@@ -59,11 +59,15 @@ def main() -> None:
         data = json.load(sys.stdin)
     except json.JSONDecodeError:
         sys.exit(0)
+    if not isinstance(data, dict):   # dane spoza formatu Claude Code: decyzja, nie awaria (onFailure: block)
+        sys.exit(0)
     tool = data.get("tool_name", "")
-    ti = data.get("tool_input") or {}
+    ti = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
     path = ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or ""
     pattern = ti.get("pattern") or ""  # Glob/Grep
-    targets = [p for p in (path, pattern if tool == "Glob" else "") if p]
+    targets = [p for p in (path, pattern if tool == "Glob" else "") if p and isinstance(p, str)]
+    if not isinstance(data.get("cwd"), (str, type(None))):
+        data["cwd"] = None
 
     for p in targets:
         norm = p.replace("\\", "/")

@@ -231,6 +231,24 @@ def main() -> int:
         fails.append(f"install: piaskownica i wycofane reguły — deny={deny} sandbox={merged.get('sandbox')} "
                      f"własna={mine.get('sandbox')}")
 
+    # ── hooki ochronne blokują akcję, gdy same zawiodą (onFailure: block, Claude Code ≥ 2.1.295); aktualizacja dopisuje
+    # brakujące pole do hooka, który już jest w projekcie, ale nie nadpisuje wyboru użytkownika ──
+    total += 1
+    guards = ("guard_bash.py", "guard_paths.py", "cleanroom_guard.py")
+    def guard_hooks(settings):
+        return {a.rsplit("/", 1)[-1]: h for e in settings["hooks"]["PreToolUse"] for h in e["hooks"]
+                for a in h.get("args") or [] if a.rsplit("/", 1)[-1] in guards}
+    in_src = guard_hooks(src)
+    old_proj = json.loads(json.dumps(src))
+    for h in guard_hooks(old_proj).values():
+        h.pop("onFailure", None)
+    guard_hooks(old_proj)["guard_paths.py"]["onFailure"] = "continue"     # świadomy wybór użytkownika
+    upd = guard_hooks(inst.merge_settings(src, old_proj))
+    if sorted(in_src) != sorted(guards) or any(h.get("onFailure") != "block" for h in in_src.values()) \
+            or upd["guard_bash.py"].get("onFailure") != "block" or upd["cleanroom_guard.py"].get("onFailure") != "block" \
+            or upd["guard_paths.py"].get("onFailure") != "continue":
+        fails.append(f"hooki ochronne: onFailure — szablon {in_src}, po aktualizacji {upd}")
+
     # ── gotowa konfiguracja piaskownicy opt-in: tylko klucz sandbox, bez furtek ──
     total += 1
     sb_file = ROOT / "factory" / "templates" / "sandbox.settings.json"

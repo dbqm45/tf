@@ -289,8 +289,9 @@ def main() -> None:
         data = json.load(sys.stdin)
     except json.JSONDecodeError:
         sys.exit(0)
-    cmd = (data.get("tool_input") or {}).get("command", "")
-    if not cmd:
+    ti = data.get("tool_input") if isinstance(data, dict) else None
+    cmd = ti.get("command") if isinstance(ti, dict) else None
+    if not cmd or not isinstance(cmd, str):   # dane spoza formatu Claude Code: decyzja, nie awaria (onFailure: block)
         sys.exit(0)
     cmd = normalize(cmd)
     for pattern, reason in DENY:
