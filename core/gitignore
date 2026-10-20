@@ -4,5 +4,6 @@
 .claude/settings.local.json
 .claude/logs/
 .claude/agent-memory-local/
+.claude/scratch/
 __pycache__/
 .idea

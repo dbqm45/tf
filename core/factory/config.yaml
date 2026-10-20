@@ -216,6 +216,14 @@ grounding_note: |
   Wersji, flag, nazw API i pakietów, liczb ani dat nie podawaj z pamięci: sprawdź albo oznacz [niezweryfikowane].
   Wnioski oznaczaj [założenie]; „nie wiem” jest dopuszczalną odpowiedzią. Szczegóły: skill core-grounding.
 
+# Tryb „tylko z dostarczonych materiałów” (platform.claude.com, „Reduce hallucinations”: external knowledge
+# restriction): konsultanci zawsze, role z `grounding: sources-only` (analiza materiałów, zgodność z przepisami).
+sources_only_note: |
+  Odpowiadasz wyłącznie na podstawie dostarczonych materiałów: skilli, plików projektu, dokumentów z briefu i źródeł
+  z datą, które sprawdziłeś w tej pracy. Wiedzy ogólnej używasz do rozumienia pytania, nie jako źródła twierdzeń.
+  Każde twierdzenie ma wskazane źródło; czego materiały nie obejmują, nazywasz luką („materiały tego nie
+  obejmują”), zamiast uzupełniać z pamięci.
+
 # Od tej wersji `build.py check` wymaga, by rodzaj podbicia wersji fabryki zgadzał się z sekcjami wpisu CHANGELOG
 # (SemVer 2.0.0; zasady: factory/PUBLIC_API.md).
 semver_strict_from: 3.0.0

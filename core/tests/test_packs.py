@@ -46,7 +46,7 @@ contributes:
     rola-b: {skills: [aa-model]}
 """)
     write(a / "roles" / "rola-a.yaml", "name: rola-a\ntitle: Rola A\ntier: std\ntriggers: a\nidentity: a\n"
-                                        "tools: [Read, Skill]\nskills: [aa-model, cc-nieznany]\n")
+                                        "tools: [Read, Skill]\nskills: [aa-model, cc-nieznany]\ngrounding: sources-only\n")
     write(a / "personas" / "ala.yaml", "name: ala\ntitle: Ala\ndescription: Persona A.\nidentity: a\ndispatcher: true\n"
                                          "roles: [rola-a, rola-c]\nskills: [aa-model]\ncore_skills: [core-git-workflow]\n"
                                          "traits: [grounded, cecha-c]\npriorities: [jakość]\n"
@@ -152,6 +152,10 @@ def main() -> int:
         check("## Typowe sytuacje" in rendered["bolek/bolek.md"] and "odsyłasz do cennika" in rendered["bolek/bolek.md"]
               and "## Typowe sytuacje" not in rendered["ala/ala.md"], "P-25: pole persony `scenarios`")
         check("effort: low" in rendered["shared/scout.md"].split("---")[1], "P-26: tier fast z effort low")
+        so = (cfg0.get("sources_only_note") or "").strip()
+        check(so and so.splitlines()[0] in rendered["ala/ala-rola-a.md"] and so.splitlines()[0] in rendered["consult/a-consult.md"]
+              and so.splitlines()[0] not in rendered["bolek/bolek-rola-b.md"],
+              "P-29: grounding: sources-only roli i konsultanci → sekcja „tylko z podanych materiałów”")
         e, _ = b.validate()
         check(not [x for x in e if "nieaktualn" not in x],   # pliki agentów nie są zbudowane — tu bez znaczenia
               f"P-12: złożona konfiguracja bez błędów: {e}")
@@ -171,9 +175,23 @@ def main() -> int:
         bp = p / "factory" / "packs" / "pack-b" / "personas" / "bolek.yaml"
         saved = bp.read_text()
         bp.write_text(saved.replace("isolation: worktree", "isolation: kontener").replace("behavior: odsyłasz do cennika", "x: y"))
+        rp = p / "factory" / "packs" / "pack-a" / "roles" / "rola-a.yaml"
+        rsaved = rp.read_text()
+        rp.write_text(rsaved.replace("grounding: sources-only", "grounding: pamiec"))
         e, _ = b.validate()
-        check(any("isolation" in x for x in e) and any("scenarios[0]" in x for x in e), f"P-27: walidacja isolation i scenarios: {e}")
+        check(any("isolation" in x for x in e) and any("scenarios[0]" in x for x in e) and any("grounding" in x for x in e),
+              f"P-27: walidacja isolation, scenarios i grounding: {e}")
         bp.write_text(saved)
+        rp.write_text(rsaved)
+
+        # skill nie ustawia model, effort ani paths (cache i widoczność skilla)
+        sk = p / ".claude" / "skills" / "aa-extra" / "SKILL.md"
+        saved = sk.read_text()
+        sk.write_text(saved.replace("name: aa-extra\n", "name: aa-extra\nmodel: haiku\npaths: src/**\n"))
+        _, w = b.validate()
+        check(any("aa-extra" in x and "pole model" in x for x in w) and any("aa-extra" in x and "paths" in x for x in w),
+              f"P-28: skill z model/paths → ostrzeżenie walidacji: {w}")
+        sk.write_text(saved)
 
         # zgodność wersji rdzenia i wymagane nakładki
         y = p / "factory" / "packs" / "pack-a" / "pack.yaml"
