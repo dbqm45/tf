@@ -36,28 +36,32 @@ Odhaczone pozycje są zrobione (`- [x]`). Źródła faktów: dokumentacja code.c
 - [x] **Q1. Opóźnienie:** `effort: low` dla tieru `fast`.
 
 ### PR 2: treść skilli i dokumentacja
-- [ ] **E. Reguły i skille:** `.claude/rules/` z `paths:` dla reguł nakładek; `paths:` w skillach technologicznych;
-  zasada: skill nie ustawia `model` ani `effort` (zmiana modelu kasuje cache).
-- [ ] **F. Skille:** `ai-prompt-engineering` (modele 5.5: domyślny effort `medium`, zapas `max_tokens`, zmiana effort
+- [x] **E. Reguły i skille:** `build.py check` ostrzega, gdy skill ustawia `model` lub `effort` (zmiana modelu w turze
+  kasuje cache); zasada w `core-skill-authoring`. Bez `paths:` w skillach: skill wczytuje się wtedy tylko przy
+  pasujących plikach, a pytania projektowe padają zanim pliki istnieją (fabryka już to ostrzegała). Bez
+  `.claude/rules/`: nakładki nie dokładają reguł do `CLAUDE.md`, więc nie ma czego dzielić po ścieżkach.
+- [x] **F. Skille:** `ai-prompt-engineering` (modele 5.5: domyślny effort `medium`, zapas `max_tokens`, zmiana effort
   w trakcie rozmowy, pozytywne sformułowania, „jeśli problemem jest koszt/opóźnienie — najpierw model”);
   `core-async-delegation` (koniec tury tekstem to raport, nie ukończenie; lista zadań; sygnał czasu);
-  `core-agent-security` (checkpointy nie cofają zmian z Bash); `core-skill-authoring` (`when_to_use`, `context: fork`).
-- [ ] **H. `core-grounding`:** weryfikacja cytatami po napisaniu tekstu (usunięte twierdzenia jako `[]`); tryb
-  „tylko z dostarczonych materiałów” (pole `grounding: sources-only` w roli/konsultancie); best-of-N i iteracyjne
-  doprecyzowanie dla decyzji trudnych do odwrócenia.
-- [ ] **I2. Procedury w duchu STE:** `docs-tech-writing` (STE100 dla dokumentacji po angielsku); uzgodnienie
+  `core-agent-security` (checkpointy nie cofają zmian z Bash); `core-skill-authoring` (`context: fork`; `when_to_use`
+  świadomie pominięte — dokleja się do opisu i zjada budżet listy skilli).
+- [x] **H. `core-grounding`:** weryfikacja cytatami po napisaniu tekstu (usunięte twierdzenia jako `[]`); tryb
+  „tylko z dostarczonych materiałów” (`sources_only_note`: konsultanci zawsze, role z `grounding: sources-only` —
+  ddd-analyst, product-compliance, ai-governance, ev-compliance); best-of-N i iteracyjne doprecyzowanie dla decyzji
+  trudnych do odwrócenia.
+- [x] **I2. Procedury w duchu STE:** `docs-tech-writing` (STE100 dla dokumentacji po angielsku); uzgodnienie
   z `txt-polish-style` (w procedurach wygrywa stały termin).
-- [ ] **J. Forma wyniku:** `core-problem-routing` — tabela/diagram (Mermaid)/jednorazowy HTML/tekst; katalog
+- [x] **J. Forma wyniku:** `core-problem-routing` — tabela/diagram (Mermaid)/jednorazowy HTML/tekst; katalog
   `.claude/scratch/` w `.gitignore`; zasady bezpieczeństwa takich stron.
-- [ ] **M. Wyciek promptu:** zasada „bez sekretów w promptach” w `core-agent-security`; kolejność monitoring →
+- [x] **M. Wyciek promptu:** zasada „bez sekretów w promptach” w `core-agent-security`; kolejność monitoring →
   utrudnianie w `sec-llm-security`.
-- [ ] **N. Wbudowany skill `claude-api`:** podział ról z `eng-llm-features` i `ai-prompt-engineering` (fakty o API
+- [x] **N. Wbudowany skill `claude-api`:** podział ról z `eng-llm-features` i `ai-prompt-engineering` (fakty o API
   Claude → `claude-api`); odesłania w opisach; usunięcie starzejących się faktów; `core-skill-authoring`: sprawdź
   skille wbudowane przed nowym skillem.
-- [ ] **P2. Ewaluacje (skille):** typ scenariusza `edge` w `core-skill-authoring`; kryteria SMART, sędzia inny niż
+- [x] **P2. Ewaluacje (skille):** typ scenariusza `edge` w `core-skill-authoring`; kryteria SMART, sędzia inny niż
   model, rozumowanie przed oceną, przypadki brzegowe, liczba przypadków ponad ręczną ocenę w `ai-evals`.
-- [ ] **Q2. Opóźnienie:** lista kontrolna w `eng-llm-features` (pomiar bazowy i TTFT → model/effort → długość →
-  cache → strumieniowanie); TTFT w `ai-product-management`.
+- [x] **Q2. Opóźnienie:** lista kontrolna w `eng-llm-features` (pomiar bazowy i TTFT → model/effort → długość →
+  cache → strumieniowanie). `ai-product-management` miał już TTFT (p50/p95 do pierwszego i ostatniego tokenu).
 - [ ] **G. Wydanie:** `workspace.py matrix` i `refs`, PR. Wersję i wpis CHANGELOG liczy workflow `release` z Conventional
   Commits po scaleniu (minor za każdy PR z `feat`).
 

@@ -16,8 +16,10 @@ Skill jest gotowy dopiero wtedy, gdy zmierzono, że:
 Sama treść SKILL.md niczego nie dowodzi.
 
 ## Procedura
-1. **Luka.** Daj modelowi 2–3 prawdziwe zadania z obszaru skilla **bez skilla**. Zapisz, czego brakuje: wiedzy,
-   kroków, formatu albo granic. Jeśli model radzi sobie dobrze, skill nie jest potrzebny.
+1. **Luka.** Najpierw sprawdź, czy obszaru nie pokrywa skill wbudowany w Claude Code (np. `claude-api` — referencja
+   API i SDK Claude, aktualizowana przez Anthropic) albo zainstalowana wtyczka: wtedy piszesz najwyżej ustalenia
+   projektu i odsyłasz do niego. Potem daj modelowi 2–3 prawdziwe zadania z obszaru skilla **bez skilla**. Zapisz,
+   czego brakuje: wiedzy, kroków, formatu albo granic. Jeśli model radzi sobie dobrze, skill nie jest potrzebny.
 2. **Szkielet.** `python3 factory/build.py new-skill <prefiks-nazwa> "<pełny opis z granicami>"` tworzy SKILL.md
    z terminem przeglądu i polem `slowa` oraz szkielet scenariuszy `tests/skill_evals/<nazwa>.json` (w projekcie:
    `.claude/tests/skill_evals/`). `--role <rola>` dopisuje skill do roli, `--name-only` ustawia `widocznosc: nazwa`.
@@ -26,6 +28,9 @@ Sama treść SKILL.md niczego nie dowodzi.
    - **2× `trigger`** — pytania z luki z kroku 1, zadane słowami człowieka, a nie opisu skilla. Do tego `checks.all`:
      ≥2 grupy wyrażeń sprawdzających wiedzę, której model nie ma bez skilla; `none` dla typowego błędu.
    - **1× `no-trigger`** z polem `neighbor` — pytanie z pogranicza, które należy do sąsiedniego skilla. Pilnuje granic.
+   - **1× brzegowy** (`trigger`, id `edge-…`), gdy skill przetwarza dane wejściowe: brakujące, za długie albo
+     niejednoznaczne dane. Oczekiwane jest pytanie albo „nie wiem” z tym, czego brakuje — `checks.none` łapie
+     zmyśloną odpowiedź (platform.claude.com, „Define success criteria and build evaluations”, 2026-10-20).
    - Format i przykłady: `tests/skill_evals/README.md`.
 4. **Punkt odniesienia (opcjonalnie, płatnie):** `run_skill_evals.py --skills <nazwa> --models sonnet --baseline`
    pokazuje, ile treści zalicza model bez skilli fabryki.
@@ -56,7 +61,13 @@ Sama treść SKILL.md niczego nie dowodzi.
      (psuje YAML). Tylko to model widzi na starcie; pole `metadata` Claude Code pomija. Nie „Pomaga z dokumentami”.
    - `metadata.katalog`: pełny opis z granicami („Nie do … (skill)”).
    - `metadata.slowa`: słowa, którymi ludzie opisują problem. Indeksuje je hook `skill_hint`.
-   - Nie używaj pola `paths`, bo ukrywa skill przed modelem.
+   - Pola `paths` nie używasz: z nim skill wczytuje się automatycznie tylko przy pasujących plikach, a pytanie
+     projektowe pada zwykle, zanim pliki istnieją. `when_to_use` dokleja się do opisu na liście skilli i zjada
+     budżet opisów — granice piszesz w `metadata.katalog`.
+   - `model` ani `effort` w nagłówku skilla: inny model niż model sesji to zmiana modelu w turze — następne
+     zapytanie czyta całą historię bez cache (code.claude.com, „Skills” i „Prompt caching”, 2026-10-20).
+   - Skill, który czyta dużo i zwraca krótki wynik (audyt, przegląd wielu plików): `context: fork` z polem `agent` —
+     działa w osobnym podagencie, do rozmowy wraca wynik.
    - Skill rzadko potrzebny: `metadata.widocznosc: nazwa` — na liście tylko nazwa (nie zabiera budżetu opisów),
      a hook `skill_hint` podpowiada go z opisem przy pasującym poleceniu (`factory/skill_profile.py`).
    - Skill uruchamiany tylko ręcznie: `disable-model-invocation: true` i scenariusze wyłącznie `no-trigger`.

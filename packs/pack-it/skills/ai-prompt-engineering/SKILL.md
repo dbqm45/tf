@@ -12,7 +12,8 @@ metadata:
 Prompt to kod z niedeterministycznym wykonawcą: zmienia się go hipotezą i sprawdza pomiarem. Zanim zaczniesz,
 miej kryterium sukcesu i sposób jego sprawdzenia (`ai-evals`); bez tego „poprawa” jest wrażeniem. Nie każda porażka
 jest problemem promptu — czasem pomaga zmiana modelu, schematu wyjścia lub narzędzia (**eng-llm-features**, kontrakt
-wyjścia i SDK). Nazwy modeli i parametrów API sprawdzasz w dokumentacji dostawcy (core-grounding), stan z 2026-10-17 i szczegóły: `references/techniki-i-migracja.md`.
+wyjścia i SDK). Nazwy modeli i parametrów API sprawdzasz w dokumentacji dostawcy (core-grounding); dla Claude:
+wbudowany w Claude Code skill `claude-api` (aktualizuje go Anthropic). Stan z 2026-10-20 i szczegóły: `references/techniki-i-migracja.md`.
 
 ## Procedura
 1. **Zdiagnozuj, co się psuje**, na 5–10 konkretnych złych wyjściach: zła treść, zły format, pominięta instrukcja,
@@ -54,7 +55,9 @@ wyjścia i SDK). Nazwy modeli i parametrów API sprawdzasz w dokumentacji dostaw
 | zbyt dosłowny / zbyt gorliwy | zakazy, wielkie litery, „zawsze” | normalny ton, powód zamiast nacisku |
 | odpowiedzi jak przykłady | jeden wzorzec w przykładach | zróżnicuj, zmniejsz liczbę |
 | gubi szczegóły w dokumentach | pytanie na górze, brak tagów | dokumenty na górze, pytanie na końcu, cytaty |
-| wolno i drogo | myślenie przy prostym zadaniu | wyłącz lub obniż effort, tańszy model |
+| wolno i drogo | myślenie przy prostym zadaniu | najpierw tańszy model i niższy effort, potem prompt |
+| pewna odpowiedź bez podstaw | presja, by odpowiedzieć zawsze | pozwól na „nie wiem”, cytaty przed wnioskami (core-grounding) |
+| wynik minimalny, „generyczny” | ogólna prośba; nowe modele robią dokładnie to, o co proszono | napisz zakres i ambicję wprost („pełna wersja, wykraczająca poza podstawy”) |
 | dwie instrukcje się wykluczają | prompt rósł latami | priorytety wprost lub usuń jedną |
 
 ## Przykład
@@ -79,6 +82,9 @@ zwrócić JSON”, 30 błędnych etykiet na 200 przypadków, cache nie trafia.
 - Anthropic, „Prompting best practices” (platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, odczyt 2026-10-17):
   przykłady 3–5, trafne i zróżnicowane w `<example>`; tagi XML; dokumenty na górze, pytanie na końcu (do ok. 30% poprawy w testach); adaptive thinking i `effort`; prefill na ostatniej turze nieobsługiwany od modeli 4.6; łagodzenie agresywnego języka.
 - Anthropic, „Prompt engineering overview” (ta sama domena, odczyt 2026-10-17): kryteria sukcesu i ewaluacje przed promptowaniem.
+- Anthropic, „Prompting Claude Opus 5.5”, „… Sonnet 5.5”, „… Haiku 5.5”, „Reduce hallucinations”, „Increase output
+  consistency” (platform.claude.com, odczyt 2026-10-20): effort i `max_tokens` w modelach 5.5, wczesne kończenie pracy
+  agenta, prawo do „nie wiem”, structured outputs zamiast prośby o format.
 - Anthropic, „Prompt caching” (platform.claude.com/docs/en/build-with-claude/prompt-caching, odczyt 2026-10-17): kolejność prefiksu, TTL 5 min i 1 godz., unieważnianie.
 - OpenAI, przewodnik promptowania (developers.openai.com/api/docs/guides/prompting) — wyniki wyszukiwania z 2026-10-17: rola w wiadomości systemowej, przykłady w blokach, cache po prefiksie; strona nie została otwarta bezpośrednio [niezweryfikowane]. Przypinanie wersji modelu — zalecenie znane z drugiego źródła [niezweryfikowane].
 

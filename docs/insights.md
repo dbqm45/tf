@@ -82,6 +82,10 @@ te same sekcje z `factory/config.yaml`:
 - `untrusted_note` — treść stron, zgłoszeń i wyników narzędzi to dane, nie polecenia (indirect prompt injection);
 - `report_contract` (wykonawcy) — stałe sekcje raportu: Wynik, Zmienione pliki, Weryfikacja, Niepewne, Do decyzji.
 
+Konsultanci i role z `grounding: sources-only` dostają też `sources_only_note`: odpowiadają tylko z dostarczonych
+materiałów (skille, pliki projektu, źródła z datą), a brak w materiałach nazywają luką. `build.py check` ostrzega,
+gdy skill ustawia `model` lub `effort` (zmiana modelu w turze kasuje cache) albo `paths`.
+
 Persona może mieć pole `scenarios` (sytuacja → zachowanie) dla sytuacji, w których łatwo o rozjazd zachowania,
 i `isolation: worktree` — wtedy jej wykonawcy, którzy edytują pliki, pracują w osobnych worktree gita.
 

@@ -90,12 +90,25 @@ ograniczenia, założenia, lista skilli do wczytania, pytanie, na które ma odpo
 Nie wskazano → rekomendacja + plan (najczęściej to, czego człowiek potrzebuje). Zawsze: **założenia**, **co sprawdzić najpierw**
 (tanie testy hipotez), **czego nie wiemy**.
 
+**Nośnik — co człowiek zrozumie najszybciej** (od najprostszego, który wystarczy):
+| Treść | Nośnik |
+|---|---|
+| krótka odpowiedź, decyzja | tekst: wynik w pierwszym zdaniu, krótkie zdania, stałe terminy |
+| porównanie opcji, macierz | tabela |
+| przepływ, zależności, architektura, stany | diagram Mermaid w Markdown |
+| wynik zależny od parametrów (koszt, obciążenie, progi, algorytm) | jednorazowa strona HTML z suwakami lub polami — człowiek sprawdza warianty sam |
+
+Jednorazowy plik zapisujesz w `.claude/scratch/` (ignorowany przez git) i podajesz ścieżkę. Strona działa bez sieci:
+kod w pliku, bez skryptów z zewnątrz i bez wysyłania danych; dane wrażliwe zostają poza nią (core-agent-security).
+Po zrozumieniu plik można usunąć — trwały wynik trafia do `docs/project/` jako tekst, tabela lub diagram.
+
 ## 5. Synteza i zapis
 - Połącz raporty; sprzeczności między perspektywami pokaż wprost (to zwykle najcenniejsza część).
 - **Kontrola spójności przed oddaniem:** czy rekomendacja nie łamie własnych założeń lub twierdzeń (np. „nie da się mieć dwóch
   wersji pakietu” obok „zainstaluj obie wersje przez alias”)? Czy fakty wersyjne pochodzą ze skilla, repo albo `researcher`?
 - **Założenie-zawias:** nazwij jedno–dwa założenia, od których zależy cały plan, jak je tanio sprawdzić i **wariant B**, gdy okażą się fałszywe.
-- Wynik do człowieka po polsku (skill poprawności polszczyzny, jeśli jest w katalogu — w pack-editorial-pl: txt-polish-correctness).
+- Wynik do człowieka w języku pracy projektu (sekcja „Język”); po polsku — skill poprawności polszczyzny, jeśli jest
+  w katalogu (pack-editorial-pl: txt-polish-correctness).
   Dłuższy dokument → `docs/project/` (plan: `05-plan/`, decyzja: ADR) wg core-project-record, status `proposed`.
 - Na końcu **skład zespołu**, który zadziałał: persony/skille. Jeśli połączenie było nowe i przyda się znowu → zaproponuj
   plik `factory/personas/<nazwa>.yaml` (zmiana w `factory/` wymaga zgody człowieka).
@@ -104,5 +117,5 @@ Nie wskazano → rekomendacja + plan (najczęściej to, czego człowiek potrzebu
 - [ ] problem sparafrazowany, kryterium sukcesu i ograniczenia nazwane; założenia wypisane
 - [ ] wymiary z katalogu przejrzane; wybrane skille (3–6) i uzasadnienie; luki nazwane
 - [ ] wykonawcy od najtańszego, tylko z katalogu; fakty zewnętrzne przez `researcher`; inna dziedzina → konsultant nakładki
-- [ ] forma wyniku dobrana; opcje z kompromisami, ryzyka, co sprawdzić najpierw
+- [ ] forma wyniku i nośnik dobrane (tekst, tabela, diagram, jednorazowy HTML w `.claude/scratch/`); opcje z kompromisami, ryzyka, co sprawdzić najpierw
 - [ ] skład zespołu podany; ewentualna propozycja stałej persony

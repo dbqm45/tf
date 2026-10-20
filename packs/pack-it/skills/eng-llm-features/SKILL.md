@@ -3,7 +3,7 @@ name: eng-llm-features
 description: Użyj, gdy budujesz w kodzie funkcję lub agenta z LLM — SDK, structured output, pętla narzędzi, ewaluacje.
 metadata:
   przeglad: 2027-01-09
-  katalog: "Użyj, gdy piszesz kod aplikacji lub narzędzia, który wywołuje model językowy — funkcja LLM w produkcie, własny agent (recenzent diffu, triaż zgłoszeń, bot w CI), agent jako usługa — wybór kategorii SDK (gotowy agent czy agent do złożenia), kontrakt wyjścia i structured output z opisami pól, pętla narzędziowa i drabina sprawczości, limit kroków i budżet kosztu, telemetria, sesje i stan, dziedziczenie konfiguracji repo, prywatność ścieżki uwierzytelnienia, wstrzykiwanie poleceń przez dane, ewaluacje promptu (promptfoo). Nie do hostowania modeli na GPU (ops-ai-inference), doboru modelu dla naszej pracy z agentem (core-cost-control), UI czatu (fe-architecture) ani bezpieczeństwa agenta-programisty (core-agent-security)."
+  katalog: "Użyj, gdy piszesz kod aplikacji lub narzędzia, który wywołuje model językowy — funkcja LLM w produkcie, własny agent (recenzent diffu, triaż zgłoszeń, bot w CI), agent jako usługa — wybór kategorii SDK (gotowy agent czy agent do złożenia), kontrakt wyjścia i structured output z opisami pól, pętla narzędziowa i drabina sprawczości, limit kroków i budżet kosztu, telemetria, sesje i stan, dziedziczenie konfiguracji repo, prywatność ścieżki uwierzytelnienia, wstrzykiwanie poleceń przez dane, ewaluacje promptu (promptfoo). Nie do hostowania modeli na GPU (ops-ai-inference), doboru modelu dla naszej pracy z agentem (core-cost-control), UI czatu (fe-architecture) ani bezpieczeństwa agenta-programisty (core-agent-security); referencji API i SDK Claude (wbudowany skill claude-api)."
   slowa: "agent sdk, claude agent sdk, vercel ai sdk, ai sdk, openrouter, structured output, json schema, zod, pydantic, wymuszony format, tool calling, wywołanie narzędzi, pętla narzędziowa, maxTurns, maxBudgetUsd, stepCountIs, własny agent, bot do review, funkcja llm, integracja z modelem, prompt systemowy, promptfoo, ewaluacja promptu, llm-as-a-judge"
 ---
 
@@ -12,7 +12,9 @@ metadata:
 Cel: kod, który wywołuje model, ma przewidywalny kształt wyniku, twardy limit kroków i kosztu, jawną ścieżkę danych
 i zestaw ewaluacji, który rozstrzyga każdą zmianę modelu lub promptu. Wersje i nazwy API sprawdzasz w dokumentacji
 i w paczce (core-grounding) — SDK z tej dziedziny zmieniają się co kilka miesięcy; stan sprawdzony 2026-10-10
-i wzorce kodu: `references/sdk-api.md`.
+i wzorce kodu: `references/sdk-api.md`. Fakty o API Claude (ID modeli, ceny, parametry Messages API, cache, Managed
+Agents) bierzesz z wbudowanego w Claude Code skilla `claude-api` — aktualizuje go Anthropic; ten skill dotyczy
+kształtu rozwiązania niezależnie od dostawcy.
 
 ## 1. Najpierw kształt, potem SDK
 | Kształt | Kiedy | Czym |
@@ -60,6 +62,15 @@ modelu → … → odpowiedź bez wywołań kończy pętlę. Jedno okrążenie =
 - Telemetria per krok (tokeny, powód zakończenia) wyłapuje zapętlenie, zanim dobije do limitu.
 - Uruchamiasz na zdarzenie, które ma znaczenie, nigdy „w kółko na wszelki wypadek”; tani model do triażu i etykiet,
   mocny tylko tam, gdzie trzeba rozumować nad kodem (zasady doboru: core-cost-control).
+
+### Opóźnienie (gdy użytkownik czeka na odpowiedź)
+Kolejność (platform.claude.com, „Reducing latency”, odczyt 2026-10-20):
+1. zmierz opóźnienie bazowe i czas do pierwszego tokenu (TTFT) na prawdziwych wejściach, p50 i p95;
+2. model i `effort` — najszybszy model, który zalicza ewaluacje (u Anthropic: Haiku z niskim `effort`);
+3. krótszy prompt i krótsza odpowiedź: limit `max_tokens`, prośba o zwięzłość, bez zbędnego kontekstu;
+4. stały prefiks pod cache (ai-prompt-engineering §8);
+5. strumieniowanie w interfejsie — nie skraca odpowiedzi, ale użytkownik widzi pierwsze słowa po TTFT.
+Każdy krok sprawdzasz tą samą ewaluacją jakości: szybszy wynik gorszej jakości to regresja.
 
 ## 5. Stan i sesje
 - Gotowy agent trzyma sesję sam: zapamiętujesz jej identyfikator i wznawiasz (`resume`), alternatywę sprawdzasz

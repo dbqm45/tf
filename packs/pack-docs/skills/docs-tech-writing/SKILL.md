@@ -20,6 +20,8 @@ metadata:
 - Czytelnik jest zajęty: najważniejsze na początku, potem szczegóły. Wiele małych rozdziałów > kilka dużych.
 - **Najpierw struktura** (rozdziały → podrozdziały), potem wypełnianie węzłów — nie pisz liniowo.
 - **KISS:** krótkie zdania i akapity; kroki jako lista numerowana, porównania jako tabela, nie wyliczenia po przecinku.
+  Runbook, instalacja, kroki naprawcze: zasady ASD-STE100 — jedna czynność na krok, zdanie do ok. 20 słów,
+  ostrzeżenie przed krokiem (`references/styl-i-struktura.md`).
 - **Spójność terminów ważniejsza niż elegancja** — raz „system”, zawsze „system”; to samo dla formatowania.
   Przy konflikcie reguły stylu z jednoznacznością wybierz jednoznaczność.
 - Każda komenda/metoda/endpoint z **przykładem kodu**, który da się skopiować i uruchomić (bloki z językiem, ```bash).

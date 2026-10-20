@@ -16,6 +16,8 @@ Zasada nadrzędna: **dobry tekst jest poprawny, krótki, konkretny i prowadzi cz
 | posiadać (o rzeczach) | mieć |
 - **Jedno zdanie = jedna myśl.** Więcej niż 2–3 poziomy zależności → podziel.
 - Słowo w trzech kolejnych zdaniach → przebuduj zdanie (ale **terminu technicznego nie zastępuj synonimem**).
+  W procedurach, runbookach i specyfikacjach powtórzenie terminu jest zamierzone (zasady ASD-STE100, skill
+  dokumentacji technicznej z pack-docs) — tam stały termin wygrywa z urozmaiceniem.
 - Przymiotnik, który nic nie wnosi („ciekawy”, „nowoczesny”, „kompleksowy”) → usuń.
 <!-- polish-lint: on -->
 

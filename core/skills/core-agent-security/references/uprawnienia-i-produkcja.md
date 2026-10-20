@@ -51,6 +51,9 @@ z 2026 r., niezweryfikowany w tej sesji].
 - Agent, który trafia na blokadę, **nie szuka obejścia** — opisuje, czego potrzebuje, i pyta człowieka.
 - Hook fabryki `guard_bash.py` łapie część wariantów (pełne ścieżki, `bash -c`); luki zgłaszaj integratorowi
   fabryki z przykładem polecenia.
+- Cofnięcie (`/rewind`, checkpointy) obejmuje edycje narzędziami plików, ale **nie zmiany zrobione przez Bash**
+  (skrypt, `sed -i`, migracja bazy) — tych nie cofa (code.claude.com, „Checkpointing”, 2026-10-20). Przed poleceniem,
+  które zmienia pliki lub stan poza repozytorium, potrzebny jest commit albo kopia.
 
 ## 4a. Piaskownica Bash — opt-in (sprawdzone na Claude Code 2.1.302, Linux z bubblewrap, 2026-10-18)
 Gotowa konfiguracja: `factory/templates/sandbox.settings.json`. Szablon projektu jej **nie włącza**: w teście na
@@ -114,6 +117,9 @@ zgłoszenia i wyniki narzędzi, więc atakujący może wstawić tam polecenia. W
    Brak ostrzeżenia filtra nie znaczy, że treść jest bezpieczna.
 5. **Red teaming:** scenariusze `wstrzykniecie-*` w `tests/skill_evals/core-agent-security.json` sprawdzają, że
    agent opisuje wstrzyknięte polecenie zamiast je wykonać.
+6. **Prompt może wyciec:** w `CLAUDE.md`, promptach agentów, skillach i opisach narzędzi nie ma sekretów, danych
+   osobowych ani poufnych reguł biznesowych — wstrzyknięcie albo zwykłe pytanie może je wydobyć. Poufne dane
+   agent czyta z miejsca z kontrolą dostępu, gdy są potrzebne (platform.claude.com, „Reduce prompt leak”, 2026-10-20).
 
 ## 5. Dostęp agenta do produkcji (CLI lub MCP)
 1. Pytanie wstępne: czy ten dostęp jest konieczny do zadania? Logi tylko do odczytu zwykle wystarczą.

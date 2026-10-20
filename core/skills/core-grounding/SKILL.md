@@ -64,6 +64,14 @@ Przy analizie długiego materiału (specyfikacja, logi, transkrypcja, regulamin)
 2. Dopiero na ich podstawie wyciągaj wnioski.
 3. Wniosek bez cytatu wycofaj albo oznacz jako założenie.
 
+**Weryfikacja cytatami po napisaniu** (tekst dla innych: raport, notatka prawna, opis zmiany): po szkicu przejdź
+twierdzenie po twierdzeniu i do każdego znajdź cytat z materiału. Twierdzenie bez cytatu usuń, a w jego miejscu zostaw
+`[]` — czytelnik widzi, że coś wycięto, i może dopytać.
+
+**Tylko z podanych materiałów** — gdy zadanie tego wymaga (przepisy, umowa, wymagania klienta, analiza wywiadów):
+wiedza ogólna służy do zrozumienia pytania, nie jako źródło twierdzeń; czego materiały nie obejmują, nazywasz luką.
+Fabryka włącza ten tryb konsultantom i rolom z `grounding: sources-only` (`factory/config.yaml`, `sources_only_note`).
+
 Ten sam wzorzec stosuje ddd-discovery-intake z pack-it (bank cytatów z kontrolą `evidence`).
 
 ## 5. Higiena kontekstu
@@ -105,19 +113,23 @@ Przed odpowiedzią z faktami, raportem kroku albo artefaktem:
    długiej rozmowy pominięta na rzecz nowszego kontekstu.
 5. Przy ważnych decyzjach (architektura, bezpieczeństwo, prawo) niech wynik oceni ktoś bez twojego kontekstu:
    security-reviewer, `/code-review` albo drugi wykonawca. Autor nie ocenia własnej pracy.
+6. **Decyzja trudna do odwrócenia, odpowiedź bez źródła do sprawdzenia:** zadaj to samo pytanie 2–3 razy
+   niezależnie (osobni wykonawcy, ten sam brief — best-of-N). Rozbieżne odpowiedzi to sygnał zmyślenia: zostaje
+   tylko to, co się powtarza i ma dowód; reszta wraca jako pytanie. Kosztuje N przebiegów — tylko przy takich
+   decyzjach. Tańszy wariant: oddaj odpowiedź do sprawdzenia twierdzenie po twierdzeniu (iteracyjne doprecyzowanie).
 
 ## Checklista
 - [ ] fakty o repo poparte przeczytanym plikiem lub poleceniem z tej sesji
 - [ ] wersje, flagi, API, pakiety, liczby i daty sprawdzone u źródła albo oznaczone jako niezweryfikowane
 - [ ] wnioski oznaczone **[założenie]** / **[ocena]**; „nie wiem” tam, gdzie nie da się sprawdzić
-- [ ] długi materiał: cytaty przed wnioskami
+- [ ] długi materiał: cytaty przed wnioskami; tekst dla innych zweryfikowany cytatami (wycięte twierdzenia jako `[]`)
 - [ ] kontekst: zadanie w czystej sesji, eksploracja w subagencie, ostrzeżenie `context_guard` obsłużone
 - [ ] liczby i wyłączności o kodzie („dokładnie N”, „tylko tu”) sprawdzone narzędziem strukturalnym, zera potwierdzone `rg`
 - [ ] `grounding_check.py` bez błędów dla oddawanych dokumentów
 
 ## Źródła
 - Anthropic — „Reduce hallucinations” (prawo do „nie wiem”, cytaty jako podstawa, weryfikacja przez cytaty,
-  weryfikacja wieloprzebiegowa, ograniczenie do podanych materiałów)
+  weryfikacja wieloprzebiegowa, ograniczenie do podanych materiałów), platform.claude.com, sprawdzone 2026-10-20
 - Anthropic — „Best practices for Claude Code” (wypełniony kontekst obniża jakość, `/clear` między zadaniami,
   subagenci do eksploracji, weryfikacja zamiast deklaracji)
 - Claude Code — „How Claude remembers your project” (code.claude.com/docs/en/memory, dostęp 2026-10-10): pamięć

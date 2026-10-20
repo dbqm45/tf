@@ -18,6 +18,9 @@ blokować merge.
 1. **Zacznij od porażek, nie od teorii.** Zapisz 20–50 prostych zadań z prawdziwych błędów (zgłoszenia, kolejka
    supportu, ręczne próby). To dobry start; zbiór rośnie z każdą nową porażką. Każde zadanie: wejście, kryterium
    sukcesu, rozwiązanie wzorcowe. Dwóch ekspertów powinno dojść do tego samego werdyktu — inaczej zadanie jest niejasne.
+   Kryterium sukcesu jest konkretne, mierzalne, osiągalne i trafne (np. „F1 ≥ 0,85 na zbiorze testowym”, nie „dobra
+   jakość”); miękkie cechy (ton, spójność) mierzysz skalą z opisem poziomów. Więcej przypadków z oceną automatyczną
+   daje więcej niż kilka ocenianych ręcznie.
 2. **Warstwy zbioru** (`references/zbiory-i-graderzy.md`): *złoty* (wzorcowe, małe, ręcznie sprawdzone), *regresyjny*
    (naprawione błędy; oczekiwane ok. 100%), *brzegowy* (puste, za długie, niejednoznaczne, w obcym języku),
    *adwersaryjny* (wstrzyknięcia, próby obejścia), *próbki z ruchu* (zanonimizowane, odświeżane). Dla każdego
@@ -29,7 +32,8 @@ blokować merge.
    sędzia LLM (nuans, ton, zgodność z faktami) → człowiek (kalibracja i próbki). Reguła: *deterministyczny, gdzie się
    da; LLM, gdzie trzeba; człowiek do walidacji*.
 5. **Sędzia LLM — zbuduj i skalibruj.** Rubryka z opisem każdego poziomu, **jeden wymiar na sędziego**, opcja
-   „nieznane / za mało danych”, inny model niż generujący, wynik w ustalonym formacie. Kalibracja: 30–50 przykładów
+   „nieznane / za mało danych”, inny model niż generujący, wynik w ustalonym formacie, **uzasadnienie przed oceną**
+   (sędzia z włączonym myśleniem albo pole `reason` przed werdyktem w schemacie). Kalibracja: 30–50 przykładów
    ocenionych przez ludzi, zgodność liczysz (odsetek zgodnych albo kappa Cohena [próg ustal z zespołem]), rozbieżności
    czytasz i poprawiasz rubrykę. Bez tego sędzia jest nieznanym instrumentem. Szczegóły: `references/zbiory-i-graderzy.md`.
 6. **Agent: wynik czy trajektoria.** Podstawą jest **wynik** (stan środowiska po przebiegu: rezerwacja istnieje w
@@ -71,7 +75,7 @@ Regresje: <zadanie → przyczyna>; Nowe porażki do zbioru: <lista>
 ## Checklista
 - [ ] zbiór startowy z prawdziwych porażek, warstwy opisane, przypadki „ma” i „nie ma wystąpić”
 - [ ] zbiór oddzielony od promptu i przykładów (kontaminacja)
-- [ ] grader najtańszy z możliwych; sędzia LLM z rubryką, opcją „nieznane” i kalibracją do ocen ludzi
+- [ ] kryteria sukcesu mierzalne; grader najtańszy z możliwych; sędzia LLM z rubryką, opcją „nieznane”, uzasadnieniem przed oceną i kalibracją do ocen ludzi
 - [ ] agent: ocena wyniku, trajektoria osobno, czyste środowisko, k prób, wybrane pass@k lub pass^k
 - [ ] linia bazowa z rozrzutem; próg w CI wyprowadzony z niej; smoke na PR, pełny zestaw okresowo
 - [ ] koszt policzony przed uruchomieniem; transkrypty porażek przeczytane
@@ -82,8 +86,8 @@ Regresje: <zadanie → przyczyna>; Nowe porażki do zbioru: <lista>
   wynik; graderzy kodowi, modelowi i ludzcy; pass@k i pass^k (przykład 75% → ok. 42% dla 3 prób); 20–50 zadań z
   prawdziwych porażek; ocena wyniku zamiast ścieżki; opcja „Unknown” i osobny sędzia na wymiar; saturacja.
 - Anthropic, „Create strong empirical evaluations / Define success criteria and build evaluations”
-  (platform.claude.com/docs/en/test-and-evaluate/develop-tests, odczyt 2026-10-17, strona bez daty): zadaniowość,
-  automatyzacja, objętość ponad jakość pojedynczego przypadku, przypadki brzegowe, inny model jako sędzia.
+  (platform.claude.com/docs/en/test-and-evaluate/develop-tests, odczyt 2026-10-20, strona bez daty): kryteria SMART, zadaniowość,
+  automatyzacja, objętość ponad jakość pojedynczego przypadku, przypadki brzegowe, inny model jako sędzia, rozumowanie sędziego przed oceną.
 - OpenAI, przewodnik po ewaluacjach (platform.openai.com/docs/guides/evals) — [niezweryfikowane]: strona nieosiągalna
   z tego środowiska 2026-10-17; z niej pochodzi tylko ogólna zasada „ewaluacje przy każdym wydaniu”, bez szczegółów API.
 - Progi kappa, rozmiar próbki kalibracji (30–50) i reguła „3–5 powtórzeń bazy” to praktyka autorów skilla [założenie].
