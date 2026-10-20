@@ -86,6 +86,20 @@ rozwijany boczny pasek (Laravel) dla bardzo rozległej dokumentacji.
   telefon), nie zostawiaj pustych pól. **Nigdy** nie używaj danych rzeczywistych osób (np. przepisanych z
   książki telefonicznej) — to realne ryzyko prawne, nie tylko stylistyczne uchybienie.
 
+## Procedury w duchu ASD-STE100
+
+ASD-STE100 (Simplified Technical English) to standard języka dokumentacji obsługi technicznej z lotnictwa:
+ograniczony słownik, jedno znaczenie słowa, krótkie zdania [niezweryfikowane: aktualne wydanie i szczegółowe reguły
+— sprawdź w specyfikacji ASD przed powołaniem się na nią]. Standard dotyczy angielskiego; dla dokumentacji po
+angielsku możesz go przyjąć wprost, dla polskiej przenosisz zasady:
+- jedna czynność w jednym kroku, kroki numerowane, czasownik w trybie rozkazującym na początku („Uruchom…”);
+- zdanie w procedurze do ok. 20 słów; warunek przed czynnością („Jeśli test nie przechodzi, przerwij wdrożenie.”);
+- jeden termin na jedno pojęcie i jedno znaczenie terminu w całym dokumencie (słownik projektu);
+- ostrzeżenie przed krokiem, którego dotyczy, nie po nim;
+- strona czynna, bez zdań wtrąconych i bez skrótów myślowych („to”, „tamto” bez rzeczownika).
+Stosujesz je w runbookach, instrukcjach instalacji, krokach naprawczych i specyfikacjach — tam, gdzie czytelnik
+wykonuje czynności pod presją czasu. Tekst objaśniający (koncepcje, ADR) może być swobodniejszy.
+
 ## Konsystencja — ważniejsza niż elegancja
 
 - Jeśli w jednym akapicie słowo „system” powtarza się dziesięć razy — to nie błąd. Zamiana na synonimy

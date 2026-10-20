@@ -73,6 +73,15 @@ zamiast pytań:
 
 Format bloku STOP, raportu i polecenie `/goal` do skopiowania: `references/polityka-wykonania.md`.
 
+**Koniec tury to raport, nie ukończenie.** Nowsze modele (Opus 5.5) w długim zadaniu kończą czasem turę samym
+tekstem — podsumowaniem z zapowiedzią kolejnego kroku. Pętla, która uznaje to za koniec, zatrzymuje pracę w połowie:
+- części zadania trzymasz na liście (plan z polami do odhaczenia, lista zadań); otwarte pozycje bez nazwanej blokady
+  → krótka wiadomość „otwarte: <pozycje>; kontynuuj, a przy blokadzie napisz, co blokuje”;
+- warunek „gotowe” sprawdza ktoś inny niż wykonawca (`/goal` z małym modelem oceniającym, bramka w CI);
+- działający proces w tle albo podagent = zadanie trwa; czekasz na jego wynik;
+- w orkiestracji kilku agentów podaj budżet czasu („ile zostało”) — w testach Anthropic zespoły kończyły szybciej
+  przy podobnej jakości (platform.claude.com, „Prompting Claude Opus 5.5”, 2026-10-20).
+
 ## 5. Rutyny i przebiegi cykliczne
 - Kontrakt mocniejszy niż przy jednym przebiegu: **cel, warunek stopu, zakres** (repo, etykiety, katalogi),
   **limit kosztu** (iteracje, czas, budżet), **kryteria sukcesu** i **kryteria porażki** (kiedy zielony status

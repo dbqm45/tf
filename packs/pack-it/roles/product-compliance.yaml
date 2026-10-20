@@ -12,3 +12,4 @@ tools: [Read, Grep, Glob, Edit, Write, Skill]
 skills: [arch-eu-product-law, arch-privacy-compliance, sec-eu-regulations, ai-governance-compliance]
 preload: []
 verify: mapa obowiązków ma odpowiedzi na pytania kwalifikujące, dla każdego aktu artykuł, datę stosowania i datę sprawdzenia ze źródłem, status [niezweryfikowane] tam, gdzie źródła pierwotnego nie przeczytano, oraz zastrzeżenie, że nie jest poradą prawną
+grounding: sources-only   # odpowiada z materiałów i przepisów, nie z pamięci (core-grounding §4)

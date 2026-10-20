@@ -10,3 +10,4 @@ tools: [Read, Grep, Glob, Edit, Write, Bash, Skill]
 skills: [ai-governance-compliance, sec-llm-security, sec-risk-management, arch-privacy-compliance, arch-threat-modeling, ai-evals]
 preload: []
 verify: dokument zgodności ma inwentarz systemów, rolę organizacji, klasę ryzyka z uzasadnieniem, macierz obowiązków z dowodami i terminami oraz zastrzeżenie, że nie jest poradą prawną
+grounding: sources-only   # odpowiada z materiałów i przepisów, nie z pamięci (core-grounding §4)

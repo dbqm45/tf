@@ -10,3 +10,4 @@ tools: [Read, Grep, Glob, Edit, Write, Skill]
 skills: [dom-ev-glossary, dom-ev-market-roles, dom-ev-charger-hardware, dom-ev-tariffs-pricing, dom-ev-payments, dom-ev-regulations-us, dom-ev-regulations-eu, dom-ev-regulations-pl, dom-ev-metering-calibration, dom-ev-iso15118, dom-ev-certification-testing, dom-ev-kpi-analytics, dom-ev-security, dom-ev-site-development, dom-ev-charging]
 preload: []
 verify: mapa obowiązków ma dla każdego wymogu akt, artykuł, datę stosowania, datę sprawdzenia i źródło; niesprawdzone u źródła oznaczone [do weryfikacji]; zastrzeżenie, że to nie porada prawna
+grounding: sources-only   # odpowiada z materiałów i przepisów, nie z pamięci (core-grounding §4)

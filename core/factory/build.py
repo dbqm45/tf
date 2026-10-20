@@ -369,6 +369,11 @@ def common_sections(cfg: dict) -> str:
     return "\n".join(parts)
 
 
+def sources_only(cfg: dict) -> str:
+    note = (cfg.get("sources_only_note") or "").strip()
+    return f"## Tylko z podanych materiałów\n{note}\n" if note else ""
+
+
 def edits_files(tools: list[str]) -> bool:
     return any(t in ("Edit", "Write", "MultiEdit", "NotebookEdit") for t in tools)
 
@@ -454,7 +459,7 @@ Czytając wejścia, zaczynaj od TL;DR i Przekazania.
 - {ask}
 - Commit i push robi orkiestrator po weryfikacji całości; Ty zostawiasz zmiany w drzewie roboczym.
 - Konfiguracja w `.claude/` i pliki z sekretami należą do człowieka — potrzebną zmianę opisujesz w raporcie.
-{consult_txt}{f"{chr(10)}## Weryfikacja{chr(10)}Przed raportem zweryfikuj zmianę: {verify} (komendy z CLAUDE.md projektu mają pierwszeństwo).{chr(10)}" if verify else ""}
+{consult_txt}{chr(10) + sources_only(cfg) if role.get("grounding") == "sources-only" else ""}{f"{chr(10)}## Weryfikacja{chr(10)}Przed raportem zweryfikuj zmianę: {verify} (komendy z CLAUDE.md projektu mają pierwszeństwo).{chr(10)}" if verify else ""}
 {common_sections(cfg)}
 ## Raport
 {cfg['report_contract'].strip()}
@@ -636,6 +641,7 @@ Skille: {skills_line(spec.get('skills') or [])}
 ## Rzetelność
 {cfg.get('grounding_note', '').strip()}
 
+{sources_only(cfg)}
 {language_section(cfg)}
 {common_sections(cfg)}"""
     return name, fm + HEADER.format(src=f"factory/packs/{spec['_pack']}/pack.yaml") + body
@@ -902,6 +908,10 @@ def validate() -> tuple[list[str], list[str]]:
             warnings.append(f"skill {name}: metadata.katalog nie określa granic (czego skill NIE obejmuje)")
         if not s.get("disable-model-invocation"):
             listing[name] = len(name) + len(d) + 4
+        for field in ("model", "effort"):
+            if s.get(field):
+                warnings.append(f"skill {name}: pole {field} zmienia model lub effort w turze — następne zapytanie czyta "
+                                "całą historię bez cache (code.claude.com, „Prompt caching”); usuń je")
         if s.get("paths"):
             warnings.append(f"skill {name}: pole paths ukrywa skill przed modelem, dopóki w sesji nie ma pasującego pliku "
                             "(„Unknown skill” także przy jawnym wywołaniu) — usuń je; uruchamianie zapewnia hook skill_hint")
@@ -953,6 +963,8 @@ def validate() -> tuple[list[str], list[str]]:
         check_skills(f"rola {n}", r.get("skills"))
         check_skills(f"rola {n} (preload)", r.get("preload"))
         check_tools(f"rola {n}", r.get("tools"))
+        if r.get("grounding") not in (None, "sources-only"):
+            errors.append(f"rola {n}: grounding może mieć tylko wartość 'sources-only'")
         if "Agent" in (r.get("tools") or []):
             warnings.append(f"rola {n}: wykonawca z narzędziem Agent może zagnieżdżać subagentów (koszt)")
     for n, s in cfg["shared_agents"].items():

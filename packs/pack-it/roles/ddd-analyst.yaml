@@ -10,3 +10,4 @@ tools: [Read, Grep, Glob, Edit, Write, Skill]   # bez Bash — analiza, nie wyko
 skills: [ddd-event-storming, ddd-facilitation, ddd-deep-modeling, ddd-strategic-analysis, ddd-context-mapping, ddd-tactical-design, ddd-archetypes, ddd-discovery-intake, ddd-algorithm-recognition, ddd-connascence-analysis, ddd-model-stress-test, core-plan-interview, proc-requirements-shaping, ddd-legacy-modernization]
 preload: []
 verify: każdy artefakt w docs/project/02-domain/ ma sekcję otwartych pytań, a każde pojęcie z modelu jest w docs/project/02-domain/glossary.md
+grounding: sources-only   # odpowiada z materiałów i przepisów, nie z pamięci (core-grounding §4)
