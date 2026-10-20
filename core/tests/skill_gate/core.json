@@ -8,11 +8,11 @@
   "offline": "2026-10-20"
  },
  "core-agent-security": {
-  "fingerprint": "8ab6f47c450d3c01",
+  "fingerprint": "3c0c6fef78b9952b",
   "offline": "2026-10-20"
  },
  "core-async-delegation": {
-  "fingerprint": "268f103e85ae381c",
+  "fingerprint": "993bd042111d5352",
   "offline": "2026-10-20"
  },
  "core-conventional-commits": {
@@ -36,7 +36,7 @@
   "offline": "2026-10-20"
  },
  "core-grounding": {
-  "fingerprint": "3e5417ac5ad2b804",
+  "fingerprint": "a4317a24df05db76",
   "offline": "2026-10-20"
  },
  "core-plan-interview": {
@@ -44,7 +44,7 @@
   "offline": "2026-10-20"
  },
  "core-problem-routing": {
-  "fingerprint": "20e6363e0b736022",
+  "fingerprint": "d2098e334236d2a9",
   "offline": "2026-10-20"
  },
  "core-project-record": {
@@ -56,7 +56,7 @@
   "offline": "2026-10-20"
  },
  "core-skill-authoring": {
-  "fingerprint": "309df95d6c8b3afa",
+  "fingerprint": "7317244278be5f52",
   "offline": "2026-10-20"
  },
  "core-skill-composition": {

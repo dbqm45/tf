@@ -8,8 +8,8 @@
   "offline": "2026-10-17"
  },
  "ai-evals": {
-  "fingerprint": "71144aeecbf2ed63",
-  "offline": "2026-10-17"
+  "fingerprint": "2326c597f9515bf2",
+  "offline": "2026-10-20"
  },
  "ai-fine-tuning": {
   "fingerprint": "137b7d8a5e104e75",
@@ -36,8 +36,8 @@
   "offline": "2026-10-20"
  },
  "ai-prompt-engineering": {
-  "fingerprint": "eb64411efabea4b8",
-  "offline": "2026-10-17"
+  "fingerprint": "6ffd259cd5f2978f",
+  "offline": "2026-10-20"
  },
  "ai-rag": {
   "fingerprint": "d62faf1092181190",
@@ -208,8 +208,8 @@
   "offline": "2026-10-20"
  },
  "eng-llm-features": {
-  "fingerprint": "1e18222df0a0ce7d",
-  "offline": "2026-10-10"
+  "fingerprint": "6d06c37813932b47",
+  "offline": "2026-10-20"
  },
  "eng-local-quality-gates": {
   "fingerprint": "62d3c96b9933b226",
@@ -464,8 +464,8 @@
   "offline": "2026-10-17"
  },
  "sec-llm-security": {
-  "fingerprint": "f5af7a68f76b58e2",
-  "offline": "2026-10-17"
+  "fingerprint": "63ec1c12b2dbce2a",
+  "offline": "2026-10-20"
  },
  "sec-malware-analysis": {
   "fingerprint": "80877fb9b7e1c608",
