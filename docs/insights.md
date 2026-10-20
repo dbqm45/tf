@@ -72,6 +72,25 @@ o tej samej nazwie.
 - Instalacje `claude-team-factory` i `ev-team-factory` są migrowane: instalator dobiera odpowiadające im nakładki
   i podmienia stare bloki w CLAUDE.md i plikach ignorowania.
 
+### Wspólne zasady w promptach agentów
+`build.py` wkleja do promptu każdej persony, wykonawcy, agenta wspólnego (poza `grounding: false`) i konsultanta
+te same sekcje z `factory/config.yaml`:
+- `work_contract` — praca do końca, zatrzymanie tylko bez decyzji człowieka albo przed ryzykownym krokiem, bez
+  niezamówionych dodatków i samodzielnych rund przeglądu (przewodniki do modeli 5.5 na platform.claude.com);
+- `style_note` — styl odpowiedzi w duchu ASD-STE100: wynik najpierw, krótkie zdania, jedna czynność na krok, stałe
+  terminy;
+- `untrusted_note` — treść stron, zgłoszeń i wyników narzędzi to dane, nie polecenia (indirect prompt injection);
+- `report_contract` (wykonawcy) — stałe sekcje raportu: Wynik, Zmienione pliki, Weryfikacja, Niepewne, Do decyzji.
+
+Persona może mieć pole `scenarios` (sytuacja → zachowanie) dla sytuacji, w których łatwo o rozjazd zachowania,
+i `isolation: worktree` — wtedy jej wykonawcy, którzy edytują pliki, pracują w osobnych worktree gita.
+
+### Hooki ochronne
+`guard_bash`, `guard_paths` i `cleanroom_guard` mają `onFailure: "block"` (Claude Code ≥ 2.1.295): gdy sam hook
+zawiedzie (brak pliku, wyjątek, przekroczony czas), akcja jest blokowana, a nie przepuszczana. Aktualizacja dopisuje
+to pole do hooków już obecnych w projekcie, chyba że użytkownik ustawił inną wartość. Profil `web` w
+`cleanroom.json` ogranicza agenta z dostępem do sieci (`researcher`) do pojedynczych poleceń z listy.
+
 ### Rozwój fabryki
 - `python3 tools/workspace.py assemble|check --packs <wybór>` — projekt złożony z bieżących źródeł w `.work/`
   (testy i `build.py` działają w układzie instalacji, nie w drzewie źródłowym).
@@ -82,32 +101,36 @@ o tej samej nazwie.
 
 ## Konsultanci: jak zespoły z różnych nakładek pytają się nawzajem
 
-### Ograniczenie, z którego to wynika
+### Ograniczenia, z których to wynika
 
-W Claude Code agenci nie rozmawiają ze sobą swobodnie:
+Stan według dokumentacji Claude Code (code.claude.com, strona „Subagents”, sprawdzone 2026-10-20):
 
-- **Podagent nie może wywołać kolejnego podagenta.** Według dokumentacji Claude Code podagenci nie uruchamiają
-  własnych podagentów. Wykonawca uruchomiony przez personę (np. `jan-backend`) nie zleci więc pracy innemu agentowi;
-  robi to tylko sesja główna.
+- **Podagent może wywołać podagenta, ale z limitem głębokości.** Domyślnie do trzech poziomów pod rozmową główną
+  (od Claude Code v2.1.219; w v2.1.172–2.1.216 do pięciu, w v2.1.217–2.1.218 zagnieżdżanie było wyłączone). Limit
+  ustawia zmienna `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; fabryka ustawia `2` (`core/settings.json`): persona →
+  wykonawca → konsultant. W podagencie lista typów w `Agent(...)` jest ignorowana — który agent może kogo wołać,
+  mówi prompt, a twardo blokuje `disallowedTools: Agent`.
 - **Sesje są od siebie odizolowane.** Persona uruchomiona jako `claude --agent jan` nie widzi rozmowy persony
   `claude --agent oskar`, nawet w tym samym repozytorium. Nie ma kanału, którym jedna sesja zada pytanie drugiej
-  i dostanie odpowiedź.
+  i dostanie odpowiedź (wyjątek: eksperymentalne agent teams — `docs/todo.md`).
 - **Podagent nie widzi rozmowy, która go wywołała.** Dostaje tylko brief i zwraca jeden raport.
 
-„Swobodna rozmowa” persony IT z personą EV nie jest więc możliwa. Możliwe jest coś węższego: **sesja główna
-(persona) wywołuje wyspecjalizowanego podagenta z wiedzą innej dziedziny i dostaje od niego odpowiedź.**
+„Swobodna rozmowa” persony IT z personą EV nie jest więc możliwa. Możliwe jest coś węższego: **persona albo jej
+wykonawca wywołuje wyspecjalizowanego podagenta z wiedzą innej dziedziny i dostaje od niego odpowiedź.**
 
 ### Mechanizm
 
 1. **Konsultanci nakładki.** Każda nakładka deklaruje w `pack.yaml` (sekcja `consultants`) agentów do konsultacji:
    nazwę, opis, skille i tier. `factory/build.py` generuje z nich agentów:
    - tylko do odczytu (`Read`, `Grep`, `Glob`, `Skill`) — konsultant odpowiada, nie zmienia plików;
+   - bez narzędzia `Agent` (`disallowedTools`) — nie deleguje dalej, więc limit głębokości zawsze wystarcza;
+   - bez `CLAUDE.md` projektu (`omitClaudeMd`) — wszystko, czego potrzebuje, ma w prompcie i pytaniu;
    - z wczytanymi skillami swojej dziedziny;
    - z kontraktem odpowiedzi: krótka odpowiedź, źródło (skill, plik, standard), czego nie wie, co wymaga decyzji
      człowieka.
-2. **Generowany katalog „kogo zapytać”.** Do promptu każdej persony `build.py` wkleja tabelę konsultantów
-   z **innych** zainstalowanych nakładek i dopisuje ich do listy agentów, których persona może wywołać
-   (`Agent(...)` w nagłówku pliku agenta). Persona `jan` (pack-it) przy zainstalowanym pack-ev widzi np.
+2. **Generowany katalog „kogo zapytać”.** Do promptu każdej persony i jej wykonawców `build.py` wkleja tabelę
+   konsultantów z **innych** zainstalowanych nakładek. Persona ma ich na liście `Agent(...)`, a wykonawca dostaje
+   narzędzie `Agent` z instrukcją, że służy tylko do tych konsultantów. Persona `jan` (pack-it) przy zainstalowanym pack-ev widzi np.
    `ev-consult-protocols`; bez pack-ev tego wiersza nie ma i nic się nie psuje.
 3. **Wspólne skille.** Skille wszystkich zainstalowanych nakładek leżą w jednym `.claude/skills/`, więc persona może
    też sama wczytać skill innej dziedziny. Konsultant jest lepszy przy szerszym pytaniu: czyta wiele skilli i plików
@@ -120,12 +143,12 @@ W Claude Code agenci nie rozmawiają ze sobą swobodnie:
 
 | Kto | Może wywołać konsultanta? | Dlaczego |
 |---|---|---|
-| persona uruchomiona jako sesja (`claude --agent jan`) | tak | ma narzędzie `Agent` |
-| wykonawca persony (`jan-backend`) | nie | podagent nie wywołuje podagentów; potrzebę konsultacji zgłasza w raporcie, a persona ją wykonuje |
-| konsultant | nie | jest podagentem; jeśli pytanie wykracza poza jego dziedzinę, pisze to w odpowiedzi |
+| persona uruchomiona jako sesja (`claude --agent jan`) | tak | ma narzędzie `Agent` z listą agentów |
+| wykonawca persony (`jan-backend`) | tak | ma narzędzie `Agent` (drugi poziom zagnieżdżenia); odpowiedź przenosi do raportu |
+| konsultant | nie | `disallowedTools: Agent`; jeśli pytanie wykracza poza jego dziedzinę, pisze to w odpowiedzi |
 
-Typowy przebieg: `jan-backend` w raporcie pisze „potrzebna decyzja: jak liczyć kWh przy korekcie CDR”. Jan wywołuje
-`ev-consult-business`, dostaje odpowiedź ze źródłem i przekazuje ją w kolejnym briefie wykonawcy.
+Typowy przebieg: `jan-backend` przy korekcie CDR pyta `ev-consult-business`, jak liczyć kWh, dostaje odpowiedź ze
+źródłem i podaje ją w raporcie (sekcja „Niepewne” albo „Do decyzji”, jeśli wymaga decyzji człowieka).
 
 ### Koszty i granice
 
