@@ -18,9 +18,14 @@ import json
 import statistics
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+import sys
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
+    import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 LOG = ROOT / ".claude" / "logs" / "usage.jsonl"

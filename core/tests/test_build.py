@@ -16,9 +16,6 @@ def load():
 
 
 def main() -> int:
-    if importlib.util.find_spec("yaml") is None:          # build.py wymaga PyYAML; w projekcie bywa nieinstalowany
-        print("✓ 0/0 testów build.py (brak PyYAML — pominięto)")
-        return 0
     b = load()
     fails, total = [], 0
 

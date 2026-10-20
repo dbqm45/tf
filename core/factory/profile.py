@@ -33,8 +33,9 @@ MANAGED = ("effortLevel", "autoCompactWindow", "advisorModel", "model")
 def load_cfg() -> dict:
     try:
         import yaml
-    except ImportError:
-        sys.exit("✗ Brak pyyaml: pip install pyyaml (Windows: py -m pip install pyyaml)")
+    except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
+        sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
+        import yaml
     return yaml.safe_load((ROOT / "factory" / "config.yaml").read_text(encoding="utf-8")) or {}
 
 

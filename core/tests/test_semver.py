@@ -111,6 +111,7 @@ def main() -> int:
           and up.newer_than("v1.2.3", "1.2.3") == 0, "update.py: porównanie wersji wg SemVer")
 
     # sama fabryka: VERSION i CHANGELOG zgodne z SemVer
+    sys.path.insert(0, str(ROOT / "factory" / "_vendor"))   # PyYAML systemowy albo dołączony do fabryki
     import yaml
     cfg = yaml.safe_load((ROOT / "factory" / "config.yaml").read_text(encoding="utf-8"))
     version = (ROOT / "factory" / "VERSION").read_text(encoding="utf-8").strip()

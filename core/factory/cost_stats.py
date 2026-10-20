@@ -266,7 +266,11 @@ def main(argv: list[str]) -> int:
     log = Path(opts.get("--log") or ROOT / ".claude" / "logs" / "usage.jsonl")
     repo = Path(opts.get("--repo-root") or ROOT)
     try:
-        import yaml
+        try:
+            import yaml
+        except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
+            sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
+            import yaml
         cfg = yaml.safe_load(Path(opts.get("--config") or ROOT / "factory" / "config.yaml").read_text(encoding="utf-8")) or {}
     except ImportError:
         print("✗ Brak PyYAML (pip install pyyaml) — potrzebny do cen z factory/config.yaml.")
