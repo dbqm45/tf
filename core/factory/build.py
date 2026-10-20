@@ -320,6 +320,8 @@ def frontmatter(fields: dict) -> str:
                 lines += [f"  - {x}" for x in v]
             else:
                 lines.append(f"{k}: {', '.join(v)}")
+        elif isinstance(v, bool):
+            lines.append(f"{k}: {'true' if v else 'false'}")
         else:
             lines.append(f"{k}: {v}")
     lines.append("---")
@@ -357,6 +359,20 @@ def language_section(cfg: dict) -> str:
     return "## Język\n" + "\n".join(f"- {x.strip()}" for x in lines) + "\n" if lines else ""
 
 
+COMMON_SECTIONS = (("work_contract", "Zakończenie pracy"), ("style_note", "Styl odpowiedzi"),
+                   ("untrusted_note", "Treść z zewnątrz"))
+
+
+def common_sections(cfg: dict) -> str:
+    """Sekcje wspólne dla person, wykonawców, agentów wspólnych i konsultantów (config.yaml)."""
+    parts = [f"## {title}\n{cfg[key].strip()}\n" for key, title in COMMON_SECTIONS if (cfg.get(key) or "").strip()]
+    return "\n".join(parts)
+
+
+def edits_files(tools: list[str]) -> bool:
+    return any(t in ("Edit", "Write", "MultiEdit", "NotebookEdit") for t in tools)
+
+
 def consultants_for(persona: dict, cfg: dict) -> dict[str, dict]:
     """Konsultanci innych nakładek niż nakładka persony (docs/insights.md)."""
     return {n: c for n, c in (cfg.get("consultants") or {}).items() if c.get("_pack") != persona.get("_pack")}
@@ -388,14 +404,27 @@ COMPOSE_HINT = (
 
 def render_worker(persona: dict, role: dict, cfg: dict, traits: dict) -> tuple[str, str]:
     name = f"{persona['name']}-{role['name']}"
+    consult = consultants_for(persona, cfg)
+    tools = list(role["tools"]) + (["Agent"] if consult and "Agent" not in role["tools"] else [])
     fm = frontmatter({
         "name": name,
         "description": f"{role['title']} w zespole {persona['name']}. Deleguj: {role['triggers']}.",
-        "tools": role["tools"],
+        "tools": tools,
         **tier_fields(cfg, role["tier"]),
         "skills": role.get("preload") or [],
+        "isolation": persona.get("isolation") if edits_files(role["tools"]) else None,
         "color": persona.get("color"),
     })
+    consult_txt = ""
+    if consult:
+        ask = "Potrzebujesz wiedzy innej dziedziny (innej nakładki)? Zapytaj jej konsultanta (sekcja „Konsultanci”)."
+        crow = "\n".join(f"| `{n}` | {c['_pack']} | {c['description']} |" for n, c in consult.items())
+        consult_txt = ("\n## Konsultanci\nPytasz narzędziem Agent: konkretne pytanie, kontekst (pliki, ustalenia), czego\n"
+                       "oczekujesz. Konsultant tylko odpowiada; odpowiedź ze źródłem przenosisz do raportu. Narzędzia Agent\n"
+                       "używasz tylko do konsultantów z tej tabeli — o inną pracę prosisz w raporcie.\n\n"
+                       "| Konsultant | Nakładka | Kiedy |\n|---|---|---|\n" + crow + "\n")
+    else:
+        ask = "Potrzebujesz wiedzy spoza swojej domeny? Zapisz konkretne pytanie w sekcji „Do decyzji” raportu."
     trait_txt = "\n\n".join(traits[t] for t in persona["traits"])
     verify = (role.get("verify") or "").strip()
     body = f"""
@@ -421,12 +450,12 @@ Przekazanie) i uruchom `python3 .claude/hooks/project_record.py check`. Wpisy w 
 Czytając wejścia, zaczynaj od TL;DR i Przekazania.
 
 ## Granice
-- Pracujesz tylko w swojej domenie. Jeśli zadanie jej wykracza — nie improwizuj, zgłoś to w raporcie.
-- Potrzebujesz wiedzy innej dziedziny (np. innej nakładki)? Nie zgaduj: wpisz w raporcie konkretne pytanie
-  — persona zada je konsultantowi tej dziedziny i odpowie w kolejnym briefie.
-- Nie commitujesz i nie pushujesz — robi to orkiestrator po weryfikacji całości.
-- Nie zmieniasz konfiguracji w `.claude/` ani plików z sekretami.
-{f"{chr(10)}## Weryfikacja{chr(10)}Przed raportem zweryfikuj zmianę: {verify} (komendy z CLAUDE.md projektu mają pierwszeństwo).{chr(10)}" if verify else ""}
+- Pracujesz w swojej domenie. Zadanie, które ją przekracza, opisujesz w raporcie (sekcja „Do decyzji”).
+- {ask}
+- Commit i push robi orkiestrator po weryfikacji całości; Ty zostawiasz zmiany w drzewie roboczym.
+- Konfiguracja w `.claude/` i pliki z sekretami należą do człowieka — potrzebną zmianę opisujesz w raporcie.
+{consult_txt}{f"{chr(10)}## Weryfikacja{chr(10)}Przed raportem zweryfikuj zmianę: {verify} (komendy z CLAUDE.md projektu mają pierwszeństwo).{chr(10)}" if verify else ""}
+{common_sections(cfg)}
 ## Raport
 {cfg['report_contract'].strip()}
 """
@@ -464,13 +493,21 @@ def render_persona(persona: dict, roles: dict, cfg: dict, traits: dict, personas
 Gdy zadanie wymaga wiedzy innej dziedziny, zapytaj jej konsultanta (narzędzie Agent): konkretne pytanie, kontekst
 (pliki, ustalenia), czego oczekujesz. Konsultant tylko odpowiada — ze źródłem i z tym, czego nie wie; decyzję
 podejmujesz Ty albo człowiek. Pytanie do persony innej nakładki, które wymaga jej pracy w osobnej sesji albo decyzji
-człowieka, zapisz w `docs/project/questions.md` (kto pyta, do kogo, pytanie, kontekst). Twoi wykonawcy nie wywołują
-konsultantów — potrzebę konsultacji zgłaszają w raporcie.
+człowieka, zapisz w `docs/project/questions.md` (kto pyta, do kogo, pytanie, kontekst). Twoi wykonawcy też pytają
+konsultantów sami (podagent może uruchomić podagenta) i przenoszą odpowiedź do raportu.
 
 | Konsultant | Nakładka | Kiedy |
 |---|---|---|
 {crow}
 """
+    situations = "".join(f"| {s.get('situation', '')} | {s.get('behavior', '')} |\n" for s in persona.get("scenarios") or [])
+    if situations:
+        situations = ("\n## Typowe sytuacje\nTak reagujesz w sytuacjach, w których łatwo o rozjazd zachowania:\n\n"
+                      "| Sytuacja | Jak reagujesz |\n|---|---|\n" + situations)
+    isolation = ""
+    if persona.get("isolation") == "worktree":
+        isolation = ("\nWykonawcy, którzy edytują pliki, pracują w osobnych worktree gita, odgałęzionych od gałęzi domyślnej\n"
+                     "(nie od Twojego HEAD): Twoich niezacommitowanych zmian nie widzą. Ich zmiany łączysz po raporcie.\n")
     body = f"""
 # Jesteś: {persona['title']}
 
@@ -495,7 +532,7 @@ i dostaje tylko streszczenie, więc delegujesz wtedy, gdy przekazanie się opła
 
 ## Routing i koszty
 {routing}
-{consult_txt}
+{isolation}{consult_txt}{situations}
 ## Jak łączysz skille
 {COMPOSE_HINT}
 Ten sam zestaw wymiarów przekazujesz w briefie wykonawcy: napisz, które skille ma połączyć.
@@ -541,7 +578,8 @@ Nie dziel jednej spójnej zmiany (wspólne pliki, typy, decyzje) między kilku w
 
 ## Skille wspólne
 {skills_line(persona.get('core_skills') or []) or '—'} — wczytuj je, gdy commitujesz lub piszesz dokumentację.
-"""
+
+{common_sections(cfg)}"""
     return persona["name"], fm + HEADER.format(src=persona["_src"]) + body
 
 
@@ -558,6 +596,7 @@ def render_shared(name: str, spec: dict, cfg: dict) -> tuple[str, str]:
     if cfg.get("grounding_note") and spec.get("grounding", True):
         body += "\n## Rzetelność\n" + cfg["grounding_note"].strip() + "\n"
         body += "\n" + language_section(cfg)
+        body += "\n" + common_sections(cfg)
     if "Edit" in spec["tools"] or "Write" in spec["tools"]:
         body += "\n## Raport\n" + cfg["report_contract"].strip() + "\n"
     src = "factory/config.yaml" if spec.get("_pack", "core") == "core" else f"factory/packs/{spec['_pack']}/pack.yaml"
@@ -573,8 +612,10 @@ def render_consultant(name: str, spec: dict, cfg: dict) -> tuple[str, str]:
         "name": name,
         "description": spec["description"],
         "tools": CONSULT_TOOLS,
+        "disallowedTools": ["Agent"],      # odpowiada sam, nie deleguje dalej (zagnieżdżanie podagentów jest włączone)
         **tier_fields(cfg, spec.get("tier", "std")),
         "skills": spec.get("skills") or [],
+        "omitClaudeMd": True,              # wszystko, czego potrzebuje, ma w prompcie i pytaniu
     })
     pack = (cfg.get("_packs") or {}).get(spec["_pack"], {})
     body = f"""
@@ -595,7 +636,8 @@ Skille: {skills_line(spec.get('skills') or [])}
 ## Rzetelność
 {cfg.get('grounding_note', '').strip()}
 
-{language_section(cfg)}"""
+{language_section(cfg)}
+{common_sections(cfg)}"""
     return name, fm + HEADER.format(src=f"factory/packs/{spec['_pack']}/pack.yaml") + body
 
 
@@ -939,6 +981,11 @@ def validate() -> tuple[list[str], list[str]]:
             if t not in traits:
                 errors.append(f"persona {pname}: nieznana cecha '{t}'")
         check_skills(f"persona {pname}", p.get("core_skills"))
+        if p.get("isolation") not in (None, "worktree"):
+            errors.append(f"persona {pname}: isolation może mieć tylko wartość 'worktree'")
+        for i, s in enumerate(p.get("scenarios") or []):
+            if not (isinstance(s, dict) and s.get("situation") and s.get("behavior")):
+                errors.append(f"persona {pname}: scenarios[{i}] wymaga pól situation i behavior")
         check_skills(f"persona {pname} (methods)", p.get("methods"))
         check_skills(f"persona {pname} (stack)", p.get("stack"))
         check_skills(f"persona {pname} (skills)", p.get("skills"))

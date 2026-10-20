@@ -18,8 +18,10 @@ FAKE = """#!/usr/bin/env python3
 import json, sys
 prompt = sys.argv[sys.argv.index("-p") + 1]
 if "--json-schema" in sys.argv:
-    print(json.dumps({"type": "result", "subtype": "success", "structured_output": {"met": ["zwrot" in prompt]},
-                      "total_cost_usd": 0.005}))
+    schema = sys.argv[sys.argv.index("--json-schema") + 1]
+    out = ({"verdicts": [{"reason": "odpowiedź opisuje zwrot", "met": "zwrot" in prompt}]} if "reason" in schema
+           else {"met": ["zwrot" in prompt]})
+    print(json.dumps({"type": "result", "subtype": "success", "structured_output": out, "total_cost_usd": 0.005}))
     raise SystemExit(0)
 print(json.dumps({"type": "system", "subtype": "init"}))
 if "UŻYJ" in prompt:
@@ -75,6 +77,29 @@ def main() -> int:
                         "checks": {"all": [["zwrot\\w* tej samej odpowiedzi"]]}}, "haiku", False, args)
         if not (r["passed"] and r["judged"]) or abs(r["cost"] - 0.015) > 1e-9:
             fails.append(f"ocena modelem: {r}")
+        # 7b. sędzia inny niż oceniany model (develop-tests: „use a different model to evaluate”) i uzasadnienie
+        # przed oceną w schemacie odpowiedzi sędziego
+        pairs = {("auto", "haiku"): "sonnet", ("auto", "sonnet"): "haiku", ("auto", "opus"): "sonnet",
+                 ("auto", "claude-haiku-5-5"): "sonnet", ("haiku", "haiku"): "haiku", ("opus", "haiku"): "opus"}
+        got = {k: ev.judge_model(*k) for k in pairs}
+        if got != pairs:
+            fails.append(f"judge_model: {got}")
+        args.judge = "auto"
+        r = ev.run_one({"skill": "be-api-design", "id": "e", "expect": "trigger", "prompt": "UŻYJ skilla",
+                        "checks": {"all": [["zwrot\\w* tej samej odpowiedzi"]]}}, "haiku", False, args)
+        if not (r["passed"] and r["judged"]) or r["judged_by"] != "sonnet" or r.get("judge_same_model"):
+            fails.append(f"sędzia auto: {r}")
+        args.judge = "haiku"
+        r = ev.run_one({"skill": "be-api-design", "id": "f", "expect": "trigger", "prompt": "UŻYJ skilla",
+                        "checks": {"all": [["zwrot\\w* tej samej odpowiedzi"]]}}, "haiku", False, args)
+        if not r.get("judge_same_model"):
+            fails.append(f"sędzia = oceniany model powinien być oznaczony: {r}")
+        rep = Path(d) / "raport.md"
+        ev.report([r], rep)
+        if "tej samej rodziny" not in rep.read_text(encoding="utf-8"):
+            fails.append("raport: brak ostrzeżenia o sędzi tej samej rodziny co oceniany model")
+        if '"reason"' not in ev.JUDGE_SCHEMA or ev.DEFAULT_JUDGE != "auto":
+            fails.append("schemat sędziego bez uzasadnienia albo domyślny sędzia nie jest 'auto'")
         os.environ.pop("CLAUDE_BIN")
         # 8. walidacja błędnego pliku
         bad = Path(d) / "be-api-design.json"

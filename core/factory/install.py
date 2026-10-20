@@ -268,6 +268,10 @@ RETIRED_DENY = ("Read(./node_modules/**)", "Read(./dist/**)", "Read(./build/**)"
                 "Read(**/package-lock.json)", "Read(**/pnpm-lock.yaml)", "Read(**/yarn.lock)")
 
 
+# Pola hooka, które aktualizacja dopisuje do hooka już obecnego w projekcie (onFailure: Claude Code ≥ 2.1.295).
+HOOK_KEYS_ADDED = ("onFailure",)
+
+
 def merge_settings(src: dict, dst: dict) -> dict:
     out = json.loads(json.dumps(dst))
     out.setdefault("$schema", src.get("$schema"))
@@ -291,6 +295,13 @@ def merge_settings(src: dict, dst: dict) -> dict:
             # hook już jest, gdy wszystkie jego argumenty występują w ustawieniach (polecenie Pythona może być inne)
             missing = [h for h in e.get("hooks", [])
                        if not all(a in have for a in (h.get("args") or [h.get("command", "")]))]
+            for h in e.get("hooks", []):          # nowe pola fabryki w hooku, który już jest (wybór użytkownika zostaje)
+                if h in missing or not h.get("args"):
+                    continue
+                for mine in (x for c in cur for x in c.get("hooks", []) if x.get("args") == h["args"]):
+                    for k in HOOK_KEYS_ADDED:
+                        if k in h:
+                            mine.setdefault(k, h[k])
             if not missing:
                 continue
             target = next((c for c in cur if c.get("matcher") == e.get("matcher")), None)

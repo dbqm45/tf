@@ -7,6 +7,8 @@ Profile z .claude/cleanroom.json:
   → deny; Grep tylko po dozwolonych ścieżkach/filtrach; Glob dozwolony (same nazwy plików). Np. qa-spec-first-testing (pack-it).
 - "allowlist" (np. `blind-analyst`): agent czyta WYŁĄCZNIE ścieżki z `allow` (np. brief biznesowy), żeby wymagania powstały
   bez wiedzy o architekturze. Np. ddd-model-stress-test (pack-it).
+- "web" (np. `researcher`): agent czyta obcą treść z sieci, więc Bash tylko dla poleceń z `bash_allow` (początek
+  polecenia, np. `npm view`), bez łączenia poleceń, podstawień i przekierowań; czytanie bez ograniczeń.
 - `block_tools`: narzędzia zablokowane dla profilu (np. Bash, który ominąłby reguły).
 Agent spoza profili: bez zmian. Hook działa w subagentach (pole `agent_type`).
 """
@@ -14,6 +16,7 @@ import fnmatch
 import json
 import os
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -88,6 +91,32 @@ def grep_allowed(path: str, glob: str, ftype: str, prof: dict) -> bool:
     return ftype in ("md", "markdown")
 
 
+SHELL_META = re.compile(r"[;&|`<>\n\r]|\$\(")
+PYTHONS = ("python3", "python", "py")
+
+
+def bash_allowed(cmd: str, prefixes: list[str]) -> bool:
+    """Polecenie zaczyna się od jednego z dozwolonych przedrostków (słowami), bez metaznaków powłoki i `..`."""
+    if SHELL_META.search(cmd):
+        return False
+    try:
+        words = shlex.split(cmd)
+    except ValueError:
+        return False
+    if not words or any(".." in w.split("/") for w in words):
+        return False
+    if words[0] in PYTHONS:
+        words[0] = "python3"
+    for pre in prefixes:
+        pw = pre.split()
+        if pw[-1].endswith("/"):    # katalog skryptów: kolejne słowo zaczyna się od tej ścieżki
+            if len(words) >= len(pw) and words[:len(pw) - 1] == pw[:-1] and words[len(pw) - 1].startswith(pw[-1]):
+                return True
+        elif words[:len(pw)] == pw:
+            return True
+    return False
+
+
 def deny(reason: str, hint: str) -> None:
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
@@ -101,6 +130,8 @@ HINTS = {
     "denylist": "Projektuj przypadki ze specyfikacji (docs/project/03-requirements), kontraktów i istniejących testów; "
                 "brak informacji = otwarte pytanie, nie czytanie kodu.",
     "allowlist": "Pracujesz na ślepo: czytaj wyłącznie pliki wskazane w zadaniu (brief biznesowy); braki zgłoś w wyniku.",
+    "web": "Czytasz obcą treść z sieci, więc powłoka służy tylko do poleceń sprawdzających fakty (jedno polecenie, "
+           "bez łączenia i przekierowań). Inne polecenie opisz w raporcie — uruchomi je orkiestrator.",
 }
 
 
@@ -109,10 +140,13 @@ def main() -> None:
         data = json.load(sys.stdin)
     except json.JSONDecodeError:
         sys.exit(0)
-    agent = data.get("agent_type") or ""
-    if not agent:
+    if not isinstance(data, dict):   # dane spoza formatu Claude Code: decyzja, nie awaria (onFailure: block)
         sys.exit(0)
-    project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd())
+    agent = data.get("agent_type") or ""
+    if not agent or not isinstance(agent, str):
+        sys.exit(0)
+    cwd = data.get("cwd") if isinstance(data.get("cwd"), str) else None
+    project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or cwd or os.getcwd())
     prof = next((p for p in load_config(project).get("profiles", [])
                  if any(fnmatch.fnmatch(agent, a) for a in p.get("agents", []))), None)
     if not prof:
@@ -120,10 +154,15 @@ def main() -> None:
     mode = prof.get("mode", "denylist")
     hint = HINTS.get(mode, "")
     tool = data.get("tool_name", "")
-    ti = data.get("tool_input") or {}
+    ti = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
+    ti = {k: v for k, v in ti.items() if isinstance(v, str)}   # pola tekstowe; inne typy to dane spoza formatu
 
     if tool in prof.get("block_tools", []):
         deny(f"{agent} (profil {prof.get('name')}) nie używa narzędzia {tool}.", hint)
+    if mode == "web":
+        if tool == "Bash" and not bash_allowed(ti.get("command", ""), prof.get("bash_allow", [])):
+            deny(f"{agent} uruchamia tylko: {', '.join(prof.get('bash_allow', []))}.", hint)
+        sys.exit(0)
     if tool in ("Read", "NotebookRead"):
         raw = ti.get("file_path") or ti.get("notebook_path") or ""
         p = rel(raw, project)

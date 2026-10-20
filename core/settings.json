@@ -82,7 +82,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard_bash.py"
             ],
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },
@@ -95,7 +96,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard_paths.py"
             ],
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },
@@ -108,7 +110,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/cleanroom_guard.py"
             ],
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },

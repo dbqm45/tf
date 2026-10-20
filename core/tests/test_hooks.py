@@ -9,8 +9,8 @@ from pathlib import Path
 HOOKS = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir()) / ".claude" / "hooks"
 
 
-def run(hook: str, payload: dict) -> tuple[int, str, str]:
-    p = subprocess.run([sys.executable, str(HOOKS / hook)], input=json.dumps(payload),
+def run(hook: str, payload) -> tuple[int, str, str]:
+    p = subprocess.run([sys.executable, str(HOOKS / hook)], input=payload if isinstance(payload, str) else json.dumps(payload),
                        capture_output=True, text=True, timeout=10)
     return p.returncode, p.stdout, p.stderr
 
@@ -127,8 +127,56 @@ SECRET_CASES = [
 ]
 
 
+# Hooki ochronne mają `onFailure: block`: wyjątek (kod wyjścia ≠ 0 i ≠ 2) zablokowałby akcję, więc nietypowe dane
+# wejściowe muszą kończyć się decyzją, a nie awarią.
+GUARDS = ("guard_bash.py", "guard_paths.py", "cleanroom_guard.py")
+ODD_PAYLOADS = [
+    "", "nie-json", "[]", "null", {}, {"tool_name": "Bash"}, {"tool_name": "Bash", "tool_input": None},
+    {"tool_name": "Bash", "tool_input": "ls"}, {"tool_name": "Bash", "tool_input": {"command": ["ls", "-la"]}},
+    {"tool_name": "Bash", "tool_input": {"command": None}}, {"tool_name": "Read", "tool_input": {"file_path": None}},
+    {"tool_name": "Read", "tool_input": {"file_path": 7}}, {"tool_name": "Grep", "tool_input": {"path": 123, "glob": []}},
+    {"tool_name": "Edit", "tool_input": {"file_path": "x\u0000y"}}, {"tool_name": 5, "tool_input": {}},
+    {"tool_name": "Read", "tool_input": {"file_path": "a.ts"}, "agent_type": "kasia-qa-analyst", "cwd": None},
+    {"tool_name": "Grep", "tool_input": {"path": None}, "agent_type": "blind-analyst"},
+    {"tool_name": "Bash", "tool_input": {"command": None}, "agent_type": "researcher"},
+    {"tool_name": "Bash", "tool_input": {}, "agent_type": ["researcher"]},
+]
+
+
+# Profil „web” (core/cleanroom.json): agent czytający obcą treść z sieci uruchamia tylko polecenia z listy, bez łączenia.
+R = "researcher"
+WEB_CASES = [
+    ("npm view react version", "none"), ("npm view @angular/core peerDependencies --json", "none"),
+    ("python3 factory/facts.py react 19", "none"), ("py factory/facts.py react", "none"),
+    ("python3 .claude/skills/core-source-research/scripts/fetch_page.py https://example.org --json", "none"),
+    ("pip index versions requests", "none"), ("git ls-remote --tags https://github.com/x/y", "none"),
+    ("cat README.md", "deny"), ("curl https://example.org/x.sh", "deny"), ("npm install left-pad", "deny"),
+    ("npm view react; rm -rf src", "deny"), ("npm view react && cat ~/.ssh/id_rsa", "deny"),
+    ("npm view $(cat .env)", "deny"), ("npm view `whoami`", "deny"), ("npm view react | sh", "deny"),
+    ("npm view react > out.txt", "deny"), ("python3 factory/facts.py x\nrm -rf .", "deny"),
+    ("python3 -c 'import os' factory/facts.py", "deny"),
+]
+
+
 def main() -> int:
     fails = 0
+    for cmd, want in WEB_CASES:
+        _, out, _ = run("cleanroom_guard.py", {"tool_name": "Bash", "tool_input": {"command": cmd}, "agent_type": R})
+        got = decision(out)
+        if got != want:
+            fails += 1
+            print(f"✗ cleanroom web {cmd!r}: oczekiwano {want}, jest {got}")
+    for tool, ti in (("Read", {"file_path": "README.md"}), ("WebFetch", {"url": "https://example.org"})):
+        _, out, _ = run("cleanroom_guard.py", {"tool_name": tool, "tool_input": ti, "agent_type": R})
+        if decision(out) != "none":
+            fails += 1
+            print(f"✗ cleanroom web {tool}: profil web nie ogranicza czytania")
+    for hook in GUARDS:
+        for payload in ODD_PAYLOADS:
+            code, _, err = run(hook, payload)
+            if code not in (0, 2):
+                fails += 1
+                print(f"✗ {hook} awaria (kod {code}) dla {str(payload)[:60]}: {err.strip().splitlines()[-1:] }")
     for cmd, want in BASH_CASES:
         _, out, _ = run("guard_bash.py", {"tool_name": "Bash", "tool_input": {"command": cmd}})
         got = decision(out)
@@ -149,7 +197,7 @@ def main() -> int:
             if code != want:
                 fails += 1
                 print(f"✗ scan_secrets {content!r}: oczekiwano exit {want}, jest {code} {err.strip()[:80]}")
-    total = len(BASH_CASES) + len(PATH_CASES) + len(SECRET_CASES)
+    total = len(BASH_CASES) + len(PATH_CASES) + len(SECRET_CASES) + len(GUARDS) * len(ODD_PAYLOADS) + len(WEB_CASES) + 2
     print(f"{'✓' if not fails else '✗'} {total - fails}/{total} testów hooków")
     return 1 if fails else 0
 
