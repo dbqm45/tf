@@ -1,5 +1,85 @@
 # Insights
 
+## Jak działa fabryka: rdzeń i nakładki
+
+### Warstwy
+- **Rdzeń** (`core/`) — mechanika: budowa agentów (`factory/build.py`), składanie konfiguracji (`factory/packs.py`),
+  instalator i aktualizator (`install.py`, `update.py`), launcher `tf`, migracje (`migrations.py`), hooki
+  (`core/hooks/`), skille praktyk `core-*`, cechy ogólne i agenci wspólni (`scout`, `researcher`, `architect`,
+  `security-reviewer`, …). Rdzeń nie zakłada, że jakakolwiek nakładka jest zainstalowana.
+- **Nakładki** (`packs/pack-*`) — wiedza dziedziny: skille, role, persony, cechy, agenci, konsultanci. Każda ma
+  `pack.yaml` z własną wersją i zakresem wersji rdzenia (`requires.core`). Dziś: `pack-it`, `pack-ux`, `pack-docs`,
+  `pack-editorial-pl`, `pack-ev`. Nowa dziedzina = nowy katalog `packs/pack-<nazwa>/` z `pack.yaml`.
+
+### Źródło a projekt
+Repozytorium to **drzewo źródłowe**. Instalator składa z niego projekt w **układzie instalacji**:
+
+| Źródło | W projekcie |
+|---|---|
+| `core/factory/` | `factory/` |
+| `core/skills/`, `packs/<id>/skills/` | `.claude/skills/` (jedno miejsce — tylko stąd czyta je Claude Code) |
+| `core/hooks/`, `packs/<id>/hooks/` | `.claude/hooks/` |
+| `core/tests/`, `packs/<id>/tests/` | `.claude/tests/` |
+| `packs/<id>/{pack.yaml,roles,personas,traits,technologies.json}` | `factory/packs/<id>/` |
+| `core/settings.json` + `packs/<id>/settings.json` | `.claude/settings.local.json` (albo `settings.json` w trybie `--shared`) |
+| `core/cleanroom.json` + `packs/<id>/cleanroom.json` | `.claude/cleanroom.json` |
+
+Agenci (`.claude/agents/_generated/`) i katalog (`.claude/catalog.md`) **nie są w repozytorium** — `build.py` buduje
+je w projekcie po każdej instalacji i zmianie ustawień, z tego, co jest zainstalowane.
+
+### Składanie (dziedziczenie)
+`factory/packs.py` łączy `factory/config.yaml` rdzenia z `pack.yaml` zainstalowanych nakładek:
+- **wymiary skilli** (prefiksy, np. `ddd-`, `dom-`) — rdzeń ma `core-`, `fw-`, `lang-`, `tool-`; nakładki dokładają
+  swoje z `order` (kolejność łączenia skilli); ten sam prefiks w dwóch miejscach to błąd;
+- **agenci wspólni, konsultanci, wiersze i akapity routingu** — rdzeń, potem nakładki;
+- **`always_skills`** nakładki trafiają tylko do jej person; rdzenia — do wszystkich;
+- **`contributes`** — wkład nakładki do person, ról i agentów *spoza* niej (np. `pack-docs` dokłada skill
+  dokumentacji każdej personie, `pack-ux` dokłada skill dostępności roli `product-compliance` z `pack-it`,
+  `pack-ev` dopisuje wskazówki do promptu `security-reviewer`). Wzbogaca ten, kto wnosi funkcję — nakładka
+  przyjmująca nic o nim nie wie;
+- **`contributes_when`** — warunek wkładu (np. `{language: pl}`); niespełniony → nakładka „uśpiona”: skille
+  i persony zostają, ale jej agenci, routing i wkład znikają;
+- **`optional_packs`** — odwołania do elementów tych nakładek są pomijane bez błędu, gdy ich nie ma (np. role UX
+  odwołują się do skilli procesu z `pack-it`);
+- **`requires.packs`** — twarda zależność; instalator dokłada wymagane nakładki sam;
+- **dane nakładek** zamiast stałych w kodzie rdzenia: interwały przeglądu skilli (`freshness`), widoczność
+  opisów (`skill_visibility`), rejestr technologii hooka `detect_stack` (`technologies.json`), profile clean-room,
+  uprawnienia, wymagane sekcje plików referencyjnych (`reference_sections`).
+
+Własne role, persony i cechy projektu (`factory/{roles,personas,traits}/`) mają pierwszeństwo przed nakładkami
+o tej samej nazwie.
+
+### Języki
+- **Treść fabryki** jest po polsku (`content_language` w `pack.yaml`); tłumaczenie — `docs/todo.md`.
+- **Język pracy** (`language`, domyślnie `pl`) — rozmowa i dokumentacja; **język commitów** (`commit_language`,
+  domyślnie `en`) — commity, PR, CHANGELOG. Kod zawsze po angielsku.
+- Ustawienia są w `.claude/factory-settings.json` (poza plikami fabryki, aktualizacje ich nie ruszają).
+  `build.py` wkleja sekcję „Język” do każdego agenta, instalator i `tf language` — do bloku w CLAUDE.md.
+- Język może wymagać nakładki (`languages.<kod>.pack` w konfiguracji rdzenia): `pl` → `pack-editorial-pl`.
+- Instalator i `tf` komunikują się z człowiekiem po angielsku.
+
+### Instalacja, aktualizacja i autokorekta
+- `tf install` / `core/factory/install.py` — rdzeń zawsze; pierwsza instalacja pyta o język pracy, język commitów
+  i nakładki (`--packs`, `--yes` bez pytań). Manifest `.claude/factory-manifest.json` zapisuje wersję, nakładki
+  i skrót każdego pliku: pliki zmienione przez człowieka nie są nadpisywane (nowa wersja obok jako `*.factory-new`),
+  pliki usunięte z fabryki lub z usuniętej nakładki idą do `.claude/factory-backup/`.
+- `tf update` pobiera nową wersję ze źródła (katalog, .zip, git) i uruchamia **jej** instalator; `tf add`,
+  `tf remove`, `tf language` przechodzą tą samą drogą.
+- **Autokorekta:** po aktualizacji instalator stosuje `factory/migrations.py` (zmiany nazw w rdzeniu i nakładkach)
+  do plików projektu, których fabryka nie instalowała (własne persony, role, nakładki, skille), i buduje agentów
+  od nowa. `tf doctor` sprawdza zgodność wersji, wymagane nakładki, nakładkę języka i aktualność agentów;
+  `tf doctor --fix` naprawia to, co da się naprawić samo.
+- Instalacje `claude-team-factory` i `ev-team-factory` są migrowane: instalator dobiera odpowiadające im nakładki
+  i podmienia stare bloki w CLAUDE.md i plikach ignorowania.
+
+### Rozwój fabryki
+- `python3 tools/workspace.py assemble|check --packs <wybór>` — projekt złożony z bieżących źródeł w `.work/`
+  (testy i `build.py` działają w układzie instalacji, nie w drzewie źródłowym).
+- `python3 tools/workspace.py matrix` — sam rdzeń, każda nakładka osobno i wszystkie razem (to samo robi CI).
+- `python3 tools/workspace.py refs` — rdzeń nie wymienia elementów nakładek (chyba że linia nazywa nakładkę,
+  np. „(pack-it)”), nakładka wymienia tylko elementy nakładek, od których zależy.
+- `python3 tools/workspace.py sync-gate` — wyniki bramki jakości skilli z projektu roboczego z powrotem do źródeł.
+
 ## Konsultanci: jak zespoły z różnych nakładek pytają się nawzajem
 
 ### Ograniczenie, z którego to wynika
