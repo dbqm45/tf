@@ -27,6 +27,7 @@ import ipaddress
 import os
 import re
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -217,7 +218,8 @@ def find_browser(env=None, extra=None):
 
 def render(url: str, browser: str, timeout: int, pin=None, proxy=None) -> str:
     """DOM po wykonaniu JavaScriptu (`--dump-dom`) w tymczasowym profilu."""
-    with tempfile.TemporaryDirectory(prefix="fetch-page-") as profile:
+    profile = tempfile.mkdtemp(prefix="fetch-page-")
+    try:
         cmd = [browser, "--headless", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
                "--disable-extensions", "--disable-sync", "--disable-background-networking", "--mute-audio",
                "--disable-dev-shm-usage", f"--user-data-dir={profile}", "--virtual-time-budget=5000"]
@@ -230,15 +232,38 @@ def render(url: str, browser: str, timeout: int, pin=None, proxy=None) -> str:
             cmd.append(f"--host-resolver-rules=MAP {host} {pin}")
         cmd += ["--dump-dom", url]
         try:
-            run = subprocess.run(cmd, capture_output=True, timeout=timeout, stdin=subprocess.DEVNULL)
-        except subprocess.TimeoutExpired:
-            raise FetchError(1, f"przekroczono limit czasu {timeout} s") from None
+            # własna grupa procesów: po przekroczeniu czasu kończymy też procesy potomne Chromium (renderer, zygote),
+            # które inaczej piszą dalej do profilu
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL,
+                                    start_new_session=os.name != "nt")
         except OSError as e:
             raise FetchError(1, f"nie uruchomiono przeglądarki: {e}") from None
-    page = run.stdout[:MAX_HTML].decode("utf-8", errors="replace")
-    if run.returncode != 0 or not page.strip():
-        raise FetchError(1, f"przeglądarka zakończyła się kodem {run.returncode}: {_reason(run.stderr)}")
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            _kill_tree(proc)
+            raise FetchError(1, f"przekroczono limit czasu {timeout} s") from None
+    finally:
+        shutil.rmtree(profile, ignore_errors=True)
+    page = stdout[:MAX_HTML].decode("utf-8", errors="replace")
+    if proc.returncode != 0 or not page.strip():
+        raise FetchError(1, f"przeglądarka zakończyła się kodem {proc.returncode}: {_reason(stderr)}")
     return page
+
+
+def _kill_tree(proc: subprocess.Popen) -> None:
+    """Kończy przeglądarkę razem z procesami potomnymi (grupa procesów; na Windowsie sam proces)."""
+    try:
+        if os.name != "nt":
+            os.killpg(proc.pid, signal.SIGKILL)
+        else:
+            proc.kill()
+    except (ProcessLookupError, PermissionError):
+        pass
+    try:
+        proc.communicate(timeout=10)
+    except subprocess.TimeoutExpired:
+        pass
 
 
 def _reason(stderr: bytes) -> str:

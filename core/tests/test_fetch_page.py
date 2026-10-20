@@ -121,6 +121,38 @@ def main() -> int:
         check("render: komunikat z linii FATAL", "No usable sandbox!" in msg)
         check("render: wskazówka o piaskownicy", "apparmor_restrict_unprivileged_userns" in msg)
 
+        # przeglądarka nie zdąży, a jej proces potomny dalej pisze do profilu: błąd przekroczenia czasu (nie błąd
+        # sprzątania katalogu) i żaden proces przeglądarki nie zostaje
+        if os.name != "nt":
+            slow = Path(d) / "wolna"
+            marker = Path(d) / "dziecko.pid"
+            slow.write_text("#!/bin/sh\nfor a in \"$@\"; do case $a in --user-data-dir=*) prof=${a#*=};; esac; done\n"
+                            f"(while true; do mkdir -p \"$prof/Default\"; touch \"$prof/Default/x$$\"; sleep 0.05; done) &\n"
+                            f"echo $! > {marker}\nsleep 30\n", encoding="utf-8")
+            slow.chmod(0o755)
+            try:
+                fp.render("http://127.0.0.1:9/", str(slow), timeout=1)
+                msg = ""
+            except fp.FetchError as e:
+                msg = str(e)
+            except OSError as e:
+                msg = f"OSError: {e}"
+            check(f"render: przekroczony czas → FetchError ({msg})", "limit czasu" in msg)
+            child = int(marker.read_text().strip()) if marker.exists() else 0
+
+            def running(pid: int) -> bool:   # zombie (zabity, czeka na sprzątnięcie przez init) to nie działający proces
+                try:
+                    os.kill(pid, 0)
+                except OSError:
+                    return False
+                status = Path(f"/proc/{pid}/status")
+                return not (status.exists() and "\nState:\tZ" in status.read_text())
+
+            alive = bool(child) and running(child)
+            if alive:
+                os.kill(child, 9)
+            check("render: po przekroczeniu czasu procesy przeglądarki zakończone", not alive)
+
     # CLI: adres prywatny → kod 2, bez uruchamiania przeglądarki
     run = subprocess.run([sys.executable, str(SCRIPT), "http://127.0.0.1:9/"], capture_output=True, text=True,
                          timeout=30)
@@ -138,7 +170,8 @@ def main() -> int:
     if browser:
         server, port = serve(JS_PAGE)
         try:
-            out = fp.fetch(f"http://127.0.0.1:{port}/", browser=browser, timeout=30, max_chars=50000,
+            # 60 s: pierwszy start Chromium na obciążonym runnerze CI potrafi przekroczyć 30 s
+            out = fp.fetch(f"http://127.0.0.1:{port}/", browser=browser, timeout=60, max_chars=50000,
                            allow_private=True)
         except fp.FetchError as e:
             out = ""
