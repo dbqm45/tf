@@ -1,0 +1,20 @@
+# Nakładka dokumentacji: pisanie dokumentacji technicznej (README, API, ADR, CHANGELOG, runbooki, podręczniki)
+# i rola Technical Writer. Wpina się do wszystkich person.
+id: pack-docs
+version: 1.0.0
+title: Documentation
+description: Technical writing — README, API docs, ADRs, changelogs, runbooks and manuals; adds the docs skill to every persona and the tech-writer role.
+content_language: pl
+default: true          # zaznaczona domyślnie w instalatorze
+requires:
+  core: ">=3.0.0 <4.0.0"
+
+facets:
+  - {prefix: docs-, order: 175, name: dokumentacja, question: "jak piszemy i utrzymujemy dokumentację techniczną — rodzaje, struktura, styl, recenzja"}
+
+routing: |
+  | zapis artefaktu albo dokumentu, którego treść jest już ustalona | {persona}-tech-writer (jeśli jest) | fast |
+
+contributes:
+  personas:
+    core_skills: [docs-tech-writing]   # „Skille wspólne” każdej persony

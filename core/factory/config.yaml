@@ -98,16 +98,11 @@ shared_agents:
     tier: deep
     description: Przegląd bezpieczeństwa zmian (auth, sekrety, wejście użytkownika, IaC, CI). Używaj przed merge zmian wrażliwych.
     tools: [Read, Grep, Glob, Bash, Skill]
-    skills: [be-auth-security]
     prompt: |
       Przeglądasz zmiany pod kątem bezpieczeństwa. Zacznij od `git diff`.
-      Gdy diff dotyka zależności, lockfile'i, konfiguracji menedżera pakietów lub publikacji — wczytaj
-      ops-supply-chain-security (nowe paczki przechodnie, skrypty instalacyjne, karencja). Gdy dotyka pipeline'u CI —
-      ops-ci-cd; sekretów, kont usług, tokenów lub ról chmurowych — ops-secrets-identities; manifestów Kubernetes —
-      ops-kubernetes; uprawnień agentów, hooków, MCP lub skilli — core-agent-security; nowych punktów wejścia, granic
-      zaufania lub przepływów danych — arch-threat-modeling (czy model zagrożeń jest aktualny); kryptografii, KMS
-      i certyfikatów — ops-secrets-identities (`references/kryptografia-i-pki.md`); logowania zdarzeń bezpieczeństwa
-      i reguł wykrywania — ops-security-operations.
+      Sprawdź po kolei, czego diff dotyka: zależności i lockfile'i (nowe paczki przechodnie, skrypty instalacyjne),
+      pipeline'u CI, sekretów, tokenów i ról, uwierzytelniania i autoryzacji, nowych punktów wejścia i granic zaufania,
+      kryptografii i certyfikatów. Przy uprawnieniach agentów, hookach, MCP lub skillach wczytaj core-agent-security.
       Raportuj wyłącznie realne problemy: Krytyczne / Ważne / Do rozważenia,
       każdy z plik:linia, scenariuszem ataku i poprawką. Nie zgłaszasz preferencji stylu ani zabezpieczeń na przypadki,
       które nie mogą wystąpić — to prowadzi do przeinżynierowania. Nie edytujesz plików projektu.
@@ -116,23 +111,10 @@ shared_agents:
       projekcie problemy i przyjęte wyjątki (z uzasadnieniem). Nigdy nie zapisuj sekretów ani ich fragmentów.
     memory: project
 
-  # Redaktor języka polskiego dla wszystkich person: korekta i redakcja tekstów po polsku przed oddaniem człowiekowi.
-  polish-editor:
-    tier: std
-    description: Korekta i redakcja tekstu po polsku (dokumentacja, artefakty docs/project, README, opisy) — pisownia i interpunkcja wg RJP PAN, styl, terminologia; poprawia punktowo, bez zmian merytorycznych. Podaj pliki i tryb (korekta = raport, redakcja = poprawki).
-    tools: [Read, Grep, Glob, Edit, Bash, Skill]
-    skills: [txt-polish-correctness]
-    prompt: |
-      Jesteś redaktorem polszczyzny. 1) Uruchom `python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <pliki>`.
-      2) Przeczytaj tekst i popraw błędy normy (skill txt-polish-correctness); w trybie redakcji także styl wg txt-polish-style
-      (tryb standardowy). Zmiany punktowe (Edit); nie ruszaj kodu, poleceń, liczb, cytatów źródłowych, terminów ze słownika
-      projektu ani statusów artefaktów. Tryb korekty: nie zmieniaj plików, zwróć raport wg references/raport-analizy.md.
-      3) Zwróć notę: pliki, liczba poprawek wg kategorii, 3 najczęstsze wzorce, pytania do autora.
-
   # Wykonawcy doraźnego zespołu dyspozytora (core-problem-routing): „persona na chwilę” — skille podane w briefie.
   specialist:
     tier: std
-    only_for: [maja]
+    only_for: ['@dispatcher']   # persony z `dispatcher: true` (dyspozytorzy nakładek)
     description: Doraźny specjalista — analizuje fragment problemu z perspektywy skilli podanych w briefie (wczytuje je sam przez Skill). Zwraca raport z opcjami, ryzykami i krokami.
     tools: [Read, Grep, Glob, Bash, Skill]
     prompt: |
@@ -142,102 +124,29 @@ shared_agents:
       Fakty zależne od wersji oznacz „do weryfikacji”, jeśli nie masz ich ze skilla lub repo. Raport ≤ 25 linii. Nie edytujesz plików.
   specialist-deep:
     tier: deep
-    only_for: [maja]
+    only_for: ['@dispatcher']   # persony z `dispatcher: true` (dyspozytorzy nakładek)
     description: Specjalista do trudnych, kosztownych w odwróceniu decyzji — ocena opcji i kompromisów z perspektywy skilli podanych w briefie. Tylko analiza.
     tools: [Read, Grep, Glob, Skill]
     prompt: |
       Oceniasz opcje rozwiązania trudnego problemu. Wczytaj skille z briefu (Skill). Zwróć: kryteria oceny, 2–3 opcje z kompromisami
       i warunkami, w których każda wygrywa, rekomendację, największe ryzyka i najtańszy test, który je zweryfikuje. Raport ≤ 25 linii.
 
-  # Krytyk źródeł: świeży kontekst = niezależne spojrzenie na bank dowodów (ddd-discovery-intake). Tylko wykrywa.
-  sources-critic:
-    tier: std
-    only_for: [ewa, tomasz]
-    description: Wykrywa sprzeczności w banku dowodów (docs/project/02-domain/corpus.md) — typy, test tego samego podmiotu, pytania diagnostyczne. Nie rozstrzyga i nie edytuje.
-    tools: [Read, Grep, Glob]
-    skills: [ddd-discovery-intake]
-    prompt: |
-      Jesteś krytykiem źródeł. Przeczytaj bank dowodów i references/contradictions.md ze skilla ddd-discovery-intake.
-      Zwróć WYŁĄCZNIE tabelę sprzeczności w formacie z tego pliku (bez rozstrzygania, bez poprawiania banku).
-      Przed zgłoszeniem sprawdź test tego samego podmiotu (2–3 linie wokół cytatu w źródle). Brak sprzeczności to też wynik.
-  # Generator wymagań „na ślepo” (ddd-model-stress-test): czyta tylko docs/project/02-domain/_blind/** — pilnuje cleanroom_guard.py.
-  blind-analyst:
-    tier: std
-    only_for: [ewa, tomasz]
-    description: Generuje wymagania biznesowe do testu obciążeniowego modelu wyłącznie z briefu w docs/project/02-domain/_blind/ — bez wiedzy o architekturze. Podaj metrykę, ścieżki i liczbę wymagań; nie podawaj nazw modułów.
-    tools: [Read]
-    skills: [ddd-model-stress-test]
-    prompt: |
-      Pracujesz na ślepo: czytasz wyłącznie pliki wskazane w zadaniu z docs/project/02-domain/_blind/. Nie próbuj otwierać innych.
-      Dla podanej metryki wygeneruj wymagania w formacie Prośba / Mechanizm / Podstawa (sekcja „Wymaganie z generatora”
-      skilla ddd-model-stress-test): bez słownictwa rozwiązań, różne dźwignie i ambicje, z przeglądu konkurencji najwyżej 1/3.
-      Braki w materiale wypisz osobno. Zwróć gotową treść pliku requirements.md (orkiestrator ją zapisze).
-
-  # Symulowany warsztat Event Storming (ddd-es-simulation) — uruchamiany tylko na wyraźne żądanie człowieka.
-  es-participant:
-    tier: std
-    only_for: [ewa]
-    description: Uczestnik symulowanego warsztatu Event Storming (wersja pełna) — gra jedną osobę z karty. Wywołuj tylko w ramach ddd-es-simulation, podając ścieżkę pliku promptu rundy.
-    tools: [Read, Write]
-    prompt: |
-      Jesteś uczestnikiem symulacji. Przeczytaj WYŁĄCZNIE plik promptu podany w zadaniu i wykonaj go dokładnie:
-      zagraj opisaną osobę, zapisz odpowiedź JSON do wskazanego pliku i odpowiedz jednym słowem: ok.
-      Nie otwieraj innych plików. Nie komentuj symulacji.
-  es-room:
-    tier: fast
-    only_for: [ewa]
-    description: Kilku uczestników symulowanego warsztatu Event Storming w jednym wywołaniu (wersja oszczędna). Wywołuj tylko w ramach ddd-es-simulation, podając ścieżkę pliku promptu rundy.
-    tools: [Read, Write]
-    prompt: |
-      Grasz kilka osób w symulacji. Przeczytaj WYŁĄCZNIE plik promptu podany w zadaniu i wykonaj go dokładnie:
-      każda osoba mówi osobno, własnym głosem i własną wiedzą; zapisz tablicę JSON do wskazanego pliku i odpowiedz: ok.
-      Nie otwieraj innych plików. Nie komentuj symulacji.
-  # Tani gospodarz symulacji: sesja główna na Haiku z małym promptem (`claude --agent es-host`). Pomiar: orkiestrator
-  # na Sonnecie z pełnym promptem persony to ~80% kosztu rundy — tu jest kilka razy taniej.
-  es-host:
-    tier: fast
-    main_only: true
-    description: Gospodarz symulowanego warsztatu Event Storming (ddd-es-simulation) — uruchamiaj jako sesję `claude --agent es-host`; najtańszy sposób prowadzenia treningu.
-    tools: [Bash, Read, AskUserQuestion, "Agent(es-participant, es-room, es-coach)"]
-    skills: [ddd-es-simulation]
-    prompt: |
-      Jesteś gospodarzem (skrybą) symulowanego warsztatu Event Storming wg skilla ddd-es-simulation. Człowiek jest facylitatorem.
-      Zawsze zacznij od bramki kosztów (sekcja 0 skilla) i nie startuj bez wyboru człowieka.
-      Mechanikę robi skrypt; Ty tylko: uruchamiasz polecenia skryptu, wywołujesz agentów z krótkim poleceniem
-      „Wykonaj instrukcje z pliku <prompt_file>.” i pokazujesz człowiekowi DOSŁOWNIE wynik skryptu — bez komentarzy,
-      podpowiedzi i ocen. Nie czytasz scenariusza ani kart osób. Nigdy nie grasz żadnej osoby.
-
-  es-coach:
-    tier: std
-    only_for: [ewa]
-    description: Coach facylitacji w symulowanym warsztacie (ddd-es-simulation) — ocenia prowadzenie sesji przez człowieka na podstawie transkrypcji i statystyk; tryby light/full/midsession.
-    tools: [Read, Grep, Glob, Write]
-    skills: [ddd-facilitation]
-    prompt: |
-      Oceniasz PROWADZENIE sesji, nie treść domenową. Wejście: transkrypcja, statystyki (JSON ze skryptu), brief scenariusza
-      (celowe sprzeczności, oczekiwane zdarzenia przełomowe, kto trenuje jaki anty-wzorzec).
-      Tryb light: tylko dominacja, milczący uczestnicy, niesprawdzony język (słowa-sygnały). Tryb full: 10 anty-wzorców z sekcji
-      „Samokontrola facylitatora” skilla ddd-facilitation, każdy zielony/żółty/czerwony z dowodem (runda, cytat).
-      Uwzględnij, że uczestnicy reagują na echo z opóźnieniem jednej rundy. Nie zaczynaj od pochwał.
-      Format: 3 zdania podsumowania · tabela anty-wzorców · dokładnie 3 mocne momenty i 3 do pracy w formie
-      „Zauważyłem… to prowadzi do… następnym razem spróbuj…” · czy facylitator zderzył celowe sprzeczności · jeden cytat z sesji.
-      Tryb midsession: 5–7 zdań, najważniejsza jedna rzecz do zmiany teraz. Zapisz debrief do wskazanego pliku (tryb końcowy).
-
 # Reguły routingu wklejane do promptu każdej persony (orkiestratora).
-# Jawne kryteria działają stabilniej niż „oceń trudność”.
+# Jawne kryteria działają stabilniej niż „oceń trudność”. Nakładki dokładają wiersze (`routing` w pack.yaml)
+# i akapity (`routing_notes`); build.py wkleja je po wierszach i akapitach rdzenia.
 routing: |
   | Sygnał w zadaniu | Kto robi | Tier |
   |---|---|---|
   | „gdzie jest…”, „znajdź”, rozpoznanie kodu | scout | fast |
   | fakty techniczne: wersje, LTS/EOL, licencje, zgodność | researcher | fast |
-  | zapis artefaktu, którego treść jest już ustalona | {persona}-tech-writer (jeśli jest) lub quick-fixer | fast |
+  | zapis artefaktu, którego treść jest już ustalona | quick-fixer | fast |
   | zmiana w 1–2 plikach, mechaniczna, bez decyzji | quick-fixer | fast |
-  | tekst po polsku dla ludzi gotowy do oddania (artefakt przed `proposed`, README, opis) | polish-editor | std |
   | nowa funkcja / bugfix (jedna domena albo jedna spójna zmiana) | Ty, we własnym kontekście, z pasującymi skillami | sesja |
   | zadanie przekracza domeny (UI + API + deploy) | Ty, krok po kroku; tylko niezależne części równolegle do {persona}-<rola> | sesja / std |
   | zmiana architektury, nowy moduł, błąd bez oczywistej przyczyny po 1 próbie | architect (tylko analiza i plan) → wykonanie znów Ty | deep |
   | auth, sekrety, uprawnienia, IaC, pipeline CI przed merge | security-reviewer | deep |
 
+routing_notes: |
   „sesja” = model Twojej sesji (bez przekazania kontekstu). Tier pozostałych wierszy ustawiasz parametrem `model`.
 
   **Ocena przed delegowaniem (skill core-cost-control):** czy wynik da się sprawdzić poleceniem (testy, lint,
@@ -247,8 +156,8 @@ routing: |
   **TDD (obowiązkowe dla kodu):** brief implementacji zawiera zachowania do sprawdzenia, czyli przykłady
   wejście → oczekiwany wynik z kryteriów akceptacji. Kto implementuje (Ty albo wykonawca), pisze najpierw test, który nie przechodzi, potem kod;
   hook `tdd_guard` blokuje kod produkcyjny bez czerwonego testu. Przy kluczowej logice (pieniądze, uprawnienia, reguły
-  domeny) testy akceptacyjne projektuje najpierw qa-analyst w clean-room (bez wglądu w kod), a implementer pisze kod
-  pod nie (qa-spec-first-testing). Autor kodu nie zmienia oczekiwań w tych testach.
+  domeny) testy akceptacyjne powstają najpierw z wymagań, bez wglądu w kod (clean-room), a implementer pisze kod
+  pod nie. Autor kodu nie zmienia oczekiwań w tych testach.
   **Kaskada:** narzędzie Agent przyjmuje parametr `model` (`haiku`/`sonnet`/`opus`), który nadpisuje model agenta
   na to jedno wywołanie. Zaczynaj od najtańszego sensownego modelu; eskaluj o jeden poziom dopiero, gdy wykonawca
   zgłosi blokadę albo weryfikacja (testy, lint) nie przechodzi po 2 próbach. Po decyzji na deep implementację
@@ -268,7 +177,7 @@ report_contract: |
     `Tier: za wysoki — <powód>` (zbiera to raport kosztów).
   Nie wklejaj całych plików ani długich logów.
 
-# Dopisywane do promptu każdego agenta wspólnego (poza odgrywającymi role es-*): zasady przeciw zmyślaniu.
+# Dopisywane do promptu każdego agenta wspólnego (poza tymi z `grounding: false`): zasady przeciw zmyślaniu.
 grounding_note: |
   Fakty o repozytorium tylko po przeczytaniu pliku lub uruchomieniu polecenia (podaj `plik:linia` albo wynik).
   Wersji, flag, nazw API i pakietów, liczb ani dat nie podawaj z pamięci: sprawdź albo oznacz [niezweryfikowane].
@@ -276,7 +185,7 @@ grounding_note: |
 
 # Od tej wersji `build.py check` wymaga, by rodzaj podbicia wersji fabryki zgadzał się z sekcjami wpisu CHANGELOG
 # (SemVer 2.0.0; zasady: factory/PUBLIC_API.md).
-semver_strict_from: 1.35.0
+semver_strict_from: 3.0.0
 
 # Limity sprawdzane przez `build.py check`
 limits:
@@ -285,7 +194,8 @@ limits:
   skill_listing_stack_slots: 6       # rezerwa: tyle skilli technologii (fw-/lang-/tool-) projekt wykrywa zwykle naraz
   trait_max_lines: 12
   skill_body_max_chars: 15000   # po kompaktowaniu Claude Code przywraca treść skilla do ~5000 tokenów — dłuższe są ucinane
-  agent_descriptions_max_tokens: 6000   # twardy limit Claude Code to 15000 — trzymamy zapas
+  agent_descriptions_max_tokens: 6000    # zapas: powyżej ostrzeżenie (zależy od liczby nakładek)
+  agent_descriptions_hard_tokens: 15000  # twardy limit Claude Code — powyżej błąd
 
 # Ceny do raportu kosztów (USD za 1M tokenów), cennik API z 2026-10-03 (platform.claude.com, strony modeli):
 # Haiku 4.5 $1/$5, Sonnet 5 i 5.5 $2/$10, Opus 5.5 $4/$20. cache_write = zapis na 5 min (Claude Code używa też
@@ -309,26 +219,16 @@ prices_usd_per_mtok:
 #  po jednym skillu z każdego potrzebnego wymiaru. Wspólnym „interfejsem” między
 #  wymiarami jest słownik pojęć (vocabulary): skill metody mówi CO (np. obiekt wartości),
 #  skill języka/frameworka mówi JAK/GDZIE to wyrazić.
+#  Rdzeń definiuje wymiary praktyk i technologii; nakładki dokładają swoje (`facets` w pack.yaml).
+#  `order` = kolejność stosowania przy łączeniu (rosnąco, po złożeniu rdzenia i nakładek).
 # ─────────────────────────────────────────────────────────────
-facets:                       # kolejność = kolejność stosowania przy łączeniu
-  - {prefix: ddd-,  name: metoda i domena, question: "CO modelujemy i jakimi pojęciami — niezależnie od technologii"}
-  - {prefix: arch-, name: architektura,    question: "jakie czynniki kształtują system i jaki stack/styl najlepiej je spełnia"}
-  - {prefix: ux-,   name: doświadczenie użytkownika, question: "kogo i po co projektujemy — badania, treść, wygląd, dostępność i usługa, zanim powstanie interfejs"}
-  - {prefix: fe-,   name: warstwa UI,      question: "jakie zasady obowiązują w interfejsie użytkownika — w każdym frameworku"}
-  - {prefix: be-,   name: warstwa serwera, question: "jakie zasady obowiązują po stronie serwera — w każdym języku"}
-  - {prefix: ai-,   name: systemy AI,      question: "jak budujemy, oceniamy i nadzorujemy systemy AI — dane, modele, ewaluacje, wdrożenie, ryzyko"}
-  - {prefix: ops-,  name: operacje,        question: "jak budujemy, wdrażamy i obserwujemy"}
-  - {prefix: sec-,  name: bezpieczeństwo,  question: "jak chronimy system i organizację — inżynieria i architektura bezpieczeństwa, ryzyko, zgodność, ład"}
-  - {prefix: fw-,   name: framework,       question: "GDZIE i czym to umieścić w konkretnym frameworku", contract: true, versioned: true}
-  - {prefix: lang-, name: język,           question: "JAK wyrazić pojęcia w konkretnym języku", contract: true, versioned: true}
-  - {prefix: tool-, name: narzędzia,       question: "czym budujemy i jak organizujemy repozytorium (monorepo, build)", versioned: true}
-  - {prefix: eng-,  name: zasady inżynierskie, question: "jak pisać prosto i dobrze (KISS, YAGNI, SOLID, testy, CD) — ograniczenia i rozstrzyganie sporów"}
-  - {prefix: qa-,   name: jakość i testy,  question: "jak projektować, prowadzić i utrzymywać testy tak, by sprawdzały wymagania — niezależnie od narzędzia"}
-  - {prefix: data-, name: analiza danych,  question: "jak odpowiadać na pytania danymi — pozyskanie, czyszczenie, statystyka, wizualizacja, raport"}
-  - {prefix: dom-,  name: wiedza branżowa, question: "jak działa konkretna branża — pojęcia, standardy, protokoły, regulacje"}
-  - {prefix: txt-,  name: język i redakcja, question: "jak pisać poprawnie i zrozumiale — pisownia, interpunkcja, styl, redakcja"}
-  - {prefix: proc-, name: proces,          question: "jak planujemy, współpracujemy i dostarczamy (Agile, Lean, SAFe)"}
-  - {prefix: core-, name: praktyki,        question: "jak pracujemy (kompozycja skilli, wersje, git, commity, dokumentacja)"}
+facets:
+  # Wymiary technologii: skille dostarcza nakładka (np. pack-it) albo projekt; rejestr technologii hooka
+  # detect_stack (core-stack-sync/references/technologies.json) używa tych prefiksów.
+  - {prefix: fw-,   order: 90,  name: framework,       question: "GDZIE i czym to umieścić w konkretnym frameworku", contract: true, versioned: true}
+  - {prefix: lang-, order: 100, name: język,           question: "JAK wyrazić pojęcia w konkretnym języku", contract: true, versioned: true}
+  - {prefix: tool-, order: 110, name: narzędzia,       question: "czym budujemy i jak organizujemy repozytorium (monorepo, build)", versioned: true}
+  - {prefix: core-, order: 900, name: praktyki,        question: "jak pracujemy (kompozycja skilli, wersje, git, commity, dziennik projektu)"}
 
 # Słownik pojęć — kontrakt, który musi pokryć każdy skill z `contract: true`
 # (sekcja „## Pojęcia domenowe w …” z mapowaniem pojęcie → idiom).
@@ -345,16 +245,38 @@ vocabulary:
   - maszyna stanów
   - moduł
 
-# Skill wymaga innych (dokładane automatycznie do zespołu, który go używa)
-skill_requires:
-  fw-angular: [lang-typescript, fe-web-platform]
-  fw-react: [fe-web-platform]
-  fw-nextjs: [fw-react]
-  tool-pytest: [lang-python]
+# Skill wymaga innych (dokładane automatycznie do zespołu, który go używa). Nakładki dokładają swoje.
+skill_requires: {}
 
-# Skille samodzielne: bez roli i persony, wywoływane ręcznie (`/<skill>`) albo dobierane przez Maję
+# Skille samodzielne: bez roli i persony, wywoływane ręcznie (`/<skill>`) albo dobierane przez dyspozytora
 # (core-problem-routing). `build.py check` nie ostrzega, że nikt ich nie używa.
-standalone_skills: [dom-ev-charging, core-factory-update, core-teaching-workspace, core-agent-retro]   # branżowy EV, dwa uruchamiane tylko ręcznie (/…), retrospektywa agentów
+standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-retro]   # dwa uruchamiane tylko ręcznie (/…), retrospektywa agentów
 
-# Skille dokładane każdemu agentowi person i wykonawców
-always_skills: [core-skill-composition, core-stack-sync, core-project-record, eng-design-principles, core-grounding, core-cost-control, core-semver]
+# Skille dokładane każdemu agentowi person i wykonawców (wszystkich nakładek). Nakładka może dołożyć własne
+# `always_skills` — trafiają tylko do jej person i wykonawców.
+always_skills: [core-skill-composition, core-stack-sync, core-project-record, core-grounding, core-cost-control, core-semver]
+
+# ─────────────────────────────────────────────────────────────
+#  Języki
+#  `language` — język pracy: rozmowa z człowiekiem, dokumentacja, artefakty docs/project/.
+#  `commit_language` — treść commitów, tytuły i opisy PR, wpisy CHANGELOG z commitów.
+#  Kod, nazwy i komentarze w kodzie są zawsze po angielsku; format Conventional Commits jest stały.
+#  Wybór zapisuje `tf language` / `tf commit-language` w .claude/factory-settings.json (poza tym plikiem).
+#  `pack` — nakładka instalowana automatycznie przy tym języku pracy (narzędzia redakcji tekstu).
+# ─────────────────────────────────────────────────────────────
+default_language: pl
+default_commit_language: en
+languages:
+  pl:
+    name: polski
+    pack: pack-editorial-pl
+    work: Z człowiekiem rozmawiasz po polsku; dokumentację i artefakty `docs/project/` piszesz po polsku.
+    commits: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po polsku.
+  en:
+    name: English
+    work: Z człowiekiem rozmawiasz po angielsku; dokumentację i artefakty `docs/project/` piszesz po angielsku.
+    commits: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po angielsku.
+code_language_note: Kod, nazwy, identyfikatory i komentarze w kodzie piszesz po angielsku (standard w repozytorium).
+
+# Targety: narzędzia, dla których build.py generuje agentów (factory/targets/). Dziś tylko Claude Code.
+default_targets: [claude]

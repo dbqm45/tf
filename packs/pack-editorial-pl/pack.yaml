@@ -1,0 +1,39 @@
+# Nakładka redakcji tekstu po polsku: poprawność (pisownia, interpunkcja wg RJP PAN) i styl, redaktor polish-editor,
+# persona Stefan. Instalowana automatycznie przy języku pracy `pl`; jej wkład działa tylko przy `language: pl`.
+id: pack-editorial-pl
+version: 1.0.0
+title: Polish editorial
+description: Polish language editing — correctness and style checks, the polish-editor agent and the Stefan persona. Installed automatically with language pl.
+content_language: pl
+language: pl           # nakładka języka — instalowana przy tym języku pracy (core config → languages)
+requires:
+  core: ">=3.0.0 <4.0.0"
+optional_packs: [pack-docs]
+
+facets:
+  - {prefix: txt-, order: 160, name: język i redakcja, question: "jak pisać poprawnie i zrozumiale — pisownia, interpunkcja, styl, redakcja"}
+
+# Wkład do person, ról i routingu — tylko przy języku pracy `pl`.
+contributes_when: {language: pl}
+contributes:
+  personas:
+    traits: [polish-language]
+  roles:
+    tech-writer:                # rola z pack-docs
+      skills: [txt-polish-correctness]
+routing: |
+  | tekst po polsku dla ludzi gotowy do oddania (artefakt przed `proposed`, README, opis) | polish-editor | std |
+
+shared_agents:
+  # Redaktor języka polskiego dla wszystkich person: korekta i redakcja tekstów po polsku przed oddaniem człowiekowi.
+  polish-editor:
+    tier: std
+    description: Korekta i redakcja tekstu po polsku (dokumentacja, artefakty docs/project, README, opisy) — pisownia i interpunkcja wg RJP PAN, styl, terminologia; poprawia punktowo, bez zmian merytorycznych. Podaj pliki i tryb (korekta = raport, redakcja = poprawki).
+    tools: [Read, Grep, Glob, Edit, Bash, Skill]
+    skills: [txt-polish-correctness]
+    prompt: |
+      Jesteś redaktorem polszczyzny. 1) Uruchom `python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <pliki>`.
+      2) Przeczytaj tekst i popraw błędy normy (skill txt-polish-correctness); w trybie redakcji także styl wg txt-polish-style
+      (tryb standardowy). Zmiany punktowe (Edit); nie ruszaj kodu, poleceń, liczb, cytatów źródłowych, terminów ze słownika
+      projektu ani statusów artefaktów. Tryb korekty: nie zmieniaj plików, zwróć raport wg references/raport-analizy.md.
+      3) Zwróć notę: pliki, liczba poprawek wg kategorii, 3 najczęstsze wzorce, pytania do autora.

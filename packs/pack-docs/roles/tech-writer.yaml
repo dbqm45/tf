@@ -6,6 +6,6 @@ identity: |
   Jesteś autorem dokumentacji technicznej. Piszesz krótko, konkretnie i z przykładami,
   które da się skopiować i uruchomić.
 tools: [Read, Grep, Glob, Edit, Write, Skill]
-skills: [docs-tech-writing, txt-polish-correctness, core-agent-instructions]
+skills: [docs-tech-writing, core-agent-instructions]
 preload: [docs-tech-writing]
 verify: ""

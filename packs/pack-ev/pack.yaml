@@ -1,0 +1,50 @@
+# Nakładka EV: wiedza branży pojazdów elektrycznych — ładowanie (OCPP, OCPI, ISO 15118), roaming, taryfy i CDR,
+# energia i smart charging, regulacje PL/UE/USA, operacje sieci ładowania. Bez stałego stacku technologicznego.
+id: pack-ev
+version: 1.0.0
+title: EV
+description: Electric vehicle charging industry — OCPP, OCPI, ISO 15118, roaming, tariffs and CDRs, energy and smart charging, PL/EU/US regulations, charging network operations.
+content_language: pl
+requires:
+  core: ">=3.0.0 <4.0.0"
+optional_packs: [pack-docs, pack-editorial-pl]
+
+facets:
+  - {prefix: dom-, order: 150, name: wiedza branżowa EV, question: "jak działa branża pojazdów elektrycznych — pojęcia, standardy, protokoły, regulacje"}
+
+always_skills: [dom-ev-knowledge-base]
+
+freshness:
+  prefixes: {dom-: 6}
+  # przepisy EV z terminami stosowania (AFIR, NIS2, CRA, UDT, EIPA, NEVI…) zmieniają się najszybciej
+  skills: {dom-ev-regulations-eu: 3, dom-ev-regulations-pl: 3, dom-ev-regulations-us: 3}
+
+contributes:
+  agents:
+    security-reviewer:
+      prompt: |
+        Przy systemach ładowania (ładowarka, CSMS, roaming, Plug & Charge) wczytaj pasujący skill dom-ev-* — model
+        zagrożeń branży (fałszywa ładowarka, przejęcie sesji, tokeny RFID, PKI kontraktów) jest tam; zacznij od dom-ev-security.
+    researcher:
+      prompt: |
+        Fakty EV: najpierw `python3 .claude/skills/dom-ev-knowledge-base/scripts/kb.py search "<hasła>"`. Źródła wybierasz
+        najpierw z rejestru (`kb.py sources --area <obszar>`); dokument pierwotny pobierasz do bazy (`kb.py ingest <id|URL>`)
+        i cytujesz z cache. Zablokowaną domenę zgłaszasz w raporcie (nazwa hosta), nie zastępujesz jej treści pamięcią.
+
+consultants:
+  ev-consult-protocols:
+    tier: std
+    description: Konsultant EV — OCPP 1.6 i 2.x, OCPI, ISO 15118 i Plug & Charge, sesja ładowania end-to-end, identyfikatory EVSE ID i EMAID. Tylko odpowiedź, bez zmian w plikach.
+    skills: [dom-ev-glossary, dom-ev-ocpp-16, dom-ev-ocpp-2x, dom-ev-ocpi, dom-ev-iso15118, dom-ev-session-lifecycle, dom-ev-identifiers]
+  ev-consult-energy:
+    tier: std
+    description: Konsultant EV — smart charging, zarządzanie mocą i zajezdnie flot, V2X, sprzęt ładowarki, pojazd i bateria. Tylko odpowiedź, bez zmian w plikach.
+    skills: [dom-ev-smart-charging, dom-ev-energy-management, dom-ev-v2x, dom-ev-charger-hardware, dom-ev-vehicle-battery]
+  ev-consult-business:
+    tier: std
+    description: Konsultant EV — role rynku i roaming, taryfy i cena sesji, CDR i rozliczenia, płatności, eMSP i floty, ekonomia stacji. Tylko odpowiedź, bez zmian w plikach.
+    skills: [dom-ev-market-roles, dom-ev-tariffs-pricing, dom-ev-cdr-settlement, dom-ev-payments, dom-ev-emsp-platform, dom-ev-fleet-charging, dom-ev-business-economics]
+  ev-consult-regulations:
+    tier: deep
+    description: Konsultant EV — przepisy PL, UE i USA dla ładowania (AFIR, NIS2, CRA, UDT, EIPA, NEVI, HB44), legalny pomiar energii (MID, Eichrecht), bezpieczeństwo sieci ładowania. Tylko odpowiedź, bez zmian w plikach.
+    skills: [dom-ev-regulations-eu, dom-ev-regulations-pl, dom-ev-regulations-us, dom-ev-metering-calibration, dom-ev-security]

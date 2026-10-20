@@ -1,41 +1,47 @@
 #!/usr/bin/env python3
 """
-Instaluje i aktualizuje claude-team-factory w projekcie (tylko biblioteka standardowa).
+Installs and updates the team factory (core + selected packs) in a project. Standard library only
+(PyYAML for pack metadata: system copy or the one bundled in factory/_vendor).
 
-Uruchamiasz z katalogu projektu — projektem jest bieżący katalog, a fabrykę wskazuje ścieżka do tego skryptu:
+Run it from the project directory — the project is the current directory, the factory is where this script lives:
 
-  cd ~/projekty/moja-aplikacja
-  python3 "$CLAUDE_TEAM_FACTORY/factory/install.py"              # instalacja prywatna (domyślna): nic nie trafia do commitów
-  python3 "$CLAUDE_TEAM_FACTORY/factory/install.py" --dry-run    # pokaż, co by się stało
-  python3 "$CLAUDE_TEAM_FACTORY/factory/install.py" --shared     # instalacja zespołowa: fabryka commitowana z projektem
-  python3 "$CLAUDE_TEAM_FACTORY/factory/install.py" --gitignore  # prywatna, ale wpisy w .gitignore zamiast .git/info/exclude
-  python3 "$CLAUDE_TEAM_FACTORY/factory/install.py" --python py  # wymuś polecenie Pythona dla hooków (domyślnie: wykrywane)
+  cd ~/projects/my-app
+  python3 "$TEAM_FACTORY/core/factory/install.py"                     # private install (default): nothing gets committed
+  python3 "$TEAM_FACTORY/core/factory/install.py" --dry-run           # show what would happen
+  python3 "$TEAM_FACTORY/core/factory/install.py" --packs pack-it,pack-ev   # choose packs without asking
+  python3 "$TEAM_FACTORY/core/factory/install.py" --add pack-ux       # add a pack to an existing install
+  python3 "$TEAM_FACTORY/core/factory/install.py" --remove pack-ux    # remove a pack
+  python3 "$TEAM_FACTORY/core/factory/install.py" --language pl --commit-language en
+  python3 "$TEAM_FACTORY/core/factory/install.py" --shared            # team install: the factory is committed with the project
+  python3 "$TEAM_FACTORY/core/factory/install.py" --gitignore         # private, but entries go to .gitignore, not .git/info/exclude
+  python3 "$TEAM_FACTORY/core/factory/install.py" --python py         # force the Python command for hooks (default: detected)
+  python3 "$TEAM_FACTORY/core/factory/install.py" --yes               # no questions: defaults or the previous choice
 
-Windows: zamiast `python3` uruchamiasz instalator przez `py` (np. `py %CLAUDE_TEAM_FACTORY%\\factory\\install.py`).
-Polecenie Pythona dla hooków i agentów wykrywa instalator: sprawdza kolejno `py`, `python`, `python3` na Windowsie
-oraz `python3`, `python` na Linuksie i macOS. Uznaje polecenie, które naprawdę uruchamia Pythona 3.9+, więc pomija
-alias ze Sklepu Microsoft. Wynik zapisuje w ustawieniach hooków, w manifeście i w sekcji CLAUDE.md. Gdy nic nie
-działa, używa pełnej ścieżki interpretera, którym uruchomiono instalator. `--python <polecenie>` wymusza wybór.
+The core is always installed. Packs (`packs/pack-*`) are chosen interactively on the first install (or with
+`--packs`); later runs keep the previous choice. A pack's required packs and the pack of the chosen working language
+(e.g. `pack-editorial-pl` for `pl`) are added automatically. On the first install you also choose the working
+language (conversation, documentation; default `pl`) and the commit language (commit messages, PR titles and
+descriptions; default `en`). Both can be changed later: `tf language <code>`, `tf commit-language <code>`.
 
-`CLAUDE_TEAM_FACTORY` to katalog fabryki ustawiony raz w profilu powłoki (np. `export CLAUDE_TEAM_FACTORY=~/narzedzia/
-claude-team-factory`); równie dobrze możesz podać dowolną ścieżkę — względną liczoną od bieżącego katalogu.
-Projekt możesz też wskazać jawnie jako pierwszy argument (ścieżka względna liczona od bieżącego katalogu).
-Ponowne uruchomienie w zainstalowanym projekcie = aktualizacja (`--update` nie jest potrzebne).
+`TEAM_FACTORY` is the factory directory set once in your shell profile (e.g. `export TEAM_FACTORY=~/tools/tf`); any
+path works too, relative to the current directory. The project can also be given as the first argument.
+Running the installer again in an installed project = update (`--update` is not needed).
 
-Na co dzień aktualizujesz z wnętrza projektu: `python3 factory/update.py` (albo `/core-factory-update` w Claude Code).
+Day to day you update from inside the project: `python3 factory/update.py` (or `tf`, or `/core-factory-update`).
 
-Tryb prywatny (domyślny): skille, hooki, agenci, `factory/`, testy fabryki (`.claude/tests/`) i przewodnik trafiają do
-projektu; uprawnienia i hooki do `.claude/settings.local.json`, zasady do `CLAUDE.local.md`; wszystkie ścieżki fabryki
-do `.git/info/exclude`. Tryb zespołowy (`--shared`): `.claude/settings.json`, `CLAUDE.md`, workflow CI i `.gitignore`.
+Private mode (default): skills, hooks, `factory/`, factory tests (`.claude/tests/`) go into the project; permissions and
+hooks into `.claude/settings.local.json`, rules into `CLAUDE.local.md`; all factory paths into `.git/info/exclude`.
+Team mode (`--shared`): `.claude/settings.json`, `CLAUDE.md`, CI workflow and `.gitignore`.
+After copying, the installer builds the agents (`factory/build.py`) for the chosen packs and languages.
 
-Manifest `.claude/factory-manifest.json` zapisuje wersję, źródło, tryb i skrót każdego zainstalowanego pliku. Dzięki
-niemu aktualizacja:
-- nadpisuje pliki fabryki, których nie zmieniałeś, i dodaje nowe;
-- pliku, który zmieniłeś, nie rusza — nową wersję zapisuje obok jako `<plik>.factory-new`;
-- plik usunięty z fabryki przenosi do `.claude/factory-backup/<data>/` (jeśli go nie zmieniałeś);
-- nigdy nie rusza Twoich własnych skilli, person, ról i cech (plików, których fabryka nie instalowała).
-Instalacja bez manifestu (starsza wersja instalatora) przy `--update`: zmienione pliki fabryki są nadpisywane z kopią
-w `.claude/factory-backup/`, a `factory/personas|roles|traits|config.yaml` dostają `.factory-new`.
+The manifest `.claude/factory-manifest.json` records the version, source, mode, packs and a hash of every installed
+file. Thanks to it an update:
+- overwrites factory files you did not change and adds new ones;
+- leaves files you changed alone — the new version is written next to them as `<file>.factory-new`;
+- moves files removed from the factory (or from a removed pack) to `.claude/factory-backup/<date>/` (if unchanged);
+- never touches your own skills, personas, roles and traits (files the factory did not install).
+Installs of claude-team-factory or ev-team-factory are migrated: the matching packs are selected and the old
+instruction and ignore blocks are replaced.
 """
 from __future__ import annotations
 
@@ -49,21 +55,49 @@ import subprocess
 import sys
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent
+SRC = Path(__file__).resolve().parent.parent.parent      # repozytorium fabryki: core/ i packs/
+CORE = SRC / "core"
+PACKS_SRC = SRC / "packs"
 MANIFEST = ".claude/factory-manifest.json"
 BACKUP_DIR = ".claude/factory-backup"
-MARK_BEGIN, MARK_END = "<!-- claude-team-factory:begin -->", "<!-- claude-team-factory:end -->"
-GI_BEGIN, GI_END = "# claude-team-factory:begin (zarządzane przez factory/install.py)", "# claude-team-factory:end"
-COPY_DIRS = {".claude/skills": ".claude/skills", ".claude/hooks": ".claude/hooks",
-             ".claude/agents/_generated": ".claude/agents/_generated", "factory": "factory",
+MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"
+GI_BEGIN, GI_END = "# team-factory:begin (managed by factory/install.py)", "# team-factory:end"
+# znaczniki instalacji, z których migrujemy (claude-team-factory, ev-team-factory)
+LEGACY_MARKS = [(f"<!-- {n}:begin -->", f"<!-- {n}:end -->") for n in ("claude-team-factory", "ev-team-factory")]
+LEGACY_GI = [(f"# {n}:begin (zarządzane przez factory/install.py)", f"# {n}:end")
+             for n in ("claude-team-factory", "ev-team-factory")]
+CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": "factory",
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
-COPY_FILES = {".claude/cleanroom.json": ".claude/cleanroom.json", ".claude/catalog.md": ".claude/catalog.md",
-              "docs/PRZEWODNIK.md": ".claude/PRZEWODNIK.md", "docs/jev.md": ".claude/JEV.md",
-              "LICENSE": "factory/LICENSE"}
-SHARED_ONLY_FILES = {".github/workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
-USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory/config.yaml")
-ALWAYS_OWNED = (".claude/agents/_generated/", ".claude/catalog.md")   # generowane — zawsze z bieżącej wersji
+CORE_FILES = {"guide/JEV.md": ".claude/JEV.md"}
+PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests"}
+PACK_META = ("pack.yaml", "roles", "personas", "traits")      # → factory/packs/<id>/
+SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
+USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory/config.yaml", "factory/packs/")
+ALWAYS_OWNED = (".claude/cleanroom.json",)   # składany z rdzenia i nakładek — zawsze z bieżącej wersji
+GENERATED = (".claude/agents/_generated/", ".claude/catalog.md")   # budowane w projekcie przez factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
+
+
+def load_packs_module():
+    """factory/packs.py z NOWEJ wersji fabryki (czytanie pack.yaml, ustawienia projektu)."""
+    spec = importlib.util.spec_from_file_location("tf_packs_src", CORE / "factory" / "packs.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def available_packs() -> dict[str, dict]:
+    pm = load_packs_module()
+    out = {}
+    for p in sorted(PACKS_SRC.glob("*/pack.yaml")) if PACKS_SRC.is_dir() else []:
+        data = pm.load_yaml(p)
+        data["_dir"] = p.parent
+        out[data.get("id") or p.parent.name] = data
+    return out
+
+
+def core_config() -> dict:
+    return load_packs_module().load_yaml(CORE / "factory" / "config.yaml")
 
 
 PY_DEFAULT = "python3"            # polecenie zapisane w plikach źródłowych fabryki
@@ -83,14 +117,14 @@ def python_works(cmd: str) -> bool:
 def choose_python(forced: str | None, previous: str | None) -> tuple[str, str]:
     """Zwraca (polecenie, opis pochodzenia). Kolejność: --python, wybór z poprzedniej instalacji, wykrycie, ścieżka."""
     if forced:
-        return forced, "podane w --python" + ("" if python_works(forced) else " — UWAGA: to polecenie nie uruchomiło Pythona 3.9+")
+        return forced, "given with --python" + ("" if python_works(forced) else " — WARNING: this command did not run Python 3.9+")
     if previous and python_works(previous):
-        return previous, "z poprzedniej instalacji"
+        return previous, "from the previous install"
     order = ("py", "python", "python3") if os.name == "nt" else ("python3", "python")
     for cmd in order:
         if python_works(cmd):
-            return cmd, "wykryte"
-    return sys.executable, "pełna ścieżka interpretera instalatora (żadne z poleceń " + ", ".join(order) + " nie działa)"
+            return cmd, "detected"
+    return sys.executable, "full path of the installer's interpreter (none of " + ", ".join(order) + " works)"
 
 
 def simple_command(cmd: str) -> bool:
@@ -129,8 +163,11 @@ def sha(data: bytes) -> str:
 
 
 def version_of(root: Path) -> str:
-    p = root / "factory" / "VERSION"
-    return p.read_text(encoding="utf-8").strip() if p.exists() else "0.0.0"
+    """Wersja rdzenia: core/factory/VERSION w repozytorium fabryki albo factory/VERSION w projekcie."""
+    for p in (root / "core" / "factory" / "VERSION", root / "factory" / "VERSION"):
+        if p.exists():
+            return p.read_text(encoding="utf-8").strip()
+    return "0.0.0"
 
 
 class Plan:
@@ -155,8 +192,10 @@ class Plan:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(self.root / rel, target)
 
-    def copy(self, src: Path, rel: str) -> None:
-        data = retarget(src.read_bytes()) if rel.endswith((".yml", ".json", ".md")) else src.read_bytes()
+    def copy(self, src: Path | None, rel: str, data: bytes | None = None) -> None:
+        """Plik fabryki `src` (albo gotowa treść `data`, np. złożona z rdzenia i nakładek) pod ścieżką `rel`."""
+        if data is None:
+            data = retarget(src.read_bytes()) if rel.endswith((".yml", ".json", ".md")) else src.read_bytes()
         dst, new_hash = self.root / rel, sha(data)
         old_hash = (self.old or {}).get(rel)
         self.files[rel] = new_hash
@@ -262,15 +301,31 @@ def merge_settings(src: dict, dst: dict) -> dict:
     return out
 
 
-def claude_md_section(py: str = PY_DEFAULT) -> str:
-    text = (SRC / "CLAUDE.md").read_text(encoding="utf-8")
+def claude_md_section(py: str = PY_DEFAULT, settings: dict | None = None, cfg: dict | None = None) -> str:
+    """Sekcja fabryki w CLAUDE.md / CLAUDE.local.md: zasady rdzenia + język pracy i commitów."""
+    text = (CORE / "CLAUDE.md").read_text(encoding="utf-8")
     body = text.split("\n", 1)[1] if text.startswith("# ") else text   # bez nagłówka „# Zasady projektu”
     body = "\n".join("#" + ln if ln.startswith("## ") else ln for ln in body.splitlines())   # podsekcje o poziom niżej
     if py != PY_DEFAULT:
         shown = py if simple_command(py) else f'"{py}"'
         body = (f"- **Python w tym projekcie: `{shown}`.** Wszędzie, gdzie skille, przewodnik i komunikaty piszą `python3`, "
                 f"uruchamiaj `{shown}` (np. `{shown} .claude/hooks/project_record.py status`).\n" + body.lstrip("\n"))
-    return f"{MARK_BEGIN}\n## Zespół agentów (claude-team-factory)\n{body.strip()}\n{MARK_END}\n"
+    if settings and cfg:
+        langs = cfg.get("languages") or {}
+        lines = [(langs.get(settings.get("language")) or {}).get("work"),
+                 (langs.get(settings.get("commit_language")) or {}).get("commits"), cfg.get("code_language_note")]
+        body = body.rstrip() + "\n\n### Język\n" + "\n".join(f"- {x.strip()}" for x in lines if x)
+    return f"{MARK_BEGIN}\n## Zespół agentów (team factory)\n{body.strip()}\n{MARK_END}\n"
+
+
+def drop_legacy_blocks(text: str, marks: list[tuple[str, str]]) -> str:
+    """Usuwa bloki starych fabryk (claude-team-factory, ev-team-factory) — zastępuje je blok tej fabryki."""
+    for begin, end in marks:
+        if begin in text and end in text:
+            a, b = text.index(begin), text.index(end) + len(end)
+            text = (text[:a].rstrip() + "\n\n" + text[b:].lstrip("\n")).strip("\n")
+            text = text + "\n" if text else ""
+    return text
 
 
 def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> str:
@@ -289,15 +344,15 @@ def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> st
     return text[:start].rstrip() + ("\n\n" if text[:start].strip() else "") + block + ("\n" + rest if rest else "")
 
 
-def ignored_paths() -> list[str]:
+def ignored_paths(files: dict[str, str] | None = None) -> list[str]:
     """Każda ścieżka instalowana przez fabrykę — per skill i per hook, żeby Twoje własne skille/hooki zostały w repo."""
     out = ["factory/", ".claude/agents/_generated/", ".claude/tests/", ".claude/catalog.md", ".claude/cleanroom.json",
-           ".claude/PRZEWODNIK.md", ".claude/JEV.md", ".claude/settings.local.json", "CLAUDE.local.md", MANIFEST, BACKUP_DIR + "/",
-           ".claude/agent-memory/", ".claude/factory-profile.json", ".claude/skill-gate.json",
-           "*.factory-new"]
-    out += [f".claude/skills/{d.name}/" for d in sorted((SRC / ".claude/skills").iterdir()) if d.is_dir()]
-    out += [f".claude/hooks/{f.name}" for f in sorted((SRC / ".claude/hooks").iterdir())
-            if f.is_file() and not any(s in f.name for s in SKIP)]
+           ".claude/JEV.md", ".claude/settings.local.json", "CLAUDE.local.md", MANIFEST, BACKUP_DIR + "/",
+           ".claude/agent-memory/", ".claude/factory-profile.json", ".claude/factory-settings.json",
+           ".claude/skill-gate.json", "*.factory-new"]
+    rels = sorted(files or {})
+    out += list(dict.fromkeys("/".join(r.split("/")[:3]) + "/" for r in rels if r.startswith(".claude/skills/")))
+    out += [r for r in rels if r.startswith(".claude/hooks/")]
     return out
 
 
@@ -331,56 +386,151 @@ def detect_mode(dst_root: Path) -> str | None:
     """Tryb starej instalacji bez manifestu — po sekcji fabryki w CLAUDE.local.md / CLAUDE.md."""
     for name, mode in (("CLAUDE.local.md", "private"), ("CLAUDE.md", "shared")):
         p = dst_root / name
-        if p.exists() and MARK_BEGIN in p.read_text(encoding="utf-8"):
+        if p.exists() and any(b in p.read_text(encoding="utf-8") for b in [MARK_BEGIN, *(m[0] for m in LEGACY_MARKS)]):
             return mode
     return None
 
 
+def legacy_packs(manifest: dict | None, dst_root: Path) -> list[str] | None:
+    """Nakładki dla instalacji claude-team-factory / ev-team-factory (manifest bez listy nakładek)."""
+    if not manifest or "packs" in manifest:
+        return None
+    src = str(manifest.get("source", "")).lower()
+    md = " ".join((dst_root / n).read_text(encoding="utf-8") for n in ("CLAUDE.md", "CLAUDE.local.md")
+                  if (dst_root / n).exists())
+    if "ev-team-factory" in src or "ev-team-factory:begin" in md:
+        return ["pack-ev", "pack-docs"]
+    return ["pack-it", "pack-ux", "pack-docs"]
+
+
+def resolve_packs(chosen: list[str], available: dict, language: str, cfg: dict) -> tuple[list[str], list[str]]:
+    """Wybrane nakładki + wymagane przez nie + nakładka języka pracy. Zwraca (nakładki, nieznane)."""
+    unknown = [c for c in chosen if c not in available]
+    out = [c for c in chosen if c in available]
+    lang_pack = ((cfg.get("languages") or {}).get(language) or {}).get("pack")
+    if lang_pack in available and lang_pack not in out:
+        out.append(lang_pack)
+    i = 0
+    while i < len(out):
+        for dep in (available[out[i]].get("requires") or {}).get("packs") or []:
+            if dep in available and dep not in out:
+                out.append(dep)
+        i += 1
+    return sorted(out), unknown
+
+
+def ask(question: str, default: str) -> str:
+    try:
+        answer = input(f"{question} [{default}]: ").strip()
+    except EOFError:
+        return default
+    return answer or default
+
+
+def interactive_choice(available: dict, cfg: dict, preset: list[str]) -> tuple[list[str], str, str]:
+    """Pierwsza instalacja w terminalu: język pracy, język commitów, nakładki."""
+    langs = cfg.get("languages") or {}
+    codes = "/".join(langs)
+    print("Team factory — first install. The core is always installed.")
+    language = ask(f"Working language (conversation, documentation) — {codes}", cfg.get("default_language", "pl"))
+    while language not in langs:
+        language = ask(f"  unknown language; choose {codes}", cfg.get("default_language", "pl"))
+    commit = ask(f"Commit language (commit messages, PR titles and descriptions) — {codes}",
+                 cfg.get("default_commit_language", "en"))
+    while commit not in langs:
+        commit = ask(f"  unknown language; choose {codes}", cfg.get("default_commit_language", "en"))
+    lang_pack = (langs.get(language) or {}).get("pack")
+    print("\nAvailable packs:")
+    ids = list(available)
+    for i, pid in enumerate(ids, 1):
+        p = available[pid]
+        mark = "*" if pid in preset else " "
+        auto = " (installed with this language)" if pid == lang_pack else ""
+        print(f"  {i}. [{mark}] {pid} — {p.get('description', p.get('title', ''))}{auto}")
+    raw = ask("Packs to install: numbers or ids separated by commas, 'all', or Enter for the marked ones",
+              ",".join(preset) or "none")
+    if raw.strip().lower() == "all":
+        chosen = ids
+    elif raw.strip().lower() in ("none", "-", ""):
+        chosen = []
+    else:
+        chosen = []
+        for tok in (t.strip() for t in raw.split(",") if t.strip()):
+            chosen.append(ids[int(tok) - 1] if tok.isdigit() and 0 < int(tok) <= len(ids) else tok)
+    return chosen, language, commit
+
+
 def rebuild(dst_root: Path, dry: bool) -> str:
-    """Po aktualizacji przebuduj agentów, jeśli są własne persony/role/cechy (wymaga pyyaml)."""
+    """Buduje agentów i katalog w projekcie dla wybranych nakładek i języków (factory/build.py)."""
     if dry:
         return ""
-    try:
-        import yaml  # noqa: F401
-    except ImportError:
-        return "⚠ Masz własne persony/role/cechy — doinstaluj `pip install pyyaml` i uruchom `python3 factory/build.py`."
     r = subprocess.run([sys.executable, "factory/build.py"], cwd=dst_root, capture_output=True, text=True)
-    return "✓ Przebudowano agentów i katalog (factory/build.py)." if r.returncode == 0 else \
-        "⚠ `factory/build.py` zgłosił problemy — uruchom `python3 factory/build.py check` i popraw je:\n" + r.stdout[-1500:]
+    first = (r.stdout.strip().splitlines() or [""])[0]
+    if r.returncode == 0:
+        return f"✓ Built the agents and the catalog (factory/build.py): {first.lstrip('✓ ')}"
+    return ("⚠ `factory/build.py` reported problems — run `python3 factory/build.py check` and fix them:\n"
+            + r.stdout[-1500:] + r.stderr[-500:])
 
 
-def main(argv: list[str]) -> int:
+def compose_cleanroom(packs: list[str], available: dict) -> bytes:
+    """`.claude/cleanroom.json`: opis z rdzenia + profile z nakładek."""
+    data = json.loads((CORE / "cleanroom.json").read_text(encoding="utf-8"))
+    for pid in packs:
+        f = available[pid]["_dir"] / "cleanroom.json"
+        if f.exists():
+            data["profiles"] = data.get("profiles", []) + json.loads(f.read_text(encoding="utf-8")).get("profiles", [])
+    return (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def compose_settings(packs: list[str], available: dict) -> dict:
+    """Uprawnienia i hooki rdzenia + nakładek (`settings.json` w nakładce)."""
+    base = json.loads(retarget((CORE / "settings.json").read_bytes()).decode("utf-8"))
+    for pid in packs:
+        f = available[pid]["_dir"] / "settings.json"
+        if f.exists():
+            base = merge_settings(json.loads(retarget(f.read_bytes()).decode("utf-8")), base)
+    return base
+
+
+def parse_args(argv: list[str]) -> tuple[list[str], dict]:
     args, opts = [], {}
     it = iter(argv[1:])
     for a in it:
-        if a == "--source":
-            opts["source"] = next(it, "")
-        elif a == "--python":
-            opts["python"] = next(it, "")
+        if a in ("--source", "--python", "--packs", "--add", "--remove", "--language", "--commit-language"):
+            opts[a.lstrip("-")] = next(it, "")
         elif a.startswith("--") or a == "-h":
             opts[a] = True
         else:
             args.append(a)
+    return args, opts
+
+
+def split_ids(raw: str | None) -> list[str]:
+    return [x.strip() for x in (raw or "").split(",") if x.strip()]
+
+
+def main(argv: list[str]) -> int:
+    args, opts = parse_args(argv)
     if opts.get("--help") or opts.get("-h"):
         print(__doc__)
         return 0
     dst_root = Path(args[0]).expanduser().resolve() if args else Path.cwd().resolve()   # domyślnie: bieżący katalog
     if dst_root in (Path.home().resolve(), Path("/")):
-        print(f"✗ {dst_root} to katalog domowy lub główny, a nie projekt. Przejdź do katalogu projektu (cd …) "
-              "albo podaj go jako argument.")
+        print(f"✗ {dst_root} is your home or root directory, not a project. Go to the project directory (cd …) "
+              "or pass it as an argument.")
         return 2
     if not dst_root.is_dir():
-        print(f"✗ Nie ma katalogu {dst_root}")
+        print(f"✗ Directory {dst_root} does not exist")
         return 2
-    if dst_root == SRC:
-        print("✗ Jesteś w katalogu fabryki. Przejdź do katalogu projektu i uruchom instalator stamtąd, np.:\n"
-              f"  cd ~/projekty/moja-aplikacja && python3 {SRC / 'factory' / 'install.py'}")
+    if dst_root == SRC or dst_root == CORE or CORE in dst_root.parents or PACKS_SRC in [dst_root, *dst_root.parents]:
+        print("✗ You are in the factory directory. Go to your project and run the installer from there, e.g.:\n"
+              f"  cd ~/projects/my-app && python3 {CORE / 'factory' / 'install.py'}")
         return 2
     dry, update = bool(opts.get("--dry-run")), bool(opts.get("--update"))
     man_p = dst_root / MANIFEST
     manifest = json.loads(man_p.read_text(encoding="utf-8")) if man_p.exists() else None
     if manifest and not update:
-        print(f"ℹ Fabryka jest już zainstalowana (wersja {manifest.get('version')}) — wykonuję aktualizację.")
+        print(f"ℹ The factory is already installed (version {manifest.get('version')}) — updating.")
         update = True
     mode = ("shared" if opts.get("--shared") else None) or (manifest or {}).get("mode") or \
         (detect_mode(dst_root) if update else None) or "private"
@@ -390,19 +540,75 @@ def main(argv: list[str]) -> int:
     plan = Plan(dst_root, dry, update, (manifest or {}).get("files") if manifest else None, stamp)
     py, py_how = choose_python(opts.get("python") or None, (manifest or {}).get("python"))
 
-    for d, target in COPY_DIRS.items():
-        for f in sorted((SRC / d).rglob("*")):
-            rel = target + "/" + f.relative_to(SRC / d).as_posix()
-            if f.is_file() and not any(s in rel for s in SKIP):
+    # nakładki i języki
+    cfg = core_config()
+    pm = load_packs_module()
+    available = available_packs()
+    settings = pm.load_settings(dst_root, cfg)
+    had_settings = (dst_root / pm.SETTINGS_REL).exists()
+    language = opts.get("language") or settings["language"]
+    commit_language = opts.get("commit-language") or settings["commit_language"]
+    for label, code in (("language", language), ("commit language", commit_language)):
+        if code not in (cfg.get("languages") or {}):
+            print(f"✗ Unknown {label} '{code}'. Available: {', '.join(cfg.get('languages') or {})}")
+            return 2
+    legacy = legacy_packs(manifest, dst_root)
+    previous = list((manifest or {}).get("packs") or {}) if manifest and "packs" in manifest else legacy
+    preset = previous if previous is not None else [pid for pid, p in available.items() if p.get("default")]
+    if opts.get("packs") is not None and opts.get("packs") != "":
+        chosen = [] if opts["packs"] in ("none", "-") else list(available) if opts["packs"] == "all" \
+            else split_ids(opts["packs"])
+    elif opts.get("packs") == "":
+        chosen = []
+    elif previous is None and not opts.get("--yes") and sys.stdin.isatty() and not dry:
+        chosen, language, commit_language = interactive_choice(available, cfg, preset)
+    else:
+        chosen = list(preset)
+    chosen = [c for c in chosen if c not in split_ids(opts.get("remove"))] + split_ids(opts.get("add"))
+    lang_pack = ((cfg.get("languages") or {}).get(language) or {}).get("pack")
+    if lang_pack and lang_pack in split_ids(opts.get("remove")):
+        print(f"✗ {lang_pack} is required by the working language '{language}'. Change the language first "
+              f"(tf language <code>) or keep the pack.")
+        return 2
+    packs, unknown = resolve_packs(list(dict.fromkeys(chosen)), available, language, cfg)
+    if unknown:
+        print(f"✗ Unknown packs: {', '.join(unknown)}. Available: {', '.join(available) or '—'}")
+        return 2
+    if legacy is not None:
+        print(f"ℹ Migrating an install of {manifest.get('source') or 'an older factory'} "
+              f"(version {manifest.get('version')}) — packs: {', '.join(packs) or 'none'}.")
+
+    # pliki rdzenia
+    for d, target in CORE_DIRS.items():
+        for f in sorted((CORE / d).rglob("*")):
+            rel = target + "/" + f.relative_to(CORE / d).as_posix()
+            if f.is_file() and not any(x in rel for x in SKIP):
                 plan.copy(f, rel)
-    for s, d in {**COPY_FILES, **(SHARED_ONLY_FILES if shared else {})}.items():
-        if (SRC / s).exists():
-            plan.copy(SRC / s, d)
+    for src_rel, dst_rel in {**CORE_FILES, **(SHARED_ONLY_FILES if shared else {})}.items():
+        if (CORE / src_rel).exists():
+            plan.copy(CORE / src_rel, dst_rel)
+    if (SRC / "LICENSE").exists():
+        plan.copy(SRC / "LICENSE", "factory/LICENSE")
+    # pliki nakładek
+    for pid in packs:
+        base = available[pid]["_dir"]
+        for d, target in PACK_DIRS.items():
+            for f in sorted((base / d).rglob("*")):
+                rel = target + "/" + f.relative_to(base / d).as_posix()
+                if f.is_file() and not any(x in rel for x in SKIP):
+                    plan.copy(f, rel)
+        for meta in PACK_META:
+            src_meta = base / meta
+            files = [src_meta] if src_meta.is_file() else sorted(src_meta.rglob("*")) if src_meta.is_dir() else []
+            for f in files:
+                if f.is_file() and not any(x in f.name for x in SKIP):
+                    plan.copy(f, f"factory/packs/{pid}/" + f.relative_to(base).as_posix())
+    plan.copy(None, ".claude/cleanroom.json", compose_cleanroom(packs, available))
     if update:
         plan.remove_obsolete()
 
     # ustawienia: prywatnie → settings.local.json, zespołowo → settings.json (zawsze scalane z tym, co już jest)
-    src_set = apply_python(json.loads(retarget((SRC / ".claude/settings.json").read_bytes()).decode("utf-8")), py)
+    src_set = apply_python(compose_settings(packs, available), py)
     if user_has_statusline():
         src_set.pop("statusLine", None)
     set_p = dst_root / (".claude/settings.json" if shared else ".claude/settings.local.json")
@@ -410,82 +616,96 @@ def main(argv: list[str]) -> int:
     merged = apply_python(merge_settings(src_set, cur), py) if cur else src_set
     if merged != cur:
         plan.write(set_p, json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
-                   f"{set_p.relative_to(dst_root)} (uprawnienia i hooki fabryki)")
+                   f"{set_p.relative_to(dst_root)} (factory permissions and hooks)")
 
     # zasady: prywatnie → CLAUDE.local.md, zespołowo → CLAUDE.md; sekcja między znacznikami, przy aktualizacji podmieniana
     md_p = dst_root / ("CLAUDE.md" if shared else "CLAUDE.local.md")
     md_old = md_p.read_text(encoding="utf-8") if md_p.exists() else ""
-    plan.write(md_p, with_block(md_old, MARK_BEGIN, MARK_END, claude_md_section(py), update),
-               f"{md_p.name} (sekcja fabryki)")
+    md_base = drop_legacy_blocks(md_old, LEGACY_MARKS)
+    section = claude_md_section(py, {"language": language, "commit_language": commit_language}, cfg)
+    plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
+               f"{md_p.name} (factory section)")
 
     # wpisy ignorowania: prywatnie → .git/info/exclude (nic nie widać w repo), zespołowo lub --gitignore → .gitignore
     exclude = None if (shared or force_gitignore) else git_exclude_path(dst_root)
     ign = exclude or dst_root / ".gitignore"
     ign_label = ".git/info/exclude" if exclude else ".gitignore"
-    ign_old = ign.read_text(encoding="utf-8") if ign.exists() else ""
+    ign_old = drop_legacy_blocks(ign.read_text(encoding="utf-8") if ign.exists() else "", LEGACY_GI)
     outside = ign_old.split(GI_BEGIN)[0] + (ign_old.split(GI_END, 1)[1] if GI_END in ign_old else "")
     have = set(outside.splitlines())
-    temp = [ln for ln in (SRC / ".gitignore").read_text(encoding="utf-8").splitlines() if ln]
-    extra = [MANIFEST, BACKUP_DIR + "/", "*.factory-new"] if shared else ignored_paths()
+    temp = [ln for ln in (CORE / "gitignore").read_text(encoding="utf-8").splitlines() if ln]
+    extra = [MANIFEST, BACKUP_DIR + "/", "*.factory-new", ".claude/factory-settings.json"] if shared \
+        else ignored_paths(plan.files)
     lines = [ln for ln in dict.fromkeys(temp + extra) if ln not in have]
     if lines:
         plan.write(ign, with_block(ign_old, GI_BEGIN, GI_END, "\n".join([GI_BEGIN, *lines, GI_END]) + "\n", True),
-                   f"{ign_label} ({len(lines)} wpisów fabryki)")
+                   f"{ign_label} ({len(lines)} factory entries)")
     gi = dst_root / ".gitignore"
     if exclude and gi.exists() and GI_BEGIN in gi.read_text(encoding="utf-8"):   # po starszej wersji instalatora
-        plan.write(gi, drop_block(gi.read_text(encoding="utf-8")), ".gitignore (usunięty blok fabryki — jest teraz w .git/info/exclude)")
+        plan.write(gi, drop_block(gi.read_text(encoding="utf-8")), ".gitignore (factory block removed — now in .git/info/exclude)")
     if not shared and not exclude and not force_gitignore:
-        print("ℹ To nie jest repozytorium git — wpisy trafią do .gitignore. Po `git init` uruchom aktualizację ponownie.")
+        print("ℹ This is not a git repository — entries go to .gitignore. After `git init` run the update again.")
 
-    # manifest
-    old_version = (manifest or {}).get("version") or ("nieznana" if update else None)
+    # manifest i ustawienia projektu
+    old_version = (manifest or {}).get("version") or ("unknown" if update else None)
     new_version = version_of(SRC)
     if not dry:
         man_p.parent.mkdir(parents=True, exist_ok=True)
         man_p.write_text(json.dumps({
             "version": new_version,
-            "source": opts.get("source") or (manifest or {}).get("source") or str(SRC),
+            # źródło aktualizacji: --source, poprzednie (nie z migrowanej fabryki) albo katalog tej fabryki
+            "source": opts.get("source") or ((manifest or {}).get("source") if legacy is None else None) or str(SRC),
             "mode": mode,
             "python": py,
             "ignore": "gitignore" if force_gitignore else "exclude",
+            "packs": {pid: str(available[pid].get("version", "0.0.0")) for pid in packs},
             "installed_at": _dt.datetime.now().isoformat(timespec="seconds"),
             "files": dict(sorted(plan.files.items())),
             "skill_overrides": (manifest or {}).get("skill_overrides") or {},   # wpisy fabryki w skillOverrides
             **({"skill_describe": manifest["skill_describe"]} if (manifest or {}).get("skill_describe") else {}),
             **({"auto_update": manifest["auto_update"]} if "auto_update" in (manifest or {}) else {}),   # update.py --auto
         }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        if not had_settings or language != settings["language"] or commit_language != settings["commit_language"]:
+            pm.save_settings(dst_root, language=language, commit_language=commit_language)
 
     # raport
-    mode_txt = "zespołowy (commitowany)" if shared else "prywatny (poza gitem)"
-    head = "Podgląd (nic nie zapisano)" if dry else ("Zaktualizowano" if update else "Zainstalowano")
+    mode_txt = "team (committed)" if shared else "private (outside git)"
+    head = "Preview (nothing written)" if dry else ("Updated" if update else "Installed")
     ver = f"{old_version} → {new_version}" if update else new_version
-    print(f"{head} w {dst_root} — wersja {ver}, tryb {mode_txt}: nowych plików {len(plan.created)}, "
-          f"zaktualizowanych {len(plan.updated)}, scalonych {len(plan.merged)}, usuniętych {len(plan.removed)}")
+    print(f"{head} in {dst_root} — version {ver}, {mode_txt} mode: new files {len(plan.created)}, "
+          f"updated {len(plan.updated)}, merged {len(plan.merged)}, removed {len(plan.removed)}")
+    print(f"  packs: {', '.join(packs) or '— (core only)'} · working language: {language} · "
+          f"commit language: {commit_language}")
     for m in plan.merged:
         print(f"  ~ {m}")
+    if not dry:
+        msg = rebuild(dst_root, dry)
+        if msg:
+            print(msg)
     # widoczność opisów skilli: z opisem to, czego używa ten projekt, reszta jako sama nazwa (factory/skill_profile.py)
     if dry:
-        print("ℹ Widoczność skilli zostanie dopasowana do projektu po instalacji (factory/skill_profile.py).")
+        print("ℹ Skill visibility will be matched to the project after the install (factory/skill_profile.py).")
     else:
-        spec = importlib.util.spec_from_file_location("ctf_skill_profile", SRC / "factory" / "skill_profile.py")
+        spec = importlib.util.spec_from_file_location("tf_skill_profile", dst_root / "factory" / "skill_profile.py")
         prof = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(prof)
         print(prof.summary(prof.apply(dst_root), False))
-    print(f"ℹ Python dla hooków i agentów: `{py}` ({py_how}).")
+    print(f"ℹ Python for hooks and agents: `{py}` ({py_how}).")
     if not simple_command(py) or not python_works(py):
-        print("⚠ Hooki bezpieczeństwa działają tylko wtedy, gdy to polecenie uruchamia Pythona. Jeśli nie — popraw je: "
-              "ponów instalację z `--python <polecenie>`.")
+        print("⚠ Security hooks only work if this command runs Python. If it does not, fix it: "
+              "run the install again with `--python <command>`.")
     if shared and py != PY_DEFAULT:
-        print(f"⚠ Tryb zespołowy: `{py}` trafia do commitowanego .claude/settings.json. Osoby na innym systemie "
-              "potrzebują innego polecenia — zespół z różnymi systemami lepiej instaluje fabrykę prywatnie (bez --shared).")
+        print(f"⚠ Team mode: `{py}` goes into the committed .claude/settings.json. People on another OS "
+              "need another command — a team on mixed systems is better off with private installs (without --shared).")
     new_skills = sorted({r.split("/")[2] for r in plan.created if r.startswith(".claude/skills/") and r.endswith("/SKILL.md")})
     if new_skills and update:
-        print(f"  + nowe skille: {', '.join(new_skills)}")
-    new_personas = sorted({Path(r).stem for r in plan.created if r.startswith("factory/personas/")})
+        print(f"  + new skills: {', '.join(new_skills)}")
+    new_personas = sorted({Path(r).stem for r in plan.created if r.startswith("factory/packs/") and "/personas/" in r})
     if new_personas and update:
-        print(f"  + nowe persony: {', '.join(new_personas)}")
+        print(f"  + new personas: {', '.join(new_personas)}")
     if plan.removed:
-        print(f"  − przeniesione do {BACKUP_DIR}/{stamp}/ (usunięte z fabryki): {', '.join(plan.removed[:10])}")
+        print(f"  − moved to {BACKUP_DIR}/{stamp}/ (removed from the factory or a removed pack): "
+              f"{', '.join(plan.removed[:10])}" + (f" … +{len(plan.removed) - 10}" if len(plan.removed) > 10 else ""))
 
     def listing(title: str, items: list[str], hint: str) -> None:
         if items:
@@ -493,54 +713,49 @@ def main(argv: list[str]) -> int:
             for c in items[:15]:
                 print(f"  ! {c}")
             if len(items) > 15:
-                print(f"  … i {len(items) - 15} więcej")
+                print(f"  … and {len(items) - 15} more")
             print(f"  {hint}")
 
-    listing("⚠ Zmieniłeś te pliki fabryki — zostały Twoje, nowa wersja leży obok jako *.factory-new", plan.kept_new,
-            "Porównaj (`diff plik plik.factory-new`), przenieś potrzebne zmiany i usuń *.factory-new. "
-            "W Claude Code pomoże `/core-factory-update`.")
-    listing(f"ℹ Starsza instalacja bez manifestu — zmienione pliki nadpisane, kopie w {BACKUP_DIR}/{stamp}/",
-            plan.backed_up, "Jeśli coś z tych plików było Twoją zmianą, przenieś ją z kopii.")
-    listing("ℹ Usunięte z fabryki, ale zmienione przez Ciebie — zostawione", plan.kept_removed,
-            "Jeśli już ich nie potrzebujesz, usuń je ręcznie.")
-    listing("ℹ Usunąłeś te pliki fabryki — nie przywracam ich", plan.skipped_deleted,
-            "Jeśli chcesz je z powrotem, usuń ich wpisy z .claude/factory-manifest.json i uruchom aktualizację.")
-    listing("⚠ Pominięto istniejące pliki o tej samej nazwie co pliki fabryki (Twoje zostały)", plan.conflicts,
-            "Zmień nazwę własnego pliku (np. skilla) i uruchom aktualizację, jeśli chcesz mieć też wersję fabryki.")
+    listing("⚠ You changed these factory files — yours stay, the new version is next to them as *.factory-new",
+            plan.kept_new, "Compare (`diff file file.factory-new`), carry over what you need and delete *.factory-new. "
+            "In Claude Code `/core-factory-update` helps.")
+    listing(f"ℹ Older install without a manifest — changed files overwritten, copies in {BACKUP_DIR}/{stamp}/",
+            plan.backed_up, "If any of them held your change, carry it over from the copy.")
+    listing("ℹ Removed from the factory, but changed by you — left in place", plan.kept_removed,
+            "Delete them by hand if you no longer need them.")
+    listing("ℹ You deleted these factory files — not restoring them", plan.skipped_deleted,
+            "To get them back, remove their entries from .claude/factory-manifest.json and run the update.")
+    listing("⚠ Skipped existing files with the same name as factory files (yours stay)", plan.conflicts,
+            "Rename your file (e.g. the skill) and run the update if you also want the factory version.")
 
     personal = Path.home() / ".claude/skills"
-    shadowed = sorted(d.name for d in (SRC / ".claude/skills").iterdir() if (personal / d.name / "SKILL.md").exists())
+    installed_skills = sorted({r.split("/")[2] for r in plan.files if r.startswith(".claude/skills/")})
+    shadowed = [n for n in installed_skills if (personal / n / "SKILL.md").exists()]
     if shadowed:
-        print(f"⚠ Skille osobiste w {personal} mają te same nazwy co skille fabryki i mają pierwszeństwo (Claude Code: "
-              f"osobiste > projektu): {', '.join(shadowed)}. Zmień nazwy osobistych, jeśli agenci mają używać wersji fabryki.")
+        print(f"⚠ Personal skills in {personal} have the same names as factory skills and take precedence (Claude Code: "
+              f"personal > project): {', '.join(shadowed)}. Rename the personal ones if agents should use the factory's.")
     if not shared:
-        already = tracked(dst_root, ignored_paths())
+        already = tracked(dst_root, ignored_paths(plan.files))
         if already:
-            print(f"⚠ {len(already)} plików fabryki jest już w repozytorium — wpisy ignorowania ich nie ukryją. "
-                  "Usuń je z indeksu (pliki na dysku zostaną):")
+            print(f"⚠ {len(already)} factory files are already tracked in the repository — ignore entries will not hide "
+                  "them. Remove them from the index (files on disk stay):")
             print("  git rm -r --cached " + " ".join(sorted({p.split("/")[0] if p.startswith("factory/") else
                                                              "/".join(p.split("/")[:3]) for p in already})[:12]))
         if not (dst_root / "CLAUDE.md").exists() and (dst_root / "AGENTS.md").exists():
-            print("⚠ Projekt używa AGENTS.md: sam CLAUDE.local.md sprawi, że Claude przestanie go czytać. Dodaj na początku "
-                  "CLAUDE.local.md linię `@AGENTS.md`.")
-    own = [p for sub in ("personas", "roles", "traits") for p in (dst_root / "factory" / sub).glob("*")
-           if p.is_file() and f"factory/{sub}/{p.name}" not in plan.files]
-    profile_set = (dst_root / ".claude" / "factory-profile.json").exists()   # profil kosztów inny niż domyślny
-    if update and (own or plan.kept_new or profile_set):
-        msg = rebuild(dst_root, dry)
-        if msg:
-            print(msg)
+            print("⚠ The project uses AGENTS.md: CLAUDE.local.md alone makes Claude stop reading it. Add the line "
+                  "`@AGENTS.md` at the top of CLAUDE.local.md.")
     if not dry and not update:
         md = "CLAUDE.md" if shared else "CLAUDE.local.md"
+        dispatchers = [pid for pid in packs if pid in ("pack-it", "pack-ev")]
+        start = {"pack-it": "`claude --agent maja` (describe the problem)", "pack-ev": "`claude --agent iwona` (EV)"}
         print(f"""
-Dalej:
-  1. Uzupełnij w {md} komendy testów/lintu/buildu Twojego projektu.
-  2. Uruchom raz `claude` w katalogu projektu i zaakceptuj zaufanie do folderu (bez tego hooki i uprawnienia nie działają).
-  3. Opcjonalnie: `pip install pyyaml` i `{py} factory/build.py check` — potrzebne tylko, gdy zmieniasz persony/role.
-  4. Start: `claude --agent maja` (opisz problem) albo wybrana persona, np. `claude --agent filip`.
-  5. Koszty: profil `zrownowazony` działa od razu; `{py} factory/profile.py oszczedny|jakosc` przełącza cały zespół
-     (wymaga pyyaml). Pasek stanu pokazuje kontekst, cache i koszt sesji.
-  Aktualizacje: `{py} factory/update.py` (albo `/core-factory-update` w Claude Code).""")
+Next:
+  1. Fill in your project's test/lint/build commands in {md}.
+  2. Run `claude` once in the project directory and accept folder trust (hooks and permissions need it).
+  3. Start: {' or '.join(start[d] for d in dispatchers) or 'a persona from .claude/catalog.md'}, e.g. `claude --agent <name>`.
+  4. Costs: the `zrownowazony` profile works right away; `{py} factory/profile.py oszczedny|jakosc` switches the team.
+  Packs: `tf add <pack>` / `tf remove <pack>` · languages: `tf language <code>`, `tf commit-language <code>`.
+  Updates: `{py} factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")
     return 0
 
 

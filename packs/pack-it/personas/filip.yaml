@@ -22,7 +22,7 @@ skills:                      # dokładane każdemu członkowi zespołu
 role_skills:                 # tylko dla konkretnej roli
   frontend: [eng-testing]
 core_skills: []
-traits: [test-driven, minimalist, documents-decisions, token-frugal, polish-language, grounded]
+traits: [test-driven, minimalist, documents-decisions, token-frugal, grounded]
 priorities: [spójność architektury, jakość i testowalność, zgodność z wersjami w projekcie, szybkość dostarczenia]
 habits: |
   - W istniejącym projekcie najpierw: `python3 .claude/hooks/detect_stack.py` i skill core-stack-sync.

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-Fabryka zespołów Claude: skille → role → persony → pliki agentów.
+Fabryka zespołów: rdzeń + nakładki (pack-*) → skille → role → persony → pliki agentów.
 
-  python3 factory/build.py            # zbuduj .claude/agents/_generated/
+  python3 factory/build.py            # zbuduj .claude/agents/_generated/ i .claude/catalog.md
   python3 factory/build.py check      # walidacja + wykrycie nieaktualnych plików (CI)
   python3 factory/build.py list       # podsumowanie zespołów
   python3 factory/build.py new-skill fw-react "Użyj przy ... Nie do ..."
 
-Źródłem prawdy są pliki w factory/. Plików w .claude/agents/_generated/ nie edytuj ręcznie.
+Źródłem prawdy są factory/config.yaml (rdzeń), factory/packs/<id>/ (nakładki) i własne pliki projektu
+w factory/{roles,personas,traits}/; składanie opisuje factory/packs.py. Plików w .claude/agents/_generated/
+nie edytuj ręcznie.
 """
 from __future__ import annotations
 
@@ -17,12 +19,10 @@ import shutil
 import sys
 from pathlib import Path
 
-try:
-    import yaml
-except ImportError:  # pragma: no cover
-    sys.exit("Brak PyYAML: pip install pyyaml")
-
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import packs as packs_mod  # noqa: E402  (factory/packs.py — nakładki i składanie konfiguracji)
+yaml = packs_mod.yaml
 FACTORY = ROOT / "factory"
 SKILLS_DIR = ROOT / ".claude" / "skills"
 OUT_DIR = ROOT / ".claude" / "agents" / "_generated"
@@ -68,7 +68,7 @@ def team_skills(persona: dict, role: dict, cfg: dict) -> list[str]:
     names = _union(names, (persona.get("role_skills") or {}).get(role["name"]))
     drop = set(persona.get("drop_skills") or [])
     names = [n for n in names if n not in drop]
-    return expand_requires(_union(names, cfg.get("always_skills")), cfg)
+    return expand_requires(_union(names, always_for(persona, cfg)), cfg)
 
 
 def persona_skills(persona: dict, roles: dict, cfg: dict) -> list[str]:
@@ -78,7 +78,13 @@ def persona_skills(persona: dict, roles: dict, cfg: dict) -> list[str]:
             acc = _union(acc, team_skills(persona, roles[r], cfg))
     for key in ("methods", "stack", "skills"):
         acc = _union(acc, [n for n in (persona.get(key) or []) if n not in set(persona.get("drop_skills") or [])])
-    return expand_requires(_union(acc, cfg.get("always_skills")), cfg)
+    return expand_requires(_union(acc, always_for(persona, cfg)), cfg)
+
+
+def always_for(persona: dict, cfg: dict) -> list[str]:
+    """Skille zawsze dokładane: rdzenia (wszystkim) + nakładki, z której pochodzi persona (tylko jej personom)."""
+    pack = (cfg.get("_packs") or {}).get(persona.get("_pack"), {})
+    return _union(cfg.get("always_skills"), pack.get("always_skills"))
 
 def load_yaml(path: Path) -> dict:
     with path.open(encoding="utf-8") as f:
@@ -100,8 +106,8 @@ def active_profile(cfg: dict) -> str:
 
 
 def load_config() -> dict:
-    """config.yaml z nałożonym profilem kosztów (pola tierów: model, effort, maxTurns)."""
-    cfg = load_yaml(FACTORY / "config.yaml")
+    """config.yaml rdzenia złożony z nakładkami (factory/packs.py) i z nałożonym profilem kosztów (pola tierów)."""
+    cfg = packs_mod.compose(ROOT, load_yaml(FACTORY / "config.yaml"))
     name = active_profile(cfg)
     cfg["_profile"] = name
     for tier, over in (((cfg.get("profiles") or {}).get(name) or {}).get("tiers") or {}).items():
@@ -111,8 +117,15 @@ def load_config() -> dict:
 
 
 TESTS_REL = "tests" if (ROOT / "tests" / "run_skill_evals.py").exists() else ".claude/tests"
-GATE_REGISTRIES = (ROOT / "tests" / "skill_gate.json", ROOT / ".claude" / "tests" / "skill_gate.json",
-                   ROOT / ".claude" / "skill-gate.json")
+PROJECT_GATE = ROOT / ".claude" / "skill-gate.json"
+
+
+def gate_registries_factory() -> list[Path]:
+    """Rejestry bramki dostarczone z rdzeniem i nakładkami (`.claude/tests/skill_gate/<id>.json`) oraz starszy układ."""
+    out = [ROOT / "tests" / "skill_gate.json", ROOT / ".claude" / "tests" / "skill_gate.json"]
+    for d in (ROOT / "tests" / "skill_gate", ROOT / ".claude" / "tests" / "skill_gate"):
+        out += sorted(d.glob("*.json")) if d.is_dir() else []
+    return out
 
 
 def evals_file(name: str) -> Path:
@@ -146,29 +159,6 @@ def skill_fingerprint(name: str) -> str:
     return h.hexdigest()[:16]
 
 
-README_COUNT = re.compile(r"^(  skills/\s+)(\d+)( skilli w )(\d+)( wymiarach)", re.M)
-
-
-def readme_counts(text: str, skills: int, facets: int) -> str:
-    """Liczba skilli i wymiarów w README (linia układu katalogów) — generowana, żeby nie poprawiać jej ręcznie."""
-    return README_COUNT.sub(lambda m: f"{m.group(1)}{skills}{m.group(3)}{facets}{m.group(5)}", text, count=1)
-
-
-def readme_count_errors(text: str, skills: int, facets: int) -> list[str]:
-    m = README_COUNT.search(text)
-    if not m or (int(m.group(2)), int(m.group(4))) == (skills, facets):
-        return []
-    return [f"README.md: „{m.group(2)} skilli w {m.group(4)} wymiarach”, a jest {skills} i {facets} — uruchom "
-            "python3 factory/build.py"]
-
-
-def factory_counts() -> tuple[int, int]:
-    cfg = load_config()
-    prefixes = skill_prefixes(cfg)
-    n = sum(1 for p in SKILLS_DIR.glob("*/SKILL.md") if p.parent.name.startswith(prefixes))
-    return n, len(cfg.get("facets") or [])
-
-
 def check_review_date(name: str, meta: dict) -> tuple[list[str], list[str]]:
     """`metadata.przeglad`: termin przeglądu skilla w formacie RRRR-MM-DD (factory/freshness.py)."""
     raw = meta.get("przeglad")
@@ -186,7 +176,7 @@ def check_review_date(name: str, meta: dict) -> tuple[list[str], list[str]]:
 def gate_registry_factory() -> dict:
     """Rejestr dostarczony z fabryką (bez wpisów projektu)."""
     reg: dict = {}
-    for p in GATE_REGISTRIES[:2]:
+    for p in gate_registries_factory():
         try:
             reg.update(json.loads(p.read_text(encoding="utf-8")) if p.exists() else {})
         except json.JSONDecodeError:
@@ -196,7 +186,7 @@ def gate_registry_factory() -> dict:
 
 def gate_registry() -> dict:
     reg: dict = {}
-    for p in GATE_REGISTRIES:
+    for p in [*gate_registries_factory(), PROJECT_GATE]:
         try:
             reg.update(json.loads(p.read_text(encoding="utf-8")) if p.exists() else {})
         except json.JSONDecodeError:
@@ -205,17 +195,12 @@ def gate_registry() -> dict:
 
 
 def load_dir(sub: str) -> dict[str, dict]:
-    items = {}
-    for p in sorted((FACTORY / sub).glob("*.yaml")):
-        data = load_yaml(p)
-        data["_src"] = f"factory/{sub}/{p.name}"
-        items[data["name"]] = data
-    return items
+    """Role albo persony z nakładek i własne projektu (factory/packs.py → load_items)."""
+    return packs_mod.load_items(ROOT, sub)[0]
 
 
 def load_traits() -> dict[str, str]:
-    return {p.stem: p.read_text(encoding="utf-8").strip()
-            for p in sorted((FACTORY / "traits").glob("*.md"))}
+    return packs_mod.load_traits(ROOT)
 
 
 def load_skills() -> dict[str, dict]:
@@ -259,6 +244,57 @@ def resolve_persona(name: str, personas: dict, seen: tuple = ()) -> dict:
         merged["role_skills"][r] = _union(merged["role_skills"].get(r), extra)
     merged["name"] = name
     return merged
+
+
+PERSONA_SKILL_KEYS = ("methods", "stack", "skills", "core_skills", "drop_skills")
+
+
+def load_team(cfg: dict) -> tuple[dict, dict, dict, dict, list[str]]:
+    """Role, persony (rozwiązane `extends`), cechy i skille po złożeniu z nakładkami:
+    - wkład nakładek (`contributes`): skille ról, cechy i skille wspólne wszystkich person;
+    - odwołania nakładki do elementów nakładek opcjonalnych (`optional_packs`), których nie zainstalowano, są pomijane
+      (lista w `_dropped`; pokazuje ją `build.py list`).
+    Zwraca (role, persony, cechy, skille, błędy)."""
+    roles, personas_raw, traits, skills = load_dir("roles"), load_dir("personas"), load_traits(), load_skills()
+    packs = cfg.get("_packs") or {}
+    rc, pc = cfg.get("_role_contrib") or {}, cfg.get("_persona_contrib") or {}
+    errors: list[str] = []
+
+    def optional_gap(item: dict) -> bool:
+        return bool(packs_mod.missing_optional(packs.get(item.get("_pack")), packs))
+
+    out_roles = {}
+    for n, r in roles.items():
+        r = dict(r, skills=_union(r.get("skills"), (rc.get(n) or {}).get("skills")))
+        if optional_gap(r):
+            r["_dropped"] = [x for k in ("skills", "preload") for x in r.get(k) or [] if x not in skills]
+            for k in ("skills", "preload"):
+                r[k] = [x for x in r.get(k) or [] if x in skills]
+        out_roles[n] = r
+    out_personas = {}
+    for name in personas_raw:
+        try:
+            p = resolve_persona(name, personas_raw)
+        except ValueError as e:
+            errors.append(str(e))
+            continue
+        for k in ("traits", "core_skills", "skills"):
+            p[k] = _union(p.get(k), pc.get(k))
+        if optional_gap(personas_raw[name]):
+            dropped = [x for k in PERSONA_SKILL_KEYS for x in p.get(k) or [] if x not in skills]
+            dropped += [f"rola {x}" for x in p.get("roles") or [] if x not in out_roles]
+            dropped += [f"cecha {x}" for x in p.get("traits") or [] if x not in traits]
+            dropped += [f"agent {x}" for x in p.get("extra_agents") or [] if x.split("-", 1)[0] not in personas_raw]
+            for k in PERSONA_SKILL_KEYS:
+                p[k] = [x for x in p.get(k) or [] if x in skills]
+            p["role_skills"] = {r: [x for x in v if x in skills] for r, v in (p.get("role_skills") or {}).items()
+                                if r in out_roles}
+            p["roles"] = [x for x in p.get("roles") or [] if x in out_roles]
+            p["traits"] = [x for x in p.get("traits") or [] if x in traits]
+            p["extra_agents"] = [x for x in p.get("extra_agents") or [] if x.split("-", 1)[0] in personas_raw]
+            p["_dropped"] = dropped
+        out_personas[name] = p
+    return out_roles, out_personas, traits, skills, errors
 
 
 # ───────────────────────── renderowanie ─────────────────────────
@@ -309,6 +345,34 @@ def dimension_table(skills: list[str], cfg: dict) -> str:
     return "| Wymiar | Pytanie | Twoje skille |\n|---|---|---|\n" + "\n".join(rows)
 
 
+def language_section(cfg: dict) -> str:
+    """Język pracy i commitów z ustawień projektu (`tf language`, `tf commit-language`)."""
+    langs, st = cfg.get("languages") or {}, cfg.get("_settings") or {}
+    work = (langs.get(st.get("language")) or {}).get("work", "")
+    commits = (langs.get(st.get("commit_language")) or {}).get("commits", "")
+    lines = [x for x in (work, commits, cfg.get("code_language_note", "")) if x]
+    return "## Język\n" + "\n".join(f"- {x.strip()}" for x in lines) + "\n" if lines else ""
+
+
+def consultants_for(persona: dict, cfg: dict) -> dict[str, dict]:
+    """Konsultanci innych nakładek niż nakładka persony (docs/insights.md)."""
+    return {n: c for n, c in (cfg.get("consultants") or {}).items() if c.get("_pack") != persona.get("_pack")}
+
+
+def shared_for(persona: dict, cfg: dict) -> list[str]:
+    """Agenci wspólni dostępni personie. `only_for`: nazwy person albo `@dispatcher` (persony z `dispatcher: true`);
+    `main_only`: agent uruchamiany jako sesja główna, nie wykonawca."""
+    out = []
+    for n, a in cfg["shared_agents"].items():
+        if n == "Explore" or a.get("main_only"):
+            continue
+        only = a.get("only_for") or []
+        if only and persona["name"] not in only and not ("@dispatcher" in only and persona.get("dispatcher")):
+            continue
+        out.append(n)
+    return out
+
+
 COMPOSE_HINT = (
     "Skille są niezależne — każdy odpowiada na inne pytanie. Przy każdym zadaniu: rozłóż je na wymiary, "
     "wczytaj (narzędziem Skill) `core-skill-composition` oraz po jednym skillu z każdego potrzebnego wymiaru "
@@ -342,6 +406,7 @@ def render_worker(persona: dict, role: dict, cfg: dict, traits: dict) -> tuple[s
 ## Cechy
 {trait_txt}
 
+{language_section(cfg)}
 ## Skille i ich łączenie
 {COMPOSE_HINT}
 
@@ -354,6 +419,8 @@ Czytając wejścia, zaczynaj od TL;DR i Przekazania.
 
 ## Granice
 - Pracujesz tylko w swojej domenie. Jeśli zadanie jej wykracza — nie improwizuj, zgłoś to w raporcie.
+- Potrzebujesz wiedzy innej dziedziny (np. innej nakładki)? Nie zgaduj: wpisz w raporcie konkretne pytanie
+  — persona zada je konsultantowi tej dziedziny i odpowie w kolejnym briefie.
 - Nie commitujesz i nie pushujesz — robi to orkiestrator po weryfikacji całości.
 - Nie zmieniasz konfiguracji w `.claude/` ani plików z sekretami.
 {f"{chr(10)}## Weryfikacja{chr(10)}Przed raportem zweryfikuj zmianę: {verify} (komendy z CLAUDE.md projektu mają pierwszeństwo).{chr(10)}" if verify else ""}
@@ -363,15 +430,13 @@ Czytając wejścia, zaczynaj od TL;DR i Przekazania.
     return name, fm + HEADER.format(src=f"{persona['_src']} + {role['_src']}") + body
 
 
-def render_persona(persona: dict, roles: dict, cfg: dict, traits: dict) -> tuple[str, str]:
+def render_persona(persona: dict, roles: dict, cfg: dict, traits: dict, personas: dict | None = None) -> tuple[str, str]:
     team = [(f"{persona['name']}-{r}", roles[r]) for r in persona["roles"]]
     shared = cfg["shared_agents"]
-    # `only_for`: agent wspólny tylko dla wskazanych person (mniej wierszy w prompcie pozostałych = taniej)
-    # `main_only`: agent do uruchamiania jako sesja główna (`claude --agent <nazwa>`) — nie jest wykonawcą person
-    shared_names = [n for n in shared if n != "Explore" and not shared[n].get("main_only")
-                    and (not shared[n].get("only_for") or persona["name"] in shared[n]["only_for"])]
+    shared_names = shared_for(persona, cfg)
     extra = persona.get("extra_agents") or []   # wykonawcy innych person, po których ta persona może sięgnąć
-    agent_names = [n for n, _ in team] + shared_names + extra
+    consult = consultants_for(persona, cfg)
+    agent_names = [n for n, _ in team] + shared_names + extra + list(consult)
     tools = [f"Agent({', '.join(agent_names)})", "Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill"]
     tf = tier_fields(cfg, persona.get("model_tier", "std"))
     fm = frontmatter({
@@ -387,7 +452,22 @@ def render_persona(persona: dict, roles: dict, cfg: dict, traits: dict) -> tuple
     rows += [f"| `{n}` | wspólny | {shared[n]['tier']} ({cfg['tiers'][shared[n]['tier']]['model']}) | {shared[n]['description']} |" for n in shared_names]
     rows += [f"| `{n}` | z persony `{n.split('-', 1)[0]}` | — | zobacz katalog `.claude/catalog.md` |" for n in extra]
     trait_txt = "\n\n".join(traits[t] for t in persona["traits"])
-    routing = cfg["routing"].replace("{persona}", persona["name"]).strip()
+    routing = (cfg["routing"].rstrip() + "\n\n" + cfg.get("routing_notes", "").strip()).replace("{persona}", persona["name"]).strip()
+    consult_txt = ""
+    if consult:
+        crow = "\n".join(f"| `{n}` | {c['_pack']} | {c['description']} |" for n, c in consult.items())
+        consult_txt = f"""
+## Konsultacje z innymi zespołami
+Gdy zadanie wymaga wiedzy innej dziedziny, zapytaj jej konsultanta (narzędzie Agent): konkretne pytanie, kontekst
+(pliki, ustalenia), czego oczekujesz. Konsultant tylko odpowiada — ze źródłem i z tym, czego nie wie; decyzję
+podejmujesz Ty albo człowiek. Pytanie do persony innej nakładki, które wymaga jej pracy w osobnej sesji albo decyzji
+człowieka, zapisz w `docs/project/questions.md` (kto pyta, do kogo, pytanie, kontekst). Twoi wykonawcy nie wywołują
+konsultantów — potrzebę konsultacji zgłaszają w raporcie.
+
+| Konsultant | Nakładka | Kiedy |
+|---|---|---|
+{crow}
+"""
     body = f"""
 # Jesteś: {persona['title']}
 
@@ -404,6 +484,7 @@ i dostaje tylko streszczenie, więc delegujesz wtedy, gdy przekazanie się opła
 ## Cechy
 {trait_txt}
 
+{language_section(cfg)}
 ## Twój zespół
 | Agent | Rola | Tier (model) | Kiedy |
 |---|---|---|---|
@@ -411,7 +492,7 @@ i dostaje tylko streszczenie, więc delegujesz wtedy, gdy przekazanie się opła
 
 ## Routing i koszty
 {routing}
-
+{consult_txt}
 ## Jak łączysz skille
 {COMPOSE_HINT}
 Ten sam zestaw wymiarów przekazujesz w briefie wykonawcy: napisz, które skille ma połączyć.
@@ -456,7 +537,7 @@ Nie dziel jednej spójnej zmiany (wspólne pliki, typy, decyzje) między kilku w
 {persona.get('habits', '').strip()}
 
 ## Skille wspólne
-{skills_line(persona['core_skills'])} — wczytuj je, gdy commitujesz lub piszesz dokumentację.
+{skills_line(persona.get('core_skills') or []) or '—'} — wczytuj je, gdy commitujesz lub piszesz dokumentację.
 """
     return persona["name"], fm + HEADER.format(src=persona["_src"]) + body
 
@@ -471,23 +552,62 @@ def render_shared(name: str, spec: dict, cfg: dict) -> tuple[str, str]:
         "memory": spec.get("memory"),
     })
     body = "\n" + spec["prompt"].strip() + "\n"
-    if cfg.get("grounding_note") and not name.startswith("es-"):
+    if cfg.get("grounding_note") and spec.get("grounding", True):
         body += "\n## Rzetelność\n" + cfg["grounding_note"].strip() + "\n"
+        body += "\n" + language_section(cfg)
     if "Edit" in spec["tools"] or "Write" in spec["tools"]:
         body += "\n## Raport\n" + cfg["report_contract"].strip() + "\n"
-    return name, fm + HEADER.format(src="factory/config.yaml") + body
+    src = "factory/config.yaml" if spec.get("_pack", "core") == "core" else f"factory/packs/{spec['_pack']}/pack.yaml"
+    return name, fm + HEADER.format(src=src) + body
+
+
+CONSULT_TOOLS = ["Read", "Grep", "Glob", "Skill"]
+
+
+def render_consultant(name: str, spec: dict, cfg: dict) -> tuple[str, str]:
+    """Konsultant nakładki: tylko do odczytu, wczytuje skille swojej dziedziny i odpowiada ze źródłem."""
+    fm = frontmatter({
+        "name": name,
+        "description": spec["description"],
+        "tools": CONSULT_TOOLS,
+        **tier_fields(cfg, spec.get("tier", "std")),
+        "skills": spec.get("skills") or [],
+    })
+    pack = (cfg.get("_packs") or {}).get(spec["_pack"], {})
+    body = f"""
+Jesteś konsultantem dziedziny „{pack.get('title', spec['_pack'])}” (nakładka {spec['_pack']}). Pyta Cię persona innego
+zespołu, która nie zna tej dziedziny. Odpowiadasz na jej pytanie, niczego nie zmieniasz w plikach.
+
+1. Wczytaj skille z listy (narzędzie Skill) i tylko te pliki projektu, które są potrzebne do odpowiedzi.
+2. Odpowiedz konkretnie na zadane pytanie, w języku tej dziedziny, ale zrozumiale dla osoby spoza niej
+   (rozwiń skróty przy pierwszym użyciu).
+3. Każde twierdzenie oprzyj na źródle: skill (`nazwa`, plik referencyjny), plik projektu (`plik:linia`) albo standard
+   lub przepis z wersją. Czego nie wiesz albo nie sprawdziłeś — napisz wprost.
+4. Gdy pytanie wymaga decyzji (biznesowej, prawnej, architektonicznej), podaj opcje z konsekwencjami i zaznacz, kto
+   powinien zdecydować. Gdy wykracza poza Twoją dziedzinę — powiedz, której.
+
+Format (maks. ~25 linii): **Odpowiedź** · **Źródła** · **Założenia i luki** · **Do decyzji** (jeśli są).
+Skille: {skills_line(spec.get('skills') or [])}
+
+## Rzetelność
+{cfg.get('grounding_note', '').strip()}
+
+{language_section(cfg)}"""
+    return name, fm + HEADER.format(src=f"factory/packs/{spec['_pack']}/pack.yaml") + body
 
 
 def render_all() -> dict[str, str]:
     cfg = load_config()
-    roles, personas_raw, traits = load_dir("roles"), load_dir("personas"), load_traits()
+    roles, personas, traits, _skills, _errors = load_team(cfg)
     out: dict[str, str] = {}
     for name, spec in cfg["shared_agents"].items():
         n, txt = render_shared(name, spec, cfg)
         out[f"shared/{n}.md"] = txt
-    for pname in personas_raw:
-        persona = resolve_persona(pname, personas_raw)
-        n, txt = render_persona(persona, roles, cfg, traits)
+    for name, spec in cfg["consultants"].items():
+        n, txt = render_consultant(name, spec, cfg)
+        out[f"consult/{n}.md"] = txt
+    for pname, persona in personas.items():
+        n, txt = render_persona(persona, roles, cfg, traits, personas)
         out[f"{pname}/{n}.md"] = txt
         for r in persona["roles"]:
             n, txt = render_worker(persona, roles[r], cfg, traits)
@@ -534,7 +654,7 @@ def reference_files() -> list[Path]:
 def render_catalog() -> str:
     """Zwięzły katalog skilli, person i agentów — czyta go dyspozytor (core-problem-routing), zamiast wszystkich skilli."""
     cfg = load_config()
-    roles, personas_raw, skills = load_dir("roles"), load_dir("personas"), load_skills()
+    roles, personas, _traits, skills, _errors = load_team(cfg)
     def short(d: str) -> str:
         d = re.sub(r"^Użyj( zawsze)?,?\s*(przy|gdy|by|do|w)?\s*", "", d.strip())
         head, _, tail = d.strip().rstrip(".").partition(" Nie do ")
@@ -549,6 +669,8 @@ def render_catalog() -> str:
         return s.get("description", "").rstrip(".") + ". Nie do " + (tail if len(tail) <= 110 else tail[:110].rsplit(" ", 1)[0] + "…")
     lines = ["# Katalog zespołu (generowany przez factory/build.py — nie edytuj)", "",
              "Do doboru skilli i person do problemu (skill core-problem-routing). Skill wczytujesz narzędziem Skill po nazwie.", ""]
+    installed = cfg.get("_packs") or {}
+    lines += ["Nakładki: " + (", ".join(f"`{pid}` ({p.get('title', '')})" for pid, p in installed.items()) or "brak — sam rdzeń"), ""]
     for f in cfg["facets"]:
         names = sorted(n for n in skills if n.startswith(f["prefix"]))
         if not names:
@@ -556,16 +678,19 @@ def render_catalog() -> str:
         lines += [f"## {f['name']} (`{f['prefix']}`) — {f['question']}", ""]
         lines += [f"- `{n}` — {entry(skills[n])}" for n in names] + [""]
     lines += ["## Persony (`claude --agent <nazwa>`) i ich wykonawcy", "",
-              "| Persona | Kim jest | Wykonawcy (`persona-rola`) | Skille wiodące |", "|---|---|---|---|"]
-    for pname in sorted(personas_raw):
-        p = resolve_persona(pname, personas_raw)
+              "| Persona | Nakładka | Kim jest | Wykonawcy (`persona-rola`) | Skille wiodące |", "|---|---|---|---|---|"]
+    for pname in sorted(personas):
+        p = personas[pname]
         workers = ", ".join(f"`{pname}-{r}`" for r in p["roles"]) or "—"
         lead = ", ".join((p.get("methods") or []) + (p.get("stack") or []) + (p.get("skills") or [])[:4]) or "—"
-        lines.append(f"| `{pname}` | {p['title']} | {workers} | {lead} |")
+        lines.append(f"| `{pname}` | {p.get('_pack', '')} | {p['title']} | {workers} | {lead} |")
     lines += ["", "## Agenci wspólni", ""]
     for n, sp in cfg["shared_agents"].items():
         if n != "Explore":
             lines.append(f"- `{n}` ({sp['tier']}) — {sp['description']}")
+    if cfg.get("consultants"):
+        lines += ["", "## Konsultanci nakładek (tylko odpowiedź, bez zmian w plikach; wywołuje ich persona)", ""]
+        lines += [f"- `{n}` ({sp['_pack']}, {sp['tier']}) — {sp['description']}" for n, sp in cfg["consultants"].items()]
     return "\n".join(lines) + "\n"
 
 
@@ -596,9 +721,44 @@ def skill_usage(skills, used: set, cfg: dict) -> tuple[list[str], list[str]]:
     standalone = cfg.get("standalone_skills") or []
     errors = [f"standalone_skills: nieznany skill '{s}'" for s in standalone if s not in skills]
     warnings = [f"skill {s}: nie jest używany przez żadną rolę ani personę" for s in skills
-                if s not in used and s not in standalone]
+                if s not in used and s not in standalone and not s.startswith("core-")]   # core-* to biblioteka dla nakładek
     warnings += [f"skill {s}: używany przez rolę lub personę — zbędny wpis w standalone_skills" for s in standalone
                  if s in skills and s in used]
+    return errors, warnings
+
+
+def version_ok(version: str, spec: str) -> bool:
+    """Prosty zakres SemVer: warunki `>=X.Y.Z`, `>X.Y.Z`, `<X.Y.Z`, `<=X.Y.Z`, `==X.Y.Z` oddzielone spacją."""
+    def t(v: str) -> tuple[int, ...]:
+        return tuple(int(x) for x in re.findall(r"\d+", v)[:3])
+    ops = {">=": lambda a, b: a >= b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b,
+           "<": lambda a, b: a < b, "==": lambda a, b: a == b}
+    for cond in str(spec).split():
+        op = next((o for o in (">=", "<=", "==", ">", "<") if cond.startswith(o)), "==")
+        if not ops[op](t(version), t(cond[len(op):] if cond.startswith(op) else cond)):
+            return False
+    return True
+
+
+def check_packs(cfg: dict) -> tuple[list[str], list[str]]:
+    """Zgodność nakładek z rdzeniem i między sobą: wersja rdzenia, wymagane nakładki, nakładka języka."""
+    errors, warnings = [], []
+    packs = cfg.get("_packs") or {}
+    core_version = (FACTORY / "VERSION").read_text(encoding="utf-8").strip() if (FACTORY / "VERSION").exists() else "0.0.0"
+    for pid, p in packs.items():
+        if p.get("_dir") and p["_dir"].name != pid:
+            errors.append(f"nakładka {pid}: katalog factory/packs/{p['_dir'].name} ≠ id")
+        spec = (p.get("requires") or {}).get("core")
+        if spec and not version_ok(core_version, spec):
+            errors.append(f"nakładka {pid}: wymaga rdzenia {spec}, a zainstalowany jest {core_version} — "
+                          f"zaktualizuj fabrykę (tf update) albo nakładkę")
+        for dep in (p.get("requires") or {}).get("packs") or []:
+            if dep not in packs:
+                errors.append(f"nakładka {pid}: wymaga nakładki {dep} — tf add {dep}")
+    lang = (cfg.get("_settings") or {}).get("language")
+    need = ((cfg.get("languages") or {}).get(lang) or {}).get("pack")
+    if need and need not in packs:
+        warnings.append(f"język pracy {lang}: brak nakładki {need} (narzędzia redakcji) — tf add {need}")
     return errors, warnings
 
 
@@ -606,7 +766,15 @@ def validate() -> tuple[list[str], list[str]]:
     errors, warnings = [], []
     cfg = load_config()
     lim = cfg["limits"]
-    roles, personas_raw, traits, skills = load_dir("roles"), load_dir("personas"), load_traits(), load_skills()
+    roles, personas, traits, skills, team_errors = load_team(cfg)
+    personas_raw = load_dir("personas")
+    errors += cfg.get("_errors") or []
+    errors += team_errors
+    for sub in ("roles", "personas"):
+        warnings += packs_mod.load_items(ROOT, sub)[1]
+    e, w = check_packs(cfg)
+    errors += e
+    warnings += w
 
     vocab = [v.lower() for v in cfg.get("vocabulary", [])]
     contract_prefixes = tuple(f["prefix"] for f in cfg["facets"] if f.get("contract"))
@@ -726,7 +894,8 @@ def validate() -> tuple[list[str], list[str]]:
                 errors.append(f"{owner}: nieznane narzędzie '{t}'")
 
     for tier_owner, tier in [(f"rola {n}", r.get("tier")) for n, r in roles.items()] + \
-                            [(f"shared {n}", s.get("tier")) for n, s in cfg["shared_agents"].items()]:
+                            [(f"shared {n}", s.get("tier")) for n, s in cfg["shared_agents"].items()] + \
+                            [(f"konsultant {n}", s.get("tier", "std")) for n, s in cfg["consultants"].items()]:
         if tier not in cfg["tiers"]:
             errors.append(f"{tier_owner}: nieznany tier '{tier}'")
 
@@ -740,15 +909,19 @@ def validate() -> tuple[list[str], list[str]]:
         check_skills(f"shared {n}", s.get("skills"))
         check_tools(f"shared {n}", s.get("tools"))
         for pn in s.get("only_for") or []:
-            if pn not in personas_raw:
+            if pn not in personas_raw and pn != "@dispatcher" and s.get("_pack") in ("core", None):
                 errors.append(f"shared {n}: only_for wskazuje nieznaną personę '{pn}'")
+            elif pn not in personas_raw and pn != "@dispatcher":
+                warnings.append(f"shared {n} ({s['_pack']}): only_for wskazuje personę '{pn}', której nie ma w projekcie")
+    for n, c in cfg["consultants"].items():
+        check_skills(f"konsultant {n} ({c['_pack']})", c.get("skills"))
+        if not c.get("description"):
+            errors.append(f"konsultant {n}: brak description")
+        if n in cfg["shared_agents"]:
+            errors.append(f"konsultant {n}: ta sama nazwa co agent wspólny")
 
     used = set()
-    for pname in personas_raw:
-        try:
-            p = resolve_persona(pname, personas_raw)
-        except ValueError as e:
-            errors.append(str(e)); continue
+    for pname, p in personas.items():
         for r in p.get("roles", []):
             if r not in roles:
                 errors.append(f"persona {pname}: nieznana rola '{r}'")
@@ -772,7 +945,7 @@ def validate() -> tuple[list[str], list[str]]:
         used.update(persona_skills(p, roles, cfg))
         if not p.get("priorities"):
             errors.append(f"persona {pname}: brak priorities (potrzebne do rozstrzygania konfliktów)")
-    for s in cfg["shared_agents"].values():
+    for s in [*cfg["shared_agents"].values(), *cfg["consultants"].values()]:
         used.update(s.get("skills") or [])
     used.update(cfg.get("always_skills") or [])
     e, w = skill_usage(skills, used, cfg)
@@ -791,8 +964,13 @@ def validate() -> tuple[list[str], list[str]]:
         desc_chars = sum(len(m.group(1)) for t in rendered.values()
                          for m in [re.search(r"^description: (.+)$", t, re.M)] if m)
         est = int(desc_chars / 3.5)
-        if est > lim["agent_descriptions_max_tokens"]:
-            errors.append(f"opisy agentów ≈{est} tokenów (> {lim['agent_descriptions_max_tokens']}) — skróć description")
+        hard = lim.get("agent_descriptions_hard_tokens", 15000)
+        if est > hard:
+            errors.append(f"opisy agentów ≈{est} tokenów (> {hard}, limit Claude Code) — skróć description albo "
+                          "zainstaluj mniej nakładek")
+        elif est > lim["agent_descriptions_max_tokens"]:
+            warnings.append(f"opisy agentów ≈{est} tokenów (> zapasu {lim['agent_descriptions_max_tokens']}) — każda "
+                            "nakładka dokłada person i konsultantów; rozważ mniej nakładek albo krótsze description")
         # nieaktualne pliki
         on_disk = {str(p.relative_to(OUT_DIR)): p.read_text(encoding="utf-8")
                    for p in OUT_DIR.rglob("*.md")} if OUT_DIR.exists() else {}
@@ -805,8 +983,8 @@ def validate() -> tuple[list[str], list[str]]:
         if stale:
             errors.append(f"brak lub nieaktualny spis treści w {len(stale)} plikach referencyjnych (np. {stale[0]}) — "
                           "uruchom: python3 factory/build.py")
-        for pname in personas_raw:
-            for x in resolve_persona(pname, personas_raw).get("extra_agents") or []:
+        for pname, p in personas.items():
+            for x in p.get("extra_agents") or []:
                 if not any(k.endswith(f"/{x}.md") for k in rendered):
                     errors.append(f"persona {pname}: extra_agents wskazuje nieznanego agenta '{x}'")
     # Archetypy w stylu mappera: stałe sekcje, w stałej kolejności (poza blokami kodu)
@@ -868,13 +1046,6 @@ def cmd_build():
             tocs += 1
     if tocs:
         print(f"✓ Spisy treści zaktualizowane w {tocs} plikach referencyjnych")
-    readme = ROOT / "README.md"
-    if readme.is_file():
-        old_r = readme.read_text(encoding="utf-8")
-        new_r = readme_counts(old_r, *factory_counts())
-        if new_r != old_r:
-            readme.write_text(new_r, encoding="utf-8")
-            print("✓ README.md: zaktualizowana liczba skilli i wymiarów")
     print(f"✓ Wygenerowano {len(rendered)} agentów w {OUT_DIR.relative_to(ROOT)} i katalog {CATALOG.relative_to(ROOT)}"
           f" (profil kosztów: {load_config()['_profile']})")
     errors, warnings = validate()
@@ -887,9 +1058,6 @@ def cmd_build():
 
 def cmd_check():
     errors, warnings = validate()
-    readme = ROOT / "README.md"
-    if readme.is_file():
-        errors += readme_count_errors(readme.read_text(encoding="utf-8"), *factory_counts())
     for w in warnings:
         print(f"⚠ {w}")
     for e in errors:
@@ -900,10 +1068,12 @@ def cmd_check():
 
 def cmd_list():
     cfg = load_config()
-    roles, personas_raw = load_dir("roles"), load_dir("personas")
-    for pname in personas_raw:
-        p = resolve_persona(pname, personas_raw)
-        print(f"\n{p['title']}  →  claude --agent {pname}")
+    roles, personas, _traits, _skills, _errors = load_team(cfg)
+    st = cfg["_settings"]
+    print(f"Nakładki: {', '.join(cfg['_packs']) or '— (sam rdzeń)'} · język pracy: {st['language']} · "
+          f"commity: {st['commit_language']}")
+    for pname, p in personas.items():
+        print(f"\n{p['title']}  →  claude --agent {pname}   [{p.get('_pack')}]")
         print(f"  cechy: {', '.join(p['traits'])}")
         all_sk = persona_skills(p, roles, cfg)
         tech = [x for x in all_sk if x.startswith(("lang-", "fw-", "tool-"))]
@@ -915,6 +1085,11 @@ def cmd_list():
             extra = (p.get("role_skills") or {}).get(r)
             print(f"  • {pname}-{r:<12} {role['tier']:<5} {cfg['tiers'][role['tier']]['model']:<7} rola: {', '.join(role['skills'])}"
                   + (f" + {', '.join(extra)}" if extra else ""))
+        if p.get("_dropped"):
+            print(f"  pominięte (brak nakładki opcjonalnej): {', '.join(p['_dropped'])}")
+        consult = consultants_for(p, cfg)
+        if consult:
+            print(f"  konsultanci: {', '.join(consult)}")
     print("\nWspólni: " + ", ".join(f"{n} ({s['tier']})" for n, s in cfg["shared_agents"].items()))
     return 0
 

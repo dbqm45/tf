@@ -1,0 +1,35 @@
+# Nakładka UX: badania z użytkownikami, przepływy i stany, architektura informacji, treści, UI i system projektowy,
+# dostępność, service design.
+id: pack-ux
+version: 1.0.0
+title: UX
+description: User experience team — research, flows, information architecture, content, visual design and design systems, accessibility, service design.
+content_language: pl
+requires:
+  core: ">=3.0.0 <4.0.0"
+# Role UX korzystają też ze skilli IT (proces, wymagania, testy eksploracyjne, front) — bez pack-it są pomijane.
+optional_packs: [pack-it, pack-docs, pack-editorial-pl]
+
+facets:
+  - {prefix: ux-, order: 30, name: doświadczenie użytkownika, question: "kogo i po co projektujemy — badania, treść, wygląd, dostępność i usługa, zanim powstanie interfejs"}
+
+freshness:
+  skills: {ux-accessibility: 6}
+
+skill_visibility:
+  name_only_prefixes: [ux-]
+
+contributes:
+  roles:
+    product-compliance:          # rola z pack-it (Maja): dostępność jako wymiar zgodności produktu
+      skills: [ux-accessibility]
+
+consultants:
+  ux-consult-design:
+    tier: std
+    description: Konsultant UX — przepływy i stany ekranów, architektura informacji, treści interfejsu, wygląd i system projektowy. Tylko odpowiedź, bez zmian w plikach.
+    skills: [ux-feature-design, ux-information-architecture, ux-content-design, ux-visual-design, ux-design-systems]
+  ux-consult-accessibility:
+    tier: std
+    description: Konsultant UX — dostępność (WCAG 2.2, EN 301 549, Europejski Akt o Dostępności) i badania z użytkownikami. Tylko odpowiedź, bez zmian w plikach.
+    skills: [ux-accessibility, ux-research-methods]

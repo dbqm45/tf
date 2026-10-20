@@ -1,6 +1,20 @@
-# Zmiany w claude-team-factory
+# Changes in the team factory core
 
-Format: najnowsza wersja na górze. `python3 factory/update.py --check` pokazuje wpisy nowsze niż zainstalowana wersja.
+Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
+Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
+
+## [3.0.0] — 2026-10-20
+### Breaking
+- **factory:** the factory is split into a core and packs — `pack-it`, `pack-ux`, `pack-docs`, `pack-editorial-pl` and `pack-ev`; domain skills, roles, personas and traits moved from the core to the packs
+- **factory:** source layout `core/` + `packs/<id>/`; in a project, packs live in `factory/packs/<id>/` and agents are built at install time
+- **skills:** `core-tech-docs` renamed to `docs-tech-writing` (pack-docs), `fe-ux-design` to `ux-feature-design` (pack-ux)
+- **factory:** launcher `tf` and variable `TEAM_FACTORY` replace `ctf`/`CLAUDE_TEAM_FACTORY`; instruction markers `team-factory:begin`
+
+### Added
+- **factory:** packs (`pack.yaml`) with facets, shared agents, consultants, routing rows and contributions to other packs (`contributes`, `contributes_when`, `optional_packs`)
+- **factory:** consultants — read-only agents a persona can ask about another pack's domain (docs/insights.md)
+- **factory:** working language and commit language settings (`tf language`, `tf commit-language`); `pl` installs `pack-editorial-pl`
+- **factory:** installer asks for languages and packs; `--packs`, `--add`, `--remove`; migration of claude-team-factory and ev-team-factory installs
 
 ## [2.45.0] — 2026-10-19
 ### Added

@@ -1,0 +1,162 @@
+# Nakładka IT: inżynieria oprogramowania — architektura, DDD, backend, frontend, operacje, bezpieczeństwo, AI, dane,
+# testy i proces. Persony i role tej nakładki budują oprogramowanie w dowolnej dziedzinie.
+id: pack-it
+version: 1.0.0
+title: IT
+description: Software engineering team — architecture, DDD, backend, frontend, DevOps/SRE, security, AI/ML, data, QA and process.
+content_language: pl
+requires:
+  core: ">=3.0.0 <4.0.0"
+# Odwołania do elementów tych nakładek są pomijane, gdy nakładki nie ma (bez błędu).
+optional_packs: [pack-docs, pack-ux, pack-editorial-pl]
+
+facets:
+  - {prefix: ddd-,  order: 10,  name: metoda i domena, question: "CO modelujemy i jakimi pojęciami — niezależnie od technologii"}
+  - {prefix: arch-, order: 20,  name: architektura,    question: "jakie czynniki kształtują system i jaki stack/styl najlepiej je spełnia"}
+  - {prefix: fe-,   order: 40,  name: warstwa UI,      question: "jakie zasady obowiązują w interfejsie użytkownika — w każdym frameworku"}
+  - {prefix: be-,   order: 50,  name: warstwa serwera, question: "jakie zasady obowiązują po stronie serwera — w każdym języku"}
+  - {prefix: ai-,   order: 60,  name: systemy AI,      question: "jak budujemy, oceniamy i nadzorujemy systemy AI — dane, modele, ewaluacje, wdrożenie, ryzyko"}
+  - {prefix: ops-,  order: 70,  name: operacje,        question: "jak budujemy, wdrażamy i obserwujemy"}
+  - {prefix: sec-,  order: 80,  name: bezpieczeństwo,  question: "jak chronimy system i organizację — inżynieria i architektura bezpieczeństwa, ryzyko, zgodność, ład"}
+  - {prefix: eng-,  order: 120, name: zasady inżynierskie, question: "jak pisać prosto i dobrze (KISS, YAGNI, SOLID, testy, CD) — ograniczenia i rozstrzyganie sporów"}
+  - {prefix: qa-,   order: 130, name: jakość i testy,  question: "jak projektować, prowadzić i utrzymywać testy tak, by sprawdzały wymagania — niezależnie od narzędzia"}
+  - {prefix: data-, order: 140, name: analiza danych,  question: "jak odpowiadać na pytania danymi — pozyskanie, czyszczenie, statystyka, wizualizacja, raport"}
+  - {prefix: proc-, order: 170, name: proces,          question: "jak planujemy, współpracujemy i dostarczamy (Agile, Lean, SAFe)"}
+
+skill_requires:
+  fw-angular: [lang-typescript, fe-web-platform]
+  fw-react: [fe-web-platform]
+  fw-nextjs: [fw-react]
+  tool-pytest: [lang-python]
+
+# Dokładane personom i wykonawcom tej nakładki (do always_skills rdzenia).
+always_skills: [eng-design-principles]
+
+freshness:
+  prefixes: {sec-: 6, ai-: 6, ops-: 6}
+  skills: {sec-eu-regulations: 3, ai-governance-compliance: 3, arch-privacy-compliance: 6, eng-llm-features: 3,
+           ops-ai-inference: 3, ops-supply-chain-security: 6}
+
+# Wymiary specjalistyczne: na liście skilli projektu sama nazwa (persony znają je ze swojego promptu).
+skill_visibility:
+  name_only_prefixes: [sec-, ai-]
+
+routing_notes: |
+  **Clean-room w nakładce IT:** testy akceptacyjne kluczowej logiki projektuje `{persona}-qa-analyst` (jeśli jest)
+  w clean-room wg qa-spec-first-testing.
+
+# Wkład do agentów rdzenia.
+contributes:
+  agents:
+    security-reviewer:
+      skills: [be-auth-security]
+      prompt: |
+        Skille nakładki IT do przeglądu: zależności i publikacja — ops-supply-chain-security; pipeline CI — ops-ci-cd;
+        sekrety, konta usług, tokeny, role chmurowe, kryptografia, KMS i certyfikaty — ops-secrets-identities
+        (`references/kryptografia-i-pki.md`); manifesty Kubernetes — ops-kubernetes; nowe punkty wejścia, granice zaufania,
+        przepływy danych — arch-threat-modeling (czy model zagrożeń jest aktualny); logowanie zdarzeń bezpieczeństwa
+        i reguły wykrywania — ops-security-operations.
+
+# Konsultanci dla person innych nakładek (docs/insights.md): tylko do odczytu, odpowiadają ze źródłem.
+consultants:
+  it-consult-architecture:
+    tier: deep
+    description: Konsultant IT — architektura systemu, wybór stacku, atrybuty jakości, model zagrożeń, prawo UE dla produktu cyfrowego. Tylko odpowiedź, bez zmian w plikach.
+    skills: [arch-system-design, arch-quality-attributes, arch-tech-selection, arch-threat-modeling, arch-multi-tenancy, arch-eu-product-law]
+  it-consult-backend:
+    tier: std
+    description: Konsultant IT — projekt API, bazy danych, uwierzytelnianie i autoryzacja, komunikacja asynchroniczna, testy. Tylko odpowiedź, bez zmian w plikach.
+    skills: [be-api-design, be-database, be-auth-security, be-messaging-outbox, eng-testing, eng-design-patterns]
+  it-consult-domain:
+    tier: std
+    description: Konsultant IT — modelowanie domeny (DDD) — konteksty, agregaty, archetypy, mapa kontekstów. Tylko odpowiedź, bez zmian w plikach.
+    skills: [ddd-strategic-analysis, ddd-tactical-design, ddd-context-mapping, ddd-archetypes]
+  it-consult-ops:
+    tier: std
+    description: Konsultant IT — CI/CD, kontenery i Kubernetes, IaC, obserwowalność, SLO i incydenty, sekrety. Tylko odpowiedź, bez zmian w plikach.
+    skills: [ops-ci-cd, ops-docker, ops-kubernetes, ops-iac-terraform, ops-observability, ops-sre-incidents, ops-secrets-identities]
+  it-consult-security:
+    tier: deep
+    description: Konsultant IT — bezpieczeństwo aplikacji i chmury, kryptografia i PKI, regulacje cyber UE (NIS2, CRA, DORA). Tylko odpowiedź, bez zmian w plikach.
+    skills: [sec-appsec-devsecops, sec-cloud-security, sec-cryptography-pki, sec-eu-regulations, sec-zero-trust-identity]
+  it-consult-data-ai:
+    tier: std
+    description: Konsultant IT — analiza i inżynieria danych, funkcje z LLM, RAG, ewaluacje AI, AI Act. Tylko odpowiedź, bez zmian w plikach.
+    skills: [data-analysis, data-engineering, eng-llm-features, ai-rag, ai-evals, ai-governance-compliance]
+
+shared_agents:
+  # Krytyk źródeł: świeży kontekst = niezależne spojrzenie na bank dowodów (ddd-discovery-intake). Tylko wykrywa.
+  sources-critic:
+    tier: std
+    only_for: [ewa, tomasz]
+    description: Wykrywa sprzeczności w banku dowodów (docs/project/02-domain/corpus.md) — typy, test tego samego podmiotu, pytania diagnostyczne. Nie rozstrzyga i nie edytuje.
+    tools: [Read, Grep, Glob]
+    skills: [ddd-discovery-intake]
+    prompt: |
+      Jesteś krytykiem źródeł. Przeczytaj bank dowodów i references/contradictions.md ze skilla ddd-discovery-intake.
+      Zwróć WYŁĄCZNIE tabelę sprzeczności w formacie z tego pliku (bez rozstrzygania, bez poprawiania banku).
+      Przed zgłoszeniem sprawdź test tego samego podmiotu (2–3 linie wokół cytatu w źródle). Brak sprzeczności to też wynik.
+  # Generator wymagań „na ślepo” (ddd-model-stress-test): czyta tylko docs/project/02-domain/_blind/** — pilnuje cleanroom_guard.py.
+  blind-analyst:
+    tier: std
+    only_for: [ewa, tomasz]
+    description: Generuje wymagania biznesowe do testu obciążeniowego modelu wyłącznie z briefu w docs/project/02-domain/_blind/ — bez wiedzy o architekturze. Podaj metrykę, ścieżki i liczbę wymagań; nie podawaj nazw modułów.
+    tools: [Read]
+    skills: [ddd-model-stress-test]
+    prompt: |
+      Pracujesz na ślepo: czytasz wyłącznie pliki wskazane w zadaniu z docs/project/02-domain/_blind/. Nie próbuj otwierać innych.
+      Dla podanej metryki wygeneruj wymagania w formacie Prośba / Mechanizm / Podstawa (sekcja „Wymaganie z generatora”
+      skilla ddd-model-stress-test): bez słownictwa rozwiązań, różne dźwignie i ambicje, z przeglądu konkurencji najwyżej 1/3.
+      Braki w materiale wypisz osobno. Zwróć gotową treść pliku requirements.md (orkiestrator ją zapisze).
+  # Symulowany warsztat Event Storming (ddd-es-simulation) — uruchamiany tylko na wyraźne żądanie człowieka.
+  es-participant:
+    grounding: false   # odgrywa rolę w symulacji — bez zasad przeciw zmyślaniu
+    tier: std
+    only_for: [ewa]
+    description: Uczestnik symulowanego warsztatu Event Storming (wersja pełna) — gra jedną osobę z karty. Wywołuj tylko w ramach ddd-es-simulation, podając ścieżkę pliku promptu rundy.
+    tools: [Read, Write]
+    prompt: |
+      Jesteś uczestnikiem symulacji. Przeczytaj WYŁĄCZNIE plik promptu podany w zadaniu i wykonaj go dokładnie:
+      zagraj opisaną osobę, zapisz odpowiedź JSON do wskazanego pliku i odpowiedz jednym słowem: ok.
+      Nie otwieraj innych plików. Nie komentuj symulacji.
+  es-room:
+    grounding: false   # odgrywa rolę w symulacji — bez zasad przeciw zmyślaniu
+    tier: fast
+    only_for: [ewa]
+    description: Kilku uczestników symulowanego warsztatu Event Storming w jednym wywołaniu (wersja oszczędna). Wywołuj tylko w ramach ddd-es-simulation, podając ścieżkę pliku promptu rundy.
+    tools: [Read, Write]
+    prompt: |
+      Grasz kilka osób w symulacji. Przeczytaj WYŁĄCZNIE plik promptu podany w zadaniu i wykonaj go dokładnie:
+      każda osoba mówi osobno, własnym głosem i własną wiedzą; zapisz tablicę JSON do wskazanego pliku i odpowiedz: ok.
+      Nie otwieraj innych plików. Nie komentuj symulacji.
+  # Tani gospodarz symulacji: sesja główna na Haiku z małym promptem (`claude --agent es-host`). Pomiar: orkiestrator
+  # na Sonnecie z pełnym promptem persony to ~80% kosztu rundy — tu jest kilka razy taniej.
+  es-host:
+    grounding: false   # odgrywa rolę w symulacji — bez zasad przeciw zmyślaniu
+    tier: fast
+    main_only: true
+    description: Gospodarz symulowanego warsztatu Event Storming (ddd-es-simulation) — uruchamiaj jako sesję `claude --agent es-host`; najtańszy sposób prowadzenia treningu.
+    tools: [Bash, Read, AskUserQuestion, "Agent(es-participant, es-room, es-coach)"]
+    skills: [ddd-es-simulation]
+    prompt: |
+      Jesteś gospodarzem (skrybą) symulowanego warsztatu Event Storming wg skilla ddd-es-simulation. Człowiek jest facylitatorem.
+      Zawsze zacznij od bramki kosztów (sekcja 0 skilla) i nie startuj bez wyboru człowieka.
+      Mechanikę robi skrypt; Ty tylko: uruchamiasz polecenia skryptu, wywołujesz agentów z krótkim poleceniem
+      „Wykonaj instrukcje z pliku <prompt_file>.” i pokazujesz człowiekowi DOSŁOWNIE wynik skryptu — bez komentarzy,
+      podpowiedzi i ocen. Nie czytasz scenariusza ani kart osób. Nigdy nie grasz żadnej osoby.
+  es-coach:
+    grounding: false   # odgrywa rolę w symulacji — bez zasad przeciw zmyślaniu
+    tier: std
+    only_for: [ewa]
+    description: Coach facylitacji w symulowanym warsztacie (ddd-es-simulation) — ocenia prowadzenie sesji przez człowieka na podstawie transkrypcji i statystyk; tryby light/full/midsession.
+    tools: [Read, Grep, Glob, Write]
+    skills: [ddd-facilitation]
+    prompt: |
+      Oceniasz PROWADZENIE sesji, nie treść domenową. Wejście: transkrypcja, statystyki (JSON ze skryptu), brief scenariusza
+      (celowe sprzeczności, oczekiwane zdarzenia przełomowe, kto trenuje jaki anty-wzorzec).
+      Tryb light: tylko dominacja, milczący uczestnicy, niesprawdzony język (słowa-sygnały). Tryb full: 10 anty-wzorców z sekcji
+      „Samokontrola facylitatora” skilla ddd-facilitation, każdy zielony/żółty/czerwony z dowodem (runda, cytat).
+      Uwzględnij, że uczestnicy reagują na echo z opóźnieniem jednej rundy. Nie zaczynaj od pochwał.
+      Format: 3 zdania podsumowania · tabela anty-wzorców · dokładnie 3 mocne momenty i 3 do pracy w formie
+      „Zauważyłem… to prowadzi do… następnym razem spróbuj…” · czy facylitator zderzył celowe sprzeczności · jeden cytat z sesji.
+      Tryb midsession: 5–7 zdań, najważniejsza jedna rzecz do zmiany teraz. Zapisz debrief do wskazanego pliku (tryb końcowy).

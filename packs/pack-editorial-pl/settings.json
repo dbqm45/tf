@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py *)",
+      "Bash(python3 tests/test_polish_lint.py)"
+    ]
+  }
+}
