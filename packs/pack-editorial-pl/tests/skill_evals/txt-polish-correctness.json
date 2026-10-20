@@ -1,0 +1,53 @@
+{
+  "skill": "txt-polish-correctness",
+  "scenarios": [
+    {
+      "id": "interpunkcja-nie",
+      "expect": "trigger",
+      "prompt": "Sprawdź interpunkcję i pisownię: „Uruchamiając skrypt pojawił się błąd, ilość plików była mała a nie działający test blokował deployment.” Podaj poprawki z uzasadnieniem. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "imiesłów",
+            "ten sam podmiot",
+            "podmiot"
+          ],
+          [
+            "liczba\\s+plików",
+            "policzaln"
+          ],
+          [
+            "niedziałając"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "kalki",
+      "expect": "trigger",
+      "prompt": "Piszę README po polsku. Czy „adresujemy problem”, „dedykowany moduł” i „wspieramy format JSON” są poprawne? Jak to zapisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "zająć się",
+            "zajmujemy się",
+            "zajmiemy się"
+          ],
+          [
+            "przeznaczon"
+          ],
+          [
+            "obsługuj",
+            "obsługa"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "skroc-akapit",
+      "expect": "no-trigger",
+      "prompt": "Skróć ten akapit README i zrób go bardziej konkretnym, w stronie czynnej: „W ramach niniejszego modułu zostało zaimplementowane rozwiązanie umożliwiające dokonanie eksportu danych.” Odpowiedz zwięźle.",
+      "neighbor": "txt-polish-style"
+    }
+  ]
+}

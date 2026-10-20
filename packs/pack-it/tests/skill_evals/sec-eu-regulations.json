@@ -1,0 +1,61 @@
+{
+  "skill": "sec-eu-regulations",
+  "scenarios": [
+    {
+      "id": "nis2-zakres-i-zegary",
+      "expect": "trigger",
+      "prompt": "Mamy w Polsce firmę logistyczną, 180 osób, obroty ok. 60 mln euro. Czy podlegamy NIS2 i jakie są terminy zgłaszania incydentu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["podmiot\\w* (kluczow|ważn)", "essential", "important"],
+          ["24 godz", "24 h", "24h", "early warning", "wczesne ostrzeżenie"],
+          ["72 godz", "72 h", "72h"],
+          ["miesi[ąa]c", "final report", "raport końcow", "sprawozdanie końcow"],
+          ["krajowym systemie cyberbezpieczeństwa", "KSC", "nie jest\\w* porad\\w* prawn", "niezweryfikowan", "ISAP"]
+        ],
+        "none": ["NIS2 nie dotyczy firm poniżej 250"]
+      }
+    },
+    {
+      "id": "jeden-incydent-wiele-zegarow",
+      "expect": "trigger",
+      "prompt": "Ransomware zaszyfrował u nas system z danymi klientów, jesteśmy fintechem (instytucja płatnicza) i jednocześnie producentem aplikacji mobilnej. Komu i kiedy musimy to zgłosić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["DORA"],
+          ["art\\.? 33", "RODO", "GDPR", "UODO", "72 godz"],
+          ["jeden incydent", "równolegle", "kilka zgłosze", "wiele zgłosze", "tabel\\w* decyzyjn", "zegar"],
+          ["lex specialis", "zamiast NIS2", "NIS2 .{0,40}(nie stosuje|wyłączon)", "DORA .{0,40}(pierwszeństw|zamiast)"]
+        ],
+        "none": ["wystarczy jedno zgłoszenie do UODO"]
+      }
+    },
+    {
+      "id": "cra-producent-iot",
+      "expect": "trigger",
+      "prompt": "Produkujemy router z oprogramowaniem i sprzedajemy w UE. Co dla nas oznacza Cyber Resilience Act i od kiedy, w tym zgłaszanie wykorzystywanych podatności? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["2026-09-11", "11 września 2026"],
+          ["2027-12-11", "11 grudnia 2027"],
+          ["aktywnie wykorzystyw\\w* podatnoś", "actively exploited"],
+          ["ENISA", "single reporting platform", "CSIRT"],
+          ["CE", "ocen\\w* zgodności", "SBOM", "obsług\\w* podatności"]
+        ],
+        "none": ["CRA stosuje się tylko do nowych produktów"]
+      }
+    },
+    {
+      "id": "iso-27001-nie-ten-skill",
+      "expect": "no-trigger",
+      "neighbor": "sec-governance-compliance",
+      "prompt": "Chcemy certyfikat ISO 27001. Jak ustalić zakres ISMS i przygotować deklarację stosowania oraz dowody dla audytora?"
+    },
+    {
+      "id": "rodo-dpia-nie-ten-skill",
+      "expect": "no-trigger",
+      "neighbor": "arch-privacy-compliance",
+      "prompt": "Czy do nowej funkcji analityki zachowań użytkowników trzeba zrobić DPIA i jaką podstawę prawną przetwarzania wybrać?"
+    }
+  ]
+}

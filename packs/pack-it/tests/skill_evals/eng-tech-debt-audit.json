@@ -1,0 +1,86 @@
+{
+  "skill": "eng-tech-debt-audit",
+  "scenarios": [
+    {
+      "id": "priorytet-dlugu",
+      "expect": "trigger",
+      "prompt": "Robię audyt długu technicznego monolitu i mam 60 ustaleń. Jak je uszeregować, żeby nie naprawiać kodu, którego nikt nie dotyka? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "częstoś\\w+ zmian|gorąc\\w+ punkt|hot ?spot|git log"
+          ],
+          [
+            "waga.{0,60}wysiłek|wysiłek.{0,60}waga|÷|/ ?wysiłek"
+          ],
+          [
+            "szybk\\w+ wygran|quick win"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "raport-struktura",
+      "expect": "trigger",
+      "prompt": "Jak powinien wyglądać raport z audytu długu, żeby zespół coś z nim zrobił, a przy ponownym audycie dało się go porównać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "plik:linia|plik i linię|numer linii"
+          ],
+          [
+            "wygląda źle, ale|celow\\w+|nie ruszaj|nie naprawiaj"
+          ],
+          [
+            "ROZWIĄZANE|NOWE|ZMIENIONE"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "hotspoty-i-tani-dlug",
+      "expect": "trigger",
+      "prompt": "W audycie długu repo chcę wskazać hotspoty i odróżnić groźne sprzężenie od taniego, np. kodu generowanego, który zawsze zmienia się razem ze schematem. Jak to ocenić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "złożonoś\\w* ?[×x*] ?częst|złożonoś\\w*.{0,40}częstoś|częstoś\\w*.{0,40}złożonoś"
+          ],
+          [
+            "generowan|regenerac|mechaniczn|kompilator|\\bCI\\b"
+          ],
+          [
+            "par[ay]|hub|współzmian"
+          ]
+        ],
+        "none": [
+          "tightly coupled"
+        ]
+      }
+    },
+    {
+      "id": "cykle-bez-madge",
+      "expect": "trigger",
+      "prompt": "Robię audyt długu technicznego w repo Django + TypeScript, w wymiarze rozpadu architektury mam znaleźć cykle i łamanie warstw, ale projekt nie ma madge ani dependency-cruisera i nie mogę nic instalować. Czym to zmierzyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "code_graph"
+          ],
+          [
+            "runtime"
+          ],
+          [
+            "leniw|TYPE_CHECKING|w funkcji|typ"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "jedna-refaktoryzacja",
+      "expect": "no-trigger",
+      "prompt": "Mam jeden agregat, który chcę przepisać na inny idiom bez zmiany zachowania. Jak to zrobić bezpiecznie i udowodnić równoważność? Odpowiedz zwięźle.",
+      "neighbor": "eng-behavior-preserving-refactoring"
+    }
+  ]
+}

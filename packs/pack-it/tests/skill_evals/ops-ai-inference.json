@@ -1,0 +1,53 @@
+{
+  "skill": "ops-ai-inference",
+  "scenarios": [
+    {
+      "id": "routing-cache",
+      "expect": "trigger",
+      "prompt": "Mamy 8 podów vLLM za zwykłym Service w Kubernetes i użytkownicy narzekają, że kolejne wiadomości w tej samej rozmowie odpowiadają wolno, choć GPU nie jest przeciążone. Skąd to i co zmienić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kv cache",
+            "cache kv",
+            "prefix"
+          ],
+          [
+            "llm-d",
+            "inference extension",
+            "endpoint picker",
+            "cache-aware|świadom\\w* cache|prefix.cache routing"
+          ],
+          [
+            "round.robin"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "budzet-vram",
+      "expect": "trigger",
+      "prompt": "Chcę postawić model 70 mld parametrów w 16 bitach na własnych GPU do czatu z długimi rozmowami. Jak policzyć, ile pamięci potrzeba i jakie metryki obserwować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "140 ?GB"
+          ],
+          [
+            "kv cache"
+          ],
+          [
+            "ttft|czas do pierwszego tokenu",
+            "głębokość kolejki|queue"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "slo-funkcji-ai",
+      "expect": "no-trigger",
+      "prompt": "Jak zdefiniować SLO i budżet błędów dla funkcji podsumowywania dokumentów opartej na zewnętrznym API LLM, z alertami po stronie użytkownika?",
+      "neighbor": "ops-sre-incidents"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "skill": "ddd-tactical-design",
+  "scenarios": [
+    {
+      "id": "agregat-i-zdarzenia",
+      "expect": "trigger",
+      "prompt": "Projektuję agregat Rezerwacja w TypeScript. Jak wyznaczyć jego granicę i kto ma publikować zdarzenia domenowe, żeby nie zgubić ich przy awarii po commicie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "niezmiennik|invariant"
+          ],
+          [
+            "outbox"
+          ],
+          [
+            "jeden agregat|jedna transakcja|identyfikator|\\bID\\b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "connascence-magiczne",
+      "expect": "trigger",
+      "prompt": "W kodzie mamy magiczne wartości („status = 2 oznacza anulowane”) i metodę wyliczającą cenę skopiowaną w dwóch modułach. Jak to ocenić i poprawić pod kątem sprzężeń? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "connascence|współzależno"
+          ],
+          [
+            "znaczen\\w*|meaning"
+          ],
+          [
+            "jedno źródło|obiekt wartości|enum"
+          ]
+        ]
+      },
+      "accept": [
+        "ddd-connascence-analysis"
+      ]
+    },
+    {
+      "id": "niezmiennik-rozsmarowany",
+      "expect": "trigger",
+      "accept": [
+        "ddd-legacy-modernization"
+      ],
+      "prompt": "Reguła „zamówienie wysyłamy tylko po opłaceniu” jest u nas kawałkiem w UI, kawałkiem w serwisie, a w bazie nic jej nie pilnuje. Jak zaprojektować agregat, który będzie jej pilnował? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "jedyn\\w* miejsc|strażnik|wyłącznie przez (metod|agregat)"
+          ],
+          [
+            "błąd\\w* domenow|nazwan\\w* błąd|fail-fast|wyjąt"
+          ],
+          [
+            "transakcj|repozytor"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ohs-katalog",
+      "expect": "no-trigger",
+      "prompt": "Moduł Katalog ma wielu odbiorców; chcemy mu dać jeden stabilny, udokumentowany kontrakt API zamiast integracji szytych na miarę. Jaki wzorzec z mapy kontekstów? Odpowiedz zwięźle.",
+      "neighbor": "ddd-context-mapping"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "skill": "dom-ev-metering-calibration",
+  "scenarios": [
+    {
+      "id": "ocmf-przed-rozliczeniem",
+      "expect": "trigger",
+      "prompt": "Ładowarki DC w Niemczech wysyłają do naszego CSMS rekord zaczynający się od OCMF| (payload JSON i podpis). Chcemy z niego brać kWh do rozliczenia. Co dokładnie sprawdzamy w środku rekordu, zanim uznamy energię za nadającą się do faktury, i czy możemy ją przeliczyć albo zaokrąglić po swojemu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["TX", "transakcj[ai]"],
+          ["EF", "flag[ia] błęd", "error flag"],
+          ["\\bST\\b", "stan licznika", "status licznika"],
+          ["bez zmian", "nie (przeliczaj|zaokrąglaj|modyfikuj|zmieniaj)", "w oryginale", "surow"]
+        ],
+        "none": ["wystarczy[^.]{0,40}(sprawdzić|zweryfikować)[^.]{0,20}podpis"]
+      }
+    },
+    {
+      "id": "mi-011-terminy",
+      "expect": "trigger",
+      "prompt": "Dostawca liczników mówi, że nasze liczniki w ładowarkach mają certyfikat MID i że zmiana unijnej dyrektywy o ładowarkach nas nie dotyczy. Co zmienia dyrektywa 2026/706 dla liczników w punktach ładowania, od kiedy i co z już zainstalowanymi urządzeniami? Odpowiedz zwięźle z datami.",
+      "checks": {
+        "all": [
+          ["MI-011"],
+          ["10 października 2028", "10\\.10\\.2028", "10 October 2028", "2028-10-10"],
+          ["2030", "2038"]
+        ],
+        "none": ["MI-011[^.]{0,40}(wyłącznie|tylko) (AC|prąd zmienny)"]
+      }
+    },
+    {
+      "id": "korekta-cdr-kredytowy",
+      "expect": "no-trigger",
+      "prompt": "Wysłaliśmy do eMSP przez OCPI CDR z błędną kwotą, bo źle zadziałał VAT. Jak poprawić go formalnie: edytujemy istniejący CDR czy wysyłamy kredytowy i nowy, i jak eMSP ma odebrać to idempotentnie?",
+      "neighbor": "dom-ev-cdr-settlement"
+    }
+  ]
+}

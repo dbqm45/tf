@@ -1,0 +1,55 @@
+{
+  "skill": "sec-security-leadership",
+  "scenarios": [
+    {
+      "id": "raport-dla-zarzadu",
+      "expect": "trigger",
+      "prompt": "Jestem nowym CISO i za dwa tygodnie mam pierwszy raz zdawać zarządowi raport o bezpieczeństwie. Mam 40 slajdów metryk ze SOC-a. Jak to ułożyć, żeby zarząd coś z tego miał? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["KRI", "wskaźnik(i|ów)? ryzyka", "key risk indicator"],
+          ["KPI", "wskaźnik(i|ów)? skuteczności", "key performance"],
+          ["apetyt", "appetite", "tolerancj"],
+          ["jedn\\w+ stron", "one-page", "jednostronic", "1 strona", "1 stron", "strona A4"],
+          ["decyzj", "do podjęcia", "prośb", "ask"]
+        ],
+        "none": ["liczba (zablokowanych )?alertów jako główn", "40 slajdów jest w sam raz"]
+      }
+    },
+    {
+      "id": "ransomware-okup-kryzys",
+      "expect": "trigger",
+      "prompt": "Ransomware zaszyfrował nam połowę serwerów, napastnik żąda okupu. Zarząd pyta, czy płacić i kto o tym decyduje. Jak zorganizować decyzję po stronie kierownictwa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zespół kryzysow", "crisis team", "sztab"],
+          ["prawnik", "radca", "adwokat", "legal", "kancelari"],
+          ["sankcj", "OFAC", "lista sankcyjn"],
+          ["dziennik decyzji", "decision log", "rejestr decyzji", "log decyzji"],
+          ["policj", "organy ścigania", "law enforcement", "CSIRT", "regulator"]
+        ],
+        "none": ["płać(cie)? od razu", "decyduje samodzielnie (CISO|dział IT)"]
+      }
+    },
+    {
+      "id": "strategia-i-budzet",
+      "expect": "trigger",
+      "prompt": "Mam 3 lata i ograniczony budżet na bezpieczeństwo w firmie 600 osób. Jak ułożyć strategię i uzasadnić budżet przed CFO, żeby nie było 'daj nam więcej, bo hakerzy'? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["profil (bieżący|aktualny)", "current profile", "stan obecny", "stan bieżący"],
+          ["profil docelowy", "target profile", "stan docelowy"],
+          ["roadmap", "mapa drogowa", "plan (1|3)", "etap"],
+          ["redukcj\\w+ ryzyka", "risk reduction", "koszt.{0,20}ryzyk", "koszt kontroli", "ALE|ROSI|FAIR"]
+        ],
+        "none": ["kup(ić)? narzędzie .{0,20} najpierw", "benchmark procentu budżetu IT jest wiążący"]
+      }
+    },
+    {
+      "id": "rejestr-ryzyk-fair",
+      "expect": "no-trigger",
+      "prompt": "Jak policzyć roczną stratę z ransomware metodą FAIR i wpisać to do rejestru ryzyk z właścicielem i terminem akceptacji? Odpowiedz zwięźle.",
+      "neighbor": "sec-risk-management"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "skill": "qa-spec-first-testing",
+  "scenarios": [
+    {
+      "id": "testy-z-kodu",
+      "expect": "trigger",
+      "prompt": "Mam metodę calculateDiscount i chcę, żeby AI wygenerowało do niej testy jednostkowe na podstawie samego kodu. Czy to dobry pomysł? Skąd brać oczekiwane wartości? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "lustrzan",
+            "mirror",
+            "powiel",
+            "koduj",
+            "utrwal"
+          ],
+          [
+            "wyroczn",
+            "oracle",
+            "spoza kodu",
+            "źródł\\w* niezależn"
+          ],
+          [
+            "clean-room",
+            "clean room",
+            "nie widz.{0,25}implementacji",
+            "bez dostępu do (kodu|implementacji)",
+            "przed (napisaniem )?(kodu|implementacj)",
+            "specyfikacj\\w* bez implementacji",
+            "bez implementacji"
+          ]
+        ]
+      },
+      "rubric": [
+        "testy wygenerowane z kodu utrwalają (powielają) obecne zachowanie razem z błędami",
+        "oczekiwane wartości z niezależnego źródła (wyrocznia): wymagania, przykłady, ręczne wyliczenia, niezmienniki — nie z kodu",
+        "przypadki testowe projektowane ze specyfikacji bez wglądu w implementację (clean-room)"
+      ]
+    },
+    {
+      "id": "test-pada-spec",
+      "expect": "trigger",
+      "prompt": "Test napisany ze specyfikacji dla rabatu od 10 sztuk pada: kod daje 20,00 zamiast 19,00 zł. Czy zmienić oczekiwaną wartość w teście, żeby build przeszedł? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "nie zmieniaj",
+            "nie zmieniać",
+            "nigdy",
+            "nie poprawiaj",
+            "do not change",
+            "don.t change",
+            "^\\W*nie\\b",
+            "utrwali\\w* (defekt|błąd)",
+            "nie zmieniaj oczekiw"
+          ],
+          [
+            "zgłoś",
+            "zgłoszeni",
+            "defect",
+            "bug report"
+          ],
+          [
+            "fails",
+            "fixme",
+            "failing",
+            "znany (błąd|defekt)",
+            "known (bug|defect)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "it-each-vitest",
+      "expect": "no-trigger",
+      "prompt": "Jak w Vitest zapisać it.each z tabelą przykładów i sprawdzić granice 9, 10 i 11 sztuk? Odpowiedz zwięźle.",
+      "neighbor": "tool-vitest"
+    },
+    {
+      "id": "przezyle-mutanty",
+      "expect": "trigger",
+      "prompt": "Stryker zostawił 14 przeżytych mutantów w module płatności. Mam dopisać testy, aż zabiję wszystkie, żeby mieć 100% mutation score? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "równoważn",
+            "equivalent"
+          ],
+          [
+            "krucha",
+            "kosmetyczn",
+            "nie goń",
+            "lustrzan"
+          ],
+          [
+            "zabolał",
+            "realn\\w* (błąd|luk)",
+            "użytkownik",
+            "biznes"
+          ]
+        ]
+      }
+    }
+  ]
+}

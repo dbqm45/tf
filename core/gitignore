@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+.claude/logs/
+.claude/agent-memory-local/
+__pycache__/
+.idea

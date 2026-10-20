@@ -1,0 +1,78 @@
+{
+ "core-agent-instructions": {
+  "fingerprint": "e906103675ead716",
+  "offline": "2026-10-10"
+ },
+ "core-agent-retro": {
+  "fingerprint": "1973eb1f01bc8cbb",
+  "offline": "2026-10-18"
+ },
+ "core-agent-security": {
+  "fingerprint": "0fc2e9257d6fd5ba",
+  "offline": "2026-10-18"
+ },
+ "core-async-delegation": {
+  "fingerprint": "71debaae4e07ac22",
+  "offline": "2026-10-10"
+ },
+ "core-conventional-commits": {
+  "fingerprint": "0459f3219c1c895a",
+  "offline": "2026-10-04"
+ },
+ "core-cost-control": {
+  "fingerprint": "4aa4b3b8a972133e",
+  "offline": "2026-10-18"
+ },
+ "core-delivery-lifecycle": {
+  "fingerprint": "12774a1128234608",
+  "offline": "2026-10-20"
+ },
+ "core-factory-update": {
+  "fingerprint": "63c2320d80e4c7f5",
+  "offline": "2026-10-18"
+ },
+ "core-git-workflow": {
+  "fingerprint": "2ffdb4a614d386b5",
+  "offline": "2026-10-18"
+ },
+ "core-grounding": {
+  "fingerprint": "f3c0b23d29b76ce0",
+  "offline": "2026-10-18"
+ },
+ "core-plan-interview": {
+  "fingerprint": "75a8b1422c3c7381",
+  "offline": "2026-10-10"
+ },
+ "core-problem-routing": {
+  "fingerprint": "2681489dcdad0669",
+  "offline": "2026-10-20"
+ },
+ "core-project-record": {
+  "fingerprint": "0f3e77fec7b0f82a",
+  "offline": "2026-10-10"
+ },
+ "core-semver": {
+  "fingerprint": "9570e62f2e4fb50a",
+  "offline": "2026-10-10"
+ },
+ "core-skill-authoring": {
+  "fingerprint": "c1bcda5cc1bcc139",
+  "offline": "2026-10-18"
+ },
+ "core-skill-composition": {
+  "fingerprint": "6cefe2b0d62da9a9",
+  "offline": "2026-10-04"
+ },
+ "core-source-research": {
+  "fingerprint": "42e092513f1dadf0",
+  "offline": "2026-10-18"
+ },
+ "core-stack-sync": {
+  "fingerprint": "6bab724c47d366c5",
+  "offline": "2026-10-10"
+ },
+ "core-teaching-workspace": {
+  "fingerprint": "4cf2fbca583f99db",
+  "offline": "2026-10-10"
+ }
+}

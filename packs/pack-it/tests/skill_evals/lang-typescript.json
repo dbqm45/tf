@@ -1,0 +1,74 @@
+{
+  "skill": "lang-typescript",
+  "scenarios": [
+    {
+      "id": "branded-bigint",
+      "expect": "trigger",
+      "prompt": "W src/domain/money.ts kwoty są typu number, a ID klienta i zamówienia to oba string i ciągle je mylimy. Jak to zamodelować w TypeScripcie? Odpowiedz zwięźle.",
+      "files": {
+        "src/domain/money.ts": "export type Money = { amount: number; currency: string };\nexport type CustomerId = string;\nexport type OrderId = string;\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "bigint"
+          ],
+          [
+            "brand",
+            "markowan",
+            "nominal"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ts6-migracja",
+      "expect": "trigger",
+      "prompt": "Przechodzimy na TypeScript 6 i tsc zgłasza TS5101 oraz TS5011 przy tsconfig.json. Co zmienić w konfiguracji? Odpowiedz zwięźle.",
+      "files": {
+        "tsconfig.json": "{\n  \"compilerOptions\": {\n    \"target\": \"es5\",\n    \"moduleResolution\": \"node\",\n    \"baseUrl\": \"./src\",\n    \"outDir\": \"dist\"\n  }\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "rootDir"
+          ],
+          [
+            "baseUrl"
+          ],
+          [
+            "types"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "koercja",
+      "expect": "no-trigger",
+      "prompt": "Dlaczego w JavaScripcie [] == false jest true, a [] jest truthy? Jak działa koercja przy ==?",
+      "neighbor": "lang-javascript"
+    },
+    {
+      "id": "bez-plikow-nowy-projekt",
+      "expect": "trigger",
+      "prompt": "Zaczynamy nowy projekt w TypeScript 6. Jakie ustawienia tsconfig uznać za obowiązkowe dla bezpieczeństwa typów i jak traktować dane przychodzące z API? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "strict"
+          ],
+          [
+            "noUncheckedIndexedAccess"
+          ],
+          [
+            "walidac",
+            "zod",
+            "valibot",
+            "schemat",
+            "schema"
+          ]
+        ]
+      }
+    }
+  ]
+}

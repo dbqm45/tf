@@ -1,0 +1,58 @@
+{
+  "skill": "core-conventional-commits",
+  "scenarios": [
+    {
+      "id": "breaking-dto",
+      "expect": "trigger",
+      "prompt": "Usunąłem pole isReserved z ResourceDto w module booking i dodałem w jego miejsce blockade.state. Jak powinien wyglądać komunikat commita, żeby narzędzie do wydań dobrze policzyło wersję? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "\\)!:|\\w!:"
+          ],
+          [
+            "BREAKING CHANGE:"
+          ],
+          [
+            "MAJOR"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zly-typ-commit",
+      "expect": "trigger",
+      "prompt": "Ostatni commit w mojej gałęzi ma typ feat, a to była poprawka błędu. Jak to naprawić — rebase interaktywny, amend, a może coś innego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "amend"
+          ],
+          [
+            "niewypchni|nieopublik|nie opublik|przed pushem|nie wypchn|lokaln",
+            "wypchnięt",
+            "po wypchnięciu"
+          ],
+          [
+            "nowy commit|nowym commicie|commit koryguj|nie przepisuj",
+            "dodaj\\w* .{0,30}commit"
+          ]
+        ]
+      },
+      "rubric": [
+        "amend dla ostatniego commita",
+        "rozróżnienie: commit jeszcze niewypchnięty (amend bez skutków) a już wypchnięty (przepisanie historii, ostrożnie)",
+        "alternatywa bez przepisywania historii: nowy commit / poprawa tytułu PR przy squash"
+      ],
+      "accept": [
+        "core-git-workflow"
+      ]
+    },
+    {
+      "id": "strategia-galezi",
+      "expect": "no-trigger",
+      "prompt": "Jak nazwać gałąź na poprawkę i czy mogę zrobić force push na gałąź mojego PR po rebase?",
+      "neighbor": "core-git-workflow"
+    }
+  ]
+}

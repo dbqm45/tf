@@ -1,0 +1,104 @@
+{
+  "skill": "eng-codebase-mapping",
+  "scenarios": [
+    {
+      "id": "nieznane-repo",
+      "expect": "trigger",
+      "prompt": "Dostałem nieznane repo TypeScript w Nx i mam w ciągu dnia zrozumieć jego strukturę. Od czego zacząć, jakimi narzędziami i jak wskazać punkty wejścia, zamiast czytać losowe pliki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "nx graph|madge"
+          ],
+          [
+            "punktacj|score|punkt\\w* wejścia"
+          ],
+          [
+            "cykl|circular"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "graf-bez-narzedzi",
+      "expect": "trigger",
+      "prompt": "Mam zrobić mapę repo z Pythonem (Django) i TypeScriptem, ale nie ma tu madge, dependency-cruisera ani nx, a sieć jest odcięta. Jak zbudować graf importów, wskazać huby i cykle, żeby nie pisać za każdym razem własnego skanera? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "code_graph"
+          ],
+          [
+            "TYPE_CHECKING|leniw|w funkcji|runtime"
+          ],
+          [
+            "barrel|re-eksport"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wejscia-z-rejestrow",
+      "expect": "trigger",
+      "prompt": "Mapuję duży projekt Django z Celery i GraphQL. Punkty wejścia po nazwach plików (urls.py, manage.py) to za mało — gdzie jeszcze zaczyna się wykonanie i jak to znaleźć bez czytania setek plików? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Celery|zadani\\w*|task"
+          ],
+          [
+            "GraphQL|schemat|komend\\w*|management"
+          ],
+          [
+            "code_graph|rejestr"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wplyw-diffu",
+      "expect": "trigger",
+      "prompt": "Mam diff z 12 plikami w monorepo i chcę ocenić ryzyko przed PR. Jak ocenić wpływ zmiany i skąd wiedzieć, czy wcześniej zrobiona mapa kodu jest jeszcze aktualna? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "1 krok|jeden krok|krok w górę|w górę i w dół|kto go używa"
+          ],
+          [
+            "affected|git diff --name-only"
+          ],
+          [
+            "pewnoś|WYCIĄGNIĘTE|WYWNIOSKOWANE|etykiet"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "terytorium-z-historii",
+      "expect": "trigger",
+      "prompt": "Mapa importów repo już jest, ale chcę wiedzieć, które części naprawdę żyją: co zmienia się najczęściej, co zmienia się razem i kogo pytać o dany obszar. Jak to wyciągnąć z historii gita, żeby nie dać się oszukać szumowi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "git_territory|git log"
+          ],
+          [
+            "współzmian|zmieniają się razem|co-?change|pary"
+          ],
+          [
+            "bot|dependabot|renovate|lockfile|szum"
+          ],
+          [
+            "ls-files|nadal istnieje|masow\\w* commit|30 plików|kwarta"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dlug",
+      "expect": "no-trigger",
+      "prompt": "Chcę ocenić dług techniczny całego modułu płatności: wymiary, wagi, priorytety i szybkie wygrane. Jak się za to zabrać? Odpowiedz zwięźle.",
+      "neighbor": "eng-tech-debt-audit"
+    }
+  ]
+}

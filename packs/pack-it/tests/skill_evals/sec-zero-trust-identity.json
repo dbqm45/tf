@@ -1,0 +1,52 @@
+{
+  "skill": "sec-zero-trust-identity",
+  "scenarios": [
+    {
+      "id": "zt-zamiast-vpn",
+      "expect": "trigger",
+      "prompt": "Dyrekcja chce wdrożyć Zero Trust i wyrzucić VPN. Jak to rozumieć i jak zaplanować migrację krok po kroku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["800-207"],
+          ["ZTNA"],
+          ["PDP|PEP|policy decision|policy enforcement|punkt\\w* decyzji|punkt\\w* egzekucji"],
+          ["etap\\w*|faz\\w*|krok\\w*|roadmap\\w*"]
+        ],
+        "none": ["Zero Trust to produkt, który się kupuje"]
+      }
+    },
+    {
+      "id": "mfa-odporne-na-phishing",
+      "expect": "trigger",
+      "prompt": "Pracownicy dają się nabrać na phishing mimo MFA z SMS-em i kodami push. Jakie uwierzytelnianie wybrać, żeby to zatrzymać, i co z kontami uprzywilejowanymi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["FIDO2|WebAuthn|passkey|klucz\\w* sprzętow\\w*"],
+          ["odporn\\w* na phishing|phishing-resistant"],
+          ["PAM|just-in-time|JIT|na żądanie|na czas"],
+          ["posture|stan urządzenia|zgodno\\w* urządzenia|device"]
+        ],
+        "none": ["SMS jest odporny na phishing"]
+      }
+    },
+    {
+      "id": "dojrzalosc-cisa",
+      "expect": "trigger",
+      "prompt": "Jak ocenić, na jakim etapie Zero Trust jesteśmy, i jakie metryki pokażą postęp? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["CISA"],
+          ["filar\\w*|pillar\\w*"],
+          ["Traditional|Initial|Advanced|Optimal|tradycyjn|początkow|zaawansowan|optymaln"],
+          ["metryk\\w*|wskaźnik\\w*|KPI"]
+        ]
+      }
+    },
+    {
+      "id": "oauth-w-kodzie",
+      "expect": "no-trigger",
+      "prompt": "Jak w aplikacji webowej poprawnie zaimplementować logowanie przez OAuth z PKCE i odświeżanie tokenów?",
+      "neighbor": "be-auth-security"
+    }
+  ]
+}

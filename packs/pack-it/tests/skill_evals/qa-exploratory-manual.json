@@ -1,0 +1,57 @@
+{
+  "skill": "qa-exploratory-manual",
+  "scenarios": [
+    {
+      "id": "karta-sesji",
+      "expect": "trigger",
+      "prompt": "Mamy w sprincie nowy formularz rezerwacji sali i chcę zrobić testy eksploracyjne w sesjach. Jak sformułować kartę sesji, ile ma trwać jedna sesja i co zapisywać w notatkach? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "45\\s*[–-]\\s*90",
+            "45.{0,12}90"
+          ],
+          [
+            "przy użyciu",
+            "aby odkryć",
+            "to discover",
+            "explore .{0,40}with"
+          ],
+          [
+            "pytani",
+            "questions"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zgloszenie-defektu",
+      "expect": "trigger",
+      "prompt": "Znalazłem błąd: rabat 5% nie jest naliczany dla dokładnie 10 sztuk. Jak napisać zgłoszenie defektu, żeby deweloper nie musiał dopytywać? Jakie pola i jakie zasady? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "źródł",
+            "source of (the )?expected"
+          ],
+          [
+            "wpływ.{0,15}częstoś",
+            "impact.{0,15}frequen"
+          ],
+          [
+            "jeden defekt",
+            "jedno zgłoszenie",
+            "one (defect|bug)",
+            "one report"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "automat-e2e",
+      "expect": "no-trigger",
+      "prompt": "Napisz mi test e2e w Playwright, który wpisuje 10 w pole Ilość, klika Przelicz i sprawdza sumę 190,00 zł. Odpowiedz zwięźle.",
+      "neighbor": "tool-playwright"
+    }
+  ]
+}

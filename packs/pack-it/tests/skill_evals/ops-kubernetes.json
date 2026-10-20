@@ -1,0 +1,51 @@
+{
+  "skill": "ops-kubernetes",
+  "scenarios": [
+    {
+      "id": "config-rollout",
+      "expect": "trigger",
+      "prompt": "Wdrożyłem nową wersję aplikacji, która wymaga zmiany adresu API w ConfigMap. Pody działają, rolling update przeszedł, a aplikacja pada przy pierwszym wywołaniu. Jak temu zapobiec? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "configmapgenerator",
+            "secretgenerator",
+            "sum\\w* kontroln|checksum|hash"
+          ],
+          [
+            "tym samym pr",
+            "razem z kodem|walidu\\w+ konfigurac\\w+ przy starcie"
+          ],
+          [
+            "readiness|gotowo"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "liveness-pdb",
+      "expect": "trigger",
+      "prompt": "Robię manifest Deploymentu dla usługi produkcyjnej zależnej od bazy danych. Jak ustawić sondy, repliki i zabezpieczenie przed przerwą przy aktualizacji węzłów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pdb|poddisruptionbudget"
+          ],
+          [
+            "liveness[^.]{0,80}(nie|bez)[^.]{0,60}(zależno|zewn|baz)",
+            "(nie|bez)[^.]{0,60}(zależno|zewn|baz)[^.]{0,80}liveness"
+          ],
+          [
+            "startupprobe|restricted|seccomp"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "obraz-gitops",
+      "expect": "no-trigger",
+      "prompt": "Jak ustawić Argo CD, żeby promocja wersji między staging a produkcją szła przez PR i dało się cofnąć przez git revert?",
+      "neighbor": "ops-release-engineering"
+    }
+  ]
+}

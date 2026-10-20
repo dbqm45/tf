@@ -1,0 +1,43 @@
+{
+  "skill": "eng-algorithms-data-structures",
+  "scenarios": [
+    {
+      "id": "kolejka-shift",
+      "expect": "trigger",
+      "prompt": "W Node przetwarzam kolejkę FIFO na tablicy: push na końcu i shift() z początku, w pętli po ok. 500 tysiącach elementów i robi się wolno. Dlaczego i czym to zastąpić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "shift.{0,40}O\\(n\\)",
+            "O\\(n\\).{0,40}shift",
+            "przesuwa|przesuw"
+          ],
+          [
+            "indeks głowy|indeksem głowy|head index|deque|ArrayDeque|dwukierunkow"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "top-k-sortowanie",
+      "expect": "trigger",
+      "prompt": "Mam 10 milionów wyników i potrzebuję tylko 100 największych. Czy sortować całość i brać pierwsze 100? Jaka jest złożoność lepszego podejścia? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kopiec|kopca|heap|priorityqueue|kolejk\\w+ priorytet"
+          ],
+          [
+            "O\\(n log k\\)|n\\s*log\\s*k|quickselect|wybór k-tego|k-tego"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "problem-domenowy",
+      "expect": "no-trigger",
+      "prompt": "W wymaganiach mam układanie harmonogramu: projekty konkurują o kompetencje ludzi w czasie i nie wiem, jaki to klasyczny problem algorytmiczny. Jak go rozpoznać w domenie? Odpowiedz zwięźle.",
+      "neighbor": "ddd-algorithm-recognition"
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+name: release
+
+# Każdy merge do main, który wymaga nowej wersji (feat, fix, perf lub zmiana niezgodna od ostatniego tagu vX.Y.Z),
+# kończy się wydaniem bez ręcznych kroków (docs/RELEASING.md):
+#   1. prepare: `python3 scripts/release.py --ci` liczy wersję z Conventional Commits, zapisuje factory/VERSION
+#      i wpis factory/CHANGELOG.md; job commituje to jako "chore(release): X.Y.Z" na main. Wersję ustawioną
+#      ręcznie (zmergowany PR "chore(release)") bez tagu wydaje bez zmian.
+#   2. tag + github-release: tag z adnotacją vX.Y.Z na tym commicie i GitHub Release z wpisem CHANGELOG.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Przebiegi czekają w kolejce zamiast się nakładać, więc dwa merge nigdy nie policzą tej samej wersji.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      new: ${{ steps.read.outputs.new }}
+      sha: ${{ steps.read.outputs.sha }}
+      skip: ${{ steps.bump.outputs.skip }}
+    steps:
+      # Pełna historia i tagi do policzenia wersji; bez tokenu w .git/config.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+
+      - name: Podnieś wersję z commitów od ostatniego tagu
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(tr -d '[:space:]' < factory/VERSION)
+          if ! git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
+            echo "factory/VERSION ma $version bez tagu (ustawione przez PR chore(release)) — wydaję bez zmian"
+            exit 0
+          fi
+          python3 scripts/release.py --ci
+          [ -z "$(git status --porcelain)" ] && exit 0
+          python3 factory/build.py check
+          version=$(tr -d '[:space:]' < factory/VERSION)
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -qam "chore(release): $version"
+          # Push z GITHUB_TOKEN nie uruchamia nowego przebiegu, więc ten commit nie wydaje się drugi raz.
+          # Gdy main poszedł dalej, push jest odrzucony, a przebieg w kolejce dla nowszego commita wyda oba.
+          if ! git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/main"; then
+            echo "::warning::main poszedł dalej w trakcie wydania; te commity wyda kolejny przebieg na main"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: read
+        run: |
+          version=$(tr -d '[:space:]' < factory/VERSION)
+          echo "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' \
+            || { echo "::error::factory/VERSION '$version' to nie X.Y.Z"; exit 1; }
+          if git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then new=false; else new=true; fi
+          # Nowa wersja musi mieć wpis w CHANGELOG (notatki wydania), zanim cokolwiek zostanie otagowane.
+          if [ "$new" = true ]; then python3 scripts/release_notes.py "$version" > /dev/null; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "Wersja $version, nowe wydanie: $new, commit $(git rev-parse --short HEAD)"
+
+  # Wydanej wersji nigdy się nie przesuwa ani nie używa ponownie (SemVer, reguła 3): tag powstaje raz.
+  tag:
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true' && needs.prepare.outputs.new == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - name: Utwórz tag v${{ needs.prepare.outputs.version }}
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "v$VERSION" -m "Release $VERSION" "$SHA"
+          git push origin "refs/tags/v$VERSION"
+
+  # GitHub Release bieżącej wersji z wpisem CHANGELOG jako notatkami. Działa przy każdym przebiegu, nie tylko
+  # zaraz po tagowaniu, więc brakujące wydanie (np. po nieudanym przebiegu) utworzy kolejny przebieg lub ręczne
+  # uruchomienie. Istniejącego wydania nie zmienia.
+  github-release:
+    needs: [prepare, tag]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.skip != 'true' && needs.tag.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Utwórz GitHub Release v${{ needs.prepare.outputs.version }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if ! git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" > /dev/null; then
+            echo "Brak tagu v$VERSION — nie tworzę wydania"
+            exit 0
+          fi
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Wydanie v$VERSION już istnieje"
+            exit 0
+          fi
+          python3 scripts/release_notes.py "$VERSION" > notes.md
+          # --verify-tag: gh nigdy nie tworzy tagu sam; musi to być tag z joba tag.
+          gh release create "v$VERSION" --verify-tag --title "v$VERSION" --notes-file notes.md

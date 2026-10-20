@@ -1,0 +1,47 @@
+{
+  "skill": "eng-design-principles",
+  "scenarios": [
+    {
+      "id": "dry-przypadkowe",
+      "expect": "trigger",
+      "prompt": "Dwie funkcje w moim kodzie wyglądają prawie tak samo: jedna liczy rabat, druga formatuje cenę w eksporcie. Wydzielić wspólną abstrakcję w imię DRY? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wiedz\\w+ biznesow|ta sama wiedza|przypadkow\\w+ podobień|przypadkow\\w+ podobn"
+          ],
+          [
+            "reguła trzech|AHA|trzeci przypadek|trzech"
+          ],
+          [
+            "duplikacja.{0,40}tańsz|tańsz\\w+ niż zła abstrakcja|zła abstrakcja"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "tell-dont-ask",
+      "expect": "trigger",
+      "prompt": "Review: widzę if (konto.getSaldo() >= kwota) konto.setSaldo(konto.getSaldo() - kwota). Jaką zasadę to narusza i czy mam usunąć wszystkie gettery? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "tell.{0,3}don.?t.{0,3}ask|powiedz|nie pytaj"
+          ],
+          [
+            "obciąż|debit|withdraw|metod\\w+ w obiekcie|konto.obci"
+          ],
+          [
+            "gettery.{0,60}(odczyt|prezentac|w porządku|nie nakaz)|odczyt\\w* i prezentac"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "nazwy-funkcji",
+      "expect": "no-trigger",
+      "prompt": "Jak nazwać funkcję, która robi wszystko z danymi zamówienia, i jak skrócić ją do czytelnej długości? Odpowiedz zwięźle.",
+      "neighbor": "eng-clean-code"
+    }
+  ]
+}

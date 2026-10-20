@@ -1,0 +1,71 @@
+{
+  "skill": "dom-ev-regulations-eu",
+  "scenarios": [
+    {
+      "id": "afir-adhoc-terminal-cena",
+      "expect": "trigger",
+      "prompt": "Mamy w Niemczech szybkie ładowarki DC 150 kW uruchomione w 2023 przy autostradzie. Płatność tylko przez aplikację i kod QR. Czy rozporządzenie AFIR każe nam dołożyć terminal kartowy, od kiedy, i jak mamy pokazać cenę przed startem? Odpowiedz zwięźle z numerami artykułów.",
+      "checks": {
+        "all": [
+          ["1 stycznia 2027|1 January 2027|01\\.01\\.2027|1\\.1\\.2027"],
+          ["czytnik|card reader|bezstykow|contactless|terminal"],
+          ["50 ?kW"],
+          ["art(ykuł|\\.)? ?5\\b|Article 5\\b"],
+          ["za minutę|per minute|opłata za (zajęcie|postój)|occupancy"]
+        ],
+        "none": ["QR[^.]{0,60}(wystarczy|wystarcza|jest wystarczając)"]
+      }
+    },
+    {
+      "id": "afir-dane-nap-api",
+      "expect": "trigger",
+      "prompt": "Jako CPO musimy udostępniać dane o punktach ładowania do krajowego punktu dostępu. Jakie dane dynamiczne wymienia rozporządzenie, od kiedy obowiązują, czy dane i API mogą być płatne i co z identyfikatorami operatorów? Odpowiedz zwięźle z numerem artykułu.",
+      "checks": {
+        "all": [
+          ["14 kwietnia 2025|14 April 2025|14\\.04\\.2025"],
+          ["operational status|status operacyjny|stan operacyjny"],
+          ["ad hoc price|cena ad hoc|cena doraźna|ceny ad hoc"],
+          ["art(ykuł|\\.)? ?20\\b|Article 20\\b"],
+          ["IDRO|Identification Registration"]
+        ],
+        "none": ["(dane|API)[^.]{0,40}(odpłatn|za opłatą)[^.]{0,30}(dozwolon|możliw)"]
+      }
+    },
+    {
+      "id": "cra-firmware-terminy",
+      "expect": "trigger",
+      "prompt": "Produkujemy ładowarki AC z własnym firmware i aplikacją mobilną do konfiguracji. Od kiedy w UE obowiązuje dla nas Cyber Resilience Act, od kiedy musimy zgłaszać aktywnie wykorzystywane podatności i w jakich terminach? Odpowiedz zwięźle z numerami artykułów.",
+      "checks": {
+        "all": [
+          ["11 grudnia 2027|11 December 2027"],
+          ["11 września 2026|11 September 2026"],
+          ["24 ?(godz|h)|24 hours"],
+          ["72 ?(godz|h)|72 hours"],
+          ["art(ykuł|\\.)? ?14\\b|Article 14\\b"]
+        ],
+        "none": ["CRA[^.]{0,40}od 2024"]
+      }
+    },
+    {
+      "id": "nis2-cpo-zakres",
+      "expect": "trigger",
+      "prompt": "Jesteśmy operatorem 400 punktów ładowania w UE, 120 pracowników, obrót ok. 30 mln EUR. Czy dyrektywa NIS2 nas obejmuje, jako jaki podmiot i w jakich terminach zgłaszamy poważny incydent? A nasz partner eMSP bez własnych ładowarek? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["załącznik(a|u)? I\\b|Annex I\\b"],
+          ["średni|medium"],
+          ["24 ?(godz|h)|24 hours"],
+          ["72 ?(godz|h)|72 hours"],
+          ["eMSP[^.]{0,200}(nie (jest|występuje|wymieni)|brak|nie ma|nie wymienia)|mobility service provider[^.]{0,200}(not|no )"]
+        ],
+        "none": ["mikroprzedsiębiorstw[^.]{0,40}zawsze"]
+      }
+    },
+    {
+      "id": "nevi-uptime-poza-zakresem",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-regulations-us",
+      "prompt": "Mamy stację w Teksasie z dofinansowania federalnego NEVI. Jak policzyć uptime portu za ostatnie 12 miesięcy i co musimy raportować kwartalnie do stanu? Odpowiedz zwięźle."
+    }
+  ]
+}

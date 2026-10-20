@@ -1,0 +1,37 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": false,
+    "excludedCommands": [
+      "git push *",
+      "git fetch *",
+      "git pull *"
+    ],
+    "filesystem": {
+      "denyRead": [
+        "~/.ssh",
+        "~/.aws",
+        "~/.config/gcloud",
+        "~/.azure",
+        "~/.kube",
+        "~/.config/gh",
+        "~/.docker/config.json",
+        "~/.git-credentials"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "github.com",
+        "api.github.com",
+        "objects.githubusercontent.com",
+        "repo.maven.apache.org",
+        "plugins.gradle.org",
+        "services.gradle.org"
+      ]
+    }
+  }
+}

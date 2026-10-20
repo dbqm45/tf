@@ -1,0 +1,59 @@
+{
+  "skill": "ops-setup-wizard",
+  "scenarios": [
+    {
+      "id": "kreator-kluczy",
+      "expect": "trigger",
+      "prompt": "Muszę skonfigurować kilka kluczy API w panelach zewnętrznych usług, część do .env, część jako sekrety w GitHub Actions. Nie chcę, żeby klucze przechodziły przez rozmowę z tobą. Jak to rozwiązać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kreator",
+            "wizard",
+            "interaktywn"
+          ],
+          [
+            "bash",
+            "skrypt"
+          ],
+          [
+            "stdin",
+            "bez echa",
+            "ukryt",
+            "read -s",
+            "-s"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "migracja-reczna",
+      "expect": "trigger",
+      "prompt": "Czeka mnie jednorazowa migracja z jednego dostawcy poczty na drugi: zmiany w panelach, klucze, nieodwracalne przełączenie DNS. Agent nie ma dostępu do paneli. Jak to zorganizować, żeby nic nie przeoczyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kreator",
+            "wizard",
+            "interaktywn"
+          ],
+          [
+            "confirm",
+            "potwierdz",
+            "nieodwracaln"
+          ],
+          [
+            "etap",
+            "krok"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pipeline-gha",
+      "expect": "no-trigger",
+      "prompt": "Napisz mi workflow GitHub Actions, który buduje aplikację, uruchamia testy i wdraża ją na staging, z cache zależności. Odpowiedz zwięźle.",
+      "neighbor": "ops-ci-cd"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "skill": "dom-ev-csms-migration",
+  "scenarios": [
+    {
+      "id": "przelaczenie-stacji-2x",
+      "expect": "trigger",
+      "prompt": "Wychodzimy z zewnętrznego SaaS-owego CSMS na własny. Mamy 400 stacji OCPP 2.0.1 i 900 stacji 1.6. Jak technicznie zdalnie przepiąć stacje na nowy adres i jak to puścić w falach, żeby w razie kłopotu dało się wrócić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["SetNetworkProfile"],
+          ["NetworkConfigurationPriority"],
+          ["configurationSlot|slot"],
+          ["pilot"],
+          ["rollback|powrót|wrócić|cofn"]
+        ],
+        "none": ["wszystkie stacje naraz", "ChangeConfiguration z kluczem CentralSystemURL (jest|to) standard"]
+      }
+    },
+    {
+      "id": "ciaglosc-roamingu",
+      "expect": "trigger",
+      "prompt": "Za dwa tygodnie przenosimy ładowarki do nowej platformy CPO. Partnerzy roamingowi mają nasze lokalizacje po OCPI, kierowcy mają sesje w toku, a część stacji jest offline. Na co uważać, żeby nie było przerwy dla eMSP i nie zgubić rozliczeń? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["party_id"],
+          ["EVSE ID|evse_id"],
+          ["CDR"],
+          ["w toku|trwając|aktywn[a-z]+ sesj|in[- ]progress"],
+          ["offline"]
+        ],
+        "none": ["nowe EVSE ID dla każdej stacji po migracji", "REMOVED dla wszystkich lokalizacji na czas migracji"]
+      }
+    },
+    {
+      "id": "granica-architektura-csms",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-cpms-architecture",
+      "prompt": "Projektujemy bramę WebSocket dla naszego CSMS. Jak routować komendy do konkretnej stacji, gdy mamy kilka instancji bramy, i jak zabezpieczyć się przed reconnect storm po awarii?"
+    }
+  ]
+}

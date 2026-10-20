@@ -1,0 +1,51 @@
+{
+  "skill": "ops-virtualization-storage",
+  "scenarios": [
+    {
+      "id": "klaster-3-wezly",
+      "expect": "trigger",
+      "prompt": "Mamy 3 serwery i ok. 60 maszyn wirtualnych. Chcemy odejść z VMware na Proxmox z Ceph. Jak policzyć, czy klaster wytrzyma awarię jednego węzła, i czego nie przeoczyć przy migracji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["N\\+1", "awari[ai]\\s+(jednego|1)\\s+węzła", "utrat[ay]\\s+(jednego|1)\\s+węzła"],
+          ["overcommit", "nadsubskrypcj", "przypisanie vCPU", "vCPU"],
+          ["quorum|kworum|QDevice"],
+          ["virtio", "V2V", "wersj[aei]\\s+próbn", "pilota", "pilot"]
+        ],
+        "none": ["RAID 0 dla Ceph"]
+      }
+    },
+    {
+      "id": "raid-i-backup",
+      "expect": "trigger",
+      "prompt": "Na macierzy NAS mamy RAID 5 z 8 dysków po 16 TB i robimy migawki raz na dobę. Szef mówi, że to jest backup. Co z tym zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["migawk\\w+\\s+(nie jest|to nie)", "snapshot\\w*\\s+(nie jest|to nie)", "nie jest kopią", "nie zastępuj"],
+          ["3-2-1"],
+          ["RAID\\s*6", "RAID\\s*10", "podwójn\\w+ parzysto", "odbudow", "rebuild"],
+          ["niezmienial", "immutab", "WORM", "air-?gap", "Object Lock"]
+        ],
+        "none": ["RAID zastępuje kopię"]
+      }
+    },
+    {
+      "id": "sklep-edge",
+      "expect": "trigger",
+      "prompt": "Projektujemy mały serwer w każdym z 120 sklepów, łącze bywa niestabilne, na miejscu nie ma administratora. Co przewidzieć w infrastrukturze? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zdalne zarządzanie", "iDRAC", "iLO", "BMC", "IPMI", "Redfish", "out-of-band"],
+          ["praca offline", "tryb offline", "bez łączności", "autonomiczn", "zdegradowan"],
+          ["zapasow\\w+ (serwer|sprzęt|węzeł)", "spare", "wymiana bez", "zero-touch", "ZTP"]
+        ]
+      }
+    },
+    {
+      "id": "dr-sasiad",
+      "expect": "no-trigger",
+      "prompt": "Mamy SLO 99,9% dla API zamówień. Jak ustawić alerty burn rate, żeby nie budzić dyżurnego bez potrzeby?",
+      "neighbor": "ops-sre-incidents"
+    }
+  ]
+}

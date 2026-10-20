@@ -1,0 +1,72 @@
+{
+  "skill": "core-plan-interview",
+  "scenarios": [
+    {
+      "id": "przesluchanie-graphql",
+      "expect": "trigger",
+      "prompt": "Chcę przejść z REST na GraphQL w naszym API i mam plan tylko w głowie. Przepytaj mnie z niego, zanim cokolwiek zaczniemy robić. Jak ma wyglądać ta rozmowa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "rekomendacj"
+          ],
+          [
+            "rund"
+          ],
+          [
+            "potwierdz|czy tak to rozumiemy"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "agent-odpowiada-sam",
+      "expect": "trigger",
+      "prompt": "Zleciłem agentowi przepytanie mojego planu, ale on sam odpowiada na swoje pytania decyzyjne i zaczyna kodować. Co zmienić w konfiguracji i podejściu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "CLAUDE\\.md"
+          ],
+          [
+            "wyraźn\\w* zgod|nie wdra"
+          ],
+          [
+            "decyzj\\w* (należ|zostaw|podejmuje człowiek)|człowiek.{0,30}decyzj",
+            "pytania decyzyjne zadaj\\w* człowiek",
+            "decyzj\\w* .{0,20}(człowiekowi|Tobie)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "przesluchanie-po-badaniu",
+      "expect": "trigger",
+      "prompt": "Mam już raport z badania kodu i ranking trzech opcji migracji przygotowany przez agenta. Przepytaj mnie przed planem kroku — o co zapytasz najpierw i o co nie będziesz pytać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "którą opcj",
+            "wybór opcji",
+            "akceptacj\\w* rankingu",
+            "ranking\\w*.{0,60}(decyzj|wybier)"
+          ],
+          [
+            "nie (będę )?pyta\\w*",
+            "pomij\\w*",
+            "już (zapisan|rozstrzygn|przesądz)"
+          ],
+          [
+            "rekomend"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "warsztat-ekspert",
+      "expect": "no-trigger",
+      "prompt": "Prowadzę warsztat z ekspertem domeny rezerwacji hoteli. Jak zadawać pytania, żeby wydobyć wspólny słownik?",
+      "neighbor": "ddd-facilitation"
+    }
+  ]
+}

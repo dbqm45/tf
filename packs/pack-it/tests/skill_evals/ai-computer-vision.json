@@ -1,0 +1,59 @@
+{
+  "skill": "ai-computer-vision",
+  "scenarios": [
+    {
+      "id": "wykrywanie-wad-linia",
+      "expect": "trigger",
+      "prompt": "Mamy 800 zdjęć detali z linii produkcyjnej z 3 kamer, wady występują w ok. 2% zdjęć. Chcemy wykrywać zarysowania. Jak zaplanować zbiór, podział na train/test i metryki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["detekcj\\w+", "segmentacj\\w+", "klasyfikacj\\w+"],
+          ["wyciek\\w*", "leakage", "ta sam\\w+ (kamer\\w+|scen\\w+|partii|detal\\w*)", "podzia\\w+ (wg|po|według) kamer\\w+"],
+          ["map@|mAP|iou", "recall|czułość", "f1|precision|precyzj\\w+"],
+          ["kawałk\\w+|slice\\w*|podział\\w* (na|wg|według) (kamer|oświetl)\\w+", "oświetleni\\w+"]
+        ],
+        "none": ["losowy podział zdjęć wystarczy", "accuracy wystarczy"]
+      }
+    },
+    {
+      "id": "ocr-faktury",
+      "expect": "trigger",
+      "prompt": "Mamy skany faktur po polsku i chcemy z nich wyciągać numer, NIP i kwotę. Jak wybrać podejście i jak zmierzyć, czy działa na prawdziwych dokumentach? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ocr", "document ai", "vlm", "vision.language", "model wizyjno.językowy"],
+          ["cer", "wer", "dokładne dopasowanie", "exact match", "f1 (na|dla) pol\\w+"],
+          ["prawdziw\\w+ (dokument\\w*|skan\\w*|dane)", "dane z produkcji", "zbiór\\w* z wdrożenia"],
+          ["rodo|anonimiz\\w+|dane osobowe", "arch-privacy-compliance"]
+        ],
+        "none": ["trenuj od zera"]
+      }
+    },
+    {
+      "id": "kamery-twarze-tablice",
+      "expect": "trigger",
+      "prompt": "Wdrażamy detekcję pojazdów z kamer miejskich na urządzeniach brzegowych. Na obrazach widać twarze i tablice rejestracyjne, a model po zmianie pory roku zaczął gorzej działać. Co zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["anonimiz\\w+", "rozmyci\\w+", "blur", "maskowa\\w+"],
+          ["drift\\w*", "dryf\\w*", "monitor\\w+"],
+          ["ai-model-optimization", "kwantyzacj\\w+", "tensorrt|onnx"],
+          ["pory (roku|dnia)", "oświetleni\\w+", "warunk\\w+ (wdrożeni\\w+|produkcyjn\\w+)"]
+        ],
+        "none": ["nie ma znaczenia dla rodo"]
+      }
+    },
+    {
+      "id": "kwantyzacja-resnet",
+      "expect": "no-trigger",
+      "prompt": "Mam gotowy model ResNet w PyTorch. Jak go wyeksportować do ONNX i skwantyzować do INT8 z TensorRT, żeby przyspieszyć wnioskowanie na GPU?",
+      "neighbor": "ai-model-optimization"
+    },
+    {
+      "id": "ewaluacja-llm",
+      "expect": "no-trigger",
+      "prompt": "Jak zbudować sędziego LLM z rubryką i skalibrować go do ocen ludzi dla naszego asystenta czatu?",
+      "neighbor": "ai-evals"
+    }
+  ]
+}

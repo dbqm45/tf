@@ -1,0 +1,55 @@
+{
+  "skill": "dom-ev-regulations-us",
+  "scenarios": [
+    {
+      "id": "nevi-uptime-wzor",
+      "expect": "trigger",
+      "prompt": "Mamy stację z dofinansowania NEVI. Jeden port miał w zeszłym roku 20 000 minut awarii, z czego 6 000 to przerwa w dostawie prądu od utility i planowany serwis. Czy spełniamy federalny wymóg dostępności portu i jak to się dokładnie liczy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["525[ ,.]?600"],
+          ["97[,.]3"],
+          ["T_?excluded|wyłączon|wykluczon|excluded"],
+          ["680\\.116"]
+        ],
+        "none": ["99 ?%"]
+      }
+    },
+    {
+      "id": "nevi-protokoly-cena",
+      "expect": "trigger",
+      "prompt": "Piszemy CPMS dla stacji budowanych za pieniądze federalne w USA. Jakie protokoły (ładowarka–CSMS, CSMS–CSMS, pojazd–ładowarka) i jaka forma ceny są tam wymagane przed startem sesji? Odpowiedz zwięźle z numerami paragrafów.",
+      "checks": {
+        "all": [
+          ["OCPP 2\\.0\\.1"],
+          ["OCPI 2\\.2\\.1"],
+          ["15118-2|15118-20"],
+          ["\\$ ?/ ?kWh|za kWh|per kWh"],
+          ["680\\.108"]
+        ],
+        "none": ["(wystarczy|wystarcza)[^.]{0,30}OCPP 1\\.6"]
+      }
+    },
+    {
+      "id": "hb44-kwh-paragon",
+      "expect": "trigger",
+      "prompt": "Sprzedajemy kWh na szybkich ładowarkach DC w USA i pokazujemy cenę w aplikacji. Z jaką rozdzielczością wolno wskazywać energię na DC i AC, jakie pola ma mieć paragon (także elektroniczny) i czy cena za kWh może się zmienić w trakcie sesji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["0[.,]001 ?kWh"],
+          ["0[.,]000 ?1"],
+          ["Handbook 44|HB ?44|3\\.40"],
+          ["S\\.2\\.6|UR\\.3\\.3|paragon|receipt"],
+          ["S\\.2\\.4\\.3|zgod|approved|wcześniej"]
+        ],
+        "none": ["tylko papierow"]
+      }
+    },
+    {
+      "id": "preautoryzacja-terminal",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-payments",
+      "prompt": "Na naszej stacji kierowca płaci kartą w terminalu. Jak powinna wyglądać preautoryzacja kwoty, kiedy zwalniamy blokadę na karcie po przerwanej sesji i jak obsłużyć chargeback? Odpowiedz zwięźle."
+    }
+  ]
+}

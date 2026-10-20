@@ -1,0 +1,51 @@
+{
+  "skill": "ops-cloud-migration",
+  "scenarios": [
+    {
+      "id": "strategie-7r",
+      "expect": "trigger",
+      "prompt": "Mamy 150 aplikacji w serwerowni i trzeba je przenieść do chmury. Jak ocenić portfel i dobrać strategię dla każdej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["rehost"],
+          ["replatform"],
+          ["retire"],
+          ["retain"],
+          ["zależno\\w+|dependenc\\w+|grawitacj\\w+ danych|data gravity|licencj\\w+"]
+        ],
+        "none": ["tylko lift and shift dla wszystkich"]
+      }
+    },
+    {
+      "id": "cutover-bazy",
+      "expect": "trigger",
+      "prompt": "Przenosimy bazę produkcyjną 4 TB do chmury, a okno przestoju to maksymalnie 30 minut. Jak zaplanować przełączenie i wycofanie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["replikacj\\w+|cdc|replication|dms"],
+          ["rollback|wycofan\\w+|powrót"],
+          ["runbook|punkt bez powrotu|point of no return|go/no-go|go-no-go"],
+          ["przestoj\\w*|downtime|budżet przestoju"]
+        ]
+      }
+    },
+    {
+      "id": "fale-migracji",
+      "expect": "trigger",
+      "prompt": "Jak podzielić migrację do chmury na fale i którą aplikację przenieść pierwszą? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["fal\\w+|wave"],
+          ["pilot"],
+          ["zależno\\w+|dependenc\\w+|grup\\w+ przenoszenia|move group"]
+        ]
+      }
+    },
+    {
+      "id": "migracja-schematu",
+      "expect": "no-trigger",
+      "neighbor": "be-database",
+      "prompt": "Jak dodać kolumnę NOT NULL do dużej tabeli w PostgreSQL bez blokowania zapisów? Odpowiedz zwięźle."
+    }
+  ]
+}

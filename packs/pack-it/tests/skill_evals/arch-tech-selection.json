@@ -1,0 +1,90 @@
+{
+  "skill": "arch-tech-selection",
+  "scenarios": [
+    {
+      "id": "stack-startup",
+      "expect": "trigger",
+      "prompt": "Startup 4 osoby, zespół zna Pythona, budujemy B2B SaaS z danymi klientów w UE. Mamy wybrać framework i bazę. Jak podejść do wyboru, żeby potem nie żałować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "filtr",
+            "odrzuc",
+            "obowiązkow",
+            "must-have",
+            "knock-?out"
+          ],
+          [
+            "nudn",
+            "boring",
+            "znan\\w* zespo",
+            "najpowszechni",
+            "najpopularni"
+          ],
+          [
+            "macierz",
+            "ważon",
+            "weighted",
+            "wag[iaę]\\b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ewolucja-stacku",
+      "expect": "trigger",
+      "prompt": "Mamy 8-letnią aplikację na AngularJS i Javie 8, a część zespołu chce przepisać wszystko od zera na nowy stack. Jak ocenić, co zostawić, a co wymienić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "strangler",
+            "stopniow",
+            "incremental"
+          ],
+          [
+            "koszt\\w* migracj",
+            "migration cost",
+            "ile wysiłku",
+            "koszt i ryzyko",
+            "koszt\\w* (zmiany|przepisania|wymiany|przejścia)"
+          ],
+          [
+            "usprawni",
+            "improve",
+            "per obszar",
+            "dla każdego obszaru",
+            "każdy obszar",
+            "osobno"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bramki-przyjaznosci-agentow",
+      "expect": "trigger",
+      "prompt": "Jak ocenić, czy kandydat na stack jest przyjazny dla agentów AI, i co zrobić, gdy klient upiera się przy frameworku, który tę ocenę oblewa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "typ"
+          ],
+          [
+            "konwencj"
+          ],
+          [
+            "w obrębie rodziny|rodzin\\w* język|wśród (framework|bibliotek)"
+          ],
+          [
+            "kompensac|quality_override|reguł\\w* do CLAUDE"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wymagania-niefunkcjonalne",
+      "expect": "no-trigger",
+      "prompt": "Jak sformułować wymagania niefunkcjonalne dla systemu: scenariusze atrybutów jakości i drzewo użyteczności?",
+      "neighbor": "arch-quality-attributes"
+    }
+  ]
+}

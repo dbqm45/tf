@@ -1,0 +1,578 @@
+{
+ "version": 1,
+ "updated": "2026-10-20",
+ "sources": [
+  {
+   "id": "ocpi-2.2.1-d2",
+   "title": "OCPI 2.2.1 (wydanie d2) — specyfikacja",
+   "url": "https://github.com/ocpi/ocpi/tree/v2.2.1-d2",
+   "areas": [
+    "ocpi"
+   ],
+   "rank": "P",
+   "licence": "unknown",
+   "kind": "spec",
+   "checked": "2026-10-20",
+   "note": "repozytorium EVRoaming Foundation; tag v2.2.1-d2 poprawia przykłady Tariffs i step_size z tagu 2.2.1",
+   "files": [
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/transport_and_format.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/status_codes.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/credentials.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/version_information_endpoint.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/mod_locations.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/mod_sessions.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/mod_cdrs.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/mod_tariffs.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/mod_tokens.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.2.1-d2/mod_commands.asciidoc"
+   ]
+  },
+  {
+   "id": "ocpi-2.3.0",
+   "title": "OCPI 2.3.0 — specyfikacja",
+   "url": "https://github.com/ocpi/ocpi/tree/v2.3.0",
+   "areas": [
+    "ocpi",
+    "payments"
+   ],
+   "rank": "P",
+   "licence": "unknown",
+   "kind": "spec",
+   "checked": "2026-10-20",
+   "note": "moduł Payments, podatki w modelu Ameryki Płn.; Bookings w osobnym tagu v2.3.0-bookings",
+   "files": [
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/transport_and_format.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/status_codes.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/credentials.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/version_information_endpoint.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/mod_locations.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/mod_sessions.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/mod_cdrs.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/mod_tariffs.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/mod_tokens.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/mod_commands.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/changelog.asciidoc",
+    "https://raw.githubusercontent.com/ocpi/ocpi/v2.3.0/mod_payments.asciidoc"
+   ]
+  },
+  {
+   "id": "evroaming",
+   "title": "EVRoaming Foundation (OCPI)",
+   "url": "https://evroaming.org",
+   "areas": [
+    "ocpi"
+   ],
+   "rank": "P",
+   "licence": "unknown",
+   "kind": "organization",
+   "checked": null,
+   "note": "właściciel specyfikacji OCPI"
+  },
+  {
+   "id": "oicp",
+   "title": "OICP 2.3 (Hubject) — specyfikacja CPO i EMP",
+   "url": "https://github.com/hubject/oicp",
+   "areas": [
+    "oicp"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "spec",
+   "checked": "2026-10-20",
+   "note": "licencja CC BY-SA 4.0; OICP 2.1 wycofane 2023-04-13, nowe wdrożenia na 2.3 (README repozytorium)",
+   "files": [
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/OICP%202.3%20CPO/01_CPO_Communication_Paradigms.asciidoc",
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/OICP%202.3%20CPO/02_CPO_Services_and_Operations.asciidoc",
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/OICP%202.3%20CPO/03_CPO_Data_Types.asciidoc",
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/OICP%202.3%20CPO/05_Glossary_and_Abreviations.asciidoc",
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/OICP%202.3%20EMP/01_EMP_Communication_Paradigms.asciidoc",
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/OICP%202.3%20EMP/02_EMP_Services_and_Operations.asciidoc",
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/OICP%202.3%20EMP/03_EMP_Data_Types.asciidoc",
+    "https://raw.githubusercontent.com/hubject/oicp/master/OICP-2.3/Realease_Notes.asciidoc"
+   ]
+  },
+  {
+   "id": "oca-ocpp",
+   "title": "OCPP — strona protokołu (Open Charge Alliance)",
+   "url": "https://openchargealliance.org/protocols/open-charge-point-protocol/",
+   "areas": [
+    "ocpp"
+   ],
+   "rank": "P",
+   "licence": "restricted",
+   "kind": "spec",
+   "checked": null,
+   "note": "pobranie specyfikacji po rejestracji; licencja ogranicza redystrybucję [do weryfikacji]"
+  },
+  {
+   "id": "ocmf",
+   "title": "OCMF — Open Charge Metering Format (S.A.F.E.)",
+   "url": "https://github.com/SAFE-eV/OCMF-Open-Charge-Metering-Format",
+   "areas": [
+    "metering"
+   ],
+   "rank": "P",
+   "licence": "unknown",
+   "kind": "spec",
+   "checked": "2026-10-20",
+   "note": "format podpisanych odczytów licznika (Eichrecht)",
+   "files": [
+    "https://raw.githubusercontent.com/SAFE-eV/OCMF-Open-Charge-Metering-Format/master/OCMF-en.md"
+   ]
+  },
+  {
+   "id": "iso-15118-20",
+   "title": "ISO 15118-20:2022 — karta normy",
+   "url": "https://www.iso.org/standard/77845.html",
+   "areas": [
+    "iso15118"
+   ],
+   "rank": "P",
+   "licence": "paid",
+   "kind": "standard",
+   "checked": null,
+   "note": "norma płatna; w bazie tylko metadane i własne notatki"
+  },
+  {
+   "id": "iec-61851-1",
+   "title": "IEC 61851-1 — karta normy",
+   "url": "https://webstore.iec.ch/en/publication/6029",
+   "areas": [
+    "hardware"
+   ],
+   "rank": "P",
+   "licence": "paid",
+   "kind": "standard",
+   "checked": null,
+   "note": "norma płatna; w bazie tylko metadane i własne notatki"
+  },
+  {
+   "id": "sae-j3400",
+   "title": "SAE J3400 (NACS) — karta normy",
+   "url": "https://www.sae.org/standards/content/j3400_202409/",
+   "areas": [
+    "hardware",
+    "regulations-us"
+   ],
+   "rank": "P",
+   "licence": "paid",
+   "kind": "standard",
+   "checked": null,
+   "note": "norma płatna"
+  },
+  {
+   "id": "eu-afir",
+   "title": "AFIR — rozporządzenie (UE) 2023/1804",
+   "url": "https://eur-lex.europa.eu/eli/reg/2023/1804/oj",
+   "areas": [
+    "regulations-eu"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "ad hoc, ceny, dane statyczne i dynamiczne, NAP; EUR-Lex odpowiada wyzwaniem WAF (202 bez treści) także dla przeglądarki headless — pobierz PDF w przeglądarce i dodaj przez --file"
+  },
+  {
+   "id": "eu-mid",
+   "title": "MID — dyrektywa 2014/32/UE (przyrządy pomiarowe)",
+   "url": "https://eur-lex.europa.eu/eli/dir/2014/32/oj",
+   "areas": [
+    "regulations-eu",
+    "metering"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "w bazie art. 1–4 i zał. I (PL, wklejone przez człowieka; pkt 7.6, 8, 10, 11 dosłownie); brak zał. V (MI-003); zmiana dla EVSE: eu-mid-2026-706; EUR-Lex blokuje boty"
+  },
+  {
+   "id": "eu-mid-2026-706",
+   "title": "Dyrektywa (UE) 2026/706 zmieniająca MID — systemy pomiarowe EVSE (MI-011)",
+   "url": "https://eur-lex.europa.eu/eli/dir/2026/706/oj",
+   "areas": [
+    "regulations-eu",
+    "metering"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "transpozycja do 10.04.2028, stosowanie od 10.10.2028; EUR-Lex blokuje boty — plik od człowieka"
+  },
+  {
+   "id": "eu-nis2",
+   "title": "NIS2 — dyrektywa (UE) 2022/2555",
+   "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+   "areas": [
+    "regulations-eu",
+    "security"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "EUR-Lex odpowiada wyzwaniem WAF (202 bez treści) także dla przeglądarki headless — pobierz PDF w przeglądarce i dodaj przez --file"
+  },
+  {
+   "id": "eu-cra",
+   "title": "Cyber Resilience Act — rozporządzenie (UE) 2024/2847",
+   "url": "https://eur-lex.europa.eu/eli/reg/2024/2847/oj",
+   "areas": [
+    "regulations-eu",
+    "security"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "EUR-Lex odpowiada wyzwaniem WAF (202 bez treści) także dla przeglądarki headless — pobierz PDF w przeglądarce i dodaj przez --file"
+  },
+  {
+   "id": "eu-red-da",
+   "title": "RED — akt delegowany (UE) 2022/30 (cyberbezpieczeństwo urządzeń radiowych)",
+   "url": "https://eur-lex.europa.eu/eli/reg_del/2022/30/oj",
+   "areas": [
+    "regulations-eu",
+    "security"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "stosowany od 01.08.2025; uchylony z dniem 11.12.2027 rozporządzeniem (UE) 2026/339 (eu-red-da-uchylenie); normy zharmonizowane EN 18031 [do weryfikacji]; EUR-Lex blokuje boty"
+  },
+  {
+   "id": "eu-red-da-uchylenie",
+   "title": "Rozporządzenie delegowane (UE) 2026/339 uchylające akt delegowany RED (UE) 2022/30",
+   "url": "https://eur-lex.europa.eu/eli/reg_del/2026/339/oj",
+   "areas": [
+    "regulations-eu",
+    "security"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "uchylenie 2022/30 z dniem 11.12.2027 (pełne stosowanie CRA); EUR-Lex blokuje boty — plik od człowieka"
+  },
+  {
+   "id": "eu-epbd",
+   "title": "EPBD — dyrektywa (UE) 2024/1275 (budynki, pre-okablowanie)",
+   "url": "https://eur-lex.europa.eu/eli/dir/2024/1275/oj",
+   "areas": [
+    "regulations-eu"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "EUR-Lex odpowiada wyzwaniem WAF (202 bez treści) także dla przeglądarki headless — pobierz PDF w przeglądarce i dodaj przez --file"
+  },
+  {
+   "id": "eu-data-act",
+   "title": "Data Act — rozporządzenie (UE) 2023/2854",
+   "url": "https://eur-lex.europa.eu/eli/reg/2023/2854/oj",
+   "areas": [
+    "regulations-eu"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "EUR-Lex odpowiada wyzwaniem WAF (202 bez treści) także dla przeglądarki headless — pobierz PDF w przeglądarce i dodaj przez --file"
+  },
+  {
+   "id": "eu-red-iii",
+   "title": "RED III — dyrektywa (UE) 2023/2413 (OZE, inteligentne ładowanie)",
+   "url": "https://eur-lex.europa.eu/eli/dir/2023/2413/oj",
+   "areas": [
+    "regulations-eu",
+    "energy"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "EUR-Lex odpowiada wyzwaniem WAF (202 bez treści) także dla przeglądarki headless — pobierz PDF w przeglądarce i dodaj przez --file"
+  },
+  {
+   "id": "pl-elektromobilnosc",
+   "title": "Ustawa o elektromobilności i paliwach alternatywnych (Dz.U. 2018 poz. 317)",
+   "url": "https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20180000317",
+   "areas": [
+    "regulations-pl"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": null,
+   "note": "ISAP zwraca stronę anty-botową — pobierz PDF tekstu jednolitego w przeglądarce i dodaj przez --file"
+  },
+  {
+   "id": "pl-udt",
+   "title": "Urząd Dozoru Technicznego — stacje ładowania",
+   "url": "https://www.udt.gov.pl",
+   "areas": [
+    "regulations-pl"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "authority",
+   "checked": null,
+   "note": "odbiory i dozór stacji"
+  },
+  {
+   "id": "pl-eipa",
+   "title": "EIPA — Ewidencja Infrastruktury Paliw Alternatywnych",
+   "url": "https://eipa.udt.gov.pl",
+   "areas": [
+    "regulations-pl"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "authority",
+   "checked": null,
+   "note": "raportowanie cen i dostępności"
+  },
+  {
+   "id": "pl-ure",
+   "title": "Urząd Regulacji Energetyki",
+   "url": "https://www.ure.gov.pl",
+   "areas": [
+    "regulations-pl",
+    "energy"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "authority",
+   "checked": null,
+   "note": ""
+  },
+  {
+   "id": "us-nevi",
+   "title": "NEVI — 23 CFR part 680 (wymogi federalne dla stacji)",
+   "url": "https://www.ecfr.gov/current/title-23/chapter-I/subchapter-G/part-680",
+   "areas": [
+    "regulations-us"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "law",
+   "checked": "2026-10-20",
+   "note": "pełny tekst przez API renderera eCFR (wersja bieżąca); strona HTML eCFR bywa zablokowana",
+   "files": [
+    "https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/title-23?part=680"
+   ]
+  },
+  {
+   "id": "us-nist-hb44",
+   "title": "NIST Handbook 44 (2026), sekcja 3.40 — Electric Vehicle Fueling Systems",
+   "url": "https://www.nist.gov/pml/owm/nist-handbook-44-current-edition",
+   "areas": [
+    "regulations-us",
+    "metering"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "standard",
+   "checked": "2026-10-20",
+   "note": "PDF sekcji 3.40 wydania 2026 (doi.org/10.6028/NIST.HB.44-2026); co roku nowe wydanie — zmień adres pliku",
+   "files": [
+    "https://www.nist.gov/document/2026-nist-handbook-44-section-340"
+   ]
+  },
+  {
+   "id": "us-afdc",
+   "title": "Alternative Fuels Data Center (DOE)",
+   "url": "https://afdc.energy.gov",
+   "areas": [
+    "regulations-us"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "authority",
+   "checked": null,
+   "note": "dane o stacjach i przepisach stanowych"
+  },
+  {
+   "id": "us-joint-office",
+   "title": "Joint Office of Energy and Transportation",
+   "url": "https://driveelectric.gov",
+   "areas": [
+    "regulations-us"
+   ],
+   "rank": "P",
+   "licence": "open",
+   "kind": "authority",
+   "checked": null,
+   "note": "wytyczne NEVI"
+  },
+  {
+   "id": "mobilityhouse-ocpp",
+   "title": "ocpp (Python) — biblioteka OCPP 1.6/2.0.1",
+   "url": "https://github.com/mobilityhouse/ocpp",
+   "areas": [
+    "ocpp",
+    "implementation"
+   ],
+   "rank": "W",
+   "licence": "open",
+   "kind": "repo",
+   "checked": null,
+   "note": "implementacja referencyjna, nie specyfikacja"
+  },
+  {
+   "id": "steve",
+   "title": "SteVe — open-source CSMS (OCPP 1.x)",
+   "url": "https://github.com/steve-community/steve",
+   "areas": [
+    "ocpp",
+    "testing"
+   ],
+   "rank": "W",
+   "licence": "open",
+   "kind": "repo",
+   "checked": null,
+   "note": ""
+  },
+  {
+   "id": "everest",
+   "title": "EVerest — open-source stos ładowarki (OCPP, ISO 15118)",
+   "url": "https://github.com/EVerest/everest-core",
+   "areas": [
+    "ocpp",
+    "iso15118",
+    "implementation"
+   ],
+   "rank": "W",
+   "licence": "open",
+   "kind": "repo",
+   "checked": null,
+   "note": ""
+  },
+  {
+   "id": "everest-libocpp-smart-charging",
+   "title": "EVerest libocpp — dokumentacja smart charging (composite schedule, OCPP 1.6 i 2.0.1)",
+   "url": "https://github.com/EVerest/libocpp",
+   "areas": [
+    "ocpp",
+    "energy",
+    "implementation"
+   ],
+   "rank": "W",
+   "licence": "open",
+   "kind": "repo",
+   "checked": "2026-10-20",
+   "note": "Apache 2.0; implementacja referencyjna, nie specyfikacja OCA; testy composite schedule w tests/lib/ocpp/v16/test_composite_schedule.cpp",
+   "files": [
+    "https://raw.githubusercontent.com/EVerest/libocpp/main/doc/common/smart_charging_profiles.md",
+    "https://raw.githubusercontent.com/EVerest/libocpp/main/doc/v2/ocpp_201_smart_charging_in_depth.md",
+    "https://raw.githubusercontent.com/EVerest/libocpp/main/tests/lib/ocpp/v16/test_composite_schedule.cpp"
+   ]
+  },
+  {
+   "id": "ocpp-json-schemas",
+   "title": "Schematy JSON OCPP 1.6 i 2.0.1 — smart charging, pomiary, ISO 15118, statusy, komendy zdalne, konfiguracja (z biblioteki mobilityhouse/ocpp)",
+   "url": "https://github.com/mobilityhouse/ocpp",
+   "areas": [
+    "energy",
+    "implementation",
+    "iso15118",
+    "metering",
+    "ocpp"
+   ],
+   "rank": "W",
+   "licence": "open",
+   "kind": "repo",
+   "checked": "2026-10-20",
+   "note": "MIT; schematy pochodzą od OCA (kopia w bibliotece) — pola i enumeracje",
+   "files": [
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/SetChargingProfile.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/GetCompositeSchedule.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/GetCompositeScheduleResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/SetChargingProfileRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/GetCompositeScheduleResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/NotifyChargingLimitRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/MeterValues.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/StopTransaction.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/MeterValuesRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/TransactionEventRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/AuthorizeRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/Get15118EVCertificateRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/CertificateSignedRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/SignCertificateRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/NotifyEVChargingNeedsRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/AuthorizeResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/Get15118EVCertificateResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/GetCertificateStatusRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/StatusNotification.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/TriggerMessage.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/ChangeConfiguration.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/GetConfiguration.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/Reset.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/ChangeAvailability.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/UpdateFirmware.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/GetDiagnostics.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/BootNotification.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/StatusNotificationRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/TriggerMessageRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/SetNetworkProfileRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/SetVariablesRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/ResetRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/ChangeAvailabilityRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/UpdateFirmwareRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/GetLogRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/BootNotificationRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/ChangeConfigurationResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/SetNetworkProfileResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/SetVariablesResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/ChangeAvailabilityResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/ResetResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/UnlockConnector.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/UnlockConnectorResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/TriggerMessageResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/UpdateFirmwareResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/ChangeAvailabilityResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/ResetResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/UpdateFirmwareResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/UnlockConnectorRequest.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/UnlockConnectorResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/TriggerMessageResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/StartTransaction.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v16/schemas/RemoteStopTransactionResponse.json",
+    "https://raw.githubusercontent.com/mobilityhouse/ocpp/master/ocpp/v201/schemas/RequestStopTransactionResponse.json"
+   ]
+  },
+  {
+   "id": "josev-iso15118",
+   "title": "Josev (SwitchEV iso15118) — implementacja ISO 15118-2, -20 i DIN 70121 (komunikaty, timeouty, PKI)",
+   "url": "https://github.com/SwitchEV/iso15118",
+   "areas": [
+    "iso15118",
+    "implementation"
+   ],
+   "rank": "W",
+   "licence": "open",
+   "kind": "repo",
+   "checked": "2026-10-20",
+   "note": "Apache 2.0; implementacja referencyjna, nie norma ISO (płatna); nazwy komunikatów, pól i timeouty z kodu",
+   "files": [
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/README.md",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/timeouts.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/iso15118_2/timeouts.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/iso15118_20/timeouts.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/din_spec/timeouts.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/enums.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/app_protocol.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/sdp.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/iso15118_2/body.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/iso15118_20/common_messages.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/iso15118_20/dc.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/messages/iso15118_20/ac.py",
+    "https://raw.githubusercontent.com/SwitchEV/iso15118/main/iso15118/shared/pki/create_certs.sh"
+   ]
+  }
+ ]
+}

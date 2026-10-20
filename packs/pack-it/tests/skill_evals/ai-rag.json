@@ -1,0 +1,99 @@
+{
+  "skill": "ai-rag",
+  "scenarios": [
+    {
+      "id": "baza-wiedzy-rag-czy-kontekst",
+      "expect": "trigger",
+      "prompt": "Mamy 300 stron regulaminów i procedur firmowych w PDF-ach i chcemy czatbota, który odpowiada pracownikom z cytatami. Czy robić RAG, wrzucić wszystko w długi kontekst, czy dotrenować model? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "200[ .,]?000 token",
+            "200 tys\\.? token",
+            "500 stron",
+            "mieści się w (kontek|oknie)"
+          ],
+          [
+            "prompt caching",
+            "cache\\w* prompt",
+            "buforowan\\w* prompt",
+            "cache'owan"
+          ],
+          [
+            "fine-tuning",
+            "dotrenowan\\w*[^.]{0,80}(styl|format|zachowan)",
+            "nie (uczy|wstrzykuje) wiedzy"
+          ]
+        ],
+        "none": [
+          "dotrenuj model na dokumentach, żeby (zapamiętał|nauczył się) fakt"
+        ]
+      }
+    },
+    {
+      "id": "slabe-wyszukiwanie-kody-bledow",
+      "expect": "trigger",
+      "prompt": "Nasz RAG po polsku świetnie radzi sobie z pytaniami opisowymi, ale przy zapytaniach o konkretne kody błędów (np. ERR-4012) i numery paragrafów zwraca bzdury. Jak to naprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "BM25",
+            "wyszukiwanie leksykaln\\w*",
+            "full-text",
+            "pełnotekstow"
+          ],
+          [
+            "hybrydow",
+            "RRF",
+            "reciprocal rank fusion",
+            "łącz\\w* (wyniki|rankingi)"
+          ],
+          [
+            "rerank",
+            "cross-encoder",
+            "reranker"
+          ]
+        ],
+        "none": [
+          "wystarczy (zwiększyć|większy) model embeddingów"
+        ]
+      }
+    },
+    {
+      "id": "pomiar-jakosci-i-uprawnienia",
+      "expect": "trigger",
+      "prompt": "Wdrażamy wyszukiwanie semantyczne po dokumentach działu HR i prawnego, do którego dostęp mają różne grupy. Jak zmierzyć jakość retrievalu i jak zadbać, żeby ktoś bez uprawnień nie dostał fragmentu cudzego dokumentu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "recall@",
+            "MRR",
+            "nDCG",
+            "zbiór złoty",
+            "golden set"
+          ],
+          [
+            "filtr\\w* (metadanych|po stronie bazy|w zapytaniu)",
+            "przed (wyszukiwaniem|rankingiem|modelem)",
+            "ACL",
+            "uprawnień\\w* (dokumentu|na poziomie)"
+          ],
+          [
+            "prompt injection",
+            "wstrzykiwani\\w* (poleceń|promptu)",
+            "dane,? nie polecenia"
+          ]
+        ],
+        "none": [
+          "(uprawnienia|dostęp) sprawdź (dopiero )?(w|przez) prompt"
+        ]
+      }
+    },
+    {
+      "id": "indeksy-pgvector",
+      "expect": "no-trigger",
+      "neighbor": "be-database",
+      "prompt": "Mamy tabelę orders w PostgreSQL z 80 mln wierszy i zapytanie z filtrem po customer_id i created_at jest wolne. Jak dobrać indeks złożony i sprawdzić plan zapytania?"
+    }
+  ]
+}

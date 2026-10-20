@@ -1,0 +1,47 @@
+{
+  "skill": "ddd-algorithm-recognition",
+  "scenarios": [
+    {
+      "id": "etapy-zaleznosci",
+      "expect": "trigger",
+      "prompt": "W wymaganiach mamy: 'etap montażu zależy od zakończenia dostawy i projektu, kilka etapów może iść równolegle, a za opóźnienie płacimy karę'. Czy to znany problem algorytmiczny i jak go zmapować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "topologiczn|topological"
+          ],
+          [
+            "ścieżk\\w+ krytyczn|critical path|cpm"
+          ],
+          [
+            "cykl|zasob|niejawn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dobor-projektow",
+      "expect": "trigger",
+      "prompt": "Biznes mówi: 'dobierz projekty do ludzi tak, żeby zmieścić się w budżecie, godzinach i kompetencjach, i maksymalizować zysk'. Jaki to klasyczny problem i czy pisać własny algorytm? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "plecak|knapsack"
+          ],
+          [
+            "wielowymiar|multidim|wiele limit|kilka limit"
+          ],
+          [
+            "solver|mip|nie pisz własn|gotow\\w+ bibliotek"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "klasa-problemu",
+      "expect": "no-trigger",
+      "neighbor": "ddd-deep-modeling",
+      "prompt": "Zbieram wymagania do modułu zgłoszeń serwisowych. Chcę ustalić, czy to zwykły CRUD, transformacja danych czy konkurencja o zasoby. Jak sklasyfikować problem przez pytania modelujące? Odpowiedz zwięźle."
+    }
+  ]
+}

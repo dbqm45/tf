@@ -1,0 +1,60 @@
+{
+  "skill": "ai-product-management",
+  "scenarios": [
+    {
+      "id": "czy-ai-i-koszt-bledow",
+      "expect": "trigger",
+      "prompt": "Szef chce funkcję AI, która sama zatwierdza zwroty w sklepie. Skąd mam wiedzieć, czy w ogóle warto tu używać AI, a nie zwykłych reguł? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["regu[łl]\\w*", "deterministyczn\\w+", "rule-based"],
+          ["koszt\\w* błęd\\w+", "cena błęd\\w+", "skutk\\w+ błęd\\w+", "kto ponosi"],
+          ["człowiek w pętli", "human-in-the-loop", "zatwierdz\\w+ (przez )?człowiek", "weryfikacj\\w+ człowiek"],
+          ["tolerancj\\w+", "dopuszczaln\\w+", "typ\\w* błęd\\w+", "fałszywie (dodatni|ujemn)"]
+        ],
+        "none": ["AI zawsze będzie lepsze od reguł", "nie trzeba mierzyć błędów"]
+      }
+    },
+    {
+      "id": "kryteria-akceptacji-jako-ewaluacje",
+      "expect": "trigger",
+      "prompt": "Piszę wymagania do asystenta AI w aplikacji bankowej i nie wiem, jak zapisać kryteria akceptacji, skoro odpowiedzi modelu są za każdym razem inne. Co tam wpisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ewaluacj\\w+", "evals?\\b", "zbi[óo]r (testow|przykład)\\w+"],
+          ["pr[óo]g jako[śs]ci", "poprzeczk\\w+", "docelow\\w+ (wynik|skuteczno)", "\\d+\\s?%"],
+          ["dobr\\w+ i złe", "przykład\\w* (dobr|wyj)\\w+", "wzorcow\\w+", "good.{0,12}bad"],
+          ["opóźnieni\\w+", "latency", "koszt (za|na) zadanie", "cost per task", "p9[05]"]
+        ],
+        "none": ["kryterium: model odpowiada poprawnie", "wystarczy test manualny"]
+      }
+    },
+    {
+      "id": "wdrozenie-etapowe-i-niepewnosc",
+      "expect": "trigger",
+      "prompt": "Mamy gotowy prototyp podsumowań AI w naszym CRM. Jak to bezpiecznie wypuścić do klientów i jak pokazać użytkownikom, że model może się mylić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["dogfooding", "beta", "etapow\\w+", "stopniow\\w+"],
+          ["A/B", "eksperyment\\w*", "shadow", "canary"],
+          ["pewno[śs]ci", "niepewno[śs]ci", "confidence", "oczekiwa\\w+"],
+          ["popraw\\w+ (przez )?użytkownik", "korekt\\w+", "feedback", "kciuk", "zgłoś błąd", "fallback", "wyjście awaryjne"],
+          ["metryk\\w+ (produktow|biznesow)\\w*", "metryk\\w+ modelu"]
+        ],
+        "none": ["wypuść od razu do wszystkich", "model nigdy się nie myli"]
+      }
+    },
+    {
+      "id": "metoda-ewaluacji-sedzia",
+      "expect": "no-trigger",
+      "prompt": "Jak zbudować sędziego LLM do oceny odpowiedzi chatbota i skalibrować go do ocen ludzi, a potem wpiąć bramkę z progiem w CI?",
+      "neighbor": "ai-evals"
+    },
+    {
+      "id": "drzewo-szans-wynik",
+      "expect": "no-trigger",
+      "prompt": "Mamy 3 pomysły na funkcje i nie wiem, który wybrać. Jak zbudować drzewo szans i rozwiązań oraz wybrać wynik do poprawy według RICE?",
+      "neighbor": "proc-product-discovery"
+    }
+  ]
+}

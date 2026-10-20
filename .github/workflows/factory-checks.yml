@@ -1,0 +1,40 @@
+# Sprawdzenia fabryki bez modelu (bez sekretów, bez kosztu): budowa agentów, testy, bramka jakości skilli.
+# Ewaluacji na modelu (płatnej) CI nie uruchamia — robi ją człowiek: python3 factory/skill_gate.py <skill> --model haiku,sonnet
+name: factory-checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python3 factory/build.py check
+      # Ubuntu 23.10+ blokuje nieuprzywilejowane przestrzenie nazw użytkownika, a bez nich Chromium nie ma piaskownicy
+      # (test_fetch_page renderuje stronę). Zezwolenie tylko dla tej jednej przeglądarki, profilem AppArmor — „Option 2”
+      # z chromium/src docs/security/apparmor-userns-restrictions.md; blokada dla reszty systemu i piaskownica zostają.
+      - name: Profil AppArmor dla Chromium (test_fetch_page)
+        run: |
+          [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] || exit 0
+          browser=$(python3 -c 'import importlib.util as u; s = u.spec_from_file_location("fp", ".claude/skills/core-source-research/scripts/fetch_page.py"); m = u.module_from_spec(s); s.loader.exec_module(m); print(m.find_browser() or "")')
+          [ -n "$browser" ] || exit 0
+          browser=$(readlink -f "$browser")
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile ctf-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$browser" \
+            | sudo tee /etc/apparmor.d/ctf-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/ctf-chromium
+      - run: for t in tests/test_*.py; do python3 "$t" || exit 1; done
+        env:
+          CTF_REQUIRE_BROWSER: "1"  # test_fetch_page pada bez Chromium zamiast pomijać render
+      - run: python3 tests/run_skill_evals.py --validate
+      - name: Każdy skill przeszedł bramkę jakości w aktualnej wersji
+        run: python3 factory/skill_gate.py --status --strict

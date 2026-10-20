@@ -1,0 +1,310 @@
+{
+ "obszar": "ocpp",
+ "pytania": [
+  {
+   "id": "ramki-call-callresult-callerror",
+   "pytanie": "Jak wyglądają ramki CALL, CALLRESULT i CALLERROR w OCPP-J (numer typu i pola)?",
+   "wzorzec": "CALL to [2, messageId, Action, payload], CALLRESULT to [3, messageId, payload] z tym samym messageId co żądanie, a CALLERROR to [4, messageId, errorCode, opis, szczegóły].",
+   "checks": {
+    "all": [
+     [
+      "\\[ ?2\\b|call.{0,25}\\b2\\b|\\b2\\b.{0,15}call\\b"
+     ],
+     [
+      "\\[ ?3\\b|callresult.{0,25}\\b3\\b|\\b3\\b.{0,15}callresult"
+     ],
+     [
+      "\\[ ?4\\b|callerror.{0,25}\\b4\\b|\\b4\\b.{0,15}callerror"
+     ],
+     [
+      "messageid|message id"
+     ]
+    ],
+    "none": []
+   },
+   "zrodlo": "dom-ev-ocpp-16",
+   "trudnosc": 1
+  },
+  {
+   "id": "bootnotification-accepted-pending-rejected",
+   "pytanie": "Co oznaczają statusy Accepted, Pending i Rejected w odpowiedzi CSMS na BootNotification?",
+   "wzorzec": "Accepted to normalna praca, a interval to odstęp Heartbeatów. Pending znaczy, że CSMS zna stację, ale jeszcze jej nie przyjął (np. ją konfiguruje), więc w praktyce nie startuje ona transakcji. Rejected znaczy, że stacja jest nieznana lub odrzucona i ponawia Boot po interval.",
+   "checks": {
+    "all": [
+     [
+      "accepted.{0,100}(normaln|przyj|praca|działa)"
+     ],
+     [
+      "pending.{0,120}(jeszcze|nie przyj|konfigur|w trakcie)"
+     ],
+     [
+      "rejected.{0,120}(nieznan|odrzuc|ponawi|nie (autoryz|zaakcept))"
+     ],
+     [
+      "interval|heartbeat|sekund"
+     ]
+    ],
+    "none": []
+   },
+   "zrodlo": "dom-ev-ocpp-16",
+   "trudnosc": 1
+  },
+  {
+   "id": "profile-bezpieczenstwa-certyfikat-klienta",
+   "pytanie": "Który profil bezpieczeństwa OCPP wymaga certyfikatu klienta po stronie ładowarki i który jest minimum na produkcję?",
+   "wzorzec": "Certyfikat klienta (mTLS) wymaga tylko profil 3. Minimum produkcyjne to profil 2 (TLS z Basic Auth); profil 1 (ws:// z Basic Auth) jest tylko do testów i sieci izolowanych.",
+   "checks": {
+    "all": [
+     [
+      "(profil|profile|security profile)\\D{0,5}3.{0,80}(certyfikat|mtls|klient)|(certyfikat|mtls).{0,80}(profil|profile)\\D{0,5}3"
+     ],
+     [
+      "(profil|profile)\\D{0,5}2.{0,100}(minimum|produkc|tls)|(minimum|produkc).{0,80}(profil|profile)\\D{0,5}2"
+     ]
+    ],
+    "none": [
+     "(profil|profile) ?1 (jest|to) (minimum|wystarcz)"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpp-16, dom-ev-ocpp-2x",
+   "trudnosc": 1
+  },
+  {
+   "id": "callerror-vs-rejected",
+   "pytanie": "CSMS dostał ramkę niezgodną ze schematem oraz poprawną ramkę, którą biznesowo odrzuca. Czym odpowiada w każdym z tych dwóch przypadków?",
+   "wzorzec": "Ramka niezgodna ze schematem dostaje CALLERROR (np. FormationViolation lub PropertyConstraintViolation), a nieznana akcja NotImplemented. Odmowa biznesowa to zwykły CALLRESULT ze status: Rejected, a nie CALLERROR.",
+   "checks": {
+    "all": [
+     [
+      "callerror.{0,150}(schemat|walidac|formation|constraint|nieznan|notimplemented)|(schemat|walidac|formation|constraint).{0,150}callerror"
+     ],
+     [
+      "callresult.{0,100}rejected|rejected.{0,100}callresult|(biznes|status).{0,100}callresult"
+     ]
+    ],
+    "none": [
+     "odmow\\w+ biznesow\\w+ (to|jest) callerror",
+     "rejected to callerror"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpp-16",
+   "trudnosc": 2
+  },
+  {
+   "id": "preparing-vs-occupied",
+   "pytanie": "Kierowca wpiął kabel i jeszcze się nie autoryzował. Jaki status złącza zgłosi stacja w StatusNotification w OCPP 1.6, a jaki w 2.0.1?",
+   "wzorzec": "W 1.6 będzie to Preparing, a w 2.0.1 Occupied, bo 2.0.1 ma tylko pięć statusów konektora, a stan ładowania niesie TransactionEvent.",
+   "checks": {
+    "all": [
+     [
+      "preparing"
+     ],
+     [
+      "occupied"
+     ],
+     [
+      "1\\.6"
+     ],
+     [
+      "2\\.0\\.1"
+     ]
+    ],
+    "none": [
+     "1\\.6.{0,20}(to|:) ?charging"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpp-16, dom-ev-ocpp-2x",
+   "trudnosc": 2
+  },
+  {
+   "id": "energia-sesji-z-licznika-wh",
+   "pytanie": "Stacja 1.6 wysłała StartTransaction z meterStart 48200 i StopTransaction z meterStop 63950. Ile kWh trafi do CDR i w jakiej jednostce są te odczyty?",
+   "wzorzec": "Odczyty licznika w 1.6 są w Wh: 63950 − 48200 = 15750 Wh, czyli 15,75 kWh.",
+   "checks": {
+    "all": [
+     [
+      "15[,.]75"
+     ],
+     [
+      "\\bwh\\b|watogodzin"
+     ]
+    ],
+    "none": [
+     "15750 ?kwh",
+     "15[,.]75 ?mwh"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpp-16, dom-ev-session-lifecycle",
+   "trudnosc": 2
+  },
+  {
+   "id": "transactionid-kto-nadaje",
+   "pytanie": "Kto nadaje transactionId w OCPP 1.6, a kto w 2.0.1, i jaki klucz transakcji przyjąć w bazie CSMS obsługującego obie wersje?",
+   "wzorzec": "W 1.6 transactionId nadaje CSMS w odpowiedzi na StartTransaction, a w 2.0.1 nadaje go stacja. Bezpieczny klucz to para (stacja, transactionId), niezależnie od wersji.",
+   "checks": {
+    "all": [
+     [
+      "1\\.6.{0,80}(csms|central system|backend)|(csms|central system).{0,40}1\\.6"
+     ],
+     [
+      "2\\.0\\.1.{0,80}(stacj|ładowark|charging station)"
+     ],
+     [
+      "klucz|para |\\(stacj"
+     ]
+    ],
+    "none": [
+     "w 2\\.0\\.1.{0,30}nadaje (go )?csms"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpp-2x, dom-ev-session-lifecycle",
+   "trudnosc": 2
+  },
+  {
+   "id": "stack-level-i-sufit-stacji",
+   "pytanie": "Na stacji 2.0.1 jest ChargingStationMaxProfile 16 A, dla trwającej sesji TxProfile 32 A (stackLevel 1) i TxDefaultProfile 10 A (stackLevel 0). Jaki limit obowiązuje i dlaczego?",
+   "wzorzec": "16 A. Wynik to minimum z limitu bazowego i sufitu ChargingStationMaxProfile. Limit bazowy daje TxProfile (32 A), bo ma pierwszeństwo przed TxDefaultProfile niezależnie od stackLevel; stackLevel rozstrzyga tylko w obrębie tego samego celu profilu.",
+   "checks": {
+    "all": [
+     [
+      "\\b16 ?a\\b"
+     ],
+     [
+      "max|sufit"
+     ],
+     [
+      "txprofile.{0,80}txdefault|txdefault.{0,80}txprofile|stacklevel.{0,80}(w obrębie|tego samego|w grupie|w ramach)"
+     ]
+    ],
+    "none": [
+     "\\b10 ?a\\b.{0,30}(obowiązuje|wynosi|limit to)",
+     "\\b32 ?a (obowiązuje|wynosi)"
+    ]
+   },
+   "zrodlo": "dom-ev-smart-charging, kb:everest-libocpp-smart-charging",
+   "trudnosc": 3
+  },
+  {
+   "id": "free-vend-id-tag-techniczny",
+   "pytanie": "Stacja 1.6 na hotelowym parkingu ładuje po wpięciu kabla, bez karty, a StartTransaction niesie idTag, którego nie ma w naszej bazie. Dlaczego ten idTag tam jest i co zrobić w CSMS?",
+   "wzorzec": "W 1.6 idTag jest wymagany w StartTransaction, więc stacja podstawia stały znacznik. Utwórz w CSMS jawny token techniczny „free vend” (per stacja lub grupa) i oznacz sesję jako free_vend, zamiast odrzucać nieznany idTag; to nadal pełna transakcja z MeterValues.",
+   "checks": {
+    "all": [
+     [
+      "idtag.{0,80}(wymagan|required|obowiązkow)|(wymagan|required|obowiązkow).{0,80}idtag"
+     ],
+     [
+      "techniczn|free ?vend"
+     ],
+     [
+      "nie odrzuc|zamiast odrzuc|utwórz|zarejestruj|dodaj|wprowadź"
+     ]
+    ],
+    "none": [
+     "free vend (nie jest|to nie) transakcj"
+    ]
+   },
+   "zrodlo": "dom-ev-session-lifecycle, kb:ocpp-json-schemas",
+   "trudnosc": 2
+  },
+  {
+   "id": "transactionevent-luka-seqno",
+   "pytanie": "W bazie ostatnie seqNo transakcji 2.0.1 to 5, a przychodzi TransactionEvent Updated z seqNo 7. Co robi CSMS?",
+   "wzorzec": "Nie odrzuca zdarzenia ani nie zamyka sesji: zapisuje je z seqNo 7, oznacza transakcję jako niekompletną (brak 6) i odpowiada normalnie (CALLRESULT, nie CALLERROR). Brakujące 6 może jeszcze dotrzeć; dopiero po ustalonym czasie bez uzupełnienia alarm i rozliczenie z oznaczeniem danych niepełnych.",
+   "checks": {
+    "all": [
+     [
+      "nie odrzuc|przyjm|zapisz|nie (zamykaj|ignoruj)"
+     ],
+     [
+      "niekomplet|lukę|luka|brak (seqNo )?6|brakując|gap|incomplete"
+     ],
+     [
+      "alarm|timer|czas|uzupełni|dotrze|poczeka"
+     ],
+     [
+      "callresult|nie callerror"
+     ]
+    ],
+    "none": [
+     "(zamknij|zamykamy|zamykać) (sesj|transakcj)\\w* (od razu|natychmiast)"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpp-2x",
+   "trudnosc": 3
+  },
+  {
+   "id": "txdefault-profil-offline",
+   "pytanie": "Ładowarka straciła łączność z CSMS, a kierowca zaczyna sesję offline. Jakie limity mocy obowiązują i co operator powinien przygotować wcześniej?",
+   "wzorzec": "Offline stacja stosuje tylko profile zainstalowane wcześniej: TxDefaultProfile (i sufit stacji) obowiązują także dla sesji startowanych offline, bo nie wymagają transactionId, a TxProfile dotyczy konkretnej transakcji CSMS. Operator musi zawczasu zainstalować TxDefaultProfile jako jawny, bezpieczny limit; nowego limitu stacja w tym czasie nie dostanie.",
+   "checks": {
+    "all": [
+     [
+      "txdefault|domyślny profil"
+     ],
+     [
+      "wcześniej|zainstal|install|z góry|przed (utrat|awari)"
+     ],
+     [
+      "transactionid|nie wymaga|sesj\\w+ startowan\\w+ offline"
+     ]
+    ],
+    "none": [
+     "limit (jest|bywa) zawsze (równy )?(48|0)"
+    ]
+   },
+   "zrodlo": "dom-ev-smart-charging",
+   "trudnosc": 2
+  },
+  {
+   "id": "reconnect-storm-pending-nie-rejected",
+   "pytanie": "Po awarii węzła bramy 8000 stacji wraca naraz. Jak rozłożyć ruch i jakim statusem odpowiadać na BootNotification, żeby nie wpędzić stacji w blokadę?",
+   "wzorzec": "Na BootNotification odpowiadaj Pending z interval rozkładającym kolejne próby, a nie Rejected (stacja uznaje się wtedy za nieautoryzowaną i blokuje na dłużej). Dodatkowo limit nowych handshake'ów/TLS na sekundę na bramie, backoff z jitterem po stronie stacji i rolling deploy z drenażem.",
+   "checks": {
+    "all": [
+     [
+      "pending"
+     ],
+     [
+      "rejected.{0,120}(nie|blok|zabl)|nie.{0,40}rejected"
+     ],
+     [
+      "jitter|backoff|limit\\w* (handshake|połącze|nowych)|drena[żz]|rolling"
+     ]
+    ],
+    "none": [
+     "odpowiada\\w* rejected (żeby|aby|by) (spowolni|ochłon)"
+    ]
+   },
+   "zrodlo": "dom-ev-cpms-architecture",
+   "trudnosc": 3
+  },
+  {
+   "id": "stop-failed-stan-operatorski",
+   "pytanie": "W naszym CSMS sesja ma stan STOP_FAILED. Czy to status z OCPP, co oznacza i co zrobić, zanim wystawimy CDR?",
+   "wzorzec": "STOP_FAILED to stan operatorski CSMS, nie status OCPP: CPO próbował zakończyć sesję, a stacja nie potwierdziła (brak StopTransaction lub TransactionEvent Ended). Ustal stan stacji (TriggerMessage) i ponów stop z limitem prób; po upływie okna zamknięcie administracyjne z wpisem (kto, dowód, meterStop, flaga szacunku). CDR dopiero po zamknięciu.",
+   "checks": {
+    "all": [
+     [
+      "nie (jest|są).{0,40}(ocpp|statusem)|nie status\\w* ocpp|stan\\w* operatorsk"
+     ],
+     [
+      "nie potwierdz|brak (stoptransaction|transactionevent|ended)"
+     ],
+     [
+      "ponow\\w+|triggermessage|retry"
+     ],
+     [
+      "administracyjn"
+     ]
+    ],
+    "none": [
+     "(wystaw|wystawi\\w+) cdr (od razu|natychmiast)",
+     "stop_failed (to|jest) status ocpp"
+    ]
+   },
+   "zrodlo": "dom-ev-session-lifecycle",
+   "trudnosc": 3
+  }
+ ]
+}

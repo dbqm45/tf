@@ -1,0 +1,339 @@
+{
+ "obszar": "energia-i-siec",
+ "pytania": [
+  {
+   "id": "dlm-statyczny-vs-dynamiczny",
+   "pytanie": "CPO planuje DLM dla parkingu biurowca. Czym różni się statyczny DLM od dynamicznego z pomiarem budynku i jak liczysz limit dla ładowarek EV w wariancie dynamicznym?",
+   "wzorzec": "Statyczny DLM ma stały limit dla EV: limit przyłącza minus szczyt budynku minus rezerwa, bez pomiaru. Dynamiczny odejmuje bieżący pobór budynku, osobno dla każdej fazy: EV_max(x) = limit(x) − budynek(x) − rezerwa, a stacja 3-fazowa dostaje minimum z faz. Wymaga licznika budynku, a pomiar jest nowym punktem awarii, więc potrzebny jest limit fail-safe.",
+   "checks": {
+    "all": [
+     [
+      "statyczn"
+     ],
+     [
+      "dynamiczn"
+     ],
+     [
+      "pomiar|licznik|przekładnik"
+     ],
+     [
+      "faz"
+     ],
+     [
+      "rezerw|minus|odejm|−|-"
+     ]
+    ],
+    "none": [
+     "dynamiczn\\w* (DLM )?(nie wymaga|działa bez) pomiaru"
+    ]
+   },
+   "zrodlo": "dom-ev-energy-management",
+   "trudnosc": 1
+  },
+  {
+   "id": "minimum-6a-przydzial",
+   "pytanie": "Algorytm podziału mocy w CSMS wyliczył dla jednego z pojazdów 4 A i wysłał to jako limit w profilu. Co się stanie z ładowaniem i jak powinien postępować algorytm?",
+   "wzorzec": "Poniżej 6 A (10 % PWM) pojazd traktuje ofertę jak brak zgody na ładowanie, więc nie będzie ładował, a plan liczy energię, której nie będzie. Algorytm powinien przydzielać 0 albo co najmniej 6 A, nigdy wartości pośrednich 1–5 A, a pojazd bez przydziału czeka.",
+   "checks": {
+    "all": [
+     [
+      "6 ?A"
+     ],
+     [
+      "nie ładuj|nie będzie ładow|wstrzym|nie pobier|brak zgody|nie ładuje|czeka|SuspendedEVSE"
+     ],
+     [
+      "\\b0 ?A|zero|0\\b|wyzeruj|zamień"
+     ]
+    ],
+    "none": [
+     "4 ?A (wystarczy|jest wystarczając|pozwoli)"
+    ]
+   },
+   "zrodlo": "dom-ev-energy-management, dom-ev-smart-charging",
+   "trudnosc": 1
+  },
+  {
+   "id": "ocpi-parking-tylko-23",
+   "pytanie": "Zespół rozwoju sieci chce publikować w OCPI wymiary miejsc, informację o zadaszeniu i miejscach pull-through (wjazd bez cofania) dla przyczep. W której wersji OCPI jest do tego obiekt Parking?",
+   "wzorzec": "Obiekt Parking (Location.parking_places, m.in. drive_through, roofed, wymiary miejsc, vehicle_types) jest dopiero w OCPI 2.3.0. W 2.2.1 nie ma go, tam zostają parking_type, parking_restrictions i facilities.",
+   "checks": {
+    "all": [
+     [
+      "2\\.3\\.0|2\\.3"
+     ],
+     [
+      "parking"
+     ],
+     [
+      "2\\.2\\.1"
+     ]
+    ],
+    "none": [
+     "2\\.2\\.1 (ma|zawiera|obsługuje|już ma) (obiekt )?parking"
+    ]
+   },
+   "zrodlo": "dom-ev-site-development",
+   "trudnosc": 1
+  },
+  {
+   "id": "composite-schedule-grupy-i-sufit",
+   "pytanie": "Na stacji OCPP 2.0.1 działa ChargingStationMaxProfile 20 A, a CSMS wysłał też TxProfile 32 A dla trwającej transakcji (brak innych profili). Jaki limit zastosuje stacja i wg jakich reguł composite schedule łączy profile?",
+   "wzorzec": "Obowiązuje 20 A. Profile dzielą się na grupy (Max, ExternalConstraints, TxDefault, Tx); w grupie wygrywa aktywny profil o najwyższym stackLevel; limit bazowy to Tx, gdy go brak TxDefault, a gdy go brak limit domyślny; wynik to minimum z limitu bazowego i Max, więc nigdy nie przekracza sufitu stacji.",
+   "checks": {
+    "all": [
+     [
+      "20 ?A"
+     ],
+     [
+      "max|sufit|ChargingStationMax|ChargePointMax"
+     ],
+     [
+      "minimum|najmniejsz|nie przekrac|ogranicz|min\\("
+     ],
+     [
+      "stackLevel|TxDefault|grup"
+     ]
+    ],
+    "none": [
+     "(obowiązuje|zastosuje|wynosi|limit to) 32 ?A",
+     "TxProfile (nadpisuje|podnosi|wyłącza) (sufit|ChargingStationMax|Max)"
+    ]
+   },
+   "zrodlo": "dom-ev-smart-charging",
+   "trudnosc": 2
+  },
+  {
+   "id": "limit-w-amperach-z-watow",
+   "pytanie": "CSMS ma ograniczyć stację 3-fazową 230 V do 9 kW, ale profil ładowania zapisuje w amperach. Jaki limit wpisujesz i na co uważasz w polach profilu?",
+   "wzorzec": "W = A × napięcie fazowe × liczba faz, więc 9000 / (230 × 3) ≈ 13,04 A, czyli 13,0 A (zaokrąglam w dół, żeby nie przekroczyć limitu; limit ma jedną cyfrę po przecinku). W profilu podaję numberPhases = 3, bo bez niego stacja zakłada 3 fazy, a pojazd 1-fazowy dostałby za mało.",
+   "checks": {
+    "all": [
+     [
+      "13([,.]0\\d?)? ?A"
+     ],
+     [
+      "numberPhases|liczb\\w* faz|faz"
+     ],
+     [
+      "w dół|nie przekrac|zaokr|round"
+     ]
+    ],
+    "none": [
+     "\\b39([,.]\\d)? ?A",
+     "9000 ?/ ?230\\b"
+    ]
+   },
+   "zrodlo": "dom-ev-smart-charging",
+   "trudnosc": 2
+  },
+  {
+   "id": "offline-bezpieczny-limit-txdefault",
+   "pytanie": "Cztery stacje 3-fazowe dzielą przyłącze 63 A na fazę, a łącze do CSMS bywa przerywane. Jak zapewnić, że bez łączności nie przekroczą przyłącza, i dlaczego „ostatni znany limit” jest zły?",
+   "wzorzec": "Bezpieczny limit musi być zainstalowany w stacji wcześniej, bo offline nowego nie dostanie: TxDefaultProfile (i sufit stacji) liczone tak, by suma domyślnych limitów wszystkich stacji mieściła się w limicie przyłącza, np. 63 ÷ 4 ≈ 15 A na stację (0 albo co najmniej 6 A). Profile dynamiczne powinny mieć krótką ważność. „Ostatni znany limit” jest zły, bo budynek i pozostałe stacje mogły się zmienić.",
+   "checks": {
+    "all": [
+     [
+      "TxDefault|ChargePointMax|ChargingStationMax|fail-safe|domyślny profil|limit domyślny"
+     ],
+     [
+      "suma|sum|łącznie|razem|÷|/ ?4|podziel|dzieli"
+     ],
+     [
+      "przyłącz|63"
+     ],
+     [
+      "wcześniej|zainstalowan|zapisan|w stacji|przed utratą|profil trwały"
+     ]
+    ],
+    "none": [
+     "ostatni znany limit (jest|wystarczy|jest bezpieczny|zapewni)"
+    ]
+   },
+   "zrodlo": "dom-ev-energy-management, dom-ev-smart-charging",
+   "trudnosc": 2
+  },
+  {
+   "id": "zajezdnia-wykonalnosc-fizyczna",
+   "pytanie": "Dyspozytor zajezdni mówi, że pojazd 3-fazowy (maks. 16 A, 230 V) musi dostać 60 kWh w 2 h postoju i prosi o podniesienie limitu przyłącza. Czy to pomoże?",
+   "wzorzec": "Nie. Granica fizyczna to 16 A × 0,23 kV × 3 fazy × 2 h = 22,08 kWh, mniej niż 60 kWh, więc plan nie uda się przy żadnym limicie przyłącza. Wykonalność liczy się przed algorytmem i zgłasza dyspozytorowi przed ładowaniem: niższy SoC docelowy, dłuższy postój albo inna stacja.",
+   "checks": {
+    "all": [
+     [
+      "22[,.]0?8?"
+     ],
+     [
+      "fizyk|nie (pomoże|uda)|niewykonaln|żaden limit|przy żadnym|granic"
+     ],
+     [
+      "dyspozytor|zgłos|SoC|postój|stacj|pojazd"
+     ]
+    ],
+    "none": [
+     "(zwiększenie|podniesienie) limitu (przyłącza )?(pomoże|rozwiąże)"
+    ]
+   },
+   "zrodlo": "dom-ev-energy-management",
+   "trudnosc": 2
+  },
+  {
+   "id": "pv-i-bess-limit-i-oplata-za-moc",
+   "pytanie": "Lokacja ma 40 kWp PV i magazyn BESS, a OSD rozlicza opłaty za moc szczytową. Czy limit przyłącza w DLM można podnieść o moc PV i co realnie daje BESS?",
+   "wzorzec": "Nie, PV nie zmniejsza ani nie podnosi limitu bezpieczeństwa: chmura zabiera produkcję w sekundy, więc limit liczy się tak, jakby PV nie było, a nadwyżka jest bonusem (tańsza energia). BESS robi peak shaving: pokrywa szczyt ponad limit (limit przyłącza plus moc falownika BESS, o ile SoC jest powyżej rezerwy), co obniża moc szczytową i opłaty za moc.",
+   "checks": {
+    "all": [
+     [
+      "PV|fotowolt"
+     ],
+     [
+      "nie (obniża|podnosi|zwiększa|odejmuj|dolicz|powinien)|bonus|bez PV|jakby PV nie było|nie ma PV|nie wlicz|nie zwiększ"
+     ],
+     [
+      "BESS|magazyn"
+     ],
+     [
+      "szczyt|peak"
+     ]
+    ],
+    "none": [
+     "PV (zwiększa|podnosi) limit (przyłącza|DLM)",
+     "limit przyłącza (plus|\\+) moc PV"
+    ]
+   },
+   "zrodlo": "dom-ev-energy-management",
+   "trudnosc": 2
+  },
+  {
+   "id": "nevi-680-106-stacja-korytarzowa",
+   "pytanie": "Wykonawca w USA projektuje stację przy korytarzu paliw alternatywnych finansowaną z NEVI. Jakie minima dla liczby portów i mocy wynikają z 23 CFR 680.106?",
+   "wzorzec": "Stacja korytarzowa musi mieć co najmniej cztery podłączone do sieci porty DC i umożliwiać jednoczesne ładowanie co najmniej czterech pojazdów. Każdy port DC ma mieć ciągłą moc znamionową co najmniej 150 kW (podział mocy dozwolony, jeśli port nadal spełnia żądanie pojazdu do 150 kW) i napięcie wyjściowe 250–920 V DC.",
+   "checks": {
+    "all": [
+     [
+      "4|cztery|four"
+     ],
+     [
+      "porty|portów|ports|port"
+     ],
+     [
+      "150 ?kW"
+     ],
+     [
+      "jednoczesn|jednocześnie|równocześnie|simultan"
+     ]
+    ],
+    "none": [
+     "(minimum|co najmniej) (dwa|2|two) porty"
+    ]
+   },
+   "zrodlo": "dom-ev-site-development, kb:us-nevi",
+   "trudnosc": 2
+  },
+  {
+   "id": "afir-art3-pula-co-60-km-moce",
+   "pytanie": "Planujemy stację przy sieci bazowej TEN-T dla aut osobowych. Jakie odległości między pulami i jakie moce puli wynikają z AFIR art. 3 ust. 4 lit. a do końca 2025 i do końca 2027? I czy to obowiązek CPO?",
+   "wzorzec": "Pule w każdym kierunku jazdy co najwyżej co 60 km. Do 31.12.2025 pula ma dawać co najmniej 400 kW i mieć co najmniej jeden punkt ≥ 150 kW; do 31.12.2027 co najmniej 600 kW i co najmniej dwa punkty ≥ 150 kW. Zobowiązanie dotyczy państw członkowskich, które zapewniają pokrycie (przez koncesje, dotacje, plany), a nie bezpośrednio pojedynczego CPO.",
+   "checks": {
+    "all": [
+     [
+      "60 ?km"
+     ],
+     [
+      "400 ?kW"
+     ],
+     [
+      "600 ?kW"
+     ],
+     [
+      "150 ?kW"
+     ],
+     [
+      "państw|member state|krajów"
+     ]
+    ],
+    "none": [
+     "AFIR (nakłada|nakazuje) (na )?(każdego )?CPO"
+    ]
+   },
+   "zrodlo": "dom-ev-site-development, kb:eu-afir",
+   "trudnosc": 3
+  },
+  {
+   "id": "dlm-fazy-biuro-3x80",
+   "pytanie": "Biuro ma przyłącze 3×80 A i rezerwę 5 A na fazę. Pobór budynku: L1 55 A, L2 30 A, L3 20 A. Do dyspozycji są dwie stacje 3-fazowe. Ile prądu może dostać każda i dlaczego nie liczysz średniej z faz?",
+   "wzorzec": "Wolne prądy: L1 80−55−5 = 20 A, L2 45 A, L3 55 A. Stacja 3-fazowa ładuje równym prądem na wszystkich fazach, więc ogranicza ją najsłabsza faza (L1, 20 A) i dwie stacje dzielą 20 A: po 10 A każda. Średnia lub suma po fazach nie ma sensu, bo każda faza ma własny limit.",
+   "checks": {
+    "all": [
+     [
+      "10 ?A"
+     ],
+     [
+      "20 ?A"
+     ],
+     [
+      "L1|najsłabsz|minimum|najmniejsz|jedn\\w+ faz|ogranicz"
+     ],
+     [
+      "faz"
+     ]
+    ],
+    "none": [
+     "każda (stacja )?(dostaje|ma|dostanie|po) (około )?45 ?A",
+     "135 ?A"
+    ]
+   },
+   "zrodlo": "dom-ev-energy-management",
+   "trudnosc": 3
+  },
+  {
+   "id": "edf-kontra-rowny-podzial",
+   "pytanie": "Limit instalacji to 24 A (3 fazy, 230 V), a od 18:00 stoją dwa pojazdy 3-fazowe: A potrzebuje 24 kWh do 20:00, B potrzebuje 20 kWh do 21:00. Porównaj równy podział z EDF.",
+   "wzorzec": "Przy równym podziale po 12 A każdy pojazd ma 12 × 0,69 kW = 8,28 kW, więc A dostanie w 2 h tylko ok. 16,6 kWh i terminu nie dotrzyma. EDF daje najpierw pojazdowi z najwcześniejszym odjazdem pełne 24 A (16,56 kW, A kończy po ok. 1,45 h), a potem B, który zdąży przed 21:00, więc oba terminy są spełnione.",
+   "checks": {
+    "all": [
+     [
+      "EDF|najwcześniejsz\\w+ odjazd|earliest"
+     ],
+     [
+      "16[,.]5\\d?|16[,.]6"
+     ],
+     [
+      "niespełnion|nie (zdąż|dotrzym|uda|spełni|naładuje)|za mało|brak"
+     ],
+     [
+      "oba|obydwa|both"
+     ]
+    ],
+    "none": [
+     "równy podział (jest|daje|zapewnia) (lepsz|oba terminy)"
+    ]
+   },
+   "zrodlo": "dom-ev-energy-management",
+   "trudnosc": 3
+  },
+  {
+   "id": "przylacze-osd-rownolegle-i-termin",
+   "pytanie": "Jak w pipeline nowej lokalizacji ustawiasz moment złożenia wniosku do OSD o przyłączenie i skąd bierzesz termin przyłączenia do harmonogramu budowy?",
+   "wzorzec": "Wniosek o przyłączenie rusza równolegle z umową z właścicielem i projektem, nie dopiero po pozwoleniu na budowę, bo przyłącze bywa najwolniejszym etapem. Termin do harmonogramu wpisuje się wyłącznie z pisma OSD (warunki przyłączenia, umowa), a nie z przeglądów czy pamięci. Gdy OSD nie przewiduje mocy w horyzoncie biznesowym, to knock-out lokalizacji albo przypadek na BESS i load management.",
+   "checks": {
+    "all": [
+     [
+      "równolegle|równocześnie|jednocześnie|w tym samym czasie"
+     ],
+     [
+      "pism|warunk\\w+ przyłączenia|umow\\w+ o przyłączenie|odpowiedź OSD|od OSD"
+     ],
+     [
+      "termin"
+     ]
+    ],
+    "none": [
+     "(po|dopiero po) (uzyskaniu )?pozwoleni\\w+ na budowę (składa|złoż)",
+     "termin (przyłączenia )?(z pamięci|z przeglądu) (wpisuj|jest)"
+    ]
+   },
+   "zrodlo": "dom-ev-site-development",
+   "trudnosc": 3
+  }
+ ]
+}

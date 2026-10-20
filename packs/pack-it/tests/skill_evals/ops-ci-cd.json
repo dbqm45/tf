@@ -1,0 +1,71 @@
+{
+  "skill": "ops-ci-cd",
+  "scenarios": [
+    {
+      "id": "actions-hardening",
+      "expect": "trigger",
+      "prompt": "Przeglądam workflow GitHub Actions, który na pull_request_target buduje kod z forka i wstawia ${{ github.event.pull_request.title }} wprost do kroku run. Co tu jest nie tak i jak to zabezpieczyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "env:",
+            "przez env|zmienn\\w+ środowiskow"
+          ],
+          [
+            "pull_request_target"
+          ],
+          [
+            "sha",
+            "permissions"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "npm-publish",
+      "expect": "trigger",
+      "prompt": "Nasz pipeline publikuje paczkę npm tokenem trzymanym w sekrecie GitHub, a zależności instaluje w tym samym jobie. Jak to ułożyć bezpieczniej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ignore-scripts"
+          ],
+          [
+            "trusted publishing|oidc"
+          ],
+          [
+            "provenance"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "composite-action-diff",
+      "expect": "trigger",
+      "prompt": "Przenosimy krok z agentem AI do composite action używanej w kilku repozytoriach. Workflow liczy diff PR i zapisuje go do GITHUB_OUTPUT, ale diff wychodzi pusty, a wielolinijkowa wartość się psuje. Co poprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fetch-depth"
+          ],
+          [
+            "<<\\s*\\w+",
+            "ogranicznik",
+            "delimiter",
+            "EOF",
+            "do pliku"
+          ],
+          [
+            "shell"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dockerfile",
+      "expect": "no-trigger",
+      "prompt": "Jak przyspieszyć budowanie obrazu w Dockerfile dla aplikacji Node.js, żeby warstwa z zależnościami się cache'owała?",
+      "neighbor": "ops-docker"
+    }
+  ]
+}

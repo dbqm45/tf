@@ -1,0 +1,56 @@
+# Automatyczna aktualizacja claude-team-factory (tryb zespołowy). Plik wstawia `python3 factory/update.py --auto on`,
+# usuwa `--auto off`. Raz w tygodniu sprawdza nowe wydanie PATCH/MINOR (MAJOR tylko zgłasza), instaluje je, uruchamia
+# testy fabryki i `factory/build.py check`, a gdy wszystko jest zielone — otwiera pull request do przeglądu.
+# Wymaga ustawienia repozytorium: Settings → Actions → General → Workflow permissions →
+# „Allow GitHub Actions to create and approve pull requests”.
+# Zmiany w .github/workflows/ nie trafiają do PR (GITHUB_TOKEN nie może ich wypchnąć) — opis PR mówi, co przenieść ręcznie.
+name: team-factory-update
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: team-factory-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CTF_SOURCE: "__CTF_SOURCE__"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - id: update
+        run: python3 factory/update.py --ci --source "$CTF_SOURCE"
+      - if: steps.update.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          BRANCH="team-factory/update-$VERSION"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+            echo "Gałąź $BRANCH już istnieje — PR dla tej wersji był otwarty wcześniej."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add -A
+          git commit -m "chore(deps): update claude-team-factory to $VERSION"
+          git push -u origin "$BRANCH"
+          gh pr create --title "chore(deps): update claude-team-factory to $VERSION" \
+            --body-file .claude/logs/update-pr.md || {
+            echo "::error::Nie udało się otworzyć PR. Włącz w repozytorium: Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests."
+            exit 1
+          }

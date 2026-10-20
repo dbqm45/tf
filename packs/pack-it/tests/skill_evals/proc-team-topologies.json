@@ -1,0 +1,51 @@
+{
+  "skill": "proc-team-topologies",
+  "scenarios": [
+    {
+      "id": "typy-zespolow",
+      "expect": "trigger",
+      "prompt": "Mamy zespół, który obsługuje CI, Kubernetes i monitoring dla 10 zespołów produktowych, i jest zawalony prośbami. Jak go przeprojektować organizacyjnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "platform"
+          ],
+          [
+            "X-as-a-Service",
+            "self-service",
+            "samoobsług"
+          ],
+          [
+            "stream-aligned|strumieni|obciążenie poznawcze|cognitive"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "conway",
+      "expect": "trigger",
+      "prompt": "Mamy monolit, a chcemy przejść na moduły o wyraźnych granicach. Jak ułożyć zespoły, żeby architektura rzeczywiście taka wyszła? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "conway"
+          ],
+          [
+            "odwrócon",
+            "inverse",
+            "reverse"
+          ],
+          [
+            "stream-aligned|kontekst|granic"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "scaling-art",
+      "expect": "no-trigger",
+      "prompt": "Jak zorganizować Agile Release Train i PI Planning dla 80 osób w kilku zespołach w SAFe? Odpowiedz zwięźle.",
+      "neighbor": "proc-safe"
+    }
+  ]
+}

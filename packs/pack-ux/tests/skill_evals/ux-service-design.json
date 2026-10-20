@@ -1,0 +1,56 @@
+{
+  "skill": "ux-service-design",
+  "scenarios": [
+    {
+      "id": "blueprint-zwrot-towaru",
+      "expect": "trigger",
+      "prompt": "Klienci sklepu internetowego skarżą się na zwroty: formularz online, kurier, magazyn, obsługa klienta i księgowość każdy robi swoje i nikt nie widzi całości. Jak narysować service blueprint tego procesu i co w nim musi być? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["frontstage|front stage|widoczn\\w+ dla klienta"],
+          ["backstage|back stage|niewidoczn"],
+          ["linia (widoczności|interakcji)|line of (visibility|interaction)"],
+          ["procesy wspierające|support process|dowody|evidence"]
+        ],
+        "none": ["tylko (jeden )?ekran|wystarczy makieta formularza"]
+      }
+    },
+    {
+      "id": "prototyp-uslugi-bez-kodu",
+      "expect": "trigger",
+      "prompt": "Urząd gminy chce wprowadzić nową usługę: wniosek o dodatek składany online, telefonicznie i w okienku. Jak to sprawdzić z mieszkańcami, zanim zbudujemy system? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wizard of oz|concierge|odgrywanie ról|role play|bodystorming|prototyp usługi"],
+          ["wszystkie kanały|między kanałami|omnichannel|spójn\\w+ kanał|joined up|połącz\\w+ kanał"],
+          ["mapa podróży|customer journey|journey map|blueprint|punkty styku|touchpoint"]
+        ],
+        "none": ["zbuduj od razu pełny system"]
+      }
+    },
+    {
+      "id": "standard-uslugi-gov",
+      "expect": "trigger",
+      "prompt": "Zespół budujący usługę publiczną pyta, jak ocenić, czy usługa rozwiązuje cały problem obywatela, a nie tylko jeden krok. Czy jest jakiś standard, do którego się odnieść? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["service standard|standard usług"],
+          ["solve a whole problem|cały problem|całość problemu"],
+          ["14 punkt|punkt 2|point 2|joined up|między kanałami"]
+        ]
+      }
+    },
+    {
+      "id": "event-storming-granica",
+      "expect": "no-trigger",
+      "prompt": "Chcę zrobić Event Storming Process Level procesu reklamacji z ekspertami domeny. Jak ułożyć zdarzenia, komendy i polityki na osi czasu?",
+      "neighbor": "ddd-event-storming"
+    },
+    {
+      "id": "przeplyw-ekranow-granica",
+      "expect": "no-trigger",
+      "prompt": "Projektuję ekrany formularza rejestracji: jakie stany ma mieć każdy ekran i jak zapisać przepływ użytkownika między krokami?",
+      "neighbor": "ux-feature-design"
+    }
+  ]
+}

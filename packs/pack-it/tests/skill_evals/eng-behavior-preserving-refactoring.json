@@ -1,0 +1,63 @@
+{
+  "skill": "eng-behavior-preserving-refactoring",
+  "scenarios": [
+    {
+      "id": "kontrakt-odrzucenia",
+      "expect": "trigger",
+      "prompt": "Przepisuję bogaty agregat Order na styl decider i chcę, żeby zamiast wyjątku przy odrzuceniu komendy zwracał pusty wynik, bo ładniej. Czy to nadal refaktoryzacja? Co zamrozić przed zmianą? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kontrakt|contract"
+          ],
+          [
+            "rodzaj odrzucenia|różne zachowan|inne zachowanie|zmiana zachowania|nie jest refaktor|to już nie"
+          ],
+          [
+            "zgod|decisions|decyzj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dowod-sterownik",
+      "expect": "trigger",
+      "prompt": "Mam testy domenowe agregatu i migruję go do innego idiomu. Jak udowodnić, że zachowanie się nie zmieniło, skoro testy są związane z typami starej implementacji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "scenariusz.{0,80}DSL|DSL",
+            "sterownik|driver"
+          ],
+          [
+            "poziom\\w* aplikac|fasad|przypadk\\w+ użycia"
+          ],
+          [
+            "rejestr asercji|czterowarstw|cztery warstw"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zapis-pozycyjny-wartownicy",
+      "expect": "trigger",
+      "prompt": "Funkcja zapisuje 18 kolumn pozycyjnie (tablica wartości w kolejności kolumn), a odczyt idzie po nazwach. Przed refaktoryzacją dopisaliśmy test zapisz → odczytaj → porównaj. Czy to wystarczy, żeby wykryć zamianę dwóch kolumn? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "nie wystarcz|przepu|zostanie zielon|nie wykryje"
+          ],
+          [
+            "wartownik|unikaln\\w* wartoś|sentinel|każde pole\\w* inn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "drobne-zapachy",
+      "expect": "no-trigger",
+      "prompt": "Mam długą funkcję z kilkoma zagnieżdżonymi if-ami i parametrem-flagą. Jak ją uporządkować małymi krokami? Odpowiedz zwięźle.",
+      "neighbor": "eng-clean-code"
+    }
+  ]
+}

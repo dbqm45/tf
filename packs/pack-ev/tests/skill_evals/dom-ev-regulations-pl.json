@@ -1,0 +1,58 @@
+{
+  "skill": "dom-ev-regulations-pl",
+  "scenarios": [
+    {
+      "id": "udt-eipa-przed-startem",
+      "expect": "trigger",
+      "prompt": "Stawiamy w Polsce stację z czterema punktami DC przy markecie, otwarcie za dwa miesiące. Co po stronie dozoru technicznego i rejestru EIPA musimy załatwić przed pierwszą sesją, w jakiej kolejności i co grozi, jeśli pominiemy badanie? Odpowiedz zwięźle z numerami artykułów.",
+      "checks": {
+        "all": [
+          ["art\\.? ?16", "badani\\w+ (techniczn\\w+ )?UDT|UDT[^.]{0,60}badani"],
+          ["numer\\w* EIPA", "kod\\w* identyfikacyjn"],
+          ["art\\.? ?41b", "art\\.? ?42"],
+          ["20[ .]?000 ?zł", "art\\.? ?45"]
+        ],
+        "none": ["badani\\w+[^.]{0,40}(jest )?dobrowoln"]
+      }
+    },
+    {
+      "id": "eipa-dane-terminy",
+      "expect": "trigger",
+      "prompt": "Nasz CPMS ma automatycznie wysyłać do krajowej ewidencji dostępność punktów i cenę ładowania. Jakie terminy reakcji po zmianie stanu i po zmianie ceny wynikają z ustawy i kto w ogóle może zgłaszać dane? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["natychmiast"],
+          ["w ciągu godziny|godzin\\w+ od zmiany|1 ?h"],
+          ["numer\\w* EIPA|uznan\\w+ kod"],
+          ["art\\.? ?42"]
+        ],
+        "none": ["co (5|10|15) minut", "raz (na dobę|dziennie)"]
+      }
+    },
+    {
+      "id": "afir-platnosc-karta-kara",
+      "expect": "trigger",
+      "prompt": "W Polsce uruchamiamy ładowarkę 150 kW dostępną dla każdego. Czy obowiązek płatności kartą i ceny za kWh wynika z naszej ustawy o elektromobilności i czy ta ustawa przewiduje karę za jego złamanie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["AFIR|2023/1804"],
+          ["art\\.? ?5"],
+          ["art\\.? ?45", "nie (ma|zawiera|przewiduje|wymienia)[^.]{0,80}kar", "brak[^.]{0,60}kar", "do weryfikacji"]
+        ],
+        "none": ["ustaw\\w+ o elektromobilności[^.]{0,60}(wymaga|nakłada)[^.]{0,60}(czytnik|terminal|kart\\w+ płatnicz)"]
+      }
+    },
+    {
+      "id": "taryfa-ocpi-vat",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-tariffs-pricing",
+      "prompt": "Mamy taryfę OCPI z elementami ENERGY i TIME oraz step_size. Jak policzyć cenę sesji z okresów ładowania, w którym miejscu doliczyć VAT i jak zaokrąglić końcową kwotę? Odpowiedz zwięźle."
+    },
+    {
+      "id": "nevi-uptime-usa",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-regulations-us",
+      "prompt": "Mamy stację w USA z dofinansowaniem federalnym. Jak liczy się uptime portu wymagany przy tym programie i jakie dane musimy raportować co kwartał? Odpowiedz zwięźle."
+    }
+  ]
+}

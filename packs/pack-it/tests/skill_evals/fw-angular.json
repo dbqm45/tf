@@ -1,0 +1,74 @@
+{
+  "skill": "fw-angular",
+  "scenarios": [
+    {
+      "id": "search-resource",
+      "expect": "trigger",
+      "prompt": "W src/app/orders/order-list.component.ts chcę wyszukiwanie zamówień z debounce po wpisaniu frazy, w Angularze 22. Jak to zrobić nowocześnie, bez ręcznego subscribe? Odpowiedz zwięźle.",
+      "files": {
+        "src/app/orders/order-list.component.ts": "import { Component } from '@angular/core';\n\n@Component({ selector: 'app-order-list', template: '' })\nexport class OrderListComponent {}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "httpResource",
+            "rxResource",
+            "resource"
+          ],
+          [
+            "debounced"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "signal-forms",
+      "expect": "trigger",
+      "prompt": "W src/app/orders/order-form.component.ts mamy Reactive Forms w Angularze 22 i piszę nowy formularz w innym miejscu. Jak ma wyglądać nowy, a co zrobić z istniejącymi? Odpowiedz zwięźle.",
+      "files": {
+        "src/app/orders/order-form.component.ts": "import { Component } from '@angular/core';\nimport { FormBuilder } from '@angular/forms';\n\n@Component({ selector: 'app-order-form', template: '' })\nexport class OrderFormComponent {\n  form = inject(FormBuilder).nonNullable.group({ name: '' });\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "Signal Forms",
+            "forms/signals"
+          ],
+          [
+            "formField"
+          ],
+          [
+            "zostaj",
+            "pozostaw",
+            "nie migruj",
+            "nie przepisuj",
+            "bez migracji"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "type-guard",
+      "expect": "no-trigger",
+      "prompt": "Jak w TypeScripcie napisać type guard dla unii dyskryminowanej i zawęzić typ w switch?",
+      "neighbor": "lang-typescript"
+    },
+    {
+      "id": "bez-plikow-nowa-aplikacja",
+      "expect": "trigger",
+      "prompt": "Planujemy nową aplikację w Angularze 22. Jakie podejście do formularzy i detekcji zmian przyjąć od startu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Signal Forms",
+            "forms/signals"
+          ],
+          [
+            "zoneless",
+            "bez zone"
+          ]
+        ]
+      }
+    }
+  ]
+}

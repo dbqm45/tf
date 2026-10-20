@@ -1,0 +1,312 @@
+{
+ "obszar": "pojecia",
+ "pytania": [
+  {
+   "id": "hierarchia-location-stacja-evse-connector",
+   "pytanie": "Jak w hierarchii od parkingu do wtyczki układają się Location, Charging Station, EVSE i Connector i co każdy z nich oznacza?",
+   "wzorzec": "Location to adres lub parking, Charging Station to fizyczne urządzenie (słupek) z jednym połączeniem z CSMS, EVSE to część ładująca jedno auto naraz (jednostka dostępności i sesji), a Connector to fizyczna wtyczka, np. Type 2 lub CCS2.",
+   "checks": {
+    "all": [
+     [
+      "location|lokalizacj"
+     ],
+     [
+      "stacj|charging station|słupek"
+     ],
+     [
+      "evse"
+     ],
+     [
+      "connector|złącz|wtyk|wtyczk"
+     ]
+    ],
+    "none": [
+     "evse (to|jest) (to samo co|po prostu) (wtyczk|złącz)"
+    ]
+   },
+   "zrodlo": "dom-ev-glossary",
+   "trudnosc": 1
+  },
+  {
+   "id": "kw-vs-kwh-nazwy-pol",
+   "pytanie": "Analityk dostał eksport z kolumną „power”, w której raz jest moc ładowarki, raz energia sesji. Czym różni się kW od kWh i jak nazwać te dwa pola?",
+   "wzorzec": "kW to moc (jak szybko), kWh to energia (ile). Pola nazwij z jednostką: power_kw dla mocy i energy_kwh dla energii, a nie jednym ogólnym „power”.",
+   "checks": {
+    "all": [
+     [
+      "kw\\b.{0,40}(moc|power)|(moc|power).{0,40}kw\\b"
+     ],
+     [
+      "kwh.{0,40}energi|energi.{0,40}kwh"
+     ],
+     [
+      "_kw|_kwh|jednostk"
+     ]
+    ],
+    "none": [
+     "kwh (to|jest) moc",
+     "kw (to|jest) energia"
+    ]
+   },
+   "zrodlo": "dom-ev-glossary, dom-ev-charging",
+   "trudnosc": 1
+  },
+  {
+   "id": "csms-cpms-central-system",
+   "pytanie": "Dostawca pisze „CPMS”, specyfikacja 1.6 „Central System”, a 2.0.1 „CSMS”. Czy to trzy różne systemy i jak to się ma do CPO?",
+   "wzorzec": "To ta sama rola, czyli backend, z którym stacje łączą się po OCPP. CSMS to termin formalny z 2.0.1 i nazwa domyślna w kodzie, CPMS to slang, a Central System to nazwa z 1.6. CPO to firma lub rola rynkowa, a CSMS to oprogramowanie, którym ona operuje.",
+   "checks": {
+    "all": [
+     [
+      "ta sama|to samo|ten sam|jedna rola|synonim|ta sama rola|identyczn"
+     ],
+     [
+      "csms"
+     ],
+     [
+      "cpo.{0,80}(firm|rola|operator|przedsiębiorc)|(firm|rola).{0,40}cpo"
+     ]
+    ],
+    "none": [
+     "cpms (to|jest) (inny|osobny) (system|produkt)"
+    ]
+   },
+   "zrodlo": "dom-ev-glossary, dom-ev-market-roles",
+   "trudnosc": 1
+  },
+  {
+   "id": "liczenie-punktow-po-evse",
+   "pytanie": "Operator ma 40 słupków; każdy ma kabel CCS2 i gniazdo Type 2, ale auto może korzystać z jednego naraz. Ile punktów ładowania wykaże w raporcie i dlaczego?",
+   "wzorzec": "40, bo punkty ładowania liczy się po EVSE, czyli miejscach obsługujących jedno auto naraz. Liczba słupków ani złączy (tu 80) nie jest jednostką liczenia.",
+   "checks": {
+    "all": [
+     [
+      "\\b40\\b"
+     ],
+     [
+      "evse"
+     ]
+    ],
+    "none": [
+     "(to|jest|będzie|wynosi|zgłosi|daje)\\s+80\\b"
+    ]
+   },
+   "zrodlo": "dom-ev-glossary",
+   "trudnosc": 2
+  },
+  {
+   "id": "sesja-transakcja-cdr-rozroznienie",
+   "pytanie": "Programista chce jednej tabeli „session” dla transactionId z OCPP, Session z OCPI i CDR. Dlaczego to złe uproszczenie?",
+   "wzorzec": "To trzy obiekty: transakcja OCPP to pojęcie urządzenia (od startu do stopu, własne id), Session OCPI to trwające ładowanie widziane przez eMSP i zmienia się w czasie, a CDR to zamknięty, niezmienny zapis do rozliczenia, powstający po zakończeniu. Zwykle sobie odpowiadają, ale nie zakładaj 1:1 w modelu.",
+   "checks": {
+    "all": [
+     [
+      "transakcj\\w*.{0,60}(ocpp|urządz)|ocpp.{0,60}transakcj"
+     ],
+     [
+      "session.{0,80}(ocpi|emsp)|sesj\\w*.{0,60}(ocpi|emsp)"
+     ],
+     [
+      "cdr.{0,100}(niezmienn|immutable|zamkni)"
+     ]
+    ],
+    "none": [
+     "cdr (można|może być) (edytowan|zmieniany)"
+    ]
+   },
+   "zrodlo": "dom-ev-glossary, dom-ev-charging",
+   "trudnosc": 2
+  },
+  {
+   "id": "cdr-korekta-kredytowy",
+   "pytanie": "eMSP zgłasza, że wysłany tydzień temu CDR ma za wysoką energię, a CPO ma poprawiony odczyt. Czy CPO może poprawić ten CDR i jak ma to zrobić?",
+   "wzorzec": "Nie edytuje go: wysłany CDR jest niezmienny. Korekta to CDR kredytowy, który znosi błędny zapis, oraz nowy CDR z poprawną energią.",
+   "checks": {
+    "all": [
+     [
+      "niezmienn|immutable|nie (wolno|można|edytuj)"
+     ],
+     [
+      "kredyt|credit|storn|ujemn"
+     ],
+     [
+      "now\\w+ cdr|kolejn\\w+ cdr|drugi cdr|new cdr"
+     ]
+    ],
+    "none": [
+     "(?<!nie )(może|można) (edytować|zmienić|nadpisać|poprawić) (ten |istniejący |wysłany )?cdr"
+    ]
+   },
+   "zrodlo": "dom-ev-glossary, dom-ev-market-roles",
+   "trudnosc": 2
+  },
+  {
+   "id": "faktura-kierowcy-roamingowego",
+   "pytanie": "Jesteśmy CPO. Kierowca z aplikacji obcego eMSP naładował się u nas. Kto wystawia mu fakturę i czy OCPI zrealizuje płatność?",
+   "wzorzec": "Fakturę kierowcy wystawia jego eMSP, nie my. OCPI przenosi tylko dane (Sessions, CDR, taryfy, tokeny) i nie realizuje płatności ani faktur; eMSP rozlicza się z CPO hurtowo na podstawie CDR.",
+   "checks": {
+    "all": [
+     [
+      "emsp.{0,60}(faktur|wystawia)|(faktur|wystawia).{0,60}emsp"
+     ],
+     [
+      "ocpi.{0,60}(nie (realizuje|przenosi|obsługuje|służy)|tylko dane)"
+     ],
+     [
+      "hurtow|zbiorcz|wholesale|bulk|na podstawie cdr|wg cdr"
+     ]
+    ],
+    "none": [
+     "cpo (wystawia|fakturuje) (mu|kierowc)",
+     "ocpi (realizuje|obsługuje) płatno"
+    ]
+   },
+   "zrodlo": "dom-ev-market-roles",
+   "trudnosc": 2
+  },
+  {
+   "id": "host-parkingu-nie-jest-cpo",
+   "pytanie": "Sklep udostępnił parking pod ładowarki obcego operatora i dostaje udział w przychodach. Czy jest CPO lub stroną OCPI i jak się z nim rozliczyć?",
+   "wzorzec": "To host: udostępnia miejsce, ale nie operuje ładowarkami, więc nie jest CPO ani stroną OCPI. Udział w przychodach rozlicza się umową z CPO poza OCPI, na danych CDR i sesji CPO.",
+   "checks": {
+    "all": [
+     [
+      "host|właściciel (lokalizacji|miejsca|parkingu)"
+     ],
+     [
+      "nie (jest|operuje|ma roli)"
+     ],
+     [
+      "poza ocpi|umow\\w+.{0,40}cpo|cdr|sesj"
+     ]
+    ],
+    "none": [
+     "host (jest|to) cpo",
+     "sklep (jest|to) cpo"
+    ]
+   },
+   "zrodlo": "dom-ev-market-roles",
+   "trudnosc": 2
+  },
+  {
+   "id": "country-code-party-id",
+   "pytanie": "Co dokładnie identyfikuje para country_code + party_id w OCPI i ile znaków mają te pola?",
+   "wzorzec": "Identyfikuje stronę (CPO lub eMSP), a nie punkt ładowania ani kierowcę. country_code to CiString(2) (ISO 3166-1 alpha-2), a party_id to CiString(3) (ID strony wg ISO 15118).",
+   "checks": {
+    "all": [
+     [
+      "stron\\w*|party|cpo|emsp"
+     ],
+     [
+      "nie (punkt|evse|kierowc)"
+     ],
+     [
+      "ci ?string ?\\(2\\)|ci ?string ?\\(3\\)|2.{0,40}\\b3\\b"
+     ]
+    ],
+    "none": [
+     "party_id (identyfikuje|to) (punkt|evse)"
+    ]
+   },
+   "zrodlo": "dom-ev-identifiers, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "uid-vs-evse-id",
+   "pytanie": "Integrator OCPI chce użyć evse_id jako klucza obiektu EVSE i pominąć uid, bo „ID i tak jest unikalne”. Co jest z tym nie tak?",
+   "wzorzec": "evse_id jest polem opcjonalnym (CiString(48), format wg eMI3, nadaje je operator) i może być puste, więc nie nadaje się na klucz. uid to odrębny identyfikator obiektu w OCPI; nie wnioskuj jednego z drugiego.",
+   "checks": {
+    "all": [
+     [
+      "opcjonal|optional|może (być )?pust|bywa pust"
+     ],
+     [
+      "uid.{0,80}(odrębn|osobn)|(odrębn|osobn)\\w*.{0,40}uid"
+     ],
+     [
+      "emi3|operator|branżow"
+     ]
+    ],
+    "none": [
+     "(?<!nie )(można|warto) (użyć|używać) evse_id (jako|zamiast)"
+    ]
+   },
+   "zrodlo": "dom-ev-identifiers",
+   "trudnosc": 3
+  },
+  {
+   "id": "rfid-uid-token-emaid",
+   "pytanie": "W CSV od partnera kolumna „contract_id” zawiera numery odczytane z kart RFID. Dlaczego to pomyłka i kto łączy te identyfikatory?",
+   "wzorzec": "UID karty RFID to numer fizycznego nośnika (nadaje producent lub wydawca karty), a EMAID (Contract ID) identyfikuje kontrakt kierowcy, np. do Plug & Charge, nadany przez eMSP. Token OCPI to trzeci identyfikator, uprawnienie do autoryzacji. Łączy je eMSP, nie ma między nimi tożsamości.",
+   "checks": {
+    "all": [
+     [
+      "uid.{0,60}(nośnik|kart|fizyczn)|nośnik|fizyczn"
+     ],
+     [
+      "emaid|contract id|kontrakt"
+     ],
+     [
+      "emsp"
+     ]
+    ],
+    "none": [
+     "uid karty (to|jest) (to samo co|tożsam\\w+ z) (emaid|kontrakt)"
+    ]
+   },
+   "zrodlo": "dom-ev-identifiers",
+   "trudnosc": 3
+  },
+  {
+   "id": "emaid-cyfra-kontrolna-nie-luhn",
+   "pytanie": "Zespół chce policzyć cyfrę kontrolną EMAID „zwykłym Luhnem”. Czy to właściwy algorytm i jak sprawdzić ID?",
+   "wzorzec": "Nie: ISO 15118 opisuje własny algorytm cyfry kontrolnej, a jego treść nie jest publicznie dostępna, więc to nie jest Luhn ani mod 10 i nie wolno go zgadywać. Sprawdza się walidatorem referencyjnym (OCHP) albo wg normy; w praktyce cyfra bywa opcjonalna, a skrypt składniowy jej nie weryfikuje.",
+   "checks": {
+    "all": [
+     [
+      "luhn|mod ?10"
+     ],
+     [
+      "nie (jest|ma|podaj|wolno|zgaduj)|niepublicz|nie jest publicznie|not public|proprietary"
+     ],
+     [
+      "walidator|norm|iso 15118|ochp"
+     ]
+    ],
+    "none": [
+     "algorytm (to|jest) (luhn|mod ?10)",
+     "(tak|tak,) (to|jest) luhn"
+    ]
+   },
+   "zrodlo": "dom-ev-identifiers",
+   "trudnosc": 3
+  },
+  {
+   "id": "cpo-i-emsp-w-jednej-firmie",
+   "pytanie": "Firma jest jednocześnie CPO i eMSP. Obcy kierowca ładuje u niej, a jej klient u obcego operatora. W jakiej roli jest firma w każdej sesji i kto fakturuje kierowcę?",
+   "wzorzec": "Rola wynika z sesji, nie z typu firmy. Gdy ładuje obcy kierowca, firma jest CPO: wysyła Sessions i CDR obcemu eMSP, który fakturuje swojego kierowcę i rozlicza się z nią hurtowo. Gdy jej klient ładuje u obcego CPO, firma jest eMSP: odbiera CDR, sama fakturuje swojego kierowcę i płaci obcemu CPO.",
+   "checks": {
+    "all": [
+     [
+      "cpo"
+     ],
+     [
+      "emsp"
+     ],
+     [
+      "(obc\\w+|innego|zewnętrzn\\w+) emsp.{0,120}(faktur|rozlicz)|(faktur|rozlicz)\\w*.{0,120}(obc\\w+|innego) emsp"
+     ],
+     [
+      "rol\\w+ (zależy|wynika)|w (danej|każdej) sesji|zależ\\w+ od sesji|rola w sesji|per sesj"
+     ]
+    ],
+    "none": [
+     "zawsze fakturuje (cpo|my)",
+     "cpo faktur\\w+ każdego"
+    ]
+   },
+   "zrodlo": "dom-ev-market-roles",
+   "trudnosc": 3
+  }
+ ]
+}

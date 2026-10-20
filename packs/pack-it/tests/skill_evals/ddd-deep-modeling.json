@@ -1,0 +1,56 @@
+{
+  "skill": "ddd-deep-modeling",
+  "scenarios": [
+    {
+      "id": "test-zmiennosci",
+      "expect": "trigger",
+      "prompt": "Wymaganie: system ma wyliczać opłatę za wynajem sprzętu i zapisywać ją przy umowie. Jak rozpoznać, czy to zwykły CRUD z regułami, czy już konkurencja o zasoby? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "test zmienności",
+            "w tej samej chwili",
+            "jednocześnie zmieni",
+            "inne żądanie|innego żądania",
+            "w tej samej sekundzie",
+            "jednocze\\w+",
+            "innych umów",
+            "stanu innych"
+          ],
+          [
+            "skutek\\w* (operacji )?dla stanu|nie liczb\\w+ reguł|nie liczba reguł|wynik.{0,30}(tylko )?zapis",
+            "zależy (tylko )?od (danych|stanu)",
+            "czyst\\w+ funkcj"
+          ]
+        ]
+      },
+      "accept": [
+        "ddd-algorithm-recognition"
+      ]
+    },
+    {
+      "id": "status-faktury",
+      "expect": "trigger",
+      "prompt": "Faktura ma pole status (szkic, wysłana, opłacona, anulowana), a ify na nim są rozsiane po serwisach. Jak to zamodelować i jakie pytania zadać ekspertom? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "5 why|pięć why|pytaj\\w* .{0,10}dlaczego"
+          ],
+          [
+            "becoming|staje się|przemian"
+          ],
+          [
+            "maszyn\\w* stan|state machine"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "fabryka-repozytorium",
+      "expect": "no-trigger",
+      "prompt": "Mam zidentyfikowany agregat Zamówienie. Jak zaprojektować fabrykę i repozytorium oraz kto ma publikować zdarzenia domenowe — agregat czy serwis aplikacyjny? Odpowiedz zwięźle.",
+      "neighbor": "ddd-tactical-design"
+    }
+  ]
+}

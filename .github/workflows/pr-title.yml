@@ -1,0 +1,26 @@
+name: pr-title
+
+# PR-y są scalane przez squash, więc tytuł PR staje się commitem na main i decyduje o kolejnej wersji
+# (docs/RELEASING.md). Działa też po edycji tytułu, bez ponownego uruchamiania całego CI.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      # Tytuł przechodzi przez zmienną środowiskową, nigdy do treści skryptu.
+      - run: python3 scripts/check_commit_message.py "$TITLE"
+        env:
+          TITLE: ${{ github.event.pull_request.title }}

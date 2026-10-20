@@ -1,0 +1,88 @@
+{
+  "skill": "ops-supply-chain-security",
+  "scenarios": [
+    {
+      "id": "karencja-wersji",
+      "expect": "trigger",
+      "prompt": "Jak skonfigurować pnpm i npm, żeby w projekcie nie instalować świeżo opublikowanych wersji paczek, które mogą być złośliwe? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "minimumReleaseAge",
+            "min-release-age",
+            "npmMinimalAgeGate"
+          ],
+          [
+            "dni|dzień|minut|1440|4320|\\b3\\b"
+          ],
+          [
+            "wyjątk",
+            "exclude",
+            "łatk"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "skompromitowana-paczka",
+      "expect": "trigger",
+      "prompt": "Dostaliśmy ostrzeżenie, że paczka z naszych zależności npm została przejęta i opublikowano złośliwą wersję z postinstall. Co robimy krok po kroku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "lockfile",
+            "package-lock",
+            "node_modules"
+          ],
+          [
+            "przebuduj",
+            "odbuduj",
+            "rebuild",
+            "reinstal",
+            "nie czyść",
+            "nie czysc"
+          ],
+          [
+            "rotuj",
+            "rotacj",
+            "unieważ",
+            "sekret"
+          ]
+        ],
+        "none": [
+          "wystarczy npm update"
+        ]
+      }
+    },
+    {
+      "id": "audyt-wielu-ekosystemow",
+      "expect": "trigger",
+      "prompt": "W monorepo mamy Node, Pythona, Go i moduł w Javie. Jakimi poleceniami robić audyt podatności zależności w CI i jak czytać wyniki, żeby nie utonąć w alertach? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "npm audit"
+          ],
+          [
+            "pip-audit"
+          ],
+          [
+            "govulncheck"
+          ],
+          [
+            "bezpośredni|przechodni"
+          ],
+          [
+            "pominięto|brak wbudowan|Dependency-Check"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pipeline-ci",
+      "expect": "no-trigger",
+      "prompt": "Jak zorganizować pipeline CI w GitHub Actions z równoległymi jobami, cache'owaniem buildów i wdrożeniem z zatwierdzeniem ręcznym? Odpowiedz zwięźle.",
+      "neighbor": "ops-ci-cd"
+    }
+  ]
+}

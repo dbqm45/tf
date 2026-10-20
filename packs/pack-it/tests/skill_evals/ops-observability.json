@@ -1,0 +1,51 @@
+{
+  "skill": "ops-observability",
+  "scenarios": [
+    {
+      "id": "dysk-cert",
+      "expect": "trigger",
+      "prompt": "Chcę alarmów, które ostrzegą przed zapełnieniem dysku i wygaśnięciem certyfikatów TLS, zanim będzie awaria. Jakie zapytania i progi w Prometheusie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "predict_linear"
+          ],
+          [
+            "probe_ssl_earliest_cert_expiry|blackbox"
+          ],
+          [
+            "21 ?\\*? ?86400|21 dni|7 dni"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "po-wdrozeniu",
+      "expect": "trigger",
+      "prompt": "Po wydaniu nowej wersji opóźnienia wzrosły z 200 ms do 5 s, ale odsetek błędów jest zerowy i żaden alert nie zadzwonił. Jak ustawić monitoring, żeby to łapać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "adnotacj",
+            "annotation"
+          ],
+          [
+            "p95|p99|percentyl"
+          ],
+          [
+            "slo|objaw"
+          ],
+          [
+            "biznesow|zamówie"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "debug-logika",
+      "expect": "no-trigger",
+      "prompt": "W mojej funkcji liczącej rabat wynik jest błędny dla zamówień powyżej 1000 zł. Jak znaleźć błąd w logice biznesowej?",
+      "neighbor": "eng-clean-code"
+    }
+  ]
+}

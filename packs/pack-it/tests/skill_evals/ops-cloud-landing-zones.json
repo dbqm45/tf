@@ -1,0 +1,50 @@
+{
+  "skill": "ops-cloud-landing-zones",
+  "scenarios": [
+    {
+      "id": "nowa-fundacja-chmury",
+      "expect": "trigger",
+      "prompt": "Mamy 20 zespołów i dopiero zaczynamy z AWS. Jak zaprojektować fundament chmury, żeby każdy zespół dostawał własne konto z gotową bazą? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["control tower|landing zone accelerator|landing zone"],
+          ["account factory|account vending|vending|automat\\w+ zakładania kont"],
+          ["konto logów|log archive|konto.{0,20}log|audit|osobn\\w+ kont\\w* .{0,20}(log|bezpiecze)"],
+          ["preventive|zapobiegaw\\w+|detective|wykrywaj\\w+|scp"]
+        ],
+        "none": ["jedno konto dla wszystkich środowisk"]
+      }
+    },
+    {
+      "id": "siec-hub-spoke",
+      "expect": "trigger",
+      "prompt": "Budujemy landing zone w Azure i AWS. Jaką topologię sieci wybrać dla kilkudziesięciu aplikacji i jak ją rozliczać kosztowo? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["hub[- ]and[- ]spoke|hub i spoke|hub-spoke"],
+          ["transit gateway|virtual wan|shared vpc|vwan"],
+          ["tag\\w*|cost allocation|alokacj\\w+ kosztów|alokacj"],
+          ["cidr|adresac\\w+|plan adres|ip address"]
+        ]
+      }
+    },
+    {
+      "id": "wersjonowanie-lz",
+      "expect": "trigger",
+      "prompt": "Jak wprowadzać zmiany w landing zone, skoro dotykają setek istniejących subskrypcji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wersj\\w+|semver|release"],
+          ["fal\\w+|ring|kanar\\w+|canary|pilot|etap"],
+          ["tryb audytu|audit|dry-run|plan"]
+        ]
+      }
+    },
+    {
+      "id": "kontrole-bezpieczenstwa",
+      "expect": "no-trigger",
+      "neighbor": "sec-cloud-security",
+      "prompt": "Jak skonfigurować klucze KMS zarządzane przez klienta i CSPM, żeby dane poufne w chmurze były zgodne z benchmarkiem CIS? Odpowiedz zwięźle."
+    }
+  ]
+}

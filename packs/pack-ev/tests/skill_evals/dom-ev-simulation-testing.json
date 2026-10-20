@@ -1,0 +1,39 @@
+{
+  "skill": "dom-ev-simulation-testing",
+  "scenarios": [
+    {
+      "id": "symulacja-sesji-i-awarii",
+      "expect": "trigger",
+      "prompt": "Nie mamy jeszcze fizycznej ładowarki, a chcemy przetestować nasz CSMS na OCPP 1.6. Jak zasymulować pełną sesję i typowe awarie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["symulator|simulator|charge_sim"],
+          ["StartTransaction.{0,200}StopTransaction|Boot\\w*.{0,200}MeterValues"],
+          ["offline|duplikat|duplicate|zegar|clock|brak StopTransaction|drop-stop|zerwan"],
+          ["ocpp_log_analyze|analizator|open-transaction|log"]
+        ],
+        "none": ["wystarczy.{0,40}(ręcznie|postman)", "tylko.{0,30}testy jednostkowe"]
+      }
+    },
+    {
+      "id": "5000-ladowarek-po-restarcie",
+      "expect": "trigger",
+      "prompt": "Jak sprawdzić, czy nasz CSMS wytrzyma 5000 ładowarek łączących się naraz po restarcie bramy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["symulator|simulator|wiele połączeń|tysi[aą]c"],
+          ["jitter|backoff|rampa|ramp|falami|partiami|stopniowo"],
+          ["zmierz|pomiar|własn\\w+ pomiar|do weryfikacji|percentyl|p99|opóźnieni"],
+          ["BootNotification|handshake|TLS|Pending"]
+        ],
+        "none": ["wytrzyma\\s+(na pewno|bez problemu)", "(każda|jedna) brama.{0,30}obsłuży\\s+\\d+\\s*(tys|k)"]
+      }
+    },
+    {
+      "id": "nowy-model-od-producenta",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-charger-onboarding",
+      "prompt": "Dostaliśmy od producenta nowy model ładowarki AC do wdrożenia. Jak sprawdzić jego zgodność z naszym CSMS i co uzgodnić przed uruchomieniem na produkcji? Odpowiedz zwięźle."
+    }
+  ]
+}

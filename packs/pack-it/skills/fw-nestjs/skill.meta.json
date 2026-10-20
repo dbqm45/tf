@@ -1,0 +1,12 @@
+{
+  "technology": "NestJS",
+  "based_on": "12.2",
+  "min_supported": "11.0",
+  "verified": "2026-10-19",
+  "verified_with": "definicje typów paczek npm @nestjs/* 12.2.0, release notes v12.0.0 i v12.2.0 (GitHub), szablon @nestjs/schematics 12.0.8; docs.nestjs.com niedostępne, bez kompilacji przykładów",
+  "sources": [
+    "https://github.com/nestjs/nest/releases",
+    "https://www.npmjs.com/package/@nestjs/core",
+    "https://www.npmjs.com/package/@nestjs/schematics"
+  ]
+}

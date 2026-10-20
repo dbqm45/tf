@@ -1,0 +1,62 @@
+{
+  "skill": "proc-safe",
+  "scenarios": [
+    {
+      "id": "pi-planning",
+      "expect": "trigger",
+      "prompt": "Nasza firma wdraża SAFe i mamy 6 zespołów w jednym Agile Release Train. Jak wygląda PI Planning, ile trwa PI i kto za co odpowiada? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "8.{0,6}12",
+            "osiem.{0,10}dwana",
+            "10 tyg"
+          ],
+          [
+            "RTE|Release Train Engineer"
+          ],
+          [
+            "Business Owner|System Architect|Product Management"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "czy-safe-pasuje",
+      "expect": "trigger",
+      "prompt": "Mamy 3 niezależne zespoły produktowe, prawie bez zależności, a dyrektor chce wdrożyć SAFe dla uporządkowania. Czy to ma sens? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "nie pasuje",
+            "nie ma sensu",
+            "nie warto",
+            "zbędn",
+            "przesad",
+            "niepotrzeb",
+            "wystarczy",
+            "raczej nie",
+            "^\\W*nie\\b",
+            "nie macie (czego|go)",
+            "narzut"
+          ],
+          [
+            "zależno",
+            "zaleznosci"
+          ],
+          [
+            "SAFe-washing",
+            "granic\\w* kontekst",
+            "zmniejsz\\w* zależno"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "jeden-zespol",
+      "expect": "no-trigger",
+      "prompt": "Jesteśmy jednym zespołem pięciu osób i chcemy wybrać między Scrumem a Kanbanem. Co wybrać i jak ustawić pracę? Odpowiedz zwięźle.",
+      "neighbor": "proc-agile"
+    }
+  ]
+}

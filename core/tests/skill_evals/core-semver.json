@@ -1,0 +1,103 @@
+{
+  "skill": "core-semver",
+  "scenarios": [
+    {
+      "id": "nastepna-wersja-api",
+      "expect": "trigger",
+      "prompt": "Nasza biblioteka ma wersję 2.4.1. W tym wydaniu dodaliśmy opcjonalny parametr do jednej funkcji i usunęliśmy funkcję oznaczoną wcześniej jako przestarzała. Jaki numer ma mieć następne wydanie i dlaczego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "3\\.0\\.0"
+          ],
+          [
+            "usunię",
+            "niezgodn",
+            "breaking",
+            "wstecz"
+          ]
+        ],
+        "none": [
+          "następn\\w* (wersj\\w* |wydani\\w* )?(to|będzie|ma być)\\s*\\**2\\.5\\.0"
+        ]
+      }
+    },
+    {
+      "id": "kolejnosc-prerelease",
+      "expect": "trigger",
+      "prompt": "Ułóż od najstarszej do najnowszej wersje naszego pakietu: 1.0.0, 1.0.0-rc.1, 1.0.0-beta.11, 1.0.0-alpha.beta, 1.0.0-beta.2, 1.0.0+build.7. Która jest „największa” według SemVer?",
+      "checks": {
+        "all": [
+          [
+            "alpha\\.beta[^\\n]{0,80}beta\\.2[^\\n]{0,80}beta\\.11[^\\n]{0,80}rc\\.1",
+            "alpha\\.beta\\W+\\s*(?:\\S+\\s*){0,6}beta\\.2\\W+\\s*(?:\\S+\\s*){0,6}beta\\.11"
+          ],
+          [
+            "metadan",
+            "build",
+            "nie wpływa",
+            "pomija",
+            "ignor"
+          ]
+        ],
+        "none": [
+          "beta\\.11[^\\n]{0,40}<[^\\n]{0,10}beta\\.2"
+        ]
+      }
+    },
+    {
+      "id": "zero-y-z",
+      "expect": "trigger",
+      "prompt": "Startujemy nowy serwis. Od jakiej wersji zacząć, jak podbijać wersje, zanim API się ustabilizuje, i kiedy wydać 1.0.0? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "0\\.1\\.0"
+          ],
+          [
+            "1\\.0\\.0"
+          ],
+          [
+            "produkc",
+            "stabiln",
+            "użytkownic\\w* (polegaj|zależ)",
+            "zgodnoś\\w* wstecz"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wydanie-bez-zmian-artefaktu",
+      "expect": "trigger",
+      "prompt": "Automat wydaje naszą paczkę npm i podbija minor przy każdym commicie feat:. Ostatnio feat: dotyczył tylko workflow CI, a zawartość paczki się nie zmieniła, i mimo to wyszła nowa wersja. Jak ustalić, kiedy wydawać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "git diff",
+            "zmian\\w* (w )?plik",
+            "npm pack",
+            "zawartoś\\w* (paczki|artefaktu)"
+          ],
+          [
+            "bez wydania",
+            "brak wydania",
+            "nie wyda",
+            "nie publikuj",
+            "pomi"
+          ],
+          [
+            "commit\\w*.{0,60}(kłam|myl|źle oznacz|intencj)",
+            "diff\\w*.{0,40}(nie kłam|prawd|decyd)",
+            "ostrzeż"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "commit-message-fix",
+      "expect": "no-trigger",
+      "neighbor": "core-conventional-commits",
+      "prompt": "Napisz commit message dla poprawki błędu zaokrąglania kwot w module płatności, z odwołaniem do zadania PAY-12."
+    }
+  ]
+}

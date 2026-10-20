@@ -1,0 +1,49 @@
+{
+  "skill": "fe-css",
+  "scenarios": [
+    {
+      "id": "karta-kontener",
+      "expect": "trigger",
+      "prompt": "Robię komponent karty, który ma dobrze wyglądać i w wąskim sidebarze, i na pełnej szerokości; media queries nie pomagają, bo zależy to od kontenera. Jak to ostylować, żeby był też gotowy na RTL? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "@container",
+            "container quer"
+          ],
+          [
+            "margin-inline",
+            "padding-inline",
+            "logiczn",
+            "logical",
+            "inset-inline"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "animacja-height",
+      "expect": "trigger",
+      "prompt": "Animacja rozwijania panelu przez zmianę height klatkuje, a użytkownicy wrażliwi na ruch skarżą się na nią. Jak to poprawić w CSS? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "transform"
+          ],
+          [
+            "opacity"
+          ],
+          [
+            "prefers-reduced-motion"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "focus-trap",
+      "expect": "no-trigger",
+      "prompt": "Jak zaimplementować pułapkę fokusu w oknie modalnym i zwrócić fokus po zamknięciu?",
+      "neighbor": "fe-web-platform"
+    }
+  ]
+}

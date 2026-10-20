@@ -1,0 +1,51 @@
+{
+  "skill": "ux-research-methods",
+  "scenarios": [
+    {
+      "id": "plan-badania-onboarding",
+      "expect": "trigger",
+      "prompt": "Mamy aplikację do fakturowania i nie wiemy, dlaczego nowi użytkownicy rezygnują w pierwszym tygodniu. Chcę zrobić badania z użytkownikami, ale nie wiem od czego zacząć: jak ułożyć plan badania, kogo rekrutować i ilu osób potrzebuję? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pytani\\w* badawcz", "research question"],
+          ["screener", "ankiet\\w* rekrutacyjn", "kwestionariusz\\w* rekrutacyjn"],
+          ["nie (jest|stanowi) gwarancj", "heurystyk", "zależy od", "nasyceni", "kolejn\\w+ rund"]
+        ],
+        "none": ["wystarczy dokładnie 5 osób zawsze", "nie potrzeba zgody"]
+      }
+    },
+    {
+      "id": "nagrania-sesji-zgoda",
+      "expect": "trigger",
+      "prompt": "Robimy zdalne testy użyteczności z nagrywaniem ekranu i głosu uczestników, część to klienci z bazy. Co musimy im przekazać i uzyskać przed sesją i jak długo trzymać nagrania? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["art\\.? ?13", "obowiązek informacyjn", "klauzul\\w* informacyjn"],
+          ["zgod\\w*"],
+          ["wycof\\w+|cofni\\w+", "w dowolnym momencie"],
+          ["retencj", "okres\\w* przechowywania", "usun\\w+|usuwa"]
+        ],
+        "none": ["nagrania można trzymać bezterminowo"]
+      }
+    },
+    {
+      "id": "synteza-ai-wywiadow",
+      "expect": "trigger",
+      "prompt": "Mam 12 transkryptów wywiadów z użytkownikami i chcę, żeby AI zrobiło z nich wnioski. Jak to zrobić rzetelnie i jak zapisać wyniki w repozytorium badań? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["weryfik\\w+", "sprawdz\\w+ (z|w) (transkrypt|cytat)"],
+          ["cytat\\w*", "dowód", "źródł\\w+ (w|z) transkrypt"],
+          ["nugget", "atomow\\w+", "affinity", "mapowanie powinowactwa", "grupowanie"]
+        ],
+        "none": ["wystarczy podsumowanie AI bez sprawdzania"]
+      }
+    },
+    {
+      "id": "drzewo-szans-jtbd",
+      "expect": "no-trigger",
+      "prompt": "Mamy cel biznesowy i pomysły na funkcje. Jak zbudować drzewo szans, zapisać JTBD i zaplanować testy założeń, żeby wybrać, co budować?",
+      "neighbor": "proc-product-discovery"
+    }
+  ]
+}

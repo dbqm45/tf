@@ -1,0 +1,49 @@
+{
+  "skill": "core-skill-composition",
+  "scenarios": [
+    {
+      "id": "formularz-angular",
+      "expect": "trigger",
+      "prompt": "Muszę dodać w Angularze formularz produktu z cechami, a domenę mamy opisaną archetypami. Jak ułożyć pracę, żeby pojęcia domenowe, framework i TypeScript pasowały do siebie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "CO.{0,30}GDZIE.{0,30}JAK"
+          ],
+          [
+            "słownik|słowniku",
+            "pojęci\\w* (domenow|ze słownika)",
+            "idiom",
+            "domena decyduje o pojęci",
+            "pojęcia z domeny"
+          ]
+        ]
+      },
+      "rubric": [
+        "kolejność CO → GDZIE → JAK (domena, potem framework, potem język)",
+        "pojęcia domenowe jako wspólny słownik tłumaczony na idiomy frameworka i języka"
+      ]
+    },
+    {
+      "id": "konflikt-zalecen",
+      "expect": "trigger",
+      "prompt": "Mieszam ogólne wskazówki architektoniczne z wtyczki z ustaleniami naszego zespołu, które im przeczą, a framework podpowiada co innego niż reguła domenowa. Czyje zalecenie wygrywa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "domen\\w*.{0,70}(wygrywa|pierwszeństw|ponad|przed|>)"
+          ],
+          [
+            "(ustaleni|konwencj)\\w*.{0,70}(projekt|zespoł|firm)|(projekt|zespoł|firm)\\w*.{0,70}(ustaleni|konwencj)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dobor-zespolu",
+      "expect": "no-trigger",
+      "prompt": "Dostałem opis problemu zwykłym tekstem i nie wiem, kogo z zespołu zaangażować ani w jakiej formie oddać wynik.",
+      "neighbor": "core-problem-routing"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "skill": "eng-repo-readiness",
+  "scenarios": [
+    {
+      "id": "szkielet-z-generatora",
+      "expect": "trigger",
+      "prompt": "Mamy zaakceptowaną decyzję o stacku (SvelteKit + TypeScript). W repo są już CLAUDE.md, katalog .claude/ i docs/project/. Postaw szkielet aplikacji tak, żeby nic z naszych plików nie zginęło. Jak to zrobić krok po kroku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["oficjaln\\w* generator|sv create|create-\\w+|generator\\w* projektu"],
+          ["\\.scaffold|katalog\\w* tymczasow|polityk\\w* konflikt|istniejący wygrywa"],
+          ["kod\\w* wyjścia|zatrzym|stop|nie dopisuj"]
+        ],
+        "none": ["skopiuj pliki z pamięci"]
+      }
+    },
+    {
+      "id": "audyt-istniejacego-repo",
+      "expect": "trigger",
+      "prompt": "Przejmujemy repo z API w Express (czysty JavaScript, bez TypeScriptu). Czy agenci mogą w nim od jutra bezpiecznie pracować? Co sprawdzić, w jakiej kolejności i jaki ma być wynik? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["lockfile|npm audit|audyt\\w* zależności"],
+          ["runner\\w* testów|--listTests|vitest list|na sucho|bez testów"],
+          ["kompensac|reguł\\w* do CLAUDE|gotowe-z-kompensacją|bramk"]
+        ]
+      }
+    },
+    {
+      "id": "swiezosc-startera",
+      "expect": "trigger",
+      "prompt": "Starter projektu, którego chcemy użyć, wygląda na porzucony. Jak ocenić jego świeżość przed startem i co zrobić, gdy generator wywali się w połowie tworzenia projektu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["npm view|time\\.modified|pushed_at|dat\\w* ostatniego wydania"],
+          ["3 mies|6 mies|starzej|nieaktualn"],
+          ["nie (dopisuj|uzupełniaj)|ręczn\\w* (uzupełni|dopis)|zatrzym|zostaw\\w* do inspekcji"]
+        ]
+      }
+    },
+    {
+      "id": "wybor-stacku",
+      "expect": "no-trigger",
+      "prompt": "Wybieramy stack dla nowej aplikacji rezerwacyjnej: SvelteKit czy Next.js, jaka baza i hosting? Porównaj kandydatów w macierzy i zarekomenduj jeden. Odpowiedz zwięźle.",
+      "neighbor": "arch-tech-selection"
+    }
+  ]
+}

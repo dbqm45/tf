@@ -1,0 +1,41 @@
+{
+  "skill": "dom-ev-v2x",
+  "scenarios": [
+    {
+      "id": "bpt-dynamic-vs-scheduled",
+      "expect": "trigger",
+      "prompt": "Piszemy SECC pod ładowanie dwukierunkowe DC z autem na ISO 15118-20. Auto w ServiceDetail pokazuje DC_BPT. Jak wygląda negocjacja: czym różni się tryb scheduled od dynamic, jakie parametry rozładowania auto i ładowarka wymieniają i gdzie w ChargeLoop to widać? Opieraj się na implementacji open source.",
+      "checks": {
+        "all": [
+          ["DC_BPT|BPT_DC"],
+          ["Scheduled.{0,80}Dynamic|Dynamic.{0,80}Scheduled|scheduled.{0,80}dynamic|dynamic.{0,80}scheduled"],
+          ["MaximumDischargePower|MaxDischargePower|max_discharge_power|EVSEMaximumDischarge"],
+          ["josev|implementacj"],
+          ["ChargeLoop|ChargeParameterDiscovery"]
+        ],
+        "none": ["Dynamic_DC_CLReqControlMode jest tylko dla jednokierunkowego"]
+      }
+    },
+    {
+      "id": "v2h-vs-v2g-czy-czeka-na-osd",
+      "expect": "trigger",
+      "prompt": "Klient chce zasilać dom z baterii auta w czasie awarii prądu i oddawać nadwyżkę do sieci wieczorem. Dealer mówi, że to jedno i to samo, a instalator, że potrzebujemy zgody od operatora sieci. Kto ma rację? Co jest czym i co musimy zaprojektować po stronie software i ładowarki?",
+      "checks": {
+        "all": [
+          ["V2H"],
+          ["V2G"],
+          ["grid[- ]forming|island|wyspow|tryb awaryjn|backup|odcięci|synchroniz"],
+          ["OSD|operator sieci|kod sieci|grid code|wymogi przyłączeniow"],
+          ["do weryfikacji|nie potwierdz|sprawdź"]
+        ],
+        "none": ["V2H i V2G to (dokładnie )?to samo"]
+      }
+    },
+    {
+      "id": "limit-jednokierunkowy-smart-charging",
+      "expect": "no-trigger",
+      "prompt": "Mamy w OCPP 2.0.1 trzy ładowarki AC na wspólnym przyłączu i chcemy, żeby CSMS co kilka minut zmieniał limity prądu zależnie od obciążenia budynku. Jak ułożyć profile TxDefault i TxProfile i który stackLevel wygrywa?",
+      "neighbor": "dom-ev-smart-charging"
+    }
+  ]
+}

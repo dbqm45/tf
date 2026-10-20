@@ -1,0 +1,125 @@
+{
+  "skill": "dom-ev-payments",
+  "scenarios": [
+    {
+      "id": "terminal-roamingowy-preautoryzacja",
+      "expect": "trigger",
+      "prompt": "Jesteśmy CPO i montujemy przy stacjach terminale kartowe zewnętrznego dostawcy, integracja przez OCPI 2.3.0. Kierowca przykłada kartę, a my mamy wiedzieć, ile zablokować, jak powiązać płatność z sesją i skąd wziąć dane do faktury. Opisz przepływ zwięźle, z nazwami pól.",
+      "checks": {
+        "all": [
+          [
+            "preauthorize_amount"
+          ],
+          [
+            "authorization_reference"
+          ],
+          [
+            "Financial Advice Confirmation|financial-advice-confirmation"
+          ],
+          [
+            "eft_data|capture_status_code"
+          ],
+          [
+            "invoice_reference_id|invoice_creator|invoice_base_url"
+          ],
+          [
+            "Payment Terminal Provider|PTP"
+          ]
+        ],
+        "none": [
+          "(zapisz|przechowuj|trzymaj).{0,30}(PAN|pełny numer karty)"
+        ]
+      }
+    },
+    {
+      "id": "sesja-przerwana-blokada-na-karcie",
+      "expect": "trigger",
+      "prompt": "Kierowca zapłacił kartą na stacji, na koncie zablokowano mu 50 EUR, ale sesja przerwała się po 4 minutach i 1,10 EUR zużytej energii. Kiedy i ile pobrać z karty, co z resztą blokady i co jeśli sesja zawisła w stanie otwartym? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "capture|obciążeni.{0,15}(końcow|rzeczywist)|pobra.{0,20}rzeczywist"
+          ],
+          [
+            "zwoln|release|void|anul|cancel"
+          ],
+          [
+            "preauthorize_amount|limit preautoryzacji|kwot.{0,20}preautoryzacji"
+          ],
+          [
+            "StopSession|stop.{0,10}sesj|limit.{0,20}(osiągn|przekrocz)"
+          ],
+          [
+            "wygas|termin|dni|timeout|czas ważności"
+          ]
+        ],
+        "none": [
+          "pobierz (całe|pełne) 50"
+        ]
+      }
+    },
+    {
+      "id": "karta-pci-chargeback",
+      "expect": "trigger",
+      "prompt": "Budujemy płatność ad hoc w CSMS: kierowca skanuje QR przy stacji i płaci kartą na stronie. Czy nasz backend może przechowywać numery kart, jak wygląda zakres PCI DSS i co robimy, gdy kierowca zgłosi chargeback albo zażąda zwrotu?",
+      "checks": {
+        "all": [
+          [
+            "tokeniz|token"
+          ],
+          [
+            "PCI DSS"
+          ],
+          [
+            "dostawc.{0,20}płatności|PSP|hosted|przekierowan|iframe"
+          ],
+          [
+            "chargeback|spór"
+          ],
+          [
+            "SCA|3-D Secure|3DS|PSD2"
+          ],
+          [
+            "do weryfikacji"
+          ]
+        ],
+        "none": [
+          "(zapisuj|przechowuj|trzymaj) .{0,30}(CVV|CVC|PAN)\\b.{0,30}(w bazie|w CSMS)"
+        ]
+      }
+    },
+    {
+      "id": "jeden-terminal-kilka-evse-afir",
+      "expect": "trigger",
+      "prompt": "Stawiamy stację z czterema ładowarkami 150 kW przy trasie TEN-T i jednym słupkiem z terminalem kartowym. Kierowca podchodzi do słupka, wybiera numer portu i przykłada kartę. Czy jeden terminal na cztery punkty wystarczy, jak go przypisać do EVSE w systemie i co się stanie, jeśli przypiszemy go do niewłaściwego EVSE? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "art(\\.|ykuł)? ?5|Article 5"
+          ],
+          [
+            "pul|pool|jeden terminal|single payment terminal|kilka (punktów|EVSE)"
+          ],
+          [
+            "location_ids|evse_uids|przypisan"
+          ],
+          [
+            "złego EVSE|innego EVSE|niewłaściw|nie ten EVSE|wrong EVSE|obciąż.{0,40}(innej|cudzej|złej) sesj"
+          ],
+          [
+            "2027|50 kW"
+          ]
+        ],
+        "none": [
+          "(każd\\w+ (EVSE|punkt\\w*|złącz\\w*))[^.\\n]{0,40}(musi|wymaga|powinien)[^.\\n]{0,30}(własn\\w+|osobn\\w+) terminal"
+        ]
+      }
+    },
+    {
+      "id": "cena-z-taryfy-nie-platnosc",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-tariffs-pricing",
+      "prompt": "W taryfie mam ENERGY 0,52 EUR/kWh z step_size 100 Wh i min_price 2 EUR, VAT 23% doliczany osobno. Sesja zużyła 7,43 kWh. Jak policzyć cenę netto i brutto oraz zaokrąglić? Odpowiedz zwięźle."
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "skill": "arch-ai-solutions",
+  "scenarios": [
+    {
+      "id": "dobor-wzorca-ai",
+      "expect": "trigger",
+      "prompt": "Projektujemy asystenta dla działu wsparcia: odpowiedzi z regulaminów zmienianych co tydzień, ma wystawiać zwroty w systemie płatności, dane klientów nie mogą wyjść poza UE. Jakiej architektury AI użyć: zwykłe wywołanie modelu, RAG, workflow z narzędziami, agent czy fine-tuning? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "tabel\\w* decyzyj",
+            "wymagan\\w* (świeżo|dok[łl]adno|opóźnie)",
+            "świeżo\\w* wiedzy",
+            "najprostsz\\w+ (wzorzec|rozwiąz)"
+          ],
+          [
+            "workflow",
+            "przepływ\\w* z narzędzi",
+            "narzędzi\\w* (z |ze )?(zatwierdz|akceptac)",
+            "human[- ]in[- ]the[- ]loop|kolejk\\w* (do )?(przeglądu|akceptac)"
+          ],
+          [
+            "rezydencj\\w* danych",
+            "data residency",
+            "region UE|w UE",
+            "lock-?in|uzależnieni"
+          ],
+          [
+            "idempotent|idempotencj",
+            "najmniejszych uprawnie|least[- ]privilege"
+          ]
+        ],
+        "none": [
+          "fine-?tuning\\w* (jest|to) (najlepsz|dobry sposób na aktualn)"
+        ]
+      }
+    },
+    {
+      "id": "koszt-i-opoznienie",
+      "expect": "trigger",
+      "prompt": "Mamy zaprojektować funkcję AI dla 200 tys. żądań dziennie, stały prompt systemowy ok. 6 tys. tokenów, odpowiedź ma się zaczynać w mniej niż 2 s. Jak oszacować koszt i budżet opóźnienia oraz co zrobić, gdy dostawca modelu padnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "tokeny? (wej\\w+ )?[×x*] ?cen",
+            "tokeny × cen",
+            "wzór|formu[łl]",
+            "z cache.{0,20}bez cache|bez cache.{0,20}z cache"
+          ],
+          [
+            "prompt caching|cache promptu|cache prefiksu",
+            "0[,.]1 ?[×x]|10 ?% ceny"
+          ],
+          [
+            "budżet opóźnie|latency budget",
+            "streaming",
+            "TTFT|czas do pierwsz"
+          ],
+          [
+            "fallback|zapasow\\w* (model|dostawc)",
+            "routing modeli|model routing|kaskad",
+            "timeout|limit czasu"
+          ]
+        ],
+        "none": [
+          "cen[ayęę]\\w* (za|to) \\d+([.,]\\d+)? ?(USD|\\$|zł) za milion"
+        ]
+      }
+    },
+    {
+      "id": "granice-zaufania-multitenant",
+      "expect": "trigger",
+      "prompt": "Robimy platformę SaaS, w której każdy klient ma własny asystent AI z dostępem do jego dokumentów i kilku narzędzi (mail, CRM). Jak rozplanować izolację klientów i granice bezpieczeństwa w architekturze, i jak to zapisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "izolacj\\w* (tenant|najemc|klient)",
+            "multi-?tenan",
+            "filtr\\w* (po|w) (tenant|najemc)",
+            "osobn\\w* (indeks|klucz|przestrzeni)"
+          ],
+          [
+            "prompt injection|wstrzykiwani\\w* (poleceń|promptu)",
+            "dane to nie polecenia|dane, nie polecenia"
+          ],
+          [
+            "najmniejszych uprawnie|least[- ]privilege|uprawnieni\\w* (użytkownika|wywołującego)",
+            "egress|wyciek\\w* danych|allowlist|lista dozwolonych"
+          ],
+          [
+            "ADR",
+            "rejestr decyzji"
+          ]
+        ],
+        "none": [
+          "ogranicz\\w* uprawnienia (tylko )?w prompcie systemowym"
+        ]
+      }
+    },
+    {
+      "id": "granica-rag",
+      "expect": "no-trigger",
+      "prompt": "Jak dobrać rozmiar chunków i model embeddingów do wyszukiwania w polskich PDF-ach oraz jak zmierzyć recall@k?",
+      "neighbor": "ai-rag"
+    },
+    {
+      "id": "lock-in-w-wagach",
+      "expect": "trigger",
+      "prompt": "Chcemy wymienić model w naszym agencie na tańszy i zostawić harness bez zmian; pamięć i konektory mamy za własną bramką. Czy problem uzależnienia od dostawcy mamy z głowy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "format\\w* narzędzi",
+            "wag(ach|i)"
+          ],
+          [
+            "w obu kierunkach",
+            "oba kierunki"
+          ]
+        ]
+      }
+    }
+  ]
+}

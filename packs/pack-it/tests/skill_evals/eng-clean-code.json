@@ -1,0 +1,71 @@
+{
+  "skill": "eng-clean-code",
+  "scenarios": [
+    {
+      "id": "zlozonosc-cyklomatyczna",
+      "expect": "trigger",
+      "prompt": "Funkcja validate() ma ogromny switch i mnóstwo if-ów z && i ||. Od jakiej złożoności cyklomatycznej dzielić i jak ją liczyć? Jak to wymusić w ESLint? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "\\b10\\b|McCabe"
+          ],
+          [
+            "complexity"
+          ],
+          [
+            "strażnicz|guard|wczesn\\w+ powrót|tabel\\w+|mapa|polimorfizm"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "null-jako-znaczenie",
+      "expect": "trigger",
+      "prompt": "Mam metodę findDiscount(customer), która zwraca null, gdy klienta nie ma, a inne metody przyjmują null jako 'użyj domyślnego'. Jak to uporządkować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "null object|obiekt pusty|pusta kolekcja|Optional|opcjonaln"
+          ],
+          [
+            "granic|przeciążeni|osobn\\w+ funkcj|strictNullChecks"
+          ]
+        ],
+        "none": [
+          "zwracaj null"
+        ]
+      }
+    },
+    {
+      "id": "zasady-architektury",
+      "expect": "no-trigger",
+      "prompt": "Czy zasada Open/Closed i odwrócenie zależności każą mi dodać interfejs do każdej klasy serwisowej w warstwie domeny? Odpowiedz zwięźle.",
+      "neighbor": "eng-design-principles"
+    },
+    {
+      "id": "catch-log-ok",
+      "expect": "trigger",
+      "prompt": "W handlerze zapisu zamówienia mamy: try { await repo.save(order) } catch (e) { logger.warn(e); return { ok: true } }. Kolega mówi, że to bezpieczne, bo błąd jest zalogowany. Czy to czysty kod? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "połknię",
+            "połyka"
+          ],
+          [
+            "5\\d\\d",
+            "zwr\\w* błąd",
+            "rzu\\w* (błąd|wyjątek)",
+            "propag"
+          ],
+          [
+            "logowanie (to )?nie",
+            "nie jest obsług",
+            "nie obsługuje"
+          ]
+        ]
+      }
+    }
+  ]
+}

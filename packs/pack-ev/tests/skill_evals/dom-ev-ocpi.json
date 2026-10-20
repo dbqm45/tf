@@ -1,0 +1,54 @@
+{
+  "skill": "dom-ev-ocpi",
+  "scenarios": [
+    {
+      "id": "handshake-token-a-b-c",
+      "expect": "trigger",
+      "prompt": "Podłączamy się po OCPI 2.2.1 do nowego eMSP. Dostaliśmy od nich token i adres versions. Co dokładnie mamy zrobić po kolei, żeby wymienić poświadczenia, i jakiego tokena używać potem w nagłówku Authorization? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["TOKEN_A|token A"],
+          ["TOKEN_B|token B"],
+          ["TOKEN_C|token C"],
+          ["Base64"],
+          ["POST"]
+        ],
+        "none": ["TOKEN_A (zostaje|jest używany) do końca"]
+      }
+    },
+    {
+      "id": "patch-sesji-i-okresy",
+      "expect": "trigger",
+      "prompt": "Wysyłamy sesje do eMSP po OCPI. Co kilka minut mamy nowe okresy ładowania i wysyłamy PATCH z listą charging_periods, a eMSP twierdzi, że mu się dublują okresy i total się nie zgadza. Kto ma rację, jak to ma działać i kiedy użyć PUT? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["PATCH[^.]{0,120}(dodaj|doda|append|add)|(dodaj|doda|append|add)[^.]{0,120}PATCH"],
+          ["PUT[^.]{0,160}(zastęp|zamien|replace)|(zastęp|zamien|replace)[^.]{0,160}PUT"],
+          ["last_updated"],
+          ["COMPLETED"]
+        ],
+        "none": ["PATCH zastępuje całą listę"]
+      }
+    },
+    {
+      "id": "komenda-start-session-async",
+      "expect": "trigger",
+      "prompt": "Jako eMSP wysyłamy START_SESSION do CPO i dostajemy HTTP 200 z ACCEPTED, a kierowca twierdzi, że ładowarka nie ruszyła. Nasz kolega mówi, że 200 znaczy, że sesja wystartowała. Jak to naprawdę działa i jak sprawdzić wynik?",
+      "checks": {
+        "all": [
+          ["response_url"],
+          ["asynchron|async"],
+          ["CommandResult|wynik komendy"],
+          ["TIMEOUT|timeout"]
+        ],
+        "none": ["200 oznacza, że sesja wystartowała"]
+      }
+    },
+    {
+      "id": "cena-sesji-z-taryfy",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-tariffs-pricing",
+      "prompt": "Mamy taryfę z dwoma elementami: 0,45 EUR za kWh oraz 0,10 EUR za minutę postoju po 30 minutach. Sesja: 32 kWh, 80 minut, w tym 25 minut po zakończeniu ładowania. Ile wynosi cena i jak działa step_size?"
+    }
+  ]
+}

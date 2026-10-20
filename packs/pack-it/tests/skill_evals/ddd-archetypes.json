@@ -1,0 +1,90 @@
+{
+  "skill": "ddd-archetypes",
+  "scenarios": [
+    {
+      "id": "saldo-punktow",
+      "expect": "trigger",
+      "prompt": "Modeluję program lojalnościowy: punkty się zdobywa, wydaje, część wygasa po 12 miesiącach, a klient pyta 'skąd mam takie saldo'. Jak to zamodelować i jak obsłużyć pomyłkowo naliczone punkty? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "accounting|księgow"
+          ],
+          [
+            "transakcj\\w+.{0,60}(zapis|konta)|zapis\\w+.{0,40}(debet|kredyt)|podwójn\\w+ zapis"
+          ],
+          [
+            "odwróc|storn|reversal",
+            "nie edytuj|nie usuwa"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "lista-rezerwowa",
+      "expect": "trigger",
+      "prompt": "Kurs ma 20 miejsc. Gdy ktoś rezygnuje, następna osoba z listy rezerwowej ma 24 h na potwierdzenie, a stali klienci mają pierwszeństwo. Jak to zamodelować, żeby nie kończyło się na ORDER BY data_wpisu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "waitlist|lista oczekując|lista rezerwow"
+          ],
+          [
+            "priorytet"
+          ],
+          [
+            "ofert\\w+.{0,40}termin|termin\\w* potwierdzenia|zablokuj|availability|dostępnoś"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wzorce-gof",
+      "expect": "no-trigger",
+      "neighbor": "eng-design-patterns",
+      "prompt": "Mam kilka algorytmów wyceny przesyłki wybieranych w czasie działania programu. Którego wzorca projektowego GoF użyć do wymiany algorytmu w kodzie? Odpowiedz zwięźle."
+    },
+    {
+      "id": "adresy-strefy-dostaw",
+      "expect": "trigger",
+      "prompt": "Sklep dostarcza w Polsce i w Niemczech. Strefy dostaw to zbiory gmin i kodów pocztowych, klienci zmieniają adresy, a faktura musi mieć adres z dnia sprzedaży. Jak zamodelować adresy, obszary i strefy, żeby nie skończyło się na kolumnach miasto/ulica w tabeli klienta? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "geograf|lokalizacj|obszar"
+          ],
+          [
+            "hierarch|zawiera|należy do|część"
+          ],
+          [
+            "z dnia|w chwili|kopi|snapshot|niezmienn|histori"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "umowa-z-aneksami",
+      "expect": "trigger",
+      "prompt": "Mamy umowy serwisowe z klientami. Aneksy zmieniają cenę i zakres od wskazanej daty, a przy sporze trzeba odtworzyć, co obowiązywało w danym dniu i kto podpisał zmianę. Jak zamodelować umowę i aneksy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "umow|agreement|kontrakt"
+          ],
+          [
+            "aneks|wersj|zmian"
+          ],
+          [
+            "obowiązyw|ważn|od .{0,20}do|effectiv|bitemporal|w danym dniu"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "adr-w-repo",
+      "expect": "no-trigger",
+      "neighbor": "docs-tech-writing",
+      "prompt": "Chcę zapisywać decyzje architektoniczne jako dokumenty ADR w repozytorium. Jaki szablon i jak nazywać pliki? Odpowiedz zwięźle."
+    }
+  ]
+}

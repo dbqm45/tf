@@ -1,0 +1,42 @@
+{
+  "skill": "dom-ev-business-economics",
+  "scenarios": [
+    {
+      "id": "stacja-nie-zarabia-przy-niskim-utilization",
+      "expect": "trigger",
+      "prompt": "Planujemy stację DC z 4 punktami. Szef pyta, czemu przy 6 % wykorzystania ledwo pokrywamy rachunki, skoro marża na każdej kWh jest dodatnia. Jak to policzyć i co mogłoby poprawić wynik? Nie mamy jeszcze modelu finansowego, chcę szybko sprawdzić, czy liczyć dalej.",
+      "checks": {
+        "all": [
+          ["koszt\\w* stał|fixed cost"],
+          ["moc\\w* umown|demand charge|opłat\\w* za moc|contracted"],
+          ["próg rentowności|break-?even"],
+          ["station_economics"],
+          ["BESS|magazyn|smart charging|przychod\\w* dodatkow"]
+        ],
+        "none": ["utilization (wynosi|to) (zawsze )?(15|20) ?%"]
+      }
+    },
+    {
+      "id": "marza-po-prowizjach-i-srednia-moc",
+      "expect": "trigger",
+      "prompt": "Sprzedajemy kWh po 2,00 zł netto, energię kupujemy po 0,90 zł, a 25 % sesji idzie przez roaming z prowizją 12 % przychodu. Ładowarki mają 150 kW, ale auta średnio biorą ok. 70 kW. Jak policzyć marżę na kWh i ile kWh rocznie da jeden port przy 10 % wykorzystania? Podaj wzory.",
+      "checks": {
+        "all": [
+          ["prowizj\\w* .{0,40}(przychod|udział|roaming)|fee"],
+          ["8760"],
+          ["średni\\w* moc|avg_power|average power"],
+          ["1[.,]04"],
+          ["61[ .,]?320"],
+          ["nominał|nominal"]
+        ],
+        "none": ["150 ?kW ?[×x*] ?8760 ?[×x*] ?0[.,]1"]
+      }
+    },
+    {
+      "id": "taryfa-przez-ocpi",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-tariffs-pricing",
+      "prompt": "W taryfie OCPI mam element z ENERGY po 0,60 EUR/kWh i PARKING_TIME po 10 minutach. Jak ustawić step_size i restrykcje, żeby opłata za postój nie naliczała się w nocy?"
+    }
+  ]
+}

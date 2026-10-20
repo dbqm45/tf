@@ -1,0 +1,53 @@
+{
+  "skill": "ops-linux-performance",
+  "scenarios": [
+    {
+      "id": "serwer-zwalnia-use",
+      "expect": "trigger",
+      "prompt": "Produkcyjny serwer Linux nagle zwolnił, a nie wiem od czego zacząć. Jaką metodą i jakimi poleceniami zrobić pierwszą diagnozę wydajności? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["use\\b|utilization.*saturation|wykorzystanie.*nasycenie"],
+          ["vmstat"],
+          ["mpstat|pidstat"],
+          ["iostat"]
+        ],
+        "none": ["zrestartuj serwer"]
+      }
+    },
+    {
+      "id": "cpu-flamegraph",
+      "expect": "trigger",
+      "prompt": "Proces zużywa 100% CPU i nie wiem, w której funkcji. Jak to profilować na produkcji bez zabijania usługi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["perf (record|top)"],
+          ["flame ?graph|wykres płomieni"],
+          ["ebpf|bpftrace|bcc|profile"],
+          ["narzut|overhead|bezpieczeń|próbkowan|sampling|krótko"]
+        ],
+        "none": ["strace -p .* bez ograniczeń"]
+      }
+    },
+    {
+      "id": "sysctl-tuning",
+      "expect": "trigger",
+      "prompt": "Znalazłem w internecie listę sysctl-i do tuningu sieci i pamięci Linuksa. Wkleić wszystko na produkcję? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zmierz|pomiar|measure|baseline"],
+          ["jedn[aąę] zmian|one change|po jednej"],
+          ["cargo|kopiuj|bezkrytyczn|hipotez"],
+          ["dokument|zapisz|rollback|wycof"]
+        ],
+        "none": ["tak, wklej wszystko"]
+      }
+    },
+    {
+      "id": "k8s-limits",
+      "expect": "no-trigger",
+      "prompt": "Jak ustawić requests i limits w manifeście Deployment w Kubernetes oraz PodDisruptionBudget?",
+      "neighbor": "ops-kubernetes"
+    }
+  ]
+}

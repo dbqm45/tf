@@ -1,0 +1,56 @@
+{
+  "skill": "proc-agile",
+  "scenarios": [
+    {
+      "id": "prognoza-kanban",
+      "expect": "trigger",
+      "prompt": "Nasz zespół pracuje w Kanbanie, a szef pyta, ile zadań zrobimy do końca kwartału. Jak odpowiedzieć na podstawie danych, a nie estymat? Jakie metryki zbierać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "monte carlo"
+          ],
+          [
+            "przepustowo",
+            "throughput"
+          ],
+          [
+            "wiek elementu",
+            "work item age",
+            "czas cyklu",
+            "cycle time"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ciecie-historyjek",
+      "expect": "trigger",
+      "prompt": "Mamy historyjkę „Jako klient chcę zamawiać produkty” rozbitą na zadania: baza, API, UI. Jak ją pociąć lepiej, żeby spełniała INVEST? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pionow",
+            "vertical"
+          ],
+          [
+            "INVEST"
+          ],
+          [
+            "ścieżk",
+            "reguł",
+            "wariant",
+            "scenariusz",
+            "happy path"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wiele-zespolow",
+      "expect": "no-trigger",
+      "prompt": "Mamy 8 zespołów i ponad 100 osób pracujących nad jednym produktem. Czy wdrożyć PI Planning i Agile Release Train i jak zaplanować pracę ponad zespołami? Odpowiedz zwięźle.",
+      "neighbor": "proc-safe"
+    }
+  ]
+}

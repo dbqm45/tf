@@ -1,0 +1,103 @@
+{
+  "skill": "ai-agents",
+  "scenarios": [
+    {
+      "id": "agent-czy-workflow",
+      "expect": "trigger",
+      "prompt": "Chcemy zautomatyzować obsługę zgłoszeń reklamacyjnych: klasyfikacja, pobranie danych zamówienia, szkic odpowiedzi, sprawdzenie szkicu. Zespół chce od razu budować autonomicznego agenta wieloagentowego. Czy to dobry pomysł? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "prompt chaining",
+            "łańcuch\\w* prompt",
+            "workflow",
+            "przepływ\\w* (z góry|zdefiniowan|predefiniowan)"
+          ],
+          [
+            "routing",
+            "evaluator-optimizer",
+            "orchestrator-workers",
+            "parallelization",
+            "równoległ"
+          ],
+          [
+            "najprostsz\\w* (rozwiązani|wariant)",
+            "dopiero (gdy|jeśli)",
+            "nie (jest )?potrzebn\\w* agent",
+            "koszt\\w* (i )?(opóźnien|latency)"
+          ]
+        ],
+        "none": [
+          "(zawsze|od razu) (buduj|zbuduj) (system )?wieloagentow"
+        ]
+      }
+    },
+    {
+      "id": "narzedzia-agenta-bledne-wywolania",
+      "expect": "trigger",
+      "prompt": "Nasz agent ma 40 narzędzi opakowujących endpointy REST naszego CRM i często wybiera złe albo podaje błędne argumenty, a po timeoucie potrafi dwa razy utworzyć to samo zlecenie. Jak przeprojektować narzędzia? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "konsoliduj",
+            "mniej(sze)? (narzędzi|zestaw)",
+            "łącz\\w* (kilka|wiele) (endpointów|operacji)",
+            "wysokopoziomow",
+            "workflow\\w* zamiast endpoint"
+          ],
+          [
+            "idempoten",
+            "klucz idempotencji",
+            "idempotency"
+          ],
+          [
+            "komunikat\\w* (o )?błęd\\w* (podpowiada|wskazuje|z)",
+            "actionable",
+            "poka-yoke",
+            "czytelne nazwy",
+            "zamiast (UUID|identyfikator)"
+          ]
+        ],
+        "none": [
+          "(wystaw|udostępnij) (wszystkie|każdy) endpoint"
+        ]
+      }
+    },
+    {
+      "id": "agent-nieodwracalne-akcje-i-petla",
+      "expect": "trigger",
+      "prompt": "Projektujemy agenta, który ma sam zamykać faktury i wysyłać przelewy do dostawców po analizie maila. Jak go zabezpieczyć i jak zapobiec zapętleniu oraz rosnącym kosztom? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "human-in-the-loop",
+            "zatwierdzeni\\w* (człowiek|przez człowieka)",
+            "akceptacj\\w* człowieka",
+            "bramk\\w* zatwierdz"
+          ],
+          [
+            "limit\\w* (kroków|tur|iteracji)",
+            "budżet",
+            "warunek\\w* stopu",
+            "max_turns|maxTurns"
+          ],
+          [
+            "trac\\w+",
+            "observability",
+            "logi?\\w* (kroków|wywołań)",
+            "obserwowalno"
+          ]
+        ],
+        "none": [
+          "agent (powinien|może) sam (zatwierdzać|wysyłać) (przelewy|płatności) bez"
+        ]
+      }
+    },
+    {
+      "id": "uruchamianie-claude-code-w-nocy",
+      "expect": "no-trigger",
+      "neighbor": "core-async-delegation",
+      "prompt": "Chcę, żeby Claude Code przepracował noc na moim zatwierdzonym planie w sandboxie przez claude -p. Jak przygotować kontrakt i bramki, żeby rano nie było niespodzianek?"
+    }
+  ]
+}

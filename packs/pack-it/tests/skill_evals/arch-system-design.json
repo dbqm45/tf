@@ -1,0 +1,75 @@
+{
+  "skill": "arch-system-design",
+  "scenarios": [
+    {
+      "id": "skracacz-szacunki",
+      "expect": "trigger",
+      "prompt": "Projektuję skracacz linków: 100 mln nowych linków miesięcznie, odczytów 100 razy więcej niż zapisów. Oszacuj ruch i pojemność i powiedz, od czego zacząć projekt. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "2[,.]5 ?mln",
+            "86 ?400",
+            "~ ?40 ?(zapis|żąd|req|write)",
+            "40 (zapis|żąd|req|write)\\w*/ ?s"
+          ],
+          [
+            "base ?62",
+            "licznik",
+            "counter",
+            "hasz",
+            "kolizj",
+            "collision",
+            "identyfikator"
+          ],
+          [
+            "replik",
+            "cache",
+            "pamięć podręczn",
+            "read-heavy",
+            "dominuj\\w* odczyt"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dostepnosc-szeregowa",
+      "expect": "trigger",
+      "prompt": "Moja usługa wywołuje synchronicznie trzy inne, każda ma SLA 99,9%. Jaką dostępność realnie mogę obiecać i jak ją poprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "99[,.]7",
+            "iloczyn",
+            "product",
+            "pomnoż"
+          ],
+          [
+            "(26|2[,.]\\d) ?(h|godz)",
+            "dni?\\b.*przestoj"
+          ],
+          [
+            "równoległ",
+            "redundan",
+            "parallel",
+            "asynchron",
+            "kolejk",
+            "bezpiecznik",
+            "circuit",
+            "fallback",
+            "replik"
+          ]
+        ]
+      },
+      "accept": [
+        "ops-sre-incidents"
+      ]
+    },
+    {
+      "id": "katalog-stylow",
+      "expect": "no-trigger",
+      "prompt": "Opisz katalog stylów architektury: warstwowa, potoki i filtry, mikrojądro. Kiedy który styl wybrać?",
+      "neighbor": "arch-quality-attributes"
+    }
+  ]
+}

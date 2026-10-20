@@ -1,0 +1,84 @@
+{
+  "skill": "lang-python",
+  "scenarios": [
+    {
+      "id": "modernizacja-typow",
+      "expect": "trigger",
+      "prompt": "W src/billing/money.py (Python 3.14, mypy --strict) kwoty są typu float, a generyczny Result zrobiony przez TypeVar i Optional/Union z typing. Jak to unowocześnić? Odpowiedz zwięźle.",
+      "files": {
+        "src/billing/money.py": "from typing import Generic, Optional, TypeVar, Union\n\nT = TypeVar('T')\n\nclass Result(Generic[T]):\n    def __init__(self, value: Optional[T] = None, error: Union[str, None] = None):\n        self.value = value\n        self.error = error\n\ndef add(a: float, b: float) -> float:\n    return a + b\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "Decimal"
+          ],
+          [
+            "class \\w+\\[T",
+            "def \\w+\\[T",
+            "\\[T\\]",
+            "PEP 695",
+            "type \\w+ ="
+          ],
+          [
+            "\\| None",
+            "X \\| Y",
+            "T \\| None"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bez-plikow-nowy-serwis",
+      "expect": "trigger",
+      "prompt": "Zakładamy nowy serwis w Pythonie 3.14. Jak ułożyć projekt: zależności i lockfile, lint i formatowanie, sprawdzanie typów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pyproject\\.toml"
+          ],
+          [
+            "\\buv\\b"
+          ],
+          [
+            "ruff"
+          ],
+          [
+            "dependency-groups",
+            "dependency groups",
+            "grup\\w* zależności",
+            "--dev",
+            "--group"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wyjatki-czy-wynik",
+      "expect": "trigger",
+      "prompt": "W src/booking/reservation.py (Python 3.13) rezerwacja sali rzuca ValueError, gdy sala jest zajęta, i łapiemy to w API. Jak lepiej wyrazić odrzucenie i warianty wyniku w Pythonie? Odpowiedz zwięźle.",
+      "files": {
+        "src/booking/reservation.py": "def reserve(room, slot, rooms):\n    if slot in rooms[room]:\n        raise ValueError('zajęte')\n    rooms[room].add(slot)\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "dataclass"
+          ],
+          [
+            "frozen"
+          ],
+          [
+            "match"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "test-ab",
+      "expect": "no-trigger",
+      "neighbor": "data-analysis",
+      "prompt": "Mam CSV z wynikami testu A/B. Jak sprawdzić, czy różnica konwersji między wariantami jest istotna statystycznie?"
+    }
+  ]
+}

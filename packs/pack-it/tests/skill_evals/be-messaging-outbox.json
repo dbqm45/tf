@@ -1,0 +1,62 @@
+{
+  "skill": "be-messaging-outbox",
+  "scenarios": [
+    {
+      "id": "utrata-zdarzen",
+      "expect": "trigger",
+      "prompt": "Po zapisaniu zamówienia publikuję zdarzenie na broker, ale po commicie; czasem proces pada i zdarzenia brak. Jak to naprawić i co z duplikatami po stronie odbiorcy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "outbox"
+          ],
+          [
+            "tej samej transakcj",
+            "jednej transakcj",
+            "same transaction",
+            "w transakcji"
+          ],
+          [
+            "inbox",
+            "ON CONFLICT",
+            "UNIQUE",
+            "unikaln",
+            "atomow",
+            "compare-and-set"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "synchroniczne-na-async",
+      "expect": "trigger",
+      "prompt": "Chcę zamienić synchroniczne wywołanie billingService.charge() z modułu zamówień na wiadomość asynchroniczną. Na co uważać, zanim to zrobię? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wynik",
+            "result",
+            "return value",
+            "rozgałęz"
+          ],
+          [
+            "read-after-write",
+            "po zapisie",
+            "zaraz po",
+            "ekran po"
+          ],
+          [
+            "komend\\w*",
+            "command"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "relacja-kontekstow",
+      "expect": "no-trigger",
+      "prompt": "Jak ustalić relację między kontekstami Zamówienia i Płatności: customer/supplier, ACL, shared kernel?",
+      "neighbor": "ddd-context-mapping"
+    }
+  ]
+}

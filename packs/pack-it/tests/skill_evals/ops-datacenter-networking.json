@@ -1,0 +1,53 @@
+{
+  "skill": "ops-datacenter-networking",
+  "scenarios": [
+    {
+      "id": "fabric-leaf-spine",
+      "expect": "trigger",
+      "prompt": "Projektujemy nową fabrykę sieciową w centrum danych na 40 szaf, każda z serwerami 2x25G. Jaką topologię i routing underlay wybrać oraz jak policzyć oversubscription? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["leaf.?spine|clos"],
+          ["ebgp|rfc ?7938"],
+          ["oversubscription|przesubskrypcj|nadsubskrypcj|stosunek .*(downlink|uplink)|downlink.*uplink"],
+          ["ecmp"]
+        ],
+        "none": ["spanning.?tree jako (podstawow|główn)"]
+      }
+    },
+    {
+      "id": "bgp-filtry-rpki",
+      "expect": "trigger",
+      "prompt": "Zestawiamy nowe sesje BGP z dostawcami tranzytu i na styku z fabryką DC. Jak zabezpieczyć sesje przed wyciekiem tras i błędną konfiguracją? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["prefix.?list|filtr(y|ów)? prefiks|filtrowan"],
+          ["max.?prefix|limit prefiks"],
+          ["rpki|route origin validation|\\brov\\b"],
+          ["communit|społeczno"]
+        ],
+        "none": ["bez filtrów"]
+      }
+    },
+    {
+      "id": "zmiana-evpn-plan",
+      "expect": "trigger",
+      "prompt": "Mamy dodać nowy tenant z VXLAN i EVPN do produkcyjnej fabryki. Jak przygotować i przeprowadzić zmianę, żeby nie wywrócić sieci? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["netbox|source of truth|źródł[oa] prawdy"],
+          ["okno (zmian|serwisow)|change window|maintenance window"],
+          ["rollback|wycofani|plan awaryjny"],
+          ["ci\\b|pipeline|dry.?run|emulac|symulac|batfish|containerlab|lab"]
+        ],
+        "none": ["bezpośrednio na produkcji bez"]
+      }
+    },
+    {
+      "id": "host-dns-curl",
+      "expect": "no-trigger",
+      "prompt": "Na serwerze Linux curl do API zwraca timeout, a dig działa. Jak sprawdzić, czy to DNS, port czy TLS?",
+      "neighbor": "ops-linux-networking"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "skill": "lang-java",
+  "scenarios": [
+    {
+      "id": "money-bigdecimal",
+      "expect": "trigger",
+      "prompt": "W src/main/java/pl/acme/billing/Money.java trzymamy kwotę jako double, a klasę obsypaliśmy Lombokiem @Data. Jak to przebudować w Javie 21? Odpowiedz zwięźle.",
+      "files": {
+        "src/main/java/pl/acme/billing/Money.java": "package pl.acme.billing;\n\nimport lombok.Data;\n\n@Data\npublic class Money {\n    private double amount;\n    private String currency;\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "BigDecimal"
+          ],
+          [
+            "RoundingMode",
+            "skal"
+          ],
+          [
+            "record"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wynik-rezerwacji",
+      "expect": "trigger",
+      "prompt": "W src/main/java/pl/acme/booking/BookingResult.java modeluję wynik rezerwacji: sukces, brak miejsc, konflikt terminu. Wyjątki czy coś innego? Java 21. Odpowiedz zwięźle.",
+      "files": {
+        "src/main/java/pl/acme/booking/BookingResult.java": "package pl.acme.booking;\n\npublic class BookingResult {\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "sealed"
+          ],
+          [
+            "wyczerpując",
+            "exhaustive",
+            "pattern matching",
+            "switch"
+          ],
+          [
+            "zamiast wyjątk",
+            "nie.*wyjątk",
+            "bez wyjątk"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "granice-agregatu",
+      "expect": "no-trigger",
+      "prompt": "Jak wyznaczyć granice agregatu Zamówienie i co powinno być osobnym kontekstem ograniczonym?",
+      "neighbor": "ddd-tactical-design"
+    },
+    {
+      "id": "bez-plikow-rozliczenia",
+      "expect": "trigger",
+      "prompt": "Zaczynamy moduł rozliczeń w Javie 21. Jak modelować kwoty pieniężne i wynik operacji, która może się nie udać na kilka sposobów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "BigDecimal"
+          ],
+          [
+            "sealed"
+          ],
+          [
+            "record"
+          ]
+        ]
+      }
+    }
+  ]
+}

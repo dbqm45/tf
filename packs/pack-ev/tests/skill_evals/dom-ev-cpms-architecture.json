@@ -1,0 +1,29 @@
+{
+  "skill": "dom-ev-cpms-architecture",
+  "scenarios": [
+    {
+      "id": "komenda-do-innej-instancji",
+      "expect": "trigger",
+      "prompt": "Mamy 3 instancje backendu za load balancerem i komenda RemoteStart czasem ginie. Jak dostarczać komendy do ładowarki, która jest podłączona do innej instancji?",
+      "checks": {
+        "all": [["rejestr.{0,40}połącze", "connection registry", "mapowanie.{0,40}(stacj|ładowark).{0,40}(węz|instancj)", "lookup"], ["szyn", "kolejk", "pub/?sub", "broker", "message bus", "queue"], ["afinic", "sticky", "jedn[ae]? (węz|instancj)", "affinity", "owner"]],
+        "none": ["otwórz nowe połączenie WebSocket do ładowarki", "backend łączy się z ładowarką"]
+      }
+    },
+    {
+      "id": "reconnect-storm",
+      "expect": "trigger",
+      "prompt": "Po wdrożeniu nowej wersji 5000 ładowarek łączy się naraz i backend pada. Jak to zaprojektować, żeby się nie powtórzyło?",
+      "checks": {
+        "all": [["jitter", "losow", "rozłoż", "random"], ["backoff", "limit.{0,30}(połącze|handshake|nowych)", "rate limit", "throttl"], ["Pending", "BootNotification", "retryInterval", "interwał"], ["rolling", "stopniowo", "drain", "partiami", "graceful"]],
+        "none": ["wyłącz TLS", "usuń heartbeat"]
+      }
+    },
+    {
+      "id": "kolejnosc-komunikatow",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-session-lifecycle",
+      "prompt": "W jakiej kolejności lecą komunikaty od podłączenia kabla do wystawienia CDR i na którym kroku jest autoryzacja RFID?"
+    }
+  ]
+}

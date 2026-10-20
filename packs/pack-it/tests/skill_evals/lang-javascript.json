@@ -1,0 +1,81 @@
+{
+  "skill": "lang-javascript",
+  "scenarios": [
+    {
+      "id": "sort-liczb",
+      "expect": "trigger",
+      "prompt": "W src/utils/sort.js sortuję ceny: [10, 9, 100].sort() daje zły wynik, a oryginalna tablica w komponencie też się zmienia. Jak to poprawić w ES2023+? Odpowiedz zwięźle.",
+      "files": {
+        "src/utils/sort.js": "export function sortPrices(prices) {\n  return prices.sort();\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "a\\s*-\\s*b"
+          ],
+          [
+            "toSorted"
+          ],
+          [
+            "tekst",
+            "string",
+            "leksykograf",
+            "alfabet"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "async-bledy",
+      "expect": "trigger",
+      "prompt": "W src/api/client.js robię trzy niezależne await po kolei, a błąd w callbacku setTimeout nie jest łapany przez try/catch. Jak to poprawić? Odpowiedz zwięźle.",
+      "files": {
+        "src/api/client.js": "export async function load() {\n  const a = await fetch('/a');\n  const b = await fetch('/b');\n  const c = await fetch('/c');\n  try { setTimeout(() => { throw new Error('x'); }, 10); } catch (e) {}\n  return [a, b, c];\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "Promise\\.all"
+          ],
+          [
+            "new Promise",
+            "opakow",
+            "opakuj",
+            "promisif"
+          ],
+          [
+            "callback",
+            "zwrotn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "generyk-ts",
+      "expect": "no-trigger",
+      "prompt": "Jak w TypeScripcie napisać generyk z ograniczeniem extends keyof i NoInfer?",
+      "neighbor": "lang-typescript"
+    },
+    {
+      "id": "bez-plikow-sortowanie",
+      "expect": "trigger",
+      "prompt": "Planuję moduł w czystym JavaScripcie (Node 22) z sortowaniem cen i list. Na jakie pułapki z sortowaniem tablic i mutacją uważać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "a\\s*-\\s*b",
+            "komparator"
+          ],
+          [
+            "toSorted"
+          ],
+          [
+            "mutuj",
+            "mutac",
+            "modyfikuje"
+          ]
+        ]
+      }
+    }
+  ]
+}

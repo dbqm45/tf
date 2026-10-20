@@ -1,0 +1,110 @@
+{
+  "skill": "core-async-delegation",
+  "scenarios": [
+    {
+      "id": "sandbox-zamkniety-laptop",
+      "expect": "trigger",
+      "prompt": "Chcę zlecić agentowi w sandboxie w chmurze uzupełnienie planu testów modułu płatności, zamknąć laptopa i wrócić do wyniku rano. Co ustawić przed startem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "setup",
+            "skrypt\\w* (startow|przygotow)"
+          ],
+          [
+            "sieć",
+            "sieci",
+            "allowlist",
+            "internet"
+          ],
+          [
+            "sekret"
+          ],
+          [
+            "warunek stopu",
+            "limit\\w* tur",
+            "zatrzym"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "plan-w-nocy-bez-pytan",
+      "expect": "trigger",
+      "prompt": "Mam zatwierdzony plan w czterech fazach. Chcę, żeby agent wykonał go w nocy przez claude -p, bez pytania mnie o cokolwiek. Jakie reguły wykonania mu dać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "2 prób",
+            "dwie próby",
+            "dwóch prób",
+            "2 próby",
+            "dwa razy"
+          ],
+          [
+            "STOP",
+            "zatrzym"
+          ],
+          [
+            "celow\\w* zepsu",
+            "zepsu\\w* (kod|zachowan)",
+            "czerwon"
+          ],
+          [
+            "na zielon",
+            "zielon"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "codzienna-rutyna",
+      "expect": "trigger",
+      "prompt": "Chcę ustawić codzienną rutynę w chmurze: agent przegląda zaległe issue z etykietą ai-candidate i pisze raport. Na co uważać, żeby to miało sens i nie kosztowało fortuny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "warunek stopu",
+            "limit"
+          ],
+          [
+            "zielon\\w* (status|przebieg)",
+            "kryteri\\w* (sukcesu|porażki)"
+          ],
+          [
+            "koszt",
+            "budżet"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "telefon-czy-sandbox",
+      "expect": "trigger",
+      "prompt": "Wychodzę z biura. Lepiej sterować moją lokalną sesją Claude Code z telefonu, czy puścić zadanie w sandboxie w chmurze? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Remote Control",
+            "remote-control",
+            "tmux",
+            "SSH"
+          ],
+          [
+            "izolacj",
+            "katalog\\w* domow",
+            "klucz",
+            "miejsce wykonania",
+            "twojej maszyn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "petla-recenzenta",
+      "expect": "no-trigger",
+      "neighbor": "core-agent-security",
+      "prompt": "Chcę, żeby agent poprawiał kod w pętli, aż drugi agent-recenzent go zaakceptuje. Jak ustawić limit rund, warunek stopu i uprawnienia, żeby to było bezpieczne?"
+    }
+  ]
+}

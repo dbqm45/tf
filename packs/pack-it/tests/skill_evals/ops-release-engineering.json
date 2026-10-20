@@ -1,0 +1,71 @@
+{
+  "skill": "ops-release-engineering",
+  "scenarios": [
+    {
+      "id": "canary-bramki",
+      "expect": "trigger",
+      "prompt": "Chcę wdrażać nową wersję usługi płatności canary z automatycznym wycofaniem. Jak ułożyć kroki ruchu i bramki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "argo rollouts|flagger"
+          ],
+          [
+            "1.{0,3}5 ?%|10 ?%.{0,20}25 ?%"
+          ],
+          [
+            "automatyczn\\w+ wycofa|auto.?rollback|automatycznie"
+          ],
+          [
+            "p99|odsetek błędów|slo"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "expand-contract",
+      "expect": "trigger",
+      "prompt": "Muszę zmienić nazwę kolumny w dużej tabeli PostgreSQL bez przestoju, a aplikacja wdrażana jest rolling update. Jak rozłożyć migrację na wydania? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "expand.{0,3}contract"
+          ],
+          [
+            "dwie wersje|dwiema wersjami|dwóch wersji|stara i nowa"
+          ],
+          [
+            "concurrently|osobn\\w+ wydani"
+          ]
+        ],
+        "none": [
+          "w jednym wdrożeniu zmień schemat i kod"
+        ]
+      }
+    },
+    {
+      "id": "pierwsze-wdrozenie-mvp",
+      "expect": "trigger",
+      "prompt": "Mamy szkielet MVP i wybraną platformę hostingową. Jak zaplanować pierwsze wdrożenie z agentem, żeby nic nie poszło na złe konto i żeby było wiadomo, co miało się stać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "whoami|auth status|zalogowan\\w* kont|które konto"
+          ],
+          [
+            "plan\\w* (wdrożenia|deploy)|deploy-plan"
+          ],
+          [
+            "sekret"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "trunk-dora",
+      "expect": "no-trigger",
+      "prompt": "Jak wdrożyć trunk-based development i mierzyć metryki DORA w zespole?",
+      "neighbor": "eng-continuous-delivery"
+    }
+  ]
+}

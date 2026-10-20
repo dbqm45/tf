@@ -1,0 +1,52 @@
+{
+  "skill": "sec-detection-engineering",
+  "scenarios": [
+    {
+      "id": "regula-sigma-w-ci",
+      "expect": "trigger",
+      "prompt": "Chcę pisać reguły wykrywania jako kod w repozytorium, w formacie niezależnym od SIEM-a, i sprawdzać je w CI przed wdrożeniem. Jak to ułożyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["Sigma"],
+          ["logsource", "detection", "condition"],
+          ["konwers\\w*", "convert", "pySigma", "sigma-cli", "walidacj\\w*", "lint"],
+          ["zdarzeni\\w* testow\\w*", "nagran\\w* zdarze", "symulac\\w*", "test\\w* regu\\w*", "Atomic Red Team"]
+        ],
+        "none": ["wystarczy wdrożyć regułę bezpośrednio na produkcyjnym SIEM"]
+      }
+    },
+    {
+      "id": "pokrycie-attack-i-luki",
+      "expect": "trigger",
+      "prompt": "Szef pyta, ile technik MITRE ATT&CK pokrywamy naszymi regułami i gdzie są luki. Jak to policzyć uczciwie i zaplanować, co pisać najpierw? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ATT&CK Navigator", "Navigator", "warstw\\w*", "layer"],
+          ["źródł\\w* danych", "data source", "telemetri\\w*", "logowani\\w*"],
+          ["przetestowan\\w*", "zwalidowan\\w*", "jakość pokrycia", "sama obecność reguły", "nie znaczy", "nie oznacza"],
+          ["priorytet\\w*", "threat intel", "zagrożen\\w* istotn\\w*", "kolejność"]
+        ],
+        "none": ["100% pokrycia ATT&CK jest realnym celem"]
+      }
+    },
+    {
+      "id": "purple-team-cwiczenie",
+      "expect": "trigger",
+      "prompt": "Planujemy ćwiczenie purple team, żeby sprawdzić, czy nasze alerty łapią realne techniki. Jak je zorganizować bezpiecznie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zgod\\w*", "autoryz\\w*", "zakres", "rules of engagement", "zasady zaangażowania"],
+          ["Atomic Red Team", "Caldera", "plan emulacji", "emulation plan"],
+          ["czas do wykrycia", "time to detect", "wykryto|nie wykryto", "luk\\w* w wykrywaniu", "tuning|strojeni\\w*"]
+        ],
+        "none": ["uruchom testy na produkcji bez uprzedzenia zespołu SOC"]
+      }
+    },
+    {
+      "id": "obsluga-incydentu",
+      "expect": "no-trigger",
+      "prompt": "Wykryliśmy ransomware na kilku serwerach. Jak ograniczyć skutki, zabezpieczyć dowody i kogo zawiadomić?",
+      "neighbor": "ops-security-operations"
+    }
+  ]
+}

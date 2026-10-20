@@ -1,0 +1,49 @@
+{
+  "skill": "ux-feature-design",
+  "scenarios": [
+    {
+      "id": "spec-faktury",
+      "expect": "trigger",
+      "prompt": "Projektuję ekran listy faktur z filtrowaniem i eksportem do CSV. Co opisać w specyfikacji dla programistów, żeby nic nie umknęło? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "tabel\\w* stan",
+            "stan\\w* (każdego|dla każdego) ekran"
+          ],
+          [
+            "375"
+          ],
+          [
+            "aria-live",
+            "region"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "powiadomienia-nawyk",
+      "expect": "trigger",
+      "prompt": "Chcemy dodać powiadomienia, żeby użytkownicy częściej wracali do aplikacji i budowali nawyk. Jak to zaprojektować odpowiedzialnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fogg"
+          ],
+          [
+            "etyczn",
+            "zwodnicz",
+            "dark pattern",
+            "manipul"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rice",
+      "expect": "no-trigger",
+      "prompt": "Mamy dziesięć pomysłów na funkcje — jak je wycenić i ustalić, które w ogóle warto budować?",
+      "neighbor": "proc-product-discovery"
+    }
+  ]
+}

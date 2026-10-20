@@ -1,0 +1,70 @@
+{
+  "skill": "ddd-connascence-analysis",
+  "scenarios": [
+    {
+      "id": "koszt-wiersza",
+      "expect": "trigger",
+      "prompt": "Mierzę sprzężenie między modułami Billing i Orders. Wspólna transakcja bazy obejmuje oba moduły, a status zamówienia jest porównywany jako liczba 3 po obu stronach. Jak to rozbić na wiersze i policzyć stopień oraz koszt? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kolejność",
+            "execution"
+          ],
+          [
+            "wartość|value"
+          ],
+          [
+            "znaczenie|meaning"
+          ],
+          [
+            "log2|logarytm|liczba miejsc|miejsc w kodzie"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "interpretacja-pasm",
+      "expect": "trigger",
+      "prompt": "W raporcie sprzężeń między dwoma kontekstami większość wierszy jest w paśmie dynamicznym (wspólna transakcja, dwa magazyny, które muszą się zgadzać). Co to oznacza dla granicy i co zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "przecieka|przeciek|leak"
+          ],
+          [
+            "jeden właściciel|właściciel danych|single owner",
+            "jedn\\w+ właściciel"
+          ],
+          [
+            "zdarzen|saga|outbox"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "szew-pary-z-importow",
+      "expect": "trigger",
+      "prompt": "Mierzę connascence między modułami checkout i payment (Python). Jak szybko zebrać listę plików, które przekraczają granicę w obie strony, zanim zacznę liczyć stopień umów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "code_graph"
+          ],
+          [
+            "--focus"
+          ],
+          [
+            "import\\w* się nie licz|nie liczy|punkt startu|start|lista plików"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "model-wewnatrz",
+      "expect": "no-trigger",
+      "neighbor": "ddd-tactical-design",
+      "prompt": "Projektuję agregat Zamówienie wewnątrz jednego kontekstu. Jak wyznaczyć granice spójności i które obiekty to wartości, a które encje? Odpowiedz zwięźle."
+    }
+  ]
+}

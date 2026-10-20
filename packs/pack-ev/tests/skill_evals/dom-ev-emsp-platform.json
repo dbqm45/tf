@@ -1,0 +1,56 @@
+{
+  "skill": "dom-ev-emsp-platform",
+  "scenarios": [
+    {
+      "id": "aplikacja-start-zdalny-bez-sesji",
+      "expect": "trigger",
+      "prompt": "Budujemy aplikację kierowcy dla naszego eMSP. Kierowca klika „Start”, a my dostajemy od CPO 200 z ACCEPTED, ale ładowanie nie rusza i ekran kręci się w nieskończoność. Jak zaprojektować start zdalny, co pokazać kierowcy w każdym stanie i jaki token wysyłamy w komendzie?",
+      "checks": {
+        "all": [
+          ["response_url", "CommandResult"],
+          ["timeout"],
+          ["APP_USER|AD_HOC_USER"],
+          ["Session|sesj[ęai].{0,30}(PENDING|ACTIVE)|status.{0,10}ACTIVE"],
+          ["EVSE_OCCUPIED|EVSE_INOPERATIVE|kabel|podłącz"]
+        ],
+        "none": ["ACCEPTED (oznacza|znaczy|=|to) (że )?(sesja|ładowanie) (się )?(rozpoczęł|wystartowa)"]
+      }
+    },
+    {
+      "id": "mapa-trzy-zrodla-duplikaty",
+      "expect": "trigger",
+      "prompt": "W naszej mapie ładowarek ta sama stacja pojawia się trzy razy: z naszych kontraktów OCPI, z huba i z otwartych danych. Kierowcy narzekają, że aplikacja pokazuje „wolne”, a na miejscu zajęte. Jak to poukładać: deduplikacja, świeżość statusu, filtry i co mamy obowiązek udostępniać z AFIR?",
+      "checks": {
+        "all": [
+          ["evse_id|współrzędn|geo|coordinates"],
+          ["last_updated|świeżoś|opóźnieni|TTL|stale"],
+          ["AFIR.{0,40}(art\\.? ?20|Article 20)|art\\.? ?20.{0,40}AFIR"],
+          ["NAP|krajow\\w+ punkt\\w* dostępu|National Access Point"],
+          ["UNKNOWN|nieznan"]
+        ],
+        "none": ["status (EVSE )?(jest|jako) (zawsze )?w czasie rzeczywistym bez opóźni"]
+      }
+    },
+    {
+      "id": "karta-rfid-zgubiona",
+      "expect": "trigger",
+      "prompt": "Kierowca zgłosił zgubioną kartę RFID naszego eMSP. Co robimy po stronie platformy: jak ją zablokować tak, żeby CPO to zobaczył natychmiast, co z sesją, która właśnie trwa, i jak wydać nową kartę, żeby klient nie stracił historii?",
+      "checks": {
+        "all": [
+          ["valid.{0,20}false|valid\\s*=\\s*false"],
+          ["whitelist"],
+          ["PUT|PATCH"],
+          ["group_id|contract_id|konto|historia"],
+          ["nie usuwa|nie kasuj|bez usuwania|nie usuwaj"]
+        ],
+        "none": ["(usuń|skasuj) (token|kartę) (z|w) (OCPI|CPO)"]
+      }
+    },
+    {
+      "id": "ad-hoc-na-stacji",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-payments",
+      "prompt": "Kierowca bez konta płaci kartą na terminalu przy stacji. Ile blokujemy preautoryzacją, kiedy pobieramy kwotę końcową i co jeśli sesja zawisła?"
+    }
+  ]
+}

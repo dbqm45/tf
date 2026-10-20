@@ -1,0 +1,56 @@
+{
+  "skill": "dom-ev-security",
+  "scenarios": [
+    {
+      "id": "reset-calej-floty-i-profile",
+      "expect": "trigger",
+      "prompt": "Jesteśmy CPO, ok. 2000 stacji, część wciąż łączy się z naszym CSMS po ws:// z samym hasłem. Audytor pyta, co się stanie, jeśli ktoś przejmie konto operatora w panelu i wyśle Reset albo zmianę limitu mocy do całej floty. Co mamy poprawić i w jakiej kolejności? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["profil(u|e)? (2|3)|TLS|mTLS|wss://"],
+          ["dwie osoby|dwóch osób|four.eyes|zatwierdz|akceptacj[ai] drugiej|approval"],
+          ["rate limit|limit (komend|wywołań|zapytań)|fale|etap|batch|partia|stopniow"],
+          ["Reset|ChangeAvailability|SetChargingProfile"],
+          ["siec[ia] energetyczn|sieć elektroenergetyczna|OSD|grid|stabilno"]
+        ],
+        "none": ["profil 1 (jest|to) (wystarczając|bezpieczn)"]
+      }
+    },
+    {
+      "id": "incydent-nis2-zegar-24-72",
+      "expect": "trigger",
+      "prompt": "W nocy wykryliśmy, że ktoś przez skradzione konto admina CSMS wgrał zmianę konfiguracji na ok. 800 stacjach i część przestała ładować. Mamy ok. 150 pracowników. Co robimy najpierw i czy musimy to zgłosić, komu i w jakim czasie?",
+      "checks": {
+        "all": [
+          ["24 ?(godz|h)|24 hours"],
+          ["72 ?(godz|h)|72 hours"],
+          ["CSIRT"],
+          ["miesi|raport końcow|final report"],
+          ["uzyskani[ae] wiedzy|dowied|becoming aware|świadom"],
+          ["izol|odcię|zablokuj|zamroź|wstrzyma"]
+        ],
+        "none": ["NIS2 nie dotyczy operatorów punktów ładowania"]
+      }
+    },
+    {
+      "id": "klon-rfid-i-sesje-bez-energii",
+      "expect": "trigger",
+      "prompt": "W logach widzimy sesje na kartach RFID z dwóch krajów w odstępie 5 minut oraz ładowarki, które zgłaszają ten sam numer seryjny z różnych adresów IP, a do tego sesje trwające godzinę bez kWh. Jak to interpretować i jakie reguły detekcji i kontrole wprowadzić?",
+      "checks": {
+        "all": [
+          ["UID|identyfikator karty|bez (krypto|szyfrowan)|sklonow|klon"],
+          ["duplikat|ten sam numer seryjny|dwa połączenia|zdublowan|podszy|fałszyw"],
+          ["bez energii|zero kWh|0 kWh|brak energii|bez przyrostu"],
+          ["blokad|odrzuć|nowe połączenie|kwarantann|limit"]
+        ],
+        "none": ["UID karty jest sekretem"]
+      }
+    },
+    {
+      "id": "szczegoly-profilu-3-w-ocpp",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-ocpp-2x",
+      "prompt": "W OCPP 2.0.1 mamy stację w Device Model i chcemy ustawić jej połączenie z CSMS na secure profile 3. Które zmienne SecurityCtrlr i NetworkConnectionProfile trzeba ustawić i jak wygląda przepływ SignCertificate → CertificateSigned po stronie stacji?"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+version: 2
+# Tytuły PR są w formacie Conventional Commits (docs/RELEASING.md): ci(deps): … — typ ci nie podbija wersji fabryki.
+# Fabryka nie ma własnych zależności (tylko biblioteka standardowa Pythona); aktualizujemy akcje w workflow.
+# examples/sklep-wycena jest przykładem bez lockfile'a i bez CI, więc nie jest tu objęty.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      # Jeden PR na tydzień ze wszystkimi akcjami.
+      actions:
+        patterns: ["*"]

@@ -1,0 +1,53 @@
+{
+  "skill": "eng-i18n",
+  "scenarios": [
+    {
+      "id": "liczba-mnoga-polski",
+      "expect": "trigger",
+      "prompt": "Aplikacja ma być po polsku i angielsku. Jak poprawnie wyświetlić „1 plik, 2 pliki, 5 plików” i formatować daty oraz kwoty? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ICU|MessageFormat|plural|PluralRules"
+          ],
+          [
+            "few|many|kategori\\w*"
+          ],
+          [
+            "Intl|locale|lokalizacj\\w*|ustawie\\w* regionaln\\w*"
+          ],
+          [
+            "walut\\w*|kwot\\w*|NumberFormat"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "strefy-czasowe-rtl",
+      "expect": "trigger",
+      "prompt": "Wchodzimy na rynek arabski i w USA. Spotkania planowane przez użytkowników przesuwają się o godzinę po zmianie czasu, a układ strony trzeba odwrócić. Co zmienić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "UTC"
+          ],
+          [
+            "IANA|America/|Europe/|stref\\w* czasow\\w*"
+          ],
+          [
+            "RTL|dir=|prawej do lewej"
+          ],
+          [
+            "logiczn\\w*|inline-start|margin-inline"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mikrocopy-przycisku",
+      "expect": "no-trigger",
+      "prompt": "Jak napisać komunikat błędu przy nieudanym zapisie formularza, żeby był zrozumiały dla użytkownika? Odpowiedz zwięźle.",
+      "neighbor": "ux-content-design"
+    }
+  ]
+}

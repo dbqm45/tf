@@ -1,0 +1,58 @@
+{
+  "skill": "fe-engineering-levels",
+  "scenarios": [
+    {
+      "id": "standard-osiem-zespolow",
+      "expect": "trigger",
+      "prompt": "Jestem seniorem i chcę wprowadzić wspólny standard lintowania i wspólny klient HTTP w 8 zespołach frontendowych. Jak do tego podejść i jak uzasadnić to zarządowi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "automat",
+            "wymus",
+            "lint",
+            "CI"
+          ],
+          [
+            "koszt"
+          ],
+          [
+            "zwrot",
+            "horyzont",
+            "ROI"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "devex-build",
+      "expect": "trigger",
+      "prompt": "Deweloperzy narzekają na wolny build i długie czekanie na review; chcę kupić nowe narzędzie do builda dla całej organizacji. Od czego zacząć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "diagnoz",
+            "tarci",
+            "friction"
+          ],
+          [
+            "koszt migracji",
+            "koszt.*migracj"
+          ],
+          [
+            "tight",
+            "FLOW",
+            "po wdrożeniu",
+            "zmierz"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dora",
+      "expect": "no-trigger",
+      "prompt": "Jak policzyć metryki DORA — deployment frequency i change failure rate — dla naszego repo?",
+      "neighbor": "eng-continuous-delivery"
+    }
+  ]
+}

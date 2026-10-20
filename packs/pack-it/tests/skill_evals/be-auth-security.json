@@ -1,0 +1,73 @@
+{
+  "skill": "be-auth-security",
+  "scenarios": [
+    {
+      "id": "rotacja-refresh",
+      "expect": "trigger",
+      "prompt": "Mamy SPA i API z refresh tokenami. Jak je rotować i co zrobić, gdy ktoś użyje starego refresh tokenu drugi raz? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "rotacj",
+            "rotat"
+          ],
+          [
+            "ponown\\w* użyci",
+            "reuse",
+            "zużyt",
+            "already used",
+            "replay"
+          ],
+          [
+            "rodzin",
+            "family",
+            "wszystk\\w* (token|sesj)",
+            "unieważni",
+            "revoke"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mfa-nie-wystarcza",
+      "expect": "trigger",
+      "prompt": "Audyt pokazał, że konta z włączonym MFA i tak są przejmowane. Co jeszcze zabezpieczyć w sesjach i OAuth? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kradzie",
+            "skradz",
+            "wykradz",
+            "stolen",
+            "infostealer",
+            "odtwarz",
+            "replay"
+          ],
+          [
+            "DPoP",
+            "mTLS",
+            "DBSC",
+            "device.?bound",
+            "wiąż\\w* \\w* urządzeni",
+            "powiąz\\w* \\w* urządzeni",
+            "powiąz\\w* z urządzeni"
+          ],
+          [
+            "step-?up",
+            "ponown\\w* uwierzytelni",
+            "device code",
+            "wyloguj wszędzie",
+            "unieważni\\w* wszystk",
+            "krótk\\w* (access|token)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zlosliwe-paczki",
+      "expect": "no-trigger",
+      "prompt": "Jak ograniczyć ryzyko złośliwych paczek npm w pipeline: lockfile, przypinanie wersji, skanowanie zależności?",
+      "neighbor": "ops-supply-chain-security"
+    }
+  ]
+}

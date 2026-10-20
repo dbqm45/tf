@@ -1,0 +1,344 @@
+{
+ "obszar": "operacje",
+ "pytania": [
+  {
+   "id": "diag-dowody-przed-resetem",
+   "pytanie": "Stacja od rana nie startuje sesji z aplikacji, a kolega z NOC chce od razu wysłać Reset. Co należy zrobić najpierw i dlaczego?",
+   "wzorzec": "Najpierw zebrać dowody: surowe ramki OCPP z czasem i kierunkiem oraz logi bramy i CSMS z tego okna, i sformułować objaw. Reset kasuje stan, który jest dowodem (bufor offline, kolejka, status złącza), a komendy zdalne wysyła się dopiero z planem i akceptacją człowieka.",
+   "checks": {
+    "all": [
+     [
+      "dowod|evidence"
+     ],
+     [
+      "log|ramk|frame"
+     ],
+     [
+      "kasuj|znika|traci|usuwa|wymaz|niszczy|destroy|erases"
+     ]
+    ],
+    "none": [
+     "najpierw (wyślij|zrób|wykonaj) reset",
+     "reset (od razu|na początek) jest (najlepszy|bezpieczny)"
+    ]
+   },
+   "zrodlo": "dom-ev-diagnostics",
+   "trudnosc": 1
+  },
+  {
+   "id": "ocpi-removed-evse",
+   "pytanie": "Likwidujemy parking i trwale wyłączamy dwa punkty ładowania. Co zrobić z nimi w OCPI wobec eMSP i czy ich EVSE ID można nadać stacji na nowej lokalizacji?",
+   "wzorzec": "Nie usuwamy obiektu EVSE, tylko ustawiamy status REMOVED (PUT lub PATCH do eMSP). Wygaszone EVSE ID nigdy nie jest nadawane ponownie, więc nowa stacja dostaje nowe ID.",
+   "checks": {
+    "all": [
+     [
+      "removed"
+     ],
+     [
+      "nie (usuw|kasuj|delete)|bez delete|zamiast (usuwa|kasowa)"
+     ],
+     [
+      "nigdy|nie wraca|nie (wolno|można|należy) \\w* ?ponownie|nowe (evse )?id|new evse"
+     ]
+    ],
+    "none": [
+     "można (nadać|użyć) (tego samego )?(evse )?id ponownie",
+     "wystarczy usunąć (evse|obiekt)"
+    ]
+   },
+   "zrodlo": "dom-ev-asset-operations, dom-ev-ocpi",
+   "trudnosc": 1
+  },
+  {
+   "id": "boot-pending-onboarding",
+   "pytanie": "Nowy model ładowarki łączy się z CSMS po raz pierwszy. Co oznacza odpowiedź Pending na BootNotification i jak wykorzystać ją przy onboardingu?",
+   "wzorzec": "Pending znaczy, że CSMS zna stację, ale jeszcze jej nie przyjął. To czas na odczyt i ustawienie konfiguracji po naszej stronie, a Accepted dajemy dopiero po sprawdzeniu karty typu (producent, model, firmware); typ spoza listy dopuszczonych dostaje Pending lub Rejected.",
+   "checks": {
+    "all": [
+     [
+      "pending"
+     ],
+     [
+      "jeszcze nie przy|nie przyj|not yet accepted|nie zaakceptow"
+     ],
+     [
+      "konfigur"
+     ],
+     [
+      "accepted|zaakcept|przyjęc"
+     ]
+    ],
+    "none": [
+     "pending (to|znaczy) (to samo co )?(rejected|odrzuc)",
+     "pending oznacza że stacja jest odrzucona"
+    ]
+   },
+   "zrodlo": "dom-ev-charger-onboarding, dom-ev-ocpp-16",
+   "trudnosc": 1
+  },
+  {
+   "id": "changeavailability-scheduled",
+   "pytanie": "Wysłaliśmy ChangeAvailability (Inoperative) do stacji z trwającą sesją i dostaliśmy Scheduled. Co to znaczy? Czy w OCPP 1.6 Reset też może zwrócić Scheduled?",
+   "wzorzec": "Scheduled oznacza odroczenie zmiany dostępności do końca trwającej sesji, więc dopiero potem stacja zmieni stan (potwierdź StatusNotification); Accepted też znaczy tylko, że polecenie przyjęto. Reset w 1.6 ma statusy Accepted i Rejected; Scheduled dla Reset pojawia się dopiero w 2.0.1.",
+   "checks": {
+    "all": [
+     [
+      "scheduled"
+     ],
+     [
+      "odrocz|po zakończeniu sesji|do końca sesji|po sesji|deferred|after the (current )?(session|transaction)"
+     ],
+     [
+      "1\\.6"
+     ],
+     [
+      "2\\.0\\.1"
+     ]
+    ],
+    "none": [
+     "scheduled (znaczy|oznacza) (że )?(odrzuc|rejected)",
+     "w 1\\.6 reset (zwraca|może zwrócić) scheduled"
+    ]
+   },
+   "zrodlo": "dom-ev-asset-operations, kb:ocpp-json-schemas",
+   "trudnosc": 2
+  },
+  {
+   "id": "session-success-rate-mianownik",
+   "pytanie": "W miesiącu było 1000 prób autoryzacji, w tym 100 odrzuconych kart RFID. Uruchomiono 900 sesji, z czego 45 skończyło się bez energii. Ile wynosi session success rate i jak liczysz mianownik?",
+   "wzorzec": "Session success rate to sesje z energią przez sesje uruchomione: (900 − 45) / 900 = 95 %. Odrzucone autoryzacje liczy się osobno (skuteczność autoryzacji), bo nie są sesją i nie wynikają ze sprawności sprzętu.",
+   "checks": {
+    "all": [
+     [
+      "95 ?%|95 proc|0[,.]95|855 ?/ ?900"
+     ],
+     [
+      "osobno|oddziel|separately|nie (wchodzą|liczą|wlicza)"
+     ],
+     [
+      "autoryzacj|authoriz"
+     ]
+    ],
+    "none": [
+     "(wynosi|jest|to) 85[,.]5",
+     "mianownik[^.]{0,30}1000 prób"
+    ]
+   },
+   "zrodlo": "dom-ev-kpi-analytics",
+   "trudnosc": 2
+  },
+  {
+   "id": "wiszaca-sesja-dowod-i-zamkniecie",
+   "pytanie": "Sesja na stacji jest aktywna w CSMS od dwóch dni, a kierowca dawno odjechał. Jak ustalasz przyczynę i jak wolno ją zamknąć?",
+   "wzorzec": "Szukaj ostatniej ramki transakcji: brak StopTransaction (1.6) lub TransactionEvent Ended po ostatnim MeterValues i ponowny BootNotification wskazują na utratę zasilania lub restart. Sesję zamyka się regułą, a energię oznacza jako szacowaną, bez cichego zgadywania; rozliczenie szacunku zatwierdza człowiek, a wystawionego CDR się nie edytuje, tylko koryguje kredytowym.",
+   "checks": {
+    "all": [
+     [
+      "stoptransaction|ended|koniec transakcji|ramk\\w* końcow|stop"
+     ],
+     [
+      "reboot|restart|boot|zasilani|offline"
+     ],
+     [
+      "szacowan|estimated"
+     ],
+     [
+      "człowiek|decyzj|akceptac"
+     ]
+    ],
+    "none": [
+     "cdr (można|wolno) edytować",
+     "edytuj\\w* cdr",
+     "po cichu uzupełni"
+    ]
+   },
+   "zrodlo": "dom-ev-diagnostics, dom-ev-session-lifecycle",
+   "trudnosc": 2
+  },
+  {
+   "id": "rozjazd-kwh-x1000",
+   "pytanie": "Licznik pokazał 12 kWh, w CSMS sesja ma 12 kWh, ale CDR dla eMSP ma 12000 kWh. Gdzie szukasz przyczyny i jak naprawiasz skutki w rozliczeniu?",
+   "wzorzec": "Różnica dokładnie ×1000 to prawie zawsze jednostka: w OCPP 1.6 meterStart i meterStop są w Wh (12 kWh = 12000 Wh), więc brakuje przeliczenia Wh→kWh w etapie generowania CDR lub eksportu. Poprawkę zaczyna się od testu (12000 Wh → 12 kWh), a wystawiony CDR jest niezmienny, więc koryguje się go CDR kredytowym i nowym CDR uzgodnionym z eMSP.",
+   "checks": {
+    "all": [
+     [
+      "wh"
+     ],
+     [
+      "1000|tysi"
+     ],
+     [
+      "jednostk|unit|przelicz"
+     ],
+     [
+      "kredyt|credit|nowy cdr|korekt"
+     ]
+    ],
+    "none": [
+     "cdr (można|wolno) (po prostu )?edytować",
+     "edytuj\\w* (istniejący )?cdr"
+    ]
+   },
+   "zrodlo": "dom-ev-diagnostics, dom-ev-asset-operations",
+   "trudnosc": 2
+  },
+  {
+   "id": "mttr-epizody",
+   "pytanie": "Port miał trzy epizody niedostępności po 60, 120 i 240 minut. Pierwszy z nich zaczął się od Faulted o 08:00, potem przyszło drugie Faulted o 08:30 bez powrotu do Available, a koniec o 09:00. Ile wynosi MTTR i ile epizodów liczysz?",
+   "wzorzec": "Kolejne Faulted bez powrotu do stanu sprawnego to jeden epizod, więc epizody są trzy. MTTR to suma czasu przestojów podzielona przez liczbę epizodów: (60 + 120 + 240) / 3 = 140 minut.",
+   "checks": {
+    "all": [
+     [
+      "140"
+     ],
+     [
+      "3 |trzy|three"
+     ],
+     [
+      "jeden epizod|one episode|ten sam epizod|jednym epizod"
+     ]
+    ],
+    "none": [
+     "(wynosi|jest|to) 105",
+     "4 epizody"
+    ]
+   },
+   "zrodlo": "dom-ev-kpi-analytics",
+   "trudnosc": 2
+  },
+  {
+   "id": "symulator-drop-stop",
+   "pytanie": "Nie mamy ładowarki, a chcemy sprawdzić, czy nasz CSMS nie zostawia sesji wiszącej, gdy stacja zniknie przed StopTransaction. Jak to przetestować na symulatorze i co powinno wyjść w analizie logu?",
+   "wzorzec": "Uruchom symulator OCPP 1.6 ze scenariuszem awarii drop-stop (brak StopTransaction) na lokalnym CSMS z zapisem logu, a analizator ma zgłosić ustalenie open-transaction. Potem sprawdź w CSMS, że transakcja jest oznaczona jako niedomknięta i ma alarm po progu czasu, i dodaj ten scenariusz jako test regresji w CI.",
+   "checks": {
+    "all": [
+     [
+      "drop-stop|brak stoptransaction|bez stoptransaction|pomi\\w+ stoptransaction"
+     ],
+     [
+      "open-transaction|niedomkni|otwart\\w* transakcj"
+     ],
+     [
+      "ci|regresj|regression"
+     ]
+    ],
+    "none": [
+     "symulator (zastępuje|wystarcza zamiast) prawdziw",
+     "testuj na (produkcyjnym|produkcji)"
+    ]
+   },
+   "zrodlo": "dom-ev-simulation-testing, dom-ev-diagnostics",
+   "trudnosc": 2
+  },
+  {
+   "id": "uptime-trzy-definicje-liczby",
+   "pytanie": "Dla portu w roku (525 600 min) łączny przestój wyniósł 20 000 min, z czego 6 000 min to udokumentowana przerwa w dostawie od zakładu energetycznego i serwis planowy. Policz uptime surowy, wg NEVI i wg SLA (wyłączenia także z mianownika) i powiedz, które wyniki przekraczają 97 %.",
+   "wzorzec": "Surowy: (525 600 − 20 000) / 525 600 ≈ 96,2 %, czyli poniżej 97 %. NEVI: (525 600 − (20 000 − 6 000)) / 525 600 ≈ 97,3 %, SLA: 505 600 / 519 600 ≈ 97,3 %. Przekraczają więc 97 % definicje NEVI i SLA, a surowa nie.",
+   "checks": {
+    "all": [
+     [
+      "96[,.][12]"
+     ],
+     [
+      "97[,.]3"
+     ],
+     [
+      "surow|raw"
+     ],
+     [
+      "nevi"
+     ],
+     [
+      "sla"
+     ]
+    ],
+    "none": [
+     "surow\\w+ (to|wynosi|jest) 97"
+    ]
+   },
+   "zrodlo": "dom-ev-kpi-analytics, dom-ev-regulations-us",
+   "trudnosc": 3
+  },
+  {
+   "id": "setnetworkprofile-nie-przelacza",
+   "pytanie": "Przy migracji floty stacji OCPP 2.0.1 na nowy CSMS wysłaliśmy SetNetworkProfile z nowym adresem i dostaliśmy Accepted, ale stacja dalej łączy się ze starym systemem. Dlaczego i jak dokończyć przełączenie bezpiecznie?",
+   "wzorzec": "SetNetworkProfile tylko zapisuje profil w slocie konfiguracyjnym i nie przełącza stacji. Trzeba zmienić priorytet profili (SetVariables) i wywołać Reset, żeby stacja połączyła się ponownie, a stary profil zostawić w innym slocie jako rollback aż do zamknięcia fali.",
+   "checks": {
+    "all": [
+     [
+      "nie przełącza|tylko zapisuje|samo .{0,25}nie|only (stores|saves)|nie wystarcz"
+     ],
+     [
+      "priorytet|priority"
+     ],
+     [
+      "reset"
+     ],
+     [
+      "stary profil|rollback|wycofan|slot"
+     ]
+    ],
+    "none": [
+     "setnetworkprofile (przełącza|wystarczy)",
+     "usuń(ąć)? stary profil od razu"
+    ]
+   },
+   "zrodlo": "dom-ev-csms-migration, kb:ocpp-json-schemas",
+   "trudnosc": 3
+  },
+  {
+   "id": "migracja-ciaglosc-ocpi",
+   "pytanie": "Przenosimy 300 stacji ze starego CSMS na nowy, a eMSP-y roamingowe nie mogą stracić lokalizacji ani historii. Jak postąpić z identyfikatorami OCPI i z tym, kto publikuje Locations, i czy stary system ma wysłać REMOVED?",
+   "wzorzec": "Tożsamość publiczna (EVSE ID, party_id, Location ID, evse.uid) zostaje bez zmian, bo nowy identyfikator to dla eMSP nowy zasób. Publikować Locations, Tariffs, Sessions i CDRs ma w danym czasie tylko jedna platforma: stary system wyłączamy z publikacji w tym samym oknie, w którym włączamy nowy, i nie wysyła on REMOVED, bo eMSP uznałby EVSE za wycofane.",
+   "checks": {
+    "all": [
+     [
+      "bez zmian|te same|nie zmieni|niezmienn"
+     ],
+     [
+      "evse.?id|party_id|location id|uid"
+     ],
+     [
+      "jedn\\w+ (platform|system)|tylko jeden|nie dwa|naraz|simultaneous"
+     ],
+     [
+      "removed"
+     ]
+    ],
+    "none": [
+     "nadaj\\w* nowe evse id",
+     "stary system (powinien|ma) wysłać removed"
+    ]
+   },
+   "zrodlo": "dom-ev-csms-migration, dom-ev-ocpi, dom-ev-asset-operations",
+   "trudnosc": 3
+  },
+  {
+   "id": "certyfikat-oca-a-wlasne-testy",
+   "pytanie": "Producent ładowarki przedstawia certyfikat OCA i proponuje pominąć nasze testy akceptacyjne. Co zawsze trzeba sprawdzić i dlaczego certyfikat nie zwalnia z własnych testów?",
+   "wzorzec": "Certyfikat jest wejściem do decyzji, nie jej zastępstwem: dotyczy konkretnej wersji OCPP i edycji, profili w zakresie oraz wersji firmware w teście, a nie pracy z naszym CSMS, naszej konfiguracji ani trybu offline. Trzeba poprosić o raport z testu (nie samo logo) i przetestować nasz CSMS na fizycznym egzemplarzu; każdy nowy firmware to nowy wiersz macierzy.",
+   "checks": {
+    "all": [
+     [
+      "nie zwalnia|nie zastępuj|nie (wystarcz|obejmuje)|wejście|input|not a substitute"
+     ],
+     [
+      "firmware"
+     ],
+     [
+      "csms|konfigurac|offline"
+     ],
+     [
+      "raport|report|zakres|profil"
+     ]
+    ],
+    "none": [
+     "certyfikat oca zwalnia z testów",
+     "wystarczy logo oca"
+    ]
+   },
+   "zrodlo": "dom-ev-certification-testing, dom-ev-charger-onboarding",
+   "trudnosc": 3
+  }
+ ]
+}

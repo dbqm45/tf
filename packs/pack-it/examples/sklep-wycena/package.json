@@ -1,0 +1,3 @@
+{ "name": "sklep-wycena", "private": true, "type": "module",
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
+  "devDependencies": { "vitest": "^5.0.2", "typescript": "^6.0.3", "fast-check": "^4.10.2", "@stryker-mutator/core": "^10.0.0" } }

@@ -1,0 +1,61 @@
+{
+  "skill": "eng-local-quality-gates",
+  "scenarios": [
+    {
+      "id": "hook-po-edycji-ts",
+      "expect": "trigger",
+      "prompt": "Chcę, żeby w moim projekcie TypeScript po każdej edycji pliku przez Claude Code automatycznie odpalał się eslint --fix i testy powiązane z tym plikiem, a błąd wracał do agenta, żeby sam go poprawił. Jak to ustawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["PostToolUse"],
+          ["vitest related", "findRelatedTests"],
+          ["exit\\s*2", "kod\\w* (wyjścia )?2", "decision.{0,20}block"]
+        ],
+        "none": ["--no-verify"]
+      }
+    },
+    {
+      "id": "warstwy-sprawdzen",
+      "expect": "trigger",
+      "prompt": "Lint, sprawdzanie typów i testy uruchamiamy dziś tylko w CI i czekamy 20 minut na informację. Co przenieść na maszynę programisty — po edycji, przed commitem, przed pushem — żeby commit nie trwał minut? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pre-push"],
+          ["staged", "w stage", "w indeksie", "lint-staged", "\\{staged_files\\}"],
+          ["sekund", "kilka s", "kilkanaście s"],
+          ["nie zastęp", "CI (nadal|dalej|zostaje)", "pełny zestaw"]
+        ]
+      }
+    },
+    {
+      "id": "hooki-gita-python",
+      "expect": "trigger",
+      "prompt": "Projekt w Pythonie z ruff i pytest. Chcemy, żeby ruff sprawdzał pliki przed każdym commitem, a pełne testy szły przed pushem. Czym to zrobić i jak sprawdzić, że hook naprawdę działa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pre-commit-config", "pre-commit install"],
+          ["pre-push"],
+          ["zepsut\\w* plik", "celowo", "commit (zostanie |zostaje )?odrzucon", "błędn\\w* plik"]
+        ]
+      }
+    },
+    {
+      "id": "agent-w-petli-hooka",
+      "expect": "trigger",
+      "prompt": "Ustawiliśmy hook, który po edycji uruchamia testy powiązane. Teraz agent w kółko przerabia kod, gdy padnie test logiki rozliczeń, aż w końcu przejdzie. Jak ustawić zasady dla agenta i samego hooka, żeby tak nie było? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["eng-debugging", "debugow", "przyczyn"],
+          ["(1|jedn\\w*)[–-](2|dwóch)", "dwóch (prób|podejść)", "drugiej (próbie|porażce)", "2 prób"],
+          ["format", "import", "trywialn"]
+        ]
+      }
+    },
+    {
+      "id": "pipeline-github-actions",
+      "expect": "no-trigger",
+      "neighbor": "ops-ci-cd",
+      "prompt": "Jak napisać workflow GitHub Actions, który na każdym PR uruchamia lint i testy z cache zależności npm?"
+    }
+  ]
+}

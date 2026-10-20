@@ -1,0 +1,61 @@
+{
+  "skill": "qa-performance-testing",
+  "scenarios": [
+    {
+      "id": "model-otwarty-k6",
+      "expect": "trigger",
+      "prompt": "Mamy publiczne API zamówień, w szczycie ok. 200 zamówień na minutę. Piszę test w k6 — stała liczba VU czy coś innego? Jak ustawić progi, żeby CI padał przy regresji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "arrival",
+            "model otwarty",
+            "open model",
+            "otwart"
+          ],
+          [
+            "niezerow",
+            "non-zero",
+            "kod wyjścia",
+            "exit code"
+          ],
+          [
+            "ukry.{0,30}spowolnieni",
+            "coordinated omission",
+            "zamkni.{0,10}model",
+            "ukrywa\\w* regresj",
+            "zmniejsza\\w* tempo",
+            "spowalnia.{0,40}(żądań|tempo)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rodzaje-ci-wycieki",
+      "expect": "trigger",
+      "prompt": "Chcę dodać test wydajnościowy do CI i osobno sprawdzić, czy aplikacja nie ma wycieków pamięci. Jakie rodzaje testów wybrać do każdego celu i jak długo je puszczać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "soak",
+            "wytrzymałoś"
+          ],
+          [
+            "godzin",
+            "hours"
+          ],
+          [
+            "dymn",
+            "smoke"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "lcp-przegladarka",
+      "expect": "no-trigger",
+      "prompt": "Strona główna ładuje się wolno w przeglądarce użytkownika. Jak poprawić LCP i INP po stronie frontendu? Odpowiedz zwięźle.",
+      "neighbor": "fe-web-platform"
+    }
+  ]
+}

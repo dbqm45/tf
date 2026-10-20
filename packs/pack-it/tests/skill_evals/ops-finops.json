@@ -1,0 +1,49 @@
+{
+  "skill": "ops-finops",
+  "scenarios": [
+    {
+      "id": "sprzatanie",
+      "expect": "trigger",
+      "prompt": "Chcę zacząć porządkować nieużywane zasoby w AWS, żeby ciąć rachunek. Jakie kryteria i jaki proces przyjąć, zanim cokolwiek usuniemy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "30 dni"
+          ],
+          [
+            "7 dni|sprzeciw"
+          ],
+          [
+            "migawk|snapshot",
+            "niepodpięt|unattached|load balancer"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "koszt-w-pr",
+      "expect": "trigger",
+      "prompt": "Jak wprowadzić kontrolę kosztów chmury do procesu zmian w Terraform, żeby zespoły widziały rachunek przed wdrożeniem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "infracost"
+          ],
+          [
+            "opa|conftest|sentinel|polityk\\w+ jako kod|policy as code"
+          ],
+          [
+            "80 ?%|120 ?%",
+            "tag\\w* \\W*(team|owner)|tagi"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "koszt-telemetrii",
+      "expect": "no-trigger",
+      "prompt": "Rachunek za logi i metryki w naszym backendzie obserwowalności urósł trzykrotnie. Jak ograniczyć koszt telemetrii?",
+      "neighbor": "ops-observability"
+    }
+  ]
+}

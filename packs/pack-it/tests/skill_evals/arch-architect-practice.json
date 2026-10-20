@@ -1,0 +1,75 @@
+{
+  "skill": "arch-architect-practice",
+  "scenarios": [
+    {
+      "id": "przeglad-atam",
+      "expect": "trigger",
+      "prompt": "Za miesiąc robimy dużą zmianę w architekturze płatności i chcę zrobić lekki przegląd architektury. Jak go poprowadzić i co ma być w raporcie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wrażliwo",
+            "sensitivity"
+          ],
+          [
+            "kompromis",
+            "trade-?off"
+          ],
+          [
+            "ryzyk",
+            "risk"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "decyzja-i-komunikacja",
+      "expect": "trigger",
+      "prompt": "Zespół co miesiąc wraca do dyskusji, czy wydzielać serwis płatności. Jak podjąć i zakomunikować decyzję architektoniczną, żeby się utrwaliła? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "\\bADR\\b",
+            "decision record"
+          ],
+          [
+            "operacj",
+            "\\bops\\b",
+            "utrzymani"
+          ],
+          [
+            "odwracaln",
+            "odwróc",
+            "reversib",
+            "dwa.* opcj",
+            "nic nie zmienia"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "test-odpornosci-decyzji",
+      "expect": "trigger",
+      "prompt": "Zespół i model są zgodni, że zarządzany Postgres na jednej platformie to dobry wybór. Jak sprawdzić, czy to nie jest przytakiwanie, zanim zapiszemy decyzję architektoniczną? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "adwokat\\w* diabła|devil"
+          ],
+          [
+            "pre-?mortem"
+          ],
+          [
+            "nieznane niewiadome|unknown unknowns"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wybor-bazy",
+      "expect": "no-trigger",
+      "prompt": "Wybieram między PostgreSQL a MongoDB dla nowego projektu. Jak je porównać i jaki stack wziąć?",
+      "neighbor": "arch-tech-selection"
+    }
+  ]
+}

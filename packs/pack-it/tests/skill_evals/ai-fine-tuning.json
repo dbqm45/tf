@@ -1,0 +1,137 @@
+{
+  "skill": "ai-fine-tuning",
+  "scenarios": [
+    {
+      "id": "wiedza-czy-finetuning",
+      "expect": "trigger",
+      "prompt": "Nasz bot zmyśla szczegóły naszych taryf i regulaminów. Szef chce dotrenować model na całej dokumentacji, żeby „nauczył się” firmy. Czy to ma sens i co zrobić najpierw? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "rag",
+            "retrieval",
+            "wyszukiwani\\w+ (w )?(dokument|kontekst|fragment)"
+          ],
+          [
+            "format",
+            "styl",
+            "ton",
+            "wąsk\\w+ zadani"
+          ],
+          [
+            "prompt\\w*.{0,60}(najpierw|pierwsz)",
+            "drabin\\w+",
+            "najpierw.{0,40}prompt",
+            "kolejność"
+          ],
+          [
+            "zbiór\\w* (ewaluacyjn|testow|wzorcow)\\w*",
+            "eval",
+            "ewaluacj\\w+"
+          ]
+        ],
+        "none": [
+          "fine-tuning to najlepszy sposób na dodanie wiedzy",
+          "dotrenowanie nauczy model wszystkich faktów"
+        ]
+      }
+    },
+    {
+      "id": "lora-klasyfikacja-hiperparametry",
+      "expect": "trigger",
+      "prompt": "Chcę dostroić model 8B do klasyfikacji zgłoszeń, mam 3000 oznaczonych przykładów i jedną kartę 24 GB. Jak ustawić LoRA, od jakich wartości zacząć i jak sprawdzić, że jest lepiej niż przed dostrajaniem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "qlora",
+            "4.bit",
+            "nf4"
+          ],
+          [
+            "\\brank\\b",
+            "\\br ?=",
+            "ranga",
+            "lora_alpha",
+            "alpha"
+          ],
+          [
+            "zamrożon\\w+",
+            "frozen",
+            "held.?out",
+            "nigdy (nie )?(trenuj|używa)",
+            "zbiór\\w* (testow|ewaluacyjn)\\w*"
+          ],
+          [
+            "model bazow\\w+",
+            "baseline",
+            "przed i po",
+            "przed dostrajaniem",
+            "punkt odniesienia"
+          ]
+        ],
+        "none": [
+          "testuj na danych treningowych",
+          "zbiór testowy nie jest potrzebny"
+        ]
+      }
+    },
+    {
+      "id": "destylacja-licencja-rodo",
+      "expect": "trigger",
+      "prompt": "Chcemy wygenerować dane treningowe odpowiedziami dużego modelu z API i dotrenować nimi mały model otwarty. Część promptów to prawdziwe zgłoszenia klientów. Na co uważać zanim zaczniemy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "regulamin\\w*",
+            "warunk\\w+ (korzystania|użytkowania)",
+            "terms",
+            "licencj\\w+"
+          ],
+          [
+            "konkurenc\\w+",
+            "competing",
+            "trenowa\\w+ (innych )?modeli"
+          ],
+          [
+            "rodo",
+            "dane osobowe",
+            "danych osobowych",
+            "anonimiz\\w+",
+            "pseudonimiz\\w+"
+          ]
+        ],
+        "none": [
+          "nie ma żadnych ograniczeń",
+          "dane klientów można użyć bez podstawy"
+        ]
+      }
+    },
+    {
+      "id": "serwowanie-vllm",
+      "expect": "no-trigger",
+      "prompt": "Jak ustawić vLLM i continuous batching, żeby obsłużyć 50 równoległych rozmów na jednym GPU, i jakie metryki obserwować?",
+      "neighbor": "ops-ai-inference"
+    },
+    {
+      "id": "destylacja-agenta-w-harnessie",
+      "expect": "trigger",
+      "prompt": "Mamy agenta na małym modelu w naszym harnessie (narzędzia, format edycji plików). Chcemy go dotrenować SFT-em na pełnych trajektoriach mocniejszego modelu-nauczyciela. Na co uważać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "on-policy",
+            "DAgger"
+          ],
+          [
+            "docelow\\w* harness",
+            "w (tym samym|swoim|naszym) harness"
+          ],
+          [
+            "preprint",
+            "jeden (wynik|eksperyment|artykuł)"
+          ]
+        ]
+      }
+    }
+  ]
+}

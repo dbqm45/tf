@@ -1,0 +1,60 @@
+{
+  "skill": "ops-security-operations",
+  "scenarios": [
+    {
+      "id": "przejete-konto",
+      "expect": "trigger",
+      "prompt": "Alert w SIEM pokazał, że konto administratora zalogowało się z nowego kraju i utworzyło token API. Jak postępować krok po kroku z incydentem, zanim wyłączymy maszynę i konto? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "dowod",
+            "dowód",
+            "migawk",
+            "snapshot",
+            "pamięć",
+            "pamięci"
+          ],
+          [
+            "containment",
+            "ograniczen"
+          ],
+          [
+            "łańcuch dowodow",
+            "chain of custody",
+            "zakres"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "terminy-zgloszen",
+      "expect": "trigger",
+      "prompt": "W naszej firmie doszło do wycieku danych osobowych klientów. W jakich terminach trzeba to zgłosić i kto przygotowuje zgłoszenie? Zakładamy, że podlegamy też NIS2. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "72"
+          ],
+          [
+            "24 h",
+            "24h",
+            "24 godz",
+            "wczesne ostrzeż",
+            "early warning"
+          ],
+          [
+            "prawn",
+            "dział prawny"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "model-zagrozen",
+      "expect": "no-trigger",
+      "prompt": "Projektuję nowy system płatności i chcę wykonać model zagrożeń STRIDE z diagramem przepływu danych, żeby zaprojektować zabezpieczenia jeszcze przed implementacją. Jak to ułożyć? Odpowiedz zwięźle.",
+      "neighbor": "arch-threat-modeling"
+    }
+  ]
+}

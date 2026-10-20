@@ -1,0 +1,47 @@
+{
+  "country_code": "PL",
+  "party_id": "EVT",
+  "id": "AC-2026-10",
+  "currency": "PLN",
+  "type": "REGULAR",
+  "tariff_alt_text": [
+    {
+      "language": "pl",
+      "text": "1,79 zł/kWh netto; postój 12 zł/h netto w dni robocze 08:00–20:00"
+    }
+  ],
+  "elements": [
+    {
+      "price_components": [
+        {
+          "type": "ENERGY",
+          "price": 1.79,
+          "vat": 23.0,
+          "step_size": 1
+        }
+      ]
+    },
+    {
+      "price_components": [
+        {
+          "type": "PARKING_TIME",
+          "price": 12.0,
+          "vat": 23.0,
+          "step_size": 300
+        }
+      ],
+      "restrictions": {
+        "start_time": "08:00",
+        "end_time": "20:00",
+        "day_of_week": [
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY"
+        ]
+      }
+    }
+  ],
+  "last_updated": "2026-10-01T00:00:00Z"
+}

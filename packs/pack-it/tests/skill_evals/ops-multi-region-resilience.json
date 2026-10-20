@@ -1,0 +1,62 @@
+{
+  "skill": "ops-multi-region-resilience",
+  "scenarios": [
+    {
+      "id": "strategia-dr-rto-rpo",
+      "expect": "trigger",
+      "prompt": "Mamy sklep w jednym regionie chmury i zarząd pyta o awarię całego regionu. Płatności mogą stać najwyżej 15 minut, a panel raportowy nawet dobę. Jaką strategię DR wybrać dla każdego z nich? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pilot light", "warm standby"],
+          ["active.?active", "multi-site", "wielu lokalizacj"],
+          ["backup (and|&|i) restore", "kopi\\w* i odtwarzani", "odtworzeni\\w* z kopii"],
+          ["tier", "poziom\\w* krytyczności", "klas\\w* usług", "per usług"],
+          ["koszt"]
+        ],
+        "none": ["jedna strategia dla wszystkich usług"]
+      }
+    },
+    {
+      "id": "failover-dns-control-plane",
+      "expect": "trigger",
+      "prompt": "Planujemy przełączanie ruchu na drugi region przez DNS z health checkami. Co może pójść nie tak w trakcie prawdziwej awarii regionu i jak to zabezpieczyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["control plane", "płaszczyzn\\w* sterowani", "płaszczyzn\\w* kontroln"],
+          ["data plane", "płaszczyzn\\w* danych"],
+          ["TTL"],
+          ["static(ally)? stab", "statyczn\\w* stabiln", "wstępnie przygotowan\\w* (zasob|pojemnoś)", "pre-provision"],
+          ["split.?brain", "fail.?back", "powrot\\w* do regionu", "przetestowan", "test\\w* failover"]
+        ],
+        "none": ["konsol\\w* jako główn\\w* narzędzi\\w* przełączenia"]
+      }
+    },
+    {
+      "id": "replikacja-konflikty-gameday",
+      "expect": "trigger",
+      "prompt": "Chcemy bazę aktywną w dwóch regionach i przetestować awarię na produkcji. Jak podejść do replikacji, konfliktów zapisu i do samego testu, żeby nikogo nie położyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["async", "asynchroniczn"],
+          ["last.?writer", "LWW", "CRDT", "rozstrzyganie konflikt", "konflikt\\w* zapis"],
+          ["game ?day", "dzień awarii", "ćwiczeni\\w* awarii"],
+          ["blast radius", "promień rażenia", "zasięg\\w* (szkód|awarii)", "limit\\w* zasięgu"],
+          ["dowod\\w*", "audytor", "raport\\w* z testu", "wynik\\w* testu"]
+        ],
+        "none": ["replikacja synchroniczna między regionami nic nie kosztuje"]
+      }
+    },
+    {
+      "id": "slo-budzet-bledow",
+      "expect": "no-trigger",
+      "neighbor": "ops-sre-incidents",
+      "prompt": "Jak policzyć budżet błędów dla SLO 99,9% i kiedy wysyłać alert burn rate do dyżurnego?"
+    },
+    {
+      "id": "replikacja-postgres",
+      "expect": "no-trigger",
+      "neighbor": "be-database",
+      "prompt": "Jak skonfigurować streaming replication w PostgreSQL i kiedy dodać replikę do odczytu przy wolnych zapytaniach?"
+    }
+  ]
+}

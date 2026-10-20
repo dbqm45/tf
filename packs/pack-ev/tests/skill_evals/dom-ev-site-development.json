@@ -1,0 +1,89 @@
+{
+  "skill": "dom-ev-site-development",
+  "scenarios": [
+    {
+      "id": "punktacja-lokalizacji-postoj",
+      "expect": "trigger",
+      "prompt": "Mamy trzy działki kandydujące pod stację ładowania: parking hipermarketu w mieście, stację benzynową przy drodze krajowej i parking biurowca. Zarząd chce w tydzień ranking, a nie opinię. Jak to policzyć i jakie ładowarki dobrać do każdej z nich? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wag\\w*|weight"
+          ],
+          [
+            "tward\\w*|knock-?out|odrzuc\\w* (od razu|na wstępie)|warunk\\w* konieczn|must-have|bramk"
+          ],
+          [
+            "czas\\w* postoju|dwell"
+          ],
+          [
+            "do weryfikacji|ilustrac|przykładow\\w* wag|założen"
+          ]
+        ],
+        "none": [
+          "jedyn\\w* kryteri\\w* jest (ruch|cena)"
+        ]
+      }
+    },
+    {
+      "id": "korytarz-afir-nevi",
+      "expect": "trigger",
+      "prompt": "Planujemy stację DC przy autostradzie, która jest w sieci bazowej TEN-T, i startujemy w konkursie dotacyjnym. Jak daleko od sąsiedniej stacji i jaką moc musi mieć pula według AFIR? A partner z USA pyta, jak wygląda minimum dla stacji NEVI na korytarzu. Podaj liczby i artykuły.",
+      "checks": {
+        "all": [
+          [
+            "60 ?km"
+          ],
+          [
+            "400 ?kW"
+          ],
+          [
+            "150 ?kW"
+          ],
+          [
+            "art\\w*\\.? ?3\\b|Article 3|ust\\. ?4"
+          ],
+          [
+            "680\\.106"
+          ],
+          [
+            "czter\\w+|four|4 (port|punkt|złącz)"
+          ]
+        ],
+        "none": [
+          "NEVI wymaga co najmniej dwóch (portów|punktów)"
+        ]
+      }
+    },
+    {
+      "id": "przylacze-oczekiwanie-osd",
+      "expect": "trigger",
+      "prompt": "OSD wydał warunki na 400 kVA, a my chcieliśmy 8 ładowarek DC po 150 kW na nowej lokalizacji. Na większe przyłącze czekałoby się kilka lat. Czy budujemy, czy odpuszczamy lokalizację? Co możemy zrobić, żeby ruszyć szybciej?",
+      "checks": {
+        "all": [
+          [
+            "wąski\\w* gardł\\w*|bottleneck|ścieżk\\w* krytyczn|czas\\w* oczekiwani"
+          ],
+          [
+            "BESS|magazyn\\w* energii|bateri\\w* buforow"
+          ],
+          [
+            "etap|faz\\w+ budow|stopniow|rozbudow\\w* w (kolejn|etap)|rur\\w* kablow|future-?proof"
+          ],
+          [
+            "kVA.{0,120}kW|kW.{0,120}kVA|cos ?φ|współczynnik mocy|power factor"
+          ]
+        ],
+        "none": [
+          "8 (ładowarek|stanowisk)\\w* po 150 ?kW (zmieści|zmieszczą) się w 400 ?kVA bez"
+        ]
+      }
+    },
+    {
+      "id": "dlm-eksploatacja-nie-budowa",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-energy-management",
+      "prompt": "Stacja już działa: przyłącze 3×125 A, osiem ładowarek AC po 32 A trójfazowo i licznik budynku na przekładnikach. Wieczorem zrywa nam zabezpieczenie główne. Jak ustawić dynamiczny podział prądu między ładowarki i z jaką rezerwą na fazę?"
+    }
+  ]
+}

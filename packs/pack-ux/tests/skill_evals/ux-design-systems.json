@@ -1,0 +1,52 @@
+{
+  "skill": "ux-design-systems",
+  "scenarios": [
+    {
+      "id": "warstwy-tokenow-motywy",
+      "expect": "trigger",
+      "prompt": "Budujemy system projektowy dla trzech produktów i chcemy ciemny motyw oraz drugą markę. Jak ułożyć tokeny i jak je nazywać, żeby nie skończyć z bałaganem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["prymityw", "primitive", "referencyjn", "reference"],
+          ["semantyczn", "semantic"],
+          ["komponentow", "component token"],
+          ["alias", "odwołuj", "referencj", "wskazuj"]
+        ],
+        "none": ["wystarczy (jedna|jedn\\w+) warstw"]
+      }
+    },
+    {
+      "id": "dtcg-style-dictionary",
+      "expect": "trigger",
+      "prompt": "Chcemy wyeksportować tokeny z Figmy do kodu w standardowym formacie i budować z nich CSS oraz zmienne na iOS i Androida. Co to jest DTCG i czym zbudować taki potok? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["\\$value"],
+          ["\\$type"],
+          ["style dictionary"],
+          ["2025\\.10", "stabiln\\w* wersj"]
+        ],
+        "none": ["(?<!nie )jest (oficjalnym )?standardem W3C", "W3C Recommendation"]
+      }
+    },
+    {
+      "id": "wycofanie-komponentu",
+      "expect": "trigger",
+      "prompt": "Chcemy usunąć stary komponent Button z biblioteki, której używa sześć zespołów, i zastąpić go nowym. Jak to przeprowadzić bez łamania cudzych aplikacji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["deprecat", "wycof", "przestarzał"],
+          ["major", "wersj\\w* główn"],
+          ["codemod", "przewodnik migracji", "migrac"],
+          ["changelog", "dziennik zmian", "okres przej"]
+        ]
+      }
+    },
+    {
+      "id": "numer-wersji-biblioteki",
+      "expect": "no-trigger",
+      "prompt": "Mamy pakiet npm w wersji 2.4.1. Dodaliśmy opcjonalny parametr do jednej funkcji. Jaki numer ma mieć kolejne wydanie według SemVer?",
+      "neighbor": "core-semver"
+    }
+  ]
+}

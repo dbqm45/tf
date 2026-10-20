@@ -1,0 +1,61 @@
+{
+  "skill": "fw-spring-boot",
+  "scenarios": [
+    {
+      "id": "test-repozytorium-h2",
+      "expect": "trigger",
+      "prompt": "W src/test/java/pl/acme/orders/OrderRepositoryTest.java testujemy repozytorium na H2 z @SpringBootTest i @MockBean dla OrderEventPublisher. Produkcja stoi na PostgreSQL, Spring Boot 3.4. Jak to poprawić? Odpowiedz zwięźle.",
+      "files": {
+        "src/test/java/pl/acme/orders/OrderRepositoryTest.java": "package pl.acme.orders;\n\nimport org.junit.jupiter.api.Test;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.boot.test.context.SpringBootTest;\nimport org.springframework.boot.test.mock.mockito.MockBean;\n\n@SpringBootTest(properties = \"spring.datasource.url=jdbc:h2:mem:test\")\nclass OrderRepositoryTest {\n    @Autowired OrderRepository repository;\n    @MockBean OrderEventPublisher publisher;\n\n    @Test\n    void savesOrder() {\n        repository.save(new Order(\"A-1\"));\n    }\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "@DataJpaTest",
+            "slice"
+          ],
+          [
+            "Testcontainers",
+            "PostgreSQLContainer"
+          ],
+          [
+            "@ServiceConnection"
+          ],
+          [
+            "@MockitoBean"
+          ]
+        ],
+        "none": [
+          "zostaw.{0,20}H2"
+        ]
+      }
+    },
+    {
+      "id": "kontroler-bledy-i-zabezpieczenia",
+      "expect": "trigger",
+      "prompt": "Mam kontroler Springa, który na błąd walidacji zwraca własną mapę z komunikatem, a dostęp konfigurujemy przez klasę dziedziczącą po WebSecurityConfigurerAdapter. Przechodzimy na Spring Boot 3. Co zmienić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ProblemDetail",
+            "Problem Details",
+            "RFC 9457",
+            "RFC 7807"
+          ],
+          [
+            "SecurityFilterChain"
+          ],
+          [
+            "@WebMvcTest"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-rekordy-java",
+      "expect": "no-trigger",
+      "neighbor": "lang-java",
+      "prompt": "Kiedy w Javie 21 użyć rekordu, a kiedy zwykłej klasy z polami final? Chodzi o czysty kod domeny bez żadnego frameworka."
+    }
+  ]
+}

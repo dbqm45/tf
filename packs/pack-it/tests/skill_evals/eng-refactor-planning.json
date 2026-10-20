@@ -1,0 +1,62 @@
+{
+  "skill": "eng-refactor-planning",
+  "scenarios": [
+    {
+      "id": "od-dlugu-do-rankingu",
+      "expect": "trigger",
+      "prompt": "Mamy raport długu technicznego modułu importu wiadomości (8 ustaleń). Jak z niego wybrać, co w ogóle refaktoryzować i w jakiej kolejności, zanim agent zacznie zmieniać kod? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["kandydat|ranking|opcj"],
+          ["git log -L|blame|intencj|świadom\\w* ogranicz|ADR"],
+          ["guard|osłon|right-siz|Transaction Script|zostaje"]
+        ],
+        "none": ["zrefaktoruj cały moduł"]
+      }
+    },
+    {
+      "id": "odwracalna-sciezka",
+      "expect": "trigger",
+      "prompt": "Chcemy wymienić warstwę zapisu do bazy w dużym module bez wielotygodniowej gałęzi i bez wstrzymywania wydań. Jaką odwracalną ścieżkę refaktoryzacji wybrać i jak ułożyć kolejność kroków, skoro wszystko zależy od wszystkiego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["Branch by Abstraction|Strangler"],
+          ["Mikado|cofnij|od liści|graf\\w* (prerekwizyt|zależnoś)"],
+          ["commit|odwracaln|wydawaln"]
+        ]
+      }
+    },
+    {
+      "id": "weryfikacja-liczb-rankingu",
+      "expect": "trigger",
+      "accept": ["core-grounding"],
+      "prompt": "Ranking opcji refaktoryzacji stoi na twierdzeniach, że interfejs Store ma 54 metody, a SaveMultiple jest wołane w 4 miejscach. Jak to sprawdzić, zanim zdecydujemy, którą opcję realizujemy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ast-grep"],
+          ["\\brg\\b|grep"],
+          ["zer|brak trafień|0 trafień"],
+          ["raport: |ślad|w miejscu|nie zmieniaj\\w* rankingu|do decyzji"]
+        ]
+      }
+    },
+    {
+      "id": "zasieg-kandydata",
+      "expect": "trigger",
+      "prompt": "Mam kandydata do refaktoryzacji w rankingu (plik pricing.py), ale raport wejściowy nie podaje zasięgu zmiany. Jak policzyć, ile plików i testów dotknie zmiana, żeby ocenić wykonalność opcji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["code_graph|--impact"],
+          ["test"],
+          ["rg|ast-grep|potwierdź|sprawdź"]
+        ]
+      }
+    },
+    {
+      "id": "dowod-zachowania",
+      "expect": "no-trigger",
+      "prompt": "Wiemy już, co zmieniamy: agregat Reservation ma przejść z bogatego modelu na decider. Jak udowodnić testami, że zachowanie się nie zmieniło? Odpowiedz zwięźle.",
+      "neighbor": "eng-behavior-preserving-refactoring"
+    }
+  ]
+}

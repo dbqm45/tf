@@ -1,0 +1,38 @@
+{
+ "ux-accessibility": {
+  "fingerprint": "42a830a054071bd4",
+  "offline": "2026-10-17"
+ },
+ "ux-content-design": {
+  "fingerprint": "76433fc925c1492c",
+  "offline": "2026-10-18"
+ },
+ "ux-design-leadership": {
+  "fingerprint": "0c17a3c7af1ff1de",
+  "offline": "2026-10-17"
+ },
+ "ux-design-systems": {
+  "fingerprint": "3fa3eccacd169076",
+  "offline": "2026-10-17"
+ },
+ "ux-feature-design": {
+  "fingerprint": "f0c0953971b98a32",
+  "offline": "2026-10-04"
+ },
+ "ux-information-architecture": {
+  "fingerprint": "2a18f8ff6f0e1d7a",
+  "offline": "2026-10-17"
+ },
+ "ux-research-methods": {
+  "fingerprint": "1166e485afc98dbf",
+  "offline": "2026-10-17"
+ },
+ "ux-service-design": {
+  "fingerprint": "e815d896492a5ae1",
+  "offline": "2026-10-17"
+ },
+ "ux-visual-design": {
+  "fingerprint": "872fd327525e318d",
+  "offline": "2026-10-17"
+ }
+}

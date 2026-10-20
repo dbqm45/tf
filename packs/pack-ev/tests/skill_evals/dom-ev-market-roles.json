@@ -1,0 +1,39 @@
+{
+  "skill": "dom-ev-market-roles",
+  "scenarios": [
+    {
+      "id": "cpo-i-emsp-faktura-roamingowa",
+      "expect": "trigger",
+      "prompt": "Jesteśmy jednocześnie CPO i eMSP. Kierowca z cudzym kontraktem naładował się u nas, a nasz klient ładował się u konkurenta. Kto komu wystawia faktury i co w tym wszystkim robi OCPI? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["role|rola", "roles"],
+          ["emsp.{0,60}(faktur|invoice)|faktur.{0,60}emsp|invoice.{0,60}emsp"],
+          ["hurtow|wholesale|rozlicz.{0,30}(cpo|między)|settlement"],
+          ["nie.{0,40}(płatno|płatnoś|pieni|faktur)|does not.{0,30}(pay|money|invoice)|nie realizuje"]
+        ],
+        "none": ["OCPI (wystawia|generuje|realizuje) faktur"]
+      }
+    },
+    {
+      "id": "host-parkingu-udzial-w-przychodach",
+      "expect": "trigger",
+      "prompt": "Właściciel parkingu chce udziału w przychodach z naszych ładowarek, które operujemy jako CPO. Jak wygląda w takim układzie przepływ danych i pieniędzy i kto ma jakie dane? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["host|właściciel lokalizacji|właściciel parkingu|site owner"],
+          ["cdr|sesj"],
+          ["umow|kontrakt|contract|agreement"],
+          ["cpo.{0,80}(dane|data)|(dane|data).{0,80}cpo"]
+        ],
+        "none": ["host (jest|zostaje) CPO z definicji"]
+      }
+    },
+    {
+      "id": "format-emaid",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-identifiers",
+      "prompt": "Jak wygląda poprawny format EMAID kierowcy i ile znaków ma część dostawcy? Chcę napisać walidator."
+    }
+  ]
+}

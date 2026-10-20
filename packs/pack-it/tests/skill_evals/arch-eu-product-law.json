@@ -1,0 +1,62 @@
+{
+  "skill": "arch-eu-product-law",
+  "scenarios": [
+    {
+      "id": "mapa-przepisow-saas-ai",
+      "expect": "trigger",
+      "prompt": "Budujemy w Polsce SaaS dla firm z asystentem AI, który generuje raporty z danych klienta. Które przepisy UE dotyczą nas jako producenta oprogramowania i od kiedy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "AI Act|2024/1689|art\\. 50|przejrzystoś\\w*"
+          ],
+          [
+            "PLD|2024/2853|odpowiedzialnoś\\w* za produkt"
+          ],
+          [
+            "Data Act|2023/2854|zmian\\w* dostawcy"
+          ],
+          [
+            "prawnik\\w*|nie jest porad\\w*|porad\\w* prawn\\w*"
+          ],
+          [
+            "20\\d\\d"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zmiana-dostawcy-saas",
+      "expect": "trigger",
+      "prompt": "Klient biznesowy chce przenieść wszystkie dane z naszego SaaS do konkurencji i pyta, ile zapłaci za eksport i transfer danych. Co mówi o tym prawo UE? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Data Act|2023/2854|akt w sprawie danych"
+          ],
+          [
+            "opłat\\w*.{0,60}(zmian\\w*|transfer\\w*|egress|wyjści\\w*)|(zmian\\w*|transfer\\w*|egress).{0,60}opłat\\w*"
+          ],
+          [
+            "2027"
+          ],
+          [
+            "prawnik\\w*|nie jest porad\\w*|porad\\w* prawn\\w*|zweryfik\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wyciek-danych-osobowych",
+      "expect": "no-trigger",
+      "prompt": "Wyciekły dane osobowe klientów z naszej bazy. Komu i w jakim terminie musimy to zgłosić według RODO? Odpowiedz zwięźle.",
+      "neighbor": "arch-privacy-compliance"
+    },
+    {
+      "id": "ksef-w-subskrypcji",
+      "expect": "no-trigger",
+      "prompt": "Jak wystawiać faktury przez KSeF przy zmianie planu subskrypcji w środku okresu rozliczeniowego? Odpowiedz zwięźle.",
+      "neighbor": "be-billing-subscriptions"
+    }
+  ]
+}

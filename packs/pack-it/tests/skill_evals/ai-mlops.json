@@ -1,0 +1,73 @@
+{
+  "skill": "ai-mlops",
+  "scenarios": [
+    {
+      "id": "od-notebooka-do-continuous-training",
+      "expect": "trigger",
+      "prompt": "Mamy model scoringowy trenowany w notebooku, a data scientist ręcznie wrzuca plik na serwer raz na kwartał. Chcę to uporządkować i dojść do automatycznego dotrenowywania, ale nie przesadzić z narzędziami. Od czego zacząć i co jest co? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["poziom\\w* (0|zero|dojrzałości)", "level 0", "MLOps 0", "dojrzałości"],
+          ["continuous training", "ciągł\\w+ trenowani", "automatyczn\\w+ (dotrenowani|trenowani|retrening)", "potok\\w* trenowania"],
+          ["walidacj\\w+ danych", "data validation", "kontrakt\\w* danych", "schemat\\w* danych"],
+          ["rejestr\\w* modeli", "model registry", "alias\\w*"]
+        ],
+        "none": ["wystarczy cron z notebookiem", "od razu Kubeflow"]
+      }
+    },
+    {
+      "id": "monitoring-opoznione-etykiety",
+      "expect": "trigger",
+      "prompt": "Mamy model churnu na produkcji. Prawdziwą etykietę (czy klient odszedł) znamy dopiero po 90 dniach, a biznes pyta, czy model nadal działa. Co monitorować na co dzień i kiedy dotrenowywać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["drift\\w* (cech|danych|predykcji|score)", "data drift", "prediction drift", "rozkład\\w* (predykcji|score|cech)"],
+          ["PSI", "Kolmogorov", "\\bKS\\b", "Jensen", "Wasserstein"],
+          ["opóźni\\w+ etykiet", "etykiet\\w* (z opóźnieniem|po 90)", "delayed (labels|ground truth)", "kohort\\w*", "proxy", "zastępcz\\w+"],
+          ["concept drift", "dryf\\w* koncepcji", "zmian\\w* zależności"]
+        ],
+        "none": ["liczyć accuracy codziennie", "wystarczy monitorować CPU"]
+      }
+    },
+    {
+      "id": "llmops-prompt-ewaluacje-koszt",
+      "expect": "trigger",
+      "prompt": "Mamy w produkcji asystenta LLM dla klientów i co tydzień ktoś poprawia prompt w kodzie. Po ostatniej zmianie promptu spadła jakość i wzrósł rachunek za tokeny. Jak wersjonować prompty i wdrażać takie zmiany operacyjnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["rejestr\\w* prompt", "prompt registry", "wersjon\\w+ prompt", "wersj\\w+ prompt"],
+          ["zestaw\\w* ewaluacyjn", "eval\\w* (w|na) CI", "regresj\\w+ jakości", "bramk\\w+ jakości", "golden set"],
+          ["tracing", "trace", "ślad\\w*"],
+          ["koszt\\w* (na|za|per) (zapytani|request|rozmow)", "cost per request", "tokeny (wej|wyj)", "tokenów"]
+        ],
+        "none": ["prompt zostaje w kodzie bez wersjonowania", "ewaluacja tylko ręcznie"]
+      }
+    },
+    {
+      "id": "skew-i-wdrozenie-modelu",
+      "expect": "trigger",
+      "prompt": "Nowy model rekomendacji ma w testach offline lepszy wynik, ale po wdrożeniu na 10% ruchu wypadł gorzej niż stary. Podejrzewam, że cechy liczymy inaczej w treningu i na produkcji. Jak to sprawdzić i jak bezpiecznie wdrażać kolejne modele? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["training[- ]serving skew", "skew", "rozjazd\\w* (cech|trening)"],
+          ["feature store", "magazyn\\w* cech", "Feast", "wspóln\\w+ (kod|definicj\\w+) cech"],
+          ["shadow", "cień", "canary", "A/B"],
+          ["point-in-time", "wyciek\\w* (danych|przyszłości)", "znacznik\\w* czasu"]
+        ],
+        "none": ["wynik offline wystarcza do pełnego wdrożenia"]
+      }
+    },
+    {
+      "id": "backfill-airflow-dane",
+      "expect": "no-trigger",
+      "prompt": "Jak zrobić idempotentny backfill w Airflow dla dziennych partycji tabeli zamówień, żeby ponowne uruchomienie nie dublowało wierszy?",
+      "neighbor": "data-engineering"
+    },
+    {
+      "id": "canary-argo-rollouts",
+      "expect": "no-trigger",
+      "prompt": "Jak skonfigurować canary w Argo Rollouts dla zwykłego serwisu HTTP z automatycznym wycofaniem, gdy odsetek błędów 5xx przekroczy próg?",
+      "neighbor": "ops-release-engineering"
+    }
+  ]
+}

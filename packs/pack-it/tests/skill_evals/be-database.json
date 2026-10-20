@@ -1,0 +1,69 @@
+{
+  "skill": "be-database",
+  "scenarios": [
+    {
+      "id": "zmiana-nazwy-kolumny",
+      "expect": "trigger",
+      "prompt": "Chcę zmienić nazwę kolumny users.fullname na display_name w PostgreSQL. Tabela ma 80 mln wierszy, wdrażamy bez przestoju. Jak to zrobić bezpiecznie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "expand",
+            "rozszerz\\w*.*(migr|kontrakt)",
+            "dodaj\\w* now\\w* kolumn"
+          ],
+          [
+            "partiami",
+            "w partiach",
+            "batch",
+            "partii"
+          ],
+          [
+            "osobn\\w* wydani",
+            "kolejn\\w* wydani",
+            "separate release",
+            "later release",
+            "wstecznie kompat",
+            "backward",
+            "osobnych wydani",
+            "wydanie [A-C]\\b",
+            "wydani\\w* (aplikacji )?[A-C]\\b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "masowy-update-wersja",
+      "expect": "trigger",
+      "prompt": "Aktualizuję 500 wierszy naraz z optymistycznym blokowaniem po kolumnie version. Jak zrobić masowy UPDATE i wykryć konflikt? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "UPDATE.*FROM.*VALUES",
+            "FROM \\(VALUES",
+            "unnest"
+          ],
+          [
+            "liczb\\w* (zmienion|zaktualizowan|wierszy)",
+            "rowcount",
+            "rows affected",
+            "affected rows",
+            "row count",
+            "ilo\\w+ wierszy"
+          ],
+          [
+            "wycof",
+            "rollback",
+            "cofn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rest-orders",
+      "expect": "no-trigger",
+      "prompt": "Jak zaprojektować endpointy REST dla zasobu orders i jakie kody statusu zwracać?",
+      "neighbor": "be-api-design"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "country_code": "PL",
+  "party_id": "EVT",
+  "id": "SES-1001",
+  "start_date_time": "2026-10-20T15:00:00Z",
+  "end_date_time": "2026-10-20T17:10:00Z",
+  "cdr_token": {
+    "country_code": "PL",
+    "party_id": "MSP",
+    "uid": "04A1B2C3D4",
+    "type": "RFID",
+    "contract_id": "PL-MSP-C00000001"
+  },
+  "auth_method": "WHITELIST",
+  "cdr_location": {
+    "id": "LOC-WAW-01",
+    "name": "Parking przykładowy",
+    "address": "ul. Przykładowa 1",
+    "city": "Warszawa",
+    "postal_code": "00-001",
+    "country": "POL",
+    "coordinates": {
+      "latitude": "52.229676",
+      "longitude": "21.012229"
+    },
+    "evse_uid": "EVSE-01",
+    "evse_id": "PL*EVT*E0001*1",
+    "connector_id": "1",
+    "connector_standard": "IEC_62196_T2",
+    "connector_format": "SOCKET",
+    "connector_power_type": "AC_3_PHASE"
+  },
+  "charging_periods": [
+    {
+      "start_date_time": "2026-10-20T15:00:00Z",
+      "dimensions": [
+        {
+          "type": "ENERGY",
+          "volume": 16.5
+        },
+        {
+          "type": "TIME",
+          "volume": 1.5
+        },
+        {
+          "type": "MAX_POWER",
+          "volume": 11.0
+        }
+      ]
+    },
+    {
+      "start_date_time": "2026-10-20T16:30:00Z",
+      "dimensions": [
+        {
+          "type": "PARKING_TIME",
+          "volume": 0.666667
+        }
+      ]
+    }
+  ]
+}

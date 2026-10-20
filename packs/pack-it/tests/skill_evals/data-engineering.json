@@ -1,0 +1,50 @@
+{
+  "skill": "data-engineering",
+  "scenarios": [
+    {
+      "id": "idempotencja-backfill",
+      "expect": "trigger",
+      "prompt": "Nocny job ładuje zamówienia do hurtowni przyrostowo 'od ostatniego uruchomienia'. Po awarii mamy duplikaty, a po poprawce logiki trzeba przeliczyć trzy miesiące. Jak to przebudować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "idempoten"
+          ],
+          [
+            "partycj"
+          ],
+          [
+            "merge|nadpisan\\w+ partycj|overwrite"
+          ],
+          [
+            "backfill|zakres dat|przeliczeni"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "cdc-vs-przyrost",
+      "expect": "trigger",
+      "prompt": "Przyrostowe ładowanie po kolumnie updated_at z tabeli źródłowej ma luki: ktoś kasuje wiersze, a analitycy widzą je dalej. Czy przejść na CDC i na co uważać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "usunię|delete|kasowan"
+          ],
+          [
+            "debezium|log replikacji|wal|binlog|log bazy"
+          ],
+          [
+            "schemat\\w* źródł|zależnoś|koszt operacyjn|kontrakt"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "analiza-sprzedazy",
+      "expect": "no-trigger",
+      "neighbor": "data-analysis",
+      "prompt": "Mam wyeksportowane CSV ze sprzedażą i chcę sprawdzić, czy różnica w średniej wartości koszyka między dwoma regionami jest istotna statystycznie. Jak to zrobić w pandas? Odpowiedz zwięźle."
+    }
+  ]
+}

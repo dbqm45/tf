@@ -1,0 +1,59 @@
+{
+  "skill": "proc-requirements-shaping",
+  "scenarios": [
+    {
+      "id": "pomysl-na-wymagania",
+      "expect": "trigger",
+      "prompt": "Mam pomysł na aplikację do nauki z fiszkami generowanymi przez AI z wklejonego tekstu. Chcę z tego zrobić wymagania (PRD) na pierwszą wersję, zanim wybierzemy technologię. Jak poprowadzisz tę sesję i co zapiszesz? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["poza zakresem", "out of scope", "wyklucz"],
+          ["reguł\\w* (biznesow|domenow)", "jednym zdaniem", "decyzj\\w* domenow"],
+          ["otwart\\w* pytani", "nie wiem", "zamiast (domysł|zgadyw)"],
+          ["budżet\\w* czasu", "ile czasu", "tygodni"]
+        ]
+      }
+    },
+    {
+      "id": "pusty-crud",
+      "expect": "trigger",
+      "prompt": "Spisz wymagania mojej aplikacji: użytkownik dodaje, przegląda, edytuje i usuwa przepisy kulinarne. To w zasadzie cała logika. Co jeszcze powinno się znaleźć w PRD? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["CRUD"],
+          ["rekomend", "klasyfik", "prioryt", "walidac", "oblicz", "przepływ\\w* stan", "ocen"],
+          ["reguł\\w* (biznesow|domenow)", "jednym zdaniem", "decyzj\\w* (domenow|aplikacj)"]
+        ]
+      }
+    },
+    {
+      "id": "mvp-za-duze",
+      "expect": "trigger",
+      "prompt": "Pierwsza wersja ma mieć logowanie, płatności, integrację z trzema systemami zewnętrznymi, panel admina i aplikację mobilną. Mam na to 4 tygodnie pracy po godzinach. Spisuję wymagania MVP — czy ten zakres jest w porządku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["za duż", "przekracza", "nie zmieści", "ponad budżet"],
+          ["wytnij", "wyciąć", "cięci", "usuń", "odłóż", "ręczn", "jeden użytkownik", "poza zakresem"],
+          ["potwierdz\\w* koszt", "świadom", "zapis\\w* (decyzj|koszt|potwierdz)", "dłuższ\\w* termin"]
+        ]
+      }
+    },
+    {
+      "id": "wyciek-techniki",
+      "expect": "trigger",
+      "prompt": "W PRD mam wymagania: „limit 100 żądań na minutę per IP liczony w Redisie po stronie serwera” i „podczas zapisu pokazujemy spinner”. Recenzent mówi, że to nie są wymagania. Jak je przepisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zachowani\\w* (widoczn|obserwowaln)", "widoczn\\w* dla użytkownika", "z zewnątrz", "mierzaln", "obserwowaln"],
+          ["architektur", "stack", "decyzj\\w* techniczn", "mechanizm", "implementacj"]
+        ]
+      }
+    },
+    {
+      "id": "priorytety-pomyslow",
+      "expect": "no-trigger",
+      "neighbor": "proc-product-discovery",
+      "prompt": "Mamy listę 15 pomysłów na nowe funkcje. Jak je uszeregować metodą RICE i jakie metryki sukcesu wybrać po wydaniu?"
+    }
+  ]
+}

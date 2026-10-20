@@ -1,0 +1,44 @@
+{
+  "skill": "ddd-strategic-analysis",
+  "scenarios": [
+    {
+      "id": "cynefin-bottom-up",
+      "expect": "trigger",
+      "prompt": "Mamy nowy produkt na nieznanym rynku, eksperci się ze sobą nie zgadzają, jest dużo „nie wiemy”. Analizować top-down przez procesy czy inaczej? Jak to uzasadnić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "cynefin"
+          ],
+          [
+            "bottom-up"
+          ],
+          [
+            "probe|zrób i sprawdź|eksperym|prototyp|spike"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rezerwacja-zdolnosc",
+      "expect": "trigger",
+      "prompt": "W systemie rezerwacji mamy osobno „rezerwację aut” i „rezerwację sal”. Czy to dobre cięcie kontekstów i według czego wyznaczać granice? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "zdolno|capabilit"
+          ],
+          [
+            "przełomow|pivotal|autonomi|rytm\\w* zmian|pytani\\w* kluczow|klas\\w* problemu"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "acl-czy-conformist",
+      "expect": "no-trigger",
+      "prompt": "Mam kontekst Płatności z zewnętrznym dostawcą i kontekst Sprzedaż. Czy użyć ACL czy Conformist i jak wystawić stabilny kontrakt dla innych modułów? Odpowiedz zwięźle.",
+      "neighbor": "ddd-context-mapping"
+    }
+  ]
+}

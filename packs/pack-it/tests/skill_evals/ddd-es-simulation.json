@@ -1,0 +1,23 @@
+{
+  "skill": "ddd-es-simulation",
+  "scenarios": [
+    {
+      "id": "warsztat-prawdziwy",
+      "expect": "no-trigger",
+      "prompt": "Jak przygotować salę i materiały do prawdziwego warsztatu Big Picture Event Storming z zespołem sprzedaży w przyszły wtorek? Odpowiedz zwięźle.",
+      "neighbor": "ddd-event-storming"
+    },
+    {
+      "id": "slownik-jezyka",
+      "expect": "no-trigger",
+      "prompt": "Jak zbudować słownik języka wszechobecnego dla naszej domeny i co do niego wpisywać, a czego nie? Odpowiedz zwięźle.",
+      "neighbor": "ddd-facilitation"
+    },
+    {
+      "id": "notatki-na-obszary",
+      "expect": "no-trigger",
+      "prompt": "Mam notatki z wywiadów z ekspertami domeny. Jak z nich zrobić listę obszarów biznesowych opartą na dowodach? Odpowiedz zwięźle.",
+      "neighbor": "ddd-discovery-intake"
+    }
+  ]
+}

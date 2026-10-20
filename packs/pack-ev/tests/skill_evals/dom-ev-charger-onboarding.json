@@ -1,0 +1,39 @@
+{
+  "skill": "dom-ev-charger-onboarding",
+  "scenarios": [
+    {
+      "id": "nowy-model-dc-150-przed-flota",
+      "expect": "trigger",
+      "prompt": "Dostajemy nowy model DC 150 kW od producenta, którego nie znamy. Jak go wprowadzić do naszego CSMS i co przetestować, zanim podłączymy 200 sztuk? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["karta|arkusz|formularz|dokumentacj\\w+ producenta"],
+          ["Pending.{0,200}Accepted|Accepted.{0,200}Pending|BootNotification"],
+          ["pilota|jedn\\w+ stacj|pojedyncz\\w+ stacj|one station|pilot"],
+          ["offline|zasilani|RemoteStop|zdalny (start|stop)|RFID"]
+        ],
+        "none": ["od razu (podłącz|wdroż)\\w*.{0,30}(wszystkie|200)"]
+      }
+    },
+    {
+      "id": "firmware-inne-statusy-flota",
+      "expect": "trigger",
+      "prompt": "Po aktualizacji firmware ładowarki producenta X raportują inne statusy niż wcześniej. Jak to sprawdzić i zapisać, zanim wdrożymy firmware na całą flotę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pilota|jedn\\w+ stacj|kilku stacj|grup\\w+ testow|canary|pilot"],
+          ["odchyleni|deviation|rejestr|wpis"],
+          ["StatusNotification|status\\w* złącza|ocpp_log_analyze|log"],
+          ["producent\\w*.{0,60}(model|firmware)|firmware.{0,80}(wersj|flag)|za flagą|flag\\w+"]
+        ],
+        "none": ["zmień (ręcznie )?(nazwy|wartości) statusów w produkcji"]
+      }
+    },
+    {
+      "id": "jedna-stacja-offline-produkcja",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-diagnostics",
+      "prompt": "Jedna z naszych działających stacji od wczoraj wieczorem jest offline w CSMS, klienci zgłaszają, że sesja się nie startuje. Jak ustalić przyczynę? Odpowiedz zwięźle."
+    }
+  ]
+}

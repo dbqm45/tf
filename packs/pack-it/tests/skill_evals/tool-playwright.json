@@ -1,0 +1,88 @@
+{
+  "skill": "tool-playwright",
+  "scenarios": [
+    {
+      "id": "flaky-config",
+      "expect": "trigger",
+      "prompt": "W e2e/order.spec.ts testy czasem padają w CI. Jak ustawić playwright.config.ts: retries, raportowanie niestabilnych i trace, żeby ich nie ukrywać? Odpowiedz zwięźle.",
+      "files": {
+        "e2e/order.spec.ts": "import { test, expect } from '@playwright/test';\ntest('TC-014: suma', async ({ page }) => {\n  await page.goto('/');\n  await expect(page.getByRole('status')).toHaveText('Suma: 190,00 zł');\n});\n",
+        "playwright.config.ts": "import { defineConfig } from '@playwright/test';\nexport default defineConfig({ testDir: 'e2e' });\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "failOnFlakyTests"
+          ],
+          [
+            "on-first-retry"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "only-changed-zegar",
+      "expect": "trigger",
+      "prompt": "W e2e/order.spec.ts chcę w PR uruchamiać tylko testy dotknięte zmianą i testować z ustalonym zegarem. Jakie flagi i API Playwrighta do tego użyć? Odpowiedz zwięźle.",
+      "files": {
+        "e2e/order.spec.ts": "import { test, expect } from '@playwright/test';\ntest('TC-020: termin dostawy', async ({ page }) => {\n  await page.goto('/');\n  await expect(page.getByRole('status')).toBeVisible();\n});\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "only-changed"
+          ],
+          [
+            "page\\.clock",
+            "setFixedTime",
+            "clock\\.install"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dobor-przypadkow",
+      "expect": "no-trigger",
+      "prompt": "Jakie przypadki testowe wybrać dla formularza rejestracji z polami e-mail, hasło i wiek? Odpowiedz zwięźle.",
+      "neighbor": "qa-test-design"
+    },
+    {
+      "id": "bez-plikow-ci",
+      "expect": "trigger",
+      "prompt": "Konfigurujemy od zera Playwright w CI. Jak ustawić ponowienia, trace i wykrywanie niestabilnych testów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "failOnFlakyTests"
+          ],
+          [
+            "on-first-retry"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "e2e-przez-agenta",
+      "expect": "trigger",
+      "prompt": "Chcę, żeby agent AI wygenerował testy e2e w Playwright dla logowania i zakupu. Jak mu to zlecić i sprawdzić wynik, żeby nie dostać kruchych testów z waitForTimeout? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "seed",
+            "wzorcow"
+          ],
+          [
+            "sprząta",
+            "teardown",
+            "afterEach"
+          ],
+          [
+            "celow\\w* (psu|zepsu)",
+            "zepsu\\w* (kod|zachowan)",
+            "odwróć"
+          ]
+        ]
+      }
+    }
+  ]
+}

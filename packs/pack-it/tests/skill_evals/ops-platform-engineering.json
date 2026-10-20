@@ -1,0 +1,62 @@
+{
+  "skill": "ops-platform-engineering",
+  "scenarios": [
+    {
+      "id": "start-platformy-wewnetrznej",
+      "expect": "trigger",
+      "prompt": "Mamy 25 zespołów, każdy wdraża po swojemu i szefostwo chce platformę wewnętrzną. Od czego zacząć, żeby nie zbudować drogiej zabawki, której nikt nie użyje? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["jako produkt", "product manager", "platform as a product"],
+          ["złot\\w* ścieżk", "golden path", "paved road"],
+          ["najcieńsz\\w* (możliw|użyteczn)", "thinnest viable", "TVP", "minimalna platforma"],
+          ["ból\\w*", "pain point", "wywiad", "ankiet", "odkrywani"],
+          ["adopcj", "dobrowoln"]
+        ],
+        "none": ["obowiązkow\\w* od pierwszego dnia"]
+      }
+    },
+    {
+      "id": "metryki-sukcesu-platformy",
+      "expect": "trigger",
+      "prompt": "Po roku platformy zarząd pyta, czy to się opłaciło. Jakie metryki pokazać i czego nie robić z DORA? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["DORA"],
+          ["SPACE", "DevEx", "ankiet\\w* (satysfakcj|doświadcz)", "developer experience"],
+          ["adopcj", "odsetek zespołów", "wykorzystani"],
+          ["Goodhart", "nie (jako )?cel", "nie porównuj zespoł", "nie (do )?ranking"],
+          ["maturity", "dojrzałości", "CNCF"]
+        ],
+        "none": ["liczba commitów jako miara"]
+      }
+    },
+    {
+      "id": "abstrakcje-i-portal",
+      "expect": "trigger",
+      "prompt": "Zespoły chcą samoobsługowo dostać bazę i kolejkę bez ticketu do ops, ale z naszymi zasadami bezpieczeństwa. Backstage, Crossplane, Terraform czy coś innego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["Backstage", "portal\\w* deweloperski", "developer portal"],
+          ["Crossplane", "composition", "kompozycj"],
+          ["Terraform", "moduł"],
+          ["policy as code", "polityk\\w* jako kod", "OPA", "Kyverno", "guardrail", "barier\\w* ochronn"],
+          ["GitOps", "Argo", "Flux"]
+        ],
+        "none": ["Backstage jest gotową platformą"]
+      }
+    },
+    {
+      "id": "typy-zespolow",
+      "expect": "no-trigger",
+      "neighbor": "proc-team-topologies",
+      "prompt": "Jak podzielić 40 osób na zespoły strumieniowe, enabling i complicated-subsystem i jakie tryby współpracy ustawić między nimi?"
+    },
+    {
+      "id": "manifesty-k8s",
+      "expect": "no-trigger",
+      "neighbor": "ops-kubernetes",
+      "prompt": "Jakie requests i limits ustawić dla podów i jak skonfigurować PodDisruptionBudget oraz sondy readiness?"
+    }
+  ]
+}

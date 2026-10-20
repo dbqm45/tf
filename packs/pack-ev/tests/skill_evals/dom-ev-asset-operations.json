@@ -1,0 +1,39 @@
+{
+  "skill": "dom-ev-asset-operations",
+  "scenarios": [
+    {
+      "id": "wygaszenie-i-ponowne-uzycie-evse-id",
+      "expect": "trigger",
+      "prompt": "Zamykamy punkt przy marketcie A i demontujemy dwie ładowarki. Szef chce, żeby nowa stacja przy markecie B dostała te same numery EVSE ID, bo są już w aplikacjach kierowców i na naklejkach. Czy tak zrobić i co zrobić po stronie CSMS oraz publikacji w roamingu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["nie (używ|używ|nadaw|przydziel)\\w* ponownie|nie wykorzyst\\w+ ponownie|nigdy ponownie|not reuse|never reuse|do not reuse|no reuse"],
+          ["REMOVED"],
+          ["CDR|historia|history|sesj"],
+          ["lokalizacj|location"]
+        ],
+        "none": ["tak, przepisz numery", "najprościej nadać ten sam EVSE ID"]
+      }
+    },
+    {
+      "id": "degradacja-ladowarek-z-telemetrii",
+      "expect": "trigger",
+      "prompt": "Mamy 300 ładowarek DC tego samego modelu i widzimy, że część z nich daje coraz mniej kW niż na początku, a w logach często wraca ten sam kod producenta. Jak z danych z CSMS wyłapać ładowarki do przeglądu zanim padną, bez zgadywania?",
+      "checks": {
+        "all": [
+          ["maks\\w* moc|peak power|max power|spadek mocy|power drop|moc szczytow"],
+          ["vendorErrorCode|kod\\w* producent|vendor error"],
+          ["model|firmware|kohort|cohort|flot"],
+          ["temperatur|moduł|module"]
+        ],
+        "none": ["wymień wszystkie ładowarki"]
+      }
+    },
+    {
+      "id": "stacja-offline-od-wczoraj",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-diagnostics",
+      "prompt": "Jedna ładowarka od wczoraj 02:14 jest offline w CSMS, ostatni Heartbeat jest z tej godziny, a modem w szafie ma zapaloną diodę. Jak ustalić, czy to sieć, zasilanie, czy zawieszony firmware?"
+    }
+  ]
+}
