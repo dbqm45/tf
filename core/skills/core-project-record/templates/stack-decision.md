@@ -52,6 +52,6 @@ inputs: [docs/project/03-requirements/requirements.md, docs/project/02-domain/st
 
 ## Otwarte pytania
 ## Przekazanie
-- **Dla:** <persona realizująca, np. filip / jan>, orkiestrator planu
+- **Dla:** <persona realizująca>, orkiestrator planu
 - **Zadanie:** plan wdrożenia (05-plan/plan.md) i spike'i z sekcji Ryzyka
 - **Przeczytaj:** TL;DR, Rekomendacja, Ryzyka

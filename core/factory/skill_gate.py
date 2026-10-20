@@ -44,7 +44,7 @@ TESTS = ROOT / "tests" if (ROOT / "tests" / "run_skill_evals.py").exists() else 
 EVALS = TESTS / "skill_evals"
 REGISTRY = ROOT / "tests" / "skill_gate.json" if (ROOT / "tests" / "run_skill_evals.py").exists() \
     else ROOT / ".claude" / "skill-gate.json"
-LINT = SKILLS / "txt-polish-correctness" / "scripts" / "polish_lint.py"
+LINT = SKILLS / "txt-polish-correctness" / "scripts" / "polish_lint.py"   # pack-editorial-pl; bez niej krok pominięty
 GROUND = SKILLS / "core-grounding" / "scripts" / "grounding_check.py"
 
 

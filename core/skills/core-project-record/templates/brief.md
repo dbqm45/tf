@@ -23,7 +23,7 @@ inputs: []
 - Poza zakresem: …
 ## Ograniczenia
 <czas, budżet, zespół i jego kompetencje, istniejące systemy, regulacje, hosting>
-- Budżet czasu MVP: <N tygodni — ustala człowiek; próg „MVP za duże” w proc-requirements-shaping>
+- Budżet czasu MVP: <N tygodni — ustala człowiek; próg „MVP za duże” w skillu wymagań, pack-it: proc-requirements-shaping>
 - Szacunek przepływu MVP: <N tygodni, uzasadnienie>
 ## Typ projektu
 <greenfield | brownfield (stack wykryty: detect_stack.py)>
@@ -32,7 +32,7 @@ inputs: []
 - [ ] … → <adresat>
 
 ## Przekazanie
-- **Dla:** <persona/rola, np. ewa (analiza domeny) lub autor wymagań>
+- **Dla:** <persona/rola analizy domeny lub autor wymagań>
 - **Zadanie:** …
 - **Przeczytaj:** TL;DR, Cele, Ograniczenia
 - **Gotowe, gdy:** …

@@ -113,8 +113,9 @@ def phase_index(phase: str) -> int:
 # ───────────── walidacja ─────────────
 
 def language_warnings(rec: Path) -> list[str]:
-    """Uwagi językowe (WYSOKIE i ŚREDNIE) z lintera polszczyzny — zero tokenów; tylko ostrzeżenia, nie blokują."""
-    lint_path = Path(__file__).resolve().parent.parent / "skills" / "txt-polish-correctness" / "scripts" / "polish_lint.py"
+    """Uwagi językowe (WYSOKIE i ŚREDNIE) z lintera polszczyzny (pack-editorial-pl) — zero tokenów; tylko ostrzeżenia,
+    nie blokują. Bez nakładki — brak uwag."""
+    lint_path = Path(__file__).resolve().parent.parent / "skills" / "txt-polish-correctness" / "scripts" / "polish_lint.py"  # pack-editorial-pl
     if not lint_path.exists():
         return []
     try:
@@ -552,7 +553,7 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
 
 # ───────────── CLI ─────────────
 
-# ───────────── dowody (ddd-discovery-intake) ─────────────
+# ───────────── dowody (format banku dowodów ze skilla ddd-discovery-intake, pack-it) ─────────────
 
 SRC_RE = re.compile(r"^##\s+(S\d+)\s+[—-]\s+(.+?)\s*$", re.M)
 ENTRY_RE = re.compile(r"^-\s+\*\*(E\d+)\*\*\s*>\s*[„\"“](.+?)[”\"“]\s*[—-]\s*([^\[\n]*?)\s*((?:\[[^\]]*\]\s*)*)$", re.M)

@@ -119,13 +119,17 @@ def main() -> int:
     items = hint.load_index()
     os.environ["CLAUDE_PROJECT_DIR"] = tmp.name
     prompt = "Jak lepiej planować pracę w zespole?"
+    names = {it["name"] for it in items}
+    target = "proc-agile" if "proc-agile" in names else "core-plan-interview"   # pack-it albo sam rdzeń
+    fb_prompt = ("Jak zaprojektować paginację w REST API i jakie kody błędów zwracać?" if "be-api-design" in names
+                 else "Jaki numer wersji nadać po usunięciu flagi z publicznego API — SemVer, podbicie major czy minor?")
     total += 1
     Fake.calls.clear()
-    Fake.script = {"skill": "proc-agile", "best": "proc-agile"}
+    Fake.script = {"skill": target, "best": target}
     os.environ["CLAUDE_SKILL_HINT_JEV"] = "1"
     picks = hint.suggest(prompt, items)
     st1 = Fake.calls[0]["body"]["questions"] if Fake.calls else {}
-    if [it["name"] for _, it in picks] != ["proc-agile"] or hint.LAST_VIA != "jev" or len(Fake.calls) != 2 \
+    if [it["name"] for _, it in picks] != [target] or hint.LAST_VIA != "jev" or len(Fake.calls) != 2 \
             or len(st1.get("skill", {}).get("criteria", {})) != len(items) or set(hint.GATE_QS) - set(st1):
         fails.append(f"jev_suggest: {[it['name'] for _, it in picks]} via {hint.LAST_VIA}, wywołań {len(Fake.calls)}")
     total += 1
@@ -133,10 +137,10 @@ def main() -> int:
     if hint.suggest(prompt, items) != []:
         fails.append("jev_suggest: bramka (pytanie ogólne) powinna nic nie podpowiadać")
     total += 1
-    Fake.script = {"skill": "proc-agile", "best": "proc-agile", "fits_0": 0.1, "fits_1": 0.1, "fits_2": 0.1}
+    Fake.script = {"skill": target, "best": target, "fits_0": 0.1, "fits_1": 0.1, "fits_2": 0.1}
     none = hint.suggest(prompt, items)
     os.environ["TYPESAFE_BASE_URL"] = "http://127.0.0.1:9"
-    fallback = hint.suggest("Jak zaprojektować paginację w REST API i jakie kody błędów zwracać?", items)
+    fallback = hint.suggest(fb_prompt, items)
     via_fb = hint.LAST_VIA
     os.environ["TYPESAFE_BASE_URL"] = base
     os.environ["CLAUDE_SKILL_HINT_JEV"] = "0"

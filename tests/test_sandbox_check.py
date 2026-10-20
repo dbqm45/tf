@@ -11,9 +11,9 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
 SCRIPT = ROOT / "scripts" / "sandbox_check.py"
-TEMPLATE = ROOT / "factory" / "templates" / "sandbox.settings.json"
+TEMPLATE = ROOT / "core" / "factory" / "templates" / "sandbox.settings.json"
 
 
 def load():

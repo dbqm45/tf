@@ -39,7 +39,7 @@ Antywzorzec: kanał „imponujący” zamiast dopasowanego do odbiorcy.
 
 ## 4. Paczka prywatna — uwierzytelnianie i wydania
 - Repo odbiorcy commituje tylko mapowanie zakresu paczek na rejestr, **nigdy** tokena.
-- Publikacja z CI z uprawnieniem zapisu do rejestru i krótkotrwałym tokenem zadania (ops-ci-cd).
+- Publikacja z CI z uprawnieniem zapisu do rejestru i krótkotrwałym tokenem zadania (pack-it: ops-ci-cd).
 - Odczyt: w tej samej organizacji często wystarcza token zadania CI; poza nią (inne repo, obce CI, platformy budowania)
   potrzebny token z prawem odczytu ze zmiennej środowiskowej, lokalnie logowanie do rejestru. Szczegóły zależą od
   rejestru i typu tokena — sprawdź w jego dokumentacji [niezweryfikowane w tej sesji].

@@ -34,14 +34,15 @@ plan aktualizujesz w tym samym commicie co kod.
 ## 3. Sześć etapów — co robi agent, co człowiek, co mierzyć
 | Etap | Agent | Człowiek | Mechanizm fabryki | Miara wyprzedzająca | Miara opóźniona |
 |---|---|---|---|---|---|
-| Plan | dopytuje (zakres, użytkownicy, ograniczenia, kryteria sukcesu) i zapisuje zamiar | zatwierdza zamiar | core-plan-interview, core-problem-routing, proc-project-planning | czas od pierwszej rozmowy do zatwierdzonego briefu | odsetek briefów, które przeszły dalej bez przeróbki |
-| Design | pisze wymagania i projekt z zasadami organizacji (skille), oznacza zastrzeżenia | rozstrzyga zastrzeżenia z właścicielami polityk | ddd-*, arch-*, arch-privacy-compliance, qa-spec-first-testing | czas od briefu do zatwierdzonych wymagań | zmiany wymagań po rozpoczęciu realizacji |
+| Plan | dopytuje (zakres, użytkownicy, ograniczenia, kryteria sukcesu) i zapisuje zamiar | zatwierdza zamiar | core-plan-interview, core-problem-routing; planowanie projektu (pack-it: proc-project-planning) | czas od pierwszej rozmowy do zatwierdzonego briefu | odsetek briefów, które przeszły dalej bez przeróbki |
+| Design | pisze wymagania i projekt z zasadami organizacji (skille), oznacza zastrzeżenia | rozstrzyga zastrzeżenia z właścicielami polityk | skille domeny, architektury, prywatności i testów od specyfikacji (pack-it: ddd-*, arch-*, arch-privacy-compliance, qa-spec-first-testing) | czas od briefu do zatwierdzonych wymagań | zmiany wymagań po rozpoczęciu realizacji |
 | Build | w trybie planowania czyta kod bez zmian, proponuje plan; po akceptacji realizuje; równoległe sesje w osobnych worktree | zatwierdza plan, steruje | `CLAUDE.md`, skille, hooki, wykonawcy (subagenci) | odsetek zmian scalonych po pierwszym podejściu; czas od planu do scalenia | liczba poprawek na zmianę; zgodność diffu z planem |
 | Test | sam sprawdza swoją pracę (testy, build, zrzuty ekranu) i iteruje, aż przejdzie | ocenia zachowanie | `tdd_guard`, jedno polecenie weryfikacji, ewaluacje | odsetek zmian agenta zielonych w CI za pierwszym razem | czas przeglądu PR; wskaźnik nieudanych zmian |
-| Deploy | przegląda PR wg `REVIEW.md`, poprawia uwagi na swoich PR; w CI zadania wymagające oceny (triaż porażki buildu, szkic changelogu) | zatwierdza scalenie i wdrożenie | core-git-workflow, ops-ci-cd, ops-release-engineering, ochrona gałęzi | czas do pierwszego przeglądu; uwagi rozwiązane bez ręcznej zmiany kodu | defekty i podatności, które przeszły na produkcję |
-| Maintain | diagnozuje naruszenie pasma kontrolnego, pisze brief zmiany z dowodami | triaż i zatwierdzenie | `scripts/control_band.py`, ops-sre-incidents, proc-issue-triage | czas od naruszenia do briefu w kolejce | powtórzenia incydentów tej samej klasy |
+| Deploy | przegląda PR wg `REVIEW.md`, poprawia uwagi na swoich PR; w CI zadania wymagające oceny (triaż porażki buildu, szkic changelogu) | zatwierdza scalenie i wdrożenie | core-git-workflow, skille CI/CD i wydań (pack-it: ops-ci-cd, ops-release-engineering), ochrona gałęzi | czas do pierwszego przeglądu; uwagi rozwiązane bez ręcznej zmiany kodu | defekty i podatności, które przeszły na produkcję |
+| Maintain | diagnozuje naruszenie pasma kontrolnego, pisze brief zmiany z dowodami | triaż i zatwierdzenie | `scripts/control_band.py`, skille SRE i triażu zgłoszeń (pack-it: ops-sre-incidents, proc-issue-triage) | czas od naruszenia do briefu w kolejce | powtórzenia incydentów tej samej klasy |
 
-Miary DORA (częstotliwość wdrożeń, czas realizacji zmiany, wskaźnik nieudanych zmian, czas przywrócenia): eng-continuous-delivery.
+Miary DORA (częstotliwość wdrożeń, czas realizacji zmiany, wskaźnik nieudanych zmian, czas przywrócenia): skill
+ciągłego dostarczania (pack-it: eng-continuous-delivery).
 
 ## 4. Praktyki etapu Build i Test
 - **Tryb planowania jako start.** Agent czyta kod i proponuje plan bez zmian w plikach; plan ma być na tyle jasny,
@@ -89,7 +90,7 @@ Zmiana modelu, `CLAUDE.md`, skilla albo hooka może pogorszyć pracę agenta tak
 - **Hooki jako bramki zatwierdzenia:** hook może zapytać człowieka i wstrzymać akcję (np. wdrożenie produkcyjne
   wymaga imiennego zatwierdzenia).
 - **Agent w CI:** uruchamiany bez interakcji do zadań wymagających oceny, w piaskownicy, z poświadczeniami
-  o najmniejszym zakresie (core-agent-security, ops-ci-cd).
+  o najmniejszym zakresie (core-agent-security; pack-it: ops-ci-cd).
 
 ## 7. Etap Maintain — pasma kontrolne zamiast ciągłego patrzenia
 - **Wykrywanie deterministyczne:** skrypt liczy średnią i odchylenie standardowe metryki (np. odsetek porażek testów,
@@ -134,10 +135,10 @@ uruchamiania każdego etapu, a kończy pętlą, w której zaakceptowany artefakt
 
 | Poziom | Zagranie | Stan w fabryce |
 |---|---|---|
-| 1 (bez zależności) | zapis zamiaru, `CLAUDE.md`, skille, pętla weryfikacji, hooki, tryb planowania | jest: brief, `CLAUDE.md`, 99 skilli, `tdd_guard` i hooki bezpieczeństwa, core-plan-interview |
+| 1 (bez zależności) | zapis zamiaru, `CLAUDE.md`, skille, pętla weryfikacji, hooki, tryb planowania | jest: brief, `CLAUDE.md`, skille rdzenia i nakładek, `tdd_guard` i hooki bezpieczeństwa, core-plan-interview |
 | 2 | subagenci (wymaga `CLAUDE.md`), ewaluacje (wymaga `CLAUDE.md` i pętli weryfikacji) | jest: wykonawcy person; ewaluacje skilli; brak zestawu zadań projektu |
 | 3 | wymagania i projekt (zamiar + skille), przegląd PR (ewaluacje + subagenci) | jest: fazy 2–4; przegląd PR — `REVIEW.md` do założenia w projekcie |
-| 4 | CI/CD (przegląd PR + hooki) | częściowo: workflow `team-factory`, ops-ci-cd |
+| 4 | CI/CD (przegląd PR + hooki) | częściowo: workflow `team-factory`, skill CI/CD (pack-it: ops-ci-cd) |
 | 5 | domknięcie pętli (CI/CD + zamiar) | faza 9, `control_band.py`; automatyczne uruchamianie agenta — decyzja człowieka |
 
 ## 11. AI-DLC (AWS) — słownik i rytuały
@@ -148,9 +149,9 @@ uruchamiania każdego etapu, a kończy pętlą, w której zaakceptowany artefakt
   w repozytorium.
 - **Mob Elaboration / Mob Construction:** cały zespół w jednej sesji waliduje pytania i propozycje agenta —
   wymagania (Elaboration) albo decyzje techniczne (Construction). Dobre przy nowym produkcie i decyzjach
-  trudnych do odwrócenia; w fabryce: warsztat z facylitacją (ddd-facilitation) i przegląd planu przez kilka osób.
+  trudnych do odwrócenia; w fabryce: warsztat z facylitacją (pack-it: ddd-facilitation) i przegląd planu przez kilka osób.
 - **Bolt** (cykl godzin lub dni zamiast sprintu) i **Unit of Work** (zamiast epiki) — przy pracy z agentami
-  krótsze cykle i mniejsze partie (eng-continuous-delivery).
+  krótsze cykle i mniejsze partie (pack-it: eng-continuous-delivery).
 
 ## 12. Antywzorce
 - Etapy bez zapisanego artefaktu — informacja ginie między etapami.

@@ -8,6 +8,8 @@ content_language: pl
 default: true          # zaznaczona domyślnie w instalatorze
 requires:
   core: ">=3.0.0 <4.0.0"
+# Skill dokumentacji podaje przykłady ze skilli tych nakładek; bez nich odwołania są tylko tekstem.
+optional_packs: [pack-it, pack-ux, pack-editorial-pl]
 
 facets:
   - {prefix: docs-, order: 175, name: dokumentacja, question: "jak piszemy i utrzymujemy dokumentację techniczną — rodzaje, struktura, styl, recenzja"}

@@ -3,7 +3,7 @@
 Zgłoszenie do repozytorium fabryki z zapisanej retrospektywy (skill core-agent-retro) — tylko biblioteka standardowa.
 
   python3 .claude/skills/core-agent-retro/scripts/factory_feedback.py              # link „nowe zgłoszenie” z treścią
-  ... --item "skill:fe-css: brak przykładu siatki formularza"                    # własna uwaga o skillu/agencie fabryki
+  ... --item "skill:core-semver: brak przykładu wersji 0.y.z"                      # własna uwaga o skillu/agencie fabryki
   ... --gh                                                                       # plan wysyłki przez gh (nic nie wysyła)
   ... --gh --yes                                                                 # wyślij przez `gh issue create`
   ... --mark-sent                                                                # po wysłaniu z linku: zapamiętaj klucze

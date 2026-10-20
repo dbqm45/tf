@@ -23,9 +23,9 @@ ROOT = Path(__file__).resolve().parent.parent
 # wersja rdzenia → stara nazwa → nowa nazwa (skille, cechy, role)
 RENAMES: dict[str, dict[str, str]] = {
     "3.0.0": {
-        "core-tech-docs": "docs-tech-writing",
-        "fe-ux-design": "ux-feature-design",
-        "core-knowledge-base": "dom-ev-knowledge-base",
+        "core-tech-docs": "docs-tech-writing",          # pack-docs
+        "fe-ux-design": "ux-feature-design",            # pack-ux
+        "core-knowledge-base": "dom-ev-knowledge-base",  # pack-ev
     },
 }
 

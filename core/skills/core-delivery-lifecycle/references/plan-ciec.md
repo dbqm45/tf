@@ -17,7 +17,7 @@ i nie rozpisuje plików — to robi plan kroku w raporcie `06-delivery/`.
   bez niego pierwszego cięcia nie da się zaplanować, zabezpieczyć albo sprawdzić.
 - Fundament nie dubluje warstwy, którą **inwentarz repozytorium** zgłasza jako obecną. Inwentarz: frontend,
   backend/API, dane, uwierzytelnianie, wdrożenie, obserwowalność — każda jako obecna / częściowa / brak,
-  z plikiem jako dowodem (eng-codebase-mapping).
+  z plikiem jako dowodem (mapa kodu; pack-it: eng-codebase-mapping).
 - Uzasadnione „najpierw poziomo” (integracja z systemem zastanym, wymóg regulacyjny dla modelu danych, rdzeń
   krytyczny wydajnościowo) to nadal F-NN: konkretny, ograniczony i przypięty do S-NN.
 
@@ -58,14 +58,14 @@ Cięcia mają porównywalną wagę. Podziel cięcie, gdy:
 - ma więcej niż jedno niezależne ryzyko albo niewiadome różnych właścicieli.
 Dziel po węższych wynikach (ścieżki procesu, persony, etapy), nigdy po warstwach. W planie cięć nie ma dni, punktów
 ani rozmiarów — kolejność wynika z zależności. Koszt i termin dla sponsora: osobno, jako przedziały
-(proc-project-planning).
+(planowanie projektu; pack-it: proc-project-planning).
 
 ## Niewiadome — gdzie je rozstrzygnąć
 | Rodzaj niewiadomej | Gdzie |
 |---|---|
 | lokalna, o kodzie („czy jest już komponent formularza?”) | plan kroku — sprawdza repo i decyduje |
-| zewnętrzna, wpływa na decyzję techniczną (biblioteka, API dostawcy, algorytm) | badanie przed planem kroku (core-source-research, eng-codebase-mapping) |
-| podejrzane założenie, problem może być źle postawiony | przeramowanie przed planem kroku (eng-debugging) |
+| zewnętrzna, wpływa na decyzję techniczną (biblioteka, API dostawcy, algorytm) | badanie przed planem kroku (core-source-research; pack-it: eng-codebase-mapping) |
+| podejrzane założenie, problem może być źle postawiony | przeramowanie przed planem kroku (pack-it: eng-debugging) |
 | bez wpływu na bieżące cięcie | „Otwarte pytania” albo „Odłożone” |
 Badanie ma sens, gdy blokuje decyzję — nie „na zapas”.
 
@@ -85,7 +85,7 @@ Nie zapisuj planu, jeśli któryś punkt nie przechodzi:
 ## Przekazanie
 Na końcu **jedna** rekomendacja następnego kroku, nie lista do wyboru: gwiazda przewodnia, jeśli gotowa; inaczej
 fundament, który ją odblokowuje; inaczej najważniejsza niewiadoma do rozstrzygnięcia; inaczej gotowe cięcie
-z największą liczbą zależnych pozycji. Przed planem kroku warto przejrzeć plan (qa-change-review, tryb A).
+z największą liczbą zależnych pozycji. Przed planem kroku warto przejrzeć plan (przegląd zmian; pack-it: qa-change-review, tryb A).
 
 Źródło: kurs 10xDevs, ed. 3 (2026), moduł 2, lekcje 1–2 (roadmapa, niewiadome) — materiał szkoleniowy
 (dostęp 2026-10-09); A. Cockburn — walking skeleton. Opisane własnymi słowami.

@@ -65,7 +65,8 @@ def main() -> int:
                                 items, hint)
     check(res2["phrases"] == [] and res2["hits_before"] == 1, f"E-2: trafiony scenariusz → nic do dopisania: {res2}")
 
-    if importlib.util.find_spec("yaml"):
+    # E-3…E-5 na prawdziwym skillu z pack-it (qa-test-design); bez tej nakładki pomijane
+    if (ROOT / ".claude" / "skills" / "qa-test-design").is_dir():
         with tempfile.TemporaryDirectory() as t:
             root = Path(t) / "f"
             shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(".git", "logs", "__pycache__", "*.zip"))

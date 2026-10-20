@@ -20,7 +20,7 @@
 | klucz–wartość (Redis, DynamoDB) | klucz → wartość | cache, sesje, liczniki, bardzo duża skala prostych odczytów | zapytania tylko po kluczu (lub zaprojektowanych indeksach) |
 | szerokokolumnowa (Cassandra, ScyllaDB) | wiersze z wieloma kolumnami, partycje | ogromne wolumeny zapisów, szeregi czasowe | model danych z góry pod zapytania |
 | grafowa (Neo4j, Neptune) | węzły i krawędzie | relacje wielopoziomowe (rekomendacje, sieci, uprawnienia ReBAC) | |
-| szeregów czasowych (TimescaleDB, InfluxDB, Prometheus) | pomiar w czasie | metryki, IoT, telemetria (np. ładowarki — dom-ev-charging) | retencja i agregacja w czasie |
+| szeregów czasowych (TimescaleDB, InfluxDB, Prometheus) | pomiar w czasie | metryki, IoT, telemetria (np. ładowarki — dom-ev-charging (pack-ev)) | retencja i agregacja w czasie |
 | wyszukiwania (Elasticsearch, OpenSearch) | indeks odwrócony | wyszukiwanie pełnotekstowe, filtry fasetowe | nie jako źródło prawdy |
 **Wiele baz w jednym systemie** (polyglot persistence) tylko z powodu — każda to koszt operacyjny, kopie, monitoring
 i kompetencje. Domyślnie jedna baza relacyjna plus cache.

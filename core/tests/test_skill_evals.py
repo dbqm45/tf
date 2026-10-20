@@ -149,7 +149,7 @@ def main() -> int:
         hr.loader.exec_module(rep_mod)
         logs = proj / ".claude" / "logs"
         r = rep_mod.analyse(rep_mod.read_jsonl(logs / "skill-hints.jsonl", None), rep_mod.read_jsonl(logs / "usage.jsonl", None))
-        if r["hit"].get("be-api-design") != 1 or r["missed"].get("be-database") != 1:
+        if api and (r["hit"].get("be-api-design") != 1 or r["missed"].get("be-database") != 1):   # podpowiedź z pack-it
             fails.append(f"hint_report: trafione/przeoczone niepoprawne: {r}")
     total = 12
     for f in fails:

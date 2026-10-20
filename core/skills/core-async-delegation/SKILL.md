@@ -61,7 +61,7 @@ zamiast pytań:
 - **Rozjazd z planem:** drobny (przeniesiony plik, nowa nazwa) → dostosuj i zapisz `ADAPT: …`; strukturalny (brak
   zależności, inna architektura, brak wyniku poprzedniej fazy) → STOP. W wątpliwości — strukturalny.
 - **Bramki fazy, od najtańszej:** polecenia z planu → pliki fazy dodane do indeksu po nazwie → **celowe zepsucie**
-  dla nowych testów (qa-spec-first-testing) → pełne testy, lint, typy → commit. Po każdej bramce linia
+  dla nowych testów (pack-it: qa-spec-first-testing) → pełne testy, lint, typy → commit. Po każdej bramce linia
   `BRAMKA <nazwa>: PASS` albo `FAIL (<skrót>, próba k/2)` — oceniający `/goal` widzi tylko transkrypt.
 - **Najwyżej 2 próby naprawy na bramkę;** trzecia porażka = STOP. Testu, asercji ani reguły lint nie osłabia.
 - **Commit tylko na zielono** (core-conventional-commits), pliki po nazwie; brudne pliki spoza fazy wypisuje,

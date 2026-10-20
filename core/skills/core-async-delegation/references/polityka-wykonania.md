@@ -53,7 +53,7 @@ Fazy: <zrobione>/<wszystkie>
 Adaptacje: <po jednej linii albo „brak”>
 Niepewności: <punkty, gdzie plan i kod się nie zgadzały, bez niezależnego źródła — albo „brak”>
 Do weryfikacji ręcznej (dla człowieka): <punkty z planu, dosłownie>
-Następny krok: przegląd w świeżym kontekście (core-git-workflow, qa-spec-first-testing)
+Następny krok: przegląd w świeżym kontekście (core-git-workflow; testy od specyfikacji, pack-it: qa-spec-first-testing)
 ```
 
 ## Odwołania w commitach

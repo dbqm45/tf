@@ -44,7 +44,7 @@ co poza zakresem. Zapytaj też wprost, co już umie — inaczej poziom pierwszej
 - Quiz: odpowiedzi tej samej długości, kolejność losowana **przy wyświetlaniu** (modele mają skłonność do stawiania
   poprawnej odpowiedzi na pierwszym miejscu).
 - Buduj z `assets/` (wspólny arkusz stylów od pierwszej lekcji); nowy element wielokrotnego użytku trafia do `assets/`.
-  Bez bibliotek z CDN bez przypiętej wersji (docs-tech-writing, diagramy-i-prezentacje.md).
+  Bez bibliotek z CDN bez przypiętej wersji (skill dokumentacji z pack-docs: docs-tech-writing, diagramy-i-prezentacje.md).
 - Linki do poprzednich lekcji i ściąg; przypomnienie, że można dopytać agenta.
 
 ## Zapis postępu (`learning-records/`)

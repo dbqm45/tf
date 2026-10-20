@@ -4,9 +4,9 @@ PreToolUse (Read|Grep|Glob|NotebookRead|Bash|WebFetch|WebSearch|Agent|Task): izo
 
 Profile z .claude/cleanroom.json:
 - "denylist" (np. `*-qa-analyst`): projektant testów nie czyta implementacji — Read pliku z rozszerzeniem kodu spoza `allow`
-  → deny; Grep tylko po dozwolonych ścieżkach/filtrach; Glob dozwolony (same nazwy plików). Skill qa-spec-first-testing.
+  → deny; Grep tylko po dozwolonych ścieżkach/filtrach; Glob dozwolony (same nazwy plików). Np. qa-spec-first-testing (pack-it).
 - "allowlist" (np. `blind-analyst`): agent czyta WYŁĄCZNIE ścieżki z `allow` (np. brief biznesowy), żeby wymagania powstały
-  bez wiedzy o architekturze. Skill ddd-model-stress-test.
+  bez wiedzy o architekturze. Np. ddd-model-stress-test (pack-it).
 - `block_tools`: narzędzia zablokowane dla profilu (np. Bash, który ominąłby reguły).
 Agent spoza profili: bez zmian. Hook działa w subagentach (pole `agent_type`).
 """

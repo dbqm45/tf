@@ -17,8 +17,8 @@ w repozytorium fabryki: `docs/pilot/`.
 - Nowe, puste repozytorium z zainstalowaną fabryką (README fabryki, „Instalacja w projekcie”).
 
 ## Przebieg
-1. **Faza 0**: `claude --agent maja` z opisem pomysłu w 3–5 zdaniach. Odpowiadaj na pytania jak właściciel
-   produktu. Maja wybiera ścieżkę (dla tego przykładu skróconą albo pełną; zapisz, którą i dlaczego).
+1. **Faza 0**: dyspozytor nakładki (pack-it: `claude --agent maja`) z opisem pomysłu w 3–5 zdaniach. Odpowiadaj
+   na pytania jak właściciel produktu. Dyspozytor wybiera ścieżkę (dla tego przykładu skróconą albo pełną; zapisz, którą i dlaczego).
 2. **Fazy 1–5**: uruchamiaj persony z Przekazania. Na bramkach czytaj TL;DR i akceptuj albo odsyłaj z uwagami.
 3. **Faza 6**: realizacja krok po kroku; po każdym kroku sprawdź raport kroku i zielony CI.
 4. **Faza 7**: przegląd gotowości w pełnej wersji (`gotowosc-produkcyjna.md`), także przećwiczone wycofanie

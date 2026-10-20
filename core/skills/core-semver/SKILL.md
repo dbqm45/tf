@@ -3,7 +3,7 @@ name: core-semver
 description: Użyj przy numerze wersji (SemVer 2.0.0) — publiczne API, podbicie major/minor/patch, 0.y.z, wersje przedpremierowe, tag.
 metadata:
   przeglad: 2027-10-09
-  katalog: "Użyj, gdy nadajesz lub sprawdzasz numer wersji czegokolwiek, co wydajesz (biblioteka, pakiet, API, CLI, aplikacja, obraz, moduł IaC, sama fabryka) — deklaracja publicznego API, które zmiany wymagają major/minor/patch, faza 0.y.z i wydanie 1.0.0, wersje przedpremierowe i metadane, kolejność wersji, wycofywanie, wydanie bez zmiany opublikowanej wersji; skrypt semver.py liczy wersję bez zgadywania. Nie do formatu commit message (core-conventional-commits) ani strategii wdrożenia (ops-release-engineering)."
+  katalog: "Użyj, gdy nadajesz lub sprawdzasz numer wersji czegokolwiek, co wydajesz (biblioteka, pakiet, API, CLI, aplikacja, obraz, moduł IaC, sama fabryka) — deklaracja publicznego API, które zmiany wymagają major/minor/patch, faza 0.y.z i wydanie 1.0.0, wersje przedpremierowe i metadane, kolejność wersji, wycofywanie, wydanie bez zmiany opublikowanej wersji; skrypt semver.py liczy wersję bez zgadywania. Nie do formatu commit message (core-conventional-commits) ani strategii wdrożenia (skill wydań, pack-it)."
   slowa: "semver, wersjonowanie, numer wersji, jaka wersja, podbić wersję, major, minor, patch, wersja 1.0.0, 0.x, beta, rc, alpha, wydanie, release, tag v1.2.3, zmiana niezgodna wstecz, breaking change, przestarzałe, deprecated"
 ---
 
@@ -81,8 +81,8 @@ Zasady:
   w CHANGELOG i poinformuj użytkowników (FAQ).
 - **Wycofywanie:** najpierw minor z oznaczeniem „przestarzałe”, opisem zastępstwa i dokumentacją. Usunięcie dopiero
   w następnym major, po co najmniej jednym minor z ostrzeżeniem.
-- Monorepo: każdy pakiet ma własną wersję (`nx release` — tool-nx).
-- Numer wersji API w URL (`/v1/`) to osobna decyzja (be-api-design). Zmiana `/v1` → `/v2` zwykle idzie z major
+- Monorepo: każdy pakiet ma własną wersję (`nx release` — pack-it: tool-nx).
+- Numer wersji API w URL (`/v1/`) to osobna decyzja (skill projektu API, pack-it: be-api-design). Zmiana `/v1` → `/v2` zwykle idzie z major
   pakietu lub serwisu.
 - Wersji **zależności** projektu nie podnosisz bez prośby człowieka (core-stack-sync). Ten skill dotyczy numeru
   wersji tego, co wydajesz.

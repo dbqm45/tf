@@ -3,7 +3,7 @@ name: core-delivery-lifecycle
 description: Użyj, gdy projekt idzie od pomysłu przez wdrożenie do utrzymania — fazy, persony, bramki, pętla z agentami AI, gotowość.
 metadata:
   przeglad: 2027-10-09
-  katalog: "Użyj, gdy projekt ma przejść od pomysłu do oprogramowania gotowego do wdrożenia — kolejność faz, persony i skille faz, kryteria wejścia i wyjścia, bramki zatwierdzane przez człowieka, definicja „gotowe do produkcji”, utrzymanie po wydaniu (łatki, aktualizacje, wygaszanie funkcji, pasma kontrolne metryk), proces wytwarzania z agentami AI (pętla artefaktów, plan przed kodem, ewaluacje konfiguracji agenta, przegląd PR przez AI, miary etapów), ścieżka skrócona dla małych projektów i przebieg próbny. Nie do treści pojedynczej fazy (skille ddd-*, arch-*, qa-*, ops-*)."
+  katalog: "Użyj, gdy projekt ma przejść od pomysłu do oprogramowania gotowego do wdrożenia — kolejność faz, persony i skille faz, kryteria wejścia i wyjścia, bramki zatwierdzane przez człowieka, definicja „gotowe do produkcji”, utrzymanie po wydaniu (łatki, aktualizacje, wygaszanie funkcji, pasma kontrolne metryk), proces wytwarzania z agentami AI (pętla artefaktów, plan przed kodem, ewaluacje konfiguracji agenta, przegląd PR przez AI, miary etapów), ścieżka skrócona dla małych projektów i przebieg próbny. Nie do treści pojedynczej fazy (skille wymiarów z nakładek: domena, architektura, testy, operacje — lista w .claude/catalog.md)."
   slowa: "plan cięć, kolejność cięć, fundament, od czego zacząć realizację, gwiazda przewodnia, cykl życia oprogramowania, SDLC, AI-native, proces z agentami AI, przebudować proces wytwarzania, przeglądy nie nadążają, pętla, metryki procesu, pasma kontrolne, Western Electric, AI-DLC, od pomysłu do produkcji, utrzymanie po wydaniu"
 ---
 
@@ -11,35 +11,42 @@ metadata:
 
 Model pracy: **agenci prowadzą i wykonują, człowiek zatwierdza i odpowiada.** Fabryka przeprowadza projekt przez
 wszystkie fazy, ale na bramkach (B1–B6) zatrzymuje się na decyzję człowieka. Bramki są obowiązkowe, nie
-grzecznościowe. Agent nie ustawia `accepted` i nie wdraża na produkcję sam (core-project-record, ops-release-engineering).
+grzecznościowe. Agent nie ustawia `accepted` i nie wdraża na produkcję sam (core-project-record).
 
 Każda faza kończy się artefaktem w `docs/project/` (core-project-record), a nie tylko odpowiedzią w rozmowie. Każda
 faza może być osobną sesją innej persony. Następna sesja zaczyna od `python3 .claude/hooks/project_record.py status`,
 TL;DR i sekcji Przekazanie.
 
 ## Kto prowadzi
-- **Start**: `claude --agent maja`. Maja przepytuje (core-plan-interview), ocenia skalę i ryzyko, wybiera ścieżkę
-  (pełną albo skróconą) i zapisuje plan faz z personami w `01-discovery/brief.md` (sekcja „Plan faz”).
+- **Start**: dyspozytor nakładki (pack-it: `claude --agent maja`; pack-ev: `claude --agent iwona`). Przepytuje
+  (core-plan-interview), ocenia skalę i ryzyko, wybiera ścieżkę (pełną albo skróconą) i zapisuje plan faz
+  z personami w `01-discovery/brief.md` (sekcja „Plan faz”). Bez dyspozytora: core-problem-routing.
 - **Fazy**: człowiek uruchamia personę wskazaną w Przekazaniu poprzedniej fazy. Persona robi zadania sama (core-cost-control §0).
 - **Człowiek**: właściciel produktu i zatwierdzający. Odpowiada na otwarte pytania, akceptuje na bramkach,
   dostarcza konta, sekrety i dostępy, uruchamia wdrożenie produkcyjne.
 
 ## Fazy
-| # | Faza | Katalog | Persona (domyślnie) | Skille wiodące | Wyjście (kryterium „gotowe”) |
-|---|---|---|---|---|---|
-| 0 | Przyjęcie i plan faz | `01-discovery/` | Maja | core-problem-routing, core-plan-interview, proc-project-planning | brief z problemem, celem, użytkownikami, zakresem i „poza zakresem”, ograniczeniami (budżet, termin, regulacje), ścieżką i planem faz; przy projekcie z budżetem i terminem plan projektu (`project-plan.md`: koszt i termin jako przedziały P50/P80, kamienie milowe, rejestr ryzyk) |
-| 1 | Odkrywanie produktu | `01-discovery/` | Natalia | proc-product-discovery, ux-feature-design | hipotezy i metryki sukcesu, przepływy i stany, makiety kluczowych ekranów, ryzyka produktu; co sprawdzić z prawdziwymi użytkownikami |
-| 2 | Domena | `02-domain/` | Ewa | ddd-discovery-intake, ddd-event-storming, ddd-strategic-analysis, ddd-context-mapping | słownik, zdarzenia i procesy, konteksty i mapa kontekstów, sprzeczności i pytania do eksperta |
-| 3 | Wymagania | `03-requirements/` | Ewa (+ Natalia) | ddd-tactical-design, qa-spec-first-testing | wymagania z kryteriami akceptacji (przykłady), wymagania jakości jako scenariusze (arch-quality-attributes), priorytety; dane osobowe wypisane przy wymaganiach, które ich dotyczą |
-| 4 | Architektura | `04-architecture/` | Tomasz | arch-system-design, arch-tech-selection, arch-quality-attributes, arch-threat-modeling, arch-privacy-compliance, arch-architect-practice | decyzja o stacku, dokument architektury (C4), ADR, model zagrożeń, szacunki, strategia danych, wdrożenia i obserwowalności; przy danych osobowych `privacy.md` (inwentarz, podstawy, retencja, decyzja o DPIA) |
-| 5 | Plan | `05-plan/` | Tomasz + Kasia | eng-continuous-delivery, qa-test-design, qa-change-review | cięcia pionowe w kolejności (szkielet end-to-end jako pierwszy krok) wg `references/plan-ciec.md` (fundamenty z polem „Odblokowuje”, gwiazda przewodnia, niewiadome blokujące), plan testów z ryzykami, wykonawcy |
-| 6 | Realizacja | `06-delivery/` | Ola / Jan / Filip / Ada / Marek (wg stacku) + Kasia | lang-*, fw-*, be-*, fe-*, eng-testing, core-git-workflow, qa-change-review | dla każdego kroku: kod, testy, przegląd, raport kroku; pipeline CI zielony od pierwszego kroku |
-| 7 | Przygotowanie do wydania | `06-delivery/`, `07-review/` | Piotr + security-reviewer + Kasia | ops-ci-cd, ops-docker, ops-iac-terraform, ops-kubernetes, ops-release-engineering, ops-observability, ops-sre-incidents, ops-supply-chain-security, ops-secrets-identities | środowiska jako kod, wdrożenie na środowisko testowe, przegląd bezpieczeństwa, testy regresji i wydajności, runbook, przegląd gotowości (`references/gotowosc-produkcyjna.md`) |
-| 8 | Wydanie i obserwacja | `07-review/` | **człowiek** wdraża; Piotr przygotowuje i obserwuje | ops-release-engineering, core-semver, ops-sre-incidents | wdrożenie stopniowe z bramkami SLO, obserwacja po wydaniu, retrospektywa i lekcje |
-| 9 | Utrzymanie | `08-operations/` | Piotr (niezawodność, łatki, aktualizacje) + persona realizująca (poprawki) + Kasia (regresja) | ops-sre-incidents, proc-issue-triage, eng-debugging, ops-dependency-upgrades, ops-supply-chain-security, qa-regression, ops-finops | cykliczny przegląd utrzymania (`operations-review.md`), poprawki błędów z testem regresyjnym, łatki bezpieczeństwa w terminie, aktualizacje przed końcem wsparcia, wycofywanie funkcji, koszty |
+Tabela podaje role i wymiary skilli; persony i skille dają zainstalowane nakładki (`.claude/catalog.md`). Obsadę
+dobierasz do problemu; pytanie spoza swojej dziedziny persona zadaje konsultantowi innej nakładki.
 
-Dokumentacja (docs-tech-writing) powstaje w trakcie, nie na końcu: README i instrukcja uruchomienia od fazy 6, runbook
-w fazie 7. Korekta języka (Stefan) przed oddaniem dokumentów ludziom.
+| # | Faza | Katalog | Rola | Wymiar skilli | Wyjście (kryterium „gotowe”) |
+|---|---|---|---|---|---|
+| 0 | Przyjęcie i plan faz | `01-discovery/` | dyspozytor | core-problem-routing, core-plan-interview, planowanie projektu | brief z problemem, celem, użytkownikami, zakresem i „poza zakresem”, ograniczeniami (budżet, termin, regulacje), ścieżką i planem faz; przy budżecie i terminie plan projektu (`project-plan.md`: koszt i termin jako przedziały P50/P80, kamienie milowe, rejestr ryzyk) |
+| 1 | Odkrywanie produktu | `01-discovery/` | projektant produktu/UX | odkrywanie produktu, projekt UX funkcji | hipotezy i metryki sukcesu, przepływy i stany, makiety kluczowych ekranów, ryzyka produktu; co sprawdzić z prawdziwymi użytkownikami |
+| 2 | Domena | `02-domain/` | analityk domeny | domena: Event Storming, podział strategiczny, mapa kontekstów | słownik, zdarzenia i procesy, konteksty i mapa kontekstów, sprzeczności i pytania do eksperta |
+| 3 | Wymagania | `03-requirements/` | analityk domeny + projektant produktu/UX | model taktyczny, testy od specyfikacji, atrybuty jakości | wymagania z kryteriami akceptacji (przykłady), wymagania jakości jako scenariusze, priorytety; dane osobowe wypisane przy wymaganiach, które ich dotyczą |
+| 4 | Architektura | `04-architecture/` | architekt rozwiązania | architektura: system, stack, atrybuty jakości, zagrożenia, prywatność | decyzja o stacku, dokument architektury (C4), ADR, model zagrożeń, szacunki, strategia danych, wdrożenia i obserwowalności; przy danych osobowych `privacy.md` (inwentarz, podstawy, retencja, decyzja o DPIA) |
+| 5 | Plan | `05-plan/` | architekt rozwiązania + projektant testów | ciągłe dostarczanie, projekt testów, przegląd planu | cięcia pionowe w kolejności (szkielet end-to-end jako pierwszy krok) wg `references/plan-ciec.md` (fundamenty z polem „Odblokowuje”, gwiazda przewodnia, niewiadome blokujące), plan testów z ryzykami, wykonawcy |
+| 6 | Realizacja | `06-delivery/` | implementer wg stacku + projektant testów | język, framework, serwer i UI, testy; core-git-workflow, przegląd zmian | dla każdego kroku: kod, testy, przegląd, raport kroku; pipeline CI zielony od pierwszego kroku |
+| 7 | Przygotowanie do wydania | `06-delivery/`, `07-review/` | DevOps/SRE + security-reviewer + projektant testów | operacje: CI/CD, kontenery, IaC, wydania, obserwowalność, łańcuch dostaw, sekrety | środowiska jako kod, wdrożenie na środowisko testowe, przegląd bezpieczeństwa, testy regresji i wydajności, runbook, przegląd gotowości (`references/gotowosc-produkcyjna.md`) |
+| 8 | Wydanie i obserwacja | `07-review/` | **człowiek** wdraża; DevOps/SRE przygotowuje i obserwuje | operacje: wydania, SRE; core-semver | wdrożenie stopniowe z bramkami SLO, obserwacja po wydaniu, retrospektywa i lekcje |
+| 9 | Utrzymanie | `08-operations/` | DevOps/SRE + implementer + projektant testów | SRE, triaż, debugowanie, aktualizacje zależności, regresja, koszty | cykliczny przegląd utrzymania (`operations-review.md`), poprawki błędów z testem regresyjnym, łatki bezpieczeństwa w terminie, aktualizacje przed końcem wsparcia, wycofywanie funkcji, koszty |
+
+Przykład (pack-it): Maja → Natalia (pack-ux) → Ewa → Tomasz → Tomasz + Kasia → wykonawca wg stacku + Kasia → Piotr.
+Obsada ze skillami, też pack-ev: `references/obsada-nakladek.md`.
+
+Dokumentacja powstaje w trakcie: README i uruchomienie od fazy 6, runbook w fazie 7 (pack-docs: docs-tech-writing).
+Korekta języka przed oddaniem ludziom (pack-editorial-pl: Stefan, txt-polish-correctness).
 
 ## Praca z agentami — pętla, nie linia
 Gdy agenci piszą kod w godziny, wolne stają się planowanie, przegląd, wdrożenie i utrzymanie — tam usprawniasz proces
@@ -79,11 +86,11 @@ Wydanie nie kończy projektu. Utrzymanie to stały rytm, a nie reakcja na awarie
   Metryki (odsetek 5xx, porażki testów, czas cyklu PR) sprawdzasz pasmami kontrolnymi:
   `python3 .claude/skills/core-delivery-lifecycle/scripts/control_band.py metryka.csv --baseline 30 --side upper`.
   Decyzje z przeglądu zatwierdza człowiek (**B6**).
-- **Zgłoszenia:** przegląd i kategorie (proc-issue-triage); błąd → przyczyna (eng-debugging) → test regresyjny
-  czerwony → poprawka → wydanie jak w fazach 7–8, w skali poprawki (ścieżka skrócona, B4 i B5 zostają).
+- **Zgłoszenia:** przegląd i kategorie; błąd → przyczyna → test regresyjny czerwony → poprawka → wydanie jak
+  w fazach 7–8, w skali poprawki (ścieżka skrócona, B4 i B5 zostają).
 - **Łatki bezpieczeństwa:** krytyczna podatność w komponencie wystawionym na zewnątrz ma szybką ścieżkę z wyjątkiem
-  od karencji (ops-supply-chain-security). Termin ustala człowiek.
-- **Aktualizacje:** drobne regularnie, główne przed końcem wsparcia, pojedynczo i z planem (ops-dependency-upgrades).
+  od karencji (skill łańcucha dostaw). Termin ustala człowiek.
+- **Aktualizacje zależności:** drobne regularnie, główne przed końcem wsparcia, pojedynczo i z planem.
   Agent nie podnosi zależności bez prośby — przegląd utrzymania zawiera propozycje do zatwierdzenia.
 - **Wycofywanie funkcji i koniec życia systemu:** decyzja człowieka; przebieg w `references/utrzymanie.md`.
 
@@ -98,8 +105,8 @@ zawsze**, a przegląd gotowości w wersji skróconej (sekcje oznaczone „minimu
   testowego. Problemy z wdrożeniem wychodzą w pierwszym tygodniu, nie w ostatnim.
 - **Ryzyko najpierw**: najmniej pewne elementy (integracja zewnętrzna, wydajność, nowa technologia) sprawdzasz
   prototypem przed B3 albo w pierwszych krokach.
-- **Testy od wymagań**: przypadki testowe z kryteriów akceptacji powstają przed kodem lub równolegle (Kasia w
-  clean-room), nie z kodu.
+- **Testy od wymagań**: przypadki testowe z kryteriów akceptacji powstają przed kodem lub równolegle (projektant
+  testów w clean-room), nie z kodu.
 - **Mierzalny koniec kroku**: krok realizacji kończy się poleceniem, które daje wynik „przechodzi / nie przechodzi”
   (testy z kryteriów akceptacji, build, lint). Przy dłuższym kroku człowiek może ustawić `/goal` z takim warunkiem,
   np. `/goal testy kroku 3 przechodzą (npm test kończy się kodem 0), inne testy bez zmian, albo stop po 30 turach`.
@@ -112,7 +119,7 @@ zawsze**, a przegląd gotowości w wersji skróconej (sekcje oznaczone „minimu
   „Oczekiwane / Zastane / Dlaczego to ważne” z wyborem: dostosuj i kontynuuj · pomiń · stop i popraw plan.
   Nie dokręcaj kodu kolejnymi poleceniami.
 - **Plan kroku na miarę ryzyka:** im więcej plików i większe ryzyko, tym staranniejszy plan i jego przegląd
-  (qa-change-review); prosta zmiana o jasnym zakresie to plan → realizacja, bez badania jako rytuału.
+  (skill przeglądu zmian); prosta zmiana o jasnym zakresie to plan → realizacja, bez badania jako rytuału.
 - **Koszt**: tanie modele do wyszukiwania i zmian mechanicznych, drogie do architektury i przeglądu bezpieczeństwa.
   Na koniec etapu: koszt i czas z `factory/cost_stats.py`, przyczyny i propozycje zmian z core-agent-retro.
 - **Stan zawsze w plikach**: przerwana sesja zostawia `draft` i Przekazanie. `project_record.py report` daje
@@ -141,7 +148,7 @@ zależności bez prośby. To wszystko jest w planie faz jako zadania dla człowi
 - [ ] po wydaniu: cykliczny przegląd utrzymania z decyzjami człowieka (B6)
 
 ## Źródła
-- Konwencje fabryki: core-project-record, eng-continuous-delivery, ops-release-engineering
+- Konwencje fabryki: core-project-record
 - Google SRE — Production Readiness Review; J. Humble, D. Farley, *Continuous Delivery*; A. Cockburn — walking skeleton
 - GOV.UK Service Manual — etapy live i retirement (wygaszanie usługi)
 - Kurs 10xDevs, ed. 3 (2026), moduł 2, lekcje 1–2 (plan cięć, zatrzymanie implementacji) — materiał szkoleniowy (dostęp 2026-10-09)

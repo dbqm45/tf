@@ -19,15 +19,15 @@ docs/project/
   journal.md                 # dziennik zdarzeń (tylko dopisywanie)
   decisions.md               # rejestr decyzji D-001, D-002… (linki do ADR)
   01-discovery/brief.md      # problem, cel, użytkownicy, zakres, ograniczenia
-  01-discovery/project-plan.md  # plan projektu: koszt i termin jako przedziały, kamienie milowe, ryzyka (proc-project-planning)
-  01-discovery/pre-flight.md # ocena wstępna „czy modularyzować” (ddd-discovery-intake)
+  01-discovery/project-plan.md  # plan projektu: koszt i termin jako przedziały, kamienie milowe, ryzyka (pack-it: proc-project-planning)
+  01-discovery/pre-flight.md # ocena wstępna „czy modularyzować” (pack-it: ddd-discovery-intake)
   02-domain/                 # glossary.md, event-storming/, concepts/, strategic.md, context-map.md
                              # intake: corpus.md, contradictions.md, strategic-gaps.md, user-answers.md, areas.md, boards/
-                             # algorithms.md, connascence/<a>-<b>.md, stress/<metryka>.md, _blind/ (tylko dla blind-analyst)
+                             # algorithms.md, connascence/<a>-<b>.md, stress/<metryka>.md, _blind/ (tylko dla blind-analyst, pack-it)
   03-requirements/requirements.md
-  04-architecture/           # stack-decision.md, architecture.md, privacy.md (arch-privacy-compliance), adr/NNNN-*.md
+  04-architecture/           # stack-decision.md, architecture.md, privacy.md (pack-it: arch-privacy-compliance), adr/NNNN-*.md
   05-plan/plan.md            # kroki (cięcia pionowe), kolejność, wykonawcy
-  05-plan/test-plan.md       # ryzyka, przypadki testowe z oczekiwanym wynikiem i źródłem (qa-test-design)
+  05-plan/test-plan.md       # ryzyka, przypadki testowe z oczekiwanym wynikiem i źródłem (pack-it: qa-test-design)
   06-delivery/NNN-<slug>.md  # raport z każdego zrealizowanego kroku (+ NNN-behavior-contract.md przy refaktoryzacji)
   07-review/<data>-<rodzaj>.md  # przeglądy: bezpieczeństwo, architektura, retro, raport testów i defekty
   08-operations/<data>-<rodzaj>.md  # faza 9, utrzymanie: przegląd okresowy, łatki, aktualizacje, wycofania
@@ -44,7 +44,7 @@ artifact: stack-decision        # brief | pre-flight | corpus | contradictions |
 phase: architecture             # discovery | domain | requirements | architecture | plan | delivery | review
 status: proposed                # draft | proposed | accepted | superseded | rejected
 version: 1
-author: tomasz-solution-architect
+author: <agent>                 # nazwa agenta z .claude/catalog.md
 created: 2026-09-27
 updated: 2026-09-27
 inputs: [docs/project/03-requirements/requirements.md]   # na czym oparty — śledzenie decyzji
@@ -69,7 +69,7 @@ Obowiązkowe sekcje (poza ADR, dziennikiem i rejestrem):
 
 ## Jak kończysz pracę (zapis)
 1. Artefakt z szablonu (`templates/<rodzaj>.md`), status `proposed` (albo `draft`, gdy przerywasz).
-2. Istotne decyzje → wiersz w `decisions.md` (+ ADR dla decyzji architektonicznych, docs-tech-writing).
+2. Istotne decyzje → wiersz w `decisions.md` (+ ADR dla decyzji architektonicznych, skill dokumentacji z pack-docs).
 3. Wpis w dzienniku: `python3 .claude/hooks/project_record.py log --by <agent> --phase <faza> "<co i dlaczego, link>"`.
 4. `python3 .claude/hooks/project_record.py check` — musi przejść. Indeks aktualizuje się sam.
    Po zmianie `corpus.md`/`areas.md`: `python3 .claude/hooks/project_record.py evidence` (cytaty istnieją w źródłach, progi obszarów).
@@ -125,7 +125,7 @@ Krótki, kuratorowany zbiór reguł, żeby kolejna sesja nie powtarzała tych sa
 - Wpis: `- RRRR-MM-DD **reguła w trybie rozkazującym** — Kontekst: <obszar, ścieżka lub faza, na tyle konkretnie,
   żeby dało się dopasować do pracy> · Zamiast tego: <działanie> · Dotyczy: plan|realizacja|przegląd|wszystko`.
   Bez „zamiast tego” to nie lekcja.
-- Lekcję pisze człowiek albo agent na jego prośbę (np. decyzja „zapisz jako lekcję” w triażu — qa-change-review),
+- Lekcję pisze człowiek albo agent na jego prośbę (np. decyzja „zapisz jako lekcję” w triażu przeglądu zmiany, pack-it: qa-change-review),
   jedna na raz; nie powstaje automatycznie z wypełnionych z góry pól.
 - Granica: jednorazowy incydent → `journal.md`; klasa błędów, która wróci i zmieniłaby wcześniejsze decyzje → lekcja.
 - Dopisujesz powtarzalne pułapki, ustalenia człowieka i sprawdzone sposoby; nie dopisujesz jednorazowych zdarzeń

@@ -11,7 +11,7 @@ Reguły:
   A. Pierwsza edycja kodu produkcyjnego w danym kontekście wymaga: edycji testu, a PO NIEJ uruchomienia testów, które
      NIE przeszły (czerwony test — dowód, że test sprawdza brakujące zachowanie). Test, który od razu przeszedł,
      niczego nie dowodzi — wyjątek: test charakteryzujący przed refaktoryzacją, oznaczony w pliku testu słowem
-     „charakteryz…”/„characteriz…” (qa-spec-first-testing).
+     „charakteryz…”/„characteriz…” (np. qa-spec-first-testing w pack-it).
   B. Później: po CLAUDE_TDD_MAX_EDITS (domyślnie 12) edycjach kodu produkcyjnego bez nowej edycji testu — następne
      zachowanie wymaga następnego testu.
   C. Osłabienie testu: edycja pliku testów, która zmniejsza liczbę asercji lub testów albo dopisuje pominięcie
@@ -233,10 +233,10 @@ def gate(s: dict, path: str) -> str | None:
             return ("TDD: nowy test od razu PRZESZEDŁ, więc niczego nie dowodzi. Popraw test tak, żeby sprawdzał "
                     "brakujące zachowanie i nie przechodził (czerwony z właściwego powodu), uruchom go i dopiero "
                     "wtedy pisz kod. Jeśli to test charakteryzujący przed refaktoryzacją, oznacz go w pliku testu "
-                    "jako [charakteryzujący] (qa-spec-first-testing).")
+                    "jako [charakteryzujący].")
         return (f"TDD: zanim zmienisz kod produkcyjny ({path}), napisz test opisujący oczekiwane zachowanie "
                 "(przy błędzie: test odtwarzający błąd), uruchom testy i pokaż, że ten test NIE przechodzi "
-                "z właściwego powodu. Potem minimalny kod → zielony → refaktoryzacja (eng-testing). Wyjątki: "
+                "z właściwego powodu. Potem minimalny kod → zielony → refaktoryzacja. Wyjątki: "
                 "konfiguracja, style, dokumentacja; spike — człowiek ustawia CLAUDE_TDD=off.")
     limit = int(os.environ.get("CLAUDE_TDD_MAX_EDITS", "12") or 12)
     if s["prod_since_test"] >= limit:

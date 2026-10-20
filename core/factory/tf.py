@@ -146,7 +146,7 @@ def need_project() -> bool:
 
 def run_build() -> int:
     r = subprocess.run([sys.executable, str(Path("factory") / "build.py")], capture_output=True, text=True)
-    print((r.stdout.strip().splitlines() or ["?"])[0] if r.returncode == 0
+    print("✓ Rebuilt the agents and the catalog (factory/build.py)" if r.returncode == 0
           else "⚠ factory/build.py reported problems:\n" + r.stdout[-1500:] + r.stderr[-500:])
     return r.returncode
 

@@ -11,7 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
 SCRIPTS = ROOT / "scripts"
 
 
@@ -112,7 +112,7 @@ def main() -> int:
     check(cc.release_notes(log.replace("\n", "\r\n"), "2.7.0") == "### Nowe\n- **web:** zoom", "REL-5: CRLF")
 
     # zgodność z kontrolą fabryki: wygenerowany wpis przechodzi semver.py check-changelog z rodzajem podbicia
-    sv = load(ROOT / ".claude" / "skills" / "core-semver" / "scripts" / "semver.py", "semver")
+    sv = load(ROOT / "core" / "skills" / "core-semver" / "scripts" / "semver.py", "semver")
     base = "# Zmiany\n\n## [2.6.0] — 2026-10-10\n### Nowe\n- x\n"
     for kind, msgs in [("major", ["feat!: a"]), ("minor", ["feat: a", "fix: b"]), ("patch", ["fix: a"])]:
         v = cc.next_version("2.6.0", kind)
@@ -124,9 +124,9 @@ def main() -> int:
     # E2E: scripts/release.py w tymczasowym repo
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
-        (repo / "factory").mkdir()
-        (repo / "factory" / "VERSION").write_text("2.6.0\n", encoding="utf-8")
-        (repo / "factory" / "CHANGELOG.md").write_text(base, encoding="utf-8")
+        (repo / "core" / "factory").mkdir(parents=True)
+        (repo / "core" / "factory" / "VERSION").write_text("2.6.0\n", encoding="utf-8")
+        (repo / "core" / "factory" / "CHANGELOG.md").write_text(base, encoding="utf-8")
         git(repo, "init", "-q", "-b", "main")
         git(repo, "add", ".")
         git(repo, "commit", "-qm", "chore(release): 2.6.0")
@@ -136,7 +136,7 @@ def main() -> int:
         git(repo, "commit", "-q", "--allow-empty", "-m", "docs: readme")
         r = run(repo, "release.py", "--ci")
         check(r.returncode == 0 and "nic do wydania" in r.stdout
-              and (repo / "factory" / "VERSION").read_text().strip() == "2.6.0", f"E2E-2: --ci bez feat/fix: {r.stdout}{r.stderr}")
+              and (repo / "core" / "factory" / "VERSION").read_text().strip() == "2.6.0", f"E2E-2: --ci bez feat/fix: {r.stdout}{r.stderr}")
         r = run(repo, "release.py")
         check(r.returncode == 1, "E2E-3: bez --ci brak zmian do wydania to błąd")
         git(repo, "commit", "-q", "--allow-empty", "-m", "feat(build): nowa flaga --x (#5)")
@@ -149,8 +149,8 @@ def main() -> int:
         check(r.returncode == 1 and "niezacommitowane" in r.stderr, f"E2E-5: brudne drzewo: {r.stderr}")
         (repo / "brudny.txt").unlink()
         r = run(repo, "release.py", "--ci")
-        log_text = (repo / "factory" / "CHANGELOG.md").read_text(encoding="utf-8")
-        check(r.returncode == 0 and (repo / "factory" / "VERSION").read_text() == "2.7.0\n"
+        log_text = (repo / "core" / "factory" / "CHANGELOG.md").read_text(encoding="utf-8")
+        check(r.returncode == 0 and (repo / "core" / "factory" / "VERSION").read_text() == "2.7.0\n"
               and log_text.startswith("# Zmiany\n\n## [2.7.0] — ") and "- **build:** nowa flaga --x (#5)" in log_text
               and "### Fixed\n- popraw y" in log_text, f"E2E-6: wydanie 2.7.0: {r.stdout}{r.stderr}\n{log_text}")
         r = run(repo, "release_notes.py", "2.7.0")

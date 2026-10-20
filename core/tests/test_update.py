@@ -27,13 +27,13 @@ def git(cwd: Path, *args: str) -> None:
 
 
 def make_repo(base: Path, name: str, versions: list[tuple[str, str | None]]) -> str:
-    """Repozytorium fabryki: kolejne commity z factory/VERSION = wersja, opcjonalnie otagowane; zwraca adres *.git."""
+    """Repozytorium fabryki: kolejne commity z core/factory/VERSION = wersja, opcjonalnie otagowane; zwraca adres *.git."""
     work = base / f"{name}-work"
-    (work / "factory").mkdir(parents=True)
-    (work / "factory" / "install.py").write_text("")
+    (work / "core" / "factory").mkdir(parents=True)
+    (work / "core" / "factory" / "install.py").write_text("")
     git(work, "init", "-q", "-b", "main")
     for version, tag in versions:
-        (work / "factory" / "VERSION").write_text(version + "\n")
+        (work / "core" / "factory" / "VERSION").write_text(version + "\n")
         git(work, "add", "-A")
         git(work, "commit", "-qm", f"wersja {version}")
         if tag:
@@ -54,10 +54,11 @@ def project(base: Path, name: str, version: str, source: str | None) -> Path:
 
 
 def factory_dir(base: Path, name: str, version: str) -> Path:
+    """Źródło fabryki (katalog) w układzie repozytorium: core/factory/install.py i core/factory/VERSION."""
     d = base / name
-    (d / "factory").mkdir(parents=True)
-    (d / "factory" / "install.py").write_text("")
-    (d / "factory" / "VERSION").write_text(version + "\n")
+    (d / "core" / "factory").mkdir(parents=True)
+    (d / "core" / "factory" / "install.py").write_text("")
+    (d / "core" / "factory" / "VERSION").write_text(version + "\n")
     return d
 
 
@@ -78,21 +79,21 @@ def notice_tests(up, check) -> None:
         check(up.notice(bare, env=env, cache_dir=cache, now=1000.0) is None, "UN-3: brak manifestu (repo fabryki) → brak")
         check(up.notice(p, env={**env, "CTF_UPDATE_CHECK": "0"}, cache_dir=cache, now=1000.0) is None,
               "UN-4: CTF_UPDATE_CHECK=0 wyłącza sprawdzanie")
-        (src / "factory" / "VERSION").write_text("3.0.0\n")
+        (src / "core" / "factory" / "VERSION").write_text("3.0.0\n")
         msg = up.notice(p, env=env, cache_dir=cache, now=1000.0 + 3600)
         check(msg and "2.20.0" in msg, f"UN-5: w ciągu doby wynik z pamięci podręcznej (bez ponownego pytania): {msg}")
         msg = up.notice(p, env=env, cache_dir=cache, now=1000.0 + 2 * 86400)
         check(msg and "3.0.0" in msg and "MAJOR" in msg, f"UN-6: po dobie sprawdza ponownie; wydanie MAJOR oznaczone: {msg}")
         z = base / "fabryka.zip"
         with zipfile.ZipFile(z, "w") as zf:
-            zf.writestr("claude-team-factory-main/factory/VERSION", "2.21.0\n")
-            zf.writestr("claude-team-factory-main/factory/install.py", "")
+            zf.writestr("team-factory-main/core/factory/VERSION", "2.21.0\n")
+            zf.writestr("team-factory-main/core/factory/install.py", "")
         msg = up.notice(project(base, "zip", "2.19.0", str(z)), env=env, cache_dir=cache, now=1000.0)
-        check(msg and "2.21.0" in msg, f"UN-7: źródło .zip → wersja z factory/VERSION w archiwum: {msg}")
+        check(msg and "2.21.0" in msg, f"UN-7: źródło .zip → wersja z core/factory/VERSION w archiwum: {msg}")
         envsrc = factory_dir(base, "z-env", "2.22.0")
-        msg = up.notice(project(base, "env", "2.19.0", str(src)), env={**env, "CLAUDE_TEAM_FACTORY": str(envsrc)},
+        msg = up.notice(project(base, "env", "2.19.0", str(src)), env={**env, "TEAM_FACTORY": str(envsrc)},
                         cache_dir=cache, now=1000.0)
-        check(msg and "2.22.0" in msg, f"UN-8: CLAUDE_TEAM_FACTORY ma pierwszeństwo przed manifestem: {msg}")
+        check(msg and "2.22.0" in msg, f"UN-8: TEAM_FACTORY ma pierwszeństwo przed manifestem: {msg}")
         check(up.notice(project(base, "gone", "2.19.0", str(base / "nie-ma")), env=env, cache_dir=cache,
                         now=1000.0) is None, "UN-9: niedostępne źródło → brak komunikatu, bez wyjątku")
 
@@ -156,7 +157,7 @@ def main() -> int:
         return 1 if fails else 0
 
     def version_of(src: str, tmp: Path) -> str:
-        return (up.fetch(src, tmp) / "factory" / "VERSION").read_text().strip()
+        return (up.fetch(src, tmp) / "core" / "factory" / "VERSION").read_text().strip()
 
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)

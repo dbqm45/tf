@@ -20,6 +20,12 @@
       "prompt": "Chcę, żeby poprawki fabryki agentów instalowały się same, a w zespole przychodziły jako PR. Jak to włączyć i jak cofnąć nieudaną aktualizację?"
     },
     {
+      "id": "dodanie-nakladki",
+      "expect": "no-trigger",
+      "neighbor": "brak",
+      "prompt": "Chcę dodać do projektu nakładkę z umiejętnościami UX i przełączyć język commitów na angielski. Jak to zrobić poleceniem tf?"
+    },
+    {
       "id": "wlasny-skill",
       "expect": "no-trigger",
       "prompt": "Chcę dodać do projektu własny skill z naszymi konwencjami nazewnictwa i commitów. Jak go utworzyć?",

@@ -24,7 +24,7 @@ Zasady dobrego skilla:
 - Kod tam, gdzie pasuje: sortowanie, parsowanie, liczenie, walidacja → skrypt w scripts/ (deterministyczny, tańszy).
   Napisz, czy skrypt URUCHOMIĆ, czy PRZECZYTAĆ. Skrypt łączący się z siecią deklarujesz linią „Sieć: …”.
 - Jeden skill, jedno zadanie: jeśli opis wymienia kilka niezależnych zadań, podziel skill.
-- Nie powtarzaj treści innych skilli — odsyłaj do nich po nazwie („stosuj zasady z fe-css”).
+- Nie powtarzaj treści innych skilli — odsyłaj do nich po nazwie („stosuj zasady z <nazwa-skilla>”).
 - Dobry skill pakuje PROCEDURĘ, którą agent inaczej by improwizował: kroki, kolejność, punkty decyzji, format wyniku.
   Sama wiedza („czym jest X”) bez kroków rzadko zmienia zachowanie agenta.
 - Jeśli skill korzysta z narzędzi zewnętrznych: tryb podglądu przed zapisem, diagnostyka („czy narzędzie działa”),

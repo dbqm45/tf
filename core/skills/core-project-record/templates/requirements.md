@@ -17,7 +17,7 @@ inputs: [docs/project/01-discovery/brief.md]
 - FR-001: <aktor> może <zdolność>. Priorytet: must|nice  <!-- brownfield: Zmiana: nowe|zmienione|zachowane -->
   Wyzwanie: <kontrargument z rundy wyzwań i co z niego wynika albo „bez kontrargumentu”>
 ## Reguła biznesowa
-<Jedno zdanie: decyzja, którą aplikacja podejmuje sama (proc-requirements-shaping).>
+<Jedno zdanie: decyzja, którą aplikacja podejmuje sama (pack-it: proc-requirements-shaping).>
 ## Historyjki (MVP)
 | ID | Jako … chcę … aby … | Kryteria akceptacji (Given/When/Then) | Priorytet |
 |---|---|---|---|
@@ -31,5 +31,5 @@ inputs: [docs/project/01-discovery/brief.md]
 
 ## Otwarte pytania
 ## Przekazanie
-- **Dla:** solution-architect (dobór stacku i architektury)
+- **Dla:** <architekt rozwiązania> (dobór stacku i architektury)
 - **Przeczytaj:** Atrybuty jakości, Ograniczenia

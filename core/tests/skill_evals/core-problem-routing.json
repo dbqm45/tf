@@ -42,6 +42,25 @@
       }
     },
     {
+      "id": "problem-miedzy-nakladkami",
+      "expect": "trigger",
+      "prompt": "Zespół backendu ma dodać do naszej aplikacji import rozliczeń sesji ładowania od partnera roamingowego, ale nikt u nas nie zna protokołów EV. Kogo zaangażować i jak to rozpisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "konsultant",
+            "consult"
+          ],
+          [
+            "katalog"
+          ],
+          [
+            "założeni"
+          ]
+        ]
+      }
+    },
+    {
       "id": "laczenie-skilli",
       "expect": "no-trigger",
       "prompt": "Mam już wybrane skille: DDD, Angular i TypeScript do formularza produktu. Jak połączyć je w jednej odpowiedzi?",

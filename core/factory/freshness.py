@@ -12,8 +12,9 @@ Aktualność skilli: terminy przeglądu (`metadata.przeglad`) i znaczniki [niezw
 Termin przeglądu to data, do której treść skilla (wersje, przepisy, standardy, metody) uznajemy za aktualną. Po
 terminie skill nadal działa; agent sprawdza wtedy ulotne fakty w chwili użycia (core-source-research), a przegląd
 w repozytorium fabryki odświeża treść i ustawia nowy termin. Interwał w miesiącach: wyjątek dla skilla, potem
-najdłuższy pasujący prefiks, potem domyślny. Własne wartości: `factory/config.yaml` → `freshness` (te same klucze
-co DEFAULT_POLICY; czytane, gdy jest PyYAML). Linia `przeglad` nie wchodzi do odcisku bramki jakości.
+najdłuższy pasujący prefiks, potem domyślny. Nakładki dokładają swoje interwały (`freshness` w pack.yaml), a projekt
+może je nadpisać w `factory/config.yaml` → `freshness` (te same klucze co DEFAULT_POLICY). Linia `przeglad` nie wchodzi
+do odcisku bramki jakości.
 """
 from __future__ import annotations
 
@@ -32,11 +33,9 @@ UNVERIFIED = "[niezweryfikowane"
 
 DEFAULT_POLICY = {
     "default_months": 12,
-    # wersje frameworków i narzędzi zmieniają się najszybciej; języki, bezpieczeństwo, AI, operacje i branże — co pół roku
-    "prefixes": {"fw-": 3, "tool-": 3, "lang-": 6, "sec-": 6, "ai-": 6, "ops-": 6, "dom-": 6},
-    # przepisy z terminami stosowania i szybko zmieniające się API
-    "skills": {"sec-eu-regulations": 3, "ai-governance-compliance": 3, "arch-privacy-compliance": 6,
-               "ux-accessibility": 6, "eng-llm-features": 3, "ops-ai-inference": 3, "ops-supply-chain-security": 6},
+    # wersje frameworków i narzędzi zmieniają się najszybciej, języki — co pół roku; wymiary nakładek: pack.yaml
+    "prefixes": {"fw-": 3, "tool-": 3, "lang-": 6},
+    "skills": {},
 }
 
 
@@ -44,10 +43,17 @@ def load_policy(root: Path = ROOT) -> dict:
     pol = {k: (dict(v) if isinstance(v, dict) else v) for k, v in DEFAULT_POLICY.items()}
     cfg = root / "factory" / "config.yaml"
     try:
-        import yaml
-        own = (yaml.safe_load(cfg.read_text(encoding="utf-8")) or {}).get("freshness") or {}
-    except Exception:  # brak PyYAML albo pliku — wartości domyślne
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("tf_packs_fresh", root / "factory" / "packs.py")
+        pm = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pm)
+        raw = pm.load_yaml(cfg)
+        packs = pm.compose(root, raw)["freshness"]          # interwały z nakładek
+        own = raw.get("freshness") or {}                    # nadpisania projektu
+    except Exception:  # brak fabryki w katalogu albo uszkodzona konfiguracja — wartości domyślne
         return pol
+    for k in ("prefixes", "skills"):
+        pol[k].update(packs.get(k) or {})
     if isinstance(own.get("default_months"), int):
         pol["default_months"] = own["default_months"]
     for k in ("prefixes", "skills"):

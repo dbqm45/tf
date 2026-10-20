@@ -1,9 +1,9 @@
 # Wersjonowanie i wydania fabryki
 
 Fabryka ma jeden numer wersji zgodny z [Semantic Versioning 2.0.0](https://semver.org/lang/pl/) (`MAJOR.MINOR.PATCH`)
-w pliku `factory/VERSION`. Wydaną wersję oznacza tag git `vX.Y.Z` (np. `v2.7.0`), a do każdego tagu powstaje GitHub
-Release z wpisem z `factory/CHANGELOG.md`. Najwyższy tag jest domyślnym źródłem `python3 factory/update.py` z repozytorium git (`<repo>#vX.Y.Z` przypina wersję).
-Co należy do publicznego API (a więc wpływa na rodzaj podbicia), opisuje [factory/PUBLIC_API.md](../factory/PUBLIC_API.md).
+w pliku `core/factory/VERSION`. Wydaną wersję oznacza tag git `vX.Y.Z` (np. `v2.7.0`), a do każdego tagu powstaje GitHub
+Release z wpisem z `core/factory/CHANGELOG.md`. Najwyższy tag jest domyślnym źródłem `tf update` (`factory/update.py`) z repozytorium git (`<repo>#vX.Y.Z` przypina wersję).
+Co należy do publicznego API (a więc wpływa na rodzaj podbicia), opisuje [core/factory/PUBLIC_API.md](../core/factory/PUBLIC_API.md).
 
 ## Commity: Conventional Commits
 
@@ -60,7 +60,7 @@ Decyduje **najpoważniejsza** zmiana od ostatniego tagu.
 | tylko dokumentacja, testy, CI, refaktoryzacja | bez wydania | bez wydania |
 
 Fabryka jest już po 1.0.0, więc obowiązuje lewa kolumna. Liczenie (także fazy 0.y.z) robi
-`.claude/skills/core-semver/scripts/semver.py`; skrypty wydań tylko z niego korzystają.
+`core/skills/core-semver/scripts/semver.py`; skrypty wydań tylko z niego korzystają.
 
 ## Jak podbijana jest wersja (automatycznie)
 
@@ -69,8 +69,8 @@ Po każdym merge'u do `main` workflow `release` (`.github/workflows/release.yml`
 1. **Liczy wersję** (`python3 scripts/release.py --ci`): bierze commity od ostatniego tagu `vX.Y.Z` i stosuje tabele
    wyżej.
    - Brak `feat`, `fix`, `perf` i zmian niezgodnych oznacza brak nowej wersji — przebieg kończy się bez zmian.
-   - W przeciwnym razie skrypt zapisuje nową wersję w `factory/VERSION` i dopisuje wpis na górze
-     `factory/CHANGELOG.md` (sekcje *Breaking*, *Added*, *Fixed* z tytułów commitów; nazwy po angielsku jak w [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), starsze wpisy mają nazwy polskie i zostają bez zmian). Sekcje są zgodne
+   - W przeciwnym razie skrypt zapisuje nową wersję w `core/factory/VERSION` i dopisuje wpis na górze
+     `core/factory/CHANGELOG.md` (sekcje *Breaking*, *Added*, *Fixed* z tytułów commitów; nazwy po angielsku jak w [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), starsze wpisy mają nazwy polskie i zostają bez zmian). Sekcje są zgodne
      z kontrolą `build.py check` (rodzaj podbicia ↔ sekcje), którą job uruchamia przed commitem.
 2. **Commituje** te zmiany na `main` jako `github-actions[bot]` z komunikatem `chore(release): X.Y.Z`. Push tokenem
    `GITHUB_TOKEN` nie uruchamia kolejnych workflow, więc commit wydania nie wywołuje następnego wydania.
@@ -83,7 +83,7 @@ Kilka PR-ów zmergowanych szybko po sobie: przebiegi czekają w kolejce (`concur
 samej wersji dwa razy. Gdy w trakcie wydania na `main` trafi nowy commit, push commitu wydania zostanie odrzucony,
 a wszystkie zmiany wyda przebieg uruchomiony dla nowszego commitu.
 
-W zwykłym PR **nie zmieniasz** `factory/VERSION` ani nagłówków w CHANGELOG — robi to CI.
+W zwykłym PR **nie zmieniasz** `core/factory/VERSION` ani nagłówków w CHANGELOG — robi to CI.
 
 ### Kiedy wydać ręcznie
 
@@ -92,16 +92,16 @@ przeredagować CHANGELOG (np. dopisać sekcję *Deprecated*) albo wydajesz MAJOR
 
 1. Na świeżej gałęzi od `main` uruchom `python3 scripts/release.py --dry-run`, a potem
    `python3 scripts/release.py minor` (lub `major` / `patch` / `X.Y.Z`).
-2. Przejrzyj i przeredaguj `factory/CHANGELOG.md`, potem `python3 factory/build.py check`.
+2. Przejrzyj i przeredaguj `core/factory/CHANGELOG.md`, potem `python3 tools/workspace.py check`.
 3. Wykonaj commit `chore(release): X.Y.Z` i otwórz PR o tym samym tytule.
-4. Po merge'u workflow zauważa w `factory/VERSION` wersję bez tagu i wydaje ją bez ponownego liczenia: sprawdza wpis
+4. Po merge'u workflow zauważa w `core/factory/VERSION` wersję bez tagu i wydaje ją bez ponownego liczenia: sprawdza wpis
    `## [X.Y.Z]` w CHANGELOG (bez niego nic nie zostanie otagowane), a dalej postępuje jak w krokach 3–4 wyżej.
 
 Zasady:
 
 - **Wydanej wersji się nie zmienia.** Taga nie przesuwamy ani nie usuwamy. Błąd w wydaniu naprawia kolejna wersja.
 - **Wycofywanie**: najpierw MINOR z sekcją *Deprecated* i aliasem, usunięcie dopiero w kolejnym MAJOR
-  (factory/PUBLIC_API.md).
+  (core/factory/PUBLIC_API.md).
 
 ## Ustawienia repozytorium na GitHubie
 

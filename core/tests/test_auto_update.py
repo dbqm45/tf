@@ -44,10 +44,10 @@ def auto_switch_tests(up, check) -> None:
         base = Path(d)
         p = project(base, "prywatny")
         code, msg = up.set_auto(p, True, env=env)
-        check(code == 0 and manifest(p).get("auto_update") is True and "włączon" in msg,
+        check(code == 0 and manifest(p).get("auto_update") is True and "enabled" in msg,
               f"AU-1: --auto on w trybie prywatnym → flaga w manifeście: {code} {msg}")
         code, msg = up.set_auto(p, False, env=env)
-        check(code == 0 and manifest(p).get("auto_update") is False and "wyłączon" in msg,
+        check(code == 0 and manifest(p).get("auto_update") is False and "disabled" in msg,
               f"AU-2: --auto off → flaga wyłączona: {code} {msg}")
 
         for name, src in (("katalog", str(base)), ("przypiety", GIT_SRC + "#main"), ("brak", None)):
@@ -56,8 +56,8 @@ def auto_switch_tests(up, check) -> None:
             check(code == 2 and not manifest(p).get("auto_update") and "git" in msg,
                   f"AU-3: źródło {name} (nie repozytorium git z tagami wydań) → odmowa: {code} {msg}")
         p = project(base, "env", source=str(base))
-        code, _ = up.set_auto(p, True, env={**env, "CLAUDE_TEAM_FACTORY": GIT_SRC})
-        check(code == 0, "AU-4: źródło git ze zmiennej CLAUDE_TEAM_FACTORY wystarcza")
+        code, _ = up.set_auto(p, True, env={**env, "TEAM_FACTORY": GIT_SRC})
+        check(code == 0, "AU-4: źródło git ze zmiennej TEAM_FACTORY wystarcza")
 
         p = project(base, "zespolowy", mode="shared")
         wf = p / ".github" / "workflows" / "team-factory-update.yml"
@@ -73,11 +73,20 @@ def auto_switch_tests(up, check) -> None:
         bare.mkdir()
         check(up.set_auto(bare, True, env=env)[0] == 2, "AU-7: brak manifestu → odmowa")
 
-    # Instalator zachowuje flagę przy aktualizacji (manifest jest przepisywany od nowa).
+    # Instalator zachowuje flagę przy aktualizacji (manifest jest przepisywany od nowa). Instalator jest
+    # w repozytorium fabryki (core/factory/install.py) — źródło bierzemy z manifestu projektu, w którym działa test.
+    try:
+        fsrc = Path(json.loads((ROOT / ".claude" / "factory-manifest.json").read_text())["source"])
+    except (OSError, ValueError, KeyError):
+        fsrc = None
+    installer = fsrc / "core" / "factory" / "install.py" if fsrc else None
+    if not (installer and installer.is_file()):
+        print("ℹ AU-8 pominięty: brak repozytorium fabryki (source w manifeście)")
+        return
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "projekt"
         p.mkdir()
-        inst = [sys.executable, str(ROOT / "factory" / "install.py"), str(p), "--source", GIT_SRC]
+        inst = [sys.executable, str(installer), str(p), "--yes", "--packs", "none", "--source", GIT_SRC]
         r = subprocess.run(inst, capture_output=True, text=True)
         man = manifest(p) if r.returncode == 0 else {}
         man["auto_update"] = True
@@ -170,7 +179,7 @@ FAKE_INSTALLER = '''import hashlib, json, shutil, sys
 from pathlib import Path
 if "--dry-run" in sys.argv:
     raise SystemExit(0)
-src, dst = Path(__file__).resolve().parent.parent, Path(sys.argv[1])
+src, dst = Path(__file__).resolve().parent.parent.parent, Path(sys.argv[1])
 man_p = dst / ".claude" / "factory-manifest.json"
 man = json.loads(man_p.read_text()) if man_p.is_file() else {"files": {}, "mode": "shared" if "--shared" in sys.argv else "private"}
 sha = lambda b: hashlib.sha256(b).hexdigest()
@@ -185,7 +194,7 @@ for f in (src / "payload").rglob("*"):
         shutil.copy(f, out)
         man["files"][rel] = sha(f.read_bytes())
 man_p.parent.mkdir(parents=True, exist_ok=True)
-man["version"] = (src / "factory" / "VERSION").read_text().strip()
+man["version"] = (src / "core" / "factory" / "VERSION").read_text().strip()
 man_p.write_text(json.dumps(man))
 '''
 PASS = "raise SystemExit(0)\n"
@@ -202,21 +211,21 @@ def factory_repo(base: Path, name: str, releases: list[tuple[str, str, bool]], w
     """Repozytorium fabryki (bare) z wydaniami (wersja, treść testu po instalacji, czy zawiera zły skill);
     `workflow` — wydania niosą też plik w .github/workflows/ (treść „wf <wersja>”)."""
     work = base / f"{name}-work"
-    (work / "factory").mkdir(parents=True)
+    (work / "core" / "factory").mkdir(parents=True)
     git(work, "init", "-q")
     log = ""
     for version, test, bad in releases:
         log = f"## [{version}]\n- zmiana w {version}\n\n" + log
-        (work / "factory" / "VERSION").write_text(version + "\n")
-        (work / "factory" / "CHANGELOG.md").write_text(log)
-        (work / "factory" / "install.py").write_text(FAKE_INSTALLER)
+        (work / "core" / "factory" / "VERSION").write_text(version + "\n")
+        (work / "core" / "factory" / "CHANGELOG.md").write_text(log)
+        (work / "core" / "factory" / "install.py").write_text(FAKE_INSTALLER)
         files = [(".claude/hooks/f.py", version), (".claude/tests/test_po.py", test)]
         if workflow:
             files.append((".github/workflows/team-factory-update.yml", f"wf {version}"))
         for rel, text in files:
             (work / "payload" / rel).parent.mkdir(parents=True, exist_ok=True)
             (work / "payload" / rel).write_text(text)
-        skill = work / ".claude" / "skills" / "zly"
+        skill = work / "core" / "skills" / "zly"
         if bad:
             skill.mkdir(parents=True, exist_ok=True)
             (skill / "SKILL.md").write_text(BAD_SKILL)
@@ -278,7 +287,7 @@ def auto_run_tests(up, check) -> None:
               and "test_po.py" in str(r.get("failed")),
               f"AA-7: czerwone testy po instalacji → przywrócenie poprzedniej wersji: {r}")
         msgs = "\n".join(up.pending_messages(p))
-        check("2.1.0" in msgs and "pominięt" in msgs, f"AA-8: przypomnienie o pominiętej wersji: {msgs}")
+        check("2.1.0" in msgs and "skipped" in msgs, f"AA-8: przypomnienie o pominiętej wersji: {msgs}")
         r = up.auto_run(p, env=env)
         check(r.get("status") == "installed" and r.get("to") == "2.0.1",
               f"AA-9: wersja z czerwonymi testami pominięta, automat bierze następną: {r}")
@@ -310,7 +319,7 @@ def start_tests(up, check) -> None:
 
         p = auto_project(base, "start", src)
         msg = up.start_auto(p, env=env, cache_dir=cache, now=1000, spawn=spawn)
-        check(msg and "2.0.0 → 2.0.1" in msg and "w tle" in msg and len(calls) == 1
+        check(msg and "2.0.0 → 2.0.1" in msg and "background" in msg and len(calls) == 1
               and "--auto-run" in calls[0][0] and Path(calls[0][1]) == p,
               f"AN-1: start sesji uruchamia automat w tle i mówi o tym: {msg} {calls}")
         check(up.start_auto(p, env=env, cache_dir=cache, now=2000, spawn=spawn) is None and len(calls) == 1,

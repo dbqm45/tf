@@ -43,7 +43,13 @@ def main() -> int:
         if not cond:
             fails.append(msg)
 
-    pol = fr.DEFAULT_POLICY
+    # polityka rdzenia + interwały, które dokłada nakładka (pack.yaml → freshness), np. pack-it i pack-ux
+    pol = {"default_months": fr.DEFAULT_POLICY["default_months"],
+           "prefixes": {**fr.DEFAULT_POLICY["prefixes"], "sec-": 6, "ai-": 6},
+           "skills": {**fr.DEFAULT_POLICY["skills"], "sec-eu-regulations": 3, "ai-governance-compliance": 3,
+                      "ux-accessibility": 6}}
+    check(fr.DEFAULT_POLICY["prefixes"] == {"fw-": 3, "tool-": 3, "lang-": 6} and fr.DEFAULT_POLICY["skills"] == {},
+          f"FR-0: rdzeń zna tylko wymiary technologii: {fr.DEFAULT_POLICY}")
     got = {n: fr.interval(n, pol) for n in ("fw-angular", "tool-nx", "lang-java", "sec-eu-regulations", "ai-evals",
                                             "eng-testing", "ai-governance-compliance", "ux-accessibility")}
     check(got == {"fw-angular": 3, "tool-nx": 3, "lang-java": 6, "sec-eu-regulations": 3, "ai-evals": 6,

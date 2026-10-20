@@ -28,5 +28,5 @@ inputs: [docs/project/02-domain/corpus.md]
 ## Otwarte pytania
 ## Przekazanie
 - **Dla:** <persona>
-- **Zadanie:** analiza strategiczna (ddd-strategic-analysis) i skan algorytmów (ddd-algorithm-recognition)
+- **Zadanie:** analiza strategiczna i skan algorytmów (pack-it: ddd-strategic-analysis, ddd-algorithm-recognition)
 - **Przeczytaj:** TL;DR, sekcja Obszary

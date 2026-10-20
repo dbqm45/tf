@@ -29,7 +29,7 @@ Monorepo (Nx, workspaces): wersje z głównego `package.json`; gdy projekty maj�
 | `OK` | wersja projektu w zakresie skilla | pracujesz; z sekcji „Zależne od wersji” bierzesz tylko to, co dostępne w wersji projektu |
 | `SKILL_OUTDATED` | projekt nowszy niż `based_on` | **aktualizujesz skill** (krok 3), zanim na nim oprzesz decyzje |
 | `PROJECT_OLDER` | projekt starszy niż `min_supported` | **nie cofasz skilla**; dopisujesz do „Zależne od wersji” wiersze dla wersji projektu (co jest niedostępne i czym to zastąpić) i stosujesz tylko te funkcje |
-| `MISSING_SKILL` | technologia bez skilla | proponujesz utworzenie: `python3 factory/build.py new-skill fw-react "…"` (dostaje tabelę słownika) i wypełnienie wg kroku 3 |
+| `MISSING_SKILL` | technologia bez skilla | proponujesz utworzenie: `python3 factory/build.py new-skill fw-<technologia> "…"` (dostaje tabelę słownika) i wypełnienie wg kroku 3 |
 | ograniczenie ✗ | np. Angular 22 wymaga TypeScript 6.0.x | nie zalecasz wersji spoza zakresu (np. TS 7 w projekcie z Angularem 22); zgłaszasz niezgodność użytkownikowi |
 
 ## 3. Aktualizacja skilla (dla każdego `SKILL_OUTDATED`)
@@ -45,11 +45,11 @@ Monorepo (Nx, workspaces): wersje z głównego `package.json`; gdy projekty maj�
 4. **Zaktualizuj przykłady w `references/`** i — jeśli to możliwe — zweryfikuj je kompilatorem/testami tej wersji
    w katalogu tymczasowym (np. `npm i` konkretnych wersji w scratchpadzie, nie w projekcie użytkownika).
 5. **Zaktualizuj `skill.meta.json`:** `based_on`, ewentualnie `min_supported`, `verified` (data), `verified_with`, `constraints`
-   (np. `"22": {"lang-typescript": ">=6.0 <6.1"}`), `sources`.
+   (np. w pack-it `"22": {"lang-typescript": ">=6.0 <6.1"}`), `sources`.
 6. **Sprawdź skille powiązane** — ograniczenia (`constraints`) i zależności (`skill_requires` w `factory/config.yaml`),
    np. nowa wersja frameworka może wymagać aktualizacji skilla języka.
 7. `python3 factory/build.py check` → pokaż użytkownikowi diff → commit wg core-conventional-commits,
-   np. `docs(skills): update fw-angular to Angular 22`.
+   np. `docs(skills): update fw-angular to Angular 22` (skill z pack-it).
 
 ## Zasady
 - Skille są współdzielone między projektami: aktualizacja poszerza zakres (`based_on` w górę), a nie „przełącza” skill na
@@ -58,4 +58,6 @@ Monorepo (Nx, workspaces): wersje z głównego `package.json`; gdy projekty maj�
   zmiana JDK) to osobne zadanie, wykonywane tylko na prośbę użytkownika.
 - Gdy nie masz dostępu do źródeł (brak sieci), zaznacz w raporcie, że skill nie został zweryfikowany dla danej wersji,
   i pracuj ostrożnie, trzymając się funkcji wspólnych dla obu wersji.
-- Rejestr technologii do wykrywania: `references/technologies.json` (dopisz nową technologię, żeby była raportowana).
+- Rejestr technologii do wykrywania: rejestr rdzenia `references/technologies.json` i rejestry nakładek
+  `factory/packs/<id>/technologies.json` (ten sam format); `detect_stack.py` czyta wszystkie. Własną technologię projektu
+  dopisz do rejestru rdzenia, żeby była raportowana.

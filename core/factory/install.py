@@ -70,7 +70,7 @@ CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": "f
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
 CORE_FILES = {"guide/JEV.md": ".claude/JEV.md"}
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests"}
-PACK_META = ("pack.yaml", "roles", "personas", "traits")      # → factory/packs/<id>/
+PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json")   # → factory/packs/<id>/
 SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
 USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory/config.yaml", "factory/packs/")
 ALWAYS_OWNED = (".claude/cleanroom.json",)   # składany z rdzenia i nakładek — zawsze z bieżącej wersji
@@ -229,7 +229,7 @@ class Plan:
     def remove_obsolete(self) -> None:
         """Pliki z poprzedniej wersji fabryki, których nowa wersja już nie ma."""
         for rel, old_hash in (self.old or {}).items():
-            if rel in self.files:
+            if rel in self.files or rel.startswith(GENERATED):   # agentów i katalog buduje build.py w projekcie
                 continue
             p = self.root / rel
             if not p.exists():
@@ -465,9 +465,9 @@ def rebuild(dst_root: Path, dry: bool) -> str:
     if dry:
         return ""
     r = subprocess.run([sys.executable, "factory/build.py"], cwd=dst_root, capture_output=True, text=True)
-    first = (r.stdout.strip().splitlines() or [""])[0]
     if r.returncode == 0:
-        return f"✓ Built the agents and the catalog (factory/build.py): {first.lstrip('✓ ')}"
+        n = len(list((dst_root / ".claude" / "agents" / "_generated").rglob("*.md")))
+        return f"✓ Built {n} agents and the catalog (factory/build.py)."
     return ("⚠ `factory/build.py` reported problems — run `python3 factory/build.py check` and fix them:\n"
             + r.stdout[-1500:] + r.stderr[-500:])
 

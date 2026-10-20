@@ -111,7 +111,7 @@ tylko konfiguracja zarządzana).
 - Sprawdź poziom usługi: aplikacje konsumenckie mogą używać rozmów do trenowania (ustawienie użytkownika), API
   i plany firmowe zwykle nie — warunki zmieniają się, więc czytasz aktualne warunki dostawcy z datą.
 - Jurysdykcja przechowywania i brak wyboru regionu decydują o kodzie firmowym — to decyzja człowieka i compliance
-  (arch-privacy-compliance), nie agenta.
+  (skill prywatności, np. arch-privacy-compliance z pack-it), nie agenta.
 
 ## 7. Przykład
 Wejście: „agent pyta o wszystko — dopiszmy `Bash(git *)` i włączmy `--dangerously-skip-permissions` na laptopie”.

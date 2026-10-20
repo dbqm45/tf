@@ -1,8 +1,8 @@
 # Przegląd PR przez AI w CI — wzorzec operacyjny
 > przeglądzie względem planu · 6. Publikacja i bramka · 7. Pętla uczenia się · 8. Podział skilla przeglądu
 
-Kryteria przeglądu względem planu i triaż z człowiekiem: qa-change-review. Bezpieczeństwo workflow (uprawnienia,
-SHA akcji, `env:` zamiast interpolacji): ops-ci-cd. Ten plik opisuje, jak przegląd AI działa **jako krok CI**.
+Kryteria przeglądu względem planu i triaż z człowiekiem: skill przeglądu zmiany (pack-it: qa-change-review).
+Bezpieczeństwo workflow (uprawnienia, SHA akcji, `env:` zamiast interpolacji): skill CI/CD (pack-it: ops-ci-cd). Ten plik opisuje, jak przegląd AI działa **jako krok CI**.
 
 ## 1. Kiedy uruchamiać
 - Na zdarzenie, które coś znaczy: otwarcie i aktualizacja PR — nie „co godzinę na wszelki wypadek”.
@@ -35,7 +35,7 @@ SHA akcji, `env:` zamiast interpolacji): ops-ci-cd. Ten plik opisuje, jak przegl
 
 ## 4. Ustalenia
 Format, waga (krytyczne / ostrzeżenie / obserwacja), wpływ (niski / średni / wysoki), limit 10 ustaleń i zasada
-jednej poprawki — jak w qa-change-review („Ustalenie”). W CI dodatkowo: sekret znaleziony w kodzie opisujesz bez
+jednej poprawki — jak w skillu przeglądu zmiany (pack-it: qa-change-review, „Ustalenie”). W CI dodatkowo: sekret znaleziony w kodzie opisujesz bez
 wartości (`<UKRYTE: token pasujący do wzorca X>`), bo komentarz PR czyta każdy z dostępem do repo.
 
 ## 5. Wymiary przy przeglądzie względem planu
@@ -72,7 +72,7 @@ Plan definiuje, co znaczy „przetestowane”; nie oceniasz tego, czego plan nie
 - Komentarz zbiorczy: werdykt, tabela wymiarów, link do raportu (`blob/<SHA>/<ścieżka>`), najwyżej 5 ustaleń
   po jednej linii.
 - `claude-code-action`: limity i narzędzia podajesz w `claude_args` (np. `--model`, `--max-turns`, `--allowedTools`);
-  akcję przypinasz do pełnego SHA (ops-ci-cd). Szkielet workflow: `.claude/skills/ops-ci-cd/references/przyklady.md`, przykład 4.
+  akcję przypinasz do pełnego SHA. Szkielet workflow (pack-it): `.claude/skills/ops-ci-cd/references/przyklady.md`, przykład 4.
 
 ## 7. Pętla uczenia się
 Co miesiąc: gdzie człowiek tylko przyklepał werdykt AI (zmarnowana uwaga → można poluzować triaż), a gdzie błąd

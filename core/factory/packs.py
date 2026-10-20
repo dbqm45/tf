@@ -130,6 +130,8 @@ def compose(root: Path, cfg: dict) -> dict:
         for k, v in (p.get("skill_requires") or {}).items():
             cfg["skill_requires"][k] = _union(cfg["skill_requires"].get(k), v)
         cfg["standalone_skills"] = _union(cfg["standalone_skills"], p.get("standalone_skills"))
+        cfg["unversioned_skills"] = _union(cfg.get("unversioned_skills"), p.get("unversioned_skills"))
+        cfg.setdefault("reference_sections", {}).update(p.get("reference_sections") or {})
         for k in ("prefixes", "skills"):
             fresh[k].update((p.get("freshness") or {}).get(k) or {})
         name_only = _union(name_only, (p.get("skill_visibility") or {}).get("name_only_prefixes"))

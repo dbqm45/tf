@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Przygotowuje wydanie fabryki na bieżącej gałęzi: liczy następną wersję SemVer z Conventional Commits od ostatniego
-tagu vX.Y.Z, zapisuje ją w factory/VERSION i dopisuje wpis na górze factory/CHANGELOG.md. Nie commituje, nie taguje
+tagu vX.Y.Z, zapisuje ją w core/factory/VERSION i dopisuje wpis na górze core/factory/CHANGELOG.md. Nie commituje, nie taguje
 i nie pushuje: na main robi to workflow Release po każdym merge (`--ci`), commitując „chore(release): X.Y.Z”
 (docs/RELEASING.md). Wywołuj z katalogu głównego repozytorium.
 
@@ -20,8 +20,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import conventional as cc  # noqa: E402
 
-VERSION_FILE = Path("factory/VERSION")
-CHANGELOG = Path("factory/CHANGELOG.md")
+VERSION_FILE = Path("core/factory/VERSION")
+CHANGELOG = Path("core/factory/CHANGELOG.md")
 
 
 def git(*args: str) -> str:
@@ -49,7 +49,7 @@ def main(argv: list[str]) -> int:
         return fail(f"brak tagu vX.Y.Z — pierwszy (v{current}) tworzy workflow Release na main po merge")
     last = tags[-1]
     if last != current:
-        return fail(f"factory/VERSION ma {current}, ostatni tag to v{last} — najpierw wydaj v{current} (merge jego PR)")
+        return fail(f"core/factory/VERSION ma {current}, ostatni tag to v{last} — najpierw wydaj v{current} (merge jego PR)")
 
     messages = [m.strip() for m in git("log", "--format=%B%x00", f"v{last}..HEAD").split("\0") if m.strip()]
     kind = cc.bump_kind(messages)
@@ -80,8 +80,8 @@ def main(argv: list[str]) -> int:
         print(f"✓ Wersja {version} zapisana")
         return 0
     print(f"""✓ Wersja {version} zapisana. Dalej:
-  1. Przejrzyj factory/CHANGELOG.md (przeredaguj wpisy dla użytkowników, dodaj Changed/Deprecated, jeśli trzeba).
-  2. python3 factory/build.py check
+  1. Przejrzyj core/factory/CHANGELOG.md (przeredaguj wpisy dla użytkowników, dodaj Changed/Deprecated, jeśli trzeba).
+  2. python3 tools/workspace.py check
   3. git switch -c release/v{version} && git commit -am "chore(release): {version}"
   4. Push i PR „chore(release): {version}”. Po merge workflow Release taguje v{version}.""")
     return 0

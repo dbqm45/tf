@@ -29,6 +29,16 @@ skill_requires:
   fw-nextjs: [fw-react]
   tool-pytest: [lang-python]
 
+# Skille technologii bez śledzenia wersji (wymiar wersjonowany, ale język bez wydań do śledzenia).
+unversioned_skills: [lang-javascript]
+
+# Stałe sekcje plików referencyjnych (sprawdza `build.py check`): archetypy w stylu mappera.
+reference_sections:
+  ddd-archetypes:
+    skip: [layers.md]
+    sections: ["Test dopasowania", "Model (istota)", "Pytania", "Kroki mapowania", "Decyzje do kontroli (R/A/X)",
+               "Format wyniku", "Wzorce i pułapki", "Kontrola jakości", "Przykład (skrócony)"]
+
 # Dokładane personom i wykonawcom tej nakładki (do always_skills rdzenia).
 always_skills: [eng-design-principles]
 

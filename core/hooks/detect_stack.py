@@ -32,7 +32,20 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 HOOKS_DIR = Path(__file__).resolve().parent
 CLAUDE_DIR = HOOKS_DIR.parent
 SKILLS_DIR = CLAUDE_DIR / "skills"
-REGISTRY = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"
+REGISTRY = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"   # rdzeń (format, wpisy własne)
+PACKS_DIR = CLAUDE_DIR.parent / "factory" / "packs"    # nakładki dokładają rejestry: factory/packs/<id>/technologies.json
+
+
+def registry_entries() -> list[dict]:
+    """Technologie do wykrywania: rejestr rdzenia + rejestry zainstalowanych nakładek (ta sama technologia — pierwszy wpis)."""
+    out, seen = [], set()
+    files = [REGISTRY, *sorted(PACKS_DIR.glob("*/technologies.json"))] if PACKS_DIR.is_dir() else [REGISTRY]
+    for f in files:
+        for t in read_json(f).get("technologies", []):
+            if t.get("id") not in seen:
+                seen.add(t.get("id"))
+                out.append(t)
+    return out
 
 
 # ───────────── wersje ─────────────
@@ -245,7 +258,7 @@ def latest_npm(pkg: str) -> str | None:
 # ───────────── analiza ─────────────
 
 def analyze(root: Path, with_latest: bool = False) -> dict:
-    registry = read_json(REGISTRY).get("technologies", [])
+    registry = registry_entries()
     found = []
     for tech in registry:
         present, raw, source = detect(root, tech)

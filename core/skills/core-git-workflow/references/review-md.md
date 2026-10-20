@@ -32,7 +32,7 @@ Nie zatwierdzasz PR i nie oceniasz stylu, który pilnuje formatter. Pytania o wy
 ```
 
 Przegląd w GitHub Actions z werdyktem jako bramką: `przeglad-ai-w-ci.md`. Triaż ustaleń z macierzą waga × wpływ:
-qa-change-review.
+skill przeglądu zmiany (pack-it: qa-change-review).
 
 Po miesiącu: przejrzyj ustalenia (trafne / nietrafne), popraw zakres i przykłady w pliku, a zmianę `REVIEW.md` przejdź
 tak jak zmianę kodu — przez PR.

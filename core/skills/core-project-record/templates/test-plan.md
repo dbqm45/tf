@@ -18,7 +18,7 @@ inputs: [docs/project/03-requirements/requirements.md]
 |---|---|---|---|---|---|
 
 ## Przypadki testowe
-Oczekiwany wynik pochodzi ze źródła — nigdy z kodu (qa-spec-first-testing).
+Oczekiwany wynik pochodzi ze źródła — nigdy z kodu (pack-it: qa-spec-first-testing).
 | ID | Wymaganie | Technika | Warunki wstępne | Kroki / wejście | Oczekiwany wynik | Źródło wyniku | Poziom | Auto/ręczny | Priorytet |
 |---|---|---|---|---|---|---|---|---|---|
 
@@ -32,6 +32,6 @@ Oczekiwany wynik pochodzi ze źródła — nigdy z kodu (qa-spec-first-testing).
 
 ## Otwarte pytania
 ## Przekazanie
-- **Dla:** <persona>-qa-automation
+- **Dla:** <persona automatyzacji testów>
 - **Zadanie:** zautomatyzuj przypadki oznaczone „auto”, zaczynając od priorytetu H; najpierw czerwone
 - **Przeczytaj:** TL;DR, tabela przypadków

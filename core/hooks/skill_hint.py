@@ -102,13 +102,17 @@ def intent(prompt: str) -> str:
     return rest if len(stems(rest)) >= 2 else prompt
 
 
+REF_SKILLS = 150   # progi skalibrowano na ~150 skillach; mniejsza instalacja (rdzeń + 1 nakładka) liczy IDF jak przy 150,
+                   # inaczej wszystkie wyniki są niższe i nawet trafne podpowiedzi spadają pod MIN_SCORE
+
+
 def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
-    n = len(items) or 1
+    n = max(len(items), REF_SKILLS)
     df: dict[str, int] = {}
     for it in items:
         for t in it["head"] | it["body"]:
             df[t] = df.get(t, 0) + 1
-    avg = sum(len(it["body"]) for it in items) / n
+    avg = sum(len(it["body"]) for it in items) / (len(items) or 1)
     q = set(stems(intent(prompt)))
     scored = []
     for it in items:

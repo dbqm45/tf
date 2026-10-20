@@ -83,11 +83,12 @@ def hint_test() -> list[str]:
     """Polski prompt czytany przy cp1250 nie może się rozjechać (skill_hint dopasowuje rdzenie słów)."""
     with tempfile.TemporaryDirectory() as d:
         root = project(d)
-        prompt = "Podnieś zależności npm i zaktualizuj lockfile, Renovate czy Dependabot?"
+        # skill rdzenia — test działa bez nakładek; polskie znaki w poleceniu sprawdzają dekodowanie
+        prompt = "Jaki numer wersji nadać po usunięciu flagi z publicznego API — SemVer, podbicie major czy minor?"
         data = json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": prompt}, ensure_ascii=False).encode("utf-8")
         r, _ = run([".claude/hooks/skill_hint.py"], root, data)
         r_utf, _ = run([".claude/hooks/skill_hint.py"], root, data, {"PYTHONIOENCODING": "utf-8"})
-        if "ops-dependency-upgrades" not in r_utf.stdout.decode("utf-8", "replace"):
+        if "core-semver" not in r_utf.stdout.decode("utf-8", "replace"):
             return ["skill_hint: brak oczekiwanej podpowiedzi (test nieważny)"]
         if r.stdout != r_utf.stdout:
             return ["skill_hint daje inny wynik przy cp1250 niż przy UTF-8 (prompt źle zdekodowany)"]

@@ -3,7 +3,7 @@ name: core-git-workflow
 description: Użyj przy pracy z gitem — gałęzie, commity, pull requesty i ich przegląd (także AI), konflikty.
 metadata:
   przeglad: 2027-10-10
-  katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (ops-ci-cd)."
+  katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
   slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ochrona gałęzi, branch protection, konflikt, rebase, merge"
 ---
 
@@ -11,7 +11,7 @@ metadata:
 
 ## Gałęzie
 - Nazwa: `<typ>/<krótki-opis>` np. `feat/user-avatar`, `fix/login-redirect`, `chore/deps-bump`.
-- Gałęzie krótko żyjące (godziny–dni) i częsta integracja z główną (trunk-based, zob. eng-continuous-delivery).
+- Gałęzie krótko żyjące (godziny–dni) i częsta integracja z główną (trunk-based, zob. skill dostarczania, pack-it: eng-continuous-delivery).
 - Nigdy nie pracujesz bezpośrednio na `main`/`master`. Jeśli jesteś na nim — utwórz gałąź przed pierwszą zmianą.
 
 ## Commity
@@ -83,7 +83,7 @@ Odwołaj się do planu kroku i wymagań (`docs/project/`), żeby przeglądający
 - **Przegląd AI jako krok CI** (triaż ryzyka, kontrakt wyjścia, werdykt jako status commita, `[skip ci]` przy
   commitach bota, komentarze tylko na liniach diffu, deduplikacja): `references/przeglad-ai-w-ci.md`. Bramka
   blokująca żyje w workflow (krok po agencie czyta werdykt), nie w odpowiedzi modelu.
-- Przegląd zgodności z planem kroku i triaż ustaleń z człowiekiem: qa-change-review.
+- Przegląd zgodności z planem kroku i triaż ustaleń z człowiekiem: skill przeglądu zmiany (pack-it: qa-change-review).
 
 ## Konflikty
 Rozwiązuj, rozumiejąc obie strony — nigdy „weź wszystko moje”. Po rozwiązaniu uruchom testy.

@@ -3,7 +3,7 @@ name: core-grounding
 description: Użyj przy każdym twierdzeniu o faktach — sprawdzenie (plik, polecenie, źródło z datą), „nie wiem”, samosprawdzenie.
 metadata:
   przeglad: 2027-10-10
-  katalog: "Użyj przy każdej odpowiedzi, raporcie i artefakcie, które zawierają fakty o kodzie, wersjach, API, poleceniach, liczbach lub źródłach — klasy twierdzeń i sposób ich sprawdzenia, miejsca, w których modele najczęściej zmyślają, higiena kontekstu, samosprawdzenie i skrypt sprawdzający odwołania. Nie do procedury badania źródeł zewnętrznych (core-source-research) ani testów kodu (qa-spec-first-testing)."
+  katalog: "Użyj przy każdej odpowiedzi, raporcie i artefakcie, które zawierają fakty o kodzie, wersjach, API, poleceniach, liczbach lub źródłach — klasy twierdzeń i sposób ich sprawdzenia, miejsca, w których modele najczęściej zmyślają, higiena kontekstu, samosprawdzenie i skrypt sprawdzający odwołania. Nie do procedury badania źródeł zewnętrznych (core-source-research) ani testów kodu (skille testów, pack-it)."
   slowa: "wynik skryptu, liczba z narzędzia, przepisać liczbę z wyniku, halucynacje, zmyślanie, nie zgaduj, czy to prawda, kolega twierdzi, podobno istnieje, czy taka opcja istnieje, sprawdź fakty, źródło, pewność, wymyślona flaga, nieistniejące API, za długi kontekst, model się myli, weryfikacja odpowiedzi, liczby w raporcie, dokładnie N wywołań, tylko w jednym miejscu, ile razy wywoływana, zużyty kontekst, pamięć automatyczna"
 ---
 
@@ -35,7 +35,7 @@ Twierdzenia bez dowodu nie podajesz jako faktu. Do wyboru:
 - Gdy nie da się sprawdzić (brak dostępu, brak źródła, brak czasu), mówisz to wprost: czego nie wiesz i jak to
   ustalić. Wymyślona, ale wiarygodnie brzmiąca odpowiedź jest gorsza niż „nie wiem”.
 - Nie zgadujesz nazw: metod, endpointów, flag, kluczy konfiguracji, pakietów, plików, zmiennych środowiska.
-  Nieistniejąca nazwa pakietu to też ryzyko bezpieczeństwa (podszywające się paczki — ops-supply-chain-security).
+  Nieistniejąca nazwa pakietu to też ryzyko bezpieczeństwa (podszywające się paczki — skill łańcucha dostaw, pack-it: ops-supply-chain-security).
 - Pytanie zawiera fałszywe założenie (np. pyta o flagę, która nie istnieje)? Mówisz, że tego nie znalazłeś. Pokazujesz, gdzie szukałeś, i nie dopasowujesz odpowiedzi do pytania.
 
 ## 3. Miejsca, w których modele zmyślają najczęściej — sprawdzaj zawsze
@@ -64,7 +64,7 @@ Przy analizie długiego materiału (specyfikacja, logi, transkrypcja, regulamin)
 2. Dopiero na ich podstawie wyciągaj wnioski.
 3. Wniosek bez cytatu wycofaj albo oznacz jako założenie.
 
-Ten sam wzorzec stosuje ddd-discovery-intake (bank cytatów z kontrolą `evidence`).
+Ten sam wzorzec stosuje ddd-discovery-intake z pack-it (bank cytatów z kontrolą `evidence`).
 
 ## 5. Higiena kontekstu
 Jakość odpowiedzi spada, gdy kontekst się wypełnia, i gdy jest w nim dużo nieudanych prób.

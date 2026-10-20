@@ -60,7 +60,7 @@ ASK = [
      r"(LaunchAgents|LaunchDaemons|/etc/cron\.|/etc/systemd/|\.config/systemd/)",
      "trwałość: cron, usługa systemd lub LaunchAgent"),
     (r"\b(npm\s+(i|install|add)|pnpm\s+(add|i|install)|yarn\s+add|bun\s+add)\b(\s+-{1,2}[\w-]+(=\S+)?)*\s+[@\w][^\s;&|]*",
-     "dodanie lub zmiana zależności (ops-supply-chain-security)"),
+     "dodanie lub zmiana zależności (łańcuch dostaw)"),
     (r"\b(kubectl|helm|terraform|aws|gcloud|az)\b.*\b(prod|production|prd)\b", "polecenie dotyczące PRODUKCJI"),
 ]
 

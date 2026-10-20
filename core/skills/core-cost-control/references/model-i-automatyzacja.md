@@ -22,7 +22,7 @@ Zanim ją porównasz, sprawdź wszystkie trzy:
 2. Liczysz **koszt rozwiązanego zadania**: tokeny wejścia i wyjścia × liczba iteracji do zielonej weryfikacji +
    czas przeglądu człowieka. Tańszy token przy dwóch dodatkowych rundach poprawek to droższe zadanie.
 3. Dla agentów zbudowanych w kodzie (recenzent w CI, triaż) — macierz przypadków × modeli w zestawie ewaluacji
-   (eng-llm-features §8), także po zmianie harnessu przy tym samym modelu.
+   (pack-it: eng-llm-features §8), także po zmianie harnessu przy tym samym modelu.
 4. Zmianę domyślnego modelu zespołu zapisujesz z wynikiem testu (profil kosztów, `factory/config.yaml`), a nie
    z nagłówka ogłoszenia. Przegląd nowości co ok. 2 tygodnie wystarcza.
 
@@ -65,7 +65,7 @@ Uruchamianie z wiersza poleceń: `claude -p "<zadanie>" --max-budget-usd <kwota>
   kontrolny (core-project-record) → nowa sesja → plan i postęp → faza od początku. Dwie nieudane poprawki tego
   samego błędu to też sygnał do świeżego kontekstu (core-grounding).
 - **Szeroki skan repo:** inwentarz, historia gita, graf zależności zbiera skrypt lub CLI, a tani model streszcza
-  wynik; mocny model dostaje skondensowany raport i pogłębia jeden przepływ (eng-codebase-mapping).
+  wynik; mocny model dostaje skondensowany raport i pogłębia jeden przepływ (mapa kodu, pack-it: eng-codebase-mapping).
 
 ## 5. Przykład: decyzja o zmianie modelu
 **Sytuacja:** nowy model ma w publicznym rankingu o 5 punktów więcej; zespół chce przestawić go dla agentów w CI.

@@ -6,10 +6,10 @@ Dane do retrospektywy pracy agentów (skill core-agent-retro) — tylko bibliote
   python3 .claude/skills/core-agent-retro/scripts/retro_data.py --days 7
   python3 .claude/skills/core-agent-retro/scripts/retro_data.py --since 2026-10-01 --until 2026-10-17 --json
   ... --save                                    # zapisz docs/project/archive/retro/<RRRRMMDD --until>-retro.json
-  ... --decide "tier:ola-frontend:za niski=tak" # decyzja człowieka (tak | nie | później) w pliku z dnia --until
+  ... --decide "tier:<agent>:za niski=tak"     # decyzja człowieka (tak | nie | później) w pliku z dnia --until
   --root <katalog projektu> (domyślnie $CLAUDE_PROJECT_DIR albo bieżący)
 
-Pamięć: każdy dowód ma stabilny klucz (np. `hint-missed:fe-css`, `trap:vitest-trybie-watch-…`). Poprzednie pliki
+Pamięć: każdy dowód ma stabilny klucz (np. `hint-missed:<skill>`, `trap:vitest-trybie-watch-…`). Poprzednie pliki
 *-retro.json dają trend: powtórki, skutek zatwierdzonych zmian (zniknęło / wraca) i sygnały odrzucone wcześniej.
 Propozycje z danych mają jawne progi: tier ≥2 sygnały, przeoczony skill ≥2 sesje, szum podpowiedzi ≥3 sesje,
 powtórka pułapki lub poprawki → kandydat na regułę w CLAUDE.md.

@@ -24,5 +24,5 @@ inputs: [docs/project/01-discovery/brief.md]
 
 ## Otwarte pytania
 ## Przekazanie
-- **Dla:** solution-architect / autor wymagań
+- **Dla:** <architekt rozwiązania> / autor wymagań
 - **Przeczytaj:** TL;DR, Archetypy i klasy problemów

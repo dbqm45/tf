@@ -3,7 +3,7 @@ name: core-plan-interview
 description: Użyj przed działaniem, by przepytać plan, decyzję lub pomysł — drzewo decyzji, rundy pytań z rekomendacją.
 metadata:
   przeglad: 2027-10-09
-  katalog: "Użyj, gdy plan, decyzję lub pomysł trzeba przepytać przed działaniem — drzewo decyzji, rundy pytań z rekomendacją (tylko pytania niezależne od siebie), fakty sprawdzane samodzielnie, decyzje zostawione człowiekowi, koniec dopiero po potwierdzeniu wspólnego zrozumienia. Nie do warsztatu z ekspertami domeny (ddd-facilitation) ani doboru zespołu (core-problem-routing)."
+  katalog: "Użyj, gdy plan, decyzję lub pomysł trzeba przepytać przed działaniem — drzewo decyzji, rundy pytań z rekomendacją (tylko pytania niezależne od siebie), fakty sprawdzane samodzielnie, decyzje zostawione człowiekowi, koniec dopiero po potwierdzeniu wspólnego zrozumienia. Nie do warsztatu z ekspertami domeny (skill facylitacji, pack-it) ani doboru zespołu (core-problem-routing)."
   slowa: "przepytaj mnie, przesłuchaj plan, grilling, zadawaj pytania przed planem, pytania z rekomendacją, ranking opcji, którą opcję wybrać, raport z badania, agent sam odpowiada na pytania, agent zaczyna kodować bez zgody, zanim zaczniesz"
 argument-hint: "[plan, decyzja albo pomysł]"
 ---
@@ -37,13 +37,13 @@ traktujesz jak **drzewo decyzji**: każda decyzja ma decyzje od niej zależne.
    wcześniejszej decyzji — wtedy wracasz jawnie.
 6. Front pusty → podsumowanie ustaleń (decyzje, założenia, co zostało poza zakresem) i pytanie: „Czy tak to rozumiemy?”.
    Koniec dopiero po potwierdzeniu. **Bez potwierdzenia nie zaczynasz wdrażać.**
-7. Zapis: decyzje do artefaktu i `decisions.md` (core-project-record), pojęcia do słownika (ddd-facilitation), decyzja
-   spełniająca próg ADR → propozycja ADR (docs-tech-writing).
+7. Zapis: decyzje do artefaktu i `decisions.md` (core-project-record), pojęcia do słownika (pack-it: ddd-facilitation),
+   decyzja spełniająca próg ADR → propozycja ADR (skill dokumentacji, pack-docs).
 
 ## Ustawienia
 - Człowiek woli pojedyncze pytania (dostępność, preferencja) → jedno pytanie na raz; zapisz to w `CLAUDE.md` projektu.
 - Bez sztywnego limitu pytań — zakres decyduje (orientacyjne liczby: „Skalowanie przesłuchania”). Gdy człowiek jest niedostępny: przyjmij rekomendacje jako założenia
-  i wypisz je (bramki decyzyjne w ddd-facilitation).
+  i wypisz je (bramki decyzyjne w pack-it: ddd-facilitation).
 - Pytanie, na które odpowie tylko prototyp lub makieta — zaproponuj prototyp zamiast zgadywania.
 
 ## Skalowanie przesłuchania

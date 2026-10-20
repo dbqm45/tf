@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 _spec = importlib.util.spec_from_file_location(
-    "ctf_semver", ROOT / ".claude" / "skills" / "core-semver" / "scripts" / "semver.py")
+    "ctf_semver", ROOT / "core" / "skills" / "core-semver" / "scripts" / "semver.py")
 semver = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(semver)
 
@@ -125,7 +125,7 @@ SECTIONS = [("Breaking", lambda c: is_breaking(c["message"])),
 
 
 def changelog_entry(version: str, date: str, messages: list[str]) -> str:
-    """Wpis CHANGELOG (format factory/CHANGELOG.md) z commitów od ostatniego tagu; każdy commit trafia raz."""
+    """Wpis CHANGELOG (format core/factory/CHANGELOG.md) z commitów od ostatniego tagu; każdy commit trafia raz."""
     commits = [{"message": m, **h} for m in messages if (h := parse_header(first_line(m)))]
     out = [f"## [{version}] — {date}"]
     left = commits

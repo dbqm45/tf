@@ -2,8 +2,8 @@ name: release
 
 # Każdy merge do main, który wymaga nowej wersji (feat, fix, perf lub zmiana niezgodna od ostatniego tagu vX.Y.Z),
 # kończy się wydaniem bez ręcznych kroków (docs/RELEASING.md):
-#   1. prepare: `python3 scripts/release.py --ci` liczy wersję z Conventional Commits, zapisuje factory/VERSION
-#      i wpis factory/CHANGELOG.md; job commituje to jako "chore(release): X.Y.Z" na main. Wersję ustawioną
+#   1. prepare: `python3 scripts/release.py --ci` liczy wersję z Conventional Commits, zapisuje core/factory/VERSION
+#      i wpis core/factory/CHANGELOG.md; job commituje to jako "chore(release): X.Y.Z" na main. Wersję ustawioną
 #      ręcznie (zmergowany PR "chore(release)") bez tagu wydaje bez zmian.
 #   2. tag + github-release: tag z adnotacją vX.Y.Z na tym commicie i GitHub Release z wpisem CHANGELOG.
 on:
@@ -47,15 +47,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(tr -d '[:space:]' < factory/VERSION)
+          version=$(tr -d '[:space:]' < core/factory/VERSION)
           if ! git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
-            echo "factory/VERSION ma $version bez tagu (ustawione przez PR chore(release)) — wydaję bez zmian"
+            echo "core/factory/VERSION ma $version bez tagu (ustawione przez PR chore(release)) — wydaję bez zmian"
             exit 0
           fi
           python3 scripts/release.py --ci
           [ -z "$(git status --porcelain)" ] && exit 0
-          python3 factory/build.py check
-          version=$(tr -d '[:space:]' < factory/VERSION)
+          python3 tools/workspace.py check --packs all
+          version=$(tr -d '[:space:]' < core/factory/VERSION)
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -qam "chore(release): $version"
@@ -68,9 +68,9 @@ jobs:
 
       - id: read
         run: |
-          version=$(tr -d '[:space:]' < factory/VERSION)
+          version=$(tr -d '[:space:]' < core/factory/VERSION)
           echo "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' \
-            || { echo "::error::factory/VERSION '$version' to nie X.Y.Z"; exit 1; }
+            || { echo "::error::core/factory/VERSION '$version' to nie X.Y.Z"; exit 1; }
           if git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then new=false; else new=true; fi
           # Nowa wersja musi mieć wpis w CHANGELOG (notatki wydania), zanim cokolwiek zostanie otagowane.
           if [ "$new" = true ]; then python3 scripts/release_notes.py "$version" > /dev/null; fi

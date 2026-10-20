@@ -3,7 +3,7 @@ name: core-cost-control
 description: Użyj przy doborze modelu i koszcie — ocena trudności, kaskada haiku→sonnet→opus, effort, cache, kompaktowanie, pomiar.
 metadata:
   przeglad: 2027-10-09
-  katalog: "Użyj, gdy wybierasz model lub effort dla zadania albo wykonawcy, eskalujesz po nieudanej próbie, planujesz długą sesję, kompaktujesz kontekst albo analizujesz koszt i trafienia cache — rubryka trudności, kaskada modeli z parametrem model narzędzia Agent, profile kosztów, doradca (advisor), opusplan, reguły cache, kompaktowanie, raport kosztów. Nie do ograniczania halucynacji (core-grounding) ani wydajności samej aplikacji (be-database, qa-performance-testing)."
+  katalog: "Użyj, gdy wybierasz model lub effort dla zadania albo wykonawcy, eskalujesz po nieudanej próbie, planujesz długą sesję, kompaktujesz kontekst albo analizujesz koszt i trafienia cache — rubryka trudności, kaskada modeli z parametrem model narzędzia Agent, profile kosztów, doradca (advisor), opusplan, reguły cache, kompaktowanie, raport kosztów. Nie do ograniczania halucynacji (core-grounding) ani wydajności samej aplikacji (skille z pack-it)."
   slowa: "ile kosztowała praca agentów, koszt w złotówkach, koszt w PLN, statystyki kosztów, drogo czy tanio, koszt, tokeny, tańszy model, drogi model, haiku, sonnet, opus, effort, eskalacja, cache, kompaktowanie, compact, limit, rachunek, oszczędność, profil kosztów, doradca, advisor, opusplan, serwery MCP drogie, dryf kontekstu, przekręca nazwy plików, nowy model, ranking modeli, benchmark, domyślny model, koszt agenta w CI, fork czy subagent, agent teams"
 ---
 
@@ -148,14 +148,14 @@ Praktyka:
 - Porównujesz **koszt rozwiązanego zadania** (tokeny × iteracje + czas przeglądu), nie cenę tokena — tani model,
   który potrzebuje trzech rund poprawek, jest droższy.
 - Rozstrzyga własny test: 3–5 prawdziwych zadań projektu z tą samą weryfikacją (testy, build), dla agentów w kodzie —
-  zestaw ewaluacji (eng-llm-features §8). Przegląd nowości w modelach co ok. 2 tygodnie, nie codziennie.
+  zestaw ewaluacji (pack-it: eng-llm-features §8). Przegląd nowości w modelach co ok. 2 tygodnie, nie codziennie.
 Szczegóły i polecenie dla modelu rozumującego: `references/model-i-automatyzacja.md` §1.
 
 ## 9. Agenci w automatyzacji (CI, harmonogram, własny agent)
 - Uruchamiasz na zdarzenie, które ma znaczenie (PR, czerwony build, nowe zgłoszenie), nigdy „w kółko na wszelki
   wypadek” — koszt mnoży się przez liczbę zdarzeń.
 - Twardy limit na przebieg: liczba tur **i** budżet w dolarach (`claude -p … --max-budget-usd`, w SDK opcja budżetu;
-  nazwy: eng-llm-features). Agent-oceniacz bez narzędzi, 1–2 tury.
+  nazwy: eng-llm-features z pack-it). Agent-oceniacz bez narzędzi, 1–2 tury.
 - Model per rola: triaż i etykiety najtańszym; rozumowanie nad kodem średnim; drogi tylko dla ścieżek krytycznych.
 - Koszt z wyniku każdego przebiegu do tabeli lub dashboardu: per PR, per poziom triażu, per tydzień.
 - Kod firmy w automatyzacji → klucz API z sekretu, nie login subskrypcji dewelopera (inne warunki danych i rozliczenia).

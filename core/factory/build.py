@@ -5,7 +5,7 @@ Fabryka zespołów: rdzeń + nakładki (pack-*) → skille → role → persony 
   python3 factory/build.py            # zbuduj .claude/agents/_generated/ i .claude/catalog.md
   python3 factory/build.py check      # walidacja + wykrycie nieaktualnych plików (CI)
   python3 factory/build.py list       # podsumowanie zespołów
-  python3 factory/build.py new-skill fw-react "Użyj przy ... Nie do ..."
+  python3 factory/build.py new-skill fw-demo "Użyj przy ... Nie do ..."
 
 Źródłem prawdy są factory/config.yaml (rdzeń), factory/packs/<id>/ (nakładki) i własne pliki projektu
 w factory/{roles,personas,traits}/; składanie opisuje factory/packs.py. Plików w .claude/agents/_generated/
@@ -26,6 +26,9 @@ yaml = packs_mod.yaml
 FACTORY = ROOT / "factory"
 SKILLS_DIR = ROOT / ".claude" / "skills"
 OUT_DIR = ROOT / ".claude" / "agents" / "_generated"
+# Targety: narzędzia, dla których budujemy agentów (ustawienie `targets` projektu). Dziś tylko Claude Code; kolejny
+# target to osobny renderer i katalog wyjściowy (docs/todo.md).
+TARGETS = {"claude": OUT_DIR}
 
 KNOWN_TOOLS = {
     "Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill", "WebFetch",
@@ -48,7 +51,7 @@ def facet_of(skill: str, cfg: dict) -> dict:
 
 
 def expand_requires(names: list[str], cfg: dict) -> list[str]:
-    """Dokłada skille wymagane przez inne (np. fw-angular → lang-typescript), rekurencyjnie."""
+    """Dokłada skille wymagane przez inne (`skill_requires`, np. w pack-it: fw-angular → lang-typescript), rekurencyjnie."""
     out = list(dict.fromkeys(names))
     i = 0
     while i < len(out):
@@ -771,6 +774,8 @@ def validate() -> tuple[list[str], list[str]]:
     personas_raw = load_dir("personas")
     errors += cfg.get("_errors") or []
     errors += team_errors
+    errors += [f"target '{t}' nie jest obsługiwany (dostępne: {', '.join(TARGETS)})"
+               for t in cfg["_settings"]["targets"] if t not in TARGETS]
     for sub in ("roles", "personas"):
         warnings += packs_mod.load_items(ROOT, sub)[1]
     e, w = check_packs(cfg)
@@ -791,7 +796,7 @@ def validate() -> tuple[list[str], list[str]]:
                     warnings.append(f"skill {name}: słownik nie pokrywa pojęć: {', '.join(missing)}")
     versioned_prefixes = tuple(f["prefix"] for f in cfg["facets"] if f.get("versioned"))
     for name, s in skills.items():
-        if name.startswith(versioned_prefixes) and name != "lang-javascript":
+        if name.startswith(versioned_prefixes) and name not in cfg.get("unversioned_skills", []):
             meta_path = SKILLS_DIR / s["_dir"] / "skill.meta.json"
             if not meta_path.exists():
                 errors.append(f"skill {name}: brak skill.meta.json (based_on, min_supported, sources) — potrzebny do synchronizacji wersji")
@@ -805,8 +810,9 @@ def validate() -> tuple[list[str], list[str]]:
                     errors.append(f"skill {name}: skill.meta.json bez pola '{key}'")
             if "## Zależne od wersji" not in (SKILLS_DIR / s["_dir"] / "SKILL.md").read_text(encoding="utf-8"):
                 errors.append(f"skill {name}: brak sekcji „## Zależne od wersji” (co działa od której wersji)")
-    registry = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"
-    if registry.exists():
+    registries = [SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json",
+                  *sorted((FACTORY / "packs").glob("*/technologies.json"))]
+    for registry in (r for r in registries if r.exists()):
         for t in json.loads(registry.read_text(encoding="utf-8")).get("technologies", []):
             if not t["skill"].startswith(skill_prefixes(cfg)):
                 errors.append(f"technologies.json: skill '{t['skill']}' bez prefiksu wymiaru")
@@ -989,13 +995,13 @@ def validate() -> tuple[list[str], list[str]]:
             for x in p.get("extra_agents") or []:
                 if not any(k.endswith(f"/{x}.md") for k in rendered):
                     errors.append(f"persona {pname}: extra_agents wskazuje nieznanego agenta '{x}'")
-    # Archetypy w stylu mappera: stałe sekcje, w stałej kolejności (poza blokami kodu)
-    arch_dir = SKILLS_DIR / "ddd-archetypes" / "references"
-    required = ["Test dopasowania", "Model (istota)", "Pytania", "Kroki mapowania", "Decyzje do kontroli (R/A/X)",
-                "Format wyniku", "Wzorce i pułapki", "Kontrola jakości", "Przykład (skrócony)"]
-    if arch_dir.exists():
-        for f in sorted(arch_dir.glob("*.md")):
-            if f.name == "layers.md":
+    # Stałe sekcje plików referencyjnych w stałej kolejności (poza blokami kodu) — reguły dostarczają nakładki
+    # (`reference_sections` w pack.yaml, np. w pack-it: archetypy w stylu mappera).
+    for skill, rule in (cfg.get("reference_sections") or {}).items():
+        ref_dir = SKILLS_DIR / skill / "references"
+        required = rule.get("sections") or []
+        for f in sorted(ref_dir.glob("*.md")) if ref_dir.exists() else []:
+            if f.name in (rule.get("skip") or []):
                 continue
             heads, fence = [], False
             for ln in f.read_text(encoding="utf-8").splitlines():
@@ -1006,7 +1012,7 @@ def validate() -> tuple[list[str], list[str]]:
             found = [h for h in heads if h in required]
             if found != required:
                 missing = [h for h in required if h not in heads]
-                errors.append(f"ddd-archetypes/references/{f.name}: sekcje mappera "
+                errors.append(f"{skill}/references/{f.name}: stałe sekcje "
                               + (f"brakujące {missing}" if missing else "w złej kolejności"))
 
     # wersja fabryki wg SemVer 2.0.0 (factory/PUBLIC_API.md): VERSION, kolejność CHANGELOG, rodzaj podbicia od 1.35.0

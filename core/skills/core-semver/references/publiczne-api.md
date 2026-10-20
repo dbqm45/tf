@@ -39,7 +39,7 @@ albo zaczyna działać inaczej bez zmiany po stronie użytkownika.
 - Zmiana nazwy zmiennej albo nowa wymagana → MAJOR. Okres przejściowy ze starą nazwą jako aliasem pozwala na MINOR
   z wycofaniem.
 - Migracja bazy wymagająca działania operatora → MAJOR. Migracja automatyczna i zgodna wstecz → MINOR lub PATCH.
-- Zdarzenia i wiadomości: nowe pole opcjonalne → MINOR; usunięcie lub zmiana znaczenia → MAJOR (be-messaging-outbox,
+- Zdarzenia i wiadomości: nowe pole opcjonalne → MINOR; usunięcie lub zmiana znaczenia → MAJOR (pack-it: be-messaging-outbox,
   testy kontraktu).
 
 ## Moduł IaC i obraz kontenera

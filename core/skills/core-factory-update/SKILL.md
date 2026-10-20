@@ -1,9 +1,9 @@
 ---
 name: core-factory-update
-description: Użyj na polecenie człowieka przy aktualizacji claude-team-factory — nowa wersja, omówienie zmian, scalenie *.factory-new.
+description: Użyj na polecenie człowieka przy aktualizacji fabryki (rdzeń + nakładki) — tf update, nakładki i języki, omówienie zmian, scalenie *.factory-new.
 metadata:
   przeglad: 2027-10-17
-  katalog: "Użyj tylko na polecenie człowieka (`/core-factory-update`) — sprawdzenie i instalacja nowej wersji claude-team-factory w projekcie, omówienie zmian, scalenie plików *.factory-new z własnymi zmianami, kontrola po aktualizacji. Nie do tworzenia własnych skilli (`factory/build.py new-skill`) ani aktualizacji zależności projektu."
+  katalog: "Użyj tylko na polecenie człowieka (`/core-factory-update`) — sprawdzenie i instalacja nowej wersji fabryki (rdzeń + nakładki) w projekcie poleceniem tf lub factory/update.py, dodanie i usunięcie nakładki, zmiana języka pracy i commitów, tf doctor, omówienie zmian, scalenie plików *.factory-new z własnymi zmianami, kontrola po aktualizacji. Nie do tworzenia własnych skilli (`factory/build.py new-skill`) ani aktualizacji zależności projektu."
 argument-hint: "[źródło: katalog | plik .zip | URL repozytorium git]"
 disable-model-invocation: true
 ---
@@ -13,22 +13,43 @@ disable-model-invocation: true
 Wywołanie: `/core-factory-update` albo `/core-factory-update <źródło>`. Źródło zapamiętuje manifest `.claude/factory-manifest.json`,
 więc zwykle wystarczy samo polecenie.
 
+Fabryka = **rdzeń** (zawsze instalowany) + **nakładki** `pack-*` wybrane w projekcie (lista w manifeście; zainstalowane
+skille i persony: `.claude/catalog.md`). Aktualizacja obejmuje rdzeń i zainstalowane nakładki.
+
+## Polecenie `tf`
+Launcher instaluje się raz: `python3 factory/tf.py --install-launcher` (domyślnie do `~/.local/bin`). W katalogu projektu:
+
+| Polecenie | Co robi |
+|---|---|
+| `tf` / `tf update [opcje]` | aktualizacja — opcje idą do `factory/update.py` (`--check`, `--yes`, `--source`…; `--dry-run` = `--check`) |
+| `tf add <pack>…` / `tf remove <pack>…` | dodanie / usunięcie nakładki przez instalator; pliki usuniętej trafiają do `.claude/factory-backup/` |
+| `tf list` | zainstalowane nakładki i języki oraz nakładki dostępne w źródle |
+| `tf language <kod>` | język pracy (rozmowa, dokumentacja); `pl` doinstalowuje pack-editorial-pl; aktualizuje sekcję języka w `CLAUDE.md`/`CLAUDE.local.md` i przebudowuje agentów |
+| `tf commit-language <kod>` | język commit message, tytułów i opisów PR |
+| `tf doctor [--fix]` | kontrola instalacji: wersje rdzenia i nakładek, wymagane nakładki, nakładka języka, agenci, zmiany nazw; `--fix` stosuje zmiany nazw, przebudowuje nieaktualne pliki i dodaje brakujące nakładki |
+
+Bez launchera: `python3 factory/update.py` (te same opcje; nakładki i języki: `--add`, `--remove`, `--packs`,
+`--language`, `--commit-language`). Dodanie, usunięcie nakładki i zmiana języka zmieniają `.claude/` — tylko na prośbę
+człowieka, z planem (`--dry-run`) przed zmianą.
+
 ## Kroki
 1. **Sprawdź, co jest nowego:** `python3 factory/update.py --check` (z `--source <źródło>`, jeśli człowiek je podał).
    Brak `factory/update.py` lub manifestu = instalacja sprzed wersji 1.1.0: poproś człowieka o pierwszą aktualizację
-   z nowej fabryki, uruchomioną w katalogu projektu: `python3 "$CLAUDE_TEAM_FACTORY/factory/install.py"` (albo ścieżka
-   do `factory/install.py` nowej fabryki). Gdy zapamiętane źródło nie istnieje (fabryka przeniesiona), poproś
-   o `--source` albo o ustawienie `CLAUDE_TEAM_FACTORY`.
-2. **Streść człowiekowi po polsku** wersję zainstalowaną i dostępną oraz zmiany z „Co nowego” (3–8 punktów: nowe skille
-   i persony, zmiany w zachowaniu agentów, hookach i uprawnieniach). Zmiany w hookach i uprawnieniach wymień osobno —
+   z nowej fabryki, uruchomioną w katalogu projektu: `python3 "$TEAM_FACTORY/core/factory/install.py"` (albo ścieżka
+   do `core/factory/install.py` nowej fabryki). Gdy zapamiętane źródło nie istnieje (fabryka przeniesiona), poproś
+   o `--source` albo o ustawienie `TEAM_FACTORY`. Instalacja sprzed podziału na rdzeń i nakładki (manifest bez listy
+   nakładek) dostaje nakładki dobrane przez instalator — pokaż je człowiekowi w planie.
+2. **Streść człowiekowi po polsku** wersję zainstalowaną i dostępną oraz zmiany z „Co nowego” (3–8 punktów: nowe skille,
+   persony i nakładki, zmiany w zachowaniu agentów, hookach i uprawnieniach). Zmiany w hookach i uprawnieniach wymień osobno —
    to zmiany zabezpieczeń.
 3. **Pokaż plan:** `python3 factory/update.py --dry-run` i zapytaj o zgodę. Bez wyraźnego „tak” nic nie zmieniasz.
 4. **Zastosuj:** `python3 factory/update.py --yes`.
 5. **Pliki `*.factory-new`** (człowiek zmienił plik fabryki, nowa wersja leży obok): dla każdego pokaż różnice
    (`diff -u plik plik.factory-new`), zaproponuj scalenie zachowujące zmiany człowieka i nowe treści fabryki; po zgodzie
    zapisz wynik i usuń `*.factory-new`. Pliki w `.claude/hooks/` i `.claude/settings*.json` scalasz tylko za zgodą.
-6. **Kontrola:** wynik testów z `update.py`; jeśli są własne persony lub role — `python3 factory/build.py check`.
-7. **Raport:** wersja przed i po, nowe skille i persony, pliki scalone, ewentualne problemy. Przypomnij o ponownym
+6. **Kontrola:** wynik testów z `update.py`, `tf doctor` (bez `--fix`; naprawa za zgodą); jeśli są własne persony
+   lub role — `python3 factory/build.py check`.
+7. **Raport:** wersja przed i po, nakładki, nowe skille i persony, pliki scalone, ewentualne problemy. Przypomnij o ponownym
    uruchomieniu Claude Code, żeby wczytał nowe skille i agentów.
 
 ## Automatyczne aktualizacje (PATCH/MINOR)

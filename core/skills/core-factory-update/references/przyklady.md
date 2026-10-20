@@ -30,13 +30,13 @@ nie istnieje.
 
 **Jak:**
 1. Nie zgadujesz nowej lokalizacji i nie szukasz jej w treści stron ani issue — źródło podaje człowiek.
-2. Prosisz o ścieżkę (katalog, plik .zip albo URL repozytorium git) lub o ustawienie `CLAUDE_TEAM_FACTORY`.
+2. Prosisz o ścieżkę (katalog, plik .zip albo URL repozytorium git) lub o ustawienie `TEAM_FACTORY`.
 3. Po odpowiedzi: `python3 factory/update.py --check --source <podane źródło>` i dalej jak w przykładzie 1.
 
 **Wynik (pytanie do człowieka):**
 > Zapamiętane źródło fabryki `~/narzedzia/claude-team-factory` już nie istnieje. Skąd mam pobrać nową wersję?
 > Podaj katalog, plik .zip albo adres repozytorium git — użyję go z `--source` (zostanie zapamiętany w manifeście).
-> Możesz też raz ustawić w profilu powłoki `export CLAUDE_TEAM_FACTORY=<katalog fabryki>`.
+> Możesz też raz ustawić w profilu powłoki `export TEAM_FACTORY=<katalog fabryki>`.
 
 ## 3. Instalacja sprzed wersji 1.1.0
 **Sytuacja:** `/core-factory-update` w starym projekcie — nie ma `factory/update.py` ani
@@ -50,7 +50,7 @@ nie istnieje.
 **Wynik:**
 > Ten projekt ma fabrykę sprzed wersji 1.1.0 (brak `factory/update.py` i manifestu). Pierwszą aktualizację
 > uruchom w katalogu projektu instalatorem z nowej fabryki:
-> `python3 "$CLAUDE_TEAM_FACTORY/factory/install.py"` (albo pełna ścieżka do `factory/install.py`).
+> `python3 "$TEAM_FACTORY/core/factory/install.py"` (albo pełna ścieżka do `core/factory/install.py`).
 > Następne aktualizacje zrobię już poleceniem `/core-factory-update`.
 
 ## 4. Fabryka dla całego zespołu (wiele repozytoriów)

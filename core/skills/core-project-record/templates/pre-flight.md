@@ -27,5 +27,5 @@ inputs: []
 ## Otwarte pytania
 ## Przekazanie
 - **Dla:** <persona>
-- **Zadanie:** <intake materiałów (ddd-discovery-intake) albo praca taktyczna>
+- **Zadanie:** <intake materiałów (pack-it: ddd-discovery-intake) albo praca taktyczna>
 - **Przeczytaj:** TL;DR

@@ -31,5 +31,7 @@ Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na
   fabrykę bez nakładek. Napisać nowy, gdy będzie można ujawnić opis projektu.
 - Baza wiedzy z rejestrem źródeł (`dom-ev-knowledge-base`, w pack-ev) ma ogólny mechanizm (`kb.py`) i dane EV.
   Rozważyć przeniesienie mechanizmu do rdzenia, a rejestrów źródeł do nakładek.
-- Targety innych narzędzi niż Claude Code (Codex, Gemini CLI): warstwa `core/targets/` jest przygotowana, zaimplementowany
-  jest tylko target `claude`. Fakty o formatach innych narzędzi sprawdzić w dokumentacji przed implementacją.
+- Targety innych narzędzi niż Claude Code (Codex, Gemini CLI): `build.py` ma listę `TARGETS` i ustawienie projektu
+  `targets`, zaimplementowany jest tylko target `claude`. Kolejny target = renderer agentów i instrukcji (`AGENTS.md`,
+  `GEMINI.md`), mapa tierów na modele dostawcy i adaptery hooków. Fakty o formatach innych narzędzi sprawdzić
+  w dokumentacji przed implementacją.

@@ -88,10 +88,13 @@ def validate_file(path: Path) -> list[str]:
             errs.append(f"{where}: za krótki prompt")
         if s.get("expect") == "no-trigger" and not s.get("neighbor") and not manual:
             errs.append(f"{where}: scenariusz no-trigger wymaga pola neighbor (skill, do którego należy pytanie)")
+        # Skille z `accept` i sąsiad mogą należeć do niezainstalowanej nakładki — ściśle sprawdza je zestaw ze
+        # wszystkimi nakładkami (TF_EVALS_STRICT=1, ustawia tools/workspace.py check --packs all).
         for a in s.get("accept") or []:
-            if not (SKILLS / a / "SKILL.md").exists():
+            if not (SKILLS / a / "SKILL.md").exists() and os.environ.get("TF_EVALS_STRICT") == "1":
                 errs.append(f"{where}: accept wskazuje nieistniejący skill '{a}'")
-        if s.get("neighbor") and not (SKILLS / s["neighbor"] / "SKILL.md").exists() and s["neighbor"] != "brak":
+        if s.get("neighbor") and not (SKILLS / s["neighbor"] / "SKILL.md").exists() and s["neighbor"] != "brak" \
+                and os.environ.get("TF_EVALS_STRICT") == "1":
             errs.append(f"{where}: neighbor '{s['neighbor']}' nie istnieje")
         checks = s.get("checks") or {}
         if s.get("expect") == "trigger" and not checks.get("all"):

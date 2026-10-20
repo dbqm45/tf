@@ -58,6 +58,7 @@ Typowy przebieg: `jan-backend` w raporcie pisze „potrzebna decyzja: jak liczy�
 
 ### Inne narzędzia niż Claude Code
 
-Warstwa targetów (`core/targets/`) pozwoli kiedyś generować pliki dla innych narzędzi (np. Codex, Gemini CLI).
+Lista targetów w `core/factory/build.py` (`TARGETS`, ustawienie projektu `targets`) pozwoli kiedyś generować pliki
+dla innych narzędzi (np. Codex, Gemini CLI); dziś jest tylko target `claude`.
 Tam, gdzie narzędzie nie ma podagentów, konsultacje przechodzą w tryb zastępczy: persona wczytuje skille innej
 nakładki sama (pkt 3) albo korzysta z pliku pytań (pkt 4).

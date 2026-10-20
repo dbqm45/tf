@@ -3,7 +3,7 @@ name: core-conventional-commits
 description: Użyj przy commit message i tytule PR (Conventional Commits) — typy, zakres, BREAKING CHANGE, bump SemVer, changelog.
 metadata:
   przeglad: 2027-10-17
-  katalog: "Użyj przy pisaniu, przeglądzie i parsowaniu commit message oraz tytułów PR wg Conventional Commits 1.0.0 — typy, zakres, !, BREAKING CHANGE, stopki, revert, bump SemVer, changelog z historii (nx release). Nie do strategii gałęzi i PR (core-git-workflow) ani treści CHANGELOG pisanego ręcznie (docs-tech-writing)."
+  katalog: "Użyj przy pisaniu, przeglądzie i parsowaniu commit message oraz tytułów PR wg Conventional Commits 1.0.0 — typy, zakres, !, BREAKING CHANGE, stopki, revert, bump SemVer, changelog z historii (nx release). Nie do strategii gałęzi i PR (core-git-workflow) ani treści CHANGELOG pisanego ręcznie (skill dokumentacji, pack-docs)."
   slowa: "komunikat commita, commit message, wiadomość commita, opis commita, tytuł PR, BREAKING CHANGE, feat, fix, chore, commitlint, narzędzie do wydań, semantic-release, release-please"
 ---
 
@@ -60,7 +60,7 @@ metadata:
 | co najmniej jeden `feat` | MINOR |
 | `!` lub `BREAKING CHANGE` w dowolnym | MAJOR |
 
-`nx release` (tool-nx) wylicza wersję i changelog z historii (także per projekt, po zakresie/ścieżkach); podobnie
+`nx release` (pack-it: tool-nx) wylicza wersję i changelog z historii (także per projekt, po zakresie/ścieżkach); podobnie
 semantic-release, release-please. Walidacja: commitlint w hooku `commit-msg`. Dlatego format to **kontrakt**, nie estetyka.
 Numer liczy `python3 .claude/skills/core-semver/scripts/semver.py next`. Zasady SemVer (faza 0.y.z, wersje
 przedpremierowe, publiczne API, wycofywanie) opisuje core-semver.

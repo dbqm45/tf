@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sprawdza na żywo piaskownicę Bash Claude Code z szablonem fabryki (factory/templates/sandbox.settings.json)
+"""Sprawdza na żywo piaskownicę Bash Claude Code z szablonem fabryki (core/factory/templates/sandbox.settings.json)
 na tej maszynie — przede wszystkim na macOS (Seatbelt), gdzie fabryka nie ma własnego wyniku.
 
   python3 scripts/sandbox_check.py [--model haiku] [--budget 0.05] [--keep]
@@ -36,7 +36,7 @@ import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE = ROOT / "factory" / "templates" / "sandbox.settings.json"
+TEMPLATE = ROOT / "core" / "factory" / "templates" / "sandbox.settings.json"
 OUTSIDE_NAME = ".sandbox-check-outside.tmp"
 
 CHECKS = ("placeholders", "write_cwd", "write_root", "write_outside", "write_git", "git_config", "git_hooks",
