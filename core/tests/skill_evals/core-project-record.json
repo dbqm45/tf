@@ -1,0 +1,91 @@
+{
+  "skill": "core-project-record",
+  "scenarios": [
+    {
+      "id": "przerwanie-sesji",
+      "expect": "trigger",
+      "prompt": "Zaczynam refaktoryzację na kilka dni, a sesja z agentem może się urwać (limity, zamknięty terminal). Jak zapisywać stan pracy, żeby inna sesja mogła od razu wrócić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wip"
+          ],
+          [
+            "następn\\w+ czynno"
+          ],
+          [
+            "git status"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "przekazanie-pracy",
+      "expect": "trigger",
+      "prompt": "Muszę przekazać rozpoczętą pracę koledze, który użyje innego agenta CLI w innym katalogu. Jak przygotować plik przekazania? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "handoff|docs/project/exports"
+          ],
+          [
+            "założeni\\w* do weryfikacji|jak zostało sprawdzone|zweryfik"
+          ],
+          [
+            "sekret|token|zredag"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zrodlo-prawdy-jira",
+      "expect": "trigger",
+      "prompt": "Wymagania mamy w Jirze, a agenci zapisują artefakty w docs/project. Co ma być źródłem prawdy i jak to połączyć, żeby się nie rozjechało? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "źródł\\w* prawdy"
+          ],
+          [
+            "Jir"
+          ],
+          [
+            "link",
+            "odnośnik",
+            "powiąza",
+            "identyfikator"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "postep-planu-kroku",
+      "expect": "trigger",
+      "prompt": "Agent realizuje krok według zatwierdzonego planu w trzech fazach i commituje po każdej fazie. Jak zapisywać postęp w raporcie kroku w docs/project, żeby po przerwie następna sesja wiedziała, od czego zacząć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Postęp"
+          ],
+          [
+            "pierwsz\\w*.{0,30}(\\[ \\]|nieodhaczon|niezaznaczon|otwart)",
+            "następn\\w* krok\\w*.{0,40}\\[ \\]"
+          ],
+          [
+            "SHA"
+          ],
+          [
+            "numer\\w*.{0,60}(nie zmienia|nie przenumer|stał|luk)",
+            "przenumer"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "granice-kontekstow",
+      "expect": "no-trigger",
+      "prompt": "Jak wyznaczyć granice bounded contextów w domenie rezerwacji i podzielić ją na subdomeny?",
+      "neighbor": "ddd-strategic-analysis"
+    }
+  ]
+}

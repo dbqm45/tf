@@ -1,0 +1,100 @@
+{
+  "skill": "arch-privacy-compliance",
+  "scenarios": [
+    {
+      "id": "nowa-funkcja-dane",
+      "expect": "trigger",
+      "prompt": "Dodajemy do aplikacji rezerwacji sal zapisywanie numeru telefonu, historię rezerwacji i analitykę zachowań użytkowników. Co musimy zrobić pod kątem RODO, zanim zaczniemy kodować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "podstaw\\w* prawn",
+            "art\\.? 6"
+          ],
+          [
+            "minimaliz"
+          ],
+          [
+            "retencj",
+            "okres\\w* przechowywania",
+            "usuwa"
+          ],
+          [
+            "DPIA",
+            "ocen\\w* skutków"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wyciek-testowej-bazy",
+      "expect": "trigger",
+      "prompt": "Odkryliśmy, że testowa baza z prawdziwymi danymi klientów była publicznie dostępna przez tydzień. Jakie mamy obowiązki wobec UODO i klientów, w jakim czasie, i co zmienić w procesie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "72"
+          ],
+          [
+            "wysokie\\w* ryzyk",
+            "art\\.? 34",
+            "zawiadom\\w* (osob|klient)",
+            "poinformow\\w* (osob|klient)"
+          ],
+          [
+            "pseudonimiz",
+            "anonimiz",
+            "syntetyczn",
+            "dan\\w* testow"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "usuniecie-konta",
+      "expect": "trigger",
+      "prompt": "Użytkownik zażądał usunięcia konta i swoich danych. Dane są w bazie, w kopiach zapasowych, w logach i w zewnętrznym narzędziu do mailingu. Jak to obsłużyć zgodnie z RODO? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "miesiąc",
+            "30 dni"
+          ],
+          [
+            "kopi\\w* zapasow"
+          ],
+          [
+            "podmiot\\w* przetwarzając",
+            "procesor",
+            "art\\.? 28",
+            "dostawc"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "poziom-uslugi-dostawcy-ai",
+      "expect": "trigger",
+      "prompt": "Chcemy wysyłać treść zgłoszeń klientów (z danymi osobowymi) do modelu AI przez narzędzie zespołu. Co sprawdzić u dostawcy modelu pod kątem RODO? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "konsumenck|plan\\w* firmow|poziom\\w* usług|API"
+          ],
+          [
+            "trenow"
+          ],
+          [
+            "region|EOG|transfer|jurysdykc"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "hasla-argon2",
+      "expect": "no-trigger",
+      "neighbor": "be-auth-security",
+      "prompt": "Jak bezpiecznie przechowywać hasła użytkowników i jakie parametry Argon2id ustawić?"
+    }
+  ]
+}

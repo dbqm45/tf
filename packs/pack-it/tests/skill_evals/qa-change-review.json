@@ -1,0 +1,47 @@
+{
+  "skill": "qa-change-review",
+  "scenarios": [
+    {
+      "id": "przeglad-planu",
+      "expect": "trigger",
+      "prompt": "Agent przygotował plan kroku w docs/project/06-delivery/003-eksport.md: 4 fazy, 11 plików, kryteria w stanie końcowym. Zanim zacznie kodować, chcę sprawdzić, czy ten plan w ogóle zadziała. Jak przeprowadzić przegląd planu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["sprzeczn", "spójnoś", "bez fazy", "obietnic", "żadna faza"],
+          ["ścieżk\\w* (istnieją|z planu)", "istnien\\w* (plik|ścieżek)", "grep", "plik:linia", "ugruntow"],
+          ["gotowy", "do poprawy", "do przemyślenia", "werdykt"]
+        ]
+      }
+    },
+    {
+      "id": "implementacja-vs-plan",
+      "expect": "trigger",
+      "prompt": "Agent skończył implementację według planu kroku. W diffie widzę pliki, których w planie nie było, i chyba brakuje jednej zaplanowanej migracji. Jak systematycznie sprawdzić implementację względem planu przed scaleniem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["dryf", "nadmiar", "nieplanowan", "spoza planu"],
+          ["\\bBRAK\\b", "w planie,? (a )?bez", "w planie bez", "brakując"],
+          ["wpływ", "waga", "krytyczn"]
+        ]
+      }
+    },
+    {
+      "id": "triaz-ustalen",
+      "expect": "trigger",
+      "prompt": "Mam raport przeglądu zmiany z 9 ustaleniami: krytyczne, ostrzeżenia i obserwacje. Jak je przejść z agentem i zdecydować, co naprawić teraz, co pominąć, a co zapisać na później? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wpływ"],
+          ["napraw\\w* teraz", "akceptuj\\w* ryzyk", "pomiń", "odrzuć"],
+          ["lekcj"]
+        ]
+      }
+    },
+    {
+      "id": "konfiguracja-review-ci",
+      "expect": "no-trigger",
+      "neighbor": "core-git-workflow",
+      "prompt": "Jak skonfigurować claude-code-action w GitHub Actions i plik REVIEW.md, żeby Claude komentował każdy pull request, a scalał człowiek?"
+    }
+  ]
+}

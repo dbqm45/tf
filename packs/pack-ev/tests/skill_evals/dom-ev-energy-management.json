@@ -1,0 +1,60 @@
+{
+  "skill": "dom-ev-energy-management",
+  "scenarios": [
+    {
+      "id": "dlm-fazy-budynek",
+      "expect": "trigger",
+      "prompt": "Biuro ma przyłącze 3×80 A i licznik budynku, który podaje prąd z każdej fazy. Teraz budynek bierze L1 55 A, L2 30 A, L3 20 A. Do tego przyłącza mamy dwie trójfazowe ładowarki AC (po 32 A) i jedną jednofazową (32 A) na L3. Chcemy dynamiczny podział z rezerwą 5 A na fazę. Ile prądu dać każdej ładowarce? Odpowiedz zwięźle, z rachunkiem.",
+      "checks": {
+        "all": [
+          ["10 ?A"],
+          ["L1.{0,80}(najbardziej|najsłabsz|ogranicz|wąsk|binding|limit)|(najbardziej|najsłabsz|ogranicz|wąsk|binding).{0,80}L1"],
+          ["32 ?A"],
+          ["każd\\w* faz|per phase|na fazę|osobno|per-phase"]
+        ],
+        "none": ["suma[^.\\n]{0,40}(240|135) ?A[^.\\n]{0,40}(podziel|dziel|równo)"]
+      }
+    },
+    {
+      "id": "zajezdnia-edf-niespelnione",
+      "expect": "trigger",
+      "prompt": "Zajezdnia dostawczaków, przyłącze 3×63 A, 230 V. EVSE-1: 18:00–22:00, 30 kWh, max 32 A. EVSE-2: 18:00–04:00, 40 kWh, max 16 A. EVSE-3: 20:00–06:00, 50 kWh, max 32 A. EVSE-4: 18:00–20:00, 60 kWh, max 16 A. Wszystkie pojazdy trójfazowe. Czy da się naładować wszystkie pod limit przyłącza, którym kolejność i co zrobić z tym, który się nie uda? Mamy w repo przykład zajezdni.",
+      "checks": {
+        "all": [
+          ["22[.,]\\d* ?kWh|22 ?kWh"],
+          ["EDF|najwcześniejsz\\w* odjazd|earliest[- ]deadline|termin\\w* odjazdu"],
+          ["EVSE-4.{0,120}(niespełnion|nie zdąży|nie dostanie|nie naładuj|not met|shortfall)|(niespełnion|nie zdąży|nie dostanie|nie naładuj|not met|shortfall).{0,120}EVSE-4"],
+          ["dyspozytor|operator floty|fleet|zgłoś|powiadom|zaplanuj inaczej|przesuń"],
+          ["depot\\.py"]
+        ],
+        "none": ["wszystkie (cztery |4 )?pojazdy (zostaną|zdążą|będą) (w pełni )?(naładowan|spełnion)"]
+      }
+    },
+    {
+      "id": "offline-pv-bess-fail-safe",
+      "expect": "trigger",
+      "prompt": "Parking firmowy z PV 40 kWp i magazynem 60 kWh za licznikiem, kilkanaście ładowarek OCPP 1.6, CSMS w chmurze. W nocy zniknęło łącze z chmurą i ładowarki zostały z ostatnim limitem, rano zadziałał zabezpieczenie przyłącza. Gdzie powinno liczyć się rozdzielanie mocy i co ma robić stacja, gdy straci kontakt z kontrolerem albo pomiar?",
+      "checks": {
+        "all": [
+          ["lokaln\\w* (kontroler|controller|EMS|sterownik)|local (energy )?(controller|manager)|site controller"],
+          ["fail-?safe|bezpieczn\\w* limit|safe limit|limit awaryjn"],
+          ["TxDefaultProfile|ChargePointMaxProfile|ChargingStationMaxProfile"],
+          ["brak pomiaru|utrat\\w* pomiar|pomiar\\w* (nie |zanik)|stale|nieaktualn|watchdog|timeout"]
+        ],
+        "none": ["ostatni limit (wystarczy|jest bezpieczny|zostaje)"]
+      }
+    },
+    {
+      "id": "profil-stack-level",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-smart-charging",
+      "prompt": "Mam dwa profile na tym samym EVSE: TxDefaultProfile ze stackLevel 0 i TxProfile ze stackLevel 1, a do tego Recurring Daily. Który wygra i jak to sprawdzić przez GetCompositeSchedule? Chcę zrozumieć, jak ładowarka składa harmonogram z profili OCPP 1.6."
+    },
+    {
+      "id": "taryfa-kierowcy-ocpi",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-tariffs-pricing",
+      "prompt": "Chcę w OCPI 2.2.1 zapisać taryfę dla kierowcy: 0,60 EUR/kWh w dzień i 0,40 EUR/kWh od 22:00, z opłatą za postój po 30 minutach. Jak ułożyć TariffElement i restrykcje, żeby kalkulator wyliczył to samo co CDR?"
+    }
+  ]
+}

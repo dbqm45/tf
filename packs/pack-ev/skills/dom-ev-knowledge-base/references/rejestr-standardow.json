@@ -1,0 +1,806 @@
+{
+ "przeglad_miesiecy": 6,
+ "uwagi": "Dane z bazy wiedzy (.claude/knowledge/<id>/doc.txt, pobrane 2026-10-20); każda data ma w polu zrodlo plik i linię, a daty spoza bazy są oznaczone do_weryfikacji.",
+ "wpisy": [
+  {
+   "id": "ocpp-1.6",
+   "nazwa": "OCPP 1.6 (JSON, 1.6J)",
+   "rodzaj": "specyfikacja",
+   "rynek": "global",
+   "wersja": "1.6J (edycja nieustalona)",
+   "status": "obowiązuje",
+   "zrodlo": "kb:oca-ocpp",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-csms-migration",
+    "dom-ev-glossary",
+    "dom-ev-metering-calibration",
+    "dom-ev-ocpp-16",
+    "dom-ev-ocpp-2x",
+    "dom-ev-smart-charging"
+   ],
+   "daty": [
+    {
+     "co": "data wydania / edycja errata",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "do_weryfikacji": true,
+   "uwagi": "Specyfikacja OCA nie jest w bazie (pobranie po rejestracji, licencja ogranicza redystrybucję). NEVI wymaga OCPP 1.6J lub wyższego (us-nevi doc.txt L168). Status i edycja niezweryfikowane. Nie ma w bazie: sprawdzono = data wpisu, nie weryfikacji."
+  },
+  {
+   "id": "ocpp-2.0.1",
+   "nazwa": "OCPP 2.0.1",
+   "rodzaj": "specyfikacja",
+   "rynek": "global",
+   "wersja": "2.0.1 Edition 3 (wersja wg skilla dom-ev-charging, [do weryfikacji])",
+   "status": "obowiązuje",
+   "zrodlo": "kb:oca-ocpp",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-csms-migration",
+    "dom-ev-glossary",
+    "dom-ev-iso15118",
+    "dom-ev-metering-calibration",
+    "dom-ev-ocpp-2x",
+    "dom-ev-v2x"
+   ],
+   "daty": [
+    {
+     "co": "termin NEVI: ładowarki zgodne z OCPP 2.0.1",
+     "data": "2024-02-28",
+     "zrodlo": "us-nevi doc.txt L168"
+    },
+    {
+     "co": "data wydania edycji",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "do_weryfikacji": true,
+   "uwagi": "Specyfikacja OCA nie jest w bazie; edycja z dom-ev-charging/references/ocpp.md L32, możliwa nowsza (Edition 4) wg dom-ev-ocpp-2x [niepotwierdzone]. Nie ma w bazie: sprawdzono = data wpisu, nie weryfikacji."
+  },
+  {
+   "id": "ocpp-2.1",
+   "nazwa": "OCPP 2.1",
+   "rodzaj": "specyfikacja",
+   "rynek": "global",
+   "wersja": "2.1 (wersja wg skilla dom-ev-ocpp-2x, [do weryfikacji])",
+   "status": "obowiązuje",
+   "zrodlo": "kb:oca-ocpp",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-iso15118",
+    "dom-ev-ocpp-2x",
+    "dom-ev-v2x"
+   ],
+   "daty": [
+    {
+     "co": "data wydania 2.1",
+     "data": null,
+     "do_weryfikacji": true
+    },
+    {
+     "co": "publikacja jako IEC 63584-210",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "do_weryfikacji": true,
+   "uwagi": "OCPP 2.1 nie jest w bazie. Skill dom-ev-ocpp-2x podaje wydanie w styczniu 2025 i IEC 63584-210:2025 z 2025-12-09 jako źródło wtórne [do weryfikacji] — nie przepisuję jako faktu. Nie ma w bazie: sprawdzono = data wpisu, nie weryfikacji."
+  },
+  {
+   "id": "ocpi-2.2.1-d2",
+   "nazwa": "OCPI 2.2.1 (wydanie d2)",
+   "rodzaj": "specyfikacja",
+   "rynek": "global",
+   "wersja": "2.2.1-d2",
+   "status": "obowiązuje",
+   "zrodlo": "kb:ocpi-2.2.1-d2",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-asset-operations",
+    "dom-ev-cdr-settlement",
+    "dom-ev-ocpi",
+    "dom-ev-oicp-hubs",
+    "dom-ev-regulations-us",
+    "dom-ev-tariffs-pricing"
+   ],
+   "daty": [
+    {
+     "co": "termin NEVI: komunikacja sieć–sieć wg OCPI 2.2.1",
+     "data": "2024-02-28",
+     "zrodlo": "us-nevi doc.txt L170"
+    },
+    {
+     "co": "data wydania tagu v2.2.1-d2",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "uwagi": "Wersja wg tytułu i tagu źródła w bazie (ocpi-2.2.1-d2); data wydania tagu nie występuje w pobranym tekście."
+  },
+  {
+   "id": "ocpi-2.3.0",
+   "nazwa": "OCPI 2.3.0",
+   "rodzaj": "specyfikacja",
+   "rynek": "global",
+   "wersja": "2.3.0",
+   "status": "obowiązuje",
+   "zrodlo": "kb:ocpi-2.3.0",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-emsp-platform",
+    "dom-ev-ocpi",
+    "dom-ev-payments",
+    "dom-ev-site-development"
+   ],
+   "daty": [
+    {
+     "co": "data wydania 2.3.0",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "uwagi": "Wersja wg tytułu i tagu źródła w bazie (moduł Payments); data wydania nie występuje w pobranym tekście."
+  },
+  {
+   "id": "oicp-2.3",
+   "nazwa": "OICP 2.3 (Hubject)",
+   "rodzaj": "specyfikacja",
+   "rynek": "global",
+   "wersja": "2.3",
+   "status": "obowiązuje",
+   "zrodlo": "kb:oicp",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-charging",
+    "dom-ev-ocpi",
+    "dom-ev-oicp-hubs",
+    "dom-ev-payments"
+   ],
+   "daty": [
+    {
+     "co": "data wydania 2.3 / wycofanie 2.1",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "uwagi": "Wersja wg tytułu źródła w bazie. Notatka w zrodla.json o wycofaniu OICP 2.1 (2023-04-13) pochodzi z README repozytorium, nie z doc.txt — daty nie przepisuję."
+  },
+  {
+   "id": "ocmf",
+   "nazwa": "OCMF — Open Charge Metering Format",
+   "rodzaj": "specyfikacja",
+   "rynek": "global",
+   "wersja": "dokument 1.4.1 (format OCMF 1.4)",
+   "status": "obowiązuje",
+   "zrodlo": "kb:ocmf",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-cdr-settlement",
+    "dom-ev-certification-testing",
+    "dom-ev-charger-hardware",
+    "dom-ev-charging",
+    "dom-ev-metering-calibration",
+    "dom-ev-security"
+   ],
+   "daty": [
+    {
+     "co": "rewizja dokumentu 1.4.1",
+     "data": "2025-01-15",
+     "zrodlo": "ocmf doc.txt L24"
+    }
+   ],
+   "uwagi": "Wersja i data z tabeli rewizji w OCMF-en.md; czy jest to najnowsza rewizja — nie sprawdzono poza tekstem w bazie."
+  },
+  {
+   "id": "iso-15118-2",
+   "nazwa": "ISO 15118-2 (komunikacja pojazd–ładowarka, warstwa aplikacji)",
+   "rodzaj": "norma",
+   "rynek": "global",
+   "wersja": "EN ISO 15118-2:2016 (wg AFIR zał. II)",
+   "status": "obowiązuje",
+   "zrodlo": "https://www.iso.org/",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-charger-hardware",
+    "dom-ev-charging",
+    "dom-ev-iso15118",
+    "dom-ev-regulations-eu",
+    "dom-ev-v2x",
+    "dom-ev-vehicle-battery"
+   ],
+   "daty": [
+    {
+     "co": "AFIR zał. II 2.1.1: stacje publiczne nowe lub odnowione zgodne z EN ISO 15118-1..4",
+     "data": "2026-01-08",
+     "zrodlo": "eu-afir doc.txt L2795"
+    },
+    {
+     "co": "AFIR zał. II 2.1.2: Plug & Charge wymaga zgodności z -2:2016 i -20:2022",
+     "data": "2027-01-01",
+     "zrodlo": "eu-afir doc.txt L2825"
+    }
+   ],
+   "uwagi": "Wersja EN ISO 15118-2:2016 wskazana w tekście AFIR (eu-afir doc.txt L2803, L2830). Norma płatna, nie ma jej w bazie; bieżąca edycja ISO niezweryfikowana. NEVI wymaga sprzętu zdolnego do -2 i -20 (us-nevi doc.txt L166)."
+  },
+  {
+   "id": "iso-15118-20",
+   "nazwa": "ISO 15118-20 (2. generacja, BPT/V2G)",
+   "rodzaj": "norma",
+   "rynek": "global",
+   "wersja": "ISO 15118-20:2022 (EN ISO 15118-20:2022 wg AFIR zał. II)",
+   "status": "obowiązuje",
+   "zrodlo": "kb:iso-15118-20",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-iso15118",
+    "dom-ev-regulations-eu",
+    "dom-ev-v2x",
+    "dom-ev-vehicle-battery"
+   ],
+   "daty": [
+    {
+     "co": "AFIR zał. II 2.1.2: Plug & Charge — zgodność z EN ISO 15118-20:2022 (stacje publiczne nowe i odnowione)",
+     "data": "2027-01-01",
+     "zrodlo": "eu-afir doc.txt L2825"
+    },
+    {
+     "co": "AFIR zał. II 2.1.3: punkty prywatne nowe lub odnowione — EN ISO 15118-20:2022",
+     "data": "2027-01-01",
+     "zrodlo": "eu-afir doc.txt L2837"
+    }
+   ],
+   "uwagi": "Rok 2022 potwierdza tekst AFIR (eu-afir doc.txt L2825) i skill dom-ev-iso15118; sama norma płatna, nie ma jej w bazie (tylko karta)."
+  },
+  {
+   "id": "din-70121",
+   "nazwa": "DIN 70121 (DIN SPEC 70121)",
+   "rodzaj": "norma",
+   "rynek": "EU",
+   "wersja": "edycja nieustalona",
+   "status": "obowiązuje",
+   "zrodlo": "https://www.din.de/",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-certification-testing",
+    "dom-ev-charger-hardware",
+    "dom-ev-charging",
+    "dom-ev-iso15118",
+    "dom-ev-vehicle-battery"
+   ],
+   "daty": [
+    {
+     "co": "data wydania / wycofania edycji",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "do_weryfikacji": true,
+   "uwagi": "DIN 70121 nie jest w bazie (norma płatna); implementacja w Josev (kb:josev-iso15118) nie wskazuje edycji. Status i edycja niezweryfikowane. Nie ma w bazie: sprawdzono = data wpisu, nie weryfikacji."
+  },
+  {
+   "id": "iec-61851-1",
+   "nazwa": "IEC 61851-1 (ładowanie przewodowe, wymagania ogólne)",
+   "rodzaj": "norma",
+   "rynek": "global",
+   "wersja": "EN IEC 61851-1:2019 (wg AFIR zał. II)",
+   "status": "obowiązuje",
+   "zrodlo": "kb:iec-61851-1",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-charger-hardware",
+    "dom-ev-glossary",
+    "dom-ev-v2x"
+   ],
+   "daty": [
+    {
+     "co": "AFIR zał. II 2.1.3: punkty prywatne nowe lub odnowione — EN IEC 61851-1:2019 (Mode 2)",
+     "data": "2027-01-01",
+     "zrodlo": "eu-afir doc.txt L2837"
+    }
+   ],
+   "do_weryfikacji": true,
+   "uwagi": "Edycja 2019 wg tekstu AFIR (L2841); czy to bieżąca edycja IEC — niezweryfikowane (norma płatna, w bazie tylko karta)."
+  },
+  {
+   "id": "iec-62196",
+   "nazwa": "IEC 62196 (wtyczki i gniazda; części 2 i 3)",
+   "rodzaj": "norma",
+   "rynek": "global",
+   "wersja": "IEC 62196-2:2022 i 62196-3:2022 (EN IEC wg AFIR zał. II)",
+   "status": "obowiązuje",
+   "zrodlo": "https://webstore.iec.ch/",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-charger-hardware"
+   ],
+   "daty": [
+    {
+     "co": "AFIR zał. II 1.x: AC Type 2 wg EN IEC 62196-2:2022, DC wg 62196-3:2022 (stacje nowe lub odnowione)",
+     "data": "2026-01-08",
+     "zrodlo": "eu-afir doc.txt L2536"
+    }
+   ],
+   "uwagi": "Lata wydań z tekstu AFIR (eu-afir doc.txt L2539, L2553) i skilla dom-ev-charger-hardware; norma płatna, nie ma jej w bazie."
+  },
+  {
+   "id": "sae-j1772",
+   "nazwa": "SAE J1772 (złącze AC Type 1)",
+   "rodzaj": "norma",
+   "rynek": "US",
+   "wersja": "rewizja nieustalona",
+   "status": "obowiązuje",
+   "zrodlo": "https://www.sae.org/",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-charger-hardware",
+    "dom-ev-regulations-us"
+   ],
+   "daty": [
+    {
+     "co": "data rewizji",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "do_weryfikacji": true,
+   "uwagi": "Norma SAE płatna, nie ma jej w bazie. NEVI wymaga złączy J1772 (skill dom-ev-regulations-us). Rewizja i status niezweryfikowane. Nie ma w bazie: sprawdzono = data wpisu, nie weryfikacji."
+  },
+  {
+   "id": "sae-j3400",
+   "nazwa": "SAE J3400 (NACS)",
+   "rodzaj": "norma",
+   "rynek": "US",
+   "wersja": "J3400_202409 (wersja wg skilla dom-ev-charger-hardware, [do weryfikacji])",
+   "status": "obowiązuje",
+   "zrodlo": "kb:sae-j3400",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-charger-hardware",
+    "dom-ev-regulations-us"
+   ],
+   "daty": [
+    {
+     "co": "data TIR (wg skilla 2023-12-18)",
+     "data": null,
+     "do_weryfikacji": true
+    },
+    {
+     "co": "data Recommended Practice (wg skilla 2024-09-30)",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "do_weryfikacji": true,
+   "uwagi": "Daty TIR 2023-12-18 i RP 2024-09-30 pochodzą ze źródeł wtórnych w skillu dom-ev-charger-hardware (L91), strona SAE była niedostępna — nie wpisuję ich jako faktu. J3400 nie występuje w 23 CFR 680. Nie ma w bazie: sprawdzono = data wpisu, nie weryfikacji."
+  },
+  {
+   "id": "eu-afir",
+   "nazwa": "AFIR — rozporządzenie (UE) 2023/1804",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2023/1804, wersja skonsolidowana 08.01.2026",
+   "status": "obowiązuje",
+   "zrodlo": "kb:eu-afir",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-payments",
+    "dom-ev-regulations-eu",
+    "dom-ev-regulations-pl",
+    "dom-ev-site-development",
+    "dom-ev-smart-charging",
+    "dom-ev-tariffs-pricing"
+   ],
+   "daty": [
+    {
+     "co": "początek stosowania",
+     "data": "2024-04-13",
+     "zrodlo": "eu-afir doc.txt L2374"
+    },
+    {
+     "co": "zał. II: wymogi techniczne dla punktów nowych lub odnowionych",
+     "data": "2026-01-08",
+     "zrodlo": "eu-afir doc.txt L2536"
+    },
+    {
+     "co": "czytnik kart/urządzenie bezstykowe także dla starszych punktów ≥ 50 kW na TEN-T i parkingach bezpiecznych",
+     "data": "2027-01-01",
+     "zrodlo": "eu-afir doc.txt L945"
+    },
+    {
+     "co": "zał. II: ISO 15118-20 i 61851-1 dla nowych/odnowionych punktów",
+     "data": "2027-01-01",
+     "zrodlo": "eu-afir doc.txt L2825"
+    },
+    {
+     "co": "art. 3: kamień milowy mocy puli ładowania (600 kW)",
+     "data": "2027-12-31",
+     "zrodlo": "eu-afir doc.txt L581"
+    },
+    {
+     "co": "art. 3: cele mocy i zasięgu na TEN-T (stan 2030)",
+     "data": "2030-12-31",
+     "zrodlo": "eu-afir doc.txt L600"
+    }
+   ],
+   "uwagi": "Wersja skonsolidowana EN; wykonanie art. 5 i zał. II opisuje skill dom-ev-regulations-eu."
+  },
+  {
+   "id": "eu-nis2",
+   "nazwa": "NIS2 — dyrektywa (UE) 2022/2555",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2022/2555",
+   "status": "obowiązuje",
+   "zrodlo": "kb:eu-nis2",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-regulations-eu",
+    "dom-ev-security"
+   ],
+   "daty": [
+    {
+     "co": "termin transpozycji",
+     "data": "2024-10-17",
+     "zrodlo": "eu-nis2 doc.txt L4113"
+    },
+    {
+     "co": "stosowanie środków krajowych",
+     "data": "2024-10-18",
+     "zrodlo": "eu-nis2 doc.txt L4116"
+    },
+    {
+     "co": "lista podmiotów kluczowych i ważnych w państwach członkowskich",
+     "data": "2025-04-17",
+     "zrodlo": "eu-nis2 doc.txt L2036"
+    }
+   ],
+   "uwagi": "Stan transpozycji w Polsce nie jest w bazie — sprawdź w dom-ev-regulations-pl [do weryfikacji]."
+  },
+  {
+   "id": "eu-cra",
+   "nazwa": "Cyber Resilience Act — rozporządzenie (UE) 2024/2847",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2024/2847",
+   "status": "obowiązuje",
+   "zrodlo": "kb:eu-cra",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-certification-testing",
+    "dom-ev-regulations-eu",
+    "dom-ev-security"
+   ],
+   "daty": [
+    {
+     "co": "rozdział IV (notyfikacja jednostek oceniających zgodność) stosuje się",
+     "data": "2026-06-11",
+     "zrodlo": "eu-cra doc.txt L4532"
+    },
+    {
+     "co": "art. 14: zgłaszanie aktywnie wykorzystywanych podatności i poważnych incydentów",
+     "data": "2026-09-11",
+     "zrodlo": "eu-cra doc.txt L4532"
+    },
+    {
+     "co": "pełne stosowanie rozporządzenia",
+     "data": "2027-12-11",
+     "zrodlo": "eu-cra doc.txt L4531"
+    }
+   ],
+   "uwagi": "Tekst PL w bazie."
+  },
+  {
+   "id": "eu-data-act",
+   "nazwa": "Data Act — rozporządzenie (UE) 2023/2854",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2023/2854",
+   "status": "obowiązuje",
+   "zrodlo": "kb:eu-data-act",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-csms-migration",
+    "dom-ev-regulations-eu",
+    "dom-ev-security"
+   ],
+   "daty": [
+    {
+     "co": "początek stosowania",
+     "data": "2025-09-12",
+     "zrodlo": "eu-data-act doc.txt L4697"
+    },
+    {
+     "co": "art. 3 ust. 1 (dostęp z projektu) dla produktów wprowadzonych po tej dacie",
+     "data": "2026-09-12",
+     "zrodlo": "eu-data-act doc.txt L4700"
+    },
+    {
+     "co": "rozdział IV dla umów sprzed 2025-09-12 (czas nieokreślony lub ≥ 10 lat od 2024-01-11)",
+     "data": "2027-09-12",
+     "zrodlo": "eu-data-act doc.txt L4707"
+    }
+   ]
+  },
+  {
+   "id": "eu-epbd",
+   "nazwa": "EPBD — dyrektywa (UE) 2024/1275",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2024/1275, wersja skonsolidowana 24.05.2026",
+   "status": "obowiązuje",
+   "zrodlo": "kb:eu-epbd",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-energy-management",
+    "dom-ev-fleet-charging",
+    "dom-ev-regulations-eu"
+   ],
+   "daty": [
+    {
+     "co": "termin transpozycji (art. 1–3, 5–29, 32)",
+     "data": "2026-05-29",
+     "zrodlo": "eu-epbd doc.txt L3200"
+    },
+    {
+     "co": "stosowanie art. 30, 31, 33, 34",
+     "data": "2026-05-30",
+     "zrodlo": "eu-epbd doc.txt L3237"
+    }
+   ],
+   "uwagi": "Stan transpozycji w Polsce nie jest w bazie [do weryfikacji]."
+  },
+  {
+   "id": "eu-red-iii",
+   "nazwa": "RED III — dyrektywa (UE) 2023/2413",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2023/2413",
+   "status": "obowiązuje",
+   "zrodlo": "kb:eu-red-iii",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-energy-management",
+    "dom-ev-regulations-eu",
+    "dom-ev-smart-charging",
+    "dom-ev-v2x",
+    "dom-ev-vehicle-battery"
+   ],
+   "daty": [
+    {
+     "co": "termin transpozycji (art. 15e, 16–16f)",
+     "data": "2024-07-01",
+     "zrodlo": "eu-red-iii doc.txt L4629"
+    },
+    {
+     "co": "termin transpozycji (całość)",
+     "data": "2025-05-21",
+     "zrodlo": "eu-red-iii doc.txt L4621"
+    }
+   ],
+   "uwagi": "Stan transpozycji w Polsce nie jest w bazie [do weryfikacji]. Art. 20a (inteligentne ładowanie) wg dom-ev-smart-charging."
+  },
+  {
+   "id": "eu-red-da-2022-30",
+   "nazwa": "RED — akt delegowany (UE) 2022/30 (cyberbezpieczeństwo urządzeń radiowych)",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2022/30",
+   "status": "uchylony",
+   "zrodlo": "kb:eu-red-da",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-certification-testing",
+    "dom-ev-regulations-eu",
+    "dom-ev-security"
+   ],
+   "daty": [
+    {
+     "co": "początek stosowania wymogów art. 3 ust. 3 lit. d, e, f",
+     "data": "2025-08-01",
+     "zrodlo": "eu-red-da-uchylenie doc.txt L60"
+    },
+    {
+     "co": "uchylenie (skutek)",
+     "data": "2027-12-11",
+     "zrodlo": "eu-red-da-uchylenie doc.txt L88"
+    }
+   ],
+   "zastapiony_przez": "eu-red-da-2026-339",
+   "uwagi": "Uchylony rozporządzeniem delegowanym 2026/339 ze skutkiem od 2027-12-11; do tego dnia akt formalnie jeszcze działa (nadzór rynku dla sprzętu wprowadzonego 2025-08-01…2027-12-10 pozostaje, L60). Tekst samego aktu 2022/30 nie jest w bazie."
+  },
+  {
+   "id": "eu-red-da-2026-339",
+   "nazwa": "Rozporządzenie delegowane (UE) 2026/339 uchylające (UE) 2022/30",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2026/339 (OJ L 29.4.2026)",
+   "status": "przyjęty",
+   "zrodlo": "kb:eu-red-da-uchylenie",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-regulations-eu"
+   ],
+   "daty": [
+    {
+     "co": "uchylenie aktu 2022/30 ze skutkiem od",
+     "data": "2027-12-11",
+     "zrodlo": "eu-red-da-uchylenie doc.txt L88"
+    },
+    {
+     "co": "wejście w życie (20. dzień po publikacji; data nie jest podana w tekście)",
+     "data": null,
+     "do_weryfikacji": true
+    }
+   ],
+   "uwagi": "Wejście w życie: dwudziesty dzień po publikacji w OJ (tekst, Art. 2); samej daty tekst nie podaje, nie obliczam jej tu. Powód uchylenia: od pełnego stosowania CRA (dzień przed to 2027-12-10, doc.txt L61)."
+  },
+  {
+   "id": "eu-mid-2014-32",
+   "nazwa": "MID — dyrektywa 2014/32/UE (przyrządy pomiarowe)",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2014/32/UE, w bazie art. 1–4 i zał. I (tekst wklejony, skrócony)",
+   "status": "obowiązuje",
+   "zrodlo": "kb:eu-mid",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-certification-testing",
+    "dom-ev-charger-hardware",
+    "dom-ev-fleet-charging",
+    "dom-ev-metering-calibration",
+    "dom-ev-regulations-eu",
+    "dom-ev-regulations-us"
+   ],
+   "daty": [],
+   "uwagi": "Zmieniona dyrektywą 2026/706 (nowa MI-011 dla EVSE, stosowanie od 2028-10-10). W bazie tylko fragment dyrektywy; daty 2014/32 nie występują w tym fragmencie."
+  },
+  {
+   "id": "eu-mid-2026-706",
+   "nazwa": "Dyrektywa (UE) 2026/706 zmieniająca MID (MI-011, systemy pomiarowe EVSE)",
+   "rodzaj": "regulacja",
+   "rynek": "EU",
+   "wersja": "2026/706 (OJ L 20.3.2026)",
+   "status": "przyjęty",
+   "zrodlo": "kb:eu-mid-2026-706",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-charger-hardware",
+    "dom-ev-metering-calibration",
+    "dom-ev-regulations-eu"
+   ],
+   "daty": [
+    {
+     "co": "MID w brzmieniu zmienionym (data odniesienia w tekście)",
+     "data": "2026-04-09",
+     "zrodlo": "eu-mid-2026-706 doc.txt L191"
+    },
+    {
+     "co": "termin przyjęcia przepisów krajowych",
+     "data": "2028-04-10",
+     "zrodlo": "eu-mid-2026-706 doc.txt L203"
+    },
+    {
+     "co": "stosowanie środków krajowych",
+     "data": "2028-10-10",
+     "zrodlo": "eu-mid-2026-706 doc.txt L207"
+    },
+    {
+     "co": "koniec wprowadzania do obrotu wg prawa krajowego: zał. Va i VIIa",
+     "data": "2030-04-10",
+     "zrodlo": "eu-mid-2026-706 doc.txt L192"
+    },
+    {
+     "co": "najpóźniejsze wygaśnięcie certyfikatów sprzed 2028-10-10",
+     "data": "2038-04-10",
+     "zrodlo": "eu-mid-2026-706 doc.txt L198"
+    }
+   ],
+   "uwagi": "2026-04-09 to data, od której tekst mówi „as amended on 9 April 2026” (wejście w życie dwudziestego dnia po publikacji 20.3.2026)."
+  },
+  {
+   "id": "pl-ustawa-elektromobilnosc",
+   "nazwa": "Ustawa z 11 stycznia 2018 r. o elektromobilności i paliwach alternatywnych",
+   "rodzaj": "regulacja",
+   "rynek": "PL",
+   "wersja": "tekst jednolity Dz.U. 2026 poz. 1243 (obwieszczenie Marszałka Sejmu z 1.09.2026, stan na 26.08.2026)",
+   "status": "obowiązuje",
+   "zrodlo": "kb:pl-elektromobilnosc",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-certification-testing",
+    "dom-ev-energy-management",
+    "dom-ev-fleet-charging",
+    "dom-ev-kpi-analytics",
+    "dom-ev-regulations-pl",
+    "dom-ev-site-development"
+   ],
+   "daty": [
+    {
+     "co": "obwieszczenie tekstu jednolitego (Dz.U. 2026 poz. 1243)",
+     "data": "2026-09-01",
+     "zrodlo": "pl-elektromobilnosc doc.txt L10"
+    },
+    {
+     "co": "ogłoszenie w Dzienniku Ustaw",
+     "data": "2026-09-23",
+     "zrodlo": "pl-elektromobilnosc doc.txt L3"
+    },
+    {
+     "co": "stan prawny tekstu jednolitego",
+     "data": "2026-08-26",
+     "zrodlo": "pl-elektromobilnosc doc.txt L17"
+    },
+    {
+     "co": "wejście w życie zmian z Dz.U. 2024 poz. 1853 (art. 1 pkt 1, 3, 4)",
+     "data": "2026-01-01",
+     "zrodlo": "pl-elektromobilnosc doc.txt L38"
+    }
+   ],
+   "uwagi": "Poprzedni tekst jednolity: Dz.U. 2024 poz. 1289 (L16). Zmiany Dz.U. 2024 poz. 1881 weszły w życie po miesiącu od ogłoszenia (L40-44; wyjątek wodorowy 2027-01-01 dotyczy Prawa energetycznego, nie tej ustawy)."
+  },
+  {
+   "id": "us-nevi",
+   "nazwa": "NEVI — 23 CFR part 680",
+   "rodzaj": "regulacja",
+   "rynek": "US",
+   "wersja": "23 CFR 680 (88 FR 12752, 28.02.2023)",
+   "status": "obowiązuje",
+   "zrodlo": "kb:us-nevi",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-asset-operations",
+    "dom-ev-business-economics",
+    "dom-ev-kpi-analytics",
+    "dom-ev-regulations-us",
+    "dom-ev-security",
+    "dom-ev-site-development"
+   ],
+   "daty": [
+    {
+     "co": "publikacja przepisu końcowego 88 FR 12752",
+     "data": "2023-02-28",
+     "zrodlo": "us-nevi doc.txt L10"
+    },
+    {
+     "co": "termin: oprogramowanie ładowarek zgodne z ISO 15118-2 i Plug & Charge; OCPP 2.0.1; OCPI 2.2.1 między sieciami",
+     "data": "2024-02-28",
+     "zrodlo": "us-nevi doc.txt L166"
+    }
+   ],
+   "uwagi": "Tekst z eCFR pobrany 2026-10-20; zmiany po tej dacie niesprawdzone."
+  },
+  {
+   "id": "us-nist-hb44",
+   "nazwa": "NIST Handbook 44 (edycja 2026), sekcja 3.40 — Electric Vehicle Fueling Systems",
+   "rodzaj": "regulacja",
+   "rynek": "US",
+   "wersja": "HB 44 (2026), sekcja 3.40",
+   "status": "obowiązuje",
+   "zrodlo": "kb:us-nist-hb44",
+   "sprawdzono": "2026-10-20",
+   "skille": [
+    "dom-ev-certification-testing",
+    "dom-ev-charger-hardware",
+    "dom-ev-metering-calibration",
+    "dom-ev-regulations-us"
+   ],
+   "daty": [
+    {
+     "co": "kod 3.40 z „tentative” na „permanent”",
+     "data": "2023-01-01",
+     "zrodlo": "us-nist-hb44 doc.txt L104"
+    },
+    {
+     "co": "koniec zwolnienia: DC EVSE oddane do użytku przed 2025-01-01 — wskazanie dostarczonej ilości (S.2.7)",
+     "data": "2028-01-01",
+     "zrodlo": "us-nist-hb44 doc.txt L345"
+    }
+   ],
+   "uwagi": "HB44 przyjmują stany osobno (stanowe Weights and Measures) — zakres stanowy w skillu dom-ev-regulations-us."
+  }
+ ]
+}

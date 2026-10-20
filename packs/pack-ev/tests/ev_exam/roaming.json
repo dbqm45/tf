@@ -1,0 +1,309 @@
+{
+ "obszar": "roaming",
+ "pytania": [
+  {
+   "id": "token-a-po-handshake",
+   "pytanie": "Integrujemy się z nowym partnerem OCPI. Do czego wolno użyć CREDENTIALS_TOKEN_A i co się z nim dzieje po zakończeniu handshake?",
+   "wzorzec": "Token A służy tylko do pobrania versions i wykonania handshake w module credentials; użyty do innego modułu daje HTTP 401. Po handshake Sender używa tokenu C, a token A wygasa.",
+   "checks": {
+    "all": [
+     [
+      "token a"
+     ],
+     [
+      "credentials"
+     ],
+     [
+      "wygas|przestaje|nieważn|expire|invalid|tokenu c|token c"
+     ]
+    ],
+    "none": [
+     "token a (służy|jest używany|działa) (do|dla) (wszystkich|każdego) moduł"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpi, kb:ocpi-2.2.1-d2",
+   "trudnosc": 1
+  },
+  {
+   "id": "status-ocpi-nieznany-token",
+   "pytanie": "eMSP dostał od CPO zapytanie real-time authorize dla tokena, którego nie ma w jego bazie. Jaki status_code OCPI ma zwrócić i czy to błąd HTTP?",
+   "wzorzec": "Odpowiedź niesie status_code 2004 (Unknown Token), bez pola data. To błąd na poziomie OCPI w ciele odpowiedzi; poprawny JSON i istniejący endpoint nie dają błędu HTTP.",
+   "checks": {
+    "all": [
+     [
+      "2004"
+     ],
+     [
+      "unknown token|nieznan"
+     ]
+    ],
+    "none": [
+     "status_code 2002",
+     "\\b4001\\b"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpi, kb:ocpi-2.2.1-d2",
+   "trudnosc": 1
+  },
+  {
+   "id": "oicp-vs-ocpi-uwierzytelnienie",
+   "pytanie": "Czym partner uwierzytelnia się wobec huba w OICP, a czym wobec drugiej strony w OCPI?",
+   "wzorzec": "W OICP hub (Hubject) sprawdza zgodność ProviderID/OperatorID z certyfikatem klienta SSL/TLS partnera (niezgodność to kod 017). W OCPI strony wymieniają tokeny A/B/C w handshake i wysyłają je w nagłówku Authorization.",
+   "checks": {
+    "all": [
+     [
+      "certyfikat|certificate|ssl|tls"
+     ],
+     [
+      "oicp"
+     ],
+     [
+      "ocpi"
+     ],
+     [
+      "token"
+     ]
+    ],
+    "none": [
+     "oicp[^.]*tokeny? a ?/ ?b ?/ ?c"
+    ]
+   },
+   "zrodlo": "dom-ev-oicp-hubs, kb:oicp",
+   "trudnosc": 1
+  },
+  {
+   "id": "start-session-accepted",
+   "pytanie": "eMSP wysłał START_SESSION, a CPO odpowiedział ACCEPTED. Czy sesja ładowania wystartowała i skąd eMSP dowie się o wyniku?",
+   "wzorzec": "Nie. ACCEPTED mówi tylko, że CPO przyjął polecenie do przekazania. Wynik ze stacji CPO wysyła później POST-em na response_url (CommandResult), a sesja istnieje dopiero jako obiekt Session; brak wyniku w timeout oznacza komendę nieudaną.",
+   "checks": {
+    "all": [
+     [
+      "\\bnie\\b"
+     ],
+     [
+      "response_url|commandresult"
+     ],
+     [
+      "session|sesj"
+     ]
+    ],
+    "none": [
+     "accepted (oznacza|znaczy),? że (sesja|ładowanie) (już )?(wystartowa|ruszy|trwa)"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpi, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "patch-sessions-charging-periods",
+   "pytanie": "CPO wysłał PATCH Session z nowymi charging_periods, ale odpowiedź nie doszła (timeout). Co się stanie po ponowieniu tego PATCH i jak bezpiecznie odzyskać spójność?",
+   "wzorzec": "PATCH dopisuje podane charging_periods do istniejących, więc ponowienie zdubluje okresy. Najpierw GET sesji u eMSP, a przy niepewnym stanie wyślij PUT z całą sesją i pełną listą okresów, bo PUT zastępuje listę.",
+   "checks": {
+    "all": [
+     [
+      "dopis|dubl|doda|append|add"
+     ],
+     [
+      "put"
+     ],
+     [
+      "get|sprawdz|sprawdź|zastęp|replace"
+     ]
+    ],
+    "none": [
+     "patch (zastępuje|nadpisuje) (całą )?listę"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpi, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "broadcast-push-hub",
+   "pytanie": "Hub OCPI pozwala wysłać Broadcast Push do wszystkich podłączonych stron. Dla których modułów to ma sens, a dla których jest niedozwolone?",
+   "wzorzec": "Broadcast Push jest do danych wspólnych, czyli Locations i Tokens. Dla Sessions i CDR jest niedozwolony, bo te dane dotyczą konkretnej pary stron i trzeba je kierować do właściwego odbiorcy; GET nie idzie broadcastem.",
+   "checks": {
+    "all": [
+     [
+      "locations?|lokalizac"
+     ],
+     [
+      "tokens?|tokeny"
+     ],
+     [
+      "sessions?|sesj"
+     ],
+     [
+      "cdr"
+     ],
+     [
+      "nie|niedozwol|zabronion|never|nigdy"
+     ]
+    ],
+    "none": [
+     "broadcast push (dotyczy|obejmuje) (też |także )?(sessions|sesji|cdr)"
+    ]
+   },
+   "zrodlo": "dom-ev-ocpi, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "restrykcja-min-max-current-32a",
+   "pytanie": "Taryfa OCPI ma dwa elementy: jeden z restrykcją max_current: 32, drugi z min_current: 32. Który obowiązuje, gdy auto ładuje dokładnie 32 A?",
+   "wzorzec": "Obowiązuje element z min_current: 32, bo min jest włączne (>=), a max jest wyłączne (<). Element z max_current: 32 pasuje dopiero poniżej 32 A.",
+   "checks": {
+    "all": [
+     [
+      "min_current"
+     ],
+     [
+      "32"
+     ],
+     [
+      "włączn|inclusive|>=|≥"
+     ]
+    ],
+    "none": [
+     "przy 32 ?a (pasuje|obowiązuje|wybran\\w+) (element )?(z )?max_current"
+    ]
+   },
+   "zrodlo": "dom-ev-tariffs-pricing, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "tariff-ids-ten-sam-typ",
+   "pytanie": "Connector ma w tariff_ids dwie taryfy z type REGULAR. Czy OCPI na to pozwala?",
+   "wzorzec": "Tylko jeśli taryfy tego samego type nie są aktywne jednocześnie, czyli mają rozłączne okresy start_date_time i end_date_time. W danej chwili może obowiązywać jedna taryfa na type; kilka taryf na Connectorze jest dopuszczalnych, gdy mają różne type.",
+   "checks": {
+    "all": [
+     [
+      "jedn\\w+ (taryf\\w+ )?(na|dla|z) (każd\\w+ )?(type|typ)|tego samego (type|typu)|only one|one of each"
+     ],
+     [
+      "start_date_time|end_date_time|rozłącz|nie nakład|nie jednocześnie|nie są aktywne"
+     ]
+    ],
+    "none": [
+     "dwie taryfy tego samego typu mogą obowiązywać jednocześnie"
+    ]
+   },
+   "zrodlo": "dom-ev-tariffs-pricing, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "cdr-duplikat-idempotencja",
+   "pytanie": "eMSP odebrał ten sam CDR dwa razy (push i pull). Po jakim kluczu rozpoznaje duplikat i co robi, gdy ten sam klucz przyjdzie z inną treścią?",
+   "wzorzec": "Kluczem jest trójka country_code, party_id i id CPO-nadawcy. Identyczna treść to sukces bez drugiego skutku (bez drugiej faktury czy księgowania); inna treść z tym samym kluczem to anomalia: CDR jest niezmienny, więc nie nadpisujesz go, tylko odrzucasz i zgłaszasz do wyjaśnienia ze sporu.",
+   "checks": {
+    "all": [
+     [
+      "country_code|party_id"
+     ],
+     [
+      "identyczn|ta sama treść|bez (drugiego|ponownego)|idempoten"
+     ],
+     [
+      "anomali|spór|odrzuc|odrzuć|nie nadpis|niezmienn"
+     ]
+    ],
+    "none": [
+     "(zaktualizuj|nadpisz) (istniejący|stary) (cdr|rekord)",
+     "klucz(em)? (jest )?(sam|tylko) id\\b"
+    ]
+   },
+   "zrodlo": "dom-ev-cdr-settlement, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "step-size-ladowanie-i-postoj",
+   "pytanie": "Taryfa: TIME 1,00 EUR/h i PARKING_TIME 2,00 EUR/h, oba z step_size 10 min. Kierowca ładował 21 minut, a potem auto stało podłączone jeszcze 16 minut. Ile minut każdego wymiaru jest płatne i ile wynosi koszt?",
+   "wzorzec": "Ładowanie liczy się dokładnie, 21 min, bo po nim następuje postój. Postój 16 min zaokrągla się w górę do 20 min. Koszt: 21/60 × 1,00 = 0,35 oraz 20/60 × 2,00 = 0,667, razem około 1,02 EUR.",
+   "checks": {
+    "all": [
+     [
+      "21 ?min"
+     ],
+     [
+      "20 ?min"
+     ],
+     [
+      "1[,.]0(2|17|16)"
+     ]
+    ],
+    "none": [
+     "1[,.]1[67]"
+    ]
+   },
+   "zrodlo": "dom-ev-tariffs-pricing, kb:ocpi-2.2.1-d2",
+   "trudnosc": 3
+  },
+  {
+   "id": "step-size-energia-dwa-elementy",
+   "pytanie": "Cena energii to 0,20 EUR/kWh przed 17:00 i 0,27 EUR/kWh po 17:00, oba składniki mają step_size 500 Wh. Kierowca pobrał 4,3 kWh przed 17:00 i 1,1 kWh po. Ile kWh rozliczysz po cenie wieczornej wg OCPI 2.2.1-d2?",
+   "wzorzec": "step_size stosuje się raz do łącznej energii sesji: 5,4 kWh zaokrągla się do 5,5 kWh, a nadwyżka 0,1 kWh trafia do ostatniego okresu. Po 17:00 rozliczasz więc 1,2 kWh po 0,27, a nie 1,5 kWh.",
+   "checks": {
+    "all": [
+     [
+      "5[,.]5"
+     ],
+     [
+      "1[,.]2"
+     ]
+    ],
+    "none": [
+     "rozlicz\\w+ 1[,.]5 ?kwh po 17"
+    ]
+   },
+   "zrodlo": "dom-ev-tariffs-pricing, kb:ocpi-2.2.1-d2",
+   "trudnosc": 3
+  },
+  {
+   "id": "oicp-cdr-emp-offline",
+   "pytanie": "W OICP CPO wysyła CDR do Hubject, ale EMP jest akurat niedostępny. Co zwróci hub i jak EMP odzyska ten rekord?",
+   "wzorzec": "Hub przyjmuje CDR (jeden na SessionID), zapisuje go i zwraca sukces także wtedy, gdy EMP jest nieosiągalny. EMP pobiera zaległe rekordy później operacją eRoamingGetChargeDetailRecords.",
+   "checks": {
+    "all": [
+     [
+      "sukces|success|przyjm|zapisuje"
+     ],
+     [
+      "getchargedetailrecords|pobier|pull"
+     ],
+     [
+      "sessionid|jeden"
+     ]
+    ],
+    "none": [
+     "hub zwraca błąd,? gdy emp"
+    ]
+   },
+   "zrodlo": "dom-ev-oicp-hubs, kb:oicp",
+   "trudnosc": 3
+  },
+  {
+   "id": "cdr-kredytowy-wymogi",
+   "pytanie": "CPO chce skorygować wysłany CDR i przygotował kredytowy z tym samym id co oryginał oraz z dodatnimi kwotami. Co jest nie tak i jak wygląda poprawna korekta?",
+   "wzorzec": "CDR jest niezmienny, więc koryguje się go kredytowym: credit: true, credit_reference_id równe id oryginału, nowe id (np. z dopiskiem -C), a total_cost ujemny. Po nim CPO wysyła nowy CDR z poprawnymi wartościami i nowym id, bez pól credit i credit_reference_id.",
+   "checks": {
+    "all": [
+     [
+      "credit_reference_id|credit"
+     ],
+     [
+      "nowe id|nowym id|inne id|różn\\w+ id|-c\\b|unikaln"
+     ],
+     [
+      "ujemn|negative|minus"
+     ],
+     [
+      "nowy cdr|new cdr|poprawion\\w+ cdr|kolejny cdr"
+     ]
+    ],
+    "none": [
+     "(wystarczy|można) (go )?(zmienić|poprawić) (put|patch)"
+    ]
+   },
+   "zrodlo": "dom-ev-cdr-settlement, kb:ocpi-2.2.1-d2",
+   "trudnosc": 3
+  }
+ ]
+}

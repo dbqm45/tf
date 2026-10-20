@@ -1,0 +1,58 @@
+{
+  "skill": "ux-design-leadership",
+  "scenarios": [
+    {
+      "id": "dojrzalosc-ux",
+      "expect": "trigger",
+      "prompt": "Jestem nowym Head of Design w firmie, gdzie UX to dwie osoby robiące makiety na zlecenie produktu. Jak ocenić dojrzałość UX i co z tego zrobić dla zarządu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["nn/?g|nielsen"],
+          ["sześć|6 (etap|poziom)|absent|limited|emergent|structured|integrated|user-driven"],
+          ["strategi\\w+.*kultur|kultur\\w+.*proces|strategy.*culture|proces\\w+.*wynik"]
+        ],
+        "none": ["liniow\\w+ lista kontrolna, którą odhaczasz"]
+      }
+    },
+    {
+      "id": "metryki-heart",
+      "expect": "trigger",
+      "prompt": "Zarząd pyta, jak mierzymy wartość UX. Mamy tylko NPS. Co dodać, żeby metryki były powiązane z celami biznesowymi i nie były czczymi wskaźnikami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["heart"],
+          ["happiness|adoption|retention|engagement|task success"],
+          ["goals?.*signals?.*metrics?|cele.*sygnały.*metryki|cel.*sygna\\w+.*metry"],
+          ["sus|task success|skuteczność zadań|odsetek ukończonych"]
+        ],
+        "none": ["wystarczy sam NPS"]
+      }
+    },
+    {
+      "id": "struktura-zespolu-designu",
+      "expect": "trigger",
+      "prompt": "Mamy 12 projektantów rozproszonych po 6 zespołach produktowych i każdy robi inaczej. Scentralizować ich, zostawić w zespołach, a może hybryda? Jakie są kompromisy i od czego zacząć DesignOps? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["scentraliz\\w+|centralized|centralny"],
+          ["wbudowan\\w+|embedded|rozproszon"],
+          ["hybryd\\w+|hybrid"],
+          ["designops"],
+          ["krytyk\\w+|critique|rytuał|standard"]
+        ]
+      }
+    },
+    {
+      "id": "topologie-zespolow-granica",
+      "expect": "no-trigger",
+      "prompt": "Jak ułożyć zespoły inżynierskie: który powinien być platformowy, który strumieniowy i jak ograniczyć obciążenie poznawcze?",
+      "neighbor": "proc-team-topologies"
+    },
+    {
+      "id": "badania-ops-granica",
+      "expect": "no-trigger",
+      "prompt": "Jak zaplanować wywiady z użytkownikami, przygotować screener i zgody na nagrywanie sesji?",
+      "neighbor": "ux-research-methods"
+    }
+  ]
+}

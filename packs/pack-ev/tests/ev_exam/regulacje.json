@@ -1,0 +1,333 @@
+{
+ "obszar": "regulacje",
+ "pytania": [
+  {
+   "id": "afir-ad-hoc-definicja",
+   "pytanie": "Klient pyta, czy „płatność ad hoc” z AFIR wymaga od niego założenia konta w aplikacji CPO. Jak AFIR definiuje ładowanie ad hoc?",
+   "wzorzec": "Wg AFIR (Art. 2 pkt 47) ładowanie ad hoc to usługa kupiona bez rejestracji, bez umowy i bez innej relacji handlowej z operatorem poza samym zakupem usługi. Konto w aplikacji nie może więc być warunkiem; operator ma umożliwić takie ładowanie w każdym publicznym punkcie.",
+   "checks": {
+    "all": [
+     [
+      "bez (rejestracji|umowy|konta)",
+      "without (registration|a contract)",
+      "nie wymaga (konta|rejestracji|umowy)"
+     ],
+     [
+      "ad hoc|AFIR|2023/1804"
+     ]
+    ],
+    "none": [
+     "wymaga (założenia )?konta",
+     "musi (założyć|mieć) konto"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, kb:eu-afir",
+   "trudnosc": 1
+  },
+  {
+   "id": "nis2-terminy-zgloszen",
+   "pytanie": "CPO będący podmiotem NIS2 wykrył poważny incydent w CSMS. W jakich terminach zgłasza go do CSIRT i od kiedy liczy się zegar?",
+   "wzorzec": "Ostrzeżenie wczesne do 24 godzin od uzyskania wiedzy o incydencie, zgłoszenie incydentu do 72 godzin, a raport końcowy do miesiąca po zgłoszeniu (Art. 23 NIS2). Dlatego CPO powinien zapisywać moment uzyskania wiedzy.",
+   "checks": {
+    "all": [
+     [
+      "24 ?(h|godz)"
+     ],
+     [
+      "72 ?(h|godz)"
+     ],
+     [
+      "uzyskani\\w* wiedzy|becoming aware|wiedzy o incydencie|moment\\w* (wykrycia|stwierdzenia)"
+     ]
+    ],
+    "none": [
+     "48 ?(h|godz)",
+     "7 dni na zgłoszenie"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, dom-ev-security, kb:eu-nis2",
+   "trudnosc": 1
+  },
+  {
+   "id": "nevi-prog-uptime",
+   "pytanie": "Jaki średnioroczny uptime muszą osiągać porty ładowania w programie NEVI i na jakim poziomie się go liczy: stacji czy portu?",
+   "wzorzec": "Wg 23 CFR 680.116(b) każdy port ma mieć średnioroczny uptime powyżej 97 %. Liczy się go na poziomie pojedynczego portu, a nie całej stacji.",
+   "checks": {
+    "all": [
+     [
+      "97 ?%|97 proc|97 percent"
+     ],
+     [
+      "port"
+     ]
+    ],
+    "none": [
+     "99 ?%",
+     "liczy się (dla|na poziomie) stacji, nie"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-us, kb:us-nevi",
+   "trudnosc": 1
+  },
+  {
+   "id": "afir-cena-50kw",
+   "pytanie": "Punkt DC 150 kW uruchomiony w 2025 r. ma w taryfie ad hoc tylko cenę za minutę. Czy to zgodne z AFIR i co powinno być widoczne przed startem sesji?",
+   "wzorzec": "Nie. Dla punktów ≥ 50 kW cena ad hoc ma być oparta na cenie za kWh (Art. 5(4) AFIR), a opłata za minutę (zajęcie) może być tylko dodatkiem. Przed rozpoczęciem sesji na stacji trzeba pokazać cenę za kWh i ewentualną opłatę za minutę.",
+   "checks": {
+    "all": [
+     [
+      "za kwh|per kwh|kwh|energi"
+     ],
+     [
+      "nie|niezgodn|not compliant"
+     ],
+     [
+      "przed (rozpocz|start)|before (the )?(start|session)"
+     ]
+    ],
+    "none": [
+     "sama cena za minutę (jest|wystarczy)",
+     "wystarczy cena za minutę"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, kb:eu-afir",
+   "trudnosc": 2
+  },
+  {
+   "id": "afir-terminal-2027",
+   "pytanie": "CPO ma od 2023 r. punkt 150 kW DC przy autostradzie TEN-T z płatnością tylko przez aplikację i kod QR. Co zmienia się 1 stycznia 2027 wg AFIR?",
+   "wzorzec": "Od 01.01.2027 Art. 5(1) AFIR obejmuje także starsze punkty ≥ 50 kW na TEN-T (lub bezpiecznym parkingu): muszą mieć czytnik kart albo urządzenie bezstykowe. Kod QR wystarcza tylko poniżej 50 kW, więc trzeba dodać terminal.",
+   "checks": {
+    "all": [
+     [
+      "01\\.01\\.2027|1 stycznia 2027|2027"
+     ],
+     [
+      "czytnik|bezstykow|terminal|contactless|card reader"
+     ],
+     [
+      "qr"
+     ],
+     [
+      "50 ?kw"
+     ]
+    ],
+    "none": [
+     "qr (wystarczy|jest wystarczając)",
+     "nie dotyczy (starszych|punktów uruchomionych przed)"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, kb:eu-afir",
+   "trudnosc": 2
+  },
+  {
+   "id": "cra-art14-terminy",
+   "pytanie": "Producent ładowarki wprowadzonej na rynek w 2024 r. pyta, czy CRA go już dotyczy, skoro całość stosuje się od końca 2027. Od kiedy obowiązuje zgłaszanie podatności i w jakich terminach?",
+   "wzorzec": "Art. 14 CRA (zgłaszanie aktywnie wykorzystywanych podatności i poważnych incydentów) stosuje się od 11.09.2026 także do produktów już na rynku (Art. 69(3)). Terminy: ostrzeżenie do 24 h, zgłoszenie do 72 h, raport końcowy do 14 dni po środku zaradczym; reszta CRA od 11.12.2027.",
+   "checks": {
+    "all": [
+     [
+      "11\\.09\\.2026|11 września 2026|wrze[sś]ni\\w* 2026|september 2026"
+     ],
+     [
+      "24 ?(h|godz)"
+     ],
+     [
+      "72 ?(h|godz)"
+     ],
+     [
+      "11\\.12\\.2027|grudni\\w* 2027|december 2027|2027"
+     ]
+    ],
+    "none": [
+     "nie dotyczy (produktów|urządzeń) (starszych|już)",
+     "dopiero od 11\\.12\\.2027 (też|również) zgłaszani"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, dom-ev-security, kb:eu-cra",
+   "trudnosc": 2
+  },
+  {
+   "id": "pl-eipa-kolejnosc",
+   "pytanie": "W Polsce operator i dostawca nowej stacji planują start. W jakiej kolejności załatwić numer EIPA, badanie UDT i zgłoszenie danych oraz w jakich terminach przekazywać do rejestru zmiany stanu punktu i ceny?",
+   "wzorzec": "Najpierw wniosek o numer EIPA (art. 41b), potem wniosek o badanie UDT z tym numerem; dane stacji ze współrzędnymi zgłasza się najpóźniej w dniu tego wniosku, a eksploatacja zaczyna się po pozytywnym badaniu. Po starcie dostępność punktu przekazuje się do rejestru natychmiast po zmianie, a cenę w ciągu godziny (art. 42 ust. 6).",
+   "checks": {
+    "all": [
+     [
+      "eipa"
+     ],
+     [
+      "udt"
+     ],
+     [
+      "natychmiast|niezwłocznie|immediately|bez opóźnienia"
+     ],
+     [
+      "godzin|hour|60 min"
+     ]
+    ],
+    "none": [
+     "cena (do|w ciągu) (24 ?h|doby)",
+     "numer eipa (po|uzyskuje się po) badani"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-pl, kb:pl-elektromobilnosc",
+   "trudnosc": 2
+  },
+  {
+   "id": "nevi-uptime-wzor",
+   "pytanie": "Port NEVI miał w ciągu 12 miesięcy 22 000 minut awarii, w tym 10 000 minut z powodu przerw w dostawie od zakładu energetycznego i serwisu planowego, które operator potrafi udokumentować. Czy port spełnia próg uptime wg § 680.116(b)? Podaj wynik.",
+   "wzorzec": "Tak. µ = (525 600 − (22 000 − 10 000)) / 525 600 × 100 = 513 600 / 525 600 × 100 ≈ 97,7 %, czyli powyżej 97 %. Bez udokumentowanych wyłączeń byłoby ok. 95,8 % i port by nie spełniał progu.",
+   "checks": {
+    "all": [
+     [
+      "97[,.]7"
+     ],
+     [
+      "spełnia|tak|meets|passes|powyżej 97|above 97"
+     ],
+     [
+      "525 ?600"
+     ]
+    ],
+    "none": [
+     "95[,.]8 ?%? (to|jest) wynik końcowy",
+     "nie spełnia progu"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-us, kb:us-nevi",
+   "trudnosc": 2
+  },
+  {
+   "id": "cena-w-trakcie-sesji-us",
+   "pytanie": "Operator w USA chce w aplikacji zmieniać cenę za kWh dynamicznie w trakcie trwającej sesji, bo rośnie koszt energii. Co na to NEVI i NIST HB44 3.40?",
+   "wzorzec": "NEVI (§ 680.116(a)) wymaga ceny w $/kWh pokazanej przed startem, a cena z chwili startu nie zmienia się w trakcie sesji. HB44 3.40 (S.2.4.3) też nie pozwala na zmianę w trakcie dostawy, chyba że klient przed sprzedażą zatwierdził zmienną strukturę ceny.",
+   "checks": {
+    "all": [
+     [
+      "przed (start|rozpocz|sesj)|before"
+     ],
+     [
+      "nie (zmienia|wolno|może)|cannot|may not|zabrania|zakaz"
+     ],
+     [
+      "kwh"
+     ],
+     [
+      "hb44|handbook 44|nist|nevi|680\\.116"
+     ]
+    ],
+    "none": [
+     "można (swobodnie )?zmieniać cenę w trakcie",
+     "zmiana ceny w trakcie sesji jest dozwolona bez zgody"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-us, kb:us-nevi, kb:us-nist-hb44",
+   "trudnosc": 2
+  },
+  {
+   "id": "red-da-2022-30-uchylenie",
+   "pytanie": "Producent wprowadza ładowarkę z Wi-Fi na rynek UE w 2026 r. Jaki jest los rozporządzenia delegowanego 2022/30 do RED (EN 18031) po rozporządzeniu 2026/339 i co obejmie te wymogi później?",
+   "wzorzec": "Rozporządzenie delegowane 2022/30 stosuje się od 01.08.2025, a rozporządzenie 2026/339 uchyla je z dniem 11.12.2027, kiedy w pełni zaczyna się stosować CRA (2024/2847) obejmujące te wymogi cyberbezpieczeństwa. Urządzenia wprowadzone w okresie 01.08.2025–10.12.2027 nadal podlegają nadzorowi wg RED, więc ładowarka z 2026 r. musi spełniać RED DA.",
+   "checks": {
+    "all": [
+     [
+      "2026/339"
+     ],
+     [
+      "11\\.12\\.2027|11 grudnia 2027|grudni\\w* 2027|december 2027"
+     ],
+     [
+      "cra|cyber resilience|2024/2847"
+     ],
+     [
+      "01\\.08\\.2025|1 sierpnia 2025|sierpni\\w* 2025|august 2025|nadal|wciąż|still"
+     ]
+    ],
+    "none": [
+     "uchylone od 01\\.08\\.2025",
+     "2022/30 nie dotyczy ładowarek"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, kb:eu-red-da-uchylenie",
+   "trudnosc": 3
+  },
+  {
+   "id": "afir-ocpp-nie-wymagany",
+   "pytanie": "Dostawca sprzedaje CPO usługę „zgodności z AFIR” twierdząc, że AFIR wymaga OCPP i OCPI. Czy to prawda? Co AFIR faktycznie narzuca w komunikacji?",
+   "wzorzec": "Nie. Aneks II AFIR w punktach 2.2–2.4 (komunikacja punkt–CPMS, roaming, operator–OSD) w tekście z 08.01.2026 nie zawiera norm, więc OCPP i OCPI nie są wskazane. AFIR wymaga natomiast ISO 15118 (pkt 2.1; -20 od 01.01.2027) między pojazdem a punktem, a także API danych i smart charging.",
+   "checks": {
+    "all": [
+     [
+      "nie (jest )?prawd|nie wymaga|nie wskazuje|nie są wskazane|nie narzuca|no\\b|does not (require|specify)"
+     ],
+     [
+      "15118"
+     ],
+     [
+      "ocpp|ocpi"
+     ]
+    ],
+    "none": [
+     "afir wymaga ocpp",
+     "afir wskazuje ocpi jako (obowiązkowy|wymagany)"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, kb:eu-afir",
+   "trudnosc": 3
+  },
+  {
+   "id": "data-act-chmura-i-produkty",
+   "pytanie": "CPO analizuje Data Act: od kiedy producent ładowarki musi projektować dane produktu jako dostępne dla użytkownika (Art. 3(1)) i jakie zasady zmiany dostawcy chmury dla CPMS obowiązują (wypowiedzenie, okres przejściowy, opłaty)?",
+   "wzorzec": "Art. 3(1) Data Act dotyczy produktów wprowadzonych na rynek po 12.09.2026. Przy zmianie dostawcy chmury (Art. 25 i 29) wypowiedzenie może trwać do 2 miesięcy, okres przejściowy do 30 dni, a od 12.01.2027 dostawca nie może pobierać opłat za zmianę.",
+   "checks": {
+    "all": [
+     [
+      "12\\.09\\.2026|12 września 2026|wrze[sś]ni\\w* 2026|september 2026"
+     ],
+     [
+      "2 mies|dwa mies|two months|2 months"
+     ],
+     [
+      "30 dni|30 days"
+     ],
+     [
+      "12\\.01\\.2027|12 stycznia 2027|stycz\\w* 2027|january 2027"
+     ]
+    ],
+    "none": [
+     "opłaty za zmianę dostawcy są dozwolone bez ograniczeń"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-eu, kb:eu-data-act",
+   "trudnosc": 3
+  },
+  {
+   "id": "hb44-rozdzielczosc-ac",
+   "pytanie": "Producent AC w USA zaokrągla w wyświetlaczu energię do pełnych watogodzin (0,001 kWh). Czy to spełnia NIST HB44 3.40 dla ładowarki AC i jak jest dla DC?",
+   "wzorzec": "Nie dla AC: S.1.3.2 wymaga, by najmniejsza jednostka wskazania nie przekraczała 0,0001 kWh dla AC, a dla DC 0,001 kWh. Zaokrąglanie do pełnych Wh spełnia więc wymóg tylko dla DC.",
+   "checks": {
+    "all": [
+     [
+      "0[,.]0001"
+     ],
+     [
+      "0[,.]001"
+     ],
+     [
+      "nie (spełnia|wystarcz)|nie dla ac|does not|not (compliant|sufficient)"
+     ],
+     [
+      "ac"
+     ]
+    ],
+    "none": [
+     "0[,.]001 kwh wystarcza (też )?dla ac",
+     "spełnia wymóg dla ac"
+    ]
+   },
+   "zrodlo": "dom-ev-regulations-us, kb:us-nist-hb44",
+   "trudnosc": 3
+  }
+ ]
+}

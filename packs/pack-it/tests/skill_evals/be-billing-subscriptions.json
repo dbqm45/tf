@@ -1,0 +1,53 @@
+{
+  "skill": "be-billing-subscriptions",
+  "scenarios": [
+    {
+      "id": "zmiana-planu-proporcjonalnie",
+      "expect": "trigger",
+      "prompt": "Klient w połowie miesięcznego okresu przechodzi z planu Basic na Pro w naszym SaaS. Jak to rozliczyć i co zaprojektować w kodzie subskrypcji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "proporcjonaln\\w*|prorat\\w*"
+          ],
+          [
+            "okres\\w*"
+          ],
+          [
+            "faktur\\w*"
+          ],
+          [
+            "idempotent\\w*|webhook\\w*|zdarze\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "nieudana-platnosc-webhook",
+      "expect": "trigger",
+      "prompt": "Odnowienie subskrypcji się nie udało — karta odrzucona. Dostawca płatności przysłał webhook dwa razy. Jak obsłużyć to po naszej stronie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "idempotent\\w*|duplikat\\w*|deduplik\\w*|raz"
+          ],
+          [
+            "podpis\\w*|signature"
+          ],
+          [
+            "ponown\\w*|retry|windykac\\w*|dunning"
+          ],
+          [
+            "past_due|zaległ\\w*|status\\w*|dostęp\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "logowanie-oauth",
+      "expect": "no-trigger",
+      "prompt": "Jak dodać logowanie przez Google (OAuth 2.0 / OIDC) do naszej aplikacji? Odpowiedz zwięźle.",
+      "neighbor": "be-auth-security"
+    }
+  ]
+}

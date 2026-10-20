@@ -1,0 +1,54 @@
+{
+  "skill": "proc-lean",
+  "scenarios": [
+    {
+      "id": "prawo-little",
+      "expect": "trigger",
+      "prompt": "Zadania w naszym zespole wiszą w toku całymi tygodniami, a mamy po kilka rzeczy na osobę. Jak to uzasadnić liczbami i co zmienić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "little"
+          ],
+          [
+            "WIP"
+          ],
+          [
+            "przepustowo",
+            "throughput",
+            "czas realizacji",
+            "lead time"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wsjf-priorytet",
+      "expect": "trigger",
+      "prompt": "Mamy pięć projektów o różnej wartości i rozmiarze, a każdy opóźniony kosztuje nas co tydzień. Jak je ustawić w kolejności ekonomicznie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "WSJF"
+          ],
+          [
+            "koszt opóźnienia",
+            "cost of delay"
+          ],
+          [
+            "rozmiar",
+            "czas pracy",
+            "podziel",
+            "dzielon"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rytualy-scrum",
+      "expect": "no-trigger",
+      "prompt": "Jak poprowadzić retrospektywę Scruma i Daily Scrum, żeby nie były nudnymi rytuałami? Odpowiedz zwięźle.",
+      "neighbor": "proc-agile"
+    }
+  ]
+}

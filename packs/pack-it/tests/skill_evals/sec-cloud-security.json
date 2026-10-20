@@ -1,0 +1,52 @@
+{
+  "skill": "sec-cloud-security",
+  "scenarios": [
+    {
+      "id": "baza-konta-guardrails",
+      "expect": "trigger",
+      "prompt": "Mamy 15 kont AWS, część zespołów klika w konsoli. Jak ułożyć strukturę kont i guardrails, żeby nikt nie wyłączył logów ani nie wstawił bucketu publicznie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["\\bSCP\\b", "service control polic"],
+          ["management account|konto zarządzając|konto główne|master", "nie obejmuj\\w* konta|nie dotycz\\w* konta"],
+          ["Block Public Access", "blokad\\w* publicznego dostępu"],
+          ["log archive|konto logów|osobn\\w* konto \\w* log|CloudTrail"]
+        ],
+        "none": ["SCP nadaje uprawnienia", "SCP przyznaje uprawnienia"]
+      }
+    },
+    {
+      "id": "multicloud-logi-i-klucze",
+      "expect": "trigger",
+      "prompt": "Firma ma AWS, Azure i GCP. Jaki minimalny zestaw logowania i zasad dla kluczy dostępowych wymusić we wszystkich trzech chmurach? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["CloudTrail"],
+          ["Activity Log"],
+          ["Data Access", "Cloud Audit Logs"],
+          ["workload identity|federacj\\w* tożsamości|OIDC|managed identity", "disableServiceAccountKeyCreation"]
+        ],
+        "none": ["klucze dostępu w repozytorium są akceptowalne"]
+      }
+    },
+    {
+      "id": "cspm-vs-ciem-cnapp",
+      "expect": "trigger",
+      "prompt": "Dostawca sprzedaje nam CNAPP i mówi, że zastąpi CSPM i CIEM. Czym to się różni i co mamy z tego realnie wymagać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["CSPM"],
+          ["CIEM"],
+          ["CWPP|workload"],
+          ["CIS Benchmark|benchmark", "kontekst|ścieżk\\w* ataku|attack path"]
+        ]
+      }
+    },
+    {
+      "id": "oidc-dla-ci",
+      "expect": "no-trigger",
+      "prompt": "Jak zastąpić klucze dostępowe w GitHub Actions rolą z OIDC i jak ograniczyć claim sub do jednej gałęzi?",
+      "neighbor": "ops-secrets-identities"
+    }
+  ]
+}

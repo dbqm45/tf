@@ -1,0 +1,80 @@
+{
+  "skill": "sec-llm-security",
+  "scenarios": [
+    {
+      "id": "top10-llm-model-zagrozen",
+      "expect": "trigger",
+      "prompt": "Budujemy czatbota z dostępem do firmowych dokumentów i narzędzi (mail, kalendarz). Jakie zagrożenia dla tej aplikacji LLM trzeba uwzględnić i wg jakiej listy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "OWASP Top 10 for LLM",
+            "LLM01"
+          ],
+          [
+            "prompt injection",
+            "wstrzykiwani\\w* prompt"
+          ],
+          [
+            "indirect|pośredni"
+          ],
+          [
+            "excessive agency",
+            "nadmiern\\w* sprawczo|nadmiern\\w* uprawnie"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "eksfiltracja-markdown",
+      "expect": "trigger",
+      "prompt": "Agent czyta maile klientów i może odpowiadać. Jak zabezpieczyć go przed wyciekiem danych przez złośliwą treść maila (np. obrazek w markdownie)? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "allow-?list|lista dozwolon|białą listę|egress"
+          ],
+          [
+            "obraz\\w*|markdown|link"
+          ],
+          [
+            "zatwierdz\\w* człowiek|human.in.the.loop|approval"
+          ],
+          [
+            "dane.{0,20}(a|nie) polece|niezaufan"
+          ]
+        ],
+        "none": [
+          "filtr słów kluczowych wystarczy"
+        ]
+      }
+    },
+    {
+      "id": "red-team-llm",
+      "expect": "trigger",
+      "prompt": "Jak przetestować ofensywnie naszą funkcję LLM przed wdrożeniem? Jakie narzędzia i scenariusze? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "garak"
+          ],
+          [
+            "PyRIT"
+          ],
+          [
+            "ATLAS"
+          ],
+          [
+            "ewaluacj|eval|regresj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "agent-claude-code",
+      "expect": "no-trigger",
+      "prompt": "Agent Claude Code chce uruchomić polecenie curl | bash skopiowane z README obcego repo. Czy mu pozwolić?",
+      "neighbor": "core-agent-security"
+    }
+  ]
+}

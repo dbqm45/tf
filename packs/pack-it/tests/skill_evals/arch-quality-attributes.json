@@ -1,0 +1,64 @@
+{
+  "skill": "arch-quality-attributes",
+  "scenarios": [
+    {
+      "id": "scenariusz-jakosci",
+      "expect": "trigger",
+      "prompt": "Biznes chce, żeby system rezerwacji sal był szybki i dostępny. Jak to zapisać w wymaganiach, żeby dało się to zmierzyć i na tej podstawie wybrać architekturę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "bodziec",
+            "stimulus",
+            "źródło ?→",
+            "source"
+          ],
+          [
+            "p95",
+            "p99",
+            "miar"
+          ],
+          [
+            "drzew\\w* użyteczn",
+            "utility tree",
+            "\\(?H, ?H\\)?"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "monolit-vs-mikroserwisy",
+      "expect": "trigger",
+      "prompt": "Mamy 6 programistów w jednym zespole, a ktoś naciska na mikroserwisy. Czy to ma sens i jak pilnować granic modułów w kodzie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "modularn\\w* monolit",
+            "modular monolith"
+          ],
+          [
+            "fitness function",
+            "funkcj\\w* dopasowania",
+            "ArchUnit",
+            "testy? architektur",
+            "granic\\w* modu",
+            "module boundar",
+            "enforce-module-boundaries"
+          ],
+          [
+            "scenariusz",
+            "niezależn\\w* wdra",
+            "independent deploy",
+            "autonomiczn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wybor-frameworka",
+      "expect": "no-trigger",
+      "prompt": "Czy do nowego backendu wybrać Spring Boot czy NestJS? Zespół zna Javę i TypeScript.",
+      "neighbor": "arch-tech-selection"
+    }
+  ]
+}

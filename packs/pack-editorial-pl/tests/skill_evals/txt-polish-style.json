@@ -1,0 +1,55 @@
+{
+  "skill": "txt-polish-style",
+  "scenarios": [
+    {
+      "id": "redakcja-zdania",
+      "expect": "trigger",
+      "prompt": "Przeredaguj do gotowej wersji: „W celu dokonania weryfikacji konfiguracji należy zaznaczyć, że zostało wykonane uruchomienie testów w dniu dzisiejszym.” Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "standardow"
+          ],
+          [
+            "\\baby\\b",
+            "\\bżeby\\b"
+          ],
+          [
+            "dziś",
+            "dzisiaj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "komunikaty-ui",
+      "expect": "trigger",
+      "prompt": "Mam komunikaty UI: przycisk „OK”, błąd „Operacja nie powiodła się z powodu niepoprawnych danych” i link „Kliknij tutaj”. Jak je napisać lepiej po polsku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "czasownik",
+            "Zapisz zmiany",
+            "Wyślij zaproszenie",
+            "verb"
+          ],
+          [
+            "co zrobić",
+            "co użytkownik ma zrobić",
+            "what to do",
+            "co się stało"
+          ]
+        ]
+      },
+      "accept": [
+        "ux-feature-design"
+      ]
+    },
+    {
+      "id": "raport-bledow",
+      "expect": "no-trigger",
+      "prompt": "Wskaż błędy interpunkcyjne i ortograficzne w zdaniu „Nie wiem czy ten plik jest już zapisany ale chyba tak” i podaj je w formie raportu z kategoriami. Odpowiedz zwięźle.",
+      "neighbor": "txt-polish-correctness"
+    }
+  ]
+}

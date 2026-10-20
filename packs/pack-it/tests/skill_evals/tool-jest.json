@@ -1,0 +1,66 @@
+{
+  "skill": "tool-jest",
+  "scenarios": [
+    {
+      "id": "jest30-aliasy",
+      "expect": "trigger",
+      "prompt": "W src/cart.test.js (Jest 30) po aktualizacji z 29 padają testy z toBeCalledWith, a skrypt z --testPathPattern przestał działać. Co zmienić? Odpowiedz zwięźle.",
+      "files": {
+        "src/cart.test.js": "test('dodaje', () => {\n  const spy = jest.fn();\n  spy('A', 1);\n  expect(spy).toBeCalledWith('A', 1);\n});\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "toHaveBeenCalledWith"
+          ],
+          [
+            "testPathPatterns"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "jest-znany-defekt",
+      "expect": "trigger",
+      "prompt": "W src/cart.test.js jest test ze specyfikacji, który pada przez znany defekt BUG-9 (łączenie tych samych pozycji). Jak go zostawić w Jest, żeby CI nie padał i oczekiwania się nie zmieniły? Odpowiedz zwięźle.",
+      "files": {
+        "src/cart.test.js": "test('H2-AC3: łączy te same SKU', () => {\n  expect(1 + 1).toBe(2);\n});\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "test\\.failing"
+          ],
+          [
+            "usu[nń].{0,40}failing",
+            "zacznie padać",
+            "zaczyna padać",
+            "will start failing",
+            "po naprawie"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "vitest-projects",
+      "expect": "no-trigger",
+      "prompt": "Przenoszę projekt Vite na Vitest 5. Jak skonfigurować projects i tryb przeglądarki? Odpowiedz zwięźle.",
+      "neighbor": "tool-vitest"
+    },
+    {
+      "id": "bez-plikow-aktualizacja",
+      "expect": "trigger",
+      "prompt": "Utrzymujemy projekt na Jest 29 i planujemy aktualizację do Jest 30. Co się zmienia w nazwach dopasowań i flagach CLI? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "toHaveBeenCalledWith"
+          ],
+          [
+            "testPathPatterns"
+          ]
+        ]
+      }
+    }
+  ]
+}

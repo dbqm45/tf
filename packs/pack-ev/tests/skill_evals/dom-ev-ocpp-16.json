@@ -1,0 +1,36 @@
+{
+  "skill": "dom-ev-ocpp-16",
+  "scenarios": [
+    {
+      "id": "stop-nieznany-transactionid",
+      "expect": "trigger",
+      "prompt": "Mamy CSMS na OCPP 1.6J. Ładowarka po restarcie zasilania wysyła StopTransaction z transactionId, którego nie mamy w bazie. Co CSMS ma odpowiedzieć i co zrobić z tą ramką? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["callresult|\\[3,|odpowiedz.{0,40}(normaln|poprawn)|potwierdz|accepted"],
+          ["zapisz|zachowaj|loguj|log|kwarantann|do wyjaśnienia|store|persist"],
+          ["retry|ponawia|powtarza|w kółko|bez końca|kolejk|buforuj"]
+        ],
+        "none": ["odrzuć.{0,30}CALLERROR.{0,30}bez zapis"]
+      }
+    },
+    {
+      "id": "status-kabel-bez-autoryzacji",
+      "expect": "trigger",
+      "prompt": "W OCPP 1.6 mam ładowarkę z wpiętym kablem, ale kierowca jeszcze nie przyłożył karty. Jaki status złącza ona raportuje i jakim komunikatem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["preparing"],
+          ["statusnotification"]
+        ],
+        "none": ["\\bOccupied\\b.{0,20}(w 1\\.6|dla 1\\.6)"]
+      }
+    },
+    {
+      "id": "transactionevent-seqno",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-ocpp-2x",
+      "prompt": "Na OCPP 2.0.1 dostaję TransactionEvent Updated z seqNo 7, a poprzedni był seqNo 5. Czy to znaczy, że zdarzenie przepadło i jak CSMS ma to obsłużyć? Odpowiedz zwięźle."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "_comment": "Rejestr technologii: jak je wykryć w projekcie i który skill je opisuje. Dopisz nową technologię, a detect_stack.py zacznie ją raportować (także jako brakujący skill). Rejestr rdzenia jest pusty: technologie ze skillami dostarczają nakładki (factory/packs/<id>/technologies.json, ten sam format); tu możesz dopisać własne.",
+  "technologies": []
+}

@@ -1,0 +1,24 @@
+{
+  "max_lines": 40,
+  "checks": [
+    {
+      "name": "eslint (popraw i sprawdź plik)",
+      "glob": "src/**/*.{ts,tsx}",
+      "cmd": "npx eslint --fix {file}",
+      "timeout": 15
+    },
+    {
+      "name": "testy powiązane — obszar ryzyka rozliczeń",
+      "glob": "src/billing/**/*.ts",
+      "cmd": "npx vitest related {file} --run",
+      "timeout": 30,
+      "env": { "AI_AGENT": "1" }
+    },
+    {
+      "name": "ruff (popraw i sprawdź plik)",
+      "glob": "**/*.py",
+      "cmd": "ruff check --fix {file}",
+      "timeout": 10
+    }
+  ]
+}

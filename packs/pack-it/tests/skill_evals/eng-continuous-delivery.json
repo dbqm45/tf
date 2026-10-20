@@ -1,0 +1,50 @@
+{
+  "skill": "eng-continuous-delivery",
+  "scenarios": [
+    {
+      "id": "dora-cele",
+      "expect": "trigger",
+      "prompt": "Szef chce wpisać zespołom w cele kwartalne częstotliwość wdrożeń i czas realizacji zmiany z DORA oraz porównać zespoły w rankingu. Czy to dobry pomysł? Jakie są te metryki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Goodhart"
+          ],
+          [
+            "nie cel|nie są cel|nie jako cel|do uczenia|uczenia się"
+          ],
+          [
+            "z samym sobą|samym ze sobą|nie międz\\w+ zespo|nie porównuj"
+          ],
+          [
+            "odsetek nieudanych|change fail|czas przywrócenia|przeróbek|rework"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "tbd-flagi",
+      "expect": "trigger",
+      "prompt": "Mamy gałęzie funkcji żyjące po 3 tygodnie i bolesne merge'e. Jak przejść na trunk-based development i bezpiecznie wdrażać niedokończone funkcje? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "feature flag|flag\\w+ funkcji|przełącznik"
+          ],
+          [
+            "właściciel|data usunięcia|datę usunięcia|termin usunięcia"
+          ],
+          [
+            "1.{0,3}2 dni|dzień|codziennie"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "github-actions",
+      "expect": "no-trigger",
+      "prompt": "Jak skonfigurować w GitHub Actions cache zależności npm i matrycę wersji Node dla budowania? Odpowiedz zwięźle.",
+      "neighbor": "ops-ci-cd"
+    }
+  ]
+}

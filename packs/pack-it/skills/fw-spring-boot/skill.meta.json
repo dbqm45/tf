@@ -1,0 +1,12 @@
+{
+  "technology": "Spring Boot",
+  "based_on": "4.1",
+  "min_supported": "3.5",
+  "verified": "2026-10-18",
+  "verified_with": "dokumentacja Spring Boot 4.1.x i Migration Guide 4.0 (GitHub), Maven Central; bez kompilacji przykładów",
+  "sources": [
+    "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide",
+    "https://github.com/spring-projects/spring-boot/tree/4.1.x/documentation/spring-boot-docs",
+    "https://spring.io/projects/spring-boot"
+  ]
+}

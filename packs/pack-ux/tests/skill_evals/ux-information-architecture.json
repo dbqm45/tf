@@ -1,0 +1,39 @@
+{
+  "skill": "ux-information-architecture",
+  "scenarios": [
+    {
+      "id": "sortowanie-kart-sklep",
+      "expect": "trigger",
+      "prompt": "Przebudowujemy menu sklepu z 400 produktami z kategorii dla majsterkowiczów. Nie wiem, jak ludzie je grupują ani jak nazwać kategorie. Jak zrobić sortowanie kart i ilu uczestników zaprosić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["otwart\\w+", "open"],
+          ["zamkni\\w+", "closed"],
+          ["15|20|30"],
+          ["macierz\\w* podobieństw", "dendrogram", "similarity matrix", "standaryzacj\\w* kategorii", "standardization grid"]
+        ],
+        "none": ["sortowanie kart zastępuje test drzewa"]
+      }
+    },
+    {
+      "id": "test-drzewa-wyniki",
+      "expect": "trigger",
+      "prompt": "Zrobiliśmy test drzewa nowej nawigacji intranetu: zadanie 'znajdź formularz urlopowy' ma 72% sukcesu, ale tylko 38% bezpośrednio. Jak to czytać i co dalej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["bezpośredniość", "directness", "bezpośredni\\w+"],
+          ["sukces\\w*", "success"],
+          ["etykiet\\w+", "węzeł|węzła|węzły", "ścieżk\\w+"],
+          ["ponown\\w+ test", "kolejn\\w+ iterac\\w+", "powtórz\\w+ test"]
+        ],
+        "none": ["72% to świetny wynik, nic nie zmieniamy"]
+      }
+    },
+    {
+      "id": "etykiety-uzytkownicy-test",
+      "expect": "no-trigger",
+      "prompt": "Projektuję ekran listy faktur z filtrowaniem, stanami pustymi i błędami oraz makietą. Co opisać w przepływie i specyfikacji dla programistów?",
+      "neighbor": "ux-feature-design"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Conventional Commits przy każdym commicie (docs/RELEASING.md). Włączenie: git config core.hooksPath .githooks
+exec python3 scripts/check_commit_message.py --file "$1"

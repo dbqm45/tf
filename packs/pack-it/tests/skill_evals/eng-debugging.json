@@ -1,0 +1,102 @@
+{
+  "skill": "eng-debugging",
+  "scenarios": [
+    {
+      "id": "regresja-200-commitow",
+      "expect": "trigger",
+      "prompt": "Raport faktur liczył sumy dobrze dwa tygodnie temu, a teraz wychodzą złe; od tego czasu weszło około 200 commitów. Jak najszybciej znaleźć commit, który to zepsuł? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "git bisect"
+          ],
+          [
+            "bisect run",
+            "skrypt"
+          ],
+          [
+            "125",
+            "skip",
+            "pomi[jń]"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "500-dla-czesci-klientow",
+      "expect": "trigger",
+      "prompt": "Endpoint POST /orders zwraca 500 tylko dla części klientów, a w logach jest NullPointerException w OrderPricing. Jak systematycznie znaleźć przyczynę, zamiast zgadywać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "odtworz",
+            "odtwarza",
+            "reprodu"
+          ],
+          [
+            "hipotez"
+          ],
+          [
+            "test\\w* (który|odtwarza|reprodukuj|regresyjn)",
+            "najpierw test",
+            "czerwon\\w* test"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "incydent-platnosci",
+      "expect": "no-trigger",
+      "neighbor": "ops-sre-incidents",
+      "prompt": "Produkcja leży od 10 minut i klienci nie mogą płacić. Co robimy teraz: kto dowodzi, jak komunikujemy i kiedy wycofać ostatnie wdrożenie?"
+    },
+    {
+      "id": "polkniety-blad",
+      "expect": "trigger",
+      "prompt": "Użytkownik pisze tylko: „zapis notatki nie działa”. API zwraca 200, ale w bazie nic się nie pojawia, a w logach jest jakiś warn. Jak to zbadać i naprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "połknię",
+            "catch",
+            "zwraca sukces",
+            "ok: ?true"
+          ],
+          [
+            "monitoring",
+            "Sentry",
+            "logi"
+          ],
+          [
+            "zapisan\\w* stan",
+            "stan w bazie",
+            "trwał\\w* skut",
+            "wiersz w bazie",
+            "sprawdza\\w* (bazę|zapis)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "przeramowanie",
+      "expect": "trigger",
+      "prompt": "To już trzecia poprawka tego samego błędu z duplikatami faktur i znowu nie pomogła. Zgłoszenie brzmiało: „duplikaty faktur — dodajmy blokadę w bazie”. Co teraz zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "obserwacj"
+          ],
+          [
+            "hipotez"
+          ],
+          [
+            "przeramow",
+            "źle (postawion|nazwan|sformułowan)",
+            "właściwy problem",
+            "inny problem"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "skill": "ops-dependency-upgrades",
+  "scenarios": [
+    {
+      "id": "spring-boot-java",
+      "expect": "trigger",
+      "prompt": "W pom.xml mamy Spring Boot 2.7 i Javę 11; dostaliśmy zadanie podniesienia do Spring Boot 3.5 i Javy 21. Jak to zaplanować i przeprowadzić bezpiecznie? Odpowiedz zwięźle.",
+      "files": {
+        "pom.xml": "<project>\n  <parent>\n    <groupId>org.springframework.boot</groupId>\n    <artifactId>spring-boot-starter-parent</artifactId>\n    <version>2.7.18</version>\n  </parent>\n  <properties>\n    <java.version>11</java.version>\n  </properties>\n</project>\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "OpenRewrite",
+            "rewrite"
+          ],
+          [
+            "jakarta"
+          ],
+          [
+            "krok",
+            "etap",
+            "po kolei",
+            "najpierw"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zalew-pr",
+      "expect": "trigger",
+      "prompt": "Mamy 40 repozytoriów i od roku nikt nie aktualizuje w nich zależności. Jak ustawić regularne aktualizacje w Renovate albo Dependabocie, żeby nie zalały nas pull requesty? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "group",
+            "grup"
+          ],
+          [
+            "automerge",
+            "automatyczn\\w* (scal|merge)"
+          ],
+          [
+            "schedule",
+            "harmonogram",
+            "raz w tygodniu",
+            "weekly",
+            "interval"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bez-plikow-uv",
+      "expect": "trigger",
+      "prompt": "W projekcie na uv chcemy podnosić zależności po jednej paczce i najpierw zobaczyć, co jest nieaktualne. Jak to zrobić i jak sprawdzić, że nic się nie zepsuło? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "--outdated"
+          ],
+          [
+            "--upgrade-package",
+            "-P "
+          ],
+          [
+            "test"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "przejeta-paczka",
+      "expect": "no-trigger",
+      "neighbor": "ops-supply-chain-security",
+      "prompt": "Wczoraj ogłoszono, że paczka npm, której używamy, została przejęta i wydano złośliwą wersję. Jak sprawdzić w lockfile, czy nas to dotknęło?"
+    }
+  ]
+}

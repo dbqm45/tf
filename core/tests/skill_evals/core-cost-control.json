@@ -1,0 +1,219 @@
+{
+  "skill": "core-cost-control",
+  "scenarios": [
+    {
+      "id": "rachunek-za-opusa",
+      "expect": "trigger",
+      "prompt": "Rachunek za Claude Code nam rośnie — wszystko leci na Opusie. Jak sprawić, żeby proste zadania szły na tańszy model, a trudne na mocniejszy, i żeby system sam to oceniał? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "haiku",
+            "sonnet",
+            "tańsz"
+          ],
+          [
+            "eskal",
+            "kaskad",
+            "o jeden poziom",
+            "po 2 próbach",
+            "po dwóch"
+          ],
+          [
+            "test",
+            "weryfik",
+            "lint",
+            "sprawdz"
+          ]
+        ],
+        "none": [
+          "zawsze (używaj|uruchamiaj) (opus|najmocniejsz)"
+        ]
+      }
+    },
+    {
+      "id": "cache-i-przelaczanie-modelu",
+      "expect": "trigger",
+      "prompt": "W połowie długiej sesji przełączam /model z Opusa na Haiku, żeby było taniej, a potem z powrotem. Czy to dobry sposób na oszczędzanie tokenów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "cache"
+          ],
+          [
+            "subagent",
+            "wykonawc",
+            "deleg",
+            "parametr `?model",
+            "na początku sesji",
+            "nowej sesji"
+          ]
+        ],
+        "none": [
+          "^\\s*tak, to dobry sposób"
+        ]
+      }
+    },
+    {
+      "id": "delegowac-czy-samemu",
+      "expect": "trigger",
+      "prompt": "Orkiestrator każdą zmianę w kodzie deleguje: scout szuka plików, wykonawca na Sonnecie implementuje, orkiestrator czyta raport i diff. Rachunek rośnie, a wykonawcy czasem nie znają ustaleń z rozmowy. Jak to ustawić taniej i lepiej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "sam\\w*",
+            "we własnym kontekście",
+            "w swoim kontekście",
+            "w jednym kontekście"
+          ],
+          [
+            "cache"
+          ],
+          [
+            "niezależn",
+            "równoleg",
+            "świeże spojrzenie",
+            "przegląd",
+            "clean-room"
+          ]
+        ],
+        "none": [
+          "deleguj (zawsze|wszystko|każd)"
+        ]
+      }
+    },
+    {
+      "id": "mcp-i-dryf-kontekstu",
+      "expect": "trigger",
+      "prompt": "Mam podłączonych 7 serwerów MCP i sesje Claude Code są drogie od pierwszej wiadomości. Do tego po dwóch godzinach pracy agent przekręca nazwy plików i wraca do poprawek, które już odrzuciłem. Co zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "definicj\\w* (narzędzi|wszystkich)",
+            "każd\\w* tur",
+            "schemat\\w* narzędzi",
+            "opis\\w* narzędzi"
+          ],
+          [
+            "now\\w* sesj",
+            "śwież\\w* (sesj|kontekst)",
+            "/clear",
+            "punkt\\w* kontroln"
+          ]
+        ],
+        "none": [
+          "/compact w środku zadania"
+        ]
+      }
+    },
+    {
+      "id": "nowy-model-z-rankingu",
+      "expect": "trigger",
+      "prompt": "Wyszedł nowy model, w publicznym rankingu programowania ma o 5 punktów więcej niż nasz obecny. Czy od razu przestawić go jako domyślny dla zespołu i agentów w CI? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "własn\\w* (test|zadan|zestaw)",
+            "prawdziw\\w* zada",
+            "ewaluacj"
+          ],
+          [
+            "koszt\\w* (rozwiązan|zadania|całego)",
+            "iteracj",
+            "pass\\^k",
+            "powtarzaln",
+            "harness"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "koszt-tygodnia-w-pln",
+      "expect": "trigger",
+      "prompt": "Ile kosztowała nas praca agentów w tym tygodniu w złotówkach i jakie modele poszły w ruch? Chcę też wiedzieć, czy to drogo w porównaniu z poprzednimi tygodniami. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "cost_stats"
+          ],
+          [
+            "NBP|PLN"
+          ],
+          [
+            "pasm|median|poprzedni|porówn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "czy-delegowanie-sie-oplaca",
+      "expect": "trigger",
+      "prompt": "Chcę sprawdzić na danych, kiedy delegowanie zadania do wykonawcy się opłaca, a kiedy taniej zrobić je samemu w głównej sesji. Co oznaczyć w briefie i skąd wziąć liczby? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Klasa:"
+          ],
+          [
+            "--delegation",
+            "delegation\\.jsonl"
+          ],
+          [
+            "czytanie|przegląd|mechaniczn|równoleg"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wolne-zapytania-sql",
+      "expect": "no-trigger",
+      "neighbor": "be-database",
+      "prompt": "Endpoint listy zamówień odpowiada po 4 sekundach przy 50 tys. rekordów w PostgreSQL. Jak znaleźć wąskie gardło i co zoptymalizować?"
+    },
+    {
+      "id": "fork-sesja-subagent-teams",
+      "expect": "trigger",
+      "prompt": "Mam dwie niezależne zmiany i przegląd bezpieczeństwa do zrobienia. Co wybrać: fork, nową sesję w worktree, subagenta czy agent teams — i ile każda opcja kosztuje? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fork"
+          ],
+          [
+            "worktree"
+          ],
+          [
+            "subagent"
+          ],
+          [
+            "agent teams"
+          ],
+          [
+            "eksperymentaln",
+            "więcej tokenów"
+          ]
+        ],
+        "none": [
+          "agent teams (domyślnie|zawsze)"
+        ]
+      }
+    },
+    {
+      "id": "harness-staly-czy-dowolny",
+      "expect": "trigger",
+      "prompt": "Dostawca podaje, że jego nowy model ma 80% w benchmarku agentowym, a nasz obecny model miał 65% w innym raporcie. Czy te liczby są porównywalne i czy przejść na nowy model? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "harness"
+          ],
+          [
+            "stał\\w* czy dowoln",
+            "harness\\w* (był )?stał",
+            "dowoln\\w* harness"
+          ]
+        ]
+      }
+    }
+  ]
+}

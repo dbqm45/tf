@@ -1,0 +1,132 @@
+{
+  "skill": "eng-legacy-dossier",
+  "scenarios": [
+    {
+      "id": "opis-systemu-przed-refaktorem",
+      "expect": "trigger",
+      "prompt": "Przejmujemy stary system fakturowania w Javie, nikt już nie wie, jak działa. Chcę go porządnie opisać: co robią poszczególne moduły i jakie reguły biznesowe siedzą w kodzie, żeby potem planować poprawki i refaktor. Jak to zrobić i w jakiej formie zapisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "plik:linia",
+            "dow[oó]d\\w*",
+            "numer\\w* linii"
+          ],
+          [
+            "reguł\\w* biznesow"
+          ],
+          [
+            "do weryfikacji",
+            "pewnoś",
+            "pytani\\w* do",
+            "niepotwierdzon"
+          ],
+          [
+            "kart\\w* modułu",
+            "każd\\w* moduł",
+            "per moduł",
+            "dla każdego modułu"
+          ]
+        ],
+        "none": [
+          "przeczytaj całe repo",
+          "najpierw (zrób|przeprowadź) refaktor"
+        ]
+      }
+    },
+    {
+      "id": "dokument-dla-nowego-zespolu",
+      "expect": "trigger",
+      "prompt": "Mamy legacy w PHP bez żadnej dokumentacji. Potrzebuję dokumentu, który nowemu zespołowi wytłumaczy, co robi każda część systemu, i będzie punktem wyjścia do poprawek. Co ma się w nim znaleźć i jak sprawdzić, że jest kompletny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "słownik",
+            "glosariusz"
+          ],
+          [
+            "przepływ",
+            "sekwencj"
+          ],
+          [
+            "kandydat\\w* do refaktor",
+            "eng-tech-debt-audit",
+            "eng-refactor-planning",
+            "dług"
+          ],
+          [
+            "dossier_check",
+            "skrypt\\w* sprawdz",
+            "sprawdz\\w* kompletnoś"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audyt-architektury-nx-angular",
+      "expect": "trigger",
+      "prompt": "Mam aplikację Angular w monorepo Nx po kilku zespołach. Chcę zrobić audyt architektury: najpierw udokumentować, jak jest zbudowana, potem ocenić rozwiązania i zaproponować zmiany tylko tam, gdzie są uzasadnione, z priorytetami i roadmapą. Jak to przeprowadzić i jakie dokumenty powinny powstać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "inventory",
+            "as-is",
+            "stan obecn"
+          ],
+          [
+            "assessment",
+            "ocen\\w* (rozwiązań|architektury)"
+          ],
+          [
+            "roadmap",
+            "rekomendacj"
+          ],
+          [
+            "enforce-module-boundaries",
+            "nx graph",
+            "granic\\w* bibliotek"
+          ],
+          [
+            "preferencj",
+            "potwierdzon\\w* problem",
+            "dow[oó]d"
+          ]
+        ],
+        "none": [
+          "zacznij od refaktor",
+          "przepisz (całą|aplikację)"
+        ]
+      }
+    },
+    {
+      "id": "zaleznosci-modulu-z-grafu",
+      "expect": "trigger",
+      "prompt": "Piszę teczkę legacy dla modułu rozliczeń w repo Python/TS i w karcie modułu mam sekcję Zależności (do i od modułu). Skąd je wziąć wiarygodnie, zamiast wypisywać z pamięci po przeczytaniu kilku plików? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "code_graph"
+          ],
+          [
+            "--focus"
+          ],
+          [
+            "unknowns|DI|kolejk|rejestr|po nazwie"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mapa-nieznanego-repo",
+      "expect": "no-trigger",
+      "neighbor": "eng-codebase-mapping",
+      "prompt": "Dostałem nieznane repo w TypeScripcie. Od czego zacząć czytać i jak szybko znaleźć punkty wejścia oraz cykle importów?"
+    },
+    {
+      "id": "ocena-dlugu",
+      "expect": "no-trigger",
+      "neighbor": "eng-tech-debt-audit",
+      "prompt": "Zrób audyt długu technicznego modułu płatności: co jest najgorsze, jaka waga i ile pracy, w jakiej kolejności to spłacać?"
+    }
+  ]
+}

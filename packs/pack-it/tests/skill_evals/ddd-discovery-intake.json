@@ -1,0 +1,75 @@
+{
+  "skill": "ddd-discovery-intake",
+  "scenarios": [
+    {
+      "id": "wywiady-na-obszary",
+      "expect": "trigger",
+      "prompt": "Mam 12 transkrypcji wywiadów z działem logistyki i zdjęcia dwóch tablic z Event Stormingu. Chcę z tego wyciągnąć obszary biznesowe, ale model nie może niczego zmyślać. Jak to zorganizować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "bank (dowod|cytat)|cytat\\w* (dosłown|ze źródła)"
+          ],
+          [
+            "sprzeczno|contradiction"
+          ],
+          [
+            "3 .{0,25}cytat|trzy .{0,25}cytat|2 .{0,25}źród|dwóch .{0,25}źród|próg"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "czy-warto-modularyzowac",
+      "expect": "trigger",
+      "prompt": "Szef chce od razu rozbijać nasz wewnętrzny skrypt do raportów na moduły i bounded contexty. Jakie pytania zadać, zanim zaczniemy, żeby ocenić, czy w ogóle warto modularyzować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "jednorazow|prototyp|cykl życia"
+          ],
+          [
+            "jeden moduł|jednym moduł|jednego moduł"
+          ],
+          [
+            "złożono|konkurencj\\w* o zasoby|integracj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "krytyka-pytan-wywiadu",
+      "expect": "trigger",
+      "prompt": "Przygotowałem pytania do wywiadów z użytkownikami przed budową narzędzia: „Czy używałbyś aplikacji, która sama planuje dyżury?”, „Ile byś za nią zapłacił?”, „Czy podoba ci się ten pomysł?”. Oceń je i popraw. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ostatni\\w* (raz|konkretn)",
+            "ostatnim razem",
+            "konkretn\\w* (sytuacj|zdarzen|przypad)",
+            "przeszł"
+          ],
+          [
+            "usuń",
+            "przepisz",
+            "zostaw",
+            "zamiast"
+          ],
+          [
+            "hipotetycz",
+            "przyszł",
+            "sugerując",
+            "komplement",
+            "pomysł"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "przygotowanie-warsztatu",
+      "expect": "no-trigger",
+      "prompt": "Planuję pierwszy warsztat Event Storming Big Picture dla 15 osób. Jak go przygotować i poprowadzić krok po kroku? Odpowiedz zwięźle.",
+      "neighbor": "ddd-event-storming"
+    }
+  ]
+}

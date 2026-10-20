@@ -1,0 +1,39 @@
+{
+  "skill": "sec-governance-compliance",
+  "scenarios": [
+    {
+      "id": "iso27001-soa-zakres",
+      "expect": "trigger",
+      "prompt": "Klient enterprise żąda certyfikatu ISO 27001 w ciągu roku. Od czego zaczynamy i jak wygląda droga do certyfikacji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zakres", "scope"],
+          ["Statement of Applicability", "SoA", "deklaracj\\w* stosowania"],
+          ["93"],
+          ["audyt\\w* wewn", "internal audit", "przegl\\w* zarządz", "management review"]
+        ],
+        "none": ["114 kontroli (w|z) 2022"]
+      }
+    },
+    {
+      "id": "soc2-typ2-mapowanie",
+      "expect": "trigger",
+      "prompt": "Mamy ISO 27001, a klienci z USA pytają o SOC 2. Czym różni się typ I od II i jak nie robić wszystkiego od zera drugi raz? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["Type II|typ(u)? II|Type 2", "okres"],
+          ["Trust Services|TSC|kryteri\\w* zaufania"],
+          ["mapowan", "jedna kontrola", "one control", "wiele-do-wielu", "crosswalk"],
+          ["dowod", "evidence"]
+        ],
+        "none": ["SOC 2 to certyfikat"]
+      }
+    },
+    {
+      "id": "ryzyko-w-rejestrze-wendora",
+      "expect": "no-trigger",
+      "prompt": "Jak ocenić ryzyko dostawcy chmurowego i zapisać akceptację ryzyka z właścicielem i datą wygaśnięcia?",
+      "neighbor": "sec-risk-management"
+    }
+  ]
+}

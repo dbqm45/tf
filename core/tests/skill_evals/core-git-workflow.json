@@ -1,0 +1,141 @@
+{
+  "skill": "core-git-workflow",
+  "scenarios": [
+    {
+      "id": "force-push",
+      "expect": "trigger",
+      "prompt": "Po rebase na mojej własnej gałęzi feature push został odrzucony. Zrobić po prostu git push --force? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "force-with-lease"
+          ],
+          [
+            "własn\\w* gałęz"
+          ],
+          [
+            "zgod"
+          ]
+        ],
+        "none": [
+          "git push --force origin (main|master)"
+        ]
+      }
+    },
+    {
+      "id": "add-all-main",
+      "expect": "trigger",
+      "prompt": "Jestem na main, mam zmiany w kilkunastu plikach. Planuję git add -A, commit i push prosto na main. Co zrobić inaczej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "git diff --staged|git diff --cached"
+          ],
+          [
+            "sekret|\\.env"
+          ],
+          [
+            "utwórz\\w* gałąź|nową gałąź|osobn\\w* gałąź|gałąź.{0,20}przed"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "przeglad-pr-przez-ai",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby Claude robił pierwszy przegląd każdego pull requesta w GitHubie. Jak to ustawić, żeby nie zasypywał nas drobiazgami i żeby agent nigdy nie zatwierdzał własnego kodu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "REVIEW\\.md"
+          ],
+          [
+            "claude-code-action",
+            "Code Review"
+          ],
+          [
+            "ochron\\w* gałęzi",
+            "branch protection",
+            "zatwierdza człowiek",
+            "zatwierdzeni\\w* człowieka",
+            "człowiek zatwierdza"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rownolegle-zmiany-worktree",
+      "expect": "trigger",
+      "prompt": "Chcę puścić równolegle dwóch agentów Claude na dwie zmiany w tym samym repozytorium git. Jak to zorganizować, żeby sobie nie przeszkadzali i żebym nadążył z przeglądem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "worktree"
+          ],
+          [
+            "port",
+            "baz\\w* (danych|lokaln)",
+            "środowisk"
+          ],
+          [
+            "wspóln\\w* plik",
+            "niezależn",
+            "konflikt",
+            "kontrakt"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "przeglad-ai-bramka-ci",
+      "expect": "trigger",
+      "prompt": "Mamy przegląd pull requestów przez Claude w GitHub Actions. Chcemy, żeby werdykt „odrzucone” blokował scalenie, a raport był commitowany na gałąź PR. Na co uważać w tym workflow? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fetch-depth"
+          ],
+          [
+            "skip ci"
+          ],
+          [
+            "status\\w* commita",
+            "commit status",
+            "krok\\w*.{0,40}werdykt",
+            "werdykt\\w*.{0,60}(krok|workflow)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "format-commita",
+      "expect": "no-trigger",
+      "prompt": "Jak powinien wyglądać komunikat commita dla zmiany łamiącej API — typ, zakres i stopka?",
+      "neighbor": "core-conventional-commits"
+    },
+    {
+      "id": "zmiana-kontraktu-miedzy-sesjami",
+      "expect": "trigger",
+      "prompt": "Pracuję w dwóch równoległych sesjach Claude Code, każda w swoim worktree. W jednej zmieniłem kontrakt API, z którego korzysta druga. Jak ją powiadomić i skąd mam wiedzieć, że któraś sesja czeka na moją decyzję? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Zmiana kontraktu"
+          ],
+          [
+            "przyjęte"
+          ],
+          [
+            "SendMessage",
+            "/peers",
+            "@\\w"
+          ],
+          [
+            "Needs input",
+            "claude agents"
+          ]
+        ]
+      }
+    }
+  ]
+}

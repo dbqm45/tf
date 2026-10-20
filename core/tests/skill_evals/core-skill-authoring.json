@@ -1,0 +1,158 @@
+{
+  "skill": "core-skill-authoring",
+  "scenarios": [
+    {
+      "id": "nowy-skill-terraform",
+      "expect": "trigger",
+      "prompt": "Chcę dodać do fabryki nowy skill o migracjach baz MongoDB. Od czego zacząć i jak sprawdzić, że naprawdę działa, zanim go oddam? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "scenariusz",
+            "ewaluacj",
+            "eval"
+          ],
+          [
+            "skill_gate",
+            "bramk"
+          ],
+          [
+            "no-trigger",
+            "sąsiad",
+            "sasiad",
+            "granic"
+          ]
+        ],
+        "none": [
+          "najpierw napisz (całą|pełną) treść SKILL\\.md"
+        ]
+      }
+    },
+    {
+      "id": "skill-sie-nie-uruchamia",
+      "expect": "trigger",
+      "prompt": "Napisałem skill do fabryki, ale model go nie wczytuje, a odpowiada z głowy. Jak to poprawić i jak udowodnić, że po poprawce jest lepiej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "description",
+            "opis",
+            "metadata\\.slowa",
+            "słow"
+          ],
+          [
+            "baseline",
+            "bez skilla",
+            "bez skilli",
+            "punkt odniesienia",
+            "porówna"
+          ],
+          [
+            "skill_gate",
+            "run_skill_evals",
+            "ewaluacj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "lista-skilli-sie-przepelnia",
+      "expect": "trigger",
+      "prompt": "Mam w projekcie ponad sto skilli i chcę dodawać kolejne. Nowy skill rzadko będzie potrzebny. Jak go dodać, żeby nie wypychał opisów innych skilli z listy, a model i tak go znalazł, gdy będzie potrzebny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "widocznosc",
+            "name-only",
+            "sama nazwa",
+            "skillOverrides"
+          ],
+          [
+            "skill_hint",
+            "podpowied"
+          ]
+        ],
+        "none": [
+          "disable-model-invocation: true dla (każdego|wszystkich)"
+        ]
+      }
+    },
+    {
+      "id": "slaby-skill",
+      "expect": "trigger",
+      "prompt": "Napisałem skill, którego opis brzmi „Pomaga z dokumentami”, a SKILL.md ma 900 linii samych zasad. Co poprawić, żeby działał dobrze? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Użyj",
+            "kiedy",
+            "reguł\\w* wyboru"
+          ],
+          [
+            "500",
+            "references"
+          ],
+          [
+            "przykład"
+          ],
+          [
+            "jedno zadanie",
+            "podziel"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "skrypt-do-skilla-z-testami",
+      "expect": "trigger",
+      "prompt": "Chcę dodać do skilla skrypt w scripts/, który liczy metryki z kodu, a agenci mają brać z niego liczby do raportów. Co musi się stać, zanim wepnę go do SKILL.md? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "TDD|najpierw test|czerwon"
+          ],
+          [
+            "wzorc|wzorzec|prawdziw\\w* repo|niezależn"
+          ],
+          [
+            "agent\\w* nie (weryfikuj|sprawdz)|bez weryfikacji|ufa"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "laczenie-ddd-angular",
+      "expect": "no-trigger",
+      "neighbor": "core-skill-composition",
+      "prompt": "Mam zadanie, które dotyka jednocześnie modelu DDD i komponentów Angulara. Jak połączyć wiedzę z obu skilli w jednym rozwiązaniu?"
+    },
+    {
+      "id": "skill-procesowy-w-ci",
+      "expect": "trigger",
+      "prompt": "Chcę dodać do fabryki skill, który z pliku planu w docs/project robi raport z przeglądu implementacji i ma działać także w CI przez claude -p, bez człowieka. Jak go zaprojektować, żeby był przewidywalny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "disable-model-invocation",
+            "wywoływan\\w* jawnie",
+            "jawn\\w* wywoł",
+            "procesow"
+          ],
+          [
+            "plik\\w* wejściow",
+            "warunek wstępny",
+            "odm[aó]w",
+            "nie istnieje",
+            "brak pliku"
+          ],
+          [
+            "bez pytań",
+            "nie (zadaje|zadawaj|pyta)",
+            "zachowawcz",
+            "werdykt"
+          ]
+        ]
+      }
+    }
+  ]
+}

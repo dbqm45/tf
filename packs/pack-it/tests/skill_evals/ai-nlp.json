@@ -1,0 +1,120 @@
+{
+  "skill": "ai-nlp",
+  "scenarios": [
+    {
+      "id": "dobor-podejscia-klasyfikacja-maili",
+      "expect": "trigger",
+      "prompt": "Dostajemy 40 000 maili dziennie po polsku i chcemy je kierować do 6 działów. Mamy ok. 800 ręcznie oznaczonych. Brać LLM przez API, dotrenować BERT-a czy zrobić coś prostszego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "TF-IDF",
+            "regresj\\w* logistyczn",
+            "klasyczn\\w* (ML|model|klasyfikator)",
+            "punkt odniesienia",
+            "baseline"
+          ],
+          [
+            "HerBERT",
+            "enkoder",
+            "encoder",
+            "mał\\w* model\\w* (enkoder|BERT)"
+          ],
+          [
+            "koszt",
+            "opóźnien",
+            "latency"
+          ],
+          [
+            "macro",
+            "makro",
+            "zbiór (testowy|walidacyjny)",
+            "niezbalansowan",
+            "nierównowag"
+          ]
+        ],
+        "none": [
+          "zawsze (użyj|wybierz|bierz) (największego )?(LLM|modelu)"
+        ]
+      }
+    },
+    {
+      "id": "ner-faktury-ocena-spanowa",
+      "expect": "trigger",
+      "prompt": "Zrobiliśmy NER wyciągający nazwy firm i kwoty z polskich faktur. Accuracy na tokenach wychodzi 98%, a użytkownicy i tak narzekają. Jak to ocenić porządnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "span",
+            "seqeval",
+            "granic\\w* (encji|spanu|fragmentu)",
+            "dopasowani\\w* (ścisł|całej encji)"
+          ],
+          [
+            "token\\w* (spoza|O\\b)",
+            "klas\\w* (dominując|większościow)",
+            "dominuj\\w*",
+            "etykiet\\w* O"
+          ],
+          [
+            "micro",
+            "macro",
+            "mikro",
+            "makro"
+          ],
+          [
+            "precision",
+            "precyzj",
+            "recall",
+            "czułoś"
+          ]
+        ],
+        "none": [
+          "accuracy (na tokenach )?(w zupełności )?wystarcza"
+        ]
+      }
+    },
+    {
+      "id": "pii-polskie-zgloszenia-odmiana",
+      "expect": "trigger",
+      "prompt": "Chcemy anonimizować polskie zgłoszenia reklamacyjne (imiona, nazwiska, PESEL, adresy) przed wysłaniem do zewnętrznego LLM, a potem móc zliczać zgłoszenia per klient mimo odmiany nazwisk. Jak to ugryźć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "suma kontrolna",
+            "sumy kontrolnej",
+            "checksum",
+            "walidacj\\w* PESEL"
+          ],
+          [
+            "Presidio",
+            "regex\\w* (i|oraz|plus|\\+) NER",
+            "reguł\\w* (i|oraz|plus) (model|NER)",
+            "podejście hybrydowe"
+          ],
+          [
+            "lemat",
+            "Morfeusz",
+            "odmian\\w*",
+            "pseudonimizacj"
+          ],
+          [
+            "recall",
+            "czułoś",
+            "pominięt\\w*",
+            "zbiór (testowy|złoty|ewaluacyjny)"
+          ]
+        ],
+        "none": [
+          "wystarczy (regex|wyrażenie regularne|wyrażenia regularne) na (imiona|nazwiska)"
+        ]
+      }
+    },
+    {
+      "id": "chunking-reranking-rag",
+      "expect": "no-trigger",
+      "neighbor": "ai-rag",
+      "prompt": "Budujemy czatbota na 1 800 PDF-ach z procedurami. Jak dobrać rozmiar chunków, czy dodać reranking i jak mierzyć recall@k retrievalu?"
+    }
+  ]
+}

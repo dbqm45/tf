@@ -1,0 +1,50 @@
+{
+  "skill": "dom-ev-smart-charging",
+  "scenarios": [
+    {
+      "id": "domyslny-limit-48-vs-zero",
+      "expect": "trigger",
+      "prompt": "Czytam dokumentację EVerest libocpp: w jednym miejscu pisze, że composite schedule bez żadnych profili to brak ładowania (limit 0.0), a w kodzie i opisie widzę domyślne 48 A. Które jest prawdą i co z tym zrobić po stronie CSMS? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["48 ?A"],
+          ["niespójn|sprzeczn|rozbież|inconsisten|nie zgadza"],
+          ["TxDefault.{0,80}(zainstal|ustaw|wyślij|domyśln|bezpieczn)|(zainstal|ustaw|wyślij).{0,60}TxDefault"]
+        ],
+        "none": ["bez profili (ładowarka|stacja) (zawsze )?nie ładuje"]
+      }
+    },
+    {
+      "id": "max-w-vs-txdefault-a",
+      "expect": "trigger",
+      "prompt": "Stacja 3-fazowa 230 V na fazę ma ChargePointMaxProfile 11000 W (jednostka W) i TxDefaultProfile 16 A na konektorze 1. Jaki prąd faktycznie dostanie pojazd po złączeniu profili i dlaczego? Podaj liczbę.",
+      "checks": {
+        "all": [
+          ["15[,.]9"],
+          ["Max.{0,60}(niższ|wygrywa|ogranicz|pułap|sufit|górn)|(niższ|ogranicz|pułap|sufit).{0,60}Max"],
+          ["11000.{0,40}(230|3 ?[x×*]|trzy)|W ?/ ?\\(?230|napięci"]
+        ],
+        "none": ["pojazd (dostanie|pobierze) 16 ?A"]
+      }
+    },
+    {
+      "id": "policz-composite-bez-stacji",
+      "expect": "trigger",
+      "prompt": "Mam w pliku JSON trzy profile ładowania (ChargingStationMaxProfile, TxDefaultProfile i TxProfile Recurring). Chcę sprawdzić, co zwróci stacja na GetCompositeSchedule w oknie od 18:00 przez 4 godziny, ale nie mam fizycznej ładowarki. Jak to zrobić?",
+      "checks": {
+        "all": [
+          ["composite_schedule\\.py"],
+          ["--start"],
+          ["--duration"]
+        ],
+        "none": ["nie ma (żadnego )?(narzędzia|sposobu)"]
+      }
+    },
+    {
+      "id": "podzial-mocy-przylacza",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-energy-management",
+      "prompt": "W biurowcu mamy przyłącze 100 A, budynek bierze do 60 A, a do tego 20 ładowarek i instalację PV. Jak rozdzielać moc między pojazdy i jak uwzględnić produkcję z PV oraz taryfę dynamiczną? Odpowiedz zwięźle."
+    }
+  ]
+}

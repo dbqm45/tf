@@ -1,0 +1,50 @@
+{
+  "skill": "docs-tech-writing",
+  "scenarios": [
+    {
+      "id": "adr-prog",
+      "expect": "trigger",
+      "prompt": "Zastanawiam się, czy wybór biblioteki do formatowania dat w naszym serwisie zasługuje na osobny ADR. Kiedy w ogóle pisać ADR, a kiedy odpuścić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "trudno odwrócić|trudn\\w+ do odwrócenia|nieodwracaln|hard to reverse"
+          ],
+          [
+            "zaskoczy|dlaczego tak|czemu tak|surprise"
+          ],
+          [
+            "prawdziw\\w+ wyb|alternatyw"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "runbook-struktura",
+      "expect": "trigger",
+      "prompt": "Piszę runbook do alertu 'kolejka zamówień rośnie'. Jaką strukturę ma mieć każdy wpis, żeby dyżurny o 3 w nocy dał radę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "objaw"
+          ],
+          [
+            "potwierdz"
+          ],
+          [
+            "rollback|wycofa|cofnię"
+          ],
+          [
+            "eskalac"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "komentarze-w-kodzie",
+      "expect": "no-trigger",
+      "neighbor": "core-project-record",
+      "prompt": "Mam w projekcie katalog docs/project/ z dziennikiem. Jak zapisać artefakt fazy wymagań z sekcją przekazania dla następnego agenta? Odpowiedz zwięźle."
+    }
+  ]
+}

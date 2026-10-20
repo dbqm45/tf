@@ -1,0 +1,53 @@
+{
+  "skill": "eng-code-audit",
+  "scenarios": [
+    {
+      "id": "pelny-audyt-tanio",
+      "expect": "trigger",
+      "prompt": "Chcę pełny audyt kodu naszej aplikacji SaaS: architektura, bezpieczeństwo, jakość, dostępność i zgodność z prawem UE. Jak to zorganizować z agentami, żeby nie przepalić budżetu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "budżet|limit koszt|koszt.{0,40}z góry|głębokoś\\w*"
+          ],
+          [
+            "tani\\w* (skan|model)|haiku|scout|najpierw.{0,40}(CLI|narzędzi|skan)"
+          ],
+          [
+            "równoleg|jednej wiadomości|osobn\\w+ wykonawc"
+          ],
+          [
+            "ranking|scal\\w*|duplikat"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "scalenie-ustalen",
+      "expect": "trigger",
+      "prompt": "Mam raporty z audytu kodu od pięciu agentów (architektura, bezpieczeństwo, dostępność, testy, dług) i część ustaleń się powtarza. Jak złożyć z tego jeden raport audytu, któremu zespół zaufa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "duplikat|scal\\w*|ta sama przyczyn|wspóln\\w+ przyczyn"
+          ],
+          [
+            "plik:linia|plik i lini|dow[oó]d"
+          ],
+          [
+            "czego nie sprawdz|nie sprawdzon|poza zakresem|niezweryfikowan"
+          ],
+          [
+            "ryzyk\\w*.{0,60}koszt|koszt\\w*.{0,60}ryzyk|zasięg|÷"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ranking-dlugu",
+      "expect": "no-trigger",
+      "prompt": "Robię audyt długu technicznego jednego modułu i chcę uszeregować ustalenia według wagi, wysiłku i częstości zmian plików. Jak policzyć priorytet? Odpowiedz zwięźle.",
+      "neighbor": "eng-tech-debt-audit"
+    }
+  ]
+}

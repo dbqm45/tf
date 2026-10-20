@@ -1,0 +1,90 @@
+{
+  "skill": "qa-test-design",
+  "scenarios": [
+    {
+      "id": "rabat-ilosciowy",
+      "expect": "trigger",
+      "prompt": "Rabat: 5% od 10 sztuk, 10% od 50 sztuk, tylko dla klientów z kontem firmowym. Jakie przypadki testowe zaprojektować i jakimi technikami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "9\\D{1,12}10\\D{1,12}11",
+            "49\\D{1,12}50\\D{1,12}51"
+          ],
+          [
+            "tablic\\w* decyzyjn",
+            "decision table"
+          ],
+          [
+            "źródł\\w*.{0,25}(wynik|oczekiwan)",
+            "(expected|oczekiwan).{0,40}(source|źródł)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stany-zamowienia",
+      "expect": "trigger",
+      "prompt": "Zamówienie ma stany: nowe, opłacone, wysłane, anulowane. Jak zaprojektować testy przejść i na jakim poziomie (jednostkowy czy e2e) je pisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "niedozwolon",
+            "invalid transition",
+            "illegal",
+            "zabronion",
+            "niepoprawn\\w* przej"
+          ],
+          [
+            "diagram stanów",
+            "state diagram",
+            "state machine",
+            "maszyn\\w* stanów"
+          ],
+          [
+            "najniżej",
+            "najniższ",
+            "lowest",
+            "jak najtani",
+            "nieliczn",
+            "few e2e"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "lokatory-pw",
+      "expect": "no-trigger",
+      "prompt": "Jak w Playwright wybrać przycisk po roli i nazwie oraz sprawdzić tekst statusu? Odpowiedz zwięźle.",
+      "neighbor": "tool-playwright"
+    },
+    {
+      "id": "strategia-testow-projektu",
+      "expect": "trigger",
+      "prompt": "Projekt ma dwa lata, prawie zero testów, a agent dopisuje testy tam, gdzie mu łatwo (helpery, formatery). Chcę strategię testów dla całego projektu, a nie plan jednej zmiany. Od czego zacząć i co ma się w niej znaleźć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "map\\w* ryzyk",
+            "ryzyk\\w* (produktow|biznesow)"
+          ],
+          [
+            "faz"
+          ],
+          [
+            "wywiad",
+            "czego (najbardziej )?(się )?boisz",
+            "sparzy",
+            "historii? git",
+            "commit"
+          ],
+          [
+            "nie testujemy",
+            "wyklucze",
+            "świadomie"
+          ]
+        ]
+      }
+    }
+  ]
+}

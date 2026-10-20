@@ -1,0 +1,46 @@
+name: team-factory
+
+on:
+  pull_request:
+    paths: ["factory/**", ".claude/**"]
+  push:
+    branches: [main]
+    paths: ["factory/**", ".claude/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # Uwaga: dla bezpieczeństwa przypnij akcje do pełnego SHA commita (np. skill ops-ci-cd w pack-it)
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Walidacja skilli, ról i person + aktualność wygenerowanych agentów
+        run: python3 factory/build.py check
+      - name: Testy hooków bezpieczeństwa
+        run: python3 tests/test_hooks.py
+      - name: Testy wykrywania stacku i wersji skilli
+        run: python3 tests/test_detect_stack.py
+      - name: Testy dziennika projektu
+        run: python3 tests/test_project_record.py
+      - name: Testy clean-room (projektant testów nie widzi implementacji)
+        run: python3 tests/test_cleanroom.py
+      - name: Testy symulowanego warsztatu Event Storming
+        run: python3 tests/test_es_sim.py
+      - name: Testy lintera polszczyzny
+        run: python3 tests/test_polish_lint.py
+      - name: Testy bramki TDD (kod po czerwonym teście, ochrona przed osłabianiem testów)
+        run: python3 tests/test_tdd.py
+      - name: Testy pasm kontrolnych (faza utrzymania)
+        run: python3 tests/test_control_band.py
+      - name: Testy audytu skilli
+        run: python3 tests/test_skill_audit.py
+      - name: Audyt bezpieczeństwa skilli (bez modelu i sieci)
+        run: python3 factory/skill_audit.py .claude/skills
+      - name: Skille zmienione po bramce jakości (bez modelu; ewaluacja na modelu tylko ręcznie, za zgodą)
+        run: python3 factory/skill_gate.py --status --strict

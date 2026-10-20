@@ -1,0 +1,66 @@
+{
+  "skill": "fw-nestjs",
+  "scenarios": [
+    {
+      "id": "testy-serwisu-i-e2e-sqlite",
+      "expect": "trigger",
+      "prompt": "W src/orders/orders.service.spec.ts tworzę OrdersService ręcznie przez new z ręcznie złożonymi zależnościami, a testy e2e aplikacji NestJS puszczamy na SQLite w pamięci, choć produkcja stoi na PostgreSQL. Jak to poprawić? Odpowiedz zwięźle.",
+      "files": {
+        "src/orders/orders.service.spec.ts": "import { OrdersService } from './orders.service';\nimport { OrdersRepository } from './orders.repository';\nimport { PaymentsClient } from '../payments/payments.client';\n\ndescribe('OrdersService', () => {\n  it('places order', async () => {\n    const repo = new OrdersRepository(null as any);\n    const payments = new PaymentsClient({} as any);\n    const service = new OrdersService(repo, payments);\n    await service.place({ sku: 'A-1', qty: 1 });\n  });\n});\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "createTestingModule"
+          ],
+          [
+            "overrideProvider",
+            "useValue"
+          ],
+          [
+            "Testcontainers",
+            "PostgreSqlContainer"
+          ],
+          [
+            "createNestApplication",
+            "supertest"
+          ]
+        ],
+        "none": [
+          "zostaw.{0,20}SQLite"
+        ]
+      }
+    },
+    {
+      "id": "walidacja-i-konfiguracja",
+      "expect": "trigger",
+      "prompt": "Kontroler NestJS sam sprawdza pola req.body ifami i zwraca res.status(400), a w serwisach czytamy process.env.DB_URL bezpośrednio. Jak to zrobić porządnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ValidationPipe"
+          ],
+          [
+            "class-validator",
+            "IsString",
+            "IsInt"
+          ],
+          [
+            "whitelist",
+            "forbidNonWhitelisted"
+          ],
+          [
+            "ConfigModule",
+            "ConfigService"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-satisfies-typescript",
+      "expect": "no-trigger",
+      "neighbor": "lang-typescript",
+      "prompt": "Kiedy w TypeScripcie użyć operatora satisfies, a kiedy zwykłej adnotacji typu przy stałej z konfiguracją? Chodzi o czysty TypeScript bez żadnego frameworka."
+    }
+  ]
+}

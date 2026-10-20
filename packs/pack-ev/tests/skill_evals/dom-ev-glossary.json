@@ -1,0 +1,37 @@
+{
+  "skill": "dom-ev-glossary",
+  "scenarios": [
+    {
+      "id": "liczenie-punktow",
+      "expect": "trigger",
+      "prompt": "Projektuję model stacji ładowania EV. Klient pyta, ile 'punktów ładowania' ma lokalizacja: jest 6 słupków, każdy z dwoma złączami (Type 2 i CCS2). Co jest jednostką dostępności i ile punktów wychodzi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["evse"],
+          ["jedno auto|jeden pojazd|jedno złącze naraz|jedno naraz|one vehicle|one car"],
+          ["nie.{0,30}złącz|nie.{0,30}słup|zamiast.{0,20}złącz"]
+        ]
+      }
+    },
+    {
+      "id": "ujednolicenie-nazw",
+      "expect": "trigger",
+      "prompt": "W kodzie mamy klasę ChargePoint, w UI przycisk 'Dodaj punkt', a w dokumentacji OCPP 2.0.1 czytam 'Charging Station'. Do tego backend raz nazywamy CPMS, raz Central System. Jak to ujednolicić w repo? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["csms"],
+          ["charging station"],
+          ["evse"],
+          ["słownik|glossary|jedna nazwa|jeden termin|mapowanie|tabel"]
+        ],
+        "none": ["CPMS i CSMS to dwa różne systemy"]
+      }
+    },
+    {
+      "id": "rozliczenia-roamingu",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-market-roles",
+      "prompt": "Kierowca klienta eMSP naładował auto w sieci obcego CPO przez hub. Kto komu płaci, kto wystawia fakturę kierowcy i jak przepływają pieniądze między stronami? Odpowiedz zwięźle."
+    }
+  ]
+}

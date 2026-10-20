@@ -1,0 +1,45 @@
+{
+  "skill": "ops-iac-terraform",
+  "scenarios": [
+    {
+      "id": "blokada-stanu",
+      "expect": "trigger",
+      "prompt": "Konfiguruję zdalny backend S3 dla Terraform 1.11 i zastanawiam się, czy dodawać tabelę DynamoDB do blokady stanu. Jak to dziś zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "use_lockfile"
+          ],
+          [
+            "przestarza|deprecated|niepotrzebn|zbędn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dryf-i-ochrona",
+      "expect": "trigger",
+      "prompt": "Jak wykrywać dryf infrastruktury w Terraform i jak zabezpieczyć bazę produkcyjną przed przypadkowym skasowaniem przy zmianie planu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "detailed-exitcode"
+          ],
+          [
+            "prevent_destroy"
+          ],
+          [
+            "must be replaced",
+            "kod 2|exit code 2|exitcode 2"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pipeline-deploy",
+      "expect": "no-trigger",
+      "prompt": "Jak ułożyć pipeline GitHub Actions, który uruchamia testy i wdraża aplikację na staging po merge?",
+      "neighbor": "ops-ci-cd"
+    }
+  ]
+}

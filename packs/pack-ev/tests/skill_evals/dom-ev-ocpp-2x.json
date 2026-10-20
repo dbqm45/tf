@@ -1,0 +1,29 @@
+{
+  "skill": "dom-ev-ocpp-2x",
+  "scenarios": [
+    {
+      "id": "luka-seqno",
+      "expect": "trigger",
+      "prompt": "W OCPP 2.0.1 dostajemy TransactionEvent Updated z seqNo 7, a ostatni zapisany u nas dla tej transakcji to 5. Co robić?",
+      "checks": {
+        "all": [["seqNo.{0,60}(per|dla każdej|w ramach).{0,30}transakcj", "numer.{0,30}sekwencj", "sequence"], ["brak", "luk", "gap", "missing"], ["nie odrzucaj", "nie odrzuca", "przyjmij", "zapisz.{0,40}(kolejność|seqNo)", "kolejk", "buforu", "reorder", "uporządkuj"]],
+        "none": ["StopTransaction", "StartTransaction"]
+      }
+    },
+    {
+      "id": "profil-mtls",
+      "expect": "trigger",
+      "prompt": "Który profil bezpieczeństwa OCPP wymaga certyfikatu klienta po stronie ładowarki i co musimy wtedy ogarnąć po stronie backendu?",
+      "checks": {
+        "all": [["profil(u)? 3", "security profile 3", "profile 3"], ["mTLS", "wzajemn", "certyfikat(u)? klient"], ["PKI", "rotacj", "unieważni", "revo", "CA"]],
+        "none": ["profil(u)? 2 wymaga certyfikatu klienta", "profil(u)? 1 wymaga certyfikatu"]
+      }
+    },
+    {
+      "id": "stopTransaction-16",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-ocpp-16",
+      "prompt": "Ładowarka z OCPP 1.6 wysłała StopTransaction bez transactionData, a meterStop jest mniejszy niż meterStart. Jak to obsłużyć w rozliczeniu?"
+    }
+  ]
+}

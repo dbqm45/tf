@@ -1,0 +1,4 @@
+{
+  "_comment": "Izolacja informacji dla wybranych agentów (hook cleanroom_guard.py). Profil 'denylist': blokuje pliki z rozszerzeniem kodu spoza 'allow' (projektant testów nie widzi implementacji). Profil 'allowlist': agent czyta WYŁĄCZNIE ścieżki z 'allow' (generator wymagań na ślepo). Zmiana wymaga zgody człowieka. Profile dostarczają nakładki (cleanroom.json w nakładce); instalator składa je w .claude/cleanroom.json.",
+  "profiles": []
+}

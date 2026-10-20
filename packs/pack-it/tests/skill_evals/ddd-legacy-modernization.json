@@ -1,0 +1,51 @@
+{
+  "skill": "ddd-legacy-modernization",
+  "scenarios": [
+    {
+      "id": "rozjazdy-model-kod",
+      "expect": "trigger",
+      "prompt": "Aplikacja działa od dwóch lat, mamy PRD, ale w kodzie słowo Account znaczy trzy różne rzeczy, a część pojęć z PRD w ogóle nie ma odpowiednika. Jak sprawdzić, czy kod odwzorowuje domenę, i od czego zacząć porządki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["słownik|glossary|język wszechobecny|ubiquitous"],
+          ["rozjazd|model vs kod|model ↔ kod|BRAK w kodzie"],
+          ["niezmiennik|agregat"]
+        ]
+      }
+    },
+    {
+      "id": "niezmiennik-tylko-w-ui",
+      "expect": "trigger",
+      "accept": ["ddd-tactical-design"],
+      "prompt": "W naszym legacy reguła „sesji generacji nie można sfinalizować, dopóki każda propozycja nie jest zaakceptowana albo odrzucona” jest sprawdzana tylko w UI, a endpoint ufa liczbom z żądania. Jak to naprawić w istniejącym kodzie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["agregat"],
+          ["błąd\\w* domenow|nazwan\\w* błąd|fail-fast"],
+          ["transakcj|repozytor"],
+          ["serwer|cienk\\w* (trasa|endpoint|API)"]
+        ]
+      }
+    },
+    {
+      "id": "przeciek-biblioteki",
+      "expect": "trigger",
+      "accept": ["ddd-context-mapping"],
+      "prompt": "Typy biblioteki ts-fsrs siedzą w schemacie bazy, w odpowiedziach API i w propsach komponentów, a konwersja jest skopiowana w trzech miejscach. Jak to odizolować w działającej aplikacji i po czym poznać, że skończyliśmy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ACL|anti-corruption|antykorupc"],
+          ["port"],
+          ["adapter"],
+          ["\\brg\\b|grep|dependency-cruiser|no-restricted-imports|ArchUnit"]
+        ]
+      }
+    },
+    {
+      "id": "integracja-kontekstow",
+      "expect": "no-trigger",
+      "prompt": "Projektujemy integrację nowego kontekstu Rozliczeń z Magazynem: Open Host Service czy Conformist, i jakie zdarzenia integracyjne publikować? Odpowiedz zwięźle.",
+      "neighbor": "ddd-context-mapping"
+    }
+  ]
+}

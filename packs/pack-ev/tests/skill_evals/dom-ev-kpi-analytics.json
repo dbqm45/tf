@@ -1,0 +1,53 @@
+{
+  "skill": "dom-ev-kpi-analytics",
+  "scenarios": [
+    {
+      "id": "uptime-raport-vs-regulator",
+      "expect": "trigger",
+      "prompt": "Nasz dashboard liczy uptime jako odsetek czasu, w którym konektor ma status Available lub Charging, i pokazuje 99,2 %. Klient publiczny chce od nas liczby zgodnej z NEVI. Jak to policzyć poprawnie, co z planowanymi przerwami serwisowymi i co z ładowarkami offline?",
+      "checks": {
+        "all": [
+          ["525[ .,\\u00a0]?600", "każdy port|per port|osobno dla (każdego )?port", "port jako jednostk"],
+          ["T_excluded|wyłączen", "excluded"],
+          ["faktycznie dostarcza|dostarcza energi|moc minimaln|minimum power", "nie wystarczy .{0,30}Available"],
+          ["offline.{0,80}(przestój|awari|outage)", "(przestój|awari|outage).{0,80}offline"]
+        ],
+        "none": ["uptime to po prostu czas w statusie Available"]
+      }
+    },
+    {
+      "id": "utilization-srednia-srednich",
+      "expect": "trigger",
+      "prompt": "Mamy 400 ładowarek w 90 lokalizacjach. Analityk policzył utilization dla każdej lokalizacji i uśrednił, wyszło 18 %. Finanse licząc od sesji dostały 11 %. Skąd różnica i jak mamy to policzyć, żeby dało się porównywać miesiące?",
+      "checks": {
+        "all": [
+          ["średni\\w* ze średnich|średni\\w* z (procent|wskaźnik)|ważon|suma .{0,40}przez sum"],
+          ["mianownik", "godzin\\w* pracy", "czas dostępn"],
+          ["EVSE|port"],
+          ["nowo uruchomion|krótsz\\w+ (niż|od) (rok|okres)|częściow\\w+ okres"]
+        ],
+        "none": ["średnia arytmetyczna wystarczy"]
+      }
+    },
+    {
+      "id": "session-success-nieudane-autoryzacje",
+      "expect": "trigger",
+      "prompt": "W zeszłym tygodniu CSMS zapisał 12 000 sesji, z czego 10 100 dostarczyło energię. Szef chce jednej liczby \"skuteczność ładowania\". Co liczymy do licznika i mianownika, gdzie wpadają odrzucone karty RFID, a gdzie sesje, które kończą się błędem STOP_FAILED?",
+      "checks": {
+        "all": [
+          ["autoryzac\\w+.{0,80}osobn", "osobn\\w+.{0,80}autoryzac", "odrębn\\w+.{0,40}autoryzac"],
+          ["0 kWh|bez energii|zerow\\w+ energi|brak energii|nie dostarczy"],
+          ["STOP_FAILED"],
+          ["definicj\\w+ .{0,40}(zapisz|opisz|ustal|przed)|ustal\\w* definicj"]
+        ],
+        "none": []
+      }
+    },
+    {
+      "id": "uzgodnienie-cdr-nie-kpi",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-cdr-settlement",
+      "prompt": "eMSP odrzucił nasz CDR, bo suma kWh nie zgadza się z sesją, którą dostał po OCPI, a faktura hurtowa wyszła o 40 zł wyższa. Jak uzgodnić CDR z sesjami i fakturą i czy wysłać korektę?"
+    }
+  ]
+}

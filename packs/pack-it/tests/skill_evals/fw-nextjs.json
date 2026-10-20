@@ -1,0 +1,87 @@
+{
+  "skill": "fw-nextjs",
+  "scenarios": [
+    {
+      "id": "akcja-bez-autoryzacji",
+      "expect": "trigger",
+      "prompt": "W app/orders/actions.ts (Next.js 16.3) jest Server Action usuwająca zamówienie; logowanie sprawdzamy w app/orders/layout.tsx. Czy to wystarczy i jak potem odświeżyć listę zamówień? Odpowiedz zwięźle.",
+      "files": {
+        "app/orders/actions.ts": "'use server';\nimport { db } from '@/lib/db';\n\nexport async function deleteOrder(id: string) {\n  await db.order.delete({ where: { id } });\n}\n",
+        "app/orders/layout.tsx": "import { redirect } from 'next/navigation';\nimport { getSession } from '@/lib/auth';\n\nexport default async function Layout({ children }: { children: React.ReactNode }) {\n  if (!(await getSession())) redirect('/login');\n  return children;\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "w każdej (akcji|Server Action|funkcji)",
+            "wewnątrz (akcji|funkcji)",
+            "w samej akcji",
+            "publiczn\\w* endpoint",
+            "bezpośredni\\w* (żądani\\w* )?POST",
+            "dowoln\\w* (żądani|POST)"
+          ],
+          [
+            "właściciel",
+            "należy do",
+            "IDOR",
+            "własnoś",
+            "uprawnie"
+          ],
+          [
+            "updateTag",
+            "revalidatePath",
+            "revalidateTag",
+            "refresh\\("
+          ]
+        ]
+      }
+    },
+    {
+      "id": "migracja-16",
+      "expect": "trigger",
+      "prompt": "Przechodzimy z Next.js 15.5 na 16 (package.json, middleware.ts, app/products/[id]/page.tsx). Co musimy zmienić w kodzie i jak to zrobić najmniejszym kosztem? Odpowiedz zwięźle.",
+      "files": {
+        "package.json": "{\n  \"dependencies\": { \"next\": \"15.5.9\", \"react\": \"19.1.4\", \"react-dom\": \"19.1.4\" }\n}\n",
+        "middleware.ts": "import { NextResponse, type NextRequest } from 'next/server';\n\nexport function middleware(req: NextRequest) {\n  if (!req.cookies.get('session')) return NextResponse.redirect(new URL('/login', req.url));\n}\n\nexport const config = { matcher: ['/orders/:path*'] };\n",
+        "app/products/[id]/page.tsx": "export default function Page({ params }: { params: { id: string } }) {\n  return <h1>{params.id}</h1>;\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "proxy\\.ts",
+            "proxy"
+          ],
+          [
+            "await"
+          ],
+          [
+            "codemod"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bez-plikow-cache",
+      "expect": "trigger",
+      "prompt": "Nowa aplikacja w Next.js 16.3 z włączonym cacheComponents. Jak cache'ować listę produktów i od razu pokazać zmianę po edycji w panelu admina? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "use cache"
+          ],
+          [
+            "cacheTag"
+          ],
+          [
+            "updateTag"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "react-vite-wyscig",
+      "expect": "no-trigger",
+      "neighbor": "fw-react",
+      "prompt": "W aplikacji React 19 na Vite (bez frameworka) efekt pobiera wyniki po zmianie filtra i czasem pokazuje stare dane. Jak to naprawić?"
+    }
+  ]
+}

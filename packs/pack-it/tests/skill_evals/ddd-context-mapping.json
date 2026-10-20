@@ -1,0 +1,75 @@
+{
+  "skill": "ddd-context-mapping",
+  "scenarios": [
+    {
+      "id": "acl-platnosci",
+      "expect": "trigger",
+      "prompt": "Mamy kontekst Sprzedaż (core) i zewnętrzny system płatności z własnym, kiepskim modelem. Jak ułożyć relację między nimi na mapie kontekstów, żeby obcy model nie przeciekał do naszego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ACL",
+            "anti-corruption",
+            "antykorupcyjn"
+          ],
+          [
+            "conformist",
+            "konformi"
+          ],
+          [
+            "upstream",
+            "downstream"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "event-carried-state",
+      "expect": "trigger",
+      "prompt": "Zamówienia mają publikować zdarzenie dla Magazynu i Rozliczeń, które potrzebują lokalnej kopii danych, żeby działać, gdy Zamówienia leżą. Co powinno być w zdarzeniu i jak odbiorcy mają je obsługiwać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "event-carried",
+            "carried state",
+            "state transfer",
+            "przenosz\\w* stan"
+          ],
+          [
+            "idempoten"
+          ],
+          [
+            "wersj\\w* schemat|numer\\w* (wersji|sekwencji)|kolejno"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "acl-wobec-biblioteki",
+      "expect": "trigger",
+      "accept": [
+        "ddd-legacy-modernization"
+      ],
+      "prompt": "Czy Anti-Corruption Layer ma sens wobec zwykłej biblioteki npm, a nie innego kontekstu? Jak sprawdzić, że izolacja naprawdę działa i nie rozjedzie się za pół roku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "port|adapter"
+          ],
+          [
+            "tylko w katalogu adaptera|wyłącznie.{0,40}adapter|\\brg\\b|grep"
+          ],
+          [
+            "dependency-cruiser|no-restricted-imports|ArchUnit|lint"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "granice-kontekstow",
+      "expect": "no-trigger",
+      "prompt": "Mamy duży system sprzedażowy. Według jakich kryteriów wyznaczyć granice bounded contextów i po czym poznać, że dwa pojęcia powinny trafić do osobnych kontekstów? Odpowiedz zwięźle.",
+      "neighbor": "ddd-strategic-analysis"
+    }
+  ]
+}

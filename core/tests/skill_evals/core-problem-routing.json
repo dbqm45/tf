@@ -1,0 +1,70 @@
+{
+  "skill": "core-problem-routing",
+  "scenarios": [
+    {
+      "id": "release-monorepo",
+      "expect": "trigger",
+      "prompt": "Nasz release trwa tydzień, pięć zespołów dotyka tego samego monorepo Nx i ciągle są konflikty. Nie wiem, od czego zacząć ani kogo zaangażować. Dobierz podejście i skład zespołu. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "rekomendacj"
+          ],
+          [
+            "założeni",
+            "hipotez",
+            "do sprawdzenia"
+          ],
+          [
+            "najpierw sprawdz|co sprawdzić najpierw|czego nie wiemy|tani\\w* test",
+            "sprawdź,? (które|czy)",
+            "pierwszy krok to sprawdz"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "decyzja-trudna",
+      "expect": "trigger",
+      "prompt": "Mamy zdecydować, czy wydzielić moduł płatności do osobnej usługi. Kompromisy są sprzeczne, decyzja trudna do odwrócenia. Kto powinien to ocenić i jak przedstawić wynik? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "specialist-deep|architect|opus"
+          ],
+          [
+            "założeni"
+          ],
+          [
+            "wariant B|plan B|zawias"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "problem-miedzy-nakladkami",
+      "expect": "trigger",
+      "prompt": "Zespół backendu ma dodać do naszej aplikacji import rozliczeń sesji ładowania od partnera roamingowego, ale nikt u nas nie zna protokołów EV. Kogo zaangażować i jak to rozpisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "konsultant",
+            "consult"
+          ],
+          [
+            "katalog"
+          ],
+          [
+            "założeni"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "laczenie-skilli",
+      "expect": "no-trigger",
+      "prompt": "Mam już wybrane skille: DDD, Angular i TypeScript do formularza produktu. Jak połączyć je w jednej odpowiedzi?",
+      "neighbor": "core-skill-composition"
+    }
+  ]
+}

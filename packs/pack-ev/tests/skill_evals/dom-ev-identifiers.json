@@ -1,0 +1,38 @@
+{
+  "skill": "dom-ev-identifiers",
+  "scenarios": [
+    {
+      "id": "walidacja-kolumny-evse",
+      "expect": "trigger",
+      "prompt": "Partner przysłał import CSV z kolumną evse_id. Wartości wyglądają tak: DE*ABC*E12345*1, de-abc-e12345-1, PL*XYZ*E777, plxyze777 i NL*AB*E1. Chcę to zwalidować przed wczytaniem do bazy. Jak to sprawdzić i co zapisać jako postać kanoniczną? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ev_id_check|skrypt|script"],
+          ["separator|\\*"],
+          ["składni|syntax|format"],
+          ["normaliz|kanoniczn|wielkie litery|uppercase|canonical"]
+        ],
+        "none": ["cyfra kontrolna EVSE"]
+      }
+    },
+    {
+      "id": "cyfra-kontrolna-emaid",
+      "expect": "trigger",
+      "prompt": "Jesteśmy eMSP i chcemy sami wyliczać cyfrę kontrolną EMAID dla nowych kontraktów. Czy to zwykły Luhn albo mod 10, czy da się to zakodować u nas? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["niepubliczn|nie jest publiczn|niedostępn|płatn|not public|not publicly|paywall"],
+          ["15118"],
+          ["walidator|validator|OCHP|referencyjn|reference"]
+        ],
+        "none": ["to zwykły Luhn", "Luhn jest właściwym algorytmem"]
+      }
+    },
+    {
+      "id": "skrot-csms-cpms",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-glossary",
+      "prompt": "Nowy w branży EV i gubię się w skrótach: czym różni się CSMS od CPMS, co znaczy SoC i czym jest hub roamingowy? Wytłumacz słownikowo."
+    }
+  ]
+}

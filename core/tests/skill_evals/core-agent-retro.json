@@ -1,0 +1,47 @@
+{
+  "skill": "core-agent-retro",
+  "scenarios": [
+    {
+      "id": "retro-etapu",
+      "expect": "trigger",
+      "prompt": "Skończyliśmy etap. Agenci kilka razy poprawiali własne commity, a wykonawca frontu dwa razy zgłaszał za niski tier. Zrób retrospektywę pracy agentów i zaproponuj, co zmienić w fabryce. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["dow[oó]d|E-\\d|log|dziennik|usage"],
+          ["lekcj|lessons|CLAUDE\\.md|reguł"],
+          ["tier|model|sonnet|opus|eskal"]
+        ]
+      }
+    },
+    {
+      "id": "ten-sam-blad",
+      "expect": "trigger",
+      "prompt": "Agent drugi raz z rzędu zapomniał uruchomić testy przed commitem. Przejrzyj, co poszło źle w ostatnich sesjach agentów, i zaproponuj, jak temu zapobiec na stałe. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["CLAUDE\\.md|reguł|hook"],
+          ["drugi|powt|ponown"],
+          ["propo|decyz|zatwierdz|zgod"]
+        ]
+      }
+    },
+    {
+      "id": "nachodzace-okno",
+      "expect": "trigger",
+      "prompt": "Robię drugą retrospektywę agentów, a skrypt pokazuje jako powtórki te same pułapki, które oceniliśmy w pierwszej. Jak wybrać okno i jak odróżnić prawdziwą powtórkę od tego samego zdarzenia? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["--since|dzień po|koniec poprzedniej"],
+          ["już ocenione|to samo zdarzenie|nachodzi"],
+          ["powtórk"]
+        ]
+      }
+    },
+    {
+      "id": "retro-sprintu-ludzi",
+      "expect": "no-trigger",
+      "neighbor": "proc-agile",
+      "prompt": "Prowadzę retrospektywę sprintu z moim zespołem programistów. Jaki format wybrać, gdy zespół jest zmęczony i mało mówi? Odpowiedz zwięźle."
+    }
+  ]
+}

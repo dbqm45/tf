@@ -1,0 +1,55 @@
+{
+  "skill": "ops-docker",
+  "scenarios": [
+    {
+      "id": "hardening-runtime",
+      "expect": "trigger",
+      "prompt": "Jak uruchomić kontener z aplikacją webową tak, żeby po włamaniu przez podatność w aplikacji napastnikowi było trudno pobrać i odpalić koparkę lub backdoor? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "read-only",
+            "tylko do odczytu"
+          ],
+          [
+            "cap-drop",
+            "no-new-privileges"
+          ],
+          [
+            "distroless",
+            "bez powłoki",
+            "169\\.254|imds|egress|ruch wychodz"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "multistage-secret",
+      "expect": "trigger",
+      "prompt": "Mój Dockerfile dla Node ma jeden etap, FROM node:latest i ARG NPM_TOKEN używany w npm install. Jak go poprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "multi-?stage|wieloetapow"
+          ],
+          [
+            "--mount=type=secret"
+          ],
+          [
+            "digest",
+            "konkretn\\w+ tag|przypi"
+          ]
+        ],
+        "none": [
+          "ARG NPM_TOKEN jest bezpieczny"
+        ]
+      }
+    },
+    {
+      "id": "pipeline-cache",
+      "expect": "no-trigger",
+      "prompt": "Jak w GitHub Actions ustawić concurrency z cancel-in-progress i cache zależności dla monorepo?",
+      "neighbor": "ops-ci-cd"
+    }
+  ]
+}

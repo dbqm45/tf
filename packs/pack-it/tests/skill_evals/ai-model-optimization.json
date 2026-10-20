@@ -1,0 +1,58 @@
+{
+  "skill": "ai-model-optimization",
+  "scenarios": [
+    {
+      "id": "kwantyzacja-70b",
+      "expect": "trigger",
+      "prompt": "Model 70B w FP16 nie mieści się nam na jednej karcie 80 GB. Jak go zmniejszyć i jak sprawdzić, że jakość nie spadła? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["140 ?GB"],
+          ["awq", "gptq", "fp8", "int4", "4.bit"],
+          ["kwantyzacj\\w+"],
+          ["własn\\w+ (zestaw|zbiór|eval)", "zbiór\\w* ewaluacyjn\\w+", "zadani\\w+ docelow\\w+", "ewaluacj\\w+ (na|po)", "kl divergence|perplexity|perpleksj"]
+        ],
+        "none": ["kwantyzacja nie wpływa na jakość", "zawsze bez utraty jakości"]
+      }
+    },
+    {
+      "id": "resnet-cpu-onnx",
+      "expect": "trigger",
+      "prompt": "Mamy model wizyjny w PyTorch (ResNet do kontroli jakości na linii) i na serwerze z procesorami Intela odpowiedź trwa 120 ms na obraz, a potrzebujemy 40 ms. Co zrobić i w jakiej kolejności? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["onnx"],
+          ["openvino", "onnx runtime"],
+          ["int8", "kwantyzacj\\w+"],
+          ["zmierz\\w*", "pomiar\\w*", "profil\\w+", "baseline", "p95", "rozgrzew\\w+"]
+        ],
+        "none": ["tensorrt (na|dla) cpu", "tensorrt na procesorach intel"]
+      }
+    },
+    {
+      "id": "gguf-laptop",
+      "expect": "trigger",
+      "prompt": "Chcę uruchomić model 8B lokalnie na laptopie bez GPU z 16 GB RAM, do ręcznych zadań. Jaki format i jaki poziom kwantyzacji wybrać i ile to zajmie pamięci? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["gguf", "llama\\.cpp"],
+          ["q4_k_m", "q5_k_m", "q8_0"],
+          ["\\b[4-9](,\\d)? ?GB\\b", "bajt\\w*", "bit\\w*"]
+        ],
+        "none": ["bez żadnej utraty jakości"]
+      }
+    },
+    {
+      "id": "batching-kv-cache",
+      "expect": "no-trigger",
+      "prompt": "Jak skonfigurować continuous batching i routing świadomy cache w vLLM na Kubernetes, żeby kolejne wiadomości rozmowy nie przeliczały kontekstu od nowa?",
+      "neighbor": "ops-ai-inference"
+    },
+    {
+      "id": "zlozonosc-lru",
+      "expect": "no-trigger",
+      "prompt": "Mój kod w TypeScript wyszukuje duplikaty w tablicy 1 mln elementów w czasie kwadratowym. Jaką strukturę danych wybrać, żeby było O(n)?",
+      "neighbor": "eng-algorithms-data-structures"
+    }
+  ]
+}

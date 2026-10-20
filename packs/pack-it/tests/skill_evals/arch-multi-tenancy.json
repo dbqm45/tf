@@ -1,0 +1,53 @@
+{
+  "skill": "arch-multi-tenancy",
+  "scenarios": [
+    {
+      "id": "izolacja-danych-klientow",
+      "expect": "trigger",
+      "prompt": "Budujemy SaaS B2B na PostgreSQL: wszyscy klienci w jednej bazie, kolumna tenant_id w tabelach. Jak zapewnić, że firma A nigdy nie zobaczy danych firmy B? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "RLS|row level security|ROW LEVEL SECURITY|polityk\\w* wierszy"
+          ],
+          [
+            "tenant_id|najemc\\w*|tenant\\w*"
+          ],
+          [
+            "test\\w*"
+          ],
+          [
+            "SET LOCAL|set_config|kontekst\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "tenant-w-zadaniu-w-tle",
+      "expect": "trigger",
+      "prompt": "W naszym wielodzierżawnym SaaS zadanie w kolejce wygenerowało raport z danymi niewłaściwego klienta. Jak przekazywać kontekst najemcy do kolejek i zadań w tle? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "najemc\\w*|tenant\\w*"
+          ],
+          [
+            "wiadomoś\\w*|komunikat\\w*|ładun\\w*|payload|nagłówk\\w*"
+          ],
+          [
+            "jawn\\w*|każd\\w*|zawsze"
+          ],
+          [
+            "test\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "indeks-wolne-zapytanie",
+      "expect": "no-trigger",
+      "prompt": "Zapytanie SQL z JOIN na trzech tabelach trwa 4 sekundy. Jak dobrać indeks? Odpowiedz zwięźle.",
+      "neighbor": "be-database"
+    }
+  ]
+}

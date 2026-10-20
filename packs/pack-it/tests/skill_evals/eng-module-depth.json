@@ -1,0 +1,47 @@
+{
+  "skill": "eng-module-depth",
+  "scenarios": [
+    {
+      "id": "test-usuniecia",
+      "expect": "trigger",
+      "prompt": "Mam OrderService, który tylko deleguje do OrderValidator, OrderMapper i OrderRepository, każdy z interfejsem i jedną implementacją. Jak ocenić, czy te moduły są płytkie i czy mają sens? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "test usunięcia|usuń\\w+ moduł|deletion test|gdyby moduł zniknął|zniknie"
+          ],
+          [
+            "przelotk|płytk"
+          ],
+          [
+            "jeden adapter|dwa adaptery|spoin"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "interfejs-pogleb",
+      "expect": "trigger",
+      "prompt": "Projektuję interfejs nowego modułu rezerwacji i nie wiem, jak go dobrze wybrać oraz jak wymusić w TS w Nx, żeby nikt nie importował jego wnętrza. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "dwa razy|design it twice|zaprojektuj dwa|kilka wariant"
+          ],
+          [
+            "enforce-module-boundaries|index\\.ts|tagi|tagów"
+          ],
+          [
+            "niezmienni|tryby błęd|kolejnoś"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mapa-repo",
+      "expect": "no-trigger",
+      "prompt": "Chcę zrozumieć całe nieznane repo: punkty wejścia, warstwy i cykle importów. Jak zbudować mapę? Odpowiedz zwięźle.",
+      "neighbor": "eng-codebase-mapping"
+    }
+  ]
+}

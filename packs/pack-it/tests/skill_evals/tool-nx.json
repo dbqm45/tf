@@ -1,0 +1,78 @@
+{
+  "skill": "tool-nx",
+  "scenarios": [
+    {
+      "id": "granice-modulow",
+      "expect": "trigger",
+      "prompt": "W libs/booking/project.json chcę, żeby kontekst booking mógł zależeć tylko od bibliotek booking i shared. Jak to wymusić w monorepo Nx i jak otagować biblioteki? Odpowiedz zwięźle.",
+      "files": {
+        "libs/booking/project.json": "{\n  \"name\": \"booking-domain\",\n  \"sourceRoot\": \"libs/booking/src\",\n  \"tags\": []\n}\n",
+        "nx.json": "{\n  \"$schema\": \"./node_modules/nx/schemas/nx-schema.json\"\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "enforce-module-boundaries"
+          ],
+          [
+            "scope:"
+          ],
+          [
+            "onlyDependOnLibsWithTags",
+            "depConstraints"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "migracja-nx23",
+      "expect": "trigger",
+      "prompt": "W nx.json mamy Nx 22 i chcę wejść na 23. Jak przeprowadzić migrację i co zmienia się w targetDefaults przy operatorze „...”? Odpowiedz zwięźle.",
+      "files": {
+        "nx.json": "{\n  \"$schema\": \"./node_modules/nx/schemas/nx-schema.json\",\n  \"targetDefaults\": { \"build\": { \"cache\": true } }\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "nx migrate"
+          ],
+          [
+            "migrations\\.json",
+            "--run-migrations"
+          ],
+          [
+            "rozszerz",
+            "extend",
+            "odziedzicz",
+            "inherit"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "angular-signal",
+      "expect": "no-trigger",
+      "prompt": "Jak w Angularze 20 zrobić komponent standalone z wejściem jako signal input i OnPush? Odpowiedz zwięźle.",
+      "neighbor": "fw-angular"
+    },
+    {
+      "id": "bez-plikow-granice",
+      "expect": "trigger",
+      "prompt": "Zakładamy monorepo Nx dla kilku kontekstów DDD. Jak wymusić granice zależności między bibliotekami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "enforce-module-boundaries"
+          ],
+          [
+            "scope:"
+          ],
+          [
+            "onlyDependOnLibsWithTags",
+            "depConstraints"
+          ]
+        ]
+      }
+    }
+  ]
+}

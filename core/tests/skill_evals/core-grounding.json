@@ -1,0 +1,113 @@
+{
+  "skill": "core-grounding",
+  "scenarios": [
+    {
+      "id": "falszywa-opcja-postgres",
+      "expect": "trigger",
+      "prompt": "Kolega twierdzi, że w PostgreSQL 17 jest opcja auto_index_advisor = on w postgresql.conf, która sama zakłada brakujące indeksy. Czy to prawda i jak ją włączyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "nie (istnieje|ma takiej|ma opcji|znalaz)",
+            "nie jest (standardow|wbudowan)",
+            "niezweryfikowan",
+            "nie potwierdz",
+            "nie ma w"
+          ],
+          [
+            "dokumentacj",
+            "SHOW ALL",
+            "pg_settings",
+            "pg_file_settings",
+            "źródł",
+            "--help",
+            "sprawdź"
+          ]
+        ],
+        "none": [
+          "auto_index_advisor\\s*=\\s*on[^\\n]{0,80}(włącza|uruchomi|wystarczy)"
+        ]
+      }
+    },
+    {
+      "id": "agent-zmysla-wersje",
+      "expect": "trigger",
+      "prompt": "Agent w poprzedniej sesji podał mi wersje bibliotek i flagi CLI, z których połowa nie istniała. Jak ustawić pracę, żeby nie zmyślał? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "sprawdz",
+            "weryfik",
+            "--help",
+            "npm view"
+          ],
+          [
+            "nie wiem",
+            "niezweryfikowan",
+            "założeni",
+            "oznacz"
+          ],
+          [
+            "kontekst",
+            "nowa sesj",
+            "/clear",
+            "/compact",
+            "punkt kontrolny"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wynik-skryptu-to-twierdzenie",
+      "expect": "trigger",
+      "prompt": "Skrypt fabryki wypisał, że w repo jest jeden cykl importów obejmujący 242 pliki, i chcę to wpisać do raportu jako fakt. Czy mogę po prostu przepisać liczbę z wyniku narzędzia? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "twierdzeni|sprawdź|zweryfikuj"
+          ],
+          [
+            "największ|losow|próbk|jedno miejsce"
+          ],
+          [
+            "plik:linia|w kodzie|przeczytaj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zmiany-node",
+      "expect": "no-trigger",
+      "neighbor": "core-source-research",
+      "prompt": "Zbierz z ostatniego miesiąca, co społeczność zgłasza o problemach po aktualizacji do Node.js 24, z datami i źródłami."
+    },
+    {
+      "id": "liczby-w-raporcie-o-kodzie",
+      "expect": "trigger",
+      "prompt": "Agent w raporcie z analizy napisał, że metoda calculateFee jest wywoływana dokładnie w 4 miejscach i tylko z modułu billing, a interfejs PaymentGateway ma 54 metody. Na tej podstawie mamy zaplanować refaktor. Jak to zweryfikować, zanim w to uwierzymy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ast-grep",
+            "LSP",
+            "find references",
+            "znajdź odwołania",
+            "kompilator",
+            "narzędzi\\w* strukturaln"
+          ],
+          [
+            "\\brg\\b",
+            "ripgrep",
+            "grep"
+          ],
+          [
+            "zero",
+            "brak trafień",
+            "0 wynik",
+            "pust\\w* wynik"
+          ]
+        ]
+      }
+    }
+  ]
+}

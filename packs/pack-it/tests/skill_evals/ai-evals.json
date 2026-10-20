@@ -1,0 +1,53 @@
+{
+  "skill": "ai-evals",
+  "scenarios": [
+    {
+      "id": "agent-niezawodnosc-pass-k",
+      "expect": "trigger",
+      "prompt": "Mamy agenta obsługi klienta, który w testach rozwiązuje zadanie w 75% prób. Szef pyta, czy to wystarczy do produkcji. Jak to ocenić, skoro agent bywa niespójny i co dokładnie mierzyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pass\\^k", "pass\\^\\s?[0-9k]", "pass hat k"],
+          ["pass@k", "pass@\\s?[0-9k]", "co najmniej jedn\\w+ (udan|sukces)"],
+          ["powtórz\\w*", "kilka prób", "wielokrotn\\w+", "k prób", "trials?"],
+          ["42\\s?%", "0[,.]42", "0[,.]75\\^3|0[,.]75 do potęgi"]
+        ],
+        "none": ["wystarczy jedno uruchomienie", "75% to wystarczy"]
+      }
+    },
+    {
+      "id": "sedzia-llm-kalibracja",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby drugi model oceniał odpowiedzi naszego chatbota od 1 do 5 zamiast ludzi. Jak zrobić tego sędziego, żeby można było mu ufać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["rubryk\\w+", "kryteri\\w+ oceny"],
+          ["etyk\\w+ ludzk\\w+", "oceny ludzi", "kalibr\\w+", "zgodno\\w+ z (ludź|człowiek|ocen)"],
+          ["kappa", "korelacj", "agreement", "odsetek zgodn", "procent zgodn"],
+          ["nieznan\\w*", "unknown", "nie wiem", "osobn\\w+ sędzi\\w+ na (każdy|wymiar)", "jeden wymiar"]
+        ],
+        "none": ["sędzia LLM nie wymaga weryfikacji", "ocena modelu zastępuje ludzi całkowicie"]
+      }
+    },
+    {
+      "id": "bramka-ci-regresja",
+      "expect": "trigger",
+      "prompt": "Mamy zestaw ewaluacji agenta do kodowania i chcemy, żeby blokował merge PR-a, gdy jakość spadnie. Jak ustawić progi w CI, żeby nie blokował przez losowy szum? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["regresyjn\\w+", "regression"],
+          ["próg\\w*|progi", "threshold"],
+          ["szum", "wariancj\\w+", "powtórz\\w+", "kilka uruchomie", "przedzia\\w+ ufności", "rozrzut"],
+          ["koszt", "budżet", "podzbiór", "smoke", "szybki zestaw"]
+        ],
+        "none": ["jedno uruchomienie wystarczy do blokady", "próg 100% dla wszystkich ewaluacji"]
+      }
+    },
+    {
+      "id": "macierz-promptfoo-podstawy",
+      "expect": "no-trigger",
+      "prompt": "Dodaję do aplikacji funkcję, w której model ocenia diffy. Jak ułożyć schemat wyjścia, limit kroków i pierwszą macierz promptfoo z podłożonymi błędami?",
+      "neighbor": "eng-llm-features"
+    }
+  ]
+}

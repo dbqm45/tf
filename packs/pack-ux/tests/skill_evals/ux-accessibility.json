@@ -1,0 +1,49 @@
+{
+  "skill": "ux-accessibility",
+  "scenarios": [
+    {
+      "id": "sklep-obowiazek-eaa",
+      "expect": "trigger",
+      "prompt": "Prowadzimy w Polsce sklep internetowy, zatrudniamy 50 osób. Czy dotyczy nas ustawa o dostępności, od kiedy i jakiej normy się trzymać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["28 czerwca 2025", "28\\.06\\.2025", "28 June 2025"],
+          ["2019/882", "europejski akt o dostępności", "European Accessibility Act", "EAA"],
+          ["EN 301 549"]
+        ],
+        "none": ["obowiązek (zacznie|obowiązuje) od 2027"]
+      }
+    },
+    {
+      "id": "audyt-serwisu-raport",
+      "expect": "trigger",
+      "prompt": "Dostaliśmy zlecenie audytu dostępności serwisu pod WCAG 2.2 AA. Jak go przeprowadzić i jak zapisać ustalenia, żeby zespół mógł je naprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["WCAG-EM", "reprezentatywn\\w+ prób", "próbk\\w+ stron", "dobór próby"],
+          ["kryteri\\w+ sukcesu", "\\b\\d\\.\\d\\.\\d+\\b"],
+          ["krytyczn", "waga", "poważność", "priorytet"]
+        ],
+        "none": ["wystarczy (uruchomić|przepuścić|puścić) \\w* ?(axe|lighthouse|automat)"]
+      }
+    },
+    {
+      "id": "deklaracja-dostepnosci-urzad",
+      "expect": "trigger",
+      "prompt": "Pracuję w urzędzie gminy. Jak przygotować deklarację dostępności strony BIP i jak często trzeba ją przeglądać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ustaw\\w+ o dostępności cyfrowej", "2019 r\\.?,? o dostępności cyfrowej"],
+          ["co roku", "corocznie", "raz w roku", "31 marca"],
+          ["niezgodno\\w+", "wyłączeni\\w+", "częściowo zgodn"]
+        ]
+      }
+    },
+    {
+      "id": "focus-trap-modal",
+      "expect": "no-trigger",
+      "neighbor": "fe-web-platform",
+      "prompt": "Kiedy używać role=status, a kiedy role=alert w regionie aria-live i dlaczego region ma być w DOM wcześniej? Odpowiedz zwięźle."
+    }
+  ]
+}

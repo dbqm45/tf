@@ -1,0 +1,76 @@
+{
+  "skill": "qa-regression",
+  "scenarios": [
+    {
+      "id": "warstwy-zestawow",
+      "expect": "trigger",
+      "prompt": "Nasz zestaw testów e2e trwa 50 minut i blokuje każdy pull request. Jak podzielić testy na warstwy i jaki budżet czasu mieć na bramkę PR? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "15\\s*min"
+          ],
+          [
+            "smoke"
+          ],
+          [
+            "affected",
+            "only-changed",
+            "--changed",
+            "dotkni",
+            "nocn",
+            "nightly"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "flaky-kwarantanna",
+      "expect": "trigger",
+      "prompt": "Trzy testy w naszym CI są czasem czerwone, czasem zielone bez zmiany kodu. Zespół chce dodać retries i o nich zapomnieć. Co zrobić z niestabilnymi testami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kwarantann",
+            "quarantine"
+          ],
+          [
+            "właściciel",
+            "owner"
+          ],
+          [
+            "termin",
+            "deadline",
+            "due date"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wartosci-brzegowe",
+      "expect": "no-trigger",
+      "prompt": "Mam pole „ilość” przyjmujące 1–100. Jakie przypadki testowe zaprojektować — klasy równoważności i wartości brzegowe? Odpowiedz zwięźle.",
+      "neighbor": "qa-test-design"
+    },
+    {
+      "id": "warstwy-od-lokalnych",
+      "expect": "trigger",
+      "prompt": "Ułóż warstwy zestawów regresji dla projektu na Vitest i Playwright — od maszyny programisty po nocny zestaw w CI — z budżetem czasu dla każdej. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pre-commit",
+            "pre-push",
+            "po edycji"
+          ],
+          [
+            "smoke"
+          ],
+          [
+            "nocn"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "skill": "core-teaching-workspace",
+  "scenarios": [
+    {
+      "id": "zrodla-bez-nauki",
+      "expect": "no-trigger",
+      "neighbor": "core-source-research",
+      "prompt": "Znajdź i porównaj wiarygodne źródła o tym, jak Kafka gwarantuje kolejność komunikatów w partycji. Chcę tylko listę sprawdzonych źródeł z oceną wiarygodności, bez żadnej nauki. Odpowiedz zwięźle."
+    },
+    {
+      "id": "jednorazowe-wyjasnienie",
+      "expect": "no-trigger",
+      "neighbor": "core-source-research",
+      "prompt": "Wyjaśnij jednorazowo, czym różni się useEffect od useLayoutEffect w Reakcie. Odpowiedz zwięźle."
+    },
+    {
+      "id": "wywiad-planistyczny",
+      "expect": "no-trigger",
+      "neighbor": "core-plan-interview",
+      "prompt": "Przeprowadź ze mną krótki wywiad doprecyzowujący, zanim zaplanuję migrację modułu płatności do nowej biblioteki. Zadaj mi pytania o zakres i ryzyka. Odpowiedz zwięźle."
+    },
+    {
+      "id": "wyjasnienie-kodu-od-agenta",
+      "expect": "no-trigger",
+      "neighbor": "be-messaging-outbox",
+      "prompt": "Agent właśnie napisał mi w module zamówień wzorzec outbox z tabelą i workerem. Wyjaśnij jednorazowo, jak ten mechanizm gwarantuje, że zdarzenie nie zginie przy awarii. Odpowiedz zwięźle."
+    }
+  ]
+}

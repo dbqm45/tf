@@ -1,0 +1,50 @@
+{
+  "skill": "data-analysis",
+  "scenarios": [
+    {
+      "id": "porownanie-grup-skosne",
+      "expect": "trigger",
+      "prompt": "Mam kwoty zamówień z dwóch kanałów sprzedaży (skośny rozkład, po ok. 300 zamówień każdy) i chcę sprawdzić, czy kanał B jest lepszy. Którego testu użyć i co jeszcze raportować poza p? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "mann.?whitney|manna.?whitney"
+          ],
+          [
+            "wielkość efektu|effect size|cohen|przedzia\\w+ ufności|confidence interval"
+          ],
+          [
+            "mediana|median"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "spadek-konwersji",
+      "expect": "trigger",
+      "prompt": "Konwersja spadła po zmianie cennika i zarząd chce wiedzieć dlaczego. Ogólna konwersja spadła, ale wydaje mi się, że w większości segmentów wzrosła. Jak do tego podejść? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "simpson"
+          ],
+          [
+            "segment"
+          ],
+          [
+            "zakłócając|confound|struktur\\w+ miksu|mix",
+            "miks",
+            "simpson",
+            "udział\\w* segment"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "potok-danych",
+      "expect": "no-trigger",
+      "neighbor": "data-engineering",
+      "prompt": "Buduję potok, który co noc ładuje zamówienia z PostgreSQL do hurtowni. Jak zrobić, żeby ponowne uruchomienie dla tego samego dnia nie tworzyło duplikatów? Odpowiedz zwięźle."
+    }
+  ]
+}

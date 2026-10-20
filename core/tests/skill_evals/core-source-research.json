@@ -1,0 +1,102 @@
+{
+  "skill": "core-source-research",
+  "scenarios": [
+    {
+      "id": "stan-biblioteki",
+      "expect": "trigger",
+      "prompt": "Chcę wiedzieć, co dzieje się z biblioteką zod w ostatnim czasie: nowe wersje, co ludzie zgłaszają w issue i na forach, czy projekt jest zdrowy. Jak do tego podejść, jakich źródeł użyć i jak przedstawić wynik? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "30 dni|30 days"
+          ],
+          [
+            "pierwotn|primary"
+          ],
+          [
+            "stan na|data odniesienia|data źródła|datą"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sprzeczne-zrodla",
+      "expect": "trigger",
+      "prompt": "Piszę raport o narzędziu CI. Mam wpis na blogu dostawcy z liczbami wydajności, trzy artykuły powtarzające tę samą historię o awarii i jedno issue opiekunów, które jej przeczy. Jak to uczciwie przedstawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "według dostawcy|sponsorowan"
+          ],
+          [
+            "jedno ustalenie|jedną historię|jedna historia|duplikat|scal"
+          ],
+          [
+            "pierwotn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wybor-technologii",
+      "expect": "no-trigger",
+      "prompt": "Który framework wybrać do nowego panelu administracyjnego: porównaj kandydatów w macierzy ocen z ryzykami.",
+      "neighbor": "arch-tech-selection"
+    },
+    {
+      "id": "dokumentacja-biblioteki-do-planu",
+      "expect": "trigger",
+      "prompt": "Planujemy moduł z biblioteką date-fns w wersji z naszego package.json. Ostatnio agent w planie użył funkcji, które w tej bibliotece nie istnieją. Skąd brać aktualne API biblioteki do planu, żeby to się nie powtórzyło? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "llms\\.txt",
+            "text/markdown",
+            "wersj\\w* \\.md",
+            "markdown"
+          ],
+          [
+            "wersj\\w* z (manifestu|package|projektu)",
+            "package\\.json",
+            "dla (tej|naszej|używanej) wersji",
+            "wersji z projektu"
+          ],
+          [
+            "dosłown",
+            "cytat",
+            "fragment\\w* dokumentacji",
+            "zapisz\\w*.{0,40}(obok|w pliku)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "strona-renderowana-js",
+      "expect": "trigger",
+      "prompt": "Muszę sprawdzić w dokumentacji narzędzia, jakie opcje ma jego plik konfiguracyjny. Strona dokumentacji renderuje się JavaScriptem i WebFetch zwraca pustą stronę. Kolega proponuje wykupić usługę scrapującą. Jak zdobyć tę treść? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "llms\\.txt",
+            "surow\\w* plik",
+            "raw\\.githubusercontent",
+            "repozytori\\w* (dokumentacji|projektu)",
+            "rejestr"
+          ],
+          [
+            "fetch_page",
+            "headless",
+            "Chromium",
+            "przeglądark\\w* lokaln",
+            "lokaln\\w* przeglądark"
+          ],
+          [
+            "zgod\\w* człowieka",
+            "zależnoś",
+            "koszt"
+          ]
+        ]
+      }
+    }
+  ]
+}

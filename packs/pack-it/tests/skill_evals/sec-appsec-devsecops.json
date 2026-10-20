@@ -1,0 +1,86 @@
+{
+  "skill": "sec-appsec-devsecops",
+  "scenarios": [
+    {
+      "id": "warstwy-skanerow-ci",
+      "expect": "trigger",
+      "prompt": "Chcemy wprowadzić DevSecOps w pipeline: jakie skanery bezpieczeństwa (sekrety, kod, zależności, aplikacja) i na jakim etapie je uruchamiać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pre-commit",
+            "przed commitem"
+          ],
+          [
+            "SAST",
+            "Semgrep",
+            "CodeQL"
+          ],
+          [
+            "SCA",
+            "SBOM"
+          ],
+          [
+            "DAST",
+            "ZAP"
+          ]
+        ],
+        "none": [
+          "wszystkie skany blokujące na każdym PR od pierwszego dnia"
+        ]
+      }
+    },
+    {
+      "id": "sla-priorytet-podatnosci",
+      "expect": "trigger",
+      "prompt": "Skaner wyrzucił 400 podatności w zależnościach i dział bezpieczeństwa chce wszystko krytyczne naprawić w 7 dni. Jak je uporządkować i jakie terminy ustalić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "EPSS"
+          ],
+          [
+            "KEV"
+          ],
+          [
+            "CVSS"
+          ],
+          [
+            "SLA",
+            "termin\\w* napraw",
+            "MTTR"
+          ]
+        ],
+        "none": [
+          "sam CVSS wystarczy"
+        ]
+      }
+    },
+    {
+      "id": "slsa-podpisy",
+      "expect": "trigger",
+      "prompt": "Jak udowodnić klientom, że nasz obraz kontenera zbudowano w naszym CI i nikt go nie podmienił? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "SLSA"
+          ],
+          [
+            "provenance",
+            "pochodzeni"
+          ],
+          [
+            "cosign",
+            "Sigstore"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "lockfile-karencja",
+      "expect": "no-trigger",
+      "prompt": "Jak ustawić karencję nowych wersji paczek npm i wyłączyć skrypty instalacyjne w projekcie?",
+      "neighbor": "ops-supply-chain-security"
+    }
+  ]
+}

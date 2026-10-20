@@ -1,0 +1,39 @@
+{
+  "skill": "sec-risk-management",
+  "scenarios": [
+    {
+      "id": "rejestr-i-akceptacja",
+      "expect": "trigger",
+      "prompt": "Dyrektor produktu chce zaakceptować ryzyko braku MFA w starym panelu partnerów. Jak to formalnie zapisać i kto może się podpisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["właściciel ryzyka", "risk owner", "właściciel"],
+          ["wygasa", "termin ważności", "data przeglądu", "expiry", "wygaśnięci", "do kiedy"],
+          ["apetyt", "tolerancj", "appetite", "tolerance"],
+          ["rezydual", "residual", "resztkow"]
+        ],
+        "none": ["akceptuje (je )?zespół bezpieczeństwa sam"]
+      }
+    },
+    {
+      "id": "fair-vs-macierz",
+      "expect": "trigger",
+      "prompt": "Mamy macierz 5x5, ale zarząd pyta, ile realnie możemy stracić na ransomware w roku. Jak to policzyć i czy macierz zastąpić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["FAIR"],
+          ["częstotliwość", "frequency", "LEF"],
+          ["Monte Carlo", "przedzia", "range"],
+          ["ISO.?27005", "scenariusz", "scenario"]
+        ],
+        "none": ["jedna liczba bez przedział"]
+      }
+    },
+    {
+      "id": "model-zagrozen-funkcji",
+      "expect": "no-trigger",
+      "prompt": "Dodajemy upload plików i webhook od partnera. Zrób DFD z granicami zaufania i przejdź STRIDE.",
+      "neighbor": "arch-threat-modeling"
+    }
+  ]
+}

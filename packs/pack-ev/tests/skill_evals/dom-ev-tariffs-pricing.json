@@ -1,0 +1,126 @@
+{
+  "skill": "dom-ev-tariffs-pricing",
+  "scenarios": [
+    {
+      "id": "step-size-zmiana-elementu",
+      "expect": "trigger",
+      "prompt": "Mamy taryfę OCPI 2.2.1: ładowanie 1,20 EUR/h przed 17:00 i 2,40 EUR/h po 17:00, w obu elementach step_size 900 s. Kierowca ładował od 16:35 przez 35 minut i od razu odjechał. Ile płaci (netto) i jak policzyć, co jest przed, a co po 17:00? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "1[.,]30"
+          ],
+          [
+            "45 min|45 minut|45 minutes|2700"
+          ],
+          [
+            "ostatni|last|ostatniego"
+          ],
+          [
+            "25 min.{0,60}0[.,]50|0[.,]50.{0,60}25 min"
+          ],
+          [
+            "20 min.{0,60}0[.,]80|0[.,]80.{0,60}20 min"
+          ]
+        ],
+        "none": [
+          "(łącznie|razem|total|suma)[^.\\n]{0,25}1[.,]20 ?(€|eur)"
+        ]
+      }
+    },
+    {
+      "id": "kalkulator-strefa-i-cdr",
+      "expect": "trigger",
+      "prompt": "Mam taryfę z oknem nocnym 22:00–06:00 i okresy ładowania z CDR z czasami w UTC. Lokalizacja jest w Warszawie. Chcę skryptem fabryki sprawdzić cenę i porównać z total_cost w CDR z dokładnością do grosza. Jak to uruchomić i czemu bez strefy wynik wyjdzie zły?",
+      "checks": {
+        "all": [
+          [
+            "ocpi_tariff_calc"
+          ],
+          [
+            "--tz"
+          ],
+          [
+            "Europe/Warsaw"
+          ],
+          [
+            "czas lokaln|local time|time_zone"
+          ],
+          [
+            "--tolerance|tolerancj"
+          ],
+          [
+            "--cdr"
+          ]
+        ],
+        "none": [
+          "UTC (jest )?wystarcz",
+          "okno .{0,30} w UTC"
+        ]
+      }
+    },
+    {
+      "id": "usa-podatek-i-limity-cen",
+      "expect": "trigger",
+      "prompt": "Wchodzimy z siecią do USA i Kanady. Podatek zależy od stanu i miasta, a my chcemy pokazywać kierowcy cenę z podatkiem. Jak to zapisać w taryfie OCPI 2.3.0, co z polem vat i jak działa min_price, gdy raz liczymy netto, a raz brutto?",
+      "checks": {
+        "all": [
+          [
+            "tax_included"
+          ],
+          [
+            "vat.{0,60}(puste|pomi|nie wypełn|brak|omit|not filled)|(puste|pomi|nie wypełn|brak|omit).{0,60}vat"
+          ],
+          [
+            "before_taxes"
+          ],
+          [
+            "after_taxes"
+          ],
+          [
+            "oba|both|jednocześnie|każd"
+          ]
+        ],
+        "none": [
+          "vat\\s*[:=]\\s*(8|7|10)[^0-9]"
+        ]
+      }
+    },
+    {
+      "id": "przypisanie-taryfy-do-evse-i-zmiana-ceny",
+      "expect": "trigger",
+      "prompt": "Mamy sieć z domyślną ceną 1,10 zł za kWh, a na jednej lokalizacji i jednym EVSE chcemy inną cenę, od jutra od północy. Do tego flotę B2B ma ładować za darmo. Jak to wskazać w OCPI na złączu, czy możemy dać inną cenę jednemu eMSP i co z kierowcą, który ładuje w momencie zmiany? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "tariff_ids"
+          ],
+          [
+            "start_date_time"
+          ],
+          [
+            "przed startem|at the start|z chwili startu|nie zmienia się w trakcie|nie może się zmienić|zamroź"
+          ],
+          [
+            "680\\.116|AFIR"
+          ],
+          [
+            "dyskrymin|discriminat|art\\.? ?5\\(3\\)|ust\\. ?3"
+          ],
+          [
+            "audyt|kto zmienił|historia zmian|dziennik zmian"
+          ]
+        ],
+        "none": [
+          "(można|wolno|należy) zmienić cenę (w trakcie|podczas) (trwającej )?sesji"
+        ]
+      }
+    },
+    {
+      "id": "cdr-kredytowy-w-rozliczeniu",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-cdr-settlement",
+      "prompt": "Partner przysłał CDR kredytowy do CDR-a, który wcześniej zaksięgowaliśmy i zafakturowaliśmy kierowcy. Jak to ułożyć w rozliczeniu hurtowym i w numeracji faktur, żeby saldo z partnerem się zgadzało?"
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+ "obszar": "produkt",
+ "pytania": [
+  {
+   "id": "ad-hoc-terminal-bez-emsp",
+   "pytanie": "Kierowca bez umowy płaci kartą na terminalu przy stacji. Kto rozlicza się z kierowcą i czy powstaje CDR do eMSP?",
+   "wzorzec": "Z kierowcą rozlicza się CPO (przez PSP lub dostawcę terminala), bo ścieżka ad hoc nie ma eMSP. CDR do eMSP nie powstaje; w module Payments OCPI 2.3.0 CDR trafia do dostawcy terminala (PTP).",
+   "checks": {
+    "all": [
+     [
+      "cpo"
+     ],
+     [
+      "nie[^.]{0,40}cdr|brak[^.]{0,30}cdr|bez[^.]{0,20}cdr|cdr[^.]{0,40}(nie|brak)"
+     ],
+     [
+      "ptp|psp|dostawc"
+     ]
+    ],
+    "none": [
+     "cdr (trafia|wysyła się|jest wysyłany) (do )?emsp"
+    ]
+   },
+   "zrodlo": "dom-ev-payments, kb:ocpi-2.3.0",
+   "trudnosc": 1
+  },
+  {
+   "id": "preautoryzacja-capture",
+   "pytanie": "Terminal zablokował na karcie preautoryzację 40 EUR, a sesja kosztowała 6,25 EUR. Ile pobierasz z karty i co dzieje się z resztą blokady?",
+   "wzorzec": "Capture robisz na kwotę rzeczywistą 6,25 EUR, nigdy większą niż zablokowana. Pozostałe 33,75 EUR blokady jest zwalniane i wraca do dyspozycji kierowcy.",
+   "checks": {
+    "all": [
+     [
+      "6[,.]25"
+     ],
+     [
+      "zwoln|wraca|zwrac|void|release|odblok"
+     ]
+    ],
+    "none": [
+     "pobier\\w+ (całe |pełne |całą kwotę )?40"
+    ]
+   },
+   "zrodlo": "dom-ev-payments, kb:ocpi-2.3.0",
+   "trudnosc": 1
+  },
+  {
+   "id": "zgubiona-karta-rfid",
+   "pytanie": "Kierowca zgubił kartę RFID wydaną przez eMSP. Jak eMSP ma zablokować token w OCPI?",
+   "wzorzec": "Nie usuwa tokenu, tylko wysyła do CPO PATCH z valid: false i nowym last_updated. Przy whitelist ALWAYS blokada zadziała dopiero po przetworzeniu PATCH u CPO, a trwającą sesję trzeba zatrzymać STOP_SESSION.",
+   "checks": {
+    "all": [
+     [
+      "valid"
+     ],
+     [
+      "false"
+     ],
+     [
+      "patch"
+     ]
+    ],
+    "none": [
+     "(należy|trzeba|wystarczy) usunąć (token|kart)"
+    ]
+   },
+   "zrodlo": "dom-ev-emsp-platform, kb:ocpi-2.2.1-d2",
+   "trudnosc": 1
+  },
+  {
+   "id": "terminal-przypisanie-evse",
+   "pytanie": "Jeden terminal płatniczy stoi przy słupku z dwoma EVSE. Jak w OCPI 2.3.0 CPO przypisuje terminal do tych EVSE?",
+   "wzorzec": "CPO wysyła do PTP PATCH Terminal z location_ids i/lub evse_uids. Gdy podano oba pola, brana jest suma zbiorów, a jeden terminal może obsługiwać kilka EVSE.",
+   "checks": {
+    "all": [
+     [
+      "patch"
+     ],
+     [
+      "evse_uids|location_ids"
+     ],
+     [
+      "suma|sum|oba|both|union|kilka|wiele"
+     ]
+    ],
+    "none": [
+     "jeden terminal (może|musi) (obsługiwać|mieć) (tylko )?jedno evse"
+    ]
+   },
+   "zrodlo": "dom-ev-payments, kb:ocpi-2.3.0",
+   "trudnosc": 2
+  },
+  {
+   "id": "authorization-reference-powiazanie",
+   "pytanie": "Jak w OCPI 2.3.0 powiązać obciążenie karty z sesją, CDR i fakturą przy płatności terminalem?",
+   "wzorzec": "Łączy je authorization_reference, które PTP podaje w StartSession, a potem jest widoczne w Session i CDR. Wraca też w Financial Advice Confirmation z wynikiem capture.",
+   "checks": {
+    "all": [
+     [
+      "authorization_reference"
+     ],
+     [
+      "ptp|financial advice|terminal"
+     ]
+    ],
+    "none": []
+   },
+   "zrodlo": "dom-ev-payments, kb:ocpi-2.3.0",
+   "trudnosc": 2
+  },
+  {
+   "id": "start-zdalny-timeout",
+   "pytanie": "Kierowca dotknął Start w aplikacji eMSP, CPO zwrócił ACCEPTED, ale po upływie timeout nie ma żadnego CommandResult. Co robi aplikacja, zanim pozwoli na ponowny start?",
+   "wzorzec": "Traktuje start jako nieudany (timeout), ale przed kolejną próbą sprawdza GET-em Sessions, czy sesja jednak nie powstała. Bez tego ponowny START_SESSION może zdublować komendę.",
+   "checks": {
+    "all": [
+     [
+      "timeout|nieudan|nie udało"
+     ],
+     [
+      "get[^.]{0,40}session|sprawdz\\w* [^.]{0,40}sesj|sprawdź [^.]{0,40}sesj|zanim"
+     ],
+     [
+      "dubl|podwój|duplikat"
+     ]
+    ],
+    "none": [
+     "accepted (oznacza|znaczy),? że (sesja|ładowanie) (już )?(wystartowa|ruszy|trwa)"
+    ]
+   },
+   "zrodlo": "dom-ev-emsp-platform, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "flota-tylko-wybrane-lokalizacje",
+   "pytanie": "Flota chce, aby jej karty działały tylko na lokalizacjach depo. Czy pole whitelist tokenu to załatwia?",
+   "wzorzec": "Nie. whitelist mówi tylko, czy CPO może autoryzować lokalnie z kopii, a nie gdzie token działa. Ograniczenie lokalizacji wymaga real-time authorization (whitelist NEVER lub ALLOWED), w której eMSP zwraca w AuthorizationInfo allowed NOT_ALLOWED; przy ALWAYS CPO przepuści token wszędzie.",
+   "checks": {
+    "all": [
+     [
+      "\\bnie\\b"
+     ],
+     [
+      "real-?time|never|post[^.]{0,20}authorize"
+     ],
+     [
+      "not_allowed|authorizationinfo|locationreferences"
+     ]
+    ],
+    "none": [
+     "whitelist (ogranicza|określa) (lokalizacje|gdzie)"
+    ]
+   },
+   "zrodlo": "dom-ev-fleet-charging, kb:ocpi-2.2.1-d2",
+   "trudnosc": 3
+  },
+  {
+   "id": "zwrot-ladowanie-domowe",
+   "pytanie": "Pracownik ładuje w domu auto służbowe i prywatne auto żony z jednej ładowarki firmowej. Z czego liczysz zwrot kosztów prądu?",
+   "wzorzec": "Ze zużycia kWh zmierzonego licznikiem ładowarki (MID), tylko z sesji tokenu auta służbowego, razem ze stawką obowiązującą w dniu sesji. Sesje auta prywatnego nie podlegają zwrotowi, a licznika głównego domu nie używasz.",
+   "checks": {
+    "all": [
+     [
+      "licznik\\w* (w )?(ładowarki|wallbox)|mid\\b|licznik\\w* ładowark"
+     ],
+     [
+      "służbow"
+     ],
+     [
+      "stawk\\w+[^.]{0,60}(dzień|data|obowiąz|dni)"
+     ]
+    ],
+    "none": [
+     "licznik\\w* (główn\\w+|domu) (jest )?(podstaw|źródł)"
+    ]
+   },
+   "zrodlo": "dom-ev-fleet-charging",
+   "trudnosc": 2
+  },
+  {
+   "id": "taryfa-zerowa-b2b",
+   "pytanie": "Klienci B2B ładują za darmo na parkingu firmy. Czy wyłączyć te sesje z rozliczenia, żeby nie generować CDR?",
+   "wzorzec": "Nie. Stosuje się taryfę zerową (Free of Charge, jeden element FLAT z ceną 0.00), a sesja nadal daje CDR z total_cost równym 0. Dzięki temu masz raport kWh per klient, rozliczenie z hostem i dowód dla audytu.",
+   "checks": {
+    "all": [
+     [
+      "\\bnie\\b"
+     ],
+     [
+      "taryf\\w+ zerow|free of charge|flat"
+     ],
+     [
+      "cdr"
+     ],
+     [
+      "0[,.]00|zero|równ\\w+ 0|\\b0\\b"
+     ]
+    ],
+    "none": [
+     "(najlepiej|należy|trzeba) (wyłączyć|pominąć) (je )?(z rozliczenia|cdr)"
+    ]
+   },
+   "zrodlo": "dom-ev-fleet-charging, kb:ocpi-2.2.1-d2",
+   "trudnosc": 2
+  },
+  {
+   "id": "marza-na-kwh-prowizja",
+   "pytanie": "Cena ładowania to 2,00 netto za kWh, prowizja roamingu to 10 % przychodu, koszt energii 0,80 za kWh. Ile wynosi marża na kWh?",
+   "wzorzec": "Marża = cena × (1 − prowizje) − koszt energii = 2,00 × 0,90 − 0,80 = 1,00 za kWh, przed kosztami stałymi.",
+   "checks": {
+    "all": [
+     [
+      "1[,.]00|\\b1 (eur|zł|pln)|jeden"
+     ]
+    ],
+    "none": [
+     "1[,.]2"
+    ]
+   },
+   "zrodlo": "dom-ev-business-economics",
+   "trudnosc": 2
+  },
+  {
+   "id": "prog-utilization-oplata-za-moc",
+   "pytanie": "Stacja: 2 EVSE, średnia moc 50 kW, marża 1,00 za kWh. Koszty stałe to opłata za moc 30 za kW miesięcznie przy 100 kW umownych oraz OPEX 24 000 rocznie. Przy jakim utilization (udział czasu ładowania w roku) EBITDA zrówna się z zerem?",
+   "wzorzec": "Koszty stałe: 30 × 100 × 12 = 36 000 plus 24 000 daje 60 000 rocznie. Próg = 60 000 / (2 × 8760 × 50 × 1,00) = 60 000 / 876 000, czyli około 6,85 %.",
+   "checks": {
+    "all": [
+     [
+      "6[,.][78]\\d? ?%|6[,.][78]\\d? proc|0[,.]068\\d?"
+     ],
+     [
+      "60 ?000"
+     ]
+    ],
+    "none": [
+     "\\b(60|36) ?%"
+    ]
+   },
+   "zrodlo": "dom-ev-business-economics",
+   "trudnosc": 3
+  },
+  {
+   "id": "npv-i-okres-zwrotu",
+   "pytanie": "Inwestycja: CAPEX 100 000, stała EBITDA 20 000 rocznie przez 10 lat, stopa dyskonta 8 %, bez wartości końcowej. Ile wynosi w przybliżeniu NPV i okres zwrotu niedyskontowany?",
+   "wzorzec": "Współczynnik rentowy dla 10 lat i 8 % to około 6,71, więc wartość bieżąca przepływów to około 134 200 i NPV około 34 200. Okres zwrotu niedyskontowany to 100 000 / 20 000 = 5 lat; dyskontowany byłby dłuższy.",
+   "checks": {
+    "all": [
+     [
+      "34[ \\u00a0.]?[12]\\d\\d|34,2 ?tys|34\\.2 ?k"
+     ],
+     [
+      "5 lat|5 years|pięć lat|5 roku"
+     ]
+    ],
+    "none": [
+     "npv (jest )?ujemn"
+    ]
+   },
+   "zrodlo": "dom-ev-business-economics",
+   "trudnosc": 3
+  },
+  {
+   "id": "prog-ebitda-a-npv",
+   "pytanie": "Skrypt ekonomii stacji pokazuje próg rentowności utilization 8,7 %, a NPV przy utilization 15 % w roku 6 nadal wychodzi ujemne. Czy to sprzeczność?",
+   "wzorzec": "Nie. Próg rentowności dotyczy EBITDA większej lub równej zeru, czyli pokrycia kosztów bieżących. NPV wymaga dodatkowo zwrotu CAPEX, więc próg dla NPV jest wyższy niż próg EBITDA.",
+   "checks": {
+    "all": [
+     [
+      "ebitda"
+     ],
+     [
+      "npv"
+     ],
+     [
+      "wyższ|higher|capex|zwrot\\w* (nakład|inwest)"
+     ]
+    ],
+    "none": [
+     "to błąd (skryptu|modelu)"
+    ]
+   },
+   "zrodlo": "dom-ev-business-economics",
+   "trudnosc": 3
+  }
+ ]
+}

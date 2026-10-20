@@ -1,0 +1,164 @@
+{
+  "skill": "core-delivery-lifecycle",
+  "scenarios": [
+    {
+      "id": "sciezka-skrocona",
+      "expect": "trigger",
+      "prompt": "Robimy mały wewnętrzny kreator raportów: trzy ekrany, jeden zespół, żadnych danych wrażliwych, łatwe wycofanie. Chcemy przeprowadzić go od pomysłu do wdrożenia z agentami AI. Które etapy i zatwierdzenia można pominąć, a które nie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "B4"
+          ],
+          [
+            "B5"
+          ],
+          [
+            "skrócon|uproszczon"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bramki-wdrozenie",
+      "expect": "trigger",
+      "prompt": "Planuję przeprowadzić cały projekt od pomysłu do produkcji zespołem agentów AI. Jak ułożyć fazy, kto zatwierdza kolejne etapy i kto robi ostateczne wdrożenie na produkcję? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "bramk"
+          ],
+          [
+            "człowiek.{0,50}(wdra|uruchamia|odpowiada)|(wdra|uruchamia).{0,50}człowiek"
+          ],
+          [
+            "szkielet|walking skeleton"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "utrzymanie",
+      "expect": "trigger",
+      "prompt": "System rezerwacji działa na produkcji od miesiąca. Jak zorganizować dalsze utrzymanie z zespołem agentów: zgłoszenia błędów, łatki bezpieczeństwa, aktualizacje i wycofywanie starych funkcji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "faz\\w* 9",
+            "utrzymani"
+          ],
+          [
+            "proc-issue-triage",
+            "triaż",
+            "przegląd zgłoszeń",
+            "zgłoszeni\\w* (błędów )?(przegląd|kategori)"
+          ],
+          [
+            "ops-dependency-upgrades",
+            "aktualizacj\\w* zależności"
+          ],
+          [
+            "wycofani\\w* funkcj",
+            "wygasz",
+            "deprecat"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "petla-ai-native",
+      "expect": "trigger",
+      "prompt": "Agenci piszą u nas kod kilka razy szybciej, ale przeglądy, testy i wdrożenia nie nadążają. Jak przebudować proces wytwarzania pod pracę z agentami AI, zachowując kontrolę człowieka? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "intent",
+            "spec\\.md",
+            "plan\\.md",
+            "artefakt"
+          ],
+          [
+            "bez zaakceptowanego planu",
+            "najpierw plan",
+            "plan przed kod",
+            "tryb planowania",
+            "plan mode"
+          ],
+          [
+            "ewaluacj",
+            "eval"
+          ],
+          [
+            "bramk"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pasma-kontrolne",
+      "expect": "trigger",
+      "prompt": "Po wydaniu chcemy, żeby agent sam reagował na pogorszenie metryk produkcji (odsetek 5xx, czas cyklu PR), ale bez fałszywych alarmów i bez samowolnych zmian na produkcji. Jak to ustawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Western Electric",
+            "3σ",
+            "3 ?sigma",
+            "odchyle\\w* standardow",
+            "pasm\\w* kontroln"
+          ],
+          [
+            "tylko do odczytu",
+            "read-only",
+            "diagnoz"
+          ],
+          [
+            "pull request",
+            "\\bPR\\b",
+            "runbook"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "plan-ciec-kolejnosc",
+      "expect": "trigger",
+      "prompt": "Mamy zaakceptowane wymagania (14 wymagań FR) i architekturę. Jak ułożyć plan cięć: od czego zacząć realizację, które prace wstępne zrobić najpierw, a które pozycje oznaczyć jako zablokowane przez niewiadome? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fundament"
+          ],
+          [
+            "odblokow"
+          ],
+          [
+            "zablokowan\\w*.{0,80}niewiadom",
+            "niewiadom\\w*.{0,80}blokuj"
+          ],
+          [
+            "gwiazd\\w* przewodni",
+            "najmniejsz\\w* przepływ",
+            "szkielet",
+            "end-to-end"
+          ]
+        ],
+        "none": [
+          "cały model danych najpierw"
+        ]
+      }
+    },
+    {
+      "id": "koniec-etapu-to-retro",
+      "expect": "no-trigger",
+      "prompt": "Skończyliśmy etap pracy z agentami AI (kilka PR-ów w dwa dni). Co zrobić przed planowaniem następnego etapu, żeby wiedzieć, ile to kosztowało i czego agenci nie powinni powtarzać? Odpowiedz zwięźle.",
+      "neighbor": "core-agent-retro"
+    },
+    {
+      "id": "canary-rollback",
+      "expect": "no-trigger",
+      "prompt": "Jak zaplanować wdrożenie canary z automatycznym wycofaniem przy przekroczeniu budżetu błędów?",
+      "neighbor": "ops-release-engineering"
+    }
+  ]
+}

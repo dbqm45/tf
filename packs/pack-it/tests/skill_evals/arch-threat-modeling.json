@@ -1,0 +1,55 @@
+{
+  "skill": "arch-threat-modeling",
+  "scenarios": [
+    {
+      "id": "model-webhook-upload",
+      "expect": "trigger",
+      "prompt": "Dodajemy webhooki od partnera płatniczego i upload faktur przez klientów. Jak zrobić model zagrożeń tej funkcji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "STRIDE"
+          ],
+          [
+            "granic\\w* zaufani",
+            "trust boundar"
+          ],
+          [
+            "DFD",
+            "diagram\\w* przepływ\\w* danych",
+            "data.?flow"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ryzyko-ilosciowe",
+      "expect": "trigger",
+      "prompt": "Zarząd pyta, czy warto wydać 200 tys. zł na ochronę przed wyciekiem danych klientów. Jak oszacować ryzyko liczbowo, a nie jako wysokie/średnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "\\bFAIR\\b"
+          ],
+          [
+            "Monte ?Carlo",
+            "przedzia",
+            "range"
+          ],
+          [
+            "rezydualn",
+            "residual",
+            "po kontroli",
+            "resztkow"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "incydent-logowania",
+      "expect": "no-trigger",
+      "prompt": "Wykryliśmy podejrzane logowania z obcego IP na konto admina. Co robimy teraz i jak ustalić zakres incydentu?",
+      "neighbor": "ops-security-operations"
+    }
+  ]
+}

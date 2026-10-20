@@ -1,0 +1,69 @@
+{
+  "skill": "fw-react",
+  "scenarios": [
+    {
+      "id": "efekt-zamiast-wyliczenia",
+      "expect": "trigger",
+      "prompt": "Przejrzyj src/components/Cart.tsx (React 19.3): sumę koszyka liczę w useEffect i zapisuję w osobnym stanie, a formularz czyszczę efektem, gdy zmieni się userId. Co poprawić? Odpowiedz zwięźle.",
+      "files": {
+        "src/components/Cart.tsx": "import { useEffect, useState } from 'react';\n\nexport function Cart({ items, userId }: { items: { price: number; qty: number }[]; userId: string }) {\n  const [total, setTotal] = useState(0);\n  const [note, setNote] = useState('');\n  useEffect(() => { setTotal(items.reduce((s, i) => s + i.price * i.qty, 0)); }, [items]);\n  useEffect(() => { setNote(''); }, [userId]);\n  return <form><input value={note} onChange={e => setNote(e.target.value)} /><p>{total}</p></form>;\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "podczas renderowania",
+            "w trakcie renderowania",
+            "w renderze",
+            "during render",
+            "bezpośrednio w ciele komponentu",
+            "wylicz\\w* (w|przy) render"
+          ],
+          [
+            "key"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "efekt-ponownie-laczy",
+      "expect": "trigger",
+      "prompt": "W src/chat/ChatRoom.tsx (React 19.3) efekt łączy się z pokojem czatu i przy połączeniu pokazuje powiadomienie w aktualnym motywie (theme). Po zmianie motywu czat łączy się od nowa. Jak to naprawić bez wyłączania reguły lintera? Odpowiedz zwięźle.",
+      "files": {
+        "src/chat/ChatRoom.tsx": "import { useEffect } from 'react';\nimport { connect, notify } from './chat';\n\nexport function ChatRoom({ roomId, theme }: { roomId: string; theme: 'light' | 'dark' }) {\n  useEffect(() => {\n    const c = connect(roomId);\n    c.on('connected', () => notify('Połączono', theme));\n    return () => c.disconnect();\n  }, [roomId, theme]);\n  return null;\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "useEffectEvent"
+          ],
+          [
+            "roomId"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bez-plikow-memo",
+      "expect": "trigger",
+      "prompt": "Zaczynamy nową aplikację w React 19.3. Czy owijać komponenty w memo i wszędzie dawać useMemo/useCallback? Jak ustawić projekt od startu, żeby o tym nie myśleć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "React Compiler",
+            "babel-plugin-react-compiler",
+            "kompilator React"
+          ],
+          [
+            "eslint-plugin-react-hooks"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "angular-resource",
+      "expect": "no-trigger",
+      "neighbor": "fw-angular",
+      "prompt": "W Angularze 22 jak zrobić wyszukiwanie z debounce przez httpResource, bez ręcznego subscribe?"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "skill": "tool-vitest",
+  "scenarios": [
+    {
+      "id": "stryker-0-procent",
+      "expect": "trigger",
+      "prompt": "W src/discount.spec.ts (Vitest 5) chcę użyć Strykera do testów mutacyjnych. Jaki runner wybrać i co zrobić, gdy wynik to 0%? Odpowiedz zwięźle.",
+      "files": {
+        "src/discount.spec.ts": "import { it, expect } from 'vitest';\nit('TC-014: 10 szt.', () => { expect(19000).toBe(19000); });\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "testRunner.{0,25}command",
+            "command runner",
+            "runner.{0,10}command",
+            "\"command\""
+          ],
+          [
+            "fałszyw",
+            "false",
+            "nie aktywuje",
+            "wszystkie mutanty przeżyły",
+            "podejrzan"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "vi-when-clearmocks",
+      "expect": "trigger",
+      "prompt": "W src/rates.spec.ts (Vitest 5) potrzebuję stuba kursu walut z portu, który rzuca błąd dla niezdefiniowanych argumentów. Jak to zapisać i co zmieniło się w clearMocks? Odpowiedz zwięźle.",
+      "files": {
+        "src/rates.spec.ts": "import { it, expect, vi } from 'vitest';\nit('H3-AC1: kurs z portu', () => {\n  const rates = vi.fn();\n  expect(rates).toBeDefined();\n});\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "vi\\.when"
+          ],
+          [
+            "onUnmatched"
+          ],
+          [
+            "clearMocks.{0,60}(domyśl|default|true)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "jest-fake-timers",
+      "expect": "no-trigger",
+      "prompt": "W Jest 29 jak ustawić fałszywy zegar na konkretną datę i przywrócić go po teście? Odpowiedz zwięźle.",
+      "neighbor": "tool-jest"
+    },
+    {
+      "id": "bez-plikow-stryker",
+      "expect": "trigger",
+      "prompt": "Planujemy testy mutacyjne w projekcie na Vitest 5. Jak skonfigurować Strykera i na co uważać przy wyniku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "testRunner.{0,25}command",
+            "command runner",
+            "runner.{0,10}command",
+            "\"command\""
+          ],
+          [
+            "fałszyw",
+            "0 ?%",
+            "podejrzan",
+            "nie aktywuje"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stryker-zawezony",
+      "expect": "trigger",
+      "prompt": "Stryker na całym repo z Vitest 5 trwa godzinę. Jak uruchamiać go tylko dla zmienionego pliku przed merge i w jakim formacie dać wynik agentowi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "--mutate"
+          ],
+          [
+            "--incremental",
+            "incremental"
+          ],
+          [
+            "json"
+          ],
+          [
+            "command"
+          ]
+        ]
+      }
+    }
+  ]
+}

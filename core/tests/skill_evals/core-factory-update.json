@@ -1,0 +1,41 @@
+{
+  "skill": "core-factory-update",
+  "scenarios": [
+    {
+      "id": "nowa-wersja-fabryki",
+      "expect": "no-trigger",
+      "prompt": "Wyszła nowa wersja claude-team-factory. Jak ją zainstalować w moim projekcie i scalić pliki *.factory-new z moimi zmianami?",
+      "neighbor": "brak"
+    },
+    {
+      "id": "fabryka-wiele-repo",
+      "expect": "no-trigger",
+      "neighbor": "brak",
+      "prompt": "Mamy 6 repozytoriów i w każdym inną wersję fabryki agentów. Jak ustawić jedno źródło i aktualizacje dla całego zespołu?"
+    },
+    {
+      "id": "auto-aktualizacja",
+      "expect": "no-trigger",
+      "neighbor": "brak",
+      "prompt": "Chcę, żeby poprawki fabryki agentów instalowały się same, a w zespole przychodziły jako PR. Jak to włączyć i jak cofnąć nieudaną aktualizację?"
+    },
+    {
+      "id": "dodanie-nakladki",
+      "expect": "no-trigger",
+      "neighbor": "brak",
+      "prompt": "Chcę dodać do projektu nakładkę z umiejętnościami UX i przełączyć język commitów na angielski. Jak to zrobić poleceniem tf?"
+    },
+    {
+      "id": "wlasny-skill",
+      "expect": "no-trigger",
+      "prompt": "Chcę dodać do projektu własny skill z naszymi konwencjami nazewnictwa i commitów. Jak go utworzyć?",
+      "neighbor": "brak"
+    },
+    {
+      "id": "upgrade-angulara",
+      "expect": "no-trigger",
+      "prompt": "Podnieś w moim projekcie Angulara z wersji 17 do 19 i uruchom migracje.",
+      "neighbor": "fw-angular"
+    }
+  ]
+}

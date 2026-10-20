@@ -1,0 +1,55 @@
+# Sprawdzenia fabryki bez modelu (bez sekretów, bez kosztu): odwołania między warstwami, testy repozytorium oraz
+# budowa i testy w zestawionym projekcie — sam rdzeń, każda nakładka osobno i wszystkie razem (tools/workspace.py).
+# Ewaluacji na modelu (płatnej) CI nie uruchamia — robi ją człowiek: python3 factory/skill_gate.py <skill> --model haiku,sonnet
+name: factory-checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  repo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Rdzeń nie wymienia elementów nakładek, nakładki — tylko tych, od których zależą
+        run: python3 tools/workspace.py refs
+      - run: for t in tests/test_*.py; do python3 "$t" || exit 1; done
+
+  workspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        packs: [none, pack-it, pack-ux, pack-docs, pack-editorial-pl, pack-ev, all]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      # Ubuntu 23.10+ blokuje nieuprzywilejowane przestrzenie nazw użytkownika, a bez nich Chromium nie ma piaskownicy
+      # (test_fetch_page renderuje stronę). Zezwolenie tylko dla tej jednej przeglądarki, profilem AppArmor — „Option 2”
+      # z chromium/src docs/security/apparmor-userns-restrictions.md; blokada dla reszty systemu i piaskownica zostają.
+      - name: Profil AppArmor dla Chromium (test_fetch_page)
+        run: |
+          [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] || exit 0
+          browser=$(python3 -c 'import importlib.util as u; s = u.spec_from_file_location("fp", "core/skills/core-source-research/scripts/fetch_page.py"); m = u.module_from_spec(s); s.loader.exec_module(m); print(m.find_browser() or "")')
+          [ -n "$browser" ] || exit 0
+          browser=$(readlink -f "$browser")
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile tf-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$browser" \
+            | sudo tee /etc/apparmor.d/tf-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/tf-chromium
+      - name: Budowa i testy w projekcie z nakładkami ${{ matrix.packs }}
+        run: python3 tools/workspace.py check --packs "${{ matrix.packs }}" $([ "${{ matrix.packs }}" = none ] && echo --language en)
+        env:
+          CTF_REQUIRE_BROWSER: "1"  # test_fetch_page pada bez Chromium zamiast pomijać render

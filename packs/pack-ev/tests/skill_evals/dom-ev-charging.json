@@ -1,0 +1,59 @@
+{
+  "skill": "dom-ev-charging",
+  "scenarios": [
+    {
+      "id": "mapa-warstw",
+      "expect": "trigger",
+      "prompt": "Dołączam do zespołu, który robi backend dla sieci ładowarek. Pokaż mi, jak wygląda komunikacja od samochodu aż do aplikacji kierowcy innej firmy: jakie są warstwy, który protokół łączy kogo i do czego służy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ocpp"
+          ],
+          [
+            "ocpi|oicp"
+          ],
+          [
+            "15118|din.?70121|pwm"
+          ]
+        ],
+        "none": [
+          "ocpi steruje ładowark"
+        ]
+      }
+    },
+    {
+      "id": "archetypy-domeny",
+      "expect": "trigger",
+      "prompt": "Zaczynamy modelować domenę nowej platformy ładowania (CPO i eMSP w jednej firmie). Jakie archetypy biznesowe i niezmienniki trzeba uwzględnić od początku, żeby nie przerabiać modelu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "party|stron[ay]|rol[ea]"
+          ],
+          [
+            "evse"
+          ],
+          [
+            "cdr.{0,40}(niezmienn|korekt)|(niezmienn|korekt).{0,40}cdr"
+          ]
+        ],
+        "none": [
+          "cdr można edytować"
+        ]
+      }
+    },
+    {
+      "id": "plug-and-charge",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-iso15118",
+      "prompt": "Chcemy uruchomić Plug & Charge w naszej sieci. Kto wystawia kierowcy kontrakt, skąd ładowarka wie, że auto ma do niego prawo, i co musi zrobić nasz CSMS? Odpowiedz zwięźle."
+    },
+    {
+      "id": "ocpi-cdr-korekta",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-cdr-settlement",
+      "prompt": "Jesteśmy CPO i wyszedł błąd w taryfie: kilka CDR-ów z zeszłego tygodnia ma złą kwotę. Czy możemy je po prostu poprawić i wysłać do eMSP przez OCPI? Jak to zrobić poprawnie? Odpowiedz zwięźle."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "skill": "dom-ev-charger-hardware",
+  "scenarios": [
+    {
+      "id": "pwm-prad-kabel-pp",
+      "expect": "trigger",
+      "prompt": "Na oscyloskopie widzę na pinie CP sygnał 1 kHz z wypełnieniem 33 %, a kabel Type 2 ma na PP rezystor 220 Ω. Jaki prąd wolno pobrać i co ogranicza ładowanie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["20 ?A"],
+          ["32 ?A"],
+          ["PP|proximity|rezystor"],
+          ["niższ|mniejsz|min(imum)?|ogranicz|lower|smaller"]
+        ],
+        "none": ["33 ?A"]
+      }
+    },
+    {
+      "id": "stany-cp-a-status-ocpp",
+      "expect": "trigger",
+      "prompt": "Pojazd jest wpięty, na CP jest +9 V i PWM, ale auto nie zamyka obwodu (nie przechodzi do C). W CSMS widzę w trakcie otwartej transakcji status Charging. Czy to poprawny status OCPP 1.6? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["SuspendedEV\\b"],
+          ["B2?\\b|9 ?V"],
+          ["C\\b.{0,80}(Charging|obwód|zamk|6 ?V|S2)|(Charging|obwód|zamk|6 ?V|S2).{0,80}\\bC\\b"]
+        ],
+        "none": ["Faulted.{0,40}(poprawn|właściw|prawidłow)"]
+      }
+    },
+    {
+      "id": "licznik-podpisany-rcd",
+      "expect": "trigger",
+      "prompt": "Wystawiamy ładowarki AC 22 kW w Niemczech i Polsce. Jakiego licznika wymaga rozliczanie za kWh i co z podpisanymi odczytami? Czy do tego RCD typu A wystarczy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["MID"],
+          ["OCMF|Eichrecht|signed meter|podpisan"],
+          ["6 ?mA|typ(u)? B|type B|RDC"]
+        ],
+        "none": ["Eichrecht.{0,30}(nie dotyczy|niepotrzebn)"]
+      }
+    },
+    {
+      "id": "boot-pending-ocpp",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-ocpp-16",
+      "prompt": "Jakie pola ma ramka BootNotification w OCPP 1.6J i co CSMS ma odpowiedzieć, żeby stacja przeszła w stan Pending, a potem Accepted? Odpowiedz zwięźle."
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "skill": "eng-llm-features",
+  "scenarios": [
+    {
+      "id": "recenzent-diffu-sdk",
+      "expect": "trigger",
+      "prompt": "Chcemy w naszym repo napisać skrypt w TypeScript, który bierze git diff, wysyła go do modelu językowego i zwraca ocenę zmiany jako JSON. Jakie SDK wybrać i jak zabezpieczyć skrypt, żeby nie przepalił budżetu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "gotow\\w* agent",
+            "do złożenia",
+            "Agent SDK",
+            "AI SDK",
+            "ToolLoopAgent"
+          ],
+          [
+            "maxTurns",
+            "maxBudgetUsd",
+            "stepCountIs",
+            "isStepCount",
+            "limit\\w* (tur|kroków|kosztu)",
+            "max-turns"
+          ],
+          [
+            "schemat",
+            "zod",
+            "json schema",
+            "structured output",
+            "pydantic"
+          ]
+        ],
+        "none": [
+          "bez limitu (tur|kroków) (jest|będzie) (w porządku|ok)"
+        ]
+      }
+    },
+    {
+      "id": "niespojne-pola-json",
+      "expect": "trigger",
+      "prompt": "Nasza funkcja w aplikacji wysyła zgłoszenie klienta do modelu językowego i dostaje JSON z kategorią i priorytetem. Pola są wypełniane niekonsekwentnie, a priorytet czasem wychodzi poza skalę 1–5. Jak to poprawić w kodzie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "opis\\w* (każdego )?pol",
+            "opis pola",
+            "describe",
+            "description"
+          ],
+          [
+            "waliduj",
+            "walidacj",
+            "safeParse",
+            "model_validate",
+            "po odbiorze"
+          ],
+          [
+            "structured output",
+            "json schema",
+            "schemat\\w* wyjścia",
+            "wymuszon\\w* format"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "tanszy-model-w-funkcji",
+      "expect": "trigger",
+      "prompt": "W naszym produkcie działa funkcja LLM, która streszcza zgłoszenia supportu. Chcemy przejść na tańszy model u innego dostawcy. Jak w kodzie sprawdzić, że jakość się nie pogorszy, zanim to wdrożymy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "promptfoo",
+            "macierz",
+            "zestaw\\w* (przypadków|ewaluac)",
+            "przypadk\\w* testow"
+          ],
+          [
+            "sędzi",
+            "llm-rubric",
+            "LLM-as-a-judge",
+            "asercj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "klucz-czy-subskrypcja",
+      "expect": "trigger",
+      "prompt": "Nasz agent zbudowany na Claude Agent SDK działa lokalnie na moim loginie z subskrypcji, bez klucza API. Chcemy go puścić na kodzie firmy w CI. Co trzeba zmienić w uwierzytelnieniu i dlaczego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "klucz\\w* API",
+            "komercyjn"
+          ],
+          [
+            "trenowan",
+            "retencj",
+            "warunk\\w* (danych|konsumenck|komercyjn)",
+            "konsumenck"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "hostowanie-modelu-gpu",
+      "expect": "no-trigger",
+      "neighbor": "ops-ai-inference",
+      "prompt": "Chcemy hostować otwarty model językowy u siebie na dwóch kartach GPU. vLLM czy coś innego i ile pamięci zostanie na KV cache?"
+    }
+  ]
+}

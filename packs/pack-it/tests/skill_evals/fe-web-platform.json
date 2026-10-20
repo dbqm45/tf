@@ -1,0 +1,104 @@
+{
+  "skill": "fe-web-platform",
+  "scenarios": [
+    {
+      "id": "szukajka-fetch",
+      "expect": "trigger",
+      "prompt": "Wyszukiwarka na żywo czasem pokazuje wyniki starszego zapytania, a przy odpowiedzi 500 nasz kod i tak parsuje JSON. Jak to naprawić w czystym fetch? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "AbortController",
+            "AbortSignal"
+          ],
+          [
+            "res\\.ok",
+            "response\\.ok",
+            "\\.ok\\b"
+          ],
+          [
+            "debounce"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "modal-live",
+      "expect": "trigger",
+      "prompt": "Modal potwierdzenia mamy z div-ów z role=dialog, a komunikat „zapisano” po akcji czytniki ekranu pomijają. Jak to poprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "showModal",
+            "<dialog"
+          ],
+          [
+            "aria-live",
+            "role=.?status",
+            "live region"
+          ],
+          [
+            "fokus"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "polityka-przegladarek",
+      "expect": "trigger",
+      "prompt": "Klient pyta, które przeglądarki wspieramy, a w kodzie co chwilę ktoś używa nowego API, które nie działa u części użytkowników. Jak zapisać politykę wsparcia przeglądarek w repo i sprawdzać kod względem niej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "browserslist"
+          ],
+          [
+            "Baseline"
+          ],
+          [
+            "compat",
+            "use-baseline",
+            "lint"
+          ],
+          [
+            "wykrywani\\w* funkcji",
+            "feature detection",
+            "@supports",
+            "in window"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "macierz-przegladarek",
+      "expect": "trigger",
+      "prompt": "Testy e2e w Playwright puszczamy tylko na Chromium, a zgłoszenia błędów przychodzą od użytkowników Safari na iPhone'ach. Jaką macierz przeglądarek testować i czy WebKit w Playwright wystarczy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "webkit"
+          ],
+          [
+            "firefox"
+          ],
+          [
+            "prawdziw\\w* (urządz|Safari|iOS)",
+            "real device",
+            "fizyczn"
+          ],
+          [
+            "noc",
+            "nightly",
+            "PR"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "struktura-features",
+      "expect": "no-trigger",
+      "prompt": "Jak zorganizować katalogi features/ i shared/ oraz kierunek importów w dużej aplikacji frontendowej?",
+      "neighbor": "fe-architecture"
+    }
+  ]
+}

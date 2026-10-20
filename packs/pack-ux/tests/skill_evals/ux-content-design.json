@@ -1,0 +1,47 @@
+{
+  "skill": "ux-content-design",
+  "scenarios": [
+    {
+      "id": "test-zrozumialosci-regulaminu",
+      "expect": "trigger",
+      "prompt": "Mamy długi tekst zasad zwrotów i nie wiemy, czy klienci go rozumieją. Jak przetestować zrozumiałość tej treści z kilkoma osobami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["cloze", "test luk", "uzupełnian\\w+ luk", "luk\\w* w tekście"],
+          ["highlighter", "zakreśl", "zaznacz\\w* (marker|tekst)", "marker"]
+        ],
+        "none": ["wystarczy (wskaźnik|indeks) (czytelności|mglistości)"]
+      }
+    },
+    {
+      "id": "asystent-ai-w-aplikacji",
+      "expect": "trigger",
+      "prompt": "Dodajemy do aplikacji bankowej asystenta opartego na LLM. Jak napisać teksty, żeby użytkownik wiedział, że rozmawia z AI, i nie ufał ślepo jego odpowiedziom? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["art\\.? ?50", "akt\\w* o sztucznej inteligencji", "AI Act"],
+          ["niepewn", "może się mylić", "zweryfikuj", "pewność odpowiedzi", "poziom pewności"]
+        ],
+        "none": ["gwarantuj\\w* (poprawn|dokładn)"]
+      }
+    },
+    {
+      "id": "sklejane-komunikaty-tlumaczenia",
+      "expect": "trigger",
+      "prompt": "Tłumaczymy aplikację na polski i niemiecki. Programiści sklejają komunikaty z fragmentów, np. 'Masz ' + n + ' nowych wiadomości'. Jak ułożyć pracę nad tekstami i tłumaczeniami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ICU", "MessageFormat", "liczb\\w+ mnog"],
+          ["kontekst", "opis dla tłumacz", "klucz", "glosariusz", "słownik"]
+        ],
+        "none": ["konkatenacj\\w+ (jest|to) (dobr|ok|bezpiecz)"]
+      }
+    },
+    {
+      "id": "interpunkcja-akapitu",
+      "expect": "no-trigger",
+      "neighbor": "txt-polish-correctness",
+      "prompt": "Popraw interpunkcję i pisownię w zdaniu: 'Zamówienie które złożyłeś wczoraj zostało wysłane ale jeszcze nie dotarło do Ciebie'. Odpowiedz zwięźle."
+    }
+  ]
+}

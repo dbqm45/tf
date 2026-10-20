@@ -1,0 +1,73 @@
+{
+  "skill": "ai-governance-compliance",
+  "scenarios": [
+    {
+      "id": "rekrutacja-cv-klasyfikacja",
+      "expect": "trigger",
+      "prompt": "Kupiliśmy od zewnętrznego dostawcy narzędzie, które ocenia i szereguje CV kandydatów, i wdrażamy je w naszej firmie w UE. Jak to zakwalifikować w AI Act i jakie mamy obowiązki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wysok\\w* ryzyk", "high-risk"],
+          ["załącznik\\w* III", "annex III"],
+          ["podmiot\\w* stosując", "deployer", "użytkownik\\w* systemu"],
+          ["nadzór\\w* człowiek", "human oversight"],
+          ["nie jest\\w* porad\\w* prawn", "prawnik", "radc\\w* prawn", "inspektor"]
+        ],
+        "none": ["AI Act nie dotyczy"]
+      }
+    },
+    {
+      "id": "chatbot-terminy",
+      "expect": "trigger",
+      "prompt": "Mamy chatbota obsługi klienta na modelu od zewnętrznego dostawcy i generujemy w nim obrazy do kampanii. Które obowiązki AI Act nas dotyczą i od kiedy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["art\\.? 50", "przejrzystoś"],
+          ["poinformow\\w* .{0,40}(AI|sztuczn)", "interakcj\\w* z (AI|systemem AI)", "oznacz\\w*", "etykiet"],
+          ["2026-08-02", "2 sierpnia 2026", "sierpni\\w* 2026"],
+          ["2 grudnia 2026", "2026-12-02", "niezweryfikowan", "omnibus"]
+        ],
+        "none": ["AI Act nie dotyczy", "chatbot\\w* jest\\w* wysokiego ryzyka z mocy"]
+      }
+    },
+    {
+      "id": "dostawca-czy-wdrazajacy",
+      "expect": "trigger",
+      "prompt": "Wzięliśmy otwarty model i dostroiliśmy go pod nasz produkt do oceny zdolności kredytowej, który sprzedajemy bankom pod własną marką. Czy jesteśmy dostawcą czy tylko wdrażającym i co z tego wynika? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["dostawc\\w*", "provider"],
+          ["art\\.? 25", "własn\\w* marc", "zmian\\w* przeznaczenia"],
+          ["ocen\\w* zgodności", "conformity", "znak\\w* CE", "deklaracj\\w* zgodności"],
+          ["dokumentacj\\w* techniczn", "system\\w* zarządzania ryzykiem", "zarządzani\\w* ryzykiem"]
+        ],
+        "none": ["AI Act nie dotyczy"]
+      }
+    },
+    {
+      "id": "polityka-ai-i-iso",
+      "expect": "trigger",
+      "prompt": "Zarząd chce uporządkować AI w firmie: polityka użycia dla pracowników, rejestr systemów i może certyfikat. Od czego zacząć i jak to się ma do NIST AI RMF i ISO 42001? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["inwentarz", "rejestr system", "spis system"],
+          ["govern", "map\\b", "measure", "manage"],
+          ["42001", "system\\w* zarządzania sztuczn"],
+          ["27001", "art\\.? 4", "kompetencj\\w* w zakresie AI", "AI literacy"]
+        ]
+      }
+    },
+    {
+      "id": "rodo-dpia-ai",
+      "expect": "no-trigger",
+      "neighbor": "arch-privacy-compliance",
+      "prompt": "Czy przy wysyłaniu danych klientów do zewnętrznego API do podsumowań trzeba robić DPIA i jak ustawić retencję logów z tymi danymi?"
+    },
+    {
+      "id": "metryki-ewaluacji",
+      "expect": "no-trigger",
+      "neighbor": "ai-evals",
+      "prompt": "Jak zbudować zbiór testowy i sędziego LLM, żeby mierzyć jakość odpowiedzi asystenta w CI, z pass@k?"
+    }
+  ]
+}

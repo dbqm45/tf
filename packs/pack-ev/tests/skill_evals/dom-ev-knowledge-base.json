@@ -1,0 +1,74 @@
+{
+  "skill": "dom-ev-knowledge-base",
+  "scenarios": [
+    {
+      "id": "odpowiedz-z-cytatem",
+      "expect": "trigger",
+      "prompt": "Chcę zapytać fabrykę, jak OCPI liczy step_size przy postoju, i dostać odpowiedź z cytatem ze specyfikacji, a nie z pamięci modelu. Skąd fabryka bierze taką odpowiedź i jak ją podaje? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kb\\.py|kb search|baz[aęy] wiedzy"
+          ],
+          [
+            "plik:linia|:l\\d|zakres linii|cytat|cytuj"
+          ],
+          [
+            "ingest|pobierz|rejestr"
+          ]
+        ],
+        "none": [
+          "z pamięci (wystarczy|jest ok)"
+        ]
+      }
+    },
+    {
+      "id": "dodaj-dokument-partnera",
+      "expect": "trigger",
+      "prompt": "Dostaliśmy od partnera roamingowego PDF z wymaganiami integracji i link do aktu prawnego. Jak dodać je do wiedzy fabryki, żeby agenci z nich korzystali, i czy mogę wrzucić PDF partnera do repozytorium? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ingest"
+          ],
+          [
+            "licencj|redystrybu|gitignore|poza gitem|lokaln\\w+ cache"
+          ],
+          [
+            "docs/knowledge|notatk"
+          ]
+        ],
+        "none": [
+          "wrzuć (pdf|go) do repozytorium"
+        ]
+      }
+    },
+    {
+      "id": "terminy-przepisow",
+      "expect": "trigger",
+      "prompt": "Robimy przegląd kwartalny fabryki: które przepisy i standardy EV mają terminy w najbliższym półroczu i które wpisy o standardach są już nieaktualne? Jak to sprawdzić bez czytania wszystkich skilli?",
+      "checks": {
+        "all": [
+          [
+            "standards_check|rejestr[a-ząćęłńóśźż ]*standard"
+          ],
+          [
+            "nadchodz|upcoming|horyzont|horizon"
+          ],
+          [
+            "sprawdzon|stale|po terminie|nieaktualn"
+          ]
+        ],
+        "none": [
+          "przeczytaj wszystkie skille"
+        ]
+      }
+    },
+    {
+      "id": "wersja-biblioteki",
+      "expect": "no-trigger",
+      "neighbor": "core-source-research",
+      "prompt": "Co zmieniło się w ostatnim miesiącu w bibliotece ocpp dla Pythona i co zgłaszają użytkownicy na GitHubie? Odpowiedz zwięźle."
+    }
+  ]
+}

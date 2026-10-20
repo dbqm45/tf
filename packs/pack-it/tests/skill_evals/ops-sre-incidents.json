@@ -1,0 +1,75 @@
+{
+  "skill": "ops-sre-incidents",
+  "scenarios": [
+    {
+      "id": "burn-rate",
+      "expect": "trigger",
+      "prompt": "Mamy SLO 99,9% w oknie 30 dni dla API zamówień. Jak ustawić alerty na budżet błędów, żeby nie budzić dyżurnego bez powodu? Podaj konkretne progi. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "burn rate",
+            "tempo spalania"
+          ],
+          [
+            "14[,.]4"
+          ],
+          [
+            "43"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "kopie-zapasowe",
+      "expect": "trigger",
+      "prompt": "Robimy codzienne kopie bazy produkcyjnej na S3 w tym samym koncie. Czy to wystarczy, jeśli chodzi o odporność na awarię? Co poprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "odtworz",
+            "restore"
+          ],
+          [
+            "RPO",
+            "RTO"
+          ],
+          [
+            "niezmienial",
+            "immutable",
+            "poza kont",
+            "inny region",
+            "innym regionie"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "incydent-nie-wroci",
+      "expect": "trigger",
+      "prompt": "Po incydencie z błędnie naliczanym rabatem chcemy mieć pewność, że ten sam błąd nie wróci, także gdy kod piszą agenci AI. Co dodać po postmortemie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "test\\w* regresyjn"
+          ],
+          [
+            "eval",
+            "scenariusz\\w* ewaluacj"
+          ],
+          [
+            "działa\\w* naprawcz",
+            "właściciel",
+            "termin"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dashboardy",
+      "expect": "no-trigger",
+      "prompt": "Jak zinstrumentować usługę w Node.js przez OpenTelemetry i zbudować dashboard w Grafanie z metrykami latencji i błędów? Odpowiedz zwięźle.",
+      "neighbor": "ops-observability"
+    }
+  ]
+}

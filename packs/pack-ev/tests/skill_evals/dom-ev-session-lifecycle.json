@@ -1,0 +1,101 @@
+{
+  "skill": "dom-ev-session-lifecycle",
+  "scenarios": [
+    {
+      "id": "start-z-aplikacji-emsp-ocpp16",
+      "expect": "trigger",
+      "prompt": "Kierowca startuje ładowanie w aplikacji eMSP, a ładowarka stoi na OCPP 1.6. Jaka jest kolejność komunikatów OCPI i OCPP od kliknięcia w aplikacji do pierwszego MeterValues i do CDR? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "START_SESSION"
+          ],
+          [
+            "RemoteStartTransaction"
+          ],
+          [
+            "response_url|asynchroniczn|CommandResult"
+          ],
+          [
+            "StartTransaction"
+          ],
+          [
+            "transactionId.{0,60}(CSMS|backend|centraln)|(CSMS|backend|centraln).{0,60}transactionId"
+          ],
+          [
+            "CDR.{0,80}(po|dopiero).{0,60}(StopTransaction|zakończ)|(StopTransaction|zakończ).{0,80}CDR"
+          ]
+        ],
+        "none": [
+          "RemoteStartTransaction.{0,40}(tworzy|zakłada|jest).{0,20}(transakcj|sesj)"
+        ]
+      }
+    },
+    {
+      "id": "offline-po-powrocie-stare-transakcje",
+      "expect": "trigger",
+      "prompt": "Ładowarka (OCPP 1.6) była 3 godziny offline i po powrocie wysyła StartTransaction i StopTransaction sprzed 2 godzin. Jak to zapisać w CSMS i co wysłać do eMSP przez OCPI? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "timestamp.{0,80}(ładowark|z ramki|zdarzeni)|czas (zdarzenia|z ramki)|nie.{0,30}czas(u)? odbioru"
+          ],
+          [
+            "idempoten|duplikat|messageId"
+          ],
+          [
+            "licznik|meterStart|meterStop|MID"
+          ],
+          [
+            "CDR"
+          ],
+          [
+            "Session.{0,80}(COMPLETED|zakończon|jednorazowo|od razu)|nie.{0,40}(ACTIVE|w czasie rzeczywistym)|COMPLETED"
+          ]
+        ],
+        "none": [
+          "czas odbioru.{0,40}(jako|za) (czas )?(start|rozpocz)"
+        ]
+      }
+    },
+    {
+      "id": "free-vend-i-stop-failed",
+      "expect": "trigger",
+      "prompt": "Mamy kilka stacji przy hotelu, które ładują bez autoryzacji (gość płaci w recepcji, ładowanie jest bezpłatne), i kilka sesji, w których operator ma status STOP_FAILED, a licznik dalej leci. Jak takie sesje wyglądają w OCPP, jak je zamknąć i co z raportem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "STOP_FAILED"
+          ],
+          [
+            "nie (jest )?(statusem|stanem|nazwą) OCPP|operator\\w* status|status operator|stan operator|nie z OCPP|nie pochodzi z OCPP"
+          ],
+          [
+            "TriggerMessage"
+          ],
+          [
+            "MeterValues|StatusNotification"
+          ],
+          [
+            "administracyjn"
+          ],
+          [
+            "NoAuthorization|free vend|AuthorizeRemote|LocalPreAuthorize|token techniczn"
+          ],
+          [
+            "do weryfikacji"
+          ]
+        ],
+        "none": [
+          "(StopFailed|STOP_FAILED) (jest|to) (status|stan|wartość)\\w* (z )?(OCPP|protokołu)"
+        ]
+      }
+    },
+    {
+      "id": "brak-odpowiedzi-na-remotestart",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-diagnostics",
+      "prompt": "Ładowarka od rana nie odpowiada na RemoteStart, w logach CSMS widzę tylko Heartbeaty. Od czego zacząć diagnozę? Odpowiedz zwięźle."
+    }
+  ]
+}

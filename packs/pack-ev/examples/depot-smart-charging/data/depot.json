@@ -1,0 +1,13 @@
+{
+  "name": "Zajezdnia przykładowa — przyłącze 63 A (3 fazy, 230 V)",
+  "start": "2026-10-20T18:00:00Z",
+  "slot_s": 900,
+  "grid_limit_a": 63,
+  "voltage": 230,
+  "vehicles": [
+    {"evse": "EVSE-1", "arrival_s": 0,    "departure_s": 14400, "needed_kwh": 30, "max_a": 32, "phases": 3},
+    {"evse": "EVSE-2", "arrival_s": 0,    "departure_s": 36000, "needed_kwh": 40, "max_a": 16, "phases": 3},
+    {"evse": "EVSE-3", "arrival_s": 7200, "departure_s": 43200, "needed_kwh": 50, "max_a": 32, "phases": 3},
+    {"evse": "EVSE-4", "arrival_s": 0,    "departure_s": 7200,  "needed_kwh": 60, "max_a": 16, "phases": 3}
+  ]
+}

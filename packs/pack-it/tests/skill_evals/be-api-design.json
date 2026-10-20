@@ -1,0 +1,66 @@
+{
+  "skill": "be-api-design",
+  "scenarios": [
+    {
+      "id": "idempotencja-platnosci",
+      "expect": "trigger",
+      "prompt": "Endpoint POST /payments inicjuje przelew, a klient mobilny po timeoucie ponawia żądanie. Jak zapewnić, że nie powstaną dwa przelewy i co zwracać przy ponowieniu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Idempotency-Key",
+            "klucz\\w* idempoten"
+          ],
+          [
+            "409",
+            "422",
+            "ta sama odpowied",
+            "zapisan\\w* (odpowied|wynik)",
+            "stored response",
+            "same response",
+            "replay"
+          ],
+          [
+            "inn\\w* (body|treś|payload|dane)",
+            "różn\\w* (body|treś|payload)",
+            "mismatch",
+            "fingerprint",
+            "skrót"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "paginacja-kolekcji",
+      "expect": "trigger",
+      "prompt": "Wystawiamy GET /orders z milionami rekordów i wieloma filtrami. Jak zrobić paginację i sortowanie, żeby nikt nie obciążył bazy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kursor",
+            "cursor",
+            "keyset"
+          ],
+          [
+            "limit\\w*.*(maks|max|twardy|górn|serwer)",
+            "(maks|max|twardy|górn)\\w* limit",
+            "hard limit"
+          ],
+          [
+            "whitelist",
+            "biał\\w* list",
+            "allowlist",
+            "dozwolon\\w* pol",
+            "lista dozwolon"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "indeksy-orders",
+      "expect": "no-trigger",
+      "prompt": "Jakie indeksy złożone założyć w PostgreSQL na tabeli orders pod zapytania po customer_id i created_at?",
+      "neighbor": "be-database"
+    }
+  ]
+}

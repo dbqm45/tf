@@ -1,0 +1,61 @@
+{
+  "skill": "fe-architecture",
+  "scenarios": [
+    {
+      "id": "retry-platnosc",
+      "expect": "trigger",
+      "prompt": "Dodajemy w SPA automatyczne ponawianie żądań przy błędach sieci, także dla POST płatności; API potrafi zwrócić 409 i 422. Jak to ustawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "idempoten"
+          ],
+          [
+            "backoff",
+            "jitter"
+          ],
+          [
+            "409|422"
+          ]
+        ]
+      },
+      "accept": [
+        "be-api-design",
+        "fe-web-platform"
+      ]
+    },
+    {
+      "id": "rsc-cve",
+      "expect": "trigger",
+      "prompt": "Mamy produkcyjną aplikację Next.js z React Server Components i właśnie wyszła krytyczna podatność we frameworku. Czy to problem tylko frontendu i jak szybko reagować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kod serwera",
+            "server-side",
+            "po stronie serwera",
+            "backend"
+          ],
+          [
+            "doby",
+            "24 ?h",
+            "24 godz",
+            "dobę"
+          ],
+          [
+            "React2Shell",
+            "CVE-2025-55182",
+            "bez logowania",
+            "bez uwierzytelni"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ciemny-motyw",
+      "expect": "no-trigger",
+      "prompt": "Jak zrobić tryb ciemny z użyciem CSS custom properties i light-dark()?",
+      "neighbor": "fe-css"
+    }
+  ]
+}

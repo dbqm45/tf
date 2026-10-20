@@ -1,0 +1,60 @@
+{
+  "skill": "core-agent-instructions",
+  "scenarios": [
+    {
+      "id": "claude-md-puchnie",
+      "expect": "trigger",
+      "prompt": "Nasz CLAUDE.md ma 420 linii: na górze opis projektu i wartości zespołu, dalej wklejony cały tsconfig i zasady w stylu „pisz czysty kod”, a zakaz logowania danych klientów jest w linii 380. Agent i tak łamie format błędów API. Jak uporządkować ten plik? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["200"],
+          ["intencj", "sprawdzaln", "konkretn\\w* zachowan", "weryfikowaln"],
+          ["na gór", "na począt", "pierwsz\\w* (linia|linie|sekcj|miejsc)", "przenieś\\w*.{0,40}(gór|począt)"],
+          ["@tsconfig", "odnośnik", "odwołan", "wskaż\\w* plik", "import\\w* @", "referencj"]
+        ]
+      }
+    },
+    {
+      "id": "monorepo-pliki-w-modulach",
+      "expect": "trigger",
+      "prompt": "Mamy monorepo z pakietami api, web i cli. Agent w pakiecie cli trzeci raz użył console.log zamiast naszego loggera, mimo że reguła jest w głównym CLAUDE.md, który ma już 300 linii. Gdzie powinny mieszkać zasady pakietu i jak to ułożyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["cli/CLAUDE\\.md", "CLAUDE\\.md w (module|pakiecie|katalogu|podkatalogu)", "zagnieżdżon\\w* CLAUDE", "osobn\\w* CLAUDE\\.md"],
+          ["na żądanie", "leniwie", "dopiero (gdy|przy)", "on demand", "gdy (agent|Claude) (czyta|otwiera)", "przy (czytaniu|odczycie) plik"],
+          ["indeks", "spis treści", "wskaźnik", "odnośnik\\w* do (plików|modułów)", "\\.claude/rules", "paths"]
+        ]
+      }
+    },
+    {
+      "id": "agents-md-i-claude-md",
+      "expect": "trigger",
+      "prompt": "Część zespołu używa Codexa, część Claude Code. W repo jest AGENTS.md z regułami, a ktoś chce dodać jeszcze CLAUDE.md z tymi samymi zasadami. Jak to ułożyć, żeby reguły się nie rozjechały i obie grupy dostawały ten sam kontekst? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["@AGENTS\\.md", "dowiązani\\w* symboliczn", "symlink", "ln -s"],
+          ["jedn\\w* źród\\w* prawdy", "źródłem prawdy", "jedn\\w* miejsc", "single source"],
+          ["(nie czyta|pomija|nie wczyt|zamiast)\\w*.{0,60}AGENTS", "AGENTS\\.md.{0,80}(gdy|tylko gdy|jeśli) (nie ma|brak) CLAUDE", "claude-md-and-agents-md", "Project instructions", "/context", "/memory"]
+        ]
+      }
+    },
+    {
+      "id": "czy-regula-dziala",
+      "expect": "trigger",
+      "prompt": "Dopisałem do CLAUDE.md regułę, że pliki handlerów nazywamy feature.handler.ts, a nie featureHandler.ts. Skąd mam wiedzieć, czy ta reguła naprawdę coś zmienia w pracy agenta, a nie tylko zajmuje kontekst? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["3.{1,3}5", "kilka (razy|przebiegów|prób)", "wielokrotnie", "powtórz\\w* (zadanie|kilka)"],
+          ["śwież\\w* sesj", "now\\w* sesj", "czyst\\w* sesj", "od zera", "/clear", "tego samego stanu"],
+          ["bez reguły", "usuń (ją|regułę)", "z regułą i bez", "przed i po", "A/B"]
+        ]
+      }
+    },
+    {
+      "id": "skill-za-dlugi",
+      "expect": "no-trigger",
+      "neighbor": "core-skill-authoring",
+      "prompt": "Napisałem nowy skill do fabryki: SKILL.md ma 600 linii, a opis brzmi „Pomaga z migracjami”. Jak go skrócić i poprawić opis, żeby model go wczytywał przy właściwych pytaniach?"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "skill": "tool-pytest",
+  "scenarios": [
+    {
+      "id": "konfiguracja-9",
+      "expect": "trigger",
+      "prompt": "W pyproject.toml mamy sekcję [tool.pytest.ini_options], a przechodzimy na pytest 9.1. Co zmienić w konfiguracji i jak włączyć tryb ścisły? Odpowiedz zwięźle.",
+      "files": {
+        "pyproject.toml": "[project]\nname = \"rezerwacje\"\nrequires-python = \">=3.12\"\n\n[tool.pytest.ini_options]\naddopts = \"-ra\"\ntestpaths = [\"tests\"]\nmarkers = [\"slow: wolne testy\"]\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "\\[tool\\.pytest\\]"
+          ],
+          [
+            "strict\\s*=\\s*true"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "powielone-testy",
+      "expect": "trigger",
+      "prompt": "W tests/test_discount.py (pytest 9) mam dwanaście kopii tego samego testu z różnymi kwotami i ręcznie tworzę katalogi tymczasowe przez tempfile. Jak to uprościć? Odpowiedz zwięźle.",
+      "files": {
+        "tests/test_discount.py": "import tempfile\nfrom shop.discount import discount\n\ndef test_discount_100():\n    d = tempfile.mkdtemp()\n    assert discount(100, d) == 0\n\ndef test_discount_200():\n    d = tempfile.mkdtemp()\n    assert discount(200, d) == 10\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "parametrize"
+          ],
+          [
+            "tmp_path"
+          ],
+          [
+            "pytest\\.param",
+            "ids?\\s*="
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bez-plikow-async",
+      "expect": "trigger",
+      "prompt": "Piszemy testy w pytest dla serwisu na asyncio (FastAPI). Jak skonfigurować testy asynchroniczne i na co uważać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pytest-asyncio"
+          ],
+          [
+            "asyncio_mode"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "vitest-mock",
+      "expect": "no-trigger",
+      "neighbor": "tool-vitest",
+      "prompt": "W Vitest 5 jak podmienić moduł mockiem i sprawdzić, z jakimi argumentami został wywołany?"
+    }
+  ]
+}

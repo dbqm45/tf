@@ -1,0 +1,57 @@
+{
+  "skill": "dom-ev-cdr-settlement",
+  "scenarios": [
+    {
+      "id": "korekta-wyslanego-cdr",
+      "expect": "trigger",
+      "prompt": "Jesteśmy CPO. Tydzień temu wysłaliśmy do eMSP-a CDR z błędną taryfą, kwota jest za wysoka o 4,20 EUR, a partner już ją zaksięgował. Jak to poprawić po stronie OCPI i co dokładnie ma być w kolejnych rekordach? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["credit_reference_id"],
+          ["credit.{0,20}true"],
+          ["ujemn|negative|minus|ze znakiem"],
+          ["nowy CDR|kolejny CDR|new CDR|drugi CDR"],
+          ["inne(go)? id|nowe id|różn.{0,20}id|unikaln.{0,20}id|-C"]
+        ],
+        "none": ["(wyślij|użyj|zrób|wykonaj)\\s+(PUT|PATCH)", "usuń .{0,30}(DELETE|CDR)"]
+      }
+    },
+    {
+      "id": "uzgodnienie-miesiaca-emsp",
+      "expect": "trigger",
+      "prompt": "Jesteśmy eMSP i na koniec miesiąca uzgadniamy rozliczenie z obcym CPO. W naszych danych część CDR-ów nie ma żadnej sesji, a przy innych kWh z sesji różni się od kWh w CDR. Jak to uporządkować przed zapłatą i fakturą dla kierowców? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["session_id"],
+          ["total_energy"],
+          ["idempoten|duplikat|ten sam .{0,10}id|po .{0,10}id"],
+          ["CDR kredytow|credit"],
+          ["spór|spor|dispute|reklamac|wstrzym"],
+          ["invoice_reference_id|numer faktury|referencj"]
+        ],
+        "none": ["zapłać .{0,30}bez (sprawdzania|weryfikacji)"]
+      }
+    },
+    {
+      "id": "sprawdzenie-kosztu-cdr-kalkulatorem",
+      "expect": "trigger",
+      "prompt": "Dostałem CDR od partnera i podejrzewam, że total_cost jest zawyżony. Mam jego taryfę z pola tariffs w pliku JSON. Jak szybko sprawdzić koszt skryptem fabryki i jak czytać wynik?",
+      "checks": {
+        "all": [
+          ["ocpi_tariff_calc"],
+          ["--cdr"],
+          ["charging_periods"],
+          ["kod (wyjścia )?1|exit (code )?1|rozbieżn|różnic"],
+          ["kod (wyjścia )?2|exit (code )?2|błąd wejścia|błędne wejście"]
+        ],
+        "none": []
+      }
+    },
+    {
+      "id": "cena-z-taryfy-step-size",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-tariffs-pricing",
+      "prompt": "Taryfa OCPI ma ENERGY 0,45 EUR/kWh, a po 2 godzinach PARKING_TIME 6 EUR/h z step_size 300 s. Jak policzyć cenę sesji i kiedy wybierany jest dany TariffElement? Odpowiedz zwięźle."
+    }
+  ]
+}

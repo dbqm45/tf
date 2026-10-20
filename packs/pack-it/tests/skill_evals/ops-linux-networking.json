@@ -1,0 +1,48 @@
+{
+  "skill": "ops-linux-networking",
+  "scenarios": [
+    {
+      "id": "dysk-inody",
+      "expect": "trigger",
+      "prompt": "Na serwerze Linux aplikacja zgłasza „No space left on device”, a df -h pokazuje 40% wolnego miejsca. Jak to zdiagnozować krok po kroku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "df -i",
+            "i-w[eę]z|inod"
+          ],
+          [
+            "lsof|dmesg|journalctl"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "poczta-spf",
+      "expect": "trigger",
+      "prompt": "Maile z naszej aplikacji trafiają do spamu w Gmailu. Jakie rekordy DNS i wymagania trzeba spełnić dla domeny wysyłającej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "spf"
+          ],
+          [
+            "dkim"
+          ],
+          [
+            "dmarc"
+          ],
+          [
+            "jednym kliknięciem|one-click|list-unsubscribe"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "k8s-manifest",
+      "expect": "no-trigger",
+      "prompt": "Jak skonfigurować NetworkPolicy domyślnie odmawiającą ruchu w namespace Kubernetes?",
+      "neighbor": "ops-kubernetes"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "skill": "proc-product-discovery",
+  "scenarios": [
+    {
+      "id": "prosba-o-funkcje",
+      "expect": "trigger",
+      "prompt": "Szef chce, żebyśmy dodali eksport do Excela, bo „klienci o to proszą”. Jak zdecydować, czy to budować, zanim zaczniemy programować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wynik",
+            "outcome"
+          ],
+          [
+            "drzewo szans",
+            "opportunity",
+            "JTBD",
+            "problem"
+          ],
+          [
+            "założeń|założen",
+            "assumption",
+            "test"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "priorytety-rice",
+      "expect": "trigger",
+      "prompt": "Mamy listę 12 pomysłów na funkcje i muszę je uszeregować oraz wybrać metryki sukcesu po wydaniu. Jakie metody i metryki zastosować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "RICE"
+          ],
+          [
+            "Kano|MoSCoW"
+          ],
+          [
+            "HEART|OKR|metryk\\w+ ochronn|guardrail"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "narzedzie-wewnetrzne-kup-czy-zbuduj",
+      "expect": "trigger",
+      "prompt": "Zespół chce z pomocą AI zbudować własne narzędzie wewnętrzne, które co rano zbiera dane z Jiry, GitHuba i Slacka do raportu dla kierownika. Czy to budować, kupić gotowe, czy jakoś inaczej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "uzupełn",
+            "cienk\\w* warstw"
+          ],
+          [
+            "kup",
+            "gotow\\w* (narzędzi|rozwiąz|funkcj)",
+            "SaaS",
+            "istniejąc\\w* narzędzi"
+          ],
+          [
+            "utrzymani",
+            "odpowiedzialnoś",
+            "właściciel"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "projekt-ui",
+      "expect": "no-trigger",
+      "prompt": "Jak zaprojektować formularz rejestracji, żeby był czytelny i dostępny: układ pól, komunikaty błędów, etykiety? Odpowiedz zwięźle.",
+      "neighbor": "ux-feature-design"
+    }
+  ]
+}

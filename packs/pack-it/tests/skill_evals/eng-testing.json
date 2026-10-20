@@ -1,0 +1,117 @@
+{
+  "skill": "eng-testing",
+  "scenarios": [
+    {
+      "id": "tdd-nowa-regula",
+      "expect": "trigger",
+      "prompt": "Mamy funkcję liczącą wartość koszyka. Dodaj regułę: 10% rabatu, gdy wartość przekracza 200 zł. Jak to zrobić metodą TDD? Opisz kolejne kroki zwięźle, bez pisania całego kodu.",
+      "checks": {
+        "all": [
+          [
+            "najpierw (napisz |piszesz |dodaj )?test",
+            "test (najpierw|przed)",
+            "czerwon",
+            "red",
+            "nie przechodzi",
+            "nie przejdzie",
+            "pada"
+          ],
+          [
+            "200",
+            "granic",
+            "brzeg",
+            "200,01",
+            "199"
+          ],
+          [
+            "uruchom",
+            "odpal",
+            "npm test",
+            "vitest",
+            "jest"
+          ]
+        ],
+        "none": [
+          "najpierw (zaimplementuj|napisz kod|dodaj kod)"
+        ]
+      }
+    },
+    {
+      "id": "mock-vs-fake",
+      "expect": "trigger",
+      "prompt": "W testach przypadków użycia mockuję repozytorium i klienta płatności bibliotekami i testy pękają przy każdym refaktorze. Co zmienić w strategii dublerów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fake"
+          ],
+          [
+            "własn\\w+ port|przez port|czego nie posiadasz|nie posiadasz|zewnętrzn"
+          ],
+          [
+            "zachowani\\w+ przez publiczn|publiczne API|nie implementacj|na wyniku|na stanie|nie na interakcj|zamiast (wywołań|interakcji)"
+          ]
+        ]
+      },
+      "rubric": [
+        "używać fake'ów (prostych działających implementacji) zamiast mocków bibliotecznych",
+        "dublować tylko granice systemu przez własny port/adapter (to, czego nie posiadasz)",
+        "asercje sprawdzają zachowanie lub wynik (stan, zwróconą wartość), a nie wywołania i szczegóły implementacji"
+      ]
+    },
+    {
+      "id": "jakosc-testow",
+      "expect": "trigger",
+      "prompt": "Mamy 90% pokrycia linii, a mimo to błędy w logice naliczania opłat uciekają na produkcję. Jak ocenić prawdziwą jakość testów i skąd brać oczekiwane wartości? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "mutacyj|mutation"
+          ],
+          [
+            "właściwości|property|oparte na właściwościach"
+          ],
+          [
+            "z wymagani|z przykład|nie z uruchomienia|nigdy z uruchomienia"
+          ]
+        ]
+      },
+      "accept": [
+        "qa-spec-first-testing"
+      ]
+    },
+    {
+      "id": "vitest",
+      "expect": "no-trigger",
+      "prompt": "Jak w Vitest zamockować czas i skonfigurować projekty oraz pokrycie? Odpowiedz zwięźle.",
+      "neighbor": "tool-vitest"
+    },
+    {
+      "id": "bramka-przed-tdd",
+      "expect": "trigger",
+      "prompt": "Faza planu obejmuje: rusztowanie katalogów, konfigurację CI, parser cennika z pliku CSV i poprawkę błędu zaokrąglania. Czy całą fazę robić w TDD? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "parser",
+            "zaokrągl",
+            "bugfix",
+            "popraw\\w* błędu"
+          ],
+          [
+            "rusztowan",
+            "konfiguracj"
+          ],
+          [
+            "mieszan",
+            "nie w TDD",
+            "bez TDD",
+            "zwykł\\w* implementacj",
+            "mała wartość",
+            "słab"
+          ]
+        ]
+      }
+    }
+  ]
+}

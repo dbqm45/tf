@@ -1,0 +1,109 @@
+{
+  "skill": "proc-project-planning",
+  "scenarios": [
+    {
+      "id": "koszt-i-termin-od-pomyslu",
+      "expect": "trigger",
+      "prompt": "Zarząd chce wiedzieć, ile będzie kosztował i kiedy będzie gotowy nowy system rezerwacji sal, zanim cokolwiek zaczniemy. Mamy tylko pomysł. Jak przygotować plan projektu z kosztem i terminem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "przedział",
+            "widełk",
+            "zakres\\w* (kosztu|terminu|wartości)",
+            "P50",
+            "P80",
+            "pesymist"
+          ],
+          [
+            "stożek niepewności",
+            "cone of uncertainty",
+            "klas\\w* referencyjn",
+            "reference class",
+            "widok z zewnątrz",
+            "outside view",
+            "podobnych projekt",
+            "dan\\w* historyczn"
+          ],
+          [
+            "rejestr ryzyk",
+            "ryzyk"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "plan-dla-sponsora",
+      "expect": "trigger",
+      "prompt": "Zostałem kierownikiem projektu migracji sklepu na nową platformę: 4 osoby, pół roku, stały budżet. Co powinien zawierać plan projektu, żeby sponsor mógł go zatwierdzić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kart\\w* projektu",
+            "charter"
+          ],
+          [
+            "poza zakresem",
+            "out of scope",
+            "wyłączen"
+          ],
+          [
+            "rezerw",
+            "bufor",
+            "contingency"
+          ],
+          [
+            "RACI",
+            "kto (zatwierdza|decyduje|odpowiada)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dodac-ludzi",
+      "expect": "trigger",
+      "prompt": "Projekt jest opóźniony o dwa miesiące, a szef chce dołożyć trzech programistów, żeby zdążyć na termin. Co mu odpowiedzieć i co zamiast tego zaproponować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Brooks"
+          ],
+          [
+            "zakres",
+            "priorytet",
+            "MVP",
+            "przesunię\\w* termin"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "model-cyklu-zycia",
+      "expect": "trigger",
+      "prompt": "Robimy oprogramowanie do urządzenia medycznego z wymogiem certyfikacji i pełnej identyfikowalności testów. Jaki model cyklu życia projektu wybrać: Scrum, kaskadowy czy model V? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "model\\w* V",
+            "V-model"
+          ],
+          [
+            "weryfikacj",
+            "walidacj"
+          ],
+          [
+            "identyfikowaln",
+            "śledzen",
+            "traceab"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "prognoza-sprintow",
+      "expect": "no-trigger",
+      "neighbor": "proc-agile",
+      "prompt": "Ile historyjek zrobi nasz zespół scrumowy w trzech kolejnych sprintach, jeśli znamy przepustowość z ostatnich 10 sprintów?"
+    }
+  ]
+}

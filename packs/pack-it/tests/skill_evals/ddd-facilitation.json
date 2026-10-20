@@ -1,0 +1,62 @@
+{
+  "skill": "ddd-facilitation",
+  "scenarios": [
+    {
+      "id": "slowa-sygnaly",
+      "expect": "trigger",
+      "prompt": "W rozmowie z ekspertem ciągle słyszę „zmieniono status” i „zaktualizowano rekord”. Jak dopytywać, żeby wydobyć język biznesu i go utrwalić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "clean questions|czyste pytania|jaki to rodzaj|co jeszcze o|co dzieje się tuż przed"
+          ],
+          [
+            "słownik|glossary|ubiquitous|wszędobylsk|wszechobecn"
+          ],
+          [
+            "zdarzeni|co się wydarzyło"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "eksperci-sie-spieraja",
+      "expect": "trigger",
+      "prompt": "Dwóch ekspertów na warsztacie nie zgadza się, kiedy zamówienie jest „zakończone”. Czy mam rozstrzygnąć, kto ma rację? Jak to poprowadzić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "hot ?spot"
+          ],
+          [
+            "nie rozstrzyga|obie wersje|dwa .{0,15}kontekst|różne konteksty|dwóch kontekst"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "symulowany-ekspert",
+      "expect": "trigger",
+      "prompt": "Nie mamy dostępu do eksperta domeny od powtórek fiszek. Czy mogę przepytać model językowy zamiast eksperta, budując słownik pojęć, i jak traktować jego odpowiedzi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "hipotez|propozycj"
+          ],
+          [
+            "wzor|stał\\w*|próg|progi|regulowan|szczegół"
+          ],
+          [
+            "inn\\w* (model|dostawc)|dokumentac|specyfikac"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "kolory-kartek",
+      "expect": "no-trigger",
+      "prompt": "Jaka jest różnica między Big Picture a Design Level w Event Stormingu i jakich kolorów kartek używa się w notacji? Odpowiedz zwięźle.",
+      "neighbor": "ddd-event-storming"
+    }
+  ]
+}

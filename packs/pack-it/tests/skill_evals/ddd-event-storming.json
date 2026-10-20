@@ -1,0 +1,50 @@
+{
+  "skill": "ddd-event-storming",
+  "scenarios": [
+    {
+      "id": "zdarzenia-przelomowe",
+      "expect": "trigger",
+      "prompt": "Na warsztacie Big Picture mamy 80 karteczek zdarzeń i oś to chaos. Jak wybrać zdarzenia przełomowe, po czym je poznać i jak wyprowadzić z nich granice modułów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pivotal|przełomow"
+          ],
+          [
+            "świętuje|raportuje|zmienia się (właściciel|odpowiedzialno)|trudno (je )?cofn|świat jest inny|odwracaln"
+          ],
+          [
+            "swimlane|tor\\w*|rozdzia"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "process-level-gramatyka",
+      "expect": "trigger",
+      "prompt": "Robimy Process Level Event Storming procesu reklamacji. Jak powinien wyglądać domknięty łańcuch od aktora do kolejnej komendy i co zrobić z lukami w nim? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "read model"
+          ],
+          [
+            "polityk"
+          ],
+          [
+            "hot ?spot"
+          ],
+          [
+            "agregat|ograniczen"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dominujacy-uczestnik",
+      "expect": "no-trigger",
+      "prompt": "Na warsztacie z ekspertami jeden uczestnik dominuje, a reszta milczy. Jak to poprowadzić? Odpowiedz zwięźle.",
+      "neighbor": "ddd-facilitation"
+    }
+  ]
+}

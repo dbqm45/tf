@@ -1,0 +1,39 @@
+{
+  "skill": "dom-ev-iso15118",
+  "scenarios": [
+    {
+      "id": "sap-wybor-protokolu-din",
+      "expect": "trigger",
+      "prompt": "Auto na naszej ładowarce DC wysyła SupportedAppProtocolReq z trzema wpisami: DIN 70121, ISO 15118-2 i ISO 15118-20 DC. SECC w firmware obsługuje tylko DIN i -2, a Plug & Charge i tak się nie włącza. Jak SECC wybiera protokół, jakie pola o tym decydują i dlaczego PnC może nie działać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["Priority|priorytet"],
+          ["SchemaID|ProtocolNamespace|namespace"],
+          ["DIN.{0,120}(EIM|ExternalPayment|zewnętrzn|bez Plug|nie (ma|obsługuje|wspiera)|brak)|(EIM|ExternalPayment|zewnętrzn|brak|nie (ma|obsługuje|wspiera)).{0,120}DIN"],
+          ["ISO 15118-2|-2\\b"]
+        ],
+        "none": ["DIN 70121 (obsługuje|supports|wspiera) Plug ?& ?Charge"]
+      }
+    },
+    {
+      "id": "certyfikat-kontraktu-przez-ocpp",
+      "expect": "trigger",
+      "prompt": "Pojazd wysłał do ładowarki CertificateInstallationReq, bo nie ma jeszcze certyfikatu kontraktu. Stacja jest na OCPP 2.0.1. Jak ta prośba dojdzie do eMSP i z powrotem do auta, które komunikaty OCPP w tym uczestniczą i na co uważać w czasie?",
+      "checks": {
+        "all": [
+          ["Get15118EVCertificate"],
+          ["exiRequest|exiResponse|EXI"],
+          ["Install"],
+          ["timeout|limit czasu|5 ?s|sekund"]
+        ],
+        "none": ["CertificateSigned.{0,60}(przenosi|niesie|zawiera).{0,40}(certyfikat kontraktu|EXI)"]
+      }
+    },
+    {
+      "id": "seqno-offline-ocpp",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-ocpp-2x",
+      "prompt": "W OCPP 2.0.1 ładowarka straciła połączenie na 20 minut w trakcie transakcji i po powrocie wysłała kilka TransactionEvent z offline=true. Jak CSMS ma ułożyć seqNo i wykryć duplikaty?"
+    }
+  ]
+}

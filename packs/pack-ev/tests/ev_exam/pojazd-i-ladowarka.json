@@ -1,0 +1,335 @@
+{
+ "obszar": "pojazd-i-ladowarka",
+ "pytania": [
+  {
+   "id": "pwm-to-limit-nie-pomiar",
+   "pytanie": "Wsparcie pyta: stacja AC wystawia na CP sygnał PWM o wypełnieniu odpowiadającym 32 A, a kierowca widzi w aplikacji pobór 10 A. Czy PWM nie działa? Co właściwie mówi wypełnienie PWM?",
+   "wzorzec": "Wypełnienie PWM na Control Pilot informuje pojazd o maksymalnym dozwolonym prądzie, czyli o limicie, a nie o prądzie zmierzonym. Faktyczny pobór wybiera pojazd (jego ładowarka pokładowa i BMS) i może być dużo niższy od oferty, więc 10 A przy ofercie 32 A nie oznacza usterki.",
+   "checks": {
+    "all": [
+     [
+      "limit|maksymaln|sufit|oferuj|maximum|upper"
+     ],
+     [
+      "pojazd|auto|samochód|vehicle|EV"
+     ],
+     [
+      "nie (jest|oznacza|mierzy|jest to)|a nie|nie pomiar|not a measure|niższ|mniej"
+     ]
+    ],
+    "none": [
+     "PWM (informuje|mówi|podaje) o (zmierzonym|rzeczywistym|aktualnym) prądzie",
+     "PWM (jest|to) pomiar prądu"
+    ]
+   },
+   "zrodlo": "dom-ev-charger-hardware, dom-ev-vehicle-battery",
+   "trudnosc": 1
+  },
+  {
+   "id": "auto-1-faza-na-stacji-22kw",
+   "pytanie": "Klient ma auto z jednofazową ładowarką pokładową i podłącza je do stacji AC 22 kW (3 fazy, 32 A, 230/400 V). Jaką maksymalną moc może uzyskać i czy to wada stacji?",
+   "wzorzec": "Auto 1-fazowe używa jednej fazy, więc pobierze najwyżej 230 V × 32 A, czyli ok. 7,4 kW (7,36 kW), a nie 22 kW. To nie wada stacji ani CSMS, tylko ograniczenie ładowarki pokładowej (liczby faz) auta.",
+   "checks": {
+    "all": [
+     [
+      "7[,.]4|7[,.]36|7[,.]3 ?kW"
+     ],
+     [
+      "jedn\\w* faz|1[- ]?faz|single[- ]phase|one phase|1 phase"
+     ],
+     [
+      "pokładow|OBC|auto|pojazd|onboard"
+     ]
+    ],
+    "none": [
+     "22 ?kW (pobierze|uzyska|dostanie)",
+     "to (jest )?wada stacji"
+    ]
+   },
+   "zrodlo": "dom-ev-charger-hardware, dom-ev-vehicle-battery",
+   "trudnosc": 1
+  },
+  {
+   "id": "soc-w-sesji-ac-brak",
+   "pytanie": "Analityk eMSP zauważył, że w sesjach AC pole SoC jest puste, a w sesjach DC zwykle wypełnione, i chce uznać to za błąd integracji ze stacjami. Czy ma rację i jak modelować SoC?",
+   "wzorzec": "Nie, to normalne: stacja zna SoC tylko wtedy, gdy dostaje go od auta, czyli w DC przez DIN 70121 albo ISO 15118; w AC zwykle go nie ma. W modelu sesji SoC musi być opcjonalny (null), a nie wymagany.",
+   "checks": {
+    "all": [
+     [
+      "AC"
+     ],
+     [
+      "brak|nie ma|nie zna|nie podaje|nie raportuje|null|puste|opcjonaln|nie dostaje|nie ma dostępu"
+     ],
+     [
+      "DC|15118|DIN"
+     ]
+    ],
+    "none": [
+     "SoC (jest|powinien być) (zawsze )?(dostępny|raportowany|wymagany|obowiązkowy)",
+     "błąd integracji"
+    ]
+   },
+   "zrodlo": "dom-ev-vehicle-battery",
+   "trudnosc": 1
+  },
+  {
+   "id": "suspendedev-vs-suspendedevse",
+   "pytanie": "Sesja OCPP 1.6 stoi na prądzie 0 A. Jak odróżnić status SuspendedEV od SuspendedEVSE i dlaczego sam pomiar prądu tego nie rozstrzyga?",
+   "wzorzec": "SuspendedEV to sytuacja, gdy pojazd nie zamyka obwodu mimo oferty PWM (stan CP B przy otwartej transakcji), a SuspendedEVSE, gdy to ładowarka wstrzymała pobór (limit z profilu, brak zasilania, otwarty przekaźnik, stan C bez prądu). Prąd 0 A jest w obu przypadkach taki sam, więc trzeba sprawdzić stan na Control Pilot i to, kto wstrzymał.",
+   "checks": {
+    "all": [
+     [
+      "suspendedev\\b"
+     ],
+     [
+      "suspendedevse"
+     ],
+     [
+      "\\bCP\\b|control pilot|stan B|state B|stan C"
+     ],
+     [
+      "pojazd|auto|EV\\b|vehicle"
+     ],
+     [
+      "stacj|ładowark|EVSE|profil|przekaźnik|charger"
+     ]
+    ],
+    "none": [
+     "SuspendedEV i SuspendedEVSE to (to samo|jedno i to samo)",
+     "prąd (0 A )?wystarcza do rozróżnienia"
+    ]
+   },
+   "zrodlo": "dom-ev-charger-hardware",
+   "trudnosc": 2
+  },
+  {
+   "id": "din70121-bez-plug-and-charge",
+   "pytanie": "Flota ma starsze auta DC, które według logów negocjują z naszą stacją tylko DIN 70121. Kierowcy pytają, czemu muszą przykładać kartę, skoro stacja obsługuje Plug & Charge. Wyjaśnij.",
+   "wzorzec": "Plug & Charge wymaga co najmniej ISO 15118-2: tylko tam są komunikaty certyfikatu kontraktu (PaymentDetails, CertificateInstallation/Update) i opcja Contract. DIN 70121 ma wyłącznie autoryzację zewnętrzną (ExternalPayment), więc autoryzacja idzie kartą RFID albo aplikacją (EIM). Stacja powinna wystawiać DIN, -2 i -20, żeby obsłużyć każde auto.",
+   "checks": {
+    "all": [
+     [
+      "DIN"
+     ],
+     [
+      "15118[- ‑]?2|ISO 15118"
+     ],
+     [
+      "external|zewnętrzn|karta|karty|RFID|aplikac|EIM"
+     ],
+     [
+      "nie (obsług|wspier|ma)|brak|bez|wymaga|only|tylko"
+     ]
+    ],
+    "none": [
+     "DIN 70121 (obsługuje|wspiera|zawiera) (Plug|PnC|certyfikat)",
+     "(wystarczy|trzeba) (wgrać|zainstalować) certyfikat.*DIN"
+    ]
+   },
+   "zrodlo": "dom-ev-iso15118",
+   "trudnosc": 2
+  },
+  {
+   "id": "bpt-tylko-iso15118-20",
+   "pytanie": "Producent busa elektrycznego obiecuje V2G. Które z protokołów DIN 70121, ISO 15118-2 i ISO 15118-20 obsługują ładowanie dwukierunkowe (BPT) i jak nazywają się usługi?",
+   "wzorzec": "Dwukierunkowy transfer mocy (BPT) jest w ISO 15118-20; DIN 70121 jest tylko jednokierunkowym DC, a ISO 15118-2 ma AC i DC bez BPT. Usługi w -20 to AC_BPT i DC_BPT (oraz DC_ACDP_BPT), wybierane w ServiceDetail/ServiceSelection.",
+   "checks": {
+    "all": [
+     [
+      "15118[- ‑]?20|-20"
+     ],
+     [
+      "BPT|bidirectional|dwukierunk"
+     ],
+     [
+      "AC_BPT|DC_BPT|usług"
+     ]
+    ],
+    "none": [
+     "(DIN 70121|15118[- ‑]?2\\b) (obsługuje|wspiera|ma) (BPT|V2G|dwukierunk)"
+    ]
+   },
+   "zrodlo": "dom-ev-v2x, dom-ev-iso15118",
+   "trudnosc": 2
+  },
+  {
+   "id": "red3-art-20a-ust3-dane-z-pojazdu",
+   "pytanie": "Budujemy w eMSP funkcję, która korzysta z SoC i SoH pojazdu przez API producenta. Jaki przepis RED III dotyczy dostępu do tych danych, kto jest zobowiązany i komu dane mają być udostępnione?",
+   "wzorzec": "Art. 20a ust. 3 dyrektywy RED III (2023/2413): państwa członkowskie mają zapewnić, że producenci pojazdów udostępniają w czasie rzeczywistym m.in. SoH, SoC, zadaną moc (power set point) i pojemność baterii (oraz lokalizację) właścicielom i użytkownikom oraz upoważnionym stronom trzecim, np. dostawcom usług elektromobilności, na warunkach niedyskryminacyjnych i bez opłat.",
+   "checks": {
+    "all": [
+     [
+      "20a"
+     ],
+     [
+      "(ust\\.?|ustęp\\w*|paragraph|para\\.?|art\\.? ?20a\\.?) ?\\(?3|20a ?\\(3\\)|20a ?ust\\.? ?3"
+     ],
+     [
+      "producen|manufacturer"
+     ],
+     [
+      "właściciel|owner|użytkownik|strony trzecie|third part|upoważnion"
+     ]
+    ],
+    "none": [
+     "(państwa członkowskie|producenci) (mogą|nie muszą) udostępni"
+    ]
+   },
+   "zrodlo": "kb:eu-red-iii, dom-ev-vehicle-battery",
+   "trudnosc": 2
+  },
+  {
+   "id": "eta-aplikacja-metoda",
+   "pytanie": "Aplikacja eMSP pokazuje czas do 80 % jako energia do dostarczenia podzielona przez moc ładowarki i dostaje zgłoszenia „ładuje wolniej niż obiecaliście”. Jak poprawnie policzyć ETA dla sesji DC?",
+   "wzorzec": "Energię liczy się z pojemności użytecznej (nie nominalnej): (SoC cel − SoC start) × pojemność. Zakres SoC dzieli się na odcinki, a moc w odcinku to minimum z mocy ładowarki, mocy z krzywej ładowania auta (BMS tnie ją wraz z SoC i temperaturą) i limitu profilu; suma czasów odcinków daje ETA. W trakcie sesji przelicza się od bieżącej mocy i SoC i pokazuje jako szacunek.",
+   "checks": {
+    "all": [
+     [
+      "użyteczn|usable|netto"
+     ],
+     [
+      "min\\w*|najmniejsz\\w*"
+     ],
+     [
+      "krzyw\\w*|odcink\\w*|przedział\\w*|curve|segment"
+     ],
+     [
+      "SoC|80"
+     ]
+    ],
+    "none": [
+     "wystarczy podzielić energię przez moc (nominalną )?ładowarki",
+     "ETA (jest )?liniow"
+    ]
+   },
+   "zrodlo": "dom-ev-vehicle-battery",
+   "trudnosc": 2
+  },
+  {
+   "id": "ladowanie-wolno-oferta-vs-pobor",
+   "pytanie": "Kierowca zgłasza, że na stacji DC 150 kW auto bierze tylko 45 kW. Co sprawdzasz w danych CSMS jako pierwsze, zanim uznasz stację za wadliwą?",
+   "wzorzec": "Najpierw porównuję ofertę (Power.Offered / Current.Offered, composite schedule, profile i DLM) z poborem (Power.Active.Import). Jeśli oferta jest wysoka, a pobór dużo niższy, moc ogranicza auto (BMS): sprawdzam SoC (powyżej ok. 80 % moc spada), temperaturę baterii i zakres napięcia, a dopiero potem alarmy stacji.",
+   "checks": {
+    "all": [
+     [
+      "offered|ofert"
+     ],
+     [
+      "Power\\.Active\\.Import|pobór|pobiera|pobierana"
+     ],
+     [
+      "SoC|80 ?%|temperatur|BMS|krzyw"
+     ]
+    ],
+    "none": [
+     "od razu (zgłoś|zgłosić|uznaj|uznać)\\w* (awari|usterk)"
+    ]
+   },
+   "zrodlo": "dom-ev-vehicle-battery",
+   "trudnosc": 2
+  },
+  {
+   "id": "exi-przez-ocpp-instalacja-kontraktu",
+   "pytanie": "Auto ISO 15118-2 prosi o instalację certyfikatu kontraktu. Którym komunikatem OCPP 2.0.1 stacja przekazuje to do CSMS, co jest w ładunku i co robi z nim stacja oraz CSMS?",
+   "wzorzec": "Stacja wysyła Get15118EVCertificate z action (Install albo Update), iso15118SchemaVersion i exiRequest (zakodowane EXI). Stacja nie dekoduje ładunku, a CSMS przekazuje EXI bez zmian do CPS/eMSP i odsyła status oraz exiResponse, który stacja oddaje autu. Odpowiedź musi zmieścić się w krótkim budżecie czasu auta.",
+   "checks": {
+    "all": [
+     [
+      "Get15118EVCertificate"
+     ],
+     [
+      "exi"
+     ],
+     [
+      "bez zmian|nie dekod|przekaz|forward|pass|przepuszcza|transparent"
+     ],
+     [
+      "Install|Update|action"
+     ]
+    ],
+    "none": [
+     "stacja dekoduje (i modyfikuje )?(EXI|ładunek)",
+     "Authorize (zawiera|niesie) exiRequest"
+    ]
+   },
+   "zrodlo": "dom-ev-iso15118",
+   "trudnosc": 3
+  },
+  {
+   "id": "ocmf-energia-rejestru-i-flagi-bledow",
+   "pytanie": "Licznik podpisał dwa rekordy OCMF. Rekord 1: odczyt TX=B 1250,30 kWh i odczyt TX=E 1272,55 kWh, oba ST=G. Rekord 2: odczyt TX=B 1272,55 kWh i odczyt TX=C 1281,10 kWh z EF=E, bez odczytu końcowego. Ile kWh i z którego rejestru rozliczasz z każdego rekordu?",
+   "wzorzec": "Z rekordu 1 rozliczam energię rejestru, czyli koniec minus początek: 22,25 kWh (po weryfikacji podpisu), a nie sumę z telemetrii MeterValues. Rekordu 2 nie rozliczam: brak odczytu końcowego, a flaga EF=E oznacza, że energia z tego odczytu nie nadaje się do rozliczenia; sprawa idzie do serwisu i procedury sporu.",
+   "checks": {
+    "all": [
+     [
+      "22[,.]25"
+     ],
+     [
+      "EF|flag\\w+ błęd|error flag"
+     ],
+     [
+      "nie rozlicz\\w*|nie nadaje|nie nadają|brak (odczytu )?końcow\\w*|nie można rozliczyć|nie wolno|bez odczytu końcowego"
+     ],
+     [
+      "koniec.{0,15}(minus|−|-).{0,15}początek|różnic\\w+|end.{0,10}start|rejestr"
+     ]
+    ],
+    "none": [
+     "wynosi 8[,.]55",
+     "8[,.]55 ?kWh do (rozliczenia|zapłaty|faktury)"
+    ]
+   },
+   "zrodlo": "dom-ev-metering-calibration, kb:ocmf",
+   "trudnosc": 3
+  },
+  {
+   "id": "ocmf-klucz-publiczny-i-zapis-rv",
+   "pytanie": "Zespół zbudował parser OCMF w JSON-ie, który po deserializacji zapisuje RV 1250.30 jako 1250.3 i bierze klucz publiczny do weryfikacji podpisu z samego rekordu. Co jest nie tak w obu miejscach?",
+   "wzorzec": "Podpisanej części nie wolno zmieniać: zmiana zapisu liczby (1250.30 na 1250.3 czy zapis wykładniczy) zmienia cyfry znaczące i psuje weryfikację, więc przechowuje się surowy tekst, a liczby parsuje do kopii jako Decimal. Klucz publiczny licznika nie jest w rekordzie, tylko przychodzi osobną drogą (rejestr powiązany z numerem seryjnym); klucz z samego rekordu niczego nie dowodzi.",
+   "checks": {
+    "all": [
+     [
+      "klucz"
+     ],
+     [
+      "poza rekordem|osobn\\w+ (drog|kanał)|rejestr|out[- ]of[- ]band|nie (jest|ma go|pochodzi).{0,20}rekord|z samego rekordu|nie z rekordu"
+     ],
+     [
+      "zapis|surow|oryginaln|bez zmian|decimal|raw|string|cyfr"
+     ]
+    ],
+    "none": [
+     "klucz publiczny (jest|bierze się|pobiera się) z (samego )?rekordu OCMF",
+     "zaokrągl\\w+ (RV|wartość).{0,30}(można|wolno|dopuszczalne)"
+    ]
+   },
+   "zrodlo": "dom-ev-metering-calibration, kb:ocmf",
+   "trudnosc": 3
+  },
+  {
+   "id": "mid-mi011-terminy-2026-706",
+   "pytanie": "Producent ładowarek DC planuje wejście na rynek UE. Dyrektywa (UE) 2026/706 dodaje do MID system pomiarowy EVSE MI-011. Do kiedy państwa muszą przyjąć przepisy krajowe i od kiedy je stosują?",
+   "wzorzec": "Państwa członkowskie przyjmują i publikują przepisy wdrażające dyrektywę 2026/706 do 10 kwietnia 2028 r., a stosują je od 10 października 2028 r. Nowy załącznik Va (MI-011) obejmuje systemy pomiarowe EVSE (AC i DC); przyrządy wprowadzone do obrotu przed 10.10.2028 zgodne z dotychczasową MID mogą być dalej udostępniane.",
+   "checks": {
+    "all": [
+     [
+      "10[. ]?(04|kwietnia|kwiecień|IV)[. ]?2028|10 April 2028|kwiet\\w* 2028"
+     ],
+     [
+      "10[. ]?(10|października|X)[. ]?2028|10 October 2028|październ\\w* 2028"
+     ],
+     [
+      "MI-011|2026/706|EVSE"
+     ]
+    ],
+    "none": [
+     "od 2026 (r\\.?|roku)? (obowiązuje|stosuje|stosują)",
+     "stosowan\\w+ od 10[. ]?04[. ]?2028"
+    ]
+   },
+   "zrodlo": "dom-ev-metering-calibration, kb:eu-mid-2026-706",
+   "trudnosc": 3
+  }
+ ]
+}

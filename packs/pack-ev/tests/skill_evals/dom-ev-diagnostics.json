@@ -1,0 +1,37 @@
+{
+  "skill": "dom-ev-diagnostics",
+  "scenarios": [
+    {
+      "id": "remotestart-cisza-heartbeaty",
+      "expect": "trigger",
+      "prompt": "Ładowarka od rana nie reaguje na RemoteStart z aplikacji, a w logach CSMS widzę tylko Heartbeaty. Od czego zacząć szukać przyczyny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ramk|surow|log"],
+          ["RemoteStart\\w*.{0,120}(Rejected|CALLRESULT|CALLERROR|bez odpowiedzi|brak odpowiedzi|timeout)|call-no-response"],
+          ["StatusNotification|status złącza|connector status|Faulted|Unavailable|TriggerMessage"]
+        ],
+        "none": ["zrestartuj.{0,40}(od razu|najpierw)", "^\\s*najpierw.{0,30}reset"]
+      }
+    },
+    {
+      "id": "kwh-vs-wh-rozjazd",
+      "expect": "trigger",
+      "prompt": "eMSP reklamuje, że sesja miała 12 kWh, a w naszym CSMS przy tej sesji mamy 12000. Co sprawdzić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["\\bWh\\b.{0,80}kWh|kWh.{0,80}\\bWh\\b|1000"],
+          ["meterStart|meterStop|MeterValues|licznik|Energy\\.Active"],
+          ["jednostk|unit|skala|mnożnik|dziel"]
+        ],
+        "none": ["CDR.{0,40}(popraw|edytuj|zmień).{0,30}(PATCH|bezpośrednio)"]
+      }
+    },
+    {
+      "id": "routing-komend-instancje",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-cpms-architecture",
+      "prompt": "Projektujemy CSMS na kilku instancjach. Jak skierować komendę RemoteStart do instancji, która trzyma połączenie WebSocket z daną ładowarką? Odpowiedz zwięźle."
+    }
+  ]
+}

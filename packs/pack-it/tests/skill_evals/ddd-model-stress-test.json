@@ -1,0 +1,47 @@
+{
+  "skill": "ddd-model-stress-test",
+  "scenarios": [
+    {
+      "id": "test-na-slepo",
+      "expect": "trigger",
+      "prompt": "Chcemy sprawdzić, czy nasz podział na moduły dobrze znosi zmiany biznesowe, np. pod kątem marży na projekcie. Jak zrobić taki test, żeby wymagania nie były dopasowane do naszej architektury? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "na ślepo|blind|bez wglądu|nie widzia|nie znał|nie zna architektur"
+          ],
+          [
+            "lokaln"
+          ],
+          [
+            "brief"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "porownanie-dekompozycji",
+      "expect": "trigger",
+      "prompt": "Mamy dwa warianty podziału systemu na konteksty. Jak uczciwie porównać, który lepiej przyjmie przyszłe zmiany biznesowe? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "zamroż|ten sam zbiór|ten sam .{0,20}zestaw"
+          ],
+          [
+            "lokaln|rozproszon|nowy moduł"
+          ],
+          [
+            "na ślepo|blind|bez wglądu|nie widzia|nie znał"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pomiar-sprzezenia",
+      "expect": "no-trigger",
+      "prompt": "Chcę zmierzyć sprzężenie między modułami Zamówienia i Magazyn w istniejącym kodzie — jak rozbić je na umowy i policzyć stopień? Odpowiedz zwięźle.",
+      "neighbor": "ddd-connascence-analysis"
+    }
+  ]
+}
