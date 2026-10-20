@@ -35,6 +35,7 @@ def main() -> int:
 
     gate = load(ROOT / "factory" / "skill_gate.py", "ctf_gate_suggest")
     hint = load(ROOT / ".claude" / "hooks" / "skill_hint.py", "ctf_hint_suggest")
+    hint.REF_SKILLS = 0   # sztuczny korpus 12 skilli poniżej — bez normalizacji do rozmiaru dużej instalacji
 
     def item(name, text):
         return {"name": name, "desc": text, "kat": "", "excerpt": "", "head": set(hint.stems(text)), "body": set()}

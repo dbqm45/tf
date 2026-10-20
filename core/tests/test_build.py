@@ -82,7 +82,7 @@ def main() -> int:
     rendered = b.render_all()
     orchestrators = {k: v for k, v in rendered.items() if not k.startswith(("shared/", "consult/"))
                      and Path(k).stem == Path(k).parent.name}
-    check(orchestrators, "OR-0: są prompty orkiestratorów")
+    check(orchestrators or not b.load_dir("personas"), "OR-0: są prompty orkiestratorów (gdy nakładki dają persony)")
     for k, t in orchestrators.items():
         check("Resztę delegujesz" not in t, f"OR-1 {k}: nie ma już zasady „resztę delegujesz”")
         check("Domyślnie robisz zadanie sam" in t, f"OR-2 {k}: zasada domyślna — zadanie robisz sam")

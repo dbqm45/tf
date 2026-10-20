@@ -93,7 +93,8 @@ def main() -> int:
         artifact(root, "07-review/2026-09-27-retro.md", artifact="review", phase="review",
                  _body="# Retro\n## TL;DR\nWiem że zespół napewno zdąży.\n## Otwarte pytania\n## Przekazanie\n- Dla: ewa\n")
         chk = run(root, "check")
-        if chk.returncode != 0 or "uwag językowych" not in chk.stdout:
+        lint = SCRIPT.parent.parent / "skills" / "txt-polish-correctness" / "scripts" / "polish_lint.py"   # pack-editorial-pl
+        if chk.returncode != 0 or (lint.exists() and "uwag językowych" not in chk.stdout):
             fails.append(f"check: ostrzeżenie językowe dla artefaktu po polsku: {chk.stdout[-300:]}")
         (root / "docs/project/07-review/2026-09-27-retro.md").unlink()
         artifact(root, "08-operations/2026-10-03-przeglad-utrzymania.md", artifact="operations-review", phase="operations",

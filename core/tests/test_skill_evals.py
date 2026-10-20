@@ -112,9 +112,15 @@ def main() -> int:
         trig = [(json.loads(f.read_text(encoding="utf-8"))["skill"], s) for f in files
                 for s in json.loads(f.read_text(encoding="utf-8"))["scenarios"] if s["expect"] == "trigger"]
         hits = sum(sk in [it["name"] for _, it in hint.select(s["prompt"], items)] for sk, s in trig)
-        generic = ["hej, jak się masz?", "Jaka jest stolica Francji?", "Przetłumacz ten akapit na angielski",
-                   "Co robi ten plik?", "Zrób commit z tymi zmianami"]
-        noise = sum(bool(hint.select(g, items)) for g in generic)
+        # polecenie ogólne → brak podpowiedzi; dla prośby o commit dopuszczalne są tylko skille commitów (w małej
+        # instalacji, bez konkurencji innych skilli, podpowiedź core-git-workflow jest trafna, nie szumem)
+        generic = {"hej, jak się masz?": set(), "Jaka jest stolica Francji?": set(),
+                   "Przetłumacz ten akapit na angielski": set(), "Co robi ten plik?": set(),
+                   "Zrób commit z tymi zmianami": {"core-git-workflow", "core-conventional-commits"}}
+        def noisy(g: str, ok: set) -> bool:
+            picks = [it["name"] for _, it in hint.select(g, items)]
+            return bool(picks) and (not ok or picks[0] not in ok)   # przy commicie liczy się lider podpowiedzi
+        noise = sum(noisy(g, ok) for g, ok in generic.items())
         if trig and hits / len(trig) < 0.8:
             fails.append(f"skill_hint: trafność {hits}/{len(trig)} < 80% — sprawdź opisy skilli lub próg")
         if noise:

@@ -15,6 +15,13 @@ Versions up to 2.45.0 are the history of claude-team-factory, from which this co
 - **factory:** consultants — read-only agents a persona can ask about another pack's domain (docs/insights.md)
 - **factory:** working language and commit language settings (`tf language`, `tf commit-language`); `pl` installs `pack-editorial-pl`
 - **factory:** installer asks for languages and packs; `--packs`, `--add`, `--remove`; migration of claude-team-factory and ev-team-factory installs
+- **factory:** `tf` launcher commands `add`, `remove`, `list`, `language`, `commit-language`, `doctor [--fix]`; `factory/migrations.py` rewrites renamed skills in project-owned files after every update
+- **factory:** `tools/workspace.py` (assemble, check, matrix, refs, sync-gate) for developing the factory; CI checks core only, each pack and all packs
+
+### Changed
+- **skills:** core-* skills describe roles and facets instead of pack personas and skills; pack examples are marked with their pack
+- **hooks:** `detect_stack` reads technology registries of installed packs; `skill_hint` scores small installs on the same scale as large ones
+- **factory:** freshness intervals, skill visibility, clean-room profiles and permissions come from packs; installer and update messages are in English
 
 ## [2.45.0] — 2026-10-19
 ### Added
