@@ -81,12 +81,20 @@ def main() -> int:
                      "--role", "nie-ma-takiej"], cwd=root)
             check(r.returncode == 2 and not (root / ".claude" / "skills" / "core-demo-x").exists(),
                   f"B-1: nieznana rola → kod 2, nic nie utworzone: {r.stdout}{r.stderr}")
+            role_files = sorted(root.glob("factory/packs/*/roles/*.yaml")) or sorted(root.glob("factory/roles/*.yaml"))
+            if not role_files:                     # sam rdzeń: rola projektu do testu wpięcia
+                (root / "factory" / "roles").mkdir(parents=True, exist_ok=True)
+                (root / "factory" / "roles" / "demo.yaml").write_text(
+                    "name: demo\ntitle: Demo\ntier: std\ntriggers: demo\nidentity: demo\ntools: [Read]\nskills: [core-grounding]\n",
+                    encoding="utf-8")
+                role_files = [root / "factory" / "roles" / "demo.yaml"]
+            role_file = role_files[0]
             r = run([root / "factory" / "build.py", "new-skill", "core-demo-x", "Użyj przy demo. Nie do niczego (core-grounding).",
-                     "--role", "frontend", "--name-only"], cwd=root)
+                     "--role", role_file.stem, "--name-only"], cwd=root)
             md = (root / ".claude" / "skills" / "core-demo-x" / "SKILL.md")
             text = md.read_text(encoding="utf-8") if md.exists() else ""
             m = re.search(r"^  przeglad: (\d{4}-\d{2}-\d{2})$", text, re.M)
-            role = (root / "factory" / "roles" / "frontend.yaml").read_text(encoding="utf-8")
+            role = role_file.read_text(encoding="utf-8")
             check(r.returncode == 0 and m and "  widocznosc: nazwa" in text and re.search(r"^  slowa: \"", text, re.M)
                   and re.search(r"^skills: \[.*\bcore-demo-x\]$", role, re.M),
                   f"B-2: termin przeglądu, słowa, widoczność i wpięcie do roli: {r.stdout[-300:]}{r.stderr[-300:]}\n{text[:400]}")

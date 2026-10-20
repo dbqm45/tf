@@ -13,9 +13,9 @@ projekcie, a reszta jest widoczna jako sama nazwa (`name-only`) — model nadal 
 podpowiada je z opisem, gdy polecenie ich dotyczy. Reguły:
   - technologie (`fw-`, `lang-`, `tool-`): opis tylko dla wykrytych przez `.claude/hooks/detect_stack.py`
     (gdy wykrywanie nie zadziała — wszystkie z opisem, jak dotąd);
-  - wiedza branżowa (`dom-`), wymiary specjalistyczne (`sec-`, `ai-`, `ux-` — persony znają je ze swojego promptu)
-    i skille oznaczone przez autora `metadata.widocznosc: nazwa`: sama nazwa, chyba że projekt włączy wymiar
-    przez `--describe` (np. zespół UX pracuje nimi na co dzień);
+  - wymiary specjalistyczne wskazane przez nakładki (`skill_visibility.name_only_prefixes` w pack.yaml, np. `sec-`,
+    `ai-`, `ux-` — persony znają je ze swojego promptu) i skille oznaczone przez autora `metadata.widocznosc: nazwa`:
+    sama nazwa, chyba że projekt włączy wymiar przez `--describe` (np. zespół UX pracuje nimi na co dzień);
   - pozostałe skille fabryki: opis.
 Zmieniane są tylko wpisy, które zapisała fabryka (pamięta je manifest, klucz `skill_overrides`). Twoje ustawienia
 w `skillOverrides` — także usunięcie wpisu fabryki — mają pierwszeństwo. Własnych skilli ani skilli uruchamianych
@@ -31,18 +31,31 @@ import sys
 from pathlib import Path
 
 STACK_PREFIXES = ("fw-", "lang-", "tool-")
-NAME_ONLY_PREFIXES = ("dom-", "sec-", "ai-", "ux-")
+NAME_ONLY_PREFIXES: tuple[str, ...] = ()   # rdzeń: brak; nakładki dokładają swoje (name_only_prefixes)
+
+
+def pack_name_only(root: Path) -> tuple[str, ...]:
+    """Prefiksy „sama nazwa” z zainstalowanych nakładek (factory/packs.py)."""
+    try:
+        spec = importlib.util.spec_from_file_location("tf_packs_sp", root / "factory" / "packs.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cfg = mod.compose(root, mod.load_yaml(root / "factory" / "config.yaml"))
+        return tuple(cfg["skill_visibility"]["name_only_prefixes"])
+    except Exception:  # brak fabryki w projekcie albo uszkodzony pack.yaml — bez prefiksów nakładek
+        return ()
 MANIFEST = Path(".claude") / "factory-manifest.json"
 SETTINGS = Path(".claude") / "settings.local.json"
 
 
-def desired(name: str, stack: set[str] | None, marked: bool = False, describe: tuple[str, ...] = ()) -> str:
+def desired(name: str, stack: set[str] | None, marked: bool = False, describe: tuple[str, ...] = (),
+            name_only: tuple[str, ...] = NAME_ONLY_PREFIXES) -> str:
     """Widoczność skilla: "on" (nazwa i opis) albo "name-only". `stack=None` — stack nieznany;
     `marked` — autor oznaczył skill `metadata.widocznosc: nazwa` (rzadko potrzebny, znajduje go skill_hint);
     `describe` — prefiksy wymiarów, które projekt chce mieć z opisem."""
     if describe and name.startswith(tuple(describe)):
         return "on"
-    if marked or name.startswith(NAME_ONLY_PREFIXES):
+    if marked or (name_only and name.startswith(name_only)):
         return "name-only"
     if name.startswith(STACK_PREFIXES) and stack is not None and name not in stack:
         return "name-only"
@@ -127,7 +140,8 @@ def apply(root: Path, dry: bool = False, describe: list[str] | None = None) -> d
         describe = manifest.get("skill_describe") or []
     stack = detect_stack(root)
     skills_dir = root / ".claude" / "skills"
-    want = {n: desired(n, stack, marked_name_only(skills_dir / n / "SKILL.md"), tuple(describe))
+    name_only = NAME_ONLY_PREFIXES + pack_name_only(root)
+    want = {n: desired(n, stack, marked_name_only(skills_dir / n / "SKILL.md"), tuple(describe), name_only)
             for n in factory_skills(root, manifest)}
     new_settings, managed, kept = plan(settings, want, manifest.get("skill_overrides") or {})
     hidden = sorted(n for n, v in want.items() if v == "name-only")
@@ -148,14 +162,14 @@ def apply(root: Path, dry: bool = False, describe: list[str] | None = None) -> d
 
 
 def summary(res: dict, dry: bool) -> str:
-    stack = ", ".join(res["stack"]) if res["stack"] else ("nic nie wykryto" if res["stack"] is not None
-                                                          else "nieznany — technologie zostają z opisem")
-    lines = [f"{'Plan' if dry else 'ℹ'} widoczności skilli: z opisem {res['with_description']}, sama nazwa "
+    stack = ", ".join(res["stack"]) if res["stack"] else ("nothing detected" if res["stack"] is not None
+                                                          else "unknown — technology skills keep their description")
+    lines = [f"{'Plan for' if dry else 'ℹ'} skill visibility: described {res['with_description']}, name only "
              f"{len(res['name_only'])} (stack: {stack})."]
     if dry and res["name_only"]:
-        lines.append("  sama nazwa: " + ", ".join(res["name_only"]))
+        lines.append("  name only: " + ", ".join(res["name_only"]))
     if res["user_kept"]:
-        lines.append("  Twoje ustawienia zostały: " + ", ".join(res["user_kept"]))
+        lines.append("  your settings kept: " + ", ".join(res["user_kept"]))
     return "\n".join(lines)
 
 

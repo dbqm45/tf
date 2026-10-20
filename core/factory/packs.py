@@ -206,6 +206,39 @@ def load_traits(root: Path) -> dict[str, str]:
     return out
 
 
+MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"
+
+
+def language_lines(cfg: dict, settings: dict) -> list[str]:
+    langs = cfg.get("languages") or {}
+    lines = [(langs.get(settings.get("language")) or {}).get("work"),
+             (langs.get(settings.get("commit_language")) or {}).get("commits"), cfg.get("code_language_note")]
+    return [f"- {x.strip()}" for x in lines if x]
+
+
+def write_language_lines(path: Path, cfg: dict, settings: dict) -> bool:
+    """Podmienia podsekcję „### Język” w bloku fabryki w CLAUDE.md / CLAUDE.local.md. Zwraca True, gdy zmieniono."""
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    if MARK_BEGIN not in text or MARK_END not in text:
+        return False
+    a, b = text.index(MARK_BEGIN), text.index(MARK_END)
+    block = text[a:b]
+    body = "### Język\n" + "\n".join(language_lines(cfg, settings)) + "\n"
+    if "### Język\n" in block:
+        i = block.index("### Język\n")
+        j = block.find("\n### ", i + 1)
+        new_block = block[:i] + body + (block[j + 1:] if j >= 0 else "")
+    else:
+        new_block = block.rstrip("\n") + "\n\n" + body
+    new = text[:a] + new_block + text[b:]
+    if new == text:
+        return False
+    path.write_text(new, encoding="utf-8")
+    return True
+
+
 def main(argv: list[str]) -> int:
     root = Path(__file__).resolve().parent.parent
     cfg = compose(root, load_yaml(root / "factory" / "config.yaml"))

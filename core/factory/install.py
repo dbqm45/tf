@@ -678,6 +678,12 @@ def main(argv: list[str]) -> int:
           f"commit language: {commit_language}")
     for m in plan.merged:
         print(f"  ~ {m}")
+    if not dry and update:     # autokorekta własnych plików projektu po zmianach nazw w rdzeniu (factory/migrations.py)
+        spec = importlib.util.spec_from_file_location("tf_migrations", CORE / "factory" / "migrations.py")
+        mig = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mig)
+        for c in mig.apply(dst_root, dry=False):
+            print(f"  ✓ migrated: {c}")
     if not dry:
         msg = rebuild(dst_root, dry)
         if msg:

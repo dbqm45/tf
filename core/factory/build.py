@@ -705,12 +705,13 @@ def _skill_profile():
     return mod
 
 
-def skill_listing(entries: dict[str, int], stack_slots: int, marked: set[str] = frozenset()) -> int:
+def skill_listing(entries: dict[str, int], stack_slots: int, marked: set[str] = frozenset(),
+                  name_only: tuple[str, ...] = ()) -> int:
     """Rozmiar listy skilli w typowym projekcie: wpisy z opisem wg skill_profile (stack pusty) + `stack_slots`
     najdłuższych wpisów technologii (fw-/lang-/tool-), które projekt może wykryć. `entries`: nazwa → znaki wpisu;
     `marked`: skille z `metadata.widocznosc: nazwa`."""
     sp = _skill_profile()
-    base = sum(n for name, n in entries.items() if sp.desired(name, set(), name in marked) == "on")
+    base = sum(n for name, n in entries.items() if sp.desired(name, set(), name in marked, (), name_only) == "on")
     stack = sorted((n for name, n in entries.items() if name.startswith(sp.STACK_PREFIXES)), reverse=True)
     return base + sum(stack[:stack_slots])
 
@@ -871,7 +872,8 @@ def validate() -> tuple[list[str], list[str]]:
             warnings.append(f"skill {name}: SKILL.md ma {s['_lines']} linii — przenieś szczegóły do references/")
 
     marked = {n for n, s in skills.items() if (s.get("metadata") or {}).get("widocznosc") == "nazwa"}
-    size = skill_listing(listing, lim.get("skill_listing_stack_slots", 6), marked)
+    size = skill_listing(listing, lim.get("skill_listing_stack_slots", 6), marked,
+                         tuple(cfg["skill_visibility"]["name_only_prefixes"]))
     if size > lim.get("skill_listing_max_chars", 10**9):
         warnings.append(f"lista skilli z opisem w typowym projekcie ma ≈{size} znaków (> {lim['skill_listing_max_chars']}): "
                         "skille z opisem wg factory/skill_profile.py + rezerwa na wykryte technologie. Claude Code trzyma listę "
@@ -1111,9 +1113,10 @@ def cmd_new_skill(name: str, description: str, role: str | None = None, name_onl
     if d.exists():
         print(f"✗ Skill {name} już istnieje")
         return 2
-    role_file = FACTORY / "roles" / f"{role}.yaml" if role else None
-    if role_file and not role_file.is_file():
-        print(f"✗ Nie ma roli {role} (factory/roles/{role}.yaml)")
+    roles = load_dir("roles") if role else {}
+    role_file = ROOT / roles[role]["_src"] if role in roles else None
+    if role and not role_file:
+        print(f"✗ Nie ma roli {role} (factory/roles/ ani factory/packs/*/roles/)")
         return 2
     tpl = (FACTORY / "templates" / "SKILL.template.md").read_text(encoding="utf-8")
     (d / "references").mkdir(parents=True)
@@ -1140,9 +1143,9 @@ def cmd_new_skill(name: str, description: str, role: str | None = None, name_onl
             items = [x.strip() for x in m.group(1).split(",") if x.strip()]
             new_line = "skills: [" + ", ".join(items + [name]) + "]"
             role_file.write_text(text[:m.start()] + new_line + text[m.end():], encoding="utf-8")
-            wired = f"✓ Dopisano do factory/roles/{role}.yaml (skills)\n"
+            wired = f"✓ Dopisano do {roles[role]['_src']} (skills)\n"
         else:
-            wired = f"⚠ factory/roles/{role}.yaml nie ma listy „skills: [...]” w jednej linii — dopisz {name} ręcznie\n"
+            wired = f"⚠ {roles[role]['_src']} nie ma listy „skills: [...]” w jednej linii — dopisz {name} ręcznie\n"
     ev = evals_file(name)
     if not ev.exists():
         ev.parent.mkdir(parents=True, exist_ok=True)

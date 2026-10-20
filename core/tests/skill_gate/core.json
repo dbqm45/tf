@@ -1,7 +1,7 @@
 {
  "core-agent-instructions": {
-  "fingerprint": "e906103675ead716",
-  "offline": "2026-10-10"
+  "fingerprint": "9bfe855dba313024",
+  "offline": "2026-10-20"
  },
  "core-agent-retro": {
   "fingerprint": "1973eb1f01bc8cbb",
@@ -16,15 +16,15 @@
   "offline": "2026-10-10"
  },
  "core-conventional-commits": {
-  "fingerprint": "0459f3219c1c895a",
-  "offline": "2026-10-04"
+  "fingerprint": "c22a850e77fb0168",
+  "offline": "2026-10-20"
  },
  "core-cost-control": {
   "fingerprint": "4aa4b3b8a972133e",
   "offline": "2026-10-18"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "12774a1128234608",
+  "fingerprint": "0506d9e53237ad55",
   "offline": "2026-10-20"
  },
  "core-factory-update": {
@@ -40,16 +40,16 @@
   "offline": "2026-10-18"
  },
  "core-plan-interview": {
-  "fingerprint": "75a8b1422c3c7381",
-  "offline": "2026-10-10"
+  "fingerprint": "c2e72b5e0e34642b",
+  "offline": "2026-10-20"
  },
  "core-problem-routing": {
-  "fingerprint": "2681489dcdad0669",
+  "fingerprint": "955944daa1c8fe2e",
   "offline": "2026-10-20"
  },
  "core-project-record": {
-  "fingerprint": "0f3e77fec7b0f82a",
-  "offline": "2026-10-10"
+  "fingerprint": "28b2f8e6e73fda07",
+  "offline": "2026-10-20"
  },
  "core-semver": {
   "fingerprint": "9570e62f2e4fb50a",
@@ -72,7 +72,7 @@
   "offline": "2026-10-10"
  },
  "core-teaching-workspace": {
-  "fingerprint": "4cf2fbca583f99db",
-  "offline": "2026-10-10"
+  "fingerprint": "e4c09c07d2cd7973",
+  "offline": "2026-10-20"
  }
 }

@@ -133,7 +133,10 @@ def main() -> int:
                capture_output=True, text=True, env=env)
         log = proj / ".claude" / "logs" / "skill-hints.jsonl"
         rec = json.loads(log.read_text(encoding="utf-8").splitlines()[0]) if log.exists() else {}
-        if rec.get("hinted") != ["be-api-design"] or "TAJNE" in log.read_text(encoding="utf-8") if log.exists() else True:
+        # pierwsza podpowiedź to skill API; kolejne mogą dojść z innych nakładek (np. paginacja w OCPI przy pack-ev)
+        api = (ev.SKILLS / "be-api-design").is_dir()      # skill z pack-it; bez niego sprawdzamy tylko brak treści w logu
+        if ((api and (rec.get("hinted") or [None])[0] != "be-api-design")
+                or "TAJNE" in log.read_text(encoding="utf-8") if log.exists() else api):
             fails.append(f"skill_hint: log decyzji niepoprawny albo zawiera treść polecenia: {rec}")
         tr = proj / "t.jsonl"
         tr.write_text(json.dumps({"type": "assistant", "message": {"id": "m1", "model": "x", "usage": {"output_tokens": 5},

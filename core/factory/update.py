@@ -14,7 +14,7 @@ Aktualizuje claude-team-factory w tym projekcie — jak aktualizacja oprogramowa
 Przed aktualizacją skille nowej wersji przechodzą audyt (`skill_audit.py` z ZAINSTALOWANEJ wersji, nie z pobranej):
 ustalenia wysokiej wagi zatrzymują aktualizację z `--yes`, a w trybie interaktywnym wymagają świadomego potwierdzenia.
 
-Źródło nowej wersji (pierwsze dostępne): `--source`, zmienna środowiskowa `CLAUDE_TEAM_FACTORY`, wpis `source`
+Źródło nowej wersji (pierwsze dostępne): `--source`, zmienna środowiskowa `TEAM_FACTORY`, wpis `source`
 w `.claude/factory-manifest.json`. Ścieżki względne liczone są od bieżącego katalogu. Może to być:
   - katalog z fabryką (np. ~/narzedzia/claude-team-factory, zaktualizowany `git pull`),
   - plik .zip z fabryką (np. ~/Downloads/claude-team-factory.zip),
@@ -110,6 +110,11 @@ def auto_target(tags: list[str], current: str, skip=()) -> tuple[str | None, str
     return (max(same, key=key) if same else None), (max(major, key=key) if major else None)
 
 
+def installer_of(new: Path) -> Path:
+    """Instalator w pobranej wersji fabryki (core/factory/install.py)."""
+    return new / "core" / "factory" / "install.py"
+
+
 def fetch(src: str, tmp: Path) -> Path:
     """Zwraca katalog z nową wersją fabryki (zawierający factory/install.py).
 
@@ -138,9 +143,9 @@ def fetch(src: str, tmp: Path) -> Path:
             base = p
         else:
             sys.exit(f"✗ Nie znaleziono źródła: {src}")
-    found = [d.parent.parent for d in base.rglob("factory/install.py") if "node_modules" not in d.parts]
+    found = [d.parent.parent.parent for d in base.rglob("core/factory/install.py") if "node_modules" not in d.parts]
     if not found:
-        sys.exit(f"✗ W {src} nie ma fabryki (brak factory/install.py).")
+        sys.exit(f"✗ No factory in {src} (core/factory/install.py is missing).")
     new = min(found, key=lambda d: len(d.parts))
     if new.resolve() == ROOT:
         sys.exit("✗ Źródło wskazuje na ten sam projekt — podaj katalog, archiwum lub repozytorium fabryki.")
@@ -163,10 +168,10 @@ def available_version(src: str, timeout: float = 5) -> str | None:
     try:
         if p.is_file() and p.suffix == ".zip":
             with zipfile.ZipFile(p) as z:
-                names = sorted((n for n in z.namelist() if n == "factory/VERSION" or n.endswith("/factory/VERSION")),
+                names = sorted((n for n in z.namelist() if n == "core/factory/VERSION" or n.endswith("/core/factory/VERSION")),
                                key=lambda n: n.count("/"))
                 return z.read(names[0]).decode("utf-8").strip() if names else None
-        v = p / "factory" / "VERSION"
+        v = p / "core" / "factory" / "VERSION"
         return v.read_text(encoding="utf-8").strip() if v.is_file() else None
     except (OSError, zipfile.BadZipFile, UnicodeDecodeError):
         return None
@@ -176,7 +181,7 @@ def notice(root: Path, env: dict | None = None, cache_dir: Path | None = None, n
            timeout: float = 5) -> str | None:
     """Komunikat o nowszym wydaniu fabryki dla projektu `root` albo None (hook SessionStart: update_notice.py).
 
-    Źródło jak przy aktualizacji (CLAUDE_TEAM_FACTORY, potem `source` z manifestu); wynik pytania zapamiętany na dobę
+    Źródło jak przy aktualizacji (TEAM_FACTORY, potem `source` z manifestu); wynik pytania zapamiętany na dobę
     w katalogu podręcznym użytkownika, wspólnym dla projektów. CTF_UPDATE_CHECK=0 wyłącza. Nigdy nie rzuca wyjątku."""
     import time
     env = os.environ if env is None else env
@@ -188,14 +193,14 @@ def notice(root: Path, env: dict | None = None, cache_dir: Path | None = None, n
             return None
         manifest = json.loads(man_p.read_text(encoding="utf-8"))
         current = manifest.get("version", "0.0.0")
-        src = env.get("CLAUDE_TEAM_FACTORY") or manifest.get("source")
+        src = env.get("TEAM_FACTORY") or manifest.get("source")
         if not src:
             return None
         src = src if is_git(src) else str(Path(src).expanduser().resolve())
         now = time.time() if now is None else now
         if cache_dir is None:
             base = env.get("XDG_CACHE_HOME") or str(Path(env.get("HOME") or Path.home()) / ".cache")
-            cache_dir = Path(base) / "claude-team-factory"
+            cache_dir = Path(base) / "team-factory"
         cache_p = cache_dir / "update-check.json"
         try:
             cache = json.loads(cache_p.read_text(encoding="utf-8"))
@@ -225,7 +230,7 @@ def notice(root: Path, env: dict | None = None, cache_dir: Path | None = None, n
 
 
 def changelog_since(new: Path, current: str) -> str:
-    p = new / "factory" / "CHANGELOG.md"
+    p = new / "core" / "factory" / "CHANGELOG.md"
     if not p.exists():
         return ""
     out, keep = [], False
@@ -242,14 +247,14 @@ def audit_new(new_root: Path) -> tuple[int, list[str]]:
     """Audyt skilli pobranej wersji narzędziem z wersji zainstalowanej (pobrane narzędzie mogłoby kłamać)."""
     import importlib.util
     tool = Path(__file__).resolve().parent / "skill_audit.py"
-    skills_dir = new_root / ".claude" / "skills"
-    if not tool.exists() or not skills_dir.is_dir():
+    skill_dirs = [d for d in [new_root / "core" / "skills", *sorted((new_root / "packs").glob("*/skills"))] if d.is_dir()]
+    if not tool.exists() or not skill_dirs:
         return 0, []
     spec = importlib.util.spec_from_file_location("skill_audit_installed", tool)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     high, lines = 0, []
-    for d in mod.find_skills(skills_dir):
+    for d in [x for sd in skill_dirs for x in mod.find_skills(sd)]:
         for f in mod.audit_skill(d)["findings"]:
             if f["severity"] in ("high", "medium"):
                 high += f["severity"] == "high"
@@ -392,7 +397,7 @@ def set_auto(root: Path, on: bool, env: dict | None = None) -> tuple[int, str]:
     wf = root / WORKFLOW
     lines = []
     if on:
-        src = env.get("CLAUDE_TEAM_FACTORY") or manifest.get("source") or ""
+        src = env.get("TEAM_FACTORY") or manifest.get("source") or ""
         if not is_git(src) or "#" in src:
             return 2, ("✗ Automatyczna aktualizacja wymaga źródła będącego repozytorium git z tagami wydań vX.Y.Z "
                        f"(bez #gałęzi), a jest: {src or 'brak'}. Ustaw je: python3 factory/update.py --source <URL git>")
@@ -479,7 +484,7 @@ def auto_run(root: Path, env: dict | None = None, now: float | None = None, time
 
 
 def _auto_run(root: Path, manifest: dict, env, now: float, timeout: float) -> dict:
-    src = env.get("CLAUDE_TEAM_FACTORY") or manifest.get("source") or ""
+    src = env.get("TEAM_FACTORY") or manifest.get("source") or ""
     if not is_git(src) or "#" in src:
         return {"status": "no_source"}
     tags = release_tags(src, timeout)
@@ -497,7 +502,7 @@ def _auto_run(root: Path, manifest: dict, env, now: float, timeout: float) -> di
         _append_log(root, entry)
         return entry
 
-    with tempfile.TemporaryDirectory(prefix="ctf-auto-") as t:
+    with tempfile.TemporaryDirectory(prefix="tf-auto-") as t:
         try:
             new = fetch(f"{src}#v{target}", Path(t))
         except SystemExit as e:
@@ -506,7 +511,7 @@ def _auto_run(root: Path, manifest: dict, env, now: float, timeout: float) -> di
         if high:
             return done("audit_blocked", findings=findings)
         backup(root, now)
-        r = subprocess.run([sys.executable, str(new / "factory" / "install.py"), str(root), "--update", "--source", src],
+        r = subprocess.run([sys.executable, str(installer_of(new)), str(root), "--update", "--source", src],
                            capture_output=True, text=True)
         if r.returncode != 0:
             rollback(root)
@@ -545,12 +550,20 @@ def _ci_manifest(root: Path, src: str) -> dict:
     if man_p.is_file():
         return json.loads(man_p.read_text(encoding="utf-8"))
     current = (root / "factory" / "VERSION").read_text(encoding="utf-8").strip()
-    with tempfile.TemporaryDirectory(prefix="ctf-ci-") as t:
+    with tempfile.TemporaryDirectory(prefix="tf-ci-") as t:
         old = fetch(f"{src}#v{current}", Path(t))
         scratch = Path(t) / "scratch"
         scratch.mkdir()
-        r = subprocess.run([sys.executable, str(old / "factory" / "install.py"), str(scratch), "--shared",
-                            "--source", src], capture_output=True, text=True)
+        packs = sorted(p.parent.name for p in (root / "factory" / "packs").glob("*/pack.yaml"))
+        settings = {}
+        try:
+            settings = json.loads((root / ".claude" / "factory-settings.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+        lang = [a for k in ("language", "commit_language") if settings.get(k)
+                for a in (f"--{k.replace('_', '-')}", settings[k])]
+        r = subprocess.run([sys.executable, str(installer_of(old)), str(scratch), "--shared", "--yes",
+                            "--packs", ",".join(packs) or "none", *lang, "--source", src], capture_output=True, text=True)
         rebuilt = scratch / ".claude" / "factory-manifest.json"
         if r.returncode != 0 or not rebuilt.is_file():
             sys.exit(f"✗ Nie udało się odtworzyć manifestu wersji {current}:\n{(r.stderr or r.stdout).strip()[-500:]}")
@@ -586,14 +599,14 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
         print(f"✓ Brak nowego wydania PATCH/MINOR (zainstalowana {current}).")
         return 0
     print(f"Aktualizacja claude-team-factory {current} → {target}")
-    with tempfile.TemporaryDirectory(prefix="ctf-ci-") as t:
+    with tempfile.TemporaryDirectory(prefix="tf-ci-") as t:
         new = fetch(f"{src}#v{target}", Path(t))
         high, findings = audit_new(new)
         if high:
             print(f"✗ Audyt skilli wersji {target}: ustalenia wysokiej wagi — aktualizacja wstrzymana:")
             print("\n".join(findings[:30]))
             return 1
-        r = subprocess.run([sys.executable, str(new / "factory" / "install.py"), str(root), "--update", "--source", src],
+        r = subprocess.run([sys.executable, str(installer_of(new)), str(root), "--update", "--source", src],
                            capture_output=True, text=True)
         if r.returncode != 0:
             print(f"✗ Instalator wersji {target} zakończył się błędem:\n{(r.stderr or r.stdout).strip()[-1500:]}")
@@ -664,7 +677,7 @@ def start_auto(root: Path, env: dict | None = None, cache_dir: Path | None = Non
         manifest = json.loads(man_p.read_text(encoding="utf-8")) if man_p.is_file() else {}
         if manifest.get("auto_update") is not True or manifest.get("mode") == "shared":
             return None
-        src = env.get("CLAUDE_TEAM_FACTORY") or manifest.get("source") or ""
+        src = env.get("TEAM_FACTORY") or manifest.get("source") or ""
         if not is_git(src) or "#" in src:
             return None
         now = time.time() if now is None else now
@@ -673,7 +686,7 @@ def start_auto(root: Path, env: dict | None = None, cache_dir: Path | None = Non
             return None
         if cache_dir is None:
             base = env.get("XDG_CACHE_HOME") or str(Path(env.get("HOME") or Path.home()) / ".cache")
-            cache_dir = Path(base) / "claude-team-factory"
+            cache_dir = Path(base) / "team-factory"
         cache_p, key = cache_dir / "update-check.json", f"auto:{root.resolve()}"
         try:
             cache = json.loads(cache_p.read_text(encoding="utf-8"))
@@ -744,11 +757,16 @@ def pending_messages(root: Path) -> list[str]:
     return out
 
 
+PASS_THROUGH = ("--packs", "--add", "--remove", "--language", "--commit-language")   # → instalator nowej wersji
+
+
 def main(argv: list[str]) -> int:
-    opts, it = {}, iter(argv[1:])
+    opts, it, passthrough = {}, iter(argv[1:]), []
     for a in it:
         if a == "--source":
             opts["source"] = next(it, "")
+        elif a in PASS_THROUGH:
+            passthrough += [a, next(it, "")]
         elif a == "--auto":
             val = next(it, "")
             if val not in ("on", "off"):
@@ -775,32 +793,34 @@ def main(argv: list[str]) -> int:
             opts[a] = True
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else {}
     if opts.get("--ci"):
-        src = opts.get("source") or os.environ.get("CLAUDE_TEAM_FACTORY") or manifest.get("source") or ""
+        src = opts.get("source") or os.environ.get("TEAM_FACTORY") or manifest.get("source") or ""
         return ci_run(ROOT, normalize(src) if src else src)
     current = manifest.get("version", "0.0.0")
-    env = os.environ.get("CLAUDE_TEAM_FACTORY")
+    env = os.environ.get("TEAM_FACTORY")
     saved = manifest.get("source")
     if saved and not is_git(saved) and not Path(saved).exists() and not opts.get("source") and not env:
         print(f"✗ Zapamiętane źródło {saved} już nie istnieje (fabryka przeniesiona?). Podaj nowe:\n"
               "  python3 factory/update.py --source <katalog|plik.zip|URL git>\n"
-              "  albo ustaw raz w profilu powłoki: export CLAUDE_TEAM_FACTORY=<katalog fabryki>")
+              "  albo ustaw raz w profilu powłoki: export TEAM_FACTORY=<katalog fabryki>")
         return 2
     src = opts.get("source") or env or saved
     if not src:
         print("✗ Nie wiem, skąd pobrać nową wersję. Podaj źródło, np.:\n"
               "  python3 factory/update.py --source ~/Downloads/claude-team-factory.zip\n"
               "  python3 factory/update.py --source https://github.com/<ty>/claude-team-factory.git\n"
-              "  albo ustaw raz w profilu powłoki: export CLAUDE_TEAM_FACTORY=<katalog fabryki>")
+              "  albo ustaw raz w profilu powłoki: export TEAM_FACTORY=<katalog fabryki>")
         return 2
     src = normalize(src)
 
-    with tempfile.TemporaryDirectory(prefix="ctf-update-") as t:
+    with tempfile.TemporaryDirectory(prefix="tf-update-") as t:
         new = fetch(src, Path(t))
-        new_version = (new / "factory" / "VERSION").read_text(encoding="utf-8").strip() \
-            if (new / "factory" / "VERSION").exists() else "0.0.0"
+        new_version = (new / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip() \
+            if (new / "core" / "factory" / "VERSION").exists() else "0.0.0"
         print(f"Zainstalowana wersja: {current}   dostępna: {new_version}   (źródło: {src})")
         newer = newer_than(new_version, current) > 0
-        if not newer and not opts.get("--force"):
+        if passthrough:                       # zmiana nakładek albo języka — ta sama wersja też się nakłada
+            print("ℹ Changing packs or languages: " + " ".join(passthrough))
+        if not newer and not opts.get("--force") and not passthrough:
             if newer_than(new_version, current) < 0:
                 print("ℹ Źródło ma starszą wersję niż zainstalowana — nic nie robię (wymuś: --force).")
             else:
@@ -822,7 +842,7 @@ def main(argv: list[str]) -> int:
             print("\n".join(findings[:30]) + ("\n  …" if len(findings) > 30 else "") + "\n")
         else:
             print("Audyt skilli nowej wersji: brak ustaleń wysokiej i średniej wagi.\n")
-        installer = [sys.executable, str(new / "factory" / "install.py"), str(ROOT), "--update", "--source", src]
+        installer = [sys.executable, str(installer_of(new)), str(ROOT), "--update", "--yes", "--source", src, *passthrough]
         print("Plan aktualizacji:")
         subprocess.run(installer + ["--dry-run"], check=False)
         if opts.get("--dry-run"):

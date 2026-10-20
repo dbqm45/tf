@@ -24,7 +24,9 @@ POLISH = "Zażółć gęślą jaźń — „cudzysłów” i zależności"
 
 
 def hook_commands() -> list[tuple[str, list[str], int]]:
-    settings = json.loads((ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    # tryb zespołowy: settings.json; prywatny (domyślny): settings.local.json
+    path = next(p for p in (ROOT / ".claude" / "settings.json", ROOT / ".claude" / "settings.local.json") if p.exists())
+    settings = json.loads(path.read_text(encoding="utf-8"))
     out = []
     for event, groups in settings["hooks"].items():
         for g in groups:

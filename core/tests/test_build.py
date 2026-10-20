@@ -44,9 +44,11 @@ def main() -> int:
     # Budżet listy skilli liczony jak w projekcie (skill_profile): technologie i dom-* bez opisu, plus rezerwa
     # na technologie wykryte w typowym projekcie (N najdłuższych wpisów technologii).
     entries = {"eng-a": 100, "core-b": 50, "dom-x": 400, "fw-angular": 300, "lang-java": 200, "tool-nx": 120}
-    check(b.skill_listing(entries, 2) == 100 + 50 + 300 + 200,
-          f"LB-1: opisane skille + 2 najdłuższe technologie, bez dom-*: {b.skill_listing(entries, 2)}")
-    check(b.skill_listing(entries, 0) == 150, f"LB-2: bez rezerwy technologii: {b.skill_listing(entries, 0)}")
+    check(b.skill_listing(entries, 2, name_only=("dom-",)) == 100 + 50 + 300 + 200,
+          f"LB-1: opisane skille + 2 najdłuższe technologie, bez dom-* (prefiks „sama nazwa” z nakładki): "
+          f"{b.skill_listing(entries, 2, name_only=('dom-',))}")
+    check(b.skill_listing(entries, 0, name_only=("dom-",)) == 150, "LB-2: bez rezerwy technologii")
+    check(b.skill_listing(entries, 0) == 550, f"LB-3: bez prefiksów nakładek dom-* z opisem: {b.skill_listing(entries, 0)}")
 
     # Termin przeglądu (metadata.przeglad): format daty sprawdzany; zmiana samego terminu nie unieważnia bramki.
     check(b.check_review_date("eng-a", {"przeglad": "2027-04-17"}) == ([], []), "RD-1: poprawna data bez uwag")
@@ -70,21 +72,21 @@ def main() -> int:
         b.SKILLS_DIR = old
     check(f1 == f2 and f2 != f3, f"RD-4: odcisk bramki pomija termin przeglądu, ale nie treść: {f1} {f2} {f3}")
 
-    # Liczby w README generowane przez build.py (linia „skills/ N skilli w M wymiarach”).
-    line = "  skills/                  148 skilli w 17 wymiarach: ddd-*, arch-*"
-    check(b.readme_counts(line, 149, 18) == "  skills/                  149 skilli w 18 wymiarach: ddd-*, arch-*",
-          f"RC-1: build podmienia liczbę skilli i wymiarów: {b.readme_counts(line, 149, 18)}")
-    check(len(b.readme_count_errors(line, 149, 18)) == 1 and b.readme_count_errors(line, 148, 17) == []
-          and b.readme_count_errors("brak linii", 149, 18) == [], "RC-2: check zgłasza rozjazd liczb w README")
+    # Zakres wersji rdzenia wymagany przez nakładkę (pack.yaml → requires.core).
+    check(b.version_ok("3.0.0", ">=3.0.0 <4.0.0") and b.version_ok("3.9.1", ">=3.0.0 <4.0.0"),
+          "VR-1: wersja w zakresie")
+    check(not b.version_ok("4.0.0", ">=3.0.0 <4.0.0") and not b.version_ok("2.45.0", ">=3.0.0"),
+          "VR-2: wersja poza zakresem")
 
     # Orkiestrator robi zadanie sam; deleguje tylko, gdy przekazanie się opłaca (koszt i jakość).
     rendered = b.render_all()
-    orchestrators = {k: v for k, v in rendered.items() if not k.startswith("shared/")
+    orchestrators = {k: v for k, v in rendered.items() if not k.startswith(("shared/", "consult/"))
                      and Path(k).stem == Path(k).parent.name}
     check(orchestrators, "OR-0: są prompty orkiestratorów")
     for k, t in orchestrators.items():
         check("Resztę delegujesz" not in t, f"OR-1 {k}: nie ma już zasady „resztę delegujesz”")
         check("Domyślnie robisz zadanie sam" in t, f"OR-2 {k}: zasada domyślna — zadanie robisz sam")
+        check("## Język" in t, f"OR-4 {k}: sekcja języka pracy i commitów")
         sec = re.search(r"^## Kiedy delegujesz\n(.*?)(?=^## )", t, re.M | re.S)
         body = sec.group(1) if sec else ""
         check(sec and all(w in body for w in ("scout", "równolegle", "świeże spojrzenie", "Nie dziel")),

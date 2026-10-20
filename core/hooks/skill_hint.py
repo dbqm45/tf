@@ -46,7 +46,7 @@ STOP = set("""
 aby albo ale bez być będzie bo by czy dla do gdy go i ich ile im jak jaki jakie jako je jest jeśli już kiedy który
 która które ma mam mamy może można mnie na nad nam nas nie niż o od oraz po pod przez przy się są ta tak także te
 też to tu tym w we więc z za ze że żeby co ten tej tego temu tych tę ja ty my wy on ona ono oni one mój nasz wasz
-odpowiedz zwięźle krótko proszę chcę chcemy potrzebuję jak zrobić czy warto użyj nie do the and for with how what
+odpowiedz zwięźle krótko proszę chcę chcemy potrzebuję jak zrobić czy warto użyj nie do robi robić the and for with how what
 """.split())
 NEG_RE = re.compile(r"\bNie do\b.*$", re.S)
 
