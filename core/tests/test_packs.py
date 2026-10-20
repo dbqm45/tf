@@ -78,9 +78,11 @@ consultants:
 """)
     write(b / "traits" / "cecha-b.md", "**Cecha B**\n- tak")
     write(b / "roles" / "rola-b.yaml", "name: rola-b\ntitle: Rola B\ntier: std\ntriggers: b\nidentity: b\n"
-                                        "tools: [Read, Skill]\nskills: [bb-tekst]\n")
+                                        "tools: [Read, Edit, Skill]\nskills: [bb-tekst]\n")
     write(b / "personas" / "bolek.yaml", "name: bolek\ntitle: Bolek\ndescription: Persona B.\nidentity: b\n"
-                                           "roles: [rola-b]\ntraits: [grounded]\npriorities: [jakość]\n")
+                                           "roles: [rola-b]\ntraits: [grounded]\npriorities: [jakość]\n"
+                                           "isolation: worktree\n"
+                                           "scenarios:\n  - {situation: klient pyta o cenę, behavior: odsyłasz do cennika}\n")
     return p
 
 
@@ -127,6 +129,29 @@ def main() -> int:
         check("specialist" in ala_md.split("\n")[3] and "specialist" not in bolek_md.split("\n")[3],
               "P-10: specialist (@dispatcher) tylko u persony z dispatcher: true")
         check("## Język" in ala_md and "po polsku" in ala_md and "commitów" in ala_md, "P-11: sekcja języka w personie")
+        # 3.1.0: wykonawcy pytają konsultantów sami (zagnieżdżanie podagentów), konsultanci nie delegują dalej
+        rendered = b.render_all()
+        ala_w, bolek_w = rendered["ala/ala-rola-a.md"], rendered["bolek/bolek-rola-b.md"]
+        check("Agent" in ala_w.split("---")[1] and "b-consult" in ala_w and "a-consult" not in ala_w,
+              "P-19: wykonawca ma narzędzie Agent i widzi konsultantów innych nakładek")
+        cons = rendered["consult/a-consult.md"].split("---")[1]
+        check("disallowedTools: Agent" in cons and "omitClaudeMd: true" in cons,
+              f"P-20: konsultant bez Agent i bez CLAUDE.md: {cons}")
+        check("nie wywołują konsultantów" not in " ".join(rendered["ala/ala.md"].split()), "P-21: persona nie zabrania wykonawcom konsultacji")
+        check("isolation: worktree" in bolek_w.split("---")[1] and "isolation" not in ala_w.split("---")[1],
+              "P-22: isolation persony tylko dla wykonawców, którzy edytują pliki")
+        cfg0 = b.load_config()
+        for key in ("work_contract", "style_note", "untrusted_note"):
+            txt = cfg0.get(key, "").strip()
+            check(txt and all(txt.splitlines()[0] in rendered[f] for f in
+                              ("ala/ala.md", "ala/ala-rola-a.md", "shared/scout.md", "consult/a-consult.md")),
+                  f"P-23: `{key}` w personie, wykonawcy, agencie wspólnym i konsultancie")
+        rc = cfg0["report_contract"]
+        check(all(s in rc for s in ("**Wynik:**", "**Zmienione pliki:**", "**Weryfikacja:**", "**Niepewne:**",
+                                    "**Do decyzji:**")), "P-24: stały szablon raportu wykonawcy")
+        check("## Typowe sytuacje" in rendered["bolek/bolek.md"] and "odsyłasz do cennika" in rendered["bolek/bolek.md"]
+              and "## Typowe sytuacje" not in rendered["ala/ala.md"], "P-25: pole persony `scenarios`")
+        check("effort: low" in rendered["shared/scout.md"].split("---")[1], "P-26: tier fast z effort low")
         e, _ = b.validate()
         check(not [x for x in e if "nieaktualn" not in x],   # pliki agentów nie są zbudowane — tu bez znaczenia
               f"P-12: złożona konfiguracja bez błędów: {e}")
@@ -141,6 +166,14 @@ def main() -> int:
         md = b.render_all()["ala/ala.md"]
         check("po angielsku" in md and "commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po polsku" in md,
               "P-14: język pracy en i commitów pl w prompcie")
+
+        # błędne isolation i scenarios → błędy walidacji
+        bp = p / "factory" / "packs" / "pack-b" / "personas" / "bolek.yaml"
+        saved = bp.read_text()
+        bp.write_text(saved.replace("isolation: worktree", "isolation: kontener").replace("behavior: odsyłasz do cennika", "x: y"))
+        e, _ = b.validate()
+        check(any("isolation" in x for x in e) and any("scenarios[0]" in x for x in e), f"P-27: walidacja isolation i scenarios: {e}")
+        bp.write_text(saved)
 
         # zgodność wersji rdzenia i wymagane nakładki
         y = p / "factory" / "packs" / "pack-a" / "pack.yaml"
