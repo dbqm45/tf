@@ -82,6 +82,71 @@
       "expect": "no-trigger",
       "neighbor": "fw-react",
       "prompt": "W aplikacji React 19 na Vite (bez frameworka) efekt pobiera wyniki po zmianie filtra i czasem pokazuje stare dane. Jak to naprawić?"
+    },
+    {
+      "id": "use-cache-i-cookies",
+      "expect": "trigger",
+      "prompt": "Next.js 16.3, cacheComponents: true. Funkcja z 'use cache' pobiera profil użytkownika i czyta w środku cookies(), a build zgłasza błąd. Jak to poprawić, żeby cache nadal działał? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "argument\\w*",
+            "poza (funkcj|cache)",
+            "przekaż\\w*",
+            "use cache: private"
+          ],
+          [
+            "klucz\\w*",
+            "cacheTag",
+            "cacheLife",
+            "Suspense"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "hydratacja-daty",
+      "expect": "trigger",
+      "prompt": "Aplikacja Next.js 16: w konsoli przeglądarki pojawia się błąd hydratacji (tekst z serwera nie pasuje do klienta) w komponencie, który renderuje new Date().toLocaleString(). Skąd to się bierze i jak to naprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "stref\\w* czasow",
+            "różn\\w* (wynik|wartoś|tekst|czas)",
+            "serwer\\w*.{0,60}klient",
+            "inn\\w* (czas|wartoś)"
+          ],
+          [
+            "useEffect",
+            "po zamontowaniu",
+            "po hydratacji",
+            "suppressHydrationWarning",
+            "przekaż\\w*.{0,40}(serwer|ISO)",
+            "toISOString"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wiele-instancji-cache",
+      "expect": "trigger",
+      "prompt": "Hostujemy Next.js 16 sami: obraz Dockera i 3 repliki za load balancerem. Po revalidateTag część użytkowników nadal widzi stare dane. Dlaczego i co z tym zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "lokaln\\w* (dysk|pamię|cache)",
+            "każd\\w* (instancj|replik)\\w* ma",
+            "system\\w* plików",
+            "nie współdziel\\w*"
+          ],
+          [
+            "cache ?handler",
+            "cacheHandler",
+            "wspóln\\w* (cache|magazyn|pamię)",
+            "Redis"
+          ]
+        ]
+      }
     }
   ]
 }

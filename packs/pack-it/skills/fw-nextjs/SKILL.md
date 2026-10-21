@@ -4,13 +4,23 @@ description: Użyj przy kodzie Next.js 14–16.3 (App Router) — Server Compone
 metadata:
   przeglad: 2027-01-03
   katalog: "Użyj przy kodzie Next.js (14–16.3, App Router) — podział Server/Client Components, pobieranie danych na serwerze, Server Actions (autoryzacja w każdej akcji, odświeżanie przez updateTag/revalidatePath/refresh), cache i Cache Components ('use cache', cacheLife, cacheTag), proxy.ts (dawniej middleware), Route Handlers, zmienne środowiskowe, strumieniowanie i obsługa błędów, testy, migracja 15→16 i łatki bezpieczeństwa — oraz przy decyzji, gdzie w aplikacji Next.js umieścić pojęcia domenowe. Nie do samego Reacta bez frameworka (fw-react), projektu API HTTP (be-api-design) ani uwierzytelniania w ogóle (be-auth-security)."
-  slowa: "Next.js, Next, App Router, Server Action, server action, use server, use client, use cache, cacheComponents, revalidatePath, revalidateTag, updateTag, middleware.ts, proxy.ts, route.ts, page.tsx, layout.tsx, next.config"
+  slowa: "Next.js, Next, App Router, Server Action, server action, use server, use client, use cache, cacheComponents, revalidatePath, revalidateTag, updateTag, middleware.ts, proxy.ts, route.ts, page.tsx, layout.tsx, next.config, unstable_cache, cacheLife, hydration, hydratacja, błąd hydratacji, useSearchParams, standalone, Docker Next.js, wiele instancji, cacheHandler, serverExternalPackages, next/dist/docs"
 ---
 
 # Next.js (App Router)
 
 **Najpierw sprawdź wersję** (`detect_stack.py` / `package.json`) i to, czy projekt ma `cacheComponents: true`
 w `next.config`. Reguły Reacta (czystość, stan, efekty) są w fw-react; tu tylko to, co dokłada Next.js.
+
+**Dokumentacja dopasowana do wersji ma pierwszeństwo przed pamięcią modelu.** Od 16.3 paczka `next` zawiera
+dokumentację (`node_modules/next/dist/docs/`), a `next dev` zapisuje w projekcie `AGENTS.md` / `CLAUDE.md` ze
+wskazaniem na nią. W fabryce:
+- hook `guard_paths` blokuje odczyt `node_modules/`, więc tej kopii nie czytasz. Dokumentację poza `node_modules`
+  (`.next-docs/`) daje `npx @next/codemod@canary agents-md`; uruchamia je człowiek, bo polecenie zmienia pliki
+  instrukcji agenta;
+- plik `CLAUDE.md` projektu należy do fabryki. Gdy `next dev` go zmienił, pokaż różnicę człowiekowi i nie
+  scalaj sam [niezweryfikowane: sposób zapisu przez `next dev` nie był sprawdzony];
+- gdy `.next-docs/` jest w projekcie, sprawdzasz w niej API przed użyciem.
 
 ## Zasady
 1. **Server Components domyślnie.** `'use client'` stawiasz tak nisko w drzewie, jak się da (liść z interakcją).
@@ -49,7 +59,12 @@ w `next.config`. Reguły Reacta (czystość, stan, efekty) są w fw-react; tu ty
    - `page`, `layout`, `loading`, `error` (komponent kliencki z `reset`), `not-found`;
    - `route.ts` nie może leżeć obok `page` w tym samym segmencie;
    - równoległe trasy (`@slot`) wymagają `default.tsx` (16);
-   - metadane przez `generateMetadata`, ścieżki statyczne przez `generateStaticParams`.
+   - metadane przez `generateMetadata`, ścieżki statyczne przez `generateStaticParams`;
+   - Route Handler służy webhookom, publicznemu API i integracjom; mutacje z własnego UI robisz Server Actions;
+   - `redirect()`, `notFound()`, `forbidden()` rzucają specjalny wyjątek: nie wołaj ich w `try`, którego `catch`
+     połyka błędy;
+   - `useSearchParams()` w trasie statycznej wymaga `<Suspense>` nad komponentem, inaczej cała trasa renderuje się
+     w przeglądarce.
 9. **Testy:**
    - logika domeny i komponenty synchroniczne — Vitest lub Jest z Testing Library (tool-vitest, tool-jest);
    - **asynchroniczne Server Components** — testy e2e (tool-playwright), bo Vitest ich nie renderuje;
@@ -59,6 +74,14 @@ w `next.config`. Reguły Reacta (czystość, stan, efekty) są w fw-react; tu ty
     - w 2025–2026 było kilka krytycznych łatek, m.in. RCE w protokole RSC (CVE-2025-66478 / React CVE-2025-55182);
     - projekt powinien mieć najnowszą łatkę swojej linii (16.3.x; 15.5.x to linia utrzymaniowa);
     - starszą wersję zgłaszasz człowiekowi i sam jej nie podnosisz (core-stack-sync).
+
+Więcej, czytane tylko przy potrzebie:
+- `references/cache-components.md` — trzy rodzaje treści, klucz cache, `'use cache: private'` i `remote`,
+  ograniczenia, migracja z `unstable_cache`, `revalidate` i `experimental.ppr`;
+- `references/diagnostyka.md` — granica serwer–klient, błędy hydratacji, brak `<Suspense>`, paczki niezgodne
+  z serwerem, nawigacja w `try/catch`, narzędzia serwera deweloperskiego;
+- `references/wdrozenie.md` — obraz `standalone`, cache przy wielu instancjach, obrazy i zmienne środowiskowe,
+  Node.js czy Edge, procedura aktualizacji wersji.
 
 Przykłady (DAL z `server-only`, Server Action z autoryzacją i `updateTag`, `'use cache'` z `cacheTag`, `proxy.ts`,
 strona z `await params`) i odpowiedniki dla 14/15: `references/wzorce.md`.
@@ -106,4 +129,11 @@ Migracja 15 → 16: `npx @next/codemod@canary upgrade latest`, a w razie potrzeb
   getting-started/caching, guides/upgrading/version-16) — dostęp 2026-10-03, dokumentacja w wersji 16.3.8
 - nextjs.org/blog: Next.js 15 (2024-10-21), 15.5 (2025-08-18), 16 (2025-10-21), 16.1, 16.2, 16.3 (2026-08-03),
   CVE-2025-66478, aktualizacja bezpieczeństwa 2025-12-11, wydania bezpieczeństwa wrzesień 2026; nextjs.org/support-policy
+- vercel-labs/next-skills, README (odczyt 2026-10-21): skille przeniesione do `vercel/next.js` (katalog `skills`:
+  `next-cache-components-adoption`, `next-cache-components-optimizer`); wiedza referencyjna w dokumentacji paczki
+  `next/dist/docs/` i w `AGENTS.md`/`CLAUDE.md` generowanych przez `next dev` (16.3+); dla 16.1 i starszych
+  `npx @next/codemod@canary agents-md`; aktualizacja przez `npx @next/codemod@latest upgrade`.
+- vercel-labs/next-skills, commit dc1de9c (2026-05-07), skille next-best-practices, next-cache-components,
+  next-upgrade — repozytorium bez licencji, więc wzięte tylko idee, opisane własnymi słowami; fakty o wersjach
+  niepotwierdzone w dokumentacji oznaczone [niezweryfikowane].
 - GitHub Security Advisory GHSA-f82v-jwr5-mffw (CVE-2025-29927); rejestr npm: `next` 16.3.8 (2026-09-30), engines `node >=20.9.0`

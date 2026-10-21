@@ -252,8 +252,8 @@
   "offline": "2026-10-20"
  },
  "fw-angular": {
-  "fingerprint": "10b7e9700cdf5caa",
-  "offline": "2026-10-20"
+  "fingerprint": "b0af60bf884998d8",
+  "offline": "2026-10-21"
  },
  "fw-nestjs": {
   "fingerprint": "d5815888c6024819",
@@ -268,8 +268,8 @@
   }
  },
  "fw-nextjs": {
-  "fingerprint": "fcdd27fad8fe8bca",
-  "offline": "2026-10-04"
+  "fingerprint": "58bbf8f8e0a5c32a",
+  "offline": "2026-10-21"
  },
  "fw-react": {
   "fingerprint": "2d11bd701d00bcbf",
