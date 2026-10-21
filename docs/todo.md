@@ -99,7 +99,7 @@ włączany na żądanie (agent sesji głównej, skill procesowy, skrypty, testy,
 - [x] **M3. `mode-talos`:** agent `talos`, skill `talos-story-run` (było `core-story-run`, wpis w `migrations.py`),
   `run_report.py` jako skrypt skilla, testy, scenariusze, przewodnik `GUIDE.md` (było `docs/talos.md`).
   W rdzeniu zostają `scope-reviewer` i ignorowanie `.claude/runs/`.
-- [ ] **M4. Zgodność wersji:** zakres `requires.core` nakładek obejmuje 5.x; dokumentacja (`insights.md`,
+- [x] **M4. Zgodność wersji:** zakres `requires.core` nakładek obejmuje 5.x; dokumentacja (`insights.md`,
   `PUBLIC_API.md`), bramka, `matrix`, `refs`, PR jako MAJOR.
 
 ### Na później (decyzja człowieka)
