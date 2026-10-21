@@ -138,7 +138,7 @@ liniowy i znacznie wyższy niż subagentów; uprawnienia jak u prowadzącego.
   wspólna lista zadań, zamknięcie i wyłączenie flagi; scenariusze, bramka.
 - [x] **A3. `modes/mode-team/`**: `pack.yaml` (`kind: mode`, `default: false`), `settings.json` (uprawnienie
   skryptu), `GUIDE.md`, testy; CI matrix; `insights.md`, `PUBLIC_API.md`; PR.
-- [ ] **P1. Przewodnik i FAQ** w `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md` (test instalatora);
+- [x] **P1. Przewodnik i FAQ** w `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md` (test instalatora);
   treść ze stanu bieżącego (polecenia `tf`, persony, nakładki, tryby, workflows, koszty, hooki, aktualizacje);
   fakty sprawdzone w plikach; PR.
 
@@ -156,6 +156,8 @@ liniowy i znacznie wyższy niż subagentów; uprawnienia jak u prowadzącego.
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
 - [ ] Pomiar kosztu sędziego z uzasadnieniem (płatny, za zgodą człowieka).
+- [ ] `test_fetch_page` (render Chromium) przekracza 60 s w CI pod obciążeniem — wystąpiło w #5 i #10
+  (`workspace (none)`, `workspace (pack-ev)`); ustalić przyczynę zamiast powtarzać przebieg.
 - [ ] Próba scenariusza symulacji ES: workflow sprawdzający nowy scenariusz automatem z gotowymi wypowiedziami
   facylitatora (czy sprzeczności wychodzą, karty osób działają). Płatny — za zgodą człowieka (zob. W4).
 
@@ -188,8 +190,8 @@ Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na
 
 ## Inne
 
-- [ ] Przewodnik użytkownika (`PRZEWODNIK.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
-  fabrykę bez nakładek. W toku (P1): instalowany do projektu, bez README w korzeniu repo.
+- [x] Przewodnik użytkownika (`PRZEWODNIK.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
+  fabrykę bez nakładek. Zrobione (P1): `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md`.
 - [ ] Baza wiedzy z rejestrem źródeł (`dom-ev-knowledge-base`, w pack-ev) ma ogólny mechanizm (`kb.py`) i dane EV.
   Rozważyć przeniesienie mechanizmu do rdzenia, a rejestrów źródeł do nakładek.
 - [ ] Targety innych narzędzi niż Claude Code (Codex, Gemini CLI): `build.py` ma listę `TARGETS` i ustawienie projektu

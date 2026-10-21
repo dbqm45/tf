@@ -72,7 +72,8 @@ LEGACY_GI = [(f"# {n}:begin (zarządzane przez factory/install.py)", f"# {n}:end
              for n in ("claude-team-factory", "ev-team-factory")]
 CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": "factory",
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
-CORE_FILES = {"guide/JEV.md": ".claude/JEV.md"}
+CORE_FILES = {"guide/JEV.md": ".claude/JEV.md",   # przewodnik i FAQ w factory/ — bez README w korzeniu projektu
+              "guide/PRZEWODNIK.md": "factory/PRZEWODNIK.md", "guide/FAQ.md": "factory/FAQ.md"}
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests",
              "workflows": ".claude/workflows"}   # workflows: skrypty wieloagentowe Claude Code (Workflow)
 PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md")   # → factory/packs/<id>/
