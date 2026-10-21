@@ -1,6 +1,6 @@
 # Polityka uprawnień agenta i dostęp do produkcji
 
-> **Spis treści:** 1. Jak Claude Code rozstrzyga reguły (stan sprawdzony) · 2. Tryby uprawnień — kiedy który · 3. Projektowanie listy allow / ask / deny · 4. Czego reguły nie łapią — obejścia · 4a. Piaskownica Bash — opt-in (sprawdzone na Claude Code… · 5. Dostęp agenta do produkcji (CLI lub MCP) · 6. Kod u dostawcy modelu · 7. Przykład
+> **Spis treści:** 1. Jak Claude Code rozstrzyga reguły (stan sprawdzony) · 2. Tryby uprawnień — kiedy który · 3. Projektowanie listy allow / ask / deny · 4. Czego reguły nie łapią — obejścia · 4a. Piaskownica Bash — opt-in (sprawdzone na Claude Code… · 4c. Treść z zewnątrz — warstwy obrony (indirect prompt… · 5. Dostęp agenta do produkcji (CLI lub MCP) · 6. Kod u dostawcy modelu · 7. Przykład
 
 Źródło faktów o Claude Code: dokumentacja „Configure permissions” i „Settings” (code.claude.com/docs/en/permissions,
 dostęp 2026-10-10). Zachowanie zależy od wersji — przy wątpliwości `/permissions` w bieżącej sesji.

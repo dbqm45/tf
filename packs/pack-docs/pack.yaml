@@ -7,7 +7,7 @@ description: Technical writing — README, API docs, ADRs, changelogs, runbooks 
 content_language: pl
 default: true          # zaznaczona domyślnie w instalatorze
 requires:
-  core: ">=3.0.0 <5.0.0"
+  core: ">=3.0.0 <6.0.0"
 # Skill dokumentacji podaje przykłady ze skilli tych nakładek; bez nich odwołania są tylko tekstem.
 optional_packs: [pack-it, pack-ux, pack-editorial-pl]
 

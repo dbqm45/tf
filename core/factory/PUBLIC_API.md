@@ -1,25 +1,29 @@
 # Publiczne API fabryki i zasady wersjonowania
 
-Fabryka to **rdzeń** (`core/`) i **nakładki** (`packs/pack-*`). Rdzeń jest wersjonowany zgodnie z **Semantic
+Fabryka to **rdzeń** (`core/`), **nakładki** (`packs/pack-*`) i **tryby** (`modes/mode-*`, np. `mode-talos`). Rdzeń jest wersjonowany zgodnie z **Semantic
 Versioning 2.0.0** (semver.org): numer w `core/factory/VERSION` (w projekcie `factory/VERSION`), historia zmian
 w `core/factory/CHANGELOG.md`. Każda nakładka ma własną wersję (`version` w `pack.yaml`) i deklaruje zakres wersji
-rdzenia, z którym działa (`requires.core`, np. `">=3.0.0 <4.0.0"`). Ten plik określa, co jest publicznym API rdzenia,
+rdzenia, z którym działa (`requires.core`, np. `">=3.0.0 <6.0.0"`). Tryb to sposób pracy włączany przez człowieka
+(agent sesji głównej, skill procesowy, skrypty); ma ten sam format co nakładka i pole `kind: mode`. Ten plik określa, co jest publicznym API rdzenia,
 czyli co obiecujemy zachować w obrębie tej samej wersji MAJOR — także wobec nakładek.
 
 ## Co należy do publicznego API
 | Obszar | Przykłady |
 |---|---|
 | nazwy skilli rdzenia i ich obecność | `core-grounding`, `core-project-record` — usunięcie albo zmiana nazwy psuje odwołania w personach, rolach, nakładkach i skillach projektu |
-| format nakładki (`pack.yaml`) | klucze `id`, `version`, `title`, `description`, `content_language`, `language`, `default`, `requires` (`core`, `packs`), `optional_packs`, `facets`, `vocabulary`, `skill_requires`, `always_skills`, `standalone_skills`, `unversioned_skills`, `reference_sections`, `freshness`, `skill_visibility`, `shared_agents` (z `only_for`, `main_only`, `grounding`), `consultants`, `routing`, `routing_notes`, `contributes` (`personas`, `roles`, `agents`), `contributes_when`; pliki nakładki `roles/`, `personas/`, `traits/`, `skills/`, `hooks/`, `tests/`, `settings.json`, `cleanroom.json`, `technologies.json` |
-| agenci rdzenia i znaczniki | agenci wspólni (`scout`, `quick-fixer`, `researcher`, `architect`, `security-reviewer`, `scope-reviewer`, `specialist`, `specialist-deep`), agent sesji głównej `talos`, znacznik `@dispatcher` w `only_for` i pole persony `dispatcher: true` |
-| polecenia i ich flagi | `tf` (install, update, add, remove, list, language, commit-language, doctor), `factory/build.py`, `install.py`, `update.py`, `packs.py`, `migrations.py`, `profile.py`, `skill_gate.py`, `skill_audit.py`, `freshness.py`, `feedback_report.py`, `cost_stats.py`, `check.py`, `finish.py`, `facts.py`, `cost_report.py`, `run_report.py`, `hint_report.py`, `jev_calibration.py`; udokumentowane polecenia skryptów w `.claude/hooks/` i `.claude/skills/*/scripts/` |
+| format nakładki (`pack.yaml`) | klucze `id`, `kind` (`pack` albo `mode`), `version`, `title`, `description`, `content_language`, `language`, `default`, `requires` (`core`, `packs`), `optional_packs`, `facets`, `vocabulary`, `skill_requires`, `always_skills`, `standalone_skills`, `unversioned_skills`, `reference_sections`, `freshness`, `skill_visibility`, `shared_agents` (z `only_for`, `main_only`, `grounding`), `consultants`, `routing`, `routing_notes`, `contributes` (`personas`, `roles`, `agents`), `contributes_when`; pliki nakładki `roles/`, `personas/`, `traits/`, `skills/`, `hooks/`, `tests/`, `settings.json`, `cleanroom.json`, `technologies.json`, `GUIDE.md` (przewodnik, w projekcie `factory/packs/<id>/GUIDE.md`) |
+| agenci rdzenia i znaczniki | agenci wspólni (`scout`, `quick-fixer`, `researcher`, `architect`, `security-reviewer`, `scope-reviewer`, `specialist`, `specialist-deep`), znacznik `@dispatcher` w `only_for` i pole persony `dispatcher: true` |
+| polecenia i ich flagi | `tf` (install, update, add, remove, list, language, commit-language, doctor), `factory/build.py`, `install.py`, `update.py`, `packs.py`, `migrations.py`, `profile.py`, `skill_gate.py`, `skill_audit.py`, `freshness.py`, `feedback_report.py`, `cost_stats.py`, `check.py`, `finish.py`, `facts.py`, `cost_report.py`, `hint_report.py`, `jev_calibration.py`; udokumentowane polecenia skryptów w `.claude/hooks/` i `.claude/skills/*/scripts/` |
 | zmienne środowiskowe | `TEAM_FACTORY`, `TF_REPO`, `CLAUDE_SKILL_HINT*`, `CLAUDE_CONTEXT_WARN_K`, `CLAUDE_SKILL_GATE`, `CLAUDE_TDD*`, `CLAUDE_CLEANROOM_DISABLE`, `CLAUDE_JEV_*`, `TYPESAFE_*` |
 | reguły blokujące hooków | co hook blokuje domyślnie: `guard_bash`, `guard_paths`, `cleanroom_guard`, `tdd_guard`, `scan_secrets` — nowa lub ostrzejsza blokada włączona domyślnie zmienia to, co wcześniej działało |
-| konfiguracja użytkownika | klucze `factory/config.yaml` (tiers, profiles, routing, routing_notes, always_skills, standalone_skills, freshness, languages, default_language, default_commit_language, prices_usd_per_mtok, prices_checked, limits…; klucz manifestu `skill_overrides`, `packs`), ustawienia projektu `.claude/factory-settings.json` (`language`, `commit_language`, `targets`), schemat plików person, ról i cech; frontmatter skilli (`metadata.katalog`, `metadata.slowa`, `metadata.widocznosc`, `metadata.przeglad`) |
+| konfiguracja użytkownika | klucze `factory/config.yaml` (tiers, profiles, routing, routing_notes, always_skills, standalone_skills, freshness, languages, default_language, default_commit_language, prices_usd_per_mtok, prices_checked, limits…; klucze manifestu `skill_overrides`, `packs`, `offered`), ustawienia projektu `.claude/factory-settings.json` (`language`, `commit_language`, `targets`), schemat plików person, ról i cech; frontmatter skilli (`metadata.katalog`, `metadata.slowa`, `metadata.widocznosc`, `metadata.przeglad`) |
 | układ instalacji w projekcie | ścieżki: `.claude/skills/`, `.claude/hooks/`, `.claude/agents/_generated/`, `.claude/tests/`, `factory/`, `factory/packs/<id>/`, `docs/project/`, pliki `CLAUDE.local.md`, `.claude/settings.local.json`, znaczniki `team-factory:begin`/`end` |
-| formaty danych | artefakty `docs/project/` (TL;DR, Przekazanie, status), punkt kontrolny `docs/project/wip/`, plik pytań między personami `docs/project/questions.md`, scenariusze `skill_evals/*.json`, rejestr bramki (`.claude/tests/skill_gate/<id>.json`, `.claude/skill-gate.json`), logi `.claude/logs/*.jsonl`, katalog przebiegu Talosa `.claude/runs/<data>-<slug>/` (`run.json`, `story.md`, `plan.md`, `parked.md`, `report.md`) |
+| formaty danych | artefakty `docs/project/` (TL;DR, Przekazanie, status), punkt kontrolny `docs/project/wip/`, plik pytań między personami `docs/project/questions.md`, scenariusze `skill_evals/*.json`, rejestr bramki (`.claude/tests/skill_gate/<id>.json`, `.claude/skill-gate.json`), logi `.claude/logs/*.jsonl`, katalog przebiegów trybów `.claude/runs/` (ignorowany przez git) |
 
-Nazwy skilli, person i agentów **nakładki** są publicznym API tej nakładki (wersja w jej `pack.yaml`).
+Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API tej nakładki lub trybu (wersja w jej
+`pack.yaml`). Tryb `mode-talos`: agent sesji głównej `talos`, skill `talos-story-run`, skrypt
+`.claude/skills/talos-story-run/scripts/run_report.py`, katalog przebiegu `.claude/runs/<data>-<slug>/` (`run.json`,
+`story.md`, `plan.md`, `parked.md`, `report.md`).
 
 **Nie** należą do publicznego API:
 - treść i sformułowania skilli, promptów i cech, jeśli zachowują swój zakres;

@@ -250,7 +250,8 @@ def audit_new(new_root: Path) -> tuple[int, list[str]]:
     """Audyt skilli pobranej wersji narzędziem z wersji zainstalowanej (pobrane narzędzie mogłoby kłamać)."""
     import importlib.util
     tool = Path(__file__).resolve().parent / "skill_audit.py"
-    skill_dirs = [d for d in [new_root / "core" / "skills", *sorted((new_root / "packs").glob("*/skills"))] if d.is_dir()]
+    skill_dirs = [d for d in [new_root / "core" / "skills", *sorted((new_root / "packs").glob("*/skills")),
+                  *sorted((new_root / "modes").glob("*/skills"))] if d.is_dir()]
     if not tool.exists() or not skill_dirs:
         return 0, []
     spec = importlib.util.spec_from_file_location("skill_audit_installed", tool)

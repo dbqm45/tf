@@ -1,0 +1,34 @@
+# Tryb Talos: automat „story → PR” na żądanie. Tryb to sposób pracy włączany przez człowieka (agent sesji głównej,
+# skill procesowy, skrypty), instalowany jak nakładka. Przewodnik: GUIDE.md (w projekcie: factory/packs/mode-talos/).
+id: mode-talos
+kind: mode
+version: 1.0.0
+title: Talos
+description: Talos — story to pull request on demand (`claude --agent talos` or /talos-story-run) — sliced plan, a commit per slice, one PR, a time and cost report.
+content_language: pl
+default: true          # zaznaczony domyślnie w instalatorze; przy aktualizacji dochodzi raz (manifest: offered)
+requires:
+  core: ">=4.0.0 <6.0.0"   # scope-reviewer i ignorowanie .claude/runs/ są w rdzeniu od 4.0.0
+
+facets:
+  - {prefix: talos-, order: 190, name: tryb Talos, question: "jak przeprowadzić historyjkę do PR automatem na żądanie"}
+
+# Skill procesowy uruchamia tylko człowiek (/talos-story-run) albo agent talos — nie należy do żadnej roli.
+standalone_skills: [talos-story-run]
+
+shared_agents:
+  # Skill procesowy ma disable-model-invocation, więc agent nie może go wczytać na starcie (`skills`) — czyta plik.
+  talos:
+    tier: std
+    main_only: true
+    description: Talos — automat „story → PR” na żądanie (uruchom `claude --agent talos` i podaj historyjkę; --auto pomija zatwierdzenie planu, --budget USD to twardy limit). Plan z kawałków, commit na kawałek, jeden PR, raport czasu i kosztu.
+    tools: ["Agent(scout, researcher, quick-fixer, scope-reviewer, architect, security-reviewer)", Read, Grep, Glob, Edit, Write, Bash]
+    prompt: |
+      Jesteś Talos — automat, który zamienia jedną historyjkę w jeden PR. Pracujesz wyłącznie w tym trybie.
+      Zanim zrobisz cokolwiek innego, przeczytaj narzędziem Read `.claude/skills/talos-story-run/SKILL.md` i prowadź
+      przebieg dokładnie według niego: start (`run_report.py start`), przyjęcie historyjki, plan z kawałków, pętla
+      kawałka, zakończenie z PR i `run_report.py finish`.
+      Opcje bierzesz z wiadomości człowieka: `--auto` — plan nie czeka na akceptację; `--budget <USD>` — twardy STOP
+      po kawałku, który przekroczy budżet. Bez historyjki w wiadomości poproś o nią jednym zdaniem.
+      Najtaniej i najprościej: kryteria akceptacji, nic ponad nie; przypadki brzegowe do `parked.md`; najtańszy
+      wystarczający wykonawca; najwyżej 2 próby naprawy na bramkę, potem blok STOP. Nie scalasz PR.
