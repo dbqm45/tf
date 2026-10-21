@@ -213,7 +213,8 @@ class Plan:
     def copy(self, src: Path | None, rel: str, data: bytes | None = None) -> None:
         """Plik fabryki `src` (albo gotowa treść `data`, np. złożona z rdzenia i nakładek) pod ścieżką `rel`."""
         if data is None:
-            data = retarget(src.read_bytes()) if rel.endswith((".yml", ".json", ".md")) else src.read_bytes()
+            # tylko workflow CI fabryki; w skillach i scenariuszach `tests/` to testy projektu (ustawienia: compose_settings)
+            data = retarget(src.read_bytes()) if rel in SHARED_ONLY_FILES.values() else src.read_bytes()
         dst, new_hash = self.root / rel, sha(data)
         old_hash = (self.old or {}).get(rel)
         self.files[rel] = new_hash
