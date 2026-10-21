@@ -114,6 +114,14 @@ i przejścia · etap oferty · kto zatwierdza aneks · wypowiedzenie · forma cz
   wersja z dnia zamówienia.
 - **Autoryzacja poza archetypem**: „kto zatwierdza aneks” liczy warstwa polityk; archetyp pilnuje struktury (okresy
   jednego typu warunku bez nakładania).
+- **Oferta to nie zamówienie:** oferta to propozycja jednej strony z terminem ważności, wersjami i negocjacją;
+  nie rezerwuje zasobów i nikogo nie wiąże do akceptacji. Zamówienie to zobowiązanie z realizacją, płatnością
+  i reklamacją. „Zamówienie ze statusem oferta” miesza dwa cykle życia i dwa zestawy reguł. Akceptacja oferty to
+  zdarzenie przełomowe, które **tworzy** zamówienie albo umowę z warunkami skopiowanymi z zaakceptowanej wersji.
+- **Zakup to nie zamówienie:** zamówienie wyraża, czego klient chce; zakup (transakcja sprzedaży) to fakt rozliczenia,
+  czyli płatność, faktura i przeniesienie własności (Accounting). Jedno zamówienie bywa realizowane kilkoma zakupami
+  lub dostawami, a zakup w sklepie stacjonarnym nie ma zamówienia. Wspólna tabela `orders` ze statusem `paid` ukrywa te
+  różnice.
 
 ## Kontrola jakości
 - [ ] strony występują w rolach z Party, bez flag
@@ -158,6 +166,8 @@ Odczyt 2026-10-17.
   2003/2004) — wyłącznie nazwy archetypów Order i Rule; treści nie weryfikowano (wtórne).
 - **Kodeks cywilny, art. 77² (forma dokumentowa, od 8.09.2016; ustawa z 10.07.2015, Dz.U. 2015 poz. 1311), art. 77³
   (dokument), art. 78¹ (forma elektroniczna)** — kontekst prawny z komentarza (wtórne); do potwierdzenia przez prawnika.
+- Oferta a zamówienie i zakup a zamówienie — na podstawie programu szkolenia „DDD — zaawansowane techniki
+  modelowania i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21); opisane własnymi słowami.
 
 Reszta (umowa ramowa vs zamówienie, kopia vs odwołanie do wersji warunków, drugi zakres dat, reguły i pułapki) to
 nasze wnioski modelowe, nieprzypisane autorom. Opisane własnymi słowami; treść książek i norm nie była cytowana.

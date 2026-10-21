@@ -66,6 +66,24 @@
       "expect": "no-trigger",
       "prompt": "Moduł Katalog ma wielu odbiorców; chcemy mu dać jeden stabilny, udokumentowany kontrakt API zamiast integracji szytych na miarę. Jaki wzorzec z mapy kontekstów? Odpowiedz zwięźle.",
       "neighbor": "ddd-context-mapping"
+    },
+    {
+      "id": "polityka-zmienna-w-czasie",
+      "expect": "trigger",
+      "prompt": "Regulamin naliczania kar zmienia się co rok, a reklamacje z poprzednich lat trzeba rozliczać według starych zasad. Jak zamodelować te reguły w domenie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wersj\\w*"
+          ],
+          [
+            "dat\\w*|obowiązywa\\w*|od dnia"
+          ],
+          [
+            "polityk\\w*|strategi\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

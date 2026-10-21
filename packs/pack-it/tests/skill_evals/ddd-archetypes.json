@@ -85,6 +85,21 @@
       "expect": "no-trigger",
       "neighbor": "docs-tech-writing",
       "prompt": "Chcę zapisywać decyzje architektoniczne jako dokumenty ADR w repozytorium. Jaki szablon i jak nazywać pliki? Odpowiedz zwięźle."
+    },
+    {
+      "id": "oferta-to-nie-zamowienie",
+      "expect": "trigger",
+      "prompt": "W naszym systemie oferta dla klienta to po prostu zamówienie ze statusem 'oferta', a po akceptacji zmieniamy status na 'zamówione'. Czy to dobry model? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "oferta\\w* (to nie|nie jest)|osobn\\w* pojęci|inn\\w* (cykl|reguł)"
+          ],
+          [
+            "status"
+          ]
+        ]
+      }
     }
   ]
 }
