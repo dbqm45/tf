@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Testy hooków bezpieczeństwa: python3 tests/test_hooks.py"""
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -9,8 +10,9 @@ from pathlib import Path
 HOOKS = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir()) / ".claude" / "hooks"
 
 
-def run(hook: str, payload) -> tuple[int, str, str]:
+def run(hook: str, payload, env: dict | None = None) -> tuple[int, str, str]:
     p = subprocess.run([sys.executable, str(HOOKS / hook)], input=payload if isinstance(payload, str) else json.dumps(payload),
+                       env={**os.environ, **(env or {})},
                        capture_output=True, text=True, timeout=10)
     return p.returncode, p.stdout, p.stderr
 
@@ -166,6 +168,12 @@ def main() -> int:
         if got != want:
             fails += 1
             print(f"✗ cleanroom web {cmd!r}: oczekiwano {want}, jest {got}")
+    # przywrócenie poprzedniego zachowania: CLAUDE_CLEANROOM_DISABLE=web (lista nazw profili po przecinku)
+    _, out, _ = run("cleanroom_guard.py", {"tool_name": "Bash", "tool_input": {"command": "cat README.md"}, "agent_type": R},
+                    env={"CLAUDE_CLEANROOM_DISABLE": "qa, web"})
+    if decision(out) != "none":
+        fails += 1
+        print("✗ cleanroom web: CLAUDE_CLEANROOM_DISABLE=web nie wyłącza profilu")
     for tool, ti in (("Read", {"file_path": "README.md"}), ("WebFetch", {"url": "https://example.org"})):
         _, out, _ = run("cleanroom_guard.py", {"tool_name": tool, "tool_input": ti, "agent_type": R})
         if decision(out) != "none":
@@ -197,7 +205,7 @@ def main() -> int:
             if code != want:
                 fails += 1
                 print(f"✗ scan_secrets {content!r}: oczekiwano exit {want}, jest {code} {err.strip()[:80]}")
-    total = len(BASH_CASES) + len(PATH_CASES) + len(SECRET_CASES) + len(GUARDS) * len(ODD_PAYLOADS) + len(WEB_CASES) + 2
+    total = len(BASH_CASES) + len(PATH_CASES) + len(SECRET_CASES) + len(GUARDS) * len(ODD_PAYLOADS) + len(WEB_CASES) + 3
     print(f"{'✓' if not fails else '✗'} {total - fails}/{total} testów hooków")
     return 1 if fails else 0
 

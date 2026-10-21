@@ -95,6 +95,32 @@ zawiedzie (brak pliku, wyjątek, przekroczony czas), akcja jest blokowana, a nie
 to pole do hooków już obecnych w projekcie, chyba że użytkownik ustawił inną wartość. Profil `web` w
 `cleanroom.json` ogranicza agenta z dostępem do sieci (`researcher`) do pojedynczych poleceń z listy.
 
+Przywrócenie poprzedniego zachowania (zmiana niezgodna wstecz w 4.0.0):
+- hook ma przepuszczać akcję, gdy zawiedzie — w `.claude/settings.local.json` (albo `settings.json`) ustaw przy nim
+  `"onFailure": "continue"`; aktualizacja nie nadpisuje tej wartości;
+- researcher ma mieć pełną powłokę — zmienna środowiskowa `CLAUDE_CLEANROOM_DISABLE=web` (lista nazw profili po
+  przecinku, np. w `env` ustawień); plik `cleanroom.json` jest nadpisywany przy aktualizacji, zmienna nie.
+
+### Talos — automat „story → PR” na żądanie
+Tryb włączany tylko przez człowieka: `claude --agent talos` (agent pracuje wyłącznie w nim) albo
+`/core-story-run <story> [--auto] [--budget USD]` w dowolnej personie. Skill ma `disable-model-invocation`, więc
+model nie włączy automatu sam — i dlatego Talos czyta `SKILL.md` narzędziem Read (skilla z tym polem nie da się
+wczytać agentowi przez `skills`).
+- **Przebieg:** przyjęcie historyjki (kryteria akceptacji albo pytania/STOP) → plan z ≤5 kawałków pionowych
+  (każdy scalany i działający) → zatwierdzenie planu przez człowieka (`--auto` pomija) → na kawałek: test
+  czerwony → kod → weryfikacja → przegląd zakresu (`scope-reviewer`, świeży kontekst) → commit → jeden PR.
+- **KISS:** przypadki brzegowe, pomysły i ryzyka spoza kryteriów trafiają do `parked.md`, a ich lista do opisu PR —
+  nie do kodu. `scope-reviewer` wskazuje kod spoza zakresu do wycofania.
+- **Koszt:** bez domyślnego budżetu, ale zawsze najtańszy wystarczający wykonawca, czytanie raz, fazy warunkowe
+  (dokumentacja, przegląd bezpieczeństwa, architekt) tylko z powodem, najwyżej 2 próby naprawy na bramkę.
+  `--budget` to twardy STOP sprawdzany po kawałku (`run_report.py status`).
+- **Pliki:** `.claude/runs/<data>-<slug>/` — `story.md`, `plan.md` (stan wznowienia), `parked.md`, `report.md`;
+  katalog jest ignorowany przez git.
+- **Raport:** `factory/run_report.py finish` sumuje transkrypty sesji i podagentów od startu przebiegu — czas,
+  tokeny (wejście, wyjście, odczyt i zapis cache 5 min / 1 h), koszt wg cennika z `config.yaml`, modele i agenci.
+  Liczy skrypt, nie model, więc raport nie kosztuje tokenów poza wklejeniem kilkunastu linii wyniku. Koszt to szacunek
+  z cennika API (przy subskrypcji — równowartość).
+
 ### Rozwój fabryki
 - `python3 tools/workspace.py assemble|check --packs <wybór>` — projekt złożony z bieżących źródeł w `.work/`
   (testy i `build.py` działają w układzie instalacji, nie w drzewie źródłowym).

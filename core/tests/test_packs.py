@@ -152,6 +152,12 @@ def main() -> int:
         check("## Typowe sytuacje" in rendered["bolek/bolek.md"] and "odsyłasz do cennika" in rendered["bolek/bolek.md"]
               and "## Typowe sytuacje" not in rendered["ala/ala.md"], "P-25: pole persony `scenarios`")
         check("effort: low" in rendered["shared/scout.md"].split("---")[1], "P-26: tier fast z effort low")
+        talos = rendered.get("shared/talos.md", "")
+        tfm = talos.split("---")[1] if talos else ""
+        check("Agent(scout, researcher, quick-fixer, scope-reviewer, architect, security-reviewer)" in tfm
+              and ".claude/skills/core-story-run/SKILL.md" in talos and "skills:" not in tfm and "maxTurns" not in tfm
+              and "`talos`" not in rendered["ala/ala.md"] and "`scope-reviewer`" in rendered["ala/ala.md"],
+              "P-30: talos — sesja główna z listą agentów, czyta skill procesowy plikiem; scope-reviewer dla person")
         so = (cfg0.get("sources_only_note") or "").strip()
         check(so and so.splitlines()[0] in rendered["ala/ala-rola-a.md"] and so.splitlines()[0] in rendered["consult/a-consult.md"]
               and so.splitlines()[0] not in rendered["bolek/bolek-rola-b.md"],

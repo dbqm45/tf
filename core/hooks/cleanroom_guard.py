@@ -11,6 +11,7 @@ Profile z .claude/cleanroom.json:
   polecenia, np. `npm view`), bez łączenia poleceń, podstawień i przekierowań; czytanie bez ograniczeń.
 - `block_tools`: narzędzia zablokowane dla profilu (np. Bash, który ominąłby reguły).
 Agent spoza profili: bez zmian. Hook działa w subagentach (pole `agent_type`).
+`CLAUDE_CLEANROOM_DISABLE=web,qa` wyłącza wymienione profile (np. przywrócenie pełnej powłoki researchera).
 """
 import fnmatch
 import json
@@ -147,8 +148,9 @@ def main() -> None:
         sys.exit(0)
     cwd = data.get("cwd") if isinstance(data.get("cwd"), str) else None
     project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or cwd or os.getcwd())
+    off = {x.strip() for x in os.environ.get("CLAUDE_CLEANROOM_DISABLE", "").split(",") if x.strip()}
     prof = next((p for p in load_config(project).get("profiles", [])
-                 if any(fnmatch.fnmatch(agent, a) for a in p.get("agents", []))), None)
+                 if p.get("name") not in off and any(fnmatch.fnmatch(agent, a) for a in p.get("agents", []))), None)
     if not prof:
         sys.exit(0)
     mode = prof.get("mode", "denylist")

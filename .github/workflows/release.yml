@@ -41,6 +41,20 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pyyaml
+      # Wydanie uruchamia `workspace.py check --packs all`, a w nim render strony w Chromium — ten sam krok co
+      # w factory-checks.yml (bez niego test_fetch_page pada i żadne wydanie nie powstaje).
+      # Ubuntu 23.10+ blokuje nieuprzywilejowane przestrzenie nazw użytkownika, a bez nich Chromium nie ma piaskownicy
+      # (test_fetch_page renderuje stronę). Zezwolenie tylko dla tej jednej przeglądarki, profilem AppArmor — „Option 2”
+      # z chromium/src docs/security/apparmor-userns-restrictions.md; blokada dla reszty systemu i piaskownica zostają.
+      - name: Profil AppArmor dla Chromium (test_fetch_page)
+        run: |
+          [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] || exit 0
+          browser=$(python3 -c 'import importlib.util as u; s = u.spec_from_file_location("fp", "core/skills/core-source-research/scripts/fetch_page.py"); m = u.module_from_spec(s); s.loader.exec_module(m); print(m.find_browser() or "")')
+          [ -n "$browser" ] || exit 0
+          browser=$(readlink -f "$browser")
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile tf-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$browser" \
+            | sudo tee /etc/apparmor.d/tf-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/tf-chromium
 
       - name: Podnieś wersję z commitów od ostatniego tagu
         id: bump

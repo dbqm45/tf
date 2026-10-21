@@ -65,6 +65,26 @@ Odhaczone pozycje są zrobione (`- [x]`). Źródła faktów: dokumentacja code.c
 - [ ] **G. Wydanie:** `workspace.py matrix` i `refs`, PR. Wersję i wpis CHANGELOG liczy workflow `release` z Conventional
   Commits po scaleniu (minor za każdy PR z `feat`).
 
+## Talos — tryb „story → PR” na żądanie
+
+Decyzje człowieka (2026-10-21): nazwa Talos; `--auto` pomija zatwierdzenie planu; jedna historyjka = jeden PR,
+kawałek planu = osobny commit; katalog przebiegów zapisywany, ale ignorowany przez git; bez domyślnego budżetu —
+zawsze najtańszy wystarczający model i najmniej pracy; `--budget` opcjonalny jako twardy STOP.
+
+- [x] **T1. Raport przebiegu** `factory/run_report.py` (TDD): `start` zakłada `.claude/runs/<data>-<slug>/`
+  (run.json, story.md, plan.md, parked.md); `finish` sumuje transkrypty sesji i podagentów od startu — czas, tokeny
+  (wejście, wyjście, odczyt i zapis cache 5 min / 1 h), koszt wg cennika z `config.yaml`, modele i agenci — i pisze
+  `report.md`. Liczy skrypt, nie model.
+- [x] **T2. Ignorowanie** `.claude/runs/` (instalator: `info/exclude` i `.gitignore` trybu `--shared`).
+- [x] **T3. Skill procesowy `core-story-run`** (tylko ręcznie): przyjęcie story, plan z pionowych kawałków (INVEST,
+  każdy kawałek scalany i działający), pętla kawałka (test czerwony → kod → weryfikacja → przegląd zakresu → commit),
+  przypadki brzegowe do `parked.md`, fazy warunkowe, STOP, PR, raport. Najpierw scenariusze ewaluacji.
+- [x] **T4. Agent `talos`** (`claude --agent talos`, tylko ten tryb) i agent `scope-reviewer` (przegląd diffu względem
+  planu w świeżym kontekście: kod spoza zakresu → wycofanie i wpis w `parked.md`). Talos czyta skill plikiem: skilla
+  z `disable-model-invocation` nie da się wczytać przez `skills` (dokumentacja „Subagents”). Agenci sesji głównej
+  (`main_only`) nie dostają `maxTurns` — jak persony.
+- [ ] **T5. Dokumentacja** (`docs/insights.md`), bramka skilla, `workspace.py matrix` i `refs`, PR.
+
 ### Na później (decyzja człowieka)
 - [ ] Nakładki jako pluginy Claude Code (eksport). Ograniczenia: agenci z pluginu ignorują `permissionMode`, `hooks`,
   `mcpServers`, `initialPrompt`; plugin nie wczytuje `CLAUDE.md`; `settings.json` pluginu przyjmuje tylko `agent`

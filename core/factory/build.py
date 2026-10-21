@@ -589,11 +589,14 @@ Nie dziel jednej spójnej zmiany (wspólne pliki, typy, decyzje) między kilku w
 
 
 def render_shared(name: str, spec: dict, cfg: dict) -> tuple[str, str]:
+    tf = tier_fields(cfg, spec["tier"])
+    if spec.get("main_only"):          # sesja główna (`claude --agent`) jak persona: bez limitu tur podagenta
+        tf.pop("maxTurns", None)
     fm = frontmatter({
         "name": name,
         "description": spec["description"],
         "tools": spec["tools"],
-        **tier_fields(cfg, spec["tier"]),
+        **tf,
         "skills": spec.get("skills") or [],
         "memory": spec.get("memory"),
     })

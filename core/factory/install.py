@@ -360,7 +360,7 @@ def ignored_paths(files: dict[str, str] | None = None) -> list[str]:
     out = ["factory/", ".claude/agents/_generated/", ".claude/tests/", ".claude/catalog.md", ".claude/cleanroom.json",
            ".claude/JEV.md", ".claude/settings.local.json", "CLAUDE.local.md", MANIFEST, BACKUP_DIR + "/",
            ".claude/agent-memory/", ".claude/factory-profile.json", ".claude/factory-settings.json",
-           ".claude/skill-gate.json", ".claude/scratch/", "*.factory-new"]
+           ".claude/skill-gate.json", ".claude/scratch/", ".claude/runs/", "*.factory-new"]
     rels = sorted(files or {})
     out += list(dict.fromkeys("/".join(r.split("/")[:3]) + "/" for r in rels if r.startswith(".claude/skills/")))
     out += [r for r in rels if r.startswith(".claude/hooks/")]

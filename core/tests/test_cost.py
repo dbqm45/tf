@@ -252,8 +252,9 @@ def main() -> int:
     # ── jednorazowe pliki objaśnień (HTML, diagramy) w .claude/scratch/ nie trafiają do gita (core-problem-routing) ──
     total += 1
     gi = ROOT / "factory" / "gitignore"
-    if ".claude/scratch/" not in inst.ignored_paths() or (gi.exists() and ".claude/scratch/" not in gi.read_text(encoding="utf-8")):
-        fails.append("install: .claude/scratch/ poza ignorowanymi ścieżkami")
+    for ign in (".claude/scratch/", ".claude/runs/"):     # runs/: przebiegi Talosa (core-story-run)
+        if ign not in inst.ignored_paths() or (gi.exists() and ign not in gi.read_text(encoding="utf-8")):
+            fails.append(f"install: {ign} poza ignorowanymi ścieżkami")
 
     # ── gotowa konfiguracja piaskownicy opt-in: tylko klucz sandbox, bez furtek ──
     total += 1
