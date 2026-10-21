@@ -142,6 +142,36 @@ liniowy i znacznie wyższy niż subagentów; uprawnienia jak u prowadzącego.
   treść ze stanu bieżącego (polecenia `tf`, persony, nakładki, tryby, workflows, koszty, hooki, aktualizacje);
   fakty sprawdzone w plikach; PR.
 
+## Event Storming prowadzony przez fabrykę
+
+Prośba człowieka (2026-10-21): fabryka ma umieć przeprowadzić Event Storming; wziąć z artykułów to, co pasuje,
+bez budowania „super narzędzia”. Źródła:
+- M. Bentley, „Building an Agentic AI Platform to Facilitate Event Storming Sessions” (Medium, 12.10.2026);
+- JIN, „Domain-Driven Design: Using Event Storming and Context Mapping to Draw Precise Boundaries” (Medium, 10.05.2026).
+
+Bierzemy:
+- fazy z kryteriami wyjścia, a reguły tylko bieżącej fazy;
+- facylitator pyta, nie podaje odpowiedzi: jedno pytanie albo jeden mały ruch na turę;
+- tablica jako dziennik zdarzeń z cofnięciem;
+- ekspert domeny tylko do odczytu i przegląd fazy w świeżym kontekście;
+- bramka człowieka przy agregatach i mapie kontekstów (błędy modelu kumulują się w późnych krokach);
+- typy subdomen i wzorzec na każdej strzałce mapy.
+
+Nie bierzemy: autonomicznego zegara (30 s / 3 min), interfejsu tablicy ani konfiguracji agentów per tablica.
+
+- [x] **E1. `ddd-event-storming/scripts/es_board.py`** (TDD), zero tokenów:
+  - dziennik `board.jsonl` (append-only), polecenia `init`, `add`, `edit`, `remove`, `phase`, `undo`, `show`
+    (Markdown wg `board-template.md` + Mermaid) i `check`;
+  - `check` sprawdza strukturę według fazy: typy kartek dozwolone w fazie (mieszanie poziomów), zdarzenie bez
+    wyzwalacza, komenda bez zdarzenia, polityka bez „kiedy”/„wtedy”, komenda bez agregatu, duży agregat, agregat
+    bez kontekstu, kontekst bez typu subdomeny, relacja bez wzorca mapy, otwarte hot spoty.
+- [x] **E2. `references/fazy-agenta.md`:** 5 faz (kontekst sesji, zdarzenia, komendy i polityki, agregaty, podział
+  na konteksty i mapa). Dla każdej fazy: cel, dozwolone kartki, ruchy facylitatora, kryterium wyjścia, bramka
+  człowieka, przegląd, typowe błędy. Do tego protokół tury.
+- [x] **E3. `SKILL.md` §7** przepisany na prowadzenie sesji ze skryptem i kartami faz; ekspert domeny i przegląd
+  jako wykonawcy tylko do odczytu; uprawnienie dla skryptu w `pack-it/settings.json`.
+- [x] **E4.** Scenariusze ewaluacji, bramka skilla, `insights.md`, matrix, `refs`, PR.
+
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
   w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.

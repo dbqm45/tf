@@ -140,6 +140,18 @@ Wyłączenie po sesji jest częścią skilla, bo z włączoną flagą podagent n
 zespołu. Członkowie to wykonawcy person. Pole `skills` z pliku agenta członka nie działa, ale wykonawcy fabryki
 i tak wczytują skille narzędziem Skill według swojej treści. Zespół działa tylko w sesji interaktywnej.
 
+### Event Storming prowadzony przez agenta (`ddd-event-storming`)
+Agent jest facylitatorem i skrybą: pyta, a wiedzę i decyzje dają ludzie. Sesja idzie przez 5 faz (kontekst sesji,
+zdarzenia, komendy i polityki, agregaty, konteksty i mapa), a agent wczytuje tylko kartę bieżącej fazy
+(`references/fazy-agenta.md`).
+- **Skrypt `es_board.py`** prowadzi tablicę bez tokenów: dziennik zdarzeń z cofnięciem, odrzucanie kartek
+  z późniejszej fazy, kontrola struktury fazy i zapis `board.md` z Mermaid.
+- **Bramki:** przy agregatach i mapie kontekstów obowiązuje przegląd w świeżym kontekście i zgoda człowieka,
+  bo w późnych krokach błędy modelu się kumulują.
+- **Źródło pomysłów:** artykuły M. Bentleya (StormSpace: fazy, facylitator pytający, ekspert domeny, przegląd)
+  i JIN-a (konteksty, mapa, typowe błędy). Bez interfejsu tablicy i autonomicznego zegara, które pasują do
+  aplikacji webowej, a nie do rozmowy w Claude Code.
+
 ### Workflows (`.claude/workflows/*.js`)
 Nakładka lub tryb może dostarczyć skrypty wieloagentowe Claude Code (Workflow) w katalogu `workflows/`. Instalator
 kopiuje je do `.claude/workflows/`, a w trybie prywatnym ignoruje je po nazwie pliku, więc własne workflows projektu

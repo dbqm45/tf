@@ -45,6 +45,27 @@
       "expect": "no-trigger",
       "prompt": "Na warsztacie z ekspertami jeden uczestnik dominuje, a reszta milczy. Jak to poprowadzić? Odpowiedz zwięźle.",
       "neighbor": "ddd-facilitation"
+    },
+    {
+      "id": "agent-prowadzi-sesje",
+      "expect": "trigger",
+      "prompt": "Poprowadź z nami Event Storming procesu zwrotu towaru w naszym sklepie — jesteśmy we trójkę przy komputerze. Jak będziesz to prowadzić i od czego zaczynasz? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pytani|pyta[mć]|zapytam"
+          ],
+          [
+            "faz|kontekst sesji|pytanie sesji"
+          ],
+          [
+            "zdarze"
+          ],
+          [
+            "propozycj|hot ?spot|potwierdz|zgod"
+          ]
+        ]
+      }
     }
   ]
 }

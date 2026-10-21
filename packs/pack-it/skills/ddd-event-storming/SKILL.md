@@ -108,16 +108,27 @@ silnik procesów), zapisz go po warsztacie:
 Diagram procesu nie zastępuje modelu domeny — reguły i niezmienniki zostają w agregatach i politykach.
 
 ## 7. Jak prowadzisz to jako agent (bez fizycznej ściany)
-- Zbierasz zdarzenia od użytkownika partiami (np. „wypisz 10–20 rzeczy, które się dzieją, w czasie przeszłym”).
-- Własne propozycje zawsze oznaczasz **[propozycja]** i prosisz o potwierdzenie. **Nie wymyślasz faktów biznesowych**
-  — każde założenie to hot spot.
-- Na bieżąco wyłapujesz sygnały językowe (ddd-facilitation) i zadajesz pytania modelujące (ddd-deep-modeling).
-- Stan tablicy zapisujesz plikiem wg szablonu z `references/board-template.md` w `docs/project/02-domain/event-storming/RRRR-MM-DD-<temat>.md`
+Jesteś facylitatorem: **pytasz i zapisujesz**, a wiedzę i decyzje dają ludzie. Sesja idzie przez 5 faz:
+kontekst sesji → zdarzenia → komendy i polityki → agregaty → konteksty i mapa. Wczytujesz kartę **tylko bieżącej
+fazy** z `references/fazy-agenta.md`, tam też jest protokół tury.
+- **Tablica:** `python3 .claude/skills/ddd-event-storming/scripts/es_board.py init --id RRRR-MM-DD-<temat> --topic … --question …`,
+  potem `add`/`edit`/`move`/`undo`/`resolve`. Dziennik zdarzeń jest w `docs/project/02-domain/event-storming/<id>/`,
+  a `show` zapisuje `board.md` wg `references/board-template.md`. Skrypt odrzuca kartkę późniejszej fazy
+  (mieszanie poziomów).
+- **Jedna tura to jedno pytanie albo jeden mały ruch.** Własne propozycje oznaczasz **[propozycja]** i dodajesz po
+  zgodzie. **Nie wymyślasz faktów biznesowych**: każde założenie to hot spot.
+- **Koniec fazy:** `check` musi być bez luk, a luki stają się pytaniami lub hot spotami, nie Twoimi domysłami.
+  O przejściu do następnej fazy decyduje człowiek.
+- **Agregaty i mapa kontekstów:** w tych późnych krokach błędy modelu się kumulują. Przed zgodą człowieka zleć
+  przegląd w świeżym kontekście (wykonawca tylko do odczytu, szczegóły w karcie fazy). Mapa kontekstów to ADR.
+- Na bieżąco wyłapujesz sygnały językowe (ddd-facilitation), zadajesz pytania modelujące (ddd-deep-modeling)
   i aktualizujesz słownik `docs/project/02-domain/glossary.md`.
 
 ## Materiały dodatkowe
 - `references/session-scripts.md` — scenariusze minutowe sesji Big Picture / Process / Design, przygotowanie sali, wersja zdalna.
 - `references/board-template.md` — szablon zapisu tablicy w Markdown + Mermaid.
+- `references/fazy-agenta.md` — sesja prowadzona przez agenta: protokół tury i karty 5 faz (kryteria wyjścia, bramki).
+- `scripts/es_board.py` — tablica sesji: dziennik zdarzeń z cofnięciem, kontrola struktury fazy, zapis Markdown.
 
 ## Wejście z tablicy (zdjęcie, eksport)
 Gdy dostajesz zdjęcie lub eksport ściany: czytaj **przepływ po torach** (numerowane kroki z typem kartki w nawiasie), zdarzenia
