@@ -54,6 +54,11 @@ i regulacji.
    - **polityki** — reguły konfigurujące operacje (kto, kiedy, ile),
    - **wsparcie decyzji** — analizy i rekomendacje na podstawie danych operacyjnych.
 
+   Warstwy zależą tylko od niższych: polityka konfiguruje operacje, ale operacje nie znają polityk z nazwy. To wersja
+   warstw odpowiedzialności Evansa (*Domain-Driven Design*, 2003, rozdz. 16 „Responsibility Layers”; u Evansa
+   przykładowo także warstwa zobowiązań [niezweryfikowane: nazwy warstw ze źródeł wtórnych]). Poziom wiedzy i operacji:
+   ddd-deep-modeling, `.claude/skills/ddd-deep-modeling/references/rozplatywanie.md`.
+
 ## Mapper — wspólny protokół (każdy archetyp)
 Każdy plik `references/<archetyp>.md` to **procedura mapowania** wymagań na archetyp: test dopasowania → pytania → kroki →
 kontrola decyzji → wynik. Ten protokół jest wspólny; pliki archetypów zawierają tylko to, co specyficzne. Wywołanie wprost:

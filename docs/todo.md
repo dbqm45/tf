@@ -187,22 +187,22 @@ Analiza luk: każdy temat programu porównany ze skillami, z dowodem `plik:linia
 - łańcuch zobowiązań (Chain of Responsibility).
 
 Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring), a kończy bramką.
-- [ ] **D1. ddd-deep-modeling:** jedno źródło prawdy jako technika rozplątywania; ukryte powiązanie wiele do wielu
+- [x] **D1. ddd-deep-modeling:** jedno źródło prawdy jako technika rozplątywania; ukryte powiązanie wiele do wielu
   (pojęcie do nazwania); status to nie mechanizm rozszerzania; dwa poziomy modelu (Knowledge i Operations Level).
-- [ ] **D2. ddd-tactical-design + `references/reguly-dynamiczne.md`:**
+- [x] **D2. ddd-tactical-design + `references/reguly-dynamiczne.md`:**
   - polityki jako funkcje, ich kompozycja w łańcuchy i drzewa, fabryka polityk, dekorator polityki;
   - reguły zmienne w czasie (wersja polityki jako nowa klasa wybierana datą) i reguły zależne od historii zdarzeń;
   - scoring;
   - agregat jako maszyna stanów.
-- [ ] **D3. ddd-archetypes:**
+- [x] **D3. ddd-archetypes:**
   - `product.md`: kanał dystrybucji; PIM a Inventory; poczekalnia importu;
   - `document.md`: obieg a redagowanie dokumentu;
   - `agreement.md`: oferta to nie zamówienie, zakup to nie zamówienie;
   - `SKILL.md`: warstwy odpowiedzialności (Evans) z atrybucją.
-- [ ] **D4. eng-design-patterns:** Role Object i Extension Object (nowe pliki, wiersze w tabeli objawów).
-- [ ] **D5. be-api-design:** model dojrzałości Richardsona; dokument REST jako komenda.
-- [ ] **D6. arch-multi-tenancy:** wersja zachowania i API per najemca; wybór handlera komendy po tenantId.
-- [ ] **D7.** Bramki zmienionych skilli, `refs`, matrix, PR.
+- [x] **D4. eng-design-patterns:** Role Object i Extension Object (`references/poza-gof.md`, wiersze w tabeli objawów).
+- [x] **D5. be-api-design:** model dojrzałości Richardsona; dokument REST jako komenda.
+- [x] **D6. arch-multi-tenancy:** wersja zachowania i API per najemca; wybór handlera komendy po tenantId.
+- [x] **D7.** Bramki zmienionych skilli, `refs`, matrix, PR.
 
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek

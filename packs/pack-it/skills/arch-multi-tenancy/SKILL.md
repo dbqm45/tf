@@ -5,7 +5,7 @@ metadata:
   widocznosc: nazwa
   przeglad: 2027-10-20
   katalog: "Użyj, gdy projektujesz lub przeglądasz SaaS obsługujący wielu klientów (najemców, tenantów) — wybór modelu izolacji (silos, pula, model mieszany) z kryteriami, kontekst najemcy w żądaniu HTTP, kolejce, zadaniu w tle, cache i logach, izolacja w bazie (kolumna najemcy z RLS w PostgreSQL, schemat lub baza na najemcę), hałaśliwy sąsiad (limity, kwoty, koszt per najemca), migracje na wielu najemcach, testy izolacji jako stała część regresji, eksport i usunięcie danych klienta, wejście i odejście najemcy. Nie do ogólnego schematu i indeksów (be-database), logowania i ról użytkowników (be-auth-security), RODO (arch-privacy-compliance), mapy przepisów (arch-eu-product-law) ani izolacji najemców w systemach AI (arch-ai-solutions)."
-  slowa: "multi-tenancy, multi-tenant, wielodzierżawność, najemca, tenant, tenant_id, izolacja klientów, izolacja danych klientów, firma A widzi dane firmy B, wyciek między klientami, silo, pool, bridge, baza na klienta, schemat na klienta, row level security, RLS, polityka wierszy, kontekst najemcy, kontekst tenanta w kolejce, zadanie w tle innego klienta, noisy neighbor, hałaśliwy sąsiad, limity na klienta, kwoty, koszt per klient, migracja wielu baz klientów, onboarding klienta SaaS, offboarding, usunięcie danych klienta, eksport danych klienta"
+  slowa: "multi-tenancy, multi-tenant, wielodzierżawność, najemca, tenant, tenant_id, izolacja klientów, izolacja danych klientów, firma A widzi dane firmy B, wyciek między klientami, silo, pool, bridge, baza na klienta, schemat na klienta, row level security, RLS, polityka wierszy, kontekst najemcy, kontekst tenanta w kolejce, zadanie w tle innego klienta, noisy neighbor, hałaśliwy sąsiad, limity na klienta, kwoty, koszt per klient, migracja wielu baz klientów, onboarding klienta SaaS, offboarding, usunięcie danych klienta, eksport danych klienta, reguła dla jednego klienta, fork dla klienta, konfiguracja per najemca, wersja API per klient"
 ---
 
 # Wielodzierżawność (multi-tenancy) w SaaS
@@ -71,6 +71,27 @@ dla wszystkich modeli.
 - Testy w zestawie regresji (qa-regression) i w CI przy każdej zmianie; nowa tabela bez polityki RLS = czerwony test
   (zapytanie do katalogu: tabele z kolumną najemcy bez włączonego RLS).
 
+## 7. Zachowanie per najemca bez forków
+Gdy klient chce innej reguły (zatwierdzanie, wycena, limity) albo starszej wersji API, nie zakładasz dla niego gałęzi
+ani kopii kodu. Fork każdego klienta mnoży koszt każdej poprawki i każdego wydania. Od najlżejszego:
+- **konfiguracja najemcy:** parametry istniejącej reguły (próg kwoty, liczba akceptujących) w rejestrze najemców,
+  z wersją i audytem zmian;
+- **flaga funkcji per najemca:** włączenie gotowego wariantu (eng-continuous-delivery); flaga ma właściciela i datę
+  usunięcia;
+- **polityka per najemca:** wariant reguły jako polityka (strategia) w domenie, wybierana przez fabrykę po
+  identyfikatorze najemcy i z konfiguracji
+  (`.claude/skills/ddd-tactical-design/references/reguly-dynamiczne.md`). Rdzeń nie zna nazw klientów;
+  `if (tenantId == "ACME")` w logice to fork w przebraniu;
+- **handler komendy per najemca:** gdy różni się cały przebieg, rejestr handlerów wybiera implementację po
+  `tenantId` z kontekstu najemcy, a domyślny handler obsługuje pozostałych. Wariant ma testy jak rdzeń;
+- **wersja API per najemca:** najemca jest przypięty do wersji kontraktu (be-api-design: wersjonowanie) i przechodzi na
+  nową w ustalonym oknie; brama albo adapter tłumaczy starą wersję na nowy model, logika jest jedna.
+
+Zasady: wariant najemcy to element produktu (nazwany, przetestowany, z właścicielem), a nie wyjątek w kodzie. Gdy
+wariantów jest coraz więcej, sprawdź, czy to nie kilka planów produktu albo osobny kontekst (ddd-strategic-analysis).
+Dostawcy chmury w wytycznych dla SaaS zalecają konfigurację i flagi funkcji zamiast osobnych wersji kodu per klient
+[niezweryfikowane: strony Azure Architecture Center i AWS SaaS Lens niedostępne z tej sesji].
+
 ## Zasady
 - Kontekst najemcy jawny i sprawdzony po stronie serwera na każdej ścieżce; brak kontekstu = błąd, nie „wszyscy”.
 - Izolację udowadnia test z dwoma najemcami, nie przegląd kodu.
@@ -96,6 +117,9 @@ innego klienta.”
 - [ ] limity i koszt per najemca
 - [ ] migracje dla wszystkich najemców z wznowieniem; eksport i usunięcie danych klienta
 - [ ] testy izolacji z dwoma najemcami w regresji i CI
+- [ ] warianty zachowania per najemca jako konfiguracja, flaga, polityka lub handler, bez forków kodu
 
 ## Źródła
 Opisane własnymi słowami; fakty i daty dostępu w `references/rls-postgresql.md`.
+Sekcja 7 na podstawie programu szkolenia „DDD — zaawansowane techniki modelowania i archetypy” (Bottega IT Minds,
+materiał od człowieka, 2026-10-21).

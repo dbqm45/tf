@@ -61,6 +61,24 @@
       "expect": "no-trigger",
       "prompt": "Jakie indeksy złożone założyć w PostgreSQL na tabeli orders pod zapytania po customer_id i created_at?",
       "neighbor": "be-database"
+    },
+    {
+      "id": "komenda-jako-zasob",
+      "expect": "trigger",
+      "prompt": "Mamy operację 'zatwierdź reklamację', która nie pasuje do CRUD na zasobie reklamacji. Jak ją wystawić w API HTTP w duchu REST? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "POST"
+          ],
+          [
+            "zasób\\w*|dokument\\w*"
+          ],
+          [
+            "komend\\w*|akcj\\w*|decyzj\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

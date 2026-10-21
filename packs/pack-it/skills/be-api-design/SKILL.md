@@ -12,7 +12,10 @@ metadata:
 ## Zasoby i metody
 - Rzeczowniki w liczbie mnogiej: `/users`, `/users/{id}/orders`. Maks. 2 poziomy zagnieżdżenia.
 - `GET` czyta (bez efektów ubocznych), `POST` tworzy, `PUT` zastępuje, `PATCH` częściowo zmienia, `DELETE` usuwa.
-- Akcje, które nie pasują do CRUD: `POST /orders/{id}/cancel`.
+- Akcje, które nie pasują do CRUD: `POST /orders/{id}/cancel`. Gdy akcja ma własne dane, autora, wynik albo historię
+  (zatwierdzenie, odwołanie, korekta), modeluj ją jako **zasób-dokument komendy**: `POST /complaints/{id}/approvals`
+  tworzy zatwierdzenie z identyfikatorem, które można odczytać, zaudytować i wycofać kolejną komendą
+  (`http-w-praktyce.md`, sekcja 8).
 
 ## Kody statusu
 | kod | kiedy |
@@ -54,7 +57,8 @@ Każde wejście walidowane schematem na granicy (body, query, params). Nieznane 
 - `style-i-komunikacja.md` — REST, GraphQL, gRPC, SOAP, webhooki (podpisy, ponowienia, SSRF), SSE, WebSocket,
   strumieniowanie, operacje asynchroniczne (`202`), brama API i BFF.
 - `http-w-praktyce.md` — cache HTTP (`Cache-Control`, `ETag`/304, `Vary`), negocjacja treści (406/415), limity żądań
-  (algorytmy, 429, nagłówki RateLimit), paginacja kursorowa, filtry i sortowanie, batch vs bulk (207), ponowienia, HATEOAS.
+  (algorytmy, 429, nagłówki RateLimit), paginacja kursorowa, filtry i sortowanie, batch vs bulk (207), ponowienia, HATEOAS,
+  model dojrzałości Richardsona i komendy jako dokumenty.
 - Checklista bezpieczeństwa przed wydaniem: be-auth-security, `.claude/skills/be-auth-security/references/checklista-bezpieczenstwa-api.md`.
 - `checklista-wydajnosci-backendu.md` — checklista wydajności (wzorce cache i unieważnianie, limity czasu i ponowienia, keep-alive, asynchroniczność, skalowanie, profilowanie, logowanie asynchroniczne).
 - `cykl-zycia-i-bezpieczenstwo.md` — design-first (lint, mock), wersjonowanie i wycofywanie (`Deprecation`, `Sunset`),
