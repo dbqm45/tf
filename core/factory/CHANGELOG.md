@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.2.1] — 2026-10-21
+### Fixed
+- **ci:** warm up Chromium before tests; root cause of render timeouts (#12)
+
 ## [5.2.0] — 2026-10-21
 ### Added
 - **modes:** mode-team for experimental agent teams (opt-in) (#10)
