@@ -29,8 +29,9 @@ skill_requires:
   fw-nextjs: [fw-react]
   tool-pytest: [lang-python]
 
-# Skille technologii bez śledzenia wersji (wymiar wersjonowany, ale język bez wydań do śledzenia).
-unversioned_skills: [lang-javascript]
+# Skille technologii bez śledzenia wersji (wymiar wersjonowany, ale bez wydań do śledzenia: język; Stripe wersjonuje API
+# datą, a nie wersją paczki — wersję API opisuje skill).
+unversioned_skills: [lang-javascript, tool-stripe]
 
 # Stałe sekcje plików referencyjnych (sprawdza `build.py check`): archetypy w stylu mappera.
 reference_sections:

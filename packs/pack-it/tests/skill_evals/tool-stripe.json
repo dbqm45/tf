@@ -1,0 +1,80 @@
+{
+  "skill": "tool-stripe",
+  "scenarios": [
+    {
+      "id": "jednorazowa-platnosc-checkout",
+      "expect": "trigger",
+      "prompt": "Dodajemy do sklepu jednorazowe płatności kartą przez Stripe. Którego API użyć i jak potwierdzić opłacenie zamówienia? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Checkout Session\\w*|checkout\\.sessions"
+          ],
+          [
+            "webhook\\w*"
+          ],
+          [
+            "checkout\\.session\\.completed|async_payment_succeeded|payment_status"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "payment-method-types-karta",
+      "expect": "trigger",
+      "prompt": "W kodzie integracji Stripe mamy payment_method_types: ['card'] i Card Element na froncie. Czy to dobrze? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "dynamic\\w*|dynamiczn\\w*|pomiń|usuń|bez payment_method_types"
+          ],
+          [
+            "Payment Element"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "klucz-api-w-kodzie",
+      "expect": "trigger",
+      "prompt": "Klucz sk_live_ do Stripe trzymamy w pliku konfiguracyjnym w repozytorium. Co z tym zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "rotuj\\w*|roll|unieważni\\w*|wymień\\w*"
+          ],
+          [
+            "restricted|ograniczon\\w*|rk_"
+          ],
+          [
+            "sejf\\w*|vault|menedżer\\w* sekret\\w*|Secrets Manager|Key Vault|Secret Manager"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "aktualizacja-wersji-api",
+      "expect": "trigger",
+      "prompt": "Chcemy podnieść wersję API Stripe i SDK w Node.js. Jak to zrobić bezpiecznie, łącznie z webhookami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "changelog|lista zmian|dziennik zmian"
+          ],
+          [
+            "Stripe-Version|apiVersion"
+          ],
+          [
+            "webhook\\w*|endpoint\\w*|miejsc\\w* docelow\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "proporcja-planu-bez-dostawcy",
+      "expect": "no-trigger",
+      "prompt": "Jak zaprojektować tabelę stanów subskrypcji i decyzję o dostępie dla każdego stanu w naszym SaaS, niezależnie od dostawcy płatności? Odpowiedz zwięźle.",
+      "neighbor": "be-billing-subscriptions"
+    }
+  ]
+}

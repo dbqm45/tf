@@ -262,3 +262,15 @@ Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na
   `targets`, zaimplementowany jest tylko target `claude`. Kolejny target = renderer agentów i instrukcji (`AGENTS.md`,
   `GEMINI.md`), mapa tierów na modele dostawcy i adaptery hooków. Fakty o formatach innych narzędzi sprawdzić
   w dokumentacji przed implementacją.
+
+## Skille z zewnętrznych źródeł (Stripe, Angular, Next.js, GitHub) — adaptacja
+Źródła sklonowane 2026-10-21, audyt `skill_audit.py`: 0 ustaleń wysokiej i średniej wagi. Licencje: Stripe, Callstack,
+Angular — MIT; `vercel-labs/next-skills` bez pliku licencji (nie kopiujemy). Skille Next.js autorzy wycofali (wiedza
+przeszła do dokumentacji w paczce `next`, od 16.3), skill `github` Callstack usunął jako przestarzały (2026-08-07).
+Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy skill tylko tam, gdzie jest luka.
+- [x] **E1. Stripe:** nowy skill tool-stripe (stripe-best-practices + upgrade-stripe), powiązany z be-billing-subscriptions;
+  w `unversioned_skills`, bo Stripe wersjonuje API datą.
+- [x] **E2. fw-angular:** luki względem angular-developer i angular-new-app.
+- [x] **E3. fw-nextjs:** luki względem next-best-practices, next-cache-components, next-upgrade.
+- [x] **E4. core-git-workflow:** luki względem skilla `github` (gh CLI, stacked PR).
+- [x] **E5.** Scenariusze ewaluacji przed treścią, bramki, `refs`, matrix, osobny PR.

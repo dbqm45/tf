@@ -4,7 +4,7 @@ description: Użyj przy pracy z gitem — gałęzie, commity, pull requesty i ic
 metadata:
   przeglad: 2027-10-10
   katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
-  slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ochrona gałęzi, branch protection, konflikt, rebase, merge"
+  slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR"
 ---
 
 # Git workflow
@@ -85,6 +85,13 @@ Odwołaj się do planu kroku i wymagań (`docs/project/`), żeby przeglądający
   blokująca żyje w workflow (krok po agencie czyta werdykt), nie w odpowiedzi modelu.
 - Przegląd zgodności z planem kroku i triaż ustaleń z człowiekiem: skill przeglądu zmiany (pack-it: qa-change-review).
 
+## Scalanie i stos PR-ów
+- Jedna strategia scalania w repozytorium (squash, rebase albo merge commit); przy squash tytuł commita podajesz
+  wprost (tytuł PR z numerem). Wybór strategii i polecenia: `references/scalanie-i-stos-pr.md`.
+- **Stos PR-ów** (każdy celuje w gałąź poprzedniego): po squash pierwszego następny przenosisz
+  `git rebase --onto origin/main <stara-baza> <gałąź>`, wypychasz `--force-with-lease` (za zgodą), zmieniasz gałąź
+  docelową PR na `main` i scalasz po zielonym CI. Konflikty w trakcie pokazujesz człowiekowi.
+
 ## Konflikty
 Rozwiązuj, rozumiejąc obie strony — nigdy „weź wszystko moje”. Po rozwiązaniu uruchom testy.
 
@@ -93,3 +100,5 @@ Rozwiązuj, rozumiejąc obie strony — nigdy „weź wszystko moje”. Po rozwi
   w CI) — materiał szkoleniowy (dostęp 2026-10-09); `git help worktree`;
   dokumentacja Claude Code (code.claude.com/docs: sesje równoległe, komunikacja między sesjami, `claude agents`),
   dostęp 2026-10-18. Opisane własnymi słowami.
+- Scalanie i stos PR-ów: callstackincubator/agent-skills, skill `github` (wersja sprzed usunięcia 2026-08-07), MIT;
+  szczegóły w `references/scalanie-i-stos-pr.md`.

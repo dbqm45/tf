@@ -92,8 +92,8 @@
   "offline": "2026-10-10"
  },
  "be-billing-subscriptions": {
-  "fingerprint": "c44bc36dbdbffcc1",
-  "offline": "2026-10-20"
+  "fingerprint": "04705037fdc9bd3c",
+  "offline": "2026-10-21"
  },
  "be-database": {
   "fingerprint": "bc17e2af1902fdf3",
@@ -252,8 +252,8 @@
   "offline": "2026-10-20"
  },
  "fw-angular": {
-  "fingerprint": "10b7e9700cdf5caa",
-  "offline": "2026-10-20"
+  "fingerprint": "b0af60bf884998d8",
+  "offline": "2026-10-21"
  },
  "fw-nestjs": {
   "fingerprint": "d5815888c6024819",
@@ -268,8 +268,8 @@
   }
  },
  "fw-nextjs": {
-  "fingerprint": "fcdd27fad8fe8bca",
-  "offline": "2026-10-04"
+  "fingerprint": "58bbf8f8e0a5c32a",
+  "offline": "2026-10-21"
  },
  "fw-react": {
   "fingerprint": "2d11bd701d00bcbf",
@@ -498,6 +498,10 @@
  "tool-pytest": {
   "fingerprint": "a9fdded189f68967",
   "offline": "2026-10-04"
+ },
+ "tool-stripe": {
+  "fingerprint": "07b54094ddeca6c0",
+  "offline": "2026-10-21"
  },
  "tool-vitest": {
   "fingerprint": "28ee2d71872da596",

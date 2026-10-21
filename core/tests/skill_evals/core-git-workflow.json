@@ -136,6 +136,48 @@
           ]
         ]
       }
+    },
+    {
+      "id": "stos-pr-po-squash",
+      "expect": "trigger",
+      "prompt": "Mam trzy PR-y w stosie: #1 do main, #2 do gałęzi #1, #3 do gałęzi #2. Scaliłem #1 przez squash. Jak teraz przenieść #2 na main, żeby nie zawierał już scalonych commitów #1? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "rebase --onto"
+          ],
+          [
+            "origin/main|main"
+          ],
+          [
+            "force-with-lease"
+          ],
+          [
+            "base|bazow\\w*|gałąź docelow\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "strategia-scalania",
+      "expect": "trigger",
+      "prompt": "Kiedy scalać pull request przez squash, kiedy przez rebase, a kiedy zwykłym merge commitem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "squash"
+          ],
+          [
+            "rebase"
+          ],
+          [
+            "merge commit|commit scalając\\w*|commit merge"
+          ],
+          [
+            "histori\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

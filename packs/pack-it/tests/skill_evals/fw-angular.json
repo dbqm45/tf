@@ -69,6 +69,71 @@
           ]
         ]
       }
+    },
+    {
+      "id": "nowa-aplikacja-cli",
+      "expect": "trigger",
+      "prompt": "Utwórz nową aplikację w Angularze dla sklepu internetowego z SSR, bez pytań interaktywnych. Jakie polecenie uruchomisz i co sprawdzisz przed i po? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ng new"
+          ],
+          [
+            "--ssr"
+          ],
+          [
+            "--interactive=false",
+            "--defaults"
+          ],
+          [
+            "ng build"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ssr-tryby-tras",
+      "expect": "trigger",
+      "prompt": "W aplikacji Angular 22 z SSR strona produktu ma być prerenderowana, panel konta renderowany tylko w przeglądarce, a reszta na serwerze. Jak to skonfigurować i na co uważać przy hydratacji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "RenderMode"
+          ],
+          [
+            "Prerender"
+          ],
+          [
+            "Client"
+          ],
+          [
+            "isPlatformBrowser",
+            "DOCUMENT",
+            "afterNextRender",
+            "ten sam DOM",
+            "identyczn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "animacje-wejscia",
+      "expect": "trigger",
+      "prompt": "W Angularze 21 chcę animować pojawianie się i znikanie powiadomienia w @if. Używać @angular/animations? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "animate.enter"
+          ],
+          [
+            "animate.leave"
+          ],
+          [
+            "CSS"
+          ]
+        ]
+      }
     }
   ]
 }
