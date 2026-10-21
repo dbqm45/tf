@@ -109,6 +109,8 @@ włączany na żądanie (agent sesji głównej, skill procesowy, skrypty, testy,
   `mcpServers`, `initialPrompt`; plugin nie wczytuje `CLAUDE.md`; `settings.json` pluginu przyjmuje tylko `agent`
   i `subagentStatusLine`; nazwy z przedrostkiem (`pack-it:jan`); brak składania wkładów nakładek. Zależności:
   `dependencies` w `plugin.json` z zakresami semver rozwiązywanymi po tagach `<plugin>--v<wersja>`.
+  Analiza: `docs/plugins.md` (2026-10-21) — rekomendacja: eksport `mode-talos`, nakładki później (tylko skille),
+  rdzeń nie; czeka na decyzje (publikacja marketplace, Talos z fabryką czy samodzielny, nazwa).
 - [ ] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person.
 - [ ] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
