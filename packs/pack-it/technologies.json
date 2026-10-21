@@ -188,6 +188,17 @@
           "pytest"
         ]
       }
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "skill": "tool-stripe",
+      "detect": {
+        "npm": [
+          "stripe",
+          "@stripe/stripe-js"
+        ]
+      }
     }
   ]
 }

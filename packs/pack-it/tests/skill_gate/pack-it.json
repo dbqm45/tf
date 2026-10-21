@@ -499,6 +499,10 @@
   "fingerprint": "a9fdded189f68967",
   "offline": "2026-10-04"
  },
+ "tool-stripe": {
+  "fingerprint": "07b54094ddeca6c0",
+  "offline": "2026-10-21"
+ },
  "tool-vitest": {
   "fingerprint": "28ee2d71872da596",
   "offline": "2026-10-10"

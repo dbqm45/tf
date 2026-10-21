@@ -236,8 +236,9 @@ Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na
 Angular — MIT; `vercel-labs/next-skills` bez pliku licencji (nie kopiujemy). Skille Next.js autorzy wycofali (wiedza
 przeszła do dokumentacji w paczce `next`, od 16.3), skill `github` Callstack usunął jako przestarzały (2026-08-07).
 Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy skill tylko tam, gdzie jest luka.
-- [ ] **E1. Stripe:** nowy skill (stripe-best-practices + upgrade-stripe), powiązany z be-billing-subscriptions.
-- [ ] **E2. fw-angular:** luki względem angular-developer i angular-new-app.
-- [ ] **E3. fw-nextjs:** luki względem next-best-practices, next-cache-components, next-upgrade.
-- [ ] **E4. core-git-workflow:** luki względem skilla `github` (gh CLI, stacked PR).
-- [ ] **E5.** Scenariusze ewaluacji przed treścią, bramki, `refs`, matrix, osobny PR.
+- [x] **E1. Stripe:** nowy skill tool-stripe (stripe-best-practices + upgrade-stripe), powiązany z be-billing-subscriptions;
+  w `unversioned_skills`, bo Stripe wersjonuje API datą.
+- [x] **E2. fw-angular:** luki względem angular-developer i angular-new-app.
+- [x] **E3. fw-nextjs:** luki względem next-best-practices, next-cache-components, next-upgrade.
+- [x] **E4. core-git-workflow:** luki względem skilla `github` (gh CLI, stacked PR).
+- [x] **E5.** Scenariusze ewaluacji przed treścią, bramki, `refs`, matrix, osobny PR.

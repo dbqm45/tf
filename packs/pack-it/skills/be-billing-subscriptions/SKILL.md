@@ -13,6 +13,7 @@ metadata:
 **Rola agenta:** projektuje model subskrypcji i przepływ pieniędzy tak, żeby klient nigdy nie zapłacił dwa razy,
 dostęp zgadzał się ze stanem płatności, a każda kwota dała się odtworzyć z faktury. Źródłem prawdy o płatności jest
 dostawca płatności; źródłem prawdy o dostępie — nasza subskrypcja uzgodniona z dostawcą.
+Konkretne API, webhooki, klucze i wersje u dostawcy Stripe: tool-stripe.
 
 ## 1. Model
 - **Produkt → plan (cena) → subskrypcja → pozycje subskrypcji → faktura → płatność.** Cena jest niezmienna i wersjonowana:
