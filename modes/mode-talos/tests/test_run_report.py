@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Testy raportu przebiegu Talosa (factory/run_report.py): python3 tests/test_run_report.py"""
+"""Testy raportu przebiegu Talosa (tryb mode-talos, skill talos-story-run, scripts/run_report.py).
+python3 .claude/tests/test_run_report.py"""
 import json
 import os
 import re
@@ -8,9 +9,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "run_report.py").is_file()
-            or (p / "factory" / "packs.py").is_file())
-SCRIPT = ROOT / "factory" / "run_report.py"
+REL = Path(".claude") / "skills" / "talos-story-run" / "scripts" / "run_report.py"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / REL).is_file())
+SCRIPT = ROOT / REL
 
 
 def run(args, cwd, cfg):

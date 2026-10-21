@@ -18,7 +18,9 @@ Run it from the project directory — the project is the current directory, the 
   python3 "$TEAM_FACTORY/core/factory/install.py" --yes               # no questions: defaults or the previous choice
 
 The core is always installed. Packs (`packs/pack-*`) are chosen interactively on the first install (or with
-`--packs`); later runs keep the previous choice. A pack's required packs and the pack of the chosen working language
+`--packs`); later runs keep the previous choice. Modes (`modes/mode-*`, e.g. `mode-talos`) are on-demand ways of
+working installed like packs (`--add mode-talos`, `--remove mode-talos`). A default pack or mode that is new in this
+version is added once on update; one you removed does not come back. A pack's required packs and the pack of the chosen working language
 (e.g. `pack-editorial-pl` for `pl`) are added automatically. On the first install you also choose the working
 language (conversation, documentation; default `pl`) and the commit language (commit messages, PR titles and
 descriptions; default `en`). Both can be changed later: `tf language <code>`, `tf commit-language <code>`.
@@ -55,9 +57,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent.parent      # repozytorium fabryki: core/ i packs/
+SRC = Path(__file__).resolve().parent.parent.parent      # repozytorium fabryki: core/, packs/ i modes/
 CORE = SRC / "core"
 PACKS_SRC = SRC / "packs"
+MODES_SRC = SRC / "modes"   # tryby pracy na żądanie (kind: mode) — instalowane jak nakładki
+ITEM_DIRS = ((PACKS_SRC, "pack", "pack-"), (MODES_SRC, "mode", "mode-"))   # katalog, kind, prefiks id
 MANIFEST = ".claude/factory-manifest.json"
 BACKUP_DIR = ".claude/factory-backup"
 MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"
@@ -70,7 +74,7 @@ CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": "f
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
 CORE_FILES = {"guide/JEV.md": ".claude/JEV.md"}
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests"}
-PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json")   # → factory/packs/<id>/
+PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md")   # → factory/packs/<id>/
 SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
 USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory/config.yaml", "factory/packs/")
 ALWAYS_OWNED = (".claude/cleanroom.json",)   # składany z rdzenia i nakładek — zawsze z bieżącej wersji
@@ -87,13 +91,27 @@ def load_packs_module():
 
 
 def available_packs() -> dict[str, dict]:
+    """Nakładki z packs/ i tryby z modes/ (ten sam pack.yaml); kind i prefiks id muszą pasować do katalogu."""
     pm = load_packs_module()
     out = {}
-    for p in sorted(PACKS_SRC.glob("*/pack.yaml")) if PACKS_SRC.is_dir() else []:
-        data = pm.load_yaml(p)
-        data["_dir"] = p.parent
-        out[data.get("id") or p.parent.name] = data
+    for root, kind, prefix in ITEM_DIRS:
+        for p in sorted(root.glob("*/pack.yaml")) if root.is_dir() else []:
+            data = pm.load_yaml(p)
+            data["_dir"] = p.parent
+            pid = data.get("id") or p.parent.name
+            if data.get("kind", "pack") != kind or not pid.startswith(prefix):
+                raise ValueError(f"{pid} in {root.name}/ needs `kind: {kind}` and an id starting with {prefix}")
+            out[pid] = data
     return out
+
+
+def offered_before(manifest: dict | None, available: dict) -> set[str] | None:
+    """Co projekt już dostał w ofercie. Manifest sprzed trybów (bez `offered`): wszystkie nakładki, bez trybów."""
+    if not manifest:
+        return None
+    if "offered" in manifest:
+        return set(manifest["offered"])
+    return set(manifest.get("packs") or {}) | {pid for pid, p in available.items() if p.get("kind", "pack") == "pack"}
 
 
 def core_config() -> dict:
@@ -451,14 +469,15 @@ def interactive_choice(available: dict, cfg: dict, preset: list[str]) -> tuple[l
     while commit not in langs:
         commit = ask(f"  unknown language; choose {codes}", cfg.get("default_commit_language", "en"))
     lang_pack = (langs.get(language) or {}).get("pack")
-    print("\nAvailable packs:")
+    print("\nAvailable packs and modes:")
     ids = list(available)
     for i, pid in enumerate(ids, 1):
         p = available[pid]
         mark = "*" if pid in preset else " "
         auto = " (installed with this language)" if pid == lang_pack else ""
+        auto += " (mode — on-demand way of working)" if p.get("kind") == "mode" else ""
         print(f"  {i}. [{mark}] {pid} — {p.get('description', p.get('title', ''))}{auto}")
-    raw = ask("Packs to install: numbers or ids separated by commas, 'all', or Enter for the marked ones",
+    raw = ask("Packs and modes to install: numbers or ids separated by commas, 'all', or Enter for the marked ones",
               ",".join(preset) or "none")
     if raw.strip().lower() == "all":
         chosen = ids
@@ -533,7 +552,8 @@ def main(argv: list[str]) -> int:
     if not dst_root.is_dir():
         print(f"✗ Directory {dst_root} does not exist")
         return 2
-    if dst_root == SRC or dst_root == CORE or CORE in dst_root.parents or PACKS_SRC in [dst_root, *dst_root.parents]:
+    if dst_root == SRC or dst_root == CORE or CORE in dst_root.parents \
+            or any(d in [dst_root, *dst_root.parents] for d in (PACKS_SRC, MODES_SRC)):
         print("✗ You are in the factory directory. Go to your project and run the installer from there, e.g.:\n"
               f"  cd ~/projects/my-app && python3 {CORE / 'factory' / 'install.py'}")
         return 2
@@ -554,7 +574,11 @@ def main(argv: list[str]) -> int:
     # nakładki i języki
     cfg = core_config()
     pm = load_packs_module()
-    available = available_packs()
+    try:
+        available = available_packs()
+    except ValueError as e:
+        print(f"✗ Factory source: {e}")
+        return 2
     settings = pm.load_settings(dst_root, cfg)
     had_settings = (dst_root / pm.SETTINGS_REL).exists()
     language = opts.get("language") or settings["language"]
@@ -565,7 +589,11 @@ def main(argv: list[str]) -> int:
             return 2
     legacy = legacy_packs(manifest, dst_root)
     previous = list((manifest or {}).get("packs") or {}) if manifest and "packs" in manifest else legacy
-    preset = previous if previous is not None else [pid for pid, p in available.items() if p.get("default")]
+    offered = offered_before(manifest, available)
+    new_defaults = [pid for pid, p in available.items() if p.get("default") and offered is not None
+                    and pid not in offered and pid not in (previous or [])]
+    preset = previous + new_defaults if previous is not None else \
+        [pid for pid, p in available.items() if p.get("default")]
     if opts.get("packs") is not None and opts.get("packs") != "":
         chosen = [] if opts["packs"] in ("none", "-") else list(available) if opts["packs"] == "all" \
             else split_ids(opts["packs"])
@@ -575,6 +603,8 @@ def main(argv: list[str]) -> int:
         chosen, language, commit_language = interactive_choice(available, cfg, preset)
     else:
         chosen = list(preset)
+        if new_defaults:
+            print(f"ℹ New default in this version: {', '.join(new_defaults)} (`tf remove <id>` if you don't want it).")
     chosen = [c for c in chosen if c not in split_ids(opts.get("remove"))] + split_ids(opts.get("add"))
     lang_pack = ((cfg.get("languages") or {}).get(language) or {}).get("pack")
     if lang_pack and lang_pack in split_ids(opts.get("remove")):
@@ -670,6 +700,7 @@ def main(argv: list[str]) -> int:
             "python": py,
             "ignore": "gitignore" if force_gitignore else "exclude",
             "packs": {pid: str(available[pid].get("version", "0.0.0")) for pid in packs},
+            "offered": sorted(set(available) | (offered or set())),   # nowe domyślne dochodzą tylko raz
             "installed_at": _dt.datetime.now().isoformat(timespec="seconds"),
             "files": dict(sorted(plan.files.items())),
             "skill_overrides": (manifest or {}).get("skill_overrides") or {},   # wpisy fabryki w skillOverrides

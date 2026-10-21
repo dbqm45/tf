@@ -1,9 +1,9 @@
 ---
-name: core-story-run
-description: Użyj na polecenie człowieka (/core-story-run, agent talos) — historyjka → plan kawałków → commit na kawałek → PR i raport kosztu.
+name: talos-story-run
+description: Użyj na polecenie człowieka (/talos-story-run, agent talos) — historyjka → plan kawałków → commit na kawałek → PR i raport kosztu.
 metadata:
   przeglad: 2027-04-21
-  katalog: "Użyj tylko na polecenie człowieka (`/core-story-run STORY [--auto] [--budget USD]` albo `claude --agent talos`) — automat „story → PR”: przyjęcie historyjki, plan z pionowych kawałków (każdy scalany i działający), pętla kawałka (test czerwony → kod → weryfikacja → przegląd zakresu → commit), przypadki brzegowe odłożone do decyzji, fazy warunkowe, STOP, jeden PR, raport czasu, tokenów, kosztu i modeli. Nie do zwykłej implementacji w rozmowie (persona pracuje sama), delegowania pracy bez nadzoru w ogóle (core-async-delegation) ani faz całego projektu (core-delivery-lifecycle)."
+  katalog: "Użyj tylko na polecenie człowieka (`/talos-story-run STORY [--auto] [--budget USD]` albo `claude --agent talos`) — automat „story → PR”: przyjęcie historyjki, plan z pionowych kawałków (każdy scalany i działający), pętla kawałka (test czerwony → kod → weryfikacja → przegląd zakresu → commit), przypadki brzegowe odłożone do decyzji, fazy warunkowe, STOP, jeden PR, raport czasu, tokenów, kosztu i modeli. Nie do zwykłej implementacji w rozmowie (persona pracuje sama), delegowania pracy bez nadzoru w ogóle (core-async-delegation) ani faz całego projektu (core-delivery-lifecycle)."
 argument-hint: "[plik story | treść] [--auto] [--budget USD]"
 disable-model-invocation: true
 ---
@@ -19,8 +19,9 @@ Automat na żądanie. Zasady, które wygrywają z każdą pokusą „zrobić wi�
 - **STOP zamiast brnięcia:** najwyżej 2 próby naprawy na bramkę; blokada → blok STOP i raport, nie obejście.
 
 ## 0. Start
+Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py` (dalej `run_report.py`).
 1. Czyste drzewo robocze, inaczej STOP („niezacommitowane zmiany: <pliki>”).
-2. `python3 factory/run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
+2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
    katalog `.claude/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
 3. Gałąź `story/<slug>` od aktualnej gałęzi domyślnej (core-git-workflow).
 
@@ -55,13 +56,13 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
    Odhacz kawałek w `plan.md`.
-6. Z `--budget`: `python3 factory/run_report.py status <katalog>` — koszt powyżej budżetu → STOP po tym kawałku.
+6. Z `--budget`: `run_report.py status <katalog>` — koszt powyżej budżetu → STOP po tym kawałku.
 
 ## 4. Zakończenie
 1. Fazy warunkowe z planu (tylko te).
 2. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
    z `parked.md`), skrót raportu kosztu. Nie scalasz — decyzja człowieka.
-3. `python3 factory/run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
+3. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
 
 ## Kto co robi (koszt)
@@ -86,7 +87,7 @@ Wznowienie: od <K<n> w plan.md>
 Po STOP i tak uruchamiasz `run_report.py finish` — raport kosztu powstaje zawsze.
 
 ## Przykład
-**Wejście:** `/core-story-run "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
+**Wejście:** `/talos-story-run "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
 
 **Wynik:**
 - plan: K1 import poprawnego CSV do tabeli sesji (test na pliku z 3 wierszami) · K2 lista sesji z błędem walidacji

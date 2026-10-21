@@ -101,9 +101,20 @@ Przywrócenie poprzedniego zachowania (zmiana niezgodna wstecz w 4.0.0):
 - researcher ma mieć pełną powłokę — zmienna środowiskowa `CLAUDE_CLEANROOM_DISABLE=web` (lista nazw profili po
   przecinku, np. w `env` ustawień); plik `cleanroom.json` jest nadpisywany przy aktualizacji, zmienna nie.
 
-### Talos — automat „story → PR” na żądanie
+### Tryby (`modes/mode-*`)
+Trzeci rodzaj elementu fabryki obok rdzenia i nakładek: sposób pracy, który włącza człowiek — agent sesji głównej,
+skill procesowy z `disable-model-invocation`, skrypty, testy i przewodnik `GUIDE.md`. Technicznie tryb jest
+nakładką (`pack.yaml` z `kind: mode`, instalacja w `factory/packs/<id>/`, `tf add|remove mode-…`); osobny katalog
+utrzymuje czytelność drzewa źródeł: `packs/` to wiedza dziedzinowa, `modes/` — sposoby pracy.
+- Instalator pilnuje zgodności: w `modes/` tylko `kind: mode` i id `mode-*`, w `packs/` — nakładki `pack-*`.
+- Domyślny tryb (`default: true`) dostaje pierwsza instalacja. Przy aktualizacji domyślny element, którego projekt
+  nigdy nie miał w ofercie, dochodzi raz (manifest: `offered`); usunięty przez człowieka nie wraca. Manifest sprzed
+  trybów: w ofercie były wszystkie nakładki, trybów — nie.
+
+### Talos (`mode-talos`) — automat „story → PR” na żądanie
+Przewodnik: `modes/mode-talos/GUIDE.md` (w projekcie `factory/packs/mode-talos/GUIDE.md`).
 Tryb włączany tylko przez człowieka: `claude --agent talos` (agent pracuje wyłącznie w nim) albo
-`/core-story-run <story> [--auto] [--budget USD]` w dowolnej personie. Skill ma `disable-model-invocation`, więc
+`/talos-story-run <story> [--auto] [--budget USD]` w dowolnej personie. Skill ma `disable-model-invocation`, więc
 model nie włączy automatu sam — i dlatego Talos czyta `SKILL.md` narzędziem Read (skilla z tym polem nie da się
 wczytać agentowi przez `skills`).
 - **Przebieg:** przyjęcie historyjki (kryteria akceptacji albo pytania/STOP) → plan z ≤5 kawałków pionowych
@@ -116,7 +127,7 @@ wczytać agentowi przez `skills`).
   `--budget` to twardy STOP sprawdzany po kawałku (`run_report.py status`).
 - **Pliki:** `.claude/runs/<data>-<slug>/` — `story.md`, `plan.md` (stan wznowienia), `parked.md`, `report.md`;
   katalog jest ignorowany przez git.
-- **Raport:** `factory/run_report.py finish` sumuje transkrypty sesji i podagentów od startu przebiegu — czas,
+- **Raport:** `run_report.py finish` (skrypt skilla `talos-story-run`) sumuje transkrypty sesji i podagentów od startu przebiegu — czas,
   tokeny (wejście, wyjście, odczyt i zapis cache 5 min / 1 h), koszt wg cennika z `config.yaml`, modele i agenci.
   Liczy skrypt, nie model, więc raport nie kosztuje tokenów poza wklejeniem kilkunastu linii wyniku. Koszt to szacunek
   z cennika API (przy subskrypcji — równowartość).
@@ -124,7 +135,8 @@ wczytać agentowi przez `skills`).
 ### Rozwój fabryki
 - `python3 tools/workspace.py assemble|check --packs <wybór>` — projekt złożony z bieżących źródeł w `.work/`
   (testy i `build.py` działają w układzie instalacji, nie w drzewie źródłowym).
-- `python3 tools/workspace.py matrix` — sam rdzeń, każda nakładka osobno i wszystkie razem (to samo robi CI).
+- `python3 tools/workspace.py matrix` — sam rdzeń, każda nakładka i każdy tryb osobno, wszystko razem (to samo
+  robi CI).
 - `python3 tools/workspace.py refs` — rdzeń nie wymienia elementów nakładek (chyba że linia nazywa nakładkę,
   np. „(pack-it)”), nakładka wymienia tylko elementy nakładek, od których zależy.
 - `python3 tools/workspace.py sync-gate` — wyniki bramki jakości skilli z projektu roboczego z powrotem do źródeł.

@@ -115,7 +115,7 @@ shared_agents:
       projekcie problemy i przyjęte wyjątki (z uzasadnieniem). Nigdy nie zapisuj sekretów ani ich fragmentów.
     memory: project
 
-  # Przegląd zakresu w świeżym kontekście: diff względem kawałka planu (KISS, YAGNI). Używa go Talos po każdym kawałku.
+  # Przegląd zakresu w świeżym kontekście: diff względem kawałka planu (KISS, YAGNI). Używa go np. tryb mode-talos.
   scope-reviewer:
     tier: std
     description: Przegląd diffu względem planu kroku w świeżym kontekście — kod spoza zakresu, nieproszone przypadki brzegowe, zbędne zależności. Tylko odczyt.
@@ -128,23 +128,6 @@ shared_agents:
       Wyjątek: zmiana potrzebna, żeby kryterium albo bezpieczeństwo nie zostało złamane — zostaje z uzasadnieniem.
       Wynik (≤ 15 linii): `Werdykt: W ZAKRESIE` albo `Werdykt: SPOZA ZAKRESU`, potem lista `plik:linia — co — dlaczego
       poza zakresem — propozycja wpisu do parked.md`. Plików nie zmieniasz.
-
-  # Talos — automat „story → PR” na żądanie: `claude --agent talos`, potem historyjka (opcje: --auto, --budget USD).
-  # Skill procesowy ma disable-model-invocation, więc agent nie może go wczytać na starcie (`skills`) — czyta plik.
-  talos:
-    tier: std
-    main_only: true
-    description: Talos — automat „story → PR” na żądanie (uruchom `claude --agent talos` i podaj historyjkę; --auto pomija zatwierdzenie planu, --budget USD to twardy limit). Plan z kawałków, commit na kawałek, jeden PR, raport czasu i kosztu.
-    tools: ["Agent(scout, researcher, quick-fixer, scope-reviewer, architect, security-reviewer)", Read, Grep, Glob, Edit, Write, Bash]
-    prompt: |
-      Jesteś Talos — automat, który zamienia jedną historyjkę w jeden PR. Pracujesz wyłącznie w tym trybie.
-      Zanim zrobisz cokolwiek innego, przeczytaj narzędziem Read `.claude/skills/core-story-run/SKILL.md` i prowadź
-      przebieg dokładnie według niego: start (`run_report.py start`), przyjęcie historyjki, plan z kawałków, pętla
-      kawałka, zakończenie z PR i `run_report.py finish`.
-      Opcje bierzesz z wiadomości człowieka: `--auto` — plan nie czeka na akceptację; `--budget <USD>` — twardy STOP
-      po kawałku, który przekroczy budżet. Bez historyjki w wiadomości poproś o nią jednym zdaniem.
-      Najtaniej i najprościej: kryteria akceptacji, nic ponad nie; przypadki brzegowe do `parked.md`; najtańszy
-      wystarczający wykonawca; najwyżej 2 próby naprawy na bramkę, potem blok STOP. Nie scalasz PR.
 
   # Wykonawcy doraźnego zespołu dyspozytora (core-problem-routing): „persona na chwilę” — skille podane w briefie.
   specialist:

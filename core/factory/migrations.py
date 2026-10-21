@@ -27,6 +27,9 @@ RENAMES: dict[str, dict[str, str]] = {
         "fe-ux-design": "ux-feature-design",            # pack-ux
         "core-knowledge-base": "dom-ev-knowledge-base",  # pack-ev
     },
+    "5.0.0": {
+        "core-story-run": "talos-story-run",            # mode-talos
+    },
 }
 
 

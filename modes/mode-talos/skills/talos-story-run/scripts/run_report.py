@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Przebieg Talosa („story → PR”, skill core-story-run): katalog przebiegu i raport kosztu.
+Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): katalog przebiegu i raport kosztu.
 
-  python3 factory/run_report.py start "<tytuł>" [--story "<treść>" | --story-file PLIK]
-  python3 factory/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
-  python3 factory/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
+  python3 .claude/skills/talos-story-run/scripts/run_report.py start "<tytuł>" [--story "<treść>" | --story-file PLIK]
+  python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
+  python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
 `start` zakłada `.claude/runs/<RRRR-MM-DD>-<slug>/` (ignorowany przez git): run.json (czas startu), story.md,
 plan.md, parked.md. `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
@@ -28,20 +28,21 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
+# projekt: katalog z factory/config.yaml nad skryptem (.claude/skills/talos-story-run/scripts/), inaczej bieżący
+ROOT = next((p for p in Path(__file__).resolve().parents if (p / "factory" / "config.yaml").is_file()), Path.cwd())
 try:
     import yaml
 except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
-    sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
+    sys.path.insert(0, str(ROOT / "factory" / "_vendor"))
     import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
 RUNS = Path(".claude") / "runs"
 KEYS = ("input", "output", "cache_read", "cache_write_5m", "cache_write_1h")
 FAMILIES = ("haiku", "sonnet", "opus", "fable", "mythos")
 
 PLAN_TEMPLATE = """# Plan: {title}
 
-Kawałki pionowe: każdy niesie wartość, przechodzi testy i jest osobnym commitem (skill core-story-run).
+Kawałki pionowe: każdy niesie wartość, przechodzi testy i jest osobnym commitem (skill talos-story-run, tryb mode-talos).
 
 - [ ] K1 — <wartość dla użytkownika> · kryteria: <testy> · pliki: <ścieżki> · weryfikacja: `<polecenie>`
 """

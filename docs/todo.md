@@ -83,9 +83,28 @@ zawsze najtańszy wystarczający model i najmniej pracy; `--budget` opcjonalny j
   planu w świeżym kontekście: kod spoza zakresu → wycofanie i wpis w `parked.md`). Talos czyta skill plikiem: skilla
   z `disable-model-invocation` nie da się wczytać przez `skills` (dokumentacja „Subagents”). Agenci sesji głównej
   (`main_only`) nie dostają `maxTurns` — jak persony.
-- [ ] **T5. Dokumentacja** (`docs/insights.md`), bramka skilla, `workspace.py matrix` i `refs`, PR.
+- [x] **T5. Dokumentacja** (`docs/insights.md`), bramka skilla, `workspace.py matrix` i `refs`, PR.
+
+## Tryby (`modes/`) — trzeci rodzaj elementu fabryki
+
+Decyzje człowieka (2026-10-21): katalog `modes/` i identyfikatory `mode-*`; Talos jako `mode-talos`, instalowany
+domyślnie; zmiana nazwy skilla jako MAJOR. Tryb to technicznie nakładka (ten sam `pack.yaml`, loader, instalacja
+w `factory/packs/<id>/`) z polem `kind: mode`; różni się katalogiem źródłowym i przeznaczeniem: sposób pracy
+włączany na żądanie (agent sesji głównej, skill procesowy, skrypty, testy, przewodnik).
+
+- [x] **M1. Katalog `modes/`** w instalatorze, aktualizatorze, `tf list`, `tools/workspace.py` (refs, sync-gate,
+  matrix) i CI; walidacja: `kind: mode` ↔ `mode-*` w `modes/`, nakładki `pack-*` w `packs/`.
+- [x] **M2. Nowe domyślne przy aktualizacji:** domyślna nakładka lub tryb, których projekt nigdy nie dostał
+  w ofercie, dochodzą przy `tf update`; świadomie usunięte nie wracają (manifest: `offered`).
+- [x] **M3. `mode-talos`:** agent `talos`, skill `talos-story-run` (było `core-story-run`, wpis w `migrations.py`),
+  `run_report.py` jako skrypt skilla, testy, scenariusze, przewodnik `GUIDE.md` (było `docs/talos.md`).
+  W rdzeniu zostają `scope-reviewer` i ignorowanie `.claude/runs/`.
+- [ ] **M4. Zgodność wersji:** zakres `requires.core` nakładek obejmuje 5.x; dokumentacja (`insights.md`,
+  `PUBLIC_API.md`), bramka, `matrix`, `refs`, PR jako MAJOR.
 
 ### Na później (decyzja człowieka)
+- [ ] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
+  w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.
 - [ ] Nakładki jako pluginy Claude Code (eksport). Ograniczenia: agenci z pluginu ignorują `permissionMode`, `hooks`,
   `mcpServers`, `initialPrompt`; plugin nie wczytuje `CLAUDE.md`; `settings.json` pluginu przyjmuje tylko `agent`
   i `subagentStatusLine`; nazwy z przedrostkiem (`pack-it:jan`); brak składania wkładów nakładek. Zależności:

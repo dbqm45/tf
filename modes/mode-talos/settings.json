@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 .claude/skills/talos-story-run/scripts/run_report.py *)"
+    ]
+  }
+}

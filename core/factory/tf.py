@@ -6,9 +6,9 @@ tf — the team factory command: install, update, packs, languages, health check
   tf                          # no factory → install the latest release; installed → update (factory/update.py)
   tf install [options]        # install (options go to install.py: --packs, --language, --commit-language, --shared…)
   tf update [options]         # update (options go to update.py: --check, --yes, --source…)
-  tf add <pack> [<pack>…]     # add packs (e.g. tf add pack-ev)
+  tf add <pack> [<pack>…]     # add packs or modes (e.g. tf add pack-ev, tf add mode-talos)
   tf remove <pack> [<pack>…]  # remove packs (their files go to .claude/factory-backup/)
-  tf list                     # installed packs, languages and the packs available in the source
+  tf list                     # installed packs and modes, languages, what the source offers
   tf language <code>          # working language (conversation, documentation); pl installs pack-editorial-pl
   tf commit-language <code>   # language of commit messages, PR titles and descriptions
   tf doctor [--fix]           # check the install: core/pack versions, required packs, language pack, agents, renames
@@ -188,13 +188,16 @@ def cmd_list() -> int:
         return 2
     r = subprocess.run([sys.executable, str(Path("factory") / "packs.py")])
     src = saved_source()
-    packs_dir = Path(src) / "packs" if src and not is_git(src) else None
-    if packs_dir and packs_dir.is_dir():
+    found = sorted(p for sub in ("packs", "modes") for p in (Path(src) / sub).glob("*/pack.yaml")) \
+        if src and not is_git(src) else []
+    if found:
         pm = project_module("packs")
         print("Available in the source:")
-        for p in sorted(packs_dir.glob("*/pack.yaml")):
+        for p in found:
             d = pm.load_yaml(p)
-            print(f"  {d.get('id', p.parent.name)} {d.get('version', '?')} — {d.get('description', d.get('title', ''))}")
+            kind = " (mode)" if d.get("kind") == "mode" else ""
+            print(f"  {d.get('id', p.parent.name)} {d.get('version', '?')}{kind} — "
+                  f"{d.get('description', d.get('title', ''))}")
     return r.returncode
 
 

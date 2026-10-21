@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Development workspace for the factory: an installed project assembled from core/ and packs/, where the build check
+Development workspace for the factory: an installed project assembled from core/, packs/ and modes/, where the build check
 and the factory tests run (tests and build expect the installed layout, not the source tree).
 
   python3 tools/workspace.py assemble [--packs all|none|a,b] [--out DIR] [--language pl] [--commit-language en]
   python3 tools/workspace.py check    [same options]   # assemble + build check + tests + scenario validation + gate status
-  python3 tools/workspace.py matrix                    # check: core only, each pack alone, all packs
-  python3 tools/workspace.py sync-gate [--out DIR]     # copy gate results from the workspace back to core/ and packs/
+  python3 tools/workspace.py matrix                    # check: core only, each pack and mode alone, all
+  python3 tools/workspace.py sync-gate [--out DIR]     # copy gate results back to core/, packs/ and modes/
   python3 tools/workspace.py refs [--verbose]          # cross-layer references: core must not name pack skills,
                                                        # a pack only names skills of its required/optional packs
 
 Default workspace: .work/<packs> (git-ignored). The workspace is recreated on every `assemble`/`check`.
 Gate results (`python3 factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
-`sync-gate` moves them into `core/tests/skill_gate/core.json` or `packs/<id>/tests/skill_gate/<id>.json`.
+`sync-gate` moves them into `core/tests/skill_gate/core.json` or `{packs,modes}/<id>/tests/skill_gate/<id>.json`.
 """
 from __future__ import annotations
 
@@ -25,6 +25,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "core" / "factory" / "install.py"
+ITEM_ROOTS = (ROOT / "packs", ROOT / "modes")   # nakładki i tryby — ta sama budowa katalogu
+
+
+def item_dirs() -> list[Path]:
+    """Katalogi nakładek i trybów (z pack.yaml), po nazwie."""
+    return sorted((p.parent for r in ITEM_ROOTS for p in r.glob("*/pack.yaml")), key=lambda d: d.name)
 
 
 def opts_of(argv: list[str]) -> dict:
@@ -91,7 +97,7 @@ def sync_gate(o: dict) -> int:
         return 0
     reg = json.loads(reg_p.read_text(encoding="utf-8"))
     owners = {d.name: ROOT / "core" for d in (ROOT / "core" / "skills").iterdir() if d.is_dir()}
-    for p in sorted((ROOT / "packs").glob("*/skills/*")):
+    for p in (s for d in item_dirs() for s in sorted(d.glob("skills/*"))):
         owners[p.name] = p.parent.parent
     moved = 0
     for skill, rec in reg.items():
@@ -105,13 +111,13 @@ def sync_gate(o: dict) -> int:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(dict(sorted(data.items())), ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         moved += 1
-    print(f"✓ Synced {moved} gate records into core/ and packs/")
+    print(f"✓ Synced {moved} gate records into core/, packs/ and modes/")
     return 0
 
 
 def skill_owners() -> dict[str, str]:
     owners = {d.name: "core" for d in (ROOT / "core" / "skills").iterdir() if d.is_dir()}
-    for d in sorted((ROOT / "packs").glob("*/skills/*")):
+    for d in (s for i in item_dirs() for s in sorted(i.glob("skills/*"))):
         owners[d.name] = d.parent.parent.name
     return owners
 
@@ -123,7 +129,7 @@ def allowed_packs(layer: str) -> set[str]:
     spec = importlib.util.spec_from_file_location("tf_packs_ws", ROOT / "core" / "factory" / "packs.py")
     pm = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(pm)
-    data = pm.load_yaml(ROOT / "packs" / layer / "pack.yaml")
+    data = pm.load_yaml(next(d for d in item_dirs() if d.name == layer) / "pack.yaml")
     return set((data.get("requires") or {}).get("packs") or []) | set(data.get("optional_packs") or [])
 
 
@@ -133,7 +139,7 @@ def refs(verbose: bool) -> int:
     import re
     owners = skill_owners()
     pattern = re.compile(r"(?<![\w/-])(" + "|".join(sorted(map(re.escape, owners), key=len, reverse=True)) + r")(?![\w-])")
-    layers = {"core": ROOT / "core", **{p.name: p for p in sorted((ROOT / "packs").iterdir()) if p.is_dir()}}
+    layers = {"core": ROOT / "core", **{p.name: p for p in item_dirs()}}
     total = 0
     for layer, base in layers.items():
         ok = allowed_packs(layer) | {layer, "core"}
@@ -166,7 +172,7 @@ def main(argv: list[str]) -> int:
     if cmd == "check":
         return 0 if check(o) else 1
     if cmd == "matrix":
-        packs = sorted(p.parent.name for p in (ROOT / "packs").glob("*/pack.yaml"))
+        packs = [d.name for d in item_dirs()]
         results = {}
         for sel in ["none", *packs, "all"]:
             # „none” = sam rdzeń: język en, bo pl dokłada pack-editorial-pl
