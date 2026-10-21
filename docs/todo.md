@@ -118,7 +118,7 @@ Decyzja człowieka (2026-10-21): zacząć od workflows dla `eng-code-audit` i sy
   a workflow nie przyjmuje danych w trakcie. Runda już wywołuje uczestników równolegle, a skrypt nie ma powłoki
   dla `es_sim.py`. Możliwe później, za zgodą: próba scenariusza (sprawdzenie nowego scenariusza automatem
   z gotowymi wypowiedziami facylitatora).
-- [ ] **W5. Dokumentacja** (`insights.md`, `PUBLIC_API.md`), matrix, refs, PR.
+- [x] **W5. Dokumentacja** (`insights.md`, `PUBLIC_API.md`), matrix, refs, PR.
 
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
