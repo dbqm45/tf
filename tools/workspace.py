@@ -145,7 +145,7 @@ def refs(verbose: bool) -> int:
         ok = allowed_packs(layer) | {layer, "core"}
         found: dict[str, list[str]] = {}
         for f in sorted(base.rglob("*")):
-            if not f.is_file() or f.suffix not in (".md", ".yaml", ".yml", ".json", ".py") or "_vendor" in f.parts \
+            if not f.is_file() or f.suffix not in (".md", ".yaml", ".yml", ".json", ".py", ".js") or "_vendor" in f.parts \
                     or f.name == "CHANGELOG.md" or "tests" in f.relative_to(base).parts:   # testy: dane testowe; zgodność bez nakładek sprawdza matrix
                 continue
             for n, line in enumerate(f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
