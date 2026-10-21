@@ -23,7 +23,8 @@ czyli co obiecujemy zachować w obrębie tej samej wersji MAJOR — także wobec
 Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API tej nakładki lub trybu (wersja w jej
 `pack.yaml`). Tryb `mode-talos`: agent sesji głównej `talos`, skill `talos-story-run`, skrypt
 `.claude/skills/talos-story-run/scripts/run_report.py`, katalog przebiegu `.claude/runs/<data>-<slug>/` (`run.json`,
-`story.md`, `plan.md`, `parked.md`, `report.md`).
+`story.md`, `plan.md`, `parked.md`, `report.md`). Tryb `mode-team`: skill `team-session`, skrypt
+`.claude/skills/team-session/scripts/team_switch.py` (`on`, `off`, `status`).
 
 **Nie** należą do publicznego API:
 - treść i sformułowania skilli, promptów i cech, jeśli zachowują swój zakres;

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 .claude/skills/team-session/scripts/team_switch.py *)"
+    ]
+  }
+}
