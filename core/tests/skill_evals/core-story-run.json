@@ -1,0 +1,23 @@
+{
+  "skill": "core-story-run",
+  "scenarios": [
+    {
+      "id": "zwykla-implementacja-historyjki",
+      "expect": "no-trigger",
+      "neighbor": "brak",
+      "prompt": "Zaimplementuj tę historyjkę: jako użytkownik chcę zresetować hasło linkiem z maila, link ważny 30 minut."
+    },
+    {
+      "id": "zadanie-na-noc-bez-nadzoru",
+      "expect": "no-trigger",
+      "neighbor": "core-async-delegation",
+      "prompt": "Chcę zostawić agentowi na noc uzupełnienie testów modułu płatności, sam zamknę laptopa. Jak przygotować dla niego kontrakt i bramki?"
+    },
+    {
+      "id": "fazy-projektu-od-pomyslu",
+      "expect": "no-trigger",
+      "neighbor": "core-delivery-lifecycle",
+      "prompt": "Prowadzimy nowy produkt od pomysłu do wdrożenia z agentami AI. Jakie fazy, bramki człowieka i persony przewidzieć?"
+    }
+  ]
+}
