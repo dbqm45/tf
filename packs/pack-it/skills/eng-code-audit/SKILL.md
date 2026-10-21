@@ -38,6 +38,17 @@ Pokaż człowiekowi propozycję i poczekaj na zgodę:
   środowisko testowe. Skanów aktywnych (DAST, skaner portów) wobec działających systemów nie uruchamiasz bez pisemnej
   zgody (core-agent-security §5b).
 
+**Uruchomienie po zgodzie:** workflow `/code-audit` (`.claude/workflows/code-audit.js`) przeprowadza etapy 0–2
+i raport. Argumenty to zatwierdzony zakres: `{"date": "RRRR-MM-DD", "dimensions": ["architektura", "bezpieczenstwo",
+"jakosc", "testy", "dostepnosc", "uzytecznosc", "wydajnosc", "prawo"], "depth": "standard", "limit": 8,
+"modules": [], "exclude": ["vendor/"]}` (opcjonalnie `executors`: wymiar → agent, np. persona z tabeli).
+- Ranking, duplikaty, blokery i hipotezy liczy skrypt, bez modelu.
+- Wymiar bez zainstalowanych skilli i wymiar ponad limit trafiają do „Czego nie sprawdzono”.
+- Wykonawcy pytają o zgodę na narzędzia jak zwykle; dłuższy przebieg bez pytań wymaga reguł `allow`.
+
+Bez workflow (inne narzędzie, wyłączone `disableWorkflows`, sprzeczności do rozstrzygnięcia w trakcie) prowadzisz
+etapy ręcznie, jak niżej.
+
 ## 2. Etap 0 — tani inwentarz (jeden wykonawca `scout` na `haiku` albo sama sesja)
 Cel: jeden plik z faktami, który dostaną wszyscy przeglądający, żeby każdy nie czytał repozytorium od nowa.
 1. `python3 .claude/hooks/detect_stack.py` — stack i wersje.

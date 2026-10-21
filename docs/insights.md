@@ -132,6 +132,21 @@ wczytać agentowi przez `skills`).
   Liczy skrypt, nie model, więc raport nie kosztuje tokenów poza wklejeniem kilkunastu linii wyniku. Koszt to szacunek
   z cennika API (przy subskrypcji — równowartość).
 
+### Workflows (`.claude/workflows/*.js`)
+Nakładka lub tryb może dostarczyć skrypty wieloagentowe Claude Code (Workflow) w katalogu `workflows/`. Instalator
+kopiuje je do `.claude/workflows/`, a w trybie prywatnym ignoruje je po nazwie pliku, więc własne workflows projektu
+zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różni się od nazwy skilla
+(`/eng-code-audit` to skill, `/code-audit` to workflow).
+- **`code-audit` (pack-it):** etapy skilla `eng-code-audit` jako skrypt. Argumenty to zakres zatwierdzony przez
+  człowieka. Inwentarz robi `haiku`, potem jeden wykonawca na wymiar. Duplikaty, ranking (ryzyko × zasięg ÷ koszt),
+  blokery i hipotezy liczy kod, bez modelu. Wymiar bez zainstalowanych skilli albo ponad limit trafia do „Czego nie
+  sprawdzono”, a nie znika po cichu.
+- **Testy bez modelu:** `test_workflows.py` uruchamia skrypt w Node z atrapami `agent`/`parallel`/`pipeline`
+  i sprawdza logikę; bez Node zostają testy statyczne (`meta`, fazy, brak `Date.now`/`Math.random`).
+- **Symulacja Event Stormingu — bez workflow.** Sesja jest interaktywna: człowiek prowadzi każdą rundę, a workflow
+  nie przyjmuje danych w trakcie przebiegu. Uczestników rundy i tak wywołuje się równolegle w jednej wiadomości,
+  a skrypt workflow nie ma dostępu do powłoki (`es_sim.py` musiałby uruchamiać dodatkowy agent).
+
 ### Rozwój fabryki
 - `python3 tools/workspace.py assemble|check --packs <wybór>` — projekt złożony z bieżących źródeł w `.work/`
   (testy i `build.py` działają w układzie instalacji, nie w drzewie źródłowym).

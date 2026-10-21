@@ -41,6 +41,7 @@ def main() -> int:
         write(pack / "tests" / "skill_evals" / "aa-run.json",
               json.dumps({"skill": "aa-run", "scenarios": [{"id": "x", "expect": "trigger",
                                                              "prompt": "W tests/test_discount.py mam kopie testu."}]}))
+        write(pack / "workflows" / "aa-audit.js", "export const meta = {name: 'aa-audit', description: 'A'}\n")
         proj = Path(t) / "proj"
         proj.mkdir()
         r = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes",
@@ -57,8 +58,20 @@ def main() -> int:
         wf = read(proj / ".github" / "workflows" / "team-factory.yml")
         check(".claude/tests/test_hooks.py" in wf and " tests/test_hooks.py" not in wf,
               "I-5: workflow CI fabryki uruchamia testy z .claude/tests/")
+        check("name: 'aa-audit'" in read(proj / ".claude" / "workflows" / "aa-audit.js"),
+              "I-7: workflow nakładki w .claude/workflows/ (tam Claude Code szuka zapisanych workflows)")
         sett = read(proj / ".claude" / "settings.json")
         check("python3 .claude/tests/test_cleanroom.py" in sett, "I-6: uprawnienie do testu fabryki w .claude/tests/")
+
+        # tryb prywatny: workflow fabryki ignorowany po nazwie pliku (własne workflows projektu zostają w repo)
+        priv = Path(t) / "priv"
+        priv.mkdir()
+        subprocess.run(["git", "init", "-q"], cwd=priv, check=True)
+        subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(priv), "--yes",
+                        "--packs", "pack-a"], capture_output=True, text=True, timeout=300)
+        exclude = read(priv / ".git" / "info" / "exclude").splitlines()
+        check(".claude/workflows/aa-audit.js" in exclude and ".claude/workflows/" not in exclude,
+              f"I-8: workflow fabryki w .git/info/exclude po nazwie: {[e for e in exclude if 'workflows' in e]}")
 
     for f in fails:
         print(f"✗ {f}")

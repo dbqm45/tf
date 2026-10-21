@@ -102,6 +102,24 @@ włączany na żądanie (agent sesji głównej, skill procesowy, skrypty, testy,
 - [x] **M4. Zgodność wersji:** zakres `requires.core` nakładek obejmuje 5.x; dokumentacja (`insights.md`,
   `PUBLIC_API.md`), bramka, `matrix`, `refs`, PR jako MAJOR.
 
+## Workflows (`.claude/workflows/*.js`) — audyt kodu i symulacja ES
+
+Decyzja człowieka (2026-10-21): zacząć od workflows dla `eng-code-audit` i symulacji Event Stormingu.
+
+- [x] **W1. Instalacja:** katalog `workflows/` nakładki lub trybu → `.claude/workflows/` (test instalatora).
+- [x] **W2. `pack-it/workflows/code-audit.js`** (`/code-audit`; nazwa inna niż skill `/eng-code-audit`): argumenty = zakres zatwierdzony przez człowieka (data, wymiary,
+  głębokość, limit wykonawców, moduły, wyłączenia); etapy: inwentarz (haiku) → przeglądy równoległe (wymiar →
+  wykonawca, model wg głębokości) → scalenie i ranking w kodzie (bez modelu: duplikaty po `plik:linia`, ryzyko ×
+  zasięg ÷ koszt, blokery, hipotezy bez dowodu) → raport. Wymiary bez zainstalowanych skilli pomijane z logiem.
+  Test: skrypt uruchamiany w Node z atrapami `agent`/`parallel`/`pipeline` (bez modelu, bez kosztu).
+- [x] **W3. Skill `eng-code-audit`:** po zatwierdzeniu zakresu uruchamiasz workflow; ręczny przebieg zostaje jako
+  wariant bez workflow. Bramka skilla.
+- [x] **W4. Symulacja ES:** ocena — workflow nie pasuje. Sesja jest interaktywna (człowiek prowadzi każdą rundę),
+  a workflow nie przyjmuje danych w trakcie. Runda już wywołuje uczestników równolegle, a skrypt nie ma powłoki
+  dla `es_sim.py`. Możliwe później, za zgodą: próba scenariusza (sprawdzenie nowego scenariusza automatem
+  z gotowymi wypowiedziami facylitatora).
+- [ ] **W5. Dokumentacja** (`insights.md`, `PUBLIC_API.md`), matrix, refs, PR.
+
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
   w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.
@@ -113,7 +131,7 @@ włączany na żądanie (agent sesji głównej, skill procesowy, skrypty, testy,
   Analiza: `docs/plugins.md` (2026-10-21) — rekomendacja: eksport `mode-talos`, nakładki później (tylko skille),
   rdzeń nie.
 - [ ] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person.
-- [ ] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu.
+- [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
 - [ ] Pomiar kosztu sędziego z uzasadnieniem (płatny, za zgodą człowieka).
 

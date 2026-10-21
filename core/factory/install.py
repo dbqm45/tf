@@ -73,7 +73,8 @@ LEGACY_GI = [(f"# {n}:begin (zarządzane przez factory/install.py)", f"# {n}:end
 CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": "factory",
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
 CORE_FILES = {"guide/JEV.md": ".claude/JEV.md"}
-PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests"}
+PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests",
+             "workflows": ".claude/workflows"}   # workflows: skrypty wieloagentowe Claude Code (Workflow)
 PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md")   # → factory/packs/<id>/
 SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
 USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory/config.yaml", "factory/packs/")
@@ -375,14 +376,14 @@ def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> st
 
 
 def ignored_paths(files: dict[str, str] | None = None) -> list[str]:
-    """Każda ścieżka instalowana przez fabrykę — per skill i per hook, żeby Twoje własne skille/hooki zostały w repo."""
+    """Każda ścieżka instalowana przez fabrykę — per skill, hook i workflow, żeby Twoje własne zostały w repo."""
     out = ["factory/", ".claude/agents/_generated/", ".claude/tests/", ".claude/catalog.md", ".claude/cleanroom.json",
            ".claude/JEV.md", ".claude/settings.local.json", "CLAUDE.local.md", MANIFEST, BACKUP_DIR + "/",
            ".claude/agent-memory/", ".claude/factory-profile.json", ".claude/factory-settings.json",
            ".claude/skill-gate.json", ".claude/scratch/", ".claude/runs/", "*.factory-new"]
     rels = sorted(files or {})
     out += list(dict.fromkeys("/".join(r.split("/")[:3]) + "/" for r in rels if r.startswith(".claude/skills/")))
-    out += [r for r in rels if r.startswith(".claude/hooks/")]
+    out += [r for r in rels if r.startswith((".claude/hooks/", ".claude/workflows/"))]
     return out
 
 
