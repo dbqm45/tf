@@ -60,6 +60,9 @@ def main() -> int:
               "I-5: workflow CI fabryki uruchamia testy z .claude/tests/")
         check("name: 'aa-audit'" in read(proj / ".claude" / "workflows" / "aa-audit.js"),
               "I-7: workflow nakładki w .claude/workflows/ (tam Claude Code szuka zapisanych workflows)")
+        guide, faq = read(proj / "factory" / "PRZEWODNIK.md"), read(proj / "factory" / "FAQ.md")
+        check(guide.startswith("# ") and faq.startswith("# ") and "tf " in guide,
+              "I-9: przewodnik i FAQ rdzenia w factory/ (bez README w korzeniu projektu)")
         sett = read(proj / ".claude" / "settings.json")
         check("python3 .claude/tests/test_cleanroom.py" in sett, "I-6: uprawnienie do testu fabryki w .claude/tests/")
 
