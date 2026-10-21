@@ -129,7 +129,8 @@ def main() -> int:
             marker = Path(d) / "dziecko.pid"
             slow.write_text("#!/bin/sh\nfor a in \"$@\"; do case $a in --user-data-dir=*) prof=${a#*=};; esac; done\n"
                             f"(while true; do mkdir -p \"$prof/Default\"; touch \"$prof/Default/x$$\"; sleep 0.05; done) &\n"
-                            f"echo $! > {marker}\nsleep 30\n", encoding="utf-8")
+                            f"echo $! > {marker}\necho 'ERROR:bus.cc(407)] Failed to connect to the bus' >&2\n"
+                            "sleep 30\n", encoding="utf-8")
             slow.chmod(0o755)
             try:
                 fp.render("http://127.0.0.1:9/", str(slow), timeout=1)
@@ -139,6 +140,9 @@ def main() -> int:
             except OSError as e:
                 msg = f"OSError: {e}"
             check(f"render: przekroczony czas → FetchError ({msg})", "limit czasu" in msg)
+            # diagnoza w CI: przy przekroczeniu czasu komunikat niesie ostatnią linię stderr przeglądarki
+            check(f"render: przekroczony czas — stderr przeglądarki w komunikacie ({msg})",
+                  "Failed to connect to the bus" in msg)
             child = int(marker.read_text().strip()) if marker.exists() else 0
 
             def running(pid: int) -> bool:   # zombie (zabity, czeka na sprzątnięcie przez init) to nie działający proces
@@ -171,7 +175,7 @@ def main() -> int:
     if browser:
         server, port = serve(JS_PAGE)
         try:
-            # 60 s: pierwszy start Chromium na obciążonym runnerze CI potrafi przekroczyć 30 s
+            # 60 s zapasu; pierwszy start Chromium na runnerze CI (16–27 s) rozgrzewa osobny krok workflow
             out = fp.fetch(f"http://127.0.0.1:{port}/", browser=browser, timeout=60, max_chars=50000,
                            allow_private=True)
         except fp.FetchError as e:

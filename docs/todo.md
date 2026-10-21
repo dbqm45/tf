@@ -156,8 +156,10 @@ liniowy i znacznie wyższy niż subagentów; uprawnienia jak u prowadzącego.
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
 - [ ] Pomiar kosztu sędziego z uzasadnieniem (płatny, za zgodą człowieka).
-- [ ] `test_fetch_page` (render Chromium) przekracza 60 s w CI pod obciążeniem — wystąpiło w #5 i #10
-  (`workspace (none)`, `workspace (pack-ev)`); ustalić przyczynę zamiast powtarzać przebieg.
+- [x] `test_fetch_page` (render Chromium) przekraczał 60 s w CI — 5 jobów. Przyczyna (pomiar w PR #12): pierwszy
+  start Chromium na runnerze trwa 16–27 s (zimny dysk), kolejne ok. 0,7 s, niezależnie od flag i D-Bus; pod obciążeniem
+  zestawu testów pierwszy start przekraczał limit. Naprawa: krok „Rozgrzanie Chromium” w CI przed testami; timeout
+  podaje teraz linię stderr przeglądarki.
 - [ ] Próba scenariusza symulacji ES: workflow sprawdzający nowy scenariusz automatem z gotowymi wypowiedziami
   facylitatora (czy sprzeczności wychodzą, karty osób działają). Płatny — za zgodą człowieka (zob. W4).
 

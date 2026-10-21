@@ -55,6 +55,20 @@ jobs:
           printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile tf-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$browser" \
             | sudo tee /etc/apparmor.d/tf-chromium
           sudo apparmor_parser -r /etc/apparmor.d/tf-chromium
+      # Pierwszy start Chromium na runnerze trwa 15–30 s (wczytanie dużego pliku przeglądarki z zimnego dysku; zmierzone
+      # w PR #12: pierwszy render 16–27 s, kolejne ok. 0,7 s, niezależnie od flag). Pod obciążeniem całego zestawu testów
+      # ten pierwszy start w test_fetch_page przekraczał 60 s — dlatego rozgrzanie osobno, z własnym limitem czasu.
+      - name: Rozgrzanie Chromium (pierwszy start)
+        run: |
+          python3 - <<'PY'
+          import importlib.util as u, time
+          s = u.spec_from_file_location("fp", "core/skills/core-source-research/scripts/fetch_page.py")
+          m = u.module_from_spec(s); s.loader.exec_module(m)
+          b = m.find_browser()
+          if b:
+              t = time.time(); m.render("about:blank", b, timeout=180)
+              print(f"Chromium {b}: pierwszy start {time.time() - t:.1f} s")
+          PY
 
       - name: Podnieś wersję z commitów od ostatniego tagu
         id: bump
