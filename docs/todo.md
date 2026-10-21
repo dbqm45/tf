@@ -62,7 +62,7 @@ Odhaczone pozycje są zrobione (`- [x]`). Źródła faktów: dokumentacja code.c
   model, rozumowanie przed oceną, przypadki brzegowe, liczba przypadków ponad ręczną ocenę w `ai-evals`.
 - [x] **Q2. Opóźnienie:** lista kontrolna w `eng-llm-features` (pomiar bazowy i TTFT → model/effort → długość →
   cache → strumieniowanie). `ai-product-management` miał już TTFT (p50/p95 do pierwszego i ostatniego tokenu).
-- [ ] **G. Wydanie:** `workspace.py matrix` i `refs`, PR. Wersję i wpis CHANGELOG liczy workflow `release` z Conventional
+- [x] **G. Wydanie:** `workspace.py matrix` i `refs`, PR. Wersję i wpis CHANGELOG liczy workflow `release` z Conventional
   Commits po scaleniu (minor za każdy PR z `feat`).
 
 ## Talos — tryb „story → PR” na żądanie
@@ -103,7 +103,7 @@ włączany na żądanie (agent sesji głównej, skill procesowy, skrypty, testy,
   `PUBLIC_API.md`), bramka, `matrix`, `refs`, PR jako MAJOR.
 
 ### Na później (decyzja człowieka)
-- [ ] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
+- [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
   w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.
 - [ ] Nakładki jako pluginy Claude Code (eksport). Ograniczenia: agenci z pluginu ignorują `permissionMode`, `hooks`,
   `mcpServers`, `initialPrompt`; plugin nie wczytuje `CLAUDE.md`; `settings.json` pluginu przyjmuje tylko `agent`
