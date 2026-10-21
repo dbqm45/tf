@@ -3,6 +3,15 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [4.0.0] — 2026-10-21
+### Breaking
+- **factory:** Talos story-to-PR mode, guard hooks fail closed (#4)
+### Added
+- **skills:** grounding modes, output form, evals and latency guidance (#3)
+- **factory:** executor consultations, prompt contracts, guard hooks (#2)
+### Fixed
+- **packs:** accept core 4.x for the 4.0.0 release; Talos guide (#5)
+
 ## [3.0.0] — 2026-10-20
 ### Breaking
 - **factory:** the factory is split into a core and packs — `pack-it`, `pack-ux`, `pack-docs`, `pack-editorial-pl` and `pack-ev`; domain skills, roles, personas and traits moved from the core to the packs
