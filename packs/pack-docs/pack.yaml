@@ -1,13 +1,13 @@
 # Nakładka dokumentacji: pisanie dokumentacji technicznej (README, API, ADR, CHANGELOG, runbooki, podręczniki)
 # i rola Technical Writer. Wpina się do wszystkich person.
 id: pack-docs
-version: 1.0.0
+version: 1.0.1
 title: Documentation
 description: Technical writing — README, API docs, ADRs, changelogs, runbooks and manuals; adds the docs skill to every persona and the tech-writer role.
 content_language: pl
 default: true          # zaznaczona domyślnie w instalatorze
 requires:
-  core: ">=3.0.0 <4.0.0"
+  core: ">=3.0.0 <5.0.0"
 # Skill dokumentacji podaje przykłady ze skilli tych nakładek; bez nich odwołania są tylko tekstem.
 optional_packs: [pack-it, pack-ux, pack-editorial-pl]
 

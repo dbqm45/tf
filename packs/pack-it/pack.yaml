@@ -1,12 +1,12 @@
 # Nakładka IT: inżynieria oprogramowania — architektura, DDD, backend, frontend, operacje, bezpieczeństwo, AI, dane,
 # testy i proces. Persony i role tej nakładki budują oprogramowanie w dowolnej dziedzinie.
 id: pack-it
-version: 1.0.0
+version: 1.0.1
 title: IT
 description: Software engineering team — architecture, DDD, backend, frontend, DevOps/SRE, security, AI/ML, data, QA and process.
 content_language: pl
 requires:
-  core: ">=3.0.0 <4.0.0"
+  core: ">=3.0.0 <5.0.0"
 # Odwołania do elementów tych nakładek są pomijane, gdy nakładki nie ma (bez błędu).
 optional_packs: [pack-docs, pack-ux, pack-editorial-pl]
 

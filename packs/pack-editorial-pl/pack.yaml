@@ -1,13 +1,13 @@
 # Nakładka redakcji tekstu po polsku: poprawność (pisownia, interpunkcja wg RJP PAN) i styl, redaktor polish-editor,
 # persona Stefan. Instalowana automatycznie przy języku pracy `pl`; jej wkład działa tylko przy `language: pl`.
 id: pack-editorial-pl
-version: 1.0.0
+version: 1.0.1
 title: Polish editorial
 description: Polish language editing — correctness and style checks, the polish-editor agent and the Stefan persona. Installed automatically with language pl.
 content_language: pl
 language: pl           # nakładka języka — instalowana przy tym języku pracy (core config → languages)
 requires:
-  core: ">=3.0.0 <4.0.0"
+  core: ">=3.0.0 <5.0.0"
 optional_packs: [pack-docs]
 
 facets:

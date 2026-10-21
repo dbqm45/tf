@@ -16,6 +16,12 @@ def write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def core_range() -> str:
+    """Zakres zgodny z wersją rdzenia tej instalacji (dane testowe nie psują się przy kolejnym MAJOR)."""
+    major = int((ROOT / "factory" / "VERSION").read_text(encoding="utf-8").split(".")[0])
+    return f">={major}.0.0 <{major + 1}.0.0"
+
+
 def project(base: Path) -> Path:
     """Projekt z rdzeniem tej instalacji (factory/, skille core-*, hooki) i dwiema sztucznymi nakładkami."""
     p = base / "proj"
@@ -31,7 +37,7 @@ def project(base: Path) -> Path:
     write(a / "pack.yaml", """id: pack-a
 version: 1.0.0
 title: A
-requires: {core: ">=3.0.0 <4.0.0"}
+requires: {core: "CORE_RANGE"}
 optional_packs: [pack-b, pack-c]
 facets:
   - {prefix: aa-, order: 10, name: wymiar A, question: "co w A"}
@@ -56,7 +62,7 @@ contributes:
 version: 1.0.0
 title: B
 language: pl
-requires: {core: ">=3.0.0 <4.0.0"}
+requires: {core: "CORE_RANGE"}
 facets:
   - {prefix: bb-, order: 20, name: wymiar B, question: "co w B"}
 contributes_when: {language: pl}
@@ -83,6 +89,8 @@ consultants:
                                            "roles: [rola-b]\ntraits: [grounded]\npriorities: [jakość]\n"
                                            "isolation: worktree\n"
                                            "scenarios:\n  - {situation: klient pyta o cenę, behavior: odsyłasz do cennika}\n")
+    for y in (a / "pack.yaml", b / "pack.yaml"):
+        y.write_text(y.read_text(encoding="utf-8").replace("CORE_RANGE", core_range()), encoding="utf-8")
     return p
 
 
@@ -201,7 +209,7 @@ def main() -> int:
 
         # zgodność wersji rdzenia i wymagane nakładki
         y = p / "factory" / "packs" / "pack-a" / "pack.yaml"
-        y.write_text(y.read_text().replace('requires: {core: ">=3.0.0 <4.0.0"}', 'requires: {core: ">=9.0.0", packs: [pack-z]}'))
+        y.write_text(y.read_text().replace(f'requires: {{core: "{core_range()}"}}', 'requires: {core: ">=9.0.0", packs: [pack-z]}'))
         e, _ = b.check_packs(b.load_config())
         check(any("wymaga rdzenia" in x for x in e) and any("tf add pack-z" in x for x in e),
               f"P-15: niezgodny rdzeń i brakująca wymagana nakładka → błędy: {e}")
