@@ -175,7 +175,7 @@ def main() -> int:
     if browser:
         server, port = serve(JS_PAGE)
         try:
-            # 60 s: pierwszy start Chromium na obciążonym runnerze CI potrafi przekroczyć 30 s
+            # 60 s zapasu; pierwszy start Chromium na runnerze CI (16–27 s) rozgrzewa osobny krok workflow
             out = fp.fetch(f"http://127.0.0.1:{port}/", browser=browser, timeout=60, max_chars=50000,
                            allow_private=True)
         except fp.FetchError as e:
