@@ -4,6 +4,9 @@ Stan: 2026-10-21. Fakty o pluginach z dokumentacji code.claude.com (odczyt 2026-
 `/en/sub-agents`, `/en/skills`, `/en/hooks`, `/en/plugin-evals`). Czego dokumentacja nie mówi, oznaczam
 [niezweryfikowane]. Dokument służy decyzji człowieka; kodu jeszcze nie ma.
 
+**Decyzja człowieka (2026-10-21): eksportu do pluginów nie robimy.** Talos zostaje trybem `mode-talos`,
+instalowanym przez `tf` jak dotąd. Analiza zostaje jako uzasadnienie decyzji.
+
 ## Wniosek
 - **Tryb `mode-talos` — tak, jako eksport.** Mieści się w modelu pluginu prawie bez strat. Potrzebne są dwie małe
   zmiany w samym trybie, użyteczne także bez pluginu.
