@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.3.0] — 2026-10-21
+### Added
+- **pack-it:** agent-facilitated Event Storming with phases and a board log (#13)
+
 ## [5.2.1] — 2026-10-21
 ### Fixed
 - **ci:** warm up Chromium before tests; root cause of render timeouts (#12)
