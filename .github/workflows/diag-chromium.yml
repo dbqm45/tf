@@ -1,0 +1,27 @@
+# TYMCZASOWE (usunąć przed scaleniem): diagnoza zawieszeń Chromium w test_fetch_page.
+name: diag-chromium
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Profil AppArmor dla Chromium (jak w factory-checks)
+        run: |
+          [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] || exit 0
+          browser=$(readlink -f /usr/bin/chromium)
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile tf-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$browser" \
+            | sudo tee /etc/apparmor.d/tf-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/tf-chromium
+      - run: echo "DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-brak}"; ls -la /usr/bin/chromium; nproc
+      - run: python3 tools/diag_chromium.py /usr/bin/chromium 10

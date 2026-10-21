@@ -129,7 +129,8 @@ def main() -> int:
             marker = Path(d) / "dziecko.pid"
             slow.write_text("#!/bin/sh\nfor a in \"$@\"; do case $a in --user-data-dir=*) prof=${a#*=};; esac; done\n"
                             f"(while true; do mkdir -p \"$prof/Default\"; touch \"$prof/Default/x$$\"; sleep 0.05; done) &\n"
-                            f"echo $! > {marker}\nsleep 30\n", encoding="utf-8")
+                            f"echo $! > {marker}\necho 'ERROR:bus.cc(407)] Failed to connect to the bus' >&2\n"
+                            "sleep 30\n", encoding="utf-8")
             slow.chmod(0o755)
             try:
                 fp.render("http://127.0.0.1:9/", str(slow), timeout=1)
@@ -139,6 +140,9 @@ def main() -> int:
             except OSError as e:
                 msg = f"OSError: {e}"
             check(f"render: przekroczony czas → FetchError ({msg})", "limit czasu" in msg)
+            # diagnoza w CI: przy przekroczeniu czasu komunikat niesie ostatnią linię stderr przeglądarki
+            check(f"render: przekroczony czas — stderr przeglądarki w komunikacie ({msg})",
+                  "Failed to connect to the bus" in msg)
             child = int(marker.read_text().strip()) if marker.exists() else 0
 
             def running(pid: int) -> bool:   # zombie (zabity, czeka na sprzątnięcie przez init) to nie działający proces

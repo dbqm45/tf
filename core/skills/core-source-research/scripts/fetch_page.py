@@ -242,8 +242,9 @@ def render(url: str, browser: str, timeout: int, pin=None, proxy=None) -> str:
         try:
             stdout, stderr = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
-            _kill_tree(proc)
-            raise FetchError(1, f"przekroczono limit czasu {timeout} s") from None
+            stderr = _kill_tree(proc)
+            # ostatnia linia stderr mówi, na czym przeglądarka utknęła (diagnoza bez ponownego uruchomienia)
+            raise FetchError(1, f"przekroczono limit czasu {timeout} s; przeglądarka: {_reason(stderr)}") from None
     finally:
         shutil.rmtree(profile, ignore_errors=True)
     page = stdout[:MAX_HTML].decode("utf-8", errors="replace")
@@ -252,8 +253,8 @@ def render(url: str, browser: str, timeout: int, pin=None, proxy=None) -> str:
     return page
 
 
-def _kill_tree(proc: subprocess.Popen) -> None:
-    """Kończy przeglądarkę razem z procesami potomnymi (grupa procesów; na Windowsie sam proces)."""
+def _kill_tree(proc: subprocess.Popen) -> bytes:
+    """Kończy przeglądarkę razem z procesami potomnymi (grupa procesów; na Windowsie sam proces); zwraca stderr."""
     try:
         if os.name != "nt":
             os.killpg(proc.pid, signal.SIGKILL)
@@ -262,9 +263,9 @@ def _kill_tree(proc: subprocess.Popen) -> None:
     except (ProcessLookupError, PermissionError):
         pass
     try:
-        proc.communicate(timeout=10)
+        return proc.communicate(timeout=10)[1] or b""
     except subprocess.TimeoutExpired:
-        pass
+        return b""
 
 
 def _reason(stderr: bytes) -> str:
