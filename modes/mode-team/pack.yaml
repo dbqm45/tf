@@ -1,0 +1,16 @@
+# Tryb agent teams: persona prowadzi zespół 3–5 członków, którzy rozmawiają bezpośrednio i mają wspólną listę zadań.
+# Funkcja eksperymentalna Claude Code — tryb nie jest domyślny, a flagę włącza człowiek (team_switch.py on).
+id: mode-team
+kind: mode
+version: 1.0.0
+title: Agent teams
+description: Agent teams on demand (/team-session) — a persona leads 3–5 teammates who message each other and share a task list; experimental Claude Code feature, opt-in.
+content_language: pl
+requires:
+  core: ">=5.0.0 <6.0.0"
+
+facets:
+  - {prefix: team-, order: 195, name: tryb zespołu, question: "jak poprowadzić pracę zespołu agentów rozmawiających ze sobą"}
+
+# Skill uruchamia tylko człowiek (/team-session) — nie należy do żadnej roli.
+standalone_skills: [team-session]

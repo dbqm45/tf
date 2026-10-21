@@ -1,0 +1,23 @@
+{
+  "skill": "team-session",
+  "scenarios": [
+    {
+      "id": "zwykle-delegowanie",
+      "expect": "no-trigger",
+      "neighbor": "brak",
+      "prompt": "Zleć backendowi dodanie endpointu GET /orders/{id} z testem, a potem pokaż wynik."
+    },
+    {
+      "id": "praca-bez-nadzoru",
+      "expect": "no-trigger",
+      "neighbor": "core-async-delegation",
+      "prompt": "Chcę zostawić agenta na noc, żeby uzupełnił testy modułu płatności. Jak to bezpiecznie ustawić?"
+    },
+    {
+      "id": "dobor-zespolu-do-problemu",
+      "expect": "no-trigger",
+      "neighbor": "core-problem-routing",
+      "prompt": "Mam problem z wydajnością aplikacji i nie wiem, kogo z zespołu zaangażować. Dobierz specjalistów."
+    }
+  ]
+}

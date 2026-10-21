@@ -120,6 +120,28 @@ Decyzja człowieka (2026-10-21): zacząć od workflows dla `eng-code-audit` i sy
   z gotowymi wypowiedziami facylitatora).
 - [x] **W5. Dokumentacja** (`insights.md`, `PUBLIC_API.md`), matrix, refs, PR.
 
+## Agent teams (`mode-team`) i przewodnik użytkownika
+
+Decyzje człowieka (2026-10-21): agent teams jako tryb `mode-team`, opt-in (nie domyślny); przewodnik i FAQ
+instalowane do projektu (`factory/`), bez README w korzeniu repo.
+
+Fakty (code.claude.com/docs/en/agent-teams, odczyt 2026-10-21): eksperymentalne, włączane
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (`env` w ustawieniach); tylko sesja interaktywna (`-p` nie tworzy zespołu);
+po włączeniu podagent nazwany przez Claude startuje jako członek zespołu; członek zespołu **nie dostaje `skills`
+z pliku agenta**; jeden zespół na sesję, bez zagnieżdżania, bez wznawiania (`/resume`); 3–5 członków; koszt
+liniowy i znacznie wyższy niż subagentów; uprawnienia jak u prowadzącego.
+
+- [x] **A1. Przełącznik** `team_switch.py on|off|status` (TDD): zmienna w `env` w `.claude/settings.local.json`
+  (osobista decyzja, także przy instalacji zespołowej); `off` usuwa wpis, reszta ustawień nietknięta.
+- [x] **A2. Skill `team-session`** (tylko ręcznie, `/team-session`): bramka kosztu, zespół czy subagenci, skład
+  z wykonawców persony, skille do wczytania w poleceniu startowym (bo `skills` nie działa), własność plików,
+  wspólna lista zadań, zamknięcie i wyłączenie flagi; scenariusze, bramka.
+- [x] **A3. `modes/mode-team/`**: `pack.yaml` (`kind: mode`, `default: false`), `settings.json` (uprawnienie
+  skryptu), `GUIDE.md`, testy; CI matrix; `insights.md`, `PUBLIC_API.md`; PR.
+- [ ] **P1. Przewodnik i FAQ** w `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md` (test instalatora);
+  treść ze stanu bieżącego (polecenia `tf`, persony, nakładki, tryby, workflows, koszty, hooki, aktualizacje);
+  fakty sprawdzone w plikach; PR.
+
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
   w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.
@@ -130,10 +152,12 @@ Decyzja człowieka (2026-10-21): zacząć od workflows dla `eng-code-audit` i sy
   `dependencies` w `plugin.json` z zakresami semver rozwiązywanymi po tagach `<plugin>--v<wersja>`.
   Analiza: `docs/plugins.md` (2026-10-21) — rekomendacja: eksport `mode-talos`, nakładki później (tylko skille),
   rdzeń nie.
-- [ ] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person.
+- [x] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person — tryb `mode-team` (A1–A3).
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
 - [ ] Pomiar kosztu sędziego z uzasadnieniem (płatny, za zgodą człowieka).
+- [ ] Próba scenariusza symulacji ES: workflow sprawdzający nowy scenariusz automatem z gotowymi wypowiedziami
+  facylitatora (czy sprzeczności wychodzą, karty osób działają). Płatny — za zgodą człowieka (zob. W4).
 
 ## Tłumaczenie treści fabryki na angielski
 
@@ -165,7 +189,7 @@ Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na
 ## Inne
 
 - [ ] Przewodnik użytkownika (`PRZEWODNIK.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
-  fabrykę bez nakładek. Napisać nowy, gdy będzie można ujawnić opis projektu.
+  fabrykę bez nakładek. W toku (P1): instalowany do projektu, bez README w korzeniu repo.
 - [ ] Baza wiedzy z rejestrem źródeł (`dom-ev-knowledge-base`, w pack-ev) ma ogólny mechanizm (`kb.py`) i dane EV.
   Rozważyć przeniesienie mechanizmu do rdzenia, a rejestrów źródeł do nakładek.
 - [ ] Targety innych narzędzi niż Claude Code (Codex, Gemini CLI): `build.py` ma listę `TARGETS` i ustawienie projektu

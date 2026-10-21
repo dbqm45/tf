@@ -132,6 +132,14 @@ wczytać agentowi przez `skills`).
   Liczy skrypt, nie model, więc raport nie kosztuje tokenów poza wklejeniem kilkunastu linii wyniku. Koszt to szacunek
   z cennika API (przy subskrypcji — równowartość).
 
+### Agent teams (`mode-team`)
+Tryb opt-in (`tf add mode-team`) dla eksperymentalnej funkcji Claude Code: persona prowadzi 3–5 członków zespołu,
+którzy piszą do siebie bezpośrednio i mają wspólną listę zadań. Flagę `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
+przełącza `team_switch.py on|off` w `.claude/settings.local.json`, czyli osobiście, także w instalacji zespołowej.
+Wyłączenie po sesji jest częścią skilla, bo z włączoną flagą podagent nazwany przez Claude startuje jako członek
+zespołu. Członkowie to wykonawcy person. Pole `skills` z pliku agenta członka nie działa, ale wykonawcy fabryki
+i tak wczytują skille narzędziem Skill według swojej treści. Zespół działa tylko w sesji interaktywnej.
+
 ### Workflows (`.claude/workflows/*.js`)
 Nakładka lub tryb może dostarczyć skrypty wieloagentowe Claude Code (Workflow) w katalogu `workflows/`. Instalator
 kopiuje je do `.claude/workflows/`, a w trybie prywatnym ignoruje je po nazwie pliku, więc własne workflows projektu
