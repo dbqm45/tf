@@ -105,12 +105,13 @@ włączany na żądanie (agent sesji głównej, skill procesowy, skrypty, testy,
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
   w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.
-- [ ] Nakładki jako pluginy Claude Code (eksport). Ograniczenia: agenci z pluginu ignorują `permissionMode`, `hooks`,
+- [x] ~~Nakładki jako pluginy Claude Code (eksport).~~ **Decyzja człowieka (2026-10-21): nie robimy** — tryby
+  i nakładki zostają instalowane przez `tf`. Ograniczenia: agenci z pluginu ignorują `permissionMode`, `hooks`,
   `mcpServers`, `initialPrompt`; plugin nie wczytuje `CLAUDE.md`; `settings.json` pluginu przyjmuje tylko `agent`
   i `subagentStatusLine`; nazwy z przedrostkiem (`pack-it:jan`); brak składania wkładów nakładek. Zależności:
   `dependencies` w `plugin.json` z zakresami semver rozwiązywanymi po tagach `<plugin>--v<wersja>`.
   Analiza: `docs/plugins.md` (2026-10-21) — rekomendacja: eksport `mode-talos`, nakładki później (tylko skille),
-  rdzeń nie; czeka na decyzje (publikacja marketplace, Talos z fabryką czy samodzielny, nazwa).
+  rdzeń nie.
 - [ ] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person.
 - [ ] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
