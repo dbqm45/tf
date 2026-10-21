@@ -60,8 +60,8 @@
   "offline": "2026-10-20"
  },
  "arch-multi-tenancy": {
-  "fingerprint": "8708463eee852e63",
-  "offline": "2026-10-20"
+  "fingerprint": "b302524eb8b11b1f",
+  "offline": "2026-10-21"
  },
  "arch-privacy-compliance": {
   "fingerprint": "9bcf44bdb6cde194",
@@ -84,8 +84,8 @@
   "offline": "2026-10-17"
  },
  "be-api-design": {
-  "fingerprint": "c95a127398ffdf3f",
-  "offline": "2026-10-20"
+  "fingerprint": "6c1b5dc1ce64b0ca",
+  "offline": "2026-10-21"
  },
  "be-auth-security": {
   "fingerprint": "60c85f1552f6d8bc",
@@ -116,8 +116,8 @@
   "offline": "2026-10-04"
  },
  "ddd-archetypes": {
-  "fingerprint": "1a78119fcc8fa92c",
-  "offline": "2026-10-20"
+  "fingerprint": "704d1b472c163a4d",
+  "offline": "2026-10-21"
  },
  "ddd-connascence-analysis": {
   "fingerprint": "317f5407ff17417c",
@@ -128,8 +128,8 @@
   "offline": "2026-10-17"
  },
  "ddd-deep-modeling": {
-  "fingerprint": "e08e816fa6ee37d6",
-  "offline": "2026-10-04"
+  "fingerprint": "8cd53c1f8bd3265e",
+  "offline": "2026-10-21"
  },
  "ddd-discovery-intake": {
   "fingerprint": "f9641902103182dd",
@@ -160,8 +160,8 @@
   "offline": "2026-10-20"
  },
  "ddd-tactical-design": {
-  "fingerprint": "8a64c908f8d6427d",
-  "offline": "2026-10-10"
+  "fingerprint": "0cb4d44a88807d6c",
+  "offline": "2026-10-21"
  },
  "eng-algorithms-data-structures": {
   "fingerprint": "d7b751a86ac451ba",
@@ -192,8 +192,8 @@
   "offline": "2026-10-10"
  },
  "eng-design-patterns": {
-  "fingerprint": "0b9d31711d0ae680",
-  "offline": "2026-10-04"
+  "fingerprint": "622a3fe2c0923122",
+  "offline": "2026-10-21"
  },
  "eng-design-principles": {
   "fingerprint": "dbe209c6d32b9de3",

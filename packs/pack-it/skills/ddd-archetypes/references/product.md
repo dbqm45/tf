@@ -109,6 +109,16 @@ wersjonowanie definicji · pola partii (które daty obowiązkowe).
 - **Poza archetypem:** kto może dodać produkt lub opublikować wpis — autoryzacja/workflow; archetyp waliduje tylko
   strukturę (cechy vs definicje, numer vs strategia).
 - **Polityki zmienne jako parametry:** „leki: sprzedaż do 30 dni przed datą użycia” → partia dostaje gotowe `sprzedaż_do`.
+- **Kanał dystrybucji to osobny wymiar:** ten sam typ produktu bywa sprzedawany w kanałach (sklep, online, hurt,
+  partner) z innym asortymentem, opisem, ceną i dostępnością. Kanał nie jest cechą typu ani flagą `onlineOnly`:
+  wpis katalogowy łączy typ z kanałem i okresem, a cena per kanał to Pricing.
+- **PIM to nie Inventory:** PIM (informacja o produkcie: opisy, zdjęcia, cechy, tłumaczenia) odpowiada „co
+  sprzedajemy i jak to opisać”, Inventory odpowiada „ile mamy, gdzie i czy można to obiecać” (Availability,
+  Accounting). Inny właściciel, rytm zmian i reguły, więc osobne konteksty powiązane identyfikatorem typu.
+- **Poczekalnia importu:** dane z zewnątrz (feed dostawcy, plik, integracja) trafiają najpierw do strefy
+  poczekalni jako surowe rekordy ze statusem walidacji i dopasowania do istniejących typów. Do katalogu albo stanu
+  przechodzą dopiero po walidacji lub decyzji człowieka. Błędny import nie psuje wtedy stanu ani historii, a rekord
+  odrzucony ma powód.
 
 ## Kontrola jakości
 - [ ] każde użycie słowa „produkt” przypisane do jednego pojęcia (typ/egzemplarz/partia/oferta/usługa)
@@ -138,3 +148,10 @@ na sztuki, smar na ml. Pakiet »start«: rower + kask + lampka. Serwis rowerów 
 | smar śledzony partiami | X → zapytano → A: tak (wycofania) |
 ## Niezmapowane pojęcia — ceny i rabat pakietu (→ Pricing), stan magazynu (→ Accounting)
 ```
+
+## Źródła
+- J. Arlow, I. Neustadt, *Enterprise Patterns and MDA*, Addison-Wesley, ISBN 9780321112309 (rok: źródła podają 2003
+  lub 2004) — archetypy Product i Inventory (według spisu treści; treści rozdziałów nie weryfikowano).
+- Kanał dystrybucji, PIM a Inventory i poczekalnia importu opisano własnymi słowami na podstawie programu szkolenia
+  „DDD — zaawansowane techniki modelowania i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21);
+  reguły to wnioski modelowe fabryki.

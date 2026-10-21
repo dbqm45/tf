@@ -67,6 +67,27 @@ Pełne API sterowane hipermediami rzadko się opłaca. Linki `next`/`prev` w kol
 zasobów są tanie i przydatne. Lista dozwolonych akcji w zasobie (np. `"actions": ["cancel"]`) pomaga frontowi
 pokazać właściwe przyciski bez kopiowania reguł biznesowych.
 
+## 8. Poziomy dojrzałości REST i komendy jako dokumenty
+- **Model dojrzałości Richardsona** opisuje kroki w stronę REST:
+  - poziom 0: jeden punkt końcowy, wszystko przez `POST` (styl RPC przez HTTP);
+  - poziom 1: osobne zasoby z własnymi adresami;
+  - poziom 2: metody i kody HTTP zgodnie z semantyką (`GET` bez efektów, `201`, `404`, `409`);
+  - poziom 3: hipermedia, czyli odpowiedź zawiera linki do możliwych dalszych kroków (sekcja 7).
+
+  Większość dobrych API publicznych celuje w poziom 2 i bierze z poziomu 3 tylko tanie elementy. Model to narzędzie
+  do opisu, a nie cel do „zaliczenia”.
+- **Komenda jako dokument:** operację biznesową, która nie jest edycją pól, wystawiasz jako utworzenie zasobu
+  opisującego decyzję, np. `POST /complaints/{id}/approvals` z treścią `{ "reason": …, "decidedBy": … }`.
+  Odpowiedź to `201` z `Location` (synchronicznie) albo `202` ze statusem przetwarzania (asynchronicznie).
+  - Komenda ma tożsamość, autora, czas i wynik, więc da się ją odczytać, zaudytować, ponowić idempotentnie
+    (`Idempotency-Key` albo identyfikator nadany przez klienta) i odrzucić z powodem (`422`).
+  - Nazwa zasobu pochodzi z języka domeny (zatwierdzenie, odwołanie, korekta), a nie z tabeli. `PATCH` zmieniający
+    `status` na `approved` ukrywa decyzję biznesową i omija jej reguły.
+  - Wycofanie to kolejna komenda (np. `POST /complaints/{id}/approval-revocations`), a nie `DELETE` historii.
+  - Po stronie serwera dokument komendy trafia do handlera komendy w warstwie aplikacji (ddd-tactical-design).
+- Część materiałów szkoleniowych nazywa projektowanie API wokół komend-dokumentów „poziomem 4” dojrzałości REST.
+  Model Richardsona ma poziomy 0–3, a „poziom 4” to określenie nieformalne.
+
 ## Źródła
 - [MDN: HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching), [MDN: Content negotiation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation),
   [SoftwareMill: Content negotiation in practice](https://softwaremill.com/content-negotiation-in-practice/)
@@ -75,4 +96,9 @@ pokazać właściwe przyciski bez kopiowania reguł biznesowych.
 - [Nordic APIs: API pagination](https://nordicapis.com/everything-you-need-to-know-about-api-pagination/),
   [Tyk: bulk vs batch import](https://tyk.io/blog/api-design-guidance-bulk-and-batch-import/)
 - [roadmap.sh — API Design](https://roadmap.sh/api-design)
+- L. Richardson, „Justice Will Take Us Millions Of Intricate Moves”, QCon 2008 (wystąpienie, w którym przedstawiono
+  poziomy) oraz M. Fowler, „Richardson Maturity Model” (martinfowler.com/articles/richardsonMaturityModel.html,
+  2010) [niezweryfikowane: strony niedostępne z tej sesji, daty ze źródeł wtórnych].
+- Komenda jako dokument i „poziom 4” na podstawie programu szkolenia „DDD — zaawansowane techniki modelowania
+  i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21).
 Opisane własnymi słowami.

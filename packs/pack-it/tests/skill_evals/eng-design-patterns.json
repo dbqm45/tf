@@ -45,6 +45,21 @@
       "expect": "no-trigger",
       "prompt": "Czy zasada Open/Closed w SOLID oznacza, że nie wolno mi edytować istniejących klas? Odpowiedz zwięźle.",
       "neighbor": "eng-design-principles"
+    },
+    {
+      "id": "role-object",
+      "expect": "trigger",
+      "prompt": "Ta sama osoba w systemie bywa klientem, dostawcą i pracownikiem, a każda rola ma inne dane i zachowanie. Teraz trzymamy wszystko w jednej klasie Person z polami null. Jaki wzorzec projektowy pomoże? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "role object|obiekt\\w* rol"
+          ],
+          [
+            "dołącz|przypin|osobn\\w* obiekt|kontekst"
+          ]
+        ]
+      }
     }
   ]
 }

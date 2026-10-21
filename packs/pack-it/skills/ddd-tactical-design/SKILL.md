@@ -35,6 +35,14 @@ metadata:
 Heurystyka: metody charakterystyczne i wielokrotnie używane w wielu przypadkach użycia → do agregatu;
 specyficzne dla jednego przypadku → do serwisu.
 
+**Gdy jedna polityka nie wystarcza** (`references/reguly-dynamiczne.md`):
+- polityki jako czyste funkcje składane w łańcuchy, drzewa i dekoratory, zbudowane z konfiguracji przez fabrykę
+  polityk;
+- scoring z wersjonowanymi składnikami i progami;
+- reguły zmienne w czasie, gdzie nowa wersja to nowa klasa wybierana po dacie istotnej (bez `if (rok >= …)`);
+- reguły zależne od historii zdarzeń (stan jako złożenie strumienia);
+- agregat jako maszyna stanów.
+
 ## Projektowanie agregatów
 1. Wyjdź od **niezmienników** (żółte kartki z Design Level), nie od rzeczowników i relacji w bazie.
 2. Zapytaj o **konkurencję o zasoby**: kto zmienia jednocześnie? co jeśli dwie osoby zrobią to naraz? (ddd-deep-modeling)

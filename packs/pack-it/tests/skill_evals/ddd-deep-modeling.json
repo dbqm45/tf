@@ -51,6 +51,36 @@
       "expect": "no-trigger",
       "prompt": "Mam zidentyfikowany agregat Zamówienie. Jak zaprojektować fabrykę i repozytorium oraz kto ma publikować zdarzenia domenowe — agregat czy serwis aplikacyjny? Odpowiedz zwięźle.",
       "neighbor": "ddd-tactical-design"
+    },
+    {
+      "id": "ukryte-wiele-do-wielu",
+      "expect": "trigger",
+      "prompt": "Lekarz pracuje w kilku przychodniach, a przychodnia ma wielu lekarzy. Trzymamy listy identyfikatorów po obu stronach i co chwilę się rozjeżdżają. Jak to zamodelować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ukryt\\w* pojęci|nazwij|zatrudnieni\\w*|umow\\w*|przydział\\w*|kontrakt"
+          ],
+          [
+            "jedn\\w* źródł\\w*|jeden właściciel|źródł\\w* prawdy|jedno miejsce"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dwa-poziomy-modelu",
+      "expect": "trigger",
+      "prompt": "Administrator ma sam definiować nowe rodzaje ubezpieczeń (jakie pola, jakie reguły), a sprzedawcy zawierają polisy tych rodzajów. Jak rozdzielić to w modelu domeny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "knowledge level|poziom\\w* wiedzy"
+          ],
+          [
+            "operat\\w*|operacyjn\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

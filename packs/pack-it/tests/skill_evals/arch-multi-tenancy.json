@@ -48,6 +48,21 @@
       "expect": "no-trigger",
       "prompt": "Zapytanie SQL z JOIN na trzech tabelach trwa 4 sekundy. Jak dobrać indeks? Odpowiedz zwięźle.",
       "neighbor": "be-database"
+    },
+    {
+      "id": "zachowanie-per-najemca",
+      "expect": "trigger",
+      "prompt": "Jeden duży klient naszego SaaS chce innej reguły zatwierdzania zamówień niż wszyscy pozostali. Jak to zrobić bez forka kodu dla tego klienta? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fork|gałęz\\w*|kopi\\w*"
+          ],
+          [
+            "konfigur\\w*|flag\\w*|polityk\\w*|handler\\w*|strategi\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

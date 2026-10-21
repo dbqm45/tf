@@ -125,6 +125,11 @@ okres i disposition · legal hold · dystrybucja i potwierdzenie · migracja for
 - **Poza archetypem:** „kto może zobaczyć umowę?” (autoryzacja), „co z niej wynika?” (Agreement), „jak ją zaksięgować?”
   (Accounting). Dokumentacja techniczna w repozytorium to docs-tech-writing.
 - **Polityki zmienne jako parametry:** poziom podpisu i okres retencji zależne od typu i kraju → archetyp dostaje gotowe wartości.
+- **Obieg to nie redagowanie:** redagowanie (edycja treści, wersje robocze, komentarze, współpraca) i obieg
+  (kto zatwierdza, w jakiej kolejności, terminy, eskalacje) to dwa modele o innych regułach i zdarzeniach. Obieg
+  operuje na **konkretnej wersji**: zmiana treści w trakcie akceptacji tworzy nową wersję i zwykle restartuje obieg
+  (decyzja A). Status „w akceptacji” w tabeli dokumentu miesza oba modele. Obieg wielu dokumentów to proces
+  (`activity-process.md`), a nie pole dokumentu.
 
 ## Kontrola jakości
 - [ ] dokument, wersja, rendycja, dystrybucja i dyspozycja to osobne pojęcia
@@ -177,6 +182,8 @@ Odczyt 2026-10-17.
   nr 14 poz. 67) — bierzemy: klasyfikacja JRWA, kategorie A, B + lata, BE + lata, liczenie od 1 stycznia roku następnego po
   zakończeniu sprawy. Ranga: pierwotne (ELI; status „obowiązujący”, zmiany [niezweryfikowane]). Dotyczy administracji; dla firm
   prywatnych — kontekst do potwierdzenia przez prawnika.
+- Obieg a redagowanie dokumentu — na podstawie programu szkolenia „DDD — zaawansowane techniki
+  modelowania i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21); opisane własnymi słowami.
 
 Rozdział na dokument, wersję, rendycję, dystrybucję i dyspozycję w tej postaci, dowody integralności jako parametr polityki oraz
 LegalHold to wnioski modelowe fabryki, nie tezy autorów ani norm.

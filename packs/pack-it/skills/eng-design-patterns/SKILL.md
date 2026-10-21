@@ -4,6 +4,7 @@ description: Użyj przy projekcie i review, gdy kusi wzorzec GoF — diagnoza sy
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj, gdy projektujesz lub refaktoryzujesz kod i rozważasz wzorzec GoF albo oceniasz jego użycie w review — diagnoza „symptom → wzorzec”, kiedy NIE używać, klasyfikacja, 22 wzorce (fabryki, budowniczy, adapter, dekorator, pełnomocnik, obserwator, stan, strategia, odwiedzający…) z lżejszymi formami w TS. Nie do zasad SOLID/KISS (eng-design-principles) ani building blocks DDD (ddd-tactical-design)."
+  slowa: "role object, obiekt roli, ta sama osoba w wielu rolach, klient i dostawca, extension object, obiekt rozszerzenia, flagi isCustomer, klasa Person z polami null, każda rola ma inne dane"
 ---
 
 # Wzorce projektowe (GoF)
@@ -47,6 +48,8 @@ potrzebujesz. Prostszy kod wygrywa remis (`references/krytyka-i-pulapki.md`).
 | `switch` wybierający wariant algorytmu/reguły | Strategia | funkcja jako parametr |
 | kilka klas z prawie identycznym procesem | Metoda szablonowa | funkcja szkieletu + obiekt kroków |
 | nowe operacje na stabilnym zbiorze typów węzłów | Odwiedzający | unia + funkcja ze `switch` |
+| ten sam byt jest klientem, dostawcą, pracownikiem; flagi `isX` i dane ról w jednej klasie | Obiekt roli (spoza GoF) | osobny obiekt lub agregat roli wskazujący rdzeń |
+| interfejsy potrzebne tylko części klientów, dokładane przez inne moduły | Obiekt rozszerzenia (spoza GoF) | mapa rozszerzeń po kluczu |
 
 Pary łatwe do pomylenia (rozstrzyga motywacja, nie kształt): Dekorator/Pełnomocnik, Strategia/Stan, Adapter/Most/Fasada,
 Łańcuch/Dekorator, Mediator/Fasada — sekcje „Powiązania” w plikach wzorców.
@@ -75,6 +78,7 @@ Pary łatwe do pomylenia (rozstrzyga motywacja, nie kształt): Dekorator/Pełnom
 - `references/krytyka-i-pulapki.md` — przed zaproponowaniem wzorca w review/refaktorze; tabela lżejszych form w TS,
   sygnały nadużycia.
 - `references/katalog.md` — gdy wybierasz między kilkoma kandydatami: 22 wzorce z „jednym zdaniem” i „kiedy NIE”.
+- `references/poza-gof.md` — obiekt roli (Role Object) i obiekt rozszerzenia (Extension Object) z katalogów PLoP.
 - `references/kreacyjne/{factory-method,abstract-factory,builder,prototype,singleton}.md`
 - `references/strukturalne/{adapter,bridge,composite,decorator,facade,flyweight,proxy}.md`
 - `references/behawioralne/{chain-of-responsibility,command,iterator,mediator,memento,observer,state,strategy,template-method,visitor}.md`

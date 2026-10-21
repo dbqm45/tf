@@ -4,6 +4,7 @@ description: Użyj przy odkrywaniu i doprecyzowaniu pojęć modelu — Being/Beh
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj przy odkrywaniu i doprecyzowaniu pojęć modelu — pytania modelujące Being/Behaving/Becoming, 5 why, klasyfikacja problemu (CRUD, transformacja, prezentacja, integracja, konkurencja o zasoby), modelowanie przez przykłady. Nie do granic kontekstów (ddd-strategic-analysis) ani wzorców implementacyjnych (ddd-tactical-design)."
+  slowa: "poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny"
 ---
 
 # Głębokie modelowanie
@@ -63,6 +64,17 @@ obszarach. Wtedy głęboki model to koszt bez zysku. Sygnał, że CRUD przestał
 pole „status” z warunkami w wielu miejscach, powtarzające się `if` w serwisach, konflikty przy równoczesnych zmianach.
 Przy polu „status” zacznij od **5 why** (sekcja Behaving): pytaj, po co zmienia się status, aż dojdziesz do zdarzenia
 biznesowego; dopiero potem decyduj o maszynie stanów.
+
+## Rozplątywanie modelu
+Gdy fakty się rozjeżdżają albo każda potrzeba dostaje nową wartość statusu, sięgnij po jedną z czterech technik
+z `references/rozplatywanie.md`:
+- **Jedno źródło prawdy:** każdy fakt ma jednego właściciela, a reszta wskazuje go identyfikatorem albo odświeża
+  kopię zdarzeniem.
+- **Ukryte pojęcie w relacji wiele do wielu:** nazwij je, np. lekarz ↔ przychodnia to Zatrudnienie z datami
+  i warunkami.
+- **Status to nie mechanizm rozszerzania:** inne dane, reguły i cykl życia oznaczają osobne pojęcie albo rolę.
+- **Dwa poziomy modelu:** poziom wiedzy (typy i reguły definiowane przez biznes) i poziom operacji (egzemplarze,
+  które wskazują swój typ).
 
 ## Modelowanie przez przykłady
 - Każdą regułę opisz **konkretnym przykładem** z liczbami i datami (Given / When / Then), razem z **kontrprzykładem**.
