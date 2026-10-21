@@ -24,4 +24,11 @@ jobs:
             | sudo tee /etc/apparmor.d/tf-chromium
           sudo apparmor_parser -r /etc/apparmor.d/tf-chromium
       - run: echo "DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-brak}"; ls -la /usr/bin/chromium; nproc
-      - run: python3 tools/diag_chromium.py /usr/bin/chromium 10
+      - name: Kolejność wariantów i rozgrzanie czcionek zależnie od części
+        run: |
+          case "${{ matrix.shard }}" in
+            1) python3 tools/diag_chromium.py /usr/bin/chromium 10 A-obecne,B-bez-virtual-time,C-bez-dbus ;;
+            2) python3 tools/diag_chromium.py /usr/bin/chromium 10 B-bez-virtual-time,C-bez-dbus,A-obecne ;;
+            3) /usr/bin/time -f "fc-cache: %e s" fc-cache 2>&1 | tail -1
+               python3 tools/diag_chromium.py /usr/bin/chromium 10 A-obecne,B-bez-virtual-time,C-bez-dbus ;;
+          esac

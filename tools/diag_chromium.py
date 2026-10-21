@@ -19,6 +19,7 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 url = f"http://127.0.0.1:{srv.server_address[1]}/"
 browser = sys.argv[1]
 n = int(sys.argv[2])
+order = sys.argv[3].split(",") if len(sys.argv) > 3 else None
 print(subprocess.run([browser, "--version"], capture_output=True, text=True).stdout.strip(), flush=True)
 ROOT = ["--no-sandbox"] if os.geteuid() == 0 else []   # jak fetch_page: root bez piaskownicy
 BASE = ROOT + ["--headless", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--disable-extensions",
@@ -28,7 +29,8 @@ VARIANTS = {
     "B-bez-virtual-time": (BASE, {}),
     "C-bez-dbus": (BASE + ["--virtual-time-budget=5000"], {"DBUS_SESSION_BUS_ADDRESS": "disabled:"}),
 }
-for name, (flags, extra) in VARIANTS.items():
+for name in (order or list(VARIANTS)):
+    flags, extra = VARIANTS[name]
     times, hangs = [], 0
     for i in range(n):
         prof = tempfile.mkdtemp()
@@ -41,6 +43,7 @@ for name, (flags, extra) in VARIANTS.items():
             ok = b"ok-js" in out
             if ok:
                 times.append(time.time() - t)
+                print(f"  {name} #{i}: {times[-1]:.1f} s", flush=True)
             else:
                 print(f"  {name} #{i}: brak treści, kod {p.returncode}: {err.decode(errors='replace')[-400:]}", flush=True)
         except subprocess.TimeoutExpired:
