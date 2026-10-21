@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.2.0] — 2026-10-21
+### Added
+- **modes:** mode-team for experimental agent teams (opt-in) (#10)
+
 ## [5.1.0] — 2026-10-21
 ### Added
 - **pack-it:** code-audit workflow for the eng-code-audit skill (#9)
