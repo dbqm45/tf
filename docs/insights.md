@@ -95,6 +95,12 @@ zawiedzie (brak pliku, wyjątek, przekroczony czas), akcja jest blokowana, a nie
 to pole do hooków już obecnych w projekcie, chyba że użytkownik ustawił inną wartość. Profil `web` w
 `cleanroom.json` ogranicza agenta z dostępem do sieci (`researcher`) do pojedynczych poleceń z listy.
 
+Przywrócenie poprzedniego zachowania (zmiana niezgodna wstecz w 4.0.0):
+- hook ma przepuszczać akcję, gdy zawiedzie — w `.claude/settings.local.json` (albo `settings.json`) ustaw przy nim
+  `"onFailure": "continue"`; aktualizacja nie nadpisuje tej wartości;
+- researcher ma mieć pełną powłokę — zmienna środowiskowa `CLAUDE_CLEANROOM_DISABLE=web` (lista nazw profili po
+  przecinku, np. w `env` ustawień); plik `cleanroom.json` jest nadpisywany przy aktualizacji, zmienna nie.
+
 ### Talos — automat „story → PR” na żądanie
 Tryb włączany tylko przez człowieka: `claude --agent talos` (agent pracuje wyłącznie w nim) albo
 `/core-story-run <story> [--auto] [--budget USD]` w dowolnej personie. Skill ma `disable-model-invocation`, więc
