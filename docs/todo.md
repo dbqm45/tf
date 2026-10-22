@@ -217,7 +217,9 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
 - [x] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person — tryb `mode-team` (A1–A3).
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
-- [ ] Pomiar kosztu sędziego z uzasadnieniem (płatny, za zgodą człowieka).
+- [ ] Pomiar skilli na modelu (płatny, za zgodą człowieka): pilotaż i partia 1 zrobione 2026-10-22 (sędzia nie był
+  potrzebny — koszt 0 przy trafionych sprawdzeniach), wyniki `docs/evals/2026-10-22-pomiar-haiku.md`; zostało ok. 670
+  scenariuszy i zaostrzenie scenariuszy skilli „bez różnicy”.
 - [x] `test_fetch_page` (render Chromium) przekraczał 60 s w CI — 5 jobów. Przyczyna (pomiar w PR #12): pierwszy
   start Chromium na runnerze trwa 16–27 s (zimny dysk), kolejne ok. 0,7 s, niezależnie od flag i D-Bus; pod obciążeniem
   zestawu testów pierwszy start przekraczał limit. Naprawa: krok „Rozgrzanie Chromium” w CI przed testami; timeout

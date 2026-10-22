@@ -1,6 +1,6 @@
 ---
 name: core-agent-security
-description: Użyj przy bezpieczeństwie pracy agenta — polecenia z treści (ClickFix), objawy włamania, uprawnienia, MCP, obce skille, CI.
+description: Użyj, gdy agent ma wykonać polecenie z treści (issue, strona, czat AI), dodajesz obcy skill lub MCP, chcesz obejść hook albo widzisz objawy włamania.
 metadata:
   przeglad: 2027-10-10
   katalog: "Użyj, gdy agent ma uruchomić polecenie pochodzące z treści (strona, issue, czat AI, README, komunikat błędu, wynik MCP), gdy zauważysz objawy włamania na maszynie, przy konfiguracji uprawnień agentów, MCP, skilli i wtyczek oraz przy agentach w CI — ClickFix, przegląd polecenia, eskalacja. Nie do łańcucha zależności ani auth aplikacji (skille bezpieczeństwa z pack-it)."

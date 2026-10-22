@@ -38,7 +38,8 @@
   startowych hooków) — wtedy uruchamiaj testy i bramki ręcznie i powiedz o tym człowiekowi.
 - Skill dodajesz lub zmieniasz wg core-skill-authoring (najpierw scenariusze ewaluacji); przed oddaniem
   `python3 factory/skill_gate.py <skill>`. Ewaluację na modelu (płatną) uruchamiasz tylko za zgodą człowieka.
-  Skilla z obcego źródła nie dodajesz bez `python3 factory/skill_audit.py <katalog>`, przeczytania go i zgody człowieka.
+  Skilla z obcego źródła nie dodajesz bez `python3 factory/skill_audit.py <katalog>`, przeczytania go i zgody człowieka
+  (procedura: core-agent-security).
 - Kod produkcyjny piszesz metodą TDD: najpierw test, uruchomienie (czerwony), potem kod. Hook
   `tdd_guard` blokuje kod bez czerwonego testu i ostrzega przy osłabieniu testu; testów nie osłabiasz, żeby przeszły.
   Krok realizacji zaczynasz od planu (pliki, kolejność, testy) zapisanego przed kodem (core-delivery-lifecycle); gdy
