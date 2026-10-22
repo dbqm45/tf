@@ -31,7 +31,7 @@ Nie podano trybu → standardowy (powiedz o tym).
 |---|---|---|
 | dokumentacja techniczna, runbook | bezosobowo lub „ty” (konsekwentnie), rzeczowo | kroki, czasowniki operacyjne, zero mgły informacyjnej |
 | artefakty projektu (brief, ADR, raport) | neutralnie | TL;DR na początku, konkret i liczby, decyzja + uzasadnienie |
-| komunikaty UI, błędy, przyciski | „ty”, krótko | co się stało + co zrobić; przycisk = czasownik z obietnicą efektu |
+| komunikaty UI, błędy, przyciski | „ty”, krótko | co się stało + co zrobić; mikrotekst szczegółowo: ux-content-design (nakładka UX) |
 | artykuł, e-book, przewodnik | „ty” lub „my”, półformalnie | narracja + praktyka, rytm zdań |
 
 ## Przebieg (dla każdej sekcji)
