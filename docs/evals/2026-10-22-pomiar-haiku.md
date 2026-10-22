@@ -220,11 +220,41 @@ Kryteria 19 skilli sprawdzone offline na odpowiedziach partii 4: rozróżnia 44 
 - Inne kandydaty do skrócenia: migracja promptów w ai-prompt-engineering (pokrywa wbudowany skill `claude-api`),
   formaty GGUF w ai-model-optimization, ogólne zasady idempotencji i CDC w data-engineering.
 
+## Sprawdzenie poprawek po partii 4 (2026-10-22): 9 scenariuszy, 1,18 USD
+6/9 zaliczonych: wczytują się teraz ai-research-methods, arch-architect-practice, core-grounding, data-analysis;
+ai-mlops i ai-product-management podają dopisaną treść. Nadal niezaliczone: `core-cost-control/harness-staly-czy-dowolny`
+(skill wczytany, zasada o harnessie dalej pomijana — trzeci raz), `arch-ai-solutions/lock-in-w-wagach` (skill
+wczytany, brak „testu wymiany w obu kierunkach”), `arch-threat-modeling/ryzyko-ilosciowe` (sec-risk-management bez
+ryzyka rezydualnego).
+
+## Partia 5 (2026-10-22): 135 scenariuszy, 234 przebiegi, 21,84 USD
+33 skille `ddd-*`, `eng-*`, `fe-*`, `fw-*`, `lang-*`; 99 scenariuszy trigger z porównaniem bez skilli i 36 no-trigger
+(35 zaliczonych). Ze skillem 90/99 (treść 95/99), bez skilli treść 60/99 (13 przez sędziego). Koszt: ze skillami
+16,29 USD, bez skilli 5,55 USD. Zużycie okna: z 45% do ok. 57% [szacunek].
+
+**Największa wartość:** ddd-connascence-analysis 3/3–0/3, ddd-legacy-modernization 3/3–0/3, eng-repo-readiness
+3/3–0/3, ddd-strategic-analysis 2/2–0/2, eng-module-depth 2/2–0/2, eng-codebase-mapping 5/5–2/5, fw-angular
+6/6–3/6, ddd-facilitation 3/3–1/3, eng-refactor-planning 3/4–1/4.
+
+**Bez różnicy (do zaostrzenia):** eng-algorithms-data-structures, eng-debugging, eng-design-patterns, eng-i18n,
+fe-architecture, fe-css, fe-engineering-levels, fw-nextjs, fw-react, fw-spring-boot, lang-java, lang-javascript,
+lang-python; gorzej ze skillem: eng-clean-code (2/3–3/3) i eng-design-principles (1/2–2/2).
+
+**Niezaliczone ze skillem (10):**
+- nie wczytał się: eng-debugging/regresja-200-commitow, eng-refactor-planning/weryfikacja-liczb-rankingu,
+  fe-engineering-levels/devex-build;
+- wczytał się sąsiad: ddd-discovery-intake/krytyka-pytan-wywiadu (ux-research-methods), eng-clean-code/null-jako-znaczenie
+  (eng-design-patterns), fe-architecture/rsc-cve (ops-security-operations, fw-nextjs);
+- no-trigger wczytał skill: ddd-algorithm-recognition/klasa-problemu (obok ddd-deep-modeling);
+- treść: eng-design-principles/dry-przypadkowe („duplikacja tańsza niż zła abstrakcja”), fw-spring-boot
+  (`@WebMvcTest`), eng-tech-debt-audit/hotspoty-i-tani-dlug (wyrażenie `none` „tightly coupled”).
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
-3. Partie 3 i 4 zrobione, zaostrzenie i poprawki po partii 4 też (sekcje wyżej). Zostało ok. 220 scenariuszy
-   trigger w nakładce IT (ddd, eng, fe, fw, lang, ops, proc, qa, sec, tool — ok. 2 partie po 25 USD).
+3. Partie 3–5 zrobione (sekcje wyżej). Zostało ok. 130 scenariuszy trigger w nakładce IT (ops, proc, qa, sec, tool —
+   ok. 1 partia za ok. 25 USD); przed nią zaostrzyć 15 skilli z partii 5 i poprawić 10 niezaliczonych oraz 3 z
+   poprawek po partii 4.
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
