@@ -9,7 +9,7 @@
         "all": [
           ["profil(u|e)? (2|3)|TLS|mTLS|wss://"],
           ["dwie osoby|dwóch osób|four.eyes|zatwierdz|akceptacj[ai] drugiej|approval"],
-          ["rate limit|limit (komend|wywołań|zapytań)|fale|etap|batch|partia|stopniow"],
+          ["rate limit|limit\\w* (komend|wywołań|zapytań)|fal[ie]\\w*|etap\\w*|batch|parti[ai]|stopniow"],
           ["Reset|ChangeAvailability|SetChargingProfile"],
           ["siec[ia] energetyczn|sieć elektroenergetyczna|OSD|grid|stabilno"]
         ],
@@ -41,7 +41,8 @@
           ["UID|identyfikator karty|bez (krypto|szyfrowan)|sklonow|klon"],
           ["duplikat|ten sam numer seryjny|dwa połączenia|zdublowan|podszy|fałszyw"],
           ["bez energii|zero kWh|0 kWh|brak energii|bez przyrostu"],
-          ["blokad|odrzuć|nowe połączenie|kwarantann|limit"]
+          ["blokad|odrzuć|nowe połączenie|kwarantann|limit"],
+          ["identyfikator\\w*[^.\\n]{0,30}nie[^.\\n]{0,15}sekret", "nie (jest |traktuj\\w* (go )?(jak|jako) )?sekret\\w*", "UID[^.\\n]{0,40}(to nie|nie jest)[^.\\n]{0,20}sekret"]
         ],
         "none": ["UID karty jest sekretem"]
       }

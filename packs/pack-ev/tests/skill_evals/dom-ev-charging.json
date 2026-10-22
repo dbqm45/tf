@@ -15,6 +15,13 @@
           ],
           [
             "15118|din.?70121|pwm"
+          ],
+          [
+            "(OCPI|roaming)[^.\\n]{0,60}nie (realizuje|obsługuje|jest systemem) płatn",
+            "CDR[^.\\n]{0,40}niezmienn",
+            "niezmienn\\w*[^.\\n]{0,20}CDR",
+            "dostępnoś\\w*[^.\\n]{0,30}EVSE",
+            "EVSE[^.\\n]{0,30}(nie connector|dostępnoś)"
           ]
         ],
         "none": [
@@ -36,6 +43,13 @@
           ],
           [
             "cdr.{0,40}(niezmienn|korekt)|(niezmienn|korekt).{0,40}cdr"
+          ],
+          [
+            "kredyt\\w*",
+            "credit",
+            "hurtow\\w*",
+            "party_id",
+            "country_code"
           ]
         ],
         "none": [

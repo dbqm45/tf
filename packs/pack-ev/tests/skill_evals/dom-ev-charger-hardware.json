@@ -10,7 +10,8 @@
           ["20 ?A"],
           ["32 ?A"],
           ["PP|proximity|rezystor"],
-          ["niższ|mniejsz|min(imum)?|ogranicz|lower|smaller"]
+          ["niższ|mniejsz|min(imum)?|ogranicz|lower|smaller"],
+          ["profil\\w* ładowani", "CSMS", "DLM", "smart charging", "nastaw\\w* (ładowark|stacj)"]
         ],
         "none": ["33 ?A"]
       }
@@ -23,7 +24,8 @@
         "all": [
           ["SuspendedEV\\b"],
           ["B2?\\b|9 ?V"],
-          ["C\\b.{0,80}(Charging|obwód|zamk|6 ?V|S2)|(Charging|obwód|zamk|6 ?V|S2).{0,80}\\bC\\b"]
+          ["C\\b.{0,80}(Charging|obwód|zamk|6 ?V|S2)|(Charging|obwód|zamk|6 ?V|S2).{0,80}\\bC\\b"],
+          ["StatusNotification", "konwencj\\w*", "quirk", "odchyleni\\w* (producent|firmware)"]
         ],
         "none": ["Faulted.{0,40}(poprawn|właściw|prawidłow)"]
       }
@@ -36,7 +38,8 @@
         "all": [
           ["MID"],
           ["OCMF|Eichrecht|signed meter|podpisan"],
-          ["6 ?mA|typ(u)? B|type B|RDC"]
+          ["6 ?mA|typ(u)? B|type B|RDC"],
+          ["MI-011", "bez zmian", "bez zaokrągl", "nie (zaokrąglaj|przeliczaj|konwertuj)", "surow\\w* (rekord|kopert)"]
         ],
         "none": ["Eichrecht.{0,30}(nie dotyczy|niepotrzebn)"]
       }
