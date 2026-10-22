@@ -11,7 +11,9 @@
           ["replatform"],
           ["retire"],
           ["retain"],
-          ["zależno\\w+|dependenc\\w+|grawitacj\\w+ danych|data gravity|licencj\\w+"]
+          ["zależno\\w+|dependenc\\w+|grawitacj\\w+ danych|data gravity|licencj\\w+"],
+          ["relocate|\\b7R\\b"],
+          ["pełn\\w* cykl\\w* biznes|koniec miesiąca|z obserwacji|najtańsz\\w* strategi"]
         ],
         "none": ["tylko lift and shift dla wszystkich"]
       }
@@ -25,7 +27,8 @@
           ["replikacj\\w+|cdc|replication|dms"],
           ["rollback|wycofan\\w+|powrót"],
           ["runbook|punkt bez powrotu|point of no return|go/no-go|go-no-go"],
-          ["przestoj\\w*|downtime|budżet przestoju"]
+          ["przestoj\\w*|downtime|budżet\\w*|okn\\w* (do |maks\\w* )?\\d+ ?min"],
+          ["licencj|baz\\w* pomiarow|kryteri\\w* sukcesu|zależnoś\\w*[^.]{0,80}(cykl|miesi|wsad|batch|hardkod)"]
         ]
       }
     },
@@ -37,7 +40,9 @@
         "all": [
           ["fal\\w+|wave"],
           ["pilot"],
-          ["zależno\\w+|dependenc\\w+|grup\\w+ przenoszenia|move group"]
+          ["zależno\\w+|dependenc\\w+|grup\\w+ przenoszenia|move group"],
+          ["pełn\\w* cykl\\w* biznes|koniec miesiąca|z obserwacji ruchu"],
+          ["limit\\w*[^.]{0,30}cutover|cutover\\w* naraz|kalendarz|szczyt\\w* sezon"]
         ]
       }
     },

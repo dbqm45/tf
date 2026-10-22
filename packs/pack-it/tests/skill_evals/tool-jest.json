@@ -37,6 +37,12 @@
             "zaczyna padać",
             "will start failing",
             "po naprawie"
+          ],
+          [
+            "ID wymagani",
+            "\\bH\\d-AC\\d",
+            "identyfikator\\w* wymagani",
+            "ID przypadku"
           ]
         ]
       }
@@ -58,6 +64,11 @@
           ],
           [
             "testPathPatterns"
+          ],
+          [
+            "arrayOf",
+            "unstable_mockModule",
+            "\\busing\\b"
           ]
         ]
       }

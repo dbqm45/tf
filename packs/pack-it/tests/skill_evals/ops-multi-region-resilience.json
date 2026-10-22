@@ -25,8 +25,9 @@
           ["control plane", "płaszczyzn\\w* sterowani", "płaszczyzn\\w* kontroln"],
           ["data plane", "płaszczyzn\\w* danych"],
           ["TTL"],
-          ["static(ally)? stab", "statyczn\\w* stabiln", "wstępnie przygotowan\\w* (zasob|pojemnoś)", "pre-provision"],
-          ["split.?brain", "fail.?back", "powrot\\w* do regionu", "przetestowan", "test\\w* failover"]
+          ["static(ally)? stab", "statyczn\\w* stabiln", "wstępnie przygotowan\\w* (zasob|pojemnoś)", "pre-provision", "wstępnie (przygotowan|zarezerwowan)\\w*", "przygotuj\\w* (ją |pojemno\\w* )?z góry"],
+          ["split.?brain", "fail.?back", "powrot\\w* do regionu", "przetestowan", "test\\w* failover"],
+          ["routing control", "\\bARC\\b", "trzeci\\w* świad"]
         ],
         "none": ["konsol\\w* jako główn\\w* narzędzi\\w* przełączenia"]
       }
@@ -40,8 +41,9 @@
           ["async", "asynchroniczn"],
           ["last.?writer", "LWW", "CRDT", "rozstrzyganie konflikt", "konflikt\\w* zapis"],
           ["game ?day", "dzień awarii", "ćwiczeni\\w* awarii"],
-          ["blast radius", "promień rażenia", "zasięg\\w* (szkód|awarii)", "limit\\w* zasięgu"],
-          ["dowod\\w*", "audytor", "raport\\w* z testu", "wynik\\w* testu"]
+          ["blast radius", "promień rażenia", "zasięg\\w* (szkód|awarii)", "limit\\w* zasięgu", "ogranicz\\w* zasięg", "zasięg\\w* (eksperyment|testu)"],
+          ["dowod\\w*", "audytor", "raport\\w* z testu", "wynik\\w* testu"],
+          ["na papierze", "table.?top", "fencing", "\\blease\\b", "replikacja przenosi (też )?błęd"]
         ],
         "none": ["replikacja synchroniczna między regionami nic nie kosztuje"]
       }

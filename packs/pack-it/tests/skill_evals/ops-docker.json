@@ -19,6 +19,9 @@
             "distroless",
             "bez powłoki",
             "169\\.254|imds|egress|ruch wychodz"
+          ],
+          [
+            "169\\.254|metadan|IRSA|Workload Identity|IMDSv2|tożsamoś\\w* obciąż"
           ]
         ]
       }
@@ -30,7 +33,7 @@
       "checks": {
         "all": [
           [
-            "multi-?stage|wieloetapow"
+            "multi-?stage|wieloetapow|wiel\\w* etap|podziel\\w* na etap"
           ],
           [
             "--mount=type=secret"
@@ -38,6 +41,9 @@
           [
             "digest",
             "konkretn\\w+ tag|przypi"
+          ],
+          [
+            "HEALTHCHECK|CMD[^\\n]{0,30}(exec|JSON)|hadolint"
           ]
         ],
         "none": [

@@ -20,6 +20,9 @@
           ],
           [
             "round.robin"
+          ],
+          [
+            "autoskal\\w*[^.]{0,40}(kolejk|opóźnie)|nie po CPU|rozdziel\\w*[^.]{0,30}prefill"
           ]
         ]
       }
@@ -39,6 +42,9 @@
           [
             "ttft|czas do pierwszego tokenu",
             "głębokość kolejki|queue"
+          ],
+          [
+            "nie po CPU|skaluj[^.]{0,40}(kolejk|opóźnie)|round.robin|świadom\\w* cache|llm-d"
           ]
         ]
       }

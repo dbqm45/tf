@@ -11,7 +11,8 @@
           ["24 godz", "24 h", "24h", "early warning", "wczesne ostrzeżenie"],
           ["72 godz", "72 h", "72h"],
           ["miesi[ąa]c", "final report", "raport końcow", "sprawozdanie końcow"],
-          ["krajowym systemie cyberbezpieczeństwa", "KSC", "nie jest\\w* porad\\w* prawn", "niezweryfikowan", "ISAP"]
+          ["krajowym systemie cyberbezpieczeństwa", "KSC", "nie jest\\w* porad\\w* prawn", "niezweryfikowan", "ISAP"],
+          ["2026-04-03", "2026-10-03", "2027-04-03", "3 kwietnia 2026", "Ministerst\\w* Cyfryzacji"]
         ],
         "none": ["NIS2 nie dotyczy firm poniżej 250"]
       }
@@ -25,7 +26,8 @@
           ["DORA"],
           ["art\\.? 33", "RODO", "GDPR", "UODO", "72 godz"],
           ["jeden incydent", "równolegle", "kilka zgłosze", "wiele zgłosze", "tabel\\w* decyzyjn", "zegar"],
-          ["lex specialis", "zamiast NIS2", "NIS2 .{0,40}(nie stosuje|wyłączon)", "DORA .{0,40}(pierwszeństw|zamiast)"]
+          ["lex specialis", "zamiast NIS2", "NIS2 .{0,40}(nie stosuje|wyłączon)", "DORA .{0,40}(pierwszeństw|zamiast)", "akt\\w* szczególn", "NIS2[^.]{0,60}nie daj\\w*[^.]{0,30}osobn"],
+          ["ENISA", "Single Reporting", "Digital Omnibus"]
         ],
         "none": ["wystarczy jedno zgłoszenie do UODO"]
       }

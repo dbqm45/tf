@@ -17,6 +17,9 @@
           [
             "sha",
             "permissions"
+          ],
+          [
+            "harden-runner|ruch\\w* wychodz|egress"
           ]
         ]
       }
@@ -35,6 +38,9 @@
           ],
           [
             "provenance"
+          ],
+          [
+            "min-release-age|karencj|cooldown|provenance[^.]{0,80}(nie (mówi|gwarant|oznacza)|gdzie)|Shai-Hulud|axios"
           ]
         ]
       }
@@ -57,6 +63,9 @@
           ],
           [
             "shell"
+          ],
+          [
+            "action_path|inputs[^.\\n]{0,40}niezaufan"
           ]
         ]
       }

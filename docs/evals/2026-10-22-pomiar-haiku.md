@@ -305,11 +305,27 @@ Wszystkie skille z plikami scenariuszy zmierzone na Haiku z porównaniem bez ski
 i poprawki opisów po każdej partii robione offline (bez kosztu); poprawki sprawdzane małymi przebiegami (ok. 1 USD).
 Skille, które nie wnoszą treści ponad wiedzę modelu, są wypisane w sekcjach „bez różnicy” i „kandydaci do skrócenia”.
 
+## Zaostrzenie i poprawki po partii 6 (bez modelu)
+Kryteria 27 skilli sprawdzone offline na odpowiedziach partii 6: rozróżnia 65 z 74 scenariuszy, przed zmianą 6.
+- Nowe grupy sprawdzają reguły skilli, których model bez skilla nie podaje, np. Java 17 przed Spring Boot 3, rejestr
+  CIDR przed pierwszą siecią, autoskalowanie inferencji po kolejce zamiast CPU, karencja nowych wersji paczek,
+  „0 znalezisk” zakazane bez listy pominiętych, Checkout Sessions zamiast samego Payment Element, termin PQC 2027-01-01.
+- Większość porażek ze skillem to były za wąskie kryteria: ops-cloud-migration (budżet przestoju jako „okno 30 min”),
+  ops-linux-performance (jeden parametr naraz), ops-platform-engineering (złota ścieżka jako szablon serwisu, GitOps jako
+  „przez PR”), ops-multi-region-resilience (limit zasięgu), sec-governance-compliance (kryteria Security/CC),
+  eng-design-principles (DRY wygrywa przy jednej wiedzy biznesowej).
+- Treść: ops-platform-engineering (samoocena CNCF przy raporcie miar), sec-zero-trust-identity (PEP i PDP na początku),
+  sec-risk-management (ryzyka ponad tolerancję nie akceptuje się podpisem); opis ops-linux-networking (pełny dysk
+  i i-węzły — skill się nie wczytywał).
+- Nie rozróżniają (model zna temat sam — kandydaci do skrócenia): proc-agile/ciecie-historyjek, tool-jest/jest30-aliasy,
+  sec-cryptography-pki/szyfrowanie-pii-kms, sec-malware-analysis/podejrzany-plik-triage, dwa scenariusze
+  sec-zero-trust-identity; ogólne części ops-docker, ops-iac-terraform, SPF/DKIM/DMARC w ops-linux-networking.
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
-3. Partie 1–6 zrobione — wszystkie scenariusze zmierzone. Zostało: zaostrzyć 26 skilli „bez różnicy” z partii 6
-   i poprawić 10 niezaliczonych (ops-platform-engineering w pierwszej kolejności) oraz eng-design-principles.
+3. Partie 1–6 zrobione, zaostrzenie i poprawki po każdej też. Poprawki opisów i treści po partii 6 potwierdzi
+   mały przebieg na modelu (ok. 1–2 USD).
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.

@@ -12,6 +12,9 @@
           ],
           [
             "przestarza|deprecated|niepotrzebn|zbędn"
+          ],
+          [
+            "osobn\\w*[^.]{0,40}(środowisk|bucket)|per środowisk|stan\\w*[^.]{0,30}sekret"
           ]
         ]
       }
@@ -31,6 +34,9 @@
           [
             "must be replaced",
             "kod 2|exit code 2|exitcode 2"
+          ],
+          [
+            "przez PR|ręczn\\w* .?apply|akceptac\\w* człowiek"
           ]
         ]
       }

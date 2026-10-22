@@ -10,7 +10,8 @@
           ["zakres", "scope"],
           ["Statement of Applicability", "SoA", "deklaracj\\w* stosowania"],
           ["93"],
-          ["audyt\\w* wewn", "internal audit", "przegl\\w* zarządz", "management review"]
+          ["audyt\\w* wewn", "internal audit", "przegl\\w* zarządz", "management review"],
+          ["robocz\\w*[^.]{0,40}(nie ocen|przygotow)", "nie (jest )?ocen\\w* zgodności"]
         ],
         "none": ["114 kontroli (w|z) 2022"]
       }
@@ -22,9 +23,10 @@
       "checks": {
         "all": [
           ["Type II|typ(u)? II|Type 2", "okres"],
-          ["Trust Services|TSC|kryteri\\w* zaufania"],
+          ["Trust Services|TSC|kryteri\\w* zaufania", "Common Criteria", "\\bCC\\d", "Security[^.]{0,30}obowiązk"],
           ["mapowan", "jedna kontrola", "one control", "wiele-do-wielu", "crosswalk"],
-          ["dowod", "evidence"]
+          ["dowod", "evidence"],
+          ["właściciel\\w*,? częstotliwoś", "częstotliwoś\\w*[^.]{0,30}dow[oó]d"]
         ],
         "none": ["SOC 2 to certyfikat"]
       }

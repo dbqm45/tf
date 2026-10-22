@@ -7,24 +7,10 @@
       "prompt": "Dwie funkcje w moim kodzie wyglądają prawie tak samo: jedna liczy rabat, druga formatuje cenę w eksporcie. Wydzielić wspólną abstrakcję w imię DRY? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "wiedz\\w+ biznesow|ta sama wiedza|przypadkow\\w+ podobień|przypadkow\\w+ podobn"
-          ],
-          [
-            "reguła trzech|AHA|trzeci przypadek|trzech"
-          ],
-          [
-            "duplikacja.{0,40}tańsz",
-            "tańsz\\w+ niż zła abstrakcja",
-            "zła abstrakcja",
-            "gorsze niż dwie",
-            "kosztuje więcej niż dwie",
-            "(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz|nad)[^.]{0,10}DRY"
-          ],
-          [
-            "(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz)[^.]{0,15}DRY",
-            "DRY[^.]{0,30}(ustępuje|przegrywa)"
-          ]
+          ["wiedz\\w+ biznesow|ta sama wiedza|przypadkow\\w+ podobień|przypadkow\\w+ podobn"],
+          ["reguła trzech|AHA|trzeci przypadek|trzech"],
+          ["duplikacja.{0,40}tańsz", "tańsz\\w+ niż zła abstrakcja", "zła abstrakcja", "gorsze niż dwie", "kosztuje więcej niż dwie", "(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz|nad)[^.]{0,10}DRY"],
+          ["(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz)[^.]{0,15}DRY", "DRY[^.]{0,30}(ustępuje|przegrywa)", "DRY[^.]{0,20}(jednak )?wygrywa[^.]{0,60}wiedz"]
         ]
       }
     },
@@ -34,15 +20,9 @@
       "prompt": "Review: widzę if (konto.getSaldo() >= kwota) konto.setSaldo(konto.getSaldo() - kwota). Jaką zasadę to narusza i czy mam usunąć wszystkie gettery? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "tell.{0,3}don.?t.{0,3}ask|powiedz|nie pytaj"
-          ],
-          [
-            "obciąż|debit|withdraw|metod\\w+ w obiekcie|konto.obci"
-          ],
-          [
-            "gettery.{0,60}(odczyt|prezentac|w porządku|nie nakaz)|odczyt\\w* i prezentac"
-          ]
+          ["tell.{0,3}don.?t.{0,3}ask|powiedz|nie pytaj"],
+          ["obciąż|debit|withdraw|metod\\w+ w obiekcie|konto.obci"],
+          ["gettery.{0,60}(odczyt|prezentac|w porządku|nie nakaz)|odczyt\\w* i prezentac"]
         ]
       }
     },

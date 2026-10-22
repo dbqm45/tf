@@ -58,7 +58,8 @@ proponujesz jako plan (diff, dry-run, okno zmian) i stosujesz po zatwierdzeniu p
    - **DORA** (eng-continuous-delivery) na poziomie usług, porównywane w czasie dla tego samego systemu, nie między zespołami;
    - **doświadczenie:** ankieta (np. kwartalna) o satysfakcji, obciążeniu poznawczym, pętlach zwrotnych i przepływie (DevEx), wymiary SPACE (satysfakcja, wydajność, aktywność, komunikacja, efektywność);
    - **biznes i koszt:** czas „pomysł → produkcja”, koszt platformy na zespół, incydenty z przyczyn platformy.
-   Raport dla zarządu: trend 3–4 miar, wniosek i decyzja, nie ściana metryk.
+   Raport dla zarządu: trend 3–4 miar, wniosek i decyzja, nie ściana metryk; do tego samoocena wg CNCF Platform
+   Engineering Maturity Model (pkt 11) jako mapa luk, bez rankingu zespołów.
 11. **Dojrzałość.** Samoocena wg CNCF Platform Engineering Maturity Model: pięć aspektów (inwestycja, adopcja, interfejsy,
     operacje, pomiary) oceniane osobno na czterech poziomach. Używaj do rozmowy i luk, nie do rankingu zespołów.
 12. **Wynik:** karta platformy (cel, użytkownicy, bóle, zakres „jest/nie jest”, miary, właściciel, tryb współpracy)

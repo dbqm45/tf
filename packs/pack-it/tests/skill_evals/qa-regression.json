@@ -20,6 +20,12 @@
             "dotkni",
             "nocn",
             "nightly"
+          ],
+          [
+            "tag\\w*",
+            "@smoke",
+            "jedna kopia",
+            "filtrem"
           ]
         ]
       }
@@ -42,6 +48,11 @@
             "termin",
             "deadline",
             "due date"
+          ],
+          [
+            "fail.on.flaky",
+            "do wykrywania",
+            "wykrywani\\w* niestabilno"
           ]
         ]
       }

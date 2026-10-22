@@ -10,7 +10,9 @@
           ["use\\b|utilization.*saturation|wykorzystanie.*nasycenie"],
           ["vmstat"],
           ["mpstat|pidstat"],
-          ["iostat"]
+          ["iostat"],
+          ["(?-i:\\bRED\\b)|wyklucz\\w*"],
+          ["/proc/pressure|PSI"]
         ],
         "none": ["zrestartuj serwer"]
       }
@@ -24,7 +26,8 @@
           ["perf (record|top)"],
           ["flame ?graph|wykres płomieni"],
           ["ebpf|bpftrace|bcc|profile"],
-          ["narzut|overhead|bezpieczeń|próbkowan|sampling|krótko"]
+          ["narzut|overhead|bezpieczeń|próbkowan|sampling|krótko"],
+          ["/proc/pressure|nr_throttled|throttl|off-?CPU|poza CPU"]
         ],
         "none": ["strace -p .* bez ograniczeń"]
       }
@@ -36,9 +39,10 @@
       "checks": {
         "all": [
           ["zmierz|pomiar|measure|baseline"],
-          ["jedn[aąę] zmian|one change|po jednej"],
-          ["cargo|kopiuj|bezkrytyczn|hipotez"],
-          ["dokument|zapisz|rollback|wycof"]
+          ["jedn[aąę] zmian|one change|po jednej|jeden parametr|jedn\\w* (zmian|parametr)\\w*[^.]{0,10}naraz"],
+          ["cargo|kopiuj|bezkrytyczn|hipotez|zmierzon\\w* objaw|konkretn\\w* objaw"],
+          ["dokument|zapisz|rollback|wycof"],
+          ["szum"]
         ],
         "none": ["tak, wklej wszystko"]
       }

@@ -7,27 +7,14 @@
       "prompt": "Chcemy wprowadzić DevSecOps w pipeline: jakie skanery bezpieczeństwa (sekrety, kod, zależności, aplikacja) i na jakim etapie je uruchamiać? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "pre-commit",
-            "przed commitem"
-          ],
-          [
-            "SAST",
-            "Semgrep",
-            "CodeQL"
-          ],
-          [
-            "SCA",
-            "SBOM"
-          ],
-          [
-            "DAST",
-            "ZAP"
-          ]
+          ["pre-commit", "przed commitem"],
+          ["SAST", "Semgrep", "CodeQL"],
+          ["SCA", "SBOM"],
+          ["DAST", "ZAP"],
+          ["CycloneDX", "SPDX", "Dependency-Track", "osv-scanner"],
+          ["tryb\\w* (raport|ostrzeg|obserw)", "najpierw[^.]{0,40}(nie blok|raport|ostrzeg)"]
         ],
-        "none": [
-          "wszystkie skany blokujące na każdym PR od pierwszego dnia"
-        ]
+        "none": ["wszystkie skany blokujące na każdym PR od pierwszego dnia"]
       }
     },
     {
@@ -36,24 +23,13 @@
       "prompt": "Skaner wyrzucił 400 podatności w zależnościach i dział bezpieczeństwa chce wszystko krytyczne naprawić w 7 dni. Jak je uporządkować i jakie terminy ustalić? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "EPSS"
-          ],
-          [
-            "KEV"
-          ],
-          [
-            "CVSS"
-          ],
-          [
-            "SLA",
-            "termin\\w* napraw",
-            "MTTR"
-          ]
+          ["EPSS"],
+          ["KEV"],
+          ["CVSS"],
+          ["SLA", "termin\\w* napraw", "MTTR"],
+          ["MTTR", "przekrocz\\w*[^.]{0,30}(SLA|termin)"]
         ],
-        "none": [
-          "sam CVSS wystarczy"
-        ]
+        "none": ["sam CVSS wystarczy"]
       }
     },
     {
@@ -62,17 +38,10 @@
       "prompt": "Jak udowodnić klientom, że nasz obraz kontenera zbudowano w naszym CI i nikt go nie podmienił? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "SLSA"
-          ],
-          [
-            "provenance",
-            "pochodzeni"
-          ],
-          [
-            "cosign",
-            "Sigstore"
-          ]
+          ["SLSA"],
+          ["provenance", "pochodzeni"],
+          ["cosign", "Sigstore"],
+          ["Build L[1-4]", "poziom\\w* (SLSA )?[2-4]\\b", "\\bL[2-4]\\b"]
         ]
       }
     },
