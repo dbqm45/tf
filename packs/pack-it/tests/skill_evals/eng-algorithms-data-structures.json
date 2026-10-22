@@ -29,6 +29,13 @@
           ],
           [
             "O\\(n log k\\)|n\\s*log\\s*k|quickselect|wybór k-tego|k-tego"
+          ],
+          [
+            "ORDER BY",
+            "LIMIT",
+            "w zapytaniu",
+            "indeks\\w* (na|w bazie)",
+            "be-database"
           ]
         ]
       }

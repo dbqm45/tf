@@ -14,7 +14,16 @@
             "reguła trzech|AHA|trzeci przypadek|trzech"
           ],
           [
-            "duplikacja.{0,40}tańsz|tańsz\\w+ niż zła abstrakcja|zła abstrakcja"
+            "duplikacja.{0,40}tańsz",
+            "tańsz\\w+ niż zła abstrakcja",
+            "zła abstrakcja",
+            "gorsze niż dwie",
+            "kosztuje więcej niż dwie",
+            "(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz|nad)[^.]{0,10}DRY"
+          ],
+          [
+            "(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz)[^.]{0,15}DRY",
+            "DRY[^.]{0,30}(ustępuje|przegrywa)"
           ]
         ]
       }
