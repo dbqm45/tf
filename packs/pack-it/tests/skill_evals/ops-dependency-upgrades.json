@@ -22,6 +22,12 @@
             "etap",
             "po kolei",
             "najpierw"
+          ],
+          [
+            "11 ?→ ?17|17[^.]{0,40}warunek|najpierw (na |do )?(Jav\\w* )?17"
+          ],
+          [
+            "dryRun|dry-run|testy charakteryzuj|ostrzeże\\w*[^.]{0,30}deprecj"
           ]
         ]
       }
@@ -46,6 +52,9 @@
             "raz w tygodniu",
             "weekly",
             "interval"
+          ],
+          [
+            "0\\.x|łatk\\w* bezpiecze\\w*[^.]{0,60}(bez karencji|poza harmonogram)|oba narzędzia|zdublowan"
           ]
         ]
       }
@@ -65,6 +74,9 @@
           ],
           [
             "test"
+          ],
+          [
+            "stan\\w* .?przed|punkt\\w* wyjścia|DeprecationWarning|ostrzeże\\w* o przestarzał|testy charakteryzuj"
           ]
         ]
       }

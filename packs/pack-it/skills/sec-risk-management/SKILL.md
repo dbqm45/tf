@@ -48,7 +48,8 @@ komunikacja → monitorowanie i przegląd. Proces jest cykliczny; wejście do So
    Po wyborze policz **ryzyko rezydualne** i zapisz je osobno.
 6. **Akceptacja ryzyka.** Tylko właściciel ryzyka z uprawnieniami adekwatnymi do poziomu (np. średnie — kierownik
    obszaru, wysokie — dyrektor, krytyczne — zarząd). Nie akceptuje ryzyka ten, kto je tworzy ani zespół bezpieczeństwa
-   za biznes. Akceptacja jest **czasowa** (zwykle ≤12 mies. [przykład]), z warunkami kompensującymi i wyzwalaczem
+   za biznes. Ryzyka ponad tolerancję nie akceptuje się podpisem: wymaga postępowania albo decyzji zarządu o zmianie
+   tolerancji. Akceptacja jest **czasowa** (zwykle ≤12 mies. [przykład]), z warunkami kompensującymi i wyzwalaczem
    przeglądu (zmiana zakresu, incydent). Wzór: `references/rejestr-i-akceptacja.md`.
 7. **Ryzyko dostawców** (trzecich stron). Tiering wg dostępu do danych i krytyczności; due diligence proporcjonalne:
    kwestionariusz, raport **SOC 2 typu II** lub certyfikat ISO 27001 (sprawdź zakres, okres, wyjątki i kontrole

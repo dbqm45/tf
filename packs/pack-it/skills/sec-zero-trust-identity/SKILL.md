@@ -13,7 +13,9 @@ metadata:
 warunkach. OAuth/OIDC, sesje i tokeny w kodzie: `be-auth-security`. Tożsamości maszynowe, sekrety, OIDC dla CI:
 `ops-secrets-identities`. NetworkPolicy i mTLS w klastrze: `ops-kubernetes`. Zabezpieczenia konta chmurowego:
 `sec-cloud-security`. Zagrożenia konkretnej funkcji: `arch-threat-modeling`. Algorytmy i certyfikaty:
-`sec-cryptography-pki`. Zero Trust to strategia, a nie produkt: żaden zakup go nie „włącza”.
+`sec-cryptography-pki`. Zero Trust to strategia, a nie produkt: żaden zakup go nie „włącza”. Rezygnacja z VPN oznacza
+punkt egzekwowania polityki (PEP) przed każdą aplikacją; o dostępie decyduje punkt decyzyjny (PDP) na podstawie
+tożsamości, stanu urządzenia i kontekstu (NIST SP 800-207).
 Wynik: `docs/project/04-architecture/zero-trust.md` (core-project-record) z mapą stanu, planem i metrykami.
 
 ## Fundament: NIST SP 800-207 (sierpień 2020)

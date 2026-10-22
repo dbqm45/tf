@@ -7,12 +7,28 @@
       "prompt": "Produkcyjny serwer Linux nagle zwolnił, a nie wiem od czego zacząć. Jaką metodą i jakimi poleceniami zrobić pierwszą diagnozę wydajności? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["use\\b|utilization.*saturation|wykorzystanie.*nasycenie"],
-          ["vmstat"],
-          ["mpstat|pidstat"],
-          ["iostat"]
+          [
+            "use\\b|utilization.*saturation|wykorzystanie.*nasycenie"
+          ],
+          [
+            "vmstat"
+          ],
+          [
+            "mpstat|pidstat"
+          ],
+          [
+            "iostat"
+          ],
+          [
+            "(?-i:\\bRED\\b)|wyklucz\\w*"
+          ],
+          [
+            "/proc/pressure|PSI"
+          ]
         ],
-        "none": ["zrestartuj serwer"]
+        "none": [
+          "zrestartuj serwer"
+        ]
       }
     },
     {
@@ -21,12 +37,25 @@
       "prompt": "Proces zużywa 100% CPU i nie wiem, w której funkcji. Jak to profilować na produkcji bez zabijania usługi? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["perf (record|top)"],
-          ["flame ?graph|wykres płomieni"],
-          ["ebpf|bpftrace|bcc|profile"],
-          ["narzut|overhead|bezpieczeń|próbkowan|sampling|krótko"]
+          [
+            "perf (record|top)"
+          ],
+          [
+            "flame ?graph|wykres płomieni"
+          ],
+          [
+            "ebpf|bpftrace|bcc|profile"
+          ],
+          [
+            "narzut|overhead|bezpieczeń|próbkowan|sampling|krótko"
+          ],
+          [
+            "/proc/pressure|nr_throttled|throttl|off-?CPU|poza CPU"
+          ]
         ],
-        "none": ["strace -p .* bez ograniczeń"]
+        "none": [
+          "strace -p .* bez ograniczeń"
+        ]
       }
     },
     {
@@ -35,12 +64,25 @@
       "prompt": "Znalazłem w internecie listę sysctl-i do tuningu sieci i pamięci Linuksa. Wkleić wszystko na produkcję? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["zmierz|pomiar|measure|baseline"],
-          ["jedn[aąę] zmian|one change|po jednej"],
-          ["cargo|kopiuj|bezkrytyczn|hipotez"],
-          ["dokument|zapisz|rollback|wycof"]
+          [
+            "zmierz|pomiar|measure|baseline"
+          ],
+          [
+            "jedn[aąę] zmian|one change|po jednej|jeden parametr|jedn\\w* (zmian|parametr)\\w*[^.]{0,10}naraz"
+          ],
+          [
+            "cargo|kopiuj|bezkrytyczn|hipotez|zmierzon\\w* objaw|konkretn\\w* objaw"
+          ],
+          [
+            "dokument|zapisz|rollback|wycof"
+          ],
+          [
+            "szum"
+          ]
         ],
-        "none": ["tak, wklej wszystko"]
+        "none": [
+          "tak, wklej wszystko"
+        ]
       }
     },
     {

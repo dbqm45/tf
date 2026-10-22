@@ -13,6 +13,9 @@
           ],
           [
             "lsof|dmesg|journalctl"
+          ],
+          [
+            "alert\\w*[^.]{0,40}(i-?węz|inod)|monitoring\\w*[^.]{0,40}(i-?węz|inod)|za zgodą|zgod\\w* człowiek"
           ]
         ]
       }
@@ -34,6 +37,9 @@
           ],
           [
             "jednym kliknięciem|one-click|list-unsubscribe"
+          ],
+          [
+            "status\\w* (zostaje|pozostaje)|listopad\\w* 2025|tymczasow\\w* odrzuc|nowy selektor"
           ]
         ]
       }
