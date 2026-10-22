@@ -256,8 +256,18 @@ Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na
 
 - [x] Przewodnik użytkownika (`PRZEWODNIK.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
   fabrykę bez nakładek. Zrobione (P1): `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md`.
-- [ ] Baza wiedzy z rejestrem źródeł (`dom-ev-knowledge-base`, w pack-ev) ma ogólny mechanizm (`kb.py`) i dane EV.
-  Rozważyć przeniesienie mechanizmu do rdzenia, a rejestrów źródeł do nakładek.
+- [x] Baza wiedzy z rejestrem źródeł (`dom-ev-knowledge-base`, w pack-ev) ma ogólny mechanizm (`kb.py`) i dane EV.
+  Rozważyć przeniesienie mechanizmu do rdzenia, a rejestrów źródeł do nakładek. **Plan (2026-10-22):**
+  - K1. Testy rdzenia `core/tests/test_kb.py` (najpierw czerwone): wyszukiwanie, cache, status, CLI na neutralnych
+    danych; kilka rejestrów naraz (obszary deklarowane w rejestrze, unikalne id między rejestrami, `--area`).
+  - K2. Skill `core-knowledge` (nie `core-knowledge-base`: tę nazwę migracja 3.0.0 zamienia na `dom-ev-knowledge-base`):
+    `scripts/kb.py` bez wiedzy o EV; rejestry to `.claude/skills/*/references/zrodla.json` z polem `areas`;
+    zmienne `TF_KB_DIR`, `TF_KB_ALLOW_LOCAL` (stare `EVTF_*` dalej działają). Procedura „zapytaj fabrykę” i forma
+    odpowiedzi w rdzeniu; scenariusze ewaluacji przed treścią.
+  - K3. pack-ev: `zrodla.json` z polem `areas`; `scripts/kb.py` jako cienkie przekierowanie do rdzenia (zgodność
+    ścieżki; na starszym rdzeniu jasny błąd); `SKILL.md` tylko to, co EV (rejestr, obszary, persony, rejestr
+    standardów, przykład); ścieżki w `pack.yaml`; `test_kb.py` tylko rejestr EV; wersja nakładki MINOR.
+  - K4. `PUBLIC_API.md` (konwencja rejestru i ścieżka `kb.py`), bramki, `refs`, matrix, PR.
 - [ ] Targety innych narzędzi niż Claude Code (Codex, Gemini CLI): `build.py` ma listę `TARGETS` i ustawienie projektu
   `targets`, zaimplementowany jest tylko target `claude`. Kolejny target = renderer agentów i instrukcji (`AGENTS.md`,
   `GEMINI.md`), mapa tierów na modele dostawcy i adaptery hooków. Fakty o formatach innych narzędzi sprawdzić

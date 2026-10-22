@@ -1,6 +1,7 @@
 {
  "version": 1,
  "updated": "2026-10-20",
+ "areas": ["ocpp", "ocpi", "oicp", "payments", "iso15118", "hardware", "metering", "energy", "security", "implementation", "testing", "regulations-eu", "regulations-pl", "regulations-us"],
  "sources": [
   {
    "id": "ocpi-2.2.1-d2",

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy bazy wiedzy fabryki (skill dom-ev-knowledge-base): rejestr źródeł, pobieranie do lokalnego cache, wyszukiwanie
-BM25 z cytatem plik:linia, status aktualności, kody wyjścia."""
+"""Testy bazy wiedzy fabryki (skill core-knowledge): rejestry źródeł nakładek, pobieranie do lokalnego cache,
+wyszukiwanie BM25 z cytatem plik:linia, status aktualności, kody wyjścia."""
 import datetime as dt
 import functools
 import http.server
@@ -14,7 +14,7 @@ import threading
 from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir())
-SKILL = ROOT / ".claude" / "skills" / "dom-ev-knowledge-base"
+SKILL = ROOT / ".claude" / "skills" / "core-knowledge"
 SCRIPT = SKILL / "scripts" / "kb.py"
 
 
@@ -27,15 +27,18 @@ def load():
 
 def project(t: Path) -> Path:
     """Mały projekt: dwa skille, notatka, archiwum researchu."""
-    (t / ".claude" / "skills" / "dom-ev-alpha" / "references").mkdir(parents=True)
-    (t / ".claude" / "skills" / "dom-ev-alpha" / "SKILL.md").write_text(
-        "---\nname: dom-ev-alpha\n---\n# Alpha\n\n## Taryfa dynamiczna\nCena zmienia się co godzinę według giełdy.\n"
+    (t / ".claude" / "skills" / "dom-alpha" / "references").mkdir(parents=True)
+    (t / ".claude" / "skills" / "dom-alpha" / "SKILL.md").write_text(
+        "---\nname: dom-alpha\n---\n# Alpha\n\n## Taryfa dynamiczna\nCena zmienia się co godzinę według giełdy.\n"
         "Taryfy dynamiczne publikuje się z wyprzedzeniem.\n", encoding="utf-8")
-    (t / ".claude" / "skills" / "dom-ev-alpha" / "references" / "szczegoly.md").write_text(
+    (t / ".claude" / "skills" / "dom-alpha" / "references" / "szczegoly.md").write_text(
         "# Szczegóły\n\nPole credit_reference_id wskazuje korygowany CDR.\n", encoding="utf-8")
-    (t / ".claude" / "skills" / "dom-ev-beta").mkdir(parents=True)
-    (t / ".claude" / "skills" / "dom-ev-beta" / "SKILL.md").write_text(
-        "---\nname: dom-ev-beta\n---\n# Beta\n\nBrama WebSocket i reconnect storm.\n", encoding="utf-8")
+    (t / ".claude" / "skills" / "dom-beta").mkdir(parents=True)
+    (t / ".claude" / "skills" / "dom-beta" / "SKILL.md").write_text(
+        "---\nname: dom-beta\n---\n# Beta\n\nBrama WebSocket i reconnect storm.\n", encoding="utf-8")
+    (t / ".claude" / "skills" / "dom-alpha" / "references" / "zrodla.json").write_text(json.dumps(REG_A), encoding="utf-8")
+    (t / ".claude" / "skills" / "dom-beta" / "references").mkdir(parents=True)
+    (t / ".claude" / "skills" / "dom-beta" / "references" / "zrodla.json").write_text(json.dumps(REG_B), encoding="utf-8")
     (t / "docs" / "knowledge").mkdir(parents=True)
     (t / "docs" / "knowledge" / "partner-x.md").write_text("# Partner X\n\nPartner X wymaga OCPI 2.2.1 i nagłówka X-Request-ID.\n",
                                                           encoding="utf-8")
@@ -44,6 +47,15 @@ def project(t: Path) -> Path:
         "# AFIR\n\n| Ustalenie | Źródło |\n|---|---|\n| płatność kartą zbliżeniową od 50 kW | eur-lex |\n", encoding="utf-8")
     return t
 
+
+def src(sid, areas, rank="P", licence="open"):
+    return {"id": sid, "title": sid.upper(), "url": f"https://example.org/{sid}", "areas": areas, "rank": rank,
+            "licence": licence, "kind": "spec", "checked": None, "note": ""}
+
+
+REG_A = {"version": 1, "areas": ["tariffs", "roaming"],
+         "sources": [src("spec-tariffs", ["tariffs"]), src("spec-roaming", ["roaming"]), src("spec-paid", ["tariffs"], licence="paid")]}
+REG_B = {"version": 1, "areas": ["gateway"], "sources": [src("spec-gateway", ["gateway"], rank="W")]}
 
 SPEC = "= Moduł Tariffs\n\n== step_size\n" + "Wypełnienie.\n" * 30 + \
        "Zaokrąglenie step_size liczy się raz na sesję dla ENERGY.\n" + "Dalszy tekst.\n" * 30
@@ -66,20 +78,34 @@ def main() -> int:
     kb = load()
     today = dt.date.today().isoformat()
 
-    # Rejestr źródeł fabryki
-    reg = kb.load_registry()
-    areas = {a for e in reg for a in e["areas"]}
-    check(kb.validate_registry(reg) == [] and len(reg) >= 15, f"R-1: rejestr poprawny i ≥ 15 źródeł: {kb.validate_registry(reg)} {len(reg)}")
-    check({"ocpp", "ocpi", "regulations-eu", "regulations-pl", "regulations-us"} <= areas, f"R-2: obszary rejestru: {areas}")
+    # Walidacja pojedynczego rejestru
     bad = [{"id": "a", "title": "A", "url": "http://x.org", "areas": ["ocpp"], "rank": "P", "licence": "open", "kind": "spec"},
            {"id": "a", "title": "B", "url": "https://y.org", "areas": ["ocpp"], "rank": "Z", "licence": "open", "kind": "spec"}]
     errs = " ".join(kb.validate_registry(bad))
     check("https" in errs and "a" in errs and "rank" in errs, f"R-3: walidacja wyłapuje http, duplikat id i złą rangę: {errs}")
+    errs = " ".join(kb.validate_registry([src("x", ["inny"])], areas={"tariffs"}))
+    check("inny" in errs, f"R-4: obszar spoza zadeklarowanych w rejestrze: {errs}")
 
     with tempfile.TemporaryDirectory() as t:
         root = project(Path(t))
         cache = root / ".claude" / "knowledge"
-        os.environ.pop("EVTF_KB_DIR", None)
+        for v in ("TF_KB_DIR", "EVTF_KB_DIR"):
+            os.environ.pop(v, None)
+
+        # Rejestry nakładek: każdy skill może mieć references/zrodla.json z deklaracją obszarów
+        reg = kb.load_registry(root=root)
+        check([e["id"] for e in reg] == ["spec-tariffs", "spec-roaming", "spec-paid", "spec-gateway"]
+              and reg[0]["registry"] == "dom-alpha" and reg[3]["registry"] == "dom-beta",
+              f"R-1: rejestry wszystkich skilli razem, z nazwą skilla: {[(e['id'], e.get('registry')) for e in reg]}")
+        check(kb.validate_registries(root) == [], f"R-2: poprawne rejestry → brak błędów: {kb.validate_registries(root)}")
+        dup = root / ".claude" / "skills" / "dom-gamma" / "references"
+        dup.mkdir(parents=True)
+        (dup / "zrodla.json").write_text(json.dumps({"version": 1, "sources": [src("spec-gateway", ["gateway"])]}),
+                                         encoding="utf-8")
+        errs = " ".join(kb.validate_registries(root))
+        check("spec-gateway" in errs and "dom-gamma" in errs and "areas" in errs,
+              f"R-5: id zdublowane między rejestrami i brak deklaracji obszarów → błędy: {errs}")
+        (dup / "zrodla.json").unlink()
         spec_file = root / "tariffs.asciidoc"
         spec_file.write_text(SPEC, encoding="utf-8")
         rid = reg[0]["id"]
@@ -104,7 +130,7 @@ def main() -> int:
               f"S-1: trafienie w cache z zakresem linii zawierającym tekst: {top}")
         check(top.get("url") == reg[0]["url"] and top.get("fetched") == today, f"S-2: trafienie niesie URL i datę pobrania: {top}")
         hits = kb.search("taryfy dynamicznej", root)
-        check(hits and hits[0]["path"] == ".claude/skills/dom-ev-alpha/SKILL.md" and hits[0]["kind"] == "skill",
+        check(hits and hits[0]["path"] == ".claude/skills/dom-alpha/SKILL.md" and hits[0]["kind"] == "skill",
               f"S-3: odmiana polska (rdzeń) trafia w skill: {hits[:1]}")
         hits = kb.search("credit_reference_id", root)
         check(hits and hits[0]["path"].endswith("references/szczegoly.md"), f"S-4: identyfikator z podkreśleniem: {hits[:1]}")
@@ -113,7 +139,7 @@ def main() -> int:
         hits = kb.search("płatność kartą 50 kW", root)
         check(hits and hits[0]["kind"] == "research", f"S-6: archiwum researchu: {hits[:1]}")
         check(kb.search("zupełnie nieobecne słowo kwarkowe", root) == [], "S-7: brak trafień → pusta lista")
-        check(len(kb.search("dom ev", root, k=2)) <= 2, "S-8: limit k")
+        check(len(kb.search("dom alpha", root, k=2)) <= 2, "S-8: limit k")
 
         # Pobieranie z URL (lokalny serwer testowy) i źródło spoza rejestru
         site = root / "site"
@@ -131,7 +157,7 @@ def main() -> int:
                 check(False, "I-5: adres lokalny bez zgody → błąd")
             except kb.KbError as e:
                 check("lokaln" in str(e) or "prywatn" in str(e), f"I-5: komunikat: {e}")
-            os.environ["EVTF_KB_ALLOW_LOCAL"] = "1"
+            os.environ["TF_KB_ALLOW_LOCAL"] = "1"
             m = kb.ingest(url, root)
             text = (cache / m["id"] / "doc.txt").read_text(encoding="utf-8")
             check(m["rank"] == "W" and m["title"] == "AFIR test" and any("spoza rejestru" in w for w in m["warnings"]),
@@ -139,7 +165,7 @@ def main() -> int:
             check("Płatność ad hoc" in text and "alert" not in text and "ukryte" not in text and ".x{}" not in text,
                   f"I-7: HTML → tekst bez skryptów, stylów i ukrytych elementów: {text!r}")
         finally:
-            os.environ.pop("EVTF_KB_ALLOW_LOCAL", None)
+            os.environ.pop("TF_KB_ALLOW_LOCAL", None)
             srv.shutdown()
 
         # Pusta albo prawie pusta odpowiedź (np. strona wymaga JavaScriptu) to błąd, nie źródło
@@ -180,14 +206,15 @@ def main() -> int:
         check(st[rid]["stale"] and st[rid]["age_days"] == 657, f"ST-1: źródło starsze niż 180 dni → stale: {st.get(rid)}")
         check(kb.remove(m["id"], root) and not (cache / m["id"]).exists(), "RM-1: usunięcie źródła z cache")
 
-        # Katalog cache z EVTF_KB_DIR
-        alt = Path(t) / "alt-kb"
-        os.environ["EVTF_KB_DIR"] = str(alt)
-        try:
-            kb.ingest(rid, root, file=spec_file)
-            check((alt / rid / "doc.txt").exists(), "ENV-1: EVTF_KB_DIR zmienia katalog cache")
-        finally:
-            os.environ.pop("EVTF_KB_DIR", None)
+        # Katalog cache z TF_KB_DIR; stara nazwa EVTF_KB_DIR dalej działa
+        for n, var in enumerate(("TF_KB_DIR", "EVTF_KB_DIR")):
+            alt = Path(t) / f"alt-kb-{n}"
+            os.environ[var] = str(alt)
+            try:
+                kb.ingest(rid, root, file=spec_file)
+                check((alt / rid / "doc.txt").exists(), f"ENV-{n + 1}: {var} zmienia katalog cache")
+            finally:
+                os.environ.pop(var, None)
 
         # Wiersz poleceń
         run = lambda *a: subprocess.run([sys.executable, str(SCRIPT), *a, "--root", str(root)], capture_output=True, text=True)
@@ -198,16 +225,16 @@ def main() -> int:
         check(p.returncode == 0 and json.loads(p.stdout)[0]["path"].endswith("szczegoly.md"), f"CLI-2: --json: {p.stdout[:200]}")
         p = run("search", "zupełnie nieobecne słowo kwarkowe")
         check(p.returncode == 1, f"CLI-3: brak trafień → kod 1: {p.returncode}")
-        p = run("sources", "--area", "ocpi")
-        check(p.returncode == 0 and "ocpi" in p.stdout.lower(), f"CLI-4: lista źródeł obszaru: {p.stdout[:300]}")
+        p = run("sources", "--area", "gateway")
+        check(p.returncode == 0 and "spec-gateway" in p.stdout and "spec-tariffs" not in p.stdout,
+              f"CLI-4: lista źródeł obszaru ze wszystkich rejestrów: {p.stdout[:300]}")
         p = run("ingest", "nie-ma-takiego-id")
         check(p.returncode == 2, f"CLI-5: nieznane id bez URL → kod 2: {p.returncode} {p.stderr[-200:]}")
         p = run("status")
         check(p.returncode == 0 and rid in p.stdout, f"CLI-6: status: {p.stdout[:300]}")
 
-    # Prawdziwa fabryka: pytanie o korektę CDR trafia w skill rozliczeń
-    hits = kb.search("korekta CDR kredytowy credit_reference_id", ROOT, k=3)
-    check(any("dom-ev-cdr-settlement" in h["path"] for h in hits), f"REAL-1: baza fabryki → dom-ev-cdr-settlement: {[h['path'] for h in hits]}")
+    # Prawdziwa fabryka: rejestry zainstalowanych nakładek są poprawne
+    check(kb.validate_registries(ROOT) == [], f"REAL-1: rejestry źródeł fabryki: {kb.validate_registries(ROOT)}")
 
     if fails:
         print(f"✗ {len(fails)}/{total} testów bazy wiedzy nie przeszło:")
