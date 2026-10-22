@@ -7,12 +7,28 @@
       "prompt": "Mamy stację z dofinansowania NEVI. Jeden port miał w zeszłym roku 20 000 minut awarii, z czego 6 000 to przerwa w dostawie prądu od utility i planowany serwis. Czy spełniamy federalny wymóg dostępności portu i jak to się dokładnie liczy? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["525[ ,.]?600"],
-          ["97[,.]3"],
-          ["T_?excluded|wyłączon|wykluczon|excluded"],
-          ["680\\.116"]
+          [
+            "525[ ,.]?600"
+          ],
+          [
+            "97[,.]3"
+          ],
+          [
+            "T_?excluded|wyłączon|wykluczon|excluded"
+          ],
+          [
+            "680\\.116"
+          ],
+          [
+            "(poprzedni|ostatni|minion|kroczą)\\w* 12 mies|12 mies\\w* (wstecz|kroczą)|okn\\w* 12 mies|rok\\w* kroczą|rolling|trailing 12"
+          ],
+          [
+            "moc\\w* minimaln|minimum power|680\\.106\\(d\\)|dostarcza\\w* (energi|moc)|Available[^.]{0,80}(nie|not)"
+          ]
         ],
-        "none": ["99 ?%"]
+        "none": [
+          "99 ?%"
+        ]
       }
     },
     {
@@ -21,13 +37,25 @@
       "prompt": "Piszemy CPMS dla stacji budowanych za pieniądze federalne w USA. Jakie protokoły (ładowarka–CSMS, CSMS–CSMS, pojazd–ładowarka) i jaka forma ceny są tam wymagane przed startem sesji? Odpowiedz zwięźle z numerami paragrafów.",
       "checks": {
         "all": [
-          ["OCPP 2\\.0\\.1"],
-          ["OCPI 2\\.2\\.1"],
-          ["15118-2|15118-20"],
-          ["\\$ ?/ ?kWh|za kWh|per kWh"],
-          ["680\\.108"]
+          [
+            "OCPP 2\\.0\\.1"
+          ],
+          [
+            "OCPI 2\\.2\\.1"
+          ],
+          [
+            "15118-2|15118-20"
+          ],
+          [
+            "\\$ ?/ ?kWh|za kWh|per kWh"
+          ],
+          [
+            "680\\.108"
+          ]
         ],
-        "none": ["(wystarczy|wystarcza)[^.]{0,30}OCPP 1\\.6"]
+        "none": [
+          "(wystarczy|wystarcza)[^.]{0,30}OCPP 1\\.6"
+        ]
       }
     },
     {
@@ -36,13 +64,25 @@
       "prompt": "Sprzedajemy kWh na szybkich ładowarkach DC w USA i pokazujemy cenę w aplikacji. Z jaką rozdzielczością wolno wskazywać energię na DC i AC, jakie pola ma mieć paragon (także elektroniczny) i czy cena za kWh może się zmienić w trakcie sesji? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["0[.,]001 ?kWh"],
-          ["0[.,]000 ?1"],
-          ["Handbook 44|HB ?44|3\\.40"],
-          ["S\\.2\\.6|UR\\.3\\.3|paragon|receipt"],
-          ["S\\.2\\.4\\.3|zgod|approved|wcześniej"]
+          [
+            "0[.,]001 ?kWh"
+          ],
+          [
+            "0[.,]000 ?1"
+          ],
+          [
+            "Handbook 44|HB ?44|3\\.40"
+          ],
+          [
+            "S\\.2\\.6|UR\\.3\\.3|paragon|receipt"
+          ],
+          [
+            "S\\.2\\.4\\.3|zgod|approved|wcześniej"
+          ]
         ],
-        "none": ["tylko papierow"]
+        "none": [
+          "tylko papierow"
+        ]
       }
     },
     {

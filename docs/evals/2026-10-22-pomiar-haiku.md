@@ -80,17 +80,35 @@ dom-ev-regulations-pl 3/3–1/3, eng-behavior-preserving-refactoring 3/3–1/3, 
 dom-ev-kpi-analytics, dom-ev-market-roles, dom-ev-ocpp-16, dom-ev-ocpp-2x, dom-ev-regulations-eu,
 dom-ev-regulations-us, ops-kubernetes, proc-product-discovery.
 
-**Niezaliczone ze skillem (10):**
+**Niezaliczone ze skillem (10, w tym 1 błąd kryterium):**
 - nie wczytał się: eng-testing/tdd-nowa-regula, eng-behavior-preserving-refactoring/zapis-pozycyjny-wartownicy;
   wczytał się sąsiad: ddd-context-mapping/event-carried-state (be-messaging-outbox),
   ops-security-operations/terminy-zgloszen (sec-eu-regulations), proc-project-planning/model-cyklu-zycia
   (core-delivery-lifecycle);
 - brak treści: arch-privacy-compliance/nowa-funkcja-dane (PKE), ddd-deep-modeling/status-faktury (5 why),
   proc-project-planning/plan-dla-sponsora (karta projektu), txt-polish-correctness/wielkie-litery-2026 (wzmianka
-  o zmianie zasad), dom-ev-regulations-eu/afir-adhoc-terminal-cena (twierdzenie, że kod QR wystarcza).
+  o zmianie zasad); `dom-ev-regulations-eu/afir-adhoc-terminal-cena` okazał się błędem kryterium (sekcja niżej).
+
+## Zaostrzenie scenariuszy partii 2 (bez modelu)
+Kryteria 11 skilli „bez różnicy” sprawdzone offline na odpowiedziach partii 2 (same wyrażenia, bez sędziego).
+Rozróżnia 22 z 28 scenariuszy, przed zmianą 4: ddd-context-mapping 2/3, ops-kubernetes 2/2,
+proc-product-discovery 3/3, dom-ev-kpi-analytics 3/3, dom-ev-diagnostics 2/2, dom-ev-iso15118 2/2,
+dom-ev-market-roles 2/2, dom-ev-ocpp-16 1/2, dom-ev-ocpp-2x 2/2, dom-ev-regulations-eu 2/4, dom-ev-regulations-us 1/3.
+- Nowe grupy sprawdzają reguły skilli, których model bez skilla nie podaje, np. dowody przed `Reset`, utilization
+  na EVSE zamiast złącza, fakty ISO 15118 z implementacji a nie z normy, okno 12 miesięcy i definicja „up” w NEVI.
+- Poprawione fałszywe odrzucenia: odmiany i zapisy dat (CRA), „Aneks I”, „np.” w zdaniu (liveness), seqNo „w obrębie”
+  transakcji, uruchomione w trakcie okresu (utilization).
+- `dom-ev-regulations-eu/afir-adhoc-terminal-cena` to był błąd wyrażenia `none` (łapało „QR nie wystarcza”), nie
+  treści skilla — pozycja schodzi z listy „brak treści”.
+- Nie rozróżniają: `ddd-context-mapping/event-carried-state` (wczytał się sąsiad be-messaging-outbox — punkt 2),
+  `dom-ev-ocpp-16/status-kabel-bez-autoryzacji` (wiedza podręcznikowa — do zastąpienia trudniejszym scenariuszem),
+  `dom-ev-regulations-eu/cra-firmware-terminy` i `/nis2-cpo-zakres`, `dom-ev-regulations-us/nevi-protokoly-cena`
+  i `/hb44-kwh-paragon` (model zna CRA i NIS2 albo pobiera eCFR i HB44 sam — kandydaci do skrócenia).
+- Kryteria sprawdzono na jednej odpowiedzi; kolejna płatna partia pokaże ich stabilność (na granicy surowości:
+  `dom-ev-ocpp-2x/luka-seqno`).
 
 ## Dalej
-1. Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2 (offline na `batch2-evals.jsonl`, bez kosztu).
+1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. Poprawić wczytywanie i treść skilli z listy niezaliczonych (opis, kolejność zasad, jak w PR #17 i #19).
 3. Kolejne partie: zostało ok. 580 scenariuszy (ok. 100 na partię, ok. 25 USD, ok. 12% okna).
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness).

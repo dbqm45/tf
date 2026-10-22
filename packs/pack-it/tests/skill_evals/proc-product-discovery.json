@@ -21,6 +21,10 @@
             "założeń|założen",
             "assumption",
             "test"
+          ],
+          [
+            "(co najmniej|minimum|≥|przynajmniej)\\s*(3|trzy)\\s*(rozwiąz|opcj|warian)",
+            "wartoś\\w*[^\\n]{0,200}użyteczn\\w*[^\\n]{0,200}wykonaln"
           ]
         ]
       }
@@ -39,6 +43,15 @@
           ],
           [
             "HEART|OKR|metryk\\w+ ochronn|guardrail"
+          ],
+          [
+            "wynik\\w*[^.]{0,30}(nie|zamiast) (od )?funkcj",
+            "outcome",
+            "mierzaln\\w* (wynik|cel)"
+          ],
+          [
+            "plan\\w* zdarzeń|zdarze\\w+ analityczn|tracking plan",
+            "metryk\\w* wiodąc|leading (metric|indicator)"
           ]
         ]
       }
@@ -63,6 +76,11 @@
             "utrzymani",
             "odpowiedzialnoś",
             "właściciel"
+          ],
+          [
+            "źródł\\w* prawdy|link\\w* do źródeł",
+            "makiet\\w*[^.]{0,80}(skrypt|eksport)",
+            "kolejnoś\\w* dojrzewania"
           ]
         ]
       }

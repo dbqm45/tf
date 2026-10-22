@@ -6,8 +6,37 @@
       "expect": "trigger",
       "prompt": "W OCPP 2.0.1 dostajemy TransactionEvent Updated z seqNo 7, a ostatni zapisany u nas dla tej transakcji to 5. Co robić?",
       "checks": {
-        "all": [["seqNo.{0,60}(per|dla każdej|w ramach).{0,30}transakcj", "numer.{0,30}sekwencj", "sequence"], ["brak", "luk", "gap", "missing"], ["nie odrzucaj", "nie odrzuca", "przyjmij", "zapisz.{0,40}(kolejność|seqNo)", "kolejk", "buforu", "reorder", "uporządkuj"]],
-        "none": ["StopTransaction", "StartTransaction"]
+        "all": [
+          [
+            "seqNo.{0,60}(per|dla każdej|w ramach|w obrębie).{0,30}transakcj",
+            "globaln\\w* licznik",
+            "numer.{0,30}sekwencj",
+            "sequence"
+          ],
+          [
+            "brak",
+            "luk",
+            "gap",
+            "missing"
+          ],
+          [
+            "nie odrzucaj",
+            "nie odrzuca",
+            "przyjmij",
+            "zapisz.{0,40}(kolejność|seqNo)",
+            "kolejk",
+            "buforu",
+            "reorder",
+            "uporządkuj"
+          ],
+          [
+            "nie zamykaj[^.]{0,20}(sesj|transakcj)|niekompletn|incomplete"
+          ]
+        ],
+        "none": [
+          "StopTransaction",
+          "StartTransaction"
+        ]
       }
     },
     {
@@ -15,8 +44,32 @@
       "expect": "trigger",
       "prompt": "Który profil bezpieczeństwa OCPP wymaga certyfikatu klienta po stronie ładowarki i co musimy wtedy ogarnąć po stronie backendu?",
       "checks": {
-        "all": [["profil(u)? 3", "security profile 3", "profile 3"], ["mTLS", "wzajemn", "certyfikat(u)? klient"], ["PKI", "rotacj", "unieważni", "revo", "CA"]],
-        "none": ["profil(u)? 2 wymaga certyfikatu klienta", "profil(u)? 1 wymaga certyfikatu"]
+        "all": [
+          [
+            "profil(u)? 3",
+            "security profile 3",
+            "profile 3"
+          ],
+          [
+            "mTLS",
+            "wzajemn",
+            "certyfikat(u)? klient"
+          ],
+          [
+            "PKI",
+            "rotacj",
+            "unieważni",
+            "revo",
+            "CA"
+          ],
+          [
+            "wersj\\w* i edycj|rejestr\\w* urządzeń|zapis\\w*[^.]{0,40}edycj"
+          ]
+        ],
+        "none": [
+          "profil(u)? 2 wymaga certyfikatu klienta",
+          "profil(u)? 1 wymaga certyfikatu"
+        ]
       }
     },
     {

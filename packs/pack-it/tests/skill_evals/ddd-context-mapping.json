@@ -19,6 +19,16 @@
           [
             "upstream",
             "downstream"
+          ],
+          [
+            "conformi\\w*[^.]{0,120}(język|core|rdzen|rdzeń)",
+            "(core|rdzen|rdzeń|język)[^.]{0,80}conformi"
+          ],
+          [
+            "dependency-cruiser|no-restricted-imports|ArchUnit",
+            "\\brg -l\\b|grep[^.]{0,60}adapter",
+            "context-map\\.md",
+            "connascence"
           ]
         ]
       }
@@ -40,6 +50,10 @@
           ],
           [
             "wersj\\w* schemat|numer\\w* (wersji|sekwencji)|kolejno"
+          ],
+          [
+            "spójnoś\\w* ostateczn|eventual\\w* consisten",
+            "jedyn\\w* właściciel|właściciel\\w*[^.]{0,40}danych|źródł\\w* prawdy|source of truth"
           ]
         ]
       }
@@ -61,6 +75,10 @@
           ],
           [
             "dependency-cruiser|no-restricted-imports|ArchUnit|lint"
+          ],
+          [
+            "serwerow\\w*[^.]{0,80}(klient|przeglądark|bundle|paczk)",
+            "obiekt\\w* wartości[^.]{0,80}(jedyn|zna kształt)"
           ]
         ]
       }

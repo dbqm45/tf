@@ -13,8 +13,9 @@
             "sum\\w* kontroln|checksum|hash"
           ],
           [
-            "tym samym pr",
-            "razem z kodem|walidu\\w+ konfigurac\\w+ przy starcie"
+            "tym samym (pr|pull request|commicie|repozytorium|wdrożeniu)",
+            "same (pr|pull request|commit)",
+            "razem z (kodem|obrazem|wersją obrazu)[^.]{0,60}(pr\\b|repozytor|gitops)"
           ],
           [
             "readiness|gotowo"
@@ -32,11 +33,15 @@
             "pdb|poddisruptionbudget"
           ],
           [
-            "liveness[^.]{0,80}(nie|bez)[^.]{0,60}(zależno|zewn|baz)",
-            "(nie|bez)[^.]{0,60}(zależno|zewn|baz)[^.]{0,80}liveness"
+            "liveness[^\\n]{0,120}(nie|bez)[^\\n]{0,60}(zależno|zewn|baz)",
+            "(nie|bez)[^\\n]{0,60}(zależno|zewn|baz)[^\\n]{0,80}liveness"
           ],
           [
             "startupprobe|restricted|seccomp"
+          ],
+          [
+            "digest|sha256",
+            "(nie|nigdy|bez|zamiast)\\W{0,3}`?:?latest"
           ]
         ]
       }
