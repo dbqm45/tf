@@ -7,12 +7,37 @@
       "prompt": "Model 70B w FP16 nie mieści się nam na jednej karcie 80 GB. Jak go zmniejszyć i jak sprawdzić, że jakość nie spadła? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["140 ?GB"],
-          ["awq", "gptq", "fp8", "int4", "4.bit"],
-          ["kwantyzacj\\w+"],
-          ["własn\\w+ (zestaw|zbiór|eval)", "zbiór\\w* ewaluacyjn\\w+", "zadani\\w+ docelow\\w+", "ewaluacj\\w+ (na|po)", "kl divergence|perplexity|perpleksj"]
+          [
+            "140 ?GB"
+          ],
+          [
+            "awq",
+            "gptq",
+            "fp8",
+            "int4",
+            "4.bit"
+          ],
+          [
+            "kwantyzacj\\w+"
+          ],
+          [
+            "własn\\w+ (zestaw|zbiór|eval)",
+            "zbiór\\w* ewaluacyjn\\w+",
+            "zadani\\w+ docelow\\w+",
+            "ewaluacj\\w+ (na|po)",
+            "kl divergence|perplexity|perpleksj"
+          ],
+          [
+            "kawałk\\w*",
+            "slice",
+            "w podziale na (język|długoś|segment|rodzaj)",
+            "pr[óo]g\\w*[^.]{0,60}przed\\W{0,3}(pomiar|mierzen|kwantyzacj)"
+          ]
         ],
-        "none": ["kwantyzacja nie wpływa na jakość", "zawsze bez utraty jakości"]
+        "none": [
+          "kwantyzacja nie wpływa na jakość",
+          "zawsze bez utraty jakości"
+        ]
       }
     },
     {
@@ -21,12 +46,36 @@
       "prompt": "Mamy model wizyjny w PyTorch (ResNet do kontroli jakości na linii) i na serwerze z procesorami Intela odpowiedź trwa 120 ms na obraz, a potrzebujemy 40 ms. Co zrobić i w jakiej kolejności? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["onnx"],
-          ["openvino", "onnx runtime"],
-          ["int8", "kwantyzacj\\w+"],
-          ["zmierz\\w*", "pomiar\\w*", "profil\\w+", "baseline", "p95", "rozgrzew\\w+"]
+          [
+            "onnx"
+          ],
+          [
+            "openvino",
+            "onnx runtime"
+          ],
+          [
+            "int8",
+            "kwantyzacj\\w+"
+          ],
+          [
+            "zmierz\\w*",
+            "pomiar\\w*",
+            "profil\\w+",
+            "baseline",
+            "p95",
+            "rozgrzew\\w+"
+          ],
+          [
+            "zgodno\\w+ liczbow",
+            "numerical (parity|equivalence)",
+            "kawałk\\w*",
+            "pr[óo]g\\w*[^.]{0,60}przed\\W{0,3}(pomiar|mierzen)"
+          ]
         ],
-        "none": ["tensorrt (na|dla) cpu", "tensorrt na procesorach intel"]
+        "none": [
+          "tensorrt (na|dla) cpu",
+          "tensorrt na procesorach intel"
+        ]
       }
     },
     {
@@ -35,11 +84,30 @@
       "prompt": "Chcę uruchomić model 8B lokalnie na laptopie bez GPU z 16 GB RAM, do ręcznych zadań. Jaki format i jaki poziom kwantyzacji wybrać i ile to zajmie pamięci? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["gguf", "llama\\.cpp"],
-          ["q4_k_m", "q5_k_m", "q8_0"],
-          ["\\b[4-9](,\\d)? ?GB\\b", "bajt\\w*", "bit\\w*"]
+          [
+            "gguf",
+            "llama\\.cpp"
+          ],
+          [
+            "q4_k_m",
+            "q5_k_m",
+            "q8_0"
+          ],
+          [
+            "\\b[4-9](,\\d)? ?GB\\b",
+            "bajt\\w*",
+            "bit\\w*"
+          ],
+          [
+            "poza angielsk",
+            "imatrix",
+            "parametr\\w*[^.]{0,20}(×|razy|x)[^.]{0,20}bajt",
+            "bajt\\w* na parametr"
+          ]
         ],
-        "none": ["bez żadnej utraty jakości"]
+        "none": [
+          "bez żadnej utraty jakości"
+        ]
       }
     },
     {

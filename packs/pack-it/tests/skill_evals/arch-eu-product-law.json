@@ -21,6 +21,15 @@
           ],
           [
             "20\\d\\d"
+          ],
+          [
+            "\\[(wtórne|niezweryfikowane)\\]",
+            "źród\\w+ wtórn",
+            "UC163"
+          ],
+          [
+            "dostawc\\w+ usług\\w* przetwarzania danych",
+            "rol\\w+ .{0,30}(dostawc|podmiot\\w* stosuj)"
           ]
         ]
       }
@@ -42,6 +51,17 @@
           ],
           [
             "prawnik\\w*|nie jest porad\\w*|porad\\w* prawn\\w*|zweryfik\\w*"
+          ],
+          [
+            "\\[(wtórne|niezweryfikowane)\\]",
+            "źród\\w+ wtórn",
+            "nie zweryfikowan\\w+ w (EUR-Lex|tekście)",
+            "nie zweryfikowano"
+          ],
+          [
+            "backlog",
+            "luk\\w* w (kodzie|produkcie)",
+            "zadani\\w* (do|w) (backlogu|produkcie)"
           ]
         ]
       }
