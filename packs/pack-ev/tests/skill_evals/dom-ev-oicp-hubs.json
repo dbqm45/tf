@@ -7,12 +7,22 @@
       "prompt": "Wysyłamy do Hubject dane stacji. Pełny wsad kilkuset EVSE poszedł w jednym wątku, a zaraz potem drugi wątek wysłał mały wsad z jednym EVSE. W hubie zostały dziwne rekordy, jakby ten duży nadpisał mały. Co robimy źle i jak to ma działać? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["sekwencyjn|po kolei|sequential"],
-          ["odpowied[zź]|response|potwierdzeni"],
-          ["fullLoad|ActionType"],
-          ["eRoamingPushEvseData|PushEvseData"]
+          [
+            "sekwencyjn|po kolei|sequential"
+          ],
+          [
+            "odpowied[zź]|response|potwierdzeni"
+          ],
+          [
+            "fullLoad|ActionType"
+          ],
+          [
+            "eRoamingPushEvseData|PushEvseData"
+          ]
         ],
-        "none": ["równoległe pushe są bezpieczne"]
+        "none": [
+          "równoległe pushe są bezpieczne"
+        ]
       }
     },
     {
@@ -21,12 +31,22 @@
       "prompt": "Jesteśmy CPO i mamy integrację z Hubject po OICP. Wysłaliśmy rekord rozliczeniowy sesji, ale kwota energii była zła i chcemy wysłać drugi, poprawny. Hub odrzuca. Jak to działa w OICP i skąd hub wie, do której sesji należy rekord?",
       "checks": {
         "all": [
-          ["jeden CDR|only one CDR|tylko jeden|jednego CDR"],
-          ["SessionID"],
-          ["eRoamingChargeDetailRecord"],
-          ["do weryfikacji|ustal.{0,40}(z hubem|u Hubject)|support Hubject"]
+          [
+            "jeden CDR|only one CDR|tylko jeden|jednego CDR"
+          ],
+          [
+            "SessionID"
+          ],
+          [
+            "eRoamingChargeDetailRecord"
+          ],
+          [
+            "do weryfikacji|ustal.{0,40}(z hubem|u Hubject)|support Hubject"
+          ]
         ],
-        "none": ["PATCH"]
+        "none": [
+          "PATCH"
+        ]
       }
     },
     {
@@ -35,13 +55,28 @@
       "prompt": "Mamy działające OCPI z kilkoma eMSP, a nowy duży partner pracuje tylko przez Hubject. Co się zmienia w identyfikacji stron i w uwierzytelnieniu? Kto jest naszym partnerem po drugiej stronie i jak odpowiada zdalny start?",
       "checks": {
         "all": [
-          ["ProviderID"],
-          ["OperatorID"],
-          ["certyfikat|certificate|mTLS"],
-          ["017"],
-          ["eRoamingAuthorizeRemoteStart"]
+          [
+            "ProviderID"
+          ],
+          [
+            "OperatorID"
+          ],
+          [
+            "certyfikat|certificate|mTLS"
+          ],
+          [
+            "017"
+          ],
+          [
+            "(eRoaming)?AuthorizeRemoteStart"
+          ],
+          [
+            "SessionID.{0,60}(nadaje|generuje|tworzy) Hubject|Hubject.{0,60}(nadaje|generuje|tworzy).{0,30}SessionID|wynika (tylko )?z `?(EvseID|EvcoID)|EvseID`? (albo|lub) `?EvcoID|\\b(018|603|604)\\b"
+          ]
         ],
-        "none": ["token A"]
+        "none": [
+          "token A"
+        ]
       }
     },
     {

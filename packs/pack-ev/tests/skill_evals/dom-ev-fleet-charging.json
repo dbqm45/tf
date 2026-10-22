@@ -7,11 +7,25 @@
       "prompt": "Mamy ładowarki za szlabanem przy biurowcu. Chcemy, żeby klienci B2B z umową ładowali za darmo, a goście płacili. Księgowość mówi, żeby ich w ogóle wyłączyć z rozliczeń, bo tam i tak nie ma kwot. Czy to dobry pomysł i jak w CSMS ograniczyć, kto gdzie może ładować?",
       "checks": {
         "all": [
-          ["taryf\\w* (zerow|za 0|free)|Free of Charge|cen\\w* 0|FLAT.{0,20}0"],
-          ["CDR.{0,100}(zerow|0|nadal|dalej|mimo)|(zerow|0).{0,60}CDR"],
-          ["whitelist|biała lista|lista uprawnie|group_?Id|locations?\\b.{0,40}(token|uprawni)|AuthorizationInfo"]
+          [
+            "taryf\\w* (zerow|za 0|free)|Free of Charge|cen\\w* 0|FLAT.{0,20}0"
+          ],
+          [
+            "CDR.{0,100}(zerow|0|nadal|dalej|mimo)|(zerow|0).{0,60}CDR"
+          ],
+          [
+            "whitelist|biała lista|lista uprawnie|group_?Id|locations?\\b.{0,40}(token|uprawni)|AuthorizationInfo"
+          ],
+          [
+            "cacheExpiry|cache\\w*.{0,60}(krótk|gości|przedłuż)|(lokaln\\w+ (biał\\w+ )?list\\w*|Local Authorization List|offline).{0,80}(pracown|stał\\w* uprawn|nie (dla )?goś)"
+          ],
+          [
+            "publish|niepubliczn|poza roaming|bilans.{0,40}licznik|licznik\\w* (hosta|budynku|główn)"
+          ]
         ],
-        "none": ["nie (generuj|twórz|wystawiaj|potrzeb)\\w* (żadnych )?CDR"]
+        "none": [
+          "nie (generuj|twórz|wystawiaj|potrzeb)\\w* (żadnych )?CDR"
+        ]
       }
     },
     {
@@ -20,11 +34,25 @@
       "prompt": "Pracownik ma służbowe auto i wallbox w garażu. Wallbox jest w naszym CSMS, ale w tym samym garażu ładuje też prywatny samochód żony. Jak rozsądnie policzyć zwrot kosztów prądu i co z jego danymi?",
       "checks": {
         "all": [
-          ["oddziel\\w*.{0,80}(sesj|auto|token)|(sesj|auto|token).{0,80}(służbow).{0,80}(prywatn|żon)|tylko sesj\\w+ (służbow|przypisan)"],
-          ["stawk\\w*.{0,60}(zwrot|taryf|ryczałt|dynamicz)|ryczałt"],
-          ["RODO|minimalizac|dane domow|zgod|cel przetwarzania|retencj"]
+          [
+            "oddziel\\w*.{0,80}(sesj|auto|token)|(sesj|auto|token).{0,80}(służbow).{0,80}(prywatn|żon)|tylko sesj\\w+ (służbow|przypisan)"
+          ],
+          [
+            "stawk\\w*.{0,60}(zwrot|taryf|ryczałt|dynamicz)|ryczałt"
+          ],
+          [
+            "RODO|minimalizac|dane domow|zgod|cel przetwarzania|retencj"
+          ],
+          [
+            "strat\\w*.{0,80}(licznik|akumulator|bateri|pracownik)"
+          ],
+          [
+            "do potwierdzenia|dat\\w* obowiązywania|nie przelicza|wersj\\w* stawk|stawk\\w* \\(wersj"
+          ]
         ],
-        "none": ["wszystkie kWh z (licznika|ładowarki) domow\\w+ (zwrac|rozlicz)"]
+        "none": [
+          "wszystkie kWh z (licznika|ładowarki) domow\\w+ (zwrac|rozlicz)"
+        ]
       }
     },
     {

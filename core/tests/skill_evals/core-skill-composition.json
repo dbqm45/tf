@@ -14,7 +14,8 @@
             "słownik|słowniku",
             "pojęci\\w* (domenow|ze słownika)",
             "idiom",
-            "domena decyduje o pojęci",
+            "domen\\w* (decyduje|rozstrzyga|mówi|wygrywa)",
+            "regu\\w* domeny wygryw",
             "pojęcia z domeny"
           ]
         ]
@@ -31,10 +32,14 @@
       "checks": {
         "all": [
           [
-            "domen\\w*.{0,70}(wygrywa|pierwszeństw|ponad|przed|>)"
+            "domen\\w*.{0,70}(wygrywa|pierwszeństw|ponad|przed|>)",
+            "wygryw\\w*.{0,30}regu\\w* domen"
           ],
           [
             "(ustaleni|konwencj)\\w*.{0,70}(projekt|zespoł|firm)|(projekt|zespoł|firm)\\w*.{0,70}(ustaleni|konwencj)"
+          ],
+          [
+            "propozycj|CLAUDE\\.md|zasad\\w* stał|hook|bezpieczeństw"
           ]
         ]
       }

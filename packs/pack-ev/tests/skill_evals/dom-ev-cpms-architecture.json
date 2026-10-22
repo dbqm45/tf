@@ -6,8 +6,37 @@
       "expect": "trigger",
       "prompt": "Mamy 3 instancje backendu za load balancerem i komenda RemoteStart czasem ginie. Jak dostarczać komendy do ładowarki, która jest podłączona do innej instancji?",
       "checks": {
-        "all": [["rejestr.{0,40}połącze", "connection registry", "mapowanie.{0,40}(stacj|ładowark).{0,40}(węz|instancj)", "lookup"], ["szyn", "kolejk", "pub/?sub", "broker", "message bus", "queue"], ["afinic", "sticky", "jedn[ae]? (węz|instancj)", "affinity", "owner"]],
-        "none": ["otwórz nowe połączenie WebSocket do ładowarki", "backend łączy się z ładowarką"]
+        "all": [
+          [
+            "rejestr.{0,40}połącze",
+            "connection registry",
+            "mapowanie.{0,40}(stacj|ładowark).{0,40}(węz|instancj)",
+            "lookup"
+          ],
+          [
+            "szyn",
+            "kolejk",
+            "pub/?sub",
+            "broker",
+            "message bus",
+            "queue"
+          ],
+          [
+            "afinic",
+            "sticky",
+            "jedn[ae]? (węz|instancj)",
+            "affinity",
+            "owner"
+          ],
+          [
+            "symulator\\w*|simulator",
+            "kolejno\\w+.{0,20}per (stacj|station)|per[- ]station order"
+          ]
+        ],
+        "none": [
+          "otwórz nowe połączenie WebSocket do ładowarki",
+          "backend łączy się z ładowarką"
+        ]
       }
     },
     {
@@ -15,8 +44,43 @@
       "expect": "trigger",
       "prompt": "Po wdrożeniu nowej wersji 5000 ładowarek łączy się naraz i backend pada. Jak to zaprojektować, żeby się nie powtórzyło?",
       "checks": {
-        "all": [["jitter", "losow", "rozłoż", "random"], ["backoff", "limit.{0,30}(połącze|handshake|nowych)", "rate limit", "throttl"], ["Pending", "BootNotification", "retryInterval", "interwał"], ["rolling", "stopniowo", "drain", "partiami", "graceful"]],
-        "none": ["wyłącz TLS", "usuń heartbeat"]
+        "all": [
+          [
+            "jitter",
+            "losow",
+            "rozłoż",
+            "random"
+          ],
+          [
+            "backoff",
+            "limit.{0,30}(połącze|handshake|nowych)",
+            "rate limit",
+            "throttl"
+          ],
+          [
+            "Pending",
+            "BootNotification",
+            "retryInterval",
+            "interwał"
+          ],
+          [
+            "rolling",
+            "stopniowo",
+            "drain",
+            "partiami",
+            "graceful"
+          ],
+          [
+            "Pending.{0,80}(interval|interwał)|(nie|zamiast|not) .?Rejected"
+          ],
+          [
+            "kolejno\\w+.{0,20}per (stacj|station)|per[- ]station order|klucz\\w* partycji.{0,20}stationId|seqNo"
+          ]
+        ],
+        "none": [
+          "wyłącz TLS",
+          "usuń heartbeat"
+        ]
       }
     },
     {
