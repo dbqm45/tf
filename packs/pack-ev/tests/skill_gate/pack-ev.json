@@ -36,8 +36,8 @@
   "offline": "2026-10-20"
  },
  "dom-ev-diagnostics": {
-  "fingerprint": "8e25f1f3c2fdd4d3",
-  "offline": "2026-10-20"
+  "fingerprint": "a28239969a53f462",
+  "offline": "2026-10-22"
  },
  "dom-ev-emsp-platform": {
   "fingerprint": "2cf29f02226886d6",
@@ -60,20 +60,20 @@
   "offline": "2026-10-20"
  },
  "dom-ev-iso15118": {
-  "fingerprint": "7a4e1a21f6f712b0",
-  "offline": "2026-10-20"
+  "fingerprint": "a8c39b0a5536da6d",
+  "offline": "2026-10-22"
  },
  "dom-ev-knowledge-base": {
   "fingerprint": "c7c47be9e55bc329",
   "offline": "2026-10-22"
  },
  "dom-ev-kpi-analytics": {
-  "fingerprint": "6e24a177fe3a9312",
-  "offline": "2026-10-20"
+  "fingerprint": "d230ca10e7ca93e0",
+  "offline": "2026-10-22"
  },
  "dom-ev-market-roles": {
-  "fingerprint": "87b487a6116be209",
-  "offline": "2026-10-20"
+  "fingerprint": "cc8e148618b59e14",
+  "offline": "2026-10-22"
  },
  "dom-ev-metering-calibration": {
   "fingerprint": "dc1877a3580ef370",
@@ -84,12 +84,12 @@
   "offline": "2026-10-20"
  },
  "dom-ev-ocpp-16": {
-  "fingerprint": "adc33c77d3960ae7",
-  "offline": "2026-10-20"
+  "fingerprint": "c790473ba635e728",
+  "offline": "2026-10-22"
  },
  "dom-ev-ocpp-2x": {
-  "fingerprint": "bc351da534a61ba2",
-  "offline": "2026-10-20"
+  "fingerprint": "b36d625171d540e7",
+  "offline": "2026-10-22"
  },
  "dom-ev-oicp-hubs": {
   "fingerprint": "341c3d41d239591c",
@@ -100,16 +100,16 @@
   "offline": "2026-10-20"
  },
  "dom-ev-regulations-eu": {
-  "fingerprint": "19aeee8a17cfc887",
-  "offline": "2026-10-20"
+  "fingerprint": "8d57187ca3d9b0fc",
+  "offline": "2026-10-22"
  },
  "dom-ev-regulations-pl": {
   "fingerprint": "fe0ac2125950e813",
   "offline": "2026-10-20"
  },
  "dom-ev-regulations-us": {
-  "fingerprint": "29ee35b4b0f66a58",
-  "offline": "2026-10-20"
+  "fingerprint": "9156c4539ade1aa1",
+  "offline": "2026-10-22"
  },
  "dom-ev-security": {
   "fingerprint": "1e8f00bfcce3c278",

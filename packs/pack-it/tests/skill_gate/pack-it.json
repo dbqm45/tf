@@ -124,8 +124,8 @@
   "offline": "2026-10-18"
  },
  "ddd-context-mapping": {
-  "fingerprint": "6bbb17d8ecb3c51c",
-  "offline": "2026-10-17"
+  "fingerprint": "546a517c263b6edc",
+  "offline": "2026-10-22"
  },
  "ddd-deep-modeling": {
   "fingerprint": "119283374f78b120",
@@ -332,8 +332,8 @@
   "offline": "2026-10-04"
  },
  "ops-kubernetes": {
-  "fingerprint": "b1d005b30660b5a7",
-  "offline": "2026-10-04"
+  "fingerprint": "e63efe4607ef13f3",
+  "offline": "2026-10-22"
  },
  "ops-linux-networking": {
   "fingerprint": "4aef6b7e58540388",
@@ -396,8 +396,8 @@
   "offline": "2026-10-22"
  },
  "proc-product-discovery": {
-  "fingerprint": "3ccc45b9a2ba0ac1",
-  "offline": "2026-10-20"
+  "fingerprint": "ae5e3a53e3fb8afd",
+  "offline": "2026-10-22"
  },
  "proc-project-planning": {
   "fingerprint": "6f7a579e750ccc1e",
