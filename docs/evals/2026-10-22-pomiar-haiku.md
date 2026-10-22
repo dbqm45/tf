@@ -11,8 +11,9 @@ nakładkami. Koszt według `total_cost_usd` z Claude Code; zużycie planu Max 5x
 | partia 1 (22 skille, z porównaniem bez skilli) | 100 | 175 | 17,46 USD | 90/100 ze skillami |
 | powtórka niezaliczonych po poprawkach opisów | 7 + 2 | 9 | 1,06 USD | 9/9 |
 
-Średni koszt przebiegu: ze skillami 0,131 USD, bez skilli 0,058 USD. Sędzia (`--judge`) nie uruchomił się ani razu,
-bo wyrażenia sprawdzające trafiały; jego koszt pojawia się tylko przy chybionych sprawdzeniach.
+Średni koszt przebiegu: ze skillami 0,131 USD, bez skilli 0,058 USD (koszt sędziego wliczony). Sędzia (Sonnet)
+uruchamia się tylko, gdy wyrażenia sprawdzające nie trafią: w pilotażu ani razu, w partii 1 przy 60 ze 175 przebiegów.
+Kolumna „treść” niżej obejmuje oceny sędziego.
 
 ## Wartość skilli — treść odpowiedzi ze skillem i bez (partia 1)
 | Skill | Ze skillem | Bez skilli |
