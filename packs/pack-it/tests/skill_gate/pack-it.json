@@ -24,7 +24,7 @@
   "offline": "2026-10-22"
  },
  "ai-model-optimization": {
-  "fingerprint": "d32a6819c680dd17",
+  "fingerprint": "bb57115edc255a71",
   "offline": "2026-10-22"
  },
  "ai-nlp": {
@@ -36,7 +36,7 @@
   "offline": "2026-10-22"
  },
  "ai-prompt-engineering": {
-  "fingerprint": "931a34cbf40d2aad",
+  "fingerprint": "f0e34026688d4628",
   "offline": "2026-10-22"
  },
  "ai-rag": {
@@ -84,7 +84,7 @@
   "offline": "2026-10-22"
  },
  "be-api-design": {
-  "fingerprint": "6915259ac94fa63d",
+  "fingerprint": "914789154cdd644f",
   "offline": "2026-10-22"
  },
  "be-auth-security": {
@@ -96,7 +96,7 @@
   "offline": "2026-10-22"
  },
  "be-database": {
-  "fingerprint": "49e63adc640dcaca",
+  "fingerprint": "e683a708de397ae9",
   "offline": "2026-10-22"
  },
  "be-messaging-outbox": {
@@ -104,11 +104,11 @@
   "offline": "2026-10-22"
  },
  "data-analysis": {
-  "fingerprint": "1c1153b616ff5192",
+  "fingerprint": "40e46e030d150edd",
   "offline": "2026-10-22"
  },
  "data-engineering": {
-  "fingerprint": "4254280c564d76ff",
+  "fingerprint": "a9349fbd1aa31e4f",
   "offline": "2026-10-22"
  },
  "ddd-algorithm-recognition": {
@@ -212,7 +212,7 @@
   "offline": "2026-10-22"
  },
  "eng-local-quality-gates": {
-  "fingerprint": "13f1951b692005a1",
+  "fingerprint": "4b4de3b5be3581e0",
   "offline": "2026-10-22"
  },
  "eng-module-depth": {
@@ -260,7 +260,7 @@
   "offline": "2026-10-22"
  },
  "fw-nextjs": {
-  "fingerprint": "19c217b73ebe79ae",
+  "fingerprint": "f85a14c4df31377a",
   "offline": "2026-10-22"
  },
  "fw-react": {
@@ -268,7 +268,7 @@
   "offline": "2026-10-22"
  },
  "fw-spring-boot": {
-  "fingerprint": "e1a5de43ed26bd28",
+  "fingerprint": "966f190fe1c4eaed",
   "offline": "2026-10-22"
  },
  "lang-java": {
@@ -276,7 +276,7 @@
   "offline": "2026-10-22"
  },
  "lang-javascript": {
-  "fingerprint": "082c0a964fa76e01",
+  "fingerprint": "3b79412f9c665bf7",
   "offline": "2026-10-22"
  },
  "lang-python": {
@@ -312,7 +312,7 @@
   "offline": "2026-10-22"
  },
  "ops-docker": {
-  "fingerprint": "8b21afb09deb66cb",
+  "fingerprint": "0450f68f97a250f1",
   "offline": "2026-10-22"
  },
  "ops-finops": {
@@ -328,7 +328,7 @@
   "offline": "2026-10-22"
  },
  "ops-linux-networking": {
-  "fingerprint": "6a59194701922f80",
+  "fingerprint": "e8e88a03c6b6e3b4",
   "offline": "2026-10-22"
  },
  "ops-linux-performance": {
@@ -340,8 +340,8 @@
   "offline": "2026-10-22"
  },
  "ops-observability": {
-  "fingerprint": "9c95a3f662f877e9",
-  "offline": "2026-10-20"
+  "fingerprint": "5d0437d4c68c576d",
+  "offline": "2026-10-22"
  },
  "ops-platform-engineering": {
   "fingerprint": "b99e676be94987d8",
@@ -364,8 +364,8 @@
   "offline": "2026-10-04"
  },
  "ops-sre-incidents": {
-  "fingerprint": "25bdc9c12f3a8e99",
-  "offline": "2026-10-20"
+  "fingerprint": "a55546402614790f",
+  "offline": "2026-10-22"
  },
  "ops-supply-chain-security": {
   "fingerprint": "436e6e933c403e4b",
@@ -376,7 +376,7 @@
   "offline": "2026-10-22"
  },
  "proc-agile": {
-  "fingerprint": "545539de264edfc9",
+  "fingerprint": "b82c0858cb352ee1",
   "offline": "2026-10-22"
  },
  "proc-issue-triage": {
@@ -384,7 +384,7 @@
   "offline": "2026-10-04"
  },
  "proc-lean": {
-  "fingerprint": "05fb7830030da147",
+  "fingerprint": "45478877c4960d0c",
   "offline": "2026-10-22"
  },
  "proc-product-discovery": {
@@ -456,7 +456,7 @@
   "offline": "2026-10-22"
  },
  "sec-llm-security": {
-  "fingerprint": "2eafb6641be9af40",
+  "fingerprint": "9118c6d5cd1f8993",
   "offline": "2026-10-22"
  },
  "sec-malware-analysis": {
@@ -480,8 +480,8 @@
   "offline": "2026-10-22"
  },
  "tool-nx": {
-  "fingerprint": "688df1bbb2871dc9",
-  "offline": "2026-10-04"
+  "fingerprint": "40049b3a3cf1c25e",
+  "offline": "2026-10-22"
  },
  "tool-playwright": {
   "fingerprint": "da6556f105efed1c",

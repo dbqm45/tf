@@ -339,11 +339,25 @@ odpowiedziami (przed: 420).
   (`dom-ev-knowledge-base/terminy-przepisow`, `dom-ev-cdr-settlement/sprawdzenie-kosztu-cdr-kalkulatorem`) — przebieg
   „bez skilli” nie jest odcięty od reszty dysku; wyniki tych dwóch porównań pominięte.
 
+## Potwierdzenie poprawek na modelu (2026-10-22): 10 przebiegów, 1,20 USD
+8/8 poprawek ze skillem zaliczonych: ops-platform-engineering (samoocena CNCF), sec-zero-trust-identity (PEP/PDP),
+sec-risk-management (tolerancja), ai-governance-compliance (nadzór człowieka), dom-ev-regulations-eu (RED/EN 18031),
+ops-linux-networking (skill wczytany po zmianie opisu), arch-ai-solutions (test wymiany w obu kierunkach),
+eng-design-principles. Nowy `dom-ev-energy-management/dlm-fazy-budynek-v2` zaliczony ze skillem, ale odpowiedź bez
+skilli też spełniła kryteria treści — scenariusz nie rozróżnia.
+
+## Skrócenie skilli (bez modelu)
+26 skilli krótszych o łącznie ok. 130 linii netto (−201, +74): usunięta wiedza podręcznikowa, którą model zna sam
+(m.in. proc-lean 44→25 linii, eng-local-quality-gates, data-engineering, cpms-architecture, sec-llm-security,
+ops-observability). Zostały reguły fabryki, nowości wersji i każde zdanie, na którym opiera się kryterium scenariusza
+rozróżniającego (sprawdzone narzędziem). Bez zmian, bo wskazany fragment jest podstawą kryteriów albo nowością wersji:
+ops-iac-terraform, sec-cryptography-pki, fw-react, fw-angular, lang-python, lang-java, tool-jest. Zysk kosztowy jest
+mały — fragmenty z listy były w większości krótkie; główna wartość: mniej treści, która nie zmienia odpowiedzi.
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
 3. Partie 1–6 zrobione, zaostrzenie i poprawki po każdej też. Poprawki opisów i treści po partii 6 potwierdzi
    mały przebieg na modelu (ok. 1–2 USD).
-4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
-   do ponownej oceny).
+4. ~~Skrócić skille, które nie wnoszą treści~~ — zrobione (sekcja wyżej).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
