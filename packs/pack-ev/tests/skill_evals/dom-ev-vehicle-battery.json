@@ -7,12 +7,26 @@
       "prompt": "Kierowca pisze: stoję na ładowarce DC 150 kW, jest -5 stopni, bateria 85 %, a auto bierze 38 kW. Ładowarka pokazuje zero błędów i status Charging. Support chce zgłaszać awarię do serwisu CPO. Co im odpowiedzieć i co sprawdzić po stronie CSMS? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["BMS|zarządzani\\w* baterią|battery management"],
-          ["85 ?%.{0,80}(spad|redukcj|ogranicz|krzyw)|(krzyw|spad|redukcj).{0,80}(wysok\\w* SoC|powyżej 80|85 ?%)"],
-          ["temperatur|preconditioning|podgrz|zimn"],
-          ["nie (jest )?awari|nie ładowarka|bez usterki|nie wina ładowarki|normaln|nie wynika z (usterki|awarii)"]
+          [
+            "BMS|zarządzani\\w* baterią|battery management"
+          ],
+          [
+            "85 ?%.{0,80}(spad|redukcj|ogranicz|krzyw)|(krzyw|spad|redukcj).{0,80}(wysok\\w* SoC|powyżej 80|85 ?%)"
+          ],
+          [
+            "temperatur|preconditioning|podgrz|zimn"
+          ],
+          [
+            "nie (jest )?awari|nie ładowarka|bez usterki|nie wina ładowarki|normaln|nie wynika z (usterki|awarii)"
+          ],
+          [
+            "800 ?V|400 ?V|zakres\\w* napięci|inne auta|innych aut|ten sam EVSE|to samo auto"
+          ]
         ],
-        "none": ["ładowarka jest uszkodzona", "należy wymienić moduł"]
+        "none": [
+          "ładowarka jest uszkodzona",
+          "należy wymienić moduł"
+        ]
       }
     },
     {
@@ -21,12 +35,29 @@
       "prompt": "Robimy w aplikacji eMSP ekran „do 80 % za X minut”. Mam pojemność użytkową auta 77 kWh, SoC 20 % i moc ładowarki 150 kW. Product chce po prostu energia podzielona przez 150 kW. Czy tak może być i jak to zrobić lepiej? Podaj przykład liczbowy.",
       "checks": {
         "all": [
-          ["krzyw\\w* ładowania|charging curve|segment|przedział|odcink"],
-          ["min\\(|mniejsz\\w* z|niższ\\w* z|minimum z|ogranicz\\w* przez (auto|pojazd)"],
-          ["46[,.]\\d|46 kWh|0[,.]6 ?\\* ?77|60 ?% ?(z|×|\\*|·) ?77"],
-          ["ilustracj|przykład poglądow|przykładow|orientacyjn|szacunk"]
+          [
+            "krzyw\\w* ładowania|charging curve|segment|przedział|odcink"
+          ],
+          [
+            "min\\(|mniejsz\\w* z|niższ\\w* z|minimum z|ogranicz\\w* przez (auto|pojazd)"
+          ],
+          [
+            "46[,.]\\d|46 kWh|0[,.]6 ?\\* ?77|60 ?% ?(z|×|\\*|·) ?77"
+          ],
+          [
+            "ilustracj|przykład poglądow|przykładow|orientacyjn|szacunk"
+          ],
+          [
+            "użytkow\\w*.{0,40}(nie|zamiast|≠) ?nominaln|nominaln\\w*.{0,40}(≠|nie|zamiast).{0,10}użytkow|netto"
+          ],
+          [
+            "800 ?V|400 ?V|zakres\\w* napięci"
+          ]
         ],
-        "none": ["wystarczy podzielić", "dokładnie 18 minut"]
+        "none": [
+          "wystarczy podzielić",
+          "dokładnie 18 minut"
+        ]
       }
     },
     {

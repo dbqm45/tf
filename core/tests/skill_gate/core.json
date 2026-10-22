@@ -16,12 +16,12 @@
   "offline": "2026-10-20"
  },
  "core-conventional-commits": {
-  "fingerprint": "742e97fc87ace4a5",
-  "offline": "2026-10-20"
+  "fingerprint": "0ea8ef5acdca5d6f",
+  "offline": "2026-10-22"
  },
  "core-cost-control": {
-  "fingerprint": "a2008d58c310fa64",
-  "offline": "2026-10-20"
+  "fingerprint": "15227ead0ea78ed6",
+  "offline": "2026-10-22"
  },
  "core-delivery-lifecycle": {
   "fingerprint": "364add29f251c74e",
@@ -36,8 +36,8 @@
   "offline": "2026-10-21"
  },
  "core-grounding": {
-  "fingerprint": "a4317a24df05db76",
-  "offline": "2026-10-20"
+  "fingerprint": "7b4ca4578166492a",
+  "offline": "2026-10-22"
  },
  "core-knowledge": {
   "fingerprint": "2821d1b4259bd7d6",
@@ -56,16 +56,16 @@
   "offline": "2026-10-20"
  },
  "core-semver": {
-  "fingerprint": "543be2329ecf3664",
-  "offline": "2026-10-20"
+  "fingerprint": "a027aa2c6bc263cd",
+  "offline": "2026-10-22"
  },
  "core-skill-authoring": {
   "fingerprint": "6c74224a8e688c14",
   "offline": "2026-10-20"
  },
  "core-skill-composition": {
-  "fingerprint": "7415438f160ff85a",
-  "offline": "2026-10-20"
+  "fingerprint": "6a97525970e9255d",
+  "offline": "2026-10-22"
  },
  "core-source-research": {
   "fingerprint": "533c8999995eacb9",

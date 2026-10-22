@@ -7,13 +7,31 @@
       "prompt": "Piszemy SECC pod ładowanie dwukierunkowe DC z autem na ISO 15118-20. Auto w ServiceDetail pokazuje DC_BPT. Jak wygląda negocjacja: czym różni się tryb scheduled od dynamic, jakie parametry rozładowania auto i ładowarka wymieniają i gdzie w ChargeLoop to widać? Opieraj się na implementacji open source.",
       "checks": {
         "all": [
-          ["DC_BPT|BPT_DC"],
-          ["Scheduled.{0,80}Dynamic|Dynamic.{0,80}Scheduled|scheduled.{0,80}dynamic|dynamic.{0,80}scheduled"],
-          ["MaximumDischargePower|MaxDischargePower|max_discharge_power|EVSEMaximumDischarge"],
-          ["josev|implementacj"],
-          ["ChargeLoop|ChargeParameterDiscovery"]
+          [
+            "DC_BPT|BPT_DC"
+          ],
+          [
+            "Scheduled.{0,80}Dynamic|Dynamic.{0,80}Scheduled|scheduled.{0,80}dynamic|dynamic.{0,80}scheduled"
+          ],
+          [
+            "MaximumDischargePower|MaxDischargePower|max_discharge_power|EVSEMaximumDischarge"
+          ],
+          [
+            "josev|implementacj"
+          ],
+          [
+            "ChargeLoop|ChargeParameterDiscovery"
+          ],
+          [
+            "łącznoś|sekund|connectivity"
+          ],
+          [
+            "oba naraz|albo żadn|both or none|ujemn|negative|nie sprawdza"
+          ]
         ],
-        "none": ["Dynamic_DC_CLReqControlMode jest tylko dla jednokierunkowego"]
+        "none": [
+          "Dynamic_DC_CLReqControlMode jest tylko dla jednokierunkowego"
+        ]
       }
     },
     {
@@ -22,13 +40,25 @@
       "prompt": "Klient chce zasilać dom z baterii auta w czasie awarii prądu i oddawać nadwyżkę do sieci wieczorem. Dealer mówi, że to jedno i to samo, a instalator, że potrzebujemy zgody od operatora sieci. Kto ma rację? Co jest czym i co musimy zaprojektować po stronie software i ładowarki?",
       "checks": {
         "all": [
-          ["V2H"],
-          ["V2G"],
-          ["grid[- ]forming|island|wyspow|tryb awaryjn|backup|odcięci|synchroniz"],
-          ["OSD|operator sieci|kod sieci|grid code|wymogi przyłączeniow"],
-          ["do weryfikacji|nie potwierdz|sprawdź"]
+          [
+            "V2H"
+          ],
+          [
+            "V2G"
+          ],
+          [
+            "grid[- ]forming|island|wyspow|tryb awaryjn|backup|odcięci|synchroniz"
+          ],
+          [
+            "OSD|operator sieci|kod sieci|grid code|wymogi przyłączeniow"
+          ],
+          [
+            "do weryfikacji|nie potwierdz|sprawdź"
+          ]
         ],
-        "none": ["V2H i V2G to (dokładnie )?to samo"]
+        "none": [
+          "V2H i V2G to (dokładnie )?to samo"
+        ]
       }
     },
     {

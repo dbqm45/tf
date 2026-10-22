@@ -48,12 +48,19 @@
           ],
           [
             "czter\\w+|four|4 (port|punkt|złącz)"
+          ],
+          [
+            "zobowiązani\\w* państw|obowiąz\\w* państw|państw\\w* członkowsk\\w*.{0,60}(nie|a nie) (CPO|operator)|member states?, not"
           ]
         ],
         "none": [
           "NEVI wymaga co najmniej dwóch (portów|punktów)"
         ]
-      }
+      },
+      "accept": [
+        "dom-ev-regulations-eu",
+        "dom-ev-regulations-us"
+      ]
     },
     {
       "id": "przylacze-oczekiwanie-osd",
@@ -62,7 +69,7 @@
       "checks": {
         "all": [
           [
-            "wąski\\w* gardł\\w*|bottleneck|ścieżk\\w* krytyczn|czas\\w* oczekiwani"
+            "z pisma OSD|termin\\w*.{0,60}pism|wąski\\w* gardł\\w*|bottleneck|ścieżk\\w* krytyczn|czas\\w* oczekiwani|harmonogram"
           ],
           [
             "BESS|magazyn\\w* energii|bateri\\w* buforow"
@@ -72,6 +79,9 @@
           ],
           [
             "kVA.{0,120}kW|kW.{0,120}kVA|cos ?φ|współczynnik mocy|power factor"
+          ],
+          [
+            "knock-?out|go/no-go|go-no-go|bramk\\w*"
           ]
         ],
         "none": [

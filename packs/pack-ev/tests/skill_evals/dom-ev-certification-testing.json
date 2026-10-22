@@ -7,12 +7,22 @@
       "prompt": "Producent pokazał nam certyfikat OCPP z OCA dla swojej ładowarki DC i mówi, że z naszym backendem wszystko zadziała. Czy możemy pominąć własne testy zgodności? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["nie gwarantuj|nie oznacza|nie zastępuj|nie wystarcz|nie obejmuje"],
-          ["OCTT|OCA|Open Charge Alliance"],
-          ["Twój CSMS|nasz\\w* (CSMS|backend)|własn\\w+ (test|program|certyfikac)|wewnętrzn\\w+ (test|program|certyfikac)|firmware|wersj\\w+ firmware"],
-          ["do weryfikacji|niezweryfikowan|sprawdź.{0,40}(stron|OCA)|założenie"]
+          [
+            "nie gwarantuj|nie oznacza|nie zastępuj|nie wystarcz|nie obejmuje"
+          ],
+          [
+            "OCTT|OCA|Open Charge Alliance"
+          ],
+          [
+            "Twój CSMS|nasz\\w* (CSMS|backend)|własn\\w+ (test|program|certyfikac)|wewnętrzn\\w+ (test|program|certyfikac)|firmware|wersj\\w+ firmware"
+          ],
+          [
+            "do weryfikacji|niezweryfikowan|sprawdź.{0,40}(stron|OCA)|założenie"
+          ]
         ],
-        "none": ["certyfikat OCA (gwarantuje|zapewnia) (działanie|zgodność) z (każdym|dowolnym) CSMS"]
+        "none": [
+          "certyfikat OCA (gwarantuje|zapewnia) (działanie|zgodność) z (każdym|dowolnym) CSMS"
+        ]
       }
     },
     {
@@ -21,13 +31,28 @@
       "prompt": "Wchodzimy z naszą siecią do nowego kraju z ładowarkami DC nowego producenta. Jak ułożyć wewnętrzną certyfikację takiego modelu u nas i co robić przy każdym nowym firmware? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["macierz\\w*.{0,80}(model|firmware|OCPP|kraj)|model.{0,40}firmware.{0,40}(OCPP|kraj)"],
-          ["kryteri\\w+ (wyjścia|przejścia|akceptacji)|exit criteria|warunk\\w+ wyjścia"],
-          ["re-?certyfikac|ponown\\w+ (certyfikac|test)|regresj|nowy firmware.{0,80}(test|runda|zakres)"],
-          ["dowod\\w*|log\\w*|raport|protokół"],
-          ["metrolog|legalizac|MID|Eichrecht|UDT|odbiór|krajow\\w+ wymag|lokaln\\w+ wymag"]
+          [
+            "macierz\\w*.{0,80}(model|firmware|OCPP|kraj)|model.{0,40}firmware.{0,40}(OCPP|kraj)"
+          ],
+          [
+            "kryteri\\w+ (wyjścia|przejścia|akceptacji)|exit criteria|warunk\\w+ wyjścia"
+          ],
+          [
+            "re-?certyfikac|ponown\\w+ (certyfikac|test)|regresj|nowy firmware.{0,80}(test|runda|zakres|wiersz)|nowy wiersz"
+          ],
+          [
+            "dowod\\w*|log\\w*|raport|protokół"
+          ],
+          [
+            "metrolog|legalizac|MID|Eichrecht|UDT|odbiór|krajow\\w+ wymag|lokaln\\w+ wymag"
+          ],
+          [
+            "obejści\\w+.{0,40}flag|flag\\w*.{0,40}(producent|model|firmware)|rejestr\\w*.{0,20}odchyle|odchyleni\\w+.{0,40}(producent|rejestr|wpis)|vendor deviation"
+          ]
         ],
-        "none": ["wystarczy (test|sesja) na symulatorze"]
+        "none": [
+          "wystarczy (test|sesja) na symulatorze"
+        ]
       }
     },
     {
@@ -36,12 +61,22 @@
       "prompt": "Chcemy prowadzić rejestr producentów ładowarek i wpisywać tam, że producent Z „zawsze psuje” StatusNotification. Jak taki rejestr założyć w repozytorium i co wolno do niego wpisać? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["docs/project/vendors|repozytori\\w+|plik\\w* w repo"],
-          ["dowód|dowod\\w+|ramk\\w+|log\\w*"],
-          ["data|datą|dat\\w+ obserwacji|wersj\\w+ firmware|firmware"],
-          ["nie (wpisuj|przepisuj|wolno).{0,60}(opini|plotk|niesprawdzon)|opini\\w+.{0,60}(nie|bez dowod)|bez dowod\\w+"]
+          [
+            "docs/project/vendors|repozytori\\w+|plik\\w* w repo"
+          ],
+          [
+            "dowód|dowod\\w+|ramk\\w+|log\\w*"
+          ],
+          [
+            "data|datą|dat\\w+ obserwacji|wersj\\w+ firmware|firmware"
+          ],
+          [
+            "nie (wpisuj|przepisuj|wolno).{0,60}(opini|plotk|niesprawdzon)|opini\\w+.{0,60}(nie|bez dowod)|bez dowod\\w+"
+          ]
         ],
-        "none": ["wpisz.{0,30}zawsze psuje"]
+        "none": [
+          "wpisz.{0,30}zawsze psuje"
+        ]
       }
     },
     {
