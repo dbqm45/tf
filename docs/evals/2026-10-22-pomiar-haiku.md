@@ -62,3 +62,36 @@ skillem przechodzi, a bez skilli nie. Przed zmianą odróżniało 8 z 37 scenari
   bez sędziego. `test-zmiennosci` i `jakosc-testow` model obsłużył skillami dopuszczonymi w scenariuszu
   (`ddd-algorithm-recognition`, `qa-spec-first-testing`), więc nowy układ `ddd-deep-modeling` i `eng-testing` nie
   był w nich wczytany — potwierdzi go dopiero kolejna partia.
+
+## Partia 2 (2026-10-22): 141 scenariuszy, 244 przebiegi, 25,71 USD
+89 nowych scenariuszy (23 skille) i 52 z 12 zaostrzonych skilli, z porównaniem bez skilli. Zużycie okna: z 3% do
+ok. 15% [szacunek]. Koszt przebiegu: ze skillami 18,51 USD łącznie, bez skilli 7,19 USD.
+
+**Zaostrzone skille na świeżych odpowiedziach** (treść ze skillem / bez): dom-ev-security 3/3–1/3, eng-testing
+4/4–1/4, ddd-tactical-design 4/4–2/4, ddd-archetypes 5/5–3/5, dom-ev-charging 2/2–1/2, dom-ev-metering-calibration
+2/2–1/2, eng-continuous-delivery 2/2–1/2, dom-ev-charger-hardware 3/3–2/3, arch-privacy-compliance 3/4–2/4,
+ddd-deep-modeling 3/4–2/4; bez różnicy nadal proc-lean 2/2–2/2 i txt-polish-correctness 2/3–2/3. Zaostrzenie
+działa, ale sędzia (Sonnet) bywa łagodny dla odpowiedzi bez skilli.
+
+**Największa wartość nowych skilli:** ddd-model-stress-test 2/2–0/2, dom-ev-tariffs-pricing 4/4–1/4,
+dom-ev-regulations-pl 3/3–1/3, eng-behavior-preserving-refactoring 3/3–1/3, core-agent-instructions 4/4–2/4.
+
+**Bez różnicy (scenariusze jeszcze niezaostrzone):** ddd-context-mapping, dom-ev-diagnostics, dom-ev-iso15118,
+dom-ev-kpi-analytics, dom-ev-market-roles, dom-ev-ocpp-16, dom-ev-ocpp-2x, dom-ev-regulations-eu,
+dom-ev-regulations-us, ops-kubernetes, proc-product-discovery.
+
+**Niezaliczone ze skillem (10):**
+- nie wczytał się: eng-testing/tdd-nowa-regula, eng-behavior-preserving-refactoring/zapis-pozycyjny-wartownicy;
+  wczytał się sąsiad: ddd-context-mapping/event-carried-state (be-messaging-outbox),
+  ops-security-operations/terminy-zgloszen (sec-eu-regulations), proc-project-planning/model-cyklu-zycia
+  (core-delivery-lifecycle);
+- brak treści: arch-privacy-compliance/nowa-funkcja-dane (PKE), ddd-deep-modeling/status-faktury (5 why),
+  proc-project-planning/plan-dla-sponsora (karta projektu), txt-polish-correctness/wielkie-litery-2026 (wzmianka
+  o zmianie zasad), dom-ev-regulations-eu/afir-adhoc-terminal-cena (twierdzenie, że kod QR wystarcza).
+
+## Dalej
+1. Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2 (offline na `batch2-evals.jsonl`, bez kosztu).
+2. Poprawić wczytywanie i treść skilli z listy niezaliczonych (opis, kolejność zasad, jak w PR #17 i #19).
+3. Kolejne partie: zostało ok. 580 scenariuszy (ok. 100 na partię, ok. 25 USD, ok. 12% okna).
+4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness).
+Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
