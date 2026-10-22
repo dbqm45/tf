@@ -4,7 +4,7 @@ description: Użyj przy architekturze systemu z komponentem AI — wzorzec (LLM,
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj, gdy projektujesz architekturę systemu z komponentem AI na poziomie decyzji — dobór wzorca (zwykłe wywołanie modelu, RAG, workflow z narzędziami, agent, fine-tuning, klasyczne ML) wg tabeli wymagań, źródło modelu (API, open-weights na własnej infrastrukturze, usługa zarządzana w chmurze), rezydencja danych i lock-in, komponenty architektury referencyjnej (bramka, serwis promptów, warstwa wyszukiwania i narzędzi, ewaluacje, guardrails, kolejka przeglądu), budżet opóźnienia, cache, fallback i routing modeli, granice bezpieczeństwa, szablon kosztu i pojemności, izolacja najemców, ADR dla decyzji AI. Nie do ogólnego projektu systemu (arch-system-design), metody doboru stacku (arch-tech-selection), atrybutów jakości (arch-quality-attributes), modelu zagrożeń (arch-threat-modeling), szczegółów RAG (ai-rag), projektu agenta (ai-agents), kodu z SDK (eng-llm-features) ani hostowania modeli (ops-ai-inference)."
-  slowa: "architektura ai, architekt rozwiązań ai, rag czy agent, jaki wzorzec ai, wybór modelu, api czy własny model, open-weights, rezydencja danych, lock-in dostawcy, brama llm, llm gateway, routing modeli, fallback modelu, budżet opóźnienia, koszt na żądanie, szacunek kosztu llm, prompt caching w architekturze, izolacja klientów, multi-tenant ai, human review queue, adr dla ai, referencyjna architektura ai"
+  slowa: "wymiana modelu na tańszy, zostawić harness, uzależnienie od dostawcy, wymiana harnessu, architektura ai, architekt rozwiązań ai, rag czy agent, jaki wzorzec ai, wybór modelu, api czy własny model, open-weights, rezydencja danych, lock-in dostawcy, brama llm, llm gateway, routing modeli, fallback modelu, budżet opóźnienia, koszt na żądanie, szacunek kosztu llm, prompt caching w architekturze, izolacja klientów, multi-tenant ai, human review queue, adr dla ai, referencyjna architektura ai"
 ---
 
 # Architektura rozwiązań z AI — decyzje przed kodem
@@ -42,7 +42,8 @@ Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `refe
    dostępność modelu w regionie. Lock-in ograniczasz cienką warstwą własnego interfejsu (bramka) i zestawem
    ewaluacji, który pozwala zmienić model w dni, nie miesiące.
    Drugie piętro lock-inu to wagi przyzwyczajone do formatu narzędzi harnessu — widać je w wynikach, nie w konfiguracji;
-   przed wymianą samego modelu albo samego harnessu zrób test wymiany w obu kierunkach na własnych ewaluacjach
+   przed wymianą samego modelu albo samego harnessu zrób **test wymiany w obu kierunkach** na własnych ewaluacjach
+   (stary model w nowym harnessie i nowy model w starym); wymiana samego modelu nie zdejmuje lock-inu
    (hipoteza z jednego preprintu, źródło niżej).
 4. **Komponenty (architektura referencyjna).** Dobierz z listy tylko to, co uzasadniają wymagania:
    - **bramka** przed modelem: uwierzytelnienie, limity (żądania i tokeny na klienta), liczenie kosztu per najemca,

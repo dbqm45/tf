@@ -210,7 +210,10 @@
           [
             "stał\\w* czy dowoln",
             "harness\\w* (był )?stał",
-            "dowoln\\w* harness"
+            "dowoln\\w* harness",
+            "w innym harness",
+            "(tym samym|ten sam) harness",
+            "harness\\w*.{0,60}(różn|inn)"
           ]
         ]
       }

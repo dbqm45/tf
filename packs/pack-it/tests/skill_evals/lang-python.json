@@ -24,6 +24,11 @@
             "\\| None",
             "X \\| Y",
             "T \\| None"
+          ],
+          [
+            "quantize",
+            "ROUND_HALF",
+            "assert_never"
           ]
         ]
       }
@@ -70,6 +75,11 @@
           ],
           [
             "match"
+          ],
+          [
+            "assert_never",
+            "wyczerpując\\w* (sprawdz|dopasow|match)",
+            "exhaustive"
           ]
         ]
       }

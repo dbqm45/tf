@@ -18,6 +18,14 @@
             "125",
             "skip",
             "pomi[jń]"
+          ],
+          [
+            "first-parent",
+            "czerwon\\w*[^.]{0,40}(HEAD|zł)[^.]{0,60}zielon",
+            "__pycache__",
+            "nieaktualn\\w+ (artefakt|cache|bajtkod)",
+            "poza repozytorium",
+            "bisect log"
           ]
         ]
       }
@@ -37,9 +45,16 @@
             "hipotez"
           ],
           [
-            "test\\w* (który|odtwarza|reprodukuj|regresyjn)",
+            "test\\w*,? (który|odtwarza|reprodukuj|regresyjn)",
             "najpierw test",
-            "czerwon\\w* test"
+            "czerwon\\w* test",
+            "test\\w*[^.]{0,30}czerwon"
+          ],
+          [
+            "jedn\\w+ rzecz\\w* naraz",
+            "dziel\\w*[^.]{0,30}połow",
+            "delta debugging",
+            "git bisect"
           ]
         ]
       }
@@ -65,7 +80,8 @@
           [
             "monitoring",
             "Sentry",
-            "logi"
+            "log(i|ów|ach|u)\\b",
+            "\\blogi"
           ],
           [
             "zapisan\\w* stan",
@@ -73,6 +89,12 @@
             "trwał\\w* skut",
             "wiersz w bazie",
             "sprawdza\\w* (bazę|zapis)"
+          ],
+          [
+            "lessons\\.md",
+            "jedn\\w+ rzecz\\w* naraz",
+            "pytani\\w+ do zgłaszając",
+            "najpierw pytani"
           ]
         ]
       }

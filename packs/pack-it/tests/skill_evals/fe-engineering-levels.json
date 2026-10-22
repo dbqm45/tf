@@ -44,6 +44,16 @@
             "FLOW",
             "po wdrożeniu",
             "zmierz"
+          ],
+          [
+            "ankiet\\w*",
+            "wywiad\\w*",
+            "developer survey",
+            "horyzont\\w* zwrot",
+            "\\bROI\\b",
+            "tight",
+            "przełącz\\w* kontekst",
+            "context.switch"
           ]
         ]
       }

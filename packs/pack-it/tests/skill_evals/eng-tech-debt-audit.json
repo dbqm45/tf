@@ -54,7 +54,7 @@
           ]
         ],
         "none": [
-          "tightly coupled"
+          "(?<![„\"“«'`])tightly coupled"
         ]
       }
     },

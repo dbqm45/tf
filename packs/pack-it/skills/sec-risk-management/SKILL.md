@@ -33,7 +33,8 @@ komunikacja → monitorowanie i przegląd. Proces jest cykliczny; wejście do So
 3. **Analiza.** Domyślnie **jakościowo**: macierz (np. 5×5) z jawnymi skalami z kroku 1. **Ilościowo (FAIR)** dla ryzyk
    najwyższych i decyzji budżetowych: ryzyko = **częstotliwość zdarzeń strat × wielkość straty**; oba czynniki jako
    **przedziały** (min, najbardziej prawdopodobna, max) z kalibrowanych ocen ekspertów i danych; **symulacja Monte
-   Carlo** daje rozkład rocznej straty (np. mediana i P90). Rozkład porównujesz z kosztem kontroli i apetytem.
+   Carlo** daje rozkład rocznej straty (np. mediana i P90). Rozkład porównujesz z kosztem kontroli i apetytem;
+   wynik symulacji po wdrożeniu kontroli to **ryzyko rezydualne** — nazwij je tak w raporcie.
    Macierzy nie zastępujesz całkiem: liczysz tylko wybrane scenariusze. Szczegóły: `references/analiza-i-postepowanie.md`.
 4. **Ewaluacja.** Porównaj ryzyko z kryteriami: ponad tolerancję → postępowanie obowiązkowe; w granicach apetytu → można
    utrzymać. Rankinguj; ryzyka tej samej klasy grupuj, żeby rejestr nie rósł w setki wierszy.

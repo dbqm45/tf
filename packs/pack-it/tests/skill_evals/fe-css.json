@@ -17,6 +17,11 @@
             "logiczn",
             "logical",
             "inset-inline"
+          ],
+          [
+            "token",
+            "var\\(--",
+            "custom propert"
           ]
         ]
       }
@@ -35,6 +40,12 @@
           ],
           [
             "prefers-reduced-motion"
+          ],
+          [
+            "token",
+            "var\\(--",
+            "custom propert",
+            "magiczn"
           ]
         ]
       }

@@ -48,7 +48,7 @@
   "offline": "2026-10-22"
  },
  "arch-ai-solutions": {
-  "fingerprint": "f01e0b1e2a93d8e7",
+  "fingerprint": "d88dc8840201ea3f",
   "offline": "2026-10-22"
  },
  "arch-architect-practice": {
@@ -80,7 +80,7 @@
   "offline": "2026-10-10"
  },
  "arch-threat-modeling": {
-  "fingerprint": "7193935a4a6155c6",
+  "fingerprint": "e9d5cc456e32a5fb",
   "offline": "2026-10-22"
  },
  "be-api-design": {
@@ -112,8 +112,8 @@
   "offline": "2026-10-22"
  },
  "ddd-algorithm-recognition": {
-  "fingerprint": "f7dc0f3e32562728",
-  "offline": "2026-10-04"
+  "fingerprint": "6296d78f01263b90",
+  "offline": "2026-10-22"
  },
  "ddd-archetypes": {
   "fingerprint": "4e43366fa49f1e6f",
@@ -132,8 +132,8 @@
   "offline": "2026-10-22"
  },
  "ddd-discovery-intake": {
-  "fingerprint": "f9641902103182dd",
-  "offline": "2026-10-17"
+  "fingerprint": "7ffbab0dc39cb49e",
+  "offline": "2026-10-22"
  },
  "ddd-es-simulation": {
   "fingerprint": "881c091867a46d12",
@@ -164,16 +164,16 @@
   "offline": "2026-10-22"
  },
  "eng-algorithms-data-structures": {
-  "fingerprint": "d7b751a86ac451ba",
-  "offline": "2026-10-04"
+  "fingerprint": "0c0b0f1ea2eb799e",
+  "offline": "2026-10-22"
  },
  "eng-behavior-preserving-refactoring": {
   "fingerprint": "5fed8349c09e6a9b",
   "offline": "2026-10-22"
  },
  "eng-clean-code": {
-  "fingerprint": "51b0b1a318b7aded",
-  "offline": "2026-10-10"
+  "fingerprint": "6007968a51bc3484",
+  "offline": "2026-10-22"
  },
  "eng-code-audit": {
   "fingerprint": "7f6bdaa987e005b5",
@@ -188,20 +188,20 @@
   "offline": "2026-10-22"
  },
  "eng-debugging": {
-  "fingerprint": "97b565368b5fa7f4",
-  "offline": "2026-10-10"
+  "fingerprint": "3c3d8dc0578dcb62",
+  "offline": "2026-10-22"
  },
  "eng-design-patterns": {
-  "fingerprint": "622a3fe2c0923122",
-  "offline": "2026-10-21"
+  "fingerprint": "9c24a73fe61c1e2d",
+  "offline": "2026-10-22"
  },
  "eng-design-principles": {
-  "fingerprint": "dbe209c6d32b9de3",
-  "offline": "2026-10-04"
+  "fingerprint": "f756f5ccc8f04fd3",
+  "offline": "2026-10-22"
  },
  "eng-i18n": {
-  "fingerprint": "647f024570df1d9f",
-  "offline": "2026-10-20"
+  "fingerprint": "c189a3defaf2425a",
+  "offline": "2026-10-22"
  },
  "eng-legacy-dossier": {
   "fingerprint": "1948c6af4757d63a",
@@ -220,32 +220,32 @@
   "offline": "2026-10-20"
  },
  "eng-refactor-planning": {
-  "fingerprint": "69265ea55bffa6a9",
-  "offline": "2026-10-18"
+  "fingerprint": "9f036c03b8b61383",
+  "offline": "2026-10-22"
  },
  "eng-repo-readiness": {
   "fingerprint": "dde9e46362ebd33d",
   "offline": "2026-10-10"
  },
  "eng-tech-debt-audit": {
-  "fingerprint": "2582dfcc9da62227",
-  "offline": "2026-10-20"
+  "fingerprint": "d041bc5bcbf1e03b",
+  "offline": "2026-10-22"
  },
  "eng-testing": {
   "fingerprint": "ab63962904aab8f1",
   "offline": "2026-10-22"
  },
  "fe-architecture": {
-  "fingerprint": "5cc7a77ccdd91079",
-  "offline": "2026-10-20"
+  "fingerprint": "20b8b218ab6de5d9",
+  "offline": "2026-10-22"
  },
  "fe-css": {
-  "fingerprint": "bf0e89525539c7a8",
-  "offline": "2026-10-10"
+  "fingerprint": "ea5115fb50cbd3fc",
+  "offline": "2026-10-22"
  },
  "fe-engineering-levels": {
-  "fingerprint": "0b0700f9928611be",
-  "offline": "2026-10-20"
+  "fingerprint": "600a454705fbecb1",
+  "offline": "2026-10-22"
  },
  "fe-web-platform": {
   "fingerprint": "de4e4a0269569144",
@@ -268,28 +268,28 @@
   }
  },
  "fw-nextjs": {
-  "fingerprint": "58bbf8f8e0a5c32a",
-  "offline": "2026-10-21"
+  "fingerprint": "19c217b73ebe79ae",
+  "offline": "2026-10-22"
  },
  "fw-react": {
-  "fingerprint": "2d11bd701d00bcbf",
-  "offline": "2026-10-04"
+  "fingerprint": "89a4c3e529331a1b",
+  "offline": "2026-10-22"
  },
  "fw-spring-boot": {
-  "fingerprint": "59267afa422dbc24",
-  "offline": "2026-10-20"
+  "fingerprint": "e1a5de43ed26bd28",
+  "offline": "2026-10-22"
  },
  "lang-java": {
-  "fingerprint": "68e330bbc54b8c28",
-  "offline": "2026-10-17"
+  "fingerprint": "b6e9e8d18c78eda1",
+  "offline": "2026-10-22"
  },
  "lang-javascript": {
-  "fingerprint": "70efe865ab50097b",
-  "offline": "2026-10-04"
+  "fingerprint": "082c0a964fa76e01",
+  "offline": "2026-10-22"
  },
  "lang-python": {
-  "fingerprint": "9eab7bb06a7a65ca",
-  "offline": "2026-10-04"
+  "fingerprint": "9229098866a50a99",
+  "offline": "2026-10-22"
  },
  "lang-typescript": {
   "fingerprint": "dd49d04e2da8522a",
@@ -472,8 +472,8 @@
   "offline": "2026-10-17"
  },
  "sec-risk-management": {
-  "fingerprint": "277dc9f36ce825cb",
-  "offline": "2026-10-17"
+  "fingerprint": "af59fe8955a6746b",
+  "offline": "2026-10-22"
  },
  "sec-security-leadership": {
   "fingerprint": "3a94eb32f81af19b",

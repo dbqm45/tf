@@ -1,6 +1,6 @@
 ---
 name: fe-engineering-levels
-description: Użyj przy ocenie poziomu rozwiązania frontendu (Senior, Staff, Principal) — standardy wielu zespołów, DevEx, ROI.
+description: Użyj przy ocenie poziomu rozwiązania frontendu (Senior, Staff, Principal) i inwestycji w DevEx (wolny build, czekanie na review) — standardy, ROI.
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj, gdy trzeba ocenić, na jakim poziomie (Senior → Staff → Principal) rozwiązać problem frontendowy, i przy pracy „ponad kodem” — review i mentoring, design system i standardy wielu zespołów, DevEx (FLOW, tight-loose), ROI i komunikacja z biznesem, wizja techniczna, sponsoring. Nie do wiedzy o kodzie (fe-architecture, fe-web-platform, fe-css) ani metryk DORA (eng-continuous-delivery)."

@@ -18,6 +18,14 @@
           ],
           [
             "walut\\w*|kwot\\w*|NumberFormat"
+          ],
+          [
+            "zada\\w+ w tle",
+            "e-?mail",
+            "PDF",
+            "JPY",
+            "KWD",
+            "przyszł\\w+[^.]{0,60}(lokaln|IANA)"
           ]
         ]
       }
@@ -39,6 +47,13 @@
           ],
           [
             "logiczn\\w*|inline-start|margin-inline"
+          ],
+          [
+            "tzdata",
+            "zada\\w+ w tle",
+            "locale odbiorcy",
+            "przyszł\\w+[^.]{0,80}(czas\\w* lokaln|lokaln\\w+ czas)",
+            "istniejące wpisy przelicz"
           ]
         ]
       }

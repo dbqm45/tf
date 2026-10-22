@@ -15,6 +15,13 @@
           ],
           [
             "strażnicz|guard|wczesn\\w+ powrót|tabel\\w+|mapa|polimorfizm"
+          ],
+          [
+            "domyśln\\w*[^.]{0,20}20",
+            "testy? charakteryz",
+            "testami charakteryz",
+            "refactor:",
+            "osobn\\w+ commi"
           ]
         ]
       }
@@ -30,12 +37,22 @@
           ],
           [
             "granic|przeciążeni|osobn\\w+ funkcj|strictNullChecks"
+          ],
+          [
+            "na granicy",
+            "raz na granic",
+            "w jednym miejscu",
+            "strictNullChecks",
+            "Special Case"
           ]
         ],
         "none": [
           "zwracaj null"
         ]
-      }
+      },
+      "accept": [
+        "eng-design-patterns"
+      ]
     },
     {
       "id": "zasady-architektury",
@@ -55,14 +72,27 @@
           ],
           [
             "5\\d\\d",
+            "5xx",
+            "zwr\\w* [^.]{0,20}błęd",
             "zwr\\w* błąd",
             "rzu\\w* (błąd|wyjątek)",
-            "propag"
+            "propag",
+            "ok: ?false",
+            "throw",
+            "przepu\\w+"
           ],
           [
             "logowanie (to )?nie",
             "nie jest obsług",
             "nie obsługuje"
+          ],
+          [
+            "OWASP",
+            "A10",
+            "Mishandling",
+            "Exceptional Conditions",
+            "na granicy",
+            "middleware"
           ]
         ]
       }

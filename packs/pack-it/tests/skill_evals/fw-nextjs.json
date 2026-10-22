@@ -55,6 +55,14 @@
           ],
           [
             "codemod"
+          ],
+          [
+            "CVE-2025-29927",
+            "\\bDAL\\b",
+            "warstw\\w* dostępu do danych",
+            "data access layer",
+            "nie tylko w (proxy|middleware)",
+            "omin\\w+ (proxy|middleware)"
           ]
         ]
       }
@@ -73,6 +81,13 @@
           ],
           [
             "updateTag"
+          ],
+          [
+            "publiczn\\w* endpoint",
+            "w (każdej|samej) akcji",
+            "server-only",
+            "requireAdmin",
+            "sprawdź\\w* (sesj|uprawnie)"
           ]
         ]
       }
@@ -100,6 +115,11 @@
             "cacheTag",
             "cacheLife",
             "Suspense"
+          ],
+          [
+            "updateTag",
+            "server-only",
+            "\\bDTO\\b"
           ]
         ]
       }
@@ -134,8 +154,9 @@
       "checks": {
         "all": [
           [
-            "lokaln\\w* (dysk|pamię|cache)",
-            "każd\\w* (instancj|replik)\\w* ma",
+            "lokaln\\w* (dysk|pamię|cache|dla)",
+            "każd\\w* (z \\d+ )?(instancj|replik)\\w*",
+            "jednej (instancji|repliki)",
             "system\\w* plików",
             "nie współdziel\\w*"
           ],
@@ -144,6 +165,13 @@
             "cacheHandler",
             "wspóln\\w* (cache|magazyn|pamię)",
             "Redis"
+          ],
+          [
+            "use cache: remote",
+            "OpenNext",
+            "adapter\\w* wdroże\\w*",
+            "deployment adapter",
+            "sticky"
           ]
         ]
       }

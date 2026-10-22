@@ -21,6 +21,11 @@
             "string",
             "leksykograf",
             "alfabet"
+          ],
+          [
+            "płytk",
+            "shallow",
+            "structuredClone"
           ]
         ]
       }
