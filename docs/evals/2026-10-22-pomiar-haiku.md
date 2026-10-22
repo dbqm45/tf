@@ -11,8 +11,9 @@ nakładkami. Koszt według `total_cost_usd` z Claude Code; zużycie planu Max 5x
 | partia 1 (22 skille, z porównaniem bez skilli) | 100 | 175 | 17,46 USD | 90/100 ze skillami |
 | powtórka niezaliczonych po poprawkach opisów | 7 + 2 | 9 | 1,06 USD | 9/9 |
 
-Średni koszt przebiegu: ze skillami 0,131 USD, bez skilli 0,058 USD. Sędzia (`--judge`) nie uruchomił się ani razu,
-bo wyrażenia sprawdzające trafiały; jego koszt pojawia się tylko przy chybionych sprawdzeniach.
+Średni koszt przebiegu: ze skillami 0,131 USD, bez skilli 0,058 USD (koszt sędziego wliczony). Sędzia (Sonnet)
+uruchamia się tylko, gdy wyrażenia sprawdzające nie trafią: w pilotażu ani razu, w partii 1 przy 60 ze 175 przebiegów.
+Kolumna „treść” niżej obejmuje oceny sędziego.
 
 ## Wartość skilli — treść odpowiedzi ze skillem i bez (partia 1)
 | Skill | Ze skillem | Bez skilli |
@@ -38,3 +39,15 @@ Przed decyzją o usunięciu zaostrzyć scenariusze tak, by sprawdzały to, co sp
 
 ## Dalej
 Pozostałe ok. 670 scenariuszy w partiach po ok. 100 (z porównaniem ok. 20 USD, ok. 10% okna limitu).
+
+## Zaostrzenie scenariuszy „bez różnicy” (bez modelu)
+Kryteria 12 skilli sprawdzone offline na zapisanych odpowiedziach partii 1: scenariusz odróżnia, gdy odpowiedź ze
+skillem przechodzi, a bez skilli nie. Przed zmianą odróżniało 8 z 37 scenariuszy, po zmianie 33 z 37
+(+1 nowy, `txt-polish-correctness/wielkie-litery-2026`, bez zapisanych odpowiedzi).
+- Nie odróżniają: `eng-continuous-delivery/tbd-flagi`, `txt-polish-correctness/interpunkcja-nie` i `/kalki` (model zna
+  te reguły sam — kandydaci do skrócenia skilla) oraz `ddd-deep-modeling/test-zmiennosci`.
+- Ustalenia o samych skillach: w `ddd-deep-modeling/test-zmiennosci` odpowiedź ze skillem pominęła test zmienności
+  i zasadę „klasę wyznacza skutek dla stanu, nie liczba reguł”; w `eng-testing/jakosc-testow` — zasadę „wartości
+  oczekiwane z wymagania, nie z uruchomienia”. Treść skilla do wzmocnienia.
+- Błąd w starym kryterium: `dom-ev-security/reset-calej-floty-i-profile` szukał „fale”, odpowiedzi piszą „fali”.
+- Kryteria sprawdzono na jednej odpowiedzi na scenariusz; następny płatny przebieg pokaże, czy są stabilne.

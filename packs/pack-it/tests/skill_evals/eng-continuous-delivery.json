@@ -14,10 +14,11 @@
             "nie cel|nie są cel|nie jako cel|do uczenia|uczenia się"
           ],
           [
-            "z samym sobą|samym ze sobą|nie międz\\w+ zespo|nie porównuj"
+            "z nim samym|z samym sobą|samym ze sobą",
+            "(system|zesp\\w*|usług\\w*).{0,40}(z nim samym|w czasie|własn\\w* trend)"
           ],
           [
-            "odsetek nieudanych|change fail|czas przywrócenia|przeróbek|rework"
+            "przeróbek|rework"
           ]
         ]
       }

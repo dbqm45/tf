@@ -58,6 +58,13 @@
           ],
           [
             "z dnia|w chwili|kopi|snapshot|niezmienn|histori"
+          ],
+          [
+            "\\bparty\\b",
+            "\\bpricing\\b",
+            "archetyp\\w*",
+            "rol\\w* obszar\\w*|arearole",
+            "geographic location"
           ]
         ]
       }
@@ -76,6 +83,13 @@
           ],
           [
             "obowiązyw|ważn|od .{0,20}do|effectiv|bitemporal|w danym dniu"
+          ],
+          [
+            "\\bpricing\\b",
+            "\\baccounting\\b",
+            "\\bparty\\b",
+            "archetyp\\w*",
+            "zamówieni\\w*.{0,80}(kopiuj\\w* warunk|wskazuje wersj)"
           ]
         ]
       }

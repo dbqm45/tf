@@ -18,6 +18,13 @@
             "throughput",
             "czas realizacji",
             "lead time"
+          ],
+          [
+            "efektywnoś\\w* przepływ",
+            "flow efficiency",
+            "czas\\w* prac\\w*.{0,40}czas\\w* (całk|czekan)",
+            "\\bVSM\\b",
+            "strumie\\w* wartości"
           ]
         ]
       }

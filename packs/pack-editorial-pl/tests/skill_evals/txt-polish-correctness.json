@@ -44,6 +44,34 @@
       }
     },
     {
+      "id": "wielkie-litery-2026",
+      "expect": "trigger",
+      "prompt": "W dokumentacji aplikacji miejskiej piszemy: „Mieszkańcy – warszawiacy i krakowianie – zgłaszają awarie na placu Zbawiciela i w alei Róż.” Czy wielkie i małe litery są tu poprawne według obowiązujących zasad pisowni? Podaj poprawną wersję. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "(?-i:Warszawia)"
+          ],
+          [
+            "(?-i:Krakowia)"
+          ],
+          [
+            "(?-i:Plac\\w* Zbawiciela)"
+          ],
+          [
+            "(?-i:Ale\\w+ Róż)"
+          ],
+          [
+            "2026",
+            "od 1 stycznia",
+            "nowe zasady",
+            "zmian\\w* zasad",
+            "RJP"
+          ]
+        ]
+      }
+    },
+    {
       "id": "skroc-akapit",
       "expect": "no-trigger",
       "prompt": "Skróć ten akapit README i zrób go bardziej konkretnym, w stronie czynnej: „W ramach niniejszego modułu zostało zaimplementowane rozwiązanie umożliwiające dokonanie eksportu danych.” Odpowiedz zwięźle.",

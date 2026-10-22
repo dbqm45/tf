@@ -10,7 +10,9 @@
           ["TX", "transakcj[ai]"],
           ["EF", "flag[ia] błęd", "error flag"],
           ["\\bST\\b", "stan licznika", "status licznika"],
-          ["bez zmian", "nie (przeliczaj|zaokrąglaj|modyfikuj|zmieniaj)", "w oryginale", "surow"]
+          ["bez zmian", "nie (przeliczaj|zaokrąglaj|modyfikuj|zmieniaj)", "w oryginale", "surow"],
+          ["ciągł\\w*", "bez luk", "paginacj\\w*", "ocmf_check"],
+          ["\\b[MXF]\\b[^.\\n]{0,40}(manipul|wymian|błąd|wyklucz)", "manipulacj\\w*"]
         ],
         "none": ["wystarczy[^.]{0,40}(sprawdzić|zweryfikować)[^.]{0,20}podpis"]
       }
@@ -23,7 +25,8 @@
         "all": [
           ["MI-011"],
           ["10 października 2028", "10\\.10\\.2028", "10 October 2028", "2028-10-10"],
-          ["2030", "2038"]
+          ["2030", "2038"],
+          ["klas\\w* dokładno\\w*", "klas\\w* [ABC]\\b", "MMQ", "minimaln\\w* mierzon\\w*", "0[,.]5 ?%"]
         ],
         "none": ["MI-011[^.]{0,40}(wyłącznie|tylko) (AC|prąd zmienny)"]
       }
