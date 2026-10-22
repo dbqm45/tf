@@ -48,7 +48,11 @@
             "dział prawny"
           ]
         ]
-      }
+      },
+      "accept": [
+        "sec-eu-regulations",
+        "arch-privacy-compliance"
+      ]
     },
     {
       "id": "model-zagrozen",

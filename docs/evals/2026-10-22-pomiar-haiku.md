@@ -107,9 +107,25 @@ dom-ev-market-roles 2/2, dom-ev-ocpp-16 1/2, dom-ev-ocpp-2x 2/2, dom-ev-regulati
 - Kryteria sprawdzono na jednej odpowiedzi; kolejna płatna partia pokaże ich stabilność (na granicy surowości:
   `dom-ev-ocpp-2x/luka-seqno`).
 
+## Poprawki po niezaliczonych z partii 2 (bez modelu)
+- Opis (wczytywanie): `proc-project-planning` (model cyklu życia: kaskadowy, V, Agile; karta projektu),
+  `eng-behavior-preserving-refactoring` (słowo „refaktoryzacja”, czy test wykryje zmianę), `ddd-context-mapping`
+  (treść zdarzeń integracyjnych i kopia danych u odbiorcy — przegrywał z be-messaging-outbox).
+- Scenariusz: `ops-security-operations/terminy-zgloszen` dopuszcza `sec-eu-regulations` i `arch-privacy-compliance` —
+  pytanie o terminy zgłoszeń to ich zakres, a odpowiedź sąsiada spełniła kryteria treści.
+- Treść: `txt-polish-correctness` — ściąga w SKILL.md podawała stare zasady wielkich liter (odpowiedź ze skillem
+  błędnie uznała „warszawiacy”, „placu Zbawiciela” za poprawne); dopisane zmiany od 2026 z odesłaniem do
+  `references/pisownia.md`. `proc-project-planning` — karta projektu do zatwierdzenia przez sponsora.
+  `arch-privacy-compliance` — nagłówek punktu o cookies wskazuje SDK analityczne i Prawo komunikacji elektronicznej.
+- Bez zmian: `eng-testing/tdd-nowa-regula` (wczytał się w 2 z 3 przebiegów — rozrzut, opis już zawiera TDD),
+  `ddd-deep-modeling/status-faktury` (odpowiedź ze skillem ma wynik 5 why — zdarzenie „płatność zaksięgowana”
+  i regułę zwolnienia towaru — ale nie nazywa techniki; kryterium zostaje, potwierdzi kolejna partia).
+- Skuteczność poprawek opisów potwierdzi dopiero przebieg na modelu (płatny, ok. 1–2 USD za 9 scenariuszy).
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
-2. Poprawić wczytywanie i treść skilli z listy niezaliczonych (opis, kolejność zasad, jak w PR #17 i #19).
+2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
 3. Kolejne partie: zostało ok. 580 scenariuszy (ok. 100 na partię, ok. 25 USD, ok. 12% okna).
-4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness).
+4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
+   do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.

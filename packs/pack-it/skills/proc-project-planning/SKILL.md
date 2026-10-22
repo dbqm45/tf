@@ -1,6 +1,6 @@
 ---
 name: proc-project-planning
-description: Użyj przy planie projektu dla sponsora — cel i zakres, koszt i termin jako przedziały, zapas, ryzyka, kamienie milowe.
+description: Użyj przy planie projektu dla sponsora i wyborze modelu cyklu życia (kaskadowy, V, Agile) — karta projektu, koszt i termin jako przedziały, ryzyka.
 metadata:
   przeglad: 2027-10-03
   katalog: "Użyj przy planowaniu projektu przed startem lub przy ponownym planowaniu — cel i miara sukcesu, zakres i „poza zakresem”, szacowanie kosztu i terminu jako przedziałów (stożek niepewności, klasa referencyjna, szacunek trzypunktowy), budżet z zapasem na ryzyka, zasoby i role (RACI), interesariusze i komunikacja, rejestr ryzyk, kamienie milowe, finansowanie etapami, reakcja na opóźnienie (prawo Brooksa), dobór modelu cyklu życia (kaskadowy, V, spiralny, Agile, DevOps, pętla AI-native). Nie do prognozy przepustowości zespołu z danych (proc-agile), decyzji, co budować (proc-product-discovery), szacunków technicznych architekta (arch-architect-practice) ani kosztów chmury (ops-finops)."
@@ -11,7 +11,9 @@ metadata:
 
 Plan projektu odpowiada sponsorowi na pytania **po co, co, za ile, do kiedy, kto i co może pójść źle** — z jawną
 niepewnością. Backlog, iteracje i prognozy z przepustowości są w proc-agile; tu jest rama, w której zespół pracuje.
-Artefakt: `docs/project/01-discovery/project-plan.md` (szablon w core-project-record). Decyzje o budżecie, terminie
+Artefakt: `docs/project/01-discovery/project-plan.md` (szablon w core-project-record). Do zatwierdzenia sponsor dostaje
+**kartę projektu** (project charter, PMI): jedna strona z celem, zakresem i poza zakresem, terminem i kosztem jako
+przedziałami, kamieniami milowymi, największymi ryzykami, sponsorem i uprawnieniami kierownika. Decyzje o budżecie, terminie
 i zakresie podejmuje człowiek (bramka B1 w core-delivery-lifecycle); agent przygotowuje warianty i liczby.
 
 ## Zasady

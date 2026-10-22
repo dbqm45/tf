@@ -64,7 +64,7 @@
   "offline": "2026-10-21"
  },
  "arch-privacy-compliance": {
-  "fingerprint": "2d5762745586d4a2",
+  "fingerprint": "9ca222ff5408abbb",
   "offline": "2026-10-22"
  },
  "arch-quality-attributes": {
@@ -124,7 +124,7 @@
   "offline": "2026-10-18"
  },
  "ddd-context-mapping": {
-  "fingerprint": "546a517c263b6edc",
+  "fingerprint": "605d42965d93872a",
   "offline": "2026-10-22"
  },
  "ddd-deep-modeling": {
@@ -168,8 +168,8 @@
   "offline": "2026-10-04"
  },
  "eng-behavior-preserving-refactoring": {
-  "fingerprint": "b3fefb7f502b7878",
-  "offline": "2026-10-10"
+  "fingerprint": "5fed8349c09e6a9b",
+  "offline": "2026-10-22"
  },
  "eng-clean-code": {
   "fingerprint": "51b0b1a318b7aded",
@@ -364,8 +364,8 @@
   "offline": "2026-10-04"
  },
  "ops-security-operations": {
-  "fingerprint": "fb6b44fa1c94d661",
-  "offline": "2026-10-17"
+  "fingerprint": "d25dcfe09ab1df92",
+  "offline": "2026-10-22"
  },
  "ops-setup-wizard": {
   "fingerprint": "decf5a015efcd3bd",
@@ -400,8 +400,8 @@
   "offline": "2026-10-22"
  },
  "proc-project-planning": {
-  "fingerprint": "6f7a579e750ccc1e",
-  "offline": "2026-10-04"
+  "fingerprint": "1b03f2e4e1b2a8f9",
+  "offline": "2026-10-22"
  },
  "proc-requirements-shaping": {
   "fingerprint": "6b20130d919fab4d",
