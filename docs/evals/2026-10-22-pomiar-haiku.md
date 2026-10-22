@@ -122,10 +122,39 @@ dom-ev-market-roles 2/2, dom-ev-ocpp-16 1/2, dom-ev-ocpp-2x 2/2, dom-ev-regulati
   i regułę zwolnienia towaru — ale nie nazywa techniki; kryterium zostaje, potwierdzi kolejna partia).
 - Skuteczność poprawek opisów potwierdzi dopiero przebieg na modelu (płatny, ok. 1–2 USD za 9 scenariuszy).
 
+## Sprawdzenie poprawek z partii 2 (2026-10-22): 9 scenariuszy, 1,13 USD
+Wszystkie 9 niezaliczonych wcześniej scenariuszy przeszło ze skillem (Haiku, jeden przebieg), w tym trzy, w których
+wcześniej wczytywał się sąsiad (`ddd-context-mapping`, `proc-project-planning/model-cyklu-zycia`,
+`ops-security-operations` przez dopuszczony `sec-eu-regulations`), i `txt-polish-correctness/wielkie-litery-2026`
+po dopisaniu zmian zasad od 2026.
+
+## Partia 3 (2026-10-22): 128 scenariuszy, 224 przebiegi, 24,78 USD
+31 skilli: rdzeń (11), pozostałe skille nakładki EV (19) i `txt-polish-style`; 96 scenariuszy trigger z porównaniem
+bez skilli i 32 no-trigger (wszystkie zaliczone). Ze skillem 89/96 (treść 93/96), bez skilli treść 58/96
+(25 z nich dopiero przez sędziego). Koszt: ze skillami 17,88 USD, bez skilli 6,90 USD.
+
+**Największa wartość:** core-knowledge 3/3–0/3, core-plan-interview 3/3–0/3, core-cost-control 8/9–2/9,
+core-git-workflow 8/8–3/8, dom-ev-payments 4/4–1/4, core-grounding 3/4–1/4, core-skill-authoring 6/6–3/6.
+
+**Bez różnicy (scenariusze niezaostrzone):** core-semver, core-skill-composition, dom-ev-asset-operations,
+dom-ev-certification-testing, dom-ev-charger-onboarding, dom-ev-cpms-architecture, dom-ev-csms-migration,
+dom-ev-emsp-platform, dom-ev-fleet-charging, dom-ev-glossary, dom-ev-simulation-testing, dom-ev-v2x,
+dom-ev-vehicle-battery, dom-ev-oicp-hubs, dom-ev-site-development, txt-polish-style; core-conventional-commits
+gorzej ze skillem (1/2–2/2, bo skill się nie wczytał).
+
+**Niezaliczone ze skillem (7):**
+- nie wczytał się: core-conventional-commits/zly-typ-commit, core-cost-control/harness-staly-czy-dowolny,
+  core-grounding/liczby-w-raporcie-o-kodzie;
+- wczytał się sąsiad: dom-ev-knowledge-base/dodaj-dokument-partnera (core-knowledge — po przeniesieniu mechanizmu
+  do rdzenia to poprawny wybór, scenariusz do dopuszczenia), dom-ev-site-development/korytarz-afir-nevi
+  (dom-ev-regulations-eu i -us), txt-polish-style/komunikaty-ui (ux-content-design);
+- brak treści: dom-ev-oicp-hubs/oicp-vs-ocpi-partner (`eRoamingAuthorizeRemoteStart`).
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
-3. Kolejne partie: zostało ok. 580 scenariuszy (ok. 100 na partię, ok. 25 USD, ok. 12% okna).
+3. Partia 3 zrobiona (wyżej). Zostało ok. 330 scenariuszy trigger w nakładkach IT i UX (ok. 3 partie po 25 USD);
+   przed nimi zaostrzyć scenariusze 16 skilli „bez różnicy” z partii 3 i poprawić 7 niezaliczonych.
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
