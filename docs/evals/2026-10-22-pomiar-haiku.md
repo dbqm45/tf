@@ -150,11 +150,30 @@ gorzej ze skillem (1/2–2/2, bo skill się nie wczytał).
   (dom-ev-regulations-eu i -us), txt-polish-style/komunikaty-ui (ux-content-design);
 - brak treści: dom-ev-oicp-hubs/oicp-vs-ocpi-partner (`eRoamingAuthorizeRemoteStart`).
 
+## Zaostrzenie i poprawki po partii 3 (bez modelu)
+Kryteria 17 skilli sprawdzone offline na odpowiedziach partii 3: rozróżnia 39 z 40 scenariuszy, przed zmianą 16.
+- Nowe grupy sprawdzają reguły skilli, których model bez skilla nie podaje, np. `Pending` z `interval` zamiast
+  `Rejected` przy reconnect storm, `GET` Sessions z `date_from` po timeoucie komendy, `whitelist: ALWAYS` i opóźniona
+  blokada tokenu, zakaz ponownego użycia EVSE ID, `rc.1` zamiast `rc1`, pojemność użytkowa zamiast nominalnej.
+- Poprawione fałszywe odrzucenia: `ChargingStation`, `AuthorizeRemoteStart` bez prefiksu (oicp-hubs to był błąd
+  kryterium, nie luka skilla), „domena rozstrzyga”, odmiany przy EVSE ID i harmonogramie OSD.
+- Nie rozróżnia: `txt-polish-style/komunikaty-ui` — model zna zasady mikrotekstu sam; kandydat do skrócenia
+  albo odesłania do ux-content-design.
+- Opisy (wczytywanie): core-conventional-commits (poprawa złego typu w commicie), core-cost-control (porównanie
+  wyników benchmarków, zmiana modelu), core-grounding (twierdzenia w raporcie agenta, liczby).
+- Scenariusze dopuszczają właściwego sąsiada: `dom-ev-knowledge-base/dodaj-dokument-partnera` → core-knowledge
+  (mechanizm w rdzeniu), `dom-ev-site-development/korytarz-afir-nevi` → dom-ev-regulations-eu/-us (pytanie o same
+  przepisy), `txt-polish-style/komunikaty-ui` → ux-content-design.
+- Kandydaci do skrócenia (model zna temat sam): ogólna architektura bramy OCPP w dom-ev-cpms-architecture, ogólny
+  przepływ komend OCPI w dom-ev-emsp-platform.
+- Kryteria sprawdzono na jednej odpowiedzi; na granicy surowości: `dom-ev-v2x/bpt-dynamic-vs-scheduled`,
+  `dom-ev-fleet-charging/zwrot-za-ladowanie-w-domu`. Skuteczność opisów potwierdzi przebieg na modelu (ok. 0,40 USD).
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
 3. Partia 3 zrobiona (wyżej). Zostało ok. 330 scenariuszy trigger w nakładkach IT i UX (ok. 3 partie po 25 USD);
-   przed nimi zaostrzyć scenariusze 16 skilli „bez różnicy” z partii 3 i poprawić 7 niezaliczonych.
+   zaostrzenie i poprawki po partii 3 zrobione (sekcja wyżej).
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
