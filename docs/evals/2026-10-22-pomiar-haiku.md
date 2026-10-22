@@ -270,11 +270,46 @@ Kryteria 15 skilli sprawdzone offline na odpowiedziach partii 5: rozróżnia 33 
 - Do rozważenia: w fe-engineering-levels kroki „najpierw diagnoza z trzech źródeł danych, potem próg decyzji”
   przenieść z references/devex.md do SKILL.md.
 
+## Sprawdzenie poprawek po partii 5 (2026-10-23): 10 scenariuszy, 1,21 USD
+9/10 zaliczonych, w tym wczytanie eng-debugging, eng-refactor-planning, fe-engineering-levels, brak wczytania
+ddd-algorithm-recognition przy klasyfikacji (no-trigger) oraz core-cost-control, arch-ai-solutions
+i arch-threat-modeling po poprawkach. Nadal niezaliczone: `eng-design-principles/dry-przypadkowe` — odpowiedź nie
+podaje kolejności KISS/YAGNI przed DRY.
+
+## Partia 6 (2026-10-23): 181 scenariuszy, 311 przebiegów, 29,39 USD — koniec pierwszego pomiaru
+47 skilli `ops-*`, `proc-*`, `qa-*`, `sec-*`, `tool-*`; 130 scenariuszy trigger z porównaniem bez skilli i 51 no-trigger
+(wszystkie zaliczone). Ze skillem 120/130 (treść 121/130), bez skilli treść 91/130 (19 przez sędziego). Koszt: ze
+skillami 22,28 USD, bez skilli 7,11 USD. Zużycie okna: od 0% (po resecie) do ok. 14% [szacunek].
+
+**Największa wartość:** qa-change-review 3/3–0/3, proc-issue-triage 2/2–0/2, ops-setup-wizard 2/2–0/2,
+tool-playwright 4/4–1/4, tool-vitest 4/4–1/4, qa-spec-first-testing 3/3–1/3, sec-security-leadership 3/3–1/3,
+proc-requirements-shaping 4/4–2/4.
+
+**Bez różnicy (do zaostrzenia):** ops-ai-inference, ops-ci-cd, ops-cloud-landing-zones, ops-cloud-migration,
+ops-dependency-upgrades, ops-docker, ops-iac-terraform, ops-linux-performance, ops-supply-chain-security,
+ops-virtualization-storage, proc-agile, qa-performance-testing, qa-regression, sec-appsec-devsecops,
+sec-cloud-security, sec-cryptography-pki, sec-eu-regulations, sec-malware-analysis, sec-risk-management,
+sec-zero-trust-identity, tool-jest, tool-pytest, tool-stripe; gorzej ze skillem: ops-linux-networking (1/2–2/2),
+ops-platform-engineering (0/3–1/3), sec-governance-compliance (1/2–2/2).
+
+**Niezaliczone ze skillem (10):**
+- nie wczytał się: ops-linux-networking/dysk-inody;
+- treść albo kryterium (skill wczytany): ops-platform-engineering — wszystkie 3 scenariusze (model dojrzałości CNCF,
+  złota ścieżka, GitOps), ops-cloud-migration/cutover-bazy (budżet przestoju), ops-linux-performance/sysctl-tuning
+  (nie kopiować tuningu bez hipotezy), ops-multi-region-resilience/replikacja-konflikty-gameday (blast radius),
+  sec-governance-compliance/soc2-typ2-mapowanie (Trust Services Criteria), sec-risk-management/rejestr-i-akceptacja
+  (apetyt i tolerancja), sec-zero-trust-identity/zt-zamiast-vpn (PDP/PEP).
+
+## Podsumowanie pierwszego pomiaru (partie 1–6)
+Wszystkie skille z plikami scenariuszy zmierzone na Haiku z porównaniem bez skilli. Zaostrzenie kryteriów
+i poprawki opisów po każdej partii robione offline (bez kosztu); poprawki sprawdzane małymi przebiegami (ok. 1 USD).
+Skille, które nie wnoszą treści ponad wiedzę modelu, są wypisane w sekcjach „bez różnicy” i „kandydaci do skrócenia”.
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
-3. Partie 3–5 zrobione (sekcje wyżej). Zostało ok. 130 scenariuszy trigger w nakładce IT (ops, proc, qa, sec, tool —
-   ok. 1 partia za ok. 25 USD); zaostrzenie i poprawki po partii 5 zrobione (sekcja wyżej).
+3. Partie 1–6 zrobione — wszystkie scenariusze zmierzone. Zostało: zaostrzyć 26 skilli „bez różnicy” z partii 6
+   i poprawić 10 niezaliczonych (ops-platform-engineering w pierwszej kolejności) oraz eng-design-principles.
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
