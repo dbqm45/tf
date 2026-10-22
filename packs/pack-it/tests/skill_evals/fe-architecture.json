@@ -49,7 +49,11 @@
             "bez uwierzytelni"
           ]
         ]
-      }
+      },
+      "accept": [
+        "fw-nextjs",
+        "ops-security-operations"
+      ]
     },
     {
       "id": "ciemny-motyw",

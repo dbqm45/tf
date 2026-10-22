@@ -1,6 +1,6 @@
 ---
 name: eng-refactor-planning
-description: Użyj, gdy z długu trzeba wybrać, co i jak refaktoryzować — ranking opcji, Strangler, Mikado, plan.
+description: Użyj, gdy z długu trzeba wybrać, co i jak refaktoryzować — ranking opcji i sprawdzenie jego liczb w kodzie, Strangler, Mikado, plan.
 metadata:
   przeglad: 2027-10-09
   katalog: "Użyj, gdy z listy długu, ryzyk lub hotspotów trzeba wybrać, co refaktoryzować, do jakiego docelowego kształtu i jaką odwracalną ścieżką — klasyfikacja kandydatów, trzy perspektywy (obecny kształt w archetypach Transaction Script / Table Module / Domain Model, intencja z historii gita i ADR, wykonalność), dopasowanie skali (zostaje / osłona zamiast przebudowy / przebudowa), Strangler Fig, Branch by Abstraction, Mikado, ranking 2–3 opcji z odrzuconymi, weryfikacja liczb ast-grepem z potwierdzeniem zer przez rg, decyzja człowieka i plan faz. Nie do samego audytu długu (eng-tech-debt-audit), dowodu zachowania przy wykonaniu (eng-behavior-preserving-refactoring) ani przeprojektowania pojęć domeny (ddd-legacy-modernization)."

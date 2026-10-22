@@ -35,7 +35,10 @@
         "none": [
           "zwracaj null"
         ]
-      }
+      },
+      "accept": [
+        "eng-design-patterns"
+      ]
     },
     {
       "id": "zasady-architektury",
