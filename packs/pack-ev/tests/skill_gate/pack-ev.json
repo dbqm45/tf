@@ -4,19 +4,19 @@
   "offline": "2026-10-22"
  },
  "dom-ev-business-economics": {
-  "fingerprint": "eb40963e5f9dee77",
-  "offline": "2026-10-20"
+  "fingerprint": "d001a62b34ab3aa5",
+  "offline": "2026-10-22"
  },
  "dom-ev-cdr-settlement": {
-  "fingerprint": "e20cb1de4d91369e",
-  "offline": "2026-10-20"
+  "fingerprint": "4e2a5979082eac72",
+  "offline": "2026-10-22"
  },
  "dom-ev-certification-testing": {
   "fingerprint": "832360faa57d5688",
   "offline": "2026-10-22"
  },
  "dom-ev-charger-hardware": {
-  "fingerprint": "eb3c3efe9ac91ac8",
+  "fingerprint": "a2720083a2b35b10",
   "offline": "2026-10-22"
  },
  "dom-ev-charger-onboarding": {
@@ -44,8 +44,8 @@
   "offline": "2026-10-22"
  },
  "dom-ev-energy-management": {
-  "fingerprint": "759d0b839d7ce01c",
-  "offline": "2026-10-20"
+  "fingerprint": "99dd617ea9ebf882",
+  "offline": "2026-10-22"
  },
  "dom-ev-fleet-charging": {
   "fingerprint": "850496d64f4559dd",
@@ -76,12 +76,12 @@
   "offline": "2026-10-22"
  },
  "dom-ev-metering-calibration": {
-  "fingerprint": "dc1877a3580ef370",
+  "fingerprint": "628d5144d99c3693",
   "offline": "2026-10-22"
  },
  "dom-ev-ocpi": {
-  "fingerprint": "42f82d883494cefe",
-  "offline": "2026-10-20"
+  "fingerprint": "294e9c6418217aa5",
+  "offline": "2026-10-22"
  },
  "dom-ev-ocpp-16": {
   "fingerprint": "c790473ba635e728",
@@ -96,11 +96,11 @@
   "offline": "2026-10-22"
  },
  "dom-ev-payments": {
-  "fingerprint": "4d0e718d0d7cd805",
-  "offline": "2026-10-20"
+  "fingerprint": "a725f03c2c68aa5c",
+  "offline": "2026-10-22"
  },
  "dom-ev-regulations-eu": {
-  "fingerprint": "8d57187ca3d9b0fc",
+  "fingerprint": "b5856f4bbb486b3a",
   "offline": "2026-10-22"
  },
  "dom-ev-regulations-pl": {
@@ -112,12 +112,12 @@
   "offline": "2026-10-22"
  },
  "dom-ev-security": {
-  "fingerprint": "1e8f00bfcce3c278",
+  "fingerprint": "900edc524ba626c8",
   "offline": "2026-10-22"
  },
  "dom-ev-session-lifecycle": {
-  "fingerprint": "822cbb045f469eae",
-  "offline": "2026-10-20"
+  "fingerprint": "01008289960d217b",
+  "offline": "2026-10-22"
  },
  "dom-ev-simulation-testing": {
   "fingerprint": "285f3eaf6d6fe490",
@@ -128,12 +128,12 @@
   "offline": "2026-10-22"
  },
  "dom-ev-smart-charging": {
-  "fingerprint": "992d82b1d3c47bc7",
-  "offline": "2026-10-20"
+  "fingerprint": "90147c5a30c59948",
+  "offline": "2026-10-22"
  },
  "dom-ev-tariffs-pricing": {
-  "fingerprint": "c50cc35d32fad5e8",
-  "offline": "2026-10-20"
+  "fingerprint": "ebf4d0b4133e7b14",
+  "offline": "2026-10-22"
  },
  "dom-ev-v2x": {
   "fingerprint": "97b2805885267d6a",
