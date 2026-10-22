@@ -196,7 +196,7 @@
   "offline": "2026-10-22"
  },
  "eng-design-principles": {
-  "fingerprint": "f756f5ccc8f04fd3",
+  "fingerprint": "5ef158e7834622cc",
   "offline": "2026-10-22"
  },
  "eng-i18n": {
@@ -296,64 +296,64 @@
   "offline": "2026-10-04"
  },
  "ops-ai-inference": {
-  "fingerprint": "dc95214aa7891603",
-  "offline": "2026-10-20"
+  "fingerprint": "dc21e8cebc3532c8",
+  "offline": "2026-10-22"
  },
  "ops-ci-cd": {
-  "fingerprint": "ac158323d73d6d79",
-  "offline": "2026-10-10"
+  "fingerprint": "bf10678f22bc44c2",
+  "offline": "2026-10-22"
  },
  "ops-cloud-landing-zones": {
-  "fingerprint": "71d4a66da93b9dd3",
-  "offline": "2026-10-17"
+  "fingerprint": "e06ca63ef2c184fa",
+  "offline": "2026-10-22"
  },
  "ops-cloud-migration": {
-  "fingerprint": "e187335c5ae26562",
-  "offline": "2026-10-17"
+  "fingerprint": "0d84b04a1d5dc3f8",
+  "offline": "2026-10-22"
  },
  "ops-datacenter-networking": {
   "fingerprint": "9b01fee899bc9dce",
   "offline": "2026-10-17"
  },
  "ops-dependency-upgrades": {
-  "fingerprint": "0f8fb64adc7ff85a",
-  "offline": "2026-10-04"
+  "fingerprint": "c1523ef85727d560",
+  "offline": "2026-10-22"
  },
  "ops-docker": {
-  "fingerprint": "a79c2709e7dd5b49",
-  "offline": "2026-10-04"
+  "fingerprint": "8b21afb09deb66cb",
+  "offline": "2026-10-22"
  },
  "ops-finops": {
   "fingerprint": "eca8a67ac58494cb",
   "offline": "2026-10-04"
  },
  "ops-iac-terraform": {
-  "fingerprint": "9144193a84252864",
-  "offline": "2026-10-04"
+  "fingerprint": "383b5bcbe0c67401",
+  "offline": "2026-10-22"
  },
  "ops-kubernetes": {
   "fingerprint": "e63efe4607ef13f3",
   "offline": "2026-10-22"
  },
  "ops-linux-networking": {
-  "fingerprint": "4aef6b7e58540388",
-  "offline": "2026-10-04"
+  "fingerprint": "6a59194701922f80",
+  "offline": "2026-10-22"
  },
  "ops-linux-performance": {
-  "fingerprint": "df3585408e850423",
-  "offline": "2026-10-17"
+  "fingerprint": "9dfa08f50b6bca27",
+  "offline": "2026-10-22"
  },
  "ops-multi-region-resilience": {
-  "fingerprint": "098b8f3f716a4e51",
-  "offline": "2026-10-20"
+  "fingerprint": "389176993402b06a",
+  "offline": "2026-10-22"
  },
  "ops-observability": {
   "fingerprint": "9c95a3f662f877e9",
   "offline": "2026-10-20"
  },
  "ops-platform-engineering": {
-  "fingerprint": "0d831768435fec94",
-  "offline": "2026-10-17"
+  "fingerprint": "b99e676be94987d8",
+  "offline": "2026-10-22"
  },
  "ops-release-engineering": {
   "fingerprint": "bb20ba85eec5f45f",
@@ -376,16 +376,16 @@
   "offline": "2026-10-20"
  },
  "ops-supply-chain-security": {
-  "fingerprint": "a6c1b23faad61670",
-  "offline": "2026-10-10"
+  "fingerprint": "436e6e933c403e4b",
+  "offline": "2026-10-22"
  },
  "ops-virtualization-storage": {
-  "fingerprint": "deee2cdc99ad74f7",
-  "offline": "2026-10-17"
+  "fingerprint": "4b2d423e8a53106c",
+  "offline": "2026-10-22"
  },
  "proc-agile": {
-  "fingerprint": "dc94ef8e34113dd8",
-  "offline": "2026-10-04"
+  "fingerprint": "545539de264edfc9",
+  "offline": "2026-10-22"
  },
  "proc-issue-triage": {
   "fingerprint": "330c2810e37e93f7",
@@ -428,8 +428,8 @@
   "offline": "2026-10-04"
  },
  "qa-regression": {
-  "fingerprint": "953efe0012fee90f",
-  "offline": "2026-10-10"
+  "fingerprint": "bf60d6aa008b9a26",
+  "offline": "2026-10-22"
  },
  "qa-spec-first-testing": {
   "fingerprint": "5a79adbe87d955b1",
@@ -440,39 +440,39 @@
   "offline": "2026-10-20"
  },
  "sec-appsec-devsecops": {
-  "fingerprint": "3906053950a0b76d",
-  "offline": "2026-10-17"
+  "fingerprint": "f7509834f846fcee",
+  "offline": "2026-10-22"
  },
  "sec-cloud-security": {
-  "fingerprint": "b51c415438cbfe39",
-  "offline": "2026-10-17"
+  "fingerprint": "c4d6647e14ed9b77",
+  "offline": "2026-10-22"
  },
  "sec-cryptography-pki": {
-  "fingerprint": "107ccff671ef3681",
-  "offline": "2026-10-17"
+  "fingerprint": "195d582367b73a34",
+  "offline": "2026-10-22"
  },
  "sec-detection-engineering": {
   "fingerprint": "6f9bde1c4c198139",
   "offline": "2026-10-17"
  },
  "sec-eu-regulations": {
-  "fingerprint": "2d8df51170fb7ca8",
-  "offline": "2026-10-17"
+  "fingerprint": "5bef8931608bc0b9",
+  "offline": "2026-10-22"
  },
  "sec-governance-compliance": {
-  "fingerprint": "1f23bf43751c91ff",
-  "offline": "2026-10-17"
+  "fingerprint": "dc8e6d33d1e2f9eb",
+  "offline": "2026-10-22"
  },
  "sec-llm-security": {
   "fingerprint": "63ec1c12b2dbce2a",
   "offline": "2026-10-20"
  },
  "sec-malware-analysis": {
-  "fingerprint": "80877fb9b7e1c608",
-  "offline": "2026-10-17"
+  "fingerprint": "b1fca3c807f735ba",
+  "offline": "2026-10-22"
  },
  "sec-risk-management": {
-  "fingerprint": "af59fe8955a6746b",
+  "fingerprint": "ada2f3140ca9f8f0",
   "offline": "2026-10-22"
  },
  "sec-security-leadership": {
@@ -480,12 +480,12 @@
   "offline": "2026-10-17"
  },
  "sec-zero-trust-identity": {
-  "fingerprint": "21896f052177954c",
-  "offline": "2026-10-17"
+  "fingerprint": "38d2e25d4ee98b2f",
+  "offline": "2026-10-22"
  },
  "tool-jest": {
-  "fingerprint": "630967a24f07e7b4",
-  "offline": "2026-10-10"
+  "fingerprint": "70cdf46f7c0a109b",
+  "offline": "2026-10-22"
  },
  "tool-nx": {
   "fingerprint": "688df1bbb2871dc9",
@@ -496,12 +496,12 @@
   "offline": "2026-10-10"
  },
  "tool-pytest": {
-  "fingerprint": "a9fdded189f68967",
-  "offline": "2026-10-04"
+  "fingerprint": "be56fad0e4e58d38",
+  "offline": "2026-10-22"
  },
  "tool-stripe": {
-  "fingerprint": "07b54094ddeca6c0",
-  "offline": "2026-10-21"
+  "fingerprint": "a8ad12eba2e4cc41",
+  "offline": "2026-10-22"
  },
  "tool-vitest": {
   "fingerprint": "28ee2d71872da596",
