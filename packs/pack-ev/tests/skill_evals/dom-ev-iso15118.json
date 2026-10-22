@@ -7,12 +7,28 @@
       "prompt": "Auto na naszej ładowarce DC wysyła SupportedAppProtocolReq z trzema wpisami: DIN 70121, ISO 15118-2 i ISO 15118-20 DC. SECC w firmware obsługuje tylko DIN i -2, a Plug & Charge i tak się nie włącza. Jak SECC wybiera protokół, jakie pola o tym decydują i dlaczego PnC może nie działać? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["Priority|priorytet"],
-          ["SchemaID|ProtocolNamespace|namespace"],
-          ["DIN.{0,120}(EIM|ExternalPayment|zewnętrzn|bez Plug|nie (ma|obsługuje|wspiera)|brak)|(EIM|ExternalPayment|zewnętrzn|brak|nie (ma|obsługuje|wspiera)).{0,120}DIN"],
-          ["ISO 15118-2|-2\\b"]
+          [
+            "Priority|priorytet"
+          ],
+          [
+            "SchemaID|ProtocolNamespace|namespace"
+          ],
+          [
+            "DIN.{0,120}(EIM|ExternalPayment|zewnętrzn|bez Plug|nie (ma|obsługuje|wspiera)|brak)|(EIM|ExternalPayment|zewnętrzn|brak|nie (ma|obsługuje|wspiera)).{0,120}DIN"
+          ],
+          [
+            "ISO 15118-2|-2\\b"
+          ],
+          [
+            "josev|implementacj\\w*[^.]{0,60}nie (z )?norm|norm\\w*[^.]{0,40}(nie ma w bazie|płatn|niedostępn)"
+          ],
+          [
+            "\\b2 ?s\\b|2 sekund|0[,.]25 ?s"
+          ]
         ],
-        "none": ["DIN 70121 (obsługuje|supports|wspiera) Plug ?& ?Charge"]
+        "none": [
+          "DIN 70121 (obsługuje|supports|wspiera) Plug ?& ?Charge"
+        ]
       }
     },
     {
@@ -21,12 +37,28 @@
       "prompt": "Pojazd wysłał do ładowarki CertificateInstallationReq, bo nie ma jeszcze certyfikatu kontraktu. Stacja jest na OCPP 2.0.1. Jak ta prośba dojdzie do eMSP i z powrotem do auta, które komunikaty OCPP w tym uczestniczą i na co uważać w czasie?",
       "checks": {
         "all": [
-          ["Get15118EVCertificate"],
-          ["exiRequest|exiResponse|EXI"],
-          ["Install"],
-          ["timeout|limit czasu|5 ?s|sekund"]
+          [
+            "Get15118EVCertificate"
+          ],
+          [
+            "exiRequest|exiResponse|EXI"
+          ],
+          [
+            "Install"
+          ],
+          [
+            "timeout|limit czasu|5 ?s|sekund"
+          ],
+          [
+            "josev|implementacj\\w*[^.]{0,60}nie (z )?norm|norm\\w*[^.]{0,40}(nie ma w bazie|płatn|niedostępn)"
+          ],
+          [
+            "800 ?B|\\b2 ?s\\b|2 sekund"
+          ]
         ],
-        "none": ["CertificateSigned.{0,60}(przenosi|niesie|zawiera).{0,40}(certyfikat kontraktu|EXI)"]
+        "none": [
+          "CertificateSigned.{0,60}(przenosi|niesie|zawiera).{0,40}(certyfikat kontraktu|EXI)"
+        ]
       }
     },
     {

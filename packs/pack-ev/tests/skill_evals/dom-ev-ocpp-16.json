@@ -7,11 +7,22 @@
       "prompt": "Mamy CSMS na OCPP 1.6J. Ładowarka po restarcie zasilania wysyła StopTransaction z transactionId, którego nie mamy w bazie. Co CSMS ma odpowiedzieć i co zrobić z tą ramką? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["callresult|\\[3,|odpowiedz.{0,40}(normaln|poprawn)|potwierdz|accepted"],
-          ["zapisz|zachowaj|loguj|log|kwarantann|do wyjaśnienia|store|persist"],
-          ["retry|ponawia|powtarza|w kółko|bez końca|kolejk|buforuj"]
+          [
+            "callresult|\\[3,|odpowiedz.{0,40}(normaln|poprawn)|potwierdz|accepted"
+          ],
+          [
+            "zapisz|zachowaj|loguj|log|kwarantann|do wyjaśnienia|store|persist"
+          ],
+          [
+            "retry|ponawia|powtarza|w kółko|bez końca|kolejk|buforuj"
+          ],
+          [
+            "(transactionId|\\bID\\b)[^.]{0,40}nadaje CSMS|CSMS nadaje|nie (twórz|zakładaj|wymyślaj)[^.]{0,40}transakcj|z powietrza|zegar|clock|timestamp\\w*[^.]{0,60}(czas\\w* odbior|błędn)"
+          ]
         ],
-        "none": ["odrzuć.{0,30}CALLERROR.{0,30}bez zapis"]
+        "none": [
+          "odrzuć.{0,30}CALLERROR.{0,30}bez zapis"
+        ]
       }
     },
     {
@@ -20,10 +31,16 @@
       "prompt": "W OCPP 1.6 mam ładowarkę z wpiętym kablem, ale kierowca jeszcze nie przyłożył karty. Jaki status złącza ona raportuje i jakim komunikatem? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["preparing"],
-          ["statusnotification"]
+          [
+            "preparing"
+          ],
+          [
+            "statusnotification"
+          ]
         ],
-        "none": ["\\bOccupied\\b.{0,20}(w 1\\.6|dla 1\\.6)"]
+        "none": [
+          "\\bOccupied\\b.{0,20}(w 1\\.6|dla 1\\.6)"
+        ]
       }
     },
     {

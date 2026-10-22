@@ -7,11 +7,26 @@
       "prompt": "Ładowarka od rana nie reaguje na RemoteStart z aplikacji, a w logach CSMS widzę tylko Heartbeaty. Od czego zacząć szukać przyczyny? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["ramk|surow|log"],
-          ["RemoteStart\\w*.{0,120}(Rejected|CALLRESULT|CALLERROR|bez odpowiedzi|brak odpowiedzi|timeout)|call-no-response"],
-          ["StatusNotification|status złącza|connector status|Faulted|Unavailable|TriggerMessage"]
+          [
+            "ramk|surow|log"
+          ],
+          [
+            "RemoteStart\\w*.{0,120}(Rejected|CALLRESULT|CALLERROR|bez odpowiedzi|brak odpowiedzi|timeout)|call-no-response"
+          ],
+          [
+            "StatusNotification|status złącza|connector status|Faulted|Unavailable|TriggerMessage"
+          ],
+          [
+            "(przed|zanim)[^.]{0,80}(restart|Reset)|restart\\w*[^.]{0,60}(kasuje|niszczy|usuwa|traci|zaciera)"
+          ],
+          [
+            "akceptac\\w*|zgod\\w* człowieka|komend\\w* odczytu|(plan\\w*|zgod\\w*)[^.]{0,60}(przed|zanim)[^.]{0,40}(Reset|restart|komend)"
+          ]
         ],
-        "none": ["zrestartuj.{0,40}(od razu|najpierw)", "^\\s*najpierw.{0,30}reset"]
+        "none": [
+          "zrestartuj.{0,40}(od razu|najpierw)",
+          "^\\s*najpierw.{0,30}reset"
+        ]
       }
     },
     {
@@ -20,11 +35,25 @@
       "prompt": "eMSP reklamuje, że sesja miała 12 kWh, a w naszym CSMS przy tej sesji mamy 12000. Co sprawdzić? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["\\bWh\\b.{0,80}kWh|kWh.{0,80}\\bWh\\b|1000"],
-          ["meterStart|meterStop|MeterValues|licznik|Energy\\.Active"],
-          ["jednostk|unit|skala|mnożnik|dziel"]
+          [
+            "\\bWh\\b.{0,80}kWh|kWh.{0,80}\\bWh\\b|1000"
+          ],
+          [
+            "meterStart|meterStop|MeterValues|licznik|Energy\\.Active"
+          ],
+          [
+            "jednostk|unit|skala|mnożnik|dziel"
+          ],
+          [
+            "złożeni\\w*|kilk\\w* (błęd|przyczyn)|każd\\w* etap|zaokrągl|licznik\\w* malej|meter-decrease"
+          ],
+          [
+            "(przed|zanim)[^.]{0,60}(zmienisz|zmian|popraw|restart)|\\[założeni|założenie\\]"
+          ]
         ],
-        "none": ["CDR.{0,40}(popraw|edytuj|zmień).{0,30}(PATCH|bezpośrednio)"]
+        "none": [
+          "CDR.{0,40}(popraw|edytuj|zmień).{0,30}(PATCH|bezpośrednio)"
+        ]
       }
     },
     {

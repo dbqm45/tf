@@ -7,12 +7,29 @@
       "prompt": "Jesteśmy jednocześnie CPO i eMSP. Kierowca z cudzym kontraktem naładował się u nas, a nasz klient ładował się u konkurenta. Kto komu wystawia faktury i co w tym wszystkim robi OCPI? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["role|rola", "roles"],
-          ["emsp.{0,60}(faktur|invoice)|faktur.{0,60}emsp|invoice.{0,60}emsp"],
-          ["hurtow|wholesale|rozlicz.{0,30}(cpo|między)|settlement"],
-          ["nie.{0,40}(płatno|płatnoś|pieni|faktur)|does not.{0,30}(pay|money|invoice)|nie realizuje"]
+          [
+            "role|rola",
+            "roles"
+          ],
+          [
+            "emsp.{0,60}(faktur|invoice)|faktur.{0,60}emsp|invoice.{0,60}emsp"
+          ],
+          [
+            "hurtow|wholesale|rozlicz.{0,30}(cpo|między)|settlement"
+          ],
+          [
+            "nie.{0,40}(płatno|płatnoś|pieni|faktur)|does not.{0,30}(pay|money|invoice)|nie realizuje"
+          ],
+          [
+            "rol\\w*[^.]{0,60}(nie|zamiast)[^.]{0,20}typ\\w* firm|typ\\w* firm\\w*[^.]{0,40}(nie|zamiast)[^.]{0,20}rol|rol\\w* w (danej |tej )?sesji"
+          ],
+          [
+            "Sender|Receiver|nadawc\\w*[^.]{0,40}odbiorc|(dwie|osobn\\w*) tożsamoś|party_id"
+          ]
         ],
-        "none": ["OCPI (wystawia|generuje|realizuje) faktur"]
+        "none": [
+          "OCPI (wystawia|generuje|realizuje) faktur"
+        ]
       }
     },
     {
@@ -21,12 +38,25 @@
       "prompt": "Właściciel parkingu chce udziału w przychodach z naszych ładowarek, które operujemy jako CPO. Jak wygląda w takim układzie przepływ danych i pieniędzy i kto ma jakie dane? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["host|właściciel lokalizacji|właściciel parkingu|site owner"],
-          ["cdr|sesj"],
-          ["umow|kontrakt|contract|agreement"],
-          ["cpo.{0,80}(dane|data)|(dane|data).{0,80}cpo"]
+          [
+            "host|właściciel lokalizacji|właściciel parkingu|site owner"
+          ],
+          [
+            "cdr|sesj"
+          ],
+          [
+            "umow|kontrakt|contract|agreement"
+          ],
+          [
+            "cpo.{0,80}(dane|data)|(dane|data).{0,80}cpo|(CDR|sesj)\\w*[^\\n]{0,40}\\bCPO|\\bCPO\\b[^\\n]{0,40}(CDR|sesj)"
+          ],
+          [
+            "(host|właściciel\\w*)[^.]{0,80}nie (jest )?stron\\w* OCPI|poza OCPI|nie (jest|uczestniczy)[^.]{0,30}OCPI"
+          ]
         ],
-        "none": ["host (jest|zostaje) CPO z definicji"]
+        "none": [
+          "host (jest|zostaje) CPO z definicji"
+        ]
       }
     },
     {
