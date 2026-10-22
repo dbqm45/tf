@@ -34,15 +34,8 @@ metadata:
 | **Shared Kernel** | biblioteka `scope:shared` — minimalna, z właścicielem, zmiany konsultowane |
 | **ACL** | biblioteka `type:data-access` w kontekście odbiorcy tłumacząca kontrakt obcego kontekstu |
 
-Przykładowe ograniczenia (`eslint.config.mjs`):
-```js
-depConstraints: [
-  { sourceTag: 'type:feature',     onlyDependOnLibsWithTags: ['type:ui', 'type:data-access', 'type:domain', 'type:util'] },
-  { sourceTag: 'type:data-access', onlyDependOnLibsWithTags: ['type:domain', 'type:util'] },
-  { sourceTag: 'type:domain',      onlyDependOnLibsWithTags: ['type:domain', 'type:util'] },
-  { sourceTag: 'scope:booking',    onlyDependOnLibsWithTags: ['scope:booking', 'scope:shared'] },
-]
-```
+`depConstraints` (`onlyDependOnLibsWithTags`) w `eslint.config.mjs` odwzorowuje tabelę: `type:domain` zależy tylko od
+`domain`/`util`, a `scope:<kontekst>` tylko od siebie i `scope:shared`.
 
 ## Zależne od wersji
 | Wersja | Co się zmieniło |

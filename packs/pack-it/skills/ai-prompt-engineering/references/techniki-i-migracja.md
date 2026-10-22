@@ -39,16 +39,10 @@ Nazwy modeli, parametry i ceny zmieniają się często; przed zmianą sprawdź b
 - Kontrakt wyjścia, walidacja po odbiorze i obsługa porażki: eng-llm-features §2.
 
 ## 3. Układ pod cache (Anthropic)
-- Prefiks buforowany w kolejności: `tools` → `system` → `messages`; `cache_control` na ostatnim bloku
-  identycznym w żądaniach (maks. 4 punkty jawne; jest też tryb automatyczny).
-- TTL: 5 minut (domyślnie, odświeżany przy odczycie) albo 1 godzina (`"ttl": "1h"`); zapis kosztuje 1,25× (5 min) lub
-  2× (1 godz.) ceny wejścia, odczyt zwykle 0,1× (na części modeli mniej).
-- Minimalna długość prefiksu zależy od modelu (od 512 do 4096 tokenów); krótszy nie jest buforowany i bez błędu.
-- Unieważniają: zmiana tekstu przed punktem (znacznik czasu, id użytkownika), zmiana definicji narzędzi, `tool_choice`,
-  dodanie lub usunięcie obrazów, przełączniki wyszukiwania i cytowań, zmiana konfiguracji myślenia lub `effort` (zależnie od modelu).
-- Sprawdzenie: pola `cache_creation_input_tokens` i `cache_read_input_tokens` w odpowiedzi; oba 0 = brak cache.
-- Równoległe żądania trafiają w cache dopiero po rozpoczęciu pierwszej odpowiedzi.
-- Reguły kosztowe sesji agenta: core-cost-control.
+Mechanikę cache API (kolejność `tools` → `system` → `messages`, `cache_control`, TTL, ceny zapisu i odczytu, minimalna
+długość prefiksu, co unieważnia) opisuje aktualnie wbudowany skill `claude-api`; reguły kosztowe sesji agenta:
+core-cost-control. Dla promptu liczy się jedno: część stała na początku, zmienna na końcu, a trafienia sprawdzasz
+w polach `cache_creation_input_tokens` i `cache_read_input_tokens` (oba 0 = brak cache).
 
 ## 4. Migracja promptu na nowszy model
 1. Przeczytaj przewodnik migracji dostawcy dla modelu docelowego.

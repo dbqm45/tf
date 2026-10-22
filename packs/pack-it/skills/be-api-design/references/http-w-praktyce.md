@@ -31,19 +31,10 @@
 - Klient (także nasz) respektuje `Retry-After` i ponawia z wykładniczym odstępem i losowym rozrzutem.
 
 ## 4. Kolekcje: paginacja, filtrowanie, sortowanie, wyszukiwanie
-- **Offset** (`?offset=100&limit=20`): prosty, pozwala skoczyć na stronę N. Wolny przy dużych przesunięciach, a nowe
-  wpisy przesuwają strony (duplikaty lub pominięcia). Tylko dla małych, rzadko zmiennych zbiorów.
-- **Kursor / keyset** (`?cursor=…&limit=20`): zapytanie `WHERE (created_at, id) > (:c, :id)` z indeksem. Stabilny
-  przy dopisywaniu, szybki na dużych zbiorach, ale bez skoku na stronę N.
-  - Kursor jest **nieprzezroczysty** (zakodowany, klient go nie składa) i zawiera wszystkie pola sortowania.
-  - Sortowanie zawsze kończy się unikalnym polem (`id`), inaczej rekordy o tej samej wartości giną między stronami.
-- Linki do następnej strony w treści (`next`) lub w nagłówku `Link` (RFC 8288). Całkowita liczba wyników jest droga —
-  opcjonalna (`?include=total`) albo przybliżona.
-- **Filtry**: allowlista pól i operatorów (`?status=paid&createdAt[gte]=2026-01-01`). Nieznany filtr → `400`, nie cicha
-  ignoracja. Każdy filtr i sortowanie mają indeks albo limit (be-database).
-- **Sortowanie**: `?sort=-createdAt,id` (minus = malejąco), tylko pola z allowlisty.
-- **Wyszukiwanie pełnotekstowe**: osobny parametr lub endpoint (`?q=`), zwykle osobny silnik (indeks wyszukiwania),
-  z limitem długości zapytania.
+- Offset tylko dla małych, rzadko zmiennych zbiorów; poza tym kursor (keyset) — **nieprzezroczysty**, z wszystkimi
+  polami sortowania, a sortowanie kończy się unikalnym polem (`id`). Liczba wszystkich wyników opcjonalna albo przybliżona.
+- Filtry i sortowanie tylko z allowlisty; nieznany filtr → `400`, nie cicha ignoracja; każdy filtr i sortowanie ma
+  indeks albo limit (be-database).
 
 ## 5. Operacje masowe i długie
 | Rodzaj | Semantyka | Odpowiedź |

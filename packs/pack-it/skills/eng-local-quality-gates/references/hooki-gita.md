@@ -58,28 +58,10 @@ Instalacja: `npx lefthook install`; kontrola: `npx lefthook check-install`, `npx
 Inne podstawienia: `{all_files}`, `{push_files}`.
 
 ## pre-commit (Python)
-```yaml
-# .pre-commit-config.yaml
-default_install_hook_types: [pre-commit, pre-push]
-repos:
-  - repo: local
-    hooks:
-      - id: ruff
-        name: ruff check
-        entry: ruff check --fix
-        language: system
-        types: [python]
-      - id: pytest
-        name: pytest
-        entry: pytest -q
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
-```
-`pre-commit install` instaluje oba hooki dzięki `default_install_hook_types` (bez tego: `--hook-type pre-push`).
-Hooki `repo: local` z `language: system` używają narzędzi z środowiska projektu — bez przypinania wersji
-zewnętrznych repozytoriów hooków. Testy powiązane: `pytest --testmon` (wtyczka pytest-testmon, wybiera testy
-dotknięte zmianą na podstawie zebranych wcześniej danych w `.testmondata`).
+`.pre-commit-config.yaml` z hookami `repo: local`, `language: system` (narzędzia ze środowiska projektu, bez
+przypinania zewnętrznych repozytoriów hooków): `ruff check --fix` na commit, `pytest -q` z `stages: [pre-push]`
+i `pass_filenames: false`. `default_install_hook_types: [pre-commit, pre-push]` sprawia, że `pre-commit install`
+instaluje oba hooki. Testy powiązane: `pytest --testmon` (pytest-testmon, dane w `.testmondata`).
 
 ## Sprawdzenie, że hook działa
 1. Wprowadź celowy błąd (nieużywany import, zła typizacja) w pliku, `git add`, `git commit` → commit odrzucony,

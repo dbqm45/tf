@@ -37,15 +37,13 @@ metadata:
 
 ## Zasoby, które rosną powoli (dysk, certyfikaty)
 Awarie „znikąd” najczęściej mają przyczynę, która rosła tygodniami. Alarmujesz o **trendzie**, nie dopiero o 100%.
-- **Dysk** (węzły, wolumeny, bazy): próg ostrzegawczy (np. 80%) i alert z prognozy — Prometheus:
-  `predict_linear(node_filesystem_avail_bytes[6h], 24*3600) < 0` (zapełni się w ciągu doby); dla wolumenów w
-  Kubernetes `kubelet_volume_stats_available_bytes`. Sprawdzaj też i-węzły (`node_filesystem_files_free`).
+- **Dysk** (węzły, wolumeny, bazy): próg ostrzegawczy i alert z prognozy zapełnienia (`predict_linear`), także
+  dla wolumenów Kubernetes i i-węzłów.
 - **Rotacja logów** skonfigurowana i sprawdzona: Docker `--log-opt max-size=… max-file=…` (sterownik `json-file`),
   kubelet `containerLogMaxSize`, `logrotate` na maszynach; pliki tymczasowe, stare kopie i obrazy sprzątane zadaniem
   z alertem, gdy zadanie przestanie działać. Pod w Kubernetes ma `ephemeral-storage` w requests/limits.
-- **Certyfikaty TLS**: odnawianie automatyczne (cert-manager, ACME) **i** niezależny pomiar z zewnątrz, bo automat też
-  się psuje — np. blackbox_exporter `probe_ssl_earliest_cert_expiry - time() < 21*86400` (ostrzeżenie), 7 dni (pilne);
-  w cert-manager `certmanager_certificate_expiration_timestamp_seconds`. Obejmij też certyfikaty wewnętrzne (mTLS,
+- **Certyfikaty TLS**: odnawianie automatyczne (cert-manager, ACME) **i** niezależny pomiar z zewnątrz (blackbox_exporter),
+  bo automat też się psuje. Obejmij też certyfikaty wewnętrzne (mTLS,
   webhooki Kubernetes, bazy, kolejki). Ważność publicznych certyfikatów maleje (CA/B Forum: 200 dni od 15.03.2026,
   100 dni od 2027, 47 dni od 2029) — ręczne odnawianie przestaje być realne.
 - Inne liczniki z datą końca: tokeny i klucze kont usług, domeny, licencje, limity planu (ops-secrets-identities).

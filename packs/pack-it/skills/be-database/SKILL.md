@@ -11,12 +11,9 @@ metadata:
 ## Migracje — bezpieczne na produkcji
 1. Każda zmiana schematu = migracja w repo. Nigdy ręczne zmiany na bazie.
 2. Migracje są **wstecznie kompatybilne** z poprzednią wersją aplikacji (deploy i rollback bez przestoju).
-3. Wzorzec expand → migrate → contract dla zmian niekompatybilnych:
-   - dodaj nową kolumnę (nullable) → zapisuj do obu → backfill partiami → przełącz odczyt → usuń starą w osobnym wydaniu.
-4. Nie dodawaj `NOT NULL` bez wartości domyślnej do dużej tabeli w jednym kroku.
-5. Indeksy na dużych tabelach: `CREATE INDEX CONCURRENTLY` (PostgreSQL).
-6. Migracja danych w partiach (np. 1000 wierszy), nie jednym `UPDATE`.
-7. Każda migracja ma sensowny `down` albo jest jawnie oznaczona jako nieodwracalna.
+3. Zmiany niekompatybilne przez expand → migrate → contract (backfill w partiach, usunięcie starej kolumny w osobnym
+   wydaniu); indeksy na dużych tabelach `CONCURRENTLY`, `NOT NULL` na dużej tabeli nie w jednym kroku.
+4. Każda migracja ma sensowny `down` albo jest jawnie oznaczona jako nieodwracalna.
 
 ## Zapytania
 - Zawsze parametryzowane. Konkatenacja stringów w SQL = błąd krytyczny.

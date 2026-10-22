@@ -47,17 +47,13 @@ Jako fakt o finansowaniu: w USA NEVI to program formułowy, którego projekty po
 uptime), więc wpływają na CAPEX i OPEX, a nie tylko na przychód.
 
 ## Ekonomia jednostkowa
-Wzory (te same, których używa skrypt):
-- kWh rocznie = EVSE × 8760 × utilization × moc średnia (kW)
-- marża na kWh = cena × (1 − prowizje) − koszt energii
-- pełny koszt kWh = (energia + prowizje + opłata za moc + OPEX stały) / kWh
-- próg rentowności utilization = koszty stałe (opłata za moc + OPEX − przychód dodatkowy) / (EVSE × 8760 × moc średnia × marża)
+Wzory (kWh rocznie = EVSE × 8760 × utilization × moc średnia, marża i pełny koszt kWh, próg rentowności) liczy
+skrypt `station_economics.py`; podawaj wynik skryptu z założeniami, nie licz ręcznie.
 
 Trzy wnioski, które model często pomija:
 - **Koszty stałe dominują przy niskim utilization.** Opłata za moc umowną i OPEX stały płacisz tak samo przy 3 %
   i przy 15 % wykorzystania, więc pełny koszt kWh gwałtownie spada wraz z utilization. Dodatnia marża na kWh nie wystarcza.
-- **Moc średnia, nie nominalna.** Auto bierze mniej niż moc ładowarki (krzywa ładowania, SoC, temperatura, limity pojazdu),
-  więc kWh na port są niższe niż w arkuszu producenta. Szczegóły: dom-ev-vehicle-battery. Skrypt przyjmuje `avg_power_kw` w czasie ładowania.
+- **Moc średnia, nie nominalna** — skrypt przyjmuje `avg_power_kw` w czasie ładowania (dom-ev-vehicle-battery).
 - **Utilization ma definicję.** W skrypcie to udział czasu ładowania w roku. Inne definicje (czas zajęcia portu, kWh
   względem maksimum) dają inne liczby; porównuj tylko tę samą definicję (dom-ev-kpi-analytics).
 - Próg „15–20 % utilization dla DC” z przeglądu jest orientacyjny [do weryfikacji]; własny próg policz skryptem.

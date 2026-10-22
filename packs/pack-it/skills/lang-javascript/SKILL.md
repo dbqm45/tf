@@ -22,13 +22,9 @@ Zachowanie w runtime — dotyczy też kodu TypeScript (lang-typescript opisuje t
 | Objaw | Prawdopodobna przyczyna → poprawka |
 |---|---|
 | dziwny wynik warunku | `==` z koercją (`"1" == 1`), `"0"` jest truthy, `typeof null === "object"`, `NaN !== NaN` → `===`, `Number.isNaN`, `== null` |
-| `this` jest `undefined` / inne | metoda odłączona od obiektu (callback, `setTimeout`, handler) → pole-strzałka, `.bind`, `() => obj.m()` |
 | tablica zmieniła się „sama” | metoda mutująca (`sort`, `reverse`, `splice`, `fill`) → `toSorted`/`toReversed`/`toSpliced`/`with`; kopie spread/`slice` są płytkie → `structuredClone` |
-| `sort` liczb w złej kolejności | domyślne sortowanie tekstowe → `sort((a, b) => a - b)` |
 | `undefined` w łańcuchu Promise | brak `return` w `.then()`; niezależne `await` po kolei → `Promise.all` |
 | `catch` nie łapie błędu | błąd w callbacku (`setTimeout`, zdarzenie) poza `try` → opakuj w Promise i `await` |
-| pętla zwraca indeksy-stringi | `for...in` na tablicy → `for...of` / `entries()` |
-| closure widzi ostatnią wartość | `var` w pętli → `let`/`const` |
 | `finally` „zjada” wynik | `return`/`throw` w `finally` nadpisuje wynik → w `finally` tylko sprzątanie |
 | `require is not defined` / `Cannot use import` | pomieszane ESM i CommonJS → sprawdź `"type"`, rozszerzenie `.mjs`/`.cjs` |
 | `ReferenceError` w podklasie | `this` przed `super()` |

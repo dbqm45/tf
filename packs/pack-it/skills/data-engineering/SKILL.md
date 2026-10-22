@@ -12,12 +12,6 @@ Celem jest dostarczanie **wiarygodnych danych na czas** tym, którzy z nich korz
 Wybór architektury (hurtownia, lakehouse, OLTP vs OLAP, ETL vs ELT, CDC, wsad vs strumień): arch-quality-attributes,
 `architektura-danych.md`. Jakość, pochodzenie, katalog, maskowanie i prawo: `references/jakosc-zarzadzanie-i-zgodnosc.md`.
 
-## Cykl życia danych
-**Wytwarzanie** (systemy źródłowe, zdarzenia, pliki, API, IoT) → **przechowywanie** → **pozyskiwanie** →
-**transformacja** → **serwowanie** (analityka, BI, uczenie maszynowe, reverse ETL). Przez wszystkie etapy przechodzą:
-bezpieczeństwo, zarządzanie danymi (jakość, metadane, pochodzenie), DataOps (automatyzacja, monitorowanie,
-reagowanie), architektura, orkiestracja i praktyki inżynierii oprogramowania (testy, przegląd, CI/CD, IaC).
-
 ## Pozyskiwanie
 | Sposób | Kiedy | Uwaga |
 |---|---|---|
@@ -26,9 +20,6 @@ reagowanie), architektura, orkiestracja i praktyki inżynierii oprogramowania (t
 | CDC z logu bazy (np. Debezium) | zmiany w niemal czasie rzeczywistym, z usunięciami | dostęp do logu replikacji, koszt operacyjny; wewnętrzny schemat źródła staje się zależnością |
 | zdarzenia domenowe z brokera | integracja z aplikacjami (be-messaging-outbox) | najlepszy kontrakt — zdarzenie zaprojektowane do publikacji |
 | API i pliki od partnerów | dane zewnętrzne | limity, paginacja, ponowienia, walidacja na wejściu — dane z zewnątrz są niezaufane |
-**Komunikaty kontra strumienie**: kolejka (RabbitMQ, SQS) — wiadomość znika po przetworzeniu, jeden odbiorca na
-wiadomość; log (Kafka, Kinesis) — zdarzenia przechowywane, wielu niezależnych czytelników, możliwość ponownego
-odczytu od dowolnego miejsca.
 
 ## Projekt potoku — zasady
 1. **Idempotencja**: ponowne uruchomienie dla tego samego okresu daje ten sam wynik — zapis przez nadpisanie partycji

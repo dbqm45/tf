@@ -60,8 +60,7 @@ zostaje przy koncie (CDR wiążesz z kontem przez `cdr_token`), nie przy karcie.
    wyświetla dane, korzysta z nich i odpowiada za ich prezentację. Zakres: `dom-ev-regulations-eu`.
 
 ## 3. Start zdalny i sesja
-`ACCEPTED` w odpowiedzi na `START_SESSION` mówi tylko, że CPO przyjął komendę. Prawdziwy wynik przychodzi POST-em
-na `response_url` (`CommandResult`), a sesja istnieje dopiero jako OCPI Session. Aplikacja ma więc cztery stany:
+`ACCEPTED` na `START_SESSION` to nie start sesji (dom-ev-ocpi, Commands). Aplikacja ma cztery stany:
 „wysyłam”, „stacja przyjęła, czekam na kabel/start”, „ładuje” (Session `ACTIVE`), „nie udało się” (z powodem).
 Limit czasu = `timeout` z odpowiedzi CPO. Szczegóły, mapowanie `CommandResult` na komunikaty i idempotencja:
 `references/start-zdalny-i-sesja.md`. Kolejność OCPP+OCPI: `dom-ev-session-lifecycle`.
@@ -95,7 +94,6 @@ Session. Gdy przyjdzie Session `ACTIVE`, ekran zmienia się na „Ładuje”. Gd
 rozpocząć, nic nie pobraliśmy” i **sprawdź GET-em Sessions**, zanim pozwolisz na ponowny start (dublowanie komend).
 
 ## Pułapki
-- Traktowanie `ACCEPTED` z odpowiedzi HTTP jako startu sesji; brak limitu czasu i stanu „nie udało się”.
 - Real-time authorize z kontrolą godzin otwarcia lub statusu EVSE po stronie eMSP (zabronione przez specyfikację).
 - Usuwanie tokenu zamiast `valid: false`; brak PATCH po zgubieniu karty; zakładanie, że blokada działa natychmiast przy `ALWAYS`.
 - Pokazywanie „wolne” z cache bez wieku; filtr „dostępne teraz” oparty na statusie sprzed godzin.

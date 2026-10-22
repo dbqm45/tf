@@ -49,12 +49,8 @@ ale *ulica* zawsze małą (`references/pisownia.md`, sekcja 8.1.2).
 spacja przed jednostką (`10 GB`); tysiące ze spacją (`10 000`), ułamki z przecinkiem (`2,5`).
 
 **Składnia i znaczenie**
-- Imiesłów przysłówkowy tylko przy tym samym podmiocie („Uruchamiając skrypt, zobaczyłem błąd.”, nie „…, pojawił się błąd.”).
-- Zaprzeczenie → dopełniacz („nie ma konfiguracji”); biernik żeński zaimka: „tę funkcję” (nie „tą”).
-- **liczba** dla policzalnych (liczba plików), **ilość** dla niepoliczalnych (ilość pamięci).
-- Kontaminacje: *pełnić funkcję* / *odgrywać rolę*; pleonazmy: *cofać się do tyłu*, *kontynuować dalej*, *okres czasu*.
-- Kalki z angielskiego: *adresować problem* → zająć się; *wspierać format* → obsługiwać; *dedykowany* → przeznaczony;
-  najpierw sprawdź, czy polski czasownik w ogóle łączy się z takim dopełnieniem.
+- Imiesłów, rekcja, liczba/ilość, pleonazmy i kalki (*adresować problem*, *wspierać format*, *dedykowany*): reguły
+  i przykłady w `references/` (tabela niżej); przy kalce sprawdź, czy polski czasownik łączy się z takim dopełnieniem.
 - Jeden termin na jedno pojęcie w całym dokumencie (słownik projektu: `docs/project/02-domain/glossary.md`); skrót rozwinięty przy
   pierwszym użyciu. Nie zmieniaj terminów dla „urozmaicenia”.
 - Liczebnik + rzeczownik: 2–4 pliki, 5–21 plików, 22–24 pliki.
