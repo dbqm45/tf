@@ -1,7 +1,7 @@
 # Nakładka EV: wiedza branży pojazdów elektrycznych — ładowanie (OCPP, OCPI, ISO 15118), roaming, taryfy i CDR,
 # energia i smart charging, regulacje PL/UE/USA, operacje sieci ładowania. Bez stałego stacku technologicznego.
 id: pack-ev
-version: 1.0.1
+version: 1.1.0
 title: EV
 description: Electric vehicle charging industry — OCPP, OCPI, ISO 15118, roaming, tariffs and CDRs, energy and smart charging, PL/EU/US regulations, charging network operations.
 content_language: pl
@@ -12,7 +12,7 @@ optional_packs: [pack-docs, pack-editorial-pl]
 facets:
   - {prefix: dom-, order: 150, name: wiedza branżowa EV, question: "jak działa branża pojazdów elektrycznych — pojęcia, standardy, protokoły, regulacje"}
 
-always_skills: [dom-ev-knowledge-base]
+always_skills: [core-knowledge, dom-ev-knowledge-base]
 
 freshness:
   prefixes: {dom-: 6}
@@ -27,7 +27,7 @@ contributes:
         zagrożeń branży (fałszywa ładowarka, przejęcie sesji, tokeny RFID, PKI kontraktów) jest tam; zacznij od dom-ev-security.
     researcher:
       prompt: |
-        Fakty EV: najpierw `python3 .claude/skills/dom-ev-knowledge-base/scripts/kb.py search "<hasła>"`. Źródła wybierasz
+        Fakty EV: najpierw `python3 .claude/skills/core-knowledge/scripts/kb.py search "<hasła>"`. Źródła wybierasz
         najpierw z rejestru (`kb.py sources --area <obszar>`); dokument pierwotny pobierasz do bazy (`kb.py ingest <id|URL>`)
         i cytujesz z cache. Zablokowaną domenę zgłaszasz w raporcie (nazwa hosta), nie zastępujesz jej treści pamięcią.
 

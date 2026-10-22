@@ -1,0 +1,71 @@
+{
+  "skill": "core-knowledge",
+  "scenarios": [
+    {
+      "id": "zapytaj-fabryke-z-cytatem",
+      "expect": "trigger",
+      "prompt": "Chcę zapytać fabrykę, jak liczymy karę umowną za opóźnienie dostawy według umowy ramowej z dostawcą, i dostać odpowiedź z cytatem z dokumentów projektu, a nie z pamięci modelu. Jak to zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kb\\.py|kb search|baz[aęy] wiedzy"
+          ],
+          [
+            "plik:linia|:l\\d|zakres linii|cytat|cytuj"
+          ],
+          [
+            "ingest|pobierz|rejestr|research"
+          ]
+        ],
+        "none": [
+          "z pamięci (wystarczy|jest ok)"
+        ]
+      }
+    },
+    {
+      "id": "rejestr-zrodel-nakladki",
+      "expect": "trigger",
+      "prompt": "Budujemy własną nakładkę fabryki dla branży ubezpieczeń i chcemy dodać zaufane źródła (ustawy, wytyczne nadzoru) do bazy wiedzy fabryki. Gdzie i w jakim formacie je zapisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "zrodla\\.json"
+          ],
+          [
+            "areas|obszar"
+          ],
+          [
+            "rank|rang|licenc|licence"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dokument-partnera-do-bazy",
+      "expect": "trigger",
+      "prompt": "Dostaliśmy od partnera PDF z wymaganiami integracji. Jak dodać go do wiedzy fabryki, żeby agenci mogli go cytować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ingest"
+          ],
+          [
+            "licencj|redystrybu|gitignore|poza gitem|lokaln\\w+ cache"
+          ],
+          [
+            "docs/knowledge|notatk"
+          ]
+        ],
+        "none": [
+          "wrzuć (pdf|go) do repozytorium"
+        ]
+      }
+    },
+    {
+      "id": "wersja-frameworka-w-sieci",
+      "expect": "no-trigger",
+      "prompt": "Jaka jest najnowsza stabilna wersja Reacta, kiedy wyszła i co zgłaszają użytkownicy po aktualizacji? Odpowiedz zwięźle.",
+      "neighbor": "core-source-research"
+    }
+  ]
+}
