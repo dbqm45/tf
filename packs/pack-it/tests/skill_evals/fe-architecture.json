@@ -16,6 +16,12 @@
           ],
           [
             "409|422"
+          ],
+          [
+            "wynik\\w* biznesow",
+            "business (outcome|result)",
+            "shared/api",
+            "jedn\\w+ (warstw|klient)\\w*"
           ]
         ]
       },

@@ -42,7 +42,8 @@ Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `refe
    dostępność modelu w regionie. Lock-in ograniczasz cienką warstwą własnego interfejsu (bramka) i zestawem
    ewaluacji, który pozwala zmienić model w dni, nie miesiące.
    Drugie piętro lock-inu to wagi przyzwyczajone do formatu narzędzi harnessu — widać je w wynikach, nie w konfiguracji;
-   przed wymianą samego modelu albo samego harnessu zrób test wymiany w obu kierunkach na własnych ewaluacjach
+   przed wymianą samego modelu albo samego harnessu zrób **test wymiany w obu kierunkach** na własnych ewaluacjach
+   (stary model w nowym harnessie i nowy model w starym); wymiana samego modelu nie zdejmuje lock-inu
    (hipoteza z jednego preprintu, źródło niżej).
 4. **Komponenty (architektura referencyjna).** Dobierz z listy tylko to, co uzasadniają wymagania:
    - **bramka** przed modelem: uwierzytelnienie, limity (żądania i tokeny na klienta), liczenie kosztu per najemca,

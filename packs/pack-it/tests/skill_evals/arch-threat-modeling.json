@@ -52,7 +52,11 @@
             "rezydualn",
             "residual",
             "po kontroli",
-            "resztkow"
+            "resztkow",
+            "z kontrolą",
+            "strata po\\b",
+            "po wdrożeniu (kontroli|zabezpiecz|ochron)",
+            "P90 po"
           ]
         ]
       },

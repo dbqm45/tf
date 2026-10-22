@@ -45,6 +45,11 @@
             "zamiast wyjątk",
             "nie.*wyjątk",
             "bez wyjątk"
+          ],
+          [
+            "record \\w*Id\\(",
+            "(?-i:\\b[A-Z]\\w*Id\\b) [a-z]",
+            "typ\\w* domenow"
           ]
         ]
       }
@@ -69,6 +74,12 @@
           ],
           [
             "record"
+          ],
+          [
+            "record \\w*Id\\(",
+            "(?-i:\\b[A-Z]\\w*Id\\b) [a-z]",
+            "osobn\\w* typ\\w* (dla )?identyfikator",
+            "typ\\w* identyfikator"
           ]
         ]
       }
