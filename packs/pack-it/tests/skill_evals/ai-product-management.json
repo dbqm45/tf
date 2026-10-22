@@ -9,8 +9,9 @@
         "all": [
           ["regu[łl]\\w*", "deterministyczn\\w+", "rule-based"],
           ["koszt\\w* błęd\\w+", "cena błęd\\w+", "skutk\\w+ błęd\\w+", "kto ponosi"],
-          ["człowiek w pętli", "human-in-the-loop", "zatwierdz\\w+ (przez )?człowiek", "weryfikacj\\w+ człowiek"],
-          ["tolerancj\\w+", "dopuszczaln\\w+", "typ\\w* błęd\\w+", "fałszywie (dodatni|ujemn)"]
+          ["człowiek w pętli", "human-in-the-loop", "zatwierdz\\w+ (przez )?człowiek", "weryfikacj\\w+ człowiek", "człowiek\\w* (zatwierdza|decyduje|akceptuje)", "tylko (proponow|rekomend)\\w*"],
+          ["tolerancj\\w+", "dopuszczaln\\w+", "typ\\w* błęd\\w+", "fałszywie (dodatni|ujemn)", "limit\\w* na typ"],
+          ["klasyczn\\w+ (ML|uczeni)", "koszt\\w* (na )?udan\\w+", "bez zbioru", "zbiór ewaluac\\w*"]
         ],
         "none": ["AI zawsze będzie lepsze od reguł", "nie trzeba mierzyć błędów"]
       }
@@ -23,8 +24,9 @@
         "all": [
           ["ewaluacj\\w+", "evals?\\b", "zbi[óo]r (testow|przykład)\\w+"],
           ["pr[óo]g jako[śs]ci", "poprzeczk\\w+", "docelow\\w+ (wynik|skuteczno)", "\\d+\\s?%"],
-          ["dobr\\w+ i złe", "przykład\\w* (dobr|wyj)\\w+", "wzorcow\\w+", "good.{0,12}bad"],
-          ["opóźnieni\\w+", "latency", "koszt (za|na) zadanie", "cost per task", "p9[05]"]
+          ["dobr\\w+ i złe", "przykład\\w* (dobr|wyj)\\w+", "wzorcow\\w+", "good.{0,12}bad", "dobr\\w+, zł\\w+", "granicz\\w+ (odpowied|wynik|przykład)"],
+          ["opóźnieni\\w+", "latency", "koszt (za|na) zadanie", "cost per task", "p9[05]"],
+          ["koszt\\w* (na )?udan\\w+", "nie na zapytanie", "bez zbioru"]
         ],
         "none": ["kryterium: model odpowiada poprawnie", "wystarczy test manualny"]
       }

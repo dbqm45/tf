@@ -37,6 +37,10 @@
           ],
           [
             "1.{0,3}2 dni|dzień|codziennie"
+          ],
+          [
+            "DORA.{0,80}(nie (jako )?cel|uczeni)",
+            "wskaźnik\\w* do uczenia"
           ]
         ]
       }

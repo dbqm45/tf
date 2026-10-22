@@ -51,6 +51,12 @@
           ],
           [
             "Session.{0,80}(COMPLETED|zakończon|jednorazowo|od razu)|nie.{0,40}(ACTIVE|w czasie rzeczywistym)|COMPLETED"
+          ],
+          [
+            "transactionId.{0,80}(nie|osobn)\\w*.{0,60}(session|sesj)",
+            "tabel\\w* powiązań",
+            "kwarantann",
+            "okn\\w* na spóźnion"
           ]
         ],
         "none": [

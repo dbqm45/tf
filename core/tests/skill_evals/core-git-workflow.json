@@ -7,19 +7,11 @@
       "prompt": "Po rebase na mojej własnej gałęzi feature push został odrzucony. Zrobić po prostu git push --force? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "force-with-lease"
-          ],
-          [
-            "własn\\w* gałęz"
-          ],
-          [
-            "zgod"
-          ]
+          ["force-with-lease"],
+          ["własn\\w* gałęz"],
+          ["zgod"]
         ],
-        "none": [
-          "git push --force origin (main|master)"
-        ]
+        "none": ["git push --force origin (main|master)"]
       }
     },
     {
@@ -28,15 +20,9 @@
       "prompt": "Jestem na main, mam zmiany w kilkunastu plikach. Planuję git add -A, commit i push prosto na main. Co zrobić inaczej? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "git diff --staged|git diff --cached"
-          ],
-          [
-            "sekret|\\.env"
-          ],
-          [
-            "utwórz\\w* gałąź|nową gałąź|osobn\\w* gałąź|gałąź.{0,20}przed"
-          ]
+          ["git diff --staged|git diff --cached"],
+          ["sekret|\\.env"],
+          ["utwórz\\w* gałąź|nową gałąź|osobn\\w* gałąź|gałąź.{0,20}przed"]
         ]
       }
     },
@@ -46,20 +32,9 @@
       "prompt": "Chcemy, żeby Claude robił pierwszy przegląd każdego pull requesta w GitHubie. Jak to ustawić, żeby nie zasypywał nas drobiazgami i żeby agent nigdy nie zatwierdzał własnego kodu? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "REVIEW\\.md"
-          ],
-          [
-            "claude-code-action",
-            "Code Review"
-          ],
-          [
-            "ochron\\w* gałęzi",
-            "branch protection",
-            "zatwierdza człowiek",
-            "zatwierdzeni\\w* człowieka",
-            "człowiek zatwierdza"
-          ]
+          ["REVIEW\\.md"],
+          ["claude-code-action", "Code Review"],
+          ["ochron\\w* gałęzi", "branch protection", "zatwierdza człowiek", "zatwierdzeni\\w* człowieka", "człowiek zatwierdza"]
         ]
       }
     },
@@ -69,20 +44,9 @@
       "prompt": "Chcę puścić równolegle dwóch agentów Claude na dwie zmiany w tym samym repozytorium git. Jak to zorganizować, żeby sobie nie przeszkadzali i żebym nadążył z przeglądem? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "worktree"
-          ],
-          [
-            "port",
-            "baz\\w* (danych|lokaln)",
-            "środowisk"
-          ],
-          [
-            "wspóln\\w* plik",
-            "niezależn",
-            "konflikt",
-            "kontrakt"
-          ]
+          ["worktree"],
+          ["port", "baz\\w* (danych|lokaln)", "środowisk"],
+          ["wspóln\\w* plik", "niezależn", "konflikt", "kontrakt"]
         ]
       }
     },
@@ -92,18 +56,9 @@
       "prompt": "Mamy przegląd pull requestów przez Claude w GitHub Actions. Chcemy, żeby werdykt „odrzucone” blokował scalenie, a raport był commitowany na gałąź PR. Na co uważać w tym workflow? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "fetch-depth"
-          ],
-          [
-            "skip ci"
-          ],
-          [
-            "status\\w* commita",
-            "commit status",
-            "krok\\w*.{0,40}werdykt",
-            "werdykt\\w*.{0,60}(krok|workflow)"
-          ]
+          ["fetch-depth"],
+          ["skip ci"],
+          ["status\\w* commita", "commit status", "krok\\w*.{0,40}werdykt", "werdykt\\w*.{0,60}(krok|workflow)"]
         ]
       }
     },
@@ -119,21 +74,10 @@
       "prompt": "Pracuję w dwóch równoległych sesjach Claude Code, każda w swoim worktree. W jednej zmieniłem kontrakt API, z którego korzysta druga. Jak ją powiadomić i skąd mam wiedzieć, że któraś sesja czeka na moją decyzję? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "Zmiana kontraktu"
-          ],
-          [
-            "przyjęte"
-          ],
-          [
-            "SendMessage",
-            "/peers",
-            "@\\w"
-          ],
-          [
-            "Needs input",
-            "claude agents"
-          ]
+          ["Zmiana kontraktu"],
+          ["przyjęte"],
+          ["SendMessage", "/peers", "@\\w"],
+          ["Needs input", "claude agents"]
         ]
       }
     },
@@ -143,18 +87,11 @@
       "prompt": "Mam trzy PR-y w stosie: #1 do main, #2 do gałęzi #1, #3 do gałęzi #2. Scaliłem #1 przez squash. Jak teraz przenieść #2 na main, żeby nie zawierał już scalonych commitów #1? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "rebase --onto"
-          ],
-          [
-            "origin/main|main"
-          ],
-          [
-            "force-with-lease"
-          ],
-          [
-            "base|bazow\\w*|gałąź docelow\\w*"
-          ]
+          ["rebase --onto"],
+          ["origin/main|main"],
+          ["force-with-lease"],
+          ["base|bazow\\w*|gałąź docelow\\w*"],
+          ["za (Twoją |twoją )?zgodą", "po (Twojej |twojej )?zgodzie", "zgod\\w+ człowiek", "zielon\\w+ CI"]
         ]
       }
     },
@@ -164,18 +101,11 @@
       "prompt": "Kiedy scalać pull request przez squash, kiedy przez rebase, a kiedy zwykłym merge commitem? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "squash"
-          ],
-          [
-            "rebase"
-          ],
-          [
-            "merge commit|commit scalając\\w*|commit merge"
-          ],
-          [
-            "histori\\w*"
-          ]
+          ["squash"],
+          ["rebase"],
+          ["merge commit|commit scalając\\w*|commit merge"],
+          ["histori\\w*"],
+          ["--subject", "jedn\\w+ strategi\\w+", "ochron\\w+ gałęzi", "branch protection", "scala człowiek", "człowiek scala"]
         ]
       }
     }

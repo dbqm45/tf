@@ -2,17 +2,18 @@
   "skill": "dom-ev-energy-management",
   "scenarios": [
     {
-      "id": "dlm-fazy-budynek",
+      "id": "dlm-fazy-budynek-v2",
       "expect": "trigger",
-      "prompt": "Biuro ma przyłącze 3×80 A i licznik budynku, który podaje prąd z każdej fazy. Teraz budynek bierze L1 55 A, L2 30 A, L3 20 A. Do tego przyłącza mamy dwie trójfazowe ładowarki AC (po 32 A) i jedną jednofazową (32 A) na L3. Chcemy dynamiczny podział z rezerwą 5 A na fazę. Ile prądu dać każdej ładowarce? Odpowiedz zwięźle, z rachunkiem.",
+      "prompt": "Biuro ma przyłącze 3×63 A i licznik budynku z pomiarem na każdej fazie. Teraz budynek bierze L1 47 A, L2 25 A, L3 22 A, a rezerwa ma wynosić 5 A na fazę. Ładują się dwa auta trójfazowe na ładowarkach AC 3×32 A. Ile prądu dać każdej ładowarce? Odpowiedz zwięźle, z rachunkiem.",
       "checks": {
         "all": [
-          ["10 ?A"],
-          ["L1.{0,80}(najbardziej|najsłabsz|ogranicz|wąsk|binding|limit)|(najbardziej|najsłabsz|ogranicz|wąsk|binding).{0,80}L1"],
-          ["32 ?A"],
-          ["każd\\w* faz|per phase|na fazę|osobno|per-phase"]
+          ["11 ?A"],
+          ["L1.{0,80}(najbardziej|najsłabsz|ogranicz|wąsk|binding|limit|minimum)|(najbardziej|najsłabsz|ogranicz|wąsk|binding|minimum).{0,80}L1"],
+          ["(poniżej|mniej niż|<) ?6 ?A", "minimum 6 ?A", "6 ?A[^.]{0,40}(minimum|nie (ładuje|ruszy)|nie zacznie)"],
+          ["\\b0 ?A", "wstrzym\\w*", "pauz\\w*", "jedn\\w+ (z )?(ładowar|aut)\\w*[^.]{0,60}(cał|11)"],
+          ["rotac\\w*", "na zmian\\w*", "naprzemien\\w*", "kolejk\\w*", "priorytet\\w*"]
         ],
-        "none": ["suma[^.\\n]{0,40}(240|135) ?A[^.\\n]{0,40}(podziel|dziel|równo)"]
+        "none": ["5[,.]5 ?A (na|dla) (każd|obie|oba)\\w*[^.]{0,40}(wystarcz|ładuj|ok\\b)"]
       }
     },
     {
@@ -39,7 +40,8 @@
           ["lokaln\\w* (kontroler|controller|EMS|sterownik)|local (energy )?(controller|manager)|site controller"],
           ["fail-?safe|bezpieczn\\w* limit|safe limit|limit awaryjn"],
           ["TxDefaultProfile|ChargePointMaxProfile|ChargingStationMaxProfile"],
-          ["brak pomiaru|utrat\\w* pomiar|pomiar\\w* (nie |zanik)|stale|nieaktualn|watchdog|timeout"]
+          ["brak pomiaru|utrat\\w* pomiar|pomiar\\w* (nie |zanik)|stale|nieaktualn|watchdog|timeout"],
+          ["sekund\\w*[^.]{0,40}lokaln", "lokaln\\w*[^.]{0,40}sekund", "ostatni\\w* (znany )?limit[^.]{0,40}nie jest bezpieczn", "restart[^.]{0,80}fail-?safe", "limit ÷", "÷ liczb\\w* stacji"]
         ],
         "none": ["ostatni limit (wystarczy|jest bezpieczny|zostaje)"]
       }

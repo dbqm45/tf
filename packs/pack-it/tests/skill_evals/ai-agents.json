@@ -39,11 +39,12 @@
       "checks": {
         "all": [
           [
-            "konsoliduj",
+            "konsolid",
             "mniej(sze)? (narzędzi|zestaw)",
             "łącz\\w* (kilka|wiele) (endpointów|operacji)",
             "wysokopoziomow",
-            "workflow\\w* zamiast endpoint"
+            "workflow\\w* zamiast endpoint",
+            "zorientowan\\w* na zadani"
           ],
           [
             "idempoten",
@@ -55,7 +56,16 @@
             "actionable",
             "poka-yoke",
             "czytelne nazwy",
-            "zamiast (UUID|identyfikator)"
+            "zamiast (UUID|identyfikator)",
+            "błęd\\w*[^.]{0,40}podpowiad",
+            "podpowiada\\w* napraw"
+          ],
+          [
+            "transkrypt",
+            "zadani\\w* wieloetap",
+            "weryfikowaln\\w* wynik",
+            "licz\\w*[^.]{0,30}(wywołań|błędów|tokenów)",
+            "response_format"
           ]
         ],
         "none": [
@@ -71,9 +81,12 @@
         "all": [
           [
             "human-in-the-loop",
-            "zatwierdzeni\\w* (człowiek|przez człowieka)",
+            "HITL",
+            "zatwierdz\\w*[^.]{0,20}człowiek",
+            "człowiek\\w* zatwierdz",
             "akceptacj\\w* człowieka",
-            "bramk\\w* zatwierdz"
+            "bramk\\w* zatwierdz",
+            "czterech oczu"
           ],
           [
             "limit\\w* (kroków|tur|iteracji)",
@@ -85,7 +98,17 @@
             "trac\\w+",
             "observability",
             "logi?\\w* (kroków|wywołań)",
-            "obserwowalno"
+            "obserwowalno",
+            "zapis\\w*[^.]{0,20}każd\\w* krok",
+            "audyt"
+          ],
+          [
+            "powtarzan\\w*[^.]{0,30}(wywoła|krok)",
+            "to samo wywołanie",
+            "identyczn\\w* wywoła",
+            "stan\\w* końcow",
+            "oddaje stan",
+            "potrzebny człowiek"
           ]
         ],
         "none": [

@@ -39,7 +39,8 @@
             "diagram stanów",
             "state diagram",
             "state machine",
-            "maszyn\\w* stanów"
+            "maszyn\\w* stanów",
+            "diagram\\w* (dozwolon\\w* )?przejść"
           ],
           [
             "najniżej",
@@ -48,6 +49,12 @@
             "jak najtani",
             "nieliczn",
             "few e2e"
+          ],
+          [
+            "zgadywani\\w* błędów",
+            "error guessing",
+            "do samego siebie",
+            "self-transition"
           ]
         ]
       }
@@ -66,7 +73,8 @@
         "all": [
           [
             "map\\w* ryzyk",
-            "ryzyk\\w* (produktow|biznesow)"
+            "ryzyk\\w* (produktow|biznesow)",
+            "map\\w* .{0,8}ryzyk"
           ],
           [
             "faz"
@@ -82,6 +90,10 @@
             "nie testujemy",
             "wyklucze",
             "świadomie"
+          ],
+          [
+            "profil\\w* bazy testów",
+            "test-strategy\\.md"
           ]
         ]
       }

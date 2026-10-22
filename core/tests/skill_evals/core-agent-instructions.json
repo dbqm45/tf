@@ -34,7 +34,8 @@
         "all": [
           ["@AGENTS\\.md", "dowiązani\\w* symboliczn", "symlink", "ln -s"],
           ["jedn\\w* źród\\w* prawdy", "źródłem prawdy", "jedn\\w* miejsc", "single source"],
-          ["(nie czyta|pomija|nie wczyt|zamiast)\\w*.{0,60}AGENTS", "AGENTS\\.md.{0,80}(gdy|tylko gdy|jeśli) (nie ma|brak) CLAUDE", "claude-md-and-agents-md", "Project instructions", "/context", "/memory"]
+          ["(nie czyta|pomija|nie wczyt|zamiast)\\w*.{0,60}AGENTS", "AGENTS\\.md.{0,80}(gdy|tylko gdy|jeśli) (nie ma|brak) CLAUDE", "claude-md-and-agents-md", "Project instructions", "/context", "/memory"],
+          ["\\b200\\b (niepust\\w+ )?lin", "kontekst, nie (egzekw|wymusz)", "nie egzekwowani", "zamiast prośby", "import\\w*[^.]{0,40}zamiast[^.]{0,20}(prośb|polec)"]
         ]
       }
     },

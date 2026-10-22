@@ -7,12 +7,9 @@
       "prompt": "Zaczynam pracę w istniejącym projekcie na Angularze 22 i ktoś chce podnieść TypeScript do 7. Czy to bezpieczne i jak ustalić, na jakich wersjach mam polegać? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "6\\.0"
-          ],
-          [
-            "niezgodn|nie zalecam|wymaga|nie wspiera"
-          ]
+          ["6\\.0"],
+          ["niezgodn|nie zalecam|wymaga|nie wspiera"],
+          ["detect_stack", "SKILL_OUTDATE\\w*", "SKILL_AHEAD", "status\\w* skill\\w*"]
         ]
       }
     },
@@ -22,15 +19,9 @@
       "prompt": "Pracuję w projekcie na Angularze 17, a moja wiedza o frameworku dotyczy nowszych wersji. Jak ustalić prawdziwy stack projektu i nie użyć API niedostępnych w 17? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "detect_stack"
-          ],
-          [
-            "node_modules.{0,80}lockfile|zainstalowan\\w+.{0,60}lockfile"
-          ],
-          [
-            "zależn\\w+ od wersji|nie cofa"
-          ]
+          ["detect_stack"],
+          ["node_modules.{0,80}lockfile|zainstalowan\\w+.{0,60}lockfile"],
+          ["zależn\\w+ od wersji|nie cofa"]
         ]
       }
     },

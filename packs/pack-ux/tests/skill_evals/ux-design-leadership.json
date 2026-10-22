@@ -9,7 +9,8 @@
         "all": [
           ["nn/?g|nielsen"],
           ["sześć|6 (etap|poziom)|absent|limited|emergent|structured|integrated|user-driven"],
-          ["strategi\\w+.*kultur|kultur\\w+.*proces|strategy.*culture|proces\\w+.*wynik"]
+          ["strategi\\w+.*kultur|kultur\\w+.*proces|strategy.*culture|proces\\w+.*wynik"],
+          ["HEART", "1.?(–|-|do) ?3 wynik\\w* biznes"]
         ],
         "none": ["liniow\\w+ lista kontrolna, którą odhaczasz"]
       }
