@@ -169,11 +169,41 @@ Kryteria 17 skilli sprawdzone offline na odpowiedziach partii 3: rozróżnia 39 
 - Kryteria sprawdzono na jednej odpowiedzi; na granicy surowości: `dom-ev-v2x/bpt-dynamic-vs-scheduled`,
   `dom-ev-fleet-charging/zwrot-za-ladowanie-w-domu`. Skuteczność opisów potwierdzi przebieg na modelu (ok. 0,40 USD).
 
+## Sprawdzenie opisów rdzenia po partii 3 (2026-10-22): 3 scenariusze, 0,38 USD
+- `core-conventional-commits/zly-typ-commit`: skill się wczytał, zaliczone.
+- `core-cost-control/harness-staly-czy-dowolny`: skill się wczytuje, ale odpowiedź pomija „harness stały czy dowolny”
+  (zasada jest w SKILL.md:144) — treść do wysunięcia wyżej.
+- `core-grounding/liczby-w-raporcie-o-kodzie`: nadal się nie wczytuje — opis nie wystarcza, do dalszej analizy.
+
+## Partia 4 (2026-10-22): 150 scenariuszy, 254 przebiegi, 24,69 USD
+37 skilli: cała nakładka UX oraz `ai-*`, `arch-*`, `be-*`, `data-*` z nakładki IT; 104 scenariusze trigger
+z porównaniem bez skilli i 46 no-trigger (45 zaliczonych). Ze skillem 96/104 (treść 98/104), bez skilli treść
+71/104 (17 przez sędziego). Koszt: ze skillami 18,81 USD, bez skilli 5,88 USD. Zużycie okna: z 22% do ok. 34%
+[szacunek].
+
+**Największa wartość:** arch-privacy-compliance 4/4–1/4, arch-architect-practice 2/3–0/3, ux-feature-design 2/2–0/2,
+ux-design-leadership 3/3–1/3, ux-research-methods 3/3–1/3, arch-tech-selection 3/3–1/3, ai-mlops 3/4–1/4.
+
+**Bez różnicy (do zaostrzenia):** ai-model-optimization, ai-prompt-engineering, ai-rag, ai-research-methods,
+arch-ai-solutions, arch-eu-product-law, arch-multi-tenancy, arch-system-design, arch-threat-modeling, be-api-design,
+be-auth-security, be-billing-subscriptions, be-database, data-engineering, ux-accessibility, ux-design-systems,
+ux-information-architecture, ux-visual-design; data-analysis gorzej ze skillem (1/2–2/2, skill się nie wczytał).
+
+**Niezaliczone ze skillem (9):**
+- nie wczytał się: ai-research-methods/wyciek-podzial-czasowy, arch-ai-solutions/lock-in-w-wagach,
+  arch-architect-practice/test-odpornosci-decyzji, data-analysis/spadek-konwersji;
+- wczytał się sąsiad: arch-threat-modeling/ryzyko-ilosciowe (sec-risk-management);
+- no-trigger wczytał skill: ai-evals/macierz-promptfoo-podstawy (obok eng-llm-features);
+- brak treści: ai-mlops/od-notebooka-do-continuous-training (walidacja danych),
+  ai-product-management/wdrozenie-etapowe-i-niepewnosc (A/B, shadow, canary),
+  ux-information-architecture/sortowanie-kart-sklep (sortowanie zamknięte).
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
-3. Partia 3 zrobiona (wyżej). Zostało ok. 330 scenariuszy trigger w nakładkach IT i UX (ok. 3 partie po 25 USD);
-   zaostrzenie i poprawki po partii 3 zrobione (sekcja wyżej).
+3. Partie 3 i 4 zrobione (wyżej). Zostało ok. 220 scenariuszy trigger w nakładce IT (ddd, eng, fe, fw, lang, ops,
+   proc, qa, sec, tool — ok. 2 partie po 25 USD); przed nimi zaostrzyć 19 skilli „bez różnicy” z partii 4 i poprawić
+   9 niezaliczonych oraz core-cost-control i core-grounding.
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
