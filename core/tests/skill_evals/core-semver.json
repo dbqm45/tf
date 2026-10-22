@@ -15,6 +15,9 @@
             "niezgodn",
             "breaking",
             "wstecz"
+          ],
+          [
+            "(minor\\w*)[^.\\n]{0,80}(przestarza|deprecat|wycof)|(przestarza|deprecat|wycof)\\w*[^.\\n]{0,80}\\bminor"
           ]
         ],
         "none": [
@@ -38,6 +41,9 @@
             "nie wpływa",
             "pomija",
             "ignor"
+          ],
+          [
+            "beta11|rc1\\b|bez kropki|z kropką|kropk\\w* (oddziel|między)"
           ]
         ],
         "none": [
@@ -62,6 +68,9 @@
             "stabiln",
             "użytkownic\\w* (polegaj|zależ)",
             "zgodnoś\\w* wstecz"
+          ],
+          [
+            "PUBLIC_API|publiczn\\w* API[^.\\n]{0,80}(zapis|spis|udokument|README|zadeklar)|(zapisz|spisz|udokumentuj|zadeklaruj)\\w*[^.\\n]{0,40}publiczn\\w* API"
           ]
         ]
       }

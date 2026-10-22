@@ -7,12 +7,30 @@
       "prompt": "Zamykamy punkt przy marketcie A i demontujemy dwie ładowarki. Szef chce, żeby nowa stacja przy markecie B dostała te same numery EVSE ID, bo są już w aplikacjach kierowców i na naklejkach. Czy tak zrobić i co zrobić po stronie CSMS oraz publikacji w roamingu? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["nie (używ|używ|nadaw|przydziel)\\w* ponownie|nie wykorzyst\\w+ ponownie|nigdy ponownie|not reuse|never reuse|do not reuse|no reuse"],
-          ["REMOVED"],
-          ["CDR|historia|history|sesj"],
-          ["lokalizacj|location"]
+          [
+            "nie (używ|używ|nadaw|przydziel)\\w* ponownie|nie wykorzyst\\w+ ponownie|nigdy ponownie|not reuse|never reuse|do not reuse|no reuse",
+            "nie nadawaj\\w*.{0,40}(star|tych samych|tego samego)",
+            "(EVSE ID|ID|identyfikator\\w*) nie wraca|nie wraca\\w*.{0,20}(EVSE|ID)",
+            "nie dostaj\\w*.{0,20}star\\w* (EVSE )?ID"
+          ],
+          [
+            "REMOVED"
+          ],
+          [
+            "CDR|historia|history|sesj"
+          ],
+          [
+            "lokalizacj|location"
+          ],
+          [
+            "DECOMMISSIONED|decommission",
+            "bez .?DELETE|nie (używaj |wysyłaj )?.?DELETE|not .?DELETE|DELETE.{0,30}(niedostępn|nie jest dostępn|not available)"
+          ]
         ],
-        "none": ["tak, przepisz numery", "najprościej nadać ten sam EVSE ID"]
+        "none": [
+          "tak, przepisz numery",
+          "najprościej nadać ten sam EVSE ID"
+        ]
       }
     },
     {
@@ -21,12 +39,25 @@
       "prompt": "Mamy 300 ładowarek DC tego samego modelu i widzimy, że część z nich daje coraz mniej kW niż na początku, a w logach często wraca ten sam kod producenta. Jak z danych z CSMS wyłapać ładowarki do przeglądu zanim padną, bez zgadywania?",
       "checks": {
         "all": [
-          ["maks\\w* moc|peak power|max power|spadek mocy|power drop|moc szczytow"],
-          ["vendorErrorCode|kod\\w* producent|vendor error"],
-          ["model|firmware|kohort|cohort|flot"],
-          ["temperatur|moduł|module"]
+          [
+            "maks\\w* moc|peak power|max power|spadek mocy|power drop|moc szczytow"
+          ],
+          [
+            "vendorErrorCode|kod\\w* producent|vendor error"
+          ],
+          [
+            "model|firmware|kohort|cohort|flot"
+          ],
+          [
+            "temperatur|moduł|module"
+          ],
+          [
+            "wspóln\\w+.{0,80}(kohort|firmware|parti|model)|jednostkow\\w+|eskal\\w+.{0,40}producent|common cause|unit-specific"
+          ]
         ],
-        "none": ["wymień wszystkie ładowarki"]
+        "none": [
+          "wymień wszystkie ładowarki"
+        ]
       }
     },
     {
