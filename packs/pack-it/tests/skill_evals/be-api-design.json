@@ -21,11 +21,17 @@
             "replay"
           ],
           [
-            "inn\\w* (body|treś|payload|dane)",
-            "różn\\w* (body|treś|payload)",
+            "inn\\w* (body|treś|payload|dane|ciał)",
+            "różn\\w* (body|treś|payload|ciał)",
+            "hash\\w* (ciał|body|żądani)",
+            "request_hash",
             "mismatch",
             "fingerprint",
             "skrót"
+          ],
+          [
+            "Problem Details",
+            "9457"
           ]
         ]
       }
@@ -76,6 +82,17 @@
           ],
           [
             "komend\\w*|akcj\\w*|decyzj\\w*"
+          ],
+          [
+            "revocation",
+            "kolejn\\w* komend",
+            "nie używaj `?DELETE",
+            "zamiast `?DELETE"
+          ],
+          [
+            "If-Match",
+            "\\b412\\b",
+            "\\b202\\b"
           ]
         ]
       }

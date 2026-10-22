@@ -7,12 +7,40 @@
       "prompt": "Nasz nowy model klasyfikacji ma 91,3% na zbiorze testowym, a stary 90,8%. Puściliśmy każdy raz. Zespół chce ogłosić, że nowy jest lepszy. Jak rzetelnie to porównać? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["seed\\w*", "ziarn\\w+", "powtórze\\w+", "kilka uruchomie\\w+", "wielokrotn\\w+"],
-          ["±", "odchyleni\\w+", "rozrzut", "wariancj\\w+", "przedzia\\w+ ufności"],
-          ["parow\\w+", "bootstrap", "McNemar", "test istotności", "istotno\\w+ statystyczn\\w+", "ten sam podział", "te same (dane|podziały)"],
-          ["baseline", "punkt odniesienia", "prost\\w+ model", "linia bazowa"]
+          [
+            "seed\\w*",
+            "ziarn\\w+",
+            "powtórze\\w+",
+            "kilka uruchomie\\w+",
+            "wielokrotn\\w+"
+          ],
+          [
+            "±",
+            "odchyleni\\w+",
+            "rozrzut",
+            "wariancj\\w+",
+            "przedzia\\w+ ufności"
+          ],
+          [
+            "parow\\w+",
+            "bootstrap",
+            "McNemar",
+            "test istotności",
+            "istotno\\w+ statystyczn\\w+",
+            "ten sam podział",
+            "te same (dane|podziały)"
+          ],
+          [
+            "baseline",
+            "punkt odniesienia",
+            "prost\\w+ model",
+            "linia bazowa"
+          ]
         ],
-        "none": ["0,5 pkt to wystarczająca różnica", "jedno uruchomienie wystarczy"]
+        "none": [
+          "0,5 pkt to wystarczająca różnica",
+          "jedno uruchomienie wystarczy"
+        ]
       }
     },
     {
@@ -21,12 +49,39 @@
       "prompt": "Trenujemy model przewidujący odejście klientów. Wynik w walidacji to AUC 0,97, ale po wdrożeniu pilotażowym wyszło około 0,70. Dane podzieliliśmy losowo 80/20, w danych jest po kilka wierszy na klienta. Co poszło nie tak i jak to naprawić? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["wyciek\\w*", "leakage", "przeciek\\w*"],
-          ["czasow\\w+", "temporal", "chronologiczn\\w+", "przyszło\\w+"],
-          ["grup\\w+", "klient\\w+ (nie )?(w|między)", "group split", "GroupKFold", "ten sam klient"],
-          ["zbi\\w+ testow\\w+ (raz|jednokrotnie|nie dotyka)", "hygiene", "higien\\w+", "nie stroić na teście", "walidacyjn\\w+"]
+          [
+            "wyciek\\w*",
+            "leakage",
+            "przeciek\\w*"
+          ],
+          [
+            "czasow\\w+",
+            "temporal",
+            "chronologiczn\\w+",
+            "przyszło\\w+"
+          ],
+          [
+            "grup\\w+",
+            "klient\\w+ (nie )?(w|między)",
+            "group split",
+            "GroupKFold",
+            "ten sam klient"
+          ],
+          [
+            "zbi\\w+ testow\\w+ (raz|jednokrotnie|nie dotyka)",
+            "hygiene",
+            "higien\\w+",
+            "nie stroić na teście",
+            "walidacyjn\\w+",
+            "dotkn\\w+ (go |ich )?(tylko )?raz",
+            "zamrożon\\w+ zbi\\w+",
+            "held[- ]out"
+          ]
         ],
-        "none": ["losowy podział jest właściwy", "wystarczy więcej danych treningowych"]
+        "none": [
+          "losowy podział jest właściwy",
+          "wystarczy więcej danych treningowych"
+        ]
       }
     },
     {
@@ -35,12 +90,34 @@
       "prompt": "Przez dwa miesiące sprawdzaliśmy, czy metoda z nowego artykułu poprawi nasz system rekomendacji. Nie poprawiła. Szef pyta, po co to w ogóle dokumentować. Jak zapisać takie badanie i co ma być w raporcie? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["wynik\\w* negatywn\\w+", "negatywn\\w+ wynik\\w*", "nie zadziałał\\w+", "negative result"],
-          ["hipotez\\w+", "pytani\\w+ badawcz\\w+"],
-          ["ograniczeni\\w+", "limitations", "czego nie (wiemy|sprawdzili)"],
-          ["konfiguracj\\w+", "odtworz\\w+", "powtarzaln\\w+", "reproducib\\w+", "wersj\\w+ (danych|kodu)", "commit"]
+          [
+            "wynik\\w* negatywn\\w+",
+            "negatywn\\w+ wynik\\w*",
+            "nie zadziałał\\w+",
+            "negative result"
+          ],
+          [
+            "hipotez\\w+",
+            "pytani\\w+ badawcz\\w+"
+          ],
+          [
+            "ograniczeni\\w+",
+            "limitations",
+            "czego nie (wiemy|sprawdzili)"
+          ],
+          [
+            "konfiguracj\\w+",
+            "odtworz\\w+",
+            "powtarzaln\\w+",
+            "reproducib\\w+",
+            "wersj\\w+ (danych|kodu)",
+            "commit"
+          ]
         ],
-        "none": ["nie warto dokumentować nieudanych", "raport tylko dla udanych"]
+        "none": [
+          "nie warto dokumentować nieudanych",
+          "raport tylko dla udanych"
+        ]
       }
     },
     {

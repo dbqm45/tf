@@ -37,7 +37,7 @@
         "all": [
           ["dogfooding", "beta", "etapow\\w+", "stopniow\\w+"],
           ["A/B", "eksperyment\\w*", "shadow", "canary"],
-          ["pewno[śs]ci", "niepewno[śs]ci", "confidence", "oczekiwa\\w+"],
+          ["pewno[śs]\\w*", "niepewno[śs]\\w*", "confidence", "oczekiwa\\w+"],
           ["popraw\\w+ (przez )?użytkownik", "korekt\\w+", "feedback", "kciuk", "zgłoś błąd", "fallback", "wyjście awaryjne"],
           ["metryk\\w+ (produktow|biznesow)\\w*", "metryk\\w+ modelu"]
         ],

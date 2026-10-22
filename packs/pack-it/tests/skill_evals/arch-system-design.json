@@ -58,6 +58,12 @@
             "circuit",
             "fallback",
             "replik"
+          ],
+          [
+            "Little",
+            "pul\\w+ (wątków|połączeń)",
+            "thread pool",
+            "connection pool"
           ]
         ]
       },

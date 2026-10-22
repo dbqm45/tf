@@ -24,6 +24,14 @@
             "wszystk\\w* (token|sesj)",
             "unieważni",
             "revoke"
+          ],
+          [
+            "DPoP",
+            "DBSC",
+            "wiąż\\w* token",
+            "powiąz\\w* token\\w* z (urządzeni|klucz)",
+            "device.?bound",
+            "sender.?constrain"
           ]
         ]
       }
@@ -59,6 +67,12 @@
             "wyloguj wszędzie",
             "unieważni\\w* wszystk",
             "krótk\\w* (access|token)"
+          ],
+          [
+            "przećwicz",
+            "wyloguj\\w* wszędzie",
+            "jedn\\w+ wywołani\\w* API",
+            "log ?out everywhere"
           ]
         ]
       }

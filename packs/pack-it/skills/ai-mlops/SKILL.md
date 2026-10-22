@@ -24,6 +24,8 @@ Nie buduj więcej, niż wymaga poziom ryzyka i częstość zmian.
    | 1 — potok trenowania | zautomatyzowany potok, walidacja danych i modelu, continuous training, rejestr | dane się zmieniają, retrening co tydzień/miesiąc |
    | 2 — CI/CD potoku | testy i budowa potoku w CI, automatyczne wdrożenie potoku i modelu | wiele modeli lub zespołów, częste zmiany kodu |
 
+   Pierwszy krok od notebooka do potoku to **walidacja danych przed treningiem** (schemat, zakresy, rozkład względem
+   poprzedniej wersji); bez niej continuous training automatycznie uczy model na zepsutych danych.
 3. **Eksperymenty i reprodukowalność.** Każdy przebieg zapisuje: parametry, metryki, **hash danych**, commit,
    środowisko (lockfile lub obraz), ziarna losowości, wersję cech. Test: czy za 6 miesięcy odtworzysz model
    z samego zapisu? MLflow Tracking to standard; wybór narzędzia mniej ważny niż kompletność zapisu (lineage).

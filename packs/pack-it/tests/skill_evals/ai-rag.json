@@ -52,6 +52,14 @@
             "rerank",
             "cross-encoder",
             "reranker"
+          ],
+          [
+            "contextual retrieval",
+            "kontekst\\w* (dopisan|do każdego (chunk|fragment))",
+            "zbi\\w+ złot",
+            "golden set",
+            "jedn\\w+ (rzecz|zmian\\w+) na ?raz",
+            "50\\s*[–-]\\s*150"
           ]
         ],
         "none": [
@@ -82,6 +90,12 @@
             "prompt injection",
             "wstrzykiwani\\w* (poleceń|promptu)",
             "dane,? nie polecenia"
+          ],
+          [
+            "iterative scan",
+            "jedn\\w+ (rzecz|zmian\\w+) na ?raz",
+            "(zmian\\w+|cofni\\w+) uprawnie\\w+[^.]{0,80}(indeks|szybko)",
+            "usunię\\w+[^.]{0,40}osobn\\w+ ścieżk"
           ]
         ],
         "none": [

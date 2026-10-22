@@ -9,7 +9,8 @@
         "all": [
           ["28 czerwca 2025", "28\\.06\\.2025", "28 June 2025"],
           ["2019/882", "europejski akt o dostępności", "European Accessibility Act", "EAA"],
-          ["EN 301 549"]
+          ["EN 301 549"],
+          ["PFRON", "V4\\.1\\.1", "WCAG 2\\.2[^.]{0,60}(cel|wyprzedzaj)"]
         ],
         "none": ["obowiązek (zacznie|obowiązuje) od 2027"]
       }
@@ -22,7 +23,8 @@
         "all": [
           ["WCAG-EM", "reprezentatywn\\w+ prób", "próbk\\w+ stron", "dobór próby"],
           ["kryteri\\w+ sukcesu", "\\b\\d\\.\\d\\.\\d+\\b"],
-          ["krytyczn", "waga", "poważność", "priorytet"]
+          ["krytyczn", "waga", "poważność", "priorytet"],
+          ["losow\\w+ stron", "nie gwarant\\w+ zgodności", "V4\\.1\\.1", "wyprzedzaj", "2\\.1 AA[^.]{0,80}(wymóg|wymag|prawn)"]
         ],
         "none": ["wystarczy (uruchomić|przepuścić|puścić) \\w* ?(axe|lighthouse|automat)"]
       }
@@ -35,7 +37,8 @@
         "all": [
           ["ustaw\\w+ o dostępności cyfrowej", "2019 r\\.?,? o dostępności cyfrowej"],
           ["co roku", "corocznie", "raz w roku", "31 marca"],
-          ["niezgodno\\w+", "wyłączeni\\w+", "częściowo zgodn"]
+          ["niezgodno\\w+", "wyłączeni\\w+", "częściowo zgodn"],
+          ["31 marca", "5 ?000 zł", "poz\\. 848", "informatyzacji"]
         ]
       }
     },

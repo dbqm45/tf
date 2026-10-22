@@ -8,7 +8,7 @@
       "checks": {
         "all": [
           ["otwart\\w+", "open"],
-          ["zamkni\\w+", "closed"],
+          ["zamkni\\w+", "closed", "bez słów[^.]{0,60}(kategori|etykiet|nazw)", "nie sugeru\\w+", "odsyłacz\\w*[^.]{0,30}(nie|zamiast) kopi"],
           ["15|20|30"],
           ["macierz\\w* podobieństw", "dendrogram", "similarity matrix", "standaryzacj\\w* kategorii", "standardization grid"]
         ],
@@ -24,7 +24,8 @@
           ["bezpośredniość", "directness", "bezpośredni\\w+"],
           ["sukces\\w*", "success"],
           ["etykiet\\w+", "węzeł|węzła|węzły", "ścieżk\\w+"],
-          ["ponown\\w+ test", "kolejn\\w+ iterac\\w+", "powtórz\\w+ test"]
+          ["ponown\\w+ test", "kolejn\\w+ iterac\\w+", "powtórz\\w+ test", "przetestuj\\w* ponownie", "test\\w* v2", "\\(v2\\)", "wersj\\w* v2"],
+          ["odsyłacz\\w*[^.]{0,30}(nie|zamiast) kopi", "ia-documentation", "słownik\\w* etykiet"]
         ],
         "none": ["72% to świetny wynik, nic nie zmieniamy"]
       }

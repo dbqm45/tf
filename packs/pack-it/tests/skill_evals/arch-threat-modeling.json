@@ -18,6 +18,18 @@
             "DFD",
             "diagram\\w* przepływ\\w* danych",
             "data.?flow"
+          ],
+          [
+            "rezydualn",
+            "residual",
+            "po kontroli"
+          ],
+          [
+            "test\\w* nadużyci",
+            "abuse case",
+            "misuse case",
+            "powierzchni\\w* ataku",
+            "attack surface"
           ]
         ]
       }

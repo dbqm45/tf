@@ -24,7 +24,8 @@
           ["\\$value"],
           ["\\$type"],
           ["style dictionary"],
-          ["2025\\.10", "stabiln\\w* wersj"]
+          ["2025\\.10", "stabiln\\w* wersj"],
+          ["nie (jest )?(oficjalnym )?standard\\w* W3C", "nie\\w* standard\\w* W3C", "raport\\w* grupy", "community group report", "nie jest na ścieżce standaryzacji"]
         ],
         "none": ["(?<!nie )jest (oficjalnym )?standardem W3C", "W3C Recommendation"]
       }
@@ -38,7 +39,8 @@
           ["deprecat", "wycof", "przestarzał"],
           ["major", "wersj\\w* główn"],
           ["codemod", "przewodnik migracji", "migrac"],
-          ["changelog", "dziennik zmian", "okres przej"]
+          ["changelog", "dziennik zmian", "okres przej"],
+          ["(2|dwa|dwóch|dwu) (kolejn\\w+ )?wyda\\w+ minor", "(co najmniej|minimum) 2 wyda", "6 miesięcy"]
         ]
       }
     },

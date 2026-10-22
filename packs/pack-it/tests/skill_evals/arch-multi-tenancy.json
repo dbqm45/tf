@@ -18,6 +18,18 @@
           ],
           [
             "SET LOCAL|set_config|kontekst\\w*"
+          ],
+          [
+            "uwierzytelnion\\w+ tożsamoś",
+            "z tokenu",
+            "nie ufaj\\w* (parametr|nagłówk)",
+            "authenticated identity"
+          ],
+          [
+            "dw(óch|a|u) najemc",
+            "two tenants",
+            "zalogowany w A",
+            "najemc\\w* A.{0,80}najemc\\w* B"
           ]
         ]
       }
@@ -39,6 +51,16 @@
           ],
           [
             "test\\w*"
+          ],
+          [
+            "uwierzytelnion\\w+ tożsamoś",
+            "z tokenu",
+            "authenticated identity"
+          ],
+          [
+            "sesj\\w+.{0,60}(pul|następn)",
+            "pul\\w+ połączeń.{0,80}(przenosi|następn)",
+            "connection pool.{0,80}(leak|next)"
           ]
         ]
       }
@@ -60,6 +82,15 @@
           ],
           [
             "konfigur\\w*|flag\\w*|polityk\\w*|handler\\w*|strategi\\w*"
+          ],
+          [
+            "właściciel\\w*.{0,40}dat\\w* usunięci",
+            "dat\\w* usunięcia",
+            "\\bADR\\b"
+          ],
+          [
+            "handler\\w* (komendy )?per (najemc|tenant)",
+            "osobn\\w+ (plan|kontekst)"
           ]
         ]
       }
