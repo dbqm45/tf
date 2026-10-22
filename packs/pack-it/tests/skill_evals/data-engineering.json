@@ -18,6 +18,13 @@
           ],
           [
             "backfill|zakres dat|przeliczeni"
+          ],
+          [
+            "surow\\w+ (kopi|warstw)",
+            "warstw\\w+ surow",
+            "SLA (świeżości|danych)",
+            "zależnoś\\w+[^.]{0,40}danych[^.]{0,30}nie[^.]{0,20}godzin",
+            "czas\\w* zdarzenia[^.]{0,40}przetw"
           ]
         ]
       }
@@ -36,6 +43,12 @@
           ],
           [
             "schemat\\w* źródł|zależnoś|koszt operacyjn|kontrakt"
+          ],
+          [
+            "kontrakt\\w* danych",
+            "data contract",
+            "outbox",
+            "zdarze\\w+ domenow"
           ]
         ]
       }

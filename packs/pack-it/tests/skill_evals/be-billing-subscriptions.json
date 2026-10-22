@@ -18,6 +18,12 @@
           ],
           [
             "idempotent\\w*|webhook\\w*|zdarze\\w*"
+          ],
+          [
+            "cen\\w* (jest )?(niezmienn|wersjonowan)",
+            "wersjonowan\\w* cen",
+            "regulamin\\w*",
+            "immutable price"
           ]
         ]
       }
@@ -39,6 +45,15 @@
           ],
           [
             "past_due|zaległ\\w*|status\\w*|dostęp\\w*"
+          ],
+          [
+            "uzgadnia\\w*",
+            "reconcil",
+            "tylko (do )?odczyt",
+            "odczyt\\w* i eksport",
+            "SCA",
+            "3-?D ?Secure",
+            "wymaga działania"
           ]
         ]
       }

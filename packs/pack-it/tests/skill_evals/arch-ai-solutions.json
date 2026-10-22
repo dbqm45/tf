@@ -11,7 +11,9 @@
             "tabel\\w* decyzyj",
             "wymagan\\w* (świeżo|dok[łl]adno|opóźnie)",
             "świeżo\\w* wiedzy",
-            "najprostsz\\w+ (wzorzec|rozwiąz)"
+            "najprostsz\\w+ (wzorzec|rozwiąz)",
+            "\\bosi(e|ach)?\\b[^.]{0,80}(wymaga|podał|liczb|opóźnie|koszt)",
+            "ewaluacj\\w+ pokaż"
           ],
           [
             "workflow",
@@ -28,6 +30,12 @@
           [
             "idempotent|idempotencj",
             "najmniejszych uprawnie|least[- ]privilege"
+          ],
+          [
+            "zero[- ]retention",
+            "(własn\\w+ )?bramk\\w*[^.]{0,80}(zmieni\\w+|wymian\\w+) (dostawc|model)",
+            "konta serwisow",
+            "kontem serwisow"
           ]
         ],
         "none": [
@@ -60,6 +68,12 @@
             "fallback|zapasow\\w* (model|dostawc)",
             "routing modeli|model routing|kaskad",
             "timeout|limit czasu"
+          ],
+          [
+            "1[,.]25 ?[×x]",
+            "zbi\\w+ złot\\w*",
+            "golden set",
+            "bez cache\\W{0,4}(i|oraz)\\W{0,4}z cache"
           ]
         ],
         "none": [
@@ -85,11 +99,18 @@
           ],
           [
             "najmniejszych uprawnie|least[- ]privilege|uprawnieni\\w* (użytkownika|wywołującego)",
-            "egress|wyciek\\w* danych|allowlist|lista dozwolonych"
+            "egress|wyciek\\w* danych|allow-?list|lista dozwolonych",
+            "poświadczeni\\w+ (klienta|użytkownika)",
+            "kontem serwisow"
           ],
           [
             "ADR",
             "rejestr decyzji"
+          ],
+          [
+            "kryteri\\w+ (rewizji|przejścia)",
+            "ai-architecture\\.md",
+            "(zapytanie|klient|najem\\w+) A[^.]{0,40}(B|innego)[^.]{0,40}(404|brak|0 wierszy)"
           ]
         ],
         "none": [
@@ -110,7 +131,7 @@
       "checks": {
         "all": [
           [
-            "format\\w* narzędzi",
+            "format\\w* (wywołań )?narzędzi",
             "wag(ach|i)"
           ],
           [

@@ -55,7 +55,10 @@
             "resztkow"
           ]
         ]
-      }
+      },
+      "accept": [
+        "sec-risk-management"
+      ]
     },
     {
       "id": "incydent-logowania",

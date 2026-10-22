@@ -16,7 +16,9 @@
             "partiami",
             "w partiach",
             "batch",
-            "partii"
+            "partii",
+            "paczk",
+            "porcj"
           ],
           [
             "osobn\\w* wydani",
@@ -26,8 +28,8 @@
             "wstecznie kompat",
             "backward",
             "osobnych wydani",
-            "wydanie [A-C]\\b",
-            "wydani\\w* (aplikacji )?[A-C]\\b"
+            "wydanie [A-C1-3]\\b",
+            "wydani\\w* (aplikacji )?[A-C1-3]\\b"
           ]
         ]
       }
@@ -56,6 +58,9 @@
             "rollback",
             "cofn"
           ]
+        ],
+        "none": [
+          "częściow\\w* (sukces|zapis)\\w*.{0,120}(zatwierd|commit)"
         ]
       }
     },
