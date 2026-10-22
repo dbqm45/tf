@@ -60,7 +60,10 @@
           [
             "wycofani\\w* funkcj",
             "wygasz",
-            "deprecat"
+            "deprecat",
+            "wycofyw\\w*",
+            "do wycofania",
+            "wycofan\\w* (funkcj|stary)"
           ]
         ]
       }
@@ -82,7 +85,11 @@
             "najpierw plan",
             "plan przed kod",
             "tryb planowania",
-            "plan mode"
+            "plan mode",
+            "zaczyna się od (zapisanego )?planu",
+            "zatwierdza[^.]{0,40}plan",
+            "najpierw (przedstawia |zapisuje )?plan",
+            "plan[^.]{0,40}przed (generowaniem|kodem|kod)"
           ],
           [
             "ewaluacj",
@@ -90,6 +97,13 @@
           ],
           [
             "bramk"
+          ],
+          [
+            "kontrakt\\w* planu",
+            "REVIEW\\.md",
+            "świeżym kontekście",
+            "świeży kontekst",
+            "jedno polecenie weryfikacji"
           ]
         ]
       }

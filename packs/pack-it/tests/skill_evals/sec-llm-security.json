@@ -38,7 +38,9 @@
             "obraz\\w*|markdown|link"
           ],
           [
-            "zatwierdz\\w* człowiek|human.in.the.loop|approval"
+            "zatwierdz\\w+",
+            "human.in.the.loop",
+            "approval"
           ],
           [
             "dane.{0,20}(a|nie) polece|niezaufan"

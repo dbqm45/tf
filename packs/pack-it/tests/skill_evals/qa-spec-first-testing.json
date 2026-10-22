@@ -27,7 +27,9 @@
             "bez dostępu do (kodu|implementacji)",
             "przed (napisaniem )?(kodu|implementacj)",
             "specyfikacj\\w* bez implementacji",
-            "bez implementacji"
+            "bez implementacji",
+            "bez kodu (metody|implementac|produkcyjn)",
+            "nie (pokazuj|dawaj)\\w* (mu )?kodu"
           ]
         ]
       },

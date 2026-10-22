@@ -25,7 +25,8 @@
           ["SuspendedEV\\b"],
           ["B2?\\b|9 ?V"],
           ["C\\b.{0,80}(Charging|obwód|zamk|6 ?V|S2)|(Charging|obwód|zamk|6 ?V|S2).{0,80}\\bC\\b"],
-          ["StatusNotification", "konwencj\\w*", "quirk", "odchyleni\\w* (producent|firmware)"]
+          ["StatusNotification", "konwencj\\w*", "quirk", "odchyleni\\w* (producent|firmware)"],
+          ["quirk", "odchyleni\\w* producent", "surow\\w* ramk"]
         ],
         "none": ["Faulted.{0,40}(poprawn|właściw|prawidłow)"]
       }

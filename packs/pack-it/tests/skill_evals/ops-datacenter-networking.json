@@ -10,7 +10,8 @@
           ["leaf.?spine|clos"],
           ["ebgp|rfc ?7938"],
           ["oversubscription|przesubskrypcj|nadsubskrypcj|stosunek .*(downlink|uplink)|downlink.*uplink"],
-          ["ecmp"]
+          ["ecmp"],
+          ["NetBox", "źródł\\w* prawdy", "falami", "fal\\w* wdroż"]
         ],
         "none": ["spanning.?tree jako (podstawow|główn)"]
       }
@@ -24,7 +25,8 @@
           ["prefix.?list|filtr(y|ów)? prefiks|filtrowan"],
           ["max.?prefix|limit prefiks"],
           ["rpki|route origin validation|\\brov\\b"],
-          ["communit|społeczno"]
+          ["communit|społeczno"],
+          ["NetBox", "źródł\\w* prawdy", "falami", "fal\\w* wdroż"]
         ],
         "none": ["bez filtrów"]
       }

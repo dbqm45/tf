@@ -17,6 +17,12 @@
             "brand",
             "markowan",
             "nominal"
+          ],
+          [
+            "private constructor",
+            "static of",
+            "obiekt\\w* wartości",
+            "Money\\.of"
           ]
         ]
       }
@@ -66,6 +72,13 @@
             "valibot",
             "schemat",
             "schema"
+          ],
+          [
+            "rootDir",
+            "TS5011",
+            "baseUrl",
+            "ignoreDeprecations",
+            "\"types\""
           ]
         ]
       }

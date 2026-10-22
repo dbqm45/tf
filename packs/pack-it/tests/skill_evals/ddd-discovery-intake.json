@@ -61,6 +61,12 @@
             "sugerując",
             "komplement",
             "pomysł"
+          ],
+          [
+            "decyzj\\w*[^.]{0,60}(wywiad|badani)",
+            "co zmieni wynik",
+            "kto (to )?rozstrzyg",
+            "do kiedy"
           ]
         ]
       },

@@ -10,8 +10,9 @@
           ["wysok\\w* ryzyk", "high-risk"],
           ["załącznik\\w* III", "annex III"],
           ["podmiot\\w* stosując", "deployer", "użytkownik\\w* systemu"],
-          ["nadzór\\w* człowiek", "human oversight"],
-          ["nie jest\\w* porad\\w* prawn", "prawnik", "radc\\w* prawn", "inspektor"]
+          ["nadzór\\w* człowiek", "human oversight", "nadzór\\w* ludzk", "nadzor\\w* ludzk"],
+          ["nie jest\\w* porad\\w* prawn", "prawnik", "radc\\w* prawn", "inspektor"],
+          ["klasyfikacj\\w* robocz", "robocz\\w*.{0,40}nie (jest )?porad", "wstępn\\w* .{0,20}robocz"]
         ],
         "none": ["AI Act nie dotyczy"]
       }
@@ -39,7 +40,8 @@
           ["dostawc\\w*", "provider"],
           ["art\\.? 25", "własn\\w* marc", "zmian\\w* przeznaczenia"],
           ["ocen\\w* zgodności", "conformity", "znak\\w* CE", "deklaracj\\w* zgodności"],
-          ["dokumentacj\\w* techniczn", "system\\w* zarządzania ryzykiem", "zarządzani\\w* ryzykiem"]
+          ["dokumentacj\\w* techniczn", "system\\w* zarządzania ryzykiem", "zarządzani\\w* ryzykiem"],
+          ["klasyfikacj\\w* robocz", "robocz\\w*.{0,40}nie (jest )?porad", "wstępn\\w* .{0,20}robocz"]
         ],
         "none": ["AI Act nie dotyczy"]
       }
@@ -53,7 +55,8 @@
           ["inwentarz", "rejestr system", "spis system"],
           ["govern", "map\\b", "measure", "manage"],
           ["42001", "system\\w* zarządzania sztuczn"],
-          ["27001", "art\\.? 4", "kompetencj\\w* w zakresie AI", "AI literacy"]
+          ["27001", "art\\.? 4", "kompetencj\\w* w zakresie AI", "AI literacy"],
+          ["klasyfikacj\\w* robocz", "robocz\\w*.{0,40}nie (jest )?porad", "wstępn\\w* .{0,20}robocz"]
         ]
       }
     },

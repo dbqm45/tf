@@ -10,7 +10,8 @@
           ["detekcj\\w+", "segmentacj\\w+", "klasyfikacj\\w+"],
           ["wyciek\\w*", "leakage", "ta sam\\w+ (kamer\\w+|scen\\w+|partii|detal\\w*)", "podzia\\w+ (wg|po|według) kamer\\w+"],
           ["map@|mAP|iou", "recall|czułość", "f1|precision|precyzj\\w+"],
-          ["kawałk\\w+|slice\\w*|podział\\w* (na|wg|według) (kamer|oświetl)\\w+", "oświetleni\\w+"]
+          ["kawałk\\w+|slice\\w*|podział\\w* (na|wg|według) (kamer|oświetl)\\w+", "oświetleni\\w+"],
+          ["kappa", "IoU ramek", "zgodnoś\\w+ (adnotator|etykiet|oznacz)\\w*", "skrót\\w* percepcyjn", "percepcyjn\\w*", "embedding\\w*", "zero-shot"]
         ],
         "none": ["losowy podział zdjęć wystarczy", "accuracy wystarczy"]
       }
@@ -38,7 +39,8 @@
           ["anonimiz\\w+", "rozmyci\\w+", "blur", "maskowa\\w+"],
           ["drift\\w*", "dryf\\w*", "monitor\\w+"],
           ["ai-model-optimization", "kwantyzacj\\w+", "tensorrt|onnx"],
-          ["pory (roku|dnia)", "oświetleni\\w+", "warunk\\w+ (wdrożeni\\w+|produkcyjn\\w+)"]
+          ["pory (roku|dnia)", "oświetleni\\w+", "warunk\\w+ (wdrożeni\\w+|produkcyjn\\w+)"],
+          ["cał\\w+ potok", "NMS", "INT8[^.]{0,60}(mał|ogon)"]
         ],
         "none": ["nie ma znaczenia dla rodo"]
       }

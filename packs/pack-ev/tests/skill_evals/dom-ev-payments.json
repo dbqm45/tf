@@ -24,6 +24,12 @@
           ],
           [
             "Payment Terminal Provider|PTP"
+          ],
+          [
+            "każd\\w* EVSE",
+            "test\\w* płatno",
+            "(chwili|moment\\w*) startu",
+            "zmian\\w* taryfy w trakcie"
           ]
         ],
         "none": [
@@ -47,10 +53,17 @@
             "preauthorize_amount|limit preautoryzacji|kwot.{0,20}preautoryzacji"
           ],
           [
-            "StopSession|stop.{0,10}sesj|limit.{0,20}(osiągn|przekrocz)"
+            "StopSession|stop.{0,10}sesj|limit.{0,20}(osiągn|przekrocz)",
+            "sesj\\w* osierocon",
+            "ostatni\\w* (znan|potwierdzon)\\w* odczyt"
           ],
           [
             "wygas|termin|dni|timeout|czas ważności"
+          ],
+          [
+            "windyk",
+            "sprawdź status",
+            "FAILED"
           ]
         ],
         "none": [

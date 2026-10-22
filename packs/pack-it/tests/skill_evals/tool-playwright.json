@@ -11,12 +11,8 @@
       },
       "checks": {
         "all": [
-          [
-            "failOnFlakyTests"
-          ],
-          [
-            "on-first-retry"
-          ]
+          ["failOnFlakyTests"],
+          ["on-first-retry"]
         ]
       }
     },
@@ -29,14 +25,9 @@
       },
       "checks": {
         "all": [
-          [
-            "only-changed"
-          ],
-          [
-            "page\\.clock",
-            "setFixedTime",
-            "clock\\.install"
-          ]
+          ["only-changed"],
+          ["page\\.clock", "setFixedTime", "clock\\.install"],
+          ["@smoke", "--grep @\\w+", "tag\\w*[^.]{0,30}smoke"]
         ]
       }
     },
@@ -52,12 +43,8 @@
       "prompt": "Konfigurujemy od zera Playwright w CI. Jak ustawić ponowienia, trace i wykrywanie niestabilnych testów? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "failOnFlakyTests"
-          ],
-          [
-            "on-first-retry"
-          ]
+          ["failOnFlakyTests"],
+          ["on-first-retry"]
         ]
       }
     },
@@ -67,20 +54,9 @@
       "prompt": "Chcę, żeby agent AI wygenerował testy e2e w Playwright dla logowania i zakupu. Jak mu to zlecić i sprawdzić wynik, żeby nie dostać kruchych testów z waitForTimeout? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "seed",
-            "wzorcow"
-          ],
-          [
-            "sprząta",
-            "teardown",
-            "afterEach"
-          ],
-          [
-            "celow\\w* (psu|zepsu)",
-            "zepsu\\w* (kod|zachowan)",
-            "odwróć"
-          ]
+          ["seed", "wzorcow"],
+          ["sprząta", "teardown", "afterEach"],
+          ["celow\\w* (psu|zepsu)", "zepsu\\w* (kod|zachowan)", "odwróć"]
         ]
       }
     }

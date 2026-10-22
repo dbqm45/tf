@@ -75,7 +75,23 @@
             "walidacyjn\\w+",
             "dotkn\\w+ (go |ich )?(tylko )?raz",
             "zamrożon\\w+ zbi\\w+",
-            "held[- ]out"
+            "held[- ]out",
+            "użyt\\w* raz",
+            "na (samym )?końcu"
+          ],
+          [
+            "kontrol\\w+ negatywn",
+            "pomieszan\\w+ etykiet",
+            "pomieszaj\\w* etykiet",
+            "permut\\w+ etykiet",
+            "negative control"
+          ],
+          [
+            "seed\\w*",
+            "ziarn\\w+",
+            "baseline",
+            "precision@k",
+            "PR-AUC"
           ]
         ],
         "none": [

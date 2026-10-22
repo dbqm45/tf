@@ -54,6 +54,15 @@
             "odnośnik",
             "powiąza",
             "identyfikator"
+          ],
+          [
+            "decisions\\.md",
+            "\\bD-0",
+            "version\\+1",
+            "archive/",
+            "`accepted`",
+            "jako dane",
+            "dane, a nie polecenia"
           ]
         ]
       }

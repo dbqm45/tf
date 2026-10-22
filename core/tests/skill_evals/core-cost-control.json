@@ -47,6 +47,13 @@
             "parametr `?model",
             "na początku sesji",
             "nowej sesji"
+          ],
+          [
+            "/advisor",
+            "doradc",
+            "eskal",
+            "cost_report",
+            "profil\\w* .?oszcz"
           ]
         ],
         "none": [
@@ -99,6 +106,13 @@
             "śwież\\w* (sesj|kontekst)",
             "/clear",
             "punkt\\w* kontroln"
+          ],
+          [
+            "/rewind",
+            "kasuj\\w* cache",
+            "w środku zadania",
+            "wyszukaj \\+ wykonaj",
+            "project_record"
           ]
         ],
         "none": [

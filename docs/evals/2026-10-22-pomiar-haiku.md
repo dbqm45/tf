@@ -321,6 +321,24 @@ Kryteria 27 skilli sprawdzone offline na odpowiedziach partii 6: rozróżnia 65 
   sec-cryptography-pki/szyfrowanie-pii-kms, sec-malware-analysis/podejrzany-plik-triage, dwa scenariusze
   sec-zero-trust-identity; ogólne części ops-docker, ops-iac-terraform, SPF/DKIM/DMARC w ops-linux-networking.
 
+## Przegląd scenariuszy nierozróżniających (bez modelu)
+Wszystkie 143 scenariusze, w których odpowiedź ze skillem i bez skilli przechodziła albo odpadała tak samo (ocena
+samymi wyrażeniami, bez sędziego), przejrzane jeden po drugim. Po zmianach rozróżnia 522 z 562 scenariuszy z zapisanymi
+odpowiedziami (przed: 420).
+- A — za wąskie lub za ogólne kryterium, poprawione: ok. 100 scenariuszy.
+- B — model zna temat, scenariusz zastąpiony trudniejszym: `dom-ev-energy-management/dlm-fazy-budynek-v2` (L1 ogranicza
+  do 11 A, czyli 5,5 A na auto — poniżej minimum 6 A).
+- C — luka treści skilla, uzupełniona: dom-ev-regulations-eu (wiersz RED 2022/30 i EN 18031 w tabeli głównej),
+  ai-governance-compliance (nadzór człowieka u podmiotu stosującego, art. 26 ust. 2); wcześniej w #30:
+  ops-platform-engineering, sec-zero-trust-identity.
+- D — model zna temat, skill nie wnosi nic więcej (33 scenariusze) — kandydaci do skrócenia, m.in. proc-lean
+  (zasady i WSJF), lang-javascript, tool-nx (tagi i depConstraints), be-api-design (kolekcje), be-database
+  (expand/contract), ops-sre-incidents (progi burn rate), sec-llm-security (lista Top 10), txt-polish-correctness
+  (imiesłów, kalki), fw-react (`useEffectEvent`), fw-nextjs (hydratacja), core-agent-security (podstawy prompt injection).
+- Skażenie porównania: w 2 z 607 przebiegów bez skilli model przeczytał pliki fabryki z dysku poza katalogiem testu
+  (`dom-ev-knowledge-base/terminy-przepisow`, `dom-ev-cdr-settlement/sprawdzenie-kosztu-cdr-kalkulatorem`) — przebieg
+  „bez skilli” nie jest odcięty od reszty dysku; wyniki tych dwóch porównań pominięte.
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).

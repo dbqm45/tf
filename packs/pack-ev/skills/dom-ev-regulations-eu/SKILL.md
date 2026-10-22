@@ -36,6 +36,7 @@ cytuj je jako `eu-afir Art. 5(4)`. Zmiany po tej dacie i przepisy krajowe wdraż
 | AFIR Aneks II pkt 2.1 | CPO, producent | ISO 15118-1 do -5 (od 08.01.2026), ISO 15118-20 (od 01.01.2027) dla punktów nowych lub odnowionych | 08.01.2026 / 01.01.2027 | SECC z -20; P&C wymaga -2 i -20 |
 | NIS2 Art. 2, 3, Aneks I pkt 1(a) | CPO średni i większy | środki zarządzania ryzykiem (Art. 21), zgłoszenia (Art. 23) | prawo krajowe od 18.10.2024 | proces incydentów, łańcuch dostaw CPMS |
 | CRA Art. 13, Aneks I | producent ładowarki, aplikacji | cyberbezpieczeństwo w projekcie, wsparcie ≥ 5 lat, SBOM | 11.12.2027 | bezpieczne aktualizacje firmware, bezpieczna konfiguracja domyślna |
+| RED rozp. del. 2022/30 (EN 18031) | producent ładowarki z Wi-Fi, LTE, BT | cyberbezpieczeństwo radiowe | od 01.08.2025 do 10.12.2027, potem wymogi przejmuje CRA (rozp. 2026/339) | ładowarka sprzedawana dziś spełnia EN 18031, nie czeka na CRA |
 | CRA Art. 14, 69(3) | producent, także produkty starsze | zgłoszenie podatności i incydentów: 24 h, 72 h, raport końcowy | 11.09.2026 (już) | kontakt do podatności, kanał zgłoszeń |
 | Data Act Art. 3, 4, 5 | producent, dostawca usługi, posiadacz danych | dostęp użytkownika do danych produktu bezpłatnie; udostępnienie stronie trzeciej | 12.09.2025; Art. 3(1) dla produktów po 12.09.2026 | API danych ładowarki i sesji dla użytkownika |
 | Data Act Art. 23-31 | dostawca chmury, klient | zmiana dostawcy: wypowiedzenie do 2 mies., 30 dni przejścia, od 12.01.2027 bez opłat | 12.09.2025; 12.01.2027 | eksport danych CPMS, wyjście z chmury |

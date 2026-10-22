@@ -24,7 +24,8 @@
           ["ATT&CK Navigator", "Navigator", "warstw\\w*", "layer"],
           ["źródł\\w* danych", "data source", "telemetri\\w*", "logowani\\w*"],
           ["przetestowan\\w*", "zwalidowan\\w*", "jakość pokrycia", "sama obecność reguły", "nie znaczy", "nie oznacza"],
-          ["priorytet\\w*", "threat intel", "zagrożen\\w* istotn\\w*", "kolejność"]
+          ["priorytet\\w*", "threat intel", "zagrożen\\w* istotn\\w*", "kolejność"],
+          ["techni\\w+ priorytet\\w*", "przetestowan\\w+ ?/ ?(techni|priorytet)\\w*", "włącz\\w* logowani\\w*", "trzy stan\\w*"]
         ],
         "none": ["100% pokrycia ATT&CK jest realnym celem"]
       }
@@ -37,7 +38,8 @@
         "all": [
           ["zgod\\w*", "autoryz\\w*", "zakres", "rules of engagement", "zasady zaangażowania"],
           ["Atomic Red Team", "Caldera", "plan emulacji", "emulation plan"],
-          ["czas do wykrycia", "time to detect", "wykryto|nie wykryto", "luk\\w* w wykrywaniu", "tuning|strojeni\\w*"]
+          ["czas do wykrycia", "time to detect", "wykryto|nie wykryto", "luk\\w* w wykrywaniu", "tuning|strojeni\\w*"],
+          ["CVE-2025-27364", "5\\.1\\.0", "zarejestrowan\\w+ bez alertu", "brak śladu", "czas[^.]{0,20}wykonani\\w*[^.]{0,30}alert\\w*"]
         ],
         "none": ["uruchom testy na produkcji bez uprzedzenia zespołu SOC"]
       }

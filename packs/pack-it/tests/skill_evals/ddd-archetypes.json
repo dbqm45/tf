@@ -7,16 +7,9 @@
       "prompt": "Modeluję program lojalnościowy: punkty się zdobywa, wydaje, część wygasa po 12 miesiącach, a klient pyta 'skąd mam takie saldo'. Jak to zamodelować i jak obsłużyć pomyłkowo naliczone punkty? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "accounting|księgow"
-          ],
-          [
-            "transakcj\\w+.{0,60}(zapis|konta)|zapis\\w+.{0,40}(debet|kredyt)|podwójn\\w+ zapis"
-          ],
-          [
-            "odwróc|storn|reversal",
-            "nie edytuj|nie usuwa"
-          ]
+          ["accounting|księgow"],
+          ["transakcj\\w+.{0,60}(zapis|konta)|zapis\\w+.{0,40}(debet|kredyt)|podwójn\\w+ zapis"],
+          ["odwróc|storn|reversal", "nie edytuj|nie usuwa"]
         ]
       }
     },
@@ -26,15 +19,9 @@
       "prompt": "Kurs ma 20 miejsc. Gdy ktoś rezygnuje, następna osoba z listy rezerwowej ma 24 h na potwierdzenie, a stali klienci mają pierwszeństwo. Jak to zamodelować, żeby nie kończyło się na ORDER BY data_wpisu? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "waitlist|lista oczekując|lista rezerwow"
-          ],
-          [
-            "priorytet"
-          ],
-          [
-            "ofert\\w+.{0,40}termin|termin\\w* potwierdzenia|zablokuj|availability|dostępnoś"
-          ]
+          ["waitlist|lista oczekując|lista rezerwow"],
+          ["priorytet"],
+          ["ofert\\w+.{0,40}termin|termin\\w* potwierdzenia|zablokuj|availability|dostępnoś"]
         ]
       }
     },
@@ -50,22 +37,10 @@
       "prompt": "Sklep dostarcza w Polsce i w Niemczech. Strefy dostaw to zbiory gmin i kodów pocztowych, klienci zmieniają adresy, a faktura musi mieć adres z dnia sprzedaży. Jak zamodelować adresy, obszary i strefy, żeby nie skończyło się na kolumnach miasto/ulica w tabeli klienta? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "geograf|lokalizacj|obszar"
-          ],
-          [
-            "hierarch|zawiera|należy do|część"
-          ],
-          [
-            "z dnia|w chwili|kopi|snapshot|niezmienn|histori"
-          ],
-          [
-            "\\bparty\\b",
-            "\\bpricing\\b",
-            "archetyp\\w*",
-            "rol\\w* obszar\\w*|arearole",
-            "geographic location"
-          ]
+          ["geograf|lokalizacj|obszar"],
+          ["hierarch|zawiera|należy do|część"],
+          ["z dnia|w chwili|kopi|snapshot|niezmienn|histori"],
+          ["\\bparty\\b", "\\bpricing\\b", "archetyp\\w*", "rol\\w* obszar\\w*|arearole", "geographic location"]
         ]
       }
     },
@@ -75,22 +50,11 @@
       "prompt": "Mamy umowy serwisowe z klientami. Aneksy zmieniają cenę i zakres od wskazanej daty, a przy sporze trzeba odtworzyć, co obowiązywało w danym dniu i kto podpisał zmianę. Jak zamodelować umowę i aneksy? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "umow|agreement|kontrakt"
-          ],
-          [
-            "aneks|wersj|zmian"
-          ],
-          [
-            "obowiązyw|ważn|od .{0,20}do|effectiv|bitemporal|w danym dniu"
-          ],
-          [
-            "\\bpricing\\b",
-            "\\baccounting\\b",
-            "\\bparty\\b",
-            "archetyp\\w*",
-            "zamówieni\\w*.{0,80}(kopiuj\\w* warunk|wskazuje wersj)"
-          ]
+          ["umow|agreement|kontrakt"],
+          ["aneks|wersj|zmian"],
+          ["obowiązyw|ważn|od .{0,20}do|effectiv|bitemporal|w danym dniu"],
+          ["\\bpricing\\b", "\\baccounting\\b", "\\bparty\\b", "archetyp\\w*", "zamówieni\\w*.{0,80}(kopiuj\\w* warunk|wskazuje wersj)"],
+          ["archetyp\\w*", "\\bAgreement\\b", "\\bPricing\\b", "\\bAccounting\\b", "kopiuj\\w* warunk\\w*"]
         ]
       }
     },
@@ -106,12 +70,9 @@
       "prompt": "W naszym systemie oferta dla klienta to po prostu zamówienie ze statusem 'oferta', a po akceptacji zmieniamy status na 'zamówione'. Czy to dobry model? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "oferta\\w* (to nie|nie jest)|osobn\\w* pojęci|inn\\w* (cykl|reguł)"
-          ],
-          [
-            "status"
-          ]
+          ["oferta\\w* (to nie|nie jest)|osobn\\w* pojęci|inn\\w* (cykl|reguł)", "różn\\w+ (cykl|pojęci|reguł)\\w*", "dwa różne pojęcia", "osobn\\w+ byt\\w*"],
+          ["status"],
+          ["archetyp\\w*", "\\bAgreement\\b", "akceptacj\\w+ (jest|to) zdarzen\\w*", "kopi\\w+ warunk\\w*"]
         ]
       }
     }

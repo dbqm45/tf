@@ -7,17 +7,10 @@
       "prompt": "Nasza firma wdraża SAFe i mamy 6 zespołów w jednym Agile Release Train. Jak wygląda PI Planning, ile trwa PI i kto za co odpowiada? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "8.{0,6}12",
-            "osiem.{0,10}dwana",
-            "10 tyg"
-          ],
-          [
-            "RTE|Release Train Engineer"
-          ],
-          [
-            "Business Owner|System Architect|Product Management"
-          ]
+          ["8.{0,6}12", "osiem.{0,10}dwana", "10 tyg"],
+          ["RTE|Release Train Engineer"],
+          ["Business Owner|System Architect|Product Management"],
+          ["kontrakt\\w*", "SAFe-?washing", "według działów", "cięt\\w+[^.]{0,30}dział\\w*", "zmniejsz\\w* zależności"]
         ]
       }
     },
@@ -27,28 +20,9 @@
       "prompt": "Mamy 3 niezależne zespoły produktowe, prawie bez zależności, a dyrektor chce wdrożyć SAFe dla uporządkowania. Czy to ma sens? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "nie pasuje",
-            "nie ma sensu",
-            "nie warto",
-            "zbędn",
-            "przesad",
-            "niepotrzeb",
-            "wystarczy",
-            "raczej nie",
-            "^\\W*nie\\b",
-            "nie macie (czego|go)",
-            "narzut"
-          ],
-          [
-            "zależno",
-            "zaleznosci"
-          ],
-          [
-            "SAFe-washing",
-            "granic\\w* kontekst",
-            "zmniejsz\\w* zależno"
-          ]
+          ["nie pasuje", "nie ma sensu", "nie warto", "zbędn", "przesad", "niepotrzeb", "wystarczy", "raczej nie", "^\\W*nie\\b", "nie macie (czego|go)", "narzut"],
+          ["zależno", "zaleznosci"],
+          ["SAFe-washing", "granic\\w* kontekst", "zmniejsz\\w* zależno"]
         ]
       }
     },

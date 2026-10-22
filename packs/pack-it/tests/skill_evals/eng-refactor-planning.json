@@ -22,7 +22,8 @@
         "all": [
           ["Branch by Abstraction|Strangler"],
           ["Mikado|cofnij|od liści|graf\\w* (prerekwizyt|zależnoś)"],
-          ["commit|odwracaln|wydawaln"]
+          ["commit|odwracaln|wydawaln"],
+          ["Mikado", "zapisz[^.]{0,40}pękł\\w*", "na zielono", "egzekwowani\\w+ (włącz|osobn)\\w*"]
         ]
       }
     },

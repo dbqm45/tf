@@ -18,6 +18,12 @@
           ],
           [
             "debounce"
+          ],
+          [
+            "walid\\w*",
+            "niezaufan",
+            "\\b409\\b",
+            "\\b422\\b"
           ]
         ]
       }
@@ -39,6 +45,10 @@
           ],
           [
             "fokus"
+          ],
+          [
+            "nie dodaje\\w* (żadnego )?zachowa",
+            "klawiatur\\w*[^.]{0,40}(sam|samodziel)"
           ]
         ]
       }
@@ -90,6 +100,12 @@
             "noc",
             "nightly",
             "PR"
+          ],
+          [
+            "browserslist",
+            "Baseline",
+            "eslint-plugin-compat",
+            "wykrywani\\w* funkcji"
           ]
         ]
       }

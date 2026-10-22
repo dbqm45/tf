@@ -52,6 +52,11 @@
           [
             "ConfigModule",
             "ConfigService"
+          ],
+          [
+            "Standard Schema",
+            "\\bv?12(\\.\\d)?\\b.{0,30}(Nest|config|validationSchema)",
+            "validationSchema.{0,40}(Zod|ArkType|Standard)"
           ]
         ]
       }

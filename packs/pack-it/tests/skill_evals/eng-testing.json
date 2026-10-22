@@ -123,12 +123,18 @@
             "konfiguracj"
           ],
           [
+            "kod\\w* produkcyjn",
+            "poza bramk\\w*",
+            "tdd_guard",
             "mieszan",
             "nie w TDD",
-            "bez TDD",
-            "zwykł\\w* implementacj",
-            "mała wartość",
-            "słab"
+            "bez TDD"
+          ],
+          [
+            "clean-room",
+            "ktoś inny niż autor",
+            "niezależn\\w+ (autor|projektant|test)",
+            "qa-analyst"
           ]
         ]
       }

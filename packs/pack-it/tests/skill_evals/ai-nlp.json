@@ -31,6 +31,13 @@
             "zbiór (testowy|walidacyjny)",
             "niezbalansowan",
             "nierównowag"
+          ],
+          [
+            "kaskad",
+            "krzyw\\w* uczenia",
+            "po źródle",
+            "nie losowo",
+            "zamro\\w*"
           ]
         ],
         "none": [
@@ -54,7 +61,9 @@
             "token\\w* (spoza|O\\b)",
             "klas\\w* (dominując|większościow)",
             "dominuj\\w*",
-            "etykiet\\w* O"
+            "etykiet\\w* O",
+            "token\\w*[^.]{0,25}`O`",
+            "klas\\w* [„\"`]O[”\"`]"
           ],
           [
             "micro",
@@ -67,6 +76,10 @@
             "precyzj",
             "recall",
             "czułoś"
+          ],
+          [
+            "zamro\\w*",
+            "rozkład\\w* produkcyjn"
           ]
         ],
         "none": [
@@ -84,13 +97,15 @@
             "suma kontrolna",
             "sumy kontrolnej",
             "checksum",
-            "walidacj\\w* PESEL"
+            "walidacj\\w* PESEL",
+            "sum\\w* kontroln"
           ],
           [
             "Presidio",
             "regex\\w* (i|oraz|plus|\\+) NER",
             "reguł\\w* (i|oraz|plus) (model|NER)",
-            "podejście hybrydowe"
+            "podejście hybrydowe",
+            "regex\\w* z walidacj"
           ],
           [
             "lemat",
@@ -103,6 +118,12 @@
             "czułoś",
             "pominięt\\w*",
             "zbiór (testowy|złoty|ewaluacyjny)"
+          ],
+          [
+            "nie sprowadzaj",
+            "wielk\\w* liter[^.]{0,40}(nie |zostaw|zachow)",
+            "koreferencj",
+            "GPL"
           ]
         ],
         "none": [

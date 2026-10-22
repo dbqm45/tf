@@ -35,6 +35,12 @@
           [
             "80 ?%|120 ?%",
             "tag\\w* \\W*(team|owner)|tagi"
+          ],
+          [
+            "\\bexpires\\b",
+            "tward\\w* blokad\\w* tylko",
+            "tylko.{0,30}oczywist\\w* marnotraw",
+            "decyzj\\w*.{0,40}(w opisie|opis PR|do opisu)"
           ]
         ]
       }

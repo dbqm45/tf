@@ -25,7 +25,8 @@
           ["FIDO2|WebAuthn|passkey|klucz\\w* sprzętow\\w*"],
           ["odporn\\w* na phishing|phishing-resistant"],
           ["PAM|just-in-time|JIT|na żądanie|na czas"],
-          ["posture|stan urządzenia|zgodno\\w* urządzenia|device", "postaw\\w* urządze", "postur\\w*"]
+          ["posture|stan urządzenia|zgodno\\w* urządzenia|device", "postaw\\w* urządze", "postur\\w*"],
+          ["odcięci\\w*", "odejści\\w*", "800-207"]
         ],
         "none": ["SMS jest odporny na phishing"]
       }
@@ -39,7 +40,8 @@
           ["CISA"],
           ["filar\\w*|pillar\\w*"],
           ["Traditional|Initial|Advanced|Optimal|tradycyjn|początkow|zaawansowan|optymaln"],
-          ["metryk\\w*|wskaźnik\\w*|KPI"]
+          ["metryk\\w*|wskaźnik\\w*|KPI"],
+          ["odcięci\\w*", "odejści\\w*", "zero-trust\\.md", "powierzchni\\w* ochrony", "protect surface"]
         ]
       }
     },

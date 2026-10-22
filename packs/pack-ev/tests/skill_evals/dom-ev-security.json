@@ -27,7 +27,8 @@
           ["CSIRT"],
           ["miesi|raport końcow|final report"],
           ["uzyskani[ae] wiedzy|dowied|becoming aware|świadom"],
-          ["izol|odcię|zablokuj|zamroź|wstrzyma"]
+          ["izol|odcię|zablokuj|zamroź|wstrzyma"],
+          ["przywraca\\w*.{0,60}fal", "falami", "kohort\\w* pilot", "partiami.{0,40}(stacj|przywr)"]
         ],
         "none": ["NIS2 nie dotyczy operatorów punktów ładowania"]
       }

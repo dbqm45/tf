@@ -11,7 +11,9 @@
             "clickfix"
           ],
           [
-            "base64.{0,60}(rozwi|zdekod|decode|odkod)|(rozwi|zdekod|decode|odkod).{0,60}base64"
+            "base64.{0,60}(rozwi|zdekod|decode|odkod)|(rozwi|zdekod|decode|odkod).{0,60}base64",
+            "base64.{0,60}(rozkod|dekod)",
+            "(rozkod|dekod)\\w*.{0,60}base64"
           ],
           [
             "oficjaln\\w* dokumentac|dokumentacj\\w* producenta"
@@ -33,6 +35,10 @@
           ],
           [
             "zespoł\\w* bezpiecze|zespołem bezpiecze|security team|incydent"
+          ],
+          [
+            "(zgło|opis|powiedz|przekaż)\\w*.{0,40}człowiek",
+            "przerw\\w* prac"
           ]
         ]
       }
@@ -95,6 +101,11 @@
           [
             "deny",
             "ask"
+          ],
+          [
+            "próg\\w*,? nie zam(ek|kiem)",
+            "(?-i:git -C)",
+            "(?-i:-C \\.)"
           ]
         ]
       }
@@ -111,11 +122,14 @@
           ],
           [
             "test.{0,40}(czerwon|nie przechodzi|najpierw)",
-            "(czerwon|najpierw)\\w*.{0,40}test"
+            "(czerwon|najpierw)\\w*.{0,40}test",
+            "(upewnij|sprawdź)\\w*.{0,30}czerwon"
           ],
           [
             "skrypt\\w*.{0,80}(po wykonaniu|dopiero po|nie jest blokowan|nie zatrzyma|granic)",
-            "(po wykonaniu|granic)\\w*.{0,80}skrypt"
+            "(po wykonaniu|granic)\\w*.{0,80}skrypt",
+            "nie sprawdza\\w*.{0,30}przed wykonaniem",
+            "dopiero po fakcie"
           ]
         ]
       }
@@ -128,7 +142,9 @@
         "all": [
           [
             "(zatrzym|wstrzym)\\w*.{0,80}(człowiek|użytkownik)",
-            "(powiedz|zgłoś|zgłaszasz|informuj)\\w*.{0,40}(człowiek|użytkownik)"
+            "(powiedz|zgłoś|zgłaszasz|informuj)\\w*.{0,40}(człowiek|użytkownik)",
+            "(zatrzym|wstrzym)\\w*.{0,80}(\\bCi\\b|Cię|Tob)",
+            "(mówię|informuję|zgłaszam)\\w* Ci"
           ],
           [
             "nie\\b.{0,30}(czyta|otwiera|wypisuj)\\w*.{0,40}(treś|\\.env|sekret)",

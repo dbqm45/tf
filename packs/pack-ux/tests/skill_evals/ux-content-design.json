@@ -20,7 +20,8 @@
       "checks": {
         "all": [
           ["art\\.? ?50", "akt\\w* o sztucznej inteligencji", "AI Act"],
-          ["niepewn", "może się mylić", "zweryfikuj", "pewność odpowiedzi", "poziom pewności"]
+          ["niepewn", "może się mylić", "zweryfikuj", "pewność odpowiedzi", "poziom pewności"],
+          ["2 sierpnia 2026", "02\\.08\\.2026", "każd\\w+ odpowied\\w*[^.]{0,40}(etykiet|oznacz)\\w*", "(etykiet|oznacz)\\w*[^.]{0,40}każd\\w+ odpowied\\w*"]
         ],
         "none": ["gwarantuj\\w* (poprawn|dokładn)"]
       }
@@ -32,7 +33,8 @@
       "checks": {
         "all": [
           ["ICU", "MessageFormat", "liczb\\w+ mnog"],
-          ["kontekst", "opis dla tłumacz", "klucz", "glosariusz", "słownik"]
+          ["kontekst", "opis dla tłumacz", "klucz", "glosariusz", "słownik"],
+          ["limit\\w* znaków", "jed\\w+ język\\w* źródłow\\w*"]
         ],
         "none": ["konkatenacj\\w+ (jest|to) (dobr|ok|bezpiecz)"]
       }

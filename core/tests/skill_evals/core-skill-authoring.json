@@ -115,7 +115,14 @@
             "wzorc|wzorzec|prawdziw\\w* repo|niezależn"
           ],
           [
-            "agent\\w* nie (weryfikuj|sprawdz)|bez weryfikacji|ufa"
+            "agent\\w* nie (weryfikuj|sprawdz)|bez weryfikacji|ufa",
+            "agent\\w*[^.]{0,15}nie (weryfikuj|sprawdz)"
+          ],
+          [
+            "skill_gate",
+            "tdd_guard",
+            "Sieć:",
+            "scenariusz\\w* ewaluacji"
           ]
         ]
       }

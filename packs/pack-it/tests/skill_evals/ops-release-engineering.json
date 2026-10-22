@@ -29,13 +29,21 @@
       "checks": {
         "all": [
           [
-            "expand.{0,3}contract"
+            "expand.{0,15}contract"
           ],
           [
-            "dwie wersje|dwiema wersjami|dwóch wersji|stara i nowa"
+            "dwie wersje|dwiema wersjami|dwóch wersji|stara i nowa",
+            "obiema wersjami|obie wersje|obu wersj",
+            "stare pody"
           ],
           [
             "concurrently|osobn\\w+ wydani"
+          ],
+          [
+            "nieodwracal",
+            "nie w migracji",
+            "migracj\\w* wdrożeniow",
+            "linter DDL"
           ]
         ],
         "none": [

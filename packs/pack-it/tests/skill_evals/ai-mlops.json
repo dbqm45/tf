@@ -7,7 +7,7 @@
       "prompt": "Mamy model scoringowy trenowany w notebooku, a data scientist ręcznie wrzuca plik na serwer raz na kwartał. Chcę to uporządkować i dojść do automatycznego dotrenowywania, ale nie przesadzić z narzędziami. Od czego zacząć i co jest co? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["poziom\\w* (0|zero|dojrzałości)", "level 0", "MLOps 0", "dojrzałości"],
+          ["poziom\\w* (0|1|2|zero|dojrzałości)", "level [0-2]", "MLOps [0-2]", "dojrzałości"],
           ["continuous training", "ciągł\\w+ trenowani", "automatyczn\\w+ (dotrenowani|trenowani|retrening)", "potok\\w* trenowania"],
           ["walidacj\\w+ danych", "data validation", "kontrakt\\w* danych", "schemat\\w* danych"],
           ["rejestr\\w* modeli", "model registry", "alias\\w*"]
@@ -52,7 +52,8 @@
           ["training[- ]serving skew", "skew", "rozjazd\\w* (cech|trening)"],
           ["feature store", "magazyn\\w* cech", "Feast", "wspóln\\w+ (kod|definicj\\w+) cech"],
           ["shadow", "cień", "canary", "A/B"],
-          ["point-in-time", "wyciek\\w* (danych|przyszłości)", "znacznik\\w* czasu"]
+          ["point-in-time", "wyciek\\w* (danych|przyszłości)", "znacznik\\w* czasu"],
+          ["champion", "challenger", "alias\\w*", "stare cechy[^.]{0,30}dostępn"]
         ],
         "none": ["wynik offline wystarcza do pełnego wdrożenia"]
       }

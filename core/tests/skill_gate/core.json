@@ -1,14 +1,14 @@
 {
  "core-agent-instructions": {
-  "fingerprint": "0a7b325fafeb5c76",
-  "offline": "2026-10-20"
+  "fingerprint": "0b9df94a46d50794",
+  "offline": "2026-10-22"
  },
  "core-agent-retro": {
-  "fingerprint": "5de0d15c40de32d3",
-  "offline": "2026-10-20"
+  "fingerprint": "ec88dda3e151ad6e",
+  "offline": "2026-10-22"
  },
  "core-agent-security": {
-  "fingerprint": "3256db31d1e85551",
+  "fingerprint": "23bac4c94c43f719",
   "offline": "2026-10-22"
  },
  "core-async-delegation": {
@@ -20,20 +20,20 @@
   "offline": "2026-10-22"
  },
  "core-cost-control": {
-  "fingerprint": "9580d75baef6cfc1",
+  "fingerprint": "c040f411c71e17a7",
   "offline": "2026-10-22"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "364add29f251c74e",
-  "offline": "2026-10-20"
+  "fingerprint": "473458d5df5293a9",
+  "offline": "2026-10-22"
  },
  "core-factory-update": {
   "fingerprint": "7b23d1f504b15374",
   "offline": "2026-10-20"
  },
  "core-git-workflow": {
-  "fingerprint": "e9c8a98b2f46ba47",
-  "offline": "2026-10-21"
+  "fingerprint": "5c9c922473dde591",
+  "offline": "2026-10-22"
  },
  "core-grounding": {
   "fingerprint": "9117b6fc125bfa74",
@@ -44,24 +44,24 @@
   "offline": "2026-10-22"
  },
  "core-plan-interview": {
-  "fingerprint": "10003ae694fad3f5",
-  "offline": "2026-10-20"
+  "fingerprint": "14c6b6fccd624749",
+  "offline": "2026-10-22"
  },
  "core-problem-routing": {
-  "fingerprint": "298f96188dfc4dac",
-  "offline": "2026-10-20"
+  "fingerprint": "0ec7e569a9035139",
+  "offline": "2026-10-22"
  },
  "core-project-record": {
-  "fingerprint": "bf5f16b1543a8d64",
-  "offline": "2026-10-20"
+  "fingerprint": "7a1135a857715227",
+  "offline": "2026-10-22"
  },
  "core-semver": {
   "fingerprint": "a027aa2c6bc263cd",
   "offline": "2026-10-22"
  },
  "core-skill-authoring": {
-  "fingerprint": "6c74224a8e688c14",
-  "offline": "2026-10-20"
+  "fingerprint": "0304ae714001ea2d",
+  "offline": "2026-10-22"
  },
  "core-skill-composition": {
   "fingerprint": "6a97525970e9255d",
@@ -72,8 +72,8 @@
   "offline": "2026-10-22"
  },
  "core-stack-sync": {
-  "fingerprint": "8c33fe1bb1eed2d7",
-  "offline": "2026-10-20"
+  "fingerprint": "fccb14f5025e997c",
+  "offline": "2026-10-22"
  },
  "core-teaching-workspace": {
   "fingerprint": "1821daf347233c4e",

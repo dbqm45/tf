@@ -9,7 +9,8 @@
         "all": [
           ["PostToolUse"],
           ["vitest related", "findRelatedTests"],
-          ["exit\\s*2", "kod\\w* (wyjścia )?2", "decision.{0,20}block"]
+          ["exit\\s*2", "kod\\w* (wyjścia )?2", "decision.{0,20}block"],
+          ["post_edit_checks", "quality-gates\\.example", "dry-run", "nieużywan\\w* import"]
         ],
         "none": ["--no-verify"]
       }
@@ -20,10 +21,11 @@
       "prompt": "Lint, sprawdzanie typów i testy uruchamiamy dziś tylko w CI i czekamy 20 minut na informację. Co przenieść na maszynę programisty — po edycji, przed commitem, przed pushem — żeby commit nie trwał minut? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["pre-push"],
+          ["pre-push", "przed push\\w*"],
           ["staged", "w stage", "w indeksie", "lint-staged", "\\{staged_files\\}"],
           ["sekund", "kilka s", "kilkanaście s"],
-          ["nie zastęp", "CI (nadal|dalej|zostaje)", "pełny zestaw"]
+          ["nie zastęp", "CI (nadal|dalej|zostaje)", "pełny zestaw"],
+          ["findRelatedTests", "\\brelated\\b", "lefthook", "obszar\\w* ryzyk", "glob\\w* ryzyk"]
         ]
       }
     },
@@ -35,7 +37,7 @@
         "all": [
           ["pre-commit-config", "pre-commit install"],
           ["pre-push"],
-          ["zepsut\\w* plik", "celowo", "commit (zostanie |zostaje )?odrzucon", "błędn\\w* plik"]
+          ["zepsut\\w* plik", "celowo", "commit (zostanie |zostaje )?odrzucon", "błędn\\w* plik", "odrzucon\\w*", "commit\\w* z błędem", "commit\\w*[^.]{0,40}(przerw|zablok)"]
         ]
       }
     },

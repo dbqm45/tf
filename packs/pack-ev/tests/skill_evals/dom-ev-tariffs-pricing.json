@@ -79,6 +79,12 @@
           ],
           [
             "oba|both|jednocześnie|każd"
+          ],
+          [
+            "680\\.116",
+            "NEVI",
+            "nie (jest )?opłat\\w* startow",
+            "dopłat\\w*"
           ]
         ],
         "none": [
@@ -99,7 +105,8 @@
             "start_date_time"
           ],
           [
-            "przed startem|at the start|z chwili startu|nie zmienia się w trakcie|nie może się zmienić|zamroź"
+            "przed startem|at the start|z chwili startu|nie zmienia się w trakcie|nie może się zmienić|zamroź",
+            "w chwili startu"
           ],
           [
             "680\\.116|AFIR"
@@ -108,7 +115,8 @@
             "dyskrymin|discriminat|art\\.? ?5\\(3\\)|ust\\. ?3"
           ],
           [
-            "audyt|kto zmienił|historia zmian|dziennik zmian"
+            "audyt|kto zmienił|historia zmian|dziennik zmian",
+            "audy\\w+"
           ]
         ],
         "none": [

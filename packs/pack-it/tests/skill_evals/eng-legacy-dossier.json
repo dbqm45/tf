@@ -58,6 +58,11 @@
             "dossier_check",
             "skrypt\\w* sprawdz",
             "sprawdz\\w* kompletnoś"
+          ],
+          [
+            "plik:linia",
+            "commit\\w* HEAD",
+            "pewnoś\\w*.{0,40}(test|kod).{0,20}do weryfikacji"
           ]
         ]
       }
@@ -90,6 +95,11 @@
             "preferencj",
             "potwierdzon\\w* problem",
             "dow[oó]d"
+          ],
+          [
+            "plik:linia",
+            "commit\\w* HEAD",
+            "eng-codebase-mapping"
           ]
         ],
         "none": [
