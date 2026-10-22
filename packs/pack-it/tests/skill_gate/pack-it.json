@@ -20,48 +20,48 @@
   "offline": "2026-10-17"
  },
  "ai-mlops": {
-  "fingerprint": "07928bce332ce163",
-  "offline": "2026-10-17"
+  "fingerprint": "fa28581e78916de8",
+  "offline": "2026-10-22"
  },
  "ai-model-optimization": {
-  "fingerprint": "13d25d0d28719a87",
-  "offline": "2026-10-17"
+  "fingerprint": "d32a6819c680dd17",
+  "offline": "2026-10-22"
  },
  "ai-nlp": {
   "fingerprint": "76b272541917cfbb",
   "offline": "2026-10-17"
  },
  "ai-product-management": {
-  "fingerprint": "7032143cc92c8ab2",
-  "offline": "2026-10-20"
+  "fingerprint": "6c34223bdc1806e3",
+  "offline": "2026-10-22"
  },
  "ai-prompt-engineering": {
-  "fingerprint": "6ffd259cd5f2978f",
-  "offline": "2026-10-20"
+  "fingerprint": "931a34cbf40d2aad",
+  "offline": "2026-10-22"
  },
  "ai-rag": {
-  "fingerprint": "d62faf1092181190",
-  "offline": "2026-10-17"
+  "fingerprint": "5c627a1b89156616",
+  "offline": "2026-10-22"
  },
  "ai-research-methods": {
-  "fingerprint": "cad011877613890d",
-  "offline": "2026-10-17"
+  "fingerprint": "8c179c08301a7b6a",
+  "offline": "2026-10-22"
  },
  "arch-ai-solutions": {
-  "fingerprint": "5293b8be28358986",
-  "offline": "2026-10-20"
+  "fingerprint": "f01e0b1e2a93d8e7",
+  "offline": "2026-10-22"
  },
  "arch-architect-practice": {
-  "fingerprint": "a0bf30f30eb0f023",
-  "offline": "2026-10-20"
+  "fingerprint": "690098ed879ff83d",
+  "offline": "2026-10-22"
  },
  "arch-eu-product-law": {
-  "fingerprint": "099c677aa857a7cc",
-  "offline": "2026-10-20"
+  "fingerprint": "37c91455efe899a1",
+  "offline": "2026-10-22"
  },
  "arch-multi-tenancy": {
-  "fingerprint": "b302524eb8b11b1f",
-  "offline": "2026-10-21"
+  "fingerprint": "4e375830be645ad9",
+  "offline": "2026-10-22"
  },
  "arch-privacy-compliance": {
   "fingerprint": "9ca222ff5408abbb",
@@ -72,44 +72,44 @@
   "offline": "2026-10-20"
  },
  "arch-system-design": {
-  "fingerprint": "65731e51640d4487",
-  "offline": "2026-10-10"
+  "fingerprint": "2aafc3b8b9666af4",
+  "offline": "2026-10-22"
  },
  "arch-tech-selection": {
   "fingerprint": "9eea4fdb95410984",
   "offline": "2026-10-10"
  },
  "arch-threat-modeling": {
-  "fingerprint": "175c1cabb62cd952",
-  "offline": "2026-10-17"
+  "fingerprint": "7193935a4a6155c6",
+  "offline": "2026-10-22"
  },
  "be-api-design": {
-  "fingerprint": "6c1b5dc1ce64b0ca",
-  "offline": "2026-10-21"
+  "fingerprint": "6915259ac94fa63d",
+  "offline": "2026-10-22"
  },
  "be-auth-security": {
-  "fingerprint": "60c85f1552f6d8bc",
-  "offline": "2026-10-10"
+  "fingerprint": "5944c96aa4b80cee",
+  "offline": "2026-10-22"
  },
  "be-billing-subscriptions": {
-  "fingerprint": "04705037fdc9bd3c",
-  "offline": "2026-10-21"
+  "fingerprint": "086ddfca17de9dd3",
+  "offline": "2026-10-22"
  },
  "be-database": {
-  "fingerprint": "bc17e2af1902fdf3",
-  "offline": "2026-10-04"
+  "fingerprint": "49e63adc640dcaca",
+  "offline": "2026-10-22"
  },
  "be-messaging-outbox": {
   "fingerprint": "9411e8e3c5c11752",
   "offline": "2026-10-10"
  },
  "data-analysis": {
-  "fingerprint": "90c6a7fae6cc0d9d",
-  "offline": "2026-10-20"
+  "fingerprint": "e6d5e98497facfda",
+  "offline": "2026-10-22"
  },
  "data-engineering": {
-  "fingerprint": "6118db0bb1d5e9c3",
-  "offline": "2026-10-10"
+  "fingerprint": "4254280c564d76ff",
+  "offline": "2026-10-22"
  },
  "ddd-algorithm-recognition": {
   "fingerprint": "f7dc0f3e32562728",
