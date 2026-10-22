@@ -33,22 +33,16 @@ Dla każdego kroku zapisz decyzję jako ADR (kontekst, opcje, wybór, konsekwenc
    offline, RTO/RPO. Liczb wydajnościowych (ile połączeń na węzeł, ile komunikatów na sekundę) **nie przyjmuj
    z głowy** — ustal je pomiarem własnym (test obciążeniowy z symulatorem stacji) albo ze źródła z datą; w tym skillu: **[do weryfikacji]**.
    Źródło ogólne mówi tylko o „horizontal scalability” i skali tysięcy–milionów sesji, bez wzorców.
-2. **Wydziel bramę.** ADR: brama jako osobny deployment od logiki domeny. Powód: obciążenie bramy to liczba
-   utrzymywanych połączeń, domeny — przepustowość logiki; skalują się i wdrażają inaczej. Wdrożenie logiki nie
-   powinno rozłączać stacji.
-3. **Afinicja połączenia.** Połączenie stacji żyje na **jednym węźle** bramy. Wniosek: zwykły load balancer
-   rozrzuca *nowe* połączenia, ale nie dostarczy komendy do właściwego węzła. Potrzebny jest **rejestr połączeń**
-   `stationId → (węzeł, wersja, czas połączenia)`, ustawiany przy handshake, czyszczony przy zamknięciu i wygasający
-   (TTL odnawiany heartbeatem).
+2. **Wydziel bramę.** ADR: brama jako osobny deployment od logiki domeny; wdrożenie logiki nie rozłącza stacji.
+3. **Afinicja połączenia.** Połączenie stacji żyje na jednym węźle bramy, więc potrzebny jest **rejestr połączeń**
+   `stationId → (węzeł, wersja, czas połączenia)` z TTL odnawianym heartbeatem.
 4. **Routing komend CSMS→stacja.** Domena nie woła bramy „na ślepo”: publikuje **komendę** na szynę z kluczem
    `stationId`; brama węzła-właściciela konsumuje i wysyła CALL. Stacja nie połączona → jawny wynik
    „offline” (nie cichy zanik). Komenda ma `commandId`, termin ważności i **korelację**: CALLRESULT/CALLERROR wraca
    jako zdarzenie z tym `commandId`. Komenda (CSMS → stacja) i zdarzenie (stacja → CSMS) trzymaj osobno; publikacja przez outbox, odbiór idempotentny (inbox).
-5. **Heartbeat i martwe połączenia.** Połowicznie otwarte gniazda (stacja zniknęła bez FIN) wykrywaj **dwoma**
-   mechanizmami: interwał Heartbeat zwracany w odpowiedzi BootNotification oraz ping/pong WebSocket; brak ruchu
-   przez ustaloną wielokrotność interwału → zamknij połączenie, wyczyść rejestr, wyemituj zdarzenie
-   „stacja offline”. Krotność i timeouty: **[do weryfikacji]** — dobierz pomiarem. Nowe połączenie tej samej stacji
-   **wypiera** stare (stare zamknij), inaczej dostaniesz dwa „właściwe” węzły.
+5. **Heartbeat i martwe połączenia.** Heartbeat z BootNotification i ping/pong WebSocket; brak ruchu → zamknij,
+   wyczyść rejestr, zdarzenie „stacja offline” (krotność dobierz pomiarem). Nowe połączenie tej samej stacji
+   **wypiera** stare, inaczej dostaniesz dwa „właściwe” węzły.
 6. **Reconnect storm.** Po awarii węzła lub wdrożeniu wszystkie stacje wracają jednocześnie (nowe TLS + BootNotification
    + zaległe kolejki offline). Projektuj obronę warstwowo — tabela niżej. Szczegóły: `references/brama-i-routing.md`.
 7. **Walidacja i warstwa anty-korupcyjna.** Brama waliduje ramkę względem schematu wersji i odpowiada CALLERROR;

@@ -112,7 +112,6 @@ zablokuje kolejkę. Zapisz ramkę w kwarantannie „nieznana transakcja” do r�
 `StartTransaction`; liczniki `meterStop` mogą być jedynym dowodem energii), zgłoś alert.
 
 ## Pułapki
-- **Zły status zamiast Preparing:** kabel wpięty bez autoryzacji to `Preparing`, nie `Charging` ani `Occupied`.
 - **Odrzucanie w pętli:** CALLERROR/Rejected na zbuforowane `StopTransaction` → ładowarka ponawia w nieskończoność.
 - **`transactionId` po stronie ładowarki:** nadaje go CSMS; ładowarka offline używa własnego tymczasowego identyfikatora
   tylko lokalnie **[do weryfikacji]** — nie zakładaj, że jest unikalny globalnie.

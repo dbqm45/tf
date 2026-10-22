@@ -17,11 +17,10 @@ Ochrona agenta Claude Code, który pracuje na Twoim repo: `core-agent-security`.
 ## Procedura
 1. **Inwentarz.** Co model widzi (instrukcje, dane użytkownika, dokumenty, wyniki narzędzi), co potrafi (narzędzia,
    zapisy, wysyłka), dokąd może wysłać dane (HTTP, mail, linki, obrazy), czyje uprawnienia dziedziczy.
-2. **Test „potrójnej kombinacji”.** Zagrożenie eksfiltracji powstaje, gdy w jednym przebiegu współistnieją:
-   (a) dostęp do danych prywatnych, (b) treść od niezaufanego autora, (c) kanał wyjścia na zewnątrz. Usuń co najmniej
-   jeden element albo rozdziel przebiegi i uprawnienia. To najtańsza i najskuteczniejsza decyzja projektowa.
+2. **Test „potrójnej kombinacji”** (dane prywatne + niezaufana treść + kanał wyjścia w jednym przebiegu): usuń jeden
+   element albo rozdziel przebiegi — to najtańsza decyzja projektowa.
 3. **Model zagrożeń** (`arch-threat-modeling`: DFD z granicami zaufania; model, wyniki narzędzi i RAG to osobne byty
-   po stronie niezaufanej) i mapowanie na listę OWASP (tabela niżej, rozszerzenia: `references/zagrozenia-i-kontrole.md`).
+   po stronie niezaufanej) i mapowanie na OWASP Top 10 for LLM 2025 (`references/zagrozenia-i-kontrole.md`).
 4. **Kontrole** w kolejności skuteczności:
    - **najmniejsze uprawnienia narzędzi**: tylko odczyt domyślnie, zakres zasobu zawężony do użytkownika, w imieniu
      którego działa agent (poświadczenia użytkownika, nie konta serwisowego z szerokim dostępem);
@@ -46,11 +45,9 @@ Ochrona agenta Claude Code, który pracuje na Twoim repo: `core-agent-security`.
    osobowe (`ops-observability`). Sygnały: nietypowe wywołania narzędzi po przeczytaniu obcej treści, próby odczytu
    system promptu, prośby o URL do nowych domen, skok zużycia tokenów. Reakcja: `ops-security-operations`.
 
-## OWASP Top 10 for LLM Applications 2025 (numeracja)
-LLM01 Prompt Injection · LLM02 Sensitive Information Disclosure · LLM03 Supply Chain · LLM04 Data and Model Poisoning ·
-LLM05 Improper Output Handling · LLM06 Excessive Agency · LLM07 System Prompt Leakage · LLM08 Vector and Embedding
-Weaknesses · LLM09 Misinformation · LLM10 Unbounded Consumption. Nowe względem 2023: LLM07 i LLM08; LLM10 rozszerza
-dawne „odmowę usługi” o koszty. Łańcuch dostaw modeli (LLM03): pobieraj modele i adaptery tylko z zaufanych źródeł,
+## OWASP Top 10 for LLM Applications 2025
+Nowe względem 2023: LLM07 (wyciek system promptu) i LLM08 (słabości wektorów i embeddingów); LLM10 rozszerza dawną
+„odmowę usługi” o koszty. Łańcuch dostaw modeli (LLM03): pobieraj modele i adaptery tylko z zaufanych źródeł,
 weryfikuj skrót, unikaj formatów z wykonywalną deserializacją (pickle), SBOM/AIBOM (`ops-supply-chain-security`).
 
 ## Przykład

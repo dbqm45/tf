@@ -83,8 +83,7 @@ class OrderRepositoryTest {
     }
 }
 ```
-Dlaczego: H2 nie wyłapie różnic dialektu (typy, `ON CONFLICT`, sekwencje); slice ładuje tylko warstwę JPA;
-`@ServiceConnection` sam ustawia URL i dane logowania kontenera. Więcej: `references/testy.md`.
+Więcej: `references/testy.md`.
 
 ## Zależne od wersji
 | Wersja | Zmiany istotne dla tego skilla |

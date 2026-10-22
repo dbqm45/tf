@@ -31,8 +31,7 @@ zrównoważone tempo, prostota — sztuka maksymalizacji pracy **niewykonanej**,
 
 ## Historyjki i backlog
 - Historyjka = potrzeba użytkownika i wartość, nie zadanie techniczne: „Jako … chcę … aby …” + **kryteria akceptacji** (Given/When/Then — eng-testing).
-- **INVEST**: niezależna, negocjowalna, wartościowa, szacowalna, mała, testowalna.
-- **Cięcie pionowe** (przez UI → logikę → dane), nie warstwami. Techniki: po ścieżkach procesu, regułach biznesowych, wariantach danych, interfejsach; z wyników Event Stormingu — po zdarzeniach (ddd-event-storming).
+- Historyjki według INVEST, cięte pionowo; z wyników Event Stormingu tniesz po zdarzeniach (ddd-event-storming); przykład: `references/przyklady.md` §2.
 - **Definition of Done** wspólna i sprawdzalna (testy, review, dokumentacja, wdrożone na środowisko…).
 
 ## Prognozowanie

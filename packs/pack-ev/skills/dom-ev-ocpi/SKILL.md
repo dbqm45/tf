@@ -119,10 +119,8 @@ Odpowiedź real-time niesie `AuthorizationInfo` (`allowed`: `ALLOWED`, `BLOCKED`
 służy do synchronizacji, nie do autoryzacji.
 
 ## Commands (asynchronicznie)
-eMSP wysyła `POST {commands}/{START_SESSION|STOP_SESSION|RESERVE_NOW|CANCEL_RESERVATION|UNLOCK_CONNECTOR}` z
-`response_url`. Odpowiedź HTTP/OCPI (`ACCEPTED`, `REJECTED`, `NOT_SUPPORTED`, `UNKNOWN_SESSION`) mówi tylko, że **CPO**
-przyjął polecenie do przekazania. Wynik ze stacji CPO wysyła później `POST` na `response_url` (`CommandResult`:
-`ACCEPTED`, `FAILED`, `REJECTED`, `TIMEOUT`, `EVSE_OCCUPIED`, `EVSE_INOPERATIVE`, `NOT_SUPPORTED`, ...).
+Odpowiedź na `POST {commands}/…` mówi tylko, że **CPO** przyjął polecenie; wynik ze stacji przychodzi później
+na `response_url` (`CommandResult`).
 - `ACCEPTED` na komendę ≠ sesja wystartowała (sesja istnieje dopiero jako Session). Brak wyniku w `timeout`
   (sekundy, pole komendy) → komenda nieudana.
 - Unikalny identyfikator wstaw do `response_url`, by dopasować wynik do żądania.

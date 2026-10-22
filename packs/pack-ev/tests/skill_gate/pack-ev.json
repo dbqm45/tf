@@ -4,7 +4,7 @@
   "offline": "2026-10-22"
  },
  "dom-ev-business-economics": {
-  "fingerprint": "d001a62b34ab3aa5",
+  "fingerprint": "3077b88e24f082d5",
   "offline": "2026-10-22"
  },
  "dom-ev-cdr-settlement": {
@@ -28,7 +28,7 @@
   "offline": "2026-10-22"
  },
  "dom-ev-cpms-architecture": {
-  "fingerprint": "76900307c4c4df50",
+  "fingerprint": "61bc74fba17f865e",
   "offline": "2026-10-22"
  },
  "dom-ev-csms-migration": {
@@ -40,7 +40,7 @@
   "offline": "2026-10-22"
  },
  "dom-ev-emsp-platform": {
-  "fingerprint": "8a99dfd4e1be8284",
+  "fingerprint": "95d4ada740b45233",
   "offline": "2026-10-22"
  },
  "dom-ev-energy-management": {
@@ -80,11 +80,11 @@
   "offline": "2026-10-22"
  },
  "dom-ev-ocpi": {
-  "fingerprint": "294e9c6418217aa5",
+  "fingerprint": "c0787e72f8dc1664",
   "offline": "2026-10-22"
  },
  "dom-ev-ocpp-16": {
-  "fingerprint": "c790473ba635e728",
+  "fingerprint": "990b6910b11f043f",
   "offline": "2026-10-22"
  },
  "dom-ev-ocpp-2x": {

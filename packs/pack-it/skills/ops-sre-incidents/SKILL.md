@@ -35,9 +35,8 @@ Trzy poziomy, każdy odpowiada na inne pytanie:
 ## 3. Budżet błędów i alerty
 - Budżet = 100% − SLO (dla 99,9% w 30 dniach to ok. 43 minuty). **Polityka budżetu** spisana z góry: co robimy, gdy
   budżet się kończy (np. wstrzymanie wydań funkcji na rzecz prac nad niezawodnością, obowiązkowy przegląd zmian).
-- Alerty z tempa spalania budżetu (burn rate) w dwóch oknach naraz, np. według Google SRE Workbook: strona do
-  dyżurnego przy tempie 14,4 w oknie 1 h i 5 min (2% budżetu w godzinę) oraz 6 w oknie 6 h i 30 min; zgłoszenie bez
-  budzenia przy tempie 1 w oknie 3 dni i 6 h.
+- Alerty z tempa spalania budżetu (burn rate) w dwóch oknach naraz, progi według Google SRE Workbook; szybkie spalanie
+  budzi dyżurnego, wolne tworzy zgłoszenie bez budzenia.
 - Alert, który przez 90 dni nie wymagał żadnego działania, usuwasz lub przenosisz na kanał bez powiadomień.
 
 ## 4. Dyżury

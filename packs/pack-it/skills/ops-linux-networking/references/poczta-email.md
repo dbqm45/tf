@@ -4,14 +4,9 @@ Aplikacja wysyła e-maile (rejestracja, reset hasła, faktury, powiadomienia) pr
 Mailgun lub firmowy serwer SMTP). Bez poprawnej konfiguracji domeny wiadomości trafiają do spamu albo są odrzucane.
 
 ## Trzy rekordy DNS
-- **SPF** (rekord TXT): lista serwerów uprawnionych do wysyłania z domeny, np. `v=spf1 include:_spf.dostawca.com -all`.
-  Jeden rekord SPF na domenę; najwyżej 10 zapytań DNS podczas sprawdzania (każde `include` się liczy).
-- **DKIM**: podpis kryptograficzny nagłówków i treści; klucz publiczny w DNS pod selektorem
-  (`selektor._domainkey.domena`). Klucze co najmniej 2048-bitowe, rotacja przez nowy selektor.
-- **DMARC** (TXT `_dmarc.domena`): co zrobić z wiadomościami, które nie przeszły SPF ani DKIM z **wyrównaniem**
-  (domena w nagłówku `From` zgodna z domeną SPF lub DKIM) i dokąd wysyłać raporty: zacznij od `p=none` z `rua=` (raporty),
-  przeanalizuj, kto wysyła w Twoim imieniu, potem `p=quarantine` i `p=reject`. To też ochrona przed podszywaniem się
-  pod Twoją domenę w phishingu.
+- **SPF**: jeden rekord na domenę, najwyżej 10 zapytań DNS (każde `include` się liczy).
+- **DKIM**: klucze co najmniej 2048-bitowe, rotacja przez nowy selektor.
+- **DMARC**: z wyrównaniem do domeny `From`; zacznij od `p=none` z raportami `rua=`, potem `p=quarantine` i `p=reject`.
 - Poczta systemowa z osobnej subdomeny (`mail.firma.pl`, `powiadomienia.firma.pl`) — reputacja marketingu nie psuje
   dostarczania resetów hasła.
 

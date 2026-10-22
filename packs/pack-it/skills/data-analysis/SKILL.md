@@ -12,14 +12,8 @@ metadata:
 Analiza kończy się **decyzją albo jej brakiem z uzasadnieniem**, nie wykresem. Każda liczba w raporcie ma źródło
 i sposób policzenia, który ktoś inny może powtórzyć.
 
-## Rodzaje analizy
-| Rodzaj | Pytanie | Przykład |
-|---|---|---|
-| opisowa | co się stało? | sprzedaż per region w kwartale |
-| diagnostyczna | dlaczego? | spadek konwersji po zmianie cennika — w których segmentach |
-| predykcyjna | co się stanie? | prognoza popytu, ryzyko rezygnacji klienta |
-| preskryptywna | co zrobić? | optymalny poziom zapasów, przydział zasobów (ddd-algorithm-recognition) |
-Każdy kolejny rodzaj wymaga poprzednich i jest droższy. Zaczynaj od najprostszego, który odpowiada na pytanie.
+Zaczynaj od najprostszego rodzaju analizy (opisowa → diagnostyczna → predykcyjna → preskryptywna), który odpowiada
+na pytanie; każdy kolejny jest droższy.
 
 ## Procedura
 1. **Pytanie i decyzja**: kto i co zdecyduje na podstawie wyniku, jaki wynik zmieniłby decyzję, termin.

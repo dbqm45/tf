@@ -13,17 +13,9 @@
   (tabela „Pojęcia domenowe” w SKILL.md).
 
 ## 2. Błędy hydratacji
-Objaw: komunikat, że HTML z serwera nie pasuje do pierwszego renderu w przeglądarce. W trybie deweloperskim nakładka
-błędu pokazuje różnicę. Przyczyny i poprawki:
-- **API przeglądarki w renderze** (`window`, `localStorage`): odczyt w `useEffect` albo komponent ładowany tylko
-  w kliencie (`dynamic(..., { ssr: false })` w komponencie klienckim).
-- **Data i czas:** serwer i przeglądarka mają inną strefę czasową i inną chwilę. Formatuj w kliencie po
-  zamontowaniu albo przekaż z serwera gotowy tekst dla jednej, jawnej strefy.
-- **Losowe wartości i identyfikatory:** `useId()` zamiast `Math.random()`.
-- **Niepoprawne zagnieżdżenie HTML** (np. `<div>` w `<p>`, `<a>` w `<a>`): przeglądarka naprawia drzewo inaczej niż
-  serwer; popraw znaczniki.
-- **Skrypty i rozszerzenia zmieniające DOM:** skrypty zewnętrzne przez `next/script` z odpowiednią strategią.
-  `suppressHydrationWarning` tylko dla pojedynczego elementu z celowo różną treścią, nie jako ogólne wyciszenie.
+Typowe przyczyny: API przeglądarki w renderze, data i czas (inna strefa i chwila), losowe identyfikatory (`useId()`),
+niepoprawne zagnieżdżenie HTML. Datę formatuj w kliencie po zamontowaniu albo przekaż z serwera tekst dla jednej, jawnej
+strefy. `suppressHydrationWarning` tylko dla pojedynczego elementu z celowo różną treścią, nie jako ogólne wyciszenie.
 
 ## 3. Utrata renderowania na serwerze bez `<Suspense>`
 `useSearchParams()` w trasie statycznej bez `<Suspense>` nad komponentem przenosi renderowanie całej trasy do

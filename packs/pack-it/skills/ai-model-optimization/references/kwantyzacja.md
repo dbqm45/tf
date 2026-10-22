@@ -9,7 +9,7 @@ llm-compressor i llama.cpp w tej sesji nie otwarto. Liczby z blogów traktuj ori
 | INT8 | szeroko, także starsze GPU i CPU | zwykle niewielka strata; wymaga kalibracji przy kwantyzacji aktywacji |
 | AWQ (INT4, tylko wagi) | serwowanie na GPU | wg wtórnych źródeł zwykle nie gorszy od GPTQ; wsparcie zależy od GPU i silnika (np. brak na AMD w vLLM wg jednego źródła). Tworzenie nowych punktów kontrolnych: llm-compressor (AutoAWQ wg jednego źródła zarchiwizowany) [niezweryfikowane] |
 | GPTQ (INT3–4, tylko wagi) | gdy brak AWQ, szerokie wsparcie CUDA | metoda drugiego rzędu, kwantyzacja jednorazowa; autorzy: model 175 mld w ok. 4 godziny GPU |
-| GGUF (llama.cpp) | laptop, CPU, mieszane CPU/GPU, Ollama, LM Studio | plik z wagami i metadanymi; to nie jest format dla vLLM. Presety: `Q8_0` (blisko bez straty), `Q5_K_M`, `Q4_K_M` (częsty kompromis); `_S/_M/_L` to mniejszy/średni/większy wariant. Niższe poziomy (Q3 i niżej) wymagają macierzy ważności (`imatrix`) |
+| GGUF (llama.cpp) | laptop, CPU, mieszane CPU/GPU, Ollama, LM Studio | plik z wagami i metadanymi; to nie jest format dla vLLM. Presety: `Q8_0` (blisko bez straty), `Q5_K_M`, `Q4_K_M` (częsty kompromis). Niższe poziomy (Q3 i niżej) wymagają macierzy ważności (`imatrix`) |
 | NVFP4 / MXFP4 | najnowsze GPU (Blackwell) | ok. 4,5 / 4,25 bita na wartość; NVIDIA deklaruje spadek ≤ 1% względem FP8 na jednym modelu (źródło wtórne, wymaga własnej weryfikacji) |
 | bitsandbytes NF4 | dostrajanie (QLoRA), szybkie próby | wolniejszy w serwowaniu; wyniki wrażliwe na model (Mekala i in.) |
 

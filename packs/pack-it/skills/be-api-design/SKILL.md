@@ -37,9 +37,8 @@ metadata:
 Nigdy nie zwracaj stack trace ani komunikatów bazy danych.
 
 ## Kolekcje
-- Paginacja kursorowa dla dużych/zmiennych zbiorów (`?cursor=…&limit=50`), offset tylko dla małych.
-- Twardy limit `limit` po stronie serwera.
-- Filtrowanie i sortowanie przez whitelistę pól.
+Kursor dla dużych zbiorów, twardy `limit` po stronie serwera, filtry i sortowanie z białej listy pól
+(`references/http-w-praktyce.md` §4).
 
 ## Idempotencja i spójność
 - `POST` z efektem finansowym lub zewnętrznym przyjmuje nagłówek `Idempotency-Key`.
