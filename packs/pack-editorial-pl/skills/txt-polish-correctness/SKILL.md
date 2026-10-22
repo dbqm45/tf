@@ -40,6 +40,9 @@ nie każdy*) oraz przy przeciwstawieniu („nie zapisany, lecz odrzucony”).
 
 **Wielka i mała litera** — nazwy własne wielką; przymiotniki od nazw małą (*angularowy komponent*); stanowiska małą w zwykłym
 tekście; nazwy dni, miesięcy małą. Tytuły dokumentów: wielka tylko pierwsza litera i nazwy własne (nie „Title Case”).
+**Zmiany od 2026** (pamięć modelu podpowiada stare zasady): nazwy mieszkańców miast i wsi wielką (*Warszawianin,
+Krakowianie*); wyraz rodzajowy obiektu przestrzeni publicznej wielką jako część nazwy (*Plac Zbawiciela, Aleja Róż*),
+ale *ulica* zawsze małą (`references/pisownia.md`, sekcja 8.1.2).
 
 **Typografia** — cudzysłów `„…”` (zagnieżdżony `»…«`); łącznik `-` w wyrazach złożonych; półpauza `–` w zakresach bez spacji
 (2020–2026); myślnik ` – ` lub ` — ` ze spacjami, jedna forma w dokumencie; wielokropek `…`; brak spacji przed `, . : ; ! ?`;

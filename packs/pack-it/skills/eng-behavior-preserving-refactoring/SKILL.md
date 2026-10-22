@@ -1,6 +1,6 @@
 ---
 name: eng-behavior-preserving-refactoring
-description: Użyj, gdy kod zmienia kształt bez zmiany zachowania (legacy, zmiana paradygmatu) — zamrożony kontrakt, dowód.
+description: Użyj przy refaktoryzacji bez zmiany zachowania (legacy, zmiana paradygmatu) — zamrożony kontrakt, czy test wykryje zmianę, dowód równoważności.
 metadata:
   przeglad: 2027-10-09
   katalog: "Użyj przy refaktoryzacji zmieniającej kształt lub idiom kodu bez zmiany zachowania (legacy, wydzielenie rdzenia domeny, zmiana paradygmatu, np. bogaty agregat → decider) — zamrożony kontrakt, testy czterowarstwowe, przepięcie poziomu testów, rejestr asercji, dowód zachowania. Nie do drobnych refaktoryzacji (eng-clean-code) ani projektowania przypadków (qa-test-design)."

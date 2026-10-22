@@ -75,7 +75,7 @@ prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-proj
    - agent zatrzymuje wyciek i zabezpiecza dowody (ops-security-operations), przygotowuje fakty do zgłoszenia,
      a o zgłoszeniu decyduje człowiek;
    - procedura z osią czasu: `references/rodo-w-praktyce.md`.
-10. **Cookies i dostęp do urządzenia:**
+10. **Cookies, SDK analityczne i dostęp do urządzenia (Prawo komunikacji elektronicznej, nie tylko RODO):**
     - poza technicznie niezbędnymi potrzebna jest zgoda przed zapisem;
     - bez domyślnie zaznaczonych zgód (TSUE, Planet49, C-673/17);
     - odmowa tak samo dostępna jak zgoda;
