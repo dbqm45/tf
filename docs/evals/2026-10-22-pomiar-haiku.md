@@ -270,13 +270,13 @@ Kryteria 15 skilli sprawdzone offline na odpowiedziach partii 5: rozróżnia 33 
 - Do rozważenia: w fe-engineering-levels kroki „najpierw diagnoza z trzech źródeł danych, potem próg decyzji”
   przenieść z references/devex.md do SKILL.md.
 
-## Sprawdzenie poprawek po partii 5 (2026-10-23): 10 scenariuszy, 1,21 USD
+## Sprawdzenie poprawek po partii 5 (2026-10-22): 10 scenariuszy, 1,21 USD
 9/10 zaliczonych, w tym wczytanie eng-debugging, eng-refactor-planning, fe-engineering-levels, brak wczytania
 ddd-algorithm-recognition przy klasyfikacji (no-trigger) oraz core-cost-control, arch-ai-solutions
 i arch-threat-modeling po poprawkach. Nadal niezaliczone: `eng-design-principles/dry-przypadkowe` — odpowiedź nie
 podaje kolejności KISS/YAGNI przed DRY.
 
-## Partia 6 (2026-10-23): 181 scenariuszy, 311 przebiegów, 29,39 USD — koniec pierwszego pomiaru
+## Partia 6 (2026-10-22): 181 scenariuszy, 311 przebiegów, 29,39 USD — koniec pierwszego pomiaru
 47 skilli `ops-*`, `proc-*`, `qa-*`, `sec-*`, `tool-*`; 130 scenariuszy trigger z porównaniem bez skilli i 51 no-trigger
 (wszystkie zaliczone). Ze skillem 120/130 (treść 121/130), bez skilli treść 91/130 (19 przez sędziego). Koszt: ze
 skillami 22,28 USD, bez skilli 7,11 USD. Zużycie okna: od 0% (po resecie) do ok. 14% [szacunek].
