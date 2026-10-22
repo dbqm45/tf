@@ -61,19 +61,22 @@ zwykła implementacja; budżet 2–5 testów na fazę) — `references/tdd-z-age
 - Fake (prosta działająca implementacja, np. repozytorium w pamięci) > stub > mock. Mockuj tylko to, czego nie posiadasz
   (zewnętrzne systemy), i to przez własny port, nie bibliotekę zewnętrzną bezpośrednio.
 
+## Jakość testów i skąd oczekiwany wynik
+- **Oczekiwana wartość pochodzi z wymagania lub przykładu, nigdy z uruchomienia kodu.** Wartość przepisana z wyniku
+  kodu utrwala błąd zamiast go wykryć. Szczegóły, clean-room i protokół rozbieżności: qa-spec-first-testing.
+- **Czerwony test zgodny z wymaganiem to defekt w kodzie:** nie zmieniasz oczekiwanej wartości, żeby test przeszedł,
+  tylko zgłaszasz albo naprawiasz kod.
+- **Pokrycie linii to za mało:** jakość testów krytycznej logiki mierzą **testy mutacyjne**, a obliczenia wzmacniają
+  **testy oparte na właściwościach** (np. suma podzielonej kwoty = kwota).
+- Techniki doboru przypadków: qa-test-design. Regresja i flaky: qa-regression.
+
 ## Techniki specjalne
 - **Testy kontraktowe** (consumer-driven) między kontekstami/usługami zamiast kruchych E2E przez wiele systemów.
 - **Testy charakteryzujące** przed refaktorem legacy — utrwalają obecne zachowanie.
-- **Testy mutacyjne** do oceny jakości testów krytycznej logiki (pokrycie linii to za mało).
-- **Testy oparte na właściwościach** dla obliczeń (np. suma podzielonej kwoty = kwota).
 
 ## Dobre testy
 Szybkie, niezależne, powtarzalne, samosprawdzające się, czytelne (nazwa = zachowanie: `rejects_block_when_resource_disabled`).
 Jeden powód porażki na test. Brak `sleep` — kontrolowany czas (zegar jako zależność).
-
-## Skąd oczekiwany wynik
-Oczekiwana wartość pochodzi z wymagania lub przykładu, **nigdy z uruchomienia kodu** — szczegóły, clean-room i protokół
-rozbieżności: qa-spec-first-testing. Techniki doboru przypadków: qa-test-design. Regresja i flaky: qa-regression.
 
 ## Testy czytelne dla biznesu
 - **Buildery w języku domeny** zamiast ręcznego składania obiektów: `projekt("P1").wymaga(kompetencja("JAVA-MID"), styczeń).zarabia(10_000)`.

@@ -51,3 +51,14 @@ skillem przechodzi, a bez skilli nie. Przed zmianą odróżniało 8 z 37 scenari
   oczekiwane z wymagania, nie z uruchomienia”. Treść skilla do wzmocnienia.
 - Błąd w starym kryterium: `dom-ev-security/reset-calej-floty-i-profile` szukał „fale”, odpowiedzi piszą „fali”.
 - Kryteria sprawdzono na jednej odpowiedzi na scenariusz; następny płatny przebieg pokaże, czy są stabilne.
+
+## Poprawka treści dwóch skilli
+- `ddd-deep-modeling`: test zmienności i zasada „klasę wyznacza skutek dla stanu, nie liczba reguł” stoją teraz przed
+  tabelą klas; tabela to „sygnały pomocnicze”, a przy sprzeczności rozstrzyga test.
+- `eng-testing`: nowa sekcja „Jakość testów i skąd oczekiwany wynik” łączy pokrycie, testy mutacyjne i oparte na
+  właściwościach z zasadami „wartość oczekiwana z wymagania, nie z uruchomienia” i „czerwony test zgodny
+  z wymaganiem to defekt w kodzie”.
+- Powtórka wszystkich scenariuszy obu skilli (Haiku, 10 przebiegów, 1,19 USD): 10/10, wszystkie przez wyrażenia,
+  bez sędziego. `test-zmiennosci` i `jakosc-testow` model obsłużył skillami dopuszczonymi w scenariuszu
+  (`ddd-algorithm-recognition`, `qa-spec-first-testing`), więc nowy układ `ddd-deep-modeling` i `eng-testing` nie
+  był w nich wczytany — potwierdzi go dopiero kolejna partia.

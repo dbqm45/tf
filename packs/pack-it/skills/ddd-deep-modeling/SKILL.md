@@ -41,7 +41,13 @@ Dla każdego ważnego pojęcia przejdź przez trzy perspektywy. Odpowiedzi od ra
 ## Klasyfikacja problemu → sposób modelowania
 Zanim zaprojektujesz, nazwij klasę problemu. Każda wymaga innego podejścia.
 
-| Klasa | Rozpoznasz po | Podejście |
+**Najpierw test zmienności — podaj go w odpowiedzi:** *czy dane, na podstawie których podejmujemy decyzję, może
+w tej samej chwili zmienić inne żądanie?* Tak → konkurencja o zasoby (atomowość, agregat). Nie → CRUD albo obliczenie
+z walidacją. **Klasę wyznacza skutek operacji dla stanu systemu, nie liczba reguł:** obliczenie, którego wynik tylko
+zapisujemy, to CRUD z polityką; bogata walidacja danych z żądania nie zmienia klasy. Tabela niżej to sygnały
+pomocnicze; gdy przeczą testowi, rozstrzyga test.
+
+| Klasa | Sygnały pomocnicze | Podejście |
 |---|---|---|
 | **CRUD** | formularze, proste walidacje, brak reguł między danymi | nie przemodelowuj; prosta warstwa danych, ewentualnie polityki walidacji |
 | **Transformacja / obliczenia** | „policz”, „wyceń”, „wyznacz”, dużo reguł, deterministyczny wynik | czyste funkcje, polityki/strategie, obiekty wartości na wejściu i wyjściu, testy na przykładach |
@@ -51,10 +57,6 @@ Zanim zaprojektujesz, nazwij klasę problemu. Każda wymaga innego podejścia.
 
 Jeden obszar biznesowy zwykle zawiera kilka klas — rozdziel je, zamiast budować jeden „model do wszystkiego”.
 
-**Klasę wyznacza skutek operacji dla stanu systemu**, nie liczba reguł: obliczenie, którego wynik tylko zapisujemy, to CRUD
-z polityką; bogata walidacja danych z żądania nie zmienia klasy. Rozstrzygający jest **test zmienności**:
-*czy dane, na podstawie których podejmujemy decyzję, może w tej samej chwili zmienić inne żądanie?* Tak → konkurencja
-o zasoby (atomowość, agregat). Nie → CRUD/obliczenie z walidacją.
 Sygnały mocne i słabe, sygnały z makiet UI, pułapki, ścieżka dedukcji i typowe kombinacje: `references/problem-classes.md`.
 Gdy obliczenie wygląda na znany problem (kolejność, przydział, pakowanie) → ddd-algorithm-recognition.
 
