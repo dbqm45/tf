@@ -22,6 +22,10 @@
           [
             "DPIA",
             "ocen\\w* skutków"
+          ],
+          [
+            "komunikacji elektronicznej",
+            "\\bPKE\\b"
           ]
         ]
       }
@@ -46,6 +50,10 @@
             "anonimiz",
             "syntetyczn",
             "dan\\w* testow"
+          ],
+          [
+            "procedur\\w*.{0,40}narusze",
+            "narusze\\w*.{0,40}procedur"
           ]
         ]
       }
@@ -68,6 +76,11 @@
             "procesor",
             "art\\.? 28",
             "dostawc"
+          ],
+          [
+            "polecen\\w*.{0,60}(usun|procesor|dostawc)",
+            "procesor\\w*.{0,80}(usun|polecen)",
+            "usunię\\w*.{0,40}u procesor"
           ]
         ]
       }
@@ -79,13 +92,19 @@
       "checks": {
         "all": [
           [
-            "konsumenck|plan\\w* firmow|poziom\\w* usług|API"
+            "konsumenck"
           ],
           [
             "trenow"
           ],
           [
             "region|EOG|transfer|jurysdykc"
+          ],
+          [
+            "z datą",
+            "zapisz\\w*.{0,40}dat",
+            "narzędzi\\w* do kodu",
+            "osobn\\w*.{0,30}ustawie"
           ]
         ]
       }
