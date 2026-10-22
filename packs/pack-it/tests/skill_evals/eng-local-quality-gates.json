@@ -37,7 +37,7 @@
         "all": [
           ["pre-commit-config", "pre-commit install"],
           ["pre-push"],
-          ["zepsut\\w* plik", "celowo", "commit (zostanie |zostaje )?odrzucon", "błędn\\w* plik", "odrzucon\\w*"]
+          ["zepsut\\w* plik", "celowo", "commit (zostanie |zostaje )?odrzucon", "błędn\\w* plik", "odrzucon\\w*", "commit\\w* z błędem", "commit\\w*[^.]{0,40}(przerw|zablok)"]
         ]
       }
     },
