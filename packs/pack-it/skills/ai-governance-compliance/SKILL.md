@@ -42,6 +42,8 @@ jakości — **ai-evals**; strategia produktu — **ai-product-management**; pol
       incydentów. Integrator cudzego modelu zwykle nie jest dostawcą GPAI, ale może być dostawcą systemu.
 4. **Obowiązki na rolę** — macierz w `references/macierz-i-dowody.md` (dostawca wysokiego ryzyka: art. 9–15, 17, 43,
    47–49, 72–73; podmiot stosujący: art. 26–27; wszyscy: art. 4). Dla każdego wiersza: właściciel, dowód, termin, status.
+   Podmiot stosujący system wysokiego ryzyka wyznacza nadzór człowieka (art. 26 ust. 2): przeszkolone osoby z kompetencjami
+   i uprawnieniem do zakwestionowania i odrzucenia wyniku systemu.
 5. **Terminy** (stan 2026-10-17): sprawdź tabelę poniżej i **datę dla swojego systemu**. Przy planowaniu podaj datę
    z przypisem źródła; sprzeczne — oba warianty z [niezweryfikowane].
 6. **Ramy dobrowolne.** NIST AI RMF 1.0 (Govern, Map, Measure, Manage) i profil AI 600-1 porządkują ryzyka;

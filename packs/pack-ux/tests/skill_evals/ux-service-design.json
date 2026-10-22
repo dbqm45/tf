@@ -10,7 +10,8 @@
           ["frontstage|front stage|widoczn\\w+ dla klienta"],
           ["backstage|back stage|niewidoczn"],
           ["linia (widoczności|interakcji)|line of (visibility|interaction)"],
-          ["procesy wspierające|support process|dowody|evidence"]
+          ["procesy wspierające|support process|dowody|evidence"],
+          ["zdarzeni\\w* (otwier|zamyk)", "od zdarzenia", "concierge", "wskaźnik\\w* ukończ", "service-blueprint\\.md"]
         ],
         "none": ["tylko (jeden )?ekran|wystarczy makieta formularza"]
       }
@@ -36,7 +37,8 @@
         "all": [
           ["service standard|standard usług"],
           ["solve a whole problem|cały problem|całość problemu"],
-          ["14 punkt|punkt 2|point 2|joined up|między kanałami"]
+          ["14 punkt|punkt 2|point 2|joined up|między kanałami"],
+          ["zdarzeni\\w* (otwier|zamyk)", "otwierając\\w*", "ukończon\\w*", "completion"]
         ]
       }
     },

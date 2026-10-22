@@ -10,7 +10,8 @@
           ["AES-256-GCM|AES-GCM|ChaCha20-Poly1305|AEAD"],
           ["kopert\\w*|envelope|DEK|KEK"],
           ["KMS|HSM"],
-          ["nonce|IV|wektor inicjuj"]
+          ["nonce|IV|wektor inicjuj"],
+          ["DEK[^.]{0,60}kompromit", "kompromit[^.]{0,60}DEK"]
         ],
         "none": ["AES-ECB jest bezpieczny", "własny algorytm szyfrowania"]
       }
