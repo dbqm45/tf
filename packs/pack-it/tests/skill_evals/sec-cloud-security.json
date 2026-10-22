@@ -10,7 +10,8 @@
           ["\\bSCP\\b", "service control polic"],
           ["management account|konto zarządzając|konto główne|master", "nie obejmuj\\w* konta|nie dotycz\\w* konta"],
           ["Block Public Access", "blokad\\w* publicznego dostępu"],
-          ["log archive|konto logów|osobn\\w* konto \\w* log|CloudTrail"]
+          ["log archive|konto logów|osobn\\w* konto \\w* log|CloudTrail"],
+          ["Access Analyzer", "CreateAccessKey", "CreateUser", "Checkov", "Conftest"]
         ],
         "none": ["SCP nadaje uprawnienia", "SCP przyznaje uprawnienia"]
       }
@@ -24,7 +25,8 @@
           ["CloudTrail"],
           ["Activity Log"],
           ["Data Access", "Cloud Audit Logs"],
-          ["workload identity|federacj\\w* tożsamości|OIDC|managed identity", "disableServiceAccountKeyCreation"]
+          ["workload identity|federacj\\w* tożsamości|OIDC|managed identity", "disableServiceAccountKeyCreation"],
+          ["StopLogging", "break-glass", "Access Analyzer", "Recommender"]
         ],
         "none": ["klucze dostępu w repozytorium są akceptowalne"]
       }
@@ -38,7 +40,8 @@
           ["CSPM"],
           ["CIEM"],
           ["CWPP|workload"],
-          ["CIS Benchmark|benchmark", "kontekst|ścieżk\\w* ataku|attack path"]
+          ["CIS Benchmark|benchmark", "kontekst|ścieżk\\w* ataku|attack path"],
+          ["MCSB", "FSBP", "Foundational Security Best", "Prowler"]
         ]
       }
     },

@@ -9,8 +9,10 @@
         "all": [
           ["właściciel ryzyka", "risk owner", "właściciel"],
           ["wygasa", "termin ważności", "data przeglądu", "expiry", "wygaśnięci", "do kiedy"],
-          ["apetyt", "tolerancj", "appetite", "tolerance"],
-          ["rezydual", "residual", "resztkow"]
+          ["apetyt", "tolerancj", "appetite", "tolerance", "kryteri\\w* (ryzyka|akceptacji)", "progi (uprawnie|akceptacji)"],
+          ["rezydual", "residual", "resztkow"],
+          ["kto (je |ryzyko )?tworzy", "zespół bezpieczeństwa[^.]{0,60}(za biznes|nie podpis|sprzeciw)"],
+          ["inherent", "inherentn"]
         ],
         "none": ["akceptuje (je )?zespół bezpieczeństwa sam"]
       }
@@ -24,7 +26,8 @@
           ["FAIR"],
           ["częstotliwość", "frequency", "LEF"],
           ["Monte Carlo", "przedzia", "range"],
-          ["ISO.?27005", "scenariusz", "scenario"]
+          ["ISO.?27005", "scenariusz", "scenario"],
+          ["rezydualn", "residual"]
         ],
         "none": ["jedna liczba bez przedział"]
       }

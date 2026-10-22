@@ -15,6 +15,12 @@
           ],
           [
             "strict\\s*=\\s*true"
+          ],
+          [
+            "zablokowan\\w* wersj",
+            "lockfile",
+            "PytestRemovedIn9",
+            "przyszłe wersje"
           ]
         ]
       }
@@ -37,6 +43,10 @@
           [
             "pytest\\.param",
             "ids?\\s*="
+          ],
+          [
+            "brzeg",
+            "tuż (pod|nad)"
           ]
         ]
       }
@@ -52,6 +62,10 @@
           ],
           [
             "asyncio_mode"
+          ],
+          [
+            "\\[tool\\.pytest\\]",
+            "strict\\s*=\\s*true"
           ]
         ]
       }

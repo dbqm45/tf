@@ -25,7 +25,8 @@
           ["ML-KEM|FIPS 203"],
           ["hybryd\\w*|hybrid"],
           ["harvest now|zbierz teraz|zbieraj teraz|HNDL|odszyfruj później"],
-          ["niezweryfikowan|2030|2035"]
+          ["niezweryfikowan|2030|2035"],
+          ["2027-01-01", "1 stycznia 2027"]
         ],
         "none": ["RSA-2048 jest odporne na komputery kwantowe"]
       }
@@ -39,7 +40,8 @@
           ["47 dni|47-day|47 days"],
           ["200 dni|100 dni|2026|2027|2029"],
           ["ACME|cert-manager|automatyz"],
-          ["inwentarz\\w*|monitoring wygasania|alert"]
+          ["inwentarz\\w*|monitoring wygasania|alert"],
+          ["03-15", "15 marca", "DNS-01", "HTTP-01", "SPIFFE"]
         ],
         "none": ["wystarczy kalendarz przypomnień"]
       }

@@ -8,10 +8,11 @@
       "checks": {
         "all": [
           ["jako produkt", "product manager", "platform as a product"],
-          ["złot\\w* ścieżk", "golden path", "paved road"],
+          ["złot\\w* ścieżk", "golden path", "paved road", "szablon\\w* serwis"],
           ["najcieńsz\\w* (możliw|użyteczn)", "thinnest viable", "TVP", "minimalna platforma"],
           ["ból\\w*", "pain point", "wywiad", "ankiet", "odkrywani"],
-          ["adopcj", "dobrowoln"]
+          ["adopcj", "dobrowoln"],
+          ["obowiązkow\\w* (są )?tylko wymagani", "nie sposób ich spełnienia", "wróciłby do starego", "ścieżk\\w* aktualizacji"]
         ],
         "none": ["obowiązkow\\w* od pierwszego dnia"]
       }
@@ -26,7 +27,8 @@
           ["SPACE", "DevEx", "ankiet\\w* (satysfakcj|doświadcz)", "developer experience"],
           ["adopcj", "odsetek zespołów", "wykorzystani"],
           ["Goodhart", "nie (jako )?cel", "nie porównuj zespoł", "nie (do )?ranking"],
-          ["maturity", "dojrzałości", "CNCF"]
+          ["maturity", "dojrzałości", "CNCF"],
+          ["trend\\w* 3[–-]4", "ścian\\w* metryk", "wniosek i decyzj"]
         ],
         "none": ["liczba commitów jako miara"]
       }
@@ -41,7 +43,8 @@
           ["Crossplane", "composition", "kompozycj"],
           ["Terraform", "moduł"],
           ["policy as code", "polityk\\w* jako kod", "OPA", "Kyverno", "guardrail", "barier\\w* ochronn"],
-          ["GitOps", "Argo", "Flux"]
+          ["GitOps", "Argo", "Flux", "(przez|z|w) PR\\b", "pull request", "deklaratywn"],
+          ["po tym,? jak ścieżki", "portal\\w* (dopiero )?(później|na końcu)", "Backstage (dodaj|dopiero) (później|potem)", "dopiero potem rozważ"]
         ],
         "none": ["Backstage jest gotową platformą"]
       }

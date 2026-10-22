@@ -19,6 +19,12 @@
             "wyjątk",
             "exclude",
             "łatk"
+          ],
+          [
+            "(1|jeden)[–-]3 dni",
+            "w ciągu (kilku )?godzin",
+            "axios",
+            "allowBuilds"
           ]
         ]
       }
@@ -40,13 +46,22 @@
             "rebuild",
             "reinstal",
             "nie czyść",
-            "nie czysc"
+            "nie czysc",
+            "przeinstal",
+            "zniszcz\\w* (runner|maszyn|obraz)",
+            "nie\\W{0,3}czyść"
           ],
           [
             "rotuj",
             "rotacj",
             "unieważ",
             "sekret"
+          ],
+          [
+            "niszczy dowody",
+            "zabezpiecz\\w* .{0,40}(dowod|list\\w* proces)",
+            "katalog\\w* .{0,60}node_modules",
+            "nawet jeśli pliki wyglądają"
           ]
         ],
         "none": [
@@ -74,6 +89,11 @@
           ],
           [
             "pominięto|brak wbudowan|Dependency-Check"
+          ],
+          [
+            "nie sprawdzono",
+            "nigdy\\W{0,3}0 znalezisk",
+            "(kod|status) wyjścia[^.]{0,30}(informacj|nie awari)"
           ]
         ]
       }

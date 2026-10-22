@@ -10,7 +10,8 @@
           ["N\\+1", "awari[ai]\\s+(jednego|1)\\s+węzła", "utrat[ay]\\s+(jednego|1)\\s+węzła"],
           ["overcommit", "nadsubskrypcj", "przypisanie vCPU", "vCPU"],
           ["quorum|kworum|QDevice"],
-          ["virtio", "V2V", "wersj[aei]\\s+próbn", "pilota", "pilot"]
+          ["virtio", "V2V", "wersj[aei]\\s+próbn", "pilota", "pilot"],
+          ["steal", "CPU ready", "p99"]
         ],
         "none": ["RAID 0 dla Ceph"]
       }
@@ -21,10 +22,11 @@
       "prompt": "Na macierzy NAS mamy RAID 5 z 8 dysków po 16 TB i robimy migawki raz na dobę. Szef mówi, że to jest backup. Co z tym zrobić? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["migawk\\w+\\s+(nie jest|to nie)", "snapshot\\w*\\s+(nie jest|to nie)", "nie jest kopią", "nie zastępuj"],
+          ["migawk\\w+\\s+(nie jest|to nie)", "snapshot\\w*\\s+(nie jest|to nie)", "nie jest kopią", "nie zastępuj", "migawk\\w+[^.]{0,40}to nie (backup|kopi)", "snapshot\\w*[^.]{0,40}to nie"],
           ["3-2-1"],
           ["RAID\\s*6", "RAID\\s*10", "podwójn\\w+ parzysto", "odbudow", "rebuild"],
-          ["niezmienial", "immutab", "WORM", "air-?gap", "Object Lock"]
+          ["niezmienial", "immutab", "WORM", "air-?gap", "Object Lock"],
+          ["osobn\\w+ poświadcze", "pomiar\\w* czasu", "odrębn\\w+ poświadcze"]
         ],
         "none": ["RAID zastępuje kopię"]
       }
@@ -37,7 +39,8 @@
         "all": [
           ["zdalne zarządzanie", "iDRAC", "iLO", "BMC", "IPMI", "Redfish", "out-of-band"],
           ["praca offline", "tryb offline", "bez łączności", "autonomiczn", "zdegradowan"],
-          ["zapasow\\w+ (serwer|sprzęt|węzeł)", "spare", "wymiana bez", "zero-touch", "ZTP"]
+          ["zapasow\\w+ (serwer|sprzęt|węzeł)", "spare", "wymiana bez", "zero-touch", "ZTP"],
+          ["QDevice", "świad(ek|ka|kiem)", "witness", "p95"]
         ]
       }
     },

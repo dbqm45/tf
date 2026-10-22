@@ -15,6 +15,12 @@
           ],
           [
             "checkout\\.session\\.completed|async_payment_succeeded|payment_status"
+          ],
+          [
+            "payment_method_types",
+            "dynamiczn\\w* metod",
+            "ui_mode",
+            "payment_method_configurations"
           ]
         ]
       }
@@ -30,6 +36,11 @@
           ],
           [
             "Payment Element"
+          ],
+          [
+            "payment_method_configurations",
+            "excluded_payment_method_types",
+            "Checkout Session"
           ]
         ]
       }
@@ -48,6 +59,11 @@
           ],
           [
             "sejf\\w*|vault|menedżer\\w* sekret\\w*|Secrets Manager|Key Vault|Secret Manager"
+          ],
+          [
+            "osobn\\w* (dla każdej|per) (usług|środowisk)",
+            "piaskownic",
+            "sandbox"
           ]
         ]
       }
@@ -66,6 +82,12 @@
           ],
           [
             "webhook\\w*|endpoint\\w*|miejsc\\w* docelow\\w*"
+          ],
+          [
+            "piaskownic",
+            "sandbox",
+            "osobn\\w* PR",
+            "nie zgaduj"
           ]
         ]
       }
