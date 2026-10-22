@@ -357,7 +357,6 @@ mały — fragmenty z listy były w większości krótkie; główna wartość: m
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
-3. Partie 1–6 zrobione, zaostrzenie i poprawki po każdej też. Poprawki opisów i treści po partii 6 potwierdzi
-   mały przebieg na modelu (ok. 1–2 USD).
+3. Partie 1–6 zrobione, zaostrzenie i poprawki po każdej też; poprawki po partii 6 potwierdzone na modelu.
 4. ~~Skrócić skille, które nie wnoszą treści~~ — zrobione (sekcja wyżej).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
