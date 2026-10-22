@@ -331,7 +331,7 @@ odpowiedziami (przed: 420).
 - C — luka treści skilla, uzupełniona: dom-ev-regulations-eu (wiersz RED 2022/30 i EN 18031 w tabeli głównej),
   ai-governance-compliance (nadzór człowieka u podmiotu stosującego, art. 26 ust. 2); wcześniej w #30:
   ops-platform-engineering, sec-zero-trust-identity.
-- D — model zna temat, skill nie wnosi nic więcej (ok. 35 scenariuszy) — kandydaci do skrócenia, m.in. proc-lean
+- D — model zna temat, skill nie wnosi nic więcej (33 scenariusze) — kandydaci do skrócenia, m.in. proc-lean
   (zasady i WSJF), lang-javascript, tool-nx (tagi i depConstraints), be-api-design (kolekcje), be-database
   (expand/contract), ops-sre-incidents (progi burn rate), sec-llm-security (lista Top 10), txt-polish-correctness
   (imiesłów, kalki), fw-react (`useEffectEvent`), fw-nextjs (hydratacja), core-agent-security (podstawy prompt injection).
