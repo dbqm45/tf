@@ -1,6 +1,6 @@
 ---
 name: arch-architect-practice
-description: Użyj przy pracy architekta poza techniką — decyzje i ich komunikacja, szacowanie, ATAM, arc42/C4/ADR, TOGAF, ITIL.
+description: Użyj przy pracy architekta poza techniką — decyzje, test odporności przed zapisaniem (adwokat diabła), komunikacja, szacowanie, ATAM, arc42/C4/ADR, TOGAF.
 metadata:
   przeglad: 2027-10-09
   katalog: "Użyj przy pracy architekta poza samą techniką — poziomy architektury, podejmowanie i komunikowanie decyzji, szacowanie, przegląd architektury (ATAM), upraszczanie, dokumentacja (arc42, C4, ADR), coaching, ramy korporacyjne (TOGAF, ITIL). Nie do atrybutów jakości (arch-quality-attributes) ani wyboru stacku (arch-tech-selection)."

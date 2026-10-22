@@ -141,7 +141,8 @@ Praktyka:
   „dane niepełne”. Przyczyny kosztu etapu i tiery wykonawców ocenia retrospektywa agentów (core-agent-retro).
 
 ## 8. Ocena nowego modelu (zanim zmienisz domyślny)
-- Wynik w rankingu to zestaw zadań + metryka + protokół (harness stały czy dowolny, limit kroków); bez tych trzech liczba nic nie mówi,
+- **Wyników z różnych raportów nie porównujesz wprost.** Wynik w rankingu to zestaw zadań + metryka + protokół (harness stały
+  czy dowolny, limit kroków); bez tych trzech liczba nic nie mówi,
   a ten sam model w innym harnessie wypada wyraźnie inaczej.
 - Praca agentowa wymaga powtarzalności w każdej próbie (pass^k), nie „choć raz” (pass@1): 90% na krok to ok. 59%
   dla pięciu kroków z rzędu (0,9⁵).

@@ -1,6 +1,6 @@
 ---
 name: arch-ai-solutions
-description: Użyj przy architekturze systemu z komponentem AI — wzorzec (LLM, RAG, workflow, agent), źródło modelu, koszt, opóźnienie, granice zaufania.
+description: Użyj przy architekturze systemu z komponentem AI — wzorzec (LLM, RAG, workflow, agent), źródło modelu i lock-in dostawcy, koszt, opóźnienie, granice zaufania.
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj, gdy projektujesz architekturę systemu z komponentem AI na poziomie decyzji — dobór wzorca (zwykłe wywołanie modelu, RAG, workflow z narzędziami, agent, fine-tuning, klasyczne ML) wg tabeli wymagań, źródło modelu (API, open-weights na własnej infrastrukturze, usługa zarządzana w chmurze), rezydencja danych i lock-in, komponenty architektury referencyjnej (bramka, serwis promptów, warstwa wyszukiwania i narzędzi, ewaluacje, guardrails, kolejka przeglądu), budżet opóźnienia, cache, fallback i routing modeli, granice bezpieczeństwa, szablon kosztu i pojemności, izolacja najemców, ADR dla decyzji AI. Nie do ogólnego projektu systemu (arch-system-design), metody doboru stacku (arch-tech-selection), atrybutów jakości (arch-quality-attributes), modelu zagrożeń (arch-threat-modeling), szczegółów RAG (ai-rag), projektu agenta (ai-agents), kodu z SDK (eng-llm-features) ani hostowania modeli (ops-ai-inference)."

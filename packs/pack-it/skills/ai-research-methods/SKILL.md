@@ -1,6 +1,6 @@
 ---
 name: ai-research-methods
-description: Użyj przy badaniu ML i AI od hipotezy do wyniku — baseline, projekt eksperymentu, seedy i wariancja, wycieki danych, metryki, reprodukowalność, raport.
+description: Użyj przy badaniu i walidacji modelu ML — baseline, wyciek danych (podział losowy, czasowy, grupowy), wynik offline vs po wdrożeniu, seedy, metryki, raport.
 metadata:
   przeglad: 2027-04-17
   katalog: "Użyj, gdy trzeba przejść od pytania badawczego lub hipotezy AI/ML do wyniku, który da się obronić — ujęcie problemu i mocny prosty baseline, projekt eksperymentu (kontrolowane zmienne, ablacje, seedy, średnia ± rozrzut, ostrożność przy wielokrotnych porównaniach), podziały danych i wyciek (czasowe, grupowe, higiena zbioru testowego, kontaminacja benchmarków), metryka zgodna z decyzją, budżet obliczeń i skalowanie od pilotażu, reprodukowalność (konfiguracja, kod, wersje danych, środowisko), przegląd literatury i krytyczne czytanie artykułów, od artykułu do prototypu produktowego, walidacja offline→online, raport badawczy z wynikami negatywnymi i ograniczeniami, przegląd etyczny danych; artefakt docs/project/02-domain/experiment-NAZWA.md. Nie do ewaluacji funkcji LLM i agentów (ai-evals), ogólnej statystyki i eksperymentów produktowych (data-analysis), dostrajania modelu (ai-fine-tuning), narzędzi śledzenia eksperymentów i rejestru (ai-mlops) ani szukania faktów w sieci (core-source-research)."
