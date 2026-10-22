@@ -10,12 +10,8 @@
           [
             "test zmienności",
             "w tej samej chwili",
-            "jednocześnie zmieni",
             "inne żądanie|innego żądania",
-            "w tej samej sekundzie",
-            "jednocze\\w+",
-            "innych umów",
-            "stanu innych"
+            "dan\\w*.{0,60}(zmieni|zmodyfikuje) .{0,40}(w tym samym czasie|jednocześnie|w tej samej chwili)"
           ],
           [
             "skutek\\w* (operacji )?dla stanu|nie liczb\\w+ reguł|nie liczba reguł|wynik.{0,30}(tylko )?zapis",
@@ -38,7 +34,11 @@
             "5 why|pięć why|pytaj\\w* .{0,10}dlaczego"
           ],
           [
-            "becoming|staje się|przemian"
+            "becoming",
+            "staje się",
+            "przemian",
+            "cykl\\w* życia",
+            "osobn\\w* pojęci"
           ],
           [
             "maszyn\\w* stan|state machine"
@@ -74,10 +74,13 @@
       "checks": {
         "all": [
           [
-            "knowledge level|poziom\\w* wiedzy"
+            "poziom\\w* wiedzy"
           ],
           [
-            "operat\\w*|operacyjn\\w*"
+            "poziom\\w* operacj\\w*",
+            "operacj\\w*",
+            "operacyjn\\w*",
+            "operat\\w*"
           ]
         ]
       }

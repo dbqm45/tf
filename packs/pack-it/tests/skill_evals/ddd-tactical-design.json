@@ -15,6 +15,14 @@
           ],
           [
             "jeden agregat|jedna transakcja|identyfikator|\\bID\\b"
+          ],
+          [
+            "zwraca\\w* zdarzeni",
+            "zdarzeni\\w*.{0,40}z metody",
+            "wybierz jed\\w* z dwóch",
+            "jeden z dwóch wariant",
+            "agregat\\w* dynamiczn",
+            "kto zmienia.{0,60}jednocześnie"
           ]
         ]
       }
@@ -33,6 +41,11 @@
           ],
           [
             "jedno źródło|obiekt wartości|enum"
+          ],
+          [
+            "stopie\\w*",
+            "lokalnoś\\w*",
+            "\\(Co[AMNTPV]\\)"
           ]
         ]
       },
@@ -81,6 +94,12 @@
           ],
           [
             "polityk\\w*|strategi\\w*"
+          ],
+          [
+            "dat\\w* istotn",
+            "świadom\\w* (wybór|decyzj|duplikac)",
+            "kopiowani\\w* kodu",
+            "nietknięt"
           ]
         ]
       }

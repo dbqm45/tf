@@ -29,6 +29,11 @@
             "npm test",
             "vitest",
             "jest"
+          ],
+          [
+            "tdd_guard",
+            "(oczekiw\\w*|wartoś\\w*).{0,60}z wymagani\\w*",
+            "nie z uruchomieni"
           ]
         ],
         "none": [
@@ -50,6 +55,11 @@
           ],
           [
             "zachowani\\w+ przez publiczn|publiczne API|nie implementacj|na wyniku|na stanie|nie na interakcj|zamiast (wywołań|interakcji)"
+          ],
+          [
+            "stub\\w*.{0,80}(awari|sekwencj)",
+            "(awari|sekwencj)\\w*.{0,80}stub",
+            "kontrakt\\w*,? któr\\w* (faktycznie )?(istnieje|jest)"
           ]
         ]
       },
@@ -72,7 +82,17 @@
             "właściwości|property|oparte na właściwościach"
           ],
           [
-            "z wymagani|z przykład|nie z uruchomienia|nigdy z uruchomienia"
+            "z wymagani",
+            "z przykład",
+            "nie\\w* .{0,30}z uruchomieni",
+            "nigdy (nie uruchamiaj|z uruchomieni)",
+            "spoza kodu"
+          ],
+          [
+            "nie zmieniaj\\w* oczekiwan",
+            "defekt\\w* w kodzie",
+            "zgłoś\\w* defekt",
+            "(czerwon|nie przechodzi)\\w*.{0,60}(defekt|błąd w kodzie)"
           ]
         ]
       },
