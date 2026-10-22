@@ -16,16 +16,16 @@
   "offline": "2026-10-20"
  },
  "dom-ev-charger-hardware": {
-  "fingerprint": "3266113ea3460cc2",
-  "offline": "2026-10-20"
+  "fingerprint": "eb3c3efe9ac91ac8",
+  "offline": "2026-10-22"
  },
  "dom-ev-charger-onboarding": {
   "fingerprint": "964f263be4358875",
   "offline": "2026-10-20"
  },
  "dom-ev-charging": {
-  "fingerprint": "a257eb8da59f9927",
-  "offline": "2026-10-20"
+  "fingerprint": "c59d54a89235eda0",
+  "offline": "2026-10-22"
  },
  "dom-ev-cpms-architecture": {
   "fingerprint": "544bc59ff58454f9",
@@ -76,8 +76,8 @@
   "offline": "2026-10-20"
  },
  "dom-ev-metering-calibration": {
-  "fingerprint": "6a5be7bd53fcbdce",
-  "offline": "2026-10-20"
+  "fingerprint": "dc1877a3580ef370",
+  "offline": "2026-10-22"
  },
  "dom-ev-ocpi": {
   "fingerprint": "42f82d883494cefe",
@@ -112,8 +112,8 @@
   "offline": "2026-10-20"
  },
  "dom-ev-security": {
-  "fingerprint": "a119d599da21f968",
-  "offline": "2026-10-20"
+  "fingerprint": "1e8f00bfcce3c278",
+  "offline": "2026-10-22"
  },
  "dom-ev-session-lifecycle": {
   "fingerprint": "822cbb045f469eae",

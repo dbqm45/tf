@@ -64,8 +64,8 @@
   "offline": "2026-10-21"
  },
  "arch-privacy-compliance": {
-  "fingerprint": "9bcf44bdb6cde194",
-  "offline": "2026-10-10"
+  "fingerprint": "2d5762745586d4a2",
+  "offline": "2026-10-22"
  },
  "arch-quality-attributes": {
   "fingerprint": "5f6167051feade91",
@@ -116,8 +116,8 @@
   "offline": "2026-10-04"
  },
  "ddd-archetypes": {
-  "fingerprint": "704d1b472c163a4d",
-  "offline": "2026-10-21"
+  "fingerprint": "4e43366fa49f1e6f",
+  "offline": "2026-10-22"
  },
  "ddd-connascence-analysis": {
   "fingerprint": "317f5407ff17417c",
@@ -128,7 +128,7 @@
   "offline": "2026-10-17"
  },
  "ddd-deep-modeling": {
-  "fingerprint": "b5218a9d0c9935ef",
+  "fingerprint": "742a039775ba5f87",
   "offline": "2026-10-22"
  },
  "ddd-discovery-intake": {
@@ -160,7 +160,7 @@
   "offline": "2026-10-20"
  },
  "ddd-tactical-design": {
-  "fingerprint": "7f9ff3cdc31054a0",
+  "fingerprint": "49d579f004a78834",
   "offline": "2026-10-22"
  },
  "eng-algorithms-data-structures": {
@@ -184,8 +184,8 @@
   "offline": "2026-10-18"
  },
  "eng-continuous-delivery": {
-  "fingerprint": "5143fdcea5ecbb89",
-  "offline": "2026-10-04"
+  "fingerprint": "aa1e6f3d6b8d92b4",
+  "offline": "2026-10-22"
  },
  "eng-debugging": {
   "fingerprint": "97b565368b5fa7f4",
@@ -232,8 +232,8 @@
   "offline": "2026-10-20"
  },
  "eng-testing": {
-  "fingerprint": "40f2d0256a3a5732",
-  "offline": "2026-10-10"
+  "fingerprint": "deaaef9813545ab3",
+  "offline": "2026-10-22"
  },
  "fe-architecture": {
   "fingerprint": "5cc7a77ccdd91079",
@@ -392,8 +392,8 @@
   "offline": "2026-10-04"
  },
  "proc-lean": {
-  "fingerprint": "93dae92e39505227",
-  "offline": "2026-10-04"
+  "fingerprint": "05fb7830030da147",
+  "offline": "2026-10-22"
  },
  "proc-product-discovery": {
   "fingerprint": "3ccc45b9a2ba0ac1",
