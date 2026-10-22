@@ -249,12 +249,32 @@ lang-python; gorzej ze skillem: eng-clean-code (2/3–3/3) i eng-design-principl
 - treść: eng-design-principles/dry-przypadkowe („duplikacja tańsza niż zła abstrakcja”), fw-spring-boot
   (`@WebMvcTest`), eng-tech-debt-audit/hotspoty-i-tani-dlug (wyrażenie `none` „tightly coupled”).
 
+## Zaostrzenie i poprawki po partii 5 (bez modelu)
+Kryteria 15 skilli sprawdzone offline na odpowiedziach partii 5: rozróżnia 33 z 42 scenariuszy, przed zmianą 5.
+- Nowe grupy sprawdzają reguły skilli, których model bez skilla nie podaje, np. pułapki bisekcji (`--first-parent`,
+  test czerwony na HEAD), sprawdzenie `null` raz na granicy, KISS/YAGNI przed DRY, przyszłe zdarzenia jako czas
+  lokalny ze strefą IANA, `use cache: remote` i autoryzacja poza proxy w Next.js, typowane identyfikatory w Javie.
+- Poprawione fałszywe odrzucenia: `eng-tech-debt-audit` (`none` łapało cytat „tightly coupled” z reguły skilla),
+  `core-cost-control/harness-staly-czy-dowolny` (odpowiedź oddaje zasadę innymi słowami — skill był w porządku),
+  `arch-threat-modeling/ryzyko-ilosciowe` (strata po kontroli = ryzyko rezydualne), `fw-spring-boot` (`@WebMvcTest`
+  tylko jako jedna z alternatyw), odmiany w eng-debugging i fw-react.
+- Nie rozróżniają (model zna temat sam — kandydaci do skrócenia): lang-javascript (2 z 3), `lang-java/money-bigdecimal`,
+  `lang-python/bez-plikow-nowy-serwis`, `fw-nextjs/hydratacja-daty`, `fw-react/efekt-ponownie-laczy`,
+  `fw-spring-boot/test-repozytorium-h2`, `eng-algorithms-data-structures/kolejka-shift`, `eng-design-patterns/switch-strategia`.
+- Opisy (wczytywanie): eng-debugging (regresja po wielu commitach), eng-refactor-planning (sprawdzenie liczb rankingu),
+  fe-engineering-levels (inwestycja w DevEx), ddd-algorithm-recognition (klasyfikacja CRUD to ddd-deep-modeling).
+- Treść: arch-ai-solutions (pogrubiony test wymiany w obu kierunkach), sec-risk-management (wynik FAIR po kontroli
+  nazwany ryzykiem rezydualnym).
+- Scenariusze dopuszczają właściwego sąsiada: ddd-discovery-intake/krytyka-pytan-wywiadu → ux-research-methods,
+  eng-clean-code/null-jako-znaczenie → eng-design-patterns, fe-architecture/rsc-cve → fw-nextjs, ops-security-operations.
+- Do rozważenia: w fe-engineering-levels kroki „najpierw diagnoza z trzech źródeł danych, potem próg decyzji”
+  przenieść z references/devex.md do SKILL.md.
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
 3. Partie 3–5 zrobione (sekcje wyżej). Zostało ok. 130 scenariuszy trigger w nakładce IT (ops, proc, qa, sec, tool —
-   ok. 1 partia za ok. 25 USD); przed nią zaostrzyć 15 skilli z partii 5 i poprawić 10 niezaliczonych oraz 3 z
-   poprawek po partii 4.
+   ok. 1 partia za ok. 25 USD); zaostrzenie i poprawki po partii 5 zrobione (sekcja wyżej).
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.

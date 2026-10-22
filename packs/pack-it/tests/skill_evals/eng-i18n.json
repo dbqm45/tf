@@ -49,10 +49,11 @@
             "logiczn\\w*|inline-start|margin-inline"
           ],
           [
-            "pseudolokaliz",
             "tzdata",
             "zada\\w+ w tle",
-            "locale odbiorcy"
+            "locale odbiorcy",
+            "przyszł\\w+[^.]{0,80}(czas\\w* lokaln|lokaln\\w+ czas)",
+            "istniejące wpisy przelicz"
           ]
         ]
       }
