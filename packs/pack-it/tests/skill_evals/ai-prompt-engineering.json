@@ -7,12 +7,40 @@
       "prompt": "Wklejam do promptu 8 długich umów (ok. 100 tys. tokenów) i pytam o klauzule kar umownych, ale model gubi szczegóły. Jak ułożyć taki prompt? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["na (górze|początku|początek)", "przed pytaniem", "dokumenty (na )?pierwsz\\w+", "najpierw dokument"],
-          ["pytani\\w+ (na|u) (końc|dole)", "na końcu", "query at the end", "pytanie na koniec"],
-          ["<document", "tag\\w* XML", "znacznik\\w* XML", "XML"],
-          ["cytat\\w*", "wyciągnij fragmenty", "quotes", "najpierw wypisz"]
+          [
+            "na (górze|początku|początek)",
+            "przed pytaniem",
+            "dokumenty (na )?pierwsz\\w+",
+            "najpierw dokument"
+          ],
+          [
+            "pytani\\w+ (na|u) (końc|dole)",
+            "na końcu",
+            "query at the end",
+            "pytanie na koniec"
+          ],
+          [
+            "<document",
+            "tag\\w* XML",
+            "znacznik\\w* XML",
+            "XML"
+          ],
+          [
+            "cytat\\w*",
+            "wyciągnij fragmenty",
+            "quotes",
+            "najpierw wypisz"
+          ],
+          [
+            "(popraw|lepsz|zysk)[^.]{0,40}30 ?%",
+            "30 ?%[^.]{0,40}(popraw|lepsz)",
+            "jedn\\w+ (rzecz|zmian\\w+) na raz"
+          ]
         ],
-        "none": ["pytanie przed dokumentami", "zawsze wrzuć wszystko jednym zdaniem"]
+        "none": [
+          "pytanie przed dokumentami",
+          "zawsze wrzuć wszystko jednym zdaniem"
+        ]
       }
     },
     {
@@ -21,12 +49,40 @@
       "prompt": "Mamy w kodzie kilka promptów systemowych sklejanych stringami, z datą i imieniem użytkownika na początku. Rachunek za API rośnie, a po każdej poprawce nie wiemy, czy nie zepsuła innych przypadków. Jak to uporządkować? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["stabiln\\w+ (prefiks|początek|część)", "prefiks", "część stał\\w+ (na )?(początku|górze)", "zmienn\\w+ (na )?(końcu|dole|po)"],
-          ["cache", "pamięć podręczn", "prompt caching"],
-          ["wersj\\w+", "rejestr promptów", "prompt registry", "szablon\\w*"],
-          ["ewaluacj\\w+", "zestaw\\w* regresyjn", "evals?", "regresj\\w+"]
+          [
+            "stabiln\\w+ (prefiks|początek|część)",
+            "prefiks",
+            "część stał\\w+ (na )?(początku|górze)",
+            "zmienn\\w+ (na )?(końcu|dole|po)"
+          ],
+          [
+            "cache",
+            "pamięć podręczn",
+            "prompt caching"
+          ],
+          [
+            "wersj\\w+",
+            "rejestr promptów",
+            "prompt registry",
+            "szablon\\w*"
+          ],
+          [
+            "ewaluacj\\w+",
+            "zestaw\\w* regresyjn",
+            "evals?",
+            "regresj\\w+"
+          ],
+          [
+            "przypię\\w+ model",
+            "pinned model",
+            "jedn\\w+ (rzecz|zmian\\w+) na raz",
+            "SemVer"
+          ]
         ],
-        "none": ["data i imię na początku są w porządku", "nie wersjonuj promptów"]
+        "none": [
+          "data i imię na początku są w porządku",
+          "nie wersjonuj promptów"
+        ]
       }
     },
     {
@@ -35,13 +91,49 @@
       "prompt": "Przesiadamy się na nowszy model Claude. Nasze prompty używają prefillu odpowiedzi do wymuszania JSON-a, wielkich liter CRITICAL i ręcznego budżetu myślenia. Co trzeba zmienić? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["prefill\\w*", "wstępn\\w+ wypełnieni", "częściow\\w+ wiadomoś"],
-          ["structured outputs?", "ustrukturyzowan\\w+ wyj", "schemat\\w* JSON"],
-          ["adaptive|adaptacyjn", "effort", "budget_tokens"],
-          ["złagodź", "wyciszy", "usuń (agresywn|wielkie)", "dial back", "mniej agresywn", "normalny ton"],
-          ["ewaluacj\\w+", "evals?", "zestaw\\w* regresyjn", "porówn\\w+ na tych samych"]
+          [
+            "prefill\\w*",
+            "wstępn\\w+ wypełnieni",
+            "częściow\\w+ wiadomoś"
+          ],
+          [
+            "structured outputs?",
+            "ustrukturyzowan\\w+ wyj",
+            "schemat\\w* JSON"
+          ],
+          [
+            "adaptive|adaptacyjn",
+            "effort",
+            "budget_tokens"
+          ],
+          [
+            "złagodź",
+            "wyciszy",
+            "usuń (agresywn|wielkie)",
+            "dial back",
+            "mniej agresywn",
+            "normaln\\w+ ton",
+            "zwykł\\w+[^.]{0,20}(ton|opis)",
+            "powód zamiast",
+            "nadgorliw"
+          ],
+          [
+            "ewaluacj\\w+",
+            "ewaluacyj\\w+",
+            "evals?",
+            "zestaw\\w* regresyjn",
+            "porówn\\w+ na tych samych"
+          ],
+          [
+            "jedn\\w+ (rzecz|zmian\\w+) na raz",
+            "one change at a time",
+            "(zostaw|zostawić|uruchom)[^.]{0,40}bez zmian"
+          ]
         ],
-        "none": ["prefill nadal jest wymagany", "dopisz więcej wielkich liter"]
+        "none": [
+          "prefill nadal jest wymagany",
+          "dopisz więcej wielkich liter"
+        ]
       }
     },
     {

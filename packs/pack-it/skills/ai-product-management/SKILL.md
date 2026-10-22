@@ -45,7 +45,8 @@ PRD i budżet MVP to **proc-requirements-shaping**, metodę ewaluacji (zbiory, g
    źródła lub pewność tylko tam, gdzie jest skalibrowana, zaprojektuj wyjście awaryjne (fallback bez AI), łatwą
    korektę i zbieranie sygnałów z poprawek do zbioru ewaluacyjnego. Teksty: **ux-content-design**.
 9. **Wdrożenie etapowe.** Ewaluacja offline (bramka) → dogfooding wewnętrzny → beta z wąską grupą i wyłącznikiem →
-   A/B lub shadow na części ruchu → pełne wdrożenie. Przejście wymaga kryterium zapisanego z góry. Kill switch i
+   A/B lub shadow na części ruchu → pełne wdrożenie. Samo stopniowe zwiększanie ruchu nie zastępuje A/B ani shadow:
+   potrzebne jest porównanie z grupą kontrolną na metryce produktowej. Przejście wymaga kryterium zapisanego z góry. Kill switch i
    plan wycofania gotowe przed betą (ops-release-engineering).
 10. **Metryki.** Dwie warstwy: **produktowe** (ukończenie zadania, retencja, czas oszczędzony, eskalacje do człowieka —
     to one decydują) i **modelowe** (zgodność, odsetek odrzuceń, halucynacje wg ewaluacji — diagnostyka). Dobra metryka

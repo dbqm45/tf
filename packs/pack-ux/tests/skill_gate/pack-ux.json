@@ -1,7 +1,7 @@
 {
  "ux-accessibility": {
-  "fingerprint": "d6615943a0e2cdd2",
-  "offline": "2026-10-20"
+  "fingerprint": "199461454c3648ae",
+  "offline": "2026-10-22"
  },
  "ux-content-design": {
   "fingerprint": "d74599e2680783e2",
@@ -12,16 +12,16 @@
   "offline": "2026-10-17"
  },
  "ux-design-systems": {
-  "fingerprint": "f947db4e0e3cd598",
-  "offline": "2026-10-20"
+  "fingerprint": "43b2601a5dc0bbfb",
+  "offline": "2026-10-22"
  },
  "ux-feature-design": {
   "fingerprint": "47ebf70fd2af1a31",
   "offline": "2026-10-20"
  },
  "ux-information-architecture": {
-  "fingerprint": "ecc3b9e7f3c72f3a",
-  "offline": "2026-10-20"
+  "fingerprint": "6ca4e6d51e23f4d2",
+  "offline": "2026-10-22"
  },
  "ux-research-methods": {
   "fingerprint": "756dc622d488e2aa",
@@ -32,7 +32,7 @@
   "offline": "2026-10-20"
  },
  "ux-visual-design": {
-  "fingerprint": "8e099ce79afa688f",
-  "offline": "2026-10-20"
+  "fingerprint": "7f92147feaa73c65",
+  "offline": "2026-10-22"
  }
 }

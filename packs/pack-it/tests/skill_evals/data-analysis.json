@@ -15,6 +15,13 @@
           ],
           [
             "mediana|median"
+          ],
+          [
+            "Holm",
+            "Benjamini",
+            "Bonferroni",
+            "(wiel\\w+|wielokrotn\\w+) porówna\\w+[^.]{0,60}korekt",
+            "p-hacking"
           ]
         ]
       }

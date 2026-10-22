@@ -198,12 +198,33 @@ ux-information-architecture, ux-visual-design; data-analysis gorzej ze skillem (
   ai-product-management/wdrozenie-etapowe-i-niepewnosc (A/B, shadow, canary),
   ux-information-architecture/sortowanie-kart-sklep (sortowanie zamknięte).
 
+## Zaostrzenie i poprawki po partii 4 (bez modelu)
+Kryteria 19 skilli sprawdzone offline na odpowiedziach partii 4: rozróżnia 44 z 49 scenariuszy, przed zmianą 6.
+- Nowe grupy sprawdzają reguły skilli, których model bez skilla nie podaje, np. PFRON jako nadzór EAA i termin
+  deklaracji dostępności, DTCG to raport grupy społecznej (nie standard W3C), najemca z uwierzytelnionej tożsamości
+  i test z dwoma najemcami, DPoP, wycofanie komendy kolejną komendą zamiast `DELETE`, „jedna zmiana na raz” w promptach.
+- Poprawione fałszywe odrzucenia, m.in. `ux-information-architecture/sortowanie-kart-sklep` (skill każe przy nowym
+  sklepie sortowanie otwarte — kryterium wymagało zamkniętego), `be-api-design/idempotencja-platnosci`, „Pewność”.
+- Nie rozróżniają (model zna temat sam — kandydaci do skrócenia): `be-api-design/paginacja-kolekcji`,
+  `be-database/zmiana-nazwy-kolumny`; bez wczytania skilla: `ai-research-methods/wyciek-podzial-czasowy`,
+  `arch-ai-solutions/lock-in-w-wagach`, `data-analysis/spadek-konwersji`.
+- Opisy (wczytywanie): ai-research-methods (podział losowy/czasowy/grupowy, offline vs po wdrożeniu),
+  arch-ai-solutions (lock-in dostawcy), arch-architect-practice (test odporności, adwokat diabła), data-analysis
+  (spadek metryki, paradoks Simpsona), core-grounding (liczby z raportu agenta).
+- Treść: core-cost-control (wyników z różnych raportów nie porównujesz wprost — na początku sekcji o ocenie modelu),
+  ai-mlops (walidacja danych jako pierwszy krok od notebooka do potoku), ai-product-management (stopniowe
+  zwiększanie ruchu nie zastępuje A/B ani shadow).
+- Scenariusz `arch-threat-modeling/ryzyko-ilosciowe` dopuszcza sec-risk-management (FAIR w jego opisie).
+- `ai-evals/macierz-promptfoo-podstawy` (no-trigger) wczytał ai-evals obok eng-llm-features — prompt dotyka
+  ewaluacji; do przemyślenia przy następnej zmianie scenariuszy.
+- Inne kandydaty do skrócenia: migracja promptów w ai-prompt-engineering (pokrywa wbudowany skill `claude-api`),
+  formaty GGUF w ai-model-optimization, ogólne zasady idempotencji i CDC w data-engineering.
+
 ## Dalej
 1. ~~Zaostrzyć scenariusze 11 skilli „bez różnicy” z partii 2~~ — zrobione (sekcja wyżej).
 2. ~~Poprawić wczytywanie i treść skilli z listy niezaliczonych~~ — zrobione (sekcja wyżej).
-3. Partie 3 i 4 zrobione (wyżej). Zostało ok. 220 scenariuszy trigger w nakładce IT (ddd, eng, fe, fw, lang, ops,
-   proc, qa, sec, tool — ok. 2 partie po 25 USD); przed nimi zaostrzyć 19 skilli „bez różnicy” z partii 4 i poprawić
-   9 niezaliczonych oraz core-cost-control i core-grounding.
+3. Partie 3 i 4 zrobione, zaostrzenie i poprawki po partii 4 też (sekcje wyżej). Zostało ok. 220 scenariuszy
+   trigger w nakładce IT (ddd, eng, fe, fw, lang, ops, proc, qa, sec, tool — ok. 2 partie po 25 USD).
 4. Skrócić skille, które po zaostrzeniu nadal nie wnoszą treści (kandydaci: proc-lean, txt-polish-correctness — po poprawce wielkich liter
    do ponownej oceny).
 Surowe wyniki partii są w scratchpadzie sesji i nie trafiają do repozytorium; ten raport jest ich podsumowaniem.
