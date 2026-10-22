@@ -7,25 +7,13 @@
       "prompt": "Mamy 20 zespołów i dopiero zaczynamy z AWS. Jak zaprojektować fundament chmury, żeby każdy zespół dostawał własne konto z gotową bazą? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "control tower|landing zone accelerator|landing zone"
-          ],
-          [
-            "account factory|account vending|vending|automat\\w+ zakładania kont"
-          ],
-          [
-            "konto logów|log archive|konto.{0,20}log|audit|osobn\\w+ kont\\w* .{0,20}(log|bezpiecze)"
-          ],
-          [
-            "preventive|zapobiegaw\\w+|detective|wykrywaj\\w+|scp"
-          ],
-          [
-            "polityk\\w*,? nie (według |wg )?organigram|rejestr\\w* CIDR|CIDR[^.]{0,40}(przed|zanim)|tryb\\w* audytu"
-          ]
+          ["control tower|landing zone accelerator|landing zone"],
+          ["account factory|account vending|vending|automat\\w+ zakładania kont"],
+          ["konto logów|log archive|konto.{0,20}log|audit|osobn\\w+ kont\\w* .{0,20}(log|bezpiecze)"],
+          ["preventive|zapobiegaw\\w+|detective|wykrywaj\\w+|scp"],
+          ["polityk\\w*,? nie (według |wg )?organigram|rejestr\\w* CIDR|CIDR[^.]{0,40}(przed|zanim)|tryb\\w* audytu"]
         ],
-        "none": [
-          "jedno konto dla wszystkich środowisk"
-        ]
+        "none": ["jedno konto dla wszystkich środowisk"]
       }
     },
     {
@@ -34,24 +22,12 @@
       "prompt": "Budujemy landing zone w Azure i AWS. Jaką topologię sieci wybrać dla kilkudziesięciu aplikacji i jak ją rozliczać kosztowo? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "hub[- ]and[- ]spoke|hub i spoke|hub-spoke"
-          ],
-          [
-            "transit gateway|virtual wan|shared vpc|vwan"
-          ],
-          [
-            "tag\\w*|cost allocation|alokacj\\w+ kosztów|alokacj"
-          ],
-          [
-            "cidr|adresac\\w+|plan adres|ip address"
-          ],
-          [
-            "rejestr\\w* CIDR|CIDR[^.]{0,60}(przed|zanim)|właściciel\\w* huba"
-          ],
-          [
-            "konto[^.]{0,40}(pierwsz|główn)\\w* wymiar|kwadrat"
-          ]
+          ["hub[- ]and[- ]spoke|hub i spoke|hub-spoke"],
+          ["transit gateway|virtual wan|shared vpc|vwan"],
+          ["tag\\w*|cost allocation|alokacj\\w+ kosztów|alokacj"],
+          ["cidr|adresac\\w+|plan adres|ip address"],
+          ["rejestr\\w* CIDR|CIDR[^.]{0,60}(przed|zanim)|właściciel\\w* huba"],
+          ["konto[^.]{0,40}(pierwsz|główn)\\w* wymiar|kwadrat"]
         ]
       }
     },
@@ -61,18 +37,10 @@
       "prompt": "Jak wprowadzać zmiany w landing zone, skoro dotykają setek istniejących subskrypcji? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "wersj\\w+|semver|release"
-          ],
-          [
-            "fal\\w+|ring|kanar\\w+|canary|pilot|etap"
-          ],
-          [
-            "tryb audytu|audit|dry-run|plan"
-          ],
-          [
-            "\\bmajor\\b|dryf\\w*|na której wersji"
-          ]
+          ["wersj\\w+|semver|release"],
+          ["fal\\w+|ring|kanar\\w+|canary|pilot|etap"],
+          ["tryb audytu|audit|dry-run|plan"],
+          ["\\bmajor\\b|dryf\\w*|na której wersji"]
         ]
       }
     },
