@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.6.1] — 2026-10-22
+### Fixed
+- skill descriptions that failed to trigger in model evals (#17)
+
 ## [5.6.0] — 2026-10-22
 ### Added
 - **core:** knowledge base mechanism in core (core-knowledge) (#16)
