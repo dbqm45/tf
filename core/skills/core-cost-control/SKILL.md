@@ -1,6 +1,6 @@
 ---
 name: core-cost-control
-description: Użyj przy doborze modelu i koszcie — ocena trudności, kaskada haiku→sonnet→opus, effort, cache, kompaktowanie, pomiar.
+description: Użyj przy doborze lub zmianie modelu i koszcie — porównanie wyników benchmarków, kaskada haiku→sonnet→opus, effort, cache, kompaktowanie, pomiar.
 metadata:
   przeglad: 2027-10-09
   katalog: "Użyj, gdy wybierasz model lub effort dla zadania albo wykonawcy, eskalujesz po nieudanej próbie, planujesz długą sesję, kompaktujesz kontekst albo analizujesz koszt i trafienia cache — rubryka trudności, kaskada modeli z parametrem model narzędzia Agent, profile kosztów, doradca (advisor), opusplan, reguły cache, kompaktowanie, raport kosztów. Nie do ograniczania halucynacji (core-grounding) ani wydajności samej aplikacji (skille z pack-it)."
