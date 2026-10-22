@@ -95,6 +95,11 @@
             "identyfikowaln",
             "śledzen",
             "traceab"
+          ],
+          [
+            "iteracj\\w*[^.]{0,40}wewnątrz",
+            "wewnątrz[^.]{0,40}iteracj",
+            "łącz\\w*[^.]{0,40}(iteracj|Scrum|Agile)"
           ]
         ]
       }
