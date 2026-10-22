@@ -1,6 +1,6 @@
 ---
 name: docs-tech-writing
-description: Użyj przy dokumentacji technicznej w repo — README, API, ADR, CHANGELOG, runbook, podręcznik; struktura, styl, recenzja.
+description: Użyj przy dokumentacji technicznej w repo — kiedy i jak pisać ADR, README, API, CHANGELOG, runbook, podręcznik; struktura, styl, recenzja.
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj przy pisaniu, poprawianiu lub ocenie dokumentacji technicznej w repo — README, dokumentacja API, ADR, CHANGELOG, runbook, podręcznik, opis modułu/funkcjonalności; odbiorca, struktura, styl, proces i recenzja. Nie do artefaktów dziennika docs/project/ (core-project-record), commit message (core-conventional-commits) ani komentarzy w kodzie."

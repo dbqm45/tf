@@ -1,6 +1,6 @@
 ---
 name: ddd-deep-modeling
-description: Użyj przy odkrywaniu i doprecyzowaniu pojęć modelu — Being/Behaving/Becoming, 5 why, klasyfikacja, przykłady.
+description: Użyj przy modelowaniu pojęć domeny — relacja wiele do wielu, typy definiowane przez administratora, status, Being/Behaving/Becoming, 5 why, klasyfikacja.
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj przy odkrywaniu i doprecyzowaniu pojęć modelu — pytania modelujące Being/Behaving/Becoming, 5 why, klasyfikacja problemu (CRUD, transformacja, prezentacja, integracja, konkurencja o zasoby), modelowanie przez przykłady. Nie do granic kontekstów (ddd-strategic-analysis) ani wzorców implementacyjnych (ddd-tactical-design)."

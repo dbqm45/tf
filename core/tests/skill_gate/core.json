@@ -8,8 +8,8 @@
   "offline": "2026-10-20"
  },
  "core-agent-security": {
-  "fingerprint": "3c0c6fef78b9952b",
-  "offline": "2026-10-20"
+  "fingerprint": "3256db31d1e85551",
+  "offline": "2026-10-22"
  },
  "core-async-delegation": {
   "fingerprint": "993bd042111d5352",
@@ -68,8 +68,8 @@
   "offline": "2026-10-20"
  },
  "core-source-research": {
-  "fingerprint": "da5fcfb5dcf4ee75",
-  "offline": "2026-10-21"
+  "fingerprint": "533c8999995eacb9",
+  "offline": "2026-10-22"
  },
  "core-stack-sync": {
   "fingerprint": "8c33fe1bb1eed2d7",

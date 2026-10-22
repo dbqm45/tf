@@ -1,6 +1,6 @@
 ---
 name: core-source-research
-description: Użyj przy badaniu aktualnych faktów z zewnątrz — wersje, zmiany, zgłoszenia, opinie; ranga źródeł, cytowanie z datą.
+description: Użyj, gdy trzeba sprawdzić aktualne fakty z zewnątrz — API i wersje bibliotek do planu, zmiany, zgłoszenia, opinie; ranga źródeł, cytowanie z datą.
 metadata:
   przeglad: 2027-10-09
   katalog: "Użyj, gdy odpowiedź zależy od aktualnych faktów z zewnątrz — co się zmieniło, co ludzie zgłaszają, jaka jest wersja, stan projektu albo opinia społeczności — procedura badania źródeł — doprecyzowanie tematu, routing źródeł z rezerwą, okno czasu, ranga źródeł, scalanie duplikatów, cytowanie z datą. Nie do wiedzy stałej (skille wymiarów) ani oceny opcji (skill wyboru technologii, pack-it)."
