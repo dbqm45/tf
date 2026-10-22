@@ -105,6 +105,12 @@
           ],
           [
             "eMSP[^.]{0,200}(nie (jest|występuje|wymieni|z tego)|brak|nie ma|nie wymienia|raczej nie)|,? nie eMSP|mobility service provider[^.]{0,200}(not|no )|not (the )?eMSP"
+          ],
+          [
+            "praw\\w* krajow",
+            "KSC",
+            "krajowym systemie",
+            "transpozycj"
           ]
         ],
         "none": [

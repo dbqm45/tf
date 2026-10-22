@@ -34,7 +34,9 @@
           [
             "decyzj\\w* (należ|zostaw|podejmuje człowiek)|człowiek.{0,30}decyzj",
             "pytania decyzyjne zadaj\\w* człowiek",
-            "decyzj\\w* .{0,20}(człowiekowi|Tobie)"
+            "decyzj\\w* .{0,20}(człowiekowi|Tobie)",
+            "pytani\\w* decyzyjn\\w*.{0,30}(odpowiada|należ)\\w* człowiek",
+            "odpowiada człowiek, nie agent"
           ]
         ]
       }

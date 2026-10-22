@@ -26,7 +26,8 @@
           ["MI-011"],
           ["10 października 2028", "10\\.10\\.2028", "10 October 2028", "2028-10-10"],
           ["2030", "2038"],
-          ["klas\\w* dokładno\\w*", "klas\\w* [ABC]\\b", "MMQ", "minimaln\\w* mierzon\\w*", "0[,.]5 ?%"]
+          ["klas\\w* [ABC]\\b", "MMQ", "minimaln\\w* mierzon\\w*", "0[,.]5 ?%"],
+          ["2038", "10\\.6", "bez narzędzi", "wyświetlacz"]
         ],
         "none": ["MI-011[^.]{0,40}(wyłącznie|tylko) (AC|prąd zmienny)"]
       }

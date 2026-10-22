@@ -43,6 +43,11 @@
             "miks",
             "simpson",
             "udział\\w* segment"
+          ],
+          [
+            "(hipotez|definicj)\\w*[^.]{0,40}(zanim|przed) (zobacz|licz|wynik)",
+            "obserwacyjn",
+            "grup\\w* kontroln"
           ]
         ]
       }

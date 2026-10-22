@@ -59,10 +59,18 @@
       "checks": {
         "all": [
           [
-            "ukryt\\w* pojęci|nazwij|zatrudnieni\\w*|umow\\w*|przydział\\w*|kontrakt"
+            "ukryt\\w* pojęci",
+            "osobn\\w* pojęci",
+            "nazwij\\w*",
+            "(?-i:Zatrudnieni|Kontrakt|Umow|Przydział|Członkostw)"
           ],
           [
             "jedn\\w* źródł\\w*|jeden właściciel|źródł\\w* prawdy|jedno miejsce"
+          ],
+          [
+            "test zmienno\\w+",
+            "CRUD",
+            "agregat\\w*"
           ]
         ]
       }

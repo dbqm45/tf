@@ -11,7 +11,8 @@
           ["credit.{0,20}true"],
           ["ujemn|negative|minus|ze znakiem"],
           ["nowy CDR|kolejny CDR|new CDR|drugi CDR"],
-          ["inne(go)? id|nowe id|różn.{0,20}id|unikaln.{0,20}id|-C"]
+          ["inne(go)? id|nowe id|różn.{0,20}id|unikaln.{0,20}id|-C"],
+          ["taryf\\w*[^.]{0,60}(chwil|moment)\\w* (startu|rozpocz)", "ocpi_tariff_calc", "kalkulator", "kredytowy, potem", "kolejnoś\\w* wysyłki", "najpierw kredyt"]
         ],
         "none": ["(wyślij|użyj|zrób|wykonaj)\\s+(PUT|PATCH)", "usuń .{0,30}(DELETE|CDR)"]
       }

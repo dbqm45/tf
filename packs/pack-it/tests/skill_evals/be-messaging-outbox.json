@@ -23,6 +23,14 @@
             "unikaln",
             "atomow",
             "compare-and-set"
+          ],
+          [
+            "sprawdź,? (a )?potem zapisz",
+            "check.then.(act|insert)",
+            "wyścig",
+            "\\brace\\b",
+            "synchroniczn",
+            "w locie"
           ]
         ]
       }

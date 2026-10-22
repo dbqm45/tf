@@ -11,7 +11,8 @@
           ["TOKEN_B|token B"],
           ["TOKEN_C|token C"],
           ["Base64"],
-          ["POST"]
+          ["POST"],
+          ["\\b300[13]\\b", "brak\\w* (oczekiwan\\w+ )?modu\\w+", "nie wysyłaj\\w*.{0,15}POST"]
         ],
         "none": ["TOKEN_A (zostaje|jest używany) do końca"]
       }
@@ -22,12 +23,12 @@
       "prompt": "Wysyłamy sesje do eMSP po OCPI. Co kilka minut mamy nowe okresy ładowania i wysyłamy PATCH z listą charging_periods, a eMSP twierdzi, że mu się dublują okresy i total się nie zgadza. Kto ma rację, jak to ma działać i kiedy użyć PUT? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["PATCH[^.]{0,120}(dodaj|doda|append|add)|(dodaj|doda|append|add)[^.]{0,120}PATCH"],
+          ["PATCH[^.]{0,120}(dodaj|doda|append|add|dopisuj|dokleja)|(dodaj|doda|append|add|dopisuj|dokleja)[^.]{0,120}PATCH"],
           ["PUT[^.]{0,160}(zastęp|zamien|replace)|(zastęp|zamien|replace)[^.]{0,160}PUT"],
           ["last_updated"],
           ["COMPLETED"]
         ],
-        "none": ["PATCH zastępuje całą listę"]
+        "none": ["PATCH zastępuje całą listę", "PATCH[^.]{0,10}\\*{0,2}zastępuje\\*{0,2} cał"]
       }
     },
     {

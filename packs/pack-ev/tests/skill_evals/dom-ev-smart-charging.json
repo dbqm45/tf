@@ -8,7 +8,7 @@
       "checks": {
         "all": [
           ["48 ?A"],
-          ["niespójn|sprzeczn|rozbież|inconsisten|nie zgadza"],
+          ["niespójn|sprzeczn|rozbież|inconsisten|nie zgadza", "przecz"],
           ["TxDefault.{0,80}(zainstal|ustaw|wyślij|domyśln|bezpieczn)|(zainstal|ustaw|wyślij).{0,60}TxDefault"]
         ],
         "none": ["bez profili (ładowarka|stacja) (zawsze )?nie ładuje"]
@@ -22,7 +22,8 @@
         "all": [
           ["15[,.]9"],
           ["Max.{0,60}(niższ|wygrywa|ogranicz|pułap|sufit|górn)|(niższ|ogranicz|pułap|sufit).{0,60}Max"],
-          ["11000.{0,40}(230|3 ?[x×*]|trzy)|W ?/ ?\\(?230|napięci"]
+          ["11000.{0,40}(230|3 ?[x×*]|trzy)|W ?/ ?\\(?230|napięci"],
+          ["numberPhases", "GetCompositeSchedule", "nie pobór", "pobiera\\w* mniej", "composite_schedule"]
         ],
         "none": ["pojazd (dostanie|pobierze) 16 ?A"]
       }

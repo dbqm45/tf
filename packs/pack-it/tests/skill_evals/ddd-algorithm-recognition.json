@@ -33,6 +33,11 @@
           ],
           [
             "solver|mip|nie pisz własn|gotow\\w+ bibliotek"
+          ],
+          [
+            "za interfejs",
+            "czyst\\w* funkcj",
+            "wymieni\\w* solver"
           ]
         ]
       }

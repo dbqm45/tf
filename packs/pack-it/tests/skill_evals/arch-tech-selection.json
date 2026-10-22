@@ -26,6 +26,12 @@
             "ważon",
             "weighted",
             "wag[iaę]\\b"
+          ],
+          [
+            "kryteri\\w* porzuceni",
+            "pre-?mortem",
+            "przyjazn\\w* dla agent",
+            "dat\\w* sprawdzeni"
           ]
         ]
       }

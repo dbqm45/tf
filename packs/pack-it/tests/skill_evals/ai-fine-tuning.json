@@ -22,12 +22,19 @@
             "prompt\\w*.{0,60}(najpierw|pierwsz)",
             "drabin\\w+",
             "najpierw.{0,40}prompt",
-            "kolejność"
+            "kolejność",
+            "z dowodem",
+            "najtańsz\\w+ (szczeb|krok)"
           ],
           [
             "zbiór\\w* (ewaluacyjn|testow|wzorcow)\\w*",
             "eval",
             "ewaluacj\\w+"
+          ],
+          [
+            "nie wyklucza\\w*",
+            "zamroż\\w+ zbi\\w+",
+            "zamroź"
           ]
         ],
         "none": [
@@ -98,6 +105,20 @@
             "danych osobowych",
             "anonimiz\\w+",
             "pseudonimiz\\w+"
+          ],
+          [
+            "podział\\w* (według|po) (jednost|klient|zgłosz)",
+            "według jednostki",
+            "GroupKFold",
+            "ten sam klient"
+          ],
+          [
+            "zapominani\\w+ katastroficzn",
+            "catastrophic forgetting",
+            "regresj\\w+",
+            "ogóln\\w+ umiejętn",
+            "próg\\w* .{0,20}przed (trening|dostraj)",
+            "przed treningiem"
           ]
         ],
         "none": [

@@ -24,10 +24,10 @@
         "all": [
           ["prowizj\\w* .{0,40}(przychod|udział|roaming)|fee"],
           ["8760"],
-          ["średni\\w* moc|avg_power|average power"],
+          ["średni\\w* moc|avg_power|average power", "moc\\w* średni\\w*", "P_?śr"],
           ["1[.,]04"],
           ["61[ .,]?320"],
-          ["nominał|nominal"]
+          ["nominał|nominal", "znamionow\\w+"]
         ],
         "none": ["150 ?kW ?[×x*] ?8760 ?[×x*] ?0[.,]1"]
       }

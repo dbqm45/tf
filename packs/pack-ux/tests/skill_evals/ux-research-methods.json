@@ -23,7 +23,8 @@
           ["art\\.? ?13", "obowiązek informacyjn", "klauzul\\w* informacyjn"],
           ["zgod\\w*"],
           ["wycof\\w+|cofni\\w+", "w dowolnym momencie"],
-          ["retencj", "okres\\w* przechowywania", "usun\\w+|usuwa"]
+          ["retencj", "okres\\w* przechowywania", "usun\\w+|usuwa"],
+          ["90 dni", "transkrypt\\w*[^.]{0,30}bez nazwisk", "wynagrodzeni\\w*[^.]{0,40}(niezależn|bez względu)", "nie uzależnia\\w*[^.]{0,30}opini"]
         ],
         "none": ["nagrania można trzymać bezterminowo"]
       }

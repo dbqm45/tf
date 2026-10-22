@@ -21,7 +21,9 @@
         "all": [
           ["CLAUDE\\.md|reguł|hook"],
           ["drugi|powt|ponown"],
-          ["propo|decyz|zatwierdz|zgod"]
+          ["propo|decyz|zatwierdz|zgod"],
+          ["dowod\\w*", "dowód", "evidence", "retro_data"],
+          ["miar\\w+", "lessons\\.md", "klas\\w+ błęd"]
         ]
       }
     },

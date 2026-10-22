@@ -48,6 +48,12 @@
           ],
           [
             "inn\\w* (model|dostawc)|dokumentac|specyfikac"
+          ],
+          [
+            "glossary\\.md",
+            "status\\w*[^.]{0,10}propozycj",
+            "hot spot",
+            "konfrontacj\\w*[^.]{0,20}(PRD|kod)"
           ]
         ]
       }

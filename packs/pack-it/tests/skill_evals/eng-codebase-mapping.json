@@ -50,7 +50,14 @@
             "GraphQL|schemat|komend\\w*|management"
           ],
           [
-            "code_graph|rejestr"
+            "code_graph\\w*",
+            "wejści\\w+ z rejestr\\w*"
+          ],
+          [
+            "heurystyk\\w+",
+            "martw\\w+ kod\\w*",
+            "nieosiągaln\\w+",
+            "pewnoś\\w+ krawędz"
           ]
         ]
       }
@@ -90,6 +97,14 @@
           ],
           [
             "ls-files|nadal istnieje|masow\\w* commit|30 plików|kwarta"
+          ],
+          [
+            "kwarta\\w*",
+            "ls-files",
+            "stał\\w+ centrum",
+            "kampani\\w+",
+            "linie niepuste",
+            "× lini"
           ]
         ]
       }

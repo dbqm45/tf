@@ -7,23 +7,9 @@
       "prompt": "Alert w SIEM pokazał, że konto administratora zalogowało się z nowego kraju i utworzyło token API. Jak postępować krok po kroku z incydentem, zanim wyłączymy maszynę i konto? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "dowod",
-            "dowód",
-            "migawk",
-            "snapshot",
-            "pamięć",
-            "pamięci"
-          ],
-          [
-            "containment",
-            "ograniczen"
-          ],
-          [
-            "łańcuch dowodow",
-            "chain of custody",
-            "zakres"
-          ]
+          ["dowod", "dowód", "migawk", "snapshot", "pamięć", "pamięci"],
+          ["containment", "ograniczen"],
+          ["łańcuch dowodow", "chain of custody", "zakres"]
         ]
       }
     },
@@ -33,26 +19,13 @@
       "prompt": "W naszej firmie doszło do wycieku danych osobowych klientów. W jakich terminach trzeba to zgłosić i kto przygotowuje zgłoszenie? Zakładamy, że podlegamy też NIS2. Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "72"
-          ],
-          [
-            "24 h",
-            "24h",
-            "24 godz",
-            "wczesne ostrzeż",
-            "early warning"
-          ],
-          [
-            "prawn",
-            "dział prawny"
-          ]
+          ["72"],
+          ["24 h", "24h", "24 godz", "wczesne ostrzeż", "early warning"],
+          ["prawn", "dział prawny"],
+          ["oś\\w* czasu", "timeline", "zapisz\\w*[^.]{0,60}(godzin|moment|zdarzeni)\\w*"]
         ]
       },
-      "accept": [
-        "sec-eu-regulations",
-        "arch-privacy-compliance"
-      ]
+      "accept": ["sec-eu-regulations", "arch-privacy-compliance"]
     },
     {
       "id": "model-zagrozen",

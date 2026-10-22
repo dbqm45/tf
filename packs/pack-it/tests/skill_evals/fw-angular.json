@@ -10,14 +10,8 @@
       },
       "checks": {
         "all": [
-          [
-            "httpResource",
-            "rxResource",
-            "resource"
-          ],
-          [
-            "debounced"
-          ]
+          ["httpResource", "rxResource", "resource"],
+          ["debounced"]
         ]
       }
     },
@@ -30,20 +24,9 @@
       },
       "checks": {
         "all": [
-          [
-            "Signal Forms",
-            "forms/signals"
-          ],
-          [
-            "formField"
-          ],
-          [
-            "zostaj",
-            "pozostaw",
-            "nie migruj",
-            "nie przepisuj",
-            "bez migracji"
-          ]
+          ["Signal Forms", "forms/signals"],
+          ["formField"],
+          ["zostaj", "pozostaw", "nie migruj", "nie przepisuj", "bez migracji"]
         ]
       }
     },
@@ -59,14 +42,9 @@
       "prompt": "Planujemy nową aplikację w Angularze 22. Jakie podejście do formularzy i detekcji zmian przyjąć od startu? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "Signal Forms",
-            "forms/signals"
-          ],
-          [
-            "zoneless",
-            "bez zone"
-          ]
+          ["Signal Forms", "forms/signals"],
+          ["zoneless", "bez zone"],
+          ["\\bEager\\b", "OnPush\\w*[^.]{0,40}domyśln\\w*", "domain/", "FormValueControl"]
         ]
       }
     },
@@ -76,19 +54,11 @@
       "prompt": "Utwórz nową aplikację w Angularze dla sklepu internetowego z SSR, bez pytań interaktywnych. Jakie polecenie uruchomisz i co sprawdzisz przed i po? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "ng new"
-          ],
-          [
-            "--ssr"
-          ],
-          [
-            "--interactive=false",
-            "--defaults"
-          ],
-          [
-            "ng build"
-          ]
+          ["ng new", "@angular/cli(@\\S+)? new"],
+          ["--ssr"],
+          ["--interactive=false", "--defaults"],
+          ["ng build", "npm run build"],
+          ["--ai-config", "globaln\\w*[^.]{0,40}(zostaw|Tobie|człowiek)", "serwer\\w* deweloper\\w*[^.]{0,30}nie", "nie uruchamiam[^.]{0,30}(serwer|ng serve)"]
         ]
       }
     },
@@ -98,22 +68,11 @@
       "prompt": "W aplikacji Angular 22 z SSR strona produktu ma być prerenderowana, panel konta renderowany tylko w przeglądarce, a reszta na serwerze. Jak to skonfigurować i na co uważać przy hydratacji? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "RenderMode"
-          ],
-          [
-            "Prerender"
-          ],
-          [
-            "Client"
-          ],
-          [
-            "isPlatformBrowser",
-            "DOCUMENT",
-            "afterNextRender",
-            "ten sam DOM",
-            "identyczn"
-          ]
+          ["RenderMode"],
+          ["Prerender"],
+          ["Client"],
+          ["isPlatformBrowser", "DOCUMENT", "afterNextRender", "ten sam DOM", "identyczn"],
+          ["inject\\(\\)[^.\\n]{0,40}przed[^.\\n]{0,20}await", "PrerenderFallback", "wartoś\\w*[^.\\n]{0,20}(jako )?(string|tekst)"]
         ]
       }
     },
@@ -123,15 +82,9 @@
       "prompt": "W Angularze 21 chcę animować pojawianie się i znikanie powiadomienia w @if. Używać @angular/animations? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          [
-            "animate.enter"
-          ],
-          [
-            "animate.leave"
-          ],
-          [
-            "CSS"
-          ]
+          ["animate.enter"],
+          ["animate.leave"],
+          ["CSS"]
         ]
       }
     }

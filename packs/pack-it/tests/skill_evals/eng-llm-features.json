@@ -99,6 +99,12 @@
             "retencj",
             "warunk\\w* (danych|konsumenck|komercyjn)",
             "konsumenck"
+          ],
+          [
+            "nie przełącza\\w*",
+            "maxTurns",
+            "maxBudgetUsd",
+            "błęd\\w*[^.]{0,40}(nie|zamiast)[^.]{0,30}(przełącz|login)"
           ]
         ]
       }
