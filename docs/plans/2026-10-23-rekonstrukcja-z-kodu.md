@@ -1,6 +1,6 @@
 # Plan: rekonstrukcja projektu z kodu
 
-Data: 2026-10-23 · Status: **F0 i F1a zrobione** (scenariusze; graf Java/C#/Go), dalej F1b · Gałąź robocza: `claude/great-hypatia-angvam`
+Data: 2026-10-23 · Status: **F0, F1a, F1b zrobione** (scenariusze; graf Java/C#/Go; spis i standardy), dalej F1c · Gałąź robocza: `claude/great-hypatia-angvam`
 
 ## TL;DR
 Nowy skill w `pack-it` (roboczo `eng-project-reconstruction`), który z samego repozytorium (duże, stare, wiele języków)
@@ -13,7 +13,7 @@ użytkownika).
 
 ## Przekazanie (jak wznowić po wyczyszczeniu kontekstu)
 1. Przeczytaj ten plik i `git status` w `/home/user/tf`.
-2. Następny krok: **F1b** (patrz „Etapy”). F0 i F1a gotowe; F0: scenariusze w `docs/plans/evals/eng-project-reconstruction.json`
+2. Następny krok: **F1c** (patrz „Etapy”). F0, F1a, F1b gotowe; F0: scenariusze w `docs/plans/evals/eng-project-reconstruction.json`
    (9: 5 trigger, 4 no-trigger z sąsiadami); w F2 przenieść je do `packs/pack-it/tests/skill_evals/` (walidator wymaga
    istniejącego `SKILL.md`, dlatego teraz leżą w `docs/plans/`).
 3. Zasady repo: bez README opisującego fabrykę (repo publiczne); `claude-team-factory` i `ev-team-factory` nietknięte;
@@ -134,7 +134,7 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
   - `code_graph.py`: Java (package/import, `@SpringBootApplication`, `main`, kontrolery), C# (namespace/using,
     `Program.cs`, kontrolery ASP.NET), Go (`package`/`import`, `func main`, `go.mod` jako korzeń modułu). Testy na
     małych fixture'ach w `tests/`.
-- **F1b. Spis i standardy (TDD):** `repo_inventory.py`, `standards_scan.py`.
+- **F1b. Spis i standardy (TDD):** `repo_inventory.py`, `standards_scan.py`. ✓ zrobione 2026-10-23 (w `eng-codebase-mapping/scripts/`).
 - **F1c. Schemat i weryfikator (TDD):** `schema_scan.py` (migracje SQL, Flyway/Liquibase, encje JPA i EF),
     `recon_check.py` (weryfikator dowodów i kompletności).
 - **F2. Skill + szablony:** `SKILL.md` (zwięźle, przykłady), `references/` (szablon raportu, schemat karty JSON,

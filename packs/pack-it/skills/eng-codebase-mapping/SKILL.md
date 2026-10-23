@@ -29,6 +29,11 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
      skleja niezwiązane pliki); osobno **huby** zmieniane z wieloma obszarami (konfiguracja, tłumaczenia, kod generowany);
    - pliki z rankingu, których nie ma w `git ls-files`, są oznaczone — historia mówi o przeszłości;
    - hotspoty: zmiany × linie niepuste (eng-tech-debt-audit).
+1c. **Spis i konwencje bez modelu** (duże lub obce repo): `python3 .claude/skills/eng-codebase-mapping/scripts/repo_inventory.py
+   <repo> [--budget-tokens N]` — języki, pliki budowania, wykluczenia (zależności, build, kod wygenerowany), moduły
+   i partie plików w budżecie tokenów do analizy porcjami; `scripts/standards_scan.py <repo>` — narzędzia
+   z konfiguracji i konwencje policzone w kodzie (nazwy plików, testy, łapanie błędów, logowanie, TODO) z udziałem,
+   przykładami `plik:linia` i wyjątkami. To dane do standardu, nie standard.
 1b. **Kontrybutorzy** (opcjonalnie, dla 3–5 stref ryzyka): `git_territory.py --authors <ścieżka>` — bez botów
    i commitów, których autorem jest agent AI. To lista „kogo zapytać, które PR-y przeczytać”, nie właściciele: nie
    mówi, kto nadal pracuje ani czy tamte decyzje są aktualne. Wiedza w jednej osobie = ryzyko na mapie. W mapie
