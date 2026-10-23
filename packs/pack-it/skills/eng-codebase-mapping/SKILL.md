@@ -34,6 +34,10 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    i partie plików w budżecie tokenów do analizy porcjami; `scripts/standards_scan.py <repo>` — narzędzia
    z konfiguracji i konwencje policzone w kodzie (nazwy plików, testy, łapanie błędów, logowanie, TODO) z udziałem,
    przykładami `plik:linia` i wyjątkami. To dane do standardu, nie standard.
+   `scripts/schema_scan.py <repo>` — tabele, kolumny, ograniczenia i powiązania z migracji SQL (Flyway) oraz encji
+   JPA i EF Core z `plik:linia` (ograniczenia = kandydaci na reguły). Raport z dowodami sprawdza
+   `scripts/recon_check.py <raport.md> --repo <repo>`: plik i linia istnieją, cytat zgadza się z kodem (±2 linie),
+   wypunktowania bez dowodu i bez [założenie]/[niezweryfikowane]/[pytanie] są zgłaszane.
 1b. **Kontrybutorzy** (opcjonalnie, dla 3–5 stref ryzyka): `git_territory.py --authors <ścieżka>` — bez botów
    i commitów, których autorem jest agent AI. To lista „kogo zapytać, które PR-y przeczytać”, nie właściciele: nie
    mówi, kto nadal pracuje ani czy tamte decyzje są aktualne. Wiedza w jednej osobie = ryzyko na mapie. W mapie
