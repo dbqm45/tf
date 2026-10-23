@@ -2,7 +2,7 @@
 # skill procesowy, skrypty), instalowany jak nakładka. Przewodnik: GUIDE.md (w projekcie: factory/packs/mode-talos/).
 id: mode-talos
 kind: mode
-version: 1.0.0
+version: 1.1.0
 title: Talos
 description: Talos — story to pull request on demand (`claude --agent talos` or /talos-story-run) — sliced plan, a commit per slice, one PR, a time and cost report.
 content_language: pl
