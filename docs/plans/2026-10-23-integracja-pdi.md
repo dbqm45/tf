@@ -54,6 +54,7 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 | Faza | Zmiana | Gdzie w tf |
 |---|---|---|
 | **F0** | Dziennik per zmiana: `change new <CHG> [--source <PRB>]`, szablony `intent`, `plan`, `decisions`; `check` waliduje nagłówki w `changes/` | `core/hooks/project_record.py`, `core/skills/core-project-record/` — **ta sesja** |
+| **F0b** | Zapis i wypychanie decyzji z dowolnego narzędzia: `project_record.py decision add --change CHG-n "…"` (wpis w `decisions.md`; gdy serwer MCP pdi podłączony — od razu `record_decision` i numer `DEC-n`), kolejka bez połączenia (wpis „niewysłane”, `decision sync` wysyła później, stały identyfikator wpisu → bez duplikatów), `decision export` (JSON wszystkich decyzji projektu do indeksowania), reguła w core-project-record („Odpowiedzi i decyzje człowieka”): decyzja z rozmowy albo bramki idzie przez to polecenie | `core/hooks/project_record.py`, `core/skills/core-project-record/` — po F0, osobny PR |
 | F0 | Instalacja tf w pdi i ShipScope | osobne sesje w tamtych repo |
 | F1 | Dopisek `Change: TSK-n`, hook commit-msg | `core/skills/core-conventional-commits`, `core-git-workflow` |
 | F1 | Talos czyta cięcia z `plan.md` zmiany; raport do `changes/CHG/runs/TSK-n.md` | `modes/mode-talos/` |
@@ -100,6 +101,11 @@ Poza zakresem: F1–F4 (dopisek Change:, Talos, rekonstrukcja, triaż z pdi, try
 - Szablony zmiany w `templates/change/` — bez kolizji z istniejącymi `templates/plan.md` i `templates/decisions.md`.
 - `dbqm45/pdi` jest prywatne: dodać do sesji tylko do odczytu (add_repo) przed czytaniem kontraktu.
 - `tools/workspace.py check --packs all` trwa kilka minut — uruchomić w tle z długim limitem czasu.
+
+## Zasada zgodności wstecz
+Fabryka działa jak dotąd: nowe polecenia są dodatkowe, `check` zaostrza się tylko dla `docs/project/changes/`,
+a wypychanie do pdi działa wyłącznie, gdy serwer MCP pdi jest podłączony. Projekt bez pdi i bez dziennika zmian
+nie widzi różnicy.
 
 ## Kryteria „gotowe” dla F0
 - `change new` tworzy katalog z trzema plikami; każdy nagłówek przechodzi walidację względem
