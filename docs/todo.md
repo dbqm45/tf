@@ -305,3 +305,19 @@ Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy sk
 Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4). Zakres teraz: tylko kod; bez PHP.
 - [ ] F0–F5 wg planu.
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
+
+## Generator nowej nakładki (`new-pack`) — zapisane 2026-10-23
+Dziś nowa nakładka powstaje przez ręczne kopiowanie istniejącej. Cel: szkielet jednym poleceniem + prowadzenie przez Claude.
+- [ ] **Skrypt:** `python3 tools/workspace.py new-pack <nazwa> [--kind pack|mode] [--title] [--description] [--prefix]
+  [--requires] [--role] [--skill]` tworzy `packs/pack-<nazwa>/` (albo `modes/mode-<nazwa>/`): minimalny poprawny
+  `pack.yaml` (`version: 0.1.0`, `default: false`, `requires.core` z bieżącej wersji rdzenia, `facets` z prefiksem),
+  szkielet `skills/<prefiks>-…/SKILL.md` wg core-skill-authoring, `tests/skill_evals/<skill>.json`, opcjonalnie
+  `roles/<rola>.md`, `GUIDE.md`; dopisuje nakładkę do macierzy w `.github/workflows/factory-checks.yml` (dziś lista
+  na sztywno); na koniec uruchamia `workspace.py check --packs <id>` i `refs` i wypisuje listę „do zrobienia”.
+  Szkielet scenariuszy celowo nie przechodzi bramki, dopóki nie powstaną prawdziwe scenariusze. Istniejący katalog →
+  błąd bez nadpisywania. TDD (test generatora w `tests/`).
+- [ ] **Skill dla autora fabryki** (tylko w repo tf, nie w rdzeniu — decyzja do potwierdzenia): na „new pack …” dopytuje
+  o zakres, prefiks, zależności i role, najpierw proponuje scenariusze ewaluacji, potem woła generator, wypełnia treść
+  i uruchamia bramki.
+- [ ] **Przewodnik** budowy nakładki (pola `pack.yaml`, tryb vs paczka, prefiksy, granice `refs`, wersjonowanie)
+  w `docs/` — nie jako README w `packs/` (repo publiczne).
