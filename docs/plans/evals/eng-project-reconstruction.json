@@ -1,0 +1,101 @@
+{
+ "skill": "eng-project-reconstruction",
+ "scenarios": [
+  {
+   "id": "duze-stare-repo-raport",
+   "expect": "trigger",
+   "prompt": "Dostałem do przejęcia duże repozytorium (ok. 400 tys. linii, Java i trochę Go, historia od 2012 r.), bez dokumentacji. Chcę z samego kodu odtworzyć, czym jest ten projekt: domeny, stack, wymagania, reguły i standardy, i dostać czytelny raport. Jak to zrobić tanio i rzetelnie? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["plik:linia", "dow[oó]d\\w*"],
+     ["skrypt\\w*", "deterministycz", "bez modelu", "0 token"],
+     ["tańsz\\w* model", "haiku", "kaskad"],
+     ["budżet", "szacun\\w* koszt", "limit koszt"],
+     ["standard\\w*"],
+     ["pewnoś", "czego nie sprawdz", "pytani\\w* do (ludzi|zespołu|człowieka)"]
+    ],
+    "none": ["przeczytaj całe repo", "wczytaj całe repo do kontekstu"]
+   }
+  },
+  {
+   "id": "standardy-z-kodu",
+   "expect": "trigger",
+   "prompt": "Chcę wyciągnąć z istniejącego kodu standardy, których zespół faktycznie przestrzega (nazewnictwo, obsługa błędów, testy, API), żeby agent AI pisał nowy kod tak samo. Nikt ich nie spisał. Jak to zrobić, żeby nie wyszła lista życzeń? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["liczb\\w* wystąpień", "ile razy", "częstoś", "\\d+ ?%"],
+     ["wyjąt\\w*", "odstęp\\w*", "sprzecznoś"],
+     ["plik:linia", "dow[oó]d\\w*", "przykład\\w* z kodu"],
+     ["INDEX", "spis", "indeks"]
+    ],
+    "none": ["przyjmij (standard|konwencj)\\w* z internetu"]
+   }
+  },
+  {
+   "id": "odswiezenie-po-zmianach",
+   "expect": "trigger",
+   "prompt": "Miesiąc temu zrobiliśmy z kodu raport o projekcie (moduły, domeny, reguły, standardy). Od tego czasu zmieniło się kilkadziesiąt plików. Jak go zaktualizować bez ponownej analizy całego repo? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["git diff", "zmienion\\w* plik", "hash"],
+     ["tylko (zmienion|dotknięt)", "przyrostow"],
+     ["manifest", "commit\\w* bazow", "commit\\w*"]
+    ]
+   }
+  },
+  {
+   "id": "wymagania-z-testow",
+   "expect": "trigger",
+   "prompt": "Mamy system w C# bez specyfikacji. Chcę odtworzyć z kodu wymagania i reguły biznesowe, a potem dać je zespołowi do potwierdzenia. Skąd w kodzie je brać i jak oznaczyć, co jest pewne? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["test\\w*"],
+     ["walidacj", "ograniczen\\w* w (bazie|schemacie)", "schemat\\w* bazy"],
+     ["endpoint", "kontroler", "API"],
+     ["pewnoś", "do potwierdzenia", "niepotwierdzon"]
+    ]
+   }
+  },
+  {
+   "id": "wejscie-dla-automatu-historyjek",
+   "expect": "trigger",
+   "prompt": "Zanim automat zacznie realizować historyjki w tym repo, chcę, żeby znał projekt: słownik domeny, moduły i obowiązujące konwencje kodu. Jak przygotować taki opis z samego kodu, żeby agent mógł go czytać przy każdej historyjce? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["słownik", "glosariusz"],
+     ["standard\\w*", "konwencj"],
+     ["docs/project", "plik\\w* (wynikow|w repo)", "INDEX"],
+     ["plik:linia", "dow[oó]d\\w*"]
+    ]
+   }
+  },
+  {
+   "id": "dossier-przed-refaktorem",
+   "expect": "no-trigger",
+   "neighbor": "eng-legacy-dossier",
+   "prompt": "Przed refaktorem modułu rozliczeń w starym systemie chcę ocenić jego architekturę: as-is, ocena rozwiązań z dowodami i roadmapa zmian z priorytetami. Jak to przeprowadzić? Odpowiedz zwięźle.",
+   "checks": {"all": [["as-is", "stan obecn"], ["roadmap"]]}
+  },
+  {
+   "id": "wplyw-zmiany-pliku",
+   "expect": "no-trigger",
+   "neighbor": "eng-codebase-mapping",
+   "prompt": "Muszę zmienić sygnaturę jednej funkcji w serwisie płatności. Jak szybko sprawdzić, co od niej zależy i które testy uruchomić? Odpowiedz zwięźle.",
+   "checks": {"all": [["import\\w*", "zależn\\w*"], ["test\\w*"]]}
+  },
+  {
+   "id": "dlug-techniczny-priorytety",
+   "expect": "no-trigger",
+   "neighbor": "eng-tech-debt-audit",
+   "prompt": "Zrób mi audyt długu technicznego naszego repo: co najbardziej boli, waga, wysiłek naprawy i kolejność. Jak to podejść? Odpowiedz zwięźle.",
+   "checks": {"all": [["wag\\w*", "wpływ"], ["wysił\\w*", "koszt"]]}
+  },
+  {
+   "id": "pelny-audyt-bezpieczenstwo",
+   "expect": "no-trigger",
+   "neighbor": "eng-code-audit",
+   "prompt": "Klient chce pełnego audytu kodu przed zakupem firmy: architektura, bezpieczeństwo, jakość, dostępność i zgodność z prawem, ze wspólnym rankingiem ustaleń. Jak to zorganizować w budżecie? Odpowiedz zwięźle.",
+   "checks": {"all": [["bezpieczeńst"], ["ranking", "priorytet"]]}
+  }
+ ]
+}

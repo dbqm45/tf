@@ -1,6 +1,6 @@
 # Plan: rekonstrukcja projektu z kodu
 
-Data: 2026-10-23 · Status: **plan do akceptacji** (nic nie zaimplementowane) · Gałąź robocza: `claude/great-hypatia-angvam`
+Data: 2026-10-23 · Status: **F0 zrobione** (scenariusze), dalej F1a · Gałąź robocza: `claude/great-hypatia-angvam`
 
 ## TL;DR
 Nowy skill w `pack-it` (roboczo `eng-project-reconstruction`), który z samego repozytorium (duże, stare, wiele języków)
@@ -13,8 +13,9 @@ użytkownika).
 
 ## Przekazanie (jak wznowić po wyczyszczeniu kontekstu)
 1. Przeczytaj ten plik i `git status` w `/home/user/tf`.
-2. Pierwszy krok do zrobienia: **F0** (scenariusze ewaluacji + decyzje D1–D4 z użytkownikiem). Kodu nie piszemy
-   przed akceptacją planu.
+2. Następny krok: **F1a** (patrz „Etapy”). F0 gotowe: scenariusze w `docs/plans/evals/eng-project-reconstruction.json`
+   (9: 5 trigger, 4 no-trigger z sąsiadami); w F2 przenieść je do `packs/pack-it/tests/skill_evals/` (walidator wymaga
+   istniejącego `SKILL.md`, dlatego teraz leżą w `docs/plans/`).
 3. Zasady repo: bez README opisującego fabrykę (repo publiczne); `claude-team-factory` i `ev-team-factory` nietknięte;
    merge do `main` po zielonym CI; odpowiedzi po polsku; płatne ewaluacje tylko za zgodą.
 4. Bramki przed PR: `python3 tools/workspace.py assemble --packs all --out .work/X`, w `.work/X`:
@@ -109,11 +110,14 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
 - **F0. Scenariusze i decyzje (darmowe).** Scenariusze ewaluacji skilla (trafienie, sąsiedzi: `eng-legacy-dossier`,
   `eng-codebase-mapping`, `eng-code-audit`, `ddd-legacy-modernization`; zakazy: zmiana kodu, twierdzenie bez dowodu),
   `checks` rozróżniające; decyzje D1–D4.
-- **F1. Skrypty (TDD, stdlib, bez sieci):**
+- Etapy są cięte tak, żeby każdy zmieścił się w jednym oknie limitu (~5–10% tygodniowego) i kończył się zielonym CI
+  i merge — bez przerywania w połowie.
+- **F1a. Graf dla Javy, C# i Go (TDD):**
   - `code_graph.py`: Java (package/import, `@SpringBootApplication`, `main`, kontrolery), C# (namespace/using,
     `Program.cs`, kontrolery ASP.NET), Go (`package`/`import`, `func main`, `go.mod` jako korzeń modułu). Testy na
     małych fixture'ach w `tests/`.
-  - `repo_inventory.py`, `standards_scan.py`, `schema_scan.py` (migracje SQL, Flyway/Liquibase, encje JPA i EF),
+- **F1b. Spis i standardy (TDD):** `repo_inventory.py`, `standards_scan.py`.
+- **F1c. Schemat i weryfikator (TDD):** `schema_scan.py` (migracje SQL, Flyway/Liquibase, encje JPA i EF),
     `recon_check.py` (weryfikator dowodów i kompletności).
 - **F2. Skill + szablony:** `SKILL.md` (zwięźle, przykłady), `references/` (szablon raportu, schemat karty JSON,
   prompt karty pod cache), bramka, `refs`, `--hints`.
@@ -133,12 +137,13 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
   liczba twierdzeń bez dowodu; koszt odświeżenia po zmianie 5% plików.
 - Kryterium sukcesu: ≥ pokrycie maistera przy ≤ 50% kosztu, precyzja dowodów ≥ 95% [cel do potwierdzenia pomiarem].
 
-## Decyzje do podjęcia przed F1
-- **D1. Nazwa skilla:** `eng-project-reconstruction` (propozycja) — czy inna?
+## Decyzje (przyjęte domyślnie 2026-10-23 — użytkownik może zmienić)
+- **D1. Nazwa skilla:** `eng-project-reconstruction` (domyślnie).
 - **D2. Wspólna mechanika przebiegu:** `run_report.py` jest w `mode-talos`, a nakładki nie mogą się odwoływać do siebie.
-  Opcje: (a) przenieść ogólną część do `core/` i używać w obu (rekomendacja), (b) osobna mała kopia w skillu.
+  Opcje: (a) przenieść ogólną część do `core/` i używać w obu (domyślnie, w F2), (b) osobna mała kopia w skillu.
 - **D3. Wybór repo do benchmarku** i zgoda na koszt (szacunek podam przed startem).
-- **D4. Raport HTML jako Artifact** — domyślnie tak (prywatny), czy tylko Markdown?
+- **D4. Raport HTML jako Artifact** — domyślnie tak (prywatny) w F5; Markdown zawsze.
+- **D3** nadal otwarte (przed F4).
 
 ## Ryzyka
 - Regex dla Javy/C#/Go nie złapie wszystkiego (refleksja, DI z XML, generowany kod) → raport oznacza luki;
