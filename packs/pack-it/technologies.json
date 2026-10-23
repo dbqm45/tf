@@ -143,11 +143,8 @@
       "name": "Go",
       "skill": "lang-go",
       "detect": {
-        "files": [
-          "go.mod"
-        ]
-      },
-      "versionless": true
+        "go": true
+      }
     },
     {
       "id": "playwright",

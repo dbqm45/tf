@@ -1,0 +1,103 @@
+{
+  "skill": "lang-go",
+  "scenarios": [
+    {
+      "id": "wynik-rezerwacji-bledy",
+      "expect": "trigger",
+      "prompt": "Piszę serwis rezerwacji w Go. Jak zwrócić z metody Reserve wynik: sukces albo odrzucenie (termin zajęty, zasób wyłączony), żeby wywołujący mógł te przypadki rozróżnić i obsłużyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "errors\\.Is",
+            "errors\\.As"
+          ],
+          [
+            "var Err\\w+\\s*=\\s*errors\\.New",
+            "sentinel",
+            "błęd\\w* wartownik"
+          ],
+          [
+            "%w",
+            "opakow\\w*",
+            "wrap"
+          ],
+          [
+            "typ\\w* błędu",
+            "type \\w+Error struct",
+            "Error\\(\\) string"
+          ]
+        ],
+        "none": [
+          "panic\\([^)]*\\)\\s*(dla|przy|gdy) (odrzuce|termin|konflikt)"
+        ]
+      }
+    },
+    {
+      "id": "kwota-i-identyfikator",
+      "expect": "trigger",
+      "prompt": "Jak w Go zamodelować kwotę pieniężną i identyfikator klienta, żeby nie dało się ich pomylić z gołym stringiem albo float64 i żeby niepoprawna wartość nie powstała? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "type \\w+ (struct|string|int64)",
+            "typ\\w* nazwan",
+            "defined type"
+          ],
+          [
+            "int64",
+            "grosz\\w*",
+            "jednost\\w* minimaln",
+            "minor unit",
+            "decimal"
+          ],
+          [
+            "New\\w+\\(",
+            "konstruktor\\w*",
+            "fabryk\\w*"
+          ],
+          [
+            "walidac\\w*",
+            "error"
+          ]
+        ],
+        "none": [
+          "float64[^\\n]{0,30}(dla|do) kwot"
+        ]
+      }
+    },
+    {
+      "id": "wersja-go-mod",
+      "expect": "trigger",
+      "prompt": "Nasz go.mod ma dyrektywę go 1.21. Zespół chce używać iteratorów (range po funkcji), sync.WaitGroup.Go i new z wyrażeniem. Od których wersji Go to działa i co zmienić w projekcie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "1\\.23"
+          ],
+          [
+            "1\\.25"
+          ],
+          [
+            "1\\.26"
+          ],
+          [
+            "dyrektyw\\w* go",
+            "go\\.mod",
+            "go mod edit"
+          ],
+          [
+            "toolchain",
+            "GOTOOLCHAIN",
+            "CI"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-java-sealed",
+      "expect": "no-trigger",
+      "neighbor": "lang-java",
+      "prompt": "Jak w Javie 21 zamodelować warianty wyniku operacji przez sealed interface i rekordy z wyczerpującym switch?"
+    }
+  ]
+}

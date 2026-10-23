@@ -167,6 +167,14 @@ def kotlin_present(root: Path) -> tuple[str | None, str]:
     return None, ""
 
 
+def go_version(root: Path) -> tuple[str | None, str]:
+    """Dyrektywa `go` w go.mod (minimalna wersja języka modułu), nie `toolchain` (narzędzie do budowania)."""
+    if not (root / "go.mod").exists():
+        return None, ""
+    m = re.search(r"^go\s+([\d.]+)\s*$", _read(root / "go.mod"), re.M)
+    return (m.group(1), "go.mod go") if m else ("", "go.mod")
+
+
 def _read(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="ignore")
@@ -224,6 +232,10 @@ def detect(root: Path, tech: dict) -> tuple[bool, str | None, str]:
             return True, v or None, src
     if d.get("java"):
         v, src = java_version(root)
+        if v is not None:
+            return True, v or None, src
+    if d.get("go"):
+        v, src = go_version(root)
         if v is not None:
             return True, v or None, src
     if d.get("spring_boot"):
