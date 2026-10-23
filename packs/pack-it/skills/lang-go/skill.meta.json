@@ -1,0 +1,8 @@
+{
+  "technology": "Go",
+  "based_on": "1.27",
+  "min_supported": "1.22",
+  "verified": "2026-10-23",
+  "verified_with": "go1.22.0 i go1.27.3: gofmt -l, go vet ./..., go test ./... (references/domain-building-blocks.md); progi wersji kompilatorami go1.21.0–go1.27.0",
+  "sources": ["https://go.dev/doc/devel/release", "https://go.dev/ref/spec", "https://proxy.golang.org/golang.org/toolchain/@v/list"]
+}

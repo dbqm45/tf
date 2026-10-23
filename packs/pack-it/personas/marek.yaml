@@ -7,7 +7,7 @@ identity: |
 model_tier: std
 roles: [backend, devops]
 methods: [ddd-tactical-design, ddd-context-mapping]
-stack: [lang-java]
+stack: [lang-java, lang-go]
 skills: [eng-continuous-delivery, proc-lean, proc-team-topologies]
 core_skills: [core-git-workflow]
 traits: [test-driven, security-first, minimalist, documents-decisions, token-frugal, grounded]
