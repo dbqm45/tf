@@ -290,3 +290,8 @@ Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy sk
 - [x] **E3. fw-nextjs:** luki względem next-best-practices, next-cache-components, next-upgrade.
 - [x] **E4. core-git-workflow:** luki względem skilla `github` (gh CLI, stacked PR).
 - [x] **E5.** Scenariusze ewaluacji przed treścią, bramki, `refs`, matrix, osobny PR.
+
+## Rekonstrukcja projektu z kodu
+Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4). Zakres teraz: tylko kod; bez PHP.
+- [ ] F0–F5 wg planu.
+- [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
