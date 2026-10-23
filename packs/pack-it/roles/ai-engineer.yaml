@@ -7,6 +7,6 @@ identity: |
   wariant, który go przejdzie: prompt, potem RAG lub narzędzia, a trening dopiero wtedy, gdy pomiar pokaże, że prostsze
   sposoby nie wystarczą. Każdą zmianę modelu, promptu lub narzędzi sprawdzasz tym samym zestawem.
 tools: [Read, Grep, Glob, Edit, Write, Bash, Skill]
-skills: [ai-evals, ai-prompt-engineering, ai-rag, ai-agents, ai-fine-tuning, ai-model-optimization, eng-llm-features, ops-ai-inference, core-cost-control, qa-spec-first-testing]
+skills: [ai-evals, ai-prompt-engineering, ai-rag, ai-agents, ai-mcp-server, ai-fine-tuning, ai-model-optimization, eng-llm-features, ops-ai-inference, core-cost-control, qa-spec-first-testing]
 preload: []
 verify: zestaw ewaluacyjny z progiem przechodzi przed i po zmianie (raport z liczbami); testy jednostkowe zielone; koszt i latencja na żądanie podane w raporcie

@@ -1,0 +1,111 @@
+{
+  "skill": "ai-mcp-server",
+  "scenarios": [
+    {
+      "id": "zbudowac-i-przetestowac",
+      "expect": "trigger",
+      "prompt": "Chcemy wystawić nasz system rezerwacji sal jako serwer MCP dla Claude Code i innych agentów. Jak go zbudować i jak testować w CI bez wywoływania modelu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "stdio",
+            "Streamable HTTP"
+          ],
+          [
+            "stdout",
+            "stderr"
+          ],
+          [
+            "create_connected_server_and_client_session",
+            "w pamięci",
+            "in-memory",
+            "Inspector"
+          ],
+          [
+            "migawk\\w*",
+            "kontrakt\\w*",
+            "snapshot",
+            "list\\w* narzędzi"
+          ],
+          [
+            "readOnlyHint",
+            "destructiveHint",
+            "adnotac\\w*"
+          ]
+        ],
+        "none": [
+          "print\\([^)]*\\)\\s*(do|na) (logowania|debug)"
+        ]
+      }
+    },
+    {
+      "id": "zdalny-serwer-autoryzacja",
+      "expect": "trigger",
+      "prompt": "Udostępniamy nasz serwer MCP przez HTTP klientom zewnętrznym; za nim jest nasze API. Na co uważać przy autoryzacji i bezpieczeństwie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "OAuth ?2\\.1"
+          ],
+          [
+            "audience",
+            "odbiorc\\w*",
+            "RFC ?8707",
+            "resource indicator"
+          ],
+          [
+            "passthrough",
+            "przekazyw\\w* tokenu",
+            "confused deputy",
+            "zastępc\\w*"
+          ],
+          [
+            "Origin",
+            "DNS rebinding",
+            "localhost",
+            "127\\.0\\.0\\.1"
+          ]
+        ],
+        "none": [
+          "przekaż\\w* (token|nagłówek Authorization) (dalej|do (API|usługi))"
+        ]
+      }
+    },
+    {
+      "id": "skill-czy-serwer",
+      "expect": "trigger",
+      "prompt": "Mamy wewnętrzne API raportów. Zrobić dla agentów serwer MCP czy wystarczy skill ze skryptem, który woła to API? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "skill\\w*",
+            "skrypt\\w*"
+          ],
+          [
+            "wiel\\w* klient\\w*",
+            "inn\\w* (narzędzi|agent|klient)",
+            "różn\\w* (klient|narzędzi)"
+          ],
+          [
+            "uwierzytelni\\w*",
+            "sekret\\w*",
+            "token\\w*",
+            "uprawnie\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-petla-agenta",
+      "expect": "no-trigger",
+      "neighbor": "ai-agents",
+      "prompt": "Jak zaprojektować pętlę agenta z narzędziami, warunkiem stopu i budżetem kroków?"
+    },
+    {
+      "id": "sasiad-obcy-serwer",
+      "expect": "no-trigger",
+      "neighbor": "core-agent-security",
+      "prompt": "Chcę podłączyć do Claude Code obcy serwer MCP znaleziony na GitHubie. Jak sprawdzić, czy jest bezpieczny, zanim go użyję?"
+    }
+  ]
+}

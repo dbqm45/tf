@@ -38,7 +38,8 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    - narzędzia sprawdzasz zadaniami wieloetapowymi z weryfikowalnym wynikiem; liczysz wywołania, błędy i tokeny,
      czytasz transkrypty i poprawiasz opisy (drobna zmiana opisu potrafi dużo zmienić).
    Wystawiasz narzędzia przez **serwer MCP**, gdy korzysta z nich wielu klientów; ta sama zasada: narzędzia
-   zorientowane na zadanie, nie na endpointy. Zaufanie do cudzych serwerów MCP: **core-agent-security**.
+   zorientowane na zadanie, nie na endpointy. Zaufanie do cudzych serwerów MCP: **core-agent-security**; budowa,
+   bezpieczeństwo, testy i wersje własnego serwera: **ai-mcp-server**.
 4. **Kontekst** (okno jest zasobem skończonym, jakość spada, gdy się zapełnia): do kontekstu trafia minimum, które
    pozwala na kolejny krok. Techniki: ładowanie na żądanie (agent trzyma ścieżki i zapytania, a treść pobiera
    narzędziem), usuwanie starych wyników narzędzi, **kompaktowanie** (streszczenie rozmowy w nowym oknie), notatki

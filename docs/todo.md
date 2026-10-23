@@ -361,7 +361,7 @@ Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
 - [x] **5. `lang-go` oraz `lang-csharp` z `fw-aspnet-core`** — zrobione 2026-10-23: `lang-go` (wykrywanie wersji z `go.mod`, przykłady sprawdzone go1.22.0 i go1.27.3); `lang-csharp` i `fw-aspnet-core` (wykrywanie platformy z `*.csproj`, przykłady i testy sprawdzone SDK 8.0.132 i 10.0.113) (inspiracja: eduardo-sl/go-agent-skills, Microsoft,
   `openai/aspnet-core`): rekonstrukcja z kodu czyta Go i C#, agent nie ma skilli do pisania w tych językach.
   Wersje sprawdzić w źródłach (core-source-research), wpis w `technologies.json`.
-- [ ] **6. Budowa serwera MCP** (anthropics/microsoft `mcp-builder`): transport, uwierzytelnianie, testowanie
+- [x] **6. Budowa serwera MCP** — zrobione 2026-10-23: skill `ai-mcp-server` (odsyła do oficjalnego `mcp-builder`; przykład z testami sprawdzony SDK `mcp` 1.29.0) (anthropics/microsoft `mcp-builder`): transport, uwierzytelnianie, testowanie
   (MCP Inspector), wersjonowanie narzędzi. Najpierw sprawdzić oficjalny skill Anthropic — może wystarczy odesłanie
   i ustalenia projektu (core-skill-authoring, krok 1); `ai-agents` ma dziś tylko projekt narzędzi i zaufanie.
 - [ ] **7. Techniczne SEO** (Addy Osmani `seo`): indeksowanie, dane strukturalne, sitemap, canonical, meta; dla
