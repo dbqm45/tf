@@ -1,0 +1,19 @@
+# Tryb pdi: decyzje w jednym źródle — dziennik zmiany (docs/project/changes/CHG-n/) zgodny z kontraktem pdi 0.3.0
+# i zapis decyzji do rejestru pdi przez MCP. Opcjonalny; bez niego fabryka działa jak dotąd.
+# Przewodnik: GUIDE.md (w projekcie: factory/packs/mode-pdi/).
+id: mode-pdi
+kind: mode
+version: 0.1.0
+title: pdi decisions
+description: Decisions in one source with pdi — per-change journal (docs/project/changes/CHG-n/) following the pdi contract and decision recording through the pdi MCP server; opt-in.
+content_language: pl
+default: false
+requires:
+  core: ">=5.6.0 <6.0.0"
+
+facets:
+  - {prefix: pdi-, order: 195, name: decyzje pdi, question: "jak zapisać decyzję o zmianie w jednym źródle (repo + rejestr pdi)"}
+
+contributes:
+  personas:
+    core_skills: [pdi-decisions]   # każda persona zapisuje decyzje o zmianie tak samo

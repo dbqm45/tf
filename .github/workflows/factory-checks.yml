@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        packs: [none, pack-it, pack-ux, pack-docs, pack-editorial-pl, pack-ev, mode-talos, mode-team, all]
+        packs: [none, pack-it, pack-ux, pack-docs, pack-editorial-pl, pack-ev, mode-talos, mode-team, mode-pdi, all]
     steps:
       - uses: actions/checkout@v7
         with:
