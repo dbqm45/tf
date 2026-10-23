@@ -7,6 +7,7 @@ Odhaczone pozycje są zrobione (`- [x]`). Źródła faktów: dokumentacja code.c
 Cel: decyzje podejmowane w różnych narzędziach (sesje Claude Code, tf, pdi, później inne) zapisywane w jednym
 źródle prawdy, jako część większego workflow AI SDLC; tf musi umieć je wypchnąć i zapisać zgodnie ze wspólnym
 kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`. Kolejność: przed F1a rekonstrukcji i pozostałymi pozycjami.
+- Wszystko w opcjonalnym trybie `modes/mode-pdi/` (rdzeń bez zmian); działa, gdy podłączony jest serwer MCP pdi.
 - [ ] **F0:** dziennik per zmiana — `project_record.py change new CHG-n [--source PRB-n]`, `check` dla
   `docs/project/changes/*/`, szablony w `templates/change/`, sekcja „Zmiana (CHG)” w core-project-record; TDD, bramki, PR.
 - [ ] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
