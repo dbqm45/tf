@@ -53,7 +53,8 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 
 | Faza | Zmiana | Gdzie w tf |
 |---|---|---|
-| **F0** | Dziennik per zmiana: `change new <CHG> [--source <PRB>]`, szablony `intent`, `plan`, `decisions`; `check` waliduje nagłówki w `changes/` | `core/hooks/project_record.py`, `core/skills/core-project-record/` — **ta sesja** |
+| **F0** | Dziennik per zmiana: `change new <CHG> [--source <PRB>]`, szablony `intent`, `plan`, `decisions`; `check` waliduje nagłówki w `changes/` | `modes/mode-pdi/` (patrz „Architektura”) — **ta sesja** |
+| **F0b** | Zapis i wypychanie decyzji z dowolnego narzędzia: `decision_record.py decision add --change CHG-n "…"` (skrypt trybu) (wpis w `decisions.md`; gdy serwer MCP pdi podłączony — od razu `record_decision` i numer `DEC-n`), kolejka bez połączenia (wpis „niewysłane”, `decision sync` wysyła później, stały identyfikator wpisu → bez duplikatów), `decision export` (JSON wszystkich decyzji projektu do indeksowania), reguła w skillu trybu: decyzja z rozmowy albo bramki idzie przez to polecenie | `modes/mode-pdi/` — po F0, osobny PR |
 | F0 | Instalacja tf w pdi i ShipScope | osobne sesje w tamtych repo |
 | F1 | Dopisek `Change: TSK-n`, hook commit-msg | `core/skills/core-conventional-commits`, `core-git-workflow` |
 | F1 | Talos czyta cięcia z `plan.md` zmiany; raport do `changes/CHG/runs/TSK-n.md` | `modes/mode-talos/` |
@@ -69,37 +70,59 @@ Realizujemy F0 integracji tf z pdi według docs/plans/2026-10-23-integracja-pdi.
 contract/change.schema.json i contract/examples/change.json (gałąź main albo claude/magical-dirac-wjvn8y,
 jeśli kontrakt 0.3.0 nie jest jeszcze scalony).
 
-Cel: dziennik per zmiana w core-project-record.
-1. `project_record.py change new CHG-12 [--source PRB-34]` tworzy docs/project/changes/CHG-12/ z intent.md,
-   plan.md i decisions.md z szablonów; nagłówek każdego pliku zgodny z contract/change.schema.json (pole change
-   wymagane; source opcjonalne; tasks tylko w plan.md; status draft; version 1; created/updated = dziś). Klucze według
-   wzorca [A-Z][A-Z0-9]+-[0-9]+; istniejący katalog → błąd bez nadpisywania.
-2. `project_record.py check` sprawdza też artefakty w docs/project/changes/*/: brak change albo change różny od nazwy
+Cel: nowy opcjonalny tryb `modes/mode-pdi/` (kind: mode, default: false) z dziennikiem per zmiana; rdzeń
+(core/hooks/project_record.py, core-project-record) bez zmian. Najpierw obejrzyj modes/mode-talos/ jako wzór trybu
+(pack.yaml, skills/, hooks/, tests/) i sprawdź, jak tryb wnosi skrypt i test.
+1. `python3 .claude/hooks/decision_record.py change new CHG-12 [--source PRB-34]` (skrypt trybu) tworzy
+   docs/project/changes/CHG-12/ z intent.md, plan.md i decisions.md z szablonów trybu; nagłówek każdego pliku zgodny
+   z contract/change.schema.json (pole change wymagane; source opcjonalne; tasks tylko w plan.md; status draft;
+   version 1; created/updated = dziś). Klucze według wzorca [A-Z][A-Z0-9]+-[0-9]+; istniejący katalog → błąd bez
+   nadpisywania.
+2. `decision_record.py check` waliduje artefakty w docs/project/changes/*/: brak change albo change różny od nazwy
    katalogu, nieznany artifact, tasks poza plan.md, zły kształt klucza → błąd z podpowiedzią.
-3. Szablony intent, plan, decisions w core/skills/core-project-record/templates/change/ (osobny podkatalog —
-   templates/plan.md i templates/decisions.md już istnieją dla dziennika projektu i zostają bez zmian; intent: problem, warianty, wybrany
-   wariant, metryki sukcesu, poza zakresem; plan: cięcia TSK z wartością, plikami i weryfikacją; decisions: wpisy
-   z id DEC-n — numer z rejestru pdi przez MCP record_decision z links.chg, jeśli serwer pdi jest podłączony; inaczej
-   pole id puste do uzupełnienia).
-4. SKILL.md core-project-record: krótka sekcja „Zmiana (CHG)” — kiedy dziennik per zmiana, a kiedy per projekt.
+3. Szablony intent, plan, decisions w skillu trybu (np. modes/mode-pdi/skills/pdi-decisions/templates/) — intent:
+   problem, warianty, wybrany wariant, metryki sukcesu, poza zakresem; plan: cięcia TSK z wartością, plikami
+   i weryfikacją; decisions: wpisy z id DEC-n — numer z rejestru pdi przez MCP record_decision z links.chg; bez
+   podłączonego serwera pole id puste, wpis oznaczony „niewysłane”.
+4. SKILL.md trybu: kiedy dziennik per zmiana; decyzja z rozmowy lub bramki → zapis lokalny + record_decision przez
+   MCP; brak serwera pdi → nie wypychaj, zgłoś. Scenariusze ewaluacji przed treścią (core-skill-authoring).
 
-Zgoda człowieka: w zakresie punktów 1–4 możesz zmieniać core/hooks/project_record.py i
-core/skills/core-project-record/. Nie zmieniaj settings.json ani factory/ poza tym, czego wymaga przebudowa.
-claude-team-factory i ev-team-factory nietknięte.
+Zgoda człowieka: tworzysz nowy katalog modes/mode-pdi/ (pack.yaml, skill, skrypt, testy, GUIDE.md). Rdzenia, innych
+nakładek, settings.json ani factory/ nie zmieniasz. claude-team-factory i ev-team-factory nietknięte.
 
-Sposób pracy: plan (pliki, kolejność, testy) zapisany przed kodem; TDD w core/tests/test_project_record.py (najpierw
-czerwony); bramki: `python3 tools/workspace.py check --packs all`, `python3 tools/workspace.py refs`,
+Sposób pracy: plan (pliki, kolejność, testy) zapisany przed kodem; TDD w modes/mode-pdi/tests/ (najpierw czerwony);
+bramki: `python3 tools/workspace.py check --packs all` (w tle, długi limit czasu), `python3 tools/workspace.py refs`,
 `for t in tests/test_*.py; do python3 "$t" || exit 1; done`, w złożonym projekcie
-`python3 factory/skill_gate.py core-project-record`. Jeśli CLI project_record.py jest publicznym API fabryki,
-nowa komenda to wersja minor (core-semver); numer liczy semver.py, bez tagu. Punkt kontrolny wip.
+`python3 factory/skill_gate.py <skill trybu>`. Wersja trybu 0.1.0 w pack.yaml. Punkt kontrolny wip.
 Commit i PR — na moją prośbę; tytuł PR sprawdź scripts/check_commit_message.py.
-Poza zakresem: F1–F4 (dopisek Change:, Talos, rekonstrukcja, triaż z pdi, tryb bez interakcji).
+Poza zakresem: F0b (decision add/sync/export), F1–F4.
 ```
 
 ## Uwagi przed startem (2026-10-23)
 - Szablony zmiany w `templates/change/` — bez kolizji z istniejącymi `templates/plan.md` i `templates/decisions.md`.
 - `dbqm45/pdi` jest prywatne: dodać do sesji tylko do odczytu (add_repo) przed czytaniem kontraktu.
 - `tools/workspace.py check --packs all` trwa kilka minut — uruchomić w tle z długim limitem czasu.
+
+## Architektura: osobna nakładka `mode-pdi` (decyzja właściciela 2026-10-23)
+Fabryka bez nakładki działa dokładnie jak dotąd; wszystko, co dotyczy decyzji i pdi, żyje w opcjonalnym trybie
+`modes/mode-pdi/` (`kind: mode`, `default: false`), instalowanym `tf add pdi` i usuwanym `tf remove pdi`.
+- **Rdzeń bez zmian:** `core/hooks/project_record.py` i `core-project-record` zostają nietknięte. Dziennik zmiany
+  (`changes/CHG-n/`), szablony i polecenia `change new`, `decision add/sync/export` oraz walidacja `changes/` są we
+  własnym skrypcie trybu (np. `modes/mode-pdi/hooks/decision_record.py`) i jego skillu (np. `pdi-decisions`).
+- **Aktywacja:** tryb działa, gdy serwer MCP pdi jest skonfigurowany (np. `.mcp.json` projektu); bez niego
+  `tf doctor` zgłasza brak, a skill nie wypycha decyzji.
+- **Podział pracy:** skrypt zapisuje lokalnie, waliduje i prowadzi kolejkę „niewysłane”; model (wg skilla) woła
+  `record_decision` przez MCP i wpisuje zwrócony `DEC-n`. Zapis bez modelu (np. z CI) wymagałby API HTTP/CLI w pdi —
+  pytanie do pdi, nie teraz.
+- **Granice:** `tools/workspace.py refs` — rdzeń i inne nakładki nie znają nazwy trybu; integracje z Talosem (F1)
+  tylko przez konwencję ścieżek (Talos czyta `docs/project/changes/<CHG>/plan.md`, jeśli istnieje), bez nazw skilli.
+- **Do sprawdzenia przy F0:** jak nakładka dokłada polecenia do `tf doctor` i czy tryb może wnosić skrypt
+  w `hooks/` bez wpisu w `settings.json` (skrypt wołany ręcznie/przez skill, nie jako hook zdarzeń).
+
+## Zasada zgodności wstecz
+Fabryka działa jak dotąd: nowe polecenia są dodatkowe, `check` zaostrza się tylko dla `docs/project/changes/`,
+a wypychanie do pdi działa wyłącznie, gdy serwer MCP pdi jest podłączony. Projekt bez pdi i bez dziennika zmian
+nie widzi różnicy.
 
 ## Kryteria „gotowe” dla F0
 - `change new` tworzy katalog z trzema plikami; każdy nagłówek przechodzi walidację względem
