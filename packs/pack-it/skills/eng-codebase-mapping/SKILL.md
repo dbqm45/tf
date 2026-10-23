@@ -3,7 +3,7 @@ name: eng-codebase-mapping
 description: Użyj przy nieznanym kodzie i ocenie wpływu zmiany — punkty wejścia, warstwy z importów, węzły centralne, cykle.
 metadata:
   przeglad: 2027-10-09
-  katalog: "Użyj, gdy trzeba zrozumieć nieznany kod lub ocenić wpływ zmiany — punkty wejścia, warstwy z grafu importów, węzły centralne i cykle runtime vs leniwe (scripts/code_graph.py dla Pythona i TS/JS), terytorium z historii gita (zmiany w czasie, współzmiany, kontrybutorzy, hotspoty — scripts/git_territory.py), legenda modułów, trasa czytania dla nowej osoby, wpływ diffu (1 krok w górę i w dół, warstwy, ryzyko), pewność krawędzi, analiza jednego przepływu i badanie kodu pod zmianę (research.md). Nie do oceny długu (eng-tech-debt-audit), wyboru refaktoryzacji (eng-refactor-planning) ani projektowania granic (ddd-strategic-analysis)."
+  katalog: "Użyj, gdy trzeba zrozumieć nieznany kod lub ocenić wpływ zmiany — punkty wejścia, warstwy z grafu importów, węzły centralne i cykle runtime vs leniwe (scripts/code_graph.py dla Pythona, TS/JS, Javy, C# i Go), terytorium z historii gita (zmiany w czasie, współzmiany, kontrybutorzy, hotspoty — scripts/git_territory.py), legenda modułów, trasa czytania dla nowej osoby, wpływ diffu (1 krok w górę i w dół, warstwy, ryzyko), pewność krawędzi, analiza jednego przepływu i badanie kodu pod zmianę (research.md). Nie do oceny długu (eng-tech-debt-audit), wyboru refaktoryzacji (eng-refactor-planning) ani projektowania granic (ddd-strategic-analysis)."
   slowa: "graf importów bez narzędzi, cykle importów, nieznane repo, mapa kodu, mapa repo, od czego zacząć czytać, punkty wejścia, graf zależności, historia gita, co się najczęściej zmienia, współzmiany, kto zmieniał, kogo zapytać, hotspoty, analiza przepływu, jak działa ten feature, research przed zmianą, wpływ zmiany"
 ---
 
@@ -37,14 +37,16 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    - Nx: `nx graph --file=graph.json` (projekty i zależności), granice modułów z tagów (tool-nx);
    - TS/JS: `madge --json` / `madge --circular`, dependency-cruiser (`--collapse`, `--focus`, `--reaches`, `--metrics`);
      Java: `jdeps`, ArchUnit, moduły Maven/Gradle; inne języki i ślepe plamy narzędzi: `references/wide-scan.md`.
-   - Python i TS/JS bez tych narzędzi (brak instalacji, brak sieci): **uruchom**
+   - Python, TS/JS, Java, C# i Go bez tych narzędzi (brak instalacji, brak sieci): **uruchom**
      `python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo>` (`--impact <plik>`, `--focus <ścieżka>`
      — importy przez granicę modułu, dwa `--focus` — szew pary; `--json`) zamiast
      pisać własny skaner — daje kroki 3 i 5 oraz dane do 4: punkty wejścia z punktacją, krawędzie między pakietami
      workspace, grupy z kierunkiem, pary pod prąd, huby bez barreli (re-eksportów), cykle runtime osobno od domykanych
      importami leniwymi (w funkcji, `TYPE_CHECKING`, `import type`, `import()`); grupę z > 40% plików sam rozbija
      o poziom niżej (`--group-depth N` wyłącza). Liczby bierz z wyniku; kod czytaj, by
-     nazwać warstwy i sprawdzić wątpliwe miejsca (punkt wejścia z samej nazwy, cykl przez `__init__`).
+     nazwać warstwy i sprawdzić wątpliwe miejsca (punkt wejścia z samej nazwy, cykl przez `__init__`). C#: `using`
+     wiąże z każdym plikiem przestrzeni nazw (krawędzie zgrubne); Java: klasy z tego samego pakietu bez importu
+     są niewidoczne; wejścia Javy, C# i Go rozpoznaje po `main` (`Program.cs`, `@SpringBootApplication`).
    - Sprzężenie runtime (DI, flagi, kolejki, webhooki, refleksja, dynamiczny import, codegen) graf pomija — wpisz je
      do `unknowns`; warstwa bez grafu to „nie objęte narzędziem”, nie „brak powiązań”.
 3. **Punkty wejścia** — punktacja kandydatów:
