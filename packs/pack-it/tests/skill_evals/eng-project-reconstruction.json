@@ -57,6 +57,21 @@
    }
   },
   {
+   "id": "raport-do-udostepnienia",
+   "expect": "trigger",
+   "prompt": "Mamy już z kodu raport o projekcie w Markdown (moduły, domeny, reguły, standardy). Szef chce go przejrzeć w przeglądarce i pokazać zarządowi, a za miesiąc odświeżymy go po zmianach w repo. Jak go podać i jak potem odświeżyć, żeby nie płacić drugi raz za całe repozytorium? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["HTML", "Artifact", "stron\\w* (www|w przeglądarce)"],
+     ["Markdown\\w* (zostaje|jest źródłem)", "źródł\\w* prawdy", "z Markdown"],
+     ["prywatn", "za zgodą", "nie (publikuj|udostępniaj) bez"],
+     ["manifest", "hash"],
+     ["tylko (zmienion|dotknięt)", "przyrostow", "partie ze zmian"]
+    ],
+    "none": ["przeanalizuj (ponownie )?całe repo", "pełn\\w* przebieg za każdym razem"]
+   }
+  },
+  {
    "id": "wejscie-dla-automatu-historyjek",
    "expect": "trigger",
    "prompt": "Zanim automat zacznie realizować historyjki w tym repo, chcę, żeby znał projekt: słownik domeny, moduły i obowiązujące konwencje kodu. Jak przygotować taki opis z samego kodu, żeby agent mógł go czytać przy każdej historyjce? Odpowiedz zwięźle.",

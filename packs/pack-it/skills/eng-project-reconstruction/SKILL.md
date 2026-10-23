@@ -3,8 +3,8 @@ name: eng-project-reconstruction
 description: Użyj, gdy z samego kodu trzeba odtworzyć, czym jest projekt — stack, moduły, domeny, wymagania, reguły, standardy — raport z dowodami.
 metadata:
   przeglad: 2027-04-23
-  katalog: "Użyj, gdy trzeba z samego repozytorium (duże, stare, wiele języków, bez dokumentacji) odtworzyć opis projektu: stack, moduły, domeny i słownik, wymagania z testów i walidacji, reguły biznesowe, standardy faktycznie stosowane w kodzie, ryzyka, pytania do ludzi — raport w docs/project/00-reconstruction/ z dowodem plik:linia przy każdym twierdzeniu, szkice CLAUDE.md i REVIEW.md ze standardów, odświeżanie przyrostowe po zmianach (manifest z hashami). Najpierw skrypty bez modelu (spis i partie w budżecie, graf, historia gita, standardy, schemat bazy), potem karty modułów tańszym modelem, synteza mocniejszym, kontrola dowodów skryptem. Nie do opisu architektury przed refaktorem z oceną i roadmapą (eng-legacy-dossier), samej mapy i wpływu zmiany (eng-codebase-mapping), długu (eng-tech-debt-audit) ani pełnego audytu z bezpieczeństwem (eng-code-audit)."
-  slowa: "rekonstrukcja projektu, odtworzyć z kodu, z samego kodu, czym jest ten projekt, przejąłem repozytorium, przejęte repo, duże repozytorium, bez dokumentacji, raport o projekcie, opis projektu, stack projektu, domeny z kodu, wymagania z kodu, wymagania z testów, reguły biznesowe z kodu, standardy z kodu, konwencje zespołu, których zespół przestrzega, agent ma pisać tak samo, CLAUDE.md z kodu, REVIEW.md, słownik domeny z kodu, odświeżyć raport, zaktualizować raport, zmieniło się kilkadziesiąt plików, maister, automat ma znać projekt, kontekst dla agenta"
+  katalog: "Użyj, gdy trzeba z samego repozytorium (duże, stare, wiele języków, bez dokumentacji) odtworzyć opis projektu: stack, moduły, domeny i słownik, wymagania z testów i walidacji, reguły biznesowe, standardy faktycznie stosowane w kodzie, ryzyka, pytania do ludzi — raport w docs/project/00-reconstruction/ z dowodem plik:linia przy każdym twierdzeniu, szkice CLAUDE.md i REVIEW.md ze standardów, odświeżanie przyrostowe po zmianach (manifest z hashami), wersja HTML do czytania. Najpierw skrypty bez modelu (spis i partie w budżecie, graf, historia gita, standardy, schemat bazy), potem karty modułów tańszym modelem, synteza mocniejszym, kontrola dowodów skryptem. Nie do opisu architektury przed refaktorem z oceną i roadmapą (eng-legacy-dossier), samej mapy i wpływu zmiany (eng-codebase-mapping), długu (eng-tech-debt-audit) ani pełnego audytu z bezpieczeństwem (eng-code-audit)."
+  slowa: "rekonstrukcja projektu, odtworzyć z kodu, z samego kodu, czym jest ten projekt, przejąłem repozytorium, przejęte repo, duże repozytorium, bez dokumentacji, raport o projekcie, opis projektu, stack projektu, domeny z kodu, wymagania z kodu, wymagania z testów, reguły biznesowe z kodu, standardy z kodu, konwencje zespołu, których zespół przestrzega, agent ma pisać tak samo, CLAUDE.md z kodu, REVIEW.md, słownik domeny z kodu, odświeżyć raport, zaktualizować raport, zmieniło się kilkadziesiąt plików, maister, automat ma znać projekt, kontekst dla agenta, raport w przeglądarce, raport HTML, pokazać raport zarządowi"
 ---
 
 # Rekonstrukcja projektu z kodu
@@ -38,16 +38,23 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 6. **Raport** `report.md` wg `references/raport.md` + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
    (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`.
 7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,
-   wszystkie sekcje, twierdzenia bez dowodu oznaczone. Raport kosztu przebiegu (core-cost-control) i `manifest.json`.
+   wszystkie sekcje, twierdzenia bez dowodu oznaczone. Raport kosztu przebiegu (core-cost-control), potem
+   `recon_manifest.py write <repo> --out docs/project/00-reconstruction/manifest.json --budget-tokens N --cost-usd X`.
+8. **Wersja do czytania (opcjonalnie):** jedna strona HTML z `report.md` (spis treści, tabele, dowody jako tekst).
+   Gdy sesja ma narzędzie Artifact — prywatna strona, udostępnia ją człowiek; bez niego plik
+   `report.html` obok. Źródłem prawdy zostaje Markdown; strona to widok, po odświeżeniu generujesz ją od nowa.
 
 ## Wynik
 `docs/project/00-reconstruction/`: `plan.md`, `raw/`, `modules/*.json`, `domain.md`, `requirements.md`, `rules.md`,
 `standards/` z `INDEX.md`, `report.md`, `CLAUDE.draft.md`, `REVIEW.draft.md`, `manifest.json`
-(commit bazowy, hash każdej partii, data, koszt).
+(commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), opcjonalnie `report.html`.
 
 ## Odświeżanie przyrostowe
-`git diff --name-only <commit z manifestu> HEAD` → partie z nowym hashem plików → tylko ich karty od nowa, potem
-synteza dotkniętych sekcji i `recon_check --final`. Partie bez zmian zostają; w raporcie data i commit odświeżenia.
+`recon_manifest.py diff <repo> --manifest docs/project/00-reconstruction/manifest.json` (ten sam budżet partii
+co w manifeście) → partie do odświeżenia (zmieniony hash albo nowe), usunięte (skasuj ich karty), zmienione testy.
+Tylko te karty od nowa, potem synteza dotkniętych sekcji (domeny, reguły, standardy z nowymi kartami; wymagania
+także ze zmienionych testów), `recon_check --final` i `recon_manifest.py write` z nowym commitem. Partie bez zmian
+zostają; w raporcie data i commit odświeżenia. Ponad połowa plików zmieniona → pełny przebieg (skrypt to podpowie).
 
 ## Zasady
 - **Dowód albo oznaczenie** — bez wyjątków; cytat przy dowodzie musi się zgadzać z kodem (sprawdza `recon_check`).

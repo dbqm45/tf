@@ -1,6 +1,6 @@
 # Plan: rekonstrukcja projektu z kodu
 
-Data: 2026-10-23 · Status: **F0–F3 zrobione** (skill rekonstrukcji; Talos czyta standardy i słownik, `plan_drift.py`), dalej F4 (pomiar, za zgodą) · Gałąź robocza: `claude/great-hypatia-angvam`
+Data: 2026-10-23 · Status: **F0–F3 i F5 zrobione** (skill rekonstrukcji; Talos czyta standardy i słownik, `plan_drift.py`; manifest i odświeżanie przyrostowe), F4 (pomiar, za zgodą) odłożony decyzją użytkownika 2026-10-23 · Gałąź robocza: `claude/great-hypatia-angvam`
 
 ## TL;DR
 Nowy skill w `pack-it` (roboczo `eng-project-reconstruction`), który z samego repozytorium (duże, stare, wiele języków)
@@ -142,7 +142,7 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
 - **F3. Integracja z Talosem:** ✓ zrobione 2026-10-23 (krok przyjęcia czyta `standards/INDEX.md` i `domain.md`; `plan_drift.py` w kroku zakończenia i w PR; mode-talos 1.1.0; scenariusz ewaluacji Talosa pominięty — skill ręczny, ma tylko no-trigger). w kroku przyjęcia historyjki Talos czyta `docs/project/00-reconstruction/standards/INDEX.md`
   i `domain.md`, jeśli istnieją (bez nazw skilli z innej nakładki — opis słowny). Scenariusz ewaluacji Talosa.
 - **F4. Pomiar (płatny, za zgodą):** ewaluacja skilla na Haiku (~1–2 USD); benchmark vs maister — patrz niżej.
-- **F5. Odświeżanie przyrostowe + raport HTML (Artifact).**
+- **F5. Odświeżanie przyrostowe + raport HTML (Artifact).** ✓ zrobione 2026-10-23 (`recon_manifest.py write|diff` — partie i pliki z hashem sha256, partie do odświeżenia, usunięte, zmienione testy; krok 8 skilla: strona HTML z `report.md`, Artifact prywatny, gdy jest w sesji; Markdown zostaje źródłem).
 - **F6. Opcjonalnie:** mod z panelem postępu; tryb Workflow dla bardzo dużych repo; tryb wsadowy (Batches).
 - **F7. Odłożone do decyzji:** konektory GitHub (issues/PR jako źródło wymagań), Confluence, Slack;
   izolacja przebiegu „bez skilli” (już w `docs/todo.md`).

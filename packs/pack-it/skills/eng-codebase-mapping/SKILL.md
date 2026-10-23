@@ -38,6 +38,8 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    JPA i EF Core z `plik:linia` (ograniczenia = kandydaci na reguły). Raport z dowodami sprawdza
    `scripts/recon_check.py <raport.md> --repo <repo>`: plik i linia istnieją, cytat zgadza się z kodem (±2 linie),
    wypunktowania bez dowodu i bez [założenie]/[niezweryfikowane]/[pytanie] są zgłaszane.
+   `scripts/recon_manifest.py write|diff <repo>` — partie i pliki z hashami; po zmianach mówi, które partie
+   przeanalizować od nowa.
 1b. **Kontrybutorzy** (opcjonalnie, dla 3–5 stref ryzyka): `git_territory.py --authors <ścieżka>` — bez botów
    i commitów, których autorem jest agent AI. To lista „kogo zapytać, które PR-y przeczytać”, nie właściciele: nie
    mówi, kto nadal pracuje ani czy tamte decyzje są aktualne. Wiedza w jednej osobie = ryzyko na mapie. W mapie
