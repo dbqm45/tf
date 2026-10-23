@@ -86,6 +86,71 @@
       }
     },
     {
+      "id": "komunikat-prasowy-przed-budowa",
+      "expect": "trigger",
+      "prompt": "Zarząd chce nowego modułu do automatycznego rozliczania delegacji. Zanim zespół zacznie budować, chcę sprawdzić, czy wiemy, po co i dla kogo. Jak to opisać i przetestować przed pierwszą linią kodu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "komunikat\\w* prasow",
+            "press release",
+            "working backwards",
+            "PR/FAQ"
+          ],
+          [
+            "FAQ",
+            "pytani\\w* i odpowied"
+          ],
+          [
+            "hipotez\\w*",
+            "założe\\w*"
+          ],
+          [
+            "metryk\\w*",
+            "wynik\\w*",
+            "kryteri\\w* sukcesu",
+            "miar\\w*"
+          ],
+          [
+            "test\\w*",
+            "concierge",
+            "prototyp\\w*",
+            "rozmow\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "roadmapa-wynikow",
+      "expect": "trigger",
+      "prompt": "Nasza roadmapa to lista funkcji z datami na 12 miesięcy i co kwartał ją przepisujemy. Jak ją przebudować, żeby pokazywała, co chcemy osiągnąć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wynik\\w*",
+            "outcome"
+          ],
+          [
+            "teraz[^\\n]{0,40}(dalej|następn)[^\\n]{0,40}później",
+            "now[^\\n]{0,20}next[^\\n]{0,20}later"
+          ],
+          [
+            "hipotez\\w*",
+            "problem\\w*",
+            "szans\\w*"
+          ],
+          [
+            "metryk\\w*",
+            "miar\\w*",
+            "wskaźnik\\w*"
+          ]
+        ],
+        "none": [
+          "dodaj (więcej )?dat\\w* do każdej funkcji"
+        ]
+      }
+    },
+    {
       "id": "projekt-ui",
       "expect": "no-trigger",
       "prompt": "Jak zaprojektować formularz rejestracji, żeby był czytelny i dostępny: układ pól, komunikaty błędów, etykiety? Odpowiedz zwięźle.",

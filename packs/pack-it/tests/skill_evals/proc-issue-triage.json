@@ -44,6 +44,38 @@
       }
     },
     {
+      "id": "doslowna-prosba-a-potrzeba",
+      "expect": "trigger",
+      "prompt": "Użytkownik zgłosił w issue: „Dodajcie przycisk do eksportu wszystkich zamówień do CSV”. Jak to ocenić w triażu, zanim przygotujemy brief? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "potrzeb\\w*",
+            "problem\\w*",
+            "cel\\w*",
+            "co chce osiągnąć",
+            "po co"
+          ],
+          [
+            "dosłown\\w*",
+            "rozwiązani\\w*[^\\n]{0,40}(zamiast|nie) problem",
+            "XY"
+          ],
+          [
+            "pytani\\w*",
+            "zapytaj",
+            "needs-info"
+          ],
+          [
+            "istniej\\w*",
+            "już (jest|można)",
+            "obejści\\w*",
+            "raport\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "wlasny-sprint",
       "expect": "no-trigger",
       "prompt": "Jak zaplanować własny sprint zespołu: cel sprintu, wybór elementów z backlogu i pojemność zespołu? Odpowiedz zwięźle.",

@@ -4,7 +4,7 @@ description: Użyj przy przeglądzie zgłoszeń i zewnętrznych PR — kategorie
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj przy przeglądzie zgłoszeń i zewnętrznych PR, których zespół sam nie napisał — kategorie i stany, weryfikacja (odtworzenie błędu, uruchomienie testów PR), szukanie istniejącej funkcji, baza odrzuconych pomysłów .out-of-scope/, trwały brief dla agenta. Nie do planowania własnej pracy (proc-agile) ani diagnozy przyczyny błędu."
-  slowa: "zgłoszenie błędu od użytkownika, issue, przejrzeć zgłoszenie, oznaczyć zgłoszenie, etykiety zgłoszeń, needs-info, zewnętrzny pull request, prośba o funkcję, triaż"
+  slowa: "zgłoszenie błędu od użytkownika, issue, przejrzeć zgłoszenie, oznaczyć zgłoszenie, etykiety zgłoszeń, needs-info, zewnętrzny pull request, prośba o funkcję, triaż, użytkownik prosi o przycisk, dodajcie przycisk, zgłoszenie funkcji w issue, czego naprawdę potrzebuje zgłaszający"
 argument-hint: "[np. „co wymaga uwagi”, „#42”]"
 ---
 
@@ -33,6 +33,11 @@ Brakujące etykiety tworzy człowiek. Lokalnie można dodać `blocked`/`deferred
    potwierdzone (ze ścieżką w kodzie) / nie udało się odtworzyć / za mało danych (silny sygnał `needs-info`).
    Głęboka analiza przyczyny to osobna praca.
 5. Niejasne wymaganie → przesłuchanie (core-plan-interview), pojęcia do słownika.
+   **Prośba o funkcję to zwykle gotowe rozwiązanie** („dodajcie eksport do CSV”), a nie potrzeba. Zanim
+   przygotujesz brief, ustal potrzebę: co zgłaszający chce osiągnąć, co robi dziś zamiast tego, jak często i co
+   zrobi z wynikiem (np. z CSV — raport dla księgowej raz w miesiącu). Potrzeba może mieć prostsze lub już
+   istniejące rozwiązanie (gotowy raport, filtr, API). Bez odpowiedzi → `needs-info` z tymi pytaniami. W briefie
+   zapisujesz potrzebę i kryteria akceptacji dla niej; dosłowną prośbę jako jedną z opcji.
 6. **Wynik** (każdy komentarz w trackerze zaczyna się od `> Wygenerowane przez AI podczas triażu.`; publikacja
    komentarza, zmiana etykiet i zamknięcie — po zgodzie człowieka):
    - `ready-for-agent` / `ready-for-human` → brief (niżej);
