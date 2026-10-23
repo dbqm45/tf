@@ -30,12 +30,14 @@ Polecenie startowe sesji: sekcja „Polecenie startowe — F0”. Kroki F1–F4 
 | Decyzje właściciela | `docs/decyzje.md` | D1 (kontrakt w pdi), D2/R1 (podział rejestru), D3 (format ID) |
 | Kontrakt 0.3.0 | `contract/` (`README.md`, `*.schema.json`, `examples/`) | nagłówek artefaktu zmiany, klucze, zdarzenia |
 
-Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu scalenia z `main` — sprawdź przed startem.
+Kontrakt 0.3.0 jest na `main` w pdi (scalony 2026-10-23).
 
 **Decyzje pdi wiążące dla tf:**
 - **D2/R1 — podział rejestru decyzji:** decyzje o konkretnej zmianie (B1–B6, odpowiedzi na pytania ci_for_sdlc)
   mają źródło prawdy w repo projektu, w `docs/project/changes/CHG-n/decisions.md`; pdi je indeksuje. Decyzje bez
   zmiany (triaż, odrzucenia) żyją w pdi.
+- **R7 — stany zgłoszenia:** biznesowe w pdi (`new`, `clarifying`, `ready_for_triage`, `accepted`, `rejected`,
+  `parked`, `duplicate`); tf **nie** dostaje tych stanów, tłumaczenie tylko na granicy (tabela w kontrakcie).
 - **D3 — klucze:** `[A-Z][A-Z0-9]+-[0-9]+`, globalne; `TSK` ma rodzica `CHG`. Dopisek w commitach `Change: TSK-57`
   (F1).
 - **Nagłówek artefaktu zmiany** (`contract/change.schema.json`) = nagłówek z `core-project-record` (`artifact`,
@@ -53,7 +55,7 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 | F1 | Dopisek `Change: TSK-n`, hook commit-msg | `core/skills/core-conventional-commits`, `core-git-workflow` |
 | F1 | Talos czyta cięcia z `plan.md` zmiany; raport do `changes/CHG/runs/TSK-n.md` | `modes/mode-talos/` |
 | F2 | Rekonstrukcja z kodu i eksport w JSON | `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (osobny plan, w toku) |
-| F3 | Triaż z wejściem `PRB` w JSON (`contract/problem.schema.json`) i rekomendacją według schematu | `packs/pack-it/skills/proc-issue-triage`; stany pdi ↔ tf w `pdi/contract/README.md` |
+| F3 | Triaż z wejściem `PRB` w JSON (`contract/problem.schema.json`) i rekomendacją według schematu | `packs/pack-it/skills/proc-issue-triage`; **tf zachowuje swoje stany** — przy triażu dla pdi rekomendacja w stanach pdi wg tabeli w `pdi/contract/README.md` (decyzja R7 w pdi) |
 | F4 | Uruchamianie person bez interakcji (`tf run <persona> --change CHG-12 --phase …`), stan „czeka na bramkę” | sygnał `gate.requested` do pdi |
 
 ## Polecenie startowe — F0 (wklej w nowej sesji w repo tf)
@@ -61,8 +63,7 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 ```text
 Realizujemy F0 integracji tf z pdi według docs/plans/2026-10-23-integracja-pdi.md. Przeczytaj ten plik
 (TL;DR, Przekazanie, „Kontekst z pdi”, „Zakres”) oraz w repo dbqm45/pdi: contract/README.md,
-contract/change.schema.json i contract/examples/change.json (gałąź main albo claude/magical-dirac-wjvn8y,
-jeśli kontrakt 0.3.0 nie jest jeszcze scalony).
+contract/change.schema.json i contract/examples/change.json (gałąź main).
 
 Cel: dziennik per zmiana w core-project-record.
 1. `project_record.py change new CHG-12 [--source PRB-34]` tworzy docs/project/changes/CHG-12/ z intent.md,
