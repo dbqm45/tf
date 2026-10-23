@@ -10,6 +10,10 @@ publicznego API: `core/factory/PUBLIC_API.md`.
   agent sesji głównej, skill procesowy, skrypty, uprawnienia, przewodnik `GUIDE.md`.
 Ten sam format i loader; instalator sprawdza, że `kind: mode` leży w `modes/`, a nakładka w `packs/`.
 
+W sesji Claude Code uruchomionej w repo tf prowadzi przez to skill `tf-new-pack` (`.claude/skills/tf-new-pack/`,
+nie trafia do projektów): dopytuje o zakres, prefiks, zależności i role, proponuje scenariusze, woła generator
+i bramki.
+
 ## Szkielet jednym poleceniem
 ```
 python3 tools/workspace.py new-pack <nazwa> [--kind pack|mode] [--prefix abc-] [--title "…"] [--description "…"]

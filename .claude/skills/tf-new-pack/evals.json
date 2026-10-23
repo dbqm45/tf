@@ -1,0 +1,71 @@
+{
+  "skill": "tf-new-pack",
+  "scenarios": [
+    {
+      "id": "nowa-nakladka-prawo",
+      "expect": "trigger",
+      "prompt": "Chcę dodać do fabryki nową nakładkę z wiedzą o prawie zamówień publicznych. Od czego zacząć i jak ją założyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "workspace\\.py new-pack",
+            "new-pack"
+          ],
+          [
+            "prefiks\\w*"
+          ],
+          [
+            "scenariusz\\w*[^\\n]{0,80}(przed|najpierw)",
+            "najpierw scenariusz"
+          ],
+          [
+            "skill_gate",
+            "bramk\\w*"
+          ],
+          [
+            "refs",
+            "zależnoś\\w*",
+            "optional_packs",
+            "requires"
+          ]
+        ],
+        "none": [
+          "skopiuj (istniejącą|inną) nakładkę",
+          "README w packs"
+        ]
+      }
+    },
+    {
+      "id": "nowy-tryb",
+      "expect": "trigger",
+      "prompt": "Potrzebuję w fabryce nowego trybu pracy do przeglądów architektury, włączanego na żądanie. Jak go dodać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "--kind mode",
+            "kind: mode",
+            "mode-"
+          ],
+          [
+            "GUIDE\\.md",
+            "przewodnik\\w*"
+          ],
+          [
+            "new-pack"
+          ],
+          [
+            "check --packs",
+            "workspace\\.py check",
+            "CI"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-skill-w-istniejacej",
+      "expect": "no-trigger",
+      "neighbor": "core-skill-authoring",
+      "prompt": "Chcę dopisać nowy skill o testach kontraktowych do istniejącej nakładki pack-it. Jak napisać scenariusze ewaluacji i treść?"
+    }
+  ]
+}
