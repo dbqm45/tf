@@ -1,6 +1,6 @@
 # Plan: rekonstrukcja projektu z kodu
 
-Data: 2026-10-23 · Status: **F0, F1a–F1c zrobione** (scenariusze; graf Java/C#/Go; spis, standardy, schemat, kontrola dowodów), dalej F2 · Gałąź robocza: `claude/great-hypatia-angvam`
+Data: 2026-10-23 · Status: **F0–F2 zrobione** (skill `eng-project-reconstruction` w pack-it), dalej F3 (Talos) i F4 (pomiar, za zgodą) · Gałąź robocza: `claude/great-hypatia-angvam`
 
 ## TL;DR
 Nowy skill w `pack-it` (roboczo `eng-project-reconstruction`), który z samego repozytorium (duże, stare, wiele języków)
@@ -13,7 +13,7 @@ użytkownika).
 
 ## Przekazanie (jak wznowić po wyczyszczeniu kontekstu)
 1. Przeczytaj ten plik i `git status` w `/home/user/tf`.
-2. Następny krok: **F2** (patrz „Etapy”). F0, F1a–F1c gotowe; F0: scenariusze w `docs/plans/evals/eng-project-reconstruction.json`
+2. Następny krok: **F3** (patrz „Etapy”). F0–F2 gotowe; F0: scenariusze w `packs/pack-it/tests/skill_evals/eng-project-reconstruction.json`
    (9: 5 trigger, 4 no-trigger z sąsiadami); w F2 przenieść je do `packs/pack-it/tests/skill_evals/` (walidator wymaga
    istniejącego `SKILL.md`, dlatego teraz leżą w `docs/plans/`).
 3. Zasady repo: bez README opisującego fabrykę (repo publiczne); `claude-team-factory` i `ev-team-factory` nietknięte;
@@ -137,7 +137,7 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
 - **F1b. Spis i standardy (TDD):** `repo_inventory.py`, `standards_scan.py`. ✓ zrobione 2026-10-23 (w `eng-codebase-mapping/scripts/`).
 - **F1c. Schemat i weryfikator (TDD):** ✓ zrobione 2026-10-23 (`schema_scan.py`, `recon_check.py` w `eng-codebase-mapping/scripts/`). `schema_scan.py` (migracje SQL, Flyway/Liquibase, encje JPA i EF),
     `recon_check.py` (weryfikator dowodów i kompletności).
-- **F2. Skill + szablony:** `SKILL.md` (zwięźle, przykłady), `references/` (szablon raportu, schemat karty JSON,
+- **F2. Skill + szablony:** ✓ zrobione 2026-10-23 (`packs/pack-it/skills/eng-project-reconstruction/`, role solution-architect i ddd-analyst; D2 rozstrzygnięte inaczej: bez przenoszenia `run_report.py` — plan przebiegu z polami do odhaczenia w `docs/project/00-reconstruction/plan.md`, koszt przez core-cost-control). `SKILL.md` (zwięźle, przykłady), `references/` (szablon raportu, schemat karty JSON,
   prompt karty pod cache), bramka, `refs`, `--hints`.
 - **F3. Integracja z Talosem:** w kroku przyjęcia historyjki Talos czyta `docs/project/00-reconstruction/standards/INDEX.md`
   i `domain.md`, jeśli istnieją (bez nazw skilli z innej nakładki — opis słowny). Scenariusz ewaluacji Talosa.

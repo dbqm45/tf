@@ -1,0 +1,14 @@
+{
+  "$comment": "Schemat karty modułu (wynik wykonawcy na partii). Każdy element z polem evidence: 'plik:linia' z repo.",
+  "module": "billing",
+  "batch": "services/billing",
+  "purpose": "Wystawia i koryguje faktury dla klientów abonamentowych.",
+  "entry_points": [{"what": "POST /invoices", "evidence": "services/billing/api.py:42"}],
+  "depends_on": [{"module": "customers", "evidence": "services/billing/service.py:3"}],
+  "data": [{"table": "invoice", "access": "write", "evidence": "services/billing/repo.py:18"}],
+  "rules": [{"rule": "Faktura bez pozycji jest odrzucana.", "evidence": "services/billing/service.py:57",
+             "quote": "raise EmptyInvoice", "confidence": "test"}],
+  "terms": [{"term": "korekta", "code_name": "CreditNote", "evidence": "services/billing/model.py:12"}],
+  "deviations": [{"what": "Logowanie przez print zamiast logging", "evidence": "services/billing/legacy.py:8"}],
+  "unknowns": ["Kolejka 'invoices.created' — konsument poza repo"]
+}
