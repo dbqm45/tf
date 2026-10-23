@@ -217,9 +217,13 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
 - [x] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person — tryb `mode-team` (A1–A3).
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [ ] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py`.
-- [ ] Pomiar skilli na modelu (płatny, za zgodą człowieka): pilotaż i partia 1 zrobione 2026-10-22 (sędzia — Sonnet,
-  tylko przy chybionych wyrażeniach: 60 ze 175 przebiegów partii 1, koszt wliczony), wyniki `docs/evals/2026-10-22-pomiar-haiku.md`; partie 2–6 też
-  (141, 128, 150, 135 i 181 scenariuszy) — wszystkie scenariusze zmierzone; zostało zaostrzenie i poprawki po partii 6 — plan w sekcji „Dalej” raportu.
+- [x] Pomiar skilli na modelu (płatny, za zgodą człowieka), 2026-10-22: partie 1–6 (wszystkie scenariusze, Haiku,
+  z porównaniem bez skilli), zaostrzenie kryteriów, poprawki opisów i treści, przegląd 143 scenariuszy
+  nierozróżniających, skrócenie 26 skilli — wyniki i decyzje w `docs/evals/2026-10-22-pomiar-haiku.md`.
+- [ ] Izolacja przebiegu „bez skilli” w `core/tests/run_skill_evals.py`: model w przebiegu bez skilli może czytać dysk
+  poza katalogiem testu i znaleźć pliki fabryki (2 z 607 przebiegów w pomiarze 2026-10-22). Zrobić przed pomiarem na
+  Sonnecie lub Opusie albo przed uruchomieniem pomiaru poza kontenerem z czystym dyskiem: odciąć przebieg od reszty
+  dysku (np. osobny HOME i katalog roboczy, blokada odczytu poza workspace) i dopisać test, który to sprawdza (TDD).
 - [x] `test_fetch_page` (render Chromium) przekraczał 60 s w CI — 5 jobów. Przyczyna (pomiar w PR #12): pierwszy
   start Chromium na runnerze trwa 16–27 s (zimny dysk), kolejne ok. 0,7 s, niezależnie od flag i D-Bus; pod obciążeniem
   zestawu testów pierwszy start przekraczał limit. Naprawa: krok „Rozgrzanie Chromium” w CI przed testami; timeout
