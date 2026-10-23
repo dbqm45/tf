@@ -91,6 +91,48 @@ TS = {
 BIG = {f"svc/api/m{i}/v{j}.py": "x = 1\n" for i in range(6) for j in range(5)}   # 30 plików pod svc/api
 BIG.update({"svc/core/a.py": "x = 1\n", "svc/core/b.py": "from svc.api.m0 import v0\n", "svc/web/c.py": "x = 1\n"})
 
+JAVA = {
+    "pom.xml": "<project/>",
+    "src/main/java/com/acme/Application.java":
+        "package com.acme;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\n"
+        "import com.acme.billing.InvoiceService;\n@SpringBootApplication\npublic class Application {\n"
+        "  public static void main(String[] args) {}\n}\n",
+    "src/main/java/com/acme/billing/InvoiceService.java":
+        "package com.acme.billing;\nimport com.acme.common.*;\nimport static com.acme.common.Money.zero;\n"
+        "/* import com.acme.billing.Ghost; */\npublic class InvoiceService {}\n",
+    "src/main/java/com/acme/common/Money.java": "package com.acme.common;\npublic final class Money {}\n",
+    "src/main/java/com/acme/common/Currency.java":
+        "package com.acme.common;\nimport com.acme.billing.InvoiceService;\npublic enum Currency { PLN }\n",
+    "src/main/java/com/acme/tools/Cli.java":
+        "package com.acme.tools;\npublic class Cli {\n  public static void main(String... a) {}\n}\n",
+    "src/test/java/com/acme/billing/InvoiceServiceTest.java":
+        "package com.acme.billing;\nimport com.acme.common.Money;\nclass InvoiceServiceTest {}\n",
+}
+
+CS = {
+    "Shop.sln": "",
+    "src/Shop.Api/Program.cs": "using Shop.Orders;\nvar app = WebApplication.Create(args);\napp.Run();\n",
+    "src/Shop.Orders/OrderService.cs":
+        "using System;\nusing Shop.Common;\nnamespace Shop.Orders\n{\n  public class OrderService {}\n}\n",
+    "src/Shop.Orders/Order.cs": "namespace Shop.Orders;\npublic record Order(int Id);\n",
+    "src/Shop.Common/Clock.cs": "namespace Shop.Common;\nusing Shop.Orders;\npublic class Clock {}\n",
+    "src/Shop.Worker/Worker.cs":
+        "using static Shop.Common.Clock;\nnamespace Shop.Worker;\npublic static class Worker {\n"
+        "  static async Task Main(string[] args) {}\n}\n",
+    "tests/Shop.Orders.Tests/OrderServiceTests.cs": "using Shop.Orders;\nnamespace Shop.Orders.Tests;\n",
+}
+
+GO = {
+    "go.mod": "module example.com/shop\n\ngo 1.22\n",
+    "cmd/api/main.go": "package main\n\nimport (\n\t\"fmt\"\n\t\"example.com/shop/internal/orders\"\n)\n\n"
+                       "func main() { fmt.Println(orders.New()) }\n",
+    "internal/orders/orders.go": "package orders\n\nimport db \"example.com/shop/internal/store\"\n\nfunc New() int { return db.X }\n",
+    "internal/orders/model.go": "package orders\n",
+    "internal/store/store.go": "package store\n\nimport _ \"example.com/shop/internal/orders\"\n\nvar X = 1\n",
+    "internal/orders/orders_test.go": "package orders\n\nimport \"example.com/shop/internal/store\"\n",
+    "tools/gen/gen.go": "package main\n\nimport \"os\"\n\nfunc main() { _ = os.Args }\n",
+}
+
 
 def main() -> int:
     fails, total = [], 0
@@ -230,6 +272,55 @@ def main() -> int:
         check("svc/api" in {x["group"] for x in g["groups"]} and not g["groups_split"], "T12 --group-depth wyłącza podział")
         r = run(str(ts), "--focus", "nie/ma")
         check(r.returncode == 2, f"T10 zły zakres rc={r.returncode}")
+
+        # T13 Java: package/import, import *, import static, komentarze, main, testy poza grafem
+        jv = Path(d) / "java"
+        write(jv, JAVA)
+        g = graph(jv)
+        J = "src/main/java/com/acme/"
+        ed = {(e["from"], e["to"]) for e in g["edges"]}
+        check((J + "Application.java", J + "billing/InvoiceService.java") in ed, f"T13 import klasy: {sorted(ed)}")
+        check({(J + "billing/InvoiceService.java", J + "common/Money.java"),
+               (J + "billing/InvoiceService.java", J + "common/Currency.java")} <= ed, "T13 import pakietu.*")
+        check(not any(t.endswith("Ghost.java") for _, t in ed), "T13 import w komentarzu pominięty")
+        check(g["files"].get("java") == 5, f"T13 liczba plików Java (bez testów): {g['files']}")
+        rt = [sorted(c["files"]) for c in g["cycles"]["runtime"]]
+        check([J + "billing/InvoiceService.java", J + "common/Currency.java"] in rt, f"T13 cykl Java: {rt}")
+        ent = {e["file"] for e in g["entry_points"]}
+        check({J + "Application.java", J + "tools/Cli.java"} <= ent, f"T13 punkty wejścia main: {ent}")
+        r = run(str(jv), "--impact", J + "common/Money.java")
+        check(r.returncode == 0 and "InvoiceServiceTest.java" in r.stdout, f"T13 test w --impact: {r.stdout[-300:]}")
+
+        # T14 C#: using → pliki przestrzeni nazw, namespace blokowy i plikowy, using static, Main i Program.cs
+        cs = Path(d) / "cs"
+        write(cs, CS)
+        g = graph(cs)
+        ed = {(e["from"], e["to"]) for e in g["edges"]}
+        check({("src/Shop.Api/Program.cs", "src/Shop.Orders/OrderService.cs"),
+               ("src/Shop.Api/Program.cs", "src/Shop.Orders/Order.cs")} <= ed, f"T14 using → namespace: {sorted(ed)}")
+        check(("src/Shop.Orders/OrderService.cs", "src/Shop.Common/Clock.cs") in ed, "T14 namespace blokowy")
+        check(("src/Shop.Worker/Worker.cs", "src/Shop.Common/Clock.cs") in ed, "T14 using static")
+        check(not any(t.startswith("System") for _, t in ed) and not any("Tests" in f for f, _ in ed),
+              "T14 bez zewnętrznych i testów")
+        check(g["files"].get("csharp") == 5, f"T14 liczba plików C#: {g['files']}")
+        ent = {e["file"] for e in g["entry_points"]}
+        check({"src/Shop.Api/Program.cs", "src/Shop.Worker/Worker.cs"} <= ent, f"T14 wejścia: {ent}")
+
+        # T15 Go: go.mod, import ścieżki pakietu → pliki katalogu, alias i import pusty, package main
+        go = Path(d) / "go"
+        write(go, GO)
+        g = graph(go)
+        ed = {(e["from"], e["to"]) for e in g["edges"]}
+        check({("cmd/api/main.go", "internal/orders/orders.go"), ("cmd/api/main.go", "internal/orders/model.go"),
+               ("internal/orders/orders.go", "internal/store/store.go")} <= ed, f"T15 importy Go: {sorted(ed)}")
+        check(not any(f.endswith("_test.go") for f, _ in ed) and not any(t == "fmt" for _, t in ed), "T15 bez testów i stdlib")
+        rt = [sorted(c["files"]) for c in g["cycles"]["runtime"]]
+        check(["internal/orders/orders.go", "internal/store/store.go"] in rt, f"T15 cykl Go: {rt}")
+        check(g["files"].get("go") == 5, f"T15 liczba plików Go: {g['files']}")
+        ent = {e["file"] for e in g["entry_points"]}
+        check({"cmd/api/main.go", "tools/gen/gen.go"} <= ent and "internal/store/store.go" not in ent, f"T15 wejścia: {ent}")
+        r = run(str(go))
+        check(r.returncode == 0 and "Go 5" in r.stdout, f"T15 tekst z liczbą plików Go: {r.stdout[:200]}")
 
     for f in fails:
         print("✗", f)

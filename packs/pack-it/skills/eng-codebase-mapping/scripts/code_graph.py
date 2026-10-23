@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Graf importów kodu do mapy (kroki 2–5 skilla eng-codebase-mapping) — gdy nie ma madge, dependency-cruisera ani nx graph.
-Python przez ast, TS/JS przez regex importów. Tylko biblioteka standardowa; kodu repozytorium nie uruchamia.
+Python przez ast; TS/JS, Java, C# i Go przez regex importów (Java: package/import, C#: namespace/using — krawędź do
+każdego pliku przestrzeni nazw, Go: go.mod + ścieżka pakietu). Tylko biblioteka standardowa; kodu nie uruchamia.
 
   python3 code_graph.py <repo>                        # punkty wejścia, pakiety, grupy, pod prąd, huby, cykle
   python3 code_graph.py <repo> --impact <plik>        # do tego zasięg zmiany pliku (2 kroki w górę + testy)
@@ -37,7 +38,8 @@ MONO = ("packages", "apps", "libs", "services", "modules")
 
 def is_test(p: str) -> bool:
     return bool(re.search(r"(^|/)(tests?|__tests__|e2e|fixtures|migrations|__mocks__)/|\.(test|spec|stories)\.|"
-                          r"(^|/)test_[^/]*\.py$|_test\.py$|(^|/)conftest\.py$", p))
+                          r"(^|/)test_[^/]*\.py$|_test\.py$|(^|/)conftest\.py$|"
+                          r"\.Tests?/|(Test|Tests|IT)\.java$|Tests?\.cs$|_test\.go$", p))
 
 
 def walk(root: str):
@@ -255,6 +257,84 @@ def ts_graph(root: str, files: list[str], aliases: dict, edges: dict, barrels: s
                 barrels.add(p)
 
 
+# ---------- Java, C#, Go (regex) ----------
+CLIKE_COMMENT = re.compile(r"/\*.*?\*/|//[^\n]*", re.S)
+
+
+def java_graph(root: str, files: list[str], edges: dict, mains: set) -> None:
+    """Krawędź do klasy z importu (też static), `import pakiet.*` → wszystkie klasy pakietu. Klasy z tego samego
+    pakietu bez importu i refleksja (Spring, CDI) są niewidoczne — do unknowns."""
+    texts, by_fqn, by_pkg = {}, {}, collections.defaultdict(list)
+    for p in files:
+        t = texts[p] = CLIKE_COMMENT.sub("", read(root, p))
+        m = re.search(r"^\s*package\s+([\w.]+)\s*;", t, re.M)
+        pkg = m.group(1) if m else ""
+        by_fqn[(pkg + "." if pkg else "") + os.path.basename(p)[:-5]] = p
+        by_pkg[pkg].append(p)
+    for p, t in texts.items():
+        for m in re.finditer(r"^\s*import\s+(static\s+)?([\w.]+?)(\.\*)?\s*;", t, re.M):
+            static, name, star = m.groups()
+            if star and not static:
+                targets = by_pkg.get(name, [])
+            else:
+                parts = name.split(".")
+                targets = next(([by_fqn[q]] for q in (".".join(parts[:i]) for i in range(len(parts), 0, -1))
+                                if q in by_fqn), [])
+            for t2 in targets:
+                add(edges, p, t2, "module")
+        if re.search(r"\bstatic\s+void\s+main\s*\(", t) or "@SpringBootApplication" in t:
+            mains.add(p)
+
+
+def cs_graph(root: str, files: list[str], edges: dict, mains: set) -> None:
+    """`using X.Y;` → krawędź do każdego pliku, który deklaruje przestrzeń nazw X.Y (zgrubnie: using nie mówi, której
+    klasy plik używa); `using static X.Y.Z;` → plik klasy Z, jeśli się nazywa Z.cs. DI i refleksja — do unknowns."""
+    texts, by_ns = {}, collections.defaultdict(list)
+    for p in files:
+        t = texts[p] = CLIKE_COMMENT.sub("", read(root, p))
+        for n in re.findall(r"^\s*namespace\s+([\w.]+)", t, re.M):
+            by_ns[n].append(p)
+    for p, t in texts.items():
+        for m in re.finditer(r"^\s*(?:global\s+)?using\s+(static\s+)?([\w.]+)\s*;", t, re.M):
+            static, name = m.groups()
+            if static:
+                ns, _, cls = name.rpartition(".")
+                targets = [f for f in by_ns.get(ns, []) if os.path.basename(f) == cls + ".cs"] or by_ns.get(ns, [])
+            else:
+                targets = by_ns.get(name, [])
+            for t2 in targets:
+                add(edges, p, t2, "module")
+        if os.path.basename(p) == "Program.cs" or re.search(
+                r"\bstatic\s+(async\s+)?(void|int|Task(<int>)?)\s+Main\s*\(", t):
+            mains.add(p)
+
+
+def go_graph(root: str, all_files: list[str], files: list[str], edges: dict, mains: set) -> None:
+    """Import ścieżki pakietu z modułu (go.mod) → krawędź do każdego pliku katalogu pakietu (bez _test.go)."""
+    mods = {}
+    for gm in (f for f in all_files if os.path.basename(f) == "go.mod"):
+        m = re.search(r"^\s*module\s+(\S+)", read(root, gm), re.M)
+        if m:
+            mods[m.group(1)] = os.path.dirname(gm)
+    by_dir = collections.defaultdict(list)
+    for p in files:
+        if not is_test(p):
+            by_dir[os.path.dirname(p)].append(p)
+    for p in files:
+        t = CLIKE_COMMENT.sub("", read(root, p))
+        paths = [x for b in re.finditer(r"\bimport\s*\(([^)]*)\)", t) for x in re.findall(r'"([^"]+)"', b.group(1))]
+        paths += re.findall(r'\bimport\s+(?:[\w.]+\s+)?"([^"]+)"', t)
+        for ip in paths:
+            mod = next((m for m in sorted(mods, key=len, reverse=True) if ip == m or ip.startswith(m + "/")), None)
+            if mod is None:
+                continue
+            d = os.path.normpath(os.path.join(mods[mod], ip[len(mod):].lstrip("/"))).replace(os.sep, "/")
+            for t2 in by_dir.get("" if d == "." else d, []):
+                add(edges, p, t2, "module")
+        if re.search(r"^\s*package\s+main\b", t, re.M) and re.search(r"\bfunc\s+main\s*\(\s*\)", t):
+            mains.add(p)
+
+
 # ---------- pakiety i punkty wejścia ----------
 def workspaces(root: str, all_files: list[str]):
     """{katalog pakietu: (nazwa, plik wejścia lub None, pliki z scripts/main/bin)}."""
@@ -351,6 +431,10 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
     all_files = list(walk(root))
     py = [p for p in all_files if p.endswith(".py")]
     ts = [p for p in all_files if p.endswith(TS_EXT) and not p.endswith(".d.ts")]
+    java = [p for p in all_files if p.endswith(".java")]
+    cs = [p for p in all_files if p.endswith(".cs")]
+    go = [p for p in all_files if p.endswith(".go")]
+    mains = set()
     pkgs = workspaces(root, all_files)
     aliases = {d.get("name"): e for d, e in ((load_json(root, os.path.join(b, "package.json")), v[1])
                                             for b, v in pkgs.items()) if e and d.get("name")}
@@ -361,7 +445,13 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         py_graph(root, py, E, barrels, reg)
     if ts:
         ts_graph(root, ts, aliases, E, barrels, reg)
-    nodes = sorted(p for p in py + ts if not is_test(p))
+    if java:
+        java_graph(root, java, E, mains)
+    if cs:
+        cs_graph(root, cs, E, mains)
+    if go:
+        go_graph(root, all_files, go, E, mains)
+    nodes = sorted(p for p in py + ts + java + cs + go if not is_test(p))
     ns = set(nodes)
     prod_edges = [(s, t, k) for s in nodes for t, k in sorted(E.get(s, {}).items()) if t in ns]
     rev = collections.defaultdict(set)
@@ -406,6 +496,8 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
             (1 if n.endswith("/__init__.py") else 0)
         if n in refs:
             s += 3; why.append("package.json")
+        elif n in mains:
+            s += 3; why.append("main")
         elif ENTRY_NAME.search(n) and depth <= 1:   # app.py czy urls.py głęboko w drzewie to zwykle moduł, nie wejście
             s += 3; why.append("nazwa")
         if depth <= 1:
@@ -420,7 +512,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         if n in barrels:
             continue
         s, why = score(n)
-        if s >= 3 and why[0] in ("nazwa", "package.json"):   # bez sygnału nazwy płytki liść to jeszcze nie wejście
+        if s >= 3 and why[0] in ("nazwa", "package.json", "main"):   # bez sygnału nazwy płytki liść to jeszcze nie wejście
             cand.append({"file": n, "score": s, "out": outdeg[n], "in": indeg[n], "why": why})
     cand.sort(key=lambda e: (-e["score"], -e["out"], e["file"]))
 
@@ -485,7 +577,9 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
     upstream.sort(key=lambda u: (-min(u["a_to_b"], u["b_to_a"]), u["a"]))
 
     res = {"root": os.path.abspath(root),
-           "files": {"python": sum(p.endswith(".py") for p in nodes), "ts_js": sum(not p.endswith(".py") for p in nodes),
+           "files": {"python": sum(p.endswith(".py") for p in nodes), "ts_js": sum(p.endswith(TS_EXT) for p in nodes),
+                     "java": sum(p.endswith(".java") for p in nodes), "csharp": sum(p.endswith(".cs") for p in nodes),
+                     "go": sum(p.endswith(".go") for p in nodes),
                      "edges": len(prod_edges),
                      "by_kind": dict(collections.Counter(k for _, _, k in prod_edges))},
            "entry_points": cand[:max(top, 15)],
@@ -522,8 +616,9 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
 
 def render(r: dict, top: int) -> str:
     f = r["files"]
-    L = [f"Pliki produkcyjne: Python {f['python']}, TS/JS {f['ts_js']}; krawędzie {f['edges']} {f['by_kind']} "
-         "(WYCIĄGNIĘTE z importów)"]
+    langs = [f"Python {f['python']}", f"TS/JS {f['ts_js']}"] + [f"{n} {f[k]}" for k, n in
+                                                              (("java", "Java"), ("csharp", "C#"), ("go", "Go")) if f.get(k)]
+    L = [f"Pliki produkcyjne: {', '.join(langs)}; krawędzie {f['edges']} {f['by_kind']} (WYCIĄGNIĘTE z importów)"]
     L.append("Punkty wejścia (wynik, out, in, dlaczego):")
     L += [f"  - {e['file']} ({e['score']}, {e['out']}, {e['in']}; {', '.join(e['why'])})" for e in r["entry_points"]]
     if r["registries"]:
