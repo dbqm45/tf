@@ -9,6 +9,10 @@ and the factory tests run (tests and build expect the installed layout, not the 
   python3 tools/workspace.py sync-gate [--out DIR]     # copy gate results back to core/, packs/ and modes/
   python3 tools/workspace.py refs [--verbose]          # cross-layer references: core must not name pack skills,
                                                        # a pack only names skills of its required/optional packs
+  python3 tools/workspace.py new-pack <name> [--kind pack|mode] [--prefix p-] [--title T] [--description D]
+                                     [--skill p-name] [--role role-name] [--no-check]
+                                                       # skeleton of packs/pack-<name>/ or modes/mode-<name>/, CI matrix
+                                                       # entry, then check + refs and a to-do list (guide: docs/new-pack.md)
 
 Default workspace: .work/<packs> (git-ignored). The workspace is recreated on every `assemble`/`check`.
 Gate results (`python3 factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
@@ -163,6 +167,137 @@ def refs(verbose: bool) -> int:
     return 1 if total else 0
 
 
+CI_FILE = ROOT / ".github" / "workflows" / "factory-checks.yml"
+
+
+def taken_prefixes() -> dict[str, str]:
+    """Prefiksy wymiarów rdzenia, nakładek i trybów → właściciel (proste dopasowanie `prefix: x-`)."""
+    import re
+    out = {}
+    for f in [ROOT / "core" / "factory" / "config.yaml", *(r / "pack.yaml" for r in item_dirs())]:
+        if f.is_file():
+            for p in re.findall(r"prefix:\s*([a-z0-9]+-)", f.read_text(encoding="utf-8")):
+                out.setdefault(p, f.parent.name)
+    return out
+
+
+SKILL_TPL = """---
+name: {skill}
+description: Użyj przy TODO — sytuacja i kluczowe pojęcia (reguła wyboru, do 170 znaków).
+metadata:
+  przeglad: {review}
+  katalog: "Użyj, gdy TODO — pełny opis z granicami. Nie do TODO (sąsiedni-skill)."
+  slowa: "TODO: słowa, którymi ludzie opisują problem"
+---
+
+# TODO: tytuł
+
+Cel: TODO — po co skill i jaki wynik daje (core-skill-authoring: najpierw scenariusze ewaluacji, potem treść).
+
+## Procedura
+1. TODO
+
+## Przykład
+TODO: wejście → wynik, z konkretnymi nazwami i liczbami.
+
+## Źródła
+- TODO: źródło z datą.
+"""
+
+GUIDE_TPL = """# {title}
+
+TODO: czym jest ten tryb, kiedy go włączyć i jak wyłączyć (`tf add {pid}`, `tf remove {pid}`), co dokłada
+(agenci, skille, skrypty, uprawnienia) i czego nie zmienia w rdzeniu.
+"""
+
+
+def new_pack(argv: list[str]) -> int:
+    import datetime
+    import re
+    args, opts = [], {"kind": "pack", "prefix": None, "title": None, "description": None, "skill": None, "role": None}
+    it = iter(argv)
+    for a in it:
+        if a.startswith("--") and a[2:] in opts:
+            opts[a[2:]] = next(it, "")
+        elif a != "--no-check":
+            args.append(a)
+    name = args[0] if args else ""
+    if not re.fullmatch(r"[a-z][a-z0-9-]*[a-z0-9]", name) or opts["kind"] not in ("pack", "mode"):
+        print(f"✗ name: lowercase letters, digits and '-' (got {name!r}); --kind pack|mode", file=sys.stderr)
+        return 2
+    pid = f"{opts['kind']}-{name}"
+    base = ROOT / ("packs" if opts["kind"] == "pack" else "modes") / pid
+    prefix = opts["prefix"] or f"{name}-"
+    skill = opts["skill"] or f"{prefix}podstawy"
+    taken = taken_prefixes()
+    problems = []
+    if base.exists():
+        problems.append(f"{base.relative_to(ROOT)} already exists — nothing overwritten")
+    if not re.fullmatch(r"[a-z][a-z0-9]*-", prefix):
+        problems.append(f"prefix must look like 'abc-' (got {prefix!r})")
+    elif prefix in taken:
+        problems.append(f"prefix {prefix} is already used by {taken[prefix]}")
+    if not skill.startswith(prefix):
+        problems.append(f"skill {skill} must start with the prefix {prefix}")
+    if problems:
+        print("✗ " + "\n✗ ".join(problems), file=sys.stderr)
+        return 2
+    def q(v: str) -> str:   # wartość YAML w cudzysłowie (opis z „: ” psuje parser)
+        return '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+    version = (ROOT / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
+    major = int(version.split(".")[0])
+    title = opts["title"] or name.replace("-", " ").title()
+    desc = opts["description"] or f"TODO: one-sentence description of {pid} (English, shown by tf list)."
+    files = {
+        "pack.yaml": f"# TODO: komentarz — czym jest {'tryb' if opts['kind'] == 'mode' else 'nakładka'} i dla kogo.\n"
+                     f"id: {pid}\n" + ("kind: mode\n" if opts["kind"] == "mode" else "")
+                     + f"version: 0.1.0\ntitle: {q(title)}\ndescription: {q(desc)}\ncontent_language: pl\ndefault: false\n"
+                     f"requires:\n  core: \">={version} <{major + 1}.0.0\"\n\nfacets:\n"
+                     f"  - {{prefix: {prefix}, order: 500, name: {title.lower()}, question: \"TODO: na jakie pytanie odpowiadają skille {prefix}*\"}}\n",
+        f"skills/{skill}/SKILL.md": SKILL_TPL.format(skill=skill, review=(datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
+        f"tests/skill_evals/{skill}.json": json.dumps({"skill": skill, "scenarios": [
+            {"id": "TODO-problem-1", "expect": "trigger", "prompt": "TODO: prawdziwe pytanie człowieka z luki, którą model ma bez skilla",
+             "checks": {"all": [["TODO: wiedza specyficzna"], ["TODO: druga niezależna rzecz"]], "none": ["TODO: typowy błąd"]}},
+            {"id": "TODO-problem-2", "expect": "trigger", "prompt": "TODO: ten sam obszar, inne słowa",
+             "checks": {"all": [["TODO"], ["TODO"]]}},
+            {"id": "TODO-sasiad", "expect": "no-trigger", "neighbor": "TODO-sasiedni-skill",
+             "prompt": "TODO: pytanie z pogranicza, które należy do sąsiedniego skilla"}]}, ensure_ascii=False, indent=2) + "\n",
+    }
+    if opts["role"]:
+        files[f"roles/{opts['role']}.yaml"] = (f"name: {opts['role']}\ntitle: TODO\ntier: std\ntriggers: TODO\nidentity: |\n"
+                                              f"  TODO: kim jest rola i jak pracuje.\ntools: [Read, Grep, Glob, Edit, Write, Bash, Skill]\n"
+                                              f"skills: [{skill}]\npreload: []\nverify: \"TODO — po czym poznać dobry wynik\"\n")
+    if opts["kind"] == "mode":
+        files["GUIDE.md"] = GUIDE_TPL.format(title=title, pid=pid)
+    for rel, text in files.items():
+        f = base / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(text, encoding="utf-8")
+    ci_note = "CI matrix: no `packs: [...]` line found — add the id by hand"
+    if CI_FILE.is_file():
+        ci = CI_FILE.read_text(encoding="utf-8")
+        m = re.search(r"^(\s*packs: \[)(.*)\]$", ci, re.M)
+        if m:
+            items = [x.strip() for x in m.group(2).split(",") if x.strip()]
+            if pid not in items:
+                items.insert(items.index("all") if "all" in items else len(items), pid)
+            CI_FILE.write_text(ci[:m.start()] + m.group(1) + ", ".join(items) + "]" + ci[m.end():], encoding="utf-8")
+            ci_note = f"CI matrix: {pid} added"
+    print(f"✓ {base.relative_to(ROOT)}: " + ", ".join(files) + f"\n✓ {ci_note}")
+    ok = True
+    if "--no-check" not in argv:
+        ok = check({"packs": pid, "out": None, "language": None, "commit-language": None, "keep": False})
+        ok &= refs(False) == 0
+    print(f"""Do zrobienia (skill core-skill-authoring, przewodnik docs/new-pack.md):
+  1. pack.yaml: komentarz, description, facets.question, order; zależności (requires.packs, optional_packs).
+  2. Scenariusze tests/skill_evals/{skill}.json — prawdziwe, zanim powstanie treść (szkielet celowo nie przechodzi bramki).
+  3. Treść skills/{skill}/SKILL.md; rola/persona (roles/, personas/).
+  4. W workspace: python3 factory/skill_gate.py {skill}, potem python3 tools/workspace.py sync-gate --out .work/{pid}.
+  5. python3 tools/workspace.py check --packs {pid} i refs; PR z feat({pid}): …""")
+    return 0 if ok else 1
+
+
 def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else "check"
     o = opts_of(argv[2:])
@@ -183,6 +318,8 @@ def main(argv: list[str]) -> int:
         return sync_gate(o)
     if cmd == "refs":
         return refs("--verbose" in argv)
+    if cmd == "new-pack":
+        return new_pack(argv[2:])
     print(__doc__)
     return 2
 
