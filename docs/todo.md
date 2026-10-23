@@ -330,7 +330,7 @@ pierwotnych (Moore, Porter, Patton, Cohn, Torres, Amazon „Working Backwards”
 
 ## Generator nowej nakładki (`new-pack`) — zapisane 2026-10-23
 Dziś nowa nakładka powstaje przez ręczne kopiowanie istniejącej. Cel: szkielet jednym poleceniem + prowadzenie przez Claude.
-- [ ] **Skrypt:** `python3 tools/workspace.py new-pack <nazwa> [--kind pack|mode] [--title] [--description] [--prefix]
+- [x] **Skrypt** (zrobione 2026-10-23; test `tests/test_new_pack.py`): `python3 tools/workspace.py new-pack <nazwa> [--kind pack|mode] [--title] [--description] [--prefix]
   [--requires] [--role] [--skill]` tworzy `packs/pack-<nazwa>/` (albo `modes/mode-<nazwa>/`): minimalny poprawny
   `pack.yaml` (`version: 0.1.0`, `default: false`, `requires.core` z bieżącej wersji rdzenia, `facets` z prefiksem),
   szkielet `skills/<prefiks>-…/SKILL.md` wg core-skill-authoring, `tests/skill_evals/<skill>.json`, opcjonalnie
@@ -341,5 +341,5 @@ Dziś nowa nakładka powstaje przez ręczne kopiowanie istniejącej. Cel: szkiel
 - [ ] **Skill dla autora fabryki** (tylko w repo tf, nie w rdzeniu — decyzja do potwierdzenia): na „new pack …” dopytuje
   o zakres, prefiks, zależności i role, najpierw proponuje scenariusze ewaluacji, potem woła generator, wypełnia treść
   i uruchamia bramki.
-- [ ] **Przewodnik** budowy nakładki (pola `pack.yaml`, tryb vs paczka, prefiksy, granice `refs`, wersjonowanie)
+- [x] **Przewodnik** (zrobione 2026-10-23: `docs/new-pack.md`) budowy nakładki (pola `pack.yaml`, tryb vs paczka, prefiksy, granice `refs`, wersjonowanie)
   w `docs/` — nie jako README w `packs/` (repo publiczne).
