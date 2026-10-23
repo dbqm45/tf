@@ -124,6 +124,22 @@ Fabryka działa jak dotąd: nowe polecenia są dodatkowe, `check` zaostrza się 
 a wypychanie do pdi działa wyłącznie, gdy serwer MCP pdi jest podłączony. Projekt bez pdi i bez dziennika zmian
 nie widzi różnicy.
 
+## Plan kroku F0 (2026-10-23, przed kodem)
+Kontrakt: `pdi/contract/` 0.3.0 na `main` pdi (gałąź `claude/magical-dirac-wjvn8y` bez różnic w `contract/`).
+Pliki (kolejność):
+1. `modes/mode-pdi/tests/skill_evals/pdi-decisions.json` — scenariusze (≥2 trigger, ≥1 no-trigger).
+2. `modes/mode-pdi/tests/test_decision_record.py` — testy skryptu (czerwone): `change new` tworzy 3 pliki z nagłówkiem
+   zgodnym z `change.schema.json`; istniejący katalog → błąd; zły klucz → błąd; `check` wykrywa: brak `change`,
+   `change` ≠ katalog, nieznany `artifact`/`phase`/`status`, nieznane pole, `tasks` poza `plan.md`, zły klucz, zła data.
+3. `modes/mode-pdi/skills/pdi-decisions/scripts/decision_record.py` (stdlib) + `templates/{intent,plan,decisions}.md`.
+4. `modes/mode-pdi/skills/pdi-decisions/SKILL.md` — kiedy dziennik zmiany; decyzja → wpis lokalny + `record_decision`
+   przez MCP pdi; bez serwera pdi: nie wypychaj, zgłoś.
+5. `modes/mode-pdi/pack.yaml` (kind: mode, 0.1.0, default: false, core >=5.6.0 <6.0.0, skill dla wszystkich person
+   przez `contributes`), `settings.json` (uprawnienie dla skryptu), `GUIDE.md`, `tests/test_mode_pdi.py`.
+6. `.github/workflows/factory-checks.yml` — `mode-pdi` w macierzy.
+Bramki: `workspace.py check --packs mode-pdi`, `--packs all`, `refs`, `tests/test_*.py`, `skill_gate.py pdi-decisions`
++ `--hints`, `sync-gate`. Bez płatnej ewaluacji.
+
 ## Kryteria „gotowe” dla F0
 - `change new` tworzy katalog z trzema plikami; każdy nagłówek przechodzi walidację względem
   `pdi/contract/change.schema.json` (test z kopią przykładu `contract/examples/change.json` albo sprawdzenie ręczne).
