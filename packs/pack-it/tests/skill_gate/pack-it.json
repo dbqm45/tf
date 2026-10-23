@@ -452,8 +452,8 @@
   "offline": "2026-10-22"
  },
  "sec-appsec-devsecops": {
-  "fingerprint": "f7509834f846fcee",
-  "offline": "2026-10-22"
+  "fingerprint": "21414fd080d54792",
+  "offline": "2026-10-23"
  },
  "sec-cloud-security": {
   "fingerprint": "c4d6647e14ed9b77",
@@ -490,6 +490,10 @@
  "sec-security-leadership": {
   "fingerprint": "3a94eb32f81af19b",
   "offline": "2026-10-17"
+ },
+ "sec-variant-analysis": {
+  "fingerprint": "2b5b662bb4d73ec6",
+  "offline": "2026-10-23"
  },
  "sec-zero-trust-identity": {
   "fingerprint": "4d6c9815af2ede29",
