@@ -27,6 +27,14 @@ print(json.dumps({"type": "system", "subtype": "init"}))
 if "UŻYJ" in prompt:
     print(json.dumps({"type": "assistant", "message": {"content": [
         {"type": "tool_use", "name": "Skill", "input": {"skill": "be-api-design"}}]}}))
+import os
+if os.environ.get("FAKE_ARGV"):
+    open(os.environ["FAKE_ARGV"], "w").write(json.dumps(sys.argv[1:]))
+if "WYCIEK" in prompt:
+    print(json.dumps({"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "name": "Read", "input": {"file_path": "/home/u/tf/core/skills/be-api-design/SKILL.md"}},
+        {"type": "tool_use", "name": "Grep", "input": {"pattern": "idempotency", "path": "/home/u/tf"}},
+        {"type": "tool_use", "name": "Read", "input": {"file_path": "notatki.md"}}]}}))
 if "CZYTAJ" in prompt:
     print(json.dumps({"type": "assistant", "message": {"content": [
         {"type": "tool_use", "name": "Read", "input": {"file_path": "/tmp/x/.claude/skills/be-database/SKILL.md"}}]}}))
@@ -100,6 +108,32 @@ def main() -> int:
             fails.append("raport: brak ostrzeżenia o sędzi tej samej rodziny co oceniany model")
         if '"reason"' not in ev.JUDGE_SCHEMA or ev.DEFAULT_JUDGE != "auto":
             fails.append("schemat sędziego bez uzasadnienia albo domyślny sędzia nie jest 'auto'")
+        # 7c. izolacja przebiegu bez skilli: --restricted (pliki tylko w katalogu testu, bez Bash, bez ustawień
+        # użytkownika i projektu) i wykrycie odczytu poza katalogiem testu w strumieniu — taki przebieg to błąd
+        args.judge = "none"
+        argv_file = Path(d) / "argv.json"
+        os.environ["FAKE_ARGV"] = str(argv_file)
+        leak = {**base, "id": "g", "expect": "trigger", "prompt": "WYCIEK UŻYJ skilla"}
+        r = ev.run_one(leak, "haiku", True, args)
+        argv = json.loads(argv_file.read_text(encoding="utf-8")) if argv_file.is_file() else []
+        if "--restricted" not in argv:
+            fails.append(f"bez skilli: brak --restricted w poleceniu: {argv}")
+        if r.get("outside_reads") != ["/home/u/tf/core/skills/be-api-design/SKILL.md", "/home/u/tf"]:
+            fails.append(f"bez skilli: odczyty poza katalogiem testu: {r.get('outside_reads')}")
+        if r["passed"] or "poza katalogiem testu" not in (r["error"] or ""):
+            fails.append(f"bez skilli: odczyt poza katalogiem testu powinien być błędem przebiegu: {r}")
+        r = ev.run_one(leak, "haiku", False, args)
+        argv = json.loads(argv_file.read_text(encoding="utf-8")) if argv_file.is_file() else []
+        if "--restricted" in argv or not r.get("outside_reads") or r["error"]:
+            fails.append(f"ze skillami: bez --restricted, odczyt zapisany, ale nie błąd: {argv} {r}")
+        p = ev.parse_stream([json.dumps({"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "name": "Glob", "input": {"pattern": "**/*.md", "path": "/w/sub"}},
+            {"type": "tool_use", "name": "Read", "input": {"file_path": "/w/a.md"}}]}})])
+        if p.get("paths") != ["/w/sub", "/w/a.md"]:
+            fails.append(f"parse_stream: ścieżki narzędzi plikowych: {p.get('paths')}")
+        if ev.outside(["/w/a.md", "rel.md", "/w2/x", "/w/../etc/passwd"], "/w") != ["/w2/x", "/w/../etc/passwd"]:
+            fails.append(f"outside: {ev.outside(['/w/a.md', 'rel.md', '/w2/x', '/w/../etc/passwd'], '/w')}")
+        os.environ.pop("FAKE_ARGV")
         os.environ.pop("CLAUDE_BIN")
         # 8. walidacja błędnego pliku
         bad = Path(d) / "be-api-design.json"

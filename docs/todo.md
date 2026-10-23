@@ -230,7 +230,10 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
 - [x] Pomiar skilli na modelu (płatny, za zgodą człowieka), 2026-10-22: partie 1–6 (wszystkie scenariusze, Haiku,
   z porównaniem bez skilli), zaostrzenie kryteriów, poprawki opisów i treści, przegląd 143 scenariuszy
   nierozróżniających, skrócenie 26 skilli — wyniki i decyzje w `docs/evals/2026-10-22-pomiar-haiku.md`.
-- [ ] Izolacja przebiegu „bez skilli” w `core/tests/run_skill_evals.py`: model w przebiegu bez skilli może czytać dysk
+- [x] Izolacja przebiegu „bez skilli” w `core/tests/run_skill_evals.py` — zrobione 2026-10-23: przebieg bez skilli
+  startuje z `--restricted` (dokumentacja CLI, odczyt 2026-10-23: narzędzia plikowe tylko w katalogach roboczych, bez
+  Bash, bez ustawień użytkownika i projektu; Claude Code ≥ 2.1.248), a runner zapisuje ścieżki narzędzi plikowych
+  i odczyt poza katalogiem testu oznacza jako błąd przebiegu (`outside_reads`); test z atrapą `claude`. Pierwotny opis: model w przebiegu bez skilli może czytać dysk
   poza katalogiem testu i znaleźć pliki fabryki (2 z 607 przebiegów w pomiarze 2026-10-22). Zrobić przed pomiarem na
   Sonnecie lub Opusie albo przed uruchomieniem pomiaru poza kontenerem z czystym dyskiem: odciąć przebieg od reszty
   dysku (np. osobny HOME i katalog roboczy, blokada odczytu poza workspace) i dopisać test, który to sprawdza (TDD).
@@ -303,7 +306,7 @@ Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy sk
 
 ## Rekonstrukcja projektu z kodu
 Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4). Zakres teraz: tylko kod; bez PHP.
-- [ ] F0–F5 wg planu.
+- [ ] F0–F5 wg planu — zrobione F0–F3 i F5; F4 (pomiar, płatny) odłożony decyzją człowieka (2026-10-23).
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
 
 ## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23
