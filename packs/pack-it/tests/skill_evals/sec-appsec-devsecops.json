@@ -46,6 +46,21 @@
       }
     },
     {
+      "id": "niebezpieczne-api-i-ustawienia",
+      "expect": "trigger",
+      "prompt": "Robię przegląd bezpieczeństwa usługi w Pythonie (Django) przed wydaniem. Na jakie niebezpieczne funkcje i domyślne ustawienia patrzeć w kodzie i konfiguracji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pickle", "yaml\\.load", "eval", "exec"],
+          ["DEBUG\\s*=\\s*True", "tryb\\w* (debug|deweloper)"],
+          ["verify\\s*=\\s*False", "weryfikacj\\w* certyfikat", "TLS"],
+          ["domyśln\\w* (hasł|konto|klucz|SECRET_KEY)", "SECRET_KEY", "zaszyt\\w* (sekret|klucz|hasł)"],
+          ["MD5", "SHA-?1", "\\brandom\\b", "secrets"]
+        ],
+        "none": ["wyłącz (weryfikację certyfikatu|verify)"]
+      }
+    },
+    {
       "id": "lockfile-karencja",
       "expect": "no-trigger",
       "prompt": "Jak ustawić karencję nowych wersji paczek npm i wyłączyć skrypty instalacyjne w projekcie?",

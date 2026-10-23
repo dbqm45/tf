@@ -4,7 +4,7 @@ description: Użyj przy commit message i tytule PR (Conventional Commits) — ty
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj przy pisaniu, przeglądzie i parsowaniu commit message oraz tytułów PR wg Conventional Commits 1.0.0 — typy, zakres, !, BREAKING CHANGE, stopki, revert, bump SemVer, changelog z historii (nx release). Nie do strategii gałęzi i PR (core-git-workflow) ani treści CHANGELOG pisanego ręcznie (skill dokumentacji, pack-docs)."
-  slowa: "komunikat commita, commit message, wiadomość commita, opis commita, tytuł PR, BREAKING CHANGE, feat, fix, chore, commitlint, narzędzie do wydań, semantic-release, release-please"
+  slowa: "komunikat commita, commit message, wiadomość commita, opis commita, tytuł PR, BREAKING CHANGE, feat, fix, chore, commitlint, narzędzie do wydań, policzyło wersję, wersja z commitów, usunąłem pole z DTO, zmiana łamiąca w commicie, semantic-release, release-please"
 ---
 
 # Conventional Commits 1.0.0

@@ -349,9 +349,9 @@ Przegląd listy (commit f737f28, 1159 pozycji) pod kątem luk w fabryce. Z listy
 własnymi słowami ze źródeł pierwotnych, licencje repozytoriów sprawdzamy przed adaptacją, obce skille tylko po
 `skill_audit.py` (core-agent-security). Każdy punkt: scenariusze ewaluacji przed treścią, bramka, `refs`, PR.
 Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
-- [ ] **1. Analiza wariantów podatności** (inspiracja: Trail of Bits `variant-analysis`): po znalezionej podatności
+- [x] **1. Analiza wariantów podatności** (zrobione 2026-10-23: nowy skill `sec-variant-analysis`, szablon reguły Semgrep sprawdzony `semgrep --test`) (inspiracja: Trail of Bits `variant-analysis`): po znalezionej podatności
   szukanie podobnych wystąpień według wzorca. Rozszerzenie `sec-appsec-devsecops` albo nowy skill `sec-`.
-- [ ] **2. Niebezpieczne API i domyślne konfiguracje** (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
+- [x] **2. Niebezpieczne API i domyślne konfiguracje** (zrobione 2026-10-23: `sec-appsec-devsecops/references/niebezpieczne-api.md`, wkład do `security-reviewer`) (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
   per język (zaszyte sekrety, domyślne hasła, słaba kryptografia, błędogenne API); `sec-appsec-devsecops`
   i wkład do agenta `security-reviewer`.
 - [ ] **3. Własne reguły Semgrep/CodeQL z testami** (ToB `semgrep-rule-creator`): procedura pisania i testowania

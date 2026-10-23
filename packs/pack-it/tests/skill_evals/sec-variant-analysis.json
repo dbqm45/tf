@@ -1,0 +1,80 @@
+{
+  "skill": "sec-variant-analysis",
+  "scenarios": [
+    {
+      "id": "sql-injection-gdzie-jeszcze",
+      "expect": "trigger",
+      "prompt": "Pentester znalazł SQL injection w endpointcie /reports: kolumna sortowania z parametru trafiała do ORDER BY sklejanego ze stringa. Naprawiliśmy to jedno miejsce. Jak upewnić się, że w reszcie kodu nie ma tego samego błędu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "przyczyn\\w* (źródłow|pierwotn)",
+            "wzorzec\\w*",
+            "uogóln\\w*"
+          ],
+          [
+            "źródł\\w*[^\\n]{0,60}(ujści|sink)",
+            "source[^\\n]{0,30}sink",
+            "przepływ\\w* danych",
+            "taint"
+          ],
+          [
+            "Semgrep",
+            "CodeQL",
+            "grep",
+            "ripgrep"
+          ],
+          [
+            "triaż\\w*",
+            "fałszyw\\w*",
+            "przejrz\\w* (każde|trafie)"
+          ],
+          [
+            "reguł\\w*[^\\n]{0,60}(CI|pipeline|regresj)",
+            "test\\w* regresj",
+            "blokuj\\w* nowe"
+          ]
+        ],
+        "none": [
+          "wystarczy (naprawić|poprawić) (to jedno|ten jeden)"
+        ]
+      }
+    },
+    {
+      "id": "deserializacja-wiele-repo",
+      "expect": "trigger",
+      "prompt": "Po incydencie z deserializacją niezaufanych danych w jednej usłudze w Javie musimy sprawdzić pozostałe 40 repozytoriów firmy. Jak to zrobić systematycznie, a nie na oko? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wariant\\w*",
+            "podobn\\w* (miejsc|wystąpie|błęd)"
+          ],
+          [
+            "wszystki\\w* repozytori",
+            "wiele repozytori",
+            "organizac\\w*",
+            "multi-repo"
+          ],
+          [
+            "wzorzec\\w*",
+            "reguł\\w*",
+            "zapytani\\w*"
+          ],
+          [
+            "priorytet\\w*",
+            "ekspozyc\\w*",
+            "osiągaln\\w*",
+            "dostępn\\w* z zewnątrz"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-sla-podatnosci",
+      "expect": "no-trigger",
+      "neighbor": "sec-appsec-devsecops",
+      "prompt": "Jak ustalić terminy napraw podatności w zależności od CVSS, EPSS i katalogu CISA KEV i kiedy blokować build?"
+    }
+  ]
+}

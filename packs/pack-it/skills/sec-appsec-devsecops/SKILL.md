@@ -3,8 +3,8 @@ name: sec-appsec-devsecops
 description: Użyj przy programie bezpieczeństwa aplikacji w pipeline — ASVS, SAMM, SAST, DAST, SCA, triaż i SLA podatności, SLSA, podpisy, metryki.
 metadata:
   przeglad: 2027-04-17
-  katalog: "Użyj, gdy budujesz lub oceniasz program bezpieczeństwa aplikacji w cyklu dostarczania (AppSec, DevSecOps) — wymagania wg OWASP ASVS 5.0 i dojrzałość wg OWASP SAMM, przegląd kodu pod kątem bezpieczeństwa, warstwy skanerów w CI/CD (sekrety, SAST, SCA i SBOM, DAST, IAST, IaC i kontenery) i miejsce każdej, strojenie fałszywych alarmów, triaż i terminy napraw wg CVSS v4, EPSS i CISA KEV, polityka blokowania buildu, integralność łańcucha (SLSA, provenance, Sigstore/cosign), security champions, metryki (MTTR, pokrycie). Nie do mechaniki pipeline'u (ops-ci-cd), lockfile i karencji zależności (ops-supply-chain-security), modelu zagrożeń (arch-threat-modeling), kodu auth (be-auth-security), łatek i incydentów w operacjach (ops-security-operations) ani sekretów (ops-secrets-identities)."
-  slowa: "devsecops, appsec, bezpieczeństwo aplikacji, ASVS, SAMM, SAST, DAST, IAST, SCA, semgrep, codeql, zap, trivy, grype, syft, dependency-track, SBOM cyclonedx spdx, skaner w CI, fałszywe alarmy, false positives, blokować build, SLA podatności, CVSS, EPSS, KEV, MTTR podatności, SLSA, cosign, sigstore, provenance, security champions, podpisywanie obrazów, podpis obrazu kontenera, nikt go nie podmienił, zbudowano w naszym CI, integralność artefaktu, przegląd kodu security, pentest, wymagania bezpieczeństwa"
+  katalog: "Użyj, gdy budujesz lub oceniasz program bezpieczeństwa aplikacji w cyklu dostarczania (AppSec, DevSecOps) — wymagania wg OWASP ASVS 5.0 i dojrzałość wg OWASP SAMM, przegląd kodu pod kątem bezpieczeństwa (niebezpieczne API i domyślne konfiguracje per język), warstwy skanerów w CI/CD (sekrety, SAST, SCA i SBOM, DAST, IAST, IaC i kontenery) i miejsce każdej, strojenie fałszywych alarmów, triaż i terminy napraw wg CVSS v4, EPSS i CISA KEV, polityka blokowania buildu, integralność łańcucha (SLSA, provenance, Sigstore/cosign), security champions, metryki (MTTR, pokrycie). Nie do mechaniki pipeline'u (ops-ci-cd), lockfile i karencji zależności (ops-supply-chain-security), modelu zagrożeń (arch-threat-modeling), kodu auth (be-auth-security), łatek i incydentów w operacjach (ops-security-operations) ani sekretów (ops-secrets-identities) ani szukania wariantów znalezionej podatności (sec-variant-analysis)."
+  slowa: "devsecops, appsec, bezpieczeństwo aplikacji, ASVS, SAMM, SAST, DAST, IAST, SCA, semgrep, codeql, zap, trivy, grype, syft, dependency-track, SBOM cyclonedx spdx, skaner w CI, fałszywe alarmy, false positives, blokować build, SLA podatności, CVSS, EPSS, KEV, MTTR podatności, SLSA, cosign, sigstore, provenance, security champions, podpisywanie obrazów, podpis obrazu kontenera, nikt go nie podmienił, zbudowano w naszym CI, integralność artefaktu, przegląd kodu security, pentest, wymagania bezpieczeństwa, niebezpieczne funkcje, niebezpieczne API, domyślne ustawienia, domyślne hasła, tryb debug na produkcji, wyłączona weryfikacja certyfikatu, pickle, yaml.load, BinaryFormatter, InsecureSkipVerify, przegląd bezpieczeństwa przed wydaniem"
 ---
 
 # AppSec w pipeline (DevSecOps)
@@ -57,6 +57,9 @@ i izolujesz od sekretów (`ops-ci-cd`, `ops-supply-chain-security`).
 Skanery nie widzą logiki. Człowiek (lub agent, wynik zatwierdza człowiek) sprawdza: kontrolę dostępu na każdym
 zasobie (IDOR), walidację na granicy, budowanie zapytań i poleceń z wejścia, deserializację, SSRF przy pobieraniu URL,
 obsługę błędów bez wycieku, logi bez danych wrażliwych. Lista pytań wg ASVS, nie wg intuicji.
+Niebezpieczne API per język (Python, JS/Node, Java, C#, Go) i domyślne konfiguracje (konta, debug, TLS, CORS,
+usługi bez uwierzytelnienia, fail-open): `references/niebezpieczne-api.md`. Po znalezieniu podatności — jej
+warianty w reszcie kodu i reguła w CI: sec-variant-analysis.
 
 ## Łańcuch dostaw artefaktu
 - **SLSA** (build track, v1.0): L1 provenance istnieje, L2 provenance podpisuje hostowana platforma buildu, L3 platforma

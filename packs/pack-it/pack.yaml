@@ -67,7 +67,9 @@ contributes:
         sekrety, konta usług, tokeny, role chmurowe, kryptografia, KMS i certyfikaty — ops-secrets-identities
         (`references/kryptografia-i-pki.md`); manifesty Kubernetes — ops-kubernetes; nowe punkty wejścia, granice zaufania,
         przepływy danych — arch-threat-modeling (czy model zagrożeń jest aktualny); logowanie zdarzeń bezpieczeństwa
-        i reguły wykrywania — ops-security-operations.
+        i reguły wykrywania — ops-security-operations; niebezpieczne API i domyślne konfiguracje w diffie —
+        sec-appsec-devsecops (`references/niebezpieczne-api.md`); znalezisko, które może mieć warianty w innych
+        miejscach kodu — sec-variant-analysis.
 
 # Konsultanci dla person innych nakładek (docs/insights.md): tylko do odczytu, odpowiadają ze źródłem.
 consultants:
