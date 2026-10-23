@@ -54,7 +54,7 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 | Faza | Zmiana | Gdzie w tf |
 |---|---|---|
 | **F0** | Dziennik per zmiana: `change new <CHG> [--source <PRB>]`, szablony `intent`, `plan`, `decisions`; `check` waliduje nagłówki w `changes/` | `modes/mode-pdi/` (patrz „Architektura”) — **ta sesja** |
-| **F0b** | Zapis i wypychanie decyzji z dowolnego narzędzia: `project_record.py decision add --change CHG-n "…"` (wpis w `decisions.md`; gdy serwer MCP pdi podłączony — od razu `record_decision` i numer `DEC-n`), kolejka bez połączenia (wpis „niewysłane”, `decision sync` wysyła później, stały identyfikator wpisu → bez duplikatów), `decision export` (JSON wszystkich decyzji projektu do indeksowania), reguła w core-project-record („Odpowiedzi i decyzje człowieka”): decyzja z rozmowy albo bramki idzie przez to polecenie | `modes/mode-pdi/` — po F0, osobny PR |
+| **F0b** | Zapis i wypychanie decyzji z dowolnego narzędzia: `decision_record.py decision add --change CHG-n "…"` (skrypt trybu) (wpis w `decisions.md`; gdy serwer MCP pdi podłączony — od razu `record_decision` i numer `DEC-n`), kolejka bez połączenia (wpis „niewysłane”, `decision sync` wysyła później, stały identyfikator wpisu → bez duplikatów), `decision export` (JSON wszystkich decyzji projektu do indeksowania), reguła w skillu trybu: decyzja z rozmowy albo bramki idzie przez to polecenie | `modes/mode-pdi/` — po F0, osobny PR |
 | F0 | Instalacja tf w pdi i ShipScope | osobne sesje w tamtych repo |
 | F1 | Dopisek `Change: TSK-n`, hook commit-msg | `core/skills/core-conventional-commits`, `core-git-workflow` |
 | F1 | Talos czyta cięcia z `plan.md` zmiany; raport do `changes/CHG/runs/TSK-n.md` | `modes/mode-talos/` |
