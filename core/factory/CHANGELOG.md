@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.19.0] — 2026-10-23
+### Added
+- **pack-it:** lang-go skill with Go version detection (#53)
+
 ## [5.18.0] — 2026-10-23
 ### Added
 - **pack-it:** variant analysis skill and dangerous API checklist (#52)
