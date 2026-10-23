@@ -338,7 +338,7 @@ Dziś nowa nakładka powstaje przez ręczne kopiowanie istniejącej. Cel: szkiel
   na sztywno); na koniec uruchamia `workspace.py check --packs <id>` i `refs` i wypisuje listę „do zrobienia”.
   Szkielet scenariuszy celowo nie przechodzi bramki, dopóki nie powstaną prawdziwe scenariusze. Istniejący katalog →
   błąd bez nadpisywania. TDD (test generatora w `tests/`).
-- [ ] **Skill dla autora fabryki** (tylko w repo tf, nie w rdzeniu — decyzja do potwierdzenia): na „new pack …” dopytuje
+- [x] **Skill dla autora fabryki** (decyzja człowieka 2026-10-23: tylko w repo tf; zrobione: `.claude/skills/tf-new-pack/`, test `tests/test_repo_skills.py`): na „new pack …” dopytuje
   o zakres, prefiks, zależności i role, najpierw proponuje scenariusze ewaluacji, potem woła generator, wypełnia treść
   i uruchamia bramki.
 - [x] **Przewodnik** (zrobione 2026-10-23: `docs/new-pack.md`) budowy nakładki (pola `pack.yaml`, tryb vs paczka, prefiksy, granice `refs`, wersjonowanie)
