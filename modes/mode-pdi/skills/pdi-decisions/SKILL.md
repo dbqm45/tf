@@ -30,18 +30,27 @@ nie zastępuje.
 
 ## Decyzja
 Decyzja to rozstrzygnięcie człowieka lub bramki (B1–B6): wybór wariantu, zgoda, odrzucenie, wyjątek. Nie zostawiasz
-jej tylko w treści odpowiedzi.
-1. **Wpis lokalny** w `decisions.md` zmiany, według wzoru w pliku: co (jedno zdanie), kiedy, kto, rodzaj
-   (`product`, `technical`, `process`, `triage`, `intent`, `gate`, `other`), dlaczego (1–5 zdań), źródło
-   (`claude-cli`, `claude-ai`, `slack`, `jira`, …). Pola `id` puste, `wyslano: nie`.
-2. **Rejestr pdi:** jeśli narzędzie MCP `record_decision` jest dostępne w sesji, wywołaj je z tymi samymi polami
-   i powiązaniem ze zmianą (`links.chg`), a zwrócony numer wpisz w `id` i ustaw `wyslano: tak`.
-3. **Bez serwera pdi** (narzędzia nie ma albo nie odpowiada): nie wypychasz, nie nadajesz numeru, nie zgadujesz.
-   Wpis zostaje z pustym `id` i `wyslano: nie`; mówisz człowiekowi, że decyzja czeka na wysłanie.
-4. Decyzja zmienia inną → stara dostaje `superseded` (w nagłówku pliku albo we wpisie), nowa wskazuje starą.
+jej tylko w treści odpowiedzi — ale też nie decydujesz sam, co jest decyzją (tak wymaga rejestr pdi).
+1. **Szkic do zatwierdzenia:** pokaż człowiekowi: co (jedno zdanie), dlaczego (1–5 zdań, tylko z rozmowy — czego
+   brakuje, o to zapytaj), kto zdecydował, rodzaj (`product`, `technical`, `process`, `triage`, `intent`, `gate`,
+   `other`). Zapisujesz dopiero po jego „tak”.
+2. **Wpis lokalny:** `decision_record.py decision add CHG-12 --statement "…" --why "…" --kind product --by "…"`
+   (opcjonalnie `--source-kind slack|jira|…`, `--drafted-by human`, `--date`) → `CHG-12/Dn` w `decisions.md`,
+   `id` puste, `wyslano: nie`.
+3. **Rejestr pdi:** jeśli w sesji jest narzędzie MCP `record_decision` serwera pdi, `decision_record.py decision pending
+   --change CHG-12` daje gotowe argumenty; wywołaj je, a zwrócony numer zapisz: `decision mark CHG-12/Dn --id DEC-41`.
+   Zanim zaproponujesz rozwiązanie w obszarze już rozstrzyganym, sprawdź `find_decisions`.
+4. **Bez serwera pdi** (narzędzia nie ma albo nie odpowiada): nie wypychasz, nie nadajesz numeru, nie zgadujesz. Wpis
+   zostaje niewysłany; mówisz człowiekowi, że czeka. Gdy serwer wróci: `decision pending`, `record_decision`, `mark`
+   (ponowienie identycznego zapisu rejestr zwraca jako istniejący wpis — bez duplikatów).
+5. Decyzja zmienia wcześniejszą → w rejestrze `supersede_decision` (nie nowa, sprzeczna decyzja), w repo stary
+   artefakt dostaje `superseded`.
+
+Eksport wszystkich decyzji projektu (z numerem i stanem wysłania): `decision_record.py decision export`.
+`decision_record.py check` sprawdza też wpisy decyzji (ref, numer, rodzaj, źródło, daty, `wyslano: tak` bez numeru).
 
 ## Przykład
-Właściciel: „W CHG-12 eksport do CSV zamiast XLSX, klienci i tak otwierają go w arkuszu”. Dopisujesz w
-`docs/project/changes/CHG-12/decisions.md` wpis „Eksport do CSV zamiast XLSX” (kto: właściciel produktu, rodzaj
-`product`, dlaczego: …, źródło `claude-cli`), wołasz `record_decision`, dostajesz `DEC-41` → `id: DEC-41`,
-`wyslano: tak`. Bez serwera: `id:` puste, `wyslano: nie` i informacja dla człowieka.
+Właściciel: „W CHG-12 eksport do CSV zamiast XLSX, klienci i tak otwierają go w arkuszu”. Pokazujesz szkic
+(co, dlaczego, kto, rodzaj `product`), po zgodzie: `decision add CHG-12 …` → `CHG-12/D1`; `decision pending`,
+`record_decision` → `DEC-41`; `decision mark CHG-12/D1 --id DEC-41`. Bez serwera: wpis `CHG-12/D1` z pustym `id`,
+`wyslano: nie` i informacja dla człowieka.

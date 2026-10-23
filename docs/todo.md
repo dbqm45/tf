@@ -10,7 +10,7 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
 - Wszystko w opcjonalnym trybie `modes/mode-pdi/` (rdzeń bez zmian); działa, gdy podłączony jest serwer MCP pdi.
 - [x] **F0:** dziennik per zmiana — `decision_record.py change new CHG-n [--source PRB-n]` (skrypt trybu), `check` dla
   `docs/project/changes/*/`, szablony i skill w trybie; TDD, bramki, PR.
-- [ ] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
+- [x] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
 ## Plan 3.1.0 — nowe możliwości Claude Code i zalecenia z dokumentacji

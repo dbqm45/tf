@@ -3,7 +3,7 @@
 # Przewodnik: GUIDE.md (w projekcie: factory/packs/mode-pdi/).
 id: mode-pdi
 kind: mode
-version: 0.1.0
+version: 0.2.0
 title: pdi decisions
 description: Decisions in one source with pdi — per-change journal (docs/project/changes/CHG-n/) following the pdi contract and decision recording through the pdi MCP server; opt-in.
 content_language: pl

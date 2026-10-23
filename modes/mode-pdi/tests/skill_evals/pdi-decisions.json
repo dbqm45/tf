@@ -7,12 +7,25 @@
    "prompt": "Ustaliliśmy z właścicielem produktu, że w zmianie CHG-12 eksport idzie do CSV, a nie do XLSX, bo klienci i tak otwierają go w arkuszu. Mamy podłączony rejestr decyzji pdi. Zapisz tę decyzję tak, żeby była w jednym źródle. Odpowiedz zwięźle.",
    "checks": {
     "all": [
-     ["decisions\\.md"],
-     ["record_decision"],
-     ["DEC-\\d+|DEC-n|numer\\w* (z )?rejestru"],
-     ["CHG-12"]
+     [
+      "decision add|decisions\\.md"
+     ],
+     [
+      "record_decision"
+     ],
+     [
+      "szkic|zatwierdz|potwierdz|akcept"
+     ],
+     [
+      "decision mark|DEC-\\d+|DEC-n|numer\\w* (z )?rejestru"
+     ],
+     [
+      "CHG-12"
+     ]
     ],
-    "none": ["tylko w (treści )?odpowiedzi"]
+    "none": [
+     "tylko w (treści )?odpowiedzi"
+    ]
    }
   },
   {
@@ -21,11 +34,21 @@
    "prompt": "Zgłoszenie PRB-34 zostało przyjęte w pdi jako zmiana CHG-12. Załóż dla niej dziennik w repozytorium (zamiar, plan, decyzje) zgodny z kontraktem pdi. Co uruchomisz i co powstanie? Odpowiedz zwięźle.",
    "checks": {
     "all": [
-     ["decision_record\\.py"],
-     ["change new"],
-     ["docs/project/changes/CHG-12"],
-     ["intent\\.md"],
-     ["--source PRB-34|source: PRB-34|source"]
+     [
+      "decision_record\\.py"
+     ],
+     [
+      "change new"
+     ],
+     [
+      "docs/project/changes/CHG-12"
+     ],
+     [
+      "intent\\.md"
+     ],
+     [
+      "--source PRB-34|source: PRB-34|source"
+     ]
     ]
    }
   },
@@ -35,11 +58,19 @@
    "prompt": "Na bramce B2 zdecydowaliśmy w CHG-7, że zostajemy przy PostgreSQL. Zapisz decyzję w rejestrze pdi — ale serwer MCP pdi nie odpowiada w tej sesji. Co robisz? Odpowiedz zwięźle.",
    "checks": {
     "all": [
-     ["decisions\\.md"],
-     ["niewysłan|nie wysłan|później|kolejk|uzupełni"],
-     ["nie (wymyślaj|zgaduj|nadawaj)|pust\\w* (pole|id)|bez numeru"]
+     [
+      "decisions\\.md"
+     ],
+     [
+      "niewysłan|nie wysłan|później|kolejk|uzupełni|decision pending"
+     ],
+     [
+      "nie (wymyślaj|zgaduj|nadawaj)|pust\\w* (pole|id)|bez numeru"
+     ]
     ],
-    "none": ["DEC-\\d{2,}"]
+    "none": [
+     "DEC-\\d{2,}"
+    ]
    }
   },
   {
@@ -47,14 +78,29 @@
    "expect": "no-trigger",
    "neighbor": "core-project-record",
    "prompt": "Kończę fazę architektury w projekcie. Gdzie i w jakim formacie zapisać artefakt fazy z TL;DR i przekazaniem dla następnej fazy? Odpowiedz zwięźle.",
-   "checks": {"all": [["docs/project"], ["TL;DR"]]}
+   "checks": {
+    "all": [
+     [
+      "docs/project"
+     ],
+     [
+      "TL;DR"
+     ]
+    ]
+   }
   },
   {
    "id": "commit-message",
    "expect": "no-trigger",
    "neighbor": "core-conventional-commits",
    "prompt": "Jak sformułować commit message dla poprawki błędu w eksporcie, żeby trafił do changelogu jako patch? Odpowiedz zwięźle.",
-   "checks": {"all": [["fix"]]}
+   "checks": {
+    "all": [
+     [
+      "fix"
+     ]
+    ]
+   }
   }
  ]
 }

@@ -2,6 +2,7 @@
 """Testy dziennika zmiany (tryb mode-pdi, skill pdi-decisions, scripts/decision_record.py): `change new` i `check`
 wobec nagłówka z kontraktu pdi 0.3.0 (contract/change.schema.json). python3 .claude/tests/test_decision_record.py"""
 import datetime as dt
+import json
 import os
 import subprocess
 import sys
@@ -33,6 +34,13 @@ def header(path: Path) -> dict:
         v = v.split(" #")[0].strip()
         out[k.strip()] = [x.strip() for x in v[1:-1].split(",") if x.strip()] if v.startswith("[") else v
     return out
+
+
+def jl(r) -> list:
+    try:
+        return json.loads(r.stdout) if r.returncode == 0 else []
+    except ValueError:
+        return []
 
 
 def write(path: Path, head: str, body: str = "# x\n") -> None:
@@ -115,6 +123,62 @@ def main() -> int:
         check(r.returncode == 0, f"D-14: poprawny plan (przykład z kontraktu) przechodzi: {r.stdout}{r.stderr}")
         r = run(["check"], Path(tmp) / "docs")
         check(r.returncode == 0 and "brak" in r.stdout.lower(), f"D-15: bez docs/project/changes — nic do sprawdzenia: {r.stdout}")
+
+    # F0b: decyzje — add, pending, mark, export, check wpisów.
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12", "--source", "PRB-34"], repo)
+        dec = repo / "docs" / "project" / "changes" / "CHG-12" / "decisions.md"
+        add = ["decision", "add", "CHG-12", "--statement", "Eksport do CSV zamiast XLSX.",
+               "--why", "Klienci i tak otwierają go w arkuszu.", "--kind", "product", "--by", "właściciel produktu"]
+        r = run(add, repo)
+        check(r.returncode == 0 and "CHG-12/D1" in r.stdout, f"E-1: decision add zwraca ref CHG-12/D1: {r.stdout}{r.stderr}")
+        text = dec.read_text(encoding="utf-8")
+        check("## Eksport do CSV zamiast XLSX." in text and "- ref: CHG-12/D1" in text and "- id:\n" in text
+              and "- wyslano: nie" in text and f"- kiedy: {today}" in text and "- szkic: ai" in text,
+              f"E-2: wpis w decisions.md z ref, pustym id, wyslano: nie, datą i szkicem: {text[-400:]}")
+        r = run(add[:3] + ["--statement", "Druga.", "--why", "Bo tak.", "--kind", "technical", "--by", "zespół",
+                           "--source-kind", "slack", "--drafted-by", "human"], repo)
+        check(r.returncode == 0 and "CHG-12/D2" in r.stdout, "E-3: kolejny wpis dostaje D2")
+        r = run(add[:3] + ["--statement", "Zła.", "--why", "x", "--kind", "decyzja", "--by", "x"], repo)
+        check(r.returncode != 0, "E-4: nieznany rodzaj decyzji → błąd")
+        r = run(["decision", "add", "CHG-99", "--statement", "x", "--why", "x", "--kind", "other", "--by", "x"], repo)
+        check(r.returncode != 0 and "change new" in r.stdout + r.stderr, "E-5: brak dziennika zmiany → błąd z podpowiedzią")
+        r = run(["decision", "pending"], repo)
+        items = jl(r)
+        first = items[0] if items else {}
+        check(r.returncode == 0 and [i.get("ref") for i in items] == ["CHG-12/D1", "CHG-12/D2"],
+              f"E-6: pending wypisuje niewysłane w kolejności: {r.stdout[:300]}")
+        check(first.get("record_decision") == {
+                  "statement": "Eksport do CSV zamiast XLSX.", "why": "Klienci i tak otwierają go w arkuszu.",
+                  "kind": "product", "source": {"kind": "claude-cli"}, "drafted_by": "ai",
+                  "decided_by": "właściciel produktu", "decided_at": today, "links": {"chg": "CHG-12", "prb": "PRB-34"}},
+              f"E-7: argumenty record_decision zgodne z kontraktem decyzji: {first}")
+        r = run(["decision", "mark", "CHG-12/D1", "--id", "DEC-41"], repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "- id: DEC-41" in text and text.count("- wyslano: tak") == 1,
+              f"E-8: mark wpisuje id i wyslano: tak: {r.stdout}{r.stderr}")
+        r = run(["decision", "mark", "CHG-12/D1", "--id", "DEC-42"], repo)
+        check(r.returncode != 0 and "DEC-41" in dec.read_text(encoding="utf-8"), "E-9: ponowne mark innym id → błąd, bez zmiany")
+        r = run(["decision", "mark", "CHG-12/D2", "--id", "dec-1"], repo)
+        check(r.returncode != 0, "E-10: zły kształt numeru DEC → błąd")
+        r = run(["decision", "pending"], repo)
+        check([i.get("ref") for i in jl(r)] == ["CHG-12/D2"], "E-11: po mark zostaje jeden niewysłany")
+        r = run(["decision", "export"], repo)
+        allx = jl(r)
+        check([(d.get("ref"), d.get("id"), d.get("sent")) for d in allx] == [("CHG-12/D1", "DEC-41", True),
+                                                                            ("CHG-12/D2", None, False)]
+              and len(allx) > 1 and allx[1].get("source") == {"kind": "slack"} and allx[1].get("drafted_by") == "human",
+              f"E-12: export wszystkich decyzji z id i stanem wysłania: {r.stdout[:400]}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"E-13: dziennik z decyzjami przechodzi check: {r.stdout}")
+        dec.write_text(dec.read_text(encoding="utf-8").replace("- id: DEC-41", "- id: 41"), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "CHG-12/D1" in r.stdout, f"E-14: check wykrywa zły numer w decyzji: {r.stdout}")
+        dec.write_text(dec.read_text(encoding="utf-8").replace("- id: 41\n- wyslano: tak", "- id:\n- wyslano: tak"),
+                       encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0, f"E-15: check wykrywa wyslano: tak bez numeru: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
