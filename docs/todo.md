@@ -343,3 +343,28 @@ Dziś nowa nakładka powstaje przez ręczne kopiowanie istniejącej. Cel: szkiel
   i uruchamia bramki.
 - [x] **Przewodnik** (zrobione 2026-10-23: `docs/new-pack.md`) budowy nakładki (pola `pack.yaml`, tryb vs paczka, prefiksy, granice `refs`, wersjonowanie)
   w `docs/` — nie jako README w `packs/` (repo publiczne).
+
+## Skille z przeglądu VoltAgent/awesome-agent-skills — zapisane 2026-10-23
+Przegląd listy (commit f737f28, 1159 pozycji) pod kątem luk w fabryce. Z listy bierzemy tylko tematy; treść piszemy
+własnymi słowami ze źródeł pierwotnych, licencje repozytoriów sprawdzamy przed adaptacją, obce skille tylko po
+`skill_audit.py` (core-agent-security). Każdy punkt: scenariusze ewaluacji przed treścią, bramka, `refs`, PR.
+Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
+- [ ] **1. Analiza wariantów podatności** (inspiracja: Trail of Bits `variant-analysis`): po znalezionej podatności
+  szukanie podobnych wystąpień według wzorca. Rozszerzenie `sec-appsec-devsecops` albo nowy skill `sec-`.
+- [ ] **2. Niebezpieczne API i domyślne konfiguracje** (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
+  per język (zaszyte sekrety, domyślne hasła, słaba kryptografia, błędogenne API); `sec-appsec-devsecops`
+  i wkład do agenta `security-reviewer`.
+- [ ] **3. Własne reguły Semgrep/CodeQL z testami** (ToB `semgrep-rule-creator`): procedura pisania i testowania
+  reguł; kandydat `tool-semgrep`.
+- [ ] **4. Fuzzing** (ToB `testing-handbook-skills`): kiedy fuzzować, harness, korpus, sanitizery, CI; rozszerzenie
+  `eng-testing` albo nowy `qa-fuzzing` (testy oparte na właściwościach już są).
+- [ ] **5. `lang-go` oraz `lang-csharp` z `fw-aspnet-core`** (inspiracja: eduardo-sl/go-agent-skills, Microsoft,
+  `openai/aspnet-core`): rekonstrukcja z kodu czyta Go i C#, agent nie ma skilli do pisania w tych językach.
+  Wersje sprawdzić w źródłach (core-source-research), wpis w `technologies.json`.
+- [ ] **6. Budowa serwera MCP** (anthropics/microsoft `mcp-builder`): transport, uwierzytelnianie, testowanie
+  (MCP Inspector), wersjonowanie narzędzi. Najpierw sprawdzić oficjalny skill Anthropic — może wystarczy odesłanie
+  i ustalenia projektu (core-skill-authoring, krok 1); `ai-agents` ma dziś tylko projekt narzędzi i zaufanie.
+- [ ] **7. Techniczne SEO** (Addy Osmani `seo`): indeksowanie, dane strukturalne, sitemap, canonical, meta; dla
+  projektów z publicznymi stronami (Core Web Vitals i dostępność już są).
+- [ ] **8. Bus factor w mapie własności** (`openai/security-ownership-map`): ryzyko „jednej osoby” per obszar
+  w `git_territory.py --authors` (`eng-codebase-mapping`), TDD.
