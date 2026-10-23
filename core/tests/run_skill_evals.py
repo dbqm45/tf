@@ -240,9 +240,12 @@ def judge_jev(answer: str, groups: list[list[str]], rubric: list[str] | None, ti
     return met, c2, fallback
 
 
+FILE_TOOLS = {"Read", "Grep", "Glob", "LS", "NotebookRead"}
+
+
 def parse_stream(lines: list[str]) -> dict:
     """Skille uruchomione narzędziem Skill lub przez odczyt SKILL.md, tekst odpowiedzi, koszt, liczba tur."""
-    skills, text, cost, turns, error, via, tool_errors = [], "", 0.0, 0, None, {}, []
+    skills, text, cost, turns, error, via, tool_errors, paths = [], "", 0.0, 0, None, {}, [], []
     for line in lines:
         try:
             e = json.loads(line)
@@ -253,6 +256,10 @@ def parse_stream(lines: list[str]) -> dict:
                 if c.get("type") != "tool_use":
                     continue
                 inp = c.get("input") or {}
+                if c.get("name") in FILE_TOOLS:
+                    p = inp.get("file_path") or inp.get("path") or inp.get("notebook_path")
+                    if p:
+                        paths.append(str(p))
                 if c.get("name") == "Skill" and inp.get("skill"):
                     skills.append(str(inp["skill"]).split(":")[-1])
                     via.setdefault(skills[-1], "Skill")
@@ -272,7 +279,14 @@ def parse_stream(lines: list[str]) -> dict:
             if e.get("is_error") or e.get("subtype") not in (None, "success"):
                 error = (e.get("subtype") or "błąd") + (f": {str(e.get('result'))[:200]}" if e.get("is_error") else "")
     return {"skills": list(dict.fromkeys(skills)), "text": text, "cost": cost, "turns": turns, "error": error,
-            "via": via, "tool_errors": tool_errors}
+            "via": via, "tool_errors": tool_errors, "paths": paths}
+
+
+def outside(paths: list[str], ws: str) -> list[str]:
+    """Ścieżki bezwzględne poza katalogiem testu (po rozwinięciu `..`); względne liczą się jako wewnątrz."""
+    roots = {os.path.normpath(ws), os.path.realpath(ws)}
+    return [p for p in paths if os.path.isabs(p)
+            and not any(os.path.normpath(p) == r or os.path.normpath(p).startswith(r + os.sep) for r in roots)]
 
 
 def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
@@ -296,7 +310,9 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
         cmd = [os.environ.get("CLAUDE_BIN", "claude"), "-p", sc["prompt"], "--model", model,
                "--max-turns", str(args.max_turns), "--permission-mode", "plan",
                "--output-format", "stream-json", "--verbose"]
-        if args.isolated:
+        if baseline:   # bez Bash, pliki tylko w katalogu testu, bez ustawień użytkownika i projektu (Claude Code ≥ 2.1.248)
+            cmd += ["--restricted"]
+        elif args.isolated:
             cmd += ["--setting-sources", "project,local"]
         t0 = time.time()
         try:
@@ -309,6 +325,9 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
             parsed = {"skills": [], "text": "", "cost": 0.0, "turns": 0, "error": f"przekroczono {args.timeout}s"}
         except OSError as e:
             parsed = {"skills": [], "text": "", "cost": 0.0, "turns": 0, "error": f"nie uruchomiono claude: {e}"}
+        outside_reads = outside(parsed.get("paths", []), str(ws))
+        if baseline and outside_reads and not parsed["error"]:
+            parsed["error"] = "odczyt poza katalogiem testu (wynik bez skilli niewiarygodny): " + ", ".join(outside_reads[:3])
     triggered = sc["skill"] in parsed["skills"] or any(a in parsed["skills"] for a in sc.get("accept") or [])
     if triggered and skill_meta(sc["skill"]).get("disable-model-invocation") == "true" \
             and (parsed.get("via") or {}).get(sc["skill"]) == "Read":
@@ -340,6 +359,7 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
             "triggered": triggered, "skills_used": parsed["skills"], "checks_ok": ok_checks, "misses": misses,
             "judged": judged, "judged_by": parsed.get("judged_by"),
             "judge_same_model": same_family(parsed.get("judged_by") or "", model), "via": parsed.get("via", {}), "tool_errors": parsed.get("tool_errors", []),
+            "outside_reads": outside_reads,
             "passed": passed and not parsed["error"], "error": parsed["error"], "cost": parsed["cost"],
             "turns": parsed["turns"], "seconds": round(time.time() - t0, 1), "answer": parsed["text"]}
 
@@ -388,7 +408,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--skills", default="", help="nazwy lub wzorce, po przecinku (np. 'be-*,qa-test-design')")
     ap.add_argument("--all", action="store_true", help="wszystkie skille z plikami scenariuszy")
     ap.add_argument("--models", default="haiku", help="haiku,sonnet,opus (domyślnie haiku — najtaniej)")
-    ap.add_argument("--baseline", action="store_true", help="dodatkowo przebieg bez skilli fabryki (porównanie)")
+    ap.add_argument("--baseline", action="store_true", help="dodatkowo przebieg bez skilli fabryki (porównanie; izolowany: --restricted, odczyt poza katalogiem testu = błąd)")
     ap.add_argument("--only", choices=EXPECT, help="tylko scenariusze danego rodzaju")
     ap.add_argument("--ids", default="", help="tylko te scenariusze: id albo skill:id, po przecinku")
     ap.add_argument("--max-turns", type=int, default=8)
