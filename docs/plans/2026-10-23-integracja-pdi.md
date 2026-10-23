@@ -3,6 +3,11 @@
 Data: 2026-10-23 · Status: **do startu** (F0 w tf) · Gałąź z planem: `claude/magical-dirac-wjvn8y`
 
 ## TL;DR
+**Cel nadrzędny:** jedno źródło decyzji — decyzje z różnych narzędzi (sesje Claude Code, tf, pdi, kolejne) można
+wypchnąć i zapisać w jednym miejscu, zgodnie ze wspólnym kontraktem; to element większego workflow AI SDLC, a nie
+integracja dla samej integracji. Dziennik zmiany w tf (F0) jest pierwszym krokiem: lokalny zapis decyzji
+(`decisions.md`) w formacie, który rejestr może zaindeksować.
+
 pdi (repo `dbqm45/pdi`, prywatne) to warstwa decyzji w procesie AI-native SDLC: zgłoszenia `PRB`, triaż, rejestr
 decyzji `DEC`, skrzynka bramek, orkiestracja i ślad od zgłoszenia do wydania. tf jest „mózgiem” procesu (fazy,
 persony, bramki B1–B6); pdi wywołuje tf, nie kopiuje jego logiki. Wspólny **kontrakt** żyje w `pdi/contract/`
