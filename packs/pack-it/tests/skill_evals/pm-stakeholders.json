@@ -1,0 +1,78 @@
+{
+  "skill": "pm-stakeholders",
+  "scenarios": [
+    {
+      "id": "wdrozenie-crm-opor",
+      "expect": "trigger",
+      "prompt": "Prowadzę wdrożenie nowego CRM w firmie na 300 osób. Dział sprzedaży się opiera, a zarząd chce szybko. Jak zaplanować pracę z interesariuszami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wpływ\\w*[^\\n]{0,60}zainteresowan\\w*",
+            "zainteresowan\\w*[^\\n]{0,60}wpływ\\w*",
+            "władz\\w*",
+            "Mendelow"
+          ],
+          [
+            "plan\\w* (zaangażowania|komunikacji)",
+            "częstotliw\\w*",
+            "kanał\\w*"
+          ],
+          [
+            "opór",
+            "obaw\\w*",
+            "przyczyn\\w*",
+            "co (tracą|zyskują)"
+          ],
+          [
+            "obecn\\w*[^\\n]{0,60}(pożądan|docelow)\\w*",
+            "nieświadom\\w*",
+            "wspierając\\w*",
+            "neutraln\\w*"
+          ]
+        ],
+        "none": [
+          "(zignoruj|pomiń) (dział )?sprzeda\\w*"
+        ]
+      }
+    },
+    {
+      "id": "kto-jest-interesariuszem",
+      "expect": "trigger",
+      "prompt": "Zaczynam projekt zmiany procesu zamówień w hurtowni. Jak rozpoznać wszystkich ważnych interesariuszy, żeby nikogo nie pominąć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kto (zyskuje|traci|decyduje|płaci)",
+            "identyfik\\w*",
+            "lista"
+          ],
+          [
+            "mapa",
+            "siatk\\w*",
+            "macierz\\w*"
+          ],
+          [
+            "pośredni\\w*",
+            "ukryt\\w*",
+            "nieformaln\\w*",
+            "zewnętrzn\\w*",
+            "regulator\\w*"
+          ],
+          [
+            "aktualiz\\w*",
+            "przegląd\\w*",
+            "zmienia\\w* się",
+            "co (miesiąc|etap|faz)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-podzial-zespolow",
+      "expect": "no-trigger",
+      "neighbor": "proc-team-topologies",
+      "prompt": "Jak podzielić 40 programistów na zespoły i ustalić tryby współpracy między zespołami platformowymi a produktowymi?"
+    }
+  ]
+}

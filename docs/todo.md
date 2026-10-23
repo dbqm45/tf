@@ -313,7 +313,7 @@ Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4)
 Luki wskazane przez przegląd `deanpeters/Product-Manager-Skills` (commit cfcb697, 15.10.2026). Licencja CC BY-NC-SA 4.0 —
 treści nie kopiujemy ani nie tłumaczymy; bierzemy tylko listę tematów, treść piszemy własnymi słowami ze źródeł
 pierwotnych (Moore, Porter, Patton, Cohn, Torres, Amazon „Working Backwards”). Najpierw scenariusze ewaluacji.
-- [ ] **Nowe skille w `pack-it` (prefiks `pm-`, nowa faseta „produkt i rynek”):**
+- [x] **Nowe skille w `pack-it` (prefiks `pm-`, nowa faseta „produkt i rynek”, widoczność „sama nazwa”)** — zrobione 2026-10-23, bramka bez modelu:
   `pm-product-strategy` (pozycjonowanie, TAM/SAM/SOM z założeniami, konkurencja z dowodami i datami — Porter, SWOT,
   battle card — PESTEL, Ansoff), `pm-saas-metrics` (ARR/MRR, NRR/GRR, churn, CAC payback, LTV:CAC, burn multiple,
   Rule of 40, ocena zmiany ceny, pułapki liczenia), `pm-product-lifecycle` (etap i ruch: przedłużyć/zastąpić/wycofać;
@@ -322,7 +322,7 @@ pierwotnych (Moore, Porter, Patton, Cohn, Torres, Amazon „Working Backwards”
 - [ ] **Rozszerzenia:** `proc-agile` (mapa historyjek, wzorce dzielenia), `proc-product-discovery` (komunikat prasowy
   przed budową, problem statement, epik jako hipoteza, tanie testy przed budową, roadmapa według wyników),
   `proc-issue-triage` (dosłowna prośba vs potrzeba).
-- [ ] **Persona Paweł — Product Manager** (`pack-it`, rola `product-manager`): skille `pm-*`, `proc-product-discovery`,
+- [x] **Persona Paweł — Product Manager** (`pack-it`, rola `product-manager`, w dyspozytorze Mai) — zrobione 2026-10-23: skille `pm-*`, `proc-product-discovery`,
   `proc-requirements-shaping`, `proc-agile`, `data-analysis`.
 - Poza zakresem: kariera PM (dyrektor/VP, rozmowy), tworzenie skilli i inżynieria kontekstu (rdzeń), warsztaty
   (ddd-facilitation), cykliczny wywiad konkurencyjny (ewentualnie później jako zadanie cykliczne).

@@ -1,0 +1,141 @@
+{
+  "skill": "pm-product-strategy",
+  "scenarios": [
+    {
+      "id": "pozycjonowanie-kolejny-program",
+      "expect": "trigger",
+      "prompt": "Mamy narzędzie do rozliczeń dla małych biur rachunkowych. Sprzedaż idzie słabo, a klienci mówią, że to „kolejny program księgowy”. Jak ustalić pozycjonowanie i główny komunikat? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "alternatyw\\w*",
+            "konkurenc\\w* alternatyw"
+          ],
+          [
+            "unikaln\\w*",
+            "wyróżni\\w*",
+            "czym się różni"
+          ],
+          [
+            "wartoś\\w* dla",
+            "korzyś\\w*",
+            "wartość"
+          ],
+          [
+            "najlepiej dopasowan\\w*",
+            "klient\\w* docelow\\w*",
+            "segment\\w*",
+            "idealn\\w* klient"
+          ],
+          [
+            "kategori\\w*",
+            "rama rynk\\w*",
+            "kontekst rynk\\w*"
+          ]
+        ],
+        "none": [
+          "(zacznij|najpierw) od (logo|nazwy|kolorów)"
+        ]
+      }
+    },
+    {
+      "id": "wielkosc-rynku-dla-inwestora",
+      "expect": "trigger",
+      "prompt": "Inwestor pyta o wielkość rynku dla naszej aplikacji do układania grafików pracy w restauracjach w Polsce. Jak to policzyć uczciwie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "TAM"
+          ],
+          [
+            "SAM"
+          ],
+          [
+            "SOM"
+          ],
+          [
+            "od dołu",
+            "bottom.?up",
+            "liczb\\w* (restauracji|lokali|klientów) ?[×x*]",
+            "jednostk\\w* × cen"
+          ],
+          [
+            "założe\\w*",
+            "źródł\\w*"
+          ]
+        ],
+        "none": [
+          "wystarczy (zdobyć|przejąć) (tylko )?1 ?%"
+        ]
+      }
+    },
+    {
+      "id": "sciagawka-dla-handlowcow",
+      "expect": "trigger",
+      "prompt": "Nasi handlowcy coraz częściej przegrywają z jednym konkurentem. Chcą jednostronicowej ściągawki do rozmów z klientem. Co w niej powinno być? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "obiekcj\\w*",
+            "zarzut\\w*"
+          ],
+          [
+            "kiedy wygrywamy",
+            "kiedy przegrywamy",
+            "gdzie (wygrywamy|przegrywamy)",
+            "dlaczego (wygrywamy|przegrywamy)"
+          ],
+          [
+            "pytani\\w*"
+          ],
+          [
+            "źródł\\w*",
+            "dat\\w*",
+            "aktualiz\\w*",
+            "dowod\\w*"
+          ]
+        ],
+        "none": [
+          "oczerni\\w*",
+          "dyskredytuj\\w*"
+        ]
+      }
+    },
+    {
+      "id": "nowy-kraj-czy-nowy-produkt",
+      "expect": "trigger",
+      "prompt": "Firma ma dobry produkt dla klinik weterynaryjnych w Polsce. Zarząd waha się: wejść do Niemiec z tym samym produktem czy zrobić drugi produkt dla obecnych klientów. Jak to ocenić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Ansoff\\w*",
+            "rozwój rynku[^\\n]{0,80}rozwój produktu",
+            "nowy rynek[^\\n]{0,80}nowy produkt"
+          ],
+          [
+            "ryzyk\\w*"
+          ],
+          [
+            "PESTEL",
+            "prawo",
+            "regulac\\w*",
+            "język\\w*",
+            "lokalizac\\w*"
+          ],
+          [
+            "test\\w*",
+            "pilot\\w*",
+            "eksperyment\\w*",
+            "założe\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-priorytety-funkcji",
+      "expect": "no-trigger",
+      "neighbor": "proc-product-discovery",
+      "prompt": "Mamy 8 pomysłów na nowe funkcje w aplikacji i dane, ilu klientów prosiło o każdą. Którą zrobić najpierw i jak to policzyć?"
+    }
+  ]
+}

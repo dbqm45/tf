@@ -1,0 +1,88 @@
+{
+  "skill": "pm-product-lifecycle",
+  "scenarios": [
+    {
+      "id": "wylaczenie-modulu",
+      "expect": "trigger",
+      "prompt": "Nasz stary moduł raportów używa 4% klientów, a jego utrzymanie kosztuje nas jeden etat. Chcemy go wyłączyć. Jak to przeprowadzić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "go/no-go",
+            "kryteri\\w* decyzji",
+            "decyzj\\w*"
+          ],
+          [
+            "komunikat\\w*",
+            "ogłosz\\w*",
+            "powiadom\\w*",
+            "poinformuj\\w*"
+          ],
+          [
+            "harmonogram\\w*",
+            "termin\\w*",
+            "data wyłączenia",
+            "okres przejściow\\w*"
+          ],
+          [
+            "migracj\\w*",
+            "zamiennik\\w*",
+            "alternatyw\\w*",
+            "eksport\\w* danych"
+          ],
+          [
+            "umow\\w*",
+            "SLA",
+            "zobowiąz\\w*",
+            "regulamin\\w*"
+          ]
+        ],
+        "none": [
+          "wyłącz\\w* (go )?(od razu|natychmiast|bez uprzedzenia)"
+        ]
+      }
+    },
+    {
+      "id": "dojrzaly-produkt",
+      "expect": "trigger",
+      "prompt": "Nasz główny produkt rośnie coraz wolniej, rynek jest nasycony, a konkurenci tną ceny. Czy dalej inwestować, utrzymywać bez rozwoju, czy wygaszać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "dojrzał\\w*",
+            "nasyc\\w*",
+            "cykl\\w* życia",
+            "schył\\w*"
+          ],
+          [
+            "przedłuż\\w*",
+            "odśwież\\w*",
+            "nowy segment",
+            "nowe zastosowa\\w*",
+            "nowy rynek"
+          ],
+          [
+            "utrzym\\w*",
+            "zbiera\\w*",
+            "harvest",
+            "wygasz\\w*",
+            "wycof\\w*"
+          ],
+          [
+            "dane",
+            "metryk\\w*",
+            "kohort\\w*",
+            "marż\\w*",
+            "retenc\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-wycofanie-wersji-api",
+      "expect": "no-trigger",
+      "neighbor": "be-api-design",
+      "prompt": "Jakie nagłówki HTTP i kody odpowiedzi stosować przy wycofywaniu wersji v1 naszego REST API, żeby klienci integracji dostali ostrzeżenie w odpowiedziach?"
+    }
+  ]
+}

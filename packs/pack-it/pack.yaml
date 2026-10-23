@@ -21,6 +21,7 @@ facets:
   - {prefix: eng-,  order: 120, name: zasady inżynierskie, question: "jak pisać prosto i dobrze (KISS, YAGNI, SOLID, testy, CD) — ograniczenia i rozstrzyganie sporów"}
   - {prefix: qa-,   order: 130, name: jakość i testy,  question: "jak projektować, prowadzić i utrzymywać testy tak, by sprawdzały wymagania — niezależnie od narzędzia"}
   - {prefix: data-, order: 140, name: analiza danych,  question: "jak odpowiadać na pytania danymi — pozyskanie, czyszczenie, statystyka, wizualizacja, raport"}
+  - {prefix: pm-,   order: 165, name: produkt i rynek, question: "dla kogo i za ile — pozycjonowanie, rynek, metryki biznesu SaaS, cykl życia produktu, interesariusze"}
   - {prefix: proc-, order: 170, name: proces,          question: "jak planujemy, współpracujemy i dostarczamy (Agile, Lean, SAFe)"}
 
 skill_requires:
@@ -50,7 +51,7 @@ freshness:
 
 # Wymiary specjalistyczne: na liście skilli projektu sama nazwa (persony znają je ze swojego promptu).
 skill_visibility:
-  name_only_prefixes: [sec-, ai-]
+  name_only_prefixes: [sec-, ai-, pm-]
 
 routing_notes: |
   **Clean-room w nakładce IT:** testy akceptacyjne kluczowej logiki projektuje `{persona}-qa-analyst` (jeśli jest)

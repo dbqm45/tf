@@ -1,0 +1,128 @@
+{
+  "skill": "pm-saas-metrics",
+  "scenarios": [
+    {
+      "id": "zdrowie-ekonomiki",
+      "expect": "trigger",
+      "prompt": "SaaS B2B: MRR 200 tys. zł, churn klientów 3% miesięcznie, CAC 4000 zł, średni przychód na klienta 250 zł miesięcznie, marża brutto 80%. Czy ta ekonomia jest zdrowa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "LTV ?[:/] ?CAC",
+            "LTV do CAC"
+          ],
+          [
+            "1[,.][67]"
+          ],
+          [
+            "zwrot\\w* CAC",
+            "CAC payback",
+            "okres zwrotu"
+          ],
+          [
+            "20 mies\\w*"
+          ],
+          [
+            "churn\\w*",
+            "odejś\\w*"
+          ]
+        ],
+        "none": [
+          "LTV ?[:/] ?CAC[^\\n]{0,40}\\b(5|6|7|8)[,.]\\d"
+        ]
+      }
+    },
+    {
+      "id": "nrr-maskuje-churn",
+      "expect": "trigger",
+      "prompt": "Zarząd pokazuje NRR 115% i mówi, że odchodzenie klientów nie jest problemem. Jak poprawnie liczyć NRR i GRR i co tu może się ukrywać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "GRR"
+          ],
+          [
+            "(nie (może|przekracza)|maks\\w*|najwyżej|≤) ?100 ?%",
+            "100 ?%"
+          ],
+          [
+            "ekspansj\\w*",
+            "upsell\\w*",
+            "rozszerze\\w*"
+          ],
+          [
+            "kohort\\w*",
+            "na początku okresu",
+            "ta sama grupa",
+            "początk\\w* okresu"
+          ]
+        ],
+        "none": [
+          "nowi klienci (są wliczani|wliczają się|liczą się) do NRR"
+        ]
+      }
+    },
+    {
+      "id": "burn-multiple-rule-of-40",
+      "expect": "trigger",
+      "prompt": "Startup SaaS: ARR rośnie 40% rok do roku, marża EBITDA -25%, w ostatnim roku spaliliśmy 6 mln zł gotówki, a net new ARR wyniósł 3 mln zł. Jak wypadamy na tle typowych progów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Rule of 40",
+            "reguł\\w* 40"
+          ],
+          [
+            "\\b15\\b"
+          ],
+          [
+            "burn multiple",
+            "mnożnik\\w* spalania"
+          ],
+          [
+            "\\b2([,.]0)?\\s?(x|×|razy)?\\b"
+          ],
+          [
+            "etap\\w*",
+            "faz\\w*",
+            "kontekst\\w*",
+            "zależ\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "edge-ltv-bez-danych",
+      "expect": "trigger",
+      "prompt": "Ile wynosi nasz LTV? Mamy 500 klientów i 1,2 mln zł przychodu rocznie. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "churn\\w*",
+            "odejś\\w*",
+            "retenc\\w*"
+          ],
+          [
+            "marż\\w*"
+          ],
+          [
+            "brak\\w*",
+            "potrzeb\\w*",
+            "podaj\\w*",
+            "nie (da się|można)",
+            "założe\\w*"
+          ]
+        ],
+        "none": [
+          "LTV (wynosi|to|=) (ok\\.? |około |~)?\\d"
+        ]
+      }
+    },
+    {
+      "id": "sasiad-proporcjonalne-rozliczenie",
+      "expect": "no-trigger",
+      "neighbor": "be-billing-subscriptions",
+      "prompt": "Jak zaimplementować proporcjonalne rozliczenie przy zmianie planu subskrypcji w środku okresu rozliczeniowego i obsłużyć webhooki dostawcy płatności?"
+    }
+  ]
+}
