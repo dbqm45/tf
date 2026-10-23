@@ -76,6 +76,22 @@ Ocena zasadności; fakty o funkcjach do potwierdzenia w dokumentacji przed użyc
 | Worktree | **Nie** | Nic nie zmieniamy w kodzie |
 | Długi kontekst (1M) | **Tylko synteza, jeśli dostępny** [niezweryfikowane] | Karty i tak są małe; nie płacić za czytanie całego repo |
 
+## Playbook „The AI-native SDLC” (Anthropic, 21.08.2026) — co bierzemy
+Przejrzany 2026-10-23. Fabryka ma go już opracowanego w `core/skills/core-delivery-lifecycle/references/ai-native-sdlc.md`
+(łańcuch artefaktów, plan przed kodem, `CLAUDE.md`, skille i hooki, ciągłe ewaluacje, `REVIEW.md`, bramki,
+`control_band.py` z pasmami 1σ/2σ/3σ). Nie dublujemy tego. Luki, które warto domknąć w tym planie:
+
+| Z playbooka | Luka w fabryce | Gdzie w planie |
+|---|---|---|
+| `/init` → `CLAUDE.md` poniżej strony; `REVIEW.md` z zasadami przeglądu | Brak generatora z faktycznego kodu | **F2:** rekonstrukcja tworzy szkice `CLAUDE.md` (polecenia, konwencje, pułapki — tylko to, czego agent nie wywnioskuje) i `REVIEW.md` (standardy jako reguły przeglądu, waga, limit drobiazgów, wykluczenia) z dowodami; człowiek zatwierdza |
+| Miary: odsetek zmian zielonych za pierwszym razem, czas od planu do merge, zgodność diffu z `plan.md` | Opisane, nieliczone | **F3:** `plan_drift.py` (pliki w diffie vs pliki w `plan.md`, testy obiecane vs dodane) + miary w raporcie przebiegu Talosa |
+| Jedno źródło prawdy na artefakt, powiązanie z SHA commita | Częściowo | **F2:** `manifest.json` z SHA bazowym; raport podaje, co jest źródłem (repo) i czego nie widziano (zewnętrzne systemy) |
+| Każdy incydent → nowy stały scenariusz ewaluacji | Reguła jest, nie ma jej w rekonstrukcji | **F4:** każde błędne twierdzenie znalezione w benchmarku → nowy scenariusz lub test `recon_check` |
+| Ciągłe ewaluacje przy każdej zmianie skilli/`CLAUDE.md`, wg harmonogramu | Płatne przebiegi tylko ręcznie, za zgodą | **Decyzja D5** (koszt): np. tygodniowy przebieg Haiku na scenariuszach zmienionych skilli z budżetem |
+
+Pominięte (poza zakresem analizy kodu albo już pokryte): Claude Design, Claude Tag, Claude Security (produkty,
+konektory — etap F7), ustawienia zarządzane i hooki-bramki wdrożeń (już w referencji), tryb auto i worktree.
+
 ## Wynik (w analizowanym projekcie)
 ```
 docs/project/00-reconstruction/
@@ -89,6 +105,8 @@ docs/project/00-reconstruction/
   standards/INDEX.md   # spis standardów (pomysł z maistera) + pliki per obszar:
   standards/<obszar>.md  # nazewnictwo, błędy, testy, API, logowanie, konfiguracja, warstwy…
                          # każdy: reguła, dowód, liczba wystąpień, wyjątki, sprzeczności, pewność
+  CLAUDE.draft.md      # szkic instrukcji dla agenta (< 1 strona), do zatwierdzenia
+  REVIEW.draft.md      # szkic zasad przeglądu PR ze standardów
   manifest.json        # hashe modułów, data, commit, koszt — podstawa odświeżania przyrostowego
 ```
 
@@ -144,6 +162,7 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
 - **D3. Wybór repo do benchmarku** i zgoda na koszt (szacunek podam przed startem).
 - **D4. Raport HTML jako Artifact** — domyślnie tak (prywatny) w F5; Markdown zawsze.
 - **D3** nadal otwarte (przed F4).
+- **D5. Ciągłe ewaluacje wg harmonogramu** (płatne) — otwarte; domyślnie nie, tylko ręcznie za zgodą.
 
 ## Ryzyka
 - Regex dla Javy/C#/Go nie złapie wszystkiego (refleksja, DI z XML, generowany kod) → raport oznacza luki;
