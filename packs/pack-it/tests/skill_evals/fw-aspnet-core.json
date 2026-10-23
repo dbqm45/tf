@@ -1,0 +1,66 @@
+{
+  "skill": "fw-aspnet-core",
+  "scenarios": [
+    {
+      "id": "bledy-walidacja-openapi",
+      "expect": "trigger",
+      "prompt": "Buduję API w ASP.NET Core na .NET 10 (Minimal API). Jak zwracać błędy biznesowe (409) i błędy walidacji wejścia zgodnie ze standardem, żeby było to też w dokumentacji OpenAPI? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ProblemDetails",
+            "problem\\+json",
+            "RFC ?9457",
+            "RFC ?7807"
+          ],
+          [
+            "TypedResults"
+          ],
+          [
+            "Results<"
+          ],
+          [
+            "AddValidation"
+          ],
+          [
+            "AddOpenApi",
+            "MapOpenApi"
+          ]
+        ],
+        "none": [
+          "Conflict\\(new ProblemDetails"
+        ]
+      }
+    },
+    {
+      "id": "test-integracyjny",
+      "expect": "trigger",
+      "prompt": "Jak napisać test integracyjny endpointu ASP.NET Core, który sprawdza kod odpowiedzi i treść, bez ręcznego stawiania serwera? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "WebApplicationFactory"
+          ],
+          [
+            "Mvc\\.Testing"
+          ],
+          [
+            "CreateClient"
+          ],
+          [
+            "IClassFixture",
+            "fixture",
+            "ConfigureWebHost",
+            "WithWebHostBuilder"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sasiad-api-niezalezne-od-technologii",
+      "expect": "no-trigger",
+      "neighbor": "be-api-design",
+      "prompt": "Jak zaprojektować paginację, kody błędów i wersjonowanie publicznego REST API niezależnie od technologii?"
+    }
+  ]
+}

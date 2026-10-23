@@ -4,7 +4,7 @@ description: Użyj przy kodzie Go 1.22–1.27 — konwencje, błędy (errors.Is/
 metadata:
   przeglad: 2027-01-23
   katalog: "Użyj przy pisaniu i przeglądzie kodu Go (1.22–1.27) — konwencje języka, obsługa błędów (błędy wartownicze, typy błędów, opakowanie %w, errors.Is i errors.As), interfejsy po stronie użytkownika, współbieżność z kontekstem i limitami, testy tabelaryczne, różnice między wersjami (iteratory, WaitGroup.Go, new z wyrażeniem, metody generyczne) oraz wyrażanie pojęć domenowych idiomami Go (obiekt wartości, warianty, agregat, wynik operacji, zdarzenia, port repozytorium). Nie do projektu API HTTP (be-api-design), konteneryzacji (ops-docker) ani modelowania domeny (ddd-*)."
-  slowa: "Go, golang, go.mod, błędy w Go, errors.Is, errors.As, wrap %w, sentinel error, wynik operacji w Go, interfejs w Go, gorutyny, context, WaitGroup, kanały, iteratory, range po funkcji, metody generyczne, testy tabelaryczne, kwota w Go, obiekt wartości w Go, agregat w Go, Go 1.27"
+  slowa: "Go, golang, go.mod, błędy w Go, errors.Is, errors.As, wrap %w, sentinel error, wynik operacji w Go, interfejs w Go, gorutyny, context, WaitGroup, kanały, iteratory, range po funkcji, metody generyczne, testy tabelaryczne, kwota w Go, float64, int64 w groszach, goły string w Go, typ nazwany, identyfikator klienta w Go, obiekt wartości w Go, agregat w Go, Go 1.27"
 ---
 
 # Go

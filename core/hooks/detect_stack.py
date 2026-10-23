@@ -175,6 +175,28 @@ def go_version(root: Path) -> tuple[str | None, str]:
     return (m.group(1), "go.mod go") if m else ("", "go.mod")
 
 
+def dotnet_version(root: Path, web: bool = False) -> tuple[str | None, str]:
+    """Najwyższa platforma `netX.Y` / `netcoreappX.Y` z plików *.csproj (do 3 poziomów, bez bin/ i obj/);
+    `web` — tylko projekty z Sdk="Microsoft.NET.Sdk.Web" (ASP.NET Core). Sam netstandard → wersja nieznana."""
+    found, best, src = False, None, ""
+    for pattern in ("*.csproj", "*/*.csproj", "*/*/*.csproj"):
+        for f in sorted(root.glob(pattern)):
+            if {"bin", "obj"} & set(f.relative_to(root).parts):
+                continue
+            text = _read(f)
+            if web and "Microsoft.NET.Sdk.Web" not in text:
+                continue
+            found = True
+            for tfms in re.findall(r"<TargetFrameworks?>([^<]+)</TargetFrameworks?>", text):
+                for m in re.finditer(r"\bnet(?:coreapp)?(\d+\.\d+)", tfms):
+                    v = parse_version(m.group(1))
+                    if v and (best is None or v > parse_version(best)):
+                        best, src = m.group(1), f"{f.relative_to(root).as_posix()} <TargetFramework>"
+    if not found:
+        return None, ""
+    return (best, src) if best else ("", "*.csproj")
+
+
 def _read(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="ignore")
@@ -232,6 +254,10 @@ def detect(root: Path, tech: dict) -> tuple[bool, str | None, str]:
             return True, v or None, src
     if d.get("java"):
         v, src = java_version(root)
+        if v is not None:
+            return True, v or None, src
+    if d.get("dotnet") or d.get("aspnet_core"):
+        v, src = dotnet_version(root, web=bool(d.get("aspnet_core")))
         if v is not None:
             return True, v or None, src
     if d.get("go"):

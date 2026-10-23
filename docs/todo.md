@@ -358,7 +358,7 @@ Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
   reguł; kandydat `tool-semgrep`.
 - [ ] **4. Fuzzing** (ToB `testing-handbook-skills`): kiedy fuzzować, harness, korpus, sanitizery, CI; rozszerzenie
   `eng-testing` albo nowy `qa-fuzzing` (testy oparte na właściwościach już są).
-- [ ] **5. `lang-go` oraz `lang-csharp` z `fw-aspnet-core`** — `lang-go` zrobione 2026-10-23 (wykrywanie wersji z `go.mod`, przykłady sprawdzone go1.22.0 i go1.27.3); C# i ASP.NET Core w osobnym PR (inspiracja: eduardo-sl/go-agent-skills, Microsoft,
+- [x] **5. `lang-go` oraz `lang-csharp` z `fw-aspnet-core`** — zrobione 2026-10-23: `lang-go` (wykrywanie wersji z `go.mod`, przykłady sprawdzone go1.22.0 i go1.27.3); `lang-csharp` i `fw-aspnet-core` (wykrywanie platformy z `*.csproj`, przykłady i testy sprawdzone SDK 8.0.132 i 10.0.113) (inspiracja: eduardo-sl/go-agent-skills, Microsoft,
   `openai/aspnet-core`): rekonstrukcja z kodu czyta Go i C#, agent nie ma skilli do pisania w tych językach.
   Wersje sprawdzić w źródłach (core-source-research), wpis w `technologies.json`.
 - [ ] **6. Budowa serwera MCP** (anthropics/microsoft `mcp-builder`): transport, uwierzytelnianie, testowanie

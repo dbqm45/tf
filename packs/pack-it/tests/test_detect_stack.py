@@ -12,6 +12,7 @@ SCRIPT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "h
 def run(files: dict[str, str], *flags: str, stdin: str = "") -> str:
     with tempfile.TemporaryDirectory() as d:
         for name, content in files.items():
+            (Path(d) / name).parent.mkdir(parents=True, exist_ok=True)
             (Path(d) / name).write_text(content)
         args = [sys.executable, str(SCRIPT), *flags] + ([] if "--hook" in flags else [d])
         env = {"CLAUDE_PROJECT_DIR": d, "PATH": "/usr/bin:/bin"}
@@ -27,6 +28,9 @@ def statuses(files: dict[str, str]) -> dict[str, str]:
 def pkg(deps: dict, dev: dict | None = None) -> str:
     return json.dumps({"dependencies": deps, "devDependencies": dev or {}})
 
+
+WEB = '<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup>{tfm}</PropertyGroup></Project>'
+LIB = '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>{tfm}</PropertyGroup></Project>'
 
 CASES = [
     ("Angular 22 + TS 6.0 + Nx 23 → zgodne",
@@ -85,6 +89,18 @@ CASES = [
     ("Go 1.28 (przyszły) → skill do aktualizacji",
      {"go.mod": "module example.com/x\n\ngo 1.28\n"},
      {"lang-go": "SKILL_OUTDATED"}),
+    ("ASP.NET Core na .NET 10 w src/ → C# i ASP.NET Core zgodne",
+     {"Shop.sln": "", "src/Api/Api.csproj": WEB.format(tfm="<TargetFramework>net10.0</TargetFramework>")},
+     {"lang-csharp": "OK", "fw-aspnet-core": "OK"}),
+    ("biblioteka .NET 8 → C# zgodne, bez ASP.NET Core",
+     {"src/Core/Core.csproj": LIB.format(tfm="<TargetFramework>net8.0</TargetFramework>")},
+     {"lang-csharp": "OK", "fw-aspnet-core": None}),
+    ("ASP.NET Core na .NET 6 → projekt starszy niż skille",
+     {"Api.csproj": WEB.format(tfm="<TargetFramework>net6.0</TargetFramework>")},
+     {"lang-csharp": "PROJECT_OLDER", "fw-aspnet-core": "PROJECT_OLDER"}),
+    ("wiele platform z .NET 11 → najwyższa decyduje, skill do aktualizacji",
+     {"src/Lib/Lib.csproj": LIB.format(tfm="<TargetFrameworks>net10.0;net11.0</TargetFrameworks>")},
+     {"lang-csharp": "SKILL_OUTDATED"}),
     ("Gradle Java 21 → zgodne",
      {"build.gradle.kts": "java { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }"},
      {"lang-java": "OK"}),
