@@ -8,7 +8,7 @@ Cel: decyzje podejmowane w różnych narzędziach (sesje Claude Code, tf, pdi, p
 źródle prawdy, jako część większego workflow AI SDLC; tf musi umieć je wypchnąć i zapisać zgodnie ze wspólnym
 kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`. Kolejność: przed F1a rekonstrukcji i pozostałymi pozycjami.
 - Wszystko w opcjonalnym trybie `modes/mode-pdi/` (rdzeń bez zmian); działa, gdy podłączony jest serwer MCP pdi.
-- [ ] **F0:** dziennik per zmiana — `decision_record.py change new CHG-n [--source PRB-n]` (skrypt trybu), `check` dla
+- [x] **F0:** dziennik per zmiana — `decision_record.py change new CHG-n [--source PRB-n]` (skrypt trybu), `check` dla
   `docs/project/changes/*/`, szablony i skill w trybie; TDD, bramki, PR.
 - [ ] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
@@ -305,6 +305,25 @@ Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy sk
 Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4). Zakres teraz: tylko kod; bez PHP.
 - [ ] F0–F5 wg planu.
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
+
+## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23
+Luki wskazane przez przegląd `deanpeters/Product-Manager-Skills` (commit cfcb697, 15.10.2026). Licencja CC BY-NC-SA 4.0 —
+treści nie kopiujemy ani nie tłumaczymy; bierzemy tylko listę tematów, treść piszemy własnymi słowami ze źródeł
+pierwotnych (Moore, Porter, Patton, Cohn, Torres, Amazon „Working Backwards”). Najpierw scenariusze ewaluacji.
+- [ ] **Nowe skille w `pack-it` (prefiks `pm-`, nowa faseta „produkt i rynek”):**
+  `pm-product-strategy` (pozycjonowanie, TAM/SAM/SOM z założeniami, konkurencja z dowodami i datami — Porter, SWOT,
+  battle card — PESTEL, Ansoff), `pm-saas-metrics` (ARR/MRR, NRR/GRR, churn, CAC payback, LTV:CAC, burn multiple,
+  Rule of 40, ocena zmiany ceny, pułapki liczenia), `pm-product-lifecycle` (etap i ruch: przedłużyć/zastąpić/wycofać;
+  wycofanie produktu: go/no-go, kolejność interesariuszy, komunikat, checklista z właścicielami, odesłanie do prawa UE),
+  `pm-stakeholders` (identyfikacja, mapa wpływ/zainteresowanie, plan zaangażowania, opór).
+- [ ] **Rozszerzenia:** `proc-agile` (mapa historyjek, wzorce dzielenia), `proc-product-discovery` (komunikat prasowy
+  przed budową, problem statement, epik jako hipoteza, tanie testy przed budową, roadmapa według wyników),
+  `proc-issue-triage` (dosłowna prośba vs potrzeba).
+- [ ] **Persona Paweł — Product Manager** (`pack-it`, rola `product-manager`): skille `pm-*`, `proc-product-discovery`,
+  `proc-requirements-shaping`, `proc-agile`, `data-analysis`.
+- Poza zakresem: kariera PM (dyrektor/VP, rozmowy), tworzenie skilli i inżynieria kontekstu (rdzeń), warsztaty
+  (ddd-facilitation), cykliczny wywiad konkurencyjny (ewentualnie później jako zadanie cykliczne).
+- 2–3 PR; bramka bez modelu; ewaluacja na Haiku (~2–4 USD) tylko za zgodą.
 
 ## Generator nowej nakładki (`new-pack`) — zapisane 2026-10-23
 Dziś nowa nakładka powstaje przez ręczne kopiowanie istniejącej. Cel: szkielet jednym poleceniem + prowadzenie przez Claude.
