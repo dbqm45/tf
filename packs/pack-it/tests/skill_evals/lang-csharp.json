@@ -1,0 +1,93 @@
+{
+  "skill": "lang-csharp",
+  "scenarios": [
+    {
+      "id": "wynik-operacji-csharp",
+      "expect": "trigger",
+      "prompt": "W C# na .NET 10 metoda Reserve ma zwrócić sukces albo odrzucenie (termin zajęty, zasób wyłączony). Rzucać wyjątki czy coś innego? Jak to zapisać, żeby kompilator pomagał obsłużyć wszystkie przypadki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "record"
+          ],
+          [
+            "switch",
+            "dopasowani\\w* wzorc",
+            "pattern matching"
+          ],
+          [
+            "abstract record",
+            "sealed",
+            "zamknięt\\w*",
+            "prywatn\\w* konstruktor"
+          ],
+          [
+            "wyjąt\\w*[^\\n]{0,80}(programist|infrastruktur|nieoczekiwan|wyjątkow)",
+            "nie (rzucaj|używaj) wyjątk\\w* (dla|do) (odrzuc|reguł|biznes)"
+          ]
+        ],
+        "none": [
+          "throw new \\w*(Conflict|Taken|Busy)\\w*Exception"
+        ]
+      }
+    },
+    {
+      "id": "field-i-extension-na-net8",
+      "expect": "trigger",
+      "prompt": "Projekt ma TargetFramework net8.0. Zespół chce używać słowa kluczowego field we właściwościach i bloków extension. Czy to zadziała i co trzeba zmienić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "C# ?14"
+          ],
+          [
+            "C# ?12"
+          ],
+          [
+            "net10\\.0",
+            ".NET 10"
+          ],
+          [
+            "LangVersion",
+            "TargetFramework"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "kwota-i-identyfikator-csharp",
+      "expect": "trigger",
+      "prompt": "Jak w C# trzymać kwoty pieniężne i identyfikatory zasobów, żeby nie pomylić ich z gołym Guid albo double i żeby nie powstała niepoprawna wartość? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "decimal"
+          ],
+          [
+            "record struct",
+            "readonly",
+            "record"
+          ],
+          [
+            "konstruktor\\w*",
+            "walidac\\w*",
+            "ArgumentException"
+          ],
+          [
+            "walut\\w*",
+            "currency"
+          ]
+        ],
+        "none": [
+          "double[^\\n]{0,30}(dla|do) kwot"
+        ]
+      }
+    },
+    {
+      "id": "sasiad-aspnet-problemdetails",
+      "expect": "no-trigger",
+      "neighbor": "fw-aspnet-core",
+      "prompt": "Jak w ASP.NET Core Minimal API zwrócić błąd 409 jako ProblemDetails i dodać walidację żądania z opisem w OpenAPI?"
+    }
+  ]
+}

@@ -29,6 +29,7 @@ skill_requires:
   fw-react: [fe-web-platform]
   fw-nextjs: [fw-react]
   tool-pytest: [lang-python]
+  fw-aspnet-core: [lang-csharp]
 
 # Skille technologii bez śledzenia wersji (wymiar wersjonowany, ale bez wydań do śledzenia: język; Stripe wersjonuje API
 # datą, a nie wersją paczki — wersję API opisuje skill).

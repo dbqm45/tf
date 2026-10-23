@@ -259,6 +259,10 @@
   "fingerprint": "2e87bf9ec7ed856c",
   "offline": "2026-10-22"
  },
+ "fw-aspnet-core": {
+  "fingerprint": "70d8fdd03a652733",
+  "offline": "2026-10-23"
+ },
  "fw-nestjs": {
   "fingerprint": "8c265b193e8fca6f",
   "offline": "2026-10-22"
@@ -275,8 +279,12 @@
   "fingerprint": "966f190fe1c4eaed",
   "offline": "2026-10-22"
  },
+ "lang-csharp": {
+  "fingerprint": "e552c33a2848a2a0",
+  "offline": "2026-10-23"
+ },
  "lang-go": {
-  "fingerprint": "ee1b9b4f11d0e5aa",
+  "fingerprint": "ade96ae8364bbbc2",
   "offline": "2026-10-23"
  },
  "lang-java": {

@@ -131,12 +131,16 @@
       "name": "C#/.NET",
       "skill": "lang-csharp",
       "detect": {
-        "glob": [
-          "*.csproj",
-          "*.sln"
-        ]
-      },
-      "versionless": true
+        "dotnet": true
+      }
+    },
+    {
+      "id": "aspnet-core",
+      "name": "ASP.NET Core",
+      "skill": "fw-aspnet-core",
+      "detect": {
+        "aspnet_core": true
+      }
     },
     {
       "id": "go",
