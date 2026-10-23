@@ -379,6 +379,22 @@
   "fingerprint": "4b2d423e8a53106c",
   "offline": "2026-10-22"
  },
+ "pm-product-lifecycle": {
+  "fingerprint": "65c9cde06fb9241a",
+  "offline": "2026-10-23"
+ },
+ "pm-product-strategy": {
+  "fingerprint": "ad107995a8643abe",
+  "offline": "2026-10-23"
+ },
+ "pm-saas-metrics": {
+  "fingerprint": "ac7390528002d10a",
+  "offline": "2026-10-23"
+ },
+ "pm-stakeholders": {
+  "fingerprint": "ffb89e8f83398c87",
+  "offline": "2026-10-23"
+ },
  "proc-agile": {
   "fingerprint": "b82c0858cb352ee1",
   "offline": "2026-10-22"
