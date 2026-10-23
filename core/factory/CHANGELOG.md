@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.14.0] — 2026-10-23
+### Added
+- **pack-it:** product manager persona Pawel and pm- skills (#47)
+
 ## [5.13.0] — 2026-10-23
 ### Added
 - **pack-it:** incremental reconstruction refresh; isolated baseline evals (#46)
