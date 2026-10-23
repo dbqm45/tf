@@ -52,6 +52,72 @@
       }
     },
     {
+      "id": "mapa-historyjek-pierwsze-wydanie",
+      "expect": "trigger",
+      "prompt": "Mamy w backlogu 60 historyjek dla nowej aplikacji do rezerwacji sal i nikt nie widzi całości ani tego, co wejdzie do pierwszego wydania. Jak to uporządkować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "mapa historyjek",
+            "story map"
+          ],
+          [
+            "kręgosłup",
+            "szkielet",
+            "aktywnoś\\w*",
+            "krok\\w* użytkownika"
+          ],
+          [
+            "wydani\\w*[^\\n]{0,60}(poziom|plaster|linia|przekr)",
+            "plaster\\w*",
+            "poziom\\w* lini\\w*",
+            "walking skeleton",
+            "chodzący szkielet"
+          ],
+          [
+            "wynik\\w*",
+            "cel\\w*",
+            "efekt\\w*"
+          ]
+        ],
+        "none": [
+          "(posortuj|ułóż) (wszystkie )?historyjki według punktów"
+        ]
+      }
+    },
+    {
+      "id": "duza-historyjka-wzorce",
+      "expect": "trigger",
+      "prompt": "Historyjka „Jako księgowa chcę importować wyciągi bankowe” nie mieści się w sprincie. Jakie są sposoby, żeby ją podzielić bez dzielenia na warstwy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "krok\\w* (przepływu|procesu)",
+            "etap\\w* procesu",
+            "ścieżk\\w*"
+          ],
+          [
+            "reguł\\w*",
+            "wariant\\w* reguł"
+          ],
+          [
+            "dan\\w*",
+            "format\\w*",
+            "bank\\w*"
+          ],
+          [
+            "spike",
+            "rozpoznani\\w*",
+            "SPIDR",
+            "interfejs\\w*"
+          ]
+        ],
+        "none": [
+          "(osobno|najpierw) (backend|baza)[^\\n]{0,30}(potem|osobno) (frontend|UI)"
+        ]
+      }
+    },
+    {
       "id": "wiele-zespolow",
       "expect": "no-trigger",
       "prompt": "Mamy 8 zespołów i ponad 100 osób pracujących nad jednym produktem. Czy wdrożyć PI Planning i Agile Release Train i jak zaplanować pracę ponad zespołami? Odpowiedz zwięźle.",

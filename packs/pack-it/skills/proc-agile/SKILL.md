@@ -3,8 +3,8 @@ name: proc-agile
 description: Użyj przy organizacji pracy zespołu — Scrum, Kanban i metryki przepływu, historyjki (INVEST), Definition of Done.
 metadata:
   przeglad: 2027-10-17
-  katalog: "Użyj przy planowaniu i organizacji pracy zespołu — wartości i zasady Manifestu Agile, Scrum (Scrum Guide 2020 + Expansion Pack 2025), Kanban i metryki przepływu, historyjki użytkownika (INVEST, cięcie pionowe), Definition of Done, prognozowanie. Nie do skalowania na wiele zespołów (proc-safe) ani ekonomii przepływu (proc-lean)."
-  slowa: "jeden zespół, Scrum czy Kanban, sprint, retrospektywa, daily, planowanie sprintu, tablica Kanban, limit WIP"
+  katalog: "Użyj przy planowaniu i organizacji pracy zespołu — wartości i zasady Manifestu Agile, Scrum (Scrum Guide 2020 + Expansion Pack 2025), Kanban i metryki przepływu, historyjki użytkownika (INVEST, cięcie pionowe, mapa historyjek, wzorce dzielenia), Definition of Done, prognozowanie. Nie do skalowania na wiele zespołów (proc-safe) ani ekonomii przepływu (proc-lean)."
+  slowa: "jeden zespół, Scrum czy Kanban, sprint, retrospektywa, daily, planowanie sprintu, tablica Kanban, limit WIP, mapa historyjek, story map, co wejdzie do pierwszego wydania, historyjka nie mieści się w sprincie, podzielić historyjkę, za duża historyjka, nikt nie widzi całości backlogu"
 ---
 
 # Agile: Scrum i Kanban w praktyce
@@ -32,6 +32,10 @@ zrównoważone tempo, prostota — sztuka maksymalizacji pracy **niewykonanej**,
 ## Historyjki i backlog
 - Historyjka = potrzeba użytkownika i wartość, nie zadanie techniczne: „Jako … chcę … aby …” + **kryteria akceptacji** (Given/When/Then — eng-testing).
 - Historyjki według INVEST, cięte pionowo; z wyników Event Stormingu tniesz po zdarzeniach (ddd-event-storming); przykład: `references/przyklady.md` §2.
+- **Mapa historyjek**, gdy backlog jest długi i nikt nie widzi całości: kręgosłup z aktywności i kroków użytkownika
+  (od lewej do prawej), pod każdym krokiem historyjki (od najważniejszej), poziome linie wydań — pierwsze wydanie
+  to najcieńszy plaster przez wszystkie kroki, który daje wynik (chodzący szkielet). Wzorce dzielenia za dużej
+  historyjki (kroki przepływu, warianty reguł, dane, interfejsy, ścieżki, rozpoznanie): `references/mapa-i-dzielenie.md`.
 - **Definition of Done** wspólna i sprawdzalna (testy, review, dokumentacja, wdrożone na środowisko…).
 
 ## Prognozowanie

@@ -319,9 +319,9 @@ pierwotnych (Moore, Porter, Patton, Cohn, Torres, Amazon „Working Backwards”
   Rule of 40, ocena zmiany ceny, pułapki liczenia), `pm-product-lifecycle` (etap i ruch: przedłużyć/zastąpić/wycofać;
   wycofanie produktu: go/no-go, kolejność interesariuszy, komunikat, checklista z właścicielami, odesłanie do prawa UE),
   `pm-stakeholders` (identyfikacja, mapa wpływ/zainteresowanie, plan zaangażowania, opór).
-- [ ] **Rozszerzenia:** `proc-agile` (mapa historyjek, wzorce dzielenia), `proc-product-discovery` (komunikat prasowy
-  przed budową, problem statement, epik jako hipoteza, tanie testy przed budową, roadmapa według wyników),
-  `proc-issue-triage` (dosłowna prośba vs potrzeba).
+- [x] **Rozszerzenia** (zrobione 2026-10-23): `proc-agile` (mapa historyjek, wzorce dzielenia), `proc-product-discovery`
+  (komunikat prasowy i FAQ przed budową, epik jako hipoteza, roadmapa według wyników; problem statement i tanie testy
+  już były), `proc-issue-triage` (dosłowna prośba vs potrzeba).
 - [x] **Persona Paweł — Product Manager** (`pack-it`, rola `product-manager`, w dyspozytorze Mai) — zrobione 2026-10-23: skille `pm-*`, `proc-product-discovery`,
   `proc-requirements-shaping`, `proc-agile`, `data-analysis`.
 - Poza zakresem: kariera PM (dyrektor/VP, rozmowy), tworzenie skilli i inżynieria kontekstu (rdzeń), warsztaty

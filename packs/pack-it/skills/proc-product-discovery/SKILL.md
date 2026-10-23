@@ -3,8 +3,8 @@ name: proc-product-discovery
 description: Użyj przy decyzji, co budować i po co — wynik zamiast funkcji, drzewo szans, JTBD, testy założeń, RICE, eksperymenty.
 metadata:
   przeglad: 2027-10-09
-  katalog: "Użyj, gdy trzeba zdecydować, CO budować i po co — wynik zamiast funkcji, drzewo szans i rozwiązań, problem i JTBD, pytania „jak moglibyśmy”, co najmniej trzy rozwiązania, mapa założeń i ich testy, priorytety (RICE, MoSCoW, Kano), metryki sukcesu (HEART, OKR), eksperymenty A/B, gotowość do wydania, kwalifikacja narzędzia wewnętrznego (kup, uzupełnij, zbuduj, czekaj). Nie do rytuałów zespołu (proc-agile) ani projektu interfejsu (ux-feature-design)."
-  slowa: "narzędzie wewnętrzne, budować czy kupić gotowe, zbudować własne narzędzie, raport dla kierownika"
+  katalog: "Użyj, gdy trzeba zdecydować, CO budować i po co — wynik zamiast funkcji, drzewo szans i rozwiązań, problem i JTBD, pytania „jak moglibyśmy”, co najmniej trzy rozwiązania, mapa założeń i ich testy, priorytety (RICE, MoSCoW, Kano), metryki sukcesu (HEART, OKR), eksperymenty A/B, gotowość do wydania, kwalifikacja narzędzia wewnętrznego (kup, uzupełnij, zbuduj, czekaj), komunikat prasowy i FAQ przed budową, epik jako hipoteza, roadmapa według wyników. Nie do rytuałów zespołu (proc-agile) ani projektu interfejsu (ux-feature-design)."
+  slowa: "narzędzie wewnętrzne, budować czy kupić gotowe, zbudować własne narzędzie, raport dla kierownika, komunikat prasowy, press release, working backwards, PR/FAQ, zanim zaczniemy budować, przed pierwszą linią kodu, epik jako hipoteza, roadmapa, roadmapa funkcji z datami, roadmapa według wyników, teraz dalej później"
 ---
 
 # Odkrywanie produktu
@@ -43,6 +43,10 @@ i dostarczanie idą równolegle — małe testy co tydzień, nie jedna faza „b
    (`references/eksperymenty-i-wydanie.md`). Przed testem zapisz kryterium sukcesu i decyzję, którą podejmiesz
    przy każdym wyniku. Test „fałszywych drzwi” (przycisk funkcji, której jeszcze nie ma) tylko z uczciwym komunikatem
    po kliknięciu.
+8a. **Duża inicjatywa przed budową** (nowy moduł, epik na kilka sprintów): komunikat prasowy z dnia premiery
+   i FAQ (praca od klienta wstecz), epik zapisany jako hipoteza z miarą i kryterium przerwania —
+   `references/od-klienta-wstecz.md`. Jeśli komunikatu nie da się napisać tak, żeby klient chciał go przeczytać,
+   problem albo klient są jeszcze niejasne.
 9. **Decyzja i zapis**: wybrane rozwiązanie, odrzucone z powodem, wyniki testów → `docs/project/01-discovery/`
    (core-project-record). Zakres pierwszej wersji tnij pionowo (proc-agile) — działająca funkcja przed dopracowaną.
    Zakres MVP i kontrakt wymagań przed architekturą (budżet czasu, pusty CRUD, wyzwanie dla każdego wymagania):
@@ -52,6 +56,8 @@ i dostarczanie idą równolegle — małe testy co tydzień, nie jedna faza „b
 Szczegóły i wzory: `references/priorytety-i-metryki.md` — RICE, MoSCoW, Kano, wartość/wysiłek (WSJF: proc-lean),
 HEART z celami, sygnałami i metrykami, OKR, metryka wiodąca z metrykami ochronnymi, dopasowanie produktu do rynku,
 plan zdarzeń analitycznych.
+
+Roadmapa według wyników (teraz / dalej / później zamiast listy funkcji z datami): `references/od-klienta-wstecz.md`.
 
 Model biznesowy, rynek i konkurencja (kanwa modelu biznesowego, Lean Canvas, analiza konkurencji, SWOT z działaniami,
 pięć sił Portera, mapa doświadczenia klienta): `references/model-biznesowy-i-rynek.md`.

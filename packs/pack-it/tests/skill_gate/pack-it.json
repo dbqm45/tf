@@ -396,20 +396,20 @@
   "offline": "2026-10-23"
  },
  "proc-agile": {
-  "fingerprint": "b82c0858cb352ee1",
-  "offline": "2026-10-22"
+  "fingerprint": "ada30aeca0cb3487",
+  "offline": "2026-10-23"
  },
  "proc-issue-triage": {
-  "fingerprint": "330c2810e37e93f7",
-  "offline": "2026-10-04"
+  "fingerprint": "e8348c31bd1aef89",
+  "offline": "2026-10-23"
  },
  "proc-lean": {
   "fingerprint": "45478877c4960d0c",
   "offline": "2026-10-22"
  },
  "proc-product-discovery": {
-  "fingerprint": "ae5e3a53e3fb8afd",
-  "offline": "2026-10-22"
+  "fingerprint": "9048a5ed08f33598",
+  "offline": "2026-10-23"
  },
  "proc-project-planning": {
   "fingerprint": "f3168ac13b9a3b01",
