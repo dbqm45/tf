@@ -1,7 +1,7 @@
 {
  "ai-agents": {
-  "fingerprint": "89da3df620e2117d",
-  "offline": "2026-10-22"
+  "fingerprint": "f320207c82c3ff1c",
+  "offline": "2026-10-23"
  },
  "ai-computer-vision": {
   "fingerprint": "111f72476294f01d",
@@ -18,6 +18,10 @@
  "ai-governance-compliance": {
   "fingerprint": "8254bc323b73e0ee",
   "offline": "2026-10-22"
+ },
+ "ai-mcp-server": {
+  "fingerprint": "a7682c7ba8756d64",
+  "offline": "2026-10-23"
  },
  "ai-mlops": {
   "fingerprint": "25f5417269136265",
