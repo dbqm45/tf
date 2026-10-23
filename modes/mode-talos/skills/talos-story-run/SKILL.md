@@ -28,6 +28,9 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
 ## 1. Przyjęcie historyjki
 Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria akceptacji** sprawdzalne testem;
 **zakres** (czego nie robimy). Stan repozytorium zbiera `scout` (lista `plik:linia`, bez całych plików).
+- **Wiedza o projekcie, jeśli jest:** gdy istnieje `docs/project/00-reconstruction/standards/INDEX.md` (rekonstrukcja
+  z kodu), czytasz ten spis i `docs/project/00-reconstruction/domain.md` (słownik) — standardy obowiązują w planie
+  i kodzie, nazwy bierzesz ze słownika. Pełnego raportu nie czytasz; konkretny standard otwierasz, gdy kawałek go dotyczy.
 - Brak kryteriów akceptacji → do 3 pytań do człowieka; z `--auto` → STOP z tymi pytaniami.
 - Drobna niejasność → wariant zachowawczy (mniej plików, mniejsza zmiana zachowania), zapisany w planie jako
   **[założenie]**.
@@ -60,9 +63,12 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 
 ## 4. Zakończenie
 1. Fazy warunkowe z planu (tylko te).
-2. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
-   z `parked.md`), skrót raportu kosztu. Nie scalasz — decyzja człowieka.
-3. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
+2. **Zgodność z planem:** `python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base <gałąź domyślna>`
+   — pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem, testy w diffie. Zmiana spoza planu
+   bez uzasadnienia → wycofujesz albo opisujesz w PR jako odstępstwo.
+3. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
+   z `parked.md`), wynik `plan_drift` (pokrycie, odstępstwa), skrót raportu kosztu. Nie scalasz — decyzja człowieka.
+4. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
 
 ## Kto co robi (koszt)

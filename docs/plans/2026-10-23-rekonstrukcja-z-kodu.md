@@ -1,6 +1,6 @@
 # Plan: rekonstrukcja projektu z kodu
 
-Data: 2026-10-23 · Status: **F0–F2 zrobione** (skill `eng-project-reconstruction` w pack-it), dalej F3 (Talos) i F4 (pomiar, za zgodą) · Gałąź robocza: `claude/great-hypatia-angvam`
+Data: 2026-10-23 · Status: **F0–F3 zrobione** (skill rekonstrukcji; Talos czyta standardy i słownik, `plan_drift.py`), dalej F4 (pomiar, za zgodą) · Gałąź robocza: `claude/great-hypatia-angvam`
 
 ## TL;DR
 Nowy skill w `pack-it` (roboczo `eng-project-reconstruction`), który z samego repozytorium (duże, stare, wiele języków)
@@ -13,7 +13,7 @@ użytkownika).
 
 ## Przekazanie (jak wznowić po wyczyszczeniu kontekstu)
 1. Przeczytaj ten plik i `git status` w `/home/user/tf`.
-2. Następny krok: **F3** (patrz „Etapy”). F0–F2 gotowe; F0: scenariusze w `packs/pack-it/tests/skill_evals/eng-project-reconstruction.json`
+2. Następny krok: **F4** — płatny pomiar, tylko za zgodą (D3). F0–F3 gotowe; F0: scenariusze w `packs/pack-it/tests/skill_evals/eng-project-reconstruction.json`
    (9: 5 trigger, 4 no-trigger z sąsiadami); w F2 przenieść je do `packs/pack-it/tests/skill_evals/` (walidator wymaga
    istniejącego `SKILL.md`, dlatego teraz leżą w `docs/plans/`).
 3. Zasady repo: bez README opisującego fabrykę (repo publiczne); `claude-team-factory` i `ev-team-factory` nietknięte;
@@ -139,7 +139,7 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
     `recon_check.py` (weryfikator dowodów i kompletności).
 - **F2. Skill + szablony:** ✓ zrobione 2026-10-23 (`packs/pack-it/skills/eng-project-reconstruction/`, role solution-architect i ddd-analyst; D2 rozstrzygnięte inaczej: bez przenoszenia `run_report.py` — plan przebiegu z polami do odhaczenia w `docs/project/00-reconstruction/plan.md`, koszt przez core-cost-control). `SKILL.md` (zwięźle, przykłady), `references/` (szablon raportu, schemat karty JSON,
   prompt karty pod cache), bramka, `refs`, `--hints`.
-- **F3. Integracja z Talosem:** w kroku przyjęcia historyjki Talos czyta `docs/project/00-reconstruction/standards/INDEX.md`
+- **F3. Integracja z Talosem:** ✓ zrobione 2026-10-23 (krok przyjęcia czyta `standards/INDEX.md` i `domain.md`; `plan_drift.py` w kroku zakończenia i w PR; mode-talos 1.1.0; scenariusz ewaluacji Talosa pominięty — skill ręczny, ma tylko no-trigger). w kroku przyjęcia historyjki Talos czyta `docs/project/00-reconstruction/standards/INDEX.md`
   i `domain.md`, jeśli istnieją (bez nazw skilli z innej nakładki — opis słowny). Scenariusz ewaluacji Talosa.
 - **F4. Pomiar (płatny, za zgodą):** ewaluacja skilla na Haiku (~1–2 USD); benchmark vs maister — patrz niżej.
 - **F5. Odświeżanie przyrostowe + raport HTML (Artifact).**

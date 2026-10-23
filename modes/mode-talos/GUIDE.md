@@ -61,6 +61,11 @@ sesji, nie model, więc nie zużywa tokenów. Koszt to szacunek z cennika API �
 faktura. W trakcie przebiegu jedna linia stanu:
 `python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog>`.
 
+Zgodność zmian z planem (`python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base main`):
+pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem i testy w diffie — trafia do opisu PR.
+Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), Talos przy przyjęciu historyjki czyta
+spis standardów i słownik domeny.
+
 ## Gdy Talos się zatrzyma
 Blok STOP mówi, co blokuje (z dowodem), co jest już zrobione (commity), czego potrzeba od Ciebie i od którego
 kawałka wznowić. Po decyzji poproś Talosa o wznowienie i podaj katalog przebiegu: pierwszy nieodhaczony kawałek
