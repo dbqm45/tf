@@ -33,9 +33,14 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 3. **Domeny i słownik** (mocniejszy model, wejście: karty + graf): subdomeny, konteksty, słownik termin → `plik:linia`,
    rozjazdy nazw kod ↔ biznes (ddd-legacy-modernization, ddd-strategic-analysis).
 4. **Wymagania i reguły:** z testów (nazwy, asercje), walidacji, endpointów i ograniczeń z `schema_scan`; każde
-   z pewnością: `test` (jest test) / `kod` (tylko kod) / `do potwierdzenia`.
+   z pewnością: `test` (jest test) / `kod` (tylko kod) / `do potwierdzenia`. Mapowanie (błąd → kod HTTP, lista błędów
+   domenowych, wartości enuma) wypisujesz w całości, łącznie z przypadkiem domyślnym i kodem sukcesu.
 5. **Standardy:** sygnał z `standards_scan` (udział, przykłady, wyjątki) → reguła po obejrzeniu przykładów. Plik na
    obszar w `standards/` + `standards/INDEX.md`. Udział < 70% to nie standard, tylko „mieszane” z wyjątkami.
+   Sygnały `idiomy testów` i `idiomy kodu` oceniasz w obrębie miejsca, którego dotyczą (testy danej warstwy,
+   kontrolery, agregaty), nie wobec wszystkich plików. Standard testów podaje z przykładem `plik:linia`: rodzaj testu
+   na warstwę (np. test web, test repozytorium, integracyjny), bibliotekę dublerów, strukturę przypadków (podtesty,
+   tabela, parametry), dane testowe (buildery, fixtures). Standard kodu: idiomy sygnatur, hermetyzacji i kontrolerów.
 6. **Raport** `report.md` wg `references/raport.md` (sekcja Moduły z `recon_cards.py modules/ --summary`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
    (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`.
 7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,
