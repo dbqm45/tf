@@ -68,8 +68,11 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 ## Odświeżanie przyrostowe
 `recon_manifest.py diff <repo> --manifest docs/project/00-reconstruction/manifest.json` (ten sam budżet partii
 co w manifeście) → partie do odświeżenia (zmieniony hash albo nowe), usunięte (skasuj ich karty), zmienione testy.
-Tylko te karty od nowa, potem synteza dotkniętych sekcji (domeny, reguły, standardy z nowymi kartami; wymagania
-także ze zmienionych testów), `recon_check --final` i `recon_manifest.py write` z nowym commitem. Partie bez zmian
+Przed nowymi kartami kopiujesz stare: `mkdir -p raw/cards-prev && cp modules/*.json raw/cards-prev/`. Tylko te karty
+od nowa, potem `recon_cards.py modules/ --repo <repo> --rules --prev raw/cards-prev`. Lista „Do sprawdzenia” to
+miejsca w całej dokumentacji ze znacznikami usuniętych lub zmienionych reguł (np. 409, 10 cyfr): każde poprawiasz albo
+zostawiasz, gdy celowo mówi o starej wartości. Potem synteza dotkniętych sekcji (domeny, reguły, standardy z nowymi
+kartami; wymagania także ze zmienionych testów), `recon_check --final` i `recon_manifest.py write` z nowym commitem. Partie bez zmian
 zostają; w raporcie data i commit odświeżenia. Ponad połowa plików zmieniona → pełny przebieg (skrypt to podpowie).
 
 ## Zasady

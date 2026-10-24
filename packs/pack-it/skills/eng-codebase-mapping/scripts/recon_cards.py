@@ -9,6 +9,14 @@ dokumentacji, nie tylko do JSON. Pierwsza linia .md to skrót treści karty — 
   python3 recon_cards.py <modules/> --repo <repo>   # dowody ze ścieżką względną wobec partii → ścieżka od korzenia
   python3 recon_cards.py <modules/> --rules         # + rules.md obok modules/: reguły z kart pogrupowane po module
   python3 recon_cards.py <modules/> --into report.md   # sekcja „## Moduły” raportu = wpisy z kart (reszta bez zmian)
+  python3 recon_cards.py <modules/> --prev raw/cards-prev   # po odświeżeniu: miejsca, które mogą opisywać stan sprzed zmiany
+
+--prev paruje reguły starej i nowej karty: ten sam plik dowodu i podobny tekst (wspólne rdzenie słów). Reguła bez pary
+jest usunięta i daje wszystkie swoje znaczniki: liczby, wzorce, identyfikatory jak 409, \\d{10}, int.MaxValue,
+DuplicateException. Reguła z parą, ale z innym cytatem, jest zmieniona i daje te znaczniki starej reguły, których nie
+ma w cytacie nowej (tekst nowej reguły bywa wzmianką o starej wartości, np. „było 10”). Znaczników szuka w plikach .md dokumentacji (bez raw/); linia trafia na listę, gdy zawiera
+znacznik jako całe słowo i rdzeń słowa z tej samej starej reguły (bez dowodów w `…` i cytatów w "…" / „…”). To lista do przejrzenia, nie bramka: dokument może celowo
+wspominać starą wartość.
 
 Z --repo: gdy pliku z dowodu nie ma od korzenia repo, a w katalogu partii (pole `batch`) jest dokładnie jeden plik
 o tej końcówce ścieżki, dowód dostaje pełną ścieżkę. Dwuznaczne zostają bez zmian (zgłosi je recon_check.py).
@@ -30,6 +38,102 @@ REF_IN_TEXT = re.compile(r"(?<![\w/.-])((?:[\w.@-]+/)*[\w.@-]+\.[A-Za-z0-9]+:\d+
 
 def card_hash(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()[:12]
+
+
+TOKEN = re.compile(r"[\\\w.{}]+")
+WORD = re.compile(r"[^\W\d_]{5,}")
+
+
+def distinctive(tok: str) -> bool:
+    """Znacznik faktu: liczba (≥ 2 cyfry), wzorzec, identyfikator z wielką literą w środku albo z kropką."""
+    tok = tok.strip(".")
+    if not re.search(r"[A-Za-z0-9]{2,}", tok):
+        return False
+    return bool(re.search(r"\d{2,}", tok) or re.search(r"[a-z][A-Z]", tok) or "{" in tok or "\\" in tok
+                or re.search(r"[A-Za-z]\.[A-Za-z]", tok))
+
+
+def stems(text: str) -> set[str]:
+    return {w.lower()[:4] for w in WORD.findall(text)}
+
+
+PROSE = re.compile(r"`[^`]*`|\"[^\"]*\"|„[^”]*”")   # dowody i cytaty — nie są opisem do sprawdzenia
+
+
+def has_token(line: str, tok: str) -> bool:
+    return re.search(rf"(?<![\w.]){re.escape(tok)}(?![\w])", line) is not None
+
+
+def card_rules(card: dict) -> list[dict]:
+    return [i for i in card.get("rules") or [] if isinstance(i, dict)]
+
+
+def ev_file(rule: dict) -> str:
+    return str(rule.get("evidence") or "").strip("`").rsplit(":", 1)[0].split("/")[-1]
+
+
+def marks(text: str) -> set[str]:
+    """Znaczniki faktu z tekstu i liczby (≥ 2 cyfry) z ich wnętrza, np. 10 z \\d{10}."""
+    out = set()
+    for t in TOKEN.findall(text):
+        t = t.strip(".")
+        if distinctive(t):
+            out.add(t)
+            out.update(re.findall(r"\d{2,}", t))
+    return out
+
+
+def load_cards(d: str) -> dict:
+    cards = {}
+    for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        if f.endswith(".json"):
+            try:
+                with open(os.path.join(d, f), encoding="utf-8") as fh:
+                    c = json.load(fh)
+                cards[f[:-5]] = c if isinstance(c, dict) else {}
+            except (OSError, ValueError):
+                cards[f[:-5]] = {}
+    return cards
+
+
+def stale_candidates(prev_dir: str, cur_dir: str, root: str) -> list[tuple[str, int, str, str]]:
+    """Linie dokumentacji ze znacznikiem, który zniknął z reguł karty, i rdzeniem słowa z tej samej starej reguły."""
+    old, new = load_cards(prev_dir), load_cards(cur_dir)
+    probes = []   # (znacznik, rdzenie starej reguły)
+    for stem, card in old.items():
+        now = card_rules(new.get(stem, {}))
+        for r in card_rules(card):
+            text = f"{r.get('rule', '')} {r.get('quote', '')}"
+            own = stems(str(r.get("rule", "")))
+            pair, best = None, 0.0
+            for n in now:
+                if ev_file(n) == ev_file(r):
+                    other = stems(str(n.get("rule", "")))
+                    sim = len(own & other) / len(own | other) if own | other else 0.0
+                    if sim > best:
+                        pair, best = n, sim
+            if pair is None or best < 0.3:                  # reguła usunięta
+                toks = marks(text)
+            elif str(pair.get("quote", "")).strip() == str(r.get("quote", "")).strip():
+                continue                                    # ta sama reguła
+            else:                                           # reguła zmieniona
+                toks = marks(text) - marks(str(pair.get("quote", "")))
+            probes += [(t, stems(text)) for t in toks]
+    hits = []
+    for dp, dn, fn in os.walk(root):
+        dn[:] = sorted(x for x in dn if x != "raw")
+        for f in sorted(fn):
+            if not f.endswith(".md"):
+                continue
+            path = os.path.join(dp, f)
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                for n, line in enumerate(fh, 1):
+                    prose = PROSE.sub(" ", line)
+                    for tok, ctx in probes:
+                        if has_token(prose, tok) and ctx & stems(prose):
+                            hits.append((os.path.relpath(path, root).replace(os.sep, "/"), n, tok, line.strip()))
+                            break
+    return hits
 
 
 def resolver(repo: str | None, batch: str):
@@ -132,12 +236,14 @@ def main(argv: list[str]) -> int:
     if "-h" in argv or "--help" in argv:
         print(__doc__)
         return 0
-    repo, into, paths, it = None, None, [], iter(argv)
+    repo, into, prev, paths, it = None, None, None, [], iter(argv)
     for a in it:
         if a == "--repo":
             repo = next(it, None)
         elif a == "--into":
             into = next(it, None)
+        elif a == "--prev":
+            prev = next(it, None)
         elif not a.startswith("--"):
             paths.append(a)
     if len(paths) != 1 or not os.path.isdir(paths[0]) or (repo is not None and not os.path.isdir(repo)):
@@ -191,6 +297,11 @@ def main(argv: list[str]) -> int:
             fh.write("\n".join(head + rules) + "\n" + keep)
     if into:
         rc = max(rc, inject(into, lines))
+    if prev:
+        hits = stale_candidates(prev, d, os.path.dirname(os.path.abspath(d)))
+        print(f"Do sprawdzenia: {len(hits)} miejsc (znaczniki ze starych kart, których nie ma w nowych regułach):")
+        for path, n, tok, line in hits:
+            print(f"  {path}:{n} [{tok}] {line[:160]}")
     if "--summary" in argv:
         print("\n## Moduły (propozycja do raportu)")
         print("\n".join(lines))
