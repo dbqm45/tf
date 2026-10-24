@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "G1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md Stack: Go 1.20 go.mod, CI 1.19, Dockerfile 1.20.7 rozjazd",
+   "why_B": "tech-stack.md: module directive 1.20, golang:1.20.7-alpine3.17, CI 1.19, module path"
+  },
+  {
+   "id": "G2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md: Echo v4.11.4",
+   "why_B": "tech-stack.md: labstack/echo v4.11.4"
+  },
+  {
+   "id": "G3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md: MySQL, go-sql-driver 1.7.1, mysql:8.3, bez ORM, article.sql",
+   "why_B": "tech-stack.md: database/sql + go-sql-driver/mysql, no ORM, mysql 8.3, article.sql"
+  },
+  {
+   "id": "G4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md: testify 1.9.0, mockery, go-sqlmock, faker",
+   "why_B": "tech-stack.md: testify, sqlmock, faker, mockery v2.42.0"
+  },
+  {
+   "id": "G5",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "domain.md + modules/domain.md: encje, błędy, zależy tylko od stdlib",
+   "why_B": "architecture.md: domain imports nothing internal; Article/Author, sentinel errors"
+  },
+  {
+   "id": "G6",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md/modules/article.md: use case Service, author przez errgroup",
+   "why_B": "architecture.md Use Case: Service, hydracja autorów"
+  },
+  {
+   "id": "G7",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "modules/internal.md: 4 trasy, CORS, timeout",
+   "why_B": "architecture.md Delivery + Routes"
+  },
+  {
+   "id": "G8",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md: repository/mysql na database/sql, helper kursora",
+   "why_B": "architecture.md Repository: SQL implementations, helper.go cursor"
+  },
+  {
+   "id": "G9",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "modules/domain.md: cztery sentinele",
+   "why_B": "error-handling.md: Sentinel Domain Errors, cztery nazwy"
+  },
+  {
+   "id": "G10",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "requirements.md: tabela nil200/500/404/409/inny500",
+   "why_B": "api.md: tylko 'getStatusCode(err) (default 500)'; brak mapowania 404/409"
+  },
+  {
+   "id": "G11",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "requirements.md W3 + kody 422/400/201",
+   "why_B": "api.md: Bind 422, validation 400, 201; architecture: validate tags"
+  },
+  {
+   "id": "G12",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "modules/article.md + report: duplikat -> ErrConflict -> 409",
+   "why_B": "roadmap.md: check-then-insert racy; brak wprost ErrConflict/409 przy duplikacie"
+  },
+  {
+   "id": "G13",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "modules/internal.md: WHERE created_at>, ErrBadParamInput, pełna strona, X-Cursor, num=10",
+   "why_B": "api.md/queries.md: base64 created_at, num=10, X-Cursor; brak ErrBadParamInput i reguły pełnej strony"
+  },
+  {
+   "id": "G14",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "CLAUDE.draft.md/kod.md: interfejsy po stronie konsumenta",
+   "why_B": "architecture.md Consumer-Side Interfaces"
+  },
+  {
+   "id": "G15",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "modules/app.md: NewService/NewArticleHandler/NewXRepository, składanie w main",
+   "why_B": "coding-style.md: manual constructor injection in app/main.go"
+  },
+  {
+   "id": "G16",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "modules/app.md CONTEXT_TIMEOUT 30s; kod.md context pierwszy",
+   "why_B": "coding-style.md Context Propagation + timeout middleware"
+  },
+  {
+   "id": "G17",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "CLAUDE.draft.md: make go-generate, //go:generate, testy.md",
+   "why_B": "test-writing.md: mockery go:generate, mocks/, On/Return/AssertExpectations"
+  },
+  {
+   "id": "G18",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "testy.md: pakiet *_test, t.Run tylko w service, sqlmock",
+   "why_B": "test-writing.md: t.Run success/error-failed, sqlmock; conventions: external <pkg>_test"
+  },
+  {
+   "id": "G19",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md/domain.md: Update bez trasy PUT",
+   "why_B": "architecture.md/roadmap.md: Update exists but not routed"
+  },
+  {
+   "id": "G20",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "modules/*: ignorowany błąd GetByTitle, 404 dla nieliczbowego id, log.Fatal .env, config.json, goroutiny",
+   "why_B": "roadmap/architecture: .env fatal, config.json; brak: ignorowanie błędu GetByTitle, 404 nieliczbowego id, ryzyko goroutin/kanału"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "modules/internal.md: GET/POST /articles i GET/DELETE /articles/:id",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:44-47"
+   },
+   {
+    "claim": "modules/internal.md Zależności: internal/rest zależy od pakietu article (article.go:24)",
+    "verdict": "fałsz",
+    "code": "internal/rest/article.go:3-12 - importy bez pakietu article; linia 24 używa tylko domain.Article; rest ma własny interfejs"
+   },
+   {
+    "claim": "modules/app.md: loc=Asia/Jakarta na sztywno w DSN",
+    "verdict": "prawda",
+    "code": "app/main.go:45"
+   },
+   {
+    "claim": "modules/article.md: Store ignoruje błąd GetByTitle",
+    "verdict": "prawda",
+    "code": "article/service.go:149"
+   },
+   {
+    "claim": "modules/root-sql.md: title varchar(45) NOT NULL, zrzut z 2017-12-13 MySQL 5.7.18",
+    "verdict": "prawda",
+    "code": "article.sql:6,29,136"
+   },
+   {
+    "claim": "modules/domain.md: Author.CreatedAt/UpdatedAt string, Article time.Time",
+    "verdict": "prawda",
+    "code": "domain/author.go:21-22; domain/article.go:13-14"
+   },
+   {
+    "claim": "standards/kod.md: błędy porównywane przez switch err, nie errors.Is",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:144-153"
+   },
+   {
+    "claim": "CLAUDE.draft.md: make up uruchamia MySQL w compose + air (numer linii w dokumencie 30 nieprecyzyjny)",
+    "verdict": "prawda",
+    "code": "Makefile:23 (up: dev-env dev-air)"
+   },
+   {
+    "claim": "standards/testy.md: t.Run tylko w teście serwisu (1/5 plików)",
+    "verdict": "prawda",
+    "code": "grep t.Run: tylko article/service_test.go (10 trafień)"
+   },
+   {
+    "claim": "report.md: CI Go 1.19 vs Dockerfile 1.20.7 vs go.mod 1.20; compose montuje ./config.json",
+    "verdict": "prawda",
+    "code": ".github/workflows/gotest.yml:18; Dockerfile:2; go.mod:3; compose.yaml:12"
+   }
+  ],
+  "B": [
+   {
+    "claim": "tech-stack.md: builder golang:1.20.7-alpine3.17, CI Go 1.19",
+    "verdict": "prawda",
+    "code": "Dockerfile:2; .github/workflows/gotest.yml:18"
+   },
+   {
+    "claim": "tech-stack.md: runtime alpine:latest, działa jako root",
+    "verdict": "prawda",
+    "code": "Dockerfile:14, brak USER (Dockerfile:14-26)"
+   },
+   {
+    "claim": "roadmap.md: CreatedAt/UpdatedAt nie ustawiane przy create (zero time)",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:99-117; article/service.go:148-156; mysql/article.go:125"
+   },
+   {
+    "claim": "roadmap.md: brak stmt.Close w article.go i author.go",
+    "verdict": "prawda",
+    "code": "internal/repository/mysql/article.go:120,140,165; author.go:22"
+   },
+   {
+    "claim": "roadmap.md: jeden nieistniejący author_id zawodzi cały GET /articles",
+    "verdict": "prawda",
+    "code": "article/service.go:63-65,90-92,107-108"
+   },
+   {
+    "claim": "conventions.md: wersje narzędzi air 1.49.0, gotestsum 1.11.0, tparse 0.13.2, mockery 2.42.0, golangci-lint 1.56.2, migrate 4.17.0",
+    "verdict": "prawda",
+    "code": "misc/make/tools.Makefile:26,39,53,67,80,93"
+   },
+   {
+    "claim": "test-writing.md: make tests z -race -short -test.count 1 -test.failfast -test.parallel 2 -test.timeout 5s --max-fails 2",
+    "verdict": "prawda",
+    "code": "Makefile:84-95"
+   },
+   {
+    "claim": "tech-stack.md: Dependabot tylko gomod",
+    "verdict": "prawda",
+    "code": ".github/dependabot.yml:8-12"
+   },
+   {
+    "claim": "roadmap.md: błędna kolejność argumentów w TestStoreArticle",
+    "verdict": "prawda",
+    "code": "internal/repository/mysql/article_test.go:90 (CreatedAt, UpdatedAt) vs zapytanie article.go:125 (UpdatedAt, CreatedAt)"
+   },
+   {
+    "claim": "api.md: Bind 422, walidacja 400, bare string w early return",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:103,108,75"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 20,
+   "częściowo": 0,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 16,
+   "częściowo": 4,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 10,
+   "fałsz": 0,
+   "nieweryfikowalne": 0
+  }
+ }
+}
