@@ -1,0 +1,23 @@
+[
+ {
+  "id": "D1",
+  "kind": "zmieniona",
+  "new": "Ilość w BasketItem musi mieścić się w zakresie 0..99: Guard.Against.OutOfRange(quantity, ..., 0, 99) w AddQuantity (dodawana ilość) i SetQuantity (ustawiana ilość, wołana też z konstruktora).",
+  "old": "Ilość pozycji koszyka: 0..int.MaxValue (tylko nieujemna, bez górnej granicy).",
+  "evidence": "src/ApplicationCore/Entities/BasketAggregate/BasketItem.cs"
+ },
+ {
+  "id": "D2",
+  "kind": "nowa",
+  "new": "Cena pozycji katalogu przy UpdateDetails musi być w zakresie 0,01..10000 (Guard.Against.OutOfRange(details.Price, ..., 0.01m, 10000m)), oprócz istniejącego NegativeOrZero.",
+  "old": null,
+  "evidence": "src/ApplicationCore/Entities/CatalogItem.cs"
+ },
+ {
+  "id": "D3",
+  "kind": "usunięta",
+  "new": "Tworzenie pozycji katalogu (CreateCatalogItemEndpoint) NIE sprawdza już unikalności nazwy — duplikat nazwy nie jest odrzucany, DuplicateException nie jest tu rzucany (klasa wyjątku i mapowanie 409 w ExceptionMiddleware nadal istnieją, ale nic go nie rzuca przy tworzeniu).",
+  "old": "Utworzenie pozycji o istniejącej nazwie kończy się DuplicateException → HTTP 409.",
+  "evidence": "src/PublicApi/CatalogItemEndpoints/CreateCatalogItemEndpoint.cs"
+ }
+]

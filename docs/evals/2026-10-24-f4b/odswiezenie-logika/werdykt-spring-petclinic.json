@@ -1,0 +1,10 @@
+{"changes":[
+{"id":"P1","A":{"aktualne":"tak","nieaktualne":["A/modules/owner.md:96 \"Brak testów dla: formatu telefonu (10 cyfr)\" (pozostałość starego formatu; słabe, bo dotyczy testów)"],"why":"Wielokrotnie podane 9 cyfr z \\d{9} (owner.md:45, rules.md:64,118, requirements.md:5, report.md:40, domain.md:19); notka o zmianie z 10."},
+"B":{"aktualne":"tak","nieaktualne":[],"why":"Tylko roadmap.md:6,14 mówi, że Owner.telephone wymaga \\d{9} (komunikaty i data.sql nadal 10 cyfr); poprawne, ale wspomniane tylko jako zadanie do uzgodnienia, brak w standardach/architekturze."}},
+{"id":"P2","A":{"aktualne":"tak","nieaktualne":[],"why":"owner.md:53, rules.md:72, requirements.md:11: imię zwierzęcia nie może zawierać cyfr, z PetValidator:49."},
+"B":{"aktualne":"tak","nieaktualne":[],"why":"architecture.md:16 PetValidator '(name required, max 30 chars, no digits...)' oraz roadmap.md:6,14 (kod błędu digits)."}},
+{"id":"P3","A":{"aktualne":"tak","nieaktualne":[],"why":"owner.md:4,63,64, rules.md:82,83, requirements.md:16, report.md:35,42: kontrola usunięta, zostaje domyślne jutro. Wzmianka, że test nadal jej oczekuje, jest adnotacją o rozjeździe, nie twierdzeniem starego stanu."},
+"B":{"aktualne":"częściowo","nieaktualne":[],"why":"roadmap.md:6,14: VisitController nie wymusza już przyszłej daty wizyty. Brak informacji o domyślnej dacie jutro (minVisitDate); wzmianka tylko w zadaniu roadmapy."}}
+],
+"spojnosc":{"A":"Spójna: wszystkie miejsca podają 9 cyfr, brak cyfr w imieniu i usuniętą kontrolę daty wizyty; jedyny ślad '10 cyfr' (owner.md:96) to nieaktualna fraza o brakujących testach, drobna niespójność.",
+"B":"Spójna: jedyne wzmianki (roadmap.md, architecture.md) zgadzają się ze zmianami i nie przeczą sobie; dokumentacja jest za to bardzo skąpa w tych sprawach."}}

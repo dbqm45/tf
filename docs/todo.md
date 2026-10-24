@@ -312,7 +312,8 @@ Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4)
 - [x] **Po F4 v2:** `recon_cards.py` generuje `modules/<moduł>.md` z kart (dowody sprawdzane przez `recon_check`, ścieżki względne wobec partii poprawiane) i szkic sekcji Moduły z kluczowymi elementami; `recon_check --final` wymaga aktualnych `.md` kart i dowodu z pliku pipeline'u w wierszu CI, gdy CI jest w repo (2026-10-24). Na danych v2: łapie „brak CI” w petclinic i 7 dowodów względnych w kartach eShopOnWeb.
 - [x] **Po F4 v3:** idiomy testów i kodu w `standards_scan.py`, mapowania w całości — `docs/evals/2026-10-24-f4-benchmark-v3.md`: pokrycie 58,5/60 wobec 45–48 maistera, każda kategoria lepsza albo remis na maksimum, poprawność 30/30 (2026-10-24).
 - [x] **Po F4:** obniżenie kosztu rekonstrukcji — 90% → 76–85% maistera przy jakości 58/60; poziom zaakceptowany przez człowieka (2026-10-24). Podsumowanie i możliwy powrót do celu ≤ 50%: `docs/evals/2026-10-24-f4-podsumowanie.md`.
-- [ ] **Po F4:** powtórka testu odświeżenia ze zmianą w logice; opcjonalnie sygnały układu pakietów i czasów życia DI w `standards_scan`.
+- [x] **Po F4:** test odświeżenia ze zmianą w logice — `docs/evals/2026-10-24-f4-odswiezenie-logika.md`: nasz 6/6 zmian opisanych, 2 nieaktualne miejsca; maister 5,5/6, 0 nieaktualnych; koszt 1,02 wobec 0,66 USD (2026-10-24).
+- [ ] **Po F4:** przy odświeżaniu porównać stare i nowe karty zmienionych partii i przeszukać dokumentację po usuniętych lub zmienionych regułach (pozostałości w `requirements.md` i niewiadomych kart); opcjonalnie sygnały układu pakietów i czasów życia DI w `standards_scan`.
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
 
 ## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23

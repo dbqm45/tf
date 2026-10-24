@@ -1,0 +1,14 @@
+{"changes":[
+{"id":"D1",
+"A":{"aktualne":"tak","nieaktualne":[],"why":"A/project/architecture.md:17 i INDEX.md:29 podają ilość BasketItem 0-99 (AddQuantity, SetQuantity); roadmap.md:6 też. Brak śladu int.MaxValue."},
+"B":{"aktualne":"tak","nieaktualne":[],"why":"ApplicationCore.md:36-37 i rules.md:5-6 podają 0-99 (Guard OutOfRange), z uwagą, że strażnik sprawdza pojedyncze wywołanie; requirements.md:7 spójnie. Pozostałe int.MaxValue (WebPages.md:35, rules.md:173) dotyczą osobnego atrybutu Range w widoku BasketItemViewModel, a rozbieżność jest opisana jawnie (rules.md:201) - to nie jest stare twierdzenie o domenie."}},
+{"id":"D2",
+"A":{"aktualne":"tak","nieaktualne":[],"why":"architecture.md:17 'CatalogItem price must be 0.01-10000 (UpdateDetails)'; INDEX.md:29, roadmap.md:6. Nie wspomina wprost o równoległym NegativeOrZero, ale zakres jest poprawny."},
+"B":{"aktualne":"tak","nieaktualne":[],"why":"ApplicationCore.md:64-65, rules.md:33-34 i requirements.md:26 podają NegativeOrZero oraz OutOfRange 0,01-10000 w UpdateDetails (konstruktor nie sprawdza). Zakres 0,01-1000 w BlazorShared (BlazorShared.md:20-21) dotyczy innej warstwy (DTO) - nie jest przestarzały."}},
+{"id":"D3",
+"A":{"aktualne":"tak","nieaktualne":[],"why":"roadmap.md:6 i :26 mówią, że sprawdzenie duplikatu nazwy (DuplicateException) usunięto z CreateCatalogItemEndpoint i nic nie odrzuca duplikatów; INDEX.md:23 jako dług techniczny. Nie wspomina wprost, że mapowanie 409 w middleware zostaje, ale to niesprzeczne."},
+"B":{"aktualne":"tak","nieaktualne":["B/requirements.md:25 - 'Duplikat nazwy przy tworzeniu → 409' (nadal twierdzi, że reguła działa)"],"why":"PublicApi.md:72-73,91, rules.md:200 i report.md:78 poprawnie opisują usunięcie sprawdzenia i pozostawione mapowanie 409 w ExceptionMiddleware. Ale requirements.md:25 to przeczy."}}
+],
+"spojnosc":{
+"A":"Spójna: wszystkie miejsca (architecture, roadmap, INDEX) zgodnie opisują 0-99, 0,01-10000 i usunięte sprawdzenie duplikatu, bez sprzeczności.",
+"B":"Prawie spójna, ale requirements.md:25 ('Duplikat nazwy przy tworzeniu → 409') przeczy PublicApi.md:72, rules.md:200 i report.md:78 co do usuniętej reguły D3."}}
