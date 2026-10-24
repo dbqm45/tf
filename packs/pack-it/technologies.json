@@ -191,6 +191,21 @@
       }
     },
     {
+      "id": "semgrep",
+      "name": "Semgrep",
+      "skill": "tool-semgrep",
+      "detect": {
+        "pypi": [
+          "semgrep"
+        ],
+        "files": [
+          ".semgrep.yml",
+          ".semgrep.yaml",
+          ".semgrep"
+        ]
+      }
+    },
+    {
       "id": "stripe",
       "name": "Stripe",
       "skill": "tool-stripe",

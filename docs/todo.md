@@ -354,7 +354,7 @@ Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
 - [x] **2. Niebezpieczne API i domyślne konfiguracje** (zrobione 2026-10-23: `sec-appsec-devsecops/references/niebezpieczne-api.md`, wkład do `security-reviewer`) (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
   per język (zaszyte sekrety, domyślne hasła, słaba kryptografia, błędogenne API); `sec-appsec-devsecops`
   i wkład do agenta `security-reviewer`.
-- [ ] **3. Własne reguły Semgrep/CodeQL z testami** (ToB `semgrep-rule-creator`): procedura pisania i testowania
+- [x] **3. Własne reguły Semgrep/CodeQL z testami** (zrobione 2026-10-24: skill `tool-semgrep`, przykłady sprawdzone Semgrepem 1.50.0, 1.100.0 i 1.182.1; testy CodeQL tylko z dokumentacji — CLI niedostępne w sesji) (ToB `semgrep-rule-creator`): procedura pisania i testowania
   reguł; kandydat `tool-semgrep`.
 - [ ] **4. Fuzzing** (ToB `testing-handbook-skills`): kiedy fuzzować, harness, korpus, sanitizery, CI; rozszerzenie
   `eng-testing` albo nowy `qa-fuzzing` (testy oparte na właściwościach już są).

@@ -2,6 +2,8 @@
 
 Reguła bez testów psuje się po cichu: przestaje łapać błąd albo zaczyna łapać wszystko. Test to plik z kodem
 podatnym i poprawnym, oznaczonym komentarzami.
+Więcej przykładów (autofix z testem `.fixed`, ograniczanie fałszywych trafień, `--baseline-commit`):
+`.claude/skills/tool-semgrep/references/reguly-i-testy.md`.
 
 ## Reguła (tryb taint, Python)
 ```yaml

@@ -1,0 +1,103 @@
+{
+  "skill": "tool-semgrep",
+  "scenarios": [
+    {
+      "id": "regula-taint-z-testem",
+      "expect": "trigger",
+      "prompt": "Chcemy własną regułę Semgrep dla naszego kodu w Pythonie: wartość z request.args nie może trafić do subprocess.run z shell=True, chyba że przeszła przez shlex.quote. Jak napisać tę regułę i sprawdzić, że działa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "mode: taint",
+            "pattern-sources",
+            "pattern-sinks"
+          ],
+          [
+            "pattern-sanitizers",
+            "sanityzator\\w*"
+          ],
+          [
+            "ruleid:",
+            "# ok:",
+            "todoruleid"
+          ],
+          [
+            "semgrep (scan )?--test",
+            "semgrep test"
+          ]
+        ],
+        "none": [
+          "nie da się przetestować reguł"
+        ]
+      }
+    },
+    {
+      "id": "falszywe-trafienia",
+      "expect": "trigger",
+      "prompt": "Nasza reguła Semgrep na hardcodowane hasła zgłasza 300 trafień w repozytorium, prawie wszystkie fałszywe (testy, przykładowe configi, stałe z pustym stringiem). Jak ją poprawić, żeby zespół jej nie wyłączył? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pattern-not",
+            "pattern-not-inside",
+            "metavariable-regex",
+            "metavariable-pattern"
+          ],
+          [
+            "paths:",
+            "exclude",
+            "\\.semgrepignore"
+          ],
+          [
+            "ok:",
+            "przypad\\w* (poprawn|dobr)",
+            "test\\w*[^\\n]{0,60}fałszyw"
+          ],
+          [
+            "precyzj\\w*",
+            "odsetek",
+            "zmierz\\w*",
+            "policz\\w*"
+          ]
+        ],
+        "none": [
+          "wyłącz\\w* (całą )?regułę"
+        ]
+      }
+    },
+    {
+      "id": "autofix-yaml-load",
+      "expect": "trigger",
+      "prompt": "Chcę, żeby reguła Semgrep nie tylko wykrywała yaml.load bez Loadera, ale też proponowała poprawkę na yaml.safe_load. Jak to zrobić i przetestować poprawkę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fix:"
+          ],
+          [
+            "\\.fixed",
+            "plik\\w* z oczekiwan\\w* (wynikiem|poprawk|kodem)"
+          ],
+          [
+            "--autofix",
+            "--dryrun",
+            "przegląd\\w*",
+            "review"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "warianty-po-incydencie",
+      "expect": "no-trigger",
+      "neighbor": "sec-variant-analysis",
+      "prompt": "Pentester znalazł IDOR w jednym endpoincie: brak sprawdzenia właściciela zasobu. Naprawiliśmy go. Jak systematycznie znaleźć podobne błędy w pozostałych endpointach i repozytoriach firmy?"
+    },
+    {
+      "id": "wybor-sast-w-pipeline",
+      "expect": "no-trigger",
+      "neighbor": "sec-appsec-devsecops",
+      "prompt": "Budujemy program AppSec od zera: jakie skanery (SAST, SCA, DAST, sekrety) wpiąć w pipeline, na jakim etapie i jak ustalić progi blokowania merge?"
+    }
+  ]
+}
