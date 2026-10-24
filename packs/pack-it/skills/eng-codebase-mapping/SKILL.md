@@ -40,7 +40,8 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    wypunktowania bez dowodu i bez [założenie]/[niezweryfikowane]/[pytanie] są zgłaszane.
    `scripts/recon_scan.py <repo> --out <raw/>` — powyższe skany jednym poleceniem, wyniki JSON do plików, na ekran
    streszczenie (rekonstrukcja projektu). `scripts/recon_cards.py <modules/> --repo <repo>` — karty modułów (JSON) jako `modules/<moduł>.md` z dowodami,
-   które `recon_check` może sprawdzić; `--summary` daje szkic sekcji Moduły, `--rules` — `rules.md` z reguł kart, `--into report.md` wstawia sekcję Moduły.
+   które `recon_check` może sprawdzić; `--summary` daje szkic sekcji Moduły, `--rules` — `rules.md` z reguł kart, `--into report.md` wstawia sekcję Moduły, `--prev <stare karty>` przy
+   odświeżaniu wskazuje miejsca w dokumentacji ze znacznikami usuniętych lub zmienionych reguł.
    `scripts/recon_manifest.py write|diff <repo>` — partie i pliki z hashami; po zmianach mówi, które partie
    przeanalizować od nowa.
 1b. **Kontrybutorzy** (opcjonalnie, dla 3–5 stref ryzyka): `git_territory.py --authors <ścieżka>` — bez botów

@@ -146,6 +146,46 @@ def main() -> int:
         r = run("recon_cards.py", str(mods), "--into", str(rep), cwd=d)
         check(r.returncode == 1 and "brak sekcji" in r.stdout, f"C-16: raport bez sekcji Moduły: rc={r.returncode} {r.stdout[-200:]}")
 
+    # --prev: stare karty kontra nowe → miejsca w dokumentacji, które mogą opisywać stan sprzed zmiany
+    with tempfile.TemporaryDirectory() as d:
+        repo = Path(d)
+        rep = repo / "docs/project/00-reconstruction"
+        prev, mods = rep / "raw/cards-prev", rep / "modules"
+        old_owner = {"module": "owner", "rules": [
+            {"rule": "Telefon właściciela musi mieć dokładnie 10 cyfr.", "quote": "@Pattern(regexp", "evidence": "Owner.java:64"},
+            {"rule": "Nazwa zwierzaka jest wymagana.", "quote": "REQUIRED", "evidence": "PetValidator.java:44"}]}
+        new_owner = {"module": "owner", "rules": [
+            {"rule": "Telefon właściciela ma dokładnie 9 cyfr (zmiana: było 10).", "quote": '@Pattern(regexp = "\\d{9}")', "evidence": "Owner.java:64"},
+            {"rule": "Nazwa zwierzaka musi być podana.", "quote": "REQUIRED", "evidence": "PetValidator.java:44"}],
+            "unknowns": ["Brak testów dla formatu telefonu (10 cyfr)."]}
+        old_api = {"module": "api", "rules": [
+            {"rule": "Utworzenie pozycji o istniejącej nazwie kończy się DuplicateException i kodem 409.",
+             "quote": "throw new DuplicateException", "evidence": "Create.cs:47"},
+            {"rule": "Tworzenie pozycji wymaga roli administratora.", "quote": "Roles = Administrators", "evidence": "Create.cs:20"}]}
+        new_api = {"module": "api", "rules": [   # mapowanie w middleware zostaje — znaczniki 409 nadal są w karcie
+            {"rule": "Middleware mapuje DuplicateException na kod 409.", "quote": "HttpStatusCode.Conflict", "evidence": "Middleware.cs:37"},
+            {"rule": "Tworzenie pozycji katalogu wymaga roli administratora.", "quote": "Roles = Administrators", "evidence": "Create.cs:20"}]}
+        write(prev, {"owner.json": json.dumps(old_owner), "api.json": json.dumps(old_api)})
+        write(mods, {"owner.json": json.dumps(new_owner), "api.json": json.dumps(new_api)})
+        write(rep, {"requirements.md": "# Wymagania\n- Telefon: dokładnie 10 cyfr\n- Telefon: dokładnie 9 cyfr\n"
+                                       "- Lista weterynarzy: 10 na stronie\n- Duplikat nazwy przy tworzeniu → 409\n"
+                                       "- Brak uprawnień → 403\n- Ścieżka /owners/{ownerId}/pets/{petId} obsługuje formularz właściciela\n"
+                                       "- Telefon właściciela jest wymagany — `src/Owner.java:104` \"@NotBlank\"\n",
+                    "raw/notes.md": "- Telefon: 10 cyfr (surowe dane, pomijane)\n"})
+        r = run("recon_cards.py", str(mods), "--prev", str(prev), cwd=d)
+        out = r.stdout
+        owner_md = "modules/owner.md:"
+        check(r.returncode == 0 and "requirements.md:2" in out and "requirements.md:5" in out,
+              f"CR-1: stary telefon i usunięta reguła duplikatu wskazane: {out[-800:]}")
+        check(owner_md in out and "Brak testów dla formatu telefonu (10 cyfr)" in out,
+              f"CR-2: stary opis przepisany do nowej karty wskazany: {out[-800:]}")
+        check("requirements.md:3" not in out and "requirements.md:4" not in out and "requirements.md:6" not in out,
+              f"CR-3: aktualny stan i inne tematy nie są wskazane: {out[-800:]}")
+        check("raw/notes.md" not in out and "PetValidator" not in out.split("Do sprawdzenia")[-1].split("\n")[0],
+              f"CR-4: raw/ pominięte, reguła bez zmiany znaczników nie daje miejsc: {out[-800:]}")
+        check("Do sprawdzenia: 5 miejsc" in out and "modules/owner.md" in out and "modules/api.md" in out,
+              f"CR-5: liczba miejsc (z wzmianką „było 10” i mapowaniem w karcie api): {out[-600:]}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_cards")

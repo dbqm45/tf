@@ -147,6 +147,21 @@
    }
   },
   {
+   "id": "odswiezenie-usunieta-regula",
+   "expect": "trigger",
+   "prompt": "Odświeżyłem rekonstrukcję z kodu po zmianach: usunięto regułę odrzucania duplikatów nazw i zmieniono format telefonu z 10 na 9 cyfr. Karty modułów są nowe, ale w wymaganiach i w jednej karcie nadal zostały stare opisy. Jak przy odświeżaniu tanio znaleźć takie pozostałości? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["star\\w* kart\\w*", "poprzedni\\w* kart\\w*", "cards-prev", "--prev"],
+     ["porówn\\w*", "różnic\\w*", "diff"],
+     ["skrypt\\w*", "bez modelu", "recon_cards"],
+     ["usunięt\\w*", "zmienion\\w*"],
+     ["przejrz\\w*", "sprawdz\\w*", "popraw\\w*"]
+    ],
+    "none": ["przebuduj całą rekonstrukcję od zera"]
+   }
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",
