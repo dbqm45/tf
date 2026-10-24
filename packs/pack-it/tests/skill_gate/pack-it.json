@@ -184,7 +184,7 @@
   "offline": "2026-10-21"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "ef9a6f92ac00abab",
+  "fingerprint": "ba1e72c4ddd7f98c",
   "offline": "2026-10-24"
  },
  "eng-continuous-delivery": {
@@ -224,7 +224,7 @@
   "offline": "2026-10-20"
  },
  "eng-project-reconstruction": {
-  "fingerprint": "09498cfe82f724cd",
+  "fingerprint": "f5ffe2102a02066b",
   "offline": "2026-10-24"
  },
  "eng-refactor-planning": {

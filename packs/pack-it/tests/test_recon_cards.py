@@ -114,6 +114,38 @@ def main() -> int:
         rel = (mods / "rel.md").read_text(encoding="utf-8") if (mods / "rel.md").exists() else ""
         check("wprost — `api.py:4`" in rel, f"C-12: bez --repo dowody bez zmian: {rel}")
 
+        # --rules: rules.md obok katalogu modules/ z reguł wszystkich kart, pogrupowanych po module, z dowodami
+        r = run("recon_cards.py", str(mods), "--repo", str(repo), "--rules", cwd=d)
+        rules_md = mods.parent / "rules.md"
+        txt = rules_md.read_text(encoding="utf-8") if rules_md.exists() else ""
+        check(r.returncode == 0 and "## billing" in txt
+              and '- Faktura bez pozycji jest odrzucana. — `services/billing/service.py:5` "raise EmptyInvoice" (pewność: test)' in txt
+              and "(szczegóły: modules/billing.md)" in txt, f"C-13: rules.md z kart: {txt[:600]}")
+        r = run("recon_check.py", str(rules_md), "--repo", str(repo), "--json", cwd=d)
+        out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(r.returncode == 0 and out.get("bad") == [] and out.get("unsupported") == [], f"C-14: rules.md przechodzi recon_check: {r.stdout[-400:]}")
+
+        # --rules ponownie: sekcja „## Reguły przekrojowe” dopisana przez syntezę zostaje
+        with open(rules_md, "a", encoding="utf-8") as fh:
+            fh.write("\n## Reguły przekrojowe\n- [niezweryfikowane] Mapowanie błędów obejmuje cały system.\n")
+        r = run("recon_cards.py", str(mods), "--repo", str(repo), "--rules", cwd=d)
+        txt = rules_md.read_text(encoding="utf-8")
+        check(txt.count("## Reguły przekrojowe") == 1 and "Mapowanie błędów obejmuje cały system." in txt and "## billing" in txt,
+              f"C-17: --rules zachowuje reguły przekrojowe: {txt[-400:]}")
+
+        # --into: sekcja „## Moduły” raportu podmieniona na wpisy z kart (reszta raportu bez zmian)
+        rep = mods.parent / "report.md"
+        rep.write_text("# R\n## Stack\nx\n## Moduły\n- stary wpis\n## Domeny\ny\n", encoding="utf-8")
+        r = run("recon_cards.py", str(mods), "--repo", str(repo), "--into", str(rep), cwd=d)
+        txt = rep.read_text(encoding="utf-8")
+        mod_part = txt.split("## Moduły", 1)[-1].split("## Domeny")[0]
+        check(r.returncode == 0 and "stary wpis" not in txt and "- billing: Wystawia" in mod_part and "- vet:" in mod_part
+              and txt.startswith("# R\n## Stack\nx\n## Moduły\n") and txt.rstrip().endswith("## Domeny\ny"),
+              f"C-15: sekcja Moduły z kart: {txt[:700]}")
+        rep.write_text("# R\n## Stack\nx\n", encoding="utf-8")
+        r = run("recon_cards.py", str(mods), "--into", str(rep), cwd=d)
+        check(r.returncode == 1 and "brak sekcji" in r.stdout, f"C-16: raport bez sekcji Moduły: rc={r.returncode} {r.stdout[-200:]}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_cards")

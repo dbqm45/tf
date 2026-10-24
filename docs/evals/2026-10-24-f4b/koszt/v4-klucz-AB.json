@@ -1,0 +1,14 @@
+{
+ "go-clean-arch": {
+  "A": "tf",
+  "B": "maister"
+ },
+ "spring-petclinic": {
+  "A": "maister",
+  "B": "tf"
+ },
+ "eShopOnWeb": {
+  "A": "tf",
+  "B": "maister"
+ }
+}

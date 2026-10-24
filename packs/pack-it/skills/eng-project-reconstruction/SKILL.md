@@ -21,18 +21,25 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 0. **Zakres i budżet.** Commit HEAD, zakres (całość albo katalogi), budżet USD od człowieka. `repo_inventory.py
    <repo>` podaje tokeny i partie — szacunek kosztu (partie × cennik modelu kart) pokaż przed startem. Plan przebiegu
    z polami do odhaczenia w `docs/project/00-reconstruction/plan.md` — po przerwie wznawiasz od niego.
-1. **Spis bez modelu:** `repo_inventory.py` (języki, pliki budowania, wykluczenia, partie), `code_graph.py --json`
-   (moduły, wejścia, cykle), `git_territory.py --all` (hotspoty, współzmiany), `standards_scan.py --json`
-   (narzędzia i konwencje z udziałem), `schema_scan.py --json` (tabele, ograniczenia). Wyniki do `raw/`.
-2. **Karty modułów** — partia z `repo_inventory` = jedno zadanie dla wykonawcy na najtańszym modelu (Haiku),
-   równolegle. Prompt ze stałym początkiem (`references/prompt-karty.md`) i zmienną końcówką (lista plików partii) —
-   wspólny prefiks trafia w cache. Wynik: JSON wg `references/karta-modulu.json` w `modules/<moduł>.json`.
-   Po każdej partii `recon_cards.py modules/ --repo <repo>` (karta → `modules/<moduł>.md` bez modelu, dowody
-   względne wobec partii poprawione na ścieżki od korzenia), potem `recon_check.py modules/ --repo <repo>`; karta ze
-   złym dowodem wraca raz, potem eskalacja na mocniejszy model.
+1. **Spis bez modelu, jednym poleceniem:** `recon_scan.py <repo> --out docs/project/00-reconstruction/raw` —
+   inwentarz i partie, graf, historia, standardy z idiomami, schemat bazy do `raw/*.json`, na ekran streszczenie.
+   Czytasz streszczenie; po szczegóły sięgasz do konkretnego pliku JSON, nie uruchamiasz skanów osobno.
+2. **Karty modułów** — zawsze wykonawcy na najtańszym modelu (Haiku), także w małym repozytorium: partia
+   z `raw/inventory.json` = jedno zadanie, równolegle (drobne partie łącz po kilka w jedno zadanie). Główny model
+   nie czyta plików źródłowych partii; wykonawca zapisuje kartę do pliku i odpowiada jedną linią. Wszystkich
+   wykonawców uruchamiasz w jednej wiadomości, na pierwszym planie (bez pracy w tle), i czekasz na ich odpowiedzi —
+   nie odpytujesz katalogu `modules/` w pętli (każde sprawdzenie to tura z pełnym kontekstem). Prompt ze stałym
+   początkiem (`references/prompt-karty.md`) i zmienną końcówką (lista plików partii) — wspólny prefiks trafia
+   w cache. Wynik: JSON wg `references/karta-modulu.json` w `modules/<moduł>.json`.
+   Wykonawca sam przepuszcza swoją kartę przez `recon_cards.py` (karta → `modules/<moduł>.md`, dowody względne wobec
+   partii poprawione) i `recon_check.py` i poprawia złe dowody. Po wszystkich kartach `recon_check.py modules/ --repo
+   <repo>`; kartę ze złym dowodem zwracasz wykonawcy raz (nie poprawiasz jej sam), potem eskalacja na mocniejszy model.
 3. **Domeny i słownik** (mocniejszy model, wejście: karty + graf): subdomeny, konteksty, słownik termin → `plik:linia`,
    rozjazdy nazw kod ↔ biznes (ddd-legacy-modernization, ddd-strategic-analysis).
-4. **Wymagania i reguły:** z testów (nazwy, asercje), walidacji, endpointów i ograniczeń z `schema_scan`; każde
+4. **Wymagania i reguły:** `recon_cards.py modules/ --repo <repo> --rules` składa `rules.md` z reguł kart bez
+   modelu; reguły przekrojowe i ograniczenia ze `schema.json` dopisujesz pod nagłówkiem `## Reguły przekrojowe`
+   (ponowne składanie go zachowuje). Wymagania z testów (nazwy, asercje),
+   walidacji i endpointów z kart; każde
    z pewnością: `test` (jest test) / `kod` (tylko kod) / `do potwierdzenia`. Mapowanie (błąd → kod HTTP, lista błędów
    domenowych, wartości enuma) wypisujesz w całości, łącznie z przypadkiem domyślnym i kodem sukcesu.
 5. **Standardy:** sygnał z `standards_scan` (udział, przykłady, wyjątki) → reguła po obejrzeniu przykładów. Plik na
@@ -41,7 +48,8 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    kontrolery, agregaty), nie wobec wszystkich plików. Standard testów podaje z przykładem `plik:linia`: rodzaj testu
    na warstwę (np. test web, test repozytorium, integracyjny), bibliotekę dublerów, strukturę przypadków (podtesty,
    tabela, parametry), dane testowe (buildery, fixtures). Standard kodu: idiomy sygnatur, hermetyzacji i kontrolerów.
-6. **Raport** `report.md` wg `references/raport.md` (sekcja Moduły z `recon_cards.py modules/ --summary`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
+6. **Raport** `report.md` wg `references/raport.md`; sekcję Moduły wstawia `recon_cards.py modules/ --repo <repo>
+   --into report.md` (nie przepisujesz jej; szczegóły modułów są w `modules/*.md`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
    (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`.
 7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,
    wszystkie sekcje, twierdzenia bez dowodu oznaczone, tabela stacku z wymaganymi wierszami (z wersjami, CI, testami
@@ -65,6 +73,9 @@ także ze zmienionych testów), `recon_check --final` i `recon_manifest.py write
 zostają; w raporcie data i commit odświeżenia. Ponad połowa plików zmieniona → pełny przebieg (skrypt to podpowie).
 
 ## Zasady
+- **Kontekst głównego modelu jest drogi:** każda tura czyta go od nowa. Pełne wyniki zostają w plikach, model czyta
+  streszczenia i karty; pliki piszesz jednym zapisem, skrypty uruchamiasz jednym poleceniem. Kod źródłowy otwierasz
+  tylko, żeby sprawdzić konkretny dowód (fragment pliku, nie cały plik).
 - **Dowód albo oznaczenie** — bez wyjątków; cytat przy dowodzie musi się zgadzać z kodem (sprawdza `recon_check`).
 - **Czego nie widać, to nie istnieje w raporcie:** DI, refleksja, kolejki, wywołania HTTP między usługami, konfiguracja
   zewnętrzna → „Czego nie sprawdzono” i pytania do ludzi.

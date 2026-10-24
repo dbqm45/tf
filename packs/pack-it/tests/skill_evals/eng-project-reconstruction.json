@@ -132,6 +132,21 @@
    }
   },
   {
+   "id": "male-repo-koszt",
+   "expect": "trigger",
+   "prompt": "Rekonstrukcja małego repozytorium (ok. 5 tys. linii Javy) kosztowała 2 USD, bo główny model sam przeczytał wszystkie pliki i napisał karty, reguły i standardy. Jak to zrobić o połowę taniej, nie tracąc jakości raportu? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["haiku", "tańsz\\w* model", "wykonawc\\w*", "deleg\\w*"],
+     ["skrypt\\w*", "bez modelu", "deterministycz"],
+     ["nie czyta\\w*", "nie wczytuj", "streszczeni\\w*", "kontekst\\w*"],
+     ["kart\\w*"],
+     ["reguł\\w*", "rules\\.md"]
+    ],
+    "none": ["przejdź na droższy model", "wyłącz kontrol\\w* dowodów"]
+   }
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",

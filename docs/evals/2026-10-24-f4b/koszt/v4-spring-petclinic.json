@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "S1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md/build-and-ci.md: enforcer requireJavaVersion, toolchain 17",
+   "why_B": "report.md: Java 17 pom.xml:19, build.gradle:19; CLAUDE.draft: enforcer"
+  },
+  {
+   "id": "S2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: Spring Boot 4.1.0 + starters webmvc, data-jpa, thymeleaf, validation, cache, actuator",
+   "why_B": "report.md Stack: Spring Boot 4.1.0, wymienione startery"
+  },
+  {
+   "id": "S3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "spring-petclinic-conventions.md: H2 default, profile mysql/postgres, ddl-auto=none, db/*/schema.sql",
+   "why_B": "report.md/resources.md: H2 domyslnie, ddl-auto=none, skrypty SQL, profile"
+  },
+  {
+   "id": "S4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "build-and-ci.md: Maven+Gradle, mvnw -B verify, gradlew build; testing: Testcontainers, JaCoCo",
+   "why_B": "report.md: Maven+Gradle, CI komendy, JUnit5, Testcontainers, JaCoCo"
+  },
+  {
+   "id": "M1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md owner: klasy, kontrolery, PetValidator, PetTypeFormatter",
+   "why_B": "modules/owner.md, domain.md: encje i kontrolery owner"
+  },
+  {
+   "id": "M2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md vet: /vets.html HTML, /vets JSON, Vet, Vets, Specialty (bez wzmianki o ManyToMany)",
+   "why_B": "modules/vet.md: /vets.html, /vets JSON Vets, relacja M:N vet_specialties"
+  },
+  {
+   "id": "M3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md model: BaseEntity, NamedEntity, Person; conventions: MappedSuperclass, Integer IDENTITY",
+   "why_B": "modules/model.md: BaseEntity (id IDENTITY, isNew), NamedEntity, Person"
+  },
+  {
+   "id": "M4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md system: CacheConfiguration vets, WebConfiguration ?lang=, CrashController /oups",
+   "why_B": "modules/system.md: cache vets, SessionLocaleResolver, ?lang=, /oups"
+  },
+  {
+   "id": "R1",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "validation.md tylko ogolniki; brak regex 10 cyfr",
+   "why_B": "requirements.md/report.md: telefon dokladnie 10 cyfr, adres<=255, miasto<=80 (Owner.java:63-64)"
+  },
+  {
+   "id": "R2",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak limitu 30 znakow dla Person",
+   "why_B": "rules.md/model.md: imie i nazwisko niepuste, max 30 (Person.java:32,37)"
+  },
+  {
+   "id": "R3",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "conventions: PetValidator jako Validator dla regul miedzypolowych, bez szczegolow",
+   "why_B": "rules.md/requirements.md: imie<=30, wymagane, rodzaj dla nowego, data urodzenia (PetValidator:43)"
+  },
+  {
+   "id": "R4",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "architecture.md: pets unique owner_id+name; brak duplicate/case-insensitive/daty z przyszlosci",
+   "why_B": "requirements.md/report.md: unikalnosc imienia, unique_owner_pet_name, data nie z przyszlosci (PetController:111,116)"
+  },
+  {
+   "id": "R5",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak regul wizyty (data > dzis, opis)",
+   "why_B": "requirements.md: data pozniejsza niz dzis, domyslnie jutro (Visit:51), opis<=255"
+  },
+  {
+   "id": "C1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "build-and-ci.md, project-formatting: spring-javaformat validate, nohttp checkstyle, .editorconfig tabs",
+   "why_B": "standards/kod.md: EditorConfig+spring-javaformat+checkstyle nohttp (pom.xml:207)"
+  },
+  {
+   "id": "C2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: konstruktor, pola final, 0 @Autowired, kontrolery package-private",
+   "why_B": "standards/kod.md: konstruktor 4/4, zero @Autowired w main"
+  },
+  {
+   "id": "C3",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "conventions: Package by Feature owner/vet/model/system",
+   "why_B": "domain.md: moduly = pakiety; brak jawnego sformulowania package-by-feature jako standardu"
+  },
+  {
+   "id": "C4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: @InitBinder setDisallowedFields, @ModelAttribute, PRG z flash",
+   "why_B": "kod.md: setDisallowedFields(id,*.id), @ModelAttribute, PRG"
+  },
+  {
+   "id": "C5",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "testing: @WebMvcTest+@MockitoBean, @DataJpaTest, Testcontainers, @DisabledInNativeImage",
+   "why_B": "testy.md: tabela warstw, @MockitoBean, @DataJpaTest, @DisabledInNativeImage"
+  },
+  {
+   "id": "O1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md/roadmap/conventions: exposure.include=* tylko dev",
+   "why_B": "report.md Ryzyka: aktuator include=*, komentarz nie na produkcje"
+  },
+  {
+   "id": "O2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture/conventions: PetClinicRuntimeHints native, I18nPropertiesSyncTest, 11 locale",
+   "why_B": "petclinic.md: hints (db/*, messages/*, serializacja BaseEntity/Person/Vet); system.md: I18nPropertiesSyncTest; bez liczby jezykow"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "Postgres credentials via POSTGRES_URL/USER/PASS",
+    "verdict": "prawda",
+    "code": "application-postgres.properties:3-5"
+   },
+   {
+    "claim": "gradle-build.yml uses a Maven cache",
+    "verdict": "prawda",
+    "code": ".github/workflows/gradle-build.yml:27 cache: maven"
+   },
+   {
+    "claim": "deploy-and-test-cluster.yml uses actions/checkout@v2",
+    "verdict": "prawda",
+    "code": ".github/workflows/deploy-and-test-cluster.yml:18"
+   },
+   {
+    "claim": "page size 5 hard-coded in OwnerController and VetController",
+    "verdict": "prawda",
+    "code": "OwnerController.java:142; VetController.java:66"
+   },
+   {
+    "claim": "OwnerRepository declares redundant findById (JpaRepository provides it)",
+    "verdict": "prawda",
+    "code": "OwnerRepository.java:36,60"
+   },
+   {
+    "claim": "k8s probes /livez and /readyz",
+    "verdict": "prawda",
+    "code": "k8s/petclinic.yml:49,53"
+   },
+   {
+    "claim": "0 @Autowired in main code",
+    "verdict": "prawda",
+    "code": "grep @Autowired src/main -> 0"
+   },
+   {
+    "claim": "All 48 of 48 Java files have the 2012-2025 license header",
+    "verdict": "fałsz",
+    "code": "src has 50 .java files (30 main+20 test); only 46 contain 'Copyright 2012-2025'"
+   },
+   {
+    "claim": "docker-compose supplies MySQL 9.7 and PostgreSQL 18.4",
+    "verdict": "prawda",
+    "code": "docker-compose.yml:3,15"
+   },
+   {
+    "claim": "devcontainer uses JDK 21 while baseline is 17",
+    "verdict": "prawda",
+    "code": ".devcontainer/devcontainer.json:6; pom.xml:19"
+   }
+  ],
+  "B": [
+   {
+    "claim": "VetRepository reads cached under name 'vets' with @Cacheable",
+    "verdict": "prawda",
+    "code": "VetRepository.java:45"
+   },
+   {
+    "claim": "gradle-build.yml uses cache: maven",
+    "verdict": "prawda",
+    "code": "gradle-build.yml:27"
+   },
+   {
+    "claim": "No JaCoCo in Gradle build",
+    "verdict": "prawda",
+    "code": "build.gradle (grep jacoco: 0); pom.xml:32,277"
+   },
+   {
+    "claim": "Phone: entity 10 digits but H2 column VARCHAR(20)",
+    "verdict": "prawda",
+    "code": "db/h2/schema.sql:42; Owner.java:63-64"
+   },
+   {
+    "claim": "New Visit defaults to tomorrow",
+    "verdict": "prawda",
+    "code": "Visit.java:51 LocalDate.now().plusDays(1)"
+   },
+   {
+    "claim": "MySQL profile sets sql.init.mode=always",
+    "verdict": "prawda",
+    "code": "application-mysql.properties:7 (B cites :6, off by one)"
+   },
+   {
+    "claim": "H2 seed rows: owners 10, pets 13, visits 4",
+    "verdict": "prawda",
+    "code": "db/h2/data.sql INSERT counts"
+   },
+   {
+    "claim": "messages_en.properties skipped in I18nPropertiesSyncTest",
+    "verdict": "prawda",
+    "code": "I18nPropertiesSyncTest.java:119"
+   },
+   {
+    "claim": "Person firstName/lastName required, max 30",
+    "verdict": "prawda",
+    "code": "Person.java:30-39"
+   },
+   {
+    "claim": "AssertJ assertThat in 9 of 20 test files",
+    "verdict": "fałsz",
+    "code": "grep -l assertThat src/test -> 10 files (of 20)"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 15,
+   "częściowo": 2,
+   "nie": 3,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 19,
+   "częściowo": 1,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  }
+ }
+}

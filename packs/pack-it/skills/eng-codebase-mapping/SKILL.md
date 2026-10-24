@@ -38,8 +38,9 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    JPA i EF Core z `plik:linia` (ograniczenia = kandydaci na reguły). Raport z dowodami sprawdza
    `scripts/recon_check.py <raport.md> --repo <repo>`: plik i linia istnieją, cytat zgadza się z kodem (±2 linie),
    wypunktowania bez dowodu i bez [założenie]/[niezweryfikowane]/[pytanie] są zgłaszane.
-   `scripts/recon_cards.py <modules/> --repo <repo>` — karty modułów (JSON) jako `modules/<moduł>.md` z dowodami,
-   które `recon_check` może sprawdzić; `--summary` daje szkic sekcji Moduły.
+   `scripts/recon_scan.py <repo> --out <raw/>` — powyższe skany jednym poleceniem, wyniki JSON do plików, na ekran
+   streszczenie (rekonstrukcja projektu). `scripts/recon_cards.py <modules/> --repo <repo>` — karty modułów (JSON) jako `modules/<moduł>.md` z dowodami,
+   które `recon_check` może sprawdzić; `--summary` daje szkic sekcji Moduły, `--rules` — `rules.md` z reguł kart, `--into report.md` wstawia sekcję Moduły.
    `scripts/recon_manifest.py write|diff <repo>` — partie i pliki z hashami; po zmianach mówi, które partie
    przeanalizować od nowa.
 1b. **Kontrybutorzy** (opcjonalnie, dla 3–5 stref ryzyka): `git_territory.py --authors <ścieżka>` — bez botów
