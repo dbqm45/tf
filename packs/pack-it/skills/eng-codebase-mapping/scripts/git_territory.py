@@ -7,6 +7,7 @@ Terytorium kodu z historii gita — co się zmienia, co zmienia się razem, kto 
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --cochange --max-files 30 --json
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --authors src/billing
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --hotspots --top 20
+  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --bus-factor --since 24.months
 
 Sekcje:
 - zawsze: ranking katalogów (na głębokości --depth) i plików wg liczby commitów; pliki, których już nie ma
@@ -16,7 +17,11 @@ Sekcje:
   bo masowy refaktor skleja niezwiązane pliki) oraz huby — pliki zmieniane razem z wieloma obszarami;
 - --authors <ścieżka>: kontrybutorzy obszaru bez botów i bez commitów, których autorem jest agent AI
   (commit człowieka z trailerem Co-Authored-By agenta zostaje); wypisuje tylko nazwę autora, bez e-maili;
-- --hotspots: zmiany × linie niepuste (proxy złożoności) dla bieżących plików, plus maks. głębokość wcięć.
+- --hotspots: zmiany × linie niepuste (proxy złożoności) dla bieżących plików, plus maks. głębokość wcięć;
+- --bus-factor: ryzyko „jednej osoby” per katalog (głębokość --depth, obszary z ≥ --min-commits commitami ludzi):
+  bus factor = najmniej osób, które razem mają ponad 50% commitów obszaru; aktywni = osoby z commitem w obszarze
+  w ostatnich --active-days dniach przed datą HEAD. Ryzyko: krytyczne (nikt aktywny), wysokie (bus factor 1),
+  umiarkowane (2), niskie (≥ 3). Bez botów i agentów AI, tylko nazwy autorów; nie wchodzi do --all.
 Szum odfiltrowany domyślnie: lockfile'e, snapshoty, dist/build, pliki generowane i zminifikowane, tłumaczenia,
 .env*. Własne wzorce: --exclude <regex> (wiele razy). Commity botów (dependabot, renovate, github-actions, „[bot]”)
 nie wchodzą do żadnej sekcji; commity agentów AI wchodzą do terytorium, ale nie do listy kontrybutorów.
@@ -32,6 +37,7 @@ import re
 import subprocess
 import sys
 from collections import Counter, defaultdict
+from datetime import datetime, timedelta
 from itertools import combinations
 from pathlib import Path
 
@@ -113,6 +119,39 @@ def complexity(path: Path) -> tuple[int, int] | None:
     return len(lines), depth
 
 
+RISK_ORDER = {"krytyczne": 0, "wysokie": 1, "umiarkowane": 2, "niskie": 3}
+
+
+def bus_factor(commits: list[dict], depth: int, min_commits: int, active_days: int, head_date: str) -> list[dict]:
+    since_active = datetime.fromisoformat(head_date) - timedelta(days=active_days)
+    areas = defaultdict(lambda: defaultdict(lambda: {"commits": 0, "last": None}))
+    for cm in commits:
+        if cm["agent"]:
+            continue
+        when = datetime.fromisoformat(cm["date"])
+        for d in {dir_of(f, depth) for f in cm["files"]}:
+            p = areas[d][cm["name"]]
+            p["commits"] += 1
+            p["last"] = max(p["last"] or when, when)
+    out = []
+    for d, people in areas.items():
+        total = sum(p["commits"] for p in people.values())
+        if total < min_commits:
+            continue
+        ranked = sorted(people.items(), key=lambda kv: (-kv[1]["commits"], kv[0]))
+        covered, bf = 0, 0
+        for _, p in ranked:
+            covered += p["commits"]
+            bf += 1
+            if covered * 2 > total:
+                break
+        active = sum(p["last"] >= since_active for p in people.values())
+        risk = "krytyczne" if not active else "wysokie" if bf == 1 else "umiarkowane" if bf == 2 else "niskie"
+        out.append({"path": d, "commits": total, "people": len(people), "bus_factor": bf, "top_author": ranked[0][0],
+                    "top_share": round(ranked[0][1]["commits"] / total, 2), "active": active, "risk": risk})
+    return sorted(out, key=lambda x: (RISK_ORDER[x["risk"]], -x["commits"], x["path"]))
+
+
 def analyse(a) -> dict:
     repo = Path(a.repo).resolve()
     extra = [re.compile(x) for x in a.exclude]
@@ -166,6 +205,9 @@ def analyse(a) -> dict:
             p["last"] = max(p["last"], cm["date"][:10])
         res["authors_path"] = a.authors
         res["authors"] = [{"name": n, **v} for n, v in sorted(people.items(), key=lambda kv: (-kv[1]["commits"], kv[0]))]
+    if a.bus_factor:
+        res["bus_factor"] = {"min_commits": a.min_commits, "active_days": a.active_days,
+                             "areas": bus_factor(commits, a.depth, a.min_commits, a.active_days, head_date)[:a.top]}
     if a.hotspots or a.all:
         hot = []
         for f, n in file_c.items():
@@ -209,6 +251,13 @@ def to_text(r: dict) -> str:
     if "authors" in r:
         out += ["", f"## Kontrybutorzy `{r['authors_path']}` (bez botów i agentów; kogo zapytać, nie właściciele)"]
         out += table(["autor", "commity", "ostatnio"], [[x["name"], x["commits"], x["last"]] for x in r["authors"]])
+    if "bus_factor" in r:
+        bf = r["bus_factor"]
+        out += ["", f"## Bus factor (obszary z ≥ {bf['min_commits']} commitami ludzi; aktywni: commit w ostatnich "
+                    f"{bf['active_days']} dniach przed HEAD; bus factor = najmniej osób z > 50% commitów)"]
+        out += table(["obszar", "commity", "osoby", "bus factor", "główny autor", "udział", "aktywni", "ryzyko"],
+                     [[f"`{x['path']}`", x["commits"], x["people"], x["bus_factor"], x["top_author"], x["top_share"],
+                       x["active"], x["risk"]] for x in bf["areas"]])
     if "hotspots" in r:
         out += ["", "## Hotspoty (zmiany × linie niepuste)"]
         out += table(["plik", "commity", "linie", "maks. wcięcie", "wynik"],
@@ -229,7 +278,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--max-files", type=int, default=30, help="pomijaj commity z większą liczbą plików przy współzmianach")
     ap.add_argument("--authors", metavar="ŚCIEŻKA", help="kontrybutorzy obszaru (bez botów i agentów AI)")
     ap.add_argument("--hotspots", action="store_true", help="hotspoty: zmiany × linie niepuste")
-    ap.add_argument("--all", action="store_true", help="wszystkie sekcje poza --authors")
+    ap.add_argument("--bus-factor", action="store_true", help="ryzyko jednej osoby per katalog (bez botów i agentów AI)")
+    ap.add_argument("--min-commits", type=int, default=5, help="z --bus-factor: minimum commitów ludzi w obszarze (domyślnie 5)")
+    ap.add_argument("--active-days", type=int, default=90, help="z --bus-factor: okno aktywności przed datą HEAD (domyślnie 90)")
+    ap.add_argument("--all", action="store_true", help="wszystkie sekcje poza --authors i --bus-factor")
     ap.add_argument("--json", action="store_true", help="wynik w JSON")
     a = ap.parse_args(argv)
     try:

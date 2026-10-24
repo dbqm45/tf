@@ -3,8 +3,8 @@ name: eng-codebase-mapping
 description: Użyj przy nieznanym kodzie i ocenie wpływu zmiany — punkty wejścia, warstwy z importów, węzły centralne, cykle.
 metadata:
   przeglad: 2027-10-09
-  katalog: "Użyj, gdy trzeba zrozumieć nieznany kod lub ocenić wpływ zmiany — punkty wejścia, warstwy z grafu importów, węzły centralne i cykle runtime vs leniwe (scripts/code_graph.py dla Pythona, TS/JS, Javy, C# i Go), terytorium z historii gita (zmiany w czasie, współzmiany, kontrybutorzy, hotspoty — scripts/git_territory.py), legenda modułów, trasa czytania dla nowej osoby, wpływ diffu (1 krok w górę i w dół, warstwy, ryzyko), pewność krawędzi, analiza jednego przepływu i badanie kodu pod zmianę (research.md). Nie do oceny długu (eng-tech-debt-audit), wyboru refaktoryzacji (eng-refactor-planning) ani projektowania granic (ddd-strategic-analysis)."
-  slowa: "graf importów bez narzędzi, cykle importów, nieznane repo, mapa kodu, mapa repo, od czego zacząć czytać, punkty wejścia, graf zależności, historia gita, co się najczęściej zmienia, współzmiany, kto zmieniał, kogo zapytać, hotspoty, analiza przepływu, jak działa ten feature, research przed zmianą, wpływ zmiany"
+  katalog: "Użyj, gdy trzeba zrozumieć nieznany kod lub ocenić wpływ zmiany — punkty wejścia, warstwy z grafu importów, węzły centralne i cykle runtime vs leniwe (scripts/code_graph.py dla Pythona, TS/JS, Javy, C# i Go), terytorium z historii gita (zmiany w czasie, współzmiany, kontrybutorzy, bus factor, hotspoty — scripts/git_territory.py), legenda modułów, trasa czytania dla nowej osoby, wpływ diffu (1 krok w górę i w dół, warstwy, ryzyko), pewność krawędzi, analiza jednego przepływu i badanie kodu pod zmianę (research.md). Nie do oceny długu (eng-tech-debt-audit), wyboru refaktoryzacji (eng-refactor-planning) ani projektowania granic (ddd-strategic-analysis)."
+  slowa: "graf importów bez narzędzi, cykle importów, nieznane repo, mapa kodu, mapa repo, od czego zacząć czytać, punkty wejścia, graf zależności, historia gita, co się najczęściej zmienia, współzmiany, kto zmieniał, kogo zapytać, bus factor, ryzyko jednej osoby, hotspoty, analiza przepływu, jak działa ten feature, research przed zmianą, wpływ zmiany"
 ---
 
 # Mapa kodu
@@ -42,8 +42,10 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    przeanalizować od nowa.
 1b. **Kontrybutorzy** (opcjonalnie, dla 3–5 stref ryzyka): `git_territory.py --authors <ścieżka>` — bez botów
    i commitów, których autorem jest agent AI. To lista „kogo zapytać, które PR-y przeczytać”, nie właściciele: nie
-   mówi, kto nadal pracuje ani czy tamte decyzje są aktualne. Wiedza w jednej osobie = ryzyko na mapie. W mapie
-   tylko login lub inicjały i obszar, bez ocen ludzi.
+   mówi, kto nadal pracuje ani czy tamte decyzje są aktualne. Wiedza w jednej osobie = ryzyko na mapie: wszystkie
+   obszary naraz pokazuje `git_territory.py --bus-factor` (najmniej osób z > 50% commitów, aktywni w 90 dniach przed
+   HEAD; „krytyczne” = nikt aktywny, „wysokie” = jedna osoba). W zespole jednoosobowym wszędzie wyjdzie 1 — to fakt,
+   nie wniosek. W mapie tylko login lub inicjały i obszar, bez ocen ludzi.
 2. **Graf zależności z narzędzi**, nie z czytania:
    - Nx: `nx graph --file=graph.json` (projekty i zależności), granice modułów z tagów (tool-nx);
    - TS/JS: `madge --json` / `madge --circular`, dependency-cruiser (`--collapse`, `--focus`, `--reaches`, `--metrics`);

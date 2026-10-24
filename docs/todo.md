@@ -366,5 +366,5 @@ Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
   i ustalenia projektu (core-skill-authoring, krok 1); `ai-agents` ma dziś tylko projekt narzędzi i zaufanie.
 - [ ] **7. Techniczne SEO** (Addy Osmani `seo`): indeksowanie, dane strukturalne, sitemap, canonical, meta; dla
   projektów z publicznymi stronami (Core Web Vitals i dostępność już są).
-- [ ] **8. Bus factor w mapie własności** (`openai/security-ownership-map`): ryzyko „jednej osoby” per obszar
+- [x] **8. Bus factor w mapie własności** (zrobione 2026-10-24: `git_territory.py --bus-factor` z `--min-commits` i `--active-days`, 9 nowych testów) (`openai/security-ownership-map`): ryzyko „jednej osoby” per obszar
   w `git_territory.py --authors` (`eng-codebase-mapping`), TDD.
