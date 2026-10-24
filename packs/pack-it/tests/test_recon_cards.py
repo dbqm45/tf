@@ -114,6 +114,17 @@ def main() -> int:
         rel = (mods / "rel.md").read_text(encoding="utf-8") if (mods / "rel.md").exists() else ""
         check("wprost — `api.py:4`" in rel, f"C-12: bez --repo dowody bez zmian: {rel}")
 
+        # --rules: rules.md obok katalogu modules/ z reguł wszystkich kart, pogrupowanych po module, z dowodami
+        r = run("recon_cards.py", str(mods), "--repo", str(repo), "--rules", cwd=d)
+        rules_md = mods.parent / "rules.md"
+        txt = rules_md.read_text(encoding="utf-8") if rules_md.exists() else ""
+        check(r.returncode == 0 and "## billing" in txt
+              and '- Faktura bez pozycji jest odrzucana. — `services/billing/service.py:5` "raise EmptyInvoice" (pewność: test)' in txt
+              and "(szczegóły: modules/billing.md)" in txt, f"C-13: rules.md z kart: {txt[:600]}")
+        r = run("recon_check.py", str(rules_md), "--repo", str(repo), "--json", cwd=d)
+        out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(r.returncode == 0 and out.get("bad") == [] and out.get("unsupported") == [], f"C-14: rules.md przechodzi recon_check: {r.stdout[-400:]}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_cards")

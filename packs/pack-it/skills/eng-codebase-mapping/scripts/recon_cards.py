@@ -7,6 +7,7 @@ dokumentacji, nie tylko do JSON. Pierwsza linia .md to skrót treści karty — 
   python3 recon_cards.py docs/project/00-reconstruction/modules            # zapisuje .md obok kart
   python3 recon_cards.py docs/project/00-reconstruction/modules --summary  # + propozycja sekcji „Moduły” raportu
   python3 recon_cards.py <modules/> --repo <repo>   # dowody ze ścieżką względną wobec partii → ścieżka od korzenia
+  python3 recon_cards.py <modules/> --rules         # + rules.md obok modules/: reguły z kart pogrupowane po module
 
 Z --repo: gdy pliku z dowodu nie ma od korzenia repo, a w katalogu partii (pole `batch`) jest dokładnie jeden plik
 o tej końcówce ścieżki, dowód dostaje pełną ścieżkę. Dwuznaczne zostają bez zmian (zgłosi je recon_check.py).
@@ -58,6 +59,13 @@ def quote(q: str) -> str:
     return f"„{q}”" if '"' in q else f'"{q}"'
 
 
+def rule_line(i: dict, fix) -> str:
+    line = f"- {i.get('rule', '?')} {ev(i, fix)}"
+    if i.get("evidence") and i.get("quote"):
+        line += f" {quote(str(i['quote']))}"
+    return line + (f" (pewność: {i['confidence']})" if i.get("confidence") else "")
+
+
 def render(stem: str, card: dict, digest: str, repo: str | None = None) -> str:
     fix = resolver(repo, str(card.get("batch") or ""))
     out = [f"<!-- karta: modules/{stem}.json sha256:{digest} -->", f"# {card.get('module') or stem}", ""]
@@ -73,13 +81,7 @@ def render(stem: str, card: dict, digest: str, repo: str | None = None) -> str:
     section("Zależności", card.get("depends_on"), lambda i: f"- {i.get('module', '?')} {ev(i, fix)}")
     section("Dane", card.get("data"), lambda i: f"- {i.get('table', '?')} ({i.get('access', '?')}) {ev(i, fix)}")
 
-    def rule(i: dict) -> str:
-        line = f"- {i.get('rule', '?')} {ev(i, fix)}"
-        if i.get("evidence") and i.get("quote"):
-            line += f" {quote(str(i['quote']))}"
-        return line + (f" (pewność: {i['confidence']})" if i.get("confidence") else "")
-
-    section("Reguły", card.get("rules"), rule)
+    section("Reguły", card.get("rules"), lambda i: rule_line(i, fix))
     section("Pojęcia", card.get("terms"), lambda i: f"- {i.get('term', '?')} → {i.get('code_name', '?')} {ev(i, fix)}")
     section("Odstępstwa", card.get("deviations"), lambda i: f"- {i.get('what', '?')} {ev(i, fix)}")
     unknowns = [f"- [niezweryfikowane] {REF_IN_TEXT.sub(lambda m: fix(m.group(1)), str(u))}"
@@ -117,7 +119,7 @@ def main(argv: list[str]) -> int:
     if len(paths) != 1 or not os.path.isdir(paths[0]) or (repo is not None and not os.path.isdir(repo)):
         print(f"✗ podaj katalog kart modules/ (jest: {paths})", file=sys.stderr)
         return 2
-    d, rc, written, lines = paths[0], 0, 0, []
+    d, rc, written, lines, rules = paths[0], 0, 0, [], []
     for f in sorted(os.listdir(d)):
         if not f.endswith(".json"):
             continue
@@ -144,7 +146,16 @@ def main(argv: list[str]) -> int:
                 fh.write(text)
             written += 1
         lines.append(summary(stem, card, repo))
+        fix = resolver(repo, str(card.get("batch") or ""))
+        items = [rule_line(i, fix) for i in card.get("rules") or [] if isinstance(i, dict)]
+        if items:
+            rules += ["", f"## {card.get('module') or stem} (szczegóły: modules/{stem}.md)", *items]
     print(f"{'✓' if rc == 0 else '✗'} karty → .md: {len(lines)}, zapisane od nowa: {written}")
+    if "--rules" in argv:
+        head = ["# Reguły z kart modułów",
+                "Złożone skryptem z `modules/*.json`; reguły przekrojowe i mapowania dopisuje synteza poniżej."]
+        with open(os.path.join(os.path.dirname(os.path.abspath(d)), "rules.md"), "w", encoding="utf-8") as fh:
+            fh.write("\n".join(head + rules) + "\n")
     if "--summary" in argv:
         print("\n## Moduły (propozycja do raportu)")
         print("\n".join(lines))
