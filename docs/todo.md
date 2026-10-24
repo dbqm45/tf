@@ -308,7 +308,9 @@ Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy sk
 Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4). Zakres teraz: tylko kod; bez PHP.
 - [ ] F0–F5 wg planu — zrobione F0–F3 i F5; F4 część A (ewaluacja skilla na Haiku, 1,48 USD, 10/10 ze skillem, treść bez skilli 3/6) zrobiona 2026-10-24 — `docs/evals/2026-10-24-f4-rekonstrukcja-haiku.md`; część B (benchmark vs maister na 3 repozytoriach, 10,55 USD) zrobiona 2026-10-24 — `docs/evals/2026-10-24-f4-benchmark-maister.md`: pokrycie ważone 85% vs 80%, poprawność 96% vs 90%, koszt 68% maistera (cel ≤ 50% niespełniony).
 - [x] **Po F4:** w `eng-project-reconstruction` obowiązkowa tabela stacku (wersje, profile, CI, testy) i lista modułów z odpowiedzialnością (luka 9/12 i 9,5/12 wobec 12/12 maistera) + scenariusz ewaluacji — `recon_check.py --final` wymusza wiersze tabeli i wpis każdego modułu z kart (2026-10-24).
-- [ ] **Po F4:** obniżenie kosztu rekonstrukcji (cel ≤ 50% maistera); powtórka testu odświeżenia ze zmianą w logice; ponowny pomiar stacku i modułów.
+- [x] **Po F4:** ponowny pomiar stacku i modułów — `docs/evals/2026-10-24-f4-benchmark-v2.md`: stack 9→11/12, moduły 9,5→10/12, pokrycie 86%, poprawność 97% (2026-10-24).
+- [ ] **Po F4 v2:** w sekcji Moduły kluczowe elementy z karty (klasa wejściowa, trasy, encje i relacje) albo `modules/<moduł>.md` generowane z kart; ostrzeżenie `recon_check --final`, gdy wiersz CI mówi o braku CI, a w repo są pliki pipeline'u.
+- [ ] **Po F4:** obniżenie kosztu rekonstrukcji (cel ≤ 50% maistera, teraz 68–72%); powtórka testu odświeżenia ze zmianą w logice.
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
 
 ## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23

@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "E1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A tech-stack.md: .NET SDK 8.0.x global.json, net8.0 w Directory.Packages.props",
+   "why_B": "B report.md Stack: net8.0, SDK 8.0.x, global.json:3"
+  },
+  {
+   "id": "E2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A tech-stack.md: MVC/Razor Pages, Blazor WASM, PublicApi, MinimalApi.Endpoint",
+   "why_B": "B report.md: MVC+Razor Pages w Web, minimalne endpointy PublicApi, Blazor WASM"
+  },
+  {
+   "id": "E3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A: EF Core 8, UseOnlyInMemoryDatabase, CatalogContext i AppIdentityDbContext",
+   "why_B": "B: EF Core 8.0.2, flaga UseOnlyInMemoryDatabase, dwa konteksty, Identity"
+  },
+  {
+   "id": "E4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A dotnet-testing.md: xUnit 2.7.0, NSubstitute, 4 warstwy, WebApplicationFactory",
+   "why_B": "B: xUnit 2.7.0 + NSubstitute, 4 projekty, WebApplicationFactory (testing.md)"
+  },
+  {
+   "id": "E5",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A architecture.md: ApplicationCore, BasketService, OrderService, IAggregateRoot",
+   "why_B": "B report.md Moduły: agregaty, usługi, specyfikacje, wyjątki"
+  },
+  {
+   "id": "E6",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A architecture.md: EfRepository, konfiguracje, migracje, Identity (bez stubu EmailSender/LoggerAdapter, ale sedno podane)",
+   "why_B": "B: EfRepository, EmailSender atrapa, LoggerAdapter"
+  },
+  {
+   "id": "E7",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A: Web host MVC/Razor/Blazor, ConfigureWebServices/ConfigureCoreServices",
+   "why_B": "B: Pages/Basket checkout, ConfigureCoreServices w data-access.md"
+  },
+  {
+   "id": "E8",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A: PublicApi CRUD + JWT, BlazorAdmin, BlazorShared",
+   "why_B": "B: PublicApi, BlazorAdmin, BlazorShared opisane"
+  },
+  {
+   "id": "E9",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "A: brak reguł domenowych koszyka",
+   "why_B": "B requirements.md/rules.md: ponowne dodanie zwiększa ilość, cena z pierwszego dodania"
+  },
+  {
+   "id": "E10",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "A: brak",
+   "why_B": "B rules.md: ilość nie ujemna (OutOfRange), pozycje o ilości 0 usuwane"
+  },
+  {
+   "id": "E11",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "A: brak",
+   "why_B": "B rules.md: EmptyBasketOnCheckout, Checkout.cshtml.cs:60 przekierowanie"
+  },
+  {
+   "id": "E12",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "A: brak",
+   "why_B": "B rules.md: Order NullOrEmpty buyerId, CatalogItem cena>0, nazwa/opis niepuste"
+  },
+  {
+   "id": "E13",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "A wspomina tylko ExceptionMiddleware i atomowość sprawdzania duplikatu; brak 409/DuplicateException/Administrators",
+   "why_B": "B rules.md: DuplicateException -> 409, rola administratora"
+  },
+  {
+   "id": "E14",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A dotnet-architecture.md: IRepository/Specification, IAggregateRoot, EfRepository",
+   "why_B": "B data-access.md: IRepository ograniczone do IAggregateRoot, EfRepository, specyfikacje"
+  },
+  {
+   "id": "E15",
+   "A": "nie",
+   "B": "częściowo",
+   "why_A": "A: brak enkapsulacji kolekcji/PropertyAccessMode",
+   "why_B": "B CLAUDE.draft: prywatne kolekcje, bez publicznych setterów; brak AsReadOnly/PropertyAccessMode"
+  },
+  {
+   "id": "E16",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A: Ardalis.GuardClauses, GuardExtensions.cs",
+   "why_B": "B errors.md: Guard.Against, GuardExtensions"
+  },
+  {
+   "id": "E17",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "A: DI przez metody rozszerzające, Scoped/Transient/Singleton ogólnie; brak IAppLogger",
+   "why_B": "B: otwarte generyki ConfigureCoreServices, IAppLogger<T> + LoggerAdapter (logging.md)"
+  },
+  {
+   "id": "E18",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "A test-writing/dotnet-testing: folder na klasę, nazwy zachowań, Substitute.For, buildery",
+   "why_B": "B testing.md: nazwy zachowań, klasa na zachowanie; brak Substitute.For i builderów"
+  },
+  {
+   "id": "E19",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A architecture/roadmap: zahardkodowany klucz JWT, token 7 dni",
+   "why_B": "B Ryzyka: AuthorizationConstants (klucz, hasło), token 7 dni"
+  },
+  {
+   "id": "E20",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "A: brak adresu, stubu e-mail i koszyka z ciasteczkiem",
+   "why_B": "B: adres w checkoucie, EmailSender atrapa, ciasteczko GUID i transfer koszyka"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "ApplicationCore referencjonuje BlazorShared (sprzężenie)",
+    "verdict": "prawda",
+    "code": "src/ApplicationCore/ApplicationCore.csproj:17"
+   },
+   {
+    "claim": "docker-compose: web na 5106, API na 5200",
+    "verdict": "prawda",
+    "code": "docker-compose.override.yml:8,17"
+   },
+   {
+    "claim": "azure.yaml definiuje tylko usługę web",
+    "verdict": "prawda",
+    "code": "azure.yaml:4-8"
+   },
+   {
+    "claim": "Token JWT ważny 7 dni",
+    "verdict": "prawda",
+    "code": "src/Infrastructure/Identity/IdentityTokenClaimService.cs:40"
+   },
+   {
+    "claim": "PublicApi ładuje nieistniejący appsettings.test.json",
+    "verdict": "nieweryfikowalne",
+    "code": "src/PublicApi/Program.cs:31; plik jest tylko w tests/PublicApiIntegrationTests/appsettings.test.json, w src/PublicApi brak"
+   },
+   {
+    "claim": "PublicApi: jedna klasa endpointu na operację, Ardalis.ApiEndpoints EndpointBaseAsync (7 z 7)",
+    "verdict": "fałsz",
+    "code": "EndpointBaseAsync tylko w src/PublicApi/AuthEndpoints/AuthenticateEndpoint.cs; endpointy katalogu używają MinimalApi.Endpoint (IEndpoint), np. CreateCatalogItemEndpoint.cs"
+   },
+   {
+    "claim": "UnitTests: 36 testów xUnit",
+    "verdict": "prawda",
+    "code": "grep [Fact]/[Theory] w tests/UnitTests = 36"
+   },
+   {
+    "claim": "Hasło SA w compose",
+    "verdict": "prawda",
+    "code": "docker-compose.yml:23"
+   },
+   {
+    "claim": "Nullable reference types włączone we wszystkich projektach src i testowych",
+    "verdict": "fałsz",
+    "code": "<Nullable> tylko w ApplicationCore, Infrastructure, PublicApi, Web csproj; brak w BlazorAdmin i BlazorShared"
+   },
+   {
+    "claim": "CI używa checkout@v2 i setup-dotnet@v1",
+    "verdict": "prawda",
+    "code": ".github/workflows/dotnetcore.yml:11,13"
+   }
+  ],
+  "B": [
+   {
+    "claim": "Token API ważny 7 dni",
+    "verdict": "prawda",
+    "code": "src/Infrastructure/Identity/IdentityTokenClaimService.cs:40"
+   },
+   {
+    "claim": "PublicApi nie sprawdza wydawcy/odbiorcy JWT ani HTTPS metadanych",
+    "verdict": "prawda",
+    "code": "src/PublicApi/Program.cs:61,67,68"
+   },
+   {
+    "claim": "Sztuczne opóźnienie 1 s na liście katalogu w API",
+    "verdict": "prawda",
+    "code": "src/PublicApi/CatalogItemEndpoints/CatalogItemListPagedEndpoint.cs:42"
+   },
+   {
+    "claim": "Sesja w Web wygasa po 60 minutach",
+    "verdict": "prawda",
+    "code": "src/Web/Configuration/ConfigureCookieSettings.cs:10,26"
+   },
+   {
+    "claim": "Hasło przy rejestracji 6-100 znaków",
+    "verdict": "prawda",
+    "code": "src/Web/Areas/Identity/Pages/Account/Register.cshtml.cs:50"
+   },
+   {
+    "claim": "Edycja produktu w Web zmienia tylko nazwę i cenę, opis bez zmian",
+    "verdict": "prawda",
+    "code": "src/Web/Services/CatalogItemViewModelService.cs:24"
+   },
+   {
+    "claim": "Katalog w Web: 10 produktów na stronę, cache 30 s",
+    "verdict": "prawda",
+    "code": "src/Web/Constants.cs:6; src/Web/Extensions/CacheHelpers.cs:7"
+   },
+   {
+    "claim": "Nullable włączone w 4 z 6 projektów src (bez BlazorAdmin i BlazorShared)",
+    "verdict": "prawda",
+    "code": "Nullable w csproj: ApplicationCore, Infrastructure, PublicApi, Web"
+   },
+   {
+    "claim": "Brak testu PUT katalogu",
+    "verdict": "prawda",
+    "code": "grep UpdateCatalogItem w tests/ bez trafień"
+   },
+   {
+    "claim": "Plik key-768c...xml w src/Web",
+    "verdict": "prawda",
+    "code": "src/Web/key-768c1632-cf7b-41a9-bb7a-bff228ae8fba.xml"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 12,
+   "częściowo": 2,
+   "nie": 6,
+   "błędnie": 0,
+   "prawda": 7,
+   "fałsz": 2,
+   "nieweryfikowalne": 1
+  },
+  "B": {
+   "tak": 18,
+   "częściowo": 2,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 10,
+   "fałsz": 0,
+   "nieweryfikowalne": 0
+  }
+ }
+}

@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "S1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: Java 17, maven-enforcer requireJavaVersion, Gradle toolchain 17",
+   "why_B": "report.md: Java 17 (Maven i Gradle zgodne) pom.xml:19, build.gradle:19; bez enforcera"
+  },
+  {
+   "id": "S2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: Spring Boot 4.1.0, starters webmvc/data-jpa/thymeleaf/validation/cache/actuator",
+   "why_B": "report.md Stack: Spring Boot 4.1.0, MVC, Data JPA, Thymeleaf, Validation, Cache, Actuator"
+  },
+  {
+   "id": "S3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md/spring-petclinic-conventions.md: H2 domyslnie, profile mysql/postgres, db/{h2,mysql,postgres}/schema.sql, ddl-auto=none",
+   "why_B": "report.md Dane: H2 domyslnie, MySQL, PostgreSQL, schemat z SQL (ddl-auto=none)"
+  },
+  {
+   "id": "S4",
+   "A": "tak",
+   "B": "błędnie",
+   "why_A": "build-and-ci.md: mvnw/gradlew, maven-build.yml ./mvnw -B verify, gradle-build.yml ./gradlew build; testing: Testcontainers, JaCoCo",
+   "why_B": "Maven+Gradle, JUnit5, Testcontainers, JaCoCo OK, ale twierdzi 'brak CI w repo' (.github/workflows istnieje: 3 workflowy)"
+  },
+  {
+   "id": "M1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md owner: Owner, Pet, PetType, Visit, kontrolery, PetValidator, PetTypeFormatter",
+   "why_B": "report.md Moduly owner: kontrolery, PetValidator, PetTypeFormatter, repozytoria"
+  },
+  {
+   "id": "M2",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md vet: /vets.html, JSON /vets, Specialty, Vets",
+   "why_B": "report.md: lista weterynarzy ze specjalizacjami, HTML i JSON, cache; bez ManyToMany/Vets/vets.html"
+  },
+  {
+   "id": "M3",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "conventions: BaseEntity @MappedSuperclass Integer id IDENTITY, NamedEntity, Person",
+   "why_B": "report.md: klasy bazowe BaseEntity, NamedEntity, Person bez szczegolow (isNew, IDENTITY)"
+  },
+  {
+   "id": "M4",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md system: CacheConfiguration 'vets', WebConfiguration ?lang=, CrashController /oups",
+   "why_B": "report.md: 'strona powitalna, wyjatek demonstracyjny, jezyk, cache' bez nazw klas/oups"
+  },
+  {
+   "id": "R1",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak reguly telefonu 10 cyfr",
+   "why_B": "rules.md: Telefon dokladnie 10 cyfr Owner.java:64; adres<=255, miasto<=80"
+  },
+  {
+   "id": "R2",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak",
+   "why_B": "rules.md: imie/nazwisko wymagane <=30 (Person.java:32)"
+  },
+  {
+   "id": "R3",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "conventions: cross-field rules w PetValidator, bez konkretow",
+   "why_B": "rules.md: nazwa zwierzecia <=30 (PetValidator:46), typ, data urodzenia w requirements.md"
+  },
+  {
+   "id": "R4",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "architecture.md: pets unique owner_id+name (schemat); brak case-insensitive, duplicate, daty z przyszlosci",
+   "why_B": "rules.md/report.md: unikalnosc bez wzgl. na wielkosc liter, unique_owner_pet_name, data nie z przyszlosci"
+  },
+  {
+   "id": "R5",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak reguly wizyty od jutra",
+   "why_B": "rules.md: Wizyta od jutra VisitController:100, opis <=255"
+  },
+  {
+   "id": "C1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "build-and-ci.md/project-formatting: spring-javaformat validate, nohttp checkstyle, .editorconfig tabs",
+   "why_B": "standards/formatting.md: spring-javaformat, nohttp, .editorconfig, tabulatory"
+  },
+  {
+   "id": "C2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: constructor injection, final fields, 0 @Autowired, package-private controllers",
+   "why_B": "standards/di.md: konstruktor, pola final, 100% kontrolerow"
+  },
+  {
+   "id": "C3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: Package by Feature",
+   "why_B": "naming.md/CLAUDE.draft.md: pakiety wg domeny, nie warstw"
+  },
+  {
+   "id": "C4",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "conventions: PRG+flash, @ModelAttribute, @InitBinder setDisallowedFields",
+   "why_B": "rules.md/CLAUDE.draft.md: setDisallowedFields; PRG/flash i @ModelAttribute tylko pomocniczo (mixed.md)"
+  },
+  {
+   "id": "C5",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "testing.md: @WebMvcTest, @MockitoBean, @DataJpaTest, @DisabledInNativeImage, Testcontainers",
+   "why_B": "testing.md: MockMvc, Testcontainers; mocki oznaczone [niezweryfikowane], brak @WebMvcTest/@DataJpaTest/@DisabledInNativeImage"
+  },
+  {
+   "id": "O1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture/conventions/roadmap: exposure.include=* tylko dev, nie produkcja",
+   "why_B": "report.md Ryzyka: Actuator wystawiony, komentarz odradza produkcje"
+  },
+  {
+   "id": "O2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture/tech-stack: GraalVM native, PetClinicRuntimeHints, I18nPropertiesSyncTest, 11 bundli",
+   "why_B": "report.md/requirements: RuntimeHints, I18nPropertiesSyncTest, 10 plikow tlumaczen"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "architecture.md: brak warstwy serwisowej, kontrolery wolaja repozytoria bezposrednio",
+    "verdict": "prawda",
+    "code": "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:49-57 (OwnerRepository wstrzykiwany), brak klas *Service w src/main"
+   },
+   {
+    "claim": "roadmap.md: hard-coded page size 5 zduplikowany w OwnerController i VetController",
+    "verdict": "prawda",
+    "code": "src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java:142; vet/VetController.java:66"
+   },
+   {
+    "claim": "roadmap.md: gradle-build.yml uzywa cache Maven",
+    "verdict": "prawda",
+    "code": ".github/workflows/gradle-build.yml:27 (cache: maven)"
+   },
+   {
+    "claim": "roadmap.md: deploy-and-test-cluster.yml uzywa actions/checkout@v2",
+    "verdict": "prawda",
+    "code": ".github/workflows/deploy-and-test-cluster.yml:18"
+   },
+   {
+    "claim": "roadmap.md: OwnerRepository ma zbedne findById",
+    "verdict": "prawda",
+    "code": "src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java:60"
+   },
+   {
+    "claim": "spring-petclinic-conventions.md: adnotacje walidacji na encjach to @NotBlank, @Pattern, @Digits",
+    "verdict": "fałsz",
+    "code": "@Digits nie wystepuje w src/main (grep pusty); Owner.java:53-64 uzywa @NotBlank/@Size/@Pattern"
+   },
+   {
+    "claim": "project-formatting-and-contribution.md: wszystkie 48 z 48 plikow Java ma naglowek Copyright 2012-2025",
+    "verdict": "fałsz",
+    "code": "find src -name '*.java' = 50 plikow; WebConfiguration.java:1-5 i 3 testy (PetValidatorTests, I18nPropertiesSyncTest, PetClinicConcurrencyTests) bez takiego naglowka"
+   },
+   {
+    "claim": "architecture.md: k8s NodePort z probami /livez i /readyz",
+    "verdict": "prawda",
+    "code": "k8s/petclinic.yml:7 (NodePort), :49 (/livez), :53 (/readyz)"
+   },
+   {
+    "claim": "build-and-ci.md: docker-compose dostarcza MySQL 9.7 i PostgreSQL 18.4",
+    "verdict": "prawda",
+    "code": "docker-compose.yml:3 (mysql:9.7), :15 (postgres:18.4)"
+   },
+   {
+    "claim": "spring-petclinic-testing.md: test Postgres pomija sie gdy brak Dockera",
+    "verdict": "prawda",
+    "code": "src/test/java/org/springframework/samples/petclinic/PostgresIntegrationTests.java:68 (assumeTrue isDockerAvailable)"
+   }
+  ],
+  "B": [
+   {
+    "claim": "report.md: brak CI w repo (brak .github)",
+    "verdict": "fałsz",
+    "code": ".github/workflows/maven-build.yml, gradle-build.yml, deploy-and-test-cluster.yml istnieja"
+   },
+   {
+    "claim": "rules.md: telefon dokladnie 10 cyfr",
+    "verdict": "prawda",
+    "code": "src/main/java/org/springframework/samples/petclinic/owner/Owner.java:64 @Pattern(regexp = \"\\\\d{10}\")"
+   },
+   {
+    "claim": "rules.md: wizyta tylko od jutra (odrzucenie daty nie po dzisiejszej)",
+    "verdict": "prawda",
+    "code": "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java:100"
+   },
+   {
+    "claim": "report.md: Actuator exposure.include=* z komentarzem odradzajacym produkcje",
+    "verdict": "prawda",
+    "code": "src/main/resources/application.properties:19-21"
+   },
+   {
+    "claim": "report.md: duplikat nazwy zwierzecia wykrywany po tekscie wyjatku unique_owner_pet_name",
+    "verdict": "prawda",
+    "code": "src/main/java/org/springframework/samples/petclinic/owner/PetController.java:202-204"
+   },
+   {
+    "claim": "rules.md: H2 UNIQUE(owner_id,name) na VARCHAR_IGNORECASE, PostgreSQL indeks LOWER(name)",
+    "verdict": "prawda",
+    "code": "src/main/resources/db/h2/schema.sql:48,55; db/postgres/schema.sql:45"
+   },
+   {
+    "claim": "report.md: docker-compose dopuszcza pusty root MySQL",
+    "verdict": "prawda",
+    "code": "docker-compose.yml:7-8 (MYSQL_ROOT_PASSWORD=, MYSQL_ALLOW_EMPTY_PASSWORD=true)"
+   },
+   {
+    "claim": "report.md: Bootstrap 5.3.8 i Font Awesome 4.7.0 przez webjars",
+    "verdict": "prawda",
+    "code": "pom.xml:27-28"
+   },
+   {
+    "claim": "report.md/naming.md: 30 plikow Java w main (w tym 5 package-info), 20 plikow testowych",
+    "verdict": "prawda",
+    "code": "find src/main -name '*.java' = 30, package-info = 5, src/test = 20"
+   },
+   {
+    "claim": "report.md: brak Spring Security w zaleznosciach",
+    "verdict": "prawda",
+    "code": "pom.xml: brak wpisu 'security' (grep pusty)"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 15,
+   "częściowo": 2,
+   "nie": 3,
+   "błędnie": 0,
+   "prawda": 8,
+   "fałsz": 2,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 14,
+   "częściowo": 5,
+   "nie": 0,
+   "błędnie": 1,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  }
+ }
+}
