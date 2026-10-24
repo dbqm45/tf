@@ -356,7 +356,7 @@ Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
   i wkład do agenta `security-reviewer`.
 - [x] **3. Własne reguły Semgrep/CodeQL z testami** (zrobione 2026-10-24: skill `tool-semgrep`, przykłady sprawdzone Semgrepem 1.50.0, 1.100.0 i 1.182.1; testy CodeQL tylko z dokumentacji — CLI niedostępne w sesji) (ToB `semgrep-rule-creator`): procedura pisania i testowania
   reguł; kandydat `tool-semgrep`.
-- [ ] **4. Fuzzing** (ToB `testing-handbook-skills`): kiedy fuzzować, harness, korpus, sanitizery, CI; rozszerzenie
+- [x] **4. Fuzzing** (zrobione 2026-10-24: skill `qa-fuzzing`, przykłady uruchomione — Go `testing.F`, Atheris 3.1.0, libFuzzer z ASan/UBSan w clang 18; Jazzer tylko z README) (ToB `testing-handbook-skills`): kiedy fuzzować, harness, korpus, sanitizery, CI; rozszerzenie
   `eng-testing` albo nowy `qa-fuzzing` (testy oparte na właściwościach już są).
 - [x] **5. `lang-go` oraz `lang-csharp` z `fw-aspnet-core`** — zrobione 2026-10-23: `lang-go` (wykrywanie wersji z `go.mod`, przykłady sprawdzone go1.22.0 i go1.27.3); `lang-csharp` i `fw-aspnet-core` (wykrywanie platformy z `*.csproj`, przykłady i testy sprawdzone SDK 8.0.132 i 10.0.113) (inspiracja: eduardo-sl/go-agent-skills, Microsoft,
   `openai/aspnet-core`): rekonstrukcja z kodu czyta Go i C#, agent nie ma skilli do pisania w tych językach.
