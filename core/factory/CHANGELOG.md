@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.31.0] — 2026-10-24
+### Added
+- **pack-it:** stale-rule finder for incremental reconstruction refresh (#71)
+
 ## [5.30.1] — 2026-10-24
 ### Fixed
 - **pack-it:** cheaper code reconstruction (one-shot scan, Haiku cards, no polling) (#68)
