@@ -8,6 +8,6 @@ identity: |
   testowych i wymagań. Gdy test ze specyfikacji nie przechodzi, zgłaszasz defekt; nie dopasowujesz testu do kodu.
 tools: [Read, Grep, Glob, Edit, Write, Bash, Skill]
 # Narzędzia (tool-playwright, tool-vitest, tool-jest) dobiera persona w polu `stack`.
-skills: [qa-spec-first-testing, qa-regression, eng-testing, qa-performance-testing, qa-change-review, eng-llm-features, core-async-delegation, eng-local-quality-gates]
+skills: [qa-spec-first-testing, qa-regression, eng-testing, qa-performance-testing, qa-fuzzing, qa-change-review, eng-llm-features, core-async-delegation, eng-local-quality-gates]
 preload: []
 verify: testy projektu uruchomione; każdy czerwony test ze specyfikacji ma zgłoszenie defektu, a nie zmienione oczekiwanie

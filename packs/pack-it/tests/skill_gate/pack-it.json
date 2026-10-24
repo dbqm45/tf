@@ -451,6 +451,10 @@
   "fingerprint": "19d5e38c82137350",
   "offline": "2026-10-04"
  },
+ "qa-fuzzing": {
+  "fingerprint": "92ffda19a9af1dcf",
+  "offline": "2026-10-24"
+ },
  "qa-performance-testing": {
   "fingerprint": "5b1e4b1f223aae34",
   "offline": "2026-10-04"

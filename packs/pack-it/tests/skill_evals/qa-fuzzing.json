@@ -1,0 +1,111 @@
+{
+  "skill": "qa-fuzzing",
+  "scenarios": [
+    {
+      "id": "parser-ramek-go",
+      "expect": "trigger",
+      "prompt": "Mamy w Go parser ramek binarnego protokołu, który dostaje dane prosto z sieci. Testy jednostkowe przechodzą, ale boimy się paniki albo zawieszenia na złośliwym wejściu. Jak to sprawdzić automatycznie i utrzymać w CI? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fuzz\\w*"
+          ],
+          [
+            "go test -fuzz",
+            "testing\\.F",
+            "f\\.Fuzz"
+          ],
+          [
+            "f\\.Add",
+            "korpus\\w*",
+            "seed"
+          ],
+          [
+            "testdata/fuzz",
+            "test\\w* regresyjn\\w*",
+            "regresj\\w*"
+          ],
+          [
+            "-fuzztime",
+            "nocn\\w*",
+            "limit\\w* czasu"
+          ]
+        ],
+        "none": [
+          "wystarczą testy jednostkowe"
+        ]
+      }
+    },
+    {
+      "id": "python-atheris-crash",
+      "expect": "trigger",
+      "prompt": "Nasza biblioteka w Pythonie parsuje pliki konfiguracyjne przysyłane przez użytkowników. Chcemy ją sfuzzować. Jak napisać harness i co zrobić, gdy fuzzer znajdzie crash? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Atheris",
+            "atheris"
+          ],
+          [
+            "harness",
+            "TestOneInput",
+            "FuzzedDataProvider"
+          ],
+          [
+            "oczekiwan\\w* wyjąt\\w*",
+            "udokumentowan\\w* wyjąt\\w*",
+            "ValueError",
+            "tylko nieoczekiwan\\w*"
+          ],
+          [
+            "test\\w* regresyjn\\w*",
+            "plik\\w* crash",
+            "odtw\\w*",
+            "minimaliz\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dekoder-c-sanitizery",
+      "expect": "trigger",
+      "prompt": "Mamy dekoder formatu obrazów napisany w C, używany w usłudze przetwarzającej uploady. Jak go fuzzować, żeby wykrywać błędy pamięci, a nie tylko crashe? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "libFuzzer",
+            "LLVMFuzzerTestOneInput",
+            "AFL\\+\\+"
+          ],
+          [
+            "-fsanitize=fuzzer",
+            "AddressSanitizer",
+            "ASan"
+          ],
+          [
+            "UBSan",
+            "UndefinedBehaviorSanitizer",
+            "MSan"
+          ],
+          [
+            "korpus\\w*",
+            "seed\\w*",
+            "przykładow\\w* plik"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "hypothesis-wlasciwosc",
+      "expect": "no-trigger",
+      "neighbor": "tool-pytest",
+      "prompt": "Jak w pytest z Hypothesis napisać test, że nasza funkcja sortująca zachowuje długość listy i zbiór elementów?"
+    },
+    {
+      "id": "test-obciazeniowy",
+      "expect": "no-trigger",
+      "neighbor": "qa-performance-testing",
+      "prompt": "Ile żądań na sekundę wytrzyma nasze API płatności przed wzrostem p99 powyżej 300 ms? Jak zaplanować test obciążeniowy?"
+    }
+  ]
+}
