@@ -20,7 +20,15 @@ GOOD = """# Rekonstrukcja
 ## TL;DR
 Faktura musi mieć pozycje (`src/billing/invoice.py:3-4`).
 ## Stack
-- Python [założenie: brak pliku budowania]
+| Obszar | Ustalenie | Dowód |
+|---|---|---|
+| Język | Python 3 | [założenie: brak pliku budowania] |
+| Framework | brak — biblioteka standardowa | `src/billing/invoice.py:1` |
+| Dane | brak bazy danych [niezweryfikowane] | — |
+| Build | brak pliku budowania [założenie] | — |
+| Testy | brak testów [niezweryfikowane] | — |
+| CI | brak konfiguracji CI [niezweryfikowane] | — |
+| Konfiguracja | stała w kodzie | `src/billing/tax.py:1` |
 ## Moduły
 - billing: liczy faktury — `src/billing/invoice.py:1`
 ## Domeny
@@ -75,7 +83,7 @@ def main() -> int:
         write(repo, {"docs/project/00-reconstruction/report.md": GOOD, "bad.md": BAD})
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
-        check(r.returncode == 0 and out.get("refs") == 6 and out.get("bad") == [], f"R-1: poprawny raport: {r.stdout[:500]}")
+        check(r.returncode == 0 and out.get("refs") == 8 and out.get("bad") == [], f"R-1: poprawny raport: {r.stdout[:500]}")
         check(out.get("unsupported") == [], f"R-2: twierdzenia oznaczone [założenie]/[pytanie] nie są bez dowodu: {out.get('unsupported')}")
         r = run("bad.md", "--repo", str(repo), "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
@@ -92,7 +100,33 @@ def main() -> int:
         check(r.returncode == 1 and "TL;DR" in r.stdout and "Czego nie sprawdzono" in r.stdout,
               f"R-9: --final wymienia brakujące sekcje: {r.stdout[-500:]}")
         r = run("docs/project/00-reconstruction", "--repo", str(repo), cwd=d)
-        check(r.returncode == 0 and "Dowody: 6," in r.stdout, f"R-10: katalog raportu: {r.stdout[-300:]}")
+        check(r.returncode == 0 and "Dowody: 8," in r.stdout, f"R-10: katalog raportu: {r.stdout[-300:]}")
+
+        # --final: tabela stacku z wymaganymi wierszami i lista modułów zgodna z kartami
+        rep = repo / "docs/project/00-reconstruction"
+        write(rep, {"modules/billing.json": json.dumps({"module": "billing"})})
+        r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
+        out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(r.returncode == 0 and out.get("stack_missing") == [] and out.get("modules_missing") == [],
+              f"R-11: kompletny raport z tabelą stacku i modułami z kart: {r.stdout[-500:]}")
+        no_ci = GOOD.replace("| CI | brak konfiguracji CI [niezweryfikowane] | — |\n", "").replace(
+            "| Testy | brak testów [niezweryfikowane] | — |\n", "")
+        write(rep, {"report.md": no_ci})
+        r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
+        check(r.returncode == 1 and "stack: brak wierszy: Testy, CI" in r.stdout, f"R-12: brak wierszy stacku: {r.stdout[-500:]}")
+        write(rep, {"report.md": GOOD.replace("| Konfiguracja | stała w kodzie | `src/billing/tax.py:1` |",
+                                              "| Konfiguracja | stała w kodzie | — |")})
+        r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
+        out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(r.returncode == 1 and any("Konfiguracja" in u["text"] for u in out.get("unsupported", [])),
+              f"R-13: wiersz stacku bez dowodu i oznaczenia: {out.get('unsupported')}")
+        write(rep, {"report.md": GOOD, "modules/customers.json": json.dumps({"module": "customers"})})
+        r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
+        check(r.returncode == 1 and "moduły bez wpisu w sekcji Moduły: customers" in r.stdout,
+              f"R-14: moduł z karty nieopisany w raporcie: {r.stdout[-500:]}")
+        write(rep, {"report.md": no_ci})
+        r = run(str(rep / "report.md"), "--repo", str(repo), cwd=d)
+        check(r.returncode == 0, f"R-15: bez --final nowe kontrole nie działają: {r.stdout[-300:]}")
 
     for f in fails:
         print("✗", f)
