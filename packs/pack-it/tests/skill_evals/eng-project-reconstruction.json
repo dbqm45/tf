@@ -102,6 +102,21 @@
    }
   },
   {
+   "id": "karty-modulow-do-dokumentacji",
+   "expect": "trigger",
+   "prompt": "Po rekonstrukcji kodu mam karty modułów w JSON, a sekcja modułów w raporcie jest ogólnikowa: brakuje endpointów, encji i reguł, które siedzą w kartach. Do tego raport twierdzi, że repo nie ma CI, choć jest katalog .github/workflows. Jak to poprawić tanio i tak, żeby się nie powtórzyło? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["skrypt\\w*", "bez modelu", "deterministycz", "recon_cards"],
+     ["\\.md", "Markdown"],
+     ["plik:linia", "dow[oó]d\\w*"],
+     ["\\.github/workflows", "plik\\w* pipeline", "plik\\w* CI"],
+     ["kontrol\\w*", "sprawdz\\w*", "recon_check", "bramk\\w*"]
+    ],
+    "none": ["przepisz (ręcznie )?wszystkie karty", "uruchom ponownie całą rekonstrukcję"]
+   }
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",

@@ -27,19 +27,21 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 2. **Karty modułów** — partia z `repo_inventory` = jedno zadanie dla wykonawcy na najtańszym modelu (Haiku),
    równolegle. Prompt ze stałym początkiem (`references/prompt-karty.md`) i zmienną końcówką (lista plików partii) —
    wspólny prefiks trafia w cache. Wynik: JSON wg `references/karta-modulu.json` w `modules/<moduł>.json`.
-   Po każdej partii `recon_check.py modules/ --repo <repo>`; karta ze złym dowodem wraca raz, potem
-   eskalacja na mocniejszy model.
+   Po każdej partii `recon_cards.py modules/ --repo <repo>` (karta → `modules/<moduł>.md` bez modelu, dowody
+   względne wobec partii poprawione na ścieżki od korzenia), potem `recon_check.py modules/ --repo <repo>`; karta ze
+   złym dowodem wraca raz, potem eskalacja na mocniejszy model.
 3. **Domeny i słownik** (mocniejszy model, wejście: karty + graf): subdomeny, konteksty, słownik termin → `plik:linia`,
    rozjazdy nazw kod ↔ biznes (ddd-legacy-modernization, ddd-strategic-analysis).
 4. **Wymagania i reguły:** z testów (nazwy, asercje), walidacji, endpointów i ograniczeń z `schema_scan`; każde
    z pewnością: `test` (jest test) / `kod` (tylko kod) / `do potwierdzenia`.
 5. **Standardy:** sygnał z `standards_scan` (udział, przykłady, wyjątki) → reguła po obejrzeniu przykładów. Plik na
    obszar w `standards/` + `standards/INDEX.md`. Udział < 70% to nie standard, tylko „mieszane” z wyjątkami.
-6. **Raport** `report.md` wg `references/raport.md` + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
+6. **Raport** `report.md` wg `references/raport.md` (sekcja Moduły z `recon_cards.py modules/ --summary`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
    (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`.
 7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,
    wszystkie sekcje, twierdzenia bez dowodu oznaczone, tabela stacku z wymaganymi wierszami (z wersjami, CI, testami
-   i konfiguracją), każdy moduł z kart wymieniony w sekcji Moduły z odpowiedzialnością. Raport kosztu przebiegu (core-cost-control), potem
+   i konfiguracją; wiersz CI wskazuje plik pipeline'u, jeśli taki jest w repo), każdy moduł z kart wymieniony
+   w sekcji Moduły i z aktualnym `modules/<moduł>.md`. Raport kosztu przebiegu (core-cost-control), potem
    `recon_manifest.py write <repo> --out docs/project/00-reconstruction/manifest.json --budget-tokens N --cost-usd X`.
 8. **Wersja do czytania (opcjonalnie):** jedna strona HTML z `report.md` (spis treści, tabele, dowody jako tekst).
    Gdy sesja ma narzędzie Artifact — prywatna strona, udostępnia ją człowiek; bez niego plik

@@ -7,15 +7,19 @@ i bez oznaczenia [założenie] / [niezweryfikowane] / [pytanie] są zgłaszane j
   python3 recon_check.py <plik.md|katalog> [--repo DIR] [--json]
   python3 recon_check.py docs/project/00-reconstruction/report.md --final   # też sekcje raportu i 0 twierdzeń bez dowodu
 
---final sprawdza też: tabelę w sekcji „Stack” z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja
-(każdy wiersz z dowodem albo oznaczeniem) oraz to, że sekcja „Moduły” wymienia każdy moduł z kart `modules/*.json`
-leżących obok raportu.
+--final sprawdza też:
+- tabelę w sekcji „Stack” z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja (każdy wiersz z dowodem
+  albo oznaczeniem); gdy w repo są pliki pipeline'u (np. .github/workflows/), wiersz CI musi wskazać któryś z nich;
+- to, że sekcja „Moduły” wymienia każdy moduł z kart `modules/*.json` leżących obok raportu, a każda karta ma aktualny
+  `modules/<karta>.md` z `recon_cards.py` (skrót treści karty w pierwszej linii).
 
 Dowód: `ścieżka:linia` albo `ścieżka:od-do`; cytat w "…" albo „…” w tym samym wierszu, po dowodzie.
 Kod wyjścia: 0 — w porządku, 1 — złe dowody (albo braki przy --final), 2 — złe wywołanie.
 """
 from __future__ import annotations
 
+import glob
+import hashlib
 import json
 import os
 import re
@@ -28,6 +32,10 @@ SECTIONS = ("TL;DR", "Stack", "Moduły", "Domeny", "Wymagania", "Reguły", "Stan
             "Czego nie sprawdzono")
 NO_EVIDENCE_SECTIONS = ("Pytania", "Czego nie sprawdzono")   # tu wypunktowania z natury nie mają dowodu
 STACK_ROWS = ("Język", "Framework", "Dane", "Build", "Testy", "CI", "Konfiguracja")   # wymagane wiersze tabeli stacku
+CI_FILES = (".github/workflows/*.yml", ".github/workflows/*.yaml", ".gitlab-ci.yml", "Jenkinsfile",
+            "azure-pipelines.yml", ".circleci/config.yml", "bitbucket-pipelines.yml", ".travis.yml", ".drone.yml",
+            ".buildkite/pipeline.yml")
+CARD_MARK = re.compile(r"^<!-- karta: \S+ sha256:([0-9a-f]{12}) -->")
 
 
 def norm(s: str) -> str:
@@ -40,8 +48,8 @@ def md_files(path: str) -> list[str]:
     return [path]
 
 
-def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[dict], list[str], list[str], str]:
-    """Dowody, złe dowody, twierdzenia bez dowodu, nagłówki, nazwy wierszy tabeli stacku, tekst sekcji Moduły."""
+def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[dict], list[str], list[tuple], str]:
+    """Dowody, złe dowody, twierdzenia bez dowodu, nagłówki, wiersze tabeli stacku (nazwa, linia), tekst sekcji Moduły."""
     refs, bad, unsupported, sections, section = 0, [], [], [], ""
     stack_rows, modules_text, row_at = [], [], None
     with open(md, encoding="utf-8") as fh:
@@ -91,12 +99,37 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
                     if row_at is not None:
                         unsupported[:] = [u for u in unsupported if u["at"] != row_at]
                 continue
-            stack_rows.append(cells[0])
+            stack_rows.append((cells[0], line))
             row_at = None
             if not found and not MARK.search(line):
                 row_at = f"{md}:{i}"
                 unsupported.append({"at": row_at, "text": " | ".join(cells)})
     return refs, bad, unsupported, sections, stack_rows, "\n".join(modules_text)
+
+
+def ci_files(repo: str) -> list[str]:
+    """Pliki pipeline'u CI w repo (ścieżki względne)."""
+    found = {os.path.relpath(p, repo).replace(os.sep, "/") for pat in CI_FILES for p in glob.glob(os.path.join(repo, pat))}
+    return sorted(found)
+
+
+def stale_cards(md: str) -> list[str]:
+    """Karty `modules/*.json` bez `modules/<karta>.md` albo z .md wygenerowanym ze starszej treści karty."""
+    d = os.path.join(os.path.dirname(md), "modules")
+    stale = []
+    for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        if not f.endswith(".json"):
+            continue
+        with open(os.path.join(d, f), "rb") as fh:
+            digest = hashlib.sha256(fh.read()).hexdigest()[:12]
+        try:
+            with open(os.path.join(d, f[:-5] + ".md"), encoding="utf-8") as fh:
+                m = CARD_MARK.match(fh.readline())
+        except OSError:
+            m = None
+        if not m or m.group(1) != digest:
+            stale.append(f[:-5])
+    return stale
 
 
 def module_names(md: str) -> list[str]:
@@ -132,20 +165,27 @@ def main(argv: list[str]) -> int:
         print(f"✗ podaj istniejący plik lub katalog raportu i --repo (jest: {paths}, repo {repo})", file=sys.stderr)
         return 2
     cache, refs, bad, uns, sections = {}, 0, [], [], []
-    stack_missing, modules_missing = [], []
+    stack_missing, modules_missing, cards_stale, ci_unreferenced = [], [], [], []
+    repo_ci = ci_files(repo) if final else []
     for p in paths:
         for md in md_files(p):
             r, b, u, s, rows, mods = check_file(md, repo, cache)
             refs, bad, uns, sections = refs + r, bad + b, uns + u, sections + s
             if final and any(h.startswith("Stack") for h in s):
-                low = [x.lower() for x in rows]
+                low = [name.lower() for name, _ in rows]
                 stack_missing += [w for w in STACK_ROWS if not any(x.startswith(w.lower()) for x in low)]
+                ci_row = next((line for name, line in rows if name.lower().startswith("ci")), None)
+                if ci_row is not None and repo_ci and not any(f in ci_row for f in repo_ci):
+                    ci_unreferenced += repo_ci
             if final and any(h.startswith("Moduły") for h in s):
                 modules_missing += [m for m in module_names(md) if m not in mods]
+                cards_stale += stale_cards(md)
     missing = [s for s in SECTIONS if not any(h.startswith(s) for h in sections)] if final else []
     out = {"refs": refs, "bad": bad, "unsupported": uns, "missing_sections": missing,
-           "stack_missing": stack_missing, "modules_missing": modules_missing}
-    failed = bool(bad) or (final and (missing or uns or stack_missing or modules_missing))
+           "stack_missing": stack_missing, "modules_missing": modules_missing, "cards_stale": cards_stale,
+           "ci_unreferenced": ci_unreferenced}
+    failed = bool(bad) or (final and (missing or uns or stack_missing or modules_missing or cards_stale
+                                      or ci_unreferenced))
     if as_json:
         print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
@@ -153,8 +193,12 @@ def main(argv: list[str]) -> int:
               + (f", brak sekcji: {', '.join(missing)}" if missing else ""))
         if stack_missing:
             print(f"  ✗ stack: brak wierszy: {', '.join(stack_missing)} (tabela w sekcji Stack)")
+        if ci_unreferenced:
+            print(f"  ✗ CI: w repo są pliki pipeline'u, wiersz CI nie wskazuje żadnego: {', '.join(ci_unreferenced)}")
         if modules_missing:
             print(f"  ✗ moduły bez wpisu w sekcji Moduły: {', '.join(modules_missing)}")
+        if cards_stale:
+            print(f"  ✗ karty bez aktualnego .md (recon_cards.py): {', '.join(cards_stale)}")
         for b in bad:
             print(f"  ✗ {b['at']}: `{b['ref']}` — {b['problem']}")
         for u in uns[:30]:

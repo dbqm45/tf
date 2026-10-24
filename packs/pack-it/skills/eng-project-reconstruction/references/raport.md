@@ -7,8 +7,12 @@ oznaczenie [założenie] / [niezweryfikowane] / [pytanie]. W „Pytaniach” i �
 - **Stack** jako tabelę z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja. Wiersz bez dowodu ma
   oznaczenie, np. „CI: [niezweryfikowane] brak plików pipeline'u w repo”. Rozjazd wersji (CI kontra plik budowania,
   obraz kontra SDK) wpisujesz w wierszu i powtarzasz w Ryzykach.
-- **Moduły**: każdy moduł z kart `modules/*.json` ma wpis. Przy dużych modułach dopisujesz pakiety lub projekty
-  poziom niżej z odpowiedzialnością, bo sama nazwa modułu nie mówi, gdzie co leży.
+- **CI**: gdy w repo są pliki pipeline'u (`.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile` i podobne), wiersz CI
+  wskazuje któryś z nich jako dowód. Sam „brak CI [niezweryfikowane]” wtedy nie przejdzie.
+- **Moduły**: każdy moduł z kart `modules/*.json` ma wpis i aktualny `modules/<moduł>.md` z `recon_cards.py`. Szkic
+  sekcji daje `recon_cards.py modules/ --summary`: cel, dowód, kluczowe elementy (wejścia, pojęcia, tabele) i odnośnik.
+  Przy dużych modułach dopisujesz pakiety lub projekty poziom niżej z odpowiedzialnością, bo sama nazwa modułu nie
+  mówi, gdzie co leży.
 
 ```markdown
 # <Nazwa projektu> — rekonstrukcja z kodu
@@ -30,7 +34,7 @@ Commit: <sha> · data: RRRR-MM-DD · zakres: <całość | katalogi> · koszt prz
 | Wdrożenie | <obraz, manifesty; opcjonalnie> | `<plik>:<linia>` |
 
 ## Moduły
-- <moduł>: <odpowiedzialność jednym zdaniem> — `<plik>:<linia>` (karta: modules/<moduł>.json)
+- <moduł>: <odpowiedzialność jednym zdaniem> — `<plik>:<linia>` · kluczowe: <wejścia, pojęcia, tabele> (szczegóły: modules/<moduł>.md)
   - <pakiet lub projekt poziom niżej>: <odpowiedzialność> — `<plik>:<linia>`
 
 ## Domeny
