@@ -238,7 +238,8 @@ Typowy przebieg: `jan-backend` przy korekcie CDR pyta `ev-consult-business`, jak
 
 ### Inne narzędzia niż Claude Code
 
-Lista targetów w `core/factory/build.py` (`TARGETS`, ustawienie projektu `targets`) pozwoli kiedyś generować pliki
-dla innych narzędzi (np. Codex, Gemini CLI); dziś jest tylko target `claude`.
+Lista targetów w `core/factory/build.py` (`TARGETS`, ustawienie projektu `targets`): `claude` i `managed-agents`
+(pliki `ant apply`, `core/factory/target_managed.py`; konsultanci są tam w rosterze koordynatora, wykonawcy nie
+delegują dalej). Inne narzędzia (np. Codex, Gemini CLI) — kolejne targety.
 Tam, gdzie narzędzie nie ma podagentów, konsultacje przechodzą w tryb zastępczy: persona wczytuje skille innej
 nakładki sama (pkt 3) albo korzysta z pliku pytań (pkt 4).
