@@ -5,6 +5,7 @@ Fabryka zespołów: rdzeń + nakładki (pack-*) → skille → role → persony 
   python3 factory/build.py            # zbuduj .claude/agents/_generated/ i .claude/catalog.md
   python3 factory/build.py check      # walidacja + wykrycie nieaktualnych plików (CI)
   python3 factory/build.py list       # podsumowanie zespołów
+  python3 factory/build.py managed-apply [--yes]   # target managed-agents: plan `ant apply`; --yes wgrywa na konto
   python3 factory/build.py new-skill fw-demo "Użyj przy ... Nie do ..."
 
 Źródłem prawdy są factory/config.yaml (rdzeń), factory/packs/<id>/ (nakładki) i własne pliki projektu
@@ -26,9 +27,9 @@ yaml = packs_mod.yaml
 FACTORY = ROOT / "factory"
 SKILLS_DIR = ROOT / ".claude" / "skills"
 OUT_DIR = ROOT / ".claude" / "agents" / "_generated"
-# Targety: narzędzia, dla których budujemy agentów (ustawienie `targets` projektu). Dziś tylko Claude Code; kolejny
-# target to osobny renderer i katalog wyjściowy (docs/todo.md).
-TARGETS = {"claude": OUT_DIR}
+# Targety: narzędzia, dla których budujemy agentów (ustawienie `targets` projektu). Claude Code zawsze;
+# `managed-agents` — pliki dla `ant apply` (Claude Managed Agents), renderer w factory/target_managed.py.
+TARGETS = {"claude": OUT_DIR, "managed-agents": ROOT / "managed-agents"}
 
 KNOWN_TOOLS = {
     "Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill", "WebFetch",
@@ -827,6 +828,13 @@ def validate() -> tuple[list[str], list[str]]:
     errors += team_errors
     errors += [f"target '{t}' nie jest obsługiwany (dostępne: {', '.join(TARGETS)})"
                for t in cfg["_settings"]["targets"] if t not in TARGETS]
+    tm = managed_target()
+    if tm:
+        files, w, e = tm.render(sys.modules[__name__])
+        errors += e
+        warnings += w
+        if tm.stale(TARGETS["managed-agents"], files):
+            errors.append("pliki w managed-agents/ są nieaktualne — uruchom: python3 factory/build.py")
     for sub in ("roles", "personas"):
         warnings += packs_mod.load_items(ROOT, sub)[1]
     e, w = check_packs(cfg)
@@ -1098,6 +1106,14 @@ def validate() -> tuple[list[str], list[str]]:
 
 # ───────────────────────── komendy ─────────────────────────
 
+def managed_target():
+    """Moduł targetu `managed-agents` albo None, gdy projekt go nie włączył."""
+    if "managed-agents" not in load_config()["_settings"]["targets"]:
+        return None
+    import target_managed  # noqa: E402  (factory/target_managed.py)
+    return target_managed
+
+
 def cmd_build():
     rendered = render_all()
     if OUT_DIR.exists():
@@ -1118,6 +1134,13 @@ def cmd_build():
         print(f"✓ Spisy treści zaktualizowane w {tocs} plikach referencyjnych")
     print(f"✓ Wygenerowano {len(rendered)} agentów w {OUT_DIR.relative_to(ROOT)} i katalog {CATALOG.relative_to(ROOT)}"
           f" (profil kosztów: {load_config()['_profile']})")
+    tm = managed_target()
+    if tm:
+        files, _w, _e = tm.render(sys.modules[__name__])
+        tm.write(TARGETS["managed-agents"], files)
+        print(f"✓ Managed Agents: {sum(k.startswith('agents/') for k in files)} agentów w "
+              f"{TARGETS['managed-agents'].relative_to(ROOT)}/ — nic nie wysłano; plan i wgranie: "
+              "python3 factory/build.py managed-apply [--yes]")
     errors, warnings = validate()
     for w in warnings:
         print(f"  ⚠ {w}")
@@ -1248,6 +1271,9 @@ def main(argv: list[str]) -> int:
         return cmd_check()
     if cmd == "list":
         return cmd_list()
+    if cmd == "managed-apply":   # jedyne polecenie, które wysyła agentów na konto (ant apply); bez --yes tylko plan
+        import target_managed  # noqa: E402
+        return target_managed.apply(TARGETS["managed-agents"], yes="--yes" in argv[2:])
     if cmd == "new-skill" and len(argv) >= 4:
         rest = argv[4:]
         role = rest[rest.index("--role") + 1] if "--role" in rest and rest.index("--role") + 1 < len(rest) else None

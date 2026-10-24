@@ -334,5 +334,11 @@ languages:
     commits: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po angielsku.
 code_language_note: Kod, nazwy, identyfikatory i komentarze w kodzie piszesz po angielsku (standard w repozytorium).
 
-# Targety: narzędzia, dla których build.py generuje agentów (factory/targets/). Dziś tylko Claude Code.
+# Targety: narzędzia, dla których build.py generuje agentów. `claude` (Claude Code) zawsze; `managed-agents` — pliki
+# dla `ant apply` (Claude Managed Agents) w katalogu managed-agents/ projektu (factory/target_managed.py). Projekt
+# włącza je w .claude/factory-settings.json: "targets": ["claude", "managed-agents"].
 default_targets: [claude]
+# Target managed-agents: model dla aliasu tieru (haiku, sonnet, opus, fable, inherit). Pełny identyfikator `claude-…`
+# w tierze lub profilu przechodzi bez zmian.
+managed_agents:
+  models: {haiku: claude-haiku-5-5, sonnet: claude-sonnet-5-5, opus: claude-opus-5-5, fable: claude-fable-5-1, inherit: claude-opus-5-5}
