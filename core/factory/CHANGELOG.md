@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.28.0] — 2026-10-24
+### Added
+- **pack-it:** stack table and module list enforced in reconstruction reports (#64)
+
 ## [5.27.0] — 2026-10-24
 ### Added
 - **core:** managed-agents target for ant apply with explicit upload (#61)
