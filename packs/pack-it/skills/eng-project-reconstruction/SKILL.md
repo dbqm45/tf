@@ -31,13 +31,14 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    nie odpytujesz katalogu `modules/` w pętli (każde sprawdzenie to tura z pełnym kontekstem). Prompt ze stałym
    początkiem (`references/prompt-karty.md`) i zmienną końcówką (lista plików partii) — wspólny prefiks trafia
    w cache. Wynik: JSON wg `references/karta-modulu.json` w `modules/<moduł>.json`.
-   Po każdej partii `recon_cards.py modules/ --repo <repo>` (karta → `modules/<moduł>.md` bez modelu, dowody
-   względne wobec partii poprawione na ścieżki od korzenia), potem `recon_check.py modules/ --repo <repo>`; karta ze
-   złym dowodem wraca raz, potem eskalacja na mocniejszy model.
+   Wykonawca sam przepuszcza swoją kartę przez `recon_cards.py` (karta → `modules/<moduł>.md`, dowody względne wobec
+   partii poprawione) i `recon_check.py` i poprawia złe dowody. Po wszystkich kartach `recon_check.py modules/ --repo
+   <repo>`; kartę ze złym dowodem zwracasz wykonawcy raz (nie poprawiasz jej sam), potem eskalacja na mocniejszy model.
 3. **Domeny i słownik** (mocniejszy model, wejście: karty + graf): subdomeny, konteksty, słownik termin → `plik:linia`,
    rozjazdy nazw kod ↔ biznes (ddd-legacy-modernization, ddd-strategic-analysis).
 4. **Wymagania i reguły:** `recon_cards.py modules/ --repo <repo> --rules` składa `rules.md` z reguł kart bez
-   modelu; dopisujesz tylko reguły przekrojowe i ograniczenia ze `schema.json`. Wymagania z testów (nazwy, asercje),
+   modelu; reguły przekrojowe i ograniczenia ze `schema.json` dopisujesz pod nagłówkiem `## Reguły przekrojowe`
+   (ponowne składanie go zachowuje). Wymagania z testów (nazwy, asercje),
    walidacji i endpointów z kart; każde
    z pewnością: `test` (jest test) / `kod` (tylko kod) / `do potwierdzenia`. Mapowanie (błąd → kod HTTP, lista błędów
    domenowych, wartości enuma) wypisujesz w całości, łącznie z przypadkiem domyślnym i kodem sukcesu.

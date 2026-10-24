@@ -125,6 +125,14 @@ def main() -> int:
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         check(r.returncode == 0 and out.get("bad") == [] and out.get("unsupported") == [], f"C-14: rules.md przechodzi recon_check: {r.stdout[-400:]}")
 
+        # --rules ponownie: sekcja „## Reguły przekrojowe” dopisana przez syntezę zostaje
+        with open(rules_md, "a", encoding="utf-8") as fh:
+            fh.write("\n## Reguły przekrojowe\n- [niezweryfikowane] Mapowanie błędów obejmuje cały system.\n")
+        r = run("recon_cards.py", str(mods), "--repo", str(repo), "--rules", cwd=d)
+        txt = rules_md.read_text(encoding="utf-8")
+        check(txt.count("## Reguły przekrojowe") == 1 and "Mapowanie błędów obejmuje cały system." in txt and "## billing" in txt,
+              f"C-17: --rules zachowuje reguły przekrojowe: {txt[-400:]}")
+
         # --into: sekcja „## Moduły” raportu podmieniona na wpisy z kart (reszta raportu bez zmian)
         rep = mods.parent / "report.md"
         rep.write_text("# R\n## Stack\nx\n## Moduły\n- stary wpis\n## Domeny\ny\n", encoding="utf-8")

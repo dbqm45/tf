@@ -178,8 +178,17 @@ def main(argv: list[str]) -> int:
     if "--rules" in argv:
         head = ["# Reguły z kart modułów",
                 "Złożone skryptem z `modules/*.json`; reguły przekrojowe i mapowania dopisuje synteza poniżej."]
-        with open(os.path.join(os.path.dirname(os.path.abspath(d)), "rules.md"), "w", encoding="utf-8") as fh:
-            fh.write("\n".join(head + rules) + "\n")
+        path = os.path.join(os.path.dirname(os.path.abspath(d)), "rules.md")
+        keep = ""
+        try:
+            with open(path, encoding="utf-8") as fh:
+                old = fh.read()
+            m = re.search(r"^## Reguły przekrojowe", old, re.M)   # sekcja syntezy zostaje przy ponownym składaniu
+            keep = "\n" + old[m.start():] if m else ""
+        except OSError:
+            pass
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(head + rules) + "\n" + keep)
     if into:
         rc = max(rc, inject(into, lines))
     if "--summary" in argv:
