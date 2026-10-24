@@ -53,6 +53,6 @@ Narzędzia pomiaru: `docs/evals/2026-10-24-f4b/narzedzia/`.
 Repozytoria (commity w raporcie v1) i maistera trzeba sklonować na nowo.
 
 ## Otwarte po F4
-- Test odświeżenia ze zmianą w logice (w v1 zmiana dotyczyła tylko komentarzy).
+- Test odświeżenia ze zmianą w logice: wykonany, `2026-10-24-f4-odswiezenie-logika.md` (6/6 zmian opisanych, 2 pozostałości starego opisu; maister 5,5/6, 0 pozostałości, taniej).
 - Opcjonalnie: sygnały układu pakietów (według funkcji albo warstw) i czasów życia DI w `standards_scan`. To
   ostatnie brakujące punkty w standardach.

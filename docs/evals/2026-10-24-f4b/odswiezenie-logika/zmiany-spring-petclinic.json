@@ -1,0 +1,23 @@
+[
+ {
+  "id": "P1",
+  "kind": "zmieniona",
+  "new": "Telefon właściciela musi mieć dokładnie 9 cyfr (@Pattern regexp \\d{9}).",
+  "old": "Telefon: dokładnie 10 cyfr (\\d{10}).",
+  "evidence": "src/main/java/org/springframework/samples/petclinic/owner/Owner.java"
+ },
+ {
+  "id": "P2",
+  "kind": "nowa",
+  "new": "Imię zwierzaka nie może zawierać cyfr (PetValidator: rejectValue name 'digits').",
+  "old": null,
+  "evidence": "src/main/java/org/springframework/samples/petclinic/owner/PetValidator.java"
+ },
+ {
+  "id": "P3",
+  "kind": "usunięta",
+  "new": "Kontroler wizyt NIE odrzuca już daty wizyty, która nie jest po dzisiejszej (sprawdzenie usunięte z processNewVisitForm); zostaje tylko domyślna data jutro (minVisitDate).",
+  "old": "Data wizyty musi być późniejsza niż dziś — kontroler odrzuca datę nie po dzisiejszej.",
+  "evidence": "src/main/java/org/springframework/samples/petclinic/owner/VisitController.java"
+ }
+]
