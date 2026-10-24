@@ -8,6 +8,7 @@ dokumentacji, nie tylko do JSON. Pierwsza linia .md to skrót treści karty — 
   python3 recon_cards.py docs/project/00-reconstruction/modules --summary  # + propozycja sekcji „Moduły” raportu
   python3 recon_cards.py <modules/> --repo <repo>   # dowody ze ścieżką względną wobec partii → ścieżka od korzenia
   python3 recon_cards.py <modules/> --rules         # + rules.md obok modules/: reguły z kart pogrupowane po module
+  python3 recon_cards.py <modules/> --into report.md   # sekcja „## Moduły” raportu = wpisy z kart (reszta bez zmian)
 
 Z --repo: gdy pliku z dowodu nie ma od korzenia repo, a w katalogu partii (pole `batch`) jest dokładnie jeden plik
 o tej końcówce ścieżki, dowód dostaje pełną ścieżkę. Dwuznaczne zostają bez zmian (zgłosi je recon_check.py).
@@ -106,14 +107,37 @@ def summary(stem: str, card: dict, repo: str | None = None) -> str:
     return line + f" (szczegóły: modules/{stem}.md)"
 
 
+def inject(report: str, lines: list[str]) -> int:
+    """Podmienia treść sekcji „## Moduły” w raporcie na wpisy z kart; zwraca 1, gdy raportu albo sekcji brak."""
+    try:
+        with open(report, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        print(f"✗ {report}: brak pliku raportu")
+        return 1
+    m = re.search(r"^## Moduły[^\n]*\n", text, re.M)
+    if not m:
+        print(f"✗ {report}: brak sekcji „## Moduły”")
+        return 1
+    nxt = re.search(r"^#{1,2} ", text[m.end():], re.M)
+    end = m.end() + nxt.start() if nxt else len(text)
+    body = "\n".join(lines) + "\n" + ("\n" if nxt else "")
+    with open(report, "w", encoding="utf-8") as fh:
+        fh.write(text[:m.end()] + body + text[end:])
+    print(f"✓ {report}: sekcja Moduły — {len(lines)} wpisów z kart")
+    return 0
+
+
 def main(argv: list[str]) -> int:
     if "-h" in argv or "--help" in argv:
         print(__doc__)
         return 0
-    repo, paths, it = None, [], iter(argv)
+    repo, into, paths, it = None, None, [], iter(argv)
     for a in it:
         if a == "--repo":
             repo = next(it, None)
+        elif a == "--into":
+            into = next(it, None)
         elif not a.startswith("--"):
             paths.append(a)
     if len(paths) != 1 or not os.path.isdir(paths[0]) or (repo is not None and not os.path.isdir(repo)):
@@ -156,6 +180,8 @@ def main(argv: list[str]) -> int:
                 "Złożone skryptem z `modules/*.json`; reguły przekrojowe i mapowania dopisuje synteza poniżej."]
         with open(os.path.join(os.path.dirname(os.path.abspath(d)), "rules.md"), "w", encoding="utf-8") as fh:
             fh.write("\n".join(head + rules) + "\n")
+    if into:
+        rc = max(rc, inject(into, lines))
     if "--summary" in argv:
         print("\n## Moduły (propozycja do raportu)")
         print("\n".join(lines))

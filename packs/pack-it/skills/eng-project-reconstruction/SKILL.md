@@ -26,7 +26,9 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    Czytasz streszczenie; po szczegóły sięgasz do konkretnego pliku JSON, nie uruchamiasz skanów osobno.
 2. **Karty modułów** — zawsze wykonawcy na najtańszym modelu (Haiku), także w małym repozytorium: partia
    z `raw/inventory.json` = jedno zadanie, równolegle (drobne partie łącz po kilka w jedno zadanie). Główny model
-   nie czyta plików źródłowych partii; wykonawca zapisuje kartę do pliku i odpowiada jedną linią. Prompt ze stałym
+   nie czyta plików źródłowych partii; wykonawca zapisuje kartę do pliku i odpowiada jedną linią. Wszystkich
+   wykonawców uruchamiasz w jednej wiadomości, na pierwszym planie (bez pracy w tle), i czekasz na ich odpowiedzi —
+   nie odpytujesz katalogu `modules/` w pętli (każde sprawdzenie to tura z pełnym kontekstem). Prompt ze stałym
    początkiem (`references/prompt-karty.md`) i zmienną końcówką (lista plików partii) — wspólny prefiks trafia
    w cache. Wynik: JSON wg `references/karta-modulu.json` w `modules/<moduł>.json`.
    Po każdej partii `recon_cards.py modules/ --repo <repo>` (karta → `modules/<moduł>.md` bez modelu, dowody
@@ -45,7 +47,8 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    kontrolery, agregaty), nie wobec wszystkich plików. Standard testów podaje z przykładem `plik:linia`: rodzaj testu
    na warstwę (np. test web, test repozytorium, integracyjny), bibliotekę dublerów, strukturę przypadków (podtesty,
    tabela, parametry), dane testowe (buildery, fixtures). Standard kodu: idiomy sygnatur, hermetyzacji i kontrolerów.
-6. **Raport** `report.md` wg `references/raport.md` (sekcja Moduły z `recon_cards.py modules/ --summary`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
+6. **Raport** `report.md` wg `references/raport.md`; sekcję Moduły wstawia `recon_cards.py modules/ --repo <repo>
+   --into report.md` (nie przepisujesz jej; szczegóły modułów są w `modules/*.md`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
    (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`.
 7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,
    wszystkie sekcje, twierdzenia bez dowodu oznaczone, tabela stacku z wymaganymi wierszami (z wersjami, CI, testami

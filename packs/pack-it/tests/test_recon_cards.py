@@ -125,6 +125,19 @@ def main() -> int:
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         check(r.returncode == 0 and out.get("bad") == [] and out.get("unsupported") == [], f"C-14: rules.md przechodzi recon_check: {r.stdout[-400:]}")
 
+        # --into: sekcja „## Moduły” raportu podmieniona na wpisy z kart (reszta raportu bez zmian)
+        rep = mods.parent / "report.md"
+        rep.write_text("# R\n## Stack\nx\n## Moduły\n- stary wpis\n## Domeny\ny\n", encoding="utf-8")
+        r = run("recon_cards.py", str(mods), "--repo", str(repo), "--into", str(rep), cwd=d)
+        txt = rep.read_text(encoding="utf-8")
+        mod_part = txt.split("## Moduły", 1)[-1].split("## Domeny")[0]
+        check(r.returncode == 0 and "stary wpis" not in txt and "- billing: Wystawia" in mod_part and "- vet:" in mod_part
+              and txt.startswith("# R\n## Stack\nx\n## Moduły\n") and txt.rstrip().endswith("## Domeny\ny"),
+              f"C-15: sekcja Moduły z kart: {txt[:700]}")
+        rep.write_text("# R\n## Stack\nx\n", encoding="utf-8")
+        r = run("recon_cards.py", str(mods), "--into", str(rep), cwd=d)
+        check(r.returncode == 1 and "brak sekcji" in r.stdout, f"C-16: raport bez sekcji Moduły: rc={r.returncode} {r.stdout[-200:]}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_cards")

@@ -9,10 +9,9 @@ oznaczenie [założenie] / [niezweryfikowane] / [pytanie]. W „Pytaniach” i �
   obraz kontra SDK) wpisujesz w wierszu i powtarzasz w Ryzykach.
 - **CI**: gdy w repo są pliki pipeline'u (`.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile` i podobne), wiersz CI
   wskazuje któryś z nich jako dowód. Sam „brak CI [niezweryfikowane]” wtedy nie przejdzie.
-- **Moduły**: każdy moduł z kart `modules/*.json` ma wpis i aktualny `modules/<moduł>.md` z `recon_cards.py`. Szkic
-  sekcji daje `recon_cards.py modules/ --summary`: cel, dowód, kluczowe elementy (wejścia, pojęcia, tabele) i odnośnik.
-  Przy dużych modułach dopisujesz pakiety lub projekty poziom niżej z odpowiedzialnością, bo sama nazwa modułu nie
-  mówi, gdzie co leży.
+- **Moduły**: każdy moduł z kart `modules/*.json` ma wpis i aktualny `modules/<moduł>.md` z `recon_cards.py`. Sekcję
+  wstawia `recon_cards.py modules/ --into report.md`: cel, dowód, kluczowe elementy (wejścia, pojęcia, tabele)
+  i odnośnik. Duży moduł dzielą partie (karta na pakiet albo projekt), więc poziom niżej widać bez dopisywania.
 
 ```markdown
 # <Nazwa projektu> — rekonstrukcja z kodu
