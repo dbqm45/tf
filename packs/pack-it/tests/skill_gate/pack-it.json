@@ -508,8 +508,8 @@
   "offline": "2026-10-17"
  },
  "sec-variant-analysis": {
-  "fingerprint": "2b5b662bb4d73ec6",
-  "offline": "2026-10-23"
+  "fingerprint": "6730bb8826e32f7c",
+  "offline": "2026-10-24"
  },
  "sec-zero-trust-identity": {
   "fingerprint": "4d6c9815af2ede29",
@@ -530,6 +530,10 @@
  "tool-pytest": {
   "fingerprint": "be56fad0e4e58d38",
   "offline": "2026-10-22"
+ },
+ "tool-semgrep": {
+  "fingerprint": "589f5fde061d68dc",
+  "offline": "2026-10-24"
  },
  "tool-stripe": {
   "fingerprint": "a8ad12eba2e4cc41",
