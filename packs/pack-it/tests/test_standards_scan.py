@@ -83,6 +83,49 @@ def main() -> int:
         r = run(str(repo))
         check(r.returncode == 0 and "snake_case" in r.stdout and "67%" in r.stdout, f"S-12: tekst: {r.stdout[:400]}")
 
+    # idiomy testów i kodu (testy warstwowe, biblioteki dublerów, struktura przypadków, idiomy produkcyjne)
+    IDIOMS = {
+        "src/main/java/app/owner/OwnerController.java": "class OwnerController {\n  @InitBinder\n  void b(WebDataBinder d) { d.setDisallowedFields(\"id\"); }\n"
+                                                        "  @ModelAttribute(\"owner\") Owner o() { return null; }\n  String save() { return \"redirect:/owners/1\"; }\n}\n",
+        "src/main/java/app/vet/VetController.java": "class VetController {\n  String list() { return \"vets\"; }\n}\n",
+        "src/test/java/app/owner/OwnerControllerTests.java": "import org.junit.jupiter.api.Test;\n@WebMvcTest(OwnerController.class)\n"
+                                                              "class OwnerControllerTests {\n  @MockitoBean OwnerRepository owners;\n}\n",
+        "src/test/java/app/owner/OwnerRepositoryTests.java": "import org.junit.jupiter.api.Test;\n@DataJpaTest\nclass OwnerRepositoryTests {}\n",
+        "tests/UnitTests/BasketAddItem.cs": "using Xunit;\nusing NSubstitute;\npublic class BasketAddItem {\n  [Fact]\n  public void AddsItem() {\n"
+                                            "    var repo = Substitute.For<IRepository<Basket>>();\n    var b = new BasketBuilder().Build();\n  }\n}\n",
+        "tests/UnitTests/Builders/BasketBuilder.cs": "public class BasketBuilder {\n  public Basket Build() => new Basket();\n}\n",
+        "src/Core/Basket.cs": "public class Basket {\n  private readonly List<Item> _items = new();\n"
+                              "  public IReadOnlyCollection<Item> Items => _items.AsReadOnly();\n  public void Add(int q) { Guard.Against.Negative(q, nameof(q)); }\n}\n",
+        "article/service.go": "package article\n\nfunc (s *Service) Fetch(ctx context.Context, n int64) error {\n\treturn nil\n}\n"
+                              "func (s *Service) Store(ctx context.Context, a *Article) error {\n\treturn nil\n}\n",
+        "article/helper.go": "package article\n\nfunc encode(s string) string {\n\treturn s\n}\n",
+        "article/service_test.go": "package article_test\n\nimport \"testing\"\n\nfunc TestFetch(t *testing.T) {\n"
+                                   "\ttests := []struct{ name string }{{\"ok\"}}\n\tfor _, tc := range tests {\n\t\tt.Run(tc.name, func(t *testing.T) {})\n\t}\n}\n",
+    }
+    with tempfile.TemporaryDirectory() as d:
+        repo = Path(d)
+        write(repo, IDIOMS)
+        r = run(str(repo), "--json")
+        out = json.loads(r.stdout) if r.returncode == 0 else {}
+        sig = {(s["area"], s["language"], s["rule"]): s for s in out.get("signals", [])}
+        idi = sorted(k for k in sig if k[0].startswith("idiomy"))
+        w = sig.get(("idiomy testów", "Java", "@WebMvcTest (test warstwy web)"))
+        check(w and w["count"] == 1 and w["total"] == 2 and any(e.startswith("src/test/java/app/owner/OwnerControllerTests.java:2") for e in w["examples"]),
+              f"S-13: @WebMvcTest z udziałem i miejscem: {w} {idi}")
+        check(("idiomy testów", "Java", "@DataJpaTest (test repozytorium)") in sig
+              and ("idiomy testów", "Java", "@MockitoBean/@MockBean") in sig, f"S-14: testy warstwowe Spring: {idi}")
+        ns = sig.get(("idiomy testów", "C#", "NSubstitute (Substitute.For)"))
+        check(ns and ns["count"] == 1 and ("idiomy testów", "C#", "builder danych testowych") in sig, f"S-15: dublery i buildery C#: {idi}")
+        check(("idiomy testów", "Go", "t.Run (podtesty)") in sig and ("idiomy testów", "Go", "tabela przypadków ([]struct)") in sig
+              and ("idiomy testów", "Go", "pakiet zewnętrzny *_test") in sig, f"S-16: idiomy testów Go: {idi}")
+        ctx = sig.get(("idiomy kodu", "Go", "context.Context pierwszym argumentem"))
+        check(ctx and ctx["count"] == 1 and ctx["total"] == 2, f"S-17: ctx jako 1. argument (1/2 plików): {ctx}")
+        check(("idiomy kodu", "C#", "AsReadOnly (kolekcje tylko do odczytu)") in sig and ("idiomy kodu", "C#", "Guard.Against") in sig,
+              f"S-18: idiomy C#: {idi}")
+        prg = sig.get(("idiomy kodu", "Java", "redirect: (Post/Redirect/Get)"))
+        check(prg and prg["count"] == 1 and prg["total"] == 2 and ("idiomy kodu", "Java", "@InitBinder") in sig
+              and ("idiomy kodu", "Java", "@ModelAttribute") in sig, f"S-19: idiomy kontrolerów Spring: {prg} {idi}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów standards_scan")

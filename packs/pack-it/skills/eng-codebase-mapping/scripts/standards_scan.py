@@ -7,7 +7,9 @@ standard: regułę zapisujesz po obejrzeniu przykładów i wyjątków. Tylko bib
   python3 standards_scan.py <repo>          # tekst
   python3 standards_scan.py <repo> --json   # pełny wynik
 
-Obszary: nazwy plików, testy (framework, położenie), błędy (szerokie łapanie), logowanie, dług (TODO/FIXME).
+Obszary: nazwy plików, testy (framework, położenie), idiomy testów (rodzaj testu na warstwę, dublery, struktura
+przypadków, buildery), idiomy kodu (np. ctx jako 1. argument, kolekcje tylko do odczytu, Post/Redirect/Get), błędy
+(szerokie łapanie), logowanie, dług (TODO/FIXME).
 Wartości `share` w procentach (zaokrąglone); `total` = pliki danego języka, których sygnał dotyczy.
 """
 from __future__ import annotations
@@ -63,6 +65,34 @@ LOGS = {"Python": [("logging", r"^\s*import logging|getLogger\("), ("structlog",
         "Java": [("slf4j", r"import org\.slf4j"), ("System.out", r"System\.(out|err)\.print")],
         "C#": [("ILogger", r"\bILogger(<\w+>)?\b"), ("Console", r"\bConsole\.Write(Line)?\(")],
         "Go": [("log/slog", r"\"log/slog\""), ("log", r"\"log\""), ("zap", r"go\.uber\.org/zap")]}
+TEST_IDIOMS = {  # w plikach testów: jak zespół testuje (wzorce do standardu testów)
+    "Java": [("@WebMvcTest (test warstwy web)", r"@WebMvcTest\b"), ("@DataJpaTest (test repozytorium)", r"@DataJpaTest\b"),
+             ("@SpringBootTest (test integracyjny)", r"@SpringBootTest\b"), ("@MockitoBean/@MockBean", r"@Mock(ito)?Bean\b"),
+             ("Mockito (mock/when)", r"\bMockito\.|\bwhen\(|@Mock\b"), ("Testcontainers", r"@Testcontainers\b|\bTestcontainers\b|Container<"),
+             ("MockMvc", r"\bMockMvc\b"), ("@ParameterizedTest", r"@ParameterizedTest\b"), ("AssertJ (assertThat)", r"\bassertThat\(")],
+    "C#": [("[Fact]", r"\[Fact\]"), ("[Theory] z danymi", r"\[Theory\]"), ("NSubstitute (Substitute.For)", r"\bSubstitute\.For<"),
+           ("Moq (new Mock<>)", r"\bnew Mock<"), ("WebApplicationFactory (testy integracyjne)", r"\bWebApplicationFactory<"),
+           ("builder danych testowych", r"\bclass \w+Builder\b|\bnew \w+Builder\("), ("FluentAssertions (.Should())", r"\.Should\(\)")],
+    "Go": [("t.Run (podtesty)", r"\bt\.Run\("), ("tabela przypadków ([]struct)", r"\[\]struct\s*\{"),
+           ("pakiet zewnętrzny *_test", r"^package \w+_test\b"), ("sqlmock", r"go-sqlmock|sqlmock\."),
+           ("mockery (mocks.)", r"\bmocks\.\w+|mock\.Anything"), ("testify assert/require", r"\b(assert|require)\.\w+\("),
+           ("httptest", r"\bhttptest\.")],
+    "Python": [("@pytest.mark.parametrize", r"@pytest\.mark\.parametrize"), ("fixture pytest", r"@pytest\.fixture"),
+               ("unittest.mock", r"unittest\.mock|\bMagicMock\b|\bpatch\("), ("factory_boy", r"\bfactory\.\w+Factory\b")],
+    "TypeScript": [("describe/it", r"\bdescribe\(|\bit\("), ("test.each/it.each", r"\b(test|it)\.each\b"),
+                   ("vi.mock/jest.mock", r"\b(vi|jest)\.mock\("), ("Testing Library", r"@testing-library/"), ("msw", r"from ['\"]msw")],
+    "JavaScript": [("describe/it", r"\bdescribe\(|\bit\("), ("vi.mock/jest.mock", r"\b(vi|jest)\.mock\(")]}
+CODE_IDIOMS = {  # w kodzie produkcyjnym: idiomy, które warto zapisać w standardzie
+    "Go": [("context.Context pierwszym argumentem", r"^func (\([^)]*\) )?\w+\(\s*\w+ context\.Context\b"),
+           ("błędy sentinel (errors.New w var)", r"^\s*Err\w+\s*=\s*errors\.New\("), ("opakowanie błędu (%w)", r"%w")],
+    "Java": [("wstrzykiwanie konstruktorem (pola final)", r"^\s*private final \w+"), ("@Autowired na polu", r"@Autowired\s*\n?\s*private"),
+             ("@InitBinder", r"@InitBinder\b"), ("@ModelAttribute", r"@ModelAttribute\b"),
+             ("redirect: (Post/Redirect/Get)", r"\"redirect:"), ("@Transactional", r"@Transactional\b"), ("record", r"\brecord \w+\(")],
+    "C#": [("AsReadOnly (kolekcje tylko do odczytu)", r"\.AsReadOnly\(\)"), ("prywatny setter", r"\{\s*get;\s*private set;"),
+           ("Guard.Against", r"\bGuard\.Against\."), ("rejestracja DI w metodach rozszerzających", r"this IServiceCollection\b"),
+           ("wyjątek domenowy (: Exception)", r"class \w+Exception\s*:\s*\w*Exception\b")],
+    "Python": [("dataclass", r"@dataclass\b"), ("pydantic BaseModel", r"\(BaseModel\)"), ("adnotacje typów w def", r"def \w+\([^)]*:\s*\w")],
+    "TypeScript": [("zod (walidacja na granicy)", r"from ['\"]zod['\"]"), ("readonly", r"\breadonly\b")]}
 TODO = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b")
 
 
@@ -132,6 +162,13 @@ def scan(root: str) -> dict:
             col = [p for p in tests if p not in sep]
             if col:
                 sigs.append(signal("testy", lang, "test obok kodu", col, len(tests), col, sep))
+        # idiomy: testów (w testach) i kodu (w kodzie produkcyjnym)
+        for area, table, pool in (("idiomy testów", TEST_IDIOMS, tests), ("idiomy kodu", CODE_IDIOMS, prod)):
+            for rule, rx in table.get(lang, []):
+                hit = {p: lines_matching(texts[p], rx) for p in pool}
+                hit = {p: l for p, l in hit.items() if l}
+                if hit:
+                    sigs.append(signal(area, lang, rule, list(hit), len(pool), [f"{p}:{l[0]}" for p, l in hit.items()]))
         # błędy, logowanie, dług — w kodzie produkcyjnym
         for area, table in (("błędy", BROAD), ("logowanie", LOGS)):
             for rule, rx in table.get(lang, []):

@@ -32,8 +32,8 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
 1c. **Spis i konwencje bez modelu** (duże lub obce repo): `python3 .claude/skills/eng-codebase-mapping/scripts/repo_inventory.py
    <repo> [--budget-tokens N]` — języki, pliki budowania, wykluczenia (zależności, build, kod wygenerowany), moduły
    i partie plików w budżecie tokenów do analizy porcjami; `scripts/standards_scan.py <repo>` — narzędzia
-   z konfiguracji i konwencje policzone w kodzie (nazwy plików, testy, łapanie błędów, logowanie, TODO) z udziałem,
-   przykładami `plik:linia` i wyjątkami. To dane do standardu, nie standard.
+   z konfiguracji i konwencje policzone w kodzie (nazwy plików, testy, idiomy testów i kodu, łapanie błędów,
+   logowanie, TODO) z udziałem, przykładami `plik:linia` i wyjątkami. To dane do standardu, nie standard.
    `scripts/schema_scan.py <repo>` — tabele, kolumny, ograniczenia i powiązania z migracji SQL (Flyway) oraz encji
    JPA i EF Core z `plik:linia` (ograniczenia = kandydaci na reguły). Raport z dowodami sprawdza
    `scripts/recon_check.py <raport.md> --repo <repo>`: plik i linia istnieją, cytat zgadza się z kodem (±2 linie),

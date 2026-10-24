@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "S1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md/build-and-ci.md: Java 17, maven-enforcer requireJavaVersion, Gradle toolchain 17",
+   "why_B": "report.md: Java 17 (pom.xml:19), Maven i Gradle zgodne, CI 17; enforcer niewymieniony, reszta zgodna"
+  },
+  {
+   "id": "S2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: Spring Boot 4.1.0 + webmvc, thymeleaf, data-jpa, validation, cache, actuator",
+   "why_B": "report.md Stack: Spring Boot 4.1.0, webmvc, Thymeleaf, Data JPA, Validation, Cache, Actuator"
+  },
+  {
+   "id": "S3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "spring-petclinic-conventions.md: H2 domyślnie, profile mysql/postgres, ddl-auto=none, db/{h2,mysql,postgres}",
+   "why_B": "report.md Stack Dane: H2, MySQL 9.7, PostgreSQL 18.4, ddl-auto=none, skrypty SQL per baza"
+  },
+  {
+   "id": "S4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "build-and-ci.md, spring-petclinic-testing.md: Maven+Gradle, mvnw verify / gradlew build, JUnit5, Testcontainers, JaCoCo",
+   "why_B": "report.md Stack Build/Testy/CI: Maven+Gradle, JUnit 5, Mockito, Testcontainers, JaCoCo, ./mvnw -B verify"
+  },
+  {
+   "id": "M1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md owner: Owner, Pet, PetType, Visit, 3 kontrolery, repozytoria, PetValidator, PetTypeFormatter",
+   "why_B": "report.md/modules/owner.md: kontrolery, encje i repozytoria, PetValidator, PetTypeFormatter"
+  },
+  {
+   "id": "M2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md vet: Vet, Vets, Specialty, /vets.html, JSON /vets (ManyToMany niewymienione wprost)",
+   "why_B": "modules/vet.md: /vets.html, /vets JSON/XML, vet_specialties, Specialty, cache"
+  },
+  {
+   "id": "M3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md model: BaseEntity, NamedEntity, Person; conventions: @MappedSuperclass, Integer id IDENTITY",
+   "why_B": "modules/model.md: BaseEntity (mapped superclass, id z bazy, isNew gdy id==null), NamedEntity, Person"
+  },
+  {
+   "id": "M4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md system: CacheConfiguration (vets), WebConfiguration (?lang=, session locale), CrashController /oups",
+   "why_B": "modules/system.md: ?lang, sesja, cache vets, /oups, welcome"
+  },
+  {
+   "id": "R1",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "Brak reguły telefonu 10 cyfr, ani limitów adresu/miasta (tylko ogólnie @Pattern)",
+   "why_B": "rules.md: Owner.java:64 \\d{10}, adres 255, miasto 80"
+  },
+  {
+   "id": "R2",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "Brak limitu 30 znaków Person",
+   "why_B": "rules.md/model.md: Person firstName/lastName wymagane, max 30"
+  },
+  {
+   "id": "R3",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "conventions: PetValidator jako cross-field Validator z @InitBinder, ale bez treści reguł (30 znaków, typ, data)",
+   "why_B": "rules.md: nazwa max 30, typ nowego wymagany, data urodzenia wymagana; owner.md: ręczny PetValidator"
+  },
+  {
+   "id": "R4",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "architecture.md: unikalny owner_id+name w schemacie; brak duplicate w kontrolerze, case-insensitive i daty z przyszłości",
+   "why_B": "rules.md: owner.getPet(...,true) duplicate, UNIQUE (owner_id,name), equalsIgnoreCase, birthDate isAfter"
+  },
+  {
+   "id": "R5",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "Brak reguły daty wizyty > dziś i opisu max 255",
+   "why_B": "rules.md: wizyta po dzisiejszej dacie, domyślnie jutro, opis 255"
+  },
+  {
+   "id": "C1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "project-formatting-and-contribution.md, build-and-ci.md: spring-javaformat validate, tabulatory, .editorconfig, nohttp checkstyle",
+   "why_B": "standards/format.md: Spring Java Format, Checkstyle nohttp, .editorconfig tabulatory"
+  },
+  {
+   "id": "C2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: konstruktor, final, 0 @Autowired, kontrolery package-private",
+   "why_B": "standards/controllers.md: pakietowe klasy, konstruktor final, brak @Autowired"
+  },
+  {
+   "id": "C3",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "conventions: Package by Feature owner/vet/model/system, brak warstw",
+   "why_B": "domain.md: granice to pakiety; modules per pakiet, ale brak jawnego stwierdzenia package-by-feature"
+  },
+  {
+   "id": "C4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: setDisallowedFields('id'), @ModelAttribute, PRG z flash",
+   "why_B": "standards/controllers.md: setDisallowedFields id,*.id, @ModelAttribute, PRG"
+  },
+  {
+   "id": "C5",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "testing.md: @WebMvcTest+@MockitoBean, @DataJpaTest, Testcontainers, @DisabledInNativeImage",
+   "why_B": "standards/tests.md: te same adnotacje, Testcontainers MySQL, @DisabledInNativeImage"
+  },
+  {
+   "id": "O1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md/roadmap/conventions: exposure.include=* tylko dev, nie w produkcji",
+   "why_B": "report.md Ryzyka: Actuator wszystkie endpointy, komentarz ostrzega"
+  },
+  {
+   "id": "O2",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "tech-stack/architecture: GraalVM native, PetClinicRuntimeHints, I18nPropertiesSyncTest, 11 pakietów komunikatów",
+   "why_B": "report.md: PetClinicRuntimeHints (native image) i 10 języków (requirements.md); brak GraalVM plugin i I18nPropertiesSyncTest"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "project-formatting-and-contribution.md: wszystkie 48 z 48 plików Java mają nagłówek licencji",
+    "verdict": "fałsz",
+    "code": "find src -name '*.java' = 50 plików; np. src/main/java/.../system/WebConfiguration.java i PetValidatorTests/PetClinicConcurrencyTests nie mają 'Copyright 2012-2025' (PetValidatorTests.java:2 ma 2024)"
+   },
+   {
+    "claim": "roadmap.md: stały rozmiar strony 5 zduplikowany w OwnerController i VetController",
+    "verdict": "prawda",
+    "code": "OwnerController.java:142 'int pageSize = 5'; VetController.java:66"
+   },
+   {
+    "claim": "roadmap.md: gradle-build.yml używa cache Maven",
+    "verdict": "prawda",
+    "code": ".github/workflows/gradle-build.yml:27 'cache: maven'"
+   },
+   {
+    "claim": "roadmap.md: deploy-and-test-cluster.yml używa actions/checkout@v2",
+    "verdict": "prawda",
+    "code": ".github/workflows/deploy-and-test-cluster.yml:18"
+   },
+   {
+    "claim": "roadmap.md: redundantne findById w OwnerRepository",
+    "verdict": "prawda",
+    "code": "OwnerRepository.java:60 'Optional<Owner> findById(Integer id);' (JpaRepository już je ma, :36)"
+   },
+   {
+    "claim": "architecture.md: k8s NodePort, sondy /livez i /readyz, obraz dsyer/petclinic",
+    "verdict": "prawda",
+    "code": "k8s/petclinic.yml:7, :49, :53, :33"
+   },
+   {
+    "claim": "build-and-ci.md: Checkstyle przypięty do 12.x, devcontainer używa JDK 21",
+    "verdict": "prawda",
+    "code": "pom.xml:30-31; .devcontainer/devcontainer.json:6 '21-oracle'"
+   },
+   {
+    "claim": "tech-stack.md: wrapper Maven 3.9.16 i Gradle 9.5.1",
+    "verdict": "prawda",
+    "code": ".mvn/wrapper/maven-wrapper.properties distributionUrl 3.9.16; gradle/wrapper/gradle-wrapper.properties gradle-9.5.1"
+   },
+   {
+    "claim": "spring-petclinic-conventions.md: adnotacje encji to @NotBlank, @Pattern, @Digits",
+    "verdict": "fałsz",
+    "code": "grep @Digits w src/main = brak trafień; Owner.java:35,64 używa @Pattern/@NotBlank, brak @Digits"
+   },
+   {
+    "claim": "spring-petclinic-conventions.md: VetRepository używa @Transactional(readOnly=true) i @Cacheable",
+    "verdict": "prawda",
+    "code": "VetRepository.java:44-45 i :54-55"
+   }
+  ],
+  "B": [
+   {
+    "claim": "rules.md: telefon dokładnie 10 cyfr",
+    "verdict": "prawda",
+    "code": "Owner.java:64 @Pattern(regexp = \"\\\\d{10}\")"
+   },
+   {
+    "claim": "rules.md: Postgres ma unikalny indeks unique_owner_pet_name na LOWER(name)",
+    "verdict": "prawda",
+    "code": "db/postgres/schema.sql:45"
+   },
+   {
+    "claim": "rules.md: MySQL ma więz UNIQUE bez nazwy dla (owner_id,name)",
+    "verdict": "prawda",
+    "code": "db/mysql/schema.sql:47"
+   },
+   {
+    "claim": "rules.md: para (vet, specialty) unikalna w MySQL i Postgres, nie w H2",
+    "verdict": "prawda",
+    "code": "db/mysql/schema.sql:19; db/postgres/schema.sql:17; db/h2/schema.sql:23-26 bez UNIQUE"
+   },
+   {
+    "claim": "rules.md: wizyta musi być po dzisiejszej dacie",
+    "verdict": "prawda",
+    "code": "VisitController.java:100"
+   },
+   {
+    "claim": "report.md: wersja projektu 4.0.0-SNAPSHOT przy Boot 4.1.0",
+    "verdict": "prawda",
+    "code": "pom.xml:13; build.gradle:15"
+   },
+   {
+    "claim": "modules/vet.md: specjalizacje weterynarza sortowane po nazwie",
+    "verdict": "prawda",
+    "code": "Vet.java:61-62 Comparator.comparing(NamedEntity::getName)"
+   },
+   {
+    "claim": "standards/tests.md: @DataJpaTest tylko w jednej klasie (ClinicServiceTests)",
+    "verdict": "prawda",
+    "code": "grep DataJpaTest src/test -> tylko service/ClinicServiceTests.java"
+   },
+   {
+    "claim": "standards/format.md/report.md: 30 plików main, 5 package-info.java",
+    "verdict": "prawda",
+    "code": "find src/main -name '*.java' = 30; package-info.java = 5"
+   },
+   {
+    "claim": "rules.md: dodanie zwierzęcia o tym samym id jest ignorowane; wizyta wymaga istniejącego zwierzęcia",
+    "verdict": "prawda",
+    "code": "Owner.java:104-111 (return przy tym samym id); Owner.java:183 Assert.notNull(pet, \"Invalid Pet identifier!\")"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 15,
+   "częściowo": 2,
+   "nie": 3,
+   "błędnie": 0,
+   "prawda": 8,
+   "fałsz": 2,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 18,
+   "częściowo": 2,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 10,
+   "fałsz": 0,
+   "nieweryfikowalne": 0
+  }
+ }
+}

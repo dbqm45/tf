@@ -117,6 +117,21 @@
    }
   },
   {
+   "id": "standard-testow-i-idiomy",
+   "expect": "trigger",
+   "prompt": "Rekonstruuję standardy z kodu dużej aplikacji. Wyszło mi „testy: JUnit 5, osobny katalog” i tyle — agent dalej pisze testy inaczej niż zespół. Co jeszcze powinien zawierać standard testów i idiomów kodu wyciągnięty z repo, żeby był użyteczny? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["warstw\\w*", "rodzaj\\w* test\\w*", "WebMvcTest", "DataJpaTest", "integracyjn\\w*"],
+     ["dubler\\w*", "mock\\w*", "Mockito", "NSubstitute"],
+     ["builder\\w*", "dane testowe", "fixture\\w*", "parametr\\w*", "tabel\\w* przypadk"],
+     ["plik:linia", "przykład\\w* z kodu", "dow[oó]d\\w*"],
+     ["udział\\w*", "\\d+ ?%", "ile (razy|plików)", "wyjąt\\w*"]
+    ],
+    "none": ["wystarczy (podać|nazwa) framework"]
+   }
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",
