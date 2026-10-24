@@ -143,7 +143,8 @@ Odświeżanie: `--refresh` → tylko moduły ze zmienionym hashem + ponowna synt
   i `domain.md`, jeśli istnieją (bez nazw skilli z innej nakładki — opis słowny). Scenariusz ewaluacji Talosa.
 - **F4. Pomiar (płatny, za zgodą):** ewaluacja skilla na Haiku (~1–2 USD); benchmark vs maister — patrz niżej.
   Część A ✓ zrobiona 2026-10-24 (1,48 USD; ze skillem 10/10, treść bez skilli 3/6) — `docs/evals/2026-10-24-f4-rekonstrukcja-haiku.md`.
-  Część B (benchmark) — czeka na decyzję człowieka.
+  Część B ✓ zrobiona 2026-10-24 (10,55 USD) — `docs/evals/2026-10-24-f4-benchmark-maister.md`: pokrycie ważone 85% vs 80%,
+  poprawność 96% vs 90%, koszt 68% maistera; luka: stack i moduły, przewaga: reguły biznesowe.
 - **F5. Odświeżanie przyrostowe + raport HTML (Artifact).** ✓ zrobione 2026-10-23 (`recon_manifest.py write|diff` — partie i pliki z hashem sha256, partie do odświeżenia, usunięte, zmienione testy; krok 8 skilla: strona HTML z `report.md`, Artifact prywatny, gdy jest w sesji; Markdown zostaje źródłem).
 - **F6. Opcjonalnie:** mod z panelem postępu; tryb Workflow dla bardzo dużych repo; tryb wsadowy (Batches).
 - **F7. Odłożone do decyzji:** konektory GitHub (issues/PR jako źródło wymagań), Confluence, Slack;

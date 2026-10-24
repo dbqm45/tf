@@ -1,0 +1,6 @@
+tf	go-clean-arch	0	301	1.1031193	76	success	False
+maister	go-clean-arch	0	486	1.9314153749999998	1	success	False
+tf	eShopOnWeb	0	370	1.3435774	70	success	False
+tf	spring-petclinic	0	424	1.6224658000000003	88	success	False
+maister	eShopOnWeb	0	525	1.9597357699999995	1	success	False
+maister	spring-petclinic	0	549	2.115282295	4	success	False

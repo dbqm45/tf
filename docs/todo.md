@@ -306,7 +306,8 @@ Decyzja: adaptacja własnymi słowami po polsku do istniejących skilli; nowy sk
 
 ## Rekonstrukcja projektu z kodu
 Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4). Zakres teraz: tylko kod; bez PHP.
-- [ ] F0–F5 wg planu — zrobione F0–F3 i F5; F4 część A (ewaluacja skilla na Haiku, 1,48 USD, 10/10 ze skillem, treść bez skilli 3/6) zrobiona 2026-10-24 — `docs/evals/2026-10-24-f4-rekonstrukcja-haiku.md`; część B (benchmark vs maister) czeka na decyzję człowieka.
+- [ ] F0–F5 wg planu — zrobione F0–F3 i F5; F4 część A (ewaluacja skilla na Haiku, 1,48 USD, 10/10 ze skillem, treść bez skilli 3/6) zrobiona 2026-10-24 — `docs/evals/2026-10-24-f4-rekonstrukcja-haiku.md`; część B (benchmark vs maister na 3 repozytoriach, 10,55 USD) zrobiona 2026-10-24 — `docs/evals/2026-10-24-f4-benchmark-maister.md`: pokrycie ważone 85% vs 80%, poprawność 96% vs 90%, koszt 68% maistera (cel ≤ 50% niespełniony).
+- [ ] **Po F4:** w `eng-project-reconstruction` obowiązkowa tabela stacku (wersje, profile, CI, testy) i lista modułów z odpowiedzialnością (luka 9/12 i 9,5/12 wobec 12/12 maistera) + scenariusz ewaluacji; obniżenie kosztu (cel ≤ 50% maistera); powtórka testu odświeżenia ze zmianą w logice.
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
 
 ## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23

@@ -1,0 +1,337 @@
+[
+ {
+  "id": "E1",
+  "category": "stack",
+  "fact": "Projekt jest w C# na .NET 8 (net8.0 ustawione centralnie, SDK 8.0.x w global.json).",
+  "evidence": [
+   "Directory.Packages.props:4",
+   "global.json:3"
+  ],
+  "keywords": [
+   ".NET 8",
+   "net8.0",
+   "global.json"
+  ]
+ },
+ {
+  "id": "E2",
+  "category": "stack",
+  "fact": "Warstwa web to ASP.NET Core 8: aplikacja Web (Razor Pages + MVC z widokami, klient Blazor WebAssembly) oraz osobne PublicApi na Minimal API.",
+  "evidence": [
+   "src/Web/Program.cs:80",
+   "src/Web/Program.cs:81",
+   "src/PublicApi/Program.cs:28",
+   "src/BlazorAdmin/BlazorAdmin.csproj:1"
+  ],
+  "keywords": [
+   "ASP.NET Core",
+   "Razor Pages",
+   "Blazor WebAssembly",
+   "MinimalApi.Endpoint"
+  ]
+ },
+ {
+  "id": "E3",
+  "category": "stack",
+  "fact": "Dostęp do danych przez Entity Framework Core 8 (SQL Server lub provider InMemory przełączany ustawieniem UseOnlyInMemoryDatabase) z ASP.NET Core Identity w osobnym AppIdentityDbContext.",
+  "evidence": [
+   "src/Infrastructure/Dependencies.cs:14",
+   "src/Infrastructure/Dependencies.cs:21",
+   "src/Infrastructure/Dependencies.cs:32",
+   "src/Infrastructure/Dependencies.cs:36",
+   "Directory.Packages.props:40"
+  ],
+  "keywords": [
+   "EF Core",
+   "CatalogContext",
+   "AppIdentityDbContext",
+   "UseInMemoryDatabase"
+  ]
+ },
+ {
+  "id": "E4",
+  "category": "stack",
+  "fact": "Testy: xUnit 2.7 z NSubstitute jako biblioteką dublerów; cztery projekty testowe (Unit, Integration, Functional, PublicApiIntegration), testy funkcjonalne na WebApplicationFactory.",
+  "evidence": [
+   "Directory.Packages.props:47",
+   "Directory.Packages.props:59",
+   "tests/UnitTests/UnitTests.csproj:13",
+   "tests/UnitTests/UnitTests.csproj:18",
+   "tests/FunctionalTests/Web/WebTestFixture.cs:15"
+  ],
+  "keywords": [
+   "xUnit",
+   "NSubstitute",
+   "WebApplicationFactory",
+   "UnitTests"
+  ]
+ },
+ {
+  "id": "E5",
+  "category": "module",
+  "fact": "ApplicationCore to rdzeń domeny bez zależności od infrastruktury: encje i agregaty (Basket, Order, CatalogItem, Buyer), interfejsy (IRepository, serwisy), specyfikacje, serwisy domenowe (BasketService, OrderService) i wyjątki.",
+  "evidence": [
+   "src/ApplicationCore/ApplicationCore.csproj:6",
+   "src/ApplicationCore/Services/BasketService.cs:11",
+   "src/ApplicationCore/Services/OrderService.cs:12",
+   "src/ApplicationCore/Interfaces/IAggregateRoot.cs:3"
+  ],
+  "keywords": [
+   "ApplicationCore",
+   "agregat",
+   "BasketService",
+   "OrderService"
+  ]
+ },
+ {
+  "id": "E6",
+  "category": "module",
+  "fact": "Infrastructure implementuje porty domeny: EfRepository, CatalogContext i konfiguracje EF, migracje, Identity (tokeny JWT), EmailSender (stub) i LoggerAdapter; referencjonuje tylko ApplicationCore.",
+  "evidence": [
+   "src/Infrastructure/Infrastructure.csproj:16",
+   "src/Infrastructure/Data/EfRepository.cs:6",
+   "src/Infrastructure/Services/EmailSender.cs:8",
+   "src/Infrastructure/Logging/LoggerAdapter.cs:6"
+  ],
+  "keywords": [
+   "Infrastructure",
+   "EfRepository",
+   "CatalogContext",
+   "LoggerAdapter"
+  ]
+ },
+ {
+  "id": "E7",
+  "category": "module",
+  "fact": "Web to sklepowa aplikacja MVC/Razor Pages (koszyk, checkout, katalog, moje zamówienia) hostująca też BlazorAdmin; referencjonuje ApplicationCore, Infrastructure, BlazorAdmin i BlazorShared, a rejestruje DI w Configuration/ConfigureCoreServices i ConfigureWebServices.",
+  "evidence": [
+   "src/Web/Web.csproj:43",
+   "src/Web/Web.csproj:44",
+   "src/Web/Web.csproj:45",
+   "src/Web/Web.csproj:46",
+   "src/Web/Configuration/ConfigureCoreServices.cs:15"
+  ],
+  "keywords": [
+   "Web",
+   "Razor Pages",
+   "ConfigureCoreServices",
+   "Checkout"
+  ]
+ },
+ {
+  "id": "E8",
+  "category": "module",
+  "fact": "PublicApi to osobne REST API (endpointy katalogu CRUD i uwierzytelnianie JWT) oraz BlazorAdmin/BlazorShared jako klient administracyjny i wspólne modele/stałe (rola Administrators).",
+  "evidence": [
+   "src/PublicApi/CatalogItemEndpoints/CreateCatalogItemEndpoint.cs:18",
+   "src/PublicApi/AuthEndpoints/AuthenticateEndpoint.cs:15",
+   "src/BlazorAdmin/BlazorAdmin.csproj:15",
+   "src/ApplicationCore/ApplicationCore.csproj:17"
+  ],
+  "keywords": [
+   "PublicApi",
+   "BlazorAdmin",
+   "BlazorShared",
+   "JWT"
+  ]
+ },
+ {
+  "id": "E9",
+  "category": "rule",
+  "fact": "Dodanie istniejącej pozycji do koszyka zwiększa jej ilość zamiast tworzyć duplikat, a przy pierwszym dodaniu cena jednostkowa zostaje zapamiętana.",
+  "evidence": [
+   "src/ApplicationCore/Entities/BasketAggregate/Basket.cs:24",
+   "src/ApplicationCore/Entities/BasketAggregate/Basket.cs:29",
+   "tests/UnitTests/ApplicationCore/Entities/BasketTests/BasketAddItem.cs:28",
+   "tests/UnitTests/ApplicationCore/Entities/BasketTests/BasketAddItem.cs:38"
+  ],
+  "keywords": [
+   "Basket.AddItem",
+   "AddQuantity",
+   "KeepsOriginalUnitPrice"
+  ]
+ },
+ {
+  "id": "E10",
+  "category": "rule",
+  "fact": "Ilość pozycji koszyka nie może być ujemna (Guard.Against.OutOfRange 0..int.MaxValue, wyjątek ArgumentOutOfRangeException); ilość 0 jest dozwolona i takie pozycje usuwa RemoveEmptyItems.",
+  "evidence": [
+   "src/ApplicationCore/Entities/BasketAggregate/BasketItem.cs:22",
+   "src/ApplicationCore/Entities/BasketAggregate/BasketItem.cs:29",
+   "src/ApplicationCore/Entities/BasketAggregate/Basket.cs:33",
+   "tests/UnitTests/ApplicationCore/Entities/BasketTests/BasketAddItem.cs:64"
+  ],
+  "keywords": [
+   "OutOfRange",
+   "RemoveEmptyItems",
+   "ujemna ilość"
+  ]
+ },
+ {
+  "id": "E11",
+  "category": "rule",
+  "fact": "Zamówienie z pustego koszyka jest zabronione: OrderService rzuca EmptyBasketOnCheckoutException (własny guard), a strona Checkout łapie ją i przekierowuje do koszyka.",
+  "evidence": [
+   "src/ApplicationCore/Services/OrderService.cs:36",
+   "src/ApplicationCore/Extensions/GuardExtensions.cs:10",
+   "src/Web/Pages/Basket/Checkout.cshtml.cs:60"
+  ],
+  "keywords": [
+   "EmptyBasketOnCheckout",
+   "EmptyBasketOnCheckoutException",
+   "BasketGuards"
+  ]
+ },
+ {
+  "id": "E12",
+  "category": "rule",
+  "fact": "Order wymaga niepustego buyerId (Guard.Against.NullOrEmpty), a CatalogItem.UpdateDetails wymaga niepustej nazwy i opisu oraz ceny większej od zera.",
+  "evidence": [
+   "src/ApplicationCore/Entities/OrderAggregate/Order.cs:15",
+   "src/ApplicationCore/Entities/CatalogItem.cs:35",
+   "src/ApplicationCore/Entities/CatalogItem.cs:37",
+   "src/ApplicationCore/Entities/CatalogItem.cs:46"
+  ],
+  "keywords": [
+   "NullOrEmpty",
+   "NegativeOrZero",
+   "UpdateDetails"
+  ]
+ },
+ {
+  "id": "E13",
+  "category": "rule",
+  "fact": "Utworzenie pozycji katalogu o istniejącej nazwie kończy się DuplicateException mapowanym przez ExceptionMiddleware na HTTP 409 Conflict; tworzenie wymaga roli Administrators i JWT.",
+  "evidence": [
+   "src/PublicApi/CatalogItemEndpoints/CreateCatalogItemEndpoint.cs:30",
+   "src/PublicApi/CatalogItemEndpoints/CreateCatalogItemEndpoint.cs:47",
+   "src/PublicApi/Middleware/ExceptionMiddleware.cs:35",
+   "src/PublicApi/Middleware/ExceptionMiddleware.cs:37"
+  ],
+  "keywords": [
+   "DuplicateException",
+   "409 Conflict",
+   "Administrators",
+   "ExceptionMiddleware"
+  ]
+ },
+ {
+  "id": "E14",
+  "category": "standard",
+  "fact": "Dostęp do danych przez wzorzec Repository + Specification (Ardalis.Specification): IRepository<T> ograniczone do IAggregateRoot, jedna generyczna EfRepository<T>, zapytania jako klasy Specification w ApplicationCore.",
+  "evidence": [
+   "src/ApplicationCore/Interfaces/IRepository.cs:5",
+   "src/Infrastructure/Data/EfRepository.cs:6",
+   "src/ApplicationCore/Specifications/BasketWithItemsSpecification.cs:6",
+   "src/ApplicationCore/Services/BasketService.cs:14"
+  ],
+  "keywords": [
+   "Specification",
+   "IRepository",
+   "EfRepository",
+   "IAggregateRoot"
+  ]
+ },
+ {
+  "id": "E15",
+  "category": "standard",
+  "fact": "Agregaty DDD hermetyzują kolekcje: prywatne pola List z publicznym IReadOnlyCollection (AsReadOnly), prywatne settery i bezparametrowy prywatny konstruktor pod EF; EF mapuje pola przez PropertyAccessMode.Field.",
+  "evidence": [
+   "src/ApplicationCore/Entities/BasketAggregate/Basket.cs:11",
+   "src/ApplicationCore/Entities/BasketAggregate/Basket.cs:12",
+   "src/ApplicationCore/Entities/OrderAggregate/Order.cs:36",
+   "src/ApplicationCore/Entities/OrderAggregate/Order.cs:11",
+   "src/Infrastructure/Data/Config/BasketConfiguration.cs:12"
+  ],
+  "keywords": [
+   "AsReadOnly",
+   "private set",
+   "PropertyAccessMode.Field",
+   "aggregate root"
+  ]
+ },
+ {
+  "id": "E16",
+  "category": "standard",
+  "fact": "Walidacja niezmienników w domenie przez Ardalis.GuardClauses (Guard.Against.*), w tym rozszerzenie własnym guardem w przestrzeni nazw Ardalis.GuardClauses.",
+  "evidence": [
+   "Directory.Packages.props:12",
+   "src/ApplicationCore/Extensions/GuardExtensions.cs:6",
+   "src/ApplicationCore/Services/OrderService.cs:35",
+   "src/Web/Pages/Basket/Index.cshtml.cs:70"
+  ],
+  "keywords": [
+   "Guard.Against",
+   "Ardalis.GuardClauses",
+   "guard clauses"
+  ]
+ },
+ {
+  "id": "E17",
+  "category": "standard",
+  "fact": "Wstrzykiwanie zależności przez konstruktor z rejestracją w metodach rozszerzających: repozytoria i serwisy Scoped (otwarte generyki), IUriComposer Singleton, IEmailSender Transient; abstrakcja IAppLogger<T> zamiast ILogger w rdzeniu.",
+  "evidence": [
+   "src/Web/Configuration/ConfigureCoreServices.cs:15",
+   "src/Web/Configuration/ConfigureCoreServices.cs:23",
+   "src/Web/Configuration/ConfigureCoreServices.cs:26",
+   "src/Infrastructure/Logging/LoggerAdapter.cs:6"
+  ],
+  "keywords": [
+   "AddScoped",
+   "IAppLogger",
+   "ConfigureCoreServices",
+   "DI"
+  ]
+ },
+ {
+  "id": "E18",
+  "category": "standard",
+  "fact": "Testy jednostkowe: klasa na scenariusz (np. BasketAddItem, DeleteBasket), metody [Fact] z nazwami opisującymi zachowanie, Assert z xUnit, repozytoria mockowane Substitute.For<IRepository<...>>, buildery danych w tests/UnitTests/Builders.",
+  "evidence": [
+   "tests/UnitTests/ApplicationCore/Entities/BasketTests/BasketAddItem.cs:15",
+   "tests/UnitTests/ApplicationCore/Services/BasketServiceTests/AddItemToBasket.cs:15",
+   "tests/UnitTests/Builders/BasketBuilder.cs:6"
+  ],
+  "keywords": [
+   "[Fact]",
+   "Substitute.For",
+   "Builder",
+   "xUnit"
+  ]
+ },
+ {
+  "id": "E19",
+  "category": "other",
+  "fact": "Ryzyko bezpieczeństwa: klucz JWT, AUTH_KEY i domyślne hasło są zahardkodowane w ApplicationCore/Constants (z komentarzem TODO), a token JWT jest ważny 7 dni.",
+  "evidence": [
+   "src/ApplicationCore/Constants/AuthorizationConstants.cs:5",
+   "src/ApplicationCore/Constants/AuthorizationConstants.cs:8",
+   "src/ApplicationCore/Constants/AuthorizationConstants.cs:11",
+   "src/Infrastructure/Identity/IdentityTokenClaimService.cs:26",
+   "src/Infrastructure/Identity/IdentityTokenClaimService.cs:40"
+  ],
+  "keywords": [
+   "JWT_SECRET_KEY",
+   "DEFAULT_PASSWORD",
+   "hardcoded secret"
+  ]
+ },
+ {
+  "id": "E20",
+  "category": "other",
+  "fact": "Nietypowe/uproszczone elementy przykładu: adres dostawy przy checkout jest zahardkodowany, EmailSender to pusty stub (TODO), a koszyk anonimowy jest identyfikowany GUID-em w ciasteczku i przenoszony na konto po zalogowaniu (TransferBasketAsync).",
+  "evidence": [
+   "src/Web/Pages/Basket/Checkout.cshtml.cs:57",
+   "src/Infrastructure/Services/EmailSender.cs:12",
+   "src/Web/Pages/Basket/Index.cshtml.cs:79",
+   "src/Web/Pages/Basket/Index.cshtml.cs:85",
+   "src/ApplicationCore/Services/BasketService.cs:66"
+  ],
+  "keywords": [
+   "hardcoded address",
+   "BASKET_COOKIENAME",
+   "TransferBasketAsync",
+   "EmailSender stub"
+  ]
+ }
+]

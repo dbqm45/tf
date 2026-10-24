@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "G1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "A/project/tech-stack.md: Go 1.20, CI 1.19, builder golang:1.20.7 mismatch",
+   "why_B": "B/report.md Stack i Ryzyka: CI 1.19, go.mod 1.20, Dockerfile 1.20.7"
+  },
+  {
+   "id": "G2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: labstack/echo v4.11.4",
+   "why_B": "report.md: echo v4.11.4 go.mod:9"
+  },
+  {
+   "id": "G3",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "tech-stack.md: database/sql + go-sql-driver, no ORM, MySQL 8.3, article.sql",
+   "why_B": "report.md: sterownik go-sql-driver, mysql:8.3; brak database/sql i informacji o braku ORM"
+  },
+  {
+   "id": "G4",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "tech-stack.md: testify, go-sqlmock, faker, mockery v2.42.0",
+   "why_B": "report.md: testify, sqlmock, mockery 2.42.0; brak faker"
+  },
+  {
+   "id": "G5",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md: domain imports nothing internal, Article/Author, sentinel errors",
+   "why_B": "domain.md/report.md: domain bez zależności, Article/Author, błędy"
+  },
+  {
+   "id": "G6",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md: Service z Fetch/Store..., author hydration errgroup",
+   "why_B": "report.md Moduły + requirements W2 (artykuł z autorem)"
+  },
+  {
+   "id": "G7",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md: ArticleHandler, 4 trasy, CORS i timeout w middleware",
+   "why_B": "requirements.md W1-W5 trasy z liniami, W8/W9 middleware"
+  },
+  {
+   "id": "G8",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md: repository/mysql + helper.go base64 cursor",
+   "why_B": "report.md: internal=adaptery HTTP i MySQL; helper kursora tylko w rules R9; brak szczegółów repo"
+  },
+  {
+   "id": "G9",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "error-handling.md: ErrNotFound, ErrConflict, ErrBadParamInput, ErrInternalServerError w domain/errors.go",
+   "why_B": "domain.md słownik + errors-logging.md: sentinelowe domain.Err*; brak ErrInternalServerError po nazwie"
+  },
+  {
+   "id": "G10",
+   "A": "częściowo",
+   "B": "częściowo",
+   "why_A": "api.md: getStatusCode, default 500; brak pełnej tabeli 404/409",
+   "why_B": "report.md: ErrBadParamInput->default 500, 404 dla złego id, 409 dla duplikatu; brak pełnego mapowania"
+  },
+  {
+   "id": "G11",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "api.md: bind 422, walidacja 400, validate tags, validator.v9, 201",
+   "why_B": "rules R8 required, W3 201, validator.v9; brak 422/400"
+  },
+  {
+   "id": "G12",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "roadmap.md: check-then-insert duplikatu tytułu; error-handling ErrConflict",
+   "why_B": "rules.md R1 ErrConflict w service.go:151"
+  },
+  {
+   "id": "G13",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "api.md/queries.md: base64 created_at, ?num=10, X-Cursor; brak złego kursora i reguły pełnej strony",
+   "why_B": "rules R3,R4,R5,R9 + report"
+  },
+  {
+   "id": "G14",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "standards/backend/architecture.md: consumer-side interfaces",
+   "why_B": "CLAUDE.draft.md i domain.md: porty w article, ArticleService w rest"
+  },
+  {
+   "id": "G15",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md/architecture.md: explicit wiring bez DI frameworka, composition root",
+   "why_B": "report.md: app ręczne DI; NewXxx w naming-structure.md"
+  },
+  {
+   "id": "G16",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md: CONTEXT_TIMEOUT default 30s, timeout middleware; coding-style: context propagation",
+   "why_B": "requirements W9, naming-structure: ctx pierwszy"
+  },
+  {
+   "id": "G17",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "test-writing.md: mockery go:generate, mocks/, On/Return/AssertExpectations",
+   "why_B": "testing.md: //go:generate mockery, mocks/"
+  },
+  {
+   "id": "G18",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "test-writing.md: t.Run success/error-failed, sqlmock",
+   "why_B": "testing.md: podtesty t.Run, sqlmock bez prawdziwej bazy"
+  },
+  {
+   "id": "G19",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md i roadmap: Update nieroutowany",
+   "why_B": "report.md Pytania, requirements W10"
+  },
+  {
+   "id": "G20",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "architecture.md: .env fatal, config.json w compose, errgroup; brak ignorowanego błędu GetByTitle i 404 dla złego id",
+   "why_B": "report.md Ryzyka: Store ignoruje błąd GetByTitle, id->404, .env, config.json; brak wzmianki o goroutinach/kanale"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "tech-stack.md: CI używa Go 1.19",
+    "verdict": "prawda",
+    "code": ".github/workflows/gotest.yml:18 (go-version: 1.19)"
+   },
+   {
+    "claim": "architecture.md: trasy GET/POST /articles, GET/DELETE /articles/:id; Update nie jest routowany",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:44-47"
+   },
+   {
+    "claim": "architecture.md: article importuje logrus bezpośrednio",
+    "verdict": "prawda",
+    "code": "article/service.go:7"
+   },
+   {
+    "claim": "architecture.md: brak .env jest fatalny",
+    "verdict": "prawda",
+    "code": "app/main.go:29-31"
+   },
+   {
+    "claim": "tech-stack.md: 19 plików źródłowych i 5 testowych",
+    "verdict": "fałsz",
+    "code": "find: 19 plików .go łącznie, w tym 5 testów i 3 mocki; źródłowych ok. 14"
+   },
+   {
+    "claim": "tech-stack.md: lll 160, pliki _test.go pomijane w lintingu",
+    "verdict": "prawda",
+    "code": ".golangci.yaml:25 i :64-65"
+   },
+   {
+    "claim": "roadmap.md: przy tworzeniu CreatedAt/UpdatedAt nie są ustawiane (zero time)",
+    "verdict": "prawda",
+    "code": "article/service.go:148-155, internal/rest/article.go:105-117, mysql/article.go:125"
+   },
+   {
+    "claim": "api.md: błąd bind daje 422, walidacja 400",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:103-108"
+   },
+   {
+    "claim": "test-writing.md: make tests z -race -short -test.count 1 -failfast -parallel 2 -timeout 5s --max-fails 2",
+    "verdict": "prawda",
+    "code": "Makefile:84-95"
+   },
+   {
+    "claim": "architecture.md: schemat ma article, author, article_category, category, bez FK i bez unique na title",
+    "verdict": "prawda",
+    "code": "article.sql:27-35,55-60,81,107"
+   }
+  ],
+  "B": [
+   {
+    "claim": "report.md: make tests z gotestsum -race i timeout 5 s",
+    "verdict": "prawda",
+    "code": "Makefile:84-95"
+   },
+   {
+    "claim": "report.md: mockery 2.42.0",
+    "verdict": "prawda",
+    "code": "misc/make/tools.Makefile:80"
+   },
+   {
+    "claim": "report.md: ErrBadParamInput trafia do default i daje 500",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:147-151; mysql/article.go:69"
+   },
+   {
+    "claim": "requirements W10: Update w serwisie, brak trasy HTTP",
+    "verdict": "prawda",
+    "code": "article/service.go:128; internal/rest/article.go:44-47"
+   },
+   {
+    "claim": "rules R6: Update/Delete muszą zmienić dokładnie 1 wiersz",
+    "verdict": "prawda",
+    "code": "internal/repository/mysql/article.go:155 i :178"
+   },
+   {
+    "claim": "rules R11: błąd pobrania autorów przy liście zeruje nextCursor",
+    "verdict": "prawda",
+    "code": "article/service.go:107-110"
+   },
+   {
+    "claim": "errors-logging.md: sql.ErrNoRows z repozytorium autorów nie jest mapowany na ErrNotFound",
+    "verdict": "prawda",
+    "code": "internal/repository/mysql/author.go:29 (Scan zwraca err wprost)"
+   },
+   {
+    "claim": "report.md: strefa Asia/Jakarta zaszyta w DSN",
+    "verdict": "prawda",
+    "code": "app/main.go:45"
+   },
+   {
+    "claim": "report.md: tytuł to varchar(45)",
+    "verdict": "prawda",
+    "code": "article.sql:29"
+   },
+   {
+    "claim": "domain.md: domain ma 21 wejść i 0 wyjść (raw/graph.json)",
+    "verdict": "nieweryfikowalne",
+    "code": "raw/graph.json nie jest w repo; domain faktycznie nie importuje pakietów projektu (domain/*.go), liczby 21 nie sprawdzono"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 17,
+   "częściowo": 3,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 15,
+   "częściowo": 5,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 0,
+   "nieweryfikowalne": 1
+  }
+ }
+}
