@@ -88,6 +88,7 @@ Decyzja człowieka (2026-10-24): uruchomić część B; repozytoria dobiera Clau
 
    Poprawka: w `references/raport.md` obowiązkowa tabela stacku (język i wersja, framework i wersja, dane, build, CI,
    testy, z dowodem) i lista modułów z odpowiedzialnością. Do tego scenariusz ewaluacji, który to sprawdza.
+   Wprowadzone w PR #64; ponowny pomiar: `2026-10-24-f4-benchmark-v2.md` (stack 11/12, moduły 10/12).
 2. **Reguły biznesowe to nasza przewaga** (14/15 wobec 5,5/15) — utrzymać.
 3. **Koszt:** 68% maistera, cel 50% niespełniony. Kandydaci do sprawdzenia:
    - karty modułów na Haiku już są;

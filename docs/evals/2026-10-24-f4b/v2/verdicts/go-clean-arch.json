@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "G1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: Go 1.20, CI 1.19, golang:1.20.7-alpine3.17 mismatch",
+   "why_B": "report.md Stack: Go 1.20 go.mod, CI 1.19, golang 1.20.7 rozjazd"
+  },
+  {
+   "id": "G2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: labstack/echo v4.11.4",
+   "why_B": "report.md: Echo v4.11.4"
+  },
+  {
+   "id": "G3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: database/sql + go-sql-driver, no ORM, MySQL 8.3, article.sql",
+   "why_B": "report.md: MySQL, database/sql bez ORM, mysql:8.3, article.sql"
+  },
+  {
+   "id": "G4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md Testing: testify, sqlmock, faker, mockery v2.42.0",
+   "why_B": "report.md Testy: testify 1.9.0 + mockery, sqlmock, faker"
+  },
+  {
+   "id": "G5",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md Domain: entities, sentinel errors, imports nothing internal",
+   "why_B": "report.md: domain encje i błędy, zero zależności; domain.md"
+  },
+  {
+   "id": "G6",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md Use Case: Service Fetch..Delete, author hydration via errgroup",
+   "why_B": "report.md: article serwis aplikacyjny, dociąganie autorów współbieżnie"
+  },
+  {
+   "id": "G7",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md: routes GET/POST /articles, GET/DELETE /articles/:id, CORS+timeout middleware",
+   "why_B": "report.md: 4 endpointy i middleware CORS/timeout, ale bez ścieżek /articles i nazwy ArticleHandler w modułach"
+  },
+  {
+   "id": "G8",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md: mysql repos on database/sql, helper.go base64 cursor",
+   "why_B": "report.md: ArticleRepository/AuthorRepository, Encode/DecodeCursor"
+  },
+  {
+   "id": "G9",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "error-handling.md: wymienia wszystkie 4 sentinele",
+   "why_B": "report.md/CLAUDE.draft: błędy z domain/errors.go, wymienione ErrConflict, ErrNotFound, ErrBadParamInput; brak ErrInternalServerError"
+  },
+  {
+   "id": "G10",
+   "A": "częściowo",
+   "B": "częściowo",
+   "why_A": "api.md: getStatusCode, default 500; roadmap wspomina 404/409, brak pełnego mapowania",
+   "why_B": "rules.md: 409 dla konfliktu, ErrBadParamInput->500; brak jawnego 404 i 200"
+  },
+  {
+   "id": "G11",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "api.md: Bind 422, validation 400, 201, validator.v9, validate tags",
+   "why_B": "requirements.md: 201, tytuł i treść wymagane, validator.v9; brak 422/400"
+  },
+  {
+   "id": "G12",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "roadmap.md: duplicate check check-then-insert; brak jawnego ErrConflict/409 przy tytule",
+   "why_B": "rules.md: duplikat tytułu -> ErrConflict (article/service.go:151)"
+  },
+  {
+   "id": "G13",
+   "A": "częściowo",
+   "B": "częściowo",
+   "why_A": "architecture.md/api.md: base64 created_at, X-Cursor, num default 10; brak reguły pełnej strony i złego kursora",
+   "why_B": "rules.md/report.md: pełna strona, zły kursor->ErrBadParamInput, X-Cursor, default 10; brak base64/created_at i zapytania"
+  },
+  {
+   "id": "G14",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md/backend/architecture.md: consumer-side interfaces",
+   "why_B": "warstwy.md: interfejsy w article/service.go:16 i rest/article.go:23"
+  },
+  {
+   "id": "G15",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md/architecture.md: composition root, wiring bez DI",
+   "why_B": "warstwy.md: app/main.go:76 ręcznie, bez frameworka DI"
+  },
+  {
+   "id": "G16",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md/tech-stack.md: context propagation, per-request timeout, CONTEXT_TIMEOUT default 30s",
+   "why_B": "requirements.md: limit czasu żądania z konfiguracji; brak ctx jako 1. argumentu i domyślnych 30 s"
+  },
+  {
+   "id": "G17",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "test-writing.md: mockery, go:generate nad interfejsem, mocks/, On/Return/AssertExpectations",
+   "why_B": "CLAUDE.draft.md/testy.md: go:generate service.go:15, mocki w mocks/, testify"
+  },
+  {
+   "id": "G18",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "test-writing.md: t.Run success/error-failed, sqlmock",
+   "why_B": "testy.md: testify, mockery, sqlmock; brak t.Run i pakietów _test"
+  },
+  {
+   "id": "G19",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md/roadmap.md: Update exists but not routed",
+   "why_B": "report.md/requirements.md: aktualizacja tylko w serwisie, brak PUT/PATCH"
+  },
+  {
+   "id": "G20",
+   "A": "częściowo",
+   "B": "częściowo",
+   "why_A": "roadmap/architecture: race check-then-insert, .env fatal, config.json nieistniejący, errgroup; brak ignorowanego błędu GetByTitle i 404 dla nieliczbowego id",
+   "why_B": "report.md: GetByTitle ignorowany, .env log.Fatal, config.json; brak goroutin/kanału bez bufora i 404 dla nieliczbowego id"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "architecture.md: Routes GET/POST /articles, GET/DELETE /articles/:id; Update not routed",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:44-47"
+   },
+   {
+    "claim": "api.md: bind failures 422, validation failures 400",
+    "verdict": "prawda",
+    "code": "internal/rest/article.go:103,108"
+   },
+   {
+    "claim": "architecture.md: compose uses mysql:8.3 with healthcheck",
+    "verdict": "prawda",
+    "code": "compose.yaml:15,31-35"
+   },
+   {
+    "claim": "architecture.md: no foreign keys, no unique index on article.title",
+    "verdict": "prawda",
+    "code": "article.sql:27-35"
+   },
+   {
+    "claim": "architecture.md: article imports logrus directly",
+    "verdict": "prawda",
+    "code": "article/service.go:8"
+   },
+   {
+    "claim": "tech-stack.md: air 1.49.0, gotestsum 1.11.0, mockery 2.42.0, golangci-lint 1.56.2 pinned",
+    "verdict": "prawda",
+    "code": "misc/make/tools.Makefile:39,53,80,93"
+   },
+   {
+    "claim": "queries.md: repositories lack defer stmt.Close() on prepared statements",
+    "verdict": "prawda",
+    "code": "internal/repository/mysql/article.go:120; author.go:21"
+   },
+   {
+    "claim": "architecture.md: CONTEXT_TIMEOUT default 30s",
+    "verdict": "prawda",
+    "code": "app/main.go:24,66-71"
+   },
+   {
+    "claim": "roadmap.md: latest commit is dependabot testify bump 1.9.0 dated 2024-03-08",
+    "verdict": "prawda",
+    "code": "git log: e06c6d0, Fri Mar 8 2024"
+   },
+   {
+    "claim": "tech-stack.md: Go ~100% of code (19 source files, 5 test files)",
+    "verdict": "fałsz",
+    "code": "find: 19 plików .go łącznie, w tym 5 *_test.go (czyli 14 nietestowych)"
+   }
+  ],
+  "B": [
+   {
+    "claim": "report.md: CI Go 1.19, go.mod 1.20, Dockerfile golang 1.20.7",
+    "verdict": "prawda",
+    "code": ".github/workflows/gotest.yml:18; go.mod:3; Dockerfile:2"
+   },
+   {
+    "claim": "rules.md: zły kursor -> ErrBadParamInput, a getStatusCode mapuje na 500",
+    "verdict": "prawda",
+    "code": "internal/repository/mysql/article.go:68-69; internal/rest/article.go:144-152"
+   },
+   {
+    "claim": "report.md: błąd z GetByTitle ignorowany w Store",
+    "verdict": "prawda",
+    "code": "article/service.go:149"
+   },
+   {
+    "claim": "report.md: stała strefa Asia/Jakarta w DSN",
+    "verdict": "prawda",
+    "code": "app/main.go:45"
+   },
+   {
+    "claim": "report.md: prepared statementy bez Close",
+    "verdict": "prawda",
+    "code": "internal/repository/mysql/article.go:120,140,165"
+   },
+   {
+    "claim": "requirements.md: CORS dla dowolnego źródła",
+    "verdict": "prawda",
+    "code": "internal/rest/middleware/cors.go:8"
+   },
+   {
+    "claim": "rules.md: tytuł do 45 znaków",
+    "verdict": "prawda",
+    "code": "article.sql:29 varchar(45)"
+   },
+   {
+    "claim": "rules.md: błąd pobrania autorów kasuje kursor",
+    "verdict": "prawda",
+    "code": "article/service.go:107-110"
+   },
+   {
+    "claim": "domain.md: Author.CreatedAt to string, Article.CreatedAt to time.Time",
+    "verdict": "prawda",
+    "code": "domain/author.go:7; domain/article.go:14"
+   },
+   {
+    "claim": "report.md: dump article.sql z MySQL 5.7, compose używa 8.3",
+    "verdict": "prawda",
+    "code": "article.sql:3,7; compose.yaml:15"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 16,
+   "częściowo": 4,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 12,
+   "częściowo": 8,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 10,
+   "fałsz": 0,
+   "nieweryfikowalne": 0
+  }
+ }
+}
