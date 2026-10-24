@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.25.0] — 2026-10-24
+### Added
+- **pack-it:** fe-technical-seo skill for crawling and indexing (#59)
+
 ## [5.24.0] — 2026-10-24
 ### Added
 - **pack-it:** qa-fuzzing skill with verified Go, Atheris and libFuzzer examples (#58)
