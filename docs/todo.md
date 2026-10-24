@@ -364,7 +364,7 @@ Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
 - [x] **6. Budowa serwera MCP** — zrobione 2026-10-23: skill `ai-mcp-server` (odsyła do oficjalnego `mcp-builder`; przykład z testami sprawdzony SDK `mcp` 1.29.0) (anthropics/microsoft `mcp-builder`): transport, uwierzytelnianie, testowanie
   (MCP Inspector), wersjonowanie narzędzi. Najpierw sprawdzić oficjalny skill Anthropic — może wystarczy odesłanie
   i ustalenia projektu (core-skill-authoring, krok 1); `ai-agents` ma dziś tylko projekt narzędzi i zaufanie.
-- [ ] **7. Techniczne SEO** (Addy Osmani `seo`): indeksowanie, dane strukturalne, sitemap, canonical, meta; dla
+- [x] **7. Techniczne SEO** (zrobione 2026-10-24: skill `fe-technical-seo`, przykład Next.js 16.4.3 sprawdzony `curl`; fakty Google przez wyszukiwanie — strony niedostępne bezpośrednio) (Addy Osmani `seo`): indeksowanie, dane strukturalne, sitemap, canonical, meta; dla
   projektów z publicznymi stronami (Core Web Vitals i dostępność już są).
 - [x] **8. Bus factor w mapie własności** (zrobione 2026-10-24: `git_territory.py --bus-factor` z `--min-commits` i `--active-days`, 9 nowych testów) (`openai/security-ownership-map`): ryzyko „jednej osoby” per obszar
   w `git_territory.py --authors` (`eng-codebase-mapping`), TDD.

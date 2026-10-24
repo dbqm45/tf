@@ -1,0 +1,114 @@
+{
+  "skill": "fe-technical-seo",
+  "scenarios": [
+    {
+      "id": "robots-txt-a-indeks",
+      "expect": "trigger",
+      "prompt": "Zablokowaliśmy w robots.txt katalog /promocje-testowe, a te adresy i tak pojawiają się w wynikach Google (bez opisu). Dlaczego i jak to zrobić dobrze? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "noindex"
+          ],
+          [
+            "robots\\.txt[^\\n]{0,80}(indeksow|crawl|skanow|indeks)",
+            "nie (blokuje|zapobiega|chroni)[^\\n]{0,40}indeks"
+          ],
+          [
+            "(nie|bez) blok\\w*[^\\n]{0,60}robots",
+            "odblokuj\\w*",
+            "usuń\\w*[^\\n]{0,40}(Disallow|robots)",
+            "musi (móc|być) (przeczyta|zeskanow|odwiedz)"
+          ],
+          [
+            "X-Robots-Tag",
+            "nagłów\\w* HTTP",
+            "hasł\\w*",
+            "404",
+            "410"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sklep-jezyki-i-filtry",
+      "expect": "trigger",
+      "prompt": "Sklep ma wersje /pl i /en tych samych produktów oraz filtry w adresach (?sort=cena, ?kolor=czarny). Jak ustawić canonical, hreflang i mapę witryny, żeby Google nie mieszało wersji i nie marnowało crawl budgetu na filtry? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "hreflang"
+          ],
+          [
+            "wzajemn\\w*",
+            "powrotn\\w*",
+            "obie strony",
+            "w obu kierunkach",
+            "return"
+          ],
+          [
+            "x-default"
+          ],
+          [
+            "canonical[^\\n]{0,80}(własn|ten sam język|tej samej wersji|siebie|samą siebie)",
+            "nie wskazuj\\w*[^\\n]{0,60}(inn\\w* (wersj|język))",
+            "self"
+          ],
+          [
+            "Disallow",
+            "robots\\.txt[^\\n]{0,60}filtr",
+            "filtr\\w*[^\\n]{0,80}robots\\.txt"
+          ],
+          [
+            "sitemap",
+            "mapa witryny",
+            "mapę witryny"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "spa-soft-404-i-dane-produktu",
+      "expect": "trigger",
+      "prompt": "Nasza aplikacja React renderowana w przeglądarce pokazuje „Nie znaleziono produktu” z kodem 200, a Search Console zgłasza soft 404. Chcemy też, żeby w wynikach była cena produktu. Co zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "404"
+          ],
+          [
+            "renderowa\\w* (po stronie )?serwer",
+            "SSR",
+            "statyczn\\w*",
+            "prerender\\w*"
+          ],
+          [
+            "JSON-LD",
+            "schema\\.org",
+            "dane strukturaln\\w*"
+          ],
+          [
+            "Product",
+            "Offer",
+            "priceCurrency"
+          ]
+        ],
+        "none": [
+          "dynamic rendering jest (zalecan|rekomendowan)"
+        ]
+      }
+    },
+    {
+      "id": "core-web-vitals",
+      "expect": "no-trigger",
+      "neighbor": "fe-web-platform",
+      "prompt": "LCP na stronie produktu wynosi 4,1 s, a INP 380 ms. Jak znaleźć przyczynę i co poprawić w kodzie frontendu?"
+    },
+    {
+      "id": "tlumaczenia-i-formaty",
+      "expect": "no-trigger",
+      "neighbor": "eng-i18n",
+      "prompt": "Jak przechowywać tłumaczenia interfejsu po polsku i angielsku i poprawnie formatować w nich daty, liczby oraz liczbę mnogą?"
+    }
+  ]
+}
