@@ -7,6 +7,10 @@ i bez oznaczenia [założenie] / [niezweryfikowane] / [pytanie] są zgłaszane j
   python3 recon_check.py <plik.md|katalog> [--repo DIR] [--json]
   python3 recon_check.py docs/project/00-reconstruction/report.md --final   # też sekcje raportu i 0 twierdzeń bez dowodu
 
+--final sprawdza też: tabelę w sekcji „Stack” z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja
+(każdy wiersz z dowodem albo oznaczeniem) oraz to, że sekcja „Moduły” wymienia każdy moduł z kart `modules/*.json`
+leżących obok raportu.
+
 Dowód: `ścieżka:linia` albo `ścieżka:od-do`; cytat w "…" albo „…” w tym samym wierszu, po dowodzie.
 Kod wyjścia: 0 — w porządku, 1 — złe dowody (albo braki przy --final), 2 — złe wywołanie.
 """
@@ -23,6 +27,7 @@ MARK = re.compile(r"\[(założenie|niezweryfikowane|pytanie)[^\]]*\]", re.I)
 SECTIONS = ("TL;DR", "Stack", "Moduły", "Domeny", "Wymagania", "Reguły", "Standardy", "Ryzyka", "Pytania",
             "Czego nie sprawdzono")
 NO_EVIDENCE_SECTIONS = ("Pytania", "Czego nie sprawdzono")   # tu wypunktowania z natury nie mają dowodu
+STACK_ROWS = ("Język", "Framework", "Dane", "Build", "Testy", "CI", "Konfiguracja")   # wymagane wiersze tabeli stacku
 
 
 def norm(s: str) -> str:
@@ -35,8 +40,10 @@ def md_files(path: str) -> list[str]:
     return [path]
 
 
-def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[dict], list[str]]:
+def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[dict], list[str], list[str], str]:
+    """Dowody, złe dowody, twierdzenia bez dowodu, nagłówki, nazwy wierszy tabeli stacku, tekst sekcji Moduły."""
     refs, bad, unsupported, sections, section = 0, [], [], [], ""
+    stack_rows, modules_text, row_at = [], [], None
     with open(md, encoding="utf-8") as fh:
         lines = fh.read().splitlines()
     for i, line in enumerate(lines, 1):
@@ -74,7 +81,36 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
         bullet = re.match(r"^\s*([-*]|\d+\.)\s+(.*)", line)
         if bullet and not found and not MARK.search(line) and not any(section.startswith(s) for s in NO_EVIDENCE_SECTIONS):
             unsupported.append({"at": f"{md}:{i}", "text": bullet.group(2).strip()})
-    return refs, bad, unsupported, sections
+        if section.startswith("Moduły"):
+            modules_text.append(line)
+        if section.startswith("Stack") and line.lstrip().startswith("|"):
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if all(re.fullmatch(r":?-{3,}:?", c) for c in cells if c):
+                if stack_rows:   # wiersz nad separatorem to nagłówek tabeli
+                    stack_rows.pop()
+                    if row_at is not None:
+                        unsupported[:] = [u for u in unsupported if u["at"] != row_at]
+                continue
+            stack_rows.append(cells[0])
+            row_at = None
+            if not found and not MARK.search(line):
+                row_at = f"{md}:{i}"
+                unsupported.append({"at": row_at, "text": " | ".join(cells)})
+    return refs, bad, unsupported, sections, stack_rows, "\n".join(modules_text)
+
+
+def module_names(md: str) -> list[str]:
+    """Nazwy modułów z kart `modules/*.json` obok raportu (pole `module`)."""
+    d = os.path.join(os.path.dirname(md), "modules")
+    names = []
+    for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        if f.endswith(".json"):
+            try:
+                with open(os.path.join(d, f), encoding="utf-8") as fh:
+                    names.append(str(json.load(fh).get("module") or f[:-5]))
+            except (OSError, ValueError, AttributeError):
+                names.append(f[:-5])
+    return names
 
 
 def main(argv: list[str]) -> int:
@@ -96,18 +132,29 @@ def main(argv: list[str]) -> int:
         print(f"✗ podaj istniejący plik lub katalog raportu i --repo (jest: {paths}, repo {repo})", file=sys.stderr)
         return 2
     cache, refs, bad, uns, sections = {}, 0, [], [], []
+    stack_missing, modules_missing = [], []
     for p in paths:
         for md in md_files(p):
-            r, b, u, s = check_file(md, repo, cache)
+            r, b, u, s, rows, mods = check_file(md, repo, cache)
             refs, bad, uns, sections = refs + r, bad + b, uns + u, sections + s
+            if final and any(h.startswith("Stack") for h in s):
+                low = [x.lower() for x in rows]
+                stack_missing += [w for w in STACK_ROWS if not any(x.startswith(w.lower()) for x in low)]
+            if final and any(h.startswith("Moduły") for h in s):
+                modules_missing += [m for m in module_names(md) if m not in mods]
     missing = [s for s in SECTIONS if not any(h.startswith(s) for h in sections)] if final else []
-    out = {"refs": refs, "bad": bad, "unsupported": uns, "missing_sections": missing}
-    failed = bool(bad) or (final and (missing or uns))
+    out = {"refs": refs, "bad": bad, "unsupported": uns, "missing_sections": missing,
+           "stack_missing": stack_missing, "modules_missing": modules_missing}
+    failed = bool(bad) or (final and (missing or uns or stack_missing or modules_missing))
     if as_json:
         print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
         print(f"Dowody: {refs}, złe: {len(bad)}, twierdzenia bez dowodu: {len(uns)}"
               + (f", brak sekcji: {', '.join(missing)}" if missing else ""))
+        if stack_missing:
+            print(f"  ✗ stack: brak wierszy: {', '.join(stack_missing)} (tabela w sekcji Stack)")
+        if modules_missing:
+            print(f"  ✗ moduły bez wpisu w sekcji Moduły: {', '.join(modules_missing)}")
         for b in bad:
             print(f"  ✗ {b['at']}: `{b['ref']}` — {b['problem']}")
         for u in uns[:30]:

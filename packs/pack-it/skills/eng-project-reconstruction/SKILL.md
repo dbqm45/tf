@@ -38,7 +38,8 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 6. **Raport** `report.md` wg `references/raport.md` + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
    (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`.
 7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,
-   wszystkie sekcje, twierdzenia bez dowodu oznaczone. Raport kosztu przebiegu (core-cost-control), potem
+   wszystkie sekcje, twierdzenia bez dowodu oznaczone, tabela stacku z wymaganymi wierszami (z wersjami, CI, testami
+   i konfiguracją), każdy moduł z kart wymieniony w sekcji Moduły z odpowiedzialnością. Raport kosztu przebiegu (core-cost-control), potem
    `recon_manifest.py write <repo> --out docs/project/00-reconstruction/manifest.json --budget-tokens N --cost-usd X`.
 8. **Wersja do czytania (opcjonalnie):** jedna strona HTML z `report.md` (spis treści, tabele, dowody jako tekst).
    Gdy sesja ma narzędzie Artifact — prywatna strona, udostępnia ją człowiek; bez niego plik

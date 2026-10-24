@@ -85,6 +85,23 @@
    }
   },
   {
+   "id": "stack-i-moduly-w-raporcie",
+   "expect": "trigger",
+   "prompt": "Przejmujemy repozytorium Spring Boot bez dokumentacji. Z rekonstrukcji z kodu potrzebuję przede wszystkim rzetelnej części o stacku i modułach: co dokładnie ma się tam znaleźć, żeby nowa osoba i agent nie musieli zgadywać? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["tabel\\w*"],
+     ["wersj\\w*"],
+     ["CI", "pipeline", "GitHub Actions"],
+     ["profil\\w*", "application\\.(properties|yml)", "ddl-auto"],
+     ["rozjazd\\w*", "niezgodn\\w* wersj", "różn\\w* wersj"],
+     ["odpowiedzialnoś\\w*", "za co odpowiada"],
+     ["plik:linia", "dow[oó]d\\w*"]
+    ],
+    "none": ["wystarczy (lista|nazwa) frameworka"]
+   }
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",
