@@ -107,6 +107,57 @@ def main() -> int:
         authors = {a["name"]: a["commits"] for a in json.loads(r.stdout or "{}").get("authors", [])}
         check(authors == {"Carol": 2}, f"autor-człowiek z trailerem agenta liczony: {authors}")
 
+        # bus factor: najmniej osób, które mają > 50% commitów obszaru; aktywność względem daty HEAD
+        bf = Path(d) / "bf"
+        bf.mkdir()
+        git(bf, "init", "-q")
+        people = {n: (n, f"{n.lower()}@example.com") for n in ["Dana", "Ed", "Fay", "Gus", "Hal", "Ida", "Jan", "Kim", "Lou", "Max", "Ned"]}
+        for i in range(5):
+            commit(bf, {"billing/inv.py": f"{i}\n"}, f"billing {i}", people["Dana"], f"2025-01-{10 + i}T10:00:00+00:00")
+        commit(bf, {"billing/inv.py": "e\n"}, "billing fix", people["Ed"], "2025-06-20T10:00:00+00:00")
+        commit(bf, {"billing/bump.txt": "1\n"}, "chore(deps): bump", BOT, "2025-06-21T10:00:00+00:00")
+        for i, who in enumerate(["Fay", "Gus", "Fay", "Gus", "Fay", "Gus"]):
+            commit(bf, {"catalog/item.py": f"{i}\n"}, f"catalog {i}", people[who], f"2025-06-{10 + i}T10:00:00+00:00")
+        for i in range(4):
+            commit(bf, {"catalog/item.py": f"agent {i}\n"}, f"agent {i}", AGENT, f"2025-06-{17 + i}T10:00:00+00:00")
+        for i in range(5):
+            commit(bf, {"legacy/old.py": f"{i}\n"}, f"legacy {i}", people["Hal"], f"2024-12-{10 + i}T10:00:00+00:00")
+        for i, who in enumerate(["Ida", "Jan", "Kim", "Lou", "Max", "Ned"]):
+            commit(bf, {"shared/util.py": f"{i}\n"}, f"shared {i}", people[who], f"2025-06-{22 + i}T10:00:00+00:00")
+        for i in range(2):
+            commit(bf, {"tiny/t.py": f"{i}\n"}, f"tiny {i}", people["Dana"], f"2025-07-0{1 + i}T10:00:00+00:00")
+        r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor", "--json")
+        try:
+            areas = json.loads(r.stdout).get("bus_factor", {}).get("areas", [])
+        except ValueError:
+            areas = []
+        by = {x["path"]: x for x in areas}
+        check(r.returncode == 0 and set(by) == {"billing", "catalog", "legacy", "shared"},
+              f"bus factor: obszary z ≥ 5 commitami ludzi (tiny pominięty): kod {r.returncode}, {list(by)} {r.stderr[:300]}")
+        b = by.get("billing", {})
+        check(b.get("bus_factor") == 1 and b.get("top_author") == "Dana" and b.get("top_share") == 0.83
+              and b.get("commits") == 6 and b.get("people") == 2 and b.get("active") == 1 and b.get("risk") == "wysokie",
+              f"billing: jedna osoba > 50%, bot pominięty, aktywny tylko Ed: {b}")
+        c = by.get("catalog", {})
+        check(c.get("bus_factor") == 2 and c.get("commits") == 6 and c.get("top_author") != "Claude" and c.get("risk") == "umiarkowane",
+              f"catalog: dokładnie 50% to za mało na 1 osobę, commity agenta nie liczą się: {c}")
+        lg = by.get("legacy", {})
+        check(lg.get("active") == 0 and lg.get("risk") == "krytyczne", f"legacy: nikt aktywny w 90 dniach przed HEAD: {lg}")
+        s = by.get("shared", {})
+        check(s.get("bus_factor") == 4 and s.get("risk") == "niskie", f"shared: 6 osób po 1 commicie → 4: {s}")
+        check([x["path"] for x in areas] == ["legacy", "billing", "catalog", "shared"], f"kolejność wg ryzyka: {[x['path'] for x in areas]}")
+        r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor", "--active-days", "400", "--json")
+        lg = {x["path"]: x for x in json.loads(r.stdout or "{}").get("bus_factor", {}).get("areas", [])}.get("legacy", {})
+        check(lg.get("active") == 1 and lg.get("risk") == "wysokie", f"--active-days 400: Hal aktywny: {lg}")
+        r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor", "--min-commits", "2", "--json")
+        paths = [x["path"] for x in json.loads(r.stdout or "{}").get("bus_factor", {}).get("areas", [])]
+        check("tiny" in paths, f"--min-commits 2 obejmuje tiny: {paths}")
+        r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor")
+        check(r.returncode == 0 and "Bus factor" in r.stdout and "| `legacy` |" in r.stdout and "@example.com" not in r.stdout,
+              f"tekst bus factor (bez e-maili): {r.stdout[-600:]}")
+        r = run("--repo", str(bf), "--since", "2024-01-01", "--all", "--json")
+        check("bus_factor" not in json.loads(r.stdout or "{}"), "--all nie dołącza bus factor (nazwiska tylko na życzenie)")
+
         # nie repo → kod 2
         plain = Path(d) / "plain"
         plain.mkdir()
