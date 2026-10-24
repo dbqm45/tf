@@ -56,6 +56,8 @@ stacku i wpis każdego modułu z kart. Pierwszy pomiar: `2026-10-24-f4-benchmark
 | Precyzja dowodów ≥ 95% | 97% twierdzeń prawdziwych w próbie | tak |
 
 ## Dalsze kroki
+Kroki 1 i 2 wykonane w PR #66, pomiar: `2026-10-24-f4-benchmark-v3.md` (58,5/60).
+
 1. **Moduły:** w sekcji Moduły raportu przy każdym module podawać 2–4 kluczowe elementy z karty (klasa wejściowa,
    trasy, encje i relacje). Można też generować `modules/<moduł>.md` z kart skryptem, bez modelu.
 2. **CI:** `recon_check --final` powinien ostrzegać, gdy wiersz CI mówi o braku CI, a w repo istnieją pliki pipeline'u

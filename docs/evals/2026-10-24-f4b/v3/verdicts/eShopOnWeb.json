@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "E1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md Stack: C# na .NET 8 (net8.0), SDK 8.0.x, Directory.Packages.props:4, global.json:3",
+   "why_B": "project/tech-stack.md: .NET SDK 8.0.x (global.json, rollForward), net8.0 w Directory.Packages.props"
+  },
+  {
+   "id": "E2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md: ASP.NET Core 8.0.2 (Razor Pages+MVC, minimal API MinimalApi.Endpoint 1.3.0, Blazor WASM)",
+   "why_B": "tech-stack.md: MVC/Razor Pages, Blazor WASM, MinimalApi.Endpoint; (api.md błędnie opisuje styl endpointów, ale fakt stosu podany)"
+  },
+  {
+   "id": "E3",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "report.md Dane: EF Core 8.0.2, SQL Server/InMemory przez UseOnlyInMemoryDatabase, dwa konteksty",
+   "why_B": "tech-stack.md: EF Core 8.0.2, CatalogContext/AppIdentityDbContext, UseOnlyInMemoryDatabase"
+  },
+  {
+   "id": "E4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "standards/testy.md: xUnit 2.7.0, NSubstitute 5.1.0, 4 projekty, WebApplicationFactory",
+   "why_B": "tech-stack.md + dotnet-testing.md: xUnit 2.7, NSubstitute, 4 warstwy, WebTestFixture/Mvc.Testing"
+  },
+  {
+   "id": "E5",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "modules/ApplicationCore.md: encje/agregaty, Guard, BasketService, OrderService, IRepository, wyjątki; port-owy rdzeń",
+   "why_B": "architecture.md: ApplicationCore = encje, interfejsy, specyfikacje, serwisy; brak wzmianki o agregatach i wyjątkach w opisie modułu"
+  },
+  {
+   "id": "E6",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "modules/Infrastructure.md: EfRepository, konteksty, migracje, JWT, LoggerAdapter, EmailSender atrapa",
+   "why_B": "architecture.md: konteksty, konfiguracje, migracje, EfRepository, Identity; bez EmailSender i LoggerAdapter"
+  },
+  {
+   "id": "E7",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "modules/Web.md + report.md: Web → ApplicationCore, Infrastructure, BlazorAdmin, BlazorShared; koszyk, checkout, ConfigureCoreServices",
+   "why_B": "architecture.md: Web jako storefront hostujący Blazor, ConfigureWebServices; bez checkout/koszyka/referencji"
+  },
+  {
+   "id": "E8",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "modules/PublicApi.md, BlazorAdmin.md, BlazorShared.md: CRUD katalogu, JWT, rola Administrators",
+   "why_B": "architecture.md: PublicApi katalog CRUD + token, BlazorAdmin SPA, BlazorShared modele i stałe autoryzacji"
+  },
+  {
+   "id": "E9",
+   "A": "tak",
+   "B": "nie",
+   "why_A": "rules.md: 'Dodanie istniejącego produktu zwiększa ilość' + cena pierwotna w requirements.md",
+   "why_B": "brak reguł koszyka w dokumentach B"
+  },
+  {
+   "id": "E10",
+   "A": "tak",
+   "B": "nie",
+   "why_A": "rules.md: ilość >=0 (OutOfRange), pozycje 0 usuwane (Basket.cs:35)",
+   "why_B": "brak"
+  },
+  {
+   "id": "E11",
+   "A": "tak",
+   "B": "nie",
+   "why_A": "rules.md: EmptyBasketOnCheckoutException, Checkout.cshtml.cs:60 przekierowanie",
+   "why_B": "brak (tylko wzmianka o klasach wyjątków w ogólnym stylu)"
+  },
+  {
+   "id": "E12",
+   "A": "tak",
+   "B": "nie",
+   "why_A": "rules.md/ApplicationCore.md: Order NullOrEmpty buyerId, UpdateDetails nazwa/opis/cena>0",
+   "why_B": "brak"
+  },
+  {
+   "id": "E13",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "rules.md: DuplicateException→409 w ExceptionMiddleware, Administrators, test API",
+   "why_B": "dotnet-architecture.md: ExceptionMiddleware tłumaczy wyjątki na HTTP; roadmapa: atomowość duplikatu nazwy; brak 409 i roli"
+  },
+  {
+   "id": "E14",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "standards/kod.md: Specifications + IRepository<T>, IAggregateRoot",
+   "why_B": "dotnet-architecture.md: IRepository/IReadRepository, Specification<T>, tylko IAggregateRoot, EfRepository"
+  },
+  {
+   "id": "E15",
+   "A": "tak",
+   "B": "nie",
+   "why_A": "standards/kod.md: hermetyzacja agregatów, prywatne settery, AsReadOnly (bez PropertyAccessMode.Field)",
+   "why_B": "brak opisu hermetyzacji agregatów"
+  },
+  {
+   "id": "E16",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "kod.md: Guard.Against.* (GuidClauses 4.0.1)",
+   "why_B": "dotnet-architecture.md: Guard Clauses i własne guardy w GuardExtensions.cs"
+  },
+  {
+   "id": "E17",
+   "A": "częściowo",
+   "B": "częściowo",
+   "why_A": "DI w metodach rozszerzających (kod.md), IAppLogger/LoggerAdapter wspomniane; brak czasów życia",
+   "why_B": "dotnet-architecture.md: DI przez metody rozszerzające i AddScoped/Transient/Singleton ogólnie; brak IAppLogger i konkretów"
+  },
+  {
+   "id": "E18",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "standards/testy.md: klasa na scenariusz, [Fact], Substitute.For, buildery",
+   "why_B": "test-writing.md/dotnet-testing.md: folder per klasa, nazwy PascalCase, NSubstitute, buildery"
+  },
+  {
+   "id": "E19",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "report.md/ApplicationCore.md: klucz JWT, DEFAULT_PASSWORD, AUTH_KEY, JWT 7 dni",
+   "why_B": "architecture.md/roadmap: zahardkodowany klucz JWT (AuthorizationConstants.cs:11), 7 dni; brak AUTH_KEY i hasła domyślnego"
+  },
+  {
+   "id": "E20",
+   "A": "tak",
+   "B": "nie",
+   "why_A": "report.md Ryzyka: adres dostawy na sztywno, EmailSender atrapa, cookie GUID, TransferBasket",
+   "why_B": "brak (wzmianka TransferBasket tylko jako nazwa pliku testu)"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "Tylko DuplicateException→409, każdy inny wyjątek→500 w ExceptionMiddleware",
+    "verdict": "prawda",
+    "code": "src/PublicApi/Middleware/ExceptionMiddleware.cs:35-46"
+   },
+   {
+    "claim": "Endpoint listy produktów ma sztuczne opóźnienie 1 s",
+    "verdict": "prawda",
+    "code": "src/PublicApi/CatalogItemEndpoints/CatalogItemListPagedEndpoint.cs:42 (await Task.Delay(1000))"
+   },
+   {
+    "claim": "Walidacja JWT w PublicApi bez sprawdzania wystawcy (ValidateIssuer=false)",
+    "verdict": "prawda",
+    "code": "src/PublicApi/Program.cs:67"
+   },
+   {
+    "claim": "PublicApi ładuje appsettings.test.json",
+    "verdict": "prawda",
+    "code": "src/PublicApi/Program.cs:31-33"
+   },
+   {
+    "claim": "GetOrderDetailsHandler nie filtruje po użytkowniku",
+    "verdict": "prawda",
+    "code": "src/Web/Features/OrderDetails/GetOrderDetailsHandler.cs:21 (spec tylko po OrderId)"
+   },
+   {
+    "claim": "Cookie koszyka gościa 'eShop' ważne 10 lat, GUID",
+    "verdict": "prawda",
+    "code": "src/Web/Pages/Basket/Index.cshtml.cs:93-95; src/Web/Constants.cs:5"
+   },
+   {
+    "claim": "Strona katalogu ma 10 produktów (ITEMS_PER_PAGE)",
+    "verdict": "prawda",
+    "code": "src/Web/Constants.cs:6"
+   },
+   {
+    "claim": "Komentarz o blokadzie konta w AuthenticateEndpoint sprzeczny z kodem (lockoutOnFailure=true)",
+    "verdict": "prawda",
+    "code": "src/PublicApi/AuthEndpoints/AuthenticateEndpoint.cs:41-44"
+   },
+   {
+    "claim": "Znacznik czasu w URI zdjęcia używa new DateTime().Ticks (zawsze 0) i ukośników wstecznych",
+    "verdict": "prawda",
+    "code": "src/ApplicationCore/Entities/CatalogItem.cs:63"
+   },
+   {
+    "claim": "PublicApi: 7 z 8 endpointów w stylu IEndpoint, AuthenticateEndpoint na EndpointBaseAsync",
+    "verdict": "prawda",
+    "code": "src/PublicApi/AuthEndpoints/AuthenticateEndpoint.cs:15; pozostałe 7 plików z IEndpoint w CatalogItemEndpoints/, CatalogBrandEndpoints/, CatalogTypeEndpoints/"
+   }
+  ],
+  "B": [
+   {
+    "claim": "ApplicationCore referencjonuje BlazorShared",
+    "verdict": "prawda",
+    "code": "src/ApplicationCore/ApplicationCore.csproj:17"
+   },
+   {
+    "claim": "PublicApi używa Ardalis.ApiEndpoints EndpointBaseAsync w 7 z 7 klas endpointów",
+    "verdict": "fałsz",
+    "code": "tylko AuthenticateEndpoint.cs:15 dziedziczy EndpointBaseAsync; reszta to IEndpoint (MinimalApi.Endpoint), np. CatalogItemListPagedEndpoint.cs"
+   },
+   {
+    "claim": "docker-compose: web na 5106, API na 5200",
+    "verdict": "prawda",
+    "code": "docker-compose.override.yml:8 i :17"
+   },
+   {
+    "claim": "azure.yaml definiuje tylko usługę web (PublicApi nie wdrażane)",
+    "verdict": "prawda",
+    "code": "azure.yaml:5-9"
+   },
+   {
+    "claim": "MediatR 12.0.1",
+    "verdict": "prawda",
+    "code": "Directory.Packages.props:24"
+   },
+   {
+    "claim": "3 migracje plus snapshot",
+    "verdict": "prawda",
+    "code": "src/Infrastructure/Data/Migrations/ (3 migracje + CatalogContextModelSnapshot.cs)"
+   },
+   {
+    "claim": "Akcje GitHub checkout@v2 i setup-dotnet@v1",
+    "verdict": "prawda",
+    "code": ".github/workflows/dotnetcore.yml:11,13"
+   },
+   {
+    "claim": "Literówka EntityFramworkCoreVersion i nieużywany Microsoft.AspNetCore.Mvc 2.2.0",
+    "verdict": "prawda",
+    "code": "Directory.Packages.props:7 i :34"
+   },
+   {
+    "claim": "UnitTests 36, IntegrationTests 3, FunctionalTests 13 testów",
+    "verdict": "prawda",
+    "code": "grep [Fact]/[Theory]: 36/3/13 (PublicApiIntegrationTests 9 vs deklarowane 10 - drobna rozbieżność)"
+   },
+   {
+    "claim": "CatalogContext stosuje konfiguracje przez ApplyConfigurationsFromAssembly",
+    "verdict": "prawda",
+    "code": "src/Infrastructure/Data/CatalogContext.cs:25"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 19,
+   "częściowo": 1,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 10,
+   "fałsz": 0,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 8,
+   "częściowo": 6,
+   "nie": 6,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  }
+ }
+}
