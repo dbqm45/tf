@@ -1,0 +1,270 @@
+{
+ "coverage": [
+  {
+   "id": "S1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md: Java 17, java.version, Gradle toolchain 17, enforcer requireJavaVersion (build-and-ci.md)",
+   "why_B": "report.md: Java 17 toolchain build.gradle:19, pom java.version 17; bez enforcera"
+  },
+  {
+   "id": "S2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "tech-stack.md/spring-petclinic-conventions.md: Boot 4.1.0, webmvc, thymeleaf, data-jpa, validation, cache, actuator",
+   "why_B": "report.md Stack: Boot 4.1.0 + Thymeleaf, JPA, validation, cache, MVC"
+  },
+  {
+   "id": "S3",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md/conventions: H2 domyślnie, profile mysql/postgres, db/{h2,mysql,postgres}, ddl-auto=none",
+   "why_B": "report.md: tylko 'H2 (domyślnie), MySQL, PostgreSQL'; brak profili, skryptów schema i ddl-auto=none"
+  },
+  {
+   "id": "S4",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "build-and-ci.md: Maven+Gradle, mvnw verify / gradlew build, Testcontainers, JaCoCo, JUnit 5",
+   "why_B": "report.md: dwa buildy, JUnit5, Testcontainers; JaCoCo brak, CI 'nie czytano' [niezweryfikowane]"
+  },
+  {
+   "id": "M1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md: pakiet owner z encjami, trzema kontrolerami, PetValidator, PetTypeFormatter",
+   "why_B": "report.md/domain.md: owner = Owner/Pet/Visit/PetType, wszystkie formularze, PetValidator, kontrolery"
+  },
+  {
+   "id": "M2",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md: vet, /vets.html paginowany, JSON /vets, Vets, Specialty",
+   "why_B": "report.md/domain.md: lista tylko do odczytu HTML+JSON, Specialty, Vets; bez /vets.html i ManyToMany"
+  },
+  {
+   "id": "M3",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md/conventions: BaseEntity @MappedSuperclass Integer IDENTITY, NamedEntity, Person",
+   "why_B": "report.md: 'bazowe encje (id, nazwa, osoba)', Person superklasa; bez szczegółów IDENTITY/isNew"
+  },
+  {
+   "id": "M4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "architecture.md: CacheConfiguration vets, WebConfiguration ?lang=, WelcomeController, CrashController /oups",
+   "why_B": "report.md/rules R19: język z sesji ?lang=, cache vets, demo błędu; CrashController w domain.md"
+  },
+  {
+   "id": "R1",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak reguły telefonu 10 cyfr w A",
+   "why_B": "rules.md R1/R2: telefon 10 cyfr, adres<=255, miasto<=80, obowiązkowe"
+  },
+  {
+   "id": "R2",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak reguły długości 30 / NotBlank imienia w A",
+   "why_B": "rules.md R3: imię i nazwisko obowiązkowe, <=30"
+  },
+  {
+   "id": "R3",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "conventions: PetValidator jako walidator cross-field; bez treści reguł",
+   "why_B": "rules.md R14: imię<=30, data urodzenia obowiązkowa, typ dla nowego"
+  },
+  {
+   "id": "R4",
+   "A": "częściowo",
+   "B": "tak",
+   "why_A": "architecture/conventions: unikat owner_id+name w schemacie; brak duplicate w kontrolerze i daty z przyszłości",
+   "why_B": "rules.md R10, R12, R13: bez względu na wielkość liter, UNIQUE, data nie z przyszłości"
+  },
+  {
+   "id": "R5",
+   "A": "nie",
+   "B": "tak",
+   "why_A": "brak reguły wizyty od jutra w A",
+   "why_B": "rules.md R15/R16: wizyta od jutra, domyślnie jutro, opis<=255"
+  },
+  {
+   "id": "C1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "build-and-ci.md: spring-javaformat validate, NoHttpCheck; project-formatting: .editorconfig tabs",
+   "why_B": "standards/nazwy-i-format.md: Spring Java Format, Checkstyle, nohttp, .editorconfig tabulatory"
+  },
+  {
+   "id": "C2",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: constructor injection, 0 @Autowired, package-private controllers",
+   "why_B": "standards/di.md i web.md: konstruktor, final, 100%, kontrolery pakietowo-prywatne"
+  },
+  {
+   "id": "C3",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture.md/conventions: 'Package by Feature' bez warstw",
+   "why_B": "report.md: monolit w 4 pakietach; nie nazywa package-by-feature jawnie, domain.md pokazuje podział"
+  },
+  {
+   "id": "C4",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "conventions: @ModelAttribute, @InitBinder setDisallowedFields, PRG z flash",
+   "why_B": "web.md: setDisallowedFields('id','*.id'), flash 'message', redirect:; @ModelAttribute słabo"
+  },
+  {
+   "id": "C5",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "testing: @WebMvcTest+@MockitoBean, @DisabledInNativeImage, Testcontainers",
+   "why_B": "testy.md: @WebMvcTest, @DataJpaTest, @SpringBootTest, Docker; bez @MockitoBean i @DisabledInNativeImage"
+  },
+  {
+   "id": "O1",
+   "A": "tak",
+   "B": "tak",
+   "why_A": "roadmap/conventions: exposure.include=* tylko dev, nie produkcja",
+   "why_B": "report.md Ryzyka: application.properties:21 exposure.include=*, komentarz zastrzega dev/test"
+  },
+  {
+   "id": "O2",
+   "A": "tak",
+   "B": "częściowo",
+   "why_A": "architecture/tech-stack: GraalVM native, PetClinicRuntimeHints, I18nPropertiesSyncTest, 11 locale",
+   "why_B": "report.md/requirements: GraalVM, I18nPropertiesSyncTest, 11 plików; bez RuntimeHints"
+  }
+ ],
+ "precision": {
+  "A": [
+   {
+    "claim": "architecture.md: brak warstwy serwisowej, kontrolery wołają repozytoria Spring Data bezpośrednio",
+    "verdict": "prawda",
+    "code": "OwnerController.java:55 wstrzykuje OwnerRepository; brak pakietu service w src/main"
+   },
+   {
+    "claim": "roadmap.md: stały rozmiar strony 5 zduplikowany w OwnerController i VetController",
+    "verdict": "prawda",
+    "code": "OwnerController.java:142, VetController.java:66 'int pageSize = 5;'"
+   },
+   {
+    "claim": "roadmap.md: gradle-build.yml używa cache Maven",
+    "verdict": "prawda",
+    "code": ".github/workflows/gradle-build.yml:27 'cache: maven'"
+   },
+   {
+    "claim": "roadmap.md: deploy-and-test-cluster.yml używa actions/checkout@v2",
+    "verdict": "prawda",
+    "code": ".github/workflows/deploy-and-test-cluster.yml:18"
+   },
+   {
+    "claim": "roadmap.md: OwnerRepository ma zbędne findById (JpaRepository już je zapewnia)",
+    "verdict": "prawda",
+    "code": "OwnerRepository.java:60 'Optional<Owner> findById(Integer id);'"
+   },
+   {
+    "claim": "project-formatting-and-contribution.md: wszystkie 48 z 48 plików Java ma nagłówek 'Copyright 2012-2025'",
+    "verdict": "fałsz",
+    "code": "Jest 50 plików .java (30 main + 20 test); np. PetValidatorTests.java ma 'Copyright 2012-2024'; 3 pliki bez frazy 2012-2025"
+   },
+   {
+    "claim": "build-and-ci.md: devcontainer używa JDK 21, baseline projektu 17, CI matrix 17",
+    "verdict": "prawda",
+    "code": ".devcontainer/devcontainer.json:6 '21-oracle'; maven-build.yml:18 java: ['17']"
+   },
+   {
+    "claim": "architecture.md: k8s NodePort, sondy /livez i /readyz, sekret demo-db",
+    "verdict": "prawda",
+    "code": "k8s/petclinic.yml:7 NodePort, :49 /livez, :53 /readyz, :64 demo-db"
+   },
+   {
+    "claim": "spring-petclinic-testing.md: PostgresIntegrationTests pomija test gdy brak Dockera, ma main()",
+    "verdict": "prawda",
+    "code": "PostgresIntegrationTests.java:68 assumeTrue(isDockerAvailable), :71 main"
+   },
+   {
+    "claim": "tech-stack.md: wrapper Maven 3.9.16, Gradle 9.5.1; 11 bundli messages",
+    "verdict": "prawda",
+    "code": ".mvn/wrapper/maven-wrapper.properties distributionUrl 3.9.16; gradle-wrapper.properties 9.5.1; src/main/resources/messages: 11 plików"
+   }
+  ],
+  "B": [
+   {
+    "claim": "CLAUDE.draft.md: konstruktor OwnerController(OwnerRepository owners) w linii 55",
+    "verdict": "prawda",
+    "code": "OwnerController.java:55"
+   },
+   {
+    "claim": "standards/di.md: 0 trafień @Autowired w kodzie głównym, 18 w testach",
+    "verdict": "prawda",
+    "code": "grep -rn Autowired src/main: 0; src/test: 18"
+   },
+   {
+    "claim": "standards/web.md: 6/6 kontrolerów pakietowo-prywatnych; WebConfiguration public z @SuppressWarnings('unused')",
+    "verdict": "prawda",
+    "code": "6 plików *Controller.java w src/main; WebConfiguration.java:24-25"
+   },
+   {
+    "claim": "standards/nazwy-i-format.md: 25 z 30 plików Java PascalCase, 5 wyjątków to package-info.java",
+    "verdict": "prawda",
+    "code": "find src/main -name '*.java' = 30; package-info.java = 5"
+   },
+   {
+    "claim": "standards/testy.md: 5 klas @WebMvcTest, 1 @DataJpaTest, 5 @SpringBootTest; 20 plików testowych",
+    "verdict": "prawda",
+    "code": "grep -rl w src/test: 5/1/5; 20 plików .java w src/test"
+   },
+   {
+    "claim": "rules.md R9: edycja odrzuca id z formularza różne od id z URL",
+    "verdict": "prawda",
+    "code": "OwnerController.java:161 'if (!Objects.equals(owner.getId(), ownerId))'"
+   },
+   {
+    "claim": "rules.md R1: telefon dokładnie 10 cyfr",
+    "verdict": "prawda",
+    "code": "Owner.java:64 @Pattern(regexp = \"\\\\d{10}\")"
+   },
+   {
+    "claim": "report.md Ryzyka: findPet zwraca wynik owner.getPet(petId), możliwy null",
+    "verdict": "prawda",
+    "code": "PetController.java:87 'return owner.getPet(petId);' (linia podana jako 86, przesunięcie o 1)"
+   },
+   {
+    "claim": "report.md Ryzyka: pets.type_id NOT NULL w schemacie H2",
+    "verdict": "prawda",
+    "code": "src/main/resources/db/h2/schema.sql:50"
+   },
+   {
+    "claim": "requirements.md: cache zasobów statycznych 12 h",
+    "verdict": "prawda",
+    "code": "application.properties:29 max-age=12h"
+   }
+  ]
+ },
+ "summary": {
+  "A": {
+   "tak": 15,
+   "częściowo": 2,
+   "nie": 3,
+   "błędnie": 0,
+   "prawda": 9,
+   "fałsz": 1,
+   "nieweryfikowalne": 0
+  },
+  "B": {
+   "tak": 13,
+   "częściowo": 7,
+   "nie": 0,
+   "błędnie": 0,
+   "prawda": 10,
+   "fałsz": 0,
+   "nieweryfikowalne": 0
+  }
+ }
+}

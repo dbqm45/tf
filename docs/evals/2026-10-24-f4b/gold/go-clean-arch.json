@@ -1,0 +1,347 @@
+[
+ {
+  "id": "G1",
+  "category": "stack",
+  "fact": "Projekt jest modułem Go github.com/bxcodec/go-clean-arch w wersji języka go 1.20 (Dockerfile buduje na golang:1.20.7, a workflow CI ustawia Go 1.19 - rozjazd).",
+  "evidence": [
+   "go.mod:1",
+   "go.mod:3",
+   "Dockerfile:2",
+   ".github/workflows/gotest.yml:18"
+  ],
+  "keywords": [
+   "go 1.20",
+   "golang:1.20.7",
+   "go.mod"
+  ]
+ },
+ {
+  "id": "G2",
+  "category": "stack",
+  "fact": "Framework HTTP to Echo v4 (github.com/labstack/echo/v4 v4.11.4); routing i handlery używają echo.Context.",
+  "evidence": [
+   "go.mod:9",
+   "app/main.go:64",
+   "internal/rest/article.go:44"
+  ],
+  "keywords": [
+   "echo",
+   "labstack/echo/v4",
+   "v4.11.4"
+  ]
+ },
+ {
+  "id": "G3",
+  "category": "stack",
+  "fact": "Baza to MySQL, dostęp przez database/sql ze sterownikiem go-sql-driver/mysql (import blank), bez ORM; w compose obraz mysql:8.3, schemat w article.sql.",
+  "evidence": [
+   "go.mod:7",
+   "app/main.go:12",
+   "app/main.go:47",
+   "compose.yaml:15",
+   "article.sql:27"
+  ],
+  "keywords": [
+   "MySQL",
+   "go-sql-driver/mysql",
+   "database/sql",
+   "mysql:8.3"
+  ]
+ },
+ {
+  "id": "G4",
+  "category": "stack",
+  "fact": "Testy używają testify (assert/require/mock), go-sqlmock do repozytorium MySQL, go-faker do danych oraz mocków generowanych przez mockery v2.42.0.",
+  "evidence": [
+   "go.mod:11",
+   "go.mod:13",
+   "go.mod:6",
+   "article/mocks/ArticleRepository.go:1",
+   "internal/repository/mysql/author_test.go:15",
+   "internal/rest/article_test.go:26"
+  ],
+  "keywords": [
+   "testify",
+   "sqlmock",
+   "faker",
+   "mockery"
+  ]
+ },
+ {
+  "id": "G5",
+  "category": "module",
+  "fact": "Pakiet domain zawiera encje (Article, Author) i wspólne błędy domenowe; nie importuje innych pakietów projektu - jest rdzeniem warstw.",
+  "evidence": [
+   "domain/article.go:8",
+   "domain/author.go:4",
+   "domain/errors.go:5"
+  ],
+  "keywords": [
+   "domain",
+   "Article",
+   "Author",
+   "encje"
+  ]
+ },
+ {
+  "id": "G6",
+  "category": "module",
+  "fact": "Pakiet article (article/service.go) to warstwa przypadków użycia: struktura Service realizuje logikę biznesową i uzupełnia artykuły danymi autora.",
+  "evidence": [
+   "article/service.go:32",
+   "article/service.go:38",
+   "article/service.go:50"
+  ],
+  "keywords": [
+   "article",
+   "Service",
+   "usecase",
+   "logika biznesowa"
+  ]
+ },
+ {
+  "id": "G7",
+  "category": "module",
+  "fact": "Pakiet internal/rest to warstwa dostarczania HTTP: ArticleHandler rejestruje trasy GET/POST /articles, GET/DELETE /articles/:id i deleguje do ArticleService; middleware (CORS, timeout) w podpakiecie.",
+  "evidence": [
+   "internal/rest/article.go:33",
+   "internal/rest/article.go:40",
+   "internal/rest/article.go:44",
+   "internal/rest/middleware/cors.go:6"
+  ],
+  "keywords": [
+   "internal/rest",
+   "ArticleHandler",
+   "/articles",
+   "middleware"
+  ]
+ },
+ {
+  "id": "G8",
+  "category": "module",
+  "fact": "Pakiet internal/repository/mysql implementuje repozytoria Article i Author na *sql.DB (zapytania SQL), a internal/repository zawiera helpery kursora (Encode/DecodeCursor).",
+  "evidence": [
+   "internal/repository/mysql/article.go:14",
+   "internal/repository/mysql/author.go:10",
+   "internal/repository/helper.go:13",
+   "internal/repository/helper.go:26"
+  ],
+  "keywords": [
+   "repository/mysql",
+   "ArticleRepository",
+   "kursor",
+   "sql.DB"
+  ]
+ },
+ {
+  "id": "G9",
+  "category": "rule",
+  "fact": "Błędy domenowe to zmienne sentinel w domain/errors.go: ErrInternalServerError, ErrNotFound, ErrConflict, ErrBadParamInput.",
+  "evidence": [
+   "domain/errors.go:7",
+   "domain/errors.go:9",
+   "domain/errors.go:11",
+   "domain/errors.go:13"
+  ],
+  "keywords": [
+   "ErrNotFound",
+   "ErrConflict",
+   "ErrBadParamInput",
+   "errors.New"
+  ]
+ },
+ {
+  "id": "G10",
+  "category": "rule",
+  "fact": "Handler mapuje błędy na kody HTTP w getStatusCode: ErrNotFound->404, ErrConflict->409, ErrInternalServerError i każdy inny->500; sukces to 200.",
+  "evidence": [
+   "internal/rest/article.go:138",
+   "internal/rest/article.go:147",
+   "internal/rest/article.go:149",
+   "internal/rest/article.go:151"
+  ],
+  "keywords": [
+   "getStatusCode",
+   "404",
+   "409",
+   "500"
+  ]
+ },
+ {
+  "id": "G11",
+  "category": "rule",
+  "fact": "Store: tytuł i treść artykułu są wymagane (tag validate:\"required\", validator.v9); niepoprawny JSON daje 422, niespełniona walidacja 400, sukces 201.",
+  "evidence": [
+   "domain/article.go:10",
+   "domain/article.go:11",
+   "internal/rest/article.go:89",
+   "internal/rest/article.go:103",
+   "internal/rest/article.go:108",
+   "internal/rest/article.go:117"
+  ],
+  "keywords": [
+   "validate required",
+   "validator.v9",
+   "422",
+   "400",
+   "201"
+  ]
+ },
+ {
+  "id": "G12",
+  "category": "rule",
+  "fact": "Serwis przy tworzeniu sprawdza unikalność tytułu przez GetByTitle i zwraca domain.ErrConflict, gdy artykuł o tym tytule istnieje.",
+  "evidence": [
+   "article/service.go:148",
+   "article/service.go:149",
+   "article/service.go:150",
+   "article/service.go:151"
+  ],
+  "keywords": [
+   "ErrConflict",
+   "GetByTitle",
+   "unikalny tytuł",
+   "Store"
+  ]
+ },
+ {
+  "id": "G13",
+  "category": "rule",
+  "fact": "Paginacja kursorowa: kursor to base64 z czasu created_at (format RFC3339 z obniżoną precyzją), zapytanie WHERE created_at > ? ORDER BY created_at LIMIT ?; zły kursor daje ErrBadParamInput; nextCursor tylko gdy liczba wyników równa limitowi; domyślny num=10, nagłówek X-Cursor.",
+  "evidence": [
+   "internal/repository/helper.go:9",
+   "internal/repository/mysql/article.go:64-65",
+   "internal/repository/mysql/article.go:68",
+   "internal/repository/mysql/article.go:77",
+   "internal/rest/article.go:37",
+   "internal/rest/article.go:67"
+  ],
+  "keywords": [
+   "cursor",
+   "X-Cursor",
+   "base64",
+   "created_at",
+   "num=10"
+  ]
+ },
+ {
+  "id": "G14",
+  "category": "standard",
+  "fact": "Interfejsy (ArticleRepository, AuthorRepository, ArticleService) są zdefiniowane po stronie konsumenta - w pakiecie article i internal/rest - a nie w pakiecie implementacji.",
+  "evidence": [
+   "article/service.go:16",
+   "article/service.go:28",
+   "internal/rest/article.go:23"
+  ],
+  "keywords": [
+   "interfejs po stronie użytkownika",
+   "ArticleRepository",
+   "ArticleService"
+  ]
+ },
+ {
+  "id": "G15",
+  "category": "standard",
+  "fact": "Wstrzykiwanie zależności konstruktorami (NewService, NewArticleHandler, NewArticleRepository) i ręczne składanie grafu w app/main.go, bez frameworka DI.",
+  "evidence": [
+   "article/service.go:38",
+   "internal/rest/article.go:40",
+   "internal/repository/mysql/article.go:19",
+   "app/main.go:76",
+   "app/main.go:80",
+   "app/main.go:81"
+  ],
+  "keywords": [
+   "konstruktor",
+   "NewService",
+   "dependency injection",
+   "main.go"
+  ]
+ },
+ {
+  "id": "G16",
+  "category": "standard",
+  "fact": "context.Context jest pierwszym argumentem każdej metody serwisu i repozytorium, a middleware nadaje kontekstowi żądania timeout (CONTEXT_TIMEOUT, domyślnie 30 s).",
+  "evidence": [
+   "article/service.go:17",
+   "internal/rest/middleware/timeout.go:11",
+   "internal/rest/middleware/timeout.go:14",
+   "app/main.go:24",
+   "app/main.go:66"
+  ],
+  "keywords": [
+   "context.Context",
+   "timeout",
+   "CONTEXT_TIMEOUT",
+   "WithTimeout"
+  ]
+ },
+ {
+  "id": "G17",
+  "category": "standard",
+  "fact": "Mocki generowane są mockery z dyrektyw //go:generate przy interfejsach i leżą w podkatalogach mocks/; testy serwisu i handlera opierają się na nich (On/Return/AssertExpectations).",
+  "evidence": [
+   "article/service.go:15",
+   "article/service.go:27",
+   "internal/rest/article.go:22",
+   "article/mocks/ArticleRepository.go:1",
+   "internal/rest/mocks/ArticleService.go:1"
+  ],
+  "keywords": [
+   "mockery",
+   "go:generate",
+   "mocks",
+   "AssertExpectations"
+  ]
+ },
+ {
+  "id": "G18",
+  "category": "standard",
+  "fact": "Styl testów: testy w pakietach zewnętrznych (np. middleware_test), tabele przypadków jako t.Run z podtestami (success/error-failed), repozytorium MySQL testowane przez sqlmock zamiast prawdziwej bazy.",
+  "evidence": [
+   "article/service_test.go:26",
+   "article/service_test.go:49",
+   "internal/rest/middleware/cors_test.go:1",
+   "internal/repository/mysql/author_test.go:15"
+  ],
+  "keywords": [
+   "t.Run",
+   "sqlmock",
+   "success",
+   "error-failed"
+  ]
+ },
+ {
+  "id": "G19",
+  "category": "other",
+  "fact": "Metoda Update jest w serwisie i repozytorium, ale handler nie rejestruje trasy PUT/PATCH (tylko GET, POST, GET:id, DELETE) - brak endpointu aktualizacji.",
+  "evidence": [
+   "internal/rest/article.go:26",
+   "internal/rest/article.go:44-47",
+   "article/service.go:128"
+  ],
+  "keywords": [
+   "Update",
+   "brak PUT",
+   "endpoint"
+  ]
+ },
+ {
+  "id": "G20",
+  "category": "other",
+  "fact": "Ryzyka w kodzie: fillAuthorDetails używa goroutin i kanału bez bufora, a Store ignoruje błąd GetByTitle; GetByID/Delete z nieliczbowym id zwracają 404; konfiguracja z .env (godotenv, log.Fatal gdy brak pliku), compose montuje nieużywany config.json.",
+  "evidence": [
+   "article/service.go:59",
+   "article/service.go:149",
+   "internal/rest/article.go:73-75",
+   "app/main.go:29-31",
+   "compose.yaml:12"
+  ],
+  "keywords": [
+   "errgroup",
+   "godotenv",
+   "goroutine",
+   "log.Fatal"
+  ]
+ }
+]
