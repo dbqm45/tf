@@ -46,8 +46,9 @@ Fakturowanie (`svc/billing/invoice.py:1`).
 - (wstawia recon_cards)
 ## Domeny
 - Fakturowanie — `svc/billing/invoice.py:1`
+- Faktura bez pozycji jest odrzucana przez system — `svc/billing/tax.py:1`
 ## Wymagania
-- Pusta faktura jest odrzucana kodem 422 — `svc/billing/invoice.py:4`
+- Pusta faktura jest odrzucana kodem 422; dotyczy faktur sprzedaży i korekt, wystawianych ręcznie w panelu oraz automatycznie z zamówień sklepu, także po imporcie z systemu księgowego — `svc/billing/invoice.py:4`
 ## Reguły
 - VAT 23% — `svc/billing/tax.py:1`
 ## Standardy
@@ -73,9 +74,9 @@ def git(repo: Path, *args):
                    check=True, capture_output=True)
 
 
-def run(script, *args, cwd=None):
+def run(script, *args, cwd=None, input=None):
     return subprocess.run([sys.executable, str(SCRIPTS / script), *args], capture_output=True, text=True, timeout=120,
-                          stdin=subprocess.DEVNULL, cwd=cwd)
+                          input=input, stdin=None if input is not None else subprocess.DEVNULL, cwd=cwd)
 
 
 def main() -> int:
@@ -126,6 +127,10 @@ def main() -> int:
         stale = rep / "raw/refresh/STALE.md"
         check("Do sprawdzenia:" in out and "report.md:" in out and stale.exists() and "422" in stale.read_text(encoding="utf-8"),
               f"RF-6: lista miejsc ze starym opisem na ekranie i w STALE.md: {out[-800:]}")
+        check("z systemu księgowego — `svc/billing/invoice.py:4`" in out,
+              f"RF-24: miejsce do poprawy z pełnym tekstem linii: {out[-900:]}")
+        check(any("podobn" in ln and "Faktura bez pozycji jest odrzucana przez system" in ln for ln in out.splitlines()),
+              f"RF-30: opis podobny do zmienionej reguły karty na liście do sprawdzenia: {out[-900:]}")
         check("- billing:" in (rep / "report.md").read_text(encoding="utf-8") and (rep / "modules/billing.md").exists()
               and (rep / "rules.md").exists(), "RF-7: sekcja Moduły, .md kart i rules.md złożone")
         check("Kontrola końcowa:" in out and len(out.splitlines()) <= 60, f"RF-8: zwięzłe podsumowanie kontroli: {out[-600:]}")
@@ -196,6 +201,8 @@ def main() -> int:
         git(repo, "commit", "-q", "-m", "refresh")
         write(repo, {"svc/billing/invoice.py": (repo / "svc/billing/invoice.py").read_text(encoding="utf-8").replace(
             "    if not lines:", "    if len(lines) < 2:\n        log('za mało')")})
+        rp = (rep / "report.md").read_text(encoding="utf-8")
+        write(rep, {"report.md": rp.replace("## Domeny\n", "## Domeny\n- Sprawdzenie liczby pozycji — `svc/billing/invoice.py:4`\n")})
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
         task = rep / "raw/refresh/billing.md"
         body = task.read_text(encoding="utf-8") if task.exists() else ""
@@ -205,10 +212,45 @@ def main() -> int:
         bj = (rep / "modules/billing.json").read_text(encoding="utf-8")
         check('"svc/billing/invoice.py:6"' in bj and '"svc/billing/invoice.py:7"' not in bj,
               f"RF-20: przesunięcie przeliczone raz mimo dwóch prep: {bj}")
-        run("recon_refresh.py", "finish", str(repo), cwd=d)
+        r = run("recon_refresh.py", "finish", str(repo), cwd=d)
+        check(any("zmienion" in ln and "Sprawdzenie liczby pozycji" in ln for ln in r.stdout.splitlines()),
+              f"RF-31: opis z dowodem w zmienionej linii kodu na liście do sprawdzenia: {r.stdout[-900:]}")
         rp = (rep / "report.md").read_text(encoding="utf-8")
         check(sum(ln.startswith("Odświeżenie przyrostowe:") for ln in rp.splitlines()) == 1,
               f"RF-21: jedna linia z datą odświeżenia po kolejnym finish: {rp[:500]}")
+
+        # dowód z cytatem, którego w kodzie już nie ma: finish pokazuje linię, apply ją poprawia i od razu kończy
+        bad = '- Pusta lista pozycji jest odrzucana — `svc/billing/invoice.py:4` "if not lines:"'
+        write(rep, {"report.md": rp.replace("## Reguły\n", "## Reguły\n" + bad + "\n")})
+        n = (rep / "report.md").read_text(encoding="utf-8").split("\n").index(bad) + 1
+        r = run("recon_refresh.py", "finish", str(repo), cwd=d)
+        check(r.returncode == 1 and f"report.md:{n}" in r.stdout and bad in r.stdout,
+              f"RF-25: zły dowód z treścią linii dokumentu: {r.stdout[-700:]}")
+        r = run("recon_refresh.py", "apply", str(repo), cwd=d,
+                input="@@ modules/billing.md:3\n- cokolwiek\n")
+        check(r.returncode == 2 and "modules/billing.json" in (r.stdout + r.stderr) and bad in (rep / "report.md").read_text(encoding="utf-8"),
+              f"RF-26: apply nie zmienia .md składanych z kart, wskazuje kartę: {r.stdout[-300:]} {r.stderr[-300:]}")
+        fixed = '- Faktura z mniej niż dwiema pozycjami jest odrzucana — `svc/billing/invoice.py:4` "if len(lines) < 2:"'
+        r = run("recon_refresh.py", "apply", str(repo), cwd=d, input=f"@@ report.md:{n}\n{fixed}\n")
+        rp = (rep / "report.md").read_text(encoding="utf-8")
+        check(r.returncode == 0 and fixed in rp and bad not in rp and "Kontrola końcowa: ✓" in r.stdout and "✓ manifest" in r.stdout,
+              f"RF-27: apply poprawia linię i uruchamia finish: rc={r.returncode} {r.stdout[-600:]}")
+
+        # wykonawca sprawdza kartę jednym poleceniem: przesunięty dowód poprawiony w JSON, brakujący cytat z linią kodu
+        cj = json.loads((rep / "modules/billing.json").read_text(encoding="utf-8"))
+        cj["rules"][0]["evidence"] = "svc/billing/invoice.py:1"                    # cytat jest jednoznacznie w linii 6
+        cj["rules"].append({"rule": "Brak pozycji to błąd.", "evidence": "svc/billing/invoice.py:4",
+                            "quote": "if not lines:", "confidence": "kod"})        # takiego kodu już nie ma
+        write(rep, {"modules/billing.json": json.dumps(cj, ensure_ascii=False)})
+        r = run("recon_refresh.py", "card", str(repo), "billing", cwd=d)
+        cj = json.loads((rep / "modules/billing.json").read_text(encoding="utf-8"))
+        check(cj["rules"][0]["evidence"] == "svc/billing/invoice.py:6" and r.returncode == 1 and "if len(lines) < 2:" in r.stdout
+              and "Brak pozycji to błąd." in r.stdout and len(r.stdout.splitlines()) <= 25,
+              f"RF-28: kontrola karty: przesunięty dowód poprawiony, zły z linią kodu: rc={r.returncode} {r.stdout[-700:]} {cj['rules']}")
+        cj["rules"].pop()
+        write(rep, {"modules/billing.json": json.dumps(cj, ensure_ascii=False)})
+        r = run("recon_refresh.py", "card", str(repo), "billing", cwd=d)
+        check(r.returncode == 0 and r.stdout.startswith("✓"), f"RF-29: poprawna karta → ✓: {r.stdout[-300:]}")
 
     # rozpoznawanie zmian tylko w komentarzach (zachowawczo: w razie wątpliwości to zmiana kodu)
     co = recon_refresh.comment_only

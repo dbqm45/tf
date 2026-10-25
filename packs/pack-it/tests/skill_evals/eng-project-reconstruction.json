@@ -186,7 +186,8 @@
      ["manifest\\w*", "diff", "zmienion\\w* plik\\w*"],
      ["haiku", "tańsz\\w* model", "wykonawc\\w*"],
      ["tylko zmienion\\w*", "aktualizuj\\w* kart\\w*", "zaktualizuj\\w*", "przyrostow\\w*"],
-     ["star\\w* opis\\w*", "pozostałoś\\w*", "STALE", "--prev", "do sprawdzenia"]
+     ["star\\w* opis\\w*", "pozostałoś\\w*", "STALE", "--prev", "do sprawdzenia"],
+     ["apply", "jedn\\w* polecen\\w*", "jedn\\w* tur\\w*", "jedn\\w* zapis\\w*"]
     ],
     "none": ["przebuduj całą rekonstrukcję od zera", "przeczytaj całe repozytorium"]
    }

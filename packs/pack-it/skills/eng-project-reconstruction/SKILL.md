@@ -77,12 +77,15 @@ czytasz sam, skanów i kopii nie robisz ręcznie.
 2. Wykonawcy (Haiku) w jednej wiadomości, na pierwszym planie; każdy dostaje jedno zdanie: „Wykonaj zlecenie
    z <ścieżka>”. Wykonawca aktualizuje starą kartę (tylko zmienione pliki) i sam sprawdza dowody.
 3. `recon_refresh.py finish <repo>`: karty → `.md`, `rules.md`, sekcja Moduły, data i commit odświeżenia w nagłówku
-   raportu, zmienione reguły kart (stara → nowa), lista miejsc ze starym opisem (`raw/refresh/STALE.md`), dowody
-   przesunięte przez zmianę kodu poprawione samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
-4. Z wydruku `finish` (zmienione reguły, miejsca z listy, błędy kontroli) poprawiasz opisy jednym zapisem — jeden
-   skrypt albo kilka edycji w jednej wiadomości, bez czytania całych plików; miejsce zostawiasz, gdy celowo mówi
-   o starej wartości. Do tego wymagania ze zmienionych testów. Potem `finish` jeszcze raz; gdy kontrola przeszła
-   i nic nie poprawiałeś, kończysz.
+   raportu, zmienione reguły kart (stara → nowa), miejsca do sprawdzenia z pełną treścią linii (stary znacznik, dowód
+   w zmienionej linii kodu, opis podobny do zmienionej reguły; też w `raw/refresh/STALE.md`), dowody przesunięte przez
+   zmianę kodu poprawione samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
+4. Poprawki z wydruku `finish` w jednej turze, bez czytania plików (chyba że linia z listy nie wystarcza): linie
+   oznaczone „z karty” poprawiasz w `modules/<karta>.json`, pozostałe jednym poleceniem
+   `recon_refresh.py apply <repo> <<'E'` z blokami `@@ plik:linia` i nową treścią linii (pusty blok usuwa linię);
+   `apply` od razu uruchamia `finish`. Miejsce zostawiasz, gdy opisuje stan obecny. Do tego wymagania ze zmienionych
+   testów. Kontrola przeszła → kończysz.
+5. Odpowiedź końcowa: do 5 linii — co się zmieniło w opisie, wynik kontroli.
 
 ## Zasady
 - **Kontekst głównego modelu jest drogi:** każda tura czyta go od nowa. Pełne wyniki zostają w plikach, model czyta
