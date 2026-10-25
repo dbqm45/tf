@@ -54,5 +54,7 @@ Repozytoria (commity w raporcie v1) i maistera trzeba sklonować na nowo.
 
 ## Otwarte po F4
 - Test odświeżenia ze zmianą w logice: wykonany, `2026-10-24-f4-odswiezenie-logika.md` (6/6 zmian opisanych, 2 pozostałości starego opisu; maister 5,5/6, 0 pozostałości, taniej).
-- Opcjonalnie: sygnały układu pakietów (według funkcji albo warstw) i czasów życia DI w `standards_scan`. To
-  ostatnie brakujące punkty w standardach.
+- Pozostałości po odświeżaniu: poprawione w PR #71 (`recon_cards.py --prev`); w powtórce testu 0 prawdziwych
+  pozostałości (`2026-10-24-f4-odswiezenie-logika.md`, sekcja „Powtórka”).
+- Sygnały układu pakietów i czasów życia DI w `standards_scan`: dodane (2026-10-25). Ich wpływu na pokrycie
+  standardów nie mierzono ponownie.
