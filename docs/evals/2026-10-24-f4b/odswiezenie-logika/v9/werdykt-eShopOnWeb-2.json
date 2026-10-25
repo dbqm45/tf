@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A podaje stan po zmianie w wielu miejscach i precyzyjnie: A/rules.md:5-7 i A/modules/ApplicationCore.md:36-38 (AddQuantity i SetQuantity, takze z konstruktora BasketItem, zakres 0-99, cytat Guard.Against.OutOfRange(quantity, ..., 0, 99)), A/rules.md:82 i A/modules/Infrastructure.md:44, A/requirements.md:7, A/report.md:49. Dodatkowo trafnie zauwaza, ze limit dotyczy pojedynczej operacji (Quantity += quantity bez limitu sumy; zgodne z kodem). Rozwazone i NIE uznane za nieaktualne: A/modules/WebPages.md:35 i A/rules.md:177 ('zakres od 0 do maksymalnej wartosci int', cytat [Range(0, int.MaxValue...) dotycza walidacji view-modelu Web (BasketItemViewModel.cs:13), ktora w kodzie nadal istnieje w tej postaci; A sam wyjasnia rozjazd w A/rules.md:205 i A/domain.md ('Komunikat bigger than 0 kontra zakres 0..max') oraz A/report.md pytaniem o komunikat. Czytelnik mogl by to wziac za stary limit encji, ale to opis innej warstwy, wiec nie jest to twierdzenie o stanie sprzed zmiany."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/architecture.md:17: 'BasketItem quantity must be 0-99 (AddQuantity/SetQuantity)' - poprawny zakres i obie metody, zgodnie z kodem. Zwiezle (brak wzmianki, ze SetQuantity jest wolane z konstruktora i ze suma po AddQuantity nie jest ograniczona), ale stan po zmianie jest podany poprawnie. Przeszukanie calego zestawu B (MaxValue, 99, quantity, ilosc, range, guard) nie wykazalo zadnego twierdzenia o dawnym zakresie 0..int.MaxValue."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/rules.md:35 i A/modules/ApplicationCore.md:66: cena 0,01-10000 wlacznie w UpdateDetails, konstruktor CatalogItem nie waliduje ceny (zgodne z kodem), z cytatem Guard.Against.OutOfRange(details.Price, ..., 0.01m, 10000m); zachowane tez istniejace NegativeOrZero (A/rules.md:34, ApplicationCore.md:65). Powtorzone w A/rules.md:83, A/modules/Infrastructure.md:45 i A/requirements.md:26. Zakres 0,01-1000 w A/modules/BlazorShared.md:20-21 i A/rules.md:63-64 dotyczy modeli klienckich BlazorShared ([Range(0.01, 1000)] nadal w kodzie) - inna warstwa, nie jest stanem sprzed zmiany."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/architecture.md:17: 'CatalogItem price must be 0.01-10000 (UpdateDetails)' - poprawny zakres i metoda. Zwiezle (nie wspomina o zachowanym NegativeOrZero ani o tym, ze konstruktor nie waliduje), ale stan po zmianie jest podany poprawnie. Zadnego twierdzenia o dawnym braku gornego limitu ceny w B nie znaleziono."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/rules.md:105 i A/modules/PublicApi.md:38: tworzenie nie sprawdza unikalnosci nazwy, duplikat nie zwraca DuplicateException ani 409; A/rules.md:204, A/requirements.md:25 ('mapowanie DuplicateException -> 409 pozostaje'), A/report.md:52 (middleware nadal mapuje 409, ale tworzenie nie zglasza duplikatu), A/modules/PublicApi.md:74 (ani tworzenie, ani aktualizacja nie sprawdzaja - zgodne z UpdateCatalogItemEndpoint.cs) i niewiadoma PublicApi.md:92. To dokladnie zgadza sie z opisem zmiany (klasa wyjatku i mapowanie 409 istnieja, nic go nie rzuca). Rozwazone i NIE uznane za nieaktualne: A/modules/PublicApi.md:63 ('zduplikowana nazwa -> DuplicateException' w slowniku Pojecia) to mapowanie terminu na klase wyjatku (middleware:35), a nie twierdzenie, ze tworzenie go rzuca - slabe, ale niesprzeczne z reszta; A/modules/PublicApi.md:18 wymienia DuplicateException jako zaleznosc pliku (using w CreateCatalogItemEndpoint.cs:8 nadal jest, choc nieuzywany); A/modules/PublicApi.md:52, A/rules.md:119 (mapowanie 409) nadal prawdziwe."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/architecture.md:49: 'CreateCatalogItemEndpoint no longer checks for duplicate names before inserting, so name uniqueness is not currently enforced' oraz B/project/roadmap.md:26 (dlug techniczny: sprawdzenie duplikatu usuniete, duplikaty nie sa odrzucane; propozycja unikalnego indeksu) i B/INDEX.md:23. Stan po zmianie podany poprawnie; B nie wspomina, ze klasa DuplicateException i mapowanie 409 w ExceptionMiddleware nadal istnieja (roadmap mowi tylko o 'handled DuplicateException' jako przyszlym kroku), co jest drobna luka, nie bledem. Brak twierdzen, ze duplikat daje DuplicateException/409 (grep: 409, Duplicate, duplikat, unique)."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spojna: A we wszystkich plikach (rules.md, requirements.md, report.md, moduly PublicApi/ApplicationCore/Infrastructure) konsekwentnie podaje 0-99 dla BasketItem, 0,01-10000 dla UpdateDetails i brak sprawdzenia unikalnosci przy tworzeniu przy zachowanym mapowaniu 409; rozne zakresy z innych warstw (view-model 0..int.MaxValue, BlazorShared cena do 1000) sa przypisane swoim warstwom i dla ilosci wprost opisane jako rozjazd (rules.md:205, domain.md), wiec nie przeczy sobie co do tych trzech zmian.",
+    "B": "Spojna: B mowi o trzech zmianach tylko w architecture.md:17 i :49 oraz roadmap.md:26 (i skrot w INDEX.md:23), wszystkie zgodnie z kodem i bez wzajemnych sprzecznosci; ogolne standardy (np. dotnet-architecture.md, models.md) nie podaja zadnych liczb ani regul sprzecznych z tymi zmianami."
+  }
+}

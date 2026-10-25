@@ -85,7 +85,9 @@ czytasz sam, skanów i kopii nie robisz ręcznie.
    jako bloki `@@ plik:linia` z nową treścią linii (pusty blok usuwa linię) i w tej samej wiadomości uruchamiasz
    `recon_refresh.py apply <repo>` — zamienia linie i od razu uruchamia `finish`. Bez heredoc i `sed -i`. Opis
    usuniętej reguły zamieniasz na zdanie o stanie obecnym („… nie jest już sprawdzane”), nie kasujesz go; pusty blok
-   tylko dla powtórzeń. Miejsce zostawiasz, gdy opisuje stan obecny. Do tego wymagania ze zmienionych testów.
+   tylko dla powtórzeń. Streszczenie, które podaje tylko część zmienionej reguły (np. dolną granicę bez nowej
+   górnej), uzupełniasz o stan obecny. Miejsce zostawiasz, gdy opisuje stan obecny w całości. Do tego wymagania ze
+   zmienionych testów.
    Kontrola przeszła → kończysz.
 5. Odpowiedź końcowa: do 5 linii — co się zmieniło w opisie, wynik kontroli.
 

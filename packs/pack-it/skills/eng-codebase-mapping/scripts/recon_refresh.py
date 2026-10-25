@@ -126,7 +126,8 @@ def changed_lines(old: str, new: str) -> list[int]:
 
 def review_places(d: str, changes: list[dict], code_lines: dict) -> list[tuple[str, int, str, str]]:
     """Opisy syntezy (poza kartami) z dowodem w zmienionej linii kodu albo o treści podobnej do zmienionej reguły."""
-    olds = [(c["card"], recon_cards.stems(c["old"].get("rule", ""))) for c in changes if c["old"]]
+    olds = [(c["card"], recon_cards.stems(c["old"].get("rule", "")),
+             f"teraz: {short(c['new'])}" if c["new"] else "reguła usunięta z kodu") for c in changes if c["old"]]
     hits = []
     for dp, dn, fn in os.walk(d):
         dn[:] = sorted(x for x in dn if x not in ("raw", "modules"))
@@ -144,9 +145,10 @@ def review_places(d: str, changes: list[dict], code_lines: dict) -> list[tuple[s
                     hits.append((rel, n, "zmieniona linia kodu", line.strip()))
                     continue
                 st = recon_cards.stems(line)
-                sim = next((card for card, o in olds if len(st & o) >= 3 and len(st & o) / max(1, len(st | o)) >= 0.2), None)
+                sim = next(((card, now) for card, o, now in olds
+                            if len(st & o) >= 3 and len(st & o) / max(1, len(st | o)) >= 0.2), None)
                 if sim:
-                    hits.append((rel, n, f"podobna do zmienionej reguły karty {sim}", line.strip()))
+                    hits.append((rel, n, f"podobna do zmienionej reguły karty {sim[0]}; {sim[1]}", line.strip()))
     return hits
 
 

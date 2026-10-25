@@ -129,8 +129,9 @@ def main() -> int:
               f"RF-6: lista miejsc ze starym opisem na ekranie i w STALE.md: {out[-800:]}")
         check("z systemu księgowego — `svc/billing/invoice.py:4`" in out,
               f"RF-24: miejsce do poprawy z pełnym tekstem linii: {out[-900:]}")
-        check(any("podobn" in ln and "Faktura bez pozycji jest odrzucana przez system" in ln for ln in out.splitlines()),
-              f"RF-30: opis podobny do zmienionej reguły karty na liście do sprawdzenia: {out[-900:]}")
+        check(any("podobn" in ln and "Faktura bez pozycji jest odrzucana przez system" in ln and "co najmniej dwie pozycje" in ln
+                  for ln in out.splitlines()),
+              f"RF-30: opis podobny do zmienionej reguły karty na liście, z nową treścią reguły: {out[-900:]}")
         check("- billing:" in (rep / "report.md").read_text(encoding="utf-8") and (rep / "modules/billing.md").exists()
               and (rep / "rules.md").exists(), "RF-7: sekcja Moduły, .md kart i rules.md złożone")
         check("Kontrola końcowa:" in out and len(out.splitlines()) <= 60, f"RF-8: zwięzłe podsumowanie kontroli: {out[-600:]}")
