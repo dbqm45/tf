@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.35.0] — 2026-10-25
+### Added
+- **mode-pdi:** release plan with MVP, release lines and flag rollout (G1.1) (#78)
+
 ## [5.34.0] — 2026-10-25
 ### Added
 - **pack-it:** story shape rules from the pdi contract in requirements lint (#77)
