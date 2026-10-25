@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Telefon = dokładnie 9 cyfr podany w wielu miejscach, zgodnie z Owner.java:64 (@Pattern \\d{9}): modules/owner.md:45 'Telefon właściciela to dokładnie 9 cyfr', rules.md:64 i :117 (wzorzec `\\d{9}`), requirements.md:5, report.md:42, domain.md:19. Brak śladu '10 cyfr' / \\d{10} w całym zestawie A (db.md:33 'telefon do 20' to szerokość kolumny H2, nie reguła cyfr)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:34 '`Owner.telephone`: @NotBlank and @Pattern(regexp = \"\\\\d{9}\") (exactly 9 digits, message key telephone.invalid)'; INDEX.md:29 '9-digit telephone'. Brak jakiegokolwiek '10 digits' / \\d{10} w zestawie B."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "modules/owner.md:53 'Imię zwierzęcia nie może zawierać cyfr' z dowodem PetValidator.java:49 (anyMatch(Character::isDigit)); to samo w rules.md:72. Reguła nie jest w niej zanegowana nigdzie indziej."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:35 'PetValidator: pet name required, at most 30 characters, must not contain digits (error code `digits`)' - zgodne z rejectValue(\"name\", \"digits\", ...); INDEX.md:29 'pet names without digits'."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Stan po usunięciu sprawdzenia opisany wprost i spójnie w kilku miejscach: modules/owner.md:82 'data wizyty nie ma już sprawdzenia w kontrolerze wizyt (VisitController nie odrzuca daty z dzisiaj ani z przeszłości)'; requirements.md:16 'domyślna data jutro (walidacji przyszłej daty już brak)'; report.md:37 'kontroler nie odrzuca już daty niebędącej w przyszłości; domyślna data nowej wizyty to jutro' oraz :44; REVIEW.draft.md:3 'walidacja daty wizyty usunięta z VisitController.java'. Domyślna data jutro (Visit.java:51 / minVisitDate) też jest podana (owner.md:63, rules.md, domain.md:22). Dodatkowo słusznie flaguje, że test VisitControllerTests (processNewVisitFormHasErrorsWhenVisitDateIsNotInFuture) nadal zakłada błąd. Brak jakiegokolwiek twierdzenia 'data musi być późniejsza niż dziś'."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:36 'VisitController: visit form relies on Bean Validation only (@Valid Visit); there is no extra check that the visit date lies in the future'; INDEX.md:29 'no extra visit-date check'. Rdzeń zmiany (kontroler nie odrzuca już daty niebędącej po dzisiejszej) jest podany poprawnie. Drobny brak: nie wspomina domyślnej daty 'jutro' (minVisitDate / Visit.java:51) ani że sprawdzenie zostało usunięte (brak zaznaczenia zmiany), ale stan końcowy jest zgodny z kodem. Nie ma żadnego twierdzenia o starej regule."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: wszystkie wzmianki o telefonie mówią 9 cyfr (\\d{9}), reguła braku cyfr w imieniu zwierzaka jest jednolita, a każda wzmianka o dacie wizyty (owner.md:82, requirements.md:16, report.md:37/44, REVIEW.draft.md:3) mówi, że kontroler już jej nie odrzuca i że domyślna jest data jutro - żadnych sprzeczności ani pozostałości starego stanu.",
+    "B": "Spójna: architecture.md:34-36 i INDEX.md:29 zgodnie podają 9-cyfrowy telefon, brak cyfr w imieniu zwierzaka i brak dodatkowego sprawdzenia daty wizyty; w pozostałych plikach (standards/*, project/*) nie ma żadnych twierdzeń o starych regułach (10 cyfr, data po dzisiejszej)."
+  }
+}

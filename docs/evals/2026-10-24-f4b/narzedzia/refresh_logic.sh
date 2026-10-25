@@ -1,16 +1,17 @@
 #!/bin/bash
-# F4: odświeżenie po zmianie w logice (zmieniona, nowa i usunięta reguła). Użycie: refresh_logic.sh <tf|maister> <repo> [budżet]
+# F4: odświeżenie po zmianie w logice (zmieniona, nowa i usunięta reguła). Użycie: refresh_logic.sh <tf|maister> <repo> [budżet] [przebieg]
 set -u
 B=${F4B_DIR:?ustaw F4B_DIR}
-TOOL=$1; REPO=$2; BUDGET=${3:-4}
-RUN=$B/rf/$TOOL-$REPO
+TOOL=$1; REPO=$2; BUDGET=${3:-4}; SUF=${4:+-$4}
+RUN=$B/rf/$TOOL-$REPO$SUF
 rm -rf "$RUN"; mkdir -p "$B/rf" "$B/logs"
 cp -r "$B/runs/$TOOL-$REPO" "$RUN"          # kopia wyniku bazowego — dane benchmarku zostają nietknięte
+git -C "$RUN" checkout -q -- .              # pliki śledzone jak w commicie bazowym (maister ma tu zmianę z v1)
 if [ "$TOOL" = tf ] && [ -n "${TF_WS:-}" ]; then   # bieżąca wersja skilli z workspace zamiast tej z przebiegu bazowego
   rm -rf "$RUN/.claude/skills" && cp -r "$TF_WS/.claude/skills" "$RUN/.claude/skills"
   find "$RUN/.claude" -name __pycache__ -prune -exec rm -rf {} +
 fi
-python3 "$B/mutate_logic.py" "$REPO" "$RUN" > "$B/logs/rl-mutate-$TOOL-$REPO.txt" || exit 3
+python3 "$B/mutate_logic.py" "$REPO" "$RUN" > "$B/logs/rl-mutate-$TOOL-$REPO$SUF.txt" || exit 3
 cd "$RUN"
 NOBUILD="Nie budujesz i nie uruchamiasz kodu projektu, nie używasz sieci."
 if [ "$TOOL" = tf ]; then
@@ -24,9 +25,9 @@ fi
 ALLOWED=(Read Glob Grep Write Edit Skill Task Agent TodoWrite TaskCreate TaskUpdate TaskList TaskGet "Bash(python3 *)" "Bash(git log *)" "Bash(git ls-files *)" "Bash(git rev-parse *)" "Bash(git show *)" "Bash(git diff *)" "Bash(git status *)" "Bash(ls *)" "Bash(wc *)" "Bash(find *)" "Bash(mkdir *)" "Bash(head *)" "Bash(grep *)")
 START=$(date +%s)
 claude -p "$PROMPT" --model sonnet --permission-mode acceptEdits --allowedTools "${ALLOWED[@]}" --disallowedTools WebFetch WebSearch --max-budget-usd "$BUDGET" \
-  --append-system-prompt "$SYS" "${EXTRA[@]}" --output-format stream-json --verbose > "$B/logs/rl-$TOOL-$REPO.jsonl" 2> "$B/logs/rl-$TOOL-$REPO.err"
+  --append-system-prompt "$SYS" "${EXTRA[@]}" --output-format stream-json --verbose > "$B/logs/rl-$TOOL-$REPO$SUF.jsonl" 2> "$B/logs/rl-$TOOL-$REPO$SUF.err"
 RC=$?; END=$(date +%s)
-python3 - "$B/logs/rl-$TOOL-$REPO.jsonl" "$TOOL" "$REPO" "$RC" "$((END-START))" >> "$B/logs/rl.tsv" <<'PY'
+python3 - "$B/logs/rl-$TOOL-$REPO$SUF.jsonl" "$TOOL" "$REPO$SUF" "$RC" "$((END-START))" >> "$B/logs/rl.tsv" <<'PY'
 import json, sys
 path, tool, repo, rc, secs = sys.argv[1:]
 res = {}

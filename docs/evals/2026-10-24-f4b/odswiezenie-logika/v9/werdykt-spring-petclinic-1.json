@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:34 podaje `Owner.telephone`: @NotBlank + @Pattern(regexp = \"\\\\d{9}\") (exactly 9 digits); A/INDEX.md:29 powtarza '9-digit telephone'. Zgodne z Owner.java:64. Nigdzie w A nie ma '10 cyfr'/'\\d{10}' (grep po digit/cyfr/telephone/10 nie zwraca nic starego)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/rules.md:64 i B/modules/owner.md:45 'Telefon właściciela to dokładnie 9 cyfr', B/rules.md:118 wzorzec `\\d{9}`, B/requirements.md:5 '(9 cyfr)', B/domain.md:19, B/report.md:42. Dodatkowo B/report.md:42 słusznie zauważa, że komunikat telephone.invalid w messages.properties nadal mówi o 10 cyfrach (potwierdzone w kodzie: messages.properties:34 'Telephone must be a 10-digit number') - to trafna obserwacja rozjazdu w kodzie, a nie nieaktualna dokumentacja. Brak twierdzeń o 10 cyfrach jako obowiązującej regule."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:35 'PetValidator: pet name required, at most 30 characters, must not contain digits (error code `digits`)'; A/INDEX.md:29 'pet names without digits'. Zgodne z PetValidator.java:49-50. Nie podaje kolejności sprawdzeń (else-if po pustym/długości), ale reguła i kod błędu są poprawne."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/rules.md:72 i B/modules/owner.md:53 'Imię zwierzęcia nie może zawierać cyfr; sprawdzane dopiero, gdy imię jest niepuste i ma najwyżej 30 znaków (błąd „digits”)' z dowodem PetValidator.java:49 - poprawne i dokładniejsze niż A (uwzględnia else-if)."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:36 'VisitController: visit form relies on Bean Validation only (@Valid Visit); there is no extra check that the visit date lies in the future'; A/INDEX.md:29 'no extra visit-date check'. Poprawnie oddaje usunięcie sprawdzenia (zgodne z processNewVisitForm, który tylko sprawdza result.hasErrors()). Luka drobna: A nie wspomina o pozostałej domyślnej dacie 'jutro' (Visit() / minVisitDate), a sformułowanie jest stanem bieżącym, nie 'już nie'. Nie ma w A żadnej wzmianki o regule 'data późniejsza niż dziś' jako obowiązującej."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/rules.md:82 i B/modules/owner.md:63 'Data wizyty nie jest już sprawdzana pod kątem tego, czy jest w przyszłości: dawne sprawdzenie „późniejsza niż dzisiaj” zniknęło z processNewVisitForm'; B/rules.md:83 i owner.md:64 'Domyślna data nowej wizyty to jutro' (Visit.java:51); B/requirements.md:16, B/report.md:37 i :44, B/owner.md:83, B/domain.md:22. Pełne i zgodne z gold (usunięcie + pozostała domyślna data jutro). B/report.md:37,44 i owner.md:97 uczciwie flagują, że test processNewVisitFormHasErrorsWhenVisitDateIsNotInFuture nadal istnieje w VisitControllerTests (potwierdzone: VisitControllerTests.java:97) - rozjazd kod/test, nie nieaktualna reguła. B/REVIEW.draft.md:3 używa usuniętego sprawdzenia jako przykładu, co jest zgodne ze stanem po zmianie."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: wszystkie trzy zmiany są opisane jednolicie w A/project/architecture.md (sekcja Validation Rules, linie 34-36) i w streszczeniu A/INDEX.md:29, a w pozostałych plikach A (standards, roadmap, tech-stack) nie ma żadnego twierdzenia o 10 cyfrach, braku reguły cyfr w imieniu ani wymogu daty wizyty po dzisiejszej.",
+    "B": "Spójna: dokumenty B (rules.md, modules/owner.md, requirements.md, domain.md, report.md, REVIEW.draft.md) konsekwentnie podają 9 cyfr, zakaz cyfr w imieniu i brak sprawdzenia przyszłej daty wizyty z domyślną datą jutro; jedyne wzmianki o 10 cyfrach (komunikat w messages.properties) i o starym teście wizyty są jawnie oznaczone jako rozjazd w kodzie, więc dokumentacja sobie nie przeczy."
+  }
+}

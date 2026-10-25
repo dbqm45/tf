@@ -186,7 +186,8 @@
      ["manifest\\w*", "diff", "zmienion\\w* plik\\w*"],
      ["haiku", "tańsz\\w* model", "wykonawc\\w*"],
      ["tylko zmienion\\w*", "aktualizuj\\w* kart\\w*", "zaktualizuj\\w*", "przyrostow\\w*"],
-     ["star\\w* opis\\w*", "pozostałoś\\w*", "STALE", "--prev", "do sprawdzenia"]
+     ["star\\w* opis\\w*", "pozostałoś\\w*", "STALE", "--prev", "do sprawdzenia"],
+     ["apply", "jedn\\w* polecen\\w*", "jedn\\w* tur\\w*", "jedn\\w* zapis\\w*"]
     ],
     "none": ["przebuduj całą rekonstrukcję od zera", "przeczytaj całe repozytorium"]
    }
@@ -218,6 +219,21 @@
    "neighbor": "eng-code-audit",
    "prompt": "Klient chce pełnego audytu kodu przed zakupem firmy: architektura, bezpieczeństwo, jakość, dostępność i zgodność z prawem, ze wspólnym rankingiem ustaleń. Jak to zorganizować w budżecie? Odpowiedz zwięźle.",
    "checks": {"all": [["bezpieczeńst"], ["ranking", "priorytet"]]}
+    },
+  {
+   "id": "odswiezenie-komentarze",
+   "expect": "trigger",
+   "prompt": "Mam rekonstrukcję z kodu z manifestem. Od ostatniego odświeżenia w 12 plikach zmieniły się tylko komentarze, w kilku dopisano linie komentarza w środku pliku. Jak odświeżyć dokumentację najtaniej i czy dowody plik:linia pozostaną poprawne? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["recon_refresh", "prep", "skrypt\\w*"],
+     ["tylko komentarz\\w*", "same komentarz\\w*", "komentarz\\w* i pust\\w* lini\\w*"],
+     ["bez zleceń", "bez wykonawc\\w*", "nie (dostaj|zlec)\\w*", "pomij\\w*"],
+     ["przelicz\\w*", "przesunięt\\w*", "numer\\w* lini\\w*"],
+     ["finish", "kontrol\\w* końcow\\w*", "recon_check"]
+    ],
+    "none": ["przebuduj całą rekonstrukcję od zera", "przeczytaj całe repozytorium"]
+   }
   }
  ]
 }

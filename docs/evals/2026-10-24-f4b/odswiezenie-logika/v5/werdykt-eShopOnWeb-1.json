@@ -1,0 +1,60 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:16 podaje: „basket item quantity must be 0-99 (BasketItem.AddQuantity/SetQuantity)”. Zakres i oba miejsca guardu zgadzają się z kodem (BasketItem.cs:22 i :29). Nie ma wzmianki, że SetQuantity woła też konstruktor, ale to szczegół. Żadnego twierdzenia o int.MaxValue ani braku górnej granicy w zestawie A nie ma (grep: MaxValue, 99, quantity, ilość)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "uwagi_graniczne": [
+          "B/modules/WebPages.md:35 i B/rules.md:174: „Ilość pozycji w koszyku nie może być ujemna (zakres od 0 do maksymalnej wartości int)” — literalnie stary stan, ale to opis walidacji ViewModelu Web ([Range(0, int.MaxValue)] w BasketItemViewModel.cs:13, w kodzie bez zmian), więc poprawne dla tej warstwy. Czytane osobno może wprowadzać w błąd co do limitu domenowego.",
+          "B/domain.md:46, B/modules/WebPages.md:71, B/rules.md:202: „komunikat bigger than 0 kontra zakres 0..max” — też o ViewModelu; rules.md:202 poprawnie mówi „Guard 0..99 na operację”.",
+          "B/report.md:49 „Ilość pozycji koszyka ≥ 0, 0 usuwa pozycję” i B/requirements.md:7 „Ilość nie może być ujemna; ilość 0 usuwa pozycję” — streszczenia bez limitu 99; niesprzeczne, ale niepełne."
+        ],
+        "why": "B/modules/ApplicationCore.md:37 i B/rules.md:6: ilość w jednej operacji (dodanie, zmiana, utworzenie; konstruktor woła SetQuantity) nie może przekraczać 99; limit liczony na argumencie, nie na sumie (198 po dwóch dodaniach po 99). Cytat guardu 0..99 przy liniach 22 i 29 BasketItem.cs. To dokładniejsze niż A. Streszczenia (report.md, requirements.md) limitu 99 nie powtarzają."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:16: „catalog item price must be 0.01-10000 (CatalogItem.UpdateDetails)” — zgodne z CatalogItem.cs:38 (OutOfRange 0.01m..10000m). Istniejącego NegativeOrZero nie wymienia, ale zmiana jest opisana poprawnie. Reguła jest nowa, więc stanu sprzed zmiany nie ma."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "uwagi_graniczne": [
+          "B/requirements.md:26 „Cena produktu dodatnia; nazwa i opis niepuste” (cytuje CatalogItem.cs:37) — pomija zakres 0,01–10000; niepełne, ale niesprzeczne.",
+          "B/modules/ApplicationCore.md:64 i B/rules.md:33 „Cena produktu musi być dodatnia” — poprawne (NegativeOrZero nadal działa), a zakres jest w następnej regule."
+        ],
+        "why": "B/modules/ApplicationCore.md:65 i B/rules.md:34: „Zmiana szczegółów produktu odrzuca cenę spoza przedziału 0,01–10000” z cytatem Guard.Against.OutOfRange(details.Price, ..., 0.01m, 10000m) przy CatalogItem.cs:38 — dokładnie zgodne z kodem. Zakresy 0,01–1000 w BlazorShared (BlazorShared.md:20-21) i 0,01–10000 w PublicApi (PublicApi.md:43) zgadzają się z kodem (inna warstwa, bez zmian)."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/roadmap.md:26: „Enforce catalog-name uniqueness with a unique index (the CreateCatalogItemEndpoint pre-check was removed, so CatalogItemNameSpecification and DuplicateException are no longer used by creation)”. Zgodne z kodem: CreateCatalogItemEndpoint.cs nie ma sprawdzenia, CatalogItemNameSpecification nie ma użycia, DuplicateException nie jest rzucany. Informacja jest tylko w roadmapie jako pozycja długu, a nie w opisie reguł. Nie mówi wprost, że duplikat jest przyjmowany ani że mapowanie 409 w ExceptionMiddleware zostaje. Żadnego twierdzenia o 409/DuplicateException przy tworzeniu nie ma (grep: 409, Conflict, Duplicate, unikal, uniq). Ogólne zdania o „duplicate checks server-side” (standards/global/validation.md:7) i UNIQUE w bazie (standards/backend/models.md:10) to ogólne standardy, nie opis tego endpointu."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "uwagi_graniczne": [
+          "B/modules/PublicApi.md:63 (słowniczek Pojęcia) „zduplikowana nazwa → DuplicateException” — sugeruje, że duplikat nazwy daje ten wyjątek, co po zmianie nic nie realizuje; sprzeczne z PublicApi.md:38 w tym samym pliku. Lekka niespójność słowniczka.",
+          "B/modules/PublicApi.md:52 i B/rules.md:116 „DuplicateException → 409 Conflict” — poprawne (mapowanie w ExceptionMiddleware nadal istnieje, zgodnie z opisem zmiany); report.md:52 i requirements.md:25 dodają, że tworzenie go już nie zgłasza."
+        ],
+        "why": "Wprost i w wielu miejscach: B/modules/PublicApi.md:38 i B/rules.md:102 („Utworzenie pozycji nie sprawdza unikalności nazwy: zduplikowana nazwa nie jest odrzucana… brak DuplicateException i brak odpowiedzi 409”), PublicApi.md:74 i :92, rules.md:201, requirements.md:25 („Middleware mapuje DuplicateException → 409, ale tworzenie pozycji nie sprawdza już duplikatu nazwy”), report.md:52 („tworzenie pozycji już go nie zgłasza”). Zgodne z kodem, łącznie z tym, że klasa i mapowanie 409 zostały."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: A mówi o D1–D3 tylko w architecture.md:16 i roadmap.md:26, zgodnie z kodem i bez zdań przeczących zmianom w innych plikach; ogólne standardy (validation.md, models.md, dotnet-architecture.md) nie twierdzą niczego o limicie ilości ani o sprawdzaniu duplikatów przy tworzeniu.",
+    "B": "Prawie spójna: reguły D1–D3 są opisane poprawnie i wielokrotnie (ApplicationCore.md, rules.md, PublicApi.md, requirements.md, report.md), a streszczenia pomijają tylko limit 99 i zakres ceny. Jedyna niespójność to słowniczek PublicApi.md:63 „zduplikowana nazwa → DuplicateException” obok PublicApi.md:38, który mówi, że nic go nie rzuca. Zdania o ilości 0..int.MaxValue dotyczą ViewModelu Web i są prawdziwe dla tej warstwy."
+  }
+}

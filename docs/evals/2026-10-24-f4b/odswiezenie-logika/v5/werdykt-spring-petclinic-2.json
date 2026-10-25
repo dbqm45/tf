@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Kod: Owner.java:64 @Pattern(regexp = \"\\\\d{9}\"). A podaje 9 cyfr konsekwentnie w 6 miejscach: modules/owner.md:45, rules.md:64, rules.md:117 (wzorzec \\d{9}), requirements.md:5, report.md:41, domain.md:19. Nie znaleziono zadnego twierdzenia o 10 cyfrach jako regule. modules/owner.md:97 wspomina 10-cyfrowe telefony tylko jako opis testow ('po zmianie regul ... moga nie przechodzic') - to poprawna uwaga o testach, nie stare twierdzenie o regule. Nie wspomina, ze tekst komunikatu telephone.invalid nadal mowi o 10 cyfrach (owner.md:91 tylko wymienia klucz jako niezweryfikowany), ale to nie jest przeciwienstwo zmiany."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:34 'Owner.telephone: @NotBlank and @Pattern requiring exactly 9 digits; message key telephone.invalid'. Powtorzone w INDEX.md:29 ('9-digit telephone') i INDEX.md:23. Dodatkowo project/roadmap.md:23 poprawnie wylapuje rozjazd: telephone.invalid w messages*.properties nadal mowi '10-digit' (zweryfikowane w kodzie: messages.properties:34 'Telephone must be a 10-digit number'). To jest zgodne z kodem, nie stare twierdzenie. Marginalnie: standards/backend/spring-petclinic-conventions.md:48 nadal wymienia @Digits wsrod adnotacji na encjach (Owner uzywal wczesniej @Digits, teraz kod nie ma zadnego @Digits) - pozostalosc starej implementacji, ale nie twierdzi liczby cyfr, wiec nie liczone jako nieaktualne."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Kod: PetValidator.java:49-50 rejectValue(\"name\", \"digits\", ...). A opisuje regule jawnie: modules/owner.md:53 i rules.md:72 'Imie zwierzecia nie moze zawierac cyfr (sprawdzane tylko dla imienia niepustego i majacego najwyzej 30 znakow)' - co zgadza sie z lancuchem if/else if w kodzie; requirements.md:17 tez ja podaje (pewnosc: kod, brak testu). Drobna wada: w requirements.md wpis jest pod naglowkiem 'Wizyty' zamiast 'Zwierzeta', a wpis o imieniu w requirements.md:11 ('imie <=30, wymagane') cyfr nie wymienia - nie zmienia to poprawnosci."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:35 'PetValidator: name required, at most 30 characters, no digits; type required for new pets; birth date required' - zgodne z kodem. INDEX.md:29 powtarza 'pet names without digits'. Opis zwiezly (bez kodu bledu 'digits' i bez warunku kolejnosci), ale poprawny."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Kod: VisitController.processNewVisitForm tylko sprawdza result.hasErrors(); jest @ModelAttribute minVisitDate = dzis+1; Visit() ustawia date = jutro, brak ograniczenia na date. A: requirements.md:16 'Wizyta tylko dla zwierzecia danego wlasciciela, opis <=255 (data bez ograniczenia; domyslnie jutro)' - jawnie podaje brak ograniczenia daty; modules/owner.md:63 i rules.md:82 oraz domain.md:22 'domyslnie jutro'. Zadne miejsce nie twierdzi, ze kontroler odrzuca date nie po dzisiejszej. modules/owner.md:97 zaznacza, ze test VisitControllerTests:101 (data dzisiejsza) moze po zmianie nie przechodzic - to hedge o testach, nie stare twierdzenie o regule. Najjawniejsze stwierdzenie jest w requirements.md (w owner.md/rules.md brak wpisu, ze ograniczenia nie ma, jest tylko wartosc domyslna)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:36 'VisitController: visit form validated only by Bean Validation on Visit; no future-date check in the controller' - jawnie mowi, ze kontroler nie sprawdza daty. Brakuje wzmianki o domyslnej dacie 'jutro' (minVisitDate / Visit()), ale istota zmiany (usuniete sprawdzenie) jest podana poprawnie. Nigdzie indziej w B nie ma twierdzenia o wymogu daty wizyty po dzisiejszej (grep: wizyt/visit/date/today)."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spojna: wszystkie 6 miejsc podaje 9 cyfr, imie bez cyfr jest opisane tak samo w owner.md/rules.md/requirements.md, a data wizyty ('bez ograniczenia; domyslnie jutro') nie jest nigdzie sprzeczna; jedyna wzmianka o starym stanie (10-cyfrowe telefony, data dzisiejsza) dotyczy testow i jest wyraznie oznaczona jako niezweryfikowana.",
+    "B": "Spojna co do tych trzech zmian: architecture.md, INDEX.md i roadmap.md zgodnie podaja 9 cyfr, imie bez cyfr i brak sprawdzenia daty w kontrolerze (roadmap trafnie wskazuje nieodswiezony komunikat 10-digit); jedyna pozostalosc to ogolna wzmianka o @Digits w standards/backend/spring-petclinic-conventions.md:48, ktora nie przeczy zmianom."
+  }
+}

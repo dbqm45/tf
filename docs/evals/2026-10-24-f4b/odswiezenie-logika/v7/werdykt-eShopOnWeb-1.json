@@ -1,0 +1,49 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:16: 'basket item quantity must be 0-99 (BasketItem.AddQuantity/SetQuantity)' - poprawny zakres i obie metody (konstruktor wolany przez SetQuantity nie jest wymieniony, drobiazg). Brak w A jakiegokolwiek miejsca z int.MaxValue / 'bez gornej granicy' (grep: int.MaxValue, MaxValue, quantity, ilosc - jedyne trafienie to architecture.md:16)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Wiele zgodnych miejsc: modules/ApplicationCore.md:36 i rules.md:5 ('przyrost i ustawienie ... 0-99 ... powyzej 99 odrzucana; granica dotyczy argumentu, nie sumy'), modules/Infrastructure.md:44-45 i rules.md:80-81 (osobno dodawanie i ustawianie 0-99, cytat Guard.Against.OutOfRange(...,0,99)), requirements.md:7, report.md:49. Uwaga graniczna, NIE uznana za nieaktualna: modules/WebPages.md:35 i rules.md:175 ('zakres od 0 do maksymalnej wartosci int', cytat [Range(0, int.MaxValue...) dotycza BasketItemViewModel.cs:13 - w kodzie nadal jest [Range(0, int.MaxValue, ...)] w modelu widoku, wiec to prawdziwy opis warstwy Web, a rules.md:203 i WebPages.md:71 jawnie opisuja rozbieznosc domena 0..99 vs widok 0..int.MaxValue. Jesli oceniajacy traktuje to doslownie jako 'old', to sa to dwa miejsca (WebPages.md:35, rules.md:175), ale w kodzie stan jest prawdziwy."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:16: 'catalog item price must be 0.01-10000 (CatalogItem.UpdateDetails)' - poprawny zakres i metoda. Nie wspomina osobno NegativeOrZero (nie wymagane). Brak sprzecznych stwierdzen o cenie w A."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "modules/ApplicationCore.md:64 i rules.md:33 ('UpdateDetails ... 0,01-10 000'), modules/Infrastructure.md:46 i rules.md:82 (cytat Guard.Against.OutOfRange(details.Price,...,0.01m,10000m), 'wlacznie'), requirements.md:26. Zachowane tez NegativeOrZero (ApplicationCore.md:63, rules.md:32) - nadal prawdziwe, nie jest nieaktualne. Zakres 0,01-1000 w BlazorShared (BlazorShared.md:20-21, rules.md:61-62) zgadza sie z kodem (src/BlazorShared/Models/*.cs [Range(0.01, 1000)]), to inna warstwa. PublicApi.md:92 ('walidacja ceny w konstruktorze poza partia') dotyczy konstruktora, ktory faktycznie nie ma guarda ceny."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/roadmap.md:26: 'the CreateCatalogItemEndpoint pre-check was removed, so CatalogItemNameSpecification and DuplicateException are no longer used by creation' - poprawnie (kod: CreateCatalogItemEndpoint nie sprawdza nazwy, CatalogItemNameSpecification nie jest uzywana nigdzie w src). Informacja jest tylko w jednym miejscu (pozycja dlugu technicznego w roadmap + echo w INDEX.md:23 'unique index for catalog names'); nie ma twierdzen o 409 przy duplikacie nigdzie w A (grep 409/Duplicate/duplikat). dotnet-architecture.md:25 ogolnie o ExceptionMiddleware - bez sprzecznosci."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [
+          "modules/PublicApi.md:62 (GRANICZNE, slabe) - slownik pojec: 'zduplikowana nazwa -> DuplicateException' sugeruje, ze duplikat nazwy konczy sie DuplicateException; sprzeczne z tym samym plikiem w :73 i :91"
+        ],
+        "why": "Stan po zmianie podany jawnie i poprawnie w kilku miejscach: requirements.md:25 ('Tworzenie pozycji katalogu nie sprawdza unikalnosci nazwy; DuplicateException mapowany na 409 w middleware, ale tworzenie go nie zglasza'), modules/PublicApi.md:73 ('Ani tworzenie, ani aktualizacja nie sprawdzaja unikalnosci nazwy ... zadna nie zwraca 409') i :91, rules.md:202 (z hedgingiem 'do potwierdzenia', ale tresc poprawna), report.md:80. Miejsca o mapowaniu DuplicateException -> 409 (PublicApi.md:51, rules.md:117, report.md:52, kod.md:6) nie sa nieaktualne: klasa i mapowanie w ExceptionMiddleware nadal istnieja, a dokument nigdzie tam nie twierdzi, ze tworzenie je zglasza. Jedyne miejsce o dwuznacznym brzmieniu to wpis slownika PublicApi.md:62."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Tak - dokumentacja A jest spojna co do tych trzech zmian: kazda zmiana wystepuje w jednym miejscu (architecture.md:16 dla D1/D2, roadmap.md:26 dla D3), nie ma tez zadnego stwierdzenia sprzecznego ze stanem po zmianie; ryzyko to jedynie plytkosc (jedna wzmianka na zmiane).",
+    "B": "W przewazajacej mierze tak - B jest spojna: D1/D2/D3 podane zgodnie z kodem w wielu plikach, a rozbieznosc 0..99 (domena) vs 0..int.MaxValue (widok) jest jawnie opisana (rules.md:203, WebPages.md:71); jedyna drobna niespojnosc to wpis slownika PublicApi.md:62 'zduplikowana nazwa -> DuplicateException', ktory kłóci się z PublicApi.md:73/91 i requirements.md:25."
+  }
+}

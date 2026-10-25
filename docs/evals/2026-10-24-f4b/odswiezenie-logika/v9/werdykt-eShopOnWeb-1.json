@@ -1,0 +1,49 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [
+          "A/report.md:49 „Ilość pozycji koszyka ≥ 0, 0 usuwa pozycję” (słabe: streszczenie w raporcie głównym nie podaje limitu 99 i brzmi jak stan sprzed zmiany — 0..int.MaxValue, bez górnej granicy; nie jest to jednak twierdzenie fałszywe)"
+        ],
+        "why": "Stan po zmianie jest podany poprawnie i w wielu miejscach: A/modules/ApplicationCore.md:36 i A/rules.md:5 (zakres 0–99 w AddQuantity i SetQuantity, linie 22 i 29, wartość ujemna i powyżej 99 odrzucane, limit dotyczy pojedynczej operacji), A/modules/Infrastructure.md:58 i A/rules.md:94 (SetQuantity także przy tworzeniu pozycji, czyli z konstruktora), A/requirements.md:7. Zgodne z kodem BasketItem.cs:22 i :29 (Guard.Against.OutOfRange(quantity, ..., 0, 99)). Nie liczę jako nieaktualnych A/modules/WebPages.md:35 i A/rules.md:175 („od 0 do maksymalnej wartości int”): dotyczą BasketItemViewModel, który w kodzie nadal ma [Range(0, int.MaxValue)] (src/Web/Pages/Basket/BasketItemViewModel.cs:13), a rozbieżność domena 0..99 kontra widok 0..int.MaxValue jest jawnie opisana w A/rules.md:203 i A/domain.md."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/architecture.md:16: „basket item quantity must be 0-99 (BasketItem.AddQuantity/SetQuantity)” — zakres i oba miejsca guarda są poprawne (konstruktor wywołujący SetQuantity nie jest wymieniony wprost, ale to szczegół). Brak jakiegokolwiek innego opisu ilości w B (grep po Quantity, ilość, int.MaxValue, 99 nie daje starego stanu)."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/modules/ApplicationCore.md:64 i A/rules.md:33 (cena przy zmianie szczegółów 0,01–10 000, poniżej 0,01 i powyżej 10 000 odrzucane w UpdateDetails, obok NegativeOrZero z linii 63/32), A/modules/Infrastructure.md:59 i A/rules.md:95, A/requirements.md:26. Zgodne z CatalogItem.cs:37-38. Zakres 0,01–1000 w A/modules/BlazorShared.md:20-21 i A/rules.md:61-62 oraz 0,01–10000 w PublicApi.md:43 to reguły osobnych modeli klienta/żądania (w kodzie [Range(0.01, 1000)] w BlazorShared i [Range(0.01, 10000)] w UpdateCatalogItemRequest), więc nie są nieaktualne wobec D2 i nie przeczą mu w obrębie encji."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/architecture.md:16: „catalog item price must be 0.01-10000 (CatalogItem.UpdateDetails)” — poprawny zakres i metoda, zgodne z CatalogItem.cs:38. Nie wspomina wprost o istniejącym wcześniej NegativeOrZero, co nie jest wymagane. Brak innych miejsc z ceną i jej zakresem."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/modules/PublicApi.md:38 i A/rules.md:103 (unikalność nazwy nie jest sprawdzana, utworzenie pozycji o istniejącej nazwie nie zwraca 409, DuplicateException nie jest zgłaszany przy tworzeniu, dawne CountAsync po CatalogItemNameSpecification usunięte), A/requirements.md:25 (z dopiskiem, że DuplicateException nadal mapowany na 409 w middleware), A/rules.md:202, A/modules/PublicApi.md:74 i :92, pytanie w A/report.md:80. Zgodne z kodem: CreateCatalogItemEndpoint.cs nie ma kontroli, UpdateCatalogItemEndpoint.cs też nie, ExceptionMiddleware.cs:35-37 nadal mapuje DuplicateException na 409. Pozostałe wzmianki o DuplicateException/409 (PublicApi.md:52 i :63, rules.md:117, report.md:52, standards/kod.md:6) opisują mapowanie w middleware i klasę wyjątku, które nadal istnieją, więc nie twierdzą, że reguła działa."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/roadmap.md:26 (dług techniczny): „Enforce catalog-name uniqueness with a unique index (the CreateCatalogItemEndpoint pre-check was removed, so CatalogItemNameSpecification and DuplicateException are no longer used by creation)” — poprawnie mówi, że sprawdzenie usunięto i że DuplicateException nie jest używany przy tworzeniu. Informacja jest tylko w jednej linii roadmapy i nie wspomina, że mapowanie 409 w middleware nadal istnieje ani wprost, że duplikat jest akceptowany, ale wynika to z kontekstu. Brak twierdzeń o 409 przy duplikacie (grep po 409, Conflict, Duplicate, unikal nie daje nic poza tą linią i ogólnikami w standards/global/validation.md:7 oraz standards/backend/models.md:10, które nie dotyczą tej reguły)."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: wszystkie karty, rules.md i requirements.md zgodnie podają zakres ilości 0–99, cenę 0,01–10 000 w UpdateDetails i brak kontroli unikalności nazwy; jedyne napięcia (ogólnikowe „≥ 0” w report.md:49 oraz zakres int w ViewModelu w WebPages.md:35 i rules.md:175) są albo drobnym niedopowiedzeniem, albo prawdziwą regułą widoku jawnie opisaną jako rozbieżność w rules.md:203.",
+    "B": "Spójna: zmiany pojawiają się tylko w project/architecture.md:16 (D1, D2) i project/roadmap.md:26 (D3), nigdzie nie ma twierdzenia o starym stanie ani sprzeczności, a ogólne standardy (validation.md, models.md, dotnet-architecture.md) nie dotykają tych reguł."
+  }
+}

@@ -129,3 +129,9 @@ i poprawianie przesuniętych dowodów. Dane: `odswiezenie-logika/v3/` (przebiegi
     0,24 USD);
   - po pierwszym `finish` model nadal robi kilka tur poprawek. Gdyby potrzebny był większy zapas, to miejsce można
     jeszcze skrócić.
+
+## Powtórka 3: 2 przebiegi na repozytorium (2026-10-25)
+Ciąg dalszy: `2026-10-25-f4-odswiezenie-tansze.md`. Korekta do powtórki 2: kopia maistera w v1–v4 zawierała jeszcze
+12 plików ze zmianą komentarzy z testu v1. Na czystej kopii maister kosztuje 0,49–0,52 USD za dwa repozytoria, a nie
+0,66 USD, więc przewaga v4 była mniejsza, niż podaje tabela wyżej. Wersja końcowa (v10) kosztuje 0,36–0,40 USD (74%
+maistera) przy 12/12 zmian opisanych i 0 miejsc nieaktualnych w ślepej ocenie.

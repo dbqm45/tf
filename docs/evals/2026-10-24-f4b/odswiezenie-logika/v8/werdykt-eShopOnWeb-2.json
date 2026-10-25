@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:17 podaje: 'BasketItem quantity must be 0-99 (AddQuantity/SetQuantity)', zgodnie z kodem (Guard.Against.OutOfRange(quantity, ..., 0, 99) w obu metodach). Nie wspomina wprost, ze SetQuantity jest wolane z konstruktora, ale to szczegol. Brak w A jakiegokolwiek twierdzenia o int.MaxValue / braku gornej granicy."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/modules/ApplicationCore.md:36-37, rules.md:5-6, requirements.md:7, report.md:49 oraz modules/Infrastructure.md:51 / rules.md:88 podaja zakres 0..99 dla AddQuantity/SetQuantity z poprawnymi cytatami (BasketItem.cs:22 i :29) i trafna uwaga, ze limit dotyczy argumentu, a nie sumy pozycji. Przypadek graniczny (uznany za NIE nieaktualny): B/modules/WebPages.md:35 i rules.md:176 pisza 'zakres od 0 do maksymalnej wartosci int' ([Range(0, int.MaxValue...)]), ale dotyczy to atrybutu BasketItemViewModel, ktory w kodzie nadal tak wyglada (zweryfikowano w src/Web/Pages/Basket/BasketItemViewModel.cs:13), a rules.md:204 i domain.md:46 jawnie opisuja te rozbieznosc wzgledem domeny 0..99."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:17: 'CatalogItem price must be 0.01-10000 (UpdateDetails)', zgodne z CatalogItem.cs:38. Nie wspomina o zachowanym NegativeOrZero, ale to nie czyni opisu bledny. Brak twierdzen o starej regule (sama dodatnia cena)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/modules/ApplicationCore.md:65, rules.md:34 i 81, modules/Infrastructure.md:44, requirements.md:26: cena w przedziale 0,01-10 000 z cytatem Guard.Against.OutOfRange(details.Price, ..., 0.01m, 10000m) (CatalogItem.cs:38), osobno zachowane NegativeOrZero (ApplicationCore.md:64, rules.md:33) - zgodne z kodem. Inne zakresy ceny (BlazorShared 0,01-1000, PublicApi update 0,01-10000) dotycza innych warstw i zgadzaja sie z kodem (zweryfikowane atrybuty [Range]), wiec nie sa nieaktualne."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:49: 'CreateCatalogItemEndpoint no longer checks for duplicate names before inserting, so name uniqueness is not currently enforced'; A/project/roadmap.md:26 (techdebt) i INDEX.md:23 spojnie to powtarzaja. Zgodne z kodem (endpoint bez sprawdzenia i bez DuplicateException). A nie wspomina, ze klasa DuplicateException i mapowanie 409 w ExceptionMiddleware nadal istnieja (roadmap.md:26 'a handled DuplicateException' jest nieco nieprecyzyjne - middleware juz go obsluguje), ale nie ma twierdzen o dzialajacej regule ani o 409 przy tworzeniu."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/modules/PublicApi.md:38, rules.md:104, requirements.md:25 i report.md:52 jasno mowia, ze tworzenie nie sprawdza unikalnosci i nie rzuca DuplicateException, a jednoczesnie, ze mapowanie DuplicateException -> 409 (PublicApi.md:52, rules.md:118) i klasa nadal istnieja - dokladnie stan z kodu. Dodatkowo PublicApi.md:73 trafnie zauwaza, ze rowniez Update nie sprawdza unikalnosci (zweryfikowane w UpdateCatalogItemEndpoint.cs). Slabe, graniczne pozostalosci (nie liczone jako nieaktualne): B/modules/PublicApi.md:18 wymienia DuplicateException wsrod zaleznosci z cytatem CreateCatalogItemEndpoint.cs:43, co sugeruje uzycie w tym endpoincie (sprzeczne z linia 38); report.md:80 pytanie o unikalnosc dotyczy PUT."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Dokumentacja A jest spojna co do tych zmian: trzy reguly (kosz 0-99, cena 0,01-10000, brak sprawdzania duplikatu nazwy) sa podane w architecture.md i powtorzone zgodnie w roadmap.md/INDEX.md, a pozostale pliki (standards/*) sa ogolne i niczemu nie przeczą.",
+    "B": "Dokumentacja B jest spojna: wszystkie miejsca (ApplicationCore, Infrastructure, PublicApi, rules.md, requirements.md, report.md) podaja te same stany po zmianie, a pozorne rozbieznosci (view model Range(0,int.MaxValue) vs domena 0-99, BlazorShared 0,01-1000 vs domena 0,01-10000, mapowanie 409 vs brak rzucania) dotycza roznych warstw i sa zgodne z kodem; jedyna drobna niescislosc to PublicApi.md:18 (DuplicateException wsrod zaleznosci endpointu Create)."
+  }
+}

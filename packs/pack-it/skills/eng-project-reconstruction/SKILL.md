@@ -68,19 +68,28 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 (commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), opcjonalnie `report.html`.
 
 ## Odświeżanie przyrostowe
-Cel: kilka tur głównego modelu. Kodu partii nie czytasz sam, skanów i kopii nie robisz ręcznie.
-1. `recon_refresh.py prep <repo>`: diff z manifestem, kopia kart do `raw/cards-prev/`, zlecenia
-   `raw/refresh/<karta>.md` dla kart, których dotyczą zmienione pliki, lista plików bez karty. Ponad połowa plików
-   zmieniona → pełny przebieg.
+Cel: kilka tur głównego modelu. Pierwsze polecenie to `prep` (bez wstępnego `git status` i `ls`); kodu partii nie
+czytasz sam, skanów i kopii nie robisz ręcznie.
+1. `recon_refresh.py prep <repo>`: diff z manifestem i poprzednie wersje plików z gita. Zmiany tylko w komentarzach
+   i pustych liniach nie dostają zleceń; numery linii dowodów w kartach i dokumentach są przeliczone. Do tego kopia
+   kart do `raw/cards-prev/`, zlecenia `raw/refresh/<karta>.md` z diffem zmienionych plików, lista plików bez karty.
+   Bez zleceń `prep` sam uruchamia `finish` — przechodzisz do kroku 4. Ponad połowa plików zmieniona → pełny przebieg.
 2. Wykonawcy (Haiku) w jednej wiadomości, na pierwszym planie; każdy dostaje jedno zdanie: „Wykonaj zlecenie
    z <ścieżka>”. Wykonawca aktualizuje starą kartę (tylko zmienione pliki) i sam sprawdza dowody.
-3. `recon_refresh.py finish <repo>`: karty → `.md`, `rules.md`, sekcja Moduły, zmienione reguły kart (stara →
-   nowa), lista miejsc ze starym opisem (`raw/refresh/STALE.md`), dowody przesunięte przez zmianę kodu poprawione
-   samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
-4. Z wydruku `finish` (zmienione reguły, miejsca z listy, błędy kontroli) poprawiasz opisy jednym zapisem — jeden
-   skrypt albo kilka edycji w jednej wiadomości, bez czytania całych plików; miejsce zostawiasz, gdy celowo mówi
-   o starej wartości. Do tego wymagania ze zmienionych testów, w raporcie data i commit odświeżenia. Potem `finish`
-   jeszcze raz.
+3. `recon_refresh.py finish <repo>`: karty → `.md`, `rules.md`, sekcja Moduły, data i commit odświeżenia w nagłówku
+   raportu, zmienione reguły kart (stara → nowa), miejsca do sprawdzenia z pełną treścią linii (stary znacznik, dowód
+   w zmienionej linii kodu, opis podobny do zmienionej reguły; też w `raw/refresh/STALE.md`), dowody przesunięte przez
+   zmianę kodu poprawione samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
+4. Poprawki z wydruku `finish` w jednej wiadomości, bez czytania plików (chyba że linia z listy nie wystarcza): linie
+   oznaczone „z karty” poprawiasz w `modules/<karta>.json`, pozostałe zapisujesz (Write) do `raw/refresh/fixes.md`
+   jako bloki `@@ plik:linia` z nową treścią linii (pusty blok usuwa linię) i w tej samej wiadomości uruchamiasz
+   `recon_refresh.py apply <repo>` — zamienia linie i od razu uruchamia `finish`. Bez heredoc i `sed -i`. Opis
+   usuniętej reguły zamieniasz na zdanie o stanie obecnym („… nie jest już sprawdzane”), nie kasujesz go; pusty blok
+   tylko dla powtórzeń. Streszczenie, które podaje tylko część zmienionej reguły (np. dolną granicę bez nowej
+   górnej), uzupełniasz o stan obecny. Miejsce zostawiasz, gdy opisuje stan obecny w całości. Do tego wymagania ze
+   zmienionych testów.
+   Kontrola przeszła → kończysz.
+5. Odpowiedź końcowa: do 5 linii — co się zmieniło w opisie, wynik kontroli.
 
 ## Zasady
 - **Kontekst głównego modelu jest drogi:** każda tura czyta go od nowa. Pełne wyniki zostają w plikach, model czyta

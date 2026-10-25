@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Telefon = dokladnie 9 cyfr podany spojnie w 6 miejscach (modules/owner.md:45, rules.md:64, rules.md:118 z wzorcem \\d{9}, requirements.md:5, report.md:42, domain.md:19), z cytatem @Pattern z Owner.java:64. Zgodne z kodem (@Pattern(regexp = \"\\\\d{9}\")). Nigdzie nie ma 10 cyfr / \\d{10}. Nie wspomina, ze komunikat telephone.invalid w messages.properties nadal mowi o 10 cyfrach (owner.md:92 oznacza szablony/komunikaty jako [niezweryfikowane, poza partia]) - to luka, nie nieaktualnosc."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:34 'Owner.telephone: @NotBlank and @Pattern requiring exactly 9 digits', INDEX.md:29 '9-digit telephone', roadmap.md:23 trafnie odnotowuje, ze komunikat telephone.invalid nadal mowi '10-digit' (potwierdzone: messages.properties:34 'must be a 10-digit number') - B jest tu dokladniejszy niz A. Drobna uwaga bez twierdzenia o liczbie cyfr: standards/backend/spring-petclinic-conventions.md:48 wymienia @Digits jako adnotacje na encjach, a w kodzie @Digits nie wystepuje (pozostalosc ogolna, nie sprzecznosc z P1)."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "modules/owner.md:53 i rules.md:72: 'Imie zwierzecia nie moze zawierac cyfr; sprawdzane dopiero, gdy imie nie jest puste i nie przekracza 30 znakow' z cytatem PetValidator (else if name.chars().anyMatch(Character::isDigit)) - zgodne z kodem, wlacznie z kolejnoscia else-if. Nie podaje kodu bledu 'digits', ale regula jest opisana poprawnie. requirements.md:11 (zwierze: imie <=30, wymagane) nie wymienia cyfr, lecz pelne reguly sa w rules.md."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:35 'PetValidator: name required, at most 30 characters, no digits; type required for new pets; birth date required' oraz INDEX.md:29 'pet names without digits'. Poprawne i zgodne z kodem; brak szczegolu o kodzie bledu 'digits' i kolejnosci sprawdzen, ale stan po zmianie jest podany."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Wprost i spojnie: modules/owner.md:63 i rules.md:82 'Data wizyty nie jest juz sprawdzana pod katem tego, czy jest pozniejsza niz dzisiaj (dawne ograniczenie najwczesniej jutro zniklo z processNewVisitForm)'; owner.md:64 i rules.md:83 oraz domain.md:22 'Domyslna data nowej wizyty to jutro' (Visit.java:51 plusDays(1); zgodne z kodem - w kodzie jest tez minVisitDate w VisitController, nie nazwany w A); requirements.md:16, report.md:37 i 44, owner.md:83 powtarzaja zmiane. Dodatkowo REVIEW.draft.md:3 i report.md:37 trafnie zauwazaja, ze test VisitControllerTests (processNewVisitFormHasErrorsWhenVisitDateIsNotInFuture) nadal oczekuje bledu daty - potwierdzone w kodzie testu. Brak jakiegokolwiek twierdzenia, ze data musi byc po dzisiejszej."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:36 'VisitController: visit form validated only by Bean Validation on Visit; no future-date check in the controller' - to poprawnie oddaje usuniecie reguly (zgodne z kodem). Jest tylko jednym zdaniem i nie wspomina domyslnej daty jutro ani minVisitDate (zostaje po zmianie), nie wspomina tez, ze istniejacy test nadal oczekuje bledu daty; to brak szczegolu, nie blad. Nigdzie indziej w B (INDEX, roadmap, standards) nie ma twierdzenia o wymaganej dacie po dzisiejszej."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spojna: wszystkie miejsca (owner.md, rules.md, requirements.md, domain.md, report.md, REVIEW.draft.md) mowia 9 cyfr, imie bez cyfr i brak sprawdzania daty wizyty z domyslna data jutro; zadne nie przeczy drugiemu.",
+    "B": "Spojna: architecture.md i INDEX.md mowia 9 cyfr, imie bez cyfr i brak kontroli daty w VisitController, a roadmap.md zgodnie z kodem odnotowuje rozjazd komunikatu '10-digit'; jedynie drobna ogolna wzmianka o @Digits w conventions.md nie ma pokrycia w kodzie, ale nie przeczy zmianom."
+  }
+}

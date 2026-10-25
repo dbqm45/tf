@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:16 podaje: 'basket item quantity must be 0-99 (BasketItem.AddQuantity/SetQuantity)' - zakres i obie metody zgodne z kodem (BasketItem.cs:22 i :29, OutOfRange 0..99). Brak rozróżnienia, że AddQuantity waliduje dodawaną ilość, a nie sumę, oraz że SetQuantity jest wołane z konstruktora - drobna nieprecyzyjność, nie błąd. Brak jakiegokolwiek twierdzenia o 0..int.MaxValue / braku górnej granicy w całym zestawie A."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/modules/ApplicationCore.md:36-37 (i powtórzone w rules.md:5-6, requirements.md:7, report.md:49) podaje 0..99 w BasketItem, z rozróżnieniem SetQuantity (linia 29) vs AddQuantity (linia 22 - odrzucany argument >99, suma po kolejnych dodaniach nieograniczona) - dokładnie jak w kodzie. Przypadek graniczny, uznany za NIE-nieaktualny: modules/WebPages.md:35 i rules.md:174 ('zakres od 0 do maksymalnej wartości int', [Range(0, int.MaxValue)]) dotyczą ViewModelu Web (BasketItemViewModel.cs:13), który w kodzie faktycznie nadal tak wygląda; rozbieżność jest jawnie opisana w rules.md:202 i domain.md:88."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:16: 'catalog item price must be 0.01-10000 (CatalogItem.UpdateDetails)' - zakres i miejsce zgodne z CatalogItem.cs:38. Nie wspomina o współistniejącym NegativeOrZero, ale to nie jest zmiana. Brak starych twierdzeń o cenie w zestawie A."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/modules/ApplicationCore.md:64-65 (rules.md:33-34, requirements.md:26): 'Cena produktu musi być dodatnia' (NegativeOrZero) oraz 'musi mieścić się w przedziale 0,01-10000' z cytatem Guard.Against.OutOfRange(...0.01m, 10000m) - zgodne z kodem. Dodatkowo PublicApi.md:43 (atrybut [Range(0.01, 10000)] w UpdateCatalogItemRequest) zgodne z kodem. Uwaga poboczna (nie nieaktualność): BlazorShared.md:20-21 / rules.md:62-63 podają Range(0.01, 1000) dla modeli Blazor - zgodne z kodem, ale niepowiązane jako rozbieżność z 10000."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/roadmap.md:26: 'the CreateCatalogItemEndpoint pre-check was removed, so CatalogItemNameSpecification and DuplicateException are no longer used by creation' (plus INDEX.md:23 'unique index for catalog names') - zgodne z kodem: HandleAsync nie sprawdza nazwy, nic nie rzuca DuplicateException. Informacja jest tylko w pozycji długu technicznego (nie w opisie zachowania API) i nie wspomina, że klasa wyjątku i mapowanie 409 w ExceptionMiddleware nadal istnieją, ale to część w nawiasie. Brak twierdzeń, że duplikat nazwy daje 409 (api.md:22 wymienia tylko 200/201/400/404/500)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/modules/PublicApi.md:38 (rules.md:102, requirements.md:25, rules.md:201, PublicApi.md:74 i :92): 'duplikat nazwy nie zgłasza DuplicateException i nie daje 409; dawne sprawdzenie unikalności zniknęło z HandleAsync' oraz że DuplicateException -> 409 w ExceptionMiddleware nadal istnieje (PublicApi.md:52, rules.md:116, requirements.md:25) - pełne i zgodne z kodem, wraz z zastrzeżeniem o braku indeksu unikalnego. Wzmianki o DuplicateException w PublicApi.md:18, :63, standards/kod.md:6, report.md:52 opisują tylko istniejącą klasę/mapowanie, a nie rzucanie przy tworzeniu."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: każda ze zmian pojawia się w dokumentach A w jednym, zgodnym z kodem sformułowaniu (architecture.md:16, roadmap.md:26, INDEX.md:23), nie ma żadnego twierdzenia sprzecznego ze stanem po zmianie ani wewnętrznej sprzeczności.",
+    "B": "Spójna: te same fakty (0..99, cena 0,01-10000, brak sprawdzania unikalności przy tworzeniu przy zachowanym mapowaniu DuplicateException -> 409) powtarzają się zgodnie w modules/, rules.md, requirements.md i report.md, a rozbieżność 0..99 (domena) vs 0..int.MaxValue (ViewModel Web) jest jawnie opisana (rules.md:202, domain.md:88), więc dokumentacja sobie nie przeczy."
+  }
+}
