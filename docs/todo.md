@@ -315,6 +315,7 @@ Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4)
 - [x] **Po F4:** test odświeżenia ze zmianą w logice — `docs/evals/2026-10-24-f4-odswiezenie-logika.md`: nasz 6/6 zmian opisanych, 2 nieaktualne miejsca; maister 5,5/6, 0 nieaktualnych; koszt 1,02 wobec 0,66 USD (2026-10-24).
 - [x] **Po F4:** `recon_cards.py --prev` przy odświeżaniu porównuje stare i nowe karty i wskazuje miejsca ze znacznikami usuniętych lub zmienionych reguł; na danych testu odświeżenia wskazuje obie pozostałości (lista 7 i 15 miejsc do przejrzenia) (2026-10-24).
 - [x] **Po F4:** sygnały układu pakietów (według funkcji czy warstw) i czasów życia DI w `standards_scan`; powtórka testu odświeżenia z `--prev`: 6/6 zmian, 0 prawdziwych pozostałości (2026-10-25).
+- [x] **Po F4:** odświeżanie dwuetapowe `recon_refresh.py prep|finish` (zlecenia kart ze zmienionych plików, skrypt składa karty, wypisuje zmienione reguły i miejsca do poprawy, poprawia przesunięte dowody, kontrola i manifest): w teście odświeżenia 0,56 wobec 0,66 USD maistera, 6/6 zmian, 0 pozostałości (2026-10-25).
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
 
 ## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23

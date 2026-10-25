@@ -83,3 +83,49 @@ Ocena ślepa i prompt jak wyżej, nowe losowanie A/B. Dane: `odswiezenie-logika/
 - **Wniosek:** z `--prev` nasz skill dorównuje maisterowi w braku pozostałości i opisuje zmiany szerzej, w miejscach,
   gdzie reguły występują. Maister pozostaje tańszy i szybszy przy odświeżaniu (ok. 58% naszego kosztu).
 
+
+## Powtórka 2: odświeżanie skryptem `recon_refresh.py` (2026-10-25)
+Decyzja człowieka (2026-10-25): odświeżanie ma być tańsze niż w maisterze (0,66 USD za dwa repozytoria) przy
+zachowanej jakości. Zmiany w skillach:
+- **`recon_refresh.py prep`** porównuje manifest z kodem, kopiuje karty do `raw/cards-prev/` i pisze po jednym
+  zleceniu na kartę, której dotyczą zmienione pliki (karta cytuje plik albo obejmuje jego ścieżkę). Wykonawca (Haiku)
+  poprawia starą kartę tylko na podstawie zmienionych plików, zamiast skanować partię od nowa.
+- **`recon_refresh.py finish`** wykonuje kroki bez modelu:
+  - składa karty, `rules.md` i sekcję Moduły;
+  - wypisuje zmienione reguły kart (stara → nowa) i listę miejsc ze starym opisem;
+  - poprawia numery linii dowodów przesuniętych przez zmianę kodu;
+  - uruchamia kontrolę końcową i zapisuje manifest, gdy kontrola przechodzi.
+- **Model główny** robi tylko trzy rzeczy: uruchamia oba kroki, zleca karty i poprawia opisy wskazane przez `finish`.
+
+Bazy, zmiany w kodzie, polecenie i ocena ślepa jak wyżej, nowe losowanie A/B. Wersja v3 to pierwsza wersja skryptu
+(bez oceny jakości, tylko koszt). Wersja v4 dodaje dwie rzeczy: wykrywanie reguły zmienionej przy tym samym cytacie
+i poprawianie przesuniętych dowodów. Dane: `odswiezenie-logika/v3/` (przebiegi) i `odswiezenie-logika/v4/`
+(przebiegi, klucz, werdykty).
+
+| | Nasz v2 | Nasz v3 | Nasz v4 | maister |
+|---|---|---|---|---|
+| Stan po zmianie podany (z 6) | 6 | nie oceniano | **6** | 6 |
+| Miejsca nieaktualne | 0 (2 graniczne) | nie oceniano | **0** (wpisy graniczne jak w v2) | 0 |
+| Koszt (2 repo) | 1,13 USD | 0,62 USD (0,31 + 0,30) | **0,56 USD** (0,32 + 0,24) | 0,66 USD (0,39 + 0,27) |
+| W tym Sonnet / Haiku | ok. 1,0 / 0,1 | 0,54 / 0,08 | 0,48 / 0,08 | 0,66 / — |
+| Tury modelu głównego | 25 / 22 | 19 / 25 | 21 / 24 | 40 / 13 |
+| Czas (2 repo) | 418 s | 279 s | 280 s | 111 s |
+
+- **Koszt:** v4 kosztuje 85% kosztu maistera.
+  - Spadek wobec v2 to głównie mniej pracy modelu głównego: nie czyta całych kart ani raportu, a kroki mechaniczne
+    robi skrypt.
+  - Liczba tur modelu głównego prawie się nie zmieniła.
+- **Jakość:**
+  - oceniający przyznał „tak” wszystkim 6 zmianom u obu narzędzi; listy nieaktualnych miejsc są puste;
+  - w eShopOnWeb oceniający dopisał przy naszym skillu pole „graniczne”: streszczenia z samą dolną granicą ilości
+    oraz zakres `[Range(0, int.MaxValue)]` w widoku, zgodny z kodem i objaśniony w `rules.md`;
+  - u maistera P3 zaliczono mimo braku wzmianki o domyślnej dacie „jutro”, a zmiany są opisane tylko w `roadmap.md`;
+  - oceniający wskazali, że nasz opis jest dokładniejszy, na przykład:
+    - rozdziela regułę domeny od walidacji widoku;
+    - zauważa, że wyjątek duplikatu i mapowanie 409 zostały w kodzie, ale nic ich już nie zgłasza.
+- **Czas:** maister jest nadal szybszy (111 s wobec 280 s), bo nie uruchamia wykonawców ani kontroli końcowej.
+- **Ograniczenia:**
+  - jeden przebieg na repo, a rozrzut kosztu między przebiegami to kilka centów na repo (v3 i v4 petclinic: 0,30 i
+    0,24 USD);
+  - po pierwszym `finish` model nadal robi kilka tur poprawek. Gdyby potrzebny był większy zapas, to miejsce można
+    jeszcze skrócić.
