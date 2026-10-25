@@ -1,0 +1,50 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:34 podaje `Owner.telephone`: @NotBlank + @Pattern 'requiring exactly 9 digits'; INDEX.md:29 ('9-digit telephone') i INDEX.md:23 powtarzają to samo. Dodatkowo roadmap.md:23 poprawnie zauważa rozjazd: komunikat telephone.invalid w messages*.properties nadal mówi '10-digit' (potwierdzone w kodzie: messages.properties:34) - to nie jest twierdzenie o starym stanie, tylko wskazanie długu. Nigdzie nie ma '10 cyfr' ani \\d{10} jako obowiązującej reguły."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Reguła 9 cyfr podana wprost i spójnie w wielu miejscach: modules/owner.md:45, rules.md:64, rules.md:117 (wzorzec `\\d{9}` z cytatem adnotacji), requirements.md:5, report.md:41, domain.md:19. Brak śladu '10 cyfr'/\\d{10}. 'telefon do 20' w modules/db.md:33 i rules.md:18 to limit długości kolumny w schema.sql, nie reguła formatu - nie jest nieaktualne. B nie wspomina o rozjeździe komunikatu telephone.invalid (10-digit) - pominięcie, nie sprzeczność."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:35: 'PetValidator: name required, at most 30 characters, no digits; type required for new pets; birth date required'; INDEX.md:29 'pet names without digits'. Reguła nowa i opisana poprawnie (bez wzmianki o kodzie błędu 'digits', ale to szczegół)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "modules/owner.md:53 i rules.md:72: 'Imię zwierzęcia nie może zawierać cyfr (sprawdzane tylko, gdy imię jest niepuste i ma najwyżej 30 znaków); błąd „digits” przy polu name' z cytatem PetValidator.java:49 - dokładnie zgodne z kodem (else-if po required i size). Zbiorcze requirements.md:11 ('imię (≤30, wymagane)') i report.md:36 pomijają cyfry, ale tego nie przeczą; w owner.md:95 zaznaczono brak testu na to."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:36: 'VisitController: visit form validated only by Bean Validation on `Visit`; no future-date check in the controller' - poprawnie oddaje usunięcie sprawdzenia (kod: processNewVisitForm tylko result.hasErrors()). Brakuje informacji, że zostaje domyślna data jutro (Visit() plusDays(1), minVisitDate) - pominięcie drugorzędne. Żadnego twierdzenia 'data wizyty musi być po dzisiejszej' w zestawie nie znaleziono."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [
+          "B/modules/owner.md:4 - 'rejestracja wizyt zwierzęcia z opisem i datą w przyszłości' (opis modułu nadal sugeruje wymóg daty z przyszłości; kod już tego nie wymusza)",
+          "B/report.md:25 - to samo zdanie w skrócie karty owner: '...rejestracja wizyt zwierzęcia z opisem i datą w przyszłości'"
+        ],
+        "why": "Usunięcie reguły jest opisane wprost: requirements.md:16 ('reguła „data najwcześniej jutro” usunięta z kodu, a test wizyt może jej jeszcze oczekiwać [niezweryfikowane]') oraz modules/owner.md:96 ('po usunięciu sprawdzenia z VisitController nie widać w partii innego ograniczenia tej daty... test VisitControllerTests.java:101 oczekuje błędu typeMismatch.visitDate, którego kod już nie zgłasza' - zgodne z repo, test processNewVisitFormHasErrorsWhenVisitDateIsNotInFuture istnieje). Domyślna data jutro: owner.md:63, rules.md:82, domain.md:22. Ocena 'tak', bo stan po zmianie jest podany poprawnie i z dowodem, ale opis modułu (owner.md:4, report.md:25) nadal zawiera stare sformułowanie i koliduje z tym stanem; informacja o usunięciu jest też oznaczona [niezweryfikowane]/'do potwierdzenia' i nie trafiła do rules.md ani do sekcji Reguły w report.md."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: wszystkie trzy zmiany (9 cyfr, brak cyfr w imieniu, brak sprawdzenia daty wizyty w kontrolerze) są opisane zgodnie ze stanem po zmianie, a jedyna wzmianka o '10-digit' (roadmap.md:23) dotyczy komunikatu w messages*.properties i jest prawdziwa; dokumentacja sobie nie przeczy.",
+    "B": "Prawie spójna: P1 i P2 są opisane jednolicie i poprawnie, ale co do P3 dokumentacja sama sobie przeczy - opis modułu owner (modules/owner.md:4, report.md:25) mówi o wizytach 'z datą w przyszłości', podczas gdy owner.md:96 i requirements.md:16 stwierdzają, że sprawdzenie daty usunięto z kodu."
+  }
+}
