@@ -1,0 +1,6 @@
+tf	eShopOnWeb	end	12	0	13	0.1209526	4	success
+maister	eShopOnWeb	end	12	0	23	0.2333893	6	success
+tf	spring-petclinic	end	2	0	12	0.1201861	4	success
+maister	spring-petclinic	end	2	0	34	0.2468598	8	success
+tf	eShopOnWeb	mid	12	0	13	0.1213111	4	success
+tf	spring-petclinic	mid	2	0	13	0.12326459999999999	5	success

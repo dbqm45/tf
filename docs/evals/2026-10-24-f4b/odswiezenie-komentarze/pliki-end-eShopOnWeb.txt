@@ -1,0 +1,12 @@
+src/ApplicationCore/Interfaces/IAggregateRoot.cs
+src/ApplicationCore/Specifications/OrderWithItemsByIdSpec.cs
+src/BlazorAdmin/Shared/CustomInputSelect.cs
+src/BlazorShared/Models/PagedCatalogItemResponse.cs
+src/Infrastructure/Dependencies.cs
+src/PublicApi/CatalogBrandEndpoints/CatalogBrandListEndpoint.ListCatalogBrandsResponse.cs
+src/PublicApi/CatalogTypeEndpoints/CatalogTypeListEndpoint.cs
+src/Web/Extensions/CacheHelpers.cs
+src/Web/Pages/Index.cshtml.cs
+src/Web/ViewModels/Manage/IndexViewModel.cs
+tests/FunctionalTests/Web/WebPageHelpers.cs
+tests/UnitTests/ApplicationCore/Services/BasketServiceTests/DeleteBasket.cs

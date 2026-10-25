@@ -1,0 +1,2 @@
+eShopOnWeb: dowody do zmienionych plików: trafne 31, chybione 0; zmienione numery w innych plikach: 0
+spring-petclinic: dowody do zmienionych plików: trafne 9, chybione 0; zmienione numery w innych plikach: 0
