@@ -263,6 +263,7 @@ def main() -> int:
         check("Liczy faktury." in r.stdout and "opis modułu" in r.stdout.lower(),
               f"RF-33: kontrola karty przypomina o opisie modułu (purpose): {r.stdout[-400:]}")
         check("purpose" in body and "opis modułu" in body.lower(), f"RF-34: zlecenie każe sprawdzić opis modułu: {body[-900:]}")
+        check("nie jest już" in body and "usunięt" in body, f"RF-35: zlecenie: usunięta reguła → wpis o stanie obecnym: {body[-900:]}")
 
     # rozpoznawanie zmian tylko w komentarzach (zachowawczo: w razie wątpliwości to zmiana kodu)
     co = recon_refresh.comment_only
