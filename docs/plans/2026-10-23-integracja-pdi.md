@@ -91,6 +91,51 @@ Commit i PR — na moją prośbę; tytuł PR sprawdź scripts/check_commit_messa
 Poza zakresem: F1–F4 (dopisek Change:, Talos, rekonstrukcja, triaż z pdi, tryb bez interakcji).
 ```
 
+## Polecenie startowe — G2.4 (autor historyjek; plan G1/G2 w pdi)
+
+Krok G2.4 z planu G1/G2 (pdi: `docs/plan-g1-g2.md`; kontrakt 0.4.0 z zestawem wzorcowym
+`contract/fixtures/story-shape/` jest na `main` pdi). Niezależny od F0 — może iść przed nim albo po nim.
+Źródło polecenia: pdi `docs/polecenia-startowe-fala-2.md`.
+
+```text
+Realizujemy krok G2.4 planu G1/G2 z repo dbqm45/pdi (docs/plan-g1-g2.md, §4.2 reguły, §4.5 zmiany w tf, §4.7 kroki).
+Przeczytaj też w pdi (main, kontrakt 0.4.0): contract/README.md (sekcja „Konwencje”) i cały katalog
+contract/fixtures/story-shape/ (README.md — jak oznaczono przypadki; stories.json; expected.json; vocabulary.json).
+
+Cel: wymagania pisane z agentem mają GWT, jedną ścieżkę na historyjkę i identyfikatory AC; Talos nie zaczyna
+historyjki, która miesza ścieżki.
+
+1. Zestaw wzorcowy: skopiuj contract/fixtures/story-shape/ z pdi do packs/pack-it/tests/fixtures/pdi-story-shape/
+   (z plikiem VERSION = 0.4.0). Nie zmieniaj etykiet w kopii — rozbieżność z expected.json to błąd lintera albo
+   zgłoszenie do pdi (zmiana kontraktu), nie poprawka kopii.
+2. requirements_lint.py (packs/pack-it/skills/proc-requirements-shaping/scripts/):
+   - wydziel funkcję sprawdzającą pojedynczą historyjkę (tytuł, opis, surowe AC, opcjonalnie story points) i używaj
+     jej przy lincie pliku requirements.md;
+   - słowa kluczowe GWT z vocabulary.json, w tym brakujące dziś polskie warianty (Zakładając, że / Mając / Kiedy /
+     Jeżeli / Jeśli / Oraz / I / Ale);
+   - nowe sprawdzenia z identyfikatorami reguł kontraktu: AC-001 (scenariusz bez Then/Wtedy, AC poza formatem),
+     AC-002 (słaby wynik z weak_results), AC-004 (druga akcja w scenariuszu), STORY-001 (kilka akcji: spójniki
+     w tytule/celu, kilku aktorów, różne akcje główne w scenariuszach), STORY-003 (tytuł od warstwy);
+     istniejące LEAK_PATTERNS jako AC-003 z rozszerzeniem z vocabulary.json (tabela, kolumna, endpoint);
+     STORY-002 tylko z liczby scenariuszy i akcji (bez estymaty);
+   - nowe problemy jako ostrzeżenia (kod 0); --strict zamienia je w kod 1. Istniejące zachowanie bez zmian.
+3. Test w packs/pack-it/tests/: na kopii zestawu, z polityką z expected.json (i nadpisaniami policy w przypadkach),
+   dla reguł zaimplementowanych w tf wynik ma się zgadzać z expected.json; raportuj precyzję i czułość per reguła
+   (cel z planu §4.8: precyzja ≥ 0,8, czułość ≥ 0,7). Liczba jednostek AC zgodna z polem scenarios.
+4. Skille: proc-requirements-shaping (faza 4: każda US-NN ma ≥ 1 scenariusz AC-n w GWT i jedną akcję; więcej akcji →
+   podział wg mapa-i-dzielenie.md), proc-agile/references/mapa-i-dzielenie.md (sekcja „Sygnały, że historyjka
+   miesza funkcjonalności” — te same sygnały co STORY-001…003), talos-story-run (§1 Przyjęcie: lint historyjki;
+   z --auto historyjka łamiąca STORY-001 kończy się blokiem STOP z propozycją podziału), qa-spec-first-testing
+   (test akceptacyjny nazwany identyfikatorem scenariusza, np. US-02/AC-3).
+
+Zasady repo tf: plan (pliki, kolejność, testy) zapisany przed kodem; TDD (najpierw czerwony test); skille zmieniasz
+wg core-skill-authoring (najpierw scenariusze ewaluacji), płatne ewaluacje tylko za moją zgodą; claude-team-factory
+i ev-team-factory nietknięte. Bramki: python3 tools/workspace.py check --packs all; python3 tools/workspace.py refs;
+for t in tests/test_*.py; do python3 "$t" || exit 1; done; skill_gate dla zmienionych skilli w złożonym projekcie;
+tytuł PR: python3 scripts/check_commit_message.py "<tytuł>". Commit i PR — na moją prośbę.
+Poza zakresem: G1.1 (plan wydania) i reguły REL; zmiany w kontrakcie pdi.
+```
+
 ## Kryteria „gotowe” dla F0
 - `change new` tworzy katalog z trzema plikami; każdy nagłówek przechodzi walidację względem
   `pdi/contract/change.schema.json` (test z kopią przykładu `contract/examples/change.json` albo sprawdzenie ręczne).
