@@ -104,9 +104,9 @@ def main(argv: list[str]) -> int:
     st = results["standards.json"]
     if st:
         L.append("Narzędzia: " + (short([f"{x['tool']} ({x['file']})" for x in st.get("tools", [])], 8) or "brak"))
-        sig = [s for s in st.get("signals", []) if s["share"] >= 50 or s["area"].startswith("idiomy")]
+        sig = [s for s in st.get("signals", []) if s["share"] >= 50 or s["area"].startswith(("idiomy", "układ"))]
         sig.sort(key=lambda s: (-s["count"], s["area"]))
-        L.append(f"Standardy (sygnały ≥ 50% i idiomy; {len(sig)} z {len(st.get('signals', []))}):")
+        L.append(f"Standardy (sygnały ≥ 50%, idiomy i układ; {len(sig)} z {len(st.get('signals', []))}):")
         L += [f"  {s['area']} · {s['language']} · {s['rule']}: {s['count']}/{s['total']} = {s['share']}%"
               for s in sig[:25]]
     L.append(f"Pełne wyniki: {out}/ ({', '.join(n for n, d in results.items() if d is not None)})")

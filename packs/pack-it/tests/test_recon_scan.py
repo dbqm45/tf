@@ -20,6 +20,10 @@ REPO = {
     "tests/test_invoice.py": "import pytest\nfrom shop.billing.invoice import total\n\n\n"
                              "@pytest.mark.parametrize('x', [[1]])\ndef test_total(x):\n    assert total(x) == 1\n",
     "db/V1__init.sql": "CREATE TABLE invoice (id INT PRIMARY KEY, amount INT NOT NULL);\n",
+    "web/owner/OwnerController.java": "class OwnerController {}\n",
+    "web/owner/OwnerRepository.java": "interface OwnerRepository {}\n",
+    "web/model/BaseEntity.java": "class BaseEntity {}\n",
+    "web/util/Strings.java": "class Strings {}\n",
 }
 RAW = ("inventory.json", "graph.json", "territory.json", "standards.json", "schema.json")
 
@@ -68,6 +72,7 @@ def main() -> int:
         check("Partie (" in s and "shop/billing" in s, f"RS-5: lista partii: {s[:800]}")
         check("Tabele: invoice" in s, f"RS-6: tabele ze schematu: {s[:1200]}")
         check("@pytest.mark.parametrize" in s, f"RS-7: sygnały standardów z idiomami: {s[-1200:]}")
+        check("układ · Java · pakiety według funkcji" in s, f"RS-11: układ pakietów w streszczeniu mimo udziału < 50%: {s[-1200:]}")
         check("raw/" in s or str(out) in s, f"RS-8: gdzie są pełne wyniki: {s[-400:]}")
 
         # bez gita: historia pominięta, reszta działa

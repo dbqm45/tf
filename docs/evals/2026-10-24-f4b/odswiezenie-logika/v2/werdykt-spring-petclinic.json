@@ -1,0 +1,9 @@
+{"changes":[
+{"id":"P1","A":{"aktualne":"tak","nieaktualne":[],"why":"roadmap.md:6 i :14 podają, że Owner.telephone wymaga \\d{9} (9-digit telephone pattern); wzmianka o 10-cyfrowych danych/komunikatach opisuje faktyczny rozjazd, nie starą regułę."},
+"B":{"aktualne":"tak","nieaktualne":[],"why":"owner.md:47, rules.md:66,121, requirements.md:5, report.md:40, domain.md:19 podają dokładnie 9 cyfr (\\d{9}); wzmianki o 10-cyfrowych testach to oznaczony rozjazd test-kod."}},
+{"id":"P2","A":{"aktualne":"tak","nieaktualne":[],"why":"architecture.md:16 (PetValidator: no digits) oraz roadmap.md:6,14 (digit-free pet names, kod 'digits')."},
+"B":{"aktualne":"tak","nieaktualne":[],"why":"owner.md:57, rules.md:76, requirements.md:11, report.md:42 - imię bez cyfr, błąd 'digits', z dowodem w PetValidator.java:49."}},
+{"id":"P3","A":{"aktualne":"tak","nieaktualne":[],"why":"roadmap.md:6 'removed visit-date check' i :14 'VisitController no longer enforces a future visit date'; brak wzmianki o domyślnej dacie jutro/minVisitDate, więc ujęcie lakoniczne, ale poprawne i bez starej reguły."},
+"B":{"aktualne":"tak","nieaktualne":[],"why":"owner.md:67,91,92, rules.md:86, requirements.md:16, report.md:35, domain.md:22 - kontroler nie egzekwuje daty późniejszej niż dziś, domyślnie jutro (minVisitDate tylko podpowiedź)."}}
+],
+"spojnosc":{"A":"Spójna - zmiany opisane tylko w roadmap.md (i architecture.md dla PetValidator), żaden dokument nie podaje starych reguł; standardy ogólne nie wspominają telefonu ani daty wizyty.","B":"Spójna - wszystkie pliki konsekwentnie podają 9 cyfr, brak cyfr w imieniu i brak wymogu daty wizyty, a rozjazdy z testami są jawnie oznaczone."}}

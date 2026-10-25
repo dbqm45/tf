@@ -59,3 +59,27 @@ komentarzy i nie rozróżniła narzędzi. Dane: `docs/evals/2026-10-24-f4b/odswi
    po usuniętych identyfikatorach z kodu tych dwóch miejsc by nie złapały.
 4. **Ograniczenia:** jeden przebieg na repo, dwa repozytoria, jeden oceniający na repo (Sonnet). Oceniający nie
    czytali kodu, tylko porównali dokumenty z opisem zmian.
+
+## Powtórka po poprawce `--prev` (2026-10-25)
+Po PR #71 (`recon_cards.py --prev`: porównanie starych i nowych kart, lista miejsc do przejrzenia) test powtórzono dla
+naszego skilla na tych samych zmianach i bazie v6, z bieżącą wersją skilli. Dokumenty maistera zostały te same.
+Ocena ślepa i prompt jak wyżej, nowe losowanie A/B. Dane: `odswiezenie-logika/v2/`.
+
+| | Nasz v1 | Nasz v2 (z `--prev`) | maister |
+|---|---|---|---|
+| Stan po zmianie podany (z 6) | 6 | **6** | 6 (w tej ocenie) |
+| Miejsca nieaktualne | 2 | **0 prawdziwych**, 2 graniczne | 0 |
+| Koszt (2 repo) | 1,02 USD | 1,13 USD (0,53 + 0,60) | 0,66 USD |
+| Czas (2 repo) | 269 s | 418 s | 111 s |
+
+- **Obie pozostałości z v1 zniknęły:**
+  - `requirements.md` opisuje teraz usunięcie kontroli duplikatu;
+  - niewiadoma w karcie owner mówi o telefonie 9-cyfrowym i o testach z 10 cyframi jako rozjeździe.
+- **Model użył nowego kroku:** w obu przebiegach powstało `raw/cards-prev/`.
+- **Dwa wpisy graniczne** (eShopOnWeb, D1):
+  - zakres `[Range(0, int.MaxValue)]` w widoku Web jest zgodny z kodem, a dokumentacja sama wyjaśnia rozjazd
+    z domeną;
+  - „ilość nie może być ujemna” w dwóch miejscach jest niepełne (brak górnej granicy 99), ale nie fałszywe.
+- **Wniosek:** z `--prev` nasz skill dorównuje maisterowi w braku pozostałości i opisuje zmiany szerzej, w miejscach,
+  gdzie reguły występują. Maister pozostaje tańszy i szybszy przy odświeżaniu (ok. 58% naszego kosztu).
+

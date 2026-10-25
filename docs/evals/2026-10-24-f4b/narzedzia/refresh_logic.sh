@@ -6,6 +6,10 @@ TOOL=$1; REPO=$2; BUDGET=${3:-4}
 RUN=$B/rf/$TOOL-$REPO
 rm -rf "$RUN"; mkdir -p "$B/rf" "$B/logs"
 cp -r "$B/runs/$TOOL-$REPO" "$RUN"          # kopia wyniku bazowego — dane benchmarku zostają nietknięte
+if [ "$TOOL" = tf ] && [ -n "${TF_WS:-}" ]; then   # bieżąca wersja skilli z workspace zamiast tej z przebiegu bazowego
+  rm -rf "$RUN/.claude/skills" && cp -r "$TF_WS/.claude/skills" "$RUN/.claude/skills"
+  find "$RUN/.claude" -name __pycache__ -prune -exec rm -rf {} +
+fi
 python3 "$B/mutate_logic.py" "$REPO" "$RUN" > "$B/logs/rl-mutate-$TOOL-$REPO.txt" || exit 3
 cd "$RUN"
 NOBUILD="Nie budujesz i nie uruchamiasz kodu projektu, nie używasz sieci."

@@ -7,7 +7,7 @@ standard: regułę zapisujesz po obejrzeniu przykładów i wyjątków. Tylko bib
   python3 standards_scan.py <repo>          # tekst
   python3 standards_scan.py <repo> --json   # pełny wynik
 
-Obszary: nazwy plików, testy (framework, położenie), idiomy testów (rodzaj testu na warstwę, dublery, struktura
+Obszary: nazwy plików, układ pakietów (według funkcji czy warstw), testy (framework, położenie), idiomy testów (rodzaj testu na warstwę, dublery, struktura
 przypadków, buildery), idiomy kodu (np. ctx jako 1. argument, kolekcje tylko do odczytu, Post/Redirect/Get), błędy
 (szerokie łapanie), logowanie, dług (TODO/FIXME).
 Wartości `share` w procentach (zaokrąglone); `total` = pliki danego języka, których sygnał dotyczy.
@@ -90,9 +90,22 @@ CODE_IDIOMS = {  # w kodzie produkcyjnym: idiomy, które warto zapisać w standa
              ("redirect: (Post/Redirect/Get)", r"\"redirect:"), ("@Transactional", r"@Transactional\b"), ("record", r"\brecord \w+\(")],
     "C#": [("AsReadOnly (kolekcje tylko do odczytu)", r"\.AsReadOnly\(\)"), ("prywatny setter", r"\{\s*get;\s*private set;"),
            ("Guard.Against", r"\bGuard\.Against\."), ("rejestracja DI w metodach rozszerzających", r"this IServiceCollection\b"),
+           ("DI: AddScoped", r"\.AddScoped\b"), ("DI: AddSingleton", r"\.AddSingleton\b"), ("DI: AddTransient", r"\.AddTransient\b"),
            ("wyjątek domenowy (: Exception)", r"class \w+Exception\s*:\s*\w*Exception\b")],
     "Python": [("dataclass", r"@dataclass\b"), ("pydantic BaseModel", r"\(BaseModel\)"), ("adnotacje typów w def", r"def \w+\([^)]*:\s*\w")],
     "TypeScript": [("zod (walidacja na granicy)", r"from ['\"]zod['\"]"), ("readonly", r"\breadonly\b")]}
+ROLES = ("Controller", "Service", "Repository", "Validator", "Handler", "Endpoint", "Entity", "Dto", "Mapper",
+         "Factory", "Formatter", "Configuration", "Config", "Exception", "Specification", "Middleware")
+LAYERS = {"controller", "controllers", "service", "services", "repository", "repositories", "repo", "model", "models",
+          "entity", "entities", "dto", "dtos", "handler", "handlers", "dao", "mapper", "mappers", "view", "views",
+          "domain", "infrastructure", "application", "persistence", "adapters", "usecase", "usecases", "interfaces",
+          "contracts", "abstractions"}
+
+
+def role(stem: str) -> str | None:
+    return next((r for r in ROLES if stem.endswith(r) and stem != r), None)
+
+
 TODO = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b")
 
 
@@ -148,6 +161,20 @@ def scan(root: str) -> dict:
             ok = [p for p, v in styles.items() if v in (top, "lowercase")]
             sigs.append(signal("nazwy plików", lang, top, ok, len(prod), ok,
                                [f"{p} ({styles[p]})" for p in prod if p not in ok]))
+        # układ pakietów: katalog z różnymi rolami plików (według funkcji) czy katalog nazwany jak warstwa
+        dirs = collections.defaultdict(list)
+        for p in prod:
+            dirs[os.path.dirname(p)].append(os.path.basename(p).split(".")[0])
+        feature = [d for d, st in dirs.items() if os.path.basename(d).lower() not in LAYERS
+                   and len({role(x) for x in st} - {None}) >= 2]
+        layered = [d for d in dirs if os.path.basename(d).lower() in LAYERS]
+        if feature:
+            sigs.append(signal("układ", lang, "pakiety według funkcji (różne role w jednym katalogu)", feature,
+                               len(dirs), [f"{d}/ ({', '.join(sorted({role(x) for x in dirs[d]} - {None}))})" for d in feature],
+                               layered))
+        if layered:
+            sigs.append(signal("układ", lang, "pakiety według warstw (katalog = warstwa)", layered, len(dirs),
+                               [f"{d}/" for d in layered], feature))
         # testy: framework i położenie
         for fw, rx in TEST_FW.get(lang, []):
             hit = {p: lines_matching(texts[p], rx) for p in tests}
