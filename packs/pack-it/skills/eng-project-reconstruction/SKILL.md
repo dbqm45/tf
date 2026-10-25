@@ -68,19 +68,21 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 (commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), opcjonalnie `report.html`.
 
 ## Odświeżanie przyrostowe
-Cel: kilka tur głównego modelu. Kodu partii nie czytasz sam, skanów i kopii nie robisz ręcznie.
-1. `recon_refresh.py prep <repo>`: diff z manifestem, kopia kart do `raw/cards-prev/`, zlecenia
-   `raw/refresh/<karta>.md` dla kart, których dotyczą zmienione pliki, lista plików bez karty. Ponad połowa plików
-   zmieniona → pełny przebieg.
+Cel: kilka tur głównego modelu. Pierwsze polecenie to `prep` (bez wstępnego `git status` i `ls`); kodu partii nie
+czytasz sam, skanów i kopii nie robisz ręcznie.
+1. `recon_refresh.py prep <repo>`: diff z manifestem i poprzednie wersje plików z gita. Zmiany tylko w komentarzach
+   i pustych liniach nie dostają zleceń; numery linii dowodów w kartach i dokumentach są przeliczone. Do tego kopia
+   kart do `raw/cards-prev/`, zlecenia `raw/refresh/<karta>.md` z diffem zmienionych plików, lista plików bez karty.
+   Bez zleceń `prep` sam uruchamia `finish` — przechodzisz do kroku 4. Ponad połowa plików zmieniona → pełny przebieg.
 2. Wykonawcy (Haiku) w jednej wiadomości, na pierwszym planie; każdy dostaje jedno zdanie: „Wykonaj zlecenie
    z <ścieżka>”. Wykonawca aktualizuje starą kartę (tylko zmienione pliki) i sam sprawdza dowody.
-3. `recon_refresh.py finish <repo>`: karty → `.md`, `rules.md`, sekcja Moduły, zmienione reguły kart (stara →
-   nowa), lista miejsc ze starym opisem (`raw/refresh/STALE.md`), dowody przesunięte przez zmianę kodu poprawione
-   samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
+3. `recon_refresh.py finish <repo>`: karty → `.md`, `rules.md`, sekcja Moduły, data i commit odświeżenia w nagłówku
+   raportu, zmienione reguły kart (stara → nowa), lista miejsc ze starym opisem (`raw/refresh/STALE.md`), dowody
+   przesunięte przez zmianę kodu poprawione samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
 4. Z wydruku `finish` (zmienione reguły, miejsca z listy, błędy kontroli) poprawiasz opisy jednym zapisem — jeden
    skrypt albo kilka edycji w jednej wiadomości, bez czytania całych plików; miejsce zostawiasz, gdy celowo mówi
-   o starej wartości. Do tego wymagania ze zmienionych testów, w raporcie data i commit odświeżenia. Potem `finish`
-   jeszcze raz.
+   o starej wartości. Do tego wymagania ze zmienionych testów. Potem `finish` jeszcze raz; gdy kontrola przeszła
+   i nic nie poprawiałeś, kończysz.
 
 ## Zasady
 - **Kontekst głównego modelu jest drogi:** każda tura czyta go od nowa. Pełne wyniki zostają w plikach, model czyta

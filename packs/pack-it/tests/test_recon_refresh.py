@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Testy eng-codebase-mapping/scripts/recon_refresh.py: odświeżanie rekonstrukcji w dwóch krokach bez modelu —
-prep (diff manifestu, kopia kart, zlecenia dla wykonawców) i finish (karty → .md, rules.md, sekcja Moduły, lista
+prep (diff manifestu, kopia kart, zlecenia dla wykonawców z diffem, zmiany tylko w komentarzach bez zleceń,
+przeliczenie przesuniętych linii) i finish (karty → .md, rules.md, sekcja Moduły, lista
 miejsc ze starym opisem, kontrola końcowa, manifest). python3 .claude/tests/test_recon_refresh.py"""
 import json
 import subprocess
@@ -11,6 +12,9 @@ from pathlib import Path
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "skills").is_dir())
 SCRIPTS = ROOT / ".claude" / "skills" / "eng-codebase-mapping" / "scripts"
 DOCS = "docs/project/00-reconstruction"
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(SCRIPTS))
+import recon_refresh  # noqa: E402
 
 CODE = {
     "svc/billing/invoice.py": "def total(lines):\n    # faktura bez pozycji jest błędem\n"
@@ -24,6 +28,7 @@ BILLING = {"module": "billing", "batch": "svc/billing", "purpose": "Liczy faktur
                      {"rule": "VAT wynosi 23%.", "evidence": "svc/billing/tax.py:1", "quote": "RATE = 0.23", "confidence": "kod"}]}
 CUSTOMERS = {"module": "customers", "batch": "svc/customers", "purpose": "Klienci.",
              "terms": [{"term": "klient", "code_name": "Customer", "evidence": "svc/customers/model.py:1"}]}
+JAVA = "package billing;\n/* Stawki */\npublic class Rate {\n    // VAT\n    static final double VAT = 0.23;\n}\n"
 REPORT = """# Rekonstrukcja
 ## TL;DR
 Fakturowanie (`svc/billing/invoice.py:1`).
@@ -61,6 +66,11 @@ def write(root: Path, files: dict) -> None:
         p = root / rel
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(text, encoding="utf-8")
+
+
+def git(repo: Path, *args):
+    subprocess.run(["git", "-C", str(repo), "-c", "user.email=t@example.com", "-c", "user.name=t", *args],
+                   check=True, capture_output=True)
 
 
 def run(script, *args, cwd=None):
@@ -147,6 +157,68 @@ def main() -> int:
               f"RF-13: zmiany reguł stara → nowa: {r.stdout[-700:]}")
         r = run("recon_refresh.py", "prep", str(repo / "nie-ma"), cwd=d)
         check(r.returncode == 2, f"RF-11: złe wywołanie → 2: {r.returncode}")
+
+    # repozytorium git: poprzednia wersja pliku z commitu manifestu (hash zgodny z manifestem)
+    with tempfile.TemporaryDirectory() as d:
+        repo = Path(d)
+        rep = repo / DOCS
+        write(repo, dict(CODE, **{"svc/billing/Rate.java": JAVA}))
+        card = dict(BILLING, terms=[{"term": "pozycja", "code_name": "lines", "evidence": "svc/billing/invoice.py:3"}])
+        write(rep, {"modules/billing.json": json.dumps(card, ensure_ascii=False),
+                    "modules/customers.json": json.dumps(CUSTOMERS, ensure_ascii=False), "report.md": REPORT})
+        git(repo, "init", "-q")
+        git(repo, "add", "-A")
+        git(repo, "commit", "-q", "-m", "base")
+        run("recon_manifest.py", "write", str(repo), "--out", str(rep / "manifest.json"), "--budget-tokens", "12000")
+
+        # zmiana tylko w komentarzach (nowa linia komentarza w środku pliku przesuwa dowody) → bez zleceń, finish od razu
+        write(repo, {"svc/billing/invoice.py": CODE["svc/billing/invoice.py"].replace(
+                         "    if not lines:", "    # pozycje sprawdzamy na początku\n    if not lines:"),
+                     "svc/billing/Rate.java": JAVA.replace("// VAT", "// VAT w Polsce").replace("/* Stawki */", "/* Stawki podatku */")})
+        r = run("recon_refresh.py", "prep", str(repo), cwd=d)
+        out = r.stdout
+        bj = (rep / "modules/billing.json").read_text(encoding="utf-8")
+        rp = (rep / "report.md").read_text(encoding="utf-8")
+        check(not (rep / "raw/refresh/billing.md").exists() and "tylko komentarze" in out.lower()
+              and "svc/billing/Rate.java" in out, f"RF-14: zmiana tylko w komentarzach bez zlecenia: {out[-700:]}")
+        check('"svc/billing/invoice.py:5"' in bj and '"svc/billing/invoice.py:4"' in bj and "`svc/billing/invoice.py:5`" in rp
+              and "`svc/billing/invoice.py:4`" not in rp, f"RF-15: numery linii przeliczone w kartach i raporcie: {bj} {rp[-500:]}")
+        check(r.returncode == 0 and "Kontrola końcowa: ✓" in out and "✓ manifest" in out,
+              f"RF-16: bez zleceń prep uruchamia finish: rc={r.returncode} {out[-700:]}")
+        stamp = [ln for ln in rp.splitlines() if ln.startswith("Odświeżenie przyrostowe:")]
+        check(len(stamp) == 1 and str(__import__("datetime").date.today()) in stamp[0],
+              f"RF-17: data odświeżenia w raporcie: {rp[:400]}")
+        r = run("recon_refresh.py", "prep", str(repo), cwd=d)
+        check("Nic do odświeżenia" in r.stdout, f"RF-18: po odświeżeniu nic do zrobienia: {r.stdout[-300:]}")
+
+        # zmiana w kodzie po commicie odświeżenia: zlecenie z diffem, przesunięcie przeliczone raz, data nie dubluje się
+        git(repo, "add", "-A")
+        git(repo, "commit", "-q", "-m", "refresh")
+        write(repo, {"svc/billing/invoice.py": (repo / "svc/billing/invoice.py").read_text(encoding="utf-8").replace(
+            "    if not lines:", "    if len(lines) < 2:\n        log('za mało')")})
+        r = run("recon_refresh.py", "prep", str(repo), cwd=d)
+        task = rep / "raw/refresh/billing.md"
+        body = task.read_text(encoding="utf-8") if task.exists() else ""
+        check("-    if not lines:" in body and "+    if len(lines) < 2:" in body and "Kontrola końcowa" not in r.stdout,
+              f"RF-19: zlecenie z diffem zmienionego pliku: {body[-700:]} {r.stdout[-300:]}")
+        run("recon_refresh.py", "prep", str(repo), cwd=d)
+        bj = (rep / "modules/billing.json").read_text(encoding="utf-8")
+        check('"svc/billing/invoice.py:6"' in bj and '"svc/billing/invoice.py:7"' not in bj,
+              f"RF-20: przesunięcie przeliczone raz mimo dwóch prep: {bj}")
+        run("recon_refresh.py", "finish", str(repo), cwd=d)
+        rp = (rep / "report.md").read_text(encoding="utf-8")
+        check(sum(ln.startswith("Odświeżenie przyrostowe:") for ln in rp.splitlines()) == 1,
+              f"RF-21: jedna linia z datą odświeżenia po kolejnym finish: {rp[:500]}")
+
+    # rozpoznawanie zmian tylko w komentarzach (zachowawczo: w razie wątpliwości to zmiana kodu)
+    co = recon_refresh.comment_only
+    check(co("int a = 1;\n", "// nowy\nint a = 1;\n", "A.java") and co("/* x */ int a = 1;\n", "/* y */ int a = 1;\n", "A.cs")
+          and co("x = 1\n", "# opis\nx = 1\n\n", "a.py") and co("/**\n * stary\n */\nclass A {}\n", "/**\n * nowy\n */\nclass A {}\n", "A.java"),
+          "RF-22: komentarze liniowe, blokowe i puste linie")
+    check(not co("/* x */ int a = 1;\n", "/* x */ int a = 2;\n", "A.cs") and not co("#if DEBUG\nx();\n#endif\n", "#if RELEASE\nx();\n#endif\n", "A.cs")
+          and not co('def f():\n    """stary"""\n', 'def f():\n    """nowy"""\n', "a.py") and not co("<p>a</p>\n", "<!-- k --><p>a</p>\n", "a.cshtml")
+          and not co("int a;\n", "/* bez końca\nint a;\n", "A.java") and not co("a = 1;\n", "a = 1; // k\n", "a.ts"),
+          "RF-23: kod, dyrektywy, docstringi, nieznane rozszerzenia, niedomknięty blok i komentarz za kodem to zmiana kodu")
 
     for f in fails:
         print("✗", f)
