@@ -70,6 +70,38 @@
       }
     },
     {
+      "id": "flaga-etapy-release-yaml",
+      "expect": "trigger",
+      "prompt": "Funkcja ponawiania płatności idzie za flagą payment-retry: najpierw pracownicy, potem 10% klientów, potem wszyscy. Jak opisać te etapy, żeby przejście dalej nie było na wyczucie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kryteri\\w* wyjścia",
+            "exit",
+            "warun\\w* przejścia"
+          ],
+          [
+            "min\\w* czas",
+            "min_days",
+            "dni"
+          ],
+          [
+            "release\\.yaml"
+          ],
+          [
+            "dat\\w* usunięcia",
+            "remove_by",
+            "usuń\\w* flag"
+          ]
+        ]
+      },
+      "rubric": [
+        "każdy etap: kryterium wyjścia z metryk i minimalny czas",
+        "etapy zapisane w release.yaml",
+        "flaga ma właściciela i datę usunięcia"
+      ]
+    },
+    {
       "id": "trunk-dora",
       "expect": "no-trigger",
       "prompt": "Jak wdrożyć trunk-based development i mierzyć metryki DORA w zespole?",

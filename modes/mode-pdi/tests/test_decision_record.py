@@ -17,6 +17,36 @@ SCRIPT = ROOT / REL if ROOT else None
 SCHEMA_KEYS = {"artifact", "phase", "status", "version", "author", "created", "updated", "inputs", "change", "source",
                "tasks", "superseded_by"}
 REQUIRED = {"artifact", "phase", "status", "version", "created", "updated", "change"}
+FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # kopia kontraktu pdi 0.4.0 (bez zmian)
+
+# Plan wydania z pdi docs/plan-g1-g2.md §5.2 (wiersze TSK-59 i TSK-60 dopisane do R2, jak w przykładzie kontraktu).
+RELEASE_OK = """# docs/project/changes/CHG-12/release.yaml   (kontrakt 0.4.0)
+change: CHG-12
+mvp:
+  release: R1
+  outcome: Klient może ponowić nieudaną płatność bez podwójnego obciążenia
+  metric: { name: odzyskane_platnosci, target: ">= 25%", horizon_days: 30 }
+  guardrails: [podwojne_obciazenia = 0]
+releases:
+  - { id: R1, name: MVP, tasks: [TSK-57, TSK-58] }
+  - { id: R2, tasks: [TSK-59, TSK-60] }
+flags:
+  - key: payment-retry
+    tasks: [TSK-57, TSK-58]
+    owner: PO Payments
+    remove_by: 2026-12-31
+    rollout:
+      - { stage: internal, min_days: 3, exit: "0 błędów krytycznych" }
+      - { stage: "10%", min_days: 7, exit: "odzyskane >= 15%, duplikaty = 0" }
+      - { stage: "100%" }
+"""
+PLAN_ROWS = """| Cięcie | Wydanie | Flaga | Wartość | Pliki | Weryfikacja |
+|---|---|---|---|---|---|
+| TSK-57 | R1 | payment-retry | ponowienie płatności | | |
+| TSK-58 | R1 | payment-retry | brak podwójnego obciążenia | | |
+| TSK-59 | R2 | — | historia prób | | |
+| TSK-60 | R2 | | powiadomienie | | |
+"""
 
 
 def run(args, cwd):
@@ -179,6 +209,65 @@ def main() -> int:
                        encoding="utf-8")
         r = run(["check"], repo)
         check(r.returncode != 0, f"E-15: check wykrywa wyslano: tak bez numeru: {r.stdout}")
+
+    # G1.1: plan wydania release.yaml (kontrakt pdi 0.4.0, release-plan.schema.json) i spójność z plan.md
+    near = SCRIPT.parent / "release-plan.schema.json"
+    check(near.is_file() and FIX.is_dir() and json.loads(near.read_text(encoding="utf-8"))
+          == json.loads((FIX / "release-plan.schema.json").read_text(encoding="utf-8"))
+          and (FIX / "VERSION").read_text(encoding="utf-8").strip() == "0.4.0",
+          "R-0: schemat obok skryptu = kopia z kontraktu pdi 0.4.0")
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        r = run(["change", "new", "CHG-12"], repo)
+        rel = repo / "docs" / "project" / "changes" / "CHG-12" / "release.yaml"
+        text = rel.read_text(encoding="utf-8") if rel.is_file() else ""
+        check(r.returncode == 0 and "change: CHG-12" in text and "R1" in text and "release.yaml" in r.stdout,
+              f"R-1: change new zakłada release.yaml z linią R1: {r.stdout} {text[:300]}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"R-2: świeży release.yaml przechodzi check: {r.stdout}")
+
+    def release_case(release: str, plan_tasks: str = "TSK-57, TSK-58, TSK-59, TSK-60", rows: str = PLAN_ROWS):
+        tmp = tempfile.mkdtemp()
+        d = Path(tmp) / "docs" / "project" / "changes" / "CHG-12"
+        write(d / "plan.md", "artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-25\n"
+              f"updated: 2026-10-25\nchange: CHG-12\ntasks: [{plan_tasks}]", "# Plan zmiany CHG-12\n\n" + rows)
+        (d / "release.yaml").write_text(release, encoding="utf-8")
+        return run(["check"], tmp)
+
+    example = (FIX / "release-plan.json").read_text(encoding="utf-8") if FIX.is_dir() else ""
+    r = release_case(RELEASE_OK)
+    check(r.returncode == 0, f"R-3: plan wydania z §5.2 planu G1 (YAML) + zgodny plan.md przechodzi: {r.stdout}")
+    r = release_case(example)
+    check(r.returncode == 0, f"R-4: przykład z kontraktu (JSON to też YAML) przechodzi: {r.stdout}")
+    bad_release = {
+        "schemat: linia X1": (RELEASE_OK.replace("id: R2", "id: X2"), "X2"),
+        "schemat: zły klucz TSK": (RELEASE_OK.replace("TSK-60]", "tsk-60]"), "tsk-60"),
+        "schemat: nieznane pole": (RELEASE_OK.replace("change: CHG-12", "change: CHG-12\nowner: ja"), "owner"),
+        "mvp.release spoza linii": (RELEASE_OK.replace("release: R1", "release: R3"), "R3"),
+        "TSK różne od plan.md": (RELEASE_OK.replace(", TSK-60]", "]"), "TSK-60"),
+        "TSK w dwóch liniach": (RELEASE_OK.replace("tasks: [TSK-59, TSK-60]", "tasks: [TSK-58, TSK-59, TSK-60]"), "TSK-58"),
+        "flaga bez etapów": (RELEASE_OK.split("    rollout:")[0], "payment-retry"),
+        "flaga bez remove_by": (RELEASE_OK.replace("    remove_by: 2026-12-31\n", ""), "remove_by"),
+        "TSK flagi spoza linii": (RELEASE_OK.replace("tasks: [TSK-57, TSK-58]\n    owner", "tasks: [TSK-57, TSK-99]\n    owner"),
+                                  "TSK-99"),
+        "niepoprawny YAML": ("change: CHG-12\nreleases: [\n", "YAML"),
+    }
+    for label, (text, needle) in bad_release.items():
+        r = release_case(text)
+        check(r.returncode != 0 and needle in r.stdout and "release.yaml" in r.stdout,
+              f"R-5 check wykrywa: {label} ({r.stdout.strip()[:300]})")
+    r = release_case(RELEASE_OK, rows=PLAN_ROWS.replace("| TSK-59 | R2 |", "| TSK-59 | R1 |"))
+    check(r.returncode != 0 and "TSK-59" in r.stdout and "Wydanie" in r.stdout,
+          f"R-6: kolumna „Wydanie” w plan.md niezgodna z release.yaml: {r.stdout}")
+    r = release_case(RELEASE_OK, rows=PLAN_ROWS.replace("| TSK-58 | R1 | payment-retry |", "| TSK-58 | R1 | — |"))
+    check(r.returncode != 0 and "TSK-58" in r.stdout and "Flaga" in r.stdout,
+          f"R-7: kolumna „Flaga” w plan.md niezgodna z release.yaml: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-1" / "plan.md",
+              "artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-23\nupdated: 2026-10-23\n"
+              "change: CHG-1\ntasks: [TSK-1]")
+        r = run(["check"], tmp)
+        check(r.returncode == 0, f"R-8: zmiana sprzed G1.1 (bez release.yaml) nadal przechodzi: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

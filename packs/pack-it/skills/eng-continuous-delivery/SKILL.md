@@ -13,6 +13,9 @@ metadata:
   integracja co najmniej codziennie. Długie gałęzie funkcji = ukryte ryzyko integracji.
 - **Małe partie**: mały PR łatwiej zrecenzować, wdrożyć i wycofać. Duża zmiana → seria kroków, każdy wdrażalny.
 - **Feature flags** oddzielają wdrożenie od udostępnienia; każda flaga ma właściciela i datę usunięcia.
+  Etapy udostępniania (wewnętrzni → procent → 100%), każdy z kryterium wyjścia i minimalnym czasem, zapisujesz
+  w planie wydania `release.yaml` (`flags[].rollout`, `remove_by`), nie tylko w opisie wydania — wtedy da się
+  sprawdzić, czy wydanie idzie zgodnie z planem i kiedy flaga ma zniknąć.
 - **Główna gałąź zawsze wdrażalna**: czerwony build naprawiamy przed nową pracą.
 - **Branch by abstraction / expand–contract** dla dużych zmian i migracji danych (be-database).
 - **Shift left**: testy, analiza statyczna, skan zależności i sekretów w pipeline, nie przed wydaniem.

@@ -80,6 +80,32 @@
       ]
     },
     {
+      "id": "mvp-zmiany-do-release",
+      "expect": "trigger",
+      "prompt": "Kształtujemy wymagania dla zmiany CHG-12 (ponawianie nieudanych płatności) w projekcie z dziennikiem zmian. Ustaliliśmy MVP i listę rzeczy poza zakresem MVP. Gdzie to zapisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "release\\.yaml"
+          ],
+          [
+            "\\bmvp\\b"
+          ],
+          [
+            "R2"
+          ],
+          [
+            "metryk",
+            "wynik"
+          ]
+        ]
+      },
+      "rubric": [
+        "wynik MVP (z metryką) trafia do mvp w release.yaml zmiany",
+        "cięcia z „Poza zakresem MVP” do linii R2"
+      ]
+    },
+    {
       "id": "priorytety-pomyslow",
       "expect": "no-trigger",
       "neighbor": "proc-product-discovery",

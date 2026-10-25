@@ -32,6 +32,8 @@ i nie rozpisuje plików — to robi plan kroku w raporcie `06-delivery/`.
 | Blokery | tylko zewnętrzne (dostawca, decyzja interesariusza); co zespół rozstrzygnie sam, jest niewiadomą |
 | Niewiadome | pytanie — właściciel — blokuje: tak/nie |
 | Ryzyko | jedno zdanie: dlaczego pozycja stoi właśnie tu w kolejności |
+| Wydanie | linia wydania: `R1` (MVP), `R2`… — sekcja „Linie wydań i flagi” |
+| Flaga | klucz flagi, za którą cięcie jest wdrażane przed decyzją o udostępnieniu, albo „—” |
 | Status | proponowane / gotowe / zablokowane / w toku / zrobione |
 
 - **Zablokowane** wtedy i tylko wtedy, gdy co najmniej jedna niewiadoma ma „blokuje: tak”.
@@ -49,6 +51,36 @@ i nie rozpisuje plików — to robi plan kroku w raporcie `06-delivery/`.
    - nauka → najpierw nieznana technologia;
    - prostota → najpierw najmniejsze cięcie.
 4. Otwarte pytanie, które wpływa na kolejność, zostawia dotknięte pozycje jako zablokowane — nie przesądzaj odpowiedzi.
+
+## Linie wydań i flagi
+- **R1 = MVP:** gwiazda przewodnia plus minimum, które daje wynik z zamiaru zmiany (`intent.md`) albo z celów
+  w briefie. Ma nazwany wynik i metrykę z progiem i horyzontem („odzyskane płatności ≥ 25% w 30 dni”) oraz metryki
+  ochronne. Reszta trafia do R2…Rn; „Poza zakresem MVP” z wymagań to kandydaci do R2.
+- **Flaga**, gdy cięcie jest wdrażane, zanim człowiek zdecyduje o udostępnieniu: właściciel, data usunięcia i etapy
+  udostępniania (wewnętrzni → procent → 100%), każdy z kryterium wyjścia i minimalnym czasem.
+- Zapis: plan wydania `release.yaml` obok planu cięć (`05-plan/release.yaml`; zmiana w dzienniku zmian:
+  `changes/CHG-n/release.yaml`) w kształcie kontraktu pdi 0.4.0:
+  ```yaml
+  change: CHG-12
+  mvp:
+    release: R1
+    outcome: Klient może ponowić nieudaną płatność bez podwójnego obciążenia
+    metric: { name: odzyskane_platnosci, target: ">= 25%", horizon_days: 30 }
+    guardrails: [podwojne_obciazenia = 0]
+  releases:
+    - { id: R1, name: MVP, tasks: [TSK-57, TSK-58] }
+    - { id: R2, tasks: [TSK-59] }
+  flags:
+    - key: payment-retry
+      tasks: [TSK-57, TSK-58]
+      owner: PO Payments
+      remove_by: 2026-12-31
+      rollout:
+        - { stage: internal, min_days: 3, exit: "0 błędów krytycznych" }
+        - { stage: "10%", min_days: 7, exit: "odzyskane >= 15%, duplikaty = 0" }
+        - { stage: "100%" }
+  ```
+  Kolumny „Wydanie” i „Flaga” w planie mają te same wartości co `release.yaml`.
 
 ## Rozmiar cięć (bez estymat)
 Cięcia mają porównywalną wagę. Podziel cięcie, gdy:
@@ -80,7 +112,10 @@ Nie zapisuj planu, jeśli któryś punkt nie przechodzi:
 - [ ] co najmniej jedno cięcie „gotowe” — jeśli wszystko jest zablokowane albo jest pięć F i zero gotowych S,
       wymagania są niedomknięte albo inwentarz źle odczytany: wróć do fazy 3;
 - [ ] pojęcia „gwiazda przewodnia” i „najbardziej ryzykowne założenie” objaśnione jednym zdaniem przy pierwszym
-      użyciu (człowiek nie zna żargonu planu).
+      użyciu (człowiek nie zna żargonu planu);
+- [ ] R1 ma wynik i metrykę (próg, horyzont) z zamiaru zmiany; każde S-NN w R1 jest widoczne dla użytkownika;
+- [ ] każde S-NN wdrażane przed decyzją o udostępnieniu ma flagę z właścicielem, datą usunięcia i etapami
+      z kryterium wyjścia; `release.yaml` zgodny z kolumnami „Wydanie” i „Flaga”.
 
 ## Przekazanie
 Na końcu **jedna** rekomendacja następnego kroku, nie lista do wyboru: gwiazda przewodnia, jeśli gotowa; inaczej
