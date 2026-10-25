@@ -118,6 +118,45 @@
       }
     },
     {
+      "id": "sygnaly-mieszania-funkcjonalnosci",
+      "expect": "trigger",
+      "prompt": "Po czym na pierwszy rzut oka poznać, że historyjka w backlogu miesza kilka funkcjonalności i trzeba ją podzielić? Mamy np. „Eksport/import produktów” i „BE: endpoint zamówień”. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "spójnik",
+            "„i”",
+            "ukośnik",
+            "\\blub\\b",
+            "\\boraz\\b"
+          ],
+          [
+            "aktor",
+            "rol\\w*",
+            "kilku użytkownik"
+          ],
+          [
+            "warstw",
+            "backend",
+            "\\bBE\\b",
+            "zadani\\w*, nie historyj"
+          ],
+          [
+            "scenariusz",
+            "kryteri\\w* akceptacji",
+            "When",
+            "Gdy"
+          ]
+        ]
+      },
+      "rubric": [
+        "spójnik albo ukośnik między czasownikami w tytule lub celu (eksport/import) to sygnał kilku akcji",
+        "kilku aktorów w „Jako X lub Y” to sygnał",
+        "tytuł od warstwy (BE:, API:) to zadanie, nie historyjka",
+        "różne akcje główne w scenariuszach kryteriów akceptacji to sygnał"
+      ]
+    },
+    {
       "id": "wiele-zespolow",
       "expect": "no-trigger",
       "prompt": "Mamy 8 zespołów i ponad 100 osób pracujących nad jednym produktem. Czy wdrożyć PI Planning i Agile Release Train i jak zaplanować pracę ponad zespołami? Odpowiedz zwięźle.",

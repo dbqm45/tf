@@ -29,6 +29,16 @@ Każdy kawałek po podziale nadal daje użytkownikowi coś działającego (piono
 Kolejność kawałków: najpierw ten, który daje najwięcej wiedzy albo wartości przy najmniejszym ryzyku.
 Podział na „backend” i „frontend” albo „baza, API, UI” to zadania, nie historyjki.
 
+## Sygnały, że historyjka miesza funkcjonalności
+Te same sygnały sprawdza `requirements_lint.py` (proc-requirements-shaping) jako reguły STORY-001…003.
+| Sygnał | Przykład | Co zrobić |
+|---|---|---|
+| Spójnik albo ukośnik między czasownikami w tytule lub celu (STORY-001) | „chcę dodać, edytować i usunąć kartę”, „Eksport/import produktów” | jedna historyjka na akcję; „numer i datę” (rzeczowniki) to nie sygnał |
+| Kilku aktorów (STORY-001) | „Jako klient lub sprzedawca chcę…” | osobna historyjka dla każdej roli albo jedna rola i reszta później |
+| Różne akcje główne w scenariuszach (STORY-001) | AC-1 „Gdy doda adres”, AC-2 „Gdy usunie adres” | wzorzec „Kroki przepływu” albo „Ścieżki”; warianty danych tej samej akcji (różne filtry) zostają razem |
+| Za dużo scenariuszy lub akcji (STORY-002) | ponad 6 scenariuszy albo ponad 3 akcje | „Warianty reguł”, „Dane” albo „Proste przed złożonym” |
+| Tytuł od warstwy technicznej (STORY-003) | „BE: endpoint do zapisu karty”, „Migracja tabeli zamówień” | to zadanie — nazwij wartość dla użytkownika i przypnij zadanie do historyjki |
+
 ## Źródła
 - J. Patton, *User Story Mapping* (2014).
 - R. Lawrence, „Patterns for Splitting User Stories” (2009); M. Cohn, SPIDR (Spikes, Paths, Interfaces, Data,

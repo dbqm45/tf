@@ -3,6 +3,7 @@
     "allow": [
       "Bash(python3 .claude/skills/ddd-es-simulation/scripts/es_sim.py *)",
       "Bash(python3 .claude/skills/ddd-event-storming/scripts/es_board.py *)",
+      "Bash(python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py *)",
       "Bash(python3 tests/test_es_sim.py)"
     ]
   }

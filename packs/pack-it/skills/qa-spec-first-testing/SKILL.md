@@ -104,7 +104,8 @@ brak odwołania do wymagania · test napisany po kodzie, który nigdy nie był c
 z ryzyka · seria testów różniących się tylko setupem przy tej samej asercji.
 
 ## Śledzenie
-Nazwa lub tag testu zawiera ID kryterium/przypadku (`H1-AC2`, `TC-014`). Pokrycie mierzymy **wymaganiami** (każde kryterium ma test),
+Nazwa lub tag testu zawiera ID kryterium/przypadku: test akceptacyjny — identyfikator scenariusza historyjki
+(`US-02/AC-3`), przypadek z planu testów — jego numer (`TC-014`). Pokrycie mierzymy **wymaganiami** (każde kryterium ma test),
 nie procentem linii.
 
 ## Źródła

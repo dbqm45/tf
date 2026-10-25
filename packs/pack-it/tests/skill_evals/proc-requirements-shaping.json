@@ -50,6 +50,36 @@
       }
     },
     {
+      "id": "historyjka-z-kryteriami-gwt",
+      "expect": "trigger",
+      "prompt": "Spisujemy wymagania (PRD). Zapisz historyjkę do requirements.md: klient zarządza adresami dostawy — dodaje, edytuje i usuwa adres. Jak ją zapisać z kryteriami akceptacji? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "AC-\\d"
+          ],
+          [
+            "Zakładając",
+            "Given",
+            "Gdy",
+            "When"
+          ],
+          [
+            "podzi\\w*",
+            "rozbi\\w*",
+            "osobn\\w* historyj",
+            "trzy historyj",
+            "3 historyj",
+            "jedn\\w* akcj"
+          ]
+        ]
+      },
+      "rubric": [
+        "każdy scenariusz ma identyfikator AC-n i formę Given/When/Then (Zakładając/Gdy/Wtedy)",
+        "dodawanie, edycja i usuwanie to różne akcje — historyjka dzielona na osobne (jedna akcja na historyjkę)"
+      ]
+    },
+    {
       "id": "priorytety-pomyslow",
       "expect": "no-trigger",
       "neighbor": "proc-product-discovery",

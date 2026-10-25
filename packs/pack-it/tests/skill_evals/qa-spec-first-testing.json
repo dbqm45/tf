@@ -73,6 +73,30 @@
       }
     },
     {
+      "id": "nazwa-testu-akceptacyjnego",
+      "expect": "trigger",
+      "prompt": "Piszę test akceptacyjny ze specyfikacji, zanim powstanie kod, dla scenariusza AC-3 historyjki US-02 (klient stosuje kod rabatowy). Jak nazwać test, żeby było wiadomo, które kryterium sprawdza? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "US-02/AC-3",
+            "US-02 / AC-3",
+            "US-02-AC-3",
+            "US-02 AC-3"
+          ],
+          [
+            "pokryci\\w*",
+            "śledz\\w*",
+            "kryteri\\w*"
+          ]
+        ]
+      },
+      "rubric": [
+        "nazwa lub tag testu zawiera identyfikator scenariusza, np. US-02/AC-3",
+        "pokrycie liczone kryteriami: każdy scenariusz AC-n ma test"
+      ]
+    },
+    {
       "id": "it-each-vitest",
       "expect": "no-trigger",
       "prompt": "Jak w Vitest zapisać it.each z tabelą przykładów i sprawdzić granice 9, 10 i 11 sztuk? Odpowiedz zwięźle.",
