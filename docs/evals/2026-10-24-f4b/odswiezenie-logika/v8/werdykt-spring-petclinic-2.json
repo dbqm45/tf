@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Stan po zmianie (dokładnie 9 cyfr, regexp \\d{9}) podany w wielu miejscach: modules/owner.md:45, rules.md:64 i :117 (cytuje @Pattern(regexp = \"\\\\d{9}\") z Owner.java:64), requirements.md:5, report.md:41, domain.md:19. Kod potwierdza (Owner.java:64). Nigdzie nie ma '10 cyfr' ani \\d{10}."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:34: 'Owner.telephone: @NotBlank and @Pattern requiring exactly 9 digits; message key telephone.invalid'; INDEX.md:29 powtarza '9-digit telephone'. roadmap.md:23 trafnie odnotowuje, że komunikat telephone.invalid w messages*.properties nadal mówi '10-digit' (zgodne z kodem: messages.properties:34), więc to nie jest stare twierdzenie o regule, tylko opis rozjazdu komunikatu. Brak twierdzeń o 10 cyfrach jako obowiązującej regule."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "modules/owner.md:53 i rules.md:72: 'Imię zwierzęcia nie może zawierać cyfr' z cytatem PetValidator.java:49 (name.chars().anyMatch(Character::isDigit)); zgodne z kodem (rejectValue 'digits'). requirements.md:11 wymienia tylko 'imię (≤30, wymagane)' bez zakazu cyfr, ale to skrót, nie twierdzenie sprzeczne, a pełna reguła jest w rules.md i owner.md."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:35: 'PetValidator: name required, at most 30 characters, no digits; type required for new pets; birth date required'; INDEX.md:29 dodatkowo 'pet names without digits'. Zgodne z kodem."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "requirements.md:16 mówi wprost: 'reguła „data najwcześniej jutro” usunięta z kodu; domyślna data wizyty to jutro' (oba elementy stanu po zmianie). modules/owner.md:63 i rules.md:82: 'Domyślna data nowej wizyty to jutro' (Visit.java:51). Żaden dokument nie twierdzi, że kontroler odrzuca datę nie po dzisiejszej. Drobna uwaga: usunięcie jest nazwane tylko w requirements.md; karta owner.md i rules.md milczą o tym, ale nie przeczą. Nie wspomina minVisitDate w VisitController."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:36: 'VisitController: visit form validated only by Bean Validation on Visit; no future-date check in the controller' — poprawnie oddaje usunięcie sprawdzenia daty w kontrolerze. Nie wspomina domyślnej daty 'jutro' (minVisitDate) ani nie nazywa reguły 'usuniętą' wprost, ale domyślna data nie była częścią zmiany, a sformułowanie jest jednoznaczne. Żadnego twierdzenia, że reguła nadal działa."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: wszystkie miejsca w zestawie A zgodnie podają 9 cyfr telefonu, zakaz cyfr w imieniu zwierzęcia i brak odrzucania daty wizyty (z domyślną datą jutro); nie znalazłem żadnego fragmentu sprzecznego z tymi trzema zmianami.",
+    "B": "Spójna: architecture.md, INDEX.md i roadmap.md zgodnie podają 9 cyfr, brak cyfr w imieniu i brak sprawdzenia daty wizyty w kontrolerze; wzmianka o '10-digit' w roadmap.md dotyczy wyłącznie nieuaktualnionego tekstu komunikatu i jest zgodna z kodem, więc nie przeczy sama sobie."
+  }
+}

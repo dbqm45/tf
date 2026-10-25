@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Podaje nowy stan wprost i z odroznieniem AddQuantity od SetQuantity: A/modules/ApplicationCore.md:36-38 oraz A/rules.md:5-7 (limit 99 przy utworzeniu pozycji i w SetQuantity, a w AddQuantity tylko dla dodawanego argumentu - 60+50=110), A/requirements.md:7 ('zakres 0-99'), A/report.md:49 ('0-99'); cytat Guard.Against.OutOfRange(quantity, ..., 0, 99) zgadza sie z BasketItem.cs:22 i :29. Zadnego twierdzenia o braku gornej granicy w domenie. Sprawdzone w kodzie: trafienia int.MaxValue w A/modules/WebPages.md:35 i A/rules.md:173 dotycza BasketItemViewModel ([Range(0, int.MaxValue)] nadal jest w src/Web/Pages/Basket/BasketItemViewModel.cs:13), czyli sa prawdziwe i nie sa stanem sprzed zmiany; A sam opisuje te rozbieznosc (A/rules.md:201, A/modules/WebPages.md:71, A/domain.md:46). Nie liczone jako nieaktualne."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/architecture.md:16: 'basket item quantity must be 0-99 (BasketItem.AddQuantity/SetQuantity)' - poprawny zakres i wlasciwe metody. Uproszczenie: nie mowi, ze w AddQuantity limit dotyczy dodawanej ilosci (nie sumy) ani ze konstruktor wola SetQuantity; brak twierdzen o int.MaxValue / braku limitu w calym zestawie B."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/modules/ApplicationCore.md:12 i :65, A/rules.md:34, A/requirements.md:26: cena w UpdateDetails w przedziale 0,01-10 000, ponizej 0,01 (w tym zero i ujemne) oraz powyzej 10 000 odrzucana, konstruktor cen nie sprawdza; cytat OutOfRange(details.Price, ..., 0.01m, 10000m) zgadza sie z CatalogItem.cs:38 (konstruktor rzeczywiscie bez guardu). Inne zakresy cen w A dotycza innych warstw i sa zgodne z kodem: [Range(0.01, 10000)] w UpdateCatalogItemRequest.cs:20 (A/modules/PublicApi.md:42, A/rules.md:106) oraz [Range(0.01, 1000)] w BlazorShared/Models/CatalogItem.cs:27 i CreateCatalogItemRequest.cs:19 (A/modules/BlazorShared.md:20-21, A/rules.md:62-63) - nie sa stanem sprzed zmiany."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/architecture.md:16: 'catalog item price must be 0.01-10000 (CatalogItem.UpdateDetails)' - poprawny zakres i metoda. Nie opisuje odrzucania wartosci zero/ujemnych ani braku guardu w konstruktorze, ale glowny fakt zmiany jest podany. Brak starych twierdzen o cenie w zestawie B."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/requirements.md:25 ('Duplikat nazwy przy tworzeniu nie jest juz kontrolowany; DuplicateException, gdyby zostal zgloszony, daje 409'), A/rules.md:200 (unikalnosc nie jest sprawdzana przy tworzeniu, mapowanie 409 w middleware zostalo, nic w PublicApi nie zglasza wyjatku), A/modules/PublicApi.md:73 ('Ani tworzenie, ani aktualizacja nie sprawdzaja unikalnosci nazwy... zadna nie zwraca 409') i :91 ('kontrola usunieta z tworzenia'). Pozostale wzmianki o DuplicateException/409 (A/modules/PublicApi.md:51 i :62, A/rules.md:115, A/report.md:52, A/standards/kod.md:6) opisuja tylko istniejace mapowanie w ExceptionMiddleware.cs:35-37 - zgodne z kodem i z polem new (mapowanie nadal istnieje); nie twierdza, ze tworzenie rzuca wyjatek. Najwyzej slabosc: haslo slownika 'zduplikowana nazwa -> DuplicateException' (PublicApi.md:62) i A/report.md:52 nie niosa zastrzezenia, ze nic go nie rzuca, ale to uzupelniaja requirements.md:25 i rules.md:200."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "B/project/roadmap.md:26 (Technical Debt): 'Enforce catalog-name uniqueness with a unique index (the CreateCatalogItemEndpoint pre-check was removed, so CatalogItemNameSpecification and DuplicateException are no longer used by creation)'; B/INDEX.md:23 powtarza 'unique index for catalog names'. Poprawne wg kodu (DuplicateException rzucany nigdzie, CatalogItemNameSpecification tylko zdefiniowana). B nie wspomina, ze mapowanie 409 w ExceptionMiddleware nadal istnieje, ale nie twierdzi tez nic przeciwnego (B/standards/backend/dotnet-architecture.md:25 mowi ogolnie o tlumaczeniu wyjatkow na HTTP). Brak trafien 409/Duplicate w innym kontekscie."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spojna: zakresy 0-99 (domena), 0,01-10 000 (UpdateDetails) i brak kontroli duplikatu przy tworzeniu sa podane tak samo w ApplicationCore.md, rules.md, requirements.md, PublicApi.md i report.md; rozne zakresy w innych warstwach (view model int.MaxValue, BlazorShared 1000, UpdateCatalogItemRequest 10000) odpowiadaja kodowi i sa jawnie oznaczone jako rozbieznosci, a nie sprzecznosc co do zmian.",
+    "B": "Spojna: architecture.md (0-99, 0,01-10000) i roadmap.md/INDEX.md (usuniete sprawdzenie unikalnosci nazwy, plan unikalnego indeksu) nie przeczą sobie ani sa w sprzecznosci z ogolnymi standardami; zadne miejsce nie utrzymuje stanu sprzed zmian."
+  }
+}
