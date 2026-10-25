@@ -311,7 +311,8 @@ def task_text(stem: str, card: dict, files: list[str], kinds: dict, rel_dir: str
               "   kontekstu). Zaktualizuj tylko elementy karty dotyczące tych plików: popraw",
               "   zmienione reguły, wejścia, dane i pojęcia, dodaj nowe, usuń te, których w kodzie już nie ma. Pozostałe",
               "   elementy zostaw bez zmian (te same słowa i cytaty).",
-              "2. Niewiadome i odstępstwa, które wspominają zmieniony fakt, popraw tak, by opisywały stan obecny.",
+              "2. Opis modułu (pole purpose), niewiadome i odstępstwa, które wspominają zmieniony albo usunięty fakt,",
+              "   popraw tak, by opisywały stan obecny (opis modułu trafia też do raportu).",
               "3. Wszystkie zmiany w karcie (sam JSON) robisz w jednej wiadomości, potem sprawdzasz ją jednym poleceniem:",
               f"   python3 {rel_scripts}/recon_refresh.py card . {stem}",
               "   Przesunięte numery linii poprawia ono samo; złe dowody wypisuje z treścią linii kodu — poprawiasz je",
@@ -625,7 +626,9 @@ def card(repo: str, rel_dir: str, stem: str) -> int:
         return 2
     bad = res.get("bad") or []
     L = [f"{'✓' if not bad else '✗'} karta {stem}: dowody {res.get('refs', '?')}, złe {len(bad)}, "
-         f"poprawione numery linii {moved}"]
+         f"poprawione numery linii {moved}",
+         f"  opis modułu (purpose): {' '.join(str(data.get('purpose') or '—').split())[:300]}",
+         "  — popraw go, jeśli powtarza zmienioną albo usuniętą regułę"]
     for b in bad[:6]:
         f, _, n = b["at"].rpartition(":")
         L.append(f"  ✗ `{b['ref']}` — {b['problem']}: {doc_line(f, int(n))[:220] if n.isdigit() else ''}")

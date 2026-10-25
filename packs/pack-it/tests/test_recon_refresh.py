@@ -260,6 +260,9 @@ def main() -> int:
         write(rep, {"modules/billing.json": json.dumps(cj, ensure_ascii=False)})
         r = run("recon_refresh.py", "card", str(repo), "billing", cwd=d)
         check(r.returncode == 0 and r.stdout.startswith("✓"), f"RF-29: poprawna karta → ✓: {r.stdout[-300:]}")
+        check("Liczy faktury." in r.stdout and "opis modułu" in r.stdout.lower(),
+              f"RF-33: kontrola karty przypomina o opisie modułu (purpose): {r.stdout[-400:]}")
+        check("purpose" in body and "opis modułu" in body.lower(), f"RF-34: zlecenie każe sprawdzić opis modułu: {body[-900:]}")
 
     # rozpoznawanie zmian tylko w komentarzach (zachowawczo: w razie wątpliwości to zmiana kodu)
     co = recon_refresh.comment_only
