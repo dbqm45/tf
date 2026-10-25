@@ -51,7 +51,9 @@ PROBE = {
         "hidden": [{"fact": "18% wizyt przepada", "any": ["18"]}, {"fact": "rabat za miot", "any": ["miot"]}],
         "contradictions": [{"name": "kiedy wizyta jest zakończona", "hot_spot_any": ["zakończ"]}],
         "behaviour": [{"round": 1, "persona": "recepcja", "max_sentences": 1, "why": "pytanie do całej sali → milczy"},
-                      {"round": 2, "persona": "recepcja", "speaks": True, "why": "pytana po imieniu → odpowiada"}],
+                      {"round": 2, "persona": "recepcja", "speaks": True, "why": "pytana po imieniu → odpowiada"},
+                      {"round": 1, "persona": "hodowca", "speaks": True, "why": "wariant dnia wyłączony",
+                       "skip_variants": [0, 1, 2, 3, 4, 5, 6, 7]}],
     },
 }
 
@@ -95,6 +97,9 @@ def main() -> int:
         state = json.loads((sd / "state.json").read_text(encoding="utf-8")) if (sd / "state.json").exists() else {}
         check(state.get("round") == 4 and len(list((sd / "rounds/01").glob("*.reply.json"))) == 6,
               f"EP-5: 4 rundy, odpowiedzi 6 osób w rundzie 1: {state.get('round')}")
+        check(any("wariant dnia wyłączony" in ln and "pominięte" in ln and "✗" not in ln for ln in text.splitlines())
+              and "## Oczekiwania (4/5)" in text,
+              f"EP-13: oczekiwanie pominięte przy wskazanym wariancie dnia, nie liczy się do wyniku: {text[:900]}")
         check("niepoprawny JSON: 4" in text, f"EP-6: brak JSON od jednej osoby w 4 rundach policzony: {text[:900]}")
         check("0,27 USD" in text and "0,27 USD" in r.stdout, f"EP-7: koszt (25 wywołań + coach): {r.stdout[-400:]}")
         calls = [json.loads(ln) for ln in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []

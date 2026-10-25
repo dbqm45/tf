@@ -12,7 +12,8 @@ Plik próby (domyślnie scenarios/<scenariusz>/proba.json):
   {"lines": ["<wypowiedź facylitatora>", {"invite": "<id osoby>"}, …],
    "expect": {"hidden": [{"fact": "…", "any": ["słowo", …]}],
               "contradictions": [{"name": "…", "hot_spot_any": ["słowo", …]}],
-              "behaviour": [{"round": 1, "persona": "<id>", "speaks": true | "max_sentences": 1, "why": "…"}]}}
+              "behaviour": [{"round": 1, "persona": "<id>", "speaks": true | "max_sentences": 1, "why": "…",
+                             "skip_variants": [<nr wariantu dnia od 0>, …]}]}}
 
 Model: zmienna ES_PROBE_CMD (lista JSON, np. atrapa w testach) zastępuje `claude -p` bez narzędzi i bez MCP; skrypt
 dokłada `--model` i `--system-prompt`. Wynik: docs/training/es-sim/<id>/probe-report.md (+ debrief.md coacha).
@@ -74,7 +75,7 @@ def usd(x: float) -> str:
     return f"{x:.2f}".replace(".", ",") + " USD"
 
 
-def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool, str, str]]:
+def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool | None, str, str]]:
     low = transcript.lower()
     hs = " ".join(h["text"] for h in st.get("hot_spots", [])).lower()
     out = []
@@ -86,9 +87,14 @@ def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool, str, s
         out.append((ok, "sprzeczność (hot spot)", c["name"]))
     rounds = {r["n"]: r for r in st.get("rounds", [])}
     for b in expect.get("behaviour", []):
+        var = st.get("day_variant", {}).get(b["persona"])
+        what = f"runda {b['round']}, {b['persona']} (wariant dnia {'—' if var is None else var + 1}): {b.get('why', '')}"
+        if var in b.get("skip_variants", []):   # wariant dnia z karty zmienia temperament — zachowanie może być inne
+            out.append((None, "karta osoby", what + " — pominięte przy tym wariancie dnia"))
+            continue
         d = (rounds.get(b["round"], {}).get("replies", {}).get(b["persona"], {}) or {}).get("dialogue", "")
         ok = bool(d.strip()) if b.get("speaks") else sentences(d) <= b.get("max_sentences", 0)
-        out.append((ok, "karta osoby", f"runda {b['round']}, {b['persona']}: {b.get('why', '')}"))
+        out.append((ok, "karta osoby", what))
     return out
 
 
@@ -146,21 +152,22 @@ def main() -> int:
     bad_json = transcript.count("brak lub niepoprawny JSON")
     silent = [p for p in st["present"]
               if not any((r.get("replies", {}).get(p, {}) or {}).get("dialogue", "").strip() for r in st["rounds"])]
-    met = sum(ok for ok, _, _ in checks)
+    counted = [ok for ok, _, _ in checks if ok is not None]
+    met = sum(counted)
     L = [f"# Próba scenariusza „{st['scenario']}” — {sid}", "",
          f"Wariant {a.variant} (model uczestników: {model}), rundy {st['round']}, wywołania modelu {calls}, "
          f"koszt {usd(cost)}{' — przerwana: przekroczony budżet' if stopped else ''}.",
          f"Zdarzenia {len(st['events'])}, hot spoty {len(st['hot_spots'])}, odrzucone kartki {len(st['rejected'])}, "
          f"niepoprawny JSON: {bad_json}, osoby bez ani jednej wypowiedzi: {', '.join(silent) or '—'}.", "",
-         f"## Oczekiwania ({met}/{len(checks)})", "| | Rodzaj | Oczekiwanie |", "|---|---|---|"]
-    L += [f"| {'✓' if ok else '✗'} | {kind} | {what} |" for ok, kind, what in checks]
+         f"## Oczekiwania ({met}/{len(counted)})", "| | Rodzaj | Oczekiwanie |", "|---|---|---|"]
+    L += [f"| {'—' if ok is None else '✓' if ok else '✗'} | {kind} | {what} |" for ok, kind, what in checks]
     L += ["", "Transkrypcja: `transcript.md` · tablica: `board.md`" + (" · debrief coacha: `debrief.md`" if (sd / "debrief.md").exists() else "")]
     (sd / "probe-report.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print("\n".join(L[:4] + [ln for ln in L[6:] if ln.startswith("| ✗")] + [f"Raport: {sd / 'probe-report.md'}"]))
     if stopped:
         print(f"⚠ budżet {usd(a.budget_usd)} przekroczony — próba przerwana po rundzie {st['round']}")
         return 3
-    return 0 if met == len(checks) else 1
+    return 0 if met == len(counted) else 1
 
 
 if __name__ == "__main__":

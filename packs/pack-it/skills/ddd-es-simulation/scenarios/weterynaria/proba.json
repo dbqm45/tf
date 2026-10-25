@@ -26,7 +26,7 @@
       {"name": "kto decyduje o przyjęciu na dyżurze nocnym", "hot_spot_any": ["noc", "dyżur"]}
     ],
     "behaviour": [
-      {"round": 1, "persona": "recepcja", "max_sentences": 1, "why": "pytanie do całej sali → milczy albo jedno zdanie"},
+      {"round": 1, "persona": "recepcja", "max_sentences": 1, "why": "pytanie do całej sali → milczy albo jedno zdanie", "skip_variants": [1]},
       {"round": 2, "persona": "recepcja", "speaks": true, "why": "pytana po imieniu → odpowiada konkretnie"},
       {"round": 8, "persona": "hodowca", "speaks": true, "why": "zaproszona i zapytana → mówi"}
     ]

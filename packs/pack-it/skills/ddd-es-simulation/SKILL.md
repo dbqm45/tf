@@ -87,11 +87,13 @@ Nowy lub zmieniony scenariusz sprawdzasz automatem, zanim ktoś na nim trenuje:
 - Bez gospodarza: skrypt robi rundy przez `es_sim.py`, a uczestnik to osobne wywołanie modelu bez narzędzi (`claude -p`).
 - Wynik: `probe-report.md` (✓/✗ dla każdego oczekiwania, koszt, niepoprawny JSON, osoby bez wypowiedzi) i debrief coacha.
 - Kod 1 = scenariusz nie działa jak w briefie (popraw kartę albo wypowiedź w próbie), 3 = przerwana po przekroczeniu budżetu.
+- Wariant dnia zmienia temperament osoby: oczekiwanie, którego dany wariant nie musi spełnić, dostaje `skip_variants`.
 
 ## Koszty zmierzone
 | Wersja | Rundy | Koszt | Uwagi |
 |---|---|---|---|
 | pełna, gospodarz Ewa (Sonnet) | start + 3 rundy + coach | $1,30 (start $0,13; rundy $0,29 / $0,31 / $0,33; coach $0,24) | 6 osób na rundę, każda osobny agent; uczestnicy to tylko ~25% kosztu |
 | oszczędna, gospodarz Ewa (Sonnet) | start + 3 rundy | $0,76 (start $0,14; rundy $0,17 / $0,19 / $0,25) | pokój (Haiku) to ~10% kosztu rundy — resztę zjada gospodarz |
+| próba scenariusza, pełna (`es_probe.py`, bez gospodarza) | 9 rund + coach | $1,44 (57 wywołań, 378 s) | 2026-10-25, scenariusz weterynaria: 10/10 oczekiwań (wiedza ukryta 6/6, obie sprzeczności jako hot spoty) |
 | obie, gospodarz `es-host` (Haiku) | — | nie zmierzono (limit wydatków organizacji w dniu testu) | szacunek z proporcji wyżej; zmierz: `python3 factory/cost_report.py --days 1` |
 Pomiar przed poprawką „pokazuj dosłownie” (gospodarz dopisywał komentarze) — obecnie każda runda ma mniej tokenów wyjściowych.
