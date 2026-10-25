@@ -1,0 +1,34 @@
+{
+  "opis": "Próba scenariusza (es_probe.py): gotowe wypowiedzi facylitatora prowadzą do wiedzy ukrytej i obu celowych sprzeczności z brief.md; sprawdza też zachowania z kart.",
+  "lines": [
+    "Dzień dobry. Zaczynamy od chaosu: napiszcie na kartkach wszystkie zdarzenia, które dzieją się w przychodni — od pierwszego telefonu klienta do zapłaty. Jedno zdarzenie na kartkę, w czasie przeszłym.",
+    "Pani Grażyno, dziękuję — zapiszmy to na kartkach. Beato, jak to wygląda od strony recepcji: ile umówionych wizyt naprawdę się odbywa?",
+    "Beato, a przypomnienia o szczepieniach — jak je dziś robicie? Proszę o przykład z wczoraj.",
+    "Doktorze Pawle, kiedy dla Pana wizyta jest zakończona? Beato, Halino, Grażyno — a dla Was?",
+    "Dyżur nocny: kto decyduje, czy w nocy przyjmujemy pacjenta? Doktorze, Grażyno, Beato — proszę każde po kolei.",
+    "Robercie, co dzieje się z lekami w aptece: zamówienia, terminy ważności, ewidencja?",
+    "Halino, jak rozliczacie pakiety opieki? Czy zdarzają się pomyłki?",
+    {"invite": "hodowca"},
+    "Jolanto, witamy. Jak wygląda Pani współpraca z przychodnią jako hodowczyni — wizyty, szczepienia miotu, ceny?",
+    "Kamilu, rozwiązania odłóżmy na parking. Jakie zdarzenia widzisz w systemie, których jeszcze nie ma na ścianie?"
+  ],
+  "expect": {
+    "hidden": [
+      {"fact": "18% umówionych wizyt przepada", "any": ["18"]},
+      {"fact": "przypomnienia o szczepieniach z zeszytu", "any": ["zeszyt"]},
+      {"fact": "karta leczenia zamykana następnego dnia rano", "any": ["rano", "następnego dnia", "nazajutrz"]},
+      {"fact": "przeterminowane leki ok. 4% obrotu", "any": ["4%", "4 %", "cztery procent", "przetermin"]},
+      {"fact": "pakiety w Excelu, podwójne zużycie usługi", "any": ["excel", "dwa razy", "podwójn", "drugi raz"]},
+      {"fact": "nigdzie nie spisany rabat za miot", "any": ["miot"]}
+    ],
+    "contradictions": [
+      {"name": "kiedy wizyta jest zakończona", "hot_spot_any": ["zakończ", "koniec wizyty", "zamknię"]},
+      {"name": "kto decyduje o przyjęciu na dyżurze nocnym", "hot_spot_any": ["noc", "dyżur"]}
+    ],
+    "behaviour": [
+      {"round": 1, "persona": "recepcja", "max_sentences": 1, "why": "pytanie do całej sali → milczy albo jedno zdanie"},
+      {"round": 2, "persona": "recepcja", "speaks": true, "why": "pytana po imieniu → odpowiada konkretnie"},
+      {"round": 8, "persona": "hodowca", "speaks": true, "why": "zaproszona i zapytana → mówi"}
+    ]
+  }
+}
