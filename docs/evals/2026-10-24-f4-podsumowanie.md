@@ -58,5 +58,8 @@ Repozytoria (commity w raporcie v1) i maistera trzeba sklonować na nowo.
   pozostałości (`2026-10-24-f4-odswiezenie-logika.md`, sekcja „Powtórka”).
 - Sygnały układu pakietów i czasów życia DI w `standards_scan`: dodane (2026-10-25). Ich wpływu na pokrycie
   standardów nie mierzono ponownie.
-- Koszt odświeżania: niższy niż w maisterze od wersji z `recon_refresh.py` (0,56 wobec 0,66 USD za dwa repozytoria,
-  6/6 zmian, 0 pozostałości; `2026-10-24-f4-odswiezenie-logika.md`, sekcja „Powtórka 2”).
+- Koszt odświeżania (`2026-10-25-f4-odswiezenie-tansze.md`, po 2 przebiegi na repozytorium, czysta kopia maistera):
+  - zmiana tylko w komentarzach: 0,24 wobec 0,48 USD i 25 wobec 57 s;
+  - zmiana w logice: 0,38 wobec 0,51 USD (74%), 12/12 zmian opisanych i 0 pozostałości u obu narzędzi; maister
+    szybszy (74 wobec 192 s), bo nie uruchamia wykonawców.
+  - Wcześniejsze porównanie 0,56 wobec 0,66 USD zawyżało koszt maistera (kopia z dodatkowymi zmianami z testu v1).

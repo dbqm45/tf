@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "D1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Stan po zmianie podany poprawnie i w wielu miejscach: modules/ApplicationCore.md:36-37 oraz rules.md:5-6 (ilość dodawana w AddQuantity i ustawiana w SetQuantity w zakresie 0-99, odrzucane ujemne i >99, z adnotacją 'wcześniej górnej granicy nie było – limit to int.MaxValue'), modules/Infrastructure.md:46 / rules.md:83 ('0-99 przy ustawieniu i dodaniu (SetQuantity, AddQuantity)'), requirements.md:7, report.md:49, ApplicationCore.md:94 (uwaga, że limit dotyczy ilości dodawanej, a nie sumy). Drobny brak: nie wspomina, że SetQuantity jest wołane też z konstruktora. Do listy nieaktualnych celowo nie wpisano WebPages.md:35 / rules.md:176 ('zakres od 0 do maksymalnej wartości int', cytat [Range(0, int.MaxValue ...]) – to opis atrybutu widoku BasketItemViewModel, który w kodzie faktycznie nadal tak wygląda (src/Web/Pages/Basket/BasketItemViewModel.cs:13), a rozbieżność z domeną jest jawnie opisana w rules.md:204 i domain.md:46."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:17: 'BasketItem quantity must be 0–99 (AddQuantity/SetQuantity)' – zgodne z kodem (obie metody, 0..99). Zwięźle, bez wzmianki o konstruktorze i o stanie poprzednim, ale poprawnie. W żadnym pliku B nie ma int.MaxValue ani twierdzenia o braku górnej granicy."
+      }
+    },
+    {
+      "id": "D2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Reguła podana poprawnie: modules/ApplicationCore.md:65 / rules.md:34 ('cena 0,01–10 000 przy aktualizacji szczegółów, poniżej 0,01 lub powyżej 10 000 odrzucana', cytat Guard.Against.OutOfRange(... 0.01m, 10000m)), obok istniejącej reguły NegativeOrZero (ApplicationCore.md:64 / rules.md:33); modules/Infrastructure.md:47 / rules.md:84 (z dopiskiem, że konstruktor zakresu nie sprawdza – zgodne z kodem); requirements.md:26. Zakresy Range(0.01, 1000) w BlazorShared.md:20-21 i Range(0.01, 10000) w PublicApi.md:43 to osobne atrybuty DTO, zgodne z kodem, nie stan sprzed zmiany."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:17: 'CatalogItem price must be 0.01–10000 (UpdateDetails)' – poprawne miejsce i zakres. Nie wspomina osobno o NegativeOrZero, ale to nie jest przedmiotem zmiany."
+      }
+    },
+    {
+      "id": "D3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Usunięcie sprawdzenia opisane wprost i spójnie: modules/PublicApi.md:38 / rules.md:104 ('Unikalność nazwy ... nie jest już sprawdzana przy utworzeniu: HandleAsync nie liczy pozycji o tej nazwie i nie zgłasza DuplicateException'), rules.md:203, PublicApi.md:74 ('Ani tworzenie, ani aktualizacja nie sprawdzają unikalności nazwy, więc żadna z nich nie zwróci 409' – zgodne z kodem Update), PublicApi.md:92, requirements.md:25 i report.md:52 (z rozróżnieniem, że klasa wyjątku i mapowanie 409 w ExceptionMiddleware zostały). Mapowanie 409 w PublicApi.md:52 / rules.md:118 jest prawdziwe (middleware nadal istnieje). Nie wpisano do nieaktualnych glosariusza PublicApi.md:63 ('zduplikowana nazwa → DuplicateException'), bo to mapowanie pojęcia na klasę, a nie twierdzenie, że tworzenie ją rzuca – ewentualnie niejasne, ale w tym samym module linia 38 wyjaśnia stan."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:49: 'CreateCatalogItemEndpoint no longer checks for duplicate names before inserting, so name uniqueness is not currently enforced' oraz project/roadmap.md:26 (dług techniczny: 'the duplicate check was removed ... duplicates are no longer rejected') i INDEX.md:23. Główny fakt poprawny. Nie podaje, że klasa DuplicateException i mapowanie 409 w ExceptionMiddleware nadal istnieją, a sformułowanie '(and a handled DuplicateException)' w roadmapie sugeruje, że obsługi jeszcze nie ma (w middleware jest) – drobna nieścisłość, nie stan sprzed zmiany. Ogólne wytyczne (standards/backend/models.md:10 'UNIQUE', global/validation.md:7 'duplicate checks server-side', dotnet-architecture.md:25 o ExceptionMiddleware) nie twierdzą, że tworzenie pozycji odrzuca duplikaty."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: wszystkie miejsca w A (ApplicationCore, Infrastructure, PublicApi, requirements, rules, report) zgodnie podają 0-99 dla ilości, 0,01-10 000 dla ceny w UpdateDetails i brak kontroli unikalności nazwy przy tworzeniu, a rozbieżności (Range(0, int.MaxValue) w widoku, 409 w middleware) są jawnie nazwane jako osobne reguły, nie jako sprzeczność.",
+    "B": "Spójna: architecture.md, roadmap.md i INDEX.md zgodnie podają 0-99, 0,01-10000 i usunięte sprawdzanie duplikatów nazw, a pozostałe pliki (standards/*) są ogólne i nie przeczą tym zmianom; B jest jednak znacznie zwięźlejsze (po jednym zdaniu na zmianę)."
+  }
+}

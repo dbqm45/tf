@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Telefon = dokładnie 9 cyfr podany spójnie w wielu miejscach: modules/owner.md:45, rules.md:64 i :118 (wzorzec `\\d{9}` z cytatem @Pattern(regexp = \"\\\\d{9}\"...)), requirements.md:5, domain.md:19, report.md:42. Zgodne z Owner.java:64. Brak jakiejkolwiek wzmianki o 10 cyfrach (grep: 10 cyfr, \\d{10}, 10-digit - pusto; 'telefon do 20' w db.md:33 i rules.md:18 to długość kolumny VARCHAR, nie reguła formatu)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:34 - `Owner.telephone`: @NotBlank i @Pattern 'requiring exactly 9 digits'; INDEX.md:29 '9-digit telephone'. Dodatkowo project/roadmap.md:23 i INDEX.md:23 poprawnie odnotowują, że komunikat telephone.invalid w messages*.properties nadal mówi '10-digit' (zgodne z kodem: messages.properties:34). Drobna uwaga niewpływająca na ocenę: standards/backend/spring-petclinic-conventions.md:48 wymienia `@Digits` wśród adnotacji na encjach, a w kodzie @Digits już nie występuje (pozostałość po starej walidacji telefonu) - ale nie twierdzi niczego o liczbie cyfr."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Reguła opisana wprost i z dokładnym miejscem w kodzie: modules/owner.md:53 i rules.md:72 'Imię zwierzęcia nie może zawierać cyfr; sprawdzane dopiero, gdy imię jest niepuste i ma najwyżej 30 znaków' (PetValidator.java:49, else-if po sprawdzeniu długości - zgodne z kodem). Także owner.md:4 i report.md:25 ('imię bez cyfr'). Drobna luka bez znaczenia dla oceny: requirements.md:11 wylicza reguły imienia (<=30, wymagane) bez 'bez cyfr', ale nie przeczy."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:35 - 'PetValidator: name required, at most 30 characters, no digits; type required for new pets; birth date required'; INDEX.md:29 'pet names without digits'. Poprawne, bez kontekstu kolejności sprawdzeń, ale to nie jest wymagane."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Najpełniejszy opis: modules/owner.md:63 i rules.md:82 'Data wizyty nie jest już sprawdzana: kontroler przyjmuje także datę dzisiejszą lub przeszłą (dawna reguła \"późniejsza niż dzisiaj\" została usunięta z processNewVisitForm)'; owner.md:64 i rules.md:83 oraz domain.md:22 - domyślna data wizyty to jutro (Visit.java:51); owner.md:83 - atrybut minVisitDate daje tylko podpowiedź min w formularzu HTML (zgodne z inputField.html i VisitController.minVisitDate). Dodatkowo report.md:37 i :44, requirements.md:16, REVIEW.draft.md:3 i owner.md:98 poprawnie flagują, że VisitControllerTests:97 nadal oczekuje błędu dla daty nie-przyszłej (test istnieje w kodzie). Żadne miejsce nie twierdzi, że kontroler nadal odrzuca datę."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:36 - 'VisitController: visit form validated only by Bean Validation on Visit; no future-date check in the controller' - to poprawnie oddaje usunięcie sprawdzenia. Opis lakoniczny: nie wspomina o domyślnej dacie jutro / minVisitDate ani o dawnej regule, więc pokrycie jest minimalne, ale rdzeń zmiany (kontroler nie odrzuca już daty) jest stwierdzony poprawnie. standards/global/validation.md:25 ('valid dates') to ogólny szablon standardu, nie twierdzenie o VisitController."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: wszystkie wzmianki o telefonie (9 cyfr), imieniu zwierzaka (bez cyfr) i dacie wizyty (brak kontroli w kontrolerze, domyślnie jutro) zgadzają się ze sobą i z kodem; jedyne napięcie (test VisitControllerTests:97 vs kod) jest jawnie opisane jako rozjazd, a nie sprzeczność dokumentacji.",
+    "B": "Spójna: architecture.md, INDEX.md i roadmap.md zgodnie podają 9 cyfr telefonu, brak cyfr w imieniu i brak sprawdzenia daty wizyty w kontrolerze; jedyna pozostałość to niewiele znacząca wzmianka o @Digits w spring-petclinic-conventions.md:48, która nie przeczy żadnemu twierdzeniu o zmianach."
+  }
+}

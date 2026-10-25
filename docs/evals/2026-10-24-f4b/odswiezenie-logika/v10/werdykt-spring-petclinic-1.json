@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:34 podaje `@Pattern(regexp = \"\\\\d{9}\")` (exactly 9 digits, klucz telephone.invalid), a A/INDEX.md:29 powtarza \"9-digit telephone\". Zgodne z Owner.java:64. Nigdzie w A nie ma 10 cyfr / \\d{10}."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Telefon = dokładnie 9 cyfr podany spójnie z cytatem Owner.java:64: modules/owner.md:45, rules.md:64 i :118 (wzorzec `\\d{9}`), requirements.md:5, report.md:42, domain.md:19. Brak śladu 10 cyfr (db.md:33 'telefon do 20' to limit kolumny, nie reguła, więc nie jest nieaktualne)."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:35: PetValidator - imię wymagane, max 30 znaków, nie może zawierać cyfr (kod błędu `digits`); A/INDEX.md:29 'pet names without digits'. Zgodne z PetValidator.java. Uwaga poza zakresem zmian: architecture.md:35 przypisuje 'birth date ... not in the future' PetValidatorowi, a w kodzie to sprawdza PetController (:116, :159) - nieścisłość, ale niezwiązana z P2."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "modules/owner.md:53 i rules.md:72: 'Imię zwierzęcia nie może zawierać cyfr; sprawdzane tylko gdy imię niepuste i <=30 znaków' z cytatem PetValidator.java:49 (dokładne odwzorowanie else-if w kodzie); requirements.md:11 'imię (<=30, wymagane, bez cyfr)'; modules/owner.md:96 odnotowuje brak testu dla cyfr w imieniu."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "A/project/architecture.md:36: 'VisitController: visit form relies on Bean Validation only (@Valid Visit); there is no extra check that the visit date lies in the future'; A/INDEX.md:29 'no extra visit-date check'. Poprawnie opisuje usunięcie reguły. Drobny brak: A nie wspomina, że zostaje domyślna data jutro (Visit() / minVisitDate), ale główny stan po zmianie jest podany jasno i poprawnie. Żadne miejsce w A nie twierdzi, że data wizyty musi być po dzisiejszej."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Jawnie i wielokrotnie: modules/owner.md:4, :63, :83; rules.md:82-83; report.md:37 i :44 ('brak walidacji najwcześniej jutro (usunięta); jutro to tylko wartość domyślna'); requirements.md:16 'data wizyty domyślnie jutro, bez walidacji zakresu'; domain.md:22 'Visit (domyślnie jutro)'. Pokrywa zarówno usunięcie sprawdzenia, jak i domyślne jutro. owner.md:97 oznacza jako [niezweryfikowane] test VisitControllerTests przypisany do dawnej reguły - to ostrzeżenie, nie twierdzenie, że reguła działa."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Spójna: architecture.md i INDEX.md zgodnie podają 9 cyfr, brak cyfr w imieniu zwierzaka i brak sprawdzenia daty wizyty; żaden z 25 plików A nie zawiera twierdzeń sprzed zmian i żadne nie przeczy drugiemu.",
+    "B": "Spójna: wszystkie pliki (owner.md, rules.md, requirements.md, domain.md, report.md, REVIEW.draft.md) podają te same trzy stany po zmianie (9 cyfr, bez cyfr w imieniu, brak walidacji daty wizyty z domyślnym jutro) i nie ma w nich żadnego twierdzenia sprzed zmiany; jedyne zastrzeżenie (owner.md:97) jest uczciwie oznaczone jako [niezweryfikowane]."
+  }
+}
