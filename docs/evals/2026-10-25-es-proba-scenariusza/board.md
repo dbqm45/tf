@@ -1,0 +1,65 @@
+# Tablica — sesja proba-pelna-1 (runda 9)
+
+## Zdarzenia (kolejność dodania)
+- `ev_001` Zamówienie leków złożone — apteka, r1
+- `ev_002` Dostawa przyjęta — apteka, r1
+- `ev_003` Lek wydany — apteka, r1
+- `ev_004` Lek przeterminowany zutylizowany — apteka, r1
+- `ev_005` Formularz rezerwacji wysłany — it, r1
+- `ev_006` SMS wysłany — it, r1
+- `ev_007` Eksport do Excela wykonany — it, r1
+- `ev_008` Paragon wystawiony — ksiegowa, r1
+- `ev_009` Faktura wystawiona — ksiegowa, r1
+- `ev_010` Pakiet rozliczony — ksiegowa, r1
+- `ev_011` Korekta faktury wystawiona — ksiegowa, r1
+- `ev_012` Pacjent przyjęty — lekarz, r1
+- `ev_013` Badanie wykonane — lekarz, r1
+- `ev_014` Zabieg przeprowadzony — lekarz, r1
+- `ev_015` Karta leczenia zamknięta — lekarz, r1
+- `ev_016` Pacjent skierowany do kliniki — lekarz, r1
+- `ev_017` Wizyta umówiona — recepcja, r1
+- `ev_018` Przypomnienie wysłane — recepcja, r1
+- `ev_019` Wizyta odwołana — recepcja, r1
+- `ev_020` Klient nie przyszedł — recepcja, r1
+- `ev_021` Płatność przyjęta — recepcja, r1
+- `ev_022` Pakiet opieki sprzedany — wlascicielka, r1
+- `ev_023` Nowa placówka otwarta — wlascicielka, r1
+- `ev_024` Klient wrócił na kolejną wizytę — wlascicielka, r1
+- `ev_025` Wizyta zakończona — wlascicielka, r1
+- `ev_026` Bramka SMS przestała działać — it, r2 ← ev_018
+- `ev_027` Klient nie przyszedł na wizytę (bez odwołania) — recepcja, r2 ← ev_020
+- `ev_028` Przypomnienie zapisane w zeszycie — recepcja, r2 ← ev_018
+- `ev_029` Termin szczepienia wpisany do zeszytu — recepcja, r3 ← ev_028
+- `ev_030` Klient poinformowany telefonicznie o szczepieniu — recepcja, r3 ← ev_018
+- `ev_031` Status wizyty zmieniony na „zakończona” w programie — it, r4 ← ev_025
+- `ev_032` Faktura wystawiona — ksiegowa, r4 ← ev_025
+- `ev_033` Paragon wystawiony — ksiegowa, r4 ← ev_021
+- `ev_034` Karta leczenia zamknięta — lekarz, r4 ← ev_025
+- `ev_035` Zwierzę opuściło placówkę — wlascicielka, r4 ← ev_025
+- `ev_036` Pacjent przyjęty na dyżurze nocnym — lekarz, r5
+- `ev_037` Pacjent przyjęty na dyżurze nocnym — wlascicielka, r5
+- `ev_038` Zamówienie leków złożone — apteka, r6
+- `ev_039` Dostawa przyjęta na stan — apteka, r6
+- `ev_040` Lek wydany i wpisany do ewidencji obrotu — apteka, r6
+- `ev_041` Lek przeterminowany zutylizowany — apteka, r6
+- `ev_042` Pakiet rozliczony — ksiegowa, r7 ← ev_032
+- `ev_043` Formularz rezerwacji wysłany — it, r9
+- `ev_044` SMS z przypomnieniem wysłany — it, r9
+- `ev_045` SMS nie został dostarczony — it, r9
+- `ev_046` Eksport do Excela wykonany — it, r9 ← ev_042
+
+## Hot spoty
+- `hs_001` 18% umówionych wizyt się nie odbywa, a recepcja widzi to dopiero po godzinie — recepcja, r2
+- `hs_002` Przypomnienie o szczepieniu pominięte, gdy jest kolejka przy ladzie — recepcja, r3
+- `hs_003` Przypomnienia w zeszycie zamiast w systemie? Skąd to się wzięło i jak często? — wlascicielka, r3
+- `hs_004` Wizyta zakończona: kiedy wychodzi pacjent, kiedy płatność, czy kiedy zamknięta karta? Karta często zamykana dopiero następnego dnia. — lekarz, r4
+- `hs_005` Kiedy wizyta jest zakończona: po wyjściu z gabinetu czy dopiero po płatności przy ladzie? — recepcja, r4
+- `hs_006` Kto decyduje o przyjęciu pacjenta w nocy? Lekarz dyżurny sam, bez wsparcia, a lek bywa niedostępny akurat wtedy — lekarz, r5
+- `hs_007` Kto decyduje o przyjęciu pacjenta w nocy? Recepcja widzi tylko ślad rano — recepcja, r5
+- `hs_008` Kto ostatecznie decyduje, czy w nocy przyjmujemy pacjenta? — wlascicielka, r5
+- `hs_009` Zamówienia składane bez danych o faktycznym zużyciu na placówkach — apteka, r6
+- `hs_010` Pakiety liczone w Excelu makrem, którego nikt poza informatykiem nie rozumie. Czy salda się zgadzają? — it, r7
+- `hs_011` Pakiety w Excelu, zużycie wpisywane osobno w każdej placówce, więc pakiet może zostać rozliczony dwa razy. Błąd wychodzi dopiero na koniec miesiąca. — ksiegowa, r7
+- `hs_012` Wizyta z pakietu opieki wykorzystana drugi raz - brak odhaczenia przy pierwszej wizycie — recepcja, r7
+- `hs_013` Rabat „za miot” liczony różnie w różnych placówkach — rachunek się nie zgadza — hodowca, r8
+- `hs_014` Brak przypomnień o szczepieniach miotu — hodowca, r8

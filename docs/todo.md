@@ -241,8 +241,8 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
   start Chromium na runnerze trwa 16–27 s (zimny dysk), kolejne ok. 0,7 s, niezależnie od flag i D-Bus; pod obciążeniem
   zestawu testów pierwszy start przekraczał limit. Naprawa: krok „Rozgrzanie Chromium” w CI przed testami; timeout
   podaje teraz linię stderr przeglądarki.
-- [ ] Próba scenariusza symulacji ES: workflow sprawdzający nowy scenariusz automatem z gotowymi wypowiedziami
-  facylitatora (czy sprzeczności wychodzą, karty osób działają). Płatny — za zgodą człowieka (zob. W4).
+- [x] Próba scenariusza symulacji ES: `es_probe.py` z gotowymi wypowiedziami facylitatora (`proba.json`), bez gospodarza;
+  wersja pełna na scenariuszu weterynaria: 1,44 USD, 10/10 oczekiwań — `docs/evals/2026-10-25-es-proba-scenariusza/` (2026-10-25).
 
 ## Tłumaczenie treści fabryki na angielski
 
