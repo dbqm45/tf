@@ -186,6 +186,19 @@ def main() -> int:
         check("Do sprawdzenia: 5 miejsc" in out and "modules/owner.md" in out and "modules/api.md" in out,
               f"CR-5: liczba miejsc (z wzmianką „było 10” i mapowaniem w karcie api): {out[-600:]}")
 
+    # ten sam (ucięty) cytat, zmieniony tekst reguły → reguła zmieniona, nie ta sama
+    with tempfile.TemporaryDirectory() as d:
+        repo = Path(d)
+        rep = repo / "docs/project/00-reconstruction"
+        prev, mods = rep / "raw/cards-prev", rep / "modules"
+        old_c = {"module": "owner", "rules": [{"rule": "Telefon właściciela ma dokładnie 10 cyfr.", "quote": "@Pattern(regexp", "evidence": "Owner.java:64"}]}
+        new_c = {"module": "owner", "rules": [{"rule": "Telefon właściciela ma dokładnie 9 cyfr.", "quote": "@Pattern(regexp", "evidence": "Owner.java:64"}]}
+        write(prev, {"owner.json": json.dumps(old_c)})
+        write(mods, {"owner.json": json.dumps(new_c)})
+        write(rep, {"requirements.md": "# W\n- Rejestracja z telefonem (10 cyfr)\n"})
+        r = run("recon_cards.py", str(mods), "--prev", str(prev), cwd=d)
+        check("requirements.md:2" in r.stdout, f"CR-6: ten sam cytat, inny tekst → miejsce wskazane: {r.stdout[-400:]}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_cards")

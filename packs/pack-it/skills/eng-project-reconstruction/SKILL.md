@@ -68,14 +68,19 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 (commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), opcjonalnie `report.html`.
 
 ## Odświeżanie przyrostowe
-`recon_manifest.py diff <repo> --manifest docs/project/00-reconstruction/manifest.json` (ten sam budżet partii
-co w manifeście) → partie do odświeżenia (zmieniony hash albo nowe), usunięte (skasuj ich karty), zmienione testy.
-Przed nowymi kartami kopiujesz stare: `mkdir -p raw/cards-prev && cp modules/*.json raw/cards-prev/`. Tylko te karty
-od nowa, potem `recon_cards.py modules/ --repo <repo> --rules --prev raw/cards-prev`. Lista „Do sprawdzenia” to
-miejsca w całej dokumentacji ze znacznikami usuniętych lub zmienionych reguł (np. 409, 10 cyfr): każde poprawiasz albo
-zostawiasz, gdy celowo mówi o starej wartości. Potem synteza dotkniętych sekcji (domeny, reguły, standardy z nowymi
-kartami; wymagania także ze zmienionych testów), `recon_check --final` i `recon_manifest.py write` z nowym commitem. Partie bez zmian
-zostają; w raporcie data i commit odświeżenia. Ponad połowa plików zmieniona → pełny przebieg (skrypt to podpowie).
+Cel: kilka tur głównego modelu. Kodu partii nie czytasz sam, skanów i kopii nie robisz ręcznie.
+1. `recon_refresh.py prep <repo>`: diff z manifestem, kopia kart do `raw/cards-prev/`, zlecenia
+   `raw/refresh/<karta>.md` dla kart, których dotyczą zmienione pliki, lista plików bez karty. Ponad połowa plików
+   zmieniona → pełny przebieg.
+2. Wykonawcy (Haiku) w jednej wiadomości, na pierwszym planie; każdy dostaje jedno zdanie: „Wykonaj zlecenie
+   z <ścieżka>”. Wykonawca aktualizuje starą kartę (tylko zmienione pliki) i sam sprawdza dowody.
+3. `recon_refresh.py finish <repo>`: karty → `.md`, `rules.md`, sekcja Moduły, zmienione reguły kart (stara →
+   nowa), lista miejsc ze starym opisem (`raw/refresh/STALE.md`), dowody przesunięte przez zmianę kodu poprawione
+   samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
+4. Z wydruku `finish` (zmienione reguły, miejsca z listy, błędy kontroli) poprawiasz opisy jednym zapisem — jeden
+   skrypt albo kilka edycji w jednej wiadomości, bez czytania całych plików; miejsce zostawiasz, gdy celowo mówi
+   o starej wartości. Do tego wymagania ze zmienionych testów, w raporcie data i commit odświeżenia. Potem `finish`
+   jeszcze raz.
 
 ## Zasady
 - **Kontekst głównego modelu jest drogi:** każda tura czyta go od nowa. Pełne wyniki zostają w plikach, model czyta

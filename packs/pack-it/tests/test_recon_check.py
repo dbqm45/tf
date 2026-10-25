@@ -172,6 +172,13 @@ def main() -> int:
         r = run(str(rep / "report.md"), "--repo", str(repo), cwd=d)
         check(r.returncode == 0, f"R-21: bez --final kontrola CI nie działa: {r.stdout[-300:]}")
 
+        # raw/ (zlecenia odświeżania, notatki robocze) nie jest częścią dokumentacji sprawdzanej przy katalogu
+        write(rep, {"raw/refresh/STALE.md": "# Do sprawdzenia\n- opis bez dowodu w notatce roboczej\n- zły dowód `nie/ma.py:3`\n"})
+        r = run(str(rep), "--repo", str(repo), "--json", cwd=d)
+        out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(not any("raw/" in u["at"] for u in out.get("unsupported", []) + out.get("bad", [])),
+              f"R-22: raw/ pominięte: {out.get('unsupported')} {out.get('bad')}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_check")
