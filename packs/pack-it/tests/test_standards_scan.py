@@ -126,6 +126,45 @@ def main() -> int:
         check(prg and prg["count"] == 1 and prg["total"] == 2 and ("idiomy kodu", "Java", "@InitBinder") in sig
               and ("idiomy kodu", "Java", "@ModelAttribute") in sig, f"S-19: idiomy kontrolerów Spring: {prg} {idi}")
 
+    # układ pakietów (funkcja czy warstwa) i czasy życia DI
+    LAYOUT = {
+        "src/main/java/app/owner/OwnerController.java": "class OwnerController {}\n",
+        "src/main/java/app/owner/OwnerRepository.java": "interface OwnerRepository {}\n",
+        "src/main/java/app/owner/PetValidator.java": "class PetValidator {}\n",
+        "src/main/java/app/vet/VetController.java": "class VetController {}\n",
+        "src/main/java/app/vet/VetRepository.java": "interface VetRepository {}\n",
+        "src/main/java/app/model/BaseEntity.java": "class BaseEntity {}\n",
+        "src/Web/Controllers/OrderController.cs": "public class OrderController {}\n",
+        "src/Core/Services/OrderService.cs": "public class OrderService {}\n",
+        "src/Core/Services/BasketService.cs": "public class BasketService {}\n",
+        "src/Infrastructure/Data/Repository.cs": "public class Repository {}\n",
+        "src/Core/Interfaces/IRepository.cs": "public interface IRepository {}\n",
+        "src/Core/Interfaces/IOrderService.cs": "public interface IOrderService {}\n",
+        "src/Infrastructure/Dependencies.cs": "public static class Dependencies {\n  public static void Add(this IServiceCollection s) {\n"
+                                              "    s.AddScoped(typeof(IRepository<>), typeof(Repository<>));\n    s.AddScoped<IBasketService, BasketService>();\n"
+                                              "    s.AddSingleton<IUriComposer>(new UriComposer());\n    s.AddTransient<IEmailSender, EmailSender>();\n  }\n}\n",
+    }
+    with tempfile.TemporaryDirectory() as d:
+        repo = Path(d)
+        write(repo, LAYOUT)
+        r = run(str(repo), "--json")
+        out = json.loads(r.stdout) if r.returncode == 0 else {}
+        sig = {(s["area"], s["language"], s["rule"]): s for s in out.get("signals", [])}
+        lay = sorted(k for k in sig if k[0] == "układ")
+        feat = sig.get(("układ", "Java", "pakiety według funkcji (różne role w jednym katalogu)"))
+        check(feat and feat["count"] == 2 and feat["total"] == 3 and any("app/owner" in e for e in feat["examples"]),
+              f"S-20: Java: owner i vet według funkcji (2 z 3 katalogów): {feat} {lay}")
+        layer = sig.get(("układ", "C#", "pakiety według warstw (katalog = warstwa)"))
+        check(layer and layer["count"] == 4 and layer["total"] == 5 and any("Controllers" in e for e in layer["examples"])
+              and not any("Data" in e for e in layer["examples"]),
+              f"S-21: C#: Controllers, Services i Infrastructure jako warstwy, Data nie: {layer} {lay}")
+        sc = sig.get(("idiomy kodu", "C#", "DI: AddScoped"))
+        check(sc and any(e.startswith("src/Infrastructure/Dependencies.cs:3") for e in sc["examples"])
+              and ("idiomy kodu", "C#", "DI: AddSingleton") in sig and ("idiomy kodu", "C#", "DI: AddTransient") in sig,
+              f"S-22: czasy życia DI z miejscem: {sc}")
+        r = run(str(repo))
+        check("układ · Java · pakiety według funkcji" in r.stdout, f"S-23: tekst: {r.stdout[-600:]}")
+
     for f in fails:
         print("✗", f)
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów standards_scan")

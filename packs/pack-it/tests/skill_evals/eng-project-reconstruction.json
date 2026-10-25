@@ -162,6 +162,21 @@
    }
   },
   {
+   "id": "uklad-pakietow-i-di",
+   "expect": "trigger",
+   "prompt": "Z rekonstrukcji kodu mam standardy nazewnictwa i testów, ale agent dalej wrzuca nowe klasy w złe miejsca i rejestruje usługi z innym czasem życia niż reszta. Jak wyciągnąć z repo standard układu pakietów i rejestracji zależności? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["według funkcji", "feature", "według warstw", "warstw\\w*", "pakiet\\w*"],
+     ["czas\\w* życia", "AddScoped", "Singleton", "Transient", "scope"],
+     ["skrypt\\w*", "skan\\w*", "policz\\w*", "standards_scan"],
+     ["plik:linia", "przykład\\w*", "dow[oó]d\\w*"],
+     ["udział\\w*", "\\d+ ?%", "wyjąt\\w*", "ile katalog\\w*"]
+    ],
+    "none": ["wymyśl\\w* układ", "przyjmij układ z innego projektu"]
+   }
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",

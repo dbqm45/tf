@@ -47,7 +47,9 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    Sygnały `idiomy testów` i `idiomy kodu` oceniasz w obrębie miejsca, którego dotyczą (testy danej warstwy,
    kontrolery, agregaty), nie wobec wszystkich plików. Standard testów podaje z przykładem `plik:linia`: rodzaj testu
    na warstwę (np. test web, test repozytorium, integracyjny), bibliotekę dublerów, strukturę przypadków (podtesty,
-   tabela, parametry), dane testowe (buildery, fixtures). Standard kodu: idiomy sygnatur, hermetyzacji i kontrolerów.
+   tabela, parametry), dane testowe (buildery, fixtures). Standard kodu: idiomy sygnatur, hermetyzacji i kontrolerów,
+   czasy życia w rejestracji DI. Sygnał `układ` (pakiety według funkcji czy warstw) daje standard „gdzie kłaść nowy
+   kod” z przykładami katalogów i wyjątkami.
 6. **Raport** `report.md` wg `references/raport.md`; sekcję Moduły wstawia `recon_cards.py modules/ --repo <repo>
    --into report.md` (nie przepisujesz jej; szczegóły modułów są w `modules/*.md`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
    (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`.
