@@ -416,8 +416,8 @@
   "offline": "2026-10-23"
  },
  "proc-agile": {
-  "fingerprint": "ada30aeca0cb3487",
-  "offline": "2026-10-23"
+  "fingerprint": "488ffe2850a55b65",
+  "offline": "2026-10-25"
  },
  "proc-issue-triage": {
   "fingerprint": "e8348c31bd1aef89",
@@ -436,8 +436,8 @@
   "offline": "2026-10-22"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "6b20130d919fab4d",
-  "offline": "2026-10-10"
+  "fingerprint": "87dcdebc54b9f35e",
+  "offline": "2026-10-25"
  },
  "proc-safe": {
   "fingerprint": "9424885d8a8a3593",
@@ -468,8 +468,8 @@
   "offline": "2026-10-22"
  },
  "qa-spec-first-testing": {
-  "fingerprint": "17ff3f2232168dd9",
-  "offline": "2026-10-22"
+  "fingerprint": "091f728a43b5a96d",
+  "offline": "2026-10-25"
  },
  "qa-test-design": {
   "fingerprint": "24d5b39cde93031e",

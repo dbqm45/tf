@@ -32,6 +32,12 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
   z kodu), czytasz ten spis i `docs/project/00-reconstruction/domain.md` (słownik) — standardy obowiązują w planie
   i kodzie, nazwy bierzesz ze słownika. Pełnego raportu nie czytasz; konkretny standard otwierasz, gdy kawałek go dotyczy.
 - Brak kryteriów akceptacji → do 3 pytań do człowieka; z `--auto` → STOP z tymi pytaniami.
+- **Kształt historyjki**, gdy jest zainstalowany lint (pack-it):
+  `python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py --story <katalog-przebiegu>/story.md`.
+  Uwagi AC-001…004 (scenariusz bez Wtedy, słaby wynik, szczegół implementacji, druga akcja) trafiają do planu jako
+  **[założenie]** albo pytanie. STORY-001 (kilka akcji, kilku aktorów) — historyjki nie zaczynasz: bez `--auto` pytasz
+  człowieka o podział; z `--auto` → blok STOP z propozycją podziału (jedna historyjka na akcję z listy akcji
+  głównych, którą wypisuje lint).
 - Drobna niejasność → wariant zachowawczy (mniej plików, mniejsza zmiana zachowania), zapisany w planie jako
   **[założenie]**.
 

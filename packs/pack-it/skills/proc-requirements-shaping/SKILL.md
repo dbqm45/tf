@@ -55,8 +55,18 @@ potwierdzenie → zapis. Rundy pytań prowadzisz wg core-plan-interview (tylko p
    Dłuższy termin jest dozwolony tylko jako świadoma decyzja: linia „Koszt potwierdzony” z datą i osobą.
    Brownfield: najmniejsza zmiana, która dowodzi poprawy, i zasięg rażenia (co jeszcze dotyka).
 4. **Wymagania.** Każde w formacie `FR-NNN: <aktor> może <zdolność>. Priorytet: must|nice`
-   (brownfield dodatkowo `Zmiana: nowe|zmienione|zachowane`). Główny przepływ ma historyjkę z kryteriami
-   Given/When/Then.
+   (brownfield dodatkowo `Zmiana: nowe|zmienione|zachowane`). Każda historyjka `US-NN` ma co najmniej jeden
+   scenariusz `AC-n` w Given/When/Then (Zakładając, że / Gdy / Wtedy) i **jedną akcję**: czasownik z obiektem
+   w kroku Gdy, a warianty danych idą do Zakładając. Więcej akcji (spójnik między czasownikami, kilku aktorów,
+   różne akcje w scenariuszach) albo tytuł od warstwy (BE:, API:) → podział przed zapisem wg proc-agile
+   (`.claude/skills/proc-agile/references/mapa-i-dzielenie.md`):
+   ```
+   ### US-02: Klient stosuje kod rabatowy
+   Jako klient chcę użyć kodu rabatowego, aby zapłacić mniej.
+   - AC-1: Zakładając, że kod RABAT10 jest aktywny
+     Gdy klient zastosuje kod RABAT10
+     Wtedy widzi cenę obniżoną o 10%
+   ```
 5. **Wyzwanie dla każdego FR** (osobna runda). Dla każdego wymagania: „co musiałoby być prawdą, żeby to
    wymaganie szkodziło?” — 2–4 kontrargumenty z domeny, „bez kontrargumentu” jako ostatnia opcja. Wynik zapisz
    pod wymaganiem (kolumna lub linia „Wyzwanie”).
@@ -95,6 +105,8 @@ Człowiek może przyjąć lukę — trafia wtedy do „Otwartych pytań” z adr
 - Przed zapisem **uruchom** kontrolę (gotowość 0–4, wyciek techniki, próg MVP z briefu):
   `python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py docs/project/03-requirements/requirements.md --brief docs/project/01-discovery/brief.md`
   Kod 1 = wyciek techniki albo szacunek ponad budżet bez potwierdzenia kosztu; gotowość < 2 to ostrzeżenie.
+  Kształt historyjek (AC-001…004, STORY-001…003, brak `AC-n`) to ostrzeżenia z `US-NN` i regułą; `--strict`
+  zamienia je w kod 1. Pojedynczą historyjkę sprawdza `--story <plik>`.
 - Sesja dłuższa niż jedna rozmowa: punkt kontrolny w `docs/project/wip/` z postępem faz (core-project-record).
 
 ## Kontrola po zapisie (zadaj człowiekowi)
@@ -123,15 +135,17 @@ zamiast kont. Kontrola skryptem: gotowość 4/4, brak wycieku. Więcej (brownfie
 - [ ] budżet czasu MVP ustalony przez człowieka i zapisany w briefie; szacunek obok
 - [ ] tryb (greenfield / brownfield) potwierdzony
 - [ ] każde FR w formacie `FR-NNN` z priorytetem i wynikiem wyzwania
+- [ ] każda `US-NN`: ≥ 1 scenariusz `AC-n` w GWT i jedna akcja (więcej → podział)
 - [ ] reguła biznesowa jednym zdaniem albo świadomie zapisany pusty CRUD
 - [ ] wymagania jakości jako zachowanie widoczne z zewnątrz; technika w „Do decyzji o stacku”
 - [ ] „Poza zakresem” niepuste; luki w „Otwartych pytaniach” z adresatem
-- [ ] `requirements_lint.py` kończy się kodem 0
+- [ ] `requirements_lint.py --strict` kończy się kodem 0 (albo człowiek przyjął nazwane ostrzeżenia)
 
 ## Źródła
 - Kurs 10xDevs, ed. 3 (2026), prework (lekcje 4.1–4.3) i moduł 1, lekcja 1 (kształtowanie zakresu i PRD) — materiał
   szkoleniowy (dostęp 2026-10-09). Kurs podaje niespójne progi MVP (raz ok. tydzień i 4 akcje, raz 3 tygodnie
   i 6 akcji) — tu zastąpione ustawieniem z briefu.
 - M. Cagan, *Inspired* (2018) — wymagania jako problem i wynik, nie lista funkcji; Mike Cohn, *User Stories Applied*
-  (2004); Gherkin Given/When/Then — cucumber.io/docs/gherkin (dostęp 2026-10-10).
+  (2004); Gherkin Given/When/Then — cucumber.io/docs/gherkin (dostęp 2026-10-10); reguły kształtu historyjek
+  i słownik — kontrakt pdi 0.4.0 (`contract/fixtures/story-shape/`, 2026-10-25).
 Opisane własnymi słowami.

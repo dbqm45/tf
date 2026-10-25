@@ -39,6 +39,11 @@ def main() -> int:
     personas = [p for p in agents.rglob("*.md") if p.parent.name not in ("shared", "consult") and p.stem == p.parent.name]
     check(personas == [] or all("`talos`" not in p.read_text(encoding="utf-8") for p in personas),
           "T-6: persony nie delegują do talos (to sesja główna, nie wykonawca)")
+    body = (skill / "SKILL.md").read_text(encoding="utf-8") if (skill / "SKILL.md").is_file() else ""
+    intake = body.split("## 1.", 1)[-1].split("## 2.", 1)[0]
+    check("requirements_lint.py --story" in intake and "STORY-001" in intake and "--auto" in intake
+          and "STOP" in intake and "podzia" in intake and "(pack-it)" in intake,
+          "T-7: przyjęcie historyjki — lint kształtu (pack-it, warunkowo); z --auto STORY-001 → STOP z propozycją podziału")
 
     for f in fails:
         print(f"✗ {f}")
