@@ -44,7 +44,11 @@ def norm(s: str) -> str:
 
 def md_files(path: str) -> list[str]:
     if os.path.isdir(path):
-        return sorted(os.path.join(dp, f) for dp, _, fn in os.walk(path) for f in fn if f.endswith(".md"))
+        out = []
+        for dp, dn, fn in os.walk(path):
+            dn[:] = [x for x in dn if x != "raw"]   # raw/: wyniki skanów i zlecenia robocze, nie dokumentacja
+            out += [os.path.join(dp, f) for f in fn if f.endswith(".md")]
+        return sorted(out)
     return [path]
 
 

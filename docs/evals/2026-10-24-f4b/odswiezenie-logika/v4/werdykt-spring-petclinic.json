@@ -1,0 +1,47 @@
+{
+  "changes": [
+    {
+      "id": "P1",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Stan po zmianie (telefon = dokladnie 9 cyfr, \\d{9}) podany w wielu miejscach i zgodny z Owner.java:64: modules/owner.md:45, rules.md:64 i :118 (cytat @Pattern(regexp = \"\\\\d{9}\"...)), requirements.md:5, report.md:40, domain.md:19. Nigdzie nie ma twierdzenia o 10 cyfrach; wzmianka o 10-cyfrowym telefonie w owner.md:97 dotyczy testow i jest oznaczona jako rozjazd do potwierdzenia (poprawna obserwacja, nie stan stary)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Stan po zmianie jest podany, ale tylko w roadmap.md: linia 6 ('9-digit telephone pattern') i linia 14 ('Owner.telephone now requires \\d{9}'), jako niezatwierdzona zmiana do uzgodnienia. Poprawnie zauwaza, ze komunikat telephone.invalid i db/*/data.sql nadal maja 10 cyfr (sprawdzone w kodzie: messages.properties:34 'must be a 10-digit number', data.sql 10-cyfrowe numery). Standardy i architecture.md nie podaja reguly telefonu, wiec nic nie przeczy; to nie jest twierdzenie o stanie sprzed zmiany."
+      }
+    },
+    {
+      "id": "P2",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Regula jawnie zapisana: modules/owner.md:53 i rules.md:72 'Imie zwierzecia nie moze zawierac cyfr' z dowodem PetValidator.java:49 (zgodne z kodem, kod bledu 'digits'). Dodatkowo owner.md:96 odnotowuje brak testu na imie z cyframi. Uproszczone streszczenie requirements.md:11 pomija cyfry, ale pelna lista regul je zawiera i nic nie przeczy."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "project/architecture.md:16: 'PetValidator (name required, max 30 chars, no digits; ...)' oraz roadmap.md:6 ('digit-free pet names') i :14 ('PetValidator rejects digits in pet names with error code digits that has no message key in the messages*.properties bundles' - zgodne z kodem, w messages.properties brak klucza digits). Zrodlo nowej reguly podane poprawnie, bez sprzecznych twierdzen."
+      }
+    },
+    {
+      "id": "P3",
+      "A": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "Jawnie i zgodnie z kodem (VisitController.java:83-86, processNewVisitForm bez sprawdzenia daty): modules/owner.md:63 i rules.md:82 'Kontroler podaje formularzowi najwczesniejsza date wizyty: jutro (minVisitDate); zapis wizyty nie sprawdza juz, czy data jest w przyszlosci'; requirements.md:16 ('jutro (bez walidacji serwerowej)'); report.md:35 i :42; owner.md:98 odnotowuje, ze test ...VisitDateIsNotInFuture oczekuje bledu, ktorego kontroler juz nie zglasza. Pokrywa oba elementy: usuniecie walidacji i pozostala domyslna data jutro. Zadne miejsce nie twierdzi, ze kontroler odrzuca date nie po dzisiejszej (REVIEW.draft.md:3 wskazuje VisitController.java:100 tylko jako przyklad reguly przegladu, bez twierdzenia o dacie)."
+      },
+      "B": {
+        "aktualne": "tak",
+        "nieaktualne": [],
+        "why": "roadmap.md:6 ('removed visit-date check') i :14 ('VisitController no longer enforces a future visit date, leaving typeMismatch.visitDate unused') - poprawnie opisuja usuniecie reguly. Brak natomiast wzmianki o pozostalej domyslnej dacie jutro (minVisitDate) i o nadal istniejacym tescie oczekujacym bledu; dopisek '(and the past-date check without tests/docs)' jest niejasny. Zaliczone jako 'tak', bo sedno zmiany (regula juz nie dziala) jest podane jasno i poprawnie; informacja jest tylko w roadmap/INDEX, nie w architecture ani standardach."
+      }
+    }
+  ],
+  "spojnosc": {
+    "A": "Dokumentacja A jest spojna: wszystkie miejsca (owner.md, rules.md, requirements.md, report.md, domain.md) mowia to samo o 9 cyfrach, braku cyfr w imieniu zwierzecia i braku serwerowej walidacji daty wizyty (zostaje tylko domyslne jutro), a rozjazdy z testami i komunikatami sa jawnie oznaczone jako niezweryfikowane, bez zadnych resztek starego stanu.",
+    "B": "Dokumentacja B jest spojna co do tych zmian: roadmap.md (linie 6 i 14), architecture.md:16 i INDEX.md:23 zgodnie opisuja nowy stan jako niezatwierdzone zmiany do uzgodnienia, bez twierdzen o 10 cyfrach czy wymaganej dacie przyszlej; zmiany sa jednak opisane tylko jako element backlogu, a nie jako regula w standardach."
+  }
+}

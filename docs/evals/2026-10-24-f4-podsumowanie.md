@@ -58,3 +58,5 @@ Repozytoria (commity w raporcie v1) i maistera trzeba sklonować na nowo.
   pozostałości (`2026-10-24-f4-odswiezenie-logika.md`, sekcja „Powtórka”).
 - Sygnały układu pakietów i czasów życia DI w `standards_scan`: dodane (2026-10-25). Ich wpływu na pokrycie
   standardów nie mierzono ponownie.
+- Koszt odświeżania: niższy niż w maisterze od wersji z `recon_refresh.py` (0,56 wobec 0,66 USD za dwa repozytoria,
+  6/6 zmian, 0 pozostałości; `2026-10-24-f4-odswiezenie-logika.md`, sekcja „Powtórka 2”).

@@ -96,29 +96,45 @@ def load_cards(d: str) -> dict:
     return cards
 
 
-def stale_candidates(prev_dir: str, cur_dir: str, root: str) -> list[tuple[str, int, str, str]]:
-    """Linie dokumentacji ze znacznikiem, który zniknął z reguł karty, i rdzeniem słowa z tej samej starej reguły."""
+def rule_changes(prev_dir: str, cur_dir: str) -> list[dict]:
+    """Reguły usunięte, zmienione i nowe: pary stara–nowa po pliku dowodu i podobieństwie tekstu, ze znacznikami."""
     old, new = load_cards(prev_dir), load_cards(cur_dir)
-    probes = []   # (znacznik, rdzenie starej reguły)
-    for stem, card in old.items():
-        now = card_rules(new.get(stem, {}))
-        for r in card_rules(card):
+    out = []
+    for stem in sorted(set(old) | set(new)):
+        now, used = card_rules(new.get(stem, {})), set()
+        for r in card_rules(old.get(stem, {})):
             text = f"{r.get('rule', '')} {r.get('quote', '')}"
             own = stems(str(r.get("rule", "")))
             pair, best = None, 0.0
-            for n in now:
+            for i, n in enumerate(now):
                 if ev_file(n) == ev_file(r):
                     other = stems(str(n.get("rule", "")))
                     sim = len(own & other) / len(own | other) if own | other else 0.0
                     if sim > best:
-                        pair, best = n, sim
-            if pair is None or best < 0.3:                  # reguła usunięta
-                toks = marks(text)
-            elif str(pair.get("quote", "")).strip() == str(r.get("quote", "")).strip():
+                        pair, best = i, sim
+            if pair is None or best < 0.3:
+                out.append({"card": stem, "kind": "usunięta", "old": r, "new": None, "marks": marks(text)})
+                continue
+            used.add(pair)
+            n = now[pair]
+            same_quote = str(n.get("quote", "")).strip() == str(r.get("quote", "")).strip()
+            same_text = " ".join(str(n.get("rule", "")).split()) == " ".join(str(r.get("rule", "")).split())
+            if same_quote and same_text:
                 continue                                    # ta sama reguła
-            else:                                           # reguła zmieniona
-                toks = marks(text) - marks(str(pair.get("quote", "")))
-            probes += [(t, stems(text)) for t in toks]
+            if same_quote:                                  # cytat ten sam (np. ucięty), zmieniony opis
+                toks = marks(str(r.get("rule", ""))) - marks(f"{n.get('rule', '')} {n.get('quote', '')}")
+            else:
+                toks = marks(text) - marks(str(n.get("quote", "")))
+            out.append({"card": stem, "kind": "zmieniona", "old": r, "new": n, "marks": toks})
+        out += [{"card": stem, "kind": "nowa", "old": None, "new": n, "marks": set()}
+                for i, n in enumerate(now) if i not in used and old.get(stem) is not None]
+    return out
+
+
+def stale_candidates(prev_dir: str, cur_dir: str, root: str) -> list[tuple[str, int, str, str]]:
+    """Linie dokumentacji ze znacznikiem, który zniknął z reguł karty, i rdzeniem słowa z tej samej starej reguły."""
+    probes = [(t, stems(f"{c['old'].get('rule', '')} {c['old'].get('quote', '')}"))
+              for c in rule_changes(prev_dir, cur_dir) if c["old"] for t in c["marks"]]
     hits = []
     for dp, dn, fn in os.walk(root):
         dn[:] = sorted(x for x in dn if x != "raw")

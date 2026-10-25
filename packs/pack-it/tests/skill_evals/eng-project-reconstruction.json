@@ -177,6 +177,21 @@
    }
   },
   {
+   "id": "odswiezenie-tanio",
+   "expect": "trigger",
+   "prompt": "Mam rekonstrukcję z kodu z manifestem. Zmieniły się 3 pliki z logiką. Ostatnie odświeżenie kosztowało więcej niż konkurencyjne narzędzie, bo główny model sam szukał zmian, kopiował karty i kilka razy poprawiał dowody. Jak odświeżyć dokumentację tanio, bez utraty jakości? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     ["skrypt\\w*", "bez modelu", "recon_refresh", "prep"],
+     ["manifest\\w*", "diff", "zmienion\\w* plik\\w*"],
+     ["haiku", "tańsz\\w* model", "wykonawc\\w*"],
+     ["tylko zmienion\\w*", "aktualizuj\\w* kart\\w*", "zaktualizuj\\w*", "przyrostow\\w*"],
+     ["star\\w* opis\\w*", "pozostałoś\\w*", "STALE", "--prev", "do sprawdzenia"]
+    ],
+    "none": ["przebuduj całą rekonstrukcję od zera", "przeczytaj całe repozytorium"]
+   }
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",
