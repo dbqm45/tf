@@ -46,6 +46,38 @@
       }
     },
     {
+      "id": "etapy-flagi-w-planie",
+      "expect": "trigger",
+      "prompt": "Wdrażamy nową funkcję za feature flagą. Gdzie i jak zapisać plan jej udostępniania, żeby dało się sprawdzić, czy idziemy zgodnie z planem i kiedy flagę usunąć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "release\\.yaml",
+            "plan wydania"
+          ],
+          [
+            "etap",
+            "wewnętrz",
+            "internal",
+            "10 ?%"
+          ],
+          [
+            "kryteri\\w* wyjścia",
+            "exit"
+          ],
+          [
+            "dat\\w* usunięcia",
+            "remove_by"
+          ]
+        ]
+      },
+      "rubric": [
+        "etapy udostępniania (wewnętrzni → procent → 100%) z kryterium wyjścia i minimalnym czasem",
+        "zapisane w planie wydania (release.yaml), nie tylko w opisie wydania",
+        "właściciel i data usunięcia flagi"
+      ]
+    },
+    {
       "id": "github-actions",
       "expect": "no-trigger",
       "prompt": "Jak skonfigurować w GitHub Actions cache zależności npm i matrycę wersji Node dla budowania? Odpowiedz zwięźle.",

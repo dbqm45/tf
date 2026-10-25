@@ -64,7 +64,9 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 4. **Przegląd zakresu:** `scope-reviewer` dostaje kawałek z planu i `git diff`. Kod spoza kryteriów (obsługa
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
-   Odhacz kawałek w `plan.md`.
+   Odhacz kawałek w `plan.md`. Kawałek cięcia z flagą (kolumna „Flaga” w planie cięć albo `flags` w `release.yaml`):
+   nowe zachowanie jest za flagą (domyślnie wyłączoną), a treść commita ma dopisek `Flag: <klucz>`, obok
+   `Change: TSK-n`, jeśli projekt łączy commity z cięciami.
 6. Z `--budget`: `run_report.py status <katalog>` — koszt powyżej budżetu → STOP po tym kawałku.
 
 ## 4. Zakończenie

@@ -54,6 +54,8 @@ potwierdzenie → zapis. Rundy pytań prowadzisz wg core-plan-interview (tylko p
    - jedna platforma zamiast webu i aplikacji mobilnej.
    Dłuższy termin jest dozwolony tylko jako świadoma decyzja: linia „Koszt potwierdzony” z datą i osobą.
    Brownfield: najmniejsza zmiana, która dowodzi poprawy, i zasięg rażenia (co jeszcze dotyka).
+   Tryb zmiany (dziennik `docs/project/changes/CHG-n/`): wynik MVP z metryką (próg, horyzont) trafia do `mvp`
+   w `release.yaml` zmiany, a cięcia z „Poza zakresem MVP” — do linii R2.
 4. **Wymagania.** Każde w formacie `FR-NNN: <aktor> może <zdolność>. Priorytet: must|nice`
    (brownfield dodatkowo `Zmiana: nowe|zmienione|zachowane`). Każda historyjka `US-NN` ma co najmniej jeden
    scenariusz `AC-n` w Given/When/Then (Zakładając, że / Gdy / Wtedy) i **jedną akcję**: czasownik z obiektem

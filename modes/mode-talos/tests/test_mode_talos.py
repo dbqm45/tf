@@ -44,6 +44,9 @@ def main() -> int:
     check("requirements_lint.py --story" in intake and "STORY-001" in intake and "--auto" in intake
           and "STOP" in intake and "podzia" in intake and "(pack-it)" in intake,
           "T-7: przyjęcie historyjki — lint kształtu (pack-it, warunkowo); z --auto STORY-001 → STOP z propozycją podziału")
+    loop = body.split("## 3.", 1)[-1].split("## 4.", 1)[0]
+    check("`Flag: " in loop and "release.yaml" in loop and "za flagą" in loop,
+          "T-8: kawałek z flagą — kod za flagą i dopisek `Flag: <klucz>` w commicie (plan wydania release.yaml)")
 
     for f in fails:
         print(f"✗ {f}")

@@ -1,0 +1,21 @@
+# Plan wydania zmiany {CHG} — kontrakt pdi 0.4.0 (release-plan.schema.json); sprawdza: decision_record.py check.
+# R1 = MVP: gwiazda przewodnia plus minimum do wyniku z intent.md. Każde TSK z plan.md w dokładnie jednej linii;
+# kolumny „Wydanie” i „Flaga” w plan.md muszą się zgadzać z tym plikiem.
+change: {CHG}
+mvp:
+  release: R1
+  # outcome: <wynik dla użytkownika z intent.md>
+  # metric: { name: <metryka>, target: "<próg, np. >= 25%>", horizon_days: 30 }
+  # guardrails: [<metryka ochronna, np. podwojne_obciazenia = 0>]
+releases:
+  - { id: R1, name: MVP, tasks: [] }
+  # - { id: R2, tasks: [] }        # to, co odłożone z MVP („Poza zakresem MVP”)
+# flags:                           # cięcie wdrażane przed decyzją o udostępnieniu
+#   - key: <klucz-flagi>
+#     tasks: [TSK-n]
+#     owner: <kto decyduje o przejściu etapu>
+#     remove_by: RRRR-MM-DD
+#     rollout:
+#       - { stage: internal, min_days: 3, exit: "<kryterium wyjścia>" }
+#       - { stage: "10%", min_days: 7, exit: "<kryterium wyjścia>" }
+#       - { stage: "100%" }

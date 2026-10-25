@@ -74,6 +74,38 @@
    }
   },
   {
+   "id": "plan-wydania-zmiany",
+   "expect": "trigger",
+   "prompt": "W projekcie z rejestrem pdi mamy zmianę CHG-12 z cięciami TSK-57…TSK-60. Gdzie zapisać, które cięcia są w MVP, a które później, i flagę payment-retry z etapami? Jak to sprawdzić przed commitem? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "release\\.yaml"
+     ],
+     [
+      "decision_record\\.py check",
+      "\\bcheck\\b"
+     ],
+     [
+      "R1"
+     ],
+     [
+      "remove_by",
+      "data usunięcia",
+      "datą usunięcia"
+     ],
+     [
+      "plan\\.md"
+     ]
+    ]
+   },
+   "rubric": [
+    "linie R1…Rn i flagi w changes/CHG-12/release.yaml (kontrakt pdi 0.4.0)",
+    "decision_record.py check: schemat i spójność z plan.md (tasks, kolumny Wydanie i Flaga)",
+    "flaga z etapami, właścicielem i remove_by"
+   ]
+  },
+  {
    "id": "dziennik-projektu-bez-pdi",
    "expect": "no-trigger",
    "neighbor": "core-project-record",

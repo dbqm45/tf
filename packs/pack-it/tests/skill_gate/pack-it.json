@@ -188,8 +188,8 @@
   "offline": "2026-10-25"
  },
  "eng-continuous-delivery": {
-  "fingerprint": "ed91f7204c413f20",
-  "offline": "2026-10-22"
+  "fingerprint": "c41ea08094fa06b1",
+  "offline": "2026-10-25"
  },
  "eng-debugging": {
   "fingerprint": "3c3d8dc0578dcb62",
@@ -372,8 +372,8 @@
   "offline": "2026-10-22"
  },
  "ops-release-engineering": {
-  "fingerprint": "84a3ae02cf8194df",
-  "offline": "2026-10-22"
+  "fingerprint": "560a1978ec0fd666",
+  "offline": "2026-10-25"
  },
  "ops-secrets-identities": {
   "fingerprint": "0378d415ad5f1153",
@@ -436,7 +436,7 @@
   "offline": "2026-10-22"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "87dcdebc54b9f35e",
+  "fingerprint": "1d2ab1ceff79912f",
   "offline": "2026-10-25"
  },
  "proc-safe": {

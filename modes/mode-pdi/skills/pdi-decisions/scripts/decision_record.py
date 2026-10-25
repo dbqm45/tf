@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json) — tryb mode-pdi.
+Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json) i planem wydania z kontraktu 0.4.0
+(contract/release-plan.schema.json, kopia obok skryptu) — tryb mode-pdi.
 
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new CHG-12 [--source PRB-34] [--author NAME]
-      tworzy docs/project/changes/CHG-12/ z intent.md, plan.md i decisions.md (szablony obok skryptu)
+      tworzy docs/project/changes/CHG-12/ z intent.md, plan.md, decisions.md i release.yaml (szablony obok skryptu)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py check
-      sprawdza nagłówki artefaktów i wpisy decyzji w docs/project/changes/*/
+      sprawdza nagłówki artefaktów i wpisy decyzji w docs/project/changes/*/, a release.yaml — schematem z kontraktu
+      i spójnością: mvp.release wśród linii, TSK w jednej linii i zgodne z plan.md (tasks, kolumny Wydanie i Flaga),
+      flaga z etapami (rollout) i datą usunięcia (remove_by), TSK flagi w liniach
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision add CHG-12 --statement "…" --why "…" \
       --kind product --by "kto" [--date RRRR-MM-DD] [--source-kind claude-cli] [--drafted-by ai]
       dopisuje zatwierdzoną decyzję do decisions.md (ref CHG-12/Dn, id puste, wyslano: nie)
@@ -39,6 +42,8 @@ ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo",
 NEW = {"intent": "discovery", "plan": "plan", "decisions": "plan"}   # artefakty `change new` i ich faza
 CHANGES = Path("docs") / "project" / "changes"
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
+RELEASE_SCHEMA = Path(__file__).resolve().parent / "release-plan.schema.json"   # kopia z kontraktu pdi 0.4.0
+EMPTY_CELL = ("", "—", "-", "–")
 
 
 def parse_header(text: str) -> dict | None:
@@ -90,7 +95,9 @@ def new_change(key: str, source: str | None, author: str) -> int:
             fields["tasks"] = []
         body = (TEMPLATES / f"{artifact}.md").read_text(encoding="utf-8").replace("{CHG}", key)
         (target / f"{artifact}.md").write_text(render(fields) + body, encoding="utf-8")
-    print(f"✓ {target}/: intent.md, plan.md, decisions.md (status draft)")
+    (target / "release.yaml").write_text((TEMPLATES / "release.yaml").read_text(encoding="utf-8").replace("{CHG}", key),
+                                         encoding="utf-8")
+    print(f"✓ {target}/: intent.md, plan.md, decisions.md (status draft), release.yaml")
     return 0
 
 
@@ -249,9 +256,143 @@ def check_entries(path: Path) -> list[str]:
     return errs
 
 
+def load_yaml(text: str):
+    try:
+        import yaml
+    except ImportError:   # dołączona kopia PyYAML (factory/_vendor), jak w skryptach trybu Talos
+        vendor = next((p / "factory" / "_vendor" for p in Path(__file__).resolve().parents
+                       if (p / "factory" / "_vendor").is_dir()), None)
+        if vendor is None:
+            raise
+        sys.path.insert(0, str(vendor))
+        import yaml
+    try:
+        return plain(yaml.safe_load(text)), None
+    except yaml.YAMLError as e:
+        return None, " ".join(str(e).split())[:200]
+
+
+def plain(v):
+    """Daty z YAML (`remove_by: 2026-12-31`) jako tekst — schemat kontraktu opisuje je jako string."""
+    if isinstance(v, dict):
+        return {str(k): plain(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [plain(x) for x in v]
+    return v.isoformat() if isinstance(v, (dt.date, dt.datetime)) else v
+
+
+def validate(v, s: dict, at: str) -> list[str]:
+    """Podzbiór JSON Schema użyty w kontrakcie pdi: type, required, additionalProperties, properties, items, pattern,
+    minLength, minItems, minimum, enum."""
+    types = {"object": dict, "array": list, "string": str, "integer": int}
+    t = s.get("type")
+    if t and (not isinstance(v, types[t]) or (t == "integer" and isinstance(v, bool))):
+        return [f"{at or 'plik'}: oczekiwano {t}, jest {type(v).__name__} ({v!r})"]
+    errs = []
+    if t == "object":
+        errs += [f"{at or 'plik'}: brak pola {k}" for k in s.get("required", []) if k not in v]
+        props = s.get("properties", {})
+        if s.get("additionalProperties") is False:
+            errs += [f"{at or 'plik'}: nieznane pole {k} (dozwolone: {', '.join(props)})" for k in v if k not in props]
+        for k, sub in props.items():
+            if k in v:
+                errs += validate(v[k], sub, f"{at}.{k}" if at else k)
+    elif t == "array":
+        if len(v) < s.get("minItems", 0):
+            errs.append(f"{at}: co najmniej {s['minItems']} pozycji")
+        for i, x in enumerate(v):
+            errs += validate(x, s.get("items", {}), f"{at}[{i}]")
+    elif t == "string":
+        if len(v) < s.get("minLength", 0):
+            errs.append(f"{at}: pusty tekst")
+        if "pattern" in s and not re.search(s["pattern"], v):
+            errs.append(f"{at}: '{v}' nie pasuje do {s['pattern']}")
+        if "enum" in s and v not in s["enum"]:
+            errs.append(f"{at}: '{v}' spoza {', '.join(s['enum'])}")
+    elif t == "integer" and "minimum" in s and v < s["minimum"]:
+        errs.append(f"{at}: {v} < {s['minimum']}")
+    return errs
+
+
+def plan_columns(text: str) -> dict:
+    """Wiersze tabeli plan.md z kolumnami „Wydanie” i „Flaga”: TSK → {"wydanie": …, "flaga": …}."""
+    out, cols = {}, None
+    for line in re.sub(r"<!--.*?-->", "", text, flags=re.S).splitlines():
+        if not line.strip().startswith("|"):
+            cols = None
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        low = [c.lower() for c in cells]
+        if "wydanie" in low or "flaga" in low:
+            cols = {k: low.index(k) for k in ("wydanie", "flaga") if k in low}
+            continue
+        if cols and cells and KEY.match(cells[0]):
+            out[cells[0]] = {k: (cells[i] if i < len(cells) and cells[i] not in EMPTY_CELL else None)
+                             for k, i in cols.items()}
+    return out
+
+
+def check_release(d: Path) -> list[str]:
+    try:
+        data, err = load_yaml((d / "release.yaml").read_text(encoding="utf-8"))
+    except ImportError:
+        return ["brak PyYAML (pip install pyyaml) — nie mogę sprawdzić planu wydania"]
+    if err:
+        return [f"niepoprawny YAML: {err}"]
+    if not isinstance(data, dict):
+        return ["niepoprawny YAML: oczekiwano mapy z polami change, releases (kontrakt release-plan)"]
+    errs = validate(data, json.loads(RELEASE_SCHEMA.read_text(encoding="utf-8")), "")
+    if errs:
+        return [f"schemat kontraktu: {e}" for e in errs]
+    if data["change"] != d.name:
+        errs.append(f"change: '{data['change']}' różny od katalogu {d.name}")
+    line_of: dict[str, str] = {}
+    ids = [r["id"] for r in data["releases"]]
+    errs += [f"linia {i} powtórzona" for i in sorted({i for i in ids if ids.count(i) > 1})]
+    for r in data["releases"]:
+        for t in r["tasks"]:
+            if t in line_of:
+                errs.append(f"{t} w dwóch liniach: {line_of[t]} i {r['id']} — cięcie należy do jednej linii")
+            line_of.setdefault(t, r["id"])
+    if "mvp" in data and data["mvp"]["release"] not in ids:
+        errs.append(f"mvp.release {data['mvp']['release']} nie jest linią z releases ({', '.join(ids)})")
+    flag_of: dict[str, str] = {}
+    for fl in data.get("flags", []):
+        k = fl["key"]
+        if not fl.get("rollout"):
+            errs.append(f"flaga {k}: brak etapów udostępniania (rollout), np. internal → 10% → 100%")
+        if not fl.get("remove_by"):
+            errs.append(f"flaga {k}: brak daty usunięcia (remove_by)")
+        for t in fl.get("tasks", []):
+            if t not in line_of:
+                errs.append(f"flaga {k}: {t} nie należy do żadnej linii wydania")
+            if t in flag_of and flag_of[t] != k:
+                errs.append(f"{t} za dwiema flagami: {flag_of[t]} i {k}")
+            flag_of.setdefault(t, k)
+    plan = d / "plan.md"
+    if plan.is_file():
+        text = plan.read_text(encoding="utf-8")
+        h = parse_header(text) or {}
+        tasks = set(h["tasks"] if isinstance(h.get("tasks"), list) else [h["tasks"]] if h.get("tasks") else [])
+        only_rel, only_plan = sorted(set(line_of) - tasks), sorted(tasks - set(line_of))
+        if only_rel or only_plan:
+            errs.append("TSK w liniach wydań ≠ tasks w plan.md: " + "; ".join(
+                x for x in (f"tylko w release.yaml: {', '.join(only_rel)}" if only_rel else "",
+                            f"tylko w plan.md: {', '.join(only_plan)}" if only_plan else "") if x))
+        for t, row in plan_columns(text).items():
+            if "wydanie" in row and row["wydanie"] != line_of.get(t):
+                errs.append(f"plan.md: {t} — kolumna „Wydanie” {row['wydanie'] or 'pusta'}, w release.yaml "
+                            f"{line_of.get(t) or 'brak linii'}")
+            if "flaga" in row and row["flaga"] != flag_of.get(t):
+                errs.append(f"plan.md: {t} — kolumna „Flaga” {row['flaga'] or 'pusta'}, w release.yaml "
+                            f"{flag_of.get(t) or 'bez flagi'}")
+    return errs
+
+
 def check() -> int:
     files = sorted(CHANGES.glob("*/*.md")) if CHANGES.is_dir() else []
-    if not files:
+    releases = sorted(CHANGES.glob("*/release.yaml")) if CHANGES.is_dir() else []
+    if not files and not releases:
         print(f"Brak artefaktów zmian w {CHANGES} — nic do sprawdzenia.")
         return 0
     bad = 0
@@ -259,7 +400,11 @@ def check() -> int:
         for e in check_file(f) + (check_entries(f) if f.name == "decisions.md" else []):
             print(f"✗ {f}: {e}")
             bad += 1
-    print(f"{'✓' if not bad else '✗'} {len(files)} plików w {CHANGES}, błędów: {bad}")
+    for f in releases:   # zmiana bez release.yaml (sprzed planu wydania) nie jest błędem
+        for e in check_release(f.parent):
+            print(f"✗ {f}: {e}")
+            bad += 1
+    print(f"{'✓' if not bad else '✗'} {len(files) + len(releases)} plików w {CHANGES}, błędów: {bad}")
     return 1 if bad else 0
 
 

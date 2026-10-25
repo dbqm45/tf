@@ -4,6 +4,7 @@ description: Użyj przy sposobie wydania — rolling, blue/green, canary z wycof
 metadata:
   przeglad: 2027-04-09
   katalog: "Użyj przy wyborze i konfiguracji sposobu wydania — rolling, blue/green, canary z bramkami metryk i automatycznym wycofaniem, feature flagi z datą usunięcia, GitOps (Argo CD, Flux), migracje bazy w CD (expand–contract), środowiska podglądu dla PR. Nie do samej budowy pipeline'u (ops-ci-cd) ani zasad trunk-based i DORA (eng-continuous-delivery)."
+  slowa: "sposób wydania, wdrożenie stopniowe, canary, blue/green, rolling, wycofanie, rollback, feature flaga, za flagą, etapy flagi, etapy udostępniania, procent klientów, najpierw pracownicy, potem wszyscy, przejście etapu, kryterium wyjścia, release.yaml, data usunięcia flagi, dark launch, GitOps, Argo CD, Flux, expand contract"
 ---
 
 # Inżynieria wydań
@@ -17,7 +18,7 @@ powrotu szybszą niż naprawa.
 | rolling | zmiany rutynowe, usługi bezstanowe, zgodne wstecz | tanio; wycofanie jest wolne (kolejny rolling) |
 | blue/green | ścieżki krytyczne (płatności, logowanie), gdy potrzebny natychmiastowy powrót | sprawdź nieaktywne środowisko **przed** przełączeniem ruchu; koszt podwójnej infrastruktury |
 | canary | gdy staging nie odtwarza produkcji (ruch, dane, integracje) | wymaga metryk per wersja i automatycznej decyzji |
-| feature flag / dark launch | oddzielenie wdrożenia od włączenia funkcji | każda flaga ma właściciela i datę usunięcia |
+| feature flag / dark launch | oddzielenie wdrożenia od włączenia funkcji | każda flaga ma właściciela, datę usunięcia i etapy w `release.yaml` |
 Wybierasz według trzech pytań: jakie ryzyko akceptujemy, jak szybko musimy wrócić, jak dobrze umiemy zweryfikować wersję.
 
 ## 2. Canary z bramkami
@@ -27,6 +28,11 @@ Wybierasz według trzech pytań: jakie ryzyko akceptujemy, jak szybko musimy wr�
 - Narzędzia: Argo Rollouts, Flagger (Kubernetes), wagi ruchu w load balancerze lub service mesh. Lustrzany ruch
   (shadowing) pozwala sprawdzić wersję bez wpływu na użytkowników.
 - Mierz, oprócz DORA: częstość wycofań i czas od wykrycia do wycofania.
+
+Flaga ma tę samą drabinę co canary, tyle że po użytkownikach: etapy (`internal` → `10%` → `100%`) zapisane
+w planie wydania `release.yaml` (`flags[].rollout`), każdy z kryterium wyjścia z metryk („odzyskane ≥ 15%,
+duplikaty = 0”) i minimalnym czasem (`min_days`), do tego `owner` i `remove_by`. Przejście etapu zatwierdza
+człowiek, gdy kryterium jest spełnione i minął minimalny czas — nie „na wyczucie”.
 
 ## 3. GitOps
 - Stan docelowy (manifesty, wersje obrazów, konfiguracja) w Git; kontroler (Argo CD, Flux) uzgadnia z nim klaster
@@ -107,7 +113,7 @@ Więcej przykładów: `references/przyklady.md`.
 ## Checklista
 - [ ] strategia dobrana do ryzyka i wymaganej szybkości powrotu
 - [ ] bramki canary z progów SLO i automatyczne wycofanie
-- [ ] flagi z właścicielem i datą usunięcia
+- [ ] flagi z właścicielem, datą usunięcia i etapami (kryterium wyjścia, minimalny czas) w `release.yaml`
 - [ ] migracje expand–contract, zgodne z dwiema wersjami aplikacji, linter DDL w CI
 - [ ] środowiska podglądu z czasem życia
 - [ ] pierwsze wdrożenie: zatwierdzony plan w repo, konto CLI sprawdzone, sekrety wprowadził człowiek

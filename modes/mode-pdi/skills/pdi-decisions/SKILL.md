@@ -17,13 +17,19 @@ to `docs/project/changes/CHG-n/decisions.md` w repo; pdi ją indeksuje i nadaje 
 ## Dziennik zmiany
 Gdy pdi przyjmie zgłoszenie jako zmianę (albo człowiek poda klucz zmiany):
 1. `decision_record.py change new CHG-12 --source PRB-34` → `docs/project/changes/CHG-12/` z `intent.md`, `plan.md`,
-   `decisions.md` (status `draft`, nagłówek zgodny z `contract/change.schema.json`). Istniejący katalog → błąd,
+   `decisions.md` (status `draft`, nagłówek zgodny z `contract/change.schema.json`) i planem wydania `release.yaml`
+   (kontrakt 0.4.0, `contract/release-plan.schema.json`). Istniejący katalog → błąd,
    nic nie jest nadpisywane. Klucze tylko w kształcie `[A-Z][A-Z0-9]+-[0-9]+`; numerów nie wymyślasz — podaje je pdi
    albo człowiek.
 2. Wypełniasz `intent.md` (problem, warianty, wybrany wariant, metryki, poza zakresem), potem `plan.md` (cięcia TSK
-   z wartością, plikami i weryfikacją; klucze cięć w `tasks` nagłówka — tylko w `plan.md`).
-3. Po każdej zmianie nagłówka: `decision_record.py check` — wykrywa brak `change`, niezgodność z katalogiem,
-   nieznane pola i wartości, `tasks` poza planem, złe klucze i daty.
+   z linią wydania, flagą, wartością, plikami i weryfikacją; klucze cięć w `tasks` nagłówka — tylko w `plan.md`)
+   i `release.yaml`: `mvp` (linia R1, wynik i metryka z `intent.md`), linie R1…Rn z TSK, flagi z właścicielem,
+   `remove_by` i etapami `rollout` (kryterium wyjścia, minimalny czas) — według planu cięć (core-delivery-lifecycle,
+   `.claude/skills/core-delivery-lifecycle/references/plan-ciec.md`).
+3. Po każdej zmianie nagłówka albo planu wydania: `decision_record.py check` — wykrywa brak `change`, niezgodność
+   z katalogiem, nieznane pola i wartości, `tasks` poza planem, złe klucze i daty; w `release.yaml` błędy schematu
+   kontraktu, `mvp.release` spoza linii, TSK w dwóch liniach albo różne od `plan.md` (także kolumny „Wydanie”
+   i „Flaga”), flagę bez etapów lub `remove_by`. Zmiana założona bez `release.yaml` nie jest błędem.
 
 Dziennik faz całego projektu (`docs/project/0N-*`) prowadzisz jak dotąd (core-project-record); dziennik zmiany go
 nie zastępuje.

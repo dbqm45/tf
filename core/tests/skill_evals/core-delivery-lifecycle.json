@@ -163,6 +163,42 @@
       }
     },
     {
+      "id": "plan-wydania-mvp-linie",
+      "expect": "trigger",
+      "prompt": "Mamy plan cięć pionowych dla nowej funkcji ponawiania płatności. Jak w fazie planu zapisać, co wchodzi do pierwszego wydania (MVP), co do kolejnych i jak potem wdrażać za flagą? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "R1",
+            "linie? wyda",
+            "linia wydania"
+          ],
+          [
+            "metryk",
+            "wynik"
+          ],
+          [
+            "release\\.yaml"
+          ],
+          [
+            "etap",
+            "10 ?%",
+            "internal",
+            "wewnętrz"
+          ],
+          [
+            "B5",
+            "bramk"
+          ]
+        ]
+      },
+      "rubric": [
+        "R1 = MVP (gwiazda przewodnia plus minimum do wyniku) z wynikiem i metryką, kolejne linie R2…",
+        "plan wydania w release.yaml: linie, flagi z etapami udostępniania, właścicielem i datą usunięcia",
+        "faza 8 wdraża wg etapów z release.yaml, przejście etapu to bramka człowieka B5"
+      ]
+    },
+    {
       "id": "koniec-etapu-to-retro",
       "expect": "no-trigger",
       "prompt": "Skończyliśmy etap pracy z agentami AI (kilka PR-ów w dwa dni). Co zrobić przed planowaniem następnego etapu, żeby wiedzieć, ile to kosztowało i czego agenci nie powinni powtarzać? Odpowiedz zwięźle.",
