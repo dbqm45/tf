@@ -5,10 +5,9 @@ miejsca z listy i zatwierdza wynik — reszta to skrypty (mniej tur, mniejszy ko
 
   python3 recon_refresh.py prep <repo> [--dir docs/project/00-reconstruction]
   python3 recon_refresh.py finish <repo> [--dir …] [--cost-usd X]
-  python3 recon_refresh.py apply <repo> [--dir …] <<'E'   # poprawki linii z wydruku finish, potem finish
-  @@ report.md:37
-  - nowa treść linii (pusty blok usuwa linię)
-  E
+  python3 recon_refresh.py apply <repo> [--dir …]   # poprawki z raw/refresh/fixes.md (albo ze stdin), potem finish
+      fixes.md:  @@ report.md:37
+                 - nowa treść linii (pusty blok usuwa linię)
   python3 recon_refresh.py card <repo> <karta> [--dir …]   # kontrola jednej karty dla wykonawcy
 
 prep: diff z manifestem (te same partie co w manifeście). Poprzednia wersja zmienionego pliku pochodzi z gita (commit
@@ -23,7 +22,7 @@ zmienione reguły kart (stara → nowa), miejsca do sprawdzenia z pełną treśc
 (cytat jednoznacznie w innej linii pliku → nowy numer linii; poza modules/ i raw/), kontrola recon_check --final;
 gdy przechodzi — nowy manifest. Podsumowanie ≤ 70 linii.
 apply: zamienia wskazane linie dokumentów (poza modules/ i liniami rules.md złożonymi z kart — te poprawia się w karcie
-JSON) i uruchamia finish. card: dowody karty z cytatem w innej, jednoznacznej linii dostają nowy numer (w JSON), karta
+JSON) i uruchamia finish; użyty fixes.md zmienia nazwę na fixes.applied.md. card: dowody karty z cytatem w innej, jednoznacznej linii dostają nowy numer (w JSON), karta
 → .md, kontrola dowodów; złe dowody z treścią elementu karty i linii kodu (≤ 25 linii).
 Kod wyjścia: 0 — w porządku (finish/card: kontrola przeszła), 1 — kontrola nie przeszła, 2 — złe wywołanie.
 """
@@ -649,7 +648,13 @@ def main(argv: list[str]) -> int:
         print(f"✗ użycie: prep|finish|apply|card <repo> [--dir …] (jest: {argv})", file=sys.stderr)
         return 2
     if cmd == "apply":
-        return apply(repo, rel_dir, sys.stdin.read())
+        fixes = os.path.join(repo, rel_dir, "raw", "refresh", "fixes.md")
+        if not os.path.isfile(fixes):
+            return apply(repo, rel_dir, sys.stdin.read())
+        with open(fixes, encoding="utf-8") as fh:
+            text = fh.read()
+        os.replace(fixes, fixes[:-3] + ".applied.md")   # ten sam plik nie zostanie użyty drugi raz
+        return apply(repo, rel_dir, text)
     if cmd == "card":
         stem = rest[1] if len(rest) > 1 and not rest[1].startswith("--") else ""
         return card(repo, rel_dir, stem) if stem else 2

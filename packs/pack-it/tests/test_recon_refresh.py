@@ -236,6 +236,15 @@ def main() -> int:
         check(r.returncode == 0 and fixed in rp and bad not in rp and "Kontrola końcowa: ✓" in r.stdout and "✓ manifest" in r.stdout,
               f"RF-27: apply poprawia linię i uruchamia finish: rc={r.returncode} {r.stdout[-600:]}")
 
+        # poprawki z pliku raw/refresh/fixes.md (Write zamiast heredoc w Bash), po użyciu plik nie zostaje do ponownego użycia
+        n2 = rp.split("\n").index(fixed) + 1
+        again = fixed.replace("jest odrzucana", "jest odrzucana przez system")
+        write(rep, {"raw/refresh/fixes.md": f"@@ {DOCS}/report.md:{n2}\n{again}\n"})
+        r = run("recon_refresh.py", "apply", str(repo), cwd=d)
+        rp = (rep / "report.md").read_text(encoding="utf-8")
+        check(r.returncode == 0 and again in rp and not (rep / "raw/refresh/fixes.md").exists() and "Kontrola końcowa: ✓" in r.stdout,
+              f"RF-32: apply czyta raw/refresh/fixes.md (też ze ścieżką od korzenia repo): rc={r.returncode} {r.stdout[-500:]}")
+
         # wykonawca sprawdza kartę jednym poleceniem: przesunięty dowód poprawiony w JSON, brakujący cytat z linią kodu
         cj = json.loads((rep / "modules/billing.json").read_text(encoding="utf-8"))
         cj["rules"][0]["evidence"] = "svc/billing/invoice.py:1"                    # cytat jest jednoznacznie w linii 6

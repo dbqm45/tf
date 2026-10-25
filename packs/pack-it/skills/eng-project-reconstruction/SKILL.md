@@ -80,11 +80,11 @@ czytasz sam, skanów i kopii nie robisz ręcznie.
    raportu, zmienione reguły kart (stara → nowa), miejsca do sprawdzenia z pełną treścią linii (stary znacznik, dowód
    w zmienionej linii kodu, opis podobny do zmienionej reguły; też w `raw/refresh/STALE.md`), dowody przesunięte przez
    zmianę kodu poprawione samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
-4. Poprawki z wydruku `finish` w jednej turze, bez czytania plików (chyba że linia z listy nie wystarcza): linie
-   oznaczone „z karty” poprawiasz w `modules/<karta>.json`, pozostałe jednym poleceniem
-   `recon_refresh.py apply <repo> <<'E'` z blokami `@@ plik:linia` i nową treścią linii (pusty blok usuwa linię);
-   `apply` od razu uruchamia `finish`. Miejsce zostawiasz, gdy opisuje stan obecny. Do tego wymagania ze zmienionych
-   testów. Kontrola przeszła → kończysz.
+4. Poprawki z wydruku `finish` w jednej wiadomości, bez czytania plików (chyba że linia z listy nie wystarcza): linie
+   oznaczone „z karty” poprawiasz w `modules/<karta>.json`, pozostałe zapisujesz (Write) do `raw/refresh/fixes.md`
+   jako bloki `@@ plik:linia` z nową treścią linii (pusty blok usuwa linię) i w tej samej wiadomości uruchamiasz
+   `recon_refresh.py apply <repo>` — zamienia linie i od razu uruchamia `finish`. Bez heredoc i `sed -i`. Miejsce
+   zostawiasz, gdy opisuje stan obecny. Do tego wymagania ze zmienionych testów. Kontrola przeszła → kończysz.
 5. Odpowiedź końcowa: do 5 linii — co się zmieniło w opisie, wynik kontroli.
 
 ## Zasady
