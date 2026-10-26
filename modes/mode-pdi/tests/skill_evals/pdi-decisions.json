@@ -218,6 +218,31 @@
      "decision add"
     ]
    }
+  },
+  {
+   "id": "faza-intent-ze-zgloszenia",
+   "expect": "trigger",
+   "prompt": "Workflow sdlc-phase uruchomiony przez pdi bez interakcji: zmiana CHG-31, faza intent, zgłoszenie PRB-3 (operator nie może zmienić konfiguracji wielu ładowarek naraz; zgłaszający proponuje przycisk bulk update). Co piszesz i jak traktujesz ten przycisk? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "intent\\.md"
+     ],
+     [
+      "PRB-3|source"
+     ],
+     [
+      "wariant"
+     ],
+     [
+      "Pytania do bramki|B1|bramk"
+     ]
+    ],
+    "none": [
+     "zapytam (człowieka|właściciela)",
+     "wymaganie: przycisk"
+    ]
+   }
   }
  ]
 }

@@ -34,6 +34,12 @@ on:
       budget_usd:
         description: "Twardy limit kosztu fazy w USD (puste — bez limitu)"
         required: false
+      source:
+        description: "Zgłoszenie (PRB-n), z którego wyszła zmiana — przy przyjęciu w pdi (faza intent)"
+        required: false
+      problem:
+        description: "Treść zgłoszenia z pdi (JSON) dla persony fazy intent"
+        required: false
 
 permissions:
   contents: write
@@ -55,6 +61,8 @@ jobs:
       DECISION: ${{ inputs.decision }}
       REWORK: ${{ inputs.rework }}
       BUDGET_USD: ${{ inputs.budget_usd }}
+      SOURCE: ${{ inputs.source }}
+      PDI_PROBLEM: ${{ inputs.problem }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -70,6 +78,12 @@ jobs:
           else
             git checkout -b "$branch"
           fi
+      - name: Dziennik zmiany ze zgłoszenia (przyjęcie w pdi, F3)
+        if: env.PHASE == 'intent' && env.SOURCE != ''
+        run: |
+          if [ ! -d "docs/project/changes/$CHANGE" ]; then
+            python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new "$CHANGE" --source "$SOURCE" --author pdi
+          fi
       - name: Sprawdzenie wejść (bez modelu)
         run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py prompt --change "$CHANGE" --phase "$PHASE" > /dev/null
       - name: Decyzja z bramki w decisions.md
@@ -84,7 +98,7 @@ jobs:
           args=(--change "$CHANGE" --phase "$PHASE")
           if [ "$REWORK" = "true" ]; then args+=(--rework --gate "$GATE" --decision "$DECISION"); fi
           if [ -n "$BUDGET_USD" ]; then args+=(--budget-usd "$BUDGET_USD"); fi
-          python3 .claude/skills/pdi-decisions/scripts/phase_run.py run "${args[@]}"
+          PDI_SOURCE="$SOURCE" python3 .claude/skills/pdi-decisions/scripts/phase_run.py run "${args[@]}"
       - name: PR fazy
         id: pr
         if: env.PHASE != 'delivery'
