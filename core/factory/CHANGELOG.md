@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.42.0] — 2026-10-26
+### Added
+- **core:** installable AI pull request review workflow with REVIEW.md (#86)
+
 ## [5.41.0] — 2026-10-26
 ### Added
 - **mode-pdi:** faza intent ze zgłoszenia przyjętego w pdi (F3) (#84)
