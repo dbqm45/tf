@@ -58,6 +58,10 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    i konfiguracją; wiersz CI wskazuje plik pipeline'u, jeśli taki jest w repo), każdy moduł z kart wymieniony
    w sekcji Moduły i z aktualnym `modules/<moduł>.md`. Raport kosztu przebiegu (core-cost-control), potem
    `recon_manifest.py write <repo> --out docs/project/00-reconstruction/manifest.json --budget-tokens N --cost-usd X`.
+   **Eksport JSON** dla narzędzi (np. kontrola wymagań jako „stan obecny”): `recon_export.py
+   docs/project/00-reconstruction --repo <repo>` → `reconstruction.json` — reguły, wymagania i słownik z tych samych
+   plików, dowody rozbite na plik i linie z `verified`, pewność, stan (dowód / założenie / pytanie), moduły z kart,
+   commit z manifestu i stały identyfikator pozycji z treści (śledzenie między odświeżeniami). Bez modelu.
 8. **Wersja do czytania (opcjonalnie):** jedna strona HTML z `report.md` (spis treści, tabele, dowody jako tekst).
    Gdy sesja ma narzędzie Artifact — prywatna strona, udostępnia ją człowiek; bez niego plik
    `report.html` obok. Źródłem prawdy zostaje Markdown; strona to widok, po odświeżeniu generujesz ją od nowa.
@@ -65,7 +69,9 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 ## Wynik
 `docs/project/00-reconstruction/`: `plan.md`, `raw/`, `modules/*.json`, `domain.md`, `requirements.md`, `rules.md`,
 `standards/` z `INDEX.md`, `report.md`, `CLAUDE.draft.md`, `REVIEW.draft.md`, `manifest.json`
-(commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), opcjonalnie `report.html`.
+(commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), `reconstruction.json` (eksport, format
+`reconstruction-export.schema.json` obok skryptu; `recon_refresh.py finish` odświeża go razem z manifestem),
+opcjonalnie `report.html`.
 
 ## Odświeżanie przyrostowe
 Cel: kilka tur głównego modelu. Pierwsze polecenie to `prep` (bez wstępnego `git status` i `ls`); kodu partii nie

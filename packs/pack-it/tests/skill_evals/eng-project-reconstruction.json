@@ -193,6 +193,37 @@
    }
   },
   {
+   "id": "eksport-json-dla-narzedzi",
+   "expect": "trigger",
+   "prompt": "Mamy gotową rekonstrukcję projektu z kodu w docs/project/00-reconstruction. Narzędzie do kontroli wymagań chce czytać reguły i wymagania z kodu maszynowo, z dowodami plik:linia, i śledzić je między odświeżeniami. Jak to przygotować? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "recon_export\\.py"
+     ],
+     [
+      "reconstruction\\.json"
+     ],
+     [
+      "identyfikator",
+      "\\bid\\b",
+      "stał\\w*"
+     ],
+     [
+      "--repo",
+      "verified",
+      "sprawdz\\w* dowod",
+      "zgodn\\w* z kodem"
+     ]
+    ]
+   },
+   "rubric": [
+    "recon_export.py <katalog> --repo <repo> → reconstruction.json obok rules.md (te same treści)",
+    "dowody rozbite na plik i linie, z oznaczeniem zgodności z kodem (--repo)",
+    "stały identyfikator pozycji z treści — śledzenie między odświeżeniami; recon_refresh finish odświeża eksport"
+   ]
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",

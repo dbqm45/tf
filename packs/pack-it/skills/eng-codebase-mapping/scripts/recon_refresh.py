@@ -530,6 +530,10 @@ def finish(repo: str, rel_dir: str, cost: str | None) -> int:
         with open(man, "w", encoding="utf-8") as fh:
             json.dump(m, fh, ensure_ascii=False, indent=2)
         L.append(f"✓ manifest: {rel_dir}/manifest.json — stan kodu po odświeżeniu")
+        if os.path.isfile(os.path.join(d, "reconstruction.json")):   # eksport JSON (F2) nadąża za odświeżeniem
+            ex = subprocess.run([sys.executable, os.path.join(HERE, "recon_export.py"), d, "--repo", repo],
+                                capture_output=True, text=True)
+            L.append(ex.stdout.strip() or f"✗ eksport JSON: {ex.stderr.strip()[-200:]}")
     else:
         L.append("Manifest bez zmian — najpierw popraw kontrolę i uruchom finish ponownie.")
     print("\n".join(L[:70]))

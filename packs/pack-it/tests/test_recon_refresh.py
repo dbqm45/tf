@@ -138,9 +138,13 @@ def main() -> int:
 
         # po poprawce opisu kontrola przechodzi i manifest dostaje nowy stan
         rp = (rep / "report.md").read_text(encoding="utf-8").replace("odrzucana kodem 422", "odrzucana, gdy ma mniej niż dwie pozycje")
-        write(rep, {"report.md": rp})
+        write(rep, {"report.md": rp, "reconstruction.json": json.dumps({"format": "tf-reconstruction", "rules": []})})
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
         after = json.loads((rep / "manifest.json").read_text(encoding="utf-8"))
+        exported = json.loads((rep / "reconstruction.json").read_text(encoding="utf-8"))
+        check(any(i.get("text") == "Faktura musi mieć co najmniej dwie pozycje." for i in exported.get("rules", []))
+              and exported.get("commit") == after.get("commit"),
+              f"RF-31: finish odświeża istniejący eksport JSON (nowa reguła, commit z manifestu): {exported.get('rules')}")
         check(r.returncode == 0 and "✓ manifest" in r.stdout and after["files"] != before["files"]
               and "svc/shipping/ship.py" in after["files"], f"RF-9: manifest zapisany po przejściu kontroli: {r.stdout[-600:]}")
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
