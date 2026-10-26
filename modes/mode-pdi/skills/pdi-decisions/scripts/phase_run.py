@@ -210,10 +210,17 @@ def gate_event(a) -> dict:
 
 def cmd_gate_request(a) -> int:
     event = gate_event(a)
-    body = json.dumps(event, ensure_ascii=False).encode()
     if a.dry_run:
         print(json.dumps({"would_send": event}, ensure_ascii=False, indent=2))
         return 0
+    status = post_event(event)
+    print(f"✓ {event['payload']['gate']} dla {a.change} w skrzynce pdi ({status}, {event['id']})")
+    return 0
+
+
+def post_event(event: dict) -> int:
+    """Podpisane zdarzenie kontraktu na $PDI_EVENTS_URL/events/tf; status HTTP albo Refused (też metric_watch.py)."""
+    body = json.dumps(event, ensure_ascii=False).encode()
     base = (os.environ.get("PDI_EVENTS_URL") or "").rstrip("/")
     secret = os.environ.get("PDI_TF_SIGNING_SECRET") or ""
     if not base:
@@ -226,17 +233,15 @@ def cmd_gate_request(a) -> int:
     ts = str(int(time.time()))
     sig = "v1=" + hmac.new(secret.encode(), ts.encode() + b"." + body, hashlib.sha256).hexdigest()
     req = urllib.request.Request(f"{base}/events/tf", data=body, method="POST", headers={
-        "content-type": "application/json", "x-pdi-timestamp": ts, "x-pdi-event": "gate.requested",
+        "content-type": "application/json", "x-pdi-timestamp": ts, "x-pdi-event": event["type"],
         "x-pdi-signature": sig})
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310 — adres sprawdzony wyżej
-            status = resp.status
+            return resp.status
     except urllib.error.HTTPError as e:
-        raise Refused(f"pdi odpowiedział {e.code} na gate.requested") from e
+        raise Refused(f"pdi odpowiedział {e.code} na {event['type']}") from e
     except OSError as e:
         raise Refused(f"brak połączenia z pdi ({getattr(e, 'reason', e)})") from e
-    print(f"✓ {event['payload']['gate']} dla {a.change} w skrzynce pdi ({status}, {event['id']})")
-    return 0
 
 
 def cmd_workflow_install(a) -> int:

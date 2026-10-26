@@ -1,0 +1,13 @@
+{
+  "id": "evt-metric.breached",
+  "type": "metric.breached",
+  "occurred_at": "2026-10-23T10:00:00Z",
+  "source": "tf",
+  "contract_version": "0.4.0",
+  "payload": {
+    "metric": "uptime_dostepnosc_dla_kierowcow",
+    "value": 96.1,
+    "threshold": 98.0,
+    "window": "7d"
+  }
+}
