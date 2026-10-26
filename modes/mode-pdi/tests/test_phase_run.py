@@ -205,12 +205,27 @@ def main() -> int:
         Catch.status = 202
         srv.shutdown()
 
+        # --- F3: faza intent ze zgłoszenia z pdi ---
+        (repo / ".claude" / "pdi-phases.json").write_text('{"intent": {"persona": "ewa"}}', encoding="utf-8")
+        problem = json.dumps({"title": "Brak operacji masowych", "who": "operator", "cannot": "zmienić wielu ładowarek",
+                              "impact": "dzień pracy", "proposed_solution": "przycisk bulk update"})
+        r = run(["prompt", "--change", "CHG-12", "--phase", "intent"], repo, PDI_SOURCE="PRB-3", PDI_PROBLEM=problem)
+        text = (jl(r) or {}).get("prompt", "")
+        check(r.returncode == 0 and "PRB-3" in text and "operator" in text and "zmienić wielu ładowarek" in text
+              and "dzień pracy" in text and "przycisk bulk update" in text and "nie wymaganie" in text,
+              f"I-1: prompt fazy intent niesie treść zgłoszenia, a pomysł zgłaszającego jako nie-wymaganie: {text[:600]}")
+        r = run(["prompt", "--change", "CHG-12", "--phase", "intent"], repo, PDI_PROBLEM="[1, 2]")
+        check(r.returncode != 0 and "PDI_PROBLEM" in r.stdout, f"I-2: zły PDI_PROBLEM → błąd: {r.stdout}")
+        r = run(["prompt", "--change", "CHG-12", "--phase", "requirements"], repo, PDI_SOURCE="PRB-3", PDI_PROBLEM=problem)
+        check("bulk update" not in (jl(r) or {}).get("prompt", ""), "I-3: treść zgłoszenia tylko w fazie intent")
+        (repo / ".claude" / "pdi-phases.json").unlink()
+
         # --- workflow install ---
         r = run(["workflow", "install"], repo)
         wf = repo / ".github" / "workflows" / "sdlc-phase.yml"
         body = wf.read_text(encoding="utf-8") if wf.is_file() else ""
         check(r.returncode == 0 and "workflow_dispatch" in body, f"W-1: szablon w .github/workflows: {r.stdout}{r.stderr}")
-        for name in ("change", "phase", "gate", "outcome", "decision", "rework", "budget_usd"):
+        for name in ("change", "phase", "gate", "outcome", "decision", "rework", "budget_usd", "source", "problem"):
             check(f"      {name}:" in body, f"W-2: wejście {name} z pdi (dbqm45/pdi src/pdi/dispatch.py)")
         check("phase_run.py run" in body and "phase_run.py gate request" in body and "decision_record.py decision gate" in body
               and "ANTHROPIC_API_KEY" in body and "PDI_TF_SIGNING_SECRET" in body and "PDI_EVENTS_URL" in body,
@@ -219,6 +234,8 @@ def main() -> int:
         bad = [ln for ln in body.splitlines() if "${{ inputs." in ln
                and not _re.match(r"^\s+[A-Z_]+: \$\{\{ inputs\.\w+ \}\}$", ln) and not ln.startswith("run-name:")]
         check(body and not bad, f"W-4: wejścia z pdi trafiają do poleceń tylko przez env (wstrzyknięcie): {bad}")
+        check("decision_record.py change new" in body and "--source" in body and "PDI_PROBLEM" in body,
+              "W-7: faza intent z pdi zakłada dziennik zmiany ze zgłoszenia i dostaje jego treść (F3)")
         wf.write_text("moje\n", encoding="utf-8")
         r = run(["workflow", "install"], repo)
         check(r.returncode != 0 and wf.read_text(encoding="utf-8") == "moje\n", "W-5: bez nadpisania")

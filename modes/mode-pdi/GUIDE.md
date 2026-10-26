@@ -21,6 +21,8 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   Potrzebne: sekrety `ANTHROPIC_API_KEY` i `PDI_TF_SIGNING_SECRET` (ten sam w odbiorniku pdi), zmienna
   `PDI_EVENTS_URL`; w pdi `PDI_DISPATCH_REPO` wskazuje to repo. Zatwierdzając bramkę, scal też PR fazy — następna
   faza zaczyna od gałęzi domyślnej. Każde uruchomienie kosztuje (model); limit fazy daje `PDI_PHASE_BUDGET_USD` w pdi.
+  Przyjęcie zgłoszenia w pdi (F3) uruchamia fazę `intent` z wejściami `source` (PRB) i `problem` (treść zgłoszenia):
+  workflow zakłada `docs/project/changes/CHG-n/` ze źródłem, a persona pisze `intent.md` z problemu zgłaszającego.
 
 - **Pasma kontrolne z ShipScope (F5):** `metric_watch.py check` czyta dzienny szereg PROD z API usług ShipScope
   (rollbacki, wdrożenia nieudane, lead time, liczba wdrożeń), liczy pasma `control_band.py` i przy punkcie poza 3σ
