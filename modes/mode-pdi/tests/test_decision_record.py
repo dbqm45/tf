@@ -17,7 +17,7 @@ SCRIPT = ROOT / REL if ROOT else None
 SCHEMA_KEYS = {"artifact", "phase", "status", "version", "author", "created", "updated", "inputs", "change", "source",
                "source_reported_at", "tasks", "superseded_by"}   # change.schema.json kontraktu pdi 0.5.0
 REQUIRED = {"artifact", "phase", "status", "version", "created", "updated", "change"}
-FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # kopia kontraktu pdi 0.4.0 (bez zmian)
+FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # kopia kontraktu pdi (wersja w VERSION, bez zmian)
 
 # Plan wydania z pdi docs/plan-g1-g2.md §5.2 (wiersze TSK-59 i TSK-60 dopisane do R2, jak w przykładzie kontraktu).
 RELEASE_OK = """# docs/project/changes/CHG-12/release.yaml   (kontrakt 0.4.0)
@@ -214,8 +214,8 @@ def main() -> int:
     near = SCRIPT.parent / "release-plan.schema.json"
     check(near.is_file() and FIX.is_dir() and json.loads(near.read_text(encoding="utf-8"))
           == json.loads((FIX / "release-plan.schema.json").read_text(encoding="utf-8"))
-          and (FIX / "VERSION").read_text(encoding="utf-8").strip() == "0.4.0",
-          "R-0: schemat obok skryptu = kopia z kontraktu pdi 0.4.0")
+          and (FIX / "VERSION").read_text(encoding="utf-8").strip() == "0.6.0",
+          "R-0: schemat obok skryptu = kopia z kontraktu pdi 0.6.0")
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
         r = run(["change", "new", "CHG-12"], repo)

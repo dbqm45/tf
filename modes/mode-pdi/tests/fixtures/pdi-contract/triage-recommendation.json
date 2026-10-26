@@ -1,0 +1,17 @@
+{
+  "problem": "PRB-34",
+  "contract_version": "0.6.0",
+  "recommended_status": "accepted",
+  "tf_state": "ready-for-agent",
+  "category": "enhancement",
+  "rationale": "Pięć zgłoszeń w trzy miesiące, obejście kosztuje dzień pracy przy każdej zmianie taryfy; operacja zbiorcza mieści się w module konfiguracji ładowarek.",
+  "executor": "agent",
+  "brief": "Operator zmienia konfigurację wielu ładowarek jedną operacją (wybór listy, podgląd zmian, wykonanie z raportem per ładowarka).",
+  "evidence": [
+    {
+      "text": "5 zgłoszeń o tym samym w 3 miesiące",
+      "epistemic_status": "observation"
+    }
+  ],
+  "drafted_by": "ai"
+}

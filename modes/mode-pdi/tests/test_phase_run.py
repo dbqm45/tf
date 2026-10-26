@@ -166,7 +166,7 @@ def main() -> int:
         check(r.returncode == 0 and got.get("path") == "/events/tf", f"G-1: POST na /events/tf: {r.stdout}{r.stderr}")
         example = json.loads((FIX / "event-gate.requested.json").read_text(encoding="utf-8"))
         check(set(event) == set(example) and event.get("type") == "gate.requested" and event.get("source") == "tf"
-              and event.get("contract_version") == "0.4.0", f"G-2: koperta jak w przykładzie kontraktu: {event}")
+              and event.get("contract_version") == example["contract_version"], f"G-2: koperta jak w przykładzie kontraktu: {event}")
         pl = event.get("payload", {})
         check(pl.get("change") == "CHG-12" and pl.get("gate") == "B2" and pl.get("artifact") == str(req.relative_to(repo))
               and pl.get("url") == "https://github.com/acme/shop/pull/7"

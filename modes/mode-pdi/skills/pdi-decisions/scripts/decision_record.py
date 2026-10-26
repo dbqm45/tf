@@ -48,7 +48,7 @@ ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo",
 NEW = {"intent": "discovery", "plan": "plan", "decisions": "plan"}   # artefakty `change new` i ich faza
 CHANGES = Path("docs") / "project" / "changes"
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
-RELEASE_SCHEMA = Path(__file__).resolve().parent / "release-plan.schema.json"   # kopia z kontraktu pdi 0.4.0
+RELEASE_SCHEMA = Path(__file__).resolve().parent / "release-plan.schema.json"   # kopia z kontraktu pdi 0.6.0
 EMPTY_CELL = ("", "—", "-", "–")
 
 
@@ -352,10 +352,10 @@ def validate(v, s: dict, at: str) -> list[str]:
             errs.append(f"{at}: pusty tekst")
         if "pattern" in s and not re.search(s["pattern"], v):
             errs.append(f"{at}: '{v}' nie pasuje do {s['pattern']}")
-        if "enum" in s and v not in s["enum"]:
-            errs.append(f"{at}: '{v}' spoza {', '.join(s['enum'])}")
     elif t == "integer" and "minimum" in s and v < s["minimum"]:
         errs.append(f"{at}: {v} < {s['minimum']}")
+    if "enum" in s and not isinstance(v, (dict, list)) and v not in s["enum"]:   # także bez type (warunki kontraktu)
+        errs.append(f"{at}: '{v}' spoza {', '.join(map(str, s['enum']))}")
     for sub in s.get("allOf", []):
         if "if" in sub:
             if not validate(v, sub["if"], at):
