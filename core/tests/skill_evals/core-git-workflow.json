@@ -63,6 +63,32 @@
       }
     },
     {
+      "id": "galaz-z-kluczem-ciecia",
+      "expect": "trigger",
+      "prompt": "Zaczynam pracę nad cięciem TSK-57 ze zmiany CHG-12. Jak nazwać gałąź i jak dopilnować, żeby każdy commit na niej dało się powiązać z tym cięciem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "tsk-57",
+            "TSK-57"
+          ],
+          [
+            "Change: TSK-57",
+            "Change:"
+          ],
+          [
+            "commit-msg",
+            "hook"
+          ]
+        ]
+      },
+      "rubric": [
+        "gałąź z kluczem cięcia w nazwie, np. story/tsk-57-<opis>",
+        "każdy commit ze stopką Change: TSK-57",
+        "hook commit-msg wymaga stopki na gałęzi z kluczem"
+      ]
+    },
+    {
       "id": "format-commita",
       "expect": "no-trigger",
       "prompt": "Jak powinien wyglądać komunikat commita dla zmiany łamiącej API — typ, zakres i stopka?",

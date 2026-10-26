@@ -52,6 +52,35 @@
       ]
     },
     {
+      "id": "stopka-change-klucz-zmiany",
+      "expect": "trigger",
+      "prompt": "Pracujemy na cięciu TSK-57 zmiany CHG-12, a kod jest za feature flagą payment-retry. Jak zapisać commit message, żeby narzędzie do śledzenia wydań połączyło commit z cięciem i flagą? Czy da się to wymusić hookiem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Change: TSK-57"
+          ],
+          [
+            "Flag: payment-retry"
+          ],
+          [
+            "stopk",
+            "footer",
+            "trailer"
+          ],
+          [
+            "commit-msg",
+            "commit_msg\\.py"
+          ]
+        ]
+      },
+      "rubric": [
+        "klucz cięcia w stopce `Change: TSK-57` (po pustej linii), nie w opisie",
+        "`Flag: payment-retry` w stopce dla cięcia za flagą",
+        "hook commit-msg (commit_msg.py install) sprawdza format i wymaga Change: na gałęzi z kluczem"
+      ]
+    },
+    {
       "id": "strategia-galezi",
       "expect": "no-trigger",
       "prompt": "Jak nazwać gałąź na poprawkę i czy mogę zrobić force push na gałąź mojego PR po rebase?",

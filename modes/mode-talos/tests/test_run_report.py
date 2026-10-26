@@ -14,6 +14,42 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / REL).is_file())
 SCRIPT = ROOT / REL
 
 
+PLAN_MD = """---
+artifact: plan
+phase: plan
+status: accepted
+version: 1
+created: 2026-10-25
+updated: 2026-10-25
+change: CHG-12
+tasks: [TSK-57, TSK-58]
+---
+# Plan zmiany CHG-12
+
+| Cięcie | Wydanie | Flaga | Wartość | Pliki | Weryfikacja |
+|---|---|---|---|---|---|
+| TSK-57 | R1 | payment-retry | klient ponawia nieudaną płatność | src/payments/retry.ts | `npm test -- retry` |
+| TSK-58 | R1 | payment-retry | brak podwójnego obciążenia | src/payments/charge.ts | `npm test -- charge` |
+"""
+INTENT_MD = """---
+artifact: intent
+phase: discovery
+status: accepted
+version: 1
+created: 2026-10-25
+updated: 2026-10-25
+change: CHG-12
+---
+# Zamiar zmiany CHG-12
+
+## Problem
+Klient nie może ponowić nieudanej płatności i porzuca zamówienie.
+
+## Poza zakresem
+- płatności cykliczne
+"""
+
+
 def run(args, cwd, cfg):
     env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg)}
     return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True, env=env,
@@ -104,6 +140,32 @@ def main() -> int:
         check(r.returncode == 0 and line.count("\n") == 0 and "0.0029 USD" in line and "2/3" in line
               and not (run_dir / "report.md").exists(), f"R-14: status w jednej linii: {line!r}")
 
+        # F1: przebieg od klucza cięcia zmiany (TSK z plan.md w docs/project/changes/CHG-n/), raport w repo
+        chg = proj / "docs" / "project" / "changes" / "CHG-12"
+        chg.mkdir(parents=True)
+        (chg / "plan.md").write_text(PLAN_MD, encoding="utf-8")
+        (chg / "intent.md").write_text(INTENT_MD, encoding="utf-8")
+        r = run(["start", "--task", "TSK-58"], proj, cfg)
+        tr = sorted((proj / ".claude" / "runs").glob("*tsk-58*"))
+        meta = json.loads((tr[0] / "run.json").read_text(encoding="utf-8")) if tr else {}
+        story = (tr[0] / "story.md").read_text(encoding="utf-8") if tr else ""
+        check(r.returncode == 0 and meta.get("change") == "CHG-12" and meta.get("task") == "TSK-58"
+              and meta.get("flag") == "payment-retry",
+              f"R-15: start --task — katalog przebiegu, run.json z change/task/flag: {r.stdout} {r.stderr} {meta}")
+        check("TSK-58" in story and "brak podwójnego obciążenia" in story and "R1" in story
+              and "Klient nie może ponowić" in story and "docs/project/changes/CHG-12" in story,
+              f"R-16: story z wiersza planu i zamiaru zmiany: {story[:600]}")
+        r = run(["start", "--task", "TSK-99"], proj, cfg)
+        check(r.returncode == 2 and "TSK-99" in r.stdout + r.stderr and "Traceback" not in r.stderr,
+              f"R-17: TSK spoza planów zmian → kod 2 z komunikatem: {r.returncode} {r.stdout} {r.stderr[-300:]}")
+        meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        (run_dir / "run.json").write_text(json.dumps({**meta, "change": "CHG-12", "task": "TSK-58"}), encoding="utf-8")
+        r = run(["finish", str(run_dir)], proj, cfg)
+        kept = chg / "runs" / "TSK-58.md"
+        text = kept.read_text(encoding="utf-8") if kept.is_file() else ""
+        check(r.returncode == 0 and "USD" in text and "TSK-58" in text and "changes/CHG-12/runs/TSK-58.md" in r.stdout,
+              f"R-18: finish przebiegu cięcia zapisuje raport w dzienniku zmiany: {r.stdout[-300:]} {text[:300]}")
+
         # brak transkryptów → czytelny komunikat, nie wyjątek
         empty = Path(t) / "inny"
         empty.mkdir()
@@ -112,7 +174,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {14 - len(fails)}/14 testów raportu przebiegu")
+    print(f"{'✓' if not fails else '✗'} {18 - len(fails)}/18 testów raportu przebiegu")
     return 1 if fails else 0
 
 

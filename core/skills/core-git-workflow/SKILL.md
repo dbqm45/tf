@@ -11,6 +11,10 @@ metadata:
 
 ## Gałęzie
 - Nazwa: `<typ>/<krótki-opis>` np. `feat/user-avatar`, `fix/login-redirect`, `chore/deps-bump`.
+- Praca nad cięciem albo zmianą z kluczem (`TSK-57`, `CHG-12`): klucz w nazwie gałęzi małymi literami
+  (`story/tsk-57-ponowienie-platnosci`), a każdy commit ze stopką `Change: TSK-57` (core-conventional-commits).
+  Hook `commit-msg` z tego skilla odrzuca commit bez stopki na takiej gałęzi. Klucz pochodzi z planu zmiany albo
+  od człowieka.
 - Gałęzie krótko żyjące (godziny–dni) i częsta integracja z główną (trunk-based, zob. skill dostarczania, pack-it: eng-continuous-delivery).
 - Nigdy nie pracujesz bezpośrednio na `main`/`master`. Jeśli jesteś na nim — utwórz gałąź przed pierwszą zmianą.
 

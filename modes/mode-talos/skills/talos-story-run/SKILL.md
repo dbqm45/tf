@@ -23,7 +23,12 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
 1. Czyste drzewo robocze, inaczej STOP („niezacommitowane zmiany: <pliki>”).
 2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
    katalog `.claude/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
-3. Gałąź `story/<slug>` od aktualnej gałęzi domyślnej (core-git-workflow).
+   **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
+   start --task TSK-57` składa `story.md` z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (wartość, wydanie,
+   flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`. TSK spoza planów
+   zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”).
+3. Gałąź `story/<slug>` od aktualnej gałęzi domyślnej (core-git-workflow); przy cięciu z kluczem slug zaczyna się
+   od klucza (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki `Change: TSK-57`.
 
 ## 1. Przyjęcie historyjki
 Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria akceptacji** sprawdzalne testem;
@@ -64,9 +69,10 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 4. **Przegląd zakresu:** `scope-reviewer` dostaje kawałek z planu i `git diff`. Kod spoza kryteriów (obsługa
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
-   Odhacz kawałek w `plan.md`. Kawałek cięcia z flagą (kolumna „Flaga” w planie cięć albo `flags` w `release.yaml`):
-   nowe zachowanie jest za flagą (domyślnie wyłączoną), a treść commita ma dopisek `Flag: <klucz>`, obok
-   `Change: TSK-n`, jeśli projekt łączy commity z cięciami.
+   Odhacz kawałek w `plan.md`. Przebieg cięcia z kluczem: każdy commit ma stopkę `Change: TSK-n`
+   (core-conventional-commits). Kawałek cięcia z flagą (kolumna „Flaga” w planie cięć albo `flags`
+   w `release.yaml`, w `run.json` pole `flag`): nowe zachowanie jest za flagą (domyślnie wyłączoną), a commit ma też
+   stopkę `Flag: <klucz>`.
 6. Z `--budget`: `run_report.py status <katalog>` — koszt powyżej budżetu → STOP po tym kawałku.
 
 ## 4. Zakończenie
@@ -78,6 +84,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
    z `parked.md`), wynik `plan_drift` (pokrycie, odstępstwa), skrót raportu kosztu. Nie scalasz — decyzja człowieka.
 4. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
+   Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`
+   (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`.
 
 ## Kto co robi (koszt)
 | Krok | Kto | Tier |
