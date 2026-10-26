@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.39.0] — 2026-10-26
+### Added
+- **mode-pdi:** triage of pdi PRB problems with a recommendation in pdi states (#82)
+
 ## [5.38.0] — 2026-10-26
 ### Added
 - **mode-pdi:** pasma kontrolne na metrykach z ShipScope → metric.breached (F5) (#81)
