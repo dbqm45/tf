@@ -33,6 +33,10 @@ def main() -> int:
     check(personas == [] or all("pdi-decisions" in p.read_text(encoding="utf-8") for p in personas),
           "P-4: skill pdi-decisions u każdej persony")
     check((ROOT / "factory" / "packs" / "mode-pdi" / "GUIDE.md").is_file(), "P-5: przewodnik trybu w projekcie")
+    runner = ".claude/skills/pdi-decisions/scripts/phase_run.py"
+    check((ROOT / runner).is_file() and runner in text and (skill / "templates" / "sdlc-phase.yml").is_file(),
+          "P-6: skrypt faz uruchamianych przez pdi i szablon workflow przy skillu, ścieżka w skillu")
+    check(any(runner in a for a in allow), "P-7: uprawnienie dla skryptu faz")
 
     for f in fails:
         print(f"✗ {f}")

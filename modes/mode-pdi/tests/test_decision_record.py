@@ -269,6 +269,40 @@ def main() -> int:
         r = run(["check"], tmp)
         check(r.returncode == 0, f"R-8: zmiana sprzed G1.1 (bez release.yaml) nadal przechodzi: {r.stdout}")
 
+    # decision gate: decyzja z bramki w pdi (gate.decided) zapisana w repo z numerem z rejestru (F4, D2/R1)
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12"], repo)
+        dec = repo / "docs" / "project" / "changes" / "CHG-12" / "decisions.md"
+        gate = ["decision", "gate", "CHG-12", "--gate", "B1", "--outcome", "approved", "--id", "DEC-41"]
+        r = run(gate, repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "CHG-12/D1" in r.stdout, f"G-1: decision gate dopisuje wpis D1: {r.stdout}{r.stderr}")
+        check("## Bramka B1: approved" in text and "- id: DEC-41" in text and "- wyslano: tak" in text
+              and "- rodzaj: gate" in text and "- kto: pdi" in text and "- zrodlo: manual" in text
+              and "- szkic: human" in text and "DEC-41" in text.split("- dlaczego:")[-1].splitlines()[0],
+              f"G-2: wpis z numerem z pdi, wyslano: tak, rodzaj gate: {text[-500:]}")
+        r = run(gate, repo)
+        check(r.returncode == 0 and dec.read_text(encoding="utf-8").count("DEC-41") == text.count("DEC-41")
+              and "już" in r.stdout, f"G-3: ponowienie z tym samym numerem nic nie dopisuje: {r.stdout}")
+        r = run(["decision", "pending"], repo)
+        check(jl(r) == [], "G-4: decyzja z bramki nie czeka na wysłanie")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"G-5: dziennik z decyzją z bramki przechodzi check: {r.stdout}")
+        r = run(["decision", "gate", "CHG-12", "--gate", "B2", "--outcome", "changes_requested", "--id", "DEC-42",
+                 "--by", "PO Payments", "--date", "2026-10-26"], repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "## Bramka B2: changes_requested" in text and "- kto: PO Payments" in text
+              and "- kiedy: 2026-10-26" in text, f"G-6: --by i --date: {r.stdout}{text[-300:]}")
+        for bad, why in ((["--outcome", "maybe"], "outcome"), (["--id", "41"], "id"), (["--gate", ""], "gate")):
+            args = gate[:3] + ["--gate", "B3", "--outcome", "approved", "--id", "DEC-43"]
+            i = args.index(bad[0])
+            args[i + 1] = bad[1]
+            r = run(args, repo)
+            check(r.returncode != 0, f"G-7: zły {why} → błąd: {r.stdout}")
+        r = run(["decision", "gate", "CHG-99", "--gate", "B1", "--outcome", "approved", "--id", "DEC-44"], repo)
+        check(r.returncode != 0 and "change new" in r.stdout, "G-8: brak dziennika zmiany → błąd z podpowiedzią")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów dziennika zmiany (mode-pdi)")

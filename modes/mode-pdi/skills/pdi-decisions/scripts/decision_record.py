@@ -18,6 +18,10 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json) i pl
       wpisuje numer nadany przez rejestr pdi i wyslano: tak
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision export
       JSON wszystkich decyzji projektu (z numerem i stanem wysłania)
+  python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate CHG-12 --gate B1 --outcome approved \
+      --id DEC-41 [--by pdi] [--date RRRR-MM-DD]
+      decyzja ze skrzynki pdi (gate.decided, wejścia szablonu sdlc-phase.yml) jako wpis z numerem i wyslano: tak;
+      ponowienie z tym samym numerem nic nie dopisuje
 
 Kod wyjścia: 0 — w porządku, 1 — błędy (z podpowiedzią), 2 — złe wywołanie.
 """
@@ -36,6 +40,7 @@ STATUSES = ("draft", "proposed", "accepted", "superseded", "rejected")
 KEYS = ("artifact", "phase", "status", "version", "author", "created", "updated", "inputs", "change", "source", "tasks",
         "superseded_by")
 REQUIRED = ("artifact", "phase", "status", "version", "created", "updated", "change")
+OUTCOMES = ("approved", "changes_requested", "rejected")   # gate.decided w kontrakcie pdi 0.4.0
 KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
 SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual")
 ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo", "szkic")   # pola wpisu w decisions.md
@@ -187,6 +192,35 @@ def decision_add(a) -> int:
              f"- szkic: {a.drafted_by}\n")
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
     print(f"✓ {ref} w {f} (wyslano: nie)")
+    return 0
+
+
+def decision_gate(a) -> int:
+    """Decyzja podjęta w skrzynce pdi: numer nadał już rejestr, więc wpis od razu jest wysłany."""
+    f = decisions_file(a.key) if KEY.match(a.key) else None
+    if f is None:
+        print(f"✗ brak {CHANGES / a.key / 'decisions.md'} — najpierw: decision_record.py change new {a.key}")
+        return 1
+    errs = [f"--outcome '{a.outcome}' spoza {', '.join(OUTCOMES)}" for _ in [0] if a.outcome not in OUTCOMES]
+    errs += [f"--id '{a.id}' — numer z rejestru pdi, np. DEC-41" for _ in [0] if not KEY.match(a.id)]
+    errs += [f"--date '{a.date}' — RRRR-MM-DD" for _ in [0] if a.date and not DATE.match(a.date)]
+    errs += [f"--{n} puste" for n, v in (("gate", a.gate), ("by", a.by)) if not v.strip()]
+    if errs:
+        print("✗ " + "; ".join(errs))
+        return 1
+    entries = parse_entries(f)
+    same = next((e for e in entries if e.get("id") == a.id), None)
+    if same:
+        print(f"✓ {same['ref']} ma już {a.id} — nic nie dopisuję")
+        return 0
+    n = 1 + max([int(e["ref"].rsplit("D", 1)[1]) for e in entries if re.search(r"/D\d+$", e["ref"])] or [0])
+    ref = f"{a.key}/D{n}"
+    entry = (f"\n## Bramka {a.gate.strip()}: {a.outcome}\n- ref: {ref}\n- id: {a.id}\n- wyslano: tak\n"
+             f"- kiedy: {a.date or dt.date.today().isoformat()}\n- kto: {a.by.strip()}\n- rodzaj: gate\n"
+             f"- dlaczego: decyzja w skrzynce bramek pdi ({a.id}); uzasadnienie w rejestrze pdi\n- zrodlo: manual\n"
+             f"- szkic: human\n")
+    f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
+    print(f"✓ {ref} w {f} ({a.id}, wyslano: tak)")
     return 0
 
 
@@ -432,12 +466,20 @@ def main(argv: list[str]) -> int:
     mark.add_argument("ref")
     mark.add_argument("--id", required=True)
     dec.add_parser("export")
+    gate = dec.add_parser("gate")
+    gate.add_argument("key")
+    gate.add_argument("--gate", required=True)
+    gate.add_argument("--outcome", required=True)
+    gate.add_argument("--id", required=True)
+    gate.add_argument("--by", default="pdi")
+    gate.add_argument("--date")
     args = ap.parse_args(argv)
     if args.cmd == "check":
         return check()
     if args.cmd == "decision":
         return {"add": lambda: decision_add(args), "pending": lambda: decision_pending(args.change),
-                "mark": lambda: decision_mark(args.ref, args.id), "export": decision_export}[args.action]()
+                "mark": lambda: decision_mark(args.ref, args.id), "export": decision_export,
+                "gate": lambda: decision_gate(args)}[args.action]()
     return new_change(args.key, args.source, args.author)
 
 
