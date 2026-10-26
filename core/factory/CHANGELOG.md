@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.37.0] — 2026-10-26
+### Added
+- **core:** Change trailer, commit-msg hook and Talos runs on change slices (#80)
+
 ## [5.36.0] — 2026-10-26
 ### Added
 - **mode-pdi:** fazy uruchamiane przez pdi bez interakcji (F4) (#79)
