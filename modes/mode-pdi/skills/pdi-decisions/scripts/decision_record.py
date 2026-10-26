@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json) i planem wydania z kontraktu 0.4.0
+Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0.5.0 z `source_reported_at`) i planem wydania z kontraktu 0.4.0
 (contract/release-plan.schema.json, kopia obok skryptu) — tryb mode-pdi.
 
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new CHG-12 [--source PRB-34] [--author NAME]
+      [--source-reported-at RRRR-MM-DD]   (dzień zgłoszenia, z pdi; kontrakt 0.5.0)
       tworzy docs/project/changes/CHG-12/ z intent.md, plan.md, decisions.md i release.yaml (szablony obok skryptu)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py check
       sprawdza nagłówki artefaktów i wpisy decyzji w docs/project/changes/*/, a release.yaml — schematem z kontraktu
@@ -37,8 +38,8 @@ DATE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 ARTIFACTS = ("intent", "requirements", "design", "plan", "decisions", "run")
 PHASES = ("discovery", "domain", "requirements", "architecture", "plan", "delivery", "review")
 STATUSES = ("draft", "proposed", "accepted", "superseded", "rejected")
-KEYS = ("artifact", "phase", "status", "version", "author", "created", "updated", "inputs", "change", "source", "tasks",
-        "superseded_by")
+KEYS = ("artifact", "phase", "status", "version", "author", "created", "updated", "inputs", "change", "source",
+        "source_reported_at", "tasks", "superseded_by")   # change.schema.json kontraktu pdi 0.5.0
 REQUIRED = ("artifact", "phase", "status", "version", "created", "updated", "change")
 OUTCOMES = ("approved", "changes_requested", "rejected")   # gate.decided w kontrakcie pdi 0.4.0
 KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
@@ -80,10 +81,16 @@ def render(fields: dict) -> str:
     return "---\n" + "\n".join(lines) + "\n---\n"
 
 
-def new_change(key: str, source: str | None, author: str) -> int:
+def new_change(key: str, source: str | None, author: str, reported: str | None = None) -> int:
     bad = [f"{name} '{v}'" for name, v in (("klucz zmiany", key), ("klucz zgłoszenia", source)) if v and not KEY.match(v)]
     if bad:
         print(f"✗ zły kształt: {', '.join(bad)} — wzorzec [A-Z][A-Z0-9]+-[0-9]+, np. CHG-12, PRB-34")
+        return 1
+    if reported and not source:
+        print("✗ --source-reported-at bez --source — data dotyczy zgłoszenia, z którego wyszła zmiana")
+        return 1
+    if reported and not DATE.match(reported):
+        print(f"✗ --source-reported-at '{reported}' — data RRRR-MM-DD")
         return 1
     target = CHANGES / key
     if target.exists():
@@ -96,6 +103,8 @@ def new_change(key: str, source: str | None, author: str) -> int:
                   "created": today, "updated": today, "inputs": [], "change": key}
         if source:
             fields["source"] = source
+        if reported:
+            fields["source_reported_at"] = reported
         if artifact == "plan":
             fields["tasks"] = []
         body = (TEMPLATES / f"{artifact}.md").read_text(encoding="utf-8").replace("{CHG}", key)
@@ -111,13 +120,13 @@ def check_file(path: Path) -> list[str]:
     if h is None:
         return ["brak nagłówka YAML (--- … ---) na początku pliku"]
     errs = [f"brak pola {k}" for k in REQUIRED if not h.get(k)]
-    errs += [f"nieznane pole {k} (kontrakt pdi 0.3.0 dopuszcza: {', '.join(KEYS)})" for k in h if k not in KEYS]
+    errs += [f"nieznane pole {k} (kontrakt pdi 0.5.0 dopuszcza: {', '.join(KEYS)})" for k in h if k not in KEYS]
     for k, allowed in (("artifact", ARTIFACTS), ("phase", PHASES), ("status", STATUSES)):
         if h.get(k) and h[k] not in allowed:
             errs.append(f"{k}: '{h[k]}' spoza {', '.join(allowed)}")
     if h.get("version") and not (str(h["version"]).isdigit() and int(h["version"]) >= 1):
         errs.append(f"version: '{h['version']}' — liczba całkowita ≥ 1")
-    for k in ("created", "updated"):
+    for k in ("created", "updated", "source_reported_at"):
         if h.get(k) and not DATE.match(str(h[k])):
             errs.append(f"{k}: '{h[k]}' — data RRRR-MM-DD")
     for k in ("change", "source"):
@@ -458,6 +467,7 @@ def main(argv: list[str]) -> int:
     new.add_argument("key")
     new.add_argument("--source")
     new.add_argument("--author", default="claude")
+    new.add_argument("--source-reported-at")
     sub.add_parser("check")
     dec = sub.add_parser("decision").add_subparsers(dest="action", required=True)
     add = dec.add_parser("add")
@@ -488,7 +498,7 @@ def main(argv: list[str]) -> int:
         return {"add": lambda: decision_add(args), "pending": lambda: decision_pending(args.change),
                 "mark": lambda: decision_mark(args.ref, args.id), "export": decision_export,
                 "gate": lambda: decision_gate(args)}[args.action]()
-    return new_change(args.key, args.source, args.author)
+    return new_change(args.key, args.source, args.author, args.source_reported_at)
 
 
 if __name__ == "__main__":
