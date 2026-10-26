@@ -50,6 +50,40 @@
       }
     },
     {
+      "id": "statusy-wersje-uptime",
+      "expect": "trigger",
+      "prompt": "Porządkujemy słownik projektu ładowarek. W Jirze piszemy 'status złącza Occupied', w kodzie adaptera 'Preparing' i 'Charging'. Jedna specyfikacja mówi 'uptime 97%', druga 'dostępność 99% bez planowanego serwisu'. Stare stacje gadają po OCPP 1.6J, nowe po 2.0.1. Jak to zapisać w słowniku, żeby każde pojęcie miało jedno znaczenie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "occupied[^.\\n]{0,80}2\\.0\\.1|2\\.0\\.1[^.\\n]{0,80}occupied"
+          ],
+          [
+            "preparing[^.\\n]{0,80}1\\.6|1\\.6[^.\\n]{0,80}preparing"
+          ],
+          [
+            "evse|\\bport|punkt\\w* ładowania"
+          ],
+          [
+            "planowan\\w* (serwis|przegl|prac)|nevi|\\bsla\\b|surow|wyłącze"
+          ],
+          [
+            "1\\.6j?[^.\\n]{0,40}json|json[^.\\n]{0,40}1\\.6"
+          ]
+        ],
+        "none": [
+          "uptime i dostępność to (zawsze )?(to samo|ta sama|jedno)",
+          "Occupied (to|jest)[^.\\n]{0,20}(status|stan) (z )?OCPP 1\\.6"
+        ]
+      }
+    },
+    {
+      "id": "wzor-uptime-nevi",
+      "expect": "no-trigger",
+      "neighbor": "dom-ev-kpi-analytics",
+      "prompt": "Mam zdarzenia statusów portów za ostatni rok. Policz uptime wg wzoru NEVI dla każdego portu i powiedz, które porty nie spełniają progu 97%, jeśli przerwy w dostawie od OSD są udokumentowane. Odpowiedz zwięźle."
+    },
+    {
       "id": "rozliczenia-roamingu",
       "expect": "no-trigger",
       "neighbor": "dom-ev-market-roles",
