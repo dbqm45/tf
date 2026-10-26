@@ -18,12 +18,13 @@ czyli co obiecujemy zachować w obrębie tej samej wersji MAJOR — także wobec
 | reguły blokujące hooków | co hook blokuje domyślnie: `guard_bash`, `guard_paths`, `cleanroom_guard`, `tdd_guard`, `scan_secrets` — nowa lub ostrzejsza blokada włączona domyślnie zmienia to, co wcześniej działało |
 | konfiguracja użytkownika | klucze `factory/config.yaml` (tiers, profiles, routing, routing_notes, always_skills, standalone_skills, freshness, languages, default_language, default_commit_language, prices_usd_per_mtok, prices_checked, limits, managed_agents.models…; klucze manifestu `skill_overrides`, `packs`, `offered`), ustawienia projektu `.claude/factory-settings.json` (`language`, `commit_language`, `targets`: `claude`, `managed-agents`), układ plików targetu `managed-agents/` (`agents/`, `environments/default.yaml`, `README.md`), schemat plików person, ról i cech; frontmatter skilli (`metadata.katalog`, `metadata.slowa`, `metadata.widocznosc`, `metadata.przeglad`) |
 | układ instalacji w projekcie | ścieżki: `.claude/skills/`, `.claude/hooks/`, `.claude/agents/_generated/`, `.claude/tests/`, `factory/`, `factory/packs/<id>/`, `docs/project/`, pliki `CLAUDE.local.md`, `.claude/settings.local.json`, znaczniki `team-factory:begin`/`end` |
-| formaty danych | artefakty `docs/project/` (TL;DR, Przekazanie, status), punkt kontrolny `docs/project/wip/`, plik pytań między personami `docs/project/questions.md`, scenariusze `skill_evals/*.json`, rejestr bramki (`.claude/tests/skill_gate/<id>.json`, `.claude/skill-gate.json`), logi `.claude/logs/*.jsonl`, katalog przebiegów trybów `.claude/runs/` (ignorowany przez git), rejestry źródeł bazy wiedzy `.claude/skills/*/references/zrodla.json` (`version`, `areas`, `sources`) i jej cache `.claude/knowledge/<id>/` (`doc.txt`, `meta.json`, ignorowany przez git) |
+| formaty danych | artefakty `docs/project/` (TL;DR, Przekazanie, status), punkt kontrolny `docs/project/wip/`, plik pytań między personami `docs/project/questions.md`, scenariusze `skill_evals/*.json`, rejestr bramki (`.claude/tests/skill_gate/<id>.json`, `.claude/skill-gate.json`), logi `.claude/logs/*.jsonl`, katalog przebiegów trybów `.claude/runs/` (ignorowany przez git), stopki commitów `Change: <klucz>` i `Flag: <klucz>` (hook `commit-msg` z core-conventional-commits), rejestry źródeł bazy wiedzy `.claude/skills/*/references/zrodla.json` (`version`, `areas`, `sources`) i jej cache `.claude/knowledge/<id>/` (`doc.txt`, `meta.json`, ignorowany przez git) |
 
 Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API tej nakładki lub trybu (wersja w jej
 `pack.yaml`). Tryb `mode-talos`: agent sesji głównej `talos`, skill `talos-story-run`, skrypt
-`.claude/skills/talos-story-run/scripts/run_report.py`, katalog przebiegu `.claude/runs/<data>-<slug>/` (`run.json`,
-`story.md`, `plan.md`, `parked.md`, `report.md`). Tryb `mode-team`: skill `team-session`, skrypt
+`.claude/skills/talos-story-run/scripts/run_report.py` (`start [--task TSK-n]`, `status`, `finish`), katalog przebiegu
+`.claude/runs/<data>-<slug>/` (`run.json`, `story.md`, `plan.md`, `parked.md`, `report.md`), raport przebiegu cięcia
+`docs/project/changes/CHG-n/runs/TSK-n.md`. Tryb `mode-team`: skill `team-session`, skrypt
 `.claude/skills/team-session/scripts/team_switch.py` (`on`, `off`, `status`).
 
 **Nie** należą do publicznego API:

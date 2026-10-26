@@ -3,11 +3,14 @@
 Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): katalog przebiegu i raport kosztu.
 
   python3 .claude/skills/talos-story-run/scripts/run_report.py start "<tytuł>" [--story "<treść>" | --story-file PLIK]
+  python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-57 ["<tytuł>"]   # cięcie z planu zmiany
   python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
   python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
 `start` zakłada `.claude/runs/<RRRR-MM-DD>-<slug>/` (ignorowany przez git): run.json (czas startu), story.md,
-plan.md, parked.md. `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
+plan.md, parked.md. Z `--task` story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek
+`tasks`) i z `intent.md` zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`);
+`finish` zapisuje wtedy też kopię raportu w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
 czas, tokeny (wejście, wyjście, odczyt cache, zapis cache 5 min i 1 h), koszt wg `prices_usd_per_mtok`
 z factory/config.yaml, modele i agenci; dopisuje postęp planu i liczbę odłożonych spraw, zapisuje report.md.
 
@@ -37,6 +40,8 @@ except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
     import yaml
 
 RUNS = Path(".claude") / "runs"
+CHANGES = Path("docs") / "project" / "changes"
+EMPTY_CELL = ("", "—", "-", "–")
 KEYS = ("input", "output", "cache_read", "cache_write_5m", "cache_write_1h")
 FAMILIES = ("haiku", "sonnet", "opus", "fable", "mythos")
 
@@ -208,7 +213,83 @@ def report_md(slug: str, rep: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def cmd_start(title: str, story: str | None, project: Path) -> int:
+def front_and_body(text: str) -> tuple[str, str]:
+    if text.startswith("---\n") and "\n---" in text[4:]:
+        front, body = text[4:].split("\n---", 1)
+        return front, body.lstrip("-").lstrip("\n")
+    return "", text
+
+
+def header_tasks(front: str) -> list[str]:
+    m = re.search(r"^tasks:\s*\[(.*)\]\s*$", front, re.M)
+    if m:
+        return [t.strip().strip("'\"") for t in m.group(1).split(",") if t.strip()]
+    m = re.search(r"^tasks:\s*\n((?:\s*-\s*\S+\s*\n?)+)", front, re.M)
+    return re.findall(r"-\s*(\S+)", m.group(1)) if m else []
+
+
+def plan_row(body: str, task: str) -> dict:
+    """Wiersz tabeli planu zmiany dla cięcia: nagłówek kolumny → wartość."""
+    head = None
+    for line in body.splitlines():
+        if not line.strip().startswith("|"):
+            head = None
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if head is None:
+            head = cells
+        elif cells and cells[0] == task:
+            return {h: (cells[i] if i < len(cells) else "") for i, h in enumerate(head)}
+    return {}
+
+
+def task_context(project: Path, task: str) -> dict | None:
+    """Cięcie TSK w dzienniku zmian: katalog zmiany, wiersz planu, flaga i treść zamiaru."""
+    for plan in sorted((project / CHANGES).glob("*/plan.md")):
+        front, body = front_and_body(plan.read_text(encoding="utf-8"))
+        if task not in header_tasks(front):
+            continue
+        row = plan_row(body, task)
+        flag = next((v for k, v in row.items() if k.lower() == "flaga" and v not in EMPTY_CELL), None)
+        release = plan.parent / "release.yaml"
+        if flag is None and release.is_file():
+            try:
+                data = yaml.safe_load(release.read_text(encoding="utf-8")) or {}
+                flag = next((f.get("key") for f in data.get("flags") or [] if task in (f.get("tasks") or [])), None)
+            except yaml.YAMLError:
+                flag = None
+        intent = plan.parent / "intent.md"
+        return {"change": plan.parent.name, "dir": plan.parent.relative_to(project).as_posix(), "row": row,
+                "flag": flag, "intent": front_and_body(intent.read_text(encoding="utf-8"))[1] if intent.is_file() else ""}
+    return None
+
+
+def task_story(task: str, ctx: dict, extra: str | None) -> str:
+    stopki = f"`Change: {task}`" + (f" i `Flag: {ctx['flag']}`" if ctx["flag"] else "")
+    lines = [f"Cięcie {task} zmiany {ctx['change']} (`{ctx['dir']}/plan.md`). Każdy commit przebiegu ma stopki "
+             f"{stopki}.", "", "| Pole | Wartość |", "|---|---|"]
+    lines += [f"| {k} | {v} |" for k, v in ctx["row"].items() if k and v not in EMPTY_CELL]
+    if ctx["intent"].strip():
+        lines += ["", f"## Zamiar zmiany (`{ctx['dir']}/intent.md`)", "", re.sub(r"(?m)^#", "##", ctx["intent"].strip())]
+    if extra and extra.strip():
+        lines += ["", "## Dodatkowo od człowieka", "", extra.strip()]
+    return "\n".join(lines)
+
+
+def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None) -> int:
+    meta = {}
+    if task:
+        ctx = task_context(project, task)
+        if ctx is None:
+            print(f"✗ {task} nie ma w nagłówku `tasks` żadnego {CHANGES}/*/plan.md — sprawdź klucz albo plan zmiany.")
+            return 2
+        value = next((v for k, v in ctx["row"].items() if k.lower() == "wartość" and v not in EMPTY_CELL), "")
+        title = title or (f"{task}: {value}" if value else task)
+        story = task_story(task, ctx, story)
+        meta = {"change": ctx["change"], "task": task, "flag": ctx["flag"]}
+    if not title:
+        print("✗ podaj tytuł historyjki albo --task TSK-n")
+        return 2
     slug = slugify(title)
     now = datetime.now(timezone.utc)
     run_dir = project / RUNS / f"{now:%Y-%m-%d}-{slug}"
@@ -217,7 +298,7 @@ def cmd_start(title: str, story: str | None, project: Path) -> int:
         return 2
     run_dir.mkdir(parents=True)
     (run_dir / "run.json").write_text(json.dumps({"slug": slug, "title": title,
-                                                  "started_at": now.isoformat(timespec="seconds")},
+                                                  "started_at": now.isoformat(timespec="seconds"), **meta},
                                                  ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     (run_dir / "story.md").write_text(f"# {title}\n\n{(story or '').strip()}\n", encoding="utf-8")
     (run_dir / "plan.md").write_text(PLAN_TEMPLATE.format(title=title), encoding="utf-8")
@@ -249,7 +330,15 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
         return 0
     md = report_md(meta.get("slug") or run_dir.name, rep)
     (run_dir / "report.md").write_text(md, encoding="utf-8")
+    kept = None
+    if meta.get("change") and meta.get("task"):   # przebieg cięcia zmiany: raport zostaje w repo
+        kept = CHANGES / meta["change"] / "runs" / f"{meta['task']}.md"
+        (project / kept).parent.mkdir(parents=True, exist_ok=True)
+        (project / kept).write_text(f"# Raport przebiegu {meta['task']} ({meta['change']})\n\n" + md, encoding="utf-8")
+        rep["kept"] = kept.as_posix()
     print(json.dumps(rep, ensure_ascii=False, default=str) if as_json else md, end="" if not as_json else "\n")
+    if kept and not as_json:
+        print(f"Raport w repo: {kept.as_posix()}")
     return 0
 
 
@@ -257,7 +346,8 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("start")
-    s.add_argument("title")
+    s.add_argument("title", nargs="?")
+    s.add_argument("--task", default=None, help="klucz cięcia z docs/project/changes/*/plan.md, np. TSK-57")
     s.add_argument("--story", default=None)
     s.add_argument("--story-file", default=None)
     for name in ("status", "finish"):
@@ -269,7 +359,7 @@ def main(argv: list[str]) -> int:
     project = Path.cwd()
     if args.cmd == "start":
         story = Path(args.story_file).read_text(encoding="utf-8") if args.story_file else args.story
-        return cmd_start(args.title, story, project)
+        return cmd_start(args.title, story, project, args.task)
     return cmd_finish(Path(args.run_dir), args.session, args.json, project, status=args.cmd == "status")
 
 

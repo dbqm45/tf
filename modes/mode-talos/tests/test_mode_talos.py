@@ -47,6 +47,10 @@ def main() -> int:
     loop = body.split("## 3.", 1)[-1].split("## 4.", 1)[0]
     check("`Flag: " in loop and "release.yaml" in loop and "za flagą" in loop,
           "T-8: kawałek z flagą — kod za flagą i dopisek `Flag: <klucz>` w commicie (plan wydania release.yaml)")
+    check("--task" in body and "Change: TSK" in body and "changes/" in body and "/runs/" in body
+          and "story/tsk-" in body,
+          "T-9: wejście TSK z planu zmiany (`run_report.py start --task`), gałąź z kluczem, `Change:` w commitach, "
+          "raport w changes/CHG-n/runs/")
 
     for f in fails:
         print(f"✗ {f}")

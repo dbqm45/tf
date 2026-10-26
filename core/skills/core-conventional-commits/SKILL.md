@@ -68,6 +68,23 @@ przedpremierowe, publiczne API, wycofywanie) opisuje core-semver.
 ## Zasady praktyczne
 - Jeden commit = jedna logiczna zmiana; pasują dwa typy → dwa commity.
 - Referencje do zadań w stopce (`Refs: PROJ-123`), nie w opisie.
+
+## Ślad zmiany w stopkach (`Change:`, `Flag:`)
+Gdy praca należy do zmiany albo cięcia z kluczem (`CHG-12`, `TSK-57`, klucz Jiry), każdy commit ma stopkę
+`Change: <klucz>` — po niej narzędzia do śledzenia wydań łączą commit z cięciem, a cięcie ze zmianą. Commit cięcia
+za flagą dostaje też `Flag: <klucz-flagi>`:
+```
+feat(payments): retry failed payment
+
+Change: TSK-57
+Flag: payment-retry
+```
+- Klucz w kształcie `[A-Z][A-Z0-9]+-[0-9]+`; kilka kluczy po przecinku (`Change: TSK-57, TSK-58`). Klucz bierzesz
+  z planu zmiany albo od człowieka, nie wymyślasz.
+- Hook `commit-msg` sprawdza nagłówek, stopki i — na gałęzi z kluczem w nazwie (`story/tsk-57-…`) — wymaga
+  `Change:` z tym kluczem. Instalacja na żądanie człowieka (katalog hooków gita jest chroniony):
+  `python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py install`; cudzego hooka nie nadpisuje,
+  tylko podaje linię do dopisania. Ręcznie: `commit_msg.py check <plik-wiadomości>`.
 - Przy squash merge tytuł PR = finalny commit, więc tytuł PR też w tym formacie; przy squashu maintainer może
   uporządkować komunikaty kontrybutorów.
 - Revert: spec go nie definiuje — konwencja projektu (u nas typ `revert` + `Refs: <sha>`).
