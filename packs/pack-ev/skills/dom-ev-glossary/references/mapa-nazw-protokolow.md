@@ -20,6 +20,8 @@
 | Zapis do rozliczenia | Cdr | — | `CDR` (niezmienny) |
 | Nośnik uprawnienia | Token | 1.6 `idTag`; 2.0.1 `idToken` **[do weryfikacji]** | `Token` |
 | Telemetria | MeterValue | `MeterValues` | pola `Session`/`CDR` |
+| Stan złącza / EVSE | enum domenowy | 1.6 `StatusNotification`: 9 stanów (`Preparing`, `Charging`…); 2.0.1 `connectorStatus`: 5 stanów (`Occupied`) | `status` EVSE (`AVAILABLE`, `CHARGING`, `BLOCKED`…) |
+| Cennik | Tariff | — (cena poza OCPP 1.6 i 2.0.1 **[do weryfikacji]**) | `Tariff` |
 
 ## Jak używać przy migracji
 1. Zrób listę nazw z kodu (`grep -rniE "chargepoint|cpms|central.?system|station"`).
