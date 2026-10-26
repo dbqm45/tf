@@ -4,7 +4,7 @@ description: Użyj przy decyzji o zmianie (CHG) w projekcie z rejestrem pdi — 
 metadata:
   przeglad: 2027-04-23
   katalog: "Użyj w projekcie z trybem mode-pdi, gdy zapada decyzja o konkretnej zmianie (CHG-n: bramka, odpowiedź właściciela, wybór wariantu) albo trzeba założyć dziennik zmiany ze zgłoszenia (PRB-n) — `decision_record.py change new` tworzy docs/project/changes/CHG-n/ (intent, plan, decisions) zgodnie z kontraktem pdi 0.3.0, decyzja trafia do decisions.md i do rejestru pdi przez MCP record_decision (numer DEC-n nadaje rejestr), bez serwera pdi wpis czeka jako niewysłany. Nie do dziennika faz projektu bez pdi (core-project-record) ani formatu commitów (core-conventional-commits)."
-  slowa: "pdi, rejestr decyzji, record_decision, zapisz decyzję, decyzja o zmianie, ustaliliśmy, zdecydowaliśmy, decisions.md, CHG, PRB, DEC, dziennik zmiany, docs/project/changes, zgłoszenie przyjęte, jedno źródło decyzji, bramka B1, bramka B2, kontrakt pdi, sdlc-phase, phase_run, faza bez interakcji, gate.requested, skrzynka bramek, pasma kontrolne, metric.breached, metric_watch, ShipScope, rollbacki, 3σ"
+  slowa: "pdi, rejestr decyzji, record_decision, zapisz decyzję, decyzja o zmianie, ustaliliśmy, zdecydowaliśmy, decisions.md, CHG, PRB, DEC, dziennik zmiany, docs/project/changes, zgłoszenie przyjęte, jedno źródło decyzji, bramka B1, bramka B2, kontrakt pdi, sdlc-phase, phase_run, faza bez interakcji, gate.requested, skrzynka bramek, pasma kontrolne, metric.breached, metric_watch, ShipScope, rollbacki, 3σ, triaż zgłoszenia, triage_pdi, rekomendacja dla pdi, odłożyć zgłoszenie, PRB w JSON"
 ---
 
 # Decyzje w jednym źródle (pdi)
@@ -89,6 +89,24 @@ wyłącznie dla localhost) z tokenem usługi w nagłówku `Authorization` (nigdy
 POST-cie `metric.breached` (nazwa metryki, wartość, próg, okno, usługa, diagnoza) na `$PDI_EVENTS_URL/events/tf`,
 podpisanym jak wyżej; z `--csv` bez `--send` nie łączy się z siecią. Pozostałe polecenia nie łączą się z siecią;
 `phase_run.py run` uruchamia lokalny `claude`.
+
+## Triaż zgłoszenia z pdi (PRB)
+Zgłoszenie żyje w pdi; tf daje tylko rekomendację (R7: w stanach pdi, decyzję podejmuje człowiek w pdi).
+1. `python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py check prb.json` (dalej `triage_pdi.py`) — wejście wobec
+   `contract/problem.schema.json` (kopia obok skryptu); triaż tylko dla stanów `new`, `clarifying`, `ready_for_triage`.
+2. Triaż według procedury proc-issue-triage (pack-it): czy już istnieje, `.out-of-scope/`, odtworzenie, potrzeba
+   zamiast dosłownej prośby (`proposed_solution` to rozwiązanie, nie problem).
+3. `triage_pdi.py recommend prb.json --status <stan> --rationale "…"` z polami stanu:
+   | Stan pdi | Wymaga | Stan tf |
+   |---|---|---|
+   | `clarifying` | `--question "…"` (kilka) | `needs-info` |
+   | `accepted` | `--brief "…"`, `--executor agent\|human` | `ready-for-agent` / `ready-for-human` |
+   | `rejected` | `--reason` z listy kontraktu (+ `--note`); `out_of_scope_recorded` → `--out-of-scope-file` | `wontfix` |
+   | `parked` | `--return-when "…"` | `needs-triage` + `deferred` |
+   | `duplicate` | `--duplicate-of PRB-n` | `wontfix` |
+   Dowody: `--observation "…"` (sprawdzone) i `--evidence "…"` (wniosek AI). Wynik: JSON wg
+   `triage-recommendation.schema.json` (obok skryptu; propozycja do kontraktu pdi), `--out plik` do przekazania.
+4. Rekomendacja nie zmienia zgłoszenia i nie tworzy zmiany: `CHG` zakłada pdi po decyzji (dalej „Dziennik zmiany”).
 
 ## Przykład
 Właściciel: „W CHG-12 eksport do CSV zamiast XLSX, klienci i tak otwierają go w arkuszu”. Pokazujesz szkic

@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dbqm45/pdi/contract/problem.schema.json",
+  "title": "Zgłoszenie PRB (pdi, kontrakt 0.4.0)",
+  "description": "Problem albo pomysł zgłoszony do pdi. Żyje w bazie pdi; do repo trafia dopiero przyjęta intencja (CHG). Format: kto nie może czego → skutek.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "title",
+    "who",
+    "cannot",
+    "impact",
+    "reporter",
+    "reported_at",
+    "channel",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$",
+      "description": "Klucz zgłoszenia, domyślnie PRB-n."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "problem",
+        "idea"
+      ],
+      "description": "problem (brownfield) albo pomysł (greenfield)."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "bug",
+        "enhancement"
+      ],
+      "description": "Kategoria jak w tf proc-issue-triage."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "who": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Kto ma problem."
+    },
+    "cannot": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Czego nie może zrobić."
+    },
+    "impact": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Jaki to ma skutek."
+    },
+    "workaround": {
+      "type": "string",
+      "description": "Jak radzi sobie dziś."
+    },
+    "frequency": {
+      "type": "string"
+    },
+    "cost": {
+      "type": "string"
+    },
+    "proposed_solution": {
+      "type": "string",
+      "description": "Rozwiązanie podane przez zgłaszającego — zachowane, ale zgłoszenie opisuje problem."
+    },
+    "reporter": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reported_at": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "form",
+        "slack",
+        "teams",
+        "support",
+        "postmortem",
+        "operate",
+        "manual"
+      ]
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "project": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "epistemic_status"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "epistemic_status": {
+            "type": "string",
+            "enum": [
+              "observation",
+              "interpretation",
+              "hypothesis",
+              "ai_inference"
+            ]
+          }
+        }
+      }
+    },
+    "reports_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Liczba zgłaszających (duplikaty łączone w jedno zgłoszenie to dowód)."
+    },
+    "related": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$",
+        "description": "Powiązane zgłoszenia."
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "clarifying",
+        "ready_for_triage",
+        "accepted",
+        "rejected",
+        "parked",
+        "duplicate"
+      ],
+      "description": "Stany pdi wg rekomendacji R7; mapowanie na stany tf proc-issue-triage w contract/README.md."
+    },
+    "rejection_reason": {
+      "type": "string",
+      "enum": [
+        "out_of_strategy",
+        "works_as_designed",
+        "cost_disproportionate",
+        "already_exists",
+        "out_of_scope_recorded",
+        "other"
+      ]
+    },
+    "rejection_note": {
+      "type": "string"
+    },
+    "return_when": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Próg powrotu odłożonego zgłoszenia, np. 3 nowe zgłoszenia albo incydent."
+    },
+    "duplicate_of": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$",
+      "description": "Zgłoszenie, którego to jest duplikat."
+    },
+    "change": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$",
+      "description": "Zmiana (CHG) utworzona po przyjęciu."
+    },
+    "triage_decision": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$",
+      "description": "Decyzja (DEC) z triażu."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "rejected"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "rejection_reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "parked"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "return_when"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "duplicate"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "duplicate_of"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "accepted"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "change"
+        ]
+      }
+    }
+  ]
+}
