@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.40.0] — 2026-10-26
+### Added
+- **pack-it:** JSON export of the code reconstruction for tools (#83)
+
 ## [5.39.0] — 2026-10-26
 ### Added
 - **mode-pdi:** triage of pdi PRB problems with a recommendation in pdi states (#82)
