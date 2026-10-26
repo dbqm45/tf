@@ -4,7 +4,7 @@ description: Użyj przy przeglądzie zgłoszeń i zewnętrznych PR — kategorie
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj przy przeglądzie zgłoszeń i zewnętrznych PR, których zespół sam nie napisał — kategorie i stany, weryfikacja (odtworzenie błędu, uruchomienie testów PR), szukanie istniejącej funkcji, baza odrzuconych pomysłów .out-of-scope/, trwały brief dla agenta. Nie do planowania własnej pracy (proc-agile) ani diagnozy przyczyny błędu."
-  slowa: "zgłoszenie błędu od użytkownika, issue, przejrzeć zgłoszenie, oznaczyć zgłoszenie, etykiety zgłoszeń, needs-info, zewnętrzny pull request, prośba o funkcję, triaż, użytkownik prosi o przycisk, dodajcie przycisk, zgłoszenie funkcji w issue, czego naprawdę potrzebuje zgłaszający"
+  slowa: "zgłoszenie błędu od użytkownika, issue, przejrzeć zgłoszenie, oznaczyć zgłoszenie, etykiety zgłoszeń, needs-info, zewnętrzny pull request, prośba o funkcję, triaż, użytkownik prosi o przycisk, dodajcie przycisk, zgłoszenie funkcji w issue, czego naprawdę potrzebuje zgłaszający, zgłoszenie z pdi, PRB, rekomendacja triażu"
 argument-hint: "[np. „co wymaga uwagi”, „#42”]"
 ---
 
@@ -48,6 +48,15 @@ Brakujące etykiety tworzy człowiek. Lokalnie można dodać `blocked`/`deferred
    - `wontfix`, odrzucona funkcja → plik w `.out-of-scope/` i link w komentarzu.
 Polecenie wprost („przenieś #42 do ready-for-agent”) → potwierdzasz, co zrobisz, i robisz, bez przesłuchania; pytasz, czy
 dopisać brief.
+
+## Wejście z pdi (PRB w JSON)
+Zgłoszenie z rejestru pdi (`PRB-n`, kontrakt `problem.schema.json`) przechodzi tę samą procedurę, ale wynik to
+**rekomendacja w stanach pdi** zamiast etykiet: `clarifying` (pytania) · `accepted` (brief, wykonawca agent albo
+człowiek) · `rejected` (powód z listy kontraktu) · `parked` (próg powrotu) · `duplicate` (oryginał). Stan tf wynika
+z tabeli mapowania kontraktu (np. `parked` → `needs-triage` + `deferred`). Pola `who`, `cannot`, `impact` to
+potrzeba; `proposed_solution` to dosłowna prośba (krok 5). Decyzję podejmuje człowiek w pdi — nie zmieniasz stanu
+zgłoszenia i nie zakładasz zmiany. W trybie mode-pdi wejście i wynik sprawdza skrypt
+`python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py` (`check`, `recommend`) (mode-pdi).
 
 ## Brief dla wykonawcy (umowa, nie notatka)
 Zgłoszenie może czekać tygodniami, a kod się zmieni — brief ma przetrwać zmiany nazw i przenosiny plików.

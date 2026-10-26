@@ -1,0 +1,26 @@
+{
+  "id": "PRB-34",
+  "kind": "problem",
+  "category": "enhancement",
+  "title": "Brak operacji na wielu ładowarkach naraz",
+  "who": "operator Control Tower",
+  "cannot": "zmienić konfiguracji wielu ładowarek jedną operacją",
+  "impact": "zmiana taryfy na 200 ładowarkach zajmuje dzień pracy",
+  "workaround": "zmiana po kolei, ładowarka po ładowarce",
+  "frequency": "kilka razy w miesiącu",
+  "proposed_solution": "przycisk bulk update",
+  "reporter": "operator-1",
+  "reported_at": "2026-10-20",
+  "channel": "form",
+  "project": "control-tower",
+  "evidence": [
+    {
+      "text": "5 zgłoszeń o tym samym w 3 miesiące",
+      "epistemic_status": "observation"
+    }
+  ],
+  "reports_count": 5,
+  "status": "accepted",
+  "change": "CHG-12",
+  "triage_decision": "DEC-41"
+}

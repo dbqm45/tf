@@ -76,6 +76,46 @@
       }
     },
     {
+      "id": "triaz-prb-z-pdi",
+      "expect": "trigger",
+      "prompt": "Dostałem z pdi zgłoszenie PRB-34 w JSON (status new): operator nie może zmienić konfiguracji wielu ładowarek naraz, 5 zgłoszeń w 3 miesiące, proponuje przycisk bulk update. Zrób triaż i powiedz, w jakiej postaci oddać wynik do pdi. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "accepted",
+            "clarifying",
+            "rejected",
+            "parked",
+            "duplicate"
+          ],
+          [
+            "triage_pdi\\.py",
+            "stan\\w* pdi",
+            "stanach pdi"
+          ],
+          [
+            "potrzeb",
+            "nie przycisk",
+            "bulk update to rozwiązanie",
+            "zamiast przycisku"
+          ],
+          [
+            "człowiek",
+            "PO ",
+            "decyzj\\w* (należy|podejmuje)",
+            "nie zmieniasz",
+            "nie zmienia"
+          ]
+        ]
+      },
+      "rubric": [
+        "rekomendacja wyrażona stanem pdi (accepted/clarifying/rejected/parked/duplicate) z wymaganymi polami",
+        "wynik przez triage_pdi.py recommend (JSON), wejście sprawdzone triage_pdi.py check",
+        "potrzeba zamiast dosłownego „przycisku bulk update”",
+        "decyzję podejmuje człowiek w pdi; tf nie tworzy zmiany"
+      ]
+    },
+    {
       "id": "wlasny-sprint",
       "expect": "no-trigger",
       "prompt": "Jak zaplanować własny sprint zespołu: cel sprintu, wybór elementów z backlogu i pojemność zespołu? Odpowiedz zwięźle.",

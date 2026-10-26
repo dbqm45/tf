@@ -106,6 +106,35 @@
    ]
   },
   {
+   "id": "rekomendacja-triazu-dla-pdi",
+   "expect": "trigger",
+   "prompt": "W projekcie z rejestrem pdi mam zgłoszenie PRB-40 do triażu. Uważam, że trzeba je odłożyć, dopóki nie przyjdą kolejne zgłoszenia. Jak przygotować rekomendację dla pdi? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "triage_pdi\\.py"
+     ],
+     [
+      "parked"
+     ],
+     [
+      "--return-when",
+      "return_when",
+      "próg\\w* powrotu"
+     ],
+     [
+      "deferred",
+      "needs-triage"
+     ]
+    ]
+   },
+   "rubric": [
+    "triage_pdi.py check, potem recommend --status parked --return-when „…” --rationale „…”",
+    "w tf to needs-triage z etykietą deferred (tabela mapowania kontraktu)",
+    "decyzję podejmuje PO w pdi"
+   ]
+  },
+  {
    "id": "dziennik-projektu-bez-pdi",
    "expect": "no-trigger",
    "neighbor": "core-project-record",

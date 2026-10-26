@@ -317,13 +317,15 @@ def plain(v):
 
 def validate(v, s: dict, at: str) -> list[str]:
     """Podzbiór JSON Schema użyty w kontrakcie pdi: type, required, additionalProperties, properties, items, pattern,
-    minLength, minItems, minimum, enum."""
+    minLength, minItems, minimum, enum, const, allOf z if/then (warunek: pola wymagane przy danym stanie)."""
     types = {"object": dict, "array": list, "string": str, "integer": int}
     t = s.get("type")
     if t and (not isinstance(v, types[t]) or (t == "integer" and isinstance(v, bool))):
         return [f"{at or 'plik'}: oczekiwano {t}, jest {type(v).__name__} ({v!r})"]
+    if "const" in s and v != s["const"]:
+        return [f"{at or 'plik'}: oczekiwano {s['const']!r}"]
     errs = []
-    if t == "object":
+    if isinstance(v, dict) and t in (None, "object"):
         errs += [f"{at or 'plik'}: brak pola {k}" for k in s.get("required", []) if k not in v]
         props = s.get("properties", {})
         if s.get("additionalProperties") is False:
@@ -345,6 +347,12 @@ def validate(v, s: dict, at: str) -> list[str]:
             errs.append(f"{at}: '{v}' spoza {', '.join(s['enum'])}")
     elif t == "integer" and "minimum" in s and v < s["minimum"]:
         errs.append(f"{at}: {v} < {s['minimum']}")
+    for sub in s.get("allOf", []):
+        if "if" in sub:
+            if not validate(v, sub["if"], at):
+                errs += validate(v, sub.get("then", {}), at)
+        else:
+            errs += validate(v, sub, at)
     return errs
 
 

@@ -10,6 +10,7 @@ content_language: pl
 default: false
 requires:
   core: ">=5.6.0 <6.0.0"
+optional_packs: [pack-it]   # persony faz (phase_run.py) i procedura triażu PRB (proc-issue-triage); bez pack-it tryb działa
 
 facets:
   - {prefix: pdi-, order: 195, name: decyzje pdi, question: "jak zapisać decyzję o zmianie w jednym źródle (repo + rejestr pdi)"}

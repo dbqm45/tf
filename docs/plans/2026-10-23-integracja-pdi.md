@@ -59,7 +59,7 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 | F1 | Dopisek `Change: TSK-n`, hook commit-msg — **zrobione 2026-10-26** jako `commit_msg.py` (`check`, `install`) w core-conventional-commits (plan: `docs/plans/2026-10-26-f1-slad-w-commitach.md`) | `core/skills/core-conventional-commits`, `core-git-workflow` |
 | F1 | Talos czyta cięcia z `plan.md` zmiany; raport do `changes/CHG/runs/TSK-n.md` — **zrobione 2026-10-26** (`run_report.py start --task`, `finish`) | `modes/mode-talos/` |
 | F2 | Rekonstrukcja z kodu i eksport w JSON | `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (osobny plan, w toku) |
-| F3 | Triaż z wejściem `PRB` w JSON (`contract/problem.schema.json`) i rekomendacją według schematu | `packs/pack-it/skills/proc-issue-triage`; stany pdi ↔ tf w `pdi/contract/README.md` |
+| F3 | Triaż z wejściem `PRB` w JSON (`contract/problem.schema.json`) i rekomendacją według schematu — **zrobione 2026-10-26** jako `triage_pdi.py` (`check`, `recommend`) w `mode-pdi` (plan: `docs/plans/2026-10-26-f3-triaz-prb.md`) | `packs/pack-it/skills/proc-issue-triage`; stany pdi ↔ tf w `pdi/contract/README.md` |
 | F4 | Uruchamianie person bez interakcji, stan „czeka na bramkę”, `gate.requested` do pdi, szablon `sdlc-phase.yml` — **zrobione 2026-10-26** jako `phase_run.py` w `mode-pdi` (plan: `docs/plans/2026-10-26-f4-uruchamianie-faz.md`) | `modes/mode-pdi/` |
 
 ## Polecenie startowe — F0 (wklej w nowej sesji w repo tf)
