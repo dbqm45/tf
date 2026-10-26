@@ -234,6 +234,8 @@ def main() -> int:
         bad = [ln for ln in body.splitlines() if "${{ inputs." in ln
                and not _re.match(r"^\s+[A-Z_]+: \$\{\{ inputs\.\w+ \}\}$", ln) and not ln.startswith("run-name:")]
         check(body and not bad, f"W-4: wejścia z pdi trafiają do poleceń tylko przez env (wstrzyknięcie): {bad}")
+        check("--source-reported-at" in body and "reported_at" in body,
+              "W-8: szablon przekazuje datę zgłoszenia z treści zgłoszenia do nagłówka zmiany")
         check("decision_record.py change new" in body and "--source" in body and "PDI_PROBLEM" in body,
               "W-7: faza intent z pdi zakłada dziennik zmiany ze zgłoszenia i dostaje jego treść (F3)")
         wf.write_text("moje\n", encoding="utf-8")

@@ -18,7 +18,8 @@ to `docs/project/changes/CHG-n/decisions.md` w repo; pdi ją indeksuje i nadaje 
 Gdy pdi przyjmie zgłoszenie jako zmianę (albo człowiek poda klucz zmiany):
 1. `decision_record.py change new CHG-12 --source PRB-34` → `docs/project/changes/CHG-12/` z `intent.md`, `plan.md`,
    `decisions.md` (status `draft`, nagłówek zgodny z `contract/change.schema.json`) i planem wydania `release.yaml`
-   (kontrakt 0.4.0, `contract/release-plan.schema.json`). Istniejący katalog → błąd,
+   (kontrakt 0.4.0, `contract/release-plan.schema.json`); `--source-reported-at RRRR-MM-DD` dopisuje dzień
+   zgłoszenia (`source_reported_at`, kontrakt 0.5.0), od którego ShipScope liczy lead time. Istniejący katalog → błąd,
    nic nie jest nadpisywane. Klucze tylko w kształcie `[A-Z][A-Z0-9]+-[0-9]+`; numerów nie wymyślasz — podaje je pdi
    albo człowiek.
 2. Wypełniasz `intent.md` (problem, warianty, wybrany wariant, metryki, poza zakresem), potem `plan.md` (cięcia TSK

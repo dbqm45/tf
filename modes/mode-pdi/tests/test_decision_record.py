@@ -15,7 +15,7 @@ SCRIPT = ROOT / REL if ROOT else None
 
 # Pola nagłówka z pdi/contract/change.schema.json 0.3.0 (additionalProperties: false).
 SCHEMA_KEYS = {"artifact", "phase", "status", "version", "author", "created", "updated", "inputs", "change", "source",
-               "tasks", "superseded_by"}
+               "source_reported_at", "tasks", "superseded_by"}   # change.schema.json kontraktu pdi 0.5.0
 REQUIRED = {"artifact", "phase", "status", "version", "created", "updated", "change"}
 FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # kopia kontraktu pdi (wersja w VERSION, bez zmian)
 
@@ -302,6 +302,24 @@ def main() -> int:
             check(r.returncode != 0, f"G-7: zły {why} → błąd: {r.stdout}")
         r = run(["decision", "gate", "CHG-99", "--gate", "B1", "--outcome", "approved", "--id", "DEC-44"], repo)
         check(r.returncode != 0 and "change new" in r.stdout, "G-8: brak dziennika zmiany → błąd z podpowiedzią")
+
+        # --- data zgłoszenia w nagłówku (kontrakt pdi 0.5.0, lead time od zgłoszenia w ShipScope) ---
+        r = run(["change", "new", "CHG-30", "--source", "PRB-3", "--source-reported-at", "2026-10-20"], repo)
+        h = header(repo / "docs" / "project" / "changes" / "CHG-30" / "intent.md")
+        check(r.returncode == 0 and h.get("source_reported_at") == "2026-10-20" and h.get("source") == "PRB-3",
+              f"S-1: change new zapisuje datę zgłoszenia w nagłówku: {r.stdout} {h}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"S-2: nagłówek z datą zgłoszenia przechodzi check: {r.stdout}")
+        r = run(["change", "new", "CHG-31", "--source", "PRB-3", "--source-reported-at", "wczoraj"], repo)
+        check(r.returncode != 0 and not (repo / "docs" / "project" / "changes" / "CHG-31").exists(),
+              f"S-3: zła data zgłoszenia → błąd, nic nie powstaje: {r.stdout}")
+        r = run(["change", "new", "CHG-32", "--source-reported-at", "2026-10-20"], repo)
+        check(r.returncode != 0 and "--source" in r.stdout, f"S-4: data bez źródła → błąd: {r.stdout}")
+        intent = repo / "docs" / "project" / "changes" / "CHG-30" / "intent.md"
+        intent.write_text(intent.read_text(encoding="utf-8").replace("source_reported_at: 2026-10-20",
+                                                                     "source_reported_at: 20.10.2026"), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "source_reported_at" in r.stdout, f"S-5: zła data w nagłówku → check: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

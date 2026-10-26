@@ -82,7 +82,11 @@ jobs:
         if: env.PHASE == 'intent' && env.SOURCE != ''
         run: |
           if [ ! -d "docs/project/changes/$CHANGE" ]; then
-            python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new "$CHANGE" --source "$SOURCE" --author pdi
+            # Dzień zgłoszenia (reported_at z pdi) do nagłówka: od niego ShipScope liczy lead time od zgłoszenia.
+            reported=$(python3 -c 'import json, os; p = json.loads(os.environ.get("PDI_PROBLEM") or "{}"); print(p.get("reported_at", "") if isinstance(p, dict) else "")')
+            args=(--source "$SOURCE" --author pdi)
+            if [ -n "$reported" ]; then args+=(--source-reported-at "$reported"); fi
+            python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new "$CHANGE" "${args[@]}"
           fi
       - name: Sprawdzenie wejść (bez modelu)
         run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py prompt --change "$CHANGE" --phase "$PHASE" > /dev/null
