@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python3 .claude/skills/pdi-decisions/scripts/decision_record.py *)",
       "Bash(python3 .claude/skills/pdi-decisions/scripts/phase_run.py *)",
-      "Bash(python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py *)"
+      "Bash(python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py *)",
+      "Bash(python3 .claude/skills/pdi-decisions/scripts/metric_watch.py *)"
     ]
   }
 }

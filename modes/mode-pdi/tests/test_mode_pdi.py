@@ -37,6 +37,10 @@ def main() -> int:
     check((ROOT / runner).is_file() and runner in text and (skill / "templates" / "sdlc-phase.yml").is_file(),
           "P-6: skrypt faz uruchamianych przez pdi i szablon workflow przy skillu, ścieżka w skillu")
     check(any(runner in a for a in allow), "P-7: uprawnienie dla skryptu faz")
+    watch = ".claude/skills/pdi-decisions/scripts/metric_watch.py"
+    check((ROOT / watch).is_file() and watch in text and (skill / "templates" / "metric-watch.yml").is_file(),
+          "P-8: skrypt pasm kontrolnych i szablon workflow przy skillu, ścieżka w skillu")
+    check(any(watch in a for a in allow), "P-9: uprawnienie dla skryptu pasm kontrolnych")
 
     for f in fails:
         print(f"✗ {f}")

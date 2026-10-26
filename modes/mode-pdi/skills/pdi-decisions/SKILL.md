@@ -4,7 +4,7 @@ description: Użyj przy decyzji o zmianie (CHG) w projekcie z rejestrem pdi — 
 metadata:
   przeglad: 2027-04-23
   katalog: "Użyj w projekcie z trybem mode-pdi, gdy zapada decyzja o konkretnej zmianie (CHG-n: bramka, odpowiedź właściciela, wybór wariantu) albo trzeba założyć dziennik zmiany ze zgłoszenia (PRB-n) — `decision_record.py change new` tworzy docs/project/changes/CHG-n/ (intent, plan, decisions) zgodnie z kontraktem pdi 0.3.0, decyzja trafia do decisions.md i do rejestru pdi przez MCP record_decision (numer DEC-n nadaje rejestr), bez serwera pdi wpis czeka jako niewysłany. Nie do dziennika faz projektu bez pdi (core-project-record) ani formatu commitów (core-conventional-commits)."
-  slowa: "pdi, rejestr decyzji, record_decision, zapisz decyzję, decyzja o zmianie, ustaliliśmy, zdecydowaliśmy, decisions.md, CHG, PRB, DEC, dziennik zmiany, docs/project/changes, zgłoszenie przyjęte, jedno źródło decyzji, bramka B1, bramka B2, kontrakt pdi, sdlc-phase, phase_run, faza bez interakcji, gate.requested, skrzynka bramek, triaż zgłoszenia, triage_pdi, rekomendacja dla pdi, odłożyć zgłoszenie, PRB w JSON"
+  slowa: "pdi, rejestr decyzji, record_decision, zapisz decyzję, decyzja o zmianie, ustaliliśmy, zdecydowaliśmy, decisions.md, CHG, PRB, DEC, dziennik zmiany, docs/project/changes, zgłoszenie przyjęte, jedno źródło decyzji, bramka B1, bramka B2, kontrakt pdi, sdlc-phase, phase_run, faza bez interakcji, gate.requested, skrzynka bramek, pasma kontrolne, metric.breached, metric_watch, ShipScope, rollbacki, 3σ, triaż zgłoszenia, triage_pdi, rekomendacja dla pdi, odłożyć zgłoszenie, PRB w JSON"
 ---
 
 # Decyzje w jednym źródle (pdi)
@@ -69,11 +69,26 @@ Gdy tak cię uruchomiono:
 4. Na koniec `decision_record.py check` ma przejść. Poprawki po `changes_requested`: przeczytaj wpis bramki w
    `decisions.md` i komentarze PR, zmień tylko to, czego dotyczą.
 
+## Pasma kontrolne z ShipScope
+Utrzymanie (faza 9) w projekcie z pdi i ShipScope: `python3 .claude/skills/pdi-decisions/scripts/metric_watch.py check`
+czyta dzienny szereg PROD z API usług ShipScope (`SHIPSCOPE_URL`, token usługi `shps_…` w `SHIPSCOPE_TOKEN`; albo plik
+`--csv`), liczy pasma `control_band.py` (skill core-delivery-lifecycle) dla `rollbacks`, `failed_deployments`,
+`lead_time_days_median` (wzrost zły) i `deployments` (spadek zły) i drukuje poziom każdej metryki z naruszeniami po
+datach. Punkt poza 3σ (poziom `act`) z ostatnich 7 dni szeregu to zdarzenie `metric.breached` (metryka, wartość, próg
+średnia ± 3σ, okno, diagnoza), które `--send` wysyła do pdi jako nowe zgłoszenie; ID `tf-metric-<metryka>-<dzień>` nie
+dubluje go przy codziennym uruchomieniu. Codziennie robi to szablon `metric-watch.yml`
+(`metric_watch.py workflow install`). Metryki, linię bazową, okno i nazwę usługi zmieniasz w `.claude/pdi-metrics.json`
+(bez tokenów — te tylko w sekretach). Niższe poziomy (`log`, `diagnose`) zostają w wyniku: zapisujesz je albo
+diagnozujesz tylko do odczytu; metryka bez zmienności w linii bazowej dostaje uwagę, nie poziom.
+
 Sieć: `phase_run.py gate request` wysyła jedno żądanie POST na `$PDI_EVENTS_URL/events/tf` (odbiornik pdi, tylko
 https, http wyłącznie dla localhost): zdarzenie `gate.requested` z kluczem zmiany, nazwą bramki, podsumowaniem,
 ścieżką artefaktu, linkiem do PR i pytaniami z sekcji „Pytania do bramki”, podpisane HMAC-SHA256 sekretem
-`PDI_TF_SIGNING_SECRET` (sam sekret nie jest wysyłany). Pozostałe polecenia nie łączą się z siecią; `phase_run.py run`
-uruchamia lokalny `claude`.
+`PDI_TF_SIGNING_SECRET` (sam sekret nie jest wysyłany). `metric_watch.py check` wysyła jedno żądanie GET na `$SHIPSCOPE_URL/api/service/v1/metrics` (tylko https, http
+wyłącznie dla localhost) z tokenem usługi w nagłówku `Authorization` (nigdy w wyjściu), a z `--send` — po jednym
+POST-cie `metric.breached` (nazwa metryki, wartość, próg, okno, usługa, diagnoza) na `$PDI_EVENTS_URL/events/tf`,
+podpisanym jak wyżej; z `--csv` bez `--send` nie łączy się z siecią. Pozostałe polecenia nie łączą się z siecią;
+`phase_run.py run` uruchamia lokalny `claude`.
 
 ## Triaż zgłoszenia z pdi (PRB)
 Zgłoszenie żyje w pdi; tf daje tylko rekomendację (R7: w stanach pdi, decyzję podejmuje człowiek w pdi).

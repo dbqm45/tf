@@ -190,6 +190,34 @@
      "decision add"
     ]
    }
+  },
+  {
+   "id": "pasma-kontrolne-shipscope",
+   "expect": "trigger",
+   "prompt": "Projekt w trybie pdi ma ShipScope z tokenem usługi. Chcę, żeby skok rollbacków na PROD sam trafiał do pdi jako nowy problem. Jak to ustawić i co dokładnie trafi do pdi? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "metric_watch\\.py"
+     ],
+     [
+      "metric\\.breached"
+     ],
+     [
+      "3σ|3 ?sigma|poza 3"
+     ],
+     [
+      "--send|workflow install|metric-watch\\.yml"
+     ],
+     [
+      "SHIPSCOPE_TOKEN"
+     ]
+    ],
+    "none": [
+     "pdi-metrics\\.json.*token",
+     "decision add"
+    ]
+   }
   }
  ]
 }
