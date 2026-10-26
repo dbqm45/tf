@@ -4,7 +4,7 @@ description: Użyj przy pracy z gitem — gałęzie, commity, pull requesty i ic
 metadata:
   przeglad: 2027-10-10
   katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
-  slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR"
+  slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai-review.yml, ai_review.py, workflow przeglądu AI, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR"
 ---
 
 # Git workflow
@@ -87,6 +87,12 @@ Odwołaj się do planu kroku i wymagań (`docs/project/`), żeby przeglądający
 - **Przegląd AI jako krok CI** (triaż ryzyka, kontrakt wyjścia, werdykt jako status commita, `[skip ci]` przy
   commitach bota, komentarze tylko na liniach diffu, deduplikacja): `references/przeglad-ai-w-ci.md`. Bramka
   blokująca żyje w workflow (krok po agencie czyta werdykt), nie w odpowiedzi modelu.
+- **Gotowy workflow:** `python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--all-prs]` →
+  `.github/workflows/ai-review.yml`: przegląd PR z etykietą `ai-review` (albo każdego) według `REVIEW.md`, agent tylko
+  czyta i zwraca JSON, krok workflow ustawia status `ai-review/verdict` i jeden komentarz zbiorczy, etykieta
+  `ai-review-override` (człowiek) to świadome obejście. Akcje przypięte do SHA, `permissions: {}`, blokada forka.
+  Sekret i ochronę gałęzi ustawia człowiek. `REVIEW.md` z zatwierdzonego szkicu rekonstrukcji z kodu:
+  `ai_review.py review-md`.
 - Przegląd zgodności z planem kroku i triaż ustaleń z człowiekiem: skill przeglądu zmiany (pack-it: qa-change-review).
 
 ## Scalanie i stos PR-ów

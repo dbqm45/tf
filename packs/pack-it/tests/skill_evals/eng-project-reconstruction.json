@@ -224,6 +224,29 @@
    ]
   },
   {
+   "id": "review-draft-do-ci",
+   "expect": "trigger",
+   "prompt": "Rekonstrukcja z kodu zrobiła REVIEW.draft.md, przejrzałem go i jest dobry. Jak zrobić z niego zasady dla przeglądu PR przez AI w CI? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "review-md"
+     ],
+     [
+      "REVIEW\\.md"
+     ],
+     [
+      "ai_review\\.py install",
+      "ai-review\\.yml"
+     ]
+    ]
+   },
+   "rubric": [
+    "ai_review.py review-md przenosi zatwierdzony szkic do REVIEW.md (bez nadpisania istniejącego)",
+    "ai_review.py install zakłada workflow przeglądu, który czyta REVIEW.md"
+   ]
+  },
+  {
    "id": "dossier-przed-refaktorem",
    "expect": "no-trigger",
    "neighbor": "eng-legacy-dossier",

@@ -89,6 +89,38 @@
       ]
     },
     {
+      "id": "przeglad-ai-w-ci-instalacja",
+      "expect": "trigger",
+      "prompt": "Chcę, żeby Claude przeglądał każdy PR z etykietą ai-review w GitHub Actions, a werdykt „odrzucone” blokował scalenie. Mamy już REVIEW.md. Jak to najszybciej uruchomić w projekcie z fabryką? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ai_review\\.py install"
+          ],
+          [
+            "ai-review/verdict",
+            "status\\w* commita"
+          ],
+          [
+            "ANTHROPIC_API_KEY"
+          ],
+          [
+            "ochron\\w* gałęzi",
+            "branch protection"
+          ],
+          [
+            "ai-review-override",
+            "obejści"
+          ]
+        ]
+      },
+      "rubric": [
+        "ai_review.py install → .github/workflows/ai-review.yml (etykieta ai-review albo --all-prs)",
+        "sekret ANTHROPIC_API_KEY i ochrona gałęzi wymagająca statusu ai-review/verdict",
+        "obejście etykietą ai-review-override dodaną przez człowieka; agent tylko czyta, nie zatwierdza PR"
+      ]
+    },
+    {
       "id": "format-commita",
       "expect": "no-trigger",
       "prompt": "Jak powinien wyglądać komunikat commita dla zmiany łamiącej API — typ, zakres i stopka?",
