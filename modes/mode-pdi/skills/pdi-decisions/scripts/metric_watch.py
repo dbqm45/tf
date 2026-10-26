@@ -10,7 +10,7 @@ Pasma kontrolne na metrykach PROD z ShipScope (tryb mode-pdi, F5): punkt poza 3�
 
 Szereg: `--csv` albo ShipScope `GET $SHIPSCOPE_URL/api/service/v1/metrics?from&to&format=csv` z tokenem usługi
 `$SHIPSCOPE_TOKEN` (shps_…). Poziomy liczy `control_band.py` ze skilla core-delivery-lifecycle. Reguła 1 (punkt poza
-3σ, poziom act) w ostatnich `--recent` dniach szeregu → `metric.breached` (kontrakt pdi 0.4.0, ID
+3σ, poziom act) w ostatnich `--recent` dniach szeregu → `metric.breached` (kontrakt pdi 0.6.0, ID
 `tf-metric-<metryka>-<dzień>`); `--send` wysyła je podpisane na `$PDI_EVENTS_URL/events/tf` (`PDI_TF_SIGNING_SECRET`).
 Metryki: METRICS niżej; nadpisanie w .claude/pdi-metrics.json ({"baseline", "recent", "service", "metrics"}).
 Kod wyjścia: 0 — policzone (i wysłane), 1 — błąd (z podpowiedzią), 2 — złe wywołanie.

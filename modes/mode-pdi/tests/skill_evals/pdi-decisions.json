@@ -131,7 +131,8 @@
    "rubric": [
     "triage_pdi.py check, potem recommend --status parked --return-when „…” --rationale „…”",
     "w tf to needs-triage z etykietą deferred (tabela mapowania kontraktu)",
-    "decyzję podejmuje PO w pdi"
+    "decyzję podejmuje PO w pdi",
+    "rekomendacja zgodna ze schematem z kontraktu pdi (triage-recommendation.schema.json, od 0.6.0), nie z własnego formatu tf"
    ]
   },
   {

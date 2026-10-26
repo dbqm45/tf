@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Testy triażu zgłoszenia z pdi (tryb mode-pdi, skill pdi-decisions, scripts/triage_pdi.py): wejście PRB w JSON
-sprawdzane schematem kontraktu pdi 0.4.0 (problem.schema.json), rekomendacja w stanach pdi (R7) z polami wymaganymi
-przy danym stanie i stanem tf z tabeli mapowania (contract/README.md). python3 .claude/tests/test_triage_pdi.py"""
+sprawdzane schematem kontraktu pdi (problem.schema.json), rekomendacja w stanach pdi (R7) z polami wymaganymi
+przy danym stanie i stanem tf z tabeli mapowania — schemat triage-recommendation.schema.json z kontraktu 0.6.0. python3 .claude/tests/test_triage_pdi.py"""
 import json
 import os
 import subprocess
@@ -12,7 +12,7 @@ from pathlib import Path
 REL = Path(".claude") / "skills" / "pdi-decisions" / "scripts" / "triage_pdi.py"
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / REL).is_file()), None)
 SCRIPT = ROOT / REL if ROOT else None
-FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # kopia kontraktu pdi 0.4.0 (bez zmian)
+FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # kopia kontraktu pdi (wersja w VERSION, bez zmian)
 
 
 def run(args, cwd):
@@ -43,9 +43,23 @@ def main() -> int:
         print(f"✗ brak skryptu {REL}")
         return 1
     near = SCRIPT.parent / "problem.schema.json"
-    check(near.is_file() and json.loads(near.read_text(encoding="utf-8"))
-          == json.loads((FIX / "problem.schema.json").read_text(encoding="utf-8")),
-          "P-0: schemat zgłoszenia obok skryptu = kopia z kontraktu pdi 0.4.0")
+    contract = (FIX / "VERSION").read_text(encoding="utf-8").strip()
+    for name in ("problem.schema.json", "triage-recommendation.schema.json"):
+        near = SCRIPT.parent / name
+        check(near.is_file() and json.loads(near.read_text(encoding="utf-8"))
+              == json.loads((FIX / name).read_text(encoding="utf-8")) and contract == "0.6.0",
+              f"P-0: {name} obok skryptu = kopia z kontraktu pdi 0.6.0 ({contract})")
+    sys.path.insert(0, str(SCRIPT.parent))
+    from decision_record import validate   # walidator tf musi rozumieć schemat z kontraktu
+    rschema = json.loads((FIX / "triage-recommendation.schema.json").read_text(encoding="utf-8"))
+    example = json.loads((FIX / "triage-recommendation.json").read_text(encoding="utf-8"))
+    check(validate(example, rschema, "") == [], f"K-1: przykład rekomendacji z kontraktu przechodzi walidator tf: "
+          f"{validate(example, rschema, '')}")
+    check(validate({**example, "executor": "human"}, rschema, ""),
+          "K-2: wykonawca human przy tf_state ready-for-agent → błąd (mapowanie z kontraktu)")
+    check(validate("wontfix", {"enum": ["ready-for-agent", "ready-for-human"]}, "tf_state")
+          and validate("ready-for-human", {"enum": ["ready-for-agent", "ready-for-human"]}, "tf_state") == [],
+          "K-3: walidator tf sprawdza enum bez type (tak jest w warunku accepted w kontrakcie)")
 
     with tempfile.TemporaryDirectory() as tmp:
         d = Path(tmp)
@@ -87,7 +101,7 @@ def main() -> int:
                      "--observation", "5 zgłoszeń o tym samym w 3 miesiące", "--evidence", "taryfa to częsty przypadek")
         check(r.returncode == 0 and out.get("problem") == "PRB-34" and out.get("recommended_status") == "accepted"
               and out.get("tf_state") == "ready-for-agent" and "change" not in out and out.get("drafted_by") == "ai"
-              and out.get("contract_version") == "0.4.0",
+              and out.get("contract_version") == "0.6.0",
               f"R-1: accepted → ready-for-agent, bez change (tworzy pdi): {r.stdout}{r.stderr}")
         ev = {e["epistemic_status"] for e in out.get("evidence", [])}
         check(ev == {"observation", "ai_inference"}, f"R-2: dowody z epistemic_status: {out.get('evidence')}")
