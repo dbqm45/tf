@@ -72,7 +72,9 @@ Plan definiuje, co znaczy „przetestowane”; nie oceniasz tego, czego plan nie
 - Komentarz zbiorczy: werdykt, tabela wymiarów, link do raportu (`blob/<SHA>/<ścieżka>`), najwyżej 5 ustaleń
   po jednej linii.
 - `claude-code-action`: limity i narzędzia podajesz w `claude_args` (np. `--model`, `--max-turns`, `--allowedTools`);
-  akcję przypinasz do pełnego SHA. Szkielet workflow (pack-it): `.claude/skills/ops-ci-cd/references/przyklady.md`, przykład 4.
+  akcję przypinasz do pełnego SHA. Gotowy workflow z tego wzorca: `scripts/ai_review.py install` (szablon
+  `templates/ai-review.yml`: werdykt z JSON, status, komentarz zbiorczy z deduplikacją, obejście etykietą); szkielet
+  do własnych zmian (pack-it): `.claude/skills/ops-ci-cd/references/przyklady.md`, przykład 4.
 
 ## 7. Pętla uczenia się
 Co miesiąc: gdzie człowiek tylko przyklepał werdykt AI (zmarnowana uwaga → można poluzować triaż), a gdzie błąd

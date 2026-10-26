@@ -71,6 +71,34 @@
       }
     },
     {
+      "id": "gotowy-workflow-przegladu-ai",
+      "expect": "trigger",
+      "prompt": "Potrzebuję workflow GitHub Actions, w którym Claude przegląda PR i ustawia status blokujący scalenie przy werdykcie odrzuconym. Na co uważać przy uprawnieniach i czy fabryka ma gotowy szablon? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "permissions: \\{\\}",
+            "permissions: {}",
+            "minimaln\\w* uprawnie"
+          ],
+          [
+            "fork"
+          ],
+          [
+            "SHA"
+          ],
+          [
+            "ai_review\\.py install",
+            "ai-review\\.yml"
+          ]
+        ]
+      },
+      "rubric": [
+        "permissions: {} na górze i minimum w jobie, blokada forka, akcje przypięte do SHA, dane PR przez env",
+        "gotowy szablon: ai_review.py install (core-git-workflow)"
+      ]
+    },
+    {
       "id": "dockerfile",
       "expect": "no-trigger",
       "prompt": "Jak przyspieszyć budowanie obrazu w Dockerfile dla aplikacji Node.js, żeby warstwa z zależnościami się cache'owała?",

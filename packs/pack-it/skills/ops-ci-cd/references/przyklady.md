@@ -168,6 +168,10 @@ w `deploy.sh` — ops-release-engineering.
 ## 4. Przegląd PR przez AI z bramką werdyktu
 **Sytuacja:** „Claude ma przeglądać PR oznaczone etykietą `ai-review`, a werdykt »odrzucone« ma blokować scalenie.”
 
+Gotowy, przypięty do SHA workflow z tymi zasadami instaluje
+`python3 .claude/skills/core-git-workflow/scripts/ai_review.py install` (core-git-workflow); poniżej skrót do
+własnych zmian.
+
 **Jak:**
 1. `permissions: {}` na górze, w jobie tylko to, czego potrzebuje (komentarze, status commita).
 2. Blokada forka i warunek etykiety w `if:` joba; `concurrency` per numer PR.
