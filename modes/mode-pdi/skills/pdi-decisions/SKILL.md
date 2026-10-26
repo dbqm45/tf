@@ -4,7 +4,7 @@ description: Użyj przy decyzji o zmianie (CHG) w projekcie z rejestrem pdi — 
 metadata:
   przeglad: 2027-04-23
   katalog: "Użyj w projekcie z trybem mode-pdi, gdy zapada decyzja o konkretnej zmianie (CHG-n: bramka, odpowiedź właściciela, wybór wariantu) albo trzeba założyć dziennik zmiany ze zgłoszenia (PRB-n) — `decision_record.py change new` tworzy docs/project/changes/CHG-n/ (intent, plan, decisions) zgodnie z kontraktem pdi 0.3.0, decyzja trafia do decisions.md i do rejestru pdi przez MCP record_decision (numer DEC-n nadaje rejestr), bez serwera pdi wpis czeka jako niewysłany. Nie do dziennika faz projektu bez pdi (core-project-record) ani formatu commitów (core-conventional-commits)."
-  slowa: "pdi, rejestr decyzji, record_decision, zapisz decyzję, decyzja o zmianie, ustaliliśmy, zdecydowaliśmy, decisions.md, CHG, PRB, DEC, dziennik zmiany, docs/project/changes, zgłoszenie przyjęte, jedno źródło decyzji, bramka B1, bramka B2, kontrakt pdi"
+  slowa: "pdi, rejestr decyzji, record_decision, zapisz decyzję, decyzja o zmianie, ustaliliśmy, zdecydowaliśmy, decisions.md, CHG, PRB, DEC, dziennik zmiany, docs/project/changes, zgłoszenie przyjęte, jedno źródło decyzji, bramka B1, bramka B2, kontrakt pdi, sdlc-phase, phase_run, faza bez interakcji, gate.requested, skrzynka bramek"
 ---
 
 # Decyzje w jednym źródle (pdi)
@@ -54,6 +54,26 @@ jej tylko w treści odpowiedzi — ale też nie decydujesz sam, co jest decyzją
 
 Eksport wszystkich decyzji projektu (z numerem i stanem wysłania): `decision_record.py decision export`.
 `decision_record.py check` sprawdza też wpisy decyzji (ref, numer, rodzaj, źródło, daty, `wyslano: tak` bez numeru).
+
+## Fazy uruchamiane przez pdi
+Po decyzji na bramce pdi uruchamia w repo workflow `sdlc-phase.yml` (`python3 .claude/skills/pdi-decisions/scripts/phase_run.py
+workflow install`, dalej `phase_run.py`): zapisuje decyzję w `decisions.md` (`decision_record.py decision gate`, numer
+już z pdi, `wyslano: tak`), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
+persona i artefakt: `phase_run.py prompt`), otwiera PR fazy i wysyła prośbę o następną bramkę (`phase_run.py gate request`).
+Gdy tak cię uruchomiono:
+1. Nikt nie odpowie na pytania: nie pytasz człowieka i nie czekasz na zgodę. Pracujesz tylko w zakresie fazy, w
+   artefakcie z polecenia (`requirements.md`, `plan.md`…), nagłówek `status: proposed`.
+2. Czego nie rozstrzygniesz bez człowieka, nie zgadujesz: lista w sekcji `## Pytania do bramki` artefaktu (pytanie
+   z adresatem w wierszu) — trafi do skrzynki pdi razem z bramką.
+3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow.
+4. Na koniec `decision_record.py check` ma przejść. Poprawki po `changes_requested`: przeczytaj wpis bramki w
+   `decisions.md` i komentarze PR, zmień tylko to, czego dotyczą.
+
+Sieć: `phase_run.py gate request` wysyła jedno żądanie POST na `$PDI_EVENTS_URL/events/tf` (odbiornik pdi, tylko
+https, http wyłącznie dla localhost): zdarzenie `gate.requested` z kluczem zmiany, nazwą bramki, podsumowaniem,
+ścieżką artefaktu, linkiem do PR i pytaniami z sekcji „Pytania do bramki”, podpisane HMAC-SHA256 sekretem
+`PDI_TF_SIGNING_SECRET` (sam sekret nie jest wysyłany). Pozostałe polecenia nie łączą się z siecią; `phase_run.py run`
+uruchamia lokalny `claude`.
 
 ## Przykład
 Właściciel: „W CHG-12 eksport do CSV zamiast XLSX, klienci i tak otwierają go w arkuszu”. Pokazujesz szkic

@@ -1,0 +1,107 @@
+# Faza zmiany uruchamiana przez pdi (tryb mode-pdi, F4): decyzja z bramki → praca persony bez interakcji → PR fazy →
+# prośba o następną bramkę w skrzynce pdi. pdi wywołuje ten workflow przez workflow_dispatch (PDI_DISPATCH_REPO,
+# PDI_DISPATCH_WORKFLOW=sdlc-phase.yml) z wejściami niżej.
+# Instalacja: python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install
+# Sekrety repozytorium: ANTHROPIC_API_KEY (Claude Code), PDI_TF_SIGNING_SECRET (ten sam co PDI_TF_SIGNING_SECRET
+# odbiornika pdi). Zmienna repozytorium: PDI_EVENTS_URL (adres odbiornika pdi, https).
+# Wejścia z pdi trafiają do poleceń tylko przez env (nigdy wprost w `run:`), żeby nie dało się wstrzyknąć polecenia.
+# Uwaga: dla bezpieczeństwa przypnij akcje do pełnego SHA commita (np. skill ops-ci-cd w pack-it).
+name: sdlc-phase
+run-name: "pdi: ${{ inputs.change }} ${{ inputs.phase }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      change:
+        description: "Zmiana (CHG-n)"
+        required: true
+      phase:
+        description: "Faza: intent, requirements, architecture, design, delivery"
+        required: true
+      gate:
+        description: "Bramka, na której zapadła decyzja (B1…)"
+        required: false
+      outcome:
+        description: "Wynik bramki: approved, changes_requested, rejected"
+        required: false
+      decision:
+        description: "Numer decyzji w rejestrze pdi (DEC-n)"
+        required: false
+      rework:
+        description: "true — poprawki tej samej fazy po changes_requested"
+        required: false
+        default: "false"
+      budget_usd:
+        description: "Twardy limit kosztu fazy w USD (puste — bez limitu)"
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sdlc-phase-${{ github.event.inputs.change }}
+  cancel-in-progress: false
+
+jobs:
+  phase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      CHANGE: ${{ inputs.change }}
+      PHASE: ${{ inputs.phase }}
+      GATE: ${{ inputs.gate }}
+      OUTCOME: ${{ inputs.outcome }}
+      DECISION: ${{ inputs.decision }}
+      REWORK: ${{ inputs.rework }}
+      BUDGET_USD: ${{ inputs.budget_usd }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Gałąź fazy (poprawki trafiają do tego samego PR)
+        run: |
+          branch="pdi/$CHANGE-$PHASE"
+          echo "BRANCH=$branch" >> "$GITHUB_ENV"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            git checkout -B "$branch" "origin/$branch"
+          else
+            git checkout -b "$branch"
+          fi
+      - name: Sprawdzenie wejść (bez modelu)
+        run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py prompt --change "$CHANGE" --phase "$PHASE" > /dev/null
+      - name: Decyzja z bramki w decisions.md
+        if: env.DECISION != ''
+        run: python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate "$CHANGE" --gate "$GATE" --outcome "$OUTCOME" --id "$DECISION"
+      - name: Claude Code
+        run: npm install -g @anthropic-ai/claude-code@2.1.310
+      - name: Faza bez interakcji
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          args=(--change "$CHANGE" --phase "$PHASE")
+          if [ "$REWORK" = "true" ]; then args+=(--rework --gate "$GATE" --decision "$DECISION"); fi
+          if [ -n "$BUDGET_USD" ]; then args+=(--budget-usd "$BUDGET_USD"); fi
+          python3 .claude/skills/pdi-decisions/scripts/phase_run.py run "${args[@]}"
+      - name: PR fazy
+        id: pr
+        if: env.PHASE != 'delivery'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "docs($CHANGE): faza $PHASE (pdi)" -m "Change: $CHANGE"
+          fi
+          git push -u origin "$BRANCH"
+          url=$(gh pr view "$BRANCH" --json url -q .url 2>/dev/null || gh pr create --fill --head "$BRANCH")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Prośba o bramkę do pdi
+        if: env.PHASE != 'delivery'
+        env:
+          PDI_TF_SIGNING_SECRET: ${{ secrets.PDI_TF_SIGNING_SECRET }}
+          PDI_EVENTS_URL: ${{ vars.PDI_EVENTS_URL }}
+          PR_URL: ${{ steps.pr.outputs.url }}
+        run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change "$CHANGE" --phase "$PHASE" --url "$PR_URL"

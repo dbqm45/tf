@@ -133,6 +133,34 @@
      ]
     ]
    }
+  },
+  {
+   "id": "faza-uruchomiona-przez-pdi",
+   "expect": "trigger",
+   "prompt": "Workflow sdlc-phase uruchomiony przez pdi wywołał cię bez interakcji: zmiana CHG-12, faza requirements, nikt nie odpowie na pytania. Co robisz i czym kończysz pracę? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "requirements\\.md"
+     ],
+     [
+      "Pytania do bramki"
+     ],
+     [
+      "nie pyta|bez pyta|nie czekaj|nikt nie odpowie|bez interakcji"
+     ],
+     [
+      "decision_record\\.py check"
+     ],
+     [
+      "B2|bramk"
+     ]
+    ],
+    "none": [
+     "zapytam (człowieka|właściciela)",
+     "decision add"
+    ]
+   }
   }
  ]
 }
