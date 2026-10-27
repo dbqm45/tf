@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.48.0] — 2026-10-27
+### Added
+- **pack-it:** defence-in-depth map, SSDF and DSOMM, security log management (#91)
+
 ## [5.47.0] — 2026-10-27
 ### Added
 - **pack-it:** host hardening and data-at-rest guidance in security skills (#90)
