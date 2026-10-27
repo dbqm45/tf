@@ -274,6 +274,37 @@
     "„Odblokowuje”: TSK-58 (cięcie tej zmiany); bez tego fundament to praca warstwowa",
     "decision_record.py check i REL-008 w ci_for_sdlc sprawdzają to samo"
    ]
+  },
+  {
+    "id": "faza-design-tabela-ramek",
+    "expect": "trigger",
+    "prompt": "pdi uruchomiło fazę design dla CHG-12. Wymagania są w requirements.md, projektantka ma ekrany w Figmie. Co mam oddać i jak sprawdzić przed bramką design-review? Odpowiedz zwięźle.",
+    "checks": {
+      "all": [
+        [
+          "design\\.md"
+        ],
+        [
+          "Wymaganie \\| Ścieżka \\| Stan \\| Ramka",
+          "tabel\\w* ramek"
+        ],
+        [
+          "design_check"
+        ],
+        [
+          "node-id|link\\w* do ramk\\w*"
+        ],
+        [
+          "Pytania do bramki|pytani\\w*"
+        ]
+      ],
+      "none": []
+    },
+    "rubric": [
+      "design.md z tabelą ramek wg kontraktu pdi (conventions.design), szablon templates/design.md",
+      "ramki projektanta dopasowane, nie rysowane przez agenta bez prośby",
+      "design_check.py check CHG-12 przed bramką; braki idą jako pytania do pdi"
+    ]
   }
- ]
+]
 }

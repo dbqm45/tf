@@ -1,7 +1,9 @@
 {
   "repo": "dbqm45/pdi",
-  "version": "0.8.0",
-  "version_files": ["modes/mode-pdi/tests/fixtures/pdi-contract/VERSION"],
+  "version": "0.9.0",
+  "version_files": [
+    "modes/mode-pdi/tests/fixtures/pdi-contract/VERSION"
+  ],
   "files": {
     "problem.schema.json": [
       "modes/mode-pdi/skills/pdi-decisions/scripts/problem.schema.json",
@@ -18,10 +20,30 @@
     "reconstruction.schema.json": [
       "packs/pack-it/skills/eng-codebase-mapping/scripts/reconstruction-export.schema.json"
     ],
-    "examples/problem.json": ["modes/mode-pdi/tests/fixtures/pdi-contract/problem.json"],
-    "examples/release-plan.json": ["modes/mode-pdi/tests/fixtures/pdi-contract/release-plan.json"],
-    "examples/triage-recommendation.json": ["modes/mode-pdi/tests/fixtures/pdi-contract/triage-recommendation.json"],
-    "examples/event-gate.requested.json": ["modes/mode-pdi/tests/fixtures/pdi-contract/event-gate.requested.json"],
-    "examples/event-metric.breached.json": ["modes/mode-pdi/tests/fixtures/pdi-contract/event-metric.breached.json"]
+    "examples/problem.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/problem.json"
+    ],
+    "examples/release-plan.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/release-plan.json"
+    ],
+    "examples/triage-recommendation.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/triage-recommendation.json"
+    ],
+    "examples/event-gate.requested.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/event-gate.requested.json"
+    ],
+    "examples/event-metric.breached.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/event-metric.breached.json"
+    ],
+    "design-links.schema.json": [
+      "modes/mode-pdi/skills/pdi-decisions/scripts/design-links.schema.json",
+      "modes/mode-pdi/tests/fixtures/pdi-contract/design-links.schema.json"
+    ],
+    "examples/design.md": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/design.md"
+    ],
+    "examples/design-links.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/design-links.json"
+    ]
   }
 }

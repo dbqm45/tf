@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Triaż zgłoszenia z pdi (F3) — tryb mode-pdi. Procedura triażu: skill proc-issue-triage; ten skrypt sprawdza wejście
-i składa rekomendację w stanach pdi (kontrakt 0.8.0, R7).
+i składa rekomendację w stanach pdi (kontrakt 0.9.0, R7).
 
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py check <prb.json>
       zgłoszenie PRB w JSON wobec contract/problem.schema.json (kopia obok skryptu); triaż tylko dla stanów
@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from decision_record import validate  # noqa: E402  (ten sam walidator podzbioru JSON Schema co dla release.yaml)
 
-CONTRACT = "0.8.0"
+CONTRACT = "0.9.0"
 PROBLEM_SCHEMA = HERE / "problem.schema.json"                  # kopia z kontraktu pdi (tools/pdi-contract.json)
 RECOMMENDATION_SCHEMA = HERE / "triage-recommendation.schema.json"   # kopia z kontraktu pdi (tools/pdi-contract.json)
 TRIAGE_INPUT = ("new", "clarifying", "ready_for_triage")
