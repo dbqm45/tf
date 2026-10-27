@@ -4,7 +4,7 @@ description: Użyj przy wykrywaniu i obsłudze incydentu bezpieczeństwa — SIE
 metadata:
   przeglad: 2027-04-17
   katalog: "Użyj przy wykrywaniu zagrożeń i reagowaniu na incydenty bezpieczeństwa — SIEM, alerty i reguły jako kod, EDR, IDS/IPS, SOAR z bramką człowieka, zarządzanie podatnościami i łatkami, utwardzanie hosta (CIS, SSH, zapora, auditd, dryf), cykl reagowania (NIST SP 800-61r3), ograniczanie skutków, zabezpieczanie dowodów, analiza przyczyn, zgłoszenia. Nie do awarii bez ataku (ops-sre-incidents) ani projektu zabezpieczeń (arch-threat-modeling)."
-  slowa: "utwardzanie serwera, hardening, CIS Benchmark, SSH tylko klucze, PermitRootLogin, OpenSCAP, Lynis, auditd, unattended-upgrades, wyciek danych osobowych klientów, w jakich terminach zgłosić incydent, kto przygotowuje zgłoszenie incydentu"
+  slowa: "centralne logi, zbieranie logów w jednym miejscu, zarządzanie logami, NIST SP 800-92, integralność logów, brak logów, utwardzanie serwera, hardening, CIS Benchmark, SSH tylko klucze, PermitRootLogin, OpenSCAP, Lynis, auditd, unattended-upgrades, wyciek danych osobowych klientów, w jakich terminach zgłosić incydent, kto przygotowuje zgłoszenie incydentu"
 ---
 
 # Operacje bezpieczeństwa: wykrywanie i reagowanie
@@ -24,6 +24,12 @@ konta, zapora hosta, audyt, sprawdzenie dryfu): `references/utwardzanie-hosta.md
 - Logi **poza systemem, który opisują** (napastnik z rootem kasuje lokalne logi), z czasem UTC i synchronizacją
   zegarów, retencja ustalona z wymaganiami prawnymi i dochodzeniowymi (zwykle miesiące, nie dni). Bez danych
   wrażliwych (ops-observability).
+- **Plan zarządzania logami** (wg NIST SP 800-92), zanim wybierzesz SIEM: inwentarz źródeł z właścicielem,
+  priorytetem i formatem; transport z buforem (agent lub kolektor, kolejka), żeby awaria odbiornika nie gubiła
+  zdarzeń; **integralność** — zapis w magazynie z ochroną przed usunięciem (blokada obiektów, WORM), uprawnienia
+  rozdzielone (system źródłowy tylko dopisuje, administratorzy produkcji nie kasują logów); retencja per źródło
+  (szybki dostęp krótko, archiwum dłużej); **alarm, gdy źródło przestaje wysyłać** — cisza w logach to też sygnał
+  (awaria albo napastnik). Format zdarzeń bezpieczeństwa w aplikacji: OWASP Logging Cheat Sheet.
 - **SIEM** zbiera, normalizuje i koreluje. Wartość daje dopiero zestaw reguł i ich utrzymanie, nie samo wdrożenie.
 
 ## 2. Alerty i reguły jako kod
@@ -96,7 +102,7 @@ i ostatnią fazą.
   i treść zgłoszenia przygotowuje człowiek z działem prawnym; agent dostarcza oś czasu i fakty.
 
 ## Checklista
-- [ ] logi bezpieczeństwa poza hostem, UTC, retencja ustalona
+- [ ] logi bezpieczeństwa poza hostem, UTC, retencja ustalona; magazyn chroniony przed usunięciem, alarm na brak logów
 - [ ] reguły wykrywania w repo, z testem, właścicielem i runbookiem; mierzona trafność
 - [ ] inwentarz zasobów i terminy naprawy podatności; łatanie w pierścieniach
 - [ ] hosty utwardzone wg linii bazowej (CIS), dryf sprawdzany skanerem
@@ -104,6 +110,9 @@ i ostatnią fazą.
 - [ ] automatyzacja destrukcyjna tylko z zatwierdzeniem człowieka
 
 ## Źródła
+- NIST SP 800-92 *Guide to Computer Security Log Management* (2006); Rev. 1 *Cybersecurity Log Management Planning
+  Guide* — projekt z 11.10.2023, nie final (wg wyszukiwania 2026-10-27);
+  [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) (treść [niezweryfikowane])
 - [NIST SP 800-61 Rev. 3](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-61r3.pdf) (04.2025),
   [AWS Security Incident Response Guide — containment](https://docs.aws.amazon.com/whitepapers/latest/aws-security-incident-response-guide/containment.html)
 - [roadmap.sh — DevSecOps](https://roadmap.sh/devsecops) (SIEM, SOAR, EDR, IDS/IPS, alert types, IR lifecycle,

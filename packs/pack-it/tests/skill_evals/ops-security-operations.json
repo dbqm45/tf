@@ -108,6 +108,41 @@
     "konta i sudo z najmniejszymi uprawnieniami, auditd/logi wysłane poza host",
     "automatyczne łatki bezpieczeństwa, sprawdzenie skanerem (OpenSCAP/Lynis) i wykrywanie dryfu; obraz z IaC zamiast ręcznych zmian"
    ]
+  },
+  {
+   "id": "centralne-logi-bezpieczenstwa",
+   "expect": "trigger",
+   "prompt": "Mamy logi rozrzucone po serwerach, chmurze i aplikacjach. Chcemy je zebrać w jednym miejscu na potrzeby bezpieczeństwa. Co zaplanować, zanim kupimy SIEM? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "źród\\w*|inwentarz\\w*"
+     ],
+     [
+      "UTC|czas\\w*|NTP|zegar\\w*"
+     ],
+     [
+      "integralnoś\\w*|niezmienial\\w*|WORM|nie\\w* (usun|skasow)\\w*|oddzielon\\w* uprawnie\\w*"
+     ],
+     [
+      "retencj\\w*"
+     ],
+     [
+      "brak\\w* log\\w*|cisz\\w*|przestał\\w*|zanik\\w*"
+     ],
+     [
+      "800-92|NIST"
+     ]
+    ],
+    "none": []
+   },
+   "rubric": [
+    "inwentarz źródeł z właścicielem i priorytetem (IdP, audyt chmury, aplikacja, EDR)",
+    "format, UTC i synchronizacja czasu; transport z buforem",
+    "integralność: logi poza systemem źródłowym, oddzielone uprawnienia (kto pisze ≠ kto kasuje), ochrona przed usunięciem",
+    "retencja per źródło z uzasadnieniem",
+    "alarm, gdy źródło przestaje wysyłać; NIST SP 800-92"
+   ]
   }
  ]
 }
