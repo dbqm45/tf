@@ -9,7 +9,8 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py check
       sprawdza nagłówki artefaktów i wpisy decyzji w docs/project/changes/*/, a release.yaml — schematem z kontraktu
       i spójnością: mvp.release wśród linii, TSK w jednej linii i zgodne z plan.md (tasks, kolumny Wydanie i Flaga),
-      flaga z etapami (rollout) i datą usunięcia (remove_by), TSK flagi w liniach
+      flaga z etapami (rollout) i datą usunięcia (remove_by), TSK flagi w liniach; w plan.md samokontrolę planu cięć
+      (fundament z „Odblokowuje” wskazującym TSK tej zmiany, cięcie z ID wymagania albo weryfikacją — jak REL-008)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision add CHG-12 --statement "…" --why "…" \
       --kind product --by "kto" [--date RRRR-MM-DD] [--source-kind claude-cli] [--drafted-by ai]
       dopisuje zatwierdzoną decyzję do decisions.md (ref CHG-12/Dn, id puste, wyslano: nie)
@@ -365,8 +366,14 @@ def validate(v, s: dict, at: str) -> list[str]:
     return errs
 
 
+PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odblokowuje", "weryfikacja")
+FOUNDATION = re.compile(r"^(fundament|foundation|f|f-\d+)$", re.I)   # jak REL-008 w ci_for_sdlc (connectors/repo.ts)
+FOUNDATION_VALUE = re.compile(r"^\((fundament|foundation)\)", re.I)
+REQUIREMENT_ID = re.compile(r"\b[A-Z][A-Z0-9]*-\d+\b")
+
+
 def plan_columns(text: str) -> dict:
-    """Wiersze tabeli plan.md z kolumnami „Wydanie” i „Flaga”: TSK → {"wydanie": …, "flaga": …}."""
+    """Wiersze tabeli cięć plan.md: TSK → {kolumna: wartość} dla kolumn z PLAN_COLUMNS obecnych w nagłówku."""
     out, cols = {}, None
     for line in re.sub(r"<!--.*?-->", "", text, flags=re.S).splitlines():
         if not line.strip().startswith("|"):
@@ -374,13 +381,38 @@ def plan_columns(text: str) -> dict:
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         low = [c.lower() for c in cells]
-        if "wydanie" in low or "flaga" in low:
-            cols = {k: low.index(k) for k in ("wydanie", "flaga") if k in low}
+        if "wydanie" in low or "flaga" in low or "odblokowuje" in low:
+            cols = {k: low.index(k) for k in PLAN_COLUMNS if k in low}
             continue
         if cols and cells and KEY.match(cells[0]):
             out[cells[0]] = {k: (cells[i] if i < len(cells) and cells[i] not in EMPTY_CELL else None)
                              for k, i in cols.items()}
     return out
+
+
+def check_plan(d: Path) -> list[str]:
+    """Samokontrola planu cięć (core-delivery-lifecycle plan-ciec.md), ta sama co REL-008 w ci_for_sdlc: fundament
+    z „Odblokowuje” wskazującym cięcia tej zmiany; cięcie z ID wymagania albo weryfikacją (gdy plan ma „Wymagania”)."""
+    plan = d / "plan.md"
+    if not plan.is_file():
+        return []
+    text = plan.read_text(encoding="utf-8")
+    h = parse_header(text) or {}
+    rows = plan_columns(text)
+    known = set(rows) | set(h["tasks"] if isinstance(h.get("tasks"), list) else [h["tasks"]] if h.get("tasks") else [])
+    errs = []
+    for t, row in rows.items():
+        if FOUNDATION.match(row.get("rodzaj") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
+            unblocks = REQUIREMENT_ID.findall(row.get("odblokowuje") or "")
+            if not unblocks:
+                errs.append(f"plan.md: {t} — fundament bez „Odblokowuje” (cięcia tej zmiany, których wymaga); "
+                            "bez tego to praca warstwowa: usuń go albo włącz do pierwszego cięcia, które go potrzebuje")
+            for u in unblocks:
+                if u not in known:
+                    errs.append(f"plan.md: {t} — „Odblokowuje” {u}, a {u} nie jest cięciem tej zmiany")
+        elif "wymagania" in row and not REQUIREMENT_ID.findall(row["wymagania"] or "") and not row.get("weryfikacja"):
+            errs.append(f"plan.md: {t} — cięcie bez ID wymagania w „Wymagania” i bez weryfikacji")
+    return errs
 
 
 def check_release(d: Path) -> list[str]:
@@ -448,7 +480,8 @@ def check() -> int:
         return 0
     bad = 0
     for f in files:
-        for e in check_file(f) + (check_entries(f) if f.name == "decisions.md" else []):
+        extra = check_entries(f) if f.name == "decisions.md" else check_plan(f.parent) if f.name == "plan.md" else []
+        for e in check_file(f) + extra:
             print(f"✗ {f}: {e}")
             bad += 1
     for f in releases:   # zmiana bez release.yaml (sprzed planu wydania) nie jest błędem

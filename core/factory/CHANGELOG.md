@@ -3,6 +3,18 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.46.0] — 2026-10-27
+### Added
+- **mode-pdi:** Rodzaj, Wymagania i Odblokowuje w planie zmiany (#89)
+
+## [5.45.0] — 2026-10-26
+### Added
+- **pack-ev:** add connector status, OCPP version and uptime to glossary (#88)
+
+## [5.44.0] — 2026-10-26
+### Added
+- **mode-pdi:** triage recommendation schema from pdi contract 0.6.0 (#87)
+
 ## [5.43.0] — 2026-10-26
 ### Added
 - **mode-pdi:** dzień zgłoszenia w nagłówku zmiany (source_reported_at) (#85)
