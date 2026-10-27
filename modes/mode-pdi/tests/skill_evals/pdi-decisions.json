@@ -244,6 +244,36 @@
      "wymaganie: przycisk"
     ]
    }
+  },
+  {
+   "id": "plan-zmiany-fundament",
+   "expect": "trigger",
+   "prompt": "Piszę plan.md zmiany CHG-12. Przed cięciem TSK-58 (ponowienie płatności) potrzebny jest klucz idempotencji jako TSK-57, bez efektu dla użytkownika. Jak go zapisać w planie, żeby przeszedł check i bramkę na PR? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "fundament"
+     ],
+     [
+      "Odblokowuje"
+     ],
+     [
+      "TSK-58"
+     ],
+     [
+      "decision_record\\.py check",
+      "\\bcheck\\b"
+     ]
+    ],
+    "none": [
+     "kolumna „Odblokowuje” jest opcjonalna dla fundamentu"
+    ]
+   },
+   "rubric": [
+    "TSK-57 z rodzajem „fundament” i wartością „(fundament) … jest gotowe”",
+    "„Odblokowuje”: TSK-58 (cięcie tej zmiany); bez tego fundament to praca warstwowa",
+    "decision_record.py check i REL-008 w ci_for_sdlc sprawdzają to samo"
+   ]
   }
  ]
 }
