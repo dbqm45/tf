@@ -49,7 +49,7 @@ ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo",
 NEW = {"intent": "discovery", "plan": "plan", "decisions": "plan"}   # artefakty `change new` i ich faza
 CHANGES = Path("docs") / "project" / "changes"
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
-RELEASE_SCHEMA = Path(__file__).resolve().parent / "release-plan.schema.json"   # kopia z kontraktu pdi 0.6.0
+RELEASE_SCHEMA = Path(__file__).resolve().parent / "release-plan.schema.json"   # kopia z kontraktu pdi (tools/pdi-contract.json)
 EMPTY_CELL = ("", "—", "-", "–")
 
 

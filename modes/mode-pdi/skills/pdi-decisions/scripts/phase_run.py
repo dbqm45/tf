@@ -10,7 +10,7 @@ Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez inter
       JSON {status: waiting_gate | done | failed, …}; kod wyjścia 0 — czeka na bramkę albo gotowe, 1 — błąd
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (kontrakt pdi 0.6.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET
+      gate.requested (kontrakt pdi 0.8.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install [--force]
       szablon .github/workflows/sdlc-phase.yml (workflow_dispatch wywoływany przez pdi)
 
@@ -40,7 +40,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.6.0"
+CONTRACT_VERSION = "0.8.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Pytania do bramki"
 # Pola zgłoszenia z pdi (contract/problem.schema.json), które trafiają do promptu fazy intent.

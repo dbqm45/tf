@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Testy triażu zgłoszenia z pdi (tryb mode-pdi, skill pdi-decisions, scripts/triage_pdi.py): wejście PRB w JSON
 sprawdzane schematem kontraktu pdi (problem.schema.json), rekomendacja w stanach pdi (R7) z polami wymaganymi
-przy danym stanie i stanem tf z tabeli mapowania — schemat triage-recommendation.schema.json z kontraktu 0.6.0. python3 .claude/tests/test_triage_pdi.py"""
+przy danym stanie i stanem tf z tabeli mapowania — schemat triage-recommendation.schema.json z kontraktu pdi (wersja w fixtures/pdi-contract/VERSION). python3 .claude/tests/test_triage_pdi.py"""
 import json
 import os
 import subprocess
@@ -47,8 +47,8 @@ def main() -> int:
     for name in ("problem.schema.json", "triage-recommendation.schema.json"):
         near = SCRIPT.parent / name
         check(near.is_file() and json.loads(near.read_text(encoding="utf-8"))
-              == json.loads((FIX / name).read_text(encoding="utf-8")) and contract == "0.6.0",
-              f"P-0: {name} obok skryptu = kopia z kontraktu pdi 0.6.0 ({contract})")
+              == json.loads((FIX / name).read_text(encoding="utf-8")) and contract,
+              f"P-0: {name} obok skryptu = kopia z kontraktu pdi {contract}")
     sys.path.insert(0, str(SCRIPT.parent))
     from decision_record import validate   # walidator tf musi rozumieć schemat z kontraktu
     rschema = json.loads((FIX / "triage-recommendation.schema.json").read_text(encoding="utf-8"))
@@ -101,7 +101,7 @@ def main() -> int:
                      "--observation", "5 zgłoszeń o tym samym w 3 miesiące", "--evidence", "taryfa to częsty przypadek")
         check(r.returncode == 0 and out.get("problem") == "PRB-34" and out.get("recommended_status") == "accepted"
               and out.get("tf_state") == "ready-for-agent" and "change" not in out and out.get("drafted_by") == "ai"
-              and out.get("contract_version") == "0.6.0",
+              and out.get("contract_version") == contract,
               f"R-1: accepted → ready-for-agent, bez change (tworzy pdi): {r.stdout}{r.stderr}")
         ev = {e["epistemic_status"] for e in out.get("evidence", [])}
         check(ev == {"observation", "ai_inference"}, f"R-2: dowody z epistemic_status: {out.get('evidence')}")

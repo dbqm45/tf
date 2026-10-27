@@ -72,7 +72,8 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
 `docs/project/00-reconstruction/`: `plan.md`, `raw/`, `modules/*.json`, `domain.md`, `requirements.md`, `rules.md`,
 `standards/` z `INDEX.md`, `report.md`, `CLAUDE.draft.md`, `REVIEW.draft.md`, `manifest.json`
 (commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), `reconstruction.json` (eksport, format
-`reconstruction-export.schema.json` obok skryptu; `recon_refresh.py finish` odświeża go razem z manifestem),
+`reconstruction-export.schema.json` obok skryptu — kopia `reconstruction.schema.json` z kontraktu pdi;
+`recon_refresh.py finish` odświeża go razem z manifestem),
 opcjonalnie `report.html`.
 
 ## Odświeżanie przyrostowe
