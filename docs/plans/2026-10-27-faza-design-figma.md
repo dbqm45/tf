@@ -1,6 +1,6 @@
 # Plan: faza projektowania z Figmą (etap 07 flow, F6)
 
-Data: 2026-10-27 · Status: kroki 1–3 w realizacji (decyzje D-F1, D-F2 przyjęte) · Gałąź: `claude/great-hypatia-angvam`
+Data: 2026-10-27 · Status: kroki 1–3 zrobione (pdi #41, tf #94, ci_for_sdlc #87); krok 4 czeka na plik Figmy (D-F3) · Decyzje D-F1, D-F2 przyjęte · Gałąź: `claude/great-hypatia-angvam`
 Źródło: pdi `docs/plan-jeden-flow-sdlc.md` §2 etap 07 („Design [B] — tf + Figma MCP — ramki per journey i stan, linki
 w `design.md`”) i §F6 („tf: faza designu przez Figma MCP”; „ci_for_sdlc: porównanie ekranów z ramkami Figmy”).
 

@@ -21,7 +21,7 @@ Polecenie startowe sesji: sekcja „Polecenie startowe — F0”. Kroki F1–F4 
 ## Stan realizacji (2026-10-27)
 Wszystkie kroki tf z planu jednego flow są na `main`: F0 i F0b (`decision_record.py`: `change new`, `check`,
 `decision add/pending/mark/export/gate`), F1 (#80), F2 (#83), F3 (#82, #84, #87), F4 (#79), F5 (#81, pasma kontrolne
-→ `metric.breached`) i z F6 AI review w CI (#86). Doszły kroki z planu G1/G2 pdi (G1.1 #78, G2.4 #77), data
+→ `metric.breached`) i z F6 AI review w CI (#86) oraz fazę designu z tabelą ramek Figmy (#94); kopie kontraktu pdi są generowane z tagu wydania (#93). Doszły kroki z planu G1/G2 pdi (G1.1 #78, G2.4 #77), data
 zgłoszenia w nagłówku zmiany (#85) i kolumny planu zmiany dla samokontroli REL-008 (#89). Stan całego ekosystemu,
 także luk G1–G8: pdi `docs/plan-jeden-flow-sdlc.md`, §8. Prognoza „kiedy to będzie” (G3, decyzja D-E1) liczy się
 w pdi z liczby cięć planu tf i czasu przepływu z ShipScope, więc tf nie potrzebuje do niej zmian.
@@ -72,7 +72,7 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 | F3 | Triaż z wejściem `PRB` w JSON (`contract/problem.schema.json`) i rekomendacją według schematu — **zrobione 2026-10-26** jako `triage_pdi.py` (`check`, `recommend`) w `mode-pdi` (plan: `docs/plans/2026-10-26-f3-triaz-prb.md`) | `packs/pack-it/skills/proc-issue-triage`; stany pdi ↔ tf w `pdi/contract/README.md` |
 | F4 | Uruchamianie person bez interakcji, stan „czeka na bramkę”, `gate.requested` do pdi, szablon `sdlc-phase.yml` — **zrobione 2026-10-26** jako `phase_run.py` w `mode-pdi` (plan: `docs/plans/2026-10-26-f4-uruchamianie-faz.md`) | `modes/mode-pdi/` |
 | F5 | Pasma kontrolne na metrykach PROD z ShipScope → `metric.breached` do pdi — **zrobione 2026-10-26** jako `metric_watch.py` i szablon `metric-watch.yml` (plan: `docs/plans/2026-10-26-f5-pasma-kontrolne.md`) | `modes/mode-pdi/` |
-| F6 | AI review pull requestów w CI według `REVIEW.md` — **zrobione** (#86, plan: `docs/plans/2026-10-26-przeglad-ai-w-ci.md`); faza designu przez Figma MCP i evale flow — do zrobienia | `core/` |
+| F6 | AI review pull requestów w CI według `REVIEW.md` — **zrobione** (#86, plan: `docs/plans/2026-10-26-przeglad-ai-w-ci.md`); faza designu z tabelą ramek Figmy i `design_check.py` — **zrobione** (#94, plan: `docs/plans/2026-10-27-faza-design-figma.md`; zostaje próba na prawdziwym pliku Figmy); evale flow — do zrobienia | `core/`, `modes/mode-pdi/`, `packs/pack-ux/` |
 
 ## Polecenie startowe — F0 (wklej w nowej sesji w repo tf)
 
