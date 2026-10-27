@@ -4,7 +4,7 @@ description: Użyj przy modelu zagrożeń funkcji lub integracji — DFD z grani
 metadata:
   przeglad: 2027-10-17
   katalog: "Użyj przy projektowaniu funkcji, usługi lub integracji i przy zmianie granic zaufania — model zagrożeń (DFD z granicami zaufania, powierzchnia ataku, STRIDE per element, PASTA dla krytycznych procesów), ocena i kwantyfikacja ryzyka, decyzje o ryzyku, OWASP Top 10:2025. Nie do przeglądu konkretnego diffu (security-reviewer) ani reagowania na incydent (ops-security-operations)."
-  slowa: "wyciek danych, atak, zagrożenie, ryzyko, ryzyko rezydualne, czy ochrona się opłaca, koszt zabezpieczeń, FAIR, prawdopodobieństwo i strata, oszacować ryzyko liczbowo, ryzyko liczbowo zamiast wysokie średnie, czy warto wydać na ochronę, ochrona przed wyciekiem danych klientów"
+  slowa: "obrona w głąb, defence in depth, defense in depth, warstwy obrony, warstwy zabezpieczeń, blast radius, wyciek danych, atak, zagrożenie, ryzyko, ryzyko rezydualne, czy ochrona się opłaca, koszt zabezpieczeń, FAIR, prawdopodobieństwo i strata, oszacować ryzyko liczbowo, ryzyko liczbowo zamiast wysokie średnie, czy warto wydać na ochronę, ochrona przed wyciekiem danych klientów"
 ---
 
 # Modelowanie zagrożeń
@@ -36,7 +36,9 @@ modelu w review, bez nowego warsztatu.
 6. **Kontrole do backlogu i testów**: każde ograniczenie ma zadanie i test nadużycia (abuse case), np. „użytkownik B
    pobiera fakturę użytkownika A → 404”. Trafiają do planu (core-project-record) i do qa-test-design.
 7. **Weryfikacja**: czy każdy przepływ przez granicę zaufania ma zagrożenia S/T/I, czy każdy magazyn danych ma I/T/D,
-   czy każda decyzja ma właściciela. Model `proposed` → akceptacja człowieka.
+   czy każda warstwa obrony (sieć, tożsamość, host, aplikacja, dane, łańcuch dostaw, wykrywanie, reagowanie) ma
+   kontrolę albo zapisaną decyzję (`references/warstwy-obrony.md`), czy każda decyzja ma właściciela.
+   Model `proposed` → akceptacja człowieka.
 
 ## STRIDE per element (wg Microsoft / Shostack)
 | Element DFD | S podszycie | T manipulacja | R wyparcie | I ujawnienie | D odmowa usługi | E podniesienie uprawnień |

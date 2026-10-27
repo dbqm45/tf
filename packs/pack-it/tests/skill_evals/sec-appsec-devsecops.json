@@ -65,6 +65,42 @@
       "expect": "no-trigger",
       "prompt": "Jak ustawić karencję nowych wersji paczek npm i wyłączyć skrypty instalacyjne w projekcie?",
       "neighbor": "ops-supply-chain-security"
+    },
+    {
+      "id": "ssdf-dsomm-ramy",
+      "expect": "trigger",
+      "prompt": "Klient wymaga, żebyśmy pokazali zgodność procesu wytwarzania z NIST SSDF, a zespół chce mierzyć dojrzałość DevSecOps w pipeline. Jak to ułożyć, żeby nie robić papierologii? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "SSDF|800-218"
+          ],
+          [
+            "PO|PS|PW|RV|Prepare the Organization|Produce Well-Secured"
+          ],
+          [
+            "DSOMM|DevSecOps Maturity"
+          ],
+          [
+            "SAMM"
+          ],
+          [
+            "shift.left|wcześni\\w*|na początku"
+          ],
+          [
+            "dow[oó]d\\w*|artefakt\\w*|mapowani\\w*"
+          ]
+        ],
+        "none": [
+          "SSDF 1.2 jest ostateczn"
+        ]
+      },
+      "rubric": [
+        "SSDF v1.1 (final 2022) jako mapa praktyk; v1.2 to projekt — nie powoływać się jak na final",
+        "mapowanie praktyk PO/PS/PW/RV na istniejące kontrole pipeline'u i dowody (logi CI, SBOM, wyniki skanów)",
+        "DSOMM dla dojrzałości pipeline'u, SAMM dla programu organizacji",
+        "shift left i bezpieczne ustawienia domyślne jako zasady, nie lista papierów"
+      ]
     }
   ]
 }

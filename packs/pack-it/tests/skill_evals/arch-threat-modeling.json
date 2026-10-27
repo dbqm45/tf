@@ -69,6 +69,46 @@
       "expect": "no-trigger",
       "prompt": "Wykryliśmy podejrzane logowania z obcego IP na konto admina. Co robimy teraz i jak ustalić zakres incydentu?",
       "neighbor": "ops-security-operations"
+    },
+    {
+      "id": "warstwy-obrony-przeglad",
+      "expect": "trigger",
+      "prompt": "Przed przeglądem architektury chcę sprawdzić, czy mamy obronę w głąb (defence in depth) — sieć, tożsamość, hosty, aplikacja, dane, monitoring. Jak to przejść systematycznie, żeby nie zostawić dziury? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "warstw\\w*"
+          ],
+          [
+            "sieć|sieci|segmentacj\\w*"
+          ],
+          [
+            "tożsamoś\\w*|IAM|uwierzytelni\\w*"
+          ],
+          [
+            "host\\w*|utwardz\\w*"
+          ],
+          [
+            "dane|danych|szyfrowani\\w*"
+          ],
+          [
+            "monitor\\w*|wykrywani\\w*|SIEM|log\\w*"
+          ],
+          [
+            "reagowani\\w*|incydent\\w*|odtworz\\w*"
+          ],
+          [
+            "pojedyncz\\w* (kontrol|punkt)|jedn\\w* kontrol\\w*|zawiedzie|nie polega\\w*"
+          ]
+        ],
+        "none": []
+      },
+      "rubric": [
+        "przegląd per warstwa: kontrola zapobiegawcza, wykrywająca i naprawcza",
+        "każda warstwa ma kontrolę albo zapisaną decyzję (akceptacja ryzyka z właścicielem)",
+        "założenie, że jedna kontrola zawiedzie — co wtedy zatrzyma napastnika",
+        "odesłania do skilli warstw (sec-zero-trust-identity, ops-security-operations, sec-cryptography-pki, sec-appsec-devsecops)"
+      ]
     }
   ]
 }

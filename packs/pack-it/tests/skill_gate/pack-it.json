@@ -84,8 +84,8 @@
   "offline": "2026-10-22"
  },
  "arch-threat-modeling": {
-  "fingerprint": "e9d5cc456e32a5fb",
-  "offline": "2026-10-22"
+  "fingerprint": "ce4b156992d40ed0",
+  "offline": "2026-10-27"
  },
  "be-api-design": {
   "fingerprint": "914789154cdd644f",
@@ -380,7 +380,7 @@
   "offline": "2026-10-22"
  },
  "ops-security-operations": {
-  "fingerprint": "3c6fa1b767cdca8f",
+  "fingerprint": "e54d2e66e43c6492",
   "offline": "2026-10-27"
  },
  "ops-setup-wizard": {
@@ -476,8 +476,8 @@
   "offline": "2026-10-22"
  },
  "sec-appsec-devsecops": {
-  "fingerprint": "21414fd080d54792",
-  "offline": "2026-10-23"
+  "fingerprint": "a1ce8fcd529a2803",
+  "offline": "2026-10-27"
  },
  "sec-cloud-security": {
   "fingerprint": "c4d6647e14ed9b77",

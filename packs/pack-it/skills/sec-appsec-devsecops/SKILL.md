@@ -3,13 +3,14 @@ name: sec-appsec-devsecops
 description: Użyj przy programie bezpieczeństwa aplikacji w pipeline — ASVS, SAMM, SAST, DAST, SCA, triaż i SLA podatności, SLSA, podpisy, metryki.
 metadata:
   przeglad: 2027-04-17
-  katalog: "Użyj, gdy budujesz lub oceniasz program bezpieczeństwa aplikacji w cyklu dostarczania (AppSec, DevSecOps) — wymagania wg OWASP ASVS 5.0 i dojrzałość wg OWASP SAMM, przegląd kodu pod kątem bezpieczeństwa (niebezpieczne API i domyślne konfiguracje per język), warstwy skanerów w CI/CD (sekrety, SAST, SCA i SBOM, DAST, IAST, IaC i kontenery) i miejsce każdej, strojenie fałszywych alarmów, triaż i terminy napraw wg CVSS v4, EPSS i CISA KEV, polityka blokowania buildu, integralność łańcucha (SLSA, provenance, Sigstore/cosign), security champions, metryki (MTTR, pokrycie). Nie do mechaniki pipeline'u (ops-ci-cd), lockfile i karencji zależności (ops-supply-chain-security), modelu zagrożeń (arch-threat-modeling), kodu auth (be-auth-security), łatek i incydentów w operacjach (ops-security-operations) ani sekretów (ops-secrets-identities) ani szukania wariantów znalezionej podatności (sec-variant-analysis)."
-  slowa: "devsecops, appsec, bezpieczeństwo aplikacji, ASVS, SAMM, SAST, DAST, IAST, SCA, semgrep, codeql, zap, trivy, grype, syft, dependency-track, SBOM cyclonedx spdx, skaner w CI, fałszywe alarmy, false positives, blokować build, SLA podatności, CVSS, EPSS, KEV, MTTR podatności, SLSA, cosign, sigstore, provenance, security champions, podpisywanie obrazów, podpis obrazu kontenera, nikt go nie podmienił, zbudowano w naszym CI, integralność artefaktu, przegląd kodu security, pentest, wymagania bezpieczeństwa, niebezpieczne funkcje, niebezpieczne API, domyślne ustawienia, domyślne hasła, tryb debug na produkcji, wyłączona weryfikacja certyfikatu, pickle, yaml.load, BinaryFormatter, InsecureSkipVerify, przegląd bezpieczeństwa przed wydaniem"
+  katalog: "Użyj, gdy budujesz lub oceniasz program bezpieczeństwa aplikacji w cyklu dostarczania (AppSec, DevSecOps) — wymagania wg OWASP ASVS 5.0 i dojrzałość wg OWASP SAMM i DSOMM, mapowanie na NIST SSDF (SP 800-218), shift left i bezpieczne ustawienia domyślne, przegląd kodu pod kątem bezpieczeństwa (niebezpieczne API i domyślne konfiguracje per język), warstwy skanerów w CI/CD (sekrety, SAST, SCA i SBOM, DAST, IAST, IaC i kontenery) i miejsce każdej, strojenie fałszywych alarmów, triaż i terminy napraw wg CVSS v4, EPSS i CISA KEV, polityka blokowania buildu, integralność łańcucha (SLSA, provenance, Sigstore/cosign), security champions, metryki (MTTR, pokrycie). Nie do mechaniki pipeline'u (ops-ci-cd), lockfile i karencji zależności (ops-supply-chain-security), modelu zagrożeń (arch-threat-modeling), kodu auth (be-auth-security), łatek i incydentów w operacjach (ops-security-operations) ani sekretów (ops-secrets-identities) ani szukania wariantów znalezionej podatności (sec-variant-analysis)."
+  slowa: "SSDF, NIST SP 800-218, DSOMM, DevSecOps Maturity Model, shift left, secure by default, bezpieczne ustawienia domyślne, zgodność z SSDF, devsecops, appsec, bezpieczeństwo aplikacji, ASVS, SAMM, SAST, DAST, IAST, SCA, semgrep, codeql, zap, trivy, grype, syft, dependency-track, SBOM cyclonedx spdx, skaner w CI, fałszywe alarmy, false positives, blokować build, SLA podatności, CVSS, EPSS, KEV, MTTR podatności, SLSA, cosign, sigstore, provenance, security champions, podpisywanie obrazów, podpis obrazu kontenera, nikt go nie podmienił, zbudowano w naszym CI, integralność artefaktu, przegląd kodu security, pentest, wymagania bezpieczeństwa, niebezpieczne funkcje, niebezpieczne API, domyślne ustawienia, domyślne hasła, tryb debug na produkcji, wyłączona weryfikacja certyfikatu, pickle, yaml.load, BinaryFormatter, InsecureSkipVerify, przegląd bezpieczeństwa przed wydaniem"
 ---
 
 # AppSec w pipeline (DevSecOps)
 
-Cel: znaleźć podatność tam, gdzie jest najtańsza do naprawy, i nie zalać zespołu szumem. Program składa się z czterech
+Cel: znaleźć podatność tam, gdzie jest najtańsza do naprawy (shift left), zacząć od bezpiecznych ustawień
+domyślnych i nie zalać zespołu szumem. Program składa się z czterech
 rzeczy: **wymagania** (co ma być bezpieczne), **kontrole w pipeline** (co sprawdza maszyna), **przegląd ludzki**
 (co wymaga rozumu) i **pomiar** (czy działa). Granice: mechanika jobów i uprawnienia runnera to `ops-ci-cd`,
 lockfile i karencja to `ops-supply-chain-security`, STRIDE to `arch-threat-modeling`, łatanie na produkcji
@@ -19,7 +20,8 @@ to `ops-security-operations`.
 1. **Stan wyjściowy.** Co już skanuje (repo, CI, chmura), kto reaguje na wyniki, ile jest otwartych znalezisk i jak
    stare. Bez tego nie ma punktu odniesienia dla metryk.
 2. **Wymagania.** Wybierz poziom ASVS dla aplikacji (L1 każda, L2 domyślnie dla danych wrażliwych, L3 krytyczne)
-   i zapisz wybrane rozdziały jako kryteria akceptacji. Dojrzałość całego programu (nie jednej aplikacji) ocenia SAMM.
+   i zapisz wybrane rozdziały jako kryteria akceptacji. Dojrzałość całego programu (nie jednej aplikacji) ocenia SAMM,
+   dojrzałość pipeline'u DSOMM; wymóg zgodności z NIST SSDF to tabela praktyka → kontrola → dowód z pipeline'u.
    Szczegóły i wersje: `references/standardy-i-metryki.md`.
 3. **Warstwy kontroli** (tabela niżej): dla każdej wskaż etap, narzędzie, tryb (blokuje / ostrzega) i właściciela.
    Zaczynaj od tych o najlepszym stosunku sygnału do szumu: sekrety, SCA, SAST z małym zestawem reguł.
@@ -86,5 +88,7 @@ zadania z terminem wg tabeli SLA, 20 najważniejszych na sprint; (5) mierzymy MT
 ## Źródła
 - [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/) — wersja 5.0.0, 30.05.2025 (wyszukiwanie 17.10.2026)
 - [OWASP SAMM](https://owaspsamm.org/), [SLSA v1.0](https://slsa.dev/spec/v1.0/levels), [Sigstore](https://docs.sigstore.dev/signing/overview/) (17.10.2026)
+- NIST SP 800-218 SSDF 1.1 (final, 02.2022; 1.2 — projekt 12.2025); [OWASP DSOMM](https://dsomm.owasp.org/)
+  (wersja [niezweryfikowane]); statusy wg wyszukiwania 2026-10-27
 - FIRST: CVSS v4.0 (listopad 2023), EPSS; [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
 Opisane własnymi słowami. Szczegóły i znaczniki niezweryfikowanych faktów: pliki w `references/`.

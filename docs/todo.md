@@ -392,10 +392,10 @@ potem treść, bramka; źródła pierwotne NIST i OWASP z datą):
 - [x] **Szyfrowanie w spoczynku i klasyfikacja danych:** klasy danych → wymagane zabezpieczenia, szyfrowanie dysków,
   baz i kopii (KMS, envelope encryption, rotacja kluczy), cykl życia danych poza RODO (archiwum, bezpieczne
   usuwanie wg NIST SP 800-88); NIST SP 800-111. Miejsce: sec-cryptography-pki (+ odnośnik z arch-privacy-compliance).
-- [ ] **Mapa warstw obrony (defence in depth):** krótka tabela warstwa → kontrole → skill fabryki (sieć, IAM, host,
+- [x] **Mapa warstw obrony (defence in depth):** krótka tabela warstwa → kontrole → skill fabryki (sieć, IAM, host,
   aplikacja, dane, monitorowanie, reagowanie), żeby przegląd architektury sprawdzał wszystkie warstwy. Miejsce:
   arch-threat-modeling (references).
-- [ ] **DevSecOps — ramy:** NIST SSDF (SP 800-218) jako mapa praktyk obok OWASP SAMM, OWASP DSOMM jako miara
+- [x] **DevSecOps — ramy:** NIST SSDF (SP 800-218) jako mapa praktyk obok OWASP SAMM, OWASP DSOMM jako miara
   dojrzałości pipeline'u; „shift left” i bezpieczne ustawienia domyślne nazwane wprost. Miejsce: sec-appsec-devsecops.
-- [ ] **Centralne logi bezpieczeństwa:** plan zarządzania logami (źródła, czas, integralność i oddzielone uprawnienia
+- [x] **Centralne logi bezpieczeństwa:** plan zarządzania logami (źródła, czas, integralność i oddzielone uprawnienia
   do logów, retencja) wg NIST SP 800-92 — uzupełnienie ops-security-operations §1 (źródła i retencja już są).
