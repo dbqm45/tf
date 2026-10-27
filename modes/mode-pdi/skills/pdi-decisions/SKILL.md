@@ -112,7 +112,7 @@ Zgłoszenie żyje w pdi; tf daje tylko rekomendację (R7: w stanach pdi, decyzj�
    | `parked` | `--return-when "…"` | `needs-triage` + `deferred` |
    | `duplicate` | `--duplicate-of PRB-n` | `wontfix` |
    Dowody: `--observation "…"` (sprawdzone) i `--evidence "…"` (wniosek AI). Wynik: JSON wg
-   `triage-recommendation.schema.json` (kopia z kontraktu pdi 0.6.0 obok skryptu), `--out plik` do przekazania.
+   `triage-recommendation.schema.json` (kopia z kontraktu pdi obok skryptu, wersja w tytule schematu), `--out plik` do przekazania.
 4. Rekomendacja nie zmienia zgłoszenia i nie tworzy zmiany: `CHG` zakłada pdi po decyzji (dalej „Dziennik zmiany”).
 
 ## Przykład

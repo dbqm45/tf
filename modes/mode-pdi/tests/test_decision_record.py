@@ -214,8 +214,8 @@ def main() -> int:
     near = SCRIPT.parent / "release-plan.schema.json"
     check(near.is_file() and FIX.is_dir() and json.loads(near.read_text(encoding="utf-8"))
           == json.loads((FIX / "release-plan.schema.json").read_text(encoding="utf-8"))
-          and (FIX / "VERSION").read_text(encoding="utf-8").strip() == "0.6.0",
-          "R-0: schemat obok skryptu = kopia z kontraktu pdi 0.6.0")
+          and (FIX / "VERSION").read_text(encoding="utf-8").strip(),
+          "R-0: schemat obok skryptu = kopia z kontraktu pdi (fixtures/pdi-contract/VERSION)")
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
         r = run(["change", "new", "CHG-12"], repo)
