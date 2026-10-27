@@ -66,7 +66,8 @@ Jednolinijkowce zamiast zgadywania: `biolatency` (histogram opóźnień dysku), 
 3. **Jedna zmiana naraz**, tymczasowo (`sysctl -w`), z gotowym wycofaniem.
 4. **Zmierz ponownie** w tych samych warunkach; poprawa mniejsza od szumu = brak efektu.
 5. **Udokumentuj** (wartość, powód, pomiar przed/po, wersja jądra) i utrwal w kodzie (IaC, `/etc/sysctl.d/`),
-   nie ręcznie na serwerze. Zmiany bez wpływu cofnij.
+   nie ręcznie na serwerze. Zmiany bez wpływu cofnij. Parametry jądra z linii bazowej bezpieczeństwa (CIS) zostają —
+   utwardzanie hosta opisuje ops-security-operations.
 
 ## Bezpieczeństwo narzędzi śledzących
 Narzut: `perf record` próbkowaniem — niski; `strace` — duży (zwalnia proces wielokrotnie), `tcpdump`/`bpftrace`

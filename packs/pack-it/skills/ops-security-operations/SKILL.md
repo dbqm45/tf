@@ -3,8 +3,8 @@ name: ops-security-operations
 description: Użyj przy wykrywaniu i obsłudze incydentu bezpieczeństwa — SIEM, EDR, podatności i łatki, NIST 800-61, forensyka.
 metadata:
   przeglad: 2027-04-17
-  katalog: "Użyj przy wykrywaniu zagrożeń i reagowaniu na incydenty bezpieczeństwa — SIEM, alerty i reguły jako kod, EDR, IDS/IPS, SOAR z bramką człowieka, zarządzanie podatnościami i łatkami, cykl reagowania (NIST SP 800-61r3), ograniczanie skutków, zabezpieczanie dowodów, analiza przyczyn, zgłoszenia. Nie do awarii bez ataku (ops-sre-incidents) ani projektu zabezpieczeń (arch-threat-modeling)."
-  slowa: "wyciek danych osobowych klientów, w jakich terminach zgłosić incydent, kto przygotowuje zgłoszenie incydentu"
+  katalog: "Użyj przy wykrywaniu zagrożeń i reagowaniu na incydenty bezpieczeństwa — SIEM, alerty i reguły jako kod, EDR, IDS/IPS, SOAR z bramką człowieka, zarządzanie podatnościami i łatkami, utwardzanie hosta (CIS, SSH, zapora, auditd, dryf), cykl reagowania (NIST SP 800-61r3), ograniczanie skutków, zabezpieczanie dowodów, analiza przyczyn, zgłoszenia. Nie do awarii bez ataku (ops-sre-incidents) ani projektu zabezpieczeń (arch-threat-modeling)."
+  slowa: "utwardzanie serwera, hardening, CIS Benchmark, SSH tylko klucze, PermitRootLogin, OpenSCAP, Lynis, auditd, unattended-upgrades, wyciek danych osobowych klientów, w jakich terminach zgłosić incydent, kto przygotowuje zgłoszenie incydentu"
 ---
 
 # Operacje bezpieczeństwa: wykrywanie i reagowanie
@@ -13,7 +13,8 @@ Zapobieganie kiedyś zawiedzie. Ten skill dotyczy tego, jak to zauważyć i co z
 DDoS i CSPM: `references/siec-i-chmura.md`. Katalog ataków z sygnałami
 i kontrolami, modele analizy (Kill Chain, ATT&CK, model diamentu), polowanie na zagrożenia, wywiad i wabiki:
 `references/ataki-i-analiza.md`. Forensyka (kolejność ulotności, łańcuch dowodowy) i testy penetracyjne z zasadami
-zaangażowania: `references/forensyka-i-testy-penetracyjne.md`. Mapowanie na SOC 2, ISO 27001 i NIST CSF: `references/zgodnosc.md`.
+zaangażowania: `references/forensyka-i-testy-penetracyjne.md`. Utwardzanie systemu serwera (linia bazowa CIS, SSH,
+konta, zapora hosta, audyt, sprawdzenie dryfu): `references/utwardzanie-hosta.md`. Mapowanie na SOC 2, ISO 27001 i NIST CSF: `references/zgodnosc.md`.
 
 ## 1. Telemetria bezpieczeństwa
 - Źródła (od najważniejszych): IdP i logowania (sukcesy, porażki, MFA, zmiany metod), logi audytowe chmury (API
@@ -55,6 +56,7 @@ zaangażowania: `references/forensyka-i-testy-penetracyjne.md`. Mapowanie na SOC
 
 ## 5. Podatności i łatki
 1. **Inwentarz zasobów** (hosty, obrazy, funkcje, domeny, zależności — SBOM) — nie załatasz tego, czego nie znasz.
+   Każdy host ma linię bazową utwardzenia i sprawdzany dryf (`references/utwardzanie-hosta.md`).
 2. **Skanowanie** regularne: hosty i sieć (np. OpenVAS, Nessus, Qualys), obrazy i zależności (ops-supply-chain-security),
    konfiguracja chmury (CSPM), aplikacja (DAST na stagingu). Skan zewnętrzny z perspektywy internetu.
 3. **Priorytet** nie z samego CVSS: podatność wykorzystywana w praktyce (np. lista CISA KEV), prawdopodobieństwo
@@ -97,6 +99,7 @@ i ostatnią fazą.
 - [ ] logi bezpieczeństwa poza hostem, UTC, retencja ustalona
 - [ ] reguły wykrywania w repo, z testem, właścicielem i runbookiem; mierzona trafność
 - [ ] inwentarz zasobów i terminy naprawy podatności; łatanie w pierścieniach
+- [ ] hosty utwardzone wg linii bazowej (CIS), dryf sprawdzany skanerem
 - [ ] playbooki incydentów przećwiczone; kanał awaryjny i kontakty gotowe
 - [ ] automatyzacja destrukcyjna tylko z zatwierdzeniem człowieka
 

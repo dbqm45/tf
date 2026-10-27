@@ -379,3 +379,23 @@ Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
   projektów z publicznymi stronami (Core Web Vitals i dostępność już są).
 - [x] **8. Bus factor w mapie własności** (zrobione 2026-10-24: `git_territory.py --bus-factor` z `--min-commits` i `--active-days`, 9 nowych testów) (`openai/security-ownership-map`): ryzyko „jednej osoby” per obszar
   w `git_territory.py --authors` (`eng-codebase-mapping`), TDD.
+
+## Bezpieczeństwo — luki wobec przeglądu warstw obrony (slajdy „Security Layers / DevSecOps”, zapisane 2026-10-27)
+Przegląd 2026-10-27: sieć, IAM, AppSec, monitorowanie i wykrywanie, reagowanie na incydenty i DevSecOps są pokryte
+(sec-zero-trust-identity, be-auth-security, sec-appsec-devsecops, ops-security-operations, sec-detection-engineering,
+ops-sre-incidents, ops-observability, sec-security-leadership). Do dorobienia (każda pozycja: scenariusze ewaluacji,
+potem treść, bramka; źródła pierwotne NIST i OWASP z datą):
+- [x] **Utwardzanie hosta** (system serwera, nie kontener ani konto chmury): minimalne usługi i pakiety, SSH (klucze,
+  bez roota, bez haseł), konta i sudo, zapora hosta, audyt (auditd), automatyczne łatki bezpieczeństwa, CIS Benchmark
+  jako lista kontrolna, sprawdzenie skanerem (np. Lynis, OpenSCAP); NIST SP 800-123. Miejsce: ops-security-operations
+  (sekcja + odnośnik z ops-linux-performance).
+- [x] **Szyfrowanie w spoczynku i klasyfikacja danych:** klasy danych → wymagane zabezpieczenia, szyfrowanie dysków,
+  baz i kopii (KMS, envelope encryption, rotacja kluczy), cykl życia danych poza RODO (archiwum, bezpieczne
+  usuwanie wg NIST SP 800-88); NIST SP 800-111. Miejsce: sec-cryptography-pki (+ odnośnik z arch-privacy-compliance).
+- [ ] **Mapa warstw obrony (defence in depth):** krótka tabela warstwa → kontrole → skill fabryki (sieć, IAM, host,
+  aplikacja, dane, monitorowanie, reagowanie), żeby przegląd architektury sprawdzał wszystkie warstwy. Miejsce:
+  arch-threat-modeling (references).
+- [ ] **DevSecOps — ramy:** NIST SSDF (SP 800-218) jako mapa praktyk obok OWASP SAMM, OWASP DSOMM jako miara
+  dojrzałości pipeline'u; „shift left” i bezpieczne ustawienia domyślne nazwane wprost. Miejsce: sec-appsec-devsecops.
+- [ ] **Centralne logi bezpieczeństwa:** plan zarządzania logami (źródła, czas, integralność i oddzielone uprawnienia
+  do logów, retencja) wg NIST SP 800-92 — uzupełnienie ops-security-operations §1 (źródła i retencja już są).

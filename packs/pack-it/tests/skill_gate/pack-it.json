@@ -68,8 +68,8 @@
   "offline": "2026-10-22"
  },
  "arch-privacy-compliance": {
-  "fingerprint": "9ca222ff5408abbb",
-  "offline": "2026-10-22"
+  "fingerprint": "216f14c08e5a05f3",
+  "offline": "2026-10-27"
  },
  "arch-quality-attributes": {
   "fingerprint": "5f6167051feade91",
@@ -356,8 +356,8 @@
   "offline": "2026-10-22"
  },
  "ops-linux-performance": {
-  "fingerprint": "9dfa08f50b6bca27",
-  "offline": "2026-10-22"
+  "fingerprint": "c1465754ce416b53",
+  "offline": "2026-10-27"
  },
  "ops-multi-region-resilience": {
   "fingerprint": "389176993402b06a",
@@ -380,8 +380,8 @@
   "offline": "2026-10-22"
  },
  "ops-security-operations": {
-  "fingerprint": "1a4b9de294361f8f",
-  "offline": "2026-10-22"
+  "fingerprint": "3c6fa1b767cdca8f",
+  "offline": "2026-10-27"
  },
  "ops-setup-wizard": {
   "fingerprint": "decf5a015efcd3bd",
@@ -484,8 +484,8 @@
   "offline": "2026-10-22"
  },
  "sec-cryptography-pki": {
-  "fingerprint": "a278db8c4b055e92",
-  "offline": "2026-10-22"
+  "fingerprint": "2c65f83d72c158d0",
+  "offline": "2026-10-27"
  },
  "sec-detection-engineering": {
   "fingerprint": "5580a443010aee0d",

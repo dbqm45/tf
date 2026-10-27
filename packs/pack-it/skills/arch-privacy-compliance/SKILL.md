@@ -37,7 +37,9 @@ prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-proj
    - okres przechowywania dla każdej kategorii i celu;
    - **automatyczne usuwanie** (zadanie retencji z testem), a nie „kiedyś posprzątamy”;
    - logi bez danych osobowych albo z krótką retencją;
-   - kopie zapasowe wygasają w znanym cyklu.
+   - kopie zapasowe wygasają w znanym cyklu;
+   - szyfrowanie w spoczynku dobrane do klasy danych i usuwanie przez zniszczenie klucza (crypto-erase):
+     sec-cryptography-pki (dane w spoczynku).
 5. **Prawa osób** (art. 12–22):
    - mechanizmy w systemie: eksport danych (dostęp, przenoszenie), poprawienie, usunięcie, ograniczenie, sprzeciw;
    - odpowiedź bez zbędnej zwłoki, **najpóźniej w miesiąc** (przedłużenie o dwa miesiące w uzasadnionych przypadkach,
