@@ -1,57 +1,142 @@
 {
-  "skill": "sec-cryptography-pki",
-  "scenarios": [
-    {
-      "id": "szyfrowanie-pii-kms",
-      "expect": "trigger",
-      "prompt": "Mamy w bazie PESEL-e i numery dokumentów i chcemy je szyfrować na poziomie pól. Jaki algorytm, jak trzymać klucze i jak je rotować? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          ["AES-256-GCM|AES-GCM|ChaCha20-Poly1305|AEAD"],
-          ["kopert\\w*|envelope|DEK|KEK"],
-          ["KMS|HSM"],
-          ["nonce|IV|wektor inicjuj"],
-          ["DEK[^.]{0,60}kompromit", "kompromit[^.]{0,60}DEK"]
-        ],
-        "none": ["AES-ECB jest bezpieczny", "własny algorytm szyfrowania"]
-      }
-    },
-    {
-      "id": "migracja-postkwantowa",
-      "expect": "trigger",
-      "prompt": "Zarząd pyta o kryptografię postkwantową. Od czego zacząć w firmie, co się dzieje z RSA i ECC i jakie są terminy? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          ["inwentarz\\w*|CBOM|crypto inventory"],
-          ["ML-KEM|FIPS 203"],
-          ["hybryd\\w*|hybrid"],
-          ["harvest now|zbierz teraz|zbieraj teraz|HNDL|odszyfruj później"],
-          ["niezweryfikowan|2030|2035"],
-          ["2027-01-01", "1 stycznia 2027"]
-        ],
-        "none": ["RSA-2048 jest odporne na komputery kwantowe"]
-      }
-    },
-    {
-      "id": "krotkie-certyfikaty-acme",
-      "expect": "trigger",
-      "prompt": "Słyszałem, że certyfikaty TLS mają mieć ważność 47 dni. Co to znaczy dla naszej wewnętrznej PKI i serwerów, na których wgrywamy certyfikaty ręcznie? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          ["47 dni|47-day|47 days"],
-          ["200 dni|100 dni|2026|2027|2029"],
-          ["ACME|cert-manager|automatyz"],
-          ["inwentarz\\w*|monitoring wygasania|alert"],
-          ["03-15", "15 marca", "DNS-01", "HTTP-01", "SPIFFE"]
-        ],
-        "none": ["wystarczy kalendarz przypomnień"]
-      }
-    },
-    {
-      "id": "haslo-vs-szyfrowanie-granica",
-      "expect": "no-trigger",
-      "prompt": "Mamy wyciek klucza AWS w publicznym repo i musimy go rotować oraz ustawić skanowanie sekretów w CI. Co robimy po kolei?",
-      "neighbor": "ops-secrets-identities"
-    }
-  ]
+ "skill": "sec-cryptography-pki",
+ "scenarios": [
+  {
+   "id": "szyfrowanie-pii-kms",
+   "expect": "trigger",
+   "prompt": "Mamy w bazie PESEL-e i numery dokumentów i chcemy je szyfrować na poziomie pól. Jaki algorytm, jak trzymać klucze i jak je rotować? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "AES-256-GCM|AES-GCM|ChaCha20-Poly1305|AEAD"
+     ],
+     [
+      "kopert\\w*|envelope|DEK|KEK"
+     ],
+     [
+      "KMS|HSM"
+     ],
+     [
+      "nonce|IV|wektor inicjuj"
+     ],
+     [
+      "DEK[^.]{0,60}kompromit",
+      "kompromit[^.]{0,60}DEK"
+     ]
+    ],
+    "none": [
+     "AES-ECB jest bezpieczny",
+     "własny algorytm szyfrowania"
+    ]
+   }
+  },
+  {
+   "id": "migracja-postkwantowa",
+   "expect": "trigger",
+   "prompt": "Zarząd pyta o kryptografię postkwantową. Od czego zacząć w firmie, co się dzieje z RSA i ECC i jakie są terminy? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "inwentarz\\w*|CBOM|crypto inventory"
+     ],
+     [
+      "ML-KEM|FIPS 203"
+     ],
+     [
+      "hybryd\\w*|hybrid"
+     ],
+     [
+      "harvest now|zbierz teraz|zbieraj teraz|HNDL|odszyfruj później"
+     ],
+     [
+      "niezweryfikowan|2030|2035"
+     ],
+     [
+      "2027-01-01",
+      "1 stycznia 2027"
+     ]
+    ],
+    "none": [
+     "RSA-2048 jest odporne na komputery kwantowe"
+    ]
+   }
+  },
+  {
+   "id": "krotkie-certyfikaty-acme",
+   "expect": "trigger",
+   "prompt": "Słyszałem, że certyfikaty TLS mają mieć ważność 47 dni. Co to znaczy dla naszej wewnętrznej PKI i serwerów, na których wgrywamy certyfikaty ręcznie? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "47 dni|47-day|47 days"
+     ],
+     [
+      "200 dni|100 dni|2026|2027|2029"
+     ],
+     [
+      "ACME|cert-manager|automatyz"
+     ],
+     [
+      "inwentarz\\w*|monitoring wygasania|alert"
+     ],
+     [
+      "03-15",
+      "15 marca",
+      "DNS-01",
+      "HTTP-01",
+      "SPIFFE"
+     ]
+    ],
+    "none": [
+     "wystarczy kalendarz przypomnień"
+    ]
+   }
+  },
+  {
+   "id": "haslo-vs-szyfrowanie-granica",
+   "expect": "no-trigger",
+   "prompt": "Mamy wyciek klucza AWS w publicznym repo i musimy go rotować oraz ustawić skanowanie sekretów w CI. Co robimy po kolei?",
+   "neighbor": "ops-secrets-identities"
+  },
+  {
+   "id": "szyfrowanie-w-spoczynku-klasy-danych",
+   "expect": "trigger",
+   "prompt": "Audytor pyta, czy szyfrujemy dane w spoczynku. Mamy Postgresa w chmurze, S3 z plikami klientów i nocne kopie. Dyski są szyfrowane domyślnie przez dostawcę — czy to wystarczy i od czego zacząć? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "klasyfikacj\\w*|klas\\w* danych|poufn\\w*"
+     ],
+     [
+      "przed czym|kradzież\\w* (dysku|nośnika)|fizyczn\\w*|nie chroni\\w*"
+     ],
+     [
+      "KMS"
+     ],
+     [
+      "kopertow\\w*|envelope"
+     ],
+     [
+      "kopi\\w* (zapasow|nocn)\\w*|backup"
+     ],
+     [
+      "rotacj\\w*"
+     ],
+     [
+      "usuwani\\w*|crypto.?erase|800-88|zniszczeni\\w* klucz\\w*"
+     ]
+    ],
+    "none": [
+     "szyfrowanie dysku wystarczy w każdym przypadku"
+    ]
+   },
+   "rubric": [
+    "najpierw klasy danych i model zagrożenia: szyfrowanie dysku chroni przed nośnikiem, nie przed kimś z dostępem do bazy/API",
+    "warstwy: dysk/wolumen → baza (TDE) → pole/aplikacja dla danych najwyższej klasy; S3 z SSE-KMS i polityką kluczy",
+    "kopie szyfrowane osobnym kluczem, poza kontem produkcji",
+    "klucze w KMS, szyfrowanie kopertowe, rozdzielone role i rotacja, logi użycia klucza",
+    "cykl życia: retencja, archiwum, bezpieczne usuwanie (crypto-erase przez zniszczenie klucza, NIST SP 800-88)"
+   ]
+  }
+ ]
 }

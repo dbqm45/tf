@@ -1,37 +1,113 @@
 {
-  "skill": "ops-security-operations",
-  "scenarios": [
-    {
-      "id": "przejete-konto",
-      "expect": "trigger",
-      "prompt": "Alert w SIEM pokazał, że konto administratora zalogowało się z nowego kraju i utworzyło token API. Jak postępować krok po kroku z incydentem, zanim wyłączymy maszynę i konto? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          ["dowod", "dowód", "migawk", "snapshot", "pamięć", "pamięci"],
-          ["containment", "ograniczen"],
-          ["łańcuch dowodow", "chain of custody", "zakres"]
-        ]
-      }
-    },
-    {
-      "id": "terminy-zgloszen",
-      "expect": "trigger",
-      "prompt": "W naszej firmie doszło do wycieku danych osobowych klientów. W jakich terminach trzeba to zgłosić i kto przygotowuje zgłoszenie? Zakładamy, że podlegamy też NIS2. Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          ["72"],
-          ["24 h", "24h", "24 godz", "wczesne ostrzeż", "early warning"],
-          ["prawn", "dział prawny"],
-          ["oś\\w* czasu", "timeline", "zapisz\\w*[^.]{0,60}(godzin|moment|zdarzeni)\\w*"]
-        ]
-      },
-      "accept": ["sec-eu-regulations", "arch-privacy-compliance"]
-    },
-    {
-      "id": "model-zagrozen",
-      "expect": "no-trigger",
-      "prompt": "Projektuję nowy system płatności i chcę wykonać model zagrożeń STRIDE z diagramem przepływu danych, żeby zaprojektować zabezpieczenia jeszcze przed implementacją. Jak to ułożyć? Odpowiedz zwięźle.",
-      "neighbor": "arch-threat-modeling"
-    }
-  ]
+ "skill": "ops-security-operations",
+ "scenarios": [
+  {
+   "id": "przejete-konto",
+   "expect": "trigger",
+   "prompt": "Alert w SIEM pokazał, że konto administratora zalogowało się z nowego kraju i utworzyło token API. Jak postępować krok po kroku z incydentem, zanim wyłączymy maszynę i konto? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "dowod",
+      "dowód",
+      "migawk",
+      "snapshot",
+      "pamięć",
+      "pamięci"
+     ],
+     [
+      "containment",
+      "ograniczen"
+     ],
+     [
+      "łańcuch dowodow",
+      "chain of custody",
+      "zakres"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "terminy-zgloszen",
+   "expect": "trigger",
+   "prompt": "W naszej firmie doszło do wycieku danych osobowych klientów. W jakich terminach trzeba to zgłosić i kto przygotowuje zgłoszenie? Zakładamy, że podlegamy też NIS2. Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "72"
+     ],
+     [
+      "24 h",
+      "24h",
+      "24 godz",
+      "wczesne ostrzeż",
+      "early warning"
+     ],
+     [
+      "prawn",
+      "dział prawny"
+     ],
+     [
+      "oś\\w* czasu",
+      "timeline",
+      "zapisz\\w*[^.]{0,60}(godzin|moment|zdarzeni)\\w*"
+     ]
+    ]
+   },
+   "accept": [
+    "sec-eu-regulations",
+    "arch-privacy-compliance"
+   ]
+  },
+  {
+   "id": "model-zagrozen",
+   "expect": "no-trigger",
+   "prompt": "Projektuję nowy system płatności i chcę wykonać model zagrożeń STRIDE z diagramem przepływu danych, żeby zaprojektować zabezpieczenia jeszcze przed implementacją. Jak to ułożyć? Odpowiedz zwięźle.",
+   "neighbor": "arch-threat-modeling"
+  },
+  {
+   "id": "utwardzanie-serwera-linux",
+   "expect": "trigger",
+   "prompt": "Stawiamy kilka maszyn wirtualnych z Ubuntu pod API (bez Kubernetesa). Jak je utwardzić przed wystawieniem do internetu i jak sprawdzić, że tak zostaje? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "CIS"
+     ],
+     [
+      "SSH"
+     ],
+     [
+      "PermitRootLogin|logowani\\w* (jako )?root|bez roota|root\\w* przez SSH"
+     ],
+     [
+      "PasswordAuthentication|hasł\\w*.{0,40}(SSH|wyłącz)|tylko klucz\\w*|klucze SSH"
+     ],
+     [
+      "zbędn\\w* (usług|pakiet)|minimaln\\w*|wyłącz\\w* (nieużywan|zbędn)\\w*"
+     ],
+     [
+      "zapor\\w*|firewall|ufw|nftables|iptables"
+     ],
+     [
+      "unattended-upgrades|automatyczn\\w* (łat|aktualiz)\\w*"
+     ],
+     [
+      "OpenSCAP|Lynis|skaner\\w*|dryf\\w*|drift"
+     ]
+    ],
+    "none": [
+     "chmod 777",
+     "PermitRootLogin yes"
+    ]
+   },
+   "rubric": [
+    "linia bazowa CIS Benchmark (poziom 1) jako lista kontrolna, odchylenia zapisane",
+    "SSH: tylko klucze, bez logowania roota, ograniczenie dostępu (bastion/VPN, zapora)",
+    "minimalny system: zbędne usługi i pakiety usunięte, zapora hosta domyślnie odrzuca",
+    "konta i sudo z najmniejszymi uprawnieniami, auditd/logi wysłane poza host",
+    "automatyczne łatki bezpieczeństwa, sprawdzenie skanerem (OpenSCAP/Lynis) i wykrywanie dryfu; obraz z IaC zamiast ręcznych zmian"
+   ]
+  }
+ ]
 }
