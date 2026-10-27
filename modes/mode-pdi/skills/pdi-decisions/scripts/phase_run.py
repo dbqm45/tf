@@ -10,7 +10,7 @@ Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez inter
       JSON {status: waiting_gate | done | failed, …}; kod wyjścia 0 — czeka na bramkę albo gotowe, 1 — błąd
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (kontrakt pdi 0.8.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET
+      gate.requested (kontrakt pdi 0.9.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install [--force]
       szablon .github/workflows/sdlc-phase.yml (workflow_dispatch wywoływany przez pdi)
 
@@ -40,7 +40,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.8.0"
+CONTRACT_VERSION = "0.9.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Pytania do bramki"
 # Pola zgłoszenia z pdi (contract/problem.schema.json), które trafiają do promptu fazy intent.
@@ -59,7 +59,9 @@ WHAT = {
     "intent": "zamiar zmiany: problem, warianty z kosztem, wybrany wariant, metryki sukcesu, poza zakresem",
     "requirements": "wymagania z kryteriami akceptacji jako przykłady, wymagania jakości, priorytety",
     "architecture": "architekturę i plan cięć TSK (plan.md z kolumnami Wydanie i Flaga), release.yaml, ADR w design.md",
-    "design": "projekt doświadczenia: przepływy, stany, makiety kluczowych ekranów i linki do nich",
+    "design": ("projekt doświadczenia: przepływy, stany i tabelę ramek Figmy `Wymaganie | Ścieżka | Stan | Ramka | "
+               "Uwagi` (kontrakt pdi conventions.design; ramki projektanta dopasowane przez Figma MCP, szkic ramek tylko "
+               "na prośbę człowieka); sprawdź design_check.py check przed bramką"),
 }
 
 
@@ -210,6 +212,16 @@ def questions_in(path: Path) -> list[str]:
     return out
 
 
+def design_problems(path: Path) -> list[str]:
+    """Braki tabeli ramek design.md (design_check.py, kontrakt 0.9.0) jako pytania do bramki design-review."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import design_check
+    try:
+        return design_check.problems(design_check.parse_design_md(path.read_text(encoding="utf-8"))["rows"])
+    except design_check.DesignFormatError as e:
+        return [f"design.md: {e}"]
+
+
 def gate_event(a) -> dict:
     d = change_dir(a.change)
     if a.phase:
@@ -225,7 +237,7 @@ def gate_event(a) -> dict:
                                         f"{a.change}: prośba o bramkę {gate}")}
     if art is not None and art.is_file():
         payload["artifact"] = str(art)
-        qs = questions_in(art)
+        qs = questions_in(art) + (design_problems(art) if a.phase == "design" else [])
         if qs:
             payload["questions"] = qs
     if a.url:

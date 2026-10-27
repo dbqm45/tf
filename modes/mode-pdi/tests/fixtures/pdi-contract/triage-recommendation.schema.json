@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/triage-recommendation.schema.json",
-  "title": "Rekomendacja triażu zgłoszenia PRB (pdi, kontrakt 0.8.0)",
+  "title": "Rekomendacja triażu zgłoszenia PRB (pdi, kontrakt 0.9.0)",
   "description": "Rekomendacja, którą wykonawca triażu (tf, F3) składa dla pdi. Stan i pola jak w problem.schema.json (R7), żeby pdi przepisało je do zgłoszenia bez tłumaczenia; tf_state z tabeli mapowania w contract/README.md. Decyzję podejmuje człowiek w pdi (triaż jest typem chronionym); zmianę (change) tworzy pdi po przyjęciu.",
   "type": "object",
   "additionalProperties": false,

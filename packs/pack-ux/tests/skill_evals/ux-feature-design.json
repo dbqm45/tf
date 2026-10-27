@@ -44,6 +44,43 @@
       "expect": "no-trigger",
       "prompt": "Mamy dziesięć pomysłów na funkcje — jak je wycenić i ustalić, które w ogóle warto budować?",
       "neighbor": "proc-product-discovery"
+    },
+    {
+      "id": "ramki-figma-do-wymagan",
+      "expect": "trigger",
+      "prompt": "Projektantka zrobiła w Figmie ekrany do zmiany taryfy na wielu ładowarkach. Mam plik Figmy i wymagania US-3 z kryteriami AC-1…AC-3. Jak przez Figma MCP powiązać ekrany z wymaganiami i stanami w design.md, zanim pójdzie do przeglądu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Wymaganie \\| Ścieżka \\| Stan \\| Ramka",
+            "tabel\\w* ramek"
+          ],
+          [
+            "node-id"
+          ],
+          [
+            "get_metadata|get_screenshot|get_design_context|Figma MCP"
+          ],
+          [
+            "stan\\w*"
+          ],
+          [
+            "brak|nie dotyczy"
+          ],
+          [
+            "design_check"
+          ]
+        ],
+        "none": [
+          "nadpisz\\w* ramk\\w* projektant"
+        ]
+      },
+      "rubric": [
+        "tryb domyślny: ramki robi projektant, agent je czyta i dopasowuje (nie projektuje sam bez prośby)",
+        "tabela Wymaganie | Ścieżka | Stan | Ramka | Uwagi z linkami z node-id, stany z listy kontraktu",
+        "brakujące stany jako „brak” z pytaniem, „nie dotyczy” z powodem",
+        "design_check.py check przed bramką design-review"
+      ]
     }
   ]
 }

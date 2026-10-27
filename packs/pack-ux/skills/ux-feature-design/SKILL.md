@@ -3,8 +3,8 @@ name: ux-feature-design
 description: Użyj przy UX funkcji przed kodem — zadania, przepływy ze stanami, architektura informacji, makiety, heurystyki, teksty UI.
 metadata:
   przeglad: 2027-10-17
-  katalog: "Użyj przy projektowaniu i ocenie UX funkcji przed kodem — analiza zadań, przepływy ze stanami i przypadkami brzegowymi, architektura informacji, makiety, prototypy, heurystyki, testy użyteczności, hierarchia wizualna, ruch, teksty interfejsu, projekt włączający i etyczny, specyfikacja dla programistów. Nie do decyzji co budować (proc-product-discovery) ani CSS (fe-css)."
-  slowa: "powiadomienia, nawyk, onboarding, makieta, przepływ użytkownika, stany ekranu, użyteczność, etyka projektowania, dark patterns"
+  katalog: "Użyj przy projektowaniu i ocenie UX funkcji przed kodem — analiza zadań, przepływy ze stanami i przypadkami brzegowymi, architektura informacji, makiety, prototypy, heurystyki, testy użyteczności, hierarchia wizualna, ruch, teksty interfejsu, projekt włączający i etyczny, specyfikacja dla programistów, ramki Figmy powiązane z wymaganiami i stanami przez Figma MCP (tabela ramek w design.md). Nie do decyzji co budować (proc-product-discovery) ani CSS (fe-css)."
+  slowa: "Figma MCP, ramki Figmy, powiązać ekrany z wymaganiami, design.md, tabela ramek, node-id, ramka dla stanu, powiadomienia, nawyk, onboarding, makieta, przepływ użytkownika, stany ekranu, użyteczność, etyka projektowania, dark patterns"
 ---
 
 # Projektowanie UX i interfejsu
@@ -47,6 +47,8 @@ działanie, wynik), diagnoza modelem Fogga i lejkiem CREATE, strategie (zrób za
 działanie), techniki z granicami nadużyć, pomiar — `references/projektowanie-zachowan.md`.
 
 ## Specyfikacja dla programistów (handoff)
+Ramki Figmy powiązane z wymaganiami i stanami (tabela `Wymaganie | Ścieżka | Stan | Ramka | Uwagi`, Figma MCP,
+domyślnie dopasowanie ramek projektanta, szkic przez agenta tylko na prośbę): `references/figma-mcp.md`.
 Umowa, nie obrazek. Zawiera: cel i zakres (co poza zakresem), przepływ, **tabelę stanów** dla każdego ekranu
 i komponentu, zachowanie (walidacja — kiedy i jak, przewijanie, fokus po akcji), treści ostateczne z kluczami i18n,
 responsywność (zachowanie na 375 px, 768 px, szerokim ekranie), tokeny zamiast wartości, adnotacje dostępności

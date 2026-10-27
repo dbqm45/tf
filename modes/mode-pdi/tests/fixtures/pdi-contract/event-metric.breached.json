@@ -3,7 +3,7 @@
   "type": "metric.breached",
   "occurred_at": "2026-10-23T10:00:00Z",
   "source": "tf",
-  "contract_version": "0.8.0",
+  "contract_version": "0.9.0",
   "payload": {
     "metric": "uptime_dostepnosc_dla_kierowcow",
     "value": 96.1,
