@@ -1,6 +1,6 @@
 # Plan: tf w jednym flow SDLC z pdi
 
-Data: 2026-10-23 · Status: **do startu** (F0 w tf) · Gałąź z planem: `claude/magical-dirac-wjvn8y`
+Data: 2026-10-23 · Status: **zrobione** (F0–F5 w tf; stan na 2026-10-27 w „Stan realizacji”) · Gałąź z planem: `claude/magical-dirac-wjvn8y`
 
 ## TL;DR
 **Cel nadrzędny:** jedno źródło decyzji — decyzje z różnych narzędzi (sesje Claude Code, tf, pdi, kolejne) można
@@ -18,9 +18,19 @@ persony, bramki B1–B6); pdi wywołuje tf, nie kopiuje jego logiki. Wspólny **
 `docs/project/changes/CHG-12/` z artefaktami, których nagłówek jest zgodny z `pdi/contract/change.schema.json`.
 Polecenie startowe sesji: sekcja „Polecenie startowe — F0”. Kroki F1–F4 są tu tylko jako zakres.
 
+## Stan realizacji (2026-10-27)
+Wszystkie kroki tf z planu jednego flow są na `main`: F0 i F0b (`decision_record.py`: `change new`, `check`,
+`decision add/pending/mark/export/gate`), F1 (#80), F2 (#83), F3 (#82, #84, #87), F4 (#79), F5 (#81, pasma kontrolne
+→ `metric.breached`) i z F6 AI review w CI (#86). Doszły kroki z planu G1/G2 pdi (G1.1 #78, G2.4 #77), data
+zgłoszenia w nagłówku zmiany (#85) i kolumny planu zmiany dla samokontroli REL-008 (#89). Stan całego ekosystemu,
+także luk G1–G8: pdi `docs/plan-jeden-flow-sdlc.md`, §8. Prognoza „kiedy to będzie” (G3, decyzja D-E1) liczy się
+w pdi z liczby cięć planu tf i czasu przepływu z ShipScope, więc tf nie potrzebuje do niej zmian.
+
 ## Przekazanie (jak wznowić)
 1. Przeczytaj ten plik i `git status` w repo tf.
-2. Następny krok: **F0** — wklej „Polecenie startowe — F0” w nowej sesji w repo tf.
+2. Plan jest zrobiony; nowe kroki tf wynikają z planów w pdi (`docs/plan-jeden-flow-sdlc.md` §8,
+   `docs/plan-automatyzacja-i-konsola.md` §8: m.in. A7 `review.light`, faza designu przez Figma MCP, evale flow).
+   „Polecenie startowe — F0” niżej zostaje jako zapis.
 3. Zasady repo (jak w planie rekonstrukcji): repo publiczne — bez README opisującego fabrykę; `claude-team-factory`
    i `ev-team-factory` nietknięte; merge do `main` po zielonym CI; odpowiedzi po polsku.
 4. Bramki przed PR: `python3 tools/workspace.py check --packs all`, `python3 tools/workspace.py refs`,
@@ -53,14 +63,16 @@ Kontrakt 0.3.0 jest na gałęzi `claude/magical-dirac-wjvn8y` w pdi do czasu sca
 
 | Faza | Zmiana | Gdzie w tf |
 |---|---|---|
-| **F0** | Dziennik per zmiana: `change new <CHG> [--source <PRB>]`, szablony `intent`, `plan`, `decisions`; `check` waliduje nagłówki w `changes/` | `modes/mode-pdi/` (patrz „Architektura”) — **ta sesja** |
-| **F0b** | Zapis i wypychanie decyzji z dowolnego narzędzia: `decision_record.py decision add --change CHG-n "…"` (skrypt trybu) (wpis w `decisions.md`; gdy serwer MCP pdi podłączony — od razu `record_decision` i numer `DEC-n`), kolejka bez połączenia (wpis „niewysłane”, `decision sync` wysyła później, stały identyfikator wpisu → bez duplikatów), `decision export` (JSON wszystkich decyzji projektu do indeksowania), reguła w skillu trybu: decyzja z rozmowy albo bramki idzie przez to polecenie | `modes/mode-pdi/` — po F0, osobny PR |
+| **F0** | Dziennik per zmiana: `change new <CHG> [--source <PRB>]`, szablony `intent`, `plan`, `decisions`; `check` waliduje nagłówki w `changes/` — **zrobione** (`decision_record.py`) | `modes/mode-pdi/` (patrz „Architektura”) |
+| **F0b** | Zapis i wypychanie decyzji z dowolnego narzędzia: `decision_record.py decision add --change CHG-n "…"` (skrypt trybu) (wpis w `decisions.md`; gdy serwer MCP pdi podłączony — od razu `record_decision` i numer `DEC-n`), kolejka bez połączenia (wpis „niewysłane”, `decision sync` wysyła później, stały identyfikator wpisu → bez duplikatów), `decision export` (JSON wszystkich decyzji projektu do indeksowania), reguła w skillu trybu: decyzja z rozmowy albo bramki idzie przez to polecenie | `modes/mode-pdi/` — **zrobione** (`decision add/pending/mark/export`) |
 | F0 | Instalacja tf w pdi i ShipScope | osobne sesje w tamtych repo |
 | F1 | Dopisek `Change: TSK-n`, hook commit-msg — **zrobione 2026-10-26** jako `commit_msg.py` (`check`, `install`) w core-conventional-commits (plan: `docs/plans/2026-10-26-f1-slad-w-commitach.md`) | `core/skills/core-conventional-commits`, `core-git-workflow` |
 | F1 | Talos czyta cięcia z `plan.md` zmiany; raport do `changes/CHG/runs/TSK-n.md` — **zrobione 2026-10-26** (`run_report.py start --task`, `finish`) | `modes/mode-talos/` |
 | F2 | Rekonstrukcja z kodu i eksport w JSON — **eksport zrobiony 2026-10-26** jako `recon_export.py` → `reconstruction.json` (plan: `docs/plans/2026-10-26-f2-eksport-rekonstrukcji.md`) | `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` |
 | F3 | Triaż z wejściem `PRB` w JSON (`contract/problem.schema.json`) i rekomendacją według schematu — **zrobione 2026-10-26** jako `triage_pdi.py` (`check`, `recommend`) w `mode-pdi` (plan: `docs/plans/2026-10-26-f3-triaz-prb.md`) | `packs/pack-it/skills/proc-issue-triage`; stany pdi ↔ tf w `pdi/contract/README.md` |
 | F4 | Uruchamianie person bez interakcji, stan „czeka na bramkę”, `gate.requested` do pdi, szablon `sdlc-phase.yml` — **zrobione 2026-10-26** jako `phase_run.py` w `mode-pdi` (plan: `docs/plans/2026-10-26-f4-uruchamianie-faz.md`) | `modes/mode-pdi/` |
+| F5 | Pasma kontrolne na metrykach PROD z ShipScope → `metric.breached` do pdi — **zrobione 2026-10-26** jako `metric_watch.py` i szablon `metric-watch.yml` (plan: `docs/plans/2026-10-26-f5-pasma-kontrolne.md`) | `modes/mode-pdi/` |
+| F6 | AI review pull requestów w CI według `REVIEW.md` — **zrobione** (#86, plan: `docs/plans/2026-10-26-przeglad-ai-w-ci.md`); faza designu przez Figma MCP i evale flow — do zrobienia | `core/` |
 
 ## Polecenie startowe — F0 (wklej w nowej sesji w repo tf)
 
