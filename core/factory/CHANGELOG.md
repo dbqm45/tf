@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.47.0] — 2026-10-27
+### Added
+- **pack-it:** host hardening and data-at-rest guidance in security skills (#90)
+
 ## [5.46.0] — 2026-10-27
 ### Added
 - **mode-pdi:** Rodzaj, Wymagania i Odblokowuje w planie zmiany (#89)
