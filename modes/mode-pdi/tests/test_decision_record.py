@@ -262,6 +262,47 @@ def main() -> int:
     r = release_case(RELEASE_OK, rows=PLAN_ROWS.replace("| TSK-58 | R1 | payment-retry |", "| TSK-58 | R1 | — |"))
     check(r.returncode != 0 and "TSK-58" in r.stdout and "Flaga" in r.stdout,
           f"R-7: kolumna „Flaga” w plan.md niezgodna z release.yaml: {r.stdout}")
+    # Samokontrola planu cięć (core-delivery-lifecycle plan-ciec.md) = REL-008 w ci_for_sdlc: fundament z „Odblokowuje”,
+    # cięcie z wymaganiem albo weryfikacją. Kolumny jak w szablonie: Rodzaj, Wymagania, Odblokowuje.
+    plan_head = ("| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje | Pliki | Weryfikacja |\n|"
+                 + "---|" * 9 + "\n")
+    rows_ok = plan_head + (
+        "| TSK-57 | fundament | R1 | payment-retry | (fundament) klucz idempotencji jest gotowy | | TSK-58 | | test klucza |\n"
+        "| TSK-58 | cięcie | R1 | payment-retry | użytkownik może ponowić płatność | US-02 | — | | e2e ponowienia |\n"
+        "| TSK-59 | cięcie | R2 | — | użytkownik widzi historię prób | US-03 | — | | |\n"
+        "| TSK-60 | cięcie | R2 | | użytkownik dostaje powiadomienie | | — | | test powiadomienia |\n")
+    r = release_case(RELEASE_OK, rows=rows_ok)
+    check(r.returncode == 0, f"P-1: plan z kolumnami Rodzaj, Wymagania, Odblokowuje i dobrą samokontrolą przechodzi: {r.stdout}")
+    bad_plan = {
+        "fundament bez Odblokowuje": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
+                                      "TSK-57", "Odblokowuje"),
+        "Odblokowuje spoza planu": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | TSK-99 | | test klucza |"),
+                                    "TSK-99", "Odblokowuje"),
+        "fundament poznany po wyniku": (rows_ok.replace("| TSK-57 | fundament |", "| TSK-57 | |")
+                                        .replace("| | TSK-58 | | test klucza |", "| | | | test klucza |"),
+                                        "TSK-57", "Odblokowuje"),
+        "cięcie bez wymagania i weryfikacji": (rows_ok.replace("| US-03 | — | | |", "| | — | | |"), "TSK-59", "Wymagania"),
+    }
+    for label, (rows, who, needle) in bad_plan.items():
+        r = release_case(RELEASE_OK, rows=rows)
+        check(r.returncode != 0 and who in r.stdout and needle in r.stdout and "plan.md" in r.stdout,
+              f"P-2 check wykrywa: {label} ({r.stdout.strip()[:300]})")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-2" / "plan.md",
+              "artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-27\nupdated: 2026-10-27\n"
+              "change: CHG-2\ntasks: [TSK-1, TSK-2]", "# Plan\n\n" + plan_head
+              + "| TSK-1 | fundament | R1 | — | (fundament) schemat | | | | |\n| TSK-2 | cięcie | R1 | — | x | US-1 | | | |\n")
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "TSK-1" in r.stdout and "Odblokowuje" in r.stdout,
+              f"P-3: samokontrola planu działa też bez release.yaml: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        run(["change", "new", "CHG-3"], tmp)
+        plan = Path(tmp) / "docs" / "project" / "changes" / "CHG-3" / "plan.md"
+        head = next((ln for ln in plan.read_text(encoding="utf-8").splitlines() if ln.startswith("| Cięcie")), "")
+        check(all(c in head for c in ("Rodzaj", "Wymagania", "Odblokowuje", "Weryfikacja")),
+              f"P-4: szablon plan.md ma kolumny samokontroli planu: {head}")
+        r = run(["check"], tmp)
+        check(r.returncode == 0, f"P-5: świeży szablon przechodzi check: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-1" / "plan.md",
               "artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-23\nupdated: 2026-10-23\n"
