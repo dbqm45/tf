@@ -686,3 +686,29 @@ modele renderowania per trasa (CSR/SSR/SSG/ISR/RSC, hydratacja) i BFF tylko jako
   stronie) → `singleton` i `strictVersion`/`requiredVersion` w federacji, kontrola wersji w CI; decyzja wg bólu
   wdrożeń między zespołami, nie złożoności aplikacji (heurystyka autora: < ~15 osób monolit modularny; 50+ i zespoły
   blokujące się przy wdrożeniach → micro-frontends) — jako heurystyka, nie reguła.
+
+## Dyscyplina pomiaru w ewaluacjach (artykuł „Structuring 40 Million Documents into an Agentic Knowledge Graph”, F. Khan, 2026-08-26, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ma zbiory, graderów, kalibrację sędziego, pass@k i bramkę w CI. Artykuł to studium
+porażek pomiaru (wszystkie liczby z jego repo, nie sprawdzone): sześć cichych błędów, z czego cztery poprawiły metrykę.
+Średni priorytet, w `ai-evals` (reference „pułapki pomiaru”):
+- [ ] **Granice wyniku:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
+  wynik systemu interpretowalny tylko między nimi (u autora oba ramiona przegrywały ze stałą „tak”, co znaczyło, że
+  zbiór i model nie rozróżniają architektur).
+- [ ] **Jedna zmienna naraz i przegląd stałych:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
+  próg) to hiperparametr — przebieg z pozostałymi wartościami zamrożonymi; obcięcie do 1100 znaków kosztowało
+  14 punktów, limit 120 kandydatów wyrzucał złoty dokument w 41% pytań. Ramiona porównawcze dostają te same stałe
+  (wyrocznia czytała 4000 znaków, system 1100 — „luka rozproszenia” była w 84% artefaktem).
+- [ ] **Wybór konfiguracji na osobnym zbiorze:** podział dobór/test, wynik raportowany tylko z testu; kontrola
+  „przetasowane etykiety” pokazuje, ile daje sam wybór najlepszej z wielu konfiguracji (u autora 3,5 pkt na szumie).
+  Siatka parametru, której optimum leży na krawędzi, jest za wąska.
+- [ ] **Etykieta z rozkładu, nie z regexa:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
+  wariantów pisowni), nie z parsowania wolnego tekstu; ta sama wartość daje pewność do abstynencji.
+- [ ] **Metryka składowa musi modelować to, co dzieje się dalej:** gorsza precyzja groundera może dać lepszy system,
+  gdy dalszy filtr odrzuca fałszywe trafienia — oceniać parę „pokrycie i przeciek na pytaniach kontrolnych”
+  (pytanie z jednym pojęciem podmienionym na losowe), nie samą metrykę składnika.
+- [ ] **Niezmienniki dla struktur pochodnych:** assert zgodności tablic równoległych plus niezależne przeliczenie
+  ze źródła (u autora rozjechane tablice etykiet nie rzuciły błędu); cache kluczowany całym wejściem; walidator
+  cytatów testowany na nawiasie z wieloma identyfikatorami.
+Wniosek merytoryczny autora, do `ai-rag`: graf/ontologia do wyszukiwania i proweniencji, ale decyzja o odmowie
+z kalibrowanej pewności modelu (AUROC 0,81), bo certyfikacja ścieżką w grafie przewidywała poprawność na poziomie
+losowym (0,50) — jeden przypadek, nie reguła; sprawdzać na własnym zbiorze.
