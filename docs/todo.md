@@ -540,6 +540,12 @@ Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet
   zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
   „Równolegle z”. Układ plików i nazwy poleceń sprawdzić w repo github/spec-kit z datą (artykuł opisuje błąd haka
   `before_specify` w nowszej wersji) [niezweryfikowane].
+- [ ] **OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji** (artykuł „OpenSpec + Superpower”, Chimin,
+  2026-05-30): po zakończeniu zmiany jej specyfikacja trafia do głównej, aktualnej specyfikacji systemu, a folder zmiany
+  zostaje historią. mode-pdi ma dziennik zmiany `docs/project/changes/CHG-n/` (intencja, plan, decyzje), ale nie
+  ma kroku „scal wymagania zmiany do bieżącego stanu wymagań” — sprawdzić, czy faza zamknięcia CHG to robi; jeśli nie,
+  dodać krok i kontrolę (wymaganie z CHG bez odpowiednika w głównym dokumencie = ustalenie). Wejście z OpenSpec
+  (`openspec/specs`, `openspec/changes`) jak z Spec Kit; układ katalogów sprawdzić w repo projektu z datą.
 
 ## Rutyny, które zdobywają uprawnienia (artykuły „How to Create Loops with Claude Code”, Y. Hosni, 2026-06-24; „Harness Engineering” i „/goal”, Gao Dalie, 2026-05, zapisane 2026-10-29)
 Przegląd 2026-10-29: większość już jest — kwalifikacja zadania i kontrakt (cel, zakres, stop, budżet), najwyżej
@@ -665,3 +671,18 @@ wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni
   `phase_run.py` przed kolejną fazą sprawdza, czy artefakt się nie zmienił — inaczej „EVIDENCE_CHANGED” i ponowna
   prośba o bramkę (wzorzec z Accension: zgoda dotyczy dowodu, który człowiek widział). Zmiana kontraktu zdarzeń —
   osobna pozycja w `pdi/TODO.md`; TDD po obu stronach.
+
+## Wzorce architektury frontendu — braki (artykuł „Every Frontend Architecture Pattern Explained”, T. Kanjariya, 2026-08-06, zapisane 2026-10-29)
+Przegląd 2026-10-29: `fe-architecture` ma style (monolit modularny, micro-frontends z Module Federation 2.0, FSD),
+modele renderowania per trasa (CSR/SSR/SSG/ISR/RSC, hydratacja) i BFF tylko jako miejsce sesji. Niski priorytet:
+- [ ] **BFF jako wzorzec:** osobny cienki backend na klienta (web, mobile), własność zespołu frontendu, kształt danych
+  pod jeden interfejs; kiedy nie (jeden klient = zbędny przeskok sieciowy); koszt: kolejny serwis i pojedynczy punkt
+  awarii (źródła: Calçado 2015, Newman — sprawdzić).
+- [ ] **Obliczenia przy danych, nie przy użytkowniku:** SSR na brzegu bez bazy rozproszonej bywa wolniejszy niż render
+  w regionie bazy; brzeg serwuje statyczną skorupę, dynamiczne części strumieniowane z regionu danych (Partial
+  Prerendering). Status Vercel Edge Functions („deprecated” wg artykułu) sprawdzić w dokumentacji z datą
+  [niezweryfikowane].
+- [ ] **Micro-frontends — typowa porażka i próg:** dryf współdzielonych zależności (dwie wersje frameworka na jednej
+  stronie) → `singleton` i `strictVersion`/`requiredVersion` w federacji, kontrola wersji w CI; decyzja wg bólu
+  wdrożeń między zespołami, nie złożoności aplikacji (heurystyka autora: < ~15 osób monolit modularny; 50+ i zespoły
+  blokujące się przy wdrożeniach → micro-frontends) — jako heurystyka, nie reguła.
