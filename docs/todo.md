@@ -1192,3 +1192,18 @@ poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia)
   nowych decyzji produktowych). Przegląd historyjki przez agentów z kilku ról (deweloper, PO, interesariusz) jest
   w pozycji „gdzie agent musiałby zgadywać” wyżej.
 
+## Model zastępczy i projekt odwrotny; miary autonomii agentów (artykuły „How I Recreated a Research Paper to teach an AI to Design Self-Rolling Tubes”, A. Janmohamed, 2026-10-22; „Agentic SDLC: Strategic Reading List”, A. Honchar, 2026-05-27; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-research-methods` ma wyciek przez wiele wierszy tej samej jednostki; brak wątku modelu
+zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z artykułów [niezweryfikowane].
+- [ ] **`ai-research-methods`, model zastępczy w pętli optymalizacji:** (1) przykłady powstałe z augmentacji
+  (odbicie, obrót) trafiają do tego samego zbioru co oryginał, inaczej test jest zawyżony; uśrednianie predykcji dla
+  wersji symetrycznych w czasie testu jako tani zysk; (2) optymalizacja na modelu wyszukuje jego błędy na swoją
+  korzyść — zwycięzca zawsze wygląda lepiej, niż jest (u autora 0,44 mm przewidziane vs 0,75 mm w symulatorze), więc
+  wynik sprawdza się prawdziwym symulatorem/eksperymentem, a raport podaje obie liczby; (3) cel spoza zakresu danych
+  treningowych (fizycznie niemożliwy) daje pewną, złą odpowiedź — najpierw policz granicę wykonalności, potem
+  szukaj; (4) w algorytmie ewolucyjnym zbyt duża mutacja (20% zamiast 2%) zamienia przeszukiwanie w losowanie.
+- [ ] **`core-delivery-lifecycle` / `eng-continuous-delivery`, miary autonomii:** obok DORA odsetek scalonych PR
+  autorstwa agenta, godziny przeglądu człowieka na zmianę, czas zadania od początku do końca; wg autora, jeśli po
+  ~6 miesiącach agentowe PR to < 5%, wąskim gardłem są specyfikacje, harness i struktura przeglądu, nie narzędzie
+  (próg to opinia autora, nie pomiar). Pasuje do decyzji G7 „miary przepływu” w ci_for_sdlc/pdi.
+
