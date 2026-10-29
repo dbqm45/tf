@@ -526,3 +526,16 @@ działających tygodniami.
   kolejnych przebiegach = eskalacja zamiast ponowienia; przegląd uprawnień rutyny przy każdym nowym narzędziu
   i co miesiąc; w przeglądzie liczyć też fałszywe alarmy i przeoczenia, nie tylko trafne pozycje. Najpierw scenariusze
   ewaluacji (core-skill-authoring), potem treść; bez nowego skilla.
+
+## MCP Apps — interfejs dla człowieka obok narzędzia (artykuł „Stop Returning JSON. Start Shipping UI with MCP Apps”, A. Tkachuk, 2026-09-14, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-mcp-server` nie wspomina rozszerzenia MCP Apps (narzędzie wskazuje zasób `ui://`, host
+renderuje go w izolowanym iframe i przekazuje wynik narzędzia; przyciski wołają narzędzia przez hosta). Daty
+z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawdzić w specyfikacji
+(apps.extensions.modelcontextprotocol.io) z datą przed dopisaniem [niezweryfikowane]. Średni priorytet.
+- [ ] **`ai-mcp-server`: kiedy MCP App, a kiedy tekst** — App tylko gdy interakcja ma strukturę (zatwierdzenie,
+  formularz, panel z akcjami, porównanie wyników), jedna App na domenę, nie na narzędzie; łagodny powrót do treści
+  strukturalnej, gdy host nie obsługuje rozszerzenia; dane w wyniku narzędzia, nie w HTML zasobu. Bezpieczeństwo:
+  widoczność narzędzia `_meta.ui.visibility: ["app"]` (model go nie widzi — przycisk człowieka jako jedyna droga
+  do akcji, np. zatwierdzenie), zatwierdzenie przez ID i wersję obiektu (odrzucenie nieaktualnej karty), UI nie jest
+  granicą zaufania — autoryzacja, walidacja, idempotencja i audyt po stronie serwera; App traktowana jak niezaufany
+  kod. Najpierw scenariusze ewaluacji (core-skill-authoring).
