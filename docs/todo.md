@@ -1306,3 +1306,24 @@ działa, z regułami w głowach ludzi; „czy w ogóle automatyzować”; jak po
 pokrywa się z `ai-product-management` i `ux-service-design`; „enabler” (narzędzia i system projektowy czytelne dla
 agenta) — z pozycjami o MCP wyżej.
 
+## Agent proaktywny i klasy informacji wychodzącej (artykuły „Claude Duet: The AI That Messages You First”, U. Estari, 2026-10-22; „I Built a Stock Terminal That Decides in Under a Second. Just Jev, No LLM”, unicodeveloper, 2026-09-30; zapisane 2026-10-29)
+Sprawdzone 2026-10-29 u źródła (claude.com/resources/articles/claude-duet, 2026-10-21, z dopiskiem z 2026-10-23):
+Claude Duet — podgląd badawczy z listą oczekujących, dla Pro i Max w USA; poranny skrót i sprawdzanie podłączonych
+aplikacji w ciągu dnia, wiadomość tylko gdy coś wymaga uwagi; własna maszyna wirtualna z przeglądarką; poświadczenia
+obsługiwane jak w Claude Managed Agents (agent nie widzi haseł ani tokenów); akcje zatwierdza klasyfikator trybu
+auto; **osobny klasyfikator i prompt bezpieczeństwa dla każdej wiadomości** — najściślejsza klasa (numery kart,
+dokumenty tożsamości) odrzucana zawsze, inne wrażliwe (zdrowie, finanse osobiste) tylko na wyraźne polecenie
+użytkownika. Wg artykułu Estariego (nie sprawdzone u źródła): wysłanie, płatność, podpis i usunięcie czekają na
+zgodę, a handel papierami wartościowymi i przelewy między kontami są wyłączone nawet za zgodą [niezweryfikowane].
+- [ ] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
+  wiadomości:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
+  polecenie” (zdrowie, finanse osobiste), reszta; sprawdzenie każdej wiadomości wychodzącej osobnym klasyfikatorem
+  poza głównym agentem, obok zatwierdzania akcji. Do tabeli trybów delegacji: agent proaktywny (skrót + sprawdzanie
+  co kilka godzin zamiast ciągłego, bo koszt w limitach) — rytm i lista tematów ustawia użytkownik; lista akcji
+  zakazanych nawet za zgodą.
+
+Bez wpisu: „Jevinik” — wzorzec „zbierz dowody, zadaj pytania typowane, działaj” z modelem decyzyjnym zamiast LLM
+(autor: ok. 40× szybciej przy podobnych prawdopodobieństwach, dwa tickery po dwa przebiegi [niezweryfikowane]) jest
+w pozycji o wyborze kontekstu przez selektor (sekcja o harnessie wyżej); jakość decyzji zależy od świeżości
+dowodów, a każdy dowód ma link i datę.
+
