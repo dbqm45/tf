@@ -1361,3 +1361,50 @@ Bez wpisu: „Build a Second Brain in 15 Minutes” (R. Brasil Monteiro, 2026-07
 podział framework / treść przy aktualizacji, workery na tańszym modelu; pokryte przez pozycje o wiki i
 `core-cost-control`) oraz powtórzony „Spec-Driven Development in Scrum and Kanban” (wpis wyżej).
 
+## Bramka LLM, anatomia harnessu i reguły w kodzie (artykuły „Design an LLM Gateway: Routing, Fallbacks, and Token Cost Control”, A. Kumar, 2026-10-22; „The Anatomy of an AI Agent Harness”, D. Yadav, 2026-10-01; „The Complete Guide to Agent Harnesses (With Code)”, P. Perrone, 2026-08-21; zapisane 2026-10-29)
+Sprawdzone 2026-10-29 u źródła: Anthropic Engineering „Effective harnesses for long-running agents” (2025-11-26 —
+agent inicjujący środowisko + agent kodujący robiący przyrost w każdej sesji i zostawiający artefakty dla
+następnej; kompaktowanie nie wystarcza: agent próbuje zrobić wszystko naraz i ogłasza koniec za wcześnie);
+„Harness design for long-running application development” (2026-03-24 — planner, generator i ewaluator z kryteriami
+zamieniającymi ocenę gustu na stopniowalne punkty); cennik cache (platform.claude.com, prompt-caching: odczyt
+cache ok. 0,05–0,1 ceny wejścia zależnie od modelu, czas życia liczony od początku żądania). Liczby z preprintów
+cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass rate 0–8 pkt) — jak w pozycji o
+„harness: wynik czy koszt” [niezweryfikowane].
+- [ ] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia:** trasy jawne per funkcja
+  (`funkcja → model, zapasowy`) z wyłącznikiem, zamiast „sprytnego” automatycznego routingu; **fallback tylko do
+  modeli spełniających te same ograniczenia** (dane z modelu własnego nie mogą po cichu pójść do zewnętrznego
+  dostawcy, słabszy model to cicha utrata jakości) i fallback produktowy („pokaż dane bez streszczenia AI”);
+  limity w tokenach, nie tylko w żądaniach — rezerwacja `max_tokens` z góry i zwrot różnicy po odpowiedzi; budżet
+  osobno od limitu: przy 80% alert, przy 100% polityka wybrana z góry przez właściciela (blokada / tańsza trasa /
+  zgoda z alertem); strumieniowanie: rozliczenie po końcu strumienia, anulowanie wywołania u dostawcy po rozłączeniu
+  klienta, odpowiedź przerwana w połowie oznaczona jako częściowa, bez cichego zszywania dwóch; logowanie treści
+  promptów tylko po włączeniu dla trasy, z retencją; miara „odsetek fallbacków” jako wczesne ostrzeżenie.
+- [ ] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (Anthropic, wyżej):
+  pierwsza sesja przygotowuje środowisko i listę zadań, każda kolejna robi jeden przyrost i zostawia artefakty
+  przekazania (postęp, stan testów); oddzielny ewaluator z jawnymi kryteriami; reguła końca sprawdzana przez test
+  lub ewaluator, nie przez deklarację agenta. Recenzent tylko do odczytu (raport, nie poprawka — inaczej znika
+  sygnał), narzędzia nieodwracalne z `dry_run` domyślnie włączonym; ścieżka rozwiązywana **przed** porównaniem
+  z listą dozwolonych (lista zakazów łapie tylko przewidziane zapisy; `work/../secrets` przechodzi); reguła
+  z promptu przeniesiona do hooka, gdy ma działać zawsze. Część jest już w `core-agent-security` — dopisać
+  przykłady i test „lista zakazów vs `..`”.
+
+## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
+Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
+[niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
+- https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/ (sekcja o piaskownicy)
+- https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/ (sekcja o piaskownicy)
+- https://docs.icepanel.io/integrations/mcp-server (model architektury jako jedno źródło widoków)
+- https://agentskills.io/ (specyfikacja Agent Skills — sprawdzona zamiast tego w repo `agentskills/agentskills` na GitHubie)
+- https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ (OWASP Top 10 for LLM 2026, sekcja o wzorcach bezpieczeństwa)
+- https://docs.github.com/en/copilot/concepts/agents/copilot-memory (pamięć Copilota, artykuł A. Kokane o ADR)
+- https://docs.langchain.com/oss/python/langgraph/durable-execution (tryby trwałości LangGraph, w tym domyślny `async`)
+- https://www.inngest.com/docs/learn/how-functions-are-executed (sprawdzone zamiast tego w repo `inngest/website`)
+- https://docs.dbos.dev/architecture (sprawdzone zamiast tego w repo `dbos-inc/dbos-docs`)
+- https://docs.temporal.io/workflow-definition (determinizm kodu workflow w Temporal)
+- https://www.pragmaticcoders.com/resources/product-health-checklist (Product Health Checklist — prawdopodobnie za formularzem; do oceny po wklejeniu treści)
+- https://www.langchain.com/blog/the-anatomy-of-an-agent-harness (definicja harnessu, LangChain)
+- https://research.trychroma.com/context-rot (badanie „context rot”, Chroma)
+- https://prachub.com/resources/llm-gateway-system-design-interview-routing-rate-limits-fallbacks-and-cost-controls (bramka LLM)
+- https://github.com/paoloap-py/agent-harness-guide (repo z przykładami warstw harnessu — 403 przez proxy GitHub dla tego repo)
+Artykułów na medium.com i innych płatnych platformach nie pobierano — treść pochodziła z wklejek.
+
