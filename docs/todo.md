@@ -494,6 +494,13 @@ porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsor
   korpusu (skan, tabela przez dwie strony, dwie kolumny) zanim ktoś stroi retriever; miara struktury tabel (TEDS) i
   kolejności czytania w zestawie ewaluacyjnym; parsery świadome układu (open source i usługi) jako kategoria z
   kryteriami wyboru, nie lista marek. Liczby z benchmarków (OmniDocBench, CVPR 2025) sprawdzić w źródle pierwotnym.
+- [ ] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (artykuł „The Limits of Vector Search in RAG”,
+  J. Wąsowski, 2026-09-14; hybrydę i „wektory gubią identyfikatory” skill już ma): zestaw ewaluacyjny z polem typu
+  zapytania — recall@k osobno dla zapytań semantycznych (parafrazy, intencje) i dokładnych (identyfikatory, kody,
+  wersje, liczby, negacje), bo średnia ukrywa podział; przed ustawieniem progu podobieństwa histogram cosinusa dla
+  kilkuset losowych, niepowiązanych par z własnego korpusu (anizotropia — losowe pary bywają przy 0,9); zapytania
+  łączące dwa fakty jako osobna kategoria (granica pojedynczego wektora: Weller i in., „On the Theoretical
+  Limitations of Embedding-Based Retrieval”, 2025 — sprawdzić w źródle; liczby z artykułu [niezweryfikowane]).
 
 ## Wiedza kanoniczna jako pliki z linkami zamiast RAG (artykuł „Beyond RAG: … Open Knowledge Format (OKF)”, Dev Evolution, 2026-09-09, zapisane 2026-10-29)
 Przegląd 2026-10-29: idea artykułu — definicje kanoniczne (metryka, schemat, reguła) jako pliki Markdown z YAML
