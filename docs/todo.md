@@ -966,3 +966,32 @@ pracy co efekt. Braki:
   albo osobna ścieżka skutków; klucz idempotencji przekazany też do dostawcy płatności. Bez naturalnego id: nadaje go
   producent przy utworzeniu albo skrót niezmiennych pól / encja + wersja.
 
+## Zmiany harnessu i skilli mierzone na odłożonym zbiorze (artykuł „AI Harness Evolution: AHE, Harness-R1, and Overfitting Without a Holdout”, J. Wąsowski, 2026-10-22, zapisane 2026-10-29)
+Przegląd 2026-10-29: w sekcji „Dyscyplina pomiaru” są już podział na dobór i ocenę i test przetasowanych etykiet dla
+ewaluacji produktowych; `core-skill-authoring` każe pisać scenariusze przed treścią. Liczby z prac (AHE 69,7 → 77,0%
+na tych samych 89 zadaniach; Harness-R1 +8,9 pkt na 1270 odłożonych; krytyka arXiv 2607.12227: przy rozłącznych
+zbiorach ok. +0,6 pkt) [niezweryfikowane]. Braki:
+- [ ] **Fabryka sama tuninguje na egzaminie:** opisy i treść skilli poprawiamy po pomiarze na tych samych scenariuszach
+  (pomiar 2026-10-22: przegląd 143 nierozróżniających, skrócenie 26 skilli). Do `core-skill-authoring` i runnera
+  ewaluacji: część scenariuszy każdego skilla odłożona (nie czyta ich autor zmiany), zmiana przyjęta, gdy poprawia
+  zbiór roboczy i nie pogarsza odłożonego; w raporcie różnica „roboczy vs odłożony” jako sygnał uczenia się egzaminu.
+  Płatny pomiar tylko za zgodą człowieka.
+- [ ] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli:** w PR przewidywanie (które
+  przypadki mają przejść z porażki na sukces, co grozi regresją), wynik względem zamrożonej linii bazowej
+  i odłożonego zbioru, potem wdrożenie albo wycofanie. Autor zmiany nie może jednocześnie zmieniać scenariuszy, na
+  których jest oceniany (jak chronione testy akceptacyjne wyżej) — dotyczy też agentów poprawiających skille.
+- [ ] **Granica pętli samodoskonalenia** (do `core-async-delegation`): pętla, która poprawia własny harness, nie ma
+  zapisu do polityki uprawnień, piaskownicy, tożsamości ani zestawu ewaluacji (osobne repo / tylko odczyt); przykłady
+  z artykułu: DGM usunął znaczniki wykrywania halucynacji z własnej funkcji nagrody i sfabrykował log testów.
+- [ ] **Manifest pary model + harness** (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
+  narzędzi, odwołanie do polityki, skrót obrazu środowiska, wersja zestawu ewaluacji — wynik ewaluacji przypisany do
+  pary, cicha zmiana modelu u dostawcy = nowa para do ponownego pomiaru.
+
+Artykuł „The Economics of Agents: Token Accounting, Caching, and Routing” (S. Singhal, 2026-08-18) — mało nowego:
+cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-control`, `eng-llm-features` i
+`ai-prompt-engineering`; ci_for_sdlc zapisuje tokeny cache i p95 czasu. Jedna pozycja:
+- [ ] **`eng-llm-features`, rachunek per zadanie:** w śladzie każdego wywołania pięć liczb (wejście, odczyt cache, zapis
+  cache, wyjście, myślenie), w logu tokeny, a cena liczona przy odczycie; koszt na *ukończone zadanie* jako percentyle
+  (p95/p99 to zwykle pętla ponowień, nie średnia); „efektywna cena wejścia” jako miara działania cache; praca
+  asynchroniczna przez Batch API; wyniki (nie tylko prompty) cache'owane dla powtarzających się pytań.
+
