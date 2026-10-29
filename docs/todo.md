@@ -584,3 +584,24 @@ zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australi
 - [ ] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
+
+## Testy aplikacji z AI poza odpowiedzią modelu (artykuł „9 AI Application Failures That Aren't Model Problems”, S. Gundeti, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ocenia odpowiedzi modelu, `fe-architecture` ma 4 stany widoku (ładowanie, błąd,
+pusto, dane), `be-auth-security` i `ai-rag` — uprawnienia i izolację najemców. Brakuje jednej listy kontrolnej awarii,
+które nie są winą modelu. Średni priorytet; jako `references/` w `qa-test-design` (odnośnik z `ai-evals` i
+`eng-llm-features`), najpierw scenariusze ewaluacji:
+- [ ] **Lista „aplikacja z AI poza modelem”** z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
+  wymuszenie 403/500/timeout/wygasłego tokenu i porównanie ekranu z odpowiedzią, akcja naprawcza pasuje do przyczyny;
+  (2) długie zadanie agenta a zerwane połączenie — rozłączenie, zakończenie w tle, powrót: prawdziwy stan końcowy bez
+  wiecznego „pracuję…”; (3) routing modeli — sesja przypięta do taniej trasy po pierwszej trywialnej wiadomości,
+  wyłączony model nadal serwowany, fallback zgodny z polityką i widoczny; (4) kontrakt narzędzi — pusty,
+  zniekształcony, zdublowany i za duży wynik narzędzia, przerwane oczekujące wywołanie (pytanie do użytkownika,
+  a on pisze nową wiadomość), pętla bez postępu (podniesienie limitu rekursji to objaw, nie naprawa), wartości
+  przepisywane przez model (URL, ID, tokeny) jako niezaufane; (5) text-to-SQL — nieistniejące kolumny, identyfikatory
+  ze spacjami, trzy różne wyniki: puste trafienie / błąd zapytania / metryka niezdefiniowana (zero, które „wygląda
+  jak fakt”); (6) integracje — konta osobiste i firmowe, odwołany token, lista dłuższa niż jedna strona, link do
+  pliku otwarty spoza aplikacji, czyją tożsamością działa agent; (7) migracje — testy na kontach z danymi sprzed
+  zmiany, nie tylko na świeżych; (8) izolacja — API wprost jako użytkownik o niskich uprawnieniach, pamięć i cache
+  nie przekraczają granic użytkownika i najemcy, odebranie roli działa od razu; (9) koszty — uzgodnienie zużycia
+  z surowymi rekordami dostawcy per wywołanie, tury dłuższe niż okno synchronizacji i sesje przez północ, zmiana
+  cennika nie przepisuje historii. Przykłady z artykułu są uogólnione przez autora — traktować jako klasy awarii.
