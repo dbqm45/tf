@@ -399,3 +399,20 @@ potem treść, bramka; źródła pierwotne NIST i OWASP z datą):
   dojrzałości pipeline'u; „shift left” i bezpieczne ustawienia domyślne nazwane wprost. Miejsce: sec-appsec-devsecops.
 - [x] **Centralne logi bezpieczeństwa:** plan zarządzania logami (źródła, czas, integralność i oddzielone uprawnienia
   do logów, retencja) wg NIST SP 800-92 — uzupełnienie ops-security-operations §1 (źródła i retencja już są).
+
+## Zamiar i oczekiwania przed bramką (artykuł „The Method That Replaces Spec-Driven Development — IDSD”, zapisane 2026-10-29)
+Przegląd 2026-10-29: rozdział „co” (człowiek) od „jak” (agent) fabryka już ma w fazach z bramkami — `intent.md`,
+faza `requirements` z kryteriami akceptacji i bramką B2, `qa-spec-first-testing`, `proc-requirements-shaping` (otwarte
+pytania zamiast domysłów), kontekst ładowany przez skille, ślad wymaganie → TSK → test `KLUCZ/AC-n`. Bez nowej
+nazwy ani warstwy metodyki (IDSD/ICE). Do dorobienia w `modes/mode-pdi/` (scenariusze ewaluacji, potem treść i kod
+metodą TDD, bramka skilla; jeden mały PR):
+- [ ] **Szablon `intent.md`: ograniczenia, porażka, powiązania.** Trzy krótkie sekcje wypełniane przez człowieka, który
+  chce wyniku: *Ograniczenia* (warunki, w których wynik ma działać), *Kiedy to porażka* (czym wynik nie może być,
+  np. „but za 140 USD”, „but niedostępny”), *Powiązania* (obszary i zmiany, których dotyczy). Dziś zamiar ma metryki
+  sukcesu i „poza zakresem”, a scenariusze porażki pojawiają się dopiero w wymaganiach pisanych przez agenta.
+  Zgodność: ci_for_sdlc czyta z `intent.md` tylko tytuł, treść i sekcję metryk — sprawdzić przy zmianie (kontrakt pdi).
+- [ ] **Test „gdzie agent musiałby zgadywać” przed bramką B2.** Osobny agent bez kontekstu rozmowy (wzorzec czystego
+  pokoju jak `blind-analyst`, `kasia-qa-analyst`) czyta `intent.md` i `requirements.md` i zwraca listę miejsc, w
+  których musiałby zgadywać; lista trafia jako pytania do prośby o bramkę (`gate.requested`), tak jak braki z
+  `design_check.py` przed `design-review`. Koszt: jedno wywołanie modelu na bramkę [szacunek: kilka centów na
+  Haiku/Sonnet] — zmierzyć na pierwszych zmianach.
