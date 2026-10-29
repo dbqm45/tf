@@ -511,3 +511,18 @@ Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet
   zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
   „Równolegle z”. Układ plików i nazwy poleceń sprawdzić w repo github/spec-kit z datą (artykuł opisuje błąd haka
   `before_specify` w nowszej wersji) [niezweryfikowane].
+
+## Rutyny, które zdobywają uprawnienia (artykuły „How to Create Loops with Claude Code”, Y. Hosni, 2026-06-24; „Harness Engineering” i „/goal”, Gao Dalie, 2026-05, zapisane 2026-10-29)
+Przegląd 2026-10-29: większość już jest — kwalifikacja zadania i kontrakt (cel, zakres, stop, budżet), najwyżej
+2 próby naprawy, idempotencja, „zielony bez wartości” jako porażka, cotygodniowy przegląd trafności
+(`core-async-delegation` §1–5, `references/kontrakt-delegacji.md`); `/goal` z oceniającym; „błąd ma się nie
+powtórzyć” jako hook lub bramka (tabela „Gdzie trafia zmiana” w `core-agent-retro`). Braki są małe, dotyczą rutyn
+działających tygodniami.
+- [ ] **`core-async-delegation` §5: uprawnienia rosną z dowodem** — drabina: tylko odczyt → szkic w pliku → zmiany
+  na gałęzi lub w worktree → szkic działania zewnętrznego (draft PR, szkic komentarza) → działanie po zgodzie →
+  automat tylko dla działań niskiego ryzyka z logiem i wycofaniem; szczebel wyżej dopiero po serii przebiegów bez
+  przekroczenia zakresu, każdy nowy szczebel z nową regułą weryfikacji. Do tego: dwa tryby wyniku (cisza — krótka
+  aktualizacja stanu, gdy nic się nie zmieniło; uwaga — raport, gdy coś wymaga człowieka); ta sama blokada w dwóch
+  kolejnych przebiegach = eskalacja zamiast ponowienia; przegląd uprawnień rutyny przy każdym nowym narzędziu
+  i co miesiąc; w przeglądzie liczyć też fałszywe alarmy i przeoczenia, nie tylko trafne pozycje. Najpierw scenariusze
+  ewaluacji (core-skill-authoring), potem treść; bez nowego skilla.
