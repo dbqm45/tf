@@ -1167,3 +1167,28 @@ Przegląd 2026-10-29: `ai-agents` nie rozróżnia typów pamięci długotrwałej
   typu i wygaśnięcia w jednym magazynie. W fabryce odpowiedniki: `docs/project/lessons.md` (semantyczna), dziennik
   i punkty kontrolne (epizodyczna), skille przez PR (proceduralna).
 
+## Trwałe wykonanie agentów i refinement pod SDD (artykuły „Inngest vs Temporal vs DBOS vs LangGraph”, P. Perrone, 2026-09-22; „Refinement with AI: How to Prepare Requirements for Spec-Driven Development”, Pragmatic Coders, 2026-10-01; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` każe projektować wznawianie od punktu kontrolnego, bez kryteriów wyboru narzędzia.
+Sprawdzone 2026-10-29 w źródłach (raw.githubusercontent.com): Inngest — wynik kroku zapisywany po wykonaniu,
+przy kolejnym wywołaniu SDK szuka go po skrócie nazwy kroku (`inngest/website`, how-functions-are-executed); DBOS —
+punkty kontrolne kroków w Postgresie, jeden zapis na krok plus dwa na workflow (`dbos-inc/dbos-docs`, architecture).
+Domyślny tryb `async` w LangGraph i szczegóły Temporal — [niezweryfikowane] (docs.langchain.com, docs.temporal.io
+poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia).
+- [ ] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie:** zysk zależy od granic kroków, nie od narzędzia — jeden
+  krok na każde kosztowne wywołanie modelu lub narzędzia (jeden krok na całą pętlę = kolejka z dodatkami); wszystko
+  poza krokiem wykonuje się ponownie przy wznowieniu (Inngest: przy każdym kroku, Temporal: kod workflow musi być
+  deterministyczny — zegar, losowość, HTTP tylko w aktywnościach). Pułapki ustawień: zapis punktu kontrolnego
+  w tle może zgubić ostatni krok; wznowienie z tym samym wejściem nadpisuje stan; brak stałego id workflow = drugi
+  przebieg obok pierwszego; zmiana nazwy kroku osieroca przebiegi w toku (wersjonowanie). Trwałość ≠ idempotencja
+  (krok, który obciążył kartę i nie zdążył zgłosić sukcesu). Wybór: graf + checkpointer w Postgresie, gdy agent
+  już jest grafem; stan w tej samej transakcji co dane → DBOS; dane kroków nie mogą opuścić sieci → bez usług
+  hostowanych; brak zespołu platformowego → bez własnego klastra. Test odzyskiwania: `SIGKILL` w środku przebiegu
+  i policzenie, co wykonało się ponownie — przed produkcją.
+- [ ] **`proc-requirements-shaping` / `core-delivery-lifecycle`, refinement pod SDD:** u autorów refinement zajmował
+  ok. 30% sprintu (prognoza do 50%) [niezweryfikowane]. Brakuje u nas dwóch kroków: przed implementacją wykonawca
+  **opowiada rozwiązanie własnymi słowami** (problem, zachowanie, sposób, ryzyka, podjęte decyzje), a właściciel
+  sprawdza zgodność z zamiarem — żeby człowiek nie był tylko przekaźnikiem między agentami; makiety z istniejących
+  komponentów i systemu projektowego przed kodem jako test wspólnego rozumienia (sprawdzić, czy nie przemycają
+  nowych decyzji produktowych). Przegląd historyjki przez agentów z kilku ról (deweloper, PO, interesariusz) jest
+  w pozycji „gdzie agent musiałby zgadywać” wyżej.
+
