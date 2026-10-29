@@ -457,6 +457,12 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
 - [ ] **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
   argumentami) oraz **przypięty skrót manifestu narzędzia MCP** (zmieniony opis lub schemat = nowa instalacja do
   przeglądu, nie cicha aktualizacja) — także jako uzupełnienie `core-agent-security`.
+- [ ] **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
+  omówienie M. Craddock, 2026-05-06 [niezweryfikowane w repo]): agent czytający obce dokumenty ma tylko Read/Grep,
+  bez MCP, i zwraca JSON ze schematem (`additionalProperties: false`, `maxItems`, `maxLength`, `pattern` na każdym
+  polu), sprawdzanym w kodzie przed orkiestratorem; prośba o przekazanie (`handoff_request`) przechodzi tylko, gdy
+  cel jest na liście dozwolonych, a ładunek zgodny ze schematem — dokument może zawierać podrobione bloki
+  przekazania. Przykład w kodzie do `sec-llm-security` obok podwójnego LLM.
 - [ ] **Reguła dwóch (Meta, „Agents Rule of Two”):** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
   do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
 - [ ] **Aktualizacja list:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
@@ -994,4 +1000,29 @@ cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-con
   cache, wyjście, myślenie), w logu tokeny, a cena liczona przy odczycie; koszt na *ukończone zadanie* jako percentyle
   (p95/p99 to zwykle pętla ponowień, nie średnia); „efektywna cena wejścia” jako miara działania cache; praca
   asynchroniczna przez Batch API; wyniki (nie tylko prompty) cache'owane dla powtarzających się pytań.
+
+## Diagnoza awarii z LLM wokół reguł deterministycznych (artykuł „Making Failure Diagnosis Reliable with Pensive AI”, Netflix Tech Blog, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ma bramkę w CI, próbki z ruchu i sędziego z kalibracją; `eng-llm-features` —
+strukturyzowane wyjście i budżet. Liczby z artykułu (np. 321% więcej ręcznych przeglądów logów bez narzędzia,
+obserwacja, nie przyczyna) [niezweryfikowane]. Braki, do `eng-llm-features` i `ai-evals`:
+- [ ] **Model wskazuje zakres, kod składa treść:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
+  i ostatniej linii fragmentu, a tekst odtwarza kod z własnej kopii — dwie liczby zamiast przepisywania śladu stosu
+  (mniej tokenów wyjścia, krócej, treść bez halucynacji; zły zakres nadal możliwy, więc mierzony w ewaluacji).
+- [ ] **Reguły jako podłoga regresji i źródło etykiet:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
+  ewaluacja sprawdza, czy to, co znalazła reguła, jest w wyniku LLM (sędzia „włączenie”), osobno precyzję każdego
+  elementu i **szum na poziomie zbioru** — linie obecne w > ~30% wyników idą na listę wykluczeń (prompt ich nie usuwa).
+- [ ] **Niezmienne kopie wejść do ewaluacji:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
+  asynchronicznie bez nadpisywania, ewaluacje czytają archiwum — zmiana wyniku przypisana systemowi, nie źródłu.
+  Ten sam zestaw ewaluacji lokalnie, na środowisku podglądu PR (progi blokują merge), po promocji (alarm do dyżurnego)
+  i cyklicznie na produkcji (dryf).
+- [ ] **Wzorce wywołań:** wspólny termin dla równoległych wywołań (spóźnione pomijane, odpowiedź na czas); kosztowna
+  analiza na żądanie, cache po jednostce pracy (nie po użytkowniku) z warunkowym zajęciem „w toku” i porzuceniem po
+  limicie czasu; strumień wysyła pełną dotychczasową odpowiedź w każdym zdarzeniu (klient bez składania tokenów);
+  ocena 👍/👎 przypięta do id śladu, 👎 jako alert w godzinach pracy; nowy model danych obok starego pola, aż klienci
+  przejdą (bez zmiany pola w miejscu). Klasyfikacja „czy ponawiać” wymaga wyższego progu niż ekstrakcja — koszt
+  błędu niesymetryczny.
+
+Bez wpisu: „The Beauty of Markov Chains” (E. Lombardi, 2026-10-18 — łańcuchy pochłaniające i PageRank, poza zakresem
+skilli fabryki poza ogólnym `eng-algorithms-data-structures`) i „AI Agents (05): The Double Trouble of Monitoring”
+(0s & 1s, 2026-09-20 — monitoring infrastruktury plus śladów agenta jest już w pozycji o OTel GenAI).
 
