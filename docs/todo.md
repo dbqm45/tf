@@ -440,3 +440,16 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
 Produkty: recenzent AI w ci_for_sdlc już działa jak „czytający bez narzędzi” (wynik tylko w schemacie JSON, ustalenie
 bez dowodu odrzucone, odpowiedź przyjęta tylko z dosłownym cytatem); automatyczne zamykanie pytań (`autoClose: apply`)
 jest opcjonalne, domyślnie `suggest` — zmian nie trzeba.
+
+## Słowa kluczowe effortu w Claude Code (artykuł „Build Production AI Systems with Claude Code”, Chandana, 2026-08-09, zapisane 2026-10-29)
+Przegląd 2026-10-29: reszta artykułu jest już w fabryce (`CLAUDE.md` krótki i skille na workflow —
+`core-agent-instructions`; punkt kontrolny zamiast `progress.md` — `project_record.py wip`; `/compact` i `/clear`,
+effort, `opusplan`, doradca — `core-cost-control`; wykonawcy tylko do odczytu — konsultanci bez `Edit`/`Write`;
+`/remote-control` — `core-async-delegation`; GitHub Action i przegląd AI w CI — `core-git-workflow`). Uwaga: artykuł
+podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzyma się dokumentacji (domyślnie 3,
+`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, fabryka ustawia 2) — bez zmian.
+- [ ] **`core-cost-control`: `ultrathink` i `ultracode`.** `ultrathink` w treści polecenia — głębsze rozumowanie w tej
+  jednej turze bez zmiany zapisanego effortu sesji (zmiana effortu sesji w trakcie kasuje cache); `ultracode` —
+  effort `xhigh` plus zgoda na orkiestrację wielu agentów (workflow), kosztowne, tylko dla zadań, które tego
+  wymagają. Działanie, koszt i dostępność sprawdzić w dokumentacji code.claude.com z datą przed dopisaniem
+  (scenariusze ewaluacji, bramka skilla).
