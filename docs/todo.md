@@ -416,3 +416,27 @@ metodą TDD, bramka skilla; jeden mały PR):
   których musiałby zgadywać; lista trafia jako pytania do prośby o bramkę (`gate.requested`), tak jak braki z
   `design_check.py` przed `design-review`. Koszt: jedno wywołanie modelu na bramkę [szacunek: kilka centów na
   Haiku/Sonnet] — zmierzyć na pierwszych zmianach.
+
+## Wzorce bezpieczeństwa agentów z LLM (artykuł „Top 4 Security design patterns for AI agents”, A. Dighe, 2026-10-08, zapisane 2026-10-29)
+Przegląd 2026-10-29: zasady są już w `sec-llm-security` (najmniejsze uprawnienia narzędzi, zatwierdzenie z pokazaniem
+dokładnego skutku, walidacja argumentów w kodzie, „model czytający obce treści nie ma narzędzi zapisu”, allow-lista
+ruchu, „lethal trifecta”) i w `core-agent-security` (MCP jak zależność: przypięta wersja, przegląd opisów narzędzi).
+Brakuje nazwanych wzorców projektowych i nowszych list. Do dorobienia w `sec-llm-security` (scenariusze ewaluacji,
+potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera — artykuł to źródło wtórne):
+- [ ] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference:** podwójny LLM (czytający bez narzędzi
+  oddaje tylko pola schematu, nie prozę), plan-then-execute (plan zamrożony przed wynikami narzędzi, dane z obcych
+  treści nie wybierają adresata wysyłki ani zapisu), action-selector, map-reduce po dokumentach, code-then-execute;
+  kiedy który i jaki koszt (dwa wywołania, mniej elastyczny agent). Przykład w kodzie, nie w prompcie.
+- [ ] **Zatwierdzenie związane z argumentami:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
+  termin i jednorazowy nonce; inne argumenty = nowa zgoda; brak polityki lub nieudany zapis audytu = brak wywołania.
+  Klasy ryzyka narzędzi (niskie … krytyczne) z domyślną odmową dla nieznanych.
+- [ ] **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
+  argumentami) oraz **przypięty skrót manifestu narzędzia MCP** (zmieniony opis lub schemat = nowa instalacja do
+  przeglądu, nie cicha aktualizacja) — także jako uzupełnienie `core-agent-security`.
+- [ ] **Reguła dwóch (Meta, „Agents Rule of Two”):** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
+  do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
+- [ ] **Aktualizacja list:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
+  Applications 2026 (ASI01…) — mapowanie na kontrole skilla; zweryfikować numerację i daty w źródłach.
+Produkty: recenzent AI w ci_for_sdlc już działa jak „czytający bez narzędzi” (wynik tylko w schemacie JSON, ustalenie
+bez dowodu odrzucone, odpowiedź przyjęta tylko z dosłownym cytatem); automatyczne zamykanie pytań (`autoClose: apply`)
+jest opcjonalne, domyślnie `suggest` — zmian nie trzeba.
