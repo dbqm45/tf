@@ -506,6 +506,11 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
   ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
   agenty mogły je czytać bez tłumaczenia.
+  Uzupełnienie (artykuł „Building a Complete Personal Harness: LLM Wiki…”, R. Brasil Monteiro, 2026-05-03): jeśli
+  wiki powstanie, trzy strefy z różnymi prawami zapisu — źródła tylko do odczytu (dziś `.claude/knowledge/<id>/`
+  z `kb.py ingest`), strony utrzymywane przez agenta z polem `sources` we frontmatterze i aktualizacją zamiast
+  przepisywania, notatki i decyzje zespołu zmieniane tylko za zgodą; ingest pokazuje plan (nowe i zmienione strony)
+  przed zapisem.
 
 ## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
 Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
