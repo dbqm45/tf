@@ -460,6 +460,15 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
   Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
   Stan specyfikacji MCP i terminy (artykuł „MCP Learnings”, C. Hobbs: DCR do usunięcia w 2027) sprawdzić na
   modelcontextprotocol.io z datą — dziś [niezweryfikowane].
+- [ ] **Tożsamość agenta i delegacja** (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
+  wspomina SPIFFE ani tokenów związanych z nadawcą): każdy agent i każda jego instancja ma własną tożsamość obciążenia
+  (SPIFFE/SPIRE, krótkie SVID przez Workload API zamiast współdzielonego konta usługi), osobną od loginu człowieka,
+  z nazwanym właścicielem; działanie w imieniu użytkownika = token użytkownika związany z kluczem agenta (mTLS-bound,
+  RFC 8705, `cnf.x5t#S256`, albo DPoP, RFC 9449), więc skradziony token jest bezużyteczny; log audytu „instancja X
+  agenta Y w imieniu użytkownika Z”; wymiana tokenu (RFC 8693) przy przejściu między usługami; usługi bez obsługi
+  wiązania jako jawnie słabsze ogniwo. Numery RFC, stan SPIFFE w CNCF i produkty chmurowe (Google Agent Identity,
+  Agent Gateway) sprawdzić w źródłach pierwotnych z datą. (Z artykułu „SPIFFE: Why Google's New Agent Identity…”,
+  G. Blaquiere, 2026-06-09, zapisane 2026-10-29.)
 Produkty: recenzent AI w ci_for_sdlc już działa jak „czytający bez narzędzi” (wynik tylko w schemacie JSON, ustalenie
 bez dowodu odrzucone, odpowiedź przyjęta tylko z dosłownym cytatem); automatyczne zamykanie pytań (`autoClose: apply`)
 jest opcjonalne, domyślnie `suggest` — zmian nie trzeba.
