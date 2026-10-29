@@ -534,6 +534,24 @@ linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
   pominięcie przy obciążeniu bez ponowienia, serwer MCP z cache sprzed regeneracji). Każdy generowany artefakt
   wiedzy ma znacznik czasu i commit źródła; kontrola w CI porównuje go z `git log -1` i alarmuje po progu (np. 24 h);
   `stale_after`/`verified` z OKF jako pola na to. Dotyczy też map z `eng-codebase-mapping` i cache `kb.py status`.
+- [ ] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (artykuł „The Dev with Two Brains”,
+  C. Core, 2026-10-07; narzędzie `okf-agent-memory` — Go, MIT, conda-forge, CLI + serwer MCP z 6 narzędziami; wersje
+  i zachowanie wg autora [niezweryfikowane], przed użyciem `skill_audit` i zgoda człowieka). Pomysły niezależne od
+  narzędzia, do `core-knowledge` / `core-project-record`:
+  - pojęcie wskazuje ścieżki, których dotyczy (`code_refs`), z poziomem: `constraint` (niezmienniki do zachowania)
+    albo `hold` (stop, zapytaj człowieka); przed pierwszą edycją pliku agent pyta „co obowiązuje tę ścieżkę” — to samo
+    co `applies_to` decyzji w pdi i planowana reguła ci_for_sdlc „PR rusza obszar przyjętej decyzji”, tylko po stronie
+    agenta przed zmianą, nie bramki po niej;
+  - zasiew z istniejących źródeł (specyfikacje, plan, kod, issues, PR-y): każda decyzja zapisuje wybrane, odrzucone
+    i „czy kod to realizuje” — tego agent nie odczyta z repo; pułapki na pierwszej stronie indeksu;
+  - `verified` wpisuje tylko człowiek (autor: od 0.6.0 wymuszone w kodzie), agent tylko `generated`;
+  - wyszukiwanie słowami (BM25) nie zna synonimów („deploy” nie znajduje „release”) — opis pojęcia pisany słowami,
+    którymi ludzie szukają; wersję narzędzia przypiąć (wg autora 0.6.0 usunęło aliasy filtrów, stare zapytanie
+    po cichu nic nie zwraca).
+- [ ] **Reguła z repo B nie działa, gdy agent startuje w repo A** (ten sam artykuł: `gh -R …` zapisane w AGENTS.md
+  i pamięci projektu, a agent z innego repo i tak się potknął). Do `core-agent-instructions`: reguły potrzebne przy
+  pracy z zewnątrz (nazwa forka, gałąź docelowa, wymagane flagi) także w miejscu, które czyta agent startujący
+  gdzie indziej (globalne instrukcje, README sąsiedniego repo); dotyczy sesji wielorepozytoryjnych tf/pdi/ci_for_sdlc.
 
 ## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
 Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
@@ -872,4 +890,14 @@ transkrypt. Braki:
 Artykuł „The One-Sentence Answer That Ends a Line of Hostile Questioning” (M. B. Hazeldine, 2026-09-12) — bez wpisu:
 „werdykt, jeden warunek, stop” fabryka już stosuje w raportach (linia werdyktu bramki, werdykt na początku raportu
 ewaluacji); dotyczy wystąpień ustnych, a materiał kończy się reklamą płatnego kursu.
+
+## Regresja przy powtarzających się kolumnach (artykuł „What “Singular Matrix” Really Means”, K. Nahar, 2026-10-20, zapisane 2026-10-29)
+Przegląd 2026-10-29: `data-analysis` wspomina tylko „brak silnej współliniowości” w założeniach regresji. Brak:
+- [ ] **`data-analysis`, macierz niepełnego rzędu:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
+  wolny) i kolumna stała w danych to ten sam problem — dane nie rozróżniają współczynników. Biblioteki reagują różnie:
+  numpy przerywa („Singular matrix”), statsmodels ostrzega i wybiera rozwiązanie o najmniejszej normie, scikit-learn
+  według autora po cichu zwraca inne [niezweryfikowane — sprawdzić na wersjach z projektu]; przed interpretacją
+  współczynników sprawdzić rząd macierzy i wskaźnik uwarunkowania (albo VIF), a naprawą jest zmiana danych lub
+  usunięcie kolumny, nie zmiana biblioteki. W kodzie `solve`/`lstsq` zamiast `inv(A) @ b` (szybciej i dokładniej
+  przy złym uwarunkowaniu).
 
