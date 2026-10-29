@@ -1074,3 +1074,27 @@ Artykuł „Graph Engineering” (V. Amballa, 2026-10) — bez wpisu: praca jako
 człowieka tam, gdzie ryzyko, stan współdzielony, punkty kontrolne) jest w `ai-agents` (workflow czy agent, trwały
 stan, punkty zatwierdzenia) i w fazach pdi z bramkami; artykuł nie wnosi metody poza zasadą.
 
+## Blokady optymistyczne i pesymistyczne, skill od wzorcowego wyniku (artykuły „When to Use Optimistic vs Pessimistic Locking”, A. Kovtun, 2026-10-14; „I Built a Claude Skill for PRD Writing… Started With the Output”, J. More, 2026-06-30; zapisane 2026-10-29)
+- [ ] **`be-database`, wybór blokady** (dziś jedna linia: `FOR UPDATE`, unikalne ograniczenia lub wersjonowanie;
+  `SKIP LOCKED` przy kolejce): pytanie zerowe — czy jedno atomowe `UPDATE … SET x = x - 30 WHERE … AND x >= 30` albo
+  ograniczenie (`UNIQUE`, `EXCLUDE`) usuwa okno między odczytem a zapisem; potem trzy pytania po kolei: czy okno mieści
+  się w jednej krótkiej transakcji (nie — myślenie użytkownika, kilka żądań: wersja/ETag albo dzierżawa z wygaśnięciem
+  w aplikacji), jak często piszący trafiają w ten sam wiersz (rzadko — optymistycznie z ograniczoną liczbą ponowień
+  i jitterem; gorący wiersz — pesymistycznie), ile kosztuje utracona praca (efekt zewnętrzny, nieidempotentny — blokada
+  przed pracą). Pułapki: zakleszczenia (stała kolejność blokowania), żadnych wywołań sieciowych pod blokadą wiersza,
+  `NOWAIT`; wersja wiersza nie chroni przed write skew (reguła na kilku wierszach — Serializable albo blokada wspólnego
+  rodzica); blokada w Redis tylko dla efektywności, dla poprawności tokeny ogrodzeniowe (Kleppmann). Wersje baz
+  i domyślne limity z artykułu (MySQL 9.7 LTS, `innodb_lock_wait_timeout` 50 s, Postgres `deadlock_timeout` 1 s)
+  sprawdzić przed wpisaniem.
+- [ ] **`core-skill-authoring`, specyfikacja wyniku przed przepływem:** skill z instrukcji krok po kroku daje płaski
+  wynik; lepiej wziąć najlepszy istniejący artefakt (np. PRD, który przeszedł przegląd bez pytań) i wypisać decyzje,
+  których ogólny szablon nie zna (kolejność sekcji pod czytelnika, nierówna głębia, język sekcji przypadków brzegowych
+  pod QA, ograniczenia prawne wprost, metryka jako zachowanie) — to staje się treścią skilla i scenariuszami ewaluacji;
+  plus 2–3 pytania, które skill zadaje przed pisaniem (w artykule: „co jedno musi być prawdą, żeby to był sukces?” —
+  brak odpowiedzi = za wcześnie na specyfikację). Dotyczy też planowanych skilli `pm-*` (persona Paweł).
+
+Bez wpisu: „Before You Blame the Model” (R. Ravishankar — wstęp serii o harnessie bez konkretów poza zapowiedziami:
+projekt jako dane sprawdzane z buildem, bramka ewaluacji w ścieżce wydania — oba już w TODO) i „What is Loop
+Engineering?” (A. Kokane, 2026-06-17 — `/goal`, `/loop`, pięć elementów pętli za A. Osmanim; ujęte wcześniej przy
+„Practical Loop Engineering” i rutynach).
+
