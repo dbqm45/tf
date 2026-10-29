@@ -437,6 +437,20 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
   do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
 - [ ] **Aktualizacja list:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
   Applications 2026 (ASI01…) — mapowanie na kontrole skilla; zweryfikować numerację i daty w źródłach.
+- [ ] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813):** wartości z etykietą pochodzenia
+  i odbiorców, polityka sprawdza etykiety przed wywołaniem narzędzia (np. dokument z dysku można streścić
+  użytkownikowi, ale nie wysłać na adres znaleziony w tym dokumencie); koszt w użyteczności z ich pomiaru na
+  AgentDojo [do sprawdzenia w źródle]. (Uzupełnione 2026-10-29 z artykułu „Building Secure AI Agents”, C. Kalhara.)
+- [ ] **Red teaming adaptacyjny** w `references/red-teaming.md`: obrona sprawdzona tylko stałą listą ataków mówi mało
+  („The Attacker Moves Second”, Nasr i in., arXiv 2510.09023); AgentDojo (NeurIPS 2024) jako gotowa uprząż — sędzia
+  sprawdza stan środowiska, nie tekst modelu, więc sam nie da się wstrzyknąć.
+- [ ] **Pamięć i RAG jako niezaufane:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
+  etykietę pochodzenia; w logu wywołań narzędzi pochodzenie argumentów; wyłącznik awaryjny agenta.
+- [ ] **Autoryzacja zdalnego serwera MCP** (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
+  serwera autoryzacji z metadanych, rejestracja klienta przez Dynamic Client Registration albo Client ID Metadata
+  Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
+  Stan specyfikacji MCP i terminy (artykuł „MCP Learnings”, C. Hobbs: DCR do usunięcia w 2027) sprawdzić na
+  modelcontextprotocol.io z datą — dziś [niezweryfikowane].
 Produkty: recenzent AI w ci_for_sdlc już działa jak „czytający bez narzędzi” (wynik tylko w schemacie JSON, ustalenie
 bez dowodu odrzucone, odpowiedź przyjęta tylko z dosłownym cytatem); automatyczne zamykanie pytań (`autoClose: apply`)
 jest opcjonalne, domyślnie `suggest` — zmian nie trzeba.
