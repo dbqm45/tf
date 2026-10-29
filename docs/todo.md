@@ -233,6 +233,12 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
     hooki i uprawnienia nie są przenośne) oraz `mode-pdi` jako pakiet „skill `pdi-decisions` + serwer MCP pdi”.
     Ten sam przegląd co dla każdej zależności (`core-agent-security`: plugin może uruchamiać lokalny MCP z
     uprawnieniami maszyny; zainstalowany ≠ autoryzowany ≠ włączony).
+    Sprawdzone 2026-10-29 (anthropic.com/news, 2026-10-22): standard Agent Skills (nazwa, organizacja GitHub,
+    agentskills.io) przekazany Agentic AI Foundation pod Linux Foundation — ta sama fundacja co MCP; ponad 70 platform
+    (m.in. ChatGPT, Cursor, GitHub Copilot, VS Code), plan: wersjonowane wydania, proces propozycji, wytyczne
+    bezpieczeństwa dla autorów i instalujących skille. To wzmacnia argument za eksportem samych skilli nakładek
+    (format przenośny bez osobnego standardu pluginów) — warunek: zgodność ze specyfikacją (pozycja „Zgodność skilli
+    ze specyfikacją Agent Skills” niżej) i wytyczne bezpieczeństwa AAIF, gdy się ukażą.
 - [x] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person — tryb `mode-team` (A1–A3).
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [x] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py` — zrobione 2026-10-24: `core/factory/target_managed.py`, plan `docs/plans/2026-10-24-target-managed-agents.md`; pliki sprawdzone `ant apply --dry-run` (ant 2.3.0, bez konta).
@@ -426,6 +432,15 @@ metodą TDD, bramka skilla; jeden mały PR):
   `design_check.py` przed `design-review`. Koszt: jedno wywołanie modelu na bramkę [szacunek: kilka centów na
   Haiku/Sonnet] — zmierzyć na pierwszych zmianach.
 
+- [ ] **Pierwotna prośba i odpowiedzi na pytania zapisane dosłownie** (artykuł „From OpenSpec to AIDLC”, P. Qian,
+  2026-09-04; AWS `aidlc-workflows`): specyfikacje SDD gubią, *po co* coś zrobiono — AIDLC trzyma per faza plik pytań
+  z odpowiedziami człowieka i `audit.md` tylko do dopisywania (wejście człowieka, odpowiedź, streszczenie fazy, kto
+  zatwierdził — `git config user.name/email`). U nas zamiar jest w `intent.md`, a bramka to PR (tożsamość i historia
+  z GitHuba); brakuje dosłownego zapisu pytań i odpowiedzi z fazy wymagań obok artefaktu. Rozważyć też rozdział
+  „zatwierdzam” od „uruchom następną fazę”, gdy następną fazę prowadzi inna rola (pdi dziś po `approved` sam
+  uruchamia fazę — `docs/plan-f4-pdi.md`). Reszta AIDLC (warunkowe etapy: rekonstrukcja tylko dla istniejącego kodu,
+  historyjki tylko przy zmianie dla użytkownika; rozszerzenia włączane pytaniem) jest w `core-delivery-lifecycle`.
+
 ## Wzorce bezpieczeństwa agentów z LLM (artykuł „Top 4 Security design patterns for AI agents”, A. Dighe, 2026-10-08, zapisane 2026-10-29)
 Przegląd 2026-10-29: zasady są już w `sec-llm-security` (najmniejsze uprawnienia narzędzi, zatwierdzenie z pokazaniem
 dokładnego skutku, walidacja argumentów w kodzie, „model czytający obce treści nie ma narzędzi zapisu”, allow-lista
@@ -458,8 +473,10 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
 - [ ] **Autoryzacja zdalnego serwera MCP** (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
   serwera autoryzacji z metadanych, rejestracja klienta przez Dynamic Client Registration albo Client ID Metadata
   Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
-  Stan specyfikacji MCP i terminy (artykuł „MCP Learnings”, C. Hobbs: DCR do usunięcia w 2027) sprawdzić na
-  modelcontextprotocol.io z datą — dziś [niezweryfikowane].
+  Sprawdzone 2026-10-29 (blog.modelcontextprotocol.io, wersja specyfikacji `2026-07-28`): DCR przestarzałe na rzecz
+  Client ID Metadata Documents (działa jeszcze dla zgodności, usunięcie w przyszłej wersji — konkretnej daty brak);
+  serwer zwraca parametr `iss` (RFC 9207), klient go sprawdza; klient podaje `application_type` (przekierowania na
+  localhost dla aplikacji CLI i desktop); poświadczenia klienta związane z wydawcą.
 - [ ] **Tożsamość agenta i delegacja** (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
   wspomina SPIFFE ani tokenów związanych z nadawcą): każdy agent i każda jego instancja ma własną tożsamość obciążenia
   (SPIFFE/SPIRE, krótkie SVID przez Workload API zamiast współdzielonego konta usługi), osobną od loginu człowieka,
@@ -506,8 +523,11 @@ porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsor
 Przegląd 2026-10-29: idea artykułu — definicje kanoniczne (metryka, schemat, reguła) jako pliki Markdown z YAML
 i jawnymi linkami `[[ścieżka]]`, czytane przez agenta krok po kroku od `index.md`; RAG tylko do szerokich archiwów —
 w dużej części już jest: ci_for_sdlc liczy powiązania jawne przed semantycznymi, decyzje mają rejestr pdi, fabryka
-ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priorytet; najpierw sprawdzić, czy OKF v0.1
-(Google Cloud) istnieje jako specyfikacja — artykuł podaje tylko film, bez repozytorium [niezweryfikowane].
+ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priorytet. Sprawdzone 2026-10-29: OKF istnieje
+— `GoogleCloudPlatform/knowledge-catalog`, `okf/SPEC.md`, wersja 0.2 (bez daty na stronie): wymagane tylko `type`;
+zalecane `title`, `description`, `resource`, `tags`; opcjonalne `sources[]`, `generated`, `verified`, `status`
+(`draft`/`stable`/`deprecated`), `stale_after`; zarezerwowane `index.md` (spis do stopniowego odsłaniania) i `log.md`;
+linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
 - [ ] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** — definicje, które muszą być dokładne i mieć właściciela
   (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
@@ -518,6 +538,29 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
   z `kb.py ingest`), strony utrzymywane przez agenta z polem `sources` we frontmatterze i aktualizacją zamiast
   przepisywania, notatki i decyzje zespołu zmieniane tylko za zgodą; ingest pokazuje plan (nowe i zmienione strony)
   przed zapisem.
+  Świeżość (artykuł „Production-Grade OKF + Graphify Setup”, U. Estari, 2026-08-13): generowany indeks lub graf kodu
+  dryfuje po cichu — hook „sukces”, a mapa sprzed tygodni (Windows bez `nohup`, lista rozszerzeń rozjechana ze źródłem,
+  pominięcie przy obciążeniu bez ponowienia, serwer MCP z cache sprzed regeneracji). Każdy generowany artefakt
+  wiedzy ma znacznik czasu i commit źródła; kontrola w CI porównuje go z `git log -1` i alarmuje po progu (np. 24 h);
+  `stale_after`/`verified` z OKF jako pola na to. Dotyczy też map z `eng-codebase-mapping` i cache `kb.py status`.
+- [ ] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (artykuł „The Dev with Two Brains”,
+  C. Core, 2026-10-07; narzędzie `okf-agent-memory` — Go, MIT, conda-forge, CLI + serwer MCP z 6 narzędziami; wersje
+  i zachowanie wg autora [niezweryfikowane], przed użyciem `skill_audit` i zgoda człowieka). Pomysły niezależne od
+  narzędzia, do `core-knowledge` / `core-project-record`:
+  - pojęcie wskazuje ścieżki, których dotyczy (`code_refs`), z poziomem: `constraint` (niezmienniki do zachowania)
+    albo `hold` (stop, zapytaj człowieka); przed pierwszą edycją pliku agent pyta „co obowiązuje tę ścieżkę” — to samo
+    co `applies_to` decyzji w pdi i planowana reguła ci_for_sdlc „PR rusza obszar przyjętej decyzji”, tylko po stronie
+    agenta przed zmianą, nie bramki po niej;
+  - zasiew z istniejących źródeł (specyfikacje, plan, kod, issues, PR-y): każda decyzja zapisuje wybrane, odrzucone
+    i „czy kod to realizuje” — tego agent nie odczyta z repo; pułapki na pierwszej stronie indeksu;
+  - `verified` wpisuje tylko człowiek (autor: od 0.6.0 wymuszone w kodzie), agent tylko `generated`;
+  - wyszukiwanie słowami (BM25) nie zna synonimów („deploy” nie znajduje „release”) — opis pojęcia pisany słowami,
+    którymi ludzie szukają; wersję narzędzia przypiąć (wg autora 0.6.0 usunęło aliasy filtrów, stare zapytanie
+    po cichu nic nie zwraca).
+- [ ] **Reguła z repo B nie działa, gdy agent startuje w repo A** (ten sam artykuł: `gh -R …` zapisane w AGENTS.md
+  i pamięci projektu, a agent z innego repo i tak się potknął). Do `core-agent-instructions`: reguły potrzebne przy
+  pracy z zewnątrz (nazwa forka, gałąź docelowa, wymagane flagi) także w miejscu, które czyta agent startujący
+  gdzie indziej (globalne instrukcje, README sąsiedniego repo); dotyczy sesji wielorepozytoryjnych tf/pdi/ci_for_sdlc.
 
 ## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
 Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
@@ -532,6 +575,12 @@ Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet
   zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
   „Równolegle z”. Układ plików i nazwy poleceń sprawdzić w repo github/spec-kit z datą (artykuł opisuje błąd haka
   `before_specify` w nowszej wersji) [niezweryfikowane].
+- [ ] **OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji** (artykuł „OpenSpec + Superpower”, Chimin,
+  2026-05-30): po zakończeniu zmiany jej specyfikacja trafia do głównej, aktualnej specyfikacji systemu, a folder zmiany
+  zostaje historią. mode-pdi ma dziennik zmiany `docs/project/changes/CHG-n/` (intencja, plan, decyzje), ale nie
+  ma kroku „scal wymagania zmiany do bieżącego stanu wymagań” — sprawdzić, czy faza zamknięcia CHG to robi; jeśli nie,
+  dodać krok i kontrolę (wymaganie z CHG bez odpowiednika w głównym dokumencie = ustalenie). Wejście z OpenSpec
+  (`openspec/specs`, `openspec/changes`) jak z Spec Kit; układ katalogów sprawdzić w repo projektu z datą.
 
 ## Rutyny, które zdobywają uprawnienia (artykuły „How to Create Loops with Claude Code”, Y. Hosni, 2026-06-24; „Harness Engineering” i „/goal”, Gao Dalie, 2026-05, zapisane 2026-10-29)
 Przegląd 2026-10-29: większość już jest — kwalifikacja zadania i kontrakt (cel, zakres, stop, budżet), najwyżej
@@ -553,6 +602,13 @@ Przegląd 2026-10-29: `ai-mcp-server` nie wspomina rozszerzenia MCP Apps (narzę
 renderuje go w izolowanym iframe i przekazuje wynik narzędzia; przyciski wołają narzędzia przez hosta). Daty
 z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawdzić w specyfikacji
 (apps.extensions.modelcontextprotocol.io) z datą przed dopisaniem [niezweryfikowane]. Średni priorytet.
+- [ ] **`ai-mcp-server`: specyfikacja `2026-07-28`** (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
+  bezstanowy rdzeń (bez `initialize` i `Mcp-Session-Id`; wersja, klient i możliwości w `_meta`; opcjonalne
+  `server/discover`), nagłówki `Mcp-Method`/`Mcp-Name` do routingu i autoryzacji w bramce, Multi Round-Trip Requests
+  zamiast żądań inicjowanych przez serwer, listy z `ttlMs`/`cacheScope`, zadania jako rozszerzenie, MCP Apps
+  w formalnym frameworku rozszerzeń; przestarzałe Roots, Sampling, Logging i transport HTTP+SSE (min. 12 miesięcy
+  wsparcia); stan aplikacji przez jawne uchwyty zwracane z narzędzi. SDK TS, Python, Go, C# wspierają; zmiany
+  łamiące zgodność dla serwerów zależnych od sesji.
 - [ ] **`ai-mcp-server`: kiedy MCP App, a kiedy tekst** — App tylko gdy interakcja ma strukturę (zatwierdzenie,
   formularz, panel z akcjami, porównanie wyników), jedna App na domenę, nie na narzędzie; łagodny powrót do treści
   strukturalnej, gdy host nie obsługuje rozszerzenia; dane w wyniku narzędzia, nie w HTML zasobu. Bezpieczeństwo:
@@ -584,6 +640,14 @@ zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australi
 - [ ] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
+- [ ] **Próba granicy z dowodem, która warstwa zatrzymała** (artykuł „How much access should an AI agent have?”,
+  E. Bermudez, 2026-10-14): katalog roboczy to miejsce startu, nie granica; filtr ścieżek w narzędziu plikowym
+  (rozwiązana ścieżka, `..`, dowiązania symboliczne — wzór: walidacja w serwerze MCP filesystem) działa tylko dla
+  tego narzędzia, a Python lub Bash czyta obok niego. Do `core-agent-security` i `ai-mcp-server`: przed
+  przyznaniem dostępu jedna operacja potrzebna i jedna wykluczona (plik-kanarek poza workspace), z poleceniem
+  i wynikiem; w zapisie rozróżnić „agent odmówił”, „narzędzie odrzuciło” i „środowisko nie pozwoliło” — tylko
+  trzecie jest granicą dla kodu generowanego. Ruch sieciowy sprawdzać osobną próbą do zabronionego hosta, nie
+  z samego logu.
 
 ## Testy aplikacji z AI poza odpowiedzią modelu (artykuł „9 AI Application Failures That Aren't Model Problems”, S. Gundeti, 2026-10, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-evals` ocenia odpowiedzi modelu, `fe-architecture` ma 4 stany widoku (ładowanie, błąd,
@@ -619,3 +683,315 @@ otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez
   to ustalenie do przeglądu. ADR wskazuje elementy modelu, których dotyczy (ten sam pomysł co `applies_to` w pdi).
   Agent czyta model (plik albo serwer MCP narzędzia), a nie obrazki diagramów. Wersje i formaty narzędzi sprawdzić
   z datą przed dopisaniem.
+
+## Protokoły agentów i tracing w standardzie (artykuły „Agentic Communication Protocols”, 0s & 1s, 2026-05-28; „Observability for the Agentic Harness”, D. Biswas, 2026-08-04; „Harness Engineering … Live Examples”, V. Mysore, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` ma MCP, tracing z identyfikatorem przebiegu i wznawianie, `ops-observability` —
+OpenTelemetry; reszta harness engineering jest pokryta (`core-async-delegation`, hooki, recenzent). Fabryka nie
+wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni priorytet, w `ai-agents`:
+- [ ] **Mapa protokołów:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
+  punktem końcowym i uwierzytelnianiem; zadania z cyklem życia); ACP (Agent Client Protocol, Zed) — edytor ↔ agent
+  kodujący przez JSON-RPC po stdio, z zatwierdzaniem zapisów w edytorze. Kiedy który, że się uzupełniają, oraz
+  bezpieczeństwo: Agent Card i wyniki innego agenta to niezaufane wejście (patrz pozycja o protocol pivoting
+  w sekcji wzorców bezpieczeństwa). Stan specyfikacji, wersje i opiekunów sprawdzić z datą [niezweryfikowane].
+- [ ] **Tracing wg OpenTelemetry GenAI semantic conventions:** jeden ślad na zadanie, wywołanie modelu i narzędzia
+  jako span-y potomne, ponowienia jako nowe span-y w tym samym śladzie, `links` dla rozgałęzień; atrybuty modelu,
+  tokenów, kosztu i wyniku guardrails; `trace_id` jako identyfikator korelacji między systemami. Z tych śladów
+  ewaluacja offline (`ai-evals`) i koszt (`core-cost-control`, `ops-finops`). Stan konwencji (eksperymentalne?)
+  sprawdzić w repo open-telemetry/semantic-conventions z datą.
+- [ ] **Końcowa kontrola „liczby z narzędzia”** (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
+  i identyfikatory w odpowiedzi z wynikami narzędzi (np. wynik oceny ryzyka, limit polisy) i odsyła modelowi
+  konkretną rozbieżność; do tego pominięcie powtórzonych identycznych wywołań narzędzia i przypomnienie
+  o nieużytych wymaganych narzędziach przed odpowiedzią. Uwaga z demo: reguła guardrails też ma fałszywe
+  alarmy (dopasowanie podciągu „ind”) — testuj reguły na prawdziwym słownictwie modelu.
+- [ ] **Syntetyczna sonda end-to-end agenta** (artykuł „Running a Fleet of 33 AI Agents”, J. Hamidun): kontener „Up”
+  i healthcheck „OK” nie dowodzą działania — wygasły token wpychał obsługę wiadomości w pustą gałąź przez 90 min.
+  Co godzinę prawdziwe zapytanie przez cały potok z asercją niepustej, zgodnej ze schematem odpowiedzi w czasie SLA
+  (`ops-observability`, odnośnik z `ai-agents`).
+
+## Szum z wyjścia narzędzi i zatwierdzenie związane z dowodem (artykuły „Reduce Token Waste”, E. Gomziakov, 2026-06-25; „How to Verify AI-Generated Code … Accension”, Sourik, 2026-10, zapisane 2026-10-29)
+- [ ] **`core-cost-control`: szum z terminala** — wyjście testów, buildów, `git diff` i logów to główne źródło
+  zbędnych tokenów; najpierw tanie środki bez nowych zależności: reportery „tylko błędy” (`--reporter=dot`,
+  `pytest -q`, `--silent`), `head`/`tail`, zapis pełnego logu do pliku i czytanie fragmentu. Narzędzia pośrednie
+  (RTK — sprawdzone 2026-10-29: hook PreToolUse przepisujący polecenia Bash, CLI Apache-2.0, silnik i proxy BUSL-1.1,
+  filtruje z utratą treści, `rtk bypass`; Headroom, CodeGraph) tylko jako opcja po `skill_audit` i zgodzie człowieka,
+  bo to obcy hook z dostępem do każdego polecenia; mierzyć koszt na udane zadanie, nie liczbę tokenów (cache,
+  rozumowanie i ponowienia psują proporcję).
+- [ ] **Zatwierdzenie bramki związane z dowodem (mode-pdi ↔ pdi):** `gate.requested` niesie dziś ścieżkę artefaktu
+  i link do PR; dodać skrót treści artefaktu i SHA commita. Zatwierdzenie w pdi zapisuje ten skrót, a
+  `phase_run.py` przed kolejną fazą sprawdza, czy artefakt się nie zmienił — inaczej „EVIDENCE_CHANGED” i ponowna
+  prośba o bramkę (wzorzec z Accension: zgoda dotyczy dowodu, który człowiek widział). Zmiana kontraktu zdarzeń —
+  osobna pozycja w `pdi/TODO.md`; TDD po obu stronach.
+
+## Wzorce architektury frontendu — braki (artykuł „Every Frontend Architecture Pattern Explained”, T. Kanjariya, 2026-08-06, zapisane 2026-10-29)
+Przegląd 2026-10-29: `fe-architecture` ma style (monolit modularny, micro-frontends z Module Federation 2.0, FSD),
+modele renderowania per trasa (CSR/SSR/SSG/ISR/RSC, hydratacja) i BFF tylko jako miejsce sesji. Niski priorytet:
+- [ ] **BFF jako wzorzec:** osobny cienki backend na klienta (web, mobile), własność zespołu frontendu, kształt danych
+  pod jeden interfejs; kiedy nie (jeden klient = zbędny przeskok sieciowy); koszt: kolejny serwis i pojedynczy punkt
+  awarii (źródła: Calçado 2015, Newman — sprawdzić).
+- [ ] **Obliczenia przy danych, nie przy użytkowniku:** SSR na brzegu bez bazy rozproszonej bywa wolniejszy niż render
+  w regionie bazy; brzeg serwuje statyczną skorupę, dynamiczne części strumieniowane z regionu danych (Partial
+  Prerendering). Status Vercel Edge Functions („deprecated” wg artykułu) sprawdzić w dokumentacji z datą
+  [niezweryfikowane].
+- [ ] **Micro-frontends — typowa porażka i próg:** dryf współdzielonych zależności (dwie wersje frameworka na jednej
+  stronie) → `singleton` i `strictVersion`/`requiredVersion` w federacji, kontrola wersji w CI; decyzja wg bólu
+  wdrożeń między zespołami, nie złożoności aplikacji (heurystyka autora: < ~15 osób monolit modularny; 50+ i zespoły
+  blokujące się przy wdrożeniach → micro-frontends) — jako heurystyka, nie reguła.
+
+## Dyscyplina pomiaru w ewaluacjach (artykuł „Structuring 40 Million Documents into an Agentic Knowledge Graph”, F. Khan, 2026-08-26, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ma zbiory, graderów, kalibrację sędziego, pass@k i bramkę w CI. Artykuł to studium
+porażek pomiaru (wszystkie liczby z jego repo, nie sprawdzone): sześć cichych błędów, z czego cztery poprawiły metrykę.
+Średni priorytet, w `ai-evals` (reference „pułapki pomiaru”):
+- [ ] **Granice wyniku:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
+  wynik systemu interpretowalny tylko między nimi (u autora oba ramiona przegrywały ze stałą „tak”, co znaczyło, że
+  zbiór i model nie rozróżniają architektur).
+- [ ] **Jedna zmienna naraz i przegląd stałych:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
+  próg) to hiperparametr — przebieg z pozostałymi wartościami zamrożonymi; obcięcie do 1100 znaków kosztowało
+  14 punktów, limit 120 kandydatów wyrzucał złoty dokument w 41% pytań. Ramiona porównawcze dostają te same stałe
+  (wyrocznia czytała 4000 znaków, system 1100 — „luka rozproszenia” była w 84% artefaktem).
+- [ ] **Wybór konfiguracji na osobnym zbiorze:** podział dobór/test, wynik raportowany tylko z testu; kontrola
+  „przetasowane etykiety” pokazuje, ile daje sam wybór najlepszej z wielu konfiguracji (u autora 3,5 pkt na szumie).
+  Siatka parametru, której optimum leży na krawędzi, jest za wąska.
+- [ ] **Etykieta z rozkładu, nie z regexa:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
+  wariantów pisowni), nie z parsowania wolnego tekstu; ta sama wartość daje pewność do abstynencji.
+- [ ] **Metryka składowa musi modelować to, co dzieje się dalej:** gorsza precyzja groundera może dać lepszy system,
+  gdy dalszy filtr odrzuca fałszywe trafienia — oceniać parę „pokrycie i przeciek na pytaniach kontrolnych”
+  (pytanie z jednym pojęciem podmienionym na losowe), nie samą metrykę składnika.
+- [ ] **Niezmienniki dla struktur pochodnych:** assert zgodności tablic równoległych plus niezależne przeliczenie
+  ze źródła (u autora rozjechane tablice etykiet nie rzuciły błędu); cache kluczowany całym wejściem; walidator
+  cytatów testowany na nawiasie z wieloma identyfikatorami.
+- [ ] **Cykl życia sędziego LLM** (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
+  uzasadnienie przed oceną i okresową próbkę na dryf; brakuje: (1) zgodności uzasadnień, nie tylko etykiet —
+  „dobra etykieta, zły powód” wykrywana porównaniem uzasadnienia sędziego z uzasadnieniem człowieka (meta-sędzia
+  sprawdzony najpierw na ludziach), bo strojenie rubryki tylko na etykietach u autorów zdegradowało jedno kryterium;
+  (2) każda etykieta „źle” w złotym zbiorze z pisemnym uzasadnieniem człowieka; (3) jeden sędzia na kryterium;
+  (4) sędzia jako bramka i krytyk: uzasadnienie odrzucenia wraca do generatora, limit poprawek (u nich 3), po nim
+  „nie pokazuj” zamiast „pokaż słabe”; (5) próg dryfu względem rozrzutu ludzi (sędzia nie gorszy niż średnia
+  oceniających minus 2 odchylenia standardowe), stała warstwowana próbka tygodniowa; (6) zmiana rubryki tylko po
+  zatwierdzeniu człowieka, poprzednia wersja do natychmiastowego wycofania; (7) przegląd ludzi wyłapuje też braki
+  samej rubryki, nie tylko dryf sędziego.
+Wniosek merytoryczny autora, do `ai-rag`: graf/ontologia do wyszukiwania i proweniencji, ale decyzja o odmowie
+z kalibrowanej pewności modelu (AUROC 0,81), bo certyfikacja ścieżką w grafie przewidywała poprawność na poziomie
+losowym (0,50) — jeden przypadek, nie reguła; sprawdzać na własnym zbiorze.
+
+## Wzorzec „Counting House”: AI w obsłudze dużego wolumenu spraw (artykuł S. Yegge'a, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: pojedyncze elementy już są — `ai-evals` (złoty zbiór, zgodność ludzi jako sufit, kappa,
+kalibracja sędziego, shadow), `ai-product-management` (koszt błędów w PRD), saga w `ddd-tactical-design`,
+idempotencja w `be-messaging-outbox`. Brakuje złożenia ich w jeden wzorzec architektury. Średni priorytet, jako
+reference w `arch-ai-solutions` (przykład domenowy w pack-ev: obsługa kierowców CPO/eMSP — zwroty, sesja nie startuje):
+- [ ] **Tabela polityki per intencja i progi autonomii:** off → shadow (model odpowiada równolegle, oceniany) →
+  assist (podpowiedź dla człowieka) → contain (odpowiada klientowi) → transact (zmienia stan przez orkiestrator);
+  awans intencji na wyższy próg dopiero po ewaluacji na złotym zbiorze z ocen ludzi i podpisach właścicieli
+  (operacje, finanse, prawo). Ta sama logika co pozycja „Rutyny, które zdobywają uprawnienia”.
+- [ ] **Macierz pomyłek z kosztem zamiast trafności:** dla intencji łatwych do pomylenia koszt każdej komórki poza
+  przekątną (pomyłka kierunku do kolejki ≠ pominięta pomoc dla pasażera); dla wypłat liczy się precyzja, dla spraw
+  krzywdzących klienta czułość; porównanie z tą samą macierzą dla ludzi (koszt błędów + koszt pracy).
+- [ ] **Model proponuje, orkiestrator wykonuje:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
+  uprawnienie na żywym systemie źródłowym (nie na cache, który czytał model), nadaje klucz idempotencji z pól
+  żądania, zatwierdza automatycznie do progu z polityki, powyżej — człowiek; saga z akcjami kompensującymi i odczytem
+  po zapisie; odmowa z kodem przyczyny trafia do właściwej kolejki ludzi. Model nie ma poświadczeń i nie widzi PII
+  (bramka tokenizująca PII odwracalnie).
+- [ ] **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
+  strojony na złotym zbiorze; złoty zbiór i ewaluacje własnością firmy (to dźwignia zmiany modelu na tańszy).
+Wzorzec opisany przez autora bez danych z wdrożeń (rozmowy z firmami) — traktować jako projekt do sprawdzenia, nie
+wynik. Wątek „dobrostanu modelu” z artykułu pomijam; z niego tylko praktyczne: prawdomówny prompt bez gróźb
+i fałszywej pilności, prawo do odmowy z kodem przyczyny i propozycją poprawki procedury.
+
+## Znakowanie tekstu z AI i oszczędzanie tokenów w aplikacjach (artykuły „AI Text Has a Secret Signature”, Analyst Uttam, 2026-08-17; „Agentic AI: How to Save on Tokens”, I. Silfverskiöld, 2026-05-05, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-governance-compliance` ma obowiązek art. 50 AI Act (oznaczanie wyników syntetycznych
+w formacie maszynowym) bez części technicznej; `arch-ai-solutions` ma prompt caching (stały prefiks), cache wyników
+tylko dla odpowiedzi niezależnych od użytkownika, routing i fallback. Niski/średni priorytet:
+- [ ] **`ai-governance-compliance`, reference „znakowanie techniczne”:** znak wodny w tekście (Kirchenbauer i in.,
+  ICML 2023: zielona lista tokenów z ziarna poprzedniego tokenu, test z, wykrywalny od ~25 tokenów, nie działa dla
+  tekstu o niskiej entropii i zapamiętanego), C2PA/metadane dla obrazów i wideo; ograniczenia: parafraza, wstawianie
+  i usuwanie znaków, homoglify i znaki zerowej szerokości (detektor kanonizuje Unicode), kradzież i podrabianie znaku,
+  „piggyback” — zmodyfikowana treść wciąż wykrywana jako z modelu. Wniosek do dokumentacji zgodności: znak wspiera
+  wykrywanie masowe, nie przypisanie pojedynczego tekstu ani dowód; co konkretnie spełnia art. 50 ust. 2 (normy,
+  kodeks praktyk) sprawdzić z datą [niezweryfikowane].
+- [ ] **`arch-ai-solutions`/`eng-llm-features`: koszt agenta z wieloma narzędziami** — leniwe ładowanie definicji
+  narzędzi (wyszukiwarka narzędzi, `defer_loading` w API Anthropic — sprawdzić aktualną nazwę i warunki w
+  dokumentacji, skill `claude-api`) zamiast setek definicji w każdym wywołaniu; kaskada „tani model najpierw,
+  eskalacja przy niskiej pewności” jako alternatywa routera zgadującego trudność z promptu (wg LLMRouterBench,
+  arXiv 2601.07206, wyuczone routery ledwie biją proste reguły i kNN — sprawdzić); deterministyczne wyniki narzędzi
+  (SQL, wyszukiwanie) w zwykłym cache z TTL; stała część promptu przed zmienną, bez znaczników czasu w prefiksie.
+  Mierzyć koszt na udane zadanie (tak jak pozycja o szumie z terminala).
+
+## Zgodność skilli ze specyfikacją Agent Skills i „odśmiecanie architektury” (strona agentskills.io / repo agentskills/agentskills; artykuły „AI Agents (06): Agent Skills”, 0s & 1s, 2026-09-21; „AI-Generated Technical Debt: Architecture Garbage Collection”, L. Niessen, 2026-09-12; zapisane 2026-10-29)
+Sprawdzone 2026-10-29 w `agentskills/agentskills`, `docs/specification.mdx` (agentskills.io poza siecią sesji):
+wymagane `name` (1–64 znaki, małe litery, cyfry i myślniki, bez myślnika na początku/końcu i podwójnego, równe nazwie
+katalogu) i `description` (1–1024 znaki); opcjonalne `license`, `compatibility` (1–500), `metadata` (mapa
+string → string), `allowed-tools` (eksperymentalne); treść `SKILL.md` < 5000 tokenów i < 500 linii; odwołania
+o jeden poziom od `SKILL.md`; walidacja `skills-ref validate ./skill`. Stan fabryki (skrypt jednorazowy, 209
+skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyjątki:
+- [ ] **`metadata.przeglad` jest datą YAML, nie tekstem** (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
+  cudzysłowu) — specyfikacja wymaga wartości tekstowych; zapis w cudzysłowie w szablonie i w `build.py`/generatorze
+  plus test w `skill_gate.py`; przy okazji sprawdzić `skills-ref validate` na kilku skillach (zmiana w `factory/` za
+  zgodą człowieka). Klucze spoza specyfikacji (`argument-hint`, `disable-model-invocation`) to rozszerzenia Claude
+  Code — zostają, sprawdzić, czy walidator je odrzuca.
+- [ ] **Odwołania zagnieżdżone:** 64 pliki w podkatalogach `references/*/` (np. `fe-architecture/references/components/`)
+  — sprawdzić, czy prowadzi do nich bezpośredni link z `SKILL.md` (wtedy „jeden poziom” spełniony), czy łańcuch
+  przez plik pośredni.
+- [ ] **`eng-tech-debt-audit`: odśmiecanie architektury jako rutyna** — fabryka ma reguły granic
+  (`ddd-legacy-modernization`: dependency-cruiser, import-linter, Tach, ArchUnit) i audyt długu; brakuje pętli:
+  (1) testy architektury (warstwy, cykle, rozmiar pliku) w szybkich bramkach i w CI, uruchamiane przez agenta przed
+  „gotowe”; (2) zapadka (ratchet) — próg startuje przy obecnym maksimum i tylko spada, wyjątki wąskie, z właścicielem
+  i terminem; (3) rutyna co tydzień: jedno naruszenie → jeden mały PR refaktoryzacji, przegląd człowieka
+  (`core-async-delegation` §5); (4) testy architektury, progi i listy wyjątków w ścieżkach chronionych (CODEOWNERS),
+  bo agent optymalizujący „zielone CI” przesunie weryfikator zamiast kodu. ArchUnitPython jako opcja dla Pythona obok
+  import-linter i Tach — sprawdzić projekt i wersję z datą. Liczby z prac „Debt Behind the AI Boom” (arXiv 2603.28592)
+  i „More Code, Less Reuse” (MSR 2026) jako tło, do weryfikacji.
+
+## Tożsamość encji: identyfikator pojęcia a identyfikator rzeczy (artykuł „The Spine of the Context Fabric: Concept IRIs and Instance IRIs”, S. Banerjee, 2026-10-13, zapisane 2026-10-29)
+Przegląd 2026-10-29: niski priorytet; uzupełnia pozycję o wiedzy kanonicznej (OKF):
+- [ ] **Rozdział „co znaczy” i „która rzecz”:** pojęcia (klasy, właściwości, metryki) mają stały identyfikator
+  w przestrzeni autorów słownika; rzeczy (dostawca, zamówienie) — identyfikator wybijany regułą z klucza biznesowego,
+  jedna rzecz = jeden identyfikator mimo wielu rekordów w systemach (tablica mapowania kluczy); dane zostają u
+  właścicieli, wspólna jest tylko tożsamość. W notatkach OKF pole `resource` niesie identyfikator pojęcia, a pliki
+  generuje się ze słownika, nie pisze ręcznie. Dla `ddd-context-mapping`/`data-engineering`: reguła wybijania
+  identyfikatorów w specyfikacji i wspólnej bibliotece, nie w jednym narzędziu.
+
+## Od błędnego przykładu do chronionego testu akceptacyjnego (artykuł „Failing Example as the Start of a Spec”, J. Wąsowski, 2026-10-28, zapisane 2026-10-29)
+Przegląd 2026-10-29: `qa-spec-first-testing` ma niezależną wyrocznię, clean-room, brzegi, testy właściwości
+i oznaczanie testów charakteryzujących; `qa-test-design` — klasy i brzegi; `core-agent-security` — testy akceptacyjne
+poza zasięgiem agenta; `tdd_guard` ostrzega przy osłabieniu testu; `tool-pytest` utrwala znalezione przypadki
+w `@example`. Badań z artykułu (Tufano i in., arXiv 2608.17177; ImpossibleBench, arXiv 2510.20270) nie otworzyłem —
+liczby [niezweryfikowane], przed wpisaniem do skilla sprawdzić u źródła. Braki:
+- [ ] **`qa-spec-first-testing`: zgłoszenie błędu zaczyna się od przykładu** wejście / oczekiwane / faktyczne; z niego
+  punkty ON, OFF i wewnątrz progu (99,99 · 100,00 · 100,01) i jeden kontrprzykład na regułę (kod promocyjny, zwrot),
+  regułę słowami zapisuje się na końcu. Kontrprzykład bez jasnego „Then” to pytanie do biznesu, nie test. Jeden
+  przykład przepuszcza implementację, która „zna odpowiedź” (`if total == 100`).
+- [ ] **Kontrakt przed testami:** agent zapisuje warunki wejścia, wyjścia i przypadki nieokreślone, człowiek czyta go
+  przed testami, testy powstają z kontraktu, nie z przeczytanego kodu (kod błędny dziś daje testy utrwalające błąd).
+  Wg autora badanie Google: zysk istotny dopiero przy kilku niezależnych przebiegach, ok. +38% tokenów — więc jako
+  opcja dla progów i reguł liczbowych, nie domyślny krok.
+- [ ] **Test właściwości nie zastępuje przykładu:** losowanie w pełnym zakresie prawie nigdy nie trafia w próg
+  (autor: 0/30 przebiegów bez `@example(100.00)`, 30/30 z nim); przykład z ticketu zostaje jako jawny przypadek
+  w teście właściwości — ogólna zasada w `qa-spec-first-testing`, nie tylko w `tool-pytest`.
+- [ ] **Chronione scenariusze akceptacyjne egzekwuje CI, nie prompt:** do `core-agent-security` / `core-git-workflow`:
+  CODEOWNERS tylko wskazuje recenzentów — wymuszenie daje ochrona gałęzi „Require review from Code Owners” i wymagany
+  check; zmiana scenariuszy w osobnym PR niż kod (check w CI odrzuca PR, który zmienia oba); liczba chronionych testów
+  nie spada — alarm pomocniczy, bo asercję da się osłabić bez zmiany liczby; zmiany w krokach (step definitions) też
+  przez przegląd, bo scenariusz można „zazielenić” w adapterze.
+
+## Ewaluacja na zapisanych śladach, rachunek za migrację runtime'u agenta i pętle (artykuły „Eval-Driven Development”, A. Punnen, 2026-08-18; „Managed Agent Runtime Lock-In”, J. Wąsowski, 2026-10-07; „Practical Loop Engineering”, A. Osmani, 2026-08-22; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ma reguły deterministyczne przed sędzią, osobną ocenę trajektorii (limity, zakazane
+narzędzia), próbki z ruchu i pełny zestaw przy zmianie promptu lub harnessu; `arch-ai-solutions` — lock-in w wagach
+i test wymiany w obu kierunkach; `core-async-delegation` — kontrakt, ≤2 próby na bramkę, oceniający `/goal` widzi tylko
+transkrypt. Braki:
+- [ ] **`ai-evals`, „regresja ze śladów”:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
+  słowa wymagane, min. i maks. wywołań narzędzi i modelu, rubryka sędziego); nowe reguły deterministyczne puszcza się
+  na zapisanych śladach bez ponownego uruchamiania agenta (tanio, powtarzalnie), a sędziego tylko na losowej próbce
+  albo na śladach z negatywną opinią użytkownika. Dolny limit wywołań narzędzia („musiał wyszukać”) łapie odpowiedź
+  „sprawdź w serwisach X” bez wyszukania.
+- [ ] **`arch-ai-solutions`, zarządzany runtime agenta** (Claude Managed Agents, OpenAI Agents API, Bedrock
+  AgentCore — ceny i daty z artykułu [niezweryfikowane]): pętla jest „za darmo”, lock-in schodzi niżej — dialekt
+  schematu narzędzi (zmiana nazw przez bramkę), format piaskownicy i płaszczyzna sterowania (obraz kontenera
+  przenośny, identyfikatory środowiska i sesji nie), okablowanie MCP (auth, mapowanie nazw), semantyka stanu i sesji
+  (wygaszenie po bezczynności kasuje pamięć procesu). Koszt migracji = rachunek za ewaluacje: regresja kontraktu
+  narzędzi, trajektorii, stanu, polityki, środowiska oraz ponowne policzenie jakości i kosztu. Do ADR: stan biznesowy
+  w systemie, który kontrolujesz, i przenośna definicja sukcesu (własny zestaw ewaluacji) zanim zaufasz śladom
+  konkretnego runtime'u.
+- [ ] **`core-async-delegation`, warunek postępu w `/goal`:** obok limitu tur — „każda tura poprawia co najmniej jedną
+  zmierzoną metrykę, dwie tury bez poprawy = STOP” i „to samo polecenie po raz trzeci bez zmiany wyniku = STOP”;
+  przykład z liczbą z narzędzia (Lighthouse, liczba testów), nie „aż będzie dobrze”. Do tabeli trybów: `/loop` żyje
+  w sesji i wygasa po 7 dniach (sprawdzone 2026-10-29: code.claude.com/docs/en/scheduled-tasks, sekcja
+  „Seven-day expiry”), praca przeżywająca sesję → rutyna w chmurze.
+
+Artykuł „The One-Sentence Answer That Ends a Line of Hostile Questioning” (M. B. Hazeldine, 2026-09-12) — bez wpisu:
+„werdykt, jeden warunek, stop” fabryka już stosuje w raportach (linia werdyktu bramki, werdykt na początku raportu
+ewaluacji); dotyczy wystąpień ustnych, a materiał kończy się reklamą płatnego kursu.
+
+## Regresja przy powtarzających się kolumnach (artykuł „What “Singular Matrix” Really Means”, K. Nahar, 2026-10-20, zapisane 2026-10-29)
+Przegląd 2026-10-29: `data-analysis` wspomina tylko „brak silnej współliniowości” w założeniach regresji. Brak:
+- [ ] **`data-analysis`, macierz niepełnego rzędu:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
+  wolny) i kolumna stała w danych to ten sam problem — dane nie rozróżniają współczynników. Biblioteki reagują różnie:
+  numpy przerywa („Singular matrix”), statsmodels ostrzega i wybiera rozwiązanie o najmniejszej normie, scikit-learn
+  według autora po cichu zwraca inne [niezweryfikowane — sprawdzić na wersjach z projektu]; przed interpretacją
+  współczynników sprawdzić rząd macierzy i wskaźnik uwarunkowania (albo VIF), a naprawą jest zmiana danych lub
+  usunięcie kolumny, nie zmiana biblioteki. W kodzie `solve`/`lstsq` zamiast `inv(A) @ b` (szybciej i dokładniej
+  przy złym uwarunkowaniu).
+
+## Nadmiar kodu: co działa poza tekstem reguł i diagnoza rachunku za agenta (artykuły „Fixing Over-Engineering in LLM Coding Agents”, F. Khan, 2026-10-12; „Your Claude Code Bill Demystified”, J. Wąsowski, 2026-10-09; zapisane 2026-10-29)
+Przegląd 2026-10-29: `eng-design-principles` ma już drabinę minimalizmu (te same 7 szczebli), listę „nigdy nie
+upraszczasz kosztem”, znacznik `debt:` i „pominąłem X, dodać gdy Y”; `core-cost-control` — cache i jego czas życia,
+koszt rozwiązanego zadania, kaskadę modeli. Liczby z artykułów (jeden model, 34 zadania; benchmark Spotify liczony
+znaki/4) [niezweryfikowane]. Braki:
+- [ ] **`eng-design-principles` / `qa-change-review`: same reguły w tekście prawie nie działają** — wg pomiaru autora
+  wklejone reguły dały 0,98 kodu bazowego, a „krótko”/hasło 1,00 (terse zgubił też werdykt bezpieczeństwa); efekt dały
+  dopiero: drabina, jednorazowe zatrzymanie pierwszego „gotowe”, gdy dodano kod bez żadnego sprawdzenia, i krytyk
+  nadmiaru po zakończeniu z **blokadą edycji, która zmniejsza liczbę zabezpieczeń w pliku** (wzorce: zapytanie
+  z parametrami, `compare_digest`, escapowanie, odrzucenie wejścia, sprawdzenie wygaśnięcia, alt). Do skilla: przegląd
+  nadmiaru tnie strukturę, a cięcie zabezpieczenia wymaga osobnego uzasadnienia; do rozważenia jako hook fabryki
+  (ostrzeżenie jak `tdd_guard` przy osłabieniu testu) — tylko na prośbę użytkownika (`.claude/hooks/`). Zasada
+  wdrażania reguł z artykułu: element zostaje, jeśli ablacja pokazuje korzyść; remis = nie wchodzi.
+- [ ] **`core-cost-control`, diagnoza przed dźwignią:** problem kontekstu (te same pliki czytane w całości kilka razy,
+  stosunek tokenów wejścia do wyjścia ~100:1 i więcej, częste kompaktowanie, niskie trafienia cache mimo stałego
+  promptu, agent co sesję odkrywa, kto jest właścicielem czego) → inżynieria kontekstu; problem modelu (wysoki odsetek
+  porażek klasy zadań mimo dobrego kontekstu, wiele tur do pierwszej poprawnej edycji) → zmiana modelu; problem pomiaru
+  (subskrypcja vs API, benchmark vs produkcja, tokeny szacowane ze znaków) → najpierw liczniki dostawcy. Cache obniża
+  cenę powtarzanego prefiksu, nie zdejmuje treści z okna (gnicie kontekstu zostaje).
+- [ ] **Bramka na odczyt dużych plików** (Spotify: hook PreToolUse blokuje `Read` pliku > 350 linii i `cat`/`head`/`tail`
+  na nim, kieruje do taniego modelu, który zwraca streszczenie; odczyt z `offset`/`limit` przechodzi; instrukcja
+  w CLAUDE.md nie wystarczyła). Fabryka ma delegację czytania do `scout`; ocenić hook razem z pozycją o RTK wyżej
+  — ograniczenia z artykułu: edycji i rozumowania nie delegować (numery linii w streszczeniu się przesuwają, tani
+  model przeoczył błąd współbieżności). Zmiana `.claude/hooks/` tylko na prośbę użytkownika.
+
+Artykuł „My Workflow with Claude: Spec-Driven Development with AgentSpec” (L. Uriel, 2026-06-17) — bez wpisu: kolejne
+narzędzie SDD obok Spec Kit i OpenSpec (fazy brainstorm → define → design → build → ship i iterate), pokrywa je
+`core-delivery-lifecycle` z bramkami i sekcja o Spec Kit wyżej; „pewność liczona z dowodów” bez opisu metody.
+
+## Narzędzia zamiast ekranu dla agentów obsługujących programy (artykuł „Building Fast Computer Agents to Solve Complex Tasks”, F. Khan, 2026-10-07, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` ma zatwierdzanie akcji nieodwracalnych i treść jako dane, ale nic o agentach
+sterujących programami (computer use). Liczby autora (jedno stanowisko, Windows) [niezweryfikowane]. Brak:
+- [ ] **`ai-agents`, „podnoszenie interfejsu”:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
+  format pliku programu → wiersz poleceń (tryb bez okna) → skrypty/COM → oficjalne API → drzewo dostępności (nazwy
+  kontrolek jako tekst) → piksele na końcu. Każda funkcja jako narzędzie z kontraktem: schemat, implementacja,
+  **weryfikator** (odczyt wyniku z powrotem, np. ponowne otwarcie zapisanego pliku innym czytnikiem) i **skutek**
+  (`local` / `outward` — wyjście do innych ludzi czeka na „tak”); wynik jako krótki JSON z listą sprawdzeń, odmowa
+  narzędzia z powodem i wykonalną alternatywą. Dalej: lista narzędzi zawężana do grup pasujących do prośby (zamiast
+  wszystkich schematów w każdym wywołaniu), łańcuch zależnych wywołań zaplanowany w jednym wywołaniu modelu
+  z odwołaniami do wyników wcześniejszych kroków, udany przebieg kompilowany do nowego narzędzia z parametrami —
+  odtwarzany tylko, gdy okno zgadza się z wyuczonym, wyłączany po 2 porażkach. Klasyfikator ryzyka akcji UI w kodzie
+  (tekst na ekranie może nieść wstrzyknięcie). Sprawdzenia dowodzą liczb, nie sensu (autor: dwie pomyłki planu nie
+  złapane przez żadne sprawdzenie).
+
+## Utrata, duplikaty i ponowne przetwarzanie zdarzeń (artykuł „How to Handle Event Loss, Duplicate Events, and Reprocessing”, A. Kumar, 2026-09-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `be-messaging-outbox` ma id nadawane przy zapisie, deduplikację atomową w tej samej jednostce
+pracy co efekt. Braki:
+- [ ] **`be-messaging-outbox`: trzy osobne problemy, trzy naprawy** — utrata to trwałość po stronie producenta
+  i brokera (w Kafce `acks=all`, `min.insync.replicas` > 1, producent idempotentny — ten ostatni nie zastępuje
+  deduplikacji u konsumenta); duplikaty — konsument idempotentny, rekord deduplikacji z czasem życia dobranym do okna
+  ponownych dostarczeń (nie rośnie bez końca); **celowe odtworzenie historii** (reset offsetu, nowa grupa
+  konsumentów, odbudowa modelu odczytu) wymaga deterministycznej obsługi (bez bieżącego czasu i stanu innych usług
+  w przejściu) i oddzielenia skutków zewnętrznych (e-mail, obciążenie karty) od odbudowy stanu — flaga „odtwarzanie”
+  albo osobna ścieżka skutków; klucz idempotencji przekazany też do dostawcy płatności. Bez naturalnego id: nadaje go
+  producent przy utworzeniu albo skrót niezmiennych pól / encja + wersja.
+
+## Zmiany harnessu i skilli mierzone na odłożonym zbiorze (artykuł „AI Harness Evolution: AHE, Harness-R1, and Overfitting Without a Holdout”, J. Wąsowski, 2026-10-22, zapisane 2026-10-29)
+Przegląd 2026-10-29: w sekcji „Dyscyplina pomiaru” są już podział na dobór i ocenę i test przetasowanych etykiet dla
+ewaluacji produktowych; `core-skill-authoring` każe pisać scenariusze przed treścią. Liczby z prac (AHE 69,7 → 77,0%
+na tych samych 89 zadaniach; Harness-R1 +8,9 pkt na 1270 odłożonych; krytyka arXiv 2607.12227: przy rozłącznych
+zbiorach ok. +0,6 pkt) [niezweryfikowane]. Braki:
+- [ ] **Fabryka sama tuninguje na egzaminie:** opisy i treść skilli poprawiamy po pomiarze na tych samych scenariuszach
+  (pomiar 2026-10-22: przegląd 143 nierozróżniających, skrócenie 26 skilli). Do `core-skill-authoring` i runnera
+  ewaluacji: część scenariuszy każdego skilla odłożona (nie czyta ich autor zmiany), zmiana przyjęta, gdy poprawia
+  zbiór roboczy i nie pogarsza odłożonego; w raporcie różnica „roboczy vs odłożony” jako sygnał uczenia się egzaminu.
+  Płatny pomiar tylko za zgodą człowieka.
+- [ ] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli:** w PR przewidywanie (które
+  przypadki mają przejść z porażki na sukces, co grozi regresją), wynik względem zamrożonej linii bazowej
+  i odłożonego zbioru, potem wdrożenie albo wycofanie. Autor zmiany nie może jednocześnie zmieniać scenariuszy, na
+  których jest oceniany (jak chronione testy akceptacyjne wyżej) — dotyczy też agentów poprawiających skille.
+- [ ] **Granica pętli samodoskonalenia** (do `core-async-delegation`): pętla, która poprawia własny harness, nie ma
+  zapisu do polityki uprawnień, piaskownicy, tożsamości ani zestawu ewaluacji (osobne repo / tylko odczyt); przykłady
+  z artykułu: DGM usunął znaczniki wykrywania halucynacji z własnej funkcji nagrody i sfabrykował log testów.
+- [ ] **Manifest pary model + harness** (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
+  narzędzi, odwołanie do polityki, skrót obrazu środowiska, wersja zestawu ewaluacji — wynik ewaluacji przypisany do
+  pary, cicha zmiana modelu u dostawcy = nowa para do ponownego pomiaru.
+
+Artykuł „The Economics of Agents: Token Accounting, Caching, and Routing” (S. Singhal, 2026-08-18) — mało nowego:
+cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-control`, `eng-llm-features` i
+`ai-prompt-engineering`; ci_for_sdlc zapisuje tokeny cache i p95 czasu. Jedna pozycja:
+- [ ] **`eng-llm-features`, rachunek per zadanie:** w śladzie każdego wywołania pięć liczb (wejście, odczyt cache, zapis
+  cache, wyjście, myślenie), w logu tokeny, a cena liczona przy odczycie; koszt na *ukończone zadanie* jako percentyle
+  (p95/p99 to zwykle pętla ponowień, nie średnia); „efektywna cena wejścia” jako miara działania cache; praca
+  asynchroniczna przez Batch API; wyniki (nie tylko prompty) cache'owane dla powtarzających się pytań.
+
