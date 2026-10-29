@@ -497,3 +497,17 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
   ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
   agenty mogły je czytać bez tłumaczenia.
+
+## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
+Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
+specyfikacji), plan cięć z dosłownymi ID wymagań, zależnościami i kolumną „Równolegle z” oraz checklistą pokrycia
+(`plan-ciec.md`, odpowiednik `/speckit.analyze`), krok po kroku z planem przed kodem i zmianą specyfikacji przed
+kodem, `plan_drift.py` w talos. Pętle i rutyny (artykuły o „loop/graph engineering” i Routines z tego dnia) pokrywa
+`core-async-delegation` (kontrakt, warunek stopu, budżet, najwyżej 2 próby naprawy) i `core-agent-retro` (lekcje).
+Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet.
+- [ ] **Wejście z Spec Kit** — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
+  intake (`proc-requirements-shaping`, mode-pdi, talos) czyta je jako istniejące wymagania, zasady i plan zamiast
+  pisać równoległe dokumenty: `spec.md` → wymagania (lint EARS jako raport, bez przepisywania), `constitution.md` →
+  zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
+  „Równolegle z”. Układ plików i nazwy poleceń sprawdzić w repo github/spec-kit z datą (artykuł opisuje błąd haka
+  `before_specify` w nowszej wersji) [niezweryfikowane].
