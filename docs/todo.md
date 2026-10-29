@@ -334,6 +334,16 @@ Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4)
 - [x] **Po F4:** odświeżanie: zmiany tylko w komentarzach bez zleceń i z przeliczeniem numerów linii, diff w zleceniach, `apply` i `card`, nowe sygnały do sprawdzenia; komentarze 0,24 wobec 0,48 USD maistera, logika 0,38 wobec 0,51 USD (2 przebiegi na repo), 12/12 zmian i 0 pozostałości; maister nadal szybszy przy zmianie w logice (192 wobec 74 s) — `docs/evals/2026-10-25-f4-odswiezenie-tansze.md` (2026-10-25).
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
 
+- [ ] **Rekonstrukcja bez kodu źródłowego** (artykuł „REA Lets AI Agents Figure Out How Apps Work, Even Without
+  Source Code”, K. Dunham, 2026-10-13; repo `morluto/rea`, MIT, serwer MCP — istnienie sprawdzone 2026-10-29 na
+  raw.githubusercontent.com, wersje i liczby z artykułu [niezweryfikowane]). Zakres dziś „tylko kod”; gdy pojawi się
+  aplikacja bez źródeł (Electron: JS w paczce czytany statycznie, mapa okno → preload → kanał IPC → obsługa;
+  natywna: Ghidra/Hopper/IDA): REA jako opcja tylko po `skill_audit`, przeczytaniu i zgodzie człowieka, analiza
+  binarek w jednorazowej maszynie wirtualnej (to nie piaskownica — Ghidra działa z uprawnieniami użytkownika),
+  zgoda prawna na analizę po stronie człowieka. Do przejęcia niezależnie od narzędzia: w wynikach rekonstrukcji
+  rozdzielać obserwacje, wnioski i niewiadome, a w ograniczeniach pisać wprost „brak znaleziska nie dowodzi braku”;
+  pytać o jedną funkcję, nie o całą aplikację.
+
 ## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23
 Luki wskazane przez przegląd `deanpeters/Product-Manager-Skills` (commit cfcb697, 15.10.2026). Licencja CC BY-NC-SA 4.0 —
 treści nie kopiujemy ani nie tłumaczymy; bierzemy tylko listę tematów, treść piszemy własnymi słowami ze źródeł
