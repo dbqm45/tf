@@ -1098,3 +1098,29 @@ projekt jako dane sprawdzane z buildem, bramka ewaluacji w ścieżce wydania —
 Engineering?” (A. Kokane, 2026-06-17 — `/goal`, `/loop`, pięć elementów pętli za A. Osmanim; ujęte wcześniej przy
 „Practical Loop Engineering” i rutynach).
 
+## Kontrakt zachowania przy zmianach w legacy i pomiar „harness: wynik czy koszt” (artykuły „Brownfield Spec and Preservation Contract”, J. Wąsowski, 2026-10-22; „When Agent Harness Moves the Result, and When It Only Moves the Cost”, J. Wąsowski, 2026-10-13; zapisane 2026-10-29)
+Przegląd 2026-10-29: `eng-behavior-preserving-refactoring` ma zamrożony kontrakt i testy charakteryzujące przed
+refaktorem (oznaczone, nie są specyfikacją); w TODO jest krok archiwizacji delty OpenSpec i chronione testy
+akceptacyjne. Liczby z artykułów (2,66% agentowych PR z commitem cofającym, 29,6% „rozwiązanych” łatek innych niż
+ludzka, METR: harness dostawcy nie lepszy od prostego, rozrzut tokenów na rozwiązane zadanie do 40×, słabszy model
+29,2 → 78,0% dzięki korekcie zachowania) [niezweryfikowane]. Braki:
+- [ ] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`):** sześć pól —
+  warunek (kiedy zmiana działa), oczekiwany wynik (nie „błąd zniknął”), chronione zachowania, dozwolony zakres plików
+  (wyjście poza = zgłoszenie), dowód naprawy (test czerwony na commicie bazowym, zielony po), dowód braku regresji
+  (testy ochronne nagrane na commicie bazowym **przed** zmianą, osobnym etapem, zielone przed i po). Chronione
+  zachowania z czterech źródeł w zasięgu zmiany (wywołujący/konsumenci — brak znalezionych to ograniczona wiedza,
+  nie dowód; incydenty; często zmieniane pliki; testy charakteryzujące), każde z kolumną **decyzji**:
+  zobowiązanie (chronić) / przypadek (wolno zmienić) / do decyzji właściciela — z nazwiskiem decydującego; zmiana
+  zachowania widocznego dla konsumenta to już nie refaktor. Przy archiwizacji zatwierdzone gwarancje trafiają do
+  delty jako ADDED (pierwszy zapis wymagania) z testem. Bez pełnej inwentaryzacji systemu na start.
+- [ ] **Skille fabryki: wynik czy tylko koszt** (protokół z artykułu do runnera ewaluacji): ta sama para „ze skillami /
+  bez” na tym samym zestawie, raport rozdzielny — odsetek sukcesów, koszt łączny na rozwiązane zadanie (wszystkie
+  próby, także porzucone, przez liczbę sukcesów), mediana tokenów udanych prób, pass@k z przedziałem, czas, rodzaje
+  porażek; drugi przebieg na mocniejszym modelu (pomiar 2026-10-22 był tylko na Haiku) — jeśli przewaga skilli maleje
+  z mocą modelu, inwestować w scenariusze ewaluacji, hooki i politykę uprawnień, nie w dłuższe treści. Ablacja
+  pojedynczych elementów, bo składniki potrafią sobie szkodzić. Płatne — tylko za zgodą człowieka.
+
+Bez wpisu: „The Harness Is the Product” (S. Singhal, 2026-08-10) — przegląd elementów harnessu (pętla, narzędzia,
+kontekst, pamięć, uprawnienia, weryfikacja, obserwowalność, podagenci) pokrytych przez `ai-agents`,
+`core-cost-control` i wcześniejsze pozycje TODO.
+
