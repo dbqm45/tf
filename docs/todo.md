@@ -754,3 +754,28 @@ tylko dla odpowiedzi niezależnych od użytkownika, routing i fallback. Niski/ś
   arXiv 2601.07206, wyuczone routery ledwie biją proste reguły i kNN — sprawdzić); deterministyczne wyniki narzędzi
   (SQL, wyszukiwanie) w zwykłym cache z TTL; stała część promptu przed zmienną, bez znaczników czasu w prefiksie.
   Mierzyć koszt na udane zadanie (tak jak pozycja o szumie z terminala).
+
+## Zgodność skilli ze specyfikacją Agent Skills i „odśmiecanie architektury” (strona agentskills.io / repo agentskills/agentskills; artykuły „AI Agents (06): Agent Skills”, 0s & 1s, 2026-09-21; „AI-Generated Technical Debt: Architecture Garbage Collection”, L. Niessen, 2026-09-12; zapisane 2026-10-29)
+Sprawdzone 2026-10-29 w `agentskills/agentskills`, `docs/specification.mdx` (agentskills.io poza siecią sesji):
+wymagane `name` (1–64 znaki, małe litery, cyfry i myślniki, bez myślnika na początku/końcu i podwójnego, równe nazwie
+katalogu) i `description` (1–1024 znaki); opcjonalne `license`, `compatibility` (1–500), `metadata` (mapa
+string → string), `allowed-tools` (eksperymentalne); treść `SKILL.md` < 5000 tokenów i < 500 linii; odwołania
+o jeden poziom od `SKILL.md`; walidacja `skills-ref validate ./skill`. Stan fabryki (skrypt jednorazowy, 209
+skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyjątki:
+- [ ] **`metadata.przeglad` jest datą YAML, nie tekstem** (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
+  cudzysłowu) — specyfikacja wymaga wartości tekstowych; zapis w cudzysłowie w szablonie i w `build.py`/generatorze
+  plus test w `skill_gate.py`; przy okazji sprawdzić `skills-ref validate` na kilku skillach (zmiana w `factory/` za
+  zgodą człowieka). Klucze spoza specyfikacji (`argument-hint`, `disable-model-invocation`) to rozszerzenia Claude
+  Code — zostają, sprawdzić, czy walidator je odrzuca.
+- [ ] **Odwołania zagnieżdżone:** 64 pliki w podkatalogach `references/*/` (np. `fe-architecture/references/components/`)
+  — sprawdzić, czy prowadzi do nich bezpośredni link z `SKILL.md` (wtedy „jeden poziom” spełniony), czy łańcuch
+  przez plik pośredni.
+- [ ] **`eng-tech-debt-audit`: odśmiecanie architektury jako rutyna** — fabryka ma reguły granic
+  (`ddd-legacy-modernization`: dependency-cruiser, import-linter, Tach, ArchUnit) i audyt długu; brakuje pętli:
+  (1) testy architektury (warstwy, cykle, rozmiar pliku) w szybkich bramkach i w CI, uruchamiane przez agenta przed
+  „gotowe”; (2) zapadka (ratchet) — próg startuje przy obecnym maksimum i tylko spada, wyjątki wąskie, z właścicielem
+  i terminem; (3) rutyna co tydzień: jedno naruszenie → jeden mały PR refaktoryzacji, przegląd człowieka
+  (`core-async-delegation` §5); (4) testy architektury, progi i listy wyjątków w ścieżkach chronionych (CODEOWNERS),
+  bo agent optymalizujący „zielone CI” przesunie weryfikator zamiast kodu. ArchUnitPython jako opcja dla Pythona obok
+  import-linter i Tach — sprawdzić projekt i wersję z datą. Liczby z prac „Debt Behind the AI Boom” (arXiv 2603.28592)
+  i „More Code, Less Reuse” (MSR 2026) jako tło, do weryfikacji.
