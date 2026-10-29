@@ -712,3 +712,26 @@ porażek pomiaru (wszystkie liczby z jego repo, nie sprawdzone): sześć cichych
 Wniosek merytoryczny autora, do `ai-rag`: graf/ontologia do wyszukiwania i proweniencji, ale decyzja o odmowie
 z kalibrowanej pewności modelu (AUROC 0,81), bo certyfikacja ścieżką w grafie przewidywała poprawność na poziomie
 losowym (0,50) — jeden przypadek, nie reguła; sprawdzać na własnym zbiorze.
+
+## Wzorzec „Counting House”: AI w obsłudze dużego wolumenu spraw (artykuł S. Yegge'a, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: pojedyncze elementy już są — `ai-evals` (złoty zbiór, zgodność ludzi jako sufit, kappa,
+kalibracja sędziego, shadow), `ai-product-management` (koszt błędów w PRD), saga w `ddd-tactical-design`,
+idempotencja w `be-messaging-outbox`. Brakuje złożenia ich w jeden wzorzec architektury. Średni priorytet, jako
+reference w `arch-ai-solutions` (przykład domenowy w pack-ev: obsługa kierowców CPO/eMSP — zwroty, sesja nie startuje):
+- [ ] **Tabela polityki per intencja i progi autonomii:** off → shadow (model odpowiada równolegle, oceniany) →
+  assist (podpowiedź dla człowieka) → contain (odpowiada klientowi) → transact (zmienia stan przez orkiestrator);
+  awans intencji na wyższy próg dopiero po ewaluacji na złotym zbiorze z ocen ludzi i podpisach właścicieli
+  (operacje, finanse, prawo). Ta sama logika co pozycja „Rutyny, które zdobywają uprawnienia”.
+- [ ] **Macierz pomyłek z kosztem zamiast trafności:** dla intencji łatwych do pomylenia koszt każdej komórki poza
+  przekątną (pomyłka kierunku do kolejki ≠ pominięta pomoc dla pasażera); dla wypłat liczy się precyzja, dla spraw
+  krzywdzących klienta czułość; porównanie z tą samą macierzą dla ludzi (koszt błędów + koszt pracy).
+- [ ] **Model proponuje, orkiestrator wykonuje:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
+  uprawnienie na żywym systemie źródłowym (nie na cache, który czytał model), nadaje klucz idempotencji z pól
+  żądania, zatwierdza automatycznie do progu z polityki, powyżej — człowiek; saga z akcjami kompensującymi i odczytem
+  po zapisie; odmowa z kodem przyczyny trafia do właściwej kolejki ludzi. Model nie ma poświadczeń i nie widzi PII
+  (bramka tokenizująca PII odwracalnie).
+- [ ] **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
+  strojony na złotym zbiorze; złoty zbiór i ewaluacje własnością firmy (to dźwignia zmiany modelu na tańszy).
+Wzorzec opisany przez autora bez danych z wdrożeń (rozmowy z firmami) — traktować jako projekt do sprawdzenia, nie
+wynik. Wątek „dobrostanu modelu” z artykułu pomijam; z niego tylko praktyczne: prawdomówny prompt bez gróźb
+i fałszywej pilności, prawo do odmowy z kodem przyczyny i propozycją poprawki procedury.
