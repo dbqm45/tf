@@ -432,6 +432,15 @@ metodą TDD, bramka skilla; jeden mały PR):
   `design_check.py` przed `design-review`. Koszt: jedno wywołanie modelu na bramkę [szacunek: kilka centów na
   Haiku/Sonnet] — zmierzyć na pierwszych zmianach.
 
+- [ ] **Pierwotna prośba i odpowiedzi na pytania zapisane dosłownie** (artykuł „From OpenSpec to AIDLC”, P. Qian,
+  2026-09-04; AWS `aidlc-workflows`): specyfikacje SDD gubią, *po co* coś zrobiono — AIDLC trzyma per faza plik pytań
+  z odpowiedziami człowieka i `audit.md` tylko do dopisywania (wejście człowieka, odpowiedź, streszczenie fazy, kto
+  zatwierdził — `git config user.name/email`). U nas zamiar jest w `intent.md`, a bramka to PR (tożsamość i historia
+  z GitHuba); brakuje dosłownego zapisu pytań i odpowiedzi z fazy wymagań obok artefaktu. Rozważyć też rozdział
+  „zatwierdzam” od „uruchom następną fazę”, gdy następną fazę prowadzi inna rola (pdi dziś po `approved` sam
+  uruchamia fazę — `docs/plan-f4-pdi.md`). Reszta AIDLC (warunkowe etapy: rekonstrukcja tylko dla istniejącego kodu,
+  historyjki tylko przy zmianie dla użytkownika; rozszerzenia włączane pytaniem) jest w `core-delivery-lifecycle`.
+
 ## Wzorce bezpieczeństwa agentów z LLM (artykuł „Top 4 Security design patterns for AI agents”, A. Dighe, 2026-10-08, zapisane 2026-10-29)
 Przegląd 2026-10-29: zasady są już w `sec-llm-security` (najmniejsze uprawnienia narzędzi, zatwierdzenie z pokazaniem
 dokładnego skutku, walidacja argumentów w kodzie, „model czytający obce treści nie ma narzędzi zapisu”, allow-lista
@@ -929,4 +938,31 @@ znaki/4) [niezweryfikowane]. Braki:
 Artykuł „My Workflow with Claude: Spec-Driven Development with AgentSpec” (L. Uriel, 2026-06-17) — bez wpisu: kolejne
 narzędzie SDD obok Spec Kit i OpenSpec (fazy brainstorm → define → design → build → ship i iterate), pokrywa je
 `core-delivery-lifecycle` z bramkami i sekcja o Spec Kit wyżej; „pewność liczona z dowodów” bez opisu metody.
+
+## Narzędzia zamiast ekranu dla agentów obsługujących programy (artykuł „Building Fast Computer Agents to Solve Complex Tasks”, F. Khan, 2026-10-07, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` ma zatwierdzanie akcji nieodwracalnych i treść jako dane, ale nic o agentach
+sterujących programami (computer use). Liczby autora (jedno stanowisko, Windows) [niezweryfikowane]. Brak:
+- [ ] **`ai-agents`, „podnoszenie interfejsu”:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
+  format pliku programu → wiersz poleceń (tryb bez okna) → skrypty/COM → oficjalne API → drzewo dostępności (nazwy
+  kontrolek jako tekst) → piksele na końcu. Każda funkcja jako narzędzie z kontraktem: schemat, implementacja,
+  **weryfikator** (odczyt wyniku z powrotem, np. ponowne otwarcie zapisanego pliku innym czytnikiem) i **skutek**
+  (`local` / `outward` — wyjście do innych ludzi czeka na „tak”); wynik jako krótki JSON z listą sprawdzeń, odmowa
+  narzędzia z powodem i wykonalną alternatywą. Dalej: lista narzędzi zawężana do grup pasujących do prośby (zamiast
+  wszystkich schematów w każdym wywołaniu), łańcuch zależnych wywołań zaplanowany w jednym wywołaniu modelu
+  z odwołaniami do wyników wcześniejszych kroków, udany przebieg kompilowany do nowego narzędzia z parametrami —
+  odtwarzany tylko, gdy okno zgadza się z wyuczonym, wyłączany po 2 porażkach. Klasyfikator ryzyka akcji UI w kodzie
+  (tekst na ekranie może nieść wstrzyknięcie). Sprawdzenia dowodzą liczb, nie sensu (autor: dwie pomyłki planu nie
+  złapane przez żadne sprawdzenie).
+
+## Utrata, duplikaty i ponowne przetwarzanie zdarzeń (artykuł „How to Handle Event Loss, Duplicate Events, and Reprocessing”, A. Kumar, 2026-09-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `be-messaging-outbox` ma id nadawane przy zapisie, deduplikację atomową w tej samej jednostce
+pracy co efekt. Braki:
+- [ ] **`be-messaging-outbox`: trzy osobne problemy, trzy naprawy** — utrata to trwałość po stronie producenta
+  i brokera (w Kafce `acks=all`, `min.insync.replicas` > 1, producent idempotentny — ten ostatni nie zastępuje
+  deduplikacji u konsumenta); duplikaty — konsument idempotentny, rekord deduplikacji z czasem życia dobranym do okna
+  ponownych dostarczeń (nie rośnie bez końca); **celowe odtworzenie historii** (reset offsetu, nowa grupa
+  konsumentów, odbudowa modelu odczytu) wymaga deterministycznej obsługi (bez bieżącego czasu i stanu innych usług
+  w przejściu) i oddzielenia skutków zewnętrznych (e-mail, obciążenie karty) od odbudowy stanu — flaga „odtwarzanie”
+  albo osobna ścieżka skutków; klucz idempotencji przekazany też do dostawcy płatności. Bez naturalnego id: nadaje go
+  producent przy utworzeniu albo skrót niezmiennych pól / encja + wersja.
 
