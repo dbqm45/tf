@@ -735,3 +735,22 @@ reference w `arch-ai-solutions` (przykład domenowy w pack-ev: obsługa kierowc�
 Wzorzec opisany przez autora bez danych z wdrożeń (rozmowy z firmami) — traktować jako projekt do sprawdzenia, nie
 wynik. Wątek „dobrostanu modelu” z artykułu pomijam; z niego tylko praktyczne: prawdomówny prompt bez gróźb
 i fałszywej pilności, prawo do odmowy z kodem przyczyny i propozycją poprawki procedury.
+
+## Znakowanie tekstu z AI i oszczędzanie tokenów w aplikacjach (artykuły „AI Text Has a Secret Signature”, Analyst Uttam, 2026-08-17; „Agentic AI: How to Save on Tokens”, I. Silfverskiöld, 2026-05-05, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-governance-compliance` ma obowiązek art. 50 AI Act (oznaczanie wyników syntetycznych
+w formacie maszynowym) bez części technicznej; `arch-ai-solutions` ma prompt caching (stały prefiks), cache wyników
+tylko dla odpowiedzi niezależnych od użytkownika, routing i fallback. Niski/średni priorytet:
+- [ ] **`ai-governance-compliance`, reference „znakowanie techniczne”:** znak wodny w tekście (Kirchenbauer i in.,
+  ICML 2023: zielona lista tokenów z ziarna poprzedniego tokenu, test z, wykrywalny od ~25 tokenów, nie działa dla
+  tekstu o niskiej entropii i zapamiętanego), C2PA/metadane dla obrazów i wideo; ograniczenia: parafraza, wstawianie
+  i usuwanie znaków, homoglify i znaki zerowej szerokości (detektor kanonizuje Unicode), kradzież i podrabianie znaku,
+  „piggyback” — zmodyfikowana treść wciąż wykrywana jako z modelu. Wniosek do dokumentacji zgodności: znak wspiera
+  wykrywanie masowe, nie przypisanie pojedynczego tekstu ani dowód; co konkretnie spełnia art. 50 ust. 2 (normy,
+  kodeks praktyk) sprawdzić z datą [niezweryfikowane].
+- [ ] **`arch-ai-solutions`/`eng-llm-features`: koszt agenta z wieloma narzędziami** — leniwe ładowanie definicji
+  narzędzi (wyszukiwarka narzędzi, `defer_loading` w API Anthropic — sprawdzić aktualną nazwę i warunki w
+  dokumentacji, skill `claude-api`) zamiast setek definicji w każdym wywołaniu; kaskada „tani model najpierw,
+  eskalacja przy niskiej pewności” jako alternatywa routera zgadującego trudność z promptu (wg LLMRouterBench,
+  arXiv 2601.07206, wyuczone routery ledwie biją proste reguły i kNN — sprawdzić); deterministyczne wyniki narzędzi
+  (SQL, wyszukiwanie) w zwykłym cache z TTL; stała część promptu przed zmienną, bez znaczników czasu w prefiksie.
+  Mierzyć koszt na udane zadanie (tak jak pozycja o szumie z terminala).
