@@ -1257,3 +1257,26 @@ linia odcięcia przed budową, koszt na rozwiązane zadanie z czasem przeglądu 
 orkiestracji, ślady od pierwszego dnia, złoty zbiór i wdrożenie etapami są już w `ai-product-management`,
 `ai-evals`, `ai-agents` i pozycjach TODO wyżej.
 
+## Ontologia obserwowalności i wiki z LLM w dwóch wersjach (artykuły „Ontology-Driven Observability: Building an End-to-End Knowledge Graph at Netflix Scale”, Netflix Tech Blog, 2026-10-16; „I Built Karpathy's LLM Wiki Twice”, L. Bernardo, 2026-05-17; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ops-sre-incidents` i `ops-observability` nie mają wątku łączenia danych z różnych narzędzi
+(metryki, alerty, incydenty, wdrożenia, czat) przez wspólny model encji. Liczby Netflixa [niezweryfikowane].
+- [ ] **`ops-observability` / `ops-sre-incidents`, wspólny model encji dla dochodzenia:** większość czasu analizy
+  przyczyny (u Netflixa ok. 4 h) to odtwarzanie powiązań między narzędziami, które nazywają to samo inaczej
+  (aplikacja / usługa / klaster). Zasady do skilla: tożsamość najpierw — encja powstaje tylko po walidacji
+  w jednym autorytatywnym katalogu (bez ogólnego typu „usługa”, który znaczy cztery rzeczy); ontologia jako kod
+  (PR, testy, wersje), pojęcia oddzielnie od instancji (por. pozycja o IRI wyżej); wyjście modelu ograniczone do
+  wyliczeń i typów, więc z niedeterministycznych kroków powstaje deterministyczny zapis; wzbogacanie kolejne
+  i „najlepsze możliwe” (wolne źródło degraduje graf, nie blokuje go); silnik korelacji **proponuje łańcuchy
+  z dowodami i pewnością** (para „wdrożenie → błąd w logach” z wyższą wagą, okno czasu, odrzucenie poniżej
+  progu), nie wydaje werdyktów; z kanału incydentu zapisywać rozumowanie (odrzucone hipotezy, co zadziałało, kto
+  wiedział) — postmortem jako dane, nie tylko tekst. Zmiany proponowane przez agentów zatwierdza człowiek.
+- [ ] **Wiki z LLM: kod czy plik instrukcji** (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
+  z etapami wystarcza dla małej bazy (< ~200 dokumentów) i szukania kształtu; pipeline w kodzie, gdy korpus jest
+  duży, wynik ma być powtarzalny, a wiki zasila dalszą automatykę — identyfikator strony jako skrót treści (zmiana
+  nazwy pliku nic nie psuje), kontrakty typów między etapami, **lint struktury Markdown** przed zapisem (dwa H1,
+  zepsuty frontmatter, martwe linki psują kolejne etapy po cichu), wyszukiwanie BM25 zamiast wektorów dla małej
+  wiki. Dotyczy `kb.py` i notatek `docs/knowledge`.
+
+Bez wpisu: „How to Create Loops with Claude Code” (Y. Hosni, 2026-06-24) — ten sam artykuł był już przeglądany;
+wnioski są w sekcji „Rutyny, które zdobywają uprawnienia”.
+
