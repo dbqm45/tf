@@ -494,6 +494,13 @@ porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsor
   korpusu (skan, tabela przez dwie strony, dwie kolumny) zanim ktoś stroi retriever; miara struktury tabel (TEDS) i
   kolejności czytania w zestawie ewaluacyjnym; parsery świadome układu (open source i usługi) jako kategoria z
   kryteriami wyboru, nie lista marek. Liczby z benchmarków (OmniDocBench, CVPR 2025) sprawdzić w źródle pierwotnym.
+- [ ] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (artykuł „The Limits of Vector Search in RAG”,
+  J. Wąsowski, 2026-09-14; hybrydę i „wektory gubią identyfikatory” skill już ma): zestaw ewaluacyjny z polem typu
+  zapytania — recall@k osobno dla zapytań semantycznych (parafrazy, intencje) i dokładnych (identyfikatory, kody,
+  wersje, liczby, negacje), bo średnia ukrywa podział; przed ustawieniem progu podobieństwa histogram cosinusa dla
+  kilkuset losowych, niepowiązanych par z własnego korpusu (anizotropia — losowe pary bywają przy 0,9); zapytania
+  łączące dwa fakty jako osobna kategoria (granica pojedynczego wektora: Weller i in., „On the Theoretical
+  Limitations of Embedding-Based Retrieval”, 2025 — sprawdzić w źródle; liczby z artykułu [niezweryfikowane]).
 
 ## Wiedza kanoniczna jako pliki z linkami zamiast RAG (artykuł „Beyond RAG: … Open Knowledge Format (OKF)”, Dev Evolution, 2026-09-09, zapisane 2026-10-29)
 Przegląd 2026-10-29: idea artykułu — definicje kanoniczne (metryka, schemat, reguła) jako pliki Markdown z YAML
@@ -577,3 +584,38 @@ zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australi
 - [ ] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
+
+## Testy aplikacji z AI poza odpowiedzią modelu (artykuł „9 AI Application Failures That Aren't Model Problems”, S. Gundeti, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ocenia odpowiedzi modelu, `fe-architecture` ma 4 stany widoku (ładowanie, błąd,
+pusto, dane), `be-auth-security` i `ai-rag` — uprawnienia i izolację najemców. Brakuje jednej listy kontrolnej awarii,
+które nie są winą modelu. Średni priorytet; jako `references/` w `qa-test-design` (odnośnik z `ai-evals` i
+`eng-llm-features`), najpierw scenariusze ewaluacji:
+- [ ] **Lista „aplikacja z AI poza modelem”** z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
+  wymuszenie 403/500/timeout/wygasłego tokenu i porównanie ekranu z odpowiedzią, akcja naprawcza pasuje do przyczyny;
+  (2) długie zadanie agenta a zerwane połączenie — rozłączenie, zakończenie w tle, powrót: prawdziwy stan końcowy bez
+  wiecznego „pracuję…”; (3) routing modeli — sesja przypięta do taniej trasy po pierwszej trywialnej wiadomości,
+  wyłączony model nadal serwowany, fallback zgodny z polityką i widoczny; (4) kontrakt narzędzi — pusty,
+  zniekształcony, zdublowany i za duży wynik narzędzia, przerwane oczekujące wywołanie (pytanie do użytkownika,
+  a on pisze nową wiadomość), pętla bez postępu (podniesienie limitu rekursji to objaw, nie naprawa), wartości
+  przepisywane przez model (URL, ID, tokeny) jako niezaufane; (5) text-to-SQL — nieistniejące kolumny, identyfikatory
+  ze spacjami, trzy różne wyniki: puste trafienie / błąd zapytania / metryka niezdefiniowana (zero, które „wygląda
+  jak fakt”); (6) integracje — konta osobiste i firmowe, odwołany token, lista dłuższa niż jedna strona, link do
+  pliku otwarty spoza aplikacji, czyją tożsamością działa agent; (7) migracje — testy na kontach z danymi sprzed
+  zmiany, nie tylko na świeżych; (8) izolacja — API wprost jako użytkownik o niskich uprawnieniach, pamięć i cache
+  nie przekraczają granic użytkownika i najemcy, odebranie roli działa od razu; (9) koszty — uzgodnienie zużycia
+  z surowymi rekordami dostawcy per wywołanie, tury dłuższe niż okno synchronizacji i sesje przez północ, zmiana
+  cennika nie przepisuje historii. Przykłady z artykułu są uogólnione przez autora — traktować jako klasy awarii.
+
+## Model architektury jako jedno źródło widoków (artykuł „How to automate your architecture diagrams”, IcePanel, 2026-07-13, zapisane 2026-10-29)
+Przegląd 2026-10-29: `arch-architect-practice` ma C4, ADR i „diagram jako kod w repo, aktualizowany z kodem”,
+`docs-tech-writing` — Mermaid i PlantUML C4. Brakuje rozróżnienia „model vs diagram” i kontroli dryfu. Artykuł jest
+materiałem producenta (IcePanel: MCP i API do modelu, import JSON/YAML); dokumentacji docs.icepanel.io nie
+otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez rekomendacji jednego produktu:
+- [ ] **`arch-architect-practice`: model jako źródło, diagramy jako widoki** — elementy i relacje C4 opisane raz
+  w modelu tekstowym w repo (np. Structurizr DSL, LikeC4 albo eksport z narzędzia), widoki dla różnych odbiorców
+  generowane z niego zamiast osobno rysowanych diagramów; zmiana w PR modyfikuje model, CI renderuje widoki.
+  Kontrola dryfu w CI: relacje z modelu porównane z faktycznymi zależnościami (graf importów z
+  `eng-codebase-mapping`, wywołania między usługami, IaC) — relacja w kodzie bez odpowiednika w modelu i odwrotnie
+  to ustalenie do przeglądu. ADR wskazuje elementy modelu, których dotyczy (ten sam pomysł co `applies_to` w pdi).
+  Agent czyta model (plik albo serwer MCP narzędzia), a nie obrazki diagramów. Wersje i formaty narzędzi sprawdzić
+  z datą przed dopisaniem.
