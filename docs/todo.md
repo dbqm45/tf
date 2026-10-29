@@ -224,6 +224,15 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
   `dependencies` w `plugin.json` z zakresami semver rozwiązywanymi po tagach `<plugin>--v<wersja>`.
   Analiza: `docs/plugins.md` (2026-10-21) — rekomendacja: eksport `mode-talos`, nakładki później (tylko skille),
   rdzeń nie.
+  - [ ] **Warunek ponownego rozważenia (zapisane 2026-10-29, artykuł „Stop Shipping Individual MCP Servers. Start
+    Shipping Agent Plugins”, A. Tkachuk, 2026-08-30):** otwarta specyfikacja Agent Plugins 1.0 (sierpień 2026,
+    Vercel, Amazon, Anysphere, Microsoft, OpenAI, Google) ma przenośny rdzeń tylko ze skilli i konfiguracji MCP;
+    według artykułu obsługują ją VS Code / Copilot, Codex, Cursor, Kiro, a Claude Code ma własny format
+    [niezweryfikowane — sprawdzić specyfikację i listę klientów z datą]. Wracamy do decyzji, gdy zespół używający
+    fabryki pracuje też w Copilocie lub Codexie: eksport samych skilli nakładki (rdzeń nadal nie, bo `CLAUDE.md`,
+    hooki i uprawnienia nie są przenośne) oraz `mode-pdi` jako pakiet „skill `pdi-decisions` + serwer MCP pdi”.
+    Ten sam przegląd co dla każdej zależności (`core-agent-security`: plugin może uruchamiać lokalny MCP z
+    uprawnieniami maszyny; zainstalowany ≠ autoryzowany ≠ włączony).
 - [x] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person — tryb `mode-team` (A1–A3).
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [x] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py` — zrobione 2026-10-24: `core/factory/target_managed.py`, plan `docs/plans/2026-10-24-target-managed-agents.md`; pliki sprawdzone `ant apply --dry-run` (ant 2.3.0, bez konta).
