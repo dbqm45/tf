@@ -1230,3 +1230,30 @@ Bez wpisu: „How to Build a Swarm of AI Agents That Hunts Alpha 24/7” (Moonsa
 zasady (twórca ≠ sprawdzający, pamięć odrzuconych hipotez, warunek stopu sprawdzalny poza agentem) już są w
 `core-async-delegation` i pozycjach wyżej.
 
+## Proces z AI, który rozleniwia osąd; gdzie żyje specyfikacja w Scrum i Kanban (artykuły „The process we wrote was part of the problem”, M. Whetton, 2026-10-20; „Spec-Driven Development in Scrum and Kanban: Where the Spec Actually Lives”, J. Wąsowski, 2026-07-05; zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-delivery-lifecycle` ma ścieżkę skróconą dla poprawek; `core-plan-interview` — przesłuchanie
+planu bez sztywnego limitu pytań; `proc-agile` — INVEST i Definition of Done, bez Definition of Ready. Liczby
+zespołu Whettona (PR 40 → 165 linii, czas do merge 16 → 32 h, oczekiwanie na pierwszy przegląd 4 h → 2,5 dnia,
+4,4 otwartych PR na osobę) [niezweryfikowane].
+- [ ] **`core-plan-interview`, przesłuchanie bez nadmiaru:** „grill me” bez kontekstu wyciąga każdy przypadek brzegowy
+  jako coś do rozwiązania i kończy się przeinżynierowaniem; pytania szeregować wpływem i prawdopodobieństwem,
+  a „po prostu zawiedź z czytelnym błędem” traktować jako pełnoprawną odpowiedź (powiązane z drabiną minimalizmu
+  w `eng-design-principles`). Sygnał ostrzegawczy procesu: zaległości wygenerowanych zgłoszeń, których nikt nie
+  zrobi, i opisy PR dłuższe niż ktokolwiek przeczyta.
+- [ ] **`core-delivery-lifecycle`, osąd nie może uciec do kroków:** refinement kończy się zgłoszeniem napisanym przez
+  człowieka dla człowieka (nie wygenerowanym opisem ani promptem); jeśli nikt w pokoju nie umie wyjaśnić, jak praca
+  zostanie zrobiona, refinement nie jest skończony (łączy się z pozycją „opowiada rozwiązanie własnymi słowami”
+  wyżej). Pogłębiony przegląd tylko powyżej progów (wielkość zmiany, obszar ryzyka) — wspólne testowanie albo
+  przejście przez rozwiązanie z grupą; nie każdy PR. Miary do śledzenia: rozmiar PR, czas do pierwszego przeglądu,
+  liczba otwartych PR na osobę — pasuje do G7 „miary przepływu” (ci_for_sdlc/pdi).
+- [ ] **`proc-agile`, specyfikacja w cyklu:** backlog i refinement na poziomie celu i zamiaru, kontrakt dojrzewa w
+  sprincie (Scrum) albo przed punktem zobowiązania (Kanban, z limitem WIP na etapie analizy, żeby specyfikacje nie
+  starzały się w kolejce); Definition of Ready jako umowa zespołu o jakości wejścia, nie bramka przeciw PO (uwaga
+  M. Cohna). Trzy szczeble SDD (spec-first / spec-anchored / spec-as-source, B. Böckeler) — dobierać do problemu;
+  mierzyć czas cyklu, odsetek przeróbek i stosunek linii Markdown do kodu, zamiast ufać odczuciu przyspieszenia.
+
+Bez wpisu: „From Demo to Production: 5 Hard Lessons from Deploying AI Agents as an FDE” (A. Kokane, 2026-10) —
+linia odcięcia przed budową, koszt na rozwiązane zadanie z czasem przeglądu człowieka, najprostszy kształt
+orkiestracji, ślady od pierwszego dnia, złoty zbiór i wdrożenie etapami są już w `ai-product-management`,
+`ai-evals`, `ai-agents` i pozycjach TODO wyżej.
+
