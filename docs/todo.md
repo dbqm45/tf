@@ -613,6 +613,14 @@ zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australi
 - [ ] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
+- [ ] **Próba granicy z dowodem, która warstwa zatrzymała** (artykuł „How much access should an AI agent have?”,
+  E. Bermudez, 2026-10-14): katalog roboczy to miejsce startu, nie granica; filtr ścieżek w narzędziu plikowym
+  (rozwiązana ścieżka, `..`, dowiązania symboliczne — wzór: walidacja w serwerze MCP filesystem) działa tylko dla
+  tego narzędzia, a Python lub Bash czyta obok niego. Do `core-agent-security` i `ai-mcp-server`: przed
+  przyznaniem dostępu jedna operacja potrzebna i jedna wykluczona (plik-kanarek poza workspace), z poleceniem
+  i wynikiem; w zapisie rozróżnić „agent odmówił”, „narzędzie odrzuciło” i „środowisko nie pozwoliło” — tylko
+  trzecie jest granicą dla kodu generowanego. Ruch sieciowy sprawdzać osobną próbą do zabronionego hosta, nie
+  z samego logu.
 
 ## Testy aplikacji z AI poza odpowiedzią modelu (artykuł „9 AI Application Failures That Aren't Model Problems”, S. Gundeti, 2026-10, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-evals` ocenia odpowiedzi modelu, `fe-architecture` ma 4 stany widoku (ładowanie, błąd,
@@ -813,3 +821,27 @@ Przegląd 2026-10-29: niski priorytet; uzupełnia pozycję o wiedzy kanonicznej 
   właścicieli, wspólna jest tylko tożsamość. W notatkach OKF pole `resource` niesie identyfikator pojęcia, a pliki
   generuje się ze słownika, nie pisze ręcznie. Dla `ddd-context-mapping`/`data-engineering`: reguła wybijania
   identyfikatorów w specyfikacji i wspólnej bibliotece, nie w jednym narzędziu.
+
+## Od błędnego przykładu do chronionego testu akceptacyjnego (artykuł „Failing Example as the Start of a Spec”, J. Wąsowski, 2026-10-28, zapisane 2026-10-29)
+Przegląd 2026-10-29: `qa-spec-first-testing` ma niezależną wyrocznię, clean-room, brzegi, testy właściwości
+i oznaczanie testów charakteryzujących; `qa-test-design` — klasy i brzegi; `core-agent-security` — testy akceptacyjne
+poza zasięgiem agenta; `tdd_guard` ostrzega przy osłabieniu testu; `tool-pytest` utrwala znalezione przypadki
+w `@example`. Badań z artykułu (Tufano i in., arXiv 2608.17177; ImpossibleBench, arXiv 2510.20270) nie otworzyłem —
+liczby [niezweryfikowane], przed wpisaniem do skilla sprawdzić u źródła. Braki:
+- [ ] **`qa-spec-first-testing`: zgłoszenie błędu zaczyna się od przykładu** wejście / oczekiwane / faktyczne; z niego
+  punkty ON, OFF i wewnątrz progu (99,99 · 100,00 · 100,01) i jeden kontrprzykład na regułę (kod promocyjny, zwrot),
+  regułę słowami zapisuje się na końcu. Kontrprzykład bez jasnego „Then” to pytanie do biznesu, nie test. Jeden
+  przykład przepuszcza implementację, która „zna odpowiedź” (`if total == 100`).
+- [ ] **Kontrakt przed testami:** agent zapisuje warunki wejścia, wyjścia i przypadki nieokreślone, człowiek czyta go
+  przed testami, testy powstają z kontraktu, nie z przeczytanego kodu (kod błędny dziś daje testy utrwalające błąd).
+  Wg autora badanie Google: zysk istotny dopiero przy kilku niezależnych przebiegach, ok. +38% tokenów — więc jako
+  opcja dla progów i reguł liczbowych, nie domyślny krok.
+- [ ] **Test właściwości nie zastępuje przykładu:** losowanie w pełnym zakresie prawie nigdy nie trafia w próg
+  (autor: 0/30 przebiegów bez `@example(100.00)`, 30/30 z nim); przykład z ticketu zostaje jako jawny przypadek
+  w teście właściwości — ogólna zasada w `qa-spec-first-testing`, nie tylko w `tool-pytest`.
+- [ ] **Chronione scenariusze akceptacyjne egzekwuje CI, nie prompt:** do `core-agent-security` / `core-git-workflow`:
+  CODEOWNERS tylko wskazuje recenzentów — wymuszenie daje ochrona gałęzi „Require review from Code Owners” i wymagany
+  check; zmiana scenariuszy w osobnym PR niż kod (check w CI odrzuca PR, który zmienia oba); liczba chronionych testów
+  nie spada — alarm pomocniczy, bo asercję da się osłabić bez zmiany liczby; zmiany w krokach (step definitions) też
+  przez przegląd, bo scenariusz można „zazielenić” w adapterze.
+
