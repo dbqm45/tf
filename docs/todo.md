@@ -724,6 +724,16 @@ porażek pomiaru (wszystkie liczby z jego repo, nie sprawdzone): sześć cichych
 - [ ] **Niezmienniki dla struktur pochodnych:** assert zgodności tablic równoległych plus niezależne przeliczenie
   ze źródła (u autora rozjechane tablice etykiet nie rzuciły błędu); cache kluczowany całym wejściem; walidator
   cytatów testowany na nawiasie z wieloma identyfikatorami.
+- [ ] **Cykl życia sędziego LLM** (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
+  uzasadnienie przed oceną i okresową próbkę na dryf; brakuje: (1) zgodności uzasadnień, nie tylko etykiet —
+  „dobra etykieta, zły powód” wykrywana porównaniem uzasadnienia sędziego z uzasadnieniem człowieka (meta-sędzia
+  sprawdzony najpierw na ludziach), bo strojenie rubryki tylko na etykietach u autorów zdegradowało jedno kryterium;
+  (2) każda etykieta „źle” w złotym zbiorze z pisemnym uzasadnieniem człowieka; (3) jeden sędzia na kryterium;
+  (4) sędzia jako bramka i krytyk: uzasadnienie odrzucenia wraca do generatora, limit poprawek (u nich 3), po nim
+  „nie pokazuj” zamiast „pokaż słabe”; (5) próg dryfu względem rozrzutu ludzi (sędzia nie gorszy niż średnia
+  oceniających minus 2 odchylenia standardowe), stała warstwowana próbka tygodniowa; (6) zmiana rubryki tylko po
+  zatwierdzeniu człowieka, poprzednia wersja do natychmiastowego wycofania; (7) przegląd ludzi wyłapuje też braki
+  samej rubryki, nie tylko dryf sędziego.
 Wniosek merytoryczny autora, do `ai-rag`: graf/ontologia do wyszukiwania i proweniencji, ale decyzja o odmowie
 z kalibrowanej pewności modelu (AUROC 0,81), bo certyfikacja ścieżką w grafie przewidywała poprawność na poziomie
 losowym (0,50) — jeden przypadek, nie reguła; sprawdzać na własnym zbiorze.
