@@ -901,3 +901,32 @@ Przegląd 2026-10-29: `data-analysis` wspomina tylko „brak silnej współlinio
   usunięcie kolumny, nie zmiana biblioteki. W kodzie `solve`/`lstsq` zamiast `inv(A) @ b` (szybciej i dokładniej
   przy złym uwarunkowaniu).
 
+## Nadmiar kodu: co działa poza tekstem reguł i diagnoza rachunku za agenta (artykuły „Fixing Over-Engineering in LLM Coding Agents”, F. Khan, 2026-10-12; „Your Claude Code Bill Demystified”, J. Wąsowski, 2026-10-09; zapisane 2026-10-29)
+Przegląd 2026-10-29: `eng-design-principles` ma już drabinę minimalizmu (te same 7 szczebli), listę „nigdy nie
+upraszczasz kosztem”, znacznik `debt:` i „pominąłem X, dodać gdy Y”; `core-cost-control` — cache i jego czas życia,
+koszt rozwiązanego zadania, kaskadę modeli. Liczby z artykułów (jeden model, 34 zadania; benchmark Spotify liczony
+znaki/4) [niezweryfikowane]. Braki:
+- [ ] **`eng-design-principles` / `qa-change-review`: same reguły w tekście prawie nie działają** — wg pomiaru autora
+  wklejone reguły dały 0,98 kodu bazowego, a „krótko”/hasło 1,00 (terse zgubił też werdykt bezpieczeństwa); efekt dały
+  dopiero: drabina, jednorazowe zatrzymanie pierwszego „gotowe”, gdy dodano kod bez żadnego sprawdzenia, i krytyk
+  nadmiaru po zakończeniu z **blokadą edycji, która zmniejsza liczbę zabezpieczeń w pliku** (wzorce: zapytanie
+  z parametrami, `compare_digest`, escapowanie, odrzucenie wejścia, sprawdzenie wygaśnięcia, alt). Do skilla: przegląd
+  nadmiaru tnie strukturę, a cięcie zabezpieczenia wymaga osobnego uzasadnienia; do rozważenia jako hook fabryki
+  (ostrzeżenie jak `tdd_guard` przy osłabieniu testu) — tylko na prośbę użytkownika (`.claude/hooks/`). Zasada
+  wdrażania reguł z artykułu: element zostaje, jeśli ablacja pokazuje korzyść; remis = nie wchodzi.
+- [ ] **`core-cost-control`, diagnoza przed dźwignią:** problem kontekstu (te same pliki czytane w całości kilka razy,
+  stosunek tokenów wejścia do wyjścia ~100:1 i więcej, częste kompaktowanie, niskie trafienia cache mimo stałego
+  promptu, agent co sesję odkrywa, kto jest właścicielem czego) → inżynieria kontekstu; problem modelu (wysoki odsetek
+  porażek klasy zadań mimo dobrego kontekstu, wiele tur do pierwszej poprawnej edycji) → zmiana modelu; problem pomiaru
+  (subskrypcja vs API, benchmark vs produkcja, tokeny szacowane ze znaków) → najpierw liczniki dostawcy. Cache obniża
+  cenę powtarzanego prefiksu, nie zdejmuje treści z okna (gnicie kontekstu zostaje).
+- [ ] **Bramka na odczyt dużych plików** (Spotify: hook PreToolUse blokuje `Read` pliku > 350 linii i `cat`/`head`/`tail`
+  na nim, kieruje do taniego modelu, który zwraca streszczenie; odczyt z `offset`/`limit` przechodzi; instrukcja
+  w CLAUDE.md nie wystarczyła). Fabryka ma delegację czytania do `scout`; ocenić hook razem z pozycją o RTK wyżej
+  — ograniczenia z artykułu: edycji i rozumowania nie delegować (numery linii w streszczeniu się przesuwają, tani
+  model przeoczył błąd współbieżności). Zmiana `.claude/hooks/` tylko na prośbę użytkownika.
+
+Artykuł „My Workflow with Claude: Spec-Driven Development with AgentSpec” (L. Uriel, 2026-06-17) — bez wpisu: kolejne
+narzędzie SDD obok Spec Kit i OpenSpec (fazy brainstorm → define → design → build → ship i iterate), pokrywa je
+`core-delivery-lifecycle` z bramkami i sekcja o Spec Kit wyżej; „pewność liczona z dowodów” bez opisu metody.
+
