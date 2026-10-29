@@ -1026,3 +1026,41 @@ Bez wpisu: „The Beauty of Markov Chains” (E. Lombardi, 2026-10-18 — łańc
 skilli fabryki poza ogólnym `eng-algorithms-data-structures`) i „AI Agents (05): The Double Trouble of Monitoring”
 (0s & 1s, 2026-09-20 — monitoring infrastruktury plus śladów agenta jest już w pozycji o OTel GenAI).
 
+## Bramka przed narzędziem: pokrycie skutków, nie nazw narzędzi (artykuł „AI Agent Gate and Model Router: The System One (Jev) Model, LangChain Middleware, and Auto Mode”, J. Wąsowski, 2026-10-12, zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-agent-security` opisuje tryb `auto` (klasyfikator w tle), reguły deny działające w każdym
+trybie i piaskownicę jako granicę; `sec-llm-security` — zatwierdzenie ze skutkiem. Sprawdzone 2026-10-29
+(code.claude.com/docs/en/permission-modes): reguły deny blokują w każdym trybie, także `bypassPermissions`; sesje
+w chmurze zatwierdzają edycje plików niezależnie od trybu. Liczby z artykułu (AmPermBench: 36,8% zmian stanu
+— 93 z 253 — przez edycję plików w projekcie, poza klasyfikatorem; 81% niebezpiecznych akcji przeszło całość;
+próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezweryfikowane]. Braki:
+- [ ] **`core-agent-security` / `sec-llm-security`, pokrycie bramki:** bramka zdefiniowana listą skutków (zapis pliku
+  poza bezpiecznym zakresem, sieć, sekrety, uruchomienie procesu), nie nazw narzędzi (`tools=["bash"]` przepuszcza
+  ten sam skutek przez edycję pliku stanu — podmiana narzędzia). Trzy osobne liczby: pokrycie (odsetek zmian stanu,
+  które w ogóle docierają do bramki), błędy klasyfikatora (FPR/FNR na tym, co ocenił), pominięcia od końca do końca;
+  przed trybem blokującym tryb cienia i policzenie obejść. Kolejność warstw: reguły deny i piaskownica na skutek
+  (nie tekst polecenia) → klasyfikator w szarej strefie → człowiek po serii odmów i dla legalnych akcji wysokiego
+  ryzyka; akcje niszczące, finansowe, wyprowadzające dane i zmiany uprawnień nigdy tylko na klasyfikatorze.
+  Bramka stoi najbliżej narzędzia, po każdym kroku, który może zmienić wywołanie (edycja przez człowieka po
+  klasyfikacji = wywołanie bez oceny); licznik odmów z eskalacją, bo bramka bez niego uczy podmiany narzędzia.
+- [ ] **Próg jako polityka:** próg klasyfikatora konfigurowalny i uzasadniony kosztem fałszywej blokady vs pominięcia,
+  z liczbą bazową (0,1% groźnych wywołań przy FPR 0,4% → ok. 1 z 5 alarmów prawdziwy); co widzi sędzia (prośby
+  użytkownika i ładunek wywołania, bez prozy agenta — inaczej da się go przekonać) i dokąd idą argumenty narzędzi
+  (sekrety w argumentach wychodzą do dostawcy klasyfikatora). Karta warstwy decyzji z artykułu jako szablon do ADR.
+
+## Wnioskowanie przyczynowe w analizie danych (artykuł „Causal Machine Learning: Moving Beyond Prediction to Real Decisions”, G. Nguyen, 2026-09-22, zapisane 2026-10-29)
+Przegląd 2026-10-29: `data-analysis` ma zmienne zakłócające, paradoks Simpsona, „korelacja to nie przyczynowość”,
+a w `references/szeregi-czasowe-i-ekonometria.md` różnicę w różnicach i zmienne instrumentalne. Wielkość rynku
+i odsetki z artykułu [niezweryfikowane]. Braki:
+- [ ] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** — najpierw graf przyczynowy (DAG)
+  z ekspertem domeny: czynnik zakłócający kontrolujesz, mediatora i zderzacza (collider) nie (kontrola mediatora
+  blokuje badany efekt, zderzacza — wprowadza obciążenie); potem metoda: wagi skłonności (propensity), zmienne
+  instrumentalne, podwójne ML z cross-fittingiem, lasy przyczynowe; ATE („czy działa”) vs CATE/uplift („dla kogo”
+  — zniżka dla tych, których zachowanie zmienia, nie dla tych, którzy i tak zostaną); na końcu **próby obalenia**
+  (losowa wspólna przyczyna, placebo, podzbiór danych) — wynik zmieniony przez losową zmienną jest kruchy. Biblioteki:
+  DoWhy (graf, identyfikacja, obalanie), EconML (CATE), CausalML (uplift) — wersje sprawdzić przed wpisaniem.
+  Rozdział: model churnu mówi „kto odejdzie”, decyzja potrzebuje „czyje odejście zmieni rabat”.
+
+Artykuł „Graph Engineering” (V. Amballa, 2026-10) — bez wpisu: praca jako jawny graf (węzły, krawędzie z bramkami
+człowieka tam, gdzie ryzyko, stan współdzielony, punkty kontrolne) jest w `ai-agents` (workflow czy agent, trwały
+stan, punkty zatwierdzenia) i w fazach pdi z bramkami; artykuł nie wnosi metody poza zasadą.
+
