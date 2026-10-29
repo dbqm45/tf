@@ -845,3 +845,31 @@ liczby [niezweryfikowane], przed wpisaniem do skilla sprawdzić u źródła. Bra
   nie spada — alarm pomocniczy, bo asercję da się osłabić bez zmiany liczby; zmiany w krokach (step definitions) też
   przez przegląd, bo scenariusz można „zazielenić” w adapterze.
 
+## Ewaluacja na zapisanych śladach, rachunek za migrację runtime'u agenta i pętle (artykuły „Eval-Driven Development”, A. Punnen, 2026-08-18; „Managed Agent Runtime Lock-In”, J. Wąsowski, 2026-10-07; „Practical Loop Engineering”, A. Osmani, 2026-08-22; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ma reguły deterministyczne przed sędzią, osobną ocenę trajektorii (limity, zakazane
+narzędzia), próbki z ruchu i pełny zestaw przy zmianie promptu lub harnessu; `arch-ai-solutions` — lock-in w wagach
+i test wymiany w obu kierunkach; `core-async-delegation` — kontrakt, ≤2 próby na bramkę, oceniający `/goal` widzi tylko
+transkrypt. Braki:
+- [ ] **`ai-evals`, „regresja ze śladów”:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
+  słowa wymagane, min. i maks. wywołań narzędzi i modelu, rubryka sędziego); nowe reguły deterministyczne puszcza się
+  na zapisanych śladach bez ponownego uruchamiania agenta (tanio, powtarzalnie), a sędziego tylko na losowej próbce
+  albo na śladach z negatywną opinią użytkownika. Dolny limit wywołań narzędzia („musiał wyszukać”) łapie odpowiedź
+  „sprawdź w serwisach X” bez wyszukania.
+- [ ] **`arch-ai-solutions`, zarządzany runtime agenta** (Claude Managed Agents, OpenAI Agents API, Bedrock
+  AgentCore — ceny i daty z artykułu [niezweryfikowane]): pętla jest „za darmo”, lock-in schodzi niżej — dialekt
+  schematu narzędzi (zmiana nazw przez bramkę), format piaskownicy i płaszczyzna sterowania (obraz kontenera
+  przenośny, identyfikatory środowiska i sesji nie), okablowanie MCP (auth, mapowanie nazw), semantyka stanu i sesji
+  (wygaszenie po bezczynności kasuje pamięć procesu). Koszt migracji = rachunek za ewaluacje: regresja kontraktu
+  narzędzi, trajektorii, stanu, polityki, środowiska oraz ponowne policzenie jakości i kosztu. Do ADR: stan biznesowy
+  w systemie, który kontrolujesz, i przenośna definicja sukcesu (własny zestaw ewaluacji) zanim zaufasz śladom
+  konkretnego runtime'u.
+- [ ] **`core-async-delegation`, warunek postępu w `/goal`:** obok limitu tur — „każda tura poprawia co najmniej jedną
+  zmierzoną metrykę, dwie tury bez poprawy = STOP” i „to samo polecenie po raz trzeci bez zmiany wyniku = STOP”;
+  przykład z liczbą z narzędzia (Lighthouse, liczba testów), nie „aż będzie dobrze”. Do tabeli trybów: `/loop` żyje
+  w sesji i wygasa po 7 dniach (sprawdzone 2026-10-29: code.claude.com/docs/en/scheduled-tasks, sekcja
+  „Seven-day expiry”), praca przeżywająca sesję → rutyna w chmurze.
+
+Artykuł „The One-Sentence Answer That Ends a Line of Hostile Questioning” (M. B. Hazeldine, 2026-09-12) — bez wpisu:
+„werdykt, jeden warunek, stop” fabryka już stosuje w raportach (linia werdyktu bramki, werdykt na początku raportu
+ewaluacji); dotyczy wystąpień ustnych, a materiał kończy się reklamą płatnego kursu.
+
