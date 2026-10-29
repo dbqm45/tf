@@ -1124,3 +1124,46 @@ Bez wpisu: „The Harness Is the Product” (S. Singhal, 2026-08-10) — przegl�
 kontekst, pamięć, uprawnienia, weryfikacja, obserwowalność, podagenci) pokrytych przez `ai-agents`,
 `core-cost-control` i wcześniejsze pozycje TODO.
 
+## Agent analityczny nad hurtownią: wnioski z case study (artykuł „Engineering Multi-Agent AI for a 100 GB Data Warehouse”, F. Khan, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: brak w fabryce wzorca „pytanie biznesowe → SQL” (text-to-SQL); części są w `ai-evals`
+(bramka, linia bazowa z rozrzutem), `sec-llm-security` (walidacja argumentów w kodzie), `data-engineering`. Liczby
+autora (jeden laptop, TPC-DS SF100, 102 pytania dev / 194 test, modele Qwen) [niezweryfikowane]. Wnioski warte
+przeniesienia (do `ai-evals`, `eng-llm-features`, `sec-llm-security`, `data-analysis`/`data-engineering`; ewentualnie
+nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
+- [ ] **Cele zapisane przed pierwszym agentem** (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
+  razem z pokryciem, p50 i p95 czasu) i **użyteczność z karą**: +1 dobra odpowiedź lub słuszna odmowa, 0 odmowa,
+  −2 pewna zła liczba — agent, który wszystkiemu odmawia, nie wygrywa. Każda zmiana jedna naraz, przyjęta tylko gdy
+  użyteczność rośnie (albo stoi, a czas spada), z parowanym bootstrapem na tych samych pytaniach; odłożone **całe
+  szablony** pytań, nie tylko instancje (u autora 85% na nowych szablonach vs 96% na znanych). Czas mierzony
+  pojedynczym użytkownikiem i stoperem z pustym cache, nie tylko przy współbieżności ewaluacji.
+- [ ] **Podwójny zapis jako miara pewności:** dwie niezależne drogi (model pisze SQL; drugi model wypełnia JSON
+  z katalogu metryk, a kod kompiluje go do SQL regułami) — zgodność wyników = wysoka pewność (u autora 40/40
+  zgodnych poprawnych), rozbieżność → krytyk, brak drugiej drogi → niższa pewność; prawie wszystkie błędy z pytań,
+  gdzie odpowiedziała jedna droga. Do `arch-ai-solutions` jako wzorzec weryfikacji wyniku liczbowego.
+- [ ] **Mierz, zanim dołożysz:** wyszukiwanie wartości do promptu (−2,0 pkt) i „zwiadowca schematu” wybierający
+  5 tabel (−13,7 pkt; potrzebne tabele trafiał w 27% zapytań) pogorszyły wynik, gdy cały schemat mieścił się
+  w prompcie; tańszy model napisał lepszy SQL niż droższe (porównanie kilku modeli na tym samym zestawie przed
+  wyborem). Model pisze SQL, baza liczy — arytmetyka modelu bez myślenia była błędna.
+- [ ] **Ściany dla SQL od modelu** (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
+  dołącza bazy, instaluje rozszerzenia — 5/11 ataków przeszło); strażnik tekstu (jedno SELECT, zakazane funkcje
+  plikowe, koszt planu z własnym estymatorem wierszy, bo planer pomylił się 469 796×) + blokada w silniku (DuckDB:
+  `enable_external_access = false`, wyłączone autoładowanie rozszerzeń, `lock_configuration = true`) + limit czasu
+  i wierszy; przerwanie zapytania działa dopiero między krokami silnika (ogon czasu przez jedno utknięte zapytanie).
+  Bramka wejściowa zawodzi otwarcie (nieczytelna odpowiedź = „odpowiadaj”), spekulacyjnie równolegle z drafami.
+- [ ] **Pułapki danych dla agenta** (`data-engineering` / `data-analysis`): klucze NULL w tabeli faktów, które inner
+  join gubi po cichu (u autora 2,36% przychodu), niepełny ostatni rok w danych (spadek, który nie jest spadkiem),
+  tabele z historią wersji (podwójne liczenie encji) — fakty mierzone z danych i wstawiane do słownika biznesowego
+  w stałej kolejności (stały tekst = trafienia cache); „najlepszy sklep” bez definicji → pytanie, nie domysł.
+
+## Typy pamięci agenta jako kontrakty (artykuł „AI Agent Memory Types: Semantic, Episodic, Procedural, Profile, Working”, J. Wąsowski, 2026-10-08, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` nie rozróżnia typów pamięci długotrwałej. Wyniki porównań z artykułu (ENGRAM
+77,55 → 46,56% po spłaszczeniu magazynów, preprint; pozostałe dwa nie testują typowania) [niezweryfikowane].
+- [ ] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego:** robocza (bieżący kontekst składany z pozostałych,
+  budżet tokenów i kolejność), semantyczna (co jest prawdą: źródło, data weryfikacji, konsolidacja zastępuje stary
+  fakt), epizodyczna (co się stało: czas, kontekst, wynik; traci przydatność, nie prawdziwość), proceduralna (jak to
+  robić: wersja, przegląd, wycofanie — zapis jak merge request, bo zły wpis zmienia zachowanie w wielu zadaniach),
+  profil (kim jest użytkownik: krótki dokument zawsze w prompcie, łatka w miejscu). Rozdzielać fizycznie dopiero po
+  objawie (przeterminowany fakt wraca jako bieżący, wpis tymczasowy konkuruje ze stałym) — często wystarcza pole
+  typu i wygaśnięcia w jednym magazynie. W fabryce odpowiedniki: `docs/project/lessons.md` (semantyczna), dziennik
+  i punkty kontrolne (epizodyczna), skille przez PR (proceduralna).
+
