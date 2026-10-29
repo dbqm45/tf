@@ -224,6 +224,15 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
   `dependencies` w `plugin.json` z zakresami semver rozwiązywanymi po tagach `<plugin>--v<wersja>`.
   Analiza: `docs/plugins.md` (2026-10-21) — rekomendacja: eksport `mode-talos`, nakładki później (tylko skille),
   rdzeń nie.
+  - [ ] **Warunek ponownego rozważenia (zapisane 2026-10-29, artykuł „Stop Shipping Individual MCP Servers. Start
+    Shipping Agent Plugins”, A. Tkachuk, 2026-08-30):** otwarta specyfikacja Agent Plugins 1.0 (sierpień 2026,
+    Vercel, Amazon, Anysphere, Microsoft, OpenAI, Google) ma przenośny rdzeń tylko ze skilli i konfiguracji MCP;
+    według artykułu obsługują ją VS Code / Copilot, Codex, Cursor, Kiro, a Claude Code ma własny format
+    [niezweryfikowane — sprawdzić specyfikację i listę klientów z datą]. Wracamy do decyzji, gdy zespół używający
+    fabryki pracuje też w Copilocie lub Codexie: eksport samych skilli nakładki (rdzeń nadal nie, bo `CLAUDE.md`,
+    hooki i uprawnienia nie są przenośne) oraz `mode-pdi` jako pakiet „skill `pdi-decisions` + serwer MCP pdi”.
+    Ten sam przegląd co dla każdej zależności (`core-agent-security`: plugin może uruchamiać lokalny MCP z
+    uprawnieniami maszyny; zainstalowany ≠ autoryzowany ≠ włączony).
 - [x] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person — tryb `mode-team` (A1–A3).
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [x] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py` — zrobione 2026-10-24: `core/factory/target_managed.py`, plan `docs/plans/2026-10-24-target-managed-agents.md`; pliki sprawdzone `ant apply --dry-run` (ant 2.3.0, bez konta).
@@ -416,3 +425,155 @@ metodą TDD, bramka skilla; jeden mały PR):
   których musiałby zgadywać; lista trafia jako pytania do prośby o bramkę (`gate.requested`), tak jak braki z
   `design_check.py` przed `design-review`. Koszt: jedno wywołanie modelu na bramkę [szacunek: kilka centów na
   Haiku/Sonnet] — zmierzyć na pierwszych zmianach.
+
+## Wzorce bezpieczeństwa agentów z LLM (artykuł „Top 4 Security design patterns for AI agents”, A. Dighe, 2026-10-08, zapisane 2026-10-29)
+Przegląd 2026-10-29: zasady są już w `sec-llm-security` (najmniejsze uprawnienia narzędzi, zatwierdzenie z pokazaniem
+dokładnego skutku, walidacja argumentów w kodzie, „model czytający obce treści nie ma narzędzi zapisu”, allow-lista
+ruchu, „lethal trifecta”) i w `core-agent-security` (MCP jak zależność: przypięta wersja, przegląd opisów narzędzi).
+Brakuje nazwanych wzorców projektowych i nowszych list. Do dorobienia w `sec-llm-security` (scenariusze ewaluacji,
+potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera — artykuł to źródło wtórne):
+- [ ] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference:** podwójny LLM (czytający bez narzędzi
+  oddaje tylko pola schematu, nie prozę), plan-then-execute (plan zamrożony przed wynikami narzędzi, dane z obcych
+  treści nie wybierają adresata wysyłki ani zapisu), action-selector, map-reduce po dokumentach, code-then-execute;
+  kiedy który i jaki koszt (dwa wywołania, mniej elastyczny agent). Przykład w kodzie, nie w prompcie.
+- [ ] **Zatwierdzenie związane z argumentami:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
+  termin i jednorazowy nonce; inne argumenty = nowa zgoda; brak polityki lub nieudany zapis audytu = brak wywołania.
+  Klasy ryzyka narzędzi (niskie … krytyczne) z domyślną odmową dla nieznanych.
+- [ ] **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
+  argumentami) oraz **przypięty skrót manifestu narzędzia MCP** (zmieniony opis lub schemat = nowa instalacja do
+  przeglądu, nie cicha aktualizacja) — także jako uzupełnienie `core-agent-security`.
+- [ ] **Reguła dwóch (Meta, „Agents Rule of Two”):** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
+  do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
+- [ ] **Aktualizacja list:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
+  Applications 2026 (ASI01…) — mapowanie na kontrole skilla; zweryfikować numerację i daty w źródłach.
+- [ ] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813):** wartości z etykietą pochodzenia
+  i odbiorców, polityka sprawdza etykiety przed wywołaniem narzędzia (np. dokument z dysku można streścić
+  użytkownikowi, ale nie wysłać na adres znaleziony w tym dokumencie); koszt w użyteczności z ich pomiaru na
+  AgentDojo [do sprawdzenia w źródle]. (Uzupełnione 2026-10-29 z artykułu „Building Secure AI Agents”, C. Kalhara.)
+- [ ] **Red teaming adaptacyjny** w `references/red-teaming.md`: obrona sprawdzona tylko stałą listą ataków mówi mało
+  („The Attacker Moves Second”, Nasr i in., arXiv 2510.09023); AgentDojo (NeurIPS 2024) jako gotowa uprząż — sędzia
+  sprawdza stan środowiska, nie tekst modelu, więc sam nie da się wstrzyknąć.
+- [ ] **Pamięć i RAG jako niezaufane:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
+  etykietę pochodzenia; w logu wywołań narzędzi pochodzenie argumentów; wyłącznik awaryjny agenta.
+- [ ] **Autoryzacja zdalnego serwera MCP** (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
+  serwera autoryzacji z metadanych, rejestracja klienta przez Dynamic Client Registration albo Client ID Metadata
+  Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
+  Stan specyfikacji MCP i terminy (artykuł „MCP Learnings”, C. Hobbs: DCR do usunięcia w 2027) sprawdzić na
+  modelcontextprotocol.io z datą — dziś [niezweryfikowane].
+- [ ] **Tożsamość agenta i delegacja** (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
+  wspomina SPIFFE ani tokenów związanych z nadawcą): każdy agent i każda jego instancja ma własną tożsamość obciążenia
+  (SPIFFE/SPIRE, krótkie SVID przez Workload API zamiast współdzielonego konta usługi), osobną od loginu człowieka,
+  z nazwanym właścicielem; działanie w imieniu użytkownika = token użytkownika związany z kluczem agenta (mTLS-bound,
+  RFC 8705, `cnf.x5t#S256`, albo DPoP, RFC 9449), więc skradziony token jest bezużyteczny; log audytu „instancja X
+  agenta Y w imieniu użytkownika Z”; wymiana tokenu (RFC 8693) przy przejściu między usługami; usługi bez obsługi
+  wiązania jako jawnie słabsze ogniwo. Numery RFC, stan SPIFFE w CNCF i produkty chmurowe (Google Agent Identity,
+  Agent Gateway) sprawdzić w źródłach pierwotnych z datą. (Z artykułu „SPIFFE: Why Google's New Agent Identity…”,
+  G. Blaquiere, 2026-06-09, zapisane 2026-10-29.)
+Produkty: recenzent AI w ci_for_sdlc już działa jak „czytający bez narzędzi” (wynik tylko w schemacie JSON, ustalenie
+bez dowodu odrzucone, odpowiedź przyjęta tylko z dosłownym cytatem); automatyczne zamykanie pytań (`autoClose: apply`)
+jest opcjonalne, domyślnie `suggest` — zmian nie trzeba.
+
+## Słowa kluczowe effortu w Claude Code (artykuł „Build Production AI Systems with Claude Code”, Chandana, 2026-08-09, zapisane 2026-10-29)
+Przegląd 2026-10-29: reszta artykułu jest już w fabryce (`CLAUDE.md` krótki i skille na workflow —
+`core-agent-instructions`; punkt kontrolny zamiast `progress.md` — `project_record.py wip`; `/compact` i `/clear`,
+effort, `opusplan`, doradca — `core-cost-control`; wykonawcy tylko do odczytu — konsultanci bez `Edit`/`Write`;
+`/remote-control` — `core-async-delegation`; GitHub Action i przegląd AI w CI — `core-git-workflow`). Uwaga: artykuł
+podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzyma się dokumentacji (domyślnie 3,
+`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, fabryka ustawia 2) — bez zmian.
+- [ ] **`core-cost-control`: `ultrathink` i `ultracode`.** `ultrathink` w treści polecenia — głębsze rozumowanie w tej
+  jednej turze bez zmiany zapisanego effortu sesji (zmiana effortu sesji w trakcie kasuje cache); `ultracode` —
+  effort `xhigh` plus zgoda na orkiestrację wielu agentów (workflow), kosztowne, tylko dla zadań, które tego
+  wymagają. Działanie, koszt i dostępność sprawdzić w dokumentacji code.claude.com z datą przed dopisaniem
+  (scenariusze ewaluacji, bramka skilla).
+
+## Jakość parsowania dokumentów w RAG (artykuł „Why Your RAG Pipeline Dies on Real Documents”, P. Perrone, 2026-10-01, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-rag` już każe zachować tabele z nagłówkiem, OCR dla skanów i chunking wg struktury; tabela
+porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsorowany (LlamaParse) — bez rekomendacji dostawcy.
+- [ ] **`ai-rag`: kontrola jakości parsowania przed indeksacją** — strona bez warstwy tekstu albo z podejrzanie
+  małą liczbą znaków to alarm, nie pusty dokument; przegląd surowego wyjścia parsera na najgorszych dokumentach
+  korpusu (skan, tabela przez dwie strony, dwie kolumny) zanim ktoś stroi retriever; miara struktury tabel (TEDS) i
+  kolejności czytania w zestawie ewaluacyjnym; parsery świadome układu (open source i usługi) jako kategoria z
+  kryteriami wyboru, nie lista marek. Liczby z benchmarków (OmniDocBench, CVPR 2025) sprawdzić w źródle pierwotnym.
+
+## Wiedza kanoniczna jako pliki z linkami zamiast RAG (artykuł „Beyond RAG: … Open Knowledge Format (OKF)”, Dev Evolution, 2026-09-09, zapisane 2026-10-29)
+Przegląd 2026-10-29: idea artykułu — definicje kanoniczne (metryka, schemat, reguła) jako pliki Markdown z YAML
+i jawnymi linkami `[[ścieżka]]`, czytane przez agenta krok po kroku od `index.md`; RAG tylko do szerokich archiwów —
+w dużej części już jest: ci_for_sdlc liczy powiązania jawne przed semantycznymi, decyzje mają rejestr pdi, fabryka
+ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priorytet; najpierw sprawdzić, czy OKF v0.1
+(Google Cloud) istnieje jako specyfikacja — artykuł podaje tylko film, bez repozytorium [niezweryfikowane].
+- [ ] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** — definicje, które muszą być dokładne i mieć właściciela
+  (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
+  deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
+  ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
+  agenty mogły je czytać bez tłumaczenia.
+  Uzupełnienie (artykuł „Building a Complete Personal Harness: LLM Wiki…”, R. Brasil Monteiro, 2026-05-03): jeśli
+  wiki powstanie, trzy strefy z różnymi prawami zapisu — źródła tylko do odczytu (dziś `.claude/knowledge/<id>/`
+  z `kb.py ingest`), strony utrzymywane przez agenta z polem `sources` we frontmatterze i aktualizacją zamiast
+  przepisywania, notatki i decyzje zespołu zmieniane tylko za zgodą; ingest pokazuje plan (nowe i zmienione strony)
+  przed zapisem.
+
+## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
+Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
+specyfikacji), plan cięć z dosłownymi ID wymagań, zależnościami i kolumną „Równolegle z” oraz checklistą pokrycia
+(`plan-ciec.md`, odpowiednik `/speckit.analyze`), krok po kroku z planem przed kodem i zmianą specyfikacji przed
+kodem, `plan_drift.py` w talos. Pętle i rutyny (artykuły o „loop/graph engineering” i Routines z tego dnia) pokrywa
+`core-async-delegation` (kontrakt, warunek stopu, budżet, najwyżej 2 próby naprawy) i `core-agent-retro` (lekcje).
+Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet.
+- [ ] **Wejście z Spec Kit** — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
+  intake (`proc-requirements-shaping`, mode-pdi, talos) czyta je jako istniejące wymagania, zasady i plan zamiast
+  pisać równoległe dokumenty: `spec.md` → wymagania (lint EARS jako raport, bez przepisywania), `constitution.md` →
+  zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
+  „Równolegle z”. Układ plików i nazwy poleceń sprawdzić w repo github/spec-kit z datą (artykuł opisuje błąd haka
+  `before_specify` w nowszej wersji) [niezweryfikowane].
+
+## Rutyny, które zdobywają uprawnienia (artykuły „How to Create Loops with Claude Code”, Y. Hosni, 2026-06-24; „Harness Engineering” i „/goal”, Gao Dalie, 2026-05, zapisane 2026-10-29)
+Przegląd 2026-10-29: większość już jest — kwalifikacja zadania i kontrakt (cel, zakres, stop, budżet), najwyżej
+2 próby naprawy, idempotencja, „zielony bez wartości” jako porażka, cotygodniowy przegląd trafności
+(`core-async-delegation` §1–5, `references/kontrakt-delegacji.md`); `/goal` z oceniającym; „błąd ma się nie
+powtórzyć” jako hook lub bramka (tabela „Gdzie trafia zmiana” w `core-agent-retro`). Braki są małe, dotyczą rutyn
+działających tygodniami.
+- [ ] **`core-async-delegation` §5: uprawnienia rosną z dowodem** — drabina: tylko odczyt → szkic w pliku → zmiany
+  na gałęzi lub w worktree → szkic działania zewnętrznego (draft PR, szkic komentarza) → działanie po zgodzie →
+  automat tylko dla działań niskiego ryzyka z logiem i wycofaniem; szczebel wyżej dopiero po serii przebiegów bez
+  przekroczenia zakresu, każdy nowy szczebel z nową regułą weryfikacji. Do tego: dwa tryby wyniku (cisza — krótka
+  aktualizacja stanu, gdy nic się nie zmieniło; uwaga — raport, gdy coś wymaga człowieka); ta sama blokada w dwóch
+  kolejnych przebiegach = eskalacja zamiast ponowienia; przegląd uprawnień rutyny przy każdym nowym narzędziu
+  i co miesiąc; w przeglądzie liczyć też fałszywe alarmy i przeoczenia, nie tylko trafne pozycje. Najpierw scenariusze
+  ewaluacji (core-skill-authoring), potem treść; bez nowego skilla.
+
+## MCP Apps — interfejs dla człowieka obok narzędzia (artykuł „Stop Returning JSON. Start Shipping UI with MCP Apps”, A. Tkachuk, 2026-09-14, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-mcp-server` nie wspomina rozszerzenia MCP Apps (narzędzie wskazuje zasób `ui://`, host
+renderuje go w izolowanym iframe i przekazuje wynik narzędzia; przyciski wołają narzędzia przez hosta). Daty
+z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawdzić w specyfikacji
+(apps.extensions.modelcontextprotocol.io) z datą przed dopisaniem [niezweryfikowane]. Średni priorytet.
+- [ ] **`ai-mcp-server`: kiedy MCP App, a kiedy tekst** — App tylko gdy interakcja ma strukturę (zatwierdzenie,
+  formularz, panel z akcjami, porównanie wyników), jedna App na domenę, nie na narzędzie; łagodny powrót do treści
+  strukturalnej, gdy host nie obsługuje rozszerzenia; dane w wyniku narzędzia, nie w HTML zasobu. Bezpieczeństwo:
+  widoczność narzędzia `_meta.ui.visibility: ["app"]` (model go nie widzi — przycisk człowieka jako jedyna droga
+  do akcji, np. zatwierdzenie), zatwierdzenie przez ID i wersję obiektu (odrzucenie nieaktualnej karty), UI nie jest
+  granicą zaufania — autoryzacja, walidacja, idempotencja i audyt po stronie serwera; App traktowana jak niezaufany
+  kod. Najpierw scenariusze ewaluacji (core-skill-authoring).
+
+## Piaskownica agenta: drogi, które omijają granicę (artykuł „Sandboxes, Part 1; Do You Know What Your Agents Are Doing Right Now?”, J. Carson, 2026-10-14, zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-agent-security` ma allowlistę ruchu wychodzącego dla pracy autonomicznej, ochronę
+`.git/config`, `.git/hooks`, `.claude/` i workflowów CI, zakaz interpretera z dowolnym argumentem i „akcje
+nieodwracalne wykonuje człowiek”; `core-async-delegation` ma kontrakt, STOP po 2 próbach i przegląd po. Artykuł
+zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australia, testy CTF Anthropic/Google/Meta).
+Źródeł pierwotnych nie otworzyłem (alignment.openai.com i metr.org poza siecią sesji) — liczby i daty
+[niezweryfikowane], przed dopisaniem do skilla sprawdzić u źródła z datą (researcher). Wnioski niezależne od liczb:
+- [ ] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”:** domyślna odmowa obejmuje też DNS (rozwiązywanie
+  nazw jako kanał: pytania zakodowane w nazwach hostów), proxy pakietów i rejestry (dozwolony serwis = droga na
+  zewnątrz), publiczne usługi pośrednie (skanery URL, zdalne przeglądarki); środowisko testowe z dostępem do internetu
+  traktujesz jak produkcję.
+- [ ] **Wspólny cache między przebiegami to kanał komunikacji:** rejestr pakietów, cache budowania, katalog
+  współdzielony — osobne przebiegi agentów mają osobne cache albo cache tylko do odczytu; inaczej „izolowane” agenty
+  zostawiają sobie wiadomości.
+- [ ] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji:** poza `.git/config` i hookami także lockfile,
+  konfiguracja repo i edytora, ścieżka interpretera, pliki czytane przez CI lub narzędzie poza piaskownicą; lista
+  „plików wykonywanych później przez kogoś innego” w ochronie ścieżek i w przeglądzie diffu.
+- [ ] **Zapis z przebiegu, którego agent nie przepisze:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem
+  agenta (transkrypt agenta nie jest niezależnym dowodem); wyłącznik działający bez współpracy agenta; inwentarz
+  przebiegów z właścicielem (kto uruchomił, co ma, jak zatrzymać) — w `core-async-delegation` §6 „Monitorowanie”.
+- [ ] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście:** w poleceniu i w polityce wykonania jawna droga „nie da
+  się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
+  w konfiguracji.
