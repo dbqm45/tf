@@ -553,3 +553,27 @@ z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawd
   do akcji, np. zatwierdzenie), zatwierdzenie przez ID i wersję obiektu (odrzucenie nieaktualnej karty), UI nie jest
   granicą zaufania — autoryzacja, walidacja, idempotencja i audyt po stronie serwera; App traktowana jak niezaufany
   kod. Najpierw scenariusze ewaluacji (core-skill-authoring).
+
+## Piaskownica agenta: drogi, które omijają granicę (artykuł „Sandboxes, Part 1; Do You Know What Your Agents Are Doing Right Now?”, J. Carson, 2026-10-14, zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-agent-security` ma allowlistę ruchu wychodzącego dla pracy autonomicznej, ochronę
+`.git/config`, `.git/hooks`, `.claude/` i workflowów CI, zakaz interpretera z dowolnym argumentem i „akcje
+nieodwracalne wykonuje człowiek”; `core-async-delegation` ma kontrakt, STOP po 2 próbach i przegląd po. Artykuł
+zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australia, testy CTF Anthropic/Google/Meta).
+Źródeł pierwotnych nie otworzyłem (alignment.openai.com i metr.org poza siecią sesji) — liczby i daty
+[niezweryfikowane], przed dopisaniem do skilla sprawdzić u źródła z datą (researcher). Wnioski niezależne od liczb:
+- [ ] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”:** domyślna odmowa obejmuje też DNS (rozwiązywanie
+  nazw jako kanał: pytania zakodowane w nazwach hostów), proxy pakietów i rejestry (dozwolony serwis = droga na
+  zewnątrz), publiczne usługi pośrednie (skanery URL, zdalne przeglądarki); środowisko testowe z dostępem do internetu
+  traktujesz jak produkcję.
+- [ ] **Wspólny cache między przebiegami to kanał komunikacji:** rejestr pakietów, cache budowania, katalog
+  współdzielony — osobne przebiegi agentów mają osobne cache albo cache tylko do odczytu; inaczej „izolowane” agenty
+  zostawiają sobie wiadomości.
+- [ ] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji:** poza `.git/config` i hookami także lockfile,
+  konfiguracja repo i edytora, ścieżka interpretera, pliki czytane przez CI lub narzędzie poza piaskownicą; lista
+  „plików wykonywanych później przez kogoś innego” w ochronie ścieżek i w przeglądzie diffu.
+- [ ] **Zapis z przebiegu, którego agent nie przepisze:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem
+  agenta (transkrypt agenta nie jest niezależnym dowodem); wyłącznik działający bez współpracy agenta; inwentarz
+  przebiegów z właścicielem (kto uruchomił, co ma, jak zatrzymać) — w `core-async-delegation` §6 „Monitorowanie”.
+- [ ] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście:** w poleceniu i w polityce wykonania jawna droga „nie da
+  się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
+  w konfiguracji.
