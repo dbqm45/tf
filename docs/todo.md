@@ -334,6 +334,16 @@ Plan: `docs/plans/2026-10-23-rekonstrukcja-z-kodu.md` (F0–F7, decyzje D1–D4)
 - [x] **Po F4:** odświeżanie: zmiany tylko w komentarzach bez zleceń i z przeliczeniem numerów linii, diff w zleceniach, `apply` i `card`, nowe sygnały do sprawdzenia; komentarze 0,24 wobec 0,48 USD maistera, logika 0,38 wobec 0,51 USD (2 przebiegi na repo), 12/12 zmian i 0 pozostałości; maister nadal szybszy przy zmianie w logice (192 wobec 74 s) — `docs/evals/2026-10-25-f4-odswiezenie-tansze.md` (2026-10-25).
 - [ ] **Konektory (odłożone, decyzja później):** GitHub (issues, PR, dyskusje jako źródło wymagań), Confluence, Slack.
 
+- [ ] **Rekonstrukcja bez kodu źródłowego** (artykuł „REA Lets AI Agents Figure Out How Apps Work, Even Without
+  Source Code”, K. Dunham, 2026-10-13; repo `morluto/rea`, MIT, serwer MCP — istnienie sprawdzone 2026-10-29 na
+  raw.githubusercontent.com, wersje i liczby z artykułu [niezweryfikowane]). Zakres dziś „tylko kod”; gdy pojawi się
+  aplikacja bez źródeł (Electron: JS w paczce czytany statycznie, mapa okno → preload → kanał IPC → obsługa;
+  natywna: Ghidra/Hopper/IDA): REA jako opcja tylko po `skill_audit`, przeczytaniu i zgodzie człowieka, analiza
+  binarek w jednorazowej maszynie wirtualnej (to nie piaskownica — Ghidra działa z uprawnieniami użytkownika),
+  zgoda prawna na analizę po stronie człowieka. Do przejęcia niezależnie od narzędzia: w wynikach rekonstrukcji
+  rozdzielać obserwacje, wnioski i niewiadome, a w ograniczeniach pisać wprost „brak znaleziska nie dowodzi braku”;
+  pytać o jedną funkcję, nie o całą aplikację.
+
 ## Produkt i rynek: persona Paweł (Product Manager) i skille `pm-*` — zapisane 2026-10-23
 Luki wskazane przez przegląd `deanpeters/Product-Manager-Skills` (commit cfcb697, 15.10.2026). Licencja CC BY-NC-SA 4.0 —
 treści nie kopiujemy ani nie tłumaczymy; bierzemy tylko listę tematów, treść piszemy własnymi słowami ze źródeł
@@ -457,6 +467,12 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
 - [ ] **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
   argumentami) oraz **przypięty skrót manifestu narzędzia MCP** (zmieniony opis lub schemat = nowa instalacja do
   przeglądu, nie cicha aktualizacja) — także jako uzupełnienie `core-agent-security`.
+- [ ] **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
+  omówienie M. Craddock, 2026-05-06 [niezweryfikowane w repo]): agent czytający obce dokumenty ma tylko Read/Grep,
+  bez MCP, i zwraca JSON ze schematem (`additionalProperties: false`, `maxItems`, `maxLength`, `pattern` na każdym
+  polu), sprawdzanym w kodzie przed orkiestratorem; prośba o przekazanie (`handoff_request`) przechodzi tylko, gdy
+  cel jest na liście dozwolonych, a ładunek zgodny ze schematem — dokument może zawierać podrobione bloki
+  przekazania. Przykład w kodzie do `sec-llm-security` obok podwójnego LLM.
 - [ ] **Reguła dwóch (Meta, „Agents Rule of Two”):** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
   do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
 - [ ] **Aktualizacja list:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
@@ -994,4 +1010,401 @@ cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-con
   cache, wyjście, myślenie), w logu tokeny, a cena liczona przy odczycie; koszt na *ukończone zadanie* jako percentyle
   (p95/p99 to zwykle pętla ponowień, nie średnia); „efektywna cena wejścia” jako miara działania cache; praca
   asynchroniczna przez Batch API; wyniki (nie tylko prompty) cache'owane dla powtarzających się pytań.
+
+## Diagnoza awarii z LLM wokół reguł deterministycznych (artykuł „Making Failure Diagnosis Reliable with Pensive AI”, Netflix Tech Blog, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-evals` ma bramkę w CI, próbki z ruchu i sędziego z kalibracją; `eng-llm-features` —
+strukturyzowane wyjście i budżet. Liczby z artykułu (np. 321% więcej ręcznych przeglądów logów bez narzędzia,
+obserwacja, nie przyczyna) [niezweryfikowane]. Braki, do `eng-llm-features` i `ai-evals`:
+- [ ] **Model wskazuje zakres, kod składa treść:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
+  i ostatniej linii fragmentu, a tekst odtwarza kod z własnej kopii — dwie liczby zamiast przepisywania śladu stosu
+  (mniej tokenów wyjścia, krócej, treść bez halucynacji; zły zakres nadal możliwy, więc mierzony w ewaluacji).
+- [ ] **Reguły jako podłoga regresji i źródło etykiet:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
+  ewaluacja sprawdza, czy to, co znalazła reguła, jest w wyniku LLM (sędzia „włączenie”), osobno precyzję każdego
+  elementu i **szum na poziomie zbioru** — linie obecne w > ~30% wyników idą na listę wykluczeń (prompt ich nie usuwa).
+- [ ] **Niezmienne kopie wejść do ewaluacji:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
+  asynchronicznie bez nadpisywania, ewaluacje czytają archiwum — zmiana wyniku przypisana systemowi, nie źródłu.
+  Ten sam zestaw ewaluacji lokalnie, na środowisku podglądu PR (progi blokują merge), po promocji (alarm do dyżurnego)
+  i cyklicznie na produkcji (dryf).
+- [ ] **Wzorce wywołań:** wspólny termin dla równoległych wywołań (spóźnione pomijane, odpowiedź na czas); kosztowna
+  analiza na żądanie, cache po jednostce pracy (nie po użytkowniku) z warunkowym zajęciem „w toku” i porzuceniem po
+  limicie czasu; strumień wysyła pełną dotychczasową odpowiedź w każdym zdarzeniu (klient bez składania tokenów);
+  ocena 👍/👎 przypięta do id śladu, 👎 jako alert w godzinach pracy; nowy model danych obok starego pola, aż klienci
+  przejdą (bez zmiany pola w miejscu). Klasyfikacja „czy ponawiać” wymaga wyższego progu niż ekstrakcja — koszt
+  błędu niesymetryczny.
+
+Bez wpisu: „The Beauty of Markov Chains” (E. Lombardi, 2026-10-18 — łańcuchy pochłaniające i PageRank, poza zakresem
+skilli fabryki poza ogólnym `eng-algorithms-data-structures`) i „AI Agents (05): The Double Trouble of Monitoring”
+(0s & 1s, 2026-09-20 — monitoring infrastruktury plus śladów agenta jest już w pozycji o OTel GenAI).
+
+## Bramka przed narzędziem: pokrycie skutków, nie nazw narzędzi (artykuł „AI Agent Gate and Model Router: The System One (Jev) Model, LangChain Middleware, and Auto Mode”, J. Wąsowski, 2026-10-12, zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-agent-security` opisuje tryb `auto` (klasyfikator w tle), reguły deny działające w każdym
+trybie i piaskownicę jako granicę; `sec-llm-security` — zatwierdzenie ze skutkiem. Sprawdzone 2026-10-29
+(code.claude.com/docs/en/permission-modes): reguły deny blokują w każdym trybie, także `bypassPermissions`; sesje
+w chmurze zatwierdzają edycje plików niezależnie od trybu. Liczby z artykułu (AmPermBench: 36,8% zmian stanu
+— 93 z 253 — przez edycję plików w projekcie, poza klasyfikatorem; 81% niebezpiecznych akcji przeszło całość;
+próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezweryfikowane]. Braki:
+- [ ] **`core-agent-security` / `sec-llm-security`, pokrycie bramki:** bramka zdefiniowana listą skutków (zapis pliku
+  poza bezpiecznym zakresem, sieć, sekrety, uruchomienie procesu), nie nazw narzędzi (`tools=["bash"]` przepuszcza
+  ten sam skutek przez edycję pliku stanu — podmiana narzędzia). Trzy osobne liczby: pokrycie (odsetek zmian stanu,
+  które w ogóle docierają do bramki), błędy klasyfikatora (FPR/FNR na tym, co ocenił), pominięcia od końca do końca;
+  przed trybem blokującym tryb cienia i policzenie obejść. Kolejność warstw: reguły deny i piaskownica na skutek
+  (nie tekst polecenia) → klasyfikator w szarej strefie → człowiek po serii odmów i dla legalnych akcji wysokiego
+  ryzyka; akcje niszczące, finansowe, wyprowadzające dane i zmiany uprawnień nigdy tylko na klasyfikatorze.
+  Bramka stoi najbliżej narzędzia, po każdym kroku, który może zmienić wywołanie (edycja przez człowieka po
+  klasyfikacji = wywołanie bez oceny); licznik odmów z eskalacją, bo bramka bez niego uczy podmiany narzędzia.
+- [ ] **Próg jako polityka:** próg klasyfikatora konfigurowalny i uzasadniony kosztem fałszywej blokady vs pominięcia,
+  z liczbą bazową (0,1% groźnych wywołań przy FPR 0,4% → ok. 1 z 5 alarmów prawdziwy); co widzi sędzia (prośby
+  użytkownika i ładunek wywołania, bez prozy agenta — inaczej da się go przekonać) i dokąd idą argumenty narzędzi
+  (sekrety w argumentach wychodzą do dostawcy klasyfikatora). Karta warstwy decyzji z artykułu jako szablon do ADR.
+
+## Wnioskowanie przyczynowe w analizie danych (artykuł „Causal Machine Learning: Moving Beyond Prediction to Real Decisions”, G. Nguyen, 2026-09-22, zapisane 2026-10-29)
+Przegląd 2026-10-29: `data-analysis` ma zmienne zakłócające, paradoks Simpsona, „korelacja to nie przyczynowość”,
+a w `references/szeregi-czasowe-i-ekonometria.md` różnicę w różnicach i zmienne instrumentalne. Wielkość rynku
+i odsetki z artykułu [niezweryfikowane]. Braki:
+- [ ] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** — najpierw graf przyczynowy (DAG)
+  z ekspertem domeny: czynnik zakłócający kontrolujesz, mediatora i zderzacza (collider) nie (kontrola mediatora
+  blokuje badany efekt, zderzacza — wprowadza obciążenie); potem metoda: wagi skłonności (propensity), zmienne
+  instrumentalne, podwójne ML z cross-fittingiem, lasy przyczynowe; ATE („czy działa”) vs CATE/uplift („dla kogo”
+  — zniżka dla tych, których zachowanie zmienia, nie dla tych, którzy i tak zostaną); na końcu **próby obalenia**
+  (losowa wspólna przyczyna, placebo, podzbiór danych) — wynik zmieniony przez losową zmienną jest kruchy. Biblioteki:
+  DoWhy (graf, identyfikacja, obalanie), EconML (CATE), CausalML (uplift) — wersje sprawdzić przed wpisaniem.
+  Rozdział: model churnu mówi „kto odejdzie”, decyzja potrzebuje „czyje odejście zmieni rabat”.
+
+Artykuł „Graph Engineering” (V. Amballa, 2026-10) — bez wpisu: praca jako jawny graf (węzły, krawędzie z bramkami
+człowieka tam, gdzie ryzyko, stan współdzielony, punkty kontrolne) jest w `ai-agents` (workflow czy agent, trwały
+stan, punkty zatwierdzenia) i w fazach pdi z bramkami; artykuł nie wnosi metody poza zasadą.
+
+## Blokady optymistyczne i pesymistyczne, skill od wzorcowego wyniku (artykuły „When to Use Optimistic vs Pessimistic Locking”, A. Kovtun, 2026-10-14; „I Built a Claude Skill for PRD Writing… Started With the Output”, J. More, 2026-06-30; zapisane 2026-10-29)
+- [ ] **`be-database`, wybór blokady** (dziś jedna linia: `FOR UPDATE`, unikalne ograniczenia lub wersjonowanie;
+  `SKIP LOCKED` przy kolejce): pytanie zerowe — czy jedno atomowe `UPDATE … SET x = x - 30 WHERE … AND x >= 30` albo
+  ograniczenie (`UNIQUE`, `EXCLUDE`) usuwa okno między odczytem a zapisem; potem trzy pytania po kolei: czy okno mieści
+  się w jednej krótkiej transakcji (nie — myślenie użytkownika, kilka żądań: wersja/ETag albo dzierżawa z wygaśnięciem
+  w aplikacji), jak często piszący trafiają w ten sam wiersz (rzadko — optymistycznie z ograniczoną liczbą ponowień
+  i jitterem; gorący wiersz — pesymistycznie), ile kosztuje utracona praca (efekt zewnętrzny, nieidempotentny — blokada
+  przed pracą). Pułapki: zakleszczenia (stała kolejność blokowania), żadnych wywołań sieciowych pod blokadą wiersza,
+  `NOWAIT`; wersja wiersza nie chroni przed write skew (reguła na kilku wierszach — Serializable albo blokada wspólnego
+  rodzica); blokada w Redis tylko dla efektywności, dla poprawności tokeny ogrodzeniowe (Kleppmann). Wersje baz
+  i domyślne limity z artykułu (MySQL 9.7 LTS, `innodb_lock_wait_timeout` 50 s, Postgres `deadlock_timeout` 1 s)
+  sprawdzić przed wpisaniem.
+- [ ] **`core-skill-authoring`, specyfikacja wyniku przed przepływem:** skill z instrukcji krok po kroku daje płaski
+  wynik; lepiej wziąć najlepszy istniejący artefakt (np. PRD, który przeszedł przegląd bez pytań) i wypisać decyzje,
+  których ogólny szablon nie zna (kolejność sekcji pod czytelnika, nierówna głębia, język sekcji przypadków brzegowych
+  pod QA, ograniczenia prawne wprost, metryka jako zachowanie) — to staje się treścią skilla i scenariuszami ewaluacji;
+  plus 2–3 pytania, które skill zadaje przed pisaniem (w artykule: „co jedno musi być prawdą, żeby to był sukces?” —
+  brak odpowiedzi = za wcześnie na specyfikację). Dotyczy też planowanych skilli `pm-*` (persona Paweł).
+
+Bez wpisu: „Before You Blame the Model” (R. Ravishankar — wstęp serii o harnessie bez konkretów poza zapowiedziami:
+projekt jako dane sprawdzane z buildem, bramka ewaluacji w ścieżce wydania — oba już w TODO) i „What is Loop
+Engineering?” (A. Kokane, 2026-06-17 — `/goal`, `/loop`, pięć elementów pętli za A. Osmanim; ujęte wcześniej przy
+„Practical Loop Engineering” i rutynach).
+
+## Kontrakt zachowania przy zmianach w legacy i pomiar „harness: wynik czy koszt” (artykuły „Brownfield Spec and Preservation Contract”, J. Wąsowski, 2026-10-22; „When Agent Harness Moves the Result, and When It Only Moves the Cost”, J. Wąsowski, 2026-10-13; zapisane 2026-10-29)
+Przegląd 2026-10-29: `eng-behavior-preserving-refactoring` ma zamrożony kontrakt i testy charakteryzujące przed
+refaktorem (oznaczone, nie są specyfikacją); w TODO jest krok archiwizacji delty OpenSpec i chronione testy
+akceptacyjne. Liczby z artykułów (2,66% agentowych PR z commitem cofającym, 29,6% „rozwiązanych” łatek innych niż
+ludzka, METR: harness dostawcy nie lepszy od prostego, rozrzut tokenów na rozwiązane zadanie do 40×, słabszy model
+29,2 → 78,0% dzięki korekcie zachowania) [niezweryfikowane]. Braki:
+- [ ] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`):** sześć pól —
+  warunek (kiedy zmiana działa), oczekiwany wynik (nie „błąd zniknął”), chronione zachowania, dozwolony zakres plików
+  (wyjście poza = zgłoszenie), dowód naprawy (test czerwony na commicie bazowym, zielony po), dowód braku regresji
+  (testy ochronne nagrane na commicie bazowym **przed** zmianą, osobnym etapem, zielone przed i po). Chronione
+  zachowania z czterech źródeł w zasięgu zmiany (wywołujący/konsumenci — brak znalezionych to ograniczona wiedza,
+  nie dowód; incydenty; często zmieniane pliki; testy charakteryzujące), każde z kolumną **decyzji**:
+  zobowiązanie (chronić) / przypadek (wolno zmienić) / do decyzji właściciela — z nazwiskiem decydującego; zmiana
+  zachowania widocznego dla konsumenta to już nie refaktor. Przy archiwizacji zatwierdzone gwarancje trafiają do
+  delty jako ADDED (pierwszy zapis wymagania) z testem. Bez pełnej inwentaryzacji systemu na start.
+- [ ] **Skille fabryki: wynik czy tylko koszt** (protokół z artykułu do runnera ewaluacji): ta sama para „ze skillami /
+  bez” na tym samym zestawie, raport rozdzielny — odsetek sukcesów, koszt łączny na rozwiązane zadanie (wszystkie
+  próby, także porzucone, przez liczbę sukcesów), mediana tokenów udanych prób, pass@k z przedziałem, czas, rodzaje
+  porażek; drugi przebieg na mocniejszym modelu (pomiar 2026-10-22 był tylko na Haiku) — jeśli przewaga skilli maleje
+  z mocą modelu, inwestować w scenariusze ewaluacji, hooki i politykę uprawnień, nie w dłuższe treści. Ablacja
+  pojedynczych elementów, bo składniki potrafią sobie szkodzić. Płatne — tylko za zgodą człowieka.
+
+Bez wpisu: „The Harness Is the Product” (S. Singhal, 2026-08-10) — przegląd elementów harnessu (pętla, narzędzia,
+kontekst, pamięć, uprawnienia, weryfikacja, obserwowalność, podagenci) pokrytych przez `ai-agents`,
+`core-cost-control` i wcześniejsze pozycje TODO.
+
+## Agent analityczny nad hurtownią: wnioski z case study (artykuł „Engineering Multi-Agent AI for a 100 GB Data Warehouse”, F. Khan, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: brak w fabryce wzorca „pytanie biznesowe → SQL” (text-to-SQL); części są w `ai-evals`
+(bramka, linia bazowa z rozrzutem), `sec-llm-security` (walidacja argumentów w kodzie), `data-engineering`. Liczby
+autora (jeden laptop, TPC-DS SF100, 102 pytania dev / 194 test, modele Qwen) [niezweryfikowane]. Wnioski warte
+przeniesienia (do `ai-evals`, `eng-llm-features`, `sec-llm-security`, `data-analysis`/`data-engineering`; ewentualnie
+nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
+- [ ] **Cele zapisane przed pierwszym agentem** (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
+  razem z pokryciem, p50 i p95 czasu) i **użyteczność z karą**: +1 dobra odpowiedź lub słuszna odmowa, 0 odmowa,
+  −2 pewna zła liczba — agent, który wszystkiemu odmawia, nie wygrywa. Każda zmiana jedna naraz, przyjęta tylko gdy
+  użyteczność rośnie (albo stoi, a czas spada), z parowanym bootstrapem na tych samych pytaniach; odłożone **całe
+  szablony** pytań, nie tylko instancje (u autora 85% na nowych szablonach vs 96% na znanych). Czas mierzony
+  pojedynczym użytkownikiem i stoperem z pustym cache, nie tylko przy współbieżności ewaluacji.
+- [ ] **Podwójny zapis jako miara pewności:** dwie niezależne drogi (model pisze SQL; drugi model wypełnia JSON
+  z katalogu metryk, a kod kompiluje go do SQL regułami) — zgodność wyników = wysoka pewność (u autora 40/40
+  zgodnych poprawnych), rozbieżność → krytyk, brak drugiej drogi → niższa pewność; prawie wszystkie błędy z pytań,
+  gdzie odpowiedziała jedna droga. Do `arch-ai-solutions` jako wzorzec weryfikacji wyniku liczbowego.
+- [ ] **Mierz, zanim dołożysz:** wyszukiwanie wartości do promptu (−2,0 pkt) i „zwiadowca schematu” wybierający
+  5 tabel (−13,7 pkt; potrzebne tabele trafiał w 27% zapytań) pogorszyły wynik, gdy cały schemat mieścił się
+  w prompcie; tańszy model napisał lepszy SQL niż droższe (porównanie kilku modeli na tym samym zestawie przed
+  wyborem). Model pisze SQL, baza liczy — arytmetyka modelu bez myślenia była błędna.
+- [ ] **Ściany dla SQL od modelu** (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
+  dołącza bazy, instaluje rozszerzenia — 5/11 ataków przeszło); strażnik tekstu (jedno SELECT, zakazane funkcje
+  plikowe, koszt planu z własnym estymatorem wierszy, bo planer pomylił się 469 796×) + blokada w silniku (DuckDB:
+  `enable_external_access = false`, wyłączone autoładowanie rozszerzeń, `lock_configuration = true`) + limit czasu
+  i wierszy; przerwanie zapytania działa dopiero między krokami silnika (ogon czasu przez jedno utknięte zapytanie).
+  Bramka wejściowa zawodzi otwarcie (nieczytelna odpowiedź = „odpowiadaj”), spekulacyjnie równolegle z drafami.
+- [ ] **Pułapki danych dla agenta** (`data-engineering` / `data-analysis`): klucze NULL w tabeli faktów, które inner
+  join gubi po cichu (u autora 2,36% przychodu), niepełny ostatni rok w danych (spadek, który nie jest spadkiem),
+  tabele z historią wersji (podwójne liczenie encji) — fakty mierzone z danych i wstawiane do słownika biznesowego
+  w stałej kolejności (stały tekst = trafienia cache); „najlepszy sklep” bez definicji → pytanie, nie domysł.
+
+## Typy pamięci agenta jako kontrakty (artykuł „AI Agent Memory Types: Semantic, Episodic, Procedural, Profile, Working”, J. Wąsowski, 2026-10-08, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` nie rozróżnia typów pamięci długotrwałej. Wyniki porównań z artykułu (ENGRAM
+77,55 → 46,56% po spłaszczeniu magazynów, preprint; pozostałe dwa nie testują typowania) [niezweryfikowane].
+- [ ] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego:** robocza (bieżący kontekst składany z pozostałych,
+  budżet tokenów i kolejność), semantyczna (co jest prawdą: źródło, data weryfikacji, konsolidacja zastępuje stary
+  fakt), epizodyczna (co się stało: czas, kontekst, wynik; traci przydatność, nie prawdziwość), proceduralna (jak to
+  robić: wersja, przegląd, wycofanie — zapis jak merge request, bo zły wpis zmienia zachowanie w wielu zadaniach),
+  profil (kim jest użytkownik: krótki dokument zawsze w prompcie, łatka w miejscu). Rozdzielać fizycznie dopiero po
+  objawie (przeterminowany fakt wraca jako bieżący, wpis tymczasowy konkuruje ze stałym) — często wystarcza pole
+  typu i wygaśnięcia w jednym magazynie. W fabryce odpowiedniki: `docs/project/lessons.md` (semantyczna), dziennik
+  i punkty kontrolne (epizodyczna), skille przez PR (proceduralna).
+
+## Trwałe wykonanie agentów i refinement pod SDD (artykuły „Inngest vs Temporal vs DBOS vs LangGraph”, P. Perrone, 2026-09-22; „Refinement with AI: How to Prepare Requirements for Spec-Driven Development”, Pragmatic Coders, 2026-10-01; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` każe projektować wznawianie od punktu kontrolnego, bez kryteriów wyboru narzędzia.
+Sprawdzone 2026-10-29 w źródłach (raw.githubusercontent.com): Inngest — wynik kroku zapisywany po wykonaniu,
+przy kolejnym wywołaniu SDK szuka go po skrócie nazwy kroku (`inngest/website`, how-functions-are-executed); DBOS —
+punkty kontrolne kroków w Postgresie, jeden zapis na krok plus dwa na workflow (`dbos-inc/dbos-docs`, architecture).
+Domyślny tryb `async` w LangGraph i szczegóły Temporal — [niezweryfikowane] (docs.langchain.com, docs.temporal.io
+poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia).
+- [ ] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie:** zysk zależy od granic kroków, nie od narzędzia — jeden
+  krok na każde kosztowne wywołanie modelu lub narzędzia (jeden krok na całą pętlę = kolejka z dodatkami); wszystko
+  poza krokiem wykonuje się ponownie przy wznowieniu (Inngest: przy każdym kroku, Temporal: kod workflow musi być
+  deterministyczny — zegar, losowość, HTTP tylko w aktywnościach). Pułapki ustawień: zapis punktu kontrolnego
+  w tle może zgubić ostatni krok; wznowienie z tym samym wejściem nadpisuje stan; brak stałego id workflow = drugi
+  przebieg obok pierwszego; zmiana nazwy kroku osieroca przebiegi w toku (wersjonowanie). Trwałość ≠ idempotencja
+  (krok, który obciążył kartę i nie zdążył zgłosić sukcesu). Wybór: graf + checkpointer w Postgresie, gdy agent
+  już jest grafem; stan w tej samej transakcji co dane → DBOS; dane kroków nie mogą opuścić sieci → bez usług
+  hostowanych; brak zespołu platformowego → bez własnego klastra. Test odzyskiwania: `SIGKILL` w środku przebiegu
+  i policzenie, co wykonało się ponownie — przed produkcją.
+- [ ] **`proc-requirements-shaping` / `core-delivery-lifecycle`, refinement pod SDD:** u autorów refinement zajmował
+  ok. 30% sprintu (prognoza do 50%) [niezweryfikowane]. Brakuje u nas dwóch kroków: przed implementacją wykonawca
+  **opowiada rozwiązanie własnymi słowami** (problem, zachowanie, sposób, ryzyka, podjęte decyzje), a właściciel
+  sprawdza zgodność z zamiarem — żeby człowiek nie był tylko przekaźnikiem między agentami; makiety z istniejących
+  komponentów i systemu projektowego przed kodem jako test wspólnego rozumienia (sprawdzić, czy nie przemycają
+  nowych decyzji produktowych). Przegląd historyjki przez agentów z kilku ról (deweloper, PO, interesariusz) jest
+  w pozycji „gdzie agent musiałby zgadywać” wyżej.
+
+## Model zastępczy i projekt odwrotny; miary autonomii agentów (artykuły „How I Recreated a Research Paper to teach an AI to Design Self-Rolling Tubes”, A. Janmohamed, 2026-10-22; „Agentic SDLC: Strategic Reading List”, A. Honchar, 2026-05-27; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-research-methods` ma wyciek przez wiele wierszy tej samej jednostki; brak wątku modelu
+zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z artykułów [niezweryfikowane].
+- [ ] **`ai-research-methods`, model zastępczy w pętli optymalizacji:** (1) przykłady powstałe z augmentacji
+  (odbicie, obrót) trafiają do tego samego zbioru co oryginał, inaczej test jest zawyżony; uśrednianie predykcji dla
+  wersji symetrycznych w czasie testu jako tani zysk; (2) optymalizacja na modelu wyszukuje jego błędy na swoją
+  korzyść — zwycięzca zawsze wygląda lepiej, niż jest (u autora 0,44 mm przewidziane vs 0,75 mm w symulatorze), więc
+  wynik sprawdza się prawdziwym symulatorem/eksperymentem, a raport podaje obie liczby; (3) cel spoza zakresu danych
+  treningowych (fizycznie niemożliwy) daje pewną, złą odpowiedź — najpierw policz granicę wykonalności, potem
+  szukaj; (4) w algorytmie ewolucyjnym zbyt duża mutacja (20% zamiast 2%) zamienia przeszukiwanie w losowanie.
+- [ ] **`core-delivery-lifecycle` / `eng-continuous-delivery`, miary autonomii:** obok DORA odsetek scalonych PR
+  autorstwa agenta, godziny przeglądu człowieka na zmianę, czas zadania od początku do końca; wg autora, jeśli po
+  ~6 miesiącach agentowe PR to < 5%, wąskim gardłem są specyfikacje, harness i struktura przeglądu, nie narzędzie
+  (próg to opinia autora, nie pomiar). Pasuje do decyzji G7 „miary przepływu” w ci_for_sdlc/pdi.
+  **Zastrzeżenie** (J. Wąsowski, „SDD Factory OKRs”, 2026-10-21): to miary aktywności — jako cel (KR) są
+  podatne na Goodharta, bo agent wypełni każdy licznik; raportować je tylko w parze z miarą wyniku (odsetek
+  defektów, które dotarły do użytkownika, koszt zmiany, czas inicjatywy od zamiaru do produkcji, ruch metryki
+  biznesowej) — gdy poprawia się tylko jedna z pary, cel uznaje się za niespełniony; dane z systemów źródłowych
+  (repo, CI, incydenty), nie z samooceny zespołu.
+
+## Graf hipotez z werdyktami i granice izolacji worktree (artykuły „My AI Agent is in Top-0.04% of WorldQuant Challenge #2: Alpha Knowledge Graph”, A. Honchar, 2026-07-31; „Self-managing coding agents: git worktree, agent-owned context, and sandbox”, J. Wąsowski, 2026-06-01; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-research-methods` każe zapisać hipotezę falsyfikowalnie z kryterium porażki;
+`core-cost-control` (`references/rownoleglosc.md`) opisuje worktree i subagentów. Liczby z artykułów (ranking,
+3 432 mechanizmy, 172 GB / 371 worktree, 93% akceptowanych zapytań o zgodę) [niezweryfikowane].
+- [ ] **`ai-research-methods`, rejestr hipotez jako graf z werdyktami:** hipoteza, której nie da się przypiąć do węzła
+  ontologii (mechanizm, naruszone założenie, kto jest po drugiej stronie), odpada przed kosztownym eksperymentem;
+  status węzła wynika z wyników eksperymentów (potwierdzony / pogrzebany), nie z deklaracji autora; pogrzebany ma
+  zapisany z góry **warunek ponownego otwarcia** (nowa konstrukcja, niezależne potwierdzenie); zapis „próbowano,
+  tak się nie udało” z zakresem — im szersze twierdzenie, tym więcej niezależnych porażek do jego odrzucenia;
+  luki wskazuje topologia (rodziny bez mechanizmów), nie pytanie do modelu. Prosta implementacja: SQLite `nodes`
+  / `edges` (klucz = cała trójka), graf w pamięci tylko do odczytu. Wybór kręgosłupa ontologii decyduje, które
+  pytania są tanie. Pasuje też do `core-knowledge` (pole statusu i warunku ponownego otwarcia w notatkach).
+- [ ] **`core-cost-control` / `core-async-delegation`, czego worktree nie izoluje:** porty, baza i migracje, cache,
+  brak `node_modules`/`.env` w świeżym checkoucie, blokada `.git/index.lock`; ta sama gałąź nie może być w dwóch
+  worktree. Zadań dotykających tych samych portów, baz lub plików nie puszczać równolegle; limit liczby
+  i sprzątanie zapomnianych worktree (koszt dysku rośnie z zależnościami). Do `core-agent-security`: wynik narzędzia
+  może ukrywać polecenia sekwencjami ANSI niewidocznymi dla człowieka w terminalu, a widocznymi dla agenta (przypadek
+  biblioteki jqwik z artykułu, [niezweryfikowane]) — treść wyjścia narzędzi to dane, nie polecenia.
+
+Bez wpisu: „How to Build a Swarm of AI Agents That Hunts Alpha 24/7” (Moonsat, 2026-07-06) — reklama narzędzia Slate;
+zasady (twórca ≠ sprawdzający, pamięć odrzuconych hipotez, warunek stopu sprawdzalny poza agentem) już są w
+`core-async-delegation` i pozycjach wyżej.
+
+## Proces z AI, który rozleniwia osąd; gdzie żyje specyfikacja w Scrum i Kanban (artykuły „The process we wrote was part of the problem”, M. Whetton, 2026-10-20; „Spec-Driven Development in Scrum and Kanban: Where the Spec Actually Lives”, J. Wąsowski, 2026-07-05; zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-delivery-lifecycle` ma ścieżkę skróconą dla poprawek; `core-plan-interview` — przesłuchanie
+planu bez sztywnego limitu pytań; `proc-agile` — INVEST i Definition of Done, bez Definition of Ready. Liczby
+zespołu Whettona (PR 40 → 165 linii, czas do merge 16 → 32 h, oczekiwanie na pierwszy przegląd 4 h → 2,5 dnia,
+4,4 otwartych PR na osobę) [niezweryfikowane].
+- [ ] **`core-plan-interview`, przesłuchanie bez nadmiaru:** „grill me” bez kontekstu wyciąga każdy przypadek brzegowy
+  jako coś do rozwiązania i kończy się przeinżynierowaniem; pytania szeregować wpływem i prawdopodobieństwem,
+  a „po prostu zawiedź z czytelnym błędem” traktować jako pełnoprawną odpowiedź (powiązane z drabiną minimalizmu
+  w `eng-design-principles`). Sygnał ostrzegawczy procesu: zaległości wygenerowanych zgłoszeń, których nikt nie
+  zrobi, i opisy PR dłuższe niż ktokolwiek przeczyta.
+- [ ] **`core-delivery-lifecycle`, osąd nie może uciec do kroków:** refinement kończy się zgłoszeniem napisanym przez
+  człowieka dla człowieka (nie wygenerowanym opisem ani promptem); jeśli nikt w pokoju nie umie wyjaśnić, jak praca
+  zostanie zrobiona, refinement nie jest skończony (łączy się z pozycją „opowiada rozwiązanie własnymi słowami”
+  wyżej). Pogłębiony przegląd tylko powyżej progów (wielkość zmiany, obszar ryzyka) — wspólne testowanie albo
+  przejście przez rozwiązanie z grupą; nie każdy PR. Miary do śledzenia: rozmiar PR, czas do pierwszego przeglądu,
+  liczba otwartych PR na osobę — pasuje do G7 „miary przepływu” (ci_for_sdlc/pdi).
+- [ ] **`proc-agile`, specyfikacja w cyklu:** backlog i refinement na poziomie celu i zamiaru, kontrakt dojrzewa w
+  sprincie (Scrum) albo przed punktem zobowiązania (Kanban, z limitem WIP na etapie analizy, żeby specyfikacje nie
+  starzały się w kolejce); Definition of Ready jako umowa zespołu o jakości wejścia, nie bramka przeciw PO (uwaga
+  M. Cohna). Trzy szczeble SDD (spec-first / spec-anchored / spec-as-source, B. Böckeler) — dobierać do problemu;
+  mierzyć czas cyklu, odsetek przeróbek i stosunek linii Markdown do kodu, zamiast ufać odczuciu przyspieszenia.
+
+Bez wpisu: „From Demo to Production: 5 Hard Lessons from Deploying AI Agents as an FDE” (A. Kokane, 2026-10) —
+linia odcięcia przed budową, koszt na rozwiązane zadanie z czasem przeglądu człowieka, najprostszy kształt
+orkiestracji, ślady od pierwszego dnia, złoty zbiór i wdrożenie etapami są już w `ai-product-management`,
+`ai-evals`, `ai-agents` i pozycjach TODO wyżej.
+
+## Ontologia obserwowalności i wiki z LLM w dwóch wersjach (artykuły „Ontology-Driven Observability: Building an End-to-End Knowledge Graph at Netflix Scale”, Netflix Tech Blog, 2026-10-16; „I Built Karpathy's LLM Wiki Twice”, L. Bernardo, 2026-05-17; zapisane 2026-10-29)
+Przegląd 2026-10-29: `ops-sre-incidents` i `ops-observability` nie mają wątku łączenia danych z różnych narzędzi
+(metryki, alerty, incydenty, wdrożenia, czat) przez wspólny model encji. Liczby Netflixa [niezweryfikowane].
+- [ ] **`ops-observability` / `ops-sre-incidents`, wspólny model encji dla dochodzenia:** większość czasu analizy
+  przyczyny (u Netflixa ok. 4 h) to odtwarzanie powiązań między narzędziami, które nazywają to samo inaczej
+  (aplikacja / usługa / klaster). Zasady do skilla: tożsamość najpierw — encja powstaje tylko po walidacji
+  w jednym autorytatywnym katalogu (bez ogólnego typu „usługa”, który znaczy cztery rzeczy); ontologia jako kod
+  (PR, testy, wersje), pojęcia oddzielnie od instancji (por. pozycja o IRI wyżej); wyjście modelu ograniczone do
+  wyliczeń i typów, więc z niedeterministycznych kroków powstaje deterministyczny zapis; wzbogacanie kolejne
+  i „najlepsze możliwe” (wolne źródło degraduje graf, nie blokuje go); silnik korelacji **proponuje łańcuchy
+  z dowodami i pewnością** (para „wdrożenie → błąd w logach” z wyższą wagą, okno czasu, odrzucenie poniżej
+  progu), nie wydaje werdyktów; z kanału incydentu zapisywać rozumowanie (odrzucone hipotezy, co zadziałało, kto
+  wiedział) — postmortem jako dane, nie tylko tekst. Zmiany proponowane przez agentów zatwierdza człowiek.
+- [ ] **Wiki z LLM: kod czy plik instrukcji** (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
+  z etapami wystarcza dla małej bazy (< ~200 dokumentów) i szukania kształtu; pipeline w kodzie, gdy korpus jest
+  duży, wynik ma być powtarzalny, a wiki zasila dalszą automatykę — identyfikator strony jako skrót treści (zmiana
+  nazwy pliku nic nie psuje), kontrakty typów między etapami, **lint struktury Markdown** przed zapisem (dwa H1,
+  zepsuty frontmatter, martwe linki psują kolejne etapy po cichu), wyszukiwanie BM25 zamiast wektorów dla małej
+  wiki. Dotyczy `kb.py` i notatek `docs/knowledge`.
+
+Bez wpisu: „How to Create Loops with Claude Code” (Y. Hosni, 2026-06-24) — ten sam artykuł był już przeglądany;
+wnioski są w sekcji „Rutyny, które zdobywają uprawnienia”.
+
+## Brakujące decyzje w specyfikacji i harness 2026 (artykuły „SDD — Missing Spec Decisions: The Two-Implementations Technique and a Decision Register”, J. Wąsowski, 2026-10; „The Harness Is the Product: How Agents Are Actually Built in 2026”, A. Tkachuk, 2026-10-02; „What is AX Design?”, F. Lamenza, 2026-06-08; zapisane 2026-10-29)
+Przegląd 2026-10-29: pozycja „gdzie agent musiałby zgadywać” (sekcja o zamiarze) szuka luk; rejestr decyzji
+prowadzi pdi (`pdi-decisions`). Liczby z artykułów (EPIC: 11,8% vs 20,4% commitów naprawczych; produkty dots, Viktor,
+Muse) [niezweryfikowane].
+- [ ] **`proc-requirements-shaping` / `mode-pdi`, technika dwóch implementacji:** dla zdania z przymiotnikiem jakości
+  („szybko”, „bezpiecznie”, „odpornie”) naszkicować dwa rozsądne rozwiązania i sprawdzić, czy różnią się czymś
+  widocznym dla użytkownika lub operatora — jeśli tak, specyfikacja milczy i brakuje decyzji. Pięć klas do pytania:
+  skala, tryb wykonania (od razu / w tle), awaria i ponowienia, uprawnienia, migracja istniejących danych. Każda
+  decyzja z wariantami, uzasadnieniem, **sposobem weryfikacji** (test, fitness function w CI, punkt przeglądu)
+  i właścicielem (rola, nie „zespół”); odwracalność × zasięg: lokalne odwracalne decyduje agent z zapisem, szerokie
+  proponuje agent, jednokierunkowe rozstrzyga właściciel przed kodem. Spójność spec / plan / zadania: każda decyzja
+  w trzech artefaktach albo jawne „nie dotyczy” (cztery różne braki: brak decyzji, sprzeczność, zgodny błąd, ślad bez
+  treści). Strona pdi: pola `verify` i `reversibility` w kontrakcie decyzji (dbqm45/pdi TODO).
+- [ ] **`ai-agents`, interfejs harnessu od strony modelu:** operacja (jednostka intencji) realizowana przez narzędzie,
+  narzędzie złożone (kod, deterministycznie) albo skill (instrukcje) — dojrzewa od skilla do narzędzia złożonego;
+  skill odwołuje się do narzędzi po id, nie kopiuje ich schematów (jedno miejsce prawdy); mały zestaw prymitywów
+  (`search_memory`, `list_capabilities`, `search_operations`, `load_operation`, `execute_operation`, `run_code`,
+  `ask_human`), a zatwierdzenie wymusza harness, nie model; kanały (Slack, Teams, głos) jako adaptery
+  normalizujące zdarzenie do jednej postaci — agent nie należy do kanału. Wybór kontekstu (pamięć, narzędzia) to
+  często klasyfikacja, nie generowanie — tańszy selektor przed dużym modelem, mierzony na własnych danych.
+
+Bez wpisu (poza powiązaniem): „What is AX Design?” — rola „detektywa” przed automatyzacją (proces taki, jak naprawdę
+działa, z regułami w głowach ludzi; „czy w ogóle automatyzować”; jak poznać, że 10 000 przebiegów w nocy się udało)
+pokrywa się z `ai-product-management` i `ux-service-design`; „enabler” (narzędzia i system projektowy czytelne dla
+agenta) — z pozycjami o MCP wyżej.
+
+## Agent proaktywny i klasy informacji wychodzącej (artykuły „Claude Duet: The AI That Messages You First”, U. Estari, 2026-10-22; „I Built a Stock Terminal That Decides in Under a Second. Just Jev, No LLM”, unicodeveloper, 2026-09-30; zapisane 2026-10-29)
+Sprawdzone 2026-10-29 u źródła (claude.com/resources/articles/claude-duet, 2026-10-21, z dopiskiem z 2026-10-23):
+Claude Duet — podgląd badawczy z listą oczekujących, dla Pro i Max w USA; poranny skrót i sprawdzanie podłączonych
+aplikacji w ciągu dnia, wiadomość tylko gdy coś wymaga uwagi; własna maszyna wirtualna z przeglądarką; poświadczenia
+obsługiwane jak w Claude Managed Agents (agent nie widzi haseł ani tokenów); akcje zatwierdza klasyfikator trybu
+auto; **osobny klasyfikator i prompt bezpieczeństwa dla każdej wiadomości** — najściślejsza klasa (numery kart,
+dokumenty tożsamości) odrzucana zawsze, inne wrażliwe (zdrowie, finanse osobiste) tylko na wyraźne polecenie
+użytkownika. Wg artykułu Estariego (nie sprawdzone u źródła): wysłanie, płatność, podpis i usunięcie czekają na
+zgodę, a handel papierami wartościowymi i przelewy między kontami są wyłączone nawet za zgodą [niezweryfikowane].
+- [ ] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
+  wiadomości:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
+  polecenie” (zdrowie, finanse osobiste), reszta; sprawdzenie każdej wiadomości wychodzącej osobnym klasyfikatorem
+  poza głównym agentem, obok zatwierdzania akcji. Do tabeli trybów delegacji: agent proaktywny (skrót + sprawdzanie
+  co kilka godzin zamiast ciągłego, bo koszt w limitach) — rytm i lista tematów ustawia użytkownik; lista akcji
+  zakazanych nawet za zgodą.
+
+Bez wpisu: „Jevinik” — wzorzec „zbierz dowody, zadaj pytania typowane, działaj” z modelem decyzyjnym zamiast LLM
+(autor: ok. 40× szybciej przy podobnych prawdopodobieństwach, dwa tickery po dwa przebiegi [niezweryfikowane]) jest
+w pozycji o wyborze kontekstu przez selektor (sekcja o harnessie wyżej); jakość decyzji zależy od świeżości
+dowodów, a każdy dowód ma link i datę.
+
+## Własność harnessu, oszczędne skille i SLO agenta (artykuły „Harness Ownership: Skills, Hooks, Instruction Files, And The Harness-Team Anti-Pattern”, J. Wąsowski, 2026-10-17; „His entire AI skills library loads in 660 tokens”, S. S., 2026-10-09; „I Built 15 SLOs for an AI Agent”, T. Deshpande, 2026-09-09; „SDD Factory OKRs”, J. Wąsowski, 2026-10-21; zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-skill-authoring` ma `disable-model-invocation` dla skilli procesowych; pozycja o OTel
+GenAI jest w sekcji o protokołach. Liczby z artykułów (wielkość biblioteki skilli, badanie ETH Zurich o plikach
+kontekstu +20% kosztu) [niezweryfikowane].
+- [ ] **`core-agent-instructions` / `core-skill-authoring`, mapa własności artefaktów harnessu w projekcie:**
+  artefakt (plik instrukcji, skill, hook, kontrakt narzędzia, polityka uprawnień, sensor) → właściciel z domeny,
+  której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu, kto zmienia kontrakt; skill nieużywany
+  60–90 dni oznaczany do wycofania (fabryka ma logi hooków — można liczyć użycia); reguły dopisywane jak zapadka:
+  tylko z prawdziwej porażki, po przeglądzie. Miara: odsetek artefaktów bez właściciela i bez testu.
+- [ ] **`core-skill-authoring`, mniej tokenów w skillach:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
+  względem domyślnego — jeśli nie, usuń całe zdanie); instrukcje pozytywne zamiast zakazów (zakaz wnosi zakazane
+  do kontekstu); słowa-pojęcia, które model już zna (np. zapachy kodu Fowlera po nazwie), zamiast definicji;
+  skill-router wywoływany ręcznie, który dopiero ładuje cięższy. Dla fabryki: zmierzyć łączny koszt opisów
+  wszystkich skilli widocznych w sesji (209 skilli) i rozważyć `disable-model-invocation` dla rzadko
+  wywoływanych automatycznie; specyfikacja bez ścieżek plików i fragmentów kodu (starzeją się, agent i tak by
+  za nimi szedł). Zmiany skilli — przez scenariusze ewaluacji i bramkę, płatny pomiar za zgodą.
+- [ ] **`ops-observability` / `ai-agents`, SLO agenta:** z OTel „za darmo” tylko dostępność i opóźnienie wywołania;
+  resztę dodaje aplikacja: stan końcowy zadania (w tym „słusznie odmówił” i „przekazał człowiekowi” — ani sukces,
+  ani porażka), klasa zadania, liczba kroków, interwencja człowieka, wersja przy odczycie i zapisie pamięci roboczej
+  (wykrywanie nieaktualnego odczytu). **Powód odrzucenia narzędzia zwraca serwer narzędzia** (zła struktura / zła
+  wartość / błąd wewnętrzny): awaria narzędzia → alarm do właściciela zależności, błędne wywołanie przez agenta →
+  zgłoszenie dla zespołu agenta. SLO liczone z jednego stabilnego rekordu emitowanego przez aplikację na koniec
+  zadania, nie z backendu śladów (zmienia nazwy spanów i typy atrybutów). Nazwy atrybutów wg konwencji GenAI tam,
+  gdzie istnieją (repo `semantic-conventions-genai` — sprawdzić wersję przed wpisaniem).
+
+Bez wpisu: „Build a Second Brain in 15 Minutes” (R. Brasil Monteiro, 2026-07-19 — COG: braindump, dzienny skrót,
+podział framework / treść przy aktualizacji, workery na tańszym modelu; pokryte przez pozycje o wiki i
+`core-cost-control`) oraz powtórzony „Spec-Driven Development in Scrum and Kanban” (wpis wyżej).
+
+## Bramka LLM, anatomia harnessu i reguły w kodzie (artykuły „Design an LLM Gateway: Routing, Fallbacks, and Token Cost Control”, A. Kumar, 2026-10-22; „The Anatomy of an AI Agent Harness”, D. Yadav, 2026-10-01; „The Complete Guide to Agent Harnesses (With Code)”, P. Perrone, 2026-08-21; zapisane 2026-10-29)
+Sprawdzone 2026-10-29 u źródła: Anthropic Engineering „Effective harnesses for long-running agents” (2025-11-26 —
+agent inicjujący środowisko + agent kodujący robiący przyrost w każdej sesji i zostawiający artefakty dla
+następnej; kompaktowanie nie wystarcza: agent próbuje zrobić wszystko naraz i ogłasza koniec za wcześnie);
+„Harness design for long-running application development” (2026-03-24 — planner, generator i ewaluator z kryteriami
+zamieniającymi ocenę gustu na stopniowalne punkty); cennik cache (platform.claude.com, prompt-caching: odczyt
+cache ok. 0,05–0,1 ceny wejścia zależnie od modelu, czas życia liczony od początku żądania). Liczby z preprintów
+cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass rate 0–8 pkt) — jak w pozycji o
+„harness: wynik czy koszt” [niezweryfikowane].
+- [ ] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia:** trasy jawne per funkcja
+  (`funkcja → model, zapasowy`) z wyłącznikiem, zamiast „sprytnego” automatycznego routingu; **fallback tylko do
+  modeli spełniających te same ograniczenia** (dane z modelu własnego nie mogą po cichu pójść do zewnętrznego
+  dostawcy, słabszy model to cicha utrata jakości) i fallback produktowy („pokaż dane bez streszczenia AI”);
+  limity w tokenach, nie tylko w żądaniach — rezerwacja `max_tokens` z góry i zwrot różnicy po odpowiedzi; budżet
+  osobno od limitu: przy 80% alert, przy 100% polityka wybrana z góry przez właściciela (blokada / tańsza trasa /
+  zgoda z alertem); strumieniowanie: rozliczenie po końcu strumienia, anulowanie wywołania u dostawcy po rozłączeniu
+  klienta, odpowiedź przerwana w połowie oznaczona jako częściowa, bez cichego zszywania dwóch; logowanie treści
+  promptów tylko po włączeniu dla trasy, z retencją; miara „odsetek fallbacków” jako wczesne ostrzeżenie.
+- [ ] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (Anthropic, wyżej):
+  pierwsza sesja przygotowuje środowisko i listę zadań, każda kolejna robi jeden przyrost i zostawia artefakty
+  przekazania (postęp, stan testów); oddzielny ewaluator z jawnymi kryteriami; reguła końca sprawdzana przez test
+  lub ewaluator, nie przez deklarację agenta. Recenzent tylko do odczytu (raport, nie poprawka — inaczej znika
+  sygnał), narzędzia nieodwracalne z `dry_run` domyślnie włączonym; ścieżka rozwiązywana **przed** porównaniem
+  z listą dozwolonych (lista zakazów łapie tylko przewidziane zapisy; `work/../secrets` przechodzi); reguła
+  z promptu przeniesiona do hooka, gdy ma działać zawsze. Część jest już w `core-agent-security` — dopisać
+  przykłady i test „lista zakazów vs `..`”.
+
+## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
+Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
+[niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
+- https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/ (sekcja o piaskownicy)
+- https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/ (sekcja o piaskownicy)
+- https://docs.icepanel.io/integrations/mcp-server (model architektury jako jedno źródło widoków)
+- https://agentskills.io/ (specyfikacja Agent Skills — sprawdzona zamiast tego w repo `agentskills/agentskills` na GitHubie)
+- https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ (OWASP Top 10 for LLM 2026, sekcja o wzorcach bezpieczeństwa)
+- https://docs.github.com/en/copilot/concepts/agents/copilot-memory (pamięć Copilota, artykuł A. Kokane o ADR)
+- https://docs.langchain.com/oss/python/langgraph/durable-execution (tryby trwałości LangGraph, w tym domyślny `async`)
+- https://www.inngest.com/docs/learn/how-functions-are-executed (sprawdzone zamiast tego w repo `inngest/website`)
+- https://docs.dbos.dev/architecture (sprawdzone zamiast tego w repo `dbos-inc/dbos-docs`)
+- https://docs.temporal.io/workflow-definition (determinizm kodu workflow w Temporal)
+- https://www.pragmaticcoders.com/resources/product-health-checklist (Product Health Checklist — prawdopodobnie za formularzem; do oceny po wklejeniu treści)
+- https://www.langchain.com/blog/the-anatomy-of-an-agent-harness (definicja harnessu, LangChain)
+- https://research.trychroma.com/context-rot (badanie „context rot”, Chroma)
+- https://prachub.com/resources/llm-gateway-system-design-interview-routing-rate-limits-fallbacks-and-cost-controls (bramka LLM)
+- https://github.com/paoloap-py/agent-harness-guide (repo z przykładami warstw harnessu — 403 przez proxy GitHub dla tego repo)
+Artykułów na medium.com i innych płatnych platformach nie pobierano — treść pochodziła z wklejek.
 
