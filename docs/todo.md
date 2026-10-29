@@ -506,8 +506,11 @@ porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsor
 Przegląd 2026-10-29: idea artykułu — definicje kanoniczne (metryka, schemat, reguła) jako pliki Markdown z YAML
 i jawnymi linkami `[[ścieżka]]`, czytane przez agenta krok po kroku od `index.md`; RAG tylko do szerokich archiwów —
 w dużej części już jest: ci_for_sdlc liczy powiązania jawne przed semantycznymi, decyzje mają rejestr pdi, fabryka
-ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priorytet; najpierw sprawdzić, czy OKF v0.1
-(Google Cloud) istnieje jako specyfikacja — artykuł podaje tylko film, bez repozytorium [niezweryfikowane].
+ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priorytet. Sprawdzone 2026-10-29: OKF istnieje
+— `GoogleCloudPlatform/knowledge-catalog`, `okf/SPEC.md`, wersja 0.2 (bez daty na stronie): wymagane tylko `type`;
+zalecane `title`, `description`, `resource`, `tags`; opcjonalne `sources[]`, `generated`, `verified`, `status`
+(`draft`/`stable`/`deprecated`), `stale_after`; zarezerwowane `index.md` (spis do stopniowego odsłaniania) i `log.md`;
+linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
 - [ ] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** — definicje, które muszą być dokładne i mieć właściciela
   (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
@@ -518,6 +521,11 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
   z `kb.py ingest`), strony utrzymywane przez agenta z polem `sources` we frontmatterze i aktualizacją zamiast
   przepisywania, notatki i decyzje zespołu zmieniane tylko za zgodą; ingest pokazuje plan (nowe i zmienione strony)
   przed zapisem.
+  Świeżość (artykuł „Production-Grade OKF + Graphify Setup”, U. Estari, 2026-08-13): generowany indeks lub graf kodu
+  dryfuje po cichu — hook „sukces”, a mapa sprzed tygodni (Windows bez `nohup`, lista rozszerzeń rozjechana ze źródłem,
+  pominięcie przy obciążeniu bez ponowienia, serwer MCP z cache sprzed regeneracji). Każdy generowany artefakt
+  wiedzy ma znacznik czasu i commit źródła; kontrola w CI porównuje go z `git log -1` i alarmuje po progu (np. 24 h);
+  `stale_after`/`verified` z OKF jako pola na to. Dotyczy też map z `eng-codebase-mapping` i cache `kb.py status`.
 
 ## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
 Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
@@ -639,3 +647,21 @@ wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni
   konkretną rozbieżność; do tego pominięcie powtórzonych identycznych wywołań narzędzia i przypomnienie
   o nieużytych wymaganych narzędziach przed odpowiedzią. Uwaga z demo: reguła guardrails też ma fałszywe
   alarmy (dopasowanie podciągu „ind”) — testuj reguły na prawdziwym słownictwie modelu.
+- [ ] **Syntetyczna sonda end-to-end agenta** (artykuł „Running a Fleet of 33 AI Agents”, J. Hamidun): kontener „Up”
+  i healthcheck „OK” nie dowodzą działania — wygasły token wpychał obsługę wiadomości w pustą gałąź przez 90 min.
+  Co godzinę prawdziwe zapytanie przez cały potok z asercją niepustej, zgodnej ze schematem odpowiedzi w czasie SLA
+  (`ops-observability`, odnośnik z `ai-agents`).
+
+## Szum z wyjścia narzędzi i zatwierdzenie związane z dowodem (artykuły „Reduce Token Waste”, E. Gomziakov, 2026-06-25; „How to Verify AI-Generated Code … Accension”, Sourik, 2026-10, zapisane 2026-10-29)
+- [ ] **`core-cost-control`: szum z terminala** — wyjście testów, buildów, `git diff` i logów to główne źródło
+  zbędnych tokenów; najpierw tanie środki bez nowych zależności: reportery „tylko błędy” (`--reporter=dot`,
+  `pytest -q`, `--silent`), `head`/`tail`, zapis pełnego logu do pliku i czytanie fragmentu. Narzędzia pośrednie
+  (RTK — sprawdzone 2026-10-29: hook PreToolUse przepisujący polecenia Bash, CLI Apache-2.0, silnik i proxy BUSL-1.1,
+  filtruje z utratą treści, `rtk bypass`; Headroom, CodeGraph) tylko jako opcja po `skill_audit` i zgodzie człowieka,
+  bo to obcy hook z dostępem do każdego polecenia; mierzyć koszt na udane zadanie, nie liczbę tokenów (cache,
+  rozumowanie i ponowienia psują proporcję).
+- [ ] **Zatwierdzenie bramki związane z dowodem (mode-pdi ↔ pdi):** `gate.requested` niesie dziś ścieżkę artefaktu
+  i link do PR; dodać skrót treści artefaktu i SHA commita. Zatwierdzenie w pdi zapisuje ten skrót, a
+  `phase_run.py` przed kolejną fazą sprawdza, czy artefakt się nie zmienił — inaczej „EVIDENCE_CHANGED” i ponowna
+  prośba o bramkę (wzorzec z Accension: zgoda dotyczy dowodu, który człowiek widział). Zmiana kontraktu zdarzeń —
+  osobna pozycja w `pdi/TODO.md`; TDD po obu stronach.
