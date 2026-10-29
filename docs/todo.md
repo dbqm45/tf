@@ -485,3 +485,15 @@ porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsor
   korpusu (skan, tabela przez dwie strony, dwie kolumny) zanim ktoś stroi retriever; miara struktury tabel (TEDS) i
   kolejności czytania w zestawie ewaluacyjnym; parsery świadome układu (open source i usługi) jako kategoria z
   kryteriami wyboru, nie lista marek. Liczby z benchmarków (OmniDocBench, CVPR 2025) sprawdzić w źródle pierwotnym.
+
+## Wiedza kanoniczna jako pliki z linkami zamiast RAG (artykuł „Beyond RAG: … Open Knowledge Format (OKF)”, Dev Evolution, 2026-09-09, zapisane 2026-10-29)
+Przegląd 2026-10-29: idea artykułu — definicje kanoniczne (metryka, schemat, reguła) jako pliki Markdown z YAML
+i jawnymi linkami `[[ścieżka]]`, czytane przez agenta krok po kroku od `index.md`; RAG tylko do szerokich archiwów —
+w dużej części już jest: ci_for_sdlc liczy powiązania jawne przed semantycznymi, decyzje mają rejestr pdi, fabryka
+ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priorytet; najpierw sprawdzić, czy OKF v0.1
+(Google Cloud) istnieje jako specyfikacja — artykuł podaje tylko film, bez repozytorium [niezweryfikowane].
+- [ ] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** — definicje, które muszą być dokładne i mieć właściciela
+  (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
+  deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
+  ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
+  agenty mogły je czytać bez tłumaczenia.
