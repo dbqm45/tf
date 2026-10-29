@@ -233,6 +233,12 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
     hooki i uprawnienia nie są przenośne) oraz `mode-pdi` jako pakiet „skill `pdi-decisions` + serwer MCP pdi”.
     Ten sam przegląd co dla każdej zależności (`core-agent-security`: plugin może uruchamiać lokalny MCP z
     uprawnieniami maszyny; zainstalowany ≠ autoryzowany ≠ włączony).
+    Sprawdzone 2026-10-29 (anthropic.com/news, 2026-10-22): standard Agent Skills (nazwa, organizacja GitHub,
+    agentskills.io) przekazany Agentic AI Foundation pod Linux Foundation — ta sama fundacja co MCP; ponad 70 platform
+    (m.in. ChatGPT, Cursor, GitHub Copilot, VS Code), plan: wersjonowane wydania, proces propozycji, wytyczne
+    bezpieczeństwa dla autorów i instalujących skille. To wzmacnia argument za eksportem samych skilli nakładek
+    (format przenośny bez osobnego standardu pluginów) — warunek: zgodność ze specyfikacją (pozycja „Zgodność skilli
+    ze specyfikacją Agent Skills” niżej) i wytyczne bezpieczeństwa AAIF, gdy się ukażą.
 - [x] Agent teams (eksperymentalne, tylko sesje interaktywne) jako opcjonalny kanał rozmowy person — tryb `mode-team` (A1–A3).
 - [x] Workflows (`.claude/workflows/*.js`) dla `eng-code-audit` i symulacji Event Stormingu — sekcja „Workflows”.
 - [x] Target `managed-agents` (Claude Managed Agents, `ant apply`) w `build.py` — zrobione 2026-10-24: `core/factory/target_managed.py`, plan `docs/plans/2026-10-24-target-managed-agents.md`; pliki sprawdzone `ant apply --dry-run` (ant 2.3.0, bez konta).
@@ -458,8 +464,10 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
 - [ ] **Autoryzacja zdalnego serwera MCP** (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
   serwera autoryzacji z metadanych, rejestracja klienta przez Dynamic Client Registration albo Client ID Metadata
   Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
-  Stan specyfikacji MCP i terminy (artykuł „MCP Learnings”, C. Hobbs: DCR do usunięcia w 2027) sprawdzić na
-  modelcontextprotocol.io z datą — dziś [niezweryfikowane].
+  Sprawdzone 2026-10-29 (blog.modelcontextprotocol.io, wersja specyfikacji `2026-07-28`): DCR przestarzałe na rzecz
+  Client ID Metadata Documents (działa jeszcze dla zgodności, usunięcie w przyszłej wersji — konkretnej daty brak);
+  serwer zwraca parametr `iss` (RFC 9207), klient go sprawdza; klient podaje `application_type` (przekierowania na
+  localhost dla aplikacji CLI i desktop); poświadczenia klienta związane z wydawcą.
 - [ ] **Tożsamość agenta i delegacja** (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
   wspomina SPIFFE ani tokenów związanych z nadawcą): każdy agent i każda jego instancja ma własną tożsamość obciążenia
   (SPIFFE/SPIRE, krótkie SVID przez Workload API zamiast współdzielonego konta usługi), osobną od loginu człowieka,
@@ -567,6 +575,13 @@ Przegląd 2026-10-29: `ai-mcp-server` nie wspomina rozszerzenia MCP Apps (narzę
 renderuje go w izolowanym iframe i przekazuje wynik narzędzia; przyciski wołają narzędzia przez hosta). Daty
 z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawdzić w specyfikacji
 (apps.extensions.modelcontextprotocol.io) z datą przed dopisaniem [niezweryfikowane]. Średni priorytet.
+- [ ] **`ai-mcp-server`: specyfikacja `2026-07-28`** (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
+  bezstanowy rdzeń (bez `initialize` i `Mcp-Session-Id`; wersja, klient i możliwości w `_meta`; opcjonalne
+  `server/discover`), nagłówki `Mcp-Method`/`Mcp-Name` do routingu i autoryzacji w bramce, Multi Round-Trip Requests
+  zamiast żądań inicjowanych przez serwer, listy z `ttlMs`/`cacheScope`, zadania jako rozszerzenie, MCP Apps
+  w formalnym frameworku rozszerzeń; przestarzałe Roots, Sampling, Logging i transport HTTP+SSE (min. 12 miesięcy
+  wsparcia); stan aplikacji przez jawne uchwyty zwracane z narzędzi. SDK TS, Python, Go, C# wspierają; zmiany
+  łamiące zgodność dla serwerów zależnych od sesji.
 - [ ] **`ai-mcp-server`: kiedy MCP App, a kiedy tekst** — App tylko gdy interakcja ma strukturę (zatwierdzenie,
   formularz, panel z akcjami, porównanie wyników), jedna App na domenę, nie na narzędzie; łagodny powrót do treści
   strukturalnej, gdy host nie obsługuje rozszerzenia; dane w wyniku narzędzia, nie w HTML zasobu. Bezpieczeństwo:
@@ -779,3 +794,12 @@ skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyją
   bo agent optymalizujący „zielone CI” przesunie weryfikator zamiast kodu. ArchUnitPython jako opcja dla Pythona obok
   import-linter i Tach — sprawdzić projekt i wersję z datą. Liczby z prac „Debt Behind the AI Boom” (arXiv 2603.28592)
   i „More Code, Less Reuse” (MSR 2026) jako tło, do weryfikacji.
+
+## Tożsamość encji: identyfikator pojęcia a identyfikator rzeczy (artykuł „The Spine of the Context Fabric: Concept IRIs and Instance IRIs”, S. Banerjee, 2026-10-13, zapisane 2026-10-29)
+Przegląd 2026-10-29: niski priorytet; uzupełnia pozycję o wiedzy kanonicznej (OKF):
+- [ ] **Rozdział „co znaczy” i „która rzecz”:** pojęcia (klasy, właściwości, metryki) mają stały identyfikator
+  w przestrzeni autorów słownika; rzeczy (dostawca, zamówienie) — identyfikator wybijany regułą z klucza biznesowego,
+  jedna rzecz = jeden identyfikator mimo wielu rekordów w systemach (tablica mapowania kluczy); dane zostają u
+  właścicieli, wspólna jest tylko tożsamość. W notatkach OKF pole `resource` niesie identyfikator pojęcia, a pliki
+  generuje się ze słownika, nie pisze ręcznie. Dla `ddd-context-mapping`/`data-engineering`: reguła wybijania
+  identyfikatorów w specyfikacji i wspólnej bibliotece, nie w jednym narzędziu.
