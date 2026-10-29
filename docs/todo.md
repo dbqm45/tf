@@ -1206,6 +1206,11 @@ zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z a
   autorstwa agenta, godziny przeglądu człowieka na zmianę, czas zadania od początku do końca; wg autora, jeśli po
   ~6 miesiącach agentowe PR to < 5%, wąskim gardłem są specyfikacje, harness i struktura przeglądu, nie narzędzie
   (próg to opinia autora, nie pomiar). Pasuje do decyzji G7 „miary przepływu” w ci_for_sdlc/pdi.
+  **Zastrzeżenie** (J. Wąsowski, „SDD Factory OKRs”, 2026-10-21): to miary aktywności — jako cel (KR) są
+  podatne na Goodharta, bo agent wypełni każdy licznik; raportować je tylko w parze z miarą wyniku (odsetek
+  defektów, które dotarły do użytkownika, koszt zmiany, czas inicjatywy od zamiaru do produkcji, ruch metryki
+  biznesowej) — gdy poprawia się tylko jedna z pary, cel uznaje się za niespełniony; dane z systemów źródłowych
+  (repo, CI, incydenty), nie z samooceny zespołu.
 
 ## Graf hipotez z werdyktami i granice izolacji worktree (artykuły „My AI Agent is in Top-0.04% of WorldQuant Challenge #2: Alpha Knowledge Graph”, A. Honchar, 2026-07-31; „Self-managing coding agents: git worktree, agent-owned context, and sandbox”, J. Wąsowski, 2026-06-01; zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-research-methods` każe zapisać hipotezę falsyfikowalnie z kryterium porażki;
@@ -1326,4 +1331,33 @@ Bez wpisu: „Jevinik” — wzorzec „zbierz dowody, zadaj pytania typowane, d
 (autor: ok. 40× szybciej przy podobnych prawdopodobieństwach, dwa tickery po dwa przebiegi [niezweryfikowane]) jest
 w pozycji o wyborze kontekstu przez selektor (sekcja o harnessie wyżej); jakość decyzji zależy od świeżości
 dowodów, a każdy dowód ma link i datę.
+
+## Własność harnessu, oszczędne skille i SLO agenta (artykuły „Harness Ownership: Skills, Hooks, Instruction Files, And The Harness-Team Anti-Pattern”, J. Wąsowski, 2026-10-17; „His entire AI skills library loads in 660 tokens”, S. S., 2026-10-09; „I Built 15 SLOs for an AI Agent”, T. Deshpande, 2026-09-09; „SDD Factory OKRs”, J. Wąsowski, 2026-10-21; zapisane 2026-10-29)
+Przegląd 2026-10-29: `core-skill-authoring` ma `disable-model-invocation` dla skilli procesowych; pozycja o OTel
+GenAI jest w sekcji o protokołach. Liczby z artykułów (wielkość biblioteki skilli, badanie ETH Zurich o plikach
+kontekstu +20% kosztu) [niezweryfikowane].
+- [ ] **`core-agent-instructions` / `core-skill-authoring`, mapa własności artefaktów harnessu w projekcie:**
+  artefakt (plik instrukcji, skill, hook, kontrakt narzędzia, polityka uprawnień, sensor) → właściciel z domeny,
+  której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu, kto zmienia kontrakt; skill nieużywany
+  60–90 dni oznaczany do wycofania (fabryka ma logi hooków — można liczyć użycia); reguły dopisywane jak zapadka:
+  tylko z prawdziwej porażki, po przeglądzie. Miara: odsetek artefaktów bez właściciela i bez testu.
+- [ ] **`core-skill-authoring`, mniej tokenów w skillach:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
+  względem domyślnego — jeśli nie, usuń całe zdanie); instrukcje pozytywne zamiast zakazów (zakaz wnosi zakazane
+  do kontekstu); słowa-pojęcia, które model już zna (np. zapachy kodu Fowlera po nazwie), zamiast definicji;
+  skill-router wywoływany ręcznie, który dopiero ładuje cięższy. Dla fabryki: zmierzyć łączny koszt opisów
+  wszystkich skilli widocznych w sesji (209 skilli) i rozważyć `disable-model-invocation` dla rzadko
+  wywoływanych automatycznie; specyfikacja bez ścieżek plików i fragmentów kodu (starzeją się, agent i tak by
+  za nimi szedł). Zmiany skilli — przez scenariusze ewaluacji i bramkę, płatny pomiar za zgodą.
+- [ ] **`ops-observability` / `ai-agents`, SLO agenta:** z OTel „za darmo” tylko dostępność i opóźnienie wywołania;
+  resztę dodaje aplikacja: stan końcowy zadania (w tym „słusznie odmówił” i „przekazał człowiekowi” — ani sukces,
+  ani porażka), klasa zadania, liczba kroków, interwencja człowieka, wersja przy odczycie i zapisie pamięci roboczej
+  (wykrywanie nieaktualnego odczytu). **Powód odrzucenia narzędzia zwraca serwer narzędzia** (zła struktura / zła
+  wartość / błąd wewnętrzny): awaria narzędzia → alarm do właściciela zależności, błędne wywołanie przez agenta →
+  zgłoszenie dla zespołu agenta. SLO liczone z jednego stabilnego rekordu emitowanego przez aplikację na koniec
+  zadania, nie z backendu śladów (zmienia nazwy spanów i typy atrybutów). Nazwy atrybutów wg konwencji GenAI tam,
+  gdzie istnieją (repo `semantic-conventions-genai` — sprawdzić wersję przed wpisaniem).
+
+Bez wpisu: „Build a Second Brain in 15 Minutes” (R. Brasil Monteiro, 2026-07-19 — COG: braindump, dzienny skrót,
+podział framework / treść przy aktualizacji, workery na tańszym modelu; pokryte przez pozycje o wiki i
+`core-cost-control`) oraz powtórzony „Spec-Driven Development in Scrum and Kanban” (wpis wyżej).
 
