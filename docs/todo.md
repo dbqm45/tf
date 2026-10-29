@@ -619,3 +619,23 @@ otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez
   to ustalenie do przeglądu. ADR wskazuje elementy modelu, których dotyczy (ten sam pomysł co `applies_to` w pdi).
   Agent czyta model (plik albo serwer MCP narzędzia), a nie obrazki diagramów. Wersje i formaty narzędzi sprawdzić
   z datą przed dopisaniem.
+
+## Protokoły agentów i tracing w standardzie (artykuły „Agentic Communication Protocols”, 0s & 1s, 2026-05-28; „Observability for the Agentic Harness”, D. Biswas, 2026-08-04; „Harness Engineering … Live Examples”, V. Mysore, 2026-10, zapisane 2026-10-29)
+Przegląd 2026-10-29: `ai-agents` ma MCP, tracing z identyfikatorem przebiegu i wznawianie, `ops-observability` —
+OpenTelemetry; reszta harness engineering jest pokryta (`core-async-delegation`, hooki, recenzent). Fabryka nie
+wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni priorytet, w `ai-agents`:
+- [ ] **Mapa protokołów:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
+  punktem końcowym i uwierzytelnianiem; zadania z cyklem życia); ACP (Agent Client Protocol, Zed) — edytor ↔ agent
+  kodujący przez JSON-RPC po stdio, z zatwierdzaniem zapisów w edytorze. Kiedy który, że się uzupełniają, oraz
+  bezpieczeństwo: Agent Card i wyniki innego agenta to niezaufane wejście (patrz pozycja o protocol pivoting
+  w sekcji wzorców bezpieczeństwa). Stan specyfikacji, wersje i opiekunów sprawdzić z datą [niezweryfikowane].
+- [ ] **Tracing wg OpenTelemetry GenAI semantic conventions:** jeden ślad na zadanie, wywołanie modelu i narzędzia
+  jako span-y potomne, ponowienia jako nowe span-y w tym samym śladzie, `links` dla rozgałęzień; atrybuty modelu,
+  tokenów, kosztu i wyniku guardrails; `trace_id` jako identyfikator korelacji między systemami. Z tych śladów
+  ewaluacja offline (`ai-evals`) i koszt (`core-cost-control`, `ops-finops`). Stan konwencji (eksperymentalne?)
+  sprawdzić w repo open-telemetry/semantic-conventions z datą.
+- [ ] **Końcowa kontrola „liczby z narzędzia”** (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
+  i identyfikatory w odpowiedzi z wynikami narzędzi (np. wynik oceny ryzyka, limit polisy) i odsyła modelowi
+  konkretną rozbieżność; do tego pominięcie powtórzonych identycznych wywołań narzędzia i przypomnienie
+  o nieużytych wymaganych narzędziach przed odpowiedzią. Uwaga z demo: reguła guardrails też ma fałszywe
+  alarmy (dopasowanie podciągu „ind”) — testuj reguły na prawdziwym słownictwie modelu.
