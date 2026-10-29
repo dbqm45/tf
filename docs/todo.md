@@ -1280,3 +1280,29 @@ Przegląd 2026-10-29: `ops-sre-incidents` i `ops-observability` nie mają wątku
 Bez wpisu: „How to Create Loops with Claude Code” (Y. Hosni, 2026-06-24) — ten sam artykuł był już przeglądany;
 wnioski są w sekcji „Rutyny, które zdobywają uprawnienia”.
 
+## Brakujące decyzje w specyfikacji i harness 2026 (artykuły „SDD — Missing Spec Decisions: The Two-Implementations Technique and a Decision Register”, J. Wąsowski, 2026-10; „The Harness Is the Product: How Agents Are Actually Built in 2026”, A. Tkachuk, 2026-10-02; „What is AX Design?”, F. Lamenza, 2026-06-08; zapisane 2026-10-29)
+Przegląd 2026-10-29: pozycja „gdzie agent musiałby zgadywać” (sekcja o zamiarze) szuka luk; rejestr decyzji
+prowadzi pdi (`pdi-decisions`). Liczby z artykułów (EPIC: 11,8% vs 20,4% commitów naprawczych; produkty dots, Viktor,
+Muse) [niezweryfikowane].
+- [ ] **`proc-requirements-shaping` / `mode-pdi`, technika dwóch implementacji:** dla zdania z przymiotnikiem jakości
+  („szybko”, „bezpiecznie”, „odpornie”) naszkicować dwa rozsądne rozwiązania i sprawdzić, czy różnią się czymś
+  widocznym dla użytkownika lub operatora — jeśli tak, specyfikacja milczy i brakuje decyzji. Pięć klas do pytania:
+  skala, tryb wykonania (od razu / w tle), awaria i ponowienia, uprawnienia, migracja istniejących danych. Każda
+  decyzja z wariantami, uzasadnieniem, **sposobem weryfikacji** (test, fitness function w CI, punkt przeglądu)
+  i właścicielem (rola, nie „zespół”); odwracalność × zasięg: lokalne odwracalne decyduje agent z zapisem, szerokie
+  proponuje agent, jednokierunkowe rozstrzyga właściciel przed kodem. Spójność spec / plan / zadania: każda decyzja
+  w trzech artefaktach albo jawne „nie dotyczy” (cztery różne braki: brak decyzji, sprzeczność, zgodny błąd, ślad bez
+  treści). Strona pdi: pola `verify` i `reversibility` w kontrakcie decyzji (dbqm45/pdi TODO).
+- [ ] **`ai-agents`, interfejs harnessu od strony modelu:** operacja (jednostka intencji) realizowana przez narzędzie,
+  narzędzie złożone (kod, deterministycznie) albo skill (instrukcje) — dojrzewa od skilla do narzędzia złożonego;
+  skill odwołuje się do narzędzi po id, nie kopiuje ich schematów (jedno miejsce prawdy); mały zestaw prymitywów
+  (`search_memory`, `list_capabilities`, `search_operations`, `load_operation`, `execute_operation`, `run_code`,
+  `ask_human`), a zatwierdzenie wymusza harness, nie model; kanały (Slack, Teams, głos) jako adaptery
+  normalizujące zdarzenie do jednej postaci — agent nie należy do kanału. Wybór kontekstu (pamięć, narzędzia) to
+  często klasyfikacja, nie generowanie — tańszy selektor przed dużym modelem, mierzony na własnych danych.
+
+Bez wpisu (poza powiązaniem): „What is AX Design?” — rola „detektywa” przed automatyzacją (proces taki, jak naprawdę
+działa, z regułami w głowach ludzi; „czy w ogóle automatyzować”; jak poznać, że 10 000 przebiegów w nocy się udało)
+pokrywa się z `ai-product-management` i `ux-service-design`; „enabler” (narzędzia i system projektowy czytelne dla
+agenta) — z pozycjami o MCP wyżej.
+
