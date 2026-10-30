@@ -1113,7 +1113,7 @@ ludzka, METR: harness dostawcy nie lepszy od prostego, rozrzut tokenów na rozwi
   zobowiązanie (chronić) / przypadek (wolno zmienić) / do decyzji właściciela — z nazwiskiem decydującego; zmiana
   zachowania widocznego dla konsumenta to już nie refaktor. Przy archiwizacji zatwierdzone gwarancje trafiają do
   delty jako ADDED (pierwszy zapis wymagania) z testem. Bez pełnej inwentaryzacji systemu na start.
-- [ ] **Skille fabryki: wynik czy tylko koszt** (protokół z artykułu do runnera ewaluacji): ta sama para „ze skillami /
+- [ ] **Skille fabryki: wynik czy tylko koszt** (część A zrobiona 2026-10-30: `docs/evals/2026-10-30-wynik-czy-koszt.md` — zamknięty zbiór 24 scenariuszy, Haiku 85% vs 50%, Sonnet 90% vs 58% pełnych odpowiedzi ze skillami / bez; przewaga nie maleje z mocą modelu. Zostało: część B — te same skille na scenariuszach strojenia, żeby zmierzyć zawyżenie wyniku, ok. 20 USD, po odnowieniu limitu tygodniowego; przyczyny słabego `core-grounding` i `core-delivery-lifecycle` na scenariuszach strojenia; test „no-op” dla skilli bez przewagi: `ai-evals`, `be-api-design`, `eng-testing`, `dom-ev-ocpp-16`) (protokół z artykułu do runnera ewaluacji): ta sama para „ze skillami /
   bez” na tym samym zestawie, raport rozdzielny — odsetek sukcesów, koszt łączny na rozwiązane zadanie (wszystkie
   próby, także porzucone, przez liczbę sukcesów), mediana tokenów udanych prób, pass@k z przedziałem, czas, rodzaje
   porażek; drugi przebieg na mocniejszym modelu (pomiar 2026-10-22 był tylko na Haiku) — jeśli przewaga skilli maleje
