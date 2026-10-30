@@ -108,6 +108,56 @@
           ]
         ]
       }
+    },
+    {
+      "id": "streszczenie-umowy-sla",
+      "expect": "trigger",
+      "prompt": "Mam 60-stronicową umowę SLA z dostawcą chmury i mam przygotować dla klienta jednostronicowe podsumowanie zobowiązań dostawcy. Jak to zrobić, żeby nie dopisać niczego, czego w umowie nie ma?",
+      "checks": {
+        "all": [
+          [
+            "cytat\\w*",
+            "dosłown\\w*",
+            "quote"
+          ],
+          [
+            "\\[\\s*\\]",
+            "bez cytatu",
+            "usu\\w*.{0,40}twierdzeni\\w*",
+            "wycof\\w*"
+          ],
+          [
+            "luk\\w*",
+            "tylko z (podanych|umowy|materiał)",
+            "nie (wynika|obejmuj)\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "agent-lata-wokol-testu",
+      "expect": "trigger",
+      "prompt": "Agent od rana robi migrację modułu płatności. Od godziny powtarza ustalenia jako nowe odkrycia i dopisuje kolejne łatki wokół tego samego czerwonego testu. Dać mu jeszcze jedną szansę czy coś zmienić?",
+      "checks": {
+        "all": [
+          [
+            "/compact",
+            "kompakt\\w*"
+          ],
+          [
+            "/rewind",
+            "cofn\\w*",
+            "/clear",
+            "now\\w* sesj\\w*"
+          ],
+          [
+            "punkt\\w* kontroln\\w*",
+            "dwa sygnał\\w*",
+            "sygnał\\w* zużyt\\w*",
+            "zużyt\\w* kontekst\\w*"
+          ]
+        ]
+      }
     }
   ]
 }
