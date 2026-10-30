@@ -1467,6 +1467,41 @@ Bez wpisu: „dług zrozumienia” z artykułu Ranjana (zespół rozumie coraz m
 go pozycja „`core-delivery-lifecycle`, osąd nie może uciec do kroków” (refinement nieskończony, dopóki nikt nie umie
 wyjaśnić, jak praca zostanie zrobiona) oraz przegląd człowieka w `core-async-delegation`.
 
+## Wielu wykonawców nad jednym zadaniem: własność, wersje i kontrakt dowodów (artykuły „Agent Harness Engineering: The Runtime Architecture Behind Reliable AI Agents”, S. J. Kar, 2026-08-14; „Seven Agent Design Patterns — and How to Combine Them”, X. Wang, 2026-10; zapisane 2026-10-30)
+Przegląd 2026-10-30: następujące elementy są już w `ai-agents` i w pozycjach TODO:
+- „kontekst to nie stan” i odtwarzanie kontekstu ze stanu;
+- zapadka „porażka → brakująca kontrola”;
+- weryfikacja zamiast deklaracji agenta;
+- egzekwowanie na granicy zamiast instrukcji;
+- trwałe wykonanie (sekcja „Trwałe wykonanie agentów”);
+- wzorce workflow i agentów;
+- przejścia grafu z obowiązkową weryfikacją.
+
+Artykułów i obrazów z Medium nie dało się otworzyć (proxy 403), podobnie docs.temporal.io, docs.langchain.com
+i agentskills.io. Braki:
+- [ ] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem:**
+  - **Dzierżawa zadania z wygaśnięciem i biciem serca.** Wykonawca, który zniknął, traci zadanie, a inny wznawia
+    je z trwałego stanu.
+  - **Zakończenie i zapis sprawdzają bieżącego właściciela i wersję rekordu.** Spóźniony wykonawca nie nadpisze
+    nowszego wyniku. Zapis całego rekordu ze starej kopii to utracona aktualizacja. Przed zapisem trzeba sprawdzić
+    wersję, użyć transakcji albo zlecić scalanie jednemu koordynatorowi.
+  - **Trzy różne operacje:** ponowienie (ta sama operacja jeszcze raz), wznowienie (z zapisanego stanu; najpierw
+    sprawdzić, czy wersje dokumentów i konfiguracji nadal pasują do przyjętej pracy) i kompensacja (osobna operacja
+    biznesowa, która też może zawieść). Żadna z nich nie jest uniwersalnym „cofnij”.
+  - **Ukończenie jako predykat systemu,** nie zdanie modelu: wymagania spełnione, walidacja przeszła, artefakty są,
+    polityki sprawdzone. Jawne wyjścia inne niż sukces: wyczerpany budżet, brak nowych dowodów, brak wymagania do
+    wyjaśnienia. Wynik częściowy oznaczony jako „szkic z zastrzeżeniami”, nie jako zatwierdzony.
+  - **Miara odzyskiwania:** ile ukończonej pracy wykonało się ponownie, czy zapisy zewnętrzne się zdublowały, czy
+    przyjęte dowody nie zniknęły.
+- [ ] **`core-source-research` / agent `researcher`, kontrakt dowodu przy równoległych badaczach:**
+  - **Rekord dowodu:** id pytania, teza, źródło, wersja dokumentu, warunki ograniczające, otwarte kwestie.
+  - **Brak informacji pozostaje brakiem,** nie zamienia się w odpowiedź przeczącą.
+  - **Duplikat z ponowienia** nie liczy się jako niezależne potwierdzenie.
+  - **Sprzeczne ustalenia zostają widoczne** i wracają do sprawdzenia, zamiast wygrywać tym, które brzmi
+    pewniej.
+  - **Recenzent dostaje dowody źródłowe i kryteria,** nie tylko gotową prozę. Zgoda drugiego agenta na tych samych
+    źródłach nie jest niezależnym dowodem.
+
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
 [niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
@@ -1486,4 +1521,5 @@ Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od 
 - https://prachub.com/resources/llm-gateway-system-design-interview-routing-rate-limits-fallbacks-and-cost-controls (bramka LLM)
 - https://github.com/paoloap-py/agent-harness-guide (repo z przykładami warstw harnessu — 403 przez proxy GitHub dla tego repo)
 Artykułów na medium.com i innych płatnych platformach nie pobierano — treść pochodziła z wklejek.
-
+- https://medium.com/@marvelous_catawba_otter_200/seven-agent-design-patterns-and-how-to-combine-them-d2168c875722 (obrazy artykułu; Medium 403)
+- https://docs.temporal.io/activities, https://docs.langchain.com/oss/python/langgraph/persistence (proxy 403, 2026-10-30)
