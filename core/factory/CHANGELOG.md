@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.51.0] — 2026-10-30
+### Added
+- **core:** add a sealed holdout set and result-vs-cost report to skill evals (#102)
+
 ## [5.50.0] — 2026-10-27
 ### Added
 - **mode-pdi:** design phase with a Figma frame table and its check (#94)
