@@ -973,7 +973,7 @@ sterujących programami (computer use). Liczby autora (jedno stanowisko, Windows
 ## Utrata, duplikaty i ponowne przetwarzanie zdarzeń (artykuł „How to Handle Event Loss, Duplicate Events, and Reprocessing”, A. Kumar, 2026-09-10, zapisane 2026-10-29)
 Przegląd 2026-10-29: `be-messaging-outbox` ma id nadawane przy zapisie, deduplikację atomową w tej samej jednostce
 pracy co efekt. Braki:
-- [ ] **`be-messaging-outbox`: trzy osobne problemy, trzy naprawy** — utrata to trwałość po stronie producenta
+- [x] **`be-messaging-outbox`: trzy osobne problemy, trzy naprawy** (zrobione 2026-10-30: §5) — utrata to trwałość po stronie producenta
   i brokera (w Kafce `acks=all`, `min.insync.replicas` > 1, producent idempotentny — ten ostatni nie zastępuje
   deduplikacji u konsumenta); duplikaty — konsument idempotentny, rekord deduplikacji z czasem życia dobranym do okna
   ponownych dostarczeń (nie rośnie bez końca); **celowe odtworzenie historii** (reset offsetu, nowa grupa
@@ -1075,7 +1075,7 @@ człowieka tam, gdzie ryzyko, stan współdzielony, punkty kontrolne) jest w `ai
 stan, punkty zatwierdzenia) i w fazach pdi z bramkami; artykuł nie wnosi metody poza zasadą.
 
 ## Blokady optymistyczne i pesymistyczne, skill od wzorcowego wyniku (artykuły „When to Use Optimistic vs Pessimistic Locking”, A. Kovtun, 2026-10-14; „I Built a Claude Skill for PRD Writing… Started With the Output”, J. More, 2026-06-30; zapisane 2026-10-29)
-- [ ] **`be-database`, wybór blokady** (dziś jedna linia: `FOR UPDATE`, unikalne ograniczenia lub wersjonowanie;
+- [x] **`be-database`, wybór blokady** (zrobione 2026-10-30: sekcja „Transakcje”; domyślne limity czasu baz z artykułu nie wpisane) (dziś jedna linia: `FOR UPDATE`, unikalne ograniczenia lub wersjonowanie;
   `SKIP LOCKED` przy kolejce): pytanie zerowe — czy jedno atomowe `UPDATE … SET x = x - 30 WHERE … AND x >= 30` albo
   ograniczenie (`UNIQUE`, `EXCLUDE`) usuwa okno między odczytem a zapisem; potem trzy pytania po kolei: czy okno mieści
   się w jednej krótkiej transakcji (nie — myślenie użytkownika, kilka żądań: wersja/ETag albo dzierżawa z wygaśnięciem
