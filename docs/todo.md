@@ -1420,6 +1420,29 @@ przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezw
 Bez wpisu: powtórzony „I Built 15 SLOs for an AI Agent” (T. Deshpande — pozycja o SLO agenta w sekcji „Własność
 harnessu…”).
 
+## Kokpit fabryki: wskaźniki wyprzedzające i opóźnione (artykuły „SDD Factory Dashboard: The Leading and Lagging Indicators That Actually Matter”, J. Wąsowski, 2026-08-12; „Building an AI Agent from Scratch: No Magic, Just a Deterministic Loop”, S. Nes, 2026-05-04; zapisane 2026-10-30)
+Przegląd 2026-10-30: `eng-continuous-delivery` ma cztery metryki DORA, a pozycja „miary autonomii” wyżej ma już
+zastrzeżenie o Goodharcie i parę „miara aktywności + miara wyniku”. Liczby z artykułu (Faros +91% czasu przeglądu,
+METR −19%, Peng +55,8%, DORA 2024: klaster „high” z gorszym CFR niż „medium”, rework rate dodany przez DORA w 2024)
+[niezweryfikowane]. Braki:
+- [ ] **`eng-continuous-delivery` / `core-delivery-lifecycle`, kokpit zdrowia fabryki:**
+  - wskaźniki opóźnione rozliczają, czyli wskaźnik nieudanych zmian (CFR), odsetek defektów u użytkownika, odsetek
+    przeróbek (rework rate, piąta miara DORA — sprawdzić w raporcie) i realizacja zwrotu z inwestycji;
+  - wskaźnik wyprzedzający trafia na kokpit tylko wtedy, gdy przewiduje któryś opóźniony: kolejka PR czekających na
+    przegląd człowieka (liczba, wiek najstarszego) → CFR; dryf specyfikacji (kod odbiega od spec) → defekty u
+    użytkownika; czas od ostatniej weryfikacji szablonu lub reguły z rzeczywistością → przeróbki;
+  - każda miara prędkości w parze z miarą jakości, która ruszy się, gdy ktoś zacznie grać pierwszą;
+  - mierzy się system, nigdy osobę;
+  - trzy widoki z różną częstotliwością: zarząd kwartalnie (opóźnione i zwrot z inwestycji), kierownictwo miesięcznie
+    (trendy obu rodzajów), lider zespołu co tydzień (pełny zestaw wyprzedzający z parami);
+  - start od czterech liczb: kolejka przeglądu, dryf specyfikacji, CFR, defekty u użytkownika. Definicje „defektu”
+    i „ucieczki” ustalić w organizacji przed pierwszym pomiarem.
+
+Bez wpisu: „Building an AI Agent from Scratch” (S. Nes — pętla ReAct w 50 liniach, Ollama, MCP; pokryte przez
+`ai-agents` i `eng-llm-features`). Repozytorium `sergenes/mini_agent` sprawdzone (README z listą części serii).
+Z obserwacji autora: model bez wsparcia wywołań funkcji opisuje wywołania prozą, a pętla kończy się od razu bez
+błędu. Pustą listę wywołań przy zadaniu wymagającym narzędzi warto traktować jako podejrzaną.
+
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
 [niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
