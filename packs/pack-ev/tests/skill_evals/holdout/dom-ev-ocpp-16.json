@@ -54,6 +54,31 @@
           ]
         ]
       }
+    },
+    {
+      "id": "ho-ocpp16-ponowiony-start",
+      "expect": "trigger",
+      "prompt": "Po zerwaniu połączenia ładowarka wysłała ponownie ten sam StartTransaction z tym samym identyfikatorem wiadomości i w CSMS powstały dwie transakcje. Jak powinien to obsłużyć backend?",
+      "checks": {
+        "all": [
+          [
+            "messageId",
+            "identyfikator\\w* wiadomości"
+          ],
+          [
+            "chargePointId",
+            "identyfikator\\w* ładowark\\w*",
+            "pary? .{0,40}ładowark"
+          ],
+          [
+            "t(ę|a) sam\\w* odpowied\\w*",
+            "same response",
+            "bez ponown\\w* skutk\\w*",
+            "nie twórz\\w* drugiej",
+            "idempoten\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

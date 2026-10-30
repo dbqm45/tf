@@ -53,6 +53,25 @@
           ]
         ]
       }
+    },
+    {
+      "id": "ho-api-rownolegla-edycja",
+      "expect": "trigger",
+      "prompt": "Dwóch operatorów edytuje w panelu ten sam produkt i drugi zapis po cichu nadpisuje zmiany pierwszego. Jak to rozwiązać na poziomie API?",
+      "checks": {
+        "all": [
+          [
+            "ETag"
+          ],
+          [
+            "If-Match"
+          ],
+          [
+            "\\b412\\b",
+            "Precondition Failed"
+          ]
+        ]
+      }
     }
   ]
 }
