@@ -1,0 +1,69 @@
+{
+  "skill": "core-async-delegation",
+  "scenarios": [
+    {
+      "id": "ho-noc-porazka-bramki",
+      "expect": "trigger",
+      "prompt": "Zlecony na noc agent trzeci raz z rzędu nie przechodzi testami fazy 2 i kusi go, żeby poluzować asercję albo odpuścić fazę. Co ma zrobić według sensownej polityki i co mi zostawić na rano?",
+      "checks": {
+        "all": [
+          [
+            "najwyżej 2",
+            "maks\\w*\\.? 2",
+            "dwie próby",
+            "2 próby",
+            "two attempts",
+            "at most 2",
+            "k/2"
+          ],
+          [
+            "\\bSTOP\\b"
+          ],
+          [
+            "SHA",
+            "adaptacj\\w*",
+            "niepewno\\w*",
+            "weryfikacj\\w* ręczn\\w*",
+            "manual verification"
+          ]
+        ],
+        "none": [
+          "osłab\\w* asercj\\w* (i|aby|żeby) (przejść|przeszł)"
+        ]
+      }
+    },
+    {
+      "id": "ho-tura-konczy-sie-tekstem",
+      "expect": "trigger",
+      "prompt": "Przy długim zadaniu agent kilka razy zakończył turę podsumowaniem w stylu 'następnie zrobię X' i nasza pętla uznała pracę za skończoną. Jak to zabezpieczyć?",
+      "checks": {
+        "all": [
+          [
+            "lista zadań",
+            "plan z polami",
+            "odhacz\\w*",
+            "checklist",
+            "to-?do",
+            "pozycj\\w* do odhaczenia"
+          ],
+          [
+            "otwarte",
+            "kontynuuj",
+            "open items",
+            "continue"
+          ],
+          [
+            "ktoś inny",
+            "inny niż wykonawca",
+            "niezależn\\w*",
+            "/goal",
+            "model oceniając\\w*",
+            "bramk\\w* w CI",
+            "evaluator",
+            "someone other"
+          ]
+        ]
+      }
+    }
+  ]
+}

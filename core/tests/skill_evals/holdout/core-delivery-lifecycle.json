@@ -1,0 +1,63 @@
+{
+  "skill": "core-delivery-lifecycle",
+  "scenarios": [
+    {
+      "id": "ho-zmiana-kontraktu-w-kroku",
+      "expect": "trigger",
+      "prompt": "Agent w połowie kroku wdrożenia zauważył, że modelu danych zakładanego w planie nie ma w kodzie, a poprawka ruszy kilkanaście modułów zamiast trzech plików. Ma po prostu dociągać kod kolejnymi poleceniami?",
+      "checks": {
+        "all": [
+          [
+            "zastan\\w*",
+            "found\\s*/?\\s*expected",
+            "oczekiwan\\w*\\s*/\\s*zastan"
+          ],
+          [
+            "dostosuj i kontynuuj",
+            "adjust and continue",
+            "stop i popraw\\w* plan",
+            "popraw\\w* plan"
+          ],
+          [
+            "odstępstw\\w*",
+            "deviations?",
+            "ADAPT"
+          ]
+        ],
+        "none": [
+          "dokręc\\w* kod (dalej|kolejnymi)"
+        ]
+      }
+    },
+    {
+      "id": "ho-warunek-konca-kroku",
+      "expect": "trigger",
+      "prompt": "Mam długi krok implementacji i chcę, żeby sesja sama się kończyła, gdy robota jest gotowa. Jak sformułować warunek końca, żeby nie opierał się na słowie agenta, i co zrobić po jego spełnieniu?",
+      "checks": {
+        "all": [
+          [
+            "kod\\w*\\s+(wyjścia\\s+)?0",
+            "exit code",
+            "przechodzi\\s*/\\s*nie przechodzi",
+            "pass\\s*/\\s*fail"
+          ],
+          [
+            "transkrypt",
+            "widzi tylko rozmow\\w*",
+            "conversation",
+            "pokazuj\\w* wynik polecenia",
+            "show\\w* (the )?(command )?output"
+          ],
+          [
+            "świeżym kontekście",
+            "fresh context",
+            "code-review",
+            "security-reviewer",
+            "autor nie ocenia",
+            "nie ocenia własnej"
+          ]
+        ]
+      }
+    }
+  ]
+}

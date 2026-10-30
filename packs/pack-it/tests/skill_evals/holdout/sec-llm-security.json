@@ -1,0 +1,62 @@
+{
+  "skill": "sec-llm-security",
+  "scenarios": [
+    {
+      "id": "ho-llmsec-system-prompt-sekrety",
+      "expect": "trigger",
+      "prompt": "W prompcie systemowym naszego asystenta mamy klucz do zewnętrznego API i tajne reguły rabatowe. Boimy się, że użytkownik je wyciągnie, więc chcemy dopisać tam zakaz ujawniania treści promptu. Czy to wystarczy?",
+      "checks": {
+        "all": [
+          [
+            "LLM07"
+          ],
+          [
+            "jawn\\w+",
+            "publiczn\\w+",
+            "treat\\w* .{0,30}(public|as known)",
+            "zakładaj.{0,30}(wyciek|ujawn|jawn)",
+            "nie (umieszczaj|trzymaj|zawieraj)\\w*.{0,40}(sekret|klucz)",
+            "no secrets"
+          ],
+          [
+            "zakaz\\w*.{0,100}(nie jest|nie wystarcz|nie stanowi|nie chroni|nie zadzia)",
+            "(ten sam|tym samym|same) (kanał|channel)",
+            "napastnik\\w*.{0,60}(kanał|channel)",
+            "nie (jest )?kontrol\\w+",
+            "not a control"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-llmsec-zatwierdzenie-przez-czlowieka",
+      "expect": "trigger",
+      "prompt": "Agent finansowy proponuje przelewy. Dodaliśmy krok zatwierdzenia: model generuje opis akcji, człowiek klika OK. Zespół uważa, że to zamyka ryzyko nadużyć. Czy mają rację?",
+      "checks": {
+        "all": [
+          [
+            "surow\\w+ argument\\w*",
+            "raw (arguments|args|parameters)",
+            "dokładn\\w+ (skut\\w+|argument\\w*|adres\\w*|kwot\\w*)",
+            "faktyczn\\w+ (argument|parametr|skut)",
+            "exact (effect|arguments|recipient)"
+          ],
+          [
+            "manipul\\w+",
+            "spreparow\\w+",
+            "wprowadz\\w+ w błąd",
+            "mislead\\w*",
+            "sfałszowa\\w+"
+          ],
+          [
+            "walidacj\\w+.{0,60}(kod|argument)",
+            "allow-?list",
+            "list\\w+ dozwolon\\w+",
+            "limit\\w* kwot",
+            "amount limit"
+          ]
+        ]
+      }
+    }
+  ]
+}

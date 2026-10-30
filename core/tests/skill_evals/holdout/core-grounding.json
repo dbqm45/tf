@@ -1,0 +1,59 @@
+{
+  "skill": "core-grounding",
+  "scenarios": [
+    {
+      "id": "ho-dlugi-regulamin-notatka",
+      "expect": "trigger",
+      "prompt": "Mam 80-stronicowy regulamin i mam na jego podstawie napisać notatkę dla zarządu, bez dokładania wiedzy z zewnątrz. Jak pracować, żeby model niczego nie dopisał od siebie?",
+      "checks": {
+        "all": [
+          [
+            "cytat\\w*",
+            "quotes?\\b"
+          ],
+          [
+            "bez cytatu",
+            "without (a )?quote",
+            "\\[\\s*\\]",
+            "usu\\w*.{0,40}twierdzeni\\w*",
+            "retract",
+            "wycof\\w*"
+          ],
+          [
+            "luk\\w*",
+            "\\bgaps?\\b",
+            "nie obejmuj\\w*",
+            "sources-only",
+            "tylko z podanych",
+            "only from (the )?provided"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-zuzyty-kontekst-sesji",
+      "expect": "trigger",
+      "prompt": "Siedzimy trzecią godzinę w jednej sesji i agent zaczął podawać ścieżki plików, których nie ma, oraz łamać ograniczenie ustalone na początku. Co robimy?",
+      "checks": {
+        "all": [
+          [
+            "rewind",
+            "cofn\\w* ostatni\\w* krok"
+          ],
+          [
+            "/?compact",
+            "kompakt\\w*"
+          ],
+          [
+            "punkt\\w* kontroln\\w*",
+            "checkpoint",
+            "nową sesj\\w*",
+            "nowej sesji",
+            "new session",
+            "fresh session"
+          ]
+        ]
+      }
+    }
+  ]
+}
