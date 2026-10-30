@@ -522,12 +522,12 @@ podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzy
 ## Jakość parsowania dokumentów w RAG (artykuł „Why Your RAG Pipeline Dies on Real Documents”, P. Perrone, 2026-10-01, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-rag` już każe zachować tabele z nagłówkiem, OCR dla skanów i chunking wg struktury; tabela
 porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsorowany (LlamaParse) — bez rekomendacji dostawcy.
-- [ ] **`ai-rag`: kontrola jakości parsowania przed indeksacją** — strona bez warstwy tekstu albo z podejrzanie
+- [x] **`ai-rag`: kontrola jakości parsowania przed indeksacją** (zrobione 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §1, SKILL.md krok 2) — strona bez warstwy tekstu albo z podejrzanie
   małą liczbą znaków to alarm, nie pusty dokument; przegląd surowego wyjścia parsera na najgorszych dokumentach
   korpusu (skan, tabela przez dwie strony, dwie kolumny) zanim ktoś stroi retriever; miara struktury tabel (TEDS) i
   kolejności czytania w zestawie ewaluacyjnym; parsery świadome układu (open source i usługi) jako kategoria z
   kryteriami wyboru, nie lista marek. Liczby z benchmarków (OmniDocBench, CVPR 2025) sprawdzić w źródle pierwotnym.
-- [ ] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (artykuł „The Limits of Vector Search in RAG”,
+- [x] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (zrobione 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §2, SKILL.md krok 7) (artykuł „The Limits of Vector Search in RAG”,
   J. Wąsowski, 2026-09-14; hybrydę i „wektory gubią identyfikatory” skill już ma): zestaw ewaluacyjny z polem typu
   zapytania — recall@k osobno dla zapytań semantycznych (parafrazy, intencje) i dokładnych (identyfikatory, kody,
   wersje, liczby, negacje), bo średnia ukrywa podział; przed ustawieniem progu podobieństwa histogram cosinusa dla
@@ -544,7 +544,7 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
 zalecane `title`, `description`, `resource`, `tags`; opcjonalne `sources[]`, `generated`, `verified`, `status`
 (`draft`/`stable`/`deprecated`), `stale_after`; zarezerwowane `index.md` (spis do stopniowego odsłaniania) i `log.md`;
 linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
-- [ ] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** — definicje, które muszą być dokładne i mieć właściciela
+- [ ] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** (część w `ai-rag` zrobiona 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §3–4, SKILL.md krok 1; zostaje ocena zgodności `docs/knowledge` z OKF i kontrola świeżości w `core-knowledge-base`) — definicje, które muszą być dokładne i mieć właściciela
   (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
   ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
@@ -973,7 +973,7 @@ sterujących programami (computer use). Liczby autora (jedno stanowisko, Windows
 ## Utrata, duplikaty i ponowne przetwarzanie zdarzeń (artykuł „How to Handle Event Loss, Duplicate Events, and Reprocessing”, A. Kumar, 2026-09-10, zapisane 2026-10-29)
 Przegląd 2026-10-29: `be-messaging-outbox` ma id nadawane przy zapisie, deduplikację atomową w tej samej jednostce
 pracy co efekt. Braki:
-- [ ] **`be-messaging-outbox`: trzy osobne problemy, trzy naprawy** — utrata to trwałość po stronie producenta
+- [x] **`be-messaging-outbox`: trzy osobne problemy, trzy naprawy** (zrobione 2026-10-30: §5) — utrata to trwałość po stronie producenta
   i brokera (w Kafce `acks=all`, `min.insync.replicas` > 1, producent idempotentny — ten ostatni nie zastępuje
   deduplikacji u konsumenta); duplikaty — konsument idempotentny, rekord deduplikacji z czasem życia dobranym do okna
   ponownych dostarczeń (nie rośnie bez końca); **celowe odtworzenie historii** (reset offsetu, nowa grupa
@@ -1075,7 +1075,7 @@ człowieka tam, gdzie ryzyko, stan współdzielony, punkty kontrolne) jest w `ai
 stan, punkty zatwierdzenia) i w fazach pdi z bramkami; artykuł nie wnosi metody poza zasadą.
 
 ## Blokady optymistyczne i pesymistyczne, skill od wzorcowego wyniku (artykuły „When to Use Optimistic vs Pessimistic Locking”, A. Kovtun, 2026-10-14; „I Built a Claude Skill for PRD Writing… Started With the Output”, J. More, 2026-06-30; zapisane 2026-10-29)
-- [ ] **`be-database`, wybór blokady** (dziś jedna linia: `FOR UPDATE`, unikalne ograniczenia lub wersjonowanie;
+- [x] **`be-database`, wybór blokady** (zrobione 2026-10-30: sekcja „Transakcje”; domyślne limity czasu baz z artykułu nie wpisane) (dziś jedna linia: `FOR UPDATE`, unikalne ograniczenia lub wersjonowanie;
   `SKIP LOCKED` przy kolejce): pytanie zerowe — czy jedno atomowe `UPDATE … SET x = x - 30 WHERE … AND x >= 30` albo
   ograniczenie (`UNIQUE`, `EXCLUDE`) usuwa okno między odczytem a zapisem; potem trzy pytania po kolei: czy okno mieści
   się w jednej krótkiej transakcji (nie — myślenie użytkownika, kilka żądań: wersja/ETag albo dzierżawa z wygaśnięciem

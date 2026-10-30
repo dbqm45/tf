@@ -108,6 +108,45 @@
       "expect": "no-trigger",
       "neighbor": "be-database",
       "prompt": "Mamy tabelę orders w PostgreSQL z 80 mln wierszy i zapytanie z filtrem po customer_id i created_at jest wolne. Jak dobrać indeks złożony i sprawdzić plan zapytania?"
+    },
+    {
+      "id": "parser-puste-strony-tabele",
+      "expect": "trigger",
+      "prompt": "Mamy RAG nad 3 tysiącami PDF-ów z przetargów (część to skany, dużo tabel przez dwie strony, układ w dwóch kolumnach). Odpowiedzi o kwotach są często błędne, więc chcemy zmienić model embeddingów i dostroić retriever. Od czego zacząć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["parser\\w*", "parsowani\\w+", "wyjści\\w+ parsera", "ekstrakcj\\w+ tekstu"],
+          ["mał\\w+ liczb\\w+ znaków", "bez warstwy tekstu", "pust\\w+ stron", "OCR"],
+          ["najgorsz\\w+ dokument", "surow\\w+ wyjści", "obejrz\\w+", "przegląd\\w* (wyniku|wyjścia)"],
+          ["kolejnoś\\w+ czytania", "dwie kolumny", "dwóch kolumn", "TEDS", "struktur\\w+ tabel"]
+        ]
+      }
+    },
+    {
+      "id": "dwa-koszyki-prog-podobienstwa",
+      "expect": "trigger",
+      "prompt": "Nasz retriever ma średni recall@10 na poziomie 0,82 i ustawiliśmy próg podobieństwa cosinusowego 0,8, żeby odcinać nietrafione fragmenty. Użytkownicy skarżą się, że nie znajduje numerów umów i wersji produktów. Jak lepiej mierzyć i ustawić próg? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["osobn\\w+ (dla|koszyk|kategori)", "typ\\w* zapyta\\w+", "dwa koszyki", "rozbi\\w+ (na|wg)"],
+          ["identyfikator\\w*", "dokładn\\w+", "numer\\w*", "kod\\w*"],
+          ["histogram", "losow\\w+ par", "niepowiązan\\w+ par", "rozkład\\w* (podobieństw|cosinus)"],
+          ["BM25", "hybryd\\w+", "leksykaln\\w+"]
+        ]
+      }
+    },
+    {
+      "id": "definicje-kanoniczne-czy-rag",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby asystent danych odpowiadał na pytania o definicje metryk (np. aktywny klient, churn) i schematy tabel. Mamy je w Confluence obok tysięcy innych stron. Wrzucić wszystko do RAG? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["kanoniczn\\w+", "kuratorowan\\w+", "źródło prawdy", "jedn\\w+ definicj\\w+"],
+          ["właściciel\\w*", "owner"],
+          ["plik\\w*", "link\\w*", "deterministyczn\\w+", "indeks\\w*"],
+          ["router\\w*", "osobn\\w+ ścieżk", "archiw\\w+", "dla reszty", "RAG dla"]
+        ]
+      }
     }
   ]
 }

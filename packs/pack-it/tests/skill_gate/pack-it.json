@@ -44,8 +44,8 @@
   "offline": "2026-10-22"
  },
  "ai-rag": {
-  "fingerprint": "5c627a1b89156616",
-  "offline": "2026-10-22"
+  "fingerprint": "d20ffb41aefe9446",
+  "offline": "2026-10-30"
  },
  "ai-research-methods": {
   "fingerprint": "fe499edda3be3d21",
@@ -100,12 +100,12 @@
   "offline": "2026-10-22"
  },
  "be-database": {
-  "fingerprint": "e683a708de397ae9",
-  "offline": "2026-10-22"
+  "fingerprint": "5ade0b01b28ffe03",
+  "offline": "2026-10-30"
  },
  "be-messaging-outbox": {
-  "fingerprint": "461c5b5184ba6cf2",
-  "offline": "2026-10-22"
+  "fingerprint": "490113ecb9c33197",
+  "offline": "2026-10-30"
  },
  "data-analysis": {
   "fingerprint": "40e46e030d150edd",

@@ -19,11 +19,16 @@ wyjścia i pętlę narzędzi opisuje **eng-llm-features**; ten skill dotyczy teg
      całość w prompcie z prompt caching, bez indeksu;
    - korpus duży, zmienny, z uprawnieniami albo wymaga cytatów → RAG;
    - dane ustrukturyzowane (zamówienie, stan konta) → narzędzie z zapytaniem do API lub SQL, nie wektory;
+   - definicje, które muszą być dokładne i mieć właściciela (metryki, schematy, reguły) → kuratorowane pliki czytane
+     deterministycznie, RAG dla reszty, router między nimi (`references/parsowanie-ewaluacja-wiki.md` §3);
    - fine-tuning zmienia styl, format i zachowanie, a nie dostarcza aktualnych faktów; nie zastępuje RAG-a
      [założenie — zweryfikuj u dostawcy modelu].
 2. **Wczytywanie.** Parser dobierz do dokumentu i obejrzyj wynik na 10 stronach: kolejność kolumn, nagłówki, stopki
    powtarzane na każdej stronie, tabele (zostaw jako Markdown/HTML z nagłówkiem, nie jako płaski tekst), OCR dla
-   skanów. Do każdego fragmentu zapisz źródło, stronę, sekcję, datę, wersję i listę uprawnień.
+   skanów. Do każdego fragmentu zapisz źródło, stronę, sekcję, datę, wersję i listę uprawnień. Strona bez warstwy
+   tekstu albo z podejrzanie małą liczbą znaków to alarm, nie pusty dokument. Przy złych odpowiedziach najpierw
+   czytasz surowe wyjście parsera na najgorszych dokumentach (skan, tabela przez dwie strony, dwie kolumny), dopiero
+   potem stroisz retriever (`references/parsowanie-ewaluacja-wiki.md` §1).
 3. **Chunking.** Zacznij od podziału wg struktury (sekcja, akapit, wiersz tabeli z nagłówkiem), nie od stałej liczby
    znaków. Punkt startowy: 200–500 tokenów i zakładka 10–20% [założenie — dobierz na zbiorze z kroku 7]. Za mały chunk
    gubi kontekst, za duży rozmywa embedding. Wariant „małe do szukania, duże do wysłania” (rodzic–dziecko) pomaga,
@@ -45,6 +50,9 @@ wyjścia i pętlę narzędzi opisuje **eng-llm-features**; ten skill dotyczy teg
    fragmentami, w tym pytania bez odpowiedzi w korpusie. Mierz: recall@k (czy właściwy fragment jest w top-k),
    MRR (jak wysoko), nDCG (gdy fragmentów jest wiele i różnią się przydatnością). Zmieniasz jedną rzecz naraz
    (parser, chunk, model, hybryda, reranker) i porównujesz z poprzednim wynikiem. Dopiero potem oceniasz odpowiedzi.
+   Recall@k liczysz **osobno dla dwóch koszyków**: zapytania semantyczne (parafrazy) i dokładne (identyfikatory, kody,
+   wersje, liczby); pytania łączące dwa fakty to trzecia kategoria. Próg podobieństwa ustawiasz dopiero po
+   histogramie cosinusa dla losowych, niepowiązanych par z własnego korpusu (`references/parsowanie-ewaluacja-wiki.md` §2).
 8. **Odpowiedź z cytatami.** Prompt: odpowiadaj wyłącznie z podanych fragmentów, przy każdym twierdzeniu podaj
    identyfikator źródła, a przy braku podstaw odpowiedz „nie wiem”. Kod sprawdza, że cytowany identyfikator istnieje
    wśród przekazanych fragmentów, a cytat występuje w jego treści. Do kontekstu dawaj mniej, lepszych fragmentów;
@@ -77,10 +85,10 @@ Diagnoza porażek (objaw → przyczyna → poprawka) i dłuższa tabela baz: `re
 
 ## Checklista
 - [ ] uzasadniony wybór: kontekst, RAG, narzędzie albo fine-tuning
-- [ ] wynik parsera obejrzany na próbce; metadane źródła, wersji i uprawnień przy każdym chunku
+- [ ] wynik parsera obejrzany na najgorszych dokumentach; alarm na strony bez tekstu; metadane źródła, wersji i uprawnień przy każdym chunku
 - [ ] embeddingi sprawdzone na własnych polskich pytaniach; nazwa modelu zapisana przy indeksie
 - [ ] hybryda i reranking albo uzasadnienie ich braku
-- [ ] zbiór złoty z pytaniami bez odpowiedzi; recall@k, MRR, nDCG przed i po każdej zmianie
+- [ ] zbiór złoty z pytaniami bez odpowiedzi; recall@k osobno dla zapytań semantycznych i dokładnych; próg z rozkładu losowych par
 - [ ] uprawnienia w zapytaniu do indeksu; propagacja zmian i usunięć
 - [ ] cytaty weryfikowane kodem; „nie wiem” przy braku podstaw
 - [ ] pobrane fragmenty traktowane jak dane; brak narzędzi zapisu sterowanych treścią

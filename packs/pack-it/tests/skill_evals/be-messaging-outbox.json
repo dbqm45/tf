@@ -65,6 +65,19 @@
       "expect": "no-trigger",
       "prompt": "Jak ustalić relację między kontekstami Zamówienia i Płatności: customer/supplier, ACL, shared kernel?",
       "neighbor": "ddd-context-mapping"
+    },
+    {
+      "id": "odtworzenie-historii-skutki",
+      "expect": "trigger",
+      "prompt": "Mamy konsumenta zdarzeń z Kafki, który aktualizuje model odczytu i wysyła klientom e-maile z potwierdzeniem płatności. Chcemy zresetować offset i przetworzyć zdarzenia z ostatnich 3 miesięcy, żeby odbudować model odczytu po błędzie. Na co uważać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["e-mail\\w*", "skutk\\w+ zewnętrzn\\w+", "efekt\\w* uboczn\\w+", "powiadomie\\w+"],
+          ["flag\\w+", "tryb\\w* odtwarzania", "replay", "osobn\\w+ ścieżk\\w+", "wyłącz\\w+ (wysyłk|skutk)"],
+          ["deterministyczn\\w+", "bieżąc\\w+ czas\\w*", "now\\(\\)", "czas\\w* ze zdarzenia"],
+          ["idempotentn\\w+", "deduplikac\\w+", "klucz\\w* idempotencji"]
+        ]
+      }
     }
   ]
 }

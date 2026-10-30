@@ -69,6 +69,19 @@
       "expect": "no-trigger",
       "prompt": "Jak zaprojektować endpointy REST dla zasobu orders i jakie kody statusu zwracać?",
       "neighbor": "be-api-design"
+    },
+    {
+      "id": "blokada-optymistyczna-czy-pesymistyczna",
+      "expect": "trigger",
+      "prompt": "W aplikacji rezerwacji miejsc dwóch użytkowników czasem kupuje to samo ostatnie miejsce, a w panelu admina dwie osoby nadpisują sobie edycję tego samego wydarzenia po kilku minutach pracy w formularzu. Jakich blokad w PostgreSQL użyć w każdym z tych przypadków? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["atomow\\w+ UPDATE", "UPDATE .*WHERE .*>=", "warunk\\w+ w UPDATE", "jednym (zapytaniem|UPDATE)", "ograniczeni\\w+ (UNIQUE|EXCLUDE|unikaln)"],
+          ["wersj\\w+", "ETag", "optymistyczn\\w+"],
+          ["FOR UPDATE", "pesymistyczn\\w+", "blokad\\w+ wiersza"],
+          ["formularz\\w*", "kilka żądań", "wiele żądań", "poza (jedną )?transakcj\\w+", "dług\\w+ (transakcj|czas)"]
+        ]
+      }
     }
   ]
 }

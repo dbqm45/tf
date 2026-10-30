@@ -54,6 +54,16 @@ Sprzątanie wysłanych rekordów i metryka zaległości outboxa (ops-observabili
   - rekord deduplikacji (inbox) zapisany **w tej samej jednostce pracy co efekt** — obsługa musi być synchroniczna w tej
     transakcji; obsługa „po commicie” lub w osobnym wątku łamie gwarancję;
   - deduplikacja przez **atomowe zajęcie** id (insert z pominięciem przy konflikcie, compare-and-set), nie „sprawdź, potem zapisz”.
+- **Utrata, duplikaty i odtworzenie to trzy osobne problemy:**
+  - utrata → trwałość po stronie producenta i brokera (w Kafce `acks=all`, `min.insync.replicas` > 1, producent
+    idempotentny — ten ostatni nie zastępuje deduplikacji u konsumenta);
+  - duplikaty → konsument idempotentny; rekord deduplikacji ma czas życia dobrany do okna ponownych dostarczeń, a nie
+    rośnie bez końca. Bez naturalnego id nadaje je producent przy utworzeniu albo liczysz skrót niezmiennych pól
+    (encja + wersja);
+  - **celowe odtworzenie historii** (reset offsetu, nowa grupa konsumentów, odbudowa modelu odczytu) → obsługa
+    deterministyczna (czas ze zdarzenia, nie bieżący; bez odczytu stanu innych usług) i skutki zewnętrzne (e-mail,
+    obciążenie karty) oddzielone od odbudowy stanu: flaga trybu odtwarzania albo osobna ścieżka skutków. Klucz
+    idempotencji przekazujesz też do dostawcy płatności.
 - Wiele instancji relaya może wysłać tę samą wiadomość dwa razy — poprawne dzięki idempotencji, ale marnotrawne:
   `SKIP LOCKED`, compare-and-set statusu lub dzierżawa.
 
