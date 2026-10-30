@@ -57,6 +57,32 @@
       "expect": "no-trigger",
       "neighbor": "data-engineering",
       "prompt": "Buduję potok, który co noc ładuje zamówienia z PostgreSQL do hurtowni. Jak zrobić, żeby ponowne uruchomienie dla tego samego dnia nie tworzyło duplikatów? Odpowiedz zwięźle."
+    },
+    {
+      "id": "macierz-osobliwa-dummy",
+      "expect": "trigger",
+      "prompt": "Robię regresję liniową sprzedaży z kategorią regionu zakodowaną jako cztery kolumny 0/1 (po jednej na region) plus wyraz wolny. numpy rzuca „Singular matrix”, a statsmodels liczy, ale współczynniki regionów są dziwne. Przejść na scikit-learn? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pułapk\\w+ zmiennych (zero-jedynkowych|binarnych|fikcyjnych)", "dummy variable trap", "usuń jedn\\w+ (kategori|kolumn)", "kategori\\w+ (bazow|referencyjn)", "drop_first"],
+          ["rząd\\w* macierzy", "niepełn\\w+ rzęd\\w*", "współliniow\\w+", "rank"],
+          ["uwarunkowani\\w+", "VIF", "condition number"],
+          ["nie (zmienia|pomoże) bibliotek\\w*", "zmian\\w+ biblioteki nie", "bibliotek\\w+ nie rozwiąż\\w*", "problem (jest )?w danych"]
+        ]
+      }
+    },
+    {
+      "id": "przyczynowosc-rabat-churn",
+      "expect": "trigger",
+      "prompt": "Mamy model churnu, który dobrze przewiduje, kto odejdzie. Marketing chce dać rabat 20% wszystkim z wysokim ryzykiem odejścia i z danych historycznych (bez eksperymentu) oszacować, ile to da. Jak podejść do tego rzetelnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["przyczynow\\w+", "efekt\\w* (rabatu|interwencji)", "uplift"],
+          ["DAG", "graf\\w* przyczynow\\w+", "zakłóc\\w+", "confound"],
+          ["CATE", "uplift", "dla kogo", "heterogeniczn\\w+", "którzy i tak"],
+          ["obal\\w+", "placebo", "refut", "test\\w* odpornoś\\w+", "losow\\w+ wspóln\\w+ przyczyn"]
+        ]
+      }
     }
   ]
 }

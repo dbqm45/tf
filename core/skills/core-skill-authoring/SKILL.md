@@ -20,6 +20,9 @@ Sama treść SKILL.md niczego nie dowodzi.
    API i SDK Claude, aktualizowana przez Anthropic) albo zainstalowana wtyczka: wtedy piszesz najwyżej ustalenia
    projektu i odsyłasz do niego. Potem daj modelowi 2–3 prawdziwe zadania z obszaru skilla **bez skilla**. Zapisz,
    czego brakuje: wiedzy, kroków, formatu albo granic. Jeśli model radzi sobie dobrze, skill nie jest potrzebny.
+   **Skill, który tworzy artefakt** (PRD, raport, plan), zaczynasz od najlepszego istniejącego wyniku, a nie od listy
+   kroków: wypisujesz decyzje, których ogólny szablon nie zna (kolejność sekcji pod czytelnika, nierówna głębia,
+   ograniczenia wprost), i 2–3 pytania, które skill zadaje przed pisaniem. To staje się treścią i scenariuszami.
 2. **Szkielet.** `python3 factory/build.py new-skill <prefiks-nazwa> "<pełny opis z granicami>"` tworzy SKILL.md
    z terminem przeglądu i polem `slowa` oraz szkielet scenariuszy `tests/skill_evals/<nazwa>.json` (w projekcie:
    `.claude/tests/skill_evals/`). `--role <rola>` dopisuje skill do roli, `--name-only` ustawia `widocznosc: nazwa`.

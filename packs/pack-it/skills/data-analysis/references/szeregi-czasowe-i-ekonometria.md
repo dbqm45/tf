@@ -30,6 +30,17 @@
   - **zmienne instrumentalne** — czynnik wpływający na wynik tylko przez badaną zmienną (trudne do uzasadnienia);
   - **nieciągłość regresji** — porównanie tuż nad i tuż pod progiem (np. próg darmowej dostawy).
   Gdy eksperyment jest możliwy, jest lepszy niż każda z tych metod (`eksperymenty-zaawansowane.md`).
+- **Przyczynowość krok po kroku (decyzja z danych obserwacyjnych):**
+  1. **Graf przyczynowy (DAG)** z ekspertem domeny. Czynnik zakłócający kontrolujesz; mediatora nie (blokuje badany
+     efekt), zderzacza (collider) też nie (wprowadza obciążenie).
+  2. **Metoda:** wagi skłonności (propensity), zmienne instrumentalne, podwójne ML z cross-fittingiem, lasy przyczynowe.
+  3. **ATE czy CATE:** „czy działa średnio” (ATE) a „dla kogo działa” (CATE, uplift). Rabat dajesz tym, których
+     zachowanie zmienia, a nie tym, którzy i tak zostaną albo i tak odejdą. Model churnu mówi „kto odejdzie”;
+     decyzja potrzebuje „czyje odejście zmieni rabat”.
+  4. **Próby obalenia:** losowa wspólna przyczyna, placebo (fałszywa interwencja), podzbiór danych. Wynik, który
+     zmienia dodanie losowej zmiennej, jest kruchy.
+  Biblioteki: DoWhy (graf, identyfikacja, obalanie), EconML (CATE), CausalML (uplift) — wersję i API sprawdzasz przed
+  użyciem (G. Nguyen, „Causal Machine Learning…”, 2026-09-22).
 - **Dopasowanie rozkładu** (czasy obsługi, wielkości zamówień — do symulacji i planowania pojemności): estymacja
   największej wiarygodności, ocena wykresem kwantyl–kwantyl i testem zgodności; rozkłady z długim ogonem
   (log-normalny, Pareto) zamiast normalnego dla kwot i czasów.

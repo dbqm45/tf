@@ -4,7 +4,7 @@ description: Użyj, gdy na pytanie trzeba odpowiedzieć danymi — spadek lub wz
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj, gdy trzeba odpowiedzieć na pytanie danymi — od pytania i decyzji przez pozyskanie danych, czyszczenie, analizę opisową i diagnostyczną, statystykę i testy hipotez, wizualizację po raport z wnioskami i ograniczeniami; pandas, SQL, R, arkusze, podstawy uczenia maszynowego. Nie do potoków danych (data-engineering) ani eksperymentów A/B produktu (proc-product-discovery)."
-  slowa: "porównanie grup, średnia czy mediana, rozkład skośny, test statystyczny, istotność, wielkość efektu, spadek konwersji, dane z eksperymentu"
+  slowa: "porównanie grup, średnia czy mediana, rozkład skośny, test statystyczny, istotność, wielkość efektu, spadek konwersji, dane z eksperymentu, ile da rabat, efekt interwencji z danych historycznych, bez eksperymentu, wnioskowanie przyczynowe, uplift, CATE, wagi skłonności, model churnu a decyzja, Singular matrix, regresja liniowa, zmienne zero-jedynkowe"
 ---
 
 # Analiza danych
@@ -36,6 +36,9 @@ na pytanie; każdy kolejny jest droższy.
    (`references/szeregi-czasowe-i-ekonometria.md`), czułość eksperymentów i metryki ilorazowe
    (`references/eksperymenty-zaawansowane.md`).
    Kontroluj zmienne zakłócające i sprawdź paradoks Simpsona (trend w całości odwrotny niż w segmentach).
+   Pytanie „ile da interwencja” bez eksperymentu: graf przyczynowy, metoda, efekt dla kogo (CATE/uplift) i próby
+   obalenia (`references/szeregi-czasowe-i-ekonometria.md`). „Singular matrix” w regresji = problem danych (pułapka
+   zmiennych zero-jedynkowych, stała kolumna), nie biblioteki (`references/statystyka.md`).
 6. **Wizualizacja** dopasowana do pytania (`references/wizualizacja.md`).
 7. **Raport**: najpierw odpowiedź na pytanie i rekomendacja, potem dowody, potem metoda; **ograniczenia** (jakość
    danych, okres, czego nie da się stwierdzić — korelacja to nie przyczynowość), niepewność (przedziały, nie tylko

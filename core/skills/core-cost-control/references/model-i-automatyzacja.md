@@ -1,5 +1,5 @@
 # Ocena nowego modelu, kontekst i agenci w automatyzacji
-> i dane · 4. Kontekst — MCP, dryf, skan repo · 5. Przykład: decyzja o zmianie modelu
+> i dane · 4. Kontekst — MCP, dryf, skan repo · 5. Przykład: decyzja o zmianie modelu · 6. Diagnoza przed dźwignią · 7. Raporty kosztów
 
 ## 1. Ocena nowego modelu
 **Jak czytać ranking.** Liczba w tabeli = zestaw zadań + metryka + protokół (harness, limit kroków, liczba prób).
@@ -83,3 +83,25 @@ Decyzja: nowy model tylko dla PR z poziomem triażu „krytyczny” (auth, płat
 reszta zostaje na obecnym. Koszt per PR mierzony 2 tygodnie, potem przegląd decyzji.
 Fałszywy alarm → nowy przypadek w zestawie ewaluacji i doprecyzowane kryteria przeglądu.
 ```
+
+## 6. Diagnoza przed dźwignią
+Zanim zmienisz model, ustal, który problem masz:
+- *kontekstu*: te same pliki czytane w całości kilka razy, stosunek tokenów wejścia do wyjścia ok. 100:1 i więcej,
+  częste kompaktowanie, niskie trafienia cache mimo stałego promptu, agent co sesję odkrywa, kto jest właścicielem
+  czego → inżynieria kontekstu (SKILL.md §5–6), nie tańszy model;
+- *modelu*: wysoki odsetek porażek klasy zadań mimo dobrego kontekstu, wiele tur do pierwszej poprawnej edycji →
+  zmiana modelu, sprawdzona jak w SKILL.md §8;
+- *pomiaru*: subskrypcja zamiast API, benchmark zamiast produkcji, tokeny szacowane ze znaków → najpierw liczniki
+  dostawcy.
+Cache obniża cenę powtarzanego prefiksu, ale nie zdejmuje treści z okna — gnicie kontekstu zostaje.
+
+Źródło: J. Wąsowski, „Your Claude Code Bill Demystified” (2026-10-09); progi to przykłady autora [niezweryfikowane].
+
+## 7. Raporty kosztów
+- `python3 factory/cost_report.py --days 7` — koszt per agent i model, eskalacje, sygnały `Tier:` i rekomendacje
+  zmiany tieru ról.
+- `python3 factory/cost_report.py --delegation` — koszt wykonawców wg klasy z briefu (hook `log_usage` zapisuje każde
+  wywołanie Agent w `.claude/logs/delegation.jsonl`). Klasa droga przy krótkim raporcie → rób takie zadania sam.
+- `python3 factory/cost_stats.py` (`--period day|week|month`) — tokeny, udział modeli, koszt w USD i PLN (kurs średni
+  NBP), zmiany w gicie i pasmo „tanio / typowo / drogo” względem mediany poprzednich okresów; luki w logach oznacza
+  „dane niepełne”. Przyczyny kosztu etapu i tiery wykonawców ocenia retrospektywa agentów (core-agent-retro).

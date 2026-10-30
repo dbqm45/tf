@@ -38,6 +38,12 @@
   ustala eksperyment albo staranna metoda przyczynowa (np. różnica w różnicach), nie sama korelacja.
 - **Regresja liniowa**: wpływ zmiennych na wynik przy kontroli pozostałych; sprawdź założenia (liniowość, reszty bez
   wzorca, brak silnej współliniowości) i nie ekstrapoluj poza zakres danych.
+- **Macierz niepełnego rzędu („Singular matrix”):** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
+  wolny) i kolumna stała w danych to ten sam problem — dane nie rozróżniają współczynników. Biblioteki reagują różnie
+  (błąd, ostrzeżenie i rozwiązanie o najmniejszej normie, ciche inne wyniki); sprawdź na wersjach z projektu. Przed
+  interpretacją współczynników sprawdzasz rząd macierzy i wskaźnik uwarunkowania (albo VIF). Naprawa to zmiana danych:
+  usunięcie jednej kategorii (kategoria bazowa, `drop_first`) albo stałej kolumny, a nie zmiana biblioteki. W kodzie
+  `solve`/`lstsq` zamiast `inv(A) @ b` — szybciej i dokładniej przy złym uwarunkowaniu.
 
 ## Źródła
 - D. Diez, M. Çetinkaya-Rundel, C. Barr, *OpenIntro Statistics*; ASA Statement on p-Values (2016)

@@ -97,6 +97,20 @@
           ]
         ]
       }
+    },
+    {
+      "id": "aplikacja-ai-poza-modelem",
+      "expect": "trigger",
+      "prompt": "Testujemy asystenta AI w naszej aplikacji SaaS (agent z narzędziami, integracja z Google Drive, pytania do bazy przez text-to-SQL). Ewaluacje odpowiedzi modelu mamy. Jakie przypadki testowe dodać, żeby wyłapać awarie, które nie są winą modelu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["403", "500", "timeout", "wygasł\\w+ token", "błęd\\w+ API"],
+          ["zerwan\\w+ połączeni\\w+", "rozłączeni\\w+", "w tle", "odświeżeni\\w+ strony"],
+          ["pust\\w+ wynik", "zniekształcon\\w+", "za duż\\w+ wynik", "kontrakt\\w* narzędzi"],
+          ["najemc\\w+", "izolacj\\w+", "niskich uprawnie\\w+", "cudz\\w+ dan\\w+", "odebrani\\w+ roli"],
+          ["migracj\\w+", "danymi sprzed", "istniejąc\\w+ kont\\w+", "stare dane"]
+        ]
+      }
     }
   ]
 }

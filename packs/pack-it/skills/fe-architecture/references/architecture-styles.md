@@ -18,6 +18,16 @@ osadzony (część z nich, jak Micro Frontends, pojawia się w obu, konsekwentni
 - Micro-frontends 2026: Module Federation 2.0 (webpack/Rspack, wtyczki Vite), Native Federation (Angular, oparte na
   import maps), Single-SPA; często wystarczy **modularny monolit** w monorepo (Nx/Turborepo) z granicami
   wymuszanymi lintem — niezależne wdrożenia są jedynym mocnym argumentem za MFE.
+- **Micro-frontends — typowa porażka:** dryf współdzielonych zależności, czyli dwie wersje frameworka na jednej stronie
+  (zepsute hooki, kontekst, podwójny rozmiar). Zapobiega `singleton: true` ze `strictVersion`/`requiredVersion`
+  w konfiguracji federacji i kontrola zgodności wersji w CI przed wdrożeniem. Decyzja „czy MFE” wynika z bólu
+  wdrożeń między zespołami, a nie ze złożoności aplikacji. Heurystyka (T. Kanjariya, 2026-08-06, nie reguła): do
+  ok. 15 osób monolit modularny; kilkadziesiąt osób i zespoły blokujące się przy wdrożeniach → rozważ MFE.
+- **BFF (Backend for Frontend) jako wzorzec:** cienki backend na każdy typ klienta (web, mobile), należący do zespołu
+  frontendu, który kształtuje dane pod jeden interfejs, agreguje wywołania i trzyma sesję w ciasteczku `HttpOnly`.
+  Kiedy nie: jeden klient i API już pasuje do ekranów — BFF to wtedy tylko dodatkowy przeskok sieciowy. Koszt:
+  kolejny serwis do utrzymania i pojedynczy punkt awarii dla klienta (wzorzec opisany przez P. Calçado i S. Newmana
+  [niezweryfikowane — źródła pierwotne nie otwierane w tej sesji]).
 
 ## Style kompozycji frontendu (LogRocket)
 

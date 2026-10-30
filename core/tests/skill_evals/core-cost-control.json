@@ -231,6 +231,32 @@
           ]
         ]
       }
+    },
+    {
+      "id": "szum-z-terminala",
+      "expect": "trigger",
+      "prompt": "Agent w Claude Code przy każdej zmianie odpala pełne testy i build, a ich wyjście ma po kilka tysięcy linii. Sesje szybko się kompaktują i są drogie. Kolega proponuje zainstalować hook, który filtruje wyjście wszystkich poleceń Bash. Co zrobić najpierw? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["reporter\\w*", "--reporter", "pytest -q", "-q\\b", "--silent", "tylko błędy"],
+          ["do pliku", "log\\w* (do|w) pliku", "head", "tail", "fragment\\w*"],
+          ["audyt\\w*", "skill_audit", "obc\\w+ hook\\w*", "zgod\\w+ człowieka", "każde polecenie"],
+          ["na (udane|rozwiązane|ukończone) zadanie", "koszt\\w* (udanego|zadania)", "nie (samą )?liczb\\w+ tokenów"]
+        ]
+      }
+    },
+    {
+      "id": "diagnoza-przed-dzwignia",
+      "expect": "trigger",
+      "prompt": "Rachunek za agenta kodującego wzrósł dwukrotnie w miesiąc. Zespół chce przejść na tańszy model. Jak sprawdzić, czy to dobry ruch? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["kontekst\\w*", "te same pliki", "czytan\\w+ w całości"],
+          ["wejści\\w+ do wyjści\\w+", "100:1", "stosun\\w+ tokenów", "trafie\\w+ cache", "cache hit"],
+          ["odset\\w+ porażek", "porażk\\w+ (klasy|zadań)", "liczb\\w+ tur", "jakoś\\w+ modelu"],
+          ["licznik\\w* dostawcy", "dane (dostawcy|z API)", "szacowan\\w+ ze znaków", "subskrypcj\\w+", "rzeczywist\\w+ zużyci\\w+"]
+        ]
+      }
     }
   ]
 }

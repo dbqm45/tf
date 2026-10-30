@@ -20,8 +20,8 @@
   "offline": "2026-10-26"
  },
  "core-cost-control": {
-  "fingerprint": "c040f411c71e17a7",
-  "offline": "2026-10-22"
+  "fingerprint": "0eef4297aa84b504",
+  "offline": "2026-10-30"
  },
  "core-delivery-lifecycle": {
   "fingerprint": "3f4f635387834cb3",
@@ -60,7 +60,7 @@
   "offline": "2026-10-22"
  },
  "core-skill-authoring": {
-  "fingerprint": "68f370ee4454138a",
+  "fingerprint": "c618383d19f9ac9e",
   "offline": "2026-10-30"
  },
  "core-skill-composition": {
