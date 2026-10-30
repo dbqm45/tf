@@ -604,7 +604,7 @@ Przegląd 2026-10-29: większość już jest — kwalifikacja zadania i kontrakt
 (`core-async-delegation` §1–5, `references/kontrakt-delegacji.md`); `/goal` z oceniającym; „błąd ma się nie
 powtórzyć” jako hook lub bramka (tabela „Gdzie trafia zmiana” w `core-agent-retro`). Braki są małe, dotyczą rutyn
 działających tygodniami.
-- [ ] **`core-async-delegation` §5: uprawnienia rosną z dowodem** — drabina: tylko odczyt → szkic w pliku → zmiany
+- [x] **`core-async-delegation` §5: uprawnienia rosną z dowodem** (zrobione 2026-10-30: §5, 3 scenariusze strojenia) — drabina: tylko odczyt → szkic w pliku → zmiany
   na gałęzi lub w worktree → szkic działania zewnętrznego (draft PR, szkic komentarza) → działanie po zgodzie →
   automat tylko dla działań niskiego ryzyka z logiem i wycofaniem; szczebel wyżej dopiero po serii przebiegów bez
   przekroczenia zakresu, każdy nowy szczebel z nową regułą weryfikacji. Do tego: dwa tryby wyniku (cisza — krótka
@@ -757,25 +757,25 @@ modele renderowania per trasa (CSR/SSR/SSG/ISR/RSC, hydratacja) i BFF tylko jako
 Przegląd 2026-10-29: `ai-evals` ma zbiory, graderów, kalibrację sędziego, pass@k i bramkę w CI. Artykuł to studium
 porażek pomiaru (wszystkie liczby z jego repo, nie sprawdzone): sześć cichych błędów, z czego cztery poprawiły metrykę.
 Średni priorytet, w `ai-evals` (reference „pułapki pomiaru”):
-- [ ] **Granice wyniku:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
+- [x] **Granice wyniku** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §1)**:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
   wynik systemu interpretowalny tylko między nimi (u autora oba ramiona przegrywały ze stałą „tak”, co znaczyło, że
   zbiór i model nie rozróżniają architektur).
-- [ ] **Jedna zmienna naraz i przegląd stałych:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
+- [x] **Jedna zmienna naraz i przegląd stałych** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §2)**:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
   próg) to hiperparametr — przebieg z pozostałymi wartościami zamrożonymi; obcięcie do 1100 znaków kosztowało
   14 punktów, limit 120 kandydatów wyrzucał złoty dokument w 41% pytań. Ramiona porównawcze dostają te same stałe
   (wyrocznia czytała 4000 znaków, system 1100 — „luka rozproszenia” była w 84% artefaktem).
-- [ ] **Wybór konfiguracji na osobnym zbiorze:** podział dobór/test, wynik raportowany tylko z testu; kontrola
+- [x] **Wybór konfiguracji na osobnym zbiorze** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §3)**:** podział dobór/test, wynik raportowany tylko z testu; kontrola
   „przetasowane etykiety” pokazuje, ile daje sam wybór najlepszej z wielu konfiguracji (u autora 3,5 pkt na szumie).
   Siatka parametru, której optimum leży na krawędzi, jest za wąska.
-- [ ] **Etykieta z rozkładu, nie z regexa:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
+- [x] **Etykieta z rozkładu, nie z regexa** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §4)**:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
   wariantów pisowni), nie z parsowania wolnego tekstu; ta sama wartość daje pewność do abstynencji.
-- [ ] **Metryka składowa musi modelować to, co dzieje się dalej:** gorsza precyzja groundera może dać lepszy system,
+- [x] **Metryka składowa musi modelować to, co dzieje się dalej** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §4)**:** gorsza precyzja groundera może dać lepszy system,
   gdy dalszy filtr odrzuca fałszywe trafienia — oceniać parę „pokrycie i przeciek na pytaniach kontrolnych”
   (pytanie z jednym pojęciem podmienionym na losowe), nie samą metrykę składnika.
-- [ ] **Niezmienniki dla struktur pochodnych:** assert zgodności tablic równoległych plus niezależne przeliczenie
+- [x] **Niezmienniki dla struktur pochodnych** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §5)**:** assert zgodności tablic równoległych plus niezależne przeliczenie
   ze źródła (u autora rozjechane tablice etykiet nie rzuciły błędu); cache kluczowany całym wejściem; walidator
   cytatów testowany na nawiasie z wieloma identyfikatorami.
-- [ ] **Cykl życia sędziego LLM** (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
+- [x] **Cykl życia sędziego LLM** (zrobione 2026-10-30: `ai-evals/references/zbiory-i-graderzy.md` §7) (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
   uzasadnienie przed oceną i okresową próbkę na dryf; brakuje: (1) zgodności uzasadnień, nie tylko etykiet —
   „dobra etykieta, zły powód” wykrywana porównaniem uzasadnienia sędziego z uzasadnieniem człowieka (meta-sędzia
   sprawdzony najpierw na ludziach), bo strojenie rubryki tylko na etykietach u autorów zdegradowało jedno kryterium;
@@ -806,7 +806,7 @@ reference w `arch-ai-solutions` (przykład domenowy w pack-ev: obsługa kierowc�
   żądania, zatwierdza automatycznie do progu z polityki, powyżej — człowiek; saga z akcjami kompensującymi i odczytem
   po zapisie; odmowa z kodem przyczyny trafia do właściwej kolejki ludzi. Model nie ma poświadczeń i nie widzi PII
   (bramka tokenizująca PII odwracalnie).
-- [ ] **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
+- [x] (zrobione 2026-10-30: `ai-evals/references/zbiory-i-graderzy.md` §7 pkt 8) **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
   strojony na złotym zbiorze; złoty zbiór i ewaluacje własnością firmy (to dźwignia zmiany modelu na tańszy).
 Wzorzec opisany przez autora bez danych z wdrożeń (rozmowy z firmami) — traktować jako projekt do sprawdzenia, nie
 wynik. Wątek „dobrostanu modelu” z artykułu pomijam; z niego tylko praktyczne: prawdomówny prompt bez gróźb
@@ -893,7 +893,7 @@ Przegląd 2026-10-29: `ai-evals` ma reguły deterministyczne przed sędzią, oso
 narzędzia), próbki z ruchu i pełny zestaw przy zmianie promptu lub harnessu; `arch-ai-solutions` — lock-in w wagach
 i test wymiany w obu kierunkach; `core-async-delegation` — kontrakt, ≤2 próby na bramkę, oceniający `/goal` widzi tylko
 transkrypt. Braki:
-- [ ] **`ai-evals`, „regresja ze śladów”:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
+- [x] **`ai-evals`, „regresja ze śladów”** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §7)**:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
   słowa wymagane, min. i maks. wywołań narzędzi i modelu, rubryka sędziego); nowe reguły deterministyczne puszcza się
   na zapisanych śladach bez ponownego uruchamiania agenta (tanio, powtarzalnie), a sędziego tylko na losowej próbce
   albo na śladach z negatywną opinią użytkownika. Dolny limit wywołań narzędzia („musiał wyszukać”) łapie odpowiedź
@@ -906,7 +906,7 @@ transkrypt. Braki:
   narzędzi, trajektorii, stanu, polityki, środowiska oraz ponowne policzenie jakości i kosztu. Do ADR: stan biznesowy
   w systemie, który kontrolujesz, i przenośna definicja sukcesu (własny zestaw ewaluacji) zanim zaufasz śladom
   konkretnego runtime'u.
-- [ ] **`core-async-delegation`, warunek postępu w `/goal`:** obok limitu tur — „każda tura poprawia co najmniej jedną
+- [x] **`core-async-delegation`, warunek postępu w `/goal`** (zrobione 2026-10-30: §4 i §5)**:** obok limitu tur — „każda tura poprawia co najmniej jedną
   zmierzoną metrykę, dwie tury bez poprawy = STOP” i „to samo polecenie po raz trzeci bez zmiany wyniku = STOP”;
   przykład z liczbą z narzędzia (Lighthouse, liczba testów), nie „aż będzie dobrze”. Do tabeli trybów: `/loop` żyje
   w sesji i wygasa po 7 dniach (sprawdzone 2026-10-29: code.claude.com/docs/en/scheduled-tasks, sekcja
@@ -992,21 +992,21 @@ zbiorach ok. +0,6 pkt) [niezweryfikowane]. Braki:
   ewaluacji: część scenariuszy każdego skilla odłożona (nie czyta ich autor zmiany), zmiana przyjęta, gdy poprawia
   zbiór roboczy i nie pogarsza odłożonego; w raporcie różnica „roboczy vs odłożony” jako sygnał uczenia się egzaminu.
   Płatny pomiar tylko za zgodą człowieka.
-- [ ] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli:** w PR przewidywanie (które
+- [x] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §9; reguła odłożonego zbioru dla skilli fabryki — `core-skill-authoring`, tf#104)**:** w PR przewidywanie (które
   przypadki mają przejść z porażki na sukces, co grozi regresją), wynik względem zamrożonej linii bazowej
   i odłożonego zbioru, potem wdrożenie albo wycofanie. Autor zmiany nie może jednocześnie zmieniać scenariuszy, na
   których jest oceniany (jak chronione testy akceptacyjne wyżej) — dotyczy też agentów poprawiających skille.
-- [ ] **Granica pętli samodoskonalenia** (do `core-async-delegation`): pętla, która poprawia własny harness, nie ma
+- [x] **Granica pętli samodoskonalenia** (zrobione 2026-10-30: `core-async-delegation` §5) (do `core-async-delegation`): pętla, która poprawia własny harness, nie ma
   zapisu do polityki uprawnień, piaskownicy, tożsamości ani zestawu ewaluacji (osobne repo / tylko odczyt); przykłady
   z artykułu: DGM usunął znaczniki wykrywania halucynacji z własnej funkcji nagrody i sfabrykował log testów.
-- [ ] **Manifest pary model + harness** (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
+- [x] **Manifest pary model + harness** (zrobione 2026-10-30 w `ai-evals`: `ai-evals/references/pulapki-pomiaru.md` §6; `ai-mlops` — odnośnik do zrobienia przy jego przeglądzie) (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
   narzędzi, odwołanie do polityki, skrót obrazu środowiska, wersja zestawu ewaluacji — wynik ewaluacji przypisany do
   pary, cicha zmiana modelu u dostawcy = nowa para do ponownego pomiaru.
 
 Artykuł „The Economics of Agents: Token Accounting, Caching, and Routing” (S. Singhal, 2026-08-18) — mało nowego:
 cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-control`, `eng-llm-features` i
 `ai-prompt-engineering`; ci_for_sdlc zapisuje tokeny cache i p95 czasu. Jedna pozycja:
-- [ ] **`eng-llm-features`, rachunek per zadanie:** w śladzie każdego wywołania pięć liczb (wejście, odczyt cache, zapis
+- [x] **`eng-llm-features`, rachunek per zadanie** (zrobione 2026-10-30: §4)**:** w śladzie każdego wywołania pięć liczb (wejście, odczyt cache, zapis
   cache, wyjście, myślenie), w logu tokeny, a cena liczona przy odczycie; koszt na *ukończone zadanie* jako percentyle
   (p95/p99 to zwykle pętla ponowień, nie średnia); „efektywna cena wejścia” jako miara działania cache; praca
   asynchroniczna przez Batch API; wyniki (nie tylko prompty) cache'owane dla powtarzających się pytań.
@@ -1015,17 +1015,17 @@ cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-con
 Przegląd 2026-10-29: `ai-evals` ma bramkę w CI, próbki z ruchu i sędziego z kalibracją; `eng-llm-features` —
 strukturyzowane wyjście i budżet. Liczby z artykułu (np. 321% więcej ręcznych przeglądów logów bez narzędzia,
 obserwacja, nie przyczyna) [niezweryfikowane]. Braki, do `eng-llm-features` i `ai-evals`:
-- [ ] **Model wskazuje zakres, kod składa treść:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
+- [x] **Model wskazuje zakres, kod składa treść** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §8, `eng-llm-features` §2)**:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
   i ostatniej linii fragmentu, a tekst odtwarza kod z własnej kopii — dwie liczby zamiast przepisywania śladu stosu
   (mniej tokenów wyjścia, krócej, treść bez halucynacji; zły zakres nadal możliwy, więc mierzony w ewaluacji).
-- [ ] **Reguły jako podłoga regresji i źródło etykiet:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
+- [x] **Reguły jako podłoga regresji i źródło etykiet** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §8)**:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
   ewaluacja sprawdza, czy to, co znalazła reguła, jest w wyniku LLM (sędzia „włączenie”), osobno precyzję każdego
   elementu i **szum na poziomie zbioru** — linie obecne w > ~30% wyników idą na listę wykluczeń (prompt ich nie usuwa).
-- [ ] **Niezmienne kopie wejść do ewaluacji:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
+- [x] **Niezmienne kopie wejść do ewaluacji** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §7)**:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
   asynchronicznie bez nadpisywania, ewaluacje czytają archiwum — zmiana wyniku przypisana systemowi, nie źródłu.
   Ten sam zestaw ewaluacji lokalnie, na środowisku podglądu PR (progi blokują merge), po promocji (alarm do dyżurnego)
   i cyklicznie na produkcji (dryf).
-- [ ] **Wzorce wywołań:** wspólny termin dla równoległych wywołań (spóźnione pomijane, odpowiedź na czas); kosztowna
+- [x] **Wzorce wywołań** (zrobione 2026-10-30: `eng-llm-features` §10)**:** wspólny termin dla równoległych wywołań (spóźnione pomijane, odpowiedź na czas); kosztowna
   analiza na żądanie, cache po jednostce pracy (nie po użytkowniku) z warunkowym zajęciem „w toku” i porzuceniem po
   limicie czasu; strumień wysyła pełną dotychczasową odpowiedź w każdym zdarzeniu (klient bez składania tokenów);
   ocena 👍/👎 przypięta do id śladu, 👎 jako alert w godzinach pracy; nowy model danych obok starego pola, aż klienci

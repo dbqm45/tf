@@ -1,6 +1,7 @@
 # Zbiory i graderzy
 
-Spis treści: 1. Warstwy zbioru · 2. Pozyskiwanie zadań · 3. Kontaminacja · 4. Dobór gradera · 5. Sędzia LLM · 6. Kalibracja · 7. Pułapki
+Spis treści: 1. Warstwy zbioru · 2. Pozyskiwanie zadań · 3. Kontaminacja · 4. Dobór gradera · 5. Sędzia LLM · 6. Kalibracja ·
+7. Cykl życia sędziego · 8. Pułapki
 
 ## 1. Warstwy zbioru
 | Warstwa | Zawartość | Oczekiwany wynik | Odświeżanie |
@@ -51,8 +52,31 @@ zaliczenie wymaga faktycznego rozwiązania, nie spełnienia litery sprawdzenia.
 4. Popraw rubrykę, powtórz. Zatrzymaj się, gdy sędzia zgadza się z ludźmi prawie tak jak ludzie między sobą.
 5. Cyklicznie wracaj: próbka produkcyjna do ręcznej oceny co tydzień lub miesiąc wykrywa dryf sędziego.
 
-## 7. Pułapki
+## 7. Cykl życia sędziego
+Kalibracja raz na starcie nie wystarcza. Sędzia to wersjonowany składnik z właścicielem.
+1. **Zgodność uzasadnień, nie tylko etykiet.** „Dobra etykieta, zły powód” wykrywasz porównaniem uzasadnienia sędziego
+   z uzasadnieniem człowieka (meta-sędzia, sprawdzony najpierw na ocenach ludzi). Strojenie rubryki tylko na etykietach
+   potrafi po cichu zepsuć jedno kryterium.
+2. Każda etykieta „źle” w złotym zbiorze ma pisemne uzasadnienie człowieka.
+3. Jeden sędzia na kryterium; agregacja w kodzie.
+4. **Sędzia jako bramka i krytyk:** uzasadnienie odrzucenia wraca do generatora, z limitem poprawek (np. 3). Po limicie
+   „nie pokazuj” zamiast „pokaż słabe”.
+5. **Próg dryfu względem rozrzutu ludzi:** sędzia nie gorszy niż średnia oceniających minus 2 odchylenia standardowe,
+   na stałej, warstwowanej próbce tygodniowej.
+6. **Zmiana rubryki** tylko po zatwierdzeniu przez człowieka. Rubryka i sędzia mają wersje, a poprzednią wersję da się
+   natychmiast przywrócić (wycofanie).
+7. Przegląd ludzki wyłapuje też braki samej rubryki (przypadki, których nie opisuje), nie tylko dryf sędziego.
+8. Sędzia dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą. Nigdy nie stroisz go na
+   złotym zbiorze, na którym go oceniasz. Złoty zbiór i ewaluacje są własnością zespołu: to one pozwalają bezpiecznie
+   zmienić model na tańszy.
+
+Źródło: Netflix Tech Blog o ocenie sędziami LLM (2026-09-04, praca arXiv 2608.18300 [niezweryfikowane]); próg
+„2 odchylenia” i limit 3 poprawek to przykłady autorów, nie reguła.
+
+## 8. Pułapki
 - Średnia z jednego uruchomienia traktowana jak prawda (wariancja).
 - Sędzia oceniający dłuższe odpowiedzi wyżej (stronniczość długości) — dodaj do rubryki, że długość nie jest zaletą.
 - Zmiana zbioru i modelu naraz — nie wiadomo, co zmieniło wynik.
 - Ewaluacja tylko ścieżki szczęśliwej.
+- Wynik bez punktów odniesienia (klasa większościowa, ramię ślepe, wyrocznia) i wybór konfiguracji na zbiorze
+  testowym — `pulapki-pomiaru.md`.

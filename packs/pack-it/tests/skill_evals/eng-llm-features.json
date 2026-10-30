@@ -114,6 +114,32 @@
       "expect": "no-trigger",
       "neighbor": "ops-ai-inference",
       "prompt": "Chcemy hostować otwarty model językowy u siebie na dwóch kartach GPU. vLLM czy coś innego i ile pamięci zostanie na KV cache?"
+    },
+    {
+      "id": "koszt-per-zadanie-p95",
+      "expect": "trigger",
+      "prompt": "Nasza funkcja z LLM w aplikacji (asystent do zgłoszeń, kilka wywołań modelu na sprawę) kosztuje średnio 3 centy na wywołanie, ale rachunek miesięczny jest dwa razy wyższy, niż wychodzi z wyliczeń. Co i jak logować, żeby zrozumieć koszt? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["odczyt\\w* cache", "cache read", "zapis\\w* (do )?cache", "cache (write|creation)"],
+          ["na (ukończon\\w+|rozwiązan\\w+) (zadanie|sprawę)", "per (zadanie|sprawę)", "koszt (zadania|sprawy)"],
+          ["p95", "p99", "percentyl\\w*", "ogon\\w*"],
+          ["ponowie\\w+", "retry", "pętl\\w+"]
+        ]
+      }
+    },
+    {
+      "id": "rownolegle-wywolania-termin",
+      "expect": "trigger",
+      "prompt": "Piszę endpoint, który dla jednego zgłoszenia awarii odpala równolegle 5 analiz z LLM (logi, metryki, zmiany, konfiguracja, historia) i składa raport. Czasem jedna analiza wisi minutę, a kilku użytkowników otwiera to samo zgłoszenie naraz. Jak to zaprojektować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wspóln\\w+ (termin|limit czasu|deadline)", "deadline", "timeout", "limit czasu"],
+          ["pomi\\w+", "bez spóźnion", "częściow\\w+ (raport|wynik)", "spóźnion\\w+"],
+          ["cache", "pamięć podręczn\\w+"],
+          ["w toku", "in.progress", "blokad\\w+", "jednokrotn\\w+", "deduplik\\w+", "singleflight", "zajęci\\w+"]
+        ]
+      }
     }
   ]
 }
