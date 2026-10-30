@@ -49,8 +49,8 @@ Kolumna **Źródło wyniku** jest obowiązkowa (qa-spec-first-testing). Brak źr
 Strategia i plan testów (weryfikacja vs walidacja, czarna/biała/szara skrzynka, dymne, sanity, regresja, UAT, model V
 i praca zwinna, kryteria wejścia i wyjścia, raport z testów, analiza ucieczek defektów): `references/strategia-i-plan-testow.md`.
 Testy wydajnościowe: qa-performance-testing.
-Aplikacja z AI (agent, narzędzia, integracje, text-to-SQL): poza ewaluacjami modelu dziewięć klas awarii, które nie są
-winą modelu, z testem do każdej — `references/aplikacja-ai-poza-modelem.md`.
+Aplikacja z AI (narzędzia modelu, integracje, text-to-SQL): poza ewaluacjami modelu dziewięć klas awarii, które nie
+są winą modelu, z testem do każdej — `references/aplikacja-ai-poza-modelem.md`.
 
 ## Wynik
 `docs/project/05-plan/test-plan.md` (szablon core-project-record): zakres, ryzyka, techniki, poziomy, przypadki (lub link do
