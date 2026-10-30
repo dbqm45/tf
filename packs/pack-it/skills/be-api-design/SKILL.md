@@ -4,30 +4,22 @@ description: Użyj przy projekcie API HTTP — zasoby, kody, błędy, paginacja,
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy projektowaniu i implementacji endpointów HTTP/REST — ścieżki, metody, kody statusu, paginacja, błędy, wersjonowanie, idempotencja, OpenAPI, cache HTTP, limity żądań, webhooki, GraphQL/gRPC/SSE, OWASP API Top 10. Nie do schematu bazy (be-database) ani mechanizmów logowania (be-auth-security)."
-  slowa: "ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu"
+  slowa: "ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu, metody HTTP GET PUT PATCH DELETE, kod statusu odpowiedzi"
 ---
 
 # Projektowanie API
 
 ## Zasoby i metody
-- Rzeczowniki w liczbie mnogiej: `/users`, `/users/{id}/orders`. Maks. 2 poziomy zagnieżdżenia.
-- `GET` czyta (bez efektów ubocznych), `POST` tworzy, `PUT` zastępuje, `PATCH` częściowo zmienia, `DELETE` usuwa.
+- Maks. 2 poziomy zagnieżdżenia ścieżek (`/users/{id}/orders`).
 - Akcje, które nie pasują do CRUD: `POST /orders/{id}/cancel`. Gdy akcja ma własne dane, autora, wynik albo historię
   (zatwierdzenie, odwołanie, korekta), modeluj ją jako **zasób-dokument komendy**: `POST /complaints/{id}/approvals`
   tworzy zatwierdzenie z identyfikatorem, które można odczytać, zaudytować i wycofać kolejną komendą
   (`http-w-praktyce.md`, sekcja 8).
 
-## Kody statusu
-| kod | kiedy |
-|---|---|
-| 200 / 201 (+`Location`) / 204 | sukces / utworzono / bez treści |
-| 400 | nieprawidłowe dane wejściowe |
-| 401 / 403 | brak uwierzytelnienia / brak uprawnień |
-| 404 | nie istnieje (lub brak dostępu, gdy nie chcemy ujawniać istnienia) |
-| 409 | konflikt stanu (np. duplikat, wersja) |
-| 422 | poprawny format, ale reguła biznesowa odrzuca |
-| 429 | limit żądań (+`Retry-After`) |
-| 5xx | błąd po naszej stronie — nigdy za błąd klienta |
+## Kody statusu, które łatwo pomylić
+- `201` z `Location` po utworzeniu; `404` także wtedy, gdy nie chcemy ujawniać istnienia zasobu.
+- `409` — konflikt stanu (duplikat, wersja); `422` — poprawny format, ale reguła biznesowa odrzuca.
+- `429` z `Retry-After`; `5xx` tylko za błąd po naszej stronie, nigdy za błąd klienta.
 
 ## Format błędu (RFC 9457 Problem Details)
 ```json
