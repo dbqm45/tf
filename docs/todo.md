@@ -1460,7 +1460,8 @@ zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześn
   - Miary jakości cache: odsetek trafień, zaoszczędzony koszt i opóźnienie, incydenty nieaktualnej odpowiedzi.
 
 Bez wpisu: „dług zrozumienia” z artykułu Ranjana (zespół rozumie coraz mniej kodu pisanego przez agentów). Pokrywa
-go pozycja o „wyjaśnij własnymi słowami” przy refinemencie oraz przegląd człowieka w `core-async-delegation`.
+go pozycja „`core-delivery-lifecycle`, osąd nie może uciec do kroków” (refinement nieskończony, dopóki nikt nie umie
+wyjaśnić, jak praca zostanie zrobiona) oraz przegląd człowieka w `core-async-delegation`.
 
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
