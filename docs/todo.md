@@ -1449,7 +1449,7 @@ budżet opóźnienia z czasem do pierwszego tokenu, cache wyników tylko dla odp
 (klucz z wersją promptu, modelu i najemcą), fallback sprawdzany ewaluacją oraz idempotencję akcji. `ai-rag` ma
 reindeksację przyrostową i usuwanie jako osobną ścieżkę. Warstwy prompt → kontekst → harness → pętla → graf oraz
 zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześniejszych pozycjach. Braki:
-- [ ] **`arch-ai-solutions` / `eng-llm-features`, trzy reguły niezawodności:**
+- [ ] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania:**
   - **Ponowienia w jednej warstwie:** wspólny budżet czasu i prób na całe żądanie. Gdy każda warstwa (klient,
     bramka, orkiestrator, SDK) ponawia osobno, jedno żądanie mnoży wywołania dostawcy i pogłębia awarię.
   - **Strumień:** gdy klient się rozłączy albo anuluje, przerwać generowanie u dostawcy, bo tokeny nadal kosztują.
@@ -1458,6 +1458,10 @@ zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześn
   - **Unieważnianie cache wyników:** klucz albo metadane zawierają wersję dokumentów źródłowych. Zmiana lub
     usunięcie dokumentu unieważnia odpowiedzi z cache, które na nim powstały, tak samo jak fragmenty w indeksie.
   - Miary jakości cache: odsetek trafień, zaoszczędzony koszt i opóźnienie, incydenty nieaktualnej odpowiedzi.
+  - **Wycofanie zmiany AI obejmuje całą konfigurację** (`ai-mlops`, LLMOps): prompt, model, definicje narzędzi,
+    ustawienia wyszukiwania i rankingu oraz **wersję indeksu**. Bez migawki indeksu powrót do poprzedniego promptu
+    nie przywraca poprzedniego zachowania. Warunki wycofania ustala się przed wydaniem: błędy, wynik ewaluacji,
+    koszt, błędne akcje narzędzi.
 
 Bez wpisu: „dług zrozumienia” z artykułu Ranjana (zespół rozumie coraz mniej kodu pisanego przez agentów). Pokrywa
 go pozycja „`core-delivery-lifecycle`, osąd nie może uciec do kroków” (refinement nieskończony, dopóki nikt nie umie
