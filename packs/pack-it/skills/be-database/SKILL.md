@@ -2,7 +2,7 @@
 name: be-database
 description: Użyj przy relacyjnej bazie — schemat, migracje, indeksy, zapytania SQL/ORM, transakcje, N+1, wydajność i skalowanie.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy pracy z relacyjną bazą danych — schemat, migracje, indeksy, zapytania SQL/ORM, transakcje, wydajność zapytań (N+1), wzorce PoEAA (Unit of Work, Identity Map, Data Mapper). Nie do projektowania endpointów (be-api-design) ani infrastruktury bazy (ops-iac-terraform)."
 ---
 

@@ -2,7 +2,7 @@
 name: core-plan-interview
 description: Użyj przed działaniem, by przepytać plan, decyzję lub pomysł — drzewo decyzji, rundy pytań z rekomendacją.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy plan, decyzję lub pomysł trzeba przepytać przed działaniem — drzewo decyzji, rundy pytań z rekomendacją (tylko pytania niezależne od siebie), fakty sprawdzane samodzielnie, decyzje zostawione człowiekowi, koniec dopiero po potwierdzeniu wspólnego zrozumienia. Nie do warsztatu z ekspertami domeny (skill facylitacji, pack-it) ani doboru zespołu (core-problem-routing)."
   slowa: "przepytaj mnie, przesłuchaj plan, grilling, zadawaj pytania przed planem, pytania z rekomendacją, ranking opcji, którą opcję wybrać, raport z badania, agent sam odpowiada na pytania, agent zaczyna kodować bez zgody, zanim zaczniesz"
 argument-hint: "[plan, decyzja albo pomysł]"

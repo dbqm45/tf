@@ -2,7 +2,7 @@
 name: sec-zero-trust-identity
 description: Użyj przy Zero Trust i tożsamości jako perymetrze — NIST 800-207, ZTNA zamiast VPN, MFA odporne na phishing, PAM, postura urządzeń, mapa dojrzałości CISA.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy planujesz lub oceniasz architekturę Zero Trust — zasady NIST SP 800-207, punkty decyzji i egzekucji polityki (PDP/PEP), tożsamość jako perymetr (IAM pracowników, CIAM klientów, PAM, dostęp just-in-time), MFA odporne na phishing (FIDO2, passkeys), postura urządzeń, mikrosegmentacja, ZTNA kontra VPN, SASE/SSE, model dojrzałości CISA, mapa migracji i metryki. Nie do OAuth/OIDC w kodzie aplikacji (be-auth-security), tożsamości maszynowych i sekretów (ops-secrets-identities), NetworkPolicy (ops-kubernetes), zabezpieczeń chmury (sec-cloud-security) ani modelu zagrożeń funkcji (arch-threat-modeling)."
   slowa: "zero trust, ZTNA, VPN, nigdy nie ufaj, zawsze weryfikuj, perymetr, segmentacja, mikrosegmentacja, SASE, SSE, CASB, SWG, 800-207, PDP, PEP, passkey, FIDO2, WebAuthn, phishing, MFA, PAM, JIT, dostęp na żądanie, IAM, CIAM, stan urządzenia, device posture, dojrzałość zero trust, CISA ZTMM, ruch boczny, lateral movement"
 ---

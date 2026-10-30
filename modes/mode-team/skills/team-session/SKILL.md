@@ -2,7 +2,7 @@
 name: team-session
 description: Użyj na polecenie człowieka (/team-session) — persona prowadzi zespół agentów rozmawiających ze sobą (agent teams).
 metadata:
-  przeglad: 2027-04-21
+  przeglad: "2027-04-21"
   katalog: "Użyj tylko na polecenie człowieka (`/team-session ZADANIE`) — sesja agent teams Claude Code: persona prowadzi 3–5 członków zespołu z wykonawców fabryki, którzy piszą do siebie bezpośrednio i mają wspólną listę zadań; bramka kosztu, przełącznik flagi, skład, podział plików, zamknięcie. Nie do zwykłego delegowania (subagenci persony), pracy bez nadzoru (core-async-delegation) ani doboru zespołu do problemu (core-problem-routing)."
 argument-hint: "[zadanie dla zespołu]"
 disable-model-invocation: true

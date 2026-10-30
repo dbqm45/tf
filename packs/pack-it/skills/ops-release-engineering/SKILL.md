@@ -2,7 +2,7 @@
 name: ops-release-engineering
 description: Użyj przy sposobie wydania — rolling, blue/green, canary z wycofaniem, feature flagi, GitOps, migracje bazy w CD.
 metadata:
-  przeglad: 2027-04-09
+  przeglad: "2027-04-09"
   katalog: "Użyj przy wyborze i konfiguracji sposobu wydania — rolling, blue/green, canary z bramkami metryk i automatycznym wycofaniem, feature flagi z datą usunięcia, GitOps (Argo CD, Flux), migracje bazy w CD (expand–contract), środowiska podglądu dla PR. Nie do samej budowy pipeline'u (ops-ci-cd) ani zasad trunk-based i DORA (eng-continuous-delivery)."
   slowa: "sposób wydania, wdrożenie stopniowe, canary, blue/green, rolling, wycofanie, rollback, feature flaga, za flagą, etapy flagi, etapy udostępniania, procent klientów, najpierw pracownicy, potem wszyscy, przejście etapu, kryterium wyjścia, release.yaml, data usunięcia flagi, dark launch, GitOps, Argo CD, Flux, expand contract"
 ---

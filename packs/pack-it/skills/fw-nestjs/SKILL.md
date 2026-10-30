@@ -3,7 +3,7 @@ name: fw-nestjs
 description: Użyj przy aplikacji NestJS — moduły i DI, kontrolery, walidacja DTO, konfiguracja, bezpieczeństwo, dane (TypeORM, Prisma), testy (@nestjs/testing, e2e).
 metadata:
   katalog: "Użyj przy aplikacji NestJS — moduły i DI, kontrolery, walidacja DTO, konfiguracja, bezpieczeństwo, dane (TypeORM, Prisma), testy (@nestjs/testing, e2e). Nie do idiomów TypeScriptu (lang-typescript), modelowania domeny (ddd-*), ogólnego projektu API (be-api-design), baz danych niezależnie od frameworka (be-database) ani runnera testów (tool-jest, tool-vitest)."
-  przeglad: 2027-01-20
+  przeglad: "2027-01-20"
   slowa: "NestJS, Nest, @nestjs/core, @Module, @Injectable, @Controller, ValidationPipe, class-validator, DTO, ConfigModule, ConfigService, process.env, Test.createTestingModule, overrideProvider, createNestApplication, supertest, TypeORM, Prisma, Guard, Interceptor, Testcontainers, forwardRef"
 ---
 

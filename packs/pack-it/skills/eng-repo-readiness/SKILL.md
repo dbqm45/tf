@@ -2,7 +2,7 @@
 name: eng-repo-readiness
 description: Użyj, gdy repo ma być gotowe dla agentów — szkielet z generatora albo audyt lockfile, testów, CI.
 metadata:
-  przeglad: 2027-10-10
+  przeglad: "2027-10-10"
   katalog: "Użyj, gdy repozytorium ma być gotowe do bezpiecznej, weryfikowalnej pracy agentów — nowy projekt: szkielet z oficjalnego generatora z decyzji o stacku, świeżość startera, katalog tymczasowy i polityka konfliktów plików, raport z kodem wyjścia; istniejący projekt: audyt tylko do odczytu (lockfile, komenda audytu zależności, runner testów na sucho, etapy CI, konfiguracja, cztery bramki stacku z kompensacją w CLAUDE.md), werdykt i lista poprawek. Skrypt scripts/readiness_check.py. Nie do wyboru stacku (arch-tech-selection), audytu długu w kodzie (eng-tech-debt-audit), dopasowania skilli do wersji (core-stack-sync) ani podnoszenia zależności (ops-dependency-upgrades)."
   slowa: "gotowość repo, repo gotowe dla agentów, czy agent może tu pracować, przejmujemy repo, postaw szkielet, szkielet projektu, scaffold, bootstrap, generator projektu, starter, create-app, nowy projekt od zera, audyt repo, health check repo, brak lockfile, brak testów, runner testów, porzucony starter, generator zwrócił błąd"
 ---

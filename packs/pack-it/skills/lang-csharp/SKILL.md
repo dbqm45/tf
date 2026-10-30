@@ -2,7 +2,7 @@
 name: lang-csharp
 description: Użyj przy kodzie C# 12–14 (.NET 8–10) — konwencje, nullable, rekordy, wynik operacji, async, pojęcia domenowe (obiekt wartości, warianty, agregat).
 metadata:
-  przeglad: 2027-01-23
+  przeglad: "2027-01-23"
   katalog: "Użyj przy pisaniu i przeglądzie kodu C# na .NET 8–10 (C# 12–14) — konwencje języka, typy referencyjne dopuszczające null, rekordy i niezmienność, wynik operacji zamiast wyjątków dla odrzuceń biznesowych, dopasowanie wzorców i wyczerpujące switch, async i CancellationToken, różnice między wersjami (konstruktory główne, wyrażenia kolekcji, kolekcje params, field, bloki extension, ?.=) oraz wyrażanie pojęć domenowych idiomami C#. Nie do ASP.NET Core — endpointów, walidacji, OpenAPI, testów integracyjnych (fw-aspnet-core), projektu API niezależnie od technologii (be-api-design) ani modelowania domeny (ddd-*)."
   slowa: "C#, csharp, .NET, dotnet, net8.0, net10.0, LangVersion, record, record struct, nullable, wynik operacji w C#, wyjątki czy wynik, switch expression, pattern matching, sealed, primary constructor, konstruktor główny, field keyword, extension members, blok extension, async await, CancellationToken, decimal kwota, obiekt wartości w C#, agregat w C#"
 ---

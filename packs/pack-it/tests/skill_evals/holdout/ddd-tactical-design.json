@@ -1,0 +1,53 @@
+{
+  "skill": "ddd-tactical-design",
+  "scenarios": [
+    {
+      "id": "ho-tactical-proces-wieloetapowy",
+      "expect": "trigger",
+      "prompt": "Realizacja zamówienia trwa kilka dni i przechodzi przez płatność, magazyn i kuriera, a każdy etap może się nie udać. Jak to zamodelować w domenie i kto ma decydować, co dzieje się po każdym zdarzeniu?",
+      "checks": {
+        "all": [
+          [
+            "dispatcher\\w*",
+            "osobn\\w+ (komponent|wykonawc|moduł)\\w*.{0,40}wykon",
+            "wykonani\\w+ krok\\w+.{0,40}osobn"
+          ],
+          [
+            "typ\\w* krok\\w*",
+            "jawn\\w+ (typ|krok)",
+            "step type",
+            "rodzaj\\w* krok\\w*"
+          ],
+          [
+            "stan\\w* (proces\\w*|sagi).{0,60}(zapis|trwał|persist|przechowy)",
+            "(zapis|persist|przechowy)\\w+.{0,40}stan\\w* (proces|sagi)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-tactical-czysta-decyzja",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby logika podejmowania decyzji przy obsłudze zamówień była czystą funkcją bez wejścia-wyjścia, łatwą do testowania i gotową na późniejsze zdarzeniowe składowanie stanu. Jak ułożyć przepływ od komendy do zapisu?",
+      "checks": {
+        "all": [
+          [
+            "decide\\s*\\(",
+            "\\bdecider\\b"
+          ],
+          [
+            "(wczyt|load|pobier|odczyt)\\w*.{0,60}(decyd|decide).{0,80}(zapis|save|persist).{0,60}(publik|publish)"
+          ],
+          [
+            "powłok\\w+",
+            "\\bshell\\b",
+            "functional core",
+            "funkcyjn\\w+ rdze\\w+",
+            "niezmienn\\w+ stan",
+            "immutable state"
+          ]
+        ]
+      }
+    }
+  ]
+}

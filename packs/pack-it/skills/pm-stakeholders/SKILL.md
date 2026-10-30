@@ -2,7 +2,7 @@
 name: pm-stakeholders
 description: Użyj przy pracy z interesariuszami projektu lub produktu — identyfikacja, mapa wpływ × zainteresowanie, zaangażowanie obecne i docelowe, plan komunikacji, opór.
 metadata:
-  przeglad: 2027-10-23
+  przeglad: "2027-10-23"
   katalog: "Użyj, gdy projekt, wdrożenie albo zmiana produktu zależy od ludzi, którzy mogą ją wesprzeć lub zablokować — identyfikacja interesariuszy (także pośrednich i nieformalnych), mapa wpływ × zainteresowanie, ocena zaangażowania obecnego i docelowego, plan zaangażowania i komunikacji (kto, co, kanał, częstotliwość, właściciel), rozpoznanie przyczyn oporu i działania, przegląd mapy w trakcie. Nie do podziału zespołów i trybów współpracy (proc-team-topologies), planu projektu z kosztami i ryzykami (proc-project-planning), facylitacji warsztatu z ekspertami (ddd-facilitation) ani raportu dla zarządu o bezpieczeństwie (sec-security-leadership)."
   slowa: "interesariusze, stakeholderzy, mapa interesariuszy, kto jest interesariuszem, wpływ i zainteresowanie, macierz władzy, opór przed zmianą, dział się opiera, wdrożenie w firmie, plan komunikacji, plan zaangażowania, kogo informować, sponsor projektu, zarząd chce szybko, przekonać dział, nikogo nie pominąć"
 ---

@@ -2,7 +2,7 @@
 name: eng-algorithms-data-structures
 description: Użyj, gdy liczy się wydajność kodu — złożoność, dobór struktur danych (TS, Java), techniki algorytmów, grafy, LRU.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy kodzie, w którym liczy się wydajność albo poprawność algorytmu — złożoność (O, czas, pamięć), dobór struktury danych w TS i Javie, wzorce rozwiązywania (dwa wskaźniki, okno, przedziały, top-k, BFS/DFS), techniki (rekurencja, nawroty, programowanie dynamiczne, zachłanne), drzewa i grafy. Nie do rozpoznawania problemu w domenie (ddd-algorithm-recognition)."
 ---
 

@@ -2,7 +2,7 @@
 name: ops-cloud-migration
 description: Użyj przy migracji obciążeń do chmury lub między środowiskami — portfel, strategie 7R, fale, dane, cutover, rollback.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   widocznosc: nazwa
   katalog: "Użyj, gdy planujesz przeniesienie aplikacji, baz lub całego centrum danych do chmury albo między chmurami i środowiskami — discovery i ocena portfela (zależności, grawitacja danych, licencje), strategie 7R (retire, retain, rehost, relocate, replatform, repurchase, refactor), fale i grupy przenoszenia, pilot, migracja danych (transfer offline, replikacja, podwójny zapis, cutover z budżetem przestoju), runbook przełączenia i plan wycofania, łączność hybrydowa, kryteria sukcesu, optymalizacja po migracji, typowe błędy. Wynik to plan migracji z falami i runbookiem cutover. Nie do strategii wydań (ops-release-engineering), migracji schematu bazy (be-database), wzorca Strangler w kodzie (eng-refactor-planning) ani budowy fundamentu chmury (ops-cloud-landing-zones)."
   slowa: "migracja do chmury, cloud migration, lift and shift, 7R, rehost, replatform, refactor, repurchase, retire, retain, relocate, fale migracji, wave planning, discovery, portfel aplikacji, przeniesienie serwerowni, cutover, rollback, przełączenie, okno przestoju, replikacja danych, DMS, migracja bazy do chmury, połączenie hybrydowe, Direct Connect, ExpressRoute, migracja między chmurami"

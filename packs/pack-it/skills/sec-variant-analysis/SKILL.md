@@ -2,7 +2,7 @@
 name: sec-variant-analysis
 description: Użyj po znalezieniu podatności, by znaleźć jej warianty w kodzie — przyczyna, wzorzec źródło→ujście, grep/Semgrep/CodeQL, triaż trafień, reguła w CI.
 metadata:
-  przeglad: 2027-10-23
+  przeglad: "2027-10-23"
   katalog: "Użyj, gdy znaleziono jedną podatność (pentest, zgłoszenie, incydent, przegląd) i trzeba sprawdzić, czy ten sam błąd nie występuje gdzie indziej — w tym repozytorium albo w wielu repozytoriach firmy: przyczyna i klasa (CWE), uogólnienie do wzorca źródło → ujście na kilku poziomach, wyszukiwanie od najtańszego (grep, Semgrep, CodeQL, w tym wiele repozytoriów naraz), triaż każdego trafienia z osiągalnością i ekspozycją, naprawa u źródła wspólnym bezpiecznym API, reguła z testami w CI blokująca nowe wystąpienia, raport z liczbami. Nie do programu skanerów i terminów napraw (sec-appsec-devsecops), modelu zagrożeń (arch-threat-modeling), obsługi incydentu (ops-security-operations) ani analizy podejrzanego pliku (sec-malware-analysis)."
   slowa: "analiza wariantów, variant analysis, gdzie jeszcze jest ten błąd, ten sam błąd w innych miejscach, podobne podatności, znaleźliśmy podatność, pentester znalazł, po incydencie sprawdzić resztę kodu, wszystkie repozytoria, reguła semgrep na ten błąd, zapytanie codeql, źródło i ujście, taint, przepływ danych, sql injection w innych miejscach, deserializacja w innych usługach"
 ---

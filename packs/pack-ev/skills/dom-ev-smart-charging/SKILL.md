@@ -2,7 +2,7 @@
 name: dom-ev-smart-charging
 description: Użyj przy profilach ładowania OCPP 1.6 i 2.0.1 — SetChargingProfile, stackLevel, composite schedule, limity A i W, TxDefault offline, walidacja, RED III art. 20a.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy CSMS albo ładowarka ustawia, łączy i sprawdza limity mocy przez profile ładowania OCPP 1.6 i 2.0.1 — cele (ChargePointMax, ChargingStationMax, ExternalConstraints, TxDefault, Tx), Absolute, Relative, Recurring, stackLevel, validFrom i validTo, duration, A i W oraz fazy, composite schedule wg libocpp, SetChargingProfile, GetCompositeSchedule, ClearChargingProfile, GetChargingProfiles, NotifyChargingLimit, walidacja K01, offline i restart, minimalny prąd 6 A, test skryptem composite_schedule.py, smart charging w RED III art. 20a i AFIR. Nie do algorytmów podziału mocy, PV, magazynów, taryf dynamicznych i OSD (dom-ev-energy-management), ISO 15118 i V2G (dom-ev-charging), sprzętu CP i PWM (dom-ev-charger-hardware) ani ogólnych ramek OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x)."
   slowa: "smart charging, profil ładowania, charging profile, SetChargingProfile, GetCompositeSchedule, ClearChargingProfile, GetChargingProfiles, NotifyChargingLimit, composite schedule, stackLevel, TxDefaultProfile, TxProfile, ChargePointMaxProfile, ChargingStationMaxProfile, ExternalConstraints, limit prądu, ogranicz moc ładowarki, chargingRateUnit, chargingSchedulePeriod, recurrencyKind, validFrom, numberPhases, load management, ładowarka offline limit, bezpieczny limit, minimalny prąd 6 A, ładowanie inteligentne, RED III 20a, AFIR smart recharging, libocpp, K01"
 ---

@@ -2,7 +2,7 @@
 name: tool-nx
 description: Użyj przy monorepo Nx — projekty i biblioteki, tagi i granice modułów, generatory, cache, affected, release, migrate.
 metadata:
-  przeglad: 2027-01-17
+  przeglad: "2027-01-17"
   katalog: "Użyj w monorepo Nx — struktura projektów i bibliotek, tagi i granice modułów, generatory, zadania i cache, affected, nx release, migracje (nx migrate). Także przy odwzorowaniu granic kontekstów DDD na biblioteki Nx. Nie do konwencji frameworka (fw-*) ani języka (lang-*)."
 ---
 

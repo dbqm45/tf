@@ -1,0 +1,63 @@
+{
+  "skill": "core-agent-security",
+  "scenarios": [
+    {
+      "id": "ho-serwer-narzedzi-zewnetrzny",
+      "expect": "trigger",
+      "prompt": "Chcemy podpiąć do Claude'a zewnętrzny serwer z gotowymi narzędziami do Jiry (przez Model Context Protocol). Co sprawdzić poza samym kodem serwera, zanim go włączymy?",
+      "checks": {
+        "all": [
+          [
+            "opis\\w*.{0,40}narzędzi",
+            "tool descriptions?",
+            "schemat\\w*.{0,20}narzędzi",
+            "descriptions? and schemas?"
+          ],
+          [
+            "zatruw\\w*",
+            "poisoning",
+            "ukryt\\w* instrukcj\\w*",
+            "hidden instructions?",
+            "najwyższy priorytet"
+          ],
+          [
+            "przypi\\w*",
+            "pin\\w*",
+            "nowa wersja",
+            "zmian\\w* opisu",
+            "commit SHA"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-pr-agenta-sciezki-chronione",
+      "expect": "trigger",
+      "prompt": "Agent otworzył PR zmieniający pliki w .github/workflows i w module płatności. CI jest zielone i ktoś proponuje automatyczny merge. Co ustawić w procesie, żeby to było rozsądne?",
+      "checks": {
+        "all": [
+          [
+            "CODEOWNERS",
+            "właściciel\\w*",
+            "owner approval",
+            "akceptacj\\w* właściciela"
+          ],
+          [
+            "etykiet\\w*",
+            "trailer",
+            "oznaczon\\w*",
+            "label\\w*",
+            "mark\\w* as agent"
+          ],
+          [
+            "nie (może|mógł) zmieni\\w*",
+            "którego agent nie",
+            "osobn\\w* (ścieżk|repozytori)",
+            "separate (path|repo)",
+            "agent cannot (change|modify)"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "skill": "dom-ev-tariffs-pricing",
+  "scenarios": [
+    {
+      "id": "ho-tariffs-step-size-postoj",
+      "expect": "trigger",
+      "prompt": "Taryfa OCPI 2.2.1 ma jeden element na całą dobę: ładowanie 1,20 EUR/h z krokiem 1800 s oraz postój 1,00 EUR/h z krokiem 900 s, bez VAT. Kierowca ładował 40 minut i potem stał jeszcze 2 minuty. Ile płaci i jak zastosować kroki?",
+      "checks": {
+        "all": [
+          [
+            "1[,.]05"
+          ],
+          [
+            "raz na sesj\\w+",
+            "once per session",
+            "nie (osobno )?(dla|w) każd\\w+ okres\\w+"
+          ],
+          [
+            "(ładowani\\w+|TIME).{0,100}(dokładn|bez zaokrągl|nie (jest )?zaokrągl|exact|not rounded)",
+            "(dokładn|exact)\\w*.{0,60}(ładowani|TIME)",
+            "postoj\\w*.{0,80}(zaokrągl|round)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-tariffs-brak-elementu-domyslnego",
+      "expect": "trigger",
+      "prompt": "W taryfie mamy element dzienny 06:00–22:00 z ENERGY i TIME oraz nocny 22:00–06:00 tylko z ENERGY. W nocy kierowcy nie płacą za czas ładowania, a chcieliśmy, żeby płacili. Dlaczego tak wychodzi i jak to naprawić?",
+      "checks": {
+        "all": [
+          [
+            "domyśln\\w+",
+            "default",
+            "fallback"
+          ],
+          [
+            "bez restrykcj\\w+",
+            "without restrictions",
+            "no restrictions",
+            "nie ma restrykcj\\w+"
+          ],
+          [
+            "pierwsz\\w+ (pasując|element)",
+            "first (matching|element)",
+            "każd\\w+ wymiar\\w*",
+            "osobno (dla|per) .{0,20}wymiar",
+            "per dimension",
+            "each dimension"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "skill": "ai-evals",
+  "scenarios": [
+    {
+      "id": "ho-evals-kontaminacja-fewshot",
+      "expect": "trigger",
+      "prompt": "Wkleiliśmy do promptu kilkanaście najlepszych przykładów z naszego zbioru testowego jako wzorce i wynik skoczył z 70% do 95%. Zespół świętuje. Czy to realna poprawa i jak to robić poprawnie?",
+      "checks": {
+        "all": [
+          [
+            "kontaminac\\w+",
+            "wyciek\\w*",
+            "contaminat\\w+",
+            "leak\\w*",
+            "data leakage"
+          ],
+          [
+            "osobn\\w+ pul\\w+",
+            "separate pool",
+            "rozł[aą]czn\\w+",
+            "oddziel\\w+ (od )?(zbior|przykład)",
+            "inn\\w+ przykład\\w+ (do|w) prompt",
+            "held-?out"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-evals-saturacja-zepsute-zadanie",
+      "expect": "trigger",
+      "prompt": "Od trzech wydań nasza ewaluacja asystenta pokazuje 100% i nie odróżnia wersji, a jedno zadanie ma 0% w dziesięciu próbach. Co z tym zrobić?",
+      "checks": {
+        "all": [
+          [
+            "saturac\\w+",
+            "nasycen\\w+",
+            "saturat\\w+"
+          ],
+          [
+            "trudniejsz\\w+",
+            "dodaj\\w* .{0,20}trudn\\w+",
+            "harder",
+            "more (difficult|challenging)"
+          ],
+          [
+            "0\\s?%.{0,120}(zepsut|grader|zadani\\w+ (jest )?(błędn|niejasn)|broken)",
+            "(zepsut|broken)\\w* (zadani|grader|task)",
+            "transkrypt\\w*",
+            "transcript\\w*"
+          ]
+        ]
+      }
+    }
+  ]
+}

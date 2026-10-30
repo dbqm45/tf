@@ -2,7 +2,7 @@
 name: ai-prompt-engineering
 description: Użyj przy pisaniu i poprawianiu promptów — struktura, tagi XML, przykłady few-shot, myślenie, długi kontekst, szablony i wersje, układ pod cache, migracja modelu.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy piszesz, poprawiasz lub przenosisz prompt systemowy albo szablon promptu dla modelu — struktura (rola, kontekst, zadanie, ograniczenia, format wyjścia, przykłady), tagi XML, dobór przykładów few-shot, łańcuch myślenia i rozszerzone lub adaptacyjne myślenie oraz kiedy go nie używać, prefill i structured outputs, układ długiego kontekstu (dokumenty na górze, pytanie na końcu), szablony i wersjonowanie promptów (rejestr), układ przyjazny cache (stały prefiks), regresja promptu przez ewaluacje, migracja promptu na nowszy model, typowe błędy (niejednoznaczność, sprzeczne instrukcje, nadmierne ograniczenia). Nie do kontraktu wyjścia, SDK i pętli narzędziowej (eng-llm-features), budowy zbiorów i graderów (ai-evals), reguł cache i doboru modelu (core-cost-control) ani instrukcji dla agenta-programisty (core-agent-instructions)."
   slowa: "prompt, prompt systemowy, prompt engineering, inżynieria promptów, few-shot, przykłady w prompcie, tagi xml, chain of thought, łańcuch myślenia, extended thinking, adaptive thinking, prefill, długi kontekst, szablon promptu, wersjonowanie promptów, rejestr promptów, prompt caching, stały prefiks, migracja promptu, model ignoruje instrukcję, sprzeczne instrukcje, poprawić prompt"
 ---

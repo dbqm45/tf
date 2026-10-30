@@ -2,7 +2,7 @@
 name: dom-ev-fleet-charging
 description: Użyj przy ładowaniu floty, w domu pracownika, w pracy i dla klientów B2B — karta flotowa, zwrot za prąd, ładowarki za szlabanem, ładowanie za darmo, centra kosztów.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy klientem nie jest kierowca ad hoc, tylko organizacja — flota z kartami (karta na kierowcę czy na auto, polityki, limity, raport per auto, kierowca i centrum kosztów), zamawianie ładowarki domowej dla pracownika i zwrot kosztów energii (licznik, stawka, oddzielenie sesji służbowych od prywatnych, RODO, lista płac), ładowarki firmowe za szlabanem z grupami uprawnionych, darmowe ładowanie klientów B2B (taryfa zerowa, a nie brak CDR), podział kosztów między najemców, EPBD i polskie przepisy o budynkach, model danych organizacja – centrum kosztów – kierowca – token – auto i uprawnienia tokenu do lokalizacji. Nie do platformy eMSP i aplikacji (dom-ev-emsp-platform), budowy taryfy (dom-ev-tariffs-pricing), mocy zajezdni i DLM (dom-ev-energy-management) ani profili ładowania (dom-ev-smart-charging)."
   slowa: "flota, karta flotowa, fleet card, kierowca floty, centrum kosztów, cost center, raport kosztów ładowania, polityka ładowania floty, limit miesięczny, ładowanie domowe pracownika, wallbox pracownika, zwrot kosztów prądu, zwrot za ładowanie w domu, ryczałt za prąd, ładowanie w pracy, parking firmowy, za szlabanem, goście, klienci B2B, darmowe ładowanie, ładowanie za darmo, taryfa zerowa, free of charge, najemcy, podział kosztów energii, lista płac, auto służbowe, company car, home charging, workplace charging, reimbursement, RODO dane domowe, telematyka floty, whitelist tokenów, token do lokalizacji, EPBD parking, punkty ładowania w budynku"
 ---

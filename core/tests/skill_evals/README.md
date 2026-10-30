@@ -65,3 +65,25 @@ tymczasowym z kopią `.claude/skills`.
 Wyniki czytaj jako sygnał, nie wyrok: model może odpowiedzieć dobrze bez skilla (wtedy skill jest zbędny albo
 opis za słaby), a sprawdzenia oparte na słowach mogą przepuścić lub odrzucić odpowiedź nietypowo sformułowaną.
 Wątpliwe przypadki oceń, czytając odpowiedź w `.jsonl`.
+
+## Zamknięty zbiór testowy i protokół „wynik czy koszt”
+
+Opisy, słowa i treść skilli stroimy na scenariuszach z plików głównych, więc wynik na nich jest zawyżony. Do pomiaru,
+czy skille coś wnoszą, służy osobny **zamknięty zbiór** w `skill_evals/holdout/<skill>.json`:
+- ten sam format, ale tylko scenariusze `trigger` ze sprawdzeniami (granice pilnuje plik główny);
+- bramka (`skill_gate.py`), podpowiedzi i `--suggest` go nie czytają, a odcisk bramki skilla go nie obejmuje;
+- jego porażek nie naprawiamy zmianą opisu pod te pytania. Zbiór uzupełniamy nowymi pytaniami, a nie poprawiamy
+  starych.
+
+```bash
+python3 tests/run_skill_evals.py --all --holdout only --models haiku,sonnet --baseline --repeats 2   # pomiar
+python3 tests/run_skill_evals.py --skills be-api-design --holdout exclude                          # strojenie
+```
+
+Raport ma sekcję „Protokół: wynik czy koszt”. Dla każdego ramienia (model × ze skillami / bez × zbiór) pokazuje:
+- **zaliczone w całości** — główny wynik: skill uruchomiony i wszystkie kryteria spełnione;
+- **średnią kryteriów** — tylko diagnostyka; 8 z 10 kryteriów to nie 80% wartości;
+- **koszt** i **koszt na rozwiązane zadanie** — wszystkie przebiegi ramienia, także nieudane, przez liczbę
+  zaliczonych;
+- **niestabilne** — scenariusze z różnym wynikiem między powtórzeniami (`--repeats`).
+

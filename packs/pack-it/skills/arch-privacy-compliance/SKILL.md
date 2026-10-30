@@ -2,7 +2,7 @@
 name: arch-privacy-compliance
 description: Użyj, gdy system przetwarza dane osobowe (RODO) — podstawy, minimalizacja, retencja, DPIA, procesory.
 metadata:
-  przeglad: 2027-04-09
+  przeglad: "2027-04-09"
   katalog: "Użyj, gdy system przetwarza dane osobowe — nowa funkcja, integracja, analityka, logi, wysyłanie danych do zewnętrznych usług (także AI) — przy projektowaniu i przeglądzie: inwentarz danych (wkład do art. 30), cel i podstawa prawna, prywatność w fazie projektowania i domyślna (minimalizacja, pseudonimizacja), retencja i usuwanie, realizacja praw osób (dostęp, usunięcie, przenoszenie) także w kopiach zapasowych, logach i u procesorów, umowy powierzenia i transfery poza EOG, ocena skutków (DPIA), naruszenia ochrony danych (72 godziny), cookies. Nie do uwierzytelniania i haseł (be-auth-security), modelu zagrożeń (arch-threat-modeling), reagowania na incydent bezpieczeństwa (ops-security-operations) ani zarządzania danymi w potokach i AI Act (data-engineering). Nie jest poradą prawną."
   slowa: "RODO, GDPR, dane osobowe, ochrona danych, prywatność, UODO, IOD, inspektor ochrony danych, DPIA, ocena skutków, prawo do usunięcia, bycia zapomnianym, retencja danych, zgoda, cookies, ciasteczka, umowa powierzenia, wyciek danych, naruszenie ochrony danych, pseudonimizacja, anonimizacja, pod kątem RODO, zgodnie z RODO, analityka zachowań użytkowników, żądanie usunięcia danych"
 ---

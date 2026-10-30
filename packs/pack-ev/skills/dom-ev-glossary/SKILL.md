@@ -2,7 +2,7 @@
 name: dom-ev-glossary
 description: Użyj przy nazewnictwie w branży EV — Location/EVSE/Connector, CSMS vs CPMS, sesja vs transakcja, kW vs kWh, status złącza, wersja OCPP, uptime, nazwy w kodzie.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba ustalić lub ujednolicić pojęcia EV po polsku i angielsku — hierarchia Location → stacja → EVSE → Connector i liczenie punktów ładowania po EVSE, CSMS/CPMS/Central System, Charge Point vs Charging Station, sesja vs transakcja, token, SoC/SoH, kW vs kWh, AC/DC, skróty (CDR, EMAID, SECC, DLM) oraz wartości, które specyfikacje muszą zapisywać jednoznacznie (wersja OCPP z numerem, status złącza ze słownika tej wersji, uptime z definicją, taryfa), i reguły nazw w kodzie, UI i dokumentacji (evse_id, energy_kwh, power_kw). Nie do liczenia uptime i KPI (dom-ev-kpi-analytics), ceny z taryfy (dom-ev-tariffs-pricing), ról rynku i przepływów pieniędzy (dom-ev-market-roles), formatów identyfikatorów (dom-ev-identifiers) ani komunikatów OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x)."
   slowa: "słownik, glossary, terminologia, nazewnictwo, punkt ładowania, charging point, stacja ładowania, charging station, charge point, EVSE, connector, złącze, CSMS, CPMS, Central System, sesja, transakcja, token, SoC, SoH, kW, kWh, AC, DC, Mode 3, SECC, EVCC, DLM, load management, ujednolicić nazwy, naming, ubiquitous language, status złącza, connector status, Occupied, Preparing, wersja OCPP, OCPP 1.6J, uptime w specyfikacji, definicja uptime, dostępność punktu, taryfa, tariff"
 ---

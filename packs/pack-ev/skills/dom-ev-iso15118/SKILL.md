@@ -2,7 +2,7 @@
 name: dom-ev-iso15118
 description: Użyj przy komunikacji auto–ładowarka i Plug & Charge — DIN 70121, ISO 15118-2 i -20, SLAC, SDP, certyfikat kontraktu, przez OCPP, awarie.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba zrozumieć lub zdebugować rozmowę pojazdu z ładowarką wysokiego poziomu — DIN 70121 kontra ISO 15118-2 i -20, SLAC i SDP, SupportedAppProtocol i wybór protokołu, kolejność komunikatów sesji DC i AC, timeouty, Plug & Charge i PKI (V2G Root, CPO, CPS, MO, OEM), instalacja i aktualizacja certyfikatu kontraktu i jej przenoszenie przez OCPP 2.0.1 i 1.6, EIM kontra PnC, wygasły certyfikat, brak łańcucha, OCSP, zegar, fallback do DIN. Nie do dwukierunkowego V2G i BPT (dom-ev-v2x), stanów CP i PWM (dom-ev-charger-hardware), szczegółów Authorize i Device Model w OCPP (dom-ev-ocpp-2x), formatu EMAID (dom-ev-identifiers)."
   slowa: "ISO 15118, ISO 15118-2, ISO 15118-20, DIN 70121, DIN SPEC 70121, Plug & Charge, PnC, SLAC, PLC, HomePlug Green PHY, SDP, SECC, EVCC, SupportedAppProtocol, certyfikat kontraktu, contract certificate, V2G Root, CPS, OEM provisioning, CertificateInstallation, CertificateUpdate, Get15118EVCertificate, iso15118CertificateHashData, EIM, ExternalPayment, auto nie rozpoczyna ładowania, PnC nie działa, handshake TLS, wygasły certyfikat, fallback do DIN, EXI, josev, jak działa Plug & Charge, stacja ładowania z Plug & Charge, pojazd elektryczny rozmawia z ładowarką"
 ---

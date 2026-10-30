@@ -2,7 +2,7 @@
 name: dom-ev-ocpp-2x
 description: Użyj przy OCPP 2.0.1 lub 2.1 — Device Model, TransactionEvent i seqNo, profile bezpieczeństwa 1–3, różnice wobec 1.6, flota mieszana 1.6 + 2.x w CSMS.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy praca dotyczy OCPP 2.0.1 lub 2.1 po stronie CSMS albo ładowarki — Device Model (komponenty, zmienne, atrybuty), TransactionEvent Started/Updated/Ended, seqNo i transactionId, offline, StatusNotification z connectorStatus, profile bezpieczeństwa 1–3 (Basic Auth, TLS, mTLS), ISO 15118 przez OCPP w zarysie, rozszerzenia 2.1, rozpoznanie wersji i adaptery we flocie mieszanej 1.6 + 2.x. Nie do OCPP 1.6 (dom-ev-ocpp-16), słownika pojęć (dom-ev-glossary), roamingu OCPI ani szczegółów ISO 15118 (dom-ev-charging)."
   slowa: "OCPP 2.0.1, OCPP 2.1, TransactionEvent, seqNo, triggerReason, Device Model, GetVariables, SetVariables, GetBaseReport, NotifyReport, security profile, mTLS, certyfikat klienta, Sec-WebSocket-Protocol, ocpp2.0.1, flota mieszana, adapter wersji, V2X, DER, edycja specyfikacji, CSMS"
 ---

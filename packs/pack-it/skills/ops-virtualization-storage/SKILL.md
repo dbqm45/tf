@@ -2,7 +2,7 @@
 name: ops-virtualization-storage
 description: Użyj przy infrastrukturze własnej i brzegowej — hiperwizor, klaster, SAN/NAS/Ceph, RAID, kopie, cykl życia sprzętu, edge.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy projekcie infrastruktury w serwerowni lub na brzegu (edge) — dobór hiperwizora (KVM z libvirt i QEMU, Proxmox VE, VMware vSphere z uwzględnieniem zmian licencyjnych po przejęciu przez Broadcom), wielkość klastra (overcommit CPU i pamięci, N+1, HA, migracja na żywo, kworum), architektura storage (SAN FC i iSCSI, NAS NFS i SMB, Ceph), RAID i erasure coding, IOPS, przepustowość, opóźnienie i głębokość kolejki, migawki a kopie zapasowe, reguła 3-2-1, niezmienialność, cykl życia sprzętu (odświeżanie, części zapasowe, firmware), planowanie pojemności, ograniczenia edge, migracja między hiperwizorami. Wynik to projekt z tabelą wymiarowania. Nie do odtwarzania po awarii regionu i strategii DR (ops-multi-region-resilience), kopii w kontekście incydentów i SLO (ops-sre-incidents), strojenia I/O w systemie operacyjnym (ops-linux-performance) ani orkiestracji kontenerów (ops-kubernetes)."
   slowa: "hiperwizor, wirtualizacja, KVM, libvirt, QEMU, Proxmox, VMware, vSphere, ESXi, Broadcom, licencje VMware, migracja z VMware, klaster, overcommit, nadsubskrypcja, HA, live migration, vMotion, SAN, iSCSI, Fibre Channel, NAS, NFS, SMB, Ceph, storage, macierz, RAID, RAID 6, erasure coding, IOPS, przepustowość, opóźnienie dysku, głębokość kolejki, migawka, snapshot, backup, 3-2-1, niezmienialna kopia, serwerownia, on-premise, odświeżanie sprzętu, części zapasowe, firmware, pojemność, edge, sklep, oddział, zdalne zarządzanie, iDRAC, iLO, wymiarowanie klastra"
   widocznosc: nazwa

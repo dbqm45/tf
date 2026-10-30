@@ -2,7 +2,7 @@
 name: sec-governance-compliance
 description: Użyj przy ISO 27001, SOC 2, NIST CSF lub PCI DSS — dobór ram, zakres, macierz kontroli, dowody, audyt wewnętrzny i certyfikujący.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy firma musi wykazać bezpieczeństwo ramami lub audytem — dobór ram wg motywu (klient, regulacja, sektor), ISO/IEC 27001:2022 (klauzule 4–10, Załącznik A, deklaracja stosowania), NIST CSF 2.0 (sześć funkcji z Govern), SOC 2 (kryteria Trust Services, typ I i II), PCI DSS v4.0.1, definicja zakresu, mapowanie jednej kontroli na wiele ram, hierarchia polityk i standardów, zbieranie dowodów i ciągła zgodność, audyt wewnętrzny, przebieg audytu certyfikującego, typowe luki. Wynik: macierz kontroli i plan gotowości do audytu. Nie do RODO i DPIA (arch-privacy-compliance), AI Act (ai-governance-compliance), procesu ryzyka i akceptacji ryzyka (sec-risk-management), obsługi incydentów i podatności (ops-security-operations) ani modelu zagrożeń (arch-threat-modeling). Nie jest poradą prawną ani oceną zgodności."
   slowa: "ISO 27001, 27001, ISMS, SZBI, deklaracja stosowania, SoA, Załącznik A, SOC 2, SOC2, typ II, Trust Services Criteria, NIST CSF, CSF 2.0, PCI DSS, certyfikacja, certyfikat bezpieczeństwa, audyt bezpieczeństwa, audyt zewnętrzny, audyt wewnętrzny, gotowość do audytu, macierz kontroli, mapowanie kontroli, polityka bezpieczeństwa, dowody dla audytora, ciągła zgodność, compliance, kwestionariusz klienta, wymóg klienta enterprise, framework bezpieczeństwa"
 ---

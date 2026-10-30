@@ -2,7 +2,7 @@
 name: core-async-delegation
 description: Użyj, gdy agent ma pracować bez nadzoru (claude -p, /goal, sandbox, rutyna) — kontrakt, bramki, przegląd.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy oddajesz zadanie agentowi, który działa bez człowieka przy ekranie — zdalna kontrola lokalnej sesji z telefonu, sandbox w chmurze (zamknięty laptop), rutyna lub przebieg według harmonogramu, wykonanie zatwierdzonego planu przez claude -p albo /goal — kwalifikacja zadania, wybór trybu kontroli, kontrakt przed startem (cel, zakres, setup, sieć, MCP, sekrety, stop, budżet), polityka wykonania planu bez pytań (bramki w fazach, celowe zepsucie, najwyżej 2 próby naprawy, blok STOP, commit na zielono, raport), monitorowanie i przegląd po. Nie do pętli recenzji i uprawnień agenta (core-agent-security), faz projektu (core-delivery-lifecycle), punktu kontrolnego sesji (core-project-record) ani doboru modelu (core-cost-control)."
   slowa: "bez nadzoru, w tle, w nocy, zamknięty laptop, odejść od komputera, z telefonu, remote control, sandbox w chmurze, claude code on the web, codex cloud, rutyna, harmonogram, routine, claude -p, headless, /goal, delegacja, zlecić agentowi, agent sam wykona plan, praca asynchroniczna"
 ---

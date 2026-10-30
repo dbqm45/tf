@@ -1,0 +1,57 @@
+{
+  "skill": "be-database",
+  "scenarios": [
+    {
+      "id": "ho-pula-polaczen",
+      "expect": "trigger",
+      "prompt": "Mamy 12 instancji aplikacji, każda z pulą 50 połączeń do Postgresa, i po autoskalowaniu baza odrzuca połączenia. Jak to policzyć i naprawić?",
+      "checks": {
+        "all": [
+          [
+            "rdzeni.{0,40}(\\*|×|x|razy)\\s*2",
+            "2\\s*(\\*|×|x)\\s*(liczb\\w*\\s*)?(rdzeni|cores)",
+            "cores?.{0,20}(\\*|×|x)\\s*2",
+            "hikari"
+          ],
+          [
+            "max_connections"
+          ],
+          [
+            "PgBouncer",
+            "pośredni\\w*",
+            "pooler",
+            "transaction(al)? (mode|pooling)",
+            "tryb\\w* transakcyjn\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-retencja-duzej-tabeli",
+      "expect": "trigger",
+      "prompt": "Tabela zdarzeń ma 900 mln wierszy, a co noc kasujemy starsze niż 90 dni jednym DELETE. Baza puchnie i zwalnia w tym czasie. Jak to zrobić lepiej?",
+      "checks": {
+        "all": [
+          [
+            "partycj\\w*",
+            "partition\\w*"
+          ],
+          [
+            "odłącz\\w*",
+            "detach",
+            "drop\\w* partition",
+            "partiami",
+            "w partiach",
+            "batch\\w*",
+            "chunk\\w*"
+          ],
+          [
+            "vacuum",
+            "martw\\w* wiersz\\w*",
+            "dead (tuples|rows)"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 name: dom-ev-business-economics
 description: Użyj przy opłacalności stacji i sieci ładowania — CAPEX, OPEX, demand charges, marża na kWh, próg rentowności utilization, NPV, okres zwrotu, wrażliwość.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba ocenić ekonomię stacji lub sieci ładowania z perspektywy decyzji inwestycyjnej i produktu — struktura CAPEX (ładowarki, przyłącze, transformator, budowa, projekt, terminale) i OPEX (energia, opłaty za moc, serwis, łączność, software, dzierżawa, roaming i płatności), dotacje, przychód i koszt na kWh, marża po prowizjach, pełny koszt kWh, próg rentowności utilization, wpływ średniej mocy, wpływ modelu cenowego, BESS i smart charging na opłaty za moc, przychody dodatkowe, rozbudowa etapami, NPV, okres zwrotu, wrażliwość, scenariusze, skrypt station_economics.py. Nie do liczenia ceny sesji z taryfy OCPI (dom-ev-tariffs-pricing), wyboru lokalizacji i budowy (dom-ev-site-development), definicji i liczenia KPI operacyjnych (dom-ev-kpi-analytics) ani podziału mocy na lokacji (dom-ev-energy-management)."
   slowa: "opłacalność stacji, czy stacja się zwróci, zwrot z inwestycji, ROI, payback, NPV, CAPEX, OPEX, koszt przyłącza, demand charge, opłata za moc, moc umowna, marża na kWh, koszt kWh, próg rentowności, break-even, utilization a zysk, business case, model biznesowy ładowania, dotacja, grant, NEVI funding, BESS opłacalność, przychody dodatkowe, prowizja roamingowa, unit economics, charging station profitability, wrażliwość, scenariusze, ile kosztuje budowa stacji, ile zarabia stacja"
 ---

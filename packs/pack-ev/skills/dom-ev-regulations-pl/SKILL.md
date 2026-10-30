@@ -2,7 +2,7 @@
 name: dom-ev-regulations-pl
 description: Użyj przy polskim prawie dla ładowania EV — ustawa o elektromobilności, numer EIPA i dane do rejestru, badanie UDT, role operatora i dostawcy, kary URE i UDT.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy stacja lub CPMS w Polsce ma spełnić ustawę z 11.01.2018 r. o elektromobilności i paliwach alternatywnych (tekst jednolity Dz.U. 2026 poz. 1243, stan prawny 26.08.2026) — definicje (ogólnodostępna stacja, punkt ładowania, operator, dostawca usługi ładowania), obowiązki operatora i dostawcy, badanie UDT przed oddaniem do eksploatacji, numer EIPA i dane do Ewidencji Infrastruktury Paliw Alternatywnych (dostępność natychmiast, cena w ciągu godziny), rola URE i OSD, kary, przepisy przejściowe, relacja do AFIR i tabela co to znaczy dla CPMS, aplikacji i raportowania. To nie porada prawna. Nie do przepisów UE jako takich (dom-ev-regulations-eu), USA (dom-ev-regulations-us), techniki płatności kartą (dom-ev-payments), liczenia ceny z taryfy (dom-ev-tariffs-pricing) ani sprzętu i licznika (dom-ev-charger-hardware)."
   slowa: "ustawa o elektromobilności, elektromobilność i paliwa alternatywne, Dz.U. 2026 poz. 1243, ogólnodostępna stacja ładowania, operator stacji, dostawca usługi ładowania, punkt ładowania, EIPA, numer EIPA, Ewidencja Infrastruktury Paliw Alternatywnych, UDT, Urząd Dozoru Technicznego, badanie techniczne stacji, oddanie do eksploatacji, wstrzymanie eksploatacji, URE, Prezes URE, OSD, kara pieniężna, art. 45, art. 42, art. 41b, art. 16, dostępność punktu, cena usługi ładowania, dostęp dostawców do stacji, wymóg umowy, polskie przepisy, Polish EV charging law, EIPA registry, public charging station Poland, AFIR a ustawa"
 ---

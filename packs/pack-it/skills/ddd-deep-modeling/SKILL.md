@@ -2,7 +2,7 @@
 name: ddd-deep-modeling
 description: Użyj przy modelowaniu pojęć domeny — relacja wiele do wielu, typy definiowane przez administratora, status, Being/Behaving/Becoming, 5 why, klasyfikacja.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy odkrywaniu i doprecyzowaniu pojęć modelu — pytania modelujące Being/Behaving/Becoming, 5 why, klasyfikacja problemu (CRUD, transformacja, prezentacja, integracja, konkurencja o zasoby), modelowanie przez przykłady. Nie do granic kontekstów (ddd-strategic-analysis) ani wzorców implementacyjnych (ddd-tactical-design)."
   slowa: "poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny"
 ---

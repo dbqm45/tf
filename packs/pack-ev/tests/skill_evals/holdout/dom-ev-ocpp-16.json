@@ -1,0 +1,59 @@
+{
+  "skill": "dom-ev-ocpp-16",
+  "scenarios": [
+    {
+      "id": "ho-ocpp16-offline-rozliczenie",
+      "expect": "trigger",
+      "prompt": "Ładowarka straciła sieć w trakcie sesji, a po powrocie przysłała StartTransaction z meterStart 12000 i StopTransaction z meterStop 30340. Ile kWh rozliczyć i skąd ma być transactionId, skoro sesja zaczęła się offline?",
+      "checks": {
+        "all": [
+          [
+            "18[ ,.]?340\\s*Wh",
+            "18[,.]34\\s*kWh",
+            "18[,.]3\\d?\\s*kWh"
+          ],
+          [
+            "transactionId.{0,80}(CSMS|Central System|backend|serwer|nadaje)",
+            "(CSMS|Central System|backend)\\w*.{0,60}nadaje.{0,30}transactionId",
+            "(CSMS|Central System).{0,40}assign"
+          ],
+          [
+            "czas\\w* odbioru",
+            "time of receipt",
+            "received (at|time)",
+            "zegar\\w*.{0,80}(błęd|korekt|synchroniz)",
+            "clock",
+            "currentTime",
+            "bufor\\w+.{0,80}(kolejn|timestamp|czas)"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-ocpp16-tolerancyjna-walidacja",
+      "expect": "trigger",
+      "prompt": "Jeden model ładowarek wysyła w payloadzie dodatkowe pole spoza schematu. Nasz CSMS waliduje ściśle, odrzuca ramkę, a ładowarka ponawia ją bez końca. Jak to rozwiązać?",
+      "checks": {
+        "all": [
+          [
+            "toleran\\w+",
+            "lenient"
+          ],
+          [
+            "alert\\w*.{0,60}(model|producent|vendor)",
+            "per model",
+            "(model|producent)\\w*.{0,40}alert"
+          ],
+          [
+            "FormationViolation",
+            "PropertyConstraintViolation",
+            "OccurenceConstraintViolation",
+            "TypeConstraintViolation",
+            "CALLERROR",
+            "InternalError"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 name: lang-java
 description: Użyj przy kodzie Java 17/21+ — konwencje, niezmienność, błędy, pojęcia domenowe (obiekt wartości, warianty, agregat).
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy pisaniu i przeglądzie kodu Java (17/21+) — konwencje języka, niezmienność, obsługa błędów oraz wyrażanie pojęć domenowych (obiekt wartości, warianty, agregat, wynik operacji, zdarzenia) idiomami Javy. Nie do konfiguracji frameworków (Spring, Jakarta — osobne fw-*) ani modelowania domeny (ddd-*)."
   slowa: "Java, wynik operacji, wyjątki czy wynik, sealed interface, record, pattern matching, BigDecimal, wynik rezerwacji, sukces albo konflikt terminu, wyjątki czy wynik w Javie, modeluję wynik operacji, Java 21"
 ---

@@ -2,7 +2,7 @@
 name: core-stack-sync
 description: Użyj na starcie pracy i przy niezgodności wersji — stack projektu i dopasowanie skilli, bez podnoszenia.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj na początku pracy w istniejącym projekcie i gdy hook zgłosi niezgodność wersji — odczytanie stacku (package.json, lockfile, pom.xml, build.gradle), porównanie z wersjami, na których oparte są skille, i aktualizacja skilli (nie projektu) do wersji z projektu. Nie do podnoszenia zależności projektu (to osobne zadanie na prośbę użytkownika)."
   slowa: "podnieść wersję, kompatybilność wersji, na jakich wersjach polegać, zakres obsługiwanych wersji, peerDependencies, jakie wersje mamy w projekcie, niezgodność wersji"
 ---

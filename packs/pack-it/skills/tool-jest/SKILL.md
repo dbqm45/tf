@@ -2,7 +2,7 @@
 name: tool-jest
 description: Użyj przy testach w Jest — test.each, dublery, fake timers, ESM, konfiguracja, migracja do Jest 30.
 metadata:
-  przeglad: 2027-01-17
+  przeglad: "2027-01-17"
   katalog: "Użyj przy testach w Jest (projekty istniejące, Node, React Native, Angular z jest-preset) — struktura, test.each, dublery i fake timers, ESM, konfiguracja, migracja do Jest 30 i kiedy przejść na Vitest. Nie do zasad wyroczni (qa-spec-first-testing) ani Vitest (tool-vitest)."
   slowa: "jestjs, Jest w projekcie, jest.useFakeTimers, fałszywy zegar, setSystemTime, jest.mock, jest.config, snapshot"
 ---

@@ -2,7 +2,7 @@
 name: dom-ev-session-lifecycle
 description: Użyj przy sesji ładowania end-to-end — OCPP i OCPI razem, autoryzacja, sesja vs transakcja vs CDR, sesje osierocone, offline, duplikaty, idempotencja.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba połączyć OCPP (ładowarka-CSMS) i OCPI (CPO-eMSP) w jedną sesję — etapy od podłączenia do rozliczenia, cztery ścieżki autoryzacji (aplikacja eMSP przez Commands, RFID, terminal płatniczy, Plug & Charge w zarysie), kolejność komunikatów w 1.6 i 2.0.1, różnica i własność OCPI Session, transakcji OCPP i CDR, sesje osierocone, późne transakcje po offline, duplikaty i klucze idempotencji, moment i niezmienność CDR, licznik jako źródło prawdy o energii oraz procedura projektu obsługi sesji w CSMS. Obejmuje też tryb free vend / kiosk i stan operatorski STOP_FAILED. Nie do szczegółów komunikatów i statusów OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x), diagnozy awarii z logów (dom-ev-diagnostics), architektury CSMS (dom-ev-cpms-architecture) ani korekt CDR i modułów OCPI (dom-ev-charging)."
   slowa: "sesja ładowania, cykl sesji, session lifecycle, end-to-end, START_SESSION, RemoteStartTransaction, RequestStartTransaction, response_url, OCPI Session, transakcja OCPP, CDR, kiedy powstaje CDR, sesja osierocona, wisząca sesja, brak StopTransaction, ładowarka offline, późna transakcja, zbuforowane ramki, duplikat, idempotencja, seqNo, transactionId, messageId, licznik MID, meterStop, energia sesji, rozliczenie sesji, RFID, Authorize, terminal płatniczy, ad hoc, Plug & Charge, free vend, ładowanie bez autoryzacji, kiosk, STOP_FAILED, nie można zatrzymać sesji, RemoteStop odrzucony, zamknięcie administracyjne, AuthorizeRemoteTxRequests, LocalPreAuthorize, NoAuthorization"
 ---

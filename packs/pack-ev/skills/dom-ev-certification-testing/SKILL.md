@@ -2,7 +2,7 @@
 name: dom-ev-certification-testing
 description: Użyj przy certyfikacji i zgodności ładowarki oraz CSMS — certyfikat OCA i OCTT, wewnętrzny program CPO, macierz model×firmware×kraj, karta producenta.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba ocenić lub zaplanować certyfikację i testy zgodności sprzętu oraz oprogramowania ładowania — certyfikat OCPP od OCA i OCTT (co obejmuje, czego nie), wewnętrzny program certyfikacji ładowarki u operatora (zakres testów, macierz model × firmware × wersja OCPP × kraj, kryteria wyjścia, re-certyfikacja przy nowym firmware, dowody), skrót o testach ISO 15118 i Plug & Charge, mapa zgodności regulacyjnej produktu jako wejścia (CE, RED, MID, Eichrecht, UDT, UL, HB44) oraz karta producenta w repozytorium projektu. Nie do procedury wprowadzenia modelu do CSMS (dom-ev-charger-onboarding), budowy symulatora (dom-ev-simulation-testing), treści przepisów (dom-ev-regulations-eu, dom-ev-regulations-pl, dom-ev-regulations-us) ani metrologii (dom-ev-metering-calibration)."
   slowa: "certyfikacja ładowarki, certyfikat OCPP, OCA, Open Charge Alliance, OCTT, OCPP Compliance Test Tool, program certyfikacji, testy zgodności, compliance test, conformance, interoperability, interoperacyjność, testival, nowy model DC, nowy kraj, macierz certyfikacji, re-certyfikacja, nowy firmware, kryteria wyjścia, exit criteria, karta producenta, rejestr producentów, vendor register, odchylenia producenta, Kempower, Alpitronic, Huawei, ABB, certyfikat nie gwarantuje, Plug & Charge test, CE RED, odbiór techniczny, UDT, charger certification, vendor qualification"
 ---

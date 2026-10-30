@@ -2,7 +2,7 @@
 name: ops-security-operations
 description: Użyj przy wykrywaniu i obsłudze incydentu bezpieczeństwa — SIEM, EDR, podatności i łatki, NIST 800-61, forensyka.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy wykrywaniu zagrożeń i reagowaniu na incydenty bezpieczeństwa — SIEM, alerty i reguły jako kod, EDR, IDS/IPS, SOAR z bramką człowieka, zarządzanie podatnościami i łatkami, utwardzanie hosta (CIS, SSH, zapora, auditd, dryf), cykl reagowania (NIST SP 800-61r3), ograniczanie skutków, zabezpieczanie dowodów, analiza przyczyn, zgłoszenia. Nie do awarii bez ataku (ops-sre-incidents) ani projektu zabezpieczeń (arch-threat-modeling)."
   slowa: "centralne logi, zbieranie logów w jednym miejscu, zarządzanie logami, NIST SP 800-92, integralność logów, brak logów, utwardzanie serwera, hardening, CIS Benchmark, SSH tylko klucze, PermitRootLogin, OpenSCAP, Lynis, auditd, unattended-upgrades, wyciek danych osobowych klientów, w jakich terminach zgłosić incydent, kto przygotowuje zgłoszenie incydentu"
 ---

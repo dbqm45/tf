@@ -59,7 +59,9 @@ def skill_meta(name: str) -> dict:
     return meta
 
 
-def validate_file(path: Path) -> list[str]:
+def validate_file(path: Path, holdout: bool = False) -> list[str]:
+    """Plik scenariuszy skilla. `holdout`: plik zamkniętego zbioru testowego (skill_evals/holdout/) — tylko scenariusze
+    trigger ze sprawdzeniami, bez minimum trzech i bez no-trigger (granice pilnuje plik główny)."""
     errs = []
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -71,7 +73,13 @@ def validate_file(path: Path) -> list[str]:
     if not (SKILLS / str(name) / "SKILL.md").exists():
         errs.append(f"{path.name}: brak skilla {name} w .claude/skills")
     sc = data.get("scenarios") or []
-    if len(sc) < 3:
+    if holdout:
+        if not sc:
+            errs.append(f"{path.name}: plik holdout bez scenariuszy")
+        for s in sc:
+            if s.get("expect") != "trigger":
+                errs.append(f"{path.name}#{s.get('id')}: w holdout tylko scenariusze trigger (pomiar wyniku)")
+    elif len(sc) < 3:
         errs.append(f"{path.name}: {len(sc)} scenariuszy (wymagane co najmniej 3)")
     manual = skill_meta(str(name)).get("disable-model-invocation") == "true"
     ids = set()
@@ -113,12 +121,24 @@ def validate_file(path: Path) -> list[str]:
                 re.compile(rx)
             except re.error as e:
                 errs.append(f"{where}: błędne wyrażenie {rx!r} ({e})")
+        if "holdout" in s and not isinstance(s["holdout"], bool):
+            errs.append(f"{where}: holdout musi być true albo false")
         for rel in (s.get("files") or {}):
             if rel.startswith("/") or ".." in Path(rel).parts:
                 errs.append(f"{where}: plik {rel} musi być ścieżką względną w katalogu roboczym")
     if manual is False and sc and not any(s.get("expect") == "trigger" for s in sc):
         errs.append(f"{path.name}: brak scenariusza trigger")
     return errs
+
+
+def tuning_set(scenarios: list[dict]) -> list[dict]:
+    """Scenariusze, na których wolno stroić opisy, słowa i treść skilla (bramka, podpowiedzi, --suggest)."""
+    return [s for s in scenarios if not s.get("holdout")]
+
+
+def holdout_set(scenarios: list[dict]) -> list[dict]:
+    """Zamknięty zbiór testowy: tylko do pomiaru — jego porażki nie prowadzą do poprawek opisów pod te pytania."""
+    return [s for s in scenarios if s.get("holdout")]
 
 
 def select_ids(scenarios: list[dict], ids: str) -> tuple[list[dict], list[str]]:
@@ -129,14 +149,20 @@ def select_ids(scenarios: list[dict], ids: str) -> tuple[list[dict], list[str]]:
             [w for w in want if not any(hit(s, w) for s in scenarios)])
 
 
+def scenario_files() -> list[tuple[Path, bool]]:
+    """Pliki scenariuszy: główne (strojenie i bramka) i zamknięty zbiór testowy `holdout/` (tylko pomiar)."""
+    return [(p, False) for p in sorted(EVALS.glob("*.json"))] + \
+           [(p, True) for p in sorted((EVALS / "holdout").glob("*.json"))]
+
+
 def load_scenarios(patterns: list[str]) -> list[dict]:
     out = []
-    for p in sorted(EVALS.glob("*.json")):
+    for p, ho in scenario_files():
         if patterns and not any(fnmatch.fnmatch(p.stem, pat.strip()) for pat in patterns):
             continue
         data = json.loads(p.read_text(encoding="utf-8"))
         for s in data["scenarios"]:
-            out.append({**s, "skill": data["skill"]})
+            out.append({**s, "skill": data["skill"], **({"holdout": True} if ho else {})})
     return out
 
 
@@ -355,7 +381,11 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
         passed = triggered and ok_checks
     else:
         passed = not triggered
+    groups_total = len(checks.get("all") or [])
+    groups_met = groups_total - sum(m.startswith("brak") for m in misses) if parsed["text"] else 0
     return {"skill": sc["skill"], "id": sc["id"], "expect": sc["expect"], "model": model, "baseline": baseline,
+            "holdout": bool(sc.get("holdout")), "repeat": sc.get("_repeat", 0),
+            "groups_total": groups_total, "groups_met": max(0, groups_met),
             "triggered": triggered, "skills_used": parsed["skills"], "checks_ok": ok_checks, "misses": misses,
             "judged": judged, "judged_by": parsed.get("judged_by"),
             "judge_same_model": same_family(parsed.get("judged_by") or "", model), "via": parsed.get("via", {}), "tool_errors": parsed.get("tool_errors", []),
@@ -365,6 +395,32 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
 
 
 # ───────────── raport ─────────────
+
+def protocol(results: list[dict]) -> list[dict]:
+    """Protokół „wynik czy koszt” (docs/todo.md, ai-evals) dla każdego ramienia: model × ze skillami/bez × zbiór.
+    Główny wynik to zadania zaliczone w całości — odpowiedź spełnia wszystkie kryteria (ta sama miara w obu ramionach;
+    bez skilli nic się nie uruchamia). Uruchomienie skilla osobno, średnia kryteriów jako diagnostyka. Koszt na
+    rozwiązane zadanie liczy wszystkie przebiegi ramienia, także nieudane."""
+    arms = {}
+    for r in results:
+        if r.get("expect") != "trigger":
+            continue
+        arms.setdefault((r["model"], r["baseline"], "holdout" if r.get("holdout") else "strojenie"), []).append(r)
+    rows = []
+    for (model, base, kind), rs in sorted(arms.items()):
+        full = lambda r: bool(r.get("checks_ok")) and not r.get("error")
+        solved = sum(full(r) for r in rs)
+        total = sum(r.get("groups_total") or 0 for r in rs)
+        cost = sum(r.get("cost") or 0.0 for r in rs)
+        outcomes = {}
+        for r in rs:
+            outcomes.setdefault((r["skill"], r["id"]), set()).add(full(r))
+        rows.append({"model": model, "baseline": base, "set": kind, "tasks": len(rs), "full_pass": solved,
+                     "triggered": None if base else sum(bool(r.get("triggered")) for r in rs),
+                     "criteria": (sum(r.get("groups_met") or 0 for r in rs) / total) if total else None,
+                     "cost": cost, "cost_per_solved": cost / solved if solved else None,
+                     "unstable": sum(len(v) > 1 for v in outcomes.values())})
+    return rows
 
 def report(results: list[dict], out: Path) -> None:
     limited = [r for r in results if r.get("error") and LIMIT_RE.search(r["error"])]
@@ -385,6 +441,22 @@ def report(results: list[dict], out: Path) -> None:
         lines.append(f"| {skill} | {label} | {sum(r['triggered'] for r in trig)}/{len(trig)} | "
                      f"{sum(r['triggered'] for r in neg)}/{len(neg)} | {sum(r['checks_ok'] for r in trig)}/{len(trig)} | "
                      f"{sum(r['passed'] for r in rs)}/{len(rs)} | ${sum(r['cost'] for r in rs):.2f} |")
+    proto = protocol(results)
+    if proto:
+        lines += ["", "## Protokół: wynik czy koszt", "",
+                  "Główny wynik: zadania zaliczone w całości (odpowiedź spełnia wszystkie kryteria — ta sama miara "
+                  "w obu ramionach). Uruchomienie: skill wczytany. Średnia kryteriów to diagnostyka. Koszt na rozwiązane "
+                  "zadanie obejmuje wszystkie przebiegi ramienia. Niestabilne: scenariusz z różnym wynikiem między "
+                  "powtórzeniami (--repeats). Holdout to zamknięty zbiór — nie stroimy pod jego pytania.", "",
+                  "| Model | Ramię | Zbiór | Zaliczone w całości | Uruchomienie | Średnia kryteriów | Koszt | Koszt na rozwiązane | Niestabilne |",
+                  "|---|---|---|---|---|---|---|---|---|"]
+        for p in proto:
+            arm = "bez skilli" if p["baseline"] else "ze skillami"
+            crit = "—" if p["criteria"] is None else f"{p['criteria']:.0%}"
+            per = "—" if p["cost_per_solved"] is None else f"${p['cost_per_solved']:.3f}"
+            trig = "—" if p["triggered"] is None else f"{p['triggered']}/{p['tasks']}"
+            lines.append(f"| {p['model']} | {arm} | {p['set']} | {p['full_pass']}/{p['tasks']} "
+                         f"({p['full_pass'] / p['tasks']:.0%}) | {trig} | {crit} | ${p['cost']:.2f} | {per} | {p['unstable']} |")
     fails = [r for r in results if not r["passed"]]
     if fails:
         lines += ["", "## Niezaliczone", ""]
@@ -423,15 +495,18 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--out", default="", help="plik raportu .md (domyślnie evals-report-<data>.md w bieżącym katalogu)")
     ap.add_argument("--only-failed", default="", help="plik .jsonl: uruchom tylko scenariusze niezaliczone w tym przebiegu")
     ap.add_argument("--resume", default="", help="plik .jsonl poprzedniego przebiegu: pomiń zrobione, dopisz nowe")
+    ap.add_argument("--repeats", type=int, default=1, help="powtórzenia każdego przebiegu (rozrzut wyniku w protokole)")
+    ap.add_argument("--holdout", choices=("include", "exclude", "only"), default="include",
+                    help="zamknięty zbiór testowy: include (pomiar), exclude (strojenie skilla), only (sam holdout)")
     ap.add_argument("--yes", action="store_true", help="bez pytania o potwierdzenie")
     ap.add_argument("--validate", action="store_true", help="tylko sprawdź pliki scenariuszy")
     args = ap.parse_args(argv[1:])
 
-    errs = [e for p in sorted(EVALS.glob("*.json")) for e in validate_file(p)]
+    errs = [("holdout/" if ho else "") + e for p, ho in scenario_files() for e in validate_file(p, holdout=ho)]
     if args.validate:
         for e in errs:
             print(f"✗ {e}")
-        n = len(list(EVALS.glob("*.json")))
+        n = len(scenario_files())
         print(f"{'✓' if not errs else '✗'} pliki scenariuszy: {n}, błędów: {len(errs)}")
         return 1 if errs else 0
     if errs:
@@ -448,6 +523,8 @@ def main(argv: list[str]) -> int:
             print(f"✗ Nie ma scenariuszy: {', '.join(unknown)} (w wybranych skillach)"); return 2
     if args.only:
         scenarios = [s for s in scenarios if s["expect"] == args.only]
+    if args.holdout != "include":
+        scenarios = holdout_set(scenarios) if args.holdout == "only" else tuning_set(scenarios)
     if args.only_failed:
         failed = set()
         for line in Path(args.only_failed).read_text(encoding="utf-8").splitlines():
@@ -459,9 +536,10 @@ def main(argv: list[str]) -> int:
                 failed.add((r["skill"], r["id"]))
         scenarios = [s for s in scenarios if (s["skill"], s["id"]) in failed]
     models = [m.strip() for m in args.models.split(",") if m.strip()]
-    jobs = [(s, m, False) for s in scenarios for m in models]
+    runs = [{**s, "_repeat": k} for k in range(max(1, args.repeats)) for s in scenarios]
+    jobs = [(s, m, False) for s in runs for m in models]
     if args.baseline:
-        jobs += [(s, m, True) for s in scenarios if s["expect"] == "trigger" for m in models]
+        jobs += [(s, m, True) for s in runs if s["expect"] == "trigger" for m in models]
     done_keys = set()
     if args.resume and Path(args.resume).exists():
         for line in Path(args.resume).read_text(encoding="utf-8").splitlines():
@@ -470,13 +548,14 @@ def main(argv: list[str]) -> int:
             except json.JSONDecodeError:
                 continue
             if not (r.get("error") and LIMIT_RE.search(r["error"])):   # przebiegi przerwane limitem powtarzamy
-                done_keys.add((r["skill"], r["id"], r["model"], r["baseline"]))
-        jobs = [j for j in jobs if (j[0]["skill"], j[0]["id"], j[1], j[2]) not in done_keys]
+                done_keys.add((r["skill"], r["id"], r["model"], r["baseline"], r.get("repeat", 0)))
+        jobs = [j for j in jobs if (j[0]["skill"], j[0]["id"], j[1], j[2], j[0]["_repeat"]) not in done_keys]
         print(f"Wznowienie: {len(done_keys)} przebiegów już zrobionych, zostało {len(jobs)}.")
     if not jobs:
         print("Brak scenariuszy do uruchomienia."); return 2
     guess = sum(COST_GUESS.get(m, 0.15) for _, m, _ in jobs)
     print(f"Przebiegów: {len(jobs)} ({len({s['skill'] for s in scenarios})} skilli × {len(models)} modeli"
+          f"{f' × {args.repeats} powtórzenia' if args.repeats > 1 else ''}"
           f"{' + przebiegi bez skilli' if args.baseline else ''}). Zgrubna prognoza kosztu: ~${guess:.2f}, "
           f"limit: ${args.budget_usd:.2f}.")
     if not args.yes:
@@ -521,7 +600,7 @@ def main(argv: list[str]) -> int:
                 r = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            merged[(r["skill"], r["id"], r["model"], r["baseline"])] = r
+            merged[(r["skill"], r["id"], r["model"], r["baseline"], r.get("repeat", 0))] = r
         results = list(merged.values())
     report(results, out_md)
     skipped = len(jobs) - sum(1 for _ in results) if not args.resume else 0

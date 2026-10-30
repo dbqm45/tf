@@ -2,7 +2,7 @@
 name: ops-dependency-upgrades
 description: Użyj, gdy człowiek prosi o podniesienie zależności — inwentarz, kolejność, codemody, testy, Renovate/Dependabot.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy człowiek prosi o podniesienie zależności, frameworka lub środowiska uruchomieniowego albo o ustawienie regularnych aktualizacji — inwentarz nieaktualnych wersji i końca wsparcia, priorytety, aktualizacje drobne zbiorczo i główne pojedynczo, jeden major naraz z przewodnikiem migracji, codemody (ng update, @next/codemod, React codemod, OpenRewrite, ruff UP), testy jako siatka bezpieczeństwa, konfiguracja Renovate i Dependabot (grupy, harmonogram, automerge, limit PR) i wycofanie. Nie do bezpieczeństwa łańcucha dostaw — karencja, skompromitowane paczki, provenance (ops-supply-chain-security) — ani dopasowania skilli do wersji projektu bez zmiany zależności (core-stack-sync)."
   slowa: "aktualizacja zależności, podnieść zależności, upgrade zależności, Renovate, Dependabot, ncu, uv lock --upgrade, OpenRewrite, codemod, koniec wsparcia, EOL, nieaktualne zależności"
 ---

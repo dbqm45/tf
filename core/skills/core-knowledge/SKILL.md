@@ -2,7 +2,7 @@
 name: core-knowledge
 description: Użyj, gdy pytasz fabrykę o wiedzę i chcesz odpowiedzi z cytatem — baza wiedzy (kb.py), rejestry zaufanych źródeł nakładek, pobranie dokumentu, luki i research.
 metadata:
-  przeglad: 2027-04-22
+  przeglad: "2027-04-22"
   katalog: "Użyj, gdy odpowiedź ma wynikać z bazy wiedzy fabryki, a nie z pamięci modelu — wyszukiwanie w skillach, notatkach zespołu, zbadanych faktach i pobranych źródłach (kb.py search) z cytatem plik:linia, URL i datą; rejestry zaufanych źródeł nakładek (references/zrodla.json: obszary, ranga, licencja); dodanie dokumentu lub pliku partnera (kb.py ingest), aktualność cache (kb.py status); forma odpowiedzi z propozycjami rozwiązań i planem wdrożenia. Nie do procedury badania faktów w sieci (core-source-research) ani do doboru person i zespołu (core-problem-routing)."
   slowa: "zapytaj fabrykę, baza wiedzy, RAG, knowledge base, kb.py, wyszukaj w fabryce, odpowiedź z cytatem, nie z pamięci, źródło odpowiedzi, plik:linia, rejestr źródeł, zaufane źródła, zrodla.json, źródła nakładki, dodać dokument do fabryki, dodać PDF, dokument partnera, ingest, cache źródeł, licencja dokumentu, czy mogę wrzucić do repozytorium, notatki zespołu, docs/knowledge, aktualność źródeł, stare źródło, propozycja rozwiązania, wsparcie wdrożenia"
 ---

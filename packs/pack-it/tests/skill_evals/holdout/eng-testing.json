@@ -1,0 +1,58 @@
+{
+  "skill": "eng-testing",
+  "scenarios": [
+    {
+      "id": "ho-testing-akceptacyjne-warstwy",
+      "expect": "trigger",
+      "prompt": "Nasze testy akceptacyjne są zapisane jako długie ciągi wywołań HTTP i klikania w UI. Każda zmiana endpointu albo layoutu wywraca kilkadziesiąt testów. Jak je ułożyć, żeby przeżywały refaktoryzację?",
+      "checks": {
+        "all": [
+          [
+            "\\bDSL\\b",
+            "język\\w* specyficzn\\w+",
+            "czasownik\\w* domeny",
+            "domain.specific language"
+          ],
+          [
+            "sterownik\\w*",
+            "\\bdriver\\w*"
+          ],
+          [
+            "nie zna\\w*",
+            "niezależn\\w+",
+            "independent",
+            "do(es)? not know",
+            "przeżywa\\w+",
+            "wymienia się tylko"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-testing-czesciowa-awaria",
+      "expect": "trigger",
+      "prompt": "Funkcja zapisuje po kolei trzy rzeczy w bazie i nie ma transakcji. Chcę przetestować, co się dzieje, gdy druga operacja się wywali. Brać prawdziwą bazę czy dublera, i co dokładnie asertować?",
+      "checks": {
+        "all": [
+          [
+            "stub\\w*"
+          ],
+          [
+            "prawdziw\\w+ baz\\w*",
+            "real database",
+            "testcontainers",
+            "kontener\\w+ testow\\w+"
+          ],
+          [
+            "kontrakt\\w*.{0,60}(jest|istnie|obecn|aktualn)",
+            "obecn\\w+ (zachowan|kontrakt)",
+            "otwart\\w+ ryzyk\\w+",
+            "ryzyk\\w+ produktow\\w+",
+            "open (product )?risk",
+            "aktualn\\w+ zachowan\\w+"
+          ]
+        ]
+      }
+    }
+  ]
+}

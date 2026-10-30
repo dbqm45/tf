@@ -2,7 +2,7 @@
 name: eng-design-principles
 description: Użyj przy decyzjach i review — KISS, YAGNI, DRY, SOLID, Demeter, kompozycja, zasady komponentów, konflikty zasad.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy każdej decyzji projektowej i przeglądzie kodu — KISS, YAGNI, DRY (i kiedy go nie stosować), SOLID, separacja odpowiedzialności, prawo Demeter, tell-don't-ask, kompozycja zamiast dziedziczenia, zasady komponentów (REP/CCP/CRP, ADP/SDP/SAP), fail fast, zasada najmniejszego zaskoczenia — oraz rozstrzyganie konfliktów między nimi. Nie do stylu nazw i funkcji (eng-clean-code)."
 ---
 

@@ -2,7 +2,7 @@
 name: txt-polish-style
 description: Użyj przy redakcji tekstu po polsku do gotowej wersji — skracanie, strona czynna, konkret, jeden ton, typografia.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy redakcji polskiego tekstu, gdy wynikiem ma być gotowa, poprawiona wersja — skracanie i wzmacnianie zdań, strona czynna, konkret, jeden ton i perspektywa, czytelność instrukcji i komunikatów, spójność między rozdziałami, typografia dokumentu. Nie do raportu błędów (txt-polish-correctness) ani zmian merytorycznych."
   slowa: "zredaguj, przeredaguj, redakcja tekstu, gotowa wersja tekstu, popraw styl, uprość zdanie, urzędowy styl, czytelniej, komunikat w interfejsie, ton, komunikaty UI, teksty przycisków, komunikat błędu, link kliknij tutaj, mikrotekst"
 argument-hint: "[standardowy|rozszerzony|premium] [plik lub fragment]"

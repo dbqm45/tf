@@ -2,7 +2,7 @@
 name: core-agent-instructions
 description: Użyj przy pisaniu i przeglądzie CLAUDE.md lub AGENTS.md — test włączenia, karta kontroli, moduły.
 metadata:
-  przeglad: 2027-10-10
+  przeglad: "2027-10-10"
   katalog: "Użyj, gdy powstaje, puchnie, starzeje się albo nie działa plik instrukcji agenta w projekcie (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/) — test włączenia reguły, gdzie co trzymać (reguła, skill, hook, pamięć), szkic z inspekcji repo, karta pięciu kontroli ze skryptem, aktualizacja z historii gita, kalibracja reguły A/B, drabina plików w modułach z indeksem w root, AGENTS.md obok CLAUDE.md. Nie do pisania skilli (core-skill-authoring), lekcji i dziennika projektu (core-project-record) ani README i dokumentacji dla ludzi (skill dokumentacji, pack-docs)."
   slowa: "CLAUDE.md, AGENTS.md, CLAUDE.local.md, plik instrukcji agenta, reguły dla agenta, reguły AI, zasady dla agenta, cursor rules, .claude/rules, /init, CLAUDE.md za długi, CLAUDE.md puchnie, agent ignoruje reguły, agent łamie konwencję, porządki w CLAUDE.md, przegląd reguł, onboarding agenta, monorepo CLAUDE.md, CLAUDE.md w module, reguły per katalog, AGENTS.md i CLAUDE.md razem, Codex i Claude Code, Copilot, Cursor, kilka narzędzi AI, wspólne reguły agentów, reguły się rozjechały, czy reguła działa"
 ---

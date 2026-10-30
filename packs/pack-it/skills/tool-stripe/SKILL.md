@@ -2,7 +2,7 @@
 name: tool-stripe
 description: Użyj przy integracji ze Stripe — wybór API (Checkout, Payment Element, Intents), webhooki, klucze ograniczone, Billing, Connect, Tax, aktualizacja wersji API i SDK.
 metadata:
-  przeglad: 2027-01-21
+  przeglad: "2027-01-21"
   katalog: "Użyj, gdy planujesz, piszesz, przeglądasz lub testujesz integrację ze Stripe — wybór API (Checkout Sessions, Payment Element, PaymentIntents, SetupIntents) i odejście od przestarzałych (Charges, Sources, Tokens, Card Element), dynamiczne metody płatności zamiast payment_method_types, realizacja zamówienia z webhooka, piaskownice i tryb testowy, klucze ograniczone (rk_), sejf sekretów, rotacja, podpis webhooka, CSP, Billing z Checkout i portalem klienta, rozliczanie zużycia, Connect (Accounts v2, typy obciążeń, prowizja platformy), Stripe Tax (rejestracje, kody podatkowe, automatic_tax), aktualizacja wersji API, SDK, Stripe.js i miejsc docelowych zdarzeń. Nie do modelu subskrypcji niezależnego od dostawcy (be-billing-subscriptions), ogólnego projektu API (be-api-design) ani PCI DSS jako programu zgodności (sec-governance-compliance)."
   slowa: "stripe, stripe checkout, checkout session, payment intent, paymentintent, setup intent, payment element, card element, payment_method_types, charges api, stripe webhook, checkout.session.completed, klucz stripe, sk_live, rk_live, restricted key, klucz ograniczony, stripe billing, customer portal, stripe connect, accounts v2, destination charges, application_fee_amount, stripe tax, automatic_tax, txcd, wersja api stripe, stripe-version, upgrade stripe, stripe sdk, stripe.js, stripe cli, piaskownica stripe"
 ---

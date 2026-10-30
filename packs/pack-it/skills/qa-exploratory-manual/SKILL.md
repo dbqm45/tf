@@ -2,7 +2,7 @@
 name: qa-exploratory-manual
 description: Użyj przy testach ręcznych i eksploracyjnych — sesje z kartą, heurystyki, UAT, ręczna dostępność, zgłoszenia defektów.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy testach ręcznych i eksploracyjnych — sesje z kartą (session-based testing), heurystyki eksploracji, testy akceptacyjne z użytkownikami (UAT), ręczna dostępność, listy kontrolne regresji ręcznej i zgłaszanie defektów. Nie do automatyzacji (tool-*, qa-regression)."
   slowa: "zgłoszenie błędu, zgłoszenie defektu, jak napisać zgłoszenie, raport defektu, testy ręczne, sesja eksploracyjna, UAT, jak opisać błąd"
 ---

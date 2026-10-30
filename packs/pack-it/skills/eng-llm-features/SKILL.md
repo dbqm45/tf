@@ -2,7 +2,7 @@
 name: eng-llm-features
 description: Użyj, gdy budujesz w kodzie funkcję lub agenta z LLM — SDK, structured output, pętla narzędzi, ewaluacje.
 metadata:
-  przeglad: 2027-01-09
+  przeglad: "2027-01-09"
   katalog: "Użyj, gdy piszesz kod aplikacji lub narzędzia, który wywołuje model językowy — funkcja LLM w produkcie, własny agent (recenzent diffu, triaż zgłoszeń, bot w CI), agent jako usługa — wybór kategorii SDK (gotowy agent czy agent do złożenia), kontrakt wyjścia i structured output z opisami pól, pętla narzędziowa i drabina sprawczości, limit kroków i budżet kosztu, telemetria, sesje i stan, dziedziczenie konfiguracji repo, prywatność ścieżki uwierzytelnienia, wstrzykiwanie poleceń przez dane, ewaluacje promptu (promptfoo). Nie do hostowania modeli na GPU (ops-ai-inference), doboru modelu dla naszej pracy z agentem (core-cost-control), UI czatu (fe-architecture) ani bezpieczeństwa agenta-programisty (core-agent-security); referencji API i SDK Claude (wbudowany skill claude-api)."
   slowa: "agent sdk, claude agent sdk, vercel ai sdk, ai sdk, openrouter, structured output, json schema, zod, pydantic, wymuszony format, tool calling, wywołanie narzędzi, pętla narzędziowa, maxTurns, maxBudgetUsd, stepCountIs, własny agent, bot do review, funkcja llm, integracja z modelem, prompt systemowy, promptfoo, ewaluacja promptu, llm-as-a-judge"
 ---

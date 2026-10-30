@@ -2,7 +2,7 @@
 name: ai-evals
 description: Użyj przy ewaluacji funkcji LLM i agentów — zbiory danych, graderzy, sędzia LLM, pass@k i pass^k, bramka w CI, ewaluacje online.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy trzeba zmierzyć jakość funkcji z LLM lub agenta, a nie tylko napisać pierwszą macierz testów — rozwój sterowany ewaluacjami, projekt zbiorów (złoty, regresyjny, przypadki brzegowe, adwersaryjne, próbki z ruchu, kontaminacja), rodzaje graderów (kod, sędzia LLM z rubryką i kalibracją do ocen ludzi, przegląd ludzki), ocena wyniku i trajektorii agenta, pass@k kontra pass^k, ewaluacje offline i online (A/B, shadow), bramka w CI z progami i alertem regresji, koszt i wariancja ewaluacji, format raportu. Nie do podstawowej macierzy promptfoo, schematu wyjścia i limitów pętli (eng-llm-features), ewaluacji skilli Claude (core-skill-authoring) ani wyroczni testów kodu (qa-spec-first-testing)."
   slowa: "ewaluacje, evals, eval, zbiór testowy, golden set, sędzia llm, llm-as-a-judge, rubryka, kalibracja sędziego, zgodność z ludźmi, pass@k, pass^k, niespójny agent, trajektoria agenta, regresja jakości, bramka w ci, próg jakości, a/b test, shadow, ewaluacja online, kontaminacja, wariancja ewaluacji, raport z ewaluacji, jak mierzyć jakość agenta"
 ---

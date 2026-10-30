@@ -2,7 +2,7 @@
 name: core-semver
 description: Użyj przy numerze wersji (SemVer 2.0.0) — publiczne API, podbicie major/minor/patch, 0.y.z, wersje przedpremierowe, tag.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy nadajesz lub sprawdzasz numer wersji czegokolwiek, co wydajesz (biblioteka, pakiet, API, CLI, aplikacja, obraz, moduł IaC, sama fabryka) — deklaracja publicznego API, które zmiany wymagają major/minor/patch, faza 0.y.z i wydanie 1.0.0, wersje przedpremierowe i metadane, kolejność wersji, wycofywanie, wydanie bez zmiany opublikowanej wersji; skrypt semver.py liczy wersję bez zgadywania. Nie do formatu commit message (core-conventional-commits) ani strategii wdrożenia (skill wydań, pack-it)."
   slowa: "semver, wersjonowanie, numer wersji, jaka wersja, podbić wersję, major, minor, patch, wersja 1.0.0, 0.x, beta, rc, alpha, wydanie, release, tag v1.2.3, zmiana niezgodna wstecz, breaking change, przestarzałe, deprecated"
 ---

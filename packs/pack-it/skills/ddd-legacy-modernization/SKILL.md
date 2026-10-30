@@ -2,7 +2,7 @@
 name: ddd-legacy-modernization
 description: Użyj przy DDD na kodzie zastanym — słownik i rozjazdy model↔kod, agregat z niezmiennika, ACL.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy w działającym kodzie (po MVP, legacy) trzeba sprawdzić, czy odwzorowuje domenę, i zaplanować modernizację — destylacja słownika z dokumentów i kodu z tabelą rozjazdów model↔kod, subdomeny, kandydaci na agregaty ze statusem niezmiennika; wybór niezmiennika (rdzeniowość × rozsmarowanie × egzekwowanie) i projekt agregatu-strażnika; wykrycie przeciekającej zależności i projekt ACL (obiekt wartości, wąski port, adapter) ze sprawdzalnym kryterium „pakiet tylko w katalogu adaptera” egzekwowanym regułą dependency-cruiser / ESLint / ArchUnit. Wynik to diagnozy i plany, nie kod produkcyjny. Nie do warsztatu z ekspertami (ddd-facilitation, ddd-event-storming), projektu modelu od zera (ddd-tactical-design), relacji między kontekstami (ddd-context-mapping) ani refaktoryzacji struktury bez zmiany pojęć (eng-refactor-planning)."
   slowa: "legacy DDD, DDD w istniejącym kodzie, modernizacja legacy, kod nie odpowiada domenie, destylacja domeny, słownik z kodu, rozjazd model kod, PRD a kod, to samo słowo znaczy kilka rzeczy, niezmiennik tylko w UI, reguła rozsmarowana, agregat strażnik, przeciekająca zależność, biblioteka wszędzie, typy biblioteki w API, ACL dla biblioteki, wymiana biblioteki, izolacja zależności"
 ---

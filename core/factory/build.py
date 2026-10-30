@@ -174,7 +174,11 @@ def check_review_date(name: str, meta: dict) -> tuple[list[str], list[str]]:
         ok = re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(raw)) and _dt.date.fromisoformat(str(raw))
     except ValueError:
         ok = False
-    return ([] if ok else [f"skill {name}: metadata.przeglad '{raw}' nie jest datą RRRR-MM-DD"]), []
+    if not ok:
+        return [f"skill {name}: metadata.przeglad '{raw}' nie jest datą RRRR-MM-DD"], []
+    if not isinstance(raw, str):   # YAML zamienia RRRR-MM-DD bez cudzysłowu na datę; specyfikacja chce tekstu
+        return [], [f"skill {name}: metadata.przeglad bez cudzysłowu — zapisz przeglad: \"{raw}\" (Agent Skills: metadata to tekst)"]
+    return [], []
 
 
 def gate_registry_factory() -> dict:
@@ -1223,7 +1227,7 @@ def cmd_new_skill(name: str, description: str, role: str | None = None, name_onl
     import datetime as _dt
     fr = _freshness()
     due = fr.add_months(_dt.date.today(), fr.interval(name, fr.load_policy(ROOT))).isoformat()
-    extra = f"  przeglad: {due}\n  slowa: \"\"\n" + ("  widocznosc: nazwa\n" if name_only else "")
+    extra = f"  przeglad: \"{due}\"\n  slowa: \"\"\n" + ("  widocznosc: nazwa\n" if name_only else "")
     body = re.sub(r"^(  katalog: .*\n)", lambda m: m.group(1) + extra, body, count=1, flags=re.M)
     (d / "SKILL.md").write_text(body, encoding="utf-8")
     wired = ""

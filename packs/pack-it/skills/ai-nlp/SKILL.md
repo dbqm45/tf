@@ -2,7 +2,7 @@
 name: ai-nlp
 description: Użyj przy zadaniach NLP na tekście, w tym polskim — dobór podejścia, klasyfikacja, NER, ewaluacja spanowa, adnotacja, PII i anonimizacja.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy trzeba rozwiązać zadanie na tekście i wybrać metodę — reguły i regex, klasyczny ML, mały model enkoderowy, LLM zero/few-shot albo model dotrenowany (koszt, opóźnienie, dane, dokładność), klasyfikacja tekstu, NER i ekstrakcja informacji, ewaluacja na poziomie spanów (precision, recall, F1 micro i macro), normalizacja i tokenizacja, embeddingi i podobieństwo semantyczne, wykrywanie tematu i intencji, ograniczenia oceny streszczeń, projekt adnotacji (wytyczne, zgodność annotatorów, active learning), niezbalansowane klasy, polszczyzna (fleksja, lematyzacja, Morfeusz, spaCy, HerBERT, KLEJ, diakrytyki) oraz wykrywanie danych osobowych i anonimizacja w tekście (PESEL, imiona, adresy). Nie do RAG i chunkingu (ai-rag), pisania promptów (ai-prompt-engineering), dotrenowania modelu (ai-fine-tuning), ogólnej metody ewaluacji LLM (ai-evals), pisowni polskiego tekstu dla ludzi (txt-polish-correctness), statystyki i raportu z danych (data-analysis) ani podstaw prawnych RODO (arch-privacy-compliance)."
   slowa: "nlp, przetwarzanie języka naturalnego, klasyfikacja tekstu, klasyfikacja maili, ner, rozpoznawanie encji, ekstrakcja informacji, f1, precision, recall, micro, macro, tokenizacja, lematyzacja, fleksja, polski model językowy, herbert, klej, morfeusz, spacy, diakrytyki, embeddingi, podobieństwo zdań, intencja, temat, streszczenia, adnotacja, wytyczne adnotacji, kappa, active learning, niezbalansowane klasy, anonimizacja, pii, pesel, dane osobowe w tekście, presidio, regex czy llm"
 ---

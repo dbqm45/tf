@@ -2,7 +2,7 @@
 name: dom-ev-cdr-settlement
 description: Użyj przy CDR i rozliczeniu CPO↔eMSP — korekta CDR kredytowym, idempotencja odbioru, uzgadnianie CDR z sesjami i fakturą, spory, sprawdzenie kosztu kalkulatorem.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy pracujesz na CDR jako niezmiennym zapisie rozliczeniowym OCPI 2.2.1/2.3.0 — pola i sumy, charging_periods, tariffs w CDR, signed_data, kiedy CPO wysyła CDR (push, pull), CDR kredytowy i korekta (credit, credit_reference_id, nowy CDR), idempotencja odbioru po id CDR, rozliczenie hurtowe CPO↔eMSP, uzgadnianie CDR z sesjami i fakturą (rozjazdy kWh i kosztów, CDR bez sesji, sesja bez CDR), spory, fakturowanie kierowcy przez eMSP (invoice_reference_id) oraz sprawdzanie kosztu CDR kalkulatorem ocpi_tariff_calc.py. Nie do liczenia ceny z taryfy i step_size (dom-ev-tariffs-pricing), protokołu OCPI — endpointy, paginacja, uwierzytelnianie (dom-ev-ocpi), przebiegu sesji i sesji osieroconych (dom-ev-session-lifecycle) ani ról rynku (dom-ev-market-roles). Płatności kartą to osobny, przyszły temat."
   slowa: "CDR, charge detail record, CDR kredytowy, credit CDR, credit_reference_id, korekta CDR, zła kwota w CDR, poprawić CDR, rozliczenie hurtowe, settlement, reconciliation, uzgadnianie, rozjazd kWh, CDR bez sesji, sesja bez CDR, duplikat CDR, idempotencja CDR, spór o rozliczenie, dispute, faktura kierowcy, invoice_reference_id, signed_data, Eichrecht, OCMF, charging_periods, total_cost, total_energy, sprawdzić koszt CDR, ocpi_tariff_calc, rozliczenie CPO eMSP, miesięczne rozliczenie roamingu, billing roaming"
 ---

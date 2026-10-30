@@ -2,7 +2,7 @@
 name: ddd-es-simulation
 description: Użyj tylko na wyraźne żądanie — symulowany warsztat Event Storming z uczestnikami AI i coachem (trening facylitacji).
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj WYŁĄCZNIE na wyraźne żądanie użytkownika („symulowany warsztat”, „trening facylitacji Event Stormingu”) — symulacja sesji Big Picture z uczestnikami odgrywanymi przez AI i coachem oceniającym prowadzenie; wersja pełna lub oszczędna, zawsze wybierana przez człowieka po ostrzeżeniu o kosztach. Nie do prawdziwej analizy domeny (ddd-event-storming, ddd-discovery-intake)."
 disable-model-invocation: true
 argument-hint: "[pelna|oszczedna] [scenariusz]"

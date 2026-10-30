@@ -838,7 +838,7 @@ katalogu) i `description` (1–1024 znaki); opcjonalne `license`, `compatibility
 string → string), `allowed-tools` (eksperymentalne); treść `SKILL.md` < 5000 tokenów i < 500 linii; odwołania
 o jeden poziom od `SKILL.md`; walidacja `skills-ref validate ./skill`. Stan fabryki (skrypt jednorazowy, 209
 skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyjątki:
-- [ ] **`metadata.przeglad` jest datą YAML, nie tekstem** (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
+- [x] **`metadata.przeglad` jest datą YAML, nie tekstem** (zrobione 2026-10-30: 209 skilli w cudzysłowie, zapis przez `freshness.py` i `build.py new-skill`, ostrzeżenie w `build.py check`) (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
   cudzysłowu) — specyfikacja wymaga wartości tekstowych; zapis w cudzysłowie w szablonie i w `build.py`/generatorze
   plus test w `skill_gate.py`; przy okazji sprawdzić `skills-ref validate` na kilku skillach (zmiana w `factory/` za
   zgodą człowieka). Klucze spoza specyfikacji (`argument-hint`, `disable-model-invocation`) to rozszerzenia Claude
@@ -1395,7 +1395,7 @@ pozycjach TODO. Eksperyment N. Jaina (model czołowy 10/10 z harnessem i bez, ta
 próba) wspiera pozycję „Skille fabryki: wynik czy tylko koszt”. Liczby z artykułów (CoreCraft v5 30,80% przy pełnej
 rubryce, ClawBench do 33,3% wobec 65–75% w piaskownicach, Harvey 40,8 → 87,7% na 12 zadaniach, LAB 7–25% całych zadań
 przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezweryfikowane]. Braki:
-- [ ] **`project_record.py wip`, sprawdzenie zgodności przy wznowieniu:** punkt kontrolny zapisuje gałąź i ostatni
+- [x] **`project_record.py wip`, sprawdzenie zgodności przy wznowieniu** (zrobione 2026-10-30: `repo_drift` w hooku sesji, 3 testy w `test_project_record.py`): punkt kontrolny zapisuje gałąź i ostatni
   commit (`snapshot`), ale przy wznowieniu nic ich nie porównuje z bieżącym stanem. Przy wypisaniu aktywnego punktu
   (start sesji) porównać zapisaną gałąź i commit z `HEAD`: rozjazd (inna gałąź, commit nieznany w historii, nowe
   commity spoza punktu) → ostrzeżenie „stan repo różni się od punktu kontrolnego, przed kontynuacją uruchom testy

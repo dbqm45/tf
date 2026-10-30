@@ -2,7 +2,7 @@
 name: dom-ev-ocpp-16
 description: Użyj przy OCPP 1.6J między ładowarką a CSMS — ramki CALL, BootNotification, StatusNotification, transakcje, MeterValues, offline, odchylenia producentów.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj przy implementacji, diagnozie i obsłudze logów OCPP 1.6 JSON/WebSocket (1.6J) po stronie CSMS (Central System) i ładowarki — ramki RPC i kody błędów, cykl połączenia i BootNotification, katalog komunikatów wg profili, statusy złącza, StartTransaction/StopTransaction i MeterValues, autoryzacja, konfiguracja, Security Whitepaper, offline, odchylenia producentów oraz procedura obsługi nowego komunikatu. Nie do OCPP 2.0.1/2.1 i migracji (dom-ev-ocpp-2x), słownika pojęć (dom-ev-glossary) ani roamingu OCPI (dom-ev-charging)."
   slowa: "OCPP 1.6, 1.6J, ocpp1.6, Central System, CSMS, CALL, CALLRESULT, CALLERROR, BootNotification, Heartbeat, StatusNotification, Preparing, SuspendedEV, StartTransaction, StopTransaction, transactionId, MeterValues, idTag, Authorize, SendLocalList, GetConfiguration, ChangeConfiguration, Security Whitepaper, ładowarka nie łączy się, ładowarka offline, charge point, wallbox, messageId"
 ---

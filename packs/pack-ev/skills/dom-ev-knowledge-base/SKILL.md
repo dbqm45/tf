@@ -2,7 +2,7 @@
 name: dom-ev-knowledge-base
 description: Użyj, gdy pytasz fabrykę o wiedzę EV i chcesz odpowiedzi z cytatem — rejestr zaufanych źródeł EV, rejestr standardów i terminów, persony do wdrożenia.
 metadata:
-  przeglad: 2027-04-22
+  przeglad: "2027-04-22"
   katalog: "Użyj, gdy odpowiedź o branży EV ma wynikać z bazy wiedzy fabryki, a nie z pamięci modelu — rejestr zaufanych źródeł EV (specyfikacje OCPP, OCPI, ISO 15118, akty prawne UE/PL/USA, urzędy) z obszarami, rangą i licencją; rejestr standardów i przepisów z terminami (standards_check.py); persony do wdrożenia odpowiedzi; przykład z cytatem ze specyfikacji. Procedura, forma odpowiedzi i polecenia kb.py: core-knowledge. Nie do procedury badania faktów w sieci (core-source-research) ani do doboru person i zespołu (core-problem-routing)."
   slowa: "zapytaj fabrykę, baza wiedzy, RAG, knowledge base, kb.py, wyszukaj w fabryce, odpowiedź z cytatem, cytat ze specyfikacji, nie z pamięci, źródło odpowiedzi, plik:linia, rejestr źródeł, zaufane źródła, wiarygodne źródła EV, dodać dokument do fabryki, dodać PDF, pobrać specyfikację, ingest, cache źródeł, licencja specyfikacji, czy mogę wrzucić do repozytorium, notatki zespołu, docs/knowledge, aktualność źródeł, stare źródło, propozycja rozwiązania, wsparcie wdrożenia, rejestr standardów, terminy przepisów i standardów, które przepisy wchodzą w życie, nieaktualne wpisy o standardach, przegląd kwartalny fabryki, standards_check"
 ---

@@ -2,7 +2,7 @@
 name: ai-fine-tuning
 description: Użyj przy dostrajaniu modelu na własnych danych — prompt, RAG czy fine-tuning, dane, SFT i LoRA, DPO, destylacja, ewaluacja przed i po, licencje.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy rozważasz lub prowadzisz dostrajanie modelu językowego na własnych danych — drabina prompt, RAG, fine-tuning i kiedy dostrajanie pomaga (format, styl, wąskie zadanie, mniejszy tańszy model) a kiedy nie (brak wiedzy), zbieranie, czyszczenie i deduplikacja danych, podział na zbiory, formaty czatu, jakość etykiet, SFT, metody oszczędne (LoRA, QLoRA, PEFT) z punktami startowymi hiperparametrów, strojenie preferencji (DPO, przegląd RLHF), destylacja z większego modelu (licencje wyników modelu nauczyciela), ewaluacja przed i po na zamrożonym zbiorze, przeuczenie i zapominanie, licencje danych i modeli, prywatność, API dostawcy czy własne trenowanie (TRL, PEFT, Unsloth, Axolotl). Nie do metody ewaluacji (ai-evals), RAG (ai-rag), potoku MLOps (ai-mlops), hostowania modelu (ops-ai-inference), potoków danych (data-engineering), RODO (arch-privacy-compliance) ani zmniejszania modelu po treningu (ai-model-optimization)."
   slowa: "fine-tuning, finetuning, dostrajanie modelu, dotrenować model, własny model, LoRA, QLoRA, PEFT, SFT, DPO, RLHF, destylacja, distillation, nauczyciel uczeń, dane treningowe, zbiór treningowy, jsonl, chat template, rank, alpha, learning rate, przeuczenie, overfitting, catastrophic forgetting, zapominanie, Unsloth, Axolotl, TRL, Hugging Face, adapter, czy dotrenować czy RAG, mały model zamiast dużego"
 ---

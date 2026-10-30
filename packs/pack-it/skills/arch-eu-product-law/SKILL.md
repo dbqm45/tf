@@ -2,7 +2,7 @@
 name: arch-eu-product-law
 description: Użyj, gdy trzeba ustalić, które przepisy UE dotyczą budowy produktu cyfrowego z AI — Data Act, PLD, mapa obowiązków z terminami i sąsiednie akty.
 metadata:
-  przeglad: 2027-01-18
+  przeglad: "2027-01-18"
   katalog: "Użyj, gdy trzeba ustalić, które przepisy UE dotyczą budowy produktu cyfrowego (SaaS, aplikacja webowa lub mobilna, oprogramowanie z AI) i od kiedy — pytania kwalifikujące (dane osobowe, AI, produkt z elementami cyfrowymi, zmiana dostawcy, sektor finansowy, usługa z listy EAA), mapa obowiązków z aktem, artykułem, datą stosowania i datą sprawdzenia, miejsce w kodzie; tematy bez osobnego skilla: Data Act (zmiana dostawcy chmury i SaaS, opłaty za zmianę i transfer danych, eksport danych), PLD (odpowiedzialność za wadliwe oprogramowanie). Kieruje do sąsiadów: RODO i DPIA → arch-privacy-compliance, NIS2, DORA i CRA → sec-eu-regulations, AI Act → ai-governance-compliance, EAA i WCAG → ux-accessibility. Poza zakresem fabryki (notatki w references/poza-zakresem-fabryki.md): DSA, prawa konsumenta, KSeF, ViDA. Nie jest poradą prawną; decyzje podejmuje prawnik lub IOD."
   slowa: "które przepisy UE dotyczą, jakie przepisy nas dotyczą, mapa obowiązków prawnych, prawo UE dla SaaS, prawo UE dla oprogramowania z AI, zgodność produktu z prawem, Data Act, akt w sprawie danych, zmiana dostawcy chmury, zmiana dostawcy SaaS, przeniesienie danych do konkurencji, opłaty za eksport danych, egress, PLD, odpowiedzialność za produkt, wadliwe oprogramowanie"
 ---

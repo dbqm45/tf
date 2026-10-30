@@ -2,7 +2,7 @@
 name: eng-codebase-mapping
 description: Użyj przy nieznanym kodzie i ocenie wpływu zmiany — punkty wejścia, warstwy z importów, węzły centralne, cykle.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy trzeba zrozumieć nieznany kod lub ocenić wpływ zmiany — punkty wejścia, warstwy z grafu importów, węzły centralne i cykle runtime vs leniwe (scripts/code_graph.py dla Pythona, TS/JS, Javy, C# i Go), terytorium z historii gita (zmiany w czasie, współzmiany, kontrybutorzy, bus factor, hotspoty — scripts/git_territory.py), legenda modułów, trasa czytania dla nowej osoby, wpływ diffu (1 krok w górę i w dół, warstwy, ryzyko), pewność krawędzi, analiza jednego przepływu i badanie kodu pod zmianę (research.md). Nie do oceny długu (eng-tech-debt-audit), wyboru refaktoryzacji (eng-refactor-planning) ani projektowania granic (ddd-strategic-analysis)."
   slowa: "graf importów bez narzędzi, cykle importów, nieznane repo, mapa kodu, mapa repo, od czego zacząć czytać, punkty wejścia, graf zależności, historia gita, co się najczęściej zmienia, współzmiany, kto zmieniał, kogo zapytać, bus factor, ryzyko jednej osoby, hotspoty, analiza przepływu, jak działa ten feature, research przed zmianą, wpływ zmiany"
 ---

@@ -2,7 +2,7 @@
 name: dom-ev-market-roles
 description: Użyj przy rolach rynku ładowania i przepływach danych oraz pieniędzy — CPO, eMSP, hub, host, OSD, flota, NAP, roaming, white-label, ad hoc.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba ustalić, kto jest kim na rynku ładowania EV i co przepływa między stronami — CPO, eMSP, hub roamingowy (P2P vs hub), właściciel lokalizacji (host), OSD/DSO i sprzedawca energii, producent ładowarek, flota, kierowca, NAP; jedna firma w wielu rolach; kto jest właścicielem jakich danych; przepływ pieniędzy w sesji roamingowej; modele biznesowe (white-label CPMS, CPO+eMSP, ad hoc, karta flotowa). Nie do słownika pojęć (dom-ev-glossary), formatów identyfikatorów (dom-ev-identifiers) ani szczegółów protokołu OCPI (dom-ev-charging)."
   slowa: "kto wystawia fakturę, rola CPO, rola eMSP, CPO i eMSP jednocześnie, hub roamingowy, Hubject, Gireve, roaming, peer-to-peer, bilateralnie, host parkingu, właściciel lokalizacji, udział w przychodach, revenue share, white label, CPMS, płatność ad hoc, bez umowy, karta flotowa, flota, kto jest właścicielem danych, rozliczenie hurtowe, przepływ pieniędzy, OSD, DSO, sprzedawca energii, NAP, punkt dostępu do danych, kto komu płaci, who invoices the driver, charge point operator, e-mobility service provider, market roles"
 ---

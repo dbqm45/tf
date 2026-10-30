@@ -2,7 +2,7 @@
 name: core-teaching-workspace
 description: Użyj na polecenie człowieka do nauki tematu przez wiele sesji w katalogu-warsztacie — lekcje, ściągi, postępy.
 metadata:
-  przeglad: 2027-10-10
+  przeglad: "2027-10-10"
   katalog: "Użyj tylko na polecenie człowieka (`/core-teaching-workspace`) — nauka jednego tematu przez wiele sesji w katalogu-warsztacie (misja, źródła, lekcje HTML, ściągi, zapisy postępów), np. wdrożenie w nowy stack lub kod projektu. Nie do jednorazowego wyjaśnienia ani badania źródeł bez nauki (core-source-research)."
 argument-hint: "[temat] | następna lekcja"
 disable-model-invocation: true

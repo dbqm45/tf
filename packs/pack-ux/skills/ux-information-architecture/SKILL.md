@@ -2,7 +2,7 @@
 name: ux-information-architecture
 description: Użyj przy architekturze informacji serwisu lub aplikacji — inwentarz treści, sortowanie kart, test drzewa, taksonomia, etykiety, nawigacja, wyszukiwarka.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj, gdy trzeba uporządkować strukturę informacji w serwisie, intranecie, sklepie lub dużej aplikacji — inwentarz i audyt treści, sortowanie kart otwarte, zamknięte i hybrydowe, test drzewa (odsetek sukcesu, bezpośredniość), taksonomia i etykiety, wzorce nawigacji, metadane, mapa serwisu, projekt wyszukiwarki, test odnajdywalności i dokumentacja architektury informacji (ia-documentation.md). Nie do podstawowej struktury informacji w przepływie jednej funkcji, makiet i heurystyk (ux-feature-design), planowania badania, rekrutacji i zgód uczestników (ux-research-methods), wyglądu interfejsu (ux-visual-design), decyzji co budować (proc-product-discovery) ani modelu domeny w kodzie (ddd-strategic-analysis)."
   slowa: "architektura informacji, IA, struktura serwisu, mapa serwisu, sitemap, nawigacja, menu, kategorie, taksonomia, etykiety, nazewnictwo, sortowanie kart, card sorting, test drzewa, tree testing, inwentarz treści, audyt treści, metadane, wyszukiwarka w serwisie, nie mogą znaleźć, odnajdywalność, findability, głębokość menu, intranet, sklep z produktami"
 ---

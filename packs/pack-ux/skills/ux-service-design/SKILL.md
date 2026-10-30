@@ -2,7 +2,7 @@
 name: ux-service-design
 description: Użyj, gdy problem to usługa w wielu kanałach z zapleczem, nie ekran — service blueprint, mapa podróży, punkty styku, prototyp usługi.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj, gdy problem klienta rozciąga się na wiele kanałów, ludzi i zaplecze (sklep, urząd, bank, serwis, onboarding), a nie na pojedynczy ekran — service blueprint (działania klienta, frontstage, backstage, procesy wspierające, dowody, linie interakcji i widoczności), mapa podróży klienta obecna i docelowa, mapa interesariuszy, inwentarz punktów styku, spójność między kanałami, warsztat współprojektowania, prototyp usługi (odgrywanie ról, concierge, Wizard of Oz), metryki usługi i standard usług publicznych (GOV.UK Service Standard); artefakt service-blueprint.md. Nie do modelowania procesu domenowego zdarzeniami (ddd-event-storming), mapy strumienia wartości i marnotrawstwa (proc-lean), wyboru, co budować, i testów założeń (proc-product-discovery) ani przepływów ekranów i stanów (ux-feature-design)."
   slowa: "usługa, service design, projektowanie usług, service blueprint, blueprint usługi, plan usługi, frontstage, backstage, zaplecze, mapa podróży klienta, customer journey, journey map, punkty styku, touchpoint, omnichannel, wielokanałowość, spójność kanałów, interesariusze, mapa interesariuszy, współprojektowanie, co-design, warsztat z klientami, prototyp usługi, Wizard of Oz, concierge, odgrywanie ról, bodystorming, standard usług, GOV.UK Service Standard, usługa publiczna, urząd, obsługa klienta, zwroty, reklamacje od strony klienta, nikt nie widzi całości"
 ---

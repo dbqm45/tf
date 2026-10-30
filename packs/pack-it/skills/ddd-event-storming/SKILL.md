@@ -2,7 +2,7 @@
 name: ddd-event-storming
 description: Użyj przy Event Stormingu (Big Picture, Process, Design Level) — przygotowanie, prowadzenie, zapis.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy planowaniu, prowadzeniu i zapisie sesji Event Storming — Big Picture, Process Level, Design Level — oraz przy przejściu od wyników sesji do architektury. Nie do technik pracy z ludźmi i językiem (ddd-facilitation) ani szczegółów implementacji agregatów (ddd-tactical-design)."
 ---
 

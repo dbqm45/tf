@@ -2,7 +2,7 @@
 name: proc-safe
 description: Użyj, gdy pracuje wiele zespołów w SAFe — Agile Release Train, PI Planning, role, WSJF, Inspect & Adapt, LPM.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   widocznosc: nazwa
   katalog: "Użyj, gdy praca obejmuje wiele zespołów w dużej organizacji stosującej SAFe — Agile Release Train, PI Planning, role (RTE, Product Management, System Architect, Business Owners), hierarchia backlogu, WSJF, Inspect & Adapt, Lean Portfolio Management — oraz przy ocenie, czy SAFe pasuje. Nie do pracy pojedynczego zespołu (proc-agile)."
 ---

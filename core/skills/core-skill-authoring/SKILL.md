@@ -2,7 +2,7 @@
 name: core-skill-authoring
 description: Użyj przy dodaniu lub zmianie skilla — najpierw scenariusze ewaluacji, potem zwięzła treść z przykładami, bramka, audyt.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy dodajesz nowy skill do fabryki, zmieniasz istniejący, skill się nie uruchamia albo trzeba udowodnić, że skill coś wnosi — kolejność pracy od scenariuszy ewaluacji, punkt odniesienia bez skilla, reguły opisu i struktury, bramka jakości factory/skill_gate.py, ewaluacja na modelach i rejestr wyników. Nie do łączenia istniejących skilli w jednym zadaniu (core-skill-composition) ani testów kodu aplikacji (skill testów, pack-it)."
   slowa: "nowy skill, dodaj skill, napisz skill, zmień skill, skill się nie uruchamia, model nie wczytuje skilla, ewaluacja skilla, scenariusze, bramka jakości, skill_gate, czy skill działa, baseline, skill procesowy, skill w CI, skill bez człowieka, claude -p, jak działa ten skill, przegląd skilla, dystrybucja skilli w zespole, paczka ze skillami, dodać skill do fabryki, nowy skill w fabryce, od czego zacząć nowy skill, sprawdzić, że skill naprawdę działa, zanim oddam skill, skill procesowy, skill działający w CI, skill dla claude -p, zaprojektować skill przewidywalny, skrypt w scripts/ skilla, wpiąć skrypt do SKILL.md, skrypt liczy metryki dla agentów, liczby ze skryptu do raportów"
 ---
@@ -34,6 +34,8 @@ Sama treść SKILL.md niczego nie dowodzi.
    - Format i przykłady: `tests/skill_evals/README.md`.
 4. **Punkt odniesienia (opcjonalnie, płatnie):** `run_skill_evals.py --skills <nazwa> --models sonnet --baseline`
    pokazuje, ile treści zalicza model bez skilli fabryki.
+   - **Zamknięty zbiór** (`tests/skill_evals/holdout/<skill>.json`) mierzy, nie stroi: jego porażki nie prowadzą do
+     zmian opisu, słów ani treści pod te pytania. Inaczej wynik mierzy dopasowanie do egzaminu, nie skill.
 5. **Minimalna treść**, która zamyka luki:
    - **jeden skill, jedno zadanie** — opis wymieniający kilka niezależnych zadań to sygnał do podziału;
    - procedura (kroki, kolejność, punkty decyzji, format wyniku), a nie wykład; zakładaj, że model jest bystry —

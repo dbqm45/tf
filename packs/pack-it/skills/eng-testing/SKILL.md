@@ -2,7 +2,7 @@
 name: eng-testing
 description: Użyj przy strategii testów w dowolnym języku — TDD, BDD, piramida testów, dublery, kontraktowe, mutacyjne.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj przy projektowaniu strategii testów i pisaniu testów w dowolnym języku — TDD (red-green-refactor), BDD i Example Mapping, piramida/trofeum testów, dublery testowe, testy kontraktowe, mutacyjne i charakteryzujące. Nie do narzędzi konkretnego frameworka testowego (tool-*) ani pracy testera (qa-*)."
   slowa: "jakość testów, pokrycie kodu, czy testy coś sprawdzają, mocki, dublery, testy mutacyjne, TDD, czy robić w TDD, kiedy TDD, faza w TDD, rusztowanie i konfiguracja w TDD"
 ---

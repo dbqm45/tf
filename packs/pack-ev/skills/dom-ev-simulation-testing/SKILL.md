@@ -2,7 +2,7 @@
 name: dom-ev-simulation-testing
 description: Użyj przy testowaniu CSMS bez prawdziwej ładowarki — symulator stacji OCPP, scenariusze awarii, test obciążeniowy bramy, kontrakt OCPI, regresja na nagranych logach.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba przetestować system ładowania bez fizycznej ładowarki albo przed jej podłączeniem — piramida testów CSMS (ramki, schematy, symulator, ładowarka w laboratorium, pilotaż), symulator OCPP 1.6J uruchamiany z linii poleceń, scenariusze awarii (zerwanie w trakcie sesji, offline i kolejka, duplikat CALL, zły zegar, brak StopTransaction, utrata zasilania, reconnect storm), test obciążeniowy bramy WebSocket, testy kontraktowe OCPI, regresja na nagranych i zanonimizowanych logach, łańcuch symulator → log → analizator. Nie do diagnozy awarii na produkcji (dom-ev-diagnostics), onboardingu nowego modelu ładowarki (dom-ev-charger-onboarding) ani projektu architektury CSMS (dom-ev-cpms-architecture)."
   slowa: "symulator ładowarki, charge point simulator, test CSMS bez ładowarki, nie mamy ładowarki, testy OCPP, test obciążeniowy, load test, 5000 ładowarek, reconnect storm, burza połączeń, wiele połączeń WebSocket, scenariusz awarii, chaos, zerwanie połączenia, offline replay, duplikat CALL, zły zegar, clock skew, brak StopTransaction, utrata zasilania, test kontraktowy OCPI, contract test, regresja na logach, replay, odtwarzanie ramek, anonimizacja idTag, EVerest, SteVe, piramida testów, charge_sim"
 ---

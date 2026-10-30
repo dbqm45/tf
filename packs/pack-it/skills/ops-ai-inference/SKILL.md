@@ -2,7 +2,7 @@
 name: ops-ai-inference
 description: Użyj przy własnym hostowaniu modeli językowych — pamięć GPU i KV cache, vLLM, continuous batching, metryki, skalowanie.
 metadata:
-  przeglad: 2027-01-17
+  przeglad: "2027-01-17"
   widocznosc: nazwa
   katalog: "Użyj przy własnym hostowaniu modeli językowych i infrastrukturze AI — pamięć GPU i KV cache, prefill i decode, continuous batching (vLLM), routing świadomy cache (llm-d, Gateway API Inference Extension), rozdzielenie prefill/decode, metryki i skalowanie, API czy własny serwer. Nie do SLO funkcji AI (ops-sre-incidents) ani ogólnych operacji Kubernetes (ops-kubernetes)."
 ---

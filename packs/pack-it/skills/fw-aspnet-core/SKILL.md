@@ -2,7 +2,7 @@
 name: fw-aspnet-core
 description: Użyj przy ASP.NET Core na .NET 8–10 — Minimal API, TypedResults, ProblemDetails, walidacja, OpenAPI, DI, testy z WebApplicationFactory.
 metadata:
-  przeglad: 2027-01-23
+  przeglad: "2027-01-23"
   katalog: "Użyj przy budowie i przeglądzie usług HTTP w ASP.NET Core (.NET 8–10) — Minimal API i grupy tras, wyniki typowane (TypedResults, Results<…>), błędy jako ProblemDetails (application/problem+json), walidacja żądań (AddValidation w .NET 10), dokument OpenAPI (AddOpenApi/MapOpenApi od .NET 9), wstrzykiwanie zależności i czasy życia, konfiguracja i opcje, mapowanie wyniku domeny na HTTP, testy integracyjne z WebApplicationFactory, różnice między wersjami. Nie do składni i idiomów C# (lang-csharp), projektu API niezależnie od technologii (be-api-design), uwierzytelniania i autoryzacji jako tematu (be-auth-security), bazy danych (be-database) ani wdrożenia (ops-*)."
   slowa: "ASP.NET Core, aspnetcore, Minimal API, minimal api, MapGet, MapPost, MapGroup, TypedResults, Results<>, ProblemDetails, problem+json, AddProblemDetails, walidacja w ASP.NET, AddValidation, OpenAPI w .NET, AddOpenApi, MapOpenApi, Swagger, WebApplicationFactory, test integracyjny ASP.NET, Mvc.Testing, kontrolery czy minimal api, DI scoped singleton, IOptions, appsettings, Kestrel"
 ---

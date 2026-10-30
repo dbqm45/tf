@@ -2,7 +2,7 @@
 name: ux-content-design
 description: Użyj przy treściach w produkcie jako projekcie — głos i ton, przewodnik stylu, prosty język, mikrotekst, modele treści, lokalizacja, testy treści.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj, gdy treść produktu trzeba zaprojektować, a nie tylko napisać — głos i ton, przewodnik stylu treści, prosty język (w tym polski „prosty język”), wzorce mikrotekstu (błędy, puste stany, potwierdzenia, przyciski, onboarding, powiadomienia), modele i wzorce treści, projektowanie od treści (prawdziwa treść przed układem), proces lokalizacji i zarządzanie ciągami tekstu, testy treści (cloze, highlighter, zadania na zrozumienie), treści dostępne, teksty funkcji z AI (oznaczenie AI, niepewność, ograniczenia). Nie do podstawowych tekstów UI w specyfikacji ekranu (ux-feature-design), korekty i redakcji polszczyzny (txt-polish-correctness, txt-polish-style), dokumentacji technicznej (docs-tech-writing) ani samej mechaniki i18n w kodzie (eng-i18n, fe-web-platform)."
   slowa: "UX writing, content design, mikrotekst, microcopy, komunikat błędu, pusty stan, tekst przycisku, głos marki, ton komunikacji, przewodnik stylu, content style guide, prosty język, zrozumiały tekst, czy użytkownicy rozumieją, test cloze, lokalizacja, tłumaczenie aplikacji, klucze tłumaczeń, treść przed makietą, lorem ipsum, model treści, asystent AI teksty, oznaczenie AI, czy klienci rozumieją tekst, zrozumiałość treści, test zrozumienia tekstu, regulamin prostym językiem, nowa treść"
 ---

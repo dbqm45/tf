@@ -2,7 +2,7 @@
 name: core-factory-update
 description: Użyj na polecenie człowieka przy aktualizacji fabryki (rdzeń + nakładki) — tf update, nakładki i języki, omówienie zmian, scalenie *.factory-new.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj tylko na polecenie człowieka (`/core-factory-update`) — sprawdzenie i instalacja nowej wersji fabryki (rdzeń + nakładki) w projekcie poleceniem tf lub factory/update.py, dodanie i usunięcie nakładki, zmiana języka pracy i commitów, tf doctor, omówienie zmian, scalenie plików *.factory-new z własnymi zmianami, kontrola po aktualizacji. Nie do tworzenia własnych skilli (`factory/build.py new-skill`) ani aktualizacji zależności projektu."
 argument-hint: "[źródło: katalog | plik .zip | URL repozytorium git]"
 disable-model-invocation: true

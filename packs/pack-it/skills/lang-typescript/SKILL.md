@@ -2,7 +2,7 @@
 name: lang-typescript
 description: Użyj przy kodzie TypeScript 5.x–7.x — typy, zawężanie, generyki, tsconfig, walidacja na granicach, pojęcia domenowe.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy pisaniu, refaktorze i przeglądzie kodu TypeScript 5.x–7.x — typy, zawężanie, generyki, dekoratory, moduły, tsconfig, walidacja na granicach, pułapki bezpieczeństwa TS/npm oraz pojęcia domenowe (obiekt wartości, warianty, agregat, wynik) idiomami TS. Nie do mechaniki runtime JS (lang-javascript), frameworka (fw-*), ogólnych zasad auth (be-auth-security) ani modelowania (ddd-*)."
 ---
 

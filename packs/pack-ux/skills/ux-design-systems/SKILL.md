@@ -2,7 +2,7 @@
 name: ux-design-systems
 description: Użyj przy systemie projektowym — warstwy tokenów, nazwy, format DTCG, Style Dictionary, komponenty, Storybook, wersje, wycofywanie, motywy, współtworzenie.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy budowie i utrzymaniu systemu projektowego (design system) — warstwy tokenów (prymitywne, semantyczne, komponentowe), konwencja nazw, format Design Tokens (DTCG) i Style Dictionary, komponenty i warianty w Figmie i w kodzie, dokumentacja (Storybook, zasady użycia, rób/nie rób), dostępność wbudowana w komponent, testy regresji wizualnej, wersjonowanie biblioteki, changelog i polityka wycofywania, model współtworzenia, zarządzanie (governance), metryki adopcji, wiele marek i motywów. Nie do audytu dostępności (ux-accessibility), decyzji o wyglądzie, kontraście i ruchu (ux-visual-design), CSS i zmiennych CSS w kodzie (fe-css), reguł numerowania wersji (core-semver) ani struktury aplikacji frontendowej (fe-architecture)."
   slowa: "system projektowy, design system, biblioteka komponentów, tokeny, design tokens, DTCG, Style Dictionary, nazewnictwo tokenów, motyw, ciemny motyw, wiele marek, white label, Storybook, dokumentacja komponentów, wycofanie komponentu, deprecation, breaking change w bibliotece, changelog, adopcja, governance, współtworzenie, zmienne Figma do kodu, regresja wizualna, Chromatic"
 ---

@@ -92,7 +92,7 @@ def main() -> int:
                  "--role", role_file.stem, "--name-only"], cwd=root)
         md = (root / ".claude" / "skills" / "core-demo-x" / "SKILL.md")
         text = md.read_text(encoding="utf-8") if md.exists() else ""
-        m = re.search(r"^  przeglad: (\d{4}-\d{2}-\d{2})$", text, re.M)
+        m = re.search(r"^  przeglad: \"(\d{4}-\d{2}-\d{2})\"$", text, re.M)
         role = role_file.read_text(encoding="utf-8")
         check(r.returncode == 0 and m and "  widocznosc: nazwa" in text and re.search(r"^  slowa: \"", text, re.M)
               and re.search(r"^skills: \[.*\bcore-demo-x\]$", role, re.M),

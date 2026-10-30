@@ -2,7 +2,7 @@
 name: ops-multi-region-resilience
 description: Użyj przy projekcie HA i DR na strefy i regiony — RTO/RPO per tier, strategie DR, replikacja, failover, testy DR.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy projektowaniu odporności na awarię strefy lub regionu — wpływ biznesowy i RTO/RPO per tier usług, wybór strategii DR (backup and restore, pilot light, warm standby, multi-site active-active) z kosztem, replikacja danych (synchroniczna i asynchroniczna, spójność, konflikty, split-brain), kierowanie ruchu i failover (DNS, globalne load balancery, ponowienia klientów), zależność od płaszczyzny sterowania regionu i static stability, runbooki failover i failback, testy DR i game days, eksperymenty chaos z limitem zasięgu, dowody dla audytora. Wynik to projekt odporności z tabelą tierów i planem testów DR. Nie do SLO, budżetu błędów, incydentów i podstaw kopii zapasowych (ops-sre-incidents), scenariuszy dostępności jako atrybutu jakości (arch-quality-attributes), replikacji w samej bazie (be-database) ani strategii wydań (ops-release-engineering)."
   slowa: "awaria całego regionu, region chmury padł, strategia DR, jaką strategię DR wybrać, ile może stać system, disaster recovery, DR, awaria regionu, awaria strefy, multi-region, wieloregionowy, failover, failback, RTO, RPO, pilot light, warm standby, active-active, active-passive, split-brain, replikacja między regionami, plan ciągłości działania, BCP, game day, test DR, chaos engineering, static stability, Route 53 health check, globalny load balancer, drugi region, ćwiczenie awarii"
   widocznosc: nazwa

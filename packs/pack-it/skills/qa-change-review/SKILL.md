@@ -2,7 +2,7 @@
 name: qa-change-review
 description: Użyj przy przeglądzie planu przed kodem albo kodu względem planu — dryf, waga, triaż, werdykt.
 metadata:
-  przeglad: 2027-10-10
+  przeglad: "2027-10-10"
   katalog: "Użyj, gdy trzeba sprawdzić plan kroku, zanim agent zacznie kodować (spójność, ugruntowanie w repo, weryfikacja ryzykownych twierdzeń, wymiary, werdykt), albo implementację względem zatwierdzonego planu po fazie lub przed scaleniem (trzy zbiory plików, dryf, nadmiar i braki, bezpieczeństwo i wzorce, kryteria), a potem przejść ustalenia z człowiekiem (macierz waga × wpływ, triaż z decyzjami, zapis jako lekcja). Nie do procesu PR i konfiguracji przeglądu przez usługę lub CI (core-git-workflow), samego bezpieczeństwa (agent security-reviewer), czytelności kodu bez planu (eng-clean-code) ani przepytywania człowieka przed planem (core-plan-interview)."
   slowa: "przegląd planu, sprawdź plan, review planu, czy plan zadziała, przegląd implementacji, zgodność z planem, dryf od planu, implementacja vs plan, przed scaleniem, ustalenia przeglądu, triaż ustaleń, co naprawić teraz, werdykt przeglądu, agent zrobił coś innego niż w planie, pliki spoza planu"
 ---

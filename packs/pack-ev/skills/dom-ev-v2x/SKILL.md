@@ -2,7 +2,7 @@
 name: dom-ev-v2x
 description: Użyj przy ładowaniu dwukierunkowym EV — V2G, V2H, V2B, V2L, BPT w ISO 15118-20, ujemne limity w OCPP, rozliczenie energii oddanej, zgoda kierowcy, minimalny SoC.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy pojazd ma oddawać energię z baterii — różnice V2G, V2H, V2B i V2L (kto odbiera energię, czy jest synchronizacja z siecią), BPT w ISO 15118-20 (usługi AC_BPT i DC_BPT, tryb scheduled i dynamic, parametry rozładowania wg implementacji josev), wymagania wobec ładowarki (DC dwukierunkowa, falownik, kod sieci, zgoda OSD), OCPP 2.0.1 a 2.1 i ujemne limity w profilach, RED III art. 20a, rozliczenie energii oddanej (licznik dwukierunkowy, eksport, CDR), zgoda kierowcy, minimalny SoC, gwarancja i degradacja baterii, modele biznesowe (agregator, arbitraż, usługi elastyczności). Nie do jednokierunkowych profili ładowania (dom-ev-smart-charging), mocy lokacji, PV i magazynu (dom-ev-energy-management), ISO 15118 ogólnie i Plug & Charge (dom-ev-iso15118), baterii jako takiej (dom-ev-vehicle-battery)."
   slowa: "V2G, V2H, V2B, V2L, V2X, vehicle to grid, vehicle to home, vehicle to building, vehicle to load, ładowanie dwukierunkowe, bidirectional charging, BPT, bidirectional power transfer, rozładowanie auta, oddawanie energii do sieci, zasilanie domu z auta, zasilanie z baterii auta, falownik, grid-forming, grid-following, kod sieci, grid code, DC_BPT, AC_BPT, EVMaximumDischargePower, ujemny limit, ujemna moc, negative charging profile, Energy.Active.Export.Register, energia oddana, licznik dwukierunkowy, agregator, arbitraż cenowy, minimalny SoC, gwarancja baterii, degradacja baterii, CHAdeMO V2G, ładowarka dwukierunkowa"
 ---

@@ -2,7 +2,7 @@
 name: ops-ci-cd
 description: Użyj przy pipeline'ach CI/CD (GitHub Actions i inne) — tworzenie, naprawa, cache buildów, wdrożenia, bezpieczeństwo.
 metadata:
-  przeglad: 2027-04-10
+  przeglad: "2027-04-10"
   katalog: "Użyj przy tworzeniu i naprawie pipeline'ów CI/CD (GitHub Actions i podobne), strategii wdrożeń, cache'owaniu buildów, bezpieczeństwie pipeline'u, composite action i reusable workflow, diffie PR w CI i bramce werdyktu przeglądu AI. Nie do pisania Dockerfile (ops-docker) ani commitów (core-git-workflow)."
 ---
 

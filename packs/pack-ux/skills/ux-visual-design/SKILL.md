@@ -2,7 +2,7 @@
 name: ux-visual-design
 description: Użyj przy wyglądzie interfejsu — hierarchia, typografia, kontrast WCAG, siatka, ruch, marka, Figma, zgodność wdrożenia z projektem.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy projekcie wizualnym interfejsu i jego ocenie — hierarchia wizualna, skala typograficzna, długość linii i interlinia, system kolorów z obliczeniem kontrastu WCAG, siatka i skala odstępów, ikony i obrazy, zasady ruchu (cel, czas, reduced motion), nałożenie marki, praktyka w Figmie (komponenty, warianty, auto layout, zmienne), przegląd zgodności wdrożenia z projektem i krytyka projektu wizualnego. Nie do przepływów, stanów ekranu i testów z użytkownikami (ux-feature-design), audytu dostępności i deklaracji (ux-accessibility), kodu CSS i tokenów w kodzie (fe-css) ani budowy biblioteki komponentów, nazewnictwa tokenów i ich wersjonowania (ux-design-systems)."
   slowa: "wygląd, UI, ładne, brzydkie, nieczytelne, hierarchia wizualna, font, krój pisma, skala typograficzna, kolory, paleta, kontrast, kontrast WCAG, siatka, odstępy, ikony, animacja, czas animacji, reduced motion, brand, księga znaku, Figma, auto layout, warianty, makieta wizualna, zgodność z projektem, pixel perfect, przegląd wizualny, krytyka projektu"
 ---

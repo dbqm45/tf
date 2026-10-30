@@ -2,7 +2,7 @@
 name: ux-feature-design
 description: Użyj przy UX funkcji przed kodem — zadania, przepływy ze stanami, architektura informacji, makiety, heurystyki, teksty UI.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy projektowaniu i ocenie UX funkcji przed kodem — analiza zadań, przepływy ze stanami i przypadkami brzegowymi, architektura informacji, makiety, prototypy, heurystyki, testy użyteczności, hierarchia wizualna, ruch, teksty interfejsu, projekt włączający i etyczny, specyfikacja dla programistów, ramki Figmy powiązane z wymaganiami i stanami przez Figma MCP (tabela ramek w design.md). Nie do decyzji co budować (proc-product-discovery) ani CSS (fe-css)."
   slowa: "Figma MCP, ramki Figmy, powiązać ekrany z wymaganiami, design.md, tabela ramek, node-id, ramka dla stanu, powiadomienia, nawyk, onboarding, makieta, przepływ użytkownika, stany ekranu, użyteczność, etyka projektowania, dark patterns"
 ---

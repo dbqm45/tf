@@ -2,7 +2,7 @@
 name: arch-threat-modeling
 description: Użyj przy modelu zagrożeń funkcji lub integracji — DFD z granicami zaufania, STRIDE, PASTA, ocena ryzyka, OWASP Top 10.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy projektowaniu funkcji, usługi lub integracji i przy zmianie granic zaufania — model zagrożeń (DFD z granicami zaufania, powierzchnia ataku, STRIDE per element, PASTA dla krytycznych procesów), ocena i kwantyfikacja ryzyka, decyzje o ryzyku, OWASP Top 10:2025. Nie do przeglądu konkretnego diffu (security-reviewer) ani reagowania na incydent (ops-security-operations)."
   slowa: "obrona w głąb, defence in depth, defense in depth, warstwy obrony, warstwy zabezpieczeń, blast radius, wyciek danych, atak, zagrożenie, ryzyko, ryzyko rezydualne, czy ochrona się opłaca, koszt zabezpieczeń, FAIR, prawdopodobieństwo i strata, oszacować ryzyko liczbowo, ryzyko liczbowo zamiast wysokie średnie, czy warto wydać na ochronę, ochrona przed wyciekiem danych klientów"
 ---

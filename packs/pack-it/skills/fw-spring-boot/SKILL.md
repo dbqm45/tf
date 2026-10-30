@@ -3,7 +3,7 @@ name: fw-spring-boot
 description: Użyj przy aplikacji Spring Boot — struktura modułów, warstwa web i danych, konfiguracja, bezpieczeństwo, obserwowalność, testy (JUnit, slice testy, Testcontainers).
 metadata:
   katalog: "Użyj przy aplikacji Spring Boot — struktura modułów, warstwa web i danych, konfiguracja, bezpieczeństwo, obserwowalność, testy (JUnit, slice testy, Testcontainers). Nie do składni i idiomów Javy (lang-java), modelowania domeny (ddd-*), ogólnego projektu API (be-api-design) ani baz danych niezależnie od frameworka (be-database)."
-  przeglad: 2027-01-20
+  przeglad: "2027-01-20"
   slowa: "Spring Boot, Spring, @SpringBootTest, @MockBean, @MockitoBean, @DataJpaTest, @WebMvcTest, slice test, Testcontainers, @ServiceConnection, SecurityFilterChain, WebSecurityConfigurerAdapter, ProblemDetail, application.yml, @ConfigurationProperties, Actuator, Micrometer, RestClient, Spring Modulith, spring-boot-starter"
 ---
 

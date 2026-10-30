@@ -2,7 +2,7 @@
 name: dom-ev-vehicle-battery
 description: Użyj przy pojeździe jako stronie ładowania — bateria, BMS, krzywa ładowania, 400 V i 800 V, ładowarka pokładowa, ETA w aplikacji, zgłoszenie „ładuje wolno”.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba zrozumieć, co robi auto w sesji ładowania z perspektywy CSMS, eMSP i aplikacji — BEV i PHEV, bateria trakcyjna i BMS jako decydent mocy, krzywa ładowania i spadek mocy przy wysokim SoC, temperatura i preconditioning, SoH, ładowarka pokładowa jako limit AC (moc, fazy), architektura 400 V i 800 V, dlaczego CSMS widzi moc niższą niż nominalna, SoC w danych sesji, szacowanie czasu ładowania i ETA, dane z auta przez API producenta. Nie do profili ładowania i limitów A lub W (dom-ev-smart-charging), sygnalizacji CP i PWM po stronie stacji (dom-ev-charger-hardware), komunikatów ISO 15118 (dom-ev-iso15118), przebiegu diagnozy awarii z ramek (dom-ev-diagnostics) ani V2G (dom-ev-v2x)."
   slowa: "ładuje wolno, auto ładuje wolno, moc niższa niż ładowarka, 150 kW a bierze 50, bateria, BMS, krzywa ładowania, charging curve, SoC, stan naładowania, 80 procent, spadek mocy, SoH, zdrowie baterii, temperatura baterii, preconditioning, zimno ładowanie, 400 V, 800 V, ładowarka pokładowa, OBC, auto jednofazowe, ETA ładowania, czas do 80 procent, ile będzie ładować, PHEV, hybryda plug-in, dane z auta, API producenta, battery, slow charging, charging power lower than nominal"
 ---

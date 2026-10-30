@@ -2,7 +2,7 @@
 name: ai-mcp-server
 description: Użyj przy budowie własnego serwera MCP — czy MCP, transport, kontrakt narzędzi, bezpieczeństwo i autoryzacja, testy w CI bez modelu, wersje, rejestracja w Claude Code.
 metadata:
-  przeglad: 2027-01-23
+  przeglad: "2027-01-23"
   katalog: "Użyj, gdy budujesz własny serwer MCP (Model Context Protocol) dla agentów — decyzja: serwer MCP czy skill ze skryptem, transport (stdio, Streamable HTTP) i jego reguły, narzędzia jako kontrakt (nazwy, schematy z ograniczeniami, adnotacje readOnly/destructive/idempotent, błędy z następnym krokiem), bezpieczeństwo (stdout tylko dla protokołu, wynik narzędzia jako niezaufane dane, potwierdzenie operacji niszczących, autoryzacja OAuth 2.1 z odbiorcą tokenu, bez przekazywania tokenu dalej, Origin i localhost), testy w CI bez modelu (sesja w pamięci, migawka kontraktu, proces stdio, surowy stdout), wersjonowanie narzędzi, rejestracja w Claude Code (.mcp.json, zakresy). Nie do projektu pętli agenta i doboru narzędzi po stronie agenta (ai-agents), oceny i podłączania obcych serwerów MCP (core-agent-security), zagrożeń aplikacji LLM ogólnie (sec-llm-security) ani ewaluacji jakości na modelu (ai-evals)."
   slowa: "serwer MCP, MCP server, Model Context Protocol, własny serwer mcp, wystawić API jako MCP, narzędzia dla agentów, FastMCP, mcp python sdk, typescript sdk mcp, stdio, streamable http, testy serwera mcp, MCP Inspector, .mcp.json, claude mcp add, autoryzacja mcp, oauth mcp, token mcp, readOnlyHint, destructiveHint, skill czy serwer mcp"
 ---

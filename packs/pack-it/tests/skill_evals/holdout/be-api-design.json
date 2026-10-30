@@ -1,0 +1,58 @@
+{
+  "skill": "be-api-design",
+  "scenarios": [
+    {
+      "id": "ho-limit-ruchu-partnera",
+      "expect": "trigger",
+      "prompt": "Udostępniamy API partnerom i jeden z nich zalał nas żądaniami. Jak ograniczyć ruch i co ma dostać klient po przekroczeniu?",
+      "checks": {
+        "all": [
+          [
+            "token bucket",
+            "sliding window",
+            "okno przesuwne",
+            "leaky bucket",
+            "wiadro"
+          ],
+          [
+            "Retry-After"
+          ],
+          [
+            "RateLimit-Policy",
+            "X-RateLimit",
+            "\\bRateLimit\\b",
+            "kwot\\w*.{0,40}(inn|osobn)",
+            "quota"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ho-import-czesciowy",
+      "expect": "trigger",
+      "prompt": "Klient wysyła nam przez API plik z 5000 produktów, z których część jest błędna. Poprawne mają wejść, a on ma dostać informację, które poprawić. Jak to wystawić?",
+      "checks": {
+        "all": [
+          [
+            "\\b207\\b",
+            "multi-?status"
+          ],
+          [
+            "per rekord",
+            "osobno dla (każdego )?rekord\\w*",
+            "wynik\\w* (dla|na) (każdego )?rekord\\w*",
+            "per record",
+            "each record"
+          ],
+          [
+            "\\b202\\b",
+            "NDJSON",
+            "json-seq",
+            "Location",
+            "limit\\w* (liczby )?rekord\\w*"
+          ]
+        ]
+      }
+    }
+  ]
+}

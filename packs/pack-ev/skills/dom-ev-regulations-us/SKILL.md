@@ -2,7 +2,7 @@
 name: dom-ev-regulations-us
 description: Użyj przy wymogach USA dla ładowania EV — NEVI (23 CFR 680), uptime 97 %, dane i API, NIST HB44 3.40 (kWh, cena, paragon), J1772, NACS, UL, przepisy stanowe.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy stacja lub CPMS ma spełnić wymogi USA — federalne NEVI 23 CFR part 680 (porty, moc, złącza, płatności, uptime ze wzorem, dane i API, OCPP, OCPI, ISO 15118, cyber, technicy), metrologia NIST Handbook 44 sekcja 3.40 (zakres, wyjątki, rozdzielczość kWh, cena i paragon, tolerancje), co to znaczy dla oprogramowania CPMS, a także SAE J1772, SAE J3400 (NACS), UL 2594, UL 2202 i przepisy stanowe (Kalifornia, Weights and Measures). Nie do unijnych i polskich przepisów (AFIR, MID, UDT, URE — osobne, jeszcze niewydzielone skille), samej płatności kartą i PCI (dom-ev-payments), sprzętu, CP/PWM i licznika od strony hardware (dom-ev-charger-hardware) ani liczenia ceny z taryfy OCPI (dom-ev-tariffs-pricing)."
   slowa: "NEVI, 23 CFR 680, part 680, 680.116, 680.112, FHWA, Joint Office, uptime 97%, 97 procent, dostępność portu, T_outage, T_excluded, 525600, cztery porty DCFC, 150 kW, 6 kW, AC Level 2, CCS1, CHAdeMO, J1772, J3400, NACS, UL 2594, UL 2202, ENERGY STAR, NRTL, EVITP, kwartalne dane, raport do stanu, dane dla stron trzecich, Handbook 44, HB44, NIST 3.40, NTEP, Weights and Measures, kWh rozdzielczość, paragon, receipt, cena w dolarach za kWh, Kalifornia, California, stan USA, dofinansowanie federalne, przepisy USA, US regulations"
 ---

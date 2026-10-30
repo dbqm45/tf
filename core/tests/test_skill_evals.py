@@ -43,6 +43,61 @@ print(json.dumps({"type": "result", "subtype": "success", "result": "Użyj nagł
 """
 
 
+PROTOCOL_TESTS = 4
+
+
+def protocol_tests() -> list[str]:
+    """Zamknięty zbiór testowy (holdout) i protokół raportu „wynik czy koszt”."""
+    fails = []
+    with tempfile.TemporaryDirectory() as d:
+        bad = Path(d) / "core-grounding.json"
+        bad.write_text(json.dumps({"skill": "core-grounding", "scenarios": [
+            {"id": "a", "expect": "trigger", "prompt": "Jak obsłużyć ponowienia POST?", "checks": {"all": [["x"]]}},
+            {"id": "b", "expect": "trigger", "prompt": "Ponowienie POST bez duplikatu?", "checks": {"all": [["x"]]},
+             "holdout": "tak"},
+            {"id": "c", "expect": "no-trigger", "prompt": "Indeksy w tabeli orders?", "neighbor": "be-database"}]}),
+            encoding="utf-8")
+        if not any("holdout" in e for e in ev.validate_file(bad)):
+            fails.append("validate_file: holdout musi być true/false")
+        # osobny plik holdout/<skill>.json: same scenariusze trigger ze sprawdzeniami, poza odciskiem bramki skilla
+        ho = Path(d) / "holdout" / "core-grounding.json"
+        ho.parent.mkdir()
+        ho.write_text(json.dumps({"skill": "core-grounding", "scenarios": [
+            {"id": "h1", "expect": "trigger", "prompt": "Klient ponawia płatność po timeoucie, co z duplikatem?",
+             "checks": {"all": [["idempot"]]}}]}), encoding="utf-8")
+        okh = ev.validate_file(ho, holdout=True)
+        ho.write_text(json.dumps({"skill": "core-grounding", "scenarios": [
+            {"id": "h1", "expect": "no-trigger", "prompt": "Pytanie sąsiada o indeksy", "neighbor": "be-database"}]}),
+            encoding="utf-8")
+        badh = ev.validate_file(ho, holdout=True)
+        if okh or not badh:
+            fails.append(f"validate_file(holdout): jeden scenariusz trigger wystarcza, no-trigger to błąd: {okh} {badh}")
+    scs = [{"id": "a", "expect": "trigger"}, {"id": "h", "expect": "trigger", "holdout": True},
+           {"id": "n", "expect": "no-trigger"}]
+    if [s["id"] for s in ev.tuning_set(scs)] != ["a", "n"] or [s["id"] for s in ev.holdout_set(scs)] != ["h"]:
+        fails.append("tuning_set/holdout_set: zbiór strojenia bez scenariuszy holdout, holdout osobno")
+    row = lambda sid, base, passed, met, cost, ho=False, rep=0: {
+        "skill": "s", "id": sid, "expect": "trigger", "model": "haiku", "baseline": base, "holdout": ho, "repeat": rep,
+        "passed": passed, "triggered": passed, "checks_ok": passed, "groups_total": 2, "groups_met": met,
+        "cost": cost, "error": None, "misses": [], "skills_used": []}
+    res = [row("a", False, True, 2, 0.10), row("b", False, False, 1, 0.10), row("a", True, False, 1, 0.05),
+           row("b", True, False, 0, 0.05), row("h", False, True, 2, 0.10, ho=True, rep=0),
+           row("h", False, False, 1, 0.10, ho=True, rep=1),
+           # bez skilli nic się nie uruchamia — pełną odpowiedź liczymy po kryteriach, nie po uruchomieniu
+           {**row("c", True, False, 2, 0.05), "checks_ok": True}]
+    rows = {(r["model"], r["baseline"], r["set"]): r for r in ev.protocol(res)}
+    w = rows.get(("haiku", False, "strojenie")) or {}
+    if (w.get("tasks"), w.get("full_pass"), w.get("criteria")) != (2, 1, 0.75) or abs(w.get("cost_per_solved", 0) - 0.20) > 1e-9:
+        fails.append(f"protocol: ze skillami — zadania, zaliczone w całości, średnia kryteriów, koszt na rozwiązane: {w}")
+    b = rows.get(("haiku", True, "strojenie")) or {}
+    h = rows.get(("haiku", False, "holdout")) or {}
+    if b.get("full_pass") != 1 or b.get("tasks") != 3 or h.get("unstable") != 1 or h.get("tasks") != 2:
+        fails.append(f"protocol: bez skilli pełna odpowiedź po kryteriach; holdout osobno, niestabilny między powtórzeniami: {b} {h}")
+    if w.get("triggered") != 1:
+        fails.append(f"protocol: uruchomienie skilla raportowane osobno: {w}")
+    return fails
+
+
 def main() -> int:
     fails = []
     # 1–2. sprawdzenia treści
@@ -169,7 +224,7 @@ def main() -> int:
         hs.loader.exec_module(hint)
         items = hint.load_index()
         trig = [(json.loads(f.read_text(encoding="utf-8"))["skill"], s) for f in files
-                for s in json.loads(f.read_text(encoding="utf-8"))["scenarios"] if s["expect"] == "trigger"]
+                for s in ev.tuning_set(json.loads(f.read_text(encoding="utf-8"))["scenarios"]) if s["expect"] == "trigger"]
         hits = sum(sk in [it["name"] for _, it in hint.select(s["prompt"], items)] for sk, s in trig)
         # polecenie ogólne → brak podpowiedzi; dla prośby o commit dopuszczalne są tylko skille commitów (w małej
         # instalacji, bez konkurencji innych skilli, podpowiedź core-git-workflow jest trafna, nie szumem)
@@ -216,7 +271,8 @@ def main() -> int:
         r = rep_mod.analyse(rep_mod.read_jsonl(logs / "skill-hints.jsonl", None), rep_mod.read_jsonl(logs / "usage.jsonl", None))
         if api and (r["hit"].get("be-api-design") != 1 or r["missed"].get("be-database") != 1):   # podpowiedź z pack-it
             fails.append(f"hint_report: trafione/przeoczone niepoprawne: {r}")
-    total = 12
+    fails += protocol_tests()
+    total = 12 + PROTOCOL_TESTS
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów ewaluacji skilli ({len(files)} plików scenariuszy)")

@@ -2,7 +2,7 @@
 name: fw-react
 description: Użyj przy kodzie Reacta 18–19.3 — czyste komponenty, stan, kiedy nie efekt, Actions i formularze, React Compiler, testy.
 metadata:
-  przeglad: 2027-01-03
+  przeglad: "2027-01-03"
   katalog: "Użyj przy kodzie Reacta (18–19.3) bez względu na framework — komponenty i hooki, struktura stanu, efekty i ich zamienniki (wyliczenie w renderze, key, useEffectEvent), Actions i formularze (useActionState, useOptimistic, use), React Compiler zamiast ręcznego memo, granice Suspense i błędów, testy z Testing Library, aktualizacja 18→19 — oraz przy decyzji, gdzie w aplikacji React umieścić pojęcia domenowe. Nie do routingu, cache i Server Actions Next.js (fw-nextjs), składni TypeScript (lang-typescript) ani ogólnej architektury frontu (fe-architecture)."
   slowa: "React, komponent Reacta, hook, useEffect, useState, useMemo, useCallback, memo, re-render, useActionState, useOptimistic, useEffectEvent, React Compiler, JSX, tsx, Vite"
 ---

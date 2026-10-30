@@ -2,7 +2,7 @@
 name: pm-saas-metrics
 description: Użyj przy metrykach biznesu subskrypcyjnego (SaaS) — MRR/ARR, churn, NRR/GRR, LTV:CAC, zwrot CAC, burn multiple, Rule of 40, ocena zmiany ceny.
 metadata:
-  przeglad: 2027-10-23
+  przeglad: "2027-10-23"
   katalog: "Użyj, gdy trzeba policzyć albo ocenić ekonomię produktu subskrypcyjnego — MRR i ARR z ruchami (nowy, ekspansja, kontrakcja, odejście), churn klientów i przychodu, NRR i GRR na kohorcie, LTV, CAC, LTV:CAC, okres zwrotu CAC, burn multiple, Rule of 40, quick ratio, wpływ zmiany ceny — z typowymi progami i pułapkami liczenia; brak danych to pytanie, nie szacunek. Nie do implementacji rozliczeń i płatności (be-billing-subscriptions, tool-stripe), ogólnej analizy danych i testów statystycznych (data-analysis) ani metryk produktu jak HEART i OKR (proc-product-discovery)."
   slowa: "MRR, ARR, churn, odchodzenie klientów, NRR, GRR, net revenue retention, retencja przychodu, LTV, CAC, LTV do CAC, zwrot CAC, payback, burn multiple, Rule of 40, reguła 40, quick ratio, ekonomia jednostkowa SaaS, czy biznes jest zdrowy, metryki dla inwestora, podwyżka ceny, zmiana cennika, spalanie gotówki"
 ---
