@@ -4,7 +4,7 @@ description: Użyj, gdy agent ma pracować bez nadzoru (claude -p, /goal, sandbo
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj, gdy oddajesz zadanie agentowi, który działa bez człowieka przy ekranie — zdalna kontrola lokalnej sesji z telefonu, sandbox w chmurze (zamknięty laptop), rutyna lub przebieg według harmonogramu, wykonanie zatwierdzonego planu przez claude -p albo /goal — kwalifikacja zadania, wybór trybu kontroli, kontrakt przed startem (cel, zakres, setup, sieć, MCP, sekrety, stop, budżet), polityka wykonania planu bez pytań (bramki w fazach, celowe zepsucie, najwyżej 2 próby naprawy, blok STOP, commit na zielono, raport), monitorowanie i przegląd po. Nie do pętli recenzji i uprawnień agenta (core-agent-security), faz projektu (core-delivery-lifecycle), punktu kontrolnego sesji (core-project-record) ani doboru modelu (core-cost-control)."
-  slowa: "bez nadzoru, w tle, w nocy, zamknięty laptop, odejść od komputera, z telefonu, remote control, sandbox w chmurze, claude code on the web, codex cloud, rutyna, harmonogram, routine, claude -p, headless, /goal, delegacja, zlecić agentowi, agent sam wykona plan, praca asynchroniczna"
+  slowa: "bez nadzoru, w tle, w nocy, zamknięty laptop, odejść od komputera, z telefonu, remote control, sandbox w chmurze, claude code on the web, codex cloud, rutyna, harmonogram, routine, claude -p, headless, /goal, delegacja, zlecić agentowi, agent sam wykona plan, praca asynchroniczna, nocny agent, agent poprawia własne prompty i skille, pętla samodoskonalenia, agent sam commituje zmiany, granice dla agenta, uprawnienia rutyny"
 ---
 
 # Delegacja pracy agentowi bez nadzoru
@@ -64,6 +64,9 @@ zamiast pytań:
   dla nowych testów (pack-it: qa-spec-first-testing) → pełne testy, lint, typy → commit. Po każdej bramce linia
   `BRAMKA <nazwa>: PASS` albo `FAIL (<skrót>, próba k/2)` — oceniający `/goal` widzi tylko transkrypt.
 - **Najwyżej 2 próby naprawy na bramkę;** trzecia porażka = STOP. Testu, asercji ani reguły lint nie osłabia.
+- **Warunek postępu, nie „aż będzie dobrze”.** Cel `/goal` to liczba z narzędzia (wynik Lighthouse, liczba
+  zielonych testów, czas p95). Obok limitu tur: każda tura poprawia co najmniej jedną zmierzoną metrykę; dwie tury
+  bez poprawy = STOP. To samo polecenie po raz trzeci bez zmiany wyniku = STOP.
 - **Commit tylko na zielono** (core-conventional-commits), pliki po nazwie; brudne pliki spoza fazy wypisuje,
   nie dodaje; bez `--no-verify` i `--amend`; padający hook przed commitem = porażka bramki.
 - Weryfikacji ręcznej nie odhacza — lista dla człowieka na końcu. Stan postępu tylko w planie (pierwszy
@@ -89,6 +92,19 @@ tekstem — podsumowaniem z zapowiedzią kolejnego kroku. Pętla, która uznaje 
 - Idempotencja: przebieg sprawdza, co już zrobił poprzedni (raport z dziś istnieje → aktualizuje, nie dubluje).
 - Wyzwalacz to zdarzenie, które ma znaczenie, albo rozsądny rytm — nie „co 5 minut na wszelki wypadek”.
 - Pętla, która sama iteruje do akceptacji recenzenta, nie trafia do harmonogramu (core-agent-security §5a).
+- **Uprawnienia rosną z dowodem.** Drabina: tylko odczyt → szkic w pliku → zmiany na gałęzi lub w worktree → szkic
+  działania zewnętrznego (draft PR, szkic komentarza) → działanie po zgodzie człowieka → automat tylko dla działań
+  niskiego ryzyka, z logiem i drogą wycofania. Szczebel wyżej dopiero po serii przebiegów bez przekroczenia zakresu,
+  a każdy nowy szczebel dostaje nową regułę weryfikacji. Uprawnienia rutyny przeglądasz przy każdym nowym narzędziu
+  i co miesiąc.
+- **Dwa tryby wyniku:** *cisza* (krótka aktualizacja stanu, gdy nic się nie zmieniło) i *uwaga* (raport, gdy coś
+  wymaga człowieka). Ta sama blokada w dwóch kolejnych przebiegach = eskalacja do człowieka, nie kolejne ponowienie.
+- **Przegląd trafności** liczy trafne pozycje, fałszywe alarmy i przeoczenia, a nie tylko to, co rutyna znalazła.
+- **Pętla samodoskonalenia** (agent poprawia własne prompty, skille, hooki): nie ma zapisu do polityki uprawnień,
+  piaskownicy, tożsamości ani zestawu ewaluacji — te leżą w osobnym repo lub są tylko do odczytu. Zmianę przyjmuje
+  wynik na odłożonym zbiorze i człowiek, nie sama pętla (pack-it: ai-evals, bramka zmiany harnessu).
+- `/loop` żyje w sesji i wygasa po 7 dniach (code.claude.com/docs/en/scheduled-tasks, „Seven-day expiry”, odczyt
+  2026-10-29); praca, która ma przeżyć sesję, idzie do rutyny w chmurze.
 - Typowe porażki są nudne: godziny prób pobrania z zablokowanego hosta, drugi podobny raport, łatanie objawu
   zamiast przyczyny, gałąź, której nikt nie umie scalić.
 

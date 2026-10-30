@@ -48,6 +48,59 @@
       "expect": "no-trigger",
       "prompt": "Dodaję do aplikacji funkcję, w której model ocenia diffy. Jak ułożyć schemat wyjścia, limit kroków i pierwszą macierz promptfoo z podłożonymi błędami?",
       "neighbor": "eng-llm-features"
+    },
+    {
+      "id": "granice-wyniku-ramiona",
+      "expect": "trigger",
+      "prompt": "Nasz system RAG odpowiada tak/nie na pytania o umowy i ma 72% trafności na naszym zbiorze. Zarząd pyta, czy to dobry wynik i czy nowa architektura z grafem wiedzy coś poprawi. Jak to rzetelnie ocenić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["klas\\w+ większościow\\w+", "stał\\w+ odpowied\\w+", "zawsze .?tak", "majority", "najczęstsz\\w+ klas\\w+"],
+          ["wyroczni\\w+", "oracle", "złot\\w+ fragment", "idealn\\w+ kontekst"],
+          ["bez kontekstu", "ślep\\w+", "blind", "bez wyszukiwania", "bez retriev"],
+          ["te same (stałe|parametry|ustawienia|limity)", "jedn\\w+ zmienn\\w+", "jedną zmianę", "zamrożon\\w+"]
+        ],
+        "none": ["72% to dobry wynik"]
+      }
+    },
+    {
+      "id": "wybor-konfiguracji-osobny-zbior",
+      "expect": "trigger",
+      "prompt": "Przetestowaliśmy 40 konfiguracji ekstraktora z LLM (prompt, model, próg, limit kandydatów) na naszych 200 przykładach i najlepsza jest o 4 punkty lepsza od obecnej. Możemy ją wdrożyć i zaraportować ten wynik? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["osobn\\w+ zbi\\w+", "odłożon\\w+", "holdout", "zbi\\w+ testow\\w+", "podział\\w*"],
+          ["przetasowan\\w+", "losow\\w+ etykiet", "shuffl", "permutac\\w+", "szum\\w*"],
+          ["krawęd\\w+", "brzeg\\w+ siatki", "granic\\w+ (siatki|zakresu)", "poszerz\\w+ (siatk|zakres)"]
+        ],
+        "none": ["możecie raportować 4 punkty"]
+      }
+    },
+    {
+      "id": "regresja-ze-sladow",
+      "expect": "trigger",
+      "prompt": "Dopisaliśmy nowe reguły oceny odpowiedzi agenta (np. musi wywołać wyszukiwarkę co najmniej raz). Ponowne uruchomienie agenta na 3000 przypadkach jest drogie, a mamy zapisane ślady z produkcji z ostatniego miesiąca. Jak sprawdzić regresję tanio i powtarzalnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zapisan\\w+ śla\\w+", "na śladach", "ze śladów", "bez ponownego uruchami\\w+", "replay", "odtworz\\w+"],
+          ["wersj\\w+ (promptu|kontraktu|polityki|rubryki)", "manifest", "skrót promptu"],
+          ["próbk\\w+", "negatywn\\w+", "kciuk", "👎"],
+          ["archiw\\w+", "niezmienn\\w+", "wygasa\\w*", "retencj\\w+"]
+        ]
+      }
+    },
+    {
+      "id": "sedzia-zly-powod-zmiana-rubryki",
+      "expect": "trigger",
+      "prompt": "Nasz sędzia LLM zgadza się z etykietami ludzi w 90%, ale po ostatnim strojeniu rubryki jedno kryterium zaczęło dawać dziwne wyniki. Jak zarządzać sędzią w czasie, żeby to wyłapywać i bezpiecznie zmieniać rubrykę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["uzasadnie\\w+", "powod\\w+", "reasoning"],
+          ["zatwierdz\\w+", "akcept\\w+ człowie\\w+", "przegląd\\w* ludz\\w+"],
+          ["wycof\\w+", "rollback", "poprzedni\\w+ wersj\\w+", "wersjonow\\w+"],
+          ["dryf\\w*", "rozrzut\\w* ludzi", "odchyle\\w+", "próbk\\w+ (tygodniow|okresow|cykliczn)"]
+        ]
+      }
     }
   ]
 }

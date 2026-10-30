@@ -36,6 +36,9 @@ wybór po marce („używamy Claude, więc Claude SDK”), bez pytania o wymienn
   pola i promptem, a w kodzie **walidujesz po odbiorze** (`safeParse`, `model_validate`) — wynik SDK bywa typowany
   jako `unknown`. Wartość spoza zakresu = błąd lub ponowienie, nigdy ciche przycięcie.
 - Enum zamiast wolnego tekstu tam, gdzie kod podejmuje decyzję (`pass`/`fail`, kategoria).
+- **Model wskazuje, kod składa.** Gdy wynik to fragment wejścia (linie logu, ślad stosu, cytat), podaj wejście
+  z numerami linii i każ zwrócić numer pierwszej i ostatniej linii; treść odtwarzasz z własnej kopii. Mniej tokenów
+  wyjścia i brak zmyślonej treści; trafność zakresu mierzysz w ewaluacji (ai-evals).
 - Porażkę przebiegu (wyczerpane tury, budżet, nieudana walidacja, odmowa) obsługujesz jawnie czytelnym komunikatem
   i kodem wyjścia; nie pozwalasz, by pętla rzuciła surowym wyjątkiem.
 
@@ -60,6 +63,12 @@ modelu → … → odpowiedź bez wywołań kończy pętlę. Jedno okrążenie =
 - Koszt czytasz z wyniku (gotowy agent: koszt USD, tury, czas, rozbicie per model; SDK do złożenia: tokeny, a koszt
   od dostawcy lub tokeny × cennik). Zapisujesz per przebieg i agregujesz (per PR, per typ zdarzenia, per tydzień).
 - Telemetria per krok (tokeny, powód zakończenia) wyłapuje zapętlenie, zanim dobije do limitu.
+- **Rachunek per zadanie:** w śladzie każdego wywołania zapisujesz pięć liczb: tokeny wejścia, odczyt cache, zapis
+  cache, wyjście i myślenie. Cenę liczysz przy odczycie raportu, bo cennik się zmienia. Raportujesz koszt na
+  *ukończone* zadanie (wszystkie wywołania i ponowienia jednej sprawy) jako p50/p95/p99, a nie średnią na wywołanie.
+  Ogon to zwykle pętla ponowień albo zapętlony agent. „Efektywna cena wejścia” (koszt wejścia / tokeny wejścia)
+  pokazuje, czy cache działa. Praca bez czekającego użytkownika idzie przez API wsadowe (Batch), a powtarzalne
+  pytania mają cache wyniku, nie tylko promptu.
 - Uruchamiasz na zdarzenie, które ma znaczenie, nigdy „w kółko na wszelki wypadek”; tani model do triażu i etykiet,
   mocny tylko tam, gdzie trzeba rozumować nad kodem (zasady doboru: core-cost-control).
 
@@ -114,6 +123,19 @@ Gdy potrzebny adres HTTP, stan między wywołaniami, własny harmonogram lub odp
 stanem (np. Cloudflare Agents na Durable Objects). Co ma przetrwać uśpienie, zapisujesz w stanie trwałym; pola
 w pamięci to cache; zaplanowane zadania idempotentne. Lokalny skrypt wystarcza, dopóki nikt z zewnątrz go nie woła.
 
+## 10. Wzorce wywołań w usłudze
+- **Równoległe analizy mają wspólny termin:** po jego upływie składasz odpowiedź z tego, co zdążyło. Spóźnione wyniki
+  pomijasz i oznaczasz w odpowiedzi, a nie czekasz na najwolniejszą.
+- **Kosztowna analiza na żądanie, cache po jednostce pracy** (zgłoszenie, commit), nie po użytkowniku. Pierwsze
+  żądanie zajmuje wpis warunkowo jako „w toku”, kolejne czekają na wynik zamiast odpalać analizę drugi raz. Wpis
+  „w toku” porzucasz po limicie czasu, żeby awaria nie zablokowała go na zawsze.
+- **Strumień wysyła pełną dotychczasową odpowiedź** w każdym zdarzeniu, więc klient nie skleja tokenów i znosi
+  zgubione zdarzenie.
+- **Ocena użytkownika (👍/👎) przypięta do id śladu.** 👎 w godzinach pracy to alert i kandydat do zbioru regresyjnego.
+- **Zmiana kształtu wyniku:** nowe pole obok starego, dopóki klienci nie przejdą; bez zmiany znaczenia pola w miejscu.
+- **Próg pewności zależy od kosztu błędu:** decyzja „czy ponawiać operację” wymaga wyższego progu niż ekstrakcja do
+  podglądu, bo błędne ponowienie kosztuje więcej.
+
 ## Przykład
 **Sytuacja:** „Chcemy bota, który na każdy PR ocenia diff i daje werdykt, na razie lokalnie: `git diff | npx tsx review.ts`.”
 
@@ -131,7 +153,8 @@ Pełny kod obu wariantów, dodanie narzędzia „czytaj plan” i konfiguracja e
 ## Checklista
 - [ ] kształt i kategoria SDK wybrane pytaniami z §1, wersja SDK przypięta, nazwy API sprawdzone w paczce
 - [ ] schemat wyjścia z opisem każdego pola; walidacja po odbiorze; jawna obsługa porażki przebiegu
-- [ ] limit kroków i budżet na przebieg; koszt zapisywany; uruchamianie na zdarzenie
+- [ ] limit kroków i budżet na przebieg; koszt na ukończone zadanie (p95) z pięcioma liczbami tokenów; uruchamianie na zdarzenie
+- [ ] równoległe wywołania ze wspólnym terminem; cache po jednostce pracy z wpisem „w toku” i limitem czasu
 - [ ] narzędzia: opis „kiedy wołać”, schemat, ścieżka braku danych; zapis za bramką
 - [ ] wiadomo, co agent dziedziczy z repo (i czy powinien)
 - [ ] ścieżka uwierzytelnienia zgodna z wrażliwością danych; treść wejścia = dane
@@ -148,5 +171,9 @@ Pełny kod obu wariantów, dodanie narzędzia „czytaj plan” i konfiguracja e
   `promptfoo` 0.124.1 — asercje `is-json`, `llm-rubric`, `javascript`, zmienna `PROMPTFOO_PASS_RATE_THRESHOLD`.
 - Anthropic, „Agent SDK overview”, „How the agent loop works”, „Modifying system prompts” (code.claude.com/docs) —
   wg kursu, nieotwierane bezpośrednio [niezweryfikowane poza typami paczki].
+
+- Netflix Tech Blog, „Making Failure Diagnosis Reliable with Pensive AI” (2026-10) — zakres zamiast treści, wspólny
+  termin, cache po jednostce pracy, pełna odpowiedź w strumieniu; S. Singhal, „The Economics of Agents” (2026-08-18) —
+  pięć liczb tokenów i koszt per zadanie. Liczby z artykułów [niezweryfikowane].
 
 Opisane własnymi słowami.

@@ -105,6 +105,45 @@
       "expect": "no-trigger",
       "neighbor": "core-agent-security",
       "prompt": "Chcę, żeby agent poprawiał kod w pętli, aż drugi agent-recenzent go zaakceptuje. Jak ustawić limit rund, warunek stopu i uprawnienia, żeby to było bezpieczne?"
+    },
+    {
+      "id": "rutyna-zdobywa-uprawnienia",
+      "expect": "trigger",
+      "prompt": "Od dwóch tygodni codzienna rutyna agenta robi przegląd zgłoszeń i zapisuje raport w pliku. Działa dobrze, więc chcę jej pozwolić od razu komentować zgłoszenia, zamykać duplikaty i otwierać PR-y z poprawkami. Jak to zrobić rozsądnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["szczeb\\w+", "stopniow\\w+", "drabin\\w+", "krok po kroku", "etap\\w*"],
+          ["szkic\\w*", "draft", "po zgodzie", "zatwierdz\\w+"],
+          ["seri\\w+ przebiegów", "bez przekroczenia", "dowod\\w*", "historia przebiegów", "kilka przebiegów"],
+          ["eskal\\w+", "dwóch kolejnych", "powtarzając\\w+ blokad\\w+", "fałszyw\\w+ alarm\\w*", "przeocze\\w+"]
+        ]
+      }
+    },
+    {
+      "id": "goal-warunek-postepu",
+      "expect": "trigger",
+      "prompt": "Chcę puścić /goal na noc z poleceniem „popraw wydajność strony, aż będzie dobrze”. Jak sformułować warunek końca i zatrzymania, żeby agent nie kręcił się w kółko? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["liczb\\w+", "metryk\\w+", "Lighthouse", "mierzaln\\w+", "zmierzon\\w+"],
+          ["bez poprawy", "nie poprawi\\w*", "postęp\\w*", "dwie tury", "2 tury"],
+          ["STOP", "zatrzym\\w+", "limit tur", "maks\\w* tur"],
+          ["to samo polecenie", "powtarza\\w+", "w kółko", "bez zmiany wyniku"]
+        ]
+      }
+    },
+    {
+      "id": "petla-samodoskonalenia-granica",
+      "expect": "trigger",
+      "prompt": "Chcę, żeby nocny agent sam poprawiał swoje prompty i skille na podstawie wyników ewaluacji i commitował zmiany, jeśli wynik rośnie. Jakie granice ustawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["zestaw\\w* ewaluacji", "ewaluacj\\w+ tylko do odczytu", "scenariusz\\w+", "zbiór (testowy|ewaluacyjny|odłożony)"],
+          ["tylko do odczytu", "bez zapisu", "osobn\\w+ repo", "nie może (zmieniać|edytować)"],
+          ["uprawnie\\w+", "piaskownic\\w+", "sandbox", "polityk\\w+"],
+          ["odłożon\\w+", "holdout", "przegląd człowieka", "zatwierdz\\w+ człowie\\w+", "człowiek zatwierdza"]
+        ]
+      }
     }
   ]
 }

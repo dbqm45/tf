@@ -4,7 +4,7 @@ description: Użyj przy ewaluacji funkcji LLM i agentów — zbiory danych, grad
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy trzeba zmierzyć jakość funkcji z LLM lub agenta, a nie tylko napisać pierwszą macierz testów — rozwój sterowany ewaluacjami, projekt zbiorów (złoty, regresyjny, przypadki brzegowe, adwersaryjne, próbki z ruchu, kontaminacja), rodzaje graderów (kod, sędzia LLM z rubryką i kalibracją do ocen ludzi, przegląd ludzki), ocena wyniku i trajektorii agenta, pass@k kontra pass^k, ewaluacje offline i online (A/B, shadow), bramka w CI z progami i alertem regresji, koszt i wariancja ewaluacji, format raportu. Nie do podstawowej macierzy promptfoo, schematu wyjścia i limitów pętli (eng-llm-features), ewaluacji skilli Claude (core-skill-authoring) ani wyroczni testów kodu (qa-spec-first-testing)."
-  slowa: "ewaluacje, evals, eval, zbiór testowy, golden set, sędzia llm, llm-as-a-judge, rubryka, kalibracja sędziego, zgodność z ludźmi, pass@k, pass^k, niespójny agent, trajektoria agenta, regresja jakości, bramka w ci, próg jakości, a/b test, shadow, ewaluacja online, kontaminacja, wariancja ewaluacji, raport z ewaluacji, jak mierzyć jakość agenta"
+  slowa: "ewaluacje, evals, eval, zbiór testowy, golden set, sędzia llm, llm-as-a-judge, rubryka, kalibracja sędziego, zgodność z ludźmi, pass@k, pass^k, niespójny agent, trajektoria agenta, regresja jakości, bramka w ci, próg jakości, a/b test, shadow, ewaluacja online, kontaminacja, wariancja ewaluacji, raport z ewaluacji, jak mierzyć jakość agenta, czy wynik jest dobry, trafność systemu, klasa większościowa, punkt odniesienia, wyrocznia, ramię ślepe, wybór najlepszej konfiguracji, przetestowane konfiguracje, siatka parametrów, przetasowane etykiety, zaraportować wynik, ślady z produkcji, regresja ze śladów, dryf sędziego"
 ---
 
 # Ewaluacje funkcji LLM i agentów
@@ -34,7 +34,9 @@ blokować merge.
    „nieznane / za mało danych”, inny model niż generujący, wynik w ustalonym formacie, **uzasadnienie przed oceną**
    (sędzia z włączonym myśleniem albo pole `reason` przed werdyktem w schemacie). Kalibracja: 30–50 przykładów
    ocenionych przez ludzi, zgodność liczysz (odsetek zgodnych albo kappa Cohena [próg ustal z zespołem]), rozbieżności
-   czytasz i poprawiasz rubrykę. Bez tego sędzia jest nieznanym instrumentem. Szczegóły: `references/zbiory-i-graderzy.md`.
+   czytasz i poprawiasz rubrykę. Bez tego sędzia jest nieznanym instrumentem. Potem sędzia żyje jak kod: zgodność
+   uzasadnień (nie tylko etykiet), próg dryfu z rozrzutu ludzi, zmiana rubryki za zgodą człowieka z wersją do wycofania
+   (`references/zbiory-i-graderzy.md` §5–7).
 6. **Agent: wynik czy trajektoria.** Podstawą jest **wynik** (stan środowiska po przebiegu: rezerwacja istnieje w
    bazie, testy przechodzą), bo sztywne sprawdzanie ścieżki karze poprawne, inne rozwiązania. Trajektorię (wywołania
    narzędzi, liczba kroków, koszt) sprawdzasz osobno: limity, zakazane narzędzia, diagnoza porażek. Dla zadań
@@ -52,7 +54,12 @@ blokować merge.
 10. **Koszt i wariancja.** Policz koszt przebiegu (przypadki × próby × kandydaci × sędzia) przed uruchomieniem;
     tani model do triażu, pełny zestaw tylko przy zmianie. 0% sukcesów w wielu próbach to zwykle zepsute zadanie lub
     grader, nie niezdolny agent. Czytaj transkrypty porażek — to najszybsza diagnoza.
-11. **Raport** w stałym formacie (niżej). Saturacja (zbiór zdaje ~100% i nie odróżnia wersji) → dodaj trudniejsze zadania.
+11. **Interpretuj wynik między granicami** (`references/pulapki-pomiaru.md`): stała klasa większościowa, ramię ślepe
+    (bez kontekstu), wyrocznia (złoty fragment); ramiona z tymi samymi stałymi, jedna zmienna naraz. Konfigurację
+    wybierasz na zbiorze doboru, wynik raportujesz z odłożonego testu; kontrola na przetasowanych etykietach.
+    Nowe reguły oceny puszczasz na zapisanych śladach (z wersją promptu i polityki), bez ponownego uruchamiania agenta.
+12. **Raport** w stałym formacie (niżej), z manifestem pary model + harness. Saturacja (zbiór zdaje ~100% i nie
+    odróżnia wersji) → dodaj trudniejsze zadania.
 
 ## Format raportu
 ```
@@ -78,7 +85,8 @@ Regresje: <zadanie → przyczyna>; Nowe porażki do zbioru: <lista>
 - [ ] agent: ocena wyniku, trajektoria osobno, czyste środowisko, k prób, wybrane pass@k lub pass^k
 - [ ] linia bazowa z rozrzutem; próg w CI wyprowadzony z niej; smoke na PR, pełny zestaw okresowo
 - [ ] koszt policzony przed uruchomieniem; transkrypty porażek przeczytane
-- [ ] ruch online (shadow, A/B) zasila zbiór; raport w stałym formacie
+- [ ] wynik między granicami (klasa większościowa, ramię ślepe, wyrocznia); konfiguracja wybrana poza zbiorem testowym
+- [ ] ruch online (shadow, A/B) zasila zbiór; raport w stałym formacie z manifestem model + harness
 
 ## Źródła
 - Anthropic Engineering, „Demystifying evals for AI agents” (2026-01-09, odczyt 2026-10-17): zadanie, próba, transkrypt,
@@ -89,6 +97,8 @@ Regresje: <zadanie → przyczyna>; Nowe porażki do zbioru: <lista>
   automatyzacja, objętość ponad jakość pojedynczego przypadku, przypadki brzegowe, inny model jako sędzia, rozumowanie sędziego przed oceną.
 - OpenAI, przewodnik po ewaluacjach (platform.openai.com/docs/guides/evals) — [niezweryfikowane]: strona nieosiągalna
   z tego środowiska 2026-10-17; z niej pochodzi tylko ogólna zasada „ewaluacje przy każdym wydaniu”, bez szczegółów API.
+- F. Khan (2026-08-26), A. Punnen (2026-08-18), Netflix Tech Blog (2026-09-04, 2026-10), J. Wąsowski (2026-10-22) —
+  pułapki pomiaru, regresja ze śladów, cykl życia sędziego, bramka zmiany harnessu; liczby autorów [niezweryfikowane].
 - Progi kappa, rozmiar próbki kalibracji (30–50) i reguła „3–5 powtórzeń bazy” to praktyka autorów skilla [założenie].
 
 Opisane własnymi słowami.
