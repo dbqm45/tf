@@ -97,7 +97,7 @@ def check_scenarios(name: str) -> tuple[list[str], list[str], dict]:
                 "(`build.py new-skill` tworzy szkielet)"], [], {}
     errs = ev.validate_file(path)
     data = json.loads(path.read_text(encoding="utf-8"))
-    sc = data.get("scenarios") or []
+    sc = ev.tuning_set(data.get("scenarios") or [])   # holdout nie służy do strojenia podpowiedzi ani opisu
     manual = ev.skill_meta(name).get("disable-model-invocation") == "true"
     trig = [s for s in sc if s.get("expect") == "trigger"]
     no = [s for s in sc if s.get("expect") == "no-trigger"]
@@ -199,7 +199,8 @@ def paid_eval(name: str, models: str, budget: float, baseline: bool, yes: bool) 
     out_dir.mkdir(parents=True, exist_ok=True)
     out = report_path(out_dir, name)
     cmd = [sys.executable, str(TESTS / "run_skill_evals.py"), "--skills", name, "--models", models,
-           "--budget-usd", str(budget), "--out", str(out)] + (["--baseline"] if baseline else []) + (["--yes"] if yes else [])
+           "--budget-usd", str(budget), "--out", str(out), "--holdout", "exclude"] \
+        + (["--baseline"] if baseline else []) + (["--yes"] if yes else [])   # holdout: tylko pomiar, nie bramka
     r = subprocess.run(cmd, text=True, timeout=3600)
     jsonl = out.with_suffix(".jsonl")
     res = [json.loads(l) for l in jsonl.read_text(encoding="utf-8").splitlines()] if jsonl.exists() else []
