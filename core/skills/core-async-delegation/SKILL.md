@@ -57,6 +57,7 @@ Gdy delegujesz zatwierdzony plan kroku (core-delivery-lifecycle, core-project-re
 zamiast pytań:
 - **Zakaz pytań do użytkownika.** Niejednoznaczność → wariant zachowawczy (mniej plików, mniejsza zmiana zachowania,
   najbliżej litery planu), zapisany w raporcie.
+- **„Nie da się w zakresie” to poprawny wynik:** STOP i zgłoszenie, nie obejście granicy (core-agent-security §4).
 - **Przed startem** sprawdza, że każde polecenie weryfikacji z planu da się uruchomić; brak = STOP w tej fazie.
 - **Rozjazd z planem:** drobny (przeniesiony plik, nowa nazwa) → dostosuj i zapisz `ADAPT: …`; strukturalny (brak
   zależności, inna architektura, brak wyniku poprzedniej fazy) → STOP. W wątpliwości — strukturalny.
@@ -112,6 +113,12 @@ tekstem — podsumowaniem z zapowiedzią kolejnego kroku. Pętla, która uznaje 
 Telefon to panel kontrolny, nie miejsce na przegląd diffu. Sprawdzasz: czy przeszedł setup, czy blokada sieci,
 MCP lub sekretu nie zatrzymała pracy, czy agent nie rozszerza zakresu. Decyzja: kontynuuj / doprecyzuj /
 zatrzymaj / zostaw do przeglądu.
+- **Inwentarz przebiegów:** każda rutyna i przebieg ma właściciela (kto uruchomił), zakres uprawnień i sposób
+  zatrzymania. Przegląd inwentarza razem z przeglądem uprawnień (§5).
+- **Zapis, którego agent nie przepisze:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem agenta.
+  Transkrypt agenta to jego relacja, nie niezależny dowód.
+- **Wyłącznik bez współpracy agenta:** zatrzymanie przez platformę (anulowanie przebiegu, odebranie tokenu, zatrzymanie
+  kontenera), a nie prośba do agenta, żeby przestał.
 
 ## 7. Przegląd po
 Przy komputerze: diff, logi, testy i raport wobec kryteriów z kontraktu — nie wobec zielonego statusu. Zmiany

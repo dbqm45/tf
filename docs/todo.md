@@ -640,23 +640,23 @@ nieodwracalne wykonuje człowiek”; `core-async-delegation` ma kontrakt, STOP p
 zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australia, testy CTF Anthropic/Google/Meta).
 Źródeł pierwotnych nie otworzyłem (alignment.openai.com i metr.org poza siecią sesji) — liczby i daty
 [niezweryfikowane], przed dopisaniem do skilla sprawdzić u źródła z datą (researcher). Wnioski niezależne od liczb:
-- [ ] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”:** domyślna odmowa obejmuje też DNS (rozwiązywanie
+- [x] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** domyślna odmowa obejmuje też DNS (rozwiązywanie
   nazw jako kanał: pytania zakodowane w nazwach hostów), proxy pakietów i rejestry (dozwolony serwis = droga na
   zewnątrz), publiczne usługi pośrednie (skanery URL, zdalne przeglądarki); środowisko testowe z dostępem do internetu
   traktujesz jak produkcję.
-- [ ] **Wspólny cache między przebiegami to kanał komunikacji:** rejestr pakietów, cache budowania, katalog
+- [x] **Wspólny cache między przebiegami to kanał komunikacji** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** rejestr pakietów, cache budowania, katalog
   współdzielony — osobne przebiegi agentów mają osobne cache albo cache tylko do odczytu; inaczej „izolowane” agenty
   zostawiają sobie wiadomości.
-- [ ] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji:** poza `.git/config` i hookami także lockfile,
+- [x] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** poza `.git/config` i hookami także lockfile,
   konfiguracja repo i edytora, ścieżka interpretera, pliki czytane przez CI lub narzędzie poza piaskownicą; lista
   „plików wykonywanych później przez kogoś innego” w ochronie ścieżek i w przeglądzie diffu.
-- [ ] **Zapis z przebiegu, którego agent nie przepisze:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem
+- [x] **Zapis z przebiegu, którego agent nie przepisze** (zrobione 2026-10-30: `core-async-delegation` §6, `core-agent-security` §6)**:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem
   agenta (transkrypt agenta nie jest niezależnym dowodem); wyłącznik działający bez współpracy agenta; inwentarz
   przebiegów z właścicielem (kto uruchomił, co ma, jak zatrzymać) — w `core-async-delegation` §6 „Monitorowanie”.
-- [ ] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście:** w poleceniu i w polityce wykonania jawna droga „nie da
+- [x] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b, `core-async-delegation` §4)**:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
-- [ ] **Próba granicy z dowodem, która warstwa zatrzymała** (artykuł „How much access should an AI agent have?”,
+- [ ] **Próba granicy z dowodem, która warstwa zatrzymała** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b; zostaje odnośnik w `ai-mcp-server`) (artykuł „How much access should an AI agent have?”,
   E. Bermudez, 2026-10-14): katalog roboczy to miejsce startu, nie granica; filtr ścieżek w narzędziu plikowym
   (rozwiązana ścieżka, `..`, dowiązania symboliczne — wzór: walidacja w serwerze MCP filesystem) działa tylko dla
   tego narzędzia, a Python lub Bash czyta obok niego. Do `core-agent-security` i `ai-mcp-server`: przed

@@ -1,6 +1,6 @@
 # Polityka uprawnień agenta i dostęp do produkcji
 
-> **Spis treści:** 1. Jak Claude Code rozstrzyga reguły (stan sprawdzony) · 2. Tryby uprawnień — kiedy który · 3. Projektowanie listy allow / ask / deny · 4. Czego reguły nie łapią — obejścia · 4a. Piaskownica Bash — opt-in (sprawdzone na Claude Code… · 4c. Treść z zewnątrz — warstwy obrony (indirect prompt… · 5. Dostęp agenta do produkcji (CLI lub MCP) · 6. Kod u dostawcy modelu · 7. Przykład
+> **Spis treści:** 1. Jak Claude Code rozstrzyga reguły (stan sprawdzony) · 2. Tryby uprawnień — kiedy który · 3. Projektowanie listy allow / ask / deny · 4. Czego reguły nie łapią — obejścia · 4a. Piaskownica Bash — opt-in (sprawdzone na Claude Code… · 4b. Drogi, które omijają granicę · 4c. Treść z zewnątrz — warstwy obrony (indirect prompt… · 5. Dostęp agenta do produkcji (CLI lub MCP) · 6. Kod u dostawcy modelu · 7. Przykład
 
 Źródło faktów o Claude Code: dokumentacja „Configure permissions” i „Settings” (code.claude.com/docs/en/permissions,
 dostęp 2026-10-10). Zachowanie zależy od wersji — przy wątpliwości `/permissions` w bieżącej sesji.
@@ -92,6 +92,31 @@ tylko konfiguracja zarządzana).
     w `.claude/`, czego piaskownica zabrania (`update.py` sprawdza to przed startem).
 - Zadanie wymagające sieci lub localhost: człowiek uruchamia polecenie sam albo czasowo wyłącza piaskownicę u siebie;
   agent tego nie proponuje jako obejścia (sekcja 4).
+
+## 4b. Drogi, które omijają granicę
+Allowlista HTTP i katalog roboczy to nie cała granica. Przed uznaniem agenta za odizolowanego sprawdzasz:
+- **Ruch wychodzący to nie tylko HTTP.** Domyślna odmowa obejmuje też DNS (pytania zakodowane w nazwach hostów
+  wynoszą dane), proxy pakietów i rejestry (dozwolony serwis z prawem publikacji = droga na zewnątrz) oraz publiczne
+  usługi pośrednie (skanery URL, zdalne przeglądarki), które pobiorą adres za agenta. Środowisko testowe z dostępem
+  do internetu traktujesz jak produkcję.
+- **Wspólny cache to kanał.** Rejestr pakietów, cache budowania i katalog współdzielony między przebiegami pozwalają
+  „izolowanym” agentom zostawiać sobie wiadomości i zatruwać sobie wejścia. Osobne przebiegi mają osobne cache albo
+  cache tylko do odczytu.
+- **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji.** Poza `.git/config` i hookami: lockfile,
+  konfiguracja repo i edytora, ścieżka interpretera, pliki czytane przez CI lub narzędzie działające poza
+  piaskownicą. Te pliki są na liście ścieżek chronionych i osobno w przeglądzie diffu.
+- **Katalog roboczy to miejsce startu, nie granica.** Filtr ścieżek w narzędziu plikowym (rozwiązana ścieżka, `..`,
+  dowiązania symboliczne) działa tylko dla tego narzędzia; Python albo Bash czyta obok niego.
+- **Próba granicy z dowodem.** Przed przyznaniem dostępu wykonujesz jedną operację potrzebną i jedną wykluczoną
+  (plik-kanarek poza workspace, osobne żądanie do zabronionego hosta), z poleceniem i wynikiem. W zapisie rozróżniasz
+  „agent odmówił”, „narzędzie odrzuciło” i „środowisko nie pozwoliło”. Tylko to trzecie jest granicą dla kodu, który
+  agent wygeneruje. Ruch sieciowy sprawdzasz próbą, nie samym logiem.
+- **Zadanie niewykonalne w zakresie → STOP i zgłoszenie,** nie obejście. W poleceniu zapisujesz „nie da się
+  w zakresie” jako poprawny wynik. Agent, który deklaruje, że coś jest poza zakresem, nie jest kontrolą — granica
+  musi być w konfiguracji.
+
+Źródła: J. Carson, „Sandboxes, Part 1” (2026-10-14) — przegląd incydentów z 2026, źródeł pierwotnych nie otwarto,
+szczegóły incydentów [niezweryfikowane]; E. Bermudez, „How much access should an AI agent have?” (2026-10-14).
 
 ## 4c. Treść z zewnątrz — warstwy obrony (indirect prompt injection)
 Źródło: platform.claude.com, „Mitigate jailbreaks and prompt injections” (pobrane 2026-10-20). Agent czyta strony,
