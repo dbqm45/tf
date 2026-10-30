@@ -115,6 +115,9 @@ Praktyka:
   a szczegóły trzymaj w `references/` (`build.py check` ostrzega).
 - Zadanie niezwiązane z poprzednim zaczynasz od `/clear`.
 - Eksploracja i długie wyjścia (testy, logi, dokumentacja) idą do subagenta. Do głównej sesji wraca tylko raport.
+- **Szum z terminala:** najpierw reportery „tylko błędy” (`--reporter=dot`, `pytest -q`, `--silent`) i log do pliku
+  czytany fragmentami; hook filtrujący każde polecenie to obcy kod z dostępem do wszystkiego (`skill_audit`, zgoda
+  człowieka). Skutek mierzysz kosztem na udane zadanie, nie liczbą tokenów.
 - **Serwery MCP kosztują w każdej turze:** każdy podłączony serwer dokłada definicje wszystkich swoich narzędzi do
   każdego zapytania. Podłączaj tylko serwery potrzebne w tym projekcie, wybieraj takie z małą liczbą uniwersalnych
   narzędzi (wzorzec „wyszukaj + wykonaj”), a gdy wiadomo, jakie polecenie uruchomić — CLI zamiast MCP.
@@ -129,16 +132,15 @@ Praktyka:
   wznowienia od fazy N) / najpierw przegląd tej fazy.
 
 ## 7. Pomiar
+**Diagnoza przed dźwignią:** zanim zmienisz model, ustal, czy problem dotyczy kontekstu (pliki czytane w całości
+wiele razy, wejście:wyjście ~100:1, niskie trafienia cache), modelu (porażki klasy zadań mimo dobrego kontekstu) czy
+pomiaru (tokeny szacowane ze znaków) — `references/model-i-automatyzacja.md` §6.
+
 - **Pasek stanu** (`.claude/hooks/statusline.py`): model, effort, zapełnienie kontekstu, trafienia cache (z dopiskiem
   „zimny”, gdy cache wygasł), koszt sesji, limity. Nie zużywa tokenów modelu.
 - `/usage` — trafienia cache sesji i prawdopodobna przyczyna ostatniego pudła.
-- `python3 factory/cost_report.py --days 7` — koszt per agent i model, eskalacje, sygnały `Tier:` i rekomendacje
-  zmiany tieru ról.
-- `python3 factory/cost_report.py --delegation` — koszt wykonawców wg klasy z briefu (hook `log_usage` zapisuje każde
-  wywołanie Agent w `.claude/logs/delegation.jsonl`). Klasa droga przy krótkim raporcie → rób takie zadania sam.
-- `python3 factory/cost_stats.py` (`--period day|week|month`) — tokeny, udział modeli, koszt w USD i PLN (kurs średni
-  NBP), zmiany w gicie i pasmo „tanio / typowo / drogo” względem mediany poprzednich okresów; luki w logach oznacza
-  „dane niepełne”. Przyczyny kosztu etapu i tiery wykonawców ocenia retrospektywa agentów (core-agent-retro).
+- Raporty kosztów z logów (`factory/cost_report.py`, `factory/cost_stats.py`) — polecenia i opcje:
+  `references/model-i-automatyzacja.md` §7; przyczyny kosztu etapu ocenia core-agent-retro.
 
 ## 8. Ocena nowego modelu (zanim zmienisz domyślny)
 - **Wyników z różnych raportów nie porównujesz wprost.** Wynik w rankingu to zestaw zadań + metryka + protokół (harness stały
@@ -163,13 +165,8 @@ Szczegóły i polecenie dla modelu rozumującego: `references/model-i-automatyza
 Szczegóły: `references/model-i-automatyzacja.md` §2–3; kontrakt pracy bez nadzoru: core-async-delegation.
 
 ## Przykład
-**Sytuacja:** wykonawca na `sonnet` dwa razy poprawiał niestabilny test terminu płatności (strefy czasowe) — dalej pada.
-
-**Wynik:** eskalacja o jeden poziom: `Agent(model: "opus")` z opisem obu nieudanych prób i zadaniem „przyczyna +
-plan, bez wdrażania”. Powód: błąd bez oczywistej przyczyny po próbie, dotyczy pieniędzy. Implementacja planu wraca
-na `sonnet`; raport wykonawcy kończy linia `Tier: za niski — …`, więc przy podobnym zadaniu od razu wybierasz `opus` do diagnozy.
-
-Więcej przykładów: `references/przyklady.md`.
+Eskalacja `sonnet` → `opus` po dwóch nieudanych poprawkach niestabilnego testu i powrót implementacji na `sonnet`:
+`references/przyklady.md` §2; tam też pozostałe przykłady.
 
 ## Checklista
 - [ ] tier wybrany rubryką (sprawdzalność, odwracalność, decyzja, ryzyko, zakres), a nie z przyzwyczajenia

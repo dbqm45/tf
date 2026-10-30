@@ -66,6 +66,32 @@
       "expect": "no-trigger",
       "prompt": "Jak zrobić tryb ciemny z użyciem CSS custom properties i light-dark()?",
       "neighbor": "fe-css"
+    },
+    {
+      "id": "bff-i-ssr-na-brzegu",
+      "expect": "trigger",
+      "prompt": "Mamy aplikację webową i mobilną na wspólnym REST API, a frontend renderujemy SSR na brzegu (edge) blisko użytkownika. Strony z danymi z bazy w jednym regionie ładują się wolniej niż przed migracją na edge. Czy dołożyć BFF i co z tym renderowaniem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["BFF", "backend for frontend", "backend dla frontendu"],
+          ["na klienta", "per klient", "osobn\\w+ (dla|na) (web|mobil)", "web i mobil\\w*"],
+          ["region\\w* (bazy|danych)", "blisko danych", "przy danych", "odległo\\w+ od bazy", "opóźnieni\\w+ do bazy"],
+          ["statyczn\\w+ (skorup|powłok|szkielet)", "strumieni\\w+", "Partial Prerendering", "PPR", "shell"]
+        ]
+      }
+    },
+    {
+      "id": "micro-frontends-dwie-wersje-frameworka",
+      "expect": "trigger",
+      "prompt": "Mamy 4 micro-frontendy na Module Federation i po ostatnim wdrożeniu na jednej stronie ładują się dwie różne wersje Reacta, a hooki się sypią. Jak temu zapobiec i czy w ogóle potrzebujemy micro-frontendów przy zespole 12 osób? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["singleton"],
+          ["strictVersion", "requiredVersion", "wymagan\\w+ wersj\\w+"],
+          ["CI", "kontrol\\w+ wersji", "sprawdz\\w+ (w|przy) (CI|buildzie)"],
+          ["monolit\\w* modularn\\w+", "modularn\\w+ monolit\\w*", "niezależn\\w+ wdroże\\w+"]
+        ]
+      }
     }
   ]
 }

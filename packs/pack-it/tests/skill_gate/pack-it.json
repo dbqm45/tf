@@ -108,8 +108,8 @@
   "offline": "2026-10-30"
  },
  "data-analysis": {
-  "fingerprint": "40e46e030d150edd",
-  "offline": "2026-10-22"
+  "fingerprint": "489899da2605b8b8",
+  "offline": "2026-10-30"
  },
  "data-engineering": {
   "fingerprint": "a9349fbd1aa31e4f",
@@ -244,8 +244,8 @@
   "offline": "2026-10-30"
  },
  "fe-architecture": {
-  "fingerprint": "20b8b218ab6de5d9",
-  "offline": "2026-10-22"
+  "fingerprint": "97bd5edd33b6da99",
+  "offline": "2026-10-30"
  },
  "fe-css": {
   "fingerprint": "ea5115fb50cbd3fc",

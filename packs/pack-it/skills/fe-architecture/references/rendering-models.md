@@ -71,6 +71,12 @@ serwerowymi `RenderMode.Server | Prerender | Client`) pozwalają dobrać model *
 
 Przykład: strona produktowa z CMS — ISR; panel użytkownika — SSR lub CSR; strona główna/marketing — SSG.
 
+**Obliczenia przy danych, nie przy użytkowniku.** SSR na brzegu (edge) bez rozproszonej bazy wykonuje kilka zapytań
+przez pół świata i bywa wolniejszy niż render w regionie bazy. Wzorzec: brzeg serwuje statyczną skorupę strony
+z cache, a dynamiczne części są strumieniowane z funkcji w regionie danych (np. Partial Prerendering w Next.js).
+Zanim przeniesiesz render na brzeg, zmierz czas do pierwszego bajtu z zapytaniami do bazy, nie bez nich. Status
+konkretnych produktów brzegowych u dostawców zmienia się — sprawdź w ich dokumentacji z datą.
+
 **Alternatywa MPA 2026:** zwykła aplikacja wielostronicowa + cross-document View Transitions + Speculation Rules
 (prefetch/prerender) daje płynne przejścia bez routera klienta — rozważ dla serwisów treściowych
 (routing/client-side-routing.md).

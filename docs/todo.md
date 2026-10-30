@@ -725,7 +725,7 @@ wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni
   (`ops-observability`, odnośnik z `ai-agents`).
 
 ## Szum z wyjścia narzędzi i zatwierdzenie związane z dowodem (artykuły „Reduce Token Waste”, E. Gomziakov, 2026-06-25; „How to Verify AI-Generated Code … Accension”, Sourik, 2026-10, zapisane 2026-10-29)
-- [ ] **`core-cost-control`: szum z terminala** — wyjście testów, buildów, `git diff` i logów to główne źródło
+- [x] **`core-cost-control`: szum z terminala** (zrobione 2026-10-30: §6; RTK i podobne bez rekomendacji) — wyjście testów, buildów, `git diff` i logów to główne źródło
   zbędnych tokenów; najpierw tanie środki bez nowych zależności: reportery „tylko błędy” (`--reporter=dot`,
   `pytest -q`, `--silent`), `head`/`tail`, zapis pełnego logu do pliku i czytanie fragmentu. Narzędzia pośrednie
   (RTK — sprawdzone 2026-10-29: hook PreToolUse przepisujący polecenia Bash, CLI Apache-2.0, silnik i proxy BUSL-1.1,
@@ -741,14 +741,14 @@ wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni
 ## Wzorce architektury frontendu — braki (artykuł „Every Frontend Architecture Pattern Explained”, T. Kanjariya, 2026-08-06, zapisane 2026-10-29)
 Przegląd 2026-10-29: `fe-architecture` ma style (monolit modularny, micro-frontends z Module Federation 2.0, FSD),
 modele renderowania per trasa (CSR/SSR/SSG/ISR/RSC, hydratacja) i BFF tylko jako miejsce sesji. Niski priorytet:
-- [ ] **BFF jako wzorzec:** osobny cienki backend na klienta (web, mobile), własność zespołu frontendu, kształt danych
+- [x] **BFF jako wzorzec** (zrobione 2026-10-30: `fe-architecture/references/architecture-styles.md`)**:** osobny cienki backend na klienta (web, mobile), własność zespołu frontendu, kształt danych
   pod jeden interfejs; kiedy nie (jeden klient = zbędny przeskok sieciowy); koszt: kolejny serwis i pojedynczy punkt
   awarii (źródła: Calçado 2015, Newman — sprawdzić).
-- [ ] **Obliczenia przy danych, nie przy użytkowniku:** SSR na brzegu bez bazy rozproszonej bywa wolniejszy niż render
+- [x] **Obliczenia przy danych, nie przy użytkowniku** (zrobione 2026-10-30: `fe-architecture/references/rendering-models.md`; status produktów brzegowych bez wpisu)**:** SSR na brzegu bez bazy rozproszonej bywa wolniejszy niż render
   w regionie bazy; brzeg serwuje statyczną skorupę, dynamiczne części strumieniowane z regionu danych (Partial
   Prerendering). Status Vercel Edge Functions („deprecated” wg artykułu) sprawdzić w dokumentacji z datą
   [niezweryfikowane].
-- [ ] **Micro-frontends — typowa porażka i próg:** dryf współdzielonych zależności (dwie wersje frameworka na jednej
+- [x] **Micro-frontends — typowa porażka i próg** (zrobione 2026-10-30: `architecture-styles.md`)**:** dryf współdzielonych zależności (dwie wersje frameworka na jednej
   stronie) → `singleton` i `strictVersion`/`requiredVersion` w federacji, kontrola wersji w CI; decyzja wg bólu
   wdrożeń między zespołami, nie złożoności aplikacji (heurystyka autora: < ~15 osób monolit modularny; 50+ i zespoły
   blokujące się przy wdrożeniach → micro-frontends) — jako heurystyka, nie reguła.
@@ -918,7 +918,7 @@ ewaluacji); dotyczy wystąpień ustnych, a materiał kończy się reklamą płat
 
 ## Regresja przy powtarzających się kolumnach (artykuł „What “Singular Matrix” Really Means”, K. Nahar, 2026-10-20, zapisane 2026-10-29)
 Przegląd 2026-10-29: `data-analysis` wspomina tylko „brak silnej współliniowości” w założeniach regresji. Brak:
-- [ ] **`data-analysis`, macierz niepełnego rzędu:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
+- [x] **`data-analysis`, macierz niepełnego rzędu** (zrobione 2026-10-30: `references/statystyka.md`, zachowanie bibliotek opisane ogólnie)**:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
   wolny) i kolumna stała w danych to ten sam problem — dane nie rozróżniają współczynników. Biblioteki reagują różnie:
   numpy przerywa („Singular matrix”), statsmodels ostrzega i wybiera rozwiązanie o najmniejszej normie, scikit-learn
   według autora po cichu zwraca inne [niezweryfikowane — sprawdzić na wersjach z projektu]; przed interpretacją
@@ -939,7 +939,7 @@ znaki/4) [niezweryfikowane]. Braki:
   nadmiaru tnie strukturę, a cięcie zabezpieczenia wymaga osobnego uzasadnienia; do rozważenia jako hook fabryki
   (ostrzeżenie jak `tdd_guard` przy osłabieniu testu) — tylko na prośbę użytkownika (`.claude/hooks/`). Zasada
   wdrażania reguł z artykułu: element zostaje, jeśli ablacja pokazuje korzyść; remis = nie wchodzi.
-- [ ] **`core-cost-control`, diagnoza przed dźwignią:** problem kontekstu (te same pliki czytane w całości kilka razy,
+- [x] **`core-cost-control`, diagnoza przed dźwignią** (zrobione 2026-10-30: §7)**:** problem kontekstu (te same pliki czytane w całości kilka razy,
   stosunek tokenów wejścia do wyjścia ~100:1 i więcej, częste kompaktowanie, niskie trafienia cache mimo stałego
   promptu, agent co sesję odkrywa, kto jest właścicielem czego) → inżynieria kontekstu; problem modelu (wysoki odsetek
   porażek klasy zadań mimo dobrego kontekstu, wiele tur do pierwszej poprawnej edycji) → zmiana modelu; problem pomiaru
@@ -1061,7 +1061,7 @@ próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezw
 Przegląd 2026-10-29: `data-analysis` ma zmienne zakłócające, paradoks Simpsona, „korelacja to nie przyczynowość”,
 a w `references/szeregi-czasowe-i-ekonometria.md` różnicę w różnicach i zmienne instrumentalne. Wielkość rynku
 i odsetki z artykułu [niezweryfikowane]. Braki:
-- [ ] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** — najpierw graf przyczynowy (DAG)
+- [x] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** (zrobione 2026-10-30: `references/szeregi-czasowe-i-ekonometria.md`) — najpierw graf przyczynowy (DAG)
   z ekspertem domeny: czynnik zakłócający kontrolujesz, mediatora i zderzacza (collider) nie (kontrola mediatora
   blokuje badany efekt, zderzacza — wprowadza obciążenie); potem metoda: wagi skłonności (propensity), zmienne
   instrumentalne, podwójne ML z cross-fittingiem, lasy przyczynowe; ATE („czy działa”) vs CATE/uplift („dla kogo”
