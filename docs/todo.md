@@ -1502,6 +1502,60 @@ i agentskills.io. Braki:
   - **Recenzent dostaje dowody źródłowe i kryteria,** nie tylko gotową prozę. Zgoda drugiego agenta na tych samych
     źródłach nie jest niezależnym dowodem.
 
+## Świadek każdego kroku: reguły według modalności, ocena klasyfikatorów decyzji i narzędzi kontekstu (artykuł „Grounded Reasoning For Agents: Ontologies, Decision Models And Every Way An Agent Can Reason”, A. Alcaraz, 2026-10-20; zapisane 2026-10-30)
+Przegląd 2026-10-30. Co już jest:
+- bramka zdefiniowana skutkami i próg jako polityka (sekcja „Bramka przed narzędziem”);
+- kaskada modeli w `core-cost-control` i `arch-ai-solutions`;
+- graf i ontologia do wyszukiwania i proweniencji w `ai-rag`;
+- rola a typ (strona, rola, faza) w `ddd-archetypes`.
+
+Sprawdzone 2026-10-30 w źródłach:
+- `bcallender/agent-context-workshop` (README): agent z grafem i agent z grepem prawie remisują w pojedynczym
+  przebiegu (21/30 vs 19/30). Graf wygrywa powtarzalnością (dobrze w każdym przebiegu: 19/30 vs 11/30), zużywa ok.
+  3× mniej tokenów wejścia, a odsetek użycia grafu rośnie z 34% do 72% po podpowiedzi.
+- `dogwood-policy/dogwood` (README i przewodnik `04-temporal-expressions.md`): składnia z Cedar plus warunki czasowe
+  `formerly`, `previous` i `since` z obowiązkowym oknem. Okno ograniczone przez `max_window`, domyślnie 24h.
+  Interpreter referencyjny, nie do produkcji.
+
+Niedostępne przez proxy (403): arXiv, typesafe.ai, randalolson.com, docs.cedarpolicy.com, w3.org, huggingface.co,
+hanxiao.io. Pozostałe liczby z artykułu [niezweryfikowane], w tym:
+- OntoMetric: 83,3% → 19,44% błędów;
+- EvoOntology: 64,6 / 69,5 / 81,8;
+- JevAgentHarness: −19,0 pkt bez progu;
+- kaskada Sena: 88,4% automatycznie.
+
+Braki:
+- [ ] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”:**
+  - Przegląd kroków agenta: krok, którego jedynym sprawdzeniem jest dalszy tekst tego samego modelu, jest przyjęty
+    na wiarę.
+  - Reguła trafia w miejsce zależne od modalności:
+    - o stanie → schemat lub kształt sprawdzany przy zapisie;
+    - o jednej akcji → polityka per żądanie (domyślnie odmowa, `forbid` wygrywa z `permit`);
+    - o sekwencji akcji → reguła czasowa nad dziennikiem zdarzeń („zatwierdzenie w ciągu 1h przed sprzedażą”).
+  - Werdykt bramki (wykonaj / odmów / eskaluj) ma być powtarzalny dla tego samego zapisanego stanu. Reguła tylko
+    w prompcie albo werdykt zwracany wyłącznie agentowi niczego nie gwarantuje.
+  - Log zapisuje, który świadek sprawdził krok.
+  - Dla fabryki: hook `tdd_guard` jest właśnie regułą czasową („edycja kodu dozwolona, jeśli od ostatniej zmiany
+    testu był czerwony przebieg”). Warto zapisać reguły hooków jako predykaty nad logiem hooków i testować je
+    odtworzeniem zapisanych śladów (jak `dogwood replay`). Zmiana hooków tylko na prośbę człowieka.
+- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (LLM jako klasyfikator albo model decyzyjny):
+  - Test kolejności i nazw opcji: przetasować i przemianować, policzyć zmiany odpowiedzi.
+  - Próg dopasowany na własnych etykietach **osobno dla każdego punktu decyzji**, nigdy domyślne 0,5.
+  - Kaskada mierzona względem samego drogiego modelu.
+  - Szczególna ostrożność przy krokach nieodwracalnych: pewny błędny wybór na takim kroku to typowa porażka.
+  - Przed przypisaniem zysku dostrajaniu — kontrola na zamrożonym modelu bazowym tym samym promptem, a nie od
+    losowo zainicjalizowanej głowy.
+  - Zbiór testowy rozdzielony po przypadku (ten sam dokument nie trafia na obie strony), najlepiej zamknięty.
+    Publiczny benchmark się nasyca.
+  - Zmiana słów w definicjach opcji to zmiana modelu: ponowny test.
+  - Licencję sprawdzać w pliku wag, modelu bazowym i danych, nie na odznace repozytorium.
+- [ ] **`eng-codebase-mapping` / `ai-rag`, ocena narzędzi kontekstu (graf, indeks, mapa kodu):**
+  - Obok trafności w jednym przebiegu: powtarzalność (dobrze w każdym z N przebiegów), tokeny wejścia oraz **odsetek
+    użycia** — czy agent w ogóle sięga po narzędzie.
+  - Fabryka ma już `hint_report.py` („podpowiedziany, a nieużyty”), więc da się to policzyć dla skilli i map.
+  - Warstwę wiedzy podawać przez narzędzia zwracające mały podgraf ze źródłami, nie wklejać do promptu (EvoOntology:
+    wklejona warstwa gorsza niż jej brak [niezweryfikowane]).
+
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
 [niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
@@ -1522,4 +1576,5 @@ Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od 
 - https://github.com/paoloap-py/agent-harness-guide (repo z przykładami warstw harnessu — 403 przez proxy GitHub dla tego repo)
 - https://medium.com/@marvelous_catawba_otter_200/seven-agent-design-patterns-and-how-to-combine-them-d2168c875722 (obrazy artykułu; Medium 403)
 - https://docs.temporal.io/activities, https://docs.langchain.com/oss/python/langgraph/persistence (proxy 403, 2026-10-30)
+- arxiv.org (2610.21412, 2609.26550, 2610.18773, 2609.15779, 2512.01289, 2610.17205), docs.typesafe.ai, randalolson.com, docs.cedarpolicy.com, w3.org/TR/shacl, huggingface.co, hanxiao.io (artykuł A. Alcaraza; proxy 403, 2026-10-30)
 Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2026-10-30: 403) — treść pochodziła z wklejek.
