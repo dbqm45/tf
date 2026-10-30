@@ -10,10 +10,8 @@ metadata:
 # Testowanie
 
 ## TDD — cykl
-1. **Red** — najmniejszy test opisujący następne zachowanie (i sprawdź, że pada z właściwego powodu).
-2. **Green** — najprostszy kod, który przechodzi.
-3. **Refactor** — popraw strukturę przy zielonych testach.
-Przy bugfixie: najpierw test odtwarzający błąd. Testuj **zachowanie przez publiczne API**, nie implementację.
+Red → green → refactor; w kroku red sprawdź, że najmniejszy nowy test pada **z właściwego powodu**. Przy bugfixie
+najpierw test odtwarzający błąd. Testuj **zachowanie przez publiczne API**, nie implementację.
 Praca agenta: najpierw uzgodnione spoiny, potem pionowe plasterki po jednym teście, refaktoryzacja jako jawny osobny krok,
 anty-wzorce (test związany z implementacją, tautologiczny, cięcie poziome) i **bramka przed fazą** (kiedy TDD, a kiedy
 zwykła implementacja; budżet 2–5 testów na fazę) — `references/tdd-z-agentem.md`.
@@ -47,10 +45,8 @@ zwykła implementacja; budżet 2–5 testów na fazę) — `references/tdd-z-age
 - **Example Mapping** przed implementacją: historia → reguły → przykłady → pytania. Za dużo pytań = historia nie jest gotowa.
 
 ## Proporcje testów
-- Dużo szybkich testów logiki domeny (bez frameworka, bazy, sieci) — tu jest wartość i szybka informacja zwrotna.
-- Testy integracyjne na krawędziach: repozytorium z prawdziwą bazą (np. kontenery testowe), klient HTTP, kolejka.
-- Nieliczne testy end-to-end dla krytycznych ścieżek użytkownika.
-- Front: więcej testów komponentów/integracji niż jednostkowych szczegółów („trofeum testów”).
+- Najwięcej szybkich testów logiki domeny; integracyjne na krawędziach (repozytorium z prawdziwą bazą, klient HTTP,
+  kolejka); nieliczne E2E. Front: przewaga testów komponentów („trofeum testów”).
 - **Prawdziwa baza**, gdy reguła zależy od ograniczeń, kaskad, unikalności, realnego SQL — mock by tu skłamał.
   **Stub klienta**, gdy trzeba wywołać awarię w środku sekwencji (druga z trzech operacji pada), czego prawdziwa baza
   łatwo nie zasymuluje — zapis nieatomowy testujesz stubem dla gałęzi częściowych awarii.
@@ -75,8 +71,8 @@ zwykła implementacja; budżet 2–5 testów na fazę) — `references/tdd-z-age
 - **Testy charakteryzujące** przed refaktorem legacy — utrwalają obecne zachowanie.
 
 ## Dobre testy
-Szybkie, niezależne, powtarzalne, samosprawdzające się, czytelne (nazwa = zachowanie: `rejects_block_when_resource_disabled`).
-Jeden powód porażki na test. Brak `sleep` — kontrolowany czas (zegar jako zależność).
+Nazwa = zachowanie (`rejects_block_when_resource_disabled`), jeden powód porażki na test, brak `sleep` — zegar jako
+zależność.
 
 ## Testy czytelne dla biznesu
 - **Buildery w języku domeny** zamiast ręcznego składania obiektów: `projekt("P1").wymaga(kompetencja("JAVA-MID"), styczeń).zarabia(10_000)`.

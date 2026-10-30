@@ -9,7 +9,6 @@ metadata:
 
 # Ewaluacje funkcji LLM i agentów
 
-Ewaluacja zamienia „wydaje się lepsze” w liczbę, na której opiera się decyzja: wypuścić, cofnąć, zmienić model.
 Podstawową macierz (przypadki × kandydaci, asercje, podłożone błędy) daje **eng-llm-features** §8; ten skill zaczyna się
 tam, gdzie pierwsza macierz przestaje wystarczać: zbiory rosną, ocena jest subiektywna, agent bywa niespójny, a wynik ma
 blokować merge.
