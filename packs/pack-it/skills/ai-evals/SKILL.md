@@ -85,6 +85,7 @@ Regresje: <zadanie → przyczyna>; Nowe porażki do zbioru: <lista>
 - [ ] agent: ocena wyniku, trajektoria osobno, czyste środowisko, k prób, wybrane pass@k lub pass^k
 - [ ] linia bazowa z rozrzutem; próg w CI wyprowadzony z niej; smoke na PR, pełny zestaw okresowo
 - [ ] koszt policzony przed uruchomieniem; transkrypty porażek przeczytane
+- [ ] awarie poza modelem (UI, sesja, narzędzia, integracje, izolacja, koszty) w planie testów — qa-test-design
 - [ ] wynik między granicami (klasa większościowa, ramię ślepe, wyrocznia); konfiguracja wybrana poza zbiorem testowym
 - [ ] ruch online (shadow, A/B) zasila zbiór; raport w stałym formacie z manifestem model + harness
 

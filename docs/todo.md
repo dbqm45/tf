@@ -670,7 +670,7 @@ Przegląd 2026-10-29: `ai-evals` ocenia odpowiedzi modelu, `fe-architecture` ma 
 pusto, dane), `be-auth-security` i `ai-rag` — uprawnienia i izolację najemców. Brakuje jednej listy kontrolnej awarii,
 które nie są winą modelu. Średni priorytet; jako `references/` w `qa-test-design` (odnośnik z `ai-evals` i
 `eng-llm-features`), najpierw scenariusze ewaluacji:
-- [ ] **Lista „aplikacja z AI poza modelem”** z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
+- [x] **Lista „aplikacja z AI poza modelem”** (zrobione 2026-10-30: `qa-test-design/references/aplikacja-ai-poza-modelem.md`, odnośnik w `ai-evals`) z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
   wymuszenie 403/500/timeout/wygasłego tokenu i porównanie ekranu z odpowiedzią, akcja naprawcza pasuje do przyczyny;
   (2) długie zadanie agenta a zerwane połączenie — rozłączenie, zakończenie w tle, powrót: prawdziwy stan końcowy bez
   wiecznego „pracuję…”; (3) routing modeli — sesja przypięta do taniej trasy po pierwszej trywialnej wiadomości,
@@ -1086,7 +1086,7 @@ stan, punkty zatwierdzenia) i w fazach pdi z bramkami; artykuł nie wnosi metody
   rodzica); blokada w Redis tylko dla efektywności, dla poprawności tokeny ogrodzeniowe (Kleppmann). Wersje baz
   i domyślne limity z artykułu (MySQL 9.7 LTS, `innodb_lock_wait_timeout` 50 s, Postgres `deadlock_timeout` 1 s)
   sprawdzić przed wpisaniem.
-- [ ] **`core-skill-authoring`, specyfikacja wyniku przed przepływem:** skill z instrukcji krok po kroku daje płaski
+- [x] **`core-skill-authoring`, specyfikacja wyniku przed przepływem** (zrobione 2026-10-30: Procedura krok 1)**:** skill z instrukcji krok po kroku daje płaski
   wynik; lepiej wziąć najlepszy istniejący artefakt (np. PRD, który przeszedł przegląd bez pytań) i wypisać decyzje,
   których ogólny szablon nie zna (kolejność sekcji pod czytelnika, nierówna głębia, język sekcji przypadków brzegowych
   pod QA, ograniczenia prawne wprost, metryka jako zachowanie) — to staje się treścią skilla i scenariuszami ewaluacji;

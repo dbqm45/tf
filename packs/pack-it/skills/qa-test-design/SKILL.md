@@ -4,7 +4,7 @@ description: Użyj przy projekcie przypadków i planu testów — klasy równowa
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj przy projektowaniu przypadków testowych i planu testów w dowolnej technologii — klasy równoważności, wartości brzegowe, tablice decyzyjne, przejścia stanów, testy parami, testowanie oparte na ryzyku, dobór poziomu testu, format przypadku z oczekiwanym wynikiem i jego źródłem. Nie do pisania kodu testów (tool-*)."
-  slowa: "strategia testów dla całego projektu, projekt prawie bez testów, od czego zacząć testy, co ma się znaleźć w strategii testów"
+  slowa: "strategia testów dla całego projektu, projekt prawie bez testów, od czego zacząć testy, co ma się znaleźć w strategii testów, aplikacja z AI, asystent AI w aplikacji, awarie poza modelem, przypadki testowe dla agenta, text-to-SQL, integracja z Google Drive"
 ---
 
 # Projektowanie testów
@@ -49,6 +49,8 @@ Kolumna **Źródło wyniku** jest obowiązkowa (qa-spec-first-testing). Brak źr
 Strategia i plan testów (weryfikacja vs walidacja, czarna/biała/szara skrzynka, dymne, sanity, regresja, UAT, model V
 i praca zwinna, kryteria wejścia i wyjścia, raport z testów, analiza ucieczek defektów): `references/strategia-i-plan-testow.md`.
 Testy wydajnościowe: qa-performance-testing.
+Aplikacja z AI (agent, narzędzia, integracje, text-to-SQL): poza ewaluacjami modelu dziewięć klas awarii, które nie są
+winą modelu, z testem do każdej — `references/aplikacja-ai-poza-modelem.md`.
 
 ## Wynik
 `docs/project/05-plan/test-plan.md` (szablon core-project-record): zakres, ryzyka, techniki, poziomy, przypadki (lub link do

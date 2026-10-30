@@ -160,6 +160,19 @@
           ]
         ]
       }
+    },
+    {
+      "id": "skill-od-wzorcowego-wyniku",
+      "expect": "trigger",
+      "prompt": "Napisałem skill do pisania PRD jako listę kroków (zbierz kontekst, opisz problem, dodaj wymagania, dodaj metryki). Wyniki są poprawne, ale płaskie i generyczne, a nasz najlepszy PRD z zeszłego kwartału przeszedł przegląd bez pytań. Jak przebudować skill? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wzorcow\\w+ (wynik|artefakt|PRD|dokument)", "najlepsz\\w+ (PRD|dokument|artefakt)", "od wyniku", "przykład\\w* wynik\\w*"],
+          ["decyzj\\w+", "czego szablon nie", "kolejnoś\\w+ sekcji", "nierówn\\w+ głębi\\w*", "pod czytelnika"],
+          ["pytani\\w+ (przed|na start)", "zada\\w+ pytani\\w+", "co musi być prawdą"],
+          ["scenariusz\\w*", "ewaluacj\\w+"]
+        ]
+      }
     }
   ]
 }
