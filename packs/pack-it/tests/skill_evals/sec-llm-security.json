@@ -77,6 +77,19 @@
       "expect": "no-trigger",
       "prompt": "Agent Claude Code chce uruchomić polecenie curl | bash skopiowane z README obcego repo. Czy mu pozwolić?",
       "neighbor": "core-agent-security"
+    },
+    {
+      "id": "sql-od-modelu-tylko-odczyt",
+      "expect": "trigger",
+      "prompt": "Nasz agent analityczny generuje SQL i wykonuje go na DuckDB podłączonym w trybie tylko do odczytu. Uważamy, że to wystarczy, żeby złośliwe pytanie nic nie zepsuło ani nie wyniosło. Mamy rację? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["nie wystarcz\\w*", "za mało", "nie chroni"],
+          ["plik\\w*", "rozszerze\\w+", "dołącz\\w+ baz", "ATTACH", "read_csv", "zewnętrzn\\w+ dostęp"],
+          ["enable_external_access", "lock_configuration", "autoload\\w*", "konfiguracj\\w+ silnika", "blokad\\w+ w silniku"],
+          ["limit\\w* (czasu|wierszy)", "timeout", "koszt\\w* planu", "jedno SELECT"]
+        ]
+      }
     }
   ]
 }

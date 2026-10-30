@@ -1,7 +1,7 @@
 {
  "ai-agents": {
-  "fingerprint": "f320207c82c3ff1c",
-  "offline": "2026-10-23"
+  "fingerprint": "d6c236372fe720be",
+  "offline": "2026-10-30"
  },
  "ai-computer-vision": {
   "fingerprint": "111f72476294f01d",
@@ -44,7 +44,7 @@
   "offline": "2026-10-22"
  },
  "ai-rag": {
-  "fingerprint": "d20ffb41aefe9446",
+  "fingerprint": "83da9012d9b764fc",
   "offline": "2026-10-30"
  },
  "ai-research-methods": {
@@ -52,12 +52,12 @@
   "offline": "2026-10-22"
  },
  "arch-ai-solutions": {
-  "fingerprint": "d88dc8840201ea3f",
-  "offline": "2026-10-22"
+  "fingerprint": "42e6c6b9dcefdd1f",
+  "offline": "2026-10-30"
  },
  "arch-architect-practice": {
-  "fingerprint": "690098ed879ff83d",
-  "offline": "2026-10-22"
+  "fingerprint": "7cf36d3e4b0b7050",
+  "offline": "2026-10-30"
  },
  "arch-eu-product-law": {
   "fingerprint": "37c91455efe899a1",
@@ -112,8 +112,8 @@
   "offline": "2026-10-30"
  },
  "data-engineering": {
-  "fingerprint": "a9349fbd1aa31e4f",
-  "offline": "2026-10-22"
+  "fingerprint": "a2ec8086248d6bd4",
+  "offline": "2026-10-30"
  },
  "ddd-algorithm-recognition": {
   "fingerprint": "298474b88cbc13e4",
@@ -500,8 +500,8 @@
   "offline": "2026-10-22"
  },
  "sec-llm-security": {
-  "fingerprint": "9118c6d5cd1f8993",
-  "offline": "2026-10-22"
+  "fingerprint": "0ea44bdcdb3080e1",
+  "offline": "2026-10-30"
  },
  "sec-malware-analysis": {
   "fingerprint": "16fe971045b39a87",

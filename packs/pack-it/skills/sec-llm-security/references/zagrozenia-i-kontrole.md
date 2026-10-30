@@ -51,3 +51,20 @@ tego, co trafia do indeksu (zatrucie), wersjonowanie i możliwość usunięcia d
 ## Zużycie (LLM10)
 Limity wejścia i wyjścia, maks. kroków agenta, budżet per użytkownik i per najemca, alert na koszt, ochrona przed
 zapytaniami powielającymi (rekurencja narzędzi).
+
+## SQL generowany przez model
+Agent analityczny, który pisze i wykonuje SQL, to wykonanie kodu z niezaufanego wejścia. Tryb tylko do odczytu nie
+chroni: SELECT potrafi czytać pliki z dysku, dołączać inne bazy i ładować rozszerzenia (w case study autora 5 z 11
+ataków przeszło mimo trybu tylko do odczytu [niezweryfikowane]). Warstwy:
+1. **Strażnik tekstu** przed wykonaniem: dokładnie jedno zapytanie SELECT, lista zakazanych funkcji (plikowe,
+   sieciowe, `ATTACH`, ładowanie rozszerzeń), koszt planu oceniony własnym estymatorem liczby wierszy — planer silnika
+   potrafi pomylić się o rzędy wielkości.
+2. **Blokada w silniku**, której zapytanie nie zmieni. W DuckDB np. wyłączony dostęp zewnętrzny
+   (`enable_external_access = false`), wyłączone automatyczne ładowanie rozszerzeń i zablokowana konfiguracja
+   (`lock_configuration = true`); nazwy ustawień sprawdź w dokumentacji wersji z projektu.
+3. **Limity** czasu i liczby zwracanych wierszy. Przerwanie zapytania działa zwykle dopiero między krokami silnika,
+   więc jedno utknięte zapytanie wydłuża ogon czasu — limit ustawiasz z zapasem i mierzysz p95.
+Bramka wejściowa (klasyfikator „czy odpowiadać”) zawodzi otwarcie: nieczytelna odpowiedź klasyfikatora = odmowa,
+nie „odpowiadaj”.
+
+Źródło: F. Khan, „Engineering Multi-Agent AI for a 100 GB Data Warehouse” (2026-10).

@@ -58,6 +58,19 @@
       "expect": "no-trigger",
       "neighbor": "data-analysis",
       "prompt": "Mam wyeksportowane CSV ze sprzedażą i chcę sprawdzić, czy różnica w średniej wartości koszyka między dwoma regionami jest istotna statystycznie. Jak to zrobić w pandas? Odpowiedz zwięźle."
+    },
+    {
+      "id": "pulapki-danych-dla-agenta",
+      "expect": "trigger",
+      "prompt": "Udostępniamy agentowi AI tabele z hurtowni (fakty sprzedaży, wymiary sklepów z historią wersji), żeby odpowiadał na pytania zarządu. Jakie pułapki w danych przygotować, zanim zacznie liczyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["NULL", "klucz\\w* (puste|null|bez wartości)", "inner join"],
+          ["niepełn\\w+ (rok|okres|miesiąc)", "ostatni\\w+ (rok|okres) niepełn\\w+", "dane do (dnia|daty)"],
+          ["histori\\w+ wersji", "SCD", "podwójn\\w+ (liczeni|zlicz)", "wersj\\w+ wiersz"],
+          ["słownik\\w*", "definicj\\w+", "zapyt\\w+ (o|użytkownika)", "dopyta\\w+"]
+        ]
+      }
     }
   ]
 }

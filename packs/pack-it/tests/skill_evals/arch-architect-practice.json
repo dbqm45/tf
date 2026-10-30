@@ -70,6 +70,19 @@
       "expect": "no-trigger",
       "prompt": "Wybieram między PostgreSQL a MongoDB dla nowego projektu. Jak je porównać i jaki stack wziąć?",
       "neighbor": "arch-tech-selection"
+    },
+    {
+      "id": "model-architektury-dryf",
+      "expect": "trigger",
+      "prompt": "Mamy kilkanaście diagramów C4 rysowanych ręcznie w narzędziu graficznym i każdy jest trochę inny i nieaktualny. Jak to uporządkować, żeby dokumentacja architektury nie rozjeżdżała się z kodem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["model\\w*", "jedno źródło", "Structurizr", "LikeC4", "DSL"],
+          ["widok\\w*", "generowan\\w+", "renderowan\\w+"],
+          ["CI", "dryf\\w*", "porówn\\w+ z kodem", "zależnoś\\w+ w kodzie", "graf\\w* importów"],
+          ["PR", "repo\\w*", "jako kod"]
+        ]
+      }
     }
   ]
 }

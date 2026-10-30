@@ -121,6 +121,19 @@
       "expect": "no-trigger",
       "neighbor": "core-async-delegation",
       "prompt": "Chcę, żeby Claude Code przepracował noc na moim zatwierdzonym planie w sandboxie przez claude -p. Jak przygotować kontrakt i bramki, żeby rano nie było niespodzianek?"
+    },
+    {
+      "id": "agent-obsluguje-program-zrzuty",
+      "expect": "trigger",
+      "prompt": "Budujemy agenta, który ma przygotowywać raporty w programie desktopowym do kosztorysowania: otwiera projekt, zmienia ceny, eksportuje PDF i wysyła klientowi. Planujemy, że będzie klikał po zrzutach ekranu. Czy to dobry pomysł i jak to zaprojektować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wiersz\\w* poleceń", "CLI", "API", "format\\w* pliku", "skrypt\\w*", "COM", "drzew\\w+ dostępności"],
+          ["na końcu", "ostateczn\\w+", "dopiero gdy", "w ostateczności", "ostatni\\w+ (krok|opcj)"],
+          ["weryfik\\w+", "odczyt\\w* (wyniku|z powrotem)", "ponowne otwarci\\w+", "sprawdz\\w+ wynik\\w*"],
+          ["zatwierdz\\w+", "zgod\\w+", "potwierdz\\w+", "czeka na .?tak", "człowiek"]
+        ]
+      }
     }
   ]
 }

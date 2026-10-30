@@ -4,7 +4,7 @@ description: Użyj przy architekturze systemu z komponentem AI — wzorzec (LLM,
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj, gdy projektujesz architekturę systemu z komponentem AI na poziomie decyzji — dobór wzorca (zwykłe wywołanie modelu, RAG, workflow z narzędziami, agent, fine-tuning, klasyczne ML) wg tabeli wymagań, źródło modelu (API, open-weights na własnej infrastrukturze, usługa zarządzana w chmurze), rezydencja danych i lock-in, komponenty architektury referencyjnej (bramka, serwis promptów, warstwa wyszukiwania i narzędzi, ewaluacje, guardrails, kolejka przeglądu), budżet opóźnienia, cache, fallback i routing modeli, granice bezpieczeństwa, szablon kosztu i pojemności, izolacja najemców, ADR dla decyzji AI. Nie do ogólnego projektu systemu (arch-system-design), metody doboru stacku (arch-tech-selection), atrybutów jakości (arch-quality-attributes), modelu zagrożeń (arch-threat-modeling), szczegółów RAG (ai-rag), projektu agenta (ai-agents), kodu z SDK (eng-llm-features) ani hostowania modeli (ops-ai-inference)."
-  slowa: "wymiana modelu na tańszy, zostawić harness, uzależnienie od dostawcy, wymiana harnessu, architektura ai, architekt rozwiązań ai, rag czy agent, jaki wzorzec ai, wybór modelu, api czy własny model, open-weights, rezydencja danych, lock-in dostawcy, brama llm, llm gateway, routing modeli, fallback modelu, budżet opóźnienia, koszt na żądanie, szacunek kosztu llm, prompt caching w architekturze, izolacja klientów, multi-tenant ai, human review queue, adr dla ai, referencyjna architektura ai"
+  slowa: "wymiana modelu na tańszy, zostawić harness, uzależnienie od dostawcy, wymiana harnessu, architektura ai, architekt rozwiązań ai, rag czy agent, jaki wzorzec ai, wybór modelu, api czy własny model, open-weights, rezydencja danych, lock-in dostawcy, brama llm, llm gateway, routing modeli, fallback modelu, budżet opóźnienia, koszt na żądanie, szacunek kosztu llm, prompt caching w architekturze, izolacja klientów, multi-tenant ai, human review queue, adr dla ai, referencyjna architektura ai, system AI odpowiada liczbami, pewnie złe liczby, kiedy odpowiedzi można ufać, model pisze SQL, text-to-SQL architektura"
 ---
 
 # Architektura rozwiązań z AI — decyzje przed kodem
@@ -87,6 +87,11 @@ Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `refe
    zapytaniu do indeksu, narzędzia i cache (filtr w bazie, nie w prompcie), osobne klucze szyfrowania i limity
    kosztu per najemca. Osobny indeks, instancja lub model tylko tam, gdzie wymaga tego umowa lub ryzyko
    (np. dane regulowane). Test: zapytanie najemcy A o dane B zwraca „brak”.
+   **Wynik liczbowy z modelu (np. text-to-SQL):** dwie niezależne drogi — model pisze SQL, a drugi model wypełnia
+   strukturę z katalogu metryk, którą kod kompiluje do SQL regułami. Zgodne wyniki = wysoka pewność, rozbieżność →
+   krytyk albo odmowa, jedna droga → niższa pewność. Model pisze zapytanie, baza liczy (arytmetyka modelu zawodzi).
+   Przed dołożeniem komponentu (wyszukiwanie wartości, wybór tabel) mierz, czy pomaga — gdy cały schemat mieści się
+   w promptcie, dodatkowy etap potrafi pogorszyć wynik (F. Khan, 2026-10 [niezweryfikowane]).
 10. **Zapis.** `ai-architecture.md` (TL;DR, osie, wzorzec, komponenty, budżety, granice, koszt, ryzyka) i **ADR** dla
     każdej decyzji kluczowej: wzorzec, źródło modelu, rezydencja, fallback (**arch-architect-practice**,
     **docs-tech-writing**). Kryterium rewizji decyzji (np. jakość na zbiorze złotym poniżej progu) wpisz do ADR.
