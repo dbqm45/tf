@@ -203,6 +203,32 @@
           ]
         ]
       }
+    },
+    {
+      "id": "piaskownica-tylko-http",
+      "expect": "trigger",
+      "prompt": "Puszczamy agentów w kontenerach z allowlistą HTTP (tylko npm i GitHub) i współdzielonym cache npm, żeby było szybciej. Uważamy, że są odizolowani i nic nie wyniosą. Czego nie widzimy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["DNS", "rozwiązywani\\w+ nazw", "zapyta\\w+ o nazw"],
+          ["rejestr\\w*", "proxy pakietów", "publikac\\w+ pakiet", "npm publish", "dozwolon\\w+ (serwis|host)"],
+          ["wspóln\\w+ cache", "współdzielon\\w+ cache", "cache (tylko do odczytu|osobn)", "kanał\\w*"],
+          ["lockfile", "konfiguracj\\w+ (repo|edytora|CI)", "pliki czytane przez", "hook\\w*", ".git/config"]
+        ]
+      }
+    },
+    {
+      "id": "proba-granicy-kanarek",
+      "expect": "trigger",
+      "prompt": "Daję agentowi dostęp tylko do katalogu projektu przez narzędzie plikowe z filtrem ścieżek, a w logach widzę, że odmawia czytania plików spoza projektu. Czy to wystarczy jako dowód, że nie dotrze do moich plików? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["kanar\\w+", "plik\\w* testow\\w+ poza", "próbk\\w+ poza", "spoza (workspace|katalogu|projektu)"],
+          ["Bash", "Python", "interpreter\\w*", "inne narzędzi\\w*", "obok"],
+          ["agent odmówił", "narzędzie odrzuciło", "środowisko nie pozwoliło", "która warstwa", "odmowa modelu"],
+          ["log\\w* (nie|to nie)", "nie (jest|stanowi) dowod\\w*", "poza procesem agenta", "niezależn\\w+"]
+        ]
+      }
     }
   ]
 }

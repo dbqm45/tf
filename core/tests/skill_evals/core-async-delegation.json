@@ -144,6 +144,19 @@
           ["odłożon\\w+", "holdout", "przegląd człowieka", "zatwierdz\\w+ człowie\\w+", "człowiek zatwierdza"]
         ]
       }
+    },
+    {
+      "id": "inwentarz-przebiegow-wylacznik",
+      "expect": "trigger",
+      "prompt": "W zespole działa już kilkanaście rutyn i nocnych przebiegów agentów zakładanych przez różne osoby. Jak je monitorować, żeby w razie problemu dało się szybko ustalić, co robiły, i je zatrzymać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["inwentar\\w+", "rejestr\\w* przebiegów", "lista przebiegów", "spis\\w*"],
+          ["właściciel\\w*", "kto uruchomił", "odpowiedzialn\\w+"],
+          ["wyłącznik", "zatrzym\\w+", "kill switch", "odebra\\w+ token"],
+          ["poza procesem agenta", "niezależn\\w+ log", "transkrypt\\w* (nie|to nie)", "log\\w* (sieci|ruchu|wywołań)"]
+        ]
+      }
     }
   ]
 }
