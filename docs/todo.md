@@ -691,7 +691,7 @@ Przegląd 2026-10-29: `arch-architect-practice` ma C4, ADR i „diagram jako kod
 `docs-tech-writing` — Mermaid i PlantUML C4. Brakuje rozróżnienia „model vs diagram” i kontroli dryfu. Artykuł jest
 materiałem producenta (IcePanel: MCP i API do modelu, import JSON/YAML); dokumentacji docs.icepanel.io nie
 otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez rekomendacji jednego produktu:
-- [ ] **`arch-architect-practice`: model jako źródło, diagramy jako widoki** — elementy i relacje C4 opisane raz
+- [x] **`arch-architect-practice`: model jako źródło, diagramy jako widoki** (zrobione 2026-10-30: sekcja „Dokumentacja architektury”) — elementy i relacje C4 opisane raz
   w modelu tekstowym w repo (np. Structurizr DSL, LikeC4 albo eksport z narzędzia), widoki dla różnych odbiorców
   generowane z niego zamiast osobno rysowanych diagramów; zmiana w PR modyfikuje model, CI renderuje widoki.
   Kontrola dryfu w CI: relacje z modelu porównane z faktycznymi zależnościami (graf importów z
@@ -958,7 +958,7 @@ narzędzie SDD obok Spec Kit i OpenSpec (fazy brainstorm → define → design �
 ## Narzędzia zamiast ekranu dla agentów obsługujących programy (artykuł „Building Fast Computer Agents to Solve Complex Tasks”, F. Khan, 2026-10-07, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-agents` ma zatwierdzanie akcji nieodwracalnych i treść jako dane, ale nic o agentach
 sterujących programami (computer use). Liczby autora (jedno stanowisko, Windows) [niezweryfikowane]. Brak:
-- [ ] **`ai-agents`, „podnoszenie interfejsu”:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
+- [x] **`ai-agents`, „podnoszenie interfejsu”** (zrobione 2026-10-30: `ai-agents/references/porazki-i-wzorce.md`)**:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
   format pliku programu → wiersz poleceń (tryb bez okna) → skrypty/COM → oficjalne API → drzewo dostępności (nazwy
   kontrolek jako tekst) → piksele na końcu. Każda funkcja jako narzędzie z kontraktem: schemat, implementacja,
   **weryfikator** (odczyt wyniku z powrotem, np. ponowne otwarcie zapisanego pliku innym czytnikiem) i **skutek**
@@ -1136,21 +1136,21 @@ nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
   użyteczność rośnie (albo stoi, a czas spada), z parowanym bootstrapem na tych samych pytaniach; odłożone **całe
   szablony** pytań, nie tylko instancje (u autora 85% na nowych szablonach vs 96% na znanych). Czas mierzony
   pojedynczym użytkownikiem i stoperem z pustym cache, nie tylko przy współbieżności ewaluacji.
-- [ ] **Podwójny zapis jako miara pewności:** dwie niezależne drogi (model pisze SQL; drugi model wypełnia JSON
+- [x] **Podwójny zapis jako miara pewności** (zrobione 2026-10-30: `arch-ai-solutions` krok 9)**:** dwie niezależne drogi (model pisze SQL; drugi model wypełnia JSON
   z katalogu metryk, a kod kompiluje go do SQL regułami) — zgodność wyników = wysoka pewność (u autora 40/40
   zgodnych poprawnych), rozbieżność → krytyk, brak drugiej drogi → niższa pewność; prawie wszystkie błędy z pytań,
   gdzie odpowiedziała jedna droga. Do `arch-ai-solutions` jako wzorzec weryfikacji wyniku liczbowego.
-- [ ] **Mierz, zanim dołożysz:** wyszukiwanie wartości do promptu (−2,0 pkt) i „zwiadowca schematu” wybierający
+- [x] **Mierz, zanim dołożysz** (zrobione 2026-10-30: `arch-ai-solutions` krok 9)**:** wyszukiwanie wartości do promptu (−2,0 pkt) i „zwiadowca schematu” wybierający
   5 tabel (−13,7 pkt; potrzebne tabele trafiał w 27% zapytań) pogorszyły wynik, gdy cały schemat mieścił się
   w prompcie; tańszy model napisał lepszy SQL niż droższe (porównanie kilku modeli na tym samym zestawie przed
   wyborem). Model pisze SQL, baza liczy — arytmetyka modelu bez myślenia była błędna.
-- [ ] **Ściany dla SQL od modelu** (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
+- [x] **Ściany dla SQL od modelu** (zrobione 2026-10-30: `sec-llm-security/references/zagrozenia-i-kontrole.md`) (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
   dołącza bazy, instaluje rozszerzenia — 5/11 ataków przeszło); strażnik tekstu (jedno SELECT, zakazane funkcje
   plikowe, koszt planu z własnym estymatorem wierszy, bo planer pomylił się 469 796×) + blokada w silniku (DuckDB:
   `enable_external_access = false`, wyłączone autoładowanie rozszerzeń, `lock_configuration = true`) + limit czasu
   i wierszy; przerwanie zapytania działa dopiero między krokami silnika (ogon czasu przez jedno utknięte zapytanie).
   Bramka wejściowa zawodzi otwarcie (nieczytelna odpowiedź = „odpowiadaj”), spekulacyjnie równolegle z drafami.
-- [ ] **Pułapki danych dla agenta** (`data-engineering` / `data-analysis`): klucze NULL w tabeli faktów, które inner
+- [x] **Pułapki danych dla agenta** (zrobione 2026-10-30: `data-engineering`, sekcja „Dane dla agenta AI”) (`data-engineering` / `data-analysis`): klucze NULL w tabeli faktów, które inner
   join gubi po cichu (u autora 2,36% przychodu), niepełny ostatni rok w danych (spadek, który nie jest spadkiem),
   tabele z historią wersji (podwójne liczenie encji) — fakty mierzone z danych i wstawiane do słownika biznesowego
   w stałej kolejności (stały tekst = trafienia cache); „najlepszy sklep” bez definicji → pytanie, nie domysł.

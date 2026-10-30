@@ -78,6 +78,15 @@ Wybór architektury (hurtownia, lakehouse, OLTP vs OLAP, ETL vs ELT, CDC, wsad v
 - **Integracyjne i end-to-end** na środowisku testowym z próbką danych; **dymny** test po wdrożeniu; **obciążeniowy**
   przy zmianie skali (qa-performance-testing).
 
+## Dane dla agenta AI (text-to-SQL)
+Zanim agent zacznie liczyć na hurtowni, przygotuj fakty o pułapkach i wstaw je do słownika biznesowego w promptcie
+(w stałej kolejności — stały tekst daje trafienia cache):
+- klucze NULL w tabeli faktów, które `INNER JOIN` gubi po cichu (część przychodu znika z wyniku);
+- niepełny ostatni okres w danych (spadek, który nie jest spadkiem) — data, do której dane są kompletne;
+- tabele z historią wersji (SCD typu 2) — bez filtra „wersja bieżąca” encje liczą się podwójnie;
+- pojęcia bez definicji („najlepszy sklep”) → agent dopytuje, zamiast zgadywać.
+Fakty mierzysz z danych zapytaniem, nie wpisujesz z pamięci. Bezpieczeństwo SQL od modelu: sec-llm-security.
+
 ## Checklista
 - [ ] potok idempotentny, po partycjach czasu, z backfillem przez zakres dat
 - [ ] kontrakt danych ze źródłem; zmiana łamiąca wykrywana w CI

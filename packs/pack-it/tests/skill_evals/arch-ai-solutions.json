@@ -140,6 +140,19 @@
           ]
         ]
       }
+    },
+    {
+      "id": "podwojna-droga-liczby",
+      "expect": "trigger",
+      "prompt": "System AI odpowiada liczbami na pytania biznesowe (model pisze SQL), ale czasem podaje pewnie złe liczby. Jak zaprojektować architekturę, żeby wiedzieć, kiedy odpowiedzi można ufać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["dwie (niezależne )?drogi", "podwójn\\w+", "drug\\w+ (droga|ścieżk)", "niezależn\\w+ (wylicz|ścieżk|drog)"],
+          ["katalog\\w* metryk", "warstw\\w+ semantyczn\\w+", "definicj\\w+ metryk"],
+          ["zgodnoś\\w+", "rozbieżnoś\\w+", "porówn\\w+ wynik"],
+          ["odmow\\w+", "nie wiem", "niższ\\w+ pewnoś\\w+", "pewnoś\\w+"]
+        ]
+      }
     }
   ]
 }

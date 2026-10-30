@@ -4,7 +4,7 @@ description: Użyj przy bezpieczeństwie aplikacji i agentów LLM — OWASP Top 
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy zabezpieczasz aplikację lub agenta opartego na LLM, którą budujesz dla użytkowników — OWASP Top 10 for LLM Applications 2025, model zagrożeń (prompt injection bezpośredni i pośredni, eksfiltracja przez narzędzia, linki i obrazy markdown, nadmierna sprawczość, niebezpieczna obsługa wyjścia, wyciek danych i system promptu, zatrucie danych i modeli, łańcuch dostaw modeli, wektory i embeddingi, nieograniczone zużycie), kontrole (najmniejsze uprawnienia narzędzi, zatwierdzanie przez człowieka, kodowanie wyjścia, allow-listy ruchu wychodzącego, rozdzielenie instrukcji od danych, filtry i ich granice), red teaming (garak, PyRIT), logi i sygnały incydentu, MITRE ATLAS. Nie do projektu agenta (ai-agents), bezpieczeństwa pracy agenta Claude Code (core-agent-security), ogólnego modelu zagrożeń (arch-threat-modeling), budowy ewaluacji (ai-evals) ani zgodności z AI Act (ai-governance-compliance)."
-  slowa: "prompt injection, wstrzyknięcie promptu, jailbreak, bezpieczeństwo llm, bezpieczeństwo czatbota, wyciek danych przez model, eksfiltracja, markdown image, indirect prompt injection, nadmierna sprawczość, excessive agency, system prompt leak, zatrucie rag, vector db security, red teaming llm, przetestować ofensywnie funkcję llm, testy ofensywne llm przed wdrożeniem, narzędzia do red teamingu, garak, pyrit, mitre atlas, owasp llm top 10, guardrails, filtr treści, bezpieczeństwo agenta w produkcie, lethal trifecta"
+  slowa: "prompt injection, wstrzyknięcie promptu, jailbreak, bezpieczeństwo llm, bezpieczeństwo czatbota, wyciek danych przez model, eksfiltracja, markdown image, indirect prompt injection, nadmierna sprawczość, excessive agency, system prompt leak, zatrucie rag, vector db security, red teaming llm, przetestować ofensywnie funkcję llm, testy ofensywne llm przed wdrożeniem, narzędzia do red teamingu, garak, pyrit, mitre atlas, owasp llm top 10, guardrails, filtr treści, bezpieczeństwo agenta w produkcie, lethal trifecta, SQL generowany przez model, agent analityczny wykonuje SQL, DuckDB tylko do odczytu, złośliwe pytanie do agenta, text-to-SQL bezpieczeństwo"
 ---
 
 # Bezpieczeństwo aplikacji i agentów LLM
@@ -63,6 +63,9 @@ obcej treści; (4) render bez zdalnych obrazów. Test regresji: mail z instrukcj
 - Zatwierdzenie z opisem wygenerowanym przez model można zmanipulować; pokaż użytkownikowi surowe argumenty akcji.
 - Agent z jednym kontem serwisowym omija autoryzację: każde wywołanie narzędzia niesie tożsamość użytkownika.
 - Wynik jednego modelu wklejony do drugiego (łańcuch) przenosi injection dalej; traktuj go jak dane obce.
+- SQL od modelu: tryb tylko do odczytu nie wystarcza (SELECT czyta pliki, dołącza bazy, ładuje rozszerzenia). Ściany
+  w trzech warstwach: strażnik tekstu, blokada w silniku, limity czasu i wierszy — `references/zagrozenia-i-kontrole.md`
+  §„SQL generowany przez model”.
 
 ## Checklista
 - [ ] potrójna kombinacja (dane prywatne, niezaufana treść, wyjście) przerwana

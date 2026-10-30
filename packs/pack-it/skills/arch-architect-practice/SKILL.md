@@ -79,6 +79,12 @@ z kodem; ta sama dyskusja co miesiąc, bo decyzja nie została zapisana.
   przekrojowe, decyzje, wymagania jakości, ryzyka, słownik) — wypełniasz tylko sekcje, które ktoś przeczyta.
 - Dokumentacja żyje w repo i jest aktualizowana z kodem; to, co da się wygenerować (grafy zależności —
   eng-codebase-mapping, referencja API), generujesz.
+- **Model jako źródło, diagramy jako widoki:** elementy i relacje C4 opisane raz w tekstowym modelu w repo (np.
+  Structurizr DSL, LikeC4 albo eksport z narzędzia), a widoki dla różnych odbiorców generowane z niego zamiast osobno
+  rysowanych diagramów. Zmiana w PR modyfikuje model, CI renderuje widoki. **Kontrola dryfu w CI:** relacje z modelu
+  porównane z faktycznymi zależnościami (graf importów, wywołania między usługami, IaC); relacja w kodzie bez
+  odpowiednika w modelu i odwrotnie to ustalenie do przeglądu. ADR wskazuje elementy modelu, których dotyczy. Agent
+  czyta model, nie obrazki diagramów. Wersje narzędzi sprawdź przed wyborem (core-grounding).
 
 ## Doradztwo i coaching
 - Przegląd projektów i PR pod kątem decyzji architektonicznych, nie stylu (od tego są lintery).

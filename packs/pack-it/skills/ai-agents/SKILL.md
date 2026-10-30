@@ -69,6 +69,9 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    kompaktowanie), LangGraph — jawny graf stanu z punktami kontrolnymi i przerwaniami dla człowieka. Wersje i API
    sprawdź w dokumentacji i w paczce (core-grounding).
 
+Agent, który obsługuje program (desktop, przeglądarka): **najpierw podnieś interfejs**, zrzuty ekranu na końcu —
+`references/porazki-i-wzorce.md` §„Agent obsługujący program”.
+
 Typowe porażki i środki: `references/porazki-i-wzorce.md`.
 
 ## Przykład
