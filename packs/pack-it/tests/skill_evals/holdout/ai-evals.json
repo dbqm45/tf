@@ -50,6 +50,32 @@
           ]
         ]
       }
+    },
+    {
+      "id": "ho-evals-ocena-sciezki",
+      "expect": "trigger",
+      "prompt": "Oceniamy agenta rezerwacji, porównując jego wywołania narzędzi z wzorcową sekwencją. Agent czasem idzie inną drogą, rezerwacja powstaje poprawnie, a test i tak pada. Jak to oceniać?",
+      "checks": {
+        "all": [
+          [
+            "stan\\w* (środowisk|baz)\\w*",
+            "ocen\\w* wynik\\w*",
+            "wynik\\w*.{0,40}(zamiast|nie) (ścieżk|sekwencj)",
+            "outcome"
+          ],
+          [
+            "trajektori\\w*.{0,80}osobn\\w*",
+            "osobn\\w*.{0,60}(trajektori|ścieżk)\\w*",
+            "trajektori\\w*.{0,80}(diagnoz|limit)"
+          ],
+          [
+            "czyst\\w* środowisk\\w*",
+            "clean environment",
+            "punkt\\w* częściow\\w*",
+            "partial credit"
+          ]
+        ]
+      }
     }
   ]
 }

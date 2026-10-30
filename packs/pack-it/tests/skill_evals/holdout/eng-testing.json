@@ -53,6 +53,33 @@
           ]
         ]
       }
+    },
+    {
+      "id": "ho-testing-od-razu-zielony",
+      "expect": "trigger",
+      "prompt": "Agent w naszym repo dopisał test do nowej reguły rabatu, test od razu przeszedł, więc agent bierze się za kod produkcyjny. Coś tu jest nie tak?",
+      "checks": {
+        "all": [
+          [
+            "nic nie dowodzi",
+            "niczego nie dowodzi",
+            "nie sprawdza brakując\\w*",
+            "fałszyw\\w* zielon\\w*",
+            "od razu (zielon|przesz)\\w*.{0,80}(nie|bez) (dowod|sprawdz)"
+          ],
+          [
+            "czerwon\\w*",
+            "nie przechodzi",
+            "pad\\w* z właściw",
+            "\\bred\\b"
+          ],
+          [
+            "tdd_guard",
+            "hook\\w*.{0,60}(blok|wymag)",
+            "blok\\w*.{0,60}(edycj|kod\\w* produkcyjn)"
+          ]
+        ]
+      }
     }
   ]
 }

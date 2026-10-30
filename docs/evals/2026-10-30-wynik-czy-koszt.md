@@ -48,6 +48,13 @@ Pełne odpowiedzi według skilla (Haiku ze skillami / bez, Sonnet ze skillami / 
    - `core-grounding`: 1/4 ze skillem na obu modelach, a Sonnet bez skilla ma 2/4; skill rzadko się uruchamia;
    - `core-delivery-lifecycle`: 2–3/4.
 
+   Diagnoza bez modelu (2026-10-30): `core-grounding` nie był podpowiadany przy długich dokumentach i zużytej sesji —
+   poprawione w #104 (nowe scenariusze strojenia i słowa). W `core-delivery-lifecycle` scenariusz
+   `ho-warunek-konca-kroku` leży na granicy z `core-async-delegation`. **Decyzja:** granica zostaje — warunek stopu
+   agenta pracującego bez nadzoru należy do `core-async-delegation`, `core-delivery-lifecycle` obejmuje fazy i bramki
+   z człowiekiem. Scenariusz zostaje w holdoucie bez zmian (zmiana po pomiarze byłaby strojeniem pod egzamin); przy
+   ocenie wyniku `core-delivery-lifecycle` traktować go jako niejednoznaczny.
+
    Zgodnie z regułą holdoutu nie stroimy opisów pod te pytania. Przyczyny trzeba szukać na scenariuszach strojenia
    i w treści skilla.
 5. **Skille zmniejszają rozrzut.** Sonnet bez skilli ma 8 scenariuszy z różnym wynikiem między powtórzeniami,
