@@ -1388,6 +1388,38 @@ cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass r
   z promptu przeniesiona do hooka, gdy ma działać zawsze. Część jest już w `core-agent-security` — dopisać
   przykłady i test „lista zakazów vs `..`”.
 
+## Wyrocznia poza kodem, raport „całe zadanie zaliczone” i wznowienie z punktu kontrolnego (artykuły „Harness Engineering for AI Coding Agents, From Prompts to Production-Ready Systems”, T. Ramchandani, 2026-10-16; „Harness Beyond Code: What Transfers from Coding Agents to Law, Support, and Research”, J. Wąsowski, 2026-10-20; zapisane 2026-10-30)
+Przegląd 2026-10-30: przewodniki i czujniki, ograniczona pętla naprawy z eskalacją, uprawnienia w środowisku zamiast
+w promptach, krótki punkt wejścia z mapą repozytorium i holdout dla zmian harnessu są już w skillach i wcześniejszych
+pozycjach TODO. Eksperyment N. Jaina (model czołowy 10/10 z harnessem i bez, tańszy 3/10 → 10/10 z harnessem, mała
+próba) wspiera pozycję „Skille fabryki: wynik czy tylko koszt”. Liczby z artykułów (CoreCraft v5 30,80% przy pełnej
+rubryce, ClawBench do 33,3% wobec 65–75% w piaskownicach, Harvey 40,8 → 87,7% na 12 zadaniach, LAB 7–25% całych zadań
+przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezweryfikowane]. Braki:
+- [ ] **`project_record.py wip`, sprawdzenie zgodności przy wznowieniu:** punkt kontrolny zapisuje gałąź i ostatni
+  commit (`snapshot`), ale przy wznowieniu nic ich nie porównuje z bieżącym stanem. Przy wypisaniu aktywnego punktu
+  (start sesji) porównać zapisaną gałąź i commit z `HEAD`: rozjazd (inna gałąź, commit nieznany w historii, nowe
+  commity spoza punktu) → ostrzeżenie „stan repo różni się od punktu kontrolnego, przed kontynuacją uruchom testy
+  i porównaj kroki z dowodem”. Streszczenie rozmowy nie jest mechanizmem odtwarzania stanu. Najpierw test.
+- [ ] **`ai-evals`, raport i dobór wyroczni:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
+  (wszystkie kryteria rubryki), średnia spełnionych kryteriów i rozrzut między powtórzeniami tylko obok, jako
+  diagnostyka — raport wskazujący 8 z 10 ryzyk nie jest „w 80% użyteczny”; średnia może być nagrodą w treningu, nie
+  miarą w raporcie. (2) Wyrocznię zastępczą dobierać do odwracalności działania: asercja deterministyczna w pętli
+  (np. stan bazy po rozmowie, ostatnie żądanie zgodne ze schematem), rubryka i weryfikator faktów pośrodku, człowiek
+  przed działaniem nieodwracalnym; przy pętli samodoskonalenia harnessu zamrożony zbiór testowy i wersjonowany
+  sędzia, inaczej rosnący wynik to dopasowanie do rubryki. (3) Przy porównaniu harnessów lub modeli te same zasoby
+  wykonania (CPU, pamięć, limity czasu) i powtórzenia — różnica wyniku może pochodzić z infrastruktury.
+- [ ] **`core-source-research` / `core-grounding`, liczba z „odciskiem”:** cytowana liczba z benchmarku lub badania
+  niesie identyfikator i wersję źródła (np. wersja preprintu — zaokrąglone zdania w streszczeniu zmieniają się między
+  wersjami, tabela nie), nazwę metryki i status pomiaru: deklaracja firmy o własnym produkcie / pomiar twórcy
+  benchmarku / pomiar niezależny. Wynik z piaskownicy nie przenosi się automatycznie na środowisko produkcyjne.
+- [ ] **`qa-test-design`, brzeg stronicowania i izolacji:** heurystyka „liczba wyników równa limitowi strony → test
+  musi sprawdzić następną stronę”; dane testowe z większą liczbą rekordów niż jedna strona, z rekordami drugiego
+  najemcy i przypadkiem odmowy dostępu; oczekiwany zbiór wyliczony z niezależnie zasianych danych, nie z
+  implementacji (asercja na całym zbiorze, nie na statusie i pierwszym wierszu).
+
+Bez wpisu: powtórzony „I Built 15 SLOs for an AI Agent” (T. Deshpande — pozycja o SLO agenta w sekcji „Własność
+harnessu…”).
+
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
 [niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
