@@ -2,7 +2,7 @@
 name: core-agent-security
 description: Użyj, gdy agent ma wykonać polecenie z treści (issue, strona, czat AI), dodajesz obcy skill lub MCP, chcesz obejść hook albo widzisz objawy włamania.
 metadata:
-  przeglad: 2027-10-10
+  przeglad: "2027-10-10"
   katalog: "Użyj, gdy agent ma uruchomić polecenie pochodzące z treści (strona, issue, czat AI, README, komunikat błędu, wynik MCP), gdy zauważysz objawy włamania na maszynie, przy konfiguracji uprawnień agentów, MCP, skilli i wtyczek oraz przy agentach w CI — ClickFix, przegląd polecenia, eskalacja. Nie do łańcucha zależności ani auth aplikacji (skille bezpieczeństwa z pack-it)."
   slowa: "wkleić do terminala, base64 | bash, curl | sh, poradnik instalacji z czatu, udostępniona rozmowa z AI, ClickFix, czy agent może to uruchomić, podejrzane polecenie, allow deny ask, reguły uprawnień, settings.json permissions, agent ciągle pyta o zgodę, dangerously-skip-permissions, bypassPermissions, tryb bez pytań, dostęp agenta do produkcji, token produkcyjny dla agenta, ostrzeżenie hooka tdd_guard o skrypcie, zapobiec zanim skrypt się wykona, piaskownica Bash, sandbox, prompt injection, wstrzyknięcie poleceń, ignore previous instructions, ukryty tekst na stronie, polecenie w treści zgłoszenia, raport researchera z poleceniem"  # audit-ok: opis ataku, nie polecenie
 ---

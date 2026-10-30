@@ -2,7 +2,7 @@
 name: lang-javascript
 description: Użyj przy czystym JavaScripcie ES2022+ — koercja, domknięcia, this, async i event loop, tablice, ESM vs CommonJS.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy kodzie i przeglądzie czystego JavaScriptu (ES2022+, przeglądarka lub Node) — koercja i porównania, zasięg i domknięcia, this, klasy, Promise/async i event loop, metody tablic (mutujące vs nie), ESM vs CommonJS, błędy — oraz pojęcia domenowe bez TypeScriptu (JSDoc, Object.freeze, bigint). Nie do API przeglądarki (fe-web-platform), typowania TS (lang-typescript) ani modelowania (ddd-*)."
 ---
 

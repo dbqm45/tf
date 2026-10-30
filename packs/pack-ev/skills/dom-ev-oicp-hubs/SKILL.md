@@ -2,7 +2,7 @@
 name: dom-ev-oicp-hubs
 description: Użyj przy integracji OICP 2.3 z Hubject i wyborze huba — operacje CPO i EMP, ProviderID i OperatorID, OICP vs OCPI, P2P czy hub, adaptery OCPI+OICP.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy budujesz, debugujesz albo oceniasz integrację OICP 2.3 przez Hubject (role CPO i EMP, push EVSE Data i EVSE Status, pull z deltą i paginacją, AuthorizeStart/Stop, AuthorizeRemoteStart/Stop, ChargeDetailRecord, ChargingNotifications, DynamicPricing, kody 017/018/603/604), gdy porównujesz OICP z OCPI, wybierasz peer-to-peer albo hub, planujesz warstwę adapterów dla OCPI i OICP naraz lub migrację z OICP 2.1. Nie do protokołu OCPI i routingu OCPI przez hub (dom-ev-ocpi), formatów EVSE ID i EMAID (dom-ev-identifiers), CDR i rozliczeń (dom-ev-cdr-settlement), taryf i ceny (dom-ev-tariffs-pricing), ról rynku (dom-ev-market-roles)."
   slowa: "OICP, OICP 2.3, Hubject, HBS, hub Hubject, roaming przez Hubject, intercharge, ProviderID, OperatorID, EvcoID, EvseID Hubject, eRoamingPushEvseData, eRoamingPullEvseData, eRoamingPushEvseStatus, eRoamingAuthorizeStart, eRoamingAuthorizeRemoteStart, eRoamingChargeDetailRecord, ChargingNotifications, DynamicPricing, kod 017, kod 604, IsHubjectCompatible, hub operator, hub provider, sub operator, OICP vs OCPI, P2P czy hub, Gireve, e-clearing, adapter OCPI i OICP, OICP 2.1 wycofanie, certyfikat klienta Hubject, delta pull LastCall, ActionType fullLoad"
 ---

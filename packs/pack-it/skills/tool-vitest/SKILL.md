@@ -2,7 +2,7 @@
 name: tool-vitest
 description: Użyj przy testach w Vitest — struktura, tabele przykładów, dublery, kontrolowany czas, tryb przeglądarki, Stryker.
 metadata:
-  przeglad: 2027-01-09
+  przeglad: "2027-01-09"
   katalog: "Użyj przy testach jednostkowych, integracyjnych i komponentowych w Vitest — struktura testów, tabele przykładów, dublery (vi.fn, vi.when), kontrolowany czas, projekty, tryb przeglądarki, pokrycie, testy mutacyjne ze Strykerem, migracje wersji. Nie do zasad wyroczni (qa-spec-first-testing) ani Jest (tool-jest)."
 ---
 

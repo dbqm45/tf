@@ -2,7 +2,7 @@
 name: eng-local-quality-gates
 description: Użyj przy lokalnych bramkach jakości — hook po edycji, pre-commit, pre-push, testy powiązane.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj przy ustawianiu lokalnych bramek jakości w projekcie — rozmieszczenie lintu, formatowania, typów i testów między hookiem agenta po edycji, pre-commit, pre-push i CI; testy powiązane z edytowanym plikiem; kody wyjścia i informacja zwrotna dla agenta; zachowanie agenta przy padającym hooku; Husky, lint-staged, Lefthook, pre-commit; szablon hooka post_edit_checks.py z konfiguracją quality-gates.json. Nie do pipeline'ów CI (ops-ci-cd), gałęzi, commitów i PR (core-git-workflow), uprawnień agenta (core-agent-security) ani doboru zestawów regresji (qa-regression)."
   slowa: "hook po edycji, hook PostToolUse, pre-commit, pre-push, husky, lint-staged, lefthook, formatowanie po edycji, lint przy zapisie, testy powiązane z plikiem, vitest related, findRelatedTests, bramka przed commitem, git hooks, hooki gita, agent dostaje błąd lintera, szybka informacja zwrotna"
 ---

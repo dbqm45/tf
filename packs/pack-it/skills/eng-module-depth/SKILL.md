@@ -2,7 +2,7 @@
 name: eng-module-depth
 description: Użyj przy projekcie interfejsu modułu — głębokie moduły, test usunięcia, spoiny i adaptery, płytkie moduły.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy projektowaniu interfejsu modułu i przeglądzie architektury pod kątem płytkich modułów — słownik (moduł, interfejs, głębokość, spoina, adapter), test usunięcia, kategorie zależności, „zaprojektuj dwa razy”, raport kandydatów do pogłębienia. Nie do mapy całego repo (eng-codebase-mapping) ani audytu długu (eng-tech-debt-audit)."
   slowa: "interfejs modułu, projektuję interfejs nowego modułu, jak wybrać interfejs, publiczne API modułu, nikt nie importuje wnętrza modułu, import wnętrza modułu, płytki moduł, głęboki moduł, spoina, adapter, test usunięcia"
 ---

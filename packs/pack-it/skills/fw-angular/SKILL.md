@@ -2,7 +2,7 @@
 name: fw-angular
 description: Użyj przy kodzie Angulara 17–22 — standalone, signals i resources, zoneless, Signal Forms, DI, HttpClient, routing, testy.
 metadata:
-  przeglad: 2027-01-17
+  przeglad: "2027-01-17"
   katalog: "Użyj przy kodzie Angulara (17–22) — komponenty standalone, signals i resources, zoneless/OnPush, Signal Forms, DI, HttpClient, routing, testy — oraz przy decyzji, gdzie w aplikacji Angular umieścić pojęcia domenowe. Uwzględnia różnice między wersjami (sekcja Zależne od wersji). Nie do składni TypeScript (lang-typescript) ani modelowania (ddd-*)."
   slowa: "ng update, aktualizacja Angulara, zaktualizować Angulara, przejść na nowszego Angulara, migracja Angulara, przejście na nowszą wersję Angulara, komponent Angulara, szablon, nowa aplikacja w Angularze, formularze w Angularze, detekcja zmian, zoneless, ng new, ng generate, ng add, nowy projekt Angular, SSR w Angularze, prerendering, hydratacja, RenderMode, @defer, animate.enter, animacje w Angularze, Angular Aria, component harness, RouterTestingHarness, migracja do standalone, serwer MCP Angular, Tailwind w Angularze"
 ---

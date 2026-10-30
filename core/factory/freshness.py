@@ -122,7 +122,7 @@ def mark_reviewed(md: Path, reviewed: dt.date, months: int) -> str:
     if fm is None:
         raise ValueError(f"{md}: brak frontmattera")
     head, rest = text[:fm[1]], text[fm[1]:]
-    line = f"  przeglad: {due}"
+    line = f'  przeglad: "{due}"'   # tekst, nie data YAML: specyfikacja Agent Skills — metadata to string → string
     if REVIEW_RE.search(head):
         head = REVIEW_RE.sub(line, head, count=1)
     elif re.search(r"^metadata:[ \t]*$", head, re.M):

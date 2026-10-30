@@ -2,7 +2,7 @@
 name: ops-finops
 description: Użyj przy kosztach chmury — tagi, koszt w PR (Infracost), budżety i alerty, sprzątanie, rozmiar, koszt jednostkowy.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy zmiana wpływa na koszty chmury albo trzeba je obniżyć — tagi właściciela, koszt w PR (Infracost), budżety i alerty, sprzątanie nieużywanych zasobów, dopasowanie rozmiaru, polityki kosztowe jako kod, czas życia środowisk, koszt jednostkowy. Nie do samego pisania Terraform (ops-iac-terraform) ani kosztu telemetrii (ops-observability)."
 ---
 

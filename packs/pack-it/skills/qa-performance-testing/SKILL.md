@@ -2,7 +2,7 @@
 name: qa-performance-testing
 description: Użyj przy testach wydajnościowych — rodzaje, model obciążenia, progi z SLO, k6 i Gatling, środowisko, analiza, raport.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy planowaniu, pisaniu i analizie testów wydajnościowych — rodzaje (dymny, obciążenia, przeciążenia, wytrzymałości, skoku, punktu granicznego), model obciążenia z ruchu produkcyjnego, progi z SLO, k6 (TS/JS) i Gatling (Java), środowisko i dane, analiza wąskich gardeł, raport, test dymny w CI. Nie do wydajności frontendu w przeglądarce (fe-web-platform) ani SLO i alertów (ops-sre-incidents)."
 ---
 

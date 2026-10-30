@@ -2,7 +2,7 @@
 name: arch-quality-attributes
 description: Użyj przy atrybutach jakości — scenariusze, kompromisy, fitness functions, dobór stylu architektury.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy ustalaniu czynników architektonicznych — scenariusze atrybutów jakości (wydajność, dostępność, bezpieczeństwo, modyfikowalność…), ograniczenia, priorytetyzacja (drzewo użyteczności), kompromisy, fitness functions i dobór stylu architektury (modularny monolit, mikroserwisy, zdarzenia). Nie do wyboru konkretnych technologii (arch-tech-selection)."
 ---
 

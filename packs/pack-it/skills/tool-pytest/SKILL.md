@@ -2,7 +2,7 @@
 name: tool-pytest
 description: Użyj przy testach w pytest 8–9 — fixtures, parametrize, tmp_path, monkeypatch, konfiguracja TOML, asyncio, Hypothesis.
 metadata:
-  przeglad: 2027-01-03
+  przeglad: "2027-01-03"
   katalog: "Użyj przy testach w pytest (8–9.1) — struktura testów i conftest.py, fixtures (zakresy, yield, fabryki), parametrize z pytest.param i ids, tmp_path, monkeypatch, caplog, pytest.raises(match=), subtesty, konfiguracja [tool.pytest] i strict = true, import-mode importlib, testy asyncio (pytest-asyncio, asyncio_mode), testy właściwości (Hypothesis), pokrycie (pytest-cov) i testy mutacyjne (mutmut), migracja 8→9. Nie do strategii testów niezależnej od narzędzia (eng-testing), projektu przypadków (qa-test-design) ani testów w JS/TS (tool-vitest, tool-jest)."
   slowa: "pytest, conftest, fixture, parametrize, tmp_path, monkeypatch, pytest.raises, pytest-asyncio, asyncio_mode, Hypothesis, pytest-cov, mutmut, test_*.py, tests/"
 ---

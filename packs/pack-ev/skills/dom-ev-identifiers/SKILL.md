@@ -2,7 +2,7 @@
 name: dom-ev-identifiers
 description: Użyj przy identyfikatorach w branży EV — EVSE ID, EMAID, OCPI country_code i party_id, uid vs evse_id, ID tokenów RFID, walidacja i normalizacja.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba rozpoznać, zwalidować lub znormalizować identyfikator EV: EVSE ID, EMAID (Contract ID), para country_code + party_id, różnica uid i evse_id, UID karty RFID kontra kontrakt, kto nadaje ID, cyfra kontrolna EMAID. Nie do słownika pojęć i skrótów (dom-ev-glossary), nie do ról rynku (dom-ev-market-roles), nie do PKI i certyfikatów kontraktowych Plug & Charge (dom-ev-charging, references/iso-15118.md)."
   slowa: "EVSE ID, evse_id, EMAID, Contract ID, eMA ID, cyfra kontrolna, check digit, country_code, party_id, uid, token RFID, UID karty, walidacja ID, import CSV, separator gwiazdka, normalizacja, CiString, eMI3, ID operatora, ID kontraktu, Luhn, mod 10, algorytm cyfry kontrolnej, wyliczyć cyfrę kontrolną"
 ---

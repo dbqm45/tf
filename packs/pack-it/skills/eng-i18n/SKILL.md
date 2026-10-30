@@ -2,7 +2,7 @@
 name: eng-i18n
 description: Użyj przy wielu językach i rynkach — ICU i liczba mnoga, Intl, strefy IANA, kwoty, przepływ tłumaczeń, RTL, pseudolokalizacja.
 metadata:
-  przeglad: 2027-10-20
+  przeglad: "2027-10-20"
   katalog: "Użyj, gdy produkt ma działać w wielu językach, krajach lub strefach czasowych — na froncie i backendzie: komunikaty w ICU MessageFormat (liczba mnoga, rodzaj, polskie kategorie one/few/many/other), MessageFormat 2, formatowanie przez Intl (daty, liczby, kwoty, listy, sortowanie), locale użytkownika i najemcy, czas w UTC i strefy IANA (spotkania w przyszłości, zmiana czasu, Temporal), kwoty pieniężne (miejsca po przecinku wg ISO 4217, zaokrąglenia), teksty z backendu (e-maile, PDF, powiadomienia, błędy API), przepływ tłumaczeń i klucze, pseudolokalizacja, RTL i CSS logical properties, testy i18n. Nie do pisania samych tekstów i tonu (ux-content-design), szczegółów API przeglądarki (fe-web-platform) ani stylów (fe-css)."
   slowa: "i18n, internacjonalizacja, l10n, lokalizacja aplikacji, wiele języków w aplikacji, ICU, MessageFormat, liczba mnoga, 1 plik 2 pliki 5 plików, plural, PluralRules, Intl, DateTimeFormat, NumberFormat, format daty, format kwoty, ISO 4217, locale, strefa czasowa, UTC, IANA, zmiana czasu, spotkanie przesuwa się o godzinę, Temporal, RTL, arabski, hebrajski, prawej do lewej, logical properties, pseudolokalizacja, klucze tłumaczeń, e-mail w języku użytkownika, Accept-Language"
 ---

@@ -2,7 +2,7 @@
 name: core-git-workflow
 description: Użyj przy pracy z gitem — gałęzie, commity, pull requesty i ich przegląd (także AI), konflikty.
 metadata:
-  przeglad: 2027-10-10
+  przeglad: "2027-10-10"
   katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
   slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai-review.yml, ai_review.py, workflow przeglądu AI, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR"
 ---

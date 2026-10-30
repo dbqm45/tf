@@ -2,7 +2,7 @@
 name: sec-cloud-security
 description: Użyj przy bezpieczeństwie chmury AWS, Azure, GCP — model współdzielonej odpowiedzialności, guardrails kont, logi, CSPM i CNAPP, CIS, baseline.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy projekcie lub przeglądzie bezpieczeństwa chmury publicznej (AWS, Azure, GCP) — współdzielona odpowiedzialność (IaaS, PaaS, SaaS), struktura kont, subskrypcji i projektów z guardrails (SCP, Azure Policy, Organization Policy), tożsamość bez długich kluczy, segmentacja sieci i prywatne punkty końcowe, szyfrowanie z kluczami klienta, klasyfikacja danych, baseline logowania, CSPM, CNAPP i CIEM, benchmarki CIS, kontenery w chmurze, polityki jako kod, gotowość na incydent. Wynik to dokument baseline i mapowanie kontroli. Nie do samego Terraform (ops-iac-terraform), RBAC i NetworkPolicy (ops-kubernetes), OIDC w CI i sekretów (ops-secrets-identities), zero trust i tożsamości ludzi (sec-zero-trust-identity), kosztów (ops-finops) ani obsługi incydentu (ops-security-operations)."
   slowa: "bezpieczeństwo chmury, cloud security, baseline chmury, landing zone, współdzielona odpowiedzialność, shared responsibility, SCP, Azure Policy, Organization Policy, guardrails, publiczny bucket, CloudTrail, Activity Log, Cloud Audit Logs, CSPM, CNAPP, CIEM, CIS Benchmark, prywatny endpoint, private link, VPC, VNet, klucze klienta, CMK, KMS, Checkov, Conftest, break-glass, mapowanie kontroli, multi-cloud, audyt chmury"
 ---

@@ -2,7 +2,7 @@
 name: dom-ev-kpi-analytics
 description: Użyj przy KPI sieci ładowania — uptime NEVI vs surowy vs SLA, session success rate, utilization, MTTR, MTBF, przychód na EVSE, pułapki liczenia i model danych.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy analityk lub backend liczy wskaźniki sieci ładowania — uptime i availability (wzór NEVI 23 CFR 680.116(b), wyłączenia, trzy definicje, port up tylko przy dostarczaniu energii, offline, czas nieznany, PAUSED), session success rate, utilization, kWh, sesje na EVSE, średnia długość sesji, przychód i marża na kWh, MTTR, MTBF, NPS, a także pułapki (złącza zamiast EVSE, DST, zdarzenia z opóźnieniem, duplikaty, zmiana EVSE ID, porty nowe, średnia średnich) i model danych (zdarzenia statusu, sesje, CDR, idempotencja). Nie do samych wymogów NEVI (dom-ev-regulations-us), rejestru assetów i serwisu (dom-ev-asset-operations), uzgadniania CDR z fakturą (dom-ev-cdr-settlement) ani ekonomii stacji i zwrotu inwestycji."
   slowa: "uptime, availability, dostępność ładowarek, dostępność portów, uptime 97, NEVI uptime, SLA serwisowe, wyłączenia z uptime, port up, offline jako przestój, status PAUSED, raport statusów, uptime per kraj, historia uptime, session success rate, skuteczność sesji, nieudane sesje, utilization, wykorzystanie ładowarek, obłożenie, sesje na EVSE dziennie, średnia długość sesji, przychód na EVSE, marża na kWh, MTTR, MTBF, NPS, ocena kierowców, KPI sieci ładowania, charging network KPI, dashboard KPI, średnia ze średnich, DST, strefa czasowa raport, duplikaty zdarzeń, zmiana EVSE ID"
 ---

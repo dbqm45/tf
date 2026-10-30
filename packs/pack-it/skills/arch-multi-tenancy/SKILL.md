@@ -3,7 +3,7 @@ name: arch-multi-tenancy
 description: Użyj przy SaaS dla wielu klientów — model izolacji najemców, kontekst najemcy w żądaniu i kolejce, RLS, hałaśliwy sąsiad, migracje, testy izolacji.
 metadata:
   widocznosc: nazwa
-  przeglad: 2027-10-20
+  przeglad: "2027-10-20"
   katalog: "Użyj, gdy projektujesz lub przeglądasz SaaS obsługujący wielu klientów (najemców, tenantów) — wybór modelu izolacji (silos, pula, model mieszany) z kryteriami, kontekst najemcy w żądaniu HTTP, kolejce, zadaniu w tle, cache i logach, izolacja w bazie (kolumna najemcy z RLS w PostgreSQL, schemat lub baza na najemcę), hałaśliwy sąsiad (limity, kwoty, koszt per najemca), migracje na wielu najemcach, testy izolacji jako stała część regresji, eksport i usunięcie danych klienta, wejście i odejście najemcy. Nie do ogólnego schematu i indeksów (be-database), logowania i ról użytkowników (be-auth-security), RODO (arch-privacy-compliance), mapy przepisów (arch-eu-product-law) ani izolacji najemców w systemach AI (arch-ai-solutions)."
   slowa: "multi-tenancy, multi-tenant, wielodzierżawność, najemca, tenant, tenant_id, izolacja klientów, izolacja danych klientów, firma A widzi dane firmy B, wyciek między klientami, silo, pool, bridge, baza na klienta, schemat na klienta, row level security, RLS, polityka wierszy, kontekst najemcy, kontekst tenanta w kolejce, zadanie w tle innego klienta, noisy neighbor, hałaśliwy sąsiad, limity na klienta, kwoty, koszt per klient, migracja wielu baz klientów, onboarding klienta SaaS, offboarding, usunięcie danych klienta, eksport danych klienta, reguła dla jednego klienta, fork dla klienta, konfiguracja per najemca, wersja API per klient"
 ---

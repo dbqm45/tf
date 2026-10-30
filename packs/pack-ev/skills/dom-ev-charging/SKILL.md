@@ -2,7 +2,7 @@
 name: dom-ev-charging
 description: Użyj przy przeglądzie całego ładowania EV — mapa warstw od auta do eMSP, który protokół za co, sesja w skrócie, archetypy i niezmienniki domeny.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba zobaczyć ładowanie EV w całości — warstwy protokołów (pojazd–ładowarka–CSMS–eMSP), który protokół łączy kogo, sesja w skrócie, archetypy i niezmienniki domeny, punkt startu przed wyborem skilla szczegółowego. Nie do ISO 15118 i Plug & Charge (dom-ev-iso15118), V2G (dom-ev-v2x), baterii i pojazdu (dom-ev-vehicle-battery), metrologii (dom-ev-metering-calibration), słownika pojęć (dom-ev-glossary), ról rynku (dom-ev-market-roles), formatów identyfikatorów (dom-ev-identifiers), komunikatów OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x), protokołu OCPI (dom-ev-ocpi), taryf i ceny (dom-ev-tariffs-pricing), CDR i rozliczeń (dom-ev-cdr-settlement), przebiegu sesji (dom-ev-session-lifecycle), architektury CSMS (dom-ev-cpms-architecture) ani diagnozy awarii (dom-ev-diagnostics)."
   slowa: "przegląd ładowania EV, mapa warstw, warstwy protokołów, który protokół za co, od auta do aplikacji, od samochodu do eMSP, jak działa ładowanie, ekosystem ładowania, archetypy domeny ładowania, model domeny ładowania, niezmienniki domeny, overview of EV charging, protocol layers"
 ---

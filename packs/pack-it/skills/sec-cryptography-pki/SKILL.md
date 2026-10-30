@@ -2,7 +2,7 @@
 name: sec-cryptography-pki
 description: Użyj przy wyborze algorytmów, TLS, zarządzaniu kluczami, PKI, krótkich certyfikatach i migracji postkwantowej — decyzje projektowe kryptografii.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy trzeba zdecydować, jak zaprojektować kryptografię — dobór prymitywów i trybów (AEAD, hashowanie haseł Argon2id, podpisy, wymiana kluczy), konfiguracja TLS 1.3 i HSTS, szyfrowanie w spoczynku z klasami danych (dysk, baza, pole, kopie, bezpieczne usuwanie wg NIST SP 800-88), cykl życia kluczy (KMS/HSM, szyfrowanie kopertowe, rotacja, unieważnianie, zniszczenie), PKI i skracanie ważności certyfikatów (47 dni, ACME), inwentarz kryptografii i zwinność, migracja postkwantowa (FIPS 203/204/205, tryb hybrydowy), typowe błędy (ECB, powtórzony nonce, alg confusion w JWT). Nie do eksploatacji sekretów, rotacji i skanowania (ops-secrets-identities), logowania i tokenów w aplikacji (be-auth-security) ani szerszej architektury zaufania (sec-zero-trust-identity)."
   slowa: "szyfrowanie w spoczynku, encryption at rest, klasyfikacja danych, klasy danych, TDE, SSE-KMS, szyfrowanie dysków, czy szyfrowanie dysku wystarczy, crypto-erase, bezpieczne usuwanie, kryptografia, szyfrowanie, szyfrować dane, szyfrowanie pól, szyfrowanie danych w bazie, jaki algorytm szyfrowania, jak trzymać klucze, rotacja kluczy, AES-GCM, ChaCha20, AEAD, nonce, IV, ECB, hashowanie haseł, Argon2id, bcrypt, scrypt, podpis cyfrowy, wymiana kluczy, TLS 1.3, HSTS, certyfikat, 47 dni, ACME, PKI, CA, root CA, KMS, HSM, szyfrowanie kopertowe, rotacja klucza, postkwantowa, PQC, ML-KEM, ML-DSA, FIPS 203, CNSA 2.0, harvest now decrypt later, zwinność kryptograficzna, CBOM, alg none, JWT alg, własna kryptografia"
 ---

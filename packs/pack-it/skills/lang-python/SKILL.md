@@ -2,7 +2,7 @@
 name: lang-python
 description: Użyj przy kodzie Python 3.11–3.15 — typy i mypy, pyproject i uv, ruff, dataclass i Decimal, wyjątki czy wynik.
 metadata:
-  przeglad: 2027-04-03
+  przeglad: "2027-04-03"
   katalog: "Użyj przy pisaniu i przeglądzie kodu Python (3.11–3.15) — typowanie (składnia generyków 3.12, X | None, Protocol, mypy/pyright), struktura projektu (pyproject.toml, src layout, uv, lockfile, grupy zależności), ruff, niezmienność (dataclass frozen), pieniądze w Decimal, obsługa błędów i odrzucenia jako wynik, match, asyncio — oraz przy wyrażaniu pojęć domenowych idiomami Pythona. Nie do testów w pytest (tool-pytest), analizy danych i statystyki (data-analysis) ani potoków danych (data-engineering)."
   slowa: "Python, pyproject, pyproject.toml, uv, ruff, mypy, pyright, typowanie w Pythonie, dataclass, Decimal, TypeVar, asyncio, venv, pip, requirements.txt, FastAPI, Django, .py"
 ---

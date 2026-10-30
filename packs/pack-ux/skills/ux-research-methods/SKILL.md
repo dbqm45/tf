@@ -2,7 +2,7 @@
 name: ux-research-methods
 description: Użyj przy badaniach z użytkownikami (UX Research, ResearchOps) — pytanie badawcze, dobór metody, plan, rekrutacja, zgody RODO, synteza, repozytorium.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj, gdy trzeba zaplanować i przeprowadzić badanie z użytkownikami — od pytania badawczego przez dobór metody (wywiady, testy użyteczności moderowane i niemoderowane, ankiety, badania dzienniczkowe, benchmark konkurencji, badania włączające), plan badania, rekrutację i screener, zgodę i RODO uczestników, prowadzenie sesji, heurystyki wielkości próby z zastrzeżeniami, syntezę (mapowanie powinowactwa, atomowe nuggets, synteza wspomagana AI ze sprawdzeniem przez człowieka), repozytorium badań i ResearchOps (panel, backlog, playbooki) aż po zamianę ustaleń na decyzje; artefakty research-plan.md i research-report.md. Nie do decyzji co budować, drzewa szans, JTBD i testów założeń (proc-product-discovery), heurystyk i testu użyteczności w trakcie projektowania (ux-feature-design), UAT (qa-exploratory-manual), statystyki (data-analysis), DPIA (arch-privacy-compliance) ani architektury informacji (ux-information-architecture)."
   slowa: "badania użytkowników, UX research, wywiady z użytkownikami, wywiad pogłębiony, badanie jakościowe, test użyteczności, ankieta, diary study, badanie dzienniczkowe, rekrutacja uczestników, screener, panel badawczy, zgoda uczestnika, nagrywanie sesji, ilu uczestników, ile osób, synteza badań, mapowanie powinowactwa, insighty, repozytorium badań, ResearchOps, raport z badań, pytanie badawcze, plan badania, moderowanie sesji"
 ---

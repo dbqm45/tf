@@ -2,7 +2,7 @@
 name: sec-detection-engineering
 description: Użyj przy projektowaniu i testowaniu reguł wykrywania — Sigma jako kod, pokrycie ATT&CK, jakość alertów, purple team, polowanie na zagrożenia.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy trzeba zaprojektować, napisać, przetestować i utrzymać wykrywanie ataków — cykl życia reguły (hipoteza, źródło danych, reguła, test symulacją, wdrożenie, strojenie, wycofanie), detection-as-code (Sigma, repo, CI), mapa pokrycia MITRE ATT&CK i analiza luk, jakość alertu (trafność, budżet szumu, kontekst, runbook), ćwiczenia purple team (Atomic Red Team, Caldera), podstawy polowania na zagrożenia, metryki (czas do wykrycia, pokrycie, fałszywe alarmy). Nie do obsługi SIEM, EDR, SOAR i reagowania na incydent (ops-security-operations), ogólnych alertów aplikacji (ops-observability), modelu zagrożeń funkcji (arch-threat-modeling) ani analizy próbek malware (sec-malware-analysis)."
   slowa: "reguła wykrywania, detection engineering, detection as code, Sigma, pokrycie ATT&CK, MITRE ATT&CK, Navigator, luki w wykrywaniu, fałszywe alarmy, zmęczenie alertami, strojenie reguł, purple team, red team, emulacja przeciwnika, Atomic Red Team, Caldera, threat hunting, polowanie na zagrożenia, hipoteza, czas do wykrycia, MTTD, hunting, testy reguł, SIEM reguła"
 ---

@@ -51,6 +51,9 @@ def main() -> int:
     check(b.check_review_date("eng-a", {"przeglad": "2027-04-17"}) == ([], []), "RD-1: poprawna data bez uwag")
     errors, _ = b.check_review_date("eng-a", {"przeglad": "kwiecień"})
     check(len(errors) == 1 and "przeglad" in errors[0], f"RD-2: zły format daty → błąd: {errors}")
+    errors, warnings = b.check_review_date("eng-a", {"przeglad": __import__("datetime").date(2027, 4, 17)})
+    check(errors == [] and len(warnings) == 1 and "cudzysłow" in warnings[0],
+          f"RD-2b: data YAML bez cudzysłowu → ostrzeżenie (specyfikacja Agent Skills: metadata to tekst): {errors} {warnings}")
     errors, warnings = b.check_review_date("eng-a", {})
     check(errors == [] and len(warnings) == 1 and "freshness.py" in warnings[0],
           f"RD-3: brak terminu → ostrzeżenie z poleceniem: {warnings}")

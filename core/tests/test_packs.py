@@ -30,7 +30,7 @@ def project(base: Path) -> Path:
     for d in (ROOT / ".claude" / "skills").glob("core-*"):
         shutil.copytree(d, p / ".claude" / "skills" / d.name)
     skill = "---\nname: {n}\ndescription: Użyj przy {n}.\nmetadata:\n  katalog: \"Użyj przy {n}. Nie do niczego.\"\n" \
-            "  przeglad: 2099-01-01\n---\n# {n}\n"
+            "  przeglad: \"2099-01-01\"\n---\n# {n}\n"
     for n in ("aa-model", "aa-extra", "bb-tekst"):
         write(p / ".claude" / "skills" / n / "SKILL.md", skill.format(n=n))
     a = p / "factory" / "packs" / "pack-a"

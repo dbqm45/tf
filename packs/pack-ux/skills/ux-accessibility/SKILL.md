@@ -2,7 +2,7 @@
 name: ux-accessibility
 description: Użyj przy audycie dostępności WCAG 2.2 AA, raporcie ustaleń, planie napraw, deklaracji dostępności i wymogach prawnych (EAA, EN 301 549).
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy trzeba ocenić lub zorganizować dostępność produktu cyfrowego — proces audytu WCAG 2.2 poziom AA (zakres i próba, automaty, kontrola ręczna, klawiatura, technologie asystujące NVDA, JAWS, VoiceOver, TalkBack), raport ustaleń z kryterium sukcesu, wagą i naprawą, plan napraw i priorytety, adnotacje dostępności w projekcie (nagłówki, landmarki, kolejność tabulacji, nazwy), obowiązki prawne (EN 301 549, Europejski akt o dostępności – dyrektywa (UE) 2019/882 i polska ustawa wdrażająca, deklaracja dostępności podmiotów publicznych), projekt włączający i szkolenie zespołu. Nie do kodu dostępności komponentów (fe-web-platform), ręcznych testów w QA (qa-exploratory-manual) ani ogólnego UX (ux-feature-design)."
   slowa: "audyt dostępności, dostępność cyfrowa, WCAG, WCAG 2.2, czytnik ekranu, NVDA, JAWS, VoiceOver, TalkBack, deklaracja dostępności, ustawa o dostępności, europejski akt o dostępności, EAA, EN 301 549, raport z audytu, niezgodność z WCAG, kontrast, dostępność strony, osoby niewidome, projekt włączający, adnotacje dostępności, plan napraw, zgodność z WCAG, BIP"
 ---

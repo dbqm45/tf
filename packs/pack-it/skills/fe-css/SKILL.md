@@ -2,7 +2,7 @@
 name: fe-css
 description: Użyj przy stylowaniu — flex/grid, responsywność, design tokens, motywy, animacje, izolacja stylów.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy stylowaniu komponentów, layoutach (flex/grid), responsywności, design tokenach, motywach jasny/ciemny, animacjach i izolacji stylów (CSS Modules, scoped, @scope, @layer). Nie do logiki JavaScript (fe-web-platform) ani struktury komponentów (fe-architecture)."
 ---
 

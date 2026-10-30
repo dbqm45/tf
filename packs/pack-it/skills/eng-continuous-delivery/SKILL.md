@@ -2,7 +2,7 @@
 name: eng-continuous-delivery
 description: Użyj przy sposobie dostarczania — trunk-based, małe partie, feature flags, CI/CD, metryki DORA, Twelve-Factor.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy decyzjach o sposobie dostarczania — trunk-based development, małe partie, feature flags, ciągła integracja i dostarczanie, metryki DORA, zasady Twelve-Factor App, bezpieczeństwo „shift left”. Nie do konfiguracji konkretnych narzędzi CI (ops-ci-cd) ani gita na co dzień (core-git-workflow)."
 ---
 

@@ -2,7 +2,7 @@
 name: be-messaging-outbox
 description: Użyj przy komunikacji asynchronicznej — komenda czy zdarzenie, outbox/inbox, kolejność, idempotencja.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy zamianie synchronicznego wywołania między modułami na asynchroniczną wiadomość i przy projektowaniu outbox/inbox — czy wolno rozproszyć, komenda czy zdarzenie, atomowość, relay, kolejność, idempotencja odbiorcy, testy producenta, kontraktu i konsumenta. Nie do wyboru relacji kontekstów (ddd-context-mapping) ani schematu bazy ogólnie (be-database)."
 ---
 

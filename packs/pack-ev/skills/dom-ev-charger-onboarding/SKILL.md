@@ -2,7 +2,7 @@
 name: dom-ev-charger-onboarding
 description: Użyj przy wprowadzaniu nowego modelu ładowarki lub firmware do CSMS — karta onboardingu, Pending vs Accepted, testy akceptacyjne, odchylenia producenta, pilotaż.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy nowy model ładowarki albo nowa wersja firmware ma wejść do sieci operatora — karta onboardingu (producent, model, firmware, OCPP i edycja, profil bezpieczeństwa, EVSE, licznik), konfiguracja połączenia, BootNotification Pending vs Accepted jako bramka, odczyt i ustawienie konfiguracji, macierz testów akceptacyjnych, analiza logów z testów, rejestr odchyleń producenta, decyzja o dopuszczeniu i pilotaż na jednej stacji przed flotą. Nie do awarii stacji w produkcji (dom-ev-diagnostics), sprzętu i złączy (dom-ev-charger-hardware), treści komunikatów OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x) ani budowy symulatora (dom-ev-simulation-testing)."
   slowa: "onboarding ładowarki, nowy model ładowarki, nowy producent, nowy firmware, aktualizacja firmware, dopuszczenie do sieci, homologacja, certyfikacja OCPP, akceptacja stacji, testy akceptacyjne, pilotaż, pilot, 200 sztuk, wdrożenie na flotę, rollout, odchylenia producenta, quirks, Pending, Accepted, karta onboardingu, raportują inne statusy, DC 150 kW, new charger model, firmware rollout, acceptance test, vendor deviation"
 ---

@@ -2,7 +2,7 @@
 name: ops-iac-terraform
 description: Użyj przy infrastrukturze jako kod (Terraform/OpenTofu) — moduły, stan, zmienne, sieć, IAM, bazy, storage.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy infrastrukturze jako kod — Terraform/OpenTofu, moduły, stan, zmienne, zasoby chmurowe (sieć, IAM, bazy, storage). Nie do pipeline'ów (ops-ci-cd) ani kontenerów (ops-docker)."
 ---
 

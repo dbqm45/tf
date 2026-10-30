@@ -2,7 +2,7 @@
 name: dom-ev-charger-hardware
 description: Użyj przy sprzęcie ładowarki EV z perspektywy software — stany CP, PWM i prąd, PP, tryby, złącza, fazy i moc, RCD, licznik MID i Eichrecht.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy firmware, CSMS lub diagnostyka musi rozumieć sprzęt ładowarki — stany Control Pilot A–F i ich mapowanie na StatusNotification, PWM i przeliczenie wypełnienia na prąd, rezystor Proximity Pilot i limit kabla, Mode 1–4, złącza (Type 1, Type 2, CCS1/CCS2, CHAdeMO, NACS/J3400) wg rynków PL/UE/USA, AC vs DC, fazy i moc, RCD typu A/B i wykrywanie 6 mA DC, licznik (MID, Eichrecht, OCMF, podpisane odczyty, NIST HB44). Nie do komunikatów i pól OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x), ISO 15118 i Plug & Charge w szczegółach (dom-ev-charging), diagnozy incydentu od objawu (dom-ev-diagnostics), wprowadzania modelu do sieci (dom-ev-charger-onboarding) ani projektu profili ładowania."
   slowa: "control pilot, CP, stan CP, stan B, stan C, PWM, duty cycle, wypełnienie, proximity pilot, PP, rezystor PP, limit kabla, Type 2, Type 1, J1772, CCS, CCS1, CCS2, Combo, CHAdeMO, NACS, J3400, Mode 3, Mode 2, tryb ładowania, złącze, gniazdo, kabel, faza, trójfazowo, jednofazowo, 230 V, 400 V, 240 V, kW, ampery, RCD, różnicówka, 6 mA, RDC-DD, typ B, licznik, MID, Eichrecht, OCMF, signed meter values, podpisany licznik, legalizacja, NIST HB44, SuspendedEV, SuspendedEVSE, Preparing, auto nie pobiera prądu, ładuje wolniej niż powinno, charger hardware, EVSE hardware, duty cycle to amps"
 ---

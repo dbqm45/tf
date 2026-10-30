@@ -2,7 +2,7 @@
 name: dom-ev-asset-operations
 description: Użyj przy rejestrze assetów i utrzymaniu stacji CPO — cykl życia, wygaszanie EVSE ID, zdalne komendy, O&M, degradacja, PAUSED, decommissioning.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy CPO prowadzi rejestr assetów infrastruktury ładowania i jej utrzymanie od strony software — atrybuty assetu, maszyna stanów cyklu życia i jej skutki dla OCPI (PLANNED, REMOVED) oraz NEVI, nadawanie i wygaszanie EVSE ID, wymiana sprzętu pod tym samym EVSE, rozjazd rejestru z BootNotification, zdalne komendy, szablony konfiguracji, runbooki, O&M, części zamienne, degradacja z telemetrii i predictive maintenance, firmware, repowering, decommissioning. Nie do diagnozy konkretnej awarii od objawu (dom-ev-diagnostics), onboardingu nowego modelu (dom-ev-charger-onboarding), liczenia KPI i raportów (dom-ev-kpi-analytics), migracji między CSMS (dom-ev-csms-migration) ani formatu EVSE ID (dom-ev-identifiers)."
   slowa: "rejestr assetów, asset management, cykl życia stacji, magazyn, IN_STOCK, commissioning, decommissioning, likwidacja stacji, demontaż, wymiana ładowarki, ponowne użycie EVSE ID, wygaszone EVSE ID, REMOVED, PLANNED, PAUSED, wyłączenie z ruchu, serwis, O&M, przegląd prewencyjny, zgłoszenie serwisowe, części zamienne, moduł mocy, degradacja, spadek mocy, predictive maintenance, runbook, zdalny reset, ChangeAvailability, TriggerMessage, GetLog, UpdateFirmware, szablon konfiguracji, nr seryjny, legalizacja licznika, repowering, asset register, lifecycle, spare parts, charger degradation, ładowarki dają coraz mniej kW, ten sam kod producenta wraca, wyłapać ładowarki do przeglądu, zanim padną, flota ładowarek DC tego samego modelu"
 ---

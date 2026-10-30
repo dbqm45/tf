@@ -2,7 +2,7 @@
 name: eng-debugging
 description: Użyj, gdy coś działa źle albo przestało działać (regresja po wielu commitach), a przyczyna nie jest oczywista — odtworzenie, hipotezy, git bisect, debugger.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy program działa źle, a przyczyna nie jest oczywista — opis objawu, odtworzenie (najlepiej czerwonym testem), hipotezy z eksperymentem rozstrzygającym, zawężanie (bisekcja w historii przez git bisect run, w danych wejściowych, w kodzie i konfiguracji), debugger i logi, typowe klasy przyczyn (niedeterminizm, stan współdzielony, cache, środowisko, wersje), przyczyna źródłowa i poprawka bez maskowania. Nie do prowadzenia incydentu produkcyjnego (ops-sre-incidents), diagnozy serwera i sieci (ops-linux-networking), przeglądu zgłoszeń z zewnątrz (proc-issue-triage) ani kwarantanny niestabilnych testów (qa-regression)."
   slowa: "debugowanie, błąd, bug, nie działa, dlaczego to nie działa, przyczyna błędu, wyjątek, stack trace, NullPointerException, regresja, git bisect, który commit zepsuł, debugger, breakpoint, pdb, odtworzyć błąd, działa lokalnie a nie w CI, poprawka nie pomogła, kolejna poprawka, znowu ten sam błąd, przeramowanie, zapis nie działa, API zwraca 200, połknięty błąd"
 ---

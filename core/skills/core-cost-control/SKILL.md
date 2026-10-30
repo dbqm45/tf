@@ -2,7 +2,7 @@
 name: core-cost-control
 description: Użyj przy doborze lub zmianie modelu i koszcie — porównanie wyników benchmarków, kaskada haiku→sonnet→opus, effort, cache, kompaktowanie, pomiar.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy wybierasz model lub effort dla zadania albo wykonawcy, eskalujesz po nieudanej próbie, planujesz długą sesję, kompaktujesz kontekst albo analizujesz koszt i trafienia cache — rubryka trudności, kaskada modeli z parametrem model narzędzia Agent, profile kosztów, doradca (advisor), opusplan, reguły cache, kompaktowanie, raport kosztów. Nie do ograniczania halucynacji (core-grounding) ani wydajności samej aplikacji (skille z pack-it)."
   slowa: "ile kosztowała praca agentów, koszt w złotówkach, koszt w PLN, statystyki kosztów, drogo czy tanio, koszt, tokeny, tańszy model, drogi model, haiku, sonnet, opus, effort, eskalacja, cache, kompaktowanie, compact, limit, rachunek, oszczędność, profil kosztów, doradca, advisor, opusplan, serwery MCP drogie, dryf kontekstu, przekręca nazwy plików, nowy model, ranking modeli, benchmark, domyślny model, koszt agenta w CI, fork czy subagent, agent teams"
 ---

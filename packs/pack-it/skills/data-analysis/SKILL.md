@@ -2,7 +2,7 @@
 name: data-analysis
 description: Użyj, gdy na pytanie trzeba odpowiedzieć danymi — spadek lub wzrost metryki, segmenty i paradoks Simpsona, czyszczenie, statystyka, testy hipotez, raport.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj, gdy trzeba odpowiedzieć na pytanie danymi — od pytania i decyzji przez pozyskanie danych, czyszczenie, analizę opisową i diagnostyczną, statystykę i testy hipotez, wizualizację po raport z wnioskami i ograniczeniami; pandas, SQL, R, arkusze, podstawy uczenia maszynowego. Nie do potoków danych (data-engineering) ani eksperymentów A/B produktu (proc-product-discovery)."
   slowa: "porównanie grup, średnia czy mediana, rozkład skośny, test statystyczny, istotność, wielkość efektu, spadek konwersji, dane z eksperymentu"
 ---

@@ -2,7 +2,7 @@
 name: pm-product-lifecycle
 description: Użyj przy etapie życia produktu lub modułu — wzrost, dojrzałość, schyłek; decyzja przedłużyć, zastąpić, utrzymać lub wycofać; plan wycofania z klientami.
 metadata:
-  przeglad: 2027-10-23
+  przeglad: "2027-10-23"
   katalog: "Użyj, gdy produkt, plan cenowy albo moduł przestaje rosnąć lub kosztuje więcej, niż daje — rozpoznanie etapu cyklu życia (wprowadzenie, wzrost, dojrzałość, schyłek) z danych, wybór ruchu (inwestować, przedłużyć życie, zastąpić, utrzymać bez rozwoju, wycofać) z kryteriami decyzji go/no-go, plan wycofania: kolejność interesariuszy, komunikat dla klientów, harmonogram (zapowiedź, koniec sprzedaży, koniec wsparcia, wyłączenie), migracja i eksport danych, umowy i prawo, checklista z właścicielami. Nie do technicznego wycofania wersji API (be-api-design), wydań i flag funkcji (ops-release-engineering), metryk SaaS (pm-saas-metrics) ani wyboru nowych funkcji (proc-product-discovery)."
   slowa: "cykl życia produktu, produkt przestał rosnąć, rynek nasycony, schyłek produktu, wycofać produkt, wyłączyć moduł, wygaszenie produktu, sunset, end of life, koniec wsparcia, koniec sprzedaży, mało kto używa, utrzymanie kosztuje, zastąpić produkt, przedłużyć życie produktu, migracja klientów, ogłoszenie wycofania"
 ---

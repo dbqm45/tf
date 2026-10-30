@@ -838,7 +838,7 @@ katalogu) i `description` (1–1024 znaki); opcjonalne `license`, `compatibility
 string → string), `allowed-tools` (eksperymentalne); treść `SKILL.md` < 5000 tokenów i < 500 linii; odwołania
 o jeden poziom od `SKILL.md`; walidacja `skills-ref validate ./skill`. Stan fabryki (skrypt jednorazowy, 209
 skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyjątki:
-- [ ] **`metadata.przeglad` jest datą YAML, nie tekstem** (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
+- [x] **`metadata.przeglad` jest datą YAML, nie tekstem** (zrobione 2026-10-30: 209 skilli w cudzysłowie, zapis przez `freshness.py` i `build.py new-skill`, ostrzeżenie w `build.py check`) (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
   cudzysłowu) — specyfikacja wymaga wartości tekstowych; zapis w cudzysłowie w szablonie i w `build.py`/generatorze
   plus test w `skill_gate.py`; przy okazji sprawdzić `skills-ref validate` na kilku skillach (zmiana w `factory/` za
   zgodą człowieka). Klucze spoza specyfikacji (`argument-hint`, `disable-model-invocation`) to rozszerzenia Claude

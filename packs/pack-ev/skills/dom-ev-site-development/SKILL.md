@@ -2,7 +2,7 @@
 name: dom-ev-site-development
 description: Użyj przy budowie lokalizacji ładowania od pomysłu do uruchomienia — wybór miejsca, punktacja, przyłącze od OSD, budowa, pozwolenia, dzierżawa, pipeline.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy zespół rozwoju sieci lub software go wspierający buduje nową lokalizację ładowania — wybór miejsca (popyt, czas postoju, typ ładowarki, konkurencja, dostęp vanów, przyczep, ciężarówek), punktacja z wagami, ograniczenia korytarzowe AFIR TEN-T i NEVI 680.106, przyłącze od OSD, budowa, pozwolenia, dzierżawa, pipeline lead → operacje z bramkami go/no-go, future-proofing, przekazanie do rejestru assetów i CSMS, publikacja w OCPI (facilities, opening_times, parking). Nie do podziału mocy i limitu przyłącza w eksploatacji (dom-ev-energy-management), NPV i marży (dom-ev-business-economics), sprzętu ładowarki (dom-ev-charger-hardware), pełnej mapy przepisów (dom-ev-regulations-eu, dom-ev-regulations-pl) ani rejestru assetów w eksploatacji (dom-ev-asset-operations)."
   slowa: "nowa lokalizacja, budowa stacji ładowania, wybór lokalizacji, site selection, pipeline lokalizacji, warunki przyłączenia, wniosek o przyłączenie, moc przyłączeniowa, kVA, stacja transformatorowa, czas oczekiwania OSD, site host, gospodarz lokalizacji, dzierżawa, podział przychodu, miejsca parkingowe, pull-through, przyczepa, ciężarówki, MCS, bollardy, CCTV, światłowód, pozwolenie na budowę, parking podziemny, przeciwpożarowe, go/no-go, future-proofing, punktacja lokalizacji, TEN-T, AFIR 60 km, NEVI 680.106, facilities, opening_times, parking_places, commissioning"
 ---

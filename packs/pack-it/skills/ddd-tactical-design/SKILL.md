@@ -2,7 +2,7 @@
 name: ddd-tactical-design
 description: Użyj przy modelu wewnątrz kontekstu — agregaty, encje, obiekty wartości, zdarzenia, polityki, saga, CQRS.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj przy projektowaniu modelu wewnątrz kontekstu — building blocks (agregat, encja, obiekt wartości, serwis, polityka, specyfikacja, fabryka, repozytorium, zdarzenia, saga), warstwy, granice spójności, CQRS, ocena sprzężeń przez connascence. Nie do granic i relacji kontekstów (ddd-strategic-analysis, ddd-context-mapping)."
   slowa: "magiczne wartości, zduplikowany algorytm, agregat, granica transakcji, obiekt wartości, regulamin zmienia się co rok, rozliczać według starych zasad, reguła zmienna w czasie, wersja polityki, naliczanie kar, scoring, drzewo reguł"
 ---

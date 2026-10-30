@@ -2,7 +2,7 @@
 name: ai-rag
 description: Użyj przy RAG i wyszukiwaniu w dokumentach dla LLM — RAG czy długi kontekst, chunking, embeddingi, hybryda, reranking, uprawnienia, ewaluacja retrievalu.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy budujesz czatbota lub funkcję odpowiadającą na podstawie własnych dokumentów — decyzja RAG, długi kontekst, fine-tuning albo narzędzia, wczytywanie i parsowanie (PDF, tabele), chunking (rozmiar, zakładka, wg struktury), wybór embeddingów także dla polskiego, wyszukiwanie hybrydowe BM25 plus wektory, reranking, contextual retrieval, filtry metadanych, uprawnienia per dokument, świeżość i reindeksacja, wybór bazy wektorowej (pgvector, Qdrant, Milvus, OpenSearch), metryki retrievalu (recall@k, MRR, nDCG), cytowanie źródeł, typowe porażki i prompt injection przez pobrane dokumenty. Nie do SDK, kontraktu wyjścia i pętli narzędzi (eng-llm-features), indeksów i zapytań PostgreSQL (be-database), ogólnej metody ewaluacji (ai-evals), potoków danych (data-engineering) ani projektu agenta (ai-agents)."
   slowa: "rag, retrieval, wyszukiwanie semantyczne, baza wiedzy, czatbot na dokumentach, embeddingi, wektory, baza wektorowa, pgvector, qdrant, milvus, opensearch, chunking, dzielenie dokumentów, hybrydowe wyszukiwanie, bm25, reranking, contextual retrieval, recall@k, mrr, ndcg, cytowanie źródeł, halucynacje, długi kontekst, uprawnienia do dokumentów, reindeksacja"
 ---

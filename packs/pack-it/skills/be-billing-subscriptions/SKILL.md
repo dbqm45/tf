@@ -3,7 +3,7 @@ name: be-billing-subscriptions
 description: Użyj przy subskrypcjach i płatnościach cyklicznych — plany, zmiana planu proporcjonalnie, okres próbny, windykacja, webhooki dostawcy, VAT, faktury.
 metadata:
   widocznosc: nazwa
-  przeglad: 2027-10-20
+  przeglad: "2027-10-20"
   katalog: "Użyj, gdy projektujesz lub przeglądasz rozliczenia SaaS — model planów, cen i okresów, subskrypcja i jej stany, zmiana planu w trakcie okresu z rozliczeniem proporcjonalnym, okres próbny, rozliczenie za zużycie, nieudane płatności i windykacja (dunning), idempotentne webhooki dostawcy płatności (Stripe, Adyen, PayU, Przelewy24) i uzgadnianie stanu, pieniądze w kodzie (waluta, zaokrąglenia), VAT dla usług elektronicznych i OSS, faktury i korekty, KSeF, anulowanie i odstąpienie. Nie do ogólnego projektu kolejek (be-messaging-outbox), modelu cennika i księgowania w domenie (ddd-archetypes: Pricing, Accounting), mapy przepisów UE dla produktu z AI (arch-eu-product-law) ani logowania (be-auth-security)."
   slowa: "subskrypcja, abonament, płatność cykliczna, billing, rozliczenia saas, plan taryfowy, zmiana planu, upgrade, downgrade, proration, rozliczenie proporcjonalne, okres próbny, trial, rozliczenie za zużycie, metered billing, nieudana płatność, karta odrzucona, dunning, windykacja, ponowienie płatności, past_due, webhook stripe, webhook przyszedł dwa razy, idempotencja płatności, uzgadnianie płatności, faktura subskrypcji, faktura korygująca, VAT OSS, VAT usług elektronicznych, kwota w groszach, zaokrąglenie kwot, anulowanie subskrypcji"
 ---

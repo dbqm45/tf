@@ -2,7 +2,7 @@
 name: ddd-context-mapping
 description: Użyj przy relacjach i integracji kontekstów — mapa kontekstów (OHS, ACL, Conformist), treść zdarzeń integracyjnych i kopia danych u odbiorcy.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj przy projektowaniu relacji i integracji między kontekstami — mapa kontekstów (Open Host Service, ACL, Published Language, Conformist i in.), serwisy krawędziowe vs wewnętrzne, zdarzenia integracyjne (notification, event-carried state transfer). Nie do wyznaczania samych granic (ddd-strategic-analysis) ani modelu wewnątrz kontekstu (ddd-tactical-design)."
   slowa: "relacja z zewnętrznym systemem, obcy model przecieka do naszego, zewnętrzny system z kiepskim modelem, relacja na mapie kontekstów"
 ---

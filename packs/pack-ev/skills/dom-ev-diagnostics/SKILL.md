@@ -2,7 +2,7 @@
 name: dom-ev-diagnostics
 description: Użyj przy diagnozie problemu sieci ładowania od objawu do przyczyny — ładowarka offline, sesja nie startuje, wisząca sesja, rozjazd kWh, Faulted; dowód z ramek.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy ładowarka traci połączenie, nie startuje sesji, sesja wisi bez CDR, energia różni się między licznikiem, CSMS i CDR albo złącze jest Faulted/Unavailable — zasada najpierw dowody (ramki OCPP i logi), drzewa decyzyjne per objaw, skrypt analizy logu ramek, raport diagnozy z osią czasu i dowodem oraz wpis odchylenia producenta. Nie do przebiegu sesji, jaki powinien być (dom-ev-session-lifecycle), katalogu komunikatów OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x) ani projektu CSMS (dom-ev-cpms-architecture)."
   slowa: "ładowarka offline, ładowarka się rozłącza, zrywa połączenie, nie odpowiada, nie startuje ładowania, RemoteStart nie działa, wisząca sesja, sesja nie kończy się, brak CDR, rozjazd energii, 12 kWh a 12000, licznik malejący, Faulted, Unavailable, errorCode, vendorErrorCode, BootNotification Rejected, Pending, certyfikat TLS wygasł, handshake, analiza logów OCPP, diagnoza, root cause, charger offline, session not starting, stuck session, missing CDR, energy mismatch, troubleshooting, debug OCPP"
 ---

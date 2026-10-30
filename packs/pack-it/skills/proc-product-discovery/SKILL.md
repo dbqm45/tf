@@ -2,7 +2,7 @@
 name: proc-product-discovery
 description: Użyj przy decyzji, co budować i po co — wynik zamiast funkcji, drzewo szans, JTBD, testy założeń, RICE, eksperymenty.
 metadata:
-  przeglad: 2027-10-09
+  przeglad: "2027-10-09"
   katalog: "Użyj, gdy trzeba zdecydować, CO budować i po co — wynik zamiast funkcji, drzewo szans i rozwiązań, problem i JTBD, pytania „jak moglibyśmy”, co najmniej trzy rozwiązania, mapa założeń i ich testy, priorytety (RICE, MoSCoW, Kano), metryki sukcesu (HEART, OKR), eksperymenty A/B, gotowość do wydania, kwalifikacja narzędzia wewnętrznego (kup, uzupełnij, zbuduj, czekaj), komunikat prasowy i FAQ przed budową, epik jako hipoteza, roadmapa według wyników. Nie do rytuałów zespołu (proc-agile) ani projektu interfejsu (ux-feature-design)."
   slowa: "narzędzie wewnętrzne, budować czy kupić gotowe, zbudować własne narzędzie, raport dla kierownika, komunikat prasowy, press release, working backwards, PR/FAQ, zanim zaczniemy budować, przed pierwszą linią kodu, epik jako hipoteza, roadmapa, roadmapa funkcji z datami, roadmapa według wyników, teraz dalej później"
 ---

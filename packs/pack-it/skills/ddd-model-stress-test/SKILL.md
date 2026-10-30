@@ -2,7 +2,7 @@
 name: ddd-model-stress-test
 description: Użyj przy teście rozszerzalności modelu wzdłuż metryki biznesowej — wymagania na ślepo, wpływ na moduły.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj, by sprawdzić rozszerzalność modelu/dekompozycji wzdłuż metryki biznesowej — brief bez rozwiązania, wymagania generowane „na ślepo” (agent bez wglądu w architekturę), ocena wpływu na moduły, porównanie dekompozycji. Nie do zbierania wymagań od klienta ani pomiaru sprzężeń w kodzie (ddd-connascence-analysis)."
   slowa: "czy model wytrzyma przyszłe wymagania, rozszerzalność, nowe wymagania, porównanie dekompozycji, wpływ zmian na moduły"
 ---

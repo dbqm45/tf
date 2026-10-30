@@ -2,7 +2,7 @@
 name: ops-secrets-identities
 description: Użyj przy sekretach i tożsamościach maszynowych — inwentarz, skanowanie, rotacja, OIDC zamiast kluczy, PKI.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj przy sekretach i tożsamościach maszynowych — inwentarz kont usług, tokenów, kluczy i certyfikatów (właściciel, zakres, wygaśnięcie), rozdział tożsamości buildu i wdrożenia, skanowanie sekretów przed commitem i w CI, push protection, rotacja i sprzątanie, inwentarz kryptografii (CBOM). Nie do auth użytkowników aplikacji (be-auth-security) ani zależności (ops-supply-chain-security)."
 ---
 

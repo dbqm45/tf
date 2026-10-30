@@ -2,7 +2,7 @@
 name: dom-ev-tariffs-pricing
 description: Użyj przy cenie sesji ładowania EV i taryfach OCPI — elementy, restrykcje, step_size, VAT i podatki, ad hoc vs kontrakt, zaokrąglanie, kalkulator.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy trzeba zdefiniować, wyjaśnić albo przeliczyć cenę sesji ładowania z taryfy OCPI 2.2.1 i 2.3.0 — Tariff, TariffElement, PriceComponent, wymiary ENERGY, TIME, PARKING_TIME, FLAT, restrykcje (włącznie i wyłącznie, czas lokalny lokacji), kolejność elementów i element domyślny, step_size, VAT per składnik, tax_included i podatki w USA, min_price i max_price, TariffType, tariff_alt_text, taryfa ad hoc a kontraktowa, netto i brutto, waluta, ceny dynamiczne i komunikacja ceny kierowcy, zaokrąglanie, kalkulator ocpi_tariff_calc.py. Przypisanie taryf do EVSE i lokalizacji, `tariff_ids`, marże i opłaty, zmiana i publikacja ceny, audyt, taryfa zerowa. Nie do CDR, jego korekt i uzgodnień rozliczeń (dom-ev-cdr-settlement) ani protokołu OCPI — moduły, credentials, wersje (dom-ev-ocpi)."
   slowa: "taryfa OCPI, tariff, TariffElement, PriceComponent, restrykcje taryfy, TariffRestrictions, step_size, krok rozliczeniowy, cena za kWh, cena za minutę, opłata za postój, parking time, opłata startowa, flat fee, min_price, max_price, VAT, netto brutto, tax_included, podatek w USA, sales tax, taryfa ad hoc, AD_HOC_PAYMENT, tariff_alt_text, cena dynamiczna, dynamic pricing, cena dla kierowcy, zaokrąglanie ceny, rounding, ile kosztuje sesja, policz koszt sesji, zły koszt w CDR, okno nocne, taryfa weekendowa, kalkulator taryf, ocpi_tariff_calc, price calculation, idle fee, przypisanie taryfy do EVSE, tariff_ids, taryfa dla eMSP, marża na kWh, zmiana ceny, audyt cen, darmowe ładowanie B2B, hierarchia taryf"
 ---

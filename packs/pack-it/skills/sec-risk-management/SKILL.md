@@ -2,7 +2,7 @@
 name: sec-risk-management
 description: Użyj przy rejestrze ryzyk bezpieczeństwa, akceptacji ryzyka, ryzyku dostawcy, FAIR lub ISO 27005 — proces, apetyt, postępowanie, KRI.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   katalog: "Użyj, gdy firma prowadzi organizacyjny proces ryzyka bezpieczeństwa informacji — kontekst i kryteria (ISO/IEC 27005:2022), identyfikacja wg aktywów lub scenariuszy, analiza jakościowa (macierz) i ilościowa (FAIR: częstotliwość zdarzeń strat × wielkość straty, przedziały, Monte Carlo), apetyt i tolerancja na ryzyko, opcje postępowania (modyfikacja, utrzymanie z właścicielem i terminem, unikanie, podział i ubezpieczenie cyber), rejestr ryzyk, ryzyko dostawców (kwestionariusze, raporty SOC 2, klauzule umowne, monitoring), zarządzanie akceptacją ryzyka, raportowanie KRI. Wynik: szablon rejestru ryzyk i zapis akceptacji ryzyka. Nie do modelu zagrożeń funkcji i oceny projektu (arch-threat-modeling), ram i audytów (sec-governance-compliance), ryzyk projektu (proc-project-planning) ani obsługi incydentu (ops-security-operations). Nie jest poradą prawną ani ubezpieczeniową."
   slowa: "ryzyko bezpieczeństwa, rejestr ryzyk, akceptacja ryzyka, apetyt na ryzyko, tolerancja ryzyka, ISO 27005, analiza ryzyka, ocena ryzyka, ryzyko rezydualne, plan postępowania z ryzykiem, FAIR, ryzyko ilościowe, macierz ryzyka, KRI, ryzyko dostawcy, ocena dostawcy, vendor risk, due diligence, ankieta bezpieczeństwa dostawcy, ubezpieczenie cyber, polisa cyber, wyjątek od polityki, ile możemy stracić, właściciel ryzyka"
 ---

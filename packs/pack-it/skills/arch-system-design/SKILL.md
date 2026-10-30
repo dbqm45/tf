@@ -2,7 +2,7 @@
 name: arch-system-design
 description: Użyj przy projekcie systemu od wymagań do skali — szacunki, API i dane, wąskie gardła, dostępność.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj, gdy trzeba zaprojektować system od wymagań do skalowania — przypadki użycia, szacunki na serwetce, API i model danych, projekt ogólny, pogłębienia, wąskie gardła; liczby opóźnień i dostępności, wysoka dostępność, antywzorce wydajności. Nie do wyboru stacku (arch-tech-selection) ani katalogu stylów (arch-quality-attributes)."
   slowa: "dostępność usług, usługi połączone szeregowo, ile dziewiątek, SLA całości, szacunki ruchu, skalowanie, wąskie gardło, ile serwerów, wywołuje synchronicznie, jaką dostępność obiecać, SLA każdej zależności"
 ---

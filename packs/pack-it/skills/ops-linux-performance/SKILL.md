@@ -2,7 +2,7 @@
 name: ops-linux-performance
 description: Użyj przy wydajności Linuksa — metoda USE, perf, flame graphy, eBPF, pamięć, dysk, tuning jądra i cgroups.
 metadata:
-  przeglad: 2027-04-17
+  przeglad: "2027-04-17"
   widocznosc: nazwa
   katalog: "Użyj przy badaniu wydajności i tuningu systemu Linux — metodyka (USE, RED), lista pierwszej minuty, profilowanie CPU (perf, flame graphy), eBPF (bcc, bpftrace), pamięć (page cache, swap, OOM, NUMA, huge pages), dysk (schedulery, opóźnienia, fio), podstawy stosu sieciowego i sysctl, cgroups v2, proces zmiany parametrów jądra, bezpieczeństwo narzędzi śledzących. Wynik to raport z badania wydajności. Nie do diagnozy awarii usług, DNS i TLS (ops-linux-networking), metryk i alertów (ops-observability), błędów w kodzie (eng-debugging) ani requests i limits w Kubernetes (ops-kubernetes)."
   slowa: "wolny serwer, serwer zwalnia, serwer muli, pierwsza diagnoza wydajności, obciążenie serwera, wolny serwer, wysokie obciążenie, load average, cpu 100%, flame graph, perf, ebpf, bpftrace, oom killer, swap, page cache, numa, huge pages, iowait, fio, scheduler dyskowy, sysctl, tuning jądra, cgroups, opóźnienia dysku, wąskie gardło, profilowanie"

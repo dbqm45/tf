@@ -2,7 +2,7 @@
 name: talos-story-run
 description: Użyj na polecenie człowieka (/talos-story-run, agent talos) — historyjka → plan kawałków → commit na kawałek → PR i raport kosztu.
 metadata:
-  przeglad: 2027-04-21
+  przeglad: "2027-04-21"
   katalog: "Użyj tylko na polecenie człowieka (`/talos-story-run STORY [--auto] [--budget USD]` albo `claude --agent talos`) — automat „story → PR”: przyjęcie historyjki, plan z pionowych kawałków (każdy scalany i działający), pętla kawałka (test czerwony → kod → weryfikacja → przegląd zakresu → commit), przypadki brzegowe odłożone do decyzji, fazy warunkowe, STOP, jeden PR, raport czasu, tokenów, kosztu i modeli. Nie do zwykłej implementacji w rozmowie (persona pracuje sama), delegowania pracy bez nadzoru w ogóle (core-async-delegation) ani faz całego projektu (core-delivery-lifecycle)."
 argument-hint: "[plik story | treść] [--auto] [--budget USD]"
 disable-model-invocation: true

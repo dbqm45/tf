@@ -2,7 +2,7 @@
 name: ddd-connascence-analysis
 description: Użyj przy pomiarze sprzężenia dwóch modułów lub kontekstów — umowy, dowody w kodzie, stopień connascence, koszt.
 metadata:
-  przeglad: 2027-10-17
+  przeglad: "2027-10-17"
   katalog: "Użyj przy POMIARZE sprzężenia między dwoma modułami/kontekstami (istniejący kod albo mapa kontekstów) — rozbicie na pojedyncze umowy, powtarzalne wyszukiwanie dowodów, stopień liczony z linii kodu, koszt, profil pasm, rejestr decyzji. Nie do projektowania modelu wewnątrz kontekstu (ddd-tactical-design) ani wyboru wzorca relacji (ddd-context-mapping)."
 ---
 

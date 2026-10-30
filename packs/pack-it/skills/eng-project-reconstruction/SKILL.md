@@ -2,7 +2,7 @@
 name: eng-project-reconstruction
 description: Użyj, gdy z samego kodu trzeba odtworzyć, czym jest projekt — stack, moduły, domeny, wymagania, reguły, standardy — raport z dowodami.
 metadata:
-  przeglad: 2027-04-23
+  przeglad: "2027-04-23"
   katalog: "Użyj, gdy trzeba z samego repozytorium (duże, stare, wiele języków, bez dokumentacji) odtworzyć opis projektu: stack, moduły, domeny i słownik, wymagania z testów i walidacji, reguły biznesowe, standardy faktycznie stosowane w kodzie, ryzyka, pytania do ludzi — raport w docs/project/00-reconstruction/ z dowodem plik:linia przy każdym twierdzeniu, szkice CLAUDE.md i REVIEW.md ze standardów, odświeżanie przyrostowe po zmianach (manifest z hashami), wersja HTML do czytania. Najpierw skrypty bez modelu (spis i partie w budżecie, graf, historia gita, standardy, schemat bazy), potem karty modułów tańszym modelem, synteza mocniejszym, kontrola dowodów skryptem. Nie do opisu architektury przed refaktorem z oceną i roadmapą (eng-legacy-dossier), samej mapy i wpływu zmiany (eng-codebase-mapping), długu (eng-tech-debt-audit) ani pełnego audytu z bezpieczeństwem (eng-code-audit)."
   slowa: "rekonstrukcja projektu, odtworzyć z kodu, z samego kodu, czym jest ten projekt, przejąłem repozytorium, przejęte repo, duże repozytorium, bez dokumentacji, raport o projekcie, opis projektu, stack projektu, domeny z kodu, wymagania z kodu, wymagania z testów, reguły biznesowe z kodu, standardy z kodu, konwencje zespołu, których zespół przestrzega, agent ma pisać tak samo, CLAUDE.md z kodu, REVIEW.md, słownik domeny z kodu, odświeżyć raport, zaktualizować raport, zmieniło się kilkadziesiąt plików, maister, automat ma znać projekt, kontekst dla agenta, raport w przeglądarce, raport HTML, pokazać raport zarządowi"
 ---

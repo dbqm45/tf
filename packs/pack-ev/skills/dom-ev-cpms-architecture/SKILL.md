@@ -2,7 +2,7 @@
 name: dom-ev-cpms-architecture
 description: Użyj przy projekcie lub ocenie architektury CSMS/CPMS — brama WebSocket OCPP, routing komend do stacji, reconnect storm, multi-tenancy, granice kontekstów.
 metadata:
-  przeglad: 2027-04-20
+  przeglad: "2027-04-20"
   katalog: "Użyj, gdy projektujesz lub oceniasz backend operatora ładowarek (CSMS/CPMS) niezależnie od języka i frameworka — brama WebSocket OCPP jako osobny komponent, afinicja połączenia do węzła, rejestr połączeń i dostarczanie komend CSMS→ładowarka przez szynę lub kolejkę, heartbeat i martwe połączenia, reconnect storm po awarii lub wdrożeniu, warstwa anty-korupcyjna 1.6/2.0.1 → wspólny model, zdarzenia domenowe i idempotencja, stan stacji i Device Model, OCPI jako osobny kontekst, multi-tenancy i white-label (party_id na najemcę), obserwowalność, granice kontekstów. Nie do treści komunikatów OCPP (dom-ev-ocpp-16, dom-ev-ocpp-2x), kolejności kroków sesji (dom-ev-session-lifecycle), diagnozy konkretnej awarii (dom-ev-diagnostics) ani ról rynku (dom-ev-market-roles)."
   slowa: "architektura CSMS, architektura CPMS, backend ładowarek, brama OCPP, OCPP gateway, WebSocket, trwałe połączenia, kilka instancji, load balancer, sticky session, komenda ginie, RemoteStart ginie, rejestr połączeń, connection registry, szyna wiadomości, kolejka, reconnect storm, burza połączeń, wszystkie ładowarki łączą się naraz, po wdrożeniu, thundering herd, jitter, backoff, BootNotification Pending, heartbeat, martwe połączenie, half-open, skalowanie poziome, horizontal scaling, wiele wersji OCPP, 1.6 i 2.0.1, anti-corruption layer, idempotencja messageId, kolejność per stacja, multi-tenant, white-label CPMS, wielu CPO, izolacja najemców, party_id najemcy, metryki, obserwowalność, ADR"
 ---

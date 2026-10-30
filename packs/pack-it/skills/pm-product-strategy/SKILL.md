@@ -2,7 +2,7 @@
 name: pm-product-strategy
 description: Użyj przy strategii produktu na rynku — pozycjonowanie, wielkość rynku TAM/SAM/SOM, ściągawka konkurencyjna dla sprzedaży, PESTEL, kierunek wzrostu (Ansoff).
 metadata:
-  przeglad: 2027-10-23
+  przeglad: "2027-10-23"
   katalog: "Użyj, gdy trzeba ustalić, dla kogo jest produkt i dlaczego wygra z alternatywami — pozycjonowanie (konkurencyjne alternatywy, unikalne cechy, wartość, najlepiej dopasowani klienci, kategoria rynku) i komunikat, wielkość rynku TAM/SAM/SOM od dołu z założeniami, ściągawka konkurencyjna dla handlowców (kiedy wygrywamy i przegrywamy, obiekcje, pytania, dowody z datą), otoczenie (PESTEL) i kierunek wzrostu (macierz Ansoffa: penetracja, nowy rynek, nowy produkt, dywersyfikacja). Nie do wyboru funkcji, drzewa szans, kanwy modelu biznesowego, pięciu sił Portera i SWOT (proc-product-discovery), metryk SaaS (pm-saas-metrics), wycofania produktu (pm-product-lifecycle) ani planu projektu (proc-project-planning)."
   slowa: "pozycjonowanie, komunikat marketingowy, kolejny program, czym się wyróżniamy, wielkość rynku, TAM, SAM, SOM, inwestor pyta o rynek, ściągawka dla handlowców, battle card, przegrywamy z konkurentem, karta konkurencji, PESTEL, nowy kraj czy nowy produkt, macierz Ansoffa, ekspansja zagraniczna, wejść do innego kraju, wejście na nowy rynek, drugi produkt dla obecnych klientów, nowy produkt czy nowy rynek, strategia wzrostu, kategoria rynku"
 ---

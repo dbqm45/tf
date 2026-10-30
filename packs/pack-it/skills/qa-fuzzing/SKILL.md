@@ -2,7 +2,7 @@
 name: qa-fuzzing
 description: Użyj przy fuzzingu kodu przyjmującego niezaufane wejście — kiedy, harness, korpus, sanitizery, crash → test regresyjny, CI (Go, Atheris, libFuzzer).
 metadata:
-  przeglad: 2027-04-24
+  przeglad: "2027-04-24"
   widocznosc: nazwa
   katalog: "Użyj, gdy kod przyjmuje niezaufane lub złożone wejście (parsery, dekodery, protokoły, formaty plików, deserializacja, uploady) i trzeba automatycznie szukać wejść, które go wywracają — kiedy fuzzować, a kiedy wystarczą testy właściwości, harness (jedno wejście → jedno wywołanie, oczekiwane błędy odróżnione od znalezisk, właściwości jak round-trip), korpus startowy i słowniki, sanitizery (AddressSanitizer, UBSan) dla kodu natywnego, znalezisko → minimalizacja → test regresyjny, fuzzing w CI (krótko w PR, długo nocą, ClusterFuzzLite, OSS-Fuzz), narzędzia: natywny fuzzing Go (testing.F), Atheris (Python), libFuzzer (C/C++), Jazzer (Java). Nie do testów właściwości w Hypothesis lub fast-check bez fuzzera (tool-pytest, eng-testing), testów obciążeniowych (qa-performance-testing), skanowania podatności w zależnościach (ops-supply-chain-security) ani analizy wariantów znalezionej podatności (sec-variant-analysis)."
   slowa: "fuzzing, fuzzer, fuzz test, sfuzzować, go test -fuzz, testing.F, f.Fuzz, f.Add, Atheris, libFuzzer, LLVMFuzzerTestOneInput, AFL++, Jazzer, cargo-fuzz, AddressSanitizer, ASan, UBSan, sanitizer, korpus, corpus, harness, crash, minimalizacja crasha, złośliwe wejście, parser binarny, dekoder, panika na wejściu, ClusterFuzzLite, OSS-Fuzz"

@@ -2,7 +2,7 @@
 name: fe-technical-seo
 description: Użyj przy technicznym SEO stron publicznych — indeksowanie (robots.txt, noindex), canonical, hreflang, sitemap, dane strukturalne, renderowanie, kody statusu.
 metadata:
-  przeglad: 2027-04-24
+  przeglad: "2027-04-24"
   widocznosc: nazwa
   katalog: "Użyj, gdy publiczne strony mają być poprawnie skanowane i indeksowane przez wyszukiwarki — robots.txt a noindex (X-Robots-Tag, meta robots), kody statusu i soft 404, przekierowania, canonical i duplikaty, wersje językowe (hreflang, x-default, powiązania wzajemne), mapa witryny (limity, lastmod, indeks map), nawigacja fasetowa i parametry w URL, renderowanie (SSR, statyczne, hydratacja; JavaScript SEO, dynamic rendering jako przestarzałe obejście), tytuł i opis, dane strukturalne JSON-LD (schema.org, Rich Results Test), sprawdzenie po wdrożeniu (curl, Search Console). Nie do wydajności i Core Web Vitals (fe-web-platform), tłumaczeń i formatów (eng-i18n), treści i tonu (ux-content-design) ani konfiguracji frameworka poza metadanymi (fw-nextjs, fw-angular)."
   slowa: "SEO, techniczne SEO, indeksowanie, Google nie indeksuje, strona w Google mimo robots.txt, robots.txt, noindex, X-Robots-Tag, meta robots, canonical, rel=canonical, duplikaty treści, hreflang, x-default, wersje językowe w Google, sitemap, sitemap.xml, mapa witryny, lastmod, crawl budget, nawigacja fasetowa, filtry w URL, soft 404, Search Console, dane strukturalne, JSON-LD, schema.org, rich results, rozszerzone wyniki, generateMetadata, JavaScript SEO, SSR dla SEO"
