@@ -1388,6 +1388,202 @@ cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass r
   z promptu przeniesiona do hooka, gdy ma działać zawsze. Część jest już w `core-agent-security` — dopisać
   przykłady i test „lista zakazów vs `..`”.
 
+## Wyrocznia poza kodem, raport „całe zadanie zaliczone” i wznowienie z punktu kontrolnego (artykuły „Harness Engineering for AI Coding Agents, From Prompts to Production-Ready Systems”, T. Ramchandani, 2026-10-16; „Harness Beyond Code: What Transfers from Coding Agents to Law, Support, and Research”, J. Wąsowski, 2026-10-20; zapisane 2026-10-30)
+Przegląd 2026-10-30: przewodniki i czujniki, ograniczona pętla naprawy z eskalacją, uprawnienia w środowisku zamiast
+w promptach, krótki punkt wejścia z mapą repozytorium i holdout dla zmian harnessu są już w skillach i wcześniejszych
+pozycjach TODO. Eksperyment N. Jaina (model czołowy 10/10 z harnessem i bez, tańszy 3/10 → 10/10 z harnessem, mała
+próba) wspiera pozycję „Skille fabryki: wynik czy tylko koszt”. Liczby z artykułów (CoreCraft v5 30,80% przy pełnej
+rubryce, ClawBench do 33,3% wobec 65–75% w piaskownicach, Harvey 40,8 → 87,7% na 12 zadaniach, LAB 7–25% całych zadań
+przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezweryfikowane]. Braki:
+- [ ] **`project_record.py wip`, sprawdzenie zgodności przy wznowieniu:** punkt kontrolny zapisuje gałąź i ostatni
+  commit (`snapshot`), ale przy wznowieniu nic ich nie porównuje z bieżącym stanem. Przy wypisaniu aktywnego punktu
+  (start sesji) porównać zapisaną gałąź i commit z `HEAD`: rozjazd (inna gałąź, commit nieznany w historii, nowe
+  commity spoza punktu) → ostrzeżenie „stan repo różni się od punktu kontrolnego, przed kontynuacją uruchom testy
+  i porównaj kroki z dowodem”. Streszczenie rozmowy nie jest mechanizmem odtwarzania stanu. Najpierw test.
+- [ ] **`ai-evals`, raport i dobór wyroczni:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
+  (wszystkie kryteria rubryki), średnia spełnionych kryteriów i rozrzut między powtórzeniami tylko obok, jako
+  diagnostyka — raport wskazujący 8 z 10 ryzyk nie jest „w 80% użyteczny”; średnia może być nagrodą w treningu, nie
+  miarą w raporcie. (2) Wyrocznię zastępczą dobierać do odwracalności działania: asercja deterministyczna w pętli
+  (np. stan bazy po rozmowie, ostatnie żądanie zgodne ze schematem), rubryka i weryfikator faktów pośrodku, człowiek
+  przed działaniem nieodwracalnym; przy pętli samodoskonalenia harnessu zamrożony zbiór testowy i wersjonowany
+  sędzia, inaczej rosnący wynik to dopasowanie do rubryki. (3) Przy porównaniu harnessów lub modeli te same zasoby
+  wykonania (CPU, pamięć, limity czasu) i powtórzenia — różnica wyniku może pochodzić z infrastruktury.
+- [ ] **`core-source-research` / `core-grounding`, liczba z „odciskiem”:** cytowana liczba z benchmarku lub badania
+  niesie identyfikator i wersję źródła (np. wersja preprintu — zaokrąglone zdania w streszczeniu zmieniają się między
+  wersjami, tabela nie), nazwę metryki i status pomiaru: deklaracja firmy o własnym produkcie / pomiar twórcy
+  benchmarku / pomiar niezależny. Wynik z piaskownicy nie przenosi się automatycznie na środowisko produkcyjne.
+- [ ] **`qa-test-design`, brzeg stronicowania i izolacji:** heurystyka „liczba wyników równa limitowi strony → test
+  musi sprawdzić następną stronę”; dane testowe z większą liczbą rekordów niż jedna strona, z rekordami drugiego
+  najemcy i przypadkiem odmowy dostępu; oczekiwany zbiór wyliczony z niezależnie zasianych danych, nie z
+  implementacji (asercja na całym zbiorze, nie na statusie i pierwszym wierszu).
+
+Bez wpisu: powtórzony „I Built 15 SLOs for an AI Agent” (T. Deshpande — pozycja o SLO agenta w sekcji „Własność
+harnessu…”).
+
+## Kokpit fabryki: wskaźniki wyprzedzające i opóźnione (artykuły „SDD Factory Dashboard: The Leading and Lagging Indicators That Actually Matter”, J. Wąsowski, 2026-08-12; „Building an AI Agent from Scratch: No Magic, Just a Deterministic Loop”, S. Nes, 2026-05-04; zapisane 2026-10-30)
+Przegląd 2026-10-30: `eng-continuous-delivery` ma cztery metryki DORA, a pozycja „miary autonomii” wyżej ma już
+zastrzeżenie o Goodharcie i parę „miara aktywności + miara wyniku”. Liczby z artykułu (Faros +91% czasu przeglądu,
+METR −19%, Peng +55,8%, DORA 2024: klaster „high” z gorszym CFR niż „medium”, rework rate dodany przez DORA w 2024)
+[niezweryfikowane]. Braki:
+- [ ] **`eng-continuous-delivery` / `core-delivery-lifecycle`, kokpit zdrowia fabryki:**
+  - wskaźniki opóźnione rozliczają, czyli wskaźnik nieudanych zmian (CFR), odsetek defektów u użytkownika, odsetek
+    przeróbek (rework rate, piąta miara DORA — sprawdzić w raporcie) i realizacja zwrotu z inwestycji;
+  - wskaźnik wyprzedzający trafia na kokpit tylko wtedy, gdy przewiduje któryś opóźniony: kolejka PR czekających na
+    przegląd człowieka (liczba, wiek najstarszego) → CFR; dryf specyfikacji (kod odbiega od spec) → defekty u
+    użytkownika; czas od ostatniej weryfikacji szablonu lub reguły z rzeczywistością → przeróbki;
+  - każda miara prędkości w parze z miarą jakości, która ruszy się, gdy ktoś zacznie grać pierwszą;
+  - mierzy się system, nigdy osobę;
+  - trzy widoki z różną częstotliwością: zarząd kwartalnie (opóźnione i zwrot z inwestycji), kierownictwo miesięcznie
+    (trendy obu rodzajów), lider zespołu co tydzień (pełny zestaw wyprzedzający z parami);
+  - start od czterech liczb: kolejka przeglądu, dryf specyfikacji, CFR, defekty u użytkownika. Definicje „defektu”
+    i „ucieczki” ustalić w organizacji przed pierwszym pomiarem.
+
+Bez wpisu: „Building an AI Agent from Scratch” (S. Nes — pętla ReAct w 50 liniach, Ollama, MCP; pokryte przez
+`ai-agents` i `eng-llm-features`). Repozytorium `sergenes/mini_agent` sprawdzone (README z listą części serii).
+Z obserwacji autora: model bez wsparcia wywołań funkcji opisuje wywołania prozą, a pętla kończy się od razu bez
+błędu. Pustą listę wywołań przy zadaniu wymagającym narzędzi warto traktować jako podejrzaną.
+
+## Projekt systemu AI w produkcji: luki po przeglądzie (artykuły „AI System Design: A Practical Guide to Production AI”, P. Kashyap, 2026-10-17; „Harness Engineering vs. Loop Engineering vs. Graph Engineering in Agentic AI”, M. Ranjan, 2026-10; grafika „Layers of AI Agent Engineering”; zapisane 2026-10-30)
+Przegląd 2026-10-30: `arch-ai-solutions` ma już pojemność z prawa Little'a, szablon kosztu tokenów z cache i bez,
+budżet opóźnienia z czasem do pierwszego tokenu, cache wyników tylko dla odpowiedzi niezależnych od użytkownika
+(klucz z wersją promptu, modelu i najemcą), fallback sprawdzany ewaluacją oraz idempotencję akcji. `ai-rag` ma
+reindeksację przyrostową i usuwanie jako osobną ścieżkę. Warstwy prompt → kontekst → harness → pętla → graf oraz
+zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześniejszych pozycjach. Braki:
+- [ ] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania:**
+  - **Ponowienia w jednej warstwie:** wspólny budżet czasu i prób na całe żądanie. Gdy każda warstwa (klient,
+    bramka, orkiestrator, SDK) ponawia osobno, jedno żądanie mnoży wywołania dostawcy i pogłębia awarię.
+  - **Strumień:** gdy klient się rozłączy albo anuluje, przerwać generowanie u dostawcy, bo tokeny nadal kosztują.
+    Strumień przerwany przez błąd dostawcy kończy się jawnym zdarzeniem błędu, nie wygląda jak pełna odpowiedź.
+    Komentarz typu „sprawdzam zgłoszenie” to nie wynik — wynik pokazuje się dopiero po odpowiedzi usługi.
+  - **Unieważnianie cache wyników:** klucz albo metadane zawierają wersję dokumentów źródłowych. Zmiana lub
+    usunięcie dokumentu unieważnia odpowiedzi z cache, które na nim powstały, tak samo jak fragmenty w indeksie.
+  - Miary jakości cache: odsetek trafień, zaoszczędzony koszt i opóźnienie, incydenty nieaktualnej odpowiedzi.
+  - **Wycofanie zmiany AI obejmuje całą konfigurację** (`ai-mlops`, LLMOps): prompt, model, definicje narzędzi,
+    ustawienia wyszukiwania i rankingu oraz **wersję indeksu**. Bez migawki indeksu powrót do poprzedniego promptu
+    nie przywraca poprzedniego zachowania. Warunki wycofania ustala się przed wydaniem: błędy, wynik ewaluacji,
+    koszt, błędne akcje narzędzi.
+
+Bez wpisu: „dług zrozumienia” z artykułu Ranjana (zespół rozumie coraz mniej kodu pisanego przez agentów). Pokrywa
+go pozycja „`core-delivery-lifecycle`, osąd nie może uciec do kroków” (refinement nieskończony, dopóki nikt nie umie
+wyjaśnić, jak praca zostanie zrobiona) oraz przegląd człowieka w `core-async-delegation`.
+
+## Wielu wykonawców nad jednym zadaniem: własność, wersje i kontrakt dowodów (artykuły „Agent Harness Engineering: The Runtime Architecture Behind Reliable AI Agents”, S. J. Kar, 2026-08-14; „Seven Agent Design Patterns — and How to Combine Them”, X. Wang, 2026-10; zapisane 2026-10-30)
+Przegląd 2026-10-30: następujące elementy są już w `ai-agents` i w pozycjach TODO:
+- „kontekst to nie stan” i odtwarzanie kontekstu ze stanu;
+- zapadka „porażka → brakująca kontrola”;
+- weryfikacja zamiast deklaracji agenta;
+- egzekwowanie na granicy zamiast instrukcji;
+- trwałe wykonanie (sekcja „Trwałe wykonanie agentów”);
+- wzorce workflow i agentów;
+- przejścia grafu z obowiązkową weryfikacją.
+
+Artykułów i obrazów z Medium nie dało się otworzyć (proxy 403), podobnie docs.temporal.io, docs.langchain.com
+i agentskills.io. Braki:
+- [ ] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem:**
+  - **Dzierżawa zadania z wygaśnięciem i biciem serca.** Wykonawca, który zniknął, traci zadanie, a inny wznawia
+    je z trwałego stanu.
+  - **Zakończenie i zapis sprawdzają bieżącego właściciela i wersję rekordu.** Spóźniony wykonawca nie nadpisze
+    nowszego wyniku. Zapis całego rekordu ze starej kopii to utracona aktualizacja. Przed zapisem trzeba sprawdzić
+    wersję, użyć transakcji albo zlecić scalanie jednemu koordynatorowi.
+  - **Trzy różne operacje:** ponowienie (ta sama operacja jeszcze raz), wznowienie (z zapisanego stanu; najpierw
+    sprawdzić, czy wersje dokumentów i konfiguracji nadal pasują do przyjętej pracy) i kompensacja (osobna operacja
+    biznesowa, która też może zawieść). Żadna z nich nie jest uniwersalnym „cofnij”.
+  - **Ukończenie jako predykat systemu,** nie zdanie modelu: wymagania spełnione, walidacja przeszła, artefakty są,
+    polityki sprawdzone. Jawne wyjścia inne niż sukces: wyczerpany budżet, brak nowych dowodów, brak wymagania do
+    wyjaśnienia. Wynik częściowy oznaczony jako „szkic z zastrzeżeniami”, nie jako zatwierdzony.
+  - **Miara odzyskiwania:** ile ukończonej pracy wykonało się ponownie, czy zapisy zewnętrzne się zdublowały, czy
+    przyjęte dowody nie zniknęły.
+- [ ] **`core-source-research` / agent `researcher`, kontrakt dowodu przy równoległych badaczach:**
+  - **Rekord dowodu:** id pytania, teza, źródło, wersja dokumentu, warunki ograniczające, otwarte kwestie.
+  - **Brak informacji pozostaje brakiem,** nie zamienia się w odpowiedź przeczącą.
+  - **Duplikat z ponowienia** nie liczy się jako niezależne potwierdzenie.
+  - **Sprzeczne ustalenia zostają widoczne** i wracają do sprawdzenia, zamiast wygrywać tym, które brzmi
+    pewniej.
+  - **Recenzent dostaje dowody źródłowe i kryteria,** nie tylko gotową prozę. Zgoda drugiego agenta na tych samych
+    źródłach nie jest niezależnym dowodem.
+
+## Świadek każdego kroku: reguły według modalności, ocena klasyfikatorów decyzji i narzędzi kontekstu (artykuł „Grounded Reasoning For Agents: Ontologies, Decision Models And Every Way An Agent Can Reason”, A. Alcaraz, 2026-10-20; zapisane 2026-10-30)
+Przegląd 2026-10-30. Co już jest:
+- bramka zdefiniowana skutkami i próg jako polityka (sekcja „Bramka przed narzędziem”);
+- kaskada modeli w `core-cost-control` i `arch-ai-solutions`;
+- graf i ontologia do wyszukiwania i proweniencji w `ai-rag`;
+- rola a typ (strona, rola, faza) w `ddd-archetypes`.
+
+Sprawdzone 2026-10-30 w źródłach:
+- `bcallender/agent-context-workshop` (README): agent z grafem i agent z grepem prawie remisują w pojedynczym
+  przebiegu (21/30 vs 19/30). Graf wygrywa powtarzalnością (dobrze w każdym przebiegu: 19/30 vs 11/30), zużywa ok.
+  3× mniej tokenów wejścia, a odsetek użycia grafu rośnie z 34% do 72% po podpowiedzi.
+- `dogwood-policy/dogwood` (README i przewodnik `04-temporal-expressions.md`): składnia z Cedar plus warunki czasowe
+  `formerly`, `previous` i `since` z obowiązkowym oknem. Okno ograniczone przez `max_window`, domyślnie 24h.
+  Interpreter referencyjny, nie do produkcji.
+
+Niedostępne przez proxy (403): arXiv, typesafe.ai, randalolson.com, docs.cedarpolicy.com, w3.org, huggingface.co,
+hanxiao.io. Pozostałe liczby z artykułu [niezweryfikowane], w tym:
+- OntoMetric: 83,3% → 19,44% błędów;
+- EvoOntology: 64,6 / 69,5 / 81,8;
+- JevAgentHarness: −19,0 pkt bez progu;
+- kaskada Sena: 88,4% automatycznie.
+
+Braki:
+- [ ] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”:**
+  - Przegląd kroków agenta: krok, którego jedynym sprawdzeniem jest dalszy tekst tego samego modelu, jest przyjęty
+    na wiarę.
+  - Reguła trafia w miejsce zależne od modalności:
+    - o stanie → schemat lub kształt sprawdzany przy zapisie;
+    - o jednej akcji → polityka per żądanie (domyślnie odmowa, `forbid` wygrywa z `permit`);
+    - o sekwencji akcji → reguła czasowa nad dziennikiem zdarzeń („zatwierdzenie w ciągu 1h przed sprzedażą”).
+  - Werdykt bramki (wykonaj / odmów / eskaluj) ma być powtarzalny dla tego samego zapisanego stanu. Reguła tylko
+    w prompcie albo werdykt zwracany wyłącznie agentowi niczego nie gwarantuje.
+  - Log zapisuje, który świadek sprawdził krok.
+  - Dla fabryki: hook `tdd_guard` jest właśnie regułą czasową („edycja kodu dozwolona, jeśli od ostatniej zmiany
+    testu był czerwony przebieg”). Warto zapisać reguły hooków jako predykaty nad logiem hooków i testować je
+    odtworzeniem zapisanych śladów (jak `dogwood replay`). Zmiana hooków tylko na prośbę człowieka.
+- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (LLM jako klasyfikator albo model decyzyjny):
+  - Test kolejności i nazw opcji: przetasować i przemianować, policzyć zmiany odpowiedzi.
+  - Próg dopasowany na własnych etykietach **osobno dla każdego punktu decyzji**, nigdy domyślne 0,5.
+  - Kaskada mierzona względem samego drogiego modelu.
+  - Szczególna ostrożność przy krokach nieodwracalnych: pewny błędny wybór na takim kroku to typowa porażka.
+  - Przed przypisaniem zysku dostrajaniu — kontrola na zamrożonym modelu bazowym tym samym promptem, a nie od
+    losowo zainicjalizowanej głowy.
+  - Zbiór testowy rozdzielony po przypadku (ten sam dokument nie trafia na obie strony), najlepiej zamknięty.
+    Publiczny benchmark się nasyca.
+  - Zmiana słów w definicjach opcji to zmiana modelu: ponowny test.
+  - Licencję sprawdzać w pliku wag, modelu bazowym i danych, nie na odznace repozytorium.
+  - W fabryce dotyczy to `factory/jev_calibration.py`: podpowiedź skilli i sędzia z Jev, pas niepewności
+    stały 0,30–0,70. Do dodania: próg dopasowany osobno dla trasowania i dla sędziego oraz test przetasowania
+    kolejności opcji. Pomiar płatny, więc tylko za zgodą człowieka.
+- [ ] **`eng-codebase-mapping` / `ai-rag`, ocena narzędzi kontekstu (graf, indeks, mapa kodu):**
+  - Obok trafności w jednym przebiegu: powtarzalność (dobrze w każdym z N przebiegów), tokeny wejścia oraz **odsetek
+    użycia** — czy agent w ogóle sięga po narzędzie.
+  - Fabryka ma już `hint_report.py` („podpowiedziany, a nieużyty”), więc da się to policzyć dla skilli i map.
+  - Warstwę wiedzy podawać przez narzędzia zwracające mały podgraf ze źródłami, nie wklejać do promptu (EvoOntology:
+    wklejona warstwa gorsza niż jej brak [niezweryfikowane]).
+
+## Pamięć automatyczna, która utrwala błąd (artykuły „Building the Harness Around AI Coding Tools” / „A Blueprint for Agentic Coding Tools”, I. Silfverskiöld, 2026-10; „Harness Engineering, Explained by Building One: An AI Agent Test Bench That Runs in Your Browser”, V. Mysore, 2026-10; zapisane 2026-10-30)
+Przegląd 2026-10-30: fabryka ma już większość opisanych elementów:
+- uprawnienia, piaskownicę i reguły deny (`core-agent-security`);
+- krótki plik instrukcji jako indeks i reguły z `paths` (`core-agent-instructions`, w tym limity pamięci
+  automatycznej 200 linii / 25 KB);
+- scenariusze `trigger` i `no-trigger` z sąsiadem i porównanie ze skillem i bez niego (`core-skill-authoring`,
+  `run_skill_evals.py`);
+- deterministyczny oceniacz pokryty testami bez modelu (`test_skill_evals.py`);
+- audyt obcych skilli (`skill_audit.py`);
+- pozycje o `/goal` i `omitClaudeMd` w TODO;
+- licznik podpowiedzi nieużytych (`hint_report.py`).
+
+Wnioski z badań przytoczonych w artykule wspierają istniejącą pozycję „Skille fabryki: wynik czy tylko koszt”:
+- SWE-Skills-Bench: 39 z 49 skilli bez zmiany wyniku, 3 szkodliwe;
+- planowanie pomaga słabszym modelom, a mocniejszym głównie obniża koszt.
+
+Liczby [niezweryfikowane]; artykułu z Medium nie dało się otworzyć (403). Brak:
+- [ ] **`core-agent-instructions` / `core-agent-retro`, przegląd pamięci automatycznej:** notatka w `MEMORY.md` i jej
+  plikach pomocniczych może być błędna i wracać w każdej sesji. Poprawka człowieka bywa wtedy dopisana obok starej
+  notatki zamiast ją zastąpić. Przegląd w retro:
+  - **mechanicznie** (skrypt): odwołania do plików i ścieżek, których już nie ma; wiek pliku; rozmiar względem
+    limitu ładowania;
+  - **z człowiekiem**: sprzeczności z `docs/` i ADR. Poprawka zastępuje starą notatkę. Ustalenie, które ma
+    obowiązywać zespół, przenieść do pliku instrukcji albo ADR; nie zostawiać go tylko w pamięci maszyny.
+
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
 [niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
@@ -1406,5 +1602,8 @@ Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od 
 - https://research.trychroma.com/context-rot (badanie „context rot”, Chroma)
 - https://prachub.com/resources/llm-gateway-system-design-interview-routing-rate-limits-fallbacks-and-cost-controls (bramka LLM)
 - https://github.com/paoloap-py/agent-harness-guide (repo z przykładami warstw harnessu — 403 przez proxy GitHub dla tego repo)
-Artykułów na medium.com i innych płatnych platformach nie pobierano — treść pochodziła z wklejek.
-
+- https://medium.com/@marvelous_catawba_otter_200/seven-agent-design-patterns-and-how-to-combine-them-d2168c875722 (obrazy artykułu; Medium 403)
+- https://docs.temporal.io/activities, https://docs.langchain.com/oss/python/langgraph/persistence (proxy 403, 2026-10-30)
+- arxiv.org (2610.21412, 2609.26550, 2610.18773, 2609.15779, 2512.01289, 2610.17205), docs.typesafe.ai, randalolson.com, docs.cedarpolicy.com, w3.org/TR/shacl, huggingface.co, hanxiao.io (artykuł A. Alcaraza; proxy 403, 2026-10-30)
+- https://medium.com/data-science-collective/a-blueprint-for-agentic-coding-tools-c1e0e2ed797b (pełny artykuł I. Silfverskiöld; Medium 403, 2026-10-30)
+Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2026-10-30: 403) — treść pochodziła z wklejek.
