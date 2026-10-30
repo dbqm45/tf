@@ -93,7 +93,8 @@ kroków ma **punkt kontrolny**: mały plik `docs/project/wip/<nazwa>.md`.
 - **Hooki robią resztę mechanicznie**:
   - przy kompaktowaniu kontekstu i na koniec sesji zapisują w pliku sekcję „Stan automatyczny” (gałąź, ostatni commit,
     niezacommitowane pliki);
-  - na starcie sesji pokazują aktywne zadania, następną czynność i niezrobione kroki;
+  - na starcie sesji pokazują aktywne zadania, następną czynność i niezrobione kroki, a gdy gałąź albo commit różnią
+    się od zapisanych — ostrzeżenie: przed kontynuacją uruchom testy i sprawdź odhaczone kroki;
   - gdy punkt kontrolny jest wyraźnie starszy niż zmiany w plikach, hook Stop prosi o jego aktualizację przed
     zakończeniem odpowiedzi.
 - **Wznowienie**: przeczytaj cały plik punktu kontrolnego, potem `git status` i `git diff`. Zmiany po ostatnim zapisie

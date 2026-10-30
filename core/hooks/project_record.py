@@ -534,6 +534,30 @@ def stop_reminder(root: Path, data: dict) -> str | None:
             "z rozmowy. Jeśli zadanie jest skończone: `project_record.py wip done <nazwa>`; jeśli wstrzymane: `wip pause <nazwa>`.")
 
 
+def repo_drift(root: Path, body: str) -> str | None:
+    """Rozjazd bieżącego repo ze stanem zapisanym przez migawkę (gałąź, commit); None, gdy zgodne albo brak danych."""
+    m = re.search(r"^- Gałąź: (.+?) · ostatni commit: (\S+)", body, re.M)
+    if not m or m.group(2) == "—":
+        return None
+    saved_branch, saved_commit = m.group(1).strip(), m.group(2)
+    issues = []
+    branch = git(root, "branch", "--show-current")
+    if branch and saved_branch != "—" and branch != saved_branch:
+        issues.append(f"gałąź {branch} zamiast {saved_branch}")
+    saved = git(root, "rev-parse", "--verify", "--quiet", f"{saved_commit}^{{commit}}")
+    head = git(root, "rev-parse", "HEAD")
+    if saved is None:
+        issues.append(f"commit {saved_commit} z punktu kontrolnego nie istnieje w repozytorium")
+    elif head and saved != head:
+        if git(root, "merge-base", "--is-ancestor", saved, "HEAD") is None:
+            issues.append(f"commit {saved_commit} nie jest w historii bieżącej gałęzi")
+        else:
+            n = int(git(root, "rev-list", "--count", f"{saved}..HEAD") or 0)
+            word = "commit" if n == 1 else "commity" if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14) else "commitów"
+            issues.append(f"{n} {word} od zapisu")
+    return "; ".join(issues) or None
+
+
 def wip_lines(root: Path, compact: bool) -> list[str]:
     out = []
     for it in wip_items(root):
@@ -544,6 +568,10 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
                    f"{title(body, it['slug'])} (aktualizacja {m.get('updated', '?')}, kroki do zrobienia: {len(todo)})")
         if nxt:
             out.append(f"  Następna czynność: {nxt}")
+        drift = repo_drift(root, it["path"].read_text(encoding="utf-8"))
+        if drift:
+            out.append(f"  Uwaga: stan repo różni się od punktu kontrolnego ({drift}) — przed kontynuacją uruchom testy "
+                       "i sprawdź, czy kroki odhaczone z dowodem nadal są prawdą.")
         out += [f"  - [ ] {t[:120]}" for t in todo[: 3 if compact else 20]]
     if out:
         out.append("  Wznawiając: przeczytaj cały plik punktu kontrolnego i `git status` — zmiany po ostatnim zapisie mogą "

@@ -70,6 +70,40 @@ def wip_tests() -> list[str]:
     return fails
 
 
+RESUME_TESTS = 3
+
+
+def resume_tests() -> list[str]:
+    """Wznowienie: stan repo zapisany w punkcie kontrolnym porównany z bieżącym (gałąź, commit)."""
+    fails = []
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+
+        def g(*a: str) -> int:
+            return subprocess.run(["git", "-C", str(root), "-c", "user.name=t", "-c", "user.email=t@t", *a],
+                                  capture_output=True).returncode
+
+        if g("init", "-q", "-b", "main") != 0:
+            return fails                                   # bez gita nie ma czego porównywać
+        (root / "a.txt").write_text("1")
+        g("add", "a.txt")
+        g("commit", "-q", "-m", "start")
+        run(root, "wip", "start", "Eksport zamówień", "--by", "ola")
+        run(root, "--hook-snapshot", "koniec sesji")
+        if "różni się od punktu kontrolnego" in run(root, "--hook-session").stdout:
+            fails.append("wznowienie: ostrzeżenie o rozjeździe, choć stan repo się nie zmienił")
+        (root / "a.txt").write_text("2")
+        g("commit", "-q", "-am", "zmiana spoza sesji")
+        s = run(root, "--hook-session").stdout
+        if "różni się od punktu kontrolnego" not in s or "1 commit" not in s:
+            fails.append(f"wznowienie: brak ostrzeżenia o nowym commicie od zapisu: {s[-300:]}")
+        g("checkout", "-q", "-b", "inna")
+        s = run(root, "--hook-session").stdout
+        if "gałąź" not in s or "inna" not in s:
+            fails.append(f"wznowienie: brak ostrzeżenia o innej gałęzi: {s[-300:]}")
+    return fails
+
+
 def main() -> int:
     fails = []
     with tempfile.TemporaryDirectory() as d:
@@ -168,7 +202,8 @@ def main() -> int:
         if run(Path(d), "--hook-session").stdout.strip():
             fails.append("hook sesji powinien milczeć bez docs/project")
     fails += wip_tests()
-    total = 18 + WIP_TESTS + len(bad)
+    fails += resume_tests()
+    total = 18 + WIP_TESTS + RESUME_TESTS + len(bad)
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów dziennika projektu")

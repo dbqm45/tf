@@ -1395,7 +1395,7 @@ pozycjach TODO. Eksperyment N. Jaina (model czołowy 10/10 z harnessem i bez, ta
 próba) wspiera pozycję „Skille fabryki: wynik czy tylko koszt”. Liczby z artykułów (CoreCraft v5 30,80% przy pełnej
 rubryce, ClawBench do 33,3% wobec 65–75% w piaskownicach, Harvey 40,8 → 87,7% na 12 zadaniach, LAB 7–25% całych zadań
 przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezweryfikowane]. Braki:
-- [ ] **`project_record.py wip`, sprawdzenie zgodności przy wznowieniu:** punkt kontrolny zapisuje gałąź i ostatni
+- [x] **`project_record.py wip`, sprawdzenie zgodności przy wznowieniu** (zrobione 2026-10-30: `repo_drift` w hooku sesji, 3 testy w `test_project_record.py`): punkt kontrolny zapisuje gałąź i ostatni
   commit (`snapshot`), ale przy wznowieniu nic ich nie porównuje z bieżącym stanem. Przy wypisaniu aktywnego punktu
   (start sesji) porównać zapisaną gałąź i commit z `HEAD`: rozjazd (inna gałąź, commit nieznany w historii, nowe
   commity spoza punktu) → ostrzeżenie „stan repo różni się od punktu kontrolnego, przed kontynuacją uruchom testy
