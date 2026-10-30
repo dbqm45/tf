@@ -1443,6 +1443,25 @@ Bez wpisu: „Building an AI Agent from Scratch” (S. Nes — pętla ReAct w 50
 Z obserwacji autora: model bez wsparcia wywołań funkcji opisuje wywołania prozą, a pętla kończy się od razu bez
 błędu. Pustą listę wywołań przy zadaniu wymagającym narzędzi warto traktować jako podejrzaną.
 
+## Projekt systemu AI w produkcji: luki po przeglądzie (artykuły „AI System Design: A Practical Guide to Production AI”, P. Kashyap, 2026-10-17; „Harness Engineering vs. Loop Engineering vs. Graph Engineering in Agentic AI”, M. Ranjan, 2026-10; grafika „Layers of AI Agent Engineering”; zapisane 2026-10-30)
+Przegląd 2026-10-30: `arch-ai-solutions` ma już pojemność z prawa Little'a, szablon kosztu tokenów z cache i bez,
+budżet opóźnienia z czasem do pierwszego tokenu, cache wyników tylko dla odpowiedzi niezależnych od użytkownika
+(klucz z wersją promptu, modelu i najemcą), fallback sprawdzany ewaluacją oraz idempotencję akcji. `ai-rag` ma
+reindeksację przyrostową i usuwanie jako osobną ścieżkę. Warstwy prompt → kontekst → harness → pętla → graf oraz
+zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześniejszych pozycjach. Braki:
+- [ ] **`arch-ai-solutions` / `eng-llm-features`, trzy reguły niezawodności:**
+  - **Ponowienia w jednej warstwie:** wspólny budżet czasu i prób na całe żądanie. Gdy każda warstwa (klient,
+    bramka, orkiestrator, SDK) ponawia osobno, jedno żądanie mnoży wywołania dostawcy i pogłębia awarię.
+  - **Strumień:** gdy klient się rozłączy albo anuluje, przerwać generowanie u dostawcy, bo tokeny nadal kosztują.
+    Strumień przerwany przez błąd dostawcy kończy się jawnym zdarzeniem błędu, nie wygląda jak pełna odpowiedź.
+    Komentarz typu „sprawdzam zgłoszenie” to nie wynik — wynik pokazuje się dopiero po odpowiedzi usługi.
+  - **Unieważnianie cache wyników:** klucz albo metadane zawierają wersję dokumentów źródłowych. Zmiana lub
+    usunięcie dokumentu unieważnia odpowiedzi z cache, które na nim powstały, tak samo jak fragmenty w indeksie.
+  - Miary jakości cache: odsetek trafień, zaoszczędzony koszt i opóźnienie, incydenty nieaktualnej odpowiedzi.
+
+Bez wpisu: „dług zrozumienia” z artykułu Ranjana (zespół rozumie coraz mniej kodu pisanego przez agentów). Pokrywa
+go pozycja o „wyjaśnij własnymi słowami” przy refinemencie oraz przegląd człowieka w `core-async-delegation`.
+
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
 [niezweryfikowane]; po dodaniu hostów do dozwolonych w ustawieniach sieci środowiska można je sprawdzić.
