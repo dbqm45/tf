@@ -82,15 +82,19 @@ def protocol_tests() -> list[str]:
         "cost": cost, "error": None, "misses": [], "skills_used": []}
     res = [row("a", False, True, 2, 0.10), row("b", False, False, 1, 0.10), row("a", True, False, 1, 0.05),
            row("b", True, False, 0, 0.05), row("h", False, True, 2, 0.10, ho=True, rep=0),
-           row("h", False, False, 1, 0.10, ho=True, rep=1)]
+           row("h", False, False, 1, 0.10, ho=True, rep=1),
+           # bez skilli nic się nie uruchamia — pełną odpowiedź liczymy po kryteriach, nie po uruchomieniu
+           {**row("c", True, False, 2, 0.05), "checks_ok": True}]
     rows = {(r["model"], r["baseline"], r["set"]): r for r in ev.protocol(res)}
     w = rows.get(("haiku", False, "strojenie")) or {}
     if (w.get("tasks"), w.get("full_pass"), w.get("criteria")) != (2, 1, 0.75) or abs(w.get("cost_per_solved", 0) - 0.20) > 1e-9:
         fails.append(f"protocol: ze skillami — zadania, zaliczone w całości, średnia kryteriów, koszt na rozwiązane: {w}")
     b = rows.get(("haiku", True, "strojenie")) or {}
     h = rows.get(("haiku", False, "holdout")) or {}
-    if b.get("full_pass") != 0 or b.get("cost_per_solved") is not None or h.get("unstable") != 1 or h.get("tasks") != 2:
-        fails.append(f"protocol: bez rozwiązań koszt na rozwiązane = brak; holdout osobno, niestabilny między powtórzeniami: {b} {h}")
+    if b.get("full_pass") != 1 or b.get("tasks") != 3 or h.get("unstable") != 1 or h.get("tasks") != 2:
+        fails.append(f"protocol: bez skilli pełna odpowiedź po kryteriach; holdout osobno, niestabilny między powtórzeniami: {b} {h}")
+    if w.get("triggered") != 1:
+        fails.append(f"protocol: uruchomienie skilla raportowane osobno: {w}")
     return fails
 
 

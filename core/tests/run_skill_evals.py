@@ -398,8 +398,9 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
 
 def protocol(results: list[dict]) -> list[dict]:
     """Protokół „wynik czy koszt” (docs/todo.md, ai-evals) dla każdego ramienia: model × ze skillami/bez × zbiór.
-    Główny wynik to zadania zaliczone w całości (skill uruchomiony i wszystkie kryteria); średnia kryteriów jest
-    diagnostyką. Koszt na rozwiązane zadanie liczy wszystkie przebiegi ramienia, także nieudane."""
+    Główny wynik to zadania zaliczone w całości — odpowiedź spełnia wszystkie kryteria (ta sama miara w obu ramionach;
+    bez skilli nic się nie uruchamia). Uruchomienie skilla osobno, średnia kryteriów jako diagnostyka. Koszt na
+    rozwiązane zadanie liczy wszystkie przebiegi ramienia, także nieudane."""
     arms = {}
     for r in results:
         if r.get("expect") != "trigger":
@@ -407,13 +408,15 @@ def protocol(results: list[dict]) -> list[dict]:
         arms.setdefault((r["model"], r["baseline"], "holdout" if r.get("holdout") else "strojenie"), []).append(r)
     rows = []
     for (model, base, kind), rs in sorted(arms.items()):
-        solved = sum(bool(r["passed"]) for r in rs)
+        full = lambda r: bool(r.get("checks_ok")) and not r.get("error")
+        solved = sum(full(r) for r in rs)
         total = sum(r.get("groups_total") or 0 for r in rs)
         cost = sum(r.get("cost") or 0.0 for r in rs)
         outcomes = {}
         for r in rs:
-            outcomes.setdefault((r["skill"], r["id"]), set()).add(bool(r["passed"]))
+            outcomes.setdefault((r["skill"], r["id"]), set()).add(full(r))
         rows.append({"model": model, "baseline": base, "set": kind, "tasks": len(rs), "full_pass": solved,
+                     "triggered": None if base else sum(bool(r.get("triggered")) for r in rs),
                      "criteria": (sum(r.get("groups_met") or 0 for r in rs) / total) if total else None,
                      "cost": cost, "cost_per_solved": cost / solved if solved else None,
                      "unstable": sum(len(v) > 1 for v in outcomes.values())})
@@ -441,17 +444,19 @@ def report(results: list[dict], out: Path) -> None:
     proto = protocol(results)
     if proto:
         lines += ["", "## Protokół: wynik czy koszt", "",
-                  "Główny wynik: zadania zaliczone w całości. Średnia kryteriów to diagnostyka. Koszt na rozwiązane "
+                  "Główny wynik: zadania zaliczone w całości (odpowiedź spełnia wszystkie kryteria — ta sama miara "
+                  "w obu ramionach). Uruchomienie: skill wczytany. Średnia kryteriów to diagnostyka. Koszt na rozwiązane "
                   "zadanie obejmuje wszystkie przebiegi ramienia. Niestabilne: scenariusz z różnym wynikiem między "
                   "powtórzeniami (--repeats). Holdout to zamknięty zbiór — nie stroimy pod jego pytania.", "",
-                  "| Model | Ramię | Zbiór | Zaliczone w całości | Średnia kryteriów | Koszt | Koszt na rozwiązane | Niestabilne |",
-                  "|---|---|---|---|---|---|---|---|"]
+                  "| Model | Ramię | Zbiór | Zaliczone w całości | Uruchomienie | Średnia kryteriów | Koszt | Koszt na rozwiązane | Niestabilne |",
+                  "|---|---|---|---|---|---|---|---|---|"]
         for p in proto:
             arm = "bez skilli" if p["baseline"] else "ze skillami"
             crit = "—" if p["criteria"] is None else f"{p['criteria']:.0%}"
             per = "—" if p["cost_per_solved"] is None else f"${p['cost_per_solved']:.3f}"
+            trig = "—" if p["triggered"] is None else f"{p['triggered']}/{p['tasks']}"
             lines.append(f"| {p['model']} | {arm} | {p['set']} | {p['full_pass']}/{p['tasks']} "
-                         f"({p['full_pass'] / p['tasks']:.0%}) | {crit} | ${p['cost']:.2f} | {per} | {p['unstable']} |")
+                         f"({p['full_pass'] / p['tasks']:.0%}) | {trig} | {crit} | ${p['cost']:.2f} | {per} | {p['unstable']} |")
     fails = [r for r in results if not r["passed"]]
     if fails:
         lines += ["", "## Niezaliczone", ""]
