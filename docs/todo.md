@@ -1549,12 +1549,40 @@ Braki:
     Publiczny benchmark się nasyca.
   - Zmiana słów w definicjach opcji to zmiana modelu: ponowny test.
   - Licencję sprawdzać w pliku wag, modelu bazowym i danych, nie na odznace repozytorium.
+  - W fabryce dotyczy to `factory/jev_calibration.py`: podpowiedź skilli i sędzia z Jev, pas niepewności
+    stały 0,30–0,70. Do dodania: próg dopasowany osobno dla trasowania i dla sędziego oraz test przetasowania
+    kolejności opcji. Pomiar płatny, więc tylko za zgodą człowieka.
 - [ ] **`eng-codebase-mapping` / `ai-rag`, ocena narzędzi kontekstu (graf, indeks, mapa kodu):**
   - Obok trafności w jednym przebiegu: powtarzalność (dobrze w każdym z N przebiegów), tokeny wejścia oraz **odsetek
     użycia** — czy agent w ogóle sięga po narzędzie.
   - Fabryka ma już `hint_report.py` („podpowiedziany, a nieużyty”), więc da się to policzyć dla skilli i map.
   - Warstwę wiedzy podawać przez narzędzia zwracające mały podgraf ze źródłami, nie wklejać do promptu (EvoOntology:
     wklejona warstwa gorsza niż jej brak [niezweryfikowane]).
+
+## Pamięć automatyczna, która utrwala błąd (artykuły „Building the Harness Around AI Coding Tools” / „A Blueprint for Agentic Coding Tools”, I. Silfverskiöld, 2026-10; „Harness Engineering, Explained by Building One: An AI Agent Test Bench That Runs in Your Browser”, V. Mysore, 2026-10; zapisane 2026-10-30)
+Przegląd 2026-10-30: fabryka ma już większość opisanych elementów:
+- uprawnienia, piaskownicę i reguły deny (`core-agent-security`);
+- krótki plik instrukcji jako indeks i reguły z `paths` (`core-agent-instructions`, w tym limity pamięci
+  automatycznej 200 linii / 25 KB);
+- scenariusze `trigger` i `no-trigger` z sąsiadem i porównanie ze skillem i bez niego (`core-skill-authoring`,
+  `run_skill_evals.py`);
+- deterministyczny oceniacz pokryty testami bez modelu (`test_skill_evals.py`);
+- audyt obcych skilli (`skill_audit.py`);
+- pozycje o `/goal` i `omitClaudeMd` w TODO;
+- licznik podpowiedzi nieużytych (`hint_report.py`).
+
+Wnioski z badań przytoczonych w artykule wspierają istniejącą pozycję „Skille fabryki: wynik czy tylko koszt”:
+- SWE-Skills-Bench: 39 z 49 skilli bez zmiany wyniku, 3 szkodliwe;
+- planowanie pomaga słabszym modelom, a mocniejszym głównie obniża koszt.
+
+Liczby [niezweryfikowane]; artykułu z Medium nie dało się otworzyć (403). Brak:
+- [ ] **`core-agent-instructions` / `core-agent-retro`, przegląd pamięci automatycznej:** notatka w `MEMORY.md` i jej
+  plikach pomocniczych może być błędna i wracać w każdej sesji. Poprawka człowieka bywa wtedy dopisana obok starej
+  notatki zamiast ją zastąpić. Przegląd w retro:
+  - **mechanicznie** (skrypt): odwołania do plików i ścieżek, których już nie ma; wiek pliku; rozmiar względem
+    limitu ładowania;
+  - **z człowiekiem**: sprzeczności z `docs/` i ADR. Poprawka zastępuje starą notatkę. Ustalenie, które ma
+    obowiązywać zespół, przenieść do pliku instrukcji albo ADR; nie zostawiać go tylko w pamięci maszyny.
 
 ## Linki, których nie udało się otworzyć (przeglądy artykułów od 2026-10-29)
 Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od nich są w pozycjach wyżej oznaczone
@@ -1577,4 +1605,5 @@ Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od 
 - https://medium.com/@marvelous_catawba_otter_200/seven-agent-design-patterns-and-how-to-combine-them-d2168c875722 (obrazy artykułu; Medium 403)
 - https://docs.temporal.io/activities, https://docs.langchain.com/oss/python/langgraph/persistence (proxy 403, 2026-10-30)
 - arxiv.org (2610.21412, 2609.26550, 2610.18773, 2609.15779, 2512.01289, 2610.17205), docs.typesafe.ai, randalolson.com, docs.cedarpolicy.com, w3.org/TR/shacl, huggingface.co, hanxiao.io (artykuł A. Alcaraza; proxy 403, 2026-10-30)
+- https://medium.com/data-science-collective/a-blueprint-for-agentic-coding-tools-c1e0e2ed797b (pełny artykuł I. Silfverskiöld; Medium 403, 2026-10-30)
 Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2026-10-30: 403) — treść pochodziła z wklejek.
