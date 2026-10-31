@@ -69,6 +69,19 @@
       "expect": "no-trigger",
       "prompt": "Prowadzę warsztat z ekspertem domeny rezerwacji hoteli. Jak zadawać pytania, żeby wydobyć wspólny słownik?",
       "neighbor": "ddd-facilitation"
+    },
+    {
+      "id": "przesluchanie-bez-nadmiaru",
+      "expect": "trigger",
+      "prompt": "Poprosiłem agenta, żeby mnie przepytał z planu prostego eksportu CSV. Zadał 40 pytań o przypadki brzegowe, a plan urósł do trzech tygodni pracy. Jak powinno wyglądać takie przesłuchanie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wpływ\\w*", "prawdopodobieństw\\w+", "ranking\\w*", "szereg\\w+", "priorytet\\w*"],
+          ["czyteln\\w+ błęd\\w*", "zawiedź", "odrzuć z błędem", "nie (rozwiązywać|obsługiwać) każdego"],
+          ["przeinżynierowa\\w+", "nadmiar\\w*", "minimalizm\\w*", "YAGNI"],
+          ["kontekst\\w*", "najpierw sprawdź", "fakty sam", "nie pytaj o to, co"]
+        ]
+      }
     }
   ]
 }

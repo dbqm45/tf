@@ -4,7 +4,7 @@ description: Użyj przy badaniu i walidacji modelu ML — baseline, wyciek danyc
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy trzeba przejść od pytania badawczego lub hipotezy AI/ML do wyniku, który da się obronić — ujęcie problemu i mocny prosty baseline, projekt eksperymentu (kontrolowane zmienne, ablacje, seedy, średnia ± rozrzut, ostrożność przy wielokrotnych porównaniach), podziały danych i wyciek (czasowe, grupowe, higiena zbioru testowego, kontaminacja benchmarków), metryka zgodna z decyzją, budżet obliczeń i skalowanie od pilotażu, reprodukowalność (konfiguracja, kod, wersje danych, środowisko), przegląd literatury i krytyczne czytanie artykułów, od artykułu do prototypu produktowego, walidacja offline→online, raport badawczy z wynikami negatywnymi i ograniczeniami, przegląd etyczny danych; artefakt docs/project/02-domain/experiment-NAZWA.md. Nie do ewaluacji funkcji LLM i agentów (ai-evals), ogólnej statystyki i eksperymentów produktowych (data-analysis), dostrajania modelu (ai-fine-tuning), narzędzi śledzenia eksperymentów i rejestru (ai-mlops) ani szukania faktów w sieci (core-source-research)."
-  slowa: "badania ML, research scientist, applied scientist, hipoteza, eksperyment ML, baseline, ablacja, seedy, wariancja między uruchomieniami, średnia i odchylenie, czy nowy model jest lepszy, wyciek danych, data leakage, podział czasowy, podział grupowy, zbiór testowy, kontaminacja benchmarku, dobór metryki, pilotaż, skalowanie eksperymentu, reprodukowalność, powtarzalność wyników, przegląd literatury, czytanie artykułów, replikacja, z artykułu do produktu, offline online, raport z badania, wyniki negatywne, metoda nie zadziałała, nie poprawiła wyniku, jak zapisać badanie, metoda z artykułu, ograniczenia badania, etyka danych"
+  slowa: "badania ML, research scientist, applied scientist, hipoteza, eksperyment ML, baseline, ablacja, seedy, wariancja między uruchomieniami, średnia i odchylenie, czy nowy model jest lepszy, wyciek danych, data leakage, podział czasowy, podział grupowy, zbiór testowy, kontaminacja benchmarku, dobór metryki, pilotaż, skalowanie eksperymentu, reprodukowalność, powtarzalność wyników, przegląd literatury, czytanie artykułów, replikacja, z artykułu do produktu, offline online, raport z badania, wyniki negatywne, metoda nie zadziałała, nie poprawiła wyniku, jak zapisać badanie, metoda z artykułu, ograniczenia badania, etyka danych, model zastępczy, surrogate model, symulator, algorytm genetyczny, optymalizacja na modelu, najlepszy projekt wg modelu, rejestr hipotez, wracamy do tych samych pomysłów"
 ---
 
 # Badania AI/ML — od hipotezy do wyniku, który się obroni
@@ -55,6 +55,9 @@ statystykę i testy A/B produktu (**data-analysis**, `.claude/skills/data-analys
     i **ai-evals**, krok 8). Różnica offline↔online jest wynikiem: zapisz ją i jej przyczynę.
 12. **Etyka danych.** Przed użyciem sprawdź pochodzenie i licencję danych, zgody, dane osobowe i szczególne
     (**arch-privacy-compliance**), reprezentatywność i ryzyko szkód dla grup; kontaminację benchmarków i nadużycia.
+12a. **Model zastępczy w pętli optymalizacji i rejestr hipotez** — optymalizacja na modelu wyszukuje jego błędy,
+    więc zwycięzcę sprawdzasz prawdziwym symulatorem lub eksperymentem i raportujesz obie liczby; hipotezy jako graf
+    z werdyktami i warunkiem ponownego otwarcia (`references/optymalizacja-i-hipotezy.md`).
 13. **Raport** `docs/project/02-domain/experiment-<nazwa>.md` wg `references/raport-i-szablon.md`: hipoteza, metoda,
     wyniki z rozrzutem, **wyniki negatywne**, ograniczenia, decyzja. Wynik negatywny jest wartościowy:
     oszczędza następnym ślepe zaułki, ale tylko gdy opisano warunki, w których go uzyskano.

@@ -179,6 +179,19 @@
           ["step definition", "definicj\\w+ kroków", "krok\\w+", "adapter\\w*"]
         ]
       }
+    },
+    {
+      "id": "worktree-czego-nie-izoluje",
+      "expect": "trigger",
+      "prompt": "Puszczam trzech agentów równolegle w trzech git worktree tego samego repo. Testy losowo padają, a raz agent zgłosił błąd z index.lock. Co worktree izoluje, a czego nie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["port\\w*"],
+          ["baz\\w+", "migrac\\w+"],
+          ["node_modules", "\\.env", "zależnoś\\w+", "świeży\\w* checkout"],
+          ["index\\.lock", "ta sama gałąź", "sprząt\\w+", "limit\\w*", "worktree remove"]
+        ]
+      }
     }
   ]
 }
