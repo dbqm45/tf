@@ -4,7 +4,7 @@ description: Użyj przy projekcie agenta LLM lub przepływu agentowego — workf
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy projektujesz agenta LLM albo przepływ agentowy w kodzie — czy w ogóle potrzebny agent, wzorce workflow (prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer), projekt narzędzi (nazwy, opisy, parametry, błędy, idempotencja) i serwerów MCP, inżynieria kontekstu (co trafia do kontekstu, kompaktowanie, pamięć), kompromisy multi-agent, guardrails i uprawnienia, zatwierdzanie przez człowieka akcji nieodwracalnych, tracing i obserwowalność, warunki stopu i budżety, typowe porażki, wybór frameworka (Claude Agent SDK, LangGraph) wg kryteriów. Nie do wywołań SDK, kontraktu wyjścia i pętli narzędzi w kodzie (eng-llm-features), uruchamiania Claude Code bez nadzoru (core-async-delegation), doboru modelu i kosztu pracy z agentem (core-cost-control), bezpieczeństwa agenta-programisty (core-agent-security) ani RAG (ai-rag)."
-  slowa: "agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy"
+  slowa: "agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta"
 ---
 
 # Projekt agenta LLM — od „czy agent” do granic i obserwowalności
@@ -61,7 +61,9 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    modeli: **core-cost-control**.
 8. **Tracing.** Każdy przebieg ma identyfikator; zapisujesz kroki: wejście, wywołanie narzędzia z argumentami
    i wynikiem, tokeny, czas, powód zakończenia. Bez tego nie zdiagnozujesz zapętlenia ani złej decyzji (ogólnie:
-   **ops-observability**; dane osobowe w śladach maskuj). Błędy stanu się kumulują, więc projektuj wznawianie
+   **ops-observability**; dane osobowe w śladach maskuj). Pamięć długotrwała to kilka kontraktów (semantyczna,
+   epizodyczna, proceduralna, profil, robocza), a nie jeden indeks wektorowy; trwałe wykonanie zależy od granic
+   kroków — `references/pamiec-i-trwale-wykonanie.md`. Błędy stanu się kumulują, więc projektuj wznawianie
    od punktu kontrolnego zamiast restartu od zera.
 9. **Framework wg kryteriów.** Zacznij od surowego API i pętli, jeśli przypadek jest prosty. Kryteria: potrzebny
    trwały stan i wznawianie? sterowanie grafem i punkty zatwierdzenia? gotowe narzędzia plików i basha? wymienność

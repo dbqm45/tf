@@ -92,6 +92,8 @@ Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `refe
    krytyk albo odmowa, jedna droga → niższa pewność. Model pisze zapytanie, baza liczy (arytmetyka modelu zawodzi).
    Przed dołożeniem komponentu (wyszukiwanie wartości, wybór tabel) mierz, czy pomaga — gdy cały schemat mieści się
    w promptcie, dodatkowy etap potrafi pogorszyć wynik (F. Khan, 2026-10 [niezweryfikowane]).
+   **Obsługa dużego wolumenu spraw** (zwroty, reklamacje, zmiany danych): progi autonomii per intencja, macierz
+   pomyłek z kosztem i „model proponuje, orkiestrator wykonuje” — `references/obsluga-spraw.md`.
 10. **Zapis.** `ai-architecture.md` (TL;DR, osie, wzorzec, komponenty, budżety, granice, koszt, ryzyka) i **ADR** dla
     każdej decyzji kluczowej: wzorzec, źródło modelu, rezydencja, fallback (**arch-architect-practice**,
     **docs-tech-writing**). Kryterium rewizji decyzji (np. jakość na zbiorze złotym poniżej progu) wpisz do ADR.

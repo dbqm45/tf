@@ -153,6 +153,19 @@
           ["odmow\\w+", "nie wiem", "niższ\\w+ pewnoś\\w+", "pewnoś\\w+"]
         ]
       }
+    },
+    {
+      "id": "obsluga-spraw-progi-autonomii",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby AI obsługiwało 20 tys. zgłoszeń klientów miesięcznie (zwroty, reklamacje, zmiana danych) i samo wykonywało część spraw w systemach. Jak zaprojektować wdrożenie, żeby nie wypłacało pieniędzy na podstawie pomyłki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["shadow", "w tle", "równolegle (z|do) ludzi", "tryb\\w* cie\\w+"],
+          ["intencj\\w+", "per (typ|rodzaj) sprawy", "per intencj\\w+", "próg\\w* autonomii", "polityk\\w+"],
+          ["koszt\\w* pomyłk\\w+", "macierz\\w* pomyłek", "koszt\\w* błęd\\w+", "precyzj\\w+"],
+          ["orkiestrator\\w*", "kod (sprawdza|wykonuje)", "model proponuje", "intencj\\w+ zapisu", "idempotencj\\w+"]
+        ]
+      }
     }
   ]
 }

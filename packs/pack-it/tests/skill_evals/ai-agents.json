@@ -134,6 +134,32 @@
           ["zatwierdz\\w+", "zgod\\w+", "potwierdz\\w+", "czeka na .?tak", "człowiek"]
         ]
       }
+    },
+    {
+      "id": "pamiec-agenta-typy",
+      "expect": "trigger",
+      "prompt": "Nasz asystent zapisuje wszystko, co wie o użytkowniku i zadaniach, do jednej bazy wektorowej i potem wyszukuje. Coraz częściej przywołuje nieaktualne fakty jako bieżące. Jak lepiej zaprojektować pamięć agenta? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["semantyczn\\w+", "fakt\\w*", "co jest prawdą"],
+          ["epizodyczn\\w+", "co się stało", "histori\\w+ zdarzeń"],
+          ["proceduraln\\w+", "jak to robić", "instrukcj\\w+"],
+          ["wygaś\\w+", "data weryfikacji", "przeterminowan\\w+", "typ\\w* wpisu", "pole typu", "zastępuje stary"]
+        ]
+      }
+    },
+    {
+      "id": "trwale-wykonanie-agenta",
+      "expect": "trigger",
+      "prompt": "Nasz agent wykonuje długie zadania (kilkanaście wywołań modelu i narzędzi, w tym płatność) i przy restarcie serwera zaczyna od nowa. Rozważamy Temporal, Inngest albo DBOS. Na co zwrócić uwagę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["granic\\w+ kroków", "krok\\w* na (każde|każdy)", "jeden krok"],
+          ["deterministyczn\\w+", "ponown\\w+ wykon\\w+", "poza krokiem"],
+          ["idempotent\\w+", "klucz\\w* idempotencji", "obciąż\\w+ (kartę|dwa razy)", "podwójn\\w+"],
+          ["SIGKILL", "test\\w* odzyskiwania", "zabi\\w+ proces", "kill"]
+        ]
+      }
     }
   ]
 }
