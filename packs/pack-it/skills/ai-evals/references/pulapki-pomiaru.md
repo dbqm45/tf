@@ -1,7 +1,8 @@
 # Pułapki pomiaru i regresja ze śladów
 
 Spis treści: 1. Granice wyniku · 2. Jedna zmienna naraz · 3. Dobór konfiguracji a test · 4. Etykieta i metryka składowa ·
-5. Niezmienniki · 6. Manifest pary model + harness · 7. Regresja ze śladów · 8. Reguły jako podłoga · 9. Bramka zmiany harnessu
+5. Niezmienniki · 6. Manifest pary model + harness · 7. Regresja ze śladów · 8. Reguły jako podłoga · 9. Bramka zmiany harnessu ·
+10. Raport i dobór wyroczni · 11. Klasyfikator decyzji · 12. Użyteczność z karą (agent odpowiadający liczbami)
 
 Ciche błędy pomiaru częściej *poprawiają* metrykę niż ją psują, więc dobry wynik sprawdzasz tak samo jak zły.
 
@@ -81,7 +82,39 @@ Zmiana promptu, skilla, hooka, opisu narzędzia lub schematu, ręczna albo z pę
 3. Autor zmiany (człowiek albo agent) nie zmienia w tym samym PR scenariuszy, na których jest oceniany.
 4. Potem wdrożenie albo wycofanie, z zapisem w raporcie.
 
+## 10. Raport i dobór wyroczni
+- **Główny sygnał gotowości to odsetek zadań zaliczonych w całości** (wszystkie kryteria rubryki). Średnia spełnionych
+  kryteriów i rozrzut między powtórzeniami idą obok jako diagnostyka: raport wskazujący 8 z 10 ryzyk nie jest
+  „w 80% użyteczny”. Średnia może być nagrodą w treningu, nie miarą w raporcie.
+- **Wyrocznię zastępczą dobierasz do odwracalności działania:** asercja deterministyczna w pętli (stan bazy po
+  rozmowie, ostatnie żądanie zgodne ze schematem), rubryka i weryfikator faktów pośrodku, człowiek przed działaniem
+  nieodwracalnym. Przy pętli samodoskonalenia — zamrożony zbiór testowy i wersjonowany sędzia (§9).
+- Porównanie harnessów lub modeli na **tych samych zasobach wykonania** (CPU, pamięć, limity czasu) i z tą samą liczbą
+  powtórzeń — różnica wyniku może pochodzić z infrastruktury.
+
+## 11. Klasyfikator decyzji (LLM jako klasyfikator)
+- Test kolejności i nazw opcji: przetasuj i przemianuj opcje, policz zmiany odpowiedzi.
+- Próg dopasowany na własnych etykietach **osobno dla każdego punktu decyzji**, nigdy domyślne 0,5.
+- Kaskada (tani model, a drogi tylko przy niepewności) mierzona względem samego drogiego modelu.
+- Szczególna ostrożność przy krokach nieodwracalnych: pewny błędny wybór to typowa porażka — tam niższy próg
+  przekazania człowiekowi.
+- Przed przypisaniem zysku dostrajaniu: kontrola na zamrożonym modelu bazowym z tym samym promptem.
+- Zbiór testowy rozdzielony po przypadku (ten sam dokument nie trafia na obie strony), najlepiej zamknięty;
+  publiczny benchmark się nasyca. Zmiana słów w definicjach opcji to zmiana modelu, więc ponowny test.
+- Licencję sprawdzasz w pliku wag, modelu bazowym i danych, nie na odznace repozytorium.
+
+## 12. Użyteczność z karą (agent odpowiadający liczbami)
+- Cele zapisane przed pierwszą wersją agenta: trafność, odsetek złych odpowiedzi wśród udzielonych **razem
+  z pokryciem**, p50 i p95 czasu.
+- **Użyteczność z karą:** +1 dobra odpowiedź lub słuszna odmowa, 0 zbędna odmowa, −2 pewna zła liczba. Agent, który
+  wszystkiemu odmawia, nie wygrywa, a ten, który zgaduje, przegrywa.
+- Zmiana przyjęta, gdy użyteczność rośnie (albo stoi, a czas spada), z **parowanym bootstrapem** na tych samych
+  pytaniach. Odkładasz **całe szablony pytań**, nie tylko instancje — wynik na nowych szablonach bywa wyraźnie niższy.
+- Czas mierzysz pojedynczym użytkownikiem z pustym cache, nie tylko przy współbieżności ewaluacji.
+
 Źródła: F. Khan, „Structuring 40 Million Documents into an Agentic Knowledge Graph” (2026-08-26, liczby z jego repo
 [niezweryfikowane]); A. Punnen, „Eval-Driven Development” (2026-08-18); Netflix Tech Blog, „Making Failure Diagnosis
-Reliable with Pensive AI” (2026-10); J. Wąsowski, „AI Harness Evolution: … Overfitting Without a Holdout” (2026-10-22).
+Reliable with Pensive AI” (2026-10); J. Wąsowski, „AI Harness Evolution: … Overfitting Without a Holdout” (2026-10-22);
+F. Khan, „Engineering Multi-Agent AI for a 100 GB Data Warehouse” (2026-10); A. Alcaraz, „Grounded Reasoning For Agents”
+(2026-10-20). Liczby autorów [niezweryfikowane].
 Progi (30% szumu, 7–30 dni retencji) to przykłady z tych artykułów, nie reguły [założenie].

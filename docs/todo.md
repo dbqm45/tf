@@ -1130,7 +1130,7 @@ Przegląd 2026-10-29: brak w fabryce wzorca „pytanie biznesowe → SQL” (tex
 autora (jeden laptop, TPC-DS SF100, 102 pytania dev / 194 test, modele Qwen) [niezweryfikowane]. Wnioski warte
 przeniesienia (do `ai-evals`, `eng-llm-features`, `sec-llm-security`, `data-analysis`/`data-engineering`; ewentualnie
 nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
-- [ ] **Cele zapisane przed pierwszym agentem** (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
+- [x] **Cele zapisane przed pierwszym agentem** (zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §12) (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
   razem z pokryciem, p50 i p95 czasu) i **użyteczność z karą**: +1 dobra odpowiedź lub słuszna odmowa, 0 odmowa,
   −2 pewna zła liczba — agent, który wszystkiemu odmawia, nie wygrywa. Każda zmiana jedna naraz, przyjęta tylko gdy
   użyteczność rośnie (albo stoi, a czas spada), z parowanym bootstrapem na tych samych pytaniach; odłożone **całe
@@ -1400,7 +1400,7 @@ przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezw
   (start sesji) porównać zapisaną gałąź i commit z `HEAD`: rozjazd (inna gałąź, commit nieznany w historii, nowe
   commity spoza punktu) → ostrzeżenie „stan repo różni się od punktu kontrolnego, przed kontynuacją uruchom testy
   i porównaj kroki z dowodem”. Streszczenie rozmowy nie jest mechanizmem odtwarzania stanu. Najpierw test.
-- [ ] **`ai-evals`, raport i dobór wyroczni:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
+- [x] **`ai-evals`, raport i dobór wyroczni** (zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §10)**:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
   (wszystkie kryteria rubryki), średnia spełnionych kryteriów i rozrzut między powtórzeniami tylko obok, jako
   diagnostyka — raport wskazujący 8 z 10 ryzyk nie jest „w 80% użyteczny”; średnia może być nagrodą w treningu, nie
   miarą w raporcie. (2) Wyrocznię zastępczą dobierać do odwracalności działania: asercja deterministyczna w pętli
@@ -1538,7 +1538,7 @@ Braki:
   - Dla fabryki: hook `tdd_guard` jest właśnie regułą czasową („edycja kodu dozwolona, jeśli od ostatniej zmiany
     testu był czerwony przebieg”). Warto zapisać reguły hooków jako predykaty nad logiem hooków i testować je
     odtworzeniem zapisanych śladów (jak `dogwood replay`). Zmiana hooków tylko na prośbę człowieka.
-- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (LLM jako klasyfikator albo model decyzyjny):
+- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (część w `ai-evals` zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §11; zostaje `factory/jev_calibration.py` — zmiana w `factory/` za zgodą człowieka) (LLM jako klasyfikator albo model decyzyjny):
   - Test kolejności i nazw opcji: przetasować i przemianować, policzyć zmiany odpowiedzi.
   - Próg dopasowany na własnych etykietach **osobno dla każdego punktu decyzji**, nigdy domyślne 0,5.
   - Kaskada mierzona względem samego drogiego modelu.
