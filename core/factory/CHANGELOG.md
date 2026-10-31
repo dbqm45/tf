@@ -3,6 +3,14 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.52.1] — 2026-10-31
+### Fixed
+- **mode-pdi:** push talos cut branches and open their PRs in sdlc-phase (#112)
+
+## [5.52.0] — 2026-10-31
+### Added
+- **mode-pdi:** record the gate decision text in decisions.md (#111)
+
 ## [5.51.1] — 2026-10-30
 ### Fixed
 - **core:** make core-grounding discoverable for long documents and worn sessions (#104)

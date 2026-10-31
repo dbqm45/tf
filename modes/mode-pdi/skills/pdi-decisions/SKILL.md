@@ -64,12 +64,15 @@ Po decyzji na bramce pdi uruchamia w repo workflow `sdlc-phase.yml` (`python3 .c
 workflow install`, dalej `phase_run.py`): zapisuje decyzję w `decisions.md` (`decision_record.py decision gate`, numer
 już z pdi, `wyslano: tak`), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
 persona i artefakt: `phase_run.py prompt`), otwiera PR fazy i wysyła prośbę o następną bramkę (`phase_run.py gate request`).
+W fazie delivery gałęzie cięć `story/*` wypycha i ich PR-y otwiera workflow (`phase_run.py cuts publish`), nie persona.
 Gdy tak cię uruchomiono:
 1. Nikt nie odpowie na pytania: nie pytasz człowieka i nie czekasz na zgodę. Pracujesz tylko w zakresie fazy, w
    artefakcie z polecenia (`requirements.md`, `plan.md`…), nagłówek `status: proposed`.
 2. Czego nie rozstrzygniesz bez człowieka, nie zgadujesz: lista w sekcji `## Pytania do bramki` artefaktu (pytanie
    z adresatem w wierszu) — trafi do skrzynki pdi razem z bramką.
-3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow.
+3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow. Wpisy `## Bramka …`
+   w `decisions.md` (ustalenie i uzasadnienie z pdi, `decision gate --why`) są wiążące: pytanie, na które
+   odpowiadają, jest rozstrzygnięte — zapisz ustalenie w artefakcie z odwołaniem do wpisu i nie pytaj ponownie.
    Faza `design`: tabela ramek w `design.md` (szablon `templates/design.md`, format z kontraktu pdi
    `conventions.design`); `design_check.py check CHG-n` przed bramką — braki ramek i stanów idą do pdi jako pytania.
 4. Na koniec `decision_record.py check` ma przejść. Poprawki po `changes_requested`: przeczytaj wpis bramki w

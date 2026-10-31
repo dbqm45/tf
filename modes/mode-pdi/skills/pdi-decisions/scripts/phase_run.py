@@ -11,12 +11,17 @@ Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez inter
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
       gate.requested (kontrakt pdi 0.9.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET
+  python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list
+      JSON z lokalnymi gałęziami cięć story/* — zapis przed fazą delivery
+  python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before PLIK [--base main] [--dry-run]
+      po fazie delivery: push nowych gałęzi story/* z commitami ponad --base i PR każdej (persona w --print nie może
+      pushować); cięcie zbudowane na innym ma PR do niego; JSON {status, prs: [{branch, pr}]}, bez cięć kod 1
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install [--force]
       szablon .github/workflows/sdlc-phase.yml (workflow_dispatch wywoływany przez pdi)
 
 Fazy, persony i bramki: PHASES niżej; nadpisanie w .claude/pdi-phases.json ({"requirements": {"persona": "jan"}}).
 Przyjęcie zgłoszenia w pdi (F3) uruchamia fazę intent z treścią zgłoszenia: $PDI_SOURCE (PRB) i $PDI_PROBLEM (JSON).
-Model: $PDI_CLAUDE_BIN (domyślnie claude). Kod wyjścia: 0 — w porządku, 1 — błąd (z podpowiedzią), 2 — złe wywołanie.
+Model: $PDI_CLAUDE_BIN (domyślnie claude), GitHub CLI: $PDI_GH_BIN (domyślnie gh). Kod wyjścia: 0 — w porządku, 1 — błąd (z podpowiedzią), 2 — złe wywołanie.
 """
 import argparse
 import hashlib
@@ -134,6 +139,9 @@ def build_prompt(a) -> dict:
         f"pytania w tej sesji: nie pytaj człowieka i nie czekaj na zgodę.",
         f"Najpierw przeczytaj dziennik zmiany {d}/ (intent.md, plan.md, decisions.md i to, co już jest) oraz "
         f"`.claude/skills/pdi-decisions/SKILL.md`.",
+        f"Wpisy `## Bramka …` w {d}/decisions.md to decyzje człowieka z bramek pdi i są wiążące: nie podważaj ich. "
+        f"Pytanie z `## Pytania do bramki` wcześniejszych artefaktów, na które odpowiada taki wpis, jest rozstrzygnięte: "
+        f"w swoim artefakcie zapisz ustalenie z odwołaniem do wpisu (np. {a.change}/D2) i nie zadawaj go ponownie.",
     ]
     if a.rework:
         lines.append(f"Bramka {a.gate or '?'} zwróciła tę fazę do poprawek (decyzja {a.decision or '?'}). Przeczytaj jej "
@@ -285,6 +293,74 @@ def post_event(event: dict) -> int:
         raise Refused(f"brak połączenia z pdi ({getattr(e, 'reason', e)})") from e
 
 
+CUT = re.compile(r"^story/[A-Za-z0-9_][A-Za-z0-9._/-]{0,199}$")
+
+
+def _git(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], capture_output=True, text=True)
+
+
+def _cuts() -> list[str]:
+    r = _git("for-each-ref", "--format=%(refname:short)", "refs/heads/story/")
+    if r.returncode != 0:
+        raise Refused(f"git for-each-ref zakończone kodem {r.returncode}: {r.stderr.strip()[:200]}")
+    return sorted(b for b in r.stdout.split() if CUT.match(b) and ".." not in b)
+
+
+def cmd_cuts(a) -> int:
+    if a.action == "list":
+        print(json.dumps(_cuts()))
+        return 0
+    try:
+        before = set(json.loads(Path(a.before).read_text(encoding="utf-8")))
+    except (OSError, ValueError, TypeError) as e:
+        raise Refused(f"nie da się przeczytać {a.before} (lista gałęzi sprzed fazy: cuts list): {e}") from e
+    base = a.base
+    ref = base if _git("rev-parse", "--verify", "-q", base).returncode == 0 else f"origin/{base}"
+    cuts = []
+    for branch in (b for b in _cuts() if b not in before):
+        count = _git("rev-list", "--count", f"{ref}..{branch}").stdout.strip()
+        if count.isdigit() and int(count) > 0:
+            cuts.append(branch)
+    if not cuts:
+        print(json.dumps({"status": "failed", "error": f"persona nie zostawiła gałęzi story/* z commitami ponad {base} "
+                                                       "— cięcia nie powstały"}, ensure_ascii=False))
+        return 1
+
+    def ancestor(x: str, y: str) -> bool:
+        return _git("merge-base", "--is-ancestor", x, y).returncode == 0
+
+    plan = []
+    for branch in cuts:
+        under = [o for o in cuts if o != branch and ancestor(o, branch)]
+        plan.append((branch, next((o for o in under if all(p == o or ancestor(p, o) for p in under)), base)))
+    if a.dry_run:
+        print(json.dumps({"status": "dry_run", "cuts": [{"branch": b, "base": x} for b, x in plan]}, ensure_ascii=False))
+        return 0
+    gh = os.environ.get("PDI_GH_BIN") or "gh"
+    for branch, _ in plan:
+        r = _git("push", "-u", "origin", branch)
+        if r.returncode != 0:
+            raise Refused(f"git push {branch} zakończone kodem {r.returncode}: {r.stderr.strip()[:300]}")
+    prs = []
+    for branch, parent in plan:
+        try:
+            r = subprocess.run([gh, "pr", "view", branch, "--json", "url", "-q", ".url"], capture_output=True, text=True)
+            url = r.stdout.strip().splitlines()[-1] if r.returncode == 0 and r.stdout.strip() else ""
+            if not url.startswith("https://"):
+                r = subprocess.run([gh, "pr", "create", "--fill", "--head", branch, "--base", parent],
+                                   capture_output=True, text=True)
+                urls = [ln.strip() for ln in r.stdout.splitlines() if ln.strip().startswith("https://")]
+                if r.returncode != 0 or not urls:
+                    raise Refused(f"gh pr create dla {branch} zakończone kodem {r.returncode}: {r.stderr.strip()[:300]}")
+                url = urls[-1]
+        except OSError as e:
+            raise Refused(f"nie da się uruchomić {gh} ({e.strerror}) — zainstaluj GitHub CLI albo ustaw PDI_GH_BIN") from e
+        prs.append({"branch": branch, "pr": url})
+    print(json.dumps({"status": "done", "prs": prs}, ensure_ascii=False))
+    return 0
+
+
 def cmd_workflow_install(a) -> int:
     if WORKFLOW.exists() and not a.force:
         raise Refused(f"{WORKFLOW} już istnieje — nie nadpisuję (--force, jeśli to celowe)")
@@ -316,10 +392,17 @@ def main(argv: list[str]) -> int:
     req.add_argument("--summary")
     req.add_argument("--url")
     req.add_argument("--dry-run", action="store_true")
+    cuts = sub.add_parser("cuts").add_subparsers(dest="action", required=True)
+    cuts.add_parser("list")
+    pub = cuts.add_parser("publish")
+    pub.add_argument("--before", required=True)
+    pub.add_argument("--base", default="main")
+    pub.add_argument("--dry-run", action="store_true")
     wf = sub.add_parser("workflow").add_subparsers(dest="action", required=True)
     wf.add_parser("install").add_argument("--force", action="store_true")
     a = ap.parse_args(argv)
-    handler = {"prompt": cmd_prompt, "run": cmd_run, "gate": cmd_gate_request, "workflow": cmd_workflow_install}[a.cmd]
+    handler = {"prompt": cmd_prompt, "run": cmd_run, "gate": cmd_gate_request, "cuts": cmd_cuts,
+               "workflow": cmd_workflow_install}[a.cmd]
     if a.cmd == "gate":
         a.gate = getattr(a, "gate", None)
     try:

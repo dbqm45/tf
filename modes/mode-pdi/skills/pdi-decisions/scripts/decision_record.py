@@ -225,10 +225,13 @@ def decision_gate(a) -> int:
         return 0
     n = 1 + max([int(e["ref"].rsplit("D", 1)[1]) for e in entries if re.search(r"/D\d+$", e["ref"])] or [0])
     ref = f"{a.key}/D{n}"
+    # Ustalenie i uzasadnienie z pdi (PRB-3) w jednym wierszu, bo wpis to lista `- pole: wartość`.
+    why = " ".join((a.why or "").split())
+    why = f"{why} (decyzja w skrzynce bramek pdi, {a.id})" if why else (
+        f"decyzja w skrzynce bramek pdi ({a.id}); uzasadnienie w rejestrze pdi")
     entry = (f"\n## Bramka {a.gate.strip()}: {a.outcome}\n- ref: {ref}\n- id: {a.id}\n- wyslano: tak\n"
              f"- kiedy: {a.date or dt.date.today().isoformat()}\n- kto: {a.by.strip()}\n- rodzaj: gate\n"
-             f"- dlaczego: decyzja w skrzynce bramek pdi ({a.id}); uzasadnienie w rejestrze pdi\n- zrodlo: manual\n"
-             f"- szkic: human\n")
+             f"- dlaczego: {why}\n- zrodlo: manual\n- szkic: human\n")
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
     print(f"✓ {ref} w {f} ({a.id}, wyslano: tak)")
     return 0
@@ -524,6 +527,7 @@ def main(argv: list[str]) -> int:
     gate.add_argument("--id", required=True)
     gate.add_argument("--by", default="pdi")
     gate.add_argument("--date")
+    gate.add_argument("--why", help="ustalenie i uzasadnienie decyzji z rejestru pdi (trafia do wpisu)")
     args = ap.parse_args(argv)
     if args.cmd == "check":
         return check()

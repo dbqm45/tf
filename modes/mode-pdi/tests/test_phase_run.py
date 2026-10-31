@@ -68,6 +68,11 @@ def project(tmp: Path) -> Path:
     return tmp
 
 
+def TEMPLATE_BODY() -> str:  # noqa: N802
+    f = SCRIPT.parent.parent / "templates" / "sdlc-phase.yml"
+    return f.read_text(encoding="utf-8") if f.is_file() else ""
+
+
 def main() -> int:
     fails, total = [], 0
 
@@ -93,6 +98,8 @@ def main() -> int:
         check("CHG-12" in text and "requirements.md" in text and "docs/project/changes/CHG-12" in text
               and "bez interakcji" in text and "Pytania do bramki" in text and "decision_record.py check" in text,
               f"R-2: prompt mówi, co i gdzie zrobić, bez pytań do człowieka: {text[:500]}")
+        check("## Bramka" in text and "wiążące" in text and "rozstrzygnięte" in text,
+              f"R-2a: decyzje z bramek w decisions.md są wiążące, a odpowiedziane pytania rozstrzygnięte: {text[:900]}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "architecture", "--rework", "--gate", "B3",
                  "--decision", "DEC-41"], repo)
         text = (jl(r) or {}).get("prompt", "")
@@ -243,6 +250,90 @@ def main() -> int:
         check(r.returncode != 0 and wf.read_text(encoding="utf-8") == "moje\n", "W-5: bez nadpisania")
         r = run(["workflow", "install", "--force"], repo)
         check(r.returncode == 0 and "workflow_dispatch" in wf.read_text(encoding="utf-8"), "W-6: --force nadpisuje")
+
+    # --- PR-y cięć po fazie delivery: persona w --print nie może pushować ani otwierać PR-ów (pdi PRB-4) ---
+    with tempfile.TemporaryDirectory() as t:
+        t = Path(t)
+        remote, repo, log = t / "remote.git", t / "repo", t / "gh.log"
+
+        def git(*args, cwd=None):
+            return subprocess.run(["git", *args], cwd=cwd or repo, capture_output=True, text=True, check=True).stdout
+
+        subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(remote)], check=True)
+        subprocess.run(["git", "clone", "-q", str(remote), str(repo)], check=True, capture_output=True)
+        for k, v in (("user.name", "t"), ("user.email", "t@example.com"), ("commit.gpgsign", "false")):
+            git("config", k, v)
+        (repo / "a.txt").write_text("a\n")
+        git("add", "-A")
+        git("commit", "-qm", "init")
+        git("push", "-q", "origin", "main")
+        git("branch", "story/stara")
+        gh = t / "gh"
+        gh.write_text(f"""#!{sys.executable}
+import json, os, sys
+open({str(log)!r}, "a").write(json.dumps(sys.argv[1:]) + "\\n")
+if sys.argv[1:3] == ["pr", "view"]:
+    if "tsk-9" not in sys.argv[3]:
+        sys.exit(1)
+    print("https://github.com/o/r/pull/9")
+if sys.argv[1:3] == ["pr", "create"]:
+    n = 1 if "tsk-1" in sys.argv[sys.argv.index("--head") + 1] else 2
+    print(f"https://github.com/o/r/pull/{{n}}")
+""")
+        gh.chmod(0o755)
+        env = {"PDI_GH_BIN": str(gh)}
+        r = run(["cuts", "list"], repo, **env)
+        before = t / "before.json"
+        before.write_text(r.stdout)
+        check(r.returncode == 0 and jl(r) == ["story/stara"], f"C-1: cuts list podaje gałęzie story/*: {r.stdout}{r.stderr}")
+        r = run(["cuts", "publish", "--before", str(before), "--base", "main"], repo, **env)
+        out = jl(r) or {}
+        check(r.returncode == 1 and out.get("status") == "failed" and "story/" in out.get("error", ""),
+              f"C-2: bez nowych cięć z commitami → błąd: {r.stdout}{r.stderr}")
+        git("switch", "-qc", "story/tsk-1-fundament")
+        (repo / "b.txt").write_text("b\n")
+        git("add", "-A")
+        git("commit", "-qm", "feat: b", "-m", "Change: TSK-1")
+        git("switch", "-qc", "story/tsk-2-data")
+        (repo / "c.txt").write_text("c\n")
+        git("add", "-A")
+        git("commit", "-qm", "feat: c", "-m", "Change: TSK-2")
+        git("branch", "story/pusta", "main")
+        git("switch", "-q", "main")
+        r = run(["cuts", "publish", "--before", str(before), "--base", "main", "--dry-run"], repo, **env)
+        check(r.returncode == 0 and not log.exists() and "story/tsk-1-fundament" not in git("ls-remote", "--heads", "origin"),
+              f"C-3: --dry-run niczego nie wypycha ani nie otwiera: {r.stdout}{r.stderr}")
+        r = run(["cuts", "publish", "--before", str(before), "--base", "main"], repo, **env)
+        out = jl(r) or {}
+        calls = [json.loads(x) for x in log.read_text().splitlines()] if log.exists() else []
+        creates = [c for c in calls if c[:2] == ["pr", "create"]]
+        heads = git("ls-remote", "--heads", "origin")
+        check(r.returncode == 0 and out.get("status") == "done" and out.get("prs") == [
+            {"branch": "story/tsk-1-fundament", "pr": "https://github.com/o/r/pull/1"},
+            {"branch": "story/tsk-2-data", "pr": "https://github.com/o/r/pull/2"}],
+              f"C-4: nowe cięcia z commitami → push i PR każdego: {r.stdout}{r.stderr}")
+        check("story/tsk-1-fundament" in heads and "story/tsk-2-data" in heads and "story/pusta" not in heads
+              and "story/stara" not in heads, f"C-5: wypchnięte tylko nowe gałęzie z commitami: {heads}")
+        check(["pr", "create", "--fill", "--head", "story/tsk-1-fundament", "--base", "main"] in creates
+              and ["pr", "create", "--fill", "--head", "story/tsk-2-data", "--base", "story/tsk-1-fundament"] in creates,
+              f"C-6: cięcie zbudowane na poprzednim ma PR do niego: {creates}")
+        git("branch", "story/tsk-9-ma-pr", "story/tsk-2-data")
+        git("switch", "-q", "story/tsk-9-ma-pr")
+        (repo / "d.txt").write_text("d\n")
+        git("add", "-A")
+        git("commit", "-qm", "feat: d")
+        git("switch", "-q", "main")
+        before.write_text(json.dumps(["story/stara", "story/tsk-1-fundament", "story/tsk-2-data"]))
+        r = run(["cuts", "publish", "--before", str(before), "--base", "main"], repo, **env)
+        check(r.returncode == 0 and (jl(r) or {}).get("prs") == [
+            {"branch": "story/tsk-9-ma-pr", "pr": "https://github.com/o/r/pull/9"}],
+              f"C-7: istniejący PR cięcia zostaje: {r.stdout}{r.stderr}")
+        r = run(["cuts", "publish", "--before", str(t / "brak.json"), "--base", "main"], repo, **env)
+        check(r.returncode == 1 and "brak.json" in r.stdout, f"C-8: brak pliku sprzed fazy → błąd: {r.stdout}")
+
+    body = TEMPLATE_BODY()
+    check("phase_run.py cuts list" in body and "phase_run.py cuts publish" in body and "DEFAULT_BRANCH" in body,
+          "W-9: workflow w fazie delivery zapisuje gałęzie cięć przed fazą i wystawia ich PR-y po niej")
 
     for f in fails:
         print(f"✗ {f}")
