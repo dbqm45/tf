@@ -871,18 +871,18 @@ i oznaczanie testów charakteryzujących; `qa-test-design` — klasy i brzegi; `
 poza zasięgiem agenta; `tdd_guard` ostrzega przy osłabieniu testu; `tool-pytest` utrwala znalezione przypadki
 w `@example`. Badań z artykułu (Tufano i in., arXiv 2608.17177; ImpossibleBench, arXiv 2510.20270) nie otworzyłem —
 liczby [niezweryfikowane], przed wpisaniem do skilla sprawdzić u źródła. Braki:
-- [ ] **`qa-spec-first-testing`: zgłoszenie błędu zaczyna się od przykładu** wejście / oczekiwane / faktyczne; z niego
+- [x] **`qa-spec-first-testing`: zgłoszenie błędu zaczyna się od przykładu** (zrobione 2026-10-31: „Błąd zgłoszony — od przykładu do testu”) wejście / oczekiwane / faktyczne; z niego
   punkty ON, OFF i wewnątrz progu (99,99 · 100,00 · 100,01) i jeden kontrprzykład na regułę (kod promocyjny, zwrot),
   regułę słowami zapisuje się na końcu. Kontrprzykład bez jasnego „Then” to pytanie do biznesu, nie test. Jeden
   przykład przepuszcza implementację, która „zna odpowiedź” (`if total == 100`).
-- [ ] **Kontrakt przed testami:** agent zapisuje warunki wejścia, wyjścia i przypadki nieokreślone, człowiek czyta go
+- [x] **Kontrakt przed testami** (zrobione 2026-10-31: `qa-spec-first-testing` pkt 5, jako opcja)**:** agent zapisuje warunki wejścia, wyjścia i przypadki nieokreślone, człowiek czyta go
   przed testami, testy powstają z kontraktu, nie z przeczytanego kodu (kod błędny dziś daje testy utrwalające błąd).
   Wg autora badanie Google: zysk istotny dopiero przy kilku niezależnych przebiegach, ok. +38% tokenów — więc jako
   opcja dla progów i reguł liczbowych, nie domyślny krok.
-- [ ] **Test właściwości nie zastępuje przykładu:** losowanie w pełnym zakresie prawie nigdy nie trafia w próg
+- [x] **Test właściwości nie zastępuje przykładu** (zrobione 2026-10-31: `qa-spec-first-testing` pkt 4)**:** losowanie w pełnym zakresie prawie nigdy nie trafia w próg
   (autor: 0/30 przebiegów bez `@example(100.00)`, 30/30 z nim); przykład z ticketu zostaje jako jawny przypadek
   w teście właściwości — ogólna zasada w `qa-spec-first-testing`, nie tylko w `tool-pytest`.
-- [ ] **Chronione scenariusze akceptacyjne egzekwuje CI, nie prompt:** do `core-agent-security` / `core-git-workflow`:
+- [x] **Chronione scenariusze akceptacyjne egzekwuje CI, nie prompt** (zrobione 2026-10-31: `core-git-workflow`, „Pull request”)**:** do `core-agent-security` / `core-git-workflow`:
   CODEOWNERS tylko wskazuje recenzentów — wymuszenie daje ochrona gałęzi „Require review from Code Owners” i wymagany
   check; zmiana scenariuszy w osobnym PR niż kod (check w CI odrzuca PR, który zmienia oba); liczba chronionych testów
   nie spada — alarm pomocniczy, bo asercję da się osłabić bez zmiany liczby; zmiany w krokach (step definitions) też
@@ -1412,7 +1412,7 @@ przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezw
   niesie identyfikator i wersję źródła (np. wersja preprintu — zaokrąglone zdania w streszczeniu zmieniają się między
   wersjami, tabela nie), nazwę metryki i status pomiaru: deklaracja firmy o własnym produkcie / pomiar twórcy
   benchmarku / pomiar niezależny. Wynik z piaskownicy nie przenosi się automatycznie na środowisko produkcyjne.
-- [ ] **`qa-test-design`, brzeg stronicowania i izolacji:** heurystyka „liczba wyników równa limitowi strony → test
+- [x] **`qa-test-design`, brzeg stronicowania i izolacji** (zrobione 2026-10-31: tabela technik)**:** heurystyka „liczba wyników równa limitowi strony → test
   musi sprawdzić następną stronę”; dane testowe z większą liczbą rekordów niż jedna strona, z rekordami drugiego
   najemcy i przypadkiem odmowy dostępu; oczekiwany zbiór wyliczony z niezależnie zasianych danych, nie z
   implementacji (asercja na całym zbiorze, nie na statusie i pierwszym wierszu).

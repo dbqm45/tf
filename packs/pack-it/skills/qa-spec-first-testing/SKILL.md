@@ -31,6 +31,21 @@ mock zwracający to, co potem jest asertowane.
 2. Programista w cyklu TDD: test jednostkowy **czerwony z właściwego powodu** → minimalny kod → zielony → refaktor (eng-testing).
 3. Każdy nowy test **musi najpierw nie przejść** — test, który od razu jest zielony, nic nie udowodnił (sprawdź, czy w ogóle wykonuje asercję).
 
+### Błąd zgłoszony — od przykładu do testu
+1. Zapisz przykład: **wejście / oczekiwane / faktyczne** (z cytatem zgłoszenia jako źródłem oczekiwanego).
+2. Z progu wyprowadź punkty: na progu, tuż pod i tuż nad (99,99 · 100,00 · 100,01) oraz jeden kontrprzykład na regułę
+   (np. kod promocyjny, zwrot). Kontrprzykład bez jasnego „Then” to pytanie do biznesu, nie test.
+3. Regułę słowami zapisujesz na końcu, z przykładów. Jeden przykład przepuszcza implementację, która „zna odpowiedź”
+   (`if total == 100`).
+4. **Test właściwości nie zastępuje przykładu:** losowanie w pełnym zakresie prawie nigdy nie trafia dokładnie w próg,
+   więc przykład ze zgłoszenia zostaje jawnym przypadkiem w teście właściwości (np. `@example(100.00)` w Hypothesis,
+   tool-pytest).
+5. Dla progów i reguł liczbowych opcjonalnie **kontrakt przed testami**: warunki wejścia, wyjścia i przypadki
+   nieokreślone zapisane przez agenta i przeczytane przez człowieka, zanim powstaną testy; testy wynikają z kontraktu,
+   nie z przeczytanego kodu. Kosztuje więcej tokenów, więc nie jako krok domyślny (J. Wąsowski, „Failing Example as
+   the Start of a Spec”, 2026-10-28; liczby z przytoczonych tam badań [niezweryfikowane]).
+6. Testy akceptacyjne chronione przed zmianą przez agenta egzekwuje CI, nie prompt (core-git-workflow, „Pull request”).
+
 ### Kod istniejący bez testów
 Dwa różne rodzaje testów — nigdy ich nie mieszaj:
 - **Testy ze specyfikacji** (projektowane w clean-room, patrz niżej). Porażka = defekt albo luka w specyfikacji — **nie poprawka testu**.

@@ -126,6 +126,19 @@
           ]
         ]
       }
+    },
+    {
+      "id": "blad-od-przykladu-prog",
+      "expect": "trigger",
+      "prompt": "Zgłoszenie: „Przy zamówieniu za dokładnie 100,00 zł darmowa dostawa się nie nalicza, a powinna od 100 zł”. Mam napisać testy do poprawki, mamy też testy właściwości w Hypothesis. Jakie przypadki dodać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["99[,.]99"],
+          ["100[,.]01"],
+          ["oczekiwan\\w+ (i|/) faktyczn\\w+", "wejście.*oczekiwan", "faktyczn\\w+ wynik"],
+          ["@example", "jawn\\w+ przypad\\w+", "przykład\\w* (zostaje|jawnie|w teście właściwości)", "losowani\\w+ (nie|rzadko) trafi"]
+        ]
+      }
     }
   ]
 }

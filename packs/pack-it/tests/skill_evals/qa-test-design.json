@@ -111,6 +111,19 @@
           ["migracj\\w+", "danymi sprzed", "istniejąc\\w+ kont\\w+", "stare dane"]
         ]
       }
+    },
+    {
+      "id": "stronicowanie-i-izolacja-testy",
+      "expect": "trigger",
+      "prompt": "Testujemy endpoint listy faktur z paginacją (domyślnie 50 na stronę) w aplikacji wielu najemców. Obecny test tworzy 3 faktury i sprawdza status 200 i pierwszą pozycję. Co jest nie tak i jak to poprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["więcej niż (jedna )?stron\\w*", "następn\\w+ stron\\w*", "51", "ponad 50", "druga stron\\w*"],
+          ["najemc\\w+", "tenant", "cudz\\w+", "drugi\\w+ (klient|organizacj)"],
+          ["cał\\w+ zbi\\w+", "wszystkie (pozycje|rekordy)", "nie tylko pierwsz\\w+"],
+          ["niezależn\\w+", "zasian\\w+", "z danych testowych", "nie z implementacji"]
+        ]
+      }
     }
   ]
 }

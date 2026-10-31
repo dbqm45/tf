@@ -4,7 +4,7 @@ description: Użyj przy projekcie przypadków i planu testów — klasy równowa
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj przy projektowaniu przypadków testowych i planu testów w dowolnej technologii — klasy równoważności, wartości brzegowe, tablice decyzyjne, przejścia stanów, testy parami, testowanie oparte na ryzyku, dobór poziomu testu, format przypadku z oczekiwanym wynikiem i jego źródłem. Nie do pisania kodu testów (tool-*)."
-  slowa: "strategia testów dla całego projektu, projekt prawie bez testów, od czego zacząć testy, co ma się znaleźć w strategii testów, aplikacja z AI, asystent AI w aplikacji, awarie poza modelem, przypadki testowe dla agenta, text-to-SQL, integracja z Google Drive"
+  slowa: "strategia testów dla całego projektu, projekt prawie bez testów, od czego zacząć testy, co ma się znaleźć w strategii testów, aplikacja z AI, asystent AI w aplikacji, awarie poza modelem, przypadki testowe dla agenta, text-to-SQL, integracja z Google Drive, paginacja w testach, endpoint listy z paginacją, test sprawdza tylko pierwszą pozycję, dane wielu najemców w testach"
 ---
 
 # Projektowanie testów
@@ -19,6 +19,7 @@ metadata:
 | **Testy parami (pairwise)** | wiele parametrów konfiguracji (przeglądarka × rola × język) | zestaw pokrywający każdą parę wartości zamiast pełnego iloczynu |
 | **Scenariusze / przypadki użycia** | przepływy użytkownika end-to-end | ścieżka główna + alternatywne + błędów |
 | **Zgadywanie błędów** | uzupełnienie powyższych | puste wartości, duplikaty, znaki specjalne, strefy czasowe, współbieżność, podwójne kliknięcie, utrata sieci |
+| **Brzeg stronicowania i izolacji** | listy z limitem strony, dane wielu najemców | liczba wyników równa limitowi strony → sprawdź następną stronę; dane testowe: więcej rekordów niż jedna strona, rekordy drugiego najemcy, przypadek odmowy dostępu; asercja na **całym** zbiorze wyliczonym z niezależnie zasianych danych, nie na statusie i pierwszym wierszu |
 
 ## Priorytet — testowanie oparte na ryzyku
 Ryzyko = **wpływ** (pieniądze, dane, bezpieczeństwo, reputacja) × **prawdopodobieństwo** (złożoność, nowość, historia błędów).
