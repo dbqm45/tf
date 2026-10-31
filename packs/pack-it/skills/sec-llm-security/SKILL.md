@@ -18,7 +18,10 @@ Ochrona agenta Claude Code, który pracuje na Twoim repo: `core-agent-security`.
 1. **Inwentarz.** Co model widzi (instrukcje, dane użytkownika, dokumenty, wyniki narzędzi), co potrafi (narzędzia,
    zapisy, wysyłka), dokąd może wysłać dane (HTTP, mail, linki, obrazy), czyje uprawnienia dziedziczy.
 2. **Test „potrójnej kombinacji”** (dane prywatne + niezaufana treść + kanał wyjścia w jednym przebiegu): usuń jeden
-   element albo rozdziel przebiegi — to najtańsza decyzja projektowa.
+   element albo rozdziel przebiegi — to najtańsza decyzja projektowa. Wersja z „Reguły dwóch” (Meta) liczy też
+   zmianę stanu. Gdy agent musi czytać obce treści i działać, wybierz wzorzec izolacji (podwójny LLM,
+   plan-then-execute, action-selector, map-reduce, CaMeL), a zgodę człowieka zwiąż ze skrótem argumentów
+   (`references/wzorce-projektowe-agentow.md`).
 3. **Model zagrożeń** (`arch-threat-modeling`: DFD z granicami zaufania; model, wyniki narzędzi i RAG to osobne byty
    po stronie niezaufanej) i mapowanie na OWASP Top 10 for LLM 2025 (`references/zagrozenia-i-kontrole.md`).
 4. **Kontrole** w kolejności skuteczności:

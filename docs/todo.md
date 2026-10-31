@@ -457,36 +457,36 @@ dokładnego skutku, walidacja argumentów w kodzie, „model czytający obce tre
 ruchu, „lethal trifecta”) i w `core-agent-security` (MCP jak zależność: przypięta wersja, przegląd opisów narzędzi).
 Brakuje nazwanych wzorców projektowych i nowszych list. Do dorobienia w `sec-llm-security` (scenariusze ewaluacji,
 potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera — artykuł to źródło wtórne):
-- [ ] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference:** podwójny LLM (czytający bez narzędzi
+- [x] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §2)**:** podwójny LLM (czytający bez narzędzi
   oddaje tylko pola schematu, nie prozę), plan-then-execute (plan zamrożony przed wynikami narzędzi, dane z obcych
   treści nie wybierają adresata wysyłki ani zapisu), action-selector, map-reduce po dokumentach, code-then-execute;
   kiedy który i jaki koszt (dwa wywołania, mniej elastyczny agent). Przykład w kodzie, nie w prompcie.
-- [ ] **Zatwierdzenie związane z argumentami:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
+- [x] **Zatwierdzenie związane z argumentami** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §4)**:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
   termin i jednorazowy nonce; inne argumenty = nowa zgoda; brak polityki lub nieudany zapis audytu = brak wywołania.
   Klasy ryzyka narzędzi (niskie … krytyczne) z domyślną odmową dla nieznanych.
-- [ ] **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
+- [x] (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §5) **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
   argumentami) oraz **przypięty skrót manifestu narzędzia MCP** (zmieniony opis lub schemat = nowa instalacja do
   przeglądu, nie cicha aktualizacja) — także jako uzupełnienie `core-agent-security`.
-- [ ] **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
+- [x] (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §6) **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
   omówienie M. Craddock, 2026-05-06 [niezweryfikowane w repo]): agent czytający obce dokumenty ma tylko Read/Grep,
   bez MCP, i zwraca JSON ze schematem (`additionalProperties: false`, `maxItems`, `maxLength`, `pattern` na każdym
   polu), sprawdzanym w kodzie przed orkiestratorem; prośba o przekazanie (`handoff_request`) przechodzi tylko, gdy
   cel jest na liście dozwolonych, a ładunek zgodny ze schematem — dokument może zawierać podrobione bloki
   przekazania. Przykład w kodzie do `sec-llm-security` obok podwójnego LLM.
-- [ ] **Reguła dwóch (Meta, „Agents Rule of Two”):** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
+- [x] **Reguła dwóch (Meta, „Agents Rule of Two”)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §1)**:** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
   do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
 - [ ] **Aktualizacja list:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
   Applications 2026 (ASI01…) — mapowanie na kontrole skilla; zweryfikować numerację i daty w źródłach.
-- [ ] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813):** wartości z etykietą pochodzenia
+- [x] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §3)**:** wartości z etykietą pochodzenia
   i odbiorców, polityka sprawdza etykiety przed wywołaniem narzędzia (np. dokument z dysku można streścić
   użytkownikowi, ale nie wysłać na adres znaleziony w tym dokumencie); koszt w użyteczności z ich pomiaru na
   AgentDojo [do sprawdzenia w źródle]. (Uzupełnione 2026-10-29 z artykułu „Building Secure AI Agents”, C. Kalhara.)
-- [ ] **Red teaming adaptacyjny** w `references/red-teaming.md`: obrona sprawdzona tylko stałą listą ataków mówi mało
+- [x] **Red teaming adaptacyjny** (zrobione 2026-10-31: `references/red-teaming.md` §„Ataki adaptacyjne”) w `references/red-teaming.md`: obrona sprawdzona tylko stałą listą ataków mówi mało
   („The Attacker Moves Second”, Nasr i in., arXiv 2510.09023); AgentDojo (NeurIPS 2024) jako gotowa uprząż — sędzia
   sprawdza stan środowiska, nie tekst modelu, więc sam nie da się wstrzyknąć.
-- [ ] **Pamięć i RAG jako niezaufane:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
+- [x] **Pamięć i RAG jako niezaufane** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §7)**:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
   etykietę pochodzenia; w logu wywołań narzędzi pochodzenie argumentów; wyłącznik awaryjny agenta.
-- [ ] **Autoryzacja zdalnego serwera MCP** (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
+- [x] **Autoryzacja zdalnego serwera MCP** (zrobione 2026-10-31: `be-auth-security/references/tokeny-sesje-oauth.md` §7, odnośnik i scenariusz w `ai-mcp-server`) (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
   serwera autoryzacji z metadanych, rejestracja klienta przez Dynamic Client Registration albo Client ID Metadata
   Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
   Sprawdzone 2026-10-29 (blog.modelcontextprotocol.io, wersja specyfikacji `2026-07-28`): DCR przestarzałe na rzecz

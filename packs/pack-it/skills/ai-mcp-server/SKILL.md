@@ -34,6 +34,9 @@ stronie agenta: ai-agents.
    - zdalny serwer z autoryzacją: OAuth 2.1, serwer przyjmuje tylko tokeny wystawione **dla niego** (odbiorca,
      RFC 8707), nieważny token → 401; **nie przekazuje tokenu klienta dalej** do API za sobą (problem
      „zdezorientowanego zastępcy”) — do API używa własnych poświadczeń z minimalnymi uprawnieniami;
+     rejestracja klienta przez Client ID Metadata Documents (DCR przestarzałe), PKCE, `iss` (RFC 9207),
+     `application_type` dla klientów CLI i desktop — stan specyfikacji `2026-07-28`: be-auth-security,
+     `.claude/skills/be-auth-security/references/tokeny-sesje-oauth.md` §7;
    - sekrety ze zmiennych środowiskowych, nigdy w `.mcp.json` w repozytorium.
 5. **Testy w CI bez modelu** (szablon w `references/serwer-i-testy.md`): sesja w pamięci
    (`create_connected_server_and_client_session`) — migawka kontraktu (nazwy, wymagane parametry, adnotacje),

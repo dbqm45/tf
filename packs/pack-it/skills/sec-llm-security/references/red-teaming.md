@@ -28,3 +28,14 @@ z wtórnego źródła, sprawdź w atlas.mitre.org przed cytowaniem].
 ## Z testu do ewaluacji
 Każdy udany atak: zapis (wejście, kontekst, skutek) → przypadek w zestawie `ai-evals` z asercją na zachowaniu
 (brak wywołania narzędzia, brak danych w wyjściu) → bramka w CI przy zmianie modelu, promptu lub narzędzi.
+
+## Ataki adaptacyjne
+Obrona sprawdzona tylko stałą listą ataków mówi mało. Nasr, Carlini i in., „The Attacker Moves Second” (arXiv
+2510.09023, 2025-10, USENIX Security 2026): adaptacyjne ataki (optymalizacja, RL, wyszukiwanie, ludzie) obeszły
+12 obron z wynikiem zwykle powyżej 90%, choć autorzy obron raportowali bliskie zera; na AgentDojo stały szablon
+osiągnął 28%, a wyszukiwanie adaptacyjne 99%. Wnioski:
+- wynik „blokuje 99% z listy” nie jest dowodem odporności — testuj atakującym, który zna obronę i iteruje;
+- **AgentDojo** (NeurIPS 2024) to gotowa uprząż: sędzia sprawdza stan środowiska po przebiegu, a nie tekst modelu,
+  więc sam nie da się wstrzyknąć;
+- odporność daje architektura (wzorce izolacji, uprawnienia — `wzorce-projektowe-agentow.md`), filtr jest warstwą
+  dodatkową.

@@ -90,6 +90,45 @@
           ["limit\\w* (czasu|wierszy)", "timeout", "koszt\\w* planu", "jedno SELECT"]
         ]
       }
+    },
+    {
+      "id": "wzorce-agenta-maile-i-wysylka",
+      "expect": "trigger",
+      "prompt": "Projektujemy asystenta, który czyta przychodzące e-maile klientów, streszcza je i może wysyłać odpowiedzi oraz załączniki z naszego dysku. Jak zaprojektować go tak, żeby e-mail z ukrytym poleceniem nie wysłał naszych plików obcej osobie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["podwójn\\w+ (LLM|model)", "dual LLM", "dwa modele", "model czytający", "kwarantann\\w+"],
+          ["plan\\w* (przed|zamrożon|najpierw)", "plan-then-execute", "plan.then.execute"],
+          ["adresat\\w*", "list\\w+ dozwolon\\w+", "z dokumentu nie", "nie (wybiera|ustala) adresat"],
+          ["reguł\\w+ dwóch", "Rule of Two", "dwie z trzech", "trzech cech", "potrójn\\w+", "lethal trifecta"]
+        ]
+      }
+    },
+    {
+      "id": "zgoda-zwiazana-z-argumentami",
+      "expect": "trigger",
+      "prompt": "Agent ma narzędzie przelewu i przed wykonaniem prosi człowieka o zgodę. Obawiamy się, że po zatwierdzeniu agent zmieni kwotę albo konto docelowe. Jak to zabezpieczyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["skrót\\w*", "hash", "odcisk\\w*"],
+          ["argument\\w*", "kwot\\w+ i konto", "kanoniczn\\w+"],
+          ["nonce", "jednorazow\\w+", "termin\\w*", "wygas\\w+"],
+          ["now\\w+ zgod\\w+", "ponown\\w+ (zgod|zatwierdz)", "inne argumenty"]
+        ]
+      }
+    },
+    {
+      "id": "obrona-adaptacyjny-atak",
+      "expect": "trigger",
+      "prompt": "Nasz filtr wykrywania prompt injection blokuje 99% ataków z publicznej listy, którą testujemy przed każdym wydaniem. Czy możemy uznać agenta za odpornego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["adaptac\\w+", "adaptacyjn\\w+", "adaptive"],
+          ["stał\\w+ (lista|zestaw)", "statyczn\\w+", "nie wystarcz\\w*", "mówi mało"],
+          ["AgentDojo", "stan\\w* środowiska", "uprząż\\w*", "benchmark\\w*"],
+          ["architektur\\w*", "projekt\\w*", "uprawnie\\w+", "nie jedyn\\w+"]
+        ]
+      }
     }
   ]
 }

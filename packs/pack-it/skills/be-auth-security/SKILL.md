@@ -36,6 +36,9 @@ Szczegóły i sygnały nadużyć: `references/tokeny-sesje-oauth.md`.
   (poczta, pliki, katalog). Użytkownik widzi i może cofnąć zgody.
 - Przepływ device code **wyłączony**, chyba że klient naprawdę go potrzebuje (urządzenie bez klawiatury) — to dziś
   popularna metoda phishingu, która omija MFA.
+- **Zdalny serwer MCP** to serwer zasobów OAuth: OAuth 2.1 z PKCE, odkrywanie serwera autoryzacji z metadanych,
+  rejestracja klienta przez Client ID Metadata Documents (Dynamic Client Registration przestarzałe), walidacja
+  odbiorcy tokenu i `iss` — `references/tokeny-sesje-oauth.md` §7.
 
 ## Autoryzacja
 - Sprawdzana na serwerze **per zasób i per akcja** (nie tylko „czy zalogowany”). Najczęstszy błąd: IDOR — `GET /invoices/{id}` bez sprawdzenia właściciela.

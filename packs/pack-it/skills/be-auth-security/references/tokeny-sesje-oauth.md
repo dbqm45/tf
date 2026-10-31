@@ -59,3 +59,18 @@ buduje aplikacje i API, są oznaczone jako **Projektuj**.
   bez uprawnień, w kontenerze tylko do odczytu, z ograniczonym ruchem wychodzącym; alarm, gdy proces aplikacji
   uruchamia proces potomny (ops-observability); SLA na łatki komponentów wystawionych do internetu.
 - Źródło: [Active Exploitation of SolarWinds Web Help Desk (CVE-2025-26399)](https://www.huntress.com/blog/active-exploitation-solarwinds-web-help-desk-cve-2025-26399)
+
+## 7. Autoryzacja zdalnego serwera MCP
+Stan specyfikacji MCP w wersji `2026-07-28` (blog.modelcontextprotocol.io, odczyt 2026-10-29):
+- serwer MCP jest serwerem zasobów OAuth; klient (Claude Code, aplikacja desktopowa, agent) używa **OAuth 2.1
+  z PKCE**, a serwer autoryzacji odkrywa z metadanych publikowanych przez serwer MCP;
+- **rejestracja klienta**: Client ID Metadata Documents (identyfikatorem klienta jest URL dokumentu z jego metadanymi).
+  Dynamic Client Registration jest przestarzałe i działa dla zgodności, a usunięcie zapowiedziano na przyszłą wersję
+  bez daty;
+- klient podaje `application_type`, co pozwala na przekierowania na localhost dla aplikacji CLI i desktopowych;
+- serwer autoryzacji zwraca parametr `iss` (RFC 9207), a klient go sprawdza — chroni przed pomieszaniem serwerów;
+- serwer MCP **waliduje odbiorcę tokenu** (token wydany dla innego zasobu jest odrzucany) i nie przekazuje tokenu
+  klienta dalej do usług w tle — do nich ma własne poświadczenia albo wymianę tokenu;
+- tokeny dostępu krótkie, odświeżanie przez zewnętrznego dostawcę OAuth, zakresy minimalne per narzędzie;
+- poświadczenia klienta związane z wydawcą.
+Opis i schematy narzędzi tego serwera po stronie klienta: core-agent-security §4 i ai-agents.
