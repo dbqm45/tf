@@ -20,8 +20,8 @@
   "offline": "2026-10-22"
  },
  "ai-mcp-server": {
-  "fingerprint": "a7682c7ba8756d64",
-  "offline": "2026-10-23"
+  "fingerprint": "d5821d0a3971ee90",
+  "offline": "2026-10-31"
  },
  "ai-mlops": {
   "fingerprint": "25f5417269136265",
@@ -92,8 +92,8 @@
   "offline": "2026-10-30"
  },
  "be-auth-security": {
-  "fingerprint": "5944c96aa4b80cee",
-  "offline": "2026-10-22"
+  "fingerprint": "bf4ad195458c7307",
+  "offline": "2026-10-31"
  },
  "be-billing-subscriptions": {
   "fingerprint": "086ddfca17de9dd3",
@@ -500,8 +500,8 @@
   "offline": "2026-10-22"
  },
  "sec-llm-security": {
-  "fingerprint": "0ea44bdcdb3080e1",
-  "offline": "2026-10-30"
+  "fingerprint": "494f6bc1aa1b732d",
+  "offline": "2026-10-31"
  },
  "sec-malware-analysis": {
   "fingerprint": "16fe971045b39a87",

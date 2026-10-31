@@ -106,6 +106,19 @@
       "expect": "no-trigger",
       "neighbor": "core-agent-security",
       "prompt": "Chcę podłączyć do Claude Code obcy serwer MCP znaleziony na GitHubie. Jak sprawdzić, czy jest bezpieczny, zanim go użyję?"
+    },
+    {
+      "id": "autoryzacja-zdalnego-serwera-mcp",
+      "expect": "trigger",
+      "prompt": "Wystawiamy zdalny serwer MCP z dostępem do danych klientów, z którego będą korzystać Claude Code i inne aplikacje desktopowe. Jak zrobić autoryzację? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["OAuth 2\\.1", "OAuth", "PKCE"],
+          ["metadan\\w+", "odkrywani\\w+", "discovery", "well-known"],
+          ["Client ID Metadata", "CIMD", "Dynamic Client Registration", "DCR", "rejestracj\\w+ klienta"],
+          ["odbiorc\\w+ tokenu", "audience", "aud\\b", "resource", "iss\\b", "RFC 9207"]
+        ]
+      }
     }
   ]
 }
