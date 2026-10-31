@@ -341,6 +341,13 @@ def main() -> int:
             args[i + 1] = bad[1]
             r = run(args, repo)
             check(r.returncode != 0, f"G-7: zły {why} → błąd: {r.stdout}")
+        r = run(["decision", "gate", "CHG-12", "--gate", "B3", "--outcome", "approved", "--id", "DEC-45",
+                 "--why", "Bez zmian w config/build.json.\n Dlaczego: DEC-0003   to rozstrzyga."], repo)
+        line = dec.read_text(encoding="utf-8").split("- id: DEC-45")[-1].split("- dlaczego:")[1].splitlines()[0]
+        check(r.returncode == 0 and line.strip() == "Bez zmian w config/build.json. Dlaczego: DEC-0003 to rozstrzyga. "
+              "(decyzja w skrzynce bramek pdi, DEC-45)", f"G-9: --why trafia do wpisu w jednym wierszu: {line!r}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"G-10: wpis z --why przechodzi check: {r.stdout}")
         r = run(["decision", "gate", "CHG-99", "--gate", "B1", "--outcome", "approved", "--id", "DEC-44"], repo)
         check(r.returncode != 0 and "change new" in r.stdout, "G-8: brak dziennika zmiany → błąd z podpowiedzią")
 

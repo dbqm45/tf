@@ -134,6 +134,9 @@ def build_prompt(a) -> dict:
         f"pytania w tej sesji: nie pytaj człowieka i nie czekaj na zgodę.",
         f"Najpierw przeczytaj dziennik zmiany {d}/ (intent.md, plan.md, decisions.md i to, co już jest) oraz "
         f"`.claude/skills/pdi-decisions/SKILL.md`.",
+        f"Wpisy `## Bramka …` w {d}/decisions.md to decyzje człowieka z bramek pdi i są wiążące: nie podważaj ich. "
+        f"Pytanie z `## Pytania do bramki` wcześniejszych artefaktów, na które odpowiada taki wpis, jest rozstrzygnięte: "
+        f"w swoim artefakcie zapisz ustalenie z odwołaniem do wpisu (np. {a.change}/D2) i nie zadawaj go ponownie.",
     ]
     if a.rework:
         lines.append(f"Bramka {a.gate or '?'} zwróciła tę fazę do poprawek (decyzja {a.decision or '?'}). Przeczytaj jej "
