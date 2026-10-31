@@ -58,7 +58,10 @@ blokować merge.
     (bez kontekstu), wyrocznia (złoty fragment); ramiona z tymi samymi stałymi, jedna zmienna naraz. Konfigurację
     wybierasz na zbiorze doboru, wynik raportujesz z odłożonego testu; kontrola na przetasowanych etykietach.
     Nowe reguły oceny puszczasz na zapisanych śladach (z wersją promptu i polityki), bez ponownego uruchamiania agenta.
-12. **Raport** w stałym formacie (niżej), z manifestem pary model + harness. Saturacja (zbiór zdaje ~100% i nie
+12. **Raport** w stałym formacie (niżej), z manifestem pary model + harness. Sygnał gotowości to odsetek zadań
+    zaliczonych w całości, średnia kryteriów tylko jako diagnostyka; klasyfikator decyzji testujesz przetasowaniem opcji
+    i progiem per decyzja; agenta odpowiadającego liczbami — użytecznością z karą (`references/pulapki-pomiaru.md`
+    §10–12). Saturacja (zbiór zdaje ~100% i nie
     odróżnia wersji) → dodaj trudniejsze zadania.
 
 ## Format raportu

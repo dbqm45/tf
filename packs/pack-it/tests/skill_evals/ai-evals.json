@@ -101,6 +101,45 @@
           ["dryf\\w*", "rozrzut\\w* ludzi", "odchyle\\w+", "próbk\\w+ (tygodniow|okresow|cykliczn)"]
         ]
       }
+    },
+    {
+      "id": "raport-cale-zadanie-zaliczone",
+      "expect": "trigger",
+      "prompt": "Agent przeglądający umowy dostaje w ewaluacji średnio 82% spełnionych kryteriów rubryki. Zarząd pyta, czy jest gotowy do użytku. Jak to zaraportować uczciwie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["w całości", "wszystkie kryteria", "pełn\\w+ (zalicz|odpowied)", "całe zadanie"],
+          ["średni\\w+ (to|jako|tylko) (diagnostyk|obok|pomocnicz)", "diagnostyk\\w*", "nie (jest|oznacza) .?80", "nie znaczy"],
+          ["odwracaln\\w+", "nieodwracaln\\w+", "człowiek przed", "przed działaniem"],
+          ["te same zasoby", "infrastruktur\\w+", "limit\\w* czasu", "powtórze\\w+"]
+        ]
+      }
+    },
+    {
+      "id": "klasyfikator-decyzji-llm",
+      "expect": "trigger",
+      "prompt": "Używamy LLM jako klasyfikatora, który wybiera jedną z 5 opcji dalszej obsługi zgłoszenia, i odcinamy wynik progiem pewności 0,5. Jak ocenić, czy taki klasyfikator jest wiarygodny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["przetasow\\w+", "kolejnoś\\w+ opcji", "zmian\\w+ nazw", "przemianow\\w+"],
+          ["próg\\w* (dopasowan|z własnych|osobno)", "nie (domyślne )?0[,.]5", "kalibrac\\w+"],
+          ["nieodwracaln\\w+", "pewny błęd\\w+", "koszt\\w* błędu"],
+          ["rozdzielon\\w+ po", "ten sam dokument", "zamknięt\\w+ zbi\\w+", "odłożon\\w+"]
+        ]
+      }
+    },
+    {
+      "id": "text-to-sql-uzytecznosc-z-kara",
+      "expect": "trigger",
+      "prompt": "Mierzymy agenta text-to-SQL trafnością na 100 pytaniach. Nowa wersja częściej odmawia odpowiedzi i ma wyższą trafność wśród udzielonych odpowiedzi. Która wersja jest lepsza i jak to policzyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["użyteczno\\w+", "punktacj\\w+", "kar\\w+", "−2|-2"],
+          ["pokryci\\w+", "odsetek odpowiedzi", "ile odpowiada"],
+          ["bootstrap\\w*", "parowan\\w+", "te same pytania"],
+          ["szablon\\w*", "nowe (typy|rodzaje) pytań", "odłożon\\w+"]
+        ]
+      }
     }
   ]
 }
