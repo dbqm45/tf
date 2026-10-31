@@ -794,14 +794,14 @@ Przegląd 2026-10-29: pojedyncze elementy już są — `ai-evals` (złoty zbiór
 kalibracja sędziego, shadow), `ai-product-management` (koszt błędów w PRD), saga w `ddd-tactical-design`,
 idempotencja w `be-messaging-outbox`. Brakuje złożenia ich w jeden wzorzec architektury. Średni priorytet, jako
 reference w `arch-ai-solutions` (przykład domenowy w pack-ev: obsługa kierowców CPO/eMSP — zwroty, sesja nie startuje):
-- [ ] **Tabela polityki per intencja i progi autonomii:** off → shadow (model odpowiada równolegle, oceniany) →
+- [x] **Tabela polityki per intencja i progi autonomii** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §1)**:** off → shadow (model odpowiada równolegle, oceniany) →
   assist (podpowiedź dla człowieka) → contain (odpowiada klientowi) → transact (zmienia stan przez orkiestrator);
   awans intencji na wyższy próg dopiero po ewaluacji na złotym zbiorze z ocen ludzi i podpisach właścicieli
   (operacje, finanse, prawo). Ta sama logika co pozycja „Rutyny, które zdobywają uprawnienia”.
-- [ ] **Macierz pomyłek z kosztem zamiast trafności:** dla intencji łatwych do pomylenia koszt każdej komórki poza
+- [x] **Macierz pomyłek z kosztem zamiast trafności** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §2)**:** dla intencji łatwych do pomylenia koszt każdej komórki poza
   przekątną (pomyłka kierunku do kolejki ≠ pominięta pomoc dla pasażera); dla wypłat liczy się precyzja, dla spraw
   krzywdzących klienta czułość; porównanie z tą samą macierzą dla ludzi (koszt błędów + koszt pracy).
-- [ ] **Model proponuje, orkiestrator wykonuje:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
+- [x] **Model proponuje, orkiestrator wykonuje** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §3)**:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
   uprawnienie na żywym systemie źródłowym (nie na cache, który czytał model), nadaje klucz idempotencji z pól
   żądania, zatwierdza automatycznie do progu z polityki, powyżej — człowiek; saga z akcjami kompensującymi i odczytem
   po zapisie; odmowa z kodem przyczyny trafia do właściwej kolejki ludzi. Model nie ma poświadczeń i nie widzi PII
@@ -1158,7 +1158,7 @@ nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
 ## Typy pamięci agenta jako kontrakty (artykuł „AI Agent Memory Types: Semantic, Episodic, Procedural, Profile, Working”, J. Wąsowski, 2026-10-08, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-agents` nie rozróżnia typów pamięci długotrwałej. Wyniki porównań z artykułu (ENGRAM
 77,55 → 46,56% po spłaszczeniu magazynów, preprint; pozostałe dwa nie testują typowania) [niezweryfikowane].
-- [ ] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego:** robocza (bieżący kontekst składany z pozostałych,
+- [x] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego** (zrobione 2026-10-31: `ai-agents/references/pamiec-i-trwale-wykonanie.md` §1)**:** robocza (bieżący kontekst składany z pozostałych,
   budżet tokenów i kolejność), semantyczna (co jest prawdą: źródło, data weryfikacji, konsolidacja zastępuje stary
   fakt), epizodyczna (co się stało: czas, kontekst, wynik; traci przydatność, nie prawdziwość), proceduralna (jak to
   robić: wersja, przegląd, wycofanie — zapis jak merge request, bo zły wpis zmienia zachowanie w wielu zadaniach),
@@ -1174,7 +1174,7 @@ przy kolejnym wywołaniu SDK szuka go po skrócie nazwy kroku (`inngest/website`
 punkty kontrolne kroków w Postgresie, jeden zapis na krok plus dwa na workflow (`dbos-inc/dbos-docs`, architecture).
 Domyślny tryb `async` w LangGraph i szczegóły Temporal — [niezweryfikowane] (docs.langchain.com, docs.temporal.io
 poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia).
-- [ ] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie:** zysk zależy od granic kroków, nie od narzędzia — jeden
+- [x] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie** (zrobione 2026-10-31: `ai-agents/references/pamiec-i-trwale-wykonanie.md` §2)**:** zysk zależy od granic kroków, nie od narzędzia — jeden
   krok na każde kosztowne wywołanie modelu lub narzędzia (jeden krok na całą pętlę = kolejka z dodatkami); wszystko
   poza krokiem wykonuje się ponownie przy wznowieniu (Inngest: przy każdym kroku, Temporal: kod workflow musi być
   deterministyczny — zegar, losowość, HTTP tylko w aktywnościach). Pułapki ustawień: zapis punktu kontrolnego
