@@ -93,6 +93,8 @@ def main() -> int:
         check("CHG-12" in text and "requirements.md" in text and "docs/project/changes/CHG-12" in text
               and "bez interakcji" in text and "Pytania do bramki" in text and "decision_record.py check" in text,
               f"R-2: prompt mówi, co i gdzie zrobić, bez pytań do człowieka: {text[:500]}")
+        check("## Bramka" in text and "wiążące" in text and "rozstrzygnięte" in text,
+              f"R-2a: decyzje z bramek w decisions.md są wiążące, a odpowiedziane pytania rozstrzygnięte: {text[:900]}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "architecture", "--rework", "--gate", "B3",
                  "--decision", "DEC-41"], repo)
         text = (jl(r) or {}).get("prompt", "")

@@ -69,7 +69,9 @@ Gdy tak cię uruchomiono:
    artefakcie z polecenia (`requirements.md`, `plan.md`…), nagłówek `status: proposed`.
 2. Czego nie rozstrzygniesz bez człowieka, nie zgadujesz: lista w sekcji `## Pytania do bramki` artefaktu (pytanie
    z adresatem w wierszu) — trafi do skrzynki pdi razem z bramką.
-3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow.
+3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow. Wpisy `## Bramka …`
+   w `decisions.md` (ustalenie i uzasadnienie z pdi, `decision gate --why`) są wiążące: pytanie, na które
+   odpowiadają, jest rozstrzygnięte — zapisz ustalenie w artefakcie z odwołaniem do wpisu i nie pytaj ponownie.
    Faza `design`: tabela ramek w `design.md` (szablon `templates/design.md`, format z kontraktu pdi
    `conventions.design`); `design_check.py check CHG-n` przed bramką — braki ramek i stanów idą do pdi jako pytania.
 4. Na koniec `decision_record.py check` ma przejść. Poprawki po `changes_requested`: przeczytaj wpis bramki w
