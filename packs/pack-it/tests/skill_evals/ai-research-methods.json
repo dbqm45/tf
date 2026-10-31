@@ -147,6 +147,32 @@
       "expect": "no-trigger",
       "prompt": "Jak zbudować sędziego LLM i ustawić próg w CI dla naszego asystenta opartego na modelu językowym, żeby wychwytywał regresje po zmianie promptu?",
       "neighbor": "ai-evals"
+    },
+    {
+      "id": "model-zastepczy-optymalizacja",
+      "expect": "trigger",
+      "prompt": "Wytrenowaliśmy sieć jako szybki model zastępczy drogiego symulatora i algorytmem genetycznym szukamy na niej najlepszego projektu części. Znaleziony projekt ma wg modelu świetny wynik. Możemy go zgłosić jako rezultat? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["symulator\\w*", "eksperyment\\w*", "prawdziw\\w+ (ocen|pomiar|wynik)"],
+          ["błęd\\w+ modelu", "wykorzyst\\w+ błęd", "zawyżon\\w+", "optymistyczn\\w+", "zwycięzc\\w+"],
+          ["obie liczby", "przewidzian\\w+ (i|vs|oraz) (zmierzon|symulowan)", "raport\\w* (podaje|z) ob"],
+          ["poza zakres\\w*", "granic\\w+ wykonalności", "augmentac\\w+", "mutac\\w+"]
+        ]
+      }
+    },
+    {
+      "id": "rejestr-hipotez-graf",
+      "expect": "trigger",
+      "prompt": "Zespół badawczy testuje dziesiątki hipotez o tym, dlaczego model zawodzi, i co kwartał wraca do tych samych pomysłów, które już nie działały. Jak prowadzić rejestr hipotez, żeby tego uniknąć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["graf\\w*", "węz\\w+", "ontologi\\w+", "mechanizm\\w*"],
+          ["warunek ponownego otwarcia", "warunk\\w+ (powrotu|wznowienia|ponownego)", "kiedy wrócić", "odrzucon\\w+ z warunkiem"],
+          ["status\\w* (z|wynika z) (wynik|eksperyment)", "werdykt\\w*", "potwierdzon\\w+", "pogrzeban\\w+"],
+          ["zakres\\w*", "próbowano", "warunk\\w+ eksperymentu", "szersz\\w+ twierdzeni\\w+"]
+        ]
+      }
     }
   ]
 }

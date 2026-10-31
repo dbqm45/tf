@@ -55,7 +55,11 @@ metadata:
 - Która sesja czeka na decyzję: `claude agents` (widok agentów, research preview) pokazuje grupę „Needs input”
   (sprawdzone 2026-10-18).
 - Worktree izoluje pliki i gałąź, **nie środowisko**: osobny port serwera deweloperskiego, osobna lokalna baza
-  (albo schemat), osobny sandbox usług płatności i kolejek.
+  (albo schemat) i migracje, osobny sandbox usług płatności i kolejek, osobny cache. Świeży worktree nie ma
+  `node_modules` ani `.env` — instalacja i konfiguracja to krok startowy. Operacje gita na wspólnym repozytorium
+  potrafią zderzyć się na `.git/index.lock`; ta sama gałąź nie może być w dwóch worktree. Zadań dotykających tych
+  samych portów, baz lub plików nie puszczasz równolegle; liczbę worktree ograniczasz i sprzątasz zapomniane
+  (`git worktree list`, `git worktree prune`) — koszt dysku rośnie z zależnościami.
 - Zmiana z decyzjami w trakcie → interaktywnie, faza po fazie; zmiana z zamkniętym zakresem i mierzalnym końcem →
   `/goal` z limitem tur (core-delivery-lifecycle). Każda zmiana → przegląd → osobny PR.
 - Drobne usprawnienia odkryte w trakcie dopisz do planu jako osobną pozycję zamiast rozszerzać bieżącą zmianę.

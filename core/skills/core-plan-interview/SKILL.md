@@ -76,6 +76,12 @@ traktujesz jak **drzewo decyzji**: każda decyzja ma decyzje od niej zależne.
 - **Zakres za duży na jedną sesję** (dziesiątki decyzji, kilka obszarów) → najpierw mapa: lista obszarów i ich zależności
   jako osobne zadania w `docs/project/`, potem przesłuchanie każdego zadania osobno.
 
+## Bez nadmiaru
+Przesłuchanie bez kontekstu wyciąga każdy przypadek brzegowy jako coś do rozwiązania i kończy się przeinżynierowaniem.
+Pytania szeregujesz wpływem i prawdopodobieństwem; odpowiedź „po prostu zawiedź z czytelnym błędem” jest
+pełnoprawna (drabina minimalizmu: eng-design-principles w pack-it). Sygnały ostrzegawcze procesu: zaległości
+wygenerowanych zgłoszeń, których nikt nie zrobi, i opisy PR dłuższe niż ktokolwiek przeczyta.
+
 ## Anty-wzorce
 Zaczynanie pracy bez zgody; skracanie przesłuchania do kilku ogólników; wszystkie pytania wyliczone z góry zamiast
 przeliczania frontu; pytanie człowieka o fakty z repo; mieszanie w jednej rundzie pytań zależnych.

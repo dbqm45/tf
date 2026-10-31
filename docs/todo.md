@@ -1195,7 +1195,7 @@ poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia)
 ## Model zastępczy i projekt odwrotny; miary autonomii agentów (artykuły „How I Recreated a Research Paper to teach an AI to Design Self-Rolling Tubes”, A. Janmohamed, 2026-10-22; „Agentic SDLC: Strategic Reading List”, A. Honchar, 2026-05-27; zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-research-methods` ma wyciek przez wiele wierszy tej samej jednostki; brak wątku modelu
 zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z artykułów [niezweryfikowane].
-- [ ] **`ai-research-methods`, model zastępczy w pętli optymalizacji:** (1) przykłady powstałe z augmentacji
+- [x] **`ai-research-methods`, model zastępczy w pętli optymalizacji** (zrobione 2026-10-31: `references/optymalizacja-i-hipotezy.md` §1)**:** (1) przykłady powstałe z augmentacji
   (odbicie, obrót) trafiają do tego samego zbioru co oryginał, inaczej test jest zawyżony; uśrednianie predykcji dla
   wersji symetrycznych w czasie testu jako tani zysk; (2) optymalizacja na modelu wyszukuje jego błędy na swoją
   korzyść — zwycięzca zawsze wygląda lepiej, niż jest (u autora 0,44 mm przewidziane vs 0,75 mm w symulatorze), więc
@@ -1216,7 +1216,7 @@ zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z a
 Przegląd 2026-10-29: `ai-research-methods` każe zapisać hipotezę falsyfikowalnie z kryterium porażki;
 `core-cost-control` (`references/rownoleglosc.md`) opisuje worktree i subagentów. Liczby z artykułów (ranking,
 3 432 mechanizmy, 172 GB / 371 worktree, 93% akceptowanych zapytań o zgodę) [niezweryfikowane].
-- [ ] **`ai-research-methods`, rejestr hipotez jako graf z werdyktami:** hipoteza, której nie da się przypiąć do węzła
+- [x] **`ai-research-methods`, rejestr hipotez jako graf z werdyktami** (zrobione 2026-10-31: `references/optymalizacja-i-hipotezy.md` §2; pole statusu w `core-knowledge` — osobno)**:** hipoteza, której nie da się przypiąć do węzła
   ontologii (mechanizm, naruszone założenie, kto jest po drugiej stronie), odpada przed kosztownym eksperymentem;
   status węzła wynika z wyników eksperymentów (potwierdzony / pogrzebany), nie z deklaracji autora; pogrzebany ma
   zapisany z góry **warunek ponownego otwarcia** (nowa konstrukcja, niezależne potwierdzenie); zapis „próbowano,
@@ -1224,7 +1224,7 @@ Przegląd 2026-10-29: `ai-research-methods` każe zapisać hipotezę falsyfikowa
   luki wskazuje topologia (rodziny bez mechanizmów), nie pytanie do modelu. Prosta implementacja: SQLite `nodes`
   / `edges` (klucz = cała trójka), graf w pamięci tylko do odczytu. Wybór kręgosłupa ontologii decyduje, które
   pytania są tanie. Pasuje też do `core-knowledge` (pole statusu i warunku ponownego otwarcia w notatkach).
-- [ ] **`core-cost-control` / `core-async-delegation`, czego worktree nie izoluje:** porty, baza i migracje, cache,
+- [x] **`core-cost-control` / `core-async-delegation`, czego worktree nie izoluje** (zrobione 2026-10-31: `core-git-workflow`, „Praca równoległa”; sekwencje ANSI w wyjściu narzędzi bez wpisu — przypadek niezweryfikowany)**:** porty, baza i migracje, cache,
   brak `node_modules`/`.env` w świeżym checkoucie, blokada `.git/index.lock`; ta sama gałąź nie może być w dwóch
   worktree. Zadań dotykających tych samych portów, baz lub plików nie puszczać równolegle; limit liczby
   i sprzątanie zapomnianych worktree (koszt dysku rośnie z zależnościami). Do `core-agent-security`: wynik narzędzia
@@ -1240,7 +1240,7 @@ Przegląd 2026-10-29: `core-delivery-lifecycle` ma ścieżkę skróconą dla pop
 planu bez sztywnego limitu pytań; `proc-agile` — INVEST i Definition of Done, bez Definition of Ready. Liczby
 zespołu Whettona (PR 40 → 165 linii, czas do merge 16 → 32 h, oczekiwanie na pierwszy przegląd 4 h → 2,5 dnia,
 4,4 otwartych PR na osobę) [niezweryfikowane].
-- [ ] **`core-plan-interview`, przesłuchanie bez nadmiaru:** „grill me” bez kontekstu wyciąga każdy przypadek brzegowy
+- [x] **`core-plan-interview`, przesłuchanie bez nadmiaru** (zrobione 2026-10-31: sekcja „Bez nadmiaru”)**:** „grill me” bez kontekstu wyciąga każdy przypadek brzegowy
   jako coś do rozwiązania i kończy się przeinżynierowaniem; pytania szeregować wpływem i prawdopodobieństwem,
   a „po prostu zawiedź z czytelnym błędem” traktować jako pełnoprawną odpowiedź (powiązane z drabiną minimalizmu
   w `eng-design-principles`). Sygnał ostrzegawczy procesu: zaległości wygenerowanych zgłoszeń, których nikt nie
