@@ -166,6 +166,19 @@
           ["--subject", "jedn\\w+ strategi\\w+", "ochron\\w+ gałęzi", "branch protection", "scala człowiek", "człowiek scala"]
         ]
       }
+    },
+    {
+      "id": "chronione-testy-akceptacyjne-ci",
+      "expect": "trigger",
+      "prompt": "Agent AI czasem „naprawia” czerwone testy akceptacyjne, zmieniając scenariusze Gherkin razem z kodem. Dodaliśmy katalog features/ do CODEOWNERS i myślimy, że to wystarczy. Wystarczy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["ochron\\w+ gałęzi", "branch protection", "Require review from Code Owners", "reguł\\w+ gałęzi", "ruleset"],
+          ["osobn\\w+ PR", "oddzieln\\w+ PR", "jednocześnie (kod i|scenariusz)", "oba naraz", "zmienia oba"],
+          ["wymagan\\w+ (check|kontrol)", "required check", "CI odrzuca", "sprawdzeni\\w+ w CI"],
+          ["step definition", "definicj\\w+ kroków", "krok\\w+", "adapter\\w*"]
+        ]
+      }
     }
   ]
 }

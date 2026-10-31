@@ -468,12 +468,12 @@
   "offline": "2026-10-22"
  },
  "qa-spec-first-testing": {
-  "fingerprint": "091f728a43b5a96d",
-  "offline": "2026-10-25"
+  "fingerprint": "d0962703ec6dcd8a",
+  "offline": "2026-10-31"
  },
  "qa-test-design": {
-  "fingerprint": "1b57e291eda31ec8",
-  "offline": "2026-10-30"
+  "fingerprint": "216764727344a675",
+  "offline": "2026-10-31"
  },
  "sec-appsec-devsecops": {
   "fingerprint": "a1ce8fcd529a2803",
