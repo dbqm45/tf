@@ -64,6 +64,7 @@ Po decyzji na bramce pdi uruchamia w repo workflow `sdlc-phase.yml` (`python3 .c
 workflow install`, dalej `phase_run.py`): zapisuje decyzję w `decisions.md` (`decision_record.py decision gate`, numer
 już z pdi, `wyslano: tak`), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
 persona i artefakt: `phase_run.py prompt`), otwiera PR fazy i wysyła prośbę o następną bramkę (`phase_run.py gate request`).
+W fazie delivery gałęzie cięć `story/*` wypycha i ich PR-y otwiera workflow (`phase_run.py cuts publish`), nie persona.
 Gdy tak cię uruchomiono:
 1. Nikt nie odpowie na pytania: nie pytasz człowieka i nie czekasz na zgodę. Pracujesz tylko w zakresie fazy, w
    artefakcie z polecenia (`requirements.md`, `plan.md`…), nagłówek `status: proposed`.
