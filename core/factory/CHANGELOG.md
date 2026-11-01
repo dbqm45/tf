@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.53.0] — 2026-11-01
+### Added
+- add agent gate coverage, protocol map and intent failure sections (#123)
+
 ## [5.52.1] — 2026-10-31
 ### Fixed
 - **mode-pdi:** push talos cut branches and open their PRs in sdlc-phase (#112)
