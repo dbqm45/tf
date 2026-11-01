@@ -4,7 +4,7 @@ description: Użyj przy relacjach i integracji kontekstów — mapa kontekstów 
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj przy projektowaniu relacji i integracji między kontekstami — mapa kontekstów (Open Host Service, ACL, Published Language, Conformist i in.), serwisy krawędziowe vs wewnętrzne, zdarzenia integracyjne (notification, event-carried state transfer). Nie do wyznaczania samych granic (ddd-strategic-analysis) ani modelu wewnątrz kontekstu (ddd-tactical-design)."
-  slowa: "relacja z zewnętrznym systemem, obcy model przecieka do naszego, zewnętrzny system z kiepskim modelem, relacja na mapie kontekstów"
+  slowa: "relacja z zewnętrznym systemem, obcy model przecieka do naszego, zewnętrzny system z kiepskim modelem, relacja na mapie kontekstów, ten sam dostawca w kilku systemach, różne ID w CRM i ERP, tożsamość między kontekstami, mapowanie kluczy, każdy dział liczy metrykę inaczej, identyfikator pojęcia"
 ---
 
 # Mapa kontekstów i integracja
@@ -76,6 +76,15 @@ odbiorca buduje własny read model i akceptuje spójność ostateczną, obsługa
 Relację z mapy można sprawdzić pomiarem connascence (ddd-connascence-analysis) — przed kodem na kontraktach (stopnie jako przedziały),
 po kodzie na kodzie (rozstrzyga kod). OHS/Published Language powinny dawać głównie sprzężenie statyczne słabe (nazwa, typ);
 sprzężenia dynamiczne przez granicę (wspólna transakcja, dane, które muszą się zgadzać) = granica przecieka.
+
+## Tożsamość między kontekstami: pojęcie a rzecz
+- **Pojęcia** (klasy, właściwości, metryki jak „przychód”) mają stały identyfikator w przestrzeni autorów słownika
+  i jedną definicję z właścicielem.
+- **Rzeczy** (dostawca, zamówienie) dostają identyfikator wybijany regułą z klucza biznesowego: jedna rzecz = jeden
+  identyfikator mimo wielu rekordów w systemach (tablica mapowania kluczy).
+- Dane zostają u właścicieli kontekstów; wspólna jest tylko tożsamość, nie kopia danych.
+- Reguła wybijania identyfikatorów żyje w specyfikacji i wspólnej bibliotece, nie w jednym narzędziu (data-engineering).
+Źródło: S. Banerjee, „The Spine of the Context Fabric…” (2026-10-13).
 
 ## Zapis wyniku (`docs/project/02-domain/context-map.md`)
 ```mermaid

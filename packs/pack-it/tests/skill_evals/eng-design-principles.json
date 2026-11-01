@@ -31,6 +31,19 @@
       "expect": "no-trigger",
       "prompt": "Jak nazwać funkcję, która robi wszystko z danymi zamówienia, i jak skrócić ją do czytelnej długości? Odpowiedz zwięźle.",
       "neighbor": "eng-clean-code"
+    },
+    {
+      "id": "agent-przeinzynierowuje-mimo-regul",
+      "expect": "trigger",
+      "prompt": "Wkleiliśmy agentowi do CLAUDE.md zasady KISS i YAGNI, ale dalej dopisuje warstwy abstrakcji, a raz przy „upraszczaniu” usunął parametryzację zapytania SQL. Co realnie działa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["drabin\\w+", "najpierw (najprostsze|bez kodu)", "szczeb\\w+"],
+          ["krytyk\\w*", "przegląd\\w* nadmiaru", "po zakończeniu", "zatrzym\\w+ (pierwsze|przy) .?gotowe"],
+          ["zabezpiecze\\w+", "parametryzac\\w+", "osobn\\w+ uzasadnie\\w+", "nie tnie"],
+          ["ablac\\w+", "pomiar\\w*", "zmierz\\w+", "same reguły (nie|prawie)"]
+        ]
+      }
     }
   ]
 }

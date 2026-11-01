@@ -61,6 +61,13 @@ Zrozum przepływ i wszystkich wywołujących (grep), potem zatrzymaj się na pie
 - W raporcie po kodzie najwyżej 3 linie „pominąłem X, dodać gdy Y”.
 - Przegląd pod kątem nadmiaru: jedna linia na uwagę `L<linia>: <usuń|stdlib|platforma|yagni|skróć> <co> → <czym zastąpić>`,
   na końcu bilans linii; poprawność i bezpieczeństwo oceniasz osobno.
+- **Same reguły w tekście prawie nie działają** na agenta (wklejone zasady i hasło „krótko” w pomiarze F. Khana dały
+  kod niemal tej samej długości co bez nich). Efekt dają: drabina powyżej, jednorazowe zatrzymanie pierwszego
+  „gotowe”, gdy dodano kod bez żadnego sprawdzenia, i przegląd nadmiaru po zakończeniu. Przegląd nadmiaru tnie
+  strukturę; **cięcie zabezpieczenia** (zapytanie z parametrami, porównanie w stałym czasie, escapowanie, odrzucenie
+  wejścia, sprawdzenie wygaśnięcia, tekst alternatywny) wymaga osobnego uzasadnienia. Regułę dla agenta zostawiasz,
+  gdy ablacja pokazuje korzyść; remis znaczy, że nie wchodzi (F. Khan, „Fixing Over-Engineering in LLM Coding
+  Agents”, 2026-10-12, liczby [niezweryfikowane]).
 Inspiracja: [ponytail](https://github.com/DietrichGebert/ponytail) — opisane własnymi słowami, bez jego stałych hooków.
 
 ## W review

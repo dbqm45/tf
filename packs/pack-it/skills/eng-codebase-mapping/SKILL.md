@@ -93,6 +93,12 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
 Każde połączenie na mapie ma etykietę: **WYCIĄGNIĘTE** (z narzędzia/AST), **WYWNIOSKOWANE** (z nazw, konwencji,
 konfiguracji DI) albo **NIEPEWNE**. Połączeń nie zmyślasz; niepewne pokazujesz, a nie pomijasz.
 
+## Ocena narzędzi kontekstu (graf, indeks, mapa kodu)
+Pojedynczy lepszy przebieg nic nie dowodzi. Mierzysz: trafność, **powtarzalność** (dobrze w każdym z N przebiegów),
+tokeny wejścia i **odsetek użycia** — czy agent w ogóle sięga po narzędzie (dla skilli i map fabryki:
+`hint_report.py`, „podpowiedziany, a nieużyty”). Warstwę wiedzy podajesz przez narzędzie zwracające mały podgraf ze
+źródłami, a nie wklejasz do promptu (ai-evals, ai-rag).
+
 ## Wpływ zmiany (diff)
 1. Zmienione pliki: `git diff --name-only <baza>...HEAD`.
 2. **Świeżość mapy w monorepo:** `git diff --name-only <commit-mapy> HEAD -- <ścieżka-projektu>` — zmiany w innych
