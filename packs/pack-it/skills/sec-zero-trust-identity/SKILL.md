@@ -4,7 +4,7 @@ description: Użyj przy Zero Trust i tożsamości jako perymetrze — NIST 800-2
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy planujesz lub oceniasz architekturę Zero Trust — zasady NIST SP 800-207, punkty decyzji i egzekucji polityki (PDP/PEP), tożsamość jako perymetr (IAM pracowników, CIAM klientów, PAM, dostęp just-in-time), MFA odporne na phishing (FIDO2, passkeys), postura urządzeń, mikrosegmentacja, ZTNA kontra VPN, SASE/SSE, model dojrzałości CISA, mapa migracji i metryki. Nie do OAuth/OIDC w kodzie aplikacji (be-auth-security), tożsamości maszynowych i sekretów (ops-secrets-identities), NetworkPolicy (ops-kubernetes), zabezpieczeń chmury (sec-cloud-security) ani modelu zagrożeń funkcji (arch-threat-modeling)."
-  slowa: "zero trust, ZTNA, VPN, nigdy nie ufaj, zawsze weryfikuj, perymetr, segmentacja, mikrosegmentacja, SASE, SSE, CASB, SWG, 800-207, PDP, PEP, passkey, FIDO2, WebAuthn, phishing, MFA, PAM, JIT, dostęp na żądanie, IAM, CIAM, stan urządzenia, device posture, dojrzałość zero trust, CISA ZTMM, ruch boczny, lateral movement"
+  slowa: "zero trust, ZTNA, VPN, nigdy nie ufaj, zawsze weryfikuj, perymetr, segmentacja, mikrosegmentacja, SASE, SSE, CASB, SWG, 800-207, PDP, PEP, passkey, FIDO2, WebAuthn, phishing, MFA, PAM, JIT, dostęp na żądanie, IAM, CIAM, stan urządzenia, device posture, dojrzałość zero trust, CISA ZTMM, ruch boczny, lateral movement, tożsamość agenta, agenci ai wywołują api, jedno konto usługi, konto usługi dla agentów, spiffe, spire, svid, dpop, token exchange, w imieniu użytkownika"
 ---
 
 # Zero Trust i tożsamość
@@ -45,6 +45,8 @@ mikrosegmentacja, sieć programowalna (SDP). Zdecyduj, które pasuje do zasobów
 3. **Tożsamość jako perymetr** (priorytet nr 1, `references/tozsamosc-i-dostep.md`): jedno IdP z SSO, MFA odporne
    na phishing (FIDO2/WebAuthn, passkeys, klucze sprzętowe), CIAM dla klientów oddzielony od katalogu pracowników,
    PAM i dostęp just-in-time dla uprawnień administracyjnych, przeglądy uprawnień, szybkie odbieranie dostępu.
+   Agenci AI: własna tożsamość obciążenia dla każdej instancji (SPIFFE/SVID), token użytkownika związany z kluczem
+   agenta (mTLS, DPoP), wymiana tokenu przy przejściu między usługami (`references/tozsamosc-i-dostep.md`, ostatnia sekcja).
 4. **Urządzenie:** rejestr, szyfrowanie dysku, aktualność systemu, EDR; sygnał postury trafia do PDP, a niezgodne
    urządzenie dostaje mniej, nie „wszystko albo nic”. Urządzenia prywatne (BYOD) — dostęp przez przeglądarkę/VDI.
 5. **Dostęp do aplikacji:** ZTNA per aplikacja zamiast VPN do całej sieci; stare aplikacje za proxy świadomym

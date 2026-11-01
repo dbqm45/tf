@@ -84,8 +84,9 @@ Tokeny myślenia liczą się jak tokeny wyjścia, czyli najdroższe.
 - `xhigh`/`max` — trudne problemy do samodzielnego rozwiązania (np. szukanie podatności).
 
 Effort agentów wynika z tieru (`factory/config.yaml`), a skill może ustawić własny polem `effort`. Na większości
-modeli zmiana effortu w trakcie sesji też kasuje cache. Wyjątek: Opus 5.5, Sonnet 5.5 i Fable 5.1 przez API
-Anthropic lub subskrypcję.
+modeli zmiana effortu w trakcie sesji też kasuje cache; wyjątek: Opus 5.5, Sonnet 5.5, Haiku 5.5 i Fable 5.1 przez
+API Anthropic lub subskrypcję. Jedna trudna tura: `ultrathink` w treści polecenia zamiast zmiany effortu sesji;
+`ultracode` to orkiestracja workflow wielu agentów, nie poziom effortu (`references/model-i-automatyzacja.md` §8).
 
 ## 5. Cache — co go psuje, a co nie
 Cache działa automatycznie i dopasowuje **początek** zapytania. Odczyt z cache kosztuje 10% ceny wejścia, a na

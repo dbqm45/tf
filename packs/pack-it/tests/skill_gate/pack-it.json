@@ -16,12 +16,12 @@
   "offline": "2026-10-22"
  },
  "ai-governance-compliance": {
-  "fingerprint": "8254bc323b73e0ee",
-  "offline": "2026-10-22"
+  "fingerprint": "98dc7f31d7de2ed7",
+  "offline": "2026-11-01"
  },
  "ai-mcp-server": {
-  "fingerprint": "d5821d0a3971ee90",
-  "offline": "2026-10-31"
+  "fingerprint": "2a4342d89c08ae67",
+  "offline": "2026-11-01"
  },
  "ai-mlops": {
   "fingerprint": "25f5417269136265",
@@ -500,7 +500,7 @@
   "offline": "2026-10-22"
  },
  "sec-llm-security": {
-  "fingerprint": "47f8edeebb4e271f",
+  "fingerprint": "d3528f50e917df42",
   "offline": "2026-11-01"
  },
  "sec-malware-analysis": {
@@ -520,8 +520,8 @@
   "offline": "2026-10-24"
  },
  "sec-zero-trust-identity": {
-  "fingerprint": "4d6c9815af2ede29",
-  "offline": "2026-10-22"
+  "fingerprint": "db7a831343410cc8",
+  "offline": "2026-11-01"
  },
  "tool-jest": {
   "fingerprint": "70cdf46f7c0a109b",

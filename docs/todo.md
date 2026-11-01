@@ -475,7 +475,7 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
   przekazania. Przykład w kodzie do `sec-llm-security` obok podwójnego LLM.
 - [x] **Reguła dwóch (Meta, „Agents Rule of Two”)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §1)**:** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
   do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
-- [ ] **Aktualizacja list:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
+- [x] **Aktualizacja list** (zrobione 2026-11-01: `sec-llm-security` — tabela LLM 2026 ↔ 2025 i ASI01–ASI10 z Appendix A wydania 2026, repo GenAI-Security-Project/GenAI-LLM-Top10)**:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
   Applications 2026 (ASI01…) — mapowanie na kontrole skilla; zweryfikować numerację i daty w źródłach.
 - [x] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §3)**:** wartości z etykietą pochodzenia
   i odbiorców, polityka sprawdza etykiety przed wywołaniem narzędzia (np. dokument z dysku można streścić
@@ -493,7 +493,7 @@ potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera
   Client ID Metadata Documents (działa jeszcze dla zgodności, usunięcie w przyszłej wersji — konkretnej daty brak);
   serwer zwraca parametr `iss` (RFC 9207), klient go sprawdza; klient podaje `application_type` (przekierowania na
   localhost dla aplikacji CLI i desktop); poświadczenia klienta związane z wydawcą.
-- [ ] **Tożsamość agenta i delegacja** (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
+- [x] **Tożsamość agenta i delegacja** (zrobione 2026-11-01: `sec-zero-trust-identity/references/tozsamosc-i-dostep.md`, ostatnia sekcja; SPIFFE z repo, RFC przez wyszukiwarkę — ietf.org niedostępne) (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
   wspomina SPIFFE ani tokenów związanych z nadawcą): każdy agent i każda jego instancja ma własną tożsamość obciążenia
   (SPIFFE/SPIRE, krótkie SVID przez Workload API zamiast współdzielonego konta usługi), osobną od loginu człowieka,
   z nazwanym właścicielem; działanie w imieniu użytkownika = token użytkownika związany z kluczem agenta (mTLS-bound,
@@ -513,7 +513,7 @@ effort, `opusplan`, doradca — `core-cost-control`; wykonawcy tylko do odczytu 
 `/remote-control` — `core-async-delegation`; GitHub Action i przegląd AI w CI — `core-git-workflow`). Uwaga: artykuł
 podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzyma się dokumentacji (domyślnie 3,
 `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, fabryka ustawia 2) — bez zmian.
-- [ ] **`core-cost-control`: `ultrathink` i `ultracode`.** `ultrathink` w treści polecenia — głębsze rozumowanie w tej
+- [x] **`core-cost-control`: `ultrathink` i `ultracode`** (zrobione 2026-11-01: `references/model-i-automatyzacja.md` §8; przy okazji: zmiana effortu nie kasuje cache na Opus/Sonnet/Haiku 5.5 i Fable 5.1 — code.claude.com/docs/en/prompt-caching). `ultrathink` w treści polecenia — głębsze rozumowanie w tej
   jednej turze bez zmiany zapisanego effortu sesji (zmiana effortu sesji w trakcie kasuje cache); `ultracode` —
   effort `xhigh` plus zgoda na orkiestrację wielu agentów (workflow), kosztowne, tylko dla zadań, które tego
   wymagają. Działanie, koszt i dostępność sprawdzić w dokumentacji code.claude.com z datą przed dopisaniem
@@ -618,14 +618,14 @@ Przegląd 2026-10-29: `ai-mcp-server` nie wspomina rozszerzenia MCP Apps (narzę
 renderuje go w izolowanym iframe i przekazuje wynik narzędzia; przyciski wołają narzędzia przez hosta). Daty
 z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawdzić w specyfikacji
 (apps.extensions.modelcontextprotocol.io) z datą przed dopisaniem [niezweryfikowane]. Średni priorytet.
-- [ ] **`ai-mcp-server`: specyfikacja `2026-07-28`** (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
+- [x] **`ai-mcp-server`: specyfikacja `2026-07-28`** (zrobione 2026-11-01: `ai-mcp-server/references/spec-2026-07-28-i-apps.md` §1–2, z changelogu w repo specyfikacji) (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
   bezstanowy rdzeń (bez `initialize` i `Mcp-Session-Id`; wersja, klient i możliwości w `_meta`; opcjonalne
   `server/discover`), nagłówki `Mcp-Method`/`Mcp-Name` do routingu i autoryzacji w bramce, Multi Round-Trip Requests
   zamiast żądań inicjowanych przez serwer, listy z `ttlMs`/`cacheScope`, zadania jako rozszerzenie, MCP Apps
   w formalnym frameworku rozszerzeń; przestarzałe Roots, Sampling, Logging i transport HTTP+SSE (min. 12 miesięcy
   wsparcia); stan aplikacji przez jawne uchwyty zwracane z narzędzi. SDK TS, Python, Go, C# wspierają; zmiany
   łamiące zgodność dla serwerów zależnych od sesji.
-- [ ] **`ai-mcp-server`: kiedy MCP App, a kiedy tekst** — App tylko gdy interakcja ma strukturę (zatwierdzenie,
+- [x] **`ai-mcp-server`: kiedy MCP App, a kiedy tekst** (zrobione 2026-11-01: tamże §3–4; MCP Apps Stable 2026-01-26) — App tylko gdy interakcja ma strukturę (zatwierdzenie,
   formularz, panel z akcjami, porównanie wyników), jedna App na domenę, nie na narzędzie; łagodny powrót do treści
   strukturalnej, gdy host nie obsługuje rozszerzenia; dane w wyniku narzędzia, nie w HTML zasobu. Bezpieczeństwo:
   widoczność narzędzia `_meta.ui.visibility: ["app"]` (model go nie widzi — przycisk człowieka jako jedyna droga
@@ -656,7 +656,7 @@ zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australi
 - [x] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b, `core-async-delegation` §4)**:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
-- [ ] **Próba granicy z dowodem, która warstwa zatrzymała** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b; zostaje odnośnik w `ai-mcp-server`) (artykuł „How much access should an AI agent have?”,
+- [x] **Próba granicy z dowodem, która warstwa zatrzymała** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b; odnośnik w `ai-mcp-server` 2026-11-01: `references/spec-2026-07-28-i-apps.md` §5) (artykuł „How much access should an AI agent have?”,
   E. Bermudez, 2026-10-14): katalog roboczy to miejsce startu, nie granica; filtr ścieżek w narzędziu plikowym
   (rozwiązana ścieżka, `..`, dowiązania symboliczne — wzór: walidacja w serwerze MCP filesystem) działa tylko dla
   tego narzędzia, a Python lub Bash czyta obok niego. Do `core-agent-security` i `ai-mcp-server`: przed
@@ -816,7 +816,7 @@ i fałszywej pilności, prawo do odmowy z kodem przyczyny i propozycją poprawki
 Przegląd 2026-10-29: `ai-governance-compliance` ma obowiązek art. 50 AI Act (oznaczanie wyników syntetycznych
 w formacie maszynowym) bez części technicznej; `arch-ai-solutions` ma prompt caching (stały prefiks), cache wyników
 tylko dla odpowiedzi niezależnych od użytkownika, routing i fallback. Niski/średni priorytet:
-- [ ] **`ai-governance-compliance`, reference „znakowanie techniczne”:** znak wodny w tekście (Kirchenbauer i in.,
+- [x] **`ai-governance-compliance`, reference „znakowanie techniczne”** (zrobione 2026-11-01: `references/znakowanie-techniczne.md`; kodeks praktyk 2026-06-10 wg omówień, eur-lex i strona Komisji niedostępne z sieci sesji)**:** znak wodny w tekście (Kirchenbauer i in.,
   ICML 2023: zielona lista tokenów z ziarna poprzedniego tokenu, test z, wykrywalny od ~25 tokenów, nie działa dla
   tekstu o niskiej entropii i zapamiętanego), C2PA/metadane dla obrazów i wideo; ograniczenia: parafraza, wstawianie
   i usuwanie znaków, homoglify i znaki zerowej szerokości (detektor kanonizuje Unicode), kradzież i podrabianie znaku,
@@ -1608,3 +1608,11 @@ Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od 
 - arxiv.org (2610.21412, 2609.26550, 2610.18773, 2609.15779, 2512.01289, 2610.17205), docs.typesafe.ai, randalolson.com, docs.cedarpolicy.com, w3.org/TR/shacl, huggingface.co, hanxiao.io (artykuł A. Alcaraza; proxy 403, 2026-10-30)
 - https://medium.com/data-science-collective/a-blueprint-for-agentic-coding-tools-c1e0e2ed797b (pełny artykuł I. Silfverskiöld; Medium 403, 2026-10-30)
 Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2026-10-30: 403) — treść pochodziła z wklejek.
+- Z przeglądu 2026-11-01 (pozycje „sprawdzenie w sieci”; fakty wzięte z repozytoriów na GitHubie albo z wyszukiwarki):
+  - https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ i https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/ [adres orientacyjny] (listy 2026; użyte repo GenAI-Security-Project/GenAI-LLM-Top10)
+  - https://www.rfc-editor.org/rfc/rfc8705, https://www.rfc-editor.org/rfc/rfc9449, https://www.rfc-editor.org/rfc/rfc8693 (pola `cnf`/`x5t#S256`, DPoP, `act`)
+  - https://docs.cloud.google.com/iam/docs/agent-identity-overview (Google Agent Identity — tylko przez wyszukiwarkę)
+  - https://modelcontextprotocol.io/specification/2026-07-28/changelog (użyte repo modelcontextprotocol/modelcontextprotocol)
+  - https://eur-lex.europa.eu/legal-content/PL/TXT/HTML/?uri=CELEX:32024R1689 (art. 50 ust. 2 i 7, art. 113 AI Act)
+  - https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content [adres orientacyjny] (kodeks praktyk z 2026-06-10, tekst końcowy; wytyczne Komisji do art. 50)
+  - https://a2a-protocol.org/latest/specification/, https://agentclientprotocol.com/, https://opentelemetry.io/docs/specs/semconv/gen-ai/ (użyte repozytoria projektów)

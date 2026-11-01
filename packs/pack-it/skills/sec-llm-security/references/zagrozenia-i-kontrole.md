@@ -2,7 +2,7 @@
 
 Spis treści: prompt injection · eksfiltracja · sprawczość · dane i wyciek promptu · pośrednie wstrzyknięcie (Anthropic) · RAG · zużycie
 
-## Prompt injection (LLM01)
+## Prompt injection (LLM01:2026, ASI01)
 - **Bezpośredni**: użytkownik sam wpisuje instrukcje (jailbreak). Skutek ogranicza się zwykle do jego uprawnień, więc
   kluczowe są uprawnienia narzędzi, nie treść promptu.
 - **Pośredni**: instrukcja siedzi w treści pobieranej przez system (mail, strona, PDF, komentarz w kodzie, opis
@@ -14,17 +14,17 @@ Kanały: obraz markdown z adresem zawierającym dane w zapytaniu, link do klikni
 zapis do współdzielonego dokumentu, wywołanie MCP do obcego serwera. Środki: CSP, brak zdalnych obrazów, proxy z
 allow-listą, brak narzędzia z dowolnym URL, zatwierdzenie wysyłki.
 
-## Nadmierna sprawczość (LLM06)
+## Nadmierna sprawczość (LLM03:2026, ASI02–ASI03)
 Trzy źródła: za dużo funkcji, za duże uprawnienia, za mało zatwierdzeń. Środek: narzędzia wąskie (zadanie, nie
 „wykonaj SQL”), poświadczenia użytkownika, zatwierdzenia dla zapisu.
 
-## Dane (LLM02, LLM07, LLM04)
+## Dane (LLM02, LLM08, LLM05 — numeracja 2026)
 Wyciek: dane treningowe lub dostrajania, kontekst z innych sesji, system prompt. Środki: separacja kontekstu per
 użytkownik, brak sekretów w prompcie, minimalizacja i anonimizacja danych (`arch-privacy-compliance`), kontrola
 pochodzenia danych dostrajania (`ai-fine-tuning`). Zatrucie: zapis do bazy wiedzy i pamięci agenta wymaga kontroli
 źródła i przeglądu.
 
-Wyciek promptu systemowego (LLM07) — kolejność wg Anthropic („Reduce prompt leak”, platform.claude.com, odczyt
+Ujawnienie ukrytego kontekstu (LLM08:2026, dawniej wyciek promptu systemowego LLM07:2025) — kolejność wg Anthropic („Reduce prompt leak”, platform.claude.com, odczyt
 2026-10-20): najpierw nic poufnego w prompcie (czego model nie potrzebuje, tego nie dostaje), potem monitorowanie
 i filtr wyjścia (wyrażenia, słowa kluczowe, tani model jako klasyfikator), regularny przegląd odpowiedzi. Utrudnianie
 wycieku instrukcjami („nie ujawniaj…”) na końcu i z testem: komplikuje zadanie i może pogorszyć jakość odpowiedzi.
@@ -44,11 +44,11 @@ wycieku instrukcjami („nie ujawniaj…”) na końcu i z testem: komplikuje za
 - Przed wdrożeniem red teaming z dokumentami i wynikami narzędzi zawierającymi wstrzyknięte polecenia
   (`references/red-teaming.md`).
 
-## RAG i wektory (LLM08)
+## RAG i wektory (LLM09:2026, ASI06)
 Uprawnienia dokumentów egzekwowane przy wyszukiwaniu (filtr po tożsamości), izolacja najemców w indeksie, kontrola
 tego, co trafia do indeksu (zatrucie), wersjonowanie i możliwość usunięcia dokumentu. Szczegóły: `ai-rag`.
 
-## Zużycie (LLM10)
+## Zużycie (LLM06:2026)
 Limity wejścia i wyjścia, maks. kroków agenta, budżet per użytkownik i per najemca, alert na koszt, ochrona przed
 zapytaniami powielającymi (rekurencja narzędzi).
 

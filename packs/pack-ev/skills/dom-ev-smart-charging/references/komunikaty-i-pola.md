@@ -1,5 +1,4 @@
 # Komunikaty smart charging — pola wg schematów JSON
-> 4. NotifyChargingLimit · 5. Różnice 1.6 i 2.0.1
 
 Źródło pól: schematy JSON `mobilityhouse/ocpp` (`.claude/knowledge/ocpp-json-schemas/doc.txt`: 1.6 SetChargingProfile
 L1-125, GetCompositeSchedule L126-233; 2.0.1 SetChargingProfileRequest L234-608, GetCompositeScheduleResponse L609-765,

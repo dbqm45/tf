@@ -1,5 +1,4 @@
 # Specyfikacja taryf OCPI — pola i różnice wersji
-> 6. Interfejsy modułu · 7. Źródła
 
 ## 1. Wersje
 Tagi w repozytorium OCPI: `2.2.1` (wydanie pierwotne), `v2.2.1-d2` (wydanie poprawione), `v2.3.0`. Daty wydań: [do weryfikacji].

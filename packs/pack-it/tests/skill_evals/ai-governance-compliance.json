@@ -71,6 +71,36 @@
       "expect": "no-trigger",
       "neighbor": "ai-evals",
       "prompt": "Jak zbudować zbiór testowy i sędziego LLM, żeby mierzyć jakość odpowiedzi asystenta w CI, z pass@k?"
+    },
+    {
+      "id": "znakowanie-tresci-art-50",
+      "expect": "trigger",
+      "prompt": "Nasz produkt generuje teksty i obrazy marketingowe modelem AI i sprzedajemy go w UE. Jak technicznie oznaczać wyniki, żeby spełnić AI Act, i czy znak wodny w tekście wystarczy jako dowód, że dany tekst wygenerował nasz system? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "art\\w*\\.? 50"
+          ],
+          [
+            "znak\\w* wodn",
+            "watermark"
+          ],
+          [
+            "c2pa",
+            "metadan\\w*"
+          ],
+          [
+            "kodeks\\w* praktyk",
+            "code of practice"
+          ],
+          [
+            "parafraz\\w*",
+            "nie (jest )?dow\\w*",
+            "nie przypis\\w*",
+            "masow\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

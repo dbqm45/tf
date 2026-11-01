@@ -158,6 +158,29 @@
           ]
         ]
       }
+    },
+    {
+      "id": "owasp-2026-i-agentic",
+      "expect": "trigger",
+      "prompt": "Robimy przegląd bezpieczeństwa agenta LLM z narzędziami i pamięcią i chcemy mapować ustalenia na aktualne listy OWASP. Których list i wydań użyć i pod jakim numerem jest nadmierna sprawczość? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "2026"
+          ],
+          [
+            "llm03.{0,40}(nadmiern|excessive)",
+            "(nadmiern|excessive).{0,60}llm03"
+          ],
+          [
+            "agentic",
+            "asi0?\\d"
+          ],
+          [
+            "asi01|goal hijack|przejęci\\w* cel"
+          ]
+        ]
+      }
     }
   ]
 }
