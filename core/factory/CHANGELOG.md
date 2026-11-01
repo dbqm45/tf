@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.54.0] — 2026-11-01
+### Added
+- **evals:** measure tuning-holdout gap and fit Jev thresholds (#127)
+
 ## [5.53.0] — 2026-11-01
 ### Added
 - add agent gate coverage, protocol map and intent failure sections (#123)
