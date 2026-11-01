@@ -186,6 +186,32 @@
           ["scenariusz\\w*", "bramk\\w+", "ewaluacj\\w+", "references"]
         ]
       }
+    },
+    {
+      "id": "przyjecie-zmiany-holdout",
+      "expect": "trigger",
+      "prompt": "Poprawiłem opis skilla i na jego scenariuszach ewaluacji wynik wzrósł z 70% do 95%. Czy mogę uznać, że skill jest lepszy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "holdout",
+            "zamknięt\\w* zbi\\w*",
+            "odłożon\\w*"
+          ],
+          [
+            "nie pogarsz\\w*",
+            "bez spadku",
+            "nie spad\\w*"
+          ],
+          [
+            "luk\\w*",
+            "dopasow\\w*",
+            "egzamin\\w*",
+            "przeucz\\w*",
+            "zawyż\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

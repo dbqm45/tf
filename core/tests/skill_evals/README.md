@@ -78,7 +78,14 @@ czy skille coś wnoszą, służy osobny **zamknięty zbiór** w `skill_evals/hol
 ```bash
 python3 tests/run_skill_evals.py --all --holdout only --models haiku,sonnet --baseline --repeats 2   # pomiar
 python3 tests/run_skill_evals.py --skills be-api-design --holdout exclude                          # strojenie
+python3 tests/run_skill_evals.py --skills "<skille z holdoutem>" --only trigger --per-skill 2 --baseline --repeats 2  # luka
 ```
+
+**Luka „strojenie − holdout”:** `--per-skill N` losuje (powtarzalnie, `--seed`) najwyżej N scenariuszy strojenia na
+skill, a holdout zostawia w całości, więc oba zbiory mają podobną liczbę pytań na skill. Raport ma sekcję „Luka
+strojenie − holdout”: wynik ze skillami w obu zbiorach, ich różnicę i przewagę skilli (ze skillami minus bez) w każdym
+zbiorze. Duża luka oznacza, że skille dopasowały się do pytań strojenia. Zmianę skilla przyjmujemy, gdy poprawia
+strojenie i nie pogarsza holdoutu. Autor zmiany nie czyta plików holdout.
 
 Raport ma sekcję „Protokół: wynik czy koszt”. Dla każdego ramienia (model × ze skillami / bez × zbiór) pokazuje:
 - **zaliczone w całości** — główny wynik: skill uruchomiony i wszystkie kryteria spełnione;
