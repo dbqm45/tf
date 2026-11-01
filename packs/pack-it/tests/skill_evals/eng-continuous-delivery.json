@@ -82,6 +82,19 @@
       "expect": "no-trigger",
       "prompt": "Jak skonfigurować w GitHub Actions cache zależności npm i matrycę wersji Node dla budowania? Odpowiedz zwięźle.",
       "neighbor": "ops-ci-cd"
+    },
+    {
+      "id": "kokpit-zdrowia-fabryki",
+      "expect": "trigger",
+      "prompt": "Chcemy zbudować dashboard dla zarządu i liderów, który pokaże, czy dostarczanie oprogramowania z agentami AI idzie dobrze. Jakie wskaźniki tam dać i jak uniknąć mierzenia tego, co łatwo podbić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wyprzedzając\\w+", "opóźnion\\w+", "leading", "lagging"],
+          ["w parze", "par\\w+ (z miarą|prędkości)", "miar\\w+ jakości"],
+          ["system\\w*, (nie|nigdy) osob", "nie (mierz\\w+ )?osob", "nie ludzi"],
+          ["kolejk\\w+ (przegląd|PR)", "dryf\\w* specyfikacji", "CFR", "nieudanych zmian"]
+        ]
+      }
     }
   ]
 }

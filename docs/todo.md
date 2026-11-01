@@ -1184,7 +1184,7 @@ poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia)
   już jest grafem; stan w tej samej transakcji co dane → DBOS; dane kroków nie mogą opuścić sieci → bez usług
   hostowanych; brak zespołu platformowego → bez własnego klastra. Test odzyskiwania: `SIGKILL` w środku przebiegu
   i policzenie, co wykonało się ponownie — przed produkcją.
-- [ ] **`proc-requirements-shaping` / `core-delivery-lifecycle`, refinement pod SDD:** u autorów refinement zajmował
+- [x] **`proc-requirements-shaping` / `core-delivery-lifecycle`, refinement pod SDD** (zrobione 2026-11-01: `core-delivery-lifecycle/references/ai-native-sdlc.md` §13)**:** u autorów refinement zajmował
   ok. 30% sprintu (prognoza do 50%) [niezweryfikowane]. Brakuje u nas dwóch kroków: przed implementacją wykonawca
   **opowiada rozwiązanie własnymi słowami** (problem, zachowanie, sposób, ryzyka, podjęte decyzje), a właściciel
   sprawdza zgodność z zamiarem — żeby człowiek nie był tylko przekaźnikiem między agentami; makiety z istniejących
@@ -1202,7 +1202,7 @@ zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z a
   wynik sprawdza się prawdziwym symulatorem/eksperymentem, a raport podaje obie liczby; (3) cel spoza zakresu danych
   treningowych (fizycznie niemożliwy) daje pewną, złą odpowiedź — najpierw policz granicę wykonalności, potem
   szukaj; (4) w algorytmie ewolucyjnym zbyt duża mutacja (20% zamiast 2%) zamienia przeszukiwanie w losowanie.
-- [ ] **`core-delivery-lifecycle` / `eng-continuous-delivery`, miary autonomii:** obok DORA odsetek scalonych PR
+- [x] **`core-delivery-lifecycle` / `eng-continuous-delivery`, miary autonomii** (zrobione 2026-11-01: `ai-native-sdlc.md` §13)**:** obok DORA odsetek scalonych PR
   autorstwa agenta, godziny przeglądu człowieka na zmianę, czas zadania od początku do końca; wg autora, jeśli po
   ~6 miesiącach agentowe PR to < 5%, wąskim gardłem są specyfikacje, harness i struktura przeglądu, nie narzędzie
   (próg to opinia autora, nie pomiar). Pasuje do decyzji G7 „miary przepływu” w ci_for_sdlc/pdi.
@@ -1245,13 +1245,13 @@ zespołu Whettona (PR 40 → 165 linii, czas do merge 16 → 32 h, oczekiwanie n
   a „po prostu zawiedź z czytelnym błędem” traktować jako pełnoprawną odpowiedź (powiązane z drabiną minimalizmu
   w `eng-design-principles`). Sygnał ostrzegawczy procesu: zaległości wygenerowanych zgłoszeń, których nikt nie
   zrobi, i opisy PR dłuższe niż ktokolwiek przeczyta.
-- [ ] **`core-delivery-lifecycle`, osąd nie może uciec do kroków:** refinement kończy się zgłoszeniem napisanym przez
+- [x] **`core-delivery-lifecycle`, osąd nie może uciec do kroków** (zrobione 2026-11-01: `ai-native-sdlc.md` §13)**:** refinement kończy się zgłoszeniem napisanym przez
   człowieka dla człowieka (nie wygenerowanym opisem ani promptem); jeśli nikt w pokoju nie umie wyjaśnić, jak praca
   zostanie zrobiona, refinement nie jest skończony (łączy się z pozycją „opowiada rozwiązanie własnymi słowami”
   wyżej). Pogłębiony przegląd tylko powyżej progów (wielkość zmiany, obszar ryzyka) — wspólne testowanie albo
   przejście przez rozwiązanie z grupą; nie każdy PR. Miary do śledzenia: rozmiar PR, czas do pierwszego przeglądu,
   liczba otwartych PR na osobę — pasuje do G7 „miary przepływu” (ci_for_sdlc/pdi).
-- [ ] **`proc-agile`, specyfikacja w cyklu:** backlog i refinement na poziomie celu i zamiaru, kontrakt dojrzewa w
+- [x] **`proc-agile`, specyfikacja w cyklu** (zrobione 2026-11-01: sekcja „Kanban”)**:** backlog i refinement na poziomie celu i zamiaru, kontrakt dojrzewa w
   sprincie (Scrum) albo przed punktem zobowiązania (Kanban, z limitem WIP na etapie analizy, żeby specyfikacje nie
   starzały się w kolejce); Definition of Ready jako umowa zespołu o jakości wejścia, nie bramka przeciw PO (uwaga
   M. Cohna). Trzy szczeble SDD (spec-first / spec-anchored / spec-as-source, B. Böckeler) — dobierać do problemu;
@@ -1289,7 +1289,7 @@ wnioski są w sekcji „Rutyny, które zdobywają uprawnienia”.
 Przegląd 2026-10-29: pozycja „gdzie agent musiałby zgadywać” (sekcja o zamiarze) szuka luk; rejestr decyzji
 prowadzi pdi (`pdi-decisions`). Liczby z artykułów (EPIC: 11,8% vs 20,4% commitów naprawczych; produkty dots, Viktor,
 Muse) [niezweryfikowane].
-- [ ] **`proc-requirements-shaping` / `mode-pdi`, technika dwóch implementacji:** dla zdania z przymiotnikiem jakości
+- [ ] **`proc-requirements-shaping` / `mode-pdi`, technika dwóch implementacji** (część w `proc-requirements-shaping` zrobiona 2026-11-01; zostaje spójność spec/plan/zadania w `mode-pdi` i pola w kontrakcie pdi)**:** dla zdania z przymiotnikiem jakości
   („szybko”, „bezpiecznie”, „odpornie”) naszkicować dwa rozsądne rozwiązania i sprawdzić, czy różnią się czymś
   widocznym dla użytkownika lub operatora — jeśli tak, specyfikacja milczy i brakuje decyzji. Pięć klas do pytania:
   skala, tryb wykonania (od razu / w tle), awaria i ponowienia, uprawnienia, migracja istniejących danych. Każda
@@ -1425,7 +1425,7 @@ Przegląd 2026-10-30: `eng-continuous-delivery` ma cztery metryki DORA, a pozycj
 zastrzeżenie o Goodharcie i parę „miara aktywności + miara wyniku”. Liczby z artykułu (Faros +91% czasu przeglądu,
 METR −19%, Peng +55,8%, DORA 2024: klaster „high” z gorszym CFR niż „medium”, rework rate dodany przez DORA w 2024)
 [niezweryfikowane]. Braki:
-- [ ] **`eng-continuous-delivery` / `core-delivery-lifecycle`, kokpit zdrowia fabryki:**
+- [x] **`eng-continuous-delivery` / `core-delivery-lifecycle`, kokpit zdrowia fabryki** (zrobione 2026-11-01: `eng-continuous-delivery`, „Kokpit zdrowia dostarczania”)**:**
   - wskaźniki opóźnione rozliczają, czyli wskaźnik nieudanych zmian (CFR), odsetek defektów u użytkownika, odsetek
     przeróbek (rework rate, piąta miara DORA — sprawdzić w raporcie) i realizacja zwrotu z inwestycji;
   - wskaźnik wyprzedzający trafia na kokpit tylko wtedy, gdy przewiduje któryś opóźniony: kolejka PR czekających na

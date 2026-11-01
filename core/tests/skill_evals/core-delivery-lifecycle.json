@@ -209,6 +209,19 @@
       "expect": "no-trigger",
       "prompt": "Jak zaplanować wdrożenie canary z automatycznym wycofaniem przy przekroczeniu budżetu błędów?",
       "neighbor": "ops-release-engineering"
+    },
+    {
+      "id": "refinement-i-miary-agentow",
+      "expect": "trigger",
+      "prompt": "Zespół pracuje z agentami AI od pół roku. Refinement kończy się wygenerowanym przez AI opisem zadania, który agent od razu implementuje, a zarząd chce mierzyć sukces odsetkiem PR-ów napisanych przez agentów. Co tu poprawić w procesie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["własnymi słowami", "opowi\\w+ rozwiązani\\w+", "wyjaśni\\w+, jak"],
+          ["człowiek\\w* dla człowieka", "napisan\\w+ przez człowieka", "nie wygenerowan\\w+"],
+          ["Goodhart\\w*", "miar\\w+ aktywności", "w parze", "miar\\w+ wyniku"],
+          ["defekt\\w*", "odsetek nieudanych", "CFR", "koszt zmiany"]
+        ]
+      }
     }
   ]
 }

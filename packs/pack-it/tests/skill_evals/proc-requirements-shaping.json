@@ -110,6 +110,19 @@
       "expect": "no-trigger",
       "neighbor": "proc-product-discovery",
       "prompt": "Mamy listę 15 pomysłów na nowe funkcje. Jak je uszeregować metodą RICE i jakie metryki sukcesu wybrać po wydaniu?"
+    },
+    {
+      "id": "dwie-implementacje-przymiotnik",
+      "expect": "trigger",
+      "prompt": "W wymaganiu stoi: „Eksport raportu ma działać szybko i niezawodnie”. Zanim agent zacznie pisać kod, jak sprawdzić, czy to wymaganie jest wystarczające? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["dwa (rozsądne )?rozwiązani\\w+", "dwie implementac\\w+", "dwa warianty"],
+          ["skal\\w+", "w tle", "asynchroniczn\\w+", "od razu"],
+          ["awari\\w+", "ponowie\\w+", "uprawnie\\w+", "migrac\\w+"],
+          ["weryfikac\\w+", "test\\w*", "właściciel\\w*", "odwracaln\\w+"]
+        ]
+      }
     }
   ]
 }

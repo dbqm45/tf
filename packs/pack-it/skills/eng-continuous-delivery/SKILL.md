@@ -33,6 +33,19 @@ metadata:
 Szybkość i stabilność idą w parze, nie są kompromisem. Metryki do uczenia się, **nie cele** (prawo Goodharta);
 porównuj system z nim samym w czasie, nie zespoły między sobą.
 
+### Kokpit zdrowia dostarczania (także z agentami AI)
+- **Wskaźniki opóźnione** rozliczają: odsetek nieudanych zmian, odsetek defektów u użytkownika, odsetek przeróbek,
+  realizacja zwrotu z inwestycji.
+- **Wskaźnik wyprzedzający** trafia na kokpit tylko wtedy, gdy przewiduje któryś opóźniony: kolejka PR czekających
+  na przegląd człowieka (liczba, wiek najstarszego) → nieudane zmiany; dryf specyfikacji (kod odbiega od spec) →
+  defekty u użytkownika; czas od ostatniej weryfikacji szablonu lub reguły z rzeczywistością → przeróbki.
+- Każda miara prędkości w parze z miarą jakości, która ruszy się, gdy ktoś zacznie grać pierwszą. Mierzysz system,
+  nigdy osobę.
+- Trzy widoki: zarząd kwartalnie (opóźnione, zwrot), kierownictwo miesięcznie (trendy obu rodzajów), lider zespołu
+  co tydzień (pełny zestaw wyprzedzający z parami). Start od czterech liczb: kolejka przeglądu, dryf specyfikacji,
+  odsetek nieudanych zmian, defekty u użytkownika — definicje „defektu” i „ucieczki” ustalasz przed pierwszym pomiarem.
+Źródło: J. Wąsowski, „SDD Factory Dashboard…” (2026-08-12).
+
 ## Twelve-Factor (skrót)
 Jedna baza kodu, jawne zależności, konfiguracja w środowisku, usługi zewnętrzne jako podłączane zasoby, rozdzielone
 build/release/run, bezstanowe procesy, port binding, skalowanie procesami, szybki start i łagodne zamykanie,
