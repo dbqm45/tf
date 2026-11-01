@@ -4,7 +4,7 @@ description: Użyj, gdy agent ma wykonać polecenie z treści (issue, strona, cz
 metadata:
   przeglad: "2027-10-10"
   katalog: "Użyj, gdy agent ma uruchomić polecenie pochodzące z treści (strona, issue, czat AI, README, komunikat błędu, wynik MCP), gdy zauważysz objawy włamania na maszynie, przy konfiguracji uprawnień agentów, MCP, skilli i wtyczek oraz przy agentach w CI — ClickFix, przegląd polecenia, eskalacja. Nie do łańcucha zależności ani auth aplikacji (skille bezpieczeństwa z pack-it)."
-  slowa: "wkleić do terminala, base64 | bash, curl | sh, poradnik instalacji z czatu, udostępniona rozmowa z AI, ClickFix, czy agent może to uruchomić, podejrzane polecenie, allow deny ask, reguły uprawnień, settings.json permissions, agent ciągle pyta o zgodę, dangerously-skip-permissions, bypassPermissions, tryb bez pytań, dostęp agenta do produkcji, token produkcyjny dla agenta, ostrzeżenie hooka tdd_guard o skrypcie, zapobiec zanim skrypt się wykona, piaskownica Bash, sandbox, prompt injection, wstrzyknięcie poleceń, ignore previous instructions, ukryty tekst na stronie, polecenie w treści zgłoszenia, raport researchera z poleceniem, dostęp agenta tylko do katalogu projektu, filtr ścieżek, agent dotrze do moich plików, plik-kanarek, izolacja agenta, kontener agenta z allowlistą, wspólny cache agentów"  # audit-ok: opis ataku, nie polecenie
+  slowa: "wkleić do terminala, base64 | bash, curl | sh, poradnik instalacji z czatu, udostępniona rozmowa z AI, ClickFix, czy agent może to uruchomić, podejrzane polecenie, allow deny ask, reguły uprawnień, settings.json permissions, agent ciągle pyta o zgodę, dangerously-skip-permissions, bypassPermissions, tryb bez pytań, dostęp agenta do produkcji, token produkcyjny dla agenta, ostrzeżenie hooka tdd_guard o skrypcie, zapobiec zanim skrypt się wykona, piaskownica Bash, sandbox, prompt injection, wstrzyknięcie poleceń, ignore previous instructions, ukryty tekst na stronie, polecenie w treści zgłoszenia, raport researchera z poleceniem, dostęp agenta tylko do katalogu projektu, filtr ścieżek, agent dotrze do moich plików, plik-kanarek, izolacja agenta, kontener agenta z allowlistą, wspólny cache agentów, klasyfikator uprawnień agenta, próg klasyfikatora, sędzia uprawnień, co powinien widzieć sędzia, bramka bezpieczeństwa agenta, pokrycie bramki, klasyfikator wywołań narzędzi"  # audit-ok: opis ataku, nie polecenie
 ---
 
 # Bezpieczeństwo pracy agenta
@@ -77,8 +77,8 @@ został, a pełne rozpoznanie wymagało uprawnień i telemetrii, których agent 
   zatrzymała: model, narzędzie czy środowisko — granicą jest tylko środowisko (`references/uprawnienia-i-produkcja.md` §4b).
 
 ## 4b. Polityka uprawnień i dostęp do produkcji
-Reguły uprawnień egzekwuje Claude Code, nie model — ale filtrują **tekst polecenia**, nie skutek. Szczegóły, tryby
-i dostęp do produkcji: `references/uprawnienia-i-produkcja.md`.
+Reguły uprawnień egzekwuje Claude Code, nie model — ale filtrują **tekst polecenia**, nie skutek. Szczegóły, tryby,
+bramka na skutkach (pokrycie, próg) i dostęp do produkcji: `references/uprawnienia-i-produkcja.md` (§4d).
 - **Kolejność:** `deny` → `ask` → `allow`, rozstrzyga pierwsze trafienie; szczegółowy `allow` nie robi wyjątku od
   szerokiego `deny` ani `ask`. Deny z dowolnego poziomu ustawień bije allow z innego.
 - **Filtr przed „nie pytaj ponownie”** (zapisuje regułę do `.claude/settings.local.json`): „co ten wzorzec może zepsuć

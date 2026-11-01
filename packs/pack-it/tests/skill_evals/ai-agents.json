@@ -186,6 +186,37 @@
           ["świadek", "kto sprawdz\\w+", "zapis\\w* (w logu|kto)"]
         ]
       }
+    },
+    {
+      "id": "kontrola-liczb-z-narzedzia",
+      "expect": "trigger",
+      "prompt": "Nasz agent ubezpieczeniowy wywołuje narzędzie oceny ryzyka i narzędzie limitu polisy, a potem pisze odpowiedź klientowi. Czasem w odpowiedzi jest inny limit niż zwróciło narzędzie. Jak to wyłapać przed wysłaniem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "porówn\\w*",
+            "zgodn\\w*",
+            "sprawdz\\w*"
+          ],
+          [
+            "wynik\\w* narzędzi",
+            "z narzędzi",
+            "zwrócon\\w*"
+          ],
+          [
+            "w kodzie",
+            "deterministyczn\\w*",
+            "harness",
+            "przed (oddaniem|wysłaniem)"
+          ],
+          [
+            "rozbieżnoś\\w*",
+            "odsył\\w*",
+            "popraw\\w*",
+            "konkretn\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

@@ -1,7 +1,8 @@
 # Wielu wykonawców, świadek kroku i długie przebiegi
 
 Spis treści: 1. Wielu wykonawców nad wspólnym stanem · 2. Kto jest świadkiem tego kroku · 3. Długie przebiegi w wielu
-oknach kontekstu · 4. Interfejs harnessu od strony modelu
+oknach kontekstu · 4. Interfejs harnessu od strony modelu · 5. Kontrola przed oddaniem odpowiedzi ·
+6. Czy agent naprawdę działa
 
 ## 1. Wielu wykonawców nad wspólnym stanem
 - **Dzierżawa zadania z wygaśnięciem i biciem serca.** Wykonawca, który zniknął, traci zadanie, a inny wznawia je
@@ -55,3 +56,25 @@ application development” (2026-03-24), odczyt 2026-10-29:
 - Kanały (Slack, Teams, głos) to adaptery normalizujące zdarzenie do jednej postaci — agent nie należy do kanału.
 - Wybór kontekstu (pamięć, narzędzia) to często klasyfikacja, nie generowanie: tańszy selektor przed dużym modelem,
   mierzony na własnych danych (ai-evals).
+
+## 5. Kontrola przed oddaniem odpowiedzi
+Model przepisuje liczby z wyników narzędzi i czasem je zmienia (limit polisy, wynik ryzyka, kwota). Harness sprawdza
+to w kodzie, zanim odpowiedź wyjdzie:
+- **Liczby i identyfikatory z narzędzia:** wyciągasz z odpowiedzi liczby, kwoty i identyfikatory i porównujesz
+  z wartościami zwróconymi przez narzędzia w tym przebiegu. Rozbieżność odsyłasz modelowi jako konkretny komunikat
+  („limit w odpowiedzi 50 000, narzędzie zwróciło 30 000”), z limitem poprawek. Po limicie odpowiedź trafia do
+  człowieka, a nie do klienta.
+- **Powtórzone identyczne wywołania** (to samo narzędzie, te same argumenty) pomijasz i zwracasz poprzedni wynik.
+- **Wymagane narzędzia:** gdy przed odpowiedzią nie użyto narzędzia wymaganego dla tego typu zadania, harness
+  przypomina o nim modelowi albo blokuje odpowiedź.
+- **Reguły kontroli też mają fałszywe alarmy:** dopasowanie podciągu (np. „ind” wewnątrz innych słów) blokuje dobre
+  odpowiedzi. Reguły testujesz na prawdziwych odpowiedziach modelu, a ich trafność mierzysz w ewaluacji
+  (ai-evals, `references/pulapki-pomiaru.md` §7–8).
+
+## 6. Czy agent naprawdę działa
+Kontener „Up” i `/health` zwracający 200 nie dowodzą, że agent odpowiada. Wygasły token potrafi kierować wiadomości
+w pustą gałąź obsługi błędu przez długi czas bez alarmu. Syntetyczna sonda end-to-end: ops-observability,
+sekcja „Healthchecki”.
+
+Źródła: V. Mysore, „Harness Engineering … Live Examples” (2026-10, demo); J. Hamidun, „Running a Fleet of 33 AI
+Agents” (2026) — szczegóły incydentu wg autora [niezweryfikowane].

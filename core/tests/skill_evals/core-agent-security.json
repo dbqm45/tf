@@ -229,6 +229,70 @@
           ["log\\w* (nie|to nie)", "nie (jest|stanowi) dowod\\w*", "poza procesem agenta", "niezależn\\w+"]
         ]
       }
+    },
+    {
+      "id": "bramka-pokrycie-skutkow",
+      "expect": "trigger",
+      "prompt": "Zbudowaliśmy bramkę bezpieczeństwa dla agenta kodującego: klasyfikator LLM ocenia każde wywołanie narzędzia bash i blokuje groźne. Na zbiorze testowym ma 0,4% fałszywych alarmów i łapie 95% groźnych poleceń. Czy możemy uznać, że agent jest zabezpieczony? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pokryci\\w*",
+            "coverage",
+            "nie dociera\\w*",
+            "omija\\w* bramk"
+          ],
+          [
+            "edycj\\w* plik",
+            "zapis\\w* plik",
+            "inne narzędzi\\w*",
+            "podmian\\w* narzędzi"
+          ],
+          [
+            "skutk\\w*",
+            "efekt\\w*"
+          ],
+          [
+            "cieni\\w*",
+            "shadow",
+            "liczb\\w* bazow\\w*",
+            "base rate",
+            "od końca do końca",
+            "end-to-end"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "prog-klasyfikatora-polityka",
+      "expect": "trigger",
+      "prompt": "Klasyfikator uprawnień naszego agenta (osobny model) dostaje cały transkrypt sesji i zwraca wynik 0–1; blokujemy powyżej 0,5. Jak ustawić próg i co właściwie powinien widzieć ten sędzia? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "koszt\\w* fałszyw\\w*",
+            "fałszyw\\w* blokad",
+            "koszt\\w* pominię",
+            "fałszyw\\w* alarm"
+          ],
+          [
+            "liczb\\w* bazow\\w*",
+            "base rate",
+            "odset\\w* groźn\\w*",
+            "rzadk\\w*"
+          ],
+          [
+            "bez prozy",
+            "bez (wypowiedzi|tekstu|rozumowania) agenta",
+            "nie (widzi|dostaje) (prozy|rozumowania|wypowiedzi)",
+            "przekona\\w*"
+          ],
+          [
+            "sekret\\w*",
+            "argument\\w* narzędzi"
+          ]
+        ]
+      }
     }
   ]
 }

@@ -4,7 +4,7 @@ description: Użyj przy projekcie agenta LLM lub przepływu agentowego — workf
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy projektujesz agenta LLM albo przepływ agentowy w kodzie — czy w ogóle potrzebny agent, wzorce workflow (prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer), projekt narzędzi (nazwy, opisy, parametry, błędy, idempotencja) i serwerów MCP, inżynieria kontekstu (co trafia do kontekstu, kompaktowanie, pamięć), kompromisy multi-agent, guardrails i uprawnienia, zatwierdzanie przez człowieka akcji nieodwracalnych, tracing i obserwowalność, warunki stopu i budżety, typowe porażki, wybór frameworka (Claude Agent SDK, LangGraph) wg kryteriów. Nie do wywołań SDK, kontraktu wyjścia i pętli narzędzi w kodzie (eng-llm-features), uruchamiania Claude Code bez nadzoru (core-async-delegation), doboru modelu i kosztu pracy z agentem (core-cost-control), bezpieczeństwa agenta-programisty (core-agent-security) ani RAG (ai-rag)."
-  slowa: "agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała"
+  slowa: "agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała, agent wywołuje narzędzie, a potem pisze odpowiedź klientowi, inny limit niż zwróciło narzędzie, liczby z wyników narzędzi, rozbieżność odpowiedzi z narzędziem, wyłapać przed wysłaniem"
 ---
 
 # Projekt agenta LLM — od „czy agent” do granic i obserwowalności
@@ -76,7 +76,7 @@ Agent, który obsługuje program (desktop, przeglądarka): **najpierw podnieś i
 
 Kilku wykonawców nad wspólnym stanem (dzierżawa, wersja rekordu, ponowienie / wznowienie / kompensacja), „kto jest
 świadkiem tego kroku” (reguła o stanie, akcji lub sekwencji poza modelem), długie przebiegi w wielu oknach kontekstu
-i interfejs harnessu: `references/wykonawcy-i-bramki.md`.
+i interfejs harnessu, kontrola liczb z narzędzi przed odpowiedzią, sonda end-to-end: `references/wykonawcy-i-bramki.md`.
 
 Typowe porażki i środki: `references/porazki-i-wzorce.md`.
 

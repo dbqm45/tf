@@ -74,6 +74,25 @@ w omówieniu repozytorium `anthropics/financial-services` (M. Craddock, 2026-05-
 - Log wywołań narzędzi zapisuje pochodzenie każdego argumentu (użytkownik, narzędzie, dokument).
 - Agent ma wyłącznik awaryjny po stronie platformy (core-async-delegation §6).
 
+## 8. Wiadomości wychodzące (agent wysyła w imieniu użytkownika)
+Agent, który odpisuje na maile, wysyła komunikaty albo sam rozsyła podsumowania, wyprowadza dane każdą wiadomością.
+- **Klasy danych z regułą dla każdej klasy:**
+  - „nigdy”: numery kart, dokumenty tożsamości, sekrety i hasła — odrzucenie bez względu na polecenie;
+  - „tylko na wyraźne polecenie w tej rozmowie”: zdrowie, finanse osobiste, dane osób trzecich;
+  - reszta według zwykłych zasad.
+- **Osobny klasyfikator na każdej wiadomości wychodzącej**, poza głównym agentem (inny model albo reguły z wykrywaniem
+  PII). Główny agent może być już zmanipulowany treścią, na którą odpowiada. Działa obok zatwierdzania akcji (§4),
+  nie zamiast niego.
+- **Akcje czekające na zgodę:** wysłanie do nowego odbiorcy, płatność, podpis, usunięcie. **Lista zakazana nawet za
+  zgodą** (np. przelewy między kontami, handel papierami wartościowymi) jest w kodzie, a nie w prompcie.
+- **Agent proaktywny** (sam pisze skróty lub przypomnienia): rytm i listę tematów ustawia użytkownik. Sprawdzanie co
+  kilka godzin zamiast ciągłego, bo każde przejście kosztuje limit. Tryb i budżet: core-async-delegation §2.
+- Bramka na skutku „wysłanie na zewnątrz”, pokrycie i próg klasyfikatora: core-agent-security,
+  `references/uprawnienia-i-produkcja.md` §4d.
+
+Źródło: U. Estari, „Claude Duet: The AI That Messages You First” (2026-10-22); lista akcji wg autora, nie sprawdzona
+w kodzie projektu [niezweryfikowane].
+
 Źródła (dostęp 2026-10-31, przez wyszukiwarkę; strony arXiv niedostępne z sieci sesji): arXiv 2506.08837,
 arXiv 2503.18813, ai.meta.com/blog/practical-ai-agent-security (2025-10-31); artykuły wtórne: A. Dighe, „Top 4
 Security design patterns for AI agents” (2026-10-08), C. Kalhara, „Building Secure AI Agents”.

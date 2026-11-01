@@ -714,12 +714,12 @@ wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni
   tokenów, kosztu i wyniku guardrails; `trace_id` jako identyfikator korelacji między systemami. Z tych śladów
   ewaluacja offline (`ai-evals`) i koszt (`core-cost-control`, `ops-finops`). Stan konwencji (eksperymentalne?)
   sprawdzić w repo open-telemetry/semantic-conventions z datą.
-- [ ] **Końcowa kontrola „liczby z narzędzia”** (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
+- [x] **Końcowa kontrola „liczby z narzędzia”** (zrobione 2026-11-01: `ai-agents/references/wykonawcy-i-bramki.md` §5) (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
   i identyfikatory w odpowiedzi z wynikami narzędzi (np. wynik oceny ryzyka, limit polisy) i odsyła modelowi
   konkretną rozbieżność; do tego pominięcie powtórzonych identycznych wywołań narzędzia i przypomnienie
   o nieużytych wymaganych narzędziach przed odpowiedzią. Uwaga z demo: reguła guardrails też ma fałszywe
   alarmy (dopasowanie podciągu „ind”) — testuj reguły na prawdziwym słownictwie modelu.
-- [ ] **Syntetyczna sonda end-to-end agenta** (artykuł „Running a Fleet of 33 AI Agents”, J. Hamidun): kontener „Up”
+- [x] **Syntetyczna sonda end-to-end agenta** (zrobione 2026-11-01: `ops-observability` „Healthchecki”, odnośnik `ai-agents` §6) (artykuł „Running a Fleet of 33 AI Agents”, J. Hamidun): kontener „Up”
   i healthcheck „OK” nie dowodzą działania — wygasły token wpychał obsługę wiadomości w pustą gałąź przez 90 min.
   Co godzinę prawdziwe zapytanie przez cały potok z asercją niepustej, zgodnej ze schematem odpowiedzi w czasie SLA
   (`ops-observability`, odnośnik z `ai-agents`).
@@ -1043,7 +1043,7 @@ trybie i piaskownicę jako granicę; `sec-llm-security` — zatwierdzenie ze sku
 w chmurze zatwierdzają edycje plików niezależnie od trybu. Liczby z artykułu (AmPermBench: 36,8% zmian stanu
 — 93 z 253 — przez edycję plików w projekcie, poza klasyfikatorem; 81% niebezpiecznych akcji przeszło całość;
 próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezweryfikowane]. Braki:
-- [ ] **`core-agent-security` / `sec-llm-security`, pokrycie bramki:** bramka zdefiniowana listą skutków (zapis pliku
+- [x] **`core-agent-security` / `sec-llm-security`, pokrycie bramki** (zrobione 2026-11-01: `core-agent-security/references/uprawnienia-i-produkcja.md` §4d)**:** bramka zdefiniowana listą skutków (zapis pliku
   poza bezpiecznym zakresem, sieć, sekrety, uruchomienie procesu), nie nazw narzędzi (`tools=["bash"]` przepuszcza
   ten sam skutek przez edycję pliku stanu — podmiana narzędzia). Trzy osobne liczby: pokrycie (odsetek zmian stanu,
   które w ogóle docierają do bramki), błędy klasyfikatora (FPR/FNR na tym, co ocenił), pominięcia od końca do końca;
@@ -1052,7 +1052,7 @@ próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezw
   ryzyka; akcje niszczące, finansowe, wyprowadzające dane i zmiany uprawnień nigdy tylko na klasyfikatorze.
   Bramka stoi najbliżej narzędzia, po każdym kroku, który może zmienić wywołanie (edycja przez człowieka po
   klasyfikacji = wywołanie bez oceny); licznik odmów z eskalacją, bo bramka bez niego uczy podmiany narzędzia.
-- [ ] **Próg jako polityka:** próg klasyfikatora konfigurowalny i uzasadniony kosztem fałszywej blokady vs pominięcia,
+- [x] **Próg jako polityka** (zrobione 2026-11-01: tamże §4d, z kartą warstwy decyzji)**:** próg klasyfikatora konfigurowalny i uzasadniony kosztem fałszywej blokady vs pominięcia,
   z liczbą bazową (0,1% groźnych wywołań przy FPR 0,4% → ok. 1 z 5 alarmów prawdziwy); co widzi sędzia (prośby
   użytkownika i ładunek wywołania, bez prozy agenta — inaczej da się go przekonać) i dokąd idą argumenty narzędzi
   (sekrety w argumentach wychodzą do dostawcy klasyfikatora). Karta warstwy decyzji z artykułu jako szablon do ADR.
@@ -1320,8 +1320,9 @@ auto; **osobny klasyfikator i prompt bezpieczeństwa dla każdej wiadomości** �
 dokumenty tożsamości) odrzucana zawsze, inne wrażliwe (zdrowie, finanse osobiste) tylko na wyraźne polecenie
 użytkownika. Wg artykułu Estariego (nie sprawdzone u źródła): wysłanie, płatność, podpis i usunięcie czekają na
 zgodę, a handel papierami wartościowymi i przelewy między kontami są wyłączone nawet za zgodą [niezweryfikowane].
-- [ ] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
-  wiadomości:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
+- [x] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
+  wiadomości** (zrobione 2026-11-01: `sec-llm-security/references/wzorce-projektowe-agentow.md` §8, wiersz „agent
+  proaktywny” w `core-async-delegation` §2)**:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
   polecenie” (zdrowie, finanse osobiste), reszta; sprawdzenie każdej wiadomości wychodzącej osobnym klasyfikatorem
   poza głównym agentem, obok zatwierdzania akcji. Do tabeli trybów delegacji: agent proaktywny (skrót + sprawdzanie
   co kilka godzin zamiast ciągłego, bo koszt w limitach) — rytm i lista tematów ustawia użytkownik; lista akcji

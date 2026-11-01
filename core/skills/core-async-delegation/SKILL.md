@@ -31,6 +31,7 @@ przegląd zaległych zgłoszeń. Złe: „napraw produkcję”, „zdecyduj, jak
 | **zdalna kontrola lokalnej sesji** (Remote Control w Claude Code, SSH + `tmux`, relay typu Happy) | Twoja maszyna lub VPS | samą sesję, z innego urządzenia | krótka poprawka, diagnoza, dokończenie pracy | bezpieczeństwo maszyny po Twojej stronie; relay = dodatkowa strona zaufania |
 | **sandbox w chmurze** (Claude Code on the web, Codex Cloud) | zarządzany kontener | setup, sieć, MCP, sekrety, zakres | ograniczone zadanie do PR przy zamkniętym laptopie | źle przygotowane środowisko, za szerokie uprawnienia |
 | **rutyna / przebieg cykliczny** (harmonogram, zdarzenie, API) | chmura lub serwer | wyzwalacz, warunek stopu, budżet, kryteria sukcesu | raport, przegląd zaległości, kontrola po wydaniu | zielony bez wartości, koszt, duplikaty, zapętlenie |
+| **agent proaktywny** (sam pisze do użytkownika: skrót, przypomnienie) | chmura lub serwer | rytm i listę tematów (ustawia użytkownik), klasy danych w wiadomościach, akcje zakazane nawet za zgodą | poranny skrót, przypomnienie o terminie | wyciek w wiadomości, szum, koszt ciągłego sprawdzania (sprawdzaj co kilka godzin) |
 
 Problem tylko z interfejsem (telefon, inna sieć) → lokalny agent + zdalna kontrola. Chcesz odciąć agenta od
 swojego katalogu domowego, kluczy i sieci → sandbox albo osobny VPS. Funkcje tych produktów (plany kont, wersje,

@@ -129,6 +129,35 @@
           ["architektur\\w*", "projekt\\w*", "uprawnie\\w+", "nie jedyn\\w+"]
         ]
       }
+    },
+    {
+      "id": "polityka-wiadomosci-wychodzacych",
+      "expect": "trigger",
+      "prompt": "Robimy asystenta, który w imieniu użytkownika odpisuje na maile i wiadomości w komunikatorze, a raz dziennie sam wysyła podsumowanie. Jak zapobiec temu, że wyśle komuś numer karty albo dane o zdrowiu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "klas\\w* danych",
+            "kategori\\w* danych"
+          ],
+          [
+            "nigdy",
+            "zawsze odrzuc\\w*",
+            "zakaz\\w*"
+          ],
+          [
+            "wyraźn\\w* polece\\w*",
+            "na prośbę",
+            "za zgod\\w*"
+          ],
+          [
+            "osobn\\w* klasyfikator",
+            "poza (głównym )?agentem",
+            "osobn\\w* (model|sprawdz)",
+            "niezależn\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

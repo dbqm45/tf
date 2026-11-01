@@ -1,6 +1,6 @@
 # Polityka uprawnień agenta i dostęp do produkcji
 
-> **Spis treści:** 1. Jak Claude Code rozstrzyga reguły (stan sprawdzony) · 2. Tryby uprawnień — kiedy który · 3. Projektowanie listy allow / ask / deny · 4. Czego reguły nie łapią — obejścia · 4a. Piaskownica Bash — opt-in (sprawdzone na Claude Code… · 4b. Drogi, które omijają granicę · 4c. Treść z zewnątrz — warstwy obrony (indirect prompt… · 5. Dostęp agenta do produkcji (CLI lub MCP) · 6. Kod u dostawcy modelu · 7. Przykład
+> **Spis treści:** 1. Jak Claude Code rozstrzyga reguły (stan sprawdzony) · 2. Tryby uprawnień — kiedy który · 3. Projektowanie listy allow / ask / deny · 4. Czego reguły nie łapią — obejścia · 4a. Piaskownica Bash — opt-in (sprawdzone na Claude Code… · 4b. Drogi, które omijają granicę · 4c. Treść z zewnątrz — warstwy obrony (indirect prompt… · 4d. Bramka na skutkach: pokrycie, próg, kolejność warstw · 5. Dostęp agenta do produkcji (CLI lub MCP) · 6. Kod u dostawcy modelu · 7. Przykład
 
 Źródło faktów o Claude Code: dokumentacja „Configure permissions” i „Settings” (code.claude.com/docs/en/permissions,
 dostęp 2026-10-10). Zachowanie zależy od wersji — przy wątpliwości `/permissions` w bieżącej sesji.
@@ -145,6 +145,44 @@ zgłoszenia i wyniki narzędzi, więc atakujący może wstawić tam polecenia. W
 6. **Prompt może wyciec:** w `CLAUDE.md`, promptach agentów, skillach i opisach narzędzi nie ma sekretów, danych
    osobowych ani poufnych reguł biznesowych — wstrzyknięcie albo zwykłe pytanie może je wydobyć. Poufne dane
    agent czyta z miejsca z kontrolą dostępu, gdy są potrzebne (platform.claude.com, „Reduce prompt leak”, 2026-10-20).
+
+## 4d. Bramka na skutkach: pokrycie, próg, kolejność warstw
+Bramka (reguły, hook, klasyfikator LLM) chroni tylko to, co do niej dociera. Projekt i ocena:
+- **Lista skutków, nie nazw narzędzi.** Bramkę definiujesz skutkami: zapis pliku poza bezpiecznym zakresem, ruch
+  sieciowy, odczyt sekretów, uruchomienie procesu, zmiana uprawnień. Bramka na `tools=["bash"]` przepuszcza ten sam
+  skutek przez edycję pliku stanu lub konfiguracji (podmiana narzędzia).
+- **Trzy osobne liczby:**
+  1. **Pokrycie:** jaki odsetek zmian stanu w ogóle trafia do bramki? Liczysz ze śladów wszystkich narzędzi, nie
+     tylko z ocenionych.
+  2. **Błędy klasyfikatora:** FPR i FNR na tym, co ocenił.
+  3. **Pominięcia od końca do końca:** groźne akcje, które przeszły całość.
+
+  Dobre FPR/FNR przy niskim pokryciu nic nie znaczy.
+- **Tryb cienia przed blokowaniem.** Bramka najpierw tylko loguje decyzje. Liczysz obejścia i fałszywe blokady,
+  dopiero potem ją włączasz.
+- **Kolejność warstw:**
+  1. reguły deny i piaskownica, działające na skutku (nie na tekście polecenia);
+  2. klasyfikator w szarej strefie;
+  3. człowiek po serii odmów i dla legalnych akcji wysokiego ryzyka.
+
+  Akcje niszczące, finansowe, wyprowadzające dane i zmieniające uprawnienia nigdy nie zależą od samego klasyfikatora.
+- **Miejsce bramki:** najbliżej narzędzia, po każdym kroku, który może zmienić wywołanie. Edycja argumentów przez
+  człowieka lub agenta po klasyfikacji to wywołanie bez oceny. Licznik odmów eskaluje do człowieka (np. po kilku
+  kolejnych), bo bramka bez niego uczy agenta szukać innego narzędzia.
+- **Próg to polityka, nie stała 0,5.** Ustawiasz go z kosztu fałszywej blokady i kosztu pominięcia, a uzasadnienie
+  zapisujesz w ADR. Liczysz z liczbą bazową: przy 0,1% groźnych wywołań i FPR 0,4% prawdziwy jest ok. 1 alarm na 5,
+  więc alarm musi być tani do sprawdzenia.
+- **Co widzi sędzia:** prośby użytkownika i ładunek wywołania (narzędzie, argumenty, cel), bez prozy i rozumowania
+  agenta. Tekst agenta (albo wstrzyknięty w jego kontekst) może sędziego przekonać.
+- **Dokąd idą argumenty:** sekrety i dane osobowe w argumentach narzędzi trafiają do dostawcy klasyfikatora. Przed
+  wysłaniem maskujesz je albo używasz lokalnego modelu.
+- **Karta warstwy decyzji (do ADR):** skutki objęte bramką, wejście sędziego, próg i jego uzasadnienie, tryb (cień
+  czy blokada), eskalacja, metryki (pokrycie, FPR/FNR, pominięcia), właściciel, data przeglądu.
+
+Źródła: artykuł o pomiarze bramek uprawnień agentów kodujących (AmPermBench, 2026-10; liczby z artykułu: ok. 37%
+zmian stanu przez edycję plików poza klasyfikatorem, 81% niebezpiecznych akcji przeszło całość) [niezweryfikowane];
+code.claude.com/docs/en/permission-modes (sprawdzone 2026-10-29: reguły deny działają w każdym trybie). Liczba
+bazowa w przykładzie wyżej to rachunek ilustracyjny, nie pomiar.
 
 ## 5. Dostęp agenta do produkcji (CLI lub MCP)
 1. Pytanie wstępne: czy ten dostęp jest konieczny do zadania? Logi tylko do odczytu zwykle wystarczą.
