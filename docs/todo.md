@@ -1610,8 +1610,8 @@ Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od 
 Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2026-10-30: 403) — treść pochodziła z wklejek.
 - Z przeglądu 2026-11-01 (pozycje „sprawdzenie w sieci”; fakty wzięte z repozytoriów na GitHubie albo z wyszukiwarki):
   - https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ i https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/ [adres orientacyjny] (listy 2026; użyte repo GenAI-Security-Project/GenAI-LLM-Top10)
-  - https://www.rfc-editor.org/rfc/rfc8705, https://www.rfc-editor.org/rfc/rfc9449, https://www.rfc-editor.org/rfc/rfc8693 (pola `cnf`/`x5t#S256`, DPoP, `act`)
-  - https://docs.cloud.google.com/iam/docs/agent-identity-overview (Google Agent Identity — tylko przez wyszukiwarkę)
+  - RFC 8705, 9449, 8693 — **przekazane przez człowieka 2026-11-01** (PDF); naniesione w `sec-zero-trust-identity`
+  - https://docs.cloud.google.com/iam/docs/agent-identity-overview — **przekazane przez człowieka 2026-11-01**; naniesione
   - https://modelcontextprotocol.io/specification/2026-07-28/changelog (użyte repo modelcontextprotocol/modelcontextprotocol)
   - https://eur-lex.europa.eu/legal-content/PL/TXT/HTML/?uri=CELEX:32024R1689 (art. 50 ust. 2 i 7, art. 113 AI Act; data stosowania art. 50 — 2026-08-02 — potwierdzona już stroną Komisji)
   - https://digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content — **przekazane przez człowieka 2026-11-01** (strona o kodeksie; naniesione w `ai-governance-compliance/references/znakowanie-techniczne.md`). Zostaje: PDF samego kodeksu (sekcja 1, warstwy znakowania) i wytyczne do art. 50 (czy przyjęte, termin 2026-12-02)

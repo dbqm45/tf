@@ -48,26 +48,42 @@ zaciera, kto co zrobił, a skradziony token działa wszędzie.
   (X.509 albo JWT) pobierane przez Workload API (lokalne gniazdo, bez sekretu w kodzie), implementacja referencyjna
   SPIRE. Rotacja certyfikatu jest automatyczna, więc nie ma długiego klucza do wycieku.
 - **Działanie w imieniu użytkownika = token użytkownika związany z kluczem agenta** (sender-constrained):
-  - mTLS: token niesie odcisk certyfikatu klienta (`cnf` → `x5t#S256`, RFC 8705), a serwer zasobu porównuje go
-    z certyfikatem z tego samego połączenia TLS;
-  - DPoP (RFC 9449): agent dołącza do każdego żądania dowód podpisany swoim kluczem;
+  - mTLS (RFC 8705, 2020-02): token w postaci JWT niesie odcisk certyfikatu klienta w `cnf` → `x5t#S256`
+    (base64url SHA-256 z DER certyfikatu, bez `=`), a serwer zasobu porównuje go z certyfikatem z tego samego
+    połączenia TLS; niezgodność → 401 `invalid_token`;
+  - DPoP (RFC 9449, 2023-09): agent dołącza do każdego żądania nagłówek `DPoP` z dowodem — JWT podpisanym swoim
+    kluczem, z metodą i adresem żądania (`htm`, `htu`) i skrótem tokenu (`ath`); token wiąże się z kluczem przez
+    `cnf` → `jkt` (odcisk klucza publicznego). Serwer odrzuca powtórzone dowody (ochrona przed replay);
   - skradziony token bez klucza agenta jest bezużyteczny.
-- **Przejście między usługami: wymiana tokenu** (RFC 8693) zamiast przekazywania oryginału. Nowy token jest
-  zawężony do odbiorcy i zakresu, a roszczenie `act` zapisuje, kto działa w czyim imieniu (zagnieżdżone `act`
-  dla łańcucha). `act` mówi tylko kto, nie z jakimi ograniczeniami na każdym kroku; propozycje łańcucha delegacji to
-  na razie szkice IETF.
+- **Przejście między usługami: wymiana tokenu** (RFC 8693, 2020-01) zamiast przekazywania oryginału. Nowy token
+  jest zawężony do odbiorcy i zakresu. RFC rozróżnia **delegację** (token mówi „A działa za B”) od
+  **podszycia** (A dostaje token, który identyfikuje tylko B) — dla agenta wybierasz delegację, bo audyt widzi
+  wtedy obu. Roszczenie `act` wskazuje bieżącego aktora; zagnieżdżone `act` to historia wcześniejszych aktorów,
+  wg RFC **tylko informacyjna** — decyzję o dostępie podejmujesz na podstawie podmiotu tokenu i bieżącego aktora.
+  `act` nie zapisuje ograniczeń na każdym kroku; propozycje łańcucha delegacji to szkice IETF [niezweryfikowane].
 - **Log audytu:** „instancja X agenta Y w imieniu użytkownika Z, token z wymiany W, zasób R”. Bez tego nie
   odtworzysz incydentu.
 - **Usługi bez obsługi wiązania tokenu** wpisujesz jawnie jako słabsze ogniwo (rejestr ryzyka, sec-risk-management):
   krótszy czas życia tokenu, wąski zakres, osobna sieć.
-- Platformy chmurowe dają to gotowe (np. Google Cloud Agent Identity: tożsamość SPIFFE i certyfikat X.509 na
-  24 h dla każdego agenta, tokeny związane z certyfikatem, mTLS do bramki i DPoP dalej). Zakres usług i status
-  funkcji (część w Preview) sprawdzasz w dokumentacji dostawcy z datą.
+- **Przykład platformy — Google Cloud Agent Identity** (dokumentacja, stan 2026-11-01):
+  - tożsamość SPIFFE na agenta (`spiffe://agents.global.org-<ID>.system.id.goog/resources/<usługa>/<ścieżka>`),
+    w IAM jako `principal://…`; certyfikat X.509 ważny 24 h, odnawiany automatycznie;
+  - w odróżnieniu od kont usługi: niewspółdzielona domyślnie, bez podszywania się i bez długich kluczy;
+  - tokeny do Google Cloud związane z certyfikatem; mTLS do API i bramki, DPoP poza bramką („podwójne wiązanie”);
+    domyślna polityka Context-Aware Access nie pozwala odtworzyć tokenu poza środowiskiem agenta;
+  - trzy tożsamości: użytkownika, agenta i delegowana (agent w imieniu użytkownika przez 3-legged OAuth z magazynu
+    poświadczeń „auth manager”); logi pokazują agenta i użytkownika;
+  - Principal Access Boundary zawęża zasoby agenta niezależnie od innych uprawnień;
+  - **pułapka cyklu życia:** usunięcie agenta nie usuwa powiązań IAM jego tożsamości, a nowy agent (nawet o tej
+    samej nazwie) dostaje nową tożsamość — powiązania czyścisz i nadajesz ręcznie;
+  - HTTP basic auth do narzędzi zewnętrznych jest dostępny, ale niezalecany.
+  Wspierane usługi i status poszczególnych funkcji sprawdzasz w dokumentacji z datą.
 - Bezpieczeństwo samego agenta (wstrzyknięcia, nadmierna sprawczość, ASI03 Identity & Privilege Abuse):
   sec-llm-security.
 
 Źródła (sprawdzone 2026-11-01): github.com/spiffe/spiffe — `standards/SPIFFE.md`, `SPIFFE_Workload_API.md`,
 README (projekt CNCF, status graduated); RFC 8705, 9449, 8693 — numery, tytuły i pola `cnf`/`x5t#S256` i `act`
-potwierdzone w wyszukiwarce i dokumentacji implementacji (rfc-editor.org i ietf.org niedostępne z sieci sesji);
-docs.cloud.google.com/iam/docs/agent-identity-overview (przez wyszukiwarkę, 2026-11-01); G. Blaquiere, „SPIFFE:
+sprawdzone w tekstach RFC przekazanych przez człowieka (RFC 8705 §3.1, RFC 8693 §1.1 i §4.1, RFC 9449 — abstrakt,
+§4, `jkt`); docs.cloud.google.com/iam/docs/agent-identity-overview (treść przekazana przez człowieka
+2026-11-01); G. Blaquiere, „SPIFFE:
 Why Google's New Agent Identity…” (2026-06-09).
