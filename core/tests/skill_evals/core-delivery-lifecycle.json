@@ -222,6 +222,93 @@
           ["defekt\\w*", "odsetek nieudanych", "CFR", "koszt zmiany"]
         ]
       }
+    },
+    {
+      "id": "gen-delivery-lifecycle-1",
+      "expect": "trigger",
+      "prompt": "Jestem PM-em i dostałem od zarządu pomysł na nową apkę do rezerwacji. Dopiero zaczynamy. Co powinno być gotowe, zanim programiści ruszą z kodem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wymaga\\w*|cel\\w*|zakres\\w*|kryteri\\w*"
+          ],
+          [
+            "faz\\w*|etap\\w*"
+          ],
+          [
+            "bramk\\w*|akcept\\w*|zatwierdz\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-delivery-lifecycle-2",
+      "expect": "trigger",
+      "prompt": "no to na jakim etapie my w sumie jesteśmy? mamy makiety, połowę backendu i klienta, który co tydzień zmienia zdanie. kto powinien zatwierdzić, że idziemy do następnego kroku? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "faz\\w*|etap\\w*"
+          ],
+          [
+            "bramk\\w*|akcept\\w*|zatwierdz\\w*"
+          ],
+          [
+            "właściciel\\w*|sponsor\\w*|product owner|klient\\w*|człowiek"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-delivery-lifecycle-3",
+      "expect": "trigger",
+      "prompt": "Wdrożyliśmy wczoraj nową wersję na produkcję i niby działa. Co jeszcze trzeba zrobić po wdrożeniu, żeby uznać, że projekt jest naprawdę skończony, a nie tylko wypchnięty? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "monitor\\w*|metryk\\w*|obserwow\\w*|slo"
+          ],
+          [
+            "utrzyman\\w*|retro\\w*|wnioski|lekcj\\w*|przekazani\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-delivery-lifecycle-4",
+      "expect": "trigger",
+      "prompt": "Chcę, żeby agent AI robił u nas zadania po kolei, a nie wszystko naraz i na chybił trafił. Jak podzielić pracę na etapy i kiedy człowiek ma patrzeć agentowi na ręce? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "etap\\w*|faz\\w*|krok\\w*"
+          ],
+          [
+            "bramk\\w*|przegląd\\w*|zatwierdz\\w*|akcept\\w*"
+          ],
+          [
+            "test\\w*|weryfik\\w*|dowod\\w*|kryteri\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-delivery-lifecycle-5",
+      "expect": "trigger",
+      "prompt": "Jestem liderem zespołu. Dev mówi, że funkcja jest gotowa do wydania, ale nikt nie sprawdził, czy spełnia to, co klient zamawiał. Jakie warunki trzeba spełnić przed wydaniem i kto to odhacza? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kryteri\\w* akceptac\\w*|definition of done|gotowoś\\w*"
+          ],
+          [
+            "bramk\\w*|akcept\\w*|zatwierdz\\w*|odbi\\w*"
+          ],
+          [
+            "właściciel\\w*|klient\\w*|product owner|biznes\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

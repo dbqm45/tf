@@ -4,7 +4,7 @@ description: Użyj przy strategii testów w dowolnym języku — TDD, BDD, piram
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj przy projektowaniu strategii testów i pisaniu testów w dowolnym języku — TDD (red-green-refactor), BDD i Example Mapping, piramida/trofeum testów, dublery testowe, testy kontraktowe, mutacyjne i charakteryzujące. Nie do narzędzi konkretnego frameworka testowego (tool-*) ani pracy testera (qa-*)."
-  slowa: "jakość testów, pokrycie kodu, czy testy coś sprawdzają, mocki, dublery, testy mutacyjne, TDD, czy robić w TDD, kiedy TDD, faza w TDD, rusztowanie i konfiguracja w TDD"
+  slowa: "jakość testów, pokrycie kodu, czy testy coś sprawdzają, mocki, dublery, testy mutacyjne, TDD, czy robić w TDD, kiedy TDD, faza w TDD, rusztowanie i konfiguracja w TDD, ile testów pisać, które przypadki testować, testy przed kodem, po co najpierw test, test od razu zielony, test nic nie sprawdza, testy psują się po zmianie nazwy, testy przywiązane do implementacji, testy raz przechodzą raz nie, testy trwają za długo, udawane serwisy, mocki czy prawdziwe serwisy, nikt nie ufa testom, kruche testy, testy sypią się przy zmianie kodu, testy łamią się przy refaktoryzacji, testy do nowej funkcji, wszystkie przypadki czy tylko ważne, ile przypadków testowych, zmiana nazwy funkcji psuje testy, testy sprawdzają wewnętrzne funkcje"
 ---
 
 # Testowanie

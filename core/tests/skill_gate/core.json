@@ -8,7 +8,7 @@
   "offline": "2026-11-01"
  },
  "core-agent-security": {
-  "fingerprint": "b5a51f48ec06492c",
+  "fingerprint": "2446905d41a875fc",
   "offline": "2026-11-01"
  },
  "core-async-delegation": {
@@ -24,7 +24,7 @@
   "offline": "2026-11-01"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "af2597a07009b2cc",
+  "fingerprint": "21eeda77e9a72729",
   "offline": "2026-11-01"
  },
  "core-factory-update": {
@@ -36,8 +36,8 @@
   "offline": "2026-11-01"
  },
  "core-grounding": {
-  "fingerprint": "55d6d14a13e0f9db",
-  "offline": "2026-10-30"
+  "fingerprint": "70f531fb4e564ba6",
+  "offline": "2026-11-01"
  },
  "core-knowledge": {
   "fingerprint": "8bc15174a285d3f2",

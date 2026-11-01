@@ -158,6 +158,90 @@
           ]
         ]
       }
+    },
+    {
+      "id": "gen-grounding-1",
+      "expect": "trigger",
+      "prompt": "Asystent napisał mi, że ta biblioteka ma flagę --fast-mode od wersji 3.2. Skąd mam wiedzieć, że to prawda, a nie wymysł? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "sprawdź\\w*|zweryfik\\w*"
+          ],
+          [
+            "dokumentac\\w*|changelog|--help|źródł\\w*|repozytori\\w*"
+          ],
+          [
+            "wersj\\w*|dat\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-grounding-2",
+      "expect": "trigger",
+      "prompt": "Kiedy asystent powinien przyznać, że czegoś nie wie, zamiast zgadywać? Mam wrażenie, że zawsze odpowiada pewnym tonem, nawet jak strzela. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "nie wiem"
+          ],
+          [
+            "sprawdz\\w*|źródł\\w*|niezweryfikowan\\w*|założeni\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-grounding-3",
+      "expect": "trigger",
+      "prompt": "Zapytałem o datę wydania i limit zapytań w API zewnętrznego dostawcy, dostałem konkretne liczby. Jak szybko to zweryfikować, zanim wpiszę je do dokumentacji dla klienta? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "źródł\\w* pierwotn\\w*|oficjaln\\w* dokumentac\\w*|dokumentac\\w* (dostawcy|api)"
+          ],
+          [
+            "dat\\w*|z datą|kiedy sprawdz"
+          ],
+          [
+            "niezweryfikowan\\w*|oznacz\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-grounding-4",
+      "expect": "trigger",
+      "prompt": "Wrzuciłem 200-stronicową specyfikację i poprosiłem o podsumowanie wymagań. Odpowiedź wygląda składnie, ale boję się, że część dopisał od siebie. Jak to sprawdzić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "cytat\\w*|stron\\w*|odwołani\\w*|plik:linia|fragment\\w*"
+          ],
+          [
+            "sprawdź\\w*|porównaj\\w*|zweryfik\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-grounding-5",
+      "expect": "trigger",
+      "prompt": "Pracuję z asystentem od rana, rozmowa jest już strasznie długa i zaczął mylić nazwy plików, które sam wcześniej stworzył, i wymyślać funkcje, których nie ma. Co z tym zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kontekst\\w*|długi\\w* rozmow\\w*|zapełni\\w*"
+          ],
+          [
+            "nowa sesj\\w*|/compact|kompakt\\w*|punkt kontroln\\w*|podsumowani\\w*"
+          ],
+          [
+            "sprawdź\\w*|przeczytaj\\w*|plik\\w*|zweryfik\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

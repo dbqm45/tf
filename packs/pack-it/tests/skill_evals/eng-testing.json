@@ -138,6 +138,84 @@
           ]
         ]
       }
+    },
+    {
+      "id": "gen-testing-1",
+      "expect": "trigger",
+      "prompt": "ile testów mam pisać do nowej funkcji liczącej rabaty? wszystkie możliwe przypadki czy tylko te ważne? nie chcę siedzieć nad tym tydzień. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "brzeg\\w*|graniczn\\w*|klas\\w* równoważ\\w*"
+          ],
+          [
+            "ryzyk\\w*|ważn\\w*|reguł\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-testing-2",
+      "expect": "trigger",
+      "prompt": "Czemu mam pisać testy przed kodem, skoro i tak wiem, co ma robić funkcja? Wydaje mi się, że to strata czasu, przekonaj mnie albo powiedz, że mam rację. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "czerwon\\w*|najpierw (test|nie przechodzi)|red"
+          ],
+          [
+            "projekt\\w*|interfejs\\w*|wymaga\\w*|zachowani\\w*|regresj\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-testing-3",
+      "expect": "trigger",
+      "prompt": "Napisałem test, odpaliłem go od razu i jest zielony, zanim cokolwiek zmieniłem w kodzie. To dobrze czy źle? Mam wrażenie, że on nic nie sprawdza. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "czerwon\\w*|nie przechodzi|powinien (najpierw )?(oblać|nie przejść|failować)|fail"
+          ],
+          [
+            "asercj\\w*|nic nie sprawdza|sprawdza\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-testing-4",
+      "expect": "trigger",
+      "prompt": "Za każdym razem jak zmieniamy w kodzie nazwę jakiejś wewnętrznej funkcji, sypie się 40 testów, choć aplikacja działa tak samo. Co robimy źle i jak to naprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "zachowani\\w*|publiczn\\w*|interfejs\\w*|api"
+          ],
+          [
+            "implementacj\\w*|szczegół\\w*|wewnętrzn\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-testing-5",
+      "expect": "trigger",
+      "prompt": "Mamy testy, które raz przechodzą, raz nie, i cały zestaw trwa już 25 minut. Ludzie przestali im ufać i klikają ponów. Od czego zacząć porządki, a kiedy używać udawanych serwisów zamiast prawdziwych? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "niestabiln\\w*|flaky|kwarantann\\w*"
+          ],
+          [
+            "mock\\w*|dubler\\w*|atrap\\w*|zaślepk\\w*|fake"
+          ],
+          [
+            "przyczyn\\w*|czas\\w*|kolejnoś\\w*|stan\\w* współdzielon\\w*|izolac\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

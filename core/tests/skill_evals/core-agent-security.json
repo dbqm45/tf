@@ -293,6 +293,90 @@
           ]
         ]
       }
+    },
+    {
+      "id": "gen-agent-security-1",
+      "expect": "trigger",
+      "prompt": "Agent w trakcie pracy znalazł w zgłoszeniu na GitHubie komendę typu curl ... | bash i chce ją odpalić, żeby naprawić błąd. Mam mu pozwolić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "nie (pozwalaj|uruchamiaj|odpalaj)|nie wolno|odmów\\w*|zablokuj\\w*"
+          ],
+          [
+            "treś\\w* (z zewnątrz|zgłoszeni)|niezaufan\\w*|clickfix|wstrzykni\\w*|prompt injection"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-agent-security-2",
+      "expect": "trigger",
+      "prompt": "jakie uprawnienia dać agentowi na moim laptopie żeby mógł edytować kod i odpalać testy, ale nie ruszał reszty dysku ani nie kasował rzeczy na serwerze? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "allow|deny|ask|uprawnie\\w*"
+          ],
+          [
+            "piaskownic\\w*|sandbox|kontener\\w*|katalog\\w* robocz\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-agent-security-3",
+      "expect": "trigger",
+      "prompt": "Zauważyłem, że agent nagle zaczął czytać pliki z kluczami i próbuje wysłać coś na nieznany adres, a przecież prosiłem go tylko o poprawę literówki w README. Co robię, to wygląda na włamanie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "zatrzym\\w*|przerwij\\w*|odetnij\\w*|odłącz\\w*|stop"
+          ],
+          [
+            "zgłoś\\w*|człowiek\\w*|zespół bezpieczeństwa|nie naprawiaj"
+          ],
+          [
+            "rotuj\\w*|unieważn\\w*|klucz\\w*|sekret\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-agent-security-4",
+      "expect": "trigger",
+      "prompt": "Kolega z pracy podesłał mi wtyczkę i serwer MCP z jakiegoś losowego repo, mówi że super przyspiesza robotę. Da się to bezpiecznie dodać do agenta, na co patrzeć przed instalacją? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "przeczytaj\\w*|przejrzyj\\w*|audyt\\w*|sprawdź\\w* kod"
+          ],
+          [
+            "wersj\\w*|przypi\\w*|źródł\\w*|zaufan\\w*"
+          ],
+          [
+            "uprawnie\\w*|opis\\w* narzędzi|dostęp\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "gen-agent-security-5",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby agent sam poprawiał błędy w naszym CI i otwierał PR-y bez nikogo przy komputerze. Jak to ustawić, żeby nie miał dostępu do produkcyjnych sekretów i nie narobił szkód? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "sekret\\w*|token\\w*|poświadcz\\w*"
+          ],
+          [
+            "uprawnie\\w*|najmniejsz\\w*|tylko do odczytu|zapis\\w*"
+          ],
+          [
+            "przegląd\\w*|człowiek\\w*|zatwierdz\\w*|pr"
+          ]
+        ]
+      }
     }
   ]
 }
