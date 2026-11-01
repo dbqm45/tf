@@ -166,6 +166,32 @@
           ["orkiestrator\\w*", "kod (sprawdza|wykonuje)", "model proponuje", "intencj\\w+ zapisu", "idempotencj\\w+"]
         ]
       }
+    },
+    {
+      "id": "bramka-llm-fallback-budzet",
+      "expect": "trigger",
+      "prompt": "Budujemy wspólną bramkę (gateway) przed kilkoma dostawcami LLM dla wszystkich funkcji firmy, z automatycznym przełączaniem na innego dostawcę przy awarii. Na co uważać w projekcie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["te same ograniczenia", "dane .* nie mogą", "rezydencj\\w+", "cicha utrata jakości", "słabszy model"],
+          ["trasy jawne", "per funkcj\\w+", "wyłącznik\\w*"],
+          ["token\\w*", "max_tokens", "budżet\\w*"],
+          ["ponowie\\w+ w jednej warstwie", "wspólny budżet", "każda warstwa ponawia", "anulow\\w+ u dostawcy"]
+        ]
+      }
+    },
+    {
+      "id": "wycofanie-zmiany-ai-indeks",
+      "expect": "trigger",
+      "prompt": "Po wdrożeniu nowego promptu w naszym asystencie RAG jakość spadła, więc wróciliśmy do starego promptu, ale odpowiedzi dalej są inne niż przed wdrożeniem. Dlaczego i jak planować wycofania? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wersj\\w+ indeksu", "migawk\\w+ indeksu", "indeks\\w*"],
+          ["cał\\w+ konfiguracj\\w+", "model\\w*, (definicj|narzędzi)", "ustawieni\\w+ wyszukiwania"],
+          ["cache", "pamięć podręczn\\w+"],
+          ["warunk\\w+ wycofania", "przed wydaniem", "z góry"]
+        ]
+      }
     }
   ]
 }

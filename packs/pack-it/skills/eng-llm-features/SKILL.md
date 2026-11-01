@@ -4,7 +4,7 @@ description: Użyj, gdy budujesz w kodzie funkcję lub agenta z LLM — SDK, str
 metadata:
   przeglad: "2027-01-09"
   katalog: "Użyj, gdy piszesz kod aplikacji lub narzędzia, który wywołuje model językowy — funkcja LLM w produkcie, własny agent (recenzent diffu, triaż zgłoszeń, bot w CI), agent jako usługa — wybór kategorii SDK (gotowy agent czy agent do złożenia), kontrakt wyjścia i structured output z opisami pól, pętla narzędziowa i drabina sprawczości, limit kroków i budżet kosztu, telemetria, sesje i stan, dziedziczenie konfiguracji repo, prywatność ścieżki uwierzytelnienia, wstrzykiwanie poleceń przez dane, ewaluacje promptu (promptfoo). Nie do hostowania modeli na GPU (ops-ai-inference), doboru modelu dla naszej pracy z agentem (core-cost-control), UI czatu (fe-architecture) ani bezpieczeństwa agenta-programisty (core-agent-security); referencji API i SDK Claude (wbudowany skill claude-api)."
-  slowa: "agent sdk, claude agent sdk, vercel ai sdk, ai sdk, openrouter, structured output, json schema, zod, pydantic, wymuszony format, tool calling, wywołanie narzędzi, pętla narzędziowa, maxTurns, maxBudgetUsd, stepCountIs, własny agent, bot do review, funkcja llm, integracja z modelem, prompt systemowy, promptfoo, ewaluacja promptu, llm-as-a-judge"
+  slowa: "agent sdk, claude agent sdk, vercel ai sdk, ai sdk, openrouter, structured output, json schema, zod, pydantic, wymuszony format, tool calling, wywołanie narzędzi, pętla narzędziowa, maxTurns, maxBudgetUsd, stepCountIs, własny agent, bot do review, funkcja llm, integracja z modelem, prompt systemowy, promptfoo, ewaluacja promptu, llm-as-a-judge, agent ma ponad 100 narzędzi, wiele narzędzi z serwerów MCP, każde wywołanie modelu drogie i wolne, leniwe ładowanie narzędzi, wyszukiwarka narzędzi"
 ---
 
 # Funkcja i agent LLM we własnym kodzie
@@ -63,6 +63,11 @@ modelu → … → odpowiedź bez wywołań kończy pętlę. Jedno okrążenie =
 - Koszt czytasz z wyniku (gotowy agent: koszt USD, tury, czas, rozbicie per model; SDK do złożenia: tokeny, a koszt
   od dostawcy lub tokeny × cennik). Zapisujesz per przebieg i agregujesz (per PR, per typ zdarzenia, per tydzień).
 - Telemetria per krok (tokeny, powód zakończenia) wyłapuje zapętlenie, zanim dobije do limitu.
+- **Agent z wieloma narzędziami:** definicje narzędzi ładowane leniwie (wyszukiwarka narzędzi zamiast setek
+  definicji w każdym wywołaniu — nazwę i warunki mechanizmu u dostawcy sprawdź w dokumentacji, dla Claude: skill
+  `claude-api`); kaskada „tani model najpierw, eskalacja przy niskiej pewności” zamiast routera zgadującego trudność
+  z promptu (wyuczone routery rzadko wyraźnie biją proste reguły [niezweryfikowane]); deterministyczne wyniki narzędzi
+  (SQL, wyszukiwanie) w zwykłym cache z TTL; stała część promptu przed zmienną, bez znaczników czasu w prefiksie.
 - **Rachunek per zadanie:** w śladzie każdego wywołania zapisujesz pięć liczb: tokeny wejścia, odczyt cache, zapis
   cache, wyjście i myślenie. Cenę liczysz przy odczycie raportu, bo cennik się zmienia. Raportujesz koszt na
   *ukończone* zadanie (wszystkie wywołania i ponowienia jednej sprawy) jako p50/p95/p99, a nie średnią na wywołanie.
