@@ -4,7 +4,7 @@ description: Użyj, gdy pytasz fabrykę o wiedzę i chcesz odpowiedzi z cytatem 
 metadata:
   przeglad: "2027-04-22"
   katalog: "Użyj, gdy odpowiedź ma wynikać z bazy wiedzy fabryki, a nie z pamięci modelu — wyszukiwanie w skillach, notatkach zespołu, zbadanych faktach i pobranych źródłach (kb.py search) z cytatem plik:linia, URL i datą; rejestry zaufanych źródeł nakładek (references/zrodla.json: obszary, ranga, licencja); dodanie dokumentu lub pliku partnera (kb.py ingest), aktualność cache (kb.py status); forma odpowiedzi z propozycjami rozwiązań i planem wdrożenia. Nie do procedury badania faktów w sieci (core-source-research) ani do doboru person i zespołu (core-problem-routing)."
-  slowa: "zapytaj fabrykę, baza wiedzy, RAG, knowledge base, kb.py, wyszukaj w fabryce, odpowiedź z cytatem, nie z pamięci, źródło odpowiedzi, plik:linia, rejestr źródeł, zaufane źródła, zrodla.json, źródła nakładki, dodać dokument do fabryki, dodać PDF, dokument partnera, ingest, cache źródeł, licencja dokumentu, czy mogę wrzucić do repozytorium, notatki zespołu, docs/knowledge, aktualność źródeł, stare źródło, propozycja rozwiązania, wsparcie wdrożenia"
+  slowa: "zapytaj fabrykę, baza wiedzy, RAG, knowledge base, kb.py, wyszukaj w fabryce, odpowiedź z cytatem, nie z pamięci, źródło odpowiedzi, plik:linia, rejestr źródeł, zaufane źródła, zrodla.json, źródła nakładki, dodać dokument do fabryki, dodać PDF, dokument partnera, ingest, cache źródeł, licencja dokumentu, czy mogę wrzucić do repozytorium, notatki zespołu, docs/knowledge, aktualność źródeł, stare źródło, propozycja rozwiązania, wsparcie wdrożenia, wiki projektu, agent utrzymuje wiki, indeks sprzed tygodni, generowany indeks kodu, świeżość wiedzy, ustalenia zespołu, agent łamie ustalenia, decyzje przed edycją, code_refs, notatki w docs/knowledge"
 ---
 
 # Baza wiedzy fabryki — „zapytaj fabrykę”
@@ -26,6 +26,9 @@ Sieć: tylko `kb.py ingest` łączy się z adresem z rejestru albo podanym w wyw
 
 Pełne teksty zostają poza gitem, bo normy, specyfikacje i dokumenty partnerów często mają ograniczenia redystrybucji.
 Do repozytorium trafiają rejestry i własne notatki, czyli streszczenie z cytatem, a nie kopia dokumentu.
+Kto co zmienia (źródła, strony agenta, decyzje zespołu), nagłówek notatki (`verified` tylko człowiek), pojęcia
+przypięte do ścieżek przed edycją, plik instrukcji czy pipeline i świeżość generowanej wiedzy:
+`references/notatki-i-wiki.md`.
 
 ## Procedura „zapytaj fabrykę”
 1. **Doprecyzuj pytanie:** kogo dotyczy, jaki rynek lub jurysdykcja, jaka wersja standardu albo umowy. Gdy człowieka

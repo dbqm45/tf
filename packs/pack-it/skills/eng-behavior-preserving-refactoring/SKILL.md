@@ -4,6 +4,7 @@ description: Użyj przy refaktoryzacji bez zmiany zachowania (legacy, zmiana par
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj przy refaktoryzacji zmieniającej kształt lub idiom kodu bez zmiany zachowania (legacy, wydzielenie rdzenia domeny, zmiana paradygmatu, np. bogaty agregat → decider) — zamrożony kontrakt, testy czterowarstwowe, przepięcie poziomu testów, rejestr asercji, dowód zachowania. Nie do drobnych refaktoryzacji (eng-clean-code) ani projektowania przypadków (qa-test-design)."
+  slowa: "poprawka w starym module, naprawić błąd w legacy, nie zepsuć innych systemów, chronione zachowania, kontrakt zmiany, refaktoryzacja legacy"
 ---
 
 # Refaktoryzacja z dowodem zachowania
@@ -23,6 +24,9 @@ najpierw test istniejącej ścieżki, potem edycja. Wybór, CO refaktoryzować i
    z błędem to RÓŻNE zachowania.
 3. **Granica spójności:** co jest ładowane i zapisywane atomowo, gdzie są blokady/wersje.
 Każda zmiana któregoś z tych trzech wymaga jawnej zgody człowieka i wpisu w `decisions.md` — to już nie jest refaktoryzacja.
+Zmiana w legacy, która **ma** zmienić zachowanie (naprawa, mała funkcja), a reszta ma zostać: kontrakt zmiany
+(warunek, wynik, chronione zachowania z decyzją, zakres plików, dowód naprawy i braku regresji) —
+`references/kontrakt-zmiany.md`.
 
 ## Testy w czterech warstwach
 | Warstwa | Zmienia się przy refaktoryzacji? | Rola |

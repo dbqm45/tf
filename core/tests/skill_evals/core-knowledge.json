@@ -66,6 +66,65 @@
       "expect": "no-trigger",
       "prompt": "Jaka jest najnowsza stabilna wersja Reacta, kiedy wyszła i co zgłaszają użytkownicy po aktualizacji? Odpowiedz zwięźle.",
       "neighbor": "core-source-research"
+    },
+    {
+      "id": "wiki-strefy-swiezosc",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby agent utrzymywał w repo wiki projektu z notatek w docs/knowledge i z pobranych dokumentów, a generowany indeks kodu odświeżał hook. Ostatnio indeks okazał się sprzed trzech tygodni, choć hook raportował sukces. Jak to poukładać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "tylko do odczytu",
+            "źródł\\w* (nie zmienia|bez zmian)"
+          ],
+          [
+            "za zgodą",
+            "zmienia\\w* tylko człowiek",
+            "decyzj\\w* zespołu"
+          ],
+          [
+            "commit\\w*",
+            "znacznik\\w* czasu",
+            "stale_after",
+            "data wygenerowania"
+          ],
+          [
+            "ci\\b",
+            "kontrol\\w*",
+            "alarm\\w*",
+            "prog\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pojecia-przypiete-do-sciezek",
+      "expect": "trigger",
+      "prompt": "Agent w naszym repo regularnie łamie ustalenia zespołu, np. zmienia moduł płatności, choć zdecydowaliśmy, że jego API jest zamrożone. Decyzje są spisane w docs/knowledge. Jak sprawić, żeby agent sprawdzał je przed edycją? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ścieżk\\w*",
+            "code_refs",
+            "applies_to",
+            "plik\\w* (których|którego) dotycz"
+          ],
+          [
+            "przed (pierwszą )?edycj",
+            "zanim (zmieni|edytuje)"
+          ],
+          [
+            "constraint",
+            "niezmienni\\w*",
+            "ograniczeni\\w*"
+          ],
+          [
+            "hold",
+            "zapyta\\w* człowiek",
+            "stop"
+          ]
+        ]
+      }
     }
   ]
 }

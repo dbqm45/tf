@@ -58,6 +58,37 @@
       "expect": "no-trigger",
       "prompt": "Mam długą funkcję z kilkoma zagnieżdżonymi if-ami i parametrem-flagą. Jak ją uporządkować małymi krokami? Odpowiedz zwięźle.",
       "neighbor": "eng-clean-code"
+    },
+    {
+      "id": "kontrakt-zmiany-legacy",
+      "expect": "trigger",
+      "prompt": "Mamy naprawić błąd w starym module rozliczeń, którego używa kilka innych systemów. Agent ma zrobić poprawkę. Jak opisać mu zadanie, żeby nie zepsuł czegoś, na czym polegają inni? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "chronion\\w* zachowa",
+            "zachowa\\w* do (ochrony|zachowania)"
+          ],
+          [
+            "zakres\\w* plików",
+            "dozwolon\\w* (plik|zakres)"
+          ],
+          [
+            "czerwon\\w*.{0,80}(bazow|przed)",
+            "przed zmianą",
+            "commit\\w* bazow"
+          ],
+          [
+            "wywołując\\w*",
+            "konsument\\w*",
+            "incydent\\w*"
+          ],
+          [
+            "decyzj\\w*",
+            "właściciel\\w*"
+          ]
+        ]
+      }
     }
   ]
 }
