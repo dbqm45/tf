@@ -1265,7 +1265,7 @@ orkiestracji, ślady od pierwszego dnia, złoty zbiór i wdrożenie etapami są 
 ## Ontologia obserwowalności i wiki z LLM w dwóch wersjach (artykuły „Ontology-Driven Observability: Building an End-to-End Knowledge Graph at Netflix Scale”, Netflix Tech Blog, 2026-10-16; „I Built Karpathy's LLM Wiki Twice”, L. Bernardo, 2026-05-17; zapisane 2026-10-29)
 Przegląd 2026-10-29: `ops-sre-incidents` i `ops-observability` nie mają wątku łączenia danych z różnych narzędzi
 (metryki, alerty, incydenty, wdrożenia, czat) przez wspólny model encji. Liczby Netflixa [niezweryfikowane].
-- [ ] **`ops-observability` / `ops-sre-incidents`, wspólny model encji dla dochodzenia:** większość czasu analizy
+- [x] **`ops-observability` / `ops-sre-incidents`, wspólny model encji dla dochodzenia** (zrobione 2026-10-31: `ops-observability`, „Agent AI i dochodzenie po incydencie”)**:** większość czasu analizy
   przyczyny (u Netflixa ok. 4 h) to odtwarzanie powiązań między narzędziami, które nazywają to samo inaczej
   (aplikacja / usługa / klaster). Zasady do skilla: tożsamość najpierw — encja powstaje tylko po walidacji
   w jednym autorytatywnym katalogu (bez ogólnego typu „usługa”, który znaczy cztery rzeczy); ontologia jako kod
@@ -1298,7 +1298,7 @@ Muse) [niezweryfikowane].
   proponuje agent, jednokierunkowe rozstrzyga właściciel przed kodem. Spójność spec / plan / zadania: każda decyzja
   w trzech artefaktach albo jawne „nie dotyczy” (cztery różne braki: brak decyzji, sprzeczność, zgodny błąd, ślad bez
   treści). Strona pdi: pola `verify` i `reversibility` w kontrakcie decyzji (dbqm45/pdi TODO).
-- [ ] **`ai-agents`, interfejs harnessu od strony modelu:** operacja (jednostka intencji) realizowana przez narzędzie,
+- [x] **`ai-agents`, interfejs harnessu od strony modelu** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §4)**:** operacja (jednostka intencji) realizowana przez narzędzie,
   narzędzie złożone (kod, deterministycznie) albo skill (instrukcje) — dojrzewa od skilla do narzędzia złożonego;
   skill odwołuje się do narzędzi po id, nie kopiuje ich schematów (jedno miejsce prawdy); mały zestaw prymitywów
   (`search_memory`, `list_capabilities`, `search_operations`, `load_operation`, `execute_operation`, `run_code`,
@@ -1348,7 +1348,7 @@ kontekstu +20% kosztu) [niezweryfikowane].
   wszystkich skilli widocznych w sesji (209 skilli) i rozważyć `disable-model-invocation` dla rzadko
   wywoływanych automatycznie; specyfikacja bez ścieżek plików i fragmentów kodu (starzeją się, agent i tak by
   za nimi szedł). Zmiany skilli — przez scenariusze ewaluacji i bramkę, płatny pomiar za zgodą.
-- [ ] **`ops-observability` / `ai-agents`, SLO agenta:** z OTel „za darmo” tylko dostępność i opóźnienie wywołania;
+- [x] **`ops-observability` / `ai-agents`, SLO agenta** (zrobione 2026-10-31: `ops-observability`, „Agent AI i dochodzenie po incydencie”)**:** z OTel „za darmo” tylko dostępność i opóźnienie wywołania;
   resztę dodaje aplikacja: stan końcowy zadania (w tym „słusznie odmówił” i „przekazał człowiekowi” — ani sukces,
   ani porażka), klasa zadania, liczba kroków, interwencja człowieka, wersja przy odczycie i zapisie pamięci roboczej
   (wykrywanie nieaktualnego odczytu). **Powód odrzucenia narzędzia zwraca serwer narzędzia** (zła struktura / zła
@@ -1379,7 +1379,7 @@ cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass r
   zgoda z alertem); strumieniowanie: rozliczenie po końcu strumienia, anulowanie wywołania u dostawcy po rozłączeniu
   klienta, odpowiedź przerwana w połowie oznaczona jako częściowa, bez cichego zszywania dwóch; logowanie treści
   promptów tylko po włączeniu dla trasy, z retencją; miara „odsetek fallbacków” jako wczesne ostrzeżenie.
-- [ ] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (Anthropic, wyżej):
+- [x] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §3) (Anthropic, wyżej):
   pierwsza sesja przygotowuje środowisko i listę zadań, każda kolejna robi jeden przyrost i zostawia artefakty
   przekazania (postęp, stan testów); oddzielny ewaluator z jawnymi kryteriami; reguła końca sprawdzana przez test
   lub ewaluator, nie przez deklarację agenta. Recenzent tylko do odczytu (raport, nie poprawka — inaczej znika
@@ -1479,7 +1479,7 @@ Przegląd 2026-10-30: następujące elementy są już w `ai-agents` i w pozycjac
 
 Artykułów i obrazów z Medium nie dało się otworzyć (proxy 403), podobnie docs.temporal.io, docs.langchain.com
 i agentskills.io. Braki:
-- [ ] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem:**
+- [x] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §1)**:**
   - **Dzierżawa zadania z wygaśnięciem i biciem serca.** Wykonawca, który zniknął, traci zadanie, a inny wznawia
     je z trwałego stanu.
   - **Zakończenie i zapis sprawdzają bieżącego właściciela i wersję rekordu.** Spóźniony wykonawca nie nadpisze
@@ -1525,7 +1525,7 @@ hanxiao.io. Pozostałe liczby z artykułu [niezweryfikowane], w tym:
 - kaskada Sena: 88,4% automatycznie.
 
 Braki:
-- [ ] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”:**
+- [x] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §2; reguły hooków jako predykaty nad logiem — zmiana hooków tylko na prośbę)**:**
   - Przegląd kroków agenta: krok, którego jedynym sprawdzeniem jest dalszy tekst tego samego modelu, jest przyjęty
     na wiarę.
   - Reguła trafia w miejsce zależne od modalności:

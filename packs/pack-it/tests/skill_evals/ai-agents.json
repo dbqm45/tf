@@ -160,6 +160,32 @@
           ["SIGKILL", "test\\w* odzyskiwania", "zabi\\w+ proces", "kill"]
         ]
       }
+    },
+    {
+      "id": "wielu-wykonawcow-wspolny-stan",
+      "expect": "trigger",
+      "prompt": "Kilku agentów-wykonawców pobiera zadania z jednej kolejki i zapisuje wyniki w wspólnym rekordzie. Czasem wykonawca znika w połowie, a czasem spóźniony nadpisuje nowszy wynik. Jak to zaprojektować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["dzierżaw\\w+", "lease", "bicie serca", "heartbeat", "wygaś\\w+"],
+          ["wersj\\w+ rekordu", "bieżąc\\w+ właściciel\\w*", "compare-and-set", "optymistyczn\\w+", "utracon\\w+ aktualizac\\w+"],
+          ["ponowieni\\w+", "wznowieni\\w+", "kompensac\\w+"],
+          ["predykat\\w*", "ukończeni\\w+ (to|jako)", "nie (zdanie|deklaracj)", "walidacj\\w+ przeszł"]
+        ]
+      }
+    },
+    {
+      "id": "swiadek-kroku-agenta",
+      "expect": "trigger",
+      "prompt": "Nasz agent sprzedażowy ma w prompcie regułę: „przed wysłaniem oferty z rabatem powyżej 20% musi być zatwierdzenie kierownika w ciągu ostatniej godziny”. Jak sprawić, żeby ta reguła naprawdę działała? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["poza (modelem|promptem)", "w kodzie", "bramk\\w+", "harness"],
+          ["dziennik\\w*", "log\\w* zdarzeń", "reguł\\w+ czasow\\w+", "sekwencj\\w+"],
+          ["powtarzaln\\w+", "deterministyczn\\w+", "ten sam stan"],
+          ["świadek", "kto sprawdz\\w+", "zapis\\w* (w logu|kto)"]
+        ]
+      }
     }
   ]
 }

@@ -24,6 +24,22 @@ metadata:
 - OpenTelemetry; propagacja kontekstu (`traceparent`) przez HTTP i kolejki.
 - `trace_id` w każdym logu, aby łączyć logi ze śladami.
 
+### Agent AI i dochodzenie po incydencie
+- **SLO agenta:** z OpenTelemetry dostajesz tylko dostępność i opóźnienie wywołania. Resztę dodaje aplikacja jednym
+  stabilnym rekordem na koniec zadania: stan końcowy (także „słusznie odmówił” i „przekazał człowiekowi” — ani sukces,
+  ani porażka), klasa zadania, liczba kroków, interwencja człowieka, wersja przy odczycie i zapisie pamięci roboczej.
+  SLO liczysz z tego rekordu, nie z backendu śladów (nazwy spanów i typy atrybutów się zmieniają); nazwy atrybutów
+  wg konwencji GenAI OpenTelemetry tam, gdzie istnieją (wersję sprawdź przed użyciem).
+- **Powód odrzucenia narzędzia zwraca serwer narzędzia** (zła struktura / zła wartość / błąd wewnętrzny): awaria
+  narzędzia → alarm do właściciela zależności, błędne wywołanie przez agenta → zgłoszenie dla zespołu agenta.
+- **Wspólny model encji do dochodzenia:** większość czasu analizy przyczyny to odtwarzanie powiązań między
+  narzędziami, które nazywają to samo inaczej. Encja powstaje dopiero po walidacji w jednym autorytatywnym katalogu
+  (bez ogólnego typu „usługa”, który znaczy cztery rzeczy); ontologia jako kod (PR, testy, wersje); wyjście modelu
+  ograniczone do wyliczeń i typów; wolne źródło degraduje graf, ale go nie blokuje. Silnik korelacji **proponuje
+  łańcuchy z dowodami i pewnością** (np. „wdrożenie → błąd w logach” w oknie czasu), nie wydaje werdyktów. Z kanału
+  incydentu zapisujesz rozumowanie (odrzucone hipotezy, co zadziałało, kto wiedział) — postmortem jako dane
+  (ops-sre-incidents). Zmiany proponowane przez agentów zatwierdza człowiek.
+
 ## Healthchecki
 - `/health/live` — proces żyje (bez zależności).
 - `/health/ready` — gotowy na ruch (baza, cache osiągalne). Orkiestrator kieruje ruch tylko do „ready”.

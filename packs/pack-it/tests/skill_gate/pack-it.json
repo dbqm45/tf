@@ -1,7 +1,7 @@
 {
  "ai-agents": {
-  "fingerprint": "54d3b812e17f4b27",
-  "offline": "2026-10-31"
+  "fingerprint": "441c8f3c27bd6b60",
+  "offline": "2026-11-01"
  },
  "ai-computer-vision": {
   "fingerprint": "111f72476294f01d",
@@ -364,8 +364,8 @@
   "offline": "2026-10-22"
  },
  "ops-observability": {
-  "fingerprint": "5d0437d4c68c576d",
-  "offline": "2026-10-22"
+  "fingerprint": "4824334bf8153131",
+  "offline": "2026-11-01"
  },
  "ops-platform-engineering": {
   "fingerprint": "b99e676be94987d8",
