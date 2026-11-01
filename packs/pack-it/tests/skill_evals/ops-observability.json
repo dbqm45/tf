@@ -46,6 +46,32 @@
       "expect": "no-trigger",
       "prompt": "W mojej funkcji liczącej rabat wynik jest błędny dla zamówień powyżej 1000 zł. Jak znaleźć błąd w logice biznesowej?",
       "neighbor": "eng-clean-code"
+    },
+    {
+      "id": "slo-agenta-ai",
+      "expect": "trigger",
+      "prompt": "Mamy agenta AI w produkcji z tracingiem OpenTelemetry. Chcemy ustawić SLO, ale z śladów widzimy tylko dostępność i opóźnienie wywołań. Co jeszcze mierzyć i skąd to brać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["stan\\w* końcow\\w+", "wynik\\w* zadania", "ukończon\\w+ zadani\\w+"],
+          ["odmów\\w+", "odmow\\w+", "przekaz\\w+ człowiekowi", "eskalac\\w+"],
+          ["rekord\\w*", "zdarzeni\\w+ (na koniec|końcow)", "emitowan\\w+ przez aplikacj"],
+          ["powód odrzucenia", "serwer\\w* narzędzi\\w*", "błąd narzędzia", "właściciel\\w* zależności"]
+        ]
+      }
+    },
+    {
+      "id": "wspolny-model-encji-incydent",
+      "expect": "trigger",
+      "prompt": "Przy incydentach analiza przyczyny trwa godzinami, bo logi, metryki, wdrożenia i katalog usług nazywają ten sam komponent inaczej (aplikacja, usługa, klaster). Jak to uporządkować, także z pomocą AI? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["katalog\\w*", "autorytatywn\\w+", "jedno źródło", "tożsamoś\\w+"],
+          ["ontologi\\w+", "model encji", "jako kod"],
+          ["proponuje", "łańcuch\\w*", "dowod\\w*", "pewnoś\\w+", "korelac\\w+"],
+          ["postmortem\\w*", "odrzucon\\w+ hipotez", "rozumowani\\w+"]
+        ]
+      }
     }
   ]
 }
