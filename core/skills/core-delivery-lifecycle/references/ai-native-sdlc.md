@@ -161,6 +161,25 @@ uruchamiania każdego etapu, a kończy pętlą, w której zaakceptowany artefakt
 - Sekrety w kontekście agenta (core-agent-security).
 - Nienastrojony przegląd przez AI, który zasypuje zespół drobiazgami.
 
+## 13. Refinement, osąd i miary autonomii
+- **Wykonawca opowiada rozwiązanie własnymi słowami** przed implementacją (problem, zachowanie, sposób, ryzyka,
+  podjęte decyzje), a właściciel sprawdza zgodność z zamiarem — człowiek nie jest tylko przekaźnikiem między agentami.
+  Makiety z istniejących komponentów i systemu projektowego przed kodem to test wspólnego rozumienia (sprawdź, czy
+  nie przemycają nowych decyzji produktowych).
+- **Osąd nie ucieka do kroków:** refinement kończy się zgłoszeniem napisanym przez człowieka dla człowieka, nie
+  wygenerowanym opisem ani promptem. Jeśli nikt nie umie wyjaśnić, jak praca zostanie zrobiona, refinement nie jest
+  skończony. Pogłębiony przegląd (wspólne testowanie, przejście przez rozwiązanie z grupą) tylko powyżej progów
+  wielkości zmiany i obszaru ryzyka, nie przy każdym PR. Miary przepływu: rozmiar PR, czas do pierwszego przeglądu,
+  liczba otwartych PR na osobę.
+- **Miary autonomii** (odsetek scalonych PR autorstwa agenta, godziny przeglądu człowieka na zmianę, czas zadania od
+  początku do końca) to miary aktywności. Jako cel są podatne na Goodharta, bo agent wypełni każdy licznik.
+  Raportujesz je tylko **w parze z miarą wyniku**: odsetek defektów, które dotarły do użytkownika, odsetek nieudanych
+  zmian, koszt zmiany, czas od zamiaru do produkcji, ruch metryki biznesowej. Gdy poprawia się tylko jedna z pary,
+  cel jest niespełniony. Dane z systemów źródłowych (repo, CI, incydenty), nie z samooceny. Kokpit:
+  pack-it: eng-continuous-delivery.
+Źródła: Pragmatic Coders, „Refinement with AI…” (2026-10-01); A. Honchar, „Agentic SDLC: Strategic Reading List”
+(2026-05-27); J. Wąsowski, „SDD Factory OKRs” (2026-10-21); progi i odsetki z artykułów [niezweryfikowane].
+
 ## Źródła
 - Anthropic, L. Claxton, „The AI-Native SDLC Playbook”, 21.08.2026 — claude.com/blog/the-ai-native-sdlc-playbook
 - Anthropic Academy, kurs „AI-Native SDLC Playbook” (14 lekcji) — academy.claude.com/courses/ai-native-sdlc-playbook

@@ -28,6 +28,11 @@ zrównoważone tempo, prostota — sztuka maksymalizacji pracy **niewykonanej**,
 - Wizualizuj przepływ, **ograniczaj pracę w toku (WIP)**, aktywnie zarządzaj przepływem, jawne zasady (np. definicja „gotowe” dla kolumn), doskonal.
 - **Metryki przepływu**: WIP, przepustowość (throughput), czas cyklu (cycle time), **wiek elementu pracy** (work item age — najlepszy wczesny sygnał problemu).
 - Zasada: kończ, zanim zaczniesz nowe („stop starting, start finishing”).
+- **Specyfikacja w cyklu (praca z agentami):** backlog i refinement na poziomie celu i zamiaru; kontrakt dojrzewa
+  w sprincie (Scrum) albo tuż przed punktem zobowiązania (Kanban, z limitem WIP na etapie analizy, żeby specyfikacje
+  nie starzały się w kolejce). Definition of Ready to umowa zespołu o jakości wejścia, nie bramka przeciw PO. Poziom
+  specyfikacji (spec-first, spec-anchored, spec-as-source — B. Böckeler) dobierasz do problemu i mierzysz czas cyklu,
+  odsetek przeróbek i stosunek linii Markdown do kodu, zamiast ufać odczuciu przyspieszenia.
 
 ## Historyjki i backlog
 - Historyjka = potrzeba użytkownika i wartość, nie zadanie techniczne: „Jako … chcę … aby …” + **kryteria akceptacji** (Given/When/Then — eng-testing).

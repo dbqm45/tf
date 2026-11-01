@@ -161,6 +161,19 @@
       "expect": "no-trigger",
       "prompt": "Mamy 8 zespołów i ponad 100 osób pracujących nad jednym produktem. Czy wdrożyć PI Planning i Agile Release Train i jak zaplanować pracę ponad zespołami? Odpowiedz zwięźle.",
       "neighbor": "proc-safe"
+    },
+    {
+      "id": "specyfikacja-w-scrum-kanban",
+      "expect": "trigger",
+      "prompt": "Wprowadzamy pracę ze specyfikacjami dla agentów AI. W Scrumie piszemy pełne specyfikacje w backlogu kilka sprintów wcześniej, a w drugim zespole na Kanbanie specyfikacje czekają tygodniami w kolumnie „analiza”. Jak to ułożyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["cel\\w*", "zamiar\\w*", "na poziomie celu"],
+          ["dojrzewa", "w sprincie", "punkt\\w* zobowiązania", "commitment point", "tuż przed"],
+          ["WIP", "limit\\w*"],
+          ["Definition of Ready", "DoR", "umow\\w+ zespołu", "czas\\w* cyklu", "przerób\\w+"]
+        ]
+      }
     }
   ]
 }
