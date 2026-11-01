@@ -240,8 +240,8 @@
   "offline": "2026-11-01"
  },
  "eng-testing": {
-  "fingerprint": "6e5e35e5dd67fbb3",
-  "offline": "2026-10-30"
+  "fingerprint": "cf7baa3a7d490700",
+  "offline": "2026-11-01"
  },
  "fe-architecture": {
   "fingerprint": "97bd5edd33b6da99",
@@ -500,7 +500,7 @@
   "offline": "2026-10-22"
  },
  "sec-llm-security": {
-  "fingerprint": "6e66056afcba1cf2",
+  "fingerprint": "47dcce9b068509a1",
   "offline": "2026-11-01"
  },
  "sec-malware-analysis": {
