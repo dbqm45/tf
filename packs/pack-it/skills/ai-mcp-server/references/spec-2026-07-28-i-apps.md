@@ -6,21 +6,27 @@ Spis treści: 1. Co zmienia `2026-07-28` · 2. Migracja serwera z sesją · 3. M
 ## 1. Co zmienia `2026-07-28`
 - **Bezstanowy rdzeń:** nie ma już `initialize`/`notifications/initialized` ani nagłówka `Mcp-Session-Id`. Każde
   żądanie niesie wersję protokołu i możliwości klienta w `_meta` (`io.modelcontextprotocol/protocolVersion`,
-  `…/clientCapabilities`). Serwer **musi** obsłużyć `server/discover` (wersje, możliwości, tożsamość).
+  `…/clientCapabilities`); klient powinien podawać `…/clientInfo`, a serwer `…/serverInfo` w `_meta` wyniku.
+  Niezgodna wersja → `UnsupportedProtocolVersionError` (kod `-32022`). Serwer **musi** obsłużyć `server/discover`
+  (wersje, możliwości, tożsamość); na stdio klient może nim sprawdzić, czy serwer zna nową wersję.
 - **Nagłówki `Mcp-Method` i `Mcp-Name`** są wymagane w Streamable HTTP. Bramka routuje i autoryzuje po nich bez
   parsowania treści; parametr narzędzia może trafić do nagłówka przez `x-mcp-header`.
 - **Multi Round-Trip Requests (MRTR)** zastępują żądania wysyłane przez serwer (`sampling/createMessage`,
-  `elicitation/create`, `roots/list`). Serwer zwraca wynik `resultType: "input_required"`, a klient ponawia żądanie
-  z odpowiedzią. Każdy wynik ma `resultType` (`complete` albo `input_required`).
-- **Listy z `ttlMs` i `cacheScope`**; `tools/list` w stałej kolejności (lepsze trafienia cache promptu po stronie
-  klienta).
+  `elicitation/create`, `roots/list`). Serwer zwraca `resultType: "input_required"` z polem `inputRequests`, a klient
+  ponawia oryginalne żądanie z `inputResponses`. Stan między próbami serwer koduje w `requestState`. Każdy wynik ma
+  `resultType`; wynik starszego serwera bez tego pola klient traktuje jak `complete`.
+- **Listy z `ttlMs` i `cacheScope`** (`public` — mogą je cache'ować pośrednicy, `private` — nie); `tools/list`
+  w stałej kolejności (lepsze trafienia cache promptu po stronie klienta).
+- **Autoryzacja:** klient sprawdza `iss` w odpowiedzi autoryzacji (RFC 9207), a poświadczenia klienta są związane
+  z serwerem autoryzacji, który je wydał (klucz po `iss`, ponowna rejestracja przy zmianie serwera).
 - `subscriptions/listen` zamiast GET i `resources/subscribe`; bez wznawiania strumienia SSE (zerwane żądanie klient
   ponawia jako nowe).
 - **Zadania** (`tasks`) przeniesione z rdzenia do oficjalnego rozszerzenia `io.modelcontextprotocol/tasks`;
   rozszerzenia deklarowane w `extensions` w możliwościach.
 - **Przestarzałe** (działają co najmniej 12 miesięcy): Roots, Sampling, Logging, transport HTTP+SSE, Dynamic Client
   Registration (zamiast niego Client ID Metadata Documents). Usunięte: `ping`, `logging/setLevel`.
-- Kod błędu „zasób nie istnieje”: `-32602` (było `-32002`).
+- Kod błędu „zasób nie istnieje”: `-32602` (było `-32002`); zakres `-32020`…`-32099` zarezerwowany dla specyfikacji
+  (`HeaderMismatch` `-32020`, `MissingRequiredClientCapability` `-32021`, `UnsupportedProtocolVersion` `-32022`).
 
 ## 2. Migracja serwera z sesją
 1. Stan rozmowy przenosisz do **jawnych uchwytów** wydawanych przez serwer (np. `cart_id`, `draft_id` zwracane
@@ -62,4 +68,5 @@ zatrzymała (agent, narzędzie, środowisko): core-agent-security, `references/u
 Źródła (sprawdzone 2026-11-01 w repozytoriach): github.com/modelcontextprotocol/modelcontextprotocol —
 `docs/specification/2026-07-28/changelog.mdx` (commit 2026-10-31); github.com/modelcontextprotocol/ext-apps —
 `specification/2026-01-26/apps.mdx` (status Stable, commit 2026-10-29). modelcontextprotocol.io niedostępne z sieci
-sesji. Pozycja w TODO: blog.modelcontextprotocol.io (2026-10-29).
+sesji, ale treść changelogu przekazana przez człowieka 2026-11-01 jest zgodna z repo. Pozycja w TODO:
+blog.modelcontextprotocol.io (2026-10-29).
