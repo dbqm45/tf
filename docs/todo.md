@@ -704,12 +704,12 @@ otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez
 Przegląd 2026-10-29: `ai-agents` ma MCP, tracing z identyfikatorem przebiegu i wznawianie, `ops-observability` —
 OpenTelemetry; reszta harness engineering jest pokryta (`core-async-delegation`, hooki, recenzent). Fabryka nie
 wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni priorytet, w `ai-agents`:
-- [ ] **Mapa protokołów:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
+- [x] **Mapa protokołów** (zrobione 2026-11-01: `ai-agents/references/protokoly-i-tracing.md` §1–2; A2A 1.0.1, ACP v1 sprawdzone w repozytoriach)**:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
   punktem końcowym i uwierzytelnianiem; zadania z cyklem życia); ACP (Agent Client Protocol, Zed) — edytor ↔ agent
   kodujący przez JSON-RPC po stdio, z zatwierdzaniem zapisów w edytorze. Kiedy który, że się uzupełniają, oraz
   bezpieczeństwo: Agent Card i wyniki innego agenta to niezaufane wejście (patrz pozycja o protocol pivoting
   w sekcji wzorców bezpieczeństwa). Stan specyfikacji, wersje i opiekunów sprawdzić z datą [niezweryfikowane].
-- [ ] **Tracing wg OpenTelemetry GenAI semantic conventions:** jeden ślad na zadanie, wywołanie modelu i narzędzia
+- [x] **Tracing wg OpenTelemetry GenAI semantic conventions** (zrobione 2026-11-01: tamże §3; status Development, repo `semantic-conventions-genai`)**:** jeden ślad na zadanie, wywołanie modelu i narzędzia
   jako span-y potomne, ponowienia jako nowe span-y w tym samym śladzie, `links` dla rozgałęzień; atrybuty modelu,
   tokenów, kosztu i wyniku guardrails; `trace_id` jako identyfikator korelacji między systemami. Z tych śladów
   ewaluacja offline (`ai-evals`) i koszt (`core-cost-control`, `ops-finops`). Stan konwencji (eksperymentalne?)

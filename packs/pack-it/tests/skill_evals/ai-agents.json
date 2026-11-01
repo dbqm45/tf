@@ -217,6 +217,73 @@
           ]
         ]
       }
+    },
+    {
+      "id": "mapa-protokolow-agentow",
+      "expect": "trigger",
+      "prompt": "Nasz agent ma korzystać z narzędzi firmy, rozmawiać z agentem partnera w innym frameworku i działać w edytorze programistów. Słyszę o MCP, A2A i ACP — który protokół do czego i czy się wykluczają? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "mcp.{0,80}(narzędzi|dan)",
+            "narzędzi.{0,40}mcp"
+          ],
+          [
+            "a2a.{0,80}(agent\\w* ?↔ ?agent|między agent|inn\\w+ agent|agent.agent)",
+            "agent card"
+          ],
+          [
+            "acp.{0,80}(edytor|ide)",
+            "edytor.{0,60}acp"
+          ],
+          [
+            "uzupełnia\\w*",
+            "nie wyklucza\\w*",
+            "razem",
+            "łącz\\w*"
+          ],
+          [
+            "niezaufan\\w*",
+            "jak dan\\w* obc",
+            "treść obc"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "tracing-otel-genai",
+      "expect": "trigger",
+      "prompt": "Chcemy śledzić naszego agenta (wywołania modelu, narzędzia, ponowienia) w OpenTelemetry tak, żeby potem liczyć koszt i robić ewaluację offline ze śladów. Jak to ułożyć i jakie nazwy atrybutów? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "gen_ai\\.",
+            "genai",
+            "gen ai semantic"
+          ],
+          [
+            "jeden ślad",
+            "jeden trace",
+            "ślad na zadanie",
+            "trace na zadanie"
+          ],
+          [
+            "span\\w* potomn",
+            "child span",
+            "span\\w* (dla|na) (każd\\w+ )?(wywołani|narzędzi)"
+          ],
+          [
+            "token\\w*"
+          ],
+          [
+            "development",
+            "eksperymentaln\\w*",
+            "niestabiln\\w*",
+            "zmienia\\w*",
+            "sprawdź wersj"
+          ]
+        ]
+      }
     }
   ]
 }
