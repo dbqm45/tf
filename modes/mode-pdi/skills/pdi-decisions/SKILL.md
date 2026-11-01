@@ -47,7 +47,9 @@ jej tylko w treści odpowiedzi — ale też nie decydujesz sam, co jest decyzją
    `other`). Zapisujesz dopiero po jego „tak”.
 2. **Wpis lokalny:** `decision_record.py decision add CHG-12 --statement "…" --why "…" --kind product --by "…"`
    (opcjonalnie `--source-kind slack|jira|…`, `--drafted-by human`, `--date`) → `CHG-12/Dn` w `decisions.md`,
-   `id` puste, `wyslano: nie`.
+   `id` puste, `wyslano: nie`. Odpowiedź na ustalenie ci_for_sdlc (np. pytanie DES-001 przy TSK-1) to taki sam wpis
+   z `--finding DES-001:TSK-1` (opcjonalnie `--effect accept_risk|dismiss|confirm`, domyślnie rozwiązuje): treść
+   `--statement` jest odpowiedzią, a ci_for_sdlc czyta ją z repo i zamyka ustalenie (bramka w PR też).
 3. **Rejestr pdi:** jeśli w sesji jest narzędzie MCP `record_decision` serwera pdi, `decision_record.py decision pending
    --change CHG-12` daje gotowe argumenty; wywołaj je, a zwrócony numer zapisz: `decision mark CHG-12/Dn --id DEC-41`.
    Zanim zaproponujesz rozwiązanie w obszarze już rozstrzyganym, sprawdź `find_decisions`.
