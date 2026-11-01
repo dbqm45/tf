@@ -4,7 +4,7 @@ description: Użyj, gdy trzeba sprawdzić aktualne fakty z zewnątrz — API i w
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj, gdy odpowiedź zależy od aktualnych faktów z zewnątrz — co się zmieniło, co ludzie zgłaszają, jaka jest wersja, stan projektu albo opinia społeczności — procedura badania źródeł — doprecyzowanie tematu, routing źródeł z rezerwą, okno czasu, ranga źródeł, scalanie duplikatów, cytowanie z datą. Nie do wiedzy stałej (skille wymiarów) ani oceny opcji (skill wyboru technologii, pack-it)."
-  slowa: "co nowego w bibliotece, co ludzie zgłaszają, stan projektu, najnowsza wersja, breaking change, dokumentacja biblioteki, aktualne API biblioteki, nieistniejące funkcje biblioteki, llms.txt, serwer dokumentacji, strona renderowana JavaScriptem, pusta strona z WebFetch, pobranie strony bez usługi scrapującej, źródła z datą, raport z badania"
+  slowa: "co nowego w bibliotece, co ludzie zgłaszają, stan projektu, najnowsza wersja, breaking change, dokumentacja biblioteki, aktualne API biblioteki, nieistniejące funkcje biblioteki, llms.txt, serwer dokumentacji, strona renderowana JavaScriptem, pusta strona z WebFetch, pobranie strony bez usługi scrapującej, źródła z datą, raport z badania, agenci-badacze równolegle, wynik na benchmarku, liczba z benchmarku, dwóch podało tę samą liczbę, nie znalazł nic, wiarygodny raport z badania, wersja preprintu"
 ---
 
 # Badanie źródeł
@@ -61,6 +61,15 @@ Artykuł sponsorowany lub dostawcy oznaczasz jako taki; jego liczby podajesz jak
 - Sprzeczne źródła: pokaż obie wersje i to, które źródło jest pierwotne.
 - Brak dostępu (paywall, logowanie): napisz, czego nie przeczytałeś; nie zgaduj treści z tytułu ani fragmentu
   i nie omijaj ograniczeń przez mirrory.
+- **Liczba z „odciskiem”:** cytowana liczba z benchmarku lub badania niesie identyfikator i wersję źródła (np. wersja
+  preprintu — zaokrąglone zdania w streszczeniu zmieniają się między wersjami, tabela nie), nazwę metryki i status
+  pomiaru: deklaracja firmy o własnym produkcie / pomiar twórcy benchmarku / pomiar niezależny. Wynik z piaskownicy
+  nie przenosi się automatycznie na produkcję.
+- **Kilku badaczy równolegle:** każdy oddaje rekord dowodu (id pytania, teza, źródło, wersja dokumentu, warunki,
+  otwarte kwestie). Brak informacji pozostaje brakiem, nie odpowiedzią przeczącą. Duplikat z ponowienia albo zgoda
+  drugiego agenta na tych samych źródłach nie są niezależnym potwierdzeniem. Sprzeczne ustalenia zostają widoczne
+  i wracają do sprawdzenia, zamiast wygrywać tym, które brzmi pewniej. Recenzent dostaje dowody i kryteria, nie
+  tylko gotową prozę.
 
 ## 4a. Tryb głębokiego badania (raport, decyzja o dużej wadze)
 Dla zwykłego pytania o fakt wystarczy `researcher`. Dla raportu (np. wybór technologii, analiza rynku narzędzi):

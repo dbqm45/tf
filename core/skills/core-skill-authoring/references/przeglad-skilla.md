@@ -32,3 +32,15 @@ pytań do człowieka; (5) odrzucono komentarze inline dla każdej uwagi (szum) n
 zmiana: nazwa pola `Werdykt`, bo czyta ją krok bramki w pipeline.
 
 Kurs 10xDevs, ed. 3 (2026), moduł 1, lekcja 2 — materiał szkoleniowy (dostęp 2026-10-09). Opisane własnymi słowami.
+
+## Odchudzanie
+- **Test „no-op” zdanie po zdaniu:** czy zdanie zmienia zachowanie względem domyślnego modelu? Jeśli nie, usuwasz
+  całe zdanie (pomiar z 2026-10-30: dwa skille pack-it odchudzone o 5–12% słów bez utraty wyniku).
+- **Instrukcje pozytywne zamiast zakazów:** zakaz wnosi zakazane do kontekstu; pisz, co zrobić.
+- **Pojęcia po nazwie,** gdy model je zna (np. zapachy kodu Fowlera), zamiast definicji.
+- **Skill-router** wywoływany ręcznie, który dopiero ładuje cięższy skill.
+- **Koszt opisów wszystkich skilli** widocznych w sesji to stały narzut każdego zapytania: rzadko wywoływane
+  automatycznie skille dostają `disable-model-invocation`, gdy człowiek i tak wywołuje je po nazwie (decyzja
+  z pomiarem trafień hooka i ewaluacją, nie z intuicji).
+- Specyfikacja w skillu bez ścieżek plików i fragmentów kodu projektu — starzeją się, a agent i tak do nich dotrze.
+- Każde cięcie przechodzi scenariusze i bramkę; płatny pomiar za zgodą człowieka.
