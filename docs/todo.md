@@ -823,7 +823,7 @@ tylko dla odpowiedzi niezależnych od użytkownika, routing i fallback. Niski/ś
   „piggyback” — zmodyfikowana treść wciąż wykrywana jako z modelu. Wniosek do dokumentacji zgodności: znak wspiera
   wykrywanie masowe, nie przypisanie pojedynczego tekstu ani dowód; co konkretnie spełnia art. 50 ust. 2 (normy,
   kodeks praktyk) sprawdzić z datą [niezweryfikowane].
-- [ ] **`arch-ai-solutions`/`eng-llm-features`: koszt agenta z wieloma narzędziami** — leniwe ładowanie definicji
+- [x] **`arch-ai-solutions`/`eng-llm-features`: koszt agenta z wieloma narzędziami** (zrobione 2026-11-01: `eng-llm-features` §4; nazwa mechanizmu u dostawcy i LLMRouterBench — do sprawdzenia) — leniwe ładowanie definicji
   narzędzi (wyszukiwarka narzędzi, `defer_loading` w API Anthropic — sprawdzić aktualną nazwę i warunki w
   dokumentacji, skill `claude-api`) zamiast setek definicji w każdym wywołaniu; kaskada „tani model najpierw,
   eskalacja przy niskiej pewności” jako alternatywa routera zgadującego trudność z promptu (wg LLMRouterBench,
@@ -898,7 +898,7 @@ transkrypt. Braki:
   na zapisanych śladach bez ponownego uruchamiania agenta (tanio, powtarzalnie), a sędziego tylko na losowej próbce
   albo na śladach z negatywną opinią użytkownika. Dolny limit wywołań narzędzia („musiał wyszukać”) łapie odpowiedź
   „sprawdź w serwisach X” bez wyszukania.
-- [ ] **`arch-ai-solutions`, zarządzany runtime agenta** (Claude Managed Agents, OpenAI Agents API, Bedrock
+- [x] **`arch-ai-solutions`, zarządzany runtime agenta** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §4) (Claude Managed Agents, OpenAI Agents API, Bedrock
   AgentCore — ceny i daty z artykułu [niezweryfikowane]): pętla jest „za darmo”, lock-in schodzi niżej — dialekt
   schematu narzędzi (zmiana nazw przez bramkę), format piaskownicy i płaszczyzna sterowania (obraz kontenera
   przenośny, identyfikatory środowiska i sesji nie), okablowanie MCP (auth, mapowanie nazw), semantyka stanu i sesji
@@ -1370,7 +1370,7 @@ zamieniającymi ocenę gustu na stopniowalne punkty); cennik cache (platform.cla
 cache ok. 0,05–0,1 ceny wejścia zależnie od modelu, czas życia liczony od początku żądania). Liczby z preprintów
 cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass rate 0–8 pkt) — jak w pozycji o
 „harness: wynik czy koszt” [niezweryfikowane].
-- [ ] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia:** trasy jawne per funkcja
+- [x] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §1–2)**:** trasy jawne per funkcja
   (`funkcja → model, zapasowy`) z wyłącznikiem, zamiast „sprytnego” automatycznego routingu; **fallback tylko do
   modeli spełniających te same ograniczenia** (dane z modelu własnego nie mogą po cichu pójść do zewnętrznego
   dostawcy, słabszy model to cicha utrata jakości) i fallback produktowy („pokaż dane bez streszczenia AI”);
@@ -1449,7 +1449,7 @@ budżet opóźnienia z czasem do pierwszego tokenu, cache wyników tylko dla odp
 (klucz z wersją promptu, modelu i najemcą), fallback sprawdzany ewaluacją oraz idempotencję akcji. `ai-rag` ma
 reindeksację przyrostową i usuwanie jako osobną ścieżkę. Warstwy prompt → kontekst → harness → pętla → graf oraz
 zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześniejszych pozycjach. Braki:
-- [ ] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania:**
+- [x] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §2–3)**:**
   - **Ponowienia w jednej warstwie:** wspólny budżet czasu i prób na całe żądanie. Gdy każda warstwa (klient,
     bramka, orkiestrator, SDK) ponawia osobno, jedno żądanie mnoży wywołania dostawcy i pogłębia awarię.
   - **Strumień:** gdy klient się rozłączy albo anuluje, przerwać generowanie u dostawcy, bo tokeny nadal kosztują.

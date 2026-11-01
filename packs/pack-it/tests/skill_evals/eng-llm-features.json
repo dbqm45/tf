@@ -140,6 +140,19 @@
           ["w toku", "in.progress", "blokad\\w+", "jednokrotn\\w+", "deduplik\\w+", "singleflight", "zajęci\\w+"]
         ]
       }
+    },
+    {
+      "id": "agent-setki-narzedzi-koszt",
+      "expect": "trigger",
+      "prompt": "Nasz agent ma ponad 150 narzędzi z kilku serwerów MCP i każde wywołanie modelu jest drogie i wolne. Jak obniżyć koszt bez utraty jakości? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["leniw\\w+", "wyszukiwar\\w+ narzędzi", "defer_loading", "tool search", "na żądanie"],
+          ["kaskad\\w+", "tani model najpierw", "eskalac\\w+"],
+          ["cache", "TTL"],
+          ["stał\\w+ (część|prefiks)", "przed zmienną", "znacznik\\w* czasu", "na (udane|ukończone) zadanie"]
+        ]
+      }
     }
   ]
 }
