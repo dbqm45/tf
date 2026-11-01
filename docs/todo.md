@@ -1539,7 +1539,7 @@ Braki:
   - Dla fabryki: hook `tdd_guard` jest właśnie regułą czasową („edycja kodu dozwolona, jeśli od ostatniej zmiany
     testu był czerwony przebieg”). Warto zapisać reguły hooków jako predykaty nad logiem hooków i testować je
     odtworzeniem zapisanych śladów (jak `dogwood replay`). Zmiana hooków tylko na prośbę człowieka.
-- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (część w `ai-evals` zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §11; zostaje `factory/jev_calibration.py` — zmiana w `factory/` za zgodą człowieka) (LLM jako klasyfikator albo model decyzyjny):
+- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (część w `ai-evals` zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §11; kod w `factory/jev_calibration.py` zrobiony 2026-11-01 — `fit_threshold` dla trasowania, `fit_band` dla sędziego, `--shuffle` test kolejności opcji, testy 15/15; zostaje płatny pomiar, gdy w środowisku będzie `TYPESAFE_API_KEY` — zmiana w `factory/` za zgodą człowieka) (LLM jako klasyfikator albo model decyzyjny):
   - Test kolejności i nazw opcji: przetasować i przemianować, policzyć zmiany odpowiedzi.
   - Próg dopasowany na własnych etykietach **osobno dla każdego punktu decyzji**, nigdy domyślne 0,5.
   - Kaskada mierzona względem samego drogiego modelu.
