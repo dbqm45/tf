@@ -846,7 +846,7 @@ skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyją
 - [ ] **Odwołania zagnieżdżone:** 64 pliki w podkatalogach `references/*/` (np. `fe-architecture/references/components/`)
   — sprawdzić, czy prowadzi do nich bezpośredni link z `SKILL.md` (wtedy „jeden poziom” spełniony), czy łańcuch
   przez plik pośredni.
-- [ ] **`eng-tech-debt-audit`: odśmiecanie architektury jako rutyna** — fabryka ma reguły granic
+- [x] **`eng-tech-debt-audit`: odśmiecanie architektury jako rutyna** (zrobione 2026-11-01: sekcja „Odśmiecanie architektury jako rutyna”; ArchUnitPython i liczby prac — do sprawdzenia) — fabryka ma reguły granic
   (`ddd-legacy-modernization`: dependency-cruiser, import-linter, Tach, ArchUnit) i audyt długu; brakuje pętli:
   (1) testy architektury (warstwy, cykle, rozmiar pliku) w szybkich bramkach i w CI, uruchamiane przez agenta przed
   „gotowe”; (2) zapadka (ratchet) — próg startuje przy obecnym maksimum i tylko spada, wyjątki wąskie, z właścicielem
@@ -858,7 +858,7 @@ skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyją
 
 ## Tożsamość encji: identyfikator pojęcia a identyfikator rzeczy (artykuł „The Spine of the Context Fabric: Concept IRIs and Instance IRIs”, S. Banerjee, 2026-10-13, zapisane 2026-10-29)
 Przegląd 2026-10-29: niski priorytet; uzupełnia pozycję o wiedzy kanonicznej (OKF):
-- [ ] **Rozdział „co znaczy” i „która rzecz”:** pojęcia (klasy, właściwości, metryki) mają stały identyfikator
+- [x] **Rozdział „co znaczy” i „która rzecz”** (zrobione 2026-11-01: `ddd-context-mapping`; pole `resource` w OKF — z pozycją o OKF)**:** pojęcia (klasy, właściwości, metryki) mają stały identyfikator
   w przestrzeni autorów słownika; rzeczy (dostawca, zamówienie) — identyfikator wybijany regułą z klucza biznesowego,
   jedna rzecz = jeden identyfikator mimo wielu rekordów w systemach (tablica mapowania kluczy); dane zostają u
   właścicieli, wspólna jest tylko tożsamość. W notatkach OKF pole `resource` niesie identyfikator pojęcia, a pliki
@@ -931,7 +931,7 @@ Przegląd 2026-10-29: `eng-design-principles` ma już drabinę minimalizmu (te s
 upraszczasz kosztem”, znacznik `debt:` i „pominąłem X, dodać gdy Y”; `core-cost-control` — cache i jego czas życia,
 koszt rozwiązanego zadania, kaskadę modeli. Liczby z artykułów (jeden model, 34 zadania; benchmark Spotify liczony
 znaki/4) [niezweryfikowane]. Braki:
-- [ ] **`eng-design-principles` / `qa-change-review`: same reguły w tekście prawie nie działają** — wg pomiaru autora
+- [x] **`eng-design-principles` / `qa-change-review`: same reguły w tekście prawie nie działają** (zrobione 2026-11-01: `eng-design-principles`, „Drabina minimalizmu”; hook przy osłabieniu zabezpieczeń — tylko na prośbę) — wg pomiaru autora
   wklejone reguły dały 0,98 kodu bazowego, a „krótko”/hasło 1,00 (terse zgubił też werdykt bezpieczeństwa); efekt dały
   dopiero: drabina, jednorazowe zatrzymanie pierwszego „gotowe”, gdy dodano kod bez żadnego sprawdzenia, i krytyk
   nadmiaru po zakończeniu z **blokadą edycji, która zmniejsza liczbę zabezpieczeń w pliku** (wzorce: zapytanie
@@ -1552,7 +1552,7 @@ Braki:
   - W fabryce dotyczy to `factory/jev_calibration.py`: podpowiedź skilli i sędzia z Jev, pas niepewności
     stały 0,30–0,70. Do dodania: próg dopasowany osobno dla trasowania i dla sędziego oraz test przetasowania
     kolejności opcji. Pomiar płatny, więc tylko za zgodą człowieka.
-- [ ] **`eng-codebase-mapping` / `ai-rag`, ocena narzędzi kontekstu (graf, indeks, mapa kodu):**
+- [x] **`eng-codebase-mapping` / `ai-rag`, ocena narzędzi kontekstu (graf, indeks, mapa kodu)** (zrobione 2026-11-01: `eng-codebase-mapping`)**:**
   - Obok trafności w jednym przebiegu: powtarzalność (dobrze w każdym z N przebiegów), tokeny wejścia oraz **odsetek
     użycia** — czy agent w ogóle sięga po narzędzie.
   - Fabryka ma już `hint_report.py` („podpowiedziany, a nieużyty”), więc da się to policzyć dla skilli i map.

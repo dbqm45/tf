@@ -88,6 +88,19 @@
       "expect": "no-trigger",
       "prompt": "Mamy duży system sprzedażowy. Według jakich kryteriów wyznaczyć granice bounded contextów i po czym poznać, że dwa pojęcia powinny trafić do osobnych kontekstów? Odpowiedz zwięźle.",
       "neighbor": "ddd-strategic-analysis"
+    },
+    {
+      "id": "tozsamosc-pojecia-i-rzeczy",
+      "expect": "trigger",
+      "prompt": "Ten sam dostawca występuje w CRM, ERP i systemie zakupów pod różnymi ID, a „przychód” każdy dział liczy inaczej. Jak uporządkować tożsamość między kontekstami bez centralnej bazy wszystkiego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["pojęci\\w+", "definicj\\w+ (metryk|pojęć)", "słownik\\w*"],
+          ["klucz\\w* biznesow\\w+", "reguł\\w+ wybijania", "jeden identyfikator", "mapowani\\w+ kluczy"],
+          ["dane zostają u właścicieli", "u właścicieli", "wspólna (jest )?tylko tożsamość", "bez kopiowania danych"],
+          ["bibliotek\\w+", "specyfikacj\\w+", "nie w jednym narzędziu"]
+        ]
+      }
     }
   ]
 }

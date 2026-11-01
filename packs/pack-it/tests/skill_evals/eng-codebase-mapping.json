@@ -114,6 +114,19 @@
       "expect": "no-trigger",
       "prompt": "Chcę ocenić dług techniczny całego modułu płatności: wymiary, wagi, priorytety i szybkie wygrane. Jak się za to zabrać? Odpowiedz zwięźle.",
       "neighbor": "eng-tech-debt-audit"
+    },
+    {
+      "id": "ocena-narzedzi-kontekstu",
+      "expect": "trigger",
+      "prompt": "Dodaliśmy agentowi graf kodu i indeks semantyczny repo jako narzędzia MCP. W jednym teście odpowiedzi były lepsze. Jak rzetelnie sprawdzić, czy te narzędzia naprawdę pomagają? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["powtarzaln\\w+", "N przebiegów", "kilka przebiegów", "w każdym przebiegu"],
+          ["odsetek użycia", "czy agent (w ogóle )?(sięga|używa)", "użyci\\w+ narzędzi\\w*"],
+          ["token\\w*", "koszt\\w*"],
+          ["mały podgraf", "przez narzędzi\\w+", "nie wkleja\\w+", "ze źródłami"]
+        ]
+      }
     }
   ]
 }

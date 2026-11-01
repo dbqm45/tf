@@ -72,6 +72,17 @@ w repozytorium i da się go porównać przy następnym audycie. Audyt niczego ni
 - Świadome skróty w kodzie znakuj komentarzem `debt: <ograniczenie>, <kiedy wrócić>`; audyt zbiera je do tabeli,
   a znacznik bez warunku powrotu jest osobnym ustaleniem.
 
+## Odśmiecanie architektury jako rutyna
+Audyt raz na kwartał nie nadąża za kodem pisanym z agentami. Pętla:
+1. **Testy architektury** (warstwy, cykle, rozmiar pliku; narzędzia jak dependency-cruiser, import-linter, Tach,
+   ArchUnit — ddd-legacy-modernization) w szybkich bramkach i w CI; agent uruchamia je przed „gotowe”.
+2. **Zapadka (ratchet):** próg startuje przy obecnym maksimum i tylko spada; wyjątki wąskie, z właścicielem
+   i terminem.
+3. **Rutyna co tydzień:** jedno naruszenie → jeden mały PR refaktoryzacji z przeglądem człowieka
+   (core-async-delegation §5).
+4. Testy architektury, progi i listy wyjątków w **ścieżkach chronionych** (CODEOWNERS i ochrona gałęzi): agent
+   optymalizujący „zielone CI” przesunie weryfikator zamiast kodu.
+
 ## Przykład
 **Sytuacja:** „Audyt `apps/shop-api` przed sprintem sprzątania — od czego zacząć?”
 **Wynik** (po orientacji i planie pokazanym człowiekowi):

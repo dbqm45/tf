@@ -81,6 +81,19 @@
       "expect": "no-trigger",
       "prompt": "Mam jeden agregat, który chcę przepisać na inny idiom bez zmiany zachowania. Jak to zrobić bezpiecznie i udowodnić równoważność? Odpowiedz zwięźle.",
       "neighbor": "eng-behavior-preserving-refactoring"
+    },
+    {
+      "id": "odsmiecanie-architektury-rutyna",
+      "expect": "trigger",
+      "prompt": "Po roku pracy z agentami AI w repo przybywa cykli między modułami i plików po 2000 linii. Audyt długu robimy raz na kwartał i niewiele z niego wynika. Jak to zamienić w działającą pętlę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["test\\w* architektury", "import-linter", "dependency-cruiser", "ArchUnit", "Tach"],
+          ["zapadk\\w+", "ratchet", "próg\\w* (tylko )?spada", "obecn\\w+ maksim\\w+"],
+          ["co tydzień", "rutyn\\w+", "jeden (mały )?PR", "jedno naruszenie"],
+          ["CODEOWNERS", "chronion\\w+", "agent .*przesunie", "weryfikator\\w*"]
+        ]
+      }
     }
   ]
 }

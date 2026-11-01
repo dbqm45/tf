@@ -128,8 +128,8 @@
   "offline": "2026-10-18"
  },
  "ddd-context-mapping": {
-  "fingerprint": "605d42965d93872a",
-  "offline": "2026-10-22"
+  "fingerprint": "a6bc4558a7dec07c",
+  "offline": "2026-11-01"
  },
  "ddd-deep-modeling": {
   "fingerprint": "0ef13a349c37c038",
@@ -184,8 +184,8 @@
   "offline": "2026-10-21"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "fddb50cec658c698",
-  "offline": "2026-10-27"
+  "fingerprint": "a4f41aec612eec99",
+  "offline": "2026-11-01"
  },
  "eng-continuous-delivery": {
   "fingerprint": "12bc7827c7a65500",
@@ -200,8 +200,8 @@
   "offline": "2026-10-22"
  },
  "eng-design-principles": {
-  "fingerprint": "5ef158e7834622cc",
-  "offline": "2026-10-22"
+  "fingerprint": "33717ba31e00ba56",
+  "offline": "2026-11-01"
  },
  "eng-i18n": {
   "fingerprint": "c189a3defaf2425a",
@@ -236,8 +236,8 @@
   "offline": "2026-10-10"
  },
  "eng-tech-debt-audit": {
-  "fingerprint": "d041bc5bcbf1e03b",
-  "offline": "2026-10-22"
+  "fingerprint": "32df73e11b73ab56",
+  "offline": "2026-11-01"
  },
  "eng-testing": {
   "fingerprint": "6e5e35e5dd67fbb3",
