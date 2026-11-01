@@ -107,6 +107,10 @@ def main() -> int:
                   and h.get("created") == today and h.get("updated") == today,
                   f"D-5 {n}: wartości nagłówka: {h}")
             check(("tasks" in h) == (n == "plan.md"), f"D-6 {n}: tasks tylko w plan.md")
+        intent = (d / "intent.md").read_text(encoding="utf-8") if d.is_dir() else ""
+        for sec in ("## Problem", "## Metryki sukcesu", "## Poza zakresem", "## Ograniczenia", "## Kiedy to porażka",
+                    "## Powiązania"):
+            check(sec in intent, f"D-2a: intent.md ma sekcję {sec!r} (ograniczenia, porażka i powiązania pisze człowiek)")
         r = run(["check"], repo)
         check(r.returncode == 0, f"D-7: świeży dziennik przechodzi check: {r.stdout}{r.stderr}")
         r = run(["change", "new", "CHG-12"], repo)

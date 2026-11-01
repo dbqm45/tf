@@ -22,7 +22,8 @@ Gdy pdi przyjmie zgłoszenie jako zmianę (albo człowiek poda klucz zmiany):
    zgłoszenia (`source_reported_at`, kontrakt 0.5.0), od którego ShipScope liczy lead time. Istniejący katalog → błąd,
    nic nie jest nadpisywane. Klucze tylko w kształcie `[A-Z][A-Z0-9]+-[0-9]+`; numerów nie wymyślasz — podaje je pdi
    albo człowiek.
-2. Wypełniasz `intent.md` (problem, warianty, wybrany wariant, metryki, poza zakresem), potem `plan.md` (cięcia TSK
+2. Wypełniasz `intent.md` (problem, warianty, wybrany wariant, metryki, poza zakresem; ograniczenia, „kiedy to
+   porażka” i powiązania podaje człowiek — czego brakuje, o to pytasz), potem `plan.md` (cięcia TSK
    z rodzajem, linią wydania, flagą, wartością, wymaganiami, plikami i weryfikacją; fundament z „Odblokowuje” —
    TSK tej zmiany, których wymaga; klucze cięć w `tasks` nagłówka — tylko w `plan.md`)
    i `release.yaml`: `mvp` (linia R1, wynik i metryka z `intent.md`), linie R1…Rn z TSK, flagi z właścicielem,

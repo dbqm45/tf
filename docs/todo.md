@@ -431,7 +431,7 @@ faza `requirements` z kryteriami akceptacji i bramką B2, `qa-spec-first-testing
 pytania zamiast domysłów), kontekst ładowany przez skille, ślad wymaganie → TSK → test `KLUCZ/AC-n`. Bez nowej
 nazwy ani warstwy metodyki (IDSD/ICE). Do dorobienia w `modes/mode-pdi/` (scenariusze ewaluacji, potem treść i kod
 metodą TDD, bramka skilla; jeden mały PR):
-- [ ] **Szablon `intent.md`: ograniczenia, porażka, powiązania.** Trzy krótkie sekcje wypełniane przez człowieka, który
+- [x] **Szablon `intent.md`: ograniczenia, porażka, powiązania** (zrobione 2026-11-01: szablon, prompt fazy `intent` w `phase_run.py`, test D-2a; sekcje dopisane po istniejących, więc ci_for_sdlc czyta tytuł, treść i metryki bez zmian). Trzy krótkie sekcje wypełniane przez człowieka, który
   chce wyniku: *Ograniczenia* (warunki, w których wynik ma działać), *Kiedy to porażka* (czym wynik nie może być,
   np. „but za 140 USD”, „but niedostępny”), *Powiązania* (obszary i zmiany, których dotyczy). Dziś zamiar ma metryki
   sukcesu i „poza zakresem”, a scenariusze porażki pojawiają się dopiero w wymaganiach pisanych przez agenta.
