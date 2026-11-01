@@ -63,7 +63,7 @@ jakości — **ai-evals**; strategia produktu — **ai-product-management**; pol
 | 2024-08-01 | wejście w życie rozporządzenia (UE) 2024/1689 | pewne |
 | 2025-02-02 | zakazy (art. 5) i kompetencje w zakresie AI (art. 4) | pewne |
 | 2025-08-02 | obowiązki GPAI, zarządzanie, kary | pewne |
-| 2026-08-02 | ogólne stosowanie, w tym art. 50; art. 50 ust. 2 dla systemów już na rynku do 2026-12-02 | [niezweryfikowane] |
+| 2026-08-02 | ogólne stosowanie, w tym art. 50; art. 50 ust. 2 dla systemów już na rynku do 2026-12-02 | art. 50 od 2026-08-02 potwierdzone (strona Komisji o kodeksie, 2026-11-01); 2026-12-02 [niezweryfikowane] |
 | 2026-12-02 | nowy zakaz (treści intymne bez zgody, CSAM) | [niezweryfikowane] |
 | 2027-12-02 | wysokie ryzyko z załącznika III (było 2026-08-02) | [niezweryfikowane] |
 | 2028-08-02 | wysokie ryzyko z załącznika I, produkty (było 2027-08-02) | [niezweryfikowane] |
@@ -84,7 +84,7 @@ Wynik (fragment) [przykład]:
 | Szeregowanie CV | podmiot stosujący | wysokie ryzyko (zał. III, zatrudnienie) | ocena i selekcja kandydatów; profilowanie wyklucza wyjątek z art. 6 ust. 3 | instrukcja dostawcy, nadzór człowieka, logi ≥6 mies., informowanie kandydatów, kompetencje; decyzja o FRIA i DPIA — prawnik/IOD |
 | Chatbot rekrutacyjny | dostawca systemu (własny produkt na cudzym modelu) | przejrzystość (art. 50) | komunikuje się z ludźmi | informacja „rozmawiasz z AI”; jeśli chatbot ocenia kandydatów, klasa rośnie do wysokiego ryzyka |
 
-Terminy: art. 50 od 2026-08-02 [niezweryfikowane]; wysokie ryzyko wg Omnibus od 2027-12-02 [niezweryfikowane]; art. 4 już teraz.
+Terminy: art. 50 od 2026-08-02 (potwierdzone na stronie Komisji); wysokie ryzyko wg Omnibus od 2027-12-02 [niezweryfikowane]; art. 4 już teraz.
 
 ## Checklista
 - [ ] inwentarz systemów AI, także wbudowanych w SaaS i „cienia”
