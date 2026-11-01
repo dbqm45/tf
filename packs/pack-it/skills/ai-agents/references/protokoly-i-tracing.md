@@ -7,7 +7,7 @@ Spis treści: 1. Mapa protokołów · 2. Bezpieczeństwo na styku protokołów �
 |---|---|---|---|
 | **MCP** (Model Context Protocol) | agent ↔ narzędzia i dane | narzędzia, zasoby, prompty serwera | agent ma korzystać z systemów firmy; wielu klientów tych samych narzędzi (ai-mcp-server) |
 | **A2A** (Agent2Agent) | agent ↔ agent, także między dostawcami i frameworkami | **Agent Card** (nazwa, opis, wersja, interfejsy, możliwości, schematy bezpieczeństwa, umiejętności, opcjonalne podpisy; pod `/.well-known/agent-card.json`), zadania z cyklem życia | delegujesz zadanie agentowi, którego nie kontrolujesz (partner, inny zespół), a nie tylko wywołujesz funkcję |
-| **ACP** (Agent Client Protocol) | edytor ↔ agent kodujący | JSON-RPC 2.0, dziś transport stdio (agent jako podproces edytora); agent prosi o zgodę przez `session/request_permission` | wbudowujesz własnego agenta kodującego w edytor albo edytor w agenta |
+| **ACP** (Agent Client Protocol) | edytor ↔ agent kodujący (wzorowany na LSP) | JSON-RPC 2.0; lokalnie stdio (agent jako podproces edytora), zdalnie HTTP/WebSocket — wsparcie w toku; typy JSON z MCP tam, gdzie się da, plus własne (np. diff), tekst w Markdown; agent prosi o zgodę przez `session/request_permission` | wbudowujesz własnego agenta kodującego w edytor albo edytor w agenta |
 
 - Protokoły się **uzupełniają**: ten sam agent może być klientem MCP (narzędzia), serwerem A2A (dla innych agentów)
   i agentem ACP (w edytorze).
@@ -71,7 +71,7 @@ i opentelemetry.io niedostępne z sieci sesji):
   `specification/a2a.proto`; treść specyfikacji z a2a-protocol.org/latest/specification przekazana przez człowieka
   2026-11-01 (§3, §7.6, §8.4, §13, załącznik A–B);
 - ACP: github.com/agentclientprotocol/agent-client-protocol — stabilna wersja protokołu 1, wydanie schematu 1.14.0
-  (2026-10-30), `docs/protocol/v1/transports.mdx` (stdio, Streamable HTTP w przygotowaniu), `tool-calls.mdx`;
+  (2026-10-30), `docs/protocol/v1/transports.mdx` (stdio, Streamable HTTP w przygotowaniu), `tool-calls.mdx`; wprowadzenie z agentclientprotocol.com przekazane przez człowieka 2026-11-01;
 - OpenTelemetry: github.com/open-telemetry/semantic-conventions-genai (commit 2026-10-31), `docs/gen-ai/gen-ai-spans.md`,
   `gen-ai-agent-spans.md`, `mcp.md`, `a2a.md` — status Development;
 - artykuły: „Agentic Communication Protocols” (0s & 1s, 2026-05-28), D. Biswas, „Observability for the Agentic
