@@ -1,11 +1,11 @@
 {
  "core-agent-instructions": {
-  "fingerprint": "0b9df94a46d50794",
-  "offline": "2026-10-22"
+  "fingerprint": "0df7e0f0f71f8f00",
+  "offline": "2026-11-01"
  },
  "core-agent-retro": {
-  "fingerprint": "ec88dda3e151ad6e",
-  "offline": "2026-10-22"
+  "fingerprint": "7ec2ff7a6bf891ee",
+  "offline": "2026-11-01"
  },
  "core-agent-security": {
   "fingerprint": "0a7ae732ddb874ab",
@@ -60,16 +60,16 @@
   "offline": "2026-10-22"
  },
  "core-skill-authoring": {
-  "fingerprint": "c618383d19f9ac9e",
-  "offline": "2026-10-30"
+  "fingerprint": "a2f66eed4db7b060",
+  "offline": "2026-11-01"
  },
  "core-skill-composition": {
   "fingerprint": "6a97525970e9255d",
   "offline": "2026-10-22"
  },
  "core-source-research": {
-  "fingerprint": "533c8999995eacb9",
-  "offline": "2026-10-22"
+  "fingerprint": "26d6b5ad17a367cc",
+  "offline": "2026-11-01"
  },
  "core-stack-sync": {
   "fingerprint": "fccb14f5025e997c",

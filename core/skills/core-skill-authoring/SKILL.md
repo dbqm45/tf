@@ -123,6 +123,8 @@ Sama treść SKILL.md niczego nie dowodzi.
   3. popraw treść;
   4. bramka, a przy zmianie treści merytorycznej także ewaluacja na modelu.
 - **Wiedzy nie usuwasz przy porządkach.** Przenosisz ją do `references/` i zostawiasz odnośnik.
+- Mniej tokenów (test „no-op” zdanie po zdaniu, instrukcje pozytywne, pojęcia po nazwie, koszt opisów wszystkich
+  skilli): `references/przeglad-skilla.md` §„Odchudzanie”.
 - Hook `skill_change_guard` przypomina o bramce po każdej edycji skilla, a na koniec sesji wymienia skille bez
   zaliczonej bramki.
 

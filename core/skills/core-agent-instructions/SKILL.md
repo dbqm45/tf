@@ -37,9 +37,20 @@ lintera albo z samego kodu?” Tak → nie dopisuj (najwyżej odnośnik). Nie �
 | pułapka z incydentu | `docs/project/lessons.md` (core-project-record); wraca drugi raz → propozycja do CLAUDE.md |
 | referencje: PRD, plany, decyzje, mapy | `docs/project/` czytane w razie potrzeby, z odnośnikiem w CLAUDE.md |
 
+**Agent startujący gdzie indziej** (sesja wielorepozytoryjna, agent z repo A zmienia repo B) nie wczytuje
+`CLAUDE.md` ani `AGENTS.md` repo B. Reguły potrzebne przy pracy z zewnątrz (nazwa forka, gałąź docelowa, wymagane
+flagi, np. `gh -R …`) trzymasz także tam, gdzie taki agent zagląda: w globalnych instrukcjach (`~/.claude/CLAUDE.md`)
+albo w README repo B; regułę krytyczną wymusza skrypt lub hook.
+
 Jedna reguła żyje w jednym miejscu. Kilka narzędzi AI w zespole: `AGENTS.md` jako źródło prawdy, a `CLAUDE.md`
 z jedną linią `@AGENTS.md` (i ewentualnie regułami tylko dla Claude Code pod nią). Jak Claude Code ładuje te pliki
 (podkatalogi na żądanie, importy, AGENTS.md bez CLAUDE.md): `references/skalowanie-kontekstu.md`, sekcja 4.
+
+**Mapa własności artefaktów harnessu:** każdy plik instrukcji, skill, hook, kontrakt narzędzia, polityka uprawnień
+i czujnik ma właściciela z domeny, której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu
+i osobę zmieniającą kontrakt. Reguły dopisujesz jak zapadkę: tylko z prawdziwej porażki, po przeglądzie. Skill
+nieużywany przez 60–90 dni (fabryka liczy użycia z logów hooków) oznaczasz do wycofania. Miara: odsetek artefaktów
+bez właściciela i bez testu.
 
 ## 3. Procedura: pierwszy szkic
 1. Wbudowane `/init` albo inspekcja: README, manifest i jego skrypty, konfiguracje lint/format/typów/testów,

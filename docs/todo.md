@@ -573,7 +573,7 @@ linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
   - wyszukiwanie słowami (BM25) nie zna synonimów („deploy” nie znajduje „release”) — opis pojęcia pisany słowami,
     którymi ludzie szukają; wersję narzędzia przypiąć (wg autora 0.6.0 usunęło aliasy filtrów, stare zapytanie
     po cichu nic nie zwraca).
-- [ ] **Reguła z repo B nie działa, gdy agent startuje w repo A** (ten sam artykuł: `gh -R …` zapisane w AGENTS.md
+- [x] **Reguła z repo B nie działa, gdy agent startuje w repo A** (zrobione 2026-11-01: `core-agent-instructions` §2) (ten sam artykuł: `gh -R …` zapisane w AGENTS.md
   i pamięci projektu, a agent z innego repo i tak się potknął). Do `core-agent-instructions`: reguły potrzebne przy
   pracy z zewnątrz (nazwa forka, gałąź docelowa, wymagane flagi) także w miejscu, które czyta agent startujący
   gdzie indziej (globalne instrukcje, README sąsiedniego repo); dotyczy sesji wielorepozytoryjnych tf/pdi/ci_for_sdlc.
@@ -1336,12 +1336,12 @@ dowodów, a każdy dowód ma link i datę.
 Przegląd 2026-10-29: `core-skill-authoring` ma `disable-model-invocation` dla skilli procesowych; pozycja o OTel
 GenAI jest w sekcji o protokołach. Liczby z artykułów (wielkość biblioteki skilli, badanie ETH Zurich o plikach
 kontekstu +20% kosztu) [niezweryfikowane].
-- [ ] **`core-agent-instructions` / `core-skill-authoring`, mapa własności artefaktów harnessu w projekcie:**
+- [x] **`core-agent-instructions` / `core-skill-authoring`, mapa własności artefaktów harnessu w projekcie** (zrobione 2026-11-01: `core-agent-instructions` §2; liczenie użyć skilli z logów — osobno)**:**
   artefakt (plik instrukcji, skill, hook, kontrakt narzędzia, polityka uprawnień, sensor) → właściciel z domeny,
   której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu, kto zmienia kontrakt; skill nieużywany
   60–90 dni oznaczany do wycofania (fabryka ma logi hooków — można liczyć użycia); reguły dopisywane jak zapadka:
   tylko z prawdziwej porażki, po przeglądzie. Miara: odsetek artefaktów bez właściciela i bez testu.
-- [ ] **`core-skill-authoring`, mniej tokenów w skillach:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
+- [x] **`core-skill-authoring`, mniej tokenów w skillach** (zrobione 2026-11-01: `references/przeglad-skilla.md` §„Odchudzanie”; pomiar kosztu opisów 209 skilli — osobno)**:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
   względem domyślnego — jeśli nie, usuń całe zdanie); instrukcje pozytywne zamiast zakazów (zakaz wnosi zakazane
   do kontekstu); słowa-pojęcia, które model już zna (np. zapachy kodu Fowlera po nazwie), zamiast definicji;
   skill-router wywoływany ręcznie, który dopiero ładuje cięższy. Dla fabryki: zmierzyć łączny koszt opisów
@@ -1408,7 +1408,7 @@ przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezw
   przed działaniem nieodwracalnym; przy pętli samodoskonalenia harnessu zamrożony zbiór testowy i wersjonowany
   sędzia, inaczej rosnący wynik to dopasowanie do rubryki. (3) Przy porównaniu harnessów lub modeli te same zasoby
   wykonania (CPU, pamięć, limity czasu) i powtórzenia — różnica wyniku może pochodzić z infrastruktury.
-- [ ] **`core-source-research` / `core-grounding`, liczba z „odciskiem”:** cytowana liczba z benchmarku lub badania
+- [x] **`core-source-research` / `core-grounding`, liczba z „odciskiem”** (zrobione 2026-11-01: `core-source-research` §4)**:** cytowana liczba z benchmarku lub badania
   niesie identyfikator i wersję źródła (np. wersja preprintu — zaokrąglone zdania w streszczeniu zmieniają się między
   wersjami, tabela nie), nazwę metryki i status pomiaru: deklaracja firmy o własnym produkcie / pomiar twórcy
   benchmarku / pomiar niezależny. Wynik z piaskownicy nie przenosi się automatycznie na środowisko produkcyjne.
@@ -1493,7 +1493,7 @@ i agentskills.io. Braki:
     wyjaśnienia. Wynik częściowy oznaczony jako „szkic z zastrzeżeniami”, nie jako zatwierdzony.
   - **Miara odzyskiwania:** ile ukończonej pracy wykonało się ponownie, czy zapisy zewnętrzne się zdublowały, czy
     przyjęte dowody nie zniknęły.
-- [ ] **`core-source-research` / agent `researcher`, kontrakt dowodu przy równoległych badaczach:**
+- [x] **`core-source-research` / agent `researcher`, kontrakt dowodu przy równoległych badaczach** (zrobione 2026-11-01: `core-source-research` §4; zmiana promptu agenta `researcher` w `factory/` — za zgodą)**:**
   - **Rekord dowodu:** id pytania, teza, źródło, wersja dokumentu, warunki ograniczające, otwarte kwestie.
   - **Brak informacji pozostaje brakiem,** nie zamienia się w odpowiedź przeczącą.
   - **Duplikat z ponowienia** nie liczy się jako niezależne potwierdzenie.
@@ -1576,7 +1576,7 @@ Wnioski z badań przytoczonych w artykule wspierają istniejącą pozycję „Sk
 - planowanie pomaga słabszym modelom, a mocniejszym głównie obniża koszt.
 
 Liczby [niezweryfikowane]; artykułu z Medium nie dało się otworzyć (403). Brak:
-- [ ] **`core-agent-instructions` / `core-agent-retro`, przegląd pamięci automatycznej:** notatka w `MEMORY.md` i jej
+- [x] **`core-agent-instructions` / `core-agent-retro`, przegląd pamięci automatycznej** (zrobione 2026-11-01: `core-agent-retro`, „Gdzie trafia zmiana”; skrypt przeglądu — osobno)**:** notatka w `MEMORY.md` i jej
   plikach pomocniczych może być błędna i wracać w każdej sesji. Poprawka człowieka bywa wtedy dopisana obok starej
   notatki zamiast ją zastąpić. Przegląd w retro:
   - **mechanicznie** (skrypt): odwołania do plików i ścieżek, których już nie ma; wiek pliku; rozmiar względem

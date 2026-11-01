@@ -66,6 +66,7 @@ Nie częściej niż co etap — retrospektywa po każdej sesji to szum i koszt.
 | wykonawca stale „za niski” / „za wysoki” albo drogi przy prostych zadaniach | tier roli, wybór wykonawcy | core-cost-control (kaskada), `factory/roles/*.yaml` |
 | błąd, który da się wykryć automatem (format, testy, ścieżki) | hook, bramka, skrypt | skill bramek lokalnych (pack-it: eng-local-quality-gates); zmiana w `.claude/hooks/` tylko za zgodą |
 | praca od nowa po własnym commicie (poprawki po sobie) | plan przed kodem, kryteria gotowe | core-delivery-lifecycle; przegląd zmiany (pack-it: qa-change-review) |
+| błędna notatka w pamięci automatycznej (`MEMORY.md` i pliki pomocnicze) wraca w każdej sesji | ta notatka — poprawka **zastępuje** starą, nie jest dopisywana obok | przegląd mechaniczny (skrypt: odwołania do plików, których już nie ma, wiek, rozmiar względem limitu ładowania) i z człowiekiem (sprzeczności z `docs/` i ADR); ustalenie dla zespołu przenosisz do pliku instrukcji albo ADR |
 | zdarzenie jednorazowe, bez klasy błędów | nic — tylko dziennik | — |
 
 Zasady: jedna zmiana na ustalenie; zmiana w `factory/`, `.claude/hooks/` i `.claude/settings.json` tylko na wyraźną

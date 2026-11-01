@@ -44,6 +44,19 @@
       "expect": "no-trigger",
       "neighbor": "proc-agile",
       "prompt": "Prowadzę retrospektywę sprintu z moim zespołem programistów. Jaki format wybrać, gdy zespół jest zmęczony i mało mówi? Odpowiedz zwięźle."
+    },
+    {
+      "id": "przeglad-pamieci-automatycznej",
+      "expect": "trigger",
+      "prompt": "Agent co sesję powtarza błędne założenie o naszym repo, mimo że dwa razy go poprawiłem. Podejrzewam pamięć automatyczną (MEMORY.md). Jak to przejrzeć i naprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["MEMORY\\.md", "pamię\\w+ automatyczn\\w+"],
+          ["zastęp\\w+", "zamiast dopis\\w+", "usuń star\\w+", "nadpis\\w+"],
+          ["nieistniejąc\\w+ (plik|ścieżk)", "odwołani\\w+ do plików", "wiek\\w*", "rozmiar\\w*", "skrypt\\w*"],
+          ["plik\\w* instrukcji", "CLAUDE\\.md", "ADR", "nie tylko w pamięci"]
+        ]
+      }
     }
   ]
 }

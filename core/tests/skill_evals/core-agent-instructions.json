@@ -56,6 +56,19 @@
       "expect": "no-trigger",
       "neighbor": "core-skill-authoring",
       "prompt": "Napisałem nowy skill do fabryki: SKILL.md ma 600 linii, a opis brzmi „Pomaga z migracjami”. Jak go skrócić i poprawić opis, żeby model go wczytywał przy właściwych pytaniach?"
+    },
+    {
+      "id": "regula-z-sasiedniego-repo",
+      "expect": "trigger",
+      "prompt": "W repo B mamy w AGENTS.md regułę, żeby PR-y otwierać do forka z flagą `gh -R nasza-org/b`. Gdy agent startuje w repo A i robi zmianę w B, i tak otwiera PR w złym miejscu. Gdzie zapisać tę regułę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["czyta (agent )?startując\\w*", "agent nie czyta", "nie wczyt\\w+", "nie ładuje"],
+          ["globaln\\w+ instrukc\\w+", "~/.claude/CLAUDE.md", "repo A", "miejscu, które czyta"],
+          ["README", "sąsiedni\\w+ repo"],
+          ["hook\\w*", "sprawdz\\w+ w kodzie", "wymusz\\w+", "skrypt\\w*"]
+        ]
+      }
     }
   ]
 }

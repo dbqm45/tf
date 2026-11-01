@@ -173,6 +173,19 @@
           ["scenariusz\\w*", "ewaluacj\\w+"]
         ]
       }
+    },
+    {
+      "id": "mniej-tokenow-w-skillach",
+      "expect": "trigger",
+      "prompt": "Nasze skille są długie i sesje szybko zjadają kontekst, a mamy ponad 200 skilli widocznych w każdej sesji. Jak odchudzić skille, nie tracąc tego, co działa? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["no-op", "zdanie po zdaniu", "czy zmienia zachowani\\w+"],
+          ["pozytywn\\w+", "zamiast zakaz\\w+", "zakaz\\w+ wnosi"],
+          ["disable-model-invocation", "rzadko wywoływan\\w+", "opis\\w* skilli", "koszt\\w* opisów"],
+          ["scenariusz\\w*", "bramk\\w+", "ewaluacj\\w+", "references"]
+        ]
+      }
     }
   ]
 }

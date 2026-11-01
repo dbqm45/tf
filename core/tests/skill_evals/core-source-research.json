@@ -97,6 +97,19 @@
           ]
         ]
       }
+    },
+    {
+      "id": "liczba-z-odciskiem-i-badacze",
+      "expect": "trigger",
+      "prompt": "Trzech agentów-badaczy równolegle zbiera dane o wynikach modeli na benchmarku. Dwóch podało tę samą liczbę, trzeci nie znalazł nic. Jak złożyć z tego wiarygodny raport? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["wersj\\w+ (źródła|preprintu|dokumentu)", "identyfikator\\w*", "nazw\\w+ metryki"],
+          ["deklaracj\\w+ (firmy|producenta)", "pomiar\\w* niezależn\\w+", "twórc\\w+ benchmarku", "status\\w* pomiaru"],
+          ["brak\\w* (informacji|wyniku) (pozostaje|to nie)", "nie znalazł\\w* (to nie|≠)", "nie (jest|znaczy) zaprzeczeni\\w+"],
+          ["duplikat\\w*", "te same źródła", "niezależn\\w+ potwierdzeni\\w+", "nie liczy się"]
+        ]
+      }
     }
   ]
 }
