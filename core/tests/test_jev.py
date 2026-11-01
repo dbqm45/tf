@@ -213,6 +213,26 @@ def main() -> int:
     if silent.strip() or none_without_key is not None:
         fails.append("bez klucza Jev powinien być całkowicie wyłączony")
 
+    # 12–14. kalibracja (factory/jev_calibration.py): pas dopasowany na etykietach, próg trasowania, test kolejności
+    cal = load(ROOT / "factory" / "jev_calibration.py", "jev_calibration")
+    total += 1
+    pts = [(0.95, True), (0.9, True), (0.85, True), (0.6, True), (0.55, False), (0.4, False), (0.1, False), (0.05, False)]
+    band = cal.fit_band(pts, target=0.95)
+    if not (band["agreement"] >= 0.95 and band["unsure"] == 1 and band["low"] < 0.55 <= band["high"]):
+        fails.append(f"fit_band: najwęższy pas z zgodnością ≥ celu: {band}")
+    if cal.fit_band([], target=0.95)["low"] != jev.LOW:
+        fails.append("fit_band: bez danych zostaje pas domyślny 0,30–0,70")
+    total += 1
+    routed = [(0.9, True), (0.8, True), (0.7, False), (0.65, True), (0.4, False), (0.2, False)]
+    th = cal.fit_threshold(routed, target=0.75)
+    if not (abs(th["threshold"] - 0.65) < 1e-9 and th["precision"] >= 0.75 and abs(th["coverage"] - 4 / 6) < 1e-9):
+        fails.append(f"fit_threshold: najniższy próg z precyzją ≥ celu: {th}")
+    total += 1
+    order = lambda prompt, opts: opts[0] if "pierwszy" in prompt else sorted(opts)[0]
+    sens = cal.order_sensitivity(order, ["weź pierwszy", "alfabetycznie"], ["c", "a", "b"])
+    if sens != {"checked": 2, "changed": 1}:
+        fails.append(f"order_sensitivity: zmiana wyboru po odwróceniu kolejności opcji: {sens}")
+
     for k in ("TYPESAFE_API_KEY", "TYPESAFE_BASE_URL", "CLAUDE_SKILL_HINT_JEV", "CLAUDE_BIN"):
         os.environ.pop(k, None)
     total += 1
