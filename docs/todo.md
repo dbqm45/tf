@@ -843,7 +843,7 @@ skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyją
   plus test w `skill_gate.py`; przy okazji sprawdzić `skills-ref validate` na kilku skillach (zmiana w `factory/` za
   zgodą człowieka). Klucze spoza specyfikacji (`argument-hint`, `disable-model-invocation`) to rozszerzenia Claude
   Code — zostają, sprawdzić, czy walidator je odrzuca.
-- [ ] **Odwołania zagnieżdżone:** 64 pliki w podkatalogach `references/*/` (np. `fe-architecture/references/components/`)
+- [x] **Odwołania zagnieżdżone** (sprawdzone 2026-11-01: wszystkie 64 pliki — `fe-architecture` 34, `eng-design-patterns` 22, `fe-web-platform` 8 — są wymienione z nazwy bezpośrednio w `SKILL.md` swojego skilla, więc „jeden poziom” jest spełniony; bez plików osieroconych; zmian nie trzeba)**:** 64 pliki w podkatalogach `references/*/` (np. `fe-architecture/references/components/`)
   — sprawdzić, czy prowadzi do nich bezpośredni link z `SKILL.md` (wtedy „jeden poziom” spełniony), czy łańcuch
   przez plik pośredni.
 - [x] **`eng-tech-debt-audit`: odśmiecanie architektury jako rutyna** (zrobione 2026-11-01: sekcja „Odśmiecanie architektury jako rutyna”; ArchUnitPython i liczby prac — do sprawdzenia) — fabryka ma reguły granic
