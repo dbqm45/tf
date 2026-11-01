@@ -544,7 +544,7 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
 zalecane `title`, `description`, `resource`, `tags`; opcjonalne `sources[]`, `generated`, `verified`, `status`
 (`draft`/`stable`/`deprecated`), `stale_after`; zarezerwowane `index.md` (spis do stopniowego odsłaniania) i `log.md`;
 linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
-- [ ] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** (część w `ai-rag` zrobiona 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §3–4, SKILL.md krok 1; zostaje ocena zgodności `docs/knowledge` z OKF i kontrola świeżości w `core-knowledge-base`) — definicje, które muszą być dokładne i mieć właściciela
+- [x] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** (część w `ai-rag` zrobiona 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §3–4, SKILL.md krok 1; reszta 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §1, §2 i §5 — strefy, nagłówek zbliżony do OKF bez deklaracji zgodności, świeżość; kontrola w CI jako kod — gdy pojawi się generowany indeks) — definicje, które muszą być dokładne i mieć właściciela
   (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
   ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
@@ -559,7 +559,7 @@ linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
   pominięcie przy obciążeniu bez ponowienia, serwer MCP z cache sprzed regeneracji). Każdy generowany artefakt
   wiedzy ma znacznik czasu i commit źródła; kontrola w CI porównuje go z `git log -1` i alarmuje po progu (np. 24 h);
   `stale_after`/`verified` z OKF jako pola na to. Dotyczy też map z `eng-codebase-mapping` i cache `kb.py status`.
-- [ ] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (artykuł „The Dev with Two Brains”,
+- [x] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (zrobione 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §2–3; narzędzie `okf-agent-memory` nieużyte) (artykuł „The Dev with Two Brains”,
   C. Core, 2026-10-07; narzędzie `okf-agent-memory` — Go, MIT, conda-forge, CLI + serwer MCP z 6 narzędziami; wersje
   i zachowanie wg autora [niezweryfikowane], przed użyciem `skill_audit` i zgoda człowieka). Pomysły niezależne od
   narzędzia, do `core-knowledge` / `core-project-record`:
@@ -1104,7 +1104,7 @@ refaktorem (oznaczone, nie są specyfikacją); w TODO jest krok archiwizacji del
 akceptacyjne. Liczby z artykułów (2,66% agentowych PR z commitem cofającym, 29,6% „rozwiązanych” łatek innych niż
 ludzka, METR: harness dostawcy nie lepszy od prostego, rozrzut tokenów na rozwiązane zadanie do 40×, słabszy model
 29,2 → 78,0% dzięki korekcie zachowania) [niezweryfikowane]. Braki:
-- [ ] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`):** sześć pól —
+- [x] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`)** (zrobione 2026-11-01: `eng-behavior-preserving-refactoring/references/kontrakt-zmiany.md`; pola w szablonie mode-pdi — razem z krokiem scalenia CHG, do decyzji)**:** sześć pól —
   warunek (kiedy zmiana działa), oczekiwany wynik (nie „błąd zniknął”), chronione zachowania, dozwolony zakres plików
   (wyjście poza = zgłoszenie), dowód naprawy (test czerwony na commicie bazowym, zielony po), dowód braku regresji
   (testy ochronne nagrane na commicie bazowym **przed** zmianą, osobnym etapem, zielone przed i po). Chronione
@@ -1275,7 +1275,7 @@ Przegląd 2026-10-29: `ops-sre-incidents` i `ops-observability` nie mają wątku
   z dowodami i pewnością** (para „wdrożenie → błąd w logach” z wyższą wagą, okno czasu, odrzucenie poniżej
   progu), nie wydaje werdyktów; z kanału incydentu zapisywać rozumowanie (odrzucone hipotezy, co zadziałało, kto
   wiedział) — postmortem jako dane, nie tylko tekst. Zmiany proponowane przez agentów zatwierdza człowiek.
-- [ ] **Wiki z LLM: kod czy plik instrukcji** (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
+- [x] **Wiki z LLM: kod czy plik instrukcji** (zrobione 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §4; lint struktury w `kb.py` — osobno, TDD, gdy wiki powstanie) (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
   z etapami wystarcza dla małej bazy (< ~200 dokumentów) i szukania kształtu; pipeline w kodzie, gdy korpus jest
   duży, wynik ma być powtarzalny, a wiki zasila dalszą automatykę — identyfikator strony jako skrót treści (zmiana
   nazwy pliku nic nie psuje), kontrakty typów między etapami, **lint struktury Markdown** przed zapisem (dwa H1,
