@@ -585,13 +585,13 @@ specyfikacji), plan cięć z dosłownymi ID wymagań, zależnościami i kolumną
 kodem, `plan_drift.py` w talos. Pętle i rutyny (artykuły o „loop/graph engineering” i Routines z tego dnia) pokrywa
 `core-async-delegation` (kontrakt, warunek stopu, budżet, najwyżej 2 próby naprawy) i `core-agent-retro` (lekcje).
 Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet.
-- [ ] **Wejście z Spec Kit** — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
+- [x] **Wejście z Spec Kit** (zrobione 2026-11-01: `proc-requirements-shaping/references/istniejace-specyfikacje.md` §1–2; Spec Kit 1.2.5 sprawdzony w repo; rozpoznanie w intake mode-pdi i talos — osobno, gdy pojawi się projekt) — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
   intake (`proc-requirements-shaping`, mode-pdi, talos) czyta je jako istniejące wymagania, zasady i plan zamiast
   pisać równoległe dokumenty: `spec.md` → wymagania (lint EARS jako raport, bez przepisywania), `constitution.md` →
   zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
   „Równolegle z”. Układ plików i nazwy poleceń sprawdzić w repo github/spec-kit z datą (artykuł opisuje błąd haka
   `before_specify` w nowszej wersji) [niezweryfikowane].
-- [ ] **OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji** (artykuł „OpenSpec + Superpower”, Chimin,
+- [ ] **OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji** (część w `proc-requirements-shaping` zrobiona 2026-11-01: tamże §3–4; zostaje krok scalenia i kontrola przy zamknięciu CHG w mode-pdi — zmiana kontraktu dziennika zmiany, do decyzji) (artykuł „OpenSpec + Superpower”, Chimin,
   2026-05-30): po zakończeniu zmiany jej specyfikacja trafia do głównej, aktualnej specyfikacji systemu, a folder zmiany
   zostaje historią. mode-pdi ma dziennik zmiany `docs/project/changes/CHG-n/` (intencja, plan, decyzje), ale nie
   ma kroku „scal wymagania zmiany do bieżącego stanu wymagań” — sprawdzić, czy faza zamknięcia CHG to robi; jeśli nie,
