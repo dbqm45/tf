@@ -4,7 +4,7 @@ description: Użyj przy logach, metrykach, tracingu, healthcheckach, alertach i 
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj przy logowaniu, metrykach, tracingu, healthcheckach, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana). Nie do debugowania logiki biznesowej ani pipeline'ów CI."
-  slowa: "po wdrożeniu, regresja wydajności, opóźnienia wzrosły, metryki biznesowe, adnotacje wdrożeń, alerty, dashboard"
+  slowa: "po wdrożeniu, regresja wydajności, opóźnienia wzrosły, metryki biznesowe, adnotacje wdrożeń, alerty, dashboard, health zwraca 200, kontener up a nie odpowiada, sonda syntetyczna, synthetic monitoring, wygasł token, bot nie odpowiadał"
 ---
 
 # Obserwowalność
@@ -43,6 +43,11 @@ metadata:
 ## Healthchecki
 - `/health/live` — proces żyje (bez zależności).
 - `/health/ready` — gotowy na ruch (baza, cache osiągalne). Orkiestrator kieruje ruch tylko do „ready”.
+- **Sonda syntetyczna end-to-end:** healthcheck i status kontenera nie dowodzą, że usługa robi swoje (wygasły token
+  potrafi wpychać każdą wiadomość w pustą gałąź obsługi błędu, a `/health` zwraca 200). Cyklicznie (np. co
+  godzinę) wysyłasz prawdziwe zapytanie przez cały potok, od wejścia do odpowiedzi, z asercją: odpowiedź niepusta,
+  zgodna ze schematem, w czasie z SLO. Porażka sondy to alert. Sonda ma osobne konto testowe i znacznik, żeby nie
+  liczyć jej w metrykach biznesowych. Dotyczy zwłaszcza agentów AI i integracji z tokenami, które wygasają.
 
 ## Alerty
 - Alertuj na objawy odczuwalne przez użytkownika (SLO: odsetek błędów, latencja p95), nie na każdą przyczynę.

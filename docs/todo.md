@@ -431,7 +431,7 @@ faza `requirements` z kryteriami akceptacji i bramką B2, `qa-spec-first-testing
 pytania zamiast domysłów), kontekst ładowany przez skille, ślad wymaganie → TSK → test `KLUCZ/AC-n`. Bez nowej
 nazwy ani warstwy metodyki (IDSD/ICE). Do dorobienia w `modes/mode-pdi/` (scenariusze ewaluacji, potem treść i kod
 metodą TDD, bramka skilla; jeden mały PR):
-- [ ] **Szablon `intent.md`: ograniczenia, porażka, powiązania.** Trzy krótkie sekcje wypełniane przez człowieka, który
+- [x] **Szablon `intent.md`: ograniczenia, porażka, powiązania** (zrobione 2026-11-01: szablon, prompt fazy `intent` w `phase_run.py`, test D-2a; sekcje dopisane po istniejących, więc ci_for_sdlc czyta tytuł, treść i metryki bez zmian). Trzy krótkie sekcje wypełniane przez człowieka, który
   chce wyniku: *Ograniczenia* (warunki, w których wynik ma działać), *Kiedy to porażka* (czym wynik nie może być,
   np. „but za 140 USD”, „but niedostępny”), *Powiązania* (obszary i zmiany, których dotyczy). Dziś zamiar ma metryki
   sukcesu i „poza zakresem”, a scenariusze porażki pojawiają się dopiero w wymaganiach pisanych przez agenta.
@@ -585,13 +585,13 @@ specyfikacji), plan cięć z dosłownymi ID wymagań, zależnościami i kolumną
 kodem, `plan_drift.py` w talos. Pętle i rutyny (artykuły o „loop/graph engineering” i Routines z tego dnia) pokrywa
 `core-async-delegation` (kontrakt, warunek stopu, budżet, najwyżej 2 próby naprawy) i `core-agent-retro` (lekcje).
 Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet.
-- [ ] **Wejście z Spec Kit** — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
+- [x] **Wejście z Spec Kit** (zrobione 2026-11-01: `proc-requirements-shaping/references/istniejace-specyfikacje.md` §1–2; Spec Kit 1.2.5 sprawdzony w repo; rozpoznanie w intake mode-pdi i talos — osobno, gdy pojawi się projekt) — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
   intake (`proc-requirements-shaping`, mode-pdi, talos) czyta je jako istniejące wymagania, zasady i plan zamiast
   pisać równoległe dokumenty: `spec.md` → wymagania (lint EARS jako raport, bez przepisywania), `constitution.md` →
   zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
   „Równolegle z”. Układ plików i nazwy poleceń sprawdzić w repo github/spec-kit z datą (artykuł opisuje błąd haka
   `before_specify` w nowszej wersji) [niezweryfikowane].
-- [ ] **OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji** (artykuł „OpenSpec + Superpower”, Chimin,
+- [ ] **OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji** (część w `proc-requirements-shaping` zrobiona 2026-11-01: tamże §3–4; zostaje krok scalenia i kontrola przy zamknięciu CHG w mode-pdi — zmiana kontraktu dziennika zmiany, do decyzji) (artykuł „OpenSpec + Superpower”, Chimin,
   2026-05-30): po zakończeniu zmiany jej specyfikacja trafia do głównej, aktualnej specyfikacji systemu, a folder zmiany
   zostaje historią. mode-pdi ma dziennik zmiany `docs/project/changes/CHG-n/` (intencja, plan, decyzje), ale nie
   ma kroku „scal wymagania zmiany do bieżącego stanu wymagań” — sprawdzić, czy faza zamknięcia CHG to robi; jeśli nie,
@@ -704,22 +704,22 @@ otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez
 Przegląd 2026-10-29: `ai-agents` ma MCP, tracing z identyfikatorem przebiegu i wznawianie, `ops-observability` —
 OpenTelemetry; reszta harness engineering jest pokryta (`core-async-delegation`, hooki, recenzent). Fabryka nie
 wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni priorytet, w `ai-agents`:
-- [ ] **Mapa protokołów:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
+- [x] **Mapa protokołów** (zrobione 2026-11-01: `ai-agents/references/protokoly-i-tracing.md` §1–2; A2A 1.0.1, ACP v1 sprawdzone w repozytoriach)**:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
   punktem końcowym i uwierzytelnianiem; zadania z cyklem życia); ACP (Agent Client Protocol, Zed) — edytor ↔ agent
   kodujący przez JSON-RPC po stdio, z zatwierdzaniem zapisów w edytorze. Kiedy który, że się uzupełniają, oraz
   bezpieczeństwo: Agent Card i wyniki innego agenta to niezaufane wejście (patrz pozycja o protocol pivoting
   w sekcji wzorców bezpieczeństwa). Stan specyfikacji, wersje i opiekunów sprawdzić z datą [niezweryfikowane].
-- [ ] **Tracing wg OpenTelemetry GenAI semantic conventions:** jeden ślad na zadanie, wywołanie modelu i narzędzia
+- [x] **Tracing wg OpenTelemetry GenAI semantic conventions** (zrobione 2026-11-01: tamże §3; status Development, repo `semantic-conventions-genai`)**:** jeden ślad na zadanie, wywołanie modelu i narzędzia
   jako span-y potomne, ponowienia jako nowe span-y w tym samym śladzie, `links` dla rozgałęzień; atrybuty modelu,
   tokenów, kosztu i wyniku guardrails; `trace_id` jako identyfikator korelacji między systemami. Z tych śladów
   ewaluacja offline (`ai-evals`) i koszt (`core-cost-control`, `ops-finops`). Stan konwencji (eksperymentalne?)
   sprawdzić w repo open-telemetry/semantic-conventions z datą.
-- [ ] **Końcowa kontrola „liczby z narzędzia”** (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
+- [x] **Końcowa kontrola „liczby z narzędzia”** (zrobione 2026-11-01: `ai-agents/references/wykonawcy-i-bramki.md` §5) (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
   i identyfikatory w odpowiedzi z wynikami narzędzi (np. wynik oceny ryzyka, limit polisy) i odsyła modelowi
   konkretną rozbieżność; do tego pominięcie powtórzonych identycznych wywołań narzędzia i przypomnienie
   o nieużytych wymaganych narzędziach przed odpowiedzią. Uwaga z demo: reguła guardrails też ma fałszywe
   alarmy (dopasowanie podciągu „ind”) — testuj reguły na prawdziwym słownictwie modelu.
-- [ ] **Syntetyczna sonda end-to-end agenta** (artykuł „Running a Fleet of 33 AI Agents”, J. Hamidun): kontener „Up”
+- [x] **Syntetyczna sonda end-to-end agenta** (zrobione 2026-11-01: `ops-observability` „Healthchecki”, odnośnik `ai-agents` §6) (artykuł „Running a Fleet of 33 AI Agents”, J. Hamidun): kontener „Up”
   i healthcheck „OK” nie dowodzą działania — wygasły token wpychał obsługę wiadomości w pustą gałąź przez 90 min.
   Co godzinę prawdziwe zapytanie przez cały potok z asercją niepustej, zgodnej ze schematem odpowiedzi w czasie SLA
   (`ops-observability`, odnośnik z `ai-agents`).
@@ -1043,7 +1043,7 @@ trybie i piaskownicę jako granicę; `sec-llm-security` — zatwierdzenie ze sku
 w chmurze zatwierdzają edycje plików niezależnie od trybu. Liczby z artykułu (AmPermBench: 36,8% zmian stanu
 — 93 z 253 — przez edycję plików w projekcie, poza klasyfikatorem; 81% niebezpiecznych akcji przeszło całość;
 próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezweryfikowane]. Braki:
-- [ ] **`core-agent-security` / `sec-llm-security`, pokrycie bramki:** bramka zdefiniowana listą skutków (zapis pliku
+- [x] **`core-agent-security` / `sec-llm-security`, pokrycie bramki** (zrobione 2026-11-01: `core-agent-security/references/uprawnienia-i-produkcja.md` §4d)**:** bramka zdefiniowana listą skutków (zapis pliku
   poza bezpiecznym zakresem, sieć, sekrety, uruchomienie procesu), nie nazw narzędzi (`tools=["bash"]` przepuszcza
   ten sam skutek przez edycję pliku stanu — podmiana narzędzia). Trzy osobne liczby: pokrycie (odsetek zmian stanu,
   które w ogóle docierają do bramki), błędy klasyfikatora (FPR/FNR na tym, co ocenił), pominięcia od końca do końca;
@@ -1052,7 +1052,7 @@ próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezw
   ryzyka; akcje niszczące, finansowe, wyprowadzające dane i zmiany uprawnień nigdy tylko na klasyfikatorze.
   Bramka stoi najbliżej narzędzia, po każdym kroku, który może zmienić wywołanie (edycja przez człowieka po
   klasyfikacji = wywołanie bez oceny); licznik odmów z eskalacją, bo bramka bez niego uczy podmiany narzędzia.
-- [ ] **Próg jako polityka:** próg klasyfikatora konfigurowalny i uzasadniony kosztem fałszywej blokady vs pominięcia,
+- [x] **Próg jako polityka** (zrobione 2026-11-01: tamże §4d, z kartą warstwy decyzji)**:** próg klasyfikatora konfigurowalny i uzasadniony kosztem fałszywej blokady vs pominięcia,
   z liczbą bazową (0,1% groźnych wywołań przy FPR 0,4% → ok. 1 z 5 alarmów prawdziwy); co widzi sędzia (prośby
   użytkownika i ładunek wywołania, bez prozy agenta — inaczej da się go przekonać) i dokąd idą argumenty narzędzi
   (sekrety w argumentach wychodzą do dostawcy klasyfikatora). Karta warstwy decyzji z artykułu jako szablon do ADR.
@@ -1320,8 +1320,9 @@ auto; **osobny klasyfikator i prompt bezpieczeństwa dla każdej wiadomości** �
 dokumenty tożsamości) odrzucana zawsze, inne wrażliwe (zdrowie, finanse osobiste) tylko na wyraźne polecenie
 użytkownika. Wg artykułu Estariego (nie sprawdzone u źródła): wysłanie, płatność, podpis i usunięcie czekają na
 zgodę, a handel papierami wartościowymi i przelewy między kontami są wyłączone nawet za zgodą [niezweryfikowane].
-- [ ] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
-  wiadomości:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
+- [x] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
+  wiadomości** (zrobione 2026-11-01: `sec-llm-security/references/wzorce-projektowe-agentow.md` §8, wiersz „agent
+  proaktywny” w `core-async-delegation` §2)**:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
   polecenie” (zdrowie, finanse osobiste), reszta; sprawdzenie każdej wiadomości wychodzącej osobnym klasyfikatorem
   poza głównym agentem, obok zatwierdzania akcji. Do tabeli trybów delegacji: agent proaktywny (skrót + sprawdzanie
   co kilka godzin zamiast ciągłego, bo koszt w limitach) — rytm i lista tematów ustawia użytkownik; lista akcji

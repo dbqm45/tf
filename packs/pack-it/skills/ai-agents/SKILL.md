@@ -4,7 +4,7 @@ description: Użyj przy projekcie agenta LLM lub przepływu agentowego — workf
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy projektujesz agenta LLM albo przepływ agentowy w kodzie — czy w ogóle potrzebny agent, wzorce workflow (prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer), projekt narzędzi (nazwy, opisy, parametry, błędy, idempotencja) i serwerów MCP, inżynieria kontekstu (co trafia do kontekstu, kompaktowanie, pamięć), kompromisy multi-agent, guardrails i uprawnienia, zatwierdzanie przez człowieka akcji nieodwracalnych, tracing i obserwowalność, warunki stopu i budżety, typowe porażki, wybór frameworka (Claude Agent SDK, LangGraph) wg kryteriów. Nie do wywołań SDK, kontraktu wyjścia i pętli narzędzi w kodzie (eng-llm-features), uruchamiania Claude Code bez nadzoru (core-async-delegation), doboru modelu i kosztu pracy z agentem (core-cost-control), bezpieczeństwa agenta-programisty (core-agent-security) ani RAG (ai-rag)."
-  slowa: "agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała"
+  slowa: "agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała, agent wywołuje narzędzie, a potem pisze odpowiedź klientowi, inny limit niż zwróciło narzędzie, liczby z wyników narzędzi, rozbieżność odpowiedzi z narzędziem, wyłapać przed wysłaniem, a2a, agent2agent, agent card, acp, agent client protocol, protokół agent agent, agent partnera w innym frameworku, opentelemetry genai, gen_ai, śledzić agenta w opentelemetry"
 ---
 
 # Projekt agenta LLM — od „czy agent” do granic i obserwowalności
@@ -40,6 +40,7 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    Wystawiasz narzędzia przez **serwer MCP**, gdy korzysta z nich wielu klientów; ta sama zasada: narzędzia
    zorientowane na zadanie, nie na endpointy. Zaufanie do cudzych serwerów MCP: **core-agent-security**; budowa,
    bezpieczeństwo, testy i wersje własnego serwera: **ai-mcp-server**.
+   Agent ↔ agent (A2A) i edytor ↔ agent (ACP), kiedy który: `references/protokoly-i-tracing.md`.
 4. **Kontekst** (okno jest zasobem skończonym, jakość spada, gdy się zapełnia): do kontekstu trafia minimum, które
    pozwala na kolejny krok. Techniki: ładowanie na żądanie (agent trzyma ścieżki i zapytania, a treść pobiera
    narzędziem), usuwanie starych wyników narzędzi, **kompaktowanie** (streszczenie rozmowy w nowym oknie), notatki
@@ -61,7 +62,8 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    modeli: **core-cost-control**.
 8. **Tracing.** Każdy przebieg ma identyfikator; zapisujesz kroki: wejście, wywołanie narzędzia z argumentami
    i wynikiem, tokeny, czas, powód zakończenia. Bez tego nie zdiagnozujesz zapętlenia ani złej decyzji (ogólnie:
-   **ops-observability**; dane osobowe w śladach maskuj). Pamięć długotrwała to kilka kontraktów (semantyczna,
+   **ops-observability**; dane osobowe w śladach maskuj; span-y i atrybuty `gen_ai.*` wg konwencji OpenTelemetry —
+   `references/protokoly-i-tracing.md` §3). Pamięć długotrwała to kilka kontraktów (semantyczna,
    epizodyczna, proceduralna, profil, robocza), a nie jeden indeks wektorowy; trwałe wykonanie zależy od granic
    kroków — `references/pamiec-i-trwale-wykonanie.md`. Błędy stanu się kumulują, więc projektuj wznawianie
    od punktu kontrolnego zamiast restartu od zera.
@@ -76,7 +78,7 @@ Agent, który obsługuje program (desktop, przeglądarka): **najpierw podnieś i
 
 Kilku wykonawców nad wspólnym stanem (dzierżawa, wersja rekordu, ponowienie / wznowienie / kompensacja), „kto jest
 świadkiem tego kroku” (reguła o stanie, akcji lub sekwencji poza modelem), długie przebiegi w wielu oknach kontekstu
-i interfejs harnessu: `references/wykonawcy-i-bramki.md`.
+i interfejs harnessu, kontrola liczb z narzędzi przed odpowiedzią, sonda end-to-end: `references/wykonawcy-i-bramki.md`.
 
 Typowe porażki i środki: `references/porazki-i-wzorce.md`.
 

@@ -61,7 +61,8 @@ PHASES = {
     "delivery": {"persona": "talos", "artifact": None, "gate": None},
 }
 WHAT = {
-    "intent": "zamiar zmiany: problem, warianty z kosztem, wybrany wariant, metryki sukcesu, poza zakresem",
+    "intent": ("zamiar zmiany: problem, warianty z kosztem, wybrany wariant, metryki sukcesu, poza zakresem; "
+               "ograniczenia, kiedy to porażka i powiązania bierzesz ze zgłoszenia, a brak zapisujesz jako pytanie"),
     "requirements": "wymagania z kryteriami akceptacji jako przykłady, wymagania jakości, priorytety",
     "architecture": "architekturę i plan cięć TSK (plan.md z kolumnami Wydanie i Flaga), release.yaml, ADR w design.md",
     "design": ("projekt doświadczenia: przepływy, stany i tabelę ramek Figmy `Wymaganie | Ścieżka | Stan | Ramka | "

@@ -72,6 +72,39 @@
           ["postmortem\\w*", "odrzucon\\w+ hipotez", "rozumowani\\w+"]
         ]
       }
+    },
+    {
+      "id": "sonda-syntetyczna-agenta",
+      "expect": "trigger",
+      "prompt": "Nasz bot agentowy działa w kontenerze; docker pokazuje „Up”, a /health zwraca 200. Mimo to przez półtorej godziny nie odpowiadał na wiadomości, bo wygasł token do API. Jak monitorować, żeby to wyłapać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "syntetyczn\\w*",
+            "sond\\w*",
+            "prawdziw\\w* zapyta\\w*",
+            "synthetic"
+          ],
+          [
+            "cał\\w* potok",
+            "end-to-end",
+            "od końca do końca",
+            "przez wszystkie"
+          ],
+          [
+            "schemat\\w*",
+            "niepust\\w*",
+            "asercj\\w*"
+          ],
+          [
+            "sla",
+            "w czasie",
+            "limit\\w* czasu",
+            "co godzin\\w*",
+            "cyklicz\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

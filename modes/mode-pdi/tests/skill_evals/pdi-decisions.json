@@ -305,6 +305,34 @@
       "ramki projektanta dopasowane, nie rysowane przez agenta bez prośby",
       "design_check.py check CHG-12 przed bramką; braki idą jako pytania do pdi"
     ]
+  },
+  {
+   "id": "zamiar-ograniczenia-porazka",
+   "expect": "trigger",
+   "prompt": "Projekt w trybie mode-pdi. Właściciel produktu chce zmiany CHG-21: „szybszy checkout”. Mam wypełnić intent.md. Co poza problemem, wariantami i metrykami muszę od niego dostać, zanim przejdę do wymagań? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "ograniczeni\\w*"
+     ],
+     [
+      "porażk\\w*",
+      "nie może być",
+      "czym wynik nie"
+     ],
+     [
+      "powiązani\\w*",
+      "obszar\\w*",
+      "inn\\w* zmian"
+     ],
+     [
+      "zapyta\\w*",
+      "pytani\\w*",
+      "od człowieka",
+      "podaje człowiek"
+     ]
+    ]
+   }
   }
 ]
 }

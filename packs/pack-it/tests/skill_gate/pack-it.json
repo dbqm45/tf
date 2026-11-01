@@ -1,6 +1,6 @@
 {
  "ai-agents": {
-  "fingerprint": "441c8f3c27bd6b60",
+  "fingerprint": "9de5a7ed9a141fe2",
   "offline": "2026-11-01"
  },
  "ai-computer-vision": {
@@ -364,7 +364,7 @@
   "offline": "2026-10-22"
  },
  "ops-observability": {
-  "fingerprint": "4824334bf8153131",
+  "fingerprint": "2690065b03581ea8",
   "offline": "2026-11-01"
  },
  "ops-platform-engineering": {
@@ -436,7 +436,7 @@
   "offline": "2026-10-22"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "4fac5f2e0a0e6fb1",
+  "fingerprint": "e52f5907b75ab263",
   "offline": "2026-11-01"
  },
  "proc-safe": {
@@ -500,8 +500,8 @@
   "offline": "2026-10-22"
  },
  "sec-llm-security": {
-  "fingerprint": "494f6bc1aa1b732d",
-  "offline": "2026-10-31"
+  "fingerprint": "47f8edeebb4e271f",
+  "offline": "2026-11-01"
  },
  "sec-malware-analysis": {
   "fingerprint": "16fe971045b39a87",
