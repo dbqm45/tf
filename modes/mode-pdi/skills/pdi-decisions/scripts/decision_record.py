@@ -13,7 +13,9 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0
       (fundament z „Odblokowuje” wskazującym TSK tej zmiany, cięcie z ID wymagania albo weryfikacją — jak REL-008)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision add CHG-12 --statement "…" --why "…" \
       --kind product --by "kto" [--date RRRR-MM-DD] [--source-kind claude-cli] [--drafted-by ai]
-      dopisuje zatwierdzoną decyzję do decisions.md (ref CHG-12/Dn, id puste, wyslano: nie)
+      [--finding DES-001:TSK-1 [--effect resolve|accept_risk|dismiss|confirm]]
+      dopisuje zatwierdzoną decyzję do decisions.md (ref CHG-12/Dn, id puste, wyslano: nie); z --finding to odpowiedź
+      na ustalenie ci_for_sdlc (pole `ustalenie`, statement = odpowiedź), którą ci_for_sdlc czyta z repo (PRB-16)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision pending [--change CHG-12]
       JSON niewysłanych decyzji z gotowymi argumentami record_decision (MCP pdi)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision mark CHG-12/D1 --id DEC-41
@@ -45,7 +47,11 @@ REQUIRED = ("artifact", "phase", "status", "version", "created", "updated", "cha
 OUTCOMES = ("approved", "changes_requested", "rejected")   # gate.decided w kontrakcie pdi 0.4.0
 KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
 SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual")
-ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo", "szkic")   # pola wpisu w decisions.md
+ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo", "szkic",
+         "ustalenie", "skutek")   # pola wpisu w decisions.md; dwa ostatnie: odpowiedź na ustalenie ci_for_sdlc
+# Id ustalenia ci_for_sdlc (reguła:element[:szczegół], np. DES-001:TSK-1) i skutek odpowiedzi (DECISION_EFFECTS w ci_for_sdlc).
+FINDING = re.compile(r"^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[0-9]{3}:[A-Z][A-Z0-9]+-[0-9]+(?::\S{1,80})?$")
+EFFECTS = ("resolve", "accept_risk", "dismiss", "confirm")
 NEW = {"intent": "discovery", "plan": "plan", "decisions": "plan"}   # artefakty `change new` i ich faza
 CHANGES = Path("docs") / "project" / "changes"
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
@@ -192,6 +198,12 @@ def decision_add(a) -> int:
              if a.source_kind not in SOURCE_KINDS]
     errs += [f"--date '{a.date}' — RRRR-MM-DD" for _ in [0] if a.date and not DATE.match(a.date)]
     errs += [f"--{n} puste" for n, v in (("statement", a.statement), ("why", a.why), ("by", a.by)) if not v.strip()]
+    if a.finding and not FINDING.match(a.finding):
+        errs.append(f"--finding '{a.finding}' — id ustalenia ci_for_sdlc, np. DES-001:TSK-1")
+    elif a.finding and a.finding.split(":")[1] not in items_of(a.key):
+        errs.append(f"--finding '{a.finding}' dotyczy {a.finding.split(':')[1]}, a to nie {a.key} ani jego cięcie (plan.md)")
+    if a.effect and not a.finding:
+        errs.append("--effect tylko z --finding")
     if errs:
         print("✗ " + "; ".join(errs))
         return 1
@@ -200,6 +212,8 @@ def decision_add(a) -> int:
     entry = (f"\n## {a.statement.strip()}\n- ref: {ref}\n- id:\n- wyslano: nie\n- kiedy: {a.date or dt.date.today().isoformat()}\n"
              f"- kto: {a.by.strip()}\n- rodzaj: {a.kind}\n- dlaczego: {a.why.strip()}\n- zrodlo: {a.source_kind}\n"
              f"- szkic: {a.drafted_by}\n")
+    if a.finding:
+        entry += f"- ustalenie: {a.finding}\n" + (f"- skutek: {a.effect}\n" if a.effect else "")
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
     print(f"✓ {ref} w {f} (wyslano: nie)")
     return 0
@@ -276,8 +290,17 @@ def decision_export() -> int:
     return 0
 
 
+def items_of(key: str) -> set[str]:
+    """Zmiana i jej cięcia (`tasks` w nagłówku plan.md i TSK z jego tabeli): elementy, których dotyczą jej ustalenia."""
+    plan = CHANGES / key / "plan.md"
+    text = plan.read_text(encoding="utf-8") if plan.is_file() else ""
+    tasks = (parse_header(text) or {}).get("tasks") or []
+    return {key, *(tasks if isinstance(tasks, list) else []), *re.findall(r"\|\s*(TSK-[0-9]+)\s*\|", text)}
+
+
 def check_entries(path: Path) -> list[str]:
     errs, seen = [], set()
+    items = items_of(path.parent.name)
     for e in parse_entries(path):
         r = e["ref"]
         if not re.fullmatch(rf"{re.escape(path.parent.name)}/D\d+", r):
@@ -300,6 +323,13 @@ def check_entries(path: Path) -> list[str]:
         if not DATE.match(e.get("kiedy", "")):
             errs.append(f"{r}: kiedy RRRR-MM-DD")
         errs += [f"{r}: brak pola {k}" for k in ("kto", "dlaczego") if not e.get(k)]
+        finding = e.get("ustalenie")
+        if finding is not None and not FINDING.match(finding):
+            errs.append(f"{r}: ustalenie '{finding}' — id ustalenia ci_for_sdlc, np. DES-001:TSK-1")
+        elif finding and finding.split(":")[1] not in items:
+            errs.append(f"{r}: ustalenie {finding} dotyczy elementu spoza {path.parent.name} i jej cięć")
+        if e.get("skutek") is not None and (not finding or e["skutek"] not in EFFECTS):
+            errs.append(f"{r}: skutek {'/'.join(EFFECTS)} i tylko przy polu ustalenie")
     return errs
 
 
@@ -515,6 +545,8 @@ def main(argv: list[str]) -> int:
     add.add_argument("--date")
     add.add_argument("--source-kind", default="claude-cli")
     add.add_argument("--drafted-by", default="ai", choices=("ai", "human"))
+    add.add_argument("--finding", help="id ustalenia ci_for_sdlc, na które to odpowiedź (np. DES-001:TSK-1)")
+    add.add_argument("--effect", choices=EFFECTS, help="skutek odpowiedzi; domyślnie resolve")
     dec.add_parser("pending").add_argument("--change")
     mark = dec.add_parser("mark")
     mark.add_argument("ref")
