@@ -1,5 +1,4 @@
 # Composite schedule wg libocpp — reguły i przypadki brzegowe
-> Recurring · 4. Jednostki i fazy · 5. Czego libocpp nie rozstrzyga
 
 Źródło: EVerest libocpp, `doc/common/smart_charging_profiles.md` (L1-246 w `.claude/knowledge/everest-libocpp-smart-charging/doc.txt`),
 `doc/v2/ocpp_201_smart_charging_in_depth.md` (L247-429), testy `test_composite_schedule.cpp` (od L430); pobrane

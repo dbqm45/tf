@@ -1,5 +1,4 @@
 # Kontrakt delegacji — szablon, przykłady, dry run
-> 4. Przykład: rutyna dzienna · 5. Przykład: zdalna kontrola lokalnej sesji · 6. Dry run, gdy funkcja jest niedostępna
 
 ## 1. Szablon do wypełnienia
 Skopiuj do polecenia (część pól przenieś do konfiguracji środowiska — tabela w §2). Pole puste = decyzja jeszcze

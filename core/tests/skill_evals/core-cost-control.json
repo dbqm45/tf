@@ -257,6 +257,29 @@
           ["licznik\\w* dostawcy", "dane (dostawcy|z API)", "szacowan\\w+ ze znaków", "subskrypcj\\w+", "rzeczywist\\w+ zużyci\\w+"]
         ]
       }
+    },
+    {
+      "id": "ultrathink-ultracode",
+      "expect": "trigger",
+      "prompt": "Sesja w Claude Code chodzi na effort medium. Jedno pytanie w środku zadania jest trudne. Mam przełączyć /effort na max, napisać ultrathink czy włączyć ultracode? Co to zmienia w koszcie i cache? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ultrathink.{0,120}(jedn\\w* tur|tej turze|bez zmiany)",
+            "(jedn\\w* tur|tej turze).{0,80}ultrathink"
+          ],
+          [
+            "ultracode.{0,160}(workflow|wielu agent|orkiestr)",
+            "(workflow|orkiestr).{0,80}ultracode"
+          ],
+          [
+            "cache"
+          ],
+          [
+            "xhigh"
+          ]
+        ]
+      }
     }
   ]
 }

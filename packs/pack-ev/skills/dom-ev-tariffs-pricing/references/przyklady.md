@@ -1,5 +1,4 @@
 # Przykłady z liczbami
-> 5. Ad hoc · 6. Podatek w USA · 7. CDR z krokiem · 8. Jak użyć w testach · 9. Wejście kalkulatora
 
 Wszystkie liczby z `mod_tariffs.asciidoc` (tagi `v2.2.1-d2` / `v2.3.0`) i `examples/*.json`, sprawdzone 2026-10-20;
 przeliczenia własne oznaczono. Kwoty w EUR, o ile nie napisano inaczej.

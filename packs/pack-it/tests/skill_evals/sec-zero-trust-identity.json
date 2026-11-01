@@ -50,6 +50,44 @@
       "expect": "no-trigger",
       "prompt": "Jak w aplikacji webowej poprawnie zaimplementować logowanie przez OAuth z PKCE i odświeżanie tokenów?",
       "neighbor": "be-auth-security"
+    },
+    {
+      "id": "tozsamosc-agenta-delegacja",
+      "expect": "trigger",
+      "prompt": "Wdrażamy kilka agentów AI, które wywołują nasze API w imieniu użytkowników. Dziś wszystkie używają jednego konta usługi z długim tokenem. Jak to zrobić w modelu Zero Trust? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "spiffe",
+            "svid",
+            "tożsamoś\\w* obciąż",
+            "workload identity"
+          ],
+          [
+            "każd\\w* (agent|instancj)",
+            "osobn\\w* tożsamo"
+          ],
+          [
+            "dpop",
+            "mtls",
+            "związan\\w* z kluczem",
+            "sender.constrain",
+            "rfc 8705",
+            "rfc 9449"
+          ],
+          [
+            "w imieniu",
+            "token\\w* użytkownika",
+            "token exchange",
+            "rfc 8693",
+            "delegac\\w*"
+          ],
+          [
+            "audyt\\w*",
+            "log\\w*"
+          ]
+        ]
+      }
     }
   ]
 }

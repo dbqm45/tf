@@ -1,5 +1,4 @@
 # Cena dla kierowcy — ad hoc, kontrakt, dynamika, przepisy
-> 5. USA i Kanada · 6. Waluta · 7. Źródła
 
 ## 1. Dwie ścieżki ceny
 | | Ad hoc | Kontrakt |

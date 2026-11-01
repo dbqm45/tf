@@ -119,6 +119,70 @@
           ["odbiorc\\w+ tokenu", "audience", "aud\\b", "resource", "iss\\b", "RFC 9207"]
         ]
       }
+    },
+    {
+      "id": "migracja-na-2026-07-28",
+      "expect": "trigger",
+      "prompt": "Nasz zdalny serwer MCP trzyma stan rozmowy w sesji (Mcp-Session-Id) i używa sampling do wywołań modelu. Co nas czeka przy przejściu na specyfikację 2026-07-28? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "bezstanow\\w*",
+            "stateless",
+            "bez sesji",
+            "usunię\\w* sesj"
+          ],
+          [
+            "initialize"
+          ],
+          [
+            "uchwyt\\w*",
+            "handle",
+            "jawn\\w* (identyfik|stan)"
+          ],
+          [
+            "sampling.{0,80}(przestarz|deprecat)",
+            "(przestarz|deprecat).{0,80}sampling"
+          ],
+          [
+            "mrtr|multi round|input_required"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mcp-app-czy-tekst",
+      "expect": "trigger",
+      "prompt": "Chcemy, żeby nasz serwer MCP pokazywał w czacie interaktywny ekran zatwierdzania faktury z przyciskiem „Zatwierdź”. Robić MCP App i jak zabezpieczyć zatwierdzenie, żeby model nie kliknął go sam? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "visibility",
+            "widoczno\\w*"
+          ],
+          [
+            "\\[\\s*\"?app\"?\\s*\\]",
+            "tylko (dla )?(app|aplikacj)",
+            "model (go )?nie widzi",
+            "ukryt\\w* przed model"
+          ],
+          [
+            "wersj\\w*",
+            "nieaktualn\\w*"
+          ],
+          [
+            "po stronie serwera",
+            "serwer\\w* (sprawdza|weryfik|autoryz)",
+            "ui nie jest granic"
+          ],
+          [
+            "tekst\\w*",
+            "treś\\w* strukturaln",
+            "fallback",
+            "host nie obsługuje"
+          ]
+        ]
+      }
     }
   ]
 }

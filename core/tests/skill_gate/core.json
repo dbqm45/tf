@@ -12,7 +12,7 @@
   "offline": "2026-11-01"
  },
  "core-async-delegation": {
-  "fingerprint": "fc41b50ac66862f1",
+  "fingerprint": "e4a34890da1e5149",
   "offline": "2026-11-01"
  },
  "core-conventional-commits": {
@@ -20,8 +20,8 @@
   "offline": "2026-10-26"
  },
  "core-cost-control": {
-  "fingerprint": "0eef4297aa84b504",
-  "offline": "2026-10-30"
+  "fingerprint": "c48d2d59b647fdf3",
+  "offline": "2026-11-01"
  },
  "core-delivery-lifecycle": {
   "fingerprint": "af2597a07009b2cc",
@@ -32,8 +32,8 @@
   "offline": "2026-10-20"
  },
  "core-git-workflow": {
-  "fingerprint": "44c2fb7e57e30c43",
-  "offline": "2026-10-31"
+  "fingerprint": "99b6cc6e3333f3f5",
+  "offline": "2026-11-01"
  },
  "core-grounding": {
   "fingerprint": "55d6d14a13e0f9db",

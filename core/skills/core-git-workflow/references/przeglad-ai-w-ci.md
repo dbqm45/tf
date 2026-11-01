@@ -1,5 +1,4 @@
 # Przegląd PR przez AI w CI — wzorzec operacyjny
-> przeglądzie względem planu · 6. Publikacja i bramka · 7. Pętla uczenia się · 8. Podział skilla przeglądu
 
 Kryteria przeglądu względem planu i triaż z człowiekiem: skill przeglądu zmiany (pack-it: qa-change-review).
 Bezpieczeństwo workflow (uprawnienia, SHA akcji, `env:` zamiast interpolacji): skill CI/CD (pack-it: ops-ci-cd). Ten plik opisuje, jak przegląd AI działa **jako krok CI**.

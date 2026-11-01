@@ -1,5 +1,4 @@
 # step_size i zaokrąglanie
-> 5. Zaokrąglanie ceny · 6. Źródła
 
 ## 1. Reguła (2.2.1-d2 i 2.3.0, rozdział o CDR)
 1. `step_size` stosuje się **raz na sesję** dla `ENERGY` oraz **raz** dla `TIME` i `PARKING_TIME` łącznie.

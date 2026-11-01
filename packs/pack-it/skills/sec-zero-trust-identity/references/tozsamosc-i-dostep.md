@@ -39,3 +39,35 @@ zamiast postury.
 ## Sygnały ciągłej oceny
 Anomalie logowania (niemożliwa podróż, nowe urządzenie), ryzyko z IdP, alerty EDR, zmiana uprawnień. Reakcja:
 wymuszenie ponownego uwierzytelnienia, ograniczenie sesji, odcięcie. Obsługa incydentu: `ops-security-operations`.
+
+## Tożsamość agentów AI i delegacja
+Agent to obciążenie (workload), które działa także w imieniu człowieka. Jedno wspólne konto usługi z długim tokenem
+zaciera, kto co zrobił, a skradziony token działa wszędzie.
+- **Każdy agent i każda jego instancja ma własną tożsamość obciążenia**, osobną od loginu człowieka, z nazwanym
+  właścicielem. Standard: **SPIFFE** — identyfikator `spiffe://<domena-zaufania>/<ścieżka>`, krótko żyjące SVID
+  (X.509 albo JWT) pobierane przez Workload API (lokalne gniazdo, bez sekretu w kodzie), implementacja referencyjna
+  SPIRE. Rotacja certyfikatu jest automatyczna, więc nie ma długiego klucza do wycieku.
+- **Działanie w imieniu użytkownika = token użytkownika związany z kluczem agenta** (sender-constrained):
+  - mTLS: token niesie odcisk certyfikatu klienta (`cnf` → `x5t#S256`, RFC 8705), a serwer zasobu porównuje go
+    z certyfikatem z tego samego połączenia TLS;
+  - DPoP (RFC 9449): agent dołącza do każdego żądania dowód podpisany swoim kluczem;
+  - skradziony token bez klucza agenta jest bezużyteczny.
+- **Przejście między usługami: wymiana tokenu** (RFC 8693) zamiast przekazywania oryginału. Nowy token jest
+  zawężony do odbiorcy i zakresu, a roszczenie `act` zapisuje, kto działa w czyim imieniu (zagnieżdżone `act`
+  dla łańcucha). `act` mówi tylko kto, nie z jakimi ograniczeniami na każdym kroku; propozycje łańcucha delegacji to
+  na razie szkice IETF.
+- **Log audytu:** „instancja X agenta Y w imieniu użytkownika Z, token z wymiany W, zasób R”. Bez tego nie
+  odtworzysz incydentu.
+- **Usługi bez obsługi wiązania tokenu** wpisujesz jawnie jako słabsze ogniwo (rejestr ryzyka, sec-risk-management):
+  krótszy czas życia tokenu, wąski zakres, osobna sieć.
+- Platformy chmurowe dają to gotowe (np. Google Cloud Agent Identity: tożsamość SPIFFE i certyfikat X.509 na
+  24 h dla każdego agenta, tokeny związane z certyfikatem, mTLS do bramki i DPoP dalej). Zakres usług i status
+  funkcji (część w Preview) sprawdzasz w dokumentacji dostawcy z datą.
+- Bezpieczeństwo samego agenta (wstrzyknięcia, nadmierna sprawczość, ASI03 Identity & Privilege Abuse):
+  sec-llm-security.
+
+Źródła (sprawdzone 2026-11-01): github.com/spiffe/spiffe — `standards/SPIFFE.md`, `SPIFFE_Workload_API.md`,
+README (projekt CNCF, status graduated); RFC 8705, 9449, 8693 — numery, tytuły i pola `cnf`/`x5t#S256` i `act`
+potwierdzone w wyszukiwarce i dokumentacji implementacji (rfc-editor.org i ietf.org niedostępne z sieci sesji);
+docs.cloud.google.com/iam/docs/agent-identity-overview (przez wyszukiwarkę, 2026-11-01); G. Blaquiere, „SPIFFE:
+Why Google's New Agent Identity…” (2026-06-09).
