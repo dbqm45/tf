@@ -1609,7 +1609,7 @@ Host niedostępny z sieci sesji (`ENOTFOUND` albo proxy 403). Fakty zależne od 
 - https://medium.com/data-science-collective/a-blueprint-for-agentic-coding-tools-c1e0e2ed797b (pełny artykuł I. Silfverskiöld; Medium 403, 2026-10-30)
 Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2026-10-30: 403) — treść pochodziła z wklejek.
 - Z przeglądu 2026-11-01 (pozycje „sprawdzenie w sieci”; fakty wzięte z repozytoriów na GitHubie albo z wyszukiwarki):
-  - https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ i https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/ [adres orientacyjny] (listy 2026; użyte repo GenAI-Security-Project/GenAI-LLM-Top10)
+  - https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/ i https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/ (Agentic — **PDF przekazany 2026-11-01**, naniesione) (listy 2026; użyte repo GenAI-Security-Project/GenAI-LLM-Top10)
   - RFC 8705, 9449, 8693 — **przekazane przez człowieka 2026-11-01** (PDF); naniesione w `sec-zero-trust-identity`
   - https://docs.cloud.google.com/iam/docs/agent-identity-overview — **przekazane przez człowieka 2026-11-01**; naniesione
   - https://modelcontextprotocol.io/specification/2026-07-28/changelog — **przekazane przez człowieka 2026-11-01**, zgodne z repo; dopisane szczegóły (kody błędów, `inputRequests`, `iss`)

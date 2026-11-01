@@ -66,10 +66,14 @@ Ochrona agenta Claude Code, który pracuje na Twoim repo: `core-agent-security`.
 Numer podawaj zawsze z rokiem (`LLM03:2026`), bo numeracja się zmieniła. Łańcuch dostaw modeli (LLM04): modele
 i adaptery tylko z zaufanych źródeł, weryfikacja skrótu, bez formatów z wykonywalną deserializacją (pickle),
 SBOM/AIBOM (`ops-supply-chain-security`).
-**Agent z narzędziami, pamięcią lub innymi agentami** — mapuj też na Agentic Top 10 2026: ASI01 Agent Goal Hijack,
-ASI02 Tool Misuse & Exploitation, ASI03 Identity & Privilege Abuse, ASI04 Agentic Supply Chain, ASI05 Unexpected Code
-Execution, ASI06 Memory & Context Poisoning, ASI07 Insecure Inter-Agent Communication, ASI08 Cascading Failures, ASI09
-Human-Agent Trust Exploitation, ASI10 Rogue Agents. Mapowanie LLM ↔ ASI: Appendix A wydania 2026.
+**Agent z narzędziami, pamięcią lub innymi agentami** — mapuj też na OWASP Top 10 for Agentic Applications
+(wersja 2026, wydana w grudniu 2025): ASI01 Agent Goal Hijack, ASI02 Tool Misuse and Exploitation, ASI03 Identity and
+Privilege Abuse, ASI04 Agentic Supply Chain Vulnerabilities, ASI05 Unexpected Code Execution (RCE), ASI06 Memory &
+Context Poisoning, ASI07 Insecure Inter-Agent Communication, ASI08 Cascading Failures, ASI09 Human-Agent Trust
+Exploitation, ASI10 Rogue Agents. Granice: legalne narzędzie użyte szkodliwie w ramach uprawnień → ASI02; eskalacja
+uprawnień lub dziedziczenie poświadczeń → ASI03; wykonanie dowolnego kodu → ASI05; definicje narzędzi z serwerów
+MCP → także ASI04. Zasada dokumentu: **Least-Agency** — nie dawaj autonomii tam, gdzie nie jest potrzebna, i zapewnij
+widoczność, co agent robi i jakimi narzędziami. Mapowanie LLM ↔ ASI: Appendix A wydania LLM 2026.
 
 ## Przykład
 **Wejście:** „Asystent czyta skrzynkę klienta, streszcza maile i może odpowiadać. Atakujący wysyła mail z ukrytą
@@ -102,7 +106,7 @@ obcej treści; (4) render bez zdalnych obrazów. Test regresji: mail z instrukcj
 ## Źródła
 - OWASP GenAI LLM Top 10 2026 (wydane 2026-08-04): github.com/GenAI-Security-Project/GenAI-LLM-Top10, `2026/final/`
   (sprawdzone 2026-11-01; genai.owasp.org niedostępne z sieci sesji); OWASP Top 10 for Agentic Applications 2026
-  (ogłoszone 2025-12-09) — nazwy ASI01–ASI10 z Appendix A tego wydania
+  (wersja 2026, grudzień 2025; PDF przekazany przez człowieka 2026-11-01 — nazwy, granice ASI02/03/05, Least-Agency)
 - [MITRE ATLAS](https://atlas.mitre.org/) · NVIDIA garak, Microsoft PyRIT (szczegóły: `references/red-teaming.md`)
 - S. Willison, „The lethal trifecta” (2025) [niezweryfikowane: dokładna data]
 Opisane własnymi słowami.
