@@ -1615,5 +1615,5 @@ Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2
   - https://modelcontextprotocol.io/specification/2026-07-28/changelog — **przekazane przez człowieka 2026-11-01**, zgodne z repo; dopisane szczegóły (kody błędów, `inputRequests`, `iss`)
   - https://eur-lex.europa.eu/legal-content/PL/TXT/HTML/?uri=CELEX:32024R1689 (art. 50 ust. 2 i 7, art. 113 AI Act; data stosowania art. 50 — 2026-08-02 — potwierdzona już stroną Komisji)
   - https://digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content — **przekazane przez człowieka 2026-11-01** (strona o kodeksie; naniesione w `ai-governance-compliance/references/znakowanie-techniczne.md`). Zostaje: PDF samego kodeksu (sekcja 1, warstwy znakowania) i wytyczne do art. 50 (czy przyjęte, termin 2026-12-02)
-  - https://a2a-protocol.org/latest/specification/, https://agentclientprotocol.com/, https://opentelemetry.io/docs/specs/semconv/gen-ai/ (użyte repozytoria projektów)
+  - https://a2a-protocol.org/latest/specification/ — **przekazane przez człowieka 2026-11-01**, naniesione; https://agentclientprotocol.com/, https://opentelemetry.io/docs/specs/semconv/gen-ai/ (użyte repozytoria projektów)
   - arXiv 2301.10226 (Kirchenbauer i in.) — **przekazane przez człowieka 2026-11-01** jako PDF v4; naniesione (25 tokenów, z = 4, entropia, katalog ataków)
