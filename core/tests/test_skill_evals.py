@@ -43,7 +43,7 @@ print(json.dumps({"type": "result", "subtype": "success", "result": "Użyj nagł
 """
 
 
-PROTOCOL_TESTS = 4
+PROTOCOL_TESTS = 7
 
 
 def protocol_tests() -> list[str]:
@@ -95,6 +95,37 @@ def protocol_tests() -> list[str]:
         fails.append(f"protocol: bez skilli pełna odpowiedź po kryteriach; holdout osobno, niestabilny między powtórzeniami: {b} {h}")
     if w.get("triggered") != 1:
         fails.append(f"protocol: uruchomienie skilla raportowane osobno: {w}")
+    # 5. --per-skill: równa próba zbioru strojenia na skill (powtarzalna), holdout zawsze w całości
+    pool = ([{"skill": "a", "id": f"t{i}", "expect": "trigger"} for i in range(6)]
+            + [{"skill": "b", "id": f"t{i}", "expect": "trigger"} for i in range(2)]
+            + [{"skill": "a", "id": f"h{i}", "expect": "trigger", "holdout": True} for i in range(3)])
+    s1, s2 = ev.sample_per_skill(pool, 2, seed=7), ev.sample_per_skill(pool, 2, seed=7)
+    per = {}
+    for s in s1:
+        if not s.get("holdout"):
+            per[s["skill"]] = per.get(s["skill"], 0) + 1
+    if ([(s["skill"], s["id"]) for s in s1] != [(s["skill"], s["id"]) for s in s2] or per != {"a": 2, "b": 2}
+            or sum(bool(s.get("holdout")) for s in s1) != 3):
+        fails.append(f"sample_per_skill: po 2 na skill, powtarzalnie, holdout w całości: {per} {s1}")
+    if [s["id"] for s in ev.sample_per_skill(pool, 0)] != [s["id"] for s in pool]:
+        fails.append("sample_per_skill: n=0 nie zmienia listy")
+    # 6. luka strojenie − holdout (sygnał uczenia się egzaminu) i przewaga skilli w każdym zbiorze
+    proto = [{"model": "haiku", "baseline": False, "set": "strojenie", "tasks": 10, "full_pass": 9},
+             {"model": "haiku", "baseline": False, "set": "holdout", "tasks": 10, "full_pass": 7},
+             {"model": "haiku", "baseline": True, "set": "strojenie", "tasks": 10, "full_pass": 4},
+             {"model": "haiku", "baseline": True, "set": "holdout", "tasks": 10, "full_pass": 4}]
+    g = {r["model"]: r for r in ev.gap(proto)}.get("haiku") or {}
+    if (round(g.get("tuning", -1), 2), round(g.get("holdout", -1), 2), round(g.get("gap", -1), 2),
+            round(g.get("uplift_tuning", -1), 2), round(g.get("uplift_holdout", -1), 2)) != (0.9, 0.7, 0.2, 0.5, 0.3):
+        fails.append(f"gap: wynik strojenia, holdoutu, luka i przewaga skilli w obu zbiorach: {g}")
+    if ev.gap([p for p in proto if p["set"] == "strojenie"]):
+        fails.append("gap: bez holdoutu nie ma luki do policzenia")
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d) / "r.md"
+        rws = [{**row("a", False, True, 2, 0.1), "holdout": False}, {**row("h", False, False, 1, 0.1), "holdout": True}]
+        ev.report(rws, out)
+        if "Luka strojenie − holdout" not in out.read_text(encoding="utf-8"):
+            fails.append("report: brak sekcji „Luka strojenie − holdout”")
     return fails
 
 

@@ -39,6 +39,9 @@ Sama treść SKILL.md niczego nie dowodzi.
    pokazuje, ile treści zalicza model bez skilli fabryki.
    - **Zamknięty zbiór** (`tests/skill_evals/holdout/<skill>.json`) mierzy, nie stroi: jego porażki nie prowadzą do
      zmian opisu, słów ani treści pod te pytania. Inaczej wynik mierzy dopasowanie do egzaminu, nie skill.
+     Autor zmiany (człowiek albo agent) nie czyta plików holdout. Zmianę przyjmujesz, gdy poprawia zbiór strojenia
+     i nie pogarsza holdoutu; dużą lukę „strojenie − holdout” w raporcie (`--per-skill N`) traktujesz jak sygnał
+     uczenia się egzaminu.
 5. **Minimalna treść**, która zamyka luki:
    - **jeden skill, jedno zadanie** — opis wymieniający kilka niezależnych zadań to sygnał do podziału;
    - procedura (kroki, kolejność, punkty decyzji, format wyniku), a nie wykład; zakładaj, że model jest bystry —

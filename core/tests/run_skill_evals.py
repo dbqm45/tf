@@ -141,6 +141,40 @@ def holdout_set(scenarios: list[dict]) -> list[dict]:
     return [s for s in scenarios if s.get("holdout")]
 
 
+def sample_per_skill(scenarios: list[dict], n: int, seed: int = 0) -> list[dict]:
+    """Równa próba zbioru strojenia: najwyżej `n` scenariuszy na skill, wybór powtarzalny (`seed`), kolejność
+    zachowana. Holdout zostaje w całości — porównanie „strojenie − holdout” wymaga podobnej liczby pytań na skill."""
+    if n <= 0:
+        return scenarios
+    import random
+    keep = set()
+    by = {}
+    for i, s in enumerate(scenarios):
+        if not s.get("holdout"):
+            by.setdefault(s["skill"], []).append(i)
+    for skill, idx in sorted(by.items()):
+        rnd = random.Random(f"{seed}:{skill}")
+        keep.update(rnd.sample(idx, min(n, len(idx))))
+    return [s for i, s in enumerate(scenarios) if s.get("holdout") or i in keep]
+
+
+def gap(proto: list[dict]) -> list[dict]:
+    """Luka „strojenie − holdout” dla każdego modelu (ze skillami): duża luka = skille nauczyły się egzaminu.
+    Gdy jest ramię bez skilli, także przewaga skilli w każdym zbiorze — różnica przewag nie zależy od trudności pytań."""
+    rate = {(p["model"], p["baseline"], p["set"]): p["full_pass"] / p["tasks"] for p in proto if p.get("tasks")}
+    out = []
+    for model in sorted({m for m, _, _ in rate}):
+        t, h = rate.get((model, False, "strojenie")), rate.get((model, False, "holdout"))
+        if t is None or h is None:
+            continue
+        row = {"model": model, "tuning": t, "holdout": h, "gap": t - h}
+        bt, bh = rate.get((model, True, "strojenie")), rate.get((model, True, "holdout"))
+        if bt is not None and bh is not None:
+            row.update(uplift_tuning=t - bt, uplift_holdout=h - bh)
+        out.append(row)
+    return out
+
+
 def select_ids(scenarios: list[dict], ids: str) -> tuple[list[dict], list[str]]:
     """Scenariusze o podanych identyfikatorach (`id` albo `skill:id`, po przecinku) i lista identyfikatorów bez trafienia."""
     want = [x.strip() for x in ids.split(",") if x.strip()]
@@ -457,6 +491,19 @@ def report(results: list[dict], out: Path) -> None:
             trig = "—" if p["triggered"] is None else f"{p['triggered']}/{p['tasks']}"
             lines.append(f"| {p['model']} | {arm} | {p['set']} | {p['full_pass']}/{p['tasks']} "
                          f"({p['full_pass'] / p['tasks']:.0%}) | {trig} | {crit} | ${p['cost']:.2f} | {per} | {p['unstable']} |")
+    gaps = gap(proto) if proto else []
+    if gaps:
+        lines += ["", "## Luka strojenie − holdout", "",
+                  "Zaliczone w całości ze skillami na zbiorze strojenia minus na holdoucie. Duża luka znaczy, że opisy "
+                  "i treść skilli dopasowały się do pytań, na których je stroimy. Przewaga = ze skillami minus bez skilli "
+                  "w tym samym zbiorze; różnica przewag nie zależy od trudności pytań. Zmianę skilla przyjmujemy, gdy "
+                  "poprawia strojenie i nie pogarsza holdoutu.", "",
+                  "| Model | Strojenie | Holdout | Luka | Przewaga skilli: strojenie | Przewaga skilli: holdout |",
+                  "|---|---|---|---|---|---|"]
+        for g in gaps:
+            ut = "—" if "uplift_tuning" not in g else f"{g['uplift_tuning']:+.0%}"
+            uh = "—" if "uplift_holdout" not in g else f"{g['uplift_holdout']:+.0%}"
+            lines.append(f"| {g['model']} | {g['tuning']:.0%} | {g['holdout']:.0%} | {g['gap']:+.0%} | {ut} | {uh} |")
     fails = [r for r in results if not r["passed"]]
     if fails:
         lines += ["", "## Niezaliczone", ""]
@@ -498,6 +545,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--repeats", type=int, default=1, help="powtórzenia każdego przebiegu (rozrzut wyniku w protokole)")
     ap.add_argument("--holdout", choices=("include", "exclude", "only"), default="include",
                     help="zamknięty zbiór testowy: include (pomiar), exclude (strojenie skilla), only (sam holdout)")
+    ap.add_argument("--per-skill", type=int, default=0, help="najwyżej N scenariuszy strojenia na skill (losowo, "
+                    "powtarzalnie; holdout w całości) — równa próba do luki „strojenie − holdout”")
+    ap.add_argument("--seed", type=int, default=0, help="ziarno losowania dla --per-skill")
     ap.add_argument("--yes", action="store_true", help="bez pytania o potwierdzenie")
     ap.add_argument("--validate", action="store_true", help="tylko sprawdź pliki scenariuszy")
     args = ap.parse_args(argv[1:])
@@ -525,6 +575,8 @@ def main(argv: list[str]) -> int:
         scenarios = [s for s in scenarios if s["expect"] == args.only]
     if args.holdout != "include":
         scenarios = holdout_set(scenarios) if args.holdout == "only" else tuning_set(scenarios)
+    if args.per_skill:
+        scenarios = sample_per_skill(scenarios, args.per_skill, args.seed)
     if args.only_failed:
         failed = set()
         for line in Path(args.only_failed).read_text(encoding="utf-8").splitlines():
