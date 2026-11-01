@@ -214,6 +214,39 @@ def main() -> int:
         r = run(["check"], repo)
         check(r.returncode != 0, f"E-15: check wykrywa wyslano: tak bez numeru: {r.stdout}")
 
+    # PRB-16: odpowiedź na ustalenie ci_for_sdlc (pole ustalenie, opcjonalny skutek), czytana przez ci_for_sdlc z repo.
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12", "--source", "PRB-34"], repo)
+        dec = repo / "docs" / "project" / "changes" / "CHG-12" / "decisions.md"
+        add = ["decision", "add", "CHG-12"]
+        plan = repo / "docs" / "project" / "changes" / "CHG-12" / "plan.md"
+        plan.write_text(plan.read_text(encoding="utf-8").rstrip("\n") + "\n\n| Cięcie | Wartość |\n|---|---|\n| TSK-57 | ponowienie płatności |\n",
+                        encoding="utf-8")
+        fadd = add[:3] + ["--statement", "Błędy płatności pokazują kontakt do wsparcia.", "--why", "Ustalone ze wsparciem.",
+                          "--kind", "product", "--by", "Ann", "--drafted-by", "human"]
+        r = run(fadd + ["--finding", "DES-001:TSK-57", "--effect", "accept_risk"], repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "- ustalenie: DES-001:TSK-57\n- skutek: accept_risk\n" in text,
+              f"F-1: decision add --finding zapisuje ustalenie i skutek: {r.stdout}{r.stderr}{text[-300:]}")
+        r = run(fadd + ["--finding", "REQ-001:CHG-12"], repo)
+        last = dec.read_text(encoding="utf-8").rsplit("\n## ", 1)[1]
+        check(r.returncode == 0 and "- ustalenie: REQ-001:CHG-12\n" in last and "skutek" not in last,
+              f"F-2: ustalenie samej zmiany, bez skutku (resolve domyślnie): {r.stdout}{last}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"F-3: wpisy z ustaleniem przechodzą check: {r.stdout}")
+        for bad, why in ((["--finding", "des-1"], "id ustalenia"), (["--finding", "DES-001:TSK-99"], "TSK-99"),
+                         (["--effect", "resolve"], "--effect tylko z --finding")):
+            r = run(fadd + bad, repo)
+            check(r.returncode != 0 and why in r.stdout + r.stderr, f"F-4: {bad} → błąd ({why}): {r.stdout}{r.stderr}")
+        dec.write_text(dec.read_text(encoding="utf-8").replace("- ustalenie: DES-001:TSK-57", "- ustalenie: DES-001:TSK-98"), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "TSK-98" in r.stdout, f"F-5: check: ustalenie o elemencie spoza zmiany → błąd: {r.stdout}")
+        dec.write_text(dec.read_text(encoding="utf-8").replace("- ustalenie: DES-001:TSK-98", "- ustalenie: DES-001:TSK-57")
+                       .replace("- skutek: accept_risk", "- skutek: ignore"), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "skutek" in r.stdout, f"F-6: check: nieznany skutek → błąd: {r.stdout}")
+
     # G1.1: plan wydania release.yaml (kontrakt pdi 0.4.0, release-plan.schema.json) i spójność z plan.md
     near = SCRIPT.parent / "release-plan.schema.json"
     check(near.is_file() and FIX.is_dir() and json.loads(near.read_text(encoding="utf-8"))
