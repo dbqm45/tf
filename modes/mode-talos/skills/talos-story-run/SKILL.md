@@ -21,6 +21,9 @@ Automat na żądanie. Zasady, które wygrywają z każdą pokusą „zrobić wi�
 ## 0. Start
 Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py` (dalej `run_report.py`).
 1. Czyste drzewo robocze, inaczej STOP („niezacommitowane zmiany: <pliki>”).
+   **Karencja wersji (N10):** `python3 .claude/skills/talos-story-run/scripts/security_scan.py cooldown` — FAIL
+   (brak `min-release-age=7` npm, `minimumReleaseAge: 10080` pnpm, `npmMinimalAgeGate` Yarn, `exclude-newer` uv albo
+   lockfile poza gitem) → STOP z linią do dodania z wyniku; ustawień nie zmieniasz sam.
 2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
    katalog `.claude/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
    **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
@@ -66,8 +69,17 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 1. **Test czerwony** z kryteriów kawałka (TDD; hook `tdd_guard` pilnuje kolejności). Tylko przypadki z kryteriów.
 2. **Najmniejszy kod**, który go zazieleni. Pracujesz we własnym kontekście (cache); mechaniczną zmianę w 1–2
    plikach z gotową specyfikacją zlecasz `quick-fixer`.
-3. **Weryfikacja:** polecenie z planu, potem testy, lint i typy projektu (komendy z CLAUDE.md). Linia werdyktu:
-   `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
+3. **Weryfikacja:** polecenie z planu, potem jedno polecenie weryfikacji produktu z pierwszej linii CLAUDE.md
+   (format, lint, typy, testy i skan; wzór `templates/verify.sh`), a bez niego testy, lint i typy z CLAUDE.md. Linia
+   werdyktu: `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
+   **Skan bezpieczeństwa** po zielonych testach: `python3 .claude/skills/talos-story-run/scripts/security_scan.py scan
+   --slice K<n> --attempt <k> --out <katalog-przebiegu>/security/K<n>` — semgrep (OWASP Top 10 i `.semgrep.yml`
+   produktu) na plikach kawałka, audyt zależności tylko przy zmianie manifestu lub lockfile'a, SARIF w katalogu.
+   Blokujące (error albo warning z CWE z OWASP Top 10, reguła SEC-001 z ci_for_sdlc) → FAIL próby: ustalenia
+   (reguła, plik:linia) z `feedback.md` są wejściem następnej próby; po 2 próbach skrypt drukuje blok STOP — kawałka
+   nie commitujesz, tak jak przy czerwonym teście. Brak skanera to FAIL z poleceniem instalacji, nie cichy PASS.
+   Ustalenia poniżej progu trafiają do raportu przebiegu (sekcja „Bezpieczeństwo”). Nowa zależność młodsza niż
+   7 dni (menedżer pakietów odmawia instalacji) → STOP z wyjaśnieniem, nie obejście.
 4. **Przegląd zakresu:** `scope-reviewer` dostaje kawałek z planu i `git diff`. Kod spoza kryteriów (obsługa
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
@@ -125,11 +137,18 @@ Po STOP i tak uruchamiasz `run_report.py finish` — raport kosztu powstaje zaws
 - [ ] historyjka gotowa (kryteria sprawdzalne) albo pytania / STOP; założenia zapisane
 - [ ] plan: ≤5 kawałków pionowych, każdy z testem, plikami i weryfikacją; fazy warunkowe z powodem
 - [ ] bez `--auto` — akceptacja planu przez człowieka
-- [ ] każdy kawałek: test czerwony → kod → weryfikacja → przegląd zakresu → commit; ≤2 próby naprawy
+- [ ] karencja wersji (`security_scan.py cooldown`) PASS albo STOP
+- [ ] każdy kawałek: test czerwony → kod → weryfikacja i skan bezpieczeństwa → przegląd zakresu → commit;
+      ≤2 próby naprawy; blokujące ustalenie skanu = czerwona bramka
 - [ ] przypadki brzegowe w `parked.md`, nie w kodzie; lista w opisie PR
 - [ ] jeden PR, bez scalania; `run_report.py finish` uruchomiony, skrót pokazany człowiekowi
 
 ## Źródła
 - Anthropic, „Prompting Claude Opus 5.5” i „Prompting Claude Sonnet 5.5” (platform.claude.com, odczyt 2026-10-20):
   praca do końca bez niezamówionych dodatków, koniec tury tekstem to raport, lista zadań do wznowienia.
+- OWASP Top 10 2021 i 2025, „List of Mapped CWEs” (github.com/OWASP/Top10, odczyt 2026-11-02): lista CWE progu
+  blokującego; reguła jak SEC-001 w ci_for_sdlc (`--sarif`).
+- semgrep 1.183.0 (kod pakietu, odczyt 2026-11-02): `--sarif --output`, `--metrics=off`, rejestr reguł z semgrep.dev
+  (host na liście dozwolonych kontenera); npm 11.10.0 `min-release-age` (dni), pnpm 10.17.0 `minimumReleaseAge`
+  (minuty), uv `exclude-newer` (czas względny) — szczegóły i luki: plan `docs/plans/2026-11-02-z8c-2-…`.
 - Bill Wake, „INVEST in Good Stories, and SMART Tasks” (2003): kryteria dobrej historyjki i kawałka.

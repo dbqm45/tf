@@ -132,6 +132,17 @@ def main() -> int:
                   f"R-11: postęp planu i liczba odłożonych: {rep.get('plan')} {rep.get('parked')}")
         md = (run_dir / "report.md").read_text(encoding="utf-8") if (run_dir / "report.md").exists() else ""
         check("opus" in md and "haiku" in md and "USD" in md and "2/3" in md, f"R-12: report.md: {md[:400]}")
+        check("## Bezpieczeństwo" in md and "brak wyniku skanu" in md, f"R-14: bez skanu sekcja mówi o braku: {md[-300:]}")
+
+        # sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security/K<n>)
+        sec = run_dir / "security" / "K2"
+        sec.mkdir(parents=True)
+        (sec / "summary.md").write_text("## Bezpieczeństwo\n\nSkan: PASS (blokujące: 0, poniżej progu: 1, błędy skanu: 0).\n\n"
+                                        "Poniżej progu:\n- r.note src/a.py:3 (note) — drobiazg\n", encoding="utf-8")
+        run(["finish", str(run_dir)], proj, cfg)
+        md = (run_dir / "report.md").read_text(encoding="utf-8")
+        check(md.count("## Bezpieczeństwo") == 1 and "### K2" in md and "r.note src/a.py:3" in md
+              and "brak wyniku skanu" not in md, f"R-15: sekcja bezpieczeństwa z wyniku skanu: {md[-400:]}")
 
         # status: jedna linia do kontroli budżetu po każdym kawałku (mało kontekstu), bez zapisu report.md
         (run_dir / "report.md").unlink()
@@ -179,7 +190,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {18 - len(fails)}/18 testów raportu przebiegu")
+    print(f"{'✓' if not fails else '✗'} {20 - len(fails)}/20 testów raportu przebiegu")
     return 1 if fails else 0
 
 

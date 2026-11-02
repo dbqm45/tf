@@ -144,6 +144,12 @@ jobs:
           python3 .claude/skills/pdi-decisions/scripts/sandbox_settings.py > "$RUNNER_TEMP/claude-settings.json"
           sudo install -D -m 644 "$RUNNER_TEMP/claude-settings.json" /etc/claude-code/managed-settings.json
           echo "PDI_CLAUDE_SETTINGS=/etc/claude-code/managed-settings.json" >> "$GITHUB_ENV"
+      # Talos w fazie delivery skanuje każdy kawałek (security_scan.py, Z8c-2); bez skanera kawałek stoi (FAIL).
+      - name: Skanery bezpieczeństwa (delivery)
+        if: env.PHASE == 'delivery'
+        run: |
+          pipx install semgrep==1.183.0
+          pipx install pip-audit==2.10.1
       - name: Gałęzie cięć przed fazą delivery
         if: env.PHASE == 'delivery'
         run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list > "$RUNNER_TEMP/cuts-before.json"

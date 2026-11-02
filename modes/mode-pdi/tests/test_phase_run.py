@@ -298,6 +298,26 @@ def main() -> int:
         check(r.returncode != 0 and wf.read_text(encoding="utf-8") == "moje\n", "W-5: bez nadpisania")
         r = run(["workflow", "install", "--force"], repo)
         check(r.returncode == 0 and "workflow_dispatch" in wf.read_text(encoding="utf-8"), "W-6: --force nadpisuje")
+        # Z8c-2: change-check — skan bezpieczeństwa na każdym PR, SARIF do ci_for_sdlc
+        r = run(["workflow", "install", "--workflow", "change-check"], repo)
+        cc = repo / ".github" / "workflows" / "change-check.yml"
+        cbody = cc.read_text(encoding="utf-8") if cc.is_file() else ""
+        csteps = [c for c in cbody.split("\n      - ")[1:]]
+        scan_i = next((i for i, c in enumerate(csteps) if c.startswith("name: Skan bezpieczeństwa")), -1)
+        ci_i = next((i for i, c in enumerate(csteps) if "repository: dbqm45/ci_for_sdlc" in c), -1)
+        check(r.returncode == 0 and "pull_request:" in cbody and "paths:" not in cbody
+              and "security_scan.py scan --base" in cbody and "--out reports/security" in cbody
+              and "SARIF_REPORTS: reports/security" in cbody and '--sarif "$GITHUB_WORKSPACE/$p"' in cbody
+              and "pipx install semgrep==" in cbody and "pipx install pip-audit==" in cbody,
+              f"W-15: change-check na każdym PR: skanery przypięte, skan od bazy PR, SARIF do ci_for_sdlc: {r.stdout}{r.stderr}")
+        check(0 <= scan_i < ci_i and "continue-on-error: true" in csteps[scan_i]
+              and any(c.startswith("name: Błędy skanu") and "verdict.json" in c and "sys.exit(1 if e" in c
+                      for c in csteps[scan_i + 1:]),
+              "W-16: skan przed checkoutem ci_for_sdlc (bez obcych plików), błąd skanu czerwieni, ustalenia ocenia SEC-001")
+        check("semgrep.dev" in cbody and "TALOS_SEMGREP_CONFIG: ${{ vars.TALOS_SEMGREP_CONFIG }}" in cbody,
+              "W-17: szablon mówi o hoście reguł (Z8a) i pozwala podać reguły lokalne")
+        r = run(["workflow", "install", "--workflow", "change-check"], repo)
+        check(r.returncode != 0, "W-18: change-check bez nadpisania")
 
     # --- PR-y cięć po fazie delivery: persona w --print nie może pushować ani otwierać PR-ów (pdi PRB-4) ---
     with tempfile.TemporaryDirectory() as t:
@@ -478,6 +498,11 @@ if sys.argv[1:3] == ["pr", "create"]:
         steps[head.removeprefix("name: ").strip()] = code
     checkout = next((c for h, c in steps.items() if h.startswith("uses: actions/checkout")), "")
     check("persist-credentials: false" in checkout, "W-10: checkout bez zapisanego tokenu (persist-credentials: false)")
+    scanners = steps.get("Skanery bezpieczeństwa (delivery)", "")
+    check("if: env.PHASE == 'delivery'" in scanners and "pipx install semgrep==" in scanners
+          and "pipx install pip-audit==" in scanners and list(steps).index("Skanery bezpieczeństwa (delivery)")
+          < list(steps).index("Faza bez interakcji"),
+          f"W-19: przed fazą delivery skanery dla pętli kawałka Talosa (security_scan.py): {scanners}")
     with_token = {h for h, c in steps.items() if "github.token" in c or "GITHUB_TOKEN" in c or "GH_TOKEN" in c}
     check(with_token == {"Gałąź fazy (poprawki trafiają do tego samego PR)", "PR-y cięć (delivery)", "PR fazy"},
           f"W-11: GH_TOKEN tylko w krokach gałęzi i PR: {sorted(with_token)}")
