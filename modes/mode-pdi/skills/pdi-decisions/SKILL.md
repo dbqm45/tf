@@ -68,6 +68,8 @@ workflow install`, dalej `phase_run.py`): zapisuje decyzję w `decisions.md` (`d
 już z pdi, `wyslano: tak`), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
 persona i artefakt: `phase_run.py prompt`), otwiera PR fazy i wysyła prośbę o następną bramkę (`phase_run.py gate request`).
 W fazie delivery gałęzie cięć `story/*` wypycha i ich PR-y otwiera workflow (`phase_run.py cuts publish`), nie persona.
+Persona działa w sandboxie Claude Code: workflow zapisuje wynik `sandbox_settings.py` jako ustawienia zarządzane i podaje
+go przez `--settings` (`PDI_CLAUDE_SETTINGS`); checkout nie zapisuje tokenu, a `GH_TOKEN` mają tylko kroki z push i PR.
 Faza startuje dopiero z wynikiem poprzedniej na gałęzi (np. `requirements.md` poza szkicem przed architecture), czyli
 po scaleniu PR poprzedniej fazy — inaczej `run` odmawia, bo gałęzie faz rozjechałyby się w dzienniku projektu
 i numeracji `decisions.md`. Nieudana faza (`status: failed`) ma w wyniku `detail` (koniec odpowiedzi persony),

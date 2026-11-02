@@ -6,6 +6,9 @@
 # odbiornika pdi). Zmienna repozytorium: PDI_EVENTS_URL (adres odbiornika pdi, https).
 # Wejścia z pdi trafiają do poleceń tylko przez env (nigdy wprost w `run:`), żeby nie dało się wstrzyknąć polecenia.
 # Uwaga: dla bezpieczeństwa przypnij akcje do pełnego SHA commita (np. skill ops-ci-cd w pack-it).
+# Izolacja persony (pdi Z8a): checkout bez zapisanego tokenu, GH_TOKEN tylko w krokach z push i PR, a persona działa w
+# sandboxie Claude Code (ustawienia zarządzane z sandbox_settings.py: bez wyjścia poza listę hostów, bez czytania
+# sekretów, tokeny niewidoczne dla poleceń). Dodatkowe hosty: zmienna repozytorium PDI_DISPATCH_ALLOW_HOSTS.
 name: sdlc-phase
 run-name: "pdi: ${{ inputs.change }} ${{ inputs.phase }}"
 
@@ -68,8 +71,13 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # bez tokenu w .git/config: persona go nie przeczyta; push i PR mają GH_TOKEN tylko w swoich krokach
+          persist-credentials: false
       - name: Gałąź fazy (poprawki trafiają do tego samego PR)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          gh auth setup-git
           branch="pdi/$CHANGE-$PHASE"
           echo "BRANCH=$branch" >> "$GITHUB_ENV"
           git config user.name "github-actions[bot]"
@@ -98,6 +106,20 @@ jobs:
         run: python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate "$CHANGE" --gate "$GATE" --outcome "$OUTCOME" --id "$DECISION"
       - name: Claude Code
         run: npm install -g @anthropic-ai/claude-code@2.1.310
+      - name: Sandbox Claude Code dla persony
+        env:
+          PDI_DISPATCH_ALLOW_HOSTS: ${{ vars.PDI_DISPATCH_ALLOW_HOSTS }}
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q bubblewrap socat
+          # Ubuntu 24.04: AppArmor blokuje przestrzenie nazw użytkownika dla bwrap (dokumentacja sandboxu Claude Code)
+          if [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ]; then
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\n  userns,\n}\n' \
+              | sudo tee /etc/apparmor.d/bwrap > /dev/null
+            sudo apparmor_parser -r /etc/apparmor.d/bwrap
+          fi
+          python3 .claude/skills/pdi-decisions/scripts/sandbox_settings.py > "$RUNNER_TEMP/claude-settings.json"
+          sudo install -D -m 644 "$RUNNER_TEMP/claude-settings.json" /etc/claude-code/managed-settings.json
+          echo "PDI_CLAUDE_SETTINGS=/etc/claude-code/managed-settings.json" >> "$GITHUB_ENV"
       - name: Gałęzie cięć przed fazą delivery
         if: env.PHASE == 'delivery'
         run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list > "$RUNNER_TEMP/cuts-before.json"
@@ -115,13 +137,16 @@ jobs:
         if: env.PHASE == 'delivery'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before "$RUNNER_TEMP/cuts-before.json" --base "$DEFAULT_BRANCH"
+        run: |
+          gh auth setup-git
+          python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before "$RUNNER_TEMP/cuts-before.json" --base "$DEFAULT_BRANCH"
       - name: PR fazy
         id: pr
         if: env.PHASE != 'delivery'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          gh auth setup-git
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m "docs($CHANGE): faza $PHASE (pdi)" -m "Change: $CHANGE"
