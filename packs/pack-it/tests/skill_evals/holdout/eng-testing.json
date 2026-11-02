@@ -80,6 +80,81 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-refaktor-23-testy",
+      "expect": "trigger",
+      "prompt": "Zrobiliśmy czysty refaktor serwisu rejestracji, czyli to samo zachowanie przy innej strukturze wewnętrznej, i 23 testy jednostkowe padły, choć aplikacja działa. W testach każda zależność jest zastąpiona obiektem, który weryfikuje, że metoda X została wywołana dokładnie raz, z takimi argumentami i w tej kolejności. Co jest nie tak i jak to przepisać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "implementacj",
+            "szczegół",
+            "sprzężon",
+            "coupl",
+            "wewnętrzn.{0,20}(struktur|wywoła)"
+          ],
+          [
+            "fake",
+            "stub",
+            "in-memory",
+            "w pamięci",
+            "prawdziw",
+            "\\bstan",
+            "state"
+          ],
+          [
+            "zachowani",
+            "behavio",
+            "publiczn",
+            "interfejs",
+            "wynik",
+            "obserwowaln",
+            "granic"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-zielony-od-razu",
+      "expect": "trigger",
+      "prompt": "Dopisuję funkcję liczącą rabat ilościowy. Napisałem test: expect(discount(120, 10)).toBe(12) i uruchomiłem go, zanim cokolwiek zaimplementowałem. Test od razu przeszedł na zielono. Zdziwiłem się, ale poszedłem dalej do kolejnego testu. Czy to było w porządku i co powinienem zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "bezwartoś",
+            "nic nie (sprawdza|dowodzi|weryfikuje)",
+            "niczego nie (sprawdza|dowodzi|weryfikuje)",
+            "fałszywie",
+            "false positive",
+            "nie dowodzi",
+            "tautolog",
+            "zawsze zielon",
+            "nie testuje"
+          ],
+          [
+            "asercj",
+            "assert",
+            "expect",
+            "oczekiwan",
+            "warunk",
+            "przyczyn",
+            "już istnieje",
+            "już (jest )?zaimplementowan",
+            "wcześniej"
+          ],
+          [
+            "czerwon",
+            "\\bred\\b",
+            "zmutuj",
+            "mutac",
+            "zepsuj",
+            "złam",
+            "zmień.{0,25}(wynik|oczekiw)",
+            "wymu[sś]"
+          ]
+        ]
+      }
     }
   ]
 }

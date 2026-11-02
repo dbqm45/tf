@@ -58,6 +58,76 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-gotowe-piatek",
+      "expect": "trigger",
+      "prompt": "Zespół mówi, że funkcja jest skończona: kod zmergowany, testy zielone na CI. Jako PM chcę ogłosić klientom wydanie w piątek. Czego jeszcze brakuje, żeby uczciwie uznać to za gotowe do wydania, i kto ma to zatwierdzić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "definition of done",
+            "definicj.{0,15}(ukończ|gotow)",
+            "kryteri.{0,20}(akcept|wydani|gotow)",
+            "bramk",
+            "checklist",
+            "lista kontrolna"
+          ],
+          [
+            "rollback",
+            "wycofa",
+            "monitor",
+            "obserwowaln",
+            "alert",
+            "runbook",
+            "plan wdro",
+            "migrac"
+          ],
+          [
+            "zatwierdz",
+            "akceptu",
+            "akceptac.{0,30}(właściciel|product owner|biznes|człowiek)",
+            "decyzj.{0,30}(człowiek|właściciel)",
+            "odpowiedzialn"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-po-wdrozeniu",
+      "expect": "trigger",
+      "prompt": "Nasz projekt trafił na produkcję tydzień temu, deweloperzy powoli przechodzą do następnego produktu, a mam wrażenie, że wszyscy uważają, że \"projekt się skończył\". Co powinno dziać się po wdrożeniu, żeby produkt nie zaczął gnić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "monitor",
+            "obserwowaln",
+            "alert",
+            "\\bSLO",
+            "metryk"
+          ],
+          [
+            "utrzymani",
+            "dyżur",
+            "on.call",
+            "właściciel",
+            "owner",
+            "wsparci",
+            "support",
+            "backlog"
+          ],
+          [
+            "retro",
+            "lekcj",
+            "wnioski",
+            "post.?mortem",
+            "dokumentac",
+            "przekazani",
+            "aktualizac.{0,20}(zależno|bezpiecz)",
+            "łat"
+          ]
+        ]
+      }
     }
   ]
 }

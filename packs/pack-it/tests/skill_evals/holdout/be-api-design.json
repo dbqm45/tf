@@ -72,6 +72,67 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-platnosc-retry",
+      "expect": "trigger",
+      "prompt": "Aplikacja mobilna wysyła POST /payments. Przy słabym zasięgu klient łapie timeout, ponawia żądanie i dwa razy mieliśmy podwójne obciążenie karty. Jak zaprojektować endpoint, żeby ponowienia były bezpieczne? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Idempotency.Key",
+            "klucz.{0,15}idempoten",
+            "idempoten"
+          ],
+          [
+            "zapisa",
+            "przechow",
+            "zwr[óo]c.{0,40}(poprzedni|zapisan|tę samą|ten sam)",
+            "deduplik",
+            "unikaln.{0,20}(indeks|ograniczen)"
+          ],
+          [
+            "409",
+            "422",
+            "inn[ey].{0,20}(payload|treś|ciał|dane)",
+            "TTL",
+            "wygas",
+            "retencj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-lista-przewijanie",
+      "expect": "trigger",
+      "prompt": "Endpoint GET /orders?page=300&per_page=50 działa coraz wolniej, a klienci skarżą się, że przy przewijaniu listy raz widzą te same zamówienia dwukrotnie, a raz jakieś giną, bo w tle spływają nowe. Co zmienić w projekcie dzielenia wyników na porcje? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kursor",
+            "cursor",
+            "keyset",
+            "seek"
+          ],
+          [
+            "next_cursor",
+            "nast[eę]pn.{0,25}(kursor|strona|link|porcj)",
+            "opaque",
+            "nieprzezroczy",
+            "zakodowan",
+            "base64",
+            "Link"
+          ],
+          [
+            "unikaln",
+            "tie.?break",
+            "dodatkow.{0,25}(klucz|kolumn|pole)",
+            "\\bid\\b",
+            "stabiln.{0,25}(sortowan|kolejno)",
+            "ORDER BY"
+          ]
+        ]
+      }
     }
   ]
 }
