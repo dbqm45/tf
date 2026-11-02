@@ -50,6 +50,61 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-step-size",
+      "expect": "trigger",
+      "prompt": "Mam taryfę OCPI 2.2.1 z dwoma price_component w jednym elemencie: FLAT 1.00 EUR oraz ENERGY 0.40 EUR za kWh ze step_size 1000. Ceny są netto, VAT wynosi 23%. Sesja dostarczyła 14,2 kWh. Ile wyniesie kwota netto i brutto i jak potraktować step_size? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "w g[óo]rę",
+            "15 (kWh|krok|jednost|blok)",
+            "15 [×x*]"
+          ],
+          [
+            "6[,.]00",
+            "7[,.]00"
+          ],
+          [
+            "8[,.]61"
+          ]
+        ],
+        "none": [
+          "6[,.]68|8[,.]22"
+        ]
+      }
+    },
+    {
+      "id": "h2-elementy-restrykcje",
+      "expect": "trigger",
+      "prompt": "W taryfie dla stacji w Gdańsku mamy w tablicy elements dwa elementy: pierwszy z ENERGY 0.20 EUR/kWh i restrykcją start_time 22:00, end_time 06:00; drugi z ENERGY 0.45 EUR/kWh bez żadnych restrykcji. Nasz serwer pracuje w UTC. Sesja trwa od 21:15 do 23:15 czasu lokalnego przy stałej mocy. Który element obowiązuje i kiedy, i na co uważać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kolejno",
+            "pierwsz.{0,40}(pasując|spełnia|dopasowan)",
+            "po kolei",
+            "w tej kolejności",
+            "od góry"
+          ],
+          [
+            "lokaln",
+            "strefa",
+            "time ?zone",
+            "czasu stacji",
+            "UTC"
+          ],
+          [
+            "22:00",
+            "dwa (okresy|przedziały|segmenty)",
+            "podzie",
+            "rozbi",
+            "zmian.{0,20}(ceny|elementu)",
+            "dwie część"
+          ]
+        ]
+      }
     }
   ]
 }

@@ -64,6 +64,76 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-nocna-migracja",
+      "expect": "trigger",
+      "prompt": "Chcę wieczorem puścić claude -p na noc, żeby przerobił ok. 200 plików testowych ze starego frameworka na nowy. Mam napisane tylko jedno zdanie polecenia i wychodzę z biura. Co jeszcze powinienem dać agentowi przed startem i co zrobić rano, żeby nie wpuścić do repo śmieci? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kryteri",
+            "definicj.{0,15}(ukończ|gotow)",
+            "warunk.{0,15}(stop|zakończ|sukces)",
+            "kontrakt",
+            "zakres",
+            "\\bDoD\\b",
+            "done"
+          ],
+          [
+            "limit",
+            "budżet",
+            "max.turns",
+            "timeout",
+            "ogranicz.{0,20}(czas|koszt|tur)"
+          ],
+          [
+            "przegląd",
+            "review",
+            "\\bdiff",
+            "zweryfikuj",
+            "niezależn",
+            "sprawdz.{0,30}(sam|rano)",
+            "uruchom.{0,20}testy"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-petla-budzet",
+      "expect": "trigger",
+      "prompt": "Nocna rutyna z agentem poszła źle: rano zobaczyłem, że przez 5 godzin 40 razy próbował naprawić ten sam failujący test, za każdym razem robiąc prawie to samo, i spalił dużą część miesięcznego budżetu. Jakie zabezpieczenia powinny to były uciąć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "limit",
+            "max.turns",
+            "timeout",
+            "budżet",
+            "pułap",
+            "ogranicz.{0,30}(tur|iterac|koszt|czas|prób)"
+          ],
+          [
+            "powtarz",
+            "zapętl",
+            "brak postęp",
+            "stagnac",
+            "ten sam błąd",
+            "licznik.{0,20}(prób|niepowodz)",
+            "prób.{0,20}z rzędu",
+            "nieudan"
+          ],
+          [
+            "zatrzym",
+            "\\bstop",
+            "przerw",
+            "eskal",
+            "raport",
+            "poddaj",
+            "zako[nń]cz"
+          ]
+        ]
+      }
     }
   ]
 }

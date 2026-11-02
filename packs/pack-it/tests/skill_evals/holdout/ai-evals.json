@@ -76,6 +76,70 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-sedzia-zielony",
+      "expect": "trigger",
+      "prompt": "Mamy model, który streszcza zgłoszenia klientów, i drugi model, który ocenia te streszczenia w skali 1-10. Sędzia daje średnio 8,7 i dashboard jest zielony, ale konsultanci mówią, że streszczenia gubią kwoty i daty. Jak sprawdzić, czy ocenom można ufać, i co poprawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "kalibr",
+            "zgodność",
+            "korelac",
+            "kappa",
+            "etykiet",
+            "ręcznie ocen",
+            "oceny (ludzk|ekspert)",
+            "human"
+          ],
+          [
+            "próbk",
+            "zbiór (złot|referenc|ewaluac)",
+            "golden",
+            "ground truth",
+            "dataset"
+          ],
+          [
+            "rubryk",
+            "binarn",
+            "pass.?fail",
+            "stronnicz",
+            "bias",
+            "długo[śs]ć",
+            "TPR",
+            "TNR"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-pass-power-k",
+      "expect": "trigger",
+      "prompt": "Nasz agent wsparcia rozwiązuje dane zgłoszenie poprawnie w 70% pojedynczych uruchomień (próby niezależne). Klient wymaga, żeby w serii 5 uruchomień tego samego zgłoszenia poprawny wynik wychodził za każdym razem. Jaka jest szansa, że agent to spełni, i jak nazywa się metryka kontrastowa do wariantu \"przynajmniej raz na 5\"? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "pass\\s*\\^\\s*k",
+            "pass\\^",
+            "niezawodn",
+            "spójno"
+          ],
+          [
+            "0[,.]7\\s*\\^\\s*5",
+            "1[67][,.]?8?\\s*%",
+            "0[,.]168",
+            "0[,.]17"
+          ],
+          [
+            "99[,.][78]",
+            "pass@k",
+            "pass@5",
+            "co najmniej jedn",
+            "przynajmniej"
+          ]
+        ]
+      }
     }
   ]
 }

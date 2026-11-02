@@ -79,6 +79,62 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-boot-pending",
+      "expect": "trigger",
+      "prompt": "Nowa ładowarka po starcie wysyła BootNotification, a nasz system odpowiada ramką [3,\"a1\",{\"status\":\"Pending\",\"currentTime\":\"2026-11-02T08:00:00Z\",\"interval\":60}]. Instalator pyta, czy ładowarka ma od razu raportować stany złączy i dopuścić ładowanie, skoro \"połączenie działa\". Jak powinna się zachować i co dalej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ponow.{0,40}BootNotification",
+            "BootNotification.{0,60}ponow",
+            "retry",
+            "powtarza.{0,30}Boot"
+          ],
+          [
+            "60 ?s",
+            "60 sekund",
+            "interval",
+            "interwał"
+          ],
+          [
+            "nie.{0,80}(StatusNotification|Authorize|StartTransaction|transakcj|innych (wiadomości|komunikatów|żądań))",
+            "wstrzym",
+            "czekać",
+            "oczekiwa"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-offline-sesje",
+      "expect": "trigger",
+      "prompt": "Ładowarka w parkingu podziemnym straciła łączność na 3 godziny w nocy i w tym czasie zrealizowała dwie sesje autoryzowane lokalnie. Po powrocie sieci w naszym systemie obie sesje mają godzinę startu 06:41, czyli moment odbioru wiadomości, a jedna jest zdublowana. Jak to powinno działać po stronie ładowarki i systemu centralnego? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "timestamp",
+            "znacznik[i]? czasu",
+            "czas.{0,25}(zdarzenia|oryginaln|wystąpienia|zapisany w wiadomości)"
+          ],
+          [
+            "kolejno",
+            "po kolei",
+            "kolejk",
+            "najpierw StartTransaction",
+            "przed StopTransaction",
+            "w tej samej kolejności"
+          ],
+          [
+            "transactionId",
+            "identyfikator.{0,10}transakcji",
+            "StartTransaction\\.conf",
+            "duplikat",
+            "deduplik"
+          ]
+        ]
+      }
     }
   ]
 }

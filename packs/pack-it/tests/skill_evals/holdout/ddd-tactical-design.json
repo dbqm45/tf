@@ -48,6 +48,64 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-order-za-duzy",
+      "expect": "trigger",
+      "prompt": "W module zamówień klasa Order trzyma w sobie pełne obiekty: Customer, listę wszystkich Invoice klienta, linie zamówienia i adresy. Załadowanie jednego zamówienia ciągnie tysiące rekordów, a dwie osoby edytujące różne rzeczy wzajemnie się blokują przez wersjonowanie optymistyczne. Jak to przeciąć w modelu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "identyfikator",
+            "\\bID\\b",
+            "referenc"
+          ],
+          [
+            "niezmiennik",
+            "invariant",
+            "granic.{0,20}(spójno|transakcj)",
+            "spójno"
+          ],
+          [
+            "jedn.{0,25}transakcj",
+            "eventual",
+            "ostateczn",
+            "zdarzeni",
+            "mał[eyo].{0,10}agregat"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-price-z-id",
+      "expect": "trigger",
+      "prompt": "W kodzie mamy klasę Price z polami id, amount, currency i setterami. Każda cena to wiersz w tabeli prices, a w testach dwie ceny \"10 PLN\" nie są sobie równe, bo mają różne id. Do tego ktoś w serwisie zmienia amount na obiekcie współdzielonym między zamówieniami i ceny \"same się zmieniają\". Jak powinno to wyglądać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "niezmienn",
+            "immutable",
+            "bez setter",
+            "nie ma setter"
+          ],
+          [
+            "równo[śs][ćc].{0,40}(wartoś|atrybut|pól|składow)",
+            "porównu.{0,40}(wartoś|pól)",
+            "equality by value",
+            "value equality",
+            "po wartości"
+          ],
+          [
+            "tożsamo",
+            "identity",
+            "nowy obiekt",
+            "nową instancj",
+            "nowe wystąpien",
+            "zwraca nowy",
+            "walidac"
+          ]
+        ]
+      }
     }
   ]
 }

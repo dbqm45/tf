@@ -52,6 +52,72 @@
           ]
         ]
       }
+    },
+    {
+      "id": "h2-migracja-region",
+      "expect": "trigger",
+      "prompt": "Mamy w PostgreSQL 15 tabelę shipments z ok. 80 mln wierszy, ruch 24/7 i rolling deploy. Muszę dodać kolumnę region NOT NULL, której wartość trzeba wyliczyć z istniejącej kolumny country. Zespół proponuje jedną migrację: ALTER TABLE ... ADD COLUMN region text NOT NULL; UPDATE shipments SET region = ...;. Co jest z tym nie tak i jak to zrobić bezpiecznie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "partiami",
+            "partii",
+            "batch",
+            "porcj",
+            "wsadow",
+            "kawałk"
+          ],
+          [
+            "NOT VALID",
+            "VALIDATE",
+            "nullable",
+            "NULL.{0,40}(najpierw|początk|bez)",
+            "expand",
+            "dopuszcz.{0,20}NULL"
+          ],
+          [
+            "lock",
+            "blokad",
+            "ACCESS EXCLUSIVE",
+            "przepis",
+            "rewrite",
+            "długa transakcj"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "h2-indeks-tickets",
+      "expect": "trigger",
+      "prompt": "Zapytanie SELECT * FROM tickets WHERE tenant_id = 42 AND status = 'open' ORDER BY created_at DESC LIMIT 20 trwa 1,5 s na tabeli z 30 mln wierszy. Mamy osobne indeksy na tenant_id, status i created_at, więc nie rozumiem, czemu jest wolno. Co zrobić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "złożon",
+            "composite",
+            "wielokolumnow",
+            "\\(tenant_id,\\s*status",
+            "wiele kolumn"
+          ],
+          [
+            "kolejność",
+            "równo[śs]ć",
+            "equality",
+            "najpierw.{0,40}(równo|tenant|kolumn)",
+            "leftmost",
+            "prefiks",
+            "na końcu.{0,30}(created_at|sortowan)"
+          ],
+          [
+            "EXPLAIN",
+            "plan zapytania",
+            "plan wykonania",
+            "ANALYZE",
+            "partial",
+            "częściow"
+          ]
+        ]
+      }
     }
   ]
 }
