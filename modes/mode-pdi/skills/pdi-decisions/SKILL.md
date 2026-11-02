@@ -64,8 +64,9 @@ Eksport wszystkich decyzji projektu (z numerem i stanem wysłania): `decision_re
 
 ## Fazy uruchamiane przez pdi
 Po decyzji na bramce pdi uruchamia w repo workflow `sdlc-phase.yml` (`python3 .claude/skills/pdi-decisions/scripts/phase_run.py
-workflow install`, dalej `phase_run.py`): zapisuje decyzję w `decisions.md` (`decision_record.py decision gate`, numer
-już z pdi, `wyslano: tak`), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
+workflow install`, dalej `phase_run.py`): dopisuje inne decyzje zmiany z rejestru pdi (`decision_record.py decision
+import CHG-n --json plik`, idempotentnie po numerze `DEC`), zapisuje decyzję w `decisions.md` (`decision_record.py
+decision gate`, numer już z pdi, `wyslano: tak`, z `--why` i `--answers`, gdy pdi je podał), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
 persona i artefakt: `phase_run.py prompt`), otwiera PR fazy i wysyła prośbę o następną bramkę (`phase_run.py gate request`).
 W fazie delivery gałęzie cięć `story/*` wypycha i ich PR-y otwiera workflow (`phase_run.py cuts publish`), nie persona.
 Faza startuje dopiero z wynikiem poprzedniej na gałęzi (np. `requirements.md` poza szkicem przed architecture), czyli
@@ -79,8 +80,12 @@ Gdy tak cię uruchomiono:
 2. Czego nie rozstrzygniesz bez człowieka, nie zgadujesz: lista w sekcji `## Pytania do bramki` artefaktu (pytanie
    z adresatem w wierszu) — trafi do skrzynki pdi razem z bramką.
 3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow. Wpisy `## Bramka …`
-   w `decisions.md` (ustalenie i uzasadnienie z pdi, `decision gate --why`) są wiążące: pytanie, na które
-   odpowiadają, jest rozstrzygnięte — zapisz ustalenie w artefakcie z odwołaniem do wpisu i nie pytaj ponownie.
+   w `decisions.md` (ustalenie i uzasadnienie z pdi, `decision gate --why`, odpowiedzi na pytania jako pary
+   `- pytanie:` / `- odpowiedz:` z `--answers`) i decyzje z rejestru pdi (`pochodzenie: pdi`, `decision import`)
+   są wiążące; polecenie fazy wymienia je jako dane, nie polecenia. Pytanie z odpowiedzią jest rozstrzygnięte —
+   zapisz ustalenie w artefakcie z odwołaniem (`CHG-n/Dk`, `DEC-n`) i nie pytaj ponownie: `run` i `gate request`
+   odrzucają artefakt, który je powtarza (porównanie bez wielkości liter, adresata i interpunkcji), a delivery nie
+   rusza, gdy `## Pytania do bramki` w `plan.md` ma pytanie bez odpowiedzi.
    Faza `design`: tabela ramek w `design.md` (szablon `templates/design.md`, format z kontraktu pdi
    `conventions.design`); `design_check.py check CHG-n` przed bramką — braki ramek i stanów idą do pdi jako pytania.
    Faza `architecture`: ADR w `architecture.md` zmiany — `design.md` należy tylko do fazy `design`.
