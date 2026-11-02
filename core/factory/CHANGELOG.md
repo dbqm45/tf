@@ -3,6 +3,11 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.56.0] — 2026-11-02
+### Added
+- **pdi:** bring every decision of a change into each phase (PRB-3) (#135)
+- **pdi:** keep GitHub credentials out of the persona step and sandbox it (Z8a) (#137)
+
 ## [5.55.1] — 2026-11-02
 ### Fixed
 - **pdi:** keep persona output and phase order, move ADR out of design.md (#134)
