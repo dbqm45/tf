@@ -160,6 +160,13 @@ def main() -> int:
         r = run(["run", "--change", "CHG-12", "--phase", "requirements", "--dry-run"], repo, **env)
         check(r.returncode == 0 and len(log.read_text().splitlines()) == n and "ewa" in r.stdout,
               f"R-14: --dry-run nie uruchamia modelu: {r.stdout}")
+        check("--settings" not in argv, f"R-20: bez PDI_CLAUDE_SETTINGS nie ma --settings: {argv}")
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo,
+                PDI_CLAUDE_SETTINGS="/etc/claude-code/managed-settings.json", **env)
+        argv = [json.loads(x) for x in log.read_text().splitlines()][-1]
+        check(r.returncode == 0 and argv[argv.index("--settings") + 1] == "/etc/claude-code/managed-settings.json",
+              f"R-21: sandbox persony (pdi Z8a) — --settings z PDI_CLAUDE_SETTINGS: {argv}")
+        n = len(log.read_text().splitlines())
         r = run(["run", "--change", "CHG-12", "--phase", "requirements", "--budget-usd", "abc"], repo, **env)
         check(r.returncode != 0 and len(log.read_text().splitlines()) == n, "R-15: zły budżet → błąd bez modelu")
         # PRB-11: przy błędzie persony wynik ma jej odpowiedź i stderr — inaczej nie da się ustalić przyczyny
@@ -462,6 +469,54 @@ if sys.argv[1:3] == ["pr", "create"]:
     check(all(body.count("${{ inputs." + k + " }}") == 1 and f"{v}: ${{{{ inputs.{k} }}}}" in body
               for k, v in (("decision_text", "DECISION_TEXT"), ("answers", "ANSWERS"), ("decisions", "DECISIONS"))),
           "Z1-W2: wejścia z pdi tylko przez env, nigdy wprost w run:")
+
+    # pdi Z8a: token GitHuba tylko w krokach z push i PR, persona w sandboxie Claude Code
+    steps = {}
+    for chunk in body.split("\n      - ")[1:]:
+        head = chunk.split("\n", 1)[0]
+        code = "\n".join(ln for ln in chunk.splitlines() if not ln.lstrip().startswith("#"))
+        steps[head.removeprefix("name: ").strip()] = code
+    checkout = next((c for h, c in steps.items() if h.startswith("uses: actions/checkout")), "")
+    check("persist-credentials: false" in checkout, "W-10: checkout bez zapisanego tokenu (persist-credentials: false)")
+    with_token = {h for h, c in steps.items() if "github.token" in c or "GITHUB_TOKEN" in c or "GH_TOKEN" in c}
+    check(with_token == {"Gałąź fazy (poprawki trafiają do tego samego PR)", "PR-y cięć (delivery)", "PR fazy"},
+          f"W-11: GH_TOKEN tylko w krokach gałęzi i PR: {sorted(with_token)}")
+    check(all("gh auth setup-git" in steps.get(h, "") for h in with_token),
+          "W-12: kroki z tokenem logują git przez gh (token tylko w env kroku)")
+    persona = steps.get("Faza bez interakcji", "")
+    sandbox = steps.get("Sandbox Claude Code dla persony", "")
+    check(persona and "GH_TOKEN" not in persona and "github.token" not in persona
+          and "ANTHROPIC_API_KEY" in persona, f"W-13: krok persony bez tokenu GitHuba: {persona}")
+    check("bubblewrap socat" in sandbox and "sandbox_settings.py" in sandbox
+          and "/etc/claude-code/managed-settings.json" in sandbox and "PDI_CLAUDE_SETTINGS" in sandbox
+          and "apparmor" in sandbox.lower() and list(steps).index("Sandbox Claude Code dla persony")
+          < list(steps).index("Faza bez interakcji"),
+          f"W-14: przed personą sandbox: bwrap, AppArmor, ustawienia zarządzane i --settings: {sandbox}")
+
+    # sandbox_settings.py: te same klucze co pdi.phase_sandbox.claude_settings
+    settings_script = SCRIPT.parent / "sandbox_settings.py"
+    with tempfile.TemporaryDirectory() as t:
+        (Path(t) / "package.json").write_text("{}", encoding="utf-8")
+        r = subprocess.run([sys.executable, str(settings_script), "--root", t], capture_output=True, text=True,
+                           timeout=60, env={**os.environ, "PDI_DISPATCH_ALLOW_HOSTS": "api.example.com,zły host,*"})
+        data = jl(r) or {}
+        sb = data.get("sandbox", {})
+        net = sb.get("network", {})
+        check(r.returncode == 0 and sb.get("enabled") is True and sb.get("failIfUnavailable") is True
+              and sb.get("allowUnsandboxedCommands") is False and sb.get("autoAllowBashIfSandboxed") is False
+              and sb.get("enableWeakerNestedSandbox") is False and net.get("allowManagedDomainsOnly") is True,
+              f"S-1: sandbox obowiązkowy, bez wyjścia poza niego i bez poszerzania uprawnień: {r.stdout}{r.stderr}")
+        check(net.get("allowedDomains") == ["api.anthropic.com", "registry.npmjs.org", "semgrep.dev", "api.example.com"],
+              f"S-2: hosty: API, rejestr z repo, reguły skanera, dodatkowe (złe pominięte): {net}")
+        denied = {e.get("name") for e in sb.get("credentials", {}).get("envVars", []) if e.get("mode") == "deny"}
+        check({"ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"} <= denied
+              and "~/.ssh" in sb.get("filesystem", {}).get("denyRead", [])
+              and "Read(//proc/**)" in data.get("permissions", {}).get("deny", []),
+              f"S-3: tokeny niewidoczne dla poleceń, sekrety z domu i /proc nieczytelne: {r.stdout}")
+        r = subprocess.run([sys.executable, str(settings_script), "--root", t, "--nested"], capture_output=True,
+                           text=True, timeout=60)
+        check((jl(r) or {}).get("sandbox", {}).get("enableWeakerNestedSandbox") is True,
+              f"S-4: --nested dla sandboxu w kontenerze (pdi lokalnie): {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

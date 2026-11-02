@@ -6,7 +6,8 @@ Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez inter
       [--rework --gate B2 --decision DEC-41] [--budget-usd 5]
       JSON {persona, artifact, gate, prompt} — co i kto zrobi, bez uruchamiania modelu
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py run --change CHG-12 --phase requirements [jak wyżej] [--dry-run]
-      uruchamia personę: claude --print --agent <persona> --permission-mode acceptEdits [--max-budget-usd N];
+      uruchamia personę: claude --print --agent <persona> --permission-mode acceptEdits [--max-budget-usd N]
+      [--settings $PDI_CLAUDE_SETTINGS];
       JSON {status: waiting_gate | done | failed, …}; kod wyjścia 0 — czeka na bramkę albo gotowe, 1 — błąd;
       delivery nie rusza, gdy `## Pytania do bramki` w plan.md ma pytanie bez odpowiedzi w decisions.md, a artefakt,
       który powtarza pytanie już rozstrzygnięte w decisions.md, kończy fazę błędem `repeated_question` (Z1, PRB-3)
@@ -295,6 +296,8 @@ def cmd_run(a) -> int:
     budget = budget_of(a.budget_usd)
     if budget:
         argv += ["--max-budget-usd", budget]
+    if os.environ.get("PDI_CLAUDE_SETTINGS"):  # sandbox persony (pdi Z8a): plik z sandbox_settings.py
+        argv += ["--settings", os.environ["PDI_CLAUDE_SETTINGS"]]
     out = {"change": a.change, "phase": a.phase, "persona": p["persona"], "gate": p["gate"]}
     if a.dry_run:
         print(json.dumps({**out, "status": "dry_run", "argv": argv, "prompt": p["prompt"]}, ensure_ascii=False, indent=2))
