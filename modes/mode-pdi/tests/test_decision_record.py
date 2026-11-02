@@ -476,6 +476,37 @@ def main() -> int:
         r = run(["check"], repo)
         check(r.returncode != 0 and "parami" in r.stdout, f"Z1-12: pytanie bez odpowiedzi → check: {r.stdout}")
 
+    # Kontrakt pdi 0.11.0: decision.schema.json (kopia z tagu) zgodny z tym, co dziennik zapisuje i importuje
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("decision_record", SCRIPT)
+    drec = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(drec)
+    schema = json.loads((FIX / "decision.schema.json").read_text(encoding="utf-8"))
+    near = SCRIPT.parent / "decision.schema.json"
+    check(near.is_file() and json.loads(near.read_text(encoding="utf-8")) == schema,
+          "K-1: decision.schema.json obok skryptu = kopia z kontraktu pdi (fixtures/pdi-contract)")
+    props = schema["properties"]
+    check(set(props["kind"]["enum"]) == set(drec.KINDS),
+          f"K-2: rodzaje decyzji = kind z kontraktu: {props['kind']['enum']} wobec {drec.KINDS}")
+    check(set(props["source"]["properties"]["kind"]["enum"]) == set(drec.SOURCE_KINDS),
+          f"K-3: zrodlo = source.kind z kontraktu: {props['source']['properties']['kind']['enum']}")
+    item = props.get("answers", {}).get("items", {})
+    check(set(item.get("required", [])) == {"question", "answer"} and item.get("additionalProperties") is False,
+          f"K-4: answers w kontrakcie = pary question/answer, które zapisuje --answers i import: {item}")
+    example = json.loads((FIX / "decision.json").read_text(encoding="utf-8"))
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12"], repo)
+        src = repo / "linked.json"
+        # kształt z pdi (pdi.phase_decisions): pola decyzji z kontraktu, source.kind jako source_kind
+        src.write_text(json.dumps([{**{k: example[k] for k in ("id", "statement", "why", "decided_at", "decided_by",
+                                                              "kind", "drafted_by")},
+                                    "source_kind": example["source"]["kind"]}], ensure_ascii=False), encoding="utf-8")
+        r = run(["decision", "import", "CHG-12", "--json", str(src)], repo)
+        text = (repo / "docs/project/changes/CHG-12/decisions.md").read_text(encoding="utf-8")
+        check(r.returncode == 0 and f"- id: {example['id']}" in text and run(["check"], repo).returncode == 0,
+              f"K-5: przykład decyzji z kontraktu importuje się i przechodzi check: {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów dziennika zmiany (mode-pdi)")

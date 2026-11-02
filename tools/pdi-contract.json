@@ -1,6 +1,6 @@
 {
   "repo": "dbqm45/pdi",
-  "version": "0.9.0",
+  "version": "0.11.0",
   "version_files": [
     "modes/mode-pdi/tests/fixtures/pdi-contract/VERSION"
   ],
@@ -44,6 +44,13 @@
     ],
     "examples/design-links.json": [
       "modes/mode-pdi/tests/fixtures/pdi-contract/design-links.json"
+    ],
+    "decision.schema.json": [
+      "modes/mode-pdi/skills/pdi-decisions/scripts/decision.schema.json",
+      "modes/mode-pdi/tests/fixtures/pdi-contract/decision.schema.json"
+    ],
+    "examples/decision.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/decision.json"
     ]
   }
 }
