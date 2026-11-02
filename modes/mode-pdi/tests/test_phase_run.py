@@ -23,10 +23,13 @@ KEY_RE = r"^[A-Z][A-Z0-9]+-[0-9]+$"
 
 FAKE_CLAUDE = """import json, os, sys
 open(os.environ["FAKE_LOG"], "a").write(json.dumps(sys.argv[1:]) + "\\n")
+if os.environ.get("FAKE_STDERR"):
+    sys.stderr.write(os.environ["FAKE_STDERR"])
 if os.environ.get("FAKE_EXIT"):
     sys.exit(int(os.environ["FAKE_EXIT"]))
 print(json.dumps({"type": "result", "subtype": os.environ.get("FAKE_SUBTYPE", "success"),
-                  "is_error": bool(os.environ.get("FAKE_ERROR")), "total_cost_usd": 0.42, "result": "gotowe"}))
+                  "is_error": bool(os.environ.get("FAKE_ERROR")), "total_cost_usd": 0.42,
+                  "result": os.environ.get("FAKE_RESULT", "gotowe")}))
 """
 
 
@@ -65,6 +68,9 @@ def project(tmp: Path) -> Path:
         f = tmp / ".claude" / "agents" / "_generated" / p / f"{p}.md"
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(f"---\nname: {p}\n---\n", encoding="utf-8")
+    for name in ("intent.md", "plan.md"):   # fazy intent i architecture za nami (artefakty poza szkicem)
+        a = tmp / "docs" / "project" / "changes" / "CHG-12" / name
+        a.write_text(a.read_text(encoding="utf-8").replace("status: draft", "status: proposed", 1), encoding="utf-8")
     return tmp
 
 
@@ -156,6 +162,39 @@ def main() -> int:
               f"R-14: --dry-run nie uruchamia modelu: {r.stdout}")
         r = run(["run", "--change", "CHG-12", "--phase", "requirements", "--budget-usd", "abc"], repo, **env)
         check(r.returncode != 0 and len(log.read_text().splitlines()) == n, "R-15: zły budżet → błąd bez modelu")
+        # PRB-11: przy błędzie persony wynik ma jej odpowiedź i stderr — inaczej nie da się ustalić przyczyny
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_ERROR="1",
+                FAKE_RESULT="API Error: 529 overloaded po zapisie pliku", **env)
+        res = jl(r) or {}
+        check(r.returncode == 1 and res.get("status") == "failed" and "529 overloaded" in str(res.get("detail")),
+              f"R-16: is_error → detail z odpowiedzią persony: {r.stdout}")
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_EXIT="3",
+                FAKE_STDERR="Error: invalid --agent", **env)
+        res = jl(r) or {}
+        check(r.returncode == 1 and "invalid --agent" in str(res.get("stderr")) and res.get("exit_code") == 3,
+              f"R-17: kod ≠ 0 → stderr i exit_code w wyniku: {r.stdout}")
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_ERROR="1", FAKE_RESULT="x" * 9000,
+                **env)
+        check(len(str((jl(r) or {}).get("detail"))) <= 2000, "R-16a: detail przycięty do 2000 znaków")
+        # PRB-12: design.md należy do fazy design (kontrakt pdi), architecture pisze ADR w architecture.md
+        p = jl(run(["prompt", "--change", "CHG-12", "--phase", "architecture"], repo)) or {}
+        check("design.md" not in p.get("prompt", "") and "architecture.md" in p.get("prompt", ""),
+              f"R-18: architecture nie pisze w design.md: {p.get('prompt', '')[-400:]}")
+        # PRB-13: faza nie startuje bez artefaktu poprzedniej fazy (PR poprzedniej fazy nie scalony) — inaczej gałęzie
+        # faz rozjeżdżają się w dzienniku projektu i numeracji decyzji
+        n = len(log.read_text().splitlines())
+        r = run(["run", "--change", "CHG-12", "--phase", "architecture"], repo, **env)
+        check(r.returncode == 1 and "requirements.md" in r.stdout and "scal" in r.stdout
+              and len(log.read_text().splitlines()) == n,
+              f"R-19: architecture bez requirements.md → błąd ze wskazówką, bez modelu: {r.stdout}")
+        req = repo / "docs" / "project" / "changes" / "CHG-12" / "requirements.md"
+        req.write_text("---\nartifact: requirements\nstatus: draft\n---\n# Wymagania\n", encoding="utf-8")
+        r = run(["run", "--change", "CHG-12", "--phase", "architecture"], repo, **env)
+        check(r.returncode == 1 and "requirements.md" in r.stdout, f"R-20: szkic (draft) to nie wynik fazy: {r.stdout}")
+        req.write_text("---\nartifact: requirements\nstatus: proposed\n---\n# Wymagania\n", encoding="utf-8")
+        r = run(["run", "--change", "CHG-12", "--phase", "architecture"], repo, **env)
+        check(r.returncode == 0 and (jl(r) or {}).get("status") == "waiting_gate", f"R-21: z wynikiem poprzedniej fazy rusza: {r.stdout}")
+        req.unlink()
 
         # --- gate request ---
         req = repo / "docs" / "project" / "changes" / "CHG-12" / "requirements.md"
@@ -243,6 +282,8 @@ def main() -> int:
         check(body and not bad, f"W-4: wejścia z pdi trafiają do poleceń tylko przez env (wstrzyknięcie): {bad}")
         check("--source-reported-at" in body and "reported_at" in body,
               "W-8: szablon przekazuje datę zgłoszenia z treści zgłoszenia do nagłówka zmiany")
+        check("git merge" in body and "origin/$DEFAULT_BRANCH" in body,
+              "W-9: istniejąca gałąź fazy dostaje gałąź domyślną przed fazą (PRB-13: rozjazd dziennika między gałęziami)")
         check("decision_record.py change new" in body and "--source" in body and "PDI_PROBLEM" in body,
               "W-7: faza intent z pdi zakłada dziennik zmiany ze zgłoszenia i dostaje jego treść (F3)")
         wf.write_text("moje\n", encoding="utf-8")

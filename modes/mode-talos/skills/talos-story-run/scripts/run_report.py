@@ -185,9 +185,14 @@ def plan_progress(run_dir: Path) -> dict:
     return {"done": done, "total": done + len(re.findall(r"^\s*- \[ \]", text, re.M))}
 
 
-def parked_count(run_dir: Path) -> int:
+def parked_items(run_dir: Path) -> list[str]:
+    """Pozycje z parked.md (bez wiersza formatu). Plik leży w .claude/runs/ poza gitem — do repo trafiają w raporcie."""
     text = (run_dir / "parked.md").read_text(encoding="utf-8") if (run_dir / "parked.md").exists() else ""
-    return len([ln for ln in text.splitlines() if ln.startswith("- ") and not ln.startswith("- <")])
+    return [ln for ln in text.splitlines() if ln.startswith("- ") and not ln.startswith("- <")]
+
+
+def parked_count(run_dir: Path) -> int:
+    return len(parked_items(run_dir))
 
 
 def fmt_tokens(n: int) -> str:
@@ -210,6 +215,7 @@ def report_md(slug: str, rep: dict) -> str:
     for agent, t in sorted(rep["agents"].items(), key=lambda kv: -kv[1].get("_cost", 0)):
         lines.append(f"| {agent} | {fmt_tokens(t['input'])} | {fmt_tokens(t['output'])} | {fmt_tokens(t['cache_read'])} | "
                      f"{t.get('_cost', 0):.4f} |")
+    lines += ["", "## Odłożone do decyzji", "", *(rep.get("parked_items") or ["- brak"])]
     return "\n".join(lines) + "\n"
 
 
@@ -323,7 +329,7 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
            "requests": data["requests"], "model_ids": data["model_ids"], "models": data["models"],
            "agents": data["agents"],
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
-           "plan": plan_progress(run_dir), "parked": parked_count(run_dir)}
+           "plan": plan_progress(run_dir), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir)}
     if status:   # kontrola budżetu po kawałku: jedna linia, bez zapisu raportu
         print(f"koszt: {rep['cost_usd']:.4f} USD · czas: {rep['duration_s'] // 60} min · plan: "
               f"{rep['plan']['done']}/{rep['plan']['total']} · odłożone: {rep['parked']}")
