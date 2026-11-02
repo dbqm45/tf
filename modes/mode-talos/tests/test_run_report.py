@@ -160,11 +160,16 @@ def main() -> int:
               f"R-17: TSK spoza planów zmian → kod 2 z komunikatem: {r.returncode} {r.stdout} {r.stderr[-300:]}")
         meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         (run_dir / "run.json").write_text(json.dumps({**meta, "change": "CHG-12", "task": "TSK-58"}), encoding="utf-8")
+        with (run_dir / "parked.md").open("a", encoding="utf-8") as f:
+            f.write("- .gitignore dla config/build.json — config/build.json — plik z placeholderem w repo — dodać do "
+                    ".gitignore — do decyzji\n")
         r = run(["finish", str(run_dir)], proj, cfg)
         kept = chg / "runs" / "TSK-58.md"
         text = kept.read_text(encoding="utf-8") if kept.is_file() else ""
         check(r.returncode == 0 and "USD" in text and "TSK-58" in text and "changes/CHG-12/runs/TSK-58.md" in r.stdout,
               f"R-18: finish przebiegu cięcia zapisuje raport w dzienniku zmiany: {r.stdout[-300:]} {text[:300]}")
+        check("## Odłożone do decyzji" in text and "placeholderem w repo" in text and "- <" not in text,
+              f"R-19: raport w repo ma pozycje z parked.md (PRB-14: parked.md jest poza gitem): {text[-600:]}")
 
         # brak transkryptów → czytelny komunikat, nie wyjątek
         empty = Path(t) / "inny"

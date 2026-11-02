@@ -52,6 +52,7 @@ QUESTIONS = "Pytania do bramki"
 PROBLEM_FIELDS = {"title": "tytuł", "kind": "rodzaj", "who": "kto ma problem", "cannot": "czego nie może zrobić",
                   "impact": "skutek", "workaround": "jak radzi sobie dziś", "frequency": "jak często"}
 PROBLEM_MAX = 8000
+DETAIL_MAX = 2000   # koniec odpowiedzi i stderr persony w wyniku nieudanej fazy
 # Faza z pdi (wejście `phase` szablonu, dbqm45/pdi src/pdi/flow.py) → persona, artefakt w changes/CHG-n/, bramka po fazie.
 PHASES = {
     "intent": {"persona": "maja", "artifact": "intent.md", "gate": "B1"},
@@ -60,11 +61,15 @@ PHASES = {
     "design": {"persona": "natalia", "artifact": "design.md", "gate": "design-review"},
     "delivery": {"persona": "talos", "artifact": None, "gate": None},
 }
+# Wynik poprzedniej fazy, bez którego faza nie startuje (poza szkicem z `change new`). Brak = PR poprzedniej fazy
+# nie jest scalony, a gałąź tej fazy rozjechałaby się z nim w dzienniku projektu i decisions.md.
+REQUIRES = {"requirements": "intent.md", "architecture": "requirements.md", "design": "plan.md", "delivery": "plan.md"}
 WHAT = {
     "intent": ("zamiar zmiany: problem, warianty z kosztem, wybrany wariant, metryki sukcesu, poza zakresem; "
                "ograniczenia, kiedy to porażka i powiązania bierzesz ze zgłoszenia, a brak zapisujesz jako pytanie"),
     "requirements": "wymagania z kryteriami akceptacji jako przykłady, wymagania jakości, priorytety",
-    "architecture": "architekturę i plan cięć TSK (plan.md z kolumnami Wydanie i Flaga), release.yaml, ADR w design.md",
+    "architecture": ("architekturę i plan cięć TSK (plan.md z kolumnami Wydanie i Flaga), release.yaml, ADR "
+                     "w architecture.md tej zmiany (projekt doświadczenia powstaje w fazie design)"),
     "design": ("projekt doświadczenia: przepływy, stany i tabelę ramek Figmy `Wymaganie | Ścieżka | Stan | Ramka | "
                "Uwagi` (kontrakt pdi conventions.design; ramki projektanta dopasowane przez Figma MCP, szkic ramek tylko "
                "na prośbę człowieka); sprawdź design_check.py check przed bramką"),
@@ -179,6 +184,23 @@ def cmd_prompt(a) -> int:
     return 0
 
 
+def missing_input(change: str, phase: str) -> str | None:
+    """Komunikat, gdy brak wyniku poprzedniej fazy (plik nie istnieje albo ma status draft)."""
+    name = REQUIRES.get(phase)
+    if not name:
+        return None
+    f = change_dir(change) / name
+    status = None
+    if f.is_file():
+        m = re.search(r"^status:\s*(\S+)", f.read_text(encoding="utf-8", errors="ignore"), re.M)
+        status = m.group(1) if m else "brak"
+    if status not in (None, "draft"):
+        return None
+    why = "nie istnieje" if status is None else "jest szkicem (status: draft)"
+    return (f"{f} {why} — faza {phase} startuje po scaleniu PR poprzedniej fazy (inaczej gałęzie faz rozjadą się "
+            f"w docs/project/README.md i decisions.md); scal ten PR i ponów fazę")
+
+
 def cmd_run(a) -> int:
     p = build_prompt(a)
     argv = [os.environ.get("PDI_CLAUDE_BIN") or "claude", "--print", "--output-format", "json", "--agent",
@@ -190,6 +212,9 @@ def cmd_run(a) -> int:
     if a.dry_run:
         print(json.dumps({**out, "status": "dry_run", "argv": argv, "prompt": p["prompt"]}, ensure_ascii=False, indent=2))
         return 0
+    missing = missing_input(a.change, a.phase)
+    if missing:
+        raise Refused(missing)
     try:
         r = subprocess.run([*argv, p["prompt"]], capture_output=True, text=True)
     except OSError as e:
@@ -204,6 +229,10 @@ def cmd_run(a) -> int:
     out.update(status=status, cost_usd=cost)
     if failed:
         out["error"] = (result.get("subtype") if isinstance(result, dict) and result else None) or f"kod {r.returncode}"
+        out["exit_code"] = r.returncode
+        text = result.get("result") if isinstance(result, dict) else None
+        out["detail"] = (str(text) if text else (r.stdout or ""))[-DETAIL_MAX:] or None
+        out["stderr"] = (r.stderr or "")[-DETAIL_MAX:] or None
     print(json.dumps(out, ensure_ascii=False, indent=2))
     return 1 if failed else 0
 

@@ -333,6 +333,24 @@
      ]
     ]
    }
-  }
+  },
+    {
+      "id": "adr-fazy-architecture",
+      "expect": "trigger",
+      "prompt": "Tryb mode-pdi: pdi uruchomił fazę architecture zmiany CHG-5 (persona tomasz). Gdzie zapisać ADR tej zmiany — w design.md czy gdzie indziej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "architecture\\.md"
+          ],
+          [
+            "faz\\w* design",
+            "natali\\w*",
+            "projekt\\w* doświadczeni\\w*",
+            "ramek"
+          ]
+        ]
+      }
+    }
 ]
 }

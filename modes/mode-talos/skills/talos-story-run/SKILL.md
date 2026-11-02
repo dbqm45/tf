@@ -56,7 +56,9 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 - **Fazy warunkowe** wpisz do planu tylko z powodem: dokumentacja przy zmianie publicznego API lub zachowania
   opisanego w docs; `security-reviewer` przy auth, sekretach, uprawnieniach, IaC, CI; `architect` przy decyzji
   trudnej do odwrócenia.
-- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku.
+- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest poza gitem:
+  w commitach i kodzie nie odsyłasz do niego — pozycje trafiają do opisu PR i raportu przebiegu
+  (sekcja „Odłożone do decyzji”, przy cięciu z kluczem w `docs/project/changes/CHG-n/runs/TSK-n.md`).
 - **Bez `--auto`:** pokaż plan (kawałki, fazy warunkowe, założenia, odłożone) i czekaj na akceptację człowieka.
   **Z `--auto`:** idziesz dalej; plan i założenia trafią do opisu PR.
 

@@ -68,6 +68,11 @@ workflow install`, dalej `phase_run.py`): zapisuje decyzję w `decisions.md` (`d
 już z pdi, `wyslano: tak`), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
 persona i artefakt: `phase_run.py prompt`), otwiera PR fazy i wysyła prośbę o następną bramkę (`phase_run.py gate request`).
 W fazie delivery gałęzie cięć `story/*` wypycha i ich PR-y otwiera workflow (`phase_run.py cuts publish`), nie persona.
+Faza startuje dopiero z wynikiem poprzedniej na gałęzi (np. `requirements.md` poza szkicem przed architecture), czyli
+po scaleniu PR poprzedniej fazy — inaczej `run` odmawia, bo gałęzie faz rozjechałyby się w dzienniku projektu
+i numeracji `decisions.md`. Nieudana faza (`status: failed`) ma w wyniku `detail` (koniec odpowiedzi persony),
+`stderr` i `exit_code`. Konflikt w generowanym `docs/project/README.md` rozwiązujesz
+`python3 .claude/hooks/project_record.py index`, nie ręcznie.
 Gdy tak cię uruchomiono:
 1. Nikt nie odpowie na pytania: nie pytasz człowieka i nie czekasz na zgodę. Pracujesz tylko w zakresie fazy, w
    artefakcie z polecenia (`requirements.md`, `plan.md`…), nagłówek `status: proposed`.
@@ -78,6 +83,7 @@ Gdy tak cię uruchomiono:
    odpowiadają, jest rozstrzygnięte — zapisz ustalenie w artefakcie z odwołaniem do wpisu i nie pytaj ponownie.
    Faza `design`: tabela ramek w `design.md` (szablon `templates/design.md`, format z kontraktu pdi
    `conventions.design`); `design_check.py check CHG-n` przed bramką — braki ramek i stanów idą do pdi jako pytania.
+   Faza `architecture`: ADR w `architecture.md` zmiany — `design.md` należy tylko do fazy `design`.
 4. Na koniec `decision_record.py check` ma przejść. Poprawki po `changes_requested`: przeczytaj wpis bramki w
    `decisions.md` i komentarze PR, zmień tylko to, czego dotyczą.
 5. Faza `intent` po przyjęciu zgłoszenia w pdi: workflow zakłada dziennik zmiany z `source: PRB-n`, a polecenie niesie
