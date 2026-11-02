@@ -406,6 +406,76 @@ def main() -> int:
         r = run(["check"], repo)
         check(r.returncode != 0 and "source_reported_at" in r.stdout, f"S-5: zła data w nagłówku → check: {r.stdout}")
 
+    # Z1 (PRB-3): odpowiedzi na pytania bramki i decyzje zmiany z rejestru pdi (kontrakt pdi 0.11.0)
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12"], repo)
+        dec = repo / "docs" / "project" / "changes" / "CHG-12" / "decisions.md"
+        answers = repo / "answers.json"
+        answers.write_text(json.dumps([
+            {"question": "Czy config/build.json zostaje w repo? (adresat: właściciel)",
+             "answer": "Nie —\n generuje go build (DEC-0003)."},
+            {"question": "Kto zatwierdza teksty?", "answer": "Właściciel produktu."}], ensure_ascii=False),
+            encoding="utf-8")
+        r = run(["decision", "gate", "CHG-12", "--gate", "B2", "--outcome", "approved", "--id", "DEC-7",
+                 "--answers", str(answers)], repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "- pytanie: Czy config/build.json zostaje w repo? (adresat: właściciel)\n"
+              "- odpowiedz: Nie — generuje go build (DEC-0003).\n- pytanie: Kto zatwierdza teksty?\n"
+              "- odpowiedz: Właściciel produktu.\n" in text, f"Z1-1: --answers zapisuje pary w wpisie bramki: {r.stdout}{text[-600:]}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"Z1-2: wpis z odpowiedziami przechodzi check: {r.stdout}")
+        bad = repo / "bad.json"
+        for content in ('[{"question": "Q?"}]', '{"question": "Q?", "answer": "A"}', "nie json"):
+            bad.write_text(content, encoding="utf-8")
+            r = run(["decision", "gate", "CHG-12", "--gate", "B3", "--outcome", "approved", "--id", "DEC-8",
+                     "--answers", str(bad)], repo)
+            check(r.returncode != 0 and "DEC-8" not in dec.read_text(encoding="utf-8"),
+                  f"Z1-3: złe --answers ({content}) → błąd, nic nie dopisane: {r.stdout}")
+
+        linked = repo / "linked.json"
+        decisions = [
+            {"id": "DEC-3", "statement": "config/build.json nie jest w repo — generuje go build.",
+             "why": "Powtarzalne buildy.\nZgoda zespołu.", "decided_at": "2026-10-30", "decided_by": "właściciel",
+             "kind": "technical", "source_kind": "ci_for_sdlc", "drafted_by": "human"},
+            {"id": "DEC-5", "statement": "Eksport tylko CSV.", "why": "Zgłaszający pracuje w arkuszu.",
+             "decided_at": "2026-10-30", "decided_by": "PO", "kind": "product", "source_kind": "meeting",
+             "drafted_by": "ai", "answers": [{"question": "Jaki format?", "answer": "CSV."}]},
+            {"id": "DEC-7", "statement": "Bramka B2", "why": "x", "decided_at": "2026-10-31", "decided_by": "pdi",
+             "kind": "gate", "source_kind": "console", "drafted_by": "human"},
+        ]
+        linked.write_text(json.dumps(decisions, ensure_ascii=False), encoding="utf-8")
+        imp = ["decision", "import", "CHG-12", "--json", str(linked)]
+        r = run(imp, repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "## config/build.json nie jest w repo — generuje go build.\n" in text
+              and "- id: DEC-3\n- wyslano: tak\n" in text and "- dlaczego: Powtarzalne buildy. Zgoda zespołu.\n" in text
+              and "- zrodlo: ci_for_sdlc\n" in text and text.count("- pochodzenie: pdi") == 2
+              and "- pytanie: Jaki format?\n- odpowiedz: CSV.\n" in text,
+              f"Z1-4: import dopisuje decyzje z pdi z numerem i pochodzeniem: {r.stdout}{text[-900:]}")
+        check(text.count("- id: DEC-7") == 1 and "pominięte" in r.stdout,
+              f"Z1-5: decyzja z numerem już w decisions.md (bramka) jest pominięta: {r.stdout}")
+        r = run(imp, repo)
+        check(r.returncode == 0 and dec.read_text(encoding="utf-8") == text,
+              f"Z1-6: ponowny import nic nie zmienia (idempotentny po id): {r.stdout}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"Z1-7: zaimportowane wpisy przechodzą check: {r.stdout}")
+        r = run(["decision", "pending"], repo)
+        check(jl(r) == [], f"Z1-8: zaimportowane decyzje nie czekają na wysłanie do pdi: {r.stdout}")
+        for broken, why in (([{**decisions[0], "id": "41"}], "zły id"), ([{**decisions[0], "kind": "x"}], "zły kind"),
+                            ({"id": "DEC-1"}, "nie lista")):
+            linked.write_text(json.dumps(broken), encoding="utf-8")
+            r = run(imp, repo)
+            check(r.returncode != 0 and dec.read_text(encoding="utf-8") == text, f"Z1-9: {why} → błąd: {r.stdout}")
+        r = run(["decision", "import", "CHG-99", "--json", str(linked)], repo)
+        check(r.returncode != 0 and "change new" in r.stdout, f"Z1-10: brak dziennika → błąd: {r.stdout}")
+        dec.write_text(text.replace("- pochodzenie: pdi", "- pochodzenie: slack", 1), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "pochodzenie" in r.stdout, f"Z1-11: nieznane pochodzenie → check: {r.stdout}")
+        dec.write_text(text.replace("- odpowiedz: CSV.\n", "", 1), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "parami" in r.stdout, f"Z1-12: pytanie bez odpowiedzi → check: {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów dziennika zmiany (mode-pdi)")

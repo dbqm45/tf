@@ -13,8 +13,11 @@ później (`decision pending`). Nie wymyślaj numerów.
 - kto: <osoba lub rola, która zdecydowała>
 - rodzaj: product | technical | process | triage | intent | gate | other
 - dlaczego: <1–5 zdań, tylko z rozmowy>
-- zrodlo: claude-cli | claude-ai | slack | confluence | jira | manual
+- zrodlo: claude-cli | claude-ai | slack | confluence | jira | manual | console | ci_for_sdlc | meeting
 - szkic: ai | human
 - ustalenie: <tylko odpowiedź na ustalenie ci_for_sdlc, np. DES-001:TSK-1>
 - skutek: <opcjonalnie przy ustaleniu: resolve | accept_risk | dismiss | confirm>
+- pochodzenie: <tylko decyzja z rejestru pdi: pdi (decision import)>
+- pytanie: <pytanie z „Pytania do bramki”, na które odpowiedział człowiek (decision gate --answers)>
+- odpowiedz: <jego odpowiedź; pary pytanie/odpowiedz mogą się powtarzać>
 -->
