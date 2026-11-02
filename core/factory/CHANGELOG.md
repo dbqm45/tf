@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.55.1] — 2026-11-02
+### Fixed
+- **pdi:** keep persona output and phase order, move ADR out of design.md (#134)
+
 ## [5.55.0] — 2026-11-01
 ### Added
 - **mode-pdi:** record answers to ci_for_sdlc findings in decisions.md (#128)
