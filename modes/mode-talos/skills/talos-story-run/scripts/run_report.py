@@ -216,7 +216,25 @@ def report_md(slug: str, rep: dict) -> str:
         lines.append(f"| {agent} | {fmt_tokens(t['input'])} | {fmt_tokens(t['output'])} | {fmt_tokens(t['cache_read'])} | "
                      f"{t.get('_cost', 0):.4f} |")
     lines += ["", "## Odłożone do decyzji", "", *(rep.get("parked_items") or ["- brak"])]
+    lines += ["", *(rep.get("security") or ["## Bezpieczeństwo", "", "- brak wyniku skanu (security_scan.py nie uruchomiony)"])]
     return "\n".join(lines) + "\n"
+
+
+def security_section(run_dir: Path) -> list[str]:
+    """Sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security[/K<n>])."""
+    found = sorted(run_dir.glob("security/**/summary.md"))
+    if not found:
+        return []
+    lines = ["## Bezpieczeństwo"]
+    for f in found:
+        body = f.read_text(encoding="utf-8").splitlines()
+        if body and body[0].startswith("## Bezpieczeństwo"):
+            body = body[1:]
+        label = f.parent.relative_to(run_dir / "security").as_posix()
+        lines += ["", *([f"### {label}"] if label != "." else []), *body]
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return lines
 
 
 def front_and_body(text: str) -> tuple[str, str]:
@@ -329,7 +347,8 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
            "requests": data["requests"], "model_ids": data["model_ids"], "models": data["models"],
            "agents": data["agents"],
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
-           "plan": plan_progress(run_dir), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir)}
+           "plan": plan_progress(run_dir), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
+           "security": security_section(run_dir)}
     if status:   # kontrola budżetu po kawałku: jedna linia, bez zapisu raportu
         print(f"koszt: {rep['cost_usd']:.4f} USD · czas: {rep['duration_s'] // 60} min · plan: "
               f"{rep['plan']['done']}/{rep['plan']['total']} · odłożone: {rep['parked']}")

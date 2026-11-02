@@ -25,6 +25,16 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   workflow zakłada `docs/project/changes/CHG-n/` ze źródłem i dniem zgłoszenia (`source_reported_at`, od niego
   ShipScope liczy lead time od zgłoszenia), a persona pisze `intent.md` z problemu zgłaszającego.
 
+- **Skan bezpieczeństwa na każdym PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` instaluje
+  `change-check.yml`: ten sam skan co w pętli kawałka Talosa (`security_scan.py scan` z trybu mode-talos — semgrep
+  z regułami OWASP Top 10 i `.semgrep.yml` produktu na plikach zmienionych od bazy PR, `npm audit` / `pip-audit` przy
+  zmianie manifestu lub lockfile'a), a SARIF z `reports/security` sprawdza ci_for_sdlc (`--sarif`, SEC-001…003) razem
+  z definicją zmian. Błąd skanu (brak skanera, audyt, który się nie wykonał) czerwieni PR. W fazie `delivery`
+  `sdlc-phase.yml` instaluje semgrep i pip-audit przed personą, żeby Talos mógł skanować kawałki. Reguły
+  `p/owasp-top-ten` pobiera się z `semgrep.dev` — w sandboxie persony host jest na liście dozwolonych (Z8a,
+  `sandbox_settings.py`); w CI bez sieci ustaw zmienną repozytorium `TALOS_SEMGREP_CONFIG` na plik reguł w repo.
+  Wymaga trybu mode-talos.
+
 - **Pasma kontrolne z ShipScope (F5):** `metric_watch.py check` czyta dzienny szereg PROD z API usług ShipScope
   (rollbacki, wdrożenia nieudane, lead time, liczba wdrożeń), liczy pasma `control_band.py` i przy punkcie poza 3σ
   z ostatnich dni wysyła do pdi `metric.breached` (`--send`). Codziennie: `metric_watch.py workflow install`

@@ -1,0 +1,80 @@
+# Sprawdzenie definicji zmian i skan bezpieczeństwa na każdym PR (tryb mode-pdi; ci_for_sdlc, Z8c-2).
+# Instalacja: python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install --workflow change-check
+# Ten sam skan co w pętli kawałka Talosa (`security_scan.py scan`, tryb mode-talos): semgrep z regułami OWASP Top 10
+# (i `.semgrep.yml` produktu) na plikach zmienionych od bazy PR, audyt zależności (npm audit / pip-audit) tylko przy
+# zmianie manifestu lub lockfile'a; SARIF w reports/security trafia do ci_for_sdlc (`--sarif`): SEC-001 (error albo
+# warning z CWE z OWASP Top 10) blokuje, SEC-002 i SEC-003 informują; adnotacje na pliku i linii.
+# Brak skanera albo skan, który nie zapisał SARIF, to czerwona bramka (brak pliku), nigdy cichy PASS.
+# Sieć: reguły `p/owasp-top-ten` pobiera się z semgrep.dev przy każdym uruchomieniu (w sandboxie persony host jest na
+# liście dozwolonych, pdi Z8a); bez sieci ustaw zmienną repozytorium TALOS_SEMGREP_CONFIG na plik reguł w repo.
+# Uwaga: dla bezpieczeństwa przypnij akcje do pełnego SHA commita, a ci_for_sdlc do tagu wydania (vX.Y.Z).
+name: Definition check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: change-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Pełna historia: pliki kawałków z dopisków `Change:` w commitach, a skan i --base potrzebują gałęzi bazowej.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Skanery
+        run: |
+          pipx install semgrep==1.183.0
+          pipx install pip-audit==2.10.1
+      # Jedno polecenie weryfikacji produktu (N3, pierwsza linia CLAUDE.md), jeśli jest — to samo co u Talosa:
+      # - run: BASE="origin/$BASE_REF" ./verify.sh
+      #   env:
+      #     BASE_REF: ${{ github.base_ref }}
+      # Skan przed checkoutem ci_for_sdlc: nieśledzony katalog .ci_for_sdlc nie może trafić do plików zmiany.
+      - name: Skan bezpieczeństwa
+        # ustalenia blokujące ocenia ci_for_sdlc (SEC-001…003), błędy skanu krok niżej
+        continue-on-error: true
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          TALOS_SEMGREP_CONFIG: ${{ vars.TALOS_SEMGREP_CONFIG }}
+        run: |
+          python3 .claude/skills/talos-story-run/scripts/security_scan.py scan --base "origin/$BASE_REF" --out reports/security
+      # Ustalenia ocenia ci_for_sdlc niżej; błąd skanu (brak skanera, audyt, który się nie wykonał) czerwieni od razu,
+      # także gdy część SARIF powstała — inaczej brakujący audyt wyglądałby jak czysty.
+      - name: Błędy skanu
+        run: |
+          python3 -c 'import json, sys; e = json.load(open("reports/security/verdict.json")).get("errors"); [print(f"::error::{x}") for x in e]; sys.exit(1 if e else 0)'
+      - uses: actions/checkout@v7
+        with:
+          repository: dbqm45/ci_for_sdlc
+          ref: main
+          path: .ci_for_sdlc
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci --workspace @ci/core --workspace @ci/server
+        working-directory: .ci_for_sdlc
+      - name: Sprawdzenie zmian i skanu
+        working-directory: .ci_for_sdlc
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          CI_DATA_DIR: ${{ runner.temp }}/ci-data
+          # Raport JUnit testów (plik albo katalog, względem repo); puste — bez wyników testów.
+          TEST_REPORTS: ''
+          SARIF_REPORTS: reports/security
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -- --repo "$GITHUB_WORKSPACE" --repo-url "$REPO_URL" --fail-on critical
+          if [ -n "$TEST_REPORTS" ]; then set -- "$@" --tests "$GITHUB_WORKSPACE/$TEST_REPORTS"; fi
+          for p in $SARIF_REPORTS; do set -- "$@" --sarif "$GITHUB_WORKSPACE/$p"; done
+          set -- "$@" --base "origin/$BASE_REF"
+          npm run analyze -- "$@"

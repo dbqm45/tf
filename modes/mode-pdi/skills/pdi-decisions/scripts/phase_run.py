@@ -20,8 +20,9 @@ Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez inter
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before PLIK [--base main] [--dry-run]
       po fazie delivery: push nowych gałęzi story/* z commitami ponad --base i PR każdej (persona w --print nie może
       pushować); cięcie zbudowane na innym ma PR do niego; JSON {status, prs: [{branch, pr}]}, bez cięć kod 1
-  python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install [--force]
-      szablon .github/workflows/sdlc-phase.yml (workflow_dispatch wywoływany przez pdi)
+  python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install [--workflow sdlc-phase|change-check] [--force]
+      szablon .github/workflows/sdlc-phase.yml (workflow_dispatch wywoływany przez pdi) albo change-check.yml
+      (sprawdzenie zmian i skan bezpieczeństwa na każdym PR przez ci_for_sdlc)
 
 Fazy, persony i bramki: PHASES niżej; nadpisanie w .claude/pdi-phases.json ({"requirements": {"persona": "jan"}}).
 Przyjęcie zgłoszenia w pdi (F3) uruchamia fazę intent z treścią zgłoszenia: $PDI_SOURCE (PRB) i $PDI_PROBLEM (JSON).
@@ -500,11 +501,16 @@ def cmd_cuts(a) -> int:
 
 
 def cmd_workflow_install(a) -> int:
-    if WORKFLOW.exists() and not a.force:
-        raise Refused(f"{WORKFLOW} już istnieje — nie nadpisuję (--force, jeśli to celowe)")
-    WORKFLOW.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(TEMPLATE, WORKFLOW)
-    print(f"✓ {WORKFLOW} — ustaw sekrety ANTHROPIC_API_KEY i PDI_TF_SIGNING_SECRET oraz zmienną PDI_EVENTS_URL")
+    target = WORKFLOW.with_name(f"{a.workflow}.yml")
+    if target.exists() and not a.force:
+        raise Refused(f"{target} już istnieje — nie nadpisuję (--force, jeśli to celowe)")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(TEMPLATE.with_name(f"{a.workflow}.yml"), target)
+    if a.workflow == "change-check":
+        print(f"✓ {target} — skan wymaga trybu mode-talos (security_scan.py); bez sieci do semgrep.dev ustaw zmienną "
+              "TALOS_SEMGREP_CONFIG na plik reguł w repo")
+    else:
+        print(f"✓ {target} — ustaw sekrety ANTHROPIC_API_KEY i PDI_TF_SIGNING_SECRET oraz zmienną PDI_EVENTS_URL")
     return 0
 
 
@@ -537,7 +543,9 @@ def main(argv: list[str]) -> int:
     pub.add_argument("--base", default="main")
     pub.add_argument("--dry-run", action="store_true")
     wf = sub.add_parser("workflow").add_subparsers(dest="action", required=True)
-    wf.add_parser("install").add_argument("--force", action="store_true")
+    inst = wf.add_parser("install")
+    inst.add_argument("--force", action="store_true")
+    inst.add_argument("--workflow", choices=("sdlc-phase", "change-check"), default="sdlc-phase")
     a = ap.parse_args(argv)
     handler = {"prompt": cmd_prompt, "run": cmd_run, "gate": cmd_gate_request, "cuts": cmd_cuts,
                "workflow": cmd_workflow_install}[a.cmd]

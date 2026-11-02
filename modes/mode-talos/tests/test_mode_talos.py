@@ -51,6 +51,13 @@ def main() -> int:
           and "story/tsk-" in body,
           "T-9: wejście TSK z planu zmiany (`run_report.py start --task`), gałąź z kluczem, `Change:` w commitach, "
           "raport w changes/CHG-n/runs/")
+    scan = ".claude/skills/talos-story-run/scripts/security_scan.py"
+    check((ROOT / scan).is_file() and any(scan in a for a in allow)
+          and (skill / "templates" / "verify.sh").is_file()
+          and "security_scan.py scan" in loop and "feedback.md" in loop and "STOP" in loop
+          and "security_scan.py cooldown" in body,
+          "T-10: skan bezpieczeństwa w pętli kawałka (skrypt, uprawnienie, FAIL → feedback.md, STOP), karencja "
+          "wersji na starcie, szablon verify.sh")
 
     for f in fails:
         print(f"✗ {f}")
