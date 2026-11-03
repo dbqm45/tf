@@ -441,6 +441,40 @@ def ci_tests(check) -> None:
               f"AC-8: czerwone `build.py check` → job czerwony, bez PR: {r.stdout[-300:]}")
 
 
+def lock_tests(check) -> None:
+    """Klon instalacji zespołowej z commitowanym `.claude/factory-lock.json`: plik fabryki, który poprzednia aktualizacja
+    zostawiła w starszej treści niż `factory/VERSION`, ma w locku swój skrót — --ci bierze bazę z locka i go aktualizuje,
+    zamiast odtwarzać manifest z czystej instalacji wersji z VERSION (który brałby ten plik za zmieniony przez projekt)."""
+    with tempfile.TemporaryDirectory() as d:
+        base = Path(d)
+        src = factory_repo(base, "fab-lock", [("2.0.0", PASS, False), ("2.1.0", PASS, False)])
+        p = ci_project(base, "ci-lock")
+        (p / ".claude" / "hooks" / "f.py").write_text("1.9.0")          # starsza treść po poprzedniej aktualizacji
+        lock = {"version": "2.0.0", "packs": [], "language": "pl", "commit_language": "en", "offered": [],
+                "files": {".claude/hooks/f.py": sha(b"1.9.0"), ".claude/tests/test_po.py": sha(PASS.encode())}}
+        (p / ".claude" / "factory-lock.json").write_text(json.dumps(lock))
+        git(p, "add", "-A")
+        git(p, "commit", "-qm", "lock")
+        r, out, body = run_ci(p, src)
+        check(r.returncode == 0 and "version=2.1.0" in out and (p / ".claude" / "hooks" / "f.py").read_text() == "2.1.0"
+              and not (p / ".claude" / "hooks" / "f.py.factory-new").exists(),
+              f"AC-9: --ci z lockiem aktualizuje plik w treści z locka, bez *.factory-new: {out!r} "
+              f"{(p / '.claude' / 'hooks' / 'f.py').read_text()!r} {r.stdout[-400:]} {r.stderr[-300:]}")
+        check("factory-lock.json" in r.stdout, f"AC-10: --ci mówi, że baza aktualizacji pochodzi z locka: {r.stdout[-400:]}")
+        check(".claude/hooks/f.py" not in body, f"AC-11: plik z locka nie trafia do „zmienionych w projekcie”: {body[-400:]}")
+
+        p = ci_project(base, "ci-lock-moje")                             # zmiana projektu po locku nadal zostaje
+        lock["files"][".claude/hooks/f.py"] = sha(b"2.0.0")
+        (p / ".claude" / "factory-lock.json").write_text(json.dumps(lock))
+        (p / ".claude" / "hooks" / "f.py").write_text("moja zmiana")
+        git(p, "add", "-A")
+        git(p, "commit", "-qm", "moja")
+        r, out, body = run_ci(p, src)
+        check(r.returncode == 0 and (p / ".claude" / "hooks" / "f.py").read_text() == "moja zmiana"
+              and ".claude/hooks/f.py" in body,
+              f"AC-12: z lockiem plik zmieniony w projekcie zostaje i trafia do opisu PR: {body[-400:]} {r.stdout[-300:]}")
+
+
 def main() -> int:
     up = load()
     fails, total = [], 0
@@ -457,6 +491,7 @@ def main() -> int:
     auto_run_tests(up, check)
     start_tests(up, check)
     ci_tests(check)
+    lock_tests(check)
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów automatycznej aktualizacji")

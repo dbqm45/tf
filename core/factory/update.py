@@ -547,12 +547,37 @@ PR_BODY = Path(".claude") / "logs" / "update-pr.md"
 WORKFLOWS = Path(".github") / "workflows"
 
 
+FACTORY_LOCK = Path(".claude") / "factory-lock.json"
+
+
+def lock_manifest(root: Path) -> dict | None:
+    """Baza aktualizacji z commitowanego `.claude/factory-lock.json` (instalacja zespołowa, wersja ≥ 5.58.3): wersja,
+    nakładki i skróty plików fabryki takie, jakie są w repozytorium. None, gdy locka nie ma albo jest nieczytelny."""
+    try:
+        lock = json.loads((root / FACTORY_LOCK).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(lock, dict) or not isinstance(lock.get("files"), dict) or not lock.get("version"):
+        return None
+    return {"version": lock["version"], "mode": "shared", "packs": {p: "0.0.0" for p in lock.get("packs") or []},
+            "offered": lock.get("offered") or [], "files": lock["files"]}
+
+
 def _ci_manifest(root: Path, src: str) -> dict:
-    """Manifest dla CI. W trybie zespołowym jest w .gitignore, więc po checkout go nie ma: odtwarza go instalator
-    wersji z `factory/VERSION` (tag v<wersja>) uruchomiony na pustym katalogu — daje te same skróty plików."""
+    """Manifest dla CI. W trybie zespołowym jest w .gitignore, więc po checkout go nie ma. Bazą jest wtedy commitowany
+    `.claude/factory-lock.json` (skróty plików tak, jak są w repozytorium — także tych, które poprzednia aktualizacja
+    pominęła). Bez locka (instalacje sprzed 5.58.3) manifest odtwarza instalator wersji z `factory/VERSION`
+    (tag v<wersja>) uruchomiony na pustym katalogu — to zakłada, że pliki projektu mają dokładnie tę wersję."""
     man_p = root / ".claude" / "factory-manifest.json"
     if man_p.is_file():
         return json.loads(man_p.read_text(encoding="utf-8"))
+    manifest = lock_manifest(root)
+    if manifest:
+        print(f"ℹ No local manifest — using {FACTORY_LOCK.as_posix()} (version {manifest['version']}) as the update base.")
+        manifest.update(source=src, auto_update=True)
+        man_p.parent.mkdir(parents=True, exist_ok=True)
+        man_p.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        return manifest
     current = (root / "factory" / "VERSION").read_text(encoding="utf-8").strip()
     with tempfile.TemporaryDirectory(prefix="tf-ci-") as t:
         old = fetch(f"{src}#v{current}", Path(t))
@@ -796,7 +821,7 @@ def main(argv: list[str]) -> int:
             return 0
         else:
             opts[a] = True
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else {}
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else (lock_manifest(ROOT) or {})
     if opts.get("--ci"):
         src = opts.get("source") or os.environ.get("TEAM_FACTORY") or manifest.get("source") or ""
         return ci_run(ROOT, normalize(src) if src else src)
