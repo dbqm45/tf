@@ -31,6 +31,8 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
+ATTEMPT = re.compile(r"proba-(\d+)")  # katalog próby kawałka z security_scan.py scan --slice
+
 # projekt: katalog z factory/config.yaml nad skryptem (.claude/skills/talos-story-run/scripts/), inaczej bieżący
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / "factory" / "config.yaml").is_file()), Path.cwd())
 try:
@@ -221,17 +223,33 @@ def report_md(slug: str, rep: dict) -> str:
 
 
 def security_section(run_dir: Path) -> list[str]:
-    """Sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security[/K<n>])."""
-    found = sorted(run_dir.glob("security/**/summary.md"))
+    """Sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security[/K<n>]);
+    każda próba kawałka (K<n>/proba-<k>/) pod nagłówkiem kawałka, w kolejności prób."""
+    sec = run_dir / "security"
+
+    def key(f: Path):
+        rel = f.parent.relative_to(sec)
+        m = ATTEMPT.fullmatch(rel.name)
+        group = rel.parent if m else rel
+        return [(int(p[1:]) if re.fullmatch(r"K\d+", p) else 0, p) for p in group.parts], int(m.group(1)) if m else 0
+
+    found = sorted(sec.glob("**/summary.md"), key=key)
     if not found:
         return []
-    lines = ["## Bezpieczeństwo"]
+    lines, last_group = ["## Bezpieczeństwo"], None
     for f in found:
         body = f.read_text(encoding="utf-8").splitlines()
         if body and body[0].startswith("## Bezpieczeństwo"):
             body = body[1:]
-        label = f.parent.relative_to(run_dir / "security").as_posix()
-        lines += ["", *([f"### {label}"] if label != "." else []), *body]
+        rel = f.parent.relative_to(sec)
+        m = ATTEMPT.fullmatch(rel.name)
+        group = (rel.parent if m else rel).as_posix()
+        if group != last_group and group != ".":
+            lines += ["", f"### {group}"]
+        last_group = group
+        if m:
+            lines += ["", f"#### Próba {m.group(1)}"]
+        lines += ["", *body] if body and body[0].strip() else body
     while lines and not lines[-1].strip():
         lines.pop()
     return lines

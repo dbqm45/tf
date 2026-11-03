@@ -1,6 +1,13 @@
 {
  "talos-story-run": {
-  "fingerprint": "d7537158bb1bee27",
-  "offline": "2026-11-03"
+  "fingerprint": "e9b51d32c0c247d2",
+  "offline": "2026-11-03",
+  "model": {
+   "report": ".claude/logs/evals/2026-11-03-bramka-talos-story-run.md",
+   "cost": 1.17,
+   "haiku": "3/3",
+   "sonnet": "3/3",
+   "date": "2026-11-03"
+  }
  }
 }

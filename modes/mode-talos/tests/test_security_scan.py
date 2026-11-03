@@ -241,7 +241,7 @@ def main() -> int:
         check(v.get("skipped") and "package.json" in v["skipped"][0] and "bez zależności" in v["skipped"][0],
               f"N-3: werdykt mówi, że audyt pominięto (manifest bez zależności): {v.get('skipped')}")
         r = run("scan", "--out", str(nout), "--slice", "K1", "--attempt", "1", cwd=nd)
-        summary = (nout / "summary.md").read_text(encoding="utf-8") if (nout / "summary.md").is_file() else ""
+        summary = (nout / "proba-1" / "summary.md").read_text(encoding="utf-8") if (nout / "proba-1" / "summary.md").is_file() else ""
         check(r.returncode == 0 and "BRAMKA K1: PASS" in r.stdout and "audyt zależności pominięty" in r.stdout.lower()
               and "audyt zależności pominięty" in summary.lower() and "bez zależności" in summary,
               f"N-4: linia skanu i summary.md mówią o pominiętym audycie: {r.stdout} | {summary}")
@@ -315,8 +315,16 @@ def main() -> int:
         r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "2", cwd=repo)
         check(r.returncode == 0 and "BRAMKA K2: PASS" in r.stdout and "STOP" not in r.stdout,
               f"L-5: po poprawce PASS: {r.returncode} {r.stdout}")
-        summary = (out / "summary.md").read_text(encoding="utf-8") if (out / "summary.md").is_file() else ""
+        summary = (out / "proba-2" / "summary.md").read_text(encoding="utf-8") if (out / "proba-2" / "summary.md").is_file() else ""
         check(summary.startswith("## Bezpieczeństwo") and "PASS" in summary, f"L-6: summary.md do raportu przebiegu: {summary[:200]}")
+        # każda próba ma własny katalog (proba-<k>): wynik próby 1 przeżywa próbę 2; feedback.md w --out — z ostatniej
+        first = (out / "proba-1" / "summary.md").read_text(encoding="utf-8") if (out / "proba-1" / "summary.md").is_file() else ""
+        check("FAIL" in first and "fake.sql-injection src/orders.py:1" in first and (out / "proba-1" / "semgrep.sarif").is_file()
+              and (out / "proba-1" / "verdict.json").is_file(), f"L-7: wynik próby 1 zachowany po próbie 2: {first[:300]}")
+        fb = (out / "feedback.md").read_text(encoding="utf-8") if (out / "feedback.md").is_file() else ""
+        check("brak blokujących" in fb and "fake.sql-injection" not in fb, f"L-8: feedback.md z ostatniej próby: {fb}")
+        check(not (out / "summary.md").exists() and not list(out.glob("*.sarif")) and not (out / "verdict.json").exists(),
+              f"L-9: bez wyniku próby poza proba-<k>: {sorted(p.name for p in out.iterdir())}")
         git(repo, "add", "src/orders.py")
         git(repo, "commit", "-qm", "orders")
 
