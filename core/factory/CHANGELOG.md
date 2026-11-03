@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.58.4] — 2026-11-03
+### Fixed
+- **update:** take the CI update base from the committed factory lock (#143)
+
 ## [5.58.3] — 2026-11-03
 ### Fixed
 - **install:** keep team installs updatable from a fresh clone (#142)
