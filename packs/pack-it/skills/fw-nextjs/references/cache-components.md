@@ -1,6 +1,4 @@
 # Cache Components (Next.js 16+) — model, klucze, ograniczenia, migracja
-
-> **Spis treści:** 1. Trzy rodzaje treści · 2. Gdzie stawiasz `'use cache'` · 3. Czas życia i warianty · 4. Klucz cache
 > · 5. Unieważnianie · 6. Dane z żądania · 7. Ograniczenia · 8. Migracja ze starych ustawień
 
 Włączasz flagą `cacheComponents: true` w `next.config.ts`; zastępuje ona eksperymentalne `experimental.ppr`.

@@ -1,5 +1,7 @@
 # Klocki domenowe w Go — przetestowane przykłady
 
+> **Spis treści:** go.mod · money/money.go · money/money_test.go · availability/availability.go · availability/availability_test.go
+
 Moduł sprawdzony 2026-10-23: `gofmt -l` (bez uwag), `go vet ./...` i `go test ./...` na go1.22.0 i go1.27.3
 (dyrektywa `go 1.22` — przykłady działają w całym zakresie skilla). Pliki skopiowane bez zmian.
 

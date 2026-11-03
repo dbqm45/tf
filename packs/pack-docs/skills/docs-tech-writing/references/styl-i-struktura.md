@@ -1,6 +1,6 @@
 # Styl i struktura dokumentacji technicznej
 
-> **Spis treści:** Cechy dobrej dokumentacji · Dla kogo piszesz — wybór stylu · Co musi się znaleźć w dokumentacji technicznej… · Przykłady dobrych spisów treści (wzorce nawigacji) · Opisywanie komponentów, metod, komend · Konsystencja — ważniejsza niż elegancja · Formatowanie — jednolity zestaw stylów · Narzędzia (generatory dokumentacji) · Dlaczego to się opłaca
+> **Spis treści:** Cechy dobrej dokumentacji · Dla kogo piszesz — wybór stylu · Co musi się znaleźć w dokumentacji technicznej… · Przykłady dobrych spisów treści (wzorce nawigacji) · Opisywanie komponentów, metod, komend · Procedury w duchu ASD-STE100 · Konsystencja — ważniejsza niż elegancja · Formatowanie — jednolity zestaw stylów · Narzędzia (generatory dokumentacji) · Dlaczego to się opłaca
 
 Rozwinięcie hubu docs-tech-writing. Elementy „ciężkie” (copyright, spis ilustracji, indeks, numeracja stron) dotyczą
 większych dokumentów (podręcznik, dokumentacja systemu), nie README.

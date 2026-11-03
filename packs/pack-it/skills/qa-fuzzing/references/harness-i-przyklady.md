@@ -1,5 +1,7 @@
 # Harness i przykłady — sprawdzone 2026-10-24
 
+> **Spis treści:** Go — natywny fuzzing (`testing.F`, go1.24.7) · Python — Atheris 3.1.0 (CPython 3.13) · C — libFuzzer + AddressSanitizer + UBSan (clang 18.1.3) · CI
+
 Każdy przykład uruchomiony: fuzzer znalazł zasiany błąd, znalezione wejście stało się testem regresyjnym, po
 naprawie test przechodzi, a ponowny fuzzing nic nie znajduje.
 

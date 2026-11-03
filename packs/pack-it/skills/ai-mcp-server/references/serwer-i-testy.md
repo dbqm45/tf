@@ -1,5 +1,7 @@
 # Serwer MCP z testami bez modelu — przetestowany przykład (Python)
 
+> **Spis treści:** booking_mcp.py · test_booking_mcp.py · Rejestracja w Claude Code
+
 Sprawdzone 2026-10-23: Python SDK `mcp` 1.29.0 (protokół 2025-11-25), `pytest` — 6 testów: migawka kontraktu
 narzędzi, wynik strukturalny, błąd narzędzia z następnym krokiem, odrzucenie wejścia przez schemat, prawdziwy
 proces po stdio, surowy stdout tylko z JSON-RPC. Kontrola odwrotna: dopisanie `print()` w narzędziu wywala ostatni

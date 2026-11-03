@@ -1,6 +1,6 @@
 # Cykl życia AI-native — pętla z artefaktami i bramkami
 
-> **Spis treści:** 1. Co się zmienia · 2. Łańcuch artefaktów w fabryce · 3. Sześć etapów — co robi agent, co człowiek, co mierzyć · 4. Praktyki etapu Build i Test · 5. Ciągłe ewaluacje konfiguracji agenta · 6. Etap Deploy — agent do bramki produkcyjnej i ani kroku… · 7. Etap Maintain — pasma kontrolne zamiast ciągłego… · 8. Źródło prawdy przy istniejących narzędziach · 9. Ustawienia zarządzane w organizacjach regulowanych · 10. Kolejność wdrażania w zespole · 11. AI-DLC (AWS) — słownik i rytuały · 12. Antywzorce
+> **Spis treści:** 1. Co się zmienia · 2. Łańcuch artefaktów w fabryce · 3. Sześć etapów — co robi agent, co człowiek, co mierzyć · 4. Praktyki etapu Build i Test · 5. Ciągłe ewaluacje konfiguracji agenta · 6. Etap Deploy — agent do bramki produkcyjnej i ani kroku… · 7. Etap Maintain — pasma kontrolne zamiast ciągłego… · 8. Źródło prawdy przy istniejących narzędziach · 9. Ustawienia zarządzane w organizacjach regulowanych · 10. Kolejność wdrażania w zespole · 11. AI-DLC (AWS) — słownik i rytuały · 12. Antywzorce · 13. Refinement, osąd i miary autonomii
 
 Na podstawie „The AI-Native SDLC Playbook” (Anthropic, 21.08.2026) i kursu Anthropic Academy o tym samym tytule
 oraz „AI-Driven Development Life Cycle” (AWS, 31.07.2025). Opisane własnymi słowami i odwzorowane na mechanizmy

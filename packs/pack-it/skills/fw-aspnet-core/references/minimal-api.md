@@ -1,5 +1,7 @@
 # Minimal API z wynikami typowanymi, ProblemDetails, walidacją i OpenAPI — przetestowany przykład
 
+> **Spis treści:** Booking.Api.csproj · Program.cs · Booking.Api.Tests.csproj
+
 Projekt sprawdzony 2026-10-23 na net10.0 (SDK 10.0.113, Microsoft.AspNetCore.OpenApi 10.0.13,
 Microsoft.AspNetCore.Mvc.Testing 10.0.13): `dotnet test` — 4 testy integracyjne (200, 409 jako
 `application/problem+json`, 400 z walidacji, 404, dokument OpenAPI), `TreatWarningsAsErrors`,
