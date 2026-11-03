@@ -1,5 +1,7 @@
 # Reguły Semgrep z testami — przykłady sprawdzone
 
+> **Spis treści:** 1. Taint: wartość z żądania → polecenie powłoki · 2. Autofix z testem poprawki · 3. Mniej fałszywych trafień: ograniczenia metazmiennych i… · W CI (sprawdzone w repozytorium git) · Pułapki
+
 Wszystkie trzy reguły i ich testy przechodzą `semgrep scan --test --metrics=off rules/` na Semgrepie 1.50.0, 1.100.0
 i 1.182.1 (2026-10-24): `3/3: ✓ All tests passed`, `1/1: ✓ All fix tests passed`. Układ katalogu:
 

@@ -1,5 +1,7 @@
 # Pułapki pomiaru i regresja ze śladów
 
+> **Spis treści:** 1. Granice wyniku · 2. Jedna zmienna naraz · 3. Dobór konfiguracji a test · 4. Etykieta i metryka składowa · 5. Niezmienniki · 6. Manifest pary model + harness · 7. Regresja ze śladów · 8. Reguły jako podłoga regresji · 9. Bramka zmiany harnessu · 10. Raport i dobór wyroczni · 11. Klasyfikator decyzji (LLM jako klasyfikator) · 12. Użyteczność z karą (agent odpowiadający liczbami)
+
 Spis treści: 1. Granice wyniku · 2. Jedna zmienna naraz · 3. Dobór konfiguracji a test · 4. Etykieta i metryka składowa ·
 5. Niezmienniki · 6. Manifest pary model + harness · 7. Regresja ze śladów · 8. Reguły jako podłoga · 9. Bramka zmiany harnessu ·
 10. Raport i dobór wyroczni · 11. Klasyfikator decyzji · 12. Użyteczność z karą (agent odpowiadający liczbami)

@@ -1,6 +1,4 @@
 # Diagnostyka typowych błędów Next.js (App Router)
-
-> **Spis treści:** 1. Granica serwer–klient · 2. Błędy hydratacji · 3. Utrata renderowania na serwerze bez
 > `<Suspense>` · 4. Paczki niezgodne z serwerem · 5. Nawigacja w `try/catch` · 6. Narzędzia serwera deweloperskiego
 
 ## 1. Granica serwer–klient
