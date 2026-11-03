@@ -71,7 +71,9 @@ spis standardów i słownik domeny.
 Po zielonych testach kawałka Talos uruchamia
 `python3 .claude/skills/talos-story-run/scripts/security_scan.py scan --slice K<n> --attempt <k> --out <katalog>/security/K<n>`:
 semgrep z regułami `p/owasp-top-ten` (i `.semgrep.yml` produktu, jeśli jest) tylko na zmienionych plikach, `npm audit`
-albo `pip-audit` tylko przy zmianie manifestu lub lockfile'a; wynik to SARIF w katalogu przebiegu. Ustalenie
+albo `pip-audit` tylko przy zmianie manifestu lub lockfile'a (`package.json` bez zależności i bez lockfile'a —
+audyt pominięty z adnotacją w raporcie; z zależnościami bez lockfile'a — błąd skanu); wynik to SARIF w katalogu
+przebiegu. Ustalenie
 blokujące (error albo warning z CWE z OWASP Top 10 — ta sama reguła co SEC-001 w ci_for_sdlc) to czerwona bramka:
 druga próba dostaje ustalenia (reguła, plik:linia), po dwóch próbach STOP i brak commitu. Ustalenia poniżej progu
 trafiają do sekcji „Bezpieczeństwo” raportu. Brak semgrep albo pip-audit to FAIL z poleceniem instalacji
