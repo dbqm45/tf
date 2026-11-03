@@ -32,7 +32,8 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   z definicją zmian. Błąd skanu (brak skanera, audyt, który się nie wykonał) czerwieni PR. W fazie `delivery`
   `sdlc-phase.yml` instaluje semgrep i pip-audit przed personą, żeby Talos mógł skanować kawałki. Reguły
   `p/owasp-top-ten` pobiera się z `semgrep.dev` — w sandboxie persony host jest na liście dozwolonych (Z8a,
-  `sandbox_settings.py`); w CI bez sieci ustaw zmienną repozytorium `TALOS_SEMGREP_CONFIG` na plik reguł w repo.
+  `sandbox_settings.py`) i działa bez logowania (zestaw węższy niż po `semgrep login` — własne wzorce produktu
+  w `.semgrep.yml`); w CI bez sieci ustaw zmienną repozytorium `TALOS_SEMGREP_CONFIG` na plik reguł w repo.
   Wymaga trybu mode-talos.
 
 - **Pasma kontrolne z ShipScope (F5):** `metric_watch.py check` czyta dzienny szereg PROD z API usług ShipScope
