@@ -16,7 +16,9 @@ z factory/config.yaml, modele i agenci; dopisuje postęp planu i liczbę odłoż
 
 Liczy skrypt, nie model — raport nie zużywa tokenów poza wklejeniem kilkunastu linii wyniku. Transkrypty:
 `$CLAUDE_CONFIG_DIR/projects/<ścieżka projektu>/` (domyślnie `~/.claude`); bez `--session` liczą się wszystkie sesje
-projektu z wpisami po starcie (także równoległe — wtedy podaj `--session`). Koszt jest szacunkiem z cennika API
+projektu z wpisami po starcie (także równoległe — wtedy podaj `--session`), a gdy ich nie ma — sesje najbliższego
+katalogu nadrzędnego (sesja uruchomiona wyżej, np. w chmurze z kilkoma repozytoriami). `--session ID` szuka tej sesji
+we wszystkich katalogach projektów. Raport podaje, z którego katalogu wziął transkrypty. Koszt jest szacunkiem z cennika API
 (przy subskrypcji to równowartość, nie faktura); zapis cache 1 h liczony jako 2× cena wejścia (platform.claude.com,
 „Prompt caching”). Typ agenta podagenta pochodzi z pliku `*.meta.json` obok transkryptu, jeśli Claude Code go zapisał.
 """
@@ -87,6 +89,14 @@ def transcript_dir(project: Path) -> Path:
     return projects_dir() / re.sub(r"[^A-Za-z0-9]", "-", str(project.resolve()))
 
 
+def transcript_dirs(project: Path) -> list[Path]:
+    """Gdzie szukać sesji przebiegu: katalog projektu, potem katalogi nadrzędne (najbliższy pierwszy, bez korzenia
+    systemu plików) — sesja uruchomiona wyżej (chmura z kilkoma repozytoriami, start z /home/user) zapisuje
+    transkrypty pod ścieżką katalogu startu, nie repozytorium."""
+    p = project.resolve()
+    return [transcript_dir(d) for d in (p, *p.parents) if d != Path(d.anchor)]
+
+
 def usage_entries(path: Path, since: datetime) -> dict[str, tuple[datetime, str, dict]]:
     """Odpowiedzi modelu po `since`: ta sama odpowiedź (message.id) bywa zapisana kilka razy podczas streamingu —
     zostaje zapis z największym `output_tokens`."""
@@ -141,8 +151,21 @@ def prices() -> dict:
 
 
 def collect(project: Path, since: datetime, session: str | None) -> dict:
-    tdir = transcript_dir(project)
-    mains = [tdir / f"{session}.jsonl"] if session else sorted(tdir.glob("*.jsonl"))
+    """Zużycie od `since`. Z `--session`: ta sesja, w dowolnym katalogu projektu (identyfikator jest unikalny).
+    Bez niej: sesje z pierwszego katalogu z `transcript_dirs`, który ma odpowiedzi modelu po starcie."""
+    if session:
+        own = transcript_dir(project) / f"{session}.jsonl"
+        mains = [own] if own.is_file() else sorted(projects_dir().glob(f"*/{session}.jsonl"))[:1]
+        return tally(mains, since)
+    data = None
+    for tdir in transcript_dirs(project):
+        data = tally(sorted(tdir.glob("*.jsonl")), since)
+        if data["requests"]:
+            break
+    return data
+
+
+def tally(mains: list[Path], since: datetime) -> dict:
     files: list[tuple[str, Path]] = []
     for m in mains:
         if not m.is_file():
@@ -178,7 +201,7 @@ def collect(project: Path, since: datetime, session: str | None) -> dict:
             else:
                 models[fam]["_unpriced"] = True
     return {"files": len(files), "requests": requests, "last": last, "models": models, "agents": agents,
-            "model_ids": sorted(model_ids)}
+            "model_ids": sorted(model_ids), "transcripts": str(mains[0].parent) if mains else None}
 
 
 def plan_progress(run_dir: Path) -> dict:
@@ -207,7 +230,8 @@ def report_md(slug: str, rep: dict) -> str:
              f"- Czas: {int(mins)} min {int(secs)} s (od startu do ostatniej odpowiedzi modelu)",
              f"- Koszt: {rep['cost_usd']:.4f} USD (szacunek z cennika API; przy subskrypcji — równowartość)",
              f"- Zapytania do modelu: {rep['requests']} · modele: {', '.join(rep['model_ids']) or '—'}",
-             f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} kawałków · odłożone do decyzji: {rep['parked']}", "",
+             f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} kawałków · odłożone do decyzji: {rep['parked']}",
+             f"- Transkrypty: {rep.get('transcripts') or '—'}", "",
              "| Model | Wejście | Wyjście | Odczyt cache | Zapis cache 5 min | Zapis cache 1 h | Koszt USD |",
              "|---|---|---|---|---|---|---|"]
     for fam, t in sorted(rep["models"].items()):
@@ -358,10 +382,14 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
         return 2
     data = collect(project, since, session)
     if not data["requests"]:
-        print(f"✗ Brak odpowiedzi modelu po {since:%Y-%m-%d %H:%M} w transkryptach {transcript_dir(project)} "
-              "(inny CLAUDE_CONFIG_DIR? podaj --session).")
+        where = (f"sesji {session} (szukana we wszystkich katalogach {projects_dir()})" if session else
+                 "transkryptach:\n" + "\n".join(f"  - {d}" for d in transcript_dirs(project)))
+        print(f"✗ Brak odpowiedzi modelu po {since:%Y-%m-%d %H:%M} w {where}\n"
+              "Sesja uruchomiona poza projektem i jego katalogami nadrzędnymi albo inny CLAUDE_CONFIG_DIR? "
+              "Podaj `--session <ID>` (ID to nazwa pliku .jsonl sesji w katalogu projects).")
         return 2
     rep = {"slug": meta.get("slug"), "duration_s": int((data["last"] - since).total_seconds()),
+           "transcripts": data["transcripts"],
            "requests": data["requests"], "model_ids": data["model_ids"], "models": data["models"],
            "agents": data["agents"],
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
