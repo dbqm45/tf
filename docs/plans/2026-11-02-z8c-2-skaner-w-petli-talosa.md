@@ -42,9 +42,12 @@ pnpm 11; karencję trzymamy też w `dependabot.yml`.
 
 ## Niezweryfikowane
 
-- Pobranie reguł `p/owasp-top-ten` z rejestru semgrep bez logowania: semgrep.dev z tego środowiska zwraca 403.
-  Obejście: `TALOS_SEMGREP_CONFIG` (lokalny plik reguł). Opcja na później: vendorowanie reguł — wymaga sprawdzenia
-  licencji Semgrep Rules License.
+- ~~Pobranie reguł `p/owasp-top-ten` z rejestru semgrep bez logowania~~ — sprawdzone 2026-11-03 (semgrep 1.183.0,
+  bez tokenu, w środowisku z `semgrep.dev` na liście dozwolonych): `GET /c/p/owasp-top-ten` → 200, 560 reguł,
+  skan bez błędów. Zestaw jest węższy niż po zalogowaniu: brak np. `tainted-sql-string` (Express) — plik testowy
+  z `conn.query("…" + req.query.env)` daje 0 ustaleń z rejestru i 2 z semgrep-rules z GitHuba; `node:sqlite` nie
+  pokrywa żadna reguła rejestru. Vendorowanie reguł nie jest potrzebne do dostępu; luki pokrycia zamyka
+  `.semgrep.yml` produktu albo token w CI.
 - Jednostka `npmMinimalAgeGate` w Yarn.
 - pip-audit nie ma wyjścia SARIF — wynik audytu Pythona idzie do `verdict.json`/`summary.md`, nie do SARIF.
 
