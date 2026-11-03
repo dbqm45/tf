@@ -221,6 +221,49 @@ def main() -> int:
               f"S-18: błąd semgrep to FAIL: {r.returncode} {r.stdout}")
         (repo / "a.py").unlink()
 
+        # N: package.json bez zależności i bez lockfile'a (np. tylko scripts i engines) — nie ma czego audytować:
+        # brak audytu, brak błędu, werdykt i summary mówią, że audyt pominięto; z zależnościami bez lockfile'a → błąd
+        nd = tmp / "nodeps"
+        nd.mkdir()
+        git(nd, "init", "-q", "-b", "main")
+        write(nd, "package.json", '{"name": "p", "scripts": {"test": "node --test"}, "engines": {"node": ">=20"}}\n')
+        write(nd, "app.js", "x = 1\n")
+        git(nd, "add", "-A")
+        git(nd, "commit", "-qm", "init")
+        write(nd, "package.json", '{"name": "p", "scripts": {"test": "node --test"}, "engines": {"node": ">=22.13"}}\n')
+        nout = nd / "reports" / "security"
+        log.unlink(missing_ok=True)
+        r = run("scan", "--out", str(nout), "--json", cwd=nd)
+        v = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(r.returncode == 0 and v.get("status") == "PASS" and not v.get("errors") and not v.get("audits"),
+              f"N-1: package.json bez zależności → PASS bez błędu i bez audytu: {r.returncode} {r.stdout[:400]}")
+        check(not [c for c in log_of(log) if c[0] in ("npm", "pip-audit")], f"N-2: audyt nie uruchomiony: {log_of(log)}")
+        check(v.get("skipped") and "package.json" in v["skipped"][0] and "bez zależności" in v["skipped"][0],
+              f"N-3: werdykt mówi, że audyt pominięto (manifest bez zależności): {v.get('skipped')}")
+        r = run("scan", "--out", str(nout), "--slice", "K1", "--attempt", "1", cwd=nd)
+        summary = (nout / "proba-1" / "summary.md").read_text(encoding="utf-8") if (nout / "proba-1" / "summary.md").is_file() else ""
+        check(r.returncode == 0 and "BRAMKA K1: PASS" in r.stdout and "audyt zależności pominięty" in r.stdout.lower()
+              and "audyt zależności pominięty" in summary.lower() and "bez zależności" in summary,
+              f"N-4: linia skanu i summary.md mówią o pominiętym audycie: {r.stdout} | {summary}")
+        for section in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
+            write(nd, "package.json", '{"name": "p", "%s": {"left-pad": "1.3.0"}}\n' % section)
+            r = run("scan", "--out", str(nout), "--json", cwd=nd)
+            v = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+            check(r.returncode == 1 and any("bez lockfile'a" in e for e in v.get("errors", [])) and not v.get("skipped"),
+                  f"N-5: {section} bez lockfile'a → błąd jak dotąd: {r.returncode} {r.stdout[:400]}")
+        write(nd, "package.json", "{nie json\n")
+        r = run("scan", "--out", str(nout), "--json", cwd=nd)
+        v = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(r.returncode == 1 and v.get("errors"), f"N-6: nieczytelny package.json bez lockfile'a → błąd, nie pominięcie: {r.stdout[:400]}")
+        # karencja spójna ze skanem: bez zależności → PASS z tym samym powodem; z zależnościami bez lockfile'a → FAIL
+        git(nd, "checkout", "-q", "--", "package.json")
+        r = run("cooldown", cwd=nd)
+        check(r.returncode == 0 and "bez zależności" in r.stdout, f"N-7: karencja: package.json bez zależności → PASS: {r.stdout}")
+        write(nd, "package.json", '{"name": "p", "dependencies": {"left-pad": "1.3.0"}}\n')
+        r = run("cooldown", cwd=nd)
+        check(r.returncode == 1 and "lockfile" in r.stdout and "package.json" in r.stdout,
+              f"N-8: karencja: zależności bez lockfile'a → FAIL jak skan: {r.returncode} {r.stdout}")
+
         # V: reguła werdyktu = SEC-001 ci_for_sdlc (error albo warning z CWE z OWASP Top 10 2021/2025)
         vdir = tmp / "v"
         vdir.mkdir()

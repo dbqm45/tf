@@ -177,6 +177,8 @@ def render(v: dict) -> list[str]:
         lines += ["Blokujące (popraw przed commitem):", *map(item, v["blocking"])]
     if v["other"]:
         lines += ["Poniżej progu (do raportu przebiegu):", *map(item, v["other"])]
+    if v.get("skipped"):
+        lines += ["Audyt zależności pominięty:", *(f"- {s}" for s in v["skipped"])]
     return lines
 
 
@@ -322,9 +324,26 @@ def run_pip_audit(root: Path, manifest_rel: str, out: Path, name: str) -> None:
     (out / name).write_text(json.dumps(sarif, indent=2) + "\n", encoding="utf-8")
 
 
-def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str]]:
-    """Audyty do uruchomienia, gdy zmienił się manifest albo lockfile: (narzędzie, plik). Błędy: stos bez audytu."""
-    jobs, errors, dirs_node, dirs_py = [], [], set(), set()
+NODE_DEP_KEYS = ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies")
+NO_DEPS = "package.json bez zależności (dependencies, devDependencies, optionalDependencies, peerDependencies)"
+
+
+def node_has_deps(manifest: Path) -> bool:
+    """Czy package.json deklaruje zależności. Nieczytelny manifest liczy się jak z zależnościami (nigdy cichy PASS);
+    brak pliku (usunięty manifest) — bez zależności."""
+    if not manifest.is_file():
+        return False
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return True
+    return not isinstance(data, dict) or any(data.get(k) for k in NODE_DEP_KEYS)
+
+
+def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str], list[str]]:
+    """Audyty do uruchomienia, gdy zmienił się manifest albo lockfile: (narzędzie, plik). Błędy: stos bez audytu.
+    Pominięte: manifesty bez zależności i bez lockfile'a — nie ma czego audytować."""
+    jobs, errors, skipped, dirs_node, dirs_py = [], [], [], set(), set()
     for f in files:
         if NODE_MANIFEST.search(f):
             dirs_node.add(str(Path(f).parent))
@@ -341,11 +360,13 @@ def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str]]:
         elif (base / "pnpm-lock.yaml").is_file() or (base / "yarn.lock").is_file():
             errors.append(f"{d}: audyt zależności pnpm/Yarn nie jest obsługiwany przez skan — uruchom `pnpm audit` "
                           "albo `yarn npm audit` i zdecyduj (STOP), albo dodaj package-lock.json")
+        elif not node_has_deps(base / "package.json"):
+            skipped.append(f"{d}: {NO_DEPS} i bez lockfile'a — nie ma czego audytować")
         else:
             errors.append(f"{d}: zmieniony package.json bez lockfile'a — lockfile musi być w repo (N10)")
     for d in sorted(dirs_py):
         jobs.append(("pip-audit", str(Path(d) / "pyproject.toml") if d != "." else "pyproject.toml"))
-    return jobs, errors
+    return jobs, errors, skipped
 
 
 # ── polecenia ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -375,6 +396,8 @@ def write_outputs(out: Path, v: dict, lines: list[str]) -> None:
     summ = ["## Bezpieczeństwo", "", f"Skan: {v['status']} (blokujące: {len(v['blocking'])}, "
             f"poniżej progu: {len(v['other'])}, błędy skanu: {len(v['errors'])}).", ""]
     summ += ["Poniżej progu:", *map(item, v["other"])] if v["other"] else ["Poniżej progu: brak."]
+    if v.get("skipped"):
+        summ += ["", "Audyt zależności pominięty:", *(f"- {s}" for s in v["skipped"])]
     if v["blocking"] or v["errors"]:
         summ += ["", "Blokujące i błędy:", *map(item, v["blocking"]), *(f"- {e}" for e in v["errors"])]
     (out / "summary.md").write_text("\n".join(summ) + "\n", encoding="utf-8")
@@ -400,7 +423,7 @@ def cmd_scan(a) -> int:
             old.unlink(missing_ok=True)
     errors = []
     files = changed_files(root, a.base, [rel_out])
-    jobs, job_errors = audit_jobs(root, files)
+    jobs, job_errors, skipped = audit_jobs(root, files)
     errors += job_errors
     needed = (["semgrep"] if files else []) + sorted({t for t, _ in jobs})
     missing = [n for n in needed if not tool(n)]
@@ -426,6 +449,7 @@ def cmd_scan(a) -> int:
     v = verdict(sorted(out.glob("*.sarif")), errors)
     v["files"] = files
     v["audits"] = [f for _, f in jobs]
+    v["skipped"] = skipped
     lines = render(v)
     if a.slice:
         lines += slice_lines(v, a.slice, a.attempt)
@@ -533,6 +557,14 @@ def cmd_cooldown(_a) -> int:
         else:
             ok.append(f"uv exclude-newer={val}")
         lock("uv.lock")
+    if (root / "package.json").is_file() and not any(
+            (root / n).is_file() for n in ("package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock")):
+        if node_has_deps(root / "package.json"):  # ta sama reguła co audit_jobs w skanie
+            problems.append("package.json ma zależności, a nie ma lockfile'a — wygeneruj (npm install) "
+                            "i zacommituj package-lock.json (N10)")
+        elif not ok and not problems:
+            print(f"KARENCJA: PASS — {NO_DEPS}; nie ma czego objąć karencją")
+            return 0
     if not ok and not problems:
         print("KARENCJA: PASS — nie wykryto menedżera pakietów z lockfile'em (npm, pnpm, Yarn, uv)")
         return 0
