@@ -74,9 +74,10 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
    werdyktu: `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
    **Skan bezpieczeństwa** po zielonych testach: `python3 .claude/skills/talos-story-run/scripts/security_scan.py scan
    --slice K<n> --attempt <k> --out <katalog-przebiegu>/security/K<n>` — semgrep (OWASP Top 10 i `.semgrep.yml`
-   produktu) na plikach kawałka, audyt zależności tylko przy zmianie manifestu lub lockfile'a, SARIF w katalogu.
+   produktu) na plikach kawałka, audyt zależności tylko przy zmianie manifestu lub lockfile'a; SARIF, werdykt
+   i `summary.md` każdej próby w `security/K<n>/proba-<k>/` (próby się nie nadpisują, raport pokazuje wszystkie).
    Blokujące (error albo warning z CWE z OWASP Top 10, reguła SEC-001 z ci_for_sdlc) → FAIL próby: ustalenia
-   (reguła, plik:linia) z `feedback.md` są wejściem następnej próby; po 2 próbach skrypt drukuje blok STOP — kawałka
+   (reguła, plik:linia) z `security/K<n>/feedback.md` (zawsze z ostatniej próby) są wejściem następnej próby; po 2 próbach skrypt drukuje blok STOP — kawałka
    nie commitujesz, tak jak przy czerwonym teście. Brak skanera to FAIL z poleceniem instalacji, nie cichy PASS.
    Ustalenia poniżej progu trafiają do raportu przebiegu (sekcja „Bezpieczeństwo”). Nowa zależność młodsza niż
    7 dni (menedżer pakietów odmawia instalacji) → STOP z wyjaśnieniem, nie obejście.

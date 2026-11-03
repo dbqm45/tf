@@ -143,6 +143,19 @@ def main() -> int:
         md = (run_dir / "report.md").read_text(encoding="utf-8")
         check(md.count("## Bezpieczeństwo") == 1 and "### K2" in md and "r.note src/a.py:3" in md
               and "brak wyniku skanu" not in md, f"R-15: sekcja bezpieczeństwa z wyniku skanu: {md[-400:]}")
+        # każda próba kawałka (security/K<n>/proba-<k>/summary.md): FAIL z ustaleniami, potem PASS — w kolejności prób
+        for k, body in ((1, "Skan: FAIL (blokujące: 1, poniżej progu: 0, błędy skanu: 0).\n\nPoniżej progu: brak.\n\n"
+                            "Blokujące i błędy:\n- node-sqlite-sql-from-string src/deployments.js:14 (CWE-89, warning)\n"),
+                        (2, "Skan: PASS (blokujące: 0, poniżej progu: 0, błędy skanu: 0).\n\nPoniżej progu: brak.\n")):
+            (sec.parent / "K1" / f"proba-{k}").mkdir(parents=True)
+            (sec.parent / "K1" / f"proba-{k}" / "summary.md").write_text("## Bezpieczeństwo\n\n" + body, encoding="utf-8")
+        (sec.parent / "K1" / "feedback.md").write_text("# Skan bezpieczeństwa\n\n- brak blokujących\n", encoding="utf-8")
+        run(["finish", str(run_dir)], proj, cfg)
+        md = (run_dir / "report.md").read_text(encoding="utf-8")
+        i = {k: md.find(k) for k in ("### K1", "#### Próba 1", "node-sqlite-sql-from-string src/deployments.js:14",
+                                     "#### Próba 2", "### K2")}
+        check(all(v >= 0 for v in i.values()) and list(i.values()) == sorted(i.values()) and md.count("## Bezpieczeństwo") == 1
+              and md.count("### K1") == 1 and "Skan: FAIL" in md, f"R-15a: wszystkie próby kawałka w raporcie: {i} {md[-900:]}")
 
         # status: jedna linia do kontroli budżetu po każdym kawałku (mało kontekstu), bez zapisu report.md
         (run_dir / "report.md").unlink()

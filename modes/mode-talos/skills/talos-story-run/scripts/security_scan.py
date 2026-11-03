@@ -12,6 +12,8 @@ SEC-001 w ci_for_sdlc. Brak skanera to FAIL z poleceniem instalacji, nigdy cichy
 scan     — bez --base: zmiany nieskomitowane i nowe pliki (pętla kawałka); z --base: także commity od bazy (CI na PR).
            Zapisuje do --out (domyślnie reports/security): semgrep.sarif, npm-audit.sarif, pip-audit.sarif,
            verdict.json, summary.md (sekcja raportu przebiegu) i feedback.md (ustalenia dla następnej próby).
+           Z --slice wynik próby trafia do --out/proba-<k>/ (próby się nie nadpisują), a --out/feedback.md to
+           kopia feedback.md ostatniej próby.
 verdict  — werdykt z gotowych plików SARIF.
 cooldown — karencja wersji (N10): min-release-age npm, minimumReleaseAge pnpm, npmMinimalAgeGate Yarn,
            exclude-newer uv ≥ 7 dni i lockfile w gicie.
@@ -381,13 +383,21 @@ def write_outputs(out: Path, v: dict, lines: list[str]) -> None:
 def cmd_scan(a) -> int:
     root = Path(git("rev-parse", "--show-toplevel", cwd=Path.cwd()).strip())
     out = Path(a.out) if os.path.isabs(a.out) else Path.cwd() / a.out
-    out.mkdir(parents=True, exist_ok=True)
-    for old in list(out.glob("*.sarif")) + [out / n for n in ("verdict.json", "feedback.md", "summary.md")]:
-        old.unlink(missing_ok=True)
     try:
         rel_out = str(out.resolve().relative_to(root.resolve()))
     except ValueError:
         rel_out = ""
+    base_out = out
+    # Kawałek: każda próba we własnym katalogu proba-<k> (raport pokazuje wszystkie); w --out tylko feedback.md
+    # ostatniej próby. Bez --slice (CI) wynik prosto w --out.
+    clean = [out]
+    if a.slice:
+        out = base_out / f"proba-{a.attempt}"
+        clean.append(out)
+    for d in clean:
+        d.mkdir(parents=True, exist_ok=True)
+        for old in list(d.glob("*.sarif")) + [d / n for n in ("verdict.json", "feedback.md", "summary.md")]:
+            old.unlink(missing_ok=True)
     errors = []
     files = changed_files(root, a.base, [rel_out])
     jobs, job_errors = audit_jobs(root, files)
@@ -420,6 +430,8 @@ def cmd_scan(a) -> int:
     if a.slice:
         lines += slice_lines(v, a.slice, a.attempt)
     write_outputs(out, v, lines)
+    if out != base_out:
+        shutil.copyfile(out / "feedback.md", base_out / "feedback.md")
     print(json.dumps(v, ensure_ascii=False, indent=2) if a.json else "\n".join(lines))
     return 0 if v["status"] == "PASS" else 1
 
