@@ -3,6 +3,12 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.58.0] — 2026-11-03
+### Added
+- **talos:** block slices with security findings and scan PRs in CI (#138)
+### Fixed
+- **talos:** skip dependency audit for package.json without dependencies (#139)
+
 ## [5.57.0] — 2026-11-02
 ### Added
 - **mode-pdi:** pdi contract copies at 0.11.0 with the decision schema (#136)
