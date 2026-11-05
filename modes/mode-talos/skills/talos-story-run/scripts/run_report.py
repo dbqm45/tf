@@ -3,14 +3,18 @@
 Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): katalog przebiegu i raport kosztu.
 
   python3 .claude/skills/talos-story-run/scripts/run_report.py start "<tytuł>" [--story "<treść>" | --story-file PLIK]
-  python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-57 ["<tytuł>"]   # cięcie z planu zmiany
+  python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-57 [--change CHG-12] ["<tytuł>"]   # cięcie z planu zmiany
   python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
   python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
-`start` zakłada `.claude/runs/<RRRR-MM-DD>-<slug>/` (ignorowany przez git): run.json (czas startu), story.md,
-plan.md, parked.md. Z `--task` story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek
-`tasks`) i z `intent.md` zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`);
-`finish` zapisuje wtedy też kopię raportu w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
+`start` zakłada `tmp/talos/runs/<RRRR-MM-DD>-<slug>/` (ignorowany przez git, PRB-32: ścieżka poza listą chronionych
+w code.claude.com/docs/en/permission-modes; `.claude/runs/` jest w `.claude/` i pisanie do niej Claude Code odmawia
+w `--print --permission-mode acceptEdits` nawet z `permissions.allow`): run.json (czas startu), story.md, plan.md,
+parked.md. `status` i `finish` czytają też katalogi zostawione w `.claude/runs/` (wznawianie starych przebiegów).
+Z `--task` story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
+zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`); z `--task` w dwóch
+planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish` zapisuje wtedy też kopię raportu
+w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
 czas, tokeny (wejście, wyjście, odczyt cache, zapis cache 5 min i 1 h), koszt wg `prices_usd_per_mtok`
 z factory/config.yaml, modele i agenci; dopisuje postęp planu i liczbę odłożonych spraw, zapisuje report.md.
 
@@ -43,7 +47,10 @@ except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
     sys.path.insert(0, str(ROOT / "factory" / "_vendor"))
     import yaml
 
-RUNS = Path(".claude") / "runs"
+RUNS = Path("tmp") / "talos" / "runs"
+# Stary katalog sprzed PRB-32 — nowych przebiegów tam nie zakładamy (ścieżka chroniona w code.claude.com
+# /docs/en/permission-modes), ale `status`/`finish` z jawną ścieżką nadal go odczytują dla wznawiania.
+LEGACY_RUNS = Path(".claude") / "runs"
 CHANGES = Path("docs") / "project" / "changes"
 EMPTY_CELL = ("", "—", "-", "–")
 KEYS = ("input", "output", "cache_read", "cache_write_5m", "cache_write_1h")
@@ -309,8 +316,10 @@ def plan_row(body: str, task: str) -> dict:
     return {}
 
 
-def task_context(project: Path, task: str) -> dict | None:
-    """Cięcie TSK w dzienniku zmian: katalog zmiany, wiersz planu, flaga i treść zamiaru."""
+def task_contexts(project: Path, task: str) -> list[dict]:
+    """Wszystkie dzienniki zmian z danym TSK (PRB-33: ten sam TSK może być w dwóch planach, np. po gałęziowym
+    konflikcie — bez `--change` nie da się wybrać na pewno)."""
+    out: list[dict] = []
     for plan in sorted((project / CHANGES).glob("*/plan.md")):
         front, body = front_and_body(plan.read_text(encoding="utf-8"))
         if task not in header_tasks(front):
@@ -325,9 +334,10 @@ def task_context(project: Path, task: str) -> dict | None:
             except yaml.YAMLError:
                 flag = None
         intent = plan.parent / "intent.md"
-        return {"change": plan.parent.name, "dir": plan.parent.relative_to(project).as_posix(), "row": row,
-                "flag": flag, "intent": front_and_body(intent.read_text(encoding="utf-8"))[1] if intent.is_file() else ""}
-    return None
+        out.append({"change": plan.parent.name, "dir": plan.parent.relative_to(project).as_posix(), "row": row,
+                    "flag": flag,
+                    "intent": front_and_body(intent.read_text(encoding="utf-8"))[1] if intent.is_file() else ""})
+    return out
 
 
 def task_story(task: str, ctx: dict, extra: str | None) -> str:
@@ -342,17 +352,31 @@ def task_story(task: str, ctx: dict, extra: str | None) -> str:
     return "\n".join(lines)
 
 
-def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None) -> int:
+def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None,
+              change: str | None = None) -> int:
     meta = {}
     if task:
-        ctx = task_context(project, task)
-        if ctx is None:
+        matches = task_contexts(project, task)
+        if change:                       # PRB-33: `--change` zawęża do jednej zmiany
+            matches = [m for m in matches if m["change"] == change]
+            if not matches:
+                print(f"✗ {task} nie ma w nagłówku `tasks` planu zmiany {change} — sprawdź klucz albo plan zmiany.")
+                return 2
+        if not matches:
             print(f"✗ {task} nie ma w nagłówku `tasks` żadnego {CHANGES}/*/plan.md — sprawdź klucz albo plan zmiany.")
             return 2
+        if len(matches) > 1:            # PRB-33: ten sam TSK w kilku planach — wymagamy `--change`
+            keys = ", ".join(m["change"] for m in matches)
+            print(f"✗ {task} jest w planach zmian: {keys}. Podaj `--change CHG-n`, żeby wybrać jedną.")
+            return 2
+        ctx = matches[0]
         value = next((v for k, v in ctx["row"].items() if k.lower() == "wartość" and v not in EMPTY_CELL), "")
         title = title or (f"{task}: {value}" if value else task)
         story = task_story(task, ctx, story)
         meta = {"change": ctx["change"], "task": task, "flag": ctx["flag"]}
+    elif change:
+        print("✗ `--change` wymaga `--task TSK-n` (wybiera plan zmiany, do której należy cięcie).")
+        return 2
     if not title:
         print("✗ podaj tytuł historyjki albo --task TSK-n")
         return 2
@@ -419,6 +443,8 @@ def main(argv: list[str]) -> int:
     s = sub.add_parser("start")
     s.add_argument("title", nargs="?")
     s.add_argument("--task", default=None, help="klucz cięcia z docs/project/changes/*/plan.md, np. TSK-57")
+    s.add_argument("--change", default=None,
+                   help="klucz zmiany, np. CHG-12 — wymagany, gdy TSK jest w planach wielu zmian (PRB-33)")
     s.add_argument("--story", default=None)
     s.add_argument("--story-file", default=None)
     for name in ("status", "finish"):
@@ -430,7 +456,7 @@ def main(argv: list[str]) -> int:
     project = Path.cwd()
     if args.cmd == "start":
         story = Path(args.story_file).read_text(encoding="utf-8") if args.story_file else args.story
-        return cmd_start(args.title, story, project, args.task)
+        return cmd_start(args.title, story, project, args.task, args.change)
     return cmd_finish(Path(args.run_dir), args.session, args.json, project, status=args.cmd == "status")
 
 

@@ -81,10 +81,13 @@ def main() -> int:
         proj, cfg = Path(t) / "proj", Path(t) / "cfg"
         proj.mkdir()
 
-        # start: katalog przebiegu z szablonami, slug bez polskich znaków
+        # start: katalog przebiegu w tmp/talos/runs/ (nie `.claude/runs/`, chroniony przez Claude Code —
+        # permission-modes 2026-11-05: writes to protected paths are never auto-approved, even with permissions.allow),
+        # slug bez polskich znaków
         r = run(["start", "Import rozliczeń CDR", "--story", "Jako operator chcę importować CDR."], proj, cfg)
-        runs = sorted((proj / ".claude" / "runs").glob("*-import-rozliczen-cdr"))
-        check(r.returncode == 0 and len(runs) == 1, f"R-1: start tworzy katalog przebiegu: {r.stdout} {r.stderr}")
+        runs = sorted((proj / "tmp" / "talos" / "runs").glob("*-import-rozliczen-cdr"))
+        check(r.returncode == 0 and len(runs) == 1 and not (proj / ".claude" / "runs").exists(),
+              f"R-1: start tworzy katalog w tmp/talos/runs/, bez .claude/runs/: {r.stdout} {r.stderr}")
         if runs:
             d = runs[0]
             check(all((d / f).is_file() for f in ("run.json", "story.md", "plan.md", "parked.md")),
@@ -92,7 +95,8 @@ def main() -> int:
             check("importować CDR" in (d / "story.md").read_text(encoding="utf-8"), "R-3: treść story zapisana")
             check(re.match(r"\d{4}-\d{2}-\d{2}-", d.name) is not None, f"R-4: data w nazwie katalogu: {d.name}")
 
-        # finish: transkrypty sesji i podagenta od chwili startu
+        # finish: transkrypty sesji i podagenta od chwili startu — status/finish czytają też katalogi w .claude/runs/
+        # (stare przebiegi sprzed przeniesienia, PRB-32, 2026-11-05: ścieżka chroniona przez Claude Code)
         run_dir = proj / ".claude" / "runs" / "2026-10-21-test"
         run_dir.mkdir(parents=True)
         (run_dir / "run.json").write_text(json.dumps({"slug": "test", "started_at": "2026-10-21T10:00:00+00:00"}))
@@ -170,7 +174,7 @@ def main() -> int:
         (chg / "plan.md").write_text(PLAN_MD, encoding="utf-8")
         (chg / "intent.md").write_text(INTENT_MD, encoding="utf-8")
         r = run(["start", "--task", "TSK-58"], proj, cfg)
-        tr = sorted((proj / ".claude" / "runs").glob("*tsk-58*"))
+        tr = sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))
         meta = json.loads((tr[0] / "run.json").read_text(encoding="utf-8")) if tr else {}
         story = (tr[0] / "story.md").read_text(encoding="utf-8") if tr else ""
         check(r.returncode == 0 and meta.get("change") == "CHG-12" and meta.get("task") == "TSK-58"
@@ -182,6 +186,34 @@ def main() -> int:
         r = run(["start", "--task", "TSK-99"], proj, cfg)
         check(r.returncode == 2 and "TSK-99" in r.stdout + r.stderr and "Traceback" not in r.stderr,
               f"R-17: TSK spoza planów zmian → kod 2 z komunikatem: {r.returncode} {r.stdout} {r.stderr[-300:]}")
+
+        # PRB-33: ten sam TSK w dwóch zmianach → błąd z listą zmian; --change rozstrzyga; zły --change → błąd
+        chg2 = proj / "docs" / "project" / "changes" / "CHG-13"
+        chg2.mkdir(parents=True)
+        plan2 = (PLAN_MD.replace("change: CHG-12", "change: CHG-13")
+                 .replace("# Plan zmiany CHG-12", "# Plan zmiany CHG-13")
+                 # inna wartość w CHG-13, żeby slug nie kolidował z katalogiem z R-15
+                 .replace("brak podwójnego obciążenia", "ponowienie w CHG-13"))
+        (chg2 / "plan.md").write_text(plan2, encoding="utf-8")
+        (chg2 / "intent.md").write_text(INTENT_MD.replace("CHG-12", "CHG-13"), encoding="utf-8")
+        r = run(["start", "--task", "TSK-58"], proj, cfg)
+        check(r.returncode == 2 and "CHG-12" in r.stdout + r.stderr and "CHG-13" in r.stdout + r.stderr
+              and "--change" in r.stdout + r.stderr and "Traceback" not in r.stderr,
+              f"R-33a: dwa dziennika z TSK-58 → kod 2 z listą zmian i podpowiedzią --change: {r.returncode} "
+              f"{r.stdout} {r.stderr[-400:]}")
+        r = run(["start", "--task", "TSK-58", "--change", "CHG-13"], proj, cfg)
+        tr13 = sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))
+        meta13 = json.loads((tr13[-1] / "run.json").read_text(encoding="utf-8")) if tr13 else {}
+        check(r.returncode == 0 and meta13.get("change") == "CHG-13",
+              f"R-33b: --change CHG-13 wybiera CHG-13: {r.returncode} {r.stdout} {r.stderr} {meta13}")
+        r = run(["start", "--task", "TSK-58", "--change", "CHG-77"], proj, cfg)
+        check(r.returncode == 2 and ("CHG-77" in r.stdout + r.stderr) and "Traceback" not in r.stderr,
+              f"R-33c: zły --change → kod 2: {r.returncode} {r.stdout} {r.stderr[-300:]}")
+        # usuwamy drugi dziennik, żeby reszta testów miała jeden wpis
+        import shutil as _sh
+        _sh.rmtree(chg2)
+        for leftover in sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))[1:]:
+            _sh.rmtree(leftover)
         meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         (run_dir / "run.json").write_text(json.dumps({**meta, "change": "CHG-12", "task": "TSK-58"}), encoding="utf-8")
         with (run_dir / "parked.md").open("a", encoding="utf-8") as f:
@@ -244,7 +276,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {24 - len(fails)}/24 testów raportu przebiegu")
+    print(f"{'✓' if not fails else '✗'} {27 - len(fails)}/27 testów raportu przebiegu")
     return 1 if fails else 0
 
 

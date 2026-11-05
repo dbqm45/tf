@@ -1,14 +1,6 @@
 {
  "talos-story-run": {
-  "fingerprint": "932d613cbea4e75b",
-  "offline": "2026-11-03",
-  "model_previous": {
-   "report": ".claude/logs/evals/2026-11-03-bramka-talos-story-run.md",
-   "cost": 1.17,
-   "haiku": "3/3",
-   "sonnet": "3/3",
-   "date": "2026-11-03",
-   "uwaga": "dla wcześniejszej wersji skilla"
-  }
+  "fingerprint": "15d25dd0d71d3b9b",
+  "offline": "2026-11-05"
  }
 }

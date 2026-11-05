@@ -27,9 +27,12 @@ if os.environ.get("FAKE_STDERR"):
     sys.stderr.write(os.environ["FAKE_STDERR"])
 if os.environ.get("FAKE_EXIT"):
     sys.exit(int(os.environ["FAKE_EXIT"]))
-print(json.dumps({"type": "result", "subtype": os.environ.get("FAKE_SUBTYPE", "success"),
-                  "is_error": bool(os.environ.get("FAKE_ERROR")), "total_cost_usd": 0.42,
-                  "result": os.environ.get("FAKE_RESULT", "gotowe")}))
+out = {"type": "result", "subtype": os.environ.get("FAKE_SUBTYPE", "success"),
+       "is_error": bool(os.environ.get("FAKE_ERROR")), "total_cost_usd": 0.42,
+       "result": os.environ.get("FAKE_RESULT", "gotowe")}
+if os.environ.get("FAKE_DENIALS"):
+    out["permission_denials"] = json.loads(os.environ["FAKE_DENIALS"])
+print(json.dumps(out))
 """
 
 
@@ -114,8 +117,11 @@ def main() -> int:
         r = run(["prompt", "--change", "CHG-12", "--phase", "delivery", "--budget-usd", "5"], repo)
         p = jl(r) or {}
         check(p.get("persona") == "talos" and p.get("gate") is None and "/talos-story-run" in p.get("prompt", "")
-              and "--auto" in p.get("prompt", "") and "--budget 5" in p.get("prompt", ""),
-              f"R-4: delivery przez Talosa, bez bramki po fazie: {r.stdout}")
+              and "--auto" in p.get("prompt", "") and "--budget 5" in p.get("prompt", "")
+              # PRB-33: delivery prompt podaje `--change CHG-n`, żeby Talos nie zgadywał, do której zmiany należy TSK
+              # (ten sam TSK może być w dwóch planach, zob. test_run_report.py R-33a)
+              and "--change CHG-12" in p.get("prompt", ""),
+              f"R-4: delivery przez Talosa, bez bramki po fazie, z --change: {r.stdout}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "intent"], repo)
         check(r.returncode != 0 and "maja" in r.stdout and "pdi-phases.json" in r.stdout,
               f"R-5: brak persony → błąd z podpowiedzią: {r.stdout}{r.stderr}")
@@ -183,6 +189,28 @@ def main() -> int:
         r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_ERROR="1", FAKE_RESULT="x" * 9000,
                 **env)
         check(len(str((jl(r) or {}).get("detail"))) <= 2000, "R-16a: detail przycięty do 2000 znaków")
+        # PRB-28: `detail` z końca odpowiedzi persony i `permission_denials` z JSON claude (code.claude.com
+        # /docs/en/agent-sdk/python 2026-11-05: ResultMessage.permission_denials) trafiają do wyniku także na sukcesie —
+        # bez tego diagnoza failed delivery (pdi A6 2026-11-04 CHG-3) zgaduje, co persona faktycznie zrobiła
+        denials = json.dumps([
+            {"tool_name": "Write", "tool_input": {"file_path": ".claude/runs/x/plan.md"},
+             "tool_use_id": "u1"}])
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_DENIALS=denials,
+                FAKE_RESULT="skończyłem, czekam na bramkę B2", **env)
+        res = jl(r) or {}
+        check(r.returncode == 0 and res.get("status") == "waiting_gate"
+              and "skończyłem" in str(res.get("detail", "")) and res.get("permission_denials") == json.loads(denials),
+              f"R-28a: sukces z detail i permission_denials: {r.stdout}")
+        r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, FAKE_DENIALS=denials,
+                FAKE_RESULT="cięcia gotowe", **env)
+        res = jl(r) or {}
+        check(r.returncode == 0 and res.get("status") == "done"
+              and "cięcia gotowe" in str(res.get("detail", "")) and res.get("permission_denials") == json.loads(denials),
+              f"R-28b: done z detail i permission_denials: {r.stdout}")
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_RESULT="ok", **env)
+        res = jl(r) or {}
+        check(r.returncode == 0 and "detail" in res and "permission_denials" not in res,
+              f"R-28c: bez denials pole pominięte, detail jest: {r.stdout}")
         # PRB-12: design.md należy do fazy design (kontrakt pdi), architecture pisze ADR w architecture.md
         p = jl(run(["prompt", "--change", "CHG-12", "--phase", "architecture"], repo)) or {}
         check("design.md" not in p.get("prompt", "") and "architecture.md" in p.get("prompt", ""),

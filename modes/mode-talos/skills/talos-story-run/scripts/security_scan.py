@@ -196,7 +196,9 @@ def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
     names |= set(git("ls-files", "--others", "--exclude-standard", cwd=root).splitlines())
     if base:
         names |= set(git("diff", "--name-only", f"{base}...HEAD", cwd=root).splitlines())
-    prefixes = [".claude/runs/", *(s.rstrip("/") + "/" for s in skip if s)]
+    # Katalog przebiegu Talosa poza skanem: tmp/talos/runs/ (PRB-32 — ścieżka poza listą chronionych
+    # code.claude.com/docs/en/permission-modes) i stary .claude/runs/ (wznawianie starych przebiegów).
+    prefixes = ["tmp/talos/runs/", ".claude/runs/", *(s.rstrip("/") + "/" for s in skip if s)]
     return sorted(n for n in names if n and (root / n).is_file() and not any(n.startswith(p) for p in prefixes))
 
 

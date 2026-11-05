@@ -5,8 +5,9 @@ Zgodność zmian z planem przebiegu Talosa: pliki zmienione na gałęzi historyj
   python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog przebiegu> [--base main] [--json]
 
 Kawałek w plan.md: `- [x] K<n> — <wartość> · … · pliki: <ścieżki po przecinku> · …` (ścieżka może być katalogiem
-albo wzorcem glob). Wynik: per kawałek pliki ruszone i nietknięte, zmiany spoza planu (bez .claude/runs/),
-pokrycie diffu planem w % i liczba zmienionych plików testów. Skrypt tylko raportuje (kod 0); 2 — złe wywołanie.
+albo wzorcem glob). Wynik: per kawałek pliki ruszone i nietknięte, zmiany spoza planu (bez katalogu przebiegu —
+`tmp/talos/runs/` od PRB-32 i `.claude/runs/` dla starych przebiegów), pokrycie diffu planem w % i liczba
+zmienionych plików testów. Skrypt tylko raportuje (kod 0); 2 — złe wywołanie.
 """
 from __future__ import annotations
 
@@ -43,11 +44,14 @@ def matches(path: str, spec: str) -> bool:
     return path == spec or fnmatch.fnmatch(path, spec) or path.startswith(spec.rstrip("/") + "/")
 
 
+RUN_PREFIXES = ("tmp/talos/runs/", ".claude/runs/")   # katalog przebiegu Talosa (PRB-32: nowy i stary)
+
+
 def changed_files(base: str) -> list[str]:
     r = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True, text=True)
     if r.returncode != 0:
         r = subprocess.run(["git", "diff", "--name-only", base], capture_output=True, text=True)
-    return sorted(f for f in r.stdout.splitlines() if f and not f.startswith(".claude/runs/"))
+    return sorted(f for f in r.stdout.splitlines() if f and not f.startswith(RUN_PREFIXES))
 
 
 def drift(plan: list[dict], changed: list[str]) -> dict:
