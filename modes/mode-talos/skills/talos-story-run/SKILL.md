@@ -4,7 +4,7 @@ description: Użyj na polecenie człowieka (/talos-story-run, agent talos) — h
 metadata:
   przeglad: "2027-04-21"
   katalog: "Użyj tylko na polecenie człowieka (`/talos-story-run STORY [--auto] [--budget USD]` albo `claude --agent talos`) — automat „story → PR”: przyjęcie historyjki, plan z pionowych kawałków (każdy scalany i działający), pętla kawałka (test czerwony → kod → weryfikacja → przegląd zakresu → commit), przypadki brzegowe odłożone do decyzji, fazy warunkowe, STOP, jeden PR, raport czasu, tokenów, kosztu i modeli. Nie do zwykłej implementacji w rozmowie (persona pracuje sama), delegowania pracy bez nadzoru w ogóle (core-async-delegation) ani faz całego projektu (core-delivery-lifecycle)."
-argument-hint: "[plik story | treść] [--auto] [--budget USD]"
+argument-hint: "[plik story | treść | TSK-n [--change CHG-n]] [--auto] [--budget USD]"
 disable-model-invocation: true
 ---
 
@@ -25,13 +25,24 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
    (brak `min-release-age=7` npm, `minimumReleaseAge: 10080` pnpm, `npmMinimalAgeGate` Yarn, `exclude-newer` uv albo
    lockfile poza gitem) → STOP z linią do dodania z wyniku; ustawień nie zmieniasz sam.
 2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
-   katalog `.claude/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
+   katalog `tmp/talos/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
+   Ścieżka celowo poza `.claude/` — Claude Code ma `.claude/` na liście chronionych (code.claude.com
+   /docs/en/permission-modes), więc `--permission-mode acceptEdits` i tak odmówiłby pisania do `.claude/runs/`.
    **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
-   start --task TSK-57` składa `story.md` z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (wartość, wydanie,
-   flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`. TSK spoza planów
-   zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”).
-3. Gałąź `story/<slug>` od aktualnej gałęzi domyślnej (core-git-workflow); przy cięciu z kluczem slug zaczyna się
-   od klucza (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki `Change: TSK-57`.
+   start --task TSK-57 --change CHG-12` składa `story.md` z wiersza cięcia w `docs/project/changes/CHG-12/plan.md`
+   (wartość, wydanie, flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`.
+   TSK spoza planów zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”); TSK w planach wielu zmian bez
+   `--change` → kod 2 i lista zmian (PRB-33).
+3. Gałąź `story/<slug>` od bazy cięcia (core-git-workflow). Zapamiętaj bazę przed `git switch -c` i wracaj do niej
+   między cięciami (`git switch <baza>`), żeby kolejne cięcia nie dziedziczyły commitów poprzedniego — chyba że plan
+   mówi inaczej.
+   - **Przebieg cięcia ze zmianą pdi** (`--change CHG-n`, tak woła Talosa faza delivery): baza to aktualna gałąź fazy
+     (`pdi/CHG-n-delivery`), bo pdi commituje na niej `decisions.md` zmiany przed uruchomieniem persony — bez tego
+     cięcia nie miałyby decyzji wiążących Talosa. Nie robisz `git switch main` przed `git switch -c`.
+   - **Zwykła historyjka** (bez `--change`): baza to gałąź domyślna (zwykle `main`); `git switch main`, potem
+     `git switch -c story/<slug>`.
+   Przy cięciu z kluczem slug zaczyna się od klucza (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki
+   `Change: TSK-57`.
 
 ## 1. Przyjęcie historyjki
 Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria akceptacji** sprawdzalne testem;
@@ -59,8 +70,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 - **Fazy warunkowe** wpisz do planu tylko z powodem: dokumentacja przy zmianie publicznego API lub zachowania
   opisanego w docs; `security-reviewer` przy auth, sekretach, uprawnieniach, IaC, CI; `architect` przy decyzji
   trudnej do odwrócenia.
-- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest poza gitem:
-  w commitach i kodzie nie odsyłasz do niego — pozycje trafiają do opisu PR i raportu przebiegu
+- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest w `tmp/talos/runs/<data>-<slug>/`
+  (poza gitem) — w commitach i kodzie nie odsyłasz do niego; pozycje trafiają do opisu PR i raportu przebiegu
   (sekcja „Odłożone do decyzji”, przy cięciu z kluczem w `docs/project/changes/CHG-n/runs/TSK-n.md`).
 - **Bez `--auto`:** pokaż plan (kawałki, fazy warunkowe, założenia, odłożone) i czekaj na akceptację człowieka.
   **Z `--auto`:** idziesz dalej; plan i założenia trafią do opisu PR.
@@ -92,7 +103,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 
 ## 4. Zakończenie
 1. Fazy warunkowe z planu (tylko te).
-2. **Zgodność z planem:** `python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base <gałąź domyślna>`
+2. **Zgodność z planem:** `python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base <baza cięcia>`
+   (dla `--change`: gałąź fazy `pdi/CHG-n-delivery`; inaczej gałąź domyślna, zwykle `main`)
    — pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem, testy w diffie. Zmiana spoza planu
    bez uzasadnienia → wycofujesz albo opisujesz w PR jako odstępstwo.
 3. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista

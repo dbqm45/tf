@@ -253,8 +253,18 @@ def build_prompt(a) -> dict:
                          f"{problem['proposed_solution']}.")
     if a.phase == "delivery":
         budget_flag = f" --budget {budget}" if budget else ""
-        lines.append(f"Zrealizuj cięcia TSK z {d}/plan.md: dla każdego `/talos-story-run <TSK> --auto{budget_flag}` "
-                     f"(commit na kawałek z dopiskiem `Change: <TSK>`, jeden PR na cięcie). Nie scalasz PR-ów.")
+        # PRB-33: `--change CHG-n` wymagane, bo ten sam klucz TSK może być w planach wielu zmian — bez niego
+        # `run_report.py start --task TSK-n` zgaduje (pierwsze trafienie) albo kończy się błędem z listą zmian.
+        # Gałąź fazy pdi (pdi/CHG-n-delivery) ma commit `decisions.md` zrobiony tuż przed uruchomieniem Talosa
+        # (pdi #148) — cięcia odgałęziają się od niej, nie od `main`, inaczej straciłyby decyzje wiążące.
+        lines.append(f"Jesteś na gałęzi fazy pdi/{a.change}-delivery (commit `decisions.md` zrobiony przez pdi tuż "
+                     f"przed Twoim uruchomieniem). Każde cięcie zaczyna `story/<slug>` od tej gałęzi — "
+                     f"`git switch -c story/<slug>`, bez `git switch main` — i wraca na nią między cięciami "
+                     f"(`git switch pdi/{a.change}-delivery`), żeby cięcia nie dziedziczyły commitów poprzedniego. "
+                     f"`plan_drift.py` uruchom z `--base pdi/{a.change}-delivery`.")
+        lines.append(f"Zrealizuj cięcia TSK z {d}/plan.md: dla każdego `/talos-story-run <TSK> --auto "
+                     f"--change {a.change}{budget_flag}` (commit na kawałek z dopiskiem `Change: <TSK>`, "
+                     f"jeden PR na cięcie). Nie scalasz PR-ów.")
     else:
         lines += [
             f"Wynik: {WHAT[a.phase]} w `{artifact}` — nagłówek zgodny z kontraktem pdi (pole change: {a.change}, "
@@ -326,11 +336,21 @@ def cmd_run(a) -> int:
     failed = r.returncode != 0 or not isinstance(result, dict) or result.get("is_error") or not result
     status = "failed" if failed else ("waiting_gate" if p["gate"] else "done")
     out.update(status=status, cost_usd=cost)
+    # PRB-28: `detail` i `permission_denials` w wyniku też na sukcesie — bez tego diagnoza failed delivery
+    # (pdi A6 2026-11-04 CHG-3 na sdlc-proba) nie ma odpowiedzi persony i listy odmów. Pole `permission_denials`
+    # wg Agent SDK ResultMessage (code.claude.com/docs/en/agent-sdk/python, odczyt 2026-11-05).
+    if isinstance(result, dict):
+        tail = result.get("result")
+        if tail:
+            out["detail"] = str(tail)[-DETAIL_MAX:]
+        denials = result.get("permission_denials")
+        if denials:
+            out["permission_denials"] = denials
     if failed:
         out["error"] = (result.get("subtype") if isinstance(result, dict) and result else None) or f"kod {r.returncode}"
         out["exit_code"] = r.returncode
-        text = result.get("result") if isinstance(result, dict) else None
-        out["detail"] = (str(text) if text else (r.stdout or ""))[-DETAIL_MAX:] or None
+        if "detail" not in out:                        # brak JSON-a w stdout → surowy stdout
+            out["detail"] = (r.stdout or "")[-DETAIL_MAX:] or None
         out["stderr"] = (r.stderr or "")[-DETAIL_MAX:] or None
     repeats = repeated(a.change, Path(p["artifact"])) if p["artifact"] and not failed else []
     if repeats:   # persona skończyła, ale artefakt pyta o to, co już rozstrzygnięto (Z1, PRB-3)
