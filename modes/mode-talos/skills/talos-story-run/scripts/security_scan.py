@@ -208,6 +208,26 @@ def tool(name: str) -> str | None:
     return shutil.which(name, path=os.environ.get("TALOS_SCAN_PATH") or None)
 
 
+SEMGREP_STATE = Path("tmp") / "talos" / "runs" / ".semgrep"
+SEMGREP_STATE_VARS = {"SEMGREP_SETTINGS_FILE": "settings.yml", "SEMGREP_LOG_FILE": "semgrep.log",
+                      "SEMGREP_VERSION_CACHE_PATH": "version-cache"}
+
+
+def semgrep_env(root: Path) -> dict[str, str]:
+    """Stan semgrepa w klonie zamiast w $HOME (PRB-32): w sandboxie Bash kontenera fazy pdi HOME nie jest zapisywalny
+    i semgrep 1.183.0 kończy się FileNotFoundError przy mkdir (odtworzone 2026-11-05). Katalog ma własny .gitignore
+    z `*`, więc nie brudzi drzewa; zmienne ustawione przez człowieka zostają."""
+    state = root / SEMGREP_STATE
+    state.mkdir(parents=True, exist_ok=True)
+    ignore = state / ".gitignore"
+    if not ignore.exists():
+        ignore.write_text("*\n", encoding="utf-8")
+    env = dict(os.environ)
+    for name, leaf in SEMGREP_STATE_VARS.items():
+        env.setdefault(name, str(state / leaf))
+    return env
+
+
 def run_semgrep(root: Path, files: list[str], out: Path) -> None:
     target = out / "semgrep.sarif"
     if not files:
@@ -217,7 +237,7 @@ def run_semgrep(root: Path, files: list[str], out: Path) -> None:
            "--config", os.environ.get("TALOS_SEMGREP_CONFIG") or SEMGREP_DEFAULT]
     if (root / ".semgrep.yml").is_file():
         cmd += ["--config", ".semgrep.yml"]
-    r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True)
+    r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True, env=semgrep_env(root))
     if r.returncode != 0 or not target.is_file():
         tail = (r.stderr or r.stdout).strip().splitlines()[-5:]
         target.unlink(missing_ok=True)

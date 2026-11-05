@@ -21,6 +21,10 @@ import json, os, sys
 args = sys.argv[1:]
 with open(os.environ["FAKE_LOG"], "a", encoding="utf-8") as f:
     f.write(json.dumps(["semgrep", *args]) + "\n")
+if os.environ.get("FAKE_ENV_LOG"):
+    keys = ("SEMGREP_SETTINGS_FILE", "SEMGREP_LOG_FILE", "SEMGREP_VERSION_CACHE_PATH")
+    with open(os.environ["FAKE_ENV_LOG"], "w", encoding="utf-8") as f:
+        json.dump({k: os.environ.get(k) for k in keys}, f)
 out = args[args.index("--output") + 1]
 skip = {args[i + 1] for i, a in enumerate(args) if a in ("--config", "--output")}
 targets = [a for a in args[1:] if not a.startswith("-") and a not in skip]
@@ -148,6 +152,21 @@ def main() -> int:
         check((out / "semgrep.sarif").is_file() and (out / "verdict.json").is_file(), "S-4: SARIF i werdykt w katalogu wyniku")
         check(not [c for c in calls if c[0] in ("npm", "pip-audit")], f"S-5: bez zmiany manifestu nie ma audytu: {calls}")
         check("SKAN: PASS" in r.stdout, f"S-6: linia werdyktu PASS: {r.stdout}")
+
+        # S-19: stan semgrepa (ustawienia, log, pamięć wersji) w klonie, nie w $HOME — w sandboxie Bash kontenera
+        # fazy HOME nie jest zapisywalny i semgrep kończy się FileNotFoundError przy mkdir (PRB-32, A6 2026-11-05)
+        env_log = tmp / "env.json"
+        log.unlink(missing_ok=True)
+        run("scan", "--out", str(out), cwd=repo, FAKE_ENV_LOG=str(env_log))
+        seen = json.loads(env_log.read_text()) if env_log.is_file() else {}
+        state = (repo / "tmp" / "talos" / "runs" / ".semgrep").resolve()
+        check(seen and all(v and Path(v).resolve().parent == state for v in seen.values()),
+              f"S-19: zmienne SEMGREP_* wskazują {state}: {seen}")
+        status = subprocess.run(["git", "status", "--porcelain", "tmp"], cwd=repo, capture_output=True, text=True).stdout
+        check(state.is_dir() and not status.strip(), f"S-20: katalog stanu semgrepa poza gitem: {status!r}")
+        run("scan", "--out", str(out), cwd=repo, FAKE_ENV_LOG=str(env_log), SEMGREP_SETTINGS_FILE=str(tmp / "own.yml"))
+        seen = json.loads(env_log.read_text()) if env_log.is_file() else {}
+        check(seen.get("SEMGREP_SETTINGS_FILE") == str(tmp / "own.yml"), f"S-21: własne ustawienie zostaje: {seen}")
 
         # S-7: własne reguły produktu (.semgrep.yml) dochodzą do OWASP
         write(repo, ".semgrep.yml", "rules: []\n")
