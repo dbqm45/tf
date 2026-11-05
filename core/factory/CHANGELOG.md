@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.58.6] — 2026-11-05
+### Fixed
+- **talos:** keep semgrep state in the clone, not in HOME (#146)
+
 ## [5.58.5] — 2026-11-05
 ### Fixed
 - **pdi:** unblock Talos in delivery (PRB-28, PRB-32, PRB-33) (#145)
