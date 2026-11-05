@@ -162,6 +162,8 @@ Po STOP i tak uruchamiasz `run_report.py finish` — raport kosztu powstaje zaws
 - OWASP Top 10 2021 i 2025, „List of Mapped CWEs” (github.com/OWASP/Top10, odczyt 2026-11-02): lista CWE progu
   blokującego; reguła jak SEC-001 w ci_for_sdlc (`--sarif`).
 - semgrep 1.183.0 (kod pakietu, odczyt 2026-11-02): `--sarif --output`, `--metrics=off`, rejestr reguł z semgrep.dev
-  (host na liście dozwolonych kontenera); npm 11.10.0 `min-release-age` (dni), pnpm 10.17.0 `minimumReleaseAge`
+  (host na liście dozwolonych kontenera); stan semgrepa (`SEMGREP_SETTINGS_FILE`, `SEMGREP_LOG_FILE`,
+  `SEMGREP_VERSION_CACHE_PATH`) `security_scan.py` kieruje do `tmp/talos/runs/.semgrep/`, bo bez zapisywalnego HOME
+  semgrep kończy się błędem (PRB-32, odtworzone 2026-11-05) — zmiennych nie dopisujesz przed poleceniem; npm 11.10.0 `min-release-age` (dni), pnpm 10.17.0 `minimumReleaseAge`
   (minuty), uv `exclude-newer` (czas względny) — szczegóły i luki: plan `docs/plans/2026-11-02-z8c-2-…`.
 - Bill Wake, „INVEST in Good Stories, and SMART Tasks” (2003): kryteria dobrej historyjki i kawałka.
