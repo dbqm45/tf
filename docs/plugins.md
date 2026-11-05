@@ -43,7 +43,7 @@ instalowanym przez `tf` jak dotąd. Analiza zostaje jako uzasadnienie decyzji.
 | ścieżka `.claude/skills/talos-story-run/scripts/run_report.py` | w pluginie inna ścieżka | skill i agent wskazują skrypt przez `${CLAUDE_SKILL_DIR}/scripts/run_report.py`; agent czyta skill — ścieżkę w agencie podstawia eksport |
 | uprawnienie z `settings.json` trybu | odrzucane | `allowed-tools` w skillu; z `claude --agent talos` skill nie jest wywoływany, więc pierwszy raz pojawi się pytanie o zgodę [niezweryfikowane: czy `allowed-tools` działa przy odczycie skilla narzędziem Read — raczej nie] |
 | ceny z `factory/config.yaml` | pliku nie ma bez fabryki | `run_report.py` z zapasowym cennikiem przy skrypcie |
-| `.claude/runs/` ignorowane przez rdzeń | bez rdzenia nikt go nie ignoruje | `run_report.py start` zakłada `.claude/runs/.gitignore` z `*` — działa wszędzie |
+| `tmp/talos/runs/` ignorowane przez rdzeń | bez rdzenia nikt go nie ignoruje | `run_report.py start` zakłada `tmp/talos/runs/.gitignore` z `*` — działa wszędzie (od 5.58.5; starsze klony mogą mieć `.claude/runs/.gitignore`) |
 | wykonawcy `scout`, `scope-reviewer`, `quick-fixer`, `architect`, `security-reviewer`, `researcher` | to agenci rdzenia | wariant A: plugin wymaga zainstalowanej fabryki; wariant B: plugin zawiera kopie tych agentów (wtedy nazwy `<plugin>:scout` itd.) [niezweryfikowane: czy `Agent(…)` przyjmuje nazwy z przestrzeni pluginu] |
 | hooki rdzenia (TDD, ochrona ścieżek) | bez fabryki ich nie ma | Talos bez fabryki traci straż TDD z hooka; zostaje TDD z treści skilla |
 
@@ -77,7 +77,7 @@ instalowanym przez `tf` jak dotąd. Analiza zostaje jako uzasadnienie decyzji.
 ## Proponowane kroki (po decyzji)
 1. **Samodzielność `mode-talos`** (przydatna też bez pluginu):
    - zapasowy cennik w `run_report.py`;
-   - `.claude/runs/.gitignore` zakładany przez skrypt;
+   - `tmp/talos/runs/.gitignore` zakładany przez skrypt;
    - ścieżka skryptu względem katalogu skilla.
 2. **`tools/plugin_export.py --mode mode-talos`:** buduje `dist/plugins/<id>/` (manifest, agent, skill), sprawdza
    eksport przez `claude plugin validate --strict` i dodaje test do CI. Ewaluacje `claude plugin eval` są płatne,

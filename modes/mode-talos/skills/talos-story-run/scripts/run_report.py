@@ -218,7 +218,7 @@ def plan_progress(run_dir: Path) -> dict:
 
 
 def parked_items(run_dir: Path) -> list[str]:
-    """Pozycje z parked.md (bez wiersza formatu). Plik leży w .claude/runs/ poza gitem — do repo trafiają w raporcie."""
+    """Pozycje z parked.md (bez wiersza formatu). Plik leży w `tmp/talos/runs/` poza gitem — do repo trafiają w raporcie."""
     text = (run_dir / "parked.md").read_text(encoding="utf-8") if (run_dir / "parked.md").exists() else ""
     return [ln for ln in text.splitlines() if ln.startswith("- ") and not ln.startswith("- <")]
 
@@ -387,6 +387,13 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         print(f"✗ Przebieg już istnieje: {run_dir} — dokończ go albo nadaj inny tytuł.")
         return 2
     run_dir.mkdir(parents=True)
+    # PRB-32: w klonie produktu `tmp/talos/runs/` często nie jest jeszcze w .gitignore (fabryka 5.58.5 dodaje go
+    # do szablonu, ale starsze klony — np. sdlc-proba — tego nie mają). Bez tego pierwszy `start` zostawiłby
+    # „?? tmp/” w statusie i hook „czyste drzewo robocze” (SKILL §0.1) padłby na kolejnym cięciu. Zakładamy
+    # lokalny `.gitignore` z `*` — tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
+    gi = run_dir.parent / ".gitignore"
+    if not gi.is_file():
+        gi.write_text("*\n", encoding="utf-8")
     (run_dir / "run.json").write_text(json.dumps({"slug": slug, "title": title,
                                                   "started_at": now.isoformat(timespec="seconds"), **meta},
                                                  ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

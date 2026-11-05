@@ -255,6 +255,13 @@ def build_prompt(a) -> dict:
         budget_flag = f" --budget {budget}" if budget else ""
         # PRB-33: `--change CHG-n` wymagane, bo ten sam klucz TSK może być w planach wielu zmian — bez niego
         # `run_report.py start --task TSK-n` zgaduje (pierwsze trafienie) albo kończy się błędem z listą zmian.
+        # Gałąź fazy pdi (pdi/CHG-n-delivery) ma commit `decisions.md` zrobiony tuż przed uruchomieniem Talosa
+        # (pdi #148) — cięcia odgałęziają się od niej, nie od `main`, inaczej straciłyby decyzje wiążące.
+        lines.append(f"Jesteś na gałęzi fazy pdi/{a.change}-delivery (commit `decisions.md` zrobiony przez pdi tuż "
+                     f"przed Twoim uruchomieniem). Każde cięcie zaczyna `story/<slug>` od tej gałęzi — "
+                     f"`git switch -c story/<slug>`, bez `git switch main` — i wraca na nią między cięciami "
+                     f"(`git switch pdi/{a.change}-delivery`), żeby cięcia nie dziedziczyły commitów poprzedniego. "
+                     f"`plan_drift.py` uruchom z `--base pdi/{a.change}-delivery`.")
         lines.append(f"Zrealizuj cięcia TSK z {d}/plan.md: dla każdego `/talos-story-run <TSK> --auto "
                      f"--change {a.change}{budget_flag}` (commit na kawałek z dopiskiem `Change: <TSK>`, "
                      f"jeden PR na cięcie). Nie scalasz PR-ów.")

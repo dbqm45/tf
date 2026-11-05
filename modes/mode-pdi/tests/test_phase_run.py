@@ -120,8 +120,13 @@ def main() -> int:
               and "--auto" in p.get("prompt", "") and "--budget 5" in p.get("prompt", "")
               # PRB-33: delivery prompt podaje `--change CHG-n`, żeby Talos nie zgadywał, do której zmiany należy TSK
               # (ten sam TSK może być w dwóch planach, zob. test_run_report.py R-33a)
-              and "--change CHG-12" in p.get("prompt", ""),
-              f"R-4: delivery przez Talosa, bez bramki po fazie, z --change: {r.stdout}")
+              and "--change CHG-12" in p.get("prompt", "")
+              # pdi #148: cięcia odgałęziają się od gałęzi fazy (pdi/CHG-n-delivery), bo pdi commituje na niej
+              # `decisions.md` tuż przed uruchomieniem Talosa — bez tego cięcia straciłyby wiążące decyzje
+              and "pdi/CHG-12-delivery" in p.get("prompt", "")
+              and "git switch pdi/CHG-12-delivery" in p.get("prompt", "")
+              and "--base pdi/CHG-12-delivery" in p.get("prompt", ""),
+              f"R-4: delivery przez Talosa, bez bramki, z --change i gałęzią fazy jako bazą cięć: {r.stdout}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "intent"], repo)
         check(r.returncode != 0 and "maja" in r.stdout and "pdi-phases.json" in r.stdout,
               f"R-5: brak persony → błąd z podpowiedzią: {r.stdout}{r.stderr}")

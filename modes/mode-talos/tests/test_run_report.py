@@ -94,6 +94,20 @@ def main() -> int:
                   f"R-2: pliki przebiegu: {sorted(x.name for x in d.iterdir())}")
             check("importować CDR" in (d / "story.md").read_text(encoding="utf-8"), "R-3: treść story zapisana")
             check(re.match(r"\d{4}-\d{2}-\d{2}-", d.name) is not None, f"R-4: data w nazwie katalogu: {d.name}")
+        # PRB-32 — klon produktu bez `tmp/talos/runs/` w .gitignore ma „?? tmp/” w statusie po pierwszym start i hook
+        # „czyste drzewo robocze” Talosa (SKILL §0.1) oraz dispatch_local pdi uznają klon za brudny. Skrypt zakłada
+        # `tmp/talos/runs/.gitignore` z `*`, tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
+        gi = proj / "tmp" / "talos" / "runs" / ".gitignore"
+        check(gi.is_file() and gi.read_text(encoding="utf-8").strip() == "*",
+              f"R-1a: start zakłada tmp/talos/runs/.gitignore z `*`: istnieje={gi.is_file()}, "
+              f"treść={gi.read_text(encoding='utf-8') if gi.is_file() else '—'!r}")
+        import subprocess as _sp
+        _sp.run(["git", "init", "-q", "-b", "main", str(proj)], check=True, capture_output=True)
+        for _k, _v in (("user.name", "t"), ("user.email", "t@t"), ("commit.gpgsign", "false")):
+            _sp.run(["git", "-C", str(proj), "config", _k, _v], check=True, capture_output=True)
+        porcelain = _sp.run(["git", "-C", str(proj), "status", "--porcelain", "tmp/talos/runs/"],
+                            capture_output=True, text=True).stdout
+        check(porcelain == "", f"R-1b: po start git status pusty w tmp/talos/runs/: {porcelain!r}")
 
         # finish: transkrypty sesji i podagenta od chwili startu — status/finish czytają też katalogi w .claude/runs/
         # (stare przebiegi sprzed przeniesienia, PRB-32, 2026-11-05: ścieżka chroniona przez Claude Code)
@@ -276,7 +290,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {27 - len(fails)}/27 testów raportu przebiegu")
+    print(f"{'✓' if not fails else '✗'} {29 - len(fails)}/29 testów raportu przebiegu")
     return 1 if fails else 0
 
 

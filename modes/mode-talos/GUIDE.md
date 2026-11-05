@@ -47,7 +47,9 @@ claude --agent talos
 7. **Koniec:** jeden PR (Talos go nie scala) i raport.
 
 ## Co dostajesz
-Katalog `.claude/runs/<data>-<slug>/` (ignorowany przez git):
+Katalog `tmp/talos/runs/<data>-<slug>/` (ignorowany przez git — `.claude/` jest ścieżką chronioną w Claude Code,
+więc `--permission-mode acceptEdits` nie pozwoliłby pisać do `.claude/runs/`; code.claude.com/docs/en/permission-modes,
+odczyt 2026-11-05):
 
 | Plik | Treść |
 |---|---|

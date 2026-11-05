@@ -33,9 +33,16 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
    (wartość, wydanie, flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`.
    TSK spoza planów zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”); TSK w planach wielu zmian bez
    `--change` → kod 2 i lista zmian (PRB-33).
-3. Gałąź `story/<slug>` od aktualnej gałęzi domyślnej: `git switch <gałąź-domyślna>` (zwykle `main`), potem
-   `git switch -c story/<slug>` (core-git-workflow). Przy cięciu z kluczem slug zaczyna się od klucza
-   (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki `Change: TSK-57`.
+3. Gałąź `story/<slug>` od bazy cięcia (core-git-workflow). Zapamiętaj bazę przed `git switch -c` i wracaj do niej
+   między cięciami (`git switch <baza>`), żeby kolejne cięcia nie dziedziczyły commitów poprzedniego — chyba że plan
+   mówi inaczej.
+   - **Przebieg cięcia ze zmianą pdi** (`--change CHG-n`, tak woła Talosa faza delivery): baza to aktualna gałąź fazy
+     (`pdi/CHG-n-delivery`), bo pdi commituje na niej `decisions.md` zmiany przed uruchomieniem persony — bez tego
+     cięcia nie miałyby decyzji wiążących Talosa. Nie robisz `git switch main` przed `git switch -c`.
+   - **Zwykła historyjka** (bez `--change`): baza to gałąź domyślna (zwykle `main`); `git switch main`, potem
+     `git switch -c story/<slug>`.
+   Przy cięciu z kluczem slug zaczyna się od klucza (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki
+   `Change: TSK-57`.
 
 ## 1. Przyjęcie historyjki
 Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria akceptacji** sprawdzalne testem;
@@ -96,7 +103,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 
 ## 4. Zakończenie
 1. Fazy warunkowe z planu (tylko te).
-2. **Zgodność z planem:** `python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base <gałąź domyślna>`
+2. **Zgodność z planem:** `python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base <baza cięcia>`
+   (dla `--change`: gałąź fazy `pdi/CHG-n-delivery`; inaczej gałąź domyślna, zwykle `main`)
    — pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem, testy w diffie. Zmiana spoza planu
    bez uzasadnienia → wycofujesz albo opisujesz w PR jako odstępstwo.
 3. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
