@@ -442,7 +442,7 @@ def main() -> int:
         r = run(["check"], repo)
         check(r.returncode != 0 and "source_reported_at" in r.stdout, f"S-5: zła data w nagłówku → check: {r.stdout}")
 
-    # Z1 (PRB-3): odpowiedzi na pytania bramki i decyzje zmiany z rejestru pdi (kontrakt pdi 0.11.0)
+    # Z1 (PRB-3): odpowiedzi na pytania bramki i decyzje zmiany z rejestru pdi (kontrakt pdi 0.12.0)
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
         run(["change", "new", "CHG-12"], repo)
@@ -512,7 +512,7 @@ def main() -> int:
         r = run(["check"], repo)
         check(r.returncode != 0 and "parami" in r.stdout, f"Z1-12: pytanie bez odpowiedzi → check: {r.stdout}")
 
-    # Kontrakt pdi 0.11.0: decision.schema.json (kopia z tagu) zgodny z tym, co dziennik zapisuje i importuje
+    # Kontrakt pdi 0.12.0: decision.schema.json (kopia z tagu) zgodny z tym, co dziennik zapisuje i importuje
     import importlib.util
     spec = importlib.util.spec_from_file_location("decision_record", SCRIPT)
     drec = importlib.util.module_from_spec(spec)
