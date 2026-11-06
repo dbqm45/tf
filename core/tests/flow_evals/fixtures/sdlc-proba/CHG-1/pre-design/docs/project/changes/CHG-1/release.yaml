@@ -1,0 +1,14 @@
+change: CHG-1
+version: 1
+flags:
+  show_last_deployed:
+    default: false
+    rollout:
+      - env: prod
+        at: R1
+        value: true
+targets:
+  R1:
+    includes: [TSK-1, TSK-2]
+slo:
+  availability: 99.9

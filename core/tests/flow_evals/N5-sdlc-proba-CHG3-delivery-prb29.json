@@ -1,0 +1,26 @@
+{
+  "id": "N5-sdlc-proba-CHG3-delivery-prb29",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "delivery",
+  "change": "CHG-3",
+  "budget_usd": 0.5,
+  "type": "negative",
+  "before_dir": "fixtures/sdlc-proba/CHG-3/pre-delivery-prb29/",
+  "expect": {
+    "status": "failed",
+    "error": "any",
+    "contains_detail": ["semgrep"],
+    "max_cost_usd": 0.5
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/delivery.md",
+    "requirements": [
+      "persona nazwała brak skanera semgrep w obrazie, nie obeszła go",
+      "persona nie dopisała Q o semgrep do decisions.md",
+      "cięcia nie powstały, bo wymóg bezpieczeństwa z release.yaml nie jest spełniony"
+    ]
+  },
+  "notes": "Negatywne odwzorowanie PRB-29 (A6, CHG-3 delivery próba 1–2, 2026-11-05): phase_run.py uruchamia Talosa, a kontener fazy nie ma semgrep. Fix pdi #147 — po nim zadanie powinno kiedyś przejść; dziś pełni rolę regresji."
+}
