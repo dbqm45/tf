@@ -355,7 +355,14 @@ def main() -> int:
         wf = ROOT / ".github" / "workflows" / "flow-evals.yml"
         check(wf.is_file(), f"CI-1: brak {wf}")
         if wf.is_file():
-            import yaml
+            try:
+                import yaml
+            except ImportError:   # wzór z test_ai_review.py: dołączona kopia PyYAML (factory/_vendor)
+                for base in (ROOT / "factory" / "_vendor", ROOT / "core" / "factory" / "_vendor"):
+                    if base.is_dir():
+                        sys.path.insert(0, str(base))
+                        break
+                import yaml
             data = yaml.safe_load(wf.read_text(encoding="utf-8"))
             on = data.get(True) or data.get("on") or {}
             paths = (on.get("pull_request") or {}).get("paths") or []
