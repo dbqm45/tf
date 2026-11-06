@@ -307,9 +307,12 @@ def missing_input(change: str, phase: str) -> str | None:
 
 
 def cmd_run(a) -> int:
+    # stream-json wymaga --print i --verbose (code.claude.com/docs/en/cli-reference, odczyt 2026-11-06);
+    # końcowe zdarzenie `result` ma pola total_cost_usd, is_error, subtype, result.{type,text}, permission_denials,
+    # usage, duration_ms, session_id (code.claude.com/docs/en/agent-sdk/typescript, odczyt 2026-11-06).
     p = build_prompt(a)
-    argv = [os.environ.get("PDI_CLAUDE_BIN") or "claude", "--print", "--output-format", "json", "--agent",
-            p["persona"], "--permission-mode", "acceptEdits"]
+    argv = [os.environ.get("PDI_CLAUDE_BIN") or "claude", "--print", "--verbose", "--output-format", "stream-json",
+            "--agent", p["persona"], "--permission-mode", "acceptEdits"]
     budget = budget_of(a.budget_usd)
     if budget:
         argv += ["--max-budget-usd", budget]
@@ -330,40 +333,66 @@ def cmd_run(a) -> int:
                           "bo talos zgadywałby odpowiedź (PRB-3): " + "; ".join(f"„{q}”" for q in open_qs)
                           + ". Odpowiedz na nie przy bramce w pdi (answers w decide_inbox_item) albo usuń je z plan.md "
                           "poprawkami fazy architecture.")
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import phase_progress
+    relay = phase_progress.ProgressRelay(change=a.change, phase=a.phase,
+                                         budget_usd=float(budget) if budget else None)
     try:
-        r = subprocess.run([*argv, p["prompt"]], capture_output=True, text=True)
+        process = subprocess.Popen([*argv, p["prompt"]], stdin=subprocess.DEVNULL,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   text=True, bufsize=1)
     except OSError as e:
         raise Refused(f"nie da się uruchomić {argv[0]} ({e.strerror}) — zainstaluj Claude Code albo ustaw PDI_CLAUDE_BIN") from e
-    try:
-        result = json.loads(r.stdout or "{}")
-    except ValueError:
-        result = {}
+    raw_lines: list[str] = []
+    assert process.stdout is not None  # subprocess.PIPE
+    for line in process.stdout:
+        line = line.rstrip("\n")
+        if not line:
+            continue
+        raw_lines.append(line)
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue  # linia niejsonowa — pdi hostowa też ją zignoruje
+        for row in relay.handle(event):
+            if phase_progress.is_valid_progress(row):
+                print(phase_progress.format_line(row))
+    code = process.wait()
+    stderr_text = process.stderr.read() if process.stderr else ""
+    result = relay.last_result or {}
     cost = result.get("total_cost_usd") if isinstance(result, dict) else None
-    failed = r.returncode != 0 or not isinstance(result, dict) or result.get("is_error") or not result
+    failed = code != 0 or not isinstance(result, dict) or result.get("is_error") or not result
     status = "failed" if failed else ("waiting_gate" if p["gate"] else "done")
     out.update(status=status, cost_usd=cost)
     # PRB-28: `detail` i `permission_denials` w wyniku też na sukcesie — bez tego diagnoza failed delivery
-    # (pdi A6 2026-11-04 CHG-3 na sdlc-proba) nie ma odpowiedzi persony i listy odmów. Pole `permission_denials`
-    # wg Agent SDK ResultMessage (code.claude.com/docs/en/agent-sdk/python, odczyt 2026-11-05).
+    # (pdi A6 2026-11-04 CHG-3 na sdlc-proba) nie ma odpowiedzi persony i listy odmów. Kształt `result` w stream-JSON:
+    # pole `result: {type, text}` (code.claude.com/docs/en/agent-sdk/typescript, odczyt 2026-11-06); starsze testy
+    # i output-format json podają `result` jako string — oba obsługuje `phase_progress.result_text`.
     if isinstance(result, dict):
-        tail = result.get("result")
-        if tail:
-            out["detail"] = str(tail)[-DETAIL_MAX:]
+        text = phase_progress.result_text(result.get("result"))
+        if text:
+            out["detail"] = text[-DETAIL_MAX:]
         denials = result.get("permission_denials")
         if denials:
             out["permission_denials"] = denials
     if failed:
-        out["error"] = (result.get("subtype") if isinstance(result, dict) and result else None) or f"kod {r.returncode}"
-        out["exit_code"] = r.returncode
-        if "detail" not in out:                        # brak JSON-a w stdout → surowy stdout
-            out["detail"] = (r.stdout or "")[-DETAIL_MAX:] or None
-        out["stderr"] = (r.stderr or "")[-DETAIL_MAX:] or None
+        out["error"] = (result.get("subtype") if isinstance(result, dict) and result else None) or f"kod {code}"
+        out["exit_code"] = code
+        if "detail" not in out:                        # brak zdarzenia result → surowe linie stdout bez PDI-PROGRESS
+            tail = "\n".join(ln for ln in raw_lines if not ln.startswith(phase_progress.PREFIX))[-DETAIL_MAX:]
+            out["detail"] = tail or None
+        out["stderr"] = (stderr_text or "")[-DETAIL_MAX:] or None
     repeats = repeated(a.change, Path(p["artifact"])) if p["artifact"] and not failed else []
     if repeats:   # persona skończyła, ale artefakt pyta o to, co już rozstrzygnięto (Z1, PRB-3)
         failed = True
         out.update(status="failed", error="repeated_question", repeated=repeats,
                    detail=f"{p['artifact']} powtarza w `## {QUESTIONS}` pytania już rozstrzygnięte w decisions.md: "
                           + "; ".join(repeats) + ". Usuń je z artefaktu (zapisz ustalenie z odwołaniem) i ponów fazę.")
+    # Końcowa linia postępu (waiting_gate / done / failed) z kosztem z last_result.
+    final_message = result.get("subtype") if isinstance(result, dict) and failed else p["gate"] or None
+    final_row = relay.emit_final(status=out["status"], message=final_message)
+    if phase_progress.is_valid_progress(final_row):
+        print(phase_progress.format_line(final_row))
     print(json.dumps(out, ensure_ascii=False, indent=2))
     return 1 if failed else 0
 

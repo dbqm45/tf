@@ -21,18 +21,26 @@ FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"
 SECRET = "sekret-tf"
 KEY_RE = r"^[A-Z][A-Z0-9]+-[0-9]+$"
 
+# Fejkowy `claude` w trybie stream-json: system init na start, opcjonalne zdarzenia, końcowy result;
+# zgodny ze stream-JSON Claude Code (code.claude.com/docs/en/headless, odczyt 2026-11-06).
 FAKE_CLAUDE = """import json, os, sys
 open(os.environ["FAKE_LOG"], "a").write(json.dumps(sys.argv[1:]) + "\\n")
 if os.environ.get("FAKE_STDERR"):
     sys.stderr.write(os.environ["FAKE_STDERR"])
+print(json.dumps({"type": "system", "subtype": "init", "session_id": "s", "model": "c"}))
+for line in os.environ.get("FAKE_EVENTS", "").split("\\x1e"):
+    if line.strip():
+        print(line)
+if not os.environ.get("FAKE_NO_RESULT"):
+    out = {"type": "result", "subtype": os.environ.get("FAKE_SUBTYPE", "success"),
+           "is_error": bool(os.environ.get("FAKE_ERROR")), "total_cost_usd": 0.42,
+           "result": {"type": "text", "text": os.environ.get("FAKE_RESULT", "gotowe")},
+           "usage": {}, "duration_ms": 1, "duration_api_ms": 1, "num_turns": 0,
+           "permission_denials": json.loads(os.environ["FAKE_DENIALS"]) if os.environ.get("FAKE_DENIALS") else [],
+           "session_id": "s"}
+    print(json.dumps(out))
 if os.environ.get("FAKE_EXIT"):
     sys.exit(int(os.environ["FAKE_EXIT"]))
-out = {"type": "result", "subtype": os.environ.get("FAKE_SUBTYPE", "success"),
-       "is_error": bool(os.environ.get("FAKE_ERROR")), "total_cost_usd": 0.42,
-       "result": os.environ.get("FAKE_RESULT", "gotowe")}
-if os.environ.get("FAKE_DENIALS"):
-    out["permission_denials"] = json.loads(os.environ["FAKE_DENIALS"])
-print(json.dumps(out))
 """
 
 
@@ -41,11 +49,28 @@ def run(args, cwd, **env):
                           env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", **env})
 
 
+PDI_PROGRESS_PREFIX = "PDI-PROGRESS: "
+
+
 def jl(r):
+    """Końcowy obiekt JSON wyniku fazy ze stdout, ignorując linie `PDI-PROGRESS: ...`."""
+    text = "\n".join(line for line in (r.stdout or "").splitlines() if not line.startswith(PDI_PROGRESS_PREFIX))
     try:
-        return json.loads(r.stdout)
+        return json.loads(text) if text else None
     except ValueError:
         return None
+
+
+def progress_lines(r):
+    """Linie postępu (`PDI-PROGRESS: {json}`) ze stdout — jako lista słowników po parsowaniu."""
+    rows = []
+    for line in (r.stdout or "").splitlines():
+        if line.startswith(PDI_PROGRESS_PREFIX):
+            try:
+                rows.append(json.loads(line[len(PDI_PROGRESS_PREFIX):]))
+            except ValueError:
+                pass
+    return rows
 
 
 class Catch(BaseHTTPRequestHandler):
@@ -216,6 +241,41 @@ def main() -> int:
         res = jl(r) or {}
         check(r.returncode == 0 and "detail" in res and "permission_denials" not in res,
               f"R-28c: bez denials pole pominięte, detail jest: {r.stdout}")
+        # Z3-lokalnie (A7): stream-json i linie postępu `PDI-PROGRESS: ...` na stdout, obok końcowego JSON-a wyniku.
+        argv_last = [json.loads(x) for x in log.read_text().splitlines()][-1]
+        check("--output-format" in argv_last and argv_last[argv_last.index("--output-format") + 1] == "stream-json"
+              and "--verbose" in argv_last and "--print" in argv_last,
+              f"R-29: stream-json wymaga --print i --verbose: {argv_last}")
+        # Zdarzenia przed wynikiem zamieniają się w linie postępu.
+        events = chr(30).join([
+            json.dumps({"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "name": "Read", "id": "u1",
+                 "input": {"file_path": f"{repo}/docs/project/changes/CHG-12/intent.md"}}]}}),
+            json.dumps({"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "name": "Bash", "id": "u2", "input": {"command": "python3 x.py"}}]}}),
+        ])
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_EVENTS=events, **env)
+        rows = progress_lines(r)
+        res = jl(r) or {}
+        check(res.get("status") == "waiting_gate",
+              f"R-30a: sukces zachowuje waiting_gate z liniami postępu: {r.stdout}")
+        statuses = [row.get("status") for row in rows]
+        check(statuses[:1] == ["started"]
+              and any(row.get("message", "").startswith("czyta plik docs/project/changes/CHG-12/intent.md") for row in rows)
+              and any(row.get("message") == "uruchamia polecenie" for row in rows)
+              and statuses[-1] == "waiting_gate",
+              f"R-30b: linie postępu: started → in_progress × 2 → waiting_gate; sekwencja: {rows}")
+        check(not any("python3" in row.get("message", "") for row in rows),
+              f"R-30c: polecenie Bash nigdy nie trafia do linii postępu: {rows}")
+        # Failed run → ostatnia linia postępu failed, wynik zachowuje error.
+        r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, FAKE_ERROR="1",
+                FAKE_SUBTYPE="error_max_turns", FAKE_RESULT="limit", **env)
+        rows = progress_lines(r)
+        res = jl(r) or {}
+        check(res.get("status") == "failed" and rows and rows[-1].get("status") == "failed"
+              and rows[-1].get("message") == "error_max_turns"
+              and rows[-1].get("cost_usd") == 0.42,
+              f"R-30d: failed → końcowa linia failed z kosztem: {rows}; wynik: {res}")
         # PRB-12: design.md należy do fazy design (kontrakt pdi), architecture pisze ADR w architecture.md
         p = jl(run(["prompt", "--change", "CHG-12", "--phase", "architecture"], repo)) or {}
         check("design.md" not in p.get("prompt", "") and "architecture.md" in p.get("prompt", ""),
