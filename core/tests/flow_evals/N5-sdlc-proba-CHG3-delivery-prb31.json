@@ -1,0 +1,17 @@
+{
+  "id": "N5-sdlc-proba-CHG3-delivery-prb31",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "delivery",
+  "change": "CHG-3",
+  "budget_usd": 0.5,
+  "type": "negative",
+  "before_dir": "fixtures/sdlc-proba/CHG-3/pre-delivery-prb31/",
+  "expect": {
+    "status": "failed",
+    "error": "any",
+    "max_cost_usd": 0.5,
+    "max_duration_s": 240
+  },
+  "notes": "Regresja PRB-31 (A6, 2026-11-05 próba 2): dispatch_local dopisał DEC-0017 do decisions.md bez commita przed Talosem — Talos widział gałąź delivery bez tej decyzji, stąd `Change: TSK` oderwany od bazy. Fix: pdi #148 commit decisions.md tuż przed uruchomieniem. Przebieg: `CHG-3-delivery-20261105T171033Z` (status failed, step cuts)."
+}

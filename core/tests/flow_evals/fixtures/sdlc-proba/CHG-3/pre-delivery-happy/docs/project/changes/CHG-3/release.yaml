@@ -1,0 +1,25 @@
+# Plan wydania zmiany CHG-3 — kontrakt pdi 0.4.0 (release-plan.schema.json); sprawdza: decision_record.py check.
+# R1 = MVP: gwiazda przewodnia plus minimum do wyniku z intent.md. Każde TSK z plan.md w dokładnie jednej linii;
+# kolumny „Wydanie" i „Flaga" w plan.md muszą się zgadzać z tym plikiem.
+# Owner, remove_by i kryteria wyjścia to [propozycja] do potwierdzenia na bramce B3 (pytania w plan.md).
+change: CHG-3
+mvp:
+  release: R1
+  outcome: "Odwiedzający widzi na stronie głównej, ile wdrożeń środowiska było w ostatnich 7 dniach"
+  metric:
+    name: licznik_zgodny_z_baza
+    target: "0 różnic względem zapytania wprost do tabeli deployments (także > 100 wdrożeń)"
+    horizon_days: 7
+  guardrails:
+    - "deploy_counter na prod enabled=false po wdrożeniu"
+    - "strona z flagą off bajt w bajt jak dotychczas"
+releases:
+  - { id: R1, name: MVP, tasks: [TSK-1] }
+flags:
+  - key: deploy_counter
+    tasks: [TSK-1]
+    owner: "Właściciel aplikacji sdlc-proba"
+    remove_by: 2027-02-28
+    rollout:
+      - { stage: internal, min_days: 3, exit: "licznik na test zgodny z /deployments, zero błędów 5xx w logu serwera" }
+      - { stage: "100%", min_days: 0, exit: "licznik widoczny na prod po decyzji właściciela; potem PR usuwający flagę" }

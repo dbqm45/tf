@@ -6,6 +6,15 @@ budżet jednego uruchomienia ustalony w tf; rozbudowa do ok. 200 po pierwszych w
 w tym samym PR (ten sam kontrakt). Stan wyjściowy: pdi `main` `7048263` (kontrakt 0.11.0), tf 5.58.7,
 A6 zaliczone 2026-11-06.
 
+## Stan realizacji (2026-11-06)
+
+- **PR #150 (`feat/flow-evals-n5` → `main`)** — harness + 6 zadań syntetycznych z sdlc-proba (CHG-1 intent/
+  requirements/architecture/design, synth-repeated-q, CHG-3 delivery-prb29). Wszystkie bramki CI zielone. Nie zmergowany (do przeglądu).
+- **PR2 (`feat/flow-evals-n5-tasks` → `main`, stacked)** — dodaje `scripts/export_pdi_runs.py` (eksport z
+  `$PDI_REGISTRY_PATH/runs/` do `tmp/flow-evals/import/`) + 14 nowych zadań (CHG-1 delivery TSK-1/TSK-2;
+  CHG-2 intent-rejected; CHG-3 intent/req/arch/design + delivery PRB-31/32/33/34 + delivery-happy; 3 zadania
+  sprintdeck) z fixturami zbudowanymi z eksportu logów A6. Razem **21 zadań** (ponad plan 20 — PRB-34 jako bonus).
+
 ## Cel
 
 Zmiana modelu, skilla, persony albo promptu fazy nie wchodzi bez przebiegu evali; raport porównuje **wynik**

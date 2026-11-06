@@ -1,0 +1,27 @@
+{
+  "id": "N5-sdlc-proba-CHG3-architecture",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "architecture",
+  "change": "CHG-3",
+  "budget_usd": 0.6,
+  "type": "happy",
+  "before_dir": "fixtures/sdlc-proba/CHG-3/pre-architecture/",
+  "expect": {
+    "status": "waiting_gate",
+    "max_cost_usd": 0.6,
+    "max_duration_s": 240,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/architecture.md",
+    "requirements": [
+      "plan.md ma tabelę cięć ze słupkami Wydanie i Flaga",
+      "release.yaml ma flagę deploy_counter z rolloutem (off na prod na start — CHG-3/D2 answers)",
+      "ADR wymienia decyzje CHG-3/D1 i CHG-3/D2 i wyjaśnia, jak ograniczają architekturę",
+      "nie powtarza pytań rozstrzygniętych w D2 (rolling window 7x24h, kryteria porażki)"
+    ]
+  },
+  "notes": "Baseline A6 CHG-3 architecture (2026-11-03). Przebieg: `CHG-3-architecture-20261103T212609Z`; eksport ma 2 odpowiedzi do B2 (FR-003 env fallback, NF-004 p95 < 200 ms)."
+}
