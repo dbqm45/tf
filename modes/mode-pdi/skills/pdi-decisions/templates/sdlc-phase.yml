@@ -161,6 +161,20 @@ jobs:
           if [ "$REWORK" = "true" ]; then args+=(--rework --gate "$GATE" --decision "$DECISION"); fi
           if [ -n "$BUDGET_USD" ]; then args+=(--budget-usd "$BUDGET_USD"); fi
           PDI_SOURCE="$SOURCE" python3 .claude/skills/pdi-decisions/scripts/phase_run.py run "${args[@]}"
+      # Drugi przegląd (N1, DZ12): niezależny model czyta artefakt razem z decyzjami zmiany i podaje luki do bramki.
+      # Klucz dostawcy widoczny TYLKO dla tego kroku (nie dla persony fazy) — Z8g: do kontenera fazy nie wchodzi.
+      # OPENAI_API_KEY opcjonalny; bez niego skrypt pada z fallbackiem na model Claude i oznacza wynik jako same-vendor.
+      - name: Drugi przegląd (requirements/architecture)
+        if: env.PHASE == 'requirements' || env.PHASE == 'architecture'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PDI_SECOND_MODEL: ${{ vars.PDI_SECOND_MODEL }}
+          PDI_SECOND_MODEL_PRICE_IN: ${{ vars.PDI_SECOND_MODEL_PRICE_IN }}
+          PDI_SECOND_MODEL_PRICE_OUT: ${{ vars.PDI_SECOND_MODEL_PRICE_OUT }}
+        run: |
+          python3 .claude/skills/pdi-decisions/scripts/second_review.py artifact \
+            --change "$CHANGE" --phase "$PHASE"
       # Persona w --print nie może pushować ani otwierać PR-ów (git push pyta o zgodę) — robi to workflow.
       # Uwaga: push tokenem github.token nie uruchamia workflow CI na tych gałęziach (ograniczenie GitHuba).
       - name: PR-y cięć (delivery)

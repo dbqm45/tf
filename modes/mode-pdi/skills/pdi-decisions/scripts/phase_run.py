@@ -53,6 +53,12 @@ SCRIPTS = ".claude/skills/pdi-decisions/scripts"
 CONTRACT_VERSION = "0.11.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Pytania do bramki"
+# Drugi przegląd (N1, DZ12): sidecar z second_review.py obok artefaktu fazy; fazy, dla których go szukamy.
+SECOND_REVIEW_PHASES = ("requirements", "architecture")
+SECOND_REVIEW_DIR = ".review"
+# Ustalenia tej wagi dopisujemy do pytań bramki; minor/info lądują tylko w artefakcie (nie blokują B2/B3).
+BLOCKING_SEVERITIES = ("blocker", "major")
+REVIEW_QUESTION_PREFIX = "[drugi przegląd] "
 # Pola zgłoszenia z pdi (contract/problem.schema.json), które trafiają do promptu fazy intent.
 PROBLEM_FIELDS = {"title": "tytuł", "kind": "rodzaj", "who": "kto ma problem", "cannot": "czego nie może zrobić",
                   "impact": "skutek", "workaround": "jak radzi sobie dziś", "frequency": "jak często"}
@@ -385,6 +391,59 @@ def design_problems(path: Path) -> list[str]:
         return [f"design.md: {e}"]
 
 
+def second_review_sidecar(change: str, phase: str) -> dict | None:
+    """Wynik drugiego przeglądu (second_review.py artifact) z docs/project/changes/<CHG>/.review/<phase>.json."""
+    f = CHANGES / change / SECOND_REVIEW_DIR / f"{phase}.json"
+    if not f.is_file():
+        return None
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except ValueError:
+        return None
+
+
+def second_review_questions(sidecar: dict) -> list[str]:
+    """Blokujące ustalenia drugiego przeglądu jako pytania do bramki; contradiction z `settled_ref` idzie z prefiksem."""
+    out = []
+    for f in sidecar.get("findings") or []:
+        if f.get("kind") == "contradiction" and f.get("settled_ref"):
+            prefix = f"[sprzeczne z {f['settled_ref']}] "
+            out.append(prefix + (f.get("reason") or "").strip())
+            continue
+        if f.get("severity") not in BLOCKING_SEVERITIES:
+            continue
+        if f.get("settled_ref"):   # rozstrzygnięte pytanie, które nie jest contradiction — nie wraca do bramki
+            continue
+        reason = (f.get("reason") or "").strip()
+        quote = (f.get("quote") or "").strip()
+        text = REVIEW_QUESTION_PREFIX + reason + (f" — cytat: „{quote}”" if quote else "")
+        out.append(text)
+    return out
+
+
+def second_review_summary(sidecar: dict | None, phase: str) -> dict:
+    """Streszczenie do payload['second_review']. Dla fazy wymagającej przeglądu brak sidecara → unavailable/not_run."""
+    if sidecar is None:
+        if phase in SECOND_REVIEW_PHASES:
+            return {"status": "unavailable", "reason": "not_run"}
+        return {}
+    findings = sidecar.get("findings") or []
+    blocking = sum(1 for f in findings
+                   if f.get("severity") in BLOCKING_SEVERITIES and not f.get("settled_ref"))
+    contradictions = sum(1 for f in findings if f.get("kind") == "contradiction" and f.get("settled_ref"))
+    out = {"status": sidecar.get("status") or "unavailable",
+           "provider": sidecar.get("provider"),
+           "model": sidecar.get("model"),
+           "same_vendor": bool(sidecar.get("same_vendor")),
+           "cost_usd": sidecar.get("cost_usd") or 0.0,
+           "findings_total": len(findings),
+           "blocking": blocking,
+           "contradictions": contradictions}
+    if sidecar.get("reason"):
+        out["reason"] = sidecar["reason"]
+    return out
+
+
 def gate_event(a) -> dict:
     d = change_dir(a.change)
     if a.phase:
@@ -398,6 +457,7 @@ def gate_event(a) -> dict:
     payload = {"change": a.change, "gate": gate,
                "summary": a.summary or (f"{a.change}: {art.name} gotowe do bramki {gate}" if art else
                                         f"{a.change}: prośba o bramkę {gate}")}
+    sidecar = second_review_sidecar(a.change, a.phase) if a.phase in SECOND_REVIEW_PHASES else None
     if art is not None and art.is_file():
         repeats = repeated(a.change, art)
         if repeats:
@@ -405,8 +465,13 @@ def gate_event(a) -> dict:
                           + "; ".join(repeats) + " — usuń je z artefaktu (zapisz ustalenie z odwołaniem) i ponów")
         payload["artifact"] = str(art)
         qs = questions_in(art) + (design_problems(art) if a.phase == "design" else [])
+        if sidecar and sidecar.get("status") == "ok":
+            qs = qs + second_review_questions(sidecar)
         if qs:
             payload["questions"] = qs
+    summary = second_review_summary(sidecar, a.phase)
+    if summary:
+        payload["second_review"] = summary
     if a.url:
         payload["url"] = a.url
     now = time.gmtime()
