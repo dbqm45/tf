@@ -112,7 +112,9 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 4. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
    Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`
-   (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`.
+   (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`. Bez dostępu do
+   transkryptów (np. sandbox fazy pdi) `finish` kończy się kodem 2, ale raport z planem i odłożonymi i tak zapisuje
+   („brak danych o koszcie”) — commitujesz go tak samo; koszt podaje wtedy wynik fazy pdi.
 
 ## Kto co robi (koszt)
 | Krok | Kto | Tier |
