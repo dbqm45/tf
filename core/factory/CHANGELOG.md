@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.60.0] — 2026-11-06
+### Added
+- **mode-pdi:** require two options and targets in plan.md (Z7b-1a) (#151)
+
 ## [5.59.0] — 2026-11-06
 ### Added
 - **mode-pdi:** add second-model review before B2/B3 (N1, DZ12) (#149)
