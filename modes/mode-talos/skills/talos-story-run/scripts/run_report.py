@@ -235,7 +235,8 @@ def report_md(slug: str, rep: dict) -> str:
     mins, secs = divmod(rep["duration_s"], 60)
     lines = [f"# Raport przebiegu: {slug}", "",
              f"- Czas: {int(mins)} min {int(secs)} s (od startu do ostatniej odpowiedzi modelu)",
-             f"- Koszt: {rep['cost_usd']:.4f} USD (szacunek z cennika API; przy subskrypcji — równowartość)",
+             (f"- Koszt: {rep['usage_missing']} — koszt przebiegu podaje wynik fazy pdi" if rep.get("usage_missing")
+              else f"- Koszt: {rep['cost_usd']:.4f} USD (szacunek z cennika API; przy subskrypcji — równowartość)"),
              f"- Zapytania do modelu: {rep['requests']} · modele: {', '.join(rep['model_ids']) or '—'}",
              f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} kawałków · odłożone do decyzji: {rep['parked']}",
              f"- Transkrypty: {rep.get('transcripts') or '—'}", "",
@@ -411,21 +412,30 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     except (OSError, ValueError, KeyError):
         print(f"✗ Brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
         return 2
-    data = collect(project, since, session)
+    try:
+        data = collect(project, since, session)
+    except OSError:   # np. sandbox fazy pdi bez odczytu ~/.claude (PRB-34)
+        data = {"requests": 0}
+    usage_missing = None
     if not data["requests"]:
         where = (f"sesji {session} (szukana we wszystkich katalogach {projects_dir()})" if session else
                  "transkryptach:\n" + "\n".join(f"  - {d}" for d in transcript_dirs(project)))
         print(f"✗ Brak odpowiedzi modelu po {since:%Y-%m-%d %H:%M} w {where}\n"
               "Sesja uruchomiona poza projektem i jego katalogami nadrzędnymi albo inny CLAUDE_CONFIG_DIR? "
               "Podaj `--session <ID>` (ID to nazwa pliku .jsonl sesji w katalogu projects).")
-        return 2
+        if status:
+            return 2
+        # PRB-34: raport (plan, odłożone, bezpieczeństwo) powstaje i tak — bez niego PR cięcia nie ma listy
+        # „Odłożone do decyzji”; koszt podaje wtedy wynik fazy pdi (`cost_usd` z phase_run.py).
+        usage_missing = "brak danych o koszcie: transkryptów sesji nie znaleziono albo nie dało się ich odczytać"
+        data = {"requests": 0, "last": since, "transcripts": None, "model_ids": [], "models": {}, "agents": {}}
     rep = {"slug": meta.get("slug"), "duration_s": int((data["last"] - since).total_seconds()),
            "transcripts": data["transcripts"],
            "requests": data["requests"], "model_ids": data["model_ids"], "models": data["models"],
            "agents": data["agents"],
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
            "plan": plan_progress(run_dir), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
-           "security": security_section(run_dir)}
+           "security": security_section(run_dir), "usage_missing": usage_missing}
     if status:   # kontrola budżetu po kawałku: jedna linia, bez zapisu raportu
         print(f"koszt: {rep['cost_usd']:.4f} USD · czas: {rep['duration_s'] // 60} min · plan: "
               f"{rep['plan']['done']}/{rep['plan']['total']} · odłożone: {rep['parked']}")
@@ -441,7 +451,7 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     print(json.dumps(rep, ensure_ascii=False, default=str) if as_json else md, end="" if not as_json else "\n")
     if kept and not as_json:
         print(f"Raport w repo: {kept.as_posix()}")
-    return 0
+    return 2 if usage_missing else 0   # kod 2 jak dotąd: brak danych o koszcie, ale raport już jest
 
 
 def main(argv: list[str]) -> int:

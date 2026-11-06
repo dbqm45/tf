@@ -241,6 +241,17 @@ def main() -> int:
         check("## Odłożone do decyzji" in text and "placeholderem w repo" in text and "- <" not in text,
               f"R-19: raport w repo ma pozycje z parked.md (PRB-14: parked.md jest poza gitem): {text[-600:]}")
 
+        # R-35 (PRB-34): w kontenerze fazy pdi transkrypty bywają niedostępne (sandbox) — finish i tak zapisuje raport
+        # cięcia (plan, odłożone, bezpieczeństwo) z adnotacją o braku danych o koszcie; kod 2 jak dotąd (R-13)
+        kept.unlink()
+        r = run(["finish", str(run_dir)], proj, Path(t) / "brak-transkryptow")
+        text = kept.read_text(encoding="utf-8") if kept.is_file() else ""
+        check(r.returncode == 2 and "brak danych o koszcie" in text and "placeholderem w repo" in text
+              and "brak danych o koszcie" in r.stdout,
+              f"R-35: finish bez transkryptów zapisuje raport z adnotacją: {r.returncode} {r.stdout[-400:]} {text[:400]}")
+        r = run(["status", str(run_dir)], proj, Path(t) / "brak-transkryptow")
+        check(r.returncode == 2, f"R-36: status bez transkryptów → kod 2: {r.returncode} {r.stdout[-300:]}")
+
         # sesja uruchomiona w katalogu nadrzędnym (chmura z kilkoma repozytoriami, start z /home/user): transkrypty są
         # w katalogu projektu przodka, nie repozytorium — finish bez --session znajduje je i mówi, skąd wziął
         ws = Path(t) / "ws"
