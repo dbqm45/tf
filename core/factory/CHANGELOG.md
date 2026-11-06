@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.62.0] — 2026-11-06
+### Added
+- **flow-evals:** full 20-task set from A6 run logs (N5 PR2) (#153)
+
 ## [5.61.0] — 2026-11-06
 ### Added
 - **flow-evals:** gate model/skill/persona/phase-prompt changes (N5) (#150)
