@@ -1,0 +1,61 @@
+# Evale przebiegu (N5, DZ13): zmiana modelu/skilla/persony/promptu fazy nie wchodzi bez przebiegu,
+# a raport porównuje wynik i koszt z poprzednim przebiegiem. Walidacja zadań (schemat) biegnie zawsze;
+# pełny przebieg tylko, gdy ANTHROPIC_API_KEY ustawiony jako sekret repo (brak sekretu — status „pominięty",
+# nigdy „passed").
+# Źródło pattern gatowania sekretem: GitHub Actions — secrets w env, if na env.X (`contexts/secrets`,
+# odczyt 2026-11-06); secrets w `if:` joba nie są dopuszczone.
+name: flow-evals
+on:
+  pull_request:
+    paths:
+      - "modes/mode-pdi/**"
+      - "core/skills/**"
+      - "modes/mode-pdi/skills/pdi-decisions/scripts/phase_run.py"
+      - "modes/mode-pdi/skills/pdi-decisions/scripts/phase_result.py"
+      - "core/tests/flow_evals/**"
+      - "core/tests/flow_evals_runner.py"
+      - "core/tests/test_flow_evals.py"
+      - ".github/workflows/flow-evals.yml"
+  push:
+    branches: [main]
+    paths:
+      - "modes/mode-pdi/**"
+      - "core/skills/**"
+      - "modes/mode-pdi/skills/pdi-decisions/scripts/phase_run.py"
+      - "modes/mode-pdi/skills/pdi-decisions/scripts/phase_result.py"
+      - "core/tests/flow_evals/**"
+      - "core/tests/flow_evals_runner.py"
+permissions:
+  contents: read
+jobs:
+  flow-evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Sprawdź sekret
+        id: secret
+        env:
+          HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' && 'true' || 'false' }}
+        run: |
+          echo "has_key=$HAS_KEY" >> "$GITHUB_OUTPUT"
+          if [ "$HAS_KEY" = "true" ]; then
+            echo "::notice::flow-evals: pełny przebieg (sekret ustawiony)"
+          else
+            echo "::notice::flow-evals: ANTHROPIC_API_KEY niedostępny — pełny przebieg POMINIĘTY (status: skipped, nigdy passed)"
+          fi
+      - name: Walidacja zadań (bez modelu)
+        run: python3 tools/workspace.py flow-evals --validate
+      - name: Flow evals — pełny przebieg
+        if: steps.secret.outputs.has_key == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PDI_CLAUDE_BIN: claude
+          FLOW_EVALS_REPOS: ""
+        run: |
+          python3 tools/workspace.py flow-evals --all --budget-usd 10 --baseline previous --yes

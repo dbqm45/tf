@@ -1,0 +1,26 @@
+{
+  "id": "N5-sdlc-proba-CHG1-design",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "design",
+  "change": "CHG-1",
+  "budget_usd": 0.7,
+  "type": "happy",
+  "before_dir": "fixtures/sdlc-proba/CHG-1/pre-design/",
+  "expect": {
+    "status": "waiting_gate",
+    "max_cost_usd": 0.7,
+    "max_duration_s": 240,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/design.md",
+    "requirements": [
+      "tabela ramek pokrywa FR-1 z co najmniej jednym stanem błędu",
+      "przepływ dla stanu 'flaga off' opisany (CHG-1/D2)",
+      "artefakt przechodzi design_check.py"
+    ]
+  },
+  "notes": "Baseline happy path design; waiting_gate dla design-review."
+}

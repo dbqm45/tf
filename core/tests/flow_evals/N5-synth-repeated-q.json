@@ -1,0 +1,17 @@
+{
+  "id": "N5-synth-repeated-q",
+  "repo": "synth",
+  "product_sha": "any",
+  "phase": "requirements",
+  "change": "CHG-1",
+  "budget_usd": 0.3,
+  "type": "regression",
+  "before_dir": "fixtures/synth/repeated-q/",
+  "expect": {
+    "status": "failed",
+    "error": "repeated_question",
+    "contains_detail": ["Pytania do bramki"],
+    "max_cost_usd": 0.3
+  },
+  "notes": "Regresja Z1: requirements.md powtarza pytanie już rozstrzygnięte w decisions.md (CHG-1/D2). phase_run.py powinien zakończyć fazę błędem `repeated_question` (zob. phase_run.py:repeated())."
+}

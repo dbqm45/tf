@@ -1,0 +1,17 @@
+change: CHG-3
+version: 1
+scanner:
+  name: semgrep
+  version: "1.183.0"
+flags:
+  payments_v2:
+    default: false
+    rollout:
+      - env: prod
+        at: R1
+        value: false
+targets:
+  R1:
+    includes: [TSK-A, TSK-B]
+slo:
+  availability: 99.9

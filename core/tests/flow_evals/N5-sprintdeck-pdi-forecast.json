@@ -1,0 +1,27 @@
+{
+  "id": "N5-sprintdeck-pdi-forecast",
+  "repo": "sprintdeck",
+  "product_sha": "any",
+  "phase": "design",
+  "change": "CHG-SD3",
+  "budget_usd": 0.7,
+  "type": "happy",
+  "before_dir": "fixtures/sprintdeck/FEAT-pdi-forecast/pre-design/",
+  "expect": {
+    "status": "waiting_gate",
+    "max_cost_usd": 0.7,
+    "max_duration_s": 240,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/design.md",
+    "requirements": [
+      "tabela ramek pokrywa FR-SD3-1 (wiersz planu z prognozą) z >=3 stanami (idle, success, error)",
+      "ramka dla pdi offline i nieistniejącego forecast_id — stany błędu widoczne",
+      "przepływ `forecast.referenced` jako zdarzenie ma swoją ramkę / komentarz",
+      "artefakt przechodzi design_check.py"
+    ]
+  },
+  "notes": "sprintdeck PR #12 (a9d700f — Point post-MVP estimate rows at pdi forecast). Fixture syntetyczny: intent + requirements + plan + decisions."
+}

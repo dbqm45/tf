@@ -1,0 +1,26 @@
+{
+  "id": "N5-sdlc-proba-CHG2-intent-rejected",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "intent",
+  "change": "CHG-2",
+  "budget_usd": 0.4,
+  "type": "negative",
+  "before_dir": "fixtures/sdlc-proba/CHG-2/pre-intent-rejected/",
+  "expect": {
+    "status": "done",
+    "max_cost_usd": 0.4,
+    "max_duration_s": 180,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/intent.md",
+    "requirements": [
+      "persona nie wymyśla problemu — zapisuje, że zgłoszenie PRB-16 jest bez konkretu",
+      "intent.md nie proponuje wariantów, bo nie ma na czym ich oprzeć",
+      "zachowuje decyzję triażu (DEC-0011) z decisions.md"
+    ]
+  },
+  "notes": "A6 §0a-4/5 CHG-2 (2026-11-03): zgłoszenie odrzucone w triagu (DEC-0011); faza intent nie powinna zmyślać problemu. Przebieg: log `CHG-2-intent-20261103T204330Z` (status done, PR #27)."
+}
