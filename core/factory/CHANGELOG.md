@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.59.0] — 2026-11-06
+### Added
+- **mode-pdi:** add second-model review before B2/B3 (N1, DZ12) (#149)
+
 ## [5.58.7] — 2026-11-06
 ### Fixed
 - **talos:** write the cut report even without transcripts (#148)
