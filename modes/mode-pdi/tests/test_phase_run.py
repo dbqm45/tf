@@ -289,6 +289,65 @@ def main() -> int:
         r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements"], repo, **genv)
         check(r.returncode != 0 and "400" in r.stdout, f"G-12: odmowa pdi → błąd z kodem: {r.stdout}")
         Catch.status = 202
+
+        # --- N1: drugi przegląd (DZ12) — sidecar z second_review.py idzie do pytań bramki i do evenetu ---
+        review_dir = repo / "docs" / "project" / "changes" / "CHG-12" / ".review"
+        review_dir.mkdir(parents=True, exist_ok=True)
+        (review_dir / "requirements.json").write_text(json.dumps({
+            "status": "ok", "provider": "openai", "model": "gpt-4o-mini", "same_vendor": False,
+            "cost_usd": 0.004, "input_tokens": 1000, "output_tokens": 500,
+            "findings": [
+                {"severity": "blocker", "kind": "missing_error_state", "quote": "FR-1",
+                 "reason": "brak stanu dla pliku > limit"},
+                {"severity": "major", "kind": "unclear_acceptance", "quote": "FR-2",
+                 "reason": "brak przykładu Given/When/Then"},
+                {"severity": "minor", "kind": "other", "quote": "CSV", "reason": "warto dopisać format"},
+                {"severity": "major", "kind": "contradiction", "quote": "FR-3",
+                 "reason": "sprzeczne z decyzją D1", "settled_ref": "CHG-12/D1"},
+            ],
+            "run_at": "2026-11-06T10:00:00Z",
+        }), encoding="utf-8")
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements"], repo, **genv)
+        pl = json.loads(Catch.got[-1]["body"]).get("payload", {})
+        review_qs = [q for q in pl.get("questions", []) if "[drugi przegląd]" in q or "[sprzeczne z CHG-12/D1]" in q]
+        check(r.returncode == 0
+              and any("[drugi przegląd]" in q and "stanu" in q for q in review_qs)
+              and any("[drugi przegląd]" in q and "Given/When/Then" in q for q in review_qs)
+              and any("[sprzeczne z CHG-12/D1]" in q for q in review_qs)
+              and all("minor" not in q for q in review_qs),
+              f"N1-1: blokujące (blocker, major) + contradiction trafiają do questions z prefiksem: {pl.get('questions')}")
+        sr = pl.get("second_review", {})
+        check(sr.get("status") == "ok" and sr.get("provider") == "openai"
+              and sr.get("blocking") == 2 and sr.get("contradictions") == 1
+              and sr.get("same_vendor") is False and sr.get("cost_usd") == 0.004,
+              f"N1-2: second_review w payload: status, blocking, contradictions, cost: {sr}")
+
+        # N1-3: brak sidecara dla requirements/architecture → status unavailable, reason not_run
+        (review_dir / "requirements.json").unlink()
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements"], repo, **genv)
+        pl = json.loads(Catch.got[-1]["body"]).get("payload", {})
+        check(pl.get("second_review", {}).get("status") == "unavailable"
+              and pl.get("second_review", {}).get("reason") == "not_run",
+              f"N1-3: brak sidecara → unavailable/not_run: {pl.get('second_review')}")
+
+        # N1-4: faza design nie wymaga drugiego przeglądu — brak pola second_review
+        r = run(["gate", "request", "--change", "CHG-12", "--gate", "design-review", "--summary", "x"], repo, **genv)
+        pl = json.loads(Catch.got[-1]["body"]).get("payload", {})
+        check("second_review" not in pl, f"N1-4: bramka design-review bez pola second_review: {pl}")
+
+        # N1-5: sidecar z status=unavailable → brak pytań z drugiego przeglądu, ale pole second_review przekazane
+        (review_dir / "architecture.json").write_text(json.dumps({
+            "status": "unavailable", "reason": "api_error: timeout", "provider": "openai", "model": "gpt-4o-mini",
+            "same_vendor": False, "cost_usd": 0.0, "findings": [], "run_at": "2026-11-06T10:00:00Z"}),
+            encoding="utf-8")
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "architecture"], repo, **genv)
+        pl = json.loads(Catch.got[-1]["body"]).get("payload", {})
+        sr = pl.get("second_review", {})
+        check(sr.get("status") == "unavailable" and "timeout" in str(sr.get("reason", ""))
+              and not any("[drugi przegląd]" in q for q in pl.get("questions") or []),
+              f"N1-5: sidecar unavailable → status w evencie, bez pytań z przeglądu: {sr}")
+        (review_dir / "architecture.json").unlink()
+
         srv.shutdown()
 
         # --- F3: faza intent ze zgłoszenia z pdi ---
@@ -326,6 +385,12 @@ def main() -> int:
               "W-9: istniejąca gałąź fazy dostaje gałąź domyślną przed fazą (PRB-13: rozjazd dziennika między gałęziami)")
         check("decision_record.py change new" in body and "--source" in body and "PDI_PROBLEM" in body,
               "W-7: faza intent z pdi zakłada dziennik zmiany ze zgłoszenia i dostaje jego treść (F3)")
+        # N1, DZ12: drugi przegląd w osobnym kroku, tylko dla requirements/architecture, klucz w env tego kroku
+        check("second_review.py artifact" in body
+              and "env.PHASE == 'requirements' || env.PHASE == 'architecture'" in body
+              and "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}" in body
+              and "PDI_SECOND_MODEL:" in body,
+              "W-14: drugi przegląd jako osobny krok z kluczem dostawcy tylko dla tego kroku (Z8g)")
         wf.write_text("moje\n", encoding="utf-8")
         r = run(["workflow", "install"], repo)
         check(r.returncode != 0 and wf.read_text(encoding="utf-8") == "moje\n", "W-5: bez nadpisania")
