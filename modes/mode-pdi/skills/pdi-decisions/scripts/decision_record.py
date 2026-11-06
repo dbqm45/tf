@@ -521,6 +521,10 @@ PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odbloko
 FOUNDATION = re.compile(r"^(fundament|foundation|f|f-\d+)$", re.I)   # jak REL-008 w ci_for_sdlc (connectors/repo.ts)
 FOUNDATION_VALUE = re.compile(r"^\((fundament|foundation)\)", re.I)
 REQUIREMENT_ID = re.compile(r"\b[A-Z][A-Z0-9]*-\d+\b")
+# Sekcje architekta w plan.md (N20 i Z7b-1a; kontrakt pdi 0.12.0 — plan.md czyta człowiek, release.yaml maszyna).
+OPTIONS_HEADING = re.compile(r"^##+\s+Rozwa[zż]one opcje\b", re.M)
+OPTION_ENTRY = re.compile(r"^###+\s+Opcja\b", re.M)
+TARGETS_HEADING = re.compile(r"^##+\s+Cele zmiany\b", re.M)
 
 
 def plan_columns(text: str) -> dict:
@@ -543,7 +547,12 @@ def plan_columns(text: str) -> dict:
 
 def check_plan(d: Path) -> list[str]:
     """Samokontrola planu cięć (core-delivery-lifecycle plan-ciec.md), ta sama co REL-008 w ci_for_sdlc: fundament
-    z „Odblokowuje” wskazującym cięcia tej zmiany; cięcie z ID wymagania albo weryfikacją (gdy plan ma „Wymagania”)."""
+    z „Odblokowuje” wskazującym cięcia tej zmiany; cięcie z ID wymagania albo weryfikacją (gdy plan ma „Wymagania”).
+
+    Od kontraktu 0.12.0 (Z7b-1a, DZ6, DZ7, N20) plan w statusie innym niż `draft` musi też mieć sekcję
+    `## Rozważone opcje` z co najmniej dwiema opcjami (`### Opcja ...`) i sekcję `## Cele zmiany` (`targets`).
+    Plan `draft` jest szkicem architekta — jeszcze nie zatwierdzony na B3, więc tych sekcji nie wymagamy.
+    """
     plan = d / "plan.md"
     if not plan.is_file():
         return []
@@ -563,6 +572,19 @@ def check_plan(d: Path) -> list[str]:
                     errs.append(f"plan.md: {t} — „Odblokowuje” {u}, a {u} nie jest cięciem tej zmiany")
         elif "wymagania" in row and not REQUIREMENT_ID.findall(row["wymagania"] or "") and not row.get("weryfikacja"):
             errs.append(f"plan.md: {t} — cięcie bez ID wymagania w „Wymagania” i bez weryfikacji")
+    status = (h.get("status") or "").strip().lower() if isinstance(h.get("status"), str) else ""
+    if status and status != "draft":
+        if not OPTIONS_HEADING.search(text):
+            errs.append("plan.md: brak sekcji „## Rozważone opcje” (N20): architekt wskazuje co najmniej dwie "
+                        "rozważone opcje z plusami, minusami i kosztem, z wyborem i powodem")
+        else:
+            options = OPTION_ENTRY.findall(text)
+            if len(options) < 2:
+                errs.append(f"plan.md: „## Rozważone opcje” ma {len(options)} opcji — N20 wymaga co najmniej dwóch "
+                            "(nagłówki `### Opcja A`, `### Opcja B`); plan z jedną opcją dostaje ustalenie przed B3")
+        if not TARGETS_HEADING.search(text):
+            errs.append("plan.md: brak sekcji „## Cele zmiany (targets)” (Z7b-1a, DZ7): architekt zapisuje "
+                        "pokrycie i mutacje zmienionego kodu (N4), dla produktu AI także progi ewaluacji")
     return errs
 
 
