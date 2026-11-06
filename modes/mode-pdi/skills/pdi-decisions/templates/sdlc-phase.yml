@@ -47,7 +47,7 @@ on:
         description: "Ustalenie i uzasadnienie decyzji z bramki (z rejestru pdi) do wpisu w decisions.md"
         required: false
       answers:
-        description: "Odpowiedzi na pytania do bramki z pdi (JSON [{question, answer}], kontrakt pdi 0.11.0)"
+        description: "Odpowiedzi na pytania do bramki z pdi (JSON [{question, answer}], kontrakt pdi 0.12.0)"
         required: false
       decisions:
         description: "Inne decyzje zmiany z rejestru pdi (JSON, links.chg) do decisions.md (decision import)"

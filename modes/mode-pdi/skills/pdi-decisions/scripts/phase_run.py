@@ -13,7 +13,7 @@ Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez inter
       który powtarza pytanie już rozstrzygnięte w decisions.md, kończy fazę błędem `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (kontrakt pdi 0.11.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET;
+      gate.requested (kontrakt pdi 0.12.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET;
       odmawia, gdy artefakt powtarza rozstrzygnięte pytanie
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list
       JSON z lokalnymi gałęziami cięć story/* — zapis przed fazą delivery
@@ -50,7 +50,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.11.0"
+CONTRACT_VERSION = "0.12.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Pytania do bramki"
 # Drugi przegląd (N1, DZ12): sidecar z second_review.py obok artefaktu fazy; fazy, dla których go szukamy.

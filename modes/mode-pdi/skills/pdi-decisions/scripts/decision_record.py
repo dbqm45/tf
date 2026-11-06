@@ -26,7 +26,7 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0
       --id DEC-41 [--by pdi] [--date RRRR-MM-DD] [--why "…"] [--answers PLIK]
       decyzja ze skrzynki pdi (gate.decided, wejścia szablonu sdlc-phase.yml) jako wpis z numerem i wyslano: tak;
       ponowienie z tym samym numerem nic nie dopisuje; --answers: JSON [{question, answer}] — odpowiedzi człowieka na
-      pytania z `## Pytania do bramki` (kontrakt pdi 0.11.0, pole answers), w wpisie jako pary `pytanie`/`odpowiedz`
+      pytania z `## Pytania do bramki` (kontrakt pdi 0.12.0, pole answers), w wpisie jako pary `pytanie`/`odpowiedz`
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision import CHG-12 --json PLIK
       decyzje zmiany z rejestru pdi (links.chg; JSON lista {id, statement, why, decided_at, decided_by, kind,
       source_kind, drafted_by, answers?}) jako wpisy z numerem, wyslano: tak i pochodzenie: pdi; decyzja, której numer
@@ -56,7 +56,7 @@ SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manua
 ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo", "szkic",
          "ustalenie", "skutek",   # odpowiedź na ustalenie ci_for_sdlc
          "pochodzenie")           # pdi — wpis z rejestru pdi (decision import)
-# Para wierszy odpowiedzi na pytanie bramki (kontrakt pdi 0.11.0, answers); w wpisie może być ich kilka.
+# Para wierszy odpowiedzi na pytanie bramki (kontrakt pdi 0.12.0, answers); w wpisie może być ich kilka.
 ANSWER_KEYS = ("pytanie", "odpowiedz")
 ORIGINS = ("pdi",)
 TEXT_MAX = 2000   # jeden wiersz wpisu z danych z pdi
@@ -196,7 +196,7 @@ def answers_lines(answers: list) -> str:
 
 
 def load_answers(path: str) -> list:
-    """Odpowiedzi z pliku JSON [{question, answer}] (pdi, kontrakt 0.11.0) jako pary albo Refused-podobny błąd."""
+    """Odpowiedzi z pliku JSON [{question, answer}] (pdi, kontrakt 0.12.0) jako pary albo Refused-podobny błąd."""
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
@@ -300,7 +300,7 @@ def decision_gate(a) -> int:
 
 
 def import_problems(d, n: int) -> list[str]:
-    """Braki jednej decyzji z pdi do importu (pola z contract/decision.schema.json kontraktu pdi 0.11.0)."""
+    """Braki jednej decyzji z pdi do importu (pola z contract/decision.schema.json kontraktu pdi 0.12.0)."""
     if not isinstance(d, dict):
         return [f"[{n}]: oczekiwany obiekt decyzji"]
     errs = [f"[{n}]: id '{d.get('id')}' — numer z rejestru pdi, np. DEC-41" for _ in [0]
@@ -700,7 +700,7 @@ def main(argv: list[str]) -> int:
     gate.add_argument("--by", default="pdi")
     gate.add_argument("--date")
     gate.add_argument("--why", help="ustalenie i uzasadnienie decyzji z rejestru pdi (trafia do wpisu)")
-    gate.add_argument("--answers", help="plik JSON [{question, answer}] — odpowiedzi na pytania do bramki (pdi 0.11.0)")
+    gate.add_argument("--answers", help="plik JSON [{question, answer}] — odpowiedzi na pytania do bramki (pdi 0.12.0)")
     imp = dec.add_parser("import")
     imp.add_argument("key")
     imp.add_argument("--json", required=True, help="plik JSON z decyzjami zmiany z rejestru pdi (links.chg)")

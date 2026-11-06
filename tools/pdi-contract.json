@@ -1,6 +1,6 @@
 {
   "repo": "dbqm45/pdi",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "version_files": [
     "modes/mode-pdi/tests/fixtures/pdi-contract/VERSION"
   ],
