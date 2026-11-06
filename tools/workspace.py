@@ -13,6 +13,9 @@ and the factory tests run (tests and build expect the installed layout, not the 
                                      [--skill p-name] [--role role-name] [--no-check]
                                                        # skeleton of packs/pack-<name>/ or modes/mode-<name>/, CI matrix
                                                        # entry, then check + refs and a to-do list (guide: docs/new-pack.md)
+  python3 tools/workspace.py flow-evals [--validate | --all | --ids <id>,<glob>] [--budget-usd N] [--baseline previous]
+                                                       # evale przebiegu (N5, DZ13): bramka zmian modelu/skilla/persony/
+                                                       # promptu fazy; raport porównuje wynik i koszt z poprzednim przebiegiem
 
 Default workspace: .work/<packs> (git-ignored). The workspace is recreated on every `assemble`/`check`.
 Gate results (`python3 factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
@@ -320,6 +323,12 @@ def main(argv: list[str]) -> int:
         return refs("--verbose" in argv)
     if cmd == "new-pack":
         return new_pack(argv[2:])
+    if cmd == "flow-evals":
+        # Evale przebiegu (N5, DZ13): bramka dla zmian modelu/skilla/persony/promptu fazy.
+        # Raport porównuje wynik i koszt z poprzednim przebiegiem; walidacja (--validate) nie dotyka modelu.
+        sys.path.insert(0, str(ROOT / "core" / "tests"))
+        import flow_evals_runner
+        return flow_evals_runner.main(argv[2:])
     print(__doc__)
     return 2
 
