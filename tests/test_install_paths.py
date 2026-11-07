@@ -58,6 +58,8 @@ def main() -> int:
         wf = read(proj / ".github" / "workflows" / "team-factory.yml")
         check(".claude/tests/test_hooks.py" in wf and " tests/test_hooks.py" not in wf,
               "I-5: workflow CI fabryki uruchamia testy z .claude/tests/")
+        check("\n  workflow_dispatch:" in wf,
+              "I-5a: workflow CI fabryki da się uruchomić ręcznie (workflow_dispatch), np. po włączeniu Actions")
         check("name: 'aa-audit'" in read(proj / ".claude" / "workflows" / "aa-audit.js"),
               "I-7: workflow nakładki w .claude/workflows/ (tam Claude Code szuka zapisanych workflows)")
         guide, faq = read(proj / "factory" / "PRZEWODNIK.md"), read(proj / "factory" / "FAQ.md")
