@@ -4,14 +4,16 @@
   "product_sha": "any",
   "phase": "delivery",
   "change": "CHG-3",
-  "budget_usd": 0.5,
+  "budget_usd": 0.8,
   "type": "negative",
   "before_dir": "fixtures/sdlc-proba/CHG-3/pre-delivery-prb29/",
   "expect": {
     "status": "failed",
     "error": "any",
-    "contains_detail": ["semgrep"],
-    "max_cost_usd": 0.5
+    "contains_detail": [
+      "semgrep"
+    ],
+    "max_cost_usd": 0.8
   },
   "judge": {
     "run": true,

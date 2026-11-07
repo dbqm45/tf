@@ -117,14 +117,13 @@ def render_decisions_md(entries: list[dict], change: str) -> str:
             rows.append(f"- dlaczego: {_one_line(e['why'])}")
         rows.append(f"- zrodlo: {e.get('source_kind') or 'manual'}")
         rows.append(f"- szkic: {e.get('drafted_by') or 'ai'}")
-        answers = e.get("answers") or []
-        if answers:
-            rows.append(f"- answers:")
-            for a in answers:
-                q = _one_line(a.get("question", ""))
-                ans = _one_line(a.get("answer", ""))
-                rows.append(f"  - pytanie: {q}")
-                rows.append(f"  - odpowiedz: {ans}")
+        # decision_record.py:parse_entries czyta pary pytanie/odpowiedz jako top-level `- ` (nie w bloku
+        # `- answers:` z wcięciem); format musi zgadzać się ze schematem pdi 0.11.0 i z `answers_lines` wprost.
+        for a in e.get("answers") or []:
+            q = _one_line(a.get("question", ""))
+            ans = _one_line(a.get("answer", ""))
+            rows.append(f"- pytanie: {q}")
+            rows.append(f"- odpowiedz: {ans}")
         rows.append("")
     return "\n".join(rows) + "\n"
 

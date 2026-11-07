@@ -8,7 +8,7 @@ created: 2026-10-31
 updated: 2026-10-31
 inputs: [intent.md]
 change: CHG-1
-source: PRB-S1
+source: PRB-99
 source_reported_at: 2026-10-30
 ---
 # Wymagania zmiany CHG-1

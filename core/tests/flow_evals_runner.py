@@ -186,11 +186,35 @@ def apply_before(task: dict, work: Path, evals_root: Path | None = None) -> None
     _copy_tree(before, work)
 
 
+_SYNTH_TEMPLATE_CACHE: Path | None = None
+
+
+def synth_template(workdir_root: Path) -> Path:
+    """Zestawia jednorazowo szablon fabryki dla zadań `synth` (potrzebuje .claude/agents/_generated/),
+    buforuje ścieżkę w module. Dla 21 zadań z >10 synth'ów to różnica między 21 × 30 s a 30 s + N × copy.
+    """
+    global _SYNTH_TEMPLATE_CACHE
+    if _SYNTH_TEMPLATE_CACHE and (_SYNTH_TEMPLATE_CACHE / ".claude" / "agents" / "_generated").is_dir():
+        return _SYNTH_TEMPLATE_CACHE
+    template = workdir_root.parent / "template"
+    if not (template / ".claude" / "agents" / "_generated").is_dir():
+        print(f"  … zestawiam szablon fabryki dla zadań synth w {template.name}/ (jednorazowo)",
+              file=sys.stderr)
+        # mode-pdi ma optional_packs: [pack-it] (persony fazy ewa/maja/tomasz/natalia w pack-it/personas/);
+        # bez pack-it nie da się uruchomić fazy w szablonie.
+        subprocess.run([sys.executable, str(ROOT / "tools" / "workspace.py"),
+                        "assemble", "--packs", "mode-pdi,pack-it", "--out", str(template)],
+                       check=True, capture_output=True)
+    _SYNTH_TEMPLATE_CACHE = template
+    return template
+
+
 def prepare_workspace(task: dict, repos: dict[str, Path], workdir_root: Path,
                       evals_root: Path | None = None) -> Path:
-    """Zestawia katalog roboczy zadania: klon/kopia produktu + overlay before/.
+    """Zestawia katalog roboczy zadania: klon produktu (albo szablon fabryki dla `synth`) + overlay before/.
 
-    Dla `repo == "synth"` tworzy minimalny szkielet (init git, pusty `docs/`), bez kopii z zewnątrz.
+    Dla `repo == "synth"` używa szablonu `synth_template(workdir_root)` — zainstalowanej fabryki mode-pdi
+    z `.claude/agents/_generated/` (persony fazy), żeby `phase_run.py` miał na kim uruchomić fazę.
     """
     work = workdir_root / task["id"]
     if work.exists():
@@ -198,7 +222,7 @@ def prepare_workspace(task: dict, repos: dict[str, Path], workdir_root: Path,
     work.mkdir(parents=True)
     repo = task.get("repo") or "synth"
     if repo == "synth":
-        (work / "docs" / "project" / "changes").mkdir(parents=True, exist_ok=True)
+        _copy_tree(synth_template(workdir_root), work)
         subprocess.run(["git", "init", "-q"], cwd=work, check=False)
     else:
         src = repos.get(repo)
@@ -287,11 +311,15 @@ def deterministic_checks(task: dict, out: dict, work: Path) -> list[dict]:
     change_dir = work / "docs" / "project" / "changes" / change
     if artifact_name:
         artifact = change_dir / artifact_name
+        # requirements_lint.py bierze ścieżkę artefaktu jako argument pozycyjny (packs/pack-it/
+        # skills/proc-requirements-shaping/scripts/requirements_lint.py); `--strict` eskaluje ostrzeżenia
+        # do kodu 1. Brak skryptu (pack-it nie zainstalowany) → sprawdzenie pominięte zamiast oblane.
         if phase == "requirements" and artifact.is_file() and REQUIREMENTS_LINT.is_file():
-            code, msg = _run_script(REQUIREMENTS_LINT, ["check", str(artifact)], work)
+            code, msg = _run_script(REQUIREMENTS_LINT, [str(artifact), "--strict"], work)
             add("requirements_lint", code == 0, msg[-400:])
-        if phase == "design" and artifact.is_file():
-            code, msg = _run_script(DESIGN_CHECK, ["check", str(artifact)], work)
+        # design_check.py check <CHG-N> (kontrakt pdi 0.9.0 — klucz zmiany, nie ścieżka pliku).
+        if phase == "design" and artifact.is_file() and DESIGN_CHECK.is_file():
+            code, msg = _run_script(DESIGN_CHECK, ["check", change], work)
             add("design_check", code == 0, msg[-400:])
         if artifact.is_file() and DECISION_RECORD.is_file():
             code, msg = _run_script(DECISION_RECORD, ["check"], work)
@@ -672,9 +700,12 @@ def main(argv: list[str] | None = None) -> int:
         raise
     print(f"Sędzia: {judge_model}")
 
-    workdir_root = Path(a.work).expanduser().resolve() if a.work else Path("tmp") / "flow-evals" / "work"
+    # Ścieżki muszą być absolutne — _run_script używa cwd=work, a str(artifact) z relatywnej Path daje
+    # arg relatywny, który subprocess rozwiąże względem work → podwójna ścieżka, FileNotFoundError.
+    workdir_root = (Path(a.work).expanduser() if a.work else Path("tmp") / "flow-evals" / "work").resolve()
     workdir_root.mkdir(parents=True, exist_ok=True)
-    out_dir = Path(a.out).expanduser().resolve() if a.out else Path("tmp") / "flow-evals" / "runs" / _now_iso().replace(":", "")
+    out_dir = (Path(a.out).expanduser() if a.out else
+               Path("tmp") / "flow-evals" / "runs" / _now_iso().replace(":", "")).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     a.budget_usd = budget_usd

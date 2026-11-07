@@ -8,7 +8,7 @@ created: 2026-10-30
 updated: 2026-10-31
 inputs: []
 change: CHG-1
-source: PRB-S1
+source: PRB-99
 source_reported_at: 2026-10-30
 ---
 # Decyzje zmiany CHG-1
@@ -34,6 +34,5 @@ source_reported_at: 2026-10-30
 - dlaczego: wariant wybrany
 - zrodlo: claude-cli
 - szkic: ai
-- answers:
-  - pytanie: Czy flaga ma być on/off per odwiedzający czy globalna?
-  - odpowiedz: globalna
+- pytanie: Czy flaga ma być on/off per odwiedzający czy globalna?
+- odpowiedz: globalna

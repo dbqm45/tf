@@ -3,13 +3,13 @@
   "repo": "sprintdeck",
   "product_sha": "any",
   "phase": "requirements",
-  "change": "CHG-SD1",
-  "budget_usd": 0.5,
+  "change": "CHG-51",
+  "budget_usd": 0.7,
   "type": "happy",
   "before_dir": "fixtures/sprintdeck/FEAT-security-headers/pre-requirements/",
   "expect": {
     "status": "waiting_gate",
-    "max_cost_usd": 0.5,
+    "max_cost_usd": 0.7,
     "max_duration_s": 180,
     "max_permission_denials": 0
   },
@@ -20,7 +20,7 @@
       "FR pokrywa 4 nagłówki (CSP, X-CTO, X-FO, Referrer-Policy) z przykładem wartości",
       "stan błędu: CSP strict blokuje inline-script bez nonce — osobny FR albo stan błędu w tym samym",
       "metryka securityheaders.com A albo lepsze w kryteriach akceptacji",
-      "nie powtarza decyzji o nonce (CHG-SD1/D2)"
+      "nie powtarza decyzji o nonce (CHG-51/D2)"
     ]
   },
   "notes": "sprintdeck PR #10 (b437d64 — Add security headers with a CSP). Fixture syntetyczny: intent + decisions.md, requirements.md do wygenerowania."

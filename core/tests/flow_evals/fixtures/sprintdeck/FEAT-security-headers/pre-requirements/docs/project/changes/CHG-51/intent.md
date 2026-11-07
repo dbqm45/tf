@@ -1,17 +1,17 @@
 ---
 artifact: intent
 phase: discovery
-status: approved
+status: accepted
 version: 1
 author: pdi
 created: 2026-11-04
 updated: 2026-11-04
 inputs: []
-change: CHG-SD1
-source: PRB-SD-10
+change: CHG-51
+source: PRB-50
 source_reported_at: 2026-11-04
 ---
-# Zamiar zmiany CHG-SD1
+# Zamiar zmiany CHG-51
 
 ## Problem
 
@@ -22,7 +22,7 @@ skaner bezpieczeństwa (PR #10) oznacza to jako blocker przed udostępnieniem pu
 ## Wybrany wariant
 
 **Wariant A** — middleware Next.js w `middleware.ts` ustawia nagłówki na każdą odpowiedź; CSP strict z nonce
-per-request. Decyzja CHG-SD1/D2 (DEC-SD-0002).
+per-request. Decyzja CHG-51/D2 (DEC-9002).
 
 ## Metryki sukcesu
 

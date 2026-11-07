@@ -90,8 +90,9 @@ def main() -> int:
                      {"question": "czy B?", "answer": "nie"}]}
     ], "CHG-9")
     check("## Zatwierdzamy X" in md and "ref: CHG-9/D1" in md and "id: DEC-0001" in md
-          and "wyslano: tak" in md and "- answers:" in md and "pytanie: czy A?" in md
-          and "odpowiedz: nie" in md and "artifact: decisions" in md,
+          and "wyslano: tak" in md and "- pytanie: czy A?" in md
+          and "- odpowiedz: nie" in md and "artifact: decisions" in md
+          and "- answers:" not in md,   # top-level pary, nie `- answers:` z wcięciem (parse_entries)
           f"RD-1: md=\n{md[:400]}")
     # Nowa linia w `why` zastąpiona spacją — jeden wiersz w markdownie.
     check("bo tak chcemy" in md, f"RD-2: `why` nie jest jednowierszowe:\n{md[:400]}")

@@ -1,12 +1,12 @@
 ---
 artifact: requirements
-status: approved
+status: accepted
 inputs: [intent.md]
-change: CHG-SD3
+change: CHG-53
 ---
-# Wymagania CHG-SD3
+# Wymagania CHG-53
 
-## FR-SD3-1 wiersz planu z prognozą pdi
+## FR-531-1 wiersz planu z prognozą pdi
 **must** — wiersz post-MVP planu pokazuje prognozę pdi (`forecast_id`, `effort`, `confidence`); przy edycji
 z UI tworzy się zdarzenie `forecast.referenced`.
 

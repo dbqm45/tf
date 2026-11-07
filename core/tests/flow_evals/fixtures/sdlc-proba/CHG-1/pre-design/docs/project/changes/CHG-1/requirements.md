@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 phase: definition
-status: approved
+status: accepted
 version: 1
 author: pdi
 created: 2026-10-31

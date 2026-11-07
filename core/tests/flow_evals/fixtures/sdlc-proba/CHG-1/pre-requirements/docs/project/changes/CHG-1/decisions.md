@@ -35,6 +35,5 @@ source_reported_at: 2026-10-30
   odwiedzającego; warianty B i C wymagają narzędzi deweloperskich
 - zrodlo: claude-cli
 - szkic: ai
-- answers:
-  - pytanie: Czy flaga ma być on/off per odwiedzający czy globalna?
-  - odpowiedz: globalna, bo mamy jeden rollout do prod
+- pytanie: Czy flaga ma być on/off per odwiedzający czy globalna?
+- odpowiedz: globalna, bo mamy jeden rollout do prod
