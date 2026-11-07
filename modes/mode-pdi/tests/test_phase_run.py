@@ -318,6 +318,11 @@ def main() -> int:
               and pl.get("url") == "https://github.com/acme/shop/pull/7"
               and pl.get("questions") == ["Limit ponowień: 3 czy 5?", "Czy płatności BLIK też?"]
               and pl.get("summary"), f"G-3: treść prośby z pytaniami z artefaktu: {pl}")
+        gate_schema = json.loads((FIX / "event.schema.json").read_text(encoding="utf-8"))["$defs"]["gate_requested"]
+        review_props = gate_schema["properties"].get("second_review", {}).get("properties", {})
+        check(set(pl) <= set(gate_schema["properties"]) and set(pl.get("second_review", {})) <= set(review_props)
+              and pl.get("second_review", {}).get("status") == "unavailable",
+              f"G-3a: pola prośby mieszczą się w schemacie gate.requested kontraktu pdi (inaczej pdi odpowie 400): {pl}")
         ts = h.get("x-pdi-timestamp", "")
         want = "v1=" + hmac.new(SECRET.encode(), f"{ts}.".encode() + got.get("body", b""), hashlib.sha256).hexdigest()
         check(h.get("x-pdi-signature") == want and h.get("x-pdi-event") == "gate.requested" and ts.isdigit(),

@@ -1,6 +1,6 @@
 {
   "repo": "dbqm45/pdi",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "version_files": [
     "modes/mode-pdi/tests/fixtures/pdi-contract/VERSION"
   ],
@@ -51,6 +51,9 @@
     ],
     "examples/decision.json": [
       "modes/mode-pdi/tests/fixtures/pdi-contract/decision.json"
+    ],
+    "event.schema.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/event.schema.json"
     ]
   }
 }
