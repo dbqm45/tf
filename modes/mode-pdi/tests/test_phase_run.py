@@ -132,6 +132,10 @@ def main() -> int:
         check("CHG-12" in text and "requirements.md" in text and "docs/project/changes/CHG-12" in text
               and "bez interakcji" in text and "Pytania do bramki" in text and "decision_record.py check" in text,
               f"R-2: prompt mówi, co i gdzie zrobić, bez pytań do człowieka: {text[:500]}")
+        check("decision_record.py check --change CHG-12" in text,
+              f"R-2b: check tylko bieżącej zmiany — stare artefakty innych zmian nie blokują fazy: {text[-600:]}")
+        check("jedno polecenie na wywołanie" in text and "&&" in text and "Read" in text and "Grep" in text,
+              f"R-2c: bez złożonych poleceń Bash (w --print każda część musi być na liście allow): {text[:900]}")
         check("## Bramka" in text and "wiążące" in text and "rozstrzygnięte" in text,
               f"R-2a: decyzje z bramek w decisions.md są wiążące, a odpowiedziane pytania rozstrzygnięte: {text[:900]}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "architecture", "--rework", "--gate", "B3",
@@ -337,6 +341,26 @@ def main() -> int:
         pl = json.loads(Catch.got[-1]["body"]).get("payload", {})
         check(r.returncode == 0 and pl.get("gate") == "design-review" and pl.get("summary") == "Projekt ekranów."
               and "artifact" not in pl, f"G-6: bramka podana wprost: {pl}")
+        # D-1/D-2: wiersze bez ramki — bez pliku Figmy jedno pytanie zbiorcze, z plikiem pytanie na wiersz (CHG-4).
+        des = repo / "docs" / "project" / "changes" / "CHG-12" / "design.md"
+        head = "---\nartifact: design\nstatus: proposed\n---\n# Projekt\n\n| Wymaganie | Ścieżka | Stan | Ramka | Uwagi |\n|---|---|---|---|---|\n"
+        rows = ("| US-1 | start | idle | brak | ramka startu |\n| US-1 | koniec | success | brak | ramka końca |\n"
+                "| US-1 | błąd | server_error | nie dotyczy | poza zakresem |\n")
+        des.write_text(head + rows, encoding="utf-8")
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "design"], repo, **genv)
+        qs = json.loads(Catch.got[-1]["body"]).get("payload", {}).get("questions", [])
+        frame_qs = [q for q in qs if "ramk" in q]
+        check(r.returncode == 0 and len(frame_qs) == 1 and "2 wiersze" in frame_qs[0] and "US-1 idle" in frame_qs[0]
+              and "US-1 success" in frame_qs[0], f"D-1: bez pliku Figmy jedno pytanie zbiorcze o ramki: {qs}")
+        linked = "| US-1 | start | idle | https://www.figma.com/design/AbC123/x?node-id=1-2 | ok |\n"
+        des.write_text(head + linked + rows.replace("| US-1 | start | idle | brak | ramka startu |\n", "")
+                       + "| US-2 | start | idle | brak | ramka US-2 |\n| US-2 | błąd | server_error | nie dotyczy | x |\n"
+                       + "| US-2 | koniec | success | brak | ramka końca US-2 |\n", encoding="utf-8")
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "design"], repo, **genv)
+        qs = json.loads(Catch.got[-1]["body"]).get("payload", {}).get("questions", [])
+        check(r.returncode == 0 and sum("brak ramki" in q for q in qs) == 3,
+              f"D-2: przy pliku Figmy pytanie na każdy wiersz bez ramki: {qs}")
+        des.unlink()
         n = len(Catch.got)
         r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements", "--dry-run"], repo, **genv)
         check(r.returncode == 0 and len(Catch.got) == n and SECRET not in r.stdout and "gate.requested" in r.stdout,

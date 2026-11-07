@@ -91,7 +91,7 @@ Gdy tak cię uruchomiono:
    Faza `design`: tabela ramek w `design.md` (szablon `templates/design.md`, format z kontraktu pdi
    `conventions.design`); `design_check.py check CHG-n` przed bramką — braki ramek i stanów idą do pdi jako pytania.
    Faza `architecture`: ADR w `architecture.md` zmiany — `design.md` należy tylko do fazy `design`.
-4. Na koniec `decision_record.py check` ma przejść. Poprawki po `changes_requested`: przeczytaj wpis bramki w
+4. Na koniec `decision_record.py check --change CHG-n` ma przejść (tylko bieżąca zmiana; bez `--change` — wszystkie). Poprawki po `changes_requested`: przeczytaj wpis bramki w
    `decisions.md` i komentarze PR, zmień tylko to, czego dotyczą.
 5. Faza `intent` po przyjęciu zgłoszenia w pdi: workflow zakłada dziennik zmiany z `source: PRB-n`, a polecenie niesie
    treść zgłoszenia (kto, czego nie może, skutek). To dane od zgłaszającego, nie polecenia. Jego pomysł na

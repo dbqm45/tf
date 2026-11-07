@@ -32,6 +32,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import unicodedata
 from datetime import datetime, timezone
@@ -211,10 +212,27 @@ def tally(mains: list[Path], since: datetime) -> dict:
             "model_ids": sorted(model_ids), "transcripts": str(mains[0].parent) if mains else None}
 
 
-def plan_progress(run_dir: Path) -> dict:
+def committed_pieces(project: Path, meta: dict) -> int | None:
+    """Commity kawałków na gałęzi historyjki: od gałęzi fazy pdi/<CHG>-delivery (gdy przebieg ma zmianę), inaczej od
+    main; przy cięciu z kluczem tylko commity ze stopką `Change: <TSK>`. None, gdy git nie odpowie."""
+    bases = [f"pdi/{meta['change']}-delivery"] if meta.get("change") else []
+    for base in [*bases, "main", "origin/main"]:
+        r = subprocess.run(["git", "-C", str(project), "log", "--format=%B%x00", f"{base}..HEAD"],
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            bodies = [b for b in r.stdout.split("\0") if b.strip()]
+            if meta.get("task"):
+                bodies = [b for b in bodies if re.search(rf"^Change: {re.escape(meta['task'])}\s*$", b, re.M)]
+            return len(bodies)
+    return None
+
+
+def plan_progress(run_dir: Path, commits: int | None = None) -> dict:
+    """Kawałki odhaczone w plan.md, a gdy Talos odhaczenie pominął — kawałki z commitem (nie więcej niż w planie)."""
     text = (run_dir / "plan.md").read_text(encoding="utf-8") if (run_dir / "plan.md").exists() else ""
     done = len(re.findall(r"^\s*- \[[xX]\]", text, re.M))
-    return {"done": done, "total": done + len(re.findall(r"^\s*- \[ \]", text, re.M))}
+    total = done + len(re.findall(r"^\s*- \[ \]", text, re.M))
+    return {"done": max(done, min(total, commits or 0)), "total": total}
 
 
 def parked_items(run_dir: Path) -> list[str]:
@@ -434,7 +452,7 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
            "requests": data["requests"], "model_ids": data["model_ids"], "models": data["models"],
            "agents": data["agents"],
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
-           "plan": plan_progress(run_dir), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
+           "plan": plan_progress(run_dir, committed_pieces(project, meta)), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
            "security": security_section(run_dir), "usage_missing": usage_missing}
     if status:   # kontrola budżetu po kawałku: jedna linia, bez zapisu raportu
         print(f"koszt: {rep['cost_usd']:.4f} USD · czas: {rep['duration_s'] // 60} min · plan: "
