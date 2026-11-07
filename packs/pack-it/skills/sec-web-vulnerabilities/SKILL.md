@@ -60,7 +60,8 @@ Moduły zaawansowane wybierasz po cechach aplikacji, nie wszystkie naraz:
 
 ## Format raportu
 Pierwsza linia: `Werdykt: BLOKUJE | DO POPRAWY | BEZ USTALEŃ` (BLOKUJE przy wadze krytycznej lub wysokiej
-z dowodem). Potem tabela:
+z dowodem). Potem tabela; każde ustalenie ma numer CWE (np. CWE-639 dla IDOR), także w planie audytu przy każdej
+klasie, żeby raporty dało się porównywać i łączyć z regułami skanerów:
 
 | ID | Klasa (CWE) | Miejsce (plik:linia) | Dowód | Waga | Poprawka | Test |
 |---|---|---|---|---|---|---|
