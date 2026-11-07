@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.64.2] — 2026-11-07
+### Fixed
+- **mode-pdi:** use claude-sonnet-5-5 as the second review fallback (#158)
+
 ## [5.64.1] — 2026-11-07
 ### Fixed
 - **flow-evals:** fixture replaces docs/project/changes/, strips siblings (N5) (#157)
