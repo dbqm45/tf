@@ -23,6 +23,7 @@ Gate results (`python3 factory/skill_gate.py <skill>` run inside the workspace) 
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import shutil
@@ -72,6 +73,15 @@ def assemble(o: dict) -> Path:
     return ws
 
 
+def factory_only_tests() -> list[Path]:
+    """Testy rdzenia, których instalator nie kopiuje do projektu (install.py: FACTORY_ONLY) — uruchamiane ze źródła."""
+    spec = importlib.util.spec_from_file_location("tf_install_ws", INSTALL)
+    inst = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(inst)
+    return sorted(ROOT / "core" / rel for rel in inst.FACTORY_ONLY
+                  if Path(rel).name.startswith("test_") and rel.endswith(".py"))
+
+
 def run(ws: Path, cmd: list[str], env: dict | None = None) -> bool:
     r = subprocess.run(cmd, cwd=ws, capture_output=True, text=True, env={**os.environ, **(env or {})})
     ok = r.returncode == 0
@@ -89,6 +99,8 @@ def check(o: dict) -> bool:
     tests = sorted((ws / ".claude" / "tests").glob("test_*.py"))
     for t in tests:
         ok &= run(ws, [sys.executable, str(t.relative_to(ws))])
+    for t in factory_only_tests():   # tylko w przestrzeni fabryki (importują moduły ze źródła fabryki)
+        ok &= run(ROOT, [sys.executable, str(t.relative_to(ROOT))])
     if (ws / ".claude/tests/run_skill_evals.py").exists():
         strict = {"TF_EVALS_STRICT": "1"} if o["packs"] == "all" else {}   # sąsiedzi scenariuszy ze wszystkich nakładek
         ok &= run(ws, [sys.executable, ".claude/tests/run_skill_evals.py", "--validate"], env=strict)

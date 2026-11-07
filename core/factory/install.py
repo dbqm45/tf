@@ -88,6 +88,12 @@ USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory
 ALWAYS_OWNED = (".claude/cleanroom.json",)   # składany z rdzenia i nakładek — zawsze z bieżącej wersji
 GENERATED = (".claude/agents/_generated/", ".claude/catalog.md")   # budowane w projekcie przez factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
+# Testy rdzenia, które mają sens tylko w repozytorium fabryki (ścieżki względem core/): evale przebiegu N5 importują
+# `scripts/export_pdi_runs.py` i `modes/mode-pdi/.../phase_result.py` ze źródła, więc w projekcie padałyby na imporcie.
+# Nie trafiają do `.claude/tests/` (aktualizacja usuwa ich kopie z wcześniejszych wersji); `tools/workspace.py check`
+# uruchamia je ze źródła (core/tests/).
+FACTORY_ONLY = ("tests/flow_evals/", "tests/flow_evals_runner.py", "tests/test_flow_evals.py",
+                "tests/test_export_pdi_runs.py")
 
 
 def load_packs_module():
@@ -651,6 +657,8 @@ def main(argv: list[str]) -> int:
     for d, target in CORE_DIRS.items():
         for f in sorted((CORE / d).rglob("*")):
             rel = target + "/" + f.relative_to(CORE / d).as_posix()
+            if f.relative_to(CORE).as_posix().startswith(FACTORY_ONLY):
+                continue
             if f.is_file() and not any(x in rel for x in SKIP):
                 plan.copy(f, rel)
     for src_rel, dst_rel in {**CORE_FILES, **(SHARED_ONLY_FILES if shared else {})}.items():
