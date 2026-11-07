@@ -69,26 +69,29 @@
     {
       "id": "cdn-cudza-strona-konta",
       "expect": "trigger",
-      "prompt": "Zgłoszenie od użytkownika: wysłał koledze link https://app.example.com/account/settings/avatar.png, kolega go otworzył, a potem zgłaszający pod tym samym adresem zobaczył stronę ustawień kolegi z jego e-mailem i adresem. Aplikacja stoi za CDN. Jak to możliwe i jak to naprawić? Odpowiedz zwięźle.",
+      "prompt": "Zgłoszenie od użytkownika: wysłał koledze link https://app.example.com/account/settings/avatar.png, kolega go otworzył, a potem zgłaszający pod tym samym adresem zobaczył stronę ustawień kolegi z jego e-mailem i adresem. Aplikacja stoi za CDN. Zapisz to jako ustalenie do raportu z audytu bezpieczeństwa, który oddajemy przed wydaniem. Odpowiedz zwięźle.",
       "checks": {
         "all": [
+          [
+            "Werdykt\\s*:"
+          ],
+          [
+            "CWE-\\d+"
+          ],
           [
             "cache deception",
             "oszuk\\w* (cache|pamięci podręcznej)",
             "deception"
           ],
           [
-            "no-store",
-            "private",
-            "Cache-Control"
+            "(waga|ważność|severity)\\W{0,5}(wysok|krytyczn|high|critical)",
+            "\\|\\s*(wysok|krytyczn)\\w*\\s*\\|"
           ],
           [
-            "rozszerzen\\w*",
-            "sufiks\\w*",
-            "404",
-            "ścisł\\w* (routing|dopasowan)",
-            "ścież\\w* statyczn\\w*",
-            "allowlist\\w*"
+            "test\\w*[^\\n]{0,160}(drug\\w*|inn\\w*|obc\\w*) (sesj|użytkownik|kont)",
+            "test\\w*[^\\n]{0,160}(no-store|HIT|MISS|cf-cache-status|x-cache)",
+            "(no-store|HIT|MISS)[^\\n]{0,120}test",
+            "test\\w*[^\\n]{0,160}(anonimow\\w*|bez sesji|niezalogowan\\w*)"
           ]
         ],
         "none": [
