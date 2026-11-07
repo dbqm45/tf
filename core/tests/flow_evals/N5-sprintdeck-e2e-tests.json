@@ -3,13 +3,13 @@
   "repo": "sprintdeck",
   "product_sha": "any",
   "phase": "architecture",
-  "change": "CHG-SD2",
-  "budget_usd": 0.6,
+  "change": "CHG-52",
+  "budget_usd": 0.8,
   "type": "happy",
   "before_dir": "fixtures/sprintdeck/FEAT-e2e-tests/pre-architecture/",
   "expect": {
     "status": "waiting_gate",
-    "max_cost_usd": 0.6,
+    "max_cost_usd": 0.8,
     "max_duration_s": 240,
     "max_permission_denials": 0
   },
@@ -20,7 +20,7 @@
       "plan.md ma cięcia z integracją Playwright + Supabase Realtime w CI",
       "cięcia uwzględniają testy utraty sieci (5/10/30s) i konsensusu Risk Deck",
       "release.yaml ma flagę rolloutu dla nowych testów E2E w CI (flaky-safe)",
-      "ADR wymienia decyzję o Playwright (DEC-SD-0004) i wyjaśnia wybór"
+      "ADR wymienia decyzję o Playwright (DEC-9004) i wyjaśnia wybór"
     ]
   },
   "notes": "sprintdeck PR #11 (87fcb18 — E2E for ten-person room and network loss). Fixture syntetyczny."

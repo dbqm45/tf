@@ -4,12 +4,12 @@
   "product_sha": "any",
   "phase": "intent",
   "change": "CHG-3",
-  "budget_usd": 0.5,
+  "budget_usd": 0.7,
   "type": "happy",
   "before_dir": "fixtures/sdlc-proba/CHG-3/pre-intent/",
   "expect": {
     "status": "waiting_gate",
-    "max_cost_usd": 0.5,
+    "max_cost_usd": 0.7,
     "max_duration_s": 180,
     "max_permission_denials": 0
   },

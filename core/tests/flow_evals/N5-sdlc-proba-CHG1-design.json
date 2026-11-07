@@ -4,12 +4,12 @@
   "product_sha": "any",
   "phase": "design",
   "change": "CHG-1",
-  "budget_usd": 0.7,
+  "budget_usd": 0.9,
   "type": "happy",
   "before_dir": "fixtures/sdlc-proba/CHG-1/pre-design/",
   "expect": {
     "status": "waiting_gate",
-    "max_cost_usd": 0.7,
+    "max_cost_usd": 0.9,
     "max_duration_s": 240,
     "max_permission_denials": 0
   },

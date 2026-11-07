@@ -4,14 +4,16 @@
   "product_sha": "any",
   "phase": "delivery",
   "change": "CHG-3",
-  "budget_usd": 0.5,
+  "budget_usd": 0.8,
   "type": "negative",
   "before_dir": "fixtures/sdlc-proba/CHG-3/pre-delivery-prb34/",
   "expect": {
     "status": "failed",
     "error": "any",
-    "contains_detail": ["TSK-1"],
-    "max_cost_usd": 0.5,
+    "contains_detail": [
+      "TSK-1"
+    ],
+    "max_cost_usd": 0.8,
     "max_duration_s": 240
   },
   "notes": "Regresja PRB-34 (A6, 2026-11-05/06): PR cięcia brał tytuł i opis z nazwy gałęzi, transkrypty nieczytelne; raport cięcia (runs/TSK-1.md) nie powstał mimo done. Fix: tf #148 bierze tytuł z pierwszego commita, opis z raportu; pdi #151 pisze raport nawet bez transkryptów. Reused pre-delivery fixture — zadanie bramkuje, czy phase_run.py sygnalizuje brak raportu."

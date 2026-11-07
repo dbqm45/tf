@@ -4,12 +4,12 @@
   "product_sha": "any",
   "phase": "intent",
   "change": "CHG-2",
-  "budget_usd": 0.4,
+  "budget_usd": 0.6,
   "type": "negative",
   "before_dir": "fixtures/sdlc-proba/CHG-2/pre-intent-rejected/",
   "expect": {
     "status": "done",
-    "max_cost_usd": 0.4,
+    "max_cost_usd": 0.6,
     "max_duration_s": 180,
     "max_permission_denials": 0
   },

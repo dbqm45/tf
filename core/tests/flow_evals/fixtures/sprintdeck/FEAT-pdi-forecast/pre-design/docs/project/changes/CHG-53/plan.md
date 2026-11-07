@@ -1,10 +1,10 @@
 ---
 artifact: plan
-status: approved
+status: accepted
 inputs: [requirements.md]
-change: CHG-SD3
+change: CHG-53
 ---
-# Plan CHG-SD3
+# Plan CHG-53
 
 ## Cięcia
 

@@ -1,7 +1,7 @@
 ---
 artifact: plan
 phase: plan
-status: approved
+status: accepted
 version: 1
 author: pdi
 created: 2026-11-05

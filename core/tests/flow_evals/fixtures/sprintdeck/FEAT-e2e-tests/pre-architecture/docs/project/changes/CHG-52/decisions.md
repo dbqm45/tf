@@ -5,15 +5,15 @@ status: draft
 version: 1
 author: pdi
 inputs: []
-change: CHG-SD2
-source: PRB-SD-11
+change: CHG-52
+source: PRB-51
 source_reported_at: 2026-11-05
 ---
-# Decyzje zmiany CHG-SD2
+# Decyzje zmiany CHG-52
 
 ## Bramka triage: approved
-- ref: CHG-SD2/D1
-- id: DEC-SD-0003
+- ref: CHG-52/D1
+- id: DEC-9003
 - wyslano: tak
 - kiedy: 2026-11-05
 - kto: człowiek
@@ -23,8 +23,8 @@ source_reported_at: 2026-11-05
 - szkic: ai
 
 ## Bramka B1 intent: approved
-- ref: CHG-SD2/D2
-- id: DEC-SD-0004
+- ref: CHG-52/D2
+- id: DEC-9004
 - wyslano: tak
 - kiedy: 2026-11-05
 - kto: człowiek
@@ -34,8 +34,8 @@ source_reported_at: 2026-11-05
 - szkic: ai
 
 ## Bramka B2 requirements: approved
-- ref: CHG-SD2/D3
-- id: DEC-SD-0005
+- ref: CHG-52/D3
+- id: DEC-9005
 - wyslano: tak
 - kiedy: 2026-11-05
 - kto: człowiek
