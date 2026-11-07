@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.64.6] — 2026-11-07
+### Fixed
+- phase run findings from the CHG-4 console run (#162)
+
 ## [5.64.5] — 2026-11-07
 ### Fixed
 - **mode-pdi:** show a missing second review instead of "no blocking findings" (#161)
