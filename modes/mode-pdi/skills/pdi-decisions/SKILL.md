@@ -102,7 +102,7 @@ Dla `requirements` i `architecture` między `phase_run.py run` a `gate request`:
 CHG-n --phase P`. Niezależny model czyta artefakt z decyzjami zmiany, wylicza luki (brak stanów błędu, kryteria bez
 Given/When/Then, sprzeczności z decyzją, cięcia bez dowodu sprawdzalności) jako JSON ze schematem i sekcję
 „Przegląd drugim modelem" w artefakcie. Dostawca: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`;
-`claude:<model>` → `ANTHROPIC_API_KEY`); bez — zapasowy `claude:claude-sonnet-4-5-20251022`, oznaczony
+`claude:<model>` → `ANTHROPIC_API_KEY`); bez — zapasowy `claude:claude-sonnet-5-5`, oznaczony
 `same_vendor: true`. Klucz nigdy w kontenerze persony (Z8g) — w Actions tylko dla kroku „Drugi przegląd".
 `gate request` czyta sidecar `.review/<phase>.json`, dopisuje `blocker`/`major` do `questions` z prefiksem
 `[drugi przegląd]`, a sprzeczności jako `[sprzeczne z <ref>]`. Finding na pytanie rozstrzygnięte (`settled_ref`)

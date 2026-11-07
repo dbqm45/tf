@@ -42,7 +42,7 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   z decyzją, cięcia bez dowodu sprawdzalności) jako JSON ze schematem i sekcję „Przegląd drugim modelem"
   w artefakcie. Dostawca: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`, `claude:<model>` →
   `ANTHROPIC_API_KEY`); bez `PDI_SECOND_MODEL` albo bez klucza dostawcy — zapasowy
-  `claude:claude-sonnet-4-5-20251022` oznaczony jako przegląd tego samego dostawcy (`same_vendor: true`).
+  `claude:claude-sonnet-5-5` oznaczony jako przegląd tego samego dostawcy (`same_vendor: true`).
   Blokujące ustalenia (`blocker` i `major`) dopisuje `phase_run.py gate request` do pytań bramki z prefiksem
   `[drugi przegląd]`, a sprzeczności z decyzjami wymienia z odwołaniem `[sprzeczne z <ref>]`. Niedostępność
   drugiego modelu jest w prośbie o bramkę jako `second_review: {status: unavailable, reason: …}`. W Actions

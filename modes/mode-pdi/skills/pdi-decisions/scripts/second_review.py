@@ -14,7 +14,7 @@ w decisions.md, cięcia bez dowodu sprawdzalności). Dla N2 druga podkomenda `co
 
 Dostawca: PDI_SECOND_MODEL (`openai:<model>` → OPENAI_API_KEY, Chat Completions, response_format json_schema strict;
 `claude:<model>` → ANTHROPIC_API_KEY, Messages API z tool_use). Bez PDI_SECOND_MODEL albo gdy wskazany dostawca nie ma
-klucza — zapasowo `claude:claude-sonnet-4-5-20251022` z innym systemowym promptem recenzenta (`same_vendor: true`).
+klucza — zapasowo `claude:claude-sonnet-5-5` z innym systemowym promptem recenzenta (`same_vendor: true`).
 Klucze nigdy w argv ani logu. N14: artefakt, decyzje i komentarze idą w znacznikach `<untrusted>…</untrusted>` ze
 zneutralizowanymi znacznikami w treści. Retry 2× przy złym JSON (łącznie 3 próby); po tym `status: unavailable`.
 
@@ -48,7 +48,7 @@ UNTRUSTED_NEUTRAL = "</untrusted_>"
 RETRY_MAX = 2
 TIMEOUT_SECONDS = 60
 # Zapasowy model Claude dla ścieżki same-vendor (inny niż domyślny Opus wykonawcy; w planie Z9 §8.3 DZ12).
-CLAUDE_FALLBACK = "claude-sonnet-4-5-20251022"
+CLAUDE_FALLBACK = "claude-sonnet-5-5"
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
