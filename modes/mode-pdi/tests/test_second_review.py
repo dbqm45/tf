@@ -98,7 +98,10 @@ def main() -> int:
         sidecar = repo / "docs" / "project" / "changes" / "CHG-12" / ".review" / "requirements.json"
         data = json.loads(sidecar.read_text(encoding="utf-8")) if sidecar.is_file() else {}
         check(r.returncode == 0 and data.get("status") == "ok"
-              and data.get("provider") == "claude" and data.get("same_vendor") is True,
+              and data.get("provider") == "claude" and data.get("same_vendor") is True
+              # zapasowy model z aktualnej listy (platform.claude.com/docs/en/about-claude/models/overview, 2026-11-07);
+              # claude-sonnet-4-5-20251022 nie istniał, a Sonnet 4.5 nie jest już dostępny
+              and data.get("model") == "claude-sonnet-5-5",
               f"S-2: fallback na claude z osobnym promptem recenzenta, same_vendor=True: {r.stdout}{r.stderr} sidecar={data}")
         check("sk-ant-xxx" not in r.stdout and "sk-ant-xxx" not in r.stderr, "S-2a: klucz nie w logu")
 
