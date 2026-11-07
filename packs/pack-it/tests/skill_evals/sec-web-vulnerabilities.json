@@ -1,0 +1,177 @@
+{
+  "skill": "sec-web-vulnerabilities",
+  "scenarios": [
+    {
+      "id": "idor-w-endpoincie-faktur",
+      "expect": "trigger",
+      "prompt": "Aplikację zrobiliśmy szybko z pomocą AI. Endpoint w Express: app.get('/api/invoices/:id', requireLogin, async (req, res) => res.json(await Invoice.findById(req.params.id))). Logowanie działa. Czy coś tu jest nie tak i jak to sprawdzić testem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "IDOR",
+            "BOLA",
+            "CWE-639",
+            "cudz\\w* faktur",
+            "inn\\w* użytkownik\\w*"
+          ],
+          [
+            "właściciel\\w*",
+            "owner",
+            "userId",
+            "user_id",
+            "tenant",
+            "najemc\\w*",
+            "organizacj\\w*"
+          ],
+          [
+            "test\\w*[^\\n]{0,160}(drugi|inn\\w*|obc\\w*) (użytkownik|kont|najemc)",
+            "(403|404)[^\\n]{0,120}test",
+            "test\\w*[^\\n]{0,120}(403|404)"
+          ]
+        ],
+        "none": [
+          "(wystarczy|wystarcza)[^\\n]{0,40}(requireLogin|logowani)"
+        ]
+      }
+    },
+    {
+      "id": "ssrf-podglad-linku-obejscia",
+      "expect": "trigger",
+      "prompt": "Dodajemy podgląd linków: serwer pobiera URL podany przez użytkownika i wyciąga tytuł strony. Kolega blokuje URL-e zawierające 'localhost' i '127.0.0.1'. Czy to wystarczy, a jeśli nie, jak to zrobić porządnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "169\\.254\\.169\\.254",
+            "metadan\\w*",
+            "metadata"
+          ],
+          [
+            "DNS rebinding",
+            "rozwiąz\\w*[^\\n]{0,80}(adres|IP)",
+            "po rozwiązaniu",
+            "przypi\\w* (adres|IP)",
+            "pin\\w*"
+          ],
+          [
+            "przekierow\\w*",
+            "redirect",
+            "3\\d\\d"
+          ],
+          [
+            "0x7f|2130706433|\\[::1?\\]|::ffff|IPv6|dziesiętn\\w*|ósemkow\\w*|szesnastkow\\w*"
+          ]
+        ],
+        "none": [
+          "(to|blokada) wystarczy"
+        ]
+      }
+    },
+    {
+      "id": "kupon-jednorazowy-wyscig",
+      "expect": "trigger",
+      "prompt": "Kod rabatowy jest jednorazowy: sprawdzamy w bazie, czy used = false, a potem ustawiamy used = true i naliczamy rabat. Tester wysłał 20 żądań naraz i rabat naliczył się 6 razy. Skąd to i jak naprawić tak, żeby dało się to udowodnić testem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "wyścig\\w*",
+            "race",
+            "TOCTOU",
+            "współbieżn\\w*"
+          ],
+          [
+            "atomow\\w*",
+            "UPDATE[^\\n]{0,80}WHERE[^\\n]{0,40}used",
+            "FOR UPDATE",
+            "blokad\\w*",
+            "unikaln\\w*",
+            "warunkow\\w* (zapis|aktualiz)",
+            "rowcount",
+            "affected"
+          ],
+          [
+            "równoległ\\w*[^\\n]{0,80}(żąda|wywoła|test)",
+            "test\\w*[^\\n]{0,80}równoległ\\w*",
+            "Promise\\.all",
+            "jednocześni\\w*",
+            "naraz"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audyt-zaawansowany-format",
+      "expect": "trigger",
+      "prompt": "Zrób audyt bezpieczeństwa naszej aplikacji webowej (Next.js + API w Node) przed wydaniem, łącznie z rzeczami zaawansowanymi, nie tylko XSS i SQL injection. W jakiej kolejności to przejść i jak ma wyglądać raport? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Werdykt"
+          ],
+          [
+            "plik:linia",
+            "\\w+\\.\\w+:\\d+"
+          ],
+          [
+            "cache",
+            "smuggling",
+            "prototype pollution",
+            "zanieczyszcz\\w* prototyp\\w*",
+            "wyścig\\w*",
+            "race",
+            "mass assignment",
+            "CORS"
+          ],
+          [
+            "CWE-\\d+"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "xss-z-fragmentu-url",
+      "expect": "trigger",
+      "prompt": "Na stronie wyników front czyta location.hash i wstawia go przez innerHTML jako nagłówek „Wyniki dla: …”. Backend escapuje wszystko, a przed aplikacją stoi WAF. Czy to wystarczy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "DOM\\w*[- ]?(based|XSS)",
+            "XSS\\w* (w|oparty na) DOM",
+            "DOM XSS"
+          ],
+          [
+            "serwer\\w*[^\\n]{0,100}(nie widzi|nie dostaje|nie trafia|nie jest wysyłan)",
+            "fragment\\w*[^\\n]{0,80}(nie (jest )?wysyłan|nie trafia|nie dociera)",
+            "(#|hash)[^\\n]{0,80}nie (jest )?(wysyłan|przesyłan)"
+          ],
+          [
+            "textContent",
+            "innerText",
+            "sanitiz\\w*",
+            "DOMPurify"
+          ]
+        ],
+        "none": [
+          "(to|backend i WAF) wystarcz"
+        ]
+      }
+    },
+    {
+      "id": "rotacja-refresh-tokenow",
+      "expect": "no-trigger",
+      "neighbor": "be-auth-security",
+      "prompt": "Jak zaprojektować rotację refresh tokenów i wylogowanie ze wszystkich urządzeń po zmianie hasła?"
+    },
+    {
+      "id": "sla-napraw-podatnosci",
+      "expect": "no-trigger",
+      "neighbor": "sec-appsec-devsecops",
+      "prompt": "Jakie terminy naprawy (SLA) ustawić dla podatności krytycznych i wysokich w programie AppSec i jak je mierzyć?"
+    },
+    {
+      "id": "sqli-gdzie-jeszcze",
+      "expect": "no-trigger",
+      "neighbor": "sec-variant-analysis",
+      "prompt": "Pentester znalazł SQL injection w /reports; naprawiliśmy to miejsce. Jak znaleźć ten sam błąd w pozostałych 40 repozytoriach firmy?"
+    }
+  ]
+}

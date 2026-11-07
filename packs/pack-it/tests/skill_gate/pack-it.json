@@ -519,6 +519,10 @@
   "fingerprint": "6730bb8826e32f7c",
   "offline": "2026-10-24"
  },
+ "sec-web-vulnerabilities": {
+  "fingerprint": "9d555d32dfcbaa1d",
+  "offline": "2026-11-07"
+ },
  "sec-zero-trust-identity": {
   "fingerprint": "cdaff80d4930090f",
   "offline": "2026-11-01"
