@@ -501,6 +501,8 @@ def gate_event(a) -> dict:
     summary = second_review_summary(sidecar, a.phase)
     if summary:
         payload["second_review"] = summary
+        if summary.get("status") != "ok":   # N1: brak przeglądu widoczny dla człowieka, nigdy ciche „zdane”
+            payload["summary"] += f" (drugi przegląd: niedostępny ({summary.get('reason') or 'unknown'}))"
     if a.url:
         payload["url"] = a.url
     now = time.gmtime()
