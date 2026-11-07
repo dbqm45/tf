@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.64.0] — 2026-11-07
+### Added
+- **mode-pdi:** optional coverage and mutation reports in change-check (Z7b-1b) (#156)
+
 ## [5.63.1] — 2026-11-07
 ### Fixed
 - **flow-evals:** make first paid run actually executable (N5) (#155)
