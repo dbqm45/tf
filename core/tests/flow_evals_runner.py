@@ -211,10 +211,15 @@ def synth_template(workdir_root: Path) -> Path:
 
 def prepare_workspace(task: dict, repos: dict[str, Path], workdir_root: Path,
                       evals_root: Path | None = None) -> Path:
-    """Zestawia katalog roboczy zadania: klon produktu (albo szablon fabryki dla `synth`) + overlay before/.
+    """Zestawia katalog roboczy zadania: klon produktu (albo szablon fabryki dla `synth`) + zastąpienie
+    `docs/project/changes/<CHG>/` zawartością fixtury.
 
     Dla `repo == "synth"` używa szablonu `synth_template(workdir_root)` — zainstalowanej fabryki mode-pdi
     z `.claude/agents/_generated/` (persony fazy), żeby `phase_run.py` miał na kim uruchomić fazę.
+
+    Fixtura zastępuje (a nie overlay'uje) katalog zmiany — produkt w HEAD może mieć pełne artefakty
+    poprzednich faz (CHG-3 w sdlc-proba HEAD ma plan.md/design.md z pracy A6), ale faza pre-intent powinna
+    startować bez nich. Resztę repozytorium (`.claude/`, kod produktu) zostawiamy nietkniętą.
     """
     work = workdir_root / task["id"]
     if work.exists():
@@ -231,6 +236,16 @@ def prepare_workspace(task: dict, repos: dict[str, Path], workdir_root: Path,
         if not src.is_dir():
             raise FileNotFoundError(f"ścieżka do repo {repo!r} nie jest katalogiem: {src}")
         _copy_tree(src, work)
+    # W `docs/project/changes/` zostawiamy tylko zmianę zadania — `decision_record.py check` jest globalny
+    # i zawaliłby się na innych zmianach z HEAD produktu (np. sdlc-proba HEAD CHG-1 ma plan.md sprzed N20).
+    changes_dir = work / "docs" / "project" / "changes"
+    change = task.get("change") or ""
+    if changes_dir.is_dir():
+        for p in changes_dir.iterdir():
+            if p.is_dir() and p.name != change:
+                shutil.rmtree(p)
+            elif p.is_dir() and p.name == change:
+                shutil.rmtree(p)   # fixture zastępuje, nie overlay'uje
     apply_before(task, work, evals_root if evals_root is not None else EVALS)
     return work
 
@@ -475,6 +490,7 @@ def run_task(task: dict, repos: dict[str, Path], workdir_root: Path, args: argpa
         "duration_s": round(phase_out.get("duration_s") or 0.0, 3),
         "files_read": phase_result.files_read(phase_out.get("progress") or []),
         "denials": phase_result.denials_count(phase_out.get("progress") or []),
+        "permission_denials": out.get("permission_denials") or [],   # pełna lista z phase_run.py (diagnoza)
         "checks": checks,
         "judge": judge,
         "detail": (out.get("detail") or "")[-800:],
