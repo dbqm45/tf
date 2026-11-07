@@ -376,13 +376,21 @@ def write_sidecar(change: str, phase: str, data: dict[str, Any]) -> Path:
     return f
 
 
+def _section_meta(meta: dict[str, Any]) -> str:
+    return (f"*Dostawca: `{meta.get('provider', '?')}`, model: `{meta.get('model', '?')}`"
+            + (" — same_vendor" if meta.get("same_vendor") else "")
+            + f", status: `{meta.get('status', '?')}`.*")
+
+
 def append_section(artifact: Path, findings: list[dict[str, Any]], meta: dict[str, Any]) -> None:
     """Doczepia (albo zastępuje) sekcję `## Przegląd drugim modelem` — idempotentnie."""
-    lines = [f"\n\n{SECTION}",
-             f"*Dostawca: `{meta.get('provider', '?')}`, model: `{meta.get('model', '?')}`"
-             + (" — same_vendor" if meta.get('same_vendor') else "")
-             + f", status: `{meta.get('status', '?')}`.*", ""]
-    if findings:
+    lines = [f"\n\n{SECTION}"]
+    if meta.get("status") != "ok":
+        # Brak przeglądu nie może wyglądać jak przegląd bez ustaleń (N1: nigdy ciche „zdane”).
+        lines.append(f"*drugi przegląd: niedostępny ({meta.get('reason') or 'unknown'})* — artefakt nie był"
+                     " czytany drugim modelem; nie ma tu ani ustaleń, ani potwierdzenia, że ich brak.")
+    elif findings:
+        lines += [_section_meta(meta), ""]
         for f in findings:
             label = f"[{f['severity']}]"
             if f.get("settled_ref"):
@@ -390,7 +398,7 @@ def append_section(artifact: Path, findings: list[dict[str, Any]], meta: dict[st
             lines.append(f"- {label} **{f.get('kind', '?')}**: {f.get('reason', '')} "
                          f"— cytat: „{f.get('quote', '')}”")
     else:
-        lines.append("- brak blokujących ustaleń")
+        lines += [_section_meta(meta), "", "- brak blokujących ustaleń"]
     body = artifact.read_text(encoding="utf-8")
     # usuń starą sekcję od nagłówka do końca pliku albo do następnego `## `
     pattern = re.compile(rf"\n+{re.escape(SECTION)}[\s\S]*?(?=\n## |\Z)")

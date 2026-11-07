@@ -223,6 +223,18 @@ def main() -> int:
         data = json.loads(sidecar.read_text(encoding="utf-8")) if sidecar.is_file() else {}
         check(data.get("status") == "unavailable" and "no_api_key" in str(data.get("reason", "")),
               f"S-11: brak kluczy → unavailable: {data}")
+        section = art.read_text(encoding="utf-8").split("## Przegląd drugim modelem", 1)[-1]
+        check("drugi przegląd: niedostępny (no_api_key)" in section and "brak blokujących ustaleń" not in section
+              and "`None`" not in section,
+              f"S-11a: sekcja nie udaje przeglądu, gdy go nie było: {section}")
+
+        # S-11b: przegląd padł po 3 złych odpowiedziach → sekcja mówi, że niedostępny, z powodem
+        s = seq(tmp, "nie-json", "też nie", "wciąż nie")
+        runp(["artifact", "--change", "CHG-12", "--phase", "requirements"], repo,
+             PDI_SECOND_MODEL="openai:gpt-4o-mini", OPENAI_API_KEY="sk-x", PDI_SECOND_MODEL_FAKE_SEQ=s)
+        section = art.read_text(encoding="utf-8").split("## Przegląd drugim modelem", 1)[-1]
+        check("drugi przegląd: niedostępny (invalid_json" in section and "brak blokujących ustaleń" not in section,
+              f"S-11b: nieudany przegląd widoczny w sekcji: {section}")
 
     if fails:
         print(f"✗ {len(fails)}/{total}")

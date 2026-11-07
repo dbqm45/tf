@@ -323,6 +323,8 @@ def main() -> int:
         check(set(pl) <= set(gate_schema["properties"]) and set(pl.get("second_review", {})) <= set(review_props)
               and pl.get("second_review", {}).get("status") == "unavailable",
               f"G-3a: pola prośby mieszczą się w schemacie gate.requested kontraktu pdi (inaczej pdi odpowie 400): {pl}")
+        check("drugi przegląd: niedostępny (not_run)" in pl.get("summary", ""),
+              f"G-3b: brak drugiego przeglądu widoczny w treści prośby, nie tylko w polu maszynowym: {pl.get('summary')}")
         ts = h.get("x-pdi-timestamp", "")
         want = "v1=" + hmac.new(SECRET.encode(), f"{ts}.".encode() + got.get("body", b""), hashlib.sha256).hexdigest()
         check(h.get("x-pdi-signature") == want and h.get("x-pdi-event") == "gate.requested" and ts.isdigit(),
