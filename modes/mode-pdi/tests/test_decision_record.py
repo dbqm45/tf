@@ -159,6 +159,20 @@ def main() -> int:
         check(r.returncode == 0, f"D-14: poprawny plan (przykład z kontraktu) przechodzi: {r.stdout}{r.stderr}")
         r = run(["check"], Path(tmp) / "docs")
         check(r.returncode == 0 and "brak" in r.stdout.lower(), f"D-15: bez docs/project/changes — nic do sprawdzenia: {r.stdout}")
+        # D-15a: `check --change` sprawdza tylko tę zmianę — stare artefakty innych zmian nie blokują fazy (CHG-4, 2026-11-07).
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-2" / "intent.md",
+              "artifact: intent\nphase: discovery\nstatus: draft\nversion: 0\ncreated: 2026-10-23\n"
+              "updated: 2026-10-23\nchange: CHG-2")
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "CHG-2" in r.stdout, f"D-15a: bez --change dalej sprawdza wszystkie zmiany: {r.stdout}")
+        r = run(["check", "--change", "CHG-1"], tmp)
+        check(r.returncode == 0 and "CHG-2" not in r.stdout, f"D-15b: --change CHG-1 pomija błąd w CHG-2: {r.stdout}")
+        r = run(["check", "--change", "CHG-2"], tmp)
+        check(r.returncode != 0 and "CHG-2" in r.stdout, f"D-15c: --change CHG-2 dalej wykrywa jej błąd: {r.stdout}")
+        r = run(["check", "--change", "CHG-9"], tmp)
+        check(r.returncode != 0 and "CHG-9" in r.stdout, f"D-15d: nieznana zmiana → błąd, nie ciche OK: {r.stdout}")
+        r = run(["check", "--change", "../x"], tmp)
+        check(r.returncode != 0, f"D-15e: zły klucz zmiany → błąd: {r.stdout}")
 
     # F0b: decyzje — add, pending, mark, export, check wpisów.
     with tempfile.TemporaryDirectory() as tmp:

@@ -152,6 +152,37 @@ def main() -> int:
         check("opus" in md and "haiku" in md and "USD" in md and "2/3" in md, f"R-12: report.md: {md[:400]}")
         check("## Bezpieczeństwo" in md and "brak wyniku skanu" in md, f"R-14: bez skanu sekcja mówi o braku: {md[-300:]}")
 
+        # R-11a: kawałek z commitem liczy się jako zrobiony, nawet gdy Talos nie odhaczył go w plan.md (CHG-4, 2026-11-07:
+        # „Plan: 0/1” przy gotowym commicie). Baza: gałąź fazy pdi/<CHG>-delivery, gdy przebieg ma zmianę, inaczej main.
+        def git(*a: str) -> None:
+            _sp.run(["git", "-C", str(proj), *a], check=True, capture_output=True)
+        (proj / "README.md").write_text("x\n")
+        git("add", "README.md")
+        git("commit", "-q", "-m", "chore: base")
+        git("switch", "-q", "-c", "pdi/CHG-90-delivery")
+        (proj / "decisions.md").write_text("d\n")
+        git("add", "decisions.md")
+        git("commit", "-q", "-m", "docs(CHG-90): decyzje przed realizacją (pdi)")
+        git("switch", "-q", "-c", "story/k")
+        (proj / "a.py").write_text("a = 1\n")
+        git("add", "a.py")
+        git("commit", "-q", "-m", "feat: a\n\nChange: TSK-90")
+        cut_dir = proj / "tmp" / "talos" / "runs" / "2026-10-21-cut"
+        cut_dir.mkdir(parents=True)
+        (cut_dir / "run.json").write_text(json.dumps({"slug": "cut", "started_at": "2026-10-21T10:00:00+00:00",
+                                                      "change": "CHG-90", "task": "TSK-90"}))
+        (cut_dir / "plan.md").write_text("# Plan\n- [ ] K1 a\n- [ ] K2 b\n")
+        r = run(["finish", str(cut_dir), "--json"], proj, cfg)
+        try:
+            got = json.loads(r.stdout).get("plan")
+        except json.JSONDecodeError:
+            got = r.stdout[-300:]
+        check(got == {"done": 1, "total": 2},
+              f"R-11a: commit kawałka liczy się mimo braku odhaczenia, commit decyzji pdi nie: {got}")
+        git("switch", "-q", "main")
+        import shutil as _sh
+        _sh.rmtree(proj / "docs" / "project" / "changes" / "CHG-90", ignore_errors=True)
+
         # sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security/K<n>)
         sec = run_dir / "security" / "K2"
         sec.mkdir(parents=True)

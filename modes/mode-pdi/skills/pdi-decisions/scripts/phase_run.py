@@ -237,6 +237,9 @@ def build_prompt(a) -> dict:
     lines = [
         f"Pracujesz bez interakcji nad zmianą {a.change}, faza `{a.phase}`, w trybie mode-pdi. Nikt nie odpowie na "
         f"pytania w tej sesji: nie pytaj człowieka i nie czekaj na zgodę.",
+        "Narzędzia: pliki czytasz i przeszukujesz przez Read, Grep i Glob, nie przez `cat`, `grep` ani `ls` w Bash. "
+        "W Bash jedno polecenie na wywołanie, bez `&&`, `||`, `;`, `|` i bez `cd …` przed poleceniem: w tej sesji "
+        "każda część złożonego polecenia musi osobno pasować do listy dozwolonych, inaczej zostaje odrzucona.",
         f"Najpierw przeczytaj dziennik zmiany {d}/ (intent.md, plan.md, decisions.md i to, co już jest) oraz "
         f"`.claude/skills/pdi-decisions/SKILL.md`.",
         f"Wpisy `## Bramka …` w {d}/decisions.md to decyzje człowieka z bramek pdi i są wiążące: nie podważaj ich. "
@@ -278,7 +281,7 @@ def build_prompt(a) -> dict:
             f"Czego nie da się rozstrzygnąć bez człowieka, nie zgadujesz: zapisz jako listę w sekcji `## {QUESTIONS}` "
             f"artefaktu (jedno pytanie w wierszu, z adresatem). Trafi do skrzynki bramek pdi razem z bramką "
             f"{spec['gate']}.",
-            f"Na koniec `python3 {SCRIPTS}/decision_record.py check` ma przejść. Nie zapisujesz decyzji za "
+            f"Na koniec `python3 {SCRIPTS}/decision_record.py check --change {a.change}` ma przejść. Nie zapisujesz decyzji za "
             f"człowieka i nie otwierasz PR — robi to workflow po tej sesji.",
         ]
     return {"persona": spec["persona"], "artifact": artifact, "gate": spec["gate"], "prompt": "\n\n".join(lines)}
@@ -415,9 +418,21 @@ def design_problems(path: Path) -> list[str]:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import design_check
     try:
-        return design_check.problems(design_check.parse_design_md(path.read_text(encoding="utf-8"))["rows"])
+        rows = design_check.parse_design_md(path.read_text(encoding="utf-8"))["rows"]
     except design_check.DesignFormatError as e:
         return [f"design.md: {e}"]
+    problems = design_check.problems(rows)
+    missing = [r for r in rows if r["status"] == "missing"]
+    if len(missing) < 2 or any(r["status"] == "linked" for r in rows):
+        return problems   # z plikiem Figmy każdy brakujący wiersz to osobna sprawa dla projektanta
+    # Bez żadnej ramki w pliku to jedna decyzja (podać plik albo zostać bez ramek), nie pytanie na wiersz (CHG-4).
+    rest = [p for p in problems if ": brak ramki — " not in p]
+    n = len(missing)
+    word = "wiersze" if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14) else "wierszy"
+    listed = ", ".join(f"{r['requirement']} {r['state']}" for r in missing)
+    grouped = (f"Ramki: {n} {word} design.md bez ramki ({listed}) i żadnej ramki w pliku Figmy — podaj plik Figmy "
+               f"z ramkami albo zdecyduj, że te wiersze zostają bez ramek (wygląd opisany w design.md).")
+    return [grouped, *rest]
 
 
 def second_review_sidecar(change: str, phase: str) -> dict | None:

@@ -6,7 +6,7 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new CHG-12 [--source PRB-34] [--author NAME]
       [--source-reported-at RRRR-MM-DD]   (dzień zgłoszenia, z pdi; kontrakt 0.5.0)
       tworzy docs/project/changes/CHG-12/ z intent.md, plan.md, decisions.md i release.yaml (szablony obok skryptu)
-  python3 .claude/skills/pdi-decisions/scripts/decision_record.py check
+  python3 .claude/skills/pdi-decisions/scripts/decision_record.py check [--change CHG-n]
       sprawdza nagłówki artefaktów i wpisy decyzji w docs/project/changes/*/, a release.yaml — schematem z kontraktu
       i spójnością: mvp.release wśród linii, TSK w jednej linii i zgodne z plan.md (tasks, kolumny Wydanie i Flaga),
       flaga z etapami (rollout) i datą usunięcia (remove_by), TSK flagi w liniach; w plan.md samokontrolę planu cięć
@@ -645,9 +645,20 @@ def check_release(d: Path) -> list[str]:
     return errs
 
 
-def check() -> int:
-    files = sorted(CHANGES.glob("*/*.md")) if CHANGES.is_dir() else []
-    releases = sorted(CHANGES.glob("*/release.yaml")) if CHANGES.is_dir() else []
+def check(change: str | None = None) -> int:
+    """Nagłówki, wpisy decyzji, plan i plan wydania. `change` zawęża do jednej zmiany: faza pdi sprawdza swoją,
+    a artefakty starszych zmian (pisane pod wcześniejszy kontrakt) jej nie blokują."""
+    pattern = "*"
+    if change is not None:
+        if not KEY.match(change):
+            print(f"✗ --change '{change}' — klucz zmiany, np. CHG-12")
+            return 2
+        if not (CHANGES / change).is_dir():
+            print(f"✗ brak {CHANGES / change} — zmiana {change} nie ma dziennika")
+            return 1
+        pattern = change
+    files = sorted(CHANGES.glob(f"{pattern}/*.md")) if CHANGES.is_dir() else []
+    releases = sorted(CHANGES.glob(f"{pattern}/release.yaml")) if CHANGES.is_dir() else []
     if not files and not releases:
         print(f"Brak artefaktów zmian w {CHANGES} — nic do sprawdzenia.")
         return 0
@@ -674,7 +685,7 @@ def main(argv: list[str]) -> int:
     new.add_argument("--source")
     new.add_argument("--author", default="claude")
     new.add_argument("--source-reported-at")
-    sub.add_parser("check")
+    sub.add_parser("check").add_argument("--change", help="tylko ta zmiana (np. CHG-12); bez — wszystkie")
     dec = sub.add_parser("decision").add_subparsers(dest="action", required=True)
     add = dec.add_parser("add")
     add.add_argument("key")
@@ -706,7 +717,7 @@ def main(argv: list[str]) -> int:
     imp.add_argument("--json", required=True, help="plik JSON z decyzjami zmiany z rejestru pdi (links.chg)")
     args = ap.parse_args(argv)
     if args.cmd == "check":
-        return check()
+        return check(args.change)
     if args.cmd == "decision":
         return {"add": lambda: decision_add(args), "pending": lambda: decision_pending(args.change),
                 "mark": lambda: decision_mark(args.ref, args.id), "export": decision_export,
