@@ -3,8 +3,8 @@ name: sec-web-vulnerabilities
 description: Użyj, gdy piszesz lub audytujesz kod aplikacji webowej pod kątem podatności — IDOR, XSS, CSRF, SSRF, upload, wstrzyknięcia, obejścia filtrów, moduły zaawansowane.
 metadata:
   przeglad: "2027-05-07"
-  katalog: "Użyj, gdy piszesz, przeglądasz albo audytujesz kod aplikacji webowej lub API (także napisany szybko z pomocą AI) i trzeba myśleć jak łowca błędów: gdzie dana klasa podatności się chowa, jak atakujący omija typowy filtr, jaka obrona działa i jaki test to udowadnia. Klasy podstawowe: kontrola dostępu (IDOR/BOLA, BFLA), XSS, CSRF, sekrety w kodzie klienta, open redirect, SSRF, upload plików, wstrzyknięcia SQL/NoSQL/poleceń, XXE, path traversal, nagłówki bezpieczeństwa, błędy JWT. Moduły zaawansowane do wyboru: logika biznesowa i wyścigi, warstwa HTTP (smuggling, zatruwanie i oszukiwanie cache, nagłówek Host), parsery i serializacja (prototype pollution, SSTI, deserializacja, ReDoS, normalizacja Unicode), przeglądarka (CORS, postMessage, WebSocket, obejścia CSP, XS-Leaks), API (mass assignment, GraphQL, limity), otoczenie aplikacji (przejęcie subdomeny, DNS rebinding, publiczne zasobniki). Raport z werdyktem, CWE, plik:linia, dowodem i testem. Nie do projektu sesji, tokenów i OAuth (be-auth-security), programu AppSec, skanerów i SLA (sec-appsec-devsecops), szukania wariantów znalezionego błędu (sec-variant-analysis), pisania reguł Semgrep (tool-semgrep), modelu zagrożeń (arch-threat-modeling) ani aplikacji z LLM (sec-llm-security)."
-  slowa: "czy ten kod jest bezpieczny, podatności w aplikacji webowej, vibe coding bezpieczeństwo, kod od AI bezpieczny, audyt bezpieczeństwa aplikacji, przegląd bezpieczeństwa kodu, jak atakujący to obejdzie, obejście filtra, bug bounty, łowca błędów, idor, bola, cudze dane po zmianie id, xss, csrf, ssrf, podgląd linku, pobieranie url od użytkownika, upload plików, wgrywanie plików, sql injection, nosql injection, command injection, xxe, path traversal, open redirect, klucz api w frontendzie, nagłówki bezpieczeństwa, csp, jwt alg none, wyścig, race condition, kupon użyty kilka razy, podwójne naliczenie, request smuggling, cache poisoning, web cache deception, prototype pollution, ssti, mass assignment, graphql introspekcja, cors, postmessage, websocket origin, przejęcie subdomeny"
+  katalog: "Użyj, gdy piszesz, przeglądasz albo audytujesz kod aplikacji webowej lub API (także napisany szybko z pomocą AI) i trzeba myśleć jak łowca błędów: gdzie dana klasa podatności się chowa, jak atakujący omija typowy filtr, jaka obrona jest skuteczna i jaki test to udowadnia. Klasy podstawowe: kontrola dostępu (IDOR/BOLA, BFLA), XSS, CSRF, sekrety po stronie klienta, open redirect, SSRF, upload plików, wstrzyknięcia SQL/NoSQL/poleceń, XXE, path traversal, nagłówki bezpieczeństwa, błędy JWT. Moduły zaawansowane do wyboru: logika biznesowa i wyścigi, warstwa HTTP (smuggling, zatruwanie i oszukiwanie cache, nagłówek Host), parsery i serializacja (prototype pollution, SSTI, deserializacja, ReDoS, normalizacja Unicode), przeglądarka (CORS, postMessage, WebSocket, obejścia CSP, XS-Leaks), API (mass assignment, GraphQL, limity), otoczenie aplikacji (przejęcie subdomeny, DNS rebinding, publiczne zasobniki). Raport z werdyktem, CWE, plik:linia, dowodem i testem. Nie do projektu sesji, tokenów i OAuth (be-auth-security), programu AppSec, skanerów i SLA (sec-appsec-devsecops), szukania wariantów znalezionego błędu (sec-variant-analysis), pisania reguł Semgrep (tool-semgrep), modelu zagrożeń (arch-threat-modeling) ani aplikacji z LLM (sec-llm-security)."
+  slowa: "czy ten kod jest bezpieczny, podatności w aplikacji webowej, vibe coding bezpieczeństwo, kod od AI bezpieczny, audyt bezpieczeństwa aplikacji, przegląd bezpieczeństwa kodu, jak atakujący to obejdzie, obejście filtra, bug bounty, łowca błędów, idor, bola, cudze dane po zmianie id, xss, stored xss, reflected xss, dom xss, location.hash w innerhtml, csrf, ssrf, podgląd linku, pobieranie url od użytkownika, upload plików, wgrywanie plików, sql injection, nosql injection, command injection, xxe, path traversal, open redirect, klucz api w frontendzie, nagłówki bezpieczeństwa, csp, jwt alg none, wyścig, race condition, kupon użyty kilka razy, podwójne naliczenie, request smuggling, cache poisoning, web cache deception, prototype pollution, ssti, mass assignment, graphql introspekcja, cors, postmessage, websocket origin, przejęcie subdomeny"
 ---
 
 # Podatności aplikacji webowej — pisanie i audyt oczami atakującego
@@ -17,7 +17,7 @@ w repozytorium albo żądanie do lokalnej instancji, nigdy atak na cudzy lub pro
 ## Tryby
 | Tryb | Kiedy | Co robisz |
 |---|---|---|
-| **pisanie** | nowa funkcja, endpoint, formularz | przed kodem: tabela „wejście → klasa → obrona → test” (niżej); obronę piszesz od razu, test razem z kodem (TDD) |
+| **pisanie** | nowa funkcja, endpoint, formularz | przed kodem: tabela „wejście → klasa → obrona → test” (niżej); obronę piszesz od razu, test przed implementacją (TDD) |
 | **przegląd** | diff, PR | tylko klasy, których dotyka diff (mapa niżej); ustalenie bez dowodu z diffu to pytanie, nie błąd |
 | **audyt podstawowy** | aplikacja, moduł, przed wydaniem | wszystkie klasy z `references/klasy-podstawowe.md` po kolei, z obejściami |
 | **audyt zaawansowany** | na prośbę albo gdy aplikacja ma pieniądze, wielu najemców, cache/CDN, własne parsery | audyt podstawowy + wybrane moduły z `references/moduly-zaawansowane.md` |
@@ -35,7 +35,7 @@ Moduły zaawansowane wybierasz po cechach aplikacji, nie wszystkie naraz:
 | W kodzie widzisz | Sprawdź |
 |---|---|
 | identyfikator z URL, body lub nagłówka użyty do odczytu/zapisu | kontrola dostępu per obiekt (IDOR, CWE-639) i per funkcja (BFLA, CWE-285) |
-| HTML z danych, `innerHTML`, `dangerouslySetInnerHTML`, `v-html`, szablon bez escapowania | XSS (CWE-79), kontekst wyjścia |
+| HTML z danych, `innerHTML`, `dangerouslySetInnerHTML`, `v-html`, szablon bez escapowania | XSS (CWE-79): zapisany, odbity, w DOM; kontekst wyjścia |
 | zmiana stanu przez ciasteczko sesji | CSRF (CWE-352), `SameSite`, token, metoda |
 | URL od użytkownika pobierany przez serwer (webhook, podgląd, import, PDF z HTML) | SSRF (CWE-918) |
 | parametr `next`, `returnUrl`, `redirect` | open redirect (CWE-601) |
@@ -80,7 +80,7 @@ Werdykt: BLOKUJE
   test: faktura A, sesja B → 404; sesja A → 200 |
 Zakres: trasy /api/invoices/*; inne trasy z :id — do sprawdzenia tym samym wzorcem (sec-variant-analysis).
 ```
-Odpowiedź 404 zamiast 403 nie zdradza, że obiekt istnieje. Samo `requireLogin` sprawdza tożsamość, nie prawo do
+Odpowiedź 404 zamiast 403 nie zdradza, że obiekt istnieje. Sam `requireLogin` sprawdza tożsamość, nie prawo do
 obiektu.
 
 ## Pisanie nowej funkcji — tabela przed kodem

@@ -38,6 +38,13 @@ odbiera dostęp od razu (unieważnianie sesji: be-auth-security).
 - te same przypadki dla każdej metody HTTP na ścieżce.
 
 ## 2. XSS (CWE-79)
+**Trzy typy — różnią się tym, gdzie ładunek czeka i kto go wstawia:**
+| Typ | Droga ładunku | Gdzie szukać | Pułapka |
+|---|---|---|---|
+| zapisany (stored) | atakujący zapisuje treść, ofiara ją wyświetla | komentarze, profile, nazwy plików, wiadomości, logi w panelu admina | trafia też do miejsc poza aplikacją: e-maile, PDF, eksport do CSV/HTML, panel administratora |
+| odbity (reflected) | ładunek w żądaniu (parametr, ścieżka, nagłówek) wraca w odpowiedzi | strony wyszukiwania, komunikaty błędów, przekierowania z parametrem | ofiara klika spreparowany link; strona błędu 404 z powtórzoną ścieżką |
+| w DOM (DOM-based) | skrypt w przeglądarce bierze wartość ze źródła (`location`, `hash`, `postMessage`, `localStorage`) i wstawia do ujścia | kod frontu: `location.hash` → `innerHTML`, routery czytające parametry | serwer niczego nie widzi (fragment `#` nie jest wysyłany), więc escapowanie po stronie serwera i WAF nie pomagają; obrona tylko w kodzie klienta |
+
 **Sygnały — ujścia:** `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `dangerouslySetInnerHTML`,
 `v-html`, `[innerHTML]`, `bypassSecurityTrust*`, `|safe`, `{!! !!}`, `href`/`src` z danych oraz `eval` i `setTimeout`
 z napisem.
@@ -69,10 +76,14 @@ z napisem.
   i `base-uri 'none'` (moduł A4);
 - `X-Content-Type-Options: nosniff`.
 
-**Dowód:**
-- ładunek dla każdego kontekstu (`<img src=x onerror=alert(1)>`, `" autofocus onfocus=alert(1) x="`,
-  `javascript:alert(1)`) zapisany i wyświetlony → w DOM jako tekst, bez wykonania;
-- typ testu: test renderowania komponentu albo e2e.
+**Dowód** (osobno dla każdego typu, ładunki dla każdego kontekstu: `<img src=x onerror=alert(1)>`,
+`" autofocus onfocus=alert(1) x="`, `javascript:alert(1)`):
+- zapisany: ładunek zapisany przez API, potem strona wyświetlająca go w aplikacji, w e-mailu i w panelu admina →
+  tekst, bez wykonania (e2e albo test renderowania);
+- odbity: ładunek w parametrze i w ścieżce (`/szukaj?q=…`, `/nieistnieje/<ładunek>`) → odpowiedź z escapowanym
+  tekstem (test integracyjny odpowiedzi HTML);
+- w DOM: strona otwarta z ładunkiem w `#` i w `postMessage` → brak wykonania (e2e w przeglądarce, np. Playwright,
+  z nasłuchem na `dialog`), bo test po stronie serwera tego nie wykryje.
 
 ## 3. CSRF (CWE-352)
 **Sygnały:**
