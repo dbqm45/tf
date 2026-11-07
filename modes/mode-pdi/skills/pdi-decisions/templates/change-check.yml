@@ -71,10 +71,19 @@ jobs:
           # Raport JUnit testów (plik albo katalog, względem repo); puste — bez wyników testów.
           TEST_REPORTS: ''
           SARIF_REPORTS: reports/security
+          # Z7b-1b: pokrycie i mutacje zmienionego kodu (TGT-001, TGT-002). Produkt sam uruchamia narzędzia
+          # (np. `pytest --cov=src --cov-report=lcov:reports/coverage/lcov.info`,
+          # `npx stryker run --reporters json` → `reports/mutation/stryker.json`); szablon tylko przekazuje
+          # raport do `npm run analyze`. Puste wejście = bez raportu; jeśli release.yaml ma `targets.coverage`
+          # albo `targets.mutation`, brak raportu to blokująca bramka (TGT-001/002 critical).
+          COVERAGE_REPORTS: ''
+          MUTATION_REPORTS: ''
           BASE_REF: ${{ github.base_ref }}
         run: |
           set -- --repo "$GITHUB_WORKSPACE" --repo-url "$REPO_URL" --fail-on critical
           if [ -n "$TEST_REPORTS" ]; then set -- "$@" --tests "$GITHUB_WORKSPACE/$TEST_REPORTS"; fi
           for p in $SARIF_REPORTS; do set -- "$@" --sarif "$GITHUB_WORKSPACE/$p"; done
+          for p in $COVERAGE_REPORTS; do set -- "$@" --coverage "$GITHUB_WORKSPACE/$p"; done
+          for p in $MUTATION_REPORTS; do set -- "$@" --mutation "$GITHUB_WORKSPACE/$p"; done
           set -- "$@" --base "origin/$BASE_REF"
           npm run analyze -- "$@"
