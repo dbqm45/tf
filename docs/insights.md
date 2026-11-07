@@ -176,6 +176,14 @@ zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różn
 - `python3 tools/workspace.py refs` — rdzeń nie wymienia elementów nakładek (chyba że linia nazywa nakładkę,
   np. „(pack-it)”), nakładka wymienia tylko elementy nakładek, od których zależy.
 - `python3 tools/workspace.py sync-gate` — wyniki bramki jakości skilli z projektu roboczego z powrotem do źródeł.
+- `python3 tools/context.py fetch <paczka> --version X --online` + `query <paczka> "<temat>" --version X` — własny
+  lokalny indeks dokumentacji wersji biblioteki (README, CHANGELOG, `.d.ts` z paczki w rejestrze, `llms.txt`, strony
+  z `--url`; wyszukiwanie BM25, fragmenty ze źródłem i datą). Do sprawdzania API przed zmianą skilli `fw-*`, `lang-*`,
+  `tool-*` zamiast usług zewnętrznych w rodzaju Context7: temat pytania nie opuszcza maszyny. Indeks w `.work/context`.
+- `python3 tools/ui-deconstruct.py --dir <repo> | --url <https://…> --name <nazwa>` — szkic skilla `ux-ds-<nazwa>`
+  z systemu projektowego (statyczna analiza CSS i HTML: zmienne, kolory, fonty, skale, promienie, cienie,
+  breakpointy, klasy komponentów) plus szkielet scenariuszy ewaluacji; wynik w `.work/ui-deconstruct/` do dopracowania wg
+  core-skill-authoring. Oba narzędzia są tylko w fabryce, do projektów nie trafiają.
 
 ## Konsultanci: jak zespoły z różnych nakładek pytają się nawzajem
 
