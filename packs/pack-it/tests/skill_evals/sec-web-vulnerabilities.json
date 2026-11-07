@@ -67,34 +67,35 @@
       }
     },
     {
-      "id": "kupon-jednorazowy-wyscig",
+      "id": "cdn-cudza-strona-konta",
       "expect": "trigger",
-      "prompt": "Kod rabatowy jest jednorazowy: sprawdzamy w bazie, czy used = false, a potem ustawiamy used = true i naliczamy rabat. Tester wysłał 20 żądań naraz i rabat naliczył się 6 razy. Skąd to i jak naprawić tak, żeby dało się to udowodnić testem? Odpowiedz zwięźle.",
+      "prompt": "Zgłoszenie od użytkownika: wysłał koledze link https://app.example.com/account/settings/avatar.png, kolega go otworzył, a potem zgłaszający pod tym samym adresem zobaczył stronę ustawień kolegi z jego e-mailem i adresem. Aplikacja stoi za CDN. Zapisz to jako ustalenie do raportu z audytu bezpieczeństwa, który oddajemy przed wydaniem. Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [
-            "wyścig\\w*",
-            "race",
-            "TOCTOU",
-            "współbieżn\\w*"
+            "Werdykt\\s*:"
           ],
           [
-            "atomow\\w*",
-            "UPDATE[^\\n]{0,80}WHERE[^\\n]{0,40}used",
-            "FOR UPDATE",
-            "blokad\\w*",
-            "unikaln\\w*",
-            "warunkow\\w* (zapis|aktualiz)",
-            "rowcount",
-            "affected"
+            "CWE-\\d+"
           ],
           [
-            "równoległ\\w*[^\\n]{0,80}(żąda|wywoła|test)",
-            "test\\w*[^\\n]{0,80}równoległ\\w*",
-            "Promise\\.all",
-            "jednocześni\\w*",
-            "naraz"
+            "cache deception",
+            "oszuk\\w* (cache|pamięci podręcznej)",
+            "deception"
+          ],
+          [
+            "(waga|ważność|severity)\\W{0,5}(wysok|krytyczn|high|critical)",
+            "\\|\\s*(wysok|krytyczn)\\w*\\s*\\|"
+          ],
+          [
+            "test\\w*[^\\n]{0,160}(drug\\w*|inn\\w*|obc\\w*) (sesj|użytkownik|kont)",
+            "test\\w*[^\\n]{0,160}(no-store|HIT|MISS|cf-cache-status|x-cache)",
+            "(no-store|HIT|MISS)[^\\n]{0,120}test",
+            "test\\w*[^\\n]{0,160}(anonimow\\w*|bez sesji|niezalogowan\\w*)"
           ]
+        ],
+        "none": [
+          "(wyczyść|wyczyszczenie|purge)[^\\n]{0,40}cache[^\\n]{0,40}(wystarczy|rozwiąże)"
         ]
       }
     },
