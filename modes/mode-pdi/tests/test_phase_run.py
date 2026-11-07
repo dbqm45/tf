@@ -472,6 +472,10 @@ def main() -> int:
               and any(c.startswith("name: Błędy skanu") and "verdict.json" in c and "sys.exit(1 if e" in c
                       for c in csteps[scan_i + 1:]),
               "W-16: skan przed checkoutem ci_for_sdlc (bez obcych plików), błąd skanu czerwieni, ustalenia ocenia SEC-001")
+        # Z7b-1b: cele zmiany (TGT-001…004) — opcjonalne pokrycie i mutacje przekazywane do ci_for_sdlc
+        check("COVERAGE_REPORTS: ''" in cbody and "MUTATION_REPORTS: ''" in cbody
+              and '--coverage "$GITHUB_WORKSPACE/$p"' in cbody and '--mutation "$GITHUB_WORKSPACE/$p"' in cbody,
+              f"W-17: change-check przekazuje opcjonalne raporty pokrycia i mutacji do ci_for_sdlc (Z7b-1b): {r.stdout}")
         check("semgrep.dev" in cbody and "TALOS_SEMGREP_CONFIG: ${{ vars.TALOS_SEMGREP_CONFIG }}" in cbody,
               "W-17: szablon mówi o hoście reguł (Z8a) i pozwala podać reguły lokalne")
         r = run(["workflow", "install", "--workflow", "change-check"], repo)
