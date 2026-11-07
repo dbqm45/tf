@@ -248,7 +248,7 @@ def fix_prompt(change: str, branch: str, round_no: int, data: dict[str, Any]) ->
         f"Pracujesz bez interakcji: runda poprawek {round_no} pętli PR (N2) cięcia {task or branch} zmiany {change}. "
         f"Jesteś już na gałęzi `{branch}` (przełączył ją pdi). Nikt nie odpowie na pytania.",
         "Poprawiasz tylko to, co jest niżej — uwagi przeglądu potwierdzone drugim modelem i czerwony check — nic poza "
-        "tym (talos-story-run, „Poprawki z pętli PR”). Uwagi, której nie da się poprawić w zakresie cięcia, nie "
+        "tym (skill Talosa, sekcja „Poprawki z pętli PR”). Uwagi, której nie da się poprawić w zakresie cięcia, nie "
         "obchodzisz: opisz ją w ostatniej odpowiedzi jednym zdaniem.",
         "Narzędzia: pliki czytasz przez Read, Grep i Glob. W Bash jedno polecenie na wywołanie, bez `&&`, `||`, `;`, "
         "`|` i bez `cd …` — inaczej polecenie zostanie odrzucone.",
