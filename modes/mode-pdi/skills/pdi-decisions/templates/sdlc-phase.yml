@@ -177,6 +177,8 @@ jobs:
             --change "$CHANGE" --phase "$PHASE"
       # Persona w --print nie może pushować ani otwierać PR-ów (git push pyta o zgodę) — robi to workflow.
       # Uwaga: push tokenem github.token nie uruchamia workflow CI na tych gałęziach (ograniczenie GitHuba).
+      # Dlatego pętla PR talosa (N2: przegląd → walidacja uwag → poprawka → zielone CI) działa tylko w trybie lokalnym
+      # pdi (PDI_DISPATCH=local, push tokenem gh właściciela); tutaj PR-y cięć idą bez pętli (pdi docs/plan-n2-petla-pr.md).
       - name: PR-y cięć (delivery)
         if: env.PHASE == 'delivery'
         env:

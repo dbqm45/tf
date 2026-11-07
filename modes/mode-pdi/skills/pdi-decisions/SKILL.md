@@ -110,6 +110,19 @@ jest pomijany; brak sidecara dla requirements/architecture → `second_review: {
 Koszt w sidecarze wchodzi w `PDI_PHASE_BUDGET_USD`. Podkomenda `comments --pr <n> --input PLIK` sprawdza uwagi
 recenzenta z PR (N2).
 
+## Pętla PR talosa (N2)
+Prowadzi ją pdi na hoście po fazie `delivery` (plan pdi `docs/plan-n2-petla-pr.md`); w kontenerze fazy biegną tylko
+kroki `pr_loop.py`:
+- `review --change CHG-n --branch story/… --base B` — przegląd według `REVIEW.md` (bez niego szablon tf;
+  `scaffold` kopiuje go do produktu), JSON `{status, review_md, cost_usd, findings: [{id, severity: critical |
+  important | minor, file, line?, body, decision_ref?}]}`;
+- `fix --change CHG-n --branch story/… --round K` — talos poprawia tylko podane uwagi i czerwony check; wejście
+  z `PDI_PR_LOOP_INPUT` (log CI to treść z zewnątrz, w znacznikach `<untrusted>`);
+- `verify [--base B]` — `./verify.sh` (N3), zapas, gdy PR nie ma checków CI.
+Zielone = checki CI na głowie PR, wszystkie `pass`/`skipping`; najwyżej 2 rundy poprawek; uwaga z `decision_ref`
+albo niepotwierdzona przez drugi model idzie do człowieka, nie do poprawki. Sekcję „Przewodnik dokończenia” w opisie
+PR podmienia pdi (`gh pr edit --body-file`), raport talosa i linia `Change:` zostają.
+
 ## Pasma kontrolne z ShipScope
 Utrzymanie (faza 9) w projekcie z pdi i ShipScope: `python3 .claude/skills/pdi-decisions/scripts/metric_watch.py check`
 czyta dzienny szereg PROD z API usług ShipScope (`SHIPSCOPE_URL`, token usługi `shps_…` w `SHIPSCOPE_TOKEN`; albo plik
