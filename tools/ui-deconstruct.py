@@ -7,8 +7,9 @@ i HTML, bez modelu i bez kluczy API. Wynik to szkic w formacie fabryki do doprac
   python3 tools/ui-deconstruct.py --dir ŚCIEŻKA --name NAZWA [--out KATALOG] [--force]
   python3 tools/ui-deconstruct.py --url https://… --name NAZWA [--out KATALOG] [--force]
 
-Wynik w KATALOG (domyślnie .work/ui-deconstruct/): ux-ds-<nazwa>/SKILL.md, references/tokeny.md, tokens.json oraz
-ux-ds-<nazwa>.evals.json — szkielet scenariuszy do przeniesienia do tests/skill_evals/ nakładki.
+Wynik dotyczy rzeczy spoza fabryki, więc nie trafia do repozytorium fabryki: bez --out narzędzie pyta o katalog
+docelowy, a katalog wewnątrz fabryki odrzuca. W KATALOG: ux-ds-<nazwa>/SKILL.md, references/tokeny.md, tokens.json
+oraz ux-ds-<nazwa>.evals.json — szkielet scenariuszy ewaluacji skilla.
 Wyciąga: zmienne CSS z :root, kolory (wg częstości, hex małymi literami), rodziny fontów, rozmiary fontu, odstępy,
 promienie, cienie, breakpointy i klasy komponentów z HTML. Pomija node_modules, .git, dist, build.
 Sieć: tylko z --url — https, jedna strona i arkusze CSS z tej samej domeny (najwyżej 20); adresy niepubliczne
@@ -30,7 +31,6 @@ from collections import Counter
 from pathlib import Path
 
 TF = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = TF / ".work" / "ui-deconstruct"
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", ".next", "coverage", "vendor"}
 MAX_FILES = 500
 MAX_BYTES = 1024 * 1024
@@ -288,8 +288,8 @@ odstęp i promień z tabel w `references/tokeny.md`, wartości przez zmienne CSS
 ## Do dopracowania (autor skilla)
 - [ ] sprawdź tokeny ze źródłem (najczęstszy kolor nie zawsze jest kolorem marki)
 - [ ] nazwij role kolorów (główny, tekst, tło, błąd) i skalę odstępów
-- [ ] scenariusze z `ux-ds-{slug}.evals.json` przenieś do `tests/skill_evals/` nakładki i uzupełnij
-- [ ] `python3 factory/skill_gate.py ux-ds-{slug}` w złożonym projekcie
+- [ ] scenariusze z `ux-ds-{slug}.evals.json` przenieś do katalogu scenariuszy projektu i uzupełnij
+- [ ] `python3 factory/skill_gate.py ux-ds-{slug}` w projekcie, w którym skill będzie używany
 
 ## Źródła
 - `{src}` — analiza statyczna {today.isoformat()} (`tools/ui-deconstruct.py`).
@@ -310,18 +310,40 @@ odstęp i promień z tabel w `references/tokeny.md`, wartości przez zmienne CSS
     return skill
 
 
+def target_dir(arg: str | None) -> Path:
+    """Katalog wyniku: z --out albo z odpowiedzi na pytanie; nigdy wewnątrz repozytorium fabryki."""
+    if not arg:
+        print("Katalog docelowy na szkic skilla (poza repozytorium fabryki): ", end="", flush=True)
+        try:
+            arg = input().strip()
+        except EOFError:
+            arg = ""
+        if not arg:
+            raise ValueError("nie podano katalogu docelowego — uruchom ponownie i odpowiedz na pytanie albo podaj --out")
+    out = Path(arg).expanduser().resolve()
+    if out == TF or out.is_relative_to(TF):
+        raise ValueError(f"{out} leży w repozytorium fabryki ({TF}) — wynik dotyczy zewnętrznego systemu projektowego, "
+                         f"wskaż katalog poza fabryką (--out)")
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--dir", help="katalog lub repozytorium (sklonowane) do analizy")
     g.add_argument("--url", help="strona https do analizy")
     ap.add_argument("--name", required=True, help="nazwa systemu projektowego (skill ux-ds-<nazwa>)")
-    ap.add_argument("--out", default=str(DEFAULT_OUT))
+    ap.add_argument("--out", help="katalog docelowy poza repozytorium fabryki (bez tej opcji narzędzie zapyta)")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args(argv)
     try:
+        out = target_dir(a.out)
+    except ValueError as e:
+        print(f"✗ {e}")
+        return 1
+    try:
         tok = extract_dir(Path(a.dir)) if a.dir else extract_url(a.url)
-        skill = write_skill(tok, a.name, Path(a.out), a.force)
+        skill = write_skill(tok, a.name, out, a.force)
     except FileExistsError as e:
         print(f"✗ {e}")
         return 1
@@ -332,7 +354,8 @@ def main(argv=None) -> int:
           f"{len(tok['components'])} klas komponentów")
     for s in tok.get("skipped", []):
         print(f"  pominięto: {s}")
-    print(f"Dalej: dopracuj SKILL.md, przenieś {skill.name}.evals.json do tests/skill_evals/ nakładki, bramka skilla.")
+    print(f"Dalej: dopracuj SKILL.md, scenariusze z {skill.name}.evals.json przenieś do katalogu scenariuszy projektu "
+          f"(np. .claude/tests/skill_evals/) i uruchom tam bramkę skilla.")
     return 0
 
 

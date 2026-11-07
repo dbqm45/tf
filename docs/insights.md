@@ -182,8 +182,9 @@ zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różn
   `tool-*` zamiast usług zewnętrznych w rodzaju Context7: temat pytania nie opuszcza maszyny. Indeks w `.work/context`.
 - `python3 tools/ui-deconstruct.py --dir <repo> | --url <https://…> --name <nazwa>` — szkic skilla `ux-ds-<nazwa>`
   z systemu projektowego (statyczna analiza CSS i HTML: zmienne, kolory, fonty, skale, promienie, cienie,
-  breakpointy, klasy komponentów) plus szkielet scenariuszy ewaluacji; wynik w `.work/ui-deconstruct/` do dopracowania wg
-  core-skill-authoring. Oba narzędzia są tylko w fabryce, do projektów nie trafiają.
+  breakpointy, klasy komponentów) plus szkielet scenariuszy ewaluacji do dopracowania wg core-skill-authoring. Wynik
+  dotyczy rzeczy zewnętrznych, więc nie trafia do fabryki: bez `--out` narzędzie pyta o katalog docelowy, a katalog
+  w repozytorium fabryki odrzuca. Oba narzędzia są tylko w fabryce, do projektów nie trafiają.
 
 ## Konsultanci: jak zespoły z różnych nakładek pytają się nawzajem
 

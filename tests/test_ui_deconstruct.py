@@ -124,6 +124,22 @@ def main() -> int:
                            capture_output=True, text=True, timeout=60)
         check(r.returncode == 1 and "--force" in r.stdout + r.stderr, f"S-4: istniejący skill bez --force → 1: {r.stdout}")
 
+        # wynik dotyczy rzeczy spoza fabryki: bez --out pytamy o katalog, a katalogu w repozytorium fabryki nie przyjmujemy
+        r = subprocess.run([sys.executable, str(SCRIPT), "--dir", str(src), "--name", "demo2"], input="",
+                           capture_output=True, text=True, timeout=60)
+        check(r.returncode == 1 and "--out" in r.stdout + r.stderr and not (ROOT / ".work" / "ui-deconstruct").exists(),
+              f"S-7: bez --out i bez odpowiedzi → kod 1, nic nie zapisane: {r.stdout}{r.stderr}")
+        asked = Path(t) / "z-pytania"
+        r = subprocess.run([sys.executable, str(SCRIPT), "--dir", str(src), "--name", "demo2"], input=f"{asked}\n",
+                           capture_output=True, text=True, timeout=60)
+        check(r.returncode == 0 and (asked / "ux-ds-demo2" / "SKILL.md").is_file() and "katalog" in r.stdout.lower(),
+              f"S-8: bez --out pyta o katalog docelowy i zapisuje tam: {r.stdout}{r.stderr}")
+        inside = ROOT / "packs" / "tmp-ui-deconstruct-test"
+        r = subprocess.run([sys.executable, str(SCRIPT), "--dir", str(src), "--name", "demo3", "--out", str(inside)],
+                           capture_output=True, text=True, timeout=60)
+        check(r.returncode == 1 and not inside.exists() and "fabryk" in r.stdout + r.stderr,
+              f"S-9: katalog wewnątrz repozytorium fabryki odrzucony: {r.stdout}{r.stderr}")
+
         r = subprocess.run([sys.executable, str(SCRIPT), "--url", "http://127.0.0.1:9/", "--name", "x", "--out", str(out)],
                            capture_output=True, text=True, timeout=60)
         check(r.returncode == 1 and ("niepubliczny" in r.stdout + r.stderr or "https" in r.stdout + r.stderr),
