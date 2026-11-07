@@ -3,6 +3,110 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.65.0] — 2026-11-07
+### Added
+- **core:** allow running the team-factory workflow by hand (#163)
+
+## [5.64.6] — 2026-11-07
+### Fixed
+- phase run findings from the CHG-4 console run (#162)
+
+## [5.64.5] — 2026-11-07
+### Fixed
+- **mode-pdi:** show a missing second review instead of "no blocking findings" (#161)
+
+## [5.64.4] — 2026-11-07
+### Fixed
+- **mode-pdi:** sync pdi contract 0.13.0 so B2/B3 gate requests are accepted (#160)
+
+## [5.64.3] — 2026-11-07
+### Fixed
+- **install:** keep factory-only flow-evals tests out of product repos (#159)
+
+## [5.64.2] — 2026-11-07
+### Fixed
+- **mode-pdi:** use claude-sonnet-5-5 as the second review fallback (#158)
+
+## [5.64.1] — 2026-11-07
+### Fixed
+- **flow-evals:** fixture replaces docs/project/changes/, strips siblings (N5) (#157)
+
+## [5.64.0] — 2026-11-07
+### Added
+- **mode-pdi:** optional coverage and mutation reports in change-check (Z7b-1b) (#156)
+
+## [5.63.1] — 2026-11-07
+### Fixed
+- **flow-evals:** make first paid run actually executable (N5) (#155)
+
+## [5.63.0] — 2026-11-07
+### Added
+- **phase:** stream-json progress lines (Z3-lokalnie A7) (#154)
+
+## [5.62.0] — 2026-11-06
+### Added
+- **flow-evals:** full 20-task set from A6 run logs (N5 PR2) (#153)
+
+## [5.61.0] — 2026-11-06
+### Added
+- **flow-evals:** gate model/skill/persona/phase-prompt changes (N5) (#150)
+
+## [5.60.0] — 2026-11-06
+### Added
+- **mode-pdi:** require two options and targets in plan.md (Z7b-1a) (#151)
+
+## [5.59.0] — 2026-11-06
+### Added
+- **mode-pdi:** add second-model review before B2/B3 (N1, DZ12) (#149)
+
+## [5.58.7] — 2026-11-06
+### Fixed
+- **talos:** write the cut report even without transcripts (#148)
+- **tests:** check installed settings in settings coverage test (#147)
+
+## [5.58.6] — 2026-11-05
+### Fixed
+- **talos:** keep semgrep state in the clone, not in HOME (#146)
+
+## [5.58.5] — 2026-11-05
+### Fixed
+- **pdi:** unblock Talos in delivery (PRB-28, PRB-32, PRB-33) (#145)
+
+## [5.58.4] — 2026-11-03
+### Fixed
+- **update:** take the CI update base from the committed factory lock (#143)
+
+## [5.58.3] — 2026-11-03
+### Fixed
+- **install:** keep team installs updatable from a fresh clone (#142)
+
+## [5.58.2] — 2026-11-03
+### Fixed
+- **talos:** find run transcripts of sessions started above the repo (#141)
+
+## [5.58.1] — 2026-11-03
+### Fixed
+- **talos:** keep every security scan attempt per slice in the run report (#140)
+
+## [5.58.0] — 2026-11-03
+### Added
+- **talos:** block slices with security findings and scan PRs in CI (#138)
+### Fixed
+- **talos:** skip dependency audit for package.json without dependencies (#139)
+
+## [5.57.0] — 2026-11-02
+### Added
+- **mode-pdi:** pdi contract copies at 0.11.0 with the decision schema (#136)
+
+## [5.56.0] — 2026-11-02
+### Added
+- **pdi:** bring every decision of a change into each phase (PRB-3) (#135)
+- **pdi:** keep GitHub credentials out of the persona step and sandbox it (Z8a) (#137)
+
+## [5.55.1] — 2026-11-02
+### Fixed
+- **pdi:** keep persona output and phase order, move ADR out of design.md (#134)
+
 ## [5.55.0] — 2026-11-01
 ### Added
 - **mode-pdi:** record answers to ci_for_sdlc findings in decisions.md (#128)

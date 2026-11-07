@@ -1,0 +1,29 @@
+# Plan wydania zmiany CHG-1 — kontrakt pdi 0.4.0 (release-plan.schema.json); sprawdza: decision_record.py check.
+# R1 = MVP: gwiazda przewodnia plus minimum do wyniku z intent.md. Każde TSK z plan.md w dokładnie jednej linii;
+# kolumny „Wydanie" i „Flaga" w plan.md muszą się zgadzać z tym plikiem.
+change: CHG-1
+mvp:
+  release: R1
+  outcome: "Data ostatniego wdrożenia jest widoczna w stopce strony sdlc-sandbox przy włączonej fladze show_last_deployed"
+  metric:
+    name: data_wdrozenia_widoczna_w_stopce
+    target: "widoczna w GET / z show_last_deployed enabled=true, rollout=100 na prod"
+    horizon_days: 7
+  guardrails:
+    - "rollbacks_count = 0 w pierwszym tygodniu po wdrożeniu R1 na prod"
+releases:
+  - id: R1
+    name: MVP
+    tasks: [TSK-1, TSK-2]
+flags:
+  - key: show_last_deployed
+    tasks: [TSK-2]
+    owner: "dbqm45"
+    remove_by: 2027-01-30
+    rollout:
+      - stage: internal
+        min_days: 0
+        exit: "data wdrożenia widoczna w stopce na środowisku wewnętrznym; brak błędów 5xx w logach serwera"
+      - stage: "100%"
+        min_days: 0
+        exit: "data widoczna dla wszystkich na prod; zero rollbacków przez horyzont MVP (7 dni); potem PR usuwający flagę"

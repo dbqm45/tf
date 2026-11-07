@@ -1,5 +1,7 @@
 # Niebezpieczne API i domyślne konfiguracje — lista do przeglądu
 
+> **Spis treści:** Wzorce wspólne · Python · JavaScript i Node.js · Java · C# i .NET · Go · Domyślne konfiguracje i ustawienia środowiska
+
 Lista pytań do przeglądu kodu i konfiguracji. Trafienie to kandydat, nie wyrok: sprawdzasz, czy dane są
 niezaufane i czy po drodze jest kontrola. Znalezione wystąpienie → poszukaj wariantów (sec-variant-analysis).
 

@@ -1,6 +1,4 @@
 # Wdrożenie poza Vercelem i aktualizacja wersji
-
-> **Spis treści:** 1. Obraz kontenera · 2. Wiele instancji · 3. Obrazy i zmienne środowiskowe · 4. Środowisko
 > uruchomieniowe · 5. Aktualizacja wersji krok po kroku
 
 ## 1. Obraz kontenera

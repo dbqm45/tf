@@ -81,18 +81,36 @@ def main() -> int:
         proj, cfg = Path(t) / "proj", Path(t) / "cfg"
         proj.mkdir()
 
-        # start: katalog przebiegu z szablonami, slug bez polskich znaków
+        # start: katalog przebiegu w tmp/talos/runs/ (nie `.claude/runs/`, chroniony przez Claude Code —
+        # permission-modes 2026-11-05: writes to protected paths are never auto-approved, even with permissions.allow),
+        # slug bez polskich znaków
         r = run(["start", "Import rozliczeń CDR", "--story", "Jako operator chcę importować CDR."], proj, cfg)
-        runs = sorted((proj / ".claude" / "runs").glob("*-import-rozliczen-cdr"))
-        check(r.returncode == 0 and len(runs) == 1, f"R-1: start tworzy katalog przebiegu: {r.stdout} {r.stderr}")
+        runs = sorted((proj / "tmp" / "talos" / "runs").glob("*-import-rozliczen-cdr"))
+        check(r.returncode == 0 and len(runs) == 1 and not (proj / ".claude" / "runs").exists(),
+              f"R-1: start tworzy katalog w tmp/talos/runs/, bez .claude/runs/: {r.stdout} {r.stderr}")
         if runs:
             d = runs[0]
             check(all((d / f).is_file() for f in ("run.json", "story.md", "plan.md", "parked.md")),
                   f"R-2: pliki przebiegu: {sorted(x.name for x in d.iterdir())}")
             check("importować CDR" in (d / "story.md").read_text(encoding="utf-8"), "R-3: treść story zapisana")
             check(re.match(r"\d{4}-\d{2}-\d{2}-", d.name) is not None, f"R-4: data w nazwie katalogu: {d.name}")
+        # PRB-32 — klon produktu bez `tmp/talos/runs/` w .gitignore ma „?? tmp/” w statusie po pierwszym start i hook
+        # „czyste drzewo robocze” Talosa (SKILL §0.1) oraz dispatch_local pdi uznają klon za brudny. Skrypt zakłada
+        # `tmp/talos/runs/.gitignore` z `*`, tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
+        gi = proj / "tmp" / "talos" / "runs" / ".gitignore"
+        check(gi.is_file() and gi.read_text(encoding="utf-8").strip() == "*",
+              f"R-1a: start zakłada tmp/talos/runs/.gitignore z `*`: istnieje={gi.is_file()}, "
+              f"treść={gi.read_text(encoding='utf-8') if gi.is_file() else '—'!r}")
+        import subprocess as _sp
+        _sp.run(["git", "init", "-q", "-b", "main", str(proj)], check=True, capture_output=True)
+        for _k, _v in (("user.name", "t"), ("user.email", "t@t"), ("commit.gpgsign", "false")):
+            _sp.run(["git", "-C", str(proj), "config", _k, _v], check=True, capture_output=True)
+        porcelain = _sp.run(["git", "-C", str(proj), "status", "--porcelain", "tmp/talos/runs/"],
+                            capture_output=True, text=True).stdout
+        check(porcelain == "", f"R-1b: po start git status pusty w tmp/talos/runs/: {porcelain!r}")
 
-        # finish: transkrypty sesji i podagenta od chwili startu
+        # finish: transkrypty sesji i podagenta od chwili startu — status/finish czytają też katalogi w .claude/runs/
+        # (stare przebiegi sprzed przeniesienia, PRB-32, 2026-11-05: ścieżka chroniona przez Claude Code)
         run_dir = proj / ".claude" / "runs" / "2026-10-21-test"
         run_dir.mkdir(parents=True)
         (run_dir / "run.json").write_text(json.dumps({"slug": "test", "started_at": "2026-10-21T10:00:00+00:00"}))
@@ -132,6 +150,61 @@ def main() -> int:
                   f"R-11: postęp planu i liczba odłożonych: {rep.get('plan')} {rep.get('parked')}")
         md = (run_dir / "report.md").read_text(encoding="utf-8") if (run_dir / "report.md").exists() else ""
         check("opus" in md and "haiku" in md and "USD" in md and "2/3" in md, f"R-12: report.md: {md[:400]}")
+        check("## Bezpieczeństwo" in md and "brak wyniku skanu" in md, f"R-14: bez skanu sekcja mówi o braku: {md[-300:]}")
+
+        # R-11a: kawałek z commitem liczy się jako zrobiony, nawet gdy Talos nie odhaczył go w plan.md (CHG-4, 2026-11-07:
+        # „Plan: 0/1” przy gotowym commicie). Baza: gałąź fazy pdi/<CHG>-delivery, gdy przebieg ma zmianę, inaczej main.
+        def git(*a: str) -> None:
+            _sp.run(["git", "-C", str(proj), *a], check=True, capture_output=True)
+        (proj / "README.md").write_text("x\n")
+        git("add", "README.md")
+        git("commit", "-q", "-m", "chore: base")
+        git("switch", "-q", "-c", "pdi/CHG-90-delivery")
+        (proj / "decisions.md").write_text("d\n")
+        git("add", "decisions.md")
+        git("commit", "-q", "-m", "docs(CHG-90): decyzje przed realizacją (pdi)")
+        git("switch", "-q", "-c", "story/k")
+        (proj / "a.py").write_text("a = 1\n")
+        git("add", "a.py")
+        git("commit", "-q", "-m", "feat: a\n\nChange: TSK-90")
+        cut_dir = proj / "tmp" / "talos" / "runs" / "2026-10-21-cut"
+        cut_dir.mkdir(parents=True)
+        (cut_dir / "run.json").write_text(json.dumps({"slug": "cut", "started_at": "2026-10-21T10:00:00+00:00",
+                                                      "change": "CHG-90", "task": "TSK-90"}))
+        (cut_dir / "plan.md").write_text("# Plan\n- [ ] K1 a\n- [ ] K2 b\n")
+        r = run(["finish", str(cut_dir), "--json"], proj, cfg)
+        try:
+            got = json.loads(r.stdout).get("plan")
+        except json.JSONDecodeError:
+            got = r.stdout[-300:]
+        check(got == {"done": 1, "total": 2},
+              f"R-11a: commit kawałka liczy się mimo braku odhaczenia, commit decyzji pdi nie: {got}")
+        git("switch", "-q", "main")
+        import shutil as _sh
+        _sh.rmtree(proj / "docs" / "project" / "changes" / "CHG-90", ignore_errors=True)
+
+        # sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security/K<n>)
+        sec = run_dir / "security" / "K2"
+        sec.mkdir(parents=True)
+        (sec / "summary.md").write_text("## Bezpieczeństwo\n\nSkan: PASS (blokujące: 0, poniżej progu: 1, błędy skanu: 0).\n\n"
+                                        "Poniżej progu:\n- r.note src/a.py:3 (note) — drobiazg\n", encoding="utf-8")
+        run(["finish", str(run_dir)], proj, cfg)
+        md = (run_dir / "report.md").read_text(encoding="utf-8")
+        check(md.count("## Bezpieczeństwo") == 1 and "### K2" in md and "r.note src/a.py:3" in md
+              and "brak wyniku skanu" not in md, f"R-15: sekcja bezpieczeństwa z wyniku skanu: {md[-400:]}")
+        # każda próba kawałka (security/K<n>/proba-<k>/summary.md): FAIL z ustaleniami, potem PASS — w kolejności prób
+        for k, body in ((1, "Skan: FAIL (blokujące: 1, poniżej progu: 0, błędy skanu: 0).\n\nPoniżej progu: brak.\n\n"
+                            "Blokujące i błędy:\n- node-sqlite-sql-from-string src/deployments.js:14 (CWE-89, warning)\n"),
+                        (2, "Skan: PASS (blokujące: 0, poniżej progu: 0, błędy skanu: 0).\n\nPoniżej progu: brak.\n")):
+            (sec.parent / "K1" / f"proba-{k}").mkdir(parents=True)
+            (sec.parent / "K1" / f"proba-{k}" / "summary.md").write_text("## Bezpieczeństwo\n\n" + body, encoding="utf-8")
+        (sec.parent / "K1" / "feedback.md").write_text("# Skan bezpieczeństwa\n\n- brak blokujących\n", encoding="utf-8")
+        run(["finish", str(run_dir)], proj, cfg)
+        md = (run_dir / "report.md").read_text(encoding="utf-8")
+        i = {k: md.find(k) for k in ("### K1", "#### Próba 1", "node-sqlite-sql-from-string src/deployments.js:14",
+                                     "#### Próba 2", "### K2")}
+        check(all(v >= 0 for v in i.values()) and list(i.values()) == sorted(i.values()) and md.count("## Bezpieczeństwo") == 1
+              and md.count("### K1") == 1 and "Skan: FAIL" in md, f"R-15a: wszystkie próby kawałka w raporcie: {i} {md[-900:]}")
 
         # status: jedna linia do kontroli budżetu po każdym kawałku (mało kontekstu), bez zapisu report.md
         (run_dir / "report.md").unlink()
@@ -146,7 +219,7 @@ def main() -> int:
         (chg / "plan.md").write_text(PLAN_MD, encoding="utf-8")
         (chg / "intent.md").write_text(INTENT_MD, encoding="utf-8")
         r = run(["start", "--task", "TSK-58"], proj, cfg)
-        tr = sorted((proj / ".claude" / "runs").glob("*tsk-58*"))
+        tr = sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))
         meta = json.loads((tr[0] / "run.json").read_text(encoding="utf-8")) if tr else {}
         story = (tr[0] / "story.md").read_text(encoding="utf-8") if tr else ""
         check(r.returncode == 0 and meta.get("change") == "CHG-12" and meta.get("task") == "TSK-58"
@@ -158,6 +231,34 @@ def main() -> int:
         r = run(["start", "--task", "TSK-99"], proj, cfg)
         check(r.returncode == 2 and "TSK-99" in r.stdout + r.stderr and "Traceback" not in r.stderr,
               f"R-17: TSK spoza planów zmian → kod 2 z komunikatem: {r.returncode} {r.stdout} {r.stderr[-300:]}")
+
+        # PRB-33: ten sam TSK w dwóch zmianach → błąd z listą zmian; --change rozstrzyga; zły --change → błąd
+        chg2 = proj / "docs" / "project" / "changes" / "CHG-13"
+        chg2.mkdir(parents=True)
+        plan2 = (PLAN_MD.replace("change: CHG-12", "change: CHG-13")
+                 .replace("# Plan zmiany CHG-12", "# Plan zmiany CHG-13")
+                 # inna wartość w CHG-13, żeby slug nie kolidował z katalogiem z R-15
+                 .replace("brak podwójnego obciążenia", "ponowienie w CHG-13"))
+        (chg2 / "plan.md").write_text(plan2, encoding="utf-8")
+        (chg2 / "intent.md").write_text(INTENT_MD.replace("CHG-12", "CHG-13"), encoding="utf-8")
+        r = run(["start", "--task", "TSK-58"], proj, cfg)
+        check(r.returncode == 2 and "CHG-12" in r.stdout + r.stderr and "CHG-13" in r.stdout + r.stderr
+              and "--change" in r.stdout + r.stderr and "Traceback" not in r.stderr,
+              f"R-33a: dwa dziennika z TSK-58 → kod 2 z listą zmian i podpowiedzią --change: {r.returncode} "
+              f"{r.stdout} {r.stderr[-400:]}")
+        r = run(["start", "--task", "TSK-58", "--change", "CHG-13"], proj, cfg)
+        tr13 = sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))
+        meta13 = json.loads((tr13[-1] / "run.json").read_text(encoding="utf-8")) if tr13 else {}
+        check(r.returncode == 0 and meta13.get("change") == "CHG-13",
+              f"R-33b: --change CHG-13 wybiera CHG-13: {r.returncode} {r.stdout} {r.stderr} {meta13}")
+        r = run(["start", "--task", "TSK-58", "--change", "CHG-77"], proj, cfg)
+        check(r.returncode == 2 and ("CHG-77" in r.stdout + r.stderr) and "Traceback" not in r.stderr,
+              f"R-33c: zły --change → kod 2: {r.returncode} {r.stdout} {r.stderr[-300:]}")
+        # usuwamy drugi dziennik, żeby reszta testów miała jeden wpis
+        import shutil as _sh
+        _sh.rmtree(chg2)
+        for leftover in sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))[1:]:
+            _sh.rmtree(leftover)
         meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         (run_dir / "run.json").write_text(json.dumps({**meta, "change": "CHG-12", "task": "TSK-58"}), encoding="utf-8")
         with (run_dir / "parked.md").open("a", encoding="utf-8") as f:
@@ -171,6 +272,58 @@ def main() -> int:
         check("## Odłożone do decyzji" in text and "placeholderem w repo" in text and "- <" not in text,
               f"R-19: raport w repo ma pozycje z parked.md (PRB-14: parked.md jest poza gitem): {text[-600:]}")
 
+        # R-35 (PRB-34): w kontenerze fazy pdi transkrypty bywają niedostępne (sandbox) — finish i tak zapisuje raport
+        # cięcia (plan, odłożone, bezpieczeństwo) z adnotacją o braku danych o koszcie; kod 2 jak dotąd (R-13)
+        kept.unlink()
+        r = run(["finish", str(run_dir)], proj, Path(t) / "brak-transkryptow")
+        text = kept.read_text(encoding="utf-8") if kept.is_file() else ""
+        check(r.returncode == 2 and "brak danych o koszcie" in text and "placeholderem w repo" in text
+              and "brak danych o koszcie" in r.stdout,
+              f"R-35: finish bez transkryptów zapisuje raport z adnotacją: {r.returncode} {r.stdout[-400:]} {text[:400]}")
+        r = run(["status", str(run_dir)], proj, Path(t) / "brak-transkryptow")
+        check(r.returncode == 2, f"R-36: status bez transkryptów → kod 2: {r.returncode} {r.stdout[-300:]}")
+
+        # sesja uruchomiona w katalogu nadrzędnym (chmura z kilkoma repozytoriami, start z /home/user): transkrypty są
+        # w katalogu projektu przodka, nie repozytorium — finish bez --session znajduje je i mówi, skąd wziął
+        ws = Path(t) / "ws"
+        repo = ws / "repo"
+        rdir = repo / ".claude" / "runs" / "2026-11-03-nested"
+        rdir.mkdir(parents=True)
+        (rdir / "run.json").write_text(json.dumps({"slug": "nested", "started_at": "2026-11-03T10:00:00+00:00"}))
+        (rdir / "plan.md").write_text("# Plan\n- [x] K1 lista\n")
+        (rdir / "parked.md").write_text("# Odłożone\n")
+        cfg2 = Path(t) / "cfg2"
+        ws_slug = re.sub(r"[^A-Za-z0-9]", "-", str(ws.resolve()))
+        write_jsonl(cfg2 / "projects" / ws_slug / "W1.jsonl",
+                    [assistant("2026-11-03T10:01:00Z", "w1", "claude-opus-5-5", i=10, o=20)])
+        r = run(["finish", str(rdir), "--json"], repo, cfg2)
+        try:
+            nested = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            nested = {}
+        check(r.returncode == 0 and nested.get("requests") == 1,
+              f"R-21: transkrypty sesji z katalogu nadrzędnego: {r.returncode} {r.stdout[-300:]} {r.stderr[-300:]}")
+        check(ws_slug in str(nested.get("transcripts", "")), f"R-22: raport mówi, skąd wziął transkrypty: {nested.get('transcripts')}")
+
+        # --session szuka sesji we wszystkich katalogach projektów (identyfikator sesji jest unikalny)
+        other_slug = "-gdzie-indziej"
+        write_jsonl(cfg2 / "projects" / other_slug / "X9.jsonl",
+                    [assistant("2026-11-03T10:02:00Z", "x9", "claude-haiku-5-5", i=5, o=5)])
+        r = run(["finish", str(rdir), "--session", "X9", "--json"], repo, cfg2)
+        try:
+            by_id = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            by_id = {}
+        check(r.returncode == 0 and by_id.get("requests") == 1 and "haiku" in by_id.get("models", {}),
+              f"R-23: --session znajduje sesję w innym katalogu projektu: {r.returncode} {r.stdout[-300:]} {r.stderr[-300:]}")
+
+        # nic nie znaleziono → komunikat z przeszukanymi katalogami i wskazówką, nie zgadywanie
+        r = run(["finish", str(rdir)], repo, Path(t) / "cfg3")
+        out = r.stdout + r.stderr
+        check(r.returncode == 2 and "Traceback" not in r.stderr and ws_slug in out and "--session" in out
+              and "katalogami nadrzędnymi" in out,
+              f"R-24: komunikat wymienia przeszukane katalogi i podpowiada --session: {out[-600:]}")
+
         # brak transkryptów → czytelny komunikat, nie wyjątek
         empty = Path(t) / "inny"
         empty.mkdir()
@@ -179,7 +332,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {18 - len(fails)}/18 testów raportu przebiegu")
+    print(f"{'✓' if not fails else '✗'} {29 - len(fails)}/29 testów raportu przebiegu")
     return 1 if fails else 0
 
 

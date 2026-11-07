@@ -3,20 +3,26 @@
 Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): katalog przebiegu i raport kosztu.
 
   python3 .claude/skills/talos-story-run/scripts/run_report.py start "<tytuł>" [--story "<treść>" | --story-file PLIK]
-  python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-57 ["<tytuł>"]   # cięcie z planu zmiany
+  python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-57 [--change CHG-12] ["<tytuł>"]   # cięcie z planu zmiany
   python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
   python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
-`start` zakłada `.claude/runs/<RRRR-MM-DD>-<slug>/` (ignorowany przez git): run.json (czas startu), story.md,
-plan.md, parked.md. Z `--task` story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek
-`tasks`) i z `intent.md` zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`);
-`finish` zapisuje wtedy też kopię raportu w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
+`start` zakłada `tmp/talos/runs/<RRRR-MM-DD>-<slug>/` (ignorowany przez git, PRB-32: ścieżka poza listą chronionych
+w code.claude.com/docs/en/permission-modes; `.claude/runs/` jest w `.claude/` i pisanie do niej Claude Code odmawia
+w `--print --permission-mode acceptEdits` nawet z `permissions.allow`): run.json (czas startu), story.md, plan.md,
+parked.md. `status` i `finish` czytają też katalogi zostawione w `.claude/runs/` (wznawianie starych przebiegów).
+Z `--task` story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
+zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`); z `--task` w dwóch
+planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish` zapisuje wtedy też kopię raportu
+w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
 czas, tokeny (wejście, wyjście, odczyt cache, zapis cache 5 min i 1 h), koszt wg `prices_usd_per_mtok`
 z factory/config.yaml, modele i agenci; dopisuje postęp planu i liczbę odłożonych spraw, zapisuje report.md.
 
 Liczy skrypt, nie model — raport nie zużywa tokenów poza wklejeniem kilkunastu linii wyniku. Transkrypty:
 `$CLAUDE_CONFIG_DIR/projects/<ścieżka projektu>/` (domyślnie `~/.claude`); bez `--session` liczą się wszystkie sesje
-projektu z wpisami po starcie (także równoległe — wtedy podaj `--session`). Koszt jest szacunkiem z cennika API
+projektu z wpisami po starcie (także równoległe — wtedy podaj `--session`), a gdy ich nie ma — sesje najbliższego
+katalogu nadrzędnego (sesja uruchomiona wyżej, np. w chmurze z kilkoma repozytoriami). `--session ID` szuka tej sesji
+we wszystkich katalogach projektów. Raport podaje, z którego katalogu wziął transkrypty. Koszt jest szacunkiem z cennika API
 (przy subskrypcji to równowartość, nie faktura); zapis cache 1 h liczony jako 2× cena wejścia (platform.claude.com,
 „Prompt caching”). Typ agenta podagenta pochodzi z pliku `*.meta.json` obok transkryptu, jeśli Claude Code go zapisał.
 """
@@ -26,10 +32,13 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
+
+ATTEMPT = re.compile(r"proba-(\d+)")  # katalog próby kawałka z security_scan.py scan --slice
 
 # projekt: katalog z factory/config.yaml nad skryptem (.claude/skills/talos-story-run/scripts/), inaczej bieżący
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / "factory" / "config.yaml").is_file()), Path.cwd())
@@ -39,7 +48,10 @@ except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
     sys.path.insert(0, str(ROOT / "factory" / "_vendor"))
     import yaml
 
-RUNS = Path(".claude") / "runs"
+RUNS = Path("tmp") / "talos" / "runs"
+# Stary katalog sprzed PRB-32 — nowych przebiegów tam nie zakładamy (ścieżka chroniona w code.claude.com
+# /docs/en/permission-modes), ale `status`/`finish` z jawną ścieżką nadal go odczytują dla wznawiania.
+LEGACY_RUNS = Path(".claude") / "runs"
 CHANGES = Path("docs") / "project" / "changes"
 EMPTY_CELL = ("", "—", "-", "–")
 KEYS = ("input", "output", "cache_read", "cache_write_5m", "cache_write_1h")
@@ -83,6 +95,14 @@ def projects_dir() -> Path:
 def transcript_dir(project: Path) -> Path:
     """Katalog transkryptów projektu: ścieżka z każdym znakiem spoza [A-Za-z0-9] zamienionym na „-”."""
     return projects_dir() / re.sub(r"[^A-Za-z0-9]", "-", str(project.resolve()))
+
+
+def transcript_dirs(project: Path) -> list[Path]:
+    """Gdzie szukać sesji przebiegu: katalog projektu, potem katalogi nadrzędne (najbliższy pierwszy, bez korzenia
+    systemu plików) — sesja uruchomiona wyżej (chmura z kilkoma repozytoriami, start z /home/user) zapisuje
+    transkrypty pod ścieżką katalogu startu, nie repozytorium."""
+    p = project.resolve()
+    return [transcript_dir(d) for d in (p, *p.parents) if d != Path(d.anchor)]
 
 
 def usage_entries(path: Path, since: datetime) -> dict[str, tuple[datetime, str, dict]]:
@@ -139,8 +159,21 @@ def prices() -> dict:
 
 
 def collect(project: Path, since: datetime, session: str | None) -> dict:
-    tdir = transcript_dir(project)
-    mains = [tdir / f"{session}.jsonl"] if session else sorted(tdir.glob("*.jsonl"))
+    """Zużycie od `since`. Z `--session`: ta sesja, w dowolnym katalogu projektu (identyfikator jest unikalny).
+    Bez niej: sesje z pierwszego katalogu z `transcript_dirs`, który ma odpowiedzi modelu po starcie."""
+    if session:
+        own = transcript_dir(project) / f"{session}.jsonl"
+        mains = [own] if own.is_file() else sorted(projects_dir().glob(f"*/{session}.jsonl"))[:1]
+        return tally(mains, since)
+    data = None
+    for tdir in transcript_dirs(project):
+        data = tally(sorted(tdir.glob("*.jsonl")), since)
+        if data["requests"]:
+            break
+    return data
+
+
+def tally(mains: list[Path], since: datetime) -> dict:
     files: list[tuple[str, Path]] = []
     for m in mains:
         if not m.is_file():
@@ -176,17 +209,34 @@ def collect(project: Path, since: datetime, session: str | None) -> dict:
             else:
                 models[fam]["_unpriced"] = True
     return {"files": len(files), "requests": requests, "last": last, "models": models, "agents": agents,
-            "model_ids": sorted(model_ids)}
+            "model_ids": sorted(model_ids), "transcripts": str(mains[0].parent) if mains else None}
 
 
-def plan_progress(run_dir: Path) -> dict:
+def committed_pieces(project: Path, meta: dict) -> int | None:
+    """Commity kawałków na gałęzi historyjki: od gałęzi fazy pdi/<CHG>-delivery (gdy przebieg ma zmianę), inaczej od
+    main; przy cięciu z kluczem tylko commity ze stopką `Change: <TSK>`. None, gdy git nie odpowie."""
+    bases = [f"pdi/{meta['change']}-delivery"] if meta.get("change") else []
+    for base in [*bases, "main", "origin/main"]:
+        r = subprocess.run(["git", "-C", str(project), "log", "--format=%B%x00", f"{base}..HEAD"],
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            bodies = [b for b in r.stdout.split("\0") if b.strip()]
+            if meta.get("task"):
+                bodies = [b for b in bodies if re.search(rf"^Change: {re.escape(meta['task'])}\s*$", b, re.M)]
+            return len(bodies)
+    return None
+
+
+def plan_progress(run_dir: Path, commits: int | None = None) -> dict:
+    """Kawałki odhaczone w plan.md, a gdy Talos odhaczenie pominął — kawałki z commitem (nie więcej niż w planie)."""
     text = (run_dir / "plan.md").read_text(encoding="utf-8") if (run_dir / "plan.md").exists() else ""
     done = len(re.findall(r"^\s*- \[[xX]\]", text, re.M))
-    return {"done": done, "total": done + len(re.findall(r"^\s*- \[ \]", text, re.M))}
+    total = done + len(re.findall(r"^\s*- \[ \]", text, re.M))
+    return {"done": max(done, min(total, commits or 0)), "total": total}
 
 
 def parked_items(run_dir: Path) -> list[str]:
-    """Pozycje z parked.md (bez wiersza formatu). Plik leży w .claude/runs/ poza gitem — do repo trafiają w raporcie."""
+    """Pozycje z parked.md (bez wiersza formatu). Plik leży w `tmp/talos/runs/` poza gitem — do repo trafiają w raporcie."""
     text = (run_dir / "parked.md").read_text(encoding="utf-8") if (run_dir / "parked.md").exists() else ""
     return [ln for ln in text.splitlines() if ln.startswith("- ") and not ln.startswith("- <")]
 
@@ -203,9 +253,11 @@ def report_md(slug: str, rep: dict) -> str:
     mins, secs = divmod(rep["duration_s"], 60)
     lines = [f"# Raport przebiegu: {slug}", "",
              f"- Czas: {int(mins)} min {int(secs)} s (od startu do ostatniej odpowiedzi modelu)",
-             f"- Koszt: {rep['cost_usd']:.4f} USD (szacunek z cennika API; przy subskrypcji — równowartość)",
+             (f"- Koszt: {rep['usage_missing']} — koszt przebiegu podaje wynik fazy pdi" if rep.get("usage_missing")
+              else f"- Koszt: {rep['cost_usd']:.4f} USD (szacunek z cennika API; przy subskrypcji — równowartość)"),
              f"- Zapytania do modelu: {rep['requests']} · modele: {', '.join(rep['model_ids']) or '—'}",
-             f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} kawałków · odłożone do decyzji: {rep['parked']}", "",
+             f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} kawałków · odłożone do decyzji: {rep['parked']}",
+             f"- Transkrypty: {rep.get('transcripts') or '—'}", "",
              "| Model | Wejście | Wyjście | Odczyt cache | Zapis cache 5 min | Zapis cache 1 h | Koszt USD |",
              "|---|---|---|---|---|---|---|"]
     for fam, t in sorted(rep["models"].items()):
@@ -216,7 +268,41 @@ def report_md(slug: str, rep: dict) -> str:
         lines.append(f"| {agent} | {fmt_tokens(t['input'])} | {fmt_tokens(t['output'])} | {fmt_tokens(t['cache_read'])} | "
                      f"{t.get('_cost', 0):.4f} |")
     lines += ["", "## Odłożone do decyzji", "", *(rep.get("parked_items") or ["- brak"])]
+    lines += ["", *(rep.get("security") or ["## Bezpieczeństwo", "", "- brak wyniku skanu (security_scan.py nie uruchomiony)"])]
     return "\n".join(lines) + "\n"
+
+
+def security_section(run_dir: Path) -> list[str]:
+    """Sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security[/K<n>]);
+    każda próba kawałka (K<n>/proba-<k>/) pod nagłówkiem kawałka, w kolejności prób."""
+    sec = run_dir / "security"
+
+    def key(f: Path):
+        rel = f.parent.relative_to(sec)
+        m = ATTEMPT.fullmatch(rel.name)
+        group = rel.parent if m else rel
+        return [(int(p[1:]) if re.fullmatch(r"K\d+", p) else 0, p) for p in group.parts], int(m.group(1)) if m else 0
+
+    found = sorted(sec.glob("**/summary.md"), key=key)
+    if not found:
+        return []
+    lines, last_group = ["## Bezpieczeństwo"], None
+    for f in found:
+        body = f.read_text(encoding="utf-8").splitlines()
+        if body and body[0].startswith("## Bezpieczeństwo"):
+            body = body[1:]
+        rel = f.parent.relative_to(sec)
+        m = ATTEMPT.fullmatch(rel.name)
+        group = (rel.parent if m else rel).as_posix()
+        if group != last_group and group != ".":
+            lines += ["", f"### {group}"]
+        last_group = group
+        if m:
+            lines += ["", f"#### Próba {m.group(1)}"]
+        lines += ["", *body] if body and body[0].strip() else body
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return lines
 
 
 def front_and_body(text: str) -> tuple[str, str]:
@@ -249,8 +335,10 @@ def plan_row(body: str, task: str) -> dict:
     return {}
 
 
-def task_context(project: Path, task: str) -> dict | None:
-    """Cięcie TSK w dzienniku zmian: katalog zmiany, wiersz planu, flaga i treść zamiaru."""
+def task_contexts(project: Path, task: str) -> list[dict]:
+    """Wszystkie dzienniki zmian z danym TSK (PRB-33: ten sam TSK może być w dwóch planach, np. po gałęziowym
+    konflikcie — bez `--change` nie da się wybrać na pewno)."""
+    out: list[dict] = []
     for plan in sorted((project / CHANGES).glob("*/plan.md")):
         front, body = front_and_body(plan.read_text(encoding="utf-8"))
         if task not in header_tasks(front):
@@ -265,9 +353,10 @@ def task_context(project: Path, task: str) -> dict | None:
             except yaml.YAMLError:
                 flag = None
         intent = plan.parent / "intent.md"
-        return {"change": plan.parent.name, "dir": plan.parent.relative_to(project).as_posix(), "row": row,
-                "flag": flag, "intent": front_and_body(intent.read_text(encoding="utf-8"))[1] if intent.is_file() else ""}
-    return None
+        out.append({"change": plan.parent.name, "dir": plan.parent.relative_to(project).as_posix(), "row": row,
+                    "flag": flag,
+                    "intent": front_and_body(intent.read_text(encoding="utf-8"))[1] if intent.is_file() else ""})
+    return out
 
 
 def task_story(task: str, ctx: dict, extra: str | None) -> str:
@@ -282,17 +371,31 @@ def task_story(task: str, ctx: dict, extra: str | None) -> str:
     return "\n".join(lines)
 
 
-def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None) -> int:
+def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None,
+              change: str | None = None) -> int:
     meta = {}
     if task:
-        ctx = task_context(project, task)
-        if ctx is None:
+        matches = task_contexts(project, task)
+        if change:                       # PRB-33: `--change` zawęża do jednej zmiany
+            matches = [m for m in matches if m["change"] == change]
+            if not matches:
+                print(f"✗ {task} nie ma w nagłówku `tasks` planu zmiany {change} — sprawdź klucz albo plan zmiany.")
+                return 2
+        if not matches:
             print(f"✗ {task} nie ma w nagłówku `tasks` żadnego {CHANGES}/*/plan.md — sprawdź klucz albo plan zmiany.")
             return 2
+        if len(matches) > 1:            # PRB-33: ten sam TSK w kilku planach — wymagamy `--change`
+            keys = ", ".join(m["change"] for m in matches)
+            print(f"✗ {task} jest w planach zmian: {keys}. Podaj `--change CHG-n`, żeby wybrać jedną.")
+            return 2
+        ctx = matches[0]
         value = next((v for k, v in ctx["row"].items() if k.lower() == "wartość" and v not in EMPTY_CELL), "")
         title = title or (f"{task}: {value}" if value else task)
         story = task_story(task, ctx, story)
         meta = {"change": ctx["change"], "task": task, "flag": ctx["flag"]}
+    elif change:
+        print("✗ `--change` wymaga `--task TSK-n` (wybiera plan zmiany, do której należy cięcie).")
+        return 2
     if not title:
         print("✗ podaj tytuł historyjki albo --task TSK-n")
         return 2
@@ -303,6 +406,13 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         print(f"✗ Przebieg już istnieje: {run_dir} — dokończ go albo nadaj inny tytuł.")
         return 2
     run_dir.mkdir(parents=True)
+    # PRB-32: w klonie produktu `tmp/talos/runs/` często nie jest jeszcze w .gitignore (fabryka 5.58.5 dodaje go
+    # do szablonu, ale starsze klony — np. sdlc-proba — tego nie mają). Bez tego pierwszy `start` zostawiłby
+    # „?? tmp/” w statusie i hook „czyste drzewo robocze” (SKILL §0.1) padłby na kolejnym cięciu. Zakładamy
+    # lokalny `.gitignore` z `*` — tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
+    gi = run_dir.parent / ".gitignore"
+    if not gi.is_file():
+        gi.write_text("*\n", encoding="utf-8")
     (run_dir / "run.json").write_text(json.dumps({"slug": slug, "title": title,
                                                   "started_at": now.isoformat(timespec="seconds"), **meta},
                                                  ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -320,16 +430,30 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     except (OSError, ValueError, KeyError):
         print(f"✗ Brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
         return 2
-    data = collect(project, since, session)
+    try:
+        data = collect(project, since, session)
+    except OSError:   # np. sandbox fazy pdi bez odczytu ~/.claude (PRB-34)
+        data = {"requests": 0}
+    usage_missing = None
     if not data["requests"]:
-        print(f"✗ Brak odpowiedzi modelu po {since:%Y-%m-%d %H:%M} w transkryptach {transcript_dir(project)} "
-              "(inny CLAUDE_CONFIG_DIR? podaj --session).")
-        return 2
+        where = (f"sesji {session} (szukana we wszystkich katalogach {projects_dir()})" if session else
+                 "transkryptach:\n" + "\n".join(f"  - {d}" for d in transcript_dirs(project)))
+        print(f"✗ Brak odpowiedzi modelu po {since:%Y-%m-%d %H:%M} w {where}\n"
+              "Sesja uruchomiona poza projektem i jego katalogami nadrzędnymi albo inny CLAUDE_CONFIG_DIR? "
+              "Podaj `--session <ID>` (ID to nazwa pliku .jsonl sesji w katalogu projects).")
+        if status:
+            return 2
+        # PRB-34: raport (plan, odłożone, bezpieczeństwo) powstaje i tak — bez niego PR cięcia nie ma listy
+        # „Odłożone do decyzji”; koszt podaje wtedy wynik fazy pdi (`cost_usd` z phase_run.py).
+        usage_missing = "brak danych o koszcie: transkryptów sesji nie znaleziono albo nie dało się ich odczytać"
+        data = {"requests": 0, "last": since, "transcripts": None, "model_ids": [], "models": {}, "agents": {}}
     rep = {"slug": meta.get("slug"), "duration_s": int((data["last"] - since).total_seconds()),
+           "transcripts": data["transcripts"],
            "requests": data["requests"], "model_ids": data["model_ids"], "models": data["models"],
            "agents": data["agents"],
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
-           "plan": plan_progress(run_dir), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir)}
+           "plan": plan_progress(run_dir, committed_pieces(project, meta)), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
+           "security": security_section(run_dir), "usage_missing": usage_missing}
     if status:   # kontrola budżetu po kawałku: jedna linia, bez zapisu raportu
         print(f"koszt: {rep['cost_usd']:.4f} USD · czas: {rep['duration_s'] // 60} min · plan: "
               f"{rep['plan']['done']}/{rep['plan']['total']} · odłożone: {rep['parked']}")
@@ -345,7 +469,7 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     print(json.dumps(rep, ensure_ascii=False, default=str) if as_json else md, end="" if not as_json else "\n")
     if kept and not as_json:
         print(f"Raport w repo: {kept.as_posix()}")
-    return 0
+    return 2 if usage_missing else 0   # kod 2 jak dotąd: brak danych o koszcie, ale raport już jest
 
 
 def main(argv: list[str]) -> int:
@@ -354,6 +478,8 @@ def main(argv: list[str]) -> int:
     s = sub.add_parser("start")
     s.add_argument("title", nargs="?")
     s.add_argument("--task", default=None, help="klucz cięcia z docs/project/changes/*/plan.md, np. TSK-57")
+    s.add_argument("--change", default=None,
+                   help="klucz zmiany, np. CHG-12 — wymagany, gdy TSK jest w planach wielu zmian (PRB-33)")
     s.add_argument("--story", default=None)
     s.add_argument("--story-file", default=None)
     for name in ("status", "finish"):
@@ -365,7 +491,7 @@ def main(argv: list[str]) -> int:
     project = Path.cwd()
     if args.cmd == "start":
         story = Path(args.story_file).read_text(encoding="utf-8") if args.story_file else args.story
-        return cmd_start(args.title, story, project, args.task)
+        return cmd_start(args.title, story, project, args.task, args.change)
     return cmd_finish(Path(args.run_dir), args.session, args.json, project, status=args.cmd == "status")
 
 

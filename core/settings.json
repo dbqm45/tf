@@ -19,7 +19,7 @@
       "Bash(git log *)",
       "Bash(git show *)",
       "Bash(git branch *)",
-      "Bash(git switch -c *)",
+      "Bash(git switch *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(npm test *)",

@@ -36,7 +36,8 @@ claude --agent talos
    (z `--auto` — zatrzymuje się z tymi pytaniami).
 3. **Plan:** do 5 kawałków pionowych — każdy niesie wartość, sam przechodzi testy i jest osobnym commitem.
    Historyjka na więcej kawałków → propozycja podziału i STOP.
-4. **Kawałek po kawałku:** test, który nie przechodzi → najmniejszy kod → weryfikacja (testy, lint, typy) → przegląd
+4. **Kawałek po kawałku:** test, który nie przechodzi → najmniejszy kod → weryfikacja (testy, lint, typy) → skan
+   bezpieczeństwa (semgrep OWASP Top 10 na plikach kawałka, audyt zależności przy zmianie manifestu) → przegląd
    zakresu przez `scope-reviewer` w świeżym kontekście → commit. Najwyżej 2 próby naprawy, potem STOP z opisem
    blokady.
 5. **KISS:** przypadki brzegowe, pomysły i ryzyka spoza kryteriów nie trafiają do kodu, tylko do `parked.md`
@@ -46,7 +47,9 @@ claude --agent talos
 7. **Koniec:** jeden PR (Talos go nie scala) i raport.
 
 ## Co dostajesz
-Katalog `.claude/runs/<data>-<slug>/` (ignorowany przez git):
+Katalog `tmp/talos/runs/<data>-<slug>/` (ignorowany przez git — `.claude/` jest ścieżką chronioną w Claude Code,
+więc `--permission-mode acceptEdits` nie pozwoliłby pisać do `.claude/runs/`; code.claude.com/docs/en/permission-modes,
+odczyt 2026-11-05):
 
 | Plik | Treść |
 |---|---|
@@ -65,6 +68,36 @@ Zgodność zmian z planem (`python3 .claude/skills/talos-story-run/scripts/plan_
 pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem i testy w diffie — trafia do opisu PR.
 Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), Talos przy przyjęciu historyjki czyta
 spis standardów i słownik domeny.
+
+## Bezpieczeństwo i karencja wersji
+Po zielonych testach kawałka Talos uruchamia
+`python3 .claude/skills/talos-story-run/scripts/security_scan.py scan --slice K<n> --attempt <k> --out <katalog>/security/K<n>`:
+semgrep z regułami `p/owasp-top-ten` (i `.semgrep.yml` produktu, jeśli jest) tylko na zmienionych plikach, `npm audit`
+albo `pip-audit` tylko przy zmianie manifestu lub lockfile'a (`package.json` bez zależności i bez lockfile'a —
+audyt pominięty z adnotacją w raporcie; z zależnościami bez lockfile'a — błąd skanu); wynik każdej próby (SARIF,
+`verdict.json`, `summary.md`) to osobny katalog `<katalog>/security/K<n>/proba-<k>/`, a
+`<katalog>/security/K<n>/feedback.md` to ustalenia ostatniej próby. Raport przebiegu wymienia każdą próbę kawałka
+(np. FAIL z ustaleniami, potem PASS). Ustalenie
+blokujące (error albo warning z CWE z OWASP Top 10 — ta sama reguła co SEC-001 w ci_for_sdlc) to czerwona bramka:
+druga próba dostaje ustalenia (reguła, plik:linia), po dwóch próbach STOP i brak commitu. Ustalenia poniżej progu
+trafiają do sekcji „Bezpieczeństwo” raportu. Brak semgrep albo pip-audit to FAIL z poleceniem instalacji
+(`pipx install semgrep`, `pipx install pip-audit`), nigdy cichy PASS.
+
+Wymagania wobec produktu:
+- **Jedno polecenie weryfikacji (N3):** skrypt w stylu `templates/verify.sh` (format, lint, typy, testy, skan),
+  nazwany w pierwszej linii `CLAUDE.md` produktu; ten sam uruchamia Talos i CI (szablony w mode-pdi).
+- **Karencja wersji 7 dni (N10):** `.npmrc` `min-release-age=7` (npm ≥ 11.10), `pnpm-workspace.yaml`
+  `minimumReleaseAge: 10080` (minuty, pnpm ≥ 10.17), `.yarnrc.yml` `npmMinimalAgeGate`, `[tool.uv]
+  exclude-newer = "7 days"`; lockfile w gicie. Sprawdza to `security_scan.py cooldown` na starcie przebiegu. Uwaga
+  pnpm: Dependabot aktualizuje lockfile bez karencji, a `pnpm install --frozen-lockfile` w CI kończy się wtedy
+  `ERR_PNPM_NO_MATURE_MATCHING_VERSION` (pnpm/pnpm#11203, #12450) — PR-y Dependabota z wersjami młodszymi niż
+  7 dni czekają albo mają `cooldown` w `dependabot.yml`.
+- **Sieć:** rejestr reguł semgrep pobiera się z `semgrep.dev` — w kontenerze z listą dozwolonych hostów dodaj go
+  (Z8a); bez sieci podaj lokalne reguły przez `TALOS_SEMGREP_CONFIG=<plik.yml albo katalog>`.
+- **Rejestr bez logowania:** `p/owasp-top-ten` pobiera się bez `semgrep login` (semgrep 1.183.0, sprawdzone
+  2026-11-03: 560 reguł), ale zestaw jest węższy niż pełne reguły — nie ma w nim m.in. `tainted-sql-string`
+  (Express) ani reguł dla `node:sqlite`. Wzorce, których rejestr nie łapie, dopisuje produkt w `.semgrep.yml`
+  (skan dokłada go zawsze); szerszy zestaw w CI daje logowanie tokenem (`SEMGREP_APP_TOKEN`).
 
 ## Gdy Talos się zatrzyma
 Blok STOP mówi, co blokuje (z dowodem), co jest już zrobione (commity), czego potrzeba od Ciebie i od którego

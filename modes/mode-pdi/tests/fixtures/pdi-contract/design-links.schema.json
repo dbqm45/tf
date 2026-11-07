@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/design-links.schema.json",
-  "title": "Ramki projektu zmiany z design.md (pdi, kontrakt 0.9.0)",
+  "title": "Ramki projektu zmiany z design.md (pdi, kontrakt 0.13.0)",
   "description": "Odczytana tabela ramek z docs/project/changes/CHG-n/design.md: wymaganie → ścieżka → stan → ramka Figmy. Zapis w Markdown, reguły w contract.json → conventions.design; parsery tf, ci_for_sdlc i pdi dają z tego samego pliku ten sam obiekt (wzorzec: examples/design.md ↔ examples/design-links.json).",
   "type": "object",
   "additionalProperties": false,

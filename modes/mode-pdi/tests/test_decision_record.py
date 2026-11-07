@@ -149,14 +149,30 @@ def main() -> int:
             r = run(["check"], tmp)
             check(r.returncode != 0, f"D-13 check wykrywa: {label} ({r.stdout.strip()[:200]})")
     with tempfile.TemporaryDirectory() as tmp:
+        # Plan w statusie innym niż draft (Z7b-1a, DZ6, DZ7, N20) musi mieć sekcje „Rozważone opcje” i „Cele zmiany”.
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-1" / "plan.md",
               "artifact: plan\nphase: plan\nstatus: accepted\nversion: 2\nauthor: x\ncreated: 2026-10-23\n"
               "updated: 2026-10-24\ninputs: [docs/project/changes/CHG-1/intent.md]\nchange: CHG-1\nsource: PRB-3\n"
-              "tasks: [TSK-57, TSK-58]")
+              "tasks: [TSK-57, TSK-58]",
+              "## Rozważone opcje\n\n### Opcja A\n\n### Opcja B\n\n## Cele zmiany (targets)\n\n")
         r = run(["check"], tmp)
         check(r.returncode == 0, f"D-14: poprawny plan (przykład z kontraktu) przechodzi: {r.stdout}{r.stderr}")
         r = run(["check"], Path(tmp) / "docs")
         check(r.returncode == 0 and "brak" in r.stdout.lower(), f"D-15: bez docs/project/changes — nic do sprawdzenia: {r.stdout}")
+        # D-15a: `check --change` sprawdza tylko tę zmianę — stare artefakty innych zmian nie blokują fazy (CHG-4, 2026-11-07).
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-2" / "intent.md",
+              "artifact: intent\nphase: discovery\nstatus: draft\nversion: 0\ncreated: 2026-10-23\n"
+              "updated: 2026-10-23\nchange: CHG-2")
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "CHG-2" in r.stdout, f"D-15a: bez --change dalej sprawdza wszystkie zmiany: {r.stdout}")
+        r = run(["check", "--change", "CHG-1"], tmp)
+        check(r.returncode == 0 and "CHG-2" not in r.stdout, f"D-15b: --change CHG-1 pomija błąd w CHG-2: {r.stdout}")
+        r = run(["check", "--change", "CHG-2"], tmp)
+        check(r.returncode != 0 and "CHG-2" in r.stdout, f"D-15c: --change CHG-2 dalej wykrywa jej błąd: {r.stdout}")
+        r = run(["check", "--change", "CHG-9"], tmp)
+        check(r.returncode != 0 and "CHG-9" in r.stdout, f"D-15d: nieznana zmiana → błąd, nie ciche OK: {r.stdout}")
+        r = run(["check", "--change", "../x"], tmp)
+        check(r.returncode != 0, f"D-15e: zły klucz zmiany → błąd: {r.stdout}")
 
     # F0b: decyzje — add, pending, mark, export, check wpisów.
     with tempfile.TemporaryDirectory() as tmp:
@@ -347,6 +363,40 @@ def main() -> int:
         r = run(["check"], tmp)
         check(r.returncode == 0, f"R-8: zmiana sprzed G1.1 (bez release.yaml) nadal przechodzi: {r.stdout}")
 
+    # Z7b-1a (DZ6, DZ7, N20): plan niebędący szkicem potrzebuje sekcji „Rozważone opcje” (≥2) i „Cele zmiany”.
+    head_accepted = ("artifact: plan\nphase: plan\nstatus: accepted\nversion: 1\ncreated: 2026-10-23\n"
+                     "updated: 2026-10-23\nchange: CHG-5\ntasks: [TSK-1]")
+    head_draft = ("artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
+                  "updated: 2026-10-23\nchange: CHG-5\ntasks: [TSK-1]")
+    body_two = "## Rozważone opcje\n\n### Opcja A\nPlusy.\n### Opcja B\nPlusy.\n\n## Cele zmiany (targets)\n\n"
+    body_one = "## Rozważone opcje\n\n### Opcja A\nPlusy.\n\n## Cele zmiany (targets)\n\n"
+    body_no_targets = "## Rozważone opcje\n\n### Opcja A\nPlusy.\n### Opcja B\nPlusy.\n\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_two)
+        r = run(["check"], tmp)
+        check(r.returncode == 0, f"Z-1: plan accepted z dwiema opcjami i celami przechodzi: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_one)
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "co najmniej dwóch" in r.stdout,
+              f"Z-2: plan z jedną opcją dostaje ustalenie: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted,
+              "## Cele zmiany (targets)\n\n")
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "Rozważone opcje" in r.stdout,
+              f"Z-3: plan bez sekcji „Rozważone opcje” dostaje ustalenie: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_no_targets)
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "Cele zmiany" in r.stdout,
+              f"Z-4: plan bez sekcji „Cele zmiany” dostaje ustalenie: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        # Szkic (`draft`) nie musi mieć nowych sekcji — architekt je dopisuje zanim status przejdzie dalej.
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_draft, "")
+        r = run(["check"], tmp)
+        check(r.returncode == 0, f"Z-5: szkic planu bez nowych sekcji przechodzi: {r.stdout}")
+
     # decision gate: decyzja z bramki w pdi (gate.decided) zapisana w repo z numerem z rejestru (F4, D2/R1)
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
@@ -405,6 +455,107 @@ def main() -> int:
                                                                      "source_reported_at: 20.10.2026"), encoding="utf-8")
         r = run(["check"], repo)
         check(r.returncode != 0 and "source_reported_at" in r.stdout, f"S-5: zła data w nagłówku → check: {r.stdout}")
+
+    # Z1 (PRB-3): odpowiedzi na pytania bramki i decyzje zmiany z rejestru pdi (kontrakt pdi 0.12.0)
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12"], repo)
+        dec = repo / "docs" / "project" / "changes" / "CHG-12" / "decisions.md"
+        answers = repo / "answers.json"
+        answers.write_text(json.dumps([
+            {"question": "Czy config/build.json zostaje w repo? (adresat: właściciel)",
+             "answer": "Nie —\n generuje go build (DEC-0003)."},
+            {"question": "Kto zatwierdza teksty?", "answer": "Właściciel produktu."}], ensure_ascii=False),
+            encoding="utf-8")
+        r = run(["decision", "gate", "CHG-12", "--gate", "B2", "--outcome", "approved", "--id", "DEC-7",
+                 "--answers", str(answers)], repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "- pytanie: Czy config/build.json zostaje w repo? (adresat: właściciel)\n"
+              "- odpowiedz: Nie — generuje go build (DEC-0003).\n- pytanie: Kto zatwierdza teksty?\n"
+              "- odpowiedz: Właściciel produktu.\n" in text, f"Z1-1: --answers zapisuje pary w wpisie bramki: {r.stdout}{text[-600:]}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"Z1-2: wpis z odpowiedziami przechodzi check: {r.stdout}")
+        bad = repo / "bad.json"
+        for content in ('[{"question": "Q?"}]', '{"question": "Q?", "answer": "A"}', "nie json"):
+            bad.write_text(content, encoding="utf-8")
+            r = run(["decision", "gate", "CHG-12", "--gate", "B3", "--outcome", "approved", "--id", "DEC-8",
+                     "--answers", str(bad)], repo)
+            check(r.returncode != 0 and "DEC-8" not in dec.read_text(encoding="utf-8"),
+                  f"Z1-3: złe --answers ({content}) → błąd, nic nie dopisane: {r.stdout}")
+
+        linked = repo / "linked.json"
+        decisions = [
+            {"id": "DEC-3", "statement": "config/build.json nie jest w repo — generuje go build.",
+             "why": "Powtarzalne buildy.\nZgoda zespołu.", "decided_at": "2026-10-30", "decided_by": "właściciel",
+             "kind": "technical", "source_kind": "ci_for_sdlc", "drafted_by": "human"},
+            {"id": "DEC-5", "statement": "Eksport tylko CSV.", "why": "Zgłaszający pracuje w arkuszu.",
+             "decided_at": "2026-10-30", "decided_by": "PO", "kind": "product", "source_kind": "meeting",
+             "drafted_by": "ai", "answers": [{"question": "Jaki format?", "answer": "CSV."}]},
+            {"id": "DEC-7", "statement": "Bramka B2", "why": "x", "decided_at": "2026-10-31", "decided_by": "pdi",
+             "kind": "gate", "source_kind": "console", "drafted_by": "human"},
+        ]
+        linked.write_text(json.dumps(decisions, ensure_ascii=False), encoding="utf-8")
+        imp = ["decision", "import", "CHG-12", "--json", str(linked)]
+        r = run(imp, repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "## config/build.json nie jest w repo — generuje go build.\n" in text
+              and "- id: DEC-3\n- wyslano: tak\n" in text and "- dlaczego: Powtarzalne buildy. Zgoda zespołu.\n" in text
+              and "- zrodlo: ci_for_sdlc\n" in text and text.count("- pochodzenie: pdi") == 2
+              and "- pytanie: Jaki format?\n- odpowiedz: CSV.\n" in text,
+              f"Z1-4: import dopisuje decyzje z pdi z numerem i pochodzeniem: {r.stdout}{text[-900:]}")
+        check(text.count("- id: DEC-7") == 1 and "pominięte" in r.stdout,
+              f"Z1-5: decyzja z numerem już w decisions.md (bramka) jest pominięta: {r.stdout}")
+        r = run(imp, repo)
+        check(r.returncode == 0 and dec.read_text(encoding="utf-8") == text,
+              f"Z1-6: ponowny import nic nie zmienia (idempotentny po id): {r.stdout}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"Z1-7: zaimportowane wpisy przechodzą check: {r.stdout}")
+        r = run(["decision", "pending"], repo)
+        check(jl(r) == [], f"Z1-8: zaimportowane decyzje nie czekają na wysłanie do pdi: {r.stdout}")
+        for broken, why in (([{**decisions[0], "id": "41"}], "zły id"), ([{**decisions[0], "kind": "x"}], "zły kind"),
+                            ({"id": "DEC-1"}, "nie lista")):
+            linked.write_text(json.dumps(broken), encoding="utf-8")
+            r = run(imp, repo)
+            check(r.returncode != 0 and dec.read_text(encoding="utf-8") == text, f"Z1-9: {why} → błąd: {r.stdout}")
+        r = run(["decision", "import", "CHG-99", "--json", str(linked)], repo)
+        check(r.returncode != 0 and "change new" in r.stdout, f"Z1-10: brak dziennika → błąd: {r.stdout}")
+        dec.write_text(text.replace("- pochodzenie: pdi", "- pochodzenie: slack", 1), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "pochodzenie" in r.stdout, f"Z1-11: nieznane pochodzenie → check: {r.stdout}")
+        dec.write_text(text.replace("- odpowiedz: CSV.\n", "", 1), encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode != 0 and "parami" in r.stdout, f"Z1-12: pytanie bez odpowiedzi → check: {r.stdout}")
+
+    # Kontrakt pdi 0.12.0: decision.schema.json (kopia z tagu) zgodny z tym, co dziennik zapisuje i importuje
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("decision_record", SCRIPT)
+    drec = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(drec)
+    schema = json.loads((FIX / "decision.schema.json").read_text(encoding="utf-8"))
+    near = SCRIPT.parent / "decision.schema.json"
+    check(near.is_file() and json.loads(near.read_text(encoding="utf-8")) == schema,
+          "K-1: decision.schema.json obok skryptu = kopia z kontraktu pdi (fixtures/pdi-contract)")
+    props = schema["properties"]
+    check(set(props["kind"]["enum"]) == set(drec.KINDS),
+          f"K-2: rodzaje decyzji = kind z kontraktu: {props['kind']['enum']} wobec {drec.KINDS}")
+    check(set(props["source"]["properties"]["kind"]["enum"]) == set(drec.SOURCE_KINDS),
+          f"K-3: zrodlo = source.kind z kontraktu: {props['source']['properties']['kind']['enum']}")
+    item = props.get("answers", {}).get("items", {})
+    check(set(item.get("required", [])) == {"question", "answer"} and item.get("additionalProperties") is False,
+          f"K-4: answers w kontrakcie = pary question/answer, które zapisuje --answers i import: {item}")
+    example = json.loads((FIX / "decision.json").read_text(encoding="utf-8"))
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12"], repo)
+        src = repo / "linked.json"
+        # kształt z pdi (pdi.phase_decisions): pola decyzji z kontraktu, source.kind jako source_kind
+        src.write_text(json.dumps([{**{k: example[k] for k in ("id", "statement", "why", "decided_at", "decided_by",
+                                                              "kind", "drafted_by")},
+                                    "source_kind": example["source"]["kind"]}], ensure_ascii=False), encoding="utf-8")
+        r = run(["decision", "import", "CHG-12", "--json", str(src)], repo)
+        text = (repo / "docs/project/changes/CHG-12/decisions.md").read_text(encoding="utf-8")
+        check(r.returncode == 0 and f"- id: {example['id']}" in text and run(["check"], repo).returncode == 0,
+              f"K-5: przykład decyzji z kontraktu importuje się i przechodzi check: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

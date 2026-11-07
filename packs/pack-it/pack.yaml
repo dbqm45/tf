@@ -1,7 +1,7 @@
 # Nakładka IT: inżynieria oprogramowania — architektura, DDD, backend, frontend, operacje, bezpieczeństwo, AI, dane,
 # testy i proces. Persony i role tej nakładki budują oprogramowanie w dowolnej dziedzinie.
 id: pack-it
-version: 1.0.1
+version: 1.0.2
 title: IT
 description: Software engineering team — architecture, DDD, backend, frontend, DevOps/SRE, security, AI/ML, data, QA and process.
 content_language: pl

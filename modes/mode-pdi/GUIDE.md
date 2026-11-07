@@ -25,6 +25,31 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   workflow zakłada `docs/project/changes/CHG-n/` ze źródłem i dniem zgłoszenia (`source_reported_at`, od niego
   ShipScope liczy lead time od zgłoszenia), a persona pisze `intent.md` z problemu zgłaszającego.
 
+- **Skan bezpieczeństwa na każdym PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` instaluje
+  `change-check.yml`: ten sam skan co w pętli kawałka Talosa (`security_scan.py scan` z trybu mode-talos — semgrep
+  z regułami OWASP Top 10 i `.semgrep.yml` produktu na plikach zmienionych od bazy PR, `npm audit` / `pip-audit` przy
+  zmianie manifestu lub lockfile'a), a SARIF z `reports/security` sprawdza ci_for_sdlc (`--sarif`, SEC-001…003) razem
+  z definicją zmian. Błąd skanu (brak skanera, audyt, który się nie wykonał) czerwieni PR. W fazie `delivery`
+  `sdlc-phase.yml` instaluje semgrep i pip-audit przed personą, żeby Talos mógł skanować kawałki. Reguły
+  `p/owasp-top-ten` pobiera się z `semgrep.dev` — w sandboxie persony host jest na liście dozwolonych (Z8a,
+  `sandbox_settings.py`) i działa bez logowania (zestaw węższy niż po `semgrep login` — własne wzorce produktu
+  w `.semgrep.yml`); w CI bez sieci ustaw zmienną repozytorium `TALOS_SEMGREP_CONFIG` na plik reguł w repo.
+  Wymaga trybu mode-talos.
+
+- **Drugi przegląd przed bramkami B2 i B3 (N1, DZ12):** `second_review.py artifact --change CHG-n --phase P`
+  po fazie `requirements`/`architecture`, a przed prośbą o bramkę, czyta artefakt razem z decyzjami zmiany i
+  (dla architecture) `requirements.md` i podaje luki (brakujące stany błędu, kryteria bez przykładu, sprzeczności
+  z decyzją, cięcia bez dowodu sprawdzalności) jako JSON ze schematem i sekcję „Przegląd drugim modelem"
+  w artefakcie. Dostawca: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`, `claude:<model>` →
+  `ANTHROPIC_API_KEY`); bez `PDI_SECOND_MODEL` albo bez klucza dostawcy — zapasowy
+  `claude:claude-sonnet-5-5` oznaczony jako przegląd tego samego dostawcy (`same_vendor: true`).
+  Blokujące ustalenia (`blocker` i `major`) dopisuje `phase_run.py gate request` do pytań bramki z prefiksem
+  `[drugi przegląd]`, a sprzeczności z decyzjami wymienia z odwołaniem `[sprzeczne z <ref>]`. Niedostępność
+  drugiego modelu jest w prośbie o bramkę jako `second_review: {status: unavailable, reason: …}`. W Actions
+  `OPENAI_API_KEY` dostaje tylko ten krok (klucz nie trafia do kontenera persony — Z8g). Koszt zapisany
+  w sidecarze (`docs/project/changes/CHG-n/.review/<phase>.json`) wchodzi w budżet fazy (`PDI_PHASE_BUDGET_USD`)
+  obok kosztu persony. Druga podkomenda `comments` sprawdza uwagi recenzenta z PR (N2, A5).
+
 - **Pasma kontrolne z ShipScope (F5):** `metric_watch.py check` czyta dzienny szereg PROD z API usług ShipScope
   (rollbacki, wdrożenia nieudane, lead time, liczba wdrożeń), liczy pasma `control_band.py` i przy punkcie poza 3σ
   z ostatnich dni wysyła do pdi `metric.breached` (`--send`). Codziennie: `metric_watch.py workflow install`

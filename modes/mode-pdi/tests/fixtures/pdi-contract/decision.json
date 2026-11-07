@@ -1,0 +1,20 @@
+{
+  "id": "DEC-41",
+  "statement": "Bulk konfiguracja ładowarek zaczyna od zmiany taryfy.",
+  "why": "Najczęstsza operacja w zgłoszeniach; restart i firmware mają inne ryzyka.",
+  "decided_at": "2026-10-23",
+  "decided_by": "po",
+  "kind": "triage",
+  "project": "control-tower",
+  "source": {
+    "kind": "manual"
+  },
+  "status": "recorded",
+  "drafted_by": "ai",
+  "links": {
+    "prb": "PRB-34",
+    "chg": "CHG-12"
+  },
+  "decision_type": "triage",
+  "draft_edited": false
+}

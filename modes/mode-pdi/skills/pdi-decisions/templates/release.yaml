@@ -1,4 +1,4 @@
-# Plan wydania zmiany {CHG} — kontrakt pdi 0.4.0 (release-plan.schema.json); sprawdza: decision_record.py check.
+# Plan wydania zmiany {CHG} — kontrakt pdi 0.12.0 (release-plan.schema.json); sprawdza: decision_record.py check.
 # R1 = MVP: gwiazda przewodnia plus minimum do wyniku z intent.md. Każde TSK z plan.md w dokładnie jednej linii;
 # kolumny „Wydanie” i „Flaga” w plan.md muszą się zgadzać z tym plikiem.
 change: {CHG}
@@ -19,3 +19,12 @@ releases:
 #       - { stage: internal, min_days: 3, exit: "<kryterium wyjścia>" }
 #       - { stage: "10%", min_days: 7, exit: "<kryterium wyjścia>" }
 #       - { stage: "100%" }
+# Cele zmiany (Z7b-1, DZ7). Architekt proponuje te same wartości w plan.md; człowiek zatwierdza na B3.
+# `coverage` i `mutation` tylko dla zmienionego kodu (N4). Dla produktu AI `evaluations` są obowiązkowe (DZ7).
+# targets:
+#   coverage: { kind: changed_lines, min_percent: 90, tool: pytest-cov }
+#   mutation: { kind: changed_lines, tool: mutmut, min_score: 70 }
+#   # performance:
+#   #   - { name: p95_login, metric: response_time_p95_ms, limit: "<= 400", note: "wynika z SLO 99,5% w 28 dni" }
+#   # evaluations:          # wymagane dla produktu AI (DZ7)
+#   #   - { name: rag_answer_quality, dataset: eval/rag.jsonl, metric: faithfulness, min: 0.9 }

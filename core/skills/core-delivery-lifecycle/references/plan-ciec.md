@@ -1,5 +1,7 @@
 # Plan cięć — kolejność pracy przed planem pierwszego kroku
 
+> **Spis treści:** Dwa rodzaje pozycji · Pola pozycji · Kolejność · Linie wydań i flagi · Rozmiar cięć (bez estymat) · Niewiadome — gdzie je rozstrzygnąć · Samokontrola przed zapisem · Przekazanie
+
 Plan cięć (`docs/project/05-plan/plan.md`, szablon `plan` w core-project-record) odpowiada tylko na pytania: co
 najpierw, co od czego zależy, co jest zablokowane i co odkładamy. Nie wybiera frameworków, nie projektuje schematu
 i nie rozpisuje plików — to robi plan kroku w raporcie `06-delivery/`.

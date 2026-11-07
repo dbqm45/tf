@@ -1,5 +1,7 @@
 # Klocki domenowe w C# — przetestowane przykłady
 
+> **Spis treści:** Booking.Domain.csproj · Money.cs · ResourceAvailability.cs · ResourceAvailabilityTests.cs
+
 Projekt sprawdzony 2026-10-23: `dotnet test` (xUnit) na net8.0 (C# 12) i net10.0 (C# 14) z
 `TreatWarningsAsErrors` i `Nullable`, `dotnet format --verify-no-changes` bez uwag (SDK 8.0.132 i 10.0.113).
 Kod używa tylko C# 12, więc działa w całym zakresie skilla. Pliki skopiowane bez zmian.

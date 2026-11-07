@@ -6,6 +6,9 @@
 # odbiornika pdi). Zmienna repozytorium: PDI_EVENTS_URL (adres odbiornika pdi, https).
 # Wejścia z pdi trafiają do poleceń tylko przez env (nigdy wprost w `run:`), żeby nie dało się wstrzyknąć polecenia.
 # Uwaga: dla bezpieczeństwa przypnij akcje do pełnego SHA commita (np. skill ops-ci-cd w pack-it).
+# Izolacja persony (pdi Z8a): checkout bez zapisanego tokenu, GH_TOKEN tylko w krokach z push i PR, a persona działa w
+# sandboxie Claude Code (ustawienia zarządzane z sandbox_settings.py: bez wyjścia poza listę hostów, bez czytania
+# sekretów, tokeny niewidoczne dla poleceń). Dodatkowe hosty: zmienna repozytorium PDI_DISPATCH_ALLOW_HOSTS.
 name: sdlc-phase
 run-name: "pdi: ${{ inputs.change }} ${{ inputs.phase }}"
 
@@ -40,6 +43,15 @@ on:
       problem:
         description: "Treść zgłoszenia z pdi (JSON) dla persony fazy intent"
         required: false
+      decision_text:
+        description: "Ustalenie i uzasadnienie decyzji z bramki (z rejestru pdi) do wpisu w decisions.md"
+        required: false
+      answers:
+        description: "Odpowiedzi na pytania do bramki z pdi (JSON [{question, answer}], kontrakt pdi 0.12.0)"
+        required: false
+      decisions:
+        description: "Inne decyzje zmiany z rejestru pdi (JSON, links.chg) do decisions.md (decision import)"
+        required: false
 
 permissions:
   contents: write
@@ -64,12 +76,20 @@ jobs:
       BUDGET_USD: ${{ inputs.budget_usd }}
       SOURCE: ${{ inputs.source }}
       PDI_PROBLEM: ${{ inputs.problem }}
+      DECISION_TEXT: ${{ inputs.decision_text }}
+      ANSWERS: ${{ inputs.answers }}
+      DECISIONS: ${{ inputs.decisions }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # bez tokenu w .git/config: persona go nie przeczyta; push i PR mają GH_TOKEN tylko w swoich krokach
+          persist-credentials: false
       - name: Gałąź fazy (poprawki trafiają do tego samego PR)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          gh auth setup-git
           branch="pdi/$CHANGE-$PHASE"
           echo "BRANCH=$branch" >> "$GITHUB_ENV"
           git config user.name "github-actions[bot]"
@@ -93,11 +113,43 @@ jobs:
           fi
       - name: Sprawdzenie wejść (bez modelu)
         run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py prompt --change "$CHANGE" --phase "$PHASE" > /dev/null
+      - name: Decyzje zmiany z rejestru pdi w decisions.md (Z1)
+        if: env.DECISIONS != ''
+        run: |
+          printf '%s' "$DECISIONS" > "$RUNNER_TEMP/decisions.json"
+          python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision import "$CHANGE" --json "$RUNNER_TEMP/decisions.json"
       - name: Decyzja z bramki w decisions.md
         if: env.DECISION != ''
-        run: python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate "$CHANGE" --gate "$GATE" --outcome "$OUTCOME" --id "$DECISION"
+        run: |
+          args=(--gate "$GATE" --outcome "$OUTCOME" --id "$DECISION")
+          if [ -n "$DECISION_TEXT" ]; then args+=(--why "$DECISION_TEXT"); fi
+          if [ -n "$ANSWERS" ]; then
+            printf '%s' "$ANSWERS" > "$RUNNER_TEMP/answers.json"
+            args+=(--answers "$RUNNER_TEMP/answers.json")
+          fi
+          python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate "$CHANGE" "${args[@]}"
       - name: Claude Code
         run: npm install -g @anthropic-ai/claude-code@2.1.310
+      - name: Sandbox Claude Code dla persony
+        env:
+          PDI_DISPATCH_ALLOW_HOSTS: ${{ vars.PDI_DISPATCH_ALLOW_HOSTS }}
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q bubblewrap socat
+          # Ubuntu 24.04: AppArmor blokuje przestrzenie nazw użytkownika dla bwrap (dokumentacja sandboxu Claude Code)
+          if [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ]; then
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\n  userns,\n}\n' \
+              | sudo tee /etc/apparmor.d/bwrap > /dev/null
+            sudo apparmor_parser -r /etc/apparmor.d/bwrap
+          fi
+          python3 .claude/skills/pdi-decisions/scripts/sandbox_settings.py > "$RUNNER_TEMP/claude-settings.json"
+          sudo install -D -m 644 "$RUNNER_TEMP/claude-settings.json" /etc/claude-code/managed-settings.json
+          echo "PDI_CLAUDE_SETTINGS=/etc/claude-code/managed-settings.json" >> "$GITHUB_ENV"
+      # Talos w fazie delivery skanuje każdy kawałek (security_scan.py, Z8c-2); bez skanera kawałek stoi (FAIL).
+      - name: Skanery bezpieczeństwa (delivery)
+        if: env.PHASE == 'delivery'
+        run: |
+          pipx install semgrep==1.183.0
+          pipx install pip-audit==2.10.1
       - name: Gałęzie cięć przed fazą delivery
         if: env.PHASE == 'delivery'
         run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list > "$RUNNER_TEMP/cuts-before.json"
@@ -109,19 +161,36 @@ jobs:
           if [ "$REWORK" = "true" ]; then args+=(--rework --gate "$GATE" --decision "$DECISION"); fi
           if [ -n "$BUDGET_USD" ]; then args+=(--budget-usd "$BUDGET_USD"); fi
           PDI_SOURCE="$SOURCE" python3 .claude/skills/pdi-decisions/scripts/phase_run.py run "${args[@]}"
+      # Drugi przegląd (N1, DZ12): niezależny model czyta artefakt razem z decyzjami zmiany i podaje luki do bramki.
+      # Klucz dostawcy widoczny TYLKO dla tego kroku (nie dla persony fazy) — Z8g: do kontenera fazy nie wchodzi.
+      # OPENAI_API_KEY opcjonalny; bez niego skrypt pada z fallbackiem na model Claude i oznacza wynik jako same-vendor.
+      - name: Drugi przegląd (requirements/architecture)
+        if: env.PHASE == 'requirements' || env.PHASE == 'architecture'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PDI_SECOND_MODEL: ${{ vars.PDI_SECOND_MODEL }}
+          PDI_SECOND_MODEL_PRICE_IN: ${{ vars.PDI_SECOND_MODEL_PRICE_IN }}
+          PDI_SECOND_MODEL_PRICE_OUT: ${{ vars.PDI_SECOND_MODEL_PRICE_OUT }}
+        run: |
+          python3 .claude/skills/pdi-decisions/scripts/second_review.py artifact \
+            --change "$CHANGE" --phase "$PHASE"
       # Persona w --print nie może pushować ani otwierać PR-ów (git push pyta o zgodę) — robi to workflow.
       # Uwaga: push tokenem github.token nie uruchamia workflow CI na tych gałęziach (ograniczenie GitHuba).
       - name: PR-y cięć (delivery)
         if: env.PHASE == 'delivery'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before "$RUNNER_TEMP/cuts-before.json" --base "$DEFAULT_BRANCH"
+        run: |
+          gh auth setup-git
+          python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before "$RUNNER_TEMP/cuts-before.json" --base "$DEFAULT_BRANCH"
       - name: PR fazy
         id: pr
         if: env.PHASE != 'delivery'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          gh auth setup-git
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m "docs($CHANGE): faza $PHASE (pdi)" -m "Change: $CHANGE"

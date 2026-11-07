@@ -125,8 +125,9 @@ wczytać agentowi przez `skills`).
 - **Koszt:** bez domyślnego budżetu, ale zawsze najtańszy wystarczający wykonawca, czytanie raz, fazy warunkowe
   (dokumentacja, przegląd bezpieczeństwa, architekt) tylko z powodem, najwyżej 2 próby naprawy na bramkę.
   `--budget` to twardy STOP sprawdzany po kawałku (`run_report.py status`).
-- **Pliki:** `.claude/runs/<data>-<slug>/` — `story.md`, `plan.md` (stan wznowienia), `parked.md`, `report.md`;
-  katalog jest ignorowany przez git.
+- **Pliki:** `tmp/talos/runs/<data>-<slug>/` (od 5.58.5 — wcześniej `.claude/runs/`, który jest ścieżką chronioną
+  w Claude Code; `status`/`finish` dalej odczytują stare katalogi) — `story.md`, `plan.md` (stan wznowienia),
+  `parked.md`, `report.md`; katalog jest ignorowany przez git (`.gitignore` z `*`).
 - **Raport:** `run_report.py finish` (skrypt skilla `talos-story-run`) sumuje transkrypty sesji i podagentów od startu przebiegu — czas,
   tokeny (wejście, wyjście, odczyt i zapis cache 5 min / 1 h), koszt wg cennika z `config.yaml`, modele i agenci.
   Liczy skrypt, nie model, więc raport nie kosztuje tokenów poza wklejeniem kilkunastu linii wyniku. Koszt to szacunek

@@ -1,0 +1,26 @@
+{
+  "id": "N5-sdlc-proba-CHG1-intent",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "intent",
+  "change": "CHG-1",
+  "budget_usd": 0.7,
+  "type": "happy",
+  "before_dir": "fixtures/sdlc-proba/CHG-1/pre-intent/",
+  "expect": {
+    "status": "waiting_gate",
+    "max_cost_usd": 0.7,
+    "max_duration_s": 180,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/intent.md",
+    "requirements": [
+      "zamiar wymienia konkretny problem zgłoszony w PRB-1",
+      "warianty mają koszt i powód odrzucenia",
+      "każde twierdzenie ma odwołanie do zgłoszenia albo decyzji"
+    ]
+  },
+  "notes": "Baseline happy path intent (sdlc-proba CHG-1, 2026-10-31). Pełna wersja fixtury po eksporcie z $PDI_REGISTRY_PATH/runs/ (PR2)."
+}

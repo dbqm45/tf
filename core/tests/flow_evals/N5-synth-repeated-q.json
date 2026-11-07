@@ -1,0 +1,26 @@
+{
+  "id": "N5-synth-repeated-q",
+  "repo": "synth",
+  "product_sha": "any",
+  "phase": "requirements",
+  "change": "CHG-1",
+  "budget_usd": 0.6,
+  "type": "happy",
+  "before_dir": "fixtures/synth/repeated-q/",
+  "expect": {
+    "status": "waiting_gate",
+    "max_cost_usd": 0.6,
+    "max_duration_s": 240,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/requirements.md",
+    "requirements": [
+      "persona NIE powtarza w `## Pytania do bramki` pytania już rozstrzygniętego w decisions.md (CHG-1/D2: flaga globalna)",
+      "artefakt wymienia ustalenie z odwołaniem do decyzji CHG-1/D2 albo DEC-0002 (Z1 compliance, nie zadawaj ponownie)",
+      "ewentualne nowe pytania do bramki dotyczą czegoś, co nie jest w decisions.md"
+    ]
+  },
+  "notes": "Z1 compliance: persona czyta decisions.md z CHG-1/D2 (flaga globalna). Fixture ma celowo w requirements.md `## Pytania do bramki` z już rozstrzygniętą kwestią — persona ma je usunąć i wpisać ustalenie. Oryginalnie zadanie testowało wykrycie regresji (phase_run.repeated()), ale dla dobrej persony Z1 compliance oznacza waiting_gate bez error — i tak chcemy. Jednostkowy test `phase_run.repeated()` jest w test_phase_run.py (R-19/R-20)."
+}

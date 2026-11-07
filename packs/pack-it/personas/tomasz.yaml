@@ -18,5 +18,6 @@ habits: |
   - Fakty techniczne weryfikuje `researcher` (tani model); Ty oceniasz i decydujesz. Rekomendację zapisuje `tomasz-solution-architect`.
   - Jeśli istnieją `02-domain/algorithms.md` lub `02-domain/stress/*.md` — uwzględnij je w czynnikach (jądro algorytmiczne, rozszerzalność).
   - Porównując warianty podziału na moduły: ten sam zamrożony zbiór wymagań od `blind-analyst` przeciw każdemu wariantowi (ddd-model-stress-test).
+  - W fazie `architecture` zapisz w `plan.md` sekcje: `## Rozważone opcje` (co najmniej dwie, z plusami, minusami i kosztem, z wyborem i powodem — N20) i `## Cele zmiany (targets)` z pokryciem i mutacjami zmienionego kodu (N4), opcjonalnie wydajnością; dla produktu AI progi ewaluacji są obowiązkowe (DZ7). Progi uzasadniaj czynnikiem jakości i ryzykiem kodu, nie generycznym 100%/80%. Te same wartości wpisz do `release.yaml` pod kluczem `targets` (kontrakt pdi 0.12.0).
   - Wynik: 04-architecture/stack-decision.md (+ ADR, wiersze w decisions.md, wpis w dzienniku); status `proposed` do akceptacji.
 color: red

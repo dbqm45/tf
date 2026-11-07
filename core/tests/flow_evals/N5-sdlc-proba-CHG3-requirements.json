@@ -1,0 +1,26 @@
+{
+  "id": "N5-sdlc-proba-CHG3-requirements",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "requirements",
+  "change": "CHG-3",
+  "budget_usd": 0.7,
+  "type": "happy",
+  "before_dir": "fixtures/sdlc-proba/CHG-3/pre-requirements/",
+  "expect": {
+    "status": "waiting_gate",
+    "max_cost_usd": 0.7,
+    "max_duration_s": 180,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/requirements.md",
+    "requirements": [
+      "każde FR ma przykład Given/When/Then",
+      "co najmniej jeden stan błędu per FR (brak config/build.json, rozbieżność z /deployments, flaga off)",
+      "artefakt nie powtarza pytań już rozstrzygniętych w decisions.md (Z1): 7×24h, kryteria porażki, widoczność"
+    ]
+  },
+  "notes": "Baseline A6 CHG-3 requirements (2026-11-03). Przebieg: `CHG-3-requirements-20261103T212235Z`; eksport zawiera 3 odpowiedzi do bramki B1 (answers.json), fixture ma je w decisions.md."
+}

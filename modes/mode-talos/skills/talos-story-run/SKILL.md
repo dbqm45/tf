@@ -4,7 +4,7 @@ description: Użyj na polecenie człowieka (/talos-story-run, agent talos) — h
 metadata:
   przeglad: "2027-04-21"
   katalog: "Użyj tylko na polecenie człowieka (`/talos-story-run STORY [--auto] [--budget USD]` albo `claude --agent talos`) — automat „story → PR”: przyjęcie historyjki, plan z pionowych kawałków (każdy scalany i działający), pętla kawałka (test czerwony → kod → weryfikacja → przegląd zakresu → commit), przypadki brzegowe odłożone do decyzji, fazy warunkowe, STOP, jeden PR, raport czasu, tokenów, kosztu i modeli. Nie do zwykłej implementacji w rozmowie (persona pracuje sama), delegowania pracy bez nadzoru w ogóle (core-async-delegation) ani faz całego projektu (core-delivery-lifecycle)."
-argument-hint: "[plik story | treść] [--auto] [--budget USD]"
+argument-hint: "[plik story | treść | TSK-n [--change CHG-n]] [--auto] [--budget USD]"
 disable-model-invocation: true
 ---
 
@@ -21,14 +21,28 @@ Automat na żądanie. Zasady, które wygrywają z każdą pokusą „zrobić wi�
 ## 0. Start
 Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py` (dalej `run_report.py`).
 1. Czyste drzewo robocze, inaczej STOP („niezacommitowane zmiany: <pliki>”).
+   **Karencja wersji (N10):** `python3 .claude/skills/talos-story-run/scripts/security_scan.py cooldown` — FAIL
+   (brak `min-release-age=7` npm, `minimumReleaseAge: 10080` pnpm, `npmMinimalAgeGate` Yarn, `exclude-newer` uv albo
+   lockfile poza gitem) → STOP z linią do dodania z wyniku; ustawień nie zmieniasz sam.
 2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
-   katalog `.claude/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
+   katalog `tmp/talos/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
+   Ścieżka celowo poza `.claude/` — Claude Code ma `.claude/` na liście chronionych (code.claude.com
+   /docs/en/permission-modes), więc `--permission-mode acceptEdits` i tak odmówiłby pisania do `.claude/runs/`.
    **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
-   start --task TSK-57` składa `story.md` z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (wartość, wydanie,
-   flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`. TSK spoza planów
-   zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”).
-3. Gałąź `story/<slug>` od aktualnej gałęzi domyślnej (core-git-workflow); przy cięciu z kluczem slug zaczyna się
-   od klucza (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki `Change: TSK-57`.
+   start --task TSK-57 --change CHG-12` składa `story.md` z wiersza cięcia w `docs/project/changes/CHG-12/plan.md`
+   (wartość, wydanie, flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`.
+   TSK spoza planów zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”); TSK w planach wielu zmian bez
+   `--change` → kod 2 i lista zmian (PRB-33).
+3. Gałąź `story/<slug>` od bazy cięcia (core-git-workflow). Zapamiętaj bazę przed `git switch -c` i wracaj do niej
+   między cięciami (`git switch <baza>`), żeby kolejne cięcia nie dziedziczyły commitów poprzedniego — chyba że plan
+   mówi inaczej.
+   - **Przebieg cięcia ze zmianą pdi** (`--change CHG-n`, tak woła Talosa faza delivery): baza to aktualna gałąź fazy
+     (`pdi/CHG-n-delivery`), bo pdi commituje na niej `decisions.md` zmiany przed uruchomieniem persony — bez tego
+     cięcia nie miałyby decyzji wiążących Talosa. Nie robisz `git switch main` przed `git switch -c`.
+   - **Zwykła historyjka** (bez `--change`): baza to gałąź domyślna (zwykle `main`); `git switch main`, potem
+     `git switch -c story/<slug>`.
+   Przy cięciu z kluczem slug zaczyna się od klucza (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki
+   `Change: TSK-57`.
 
 ## 1. Przyjęcie historyjki
 Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria akceptacji** sprawdzalne testem;
@@ -56,8 +70,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 - **Fazy warunkowe** wpisz do planu tylko z powodem: dokumentacja przy zmianie publicznego API lub zachowania
   opisanego w docs; `security-reviewer` przy auth, sekretach, uprawnieniach, IaC, CI; `architect` przy decyzji
   trudnej do odwrócenia.
-- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest poza gitem:
-  w commitach i kodzie nie odsyłasz do niego — pozycje trafiają do opisu PR i raportu przebiegu
+- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest w `tmp/talos/runs/<data>-<slug>/`
+  (poza gitem) — w commitach i kodzie nie odsyłasz do niego; pozycje trafiają do opisu PR i raportu przebiegu
   (sekcja „Odłożone do decyzji”, przy cięciu z kluczem w `docs/project/changes/CHG-n/runs/TSK-n.md`).
 - **Bez `--auto`:** pokaż plan (kawałki, fazy warunkowe, założenia, odłożone) i czekaj na akceptację człowieka.
   **Z `--auto`:** idziesz dalej; plan i założenia trafią do opisu PR.
@@ -66,8 +80,18 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 1. **Test czerwony** z kryteriów kawałka (TDD; hook `tdd_guard` pilnuje kolejności). Tylko przypadki z kryteriów.
 2. **Najmniejszy kod**, który go zazieleni. Pracujesz we własnym kontekście (cache); mechaniczną zmianę w 1–2
    plikach z gotową specyfikacją zlecasz `quick-fixer`.
-3. **Weryfikacja:** polecenie z planu, potem testy, lint i typy projektu (komendy z CLAUDE.md). Linia werdyktu:
-   `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
+3. **Weryfikacja:** polecenie z planu, potem jedno polecenie weryfikacji produktu z pierwszej linii CLAUDE.md
+   (format, lint, typy, testy i skan; wzór `templates/verify.sh`), a bez niego testy, lint i typy z CLAUDE.md. Linia
+   werdyktu: `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
+   **Skan bezpieczeństwa** po zielonych testach: `python3 .claude/skills/talos-story-run/scripts/security_scan.py scan
+   --slice K<n> --attempt <k> --out <katalog-przebiegu>/security/K<n>` — semgrep (OWASP Top 10 i `.semgrep.yml`
+   produktu) na plikach kawałka, audyt zależności tylko przy zmianie manifestu lub lockfile'a; SARIF, werdykt
+   i `summary.md` każdej próby w `security/K<n>/proba-<k>/` (próby się nie nadpisują, raport pokazuje wszystkie).
+   Blokujące (error albo warning z CWE z OWASP Top 10, reguła SEC-001 z ci_for_sdlc) → FAIL próby: ustalenia
+   (reguła, plik:linia) z `security/K<n>/feedback.md` (zawsze z ostatniej próby) są wejściem następnej próby; po 2 próbach skrypt drukuje blok STOP — kawałka
+   nie commitujesz, tak jak przy czerwonym teście. Brak skanera to FAIL z poleceniem instalacji, nie cichy PASS.
+   Ustalenia poniżej progu trafiają do raportu przebiegu (sekcja „Bezpieczeństwo”). Nowa zależność młodsza niż
+   7 dni (menedżer pakietów odmawia instalacji) → STOP z wyjaśnieniem, nie obejście.
 4. **Przegląd zakresu:** `scope-reviewer` dostaje kawałek z planu i `git diff`. Kod spoza kryteriów (obsługa
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
@@ -79,7 +103,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 
 ## 4. Zakończenie
 1. Fazy warunkowe z planu (tylko te).
-2. **Zgodność z planem:** `python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base <gałąź domyślna>`
+2. **Zgodność z planem:** `python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base <baza cięcia>`
+   (dla `--change`: gałąź fazy `pdi/CHG-n-delivery`; inaczej gałąź domyślna, zwykle `main`)
    — pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem, testy w diffie. Zmiana spoza planu
    bez uzasadnienia → wycofujesz albo opisujesz w PR jako odstępstwo.
 3. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
@@ -87,7 +112,9 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 4. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
    Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`
-   (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`.
+   (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`. Bez dostępu do
+   transkryptów (np. sandbox fazy pdi) `finish` kończy się kodem 2, ale raport z planem i odłożonymi i tak zapisuje
+   („brak danych o koszcie”) — commitujesz go tak samo; koszt podaje wtedy wynik fazy pdi.
 
 ## Kto co robi (koszt)
 | Krok | Kto | Tier |
@@ -125,11 +152,20 @@ Po STOP i tak uruchamiasz `run_report.py finish` — raport kosztu powstaje zaws
 - [ ] historyjka gotowa (kryteria sprawdzalne) albo pytania / STOP; założenia zapisane
 - [ ] plan: ≤5 kawałków pionowych, każdy z testem, plikami i weryfikacją; fazy warunkowe z powodem
 - [ ] bez `--auto` — akceptacja planu przez człowieka
-- [ ] każdy kawałek: test czerwony → kod → weryfikacja → przegląd zakresu → commit; ≤2 próby naprawy
+- [ ] karencja wersji (`security_scan.py cooldown`) PASS albo STOP
+- [ ] każdy kawałek: test czerwony → kod → weryfikacja i skan bezpieczeństwa → przegląd zakresu → commit;
+      ≤2 próby naprawy; blokujące ustalenie skanu = czerwona bramka
 - [ ] przypadki brzegowe w `parked.md`, nie w kodzie; lista w opisie PR
 - [ ] jeden PR, bez scalania; `run_report.py finish` uruchomiony, skrót pokazany człowiekowi
 
 ## Źródła
 - Anthropic, „Prompting Claude Opus 5.5” i „Prompting Claude Sonnet 5.5” (platform.claude.com, odczyt 2026-10-20):
   praca do końca bez niezamówionych dodatków, koniec tury tekstem to raport, lista zadań do wznowienia.
+- OWASP Top 10 2021 i 2025, „List of Mapped CWEs” (github.com/OWASP/Top10, odczyt 2026-11-02): lista CWE progu
+  blokującego; reguła jak SEC-001 w ci_for_sdlc (`--sarif`).
+- semgrep 1.183.0 (kod pakietu, odczyt 2026-11-02): `--sarif --output`, `--metrics=off`, rejestr reguł z semgrep.dev
+  (host na liście dozwolonych kontenera); stan semgrepa (`SEMGREP_SETTINGS_FILE`, `SEMGREP_LOG_FILE`,
+  `SEMGREP_VERSION_CACHE_PATH`) `security_scan.py` kieruje do `tmp/talos/runs/.semgrep/`, bo bez zapisywalnego HOME
+  semgrep kończy się błędem (PRB-32, odtworzone 2026-11-05) — zmiennych nie dopisujesz przed poleceniem; npm 11.10.0 `min-release-age` (dni), pnpm 10.17.0 `minimumReleaseAge`
+  (minuty), uv `exclude-newer` (czas względny) — szczegóły i luki: plan `docs/plans/2026-11-02-z8c-2-…`.
 - Bill Wake, „INVEST in Good Stories, and SMART Tasks” (2003): kryteria dobrej historyjki i kawałka.

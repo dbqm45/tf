@@ -13,6 +13,9 @@ and the factory tests run (tests and build expect the installed layout, not the 
                                      [--skill p-name] [--role role-name] [--no-check]
                                                        # skeleton of packs/pack-<name>/ or modes/mode-<name>/, CI matrix
                                                        # entry, then check + refs and a to-do list (guide: docs/new-pack.md)
+  python3 tools/workspace.py flow-evals [--validate | --all | --ids <id>,<glob>] [--budget-usd N] [--baseline previous]
+                                                       # evale przebiegu (N5, DZ13): bramka zmian modelu/skilla/persony/
+                                                       # promptu fazy; raport porównuje wynik i koszt z poprzednim przebiegiem
 
 Default workspace: .work/<packs> (git-ignored). The workspace is recreated on every `assemble`/`check`.
 Gate results (`python3 factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
@@ -20,6 +23,7 @@ Gate results (`python3 factory/skill_gate.py <skill>` run inside the workspace) 
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import shutil
@@ -69,6 +73,15 @@ def assemble(o: dict) -> Path:
     return ws
 
 
+def factory_only_tests() -> list[Path]:
+    """Testy rdzenia, których instalator nie kopiuje do projektu (install.py: FACTORY_ONLY) — uruchamiane ze źródła."""
+    spec = importlib.util.spec_from_file_location("tf_install_ws", INSTALL)
+    inst = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(inst)
+    return sorted(ROOT / "core" / rel for rel in inst.FACTORY_ONLY
+                  if Path(rel).name.startswith("test_") and rel.endswith(".py"))
+
+
 def run(ws: Path, cmd: list[str], env: dict | None = None) -> bool:
     r = subprocess.run(cmd, cwd=ws, capture_output=True, text=True, env={**os.environ, **(env or {})})
     ok = r.returncode == 0
@@ -86,6 +99,8 @@ def check(o: dict) -> bool:
     tests = sorted((ws / ".claude" / "tests").glob("test_*.py"))
     for t in tests:
         ok &= run(ws, [sys.executable, str(t.relative_to(ws))])
+    for t in factory_only_tests():   # tylko w przestrzeni fabryki (importują moduły ze źródła fabryki)
+        ok &= run(ROOT, [sys.executable, str(t.relative_to(ROOT))])
     if (ws / ".claude/tests/run_skill_evals.py").exists():
         strict = {"TF_EVALS_STRICT": "1"} if o["packs"] == "all" else {}   # sąsiedzi scenariuszy ze wszystkich nakładek
         ok &= run(ws, [sys.executable, ".claude/tests/run_skill_evals.py", "--validate"], env=strict)
@@ -320,6 +335,12 @@ def main(argv: list[str]) -> int:
         return refs("--verbose" in argv)
     if cmd == "new-pack":
         return new_pack(argv[2:])
+    if cmd == "flow-evals":
+        # Evale przebiegu (N5, DZ13): bramka dla zmian modelu/skilla/persony/promptu fazy.
+        # Raport porównuje wynik i koszt z poprzednim przebiegiem; walidacja (--validate) nie dotyka modelu.
+        sys.path.insert(0, str(ROOT / "core" / "tests"))
+        import flow_evals_runner
+        return flow_evals_runner.main(argv[2:])
     print(__doc__)
     return 2
 

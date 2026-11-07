@@ -37,7 +37,10 @@ Team mode (`--shared`): `.claude/settings.json`, `CLAUDE.md`, CI workflow and `.
 After copying, the installer builds the agents (`factory/build.py`) for the chosen packs and languages.
 
 The manifest `.claude/factory-manifest.json` records the version, source, mode, packs and a hash of every installed
-file. Thanks to it an update:
+file (as it is after `factory/build.py`). The manifest stays outside git; in team mode the installer also writes
+`.claude/factory-lock.json` (version, packs, languages, file hashes — nothing machine-specific), committed with the
+project, so a fresh clone without the manifest updates from it instead of skipping factory files. Thanks to them an
+update:
 - overwrites factory files you did not change and adds new ones;
 - leaves files you changed alone — the new version is written next to them as `<file>.factory-new`;
 - moves files removed from the factory (or from a removed pack) to `.claude/factory-backup/<date>/` (if unchanged);
@@ -63,6 +66,9 @@ PACKS_SRC = SRC / "packs"
 MODES_SRC = SRC / "modes"   # tryby pracy na żądanie (kind: mode) — instalowane jak nakładki
 ITEM_DIRS = ((PACKS_SRC, "pack", "pack-"), (MODES_SRC, "mode", "mode-"))   # katalog, kind, prefiks id
 MANIFEST = ".claude/factory-manifest.json"
+# Tryb zespołowy: manifest jest poza gitem (źródło, Python są lokalne), więc klon dostaje bazę aktualizacji z locka —
+# wersja, nakładki, języki i skróty plików fabryki, commitowane z projektem.
+LOCK = ".claude/factory-lock.json"
 BACKUP_DIR = ".claude/factory-backup"
 MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"
 GI_BEGIN, GI_END = "# team-factory:begin (managed by factory/install.py)", "# team-factory:end"
@@ -82,6 +88,12 @@ USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory
 ALWAYS_OWNED = (".claude/cleanroom.json",)   # składany z rdzenia i nakładek — zawsze z bieżącej wersji
 GENERATED = (".claude/agents/_generated/", ".claude/catalog.md")   # budowane w projekcie przez factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
+# Testy rdzenia, które mają sens tylko w repozytorium fabryki (ścieżki względem core/): evale przebiegu N5 importują
+# `scripts/export_pdi_runs.py` i `modes/mode-pdi/.../phase_result.py` ze źródła, więc w projekcie padałyby na imporcie.
+# Nie trafiają do `.claude/tests/` (aktualizacja usuwa ich kopie z wcześniejszych wersji); `tools/workspace.py check`
+# uruchamia je ze źródła (core/tests/).
+FACTORY_ONLY = ("tests/flow_evals/", "tests/flow_evals_runner.py", "tests/test_flow_evals.py",
+                "tests/test_export_pdi_runs.py")
 
 
 def load_packs_module():
@@ -378,10 +390,13 @@ def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> st
 
 def ignored_paths(files: dict[str, str] | None = None) -> list[str]:
     """Każda ścieżka instalowana przez fabrykę — per skill, hook i workflow, żeby Twoje własne zostały w repo."""
+    # PRB-32 (2026-11-05): Talos zakłada katalog przebiegu w `tmp/talos/runs/`, bo `.claude/` jest ścieżką chronioną
+    # w Claude Code (code.claude.com/docs/en/permission-modes) — stary `.claude/runs/` zostaje tu dalej, bo `status`
+    # i `finish` wznawiają z niego przebiegi sprzed przeniesienia.
     out = ["factory/", ".claude/agents/_generated/", ".claude/tests/", ".claude/catalog.md", ".claude/cleanroom.json",
            ".claude/JEV.md", ".claude/settings.local.json", "CLAUDE.local.md", MANIFEST, BACKUP_DIR + "/",
            ".claude/agent-memory/", ".claude/factory-profile.json", ".claude/factory-settings.json",
-           ".claude/skill-gate.json", ".claude/scratch/", ".claude/runs/", "*.factory-new"]
+           ".claude/skill-gate.json", ".claude/scratch/", ".claude/runs/", "tmp/talos/runs/", "*.factory-new"]
     rels = sorted(files or {})
     out += list(dict.fromkeys("/".join(r.split("/")[:3]) + "/" for r in rels if r.startswith(".claude/skills/")))
     out += [r for r in rels if r.startswith((".claude/hooks/", ".claude/workflows/"))]
@@ -493,6 +508,15 @@ def interactive_choice(available: dict, cfg: dict, preset: list[str]) -> tuple[l
     return chosen, language, commit
 
 
+def save_manifest(dst_root: Path, manifest: dict, shared: bool, language: str, commit_language: str) -> None:
+    """Manifest (lokalny) i — w trybie zespołowym — lock bez danych lokalnych (commitowany z projektem)."""
+    (dst_root / MANIFEST).write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    if shared:
+        lock = {"version": manifest["version"], "packs": list(manifest["packs"]), "language": language,
+                "commit_language": commit_language, "offered": manifest["offered"], "files": manifest["files"]}
+        (dst_root / LOCK).write_text(json.dumps(lock, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
 def rebuild(dst_root: Path, dry: bool) -> str:
     """Buduje agentów i katalog w projekcie dla wybranych nakładek i języków (factory/build.py)."""
     if dry:
@@ -563,6 +587,12 @@ def main(argv: list[str]) -> int:
     dry, update = bool(opts.get("--dry-run")), bool(opts.get("--update"))
     man_p = dst_root / MANIFEST
     manifest = json.loads(man_p.read_text(encoding="utf-8")) if man_p.exists() else None
+    lock_p = dst_root / LOCK
+    lock = json.loads(lock_p.read_text(encoding="utf-8")) if lock_p.exists() else None
+    if manifest is None and lock:          # klon instalacji zespołowej: baza aktualizacji z locka
+        print(f"ℹ No local manifest — using {LOCK} (version {lock.get('version')}) as the update base.")
+        manifest = {"version": lock.get("version"), "mode": "shared", "packs": {p: "0.0.0" for p in lock.get("packs") or []},
+                    "offered": lock.get("offered") or [], "files": lock.get("files") or {}}
     if manifest and not update:
         print(f"ℹ The factory is already installed (version {manifest.get('version')}) — updating.")
         update = True
@@ -584,8 +614,9 @@ def main(argv: list[str]) -> int:
         return 2
     settings = pm.load_settings(dst_root, cfg)
     had_settings = (dst_root / pm.SETTINGS_REL).exists()
-    language = opts.get("language") or settings["language"]
-    commit_language = opts.get("commit-language") or settings["commit_language"]
+    language = opts.get("language") or (None if had_settings else (lock or {}).get("language")) or settings["language"]
+    commit_language = opts.get("commit-language") or \
+        (None if had_settings else (lock or {}).get("commit_language")) or settings["commit_language"]
     for label, code in (("language", language), ("commit language", commit_language)):
         if code not in (cfg.get("languages") or {}):
             print(f"✗ Unknown {label} '{code}'. Available: {', '.join(cfg.get('languages') or {})}")
@@ -626,6 +657,8 @@ def main(argv: list[str]) -> int:
     for d, target in CORE_DIRS.items():
         for f in sorted((CORE / d).rglob("*")):
             rel = target + "/" + f.relative_to(CORE / d).as_posix()
+            if f.relative_to(CORE).as_posix().startswith(FACTORY_ONLY):
+                continue
             if f.is_file() and not any(x in rel for x in SKIP):
                 plan.copy(f, rel)
     for src_rel, dst_rel in {**CORE_FILES, **(SHARED_ONLY_FILES if shared else {})}.items():
@@ -695,7 +728,7 @@ def main(argv: list[str]) -> int:
     new_version = version_of(SRC)
     if not dry:
         man_p.parent.mkdir(parents=True, exist_ok=True)
-        man_p.write_text(json.dumps({
+        new_manifest = {
             "version": new_version,
             # źródło aktualizacji: --source, poprzednie (nie z migrowanej fabryki) albo katalog tej fabryki
             "source": opts.get("source") or ((manifest or {}).get("source") if legacy is None else None) or str(SRC),
@@ -709,7 +742,8 @@ def main(argv: list[str]) -> int:
             "skill_overrides": (manifest or {}).get("skill_overrides") or {},   # wpisy fabryki w skillOverrides
             **({"skill_describe": manifest["skill_describe"]} if (manifest or {}).get("skill_describe") else {}),
             **({"auto_update": manifest["auto_update"]} if "auto_update" in (manifest or {}) else {}),   # update.py --auto
-        }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        }
+        save_manifest(dst_root, new_manifest, shared, language, commit_language)
         if not had_settings or language != settings["language"] or commit_language != settings["commit_language"]:
             pm.save_settings(dst_root, language=language, commit_language=commit_language)
 
@@ -733,6 +767,13 @@ def main(argv: list[str]) -> int:
         msg = rebuild(dst_root, dry)
         if msg:
             print(msg)
+        # build.py przetwarza pliki (np. spis treści w references/) — manifest i lock zapamiętują to, co jest na dysku,
+        # inaczej następna aktualizacja wzięłaby nietknięty plik za zmieniony przez Ciebie (*.factory-new)
+        written = [r for r in plan.created + plan.updated if r in new_manifest["files"] and (dst_root / r).is_file()]
+        rehashed = {r: sha((dst_root / r).read_bytes()) for r in written}
+        if any(new_manifest["files"][r] != h for r, h in rehashed.items()):
+            new_manifest["files"] = dict(sorted({**new_manifest["files"], **rehashed}.items()))
+            save_manifest(dst_root, new_manifest, shared, language, commit_language)
     # widoczność opisów skilli: z opisem to, czego używa ten projekt, reszta jako sama nazwa (factory/skill_profile.py)
     if dry:
         print("ℹ Skill visibility will be matched to the project after the install (factory/skill_profile.py).")

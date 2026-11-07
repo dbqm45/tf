@@ -1,5 +1,7 @@
 # Next.js App Router — metadane, sitemap, robots, dane strukturalne
 
+> **Spis treści:** Wspólne · Strona produktu · Sitemap i robots · Sprawdzenie po wdrożeniu (dowolny stack)
+
 Sprawdzone 2026-10-24 na Next.js 16.4.3 i React 19.3.1: `next build`, `next start`, odpowiedzi pobrane `curl`.
 Sklep z wersjami `/pl` i `/en`, jeden produkt `kubek-termiczny`.
 

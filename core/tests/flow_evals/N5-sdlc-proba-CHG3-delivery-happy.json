@@ -1,0 +1,27 @@
+{
+  "id": "N5-sdlc-proba-CHG3-delivery-happy",
+  "repo": "sdlc-proba",
+  "product_sha": "any",
+  "phase": "delivery",
+  "change": "CHG-3",
+  "budget_usd": 1.3,
+  "type": "happy",
+  "before_dir": "fixtures/sdlc-proba/CHG-3/pre-delivery-happy/",
+  "expect": {
+    "status": "done",
+    "max_cost_usd": 1.3,
+    "max_duration_s": 420,
+    "max_permission_denials": 0
+  },
+  "judge": {
+    "run": true,
+    "rubric": "rubrics/delivery.md",
+    "requirements": [
+      "powstała gałąź story/tsk-1-deploy-counter z commitem ponad pdi/CHG-3-delivery",
+      "commit ma dopisek `Change: TSK-1`",
+      "`security_scan.py` (Z8c-2) nie zgłasza blockera (persona poprawiła SQL injection z próby 1)",
+      "slice ma dowód sprawdzalności (test akceptacyjny FR-001..005)"
+    ]
+  },
+  "notes": "Baseline happy path po poprawkach PRB-29/31/32/33. Przebieg A6: `CHG-3-delivery-20261105T224057Z` (status done, PR sdlc-proba #34, cięcie story/tsk-1-deploy-counter)."
+}
