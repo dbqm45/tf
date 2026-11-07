@@ -180,6 +180,46 @@ def main() -> int:
     finally:
         shutil.rmtree(tmp)
 
+    # ── prepare_workspace: fixture ZASTĘPUJE docs/project/changes/<CHG>/, nie nakłada się ────────────
+    tmp = _tmp()
+    try:
+        evals = tmp / "evals"
+        # Fixture pre-intent ma tylko decisions.md (bez intent/plan/design/requirements)
+        chg_fix = evals / "fixtures" / "sdlc-proba" / "CHG-7" / "pre-intent" / "docs" / "project" / "changes" / "CHG-7"
+        chg_fix.mkdir(parents=True)
+        (chg_fix / "decisions.md").write_text("## triage approved\n- ref: CHG-7/D1\n", encoding="utf-8")
+        # Produkt sdlc-proba w HEAD ma już pełne artefakty CHG-7 z poprzedniej (ukończonej) pracy
+        # ORAZ obcą zmianę CHG-1 (którą prepare_workspace też powinien usunąć, inaczej globalny
+        # `decision_record.py check` zawali się na CHG-1 z pre-N20 plan.md).
+        src_repo = tmp / "sdlc-proba"
+        src_chg = src_repo / "docs" / "project" / "changes" / "CHG-7"
+        src_chg.mkdir(parents=True)
+        (src_chg / "plan.md").write_text("# plan z A6 — bez N20\n", encoding="utf-8")
+        (src_chg / "design.md").write_text("# design\n", encoding="utf-8")
+        (src_repo / "docs" / "project" / "changes" / "CHG-1").mkdir()
+        (src_repo / "docs" / "project" / "changes" / "CHG-1" / "plan.md").write_text("# obca zmiana\n")
+        (src_repo / "README.md").write_text("product readme (nie dotyczy fixtury)\n", encoding="utf-8")
+
+        task = {"id": "REPLACE-TEST", "repo": "sdlc-proba", "phase": "intent", "change": "CHG-7", "type": "happy",
+                "before_dir": "fixtures/sdlc-proba/CHG-7/pre-intent/", "expect": {"status": "waiting_gate"}}
+        work_root = tmp / "work"
+        work_root.mkdir()
+        work = fer.prepare_workspace(task, repos={"sdlc-proba": src_repo}, workdir_root=work_root,
+                                     evals_root=evals)
+        chg_work = work / "docs" / "project" / "changes" / "CHG-7"
+        check((chg_work / "decisions.md").is_file(),
+              "REPLACE-1: decisions.md z fixtury nie trafił do work/")
+        check(not (chg_work / "plan.md").exists() and not (chg_work / "design.md").exists(),
+              f"REPLACE-2: plan.md/design.md z produktu NIE zostały usunięte przed overlay'em: {list(chg_work.iterdir())}")
+        # Obce zmiany w docs/project/changes/ też usunięte
+        check(not (work / "docs" / "project" / "changes" / "CHG-1").exists(),
+              "REPLACE-3: obca zmiana CHG-1 nie została usunięta (zawaliłaby globalny decision_record.py check)")
+        # Reszta repozytorium musi zostać
+        check((work / "README.md").is_file(),
+              "REPLACE-4: pliki poza docs/project/changes/ zostały zmazane (nie powinny)")
+    finally:
+        shutil.rmtree(tmp)
+
     # ── run_task z iniekcją phase_fn + judge_fn ──────────────────────────────
     tmp = _tmp()
     try:
