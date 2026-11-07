@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.63.1] — 2026-11-07
+### Fixed
+- **flow-evals:** make first paid run actually executable (N5) (#155)
+
 ## [5.63.0] — 2026-11-07
 ### Added
 - **phase:** stream-json progress lines (Z3-lokalnie A7) (#154)
