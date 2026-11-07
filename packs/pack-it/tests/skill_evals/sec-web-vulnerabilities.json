@@ -67,34 +67,32 @@
       }
     },
     {
-      "id": "kupon-jednorazowy-wyscig",
+      "id": "cdn-cudza-strona-konta",
       "expect": "trigger",
-      "prompt": "Kod rabatowy jest jednorazowy: sprawdzamy w bazie, czy used = false, a potem ustawiamy used = true i naliczamy rabat. Tester wysłał 20 żądań naraz i rabat naliczył się 6 razy. Skąd to i jak naprawić tak, żeby dało się to udowodnić testem? Odpowiedz zwięźle.",
+      "prompt": "Zgłoszenie od użytkownika: wysłał koledze link https://app.example.com/account/settings/avatar.png, kolega go otworzył, a potem zgłaszający pod tym samym adresem zobaczył stronę ustawień kolegi z jego e-mailem i adresem. Aplikacja stoi za CDN. Jak to możliwe i jak to naprawić? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [
-            "wyścig\\w*",
-            "race",
-            "TOCTOU",
-            "współbieżn\\w*"
+            "cache deception",
+            "oszuk\\w* (cache|pamięci podręcznej)",
+            "deception"
           ],
           [
-            "atomow\\w*",
-            "UPDATE[^\\n]{0,80}WHERE[^\\n]{0,40}used",
-            "FOR UPDATE",
-            "blokad\\w*",
-            "unikaln\\w*",
-            "warunkow\\w* (zapis|aktualiz)",
-            "rowcount",
-            "affected"
+            "no-store",
+            "private",
+            "Cache-Control"
           ],
           [
-            "równoległ\\w*[^\\n]{0,80}(żąda|wywoła|test)",
-            "test\\w*[^\\n]{0,80}równoległ\\w*",
-            "Promise\\.all",
-            "jednocześni\\w*",
-            "naraz"
+            "rozszerzen\\w*",
+            "sufiks\\w*",
+            "404",
+            "ścisł\\w* (routing|dopasowan)",
+            "ścież\\w* statyczn\\w*",
+            "allowlist\\w*"
           ]
+        ],
+        "none": [
+          "(wyczyść|wyczyszczenie|purge)[^\\n]{0,40}cache[^\\n]{0,40}(wystarczy|rozwiąże)"
         ]
       }
     },
