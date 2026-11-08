@@ -1,5 +1,8 @@
 # F4 (część A): ewaluacja skilla eng-project-reconstruction — 2026-10-24 (Haiku)
 
+Dane: `core/tests/run_skill_evals.py` — wynik runnera z dnia pomiaru (koszt z `total_cost_usd`); surowych
+wyników nie zapisano w repozytorium.
+
 Decyzja człowieka (2026-10-24): tylko część A — ewaluacja skilla na Haiku z porównaniem bez skilli. Benchmark vs
 maister (część B) nie został uruchomiony; repozytoria dobierze Claude, gdy człowiek zdecyduje o B.
 

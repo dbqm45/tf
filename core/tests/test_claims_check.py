@@ -97,6 +97,14 @@ def main() -> int:
         r = run(["z-deklaracja.md"], d)
         check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
               f"C-13: deklaracja źródła danych dokumentu (Pliki:/Źródło danych: z `ścieżką`) obejmuje liczby: {r.stdout}")
+        (d / "inline.md").write_text("# Pomiar\n\nPowtórzenie testu. Dane: `wyniki/v2/`, skrypty obok.\n\n"
+                                     "Koszt 5,38 USD, pokrycie 90%.\n", encoding="utf-8")
+        r = run(["inline.md"], d)
+        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
+              f"C-14: deklaracja „Dane: `ścieżka`” w środku zdania też obejmuje liczby dokumentu: {r.stdout}")
+        (d / "bez.md").write_text("# Pomiar\n\nNie mamy danych: wynik 5 USD.\n", encoding="utf-8")
+        r = run(["bez.md"], d)
+        check(r.stdout.startswith("Werdykt: OSTRZEŻENIA"), f"C-15: słowo „danych” bez ścieżki to nie deklaracja: {r.stdout}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recenzenta liczb")
     return 1 if fails else 0
 

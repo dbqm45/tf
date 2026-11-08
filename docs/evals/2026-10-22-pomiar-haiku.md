@@ -1,5 +1,8 @@
 # Pomiar skilli na modelu — 2026-10-22 (Haiku)
 
+Dane: `core/tests/run_skill_evals.py` — wynik runnera z dnia pomiaru (koszt z `total_cost_usd`); surowych
+wyników nie zapisano w repozytorium.
+
 Runner: `tests/run_skill_evals.py --models haiku --isolated` (część z `--baseline`), przestrzeń `.work` ze wszystkimi
 nakładkami. Koszt według `total_cost_usd` z Claude Code; zużycie planu Max 5x: ok. 1 punkt procentowy okna na 2 USD
 (odczyt człowieka: 5% → 6% po pilotażu za 2,15 USD; dokładność wskaźnika 1%).

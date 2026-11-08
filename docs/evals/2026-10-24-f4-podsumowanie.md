@@ -1,5 +1,8 @@
 # F4: podsumowanie — rekonstrukcja projektu z kodu wobec maistera — 2026-10-24
 
+Dane: `docs/evals/2026-10-24-f4b/` (`przebiegi.tsv`, `odswiezenie.tsv`, werdykty ślepej oceny w `verdicts/`) i raporty
+częściowe F4 z 2026-10-24 i 2026-10-25 w tym katalogu.
+
 Decyzja człowieka (2026-10-24): **obecny poziom kosztu jest zaakceptowany**, bo jakość jest wyraźnie lepsza od maistera.
 Do dalszego obniżania kosztu można wrócić w przyszłości (sekcja „Powrót do kosztu”).
 
