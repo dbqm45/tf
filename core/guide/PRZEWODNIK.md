@@ -41,7 +41,9 @@ Agenci wspólni, dostępni dla każdej persony:
   przerwie sesja zaczyna od niego i od `git status`.
 - **Fazy od pomysłu do utrzymania** (persony, bramki, gotowość): skill `core-delivery-lifecycle`.
 - **Plan przed kodem, potem TDD:** najpierw test, który nie przechodzi, potem kod. Hook `tdd_guard` blokuje kod
-  produkcyjny bez czerwonego testu.
+  produkcyjny bez czerwonego testu. Bramka jakości: plik `.claude/quality-gate.json` z poleceniem testów, np.
+  `{"command": "npm test", "watch": ["src/", "test/"]}` — hook `quality_gate` nie pozwoli zakończyć tury z czerwonym
+  buildem (opis w nagłówku `.claude/hooks/quality_gate.py`).
 
 ## 4. Tryby i automaty na żądanie
 | Co | Jak | Kiedy |

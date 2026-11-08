@@ -226,6 +226,14 @@
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/jev_guard.py"
             ],
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/quality_gate.py"
+            ],
+            "timeout": 900
           }
         ]
       }
@@ -322,6 +330,14 @@
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/skill_change_guard.py"
             ],
             "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/quality_gate.py"
+            ],
+            "timeout": 900
           }
         ]
       }
