@@ -1,0 +1,5 @@
+[
+  {"rule": "cycle", "file": "app/cyc/a.py"},
+  {"rule": "upstream", "file": "app/billing"},
+  {"rule": "hub", "file": "app/core/util.py"}
+]

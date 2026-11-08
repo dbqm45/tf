@@ -81,7 +81,8 @@ CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": "f
 CORE_FILES = {"guide/JEV.md": ".claude/JEV.md",   # przewodnik i FAQ w factory/ — bez README w korzeniu projektu
               "guide/PRZEWODNIK.md": "factory/PRZEWODNIK.md", "guide/FAQ.md": "factory/FAQ.md"}
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests",
-             "workflows": ".claude/workflows"}   # workflows: skrypty wieloagentowe Claude Code (Workflow)
+             "workflows": ".claude/workflows",   # workflows: skrypty wieloagentowe Claude Code (Workflow)
+             "analyzers": "factory/analyzers"}   # moduły tf analyze (analyzer.yaml, scripts/, fixtures/)
 PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md")   # → factory/packs/<id>/
 SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
 USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory/config.yaml", "factory/packs/")

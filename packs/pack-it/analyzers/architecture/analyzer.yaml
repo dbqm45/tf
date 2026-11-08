@@ -1,0 +1,15 @@
+name: architecture
+prefix: ARC
+title: Architektura
+description: cykle importów, zależności w obie strony między grupami modułów, huby (graf importów bez modelu)
+version: 1.0.0
+przeglad: "2027-05-08"
+skills: [eng-codebase-mapping, ddd-connascence-analysis, arch-quality-attributes]
+incremental: false
+applies_when:
+  files_any: ["**/*.py", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.java", "**/*.cs", "**/*.go"]
+tier0:
+  script: scripts/scan.py
+gate:
+  min_recall: 1.0
+  max_false_positives: 0

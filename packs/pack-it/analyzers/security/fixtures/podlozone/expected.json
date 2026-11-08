@@ -1,0 +1,8 @@
+[
+  {"rule": "secret", "file": "src/app.py"},
+  {"rule": "dangerous-api", "file": "src/app.py"},
+  {"rule": "tls-off", "file": "src/app.py"},
+  {"rule": "weak-hash", "file": "src/app.py"},
+  {"rule": "dangerous-api", "file": "web/ui.tsx"},
+  {"rule": "no-lockfile", "file": "package.json"}
+]
