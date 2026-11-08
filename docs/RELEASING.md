@@ -72,6 +72,9 @@ Po każdym merge'u do `main` workflow `release` (`.github/workflows/release.yml`
    - W przeciwnym razie skrypt zapisuje nową wersję w `core/factory/VERSION` i dopisuje wpis na górze
      `core/factory/CHANGELOG.md` (sekcje *Breaking*, *Added*, *Fixed* z tytułów commitów; nazwy po angielsku jak w [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), starsze wpisy mają nazwy polskie i zostają bez zmian). Sekcje są zgodne
      z kontrolą `build.py check` (rodzaj podbicia ↔ sekcje), którą job uruchamia przed commitem.
+   - Przy wydaniu MAJOR (`X.0.0`) skrypt podnosi w `packs/*/pack.yaml` i `modes/*/pack.yaml` górną granicę
+     `requires.core: "… <X.0.0"` na `<X+1.0.0` — inaczej `build.py check` odrzuciłby każdą nakładkę z nowym rdzeniem.
+     Nakładka, która naprawdę nie działa z nowym rdzeniem, musi mieć w tym samym PR inną granicę.
 2. **Commituje** te zmiany na `main` jako `github-actions[bot]` z komunikatem `chore(release): X.Y.Z`. Push tokenem
    `GITHUB_TOKEN` nie uruchamia kolejnych workflow, więc commit wydania nie wywołuje następnego wydania.
 3. **Tworzy tag** `vX.Y.Z` z adnotacją na commicie wydania.

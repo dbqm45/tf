@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Przygotowuje wydanie fabryki na bieżącej gałęzi: liczy następną wersję SemVer z Conventional Commits od ostatniego
-tagu vX.Y.Z, zapisuje ją w core/factory/VERSION i dopisuje wpis na górze core/factory/CHANGELOG.md. Nie commituje, nie taguje
+tagu vX.Y.Z, zapisuje ją w core/factory/VERSION i dopisuje wpis na górze core/factory/CHANGELOG.md; przy wydaniu MAJOR
+podnosi górną granicę `requires.core` nakładek i trybów, które wykluczałyby nowy rdzeń. Nie commituje, nie taguje
 i nie pushuje: na main robi to workflow Release po każdym merge (`--ci`), commitując „chore(release): X.Y.Z”
 (docs/RELEASING.md). Wywołuj z katalogu głównego repozytorium.
 
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 import datetime as dt
 import subprocess
+import re
 import sys
 from functools import cmp_to_key
 from pathlib import Path
@@ -31,6 +33,24 @@ def git(*args: str) -> str:
 def fail(msg: str) -> int:
     print(f"✗ {msg}", file=sys.stderr)
     return 1
+
+
+def widen_pack_requirements(version: str) -> list[str]:
+    """Przy wydaniu MAJOR: nakładki i tryby z górną granicą `requires.core` równą `<{nowy major}.0.0` (czyli
+    wykluczające nowy rdzeń) dostają `<{nowy major + 1}.0.0`. Bez tego `build.py check` po podbiciu wersji zgłasza
+    każdą nakładkę i wydanie się nie udaje (6.0.0 i 7.0.0, tf#179, tf#181). Inne granice zostają bez zmian."""
+    major = int(version.split(".")[0])
+    if version != f"{major}.0.0":
+        return []
+    rx = re.compile(r'^(\s*core:\s*"[^"]*<)' + str(major) + r'(\.0\.0")', re.M)
+    changed = []
+    for p in sorted([*Path("packs").glob("*/pack.yaml"), *Path("modes").glob("*/pack.yaml")]):
+        text = p.read_text(encoding="utf-8")
+        new = rx.sub(lambda m: f"{m.group(1)}{major + 1}{m.group(2)}", text)
+        if new != text:
+            p.write_text(new, encoding="utf-8")
+            changed.append(p.parent.name)
+    return changed
 
 
 def main(argv: list[str]) -> int:
@@ -76,6 +96,9 @@ def main(argv: list[str]) -> int:
         return 0
     VERSION_FILE.write_text(version + "\n", encoding="utf-8")
     CHANGELOG.write_text(cc.insert_entry(CHANGELOG.read_text(encoding="utf-8"), entry), encoding="utf-8")
+    widened = widen_pack_requirements(version)
+    if widened:
+        print(f"✓ requires.core dopuszcza {version}: {', '.join(widened)}")
     if ci:
         print(f"✓ Wersja {version} zapisana")
         return 0

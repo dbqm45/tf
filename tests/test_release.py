@@ -167,6 +167,24 @@ def main() -> int:
         r = run(repo, "release.py", "--dry-run", "2.7.0")
         check(r.returncode == 1 and "nie jest nowsza" in r.stderr, f"E2E-11: wersja nie nowsza: {r.stderr}")
 
+        # E2E-12: wydanie MAJOR podnosi górną granicę `requires.core` nakładek i trybów, które wykluczałyby nowy rdzeń
+        for rel, line in (("packs/pack-a/pack.yaml", '  core: ">=2.0.0 <3.0.0"   # komentarz zostaje'),
+                          ("modes/mode-b/pack.yaml", '  core: ">=2.5.0 <3.0.0"'),
+                          ("packs/pack-c/pack.yaml", '  core: ">=2.0.0 <9.0.0"')):
+            (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+            (repo / rel).write_text(f"id: x\nrequires:\n{line}\n", encoding="utf-8")
+        git(repo, "add", ".")
+        git(repo, "commit", "-qm", "feat!: zmiana niezgodna\n\nBREAKING CHANGE: x")
+        r = run(repo, "release.py", "--ci")
+        packs = {rel: (repo / rel).read_text(encoding="utf-8") for rel in
+                 ("packs/pack-a/pack.yaml", "modes/mode-b/pack.yaml", "packs/pack-c/pack.yaml")}
+        check(r.returncode == 0 and (repo / "core" / "factory" / "VERSION").read_text() == "3.0.0\n"
+              and '">=2.0.0 <4.0.0"   # komentarz zostaje' in packs["packs/pack-a/pack.yaml"]
+              and '">=2.5.0 <4.0.0"' in packs["modes/mode-b/pack.yaml"]
+              and '">=2.0.0 <9.0.0"' in packs["packs/pack-c/pack.yaml"] and "pack-a" in r.stdout,
+              f"E2E-12: MAJOR podnosi requires.core nakładek (<3.0.0 → <4.0.0), inne granice bez zmian: "
+              f"{r.stdout}{r.stderr} {packs}")
+
         # sprawdzanie wiadomości commita (hook commit-msg i tytuł PR)
         r = run(repo, "check_commit_message.py", "feat(web): zoom")
         check(r.returncode == 0 and "✓" in r.stdout, "MSG-1: poprawny tytuł")
