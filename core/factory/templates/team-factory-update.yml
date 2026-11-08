@@ -1,6 +1,6 @@
-# Automatyczna aktualizacja team-factory (tryb zespołowy). Plik wstawia `python3 factory/update.py --auto on`,
+# Automatyczna aktualizacja team-factory (tryb zespołowy). Plik wstawia `python3 .tf/factory/update.py --auto on`,
 # usuwa `--auto off`. Raz w tygodniu sprawdza nowe wydanie PATCH/MINOR (MAJOR tylko zgłasza), instaluje je, uruchamia
-# testy fabryki i `factory/build.py check`, a gdy wszystko jest zielone — otwiera pull request do przeglądu.
+# testy fabryki i `.tf/factory/build.py check`, a gdy wszystko jest zielone — otwiera pull request do przeglądu.
 # Wymaga ustawienia repozytorium: Settings → Actions → General → Workflow permissions →
 # „Allow GitHub Actions to create and approve pull requests”.
 # Zmiany w .github/workflows/ nie trafiają do PR (GITHUB_TOKEN nie może ich wypchnąć) — opis PR mówi, co przenieść ręcznie.
@@ -32,7 +32,7 @@ jobs:
           python-version: "3.12"
       - run: pip install pyyaml
       - id: update
-        run: python3 factory/update.py --ci --source "$CTF_SOURCE"
+        run: python3 .tf/factory/update.py --ci --source "$CTF_SOURCE"
       - if: steps.update.outputs.version != ''
         env:
           GH_TOKEN: ${{ github.token }}

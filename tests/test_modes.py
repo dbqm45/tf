@@ -71,7 +71,7 @@ def main() -> int:
         m = manifest(p)
         check(r.returncode == 0 and sorted(m.get("packs", {})) == ["mode-x", "pack-d"],
               f"M-1: domyślny tryb z modes/ instalowany przy pierwszej instalacji: {m.get('packs')} {r.stdout[-800:]}")
-        check((p / "factory" / "packs" / "mode-x" / "pack.yaml").is_file()
+        check((p / ".tf" / "factory" / "packs" / "mode-x" / "pack.yaml").is_file()
               and (p / ".claude" / "skills" / "xx-run" / "SKILL.md").is_file(), "M-2: pliki trybu na miejscu")
         check(sorted(m.get("offered", [])) == ["mode-x", "pack-a", "pack-d"],
               f"M-3: manifest zapisuje, co było w ofercie: {m.get('offered')}")

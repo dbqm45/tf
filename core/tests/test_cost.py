@@ -40,7 +40,7 @@ def main() -> int:
         shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns("__pycache__", "logs", ".git", "*.zip"))
         (root / ".claude" / "factory-profile.json").unlink(missing_ok=True)
         (root / ".claude" / "settings.local.json").write_text(json.dumps({"model": "opus"}))   # własne ustawienie
-        prof = str(root / "factory" / "profile.py")
+        prof = str(root / ".tf" / "factory" / "profile.py")
 
         total += 1
         r = run([prof, "oszczedny"], cwd=root)
@@ -159,7 +159,7 @@ def main() -> int:
 
     # ── cost_report: rekomendacje tierów ──
     total += 1
-    cr = load(ROOT / "factory" / "cost_report.py", "cost_report")
+    cr = load(ROOT / ".tf" / "factory" / "cost_report.py", "cost_report")
     cfg = {"shared_agents": {"quick-fixer": {}}}
 
     def rec(ts, session, agent, model, fb=None):
@@ -200,13 +200,13 @@ def main() -> int:
         dl, ul = Path(d) / "delegation.jsonl", Path(d) / "usage.jsonl"
         dl.write_text("\n".join(json.dumps({"ts": "2026-10-18T12:00:00+00:00", **x}) for x in deleg), encoding="utf-8")
         ul.write_text("\n".join(json.dumps({"ts": "2026-10-18T12:00:00+00:00", **x}) for x in usage), encoding="utf-8")
-        r = run([str(ROOT / "factory" / "cost_report.py"), "--delegation", "--log", str(ul), "--delegation-log", str(dl)])
+        r = run([str(ROOT / ".tf" / "factory" / "cost_report.py"), "--delegation", "--log", str(ul), "--delegation-log", str(dl)])
         if r.returncode != 0 or "czytanie" not in r.stdout or "bez klasy" not in r.stdout:
             fails.append(f"cost_report --delegation: {r.returncode} {r.stdout[-400:]} {r.stderr[-400:]}")
 
     # ── instalator: scalanie kluczy najwyższego poziomu i polecenie Pythona w pasku stanu ──
     total += 1
-    inst = load(ROOT / "factory" / "install.py", "install")
+    inst = load(ROOT / ".tf" / "factory" / "install.py", "install")
     sp = ROOT / ".claude" / "settings.json"
     sp = sp if sp.exists() else ROOT / ".claude" / "settings.local.json"     # w projekcie (instalacja prywatna)
     src = json.loads(sp.read_text(encoding="utf-8"))
@@ -251,7 +251,7 @@ def main() -> int:
 
     # ── jednorazowe pliki objaśnień (HTML, diagramy) w .claude/scratch/ nie trafiają do gita (core-problem-routing) ──
     total += 1
-    gi = ROOT / "factory" / "gitignore"
+    gi = ROOT / ".tf" / "factory" / "gitignore"
     for ign in (".claude/scratch/",):
         if ign not in inst.ignored_paths() or (gi.exists() and ign not in gi.read_text(encoding="utf-8")):
             fails.append(f"install: {ign} poza ignorowanymi ścieżkami")
@@ -262,7 +262,7 @@ def main() -> int:
 
     # ── gotowa konfiguracja piaskownicy opt-in: tylko klucz sandbox, bez furtek ──
     total += 1
-    sb_file = ROOT / "factory" / "templates" / "sandbox.settings.json"
+    sb_file = ROOT / ".tf" / "factory" / "templates" / "sandbox.settings.json"
     try:
         sb_all = json.loads(sb_file.read_text(encoding="utf-8"))
         sb = sb_all["sandbox"]

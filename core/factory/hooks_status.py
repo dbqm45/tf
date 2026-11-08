@@ -2,8 +2,8 @@
 """
 Czy hooki fabryki działały przy ostatnich commitach — porównanie śladów hooków w .tf/logs z historią git.
 
-  python3 factory/hooks_status.py              # jedna linia: aktywne / nieaktywne / brak hooków
-  python3 factory/hooks_status.py --json       # {"active": true|false|null, "last_log", "after_commits", "first_after"}
+  python3 .tf/factory/hooks_status.py              # jedna linia: aktywne / nieaktywne / brak hooków
+  python3 .tf/factory/hooks_status.py --json       # {"active": true|false|null, "last_log", "after_commits", "first_after"}
   --root <repozytorium>
 
 Ślady hooków: wpisy `ts` w .tf/logs/skill-hints.jsonl (każde polecenie) i usage.jsonl (koniec sesji). Commit
@@ -19,9 +19,11 @@ import json
 import os
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 LOGS = ("skill-hints.jsonl", "usage.jsonl")
 GRACE = dt.timedelta(hours=1)
 MIN_COMMITS = 2

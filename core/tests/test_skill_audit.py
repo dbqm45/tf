@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy audytu skilli (factory/skill_audit.py): bezpieczeństwo skilli z obcych źródeł i zalecenia Anthropic."""
+"""Testy audytu skilli (.tf/factory/skill_audit.py): bezpieczeństwo skilli z obcych źródeł i zalecenia Anthropic."""
 import json
 import subprocess
 import sys
@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir())
-SCRIPT = ROOT / "factory" / "skill_audit.py"
+SCRIPT = ROOT / ".tf" / "factory" / "skill_audit.py"
 
 GOOD = """---
 name: pdf-forms
@@ -98,7 +98,7 @@ def main() -> int:
 
     # audyt przy aktualizacji: skille pobranej wersji sprawdza narzędzie z wersji zainstalowanej
     import importlib.util
-    spec = importlib.util.spec_from_file_location("upd", ROOT / "factory" / "update.py")
+    spec = importlib.util.spec_from_file_location("upd", ROOT / ".tf" / "factory" / "update.py")
     upd = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(upd)
     with tempfile.TemporaryDirectory() as d:

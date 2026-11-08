@@ -161,7 +161,7 @@ const report = await agent(
   `Napisz raport audytu kodu do ${reportPath} według references/szablon-raportu.md skilla eng-code-audit ` +
   `(sekcja 5 skilla: TL;DR, blokery, ranking i top 10, szybkie wygrane, „Czego nie sprawdzono”, sprzeczności, koszt). ` +
   `Ranking, blokery i hipotezy są już policzone — przepisz je bez zmiany kolejności i wartości. Koszt audytu: ` +
-  `python3 factory/cost_report.py --days 1. Na koniec python3 .claude/skills/core-grounding/scripts/grounding_check.py ` +
+  `python3 .tf/factory/cost_report.py --days 1. Na koniec python3 .claude/skills/core-grounding/scripts/grounding_check.py ` +
   `${reportPath} i popraw błędy. Zwróć samą ścieżkę raportu.\nDane:\n${JSON.stringify(data)}`,
   { label: 'raport', phase: 'Raport' })
 

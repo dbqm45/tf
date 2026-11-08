@@ -2,8 +2,8 @@
 """
 Pomiar Jev na danych fabryki — ZANIM go włączysz (wymaga TYPESAFE_API_KEY; koszt rzędu centów).
 
-  python3 factory/jev_calibration.py --routing [--limit 300] [--shuffle] [--target 0.9]
-  python3 factory/jev_calibration.py --judge docs/evals/2026-10-02-sonnet.jsonl [--limit 100]
+  python3 .tf/factory/jev_calibration.py --routing [--limit 300] [--shuffle] [--target 0.9]
+  python3 .tf/factory/jev_calibration.py --judge docs/evals/2026-10-02-sonnet.jsonl [--limit 100]
 
 --routing  podpowiedź skilli na wszystkich scenariuszach ewaluacji: same słowa (hook domyślny) kontra dwuetapowy Jev
            (cookbook TypeSafe „skill suggestion”). Miary jak w cookbooku: trafne, błędne (podpowiedziany inny skill),
@@ -26,10 +26,12 @@ import importlib.util
 import json
 import re
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 HOOKS = ROOT / ".claude" / "hooks"
 TESTS = ROOT / "tests" if (ROOT / "tests" / "run_skill_evals.py").exists() else ROOT / ".claude" / "tests"
 

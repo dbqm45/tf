@@ -289,7 +289,7 @@ odstęp i promień z tabel w `references/tokeny.md`, wartości przez zmienne CSS
 - [ ] sprawdź tokeny ze źródłem (najczęstszy kolor nie zawsze jest kolorem marki)
 - [ ] nazwij role kolorów (główny, tekst, tło, błąd) i skalę odstępów
 - [ ] scenariusze z `ux-ds-{slug}.evals.json` przenieś do katalogu scenariuszy projektu i uzupełnij
-- [ ] `python3 factory/skill_gate.py ux-ds-{slug}` w projekcie, w którym skill będzie używany
+- [ ] `python3 .tf/factory/skill_gate.py ux-ds-{slug}` w projekcie, w którym skill będzie używany
 
 ## Źródła
 - `{src}` — analiza statyczna {today.isoformat()} (`tools/ui-deconstruct.py`).

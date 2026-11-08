@@ -295,7 +295,7 @@ def main() -> int:
                                   {"type": "tool_use", "name": "Read", "input": {"file_path": "/p/.claude/skills/be-database/SKILL.md"}}]}}) + "\n")
         sp.run([sys.executable, str(hooks / "log_usage.py")], capture_output=True, text=True, env=env,
                input=json.dumps({"hook_event_name": "SessionEnd", "session_id": "s1", "transcript_path": str(tr)}))
-        hr = importlib.util.spec_from_file_location("hint_report", ev.ROOT / "factory" / "hint_report.py")
+        hr = importlib.util.spec_from_file_location("hint_report", ev.ROOT / ".tf" / "factory" / "hint_report.py")
         rep_mod = importlib.util.module_from_spec(hr)
         hr.loader.exec_module(rep_mod)
         logs = proj / ".tf" / "logs"

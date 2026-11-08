@@ -2,8 +2,8 @@
 """
 Raport skuteczności podpowiedzi skilli (hook skill_hint) na prawdziwej pracy w projekcie.
 
-  python3 factory/hint_report.py               # wszystkie sesje z logów
-  python3 factory/hint_report.py --days 7      # ostatnie 7 dni
+  python3 .tf/factory/hint_report.py               # wszystkie sesje z logów
+  python3 .tf/factory/hint_report.py --days 7      # ostatnie 7 dni
 
 Łączy dwa logi z .tf/logs/:
 - skill-hints.jsonl (hook skill_hint): co podpowiedziano przy każdym poleceniu,
@@ -20,11 +20,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 LOGS = ROOT / ".tf" / "logs"
 
 

@@ -111,7 +111,7 @@ Po zrozumieniu plik można usunąć — trwały wynik trafia do `docs/project/` 
   w katalogu (pack-editorial-pl: txt-polish-correctness).
   Dłuższy dokument → `docs/project/` (plan: `05-plan/`, decyzja: ADR) wg core-project-record, status `proposed`.
 - Na końcu **skład zespołu**, który zadziałał: persony/skille. Jeśli połączenie było nowe i przyda się znowu → zaproponuj
-  plik `factory/personas/<nazwa>.yaml` (zmiana w `factory/` wymaga zgody człowieka).
+  plik `.tf/config/personas/<nazwa>.yaml` (zmiana w `.tf/factory/` wymaga zgody człowieka).
 
 ## Checklista
 - [ ] problem sparafrazowany, kryterium sukcesu i ograniczenia nazwane; założenia wypisane

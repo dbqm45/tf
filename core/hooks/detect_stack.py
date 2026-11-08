@@ -33,7 +33,7 @@ HOOKS_DIR = Path(__file__).resolve().parent
 CLAUDE_DIR = HOOKS_DIR.parent
 SKILLS_DIR = CLAUDE_DIR / "skills"
 REGISTRY = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"   # rdzeń (format, wpisy własne)
-PACKS_DIR = CLAUDE_DIR.parent / "factory" / "packs"    # nakładki dokładają rejestry: factory/packs/<id>/technologies.json
+PACKS_DIR = CLAUDE_DIR.parent / ".tf" / "factory" / "packs"    # nakładki dokładają rejestry: .tf/factory/packs/<id>/technologies.json
 
 
 def registry_entries() -> list[dict]:

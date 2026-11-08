@@ -2,11 +2,11 @@
 """
 Bramka jakości skilla — obowiązkowa przy dodaniu i każdej zmianie skilla.
 
-  python3 factory/skill_gate.py core-grounding                 # bezpłatne sprawdzenia (bez modelu)
-  python3 factory/skill_gate.py --changed                      # skille zmienione od ostatniej bramki
-  python3 factory/skill_gate.py --status [--strict]            # stan bramki wszystkich skilli (--strict: kod 1 w CI)
-  python3 factory/skill_gate.py core-grounding --model haiku,sonnet --budget 2 --yes   # + ewaluacja na modelu (płatna)
-  python3 factory/skill_gate.py core-grounding --model sonnet --baseline --yes         # + porównanie bez skilli
+  python3 .tf/factory/skill_gate.py core-grounding                 # bezpłatne sprawdzenia (bez modelu)
+  python3 .tf/factory/skill_gate.py --changed                      # skille zmienione od ostatniej bramki
+  python3 .tf/factory/skill_gate.py --status [--strict]            # stan bramki wszystkich skilli (--strict: kod 1 w CI)
+  python3 .tf/factory/skill_gate.py core-grounding --model haiku,sonnet --budget 2 --yes   # + ewaluacja na modelu (płatna)
+  python3 .tf/factory/skill_gate.py core-grounding --model sonnet --baseline --yes         # + porównanie bez skilli
 
 Sprawdzenia bezpłatne (kolejno, każde musi przejść):
   1. struktura      — reguły `build.py check` dla tego skilla (opis ≤170 znaków, metadata.katalog z granicami, brak `paths`,
@@ -36,9 +36,11 @@ import json
 import re
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 SKILLS = ROOT / ".claude" / "skills"
 TESTS = ROOT / "tests" if (ROOT / "tests" / "run_skill_evals.py").exists() else ROOT / ".claude" / "tests"
 EVALS = TESTS / "skill_evals"
@@ -56,12 +58,12 @@ def load_module(path: Path, name: str):
 
 
 def fingerprint(name: str) -> str:
-    return load_module(ROOT / "factory" / "build.py", "factory_build").skill_fingerprint(name)
+    return load_module(ROOT / ".tf" / "factory" / "build.py", "factory_build").skill_fingerprint(name)
 
 
 def read_registry() -> dict:
     """Wszystkie rejestry: fabryki (`tests/` lub `.claude/tests/` po instalacji) i projektu (`.claude/skill-gate.json`)."""
-    return load_module(ROOT / "factory" / "build.py", "factory_build").gate_registry()
+    return load_module(ROOT / ".tf" / "factory" / "build.py", "factory_build").gate_registry()
 
 
 def write_registry(reg: dict) -> None:
@@ -72,7 +74,7 @@ def write_registry(reg: dict) -> None:
     except json.JSONDecodeError:
         pass
     base = {} if REGISTRY == ROOT / "tests" / "skill_gate.json" else \
-        load_module(ROOT / "factory" / "build.py", "factory_build").gate_registry_factory()
+        load_module(ROOT / ".tf" / "factory" / "build.py", "factory_build").gate_registry_factory()
     for k, v in reg.items():
         if base.get(k) != v:
             own[k] = v
@@ -83,7 +85,7 @@ def write_registry(reg: dict) -> None:
 # ───────────── sprawdzenia bezpłatne ─────────────
 
 def check_structure(name: str) -> tuple[list[str], list[str]]:
-    build = load_module(ROOT / "factory" / "build.py", "factory_build")
+    build = load_module(ROOT / ".tf" / "factory" / "build.py", "factory_build")
     errors, warnings = build.validate()
     mine = lambda xs: [x for x in xs if re.search(rf"\b(skill|skille?) {re.escape(name)}\b|'{re.escape(name)}'", x)]
     return mine(errors), [w for w in mine(warnings) if "bramk" not in w and "bramce" not in w]   # stan bramki to wynik, nie wejście
@@ -165,7 +167,7 @@ def check_polish(name: str) -> tuple[list[str], list[str]]:
 
 
 def check_audit(name: str) -> tuple[list[str], list[str]]:
-    audit = load_module(ROOT / "factory" / "skill_audit.py", "skill_audit")
+    audit = load_module(ROOT / ".tf" / "factory" / "skill_audit.py", "skill_audit")
     rep = audit.audit_skill(SKILLS / name)
     errs = [f"[{f['severity']}] {f['code']} — {f['file']}:{f['line']}: {f['message']}" for f in rep["findings"]
             if f["severity"] in ("high", "medium")]
@@ -372,7 +374,7 @@ def suggest(name: str, apply: bool) -> int:
     line = ", ".join(res["phrases"])
     print(f'Propozycja do metadata.slowa: "{line}"')
     if not apply:
-        print(f"Dopisz: python3 factory/skill_gate.py --suggest {name} --apply (potem bramka: python3 factory/skill_gate.py {name})")
+        print(f"Dopisz: python3 .tf/factory/skill_gate.py --suggest {name} --apply (potem bramka: python3 .tf/factory/skill_gate.py {name})")
         return 0
     md = SKILLS / name / "SKILL.md"
     text = md.read_text(encoding="utf-8")
@@ -382,7 +384,7 @@ def suggest(name: str, apply: bool) -> int:
     else:
         text = re.sub(r"^(  katalog: .*\n)", lambda mm: mm.group(1) + f'  slowa: "{line}"\n', text, count=1, flags=re.M)
     md.write_text(text, encoding="utf-8")
-    print(f"✓ Dopisano do {md.relative_to(ROOT)} — teraz bramka: python3 factory/skill_gate.py {name}")
+    print(f"✓ Dopisano do {md.relative_to(ROOT)} — teraz bramka: python3 .tf/factory/skill_gate.py {name}")
     return 0
 
 

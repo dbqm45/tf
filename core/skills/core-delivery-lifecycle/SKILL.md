@@ -121,7 +121,7 @@ zawsze**, a przegląd gotowości w wersji skróconej (sekcje oznaczone „minimu
 - **Plan kroku na miarę ryzyka:** im więcej plików i większe ryzyko, tym staranniejszy plan i jego przegląd
   (skill przeglądu zmian); prosta zmiana o jasnym zakresie to plan → realizacja, bez badania jako rytuału.
 - **Koszt**: tanie modele do wyszukiwania i zmian mechanicznych, drogie do architektury i przeglądu bezpieczeństwa.
-  Na koniec etapu: koszt i czas z `factory/cost_stats.py`, przyczyny i propozycje zmian z core-agent-retro.
+  Na koniec etapu: koszt i czas z `.tf/factory/cost_stats.py`, przyczyny i propozycje zmian z core-agent-retro.
 - **Stan zawsze w plikach**: przerwana sesja zostawia `draft` i Przekazanie. `project_record.py report` daje
   człowiekowi jeden plik ze stanem projektu.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy polecenia tf (factory/tf.py): instalacja z najnowszego wydania albo aktualizacja, nakładki, launcher z adresem repo."""
+"""Testy polecenia tf (.tf/factory/tf.py): instalacja z najnowszego wydania albo aktualizacja, nakładki, launcher z adresem repo."""
 import json
 import os
 import shutil
@@ -8,8 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "tf.py").is_file())
-CTF = ROOT / "factory" / "tf.py"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
+CTF = ROOT / ".tf" / "factory" / "tf.py"
 
 # Atrapa instalatora: zapisuje w projekcie, z której wersji i z jakimi argumentami go uruchomiono.
 STUB_INSTALL = """import json, sys
@@ -21,7 +21,7 @@ args = [a for a in sys.argv[1:]]
 # Atrapa update.py w zainstalowanym projekcie.
 STUB_UPDATE = """import json, sys
 from pathlib import Path
-(Path(__file__).resolve().parent.parent / "updated.json").write_text(json.dumps(sys.argv[1:]))
+(Path(__file__).resolve().parents[2] / "updated.json").write_text(json.dumps(sys.argv[1:]))
 """
 
 
@@ -70,8 +70,8 @@ def main() -> int:
         if source is not None:
             (p / ".claude").mkdir()
             (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0", "source": source}))
-            (p / "factory").mkdir()
-            (p / "factory" / "update.py").write_text(STUB_UPDATE)
+            (p / ".tf" / "factory").mkdir(parents=True)
+            (p / ".tf" / "factory" / "update.py").write_text(STUB_UPDATE)
         return p
 
     def installed(p: Path) -> dict:
@@ -114,6 +114,16 @@ def main() -> int:
         r = ctf(p)
         check(r.returncode == 2 and "TF_REPO" in r.stdout + r.stderr and not installed(p),
               f"CTF-7: brak adresu repo → kod 2 i podpowiedź: {r.returncode} {r.stdout}{r.stderr}")
+
+        # CTF-17: instalacja sprzed przeniesienia silnika (factory/ w katalogu głównym, bez .tf/factory/) — komunikat
+        p = base / "stary-uklad"
+        (p / ".claude").mkdir(parents=True)
+        (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "8.0.0", "source": repo}))
+        (p / "factory").mkdir()
+        (p / "factory" / "update.py").write_text(STUB_UPDATE)
+        r = ctf(p, "list", repo=repo)
+        check(r.returncode == 2 and ".tf/factory" in r.stdout and "tf install" in r.stdout,
+              f"CTF-17: stary układ factory/ → kod 2 i polecenie ponownej instalacji: {r.returncode} {r.stdout}")
 
         p = project(base, "nakladki", source=repo)
         r = ctf(p, "add", "pack-ev", "pack-ux", repo=repo)

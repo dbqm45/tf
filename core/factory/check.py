@@ -2,9 +2,9 @@
 """
 Cała lokalna pętla sprawdzeń fabryki jednym poleceniem — krótki wynik zamiast kilku długich wyjść (tańszy kontekst).
 
-  python3 factory/check.py              # build check, testy, scenariusze, bramka, dziennik
-  python3 factory/check.py -k skill     # tylko testy, których nazwa zawiera „skill” (plus pozostałe kroki)
-  python3 factory/check.py --json       # wynik dla automatu
+  python3 .tf/factory/check.py              # build check, testy, scenariusze, bramka, dziennik
+  python3 .tf/factory/check.py -k skill     # tylko testy, których nazwa zawiera „skill” (plus pozostałe kroki)
+  python3 .tf/factory/check.py --json       # wynik dla automatu
   --root <katalog> (domyślnie repozytorium tej fabryki)
 
 Na wyjściu: linia na krok (zielone tylko z liczbą), szczegóły wyłącznie przy błędach (ostatnie linie wyjścia), ostatnia
@@ -16,9 +16,11 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 TAIL = 12
 
 
@@ -52,19 +54,19 @@ def steps(root: Path, pattern: str | None) -> list[dict]:
         out.append({"name": name, "ok": ok or info, "info": info, "summary": last_line(text),
                     "details": [] if ok else failure_lines(text)})
 
-    step("build check", root / "factory" / "build.py", "check")
+    step("build check", root / ".tf" / "factory" / "build.py", "check")
     tests = sorted(p for p in tests_dir.glob("test_*.py") if not pattern or pattern in p.name)
     for t in tests:
         step(t.relative_to(root).as_posix(), t)
     step("scenariusze", tests_dir / "run_skill_evals.py", "--validate")
-    step("bramka skilli", root / "factory" / "skill_gate.py", "--status", "--strict")
-    step("podpowiedzi wszystkich skilli", root / "factory" / "skill_gate.py", "--hints")
+    step("bramka skilli", root / ".tf" / "factory" / "skill_gate.py", "--status", "--strict")
+    step("podpowiedzi wszystkich skilli", root / ".tf" / "factory" / "skill_gate.py", "--hints")
     if (root / "docs" / "project").is_dir():
         step("dziennik", root / ".claude" / "hooks" / "project_record.py", "check")
     else:
         out.append({"name": "dziennik", "ok": True, "skipped": True, "summary": "pominięto (brak docs/project/)"})
-    step("terminy przeglądu", root / "factory" / "freshness.py", "--root", str(root), info=True)
-    step("hooki fabryki", root / "factory" / "hooks_status.py", "--root", str(root), info=True)
+    step("terminy przeglądu", root / ".tf" / "factory" / "freshness.py", "--root", str(root), info=True)
+    step("hooki fabryki", root / ".tf" / "factory" / "hooks_status.py", "--root", str(root), info=True)
     return out
 
 

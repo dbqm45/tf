@@ -31,16 +31,16 @@
       "Bash(terraform validate *)",
       "Bash(terraform plan *)",
       "Bash(docker build *)",
-      "Bash(python3 factory/build.py *)",
-      "Bash(python3 factory/cost_report.py *)",
-      "Bash(python3 factory/hint_report.py *)",
+      "Bash(python3 .tf/factory/build.py *)",
+      "Bash(python3 .tf/factory/cost_report.py *)",
+      "Bash(python3 .tf/factory/hint_report.py *)",
       "Bash(python3 .claude/hooks/detect_stack.py *)",
       "Bash(python3 .claude/hooks/project_record.py *)",
       "Bash(python3 .claude/hooks/test_lock.py -- *)",
       "Bash(python3 tests/test_cleanroom.py)",
       "Bash(python3 .claude/skills/core-grounding/scripts/grounding_check.py *)",
-      "Bash(python3 factory/skill_gate.py *)",
-      "Bash(python3 factory/skill_audit.py *)",
+      "Bash(python3 .tf/factory/skill_gate.py *)",
+      "Bash(python3 .tf/factory/skill_audit.py *)",
       "Bash(python3 .claude/hooks/jev_client.py --tier *)",
       "Bash(python3 .claude/skills/core-semver/scripts/semver.py *)"
     ],
@@ -53,7 +53,7 @@
       "Bash(npm publish *)",
       "Bash(docker push *)",
       "WebFetch",
-      "Bash(python3 factory/skill_gate.py *--model*)"
+      "Bash(python3 .tf/factory/skill_gate.py *--model*)"
     ],
     "deny": [
       "Read(./.env)",

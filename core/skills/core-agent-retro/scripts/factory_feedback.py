@@ -94,7 +94,7 @@ def compose(payload: dict) -> tuple[str, str]:
             f"Uwagi z retrospektywy projektu (fabryka {payload['factory_version']})"
     lines = ["Zgłoszenie z retrospektywy pracy agentów (core-agent-retro). Zawiera tylko nazwy skilli i agentów fabryki "
              "oraz liczby — bez danych projektu. To sygnał z jednego projektu: sprawdź go na innych zgłoszeniach "
-             "(`python3 factory/feedback_report.py`) i scenariuszach ewaluacji przed zmianą.", ""]
+             "(`python3 .tf/factory/feedback_report.py`) i scenariuszach ewaluacji przed zmianą.", ""]
     if sig:
         lines += ["| Klucz | Ile | Decyzja w projekcie | Co sugeruje |", "|---|---|---|---|"]
         lines += [f"| `{s['key']}` | {s['n']} | {s['decision']} | {HINT[s['key'].split(':')[0]]} |" for s in sig]
@@ -130,8 +130,8 @@ def main(argv: list[str]) -> int:
     root = Path(opts.get("--root") or os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     man_p = root / ".claude" / "factory-manifest.json"
     manifest = json.loads(man_p.read_text(encoding="utf-8")) if man_p.is_file() else {}
-    version = manifest.get("version") or ((root / "factory" / "VERSION").read_text(encoding="utf-8").strip()
-                                          if (root / "factory" / "VERSION").is_file() else "?")
+    version = manifest.get("version") or ((root / ".tf" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
+                                          if (root / ".tf" / "factory" / "VERSION").is_file() else "?")
     repo = opts.get("--repo") or ""
     if not repo:
         m = GITHUB.search(str(manifest.get("source") or os.environ.get("CLAUDE_TEAM_FACTORY") or ""))

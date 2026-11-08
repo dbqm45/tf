@@ -13,7 +13,7 @@ Wyłączenie: zmienna CLAUDE_SKILL_HINT=0. Tylko biblioteka standardowa; błąd 
 
 Log: każda decyzja trafia do .tf/logs/skill-hints.jsonl (czas, sesja, podpowiedziane skille, 5 najwyżej
 ocenionych z wynikiem). Treści polecenia NIE zapisujemy — chyba że CLAUDE_SKILL_HINT_LOG_PROMPT=1 (pierwsze 200
-znaków, do strojenia słów kluczowych na własnej maszynie). Raport: python3 factory/hint_report.py
+znaków, do strojenia słów kluczowych na własnej maszynie). Raport: python3 .tf/factory/hint_report.py
 """
 from __future__ import annotations
 

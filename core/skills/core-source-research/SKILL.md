@@ -74,7 +74,7 @@ Artykuł sponsorowany lub dostawcy oznaczasz jako taki; jego liczby podajesz jak
 ## 4a. Tryb głębokiego badania (raport, decyzja o dużej wadze)
 Dla zwykłego pytania o fakt wystarczy `researcher`. Dla raportu (np. wybór technologii, analiza rynku narzędzi):
 1. **Zakres:** podpytania, co w zakresie i poza nim, kryterium sukcesu, założenia. Najpierw ustal dzisiejszą datę.
-   Zanim zaczniesz szukać: `python3 factory/facts.py <hasła>` — ustalenia już zweryfikowane w projekcie (werdykt, data);
+   Zanim zaczniesz szukać: `python3 .tf/factory/facts.py <hasła>` — ustalenia już zweryfikowane w projekcie (werdykt, data);
    świeżych i potwierdzonych nie sprawdzasz ponownie, a nową tabelę weryfikacji zapisujesz w
    `docs/project/archive/research/<RRRRMMDD>-<temat>.md` (werdykty P / C / N / S na początku linii).
 2. **Kąty wyszukiwania (5–10):** podstawowy, techniczny, najnowszy, naukowy, **przeciwny** (krytyka, porażki),

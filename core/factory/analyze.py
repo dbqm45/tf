@@ -2,13 +2,13 @@
 """
 tf init / tf analyze — katalog `.tf/` na wyniki pracy fabryki i modułowy przegląd projektu (piętro 0: skrypty).
 
-  python3 factory/analyze.py init                      # szkielet .tf/ (idempotentnie) i mapa katalogu
-  python3 factory/analyze.py list                      # dostępne moduły i czy stosują się do repo
-  python3 factory/analyze.py run [--only a,b] [--since <commit>] [--top N]
-  python3 factory/analyze.py gate [--module m]          # bramka: moduł na swoim zestawie testowym (fixtures/)
+  python3 .tf/factory/analyze.py init                      # szkielet .tf/ (idempotentnie) i mapa katalogu
+  python3 .tf/factory/analyze.py list                      # dostępne moduły i czy stosują się do repo
+  python3 .tf/factory/analyze.py run [--only a,b] [--since <commit>] [--top N]
+  python3 .tf/factory/analyze.py gate [--module m]          # bramka: moduł na swoim zestawie testowym (fixtures/)
 
 Moduł to katalog z `analyzer.yaml` (name, prefix, title, description, version, applies_when.files_any,
-tier0.script, incremental, gate) w `factory/analyzers/`, `.tf/analyzers/` albo katalogach z `TF_ANALYZERS_PATH`. Skrypt piętra 0
+tier0.script, incremental, gate) w `.tf/factory/analyzers/`, `.tf/analyzers/` albo katalogach z `TF_ANALYZERS_PATH`. Skrypt piętra 0
 dostaje `--root <repo> [--files a,b]` i wypisuje ustalenia jako JSON Lines (rule, title, file, line, snippet,
 severity, confidence, evidence, basis, suggestion). Rdzeń nadaje stabilne `id` (`<prefix>-<6 hex>` z reguły, pliku
 i treści, bez numeru linii), deduplikuje, szereguje, pisze `.tf/reports/<moduł>.md` (checkboxy scalane przy ponownej
@@ -27,11 +27,13 @@ import os
 import re
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
+except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
@@ -53,7 +55,7 @@ SHORT = {"reports": "raporty analiz z listą działań", "register": "rejestr pr
          "wip": "punkty kontrolne pracy w toku",
          "cache": "wyniki pośrednie, odtwarzalne", "logs": "logi pracy fabryki", "runs": "przebiegi wykonawcze",
          "backup": "kopie z aktualizacji"}
-CONFIG = "analyze:\n  top: 10\n  modules: {}\nproject_record: docs/project\n"
+CONFIG = "# Nadpisania konfiguracji fabryki dla tego projektu (nakładane na .tf/factory/config.yaml).\nanalyze:\n  top: 10\n"
 
 
 # ───────────── narzędzia ─────────────
@@ -100,12 +102,13 @@ def cmd_init(root: Path) -> int:
         if not readme.exists():
             where = "w gicie (instalacja zespołowa)" if in_git else "poza gitem"
             readme.write_text(f"# .tf/{d}/\n\n{text}\n\nGit: {where}.\n", encoding="utf-8")
-    cfg = base / "config.yaml"
+    cfg = base / "config" / "config.yaml"
     if not cfg.exists():
+        cfg.parent.mkdir(parents=True, exist_ok=True)
         cfg.write_text(CONFIG, encoding="utf-8")
     note = git_rules(root)
     print("✓ .tf/ — wyniki pracy fabryki:")
-    print("  config.yaml   ustawienia (moduły analizy, top N, ścieżka dziennika projektu)")
+    print("  config/       konfiguracja projektu: config.yaml (nadpisania, m.in. analyze.top), własne persony, role, cechy")
     for d, (text, in_git) in DIRS.items():
         print(f"  {d + '/':<13} {'git (zespołowa)' if in_git else 'poza gitem':<16} {SHORT[d]}")
     if note:
@@ -138,7 +141,7 @@ def git_rules(root: Path) -> str:
 # ───────────── moduły ─────────────
 
 def module_dirs(root: Path) -> list[Path]:
-    dirs = [root / "factory" / "analyzers", root / TF / "analyzers"]
+    dirs = [root / ".tf" / "factory" / "analyzers", root / TF / "analyzers"]
     dirs += [Path(p) for p in os.environ.get("TF_ANALYZERS_PATH", "").split(os.pathsep) if p]
     return dirs
 
@@ -394,9 +397,9 @@ def save_register(root: Path, reg: dict[str, dict]) -> None:
 
 
 def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> int:
-    if not (root / TF / "config.yaml").exists():
+    if not (root / TF / "reports").exists():
         cmd_init(root)
-    cfg = load_yaml(root / TF / "config.yaml")
+    cfg = load_yaml(root / TF / "config" / "config.yaml")
     top = top or int(((cfg.get("analyze") or {}).get("top")) or 10)
     mods = [m for m in discover(root) if not only or m["name"] in only]
     if not mods:

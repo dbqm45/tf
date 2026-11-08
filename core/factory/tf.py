@@ -3,7 +3,7 @@
 tf — the team factory command: install, update, packs, languages, health check (standard library only).
 
   cd ~/projects/my-app
-  tf                          # no factory → install the latest release; installed → update (factory/update.py)
+  tf                          # no factory → install the latest release; installed → update (.tf/factory/update.py)
   tf install [options]        # install (options go to install.py: --packs, --language, --commit-language, --shared…)
   tf update [options]         # update (options go to update.py: --check, --yes, --source…)
   tf add <pack> [<pack>…]     # add packs or modes (e.g. tf add pack-ev, tf add mode-talos)
@@ -14,13 +14,13 @@ tf — the team factory command: install, update, packs, languages, health check
   tf doctor [--fix]           # check the install: core/pack versions, required packs, language pack, agents, renames
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
-                              # modular project review → .tf/reports/<module>.md with a checklist (factory/analyze.py)
+                              # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
   tf --repo <url>             # another factory repository (also <url>#branch-or-tag)
 
 Install the launcher once, from a factory clone or from a project that already has the factory:
 
   python3 core/factory/tf.py --install-launcher [--bin ~/.local/bin] [--repo <url>]    # in a factory clone
-  python3 factory/tf.py --install-launcher [--bin ~/.local/bin] [--repo <url>]         # in a project
+  python3 .tf/factory/tf.py --install-launcher [--bin ~/.local/bin] [--repo <url>]         # in a project
 
 It copies this script to `--bin` (default ~/.local/bin; on Windows also tf.cmd) and writes the repository URL into
 it: from `--repo`, the `TF_REPO` variable, the git source in the project manifest or the `origin` of the factory clone.
@@ -38,6 +38,8 @@ import os
 import re
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 import tempfile
 from pathlib import Path
 
@@ -71,7 +73,7 @@ def install(repo: str, args: list[str]) -> int:
     print(f"ℹ Installing the factory from {public(url)}" + (f" ({ref})" if ref else " (default branch — no release tags)"))
     args = ["--dry-run" if a == "--check" else a for a in args]
     with tempfile.TemporaryDirectory(prefix="tf-") as t:
-        clone = Path(t) / "factory"
+        clone = Path(t) / ".tf" / "factory"
         r = subprocess.run(["git", "clone", "--depth", "1", "--quiet", *(["--branch", ref] if ref else []), url,
                             str(clone)], capture_output=True, text=True)
         if r.returncode != 0:
@@ -95,7 +97,7 @@ def update(repo: str | None, args: list[str]) -> int:
     args = ["--check" if a == "--dry-run" else a for a in args]
     if repo and not is_git(saved_source()) and "--source" not in args:
         args = ["--source", public(repo), *args]
-    return subprocess.run([sys.executable, str(Path("factory") / "update.py"), *args]).returncode
+    return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "update.py"), *args]).returncode
 
 
 def origin_of(path: Path) -> str:
@@ -131,8 +133,8 @@ def install_launcher(repo: str | None, bin_dir: Path) -> int:
 # ───────────── commands inside an installed project ─────────────
 
 def project_module(name: str):
-    """A module from the project's factory/ (packs.py, build.py, migrations.py)."""
-    path = Path("factory") / f"{name}.py"
+    """A module from the project's .tf/factory/ (packs.py, build.py, migrations.py)."""
+    path = (Path(".tf") / "factory") / f"{name}.py"
     spec = importlib.util.spec_from_file_location(f"tf_project_{name}", path.resolve())
     mod = importlib.util.module_from_spec(spec)
     sys.path.insert(0, str(path.resolve().parent))
@@ -141,6 +143,11 @@ def project_module(name: str):
 
 
 def need_project() -> bool:
+    if MANIFEST.exists() and not (Path(".tf") / "factory").is_dir() and Path("factory").is_dir():
+        print("✗ This project has the old layout (factory/ in the project root). The engine now lives in .tf/factory/ "
+              "and your configuration in .tf/config/ — reinstall: remove factory/, .claude/factory-manifest.json "
+              "and the factory files, then run tf install.")
+        return False
     if MANIFEST.exists():
         return True
     print("✗ No factory in this directory. Install it first: tf install")
@@ -148,9 +155,9 @@ def need_project() -> bool:
 
 
 def run_build() -> int:
-    r = subprocess.run([sys.executable, str(Path("factory") / "build.py")], capture_output=True, text=True)
-    print("✓ Rebuilt the agents and the catalog (factory/build.py)" if r.returncode == 0
-          else "⚠ factory/build.py reported problems:\n" + r.stdout[-1500:] + r.stderr[-500:])
+    r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "build.py")], capture_output=True, text=True)
+    print("✓ Rebuilt the agents and the catalog (.tf/factory/build.py)" if r.returncode == 0
+          else "⚠ .tf/factory/build.py reported problems:\n" + r.stdout[-1500:] + r.stderr[-500:])
     return r.returncode
 
 
@@ -159,7 +166,7 @@ def set_language(kind: str, code: str, repo: str | None) -> int:
     if not need_project():
         return 2
     pm = project_module("packs")
-    cfg = pm.load_yaml(Path("factory") / "config.yaml")
+    cfg = pm.load_config(Path.cwd())
     langs = cfg.get("languages") or {}
     if code not in langs:
         print(f"✗ Unknown language '{code}'. Available: {', '.join(langs)}")
@@ -189,7 +196,7 @@ def set_language(kind: str, code: str, repo: str | None) -> int:
 def cmd_list() -> int:
     if not need_project():
         return 2
-    r = subprocess.run([sys.executable, str(Path("factory") / "packs.py")])
+    r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "packs.py")])
     src = saved_source()
     found = sorted(p for sub in ("packs", "modes") for p in (Path(src) / sub).glob("*/pack.yaml")) \
         if src and not is_git(src) else []
@@ -212,7 +219,7 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     changes = mig.apply(Path.cwd(), dry=not fix)
     for c in changes:
         print(("✓ fixed: " if fix else "⚠ to fix (tf doctor --fix): ") + c)
-    r = subprocess.run([sys.executable, str(Path("factory") / "build.py"), "check"], capture_output=True, text=True)
+    r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "build.py"), "check"], capture_output=True, text=True)
     out = r.stdout
     print("\n".join(ln for ln in out.splitlines() if not ln.startswith("⚠ skill ")) or "?")
     missing = sorted(set(re.findall(r"tf add (pack-[a-z0-9-]+)", out)))
@@ -264,7 +271,7 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         sub = ["init"] if cmd == "init" else (["list"] if "--list" in rest else ["run", *rest])
-        return subprocess.run([sys.executable, str(Path("factory") / "analyze.py"), *sub]).returncode
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "analyze.py"), *sub]).returncode
     if cmd not in (None, "install", "update"):
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2

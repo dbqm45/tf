@@ -4,12 +4,12 @@
   "offline": "2026-11-01"
  },
  "core-agent-retro": {
-  "fingerprint": "39d3b415dcdaa977",
+  "fingerprint": "712cb28fd6f99d36",
   "offline": "2026-11-08"
  },
  "core-agent-security": {
-  "fingerprint": "673e2492e27a475c",
-  "offline": "2026-11-01"
+  "fingerprint": "069c1bf5a98e1439",
+  "offline": "2026-11-08"
  },
  "core-async-delegation": {
   "fingerprint": "e4a34890da1e5149",
@@ -20,15 +20,15 @@
   "offline": "2026-10-26"
  },
  "core-cost-control": {
-  "fingerprint": "d90d0febf2e307bb",
+  "fingerprint": "40ef9872f2036fb9",
   "offline": "2026-11-08"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "af1f271f06bd4868",
+  "fingerprint": "7329571a6fad97f0",
   "offline": "2026-11-08"
  },
  "core-factory-update": {
-  "fingerprint": "f9ece59a8646ca8f",
+  "fingerprint": "49a19cdcb8cfce48",
   "offline": "2026-11-08"
  },
  "core-git-workflow": {
@@ -36,31 +36,31 @@
   "offline": "2026-11-01"
  },
  "core-grounding": {
-  "fingerprint": "995ffa818315d87c",
+  "fingerprint": "7e52df1b1e9c3a38",
   "offline": "2026-11-08"
  },
  "core-knowledge": {
-  "fingerprint": "8bc15174a285d3f2",
-  "offline": "2026-11-01"
+  "fingerprint": "b11d9c7b3a6637ec",
+  "offline": "2026-11-08"
  },
  "core-plan-interview": {
   "fingerprint": "375293c3a4952cd0",
   "offline": "2026-10-31"
  },
  "core-problem-routing": {
-  "fingerprint": "0ec7e569a9035139",
-  "offline": "2026-10-22"
+  "fingerprint": "f2f4f615e449b263",
+  "offline": "2026-11-08"
  },
  "core-project-record": {
   "fingerprint": "d5ae52157a2ec477",
   "offline": "2026-11-08"
  },
  "core-semver": {
-  "fingerprint": "a027aa2c6bc263cd",
-  "offline": "2026-10-22"
+  "fingerprint": "c913226a202728a7",
+  "offline": "2026-11-08"
  },
  "core-skill-authoring": {
-  "fingerprint": "6cf6018483b3c677",
+  "fingerprint": "74dc6dbf150672aa",
   "offline": "2026-11-08"
  },
  "core-skill-composition": {
@@ -68,12 +68,12 @@
   "offline": "2026-10-22"
  },
  "core-source-research": {
-  "fingerprint": "26d6b5ad17a367cc",
-  "offline": "2026-11-01"
+  "fingerprint": "cf5f65efe75cda1c",
+  "offline": "2026-11-08"
  },
  "core-stack-sync": {
-  "fingerprint": "fccb14f5025e997c",
-  "offline": "2026-10-22"
+  "fingerprint": "c27ee2a2b3d1adf1",
+  "offline": "2026-11-08"
  },
  "core-teaching-workspace": {
   "fingerprint": "1821daf347233c4e",

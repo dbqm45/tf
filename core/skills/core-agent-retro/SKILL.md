@@ -53,7 +53,7 @@ Nie częściej niż co etap — retrospektywa po każdej sesji to szum i koszt.
    `scripts/factory_feedback.py` — domyślnie link „nowe zgłoszenie” z gotową treścią (sprawdzasz i wysyłasz sam,
    potem `--mark-sent`), z `--gh --yes` przez gh. Treść to tylko nazwy skilli i agentów fabryki oraz liczby; własną
    uwagę dodasz przez `--item "skill:<nazwa>: <uwaga>"` (bez ścieżek, adresów i e-maili — skrypt je odrzuca). Zgłoszenie
-   wysyłasz tylko za zgodą człowieka. Fabryka zbiera zgłoszenia `factory/feedback_report.py` i zmienia skill, gdy
+   wysyłasz tylko za zgodą człowieka. Fabryka zbiera zgłoszenia `.tf/factory/feedback_report.py` i zmienia skill, gdy
    sygnał przychodzi z co najmniej dwóch projektów.
 
 ## Gdzie trafia zmiana
@@ -61,15 +61,15 @@ Nie częściej niż co etap — retrospektywa po każdej sesji to szum i koszt.
 |---|---|---|
 | powtarzalna pułapka projektu (pierwszy raz) | lekcje projektu (docs/project/lessons.md) | format i limit z core-project-record |
 | ten sam błąd **drugi raz** albo lekcja, którą każdy wykonawca musi znać | reguła w `CLAUDE.md` | test włączenia z core-agent-instructions |
-| skill nie został użyty, choć pasował (przeoczony) / był podpowiadany bez sensu | `metadata.slowa`, opis, granice skilla | core-skill-authoring, potem `factory/skill_gate.py <skill>` |
-| skill dał złą radę albo nieaktualny fakt | treść skilla, termin przeglądu | core-skill-authoring, `factory/freshness.py --reviewed` |
-| wykonawca stale „za niski” / „za wysoki” albo drogi przy prostych zadaniach | tier roli, wybór wykonawcy | core-cost-control (kaskada), `factory/roles/*.yaml` |
+| skill nie został użyty, choć pasował (przeoczony) / był podpowiadany bez sensu | `metadata.slowa`, opis, granice skilla | core-skill-authoring, potem `.tf/factory/skill_gate.py <skill>` |
+| skill dał złą radę albo nieaktualny fakt | treść skilla, termin przeglądu | core-skill-authoring, `.tf/factory/freshness.py --reviewed` |
+| wykonawca stale „za niski” / „za wysoki” albo drogi przy prostych zadaniach | tier roli, wybór wykonawcy | core-cost-control (kaskada), `.tf/config/roles/*.yaml` |
 | błąd, który da się wykryć automatem (format, testy, ścieżki) | hook, bramka, skrypt | skill bramek lokalnych (pack-it: eng-local-quality-gates); zmiana w `.claude/hooks/` tylko za zgodą |
 | praca od nowa po własnym commicie (poprawki po sobie) | plan przed kodem, kryteria gotowe | core-delivery-lifecycle; przegląd zmiany (pack-it: qa-change-review) |
 | błędna notatka w pamięci automatycznej (`MEMORY.md` i pliki pomocnicze) wraca w każdej sesji | ta notatka — poprawka **zastępuje** starą, nie jest dopisywana obok | przegląd mechaniczny (skrypt: odwołania do plików, których już nie ma, wiek, rozmiar względem limitu ładowania) i z człowiekiem (sprzeczności z `docs/` i ADR); ustalenie dla zespołu przenosisz do pliku instrukcji albo ADR |
 | zdarzenie jednorazowe, bez klasy błędów | nic — tylko dziennik | — |
 
-Zasady: jedna zmiana na ustalenie; zmiana w `factory/`, `.claude/hooks/` i `.claude/settings.json` tylko na wyraźną
+Zasady: jedna zmiana na ustalenie; zmiana w `.tf/factory/`, `.claude/hooks/` i `.claude/settings.json` tylko na wyraźną
 prośbę człowieka; reguła, której agent i tak by nie złamał, nie trafia do CLAUDE.md (koszt każdej sesji).
 
 ## Format raportu

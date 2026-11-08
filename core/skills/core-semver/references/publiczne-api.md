@@ -48,4 +48,4 @@ albo zaczyna działać inaczej bez zmiany po stronie użytkownika.
   zgodności.
 
 ## Fabryka (claude-team-factory)
-Publiczne API fabryki opisuje `factory/PUBLIC_API.md`. Tam jest też procedura wydania i kontrole CHANGELOG.
+Publiczne API fabryki opisuje `.tf/factory/PUBLIC_API.md`. Tam jest też procedura wydania i kontrole CHANGELOG.

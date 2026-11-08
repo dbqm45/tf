@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pilnuje bramki jakości skilli (factory/skill_gate.py).
+Pilnuje bramki jakości skilli (.tf/factory/skill_gate.py).
 
 PostToolUse (Edit|Write): po zmianie pliku skilla (`.claude/skills/<skill>/…`) albo jego scenariuszy
 (`…/skill_evals/<skill>.json`) dopisuje do kontekstu przypomnienie o bramce — raz na skill w sesji.
@@ -65,7 +65,7 @@ def on_edit(data: dict) -> None:
     seen.append(skill)
     save_state(root, state)
     msg = (f"Zmieniono skill {skill}. Zanim uznasz pracę za skończoną, uruchom bramkę jakości: "
-           f"`python3 factory/skill_gate.py {skill}` (bezpłatnie: struktura, scenariusze, podpowiedź, regresja innych "
+           f"`python3 .tf/factory/skill_gate.py {skill}` (bezpłatnie: struktura, scenariusze, podpowiedź, regresja innych "
            "skilli, polszczyzna). Nowy skill zaczynasz od scenariuszy ewaluacji (skill core-skill-authoring). Ewaluację "
            f"na modelu (`--model haiku,sonnet`) uruchamiasz dopiero po zgodzie człowieka — jest płatna.")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": msg}},
@@ -77,7 +77,7 @@ def on_stop(data: dict) -> None:
     seen = load_state(root).get(str(data.get("session_id") or "?")) or []
     if not seen:
         return
-    build_py = root / "factory" / "build.py"
+    build_py = root / ".tf" / "factory" / "build.py"
     if not build_py.exists():
         return
     spec = importlib.util.spec_from_file_location("factory_build", build_py)
@@ -88,7 +88,7 @@ def on_stop(data: dict) -> None:
              and reg.get(s, {}).get("fingerprint") != build.skill_fingerprint(s)]
     if stale:
         print(json.dumps({"systemMessage": "⚠ Skille zmienione w tej sesji bez zaliczonej bramki jakości: "
-                          + ", ".join(stale) + f". Uruchom: python3 factory/skill_gate.py {' '.join(stale)}"},
+                          + ", ".join(stale) + f". Uruchom: python3 .tf/factory/skill_gate.py {' '.join(stale)}"},
                          ensure_ascii=False))
 
 

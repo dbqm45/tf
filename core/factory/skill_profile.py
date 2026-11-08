@@ -2,10 +2,10 @@
 """
 Dopasowuje widoczność opisów skilli fabryki do projektu (ustawienie Claude Code `skillOverrides`).
 
-  python3 factory/skill_profile.py              # zastosuj w bieżącym projekcie
-  python3 factory/skill_profile.py --dry-run    # pokaż plan, nic nie zapisuj
-  python3 factory/skill_profile.py <projekt>
-  python3 factory/skill_profile.py --describe ux-,sec-   # w tym projekcie te wymiary z opisem (zapamiętane w manifeście)
+  python3 .tf/factory/skill_profile.py              # zastosuj w bieżącym projekcie
+  python3 .tf/factory/skill_profile.py --dry-run    # pokaż plan, nic nie zapisuj
+  python3 .tf/factory/skill_profile.py <projekt>
+  python3 .tf/factory/skill_profile.py --describe ux-,sec-   # w tym projekcie te wymiary z opisem (zapamiętane w manifeście)
 
 Po co: Claude Code trzyma listę skilli w budżecie ~1% okna kontekstu; po przepełnieniu usuwa opisy najrzadziej
 używanych skilli, więc każdy nowy skill wypychałby opisy innych. Tu opis na liście dostają skille potrzebne w tym
@@ -28,6 +28,8 @@ import importlib.util
 import json
 import re
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
 STACK_PREFIXES = ("fw-", "lang-", "tool-")
@@ -35,12 +37,12 @@ NAME_ONLY_PREFIXES: tuple[str, ...] = ()   # rdzeń: brak; nakładki dokładają
 
 
 def pack_name_only(root: Path) -> tuple[str, ...]:
-    """Prefiksy „sama nazwa” z zainstalowanych nakładek (factory/packs.py)."""
+    """Prefiksy „sama nazwa” z zainstalowanych nakładek (.tf/factory/packs.py)."""
     try:
-        spec = importlib.util.spec_from_file_location("tf_packs_sp", root / "factory" / "packs.py")
+        spec = importlib.util.spec_from_file_location("tf_packs_sp", root / ".tf" / "factory" / "packs.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        cfg = mod.compose(root, mod.load_yaml(root / "factory" / "config.yaml"))
+        cfg = mod.compose(root, mod.load_config(root))
         return tuple(cfg["skill_visibility"]["name_only_prefixes"])
     except Exception:  # brak fabryki w projekcie albo uszkodzony pack.yaml — bez prefiksów nakładek
         return ()

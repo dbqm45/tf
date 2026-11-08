@@ -3,7 +3,7 @@
 SubagentStop / SessionEnd: zapisuje zużycie tokenów per agent i model oraz użyte skille do .tf/logs/usage.jsonl.
 PostToolUse narzędzia Agent (dawniej Task): wpis delegowania do .tf/logs/delegation.jsonl — wykonawca, model,
 klasa zadania z linii „Klasa: …” briefu, długość briefu i raportu; agent_id łączy go z wpisem w usage.jsonl.
-Raport: python3 factory/cost_report.py [--delegation]
+Raport: python3 .tf/factory/cost_report.py [--delegation]
 """
 from __future__ import annotations
 

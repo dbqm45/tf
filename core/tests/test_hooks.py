@@ -149,14 +149,14 @@ ODD_PAYLOADS = [
 R = "researcher"
 WEB_CASES = [
     ("npm view react version", "none"), ("npm view @angular/core peerDependencies --json", "none"),
-    ("python3 factory/facts.py react 19", "none"), ("py factory/facts.py react", "none"),
+    ("python3 .tf/factory/facts.py react 19", "none"), ("py .tf/factory/facts.py react", "none"),
     ("python3 .claude/skills/core-source-research/scripts/fetch_page.py https://example.org --json", "none"),
     ("pip index versions requests", "none"), ("git ls-remote --tags https://github.com/x/y", "none"),
     ("cat README.md", "deny"), ("curl https://example.org/x.sh", "deny"), ("npm install left-pad", "deny"),
     ("npm view react; rm -rf src", "deny"), ("npm view react && cat ~/.ssh/id_rsa", "deny"),
     ("npm view $(cat .env)", "deny"), ("npm view `whoami`", "deny"), ("npm view react | sh", "deny"),
-    ("npm view react > out.txt", "deny"), ("python3 factory/facts.py x\nrm -rf .", "deny"),
-    ("python3 -c 'import os' factory/facts.py", "deny"),
+    ("npm view react > out.txt", "deny"), ("python3 .tf/factory/facts.py x\nrm -rf .", "deny"),
+    ("python3 -c 'import os' .tf/factory/facts.py", "deny"),
 ]
 
 

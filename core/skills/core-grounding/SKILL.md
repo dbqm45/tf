@@ -70,7 +70,7 @@ twierdzenie po twierdzeniu i do każdego znajdź cytat z materiału. Twierdzenie
 
 **Tylko z podanych materiałów** — gdy zadanie tego wymaga (przepisy, umowa, wymagania klienta, analiza wywiadów):
 wiedza ogólna służy do zrozumienia pytania, nie jako źródło twierdzeń; czego materiały nie obejmują, nazywasz luką.
-Fabryka włącza ten tryb konsultantom i rolom z `grounding: sources-only` (`factory/config.yaml`, `sources_only_note`).
+Fabryka włącza ten tryb konsultantom i rolom z `grounding: sources-only` (`.tf/config/config.yaml`, `sources_only_note`).
 
 Ten sam wzorzec stosuje ddd-discovery-intake z pack-it (bank cytatów z kontrolą `evidence`).
 

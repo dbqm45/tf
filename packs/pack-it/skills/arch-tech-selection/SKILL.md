@@ -52,7 +52,7 @@ Wejście uzupełniające (jeśli istnieje): `02-domain/algorithms.md`, `02-domai
 8. **Ryzyka i spike'i** — dla każdej niepewności: eksperyment ograniczony czasem i **kryterium porzucenia** wyboru.
    Lidera przepuść przez test odporności decyzji (adwokat diabła, pre-mortem, nieznane niewiadome —
    arch-architect-practice), zanim zapiszesz rekomendację. Hosting MVP: `references/platforma-wdrozeniowa.md`.
-9. **Mapowanie na zespół agentów** — potrzebne skille: dostępne / do utworzenia (`python3 factory/build.py new-skill …`),
+9. **Mapowanie na zespół agentów** — potrzebne skille: dostępne / do utworzenia (`python3 .tf/factory/build.py new-skill …`),
    sugerowany `stack` person realizujących (np. `[fw-angular, lang-typescript, tool-nx]`).
 9a. **Start z oficjalnego generatora i oblane bramki.**
    - Wskaż, czym projekt wystartuje: oficjalny generator lub dojrzały szablon (polecenie i wersja ze źródła z datą),

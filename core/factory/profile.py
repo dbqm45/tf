@@ -2,12 +2,12 @@
 """
 Profil kosztów zespołu — jeden przełącznik między ceną a jakością.
 
-  python3 factory/profile.py                 # aktywny profil, modele tierów i ustawienia sesji
-  python3 factory/profile.py oszczedny       # przełącz (też: zrownowazony, jakosc)
-  python3 factory/profile.py jakosc --dry-run
-  python3 factory/profile.py oszczedny --tylko-zespol   # bez zmian w .claude/settings.local.json
+  python3 .tf/factory/profile.py                 # aktywny profil, modele tierów i ustawienia sesji
+  python3 .tf/factory/profile.py oszczedny       # przełącz (też: zrownowazony, jakosc)
+  python3 .tf/factory/profile.py jakosc --dry-run
+  python3 .tf/factory/profile.py oszczedny --tylko-zespol   # bez zmian w .claude/settings.local.json
 
-Profil (factory/config.yaml → profiles) robi dwie rzeczy:
+Profil (.tf/config/config.yaml → profiles) robi dwie rzeczy:
 1. nadpisuje model i effort tierów (fast/std/deep), więc po przebudowaniu wszyscy agenci i persony dostają
    nowe modele — role dalej wskazują tier, nie model;
 2. ustawia sesję w `.claude/settings.local.json` (osobisty plik, poza gitem): effortLevel, autoCompactWindow
@@ -22,21 +22,32 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = ROOT / ".claude" / "factory-profile.json"
 LOCAL_SETTINGS = ROOT / ".claude" / "settings.local.json"
 MANAGED = ("effortLevel", "autoCompactWindow", "advisorModel", "model")
 
 
+
+def _tf_config(root: Path) -> dict:
+    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.load_config(root)
+
 def load_cfg() -> dict:
     try:
         import yaml
-    except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
+    except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
         sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
         import yaml
-    return yaml.safe_load((ROOT / "factory" / "config.yaml").read_text(encoding="utf-8")) or {}
+    return _tf_config(ROOT) or {}
 
 
 def read_json(p: Path) -> dict:
@@ -118,7 +129,7 @@ def main(argv: list[str]) -> int:
     PROFILE_FILE.parent.mkdir(parents=True, exist_ok=True)
     PROFILE_FILE.write_text(json.dumps({"profile": name, "settings": want}, ensure_ascii=False, indent=2) + "\n",
                             encoding="utf-8")
-    r = subprocess.run([sys.executable, str(ROOT / "factory" / "build.py")], cwd=ROOT, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "build.py")], cwd=ROOT, capture_output=True, text=True)
     if r.returncode != 0:
         print("⚠ build.py zgłosił problemy:\n" + r.stdout[-1500:] + r.stderr[-500:])
         return 1

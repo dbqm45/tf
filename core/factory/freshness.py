@@ -2,18 +2,18 @@
 """
 Aktualność skilli: terminy przeglądu (`metadata.przeglad`) i znaczniki [niezweryfikowane] (tylko biblioteka standardowa).
 
-  python3 factory/freshness.py                         # skille po terminie, z terminem ≤30 dni, bez terminu
-  python3 factory/freshness.py --json                  # to samo jako JSON (np. dla przeglądu okresowego)
-  python3 factory/freshness.py --strict                # kod 1, gdy jakiś skill jest po terminie
-  python3 factory/freshness.py --reviewed <skill…>     # po przeglądzie: nowy termin = dziś + interwał skilla
-  python3 factory/freshness.py --reviewed <skill> --date 2026-10-03   # przegląd z podanego dnia
+  python3 .tf/factory/freshness.py                         # skille po terminie, z terminem ≤30 dni, bez terminu
+  python3 .tf/factory/freshness.py --json                  # to samo jako JSON (np. dla przeglądu okresowego)
+  python3 .tf/factory/freshness.py --strict                # kod 1, gdy jakiś skill jest po terminie
+  python3 .tf/factory/freshness.py --reviewed <skill…>     # po przeglądzie: nowy termin = dziś + interwał skilla
+  python3 .tf/factory/freshness.py --reviewed <skill> --date 2026-10-03   # przegląd z podanego dnia
   --today RRRR-MM-DD (data odniesienia), --root <katalog projektu>
 
 Termin przeglądu to data, do której treść skilla (wersje, przepisy, standardy, metody) uznajemy za aktualną. Po
 terminie skill nadal działa; agent sprawdza wtedy ulotne fakty w chwili użycia (core-source-research), a przegląd
 w repozytorium fabryki odświeża treść i ustawia nowy termin. Interwał w miesiącach: wyjątek dla skilla, potem
 najdłuższy pasujący prefiks, potem domyślny. Nakładki dokładają swoje interwały (`freshness` w pack.yaml), a projekt
-może je nadpisać w `factory/config.yaml` → `freshness` (te same klucze co DEFAULT_POLICY). Linia `przeglad` nie wchodzi
+może je nadpisać w `.tf/config/config.yaml` → `freshness` (te same klucze co DEFAULT_POLICY). Linia `przeglad` nie wchodzi
 do odcisku bramki jakości.
 """
 from __future__ import annotations
@@ -23,9 +23,11 @@ import datetime as dt
 import json
 import re
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 SOON_DAYS = 30
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 REVIEW_RE = re.compile(r"^  przeglad:[ \t]*(.*?)[ \t]*$", re.M)
@@ -41,15 +43,14 @@ DEFAULT_POLICY = {
 
 def load_policy(root: Path = ROOT) -> dict:
     pol = {k: (dict(v) if isinstance(v, dict) else v) for k, v in DEFAULT_POLICY.items()}
-    cfg = root / "factory" / "config.yaml"
     try:
         import importlib.util
-        spec = importlib.util.spec_from_file_location("tf_packs_fresh", root / "factory" / "packs.py")
+        spec = importlib.util.spec_from_file_location("tf_packs_fresh", root / ".tf" / "factory" / "packs.py")
         pm = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(pm)
-        raw = pm.load_yaml(cfg)
-        packs = pm.compose(root, raw)["freshness"]          # interwały z nakładek
-        own = raw.get("freshness") or {}                    # nadpisania projektu
+        packs = pm.compose(root, pm.load_config(root))["freshness"]   # interwały z nakładek
+        own_p = root / ".tf" / "config" / "config.yaml"
+        own = (pm.load_yaml(own_p).get("freshness") or {}) if own_p.is_file() else {}   # nadpisania projektu
     except Exception:  # brak fabryki w katalogu albo uszkodzona konfiguracja — wartości domyślne
         return pol
     for k in ("prefixes", "skills"):
@@ -195,7 +196,7 @@ def main(argv: list[str]) -> int:
               f"{s['overdue']}, termin ≤{SOON_DAYS} dni: {s['soon']}, bez terminu: {s['missing']}, "
               f"znaczników [niezweryfikowane]: {s['unverified']}")
         if s["overdue"]:
-            print("  Po przeglądzie (fakty sprawdzone w źródłach z datą): python3 factory/freshness.py --reviewed <skill>")
+            print("  Po przeglądzie (fakty sprawdzone w źródłach z datą): python3 .tf/factory/freshness.py --reviewed <skill>")
     return 1 if opts.get("--strict") and (s["overdue"] or s["invalid"]) else 0
 
 

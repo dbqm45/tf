@@ -20,7 +20,7 @@ dlatego tryb nie instaluje się domyślnie, a flagę włączasz sam.
    także wtedy, gdy nikt o zespół nie prosił.
 
 ## Na co uważać
-- Koszt rośnie z liczbą członków; zmierzysz go `python3 factory/cost_report.py --days 1`.
+- Koszt rośnie z liczbą członków; zmierzysz go `python3 .tf/factory/cost_report.py --days 1`.
 - Każdy plik powinien mieć jednego właściciela — dwóch członków nadpisuje sobie zmiany.
 - Jeden zespół na sesję; `/resume` nie przywraca członków zespołu.
 - Pytania o uprawnienia członków pojawiają się w Twojej sesji; częste polecenia dopisz do `allow` przed startem.

@@ -4,7 +4,7 @@ Moduł `architecture` tf analyze, piętro 0 (bez modelu): graf importów z `code
 zamieniony na ustalenia — cykle importów wykonywanych przy imporcie, zależności w obie strony między grupami modułów
 („pod prąd”) i huby (plik importowany przez co najmniej HUB_MIN plików produkcyjnych).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
 
 Graf jest całościowy, więc `--files` jest ignorowane (`incremental: false` w analyzer.yaml). Graf pomija DI,
 rejestry, kolejki i HTTP między usługami (ograniczenie code_graph.py) — brak ustaleń nie dowodzi braku sprzężeń.
@@ -23,7 +23,7 @@ REL = Path("skills") / "eng-codebase-mapping" / "scripts" / "code_graph.py"
 
 def find_graph(root: Path) -> Path:
     here = Path(__file__).resolve()
-    for p in (root / ".claude" / REL, here.parents[4] / ".claude" / REL, here.parents[3] / REL):
+    for p in (root / ".claude" / REL, here.parents[5] / ".claude" / REL, here.parents[3] / REL):
         if p.is_file():
             return p
     raise SystemExit("brak code_graph.py (skill eng-codebase-mapping z pack-it) — tf add pack-it")

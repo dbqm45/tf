@@ -58,7 +58,7 @@ Priorytet = ryzyko × zasięg ÷ koszt (S = 1, M = 2, L = 4).
 ## Koszt audytu
 | Etap | Wykonawcy | Modele | Koszt |
 |---|---|---|---|
-Razem: <kwota> z budżetu <kwota> (źródło: `python3 factory/cost_report.py --days 1`).
+Razem: <kwota> z budżetu <kwota> (źródło: `python3 .tf/factory/cost_report.py --days 1`).
 
 ## Porównanie z poprzednim audytem (jeśli był)
 | ID | status (ROZWIĄZANE / NOWE / ZMIENIONE) | uwagi |

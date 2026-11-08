@@ -106,16 +106,16 @@ def main() -> int:
     check(sv.check_changelog(bad_minor, None, "1.3.0") == [], "changelog: kontrola rodzaju dopiero od strict_from")
 
     # update.py: precedencja SemVer
-    up = load(ROOT / "factory" / "update.py", "ctf_update")
+    up = load(ROOT / ".tf" / "factory" / "update.py", "ctf_update")
     check(up.newer_than("1.36.0", "1.36.0-rc.1") > 0 and up.newer_than("1.10.0", "1.9.3") > 0
           and up.newer_than("v1.2.3", "1.2.3") == 0, "update.py: porównanie wersji wg SemVer")
 
     # sama fabryka: VERSION i CHANGELOG zgodne z SemVer
-    sys.path.insert(0, str(ROOT / "factory" / "_vendor"))   # PyYAML systemowy albo dołączony do fabryki
+    sys.path.insert(0, str(ROOT / ".tf" / "factory" / "_vendor"))   # PyYAML systemowy albo dołączony do fabryki
     import yaml
-    cfg = yaml.safe_load((ROOT / "factory" / "config.yaml").read_text(encoding="utf-8"))
-    version = (ROOT / "factory" / "VERSION").read_text(encoding="utf-8").strip()
-    probs = sv.check_changelog((ROOT / "factory" / "CHANGELOG.md").read_text(encoding="utf-8"), version,
+    cfg = yaml.safe_load((ROOT / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8"))
+    version = (ROOT / ".tf" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
+    probs = sv.check_changelog((ROOT / ".tf" / "factory" / "CHANGELOG.md").read_text(encoding="utf-8"), version,
                                cfg.get("semver_strict_from"))
     check(not probs, f"wersja fabryki: {probs}")
 

@@ -18,7 +18,7 @@ and the factory tests run (tests and build expect the installed layout, not the 
                                                        # promptu fazy; raport porównuje wynik i koszt z poprzednim przebiegiem
 
 Default workspace: .work/<packs> (git-ignored). The workspace is recreated on every `assemble`/`check`.
-Gate results (`python3 factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
+Gate results (`python3 .tf/factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
 `sync-gate` moves them into `core/tests/skill_gate/core.json` or `{packs,modes}/<id>/tests/skill_gate/<id>.json`.
 """
 from __future__ import annotations
@@ -95,7 +95,7 @@ def run(ws: Path, cmd: list[str], env: dict | None = None) -> bool:
 def check(o: dict) -> bool:
     ws = assemble(o)
     print(f"Workspace {ws.relative_to(ROOT) if ws.is_relative_to(ROOT) else ws} — packs: {o['packs'] or 'none'}")
-    ok = run(ws, [sys.executable, "factory/build.py", "check"])
+    ok = run(ws, [sys.executable, ".tf/factory/build.py", "check"])
     tests = sorted((ws / ".claude" / "tests").glob("test_*.py"))
     for t in tests:
         ok &= run(ws, [sys.executable, str(t.relative_to(ws))])
@@ -104,7 +104,7 @@ def check(o: dict) -> bool:
     if (ws / ".claude/tests/run_skill_evals.py").exists():
         strict = {"TF_EVALS_STRICT": "1"} if o["packs"] == "all" else {}   # sąsiedzi scenariuszy ze wszystkich nakładek
         ok &= run(ws, [sys.executable, ".claude/tests/run_skill_evals.py", "--validate"], env=strict)
-    ok &= run(ws, [sys.executable, "factory/skill_gate.py", "--status", "--strict"])
+    ok &= run(ws, [sys.executable, ".tf/factory/skill_gate.py", "--status", "--strict"])
     return ok
 
 
@@ -308,7 +308,7 @@ def new_pack(argv: list[str]) -> int:
   1. pack.yaml: komentarz, description, facets.question, order; zależności (requires.packs, optional_packs).
   2. Scenariusze tests/skill_evals/{skill}.json — prawdziwe, zanim powstanie treść (szkielet celowo nie przechodzi bramki).
   3. Treść skills/{skill}/SKILL.md; rola/persona (roles/, personas/).
-  4. W workspace: python3 factory/skill_gate.py {skill}, potem python3 tools/workspace.py sync-gate --out .work/{pid}.
+  4. W workspace: python3 .tf/factory/skill_gate.py {skill}, potem python3 tools/workspace.py sync-gate --out .work/{pid}.
   5. python3 tools/workspace.py check --packs {pid} i refs; PR z feat({pid}): …""")
     return 0 if ok else 1
 

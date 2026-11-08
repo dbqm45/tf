@@ -2,15 +2,16 @@
 """
 Nakładki (pack-*) zainstalowane w projekcie i konfiguracja złożona z rdzenia i nakładek.
 
-  python3 factory/packs.py              # zainstalowane nakładki i ustawienia projektu
-  python3 factory/packs.py --json       # konfiguracja po złożeniu (do diagnostyki)
+  python3 .tf/factory/packs.py              # zainstalowane nakładki i ustawienia projektu
+  python3 .tf/factory/packs.py --json       # konfiguracja po złożeniu (do diagnostyki)
 
 Układ w projekcie:
-  factory/config.yaml                     konfiguracja rdzenia
-  factory/traits/*.md                     cechy rdzenia (i własne cechy projektu)
-  factory/roles/, factory/personas/       własne role i persony projektu (nadpisują te z nakładek o tej samej nazwie)
-  factory/packs/<id>/pack.yaml            nakładka: wymiary, agenci, konsultanci, wkład do rdzenia i innych nakładek
-  factory/packs/<id>/{roles,personas,traits}/
+  .tf/factory/config.yaml                 domyślna konfiguracja rdzenia (silnik — nadpisuje go aktualizacja)
+  .tf/factory/traits/*.md                 cechy rdzenia
+  .tf/factory/packs/<id>/pack.yaml        nakładka: wymiary, agenci, konsultanci, wkład do rdzenia i innych nakładek
+  .tf/factory/packs/<id>/{roles,personas,traits}/
+  .tf/config/config.yaml                  nadpisania projektu (nakładane rekurencyjnie na domyślną konfigurację)
+  .tf/config/{roles,personas,traits}/     własne role, persony i cechy projektu (nadpisują te z rdzenia i nakładek)
   .claude/skills/                         skille rdzenia i nakładek (Claude Code czyta je tylko stąd)
   .claude/factory-settings.json           ustawienia projektu: language, commit_language, targets
 
@@ -21,28 +22,47 @@ Zasady składania:
   - `contributes` (wkład do person, ról i agentów spoza nakładki) oraz agenci wspólni, konsultanci i wiersze routingu
     nakładki działają tylko wtedy, gdy spełniony jest `contributes_when` (np. `{language: pl}`);
   - odwołania do elementów nakładek z `optional_packs`, których nie zainstalowano, są pomijane bez błędu.
-Biblioteka standardowa + PyYAML (systemowy albo dołączony w factory/_vendor).
+Biblioteka standardowa + PyYAML (systemowy albo dołączony w .tf/factory/_vendor).
 """
 from __future__ import annotations
 
 import json
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (licencja MIT, factory/_vendor/yaml/LICENSE)
+except ImportError:  # dołączona kopia PyYAML (licencja MIT, .tf/factory/_vendor/yaml/LICENSE)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
 SETTINGS_REL = Path(".claude") / "factory-settings.json"
-PACKS_REL = Path("factory") / "packs"
+ENGINE_REL = Path(".tf") / "factory"     # silnik fabryki (tylko do odczytu — nadpisuje go aktualizacja)
+CONFIG_REL = Path(".tf") / "config"      # konfiguracja projektu: nadpisania config.yaml, własne persony, role, cechy
+PACKS_REL = ENGINE_REL / "packs"
 LIST_KEYS = ("traits", "core_skills", "skills")
 
 
 def load_yaml(path: Path) -> dict:
     with path.open(encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def deep_merge(base: dict, over: dict) -> dict:
+    """`over` nałożone na `base`: słowniki łączone rekurencyjnie, inne wartości (listy, napisy, liczby) zastępowane."""
+    out = dict(base)
+    for k, v in (over or {}).items():
+        out[k] = deep_merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
+def load_config(root: Path) -> dict:
+    """Konfiguracja rdzenia: domyślna z `.tf/factory/config.yaml` z nadpisaniami projektu z `.tf/config/config.yaml`."""
+    cfg = load_yaml(root / ENGINE_REL / "config.yaml")
+    own = root / CONFIG_REL / "config.yaml"
+    return deep_merge(cfg, load_yaml(own)) if own.is_file() else cfg
 
 
 def installed_packs(root: Path) -> dict[str, dict]:
@@ -191,9 +211,9 @@ def load_items(root: Path, sub: str) -> tuple[dict[str, dict], list[str]]:
             if data.get("name") in items:
                 notes.append(f"{sub} {data['name']}: w {items[data['name']]['_pack']} i w {pid} — używam {pid}")
             items[data["name"]] = data
-    for f in sorted((root / "factory" / sub).glob("*.yaml")):
+    for f in sorted((root / CONFIG_REL / sub).glob("*.yaml")):
         data = load_yaml(f)
-        data["_src"] = f"factory/{sub}/{f.name}"
+        data["_src"] = (CONFIG_REL / sub / f.name).as_posix()
         data["_pack"] = "project"
         if data.get("name") in items:
             notes.append(f"{sub} {data['name']}: własna wersja projektu zastępuje wersję z {items[data['name']]['_pack']}")
@@ -202,9 +222,10 @@ def load_items(root: Path, sub: str) -> tuple[dict[str, dict], list[str]]:
 
 
 def load_traits(root: Path) -> dict[str, str]:
-    out = {p.stem: p.read_text(encoding="utf-8").strip() for p in sorted((root / "factory" / "traits").glob("*.md"))}
+    out = {p.stem: p.read_text(encoding="utf-8").strip() for p in sorted((root / ENGINE_REL / "traits").glob("*.md"))}
     for p in installed_packs(root).values():
         out.update({t.stem: t.read_text(encoding="utf-8").strip() for t in sorted((p["_dir"] / "traits").glob("*.md"))})
+    out.update({p.stem: p.read_text(encoding="utf-8").strip() for p in sorted((root / CONFIG_REL / "traits").glob("*.md"))})
     return out
 
 
@@ -242,8 +263,8 @@ def write_language_lines(path: Path, cfg: dict, settings: dict) -> bool:
 
 
 def main(argv: list[str]) -> int:
-    root = Path(__file__).resolve().parent.parent
-    cfg = compose(root, load_yaml(root / "factory" / "config.yaml"))
+    root = Path(__file__).resolve().parents[2]
+    cfg = compose(root, load_config(root))
     if "--json" in argv:
         print(json.dumps({k: v for k, v in cfg.items() if k != "_packs"}, ensure_ascii=False, indent=1, default=str))
         return 0

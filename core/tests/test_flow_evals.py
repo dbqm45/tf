@@ -397,8 +397,8 @@ def main() -> int:
         if wf.is_file():
             try:
                 import yaml
-            except ImportError:   # wzór z test_ai_review.py: dołączona kopia PyYAML (factory/_vendor)
-                for base in (ROOT / "factory" / "_vendor", ROOT / "core" / "factory" / "_vendor"):
+            except ImportError:   # wzór z test_ai_review.py: dołączona kopia PyYAML (.tf/factory/_vendor)
+                for base in (ROOT / ".tf" / "factory" / "_vendor", ROOT / "core" / "factory" / "_vendor"):
                     if base.is_dir():
                         sys.path.insert(0, str(base))
                         break

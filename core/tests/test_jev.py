@@ -213,8 +213,8 @@ def main() -> int:
     if silent.strip() or none_without_key is not None:
         fails.append("bez klucza Jev powinien być całkowicie wyłączony")
 
-    # 12–14. kalibracja (factory/jev_calibration.py): pas dopasowany na etykietach, próg trasowania, test kolejności
-    cal = load(ROOT / "factory" / "jev_calibration.py", "jev_calibration")
+    # 12–14. kalibracja (.tf/factory/jev_calibration.py): pas dopasowany na etykietach, próg trasowania, test kolejności
+    cal = load(ROOT / ".tf" / "factory" / "jev_calibration.py", "jev_calibration")
     total += 1
     pts = [(0.95, True), (0.9, True), (0.85, True), (0.6, True), (0.55, False), (0.4, False), (0.1, False), (0.05, False)]
     band = cal.fit_band(pts, target=0.95)

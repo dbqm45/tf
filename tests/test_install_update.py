@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy aktualizacji instalatora: manifest zapisuje skrót pliku po `factory/build.py` (spis treści plików referencyjnych),
+"""Testy aktualizacji instalatora: manifest zapisuje skrót pliku po `.tf/factory/build.py` (spis treści plików referencyjnych),
 więc aktualizacja czystej instalacji nie zostawia `*.factory-new`; pliki fabryki zmienione w projekcie
-aktualizacja nadpisuje (jak node_modules), a w `factory/config.yaml` zostawia ustawienia projektu i dopisuje nowe klucze; klon instalacji zespołowej (manifest poza gitem)
+aktualizacja nadpisuje (jak node_modules), a `.tf/config/` (nadpisania konfiguracji, własne persony) zostawia; klon instalacji zespołowej (manifest poza gitem)
 aktualizuje się z commitowanego `.claude/factory-lock.json`, a nie pomija plików fabryki; spisy treści w źródle
 fabryki są aktualne. python3 tests/test_install_update.py"""
 import importlib.util
@@ -140,25 +140,31 @@ def main() -> int:
         lock2 = json.loads((clone / LOCK).read_text(encoding="utf-8")) if (clone / LOCK).exists() else {}
         check(lock2.get("version") == f"{major}.99.0", f"C-5: lock zaktualizowany: {lock2.get('version')}")
 
-        # N-1..N-4: config.yaml to konfiguracja projektu — ustawienia zostają, nowe klucze fabryki dochodzą;
-        # własne pliki w katalogach fabryki zostają nietknięte
+        # N-1..N-4: silnik (w tym domyślny config.yaml) nadpisywany; nadpisania projektu i własne persony w .tf/config/
+        # nietknięte, a nowe klucze domyślne działają bez łatania pliku projektu
         cfg_src = src / "core" / "factory" / "config.yaml"
         write(cfg_src, cfg_src.read_text(encoding="utf-8") + "\n# nowy klucz fabryki\nnowy_klucz_testu:\n  a: 1\n")
         write(src / "core" / "factory" / "VERSION", f"{major}.99.1\n")
-        cfg = clone / "factory" / "config.yaml"
-        before = cfg.read_text(encoding="utf-8")
-        check("default_profile: zrownowazony" in before, "N-0: konfiguracja ma domyślny profil (założenie testu)")
-        cfg.write_text(before.replace("default_profile: zrownowazony", "default_profile: oszczedny"), encoding="utf-8")
-        mine = clone / "factory" / "personas" / "moja-persona.yaml"
+        own = clone / ".tf" / "config" / "config.yaml"
+        own.parent.mkdir(parents=True, exist_ok=True)
+        own.write_text("default_profile: oszczedny\n", encoding="utf-8")
+        mine = clone / ".tf" / "config" / "personas" / "moja-persona.yaml"
         write(mine, "name: moja\n")
         r = install(src, clone)
-        after = cfg.read_text(encoding="utf-8")
-        check(r.returncode == 0 and "default_profile: oszczedny" in after and "nowy_klucz_testu:" in after
-              and "  a: 1" in after, f"N-1: config.yaml — ustawienie projektu zostaje, nowy klucz dopisany: "
-              f"{r.stdout[-500:]} {after[-300:]}")
-        check(after.count("default_profile:") == 1, "N-2: istniejący klucz nie jest dublowany")
-        check(mine.read_text(encoding="utf-8") == "name: moja\n", "N-3: własny plik w factory/personas/ nietknięty")
-        check(not factory_new(clone), f"N-4: żadnych *.factory-new: {factory_new(clone)}")
+        engine = (clone / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8") \
+            if (clone / ".tf" / "factory" / "config.yaml").exists() else ""
+        check(r.returncode == 0 and "nowy_klucz_testu:" in engine and own.read_text(encoding="utf-8") ==
+              "default_profile: oszczedny\n", f"N-1: domyślny config silnika zaktualizowany, nadpisania projektu bez "
+              f"zmian: {r.stdout[-500:]}")
+        spec = importlib.util.spec_from_file_location("tf_packs_n2", clone / ".tf" / "factory" / "packs.py")
+        pm = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pm)
+        merged = pm.load_config(clone)
+        check(merged.get("default_profile") == "oszczedny" and (merged.get("nowy_klucz_testu") or {}).get("a") == 1,
+              f"N-2: złożona konfiguracja — nadpisanie projektu i nowy klucz silnika: {merged.get('default_profile')}")
+        check(mine.read_text(encoding="utf-8") == "name: moja\n", "N-3: własna persona w .tf/config/personas/ nietknięta")
+        check(not factory_new(clone) and not (clone / "factory").exists(), f"N-4: żadnych *.factory-new ani factory/: "
+              f"{factory_new(clone)}")
 
     for f in fails:
         print(f"✗ {f}")

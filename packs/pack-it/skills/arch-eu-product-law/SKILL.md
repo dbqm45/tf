@@ -43,7 +43,7 @@ PLD dotyczy praktycznie każdego oprogramowania wprowadzanego do obrotu w ramach
 | EAA, dyr. 2019/882 | wybrane produkty i usługi B2C | od 28.06.2025 | ux-accessibility |
 
 Tabela jest punktem startu, nie wynikiem: przed oddaniem mapy każdą datę i artykuł, z których wynika obowiązek,
-sprawdza `researcher` w EUR-Lex lub ISAP (`python3 factory/facts.py`, jeśli projekt prowadzi bazę faktów).
+sprawdza `researcher` w EUR-Lex lub ISAP (`python3 .tf/factory/facts.py`, jeśli projekt prowadzi bazę faktów).
 
 ## 3. Procedura
 1. **Kwalifikacja:** odpowiedzi na Q1–Q6 z dowodem (plik, dokument) albo z odpowiedzi człowieka.

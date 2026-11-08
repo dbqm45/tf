@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = next(p for p in Path(__file__).resolve().parents
             if (p / ".claude" / "skills" / "core-agent-retro" / "scripts" / "factory_feedback.py").is_file())
 FEEDBACK = ROOT / ".claude" / "skills" / "core-agent-retro" / "scripts" / "factory_feedback.py"
-REPORT = ROOT / "factory" / "feedback_report.py"
+REPORT = ROOT / ".tf" / "factory" / "feedback_report.py"
 
 
 def project(base: Path, source: str | None = "https://github.com/dbqm45/claude-team-factory.git") -> Path:

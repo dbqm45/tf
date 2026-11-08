@@ -4,7 +4,7 @@ skill u person i przewodnik. python3 .claude/tests/test_mode_pdi.py"""
 import json
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "packs" / "mode-pdi").is_dir())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "packs" / "mode-pdi").is_dir())
 
 
 def main() -> int:
@@ -32,7 +32,7 @@ def main() -> int:
     personas = [p for p in agents.rglob("*.md") if p.parent.name not in ("shared", "consult") and p.stem == p.parent.name]
     check(personas == [] or all("pdi-decisions" in p.read_text(encoding="utf-8") for p in personas),
           "P-4: skill pdi-decisions u każdej persony")
-    check((ROOT / "factory" / "packs" / "mode-pdi" / "GUIDE.md").is_file(), "P-5: przewodnik trybu w projekcie")
+    check((ROOT / ".tf" / "factory" / "packs" / "mode-pdi" / "GUIDE.md").is_file(), "P-5: przewodnik trybu w projekcie")
     runner = ".claude/skills/pdi-decisions/scripts/phase_run.py"
     check((ROOT / runner).is_file() and runner in text and (skill / "templates" / "sdlc-phase.yml").is_file(),
           "P-6: skrypt faz uruchamianych przez pdi i szablon workflow przy skillu, ścieżka w skillu")

@@ -9,12 +9,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "update.py").is_file())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "update.py").is_file())
 GIT_SRC = "https://example.com/fabryka.git"
 
 
 def load():
-    spec = importlib.util.spec_from_file_location("ctf_update_auto", ROOT / "factory" / "update.py")
+    spec = importlib.util.spec_from_file_location("ctf_update_auto", ROOT / ".tf" / "factory" / "update.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -23,10 +23,10 @@ def load():
 def project(base: Path, name: str, mode: str = "private", source: str | None = GIT_SRC, version: str = "2.0.0") -> Path:
     p = base / name
     (p / ".claude").mkdir(parents=True)
-    (p / "factory" / "templates").mkdir(parents=True)
-    tpl = ROOT / "factory" / "templates" / "team-factory-update.yml"
+    (p / ".tf" / "factory" / "templates").mkdir(parents=True)
+    tpl = ROOT / ".tf" / "factory" / "templates" / "team-factory-update.yml"
     if tpl.is_file():
-        shutil.copy(tpl, p / "factory" / "templates" / tpl.name)
+        shutil.copy(tpl, p / ".tf" / "factory" / "templates" / tpl.name)
     man = {"version": version, "mode": mode, "files": {}}
     if source:
         man["source"] = source
@@ -117,9 +117,9 @@ def backup_rollback_tests(up, check) -> None:
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)
         p = installed(base, "kopia", {".claude/hooks/a.py": "a1", ".claude/skills/s/SKILL.md": "s1",
-                                      "factory/x.py": "x1"})
+                                      ".tf/factory/x.py": "x1"})
         (p / ".claude" / "settings.local.json").write_text('{"v": 1}')
-        (p / "factory" / "x.py.factory-new").write_text("x-stare-nowe")    # już przed aktualizacją
+        (p / ".tf" / "factory" / "x.py.factory-new").write_text("x-stare-nowe")    # już przed aktualizacją
         old_man = manifest(p)
         bdir = up.backup(p)
         meta = json.loads((bdir / "backup.json").read_text()) if (bdir / "backup.json").is_file() else {}
@@ -149,7 +149,7 @@ def backup_rollback_tests(up, check) -> None:
               and (p / ".claude" / "hooks" / "ruszony.py").read_text() == "r-moje",
               "AB-3: rollback usuwa pliki dodane przez aktualizację, ale nie te zmienione przez użytkownika")
         check(not (p / ".claude" / "skills" / "s" / "SKILL.md.factory-new").exists()
-              and (p / "factory" / "x.py.factory-new").exists(),
+              and (p / ".tf" / "factory" / "x.py.factory-new").exists(),
               "AB-4: rollback usuwa nowe .factory-new, zostawia te sprzed aktualizacji")
         check("2.0.0" in msg and "2.1.0" in msg, f"AB-5: komunikat rollbacku podaje wersje: {msg}")
 
@@ -160,7 +160,7 @@ def backup_rollback_tests(up, check) -> None:
         kept = [b for b in (p / ".tf" / "backup").iterdir() if (b / "backup.json").is_file()]
         check(len(kept) == 3 and other.exists(), f"AB-6: zostają 3 ostatnie kopie, inne katalogi nietknięte: {kept}")
 
-        empty = installed(base, "bez-kopii", {"factory/x.py": "x"})
+        empty = installed(base, "bez-kopii", {".tf/factory/x.py": "x"})
         check(up.rollback(empty)[0] == 2, "AB-7: rollback bez kopii → odmowa")
 
 
@@ -348,8 +348,8 @@ def start_tests(up, check) -> None:
         # CLI --auto-run: update.py z projektu instaluje w swoim projekcie
         cli = auto_project(base, "cli", src)
         for f in ("update.py", "skill_audit.py"):
-            shutil.copy(ROOT / "factory" / f, cli / "factory" / f)
-        r = subprocess.run([sys.executable, str(cli / "factory" / "update.py"), "--auto-run"], capture_output=True,
+            shutil.copy(ROOT / ".tf" / "factory" / f, cli / ".tf" / "factory" / f)
+        r = subprocess.run([sys.executable, str(cli / ".tf" / "factory" / "update.py"), "--auto-run"], capture_output=True,
                            text=True, cwd=base)
         check(r.returncode == 0 and manifest(cli)["version"] == "2.0.1",
               f"AN-6: `update.py --auto-run` instaluje w projekcie, w którym leży: {r.stdout[-300:]} {r.stderr[-300:]}")
@@ -367,7 +367,7 @@ CI_IGNORE = ".claude/factory-manifest.json\n.tf/backup/\n.tf/logs/\n*.factory-ne
 def ci_project(base: Path, name: str, workflow: bool = False) -> Path:
     """Projekt w trybie zespołowym, jak go widzi CI po checkout: fabryka 2.0.0 w repo, bez manifestu (gitignore)."""
     p = base / name
-    files = {"factory/VERSION": "2.0.0\n", ".claude/hooks/f.py": "2.0.0", ".claude/tests/test_po.py": PASS,
+    files = {".tf/factory/VERSION": "2.0.0\n", ".claude/hooks/f.py": "2.0.0", ".claude/tests/test_po.py": PASS,
              ".gitignore": CI_IGNORE}
     if workflow:
         files[".github/workflows/team-factory-update.yml"] = "wf 2.0.0"
@@ -375,7 +375,7 @@ def ci_project(base: Path, name: str, workflow: bool = False) -> Path:
         (p / rel).parent.mkdir(parents=True, exist_ok=True)
         (p / rel).write_text(text)
     for f in ("update.py", "skill_audit.py"):
-        shutil.copy(ROOT / "factory" / f, p / "factory" / f)
+        shutil.copy(ROOT / ".tf" / "factory" / f, p / ".tf" / "factory" / f)
     git(p, "init", "-q")
     git(p, "add", "-A")
     git(p, "commit", "-q", "-m", "start")
@@ -385,7 +385,7 @@ def ci_project(base: Path, name: str, workflow: bool = False) -> Path:
 def run_ci(p: Path, src: str) -> tuple[subprocess.CompletedProcess, str, str]:
     out = p.parent / f"{p.name}.github_output"
     out.write_text("")
-    r = subprocess.run([sys.executable, str(p / "factory" / "update.py"), "--ci", "--source", src], cwd=p,
+    r = subprocess.run([sys.executable, str(p / ".tf" / "factory" / "update.py"), "--ci", "--source", src], cwd=p,
                        capture_output=True, text=True,
                        env={"PATH": os.environ.get("PATH", ""), "HOME": str(p.parent), "GITHUB_OUTPUT": str(out)})
     body = p / ".tf" / "logs" / "update-pr.md"
@@ -433,7 +433,7 @@ def ci_tests(check) -> None:
               f"AC-7: ustalenie wysokiej wagi w audycie → job czerwony, bez PR: {r.stdout[-300:]}")
 
         p = ci_project(base, "ci-build")
-        (p / "factory" / "build.py").write_text(FAIL)
+        (p / ".tf" / "factory" / "build.py").write_text(FAIL)
         git(p, "add", "-A")
         git(p, "commit", "-qm", "build")
         r, out, body = run_ci(p, factory_repo(base, "fab-build", [("2.0.0", PASS, False), ("2.0.1", PASS, False)]))
@@ -443,7 +443,7 @@ def ci_tests(check) -> None:
 
 def lock_tests(check) -> None:
     """Klon instalacji zespołowej z commitowanym `.claude/factory-lock.json`: plik fabryki, który poprzednia aktualizacja
-    zostawiła w starszej treści niż `factory/VERSION`, ma w locku swój skrót — --ci bierze bazę z locka i go aktualizuje,
+    zostawiła w starszej treści niż `.tf/factory/VERSION`, ma w locku swój skrót — --ci bierze bazę z locka i go aktualizuje,
     zamiast odtwarzać manifest z czystej instalacji wersji z VERSION (który brałby ten plik za zmieniony przez projekt)."""
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)
