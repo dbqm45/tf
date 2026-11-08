@@ -49,6 +49,8 @@ Skrypty uruchamiane przez Claude Code przy zdarzeniach, niezależnie od decyzji 
 - `guard_paths` — pliki z sekretami;
 - `cleanroom_guard` — izolacja informacji między agentami;
 - `tdd_guard` — kod dopiero po czerwonym teście;
+- `quality_gate` — z `.claude/quality-gate.json` tura i podagent nie kończą się z czerwonymi testami (blokada
+  testów: `test_lock.py`);
 - `scan_secrets` — sekrety w zapisanych plikach;
 - `skill_hint` — podpowiedzi skilli;
 - `context_guard` — ostrzeżenie o długim kontekście;

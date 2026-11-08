@@ -42,6 +42,9 @@
   (procedura: core-agent-security).
 - Kod produkcyjny piszesz metodą TDD: najpierw test, uruchomienie (czerwony), potem kod. Hook
   `tdd_guard` blokuje kod bez czerwonego testu i ostrzega przy osłabieniu testu; testów nie osłabiasz, żeby przeszły.
+  Z plikiem `.claude/quality-gate.json` hook `quality_gate` nie kończy tury ani podagenta z czerwonym buildem i testami;
+  zamierzony czerwony test zapisujesz w `.claude/quality-gate.expected-red`. Testy uruchamiasz przez
+  `python3 .claude/hooks/test_lock.py -- <polecenie>`, żeby nie zderzyły się z bramką we wspólnym katalogu build.
   Krok realizacji zaczynasz od planu (pliki, kolejność, testy) zapisanego przed kodem (core-delivery-lifecycle); gdy
   w trakcie zmienia się kontrakt planu, zatrzymujesz się i aktualizujesz plan zamiast improwizować.
 - Wersje tego, co wydajesz (pakiet, API, aplikacja, obraz, moduł), nadajesz wg SemVer 2.0.0 (skill core-semver); numer
