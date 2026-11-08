@@ -36,6 +36,7 @@
       "Bash(python3 factory/hint_report.py *)",
       "Bash(python3 .claude/hooks/detect_stack.py *)",
       "Bash(python3 .claude/hooks/project_record.py *)",
+      "Bash(python3 .claude/hooks/test_lock.py -- *)",
       "Bash(python3 tests/test_cleanroom.py)",
       "Bash(python3 .claude/skills/core-grounding/scripts/grounding_check.py *)",
       "Bash(python3 factory/skill_gate.py *)",
