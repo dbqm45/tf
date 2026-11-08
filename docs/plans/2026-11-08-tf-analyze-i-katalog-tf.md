@@ -146,8 +146,7 @@ i `tools/workspace.py check` dla wszystkich nakładek.
   autonomii według typu akcji (proponuje: plan i przydział; robi sama, gdy da się odwrócić: kod na gałęzi, testy,
   research; czeka na człowieka: merge, zmiana kontraktu lub API, decyzje biznesowe, wszystko ponad budżet); jedno
   zbiorcze podsumowanie dziennie.
-- **Pętla wykonawcza jako wspólny skill** person deweloperskich (dziś tylko Talos): kawałek zablokowany zamiast STOP
-  całej historyjki, praca obok w tle z zapisem do notatki, powrót z odpowiedzią.
+- **Pętla wykonawcza jako wspólny skill** person deweloperskich (dziś tylko Talos) — sekcja 10.
 - **PO/TPO jako pełnomocnik wiedzy produktowej:** modułowy, z ryzykami i sposobem ich usunięcia — sekcja 9.
 - **Scrum Master jako skill i okresowy przegląd:** blokady i ich wiek, limity WIP, metryki przepływu, Definition of
   Done, retro (core-agent-retro) — bez stale działającego agenta.
@@ -170,7 +169,7 @@ i jest podatna na treść źródeł. Dlatego PO to **usługa odpowiedzi z dowod�
   osobna persona „PO” nie jest potrzebna, co najwyżej cienki profil roli (9.2).
 
 ### 9.2. Moduły (wkład nakładek, jak `analyzers/`)
-Jeden wspólny kontrakt modułu w rdzeniu (`module.yaml` z polem `kind`: `analyzer` | `po-source` | `po-skill`),
+Jeden wspólny kontrakt modułu w rdzeniu (`module.yaml` z polem `kind`: `analyzer` | `po-source` | `po-skill`, a z sekcji 10 także `gate` | `notifier` | `consult`),
 jedna bramka i jeden rejestr bramek — PO nie dostaje osobnego mechanizmu.
 
 | Rodzaj | Gdzie | Co zawiera | Przykłady |
@@ -213,12 +212,93 @@ w `.tf/register/`.
 3. Moduły `jira`, `confluence` (konektor tylko do odczytu + eksport), `tf po sync`, `sources-critic` w pętli.
 4. Umiejętności: doprecyzowanie zgłoszenia, przegląd PR wobec kryteriów, priorytety; profil `tpo` z `openapi`.
 
+## 10. Pętla pracy dewelopera — wierne odwzorowanie (luki, kontrakt, ryzyka)
+Decyzja człowieka 2026-11-08: plan ma objąć luki z porównania „czynność dewelopera → co jest w fabryce” i domknąć je
+spinając istniejące części, bez nowego przepływu; modułowo jak reszta.
+
+### 10.1. Luki (stan 2026-11-08)
+| Czynność dewelopera | Co jest dziś | Luka |
+|---|---|---|
+| napisać testy | `tdd_guard`, eng-testing, qa-spec-first-testing | — |
+| napisać kod | persony deweloperskie, pętla kawałka w talosie | pętla tylko w talosie |
+| w międzyczasie coś zweryfikować | `quality_gate`, `test_lock`, `scope-reviewer`, `plan_drift` | — |
+| wrócić, poprawić | talos: najwyżej 2 próby na bramkę, potem STOP; `tdd_guard` wykrywa pętlę tej samej porażki | STOP przerywa całą historyjkę zamiast odłożyć jeden kawałek |
+| zerknąć do dokumentacji | core-source-research §4b, `fetch_page.py` | wynik nie zostaje w projekcie — agent szuka od nowa (`tools/context.py` z decyzji człowieka jest tylko w fabryce) |
+| skonsultować się | `architect`, `security-reviewer`, `specialist`, konsultanci między nakładkami, pytanie do człowieka | konsultacja blokuje wątek; brak „zapytaj w tle i wróć do kodu” z wynikiem w pliku (`/btw`) |
+| zerknąć na design | ux-feature-design, Figma MCP, `design_check.py` | — |
+| zgłosić niespójność | talos `parked.md`; mode-pdi „Pytania do bramki”; `decision add --finding` | zgłoszenie dociera do człowieka dopiero w PR albo na bramce; agent nie wie, czy czekać, czy iść dalej |
+| ustalić, co robimy | `decisions.md`, wpisy bramek pdi, ADR | odpowiedź nie wraca sama do przerwanego kawałka |
+
+### 10.2. Kontrakt (spina istniejące części)
+1. **Zdarzenia w rejestrze.** Typy: `pytanie`, `niespójność`, `konsultacja`, `dokumentacja`, `decyzja`, `blokada`.
+   Pola: `id`, typ, kawałek (`TSK`/kawałek z planu), status (otwarte → w toku → rozstrzygnięte; `czeka na człowieka`),
+   **wpływ** (`blokuje kawałek` | `nie blokuje`), **odwracalność** dalszej pracy bez odpowiedzi (`odwracalna` |
+   `nieodwracalna`), odwołania (CHG, PRB, `id` ustalenia z `tf analyze`), wynik (ścieżka notatki). Zapis i odczyt
+   tylko skryptem (`work_events.py`, bez modelu, TDD) — `parked.md` talosa i „Pytania do bramki” pdi stają się
+   widokami tych zdarzeń, nie osobnymi listami.
+2. **Kawałek zablokowany zamiast STOP.** Zdarzenie blokujące zatrzymuje tylko swój kawałek. Następny kawałek to
+   pierwszy z planu, który **nie zależy** od zablokowanych (zależności jawne w planie: `zależy od: K2`; kawałek bez
+   tej informacji traktujemy jako zależny). STOP z listą pytań dopiero, gdy nie ma kawałka niezależnego albo
+   przekroczono limit otwartych blokad (`config.yaml`, domyślnie 2).
+3. **Czekać czy iść dalej — reguła, nie ocena agenta.** Idzie dalej, gdy zdarzenie nie blokuje albo dalsza praca
+   jest odwracalna (kod na gałęzi, testy, notatka). Czeka, gdy dalsza praca byłaby nieodwracalna albo zmienia kontrakt
+   (API, schemat, migracja danych, decyzja biznesowa) — wtedy kawałek jest zablokowany.
+4. **Bieżące powiadomienie człowieka.** Zdarzenie `czeka na człowieka` od razu idzie kanałem z modułu powiadomień
+   (terminal, skrzynka pdi, komentarz w PR) z jednym pytaniem, opcjami i rekomendacją; drobne zbierane w podsumowanie
+   (limit powiadomień na godzinę w `config.yaml`).
+5. **Praca obok w tle (`/btw`).** Konsultacja, research i sprawdzenie designu idą do podagenta w tle z briefem
+   z zdarzenia; wynik w `.tf/runs/<przebieg>/notes/<id>.md` (cytaty ze źródłem i datą, werdykt w pierwszej linii);
+   główny wątek dostaje jedną linię „gotowe: <id>” i wczytuje notatkę, gdy kawałek jej potrzebuje.
+6. **Powrót z odpowiedzią.** Odpowiedź człowieka albo decyzja z bramki pdi zamyka zdarzenie (`work_events.py
+   resolve <id> --source "człowiek, data"`), dopisuje decyzję do `decisions.md` i odblokowuje kawałek; pętla zaczyna
+   następny krok od odblokowanych kawałków, z kontekstem: plan kawałka, zdarzenie, odpowiedź, notatki, `git diff`
+   kawałka.
+7. **Dokumentacja w projekcie.** Wynik sprawdzenia dokumentacji (core-source-research) zapisywany w `.tf/cache/docs/`
+   z paczką, **wersją z projektu**, adresem i datą; kolejne pytanie o tę samą paczkę i wersję czyta notatkę zamiast
+   szukać od nowa; zmiana wersji w lockfile unieważnia wpis. To nie jest `tools/context.py` (zostaje tylko w fabryce),
+   tylko zapis wyników researchu.
+
+### 10.3. Moduły
+Na wspólnym kontrakcie `module.yaml` (sekcja 9.2):
+- **pętla** — skill wykonawczy w rdzeniu (wyciągnięty z talosa: test czerwony → kod → weryfikacja → przegląd zakresu
+  → commit, budżet, raport kosztu) + `work_events.py`; persona deweloperska włącza go w `pack.yaml`;
+- `kind: gate` — kroki weryfikacji kawałka dokładane przez nakładki (`design_check.py` z pack-ux, `security_scan.py`,
+  `pr_budget.py`, testy kontraktowe), dobierane po plikach kawałka;
+- `kind: notifier` — kanały powiadomień (terminal, skrzynka pdi, PR; inne nakładki);
+- `kind: consult` — kogo pytać w tle o dany typ zdarzenia (architect, security-reviewer, PO z sekcji 9, design).
+
+### 10.4. Ryzyka i jak je usuwamy
+| # | Ryzyko | Usunięcie projektem | Co zostaje do pilnowania |
+|---|---|---|---|
+| P1 | ukryta zależność: kawałek „niezależny” psuje się po odpowiedzi na zablokowany | zależności jawne w planie; brak informacji = zależny; po odblokowaniu bramka testów na całości, nie tylko na kawałku | jakość planu (`plan_drift`) |
+| P2 | agent idzie dalej, gdy powinien czekać | reguła 10.2.3 po polach `wpływ` i `odwracalność`, nie ocena w prompcie; zmiana kontraktu zawsze blokuje | test reguły na przykładach |
+| P3 | zbyt wiele otwartych wątków (WIP), rozmyta praca | limit otwartych blokad i prac w tle w `config.yaml`; po przekroczeniu STOP z listą | metryki SM (sekcja 8) |
+| P4 | utrata stanu przy przerwaniu sesji | stan wyłącznie w rejestrze i `.tf/wip/` (skrypt), nie w kontekście; wznowienie od `work_events.py open` + `git status` | — |
+| P5 | powrót bez kontekstu, rozjazd z kodem | pakiet powrotu (10.2.6) + ostrzeżenie o rozjeździe z HEAD jak w `project_record wip` | — |
+| P6 | koszt prac w tle | tani model domyślnie (core-cost-control), budżet na zdarzenie ze STOP, koszt w raporcie przebiegu | — |
+| P7 | wynik z tła niesprawdzony albo z wstrzykniętym poleceniem ze strony | notatka z cytatami i źródłem, `claims_check.py` przed użyciem; podagent research bez zapisu poza notatką; treść stron to dane (core-agent-security) | — |
+| P8 | spam powiadomień | jedno pytanie na zdarzenie, drobne w podsumowanie, limit na godzinę | — |
+| P9 | niejednoznaczna odpowiedź człowieka | odpowiedź zamyka zdarzenie tylko, gdy wybiera opcję albo podaje wartość; inaczej pytanie doprecyzowujące (core-plan-interview) | — |
+| P10 | nieaktualna notatka dokumentacji | klucz: paczka + wersja z lockfile; zmiana wersji unieważnia; data w notatce | — |
+| P11 | czerwona bramka jakości z powodu zablokowanego kawałka | zamierzony stan zapisany w `.claude/quality-gate.expected-red` z `id` zdarzenia; usuwany przy odblokowaniu | — |
+| P12 | konflikty w gicie między kawałkami | kawałki sekwencyjnie na jednej gałęzi (bez równoległej edycji kodu); w tle tylko odczyt i notatki | — |
+| P13 | brak dowodu, że pętla jest lepsza | `tools/flow_compare.py` (pętla w personie vs talos vs tryb planu) przed włączeniem domyślnym; za flagą do tego czasu | koszt pomiaru — za zgodą |
+
+### 10.5. Kolejność (po rejestrze z kroku 1)
+1. `work_events.py` (zdarzenia, reguła czekać/iść dalej, widoki `parked.md` i „Pytania do bramki”) — TDD.
+2. Pętla jako skill w rdzeniu, wyciągnięta z talosa; talos korzysta z niej bez zmiany zachowania (testy talosa
+   zielone); kawałek zablokowany zamiast STOP.
+3. Praca w tle z notatkami, powrót z odpowiedzią, `notifier` terminal i pdi.
+4. Notatki dokumentacji w `.tf/cache/docs/`; `kind: gate` z nakładek.
+5. Włączenie pętli w personach deweloperskich za flagą; pomiar `flow_compare` (za zgodą) przed domyślnym.
+
 ## Kolejność realizacji (każdy krok osobny PR, TDD, bramki)
 1. `.tf/` (config, reports, register) + format ustalenia + rdzeń `tf analyze` z piętrem 0 i raportem ze scalaniem
    checkboxów.
 2. Bramka modułów i moduły `security`, `architecture` (piętra 0–1).
 3. `accessibility` z piętrem 2 (Playwright; MCP za zgodą) i `legal` z pytaniami wejściowymi.
 4. Migracja istniejących ścieżek do `.tf/`, w tym `factory/` → `.tf/factory/` (sekcje 0 i 7).
-5. Maja na rejestrze, pętla wykonawcza, SM jako skill (sekcja 8) — każdy osobno, po pomiarze.
+5. Maja na rejestrze, SM jako skill (sekcja 8) — każdy osobno, po pomiarze.
 6. PO/TPO według kolejności z sekcji 9.4.
+7. Pętla pracy dewelopera według kolejności z sekcji 10.5 (krok 2 przed wygaszeniem talosa).
 Płatne przebiegi (piętra 1–3 na prawdziwych repozytoriach, pomiar przepływów) tylko za zgodą człowieka z budżetem.
