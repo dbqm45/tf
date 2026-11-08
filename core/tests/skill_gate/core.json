@@ -4,7 +4,7 @@
   "offline": "2026-11-01"
  },
  "core-agent-retro": {
-  "fingerprint": "66962ae7a87df445",
+  "fingerprint": "39d3b415dcdaa977",
   "offline": "2026-11-08"
  },
  "core-agent-security": {
@@ -52,8 +52,8 @@
   "offline": "2026-10-22"
  },
  "core-project-record": {
-  "fingerprint": "657e53d5669e8c39",
-  "offline": "2026-10-30"
+  "fingerprint": "d5ae52157a2ec477",
+  "offline": "2026-11-08"
  },
  "core-semver": {
   "fingerprint": "a027aa2c6bc263cd",

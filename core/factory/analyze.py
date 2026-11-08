@@ -43,12 +43,14 @@ DIRS = {
                 "do odhaczania i `<moduł>.json` z pełną listą ustaleń.", True),
     "register": ("Rejestr pracy: `items.jsonl`, jedna pozycja na linię (ustalenia analizy; później zadania, pytania, "
                  "decyzje). Piszą `tf analyze` i persony; odhaczenie w raporcie zmienia status tutaj.", True),
+    "wip": ("Punkty kontrolne pracy w toku (`project_record.py wip`), zakończone w `archive/`.", True),
     "cache": ("Wyniki pośrednie i odciski analiz (po commicie). Odtwarzalne — można usunąć.", False),
     "logs": ("Logi pracy fabryki (zużycie, podpowiedzi, bramka jakości). Można usunąć.", False),
     "runs": ("Przebiegi wykonawcze trybów. Można usunąć po zakończeniu pracy.", False),
     "backup": ("Kopie plików z aktualizacji i usuwania nakładek. Można usunąć, gdy niepotrzebne.", False),
 }
 SHORT = {"reports": "raporty analiz z listą działań", "register": "rejestr pracy (ustalenia, później zadania i decyzje)",
+         "wip": "punkty kontrolne pracy w toku",
          "cache": "wyniki pośrednie, odtwarzalne", "logs": "logi pracy fabryki", "runs": "przebiegi wykonawcze",
          "backup": "kopie z aktualizacji"}
 CONFIG = "analyze:\n  top: 10\n  modules: {}\nproject_record: docs/project\n"

@@ -103,7 +103,7 @@ def hanging_git_test() -> list[str]:
         root = Path(d)
         subprocess.run(["git", "init", "-q", str(root)], capture_output=True)
         r, _ = run([".claude/hooks/project_record.py", "wip", "start", "Długie zadanie"], root, b"")
-        wip = root / "docs/project/wip/dlugie-zadanie.md"
+        wip = root / ".tf/wip/dlugie-zadanie.md"
         if not wip.exists():
             return [f"wip start: {r.stdout[-200:]!r}"]
         (root / "app.ts").write_text("x", encoding="utf-8")

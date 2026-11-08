@@ -24,7 +24,7 @@
 
 ## Kompaktowanie kontekstu
 - Przy kompaktowaniu zachowaj: listę zmienionych plików, polecenia testów i ich ostatni wynik, aktywny punkt kontrolny
-  (`docs/project/wip/`) i decyzje człowieka z tej sesji.
+  (`.tf/wip/`) i decyzje człowieka z tej sesji.
 - Koszt (skill core-cost-control): wykonawcę wybierasz najtańszym modelem, który przejdzie weryfikację (parametr `model`
   narzędzia Agent), i eskalujesz po porażce. Modelu ani effortu sesji nie zmieniasz w środku zadania, bo to kasuje cache.
 

@@ -36,7 +36,7 @@ def wip_tests() -> list[str]:
         root = Path(d)
         git_ok = subprocess.run(["git", "init", "-q", str(root)], capture_output=True).returncode == 0
         r = run(root, "wip", "start", "Logowanie przez Google", "--by", "ola")
-        wip = root / "docs/project/wip/logowanie-przez-google.md"
+        wip = root / ".tf/wip/logowanie-przez-google.md"
         if r.returncode != 0 or not wip.exists():
             fails.append(f"wip start: {r.stdout[-200:]}")
             return fails
@@ -64,7 +64,7 @@ def wip_tests() -> list[str]:
         if run(root, "--hook-stop", stdin='{"stop_hook_active": true}').stdout.strip():
             fails.append("Stop nie może blokować drugi raz (stop_hook_active)")
         r = run(root, "wip", "done", "logowanie-przez-google", "--by", "ola")
-        if r.returncode != 0 or wip.exists() or not list((root / "docs/project/archive/wip").glob("*logowanie-przez-google.md")) \
+        if r.returncode != 0 or wip.exists() or not list((root / ".tf/wip/archive").glob("*logowanie-przez-google.md")) \
                 or run(root, "--hook-stop", stdin="{}").stdout.strip():
             fails.append("wip done: plik nie trafił do archiwum albo Stop nadal przypomina")
     return fails

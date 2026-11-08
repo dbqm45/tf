@@ -111,7 +111,7 @@ def main() -> int:
         repo = make_project(t)
         r = run("init", cwd=repo)
         tfd = repo / ".tf"
-        dirs = ["reports", "register", "cache", "logs", "runs", "backup"]
+        dirs = ["reports", "register", "wip", "cache", "logs", "runs", "backup"]
         check(r.returncode == 0 and (tfd / "config.yaml").is_file()
               and all((tfd / d / "README.md").is_file() for d in dirs),
               f"A-1: init tworzy .tf/ z config.yaml i README w katalogach: {r.stdout}{r.stderr}")

@@ -77,10 +77,10 @@ Obowiązkowe sekcje (poza ADR, dziennikiem i rejestrem):
 
 W zespole persony: wykonawca pisze artefakt, jeśli brief mu go przydziela; wpisy w dzienniku i rejestrze decyzji robi orkiestrator.
 
-## Praca w toku — przerwanie sesji i powrót (`docs/project/wip/`)
+## Praca w toku — przerwanie sesji i powrót (`.tf/wip/`)
 Artefakty faz powstają na końcu fazy. Żeby dało się przerwać pracę **w dowolnym momencie** (zamknięty terminal,
 koniec limitu, kompaktowanie kontekstu, przejście na inny komputer albo do innej persony), zadanie dłuższe niż kilka
-kroków ma **punkt kontrolny**: mały plik `docs/project/wip/<nazwa>.md`.
+kroków ma **punkt kontrolny**: mały plik `.tf/wip/<nazwa>.md`.
 - **Start**: `python3 .claude/hooks/project_record.py wip start "<cel>" --by <persona>` i od razu uzupełnij
   w pliku: cel i kryterium „gotowe”, kroki, następną czynność.
 - **Po każdym zakończonym kroku** (nie na końcu sesji, bo koniec bywa nagły) krótka edycja, kilka linii:
@@ -100,7 +100,7 @@ kroków ma **punkt kontrolny**: mały plik `docs/project/wip/<nazwa>.md`.
 - **Wznowienie**: przeczytaj cały plik punktu kontrolnego, potem `git status` i `git diff`. Zmiany po ostatnim zapisie
   mogą być niedokończone, więc najpierw je oceń: dokończ, napraw albo cofnij za zgodą człowieka. Dopiero potem
   wykonaj następną czynność. Nie powtarzaj kroków odhaczonych z dowodem.
-- **Koniec**: `wip done <nazwa>` przenosi plik do `archive/wip/`. Trwałe wnioski trafiają do artefaktu fazy
+- **Koniec**: `wip done <nazwa>` przenosi plik do `.tf/wip/archive/`. Trwałe wnioski trafiają do artefaktu fazy
   (np. raport kroku w `06-delivery/`), decyzji (`decisions.md`) lub lekcji. Wstrzymanie: `wip pause <nazwa>`, blokada
   na kogoś: `wip block <nazwa>` (z adresatem w „Otwartych pytaniach”), powrót: `wip resume <nazwa>`.
 - Kilka równoległych zadań to kilka plików. W zespole persony punkt kontrolny prowadzi orkiestrator, a wykonawcy
