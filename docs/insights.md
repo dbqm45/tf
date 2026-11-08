@@ -185,6 +185,9 @@ zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różn
   breakpointy, klasy komponentów) plus szkielet scenariuszy ewaluacji do dopracowania wg core-skill-authoring. Wynik
   dotyczy rzeczy zewnętrznych, więc nie trafia do fabryki: bez `--out` narzędzie pyta o katalog docelowy, a katalog
   w repozytorium fabryki odrzuca. Oba narzędzia są tylko w fabryce, do projektów nie trafiają.
+- `python3 tools/flow_compare.py prepare|report flows.json …` — porównanie przepływów (tryb planu, talos, mode-pdi)
+  na tych samych zgłoszeniach: zanonimizowane diffy do ślepej oceny, raport z kosztem, czasem, kodem i artefaktami;
+  protokół w `docs/evals/protokol-porownania-przeplywow.md`.
 
 ## Konsultanci: jak zespoły z różnych nakładek pytają się nawzajem
 
