@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.72.0] — 2026-11-08
+### Added
+- **tools:** add flow comparison with blind review (#172)
+
 ## [5.71.0] — 2026-11-08
 ### Added
 - **core:** add artifact budget check for pull requests (#171)
