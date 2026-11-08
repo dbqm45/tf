@@ -7,7 +7,7 @@ description: Polish language editing — correctness and style checks, the polis
 content_language: pl
 language: pl           # nakładka języka — instalowana przy tym języku pracy (core config → languages)
 requires:
-  core: ">=3.0.0 <7.0.0"
+  core: ">=3.0.0 <8.0.0"
 optional_packs: [pack-docs]
 
 facets:

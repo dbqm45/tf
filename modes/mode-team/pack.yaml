@@ -7,7 +7,7 @@ title: Agent teams
 description: Agent teams on demand (/team-session) — a persona leads 3–5 teammates who message each other and share a task list; experimental Claude Code feature, opt-in.
 content_language: pl
 requires:
-  core: ">=5.0.0 <7.0.0"
+  core: ">=5.0.0 <8.0.0"
 
 facets:
   - {prefix: team-, order: 195, name: tryb zespołu, question: "jak poprowadzić pracę zespołu agentów rozmawiających ze sobą"}
