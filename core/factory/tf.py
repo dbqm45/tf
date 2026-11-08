@@ -12,6 +12,9 @@ tf — the team factory command: install, update, packs, languages, health check
   tf language <code>          # working language (conversation, documentation); pl installs pack-editorial-pl
   tf commit-language <code>   # language of commit messages, PR titles and descriptions
   tf doctor [--fix]           # check the install: core/pack versions, required packs, language pack, agents, renames
+  tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
+  tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
+                              # modular project review → .tf/reports/<module>.md with a checklist (factory/analyze.py)
   tf --repo <url>             # another factory repository (also <url>#branch-or-tag)
 
 Install the launcher once, from a factory clone or from a project that already has the factory:
@@ -257,6 +260,11 @@ def main(argv: list[str]) -> int:
         return cmd_list()
     if cmd == "doctor":
         return cmd_doctor("--fix" in rest, repo or REPO or None)
+    if cmd in ("init", "analyze"):
+        if not need_project():
+            return 2
+        sub = ["init"] if cmd == "init" else (["list"] if "--list" in rest else ["run", *rest])
+        return subprocess.run([sys.executable, str(Path("factory") / "analyze.py"), *sub]).returncode
     if cmd not in (None, "install", "update"):
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2

@@ -69,6 +69,15 @@ Poproś o źródło. Zasada fabryki to fakt z pliku, polecenia albo źródła z 
 znacznikiem [założenie]. Powtarzającą się pomyłkę zapisz w `docs/project/lessons.md`, żeby następne sesje jej
 unikały.
 
+## Co to jest `.tf/` i `tf analyze`?
+`tf init` zakłada w projekcie katalog `.tf/` — jedno miejsce na wyniki pracy fabryki: `reports/` (raporty analiz),
+`register/` (rejestr pracy), `cache/`, `logs/`, `runs/`, `backup/`; każdy katalog ma `README.md`, co w nim jest i czy
+można go usunąć. W instalacji prywatnej cały `.tf/` jest w `.git/info/exclude`, w zespołowej do `.gitignore` trafiają
+tylko katalogi odtwarzalne. `tf analyze` uruchamia moduły przeglądu (`tf analyze --list`) i dla każdego pisze
+`.tf/reports/<moduł>.md` z listą działań do odhaczania; ponowna analiza zachowuje odhaczenia i notatki, oznacza
+to, co wygląda na naprawione, i dopisuje nowe ustalenia na końcu. Na razie działają tylko skrypty (piętro 0), bez
+modelu i bez kosztu; moduły dokładają nakładki albo własny katalog `.tf/analyzers/`.
+
 ## Jak odinstalować fabrykę?
 Polecenia odinstalowania nie ma. Instalator zapisuje w `.claude/factory-manifest.json` listę wszystkich swoich
 plików (`files`). Usuń:
