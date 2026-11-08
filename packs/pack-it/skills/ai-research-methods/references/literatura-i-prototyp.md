@@ -19,6 +19,22 @@
 6. **Notatka:** jedna strona na artykuł: twierdzenie, dowód, wiarygodność (wysoka/średnia/niska) z powodem, pomysł na
    użycie.
 
+## Projekty w domenach naukowych (biologia, chemia, medycyna, materiały)
+Gdy założenia projektu zależą od wiedzy naukowej spoza informatyki (np. degradacja ogniw, interakcje leków, dane
+kliniczne), przegląd literatury i analiza danych z baz naukowych to osobny krok przed modelem:
+1. **Narzędzie:** Claude Science (aplikacja desktopowa Anthropic, publiczna beta; literatura i ponad 60 baz
+   naukowych, odtwarzalne notatniki, recenzent cytowań i liczb w tle — strona produktu claude.com/product/claude-science,
+   dostęp 2026-11-08) prowadzi człowiek; agent fabryki nie ma do niego dostępu programowego. Bez niego: wyszukiwanie
+   wg **core-source-research** i bazy dziedzinowe przez ich API.
+2. **Do repozytorium wraca zapis dowodu, nie streszczenie rozmowy:** dla każdego ustalenia teza, źródło (DOI albo
+   adres, wersja preprintu lub artykułu, data dostępu), warunki (próba, metoda, zakres) i ścieżka do notatnika lub
+   skryptu, który odtwarza liczbę. Notatnik i dane pośrednie trafiają obok (np. katalog badań w dzienniku projektu, docs/project/02-domain/badania/),
+   duże dane — tylko opis, skąd je pobrać.
+3. **Sprawdzenie przed użyciem w projekcie:** liczby i daty w zapisie przez
+   `python3 .claude/skills/core-grounding/scripts/claims_check.py`, odwołania przez `grounding_check.py`; ustalenie
+   bez odtwarzalnego źródła ma status [niezweryfikowane] i nie wchodzi do wymagań ani do cech modelu.
+4. Decyzje medyczne, prawne i bezpieczeństwa z takich ustaleń zatwierdza ekspert dziedzinowy, nie agent.
+
 ## Z artykułu do prototypu produktowego
 1. Zacznij od decyzji produktowej i metryki zgodnej z nią, nie od metody.
 2. Porównaj metodę z baseline na **własnych** danych z podziałem odpowiadającym użyciu (czasowy/grupowy).
