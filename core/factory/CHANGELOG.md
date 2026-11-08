@@ -3,6 +3,12 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [6.0.0] — 2026-11-08
+### Breaking
+- **core:** overwrite factory files on update like node_modules (#178)
+### Fixed
+- **packs:** accept core 6.x in all packs and modes (#179)
+
 ## [5.74.0] — 2026-11-08
 ### Added
 - **pack-it:** add security and architecture analyzers for tf analyze (#177)
