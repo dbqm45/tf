@@ -25,8 +25,8 @@ in `.claude/factory-manifest.json`. Relative paths are resolved from the current
 The update runs the installer of the NEW version (`core/factory/install.py` in the source) — use only a source you trust.
 
 What an update does: see `python3 <source>/core/factory/install.py --help` (manifest description). Your own skills,
-personas, roles and traits stay; factory files you changed stay too — the new version lands next to them as
-`*.factory-new`.
+personas, roles and traits stay; factory files changed in the project are overwritten (like node_modules — make
+changes in the factory repository); your settings in `factory/config.yaml` stay and new keys are appended.
 """
 from __future__ import annotations
 
@@ -667,10 +667,9 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
                   "(`python3 factory/update.py`) after reading the „Breaking” section.", ""]
     fresh = _factory_new(root, man.get("files", {}))
     if fresh:
-        lines += ["## Files changed in the project", "",
-                  "These factory files were changed locally, so they were left as they are; their new version is not "
-                  "in this PR. Merge by hand: `python3 factory/update.py` run locally puts it next to them as "
-                  "`*.factory-new`.", ""]
+        lines += ["## Leftover `*.factory-new` files", "",
+                  "Earlier factory versions left a new version next to files changed in the project. Updates now "
+                  "overwrite factory files (like node_modules), so these copies can be deleted:", ""]
         lines += [f"- `{f[:-len('.factory-new')]}`" for f in fresh] + [""]
     if workflows:
         lines += ["## Workflows to carry over by hand", "",

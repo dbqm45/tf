@@ -8,7 +8,7 @@ zapamiętane w manifeście; człowiek kiedyś zmienił w swoim projekcie skill f
 1. `python3 factory/update.py --check` — wersja zainstalowana i dostępna, sekcja „Co nowego”. Nic nie zmienia.
 2. Streszczenie po polsku; zmiany w hookach i uprawnieniach osobno.
 3. `python3 factory/update.py --dry-run` → plan i pytanie o zgodę. Czekasz na „tak”.
-4. `python3 factory/update.py --yes`, potem `diff -u` dla każdego `*.factory-new` i propozycja scalenia.
+4. `python3 factory/update.py --yes`; lista plików fabryki nadpisanych mimo zmian w projekcie (zmiana → PR do repo fabryki).
 5. Kontrola: wynik testów z `update.py`, `python3 factory/build.py check` (projekt ma własną personę), raport.
 
 **Wynik (raport dla człowieka):**
@@ -16,8 +16,8 @@ zapamiętane w manifeście; człowiek kiedyś zmienił w swoim projekcie skill f
 Aktualizacja fabryki: 2.3.1 → 2.4.0
 Nowe: skill X, persona Y (szczegóły w „Co nowego”).
 Zabezpieczenia: nowy hook Z w .claude/hooks/ — scalony za Twoją zgodą.
-Scalone: .claude/skills/core-git-workflow/SKILL.md — Twoja sekcja o nazwach gałęzi
-  zachowana, nowa treść fabryki dodana; plik *.factory-new usunięty.
+Nadpisane: .claude/skills/core-git-workflow/SKILL.md — Twoja sekcja o nazwach gałęzi
+  zastąpiona wersją fabryki; jeśli jest potrzebna, dodaj ją w repo fabryki i zaktualizuj.
 Kontrola: testy z update.py przeszły, build.py check bez błędów.
 Kopie nadpisanych plików: .claude/factory-backup/<data>/
 Uruchom ponownie Claude Code, żeby wczytał nowe skille i agentów.
@@ -63,7 +63,7 @@ nie istnieje.
    przypięte do tagu: `--source https://…/fabryka-zespolu.git#v1.4.0`. Gałąź bez tagu to źródło ruchome — w raporcie
    ostrzegasz, że kolejne aktualizacje mogą przynieść niesprawdzone zmiany.
 3. Aktualizacja = osobny PR w każdym repo: wynik `update.py --check` (co nowego, zmiany hooków osobno), `--dry-run`,
-   scalone `*.factory-new`, wynik testów; przegląd jak zwykłego kodu.
+   nadpisane pliki, wynik testów; przegląd jak zwykłego kodu.
 4. Własna persona z jednego repo trafia do forka jako zmiana z przeglądem, a nie zostaje lokalną kopią.
 5. Rejestr pakietów lub własne narzędzie dystrybucji dopiero, gdy odbiorcy są poza wspólnym hostingiem git.
 

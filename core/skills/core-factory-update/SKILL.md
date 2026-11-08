@@ -1,9 +1,9 @@
 ---
 name: core-factory-update
-description: Użyj na polecenie człowieka przy aktualizacji fabryki (rdzeń + nakładki) — tf update, nakładki i języki, omówienie zmian, scalenie *.factory-new.
+description: Użyj na polecenie człowieka przy aktualizacji fabryki (rdzeń + nakładki) — tf update, nakładki i języki, omówienie zmian, nadpisane pliki fabryki.
 metadata:
   przeglad: "2027-10-17"
-  katalog: "Użyj tylko na polecenie człowieka (`/core-factory-update`) — sprawdzenie i instalacja nowej wersji fabryki (rdzeń + nakładki) w projekcie poleceniem tf lub factory/update.py, dodanie i usunięcie nakładki, zmiana języka pracy i commitów, tf doctor, omówienie zmian, scalenie plików *.factory-new z własnymi zmianami, kontrola po aktualizacji. Nie do tworzenia własnych skilli (`factory/build.py new-skill`) ani aktualizacji zależności projektu."
+  katalog: "Użyj tylko na polecenie człowieka (`/core-factory-update`) — sprawdzenie i instalacja nowej wersji fabryki (rdzeń + nakładki) w projekcie poleceniem tf lub factory/update.py, dodanie i usunięcie nakładki, zmiana języka pracy i commitów, tf doctor, omówienie zmian, nadpisane pliki fabryki i nowe klucze konfiguracji, kontrola po aktualizacji. Nie do tworzenia własnych skilli (`factory/build.py new-skill`) ani aktualizacji zależności projektu."
 argument-hint: "[źródło: katalog | plik .zip | URL repozytorium git]"
 disable-model-invocation: true
 ---
@@ -44,12 +44,14 @@ człowieka, z planem (`--dry-run`) przed zmianą.
    to zmiany zabezpieczeń.
 3. **Pokaż plan:** `python3 factory/update.py --dry-run` i zapytaj o zgodę. Bez wyraźnego „tak” nic nie zmieniasz.
 4. **Zastosuj:** `python3 factory/update.py --yes`.
-5. **Pliki `*.factory-new`** (człowiek zmienił plik fabryki, nowa wersja leży obok): dla każdego pokaż różnice
-   (`diff -u plik plik.factory-new`), zaproponuj scalenie zachowujące zmiany człowieka i nowe treści fabryki; po zgodzie
-   zapisz wynik i usuń `*.factory-new`. Pliki w `.claude/hooks/` i `.claude/settings*.json` scalasz tylko za zgodą.
+5. **Pliki fabryki zmienione w projekcie** są przy aktualizacji nadpisywane wersją fabryki (jak `node_modules`) —
+   instalator je wymienia. Powiedz o nich człowiekowi: zmiana, która jest potrzebna, idzie do repo fabryki (PR tam),
+   a potem do projektu aktualizacją. Nowe klucze `factory/config.yaml` instalator dopisuje na końcu pliku (ustawienia
+   projektu zostają) — pokaż je. Stare pliki `*.factory-new` z wcześniejszych wersji można usunąć.
 6. **Kontrola:** wynik testów z `update.py`, `tf doctor` (bez `--fix`; naprawa za zgodą); jeśli są własne persony
    lub role — `python3 factory/build.py check`.
-7. **Raport:** wersja przed i po, nakładki, nowe skille i persony, pliki scalone, ewentualne problemy. Przypomnij o ponownym
+7. **Raport:** wersja przed i po, nakładki, nowe skille i persony, nadpisane pliki i nowe klucze konfiguracji,
+   ewentualne problemy. Przypomnij o ponownym
    uruchomieniu Claude Code, żeby wczytał nowe skille i agentów.
 
 ## Automatyczne aktualizacje (PATCH/MINOR)
@@ -60,7 +62,7 @@ człowieka, z planem (`--dry-run`) przed zmianą.
   następnej sesji; historia: `.claude/logs/update.jsonl`.
 - **Tryb zespołowy:** `--auto on` wstawia `.github/workflows/team-factory-update.yml` (co tydzień `update.py --ci`:
   testy i `build.py check`, PR tylko na zielono). Wymaga ustawienia repo „Allow GitHub Actions to create and approve
-  pull requests”. W PR od automatu: pliki z sekcji „Pliki zmienione w projekcie” i zmiany workflow scalasz jak w kroku 5.
+  pull requests”. W PR od automatu zmiany workflow przenosisz ręcznie (sekcja w opisie PR).
 - **Cofnięcie:** `python3 factory/update.py --rollback` (ostatnia z 3 kopii w `.claude/factory-backup/`) — na prośbę
   człowieka.
 
@@ -71,12 +73,15 @@ człowieka, z planem (`--dry-run`) przed zmianą.
 - Włączona piaskownica Bash zabrania zapisu w `.claude/` — `update.py` zgłasza to przed startem; aktualizację
   i `--rollback` uruchamia wtedy człowiek w terminalu (core-agent-security, references §4a).
 - Własne skille, persony i role człowieka nie są częścią aktualizacji — nie zmieniasz ich.
+- Plików fabryki w projekcie nie zmieniasz (skille, agenci, hooki, silnik `factory/`) — aktualizacja i tak je nadpisze;
+  zmianę proponujesz w repo fabryki.
 
 ## Przykład
 **Sytuacja:** `/core-factory-update`; źródło jest w manifeście, człowiek zmienił kiedyś skill fabryki `core-git-workflow`.
 
 **Wynik:** `update.py --check` → streszczenie „Co nowego” (hooki osobno) → `--dry-run` i zgoda → `--yes` →
-`diff -u` dla `core-git-workflow/SKILL.md.factory-new`, scalenie zachowujące sekcję człowieka, usunięcie
-`*.factory-new` → raport: wersja przed i po, scalone pliki, wynik testów, przypomnienie o ponownym uruchomieniu.
+informacja: `core-git-workflow/SKILL.md` nadpisany wersją fabryki; jeśli zmiana jest potrzebna — PR do repo fabryki
+→ raport: wersja przed i po, nadpisane pliki, nowe klucze konfiguracji, wynik testów, przypomnienie o ponownym
+uruchomieniu.
 
 Więcej przykładów: `references/przyklady.md`.
