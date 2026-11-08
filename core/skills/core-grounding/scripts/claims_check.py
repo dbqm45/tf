@@ -11,8 +11,8 @@ Sprawdza:
   „zmierzono”, „uruchomiono”),
 - ostrzeżenie: liczbę z jednostką (%, pp, USD, zł, EUR, ms, s, min, h, GB, MB, razy) w linii tekstu bez śladu
   pochodzenia w tej samej linii — `polecenie` albo `ścieżka`, link, adres URL, plik:linia, „źródło”, „wg”/„według”,
-  [założenie], [niezweryfikowane], przypis [^n]; dokument z deklaracją źródła danych (linia „Pliki:”, „Dane:”,
-  „Źródło danych:” albo „Surowe wyniki:” ze `ścieżką`) ma ją dla wszystkich liczb.
+  [założenie], [niezweryfikowane], przypis [^n]; dokument z deklaracją źródła danych („Pliki:”, „Dane:”,
+  „Źródło danych:” albo „surowe wyniki w” zaraz przed `ścieżką`, także w środku zdania) ma ją dla wszystkich liczb.
 Pomija bloki kodu, nagłówki i — dla ostrzeżeń — wiersze tabel (źródło tabeli stoi zwykle nad nią).
 Pierwsza linia wyniku: „Werdykt: OK | OSTRZEŻENIA | BŁĘDY”. Kod wyjścia: 1 przy błędach (z --strict także przy
 ostrzeżeniach), inaczej 0.
@@ -30,7 +30,7 @@ DATE = re.compile(r"(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)")
 STATE_WORDS = re.compile(r"stan na|dostęp|pobran\w*|zmierzon\w*|uruchomion\w*|sprawdzon\w*", re.I)
 CLAIM = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)?\s*(%|pp\b|p\.p\.|USD\b|zł\b|PLN\b|EUR\b|ms\b|s\b|min\b|h\b|GB\b|MB\b"
                    r"|razy\b|×)", re.I)
-DOC_SOURCE = re.compile(r"^\s*[-*]?\s*\**\s*(pliki|dane|źródło danych|surowe wyniki)\s*\**\s*:.*`[^`]+`", re.I | re.M)
+DOC_SOURCE = re.compile(r"(?<![\w])(pliki|dane|źródło danych|surowe wyniki(?: w)?)\s*\**\s*:?\s*\**\s*`[^`]+`", re.I)
 SOURCE = re.compile(r"`[^`]+`|https?://|\]\([^)]+\)|\b[\w./-]+\.\w+:\d+|źródł\w*|\bwg\b|według|\[założenie\]"
                     r"|\[niezweryfikowane\]|\[\^[^\]]+\]", re.I)
 

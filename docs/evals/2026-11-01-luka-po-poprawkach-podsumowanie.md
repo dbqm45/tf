@@ -1,5 +1,7 @@
 # Luka „strojenie − holdout” po poprawkach `slowa` (2026-11-01, Haiku)
 
+Pliki: raport z runnera `2026-11-01-luka-po-poprawkach.md`, surowe wyniki w `2026-11-01-luka-po-poprawkach.jsonl`.
+
 Powtórzenie pomiaru `2026-11-01-luka-strojenie-holdout-podsumowanie.md` z tymi samymi ustawieniami po PR z nowymi
 scenariuszami strojenia `gen-*` i dopisanymi `slowa` dla 5 skilli (`core-delivery-lifecycle`, `eng-testing`,
 `core-agent-security`, `sec-llm-security`, `core-grounding`).
