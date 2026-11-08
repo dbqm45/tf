@@ -19,7 +19,7 @@ Zabezpieczenia: nowy hook Z w .claude/hooks/ — scalony za Twoją zgodą.
 Nadpisane: .claude/skills/core-git-workflow/SKILL.md — Twoja sekcja o nazwach gałęzi
   zastąpiona wersją fabryki; jeśli jest potrzebna, dodaj ją w repo fabryki i zaktualizuj.
 Kontrola: testy z update.py przeszły, build.py check bez błędów.
-Kopie nadpisanych plików: .claude/factory-backup/<data>/
+Kopie nadpisanych plików: .tf/backup/<data>/
 Uruchom ponownie Claude Code, żeby wczytał nowe skille i agentów.
 ```
 (Nazwy X, Y, Z i numery wersji pochodzą z wyniku `--check` — tu są tylko ilustracją.)

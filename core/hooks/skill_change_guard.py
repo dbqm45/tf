@@ -32,7 +32,7 @@ def root_of(data: dict) -> Path:
 
 
 def state_path(root: Path) -> Path:
-    return root / ".claude" / "logs" / "skill-changes.json"
+    return root / ".tf" / "logs" / "skill-changes.json"
 
 
 def load_state(root: Path) -> dict:

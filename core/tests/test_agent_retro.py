@@ -32,7 +32,7 @@ def commit(root: Path, files: dict[str, str], msg: str, date: str) -> None:
 
 
 def make(root: Path, with_git: bool = True) -> None:
-    logs = root / ".claude" / "logs"
+    logs = root / ".tf" / "logs"
     jl(logs / "usage.jsonl", [
         {"ts": "2026-10-01T10:00:00+00:00", "session": "s0", "agent": "main", "output": 999999, "requests": 9,
          "cache_read": 1, "models": {"claude-opus": 999999}, "skills": [], "tier_feedback": None},

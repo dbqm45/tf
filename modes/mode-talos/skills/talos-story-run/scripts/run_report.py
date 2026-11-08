@@ -7,10 +7,10 @@ Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): ka
   python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
   python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
-`start` zakłada `tmp/talos/runs/<RRRR-MM-DD>-<slug>/` (ignorowany przez git, PRB-32: ścieżka poza listą chronionych
+`start` zakłada `.tf/runs/talos/<RRRR-MM-DD>-<slug>/` (ignorowany przez git, PRB-32: ścieżka poza listą chronionych
 w code.claude.com/docs/en/permission-modes; `.claude/runs/` jest w `.claude/` i pisanie do niej Claude Code odmawia
 w `--print --permission-mode acceptEdits` nawet z `permissions.allow`): run.json (czas startu), story.md, plan.md,
-parked.md. `status` i `finish` czytają też katalogi zostawione w `.claude/runs/` (wznawianie starych przebiegów).
+parked.md.
 Z `--task` story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
 zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`); z `--task` w dwóch
 planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish` zapisuje wtedy też kopię raportu
@@ -48,10 +48,7 @@ except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
     sys.path.insert(0, str(ROOT / "factory" / "_vendor"))
     import yaml
 
-RUNS = Path("tmp") / "talos" / "runs"
-# Stary katalog sprzed PRB-32 — nowych przebiegów tam nie zakładamy (ścieżka chroniona w code.claude.com
-# /docs/en/permission-modes), ale `status`/`finish` z jawną ścieżką nadal go odczytują dla wznawiania.
-LEGACY_RUNS = Path(".claude") / "runs"
+RUNS = Path(".tf") / "runs" / "talos"   # wyniki pracy fabryki w .tf/ (poza .claude/ — ścieżką chronioną, PRB-32)
 CHANGES = Path("docs") / "project" / "changes"
 EMPTY_CELL = ("", "—", "-", "–")
 KEYS = ("input", "output", "cache_read", "cache_write_5m", "cache_write_1h")
@@ -236,7 +233,7 @@ def plan_progress(run_dir: Path, commits: int | None = None) -> dict:
 
 
 def parked_items(run_dir: Path) -> list[str]:
-    """Pozycje z parked.md (bez wiersza formatu). Plik leży w `tmp/talos/runs/` poza gitem — do repo trafiają w raporcie."""
+    """Pozycje z parked.md (bez wiersza formatu). Plik leży w `.tf/runs/talos/` poza gitem — do repo trafiają w raporcie."""
     text = (run_dir / "parked.md").read_text(encoding="utf-8") if (run_dir / "parked.md").exists() else ""
     return [ln for ln in text.splitlines() if ln.startswith("- ") and not ln.startswith("- <")]
 
@@ -406,7 +403,7 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         print(f"✗ Przebieg już istnieje: {run_dir} — dokończ go albo nadaj inny tytuł.")
         return 2
     run_dir.mkdir(parents=True)
-    # PRB-32: w klonie produktu `tmp/talos/runs/` często nie jest jeszcze w .gitignore (fabryka 5.58.5 dodaje go
+    # PRB-32: w klonie produktu `.tf/runs/talos/` często nie jest jeszcze w .gitignore (fabryka 5.58.5 dodaje go
     # do szablonu, ale starsze klony — np. sdlc-proba — tego nie mają). Bez tego pierwszy `start` zostawiłby
     # „?? tmp/” w statusie i hook „czyste drzewo robocze” (SKILL §0.1) padłby na kolejnym cięciu. Zakładamy
     # lokalny `.gitignore` z `*` — tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.

@@ -12,7 +12,7 @@ Działa tylko z konfiguracją projektu `.claude/quality-gate.json` (fabryka nie 
 Polecenie biegnie tylko, gdy zmienił się kod w `watch` względem HEAD (odcisk diffu i nowych plików); po zielonym
 przebiegu ten sam odcisk nie uruchamia testów drugi raz. Świadomie czerwona partia (TDD, test przed kodem): plik
 `.claude/quality-gate.expected-red` z powodem — bramka przepuszcza; usuń go po partii. `QG_GATE_DISABLE=1` wyłącza
-bramkę (np. w `.claude/settings.local.json`). Stan: `.claude/logs/quality-gate.json`. Tylko biblioteka standardowa.
+bramkę (np. w `.claude/settings.local.json`). Stan: `.tf/logs/quality-gate.json`. Tylko biblioteka standardowa.
 """
 from __future__ import annotations
 
@@ -104,7 +104,7 @@ def decide(root: Path, data: dict) -> dict | None:
     fp = fingerprint(root, list(cfg.get("watch") or []))
     if fp is None:
         return None
-    state_path = root / ".claude" / "logs" / "quality-gate.json"
+    state_path = root / ".tf" / "logs" / "quality-gate.json"
     state = load_state(state_path)
     if state.get("green") == fp:
         return None

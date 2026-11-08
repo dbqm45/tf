@@ -71,7 +71,7 @@ def main() -> int:
             return 0
         level = 2 if tokens >= warn_k * 1500 else 1 if tokens >= warn_k * 1000 else 0
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or ".")
-        state_p = root / ".claude" / "logs" / "context-guard.json"
+        state_p = root / ".tf" / "logs" / "context-guard.json"
         state = json.loads(state_p.read_text(encoding="utf-8")) if state_p.exists() else {}
         session = str(data.get("session_id") or "?")
         last = int(state.get(session, 0))

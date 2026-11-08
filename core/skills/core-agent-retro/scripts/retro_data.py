@@ -15,8 +15,8 @@ Propozycje z danych mają jawne progi: tier ≥2 sygnały, przeoczony skill ≥2
 powtórka pułapki lub poprawki → kandydat na regułę w CLAUDE.md.
 
 Źródła (brak źródła → wpis w „missing”, nie błąd):
-- .claude/logs/usage.jsonl (hook log_usage): tokeny, modele, skille i sygnał „Tier: za niski/za wysoki” per agent,
-- .claude/logs/skill-hints.jsonl (hook skill_hint): podpowiedzi vs skille faktycznie użyte w sesji,
+- .tf/logs/usage.jsonl (hook log_usage): tokeny, modele, skille i sygnał „Tier: za niski/za wysoki” per agent,
+- .tf/logs/skill-hints.jsonl (hook skill_hint): podpowiedzi vs skille faktycznie użyte w sesji,
 - docs/project/journal.md: wpisy z okna, wyróżnione te z sygnałem problemu,
 - docs/project/wip/*.md i archive/wip/*.md: sekcje „Pułapki i ślepe uliczki” punktów kontrolnych z okna,
 - docs/project/lessons.md: istniejące reguły (powtórka → propozycja do CLAUDE.md),
@@ -160,7 +160,7 @@ def git_data(root: Path, since: dt.date, until: dt.date) -> dict | None:
 
 
 def collect(root: Path, since: dt.date, until: dt.date) -> dict:
-    logs, proj = root / ".claude" / "logs", root / "docs" / "project"
+    logs, proj = root / ".tf" / "logs", root / "docs" / "project"
     data: dict = {"window": {"since": since.isoformat(), "until": until.isoformat()}, "missing": []}
     usage = read_jsonl(logs / "usage.jsonl", since, until) if (logs / "usage.jsonl").is_file() else None
     if usage is None:

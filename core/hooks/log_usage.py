@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-SubagentStop / SessionEnd: zapisuje zużycie tokenów per agent i model oraz użyte skille do .claude/logs/usage.jsonl.
-PostToolUse narzędzia Agent (dawniej Task): wpis delegowania do .claude/logs/delegation.jsonl — wykonawca, model,
+SubagentStop / SessionEnd: zapisuje zużycie tokenów per agent i model oraz użyte skille do .tf/logs/usage.jsonl.
+PostToolUse narzędzia Agent (dawniej Task): wpis delegowania do .tf/logs/delegation.jsonl — wykonawca, model,
 klasa zadania z linii „Klasa: …” briefu, długość briefu i raportu; agent_id łączy go z wpisem w usage.jsonl.
 Raport: python3 factory/cost_report.py [--delegation]
 """
@@ -71,7 +71,7 @@ def delegation_record(data: dict) -> dict:
 
 
 def log_dir_for(data: dict) -> Path:
-    d = Path(os.environ.get("CLAUDE_PROJECT_DIR", data.get("cwd", "."))) / ".claude" / "logs"
+    d = Path(os.environ.get("CLAUDE_PROJECT_DIR", data.get("cwd", "."))) / ".tf" / "logs"
     d.mkdir(parents=True, exist_ok=True)
     return d
 

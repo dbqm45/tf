@@ -50,9 +50,10 @@ def main() -> int:
         repo = Path(d) / "repo"
         repo.mkdir()
         git(repo, "init", "-q")
-        (repo / ".claude" / "logs").mkdir(parents=True)
+        (repo / ".tf" / "logs").mkdir(parents=True)
+        (repo / ".claude").mkdir()
         (repo / ".claude" / "settings.json").write_text(json.dumps({"hooks": {"SessionEnd": []}}), encoding="utf-8")
-        log = repo / ".claude" / "logs" / "skill-hints.jsonl"
+        log = repo / ".tf" / "logs" / "skill-hints.jsonl"
         log.write_text(json.dumps({"ts": "2026-10-18T10:00:00+00:00"}) + "\n", encoding="utf-8")
         commit(repo, "a", "2026-10-18T10:30:00+00:00")           # w ciągu godziny od logu — w porządku
 
@@ -77,7 +78,7 @@ def main() -> int:
 
         # jev.jsonl (pisany też przez testy) nie liczy się jako ślad hooków
         log.unlink()
-        (repo / ".claude" / "logs" / "jev.jsonl").write_text(json.dumps({"ts": "2026-10-18T15:00:00"}) + "\n")
+        (repo / ".tf" / "logs" / "jev.jsonl").write_text(json.dumps({"ts": "2026-10-18T15:00:00"}) + "\n")
         s = json.loads(run("--root", str(repo), "--json").stdout)
         check(s["active"] is False and s["last_log"] is None and s["after_commits"] == 3, f"H4 bez logów hooków: {s}")
 

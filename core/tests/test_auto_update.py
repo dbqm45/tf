@@ -123,7 +123,7 @@ def backup_rollback_tests(up, check) -> None:
         old_man = manifest(p)
         bdir = up.backup(p)
         meta = json.loads((bdir / "backup.json").read_text()) if (bdir / "backup.json").is_file() else {}
-        check(bdir.parent == p / ".claude" / "factory-backup" and meta.get("version") == "2.0.0"
+        check(bdir.parent == p / ".tf" / "backup" and meta.get("version") == "2.0.0"
               and (bdir / ".claude" / "hooks" / "a.py").read_text() == "a1"
               and (bdir / ".claude" / "settings.local.json").is_file(),
               f"AB-1: kopia plików fabryki, ustawień i manifestu z backup.json: {bdir} {meta}")
@@ -153,11 +153,11 @@ def backup_rollback_tests(up, check) -> None:
               "AB-4: rollback usuwa nowe .factory-new, zostawia te sprzed aktualizacji")
         check("2.0.0" in msg and "2.1.0" in msg, f"AB-5: komunikat rollbacku podaje wersje: {msg}")
 
-        other = p / ".claude" / "factory-backup" / "20200101-000000"      # kopia usuniętych plików z install.py
+        other = p / ".tf" / "backup" / "20200101-000000"      # kopia usuniętych plików z install.py
         other.mkdir()
         for i in range(4):
             up.backup(p, now=1_700_000_000 + i)
-        kept = [b for b in (p / ".claude" / "factory-backup").iterdir() if (b / "backup.json").is_file()]
+        kept = [b for b in (p / ".tf" / "backup").iterdir() if (b / "backup.json").is_file()]
         check(len(kept) == 3 and other.exists(), f"AB-6: zostają 3 ostatnie kopie, inne katalogi nietknięte: {kept}")
 
         empty = installed(base, "bez-kopii", {"factory/x.py": "x"})
@@ -247,7 +247,7 @@ def auto_project(base: Path, name: str, src: str, on: bool = True) -> Path:
 
 
 def log(p: Path) -> list[dict]:
-    f = p / ".claude" / "logs" / "update.jsonl"
+    f = p / ".tf" / "logs" / "update.jsonl"
     return [json.loads(x) for x in f.read_text().splitlines() if x.strip()] if f.is_file() else []
 
 
@@ -263,7 +263,7 @@ def auto_run_tests(up, check) -> None:
               and (p / ".claude" / "hooks" / "f.py").read_text() == "2.1.0",
               f"AA-1: automat instaluje najwyższe PATCH/MINOR, MAJOR tylko zgłasza: {r}")
         check([e.get("status") for e in log(p)] == ["installed"] and manifest(p).get("auto_update") is True
-              and any((b / "backup.json").is_file() for b in (p / ".claude" / "factory-backup").glob("*")),
+              and any((b / "backup.json").is_file() for b in (p / ".tf" / "backup").glob("*")),
               f"AA-2: wpis w update.jsonl, flaga zachowana, kopia przed instalacją: {log(p)}")
         msgs = "\n".join(up.pending_messages(p))
         check("2.0.0 → 2.1.0" in msgs and "zmiana w 2.1.0" in msgs and "3.0.0" in msgs,
@@ -273,8 +273,8 @@ def auto_run_tests(up, check) -> None:
         off = auto_project(base, "wylaczony", src, on=False)
         check(up.auto_run(off, env=env).get("status") == "off", "AA-5: bez --auto on automat nic nie robi")
         locked = auto_project(base, "zablokowany", src)
-        (locked / ".claude" / "logs").mkdir(parents=True)
-        (locked / ".claude" / "logs" / "update.lock").write_text("123")
+        (locked / ".tf" / "logs").mkdir(parents=True)
+        (locked / ".tf" / "logs" / "update.lock").write_text("123")
         check(up.auto_run(locked, env=env).get("status") == "locked" and manifest(locked)["version"] == "2.0.0",
               "AA-6: świeża blokada (trwa inna instalacja) → nic nie robi")
 
@@ -296,7 +296,7 @@ def auto_run_tests(up, check) -> None:
         p = auto_project(base, "audyt", src)
         r = up.auto_run(p, env=env)
         check(r.get("status") == "audit_blocked" and "curl-pipe-shell" in str(r.get("findings"))
-              and manifest(p)["version"] == "2.0.0" and not (p / ".claude" / "factory-backup").exists(),
+              and manifest(p)["version"] == "2.0.0" and not (p / ".tf" / "backup").exists(),
               f"AA-10: ustalenie wysokiej wagi w audycie → stop bez zmian: {r}")
 
         src = factory_repo(base, "fab-moje", [("2.0.1", PASS, False)])
@@ -333,8 +333,8 @@ def start_tests(up, check) -> None:
         man["mode"] = "shared"
         (shared / ".claude" / "factory-manifest.json").write_text(json.dumps(man))
         locked = auto_project(base, "blok", src)
-        (locked / ".claude" / "logs").mkdir(parents=True)
-        (locked / ".claude" / "logs" / "update.lock").write_text("1")
+        (locked / ".tf" / "logs").mkdir(parents=True)
+        (locked / ".tf" / "logs" / "update.lock").write_text("1")
         for name, proj, e in (("wyłączony", off, env), ("zespołowy (robi to CI)", shared, env),
                               ("trwa instalacja", locked, env), ("CTF_UPDATE_CHECK=0", p, {**env, "CTF_UPDATE_CHECK": "0"})):
             n = len(calls)
@@ -361,7 +361,7 @@ def start_tests(up, check) -> None:
         check("2.0.0 → 2.0.1" in r.stdout, f"AN-7: hook pokazuje wynik automatu z poprzedniej sesji: {r.stdout[-300:]}")
 
 
-CI_IGNORE = ".claude/factory-manifest.json\n.claude/factory-backup/\n.claude/logs/\n*.factory-new\n"
+CI_IGNORE = ".claude/factory-manifest.json\n.tf/backup/\n.tf/logs/\n*.factory-new\n"
 
 
 def ci_project(base: Path, name: str, workflow: bool = False) -> Path:
@@ -388,7 +388,7 @@ def run_ci(p: Path, src: str) -> tuple[subprocess.CompletedProcess, str, str]:
     r = subprocess.run([sys.executable, str(p / "factory" / "update.py"), "--ci", "--source", src], cwd=p,
                        capture_output=True, text=True,
                        env={"PATH": os.environ.get("PATH", ""), "HOME": str(p.parent), "GITHUB_OUTPUT": str(out)})
-    body = p / ".claude" / "logs" / "update-pr.md"
+    body = p / ".tf" / "logs" / "update-pr.md"
     return r, out.read_text(), body.read_text(encoding="utf-8") if body.is_file() else ""
 
 

@@ -427,7 +427,7 @@ def changed_files(root: Path) -> list[str] | None:
     files = []
     for line in out.splitlines():
         path = line[3:].split(" -> ")[-1].strip().strip('"')
-        if path and not path.startswith(("docs/project/wip/", ".claude/logs/")) and \
+        if path and not path.startswith(("docs/project/wip/", ".tf/")) and \
                 path not in ("docs/project/README.md", "docs/project/journal.md"):
             files.append(path)
     return files

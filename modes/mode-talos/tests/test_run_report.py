@@ -81,37 +81,36 @@ def main() -> int:
         proj, cfg = Path(t) / "proj", Path(t) / "cfg"
         proj.mkdir()
 
-        # start: katalog przebiegu w tmp/talos/runs/ (nie `.claude/runs/`, chroniony przez Claude Code —
+        # start: katalog przebiegu w .tf/runs/talos/ (nie `.claude/runs/`, chroniony przez Claude Code —
         # permission-modes 2026-11-05: writes to protected paths are never auto-approved, even with permissions.allow),
         # slug bez polskich znaków
         r = run(["start", "Import rozliczeń CDR", "--story", "Jako operator chcę importować CDR."], proj, cfg)
-        runs = sorted((proj / "tmp" / "talos" / "runs").glob("*-import-rozliczen-cdr"))
+        runs = sorted((proj / ".tf" / "runs" / "talos").glob("*-import-rozliczen-cdr"))
         check(r.returncode == 0 and len(runs) == 1 and not (proj / ".claude" / "runs").exists(),
-              f"R-1: start tworzy katalog w tmp/talos/runs/, bez .claude/runs/: {r.stdout} {r.stderr}")
+              f"R-1: start tworzy katalog w .tf/runs/talos/, bez .claude/runs/: {r.stdout} {r.stderr}")
         if runs:
             d = runs[0]
             check(all((d / f).is_file() for f in ("run.json", "story.md", "plan.md", "parked.md")),
                   f"R-2: pliki przebiegu: {sorted(x.name for x in d.iterdir())}")
             check("importować CDR" in (d / "story.md").read_text(encoding="utf-8"), "R-3: treść story zapisana")
             check(re.match(r"\d{4}-\d{2}-\d{2}-", d.name) is not None, f"R-4: data w nazwie katalogu: {d.name}")
-        # PRB-32 — klon produktu bez `tmp/talos/runs/` w .gitignore ma „?? tmp/” w statusie po pierwszym start i hook
+        # PRB-32 — klon produktu bez `.tf/runs/talos/` w .gitignore ma „?? tmp/” w statusie po pierwszym start i hook
         # „czyste drzewo robocze” Talosa (SKILL §0.1) oraz dispatch_local pdi uznają klon za brudny. Skrypt zakłada
-        # `tmp/talos/runs/.gitignore` z `*`, tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
-        gi = proj / "tmp" / "talos" / "runs" / ".gitignore"
+        # `.tf/runs/talos/.gitignore` z `*`, tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
+        gi = proj / ".tf" / "runs" / "talos" / ".gitignore"
         check(gi.is_file() and gi.read_text(encoding="utf-8").strip() == "*",
-              f"R-1a: start zakłada tmp/talos/runs/.gitignore z `*`: istnieje={gi.is_file()}, "
+              f"R-1a: start zakłada .tf/runs/talos/.gitignore z `*`: istnieje={gi.is_file()}, "
               f"treść={gi.read_text(encoding='utf-8') if gi.is_file() else '—'!r}")
         import subprocess as _sp
         _sp.run(["git", "init", "-q", "-b", "main", str(proj)], check=True, capture_output=True)
         for _k, _v in (("user.name", "t"), ("user.email", "t@t"), ("commit.gpgsign", "false")):
             _sp.run(["git", "-C", str(proj), "config", _k, _v], check=True, capture_output=True)
-        porcelain = _sp.run(["git", "-C", str(proj), "status", "--porcelain", "tmp/talos/runs/"],
+        porcelain = _sp.run(["git", "-C", str(proj), "status", "--porcelain", ".tf/runs/talos/"],
                             capture_output=True, text=True).stdout
-        check(porcelain == "", f"R-1b: po start git status pusty w tmp/talos/runs/: {porcelain!r}")
+        check(porcelain == "", f"R-1b: po start git status pusty w .tf/runs/talos/: {porcelain!r}")
 
-        # finish: transkrypty sesji i podagenta od chwili startu — status/finish czytają też katalogi w .claude/runs/
-        # (stare przebiegi sprzed przeniesienia, PRB-32, 2026-11-05: ścieżka chroniona przez Claude Code)
-        run_dir = proj / ".claude" / "runs" / "2026-10-21-test"
+        # finish: transkrypty sesji i podagenta od chwili startu (przebieg w .tf/runs/talos/)
+        run_dir = proj / ".tf" / "runs" / "talos" / "2026-10-21-test"
         run_dir.mkdir(parents=True)
         (run_dir / "run.json").write_text(json.dumps({"slug": "test", "started_at": "2026-10-21T10:00:00+00:00"}))
         (run_dir / "plan.md").write_text("# Plan\n- [x] K1 import\n- [x] K2 walidacja\n- [ ] K3 raport\n")
@@ -167,7 +166,7 @@ def main() -> int:
         (proj / "a.py").write_text("a = 1\n")
         git("add", "a.py")
         git("commit", "-q", "-m", "feat: a\n\nChange: TSK-90")
-        cut_dir = proj / "tmp" / "talos" / "runs" / "2026-10-21-cut"
+        cut_dir = proj / ".tf" / "runs" / "talos" / "2026-10-21-cut"
         cut_dir.mkdir(parents=True)
         (cut_dir / "run.json").write_text(json.dumps({"slug": "cut", "started_at": "2026-10-21T10:00:00+00:00",
                                                       "change": "CHG-90", "task": "TSK-90"}))
@@ -219,7 +218,7 @@ def main() -> int:
         (chg / "plan.md").write_text(PLAN_MD, encoding="utf-8")
         (chg / "intent.md").write_text(INTENT_MD, encoding="utf-8")
         r = run(["start", "--task", "TSK-58"], proj, cfg)
-        tr = sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))
+        tr = sorted((proj / ".tf" / "runs" / "talos").glob("*tsk-58*"))
         meta = json.loads((tr[0] / "run.json").read_text(encoding="utf-8")) if tr else {}
         story = (tr[0] / "story.md").read_text(encoding="utf-8") if tr else ""
         check(r.returncode == 0 and meta.get("change") == "CHG-12" and meta.get("task") == "TSK-58"
@@ -247,7 +246,7 @@ def main() -> int:
               f"R-33a: dwa dziennika z TSK-58 → kod 2 z listą zmian i podpowiedzią --change: {r.returncode} "
               f"{r.stdout} {r.stderr[-400:]}")
         r = run(["start", "--task", "TSK-58", "--change", "CHG-13"], proj, cfg)
-        tr13 = sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))
+        tr13 = sorted((proj / ".tf" / "runs" / "talos").glob("*tsk-58*"))
         meta13 = json.loads((tr13[-1] / "run.json").read_text(encoding="utf-8")) if tr13 else {}
         check(r.returncode == 0 and meta13.get("change") == "CHG-13",
               f"R-33b: --change CHG-13 wybiera CHG-13: {r.returncode} {r.stdout} {r.stderr} {meta13}")
@@ -257,7 +256,7 @@ def main() -> int:
         # usuwamy drugi dziennik, żeby reszta testów miała jeden wpis
         import shutil as _sh
         _sh.rmtree(chg2)
-        for leftover in sorted((proj / "tmp" / "talos" / "runs").glob("*tsk-58*"))[1:]:
+        for leftover in sorted((proj / ".tf" / "runs" / "talos").glob("*tsk-58*"))[1:]:
             _sh.rmtree(leftover)
         meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         (run_dir / "run.json").write_text(json.dumps({**meta, "change": "CHG-12", "task": "TSK-58"}), encoding="utf-8")
@@ -287,7 +286,7 @@ def main() -> int:
         # w katalogu projektu przodka, nie repozytorium — finish bez --session znajduje je i mówi, skąd wziął
         ws = Path(t) / "ws"
         repo = ws / "repo"
-        rdir = repo / ".claude" / "runs" / "2026-11-03-nested"
+        rdir = repo / ".tf" / "runs" / "talos" / "2026-11-03-nested"
         rdir.mkdir(parents=True)
         (rdir / "run.json").write_text(json.dumps({"slug": "nested", "started_at": "2026-11-03T10:00:00+00:00"}))
         (rdir / "plan.md").write_text("# Plan\n- [x] K1 lista\n")

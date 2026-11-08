@@ -5,7 +5,7 @@ Raport skuteczności podpowiedzi skilli (hook skill_hint) na prawdziwej pracy w 
   python3 factory/hint_report.py               # wszystkie sesje z logów
   python3 factory/hint_report.py --days 7      # ostatnie 7 dni
 
-Łączy dwa logi z .claude/logs/:
+Łączy dwa logi z .tf/logs/:
 - skill-hints.jsonl (hook skill_hint): co podpowiedziano przy każdym poleceniu,
 - usage.jsonl (hook log_usage): jakie skille sesja faktycznie wczytała (wątek główny i wykonawcy).
 
@@ -25,7 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LOGS = ROOT / ".claude" / "logs"
+LOGS = ROOT / ".tf" / "logs"
 
 
 def read_jsonl(path: Path, since: datetime | None) -> list[dict]:
@@ -76,7 +76,7 @@ def analyse(hints: list[dict], usage: list[dict]) -> dict:
 def render(r: dict) -> str:
     lines = [f"Sesje: {r['sessions']} · polecenia: {r['prompts']} · z podpowiedzią: {r['prompts_with_hint']}"]
     if not r["sessions"]:
-        lines.append("Brak danych: potrzebne logi .claude/logs/skill-hints.jsonl i usage.jsonl z tych samych sesji.")
+        lines.append("Brak danych: potrzebne logi .tf/logs/skill-hints.jsonl i usage.jsonl z tych samych sesji.")
         return "\n".join(lines)
     total_hit, total_ign, total_miss = sum(r["hit"].values()), sum(r["ignored"].values()), sum(r["missed"].values())
     lines.append(f"Podpowiedzi trafione: {total_hit} · zignorowane: {total_ign} · skille użyte bez podpowiedzi: {total_miss}")

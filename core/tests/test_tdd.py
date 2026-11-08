@@ -231,7 +231,7 @@ def main() -> int:
               and post_bash("ls", "p3") is None, "zmiana przez Edit (po bramce) nie jest zgłaszana jako zapis przez Bash")
         (proj / "src" / "price.ts").write_text("export const rabat = (x: number) => x * 0.6\n")
         check(post_bash("python3 gen.py", "p1", {"CLAUDE_TDD_BASH": "off"}) is None, "CLAUDE_TDD_BASH=off wyłącza kontrolę po wykonaniu")
-        state = (proj / ".claude" / "logs" / "tdd-state.json").read_text(encoding="utf-8")
+        state = (proj / ".tf" / "logs" / "tdd-state.json").read_text(encoding="utf-8")
         check("rabat" not in state and "gen.py" not in state, "stan nie zawiera treści plików ani poleceń")
 
         # 12. pętla tej samej porażki (D-013): 3× ten sam test i typ wyjątku → komunikat; zielony albo inna porażka zeruje
@@ -286,7 +286,7 @@ def main() -> int:
         (proj / ".env").write_text("API_KEY=sekret-123\n")
         out = guard("python3 fix.py", "g1")
         check(warned(out, ".env"), f"nowy plik .env → komunikat: {out}")
-        state = (proj / ".claude" / "logs" / "tdd-state.json").read_text(encoding="utf-8")
+        state = (proj / ".tf" / "logs" / "tdd-state.json").read_text(encoding="utf-8")
         check("sekret-123" not in json.dumps(out) and "sekret-123" not in state and "API_KEY" not in state,
               "komunikat i stan bez treści pliku z sekretem")
         (proj / ".claude" / "hooks" / "guard.py").write_text("x = 2  # wyłączony\n")

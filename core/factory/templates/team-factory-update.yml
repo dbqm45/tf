@@ -50,7 +50,7 @@ jobs:
           git commit -m "chore(deps): update team-factory to $VERSION"
           git push -u origin "$BRANCH"
           gh pr create --title "chore(deps): update team-factory to $VERSION" \
-            --body-file .claude/logs/update-pr.md || {
+            --body-file .tf/logs/update-pr.md || {
             echo "::error::Nie udało się otworzyć PR. Włącz w repozytorium: Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests."
             exit 1
           }

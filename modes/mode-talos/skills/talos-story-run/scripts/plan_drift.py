@@ -6,7 +6,7 @@ Zgodność zmian z planem przebiegu Talosa: pliki zmienione na gałęzi historyj
 
 Kawałek w plan.md: `- [x] K<n> — <wartość> · … · pliki: <ścieżki po przecinku> · …` (ścieżka może być katalogiem
 albo wzorcem glob). Wynik: per kawałek pliki ruszone i nietknięte, zmiany spoza planu (bez katalogu przebiegu —
-`tmp/talos/runs/` od PRB-32 i `.claude/runs/` dla starych przebiegów), pokrycie diffu planem w % i liczba
+i inne wyniki pracy fabryki w `.tf/`), pokrycie diffu planem w % i liczba
 zmienionych plików testów. Skrypt tylko raportuje (kod 0); 2 — złe wywołanie.
 """
 from __future__ import annotations
@@ -44,7 +44,7 @@ def matches(path: str, spec: str) -> bool:
     return path == spec or fnmatch.fnmatch(path, spec) or path.startswith(spec.rstrip("/") + "/")
 
 
-RUN_PREFIXES = ("tmp/talos/runs/", ".claude/runs/")   # katalog przebiegu Talosa (PRB-32: nowy i stary)
+RUN_PREFIXES = (".tf/",)   # wyniki pracy fabryki (przebiegi Talosa, raporty, logi)
 
 
 def changed_files(base: str) -> list[str]:

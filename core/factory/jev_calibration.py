@@ -133,7 +133,7 @@ def calibrate_routing(limit: int, shuffle: bool = False, target: float = 0.9) ->
         for k, picked in (("słowa", words), ("jev", jev_pick)):
             o = outcome(picked, expected)
             stats[k][o] = stats[k].get(o, 0) + 1
-    log = ROOT / ".claude" / "logs" / "jev.jsonl"
+    log = ROOT / ".tf" / "logs" / "jev.jsonl"
     if log.exists():
         for line in log.read_text(encoding="utf-8").splitlines():
             try:

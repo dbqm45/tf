@@ -68,7 +68,7 @@ Strażników (`CLAUDE_JEV_GUARD`, `CLAUDE_JEV_REPORT_CHECK`) włącz na kilka dn
 - czy blokady raportów były zasadne;
 - czy ostrzeżenia o stronach dotyczyły podejrzanej treści.
 
-Zużycie Jev trafia do `.claude/logs/jev.jsonl` (bez treści zapytań).
+Zużycie Jev trafia do `.tf/logs/jev.jsonl` (bez treści zapytań).
 
 ## Ograniczenia
 
