@@ -34,10 +34,18 @@ jobs:
         run: |
           pipx install semgrep==1.183.0
           pipx install pip-audit==2.10.1
-      # Jedno polecenie weryfikacji produktu (N3, pierwsza linia CLAUDE.md), jeśli jest — to samo co u Talosa:
-      # - run: BASE="origin/$BASE_REF" ./verify.sh
-      #   env:
-      #     BASE_REF: ${{ github.base_ref }}
+      # Jedno polecenie weryfikacji produktu (N3, pierwsza linia CLAUDE.md) — to samo co u Talosa. Obowiązkowe: pętla PR
+      # talosa (pdi N2) uznaje PR za zielony tylko z checkami CI, a ten krok uruchamia testy produktu na każdym PR kodu.
+      # Brak verify.sh to czerwony krok z poleceniem dodania, nigdy cichy PASS. Narzędzia stosu (node, uv…) ustaw wyżej.
+      - name: Weryfikacja produktu (N3)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ ! -f verify.sh ]; then
+            echo "::error::Brak ./verify.sh (N3) — skopiuj .claude/skills/talos-story-run/templates/verify.sh, wpisz komendy stosu i nazwij go w pierwszej linii CLAUDE.md"
+            exit 1
+          fi
+          BASE="origin/$BASE_REF" SCAN_OUT=reports/security-verify bash verify.sh
       # Skan przed checkoutem ci_for_sdlc: nieśledzony katalog .ci_for_sdlc nie może trafić do plików zmiany.
       - name: Skan bezpieczeństwa
         # ustalenia blokujące ocenia ci_for_sdlc (SEC-001…003), błędy skanu krok niżej

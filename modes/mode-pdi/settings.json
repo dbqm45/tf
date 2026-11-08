@@ -6,7 +6,8 @@
       "Bash(python3 .claude/skills/pdi-decisions/scripts/design_check.py *)",
       "Bash(python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py *)",
       "Bash(python3 .claude/skills/pdi-decisions/scripts/metric_watch.py *)",
-      "Bash(python3 .claude/skills/pdi-decisions/scripts/second_review.py *)"
+      "Bash(python3 .claude/skills/pdi-decisions/scripts/second_review.py *)",
+      "Bash(python3 .claude/skills/pdi-decisions/scripts/pr_loop.py *)"
     ]
   }
 }

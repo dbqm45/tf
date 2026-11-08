@@ -50,6 +50,18 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   w sidecarze (`docs/project/changes/CHG-n/.review/<phase>.json`) wchodzi w budżet fazy (`PDI_PHASE_BUDGET_USD`)
   obok kosztu persony. Druga podkomenda `comments` sprawdza uwagi recenzenta z PR (N2, A5).
 
+- **Pętla PR talosa (N2):** po fazie `delivery` w trybie lokalnym pdi prowadzi każdy PR cięcia przez rundy:
+  przegląd AI według `REVIEW.md` produktu (`pr_loop.py review`, w kontenerze fazy; bez pliku — szablon tf, a
+  `pr_loop.py scaffold` dodaje go do produktu) → walidacja uwag drugim modelem (`second_review.py comments`, N1) →
+  talos poprawia tylko potwierdzone uwagi `critical`/`important` i czerwone checki (`pr_loop.py fix`, log CI jako
+  dane cytowane) → ponowny przegląd; najwyżej 2 rundy (jak DZ6). Uwagi niepotwierdzone, przy niedostępnym drugim
+  modelu i sprzeczne z decyzją zmiany idą do człowieka jako pytania; drobne (`minor`) — jako lista w PR. **Zielone**
+  = co najmniej jeden check CI na głowie PR i wszystkie `pass`/`skipping`; dlatego `change-check.yml` ma obowiązkowy
+  krok „Weryfikacja produktu (N3)” (`./verify.sh`). PR bez checków nie jest zielony: pdi uruchamia wtedy
+  `pr_loop.py verify` w kontenerze i kończy z powodem `no_ci_checks`. Opis PR dostaje sekcję „Przewodnik
+  dokończenia” (co zrobione, co zostaje, decyzje poza planem, ryzyka), aktualizowaną po każdej rundzie. W Actions
+  (`sdlc-phase.yml`) pętli nie ma: push tokenem `github.token` nie uruchamia CI na gałęziach cięć.
+
 - **Pasma kontrolne z ShipScope (F5):** `metric_watch.py check` czyta dzienny szereg PROD z API usług ShipScope
   (rollbacki, wdrożenia nieudane, lead time, liczba wdrożeń), liczy pasma `control_band.py` i przy punkcie poza 3σ
   z ostatnich dni wysyła do pdi `metric.breached` (`--send`). Codziennie: `metric_watch.py workflow install`

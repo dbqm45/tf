@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python3 .claude/skills/talos-story-run/scripts/run_report.py *)",
       "Bash(python3 .claude/skills/talos-story-run/scripts/plan_drift.py *)",
-      "Bash(python3 .claude/skills/talos-story-run/scripts/security_scan.py *)"
+      "Bash(python3 .claude/skills/talos-story-run/scripts/security_scan.py *)",
+      "Bash(./verify.sh *)"
     ]
   }
 }
