@@ -3,6 +3,12 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.0.0] — 2026-11-08
+### Breaking
+- **core:** move the engine to .tf/factory and project config to .tf/config (#184)
+### Fixed
+- **core:** keep the incompatible-core pack test valid on every major (#185)
+
 ## [8.0.0] — 2026-11-08
 ### Breaking
 - **core:** move work-in-progress checkpoints into .tf/wip (#183)

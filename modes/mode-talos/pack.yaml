@@ -8,7 +8,7 @@ description: Talos — story to pull request on demand (`claude --agent talos` o
 content_language: pl
 default: true          # zaznaczony domyślnie w instalatorze; przy aktualizacji dochodzi raz (manifest: offered)
 requires:
-  core: ">=4.0.0 <9.0.0"   # scope-reviewer i ignorowanie .claude/runs/ są w rdzeniu od 4.0.0
+  core: ">=4.0.0 <10.0.0"   # scope-reviewer i ignorowanie .claude/runs/ są w rdzeniu od 4.0.0
 
 facets:
   - {prefix: talos-, order: 190, name: tryb Talos, question: "jak przeprowadzić historyjkę do PR automatem na żądanie"}
