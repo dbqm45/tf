@@ -55,6 +55,11 @@ REQUIRED = [
     "python3 .claude/skills/talos-story-run/scripts/security_scan.py scan --slice K1 --attempt 1",
     # skrypt pdi wywoływany na końcu fazy architecture/design (decision_record.py check — w prompcie phase_run.py)
     "python3 .claude/skills/pdi-decisions/scripts/decision_record.py check",
+    # pętla PR talosa (N2, pr_loop.py fix): poprawka uwag, weryfikacja N3 i commit z trzema -m
+    "./verify.sh",
+    "git commit -m 'fix(x): y' -m 'Runda pętli PR 1' -m 'Change: TSK-1'",
+    # kroki pętli PR w kontenerze fazy (pdi uruchamia je poza sesją persony; wpis na wypadek ręcznego użycia)
+    "python3 .claude/skills/pdi-decisions/scripts/pr_loop.py verify",
 ]
 
 
