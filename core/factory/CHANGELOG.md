@@ -3,6 +3,14 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.67.0] — 2026-11-07
+### Added
+- **tools:** add context and ui-deconstruct factory tools (#167)
+
+## [5.66.0] — 2026-11-07
+### Added
+- **pack-it:** add web application vulnerabilities skill (#164)
+
 ## [5.65.0] — 2026-11-07
 ### Added
 - **core:** allow running the team-factory workflow by hand (#163)
