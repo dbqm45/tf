@@ -80,7 +80,8 @@ Agenci wspólni, dostępni dla każdej persony:
   `python3 factory/build.py`. Pliki w `.claude/agents/_generated/` są nadpisywane przy budowie.
 - **Własny skill:** według `core-skill-authoring` (najpierw scenariusze), potem `python3 factory/skill_gate.py <skill>`.
   Skill z obcego źródła: najpierw `python3 factory/skill_audit.py <katalog>` i przeczytanie.
-- **Zmienione pliki fabryki zostają** przy aktualizacji — nowa wersja ląduje obok jako `*.factory-new`.
+- **Pliki fabryki są jak `node_modules`:** aktualizacja je nadpisuje; zmianę wprowadzasz w repo fabryki i aktualizujesz.
+  Własne pliki i ustawienia w `factory/config.yaml` zostają (nowe klucze dochodzą na końcu).
 
 ## 8. Ściąga poleceń
 | Polecenie | Co robi |

@@ -42,7 +42,8 @@ file (as it is after `factory/build.py`). The manifest stays outside git; in tea
 project, so a fresh clone without the manifest updates from it instead of skipping factory files. Thanks to them an
 update:
 - overwrites factory files you did not change and adds new ones;
-- leaves files you changed alone — the new version is written next to them as `<file>.factory-new`;
+- overwrites factory files changed in the project (like node_modules — change the factory repository instead); keeps
+  your settings in `factory/config.yaml` and appends new top-level keys from the factory version;
 - moves files removed from the factory (or from a removed pack) to `.claude/factory-backup/<date>/` (if unchanged);
 - never touches your own skills, personas, roles and traits (files the factory did not install).
 Installs of claude-team-factory or ev-team-factory are migrated: the matching packs are selected and the old
@@ -55,6 +56,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -95,6 +97,34 @@ SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
 # uruchamia je ze źródła (core/tests/).
 FACTORY_ONLY = ("tests/flow_evals/", "tests/flow_evals_runner.py", "tests/test_flow_evals.py",
                 "tests/test_export_pdi_runs.py")
+
+
+CONFIG_REL = "factory/config.yaml"
+
+
+def merge_config(mine: str, theirs: str) -> tuple[str, list[str]]:
+    """Konfiguracja projektu `mine` + klucze najwyższego poziomu z nowej wersji fabryki `theirs`, których w niej nie
+    ma — dopisane na końcu blokami tekstu z `theirs` (z komentarzami nad kluczem). Istniejących kluczy nie zmienia."""
+    def blocks(text: str) -> dict[str, str]:
+        out: dict[str, str] = {}
+        cur, pending = None, ""
+        for line in text.splitlines(keepends=True):
+            key = re.match(r"^([A-Za-z_][\w-]*)\s*:", line)
+            if key:
+                cur = key.group(1)
+                out[cur], pending = pending + line, ""
+            elif line.startswith("#") or not line.strip():
+                pending += line                       # komentarz albo pusta linia — należy do następnego klucza
+            elif cur is not None:
+                out[cur] += pending + line            # wcięta treść bieżącego klucza (z komentarzami w środku)
+                pending = ""
+        return out
+    have, new = blocks(mine), blocks(theirs)
+    added = [k for k in new if k not in have]
+    if not added:
+        return mine, []
+    tail = "".join(new[k].strip("\n") + "\n\n" for k in added)
+    return mine.rstrip("\n") + "\n\n" + tail.rstrip("\n") + "\n", added
 
 
 def load_packs_module():
@@ -208,6 +238,7 @@ class Plan:
         self.root, self.dry, self.update, self.old, self.stamp = dst_root, dry, update, old_files, stamp
         self.created, self.updated, self.conflicts, self.merged = [], [], [], []
         self.kept_new, self.backed_up, self.removed, self.kept_removed, self.skipped_deleted = [], [], [], [], []
+        self.overwritten, self.config_added = [], []
         self.files: dict[str, str] = {}          # nowy manifest: ścieżka → skrót zainstalowanej wersji fabryki
 
     def _write(self, dst: Path, data: bytes, src: Path | None) -> None:
@@ -249,9 +280,14 @@ class Plan:
         elif old_hash is not None and sha(cur) == old_hash:          # nie zmieniałeś — aktualizujemy
             self.updated.append(rel)
             self._write(dst, data, src)
-        elif old_hash is not None or (self.update and rel.startswith(USER_OWNED)):
-            self.kept_new.append(rel)                                 # Twoja zmiana zostaje, nowa wersja obok
-            self._write(dst.with_name(dst.name + ".factory-new"), data, None)
+        elif rel == CONFIG_REL and self.update:                       # konfiguracja projektu: ustawienia zostają,
+            merged, added = merge_config(cur.decode("utf-8"), data.decode("utf-8"))   # nowe klucze fabryki dochodzą
+            if added:
+                self.config_added += added
+                self._write(dst, merged.encode("utf-8"), None)
+        elif old_hash is not None:                                    # plik fabryki zmieniony w projekcie: jak
+            self.overwritten.append(rel)                              # node_modules — nadpisany wersją fabryki
+            self._write(dst, data, src)
         elif self.update and self.old is None:                        # stara instalacja bez manifestu
             self._backup(rel)
             self.updated.append(rel)
@@ -809,9 +845,10 @@ def main(argv: list[str]) -> int:
                 print(f"  … and {len(items) - 15} more")
             print(f"  {hint}")
 
-    listing("⚠ You changed these factory files — yours stay, the new version is next to them as *.factory-new",
-            plan.kept_new, "Compare (`diff file file.factory-new`), carry over what you need and delete *.factory-new. "
-            "In Claude Code `/core-factory-update` helps.")
+    listing("ℹ Factory files changed in the project — overwritten with the factory version", plan.overwritten,
+            "Factory files in a project are like node_modules: change them in the factory repository, then update.")
+    listing("ℹ New settings added to factory/config.yaml (your values stay)", plan.config_added,
+            "Review the new keys at the end of factory/config.yaml.")
     listing(f"ℹ Older install without a manifest — changed files overwritten, copies in {BACKUP_DIR}/{stamp}/",
             plan.backed_up, "If any of them held your change, carry it over from the copy.")
     listing("ℹ Removed from the factory, but changed by you — left in place", plan.kept_removed,

@@ -30,7 +30,8 @@ Antywzorzec: kanał „imponujący” zamiast dopasowanego do odbiorcy.
   znaczniki, odrzuć — inaczej następna instalacja skasuje cudzy tekst.
 - **Manifest** w repo odbiorcy: paczka, wersja, narzędzie, lista plików ze skrótami. Deinstalacja usuwa dokładnie pliki
   z manifestu, nie zależy od `node_modules` ani skryptów menedżera pakietów; uszkodzony manifest → nie usuwa nic.
-- **Plik zmieniony lokalnie** nie jest nadpisywany — nowa wersja obok (np. `<plik>.factory-new`) do ręcznego scalenia.
+- **Plik zmieniony lokalnie** jest nadpisywany jak zależność w `node_modules`: zmiany wprowadza się u źródła i wydaje
+  nową wersję; konfiguracja odbiorcy (np. `factory/config.yaml`) zostaje, a nowe klucze dochodzą.
 - **Kopiowanie** działa wszędzie (także przy jednorazowym uruchomieniu z cache, który znika); dowiązania tylko przy
   trwałej zależności.
 - **Zależności między skillami** deklarowane w nagłówku; wybór podzbioru przechodzi przez rozwiązywanie zależności.

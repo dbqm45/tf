@@ -67,5 +67,6 @@ Prywatnie — gdy fabryka jest tylko Twoim narzędziem. Zespołowo — gdy ma dz
 | `tf language <kod>` / `tf commit-language <kod>` | zmiana języków |
 | `python3 factory/update.py --rollback` | powrót do poprzedniej wersji |
 
-Pliki fabryki zmienione przez Ciebie aktualizacja zostawia; nowa wersja ląduje obok jako `*.factory-new`. Wszystkie
+Pliki fabryki aktualizacja nadpisuje (jak `node_modules`) — zmiany wprowadzasz w repo fabryki; Twoje pliki i ustawienia
+w `factory/config.yaml` zostają. Wszystkie
 opcje: `python3 ~/tools/tf/core/factory/install.py --help` i `tf --help`.

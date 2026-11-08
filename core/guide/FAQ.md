@@ -23,8 +23,10 @@ nie działają.
 - `tf update --check` pokazuje, czy jest nowa wersja i co się zmieni, niczego nie zmieniając.
 - `tf` (albo `python3 factory/update.py`) aktualizuje.
 
-Przed aktualizacją skille nowej wersji przechodzą audyt narzędziem z wersji zainstalowanej. Pliki fabryki, które
-zmieniłeś, zostają, a nowa wersja ląduje obok jako `*.factory-new`. Powrót: `python3 factory/update.py --rollback`.
+Przed aktualizacją skille nowej wersji przechodzą audyt narzędziem z wersji zainstalowanej. Pliki fabryki w
+projekcie są jak `node_modules`: aktualizacja je nadpisuje, więc zmiany wprowadzasz w repo fabryki i aktualizujesz.
+Twoje pliki (własne skille, persony, role, `CLAUDE.local.md`) zostają; w `factory/config.yaml` zostają Twoje
+ustawienia, a nowe klucze dochodzą na końcu. Powrót: `python3 factory/update.py --rollback`.
 
 ## Czy aktualizacje mogą działać same?
 Tak: `python3 factory/update.py --auto on` (wyłączenie: `--auto off`). Automatycznie wchodzą tylko wydania PATCH

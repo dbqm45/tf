@@ -16,6 +16,16 @@ nie pisze.
 Przeniesienie `factory/` to większość pracy i zmiana publicznego API (układ instalacji) — dlatego krok dzielę na
 trzy osobne PR, od najmniej ryzykownego.
 
+## 4-0 — pliki fabryki w projekcie jak `node_modules` (decyzja człowieka 2026-11-08, osobny PR przed 4a)
+- Aktualizacja nadpisuje pliki fabryki zmienione w projekcie; bez `*.factory-new`, bez kopii i bez wykrywania zmian
+  (zostaje `tf update --rollback` całej aktualizacji). Bez blokady edycji — reguła w `CLAUDE.md`: zmiana fabryki idzie
+  przez repo fabryki.
+- Wyjątek: `factory/config.yaml` to konfiguracja projektu (jak `package.json`) — ustawienia projektu zostają, nowe
+  klucze najwyższego poziomu z wersji fabryki dochodzą na końcu pliku (z komentarzami). Własne pliki projektu
+  (spoza manifestu) zostają nietknięte, w tym w `factory/personas/`, `roles/`, `traits/`.
+- Decyzja D1 niżej przestaje obowiązywać. Wydanie MAJOR (zmiana zachowania aktualizacji), sekcja `### Breaking`.
+- Testy: `tests/test_install_update.py` C-4 (nadpisanie), N-1…N-4 (konfiguracja, własne pliki, brak `*.factory-new`).
+
 ## 4a — wyniki odtwarzalne: logi, cache, przebiegi, kopie (ten plan, szczegółowo)
 **Reguła przejścia (jedna dla wszystkich):** gdy w projekcie jest katalog `.tf/`, fabryka pisze do `.tf/<katalog>`;
 bez `.tf/` — tak jak dziś. Czytający (raporty, statusy, wznawianie) czytają obie lokalizacje. Projekt, w którym nikt
@@ -43,7 +53,7 @@ nie uruchomił `tf init` ani aktualizacji, działa bez zmian.
 - **Wersja:** MINOR (stare lokalizacje działają dalej, migracja automatyczna); wpis w CHANGELOG przez CI;
   w `PUBLIC_API.md` nowe lokalizacje z adnotacją „od X.Y.Z; wcześniej …, czytane dla zgodności”.
 
-### Decyzja do człowieka przed 4a
+### Decyzja D1 (nieaktualna — zastąpiona przez 4-0)
 **D1 — pliki `*.factory-new`.** Plan nadrzędny przenosi je do `.tf/backup/`. Dziś leżą obok zmienionego pliku, bo
 skill `core-factory-update` robi `diff -u plik plik.factory-new` i scala. Opcje:
 - a) zostają obok pliku (tymczasowe, znikają po scaleniu; `tf update` wypisuje listę) — rekomendacja: krótka droga
