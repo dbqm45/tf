@@ -98,7 +98,7 @@ Sama treść SKILL.md niczego nie dowodzi.
    - Muszą przejść wszystkie scenariusze. Haiku sprawdza, czy instrukcje wystarczą słabszemu modelowi, a Sonnet,
      czy są zwięzłe.
    - Dodaj `opus` dla skilli, których używają agenci na tierze deep.
-   - Raport trafia do `docs/evals/` (w projekcie `.claude/logs/evals/`).
+   - Raport trafia do `docs/evals/` (w projekcie `.tf/logs/evals/`).
 10. **Zapis:** wpis w CHANGELOG (co, wynik bramki i ewaluacji z kosztem).
 
 ## Skille procesowe i do pracy bez człowieka

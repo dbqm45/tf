@@ -22,7 +22,7 @@ Launcher instaluje się raz: `python3 factory/tf.py --install-launcher` (domyśl
 | Polecenie | Co robi |
 |---|---|
 | `tf` / `tf update [opcje]` | aktualizacja — opcje idą do `factory/update.py` (`--check`, `--yes`, `--source`…; `--dry-run` = `--check`) |
-| `tf add <pack>…` / `tf remove <pack>…` | dodanie / usunięcie nakładki przez instalator; pliki usuniętej trafiają do `.claude/factory-backup/` |
+| `tf add <pack>…` / `tf remove <pack>…` | dodanie / usunięcie nakładki przez instalator; pliki usuniętej trafiają do `.tf/backup/` |
 | `tf list` | zainstalowane nakładki i języki oraz nakładki dostępne w źródle |
 | `tf language <kod>` | język pracy (rozmowa, dokumentacja); `pl` doinstalowuje pack-editorial-pl; aktualizuje sekcję języka w `CLAUDE.md`/`CLAUDE.local.md` i przebudowuje agentów |
 | `tf commit-language <kod>` | język commit message, tytułów i opisów PR |
@@ -59,11 +59,11 @@ człowieka, z planem (`--dry-run`) przed zmianą.
   git, najwyższe PATCH/MINOR; wydanie MAJOR tylko zgłasza (instalacja ręczna, kroki 1–7).
 - **Tryb prywatny:** hook startu sesji raz na dobę uruchamia w tle `update.py --auto-run` (audyt skilli → kopia →
   instalator → testy fabryki; czerwone testy → powrót do kopii i pominięcie wersji). Wynik pokazuje przy starcie
-  następnej sesji; historia: `.claude/logs/update.jsonl`.
+  następnej sesji; historia: `.tf/logs/update.jsonl`.
 - **Tryb zespołowy:** `--auto on` wstawia `.github/workflows/team-factory-update.yml` (co tydzień `update.py --ci`:
   testy i `build.py check`, PR tylko na zielono). Wymaga ustawienia repo „Allow GitHub Actions to create and approve
   pull requests”. W PR od automatu zmiany workflow przenosisz ręcznie (sekcja w opisie PR).
-- **Cofnięcie:** `python3 factory/update.py --rollback` (ostatnia z 3 kopii w `.claude/factory-backup/`) — na prośbę
+- **Cofnięcie:** `python3 factory/update.py --rollback` (ostatnia z 3 kopii w `.tf/backup/`) — na prośbę
   człowieka.
 
 ## Zasady

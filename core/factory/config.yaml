@@ -182,7 +182,7 @@ routing_notes: |
   zgłosi blokadę albo weryfikacja (testy, lint) nie przechodzi po 2 próbach. Po decyzji na deep implementację
   zlecaj znów na std. Nigdy nie używaj deep do rzeczy mechanicznych.
   **Klasa w briefie:** pierwsza linia briefu dla wykonawcy to `Klasa: <czytanie|rownolegle|przeglad|mechaniczna|decyzja|inne>`
-  — powód delegowania wg core-cost-control §0. Hook `log_usage` zapisuje ją w `.claude/logs/delegation.jsonl`,
+  — powód delegowania wg core-cost-control §0. Hook `log_usage` zapisuje ją w `.tf/logs/delegation.jsonl`,
   a `python3 factory/cost_report.py --delegation` pokazuje koszt wykonawców wg klasy.
 
 # Kontrakt raportu zwracanego przez wykonawców — krótki raport = mały kontekst orkiestratora. Stałe sekcje w stałej

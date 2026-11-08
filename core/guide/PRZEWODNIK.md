@@ -58,7 +58,7 @@ Agenci wspólni, dostępni dla każdej persony:
   - `oszczedny` — bez Opusa;
   - `zrownowazony` — domyślny: Haiku do mechaniki, Sonnet na co dzień, Opus do drogich pomyłek;
   - `jakosc` — wyższy effort i doradca Opus.
-- **Pomiar:** `python3 factory/cost_report.py --days 7` (zużycie per agent i model z `.claude/logs/usage.jsonl`);
+- **Pomiar:** `python3 factory/cost_report.py --days 7` (zużycie per agent i model z `.tf/logs/usage.jsonl`);
   pasek stanu pokazuje koszt sesji i zapełnienie kontekstu.
 - **Zasady:** najtańszy wystarczający model na zadanie i eskalacja dopiero po porażce (skill `core-cost-control`);
   modelu sesji nie zmieniasz w środku zadania, bo to kasuje cache; przy długim kontekście hook `context_guard`

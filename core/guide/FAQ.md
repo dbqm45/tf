@@ -33,7 +33,7 @@ Tak: `python3 factory/update.py --auto on` (wyłączenie: `--auto off`). Automat
 i MINOR. Wydanie MAJOR, które zmienia publiczne API fabryki, wymaga Twojej decyzji.
 
 ## Jak dodać albo usunąć nakładkę lub tryb?
-- `tf add <id>` i `tf remove <id>`. Usunięte pliki trafiają do `.claude/factory-backup/`.
+- `tf add <id>` i `tf remove <id>`. Usunięte pliki trafiają do `.tf/backup/`.
 - Lista dostępnych i zainstalowanych: `tf list`.
 - Domyślna nakładka lub tryb, które pojawią się w nowej wersji, dochodzą przy aktualizacji raz. Usunięte przez
   Ciebie nie wracają.
@@ -89,7 +89,7 @@ plików (`files`). Usuń:
 - wpisy fabryki w `.claude/settings.local.json` albo `.claude/settings.json`;
 - sam manifest.
 
-Kopie z aktualizacji leżą w `.claude/factory-backup/`.
+Kopie z aktualizacji leżą w `.tf/backup/`.
 
 ## Gdzie czytać dalej?
 - `.claude/catalog.md` — persony, role i skille tej instalacji.

@@ -4,8 +4,8 @@
   "offline": "2026-11-01"
  },
  "core-agent-retro": {
-  "fingerprint": "7ec2ff7a6bf891ee",
-  "offline": "2026-11-01"
+  "fingerprint": "66962ae7a87df445",
+  "offline": "2026-11-08"
  },
  "core-agent-security": {
   "fingerprint": "673e2492e27a475c",
@@ -20,15 +20,15 @@
   "offline": "2026-10-26"
  },
  "core-cost-control": {
-  "fingerprint": "c48d2d59b647fdf3",
-  "offline": "2026-11-01"
+  "fingerprint": "d90d0febf2e307bb",
+  "offline": "2026-11-08"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "d20564c2d4909f5e",
+  "fingerprint": "af1f271f06bd4868",
   "offline": "2026-11-08"
  },
  "core-factory-update": {
-  "fingerprint": "33907713c0de9d7a",
+  "fingerprint": "f9ece59a8646ca8f",
   "offline": "2026-11-08"
  },
  "core-git-workflow": {
@@ -60,7 +60,7 @@
   "offline": "2026-10-22"
  },
  "core-skill-authoring": {
-  "fingerprint": "c21fa5dc0b9ac40f",
+  "fingerprint": "6cf6018483b3c677",
   "offline": "2026-11-08"
  },
  "core-skill-composition": {

@@ -195,7 +195,7 @@ def report_path(out_dir: Path, name: str) -> Path:
 
 
 def paid_eval(name: str, models: str, budget: float, baseline: bool, yes: bool) -> tuple[bool, dict]:
-    out_dir = ROOT / "docs" / "evals" if (ROOT / "docs" / "evals").is_dir() else ROOT / ".claude" / "logs" / "evals"
+    out_dir = ROOT / "docs" / "evals" if (ROOT / "docs" / "evals").is_dir() else ROOT / ".tf" / "logs" / "evals"
     out_dir.mkdir(parents=True, exist_ok=True)
     out = report_path(out_dir, name)
     cmd = [sys.executable, str(TESTS / "run_skill_evals.py"), "--skills", name, "--models", models,

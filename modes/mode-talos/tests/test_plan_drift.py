@@ -54,12 +54,11 @@ def main() -> int:
         git(repo, "add", "-A")
         git(repo, "commit", "-qm", "init")
         git(repo, "checkout", "-qb", "story/export")
-        # PRB-32: katalog przebiegu w tmp/talos/runs/ (nie `.claude/runs/`, chroniony przez Claude Code);
-        # plan_drift ignoruje oba prefiksy — nowe przebiegi i stare z czasu .claude/runs/
-        run_dir = repo / "tmp" / "talos" / "runs" / "2026-10-23-export"
-        write(repo, "tmp/talos/runs/2026-10-23-export/plan.md", PLAN)
-        # i stary przebieg z .claude/runs/ też jest ignorowany
-        write(repo, ".claude/runs/2026-09-01-stary/run.json", "{}")
+        # PRB-32: katalog przebiegu w .tf/runs/talos/ (nie `.claude/runs/`, chroniony przez Claude Code);
+        # plan_drift ignoruje wyniki pracy fabryki w .tf/ (przebiegi, raporty, logi)
+        run_dir = repo / ".tf" / "runs" / "talos" / "2026-10-23-export"
+        write(repo, ".tf/runs/talos/2026-10-23-export/plan.md", PLAN)
+        write(repo, ".tf/reports/security.md", "# raport\n")
         for f in ("src/export/csv.py", "tests/test_export.py", "web/src/export/Button.tsx", "src/util/helpers.py"):
             write(repo, f)
         git(repo, "add", "-A")
@@ -74,7 +73,7 @@ def main() -> int:
         check(sl.get("K2", {}).get("touched") == ["web/src/export/Button.tsx"], f"P-4: katalog w planie obejmuje pliki: {sl.get('K2')}")
         check(sl.get("K3", {}).get("missing") == ["src/export/limits.py"], f"P-5: nietknięte pliki planu: {sl.get('K3')}")
         check(out.get("unplanned") == ["src/util/helpers.py"],
-              f"P-6: zmiany spoza planu (bez tmp/talos/runs i .claude/runs): {out.get('unplanned')}")
+              f"P-6: zmiany spoza planu (bez .tf/): {out.get('unplanned')}")
         check(out.get("coverage") == 75 and out.get("tests_changed") == 1, f"P-7: pokrycie planem 3/4 i testy: {out}")
         r = run(str(run_dir), "--base", "main", cwd=repo)
         check(r.returncode == 0 and "spoza planu" in r.stdout and "src/util/helpers.py" in r.stdout and "75%" in r.stdout,

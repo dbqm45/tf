@@ -159,10 +159,10 @@ def main() -> int:
         log.unlink(missing_ok=True)
         run("scan", "--out", str(out), cwd=repo, FAKE_ENV_LOG=str(env_log))
         seen = json.loads(env_log.read_text()) if env_log.is_file() else {}
-        state = (repo / "tmp" / "talos" / "runs" / ".semgrep").resolve()
+        state = (repo / ".tf" / "cache" / "semgrep").resolve()
         check(seen and all(v and Path(v).resolve().parent == state for v in seen.values()),
               f"S-19: zmienne SEMGREP_* wskazują {state}: {seen}")
-        status = subprocess.run(["git", "status", "--porcelain", "tmp"], cwd=repo, capture_output=True, text=True).stdout
+        status = subprocess.run(["git", "status", "--porcelain", ".tf"], cwd=repo, capture_output=True, text=True).stdout
         check(state.is_dir() and not status.strip(), f"S-20: katalog stanu semgrepa poza gitem: {status!r}")
         run("scan", "--out", str(out), cwd=repo, FAKE_ENV_LOG=str(env_log), SEMGREP_SETTINGS_FILE=str(tmp / "own.yml"))
         seen = json.loads(env_log.read_text()) if env_log.is_file() else {}

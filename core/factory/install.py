@@ -44,7 +44,7 @@ update:
 - overwrites factory files you did not change and adds new ones;
 - overwrites factory files changed in the project (like node_modules — change the factory repository instead); keeps
   your settings in `factory/config.yaml` and appends new top-level keys from the factory version;
-- moves files removed from the factory (or from a removed pack) to `.claude/factory-backup/<date>/` (if unchanged);
+- moves files removed from the factory (or from a removed pack) to `.tf/backup/<date>/` (if unchanged);
 - never touches your own skills, personas, roles and traits (files the factory did not install).
 Installs of claude-team-factory or ev-team-factory are migrated: the matching packs are selected and the old
 instruction and ignore blocks are replaced.
@@ -71,7 +71,7 @@ MANIFEST = ".claude/factory-manifest.json"
 # Tryb zespołowy: manifest jest poza gitem (źródło, Python są lokalne), więc klon dostaje bazę aktualizacji z locka —
 # wersja, nakładki, języki i skróty plików fabryki, commitowane z projektem.
 LOCK = ".claude/factory-lock.json"
-BACKUP_DIR = ".claude/factory-backup"
+BACKUP_DIR = ".tf/backup"
 MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"
 GI_BEGIN, GI_END = "# team-factory:begin (managed by factory/install.py)", "# team-factory:end"
 # znaczniki instalacji, z których migrujemy (claude-team-factory, ev-team-factory)
@@ -427,13 +427,11 @@ def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> st
 
 def ignored_paths(files: dict[str, str] | None = None) -> list[str]:
     """Każda ścieżka instalowana przez fabrykę — per skill, hook i workflow, żeby Twoje własne zostały w repo."""
-    # PRB-32 (2026-11-05): Talos zakłada katalog przebiegu w `tmp/talos/runs/`, bo `.claude/` jest ścieżką chronioną
-    # w Claude Code (code.claude.com/docs/en/permission-modes) — stary `.claude/runs/` zostaje tu dalej, bo `status`
-    # i `finish` wznawiają z niego przebiegi sprzed przeniesienia.
+    # `.tf/`: wyniki pracy fabryki (raporty, rejestr, logi, przebiegi, kopie) — prywatnie w całości poza repo.
     out = ["factory/", ".claude/agents/_generated/", ".claude/tests/", ".claude/catalog.md", ".claude/cleanroom.json",
            ".claude/JEV.md", ".claude/settings.local.json", "CLAUDE.local.md", MANIFEST, BACKUP_DIR + "/",
            ".claude/agent-memory/", ".claude/factory-profile.json", ".claude/factory-settings.json",
-           ".claude/skill-gate.json", ".claude/scratch/", ".claude/runs/", "tmp/talos/runs/", "*.factory-new"]
+           ".claude/skill-gate.json", ".claude/scratch/", ".tf/", "*.factory-new"]
     rels = sorted(files or {})
     out += list(dict.fromkeys("/".join(r.split("/")[:3]) + "/" for r in rels if r.startswith(".claude/skills/")))
     out += [r for r in rels if r.startswith((".claude/hooks/", ".claude/workflows/"))]
@@ -804,6 +802,10 @@ def main(argv: list[str]) -> int:
         msg = rebuild(dst_root, dry)
         if msg:
             print(msg)
+        # .tf/ — jedno miejsce na wyniki pracy fabryki (raporty, rejestr, logi, przebiegi, kopie), jak `tf init`
+        if (dst_root / "factory" / "analyze.py").is_file():
+            subprocess.run([sys.executable, "factory/analyze.py", "init"], cwd=dst_root, capture_output=True,
+                           text=True, timeout=120)
         # build.py przetwarza pliki (np. spis treści w references/) — manifest i lock zapamiętują to, co jest na dysku,
         # inaczej następna aktualizacja wzięłaby nietknięty plik za zmieniony przez Ciebie (*.factory-new)
         written = [r for r in plan.created + plan.updated if r in new_manifest["files"] and (dst_root / r).is_file()]

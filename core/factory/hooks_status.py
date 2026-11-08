@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Czy hooki fabryki działały przy ostatnich commitach — porównanie śladów hooków w .claude/logs z historią git.
+Czy hooki fabryki działały przy ostatnich commitach — porównanie śladów hooków w .tf/logs z historią git.
 
   python3 factory/hooks_status.py              # jedna linia: aktywne / nieaktywne / brak hooków
   python3 factory/hooks_status.py --json       # {"active": true|false|null, "last_log", "after_commits", "first_after"}
   --root <repozytorium>
 
-Ślady hooków: wpisy `ts` w .claude/logs/skill-hints.jsonl (każde polecenie) i usage.jsonl (koniec sesji). Commit
+Ślady hooków: wpisy `ts` w .tf/logs/skill-hints.jsonl (każde polecenie) i usage.jsonl (koniec sesji). Commit
 później niż godzinę po ostatnim śladzie nie ma pokrycia w logach; od dwóch takich commitów hooki uznajemy za nieaktywne
 (jeden to zwykle bieżąca sesja przed zapisem). Typowa przyczyna: sesja w chmurze z kilkoma repozytoriami albo sesja
 uruchomiona z katalogu nadrzędnego — hooki z .claude/settings.json się nie wczytują, więc nie działają tdd_guard,
@@ -45,7 +45,7 @@ def has_hooks(root: Path) -> bool:
 def last_log(root: Path) -> dt.datetime | None:
     last = None
     for name in LOGS:
-        f = root / ".claude" / "logs" / name
+        f = root / ".tf" / "logs" / name
         if not f.is_file():
             continue
         for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -76,8 +76,8 @@ def line(s: dict) -> str:
     if s["active"] is None:
         return "· hooki fabryki: brak hooków w .claude/settings.json albo CI — nic do sprawdzenia"
     if s["active"]:
-        return "✓ hooki fabryki: aktywne (ślady w .claude/logs pokrywają ostatnie commity)"
-    since = f"po ostatnim śladzie hooków ({s['last_log'][:16]})" if s["last_log"] else "bez żadnego śladu hooków w .claude/logs"
+        return "✓ hooki fabryki: aktywne (ślady w .tf/logs pokrywają ostatnie commity)"
+    since = f"po ostatnim śladzie hooków ({s['last_log'][:16]})" if s["last_log"] else "bez żadnego śladu hooków w .tf/logs"
     return (f"⚠ hooki fabryki prawdopodobnie nieaktywne: {s['after_commits']} commitów {since} — tdd_guard, ochrona "
             "ścieżek i logi kosztów nie działają. Uruchamiaj testy i bramki ręcznie; następną sesję w chmurze zacznij "
             "z jednym repozytorium (README: Sesja w chmurze).")

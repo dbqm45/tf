@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Raport zużycia tokenów per agent i model na podstawie .claude/logs/usage.jsonl.
+Raport zużycia tokenów per agent i model na podstawie .tf/logs/usage.jsonl.
 
   python3 factory/cost_report.py            # całość
   python3 factory/cost_report.py --days 7   # ostatnie 7 dni
@@ -28,8 +28,8 @@ except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
     import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-LOG = ROOT / ".claude" / "logs" / "usage.jsonl"
-DELEG_LOG = ROOT / ".claude" / "logs" / "delegation.jsonl"
+LOG = ROOT / ".tf" / "logs" / "usage.jsonl"
+DELEG_LOG = ROOT / ".tf" / "logs" / "delegation.jsonl"
 
 
 def family(model: str) -> str:

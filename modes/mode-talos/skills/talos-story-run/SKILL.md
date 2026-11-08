@@ -25,7 +25,7 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
    (brak `min-release-age=7` npm, `minimumReleaseAge: 10080` pnpm, `npmMinimalAgeGate` Yarn, `exclude-newer` uv albo
    lockfile poza gitem) → STOP z linią do dodania z wyniku; ustawień nie zmieniasz sam.
 2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
-   katalog `tmp/talos/runs/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
+   katalog `.tf/runs/talos/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
    Ścieżka celowo poza `.claude/` — Claude Code ma `.claude/` na liście chronionych (code.claude.com
    /docs/en/permission-modes), więc `--permission-mode acceptEdits` i tak odmówiłby pisania do `.claude/runs/`.
    **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
@@ -70,7 +70,7 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 - **Fazy warunkowe** wpisz do planu tylko z powodem: dokumentacja przy zmianie publicznego API lub zachowania
   opisanego w docs; `security-reviewer` przy auth, sekretach, uprawnieniach, IaC, CI; `architect` przy decyzji
   trudnej do odwrócenia.
-- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest w `tmp/talos/runs/<data>-<slug>/`
+- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest w `.tf/runs/talos/<data>-<slug>/`
   (poza gitem) — w commitach i kodzie nie odsyłasz do niego; pozycje trafiają do opisu PR i raportu przebiegu
   (sekcja „Odłożone do decyzji”, przy cięciu z kluczem w `docs/project/changes/CHG-n/runs/TSK-n.md`).
 - **Bez `--auto`:** pokaż plan (kawałki, fazy warunkowe, założenia, odłożone) i czekaj na akceptację człowieka.
@@ -175,7 +175,7 @@ Po STOP i tak uruchamiasz `run_report.py finish` — raport kosztu powstaje zaws
   blokującego; reguła jak SEC-001 w ci_for_sdlc (`--sarif`).
 - semgrep 1.183.0 (kod pakietu, odczyt 2026-11-02): `--sarif --output`, `--metrics=off`, rejestr reguł z semgrep.dev
   (host na liście dozwolonych kontenera); stan semgrepa (`SEMGREP_SETTINGS_FILE`, `SEMGREP_LOG_FILE`,
-  `SEMGREP_VERSION_CACHE_PATH`) `security_scan.py` kieruje do `tmp/talos/runs/.semgrep/`, bo bez zapisywalnego HOME
+  `SEMGREP_VERSION_CACHE_PATH`) `security_scan.py` kieruje do `.tf/runs/talos/.semgrep/`, bo bez zapisywalnego HOME
   semgrep kończy się błędem (PRB-32, odtworzone 2026-11-05) — zmiennych nie dopisujesz przed poleceniem; npm 11.10.0 `min-release-age` (dni), pnpm 10.17.0 `minimumReleaseAge`
   (minuty), uv `exclude-newer` (czas względny) — szczegóły i luki: plan `docs/plans/2026-11-02-z8c-2-…`.
 - Bill Wake, „INVEST in Good Stories, and SMART Tasks” (2003): kryteria dobrej historyjki i kawałka.

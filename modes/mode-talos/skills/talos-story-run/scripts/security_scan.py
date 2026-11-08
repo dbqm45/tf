@@ -196,9 +196,8 @@ def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
     names |= set(git("ls-files", "--others", "--exclude-standard", cwd=root).splitlines())
     if base:
         names |= set(git("diff", "--name-only", f"{base}...HEAD", cwd=root).splitlines())
-    # Katalog przebiegu Talosa poza skanem: tmp/talos/runs/ (PRB-32 — ścieżka poza listą chronionych
-    # code.claude.com/docs/en/permission-modes) i stary .claude/runs/ (wznawianie starych przebiegów).
-    prefixes = ["tmp/talos/runs/", ".claude/runs/", *(s.rstrip("/") + "/" for s in skip if s)]
+    # Wyniki pracy fabryki (.tf/: przebiegi Talosa, raporty, logi) poza skanem.
+    prefixes = [".tf/", *(s.rstrip("/") + "/" for s in skip if s)]
     return sorted(n for n in names if n and (root / n).is_file() and not any(n.startswith(p) for p in prefixes))
 
 
@@ -208,7 +207,7 @@ def tool(name: str) -> str | None:
     return shutil.which(name, path=os.environ.get("TALOS_SCAN_PATH") or None)
 
 
-SEMGREP_STATE = Path("tmp") / "talos" / "runs" / ".semgrep"
+SEMGREP_STATE = Path(".tf") / "cache" / "semgrep"
 SEMGREP_STATE_VARS = {"SEMGREP_SETTINGS_FILE": "settings.yml", "SEMGREP_LOG_FILE": "semgrep.log",
                       "SEMGREP_VERSION_CACHE_PATH": "version-cache"}
 

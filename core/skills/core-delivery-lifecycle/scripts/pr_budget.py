@@ -5,7 +5,7 @@ Budżet artefaktów w PR: czy plany, raporty i dowody przebiegu nie zagłuszają
   python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base main [--json]
 
 Liczy dodane linie gałęzi względem punktu rozejścia z --base (commity, bez zmian niezatwierdzonych) i dzieli je na
-kod i artefakty. Artefakty: docs/project/**, docs/test/**, docs/work/**, .claude/runs/**, **/evidence/** oraz wzorce
+kod i artefakty. Artefakty: docs/project/**, docs/test/**, docs/work/**, .tf/**, **/evidence/** oraz wzorce
 z `.claude/pr-budget.json` ({"artifacts": [...], "max_share": 0.5, "max_artifact": 600, "max_plan": 300}).
 Przekroczenie:
 - artefakty > max_share (domyślnie 50%) dodanych linii, gdy PR zmienia też kod (PR z samą dokumentacją nie podlega);
@@ -23,7 +23,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-DEFAULT_ARTIFACTS = ["docs/project/**", "docs/test/**", "docs/work/**", ".claude/runs/**", "**/evidence/**"]
+DEFAULT_ARTIFACTS = ["docs/project/**", "docs/test/**", "docs/work/**", ".tf/**", "**/evidence/**"]
 PLAN = re.compile(r"(^|/)([\w.-]*-)?plan\.md$")
 
 

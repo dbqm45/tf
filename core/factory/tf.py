@@ -7,7 +7,7 @@ tf — the team factory command: install, update, packs, languages, health check
   tf install [options]        # install (options go to install.py: --packs, --language, --commit-language, --shared…)
   tf update [options]         # update (options go to update.py: --check, --yes, --source…)
   tf add <pack> [<pack>…]     # add packs or modes (e.g. tf add pack-ev, tf add mode-talos)
-  tf remove <pack> [<pack>…]  # remove packs (their files go to .claude/factory-backup/)
+  tf remove <pack> [<pack>…]  # remove packs (their files go to .tf/backup/)
   tf list                     # installed packs and modes, languages, what the source offers
   tf language <code>          # working language (conversation, documentation); pl installs pack-editorial-pl
   tf commit-language <code>   # language of commit messages, PR titles and descriptions

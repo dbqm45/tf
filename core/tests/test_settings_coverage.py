@@ -50,8 +50,8 @@ REQUIRED = [
     "git commit -m 'feat(x): y'",
     # skrypty Talosa
     "python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-1",
-    "python3 .claude/skills/talos-story-run/scripts/run_report.py finish tmp/talos/runs/2026-11-05-x",
-    "python3 .claude/skills/talos-story-run/scripts/plan_drift.py tmp/talos/runs/x --base main",
+    "python3 .claude/skills/talos-story-run/scripts/run_report.py finish .tf/runs/talos/2026-11-05-x",
+    "python3 .claude/skills/talos-story-run/scripts/plan_drift.py .tf/runs/talos/x --base main",
     "python3 .claude/skills/talos-story-run/scripts/security_scan.py scan --slice K1 --attempt 1",
     # skrypt pdi wywoływany na końcu fazy architecture/design (decision_record.py check — w prompcie phase_run.py)
     "python3 .claude/skills/pdi-decisions/scripts/decision_record.py check",

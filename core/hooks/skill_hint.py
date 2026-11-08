@@ -11,7 +11,7 @@ i metadata.katalog) prostym dopasowaniem rdzeni słów z wagą rzadkości i dopi
 
 Wyłączenie: zmienna CLAUDE_SKILL_HINT=0. Tylko biblioteka standardowa; błąd nigdy nie blokuje polecenia.
 
-Log: każda decyzja trafia do .claude/logs/skill-hints.jsonl (czas, sesja, podpowiedziane skille, 5 najwyżej
+Log: każda decyzja trafia do .tf/logs/skill-hints.jsonl (czas, sesja, podpowiedziane skille, 5 najwyżej
 ocenionych z wynikiem). Treści polecenia NIE zapisujemy — chyba że CLAUDE_SKILL_HINT_LOG_PROMPT=1 (pierwsze 200
 znaków, do strojenia słów kluczowych na własnej maszynie). Raport: python3 factory/hint_report.py
 """
@@ -137,14 +137,14 @@ def select(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
 
 
 def log_decision(data: dict, prompt: str, items: list[dict], picks: list) -> None:
-    """Zapis decyzji do .claude/logs/skill-hints.jsonl (bez treści polecenia, o ile nie włączono jawnie)."""
+    """Zapis decyzji do .tf/logs/skill-hints.jsonl (bez treści polecenia, o ile nie włączono jawnie)."""
     try:
         top = [(it["name"], s) for s, it in rank(prompt, items)[:5]] if items else []
         rec = {"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"), "session": data.get("session_id"),
                "prompt_chars": len(prompt), "hinted": [it["name"] for _, it in picks], "top": top, "via": LAST_VIA}
         if os.environ.get("CLAUDE_SKILL_HINT_LOG_PROMPT") == "1":
             rec["prompt"] = prompt[:200]
-        log_dir = SKILLS.parent / "logs"
+        log_dir = SKILLS.parent.parent / ".tf" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         with (log_dir / "skill-hints.jsonl").open("a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")

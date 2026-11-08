@@ -88,6 +88,8 @@ def main() -> int:
         subprocess.run(["git", "init", "-q"], cwd=proj, check=True)
         r = install(src, proj, "--shared", "--packs", "pack-a")
         check(r.returncode == 0, f"U-1: instalacja: {r.stdout[-600:]} {r.stderr[-300:]}")
+        check((proj / ".tf" / "reports" / "README.md").is_file() and (proj / ".tf" / "logs").is_dir(),
+              "U-1a: instalacja zakłada .tf/ (jak tf init)")
         installed = proj / ".claude" / "skills" / "aa-run" / "references" / "dlugi.md"
         text = installed.read_text(encoding="utf-8") if installed.exists() else ""
         man = json.loads((proj / MANIFEST).read_text(encoding="utf-8")) if (proj / MANIFEST).exists() else {}

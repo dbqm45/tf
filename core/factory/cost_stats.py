@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Statystyki kosztów per dzień, tydzień albo miesiąc z .claude/logs/usage.jsonl (hook log_usage) i historii git.
+Statystyki kosztów per dzień, tydzień albo miesiąc z .tf/logs/usage.jsonl (hook log_usage) i historii git.
 
   python3 factory/cost_stats.py                       # tygodnie (ostatnie 8)
   python3 factory/cost_stats.py --period day --last 14
@@ -263,7 +263,7 @@ def main(argv: list[str]) -> int:
     if period not in ("day", "week", "month"):
         print("✗ --period day|week|month")
         return 2
-    log = Path(opts.get("--log") or ROOT / ".claude" / "logs" / "usage.jsonl")
+    log = Path(opts.get("--log") or ROOT / ".tf" / "logs" / "usage.jsonl")
     repo = Path(opts.get("--repo-root") or ROOT)
     try:
         try:

@@ -102,7 +102,7 @@ Cache obniża cenę powtarzanego prefiksu, ale nie zdejmuje treści z okna — g
 - `python3 factory/cost_report.py --days 7` — koszt per agent i model, eskalacje, sygnały `Tier:` i rekomendacje
   zmiany tieru ról.
 - `python3 factory/cost_report.py --delegation` — koszt wykonawców wg klasy z briefu (hook `log_usage` zapisuje każde
-  wywołanie Agent w `.claude/logs/delegation.jsonl`). Klasa droga przy krótkim raporcie → rób takie zadania sam.
+  wywołanie Agent w `.tf/logs/delegation.jsonl`). Klasa droga przy krótkim raporcie → rób takie zadania sam.
 - `python3 factory/cost_stats.py` (`--period day|week|month`) — tokeny, udział modeli, koszt w USD i PLN (kurs średni
   NBP), zmiany w gicie i pasmo „tanio / typowo / drogo” względem mediany poprzednich okresów; luki w logach oznacza
   „dane niepełne”. Przyczyny kosztu etapu i tiery wykonawców ocenia retrospektywa agentów (core-agent-retro).

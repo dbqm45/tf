@@ -97,13 +97,13 @@ def main() -> int:
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(root)}
         run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SubagentStop", "agent_type": "scout",
                                                              "agent_transcript_path": str(tr), "session_id": "s"}))
-        rec = json.loads((root / ".claude" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
+        rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
         if rec.get("tier_feedback") != "niski":
             fails.append(f"log_usage: brak tier_feedback — {rec}")
         total += 1
         run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SubagentStop", "agent_type": "scout",
                                                              "agent_id": "a1", "agent_transcript_path": str(tr)}))
-        rec = json.loads((root / ".claude" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
+        rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
         if rec.get("agent_id") != "a1":
             fails.append(f"log_usage: SubagentStop bez agent_id (łączenie z delegation.jsonl) — {rec}")
 
@@ -117,7 +117,7 @@ def main() -> int:
             run([str(HOOKS / "log_usage.py")], env, json.dumps({
                 "hook_event_name": "PostToolUse", "tool_name": tool, "session_id": "s", "tool_input": inp,
                 "tool_response": {"agentId": "a1", "content": [{"type": "text", "text": "raport"}]}}))
-            p = root / ".claude" / "logs" / "delegation.jsonl"
+            p = root / ".tf" / "logs" / "delegation.jsonl"
             return json.loads(p.read_text(encoding="utf-8").splitlines()[-1]) if p.exists() else {}
 
         total += 1
@@ -144,17 +144,17 @@ def main() -> int:
             "hook_event_name": "PostToolUse", "tool_name": "Agent", "tool_input": {"subagent_type": "scout", "prompt": "x"},
             "tool_response": {"status": "async_launched", "agentId": "a9", "resolvedModel": "claude-haiku-5-5",
                               "prompt": "x", "description": "d"}}))
-        rec = json.loads((root / ".claude" / "logs" / "delegation.jsonl").read_text().splitlines()[-1])
+        rec = json.loads((root / ".tf" / "logs" / "delegation.jsonl").read_text().splitlines()[-1])
         if rec.get("background") is not True or rec.get("resolved_model") != "claude-haiku-5-5" \
                 or rec.get("result_chars") != 0:
             fails.append(f"log_usage: delegowanie w tle (async_launched) — {rec}")
         total += 1
-        dl = root / ".claude" / "logs" / "delegation.jsonl"
+        dl = root / ".tf" / "logs" / "delegation.jsonl"
         n = len(dl.read_text().splitlines()) if dl.exists() else 0
         run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "PostToolUse", "tool_name": "Bash",
                                                              "tool_input": {"command": "ls"}}))
         if (len(dl.read_text().splitlines()) if dl.exists() else 0) != n \
-                or (root / ".claude" / "logs" / "usage.jsonl").exists():
+                or (root / ".tf" / "logs" / "usage.jsonl").exists():
             fails.append("log_usage: PostToolUse innego narzędzia nie może nic zapisać")
 
     # ── cost_report: rekomendacje tierów ──
@@ -252,9 +252,13 @@ def main() -> int:
     # ── jednorazowe pliki objaśnień (HTML, diagramy) w .claude/scratch/ nie trafiają do gita (core-problem-routing) ──
     total += 1
     gi = ROOT / "factory" / "gitignore"
-    for ign in (".claude/scratch/", ".claude/runs/"):     # runs/: przebiegi trybów (np. mode-talos)
+    for ign in (".claude/scratch/",):
         if ign not in inst.ignored_paths() or (gi.exists() and ign not in gi.read_text(encoding="utf-8")):
             fails.append(f"install: {ign} poza ignorowanymi ścieżkami")
+    # wyniki pracy fabryki: prywatnie cały .tf/, w szablonie .gitignore (instalacja zespołowa) katalogi odtwarzalne
+    if ".tf/" not in inst.ignored_paths() or (gi.exists() and not all(
+            f".tf/{d}/" in gi.read_text(encoding="utf-8") for d in ("cache", "logs", "runs", "backup"))):
+        fails.append("install: .tf/ (prywatnie) albo .tf/{cache,logs,runs,backup}/ (szablon .gitignore) nieignorowane")
 
     # ── gotowa konfiguracja piaskownicy opt-in: tylko klucz sandbox, bez furtek ──
     total += 1

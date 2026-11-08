@@ -73,8 +73,8 @@ def main() -> int:
     env = {**os.environ, "TYPESAFE_API_KEY": "ts_live_testkey123", "TYPESAFE_BASE_URL": base,
            "CLAUDE_PROJECT_DIR": tmp.name}
     os.environ.update({k: env[k] for k in ("TYPESAFE_API_KEY", "TYPESAFE_BASE_URL")})
-    os.environ["CLAUDE_PROJECT_DIR"] = tmp.name   # jev_client.log() pisze do <projekt>/.claude/logs — nie do repo
-    real_log = ROOT / ".claude" / "logs" / "jev.jsonl"
+    os.environ["CLAUDE_PROJECT_DIR"] = tmp.name   # jev_client.log() pisze do <projekt>/.tf/logs — nie do repo
+    real_log = ROOT / ".tf" / "logs" / "jev.jsonl"
     real_before = real_log.read_bytes() if real_log.is_file() else b""
     sys.path.insert(0, str(HOOKS))
     jev = load(HOOKS / "jev_client.py", "jev_client")
@@ -238,7 +238,7 @@ def main() -> int:
     total += 1
     real_after = real_log.read_bytes() if real_log.is_file() else b""
     if real_after != real_before:
-        fails.append("test zapisał wpisy do prawdziwego .claude/logs/jev.jsonl — log tylko w katalogu tymczasowym")
+        fails.append("test zapisał wpisy do prawdziwego .tf/logs/jev.jsonl — log tylko w katalogu tymczasowym")
     srv.shutdown()
     tmp.cleanup()
     for f in fails:

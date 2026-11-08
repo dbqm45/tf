@@ -120,10 +120,10 @@ def decide(state, questions: dict, timeout: float = 10.0, retries: int = 2) -> d
 
 
 def log(usage: dict) -> None:
-    """Zużycie do .claude/logs/jev.jsonl (bez treści zapytań)."""
+    """Zużycie do .tf/logs/jev.jsonl (bez treści zapytań)."""
     try:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parents[2])
-        p = root / ".claude" / "logs" / "jev.jsonl"
+        p = root / ".tf" / "logs" / "jev.jsonl"
         p.parent.mkdir(parents=True, exist_ok=True)
         with p.open("a", encoding="utf-8") as f:
             f.write(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), **usage}) + "\n")

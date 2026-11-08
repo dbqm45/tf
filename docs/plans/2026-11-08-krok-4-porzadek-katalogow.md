@@ -26,32 +26,29 @@ trzy osobne PR, od najmniej ryzykownego.
 - Decyzja D1 niżej przestaje obowiązywać. Wydanie MAJOR (zmiana zachowania aktualizacji), sekcja `### Breaking`.
 - Testy: `tests/test_install_update.py` C-4 (nadpisanie), N-1…N-4 (konfiguracja, własne pliki, brak `*.factory-new`).
 
-## 4a — wyniki odtwarzalne: logi, cache, przebiegi, kopie (ten plan, szczegółowo)
-**Reguła przejścia (jedna dla wszystkich):** gdy w projekcie jest katalog `.tf/`, fabryka pisze do `.tf/<katalog>`;
-bez `.tf/` — tak jak dziś. Czytający (raporty, statusy, wznawianie) czytają obie lokalizacje. Projekt, w którym nikt
-nie uruchomił `tf init` ani aktualizacji, działa bez zmian.
+## 4a — wyniki odtwarzalne: logi, cache, przebiegi, kopie (szczegółowo)
+**Decyzja człowieka 2026-11-08: bez migracji i bez okresu przejściowego.** Nowa wersja pisze i czyta wyłącznie
+`.tf/`; projekt z poprzednią wersją fabryki działa po staremu, a do nowej przechodzi się świeżą instalacją (fabrykę
+używa dziś tylko jej autor). Instalacja zakłada `.tf/` (jak `tf init`).
 
-| Dziś | Po 4a (z `.tf/`) | Kto pisze / czyta |
+| Dziś | Po 4a | Kto pisze / czyta |
 |---|---|---|
-| `.claude/logs/*.jsonl`, `*.json` | `.tf/logs/` | hooki (`log_usage`, `skill_hint`, `tdd_guard`, `quality_gate`, `context_guard`, `skill_change_guard`, `jev_client`), `hint_report`, `cost_report`, `cost_stats`, `hooks_status`, `retro_data` |
-| `.claude/cache/` | `.tf/cache/` | (1 miejsce) |
-| `tmp/talos/runs/<przebieg>/` (i stare `.claude/runs/`) | `.tf/runs/talos/<przebieg>/` | `run_report.py`, `plan_drift.py`, `security_scan.py`, SKILL talosa |
-| `.claude/factory-backup/` | `.tf/backup/` | `install.py`, `update.py` (`--rollback` czyta obie) |
+| `.claude/logs/*.jsonl`, `*.json` | `.tf/logs/` | hooki (`log_usage`, `skill_hint`, `tdd_guard`, `quality_gate`, `context_guard`, `skill_change_guard`, `jev_client`), `hint_report`, `cost_report`, `cost_stats`, `hooks_status`, `retro_data`, `update.py` (`update.jsonl`, `update-pr.md`, blokada), `skill_gate` (`evals/`) |
+| `tmp/talos/runs/<przebieg>/` (i stare `.claude/runs/`) | `.tf/runs/talos/<przebieg>/` | `run_report.py`, `plan_drift.py`, `security_scan.py`, SKILL i GUIDE talosa |
+| `.claude/factory-backup/` | `.tf/backup/` | `install.py` (pliki usunięte z fabryki), `update.py` (`--rollback`) |
 
-- **Wspólna funkcja ścieżek** `core/hooks/tf_paths.py` (`state_dir(root, "logs" | "cache" | "runs" | "backup")`
-  i `read_dirs(root, …)` zwracające nową i starą lokalizację). Hooki importują ją z własnego katalogu; skrypty
-  w `factory/` i w skillach ładują ją z `.claude/hooks/` z zapasową kopią trzech linii, gdy hooka nie ma (skrypt
-  skilla uruchomiony poza projektem).
-- **`.tf/` poza `.claude/`** rozwiązuje też PRB-32: Claude Code odmawia pisania do `.claude/runs/` (lista chronionych
-  ścieżek), dlatego talos przeniósł się do `tmp/talos/runs/`; `.tf/runs/` nie jest chroniony.
-- **Migracja** (`core/factory/migrations.py`, przy `tf update` i `tf doctor --fix`): tworzy `.tf/` (jak `tf init`),
-  przenosi zawartość `.claude/logs/`, `.claude/cache/`, `tmp/talos/runs/`, `.claude/runs/`,
-  `.claude/factory-backup/` do nowych miejsc (bez nadpisywania; konflikt nazw → zostaje w starym miejscu
-  i ostrzeżenie), usuwa puste stare katalogi. Świeża instalacja od razu robi `tf init`.
-- **Git:** wpisy `.gitignore`/`.git/info/exclude` dla nowych katalogów robi już `tf init` (krok 1); stare wpisy
-  zostają do kroku sprzątania.
-- **Wersja:** MINOR (stare lokalizacje działają dalej, migracja automatyczna); wpis w CHANGELOG przez CI;
-  w `PUBLIC_API.md` nowe lokalizacje z adnotacją „od X.Y.Z; wcześniej …, czytane dla zgodności”.
+- `.tf/` poza `.claude/` rozwiązuje też PRB-32 (Claude Code odmawia pisania do `.claude/runs/`).
+- `.gitignore` / `.git/info/exclude`: instalator zamiast `.claude/logs/`, `.claude/runs/`, `tmp/talos/runs/`,
+  `.claude/factory-backup/` dopisuje katalogi `.tf/` jak `tf init` (prywatna: cały `.tf/`; zespołowa: katalogi
+  odtwarzalne).
+- `pr_budget.py`: artefakt `.claude/runs/**` → `.tf/**`.
+- Wersja: MAJOR (zmiana publicznych ścieżek logów, przebiegów i kopii), `### Breaking` z instrukcją: zainstaluj
+  fabrykę na nowo.
+
+### Testy 4a
+Istniejące testy ścieżek (`test_cost`, `test_tdd`, `test_hooks_status`, `test_skill_evals`, `test_agent_retro`,
+`test_auto_update`, `test_jev`, `test_run_report`, `test_plan_drift`, `test_settings_coverage`, `test_pr_budget`)
+przechodzą na nowe ścieżki najpierw (czerwone), potem kod; `tools/workspace.py check` dla wszystkich przestrzeni.
 
 ### Decyzja D1 (nieaktualna — zastąpiona przez 4-0)
 **D1 — pliki `*.factory-new`.** Plan nadrzędny przenosi je do `.tf/backup/`. Dziś leżą obok zmienionego pliku, bo
@@ -61,18 +58,8 @@ skill `core-factory-update` robi `diff -u plik plik.factory-new` i scala. Opcje:
 - b) `.tf/backup/new/<ścieżka>` — w katalogu projektu nie ma obcych plików, ale scalenie wymaga ścieżek z dwóch
   drzew i zmiany skilla aktualizacji.
 
-### Testy 4a (najpierw czerwone)
-- `core/tests/test_tf_paths.py`: z `.tf/` → nowa lokalizacja, bez → stara; `read_dirs` zwraca obie, istniejące.
-- Hooki: z `.tf/` log ląduje w `.tf/logs/` (`test_hooks.py`, `test_cost.py`, `test_quality_gate.py` — nowe przypadki
-  obok istniejących, istniejące bez zmian = dowód zgodności).
-- `test_run_report.py`, `test_plan_drift.py`: przebieg w `.tf/runs/talos/` przy `.tf/`; wznawianie przebiegu
-  z `tmp/talos/runs/` i `.claude/runs/`.
-- `test_update.py` / migracje: przeniesienie zawartości, brak nadpisania, ostrzeżenie przy konflikcie,
-  `--rollback` z kopii w `.tf/backup/` i ze starej lokalizacji.
-- `tools/workspace.py check` dla wszystkich przestrzeni (`matrix`).
-
 ## 4b — punkt kontrolny `docs/project/wip/` → `.tf/wip/` (osobny PR, krótki plan przed kodem)
-`project_record.py wip …` pisze do `.tf/wip/` przy `.tf/`, czyta obie; skille i `CLAUDE.md` mówią „punkt kontrolny”
+`project_record.py wip …` pisze i czyta tylko `.tf/wip/` (bez okresu przejściowego, jak 4a); skille i `CLAUDE.md` mówią „punkt kontrolny”
 zamiast ścieżki tam, gdzie się da. Przed kodem: sprawdzić, czy pdi, ci_for_sdlc albo ShipScope czytają
 `docs/project/wip/` (dziś `grep` w `pdi/src` i `ci_for_sdlc/packages` nic nie znajduje).
 
@@ -87,4 +74,4 @@ typu `python3 factory/build.py`, hooki, launcher `tf`, `install.py`/`update.py`,
   (`CLAUDE.local.md` w katalogu głównym vs `.claude/`) [niezweryfikowane].
 
 ## Kolejność
-4a (po decyzji D1) → 4b → plan 4c z decyzjami D2, D3.
+4a → 4b → plan 4c z decyzjami D2, D3 (także bez migracji — świeża instalacja).

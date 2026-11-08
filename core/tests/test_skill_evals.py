@@ -282,7 +282,7 @@ def main() -> int:
         prompt = "Jak zrobić paginację GET /orders z milionami rekordów? TAJNE-SLOWO"
         sp.run([sys.executable, str(hooks / "skill_hint.py")], input=json.dumps({"prompt": prompt, "session_id": "s1"}),
                capture_output=True, text=True, env=env)
-        log = proj / ".claude" / "logs" / "skill-hints.jsonl"
+        log = proj / ".tf" / "logs" / "skill-hints.jsonl"
         rec = json.loads(log.read_text(encoding="utf-8").splitlines()[0]) if log.exists() else {}
         # pierwsza podpowiedź to skill API; kolejne mogą dojść z innych nakładek (np. paginacja w OCPI przy pack-ev)
         api = (ev.SKILLS / "be-api-design").is_dir()      # skill z pack-it; bez niego sprawdzamy tylko brak treści w logu
@@ -298,7 +298,7 @@ def main() -> int:
         hr = importlib.util.spec_from_file_location("hint_report", ev.ROOT / "factory" / "hint_report.py")
         rep_mod = importlib.util.module_from_spec(hr)
         hr.loader.exec_module(rep_mod)
-        logs = proj / ".claude" / "logs"
+        logs = proj / ".tf" / "logs"
         r = rep_mod.analyse(rep_mod.read_jsonl(logs / "skill-hints.jsonl", None), rep_mod.read_jsonl(logs / "usage.jsonl", None))
         if api and (r["hit"].get("be-api-design") != 1 or r["missed"].get("be-database") != 1):   # podpowiedź z pack-it
             fails.append(f"hint_report: trafione/przeoczone niepoprawne: {r}")

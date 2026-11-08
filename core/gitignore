@@ -2,10 +2,11 @@
 .env.*
 !.env.example
 .claude/settings.local.json
-.claude/logs/
+.tf/cache/
+.tf/logs/
+.tf/runs/
+.tf/backup/
 .claude/agent-memory-local/
 .claude/scratch/
-.claude/runs/
-tmp/talos/runs/
 __pycache__/
 .idea

@@ -2,7 +2,7 @@
 """
 Bramka TDD: kod produkcyjny dopiero po czerwonym teście. Tylko biblioteka standardowa; błąd hooka nigdy nie blokuje.
 
-Śledzi osobno każdy kontekst (sesja główna i każdy subagent) w `.claude/logs/tdd-state.json`:
+Śledzi osobno każdy kontekst (sesja główna i każdy subagent) w `.tf/logs/tdd-state.json`:
   - PostToolUse Edit|Write   — edycja pliku testów;
   - PostToolUse / PostToolUseFailure Bash — uruchomienie testów i jego wynik (czerwony / zielony);
   - PreToolUse Edit|Write    — edycja pliku produkcyjnego: sprawdza regułę.
@@ -100,13 +100,13 @@ def is_production(path: str) -> bool:
 
 def load(root: Path) -> dict:
     try:
-        return json.loads((root / ".claude" / "logs" / "tdd-state.json").read_text(encoding="utf-8"))
+        return json.loads((root / ".tf" / "logs" / "tdd-state.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {}
 
 
 def save(root: Path, state: dict) -> None:
-    p = root / ".claude" / "logs" / "tdd-state.json"
+    p = root / ".tf" / "logs" / "tdd-state.json"
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(dict(list(state.items())[-100:]), ensure_ascii=False), encoding="utf-8")
 

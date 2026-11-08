@@ -7,7 +7,7 @@ Updates the team factory in this project, like a software update (standard libra
   python3 factory/update.py --yes                        # no question (e.g. in a script)
   python3 factory/update.py --source <source>            # set the source (remembered in the manifest)
   python3 factory/update.py --yes --accept-audit         # apply despite high-severity skill audit findings
-  python3 factory/update.py --rollback                   # go back to the state before the last update (copy in .claude/factory-backup/)
+  python3 factory/update.py --rollback                   # go back to the state before the last update (copy in .tf/backup/)
   python3 factory/update.py --auto on|off                # automatic PATCH/MINOR releases (session start hook or a PR workflow)
   python3 factory/update.py --auto-run                   # one automatic run (the session start hook runs it in the background)
   python3 factory/update.py --ci --source <git URL>      # CI run (the team-factory-update workflow opens a PR from it)
@@ -267,7 +267,7 @@ def audit_new(new_root: Path) -> tuple[int, list[str]]:
     return high, lines
 
 
-BACKUP_DIR = Path(".claude") / "factory-backup"
+BACKUP_DIR = Path(".tf") / "backup"
 BACKUP_KEEP = 3
 BACKUP_EXTRA = (".claude/settings.json", ".claude/settings.local.json", "CLAUDE.md", "CLAUDE.local.md", ".gitignore",
                 ".claude/factory-manifest.json")
@@ -284,7 +284,7 @@ def _factory_new(root: Path, rels) -> list[str]:
 
 def backup(root: Path, now: float | None = None) -> Path:
     """Pełna kopia przed aktualizacją: pliki z manifestu, ustawienia, CLAUDE.md, .gitignore i manifest, do
-    `.claude/factory-backup/<data>-v<wersja>/` ze znacznikiem `backup.json`. Zostają 3 ostatnie takie kopie
+    `.tf/backup/<data>-v<wersja>/` ze znacznikiem `backup.json`. Zostają 3 ostatnie takie kopie
     (katalogi bez znacznika — pliki usunięte przez instalator — nie są ruszane)."""
     import shutil
     import time
@@ -417,7 +417,7 @@ def set_auto(root: Path, on: bool, env: dict | None = None) -> tuple[int, str]:
                       "„Allow GitHub Actions to create and approve pull requests”."]
         else:
             lines.append("New PATCH/MINOR releases install at session start (in the background, active from the next "
-                         "session); MAJOR is only reported. History: .claude/logs/update.jsonl.")
+                         "session); MAJOR is only reported. History: .tf/logs/update.jsonl.")
     elif shared and wf.exists():
         wf.unlink()
         lines.append(f"Removed {WORKFLOW.as_posix()} — commit the change.")
@@ -427,9 +427,9 @@ def set_auto(root: Path, on: bool, env: dict | None = None) -> tuple[int, str]:
     return 0, "\n".join([head] + lines)
 
 
-LOG = Path(".claude") / "logs" / "update.jsonl"
-SEEN = Path(".claude") / "logs" / "update.seen"
-LOCK = Path(".claude") / "logs" / "update.lock"
+LOG = Path(".tf") / "logs" / "update.jsonl"
+SEEN = Path(".tf") / "logs" / "update.seen"
+LOCK = Path(".tf") / "logs" / "update.lock"
 LOCK_STALE = 3600              # blokada starsza niż godzina to ślad po przerwanym przebiegu
 SKIP_STATUSES = ("tests_failed", "install_failed", "audit_blocked")
 
@@ -471,7 +471,7 @@ def _lock(root: Path, now: float) -> bool:
 def auto_run(root: Path, env: dict | None = None, now: float | None = None, timeout: float = 20) -> dict:
     """Jeden przebieg automatu (tryb prywatny, w tle ze startu sesji): najwyższe wydanie PATCH/MINOR → audyt skilli →
     kopia → instalator → testy fabryki; czerwone testy lub błąd instalatora → powrót do kopii i pominięcie wersji.
-    Wynik (poza „nic nowego”) trafia do `.claude/logs/update.jsonl`; pokazuje go `pending_messages`."""
+    Wynik (poza „nic nowego”) trafia do `.tf/logs/update.jsonl`; pokazuje go `pending_messages`."""
     import time
     env = os.environ if env is None else env
     now = time.time() if now is None else now
@@ -543,7 +543,7 @@ def _run_tests(root: Path) -> list[str]:
     return failed
 
 
-PR_BODY = Path(".claude") / "logs" / "update-pr.md"
+PR_BODY = Path(".tf") / "logs" / "update-pr.md"
 WORKFLOWS = Path(".github") / "workflows"
 
 
@@ -609,7 +609,7 @@ def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
 
 def ci_run(root: Path, src: str, env: dict | None = None) -> int:
     """Tryb zespołowy w CI (workflow team-factory-update): najwyższe wydanie PATCH/MINOR → audyt skilli → instalator
-    → testy fabryki i `factory/build.py check`. Zielone → opis PR w `.claude/logs/update-pr.md` i `version=X`
+    → testy fabryki i `factory/build.py check`. Zielone → opis PR w `.tf/logs/update-pr.md` i `version=X`
     w `$GITHUB_OUTPUT` (workflow otwiera PR); czerwone → kod 1 (czerwony job to powiadomienie), bez PR."""
     env = os.environ if env is None else env
     if not is_git(src) or "#" in src:
