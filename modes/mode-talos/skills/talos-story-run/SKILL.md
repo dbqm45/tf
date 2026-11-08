@@ -107,8 +107,11 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
    (dla `--change`: gałąź fazy `pdi/CHG-n-delivery`; inaczej gałąź domyślna, zwykle `main`)
    — pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem, testy w diffie. Zmiana spoza planu
    bez uzasadnienia → wycofujesz albo opisujesz w PR jako odstępstwo.
+   **Budżet artefaktów:** `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <baza cięcia>`
+   (także po commicie raportu cięcia) — `Werdykt: PRZEKROCZONY` (artefakty > 50% dodanych linii, artefakt > 600 linii,
+   plan > 300) → skracasz artefakty albo przenosisz surowe dowody poza repozytorium; wyjątek opisujesz w PR.
 3. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
-   z `parked.md`), wynik `plan_drift` (pokrycie, odstępstwa), skrót raportu kosztu. Nie scalasz — decyzja człowieka.
+   z `parked.md`), wynik `plan_drift` (pokrycie, odstępstwa) i `pr_budget`, skrót raportu kosztu. Nie scalasz — decyzja człowieka.
 4. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
    Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`
