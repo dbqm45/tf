@@ -69,6 +69,8 @@ def main() -> int:
         check(cfg.get("default_profile") == "oszczedny" and (cfg.get("tiers") or {}).get("fast", {}).get("maxTurns") == 7
               and (cfg.get("tiers") or {}).get("fast", {}).get("model") and "std" in (cfg.get("tiers") or {}),
               f"T-3: nadpisania z .tf/config/config.yaml nałożone na domyślne silnika: {r2.stdout[:300]} {r2.stderr[-300:]}")
+        caches = sorted(str(x.relative_to(proj)) for x in (tfd / "factory").rglob("__pycache__"))
+        check(not caches, f"T-6: silnik nie zostawia __pycache__ w .tf/factory/ (instalacja, packs.py): {caches}")
         instr = (proj / "CLAUDE.md").read_text(encoding="utf-8") if (proj / "CLAUDE.md").exists() else ""
         check(".tf/factory/build.py" in instr and "python3 factory/" not in instr,
               f"T-4: instrukcje projektu wskazują .tf/factory/: {instr[-400:]}")

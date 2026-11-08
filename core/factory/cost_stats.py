@@ -30,6 +30,8 @@ import re
 import statistics
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 import urllib.request
 from collections import defaultdict
 from pathlib import Path

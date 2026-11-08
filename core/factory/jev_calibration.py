@@ -26,6 +26,8 @@ import importlib.util
 import json
 import re
 import sys
+
+sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 import time
 from pathlib import Path
 
