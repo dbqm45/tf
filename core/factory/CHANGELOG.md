@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [5.69.0] — 2026-11-08
+### Added
+- **core:** add claims check for numbers and dates in reports (#168)
+
 ## [5.68.0] — 2026-11-08
 ### Added
 - **mode-pdi:** PR loop steps for talos cuts (N2) (#165)
