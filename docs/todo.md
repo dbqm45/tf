@@ -13,6 +13,35 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
 - [x] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
+## Na później: interfejs „control tower” i integracja planu tf analyze z pdi (zapisane 2026-11-08, decyzja człowieka: wrócić później)
+Decyzja 2026-11-08: na początek tylko `tf analyze` i porządek w katalogach (`.tf/`) — kroki 1–4 planu
+`docs/plans/2026-11-08-tf-analyze-i-katalog-tf.md`. Reszta czeka:
+- [ ] **Interfejs do podglądu pracy fabryki** przy zasadzie „CLI zostaje głównym sposobem pracy, interfejs to widok na
+  zapis” (nic w CLI nie zależy od interfejsu; wszystko dokładane i włączane jawnie; najpierw tylko odczyt, decyzje
+  z interfejsu tylko przez pdi). Drabina, każdy szczebel osobno: 0 `tf status` w terminalu; 1 `tf status --html`
+  (statyczna strona w `.tf/reports/`); 2 `tf ui` (lokalny podgląd tylko do odczytu); 3 konsola pdi (`pis`, pdi
+  `docs/15-jedna-platforma.md`, `docs/plan-automatyzacja-i-konsola.md` K-2…K-4; zależy od decyzji G6/P1 w pdi).
+  Decyzję podjąć po wywiadzie (core-plan-interview) i blueprincie usługi (ux-service-design, `natalia-service-designer`),
+  potem ocena makiet pdi `design/konsola/`, `design/platforma/` (design-critique). Runda 1 wywiadu przygotowana
+  i niezadana: P1 kto patrzy (rekomendacja: tylko człowiek-właściciel), P2 kiedy (po przerwie, potem obok CLI),
+  P3 co w 10 sekund (co czeka na moją decyzję, potem co robią agenci), P4 zasięg (cel: wiele repo, start: jedno),
+  P5 gdzie praca z fabryką (lokalnie / sesje w chmurze / CI — przesądza, czy podgląd lokalny w ogóle zadziała),
+  P6 decyzje w interfejsie (start: tylko podgląd).
+- [ ] **Integracja planu z pdi i ci_for_sdlc — luki L1–L10** (z przeglądu planu 2026-11-08): L1 dwa źródła prawdy
+  (`.tf/register/` i `decisions.md` vs rejestr pdi — przy podłączonym pdi pdi jest źródłem, rejestr to kopia i kolejka
+  wysyłki); L2 brak w kontrakcie pdi 0.10.0 typów dla pytań i blokad pętli (`question.raised`/`question.answered`,
+  zmiana w 4 repo); L3 brak drogi powrotnej decyzji do sesji lokalnej (`work_events.py sync` przy starcie i w pętli);
+  L4 tryb wykonania, gdy człowiek decyduje w przeglądarce (sesja lokalna vs faza w CI / sesja w chmurze); L5 PO
+  dubluje ci_for_sdlc (Jira, Confluence, Figma, odpowiedzi z cytatem A2a — ci_for_sdlc jako `po-source`); L6 typy
+  ustaleń `tf analyze` vs ci_for_sdlc (GAP, CONFLICT, AMBIGUITY, OUTDATED, MISSING_COVERAGE, DRIFT); L7 powiadomienia
+  — pdi ma je już (F5), `notifier` „pdi”; L8 tożsamość decydującego (git config vs konto); L9 wspólna kolejność
+  z krokami pdi (K-2, K-3, G6/P1, DA5); L10 hook startu sesji „co czeka na mnie / na człowieka / co wróciło”.
+  Uwaga dla kroku 1 planu: format rejestru i ustalenia projektować tak, żeby dało się je później zmapować na kontrakt
+  pdi (L1, L2, L6), bez integracji teraz.
+- [ ] **Adaptery wychwytywania decyzji w pdi** dla Teams, Confluence, Miro (obok `/record-decision` i
+  `/decisions-from` dla Slacka i transkrypcji): szkic z cytatem w skrzynce, zatwierdza człowiek — do TODO pdi przy
+  powrocie do tematu.
+
 ## Plan 3.1.0 — nowe możliwości Claude Code i zalecenia z dokumentacji
 
 ### PR 1: generowani agenci, hooki, bezpieczeństwo, ewaluacje

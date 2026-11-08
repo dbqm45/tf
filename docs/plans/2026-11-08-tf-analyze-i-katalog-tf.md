@@ -3,6 +3,10 @@
 Stan: 2026-11-08, do akceptacji człowieka; kodu jeszcze nie ma. Źródła decyzji: rozmowa z człowiekiem 2026-11-08
 (porównanie z dev-kitem, wizja Mai jako menedżerki zespołu, moduły analizy, katalog `.tf/`).
 
+**Zakres na teraz (decyzja człowieka 2026-11-08):** kroki 1–4 kolejności realizacji — `tf analyze` i porządek
+w katalogach (`.tf/`). Sekcje 8–10 (Maja, PO/TPO, pętla pracy dewelopera), interfejs i integracja z pdi
+(luki L1–L10) czekają: `docs/todo.md`, „Na później: interfejs „control tower” …”.
+
 ## Cel
 Wejście fabryki do istniejącego kodu zaczyna się od przeglądu: `tf init` (mapa, stack, dziennik), potem
 `tf analyze` — raporty z wymiarów (bezpieczeństwo, architektura, dostępność, prawo…) z listą działań do odhaczania,
