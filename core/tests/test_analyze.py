@@ -61,7 +61,10 @@ def make_project(t: Path, mode="private") -> Path:
     repo = t / "proj"
     (repo / ".claude").mkdir(parents=True)
     (repo / ".claude" / "factory-manifest.json").write_text(json.dumps({"mode": mode}))
-    (repo / "factory").symlink_to(ROOT / "factory")
+    (repo / "factory").mkdir()   # silnik fabryki bez modułów nakładek — testy rdzenia nie zależą od zestawu nakładek
+    for item in (ROOT / "factory").iterdir():
+        if item.name != "analyzers":
+            (repo / "factory" / item.name).symlink_to(item)
     sk = ROOT / ".claude" / "skills" / "core-grounding"
     if sk.is_dir():
         (repo / ".claude" / "skills").mkdir()
@@ -234,6 +237,51 @@ def main() -> int:
         if cc.is_file():
             r = subprocess.run([sys.executable, str(cc), str(rep)], capture_output=True, text=True)
             check(r.returncode == 0, f"A-10: raport przechodzi claims_check: {r.stdout}")
+        # A-11 bramka modułu na zestawie testowym
+        def fixture(mod: Path, case: str, files: dict, expected: list):
+            d = mod / "fixtures" / case
+            for rel, text in files.items():
+                (d / "repo" / rel).parent.mkdir(parents=True, exist_ok=True)
+                (d / "repo" / rel).write_text(text)
+            (d / "expected.json").write_text(json.dumps(expected))
+        gm = t / "gmods"
+        good = make_module(gm, name="dobry", prefix="DOB")
+        (good / "analyzer.yaml").write_text((good / "analyzer.yaml").read_text()
+                                            + "gate:\n  min_recall: 1.0\n  max_false_positives: 0\n")
+        fixture(good, "zle", {"x.py": "# TODO-SEC HIGH\n"}, [{"rule": "todo-sec", "file": "x.py"}])
+        fixture(good, "czyste", {"y.py": "y = 1\n"}, [])
+        noisy = make_module(gm, name="szum", prefix="SZU")
+        fixture(noisy, "czyste", {"y.py": "# TODO-SEC drobne\n"}, [])
+        make_module(gm, name="bez", prefix="BEZ")
+        genv = {"TF_ANALYZERS_PATH": str(gm), "T_COUNTER": str(counter)}
+        r = run("gate", "--module", "dobry", cwd=repo, env=genv)
+        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
+              f"A-11: moduł znajdujący wszystko bez fałszywych trafień przechodzi bramkę: {r.stdout}{r.stderr}")
+        r = run("gate", "--module", "szum", cwd=repo, env=genv)
+        check(r.returncode == 1 and "NIE PRZESZŁA" in r.stdout and "fałszyw" in r.stdout,
+              f"A-11: fałszywe trafienie w przypadku czystym → bramka nie przechodzi: {r.stdout}{r.stderr}")
+        r = run("gate", "--module", "bez", cwd=repo, env=genv)
+        check(r.returncode == 1 and "fixtures" in r.stdout, f"A-11: moduł bez zestawu nie przechodzi: {r.stdout}")
+        # A-12 bez --module: wszystkie moduły, kod 1, gdy któryś nie przeszedł
+        r = run("gate", cwd=repo, env=genv)
+        check(r.returncode == 1 and "dobry" in r.stdout and "szum" in r.stdout and "bez" in r.stdout,
+              f"A-12: gate bez --module sprawdza wszystkie: {r.stdout}")
+        # A-13 moduł całościowy (incremental: false): --since nie zawęża skanu i nie łączy z poprzednim wynikiem
+        full = t / "full"
+        whole = ("import argparse, json\nap = argparse.ArgumentParser(); ap.add_argument('--root'); "
+                 "ap.add_argument('--files', default='')\na = ap.parse_args()\n"
+                 "print(json.dumps({'rule': 'args', 'file': 'x', 'line': 1, 'snippet': 'files=' + a.files, "
+                 "'severity': 'niska', 'confidence': 1}))\n")
+        fm = make_module(full, name="calosc", prefix="CAL", script=whole)
+        (fm / "analyzer.yaml").write_text((fm / "analyzer.yaml").read_text() + "incremental: false\n")
+        fenv = {"TF_ANALYZERS_PATH": str(full)}
+        run("run", cwd=repo, env=fenv)
+        before = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True).stdout.strip()
+        (repo / "src" / "a.py").write_text("x = 2\n")
+        commit(repo)
+        run("run", "--since", before, cwd=repo, env=fenv)
+        snips = [f["snippet"] for f in json.loads((tfd / "reports" / "calosc.json").read_text())["findings"]]
+        check(snips == ["files="], f"A-13: incremental: false — skrypt bez --files, bez łączenia z poprzednim: {snips}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów analyze")
     return 1 if fails else 0
 

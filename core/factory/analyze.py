@@ -5,9 +5,10 @@ tf init / tf analyze — katalog `.tf/` na wyniki pracy fabryki i modułowy prze
   python3 factory/analyze.py init                      # szkielet .tf/ (idempotentnie) i mapa katalogu
   python3 factory/analyze.py list                      # dostępne moduły i czy stosują się do repo
   python3 factory/analyze.py run [--only a,b] [--since <commit>] [--top N]
+  python3 factory/analyze.py gate [--module m]          # bramka: moduł na swoim zestawie testowym (fixtures/)
 
 Moduł to katalog z `analyzer.yaml` (name, prefix, title, description, version, applies_when.files_any,
-tier0.script) w `factory/analyzers/`, `.tf/analyzers/` albo katalogach z `TF_ANALYZERS_PATH`. Skrypt piętra 0
+tier0.script, incremental, gate) w `factory/analyzers/`, `.tf/analyzers/` albo katalogach z `TF_ANALYZERS_PATH`. Skrypt piętra 0
 dostaje `--root <repo> [--files a,b]` i wypisuje ustalenia jako JSON Lines (rule, title, file, line, snippet,
 severity, confidence, evidence, basis, suggestion). Rdzeń nadaje stabilne `id` (`<prefix>-<6 hex>` z reguły, pliku
 i treści, bez numeru linii), deduplikuje, szereguje, pisze `.tf/reports/<moduł>.md` (checkboxy scalane przy ponownej
@@ -245,6 +246,8 @@ def analyze_module(m: dict, root: Path, head: str, clean: bool, since: str | Non
             and c.get("version") == version):
         return c.get("findings", []), None, "wynik z cache (ten sam commit i wersja modułu)"
     files, scope = None, "całe repozytorium"
+    if since and m.get("incremental", True) is False:
+        since, scope = None, f"całe repozytorium (moduł całościowy — --since {since[:7]} nie zawęża skanu)"
     if since:
         files = [f for f in git(root, "diff", "--name-only", f"{since}..HEAD").splitlines() if f]
         scope = f"pliki zmienione od {since[:7]} ({len(files)}); ustalenia pozostałych plików z poprzedniej analizy"
@@ -427,6 +430,50 @@ def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> 
     return 1 if failed else 0
 
 
+# ───────────── bramka modułu ─────────────
+
+def gate_module(m: dict) -> tuple[bool, list[str]]:
+    """Moduł na fixtures/<przypadek>/repo z expected.json; progi z analyzer.yaml `gate`."""
+    cases = sorted(p for p in (m["_dir"] / "fixtures").glob("*") if (p / "expected.json").is_file()) \
+        if (m["_dir"] / "fixtures").is_dir() else []
+    if not cases:
+        return False, ["brak zestawu testowego fixtures/<przypadek>/{repo/, expected.json}"]
+    g = m.get("gate") or {}
+    min_recall, max_fp = float(g.get("min_recall", 1.0)), int(g.get("max_false_positives", 0))
+    want_n = hit_n = fp_n = 0
+    lines = []
+    for case in cases:
+        expected = {(e["rule"], e["file"]) for e in json.loads((case / "expected.json").read_text(encoding="utf-8"))}
+        raw, err = run_script(m, (case / "repo").resolve(), None)
+        if err:
+            return False, lines + [f"{case.name}: moduł nie powiódł się: {err}"]
+        got = {(f["rule"], f["file"]) for f in raw}
+        hit, fp = expected & got, got - expected
+        want_n, hit_n, fp_n = want_n + len(expected), hit_n + len(hit), fp_n + len(fp)
+        miss = sorted(expected - got)
+        lines.append(f"{case.name}: znalezione {len(hit)}/{len(expected)}, fałszywe trafienia {len(fp)}"
+                     + (f"; brak: {miss}" if miss else "") + (f"; fałszywe: {sorted(fp)}" if fp else ""))
+    recall = hit_n / want_n if want_n else 1.0
+    ok = recall >= min_recall and fp_n <= max_fp
+    lines.append(f"czułość {recall:.0%} (próg {min_recall:.0%}), fałszywe trafienia {fp_n} (limit {max_fp})")
+    return ok, lines
+
+
+def cmd_gate(root: Path, module: str | None) -> int:
+    mods = [m for m in discover(root) if not module or m["name"] == module]
+    if not mods:
+        print("Werdykt: NIE PRZESZŁA — brak modułu" + (f" {module}" if module else "ów"))
+        return 1
+    results = [(m, *gate_module(m)) for m in mods]
+    bad = [m["name"] for m, ok, _ in results if not ok]
+    print("Werdykt: " + ("OK" if not bad else f"NIE PRZESZŁA ({', '.join(bad)})"))
+    for m, ok, lines in results:
+        print(f"{'✓' if ok else '✗'} {m['name']}")
+        for ln in lines:
+            print(f"  {ln}")
+    return 1 if bad else 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -436,6 +483,8 @@ def main(argv=None) -> int:
     r.add_argument("--only", default="")
     r.add_argument("--since")
     r.add_argument("--top", type=int)
+    g = sub.add_parser("gate")
+    g.add_argument("--module")
     a = ap.parse_args(argv)
     root = Path.cwd()
     try:
@@ -443,6 +492,8 @@ def main(argv=None) -> int:
             return cmd_init(root)
         if a.cmd == "list":
             return cmd_list(root)
+        if a.cmd == "gate":
+            return cmd_gate(root, a.module)
         return cmd_run(root, [x for x in a.only.split(",") if x], a.since, a.top)
     except RuntimeError as e:
         print(f"✗ {e}")

@@ -1,0 +1,12 @@
+name: security
+prefix: SEC
+title: Bezpieczeństwo
+description: sekrety w kodzie, pliki .env w repo, niebezpieczne API, wyłączony TLS, słaby skrót haseł, brak lockfile'a
+version: 1.0.0
+przeglad: "2027-05-08"
+skills: [sec-web-vulnerabilities, arch-threat-modeling, ops-supply-chain-security, sec-appsec-devsecops]
+tier0:
+  script: scripts/scan.py
+gate:
+  min_recall: 1.0
+  max_false_positives: 0
