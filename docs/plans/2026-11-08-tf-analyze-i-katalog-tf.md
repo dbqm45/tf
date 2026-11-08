@@ -148,12 +148,70 @@ i `tools/workspace.py check` dla wszystkich nakładek.
   zbiorcze podsumowanie dziennie.
 - **Pętla wykonawcza jako wspólny skill** person deweloperskich (dziś tylko Talos): kawałek zablokowany zamiast STOP
   całej historyjki, praca obok w tle z zapisem do notatki, powrót z odpowiedzią.
-- **PO/TPO jako pełnomocnik:** odpowiada tylko ze źródłem (pdi, `docs/project/`, bank dowodów, Jira/Confluence przez
-  konektor, metryki, rozmowa z człowiekiem zapisana jako decyzja); bez źródła eskaluje do człowieka.
+- **PO/TPO jako pełnomocnik wiedzy produktowej:** modułowy, z ryzykami i sposobem ich usunięcia — sekcja 9.
 - **Scrum Master jako skill i okresowy przegląd:** blokady i ich wiek, limity WIP, metryki przepływu, Definition of
   Done, retro (core-agent-retro) — bez stale działającego agenta.
 - **Talos:** zostaje do czasu pomiaru `tools/flow_compare.py` (protokół `docs/evals/protokol-porownania-przeplywow.md`);
   wygaszenie jako osobnej persony dopiero po danych.
+
+## 9. PO/TPO — modułowy pełnomocnik wiedzy produktowej
+Decyzja człowieka 2026-11-08: PO/TPO ma być modułowe jak `tf analyze`, a plan ma wymienić ryzyka do usunięcia
+i — gdzie się da — usuwać je projektem, nie regułą w prompcie.
+
+### 9.1. Zmiana projektu wobec „persony PO z wiedzą”
+Persona, która „zna produkt” (wiedza wczytana do kontekstu), zgaduje, gdy wiedzy brakuje, starzeje się po cichu
+i jest podatna na treść źródeł. Dlatego PO to **usługa odpowiedzi z dowodów**, a nie nowa persona:
+- wiedza leży w **banku dowodów** (format `ddd-discovery-intake`: cytat dosłowny, źródło, ranga, data, wersja),
+  zbudowanym przez moduły źródeł;
+- odpowiedź powstaje z pozycji banku wyszukanych dla pytania i przechodzi **walidator bez modelu**: każdy cytat musi
+  dosłownie występować w źródle w cache, z datą nie starszą niż TTL źródła — inaczej odpowiedź nie wychodzi, a pytanie
+  trafia do człowieka;
+- z usługi korzystają istniejące persony i role (natalia, patrycja, lena, `product-manager`, Maja przy przydziale);
+  osobna persona „PO” nie jest potrzebna, co najwyżej cienki profil roli (9.2).
+
+### 9.2. Moduły (wkład nakładek, jak `analyzers/`)
+Jeden wspólny kontrakt modułu w rdzeniu (`module.yaml` z polem `kind`: `analyzer` | `po-source` | `po-skill`),
+jedna bramka i jeden rejestr bramek — PO nie dostaje osobnego mechanizmu.
+
+| Rodzaj | Gdzie | Co zawiera | Przykłady |
+|---|---|---|---|
+| źródło wiedzy | `packs/<nakładka>/po-sources/<nazwa>/` | sygnały wykrycia w repo, sposób dostępu (konektor tylko do odczytu albo eksport), skrypt pobrania do cache, mapowanie na typy pozycji banku, ranga domyślna (normatywne / opisowe / nieformalne), TTL, `fixtures/` | `docs-project`, `pdi` (PRB, decyzje, metryki), `jira`, `confluence`, `github-issues`, `openapi`, `figma`, `metrics` (ShipScope) |
+| umiejętność | `packs/<nakładka>/po-skills/<nazwa>/` | skill + kontrakt wejścia i wyjścia + zestaw ewaluacyjny | odpowiedź na pytanie, doprecyzowanie zgłoszenia (kryteria jako przykłady, poza zakresem), przegląd PR wobec kryteriów akceptacji, propozycja priorytetu (RICE, wynik zamiast funkcji) |
+| profil roli | `packs/<nakładka>/po-profiles/<nazwa>.yaml` | zestaw umiejętności, wymagane i zalecane źródła, poziomy autonomii | `po` (pack-it), `tpo` = `po` + `openapi`, atrybuty jakości, fakty integracyjne; nakładki domenowe dokładają źródła (pack-ev: regulacje, słownik EV) |
+
+Polecenia (rdzeń): `tf po setup [--profile po|tpo]` — wykrycie źródeł po sygnałach (klucze zgłoszeń w commitach
+i gałęziach, adresy `*.atlassian.net`, Notion, Figma w README i `docs/`, specyfikacje OpenAPI, zainstalowany mode-pdi),
+propozycja konektora dla każdego, instalacja za zgodą, krótki wywiad tylko o to, czego repo nie powie (gdzie są
+wymagania, kto decyduje, skąd metryki); `tf po list`; `tf po sync` (odświeżenie, wykrycie sprzeczności między starą
+a nową wersją); `tf po check` (bramka modułów). Destylacja i wywiad: skill `/po-onboard` w sesji.
+
+Gdzie leży: mapa źródeł `.tf/po/sources.yaml` (git); surowe pobrania `.tf/cache/po/` (poza gitem); bank dowodów
+i destylat w dzienniku projektu (`02-domain/corpus.md`, `01-discovery/brief.md`); pytania, odpowiedzi i eskalacje
+w `.tf/register/`.
+
+### 9.3. Ryzyka i jak je usuwamy
+| # | Ryzyko | Usunięcie projektem | Co zostaje do pilnowania |
+|---|---|---|---|
+| R1 | zmyślona odpowiedź brzmiąca wiarygodnie | walidator cytatów bez modelu (9.1); brak dowodu = eskalacja, nie odpowiedź | próg w bramce: 0 zmyśleń na zestawie pytań |
+| R2 | wiedza nieaktualna | data i wersja każdej pozycji, TTL na źródło, `tf po sync`; pozycja po TTL nie uzasadnia odpowiedzi | częstotliwość sync w `config.yaml` |
+| R3 | sprzeczne źródła | hierarchia rang (decyzja człowieka > normatywne > opisowe > nieformalne); sprzeczność wykrywa `sources-critic` i zawsze eskaluje — agent nie wybiera | — |
+| R4 | prompt injection z Jiry, Confluence, komentarzy | pobranie skryptem bez modelu; destylacja w podagencie tylko z `Read` na cache, bez sieci, zapisu i Bash; wynik to cytaty, nie polecenia; walidator odrzuca pozycje bez cytatu | reguły core-agent-security |
+| R5 | dane osobowe i poufne w repo | skaner PII piętra 0 przed zapisem do banku (blokuje zapis); surowe dane tylko w `.tf/cache/` poza gitem | lista przestrzeni dopuszczonych do destylacji |
+| R6 | ujawnienie treści osobom bez dostępu (repo widzi więcej ludzi niż przestrzeń Confluence) | destylat do repo tylko z przestrzeni oznaczonych w `sources.yaml` jako dostępne dla zespołu repo; reszta tylko w cache lokalnym | decyzja człowieka przy `setup` |
+| R7 | zapis do zewnętrznych systemów (komentarze, statusy w Jirze) | konektory domyślnie tylko do odczytu z minimalnym zakresem; zapis to osobny moduł, zgoda na każdą akcję | — |
+| R8 | agent podejmuje decyzje biznesowe za człowieka | PO proponuje opcje z dowodami; decyzja zawsze z podpisem „człowiek, data”; poziomy autonomii w profilu roli (sekcja 8) | dzienne podsumowanie dla ludzkiego PO |
+| R9 | mylenie „jak jest” z „jak ma być” | kod, testy i OpenAPI mają rangę opisową — mogą opisać stan, nie uzasadnić wymagania | — |
+| R10 | koszt kontekstu (duże przestrzenie) | wyszukiwanie w indeksie banku (jak `core-knowledge-base`, `tools/context.py`), nie wczytywanie całości; budżet na pytanie z twardym STOP | — |
+| R11 | uzależnienie od jednego dostawcy | źródła wymienne; dla każdego konektora ścieżka eksportu do plików | — |
+| R12 | jakość niezmierzona | bramka modułu: zestaw pytań z odpowiedziami od człowieka; miary: trafność ze źródłem, trafne „nie wiem”, zmyślenia (=0) | koszt ewaluacji — tylko za zgodą |
+| R13 | ludzki PO traci kontrolę albo przestaje ufać | każda odpowiedź i eskalacja w rejestrze z dowodami; odpowiedzi człowieka wracają do banku jako decyzje | — |
+
+### 9.4. Kolejność (po rejestrze z kroku 1)
+1. Wspólny kontrakt `module.yaml` i bramka dla `po-source`; moduły `docs-project` i `pdi` (bez sieci).
+2. Walidator cytatów, skaner PII, `tf po setup` (wykrywanie, mapa, wywiad) i umiejętność „odpowiedź na pytanie”
+   z eskalacją do rejestru; zestaw pytań i pierwszy pomiar (za zgodą).
+3. Moduły `jira`, `confluence` (konektor tylko do odczytu + eksport), `tf po sync`, `sources-critic` w pętli.
+4. Umiejętności: doprecyzowanie zgłoszenia, przegląd PR wobec kryteriów, priorytety; profil `tpo` z `openapi`.
 
 ## Kolejność realizacji (każdy krok osobny PR, TDD, bramki)
 1. `.tf/` (config, reports, register) + format ustalenia + rdzeń `tf analyze` z piętrem 0 i raportem ze scalaniem
@@ -161,5 +219,6 @@ i `tools/workspace.py check` dla wszystkich nakładek.
 2. Bramka modułów i moduły `security`, `architecture` (piętra 0–1).
 3. `accessibility` z piętrem 2 (Playwright; MCP za zgodą) i `legal` z pytaniami wejściowymi.
 4. Migracja istniejących ścieżek do `.tf/`, w tym `factory/` → `.tf/factory/` (sekcje 0 i 7).
-5. Maja na rejestrze, pętla wykonawcza, PO-pełnomocnik, SM jako skill (sekcja 8) — każdy osobno, po pomiarze.
+5. Maja na rejestrze, pętla wykonawcza, SM jako skill (sekcja 8) — każdy osobno, po pomiarze.
+6. PO/TPO według kolejności z sekcji 9.4.
 Płatne przebiegi (piętra 1–3 na prawdziwych repozytoriach, pomiar przepływów) tylko za zgodą człowieka z budżetem.
