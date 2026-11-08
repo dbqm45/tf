@@ -47,6 +47,35 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes",
                             "--shared", "--packs", "pack-a"], capture_output=True, text=True, timeout=300)
         check(r.returncode == 0, f"I-1: instalacja: {r.stdout[-600:]} {r.stderr[-300:]}")
+        # T-1…T-5 (krok 4c): silnik w .tf/factory/, konfiguracja projektu w .tf/config/, nic w katalogu factory/
+        tfd = proj / ".tf"
+        check((tfd / "factory" / "build.py").is_file() and (tfd / "factory" / "VERSION").is_file()
+              and (tfd / "factory" / "packs" / "pack-a" / "pack.yaml").is_file() and not (proj / "factory").exists(),
+              f"T-1: silnik i metadane nakładek w .tf/factory/, bez factory/ w katalogu głównym: "
+              f"{sorted(x.name for x in proj.iterdir())}")
+        own_cfg = tfd / "config" / "config.yaml"
+        check(own_cfg.is_file() and not any(ln.startswith("tiers:") for ln in own_cfg.read_text(encoding="utf-8").splitlines())
+              and all((tfd / "config" / d).is_dir() for d in ("personas", "roles", "traits")),
+              f"T-2: .tf/config/ — config.yaml tylko na nadpisania i katalogi własnych person, ról, cech")
+        own_cfg.parent.mkdir(parents=True, exist_ok=True)
+        own_cfg.write_text("default_profile: oszczedny\ntiers:\n  fast: {maxTurns: 7}\n", encoding="utf-8")
+        r2 = subprocess.run([sys.executable, str(tfd / "factory" / "packs.py"), "--json"], cwd=proj,
+                            capture_output=True, text=True, timeout=120)
+        try:
+            composed = json.loads(r2.stdout)
+        except ValueError:
+            composed = {}
+        cfg = composed.get("config", composed)
+        check(cfg.get("default_profile") == "oszczedny" and (cfg.get("tiers") or {}).get("fast", {}).get("maxTurns") == 7
+              and (cfg.get("tiers") or {}).get("fast", {}).get("model") and "std" in (cfg.get("tiers") or {}),
+              f"T-3: nadpisania z .tf/config/config.yaml nałożone na domyślne silnika: {r2.stdout[:300]} {r2.stderr[-300:]}")
+        instr = (proj / "CLAUDE.md").read_text(encoding="utf-8") if (proj / "CLAUDE.md").exists() else ""
+        check(".tf/factory/build.py" in instr and "python3 factory/" not in instr,
+              f"T-4: instrukcje projektu wskazują .tf/factory/: {instr[-400:]}")
+        r3 = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes"],
+                            capture_output=True, text=True, timeout=300)
+        check(r3.returncode == 0 and "oszczedny" in own_cfg.read_text(encoding="utf-8"),
+              f"T-5: aktualizacja nie rusza .tf/config/config.yaml: {r3.stdout[-400:]}")
         skill = proj / ".claude" / "skills" / "aa-run"
         read = lambda p: p.read_text(encoding="utf-8") if p.exists() else ""
         check("python3 tests/test_orders.py" in read(skill / "SKILL.md"),
@@ -62,9 +91,9 @@ def main() -> int:
               "I-5a: workflow CI fabryki da się uruchomić ręcznie (workflow_dispatch), np. po włączeniu Actions")
         check("name: 'aa-audit'" in read(proj / ".claude" / "workflows" / "aa-audit.js"),
               "I-7: workflow nakładki w .claude/workflows/ (tam Claude Code szuka zapisanych workflows)")
-        guide, faq = read(proj / "factory" / "PRZEWODNIK.md"), read(proj / "factory" / "FAQ.md")
+        guide, faq = read(proj / ".tf" / "factory" / "PRZEWODNIK.md"), read(proj / ".tf" / "factory" / "FAQ.md")
         check(guide.startswith("# ") and faq.startswith("# ") and "tf " in guide,
-              "I-9: przewodnik i FAQ rdzenia w factory/ (bez README w korzeniu projektu)")
+              "I-9: przewodnik i FAQ rdzenia w .tf/factory/ (bez README w korzeniu projektu)")
         sett = read(proj / ".claude" / "settings.json")
         check("python3 .claude/tests/test_cleanroom.py" in sett, "I-6: uprawnienie do testu fabryki w .claude/tests/")
 

@@ -2,7 +2,7 @@
 
 Na pytanie „jak działa ten skill?”, „dlaczego zachowuje się tak, a nie inaczej?” albo „jak zrobić podobny?”
 odpowiadasz raportem w siedmiu punktach. Najpierw czytasz całość: SKILL.md, każdy plik z `references/`, każdy skrypt
-(obcy skill — najpierw `python3 factory/skill_audit.py <katalog>`, core-agent-security §4a).
+(obcy skill — najpierw `python3 .tf/factory/skill_audit.py <katalog>`, core-agent-security §4a).
 
 Głębokość: SKILL.md krótszy niż 150 linii → zwięźle, bez tabeli anatomii; dłuższy niż 400 linii → pełna tabela
 anatomii z numerami linii.

@@ -2,10 +2,10 @@ name: team-factory
 
 on:
   pull_request:
-    paths: ["factory/**", ".claude/**"]
+    paths: [".tf/factory/**", ".claude/**"]
   push:
     branches: [main]
-    paths: ["factory/**", ".claude/**"]
+    paths: [".tf/factory/**", ".claude/**"]
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
           python-version: "3.12"
       - run: pip install pyyaml
       - name: Walidacja skilli, ról i person + aktualność wygenerowanych agentów
-        run: python3 factory/build.py check
+        run: python3 .tf/factory/build.py check
       - name: Testy hooków bezpieczeństwa
         run: python3 tests/test_hooks.py
       - name: Testy wykrywania stacku i wersji skilli
@@ -42,6 +42,6 @@ jobs:
       - name: Testy audytu skilli
         run: python3 tests/test_skill_audit.py
       - name: Audyt bezpieczeństwa skilli (bez modelu i sieci)
-        run: python3 factory/skill_audit.py .claude/skills
+        run: python3 .tf/factory/skill_audit.py .claude/skills
       - name: Skille zmienione po bramce jakości (bez modelu; ewaluacja na modelu tylko ręcznie, za zgodą)
-        run: python3 factory/skill_gate.py --status --strict
+        run: python3 .tf/factory/skill_gate.py --status --strict

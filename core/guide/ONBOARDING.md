@@ -1,7 +1,7 @@
 # Onboarding: pierwsza instalacja fabryki
 
 Ten plik prowadzi od zera do działającej fabryki w projekcie. Codzienna praca: `PRZEWODNIK.md`, częste pytania:
-`FAQ.md` (oba trafiają przy instalacji do `factory/` w projekcie).
+`FAQ.md` (oba trafiają przy instalacji do `.tf/factory/` w projekcie).
 
 ## 1. Raz na komputerze: polecenie `tf`
 Potrzebny jest Python 3 i git.
@@ -28,7 +28,7 @@ Bez fabryki w projekcie `tf` instaluje najnowsze wydanie (najwyższy tag `vX.Y.Z
 - nakładki (`pack-*`) i tryby (`mode-*`).
 
 Wymagane nakładki i nakładka języka (dla `pl`: `pack-editorial-pl`) dochodzą same. Na koniec instalator składa
-agentów (`factory/build.py`).
+agentów (`.tf/factory/build.py`).
 
 Bez pytań, na przykład w skrypcie:
 
@@ -51,7 +51,7 @@ Prywatnie — gdy fabryka jest tylko Twoim narzędziem. Zespołowo — gdy ma dz
 1. W katalogu projektu uruchom `claude` i zaakceptuj zaufanie do folderu. Bez tego hooki i uprawnienia nie
    działają.
 2. Sprawdź instalację: `tf doctor` (naprawa: `tf doctor --fix`), lista nakładek i trybów: `tf list`.
-3. Wybierz personę z `.claude/catalog.md` i uruchom ją: `claude --agent <nazwa>`. Dalej: `factory/PRZEWODNIK.md`.
+3. Wybierz personę z `.claude/catalog.md` i uruchom ją: `claude --agent <nazwa>`. Dalej: `.tf/factory/PRZEWODNIK.md`.
 
 ## 5. Sesje w chmurze (claude.ai/code)
 - Hooki fabryki działają tylko w sesji uruchomionej w katalogu repozytorium projektu.
@@ -65,8 +65,8 @@ Prywatnie — gdy fabryka jest tylko Twoim narzędziem. Zespołowo — gdy ma dz
 | `tf` | aktualizacja (`tf update --check` — co się zmieni, bez zmian) |
 | `tf add <id>` / `tf remove <id>` | dodanie lub usunięcie nakładki albo trybu |
 | `tf language <kod>` / `tf commit-language <kod>` | zmiana języków |
-| `python3 factory/update.py --rollback` | powrót do poprzedniej wersji |
+| `python3 .tf/factory/update.py --rollback` | powrót do poprzedniej wersji |
 
 Pliki fabryki aktualizacja nadpisuje (jak `node_modules`) — zmiany wprowadzasz w repo fabryki; Twoje pliki i ustawienia
-w `factory/config.yaml` zostają. Wszystkie
+w `.tf/config/config.yaml` zostają. Wszystkie
 opcje: `python3 ~/tools/tf/core/factory/install.py --help` i `tf --help`.

@@ -2,8 +2,8 @@
 """
 Szukanie już zweryfikowanych faktów, zanim zacznie się nowy research (tańsze niż ponowne sprawdzanie źródeł).
 
-  python3 factory/facts.py ISO 19112          # wszystkie hasła naraz, bez wielkości liter, po rdzeniu słowa
-  python3 factory/facts.py eidas podpis --json
+  python3 .tf/factory/facts.py ISO 19112          # wszystkie hasła naraz, bez wielkości liter, po rdzeniu słowa
+  python3 .tf/factory/facts.py eidas podpis --json
   --root <katalog projektu> · --today RRRR-MM-DD (data odniesienia) · --max-age 180 (dni, po których ustalenie jest „stare”)
 
 Przeszukuje:
@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 VERDICT = {"P": "potwierdzone", "C": "częściowo", "N": "niepotwierdzone", "S": "sprzeczne"}
 LINE_VERDICT = re.compile(r"^\s*[-*]\s*(P|C|N|S)\b")
 DATE_IN_LINE = re.compile(r"odczyt[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")

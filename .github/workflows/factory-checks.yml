@@ -1,6 +1,6 @@
 # Sprawdzenia fabryki bez modelu (bez sekretów, bez kosztu): odwołania między warstwami, testy repozytorium oraz
 # budowa i testy w zestawionym projekcie — sam rdzeń, każda nakładka osobno i wszystkie razem (tools/workspace.py).
-# Ewaluacji na modelu (płatnej) CI nie uruchamia — robi ją człowiek: python3 factory/skill_gate.py <skill> --model haiku,sonnet
+# Ewaluacji na modelu (płatnej) CI nie uruchamia — robi ją człowiek: python3 .tf/factory/skill_gate.py <skill> --model haiku,sonnet
 name: factory-checks
 on:
   pull_request:

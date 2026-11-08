@@ -24,7 +24,7 @@ Zanim ją porównasz, sprawdź wszystkie trzy:
    czas przeglądu człowieka. Tańszy token przy dwóch dodatkowych rundach poprawek to droższe zadanie.
 3. Dla agentów zbudowanych w kodzie (recenzent w CI, triaż) — macierz przypadków × modeli w zestawie ewaluacji
    (pack-it: eng-llm-features §8), także po zmianie harnessu przy tym samym modelu.
-4. Zmianę domyślnego modelu zespołu zapisujesz z wynikiem testu (profil kosztów, `factory/config.yaml`), a nie
+4. Zmianę domyślnego modelu zespołu zapisujesz z wynikiem testu (profil kosztów, `.tf/config/config.yaml`), a nie
    z nagłówka ogłoszenia. Przegląd nowości co ok. 2 tygodnie wystarcza.
 
 **Polecenie dla modelu rozumującego:** cel + twarde ograniczenia + mierzalne kryterium sukcesu. Nie narzucaj kroków
@@ -99,11 +99,11 @@ Cache obniża cenę powtarzanego prefiksu, ale nie zdejmuje treści z okna — g
 Źródło: J. Wąsowski, „Your Claude Code Bill Demystified” (2026-10-09); progi to przykłady autora [niezweryfikowane].
 
 ## 7. Raporty kosztów
-- `python3 factory/cost_report.py --days 7` — koszt per agent i model, eskalacje, sygnały `Tier:` i rekomendacje
+- `python3 .tf/factory/cost_report.py --days 7` — koszt per agent i model, eskalacje, sygnały `Tier:` i rekomendacje
   zmiany tieru ról.
-- `python3 factory/cost_report.py --delegation` — koszt wykonawców wg klasy z briefu (hook `log_usage` zapisuje każde
+- `python3 .tf/factory/cost_report.py --delegation` — koszt wykonawców wg klasy z briefu (hook `log_usage` zapisuje każde
   wywołanie Agent w `.tf/logs/delegation.jsonl`). Klasa droga przy krótkim raporcie → rób takie zadania sam.
-- `python3 factory/cost_stats.py` (`--period day|week|month`) — tokeny, udział modeli, koszt w USD i PLN (kurs średni
+- `python3 .tf/factory/cost_stats.py` (`--period day|week|month`) — tokeny, udział modeli, koszt w USD i PLN (kurs średni
   NBP), zmiany w gicie i pasmo „tanio / typowo / drogo” względem mediany poprzednich okresów; luki w logach oznacza
   „dane niepełne”. Przyczyny kosztu etapu i tiery wykonawców ocenia retrospektywa agentów (core-agent-retro).
 

@@ -9,8 +9,8 @@ import tempfile
 from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir())
-ANALYZE = ROOT / "factory" / "analyze.py"
-MODS = ROOT / "factory" / "analyzers"
+ANALYZE = ROOT / ".tf" / "factory" / "analyze.py"
+MODS = ROOT / ".tf" / "factory" / "analyzers"
 SECRET = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
 
 
@@ -30,7 +30,7 @@ def main() -> int:
             print(f"✗ {msg}")
 
     for name in ("security", "architecture"):
-        check((MODS / name / "analyzer.yaml").is_file(), f"Z-1: moduł {name} zainstalowany w factory/analyzers/")
+        check((MODS / name / "analyzer.yaml").is_file(), f"Z-1: moduł {name} zainstalowany w .tf/factory/analyzers/")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", name], cwd=ROOT, capture_output=True,
                            text=True, timeout=300)
         check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
@@ -41,7 +41,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         repo = Path(t) / "proj"
         (repo / "src").mkdir(parents=True)
-        (repo / "factory").symlink_to(ROOT / "factory")
+        (repo / ".tf").mkdir()
+        (repo / ".tf" / "factory").symlink_to(ROOT / ".tf" / "factory")
         (repo / ".claude").mkdir()
         (repo / ".claude" / "hooks").symlink_to(ROOT / ".claude" / "hooks")
         (repo / ".claude" / "skills").symlink_to(ROOT / ".claude" / "skills")
@@ -49,7 +50,7 @@ def main() -> int:
         (repo / "src" / "conf.py").write_text(f'TOKEN = "{SECRET}"\n')
         (repo / "tests").mkdir()
         (repo / "tests" / "test_conf.py").write_text(f'FAKE = "{SECRET}"\n')
-        (repo / ".gitignore").write_text("factory\n.claude/\n")
+        (repo / ".gitignore").write_text(".tf/\n.claude/\n")
         git(repo, "init", "-q", "-b", "main")
         git(repo, "add", ".")
         git(repo, "commit", "-qm", "init")

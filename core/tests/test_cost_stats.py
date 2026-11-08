@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy factory/cost_stats.py: okresy, udział modeli, koszt USD i PLN (kurs średni NBP, tabela A), skuteczność,
+"""Testy .tf/factory/cost_stats.py: okresy, udział modeli, koszt USD i PLN (kurs średni NBP, tabela A), skuteczność,
 ocena drogo/tanio (pasmo kontrolne, warianty „wszystko na Opusie” i „bez cache”)."""
 import datetime as dt
 import importlib.util
@@ -10,8 +10,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "cost_stats.py").is_file())
-SCRIPT = ROOT / "factory" / "cost_stats.py"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "cost_stats.py").is_file())
+SCRIPT = ROOT / ".tf" / "factory" / "cost_stats.py"
 PRICES = {"haiku": {"input": 0.10, "output": 0.50, "cache_read": 0.01, "cache_write": 0.125},
           "sonnet": {"input": 2, "output": 10, "cache_read": 0.20, "cache_write": 2.5},
           "opus": {"input": 4, "output": 20, "cache_read": 0.20, "cache_write": 5},

@@ -47,7 +47,7 @@ niż subagenci (każdy członek to osobna instancja, koszt rośnie liniowo), wi�
 1. Poproś członków o zamknięcie, gdy ich zadania są zrobione.
 2. Wynik: co zrobiono (pliki, testy z wynikiem), spory i decyzje. Decyzje zapisujesz w dzienniku projektu
    (core-project-record).
-3. Koszt: `python3 factory/cost_report.py --days 1`.
+3. Koszt: `python3 .tf/factory/cost_report.py --days 1`.
 4. `python3 .claude/skills/team-session/scripts/team_switch.py off` — z włączoną flagą podagent nazwany przez
    Claude startuje jako członek zespołu także wtedy, gdy nikt o zespół nie prosił.
 

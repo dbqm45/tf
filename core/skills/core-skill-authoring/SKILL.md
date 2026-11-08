@@ -3,7 +3,7 @@ name: core-skill-authoring
 description: Użyj przy dodaniu lub zmianie skilla — najpierw scenariusze ewaluacji, potem zwięzła treść z przykładami, bramka, audyt.
 metadata:
   przeglad: "2027-10-09"
-  katalog: "Użyj, gdy dodajesz nowy skill do fabryki, zmieniasz istniejący, skill się nie uruchamia albo trzeba udowodnić, że skill coś wnosi — kolejność pracy od scenariuszy ewaluacji, punkt odniesienia bez skilla, reguły opisu i struktury, bramka jakości factory/skill_gate.py, ewaluacja na modelach i rejestr wyników. Nie do łączenia istniejących skilli w jednym zadaniu (core-skill-composition) ani testów kodu aplikacji (skill testów, pack-it)."
+  katalog: "Użyj, gdy dodajesz nowy skill do fabryki, zmieniasz istniejący, skill się nie uruchamia albo trzeba udowodnić, że skill coś wnosi — kolejność pracy od scenariuszy ewaluacji, punkt odniesienia bez skilla, reguły opisu i struktury, bramka jakości .tf/factory/skill_gate.py, ewaluacja na modelach i rejestr wyników. Nie do łączenia istniejących skilli w jednym zadaniu (core-skill-composition) ani testów kodu aplikacji (skill testów, pack-it)."
   slowa: "nowy skill, dodaj skill, napisz skill, zmień skill, skill się nie uruchamia, model nie wczytuje skilla, ewaluacja skilla, scenariusze, bramka jakości, skill_gate, czy skill działa, baseline, skill procesowy, skill w CI, skill bez człowieka, claude -p, jak działa ten skill, przegląd skilla, dystrybucja skilli w zespole, paczka ze skillami, dodać skill do fabryki, nowy skill w fabryce, od czego zacząć nowy skill, sprawdzić, że skill naprawdę działa, zanim oddam skill, skill procesowy, skill działający w CI, skill dla claude -p, zaprojektować skill przewidywalny, skrypt w scripts/ skilla, wpiąć skrypt do SKILL.md, skrypt liczy metryki dla agentów, liczby ze skryptu do raportów"
 ---
 
@@ -23,10 +23,10 @@ Sama treść SKILL.md niczego nie dowodzi.
    **Skill, który tworzy artefakt** (PRD, raport, plan), zaczynasz od najlepszego istniejącego wyniku, a nie od listy
    kroków: wypisujesz decyzje, których ogólny szablon nie zna (kolejność sekcji pod czytelnika, nierówna głębia,
    ograniczenia wprost), i 2–3 pytania, które skill zadaje przed pisaniem. To staje się treścią i scenariuszami.
-2. **Szkielet.** `python3 factory/build.py new-skill <prefiks-nazwa> "<pełny opis z granicami>"` tworzy SKILL.md
+2. **Szkielet.** `python3 .tf/factory/build.py new-skill <prefiks-nazwa> "<pełny opis z granicami>"` tworzy SKILL.md
    z terminem przeglądu i polem `slowa` oraz szkielet scenariuszy `tests/skill_evals/<nazwa>.json` (w projekcie:
    `.claude/tests/skill_evals/`). `--role <rola>` dopisuje skill do roli, `--name-only` ustawia `widocznosc: nazwa`.
-   Prefiks wybierz z wymiarów w `factory/config.yaml → facets`.
+   Prefiks wybierz z wymiarów w `.tf/config/config.yaml → facets`.
 3. **Scenariusze przed treścią** (≥3):
    - **2× `trigger`** — pytania z luki z kroku 1, zadane słowami człowieka, a nie opisu skilla. Do tego `checks.all`:
      ≥2 grupy wyrażeń sprawdzających wiedzę, której model nie ma bez skilla; `none` dla typowego błędu.
@@ -77,24 +77,24 @@ Sama treść SKILL.md niczego nie dowodzi.
    - Skill, który czyta dużo i zwraca krótki wynik (audyt, przegląd wielu plików): `context: fork` z polem `agent` —
      działa w osobnym podagencie, do rozmowy wraca wynik.
    - Skill rzadko potrzebny: `metadata.widocznosc: nazwa` — na liście tylko nazwa (nie zabiera budżetu opisów),
-     a hook `skill_hint` podpowiada go z opisem przy pasującym poleceniu (`factory/skill_profile.py`).
+     a hook `skill_hint` podpowiada go z opisem przy pasującym poleceniu (`.tf/factory/skill_profile.py`).
    - Skill uruchamiany tylko ręcznie: `disable-model-invocation: true` i scenariusze wyłącznie `no-trigger`.
-   - `metadata.przeglad`: termin przeglądu treści (RRRR-MM-DD). Ustawia go `python3 factory/freshness.py --reviewed
+   - `metadata.przeglad`: termin przeglądu treści (RRRR-MM-DD). Ustawia go `python3 .tf/factory/freshness.py --reviewed
      <nazwa>` po sprawdzeniu faktów w źródłach (dziś + interwał: wersje 3 mies., przepisy 3–6, metody 12).
-7. **Wpięcie:** dopisz skill do roli (`factory/roles/*.yaml`) albo persony i uruchom `python3 factory/build.py`.
-8. **Bramka jakości** (bezpłatna, obowiązkowa): `python3 factory/skill_gate.py <nazwa>`. Sprawdza:
+7. **Wpięcie:** dopisz skill do roli (`.tf/config/roles/*.yaml`) albo persony i uruchom `python3 .tf/factory/build.py`.
+8. **Bramka jakości** (bezpłatna, obowiązkowa): `python3 .tf/factory/skill_gate.py <nazwa>`. Sprawdza:
    - strukturę;
    - scenariusze;
    - czy hook podpowiada skill przy jego pytaniach, a przy pytaniu sąsiada nie stawia go na pierwszym miejscu;
    - **regresję podpowiedzi wszystkich skilli** (nowy skill nie może podkradać pytań innym);
    - polszczyznę;
    - odwołania;
-   - **audyt** (`factory/skill_audit.py`): bezpieczeństwo i zalecenia Anthropic (reguła wyboru w opisie, przykłady,
+   - **audyt** (`.tf/factory/skill_audit.py`): bezpieczeństwo i zalecenia Anthropic (reguła wyboru w opisie, przykłady,
      istniejące pliki, deklaracja sieci) — wysoka i średnia waga blokują bramkę.
 
    Wynik i odcisk treści trafiają do rejestru. `build.py check` ostrzega, gdy skill zmieniono po bramce.
 9. **Ewaluacja na modelu** (płatna, **za zgodą człowieka**, ~$0,10–0,30 na scenariusz i model):
-   `python3 factory/skill_gate.py <nazwa> --model haiku,sonnet --budget 2`.
+   `python3 .tf/factory/skill_gate.py <nazwa> --model haiku,sonnet --budget 2`.
    - Muszą przejść wszystkie scenariusze. Haiku sprawdza, czy instrukcje wystarczą słabszemu modelowi, a Sonnet,
      czy są zwięzłe.
    - Dodaj `opus` dla skilli, których używają agenci na tierze deep.
@@ -147,7 +147,7 @@ Sama treść SKILL.md niczego nie dowodzi.
 - [ ] jedno zadanie; sekcja `## Przykład`; skrypty dla operacji deterministycznych; sieć zadeklarowana
 - [ ] SKILL.md zwięzły, `references/` jeden poziom od SKILL.md ze spisem treści, źródła z datą, `metadata.przeglad`
 - [ ] skill procesowy: warunek wstępny pliku, raport ze statusami faz, bez łańcuchowania; w CI bez pytań, z linią werdyktu
-- [ ] `python3 factory/skill_gate.py <nazwa>` przechodzi (także regresja wszystkich skilli)
+- [ ] `python3 .tf/factory/skill_gate.py <nazwa>` przechodzi (także regresja wszystkich skilli)
 - [ ] ewaluacja na haiku i sonnet zaliczona (za zgodą człowieka), wynik i koszt w CHANGELOG
 
 ## Źródła

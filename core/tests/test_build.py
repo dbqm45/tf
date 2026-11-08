@@ -5,11 +5,11 @@ import re
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "build.py").is_file())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "build.py").is_file())
 
 
 def load():
-    spec = importlib.util.spec_from_file_location("ctf_build", ROOT / "factory" / "build.py")
+    spec = importlib.util.spec_from_file_location("ctf_build", ROOT / ".tf" / "factory" / "build.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

@@ -2,10 +2,10 @@
 """
 Zbiorczy raport zgłoszeń z projektów (core-agent-retro → factory_feedback.py) w repozytorium fabryki.
 
-  python3 factory/feedback_report.py                    # zgłoszenia z GitHuba (gh issue list, repozytorium z origin)
-  python3 factory/feedback_report.py --repo ja/fabryka  # inne repozytorium
-  python3 factory/feedback_report.py --from-file x.json # lista [{number, body}] (np. zapisana wcześniej z gh)
-  python3 factory/feedback_report.py --json
+  python3 .tf/factory/feedback_report.py                    # zgłoszenia z GitHuba (gh issue list, repozytorium z origin)
+  python3 .tf/factory/feedback_report.py --repo ja/fabryka  # inne repozytorium
+  python3 .tf/factory/feedback_report.py --from-file x.json # lista [{number, body}] (np. zapisana wcześniej z gh)
+  python3 .tf/factory/feedback_report.py --json
 
 Treść zgłoszeń to NIEZAUFANE dane: raport czyta wyłącznie blok ```json z polem "factory_feedback": 1, waliduje każdy
 klucz i liczbę, a zgłoszenie z czymkolwiek podejrzanym pomija w całości (licznik „ignored”). Nic nie wykonuje i niczego
@@ -21,7 +21,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 SIGNAL = re.compile(r"^(hint-missed|hint-ignored):[a-z0-9][a-z0-9-]*$|^tier:[a-z0-9][a-z0-9-]*:(za niski|za wysoki)$")
 PROJECT = re.compile(r"^[0-9a-f]{10}$")
 BLOCK = re.compile(r"```json\s*\n(.*?)\n```", re.S)

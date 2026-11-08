@@ -58,7 +58,7 @@ modelowi decyzyjnemu Jev w ~0,1 s za ułamek centa. Sugestię „NIEPEWNE” roz
   tura przeczyta całą historię bez rabatu. Delegowanie do wykonawcy na innym modelu nie psuje cache sesji.
 
 ## 3. Główna sesja: model, profil, doradca
-- **Profil kosztów** (`python3 factory/profile.py`) przestawia cały zespół naraz:
+- **Profil kosztów** (`python3 .tf/factory/profile.py`) przestawia cały zespół naraz:
   - `oszczedny` — bez Opusa;
   - `zrownowazony` — domyślny;
   - `jakosc` — std z effort high i doradca Opus.
@@ -83,7 +83,7 @@ Tokeny myślenia liczą się jak tokeny wyjścia, czyli najdroższe.
 - `high` — błędy w istniejącym kodzie, przypadki brzegowe, weryfikacja;
 - `xhigh`/`max` — trudne problemy do samodzielnego rozwiązania (np. szukanie podatności).
 
-Effort agentów wynika z tieru (`factory/config.yaml`), a skill może ustawić własny polem `effort`. Na większości
+Effort agentów wynika z tieru (`.tf/config/config.yaml`), a skill może ustawić własny polem `effort`. Na większości
 modeli zmiana effortu w trakcie sesji też kasuje cache; wyjątek: Opus 5.5, Sonnet 5.5, Haiku 5.5 i Fable 5.1 przez
 API Anthropic lub subskrypcję. Jedna trudna tura: `ultrathink` w treści polecenia zamiast zmiany effortu sesji;
 `ultracode` to orkiestracja workflow wielu agentów, nie poziom effortu (`references/model-i-automatyzacja.md` §8).
@@ -140,7 +140,7 @@ pomiaru (tokeny szacowane ze znaków) — `references/model-i-automatyzacja.md` 
 - **Pasek stanu** (`.claude/hooks/statusline.py`): model, effort, zapełnienie kontekstu, trafienia cache (z dopiskiem
   „zimny”, gdy cache wygasł), koszt sesji, limity. Nie zużywa tokenów modelu.
 - `/usage` — trafienia cache sesji i prawdopodobna przyczyna ostatniego pudła.
-- Raporty kosztów z logów (`factory/cost_report.py`, `factory/cost_stats.py`) — polecenia i opcje:
+- Raporty kosztów z logów (`.tf/factory/cost_report.py`, `.tf/factory/cost_stats.py`) — polecenia i opcje:
   `references/model-i-automatyzacja.md` §7; przyczyny kosztu etapu ocenia core-agent-retro.
 
 ## 8. Ocena nowego modelu (zanim zmienisz domyślny)

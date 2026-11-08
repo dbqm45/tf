@@ -33,7 +33,7 @@ Pokaż człowiekowi propozycję i poczekaj na zgodę:
   - *standard* — wszystkie wybrane wymiary na `sonnet`, ranking, top 10 z propozycjami;
   - *pełny* — jak standard, a architektura i bezpieczeństwo na `opus`, duże repo dzielone na moduły.
 - **Limit kosztu:** kwota albo liczba wywołań wykonawców, ustalona przez człowieka. Liczysz ją w pasku stanu lub
-  `python3 factory/cost_report.py --days 1`; przy 80% limitu zatrzymujesz się i pytasz, co pominąć.
+  `python3 .tf/factory/cost_report.py --days 1`; przy 80% limitu zatrzymujesz się i pytasz, co pominąć.
 - **Granice:** czego nie ruszasz (np. `vendor/`, kod generowany), czy wolno uruchamiać narzędzia projektu, czy jest
   środowisko testowe. Skanów aktywnych (DAST, skaner portów) wobec działających systemów nie uruchamiasz bez pisemnej
   zgody (core-agent-security §5b).

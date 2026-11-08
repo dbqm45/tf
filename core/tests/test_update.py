@@ -11,11 +11,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "update.py").is_file())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "update.py").is_file())
 
 
 def load():
-    spec = importlib.util.spec_from_file_location("ctf_update_fetch", ROOT / "factory" / "update.py")
+    spec = importlib.util.spec_from_file_location("ctf_update_fetch", ROOT / ".tf" / "factory" / "update.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -99,8 +99,8 @@ def notice_tests(up, check) -> None:
 
         # Hook SessionStart w projekcie: komunikat widoczny dla człowieka (systemMessage) i w kontekście agenta.
         app = project(base, "hook-app", "2.19.0", str(factory_dir(base, "hook-src", "2.20.0")))
-        (app / "factory").mkdir()
-        shutil.copy(ROOT / "factory" / "update.py", app / "factory" / "update.py")
+        (app / ".tf" / "factory").mkdir(parents=True)
+        shutil.copy(ROOT / ".tf" / "factory" / "update.py", app / ".tf" / "factory" / "update.py")
         (app / ".claude" / "hooks").mkdir()
         shutil.copy(ROOT / ".claude" / "hooks" / "update_notice.py", app / ".claude" / "hooks" / "update_notice.py")
         r = subprocess.run([sys.executable, str(app / ".claude" / "hooks" / "update_notice.py")], capture_output=True,
@@ -132,8 +132,8 @@ def preflight_tests(up, check) -> None:
         (root / "CLAUDE.md").mkdir()
         got = up.unwritable(root)
         check(got == [".claude/skills/", "CLAUDE.md"], f"PF-3: niezapisywalne ścieżki wymienione z nazwy: {got}")
-        code, msg = up.preflight(root, "python3 factory/update.py --yes")
-        check(code == 2 and ".claude/skills/" in msg and "python3 factory/update.py --yes" in msg,
+        code, msg = up.preflight(root, "python3 .tf/factory/update.py --yes")
+        check(code == 2 and ".claude/skills/" in msg and "python3 .tf/factory/update.py --yes" in msg,
               f"PF-4: komunikat każe człowiekowi uruchomić polecenie samemu: {code} {msg}")
         (root / ".claude" / "skills").unlink()
         (root / "CLAUDE.md").rmdir()

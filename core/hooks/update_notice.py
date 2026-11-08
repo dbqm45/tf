@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Hook SessionStart: nowsze wydanie fabryki i skille po terminie przeglądu (tylko biblioteka standardowa).
 
-W projekcie z zainstalowaną fabryką: raz na dobę pyta źródło aktualizacji (factory/update.py → notice) i, gdy jest
+W projekcie z zainstalowaną fabryką: raz na dobę pyta źródło aktualizacji (.tf/factory/update.py → notice) i, gdy jest
 nowsze wydanie, pokazuje komunikat człowiekowi (systemMessage) i agentowi. Z `update.py --auto on` (tryb prywatny)
-nowe wydanie PATCH/MINOR instaluje w tle (`update.py --auto-run`), a wynik pokazuje przy starcie następnej sesji. Wszędzie, gdzie jest factory/freshness.py:
+nowe wydanie PATCH/MINOR instaluje w tle (`update.py --auto-run`), a wynik pokazuje przy starcie następnej sesji. Wszędzie, gdzie jest .tf/factory/freshness.py:
 lista skilli po terminie przeglądu — agent sprawdza w nich ulotne fakty w źródłach przed użyciem. Wyłącznik
 sprawdzania wydań: CTF_UPDATE_CHECK=0. Hook nigdy nie blokuje startu sesji (kod 0, cisza, gdy nie ma czego zgłosić).
 """
@@ -29,7 +29,7 @@ def load(path: Path, name: str):
 
 def messages(root: Path) -> list[str]:
     out = []
-    up = root / "factory" / "update.py"
+    up = root / ".tf" / "factory" / "update.py"
     if up.is_file():
         try:
             mod = load(up, "ctf_update_notice")
@@ -39,7 +39,7 @@ def messages(root: Path) -> list[str]:
             msg = None
         if msg:
             out.append(msg)
-    fr = root / "factory" / "freshness.py"
+    fr = root / ".tf" / "factory" / "freshness.py"
     if fr.is_file():
         try:
             import datetime as dt
@@ -50,7 +50,7 @@ def messages(root: Path) -> list[str]:
             names = ", ".join(r["skill"] for r in rows[:8]) + (" …" if len(rows) > 8 else "")
             out.append(f"Skille po terminie przeglądu ({len(rows)}): {names}. Ulotne fakty z nich (wersje, przepisy, "
                        "terminy, progi) sprawdź w źródłach przed użyciem (core-source-research). Lista: "
-                       "python3 factory/freshness.py; nowsza fabryka mogła je już odświeżyć.")
+                       "python3 .tf/factory/freshness.py; nowsza fabryka mogła je już odświeżyć.")
     return out
 
 

@@ -4,12 +4,12 @@ import importlib.util
 import sys
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "build.py").is_file())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "build.py").is_file())
 sys.dont_write_bytecode = True
 
 
 def load(name: str, file: str):
-    spec = importlib.util.spec_from_file_location(name, ROOT / "factory" / file)
+    spec = importlib.util.spec_from_file_location(name, ROOT / ".tf" / "factory" / file)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -65,7 +65,7 @@ def main() -> int:
           f"RO-1: {names} {dropped}")
 
     # Prompt z pliku Claude Code: bez frontmattera i komentarza nagłówka.
-    doc = "---\nname: x\ndescription: \"d\"\n---\n<!-- WYGENEROWANO przez factory/build.py — nie edytuj ręcznie. Źródło: s -->\n\n# Tytuł\ntreść\n"
+    doc = "---\nname: x\ndescription: \"d\"\n---\n<!-- WYGENEROWANO przez .tf/factory/build.py — nie edytuj ręcznie. Źródło: s -->\n\n# Tytuł\ntreść\n"
     check(tm.system_prompt(doc) == "# Tytuł\ntreść\n", f"SP-1: {tm.system_prompt(doc)!r}")
 
     # Opis bez wskazówki uruchomienia w Claude Code.
@@ -77,11 +77,11 @@ def main() -> int:
 
     # Plik agenta: frontmatter parsowalny, treść = prompt, komentarz źródła w frontmatterze.
     out = tm.agent_doc({"name": "x", "description": "Opis: z dwukropkiem", "model": {"id": "claude-haiku-5-5"}},
-                       "# P\n", src="factory/x.yaml")
+                       "# P\n", src=".tf/factory/x.yaml")
     fm, body = split(out, yaml)
     check(fm == {"name": "x", "description": "Opis: z dwukropkiem", "model": {"id": "claude-haiku-5-5"}}
           and body == "# P\n", f"AD-1: {fm} {body!r}")
-    check("# WYGENEROWANO przez factory/build.py" in out.split("\n---\n", 1)[0], "AD-2: znacznik w frontmatterze")
+    check("# WYGENEROWANO przez .tf/factory/build.py" in out.split("\n---\n", 1)[0], "AD-2: znacznik w frontmatterze")
 
     # Zapis: usuwa tylko własne wygenerowane pliki, nie rusza claude-lock.json ani plików użytkownika.
     import tempfile

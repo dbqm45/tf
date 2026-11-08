@@ -68,7 +68,7 @@ Zmiana modelu, `CLAUDE.md`, skilla albo hooka może pogorszyć pracę agenta tak
 - **Każdy incydent produkcyjny staje się stałym scenariuszem** (obok testu regresyjnego w kodzie).
 - Scenariusze, które przestały rozróżniać dobre i złe odpowiedzi (bo modele się poprawiły), wymieniasz.
 - W fabryce: skille mają scenariusze w `tests/skill_evals/` (bramka `skill_gate.py`, płatny przebieg tylko za zgodą
-  człowieka); workflow `team-factory` uruchamia testy bez modelu przy zmianach w `.claude/` i `factory/`.
+  człowieka); workflow `team-factory` uruchamia testy bez modelu przy zmianach w `.claude/` i `.tf/factory/`.
 - **Własny prompt lub agent w produkcie albo w CI** (przegląd PR, triaż zgłoszeń) ewaluujesz macierzą
   *przypadki × kandydaci* (prompty, modele, konfiguracje), np. narzędziem typu promptfoo: jeden plik z promptami,
   kandydatami i przypadkami z asercjami. Trzy rodzaje asercji:

@@ -2,12 +2,12 @@
 """
 Zamknięcie zadania do commita jednym poleceniem (tańszy kontekst): sprawdzenia, treść commita, dziennik, commit.
 
-  python3 factory/finish.py --message /ścieżka/msg.txt
-  python3 factory/finish.py --message msg.txt --log "Co zrobiono (jedno zdanie)" --wip <punkt-kontrolny>
-  --by claude · --phase maintenance · --no-check (pomiń factory/check.py) · --root <repozytorium>
+  python3 .tf/factory/finish.py --message /ścieżka/msg.txt
+  python3 .tf/factory/finish.py --message msg.txt --log "Co zrobiono (jedno zdanie)" --wip <punkt-kontrolny>
+  --by claude · --phase maintenance · --no-check (pomiń .tf/factory/check.py) · --root <repozytorium>
 
 Kolejność (zatrzymuje się na pierwszym błędzie): gałąź nie jest main/master → w zmianach nie ma plików `.env*`
-(poza `.env.example`) → `factory/check.py` zielony → treść commita przechodzi `scripts/check_commit_message.py`
+(poza `.env.example`) → `.tf/factory/check.py` zielony → treść commita przechodzi `scripts/check_commit_message.py`
 (gdy jest) → wpis w dzienniku i zamknięcie punktu kontrolnego (gdy podane) → `git add -A` i `git commit -F`.
 **Pushu nie robi**: wypisuje polecenie `git push -u origin <gałąź>` do uruchomienia osobno — strażnik guard_bash pyta
 o push człowieka, a skrypt nie może tego obchodzić. Plik z treścią commita trzymaj poza repozytorium (scratchpad).
@@ -18,7 +18,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def git(root: Path, *args: str) -> subprocess.CompletedProcess:
@@ -63,8 +63,8 @@ def main(argv: list[str]) -> int:
     if not paths and not opts.get("--log"):
         print("✓ Brak zmian — nic do commita.")
         return 0
-    if not opts.get("--no-check") and (root / "factory" / "check.py").is_file():
-        r = py(root / "factory" / "check.py", cwd=root)
+    if not opts.get("--no-check") and (root / ".tf" / "factory" / "check.py").is_file():
+        r = py(root / ".tf" / "factory" / "check.py", cwd=root)
         if r.returncode != 0:
             print("✗ Sprawdzenia czerwone — bez commita:\n" + tail(r, 15))
             return 1
@@ -95,7 +95,7 @@ def main(argv: list[str]) -> int:
         print("✓ dziennik zaktualizowany")
     elif opts.get("--log") or opts.get("--wip"):
         print("ℹ Brak .claude/hooks/project_record.py — wpis w dzienniku pominięty.")
-    hooks = root / "factory" / "hooks_status.py"
+    hooks = root / ".tf" / "factory" / "hooks_status.py"
     if hooks.is_file():
         r = py(hooks, "--root", str(root), cwd=root)
         if r.stdout.startswith("⚠"):

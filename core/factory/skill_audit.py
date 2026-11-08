@@ -3,7 +3,7 @@
 Audyt skilli: bezpieczeństwo (zwłaszcza skilli z obcych źródeł) i zalecenia Anthropic dla dobrych skilli.
 Bez modelu, bez sieci, tylko biblioteka standardowa — audyt czyta pliki, niczego nie uruchamia.
 
-  python3 factory/skill_audit.py <katalog-skilla | katalog-ze-skillami> [--json] [--strict]
+  python3 .tf/factory/skill_audit.py <katalog-skilla | katalog-ze-skillami> [--json] [--strict]
 
 Kody wyjścia: 2 — są ustalenia wysokiej wagi (nie instaluj bez wyjaśnienia), 1 — średniej wagi (albo niskiej
 z --strict), 0 — brak. Audyt automatyczny NIE zastępuje przeczytania SKILL.md i każdego skryptu przez człowieka:

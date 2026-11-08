@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy `factory/analyze.py` (tf init, tf analyze): szkielet .tf/, moduły piętra 0, stabilne id ustaleń, raport ze
+"""Testy `.tf/factory/analyze.py` (tf init, tf analyze): szkielet .tf/, moduły piętra 0, stabilne id ustaleń, raport ze
 scalaniem checkboxów, rejestr, cache po commicie. Plan: docs/plans/2026-11-08-krok-1-tf-analyze-rdzen.md."""
 import json
 import os
@@ -9,9 +9,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "tf.py").is_file())
-ANALYZE = ROOT / "factory" / "analyze.py"
-TF = ROOT / "factory" / "tf.py"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
+ANALYZE = ROOT / ".tf" / "factory" / "analyze.py"
+TF = ROOT / ".tf" / "factory" / "tf.py"
 
 # Moduł testowy: zgłasza każdą linię z "TODO-SEC" w plikach *.py; liczy uruchomienia w pliku obok repo.
 SCRIPT = r'''import argparse, json, os
@@ -61,10 +61,10 @@ def make_project(t: Path, mode="private") -> Path:
     repo = t / "proj"
     (repo / ".claude").mkdir(parents=True)
     (repo / ".claude" / "factory-manifest.json").write_text(json.dumps({"mode": mode}))
-    (repo / "factory").mkdir()   # silnik fabryki bez modułów nakładek — testy rdzenia nie zależą od zestawu nakładek
-    for item in (ROOT / "factory").iterdir():
+    (repo / ".tf" / "factory").mkdir(parents=True)   # silnik fabryki bez modułów nakładek — testy rdzenia nie zależą od zestawu nakładek
+    for item in (ROOT / ".tf" / "factory").iterdir():
         if item.name != "analyzers":
-            (repo / "factory" / item.name).symlink_to(item)
+            (repo / ".tf" / "factory" / item.name).symlink_to(item)
     sk = ROOT / ".claude" / "skills" / "core-grounding"
     if sk.is_dir():
         (repo / ".claude" / "skills").mkdir()
@@ -73,7 +73,7 @@ def make_project(t: Path, mode="private") -> Path:
     (repo / "src" / "a.py").write_text("x = 1\n# TODO-SEC HIGH token\n# TODO-SEC drobne\n")
     (repo / "src" / "b.py").write_text("y = 2\n")
     git(repo, "init", "-q", "-b", "main")
-    (repo / ".gitignore").write_text("factory\n.claude/\n")
+    (repo / ".gitignore").write_text(".tf/\n.claude/\n")
     git(repo, "add", ".")
     git(repo, "commit", "-qm", "init")
     return repo
@@ -112,14 +112,14 @@ def main() -> int:
         r = run("init", cwd=repo)
         tfd = repo / ".tf"
         dirs = ["reports", "register", "wip", "cache", "logs", "runs", "backup"]
-        check(r.returncode == 0 and (tfd / "config.yaml").is_file()
+        check(r.returncode == 0 and (tfd / "config" / "config.yaml").is_file()
               and all((tfd / d / "README.md").is_file() for d in dirs),
-              f"A-1: init tworzy .tf/ z config.yaml i README w katalogach: {r.stdout}{r.stderr}")
+              f"A-1: init tworzy .tf/ z config/config.yaml i README w katalogach: {r.stdout}{r.stderr}")
         check("reports" in r.stdout and "register" in r.stdout, f"A-1: init wypisuje mapę .tf/: {r.stdout}")
-        (tfd / "config.yaml").write_text("analyze:\n  top: 1\n")
+        (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 1\n")
         run("init", cwd=repo)
-        check((tfd / "config.yaml").read_text() == "analyze:\n  top: 1\n", "A-1: drugi init nie nadpisuje config.yaml")
-        (tfd / "config.yaml").write_text("analyze:\n  top: 10\n")
+        check((tfd / "config" / "config.yaml").read_text() == "analyze:\n  top: 1\n", "A-1: drugi init nie nadpisuje config.yaml")
+        (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 10\n")
 
         # A-2 git: prywatna → exclude, zespołowa → .gitignore
         excl = (repo / ".git" / "info" / "exclude").read_text() if (repo / ".git" / "info" / "exclude").exists() else ""
@@ -162,14 +162,14 @@ def main() -> int:
               f"A-4: przesunięcie linii nie zmienia id, powtórzona linia nie dubluje ustalenia: {data['findings']}")
 
         # A-5 ranking i top
-        (tfd / "config.yaml").write_text("analyze:\n  top: 1\n")
+        (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 1\n")
         run("run", cwd=repo, env={**env, "TF_ANALYZE_NO_CACHE": "1"})
         text = rep.read_text()
         ust = text.split("## Ustalenia", 1)[1].split("##", 1)[0] if "## Ustalenia" in text else ""
         check("HIGH" in ust and "drobne" not in ust, f"A-5: w ustaleniach top 1 — najwyższa waga: {ust}")
         check(len(json.loads((tfd / "reports" / "sec.json").read_text())["findings"]) == 2,
               "A-5: pełna lista w .json mimo top 1")
-        (tfd / "config.yaml").write_text("analyze:\n  top: 10\n")
+        (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 10\n")
 
         # A-6 scalanie checkboxów
         hi = next(f["id"] for f in data["findings"] if "HIGH" in f["snippet"])

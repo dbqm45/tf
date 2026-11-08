@@ -14,8 +14,8 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hoo
 SCRIPT = ROOT / ".claude" / "skills" / "core-git-workflow" / "scripts" / "ai_review.py"
 try:
     import yaml
-except ImportError:   # dołączona kopia PyYAML (factory/_vendor)
-    sys.path.insert(0, str(ROOT / "factory" / "_vendor"))
+except ImportError:   # dołączona kopia PyYAML (.tf/factory/_vendor)
+    sys.path.insert(0, str(ROOT / ".tf" / "factory" / "_vendor"))
     import yaml
 
 FAKE_GH = r'''#!/usr/bin/env python3

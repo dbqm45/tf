@@ -100,7 +100,7 @@ bramka na skutkach (pokrycie, próg) i dostęp do produkcji: `references/uprawni
 Skill daje agentowi instrukcje i kod, których nie napisałeś — złośliwy skill może kazać wywołać narzędzia albo kod
 niezgodnie z deklarowanym celem (Anthropic: instaluj tylko z zaufanych źródeł — własne albo od Anthropic — a resztę
 audytuj jak instalowane oprogramowanie).
-1. **Audyt automatyczny:** `python3 factory/skill_audit.py <katalog-skilla>`. Kod 2 = ustalenia wysokiej wagi
+1. **Audyt automatyczny:** `python3 .tf/factory/skill_audit.py <katalog-skilla>`. Kod 2 = ustalenia wysokiej wagi
    (sieć bez deklaracji, pobieranie skryptu przekazywanego wprost do powłoki, dostęp do sekretów, polecenia ukrywające działanie, ukryte znaki) — nie
    instalujesz bez wyjaśnienia. Wynik 0 nie znaczy „bezpieczny”: audyt łapie typowe wzorce, nie każdą złośliwość.
 2. **Czytasz całość:** SKILL.md od początku do końca, każdy skrypt i plik pomocniczy. Szukasz pobierania adresów

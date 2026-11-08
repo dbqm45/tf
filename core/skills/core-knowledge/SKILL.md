@@ -35,7 +35,7 @@ przypięte do ścieżek przed edycją, plik instrukcji czy pipeline i świeżoś
    nie ma, przyjmij założenie i zapisz je w odpowiedzi.
 2. **Szukaj lokalnie.** Zadaj 2–3 zapytania: po polsku, po angielsku i z identyfikatorami (nazwy pól, numery
    artykułów), np. `kb.py search "kara umowna opóźnienie dostawy"`. Zbadane fakty sprawdza też
-   `python3 factory/facts.py <hasła>`.
+   `python3 .tf/factory/facts.py <hasła>`.
 3. **Czytaj trafienia,** a nie same fragmenty z wyniku: otwórz plik w zakresie linii. Odpowiedź opierasz na
    przeczytanym tekście.
 4. **Oceń, czy to wystarczy.** Kolejność wiarygodności: źródło pierwotne z cache (ranga P) → skill (który sam cytuje

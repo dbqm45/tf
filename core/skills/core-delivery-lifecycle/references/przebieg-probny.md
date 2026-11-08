@@ -48,6 +48,6 @@ zmienić.
 
 ## Wnioski do fabryki
 - Lekcje projektu (core-project-record, `lessons.md`) dotyczą tego projektu. Poprawki fabryki (skille, role,
-  persony, hooki) zapisz osobno jako listę propozycji dla człowieka, bo zmiany w `factory/` i `.claude/hooks/`
+  persony, hooki) zapisz osobno jako listę propozycji dla człowieka, bo zmiany w `.tf/factory/` i `.claude/hooks/`
   wymagają jego zgody (CLAUDE.md).
 - Powtórz przebieg po poprawkach na innym małym projekcie, żeby nie dopasować fabryki do jednego przykładu.

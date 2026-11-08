@@ -16,7 +16,7 @@ zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `
 planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish` zapisuje wtedy też kopię raportu
 w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
 czas, tokeny (wejście, wyjście, odczyt cache, zapis cache 5 min i 1 h), koszt wg `prices_usd_per_mtok`
-z factory/config.yaml, modele i agenci; dopisuje postęp planu i liczbę odłożonych spraw, zapisuje report.md.
+z .tf/config/config.yaml, modele i agenci; dopisuje postęp planu i liczbę odłożonych spraw, zapisuje report.md.
 
 Liczy skrypt, nie model — raport nie zużywa tokenów poza wklejeniem kilkunastu linii wyniku. Transkrypty:
 `$CLAUDE_CONFIG_DIR/projects/<ścieżka projektu>/` (domyślnie `~/.claude`); bez `--session` liczą się wszystkie sesje
@@ -40,12 +40,12 @@ from pathlib import Path
 
 ATTEMPT = re.compile(r"proba-(\d+)")  # katalog próby kawałka z security_scan.py scan --slice
 
-# projekt: katalog z factory/config.yaml nad skryptem (.claude/skills/talos-story-run/scripts/), inaczej bieżący
-ROOT = next((p for p in Path(__file__).resolve().parents if (p / "factory" / "config.yaml").is_file()), Path.cwd())
+# projekt: katalog z .tf/config/config.yaml nad skryptem (.claude/skills/talos-story-run/scripts/), inaczej bieżący
+ROOT = next((p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "config.yaml").is_file()), Path.cwd())
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
-    sys.path.insert(0, str(ROOT / "factory" / "_vendor"))
+except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
+    sys.path.insert(0, str(ROOT / ".tf" / "factory" / "_vendor"))
     import yaml
 
 RUNS = Path(".tf") / "runs" / "talos"   # wyniki pracy fabryki w .tf/ (poza .claude/ — ścieżką chronioną, PRB-32)
@@ -66,6 +66,15 @@ Przypadki brzegowe, pomysły i ryzyka spoza kryteriów akceptacji — nie trafia
 Format: `- <co> — <gdzie: plik:linia> — <skutek> — <propozycja> — do decyzji`
 """
 
+
+
+def _tf_config(root: Path) -> dict:
+    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.load_config(root)
 
 def slugify(text: str) -> str:
     t = unicodedata.normalize("NFKD", text.lower().replace("ł", "l"))
@@ -149,7 +158,7 @@ def cost(tokens: dict, price: dict | None) -> float | None:
 
 def prices() -> dict:
     try:
-        cfg = yaml.safe_load((ROOT / "factory" / "config.yaml").read_text(encoding="utf-8")) or {}
+        cfg = _tf_config(ROOT) or {}
     except OSError:
         return {}
     return cfg.get("prices_usd_per_mtok") or {}

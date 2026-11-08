@@ -32,7 +32,7 @@ Reguły:
 
 Tryb (zmienna środowiskowa CLAUDE_TDD): strict (domyślnie: blokada z wyjaśnieniem dla agenta), ask (decyduje człowiek),
 off (wyłączone — np. spike, prototyp). Pliki nieobjęte: testy, konfiguracja, style i szablony, dokumentacja, `.claude/`,
-`factory/`, wygenerowane katalogi; dodatkowe wzorce w CLAUDE_TDD_EXEMPT (oddzielone przecinkami, np. "src/migrations/*").
+`.tf/factory/`, wygenerowane katalogi; dodatkowe wzorce w CLAUDE_TDD_EXEMPT (oddzielone przecinkami, np. "src/migrations/*").
 """
 from __future__ import annotations
 

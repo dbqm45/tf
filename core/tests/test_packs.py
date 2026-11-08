@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy nakładek (factory/packs.py + build.py): składanie konfiguracji, wkład do person i ról, warunek języka,
+"""Testy nakładek (.tf/factory/packs.py + build.py): składanie konfiguracji, wkład do person i ról, warunek języka,
 nakładki opcjonalne, konsultanci, dyspozytor, zgodność wersji, migracje. python3 tests/test_packs.py"""
 import importlib.util
 import json
@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "packs.py").is_file())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "packs.py").is_file())
 
 
 def write(path: Path, text: str) -> None:
@@ -18,14 +18,14 @@ def write(path: Path, text: str) -> None:
 
 def core_range() -> str:
     """Zakres zgodny z wersją rdzenia tej instalacji (dane testowe nie psują się przy kolejnym MAJOR)."""
-    major = int((ROOT / "factory" / "VERSION").read_text(encoding="utf-8").split(".")[0])
+    major = int((ROOT / ".tf" / "factory" / "VERSION").read_text(encoding="utf-8").split(".")[0])
     return f">={major}.0.0 <{major + 1}.0.0"
 
 
 def project(base: Path) -> Path:
-    """Projekt z rdzeniem tej instalacji (factory/, skille core-*, hooki) i dwiema sztucznymi nakładkami."""
+    """Projekt z rdzeniem tej instalacji (.tf/factory/, skille core-*, hooki) i dwiema sztucznymi nakładkami."""
     p = base / "proj"
-    shutil.copytree(ROOT / "factory", p / "factory", ignore=shutil.ignore_patterns("packs", "__pycache__", "personas",
+    shutil.copytree(ROOT / ".tf" / "factory", p / ".tf" / "factory", ignore=shutil.ignore_patterns("packs", "__pycache__", "personas",
                                                                                      "roles"))
     for d in (ROOT / ".claude" / "skills").glob("core-*"):
         shutil.copytree(d, p / ".claude" / "skills" / d.name)
@@ -33,7 +33,7 @@ def project(base: Path) -> Path:
             "  przeglad: \"2099-01-01\"\n---\n# {n}\n"
     for n in ("aa-model", "aa-extra", "bb-tekst"):
         write(p / ".claude" / "skills" / n / "SKILL.md", skill.format(n=n))
-    a = p / "factory" / "packs" / "pack-a"
+    a = p / ".tf" / "factory" / "packs" / "pack-a"
     write(a / "pack.yaml", """id: pack-a
 version: 1.0.0
 title: A
@@ -57,7 +57,7 @@ contributes:
                                          "roles: [rola-a, rola-c]\nskills: [aa-model]\ncore_skills: [core-git-workflow]\n"
                                          "traits: [grounded, cecha-c]\npriorities: [jakość]\n"
                                          "extra_agents: [cyryl-rola-c]\n")
-    b = p / "factory" / "packs" / "pack-b"
+    b = p / ".tf" / "factory" / "packs" / "pack-b"
     write(b / "pack.yaml", """id: pack-b
 version: 1.0.0
 title: B
@@ -101,9 +101,9 @@ consultants:
 
 
 def load(p: Path, name: str):
-    spec = importlib.util.spec_from_file_location(f"tp_{name}_{id(p)}", p / "factory" / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(f"tp_{name}_{id(p)}", p / ".tf" / "factory" / f"{name}.py")
     mod = importlib.util.module_from_spec(spec)
-    sys.path.insert(0, str(p / "factory"))
+    sys.path.insert(0, str(p / ".tf" / "factory"))
     spec.loader.exec_module(mod)
     return mod
 
@@ -192,10 +192,10 @@ def main() -> int:
               "P-14: język pracy en i commitów pl w prompcie")
 
         # błędne isolation i scenarios → błędy walidacji
-        bp = p / "factory" / "packs" / "pack-b" / "personas" / "bolek.yaml"
+        bp = p / ".tf" / "factory" / "packs" / "pack-b" / "personas" / "bolek.yaml"
         saved = bp.read_text()
         bp.write_text(saved.replace("isolation: worktree", "isolation: kontener").replace("behavior: odsyłasz do cennika", "x: y"))
-        rp = p / "factory" / "packs" / "pack-a" / "roles" / "rola-a.yaml"
+        rp = p / ".tf" / "factory" / "packs" / "pack-a" / "roles" / "rola-a.yaml"
         rsaved = rp.read_text()
         rp.write_text(rsaved.replace("grounding: sources-only", "grounding: pamiec"))
         e, _ = b.validate()
@@ -214,26 +214,26 @@ def main() -> int:
         sk.write_text(saved)
 
         # zgodność wersji rdzenia i wymagane nakładki
-        y = p / "factory" / "packs" / "pack-a" / "pack.yaml"
+        y = p / ".tf" / "factory" / "packs" / "pack-a" / "pack.yaml"
         y.write_text(y.read_text().replace(f'requires: {{core: "{core_range()}"}}', 'requires: {core: ">=9.0.0", packs: [pack-z]}'))
         e, _ = b.check_packs(b.load_config())
         check(any("wymaga rdzenia" in x for x in e) and any("tf add pack-z" in x for x in e),
               f"P-15: niezgodny rdzeń i brakująca wymagana nakładka → błędy: {e}")
 
         # migracje: własna persona projektu ze starą nazwą skilla
-        write(p / "factory" / "personas" / "moja.yaml", "name: moja\nskills: [core-tech-docs, fe-ux-design]\n")
+        write(p / ".tf" / "config" / "personas" / "moja.yaml", "name: moja\nskills: [core-tech-docs, fe-ux-design]\n")
         mig = load(p, "migrations")
         todo = mig.apply(p, dry=True)
-        check(todo and "docs-tech-writing" in todo[0] and "core-tech-docs" in (p / "factory/personas/moja.yaml").read_text(),
+        check(todo and "docs-tech-writing" in todo[0] and "core-tech-docs" in (p / ".tf/config/personas/moja.yaml").read_text(),
               f"P-16: migracja na sucho pokazuje zmianę, nic nie zapisuje: {todo}")
         mig.apply(p, dry=False)
-        text = (p / "factory/personas/moja.yaml").read_text()
+        text = (p / ".tf/config/personas/moja.yaml").read_text()
         check("docs-tech-writing" in text and "ux-feature-design" in text, f"P-17: migracja poprawia plik projektu: {text}")
 
         # sekcja języka w CLAUDE.local.md
         md_p = p / "CLAUDE.local.md"
         md_p.write_text("x\n<!-- team-factory:begin -->\n## Zespół\n### Język\n- stare\n<!-- team-factory:end -->\n")
-        changed = pm.write_language_lines(md_p, pm.load_yaml(p / "factory" / "config.yaml"),
+        changed = pm.write_language_lines(md_p, pm.load_yaml(p / ".tf" / "factory" / "config.yaml"),
                                           {"language": "pl", "commit_language": "en"})
         txt = md_p.read_text()
         check(changed and "- stare" not in txt and "po polsku" in txt and txt.startswith("x\n"),

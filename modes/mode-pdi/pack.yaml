@@ -1,6 +1,6 @@
 # Tryb pdi: decyzje w jednym źródle — dziennik zmiany (docs/project/changes/CHG-n/) zgodny z kontraktem pdi 0.3.0
 # i zapis decyzji do rejestru pdi przez MCP. Opcjonalny; bez niego fabryka działa jak dotąd.
-# Przewodnik: GUIDE.md (w projekcie: factory/packs/mode-pdi/).
+# Przewodnik: GUIDE.md (w projekcie: .tf/factory/packs/mode-pdi/).
 id: mode-pdi
 kind: mode
 version: 0.9.0

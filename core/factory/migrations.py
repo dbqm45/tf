@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Migracje rdzenia — autokorekta plików projektu po zmianach w publicznym API fabryki (factory/PUBLIC_API.md).
+Migracje rdzenia — autokorekta plików projektu po zmianach w publicznym API fabryki (.tf/factory/PUBLIC_API.md).
 
-  python3 factory/migrations.py            # pokaż, co trzeba poprawić (nic nie zmienia)
-  python3 factory/migrations.py --apply    # popraw
+  python3 .tf/factory/migrations.py            # pokaż, co trzeba poprawić (nic nie zmienia)
+  python3 .tf/factory/migrations.py --apply    # popraw
 
 Uruchamiają je instalator (po każdej aktualizacji) i `tf doctor --fix`. Poprawiane są tylko pliki projektu, których
-fabryka nie instalowała: własne persony i role (`factory/personas/`, `factory/roles/`), własne nakładki
-(`factory/packs/<id>/` spoza manifestu) i własne skille (`.claude/skills/<skill>/SKILL.md` spoza manifestu).
+fabryka nie instalowała: własne persony i role (`.tf/config/personas/`, `.tf/config/roles/`), własne nakładki
+(`.tf/factory/packs/<id>/` spoza manifestu) i własne skille (`.claude/skills/<skill>/SKILL.md` spoza manifestu).
 Pliki fabryki aktualizuje instalator. Tylko biblioteka standardowa.
 
 Nowa zmiana nazwy w rdzeniu lub nakładce = nowy wpis w RENAMES (z wersją rdzenia, od której obowiązuje).
@@ -19,7 +19,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 # wersja rdzenia → stara nazwa → nowa nazwa (skille, cechy, role)
 RENAMES: dict[str, dict[str, str]] = {
     "3.0.0": {
@@ -43,8 +43,8 @@ def factory_files(root: Path) -> set[str]:
 def own_files(root: Path) -> list[Path]:
     """Pliki projektu, które mogą odwoływać się do nazw fabryki, a których fabryka nie instaluje."""
     installed = factory_files(root)
-    cands = [*(root / "factory" / "personas").glob("*.yaml"), *(root / "factory" / "roles").glob("*.yaml"),
-             *(root / "factory" / "packs").glob("*/**/*.yaml"), *(root / ".claude" / "skills").glob("*/SKILL.md")]
+    cands = [*(root / ".tf" / "config" / "personas").glob("*.yaml"), *(root / ".tf" / "config" / "roles").glob("*.yaml"),
+             *(root / ".tf" / "factory" / "packs").glob("*/**/*.yaml"), *(root / ".claude" / "skills").glob("*/SKILL.md")]
     return [p for p in cands if p.is_file() and p.relative_to(root).as_posix() not in installed]
 
 

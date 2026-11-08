@@ -1,5 +1,5 @@
 # Tryb Talos: automat „story → PR” na żądanie. Tryb to sposób pracy włączany przez człowieka (agent sesji głównej,
-# skill procesowy, skrypty), instalowany jak nakładka. Przewodnik: GUIDE.md (w projekcie: factory/packs/mode-talos/).
+# skill procesowy, skrypty), instalowany jak nakładka. Przewodnik: GUIDE.md (w projekcie: .tf/factory/packs/mode-talos/).
 id: mode-talos
 kind: mode
 version: 1.3.0

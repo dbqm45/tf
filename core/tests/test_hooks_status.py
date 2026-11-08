@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy factory/hooks_status.py: czy hooki fabryki działały w ostatnich commitach (log vs historia git)."""
+"""Testy .tf/factory/hooks_status.py: czy hooki fabryki działały w ostatnich commitach (log vs historia git)."""
 import json
 import os
 import subprocess
@@ -7,9 +7,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory").is_dir())
-SCRIPT = ROOT / "factory" / "hooks_status.py"
-CHECK = ROOT / "factory" / "check.py"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory").is_dir())
+SCRIPT = ROOT / ".tf" / "factory" / "hooks_status.py"
+CHECK = ROOT / ".tf" / "factory" / "check.py"
 
 
 def git(repo: Path, *args, date="2026-10-18T12:00:00+00:00"):

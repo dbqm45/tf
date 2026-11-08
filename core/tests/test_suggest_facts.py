@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy: skill_gate --suggest (frazy do metadata.slowa z nietrafionych scenariuszy) i factory/facts.py
+"""Testy: skill_gate --suggest (frazy do metadata.slowa z nietrafionych scenariuszy) i .tf/factory/facts.py
 (szukanie już zweryfikowanych faktów przed nowym researchem)."""
 import importlib.util
 import json
@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "facts.py").is_file())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "facts.py").is_file())
 
 
 def load(path: Path, name: str):
@@ -33,7 +33,7 @@ def main() -> int:
         if not cond:
             fails.append(msg)
 
-    gate = load(ROOT / "factory" / "skill_gate.py", "ctf_gate_suggest")
+    gate = load(ROOT / ".tf" / "factory" / "skill_gate.py", "ctf_gate_suggest")
     hint = load(ROOT / ".claude" / "hooks" / "skill_hint.py", "ctf_hint_suggest")
     hint.REF_SKILLS = 0   # sztuczny korpus 12 skilli poniżej — bez normalizacji do rozmiaru dużej instalacji
 
@@ -75,13 +75,13 @@ def main() -> int:
             s = md.read_text(encoding="utf-8")
             s = re.sub(r'^  slowa: ".*"$', '  slowa: ""', s, flags=re.M)       # bez słów scenariusz nie trafia
             md.write_text(s, encoding="utf-8")
-            r = run([root / "factory" / "skill_gate.py", "--hints"], cwd=root)
+            r = run([root / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=root)
             check("qa-test-design" in r.stdout, f"E-3: po usunięciu słów scenariusz znów nie trafia: {r.stdout[-300:]}")
-            r = run([root / "factory" / "skill_gate.py", "--suggest", "qa-test-design"], cwd=root)
+            r = run([root / ".tf" / "factory" / "skill_gate.py", "--suggest", "qa-test-design"], cwd=root)
             check(r.returncode == 0 and "slowa" in r.stdout and "--apply" in r.stdout and s == md.read_text(encoding="utf-8"),
                   f"E-4: --suggest bez --apply tylko pokazuje propozycję: {r.stdout[-500:]}{r.stderr[-300:]}")
-            r = run([root / "factory" / "skill_gate.py", "--suggest", "qa-test-design", "--apply"], cwd=root)
-            r2 = run([root / "factory" / "skill_gate.py", "--hints"], cwd=root)
+            r = run([root / ".tf" / "factory" / "skill_gate.py", "--suggest", "qa-test-design", "--apply"], cwd=root)
+            r2 = run([root / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=root)
             check(r.returncode == 0 and md.read_text(encoding="utf-8") != s and "qa-test-design" not in r2.stdout,
                   f"E-5: --apply dopisuje frazy i scenariusz znów trafia: {r.stdout[-400:]} | {r2.stdout[-300:]}")
 
@@ -99,7 +99,7 @@ def main() -> int:
         sk.mkdir(parents=True)
         (sk / "SKILL.md").write_text("---\nname: sec-x\n---\n# X\nTreść o ISO 19112 poza źródłami.\n## Źródła\n"
                                      "- ISO 19112:2019 (iso.org, odczyt 2026-10-10) — schemat gazetteera.\n", encoding="utf-8")
-        r = run([ROOT / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "--json", "ISO", "19112"])
+        r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "--json", "ISO", "19112"])
         try:
             hits = json.loads(r.stdout)
         except ValueError:
@@ -112,13 +112,13 @@ def main() -> int:
         new = [h for h in hits if h["file"].endswith("20261017-archetypy-zrodla.md")]
         check(old and old[0]["stale"] is True and new and new[0]["stale"] is False and new[0]["date"] == "2026-10-17",
               f"F-2: data ustalenia i oznaczenie starych (> 180 dni): {old} {new}")
-        r = run([ROOT / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "eidas", "podpis"])
+        r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "eidas", "podpis"])
         check(r.returncode == 0 and "eIDAS 910/2014" in r.stdout and "częściowo" in r.stdout,
               f"F-3: wszystkie hasła naraz, bez wielkości liter, z rdzeniem słowa: {r.stdout}")
-        r = run([ROOT / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "DORA", "terminy"])
+        r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "DORA", "terminy"])
         check(r.returncode == 0 and "brak" in r.stdout.lower() and "researcher" in r.stdout,
               f"F-4: brak trafień → wskazówka, że trzeba sprawdzić w źródłach: {r.stdout}")
-        r = run([ROOT / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "Geographic", "Boundary"])
+        r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "Geographic", "Boundary"])
         check("niepotwierdzone" in r.stdout and "nie podawaj jako faktu" in r.stdout,
               f"F-5: ustalenie niepotwierdzone oznaczone jako takie: {r.stdout}")
 

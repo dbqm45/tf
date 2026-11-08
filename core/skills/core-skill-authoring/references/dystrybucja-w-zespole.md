@@ -3,7 +3,7 @@
 
 Skille, reguły, polecenia i szablony konfiguracji agentów to kod wykonywany przy każdej zmianie: potrzebują wersji,
 przeglądu zmian i kontrolowanej dystrybucji. Kopiowanie między repozytoriami rozjeżdża wersje po kilku tygodniach.
-Instalator tej fabryki (`factory/install.py`, `factory/update.py`) realizuje opisane niżej własności — to działający
+Instalator tej fabryki (`.tf/factory/install.py`, `.tf/factory/update.py`) realizuje opisane niżej własności — to działający
 wzorzec do porównania.
 
 ## 1. Wymagania — miara każdego rozwiązania
@@ -31,12 +31,12 @@ Antywzorzec: kanał „imponujący” zamiast dopasowanego do odbiorcy.
 - **Manifest** w repo odbiorcy: paczka, wersja, narzędzie, lista plików ze skrótami. Deinstalacja usuwa dokładnie pliki
   z manifestu, nie zależy od `node_modules` ani skryptów menedżera pakietów; uszkodzony manifest → nie usuwa nic.
 - **Plik zmieniony lokalnie** jest nadpisywany jak zależność w `node_modules`: zmiany wprowadza się u źródła i wydaje
-  nową wersję; konfiguracja odbiorcy (np. `factory/config.yaml`) zostaje, a nowe klucze dochodzą.
+  nową wersję; konfiguracja odbiorcy (np. `.tf/config/config.yaml`) zostaje, a nowe klucze dochodzą.
 - **Kopiowanie** działa wszędzie (także przy jednorazowym uruchomieniu z cache, który znika); dowiązania tylko przy
   trwałej zależności.
 - **Zależności między skillami** deklarowane w nagłówku; wybór podzbioru przechodzi przez rozwiązywanie zależności.
 - Błąd kroku poinstalacyjnego nie wywraca instalacji zależności projektu — ostrzeżenie zamiast awarii.
-- Nowa wersja obcego skilla przechodzi audyt przed zapisaniem (`factory/skill_audit.py`, core-agent-security §4a).
+- Nowa wersja obcego skilla przechodzi audyt przed zapisaniem (`.tf/factory/skill_audit.py`, core-agent-security §4a).
 
 ## 4. Paczka prywatna — uwierzytelnianie i wydania
 - Repo odbiorcy commituje tylko mapowanie zakresu paczek na rejestr, **nigdy** tokena.

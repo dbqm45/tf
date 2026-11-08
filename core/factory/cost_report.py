@@ -2,14 +2,14 @@
 """
 Raport zużycia tokenów per agent i model na podstawie .tf/logs/usage.jsonl.
 
-  python3 factory/cost_report.py            # całość
-  python3 factory/cost_report.py --days 7   # ostatnie 7 dni
-  python3 factory/cost_report.py --delegation   # koszt delegowania wg klasy zadania (delegation.jsonl)
+  python3 .tf/factory/cost_report.py            # całość
+  python3 .tf/factory/cost_report.py --days 7   # ostatnie 7 dni
+  python3 .tf/factory/cost_report.py --delegation   # koszt delegowania wg klasy zadania (delegation.jsonl)
 
 Pokazuje też dobór tierów: którzy wykonawcy byli eskalowani na mocniejszy model albo zgłaszali w raporcie
 „Tier: za niski/za wysoki” — z podpowiedzią, gdzie zmienić domyślny tier.
 
-Ceny ustaw w factory/config.yaml → prices_usd_per_mtok (bez nich raport pokazuje same tokeny).
+Ceny ustaw w .tf/config/config.yaml → prices_usd_per_mtok (bez nich raport pokazuje same tokeny).
 """
 from __future__ import annotations
 
@@ -23,14 +23,23 @@ from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
+except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 LOG = ROOT / ".tf" / "logs" / "usage.jsonl"
 DELEG_LOG = ROOT / ".tf" / "logs" / "delegation.jsonl"
 
+
+
+def _tf_config(root: Path) -> dict:
+    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.load_config(root)
 
 def family(model: str) -> str:
     m = model.lower()
@@ -50,12 +59,12 @@ def dominant(models: dict) -> str | None:
 def where_tier(agent: str, cfg: dict) -> str:
     """Gdzie zmienić domyślny tier agenta: rola persony albo agent wspólny."""
     if agent in (cfg.get("shared_agents") or {}):
-        return f"factory/config.yaml → shared_agents.{agent}.tier"
+        return f".tf/config/config.yaml → shared_agents.{agent}.tier"
     if "-" in agent:
         role = agent.split("-", 1)[1]
-        if (ROOT / "factory" / "roles" / f"{role}.yaml").exists():
-            return f"factory/roles/{role}.yaml → tier (albo parametr model przy delegowaniu)"
-    return "factory/config.yaml → tiers / persona model_tier"
+        if (ROOT / ".tf" / "config" / "roles" / f"{role}.yaml").exists():
+            return f".tf/config/roles/{role}.yaml → tier (albo parametr model przy delegowaniu)"
+    return ".tf/config/config.yaml → tiers / persona model_tier"
 
 
 def tier_advice(records: list[dict], cfg: dict) -> list[str]:
@@ -166,7 +175,7 @@ def main() -> int:
         if not args.delegation_log.exists():
             print(f"Brak logu {args.delegation_log} — pojawi się po pierwszym wywołaniu narzędzia Agent z hookiem log_usage.")
             return 0
-        cfg = yaml.safe_load((ROOT / "factory" / "config.yaml").read_text(encoding="utf-8"))
+        cfg = _tf_config(ROOT)
         since = datetime.now(timezone.utc) - timedelta(days=args.days) if args.days else None
         print_delegation(delegation_summary(read_jsonl(args.delegation_log, since), read_jsonl(args.log, since),
                                             cfg.get("prices_usd_per_mtok") or {}))
@@ -175,7 +184,7 @@ def main() -> int:
     if not args.log.exists():
         print(f"Brak logu {args.log} — uruchom kilka sesji z hookiem log_usage.")
         return 0
-    cfg = yaml.safe_load((ROOT / "factory" / "config.yaml").read_text(encoding="utf-8"))
+    cfg = _tf_config(ROOT)
     prices = cfg.get("prices_usd_per_mtok") or {}
     since = datetime.now(timezone.utc) - timedelta(days=args.days) if args.days else None
 

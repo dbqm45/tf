@@ -11,7 +11,7 @@
         "npm view",
         "pip index versions",
         "git ls-remote",
-        "python3 factory/facts.py",
+        "python3 .tf/factory/facts.py",
         "python3 .claude/skills/core-source-research/scripts/"
       ]
     }

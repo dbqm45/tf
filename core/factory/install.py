@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Installs and updates the team factory (core + selected packs) in a project. Standard library only
-(PyYAML for pack metadata: system copy or the one bundled in factory/_vendor).
+(PyYAML for pack metadata: system copy or the one bundled in .tf/factory/_vendor).
 
 Run it from the project directory — the project is the current directory, the factory is where this script lives:
 
@@ -29,21 +29,21 @@ descriptions; default `en`). Both can be changed later: `tf language <code>`, `t
 path works too, relative to the current directory. The project can also be given as the first argument.
 Running the installer again in an installed project = update (`--update` is not needed).
 
-Day to day you update from inside the project: `python3 factory/update.py` (or `tf`, or `/core-factory-update`).
+Day to day you update from inside the project: `python3 .tf/factory/update.py` (or `tf`, or `/core-factory-update`).
 
-Private mode (default): skills, hooks, `factory/`, factory tests (`.claude/tests/`) go into the project; permissions and
+Private mode (default): skills, hooks, `.tf/factory/`, factory tests (`.claude/tests/`) go into the project; permissions and
 hooks into `.claude/settings.local.json`, rules into `CLAUDE.local.md`; all factory paths into `.git/info/exclude`.
 Team mode (`--shared`): `.claude/settings.json`, `CLAUDE.md`, CI workflow and `.gitignore`.
-After copying, the installer builds the agents (`factory/build.py`) for the chosen packs and languages.
+After copying, the installer builds the agents (`.tf/factory/build.py`) for the chosen packs and languages.
 
 The manifest `.claude/factory-manifest.json` records the version, source, mode, packs and a hash of every installed
-file (as it is after `factory/build.py`). The manifest stays outside git; in team mode the installer also writes
+file (as it is after `.tf/factory/build.py`). The manifest stays outside git; in team mode the installer also writes
 `.claude/factory-lock.json` (version, packs, languages, file hashes — nothing machine-specific), committed with the
 project, so a fresh clone without the manifest updates from it instead of skipping factory files. Thanks to them an
 update:
 - overwrites factory files you did not change and adds new ones;
-- overwrites factory files changed in the project (like node_modules — change the factory repository instead); keeps
-  your settings in `factory/config.yaml` and appends new top-level keys from the factory version;
+- overwrites factory files changed in the project (like node_modules — change the factory repository instead); never
+  touches `.tf/config/` (your config.yaml overrides, own personas, roles and traits);
 - moves files removed from the factory (or from a removed pack) to `.tf/backup/<date>/` (if unchanged);
 - never touches your own skills, personas, roles and traits (files the factory did not install).
 Installs of claude-team-factory or ev-team-factory are migrated: the matching packs are selected and the old
@@ -56,13 +56,12 @@ import hashlib
 import importlib.util
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent.parent      # repozytorium fabryki: core/, packs/ i modes/
+SRC = Path(__file__).resolve().parents[2]      # repozytorium fabryki: core/, packs/ i modes/
 CORE = SRC / "core"
 PACKS_SRC = SRC / "packs"
 MODES_SRC = SRC / "modes"   # tryby pracy na żądanie (kind: mode) — instalowane jak nakładki
@@ -78,18 +77,18 @@ GI_BEGIN, GI_END = "# team-factory:begin (managed by factory/install.py)", "# te
 LEGACY_MARKS = [(f"<!-- {n}:begin -->", f"<!-- {n}:end -->") for n in ("claude-team-factory", "ev-team-factory")]
 LEGACY_GI = [(f"# {n}:begin (zarządzane przez factory/install.py)", f"# {n}:end")
              for n in ("claude-team-factory", "ev-team-factory")]
-CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": "factory",
+CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": ".tf/factory",
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
-CORE_FILES = {"guide/JEV.md": ".claude/JEV.md",   # przewodnik i FAQ w factory/ — bez README w korzeniu projektu
-              "guide/PRZEWODNIK.md": "factory/PRZEWODNIK.md", "guide/FAQ.md": "factory/FAQ.md"}
+CORE_FILES = {"guide/JEV.md": ".claude/JEV.md",   # przewodnik i FAQ w .tf/factory/ — bez README w korzeniu projektu
+              "guide/PRZEWODNIK.md": ".tf/factory/PRZEWODNIK.md", "guide/FAQ.md": ".tf/factory/FAQ.md"}
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests",
              "workflows": ".claude/workflows",   # workflows: skrypty wieloagentowe Claude Code (Workflow)
-             "analyzers": "factory/analyzers"}   # moduły tf analyze (analyzer.yaml, scripts/, fixtures/)
-PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md")   # → factory/packs/<id>/
+             "analyzers": ".tf/factory/analyzers"}   # moduły tf analyze (analyzer.yaml, scripts/, fixtures/)
+PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md")   # → .tf/factory/packs/<id>/
 SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
-USER_OWNED = ("factory/personas/", "factory/roles/", "factory/traits/", "factory/config.yaml", "factory/packs/")
+USER_OWNED = (".tf/config/",)   # konfiguracja projektu — instalator zakłada szablon, nigdy go nie nadpisuje
 ALWAYS_OWNED = (".claude/cleanroom.json",)   # składany z rdzenia i nakładek — zawsze z bieżącej wersji
-GENERATED = (".claude/agents/_generated/", ".claude/catalog.md")   # budowane w projekcie przez factory/build.py
+GENERATED = (".claude/agents/_generated/", ".claude/catalog.md")   # budowane w projekcie przez .tf/factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
 # Testy rdzenia, które mają sens tylko w repozytorium fabryki (ścieżki względem core/): evale przebiegu N5 importują
 # `scripts/export_pdi_runs.py` i `modes/mode-pdi/.../phase_result.py` ze źródła, więc w projekcie padałyby na imporcie.
@@ -99,36 +98,36 @@ FACTORY_ONLY = ("tests/flow_evals/", "tests/flow_evals_runner.py", "tests/test_f
                 "tests/test_export_pdi_runs.py")
 
 
-CONFIG_REL = "factory/config.yaml"
+CONFIG_TEMPLATE = """# Nadpisania konfiguracji fabryki dla tego projektu (nakładane rekurencyjnie na .tf/factory/config.yaml).
+# Wpisuj tylko to, co zmieniasz, np.:
+#   default_profile: oszczedny
+#   tiers:
+#     fast: {maxTurns: 20}
+# Po zmianie: python3 .tf/factory/build.py
+"""
+CONFIG_DIRS = {"personas": "własne persony projektu (nadpisują te z rdzenia i nakładek o tej samej nazwie)",
+               "roles": "własne role projektu (nadpisują te z nakładek o tej samej nazwie)",
+               "traits": "własne cechy projektu (*.md)"}
 
 
-def merge_config(mine: str, theirs: str) -> tuple[str, list[str]]:
-    """Konfiguracja projektu `mine` + klucze najwyższego poziomu z nowej wersji fabryki `theirs`, których w niej nie
-    ma — dopisane na końcu blokami tekstu z `theirs` (z komentarzami nad kluczem). Istniejących kluczy nie zmienia."""
-    def blocks(text: str) -> dict[str, str]:
-        out: dict[str, str] = {}
-        cur, pending = None, ""
-        for line in text.splitlines(keepends=True):
-            key = re.match(r"^([A-Za-z_][\w-]*)\s*:", line)
-            if key:
-                cur = key.group(1)
-                out[cur], pending = pending + line, ""
-            elif line.startswith("#") or not line.strip():
-                pending += line                       # komentarz albo pusta linia — należy do następnego klucza
-            elif cur is not None:
-                out[cur] += pending + line            # wcięta treść bieżącego klucza (z komentarzami w środku)
-                pending = ""
-        return out
-    have, new = blocks(mine), blocks(theirs)
-    added = [k for k in new if k not in have]
-    if not added:
-        return mine, []
-    tail = "".join(new[k].strip("\n") + "\n\n" for k in added)
-    return mine.rstrip("\n") + "\n\n" + tail.rstrip("\n") + "\n", added
+def ensure_config(dst_root: Path) -> list[str]:
+    """`.tf/config/` — konfiguracja projektu: szablon config.yaml i katalogi własnych person, ról i cech. Istniejących
+    plików nie zmienia."""
+    base, made = dst_root / ".tf" / "config", []
+    base.mkdir(parents=True, exist_ok=True)
+    if not (base / "config.yaml").exists():
+        (base / "config.yaml").write_text(CONFIG_TEMPLATE, encoding="utf-8")
+        made.append(".tf/config/config.yaml")
+    for d, what in CONFIG_DIRS.items():
+        (base / d).mkdir(exist_ok=True)
+        if not (base / d / "README.md").exists():
+            (base / d / "README.md").write_text(f"# .tf/config/{d}/\n\n{what.capitalize()}. Po zmianie: "
+                                                  "`python3 .tf/factory/build.py`.\n", encoding="utf-8")
+    return made
 
 
 def load_packs_module():
-    """factory/packs.py z NOWEJ wersji fabryki (czytanie pack.yaml, ustawienia projektu)."""
+    """.tf/factory/packs.py z NOWEJ wersji fabryki (czytanie pack.yaml, ustawienia projektu)."""
     spec = importlib.util.spec_from_file_location("tf_packs_src", CORE / "factory" / "packs.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -226,8 +225,8 @@ def sha(data: bytes) -> str:
 
 
 def version_of(root: Path) -> str:
-    """Wersja rdzenia: core/factory/VERSION w repozytorium fabryki albo factory/VERSION w projekcie."""
-    for p in (root / "core" / "factory" / "VERSION", root / "factory" / "VERSION"):
+    """Wersja rdzenia: core/factory/VERSION w repozytorium fabryki albo .tf/factory/VERSION w projekcie."""
+    for p in (root / "core" / "factory" / "VERSION", root / ".tf" / "factory" / "VERSION"):
         if p.exists():
             return p.read_text(encoding="utf-8").strip()
     return "0.0.0"
@@ -238,7 +237,7 @@ class Plan:
         self.root, self.dry, self.update, self.old, self.stamp = dst_root, dry, update, old_files, stamp
         self.created, self.updated, self.conflicts, self.merged = [], [], [], []
         self.kept_new, self.backed_up, self.removed, self.kept_removed, self.skipped_deleted = [], [], [], [], []
-        self.overwritten, self.config_added = [], []
+        self.overwritten = []
         self.files: dict[str, str] = {}          # nowy manifest: ścieżka → skrót zainstalowanej wersji fabryki
 
     def _write(self, dst: Path, data: bytes, src: Path | None) -> None:
@@ -280,11 +279,6 @@ class Plan:
         elif old_hash is not None and sha(cur) == old_hash:          # nie zmieniałeś — aktualizujemy
             self.updated.append(rel)
             self._write(dst, data, src)
-        elif rel == CONFIG_REL and self.update:                       # konfiguracja projektu: ustawienia zostają,
-            merged, added = merge_config(cur.decode("utf-8"), data.decode("utf-8"))   # nowe klucze fabryki dochodzą
-            if added:
-                self.config_added += added
-                self._write(dst, merged.encode("utf-8"), None)
         elif old_hash is not None:                                    # plik fabryki zmieniony w projekcie: jak
             self.overwritten.append(rel)                              # node_modules — nadpisany wersją fabryki
             self._write(dst, data, src)
@@ -428,7 +422,7 @@ def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> st
 def ignored_paths(files: dict[str, str] | None = None) -> list[str]:
     """Każda ścieżka instalowana przez fabrykę — per skill, hook i workflow, żeby Twoje własne zostały w repo."""
     # `.tf/`: wyniki pracy fabryki (raporty, rejestr, logi, przebiegi, kopie) — prywatnie w całości poza repo.
-    out = ["factory/", ".claude/agents/_generated/", ".claude/tests/", ".claude/catalog.md", ".claude/cleanroom.json",
+    out = [".tf/factory/", ".claude/agents/_generated/", ".claude/tests/", ".claude/catalog.md", ".claude/cleanroom.json",
            ".claude/JEV.md", ".claude/settings.local.json", "CLAUDE.local.md", MANIFEST, BACKUP_DIR + "/",
            ".claude/agent-memory/", ".claude/factory-profile.json", ".claude/factory-settings.json",
            ".claude/skill-gate.json", ".claude/scratch/", ".tf/", "*.factory-new"]
@@ -553,14 +547,14 @@ def save_manifest(dst_root: Path, manifest: dict, shared: bool, language: str, c
 
 
 def rebuild(dst_root: Path, dry: bool) -> str:
-    """Buduje agentów i katalog w projekcie dla wybranych nakładek i języków (factory/build.py)."""
+    """Buduje agentów i katalog w projekcie dla wybranych nakładek i języków (.tf/factory/build.py)."""
     if dry:
         return ""
-    r = subprocess.run([sys.executable, "factory/build.py"], cwd=dst_root, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, ".tf/factory/build.py"], cwd=dst_root, capture_output=True, text=True)
     if r.returncode == 0:
         n = len(list((dst_root / ".claude" / "agents" / "_generated").rglob("*.md")))
-        return f"✓ Built {n} agents and the catalog (factory/build.py)."
-    return ("⚠ `factory/build.py` reported problems — run `python3 factory/build.py check` and fix them:\n"
+        return f"✓ Built {n} agents and the catalog (.tf/factory/build.py)."
+    return ("⚠ `.tf/factory/build.py` reported problems — run `python3 .tf/factory/build.py check` and fix them:\n"
             + r.stdout[-1500:] + r.stderr[-500:])
 
 
@@ -700,7 +694,7 @@ def main(argv: list[str]) -> int:
         if (CORE / src_rel).exists():
             plan.copy(CORE / src_rel, dst_rel)
     if (SRC / "LICENSE").exists():
-        plan.copy(SRC / "LICENSE", "factory/LICENSE")
+        plan.copy(SRC / "LICENSE", ".tf/factory/LICENSE")
     # pliki nakładek
     for pid in packs:
         base = available[pid]["_dir"]
@@ -714,7 +708,7 @@ def main(argv: list[str]) -> int:
             files = [src_meta] if src_meta.is_file() else sorted(src_meta.rglob("*")) if src_meta.is_dir() else []
             for f in files:
                 if f.is_file() and not any(x in f.name for x in SKIP):
-                    plan.copy(f, f"factory/packs/{pid}/" + f.relative_to(base).as_posix())
+                    plan.copy(f, f".tf/factory/packs/{pid}/" + f.relative_to(base).as_posix())
     plan.copy(None, ".claude/cleanroom.json", compose_cleanroom(packs, available))
     if update:
         plan.remove_obsolete()
@@ -792,7 +786,7 @@ def main(argv: list[str]) -> int:
           f"commit language: {commit_language}")
     for m in plan.merged:
         print(f"  ~ {m}")
-    if not dry and update:     # autokorekta własnych plików projektu po zmianach nazw w rdzeniu (factory/migrations.py)
+    if not dry and update:     # autokorekta własnych plików projektu po zmianach nazw w rdzeniu (.tf/factory/migrations.py)
         spec = importlib.util.spec_from_file_location("tf_migrations", CORE / "factory" / "migrations.py")
         mig = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mig)
@@ -803,8 +797,9 @@ def main(argv: list[str]) -> int:
         if msg:
             print(msg)
         # .tf/ — jedno miejsce na wyniki pracy fabryki (raporty, rejestr, logi, przebiegi, kopie), jak `tf init`
-        if (dst_root / "factory" / "analyze.py").is_file():
-            subprocess.run([sys.executable, "factory/analyze.py", "init"], cwd=dst_root, capture_output=True,
+        ensure_config(dst_root)
+        if (dst_root / ".tf" / "factory" / "analyze.py").is_file():
+            subprocess.run([sys.executable, ".tf/factory/analyze.py", "init"], cwd=dst_root, capture_output=True,
                            text=True, timeout=120)
         # build.py przetwarza pliki (np. spis treści w references/) — manifest i lock zapamiętują to, co jest na dysku,
         # inaczej następna aktualizacja wzięłaby nietknięty plik za zmieniony przez Ciebie (*.factory-new)
@@ -813,11 +808,11 @@ def main(argv: list[str]) -> int:
         if any(new_manifest["files"][r] != h for r, h in rehashed.items()):
             new_manifest["files"] = dict(sorted({**new_manifest["files"], **rehashed}.items()))
             save_manifest(dst_root, new_manifest, shared, language, commit_language)
-    # widoczność opisów skilli: z opisem to, czego używa ten projekt, reszta jako sama nazwa (factory/skill_profile.py)
+    # widoczność opisów skilli: z opisem to, czego używa ten projekt, reszta jako sama nazwa (.tf/factory/skill_profile.py)
     if dry:
-        print("ℹ Skill visibility will be matched to the project after the install (factory/skill_profile.py).")
+        print("ℹ Skill visibility will be matched to the project after the install (.tf/factory/skill_profile.py).")
     else:
-        spec = importlib.util.spec_from_file_location("tf_skill_profile", dst_root / "factory" / "skill_profile.py")
+        spec = importlib.util.spec_from_file_location("tf_skill_profile", dst_root / ".tf" / "factory" / "skill_profile.py")
         prof = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(prof)
         print(prof.summary(prof.apply(dst_root), False))
@@ -831,7 +826,7 @@ def main(argv: list[str]) -> int:
     new_skills = sorted({r.split("/")[2] for r in plan.created if r.startswith(".claude/skills/") and r.endswith("/SKILL.md")})
     if new_skills and update:
         print(f"  + new skills: {', '.join(new_skills)}")
-    new_personas = sorted({Path(r).stem for r in plan.created if r.startswith("factory/packs/") and "/personas/" in r})
+    new_personas = sorted({Path(r).stem for r in plan.created if r.startswith(".tf/factory/packs/") and "/personas/" in r})
     if new_personas and update:
         print(f"  + new personas: {', '.join(new_personas)}")
     if plan.removed:
@@ -849,8 +844,6 @@ def main(argv: list[str]) -> int:
 
     listing("ℹ Factory files changed in the project — overwritten with the factory version", plan.overwritten,
             "Factory files in a project are like node_modules: change them in the factory repository, then update.")
-    listing("ℹ New settings added to factory/config.yaml (your values stay)", plan.config_added,
-            "Review the new keys at the end of factory/config.yaml.")
     listing(f"ℹ Older install without a manifest — changed files overwritten, copies in {BACKUP_DIR}/{stamp}/",
             plan.backed_up, "If any of them held your change, carry it over from the copy.")
     listing("ℹ Removed from the factory, but changed by you — left in place", plan.kept_removed,
@@ -871,7 +864,7 @@ def main(argv: list[str]) -> int:
         if already:
             print(f"⚠ {len(already)} factory files are already tracked in the repository — ignore entries will not hide "
                   "them. Remove them from the index (files on disk stay):")
-            print("  git rm -r --cached " + " ".join(sorted({p.split("/")[0] if p.startswith("factory/") else
+            print("  git rm -r --cached " + " ".join(sorted({p.split("/")[0] if p.startswith(".tf/factory/") else
                                                              "/".join(p.split("/")[:3]) for p in already})[:12]))
         if not (dst_root / "CLAUDE.md").exists() and (dst_root / "AGENTS.md").exists():
             print("⚠ The project uses AGENTS.md: CLAUDE.local.md alone makes Claude stop reading it. Add the line "
@@ -885,9 +878,9 @@ Next:
   1. Fill in your project's test/lint/build commands in {md}.
   2. Run `claude` once in the project directory and accept folder trust (hooks and permissions need it).
   3. Start: {' or '.join(start[d] for d in dispatchers) or 'a persona from .claude/catalog.md'}, e.g. `claude --agent <name>`.
-  4. Costs: the `zrownowazony` profile works right away; `{py} factory/profile.py oszczedny|jakosc` switches the team.
+  4. Costs: the `zrownowazony` profile works right away; `{py} .tf/factory/profile.py oszczedny|jakosc` switches the team.
   Packs: `tf add <pack>` / `tf remove <pack>` · languages: `tf language <code>`, `tf commit-language <code>`.
-  Updates: `{py} factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")
+  Updates: `{py} .tf/factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")
     return 0
 
 

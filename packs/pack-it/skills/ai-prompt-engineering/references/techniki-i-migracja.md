@@ -28,7 +28,7 @@ Nazwy modeli, parametry i ceny zmieniają się często; przed zmianą sprawdź b
 - Sonnet 5.5 na `low`/`medium` bywa, że pyta przed końcem pracy, a na każdym poziomie dodaje niezamówione testy
   i dokumentację; Haiku 5.5 przy długim prompcie agenta na `low` kończy za wcześnie. Pomaga instrukcja: „pracuj, aż
   wszystko jest zrobione; zatrzymaj się tylko bez decyzji człowieka albo przed ryzykownym krokiem; po sprawdzeniu
-  zgłoś wynik, a pomysły na dodatki wymień na końcu” (fabryka: `work_contract` w `factory/config.yaml`).
+  zgłoś wynik, a pomysły na dodatki wymień na końcu” (fabryka: `work_contract` w `.tf/config/config.yaml`).
 
 ## 2. Prefill i format wyjścia
 - Prefill ostatniej wiadomości asystenta nie jest obsługiwany od modeli Claude 4.6 (żądanie zwraca błąd).

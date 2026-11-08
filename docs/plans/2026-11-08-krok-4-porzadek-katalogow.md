@@ -63,15 +63,33 @@ skill `core-factory-update` robi `diff -u plik plik.factory-new` i scala. Opcje:
 zamiast ścieżki tam, gdzie się da. Przed kodem: sprawdzić, czy pdi, ci_for_sdlc albo ShipScope czytają
 `docs/project/wip/` (dziś `grep` w `pdi/src` i `ci_for_sdlc/packages` nic nie znajduje).
 
-## 4c — silnik `factory/` → `.tf/factory/` (osobny plan i decyzje przed kodem)
-Zmiana układu instalacji (publiczne API rdzenia): 523 odwołania (polecenia w skillach i `CLAUDE.md`
-typu `python3 factory/build.py`, hooki, launcher `tf`, `install.py`/`update.py`, testy). Przed planem:
-- **D2:** co z konfiguracją użytkownika w `factory/` (`personas/`, `roles/`, `traits/`, `config.yaml`, `packs/` —
-  dziś `USER_OWNED`): razem do `.tf/factory/`, czy osobno (`.tf/config/`), czy zostaje.
-- **D3:** czy MAJOR z jednorazową migracją (`tf update` przenosi i poprawia odwołania przez `RENAMES`), czy okres,
-  w którym `factory/` to cienka nakładka przekierowująca do `.tf/factory/`.
-- Fakt do sprawdzenia w dokumentacji Claude Code: które lokalizacje pliku instrukcji są wczytywane
-  (`CLAUDE.local.md` w katalogu głównym vs `.claude/`) [niezweryfikowane].
+## 4c — silnik `factory/` → `.tf/factory/`, konfiguracja projektu → `.tf/config/`
+Decyzje człowieka 2026-11-08: **D2** — konfiguracja projektu osobno w `.tf/config/`; **D3** — bez migracji, świeża
+instalacja. Wydanie MAJOR.
+
+**Podział (jak `node_modules` i `package.json`):**
+| Gdzie | Co | Kto zmienia |
+|---|---|---|
+| `.tf/factory/` | cały silnik: skrypty (`build.py`, `install.py`, `update.py`, `analyze.py`…), `VERSION`, `CHANGELOG.md`, `PUBLIC_API.md`, przewodnik i FAQ, `_vendor/`, `templates/`, cechy rdzenia `traits/`, metadane nakładek `packs/<id>/`, moduły `analyzers/`, domyślna konfiguracja `config.yaml` | tylko aktualizacja (nadpisuje) |
+| `.tf/config/` | `config.yaml` — **tylko nadpisania projektu**, nakładane rekurencyjnie na domyślne `.tf/factory/config.yaml` przy składaniu (słowniki łączone, inne wartości zastępowane); własne `personas/`, `roles/`, `traits/` (nadpisują te z rdzenia i nakładek o tej samej nazwie) | człowiek; instalacja zakłada pusty szablon z komentarzem, aktualizacja nie rusza |
+
+- Skutek uboczny: znika łatanie `factory/config.yaml` przy aktualizacji (dopisywanie nowych kluczy z 4-0) — nowe klucze
+  przychodzą z domyślnej konfiguracji silnika, nadpisania projektu zostają w `.tf/config/config.yaml`.
+- Instalacja zespołowa: `.tf/factory/` i `.tf/config/` w gicie (jak dziś `factory/`); prywatna: cały `.tf/` poza gitem.
+- Ścieżki w projekcie: `ROOT` skryptów silnika to `.tf/factory/../..`; polecenia w skillach, `CLAUDE.md`, hookach,
+  regułach `permissions.allow`, szablonach CI i trybach: `python3 .tf/factory/<skrypt>.py`.
+- Launcher `tf` szuka `.tf/factory/` (instalacja sprzed 9.0.0 → komunikat „zainstaluj fabrykę na nowo”).
+
+**Zakres (sprawdzone 2026-11-08 `grep`):** ok. 100 plików — `core/factory` (25), skille rdzenia (22), testy rdzenia
+(18), pack-it (11), hooki (6), przewodnik (4), tryby (6), `tools/workspace.py`, testy repo (3), `core/settings.json`,
+`core/cleanroom.json`, `core/CLAUDE.md`, workflow CI; odwołania do konfiguracji: `factory/config.yaml` (40),
+`factory/packs` (36), `factory/personas|roles|traits` (22).
+
+**Kolejność w jednym PR (MAJOR):** testy na nowy układ (instalacja: `.tf/factory/`, `.tf/config/`, brak `factory/`;
+składanie konfiguracji z nadpisaniami; własna persona z `.tf/config/personas/`) → `install.py` i `packs.py`/`build.py`
+(układ i składanie) → `ROOT` i ścieżki w skryptach silnika → `tf.py`, `update.py`, `analyze.py` → hooki, ustawienia,
+cleanroom → skille, przewodnik, `CLAUDE.md`, tryby, szablony CI → `tools/workspace.py` i testy → bramki skilli,
+`workspace.py check` dla wszystkich przestrzeni (`matrix`).
 
 ## Kolejność
-4a → 4b → plan 4c z decyzjami D2, D3 (także bez migracji — świeża instalacja).
+4a (#180) → 4b (#183) → 4c (decyzje D2, D3 z 2026-11-08).

@@ -4,7 +4,7 @@ Moduł `security` tf analyze, piętro 0 (bez modelu): sekrety w kodzie (wzorce h
 (tylko nazwa — treści nie czyta), niebezpieczne API (eval, exec, pickle, yaml.load, shell=True, innerHTML…),
 wyłączona weryfikacja TLS, md5/sha1 przy hasłach, manifest zależności bez lockfile'a.
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
 
 Wartość sekretu nie trafia do wyjścia (fragment jest maskowany). Tylko biblioteka standardowa.
 """
@@ -25,7 +25,7 @@ SKIP_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip", ".
             ".ttf", ".jar", ".so", ".dll", ".exe", ".bin", ".svg"}
 LOCKFILES = {"package-lock.json", "pnpm-lock.yaml", "yarn.lock", "npm-shrinkwrap.json", "uv.lock", "poetry.lock",
              "pdm.lock", "Pipfile.lock", "bun.lockb"}
-FACTORY_OWNED = ("factory/", ".claude/")   # pliki fabryki w projekcie (instalacja zespołowa) — nie kod produktu
+FACTORY_OWNED = (".tf/factory/", ".claude/")   # pliki fabryki w projekcie (instalacja zespołowa) — nie kod produktu
 ENV_OK = {".env.example", ".env.sample", ".env.template", ".env.dist"}
 CODE_EXT = {".py", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".java", ".cs", ".go", ".rb",
             ".php", ".html", ".vue", ".svelte"}
@@ -65,7 +65,7 @@ API = [
 
 def load_secret_rules(root: Path):
     for hook in (root / ".claude" / "hooks" / "scan_secrets.py",
-                 Path(__file__).resolve().parents[4] / ".claude" / "hooks" / "scan_secrets.py",
+                 Path(__file__).resolve().parents[5] / ".claude" / "hooks" / "scan_secrets.py",
                  Path(__file__).resolve().parents[5] / "core" / "hooks" / "scan_secrets.py"):   # źródła fabryki
         if hook.is_file():
             spec = importlib.util.spec_from_file_location("tf_scan_secrets", hook)

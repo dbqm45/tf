@@ -55,8 +55,8 @@ Dokumentacja TypeSafe podaje, że angielski działa najlepiej, a inne języki s�
 angielsku, ale stan (polecenia, dokumenty) jest po polsku. Dlatego przed włączeniem zmierz Jev na danych fabryki:
 
 ```bash
-python3 factory/jev_calibration.py --routing                                   # słowa vs Jev
-python3 factory/jev_calibration.py --judge docs/evals/2026-10-02-sonnet.jsonl  # zgodność ocen
+python3 .tf/factory/jev_calibration.py --routing                                   # słowa vs Jev
+python3 .tf/factory/jev_calibration.py --judge docs/evals/2026-10-02-sonnet.jsonl  # zgodność ocen
 ```
 
 Podpowiedź skilli zmierzysz na wszystkich ~270 scenariuszach za ułamek centa. Włącz:

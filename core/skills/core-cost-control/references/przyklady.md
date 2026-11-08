@@ -42,7 +42,7 @@ zapisuje, a przy podobnym zadaniu od razu wybierasz `opus` do diagnozy.
 **Sytuacja:** „Ten tydzień kosztował więcej niż zwykle. Sprawdź, gdzie uciekają tokeny, i zaproponuj zmianę”.
 
 **Jak:**
-1. `python3 factory/cost_report.py --days 7` — koszt per agent i model, trafienia cache, sygnały `Tier:`.
+1. `python3 .tf/factory/cost_report.py --days 7` — koszt per agent i model, trafienia cache, sygnały `Tier:`.
 2. Szukasz wzorca: kto często eskaluje albo zgłasza „za wysoki”, gdzie trafienia cache są niskie.
 3. Sprawdzasz nawyki sesji: przełączanie `/model` w środku zadania, długie przerwy, `/compact` zamiast `/rewind`.
 4. Proponujesz zmianę konfiguracji, a nie jednorazowe „uważaj”.
@@ -51,7 +51,7 @@ zapisuje, a przy podobnym zadaniu od razu wybierasz `opus` do diagnozy.
 
 | Ustalenie | Dowód | Zmiana |
 |---|---|---|
-| wykonawca dokumentacji zgłasza „Tier: za wysoki” | raport: 4 z 9 zadań | obniż tier roli w `factory/config.yaml` |
+| wykonawca dokumentacji zgłasza „Tier: za wysoki” | raport: 4 z 9 zadań | obniż tier roli w `.tf/config/config.yaml` |
 | niskie trafienia cache w głównej sesji | pasek stanu „zimny” po przerwach | po długiej przerwie nowa sesja od punktu kontrolnego |
 | `/model` przełączany w trakcie zadania | historia sesji | model ustalany na początku; trudne kroki do wykonawcy z `model: opus` |
-| krótkie zadania przy profilu `jakosc` | doradca wzywany w krótkich zadaniach | `python3 factory/profile.py zrownowazony --dry-run`, potem zmiana za zgodą |
+| krótkie zadania przy profilu `jakosc` | doradca wzywany w krótkich zadaniach | `python3 .tf/factory/profile.py zrownowazony --dry-run`, potem zmiana za zgodą |

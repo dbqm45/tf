@@ -35,11 +35,11 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as d:
         root = Path(d) / "f"
         shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns("__pycache__", "logs", ".git", "*.zip", "docs"))
-        gate = str(root / "factory" / "skill_gate.py")
+        gate = str(root / ".tf" / "factory" / "skill_gate.py")
 
         total += 1
         r = run([gate, "core-grounding", "--fast"], cwd=root)
-        reg = load(root / "factory" / "build.py", "b_copy").gate_registry()
+        reg = load(root / ".tf" / "factory" / "build.py", "b_copy").gate_registry()
         if r.returncode != 0 or "fingerprint" not in reg.get("core-grounding", {}):
             fails.append(f"gate: istniejący skill powinien przejść i trafić do rejestru — {r.stdout[-600:]}")
 
@@ -47,12 +47,12 @@ def main() -> int:
         p = root / ".claude" / "skills" / "core-grounding" / "SKILL.md"
         p.write_text(p.read_text() + "\nZmiana.\n")
         st = run([gate, "--status"], cwd=root).stdout
-        chk = run([str(root / "factory" / "build.py"), "check"], cwd=root).stdout
+        chk = run([str(root / ".tf" / "factory" / "build.py"), "check"], cwd=root).stdout
         if "core-grounding" not in st or "zmieniony po bramce" not in st or "core-grounding: zmieniony po ostatniej bramce" not in chk:
             fails.append(f"gate: zmiana skilla nie wykryta — {st[-300:]} / {chk[-300:]}")
 
         total += 1
-        r = run([str(root / "factory" / "build.py"), "new-skill", "core-demo-gate", "Użyj przy demo. Nie do niczego innego."], cwd=root)
+        r = run([str(root / ".tf" / "factory" / "build.py"), "new-skill", "core-demo-gate", "Użyj przy demo. Nie do niczego innego."], cwd=root)
         ev = next((d / "skill_evals" / "core-demo-gate.json" for d in (root / "tests", root / ".claude" / "tests")
                    if (d / "skill_evals" / "core-demo-gate.json").exists()), root / "tests" / "skill_evals" / "core-demo-gate.json")
         g = run([gate, "core-demo-gate", "--fast"], cwd=root)
@@ -72,7 +72,7 @@ def main() -> int:
     # 5. każda runda ewaluacji ma własny raport (bez mieszania wyników kilku rund)
     total += 1
     with tempfile.TemporaryDirectory() as d:
-        g = load(ROOT / "factory" / "skill_gate.py", "gate_mod")
+        g = load(ROOT / ".tf" / "factory" / "skill_gate.py", "gate_mod")
         out = Path(d)
         first = g.report_path(out, "x")
         first.with_suffix(".jsonl").write_text("{}\n")

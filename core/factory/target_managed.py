@@ -2,7 +2,7 @@
 """
 Target `managed-agents`: persony, wykonawcy i agenci wspólni fabryki jako pliki dla `ant apply`
 (Claude Managed Agents). Włączasz go w `.claude/factory-settings.json`: `"targets": ["claude", "managed-agents"]`;
-`python3 factory/build.py` zapisuje wtedy katalog `managed-agents/`:
+`python3 .tf/factory/build.py` zapisuje wtedy katalog `managed-agents/`:
 
   managed-agents/agents/<agent>.md        frontmatter YAML = konfiguracja agenta, treść = prompt systemowy
   managed-agents/environments/default.yaml środowisko chmurowe z ograniczoną siecią
@@ -21,7 +21,7 @@ import subprocess
 
 OUT = "managed-agents"
 SKILLS_FROM_AGENT = "../../.claude/skills"   # z managed-agents/agents/<plik>.md do .claude/skills/
-MARK = "WYGENEROWANO przez factory/build.py — nie edytuj ręcznie."
+MARK = "WYGENEROWANO przez .tf/factory/build.py — nie edytuj ręcznie."
 ROSTER_LIMIT = 20                             # maks. pozycji `predefined_agents`
 SKILLS_LIMIT = 500                            # maks. skilli na sesję, liczone raz dla wszystkich agentów
 TOOLSET = "agent_toolset_20260401"
@@ -31,7 +31,7 @@ CLAUDE_TOOLS = {"Bash": "bash", "Read": "read", "Write": "write", "Edit": "edit"
 MODEL_IDS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5", "opus": "claude-opus-5-5",
              "fable": "claude-fable-5-1", "inherit": "claude-opus-5-5"}
 
-ENVIRONMENT = """# {mark} Źródło: factory/target_managed.py
+ENVIRONMENT = """# {mark} Źródło: .tf/factory/target_managed.py
 name: tf-default
 config:
   type: cloud
@@ -53,8 +53,8 @@ Pracujesz jako agent Claude Managed Agents, nie w Claude Code. Różnice wobec r
 
 README = """# Managed Agents — wygenerowane przez fabrykę
 
-Pliki w `agents/`, `environments/default.yaml` i ten README generuje `python3 factory/build.py` (target
-`managed-agents` w `.claude/factory-settings.json`). Nie edytuj ich ręcznie — zmiany wprowadzaj w `factory/`.
+Pliki w `agents/`, `environments/default.yaml` i ten README generuje `python3 .tf/factory/build.py` (target
+`managed-agents` w `.claude/factory-settings.json`). Nie edytuj ich ręcznie — zmiany wprowadzaj w `.tf/factory/`.
 `claude-lock.json`, który zapisuje `ant apply`, należy do Ciebie: commitujesz go, fabryka go nie zmienia.
 
 ## Wgranie
@@ -62,8 +62,8 @@ Wymaga `ant` ≥ 1.40.0 (ścieżki plików w `predefined_agents`). Budowa fabryk
 konto organizacji to osobne, jawne polecenie (z katalogu głównego projektu):
 
 ```sh
-python3 factory/build.py managed-apply         # plan: agenci, środowisko i skille z .claude/skills/ — nic nie wysyła
-python3 factory/build.py managed-apply --yes   # wgranie, po przejrzeniu planu
+python3 .tf/factory/build.py managed-apply         # plan: agenci, środowisko i skille z .claude/skills/ — nic nie wysyła
+python3 .tf/factory/build.py managed-apply --yes   # wgranie, po przejrzeniu planu
 ```
 
 To samo bezpośrednio: `cd managed-agents && ant apply --dry-run agents environments` (plan),
@@ -124,13 +124,13 @@ def description(text: str) -> str:
 def system_prompt(claude_doc: str) -> str:
     """Treść pliku agenta Claude Code bez frontmattera i komentarza nagłówka."""
     body = claude_doc.split("\n---\n", 1)[1] if claude_doc.startswith("---\n") else claude_doc
-    body = re.sub(r"^<!-- WYGENEROWANO przez factory/build\.py[^\n]*-->\n", "", body)
+    body = re.sub(r"^<!-- WYGENEROWANO przez .tf/factory/build\.py[^\n]*-->\n", "", body)
     return body.lstrip("\n")
 
 
 def agent_doc(fields: dict, system: str, src: str, yaml=None) -> str:
     if yaml is None:
-        import packs as packs_mod   # factory/packs.py: PyYAML systemowy albo z factory/_vendor
+        import packs as packs_mod   # .tf/factory/packs.py: PyYAML systemowy albo z .tf/factory/_vendor
         yaml = packs_mod.yaml
     head = yaml.safe_dump({k: v for k, v in fields.items() if v not in (None, "", [], {})},
                           allow_unicode=True, sort_keys=False, width=1000)
@@ -141,7 +141,7 @@ def apply(d, yes: bool = False, run=subprocess.run, which=shutil.which) -> int:
     """Jedyne miejsce, które wysyła coś na konto: `ant apply` w katalogu targetu. Bez `yes` — tylko plan
     (`--dry-run`), z `yes` — wgranie. Budowa (`build.py`) i kontrola (`build.py check`) nigdy tego nie wywołują."""
     if not ((d / "agents").is_dir() and (d / "environments").is_dir()):
-        print(f"✗ brak plików targetu w {d} — włącz target managed-agents i uruchom: python3 factory/build.py")
+        print(f"✗ brak plików targetu w {d} — włącz target managed-agents i uruchom: python3 .tf/factory/build.py")
         return 2
     ant = which("ant")
     if not ant:
@@ -149,7 +149,7 @@ def apply(d, yes: bool = False, run=subprocess.run, which=shutil.which) -> int:
         return 2
     argv = [ant, "apply", "--yes" if yes else "--dry-run", "agents", "environments"]
     if not yes:
-        print("Plan (nic nie zostanie wysłane). Wgranie: python3 factory/build.py managed-apply --yes")
+        print("Plan (nic nie zostanie wysłane). Wgranie: python3 .tf/factory/build.py managed-apply --yes")
     return run(argv, cwd=d).returncode
 
 
@@ -188,7 +188,7 @@ def render(b) -> tuple[dict[str, str], list[str], list[str]]:
     roles, personas, _traits, _skills, _errors = b.load_team(cfg)
     claude = b.render_all()
     files, warnings, errors = {}, [], []
-    meta = {"generated_by": "tf factory/build.py"}
+    meta = {"generated_by": "tf .tf/factory/build.py"}
     agents: dict[str, dict] = {}   # nazwa → frontmatter (do liczenia skilli w sesji)
 
     def add(name: str, fields: dict, claude_key: str, src: str, note: bool = False) -> None:
@@ -205,11 +205,11 @@ def render(b) -> tuple[dict[str, str], list[str], list[str]]:
             continue
         add(n, {"description": spec["description"], "model": model_spec(cfg, spec["tier"]),
                 "tools": toolset(spec["tools"]), "skills": skill_paths(spec.get("skills") or [])},
-            f"shared/{n}.md", "factory/config.yaml")
+            f"shared/{n}.md", ".tf/config/config.yaml")
     for n, spec in cfg["consultants"].items():
         add(n, {"description": spec["description"], "model": model_spec(cfg, spec.get("tier", "std")),
                 "tools": toolset(b.CONSULT_TOOLS), "skills": skill_paths(spec.get("skills") or [])},
-            f"consult/{n}.md", f"factory/packs/{spec['_pack']}/pack.yaml")
+            f"consult/{n}.md", f".tf/factory/packs/{spec['_pack']}/pack.yaml")
     for pname, p in personas.items():
         for r in p["roles"]:
             role = roles[r]

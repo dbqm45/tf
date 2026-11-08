@@ -4,7 +4,7 @@ uprawnienie dla skryptu i przewodnik. python3 .claude/tests/test_mode_talos.py""
 import json
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "packs" / "mode-talos").is_dir())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "packs" / "mode-talos").is_dir())
 
 
 def main() -> int:
@@ -35,7 +35,7 @@ def main() -> int:
         if f.is_file():
             allow += json.loads(f.read_text(encoding="utf-8")).get("permissions", {}).get("allow", [])
     check(any(script in a for a in allow), f"T-4: uprawnienie dla skryptu przebiegu: {[a for a in allow if 'run' in a]}")
-    check((ROOT / "factory" / "packs" / "mode-talos" / "GUIDE.md").is_file(), "T-5: przewodnik trybu w projekcie")
+    check((ROOT / ".tf" / "factory" / "packs" / "mode-talos" / "GUIDE.md").is_file(), "T-5: przewodnik trybu w projekcie")
     personas = [p for p in agents.rglob("*.md") if p.parent.name not in ("shared", "consult") and p.stem == p.parent.name]
     check(personas == [] or all("`talos`" not in p.read_text(encoding="utf-8") for p in personas),
           "T-6: persony nie delegują do talos (to sesja główna, nie wykonawca)")

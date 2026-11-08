@@ -2,14 +2,14 @@
 """
 Fabryka zespołów: rdzeń + nakładki (pack-*) → skille → role → persony → pliki agentów.
 
-  python3 factory/build.py            # zbuduj .claude/agents/_generated/ i .claude/catalog.md
-  python3 factory/build.py check      # walidacja + wykrycie nieaktualnych plików (CI)
-  python3 factory/build.py list       # podsumowanie zespołów
-  python3 factory/build.py managed-apply [--yes]   # target managed-agents: plan `ant apply`; --yes wgrywa na konto
-  python3 factory/build.py new-skill fw-demo "Użyj przy ... Nie do ..."
+  python3 .tf/factory/build.py            # zbuduj .claude/agents/_generated/ i .claude/catalog.md
+  python3 .tf/factory/build.py check      # walidacja + wykrycie nieaktualnych plików (CI)
+  python3 .tf/factory/build.py list       # podsumowanie zespołów
+  python3 .tf/factory/build.py managed-apply [--yes]   # target managed-agents: plan `ant apply`; --yes wgrywa na konto
+  python3 .tf/factory/build.py new-skill fw-demo "Użyj przy ... Nie do ..."
 
-Źródłem prawdy są factory/config.yaml (rdzeń), factory/packs/<id>/ (nakładki) i własne pliki projektu
-w factory/{roles,personas,traits}/; składanie opisuje factory/packs.py. Plików w .claude/agents/_generated/
+Źródłem prawdy są .tf/config/config.yaml (rdzeń), .tf/factory/packs/<id>/ (nakładki) i własne pliki projektu
+w .tf/factory/{roles,personas,traits}/; składanie opisuje .tf/factory/packs.py. Plików w .claude/agents/_generated/
 nie edytuj ręcznie.
 """
 from __future__ import annotations
@@ -20,22 +20,22 @@ import shutil
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import packs as packs_mod  # noqa: E402  (factory/packs.py — nakładki i składanie konfiguracji)
+import packs as packs_mod  # noqa: E402  (.tf/factory/packs.py — nakładki i składanie konfiguracji)
 yaml = packs_mod.yaml
-FACTORY = ROOT / "factory"
+FACTORY = ROOT / ".tf" / "factory"
 SKILLS_DIR = ROOT / ".claude" / "skills"
 OUT_DIR = ROOT / ".claude" / "agents" / "_generated"
 # Targety: narzędzia, dla których budujemy agentów (ustawienie `targets` projektu). Claude Code zawsze;
-# `managed-agents` — pliki dla `ant apply` (Claude Managed Agents), renderer w factory/target_managed.py.
+# `managed-agents` — pliki dla `ant apply` (Claude Managed Agents), renderer w .tf/factory/target_managed.py.
 TARGETS = {"claude": OUT_DIR, "managed-agents": ROOT / "managed-agents"}
 
 KNOWN_TOOLS = {
     "Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill", "WebFetch",
     "WebSearch", "NotebookEdit", "LSP", "TodoWrite", "Agent", "Monitor", "AskUserQuestion",
 }
-HEADER = "<!-- WYGENEROWANO przez factory/build.py — nie edytuj ręcznie. Źródło: {src} -->\n"
+HEADER = "<!-- WYGENEROWANO przez .tf/factory/build.py — nie edytuj ręcznie. Źródło: {src} -->\n"
 
 
 # ───────────────────────── ładowanie ─────────────────────────
@@ -99,7 +99,7 @@ PROFILE_FILE = ROOT / ".claude" / "factory-profile.json"
 
 
 def active_profile(cfg: dict) -> str:
-    """Profil kosztów: z .claude/factory-profile.json (ustawia factory/profile.py), inaczej default_profile."""
+    """Profil kosztów: z .claude/factory-profile.json (ustawia .tf/factory/profile.py), inaczej default_profile."""
     name = cfg.get("default_profile")
     if PROFILE_FILE.exists():
         try:
@@ -110,8 +110,8 @@ def active_profile(cfg: dict) -> str:
 
 
 def load_config() -> dict:
-    """config.yaml rdzenia złożony z nakładkami (factory/packs.py) i z nałożonym profilem kosztów (pola tierów)."""
-    cfg = packs_mod.compose(ROOT, load_yaml(FACTORY / "config.yaml"))
+    """config.yaml rdzenia złożony z nakładkami (.tf/factory/packs.py) i z nałożonym profilem kosztów (pola tierów)."""
+    cfg = packs_mod.compose(ROOT, packs_mod.load_config(ROOT))
     name = active_profile(cfg)
     cfg["_profile"] = name
     for tier, over in (((cfg.get("profiles") or {}).get(name) or {}).get("tiers") or {}).items():
@@ -140,7 +140,7 @@ def evals_file(name: str) -> Path:
 
 
 def skill_fingerprint(name: str) -> str:
-    """Odcisk treści skilla do bramki jakości (factory/skill_gate.py): pliki skilla i jego scenariusze. Ścieżki względne,
+    """Odcisk treści skilla do bramki jakości (.tf/factory/skill_gate.py): pliki skilla i jego scenariusze. Ścieżki względne,
     spis treści i ścieżki testów po instalacji normalizowane — ten sam skill ma ten sam odcisk w fabryce i w projekcie."""
     import hashlib
     h = hashlib.sha256()
@@ -156,7 +156,7 @@ def skill_fingerprint(name: str) -> str:
                 .replace("(python3 .claude/tests/", "(python3 tests/")
             if p.suffix == ".md" and rel.startswith("references/"):
                 text = with_toc(text)
-            if rel == "SKILL.md":   # termin przeglądu (factory/freshness.py) nie zmienia treści — bramka zostaje ważna
+            if rel == "SKILL.md":   # termin przeglądu (.tf/factory/freshness.py) nie zmienia treści — bramka zostaje ważna
                 text = re.sub(r"^  przeglad:.*\n", "", text, count=1, flags=re.M)
             data = text.encode("utf-8")
         h.update(rel.encode() + b"\0" + data + b"\0")
@@ -164,11 +164,11 @@ def skill_fingerprint(name: str) -> str:
 
 
 def check_review_date(name: str, meta: dict) -> tuple[list[str], list[str]]:
-    """`metadata.przeglad`: termin przeglądu skilla w formacie RRRR-MM-DD (factory/freshness.py)."""
+    """`metadata.przeglad`: termin przeglądu skilla w formacie RRRR-MM-DD (.tf/factory/freshness.py)."""
     raw = meta.get("przeglad")
     if raw is None:
         return [], [f"skill {name}: brak metadata.przeglad (termin przeglądu treści) — "
-                    f"python3 factory/freshness.py --reviewed {name}"]
+                    f"python3 .tf/factory/freshness.py --reviewed {name}"]
     try:
         import datetime as _dt
         ok = re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(raw)) and _dt.date.fromisoformat(str(raw))
@@ -203,7 +203,7 @@ def gate_registry() -> dict:
 
 
 def load_dir(sub: str) -> dict[str, dict]:
-    """Role albo persony z nakładek i własne projektu (factory/packs.py → load_items)."""
+    """Role albo persony z nakładek i własne projektu (.tf/factory/packs.py → load_items)."""
     return packs_mod.load_items(ROOT, sub)[0]
 
 
@@ -612,7 +612,7 @@ def render_shared(name: str, spec: dict, cfg: dict) -> tuple[str, str]:
         body += "\n" + common_sections(cfg)
     if "Edit" in spec["tools"] or "Write" in spec["tools"]:
         body += "\n## Raport\n" + cfg["report_contract"].strip() + "\n"
-    src = "factory/config.yaml" if spec.get("_pack", "core") == "core" else f"factory/packs/{spec['_pack']}/pack.yaml"
+    src = ".tf/config/config.yaml" if spec.get("_pack", "core") == "core" else f".tf/factory/packs/{spec['_pack']}/pack.yaml"
     return name, fm + HEADER.format(src=src) + body
 
 
@@ -652,7 +652,7 @@ Skille: {skills_line(spec.get('skills') or [])}
 {sources_only(cfg)}
 {language_section(cfg)}
 {common_sections(cfg)}"""
-    return name, fm + HEADER.format(src=f"factory/packs/{spec['_pack']}/pack.yaml") + body
+    return name, fm + HEADER.format(src=f".tf/factory/packs/{spec['_pack']}/pack.yaml") + body
 
 
 def render_all() -> dict[str, str]:
@@ -726,7 +726,7 @@ def render_catalog() -> str:
         if not tail:
             return short(s.get("description", ""))
         return s.get("description", "").rstrip(".") + ". Nie do " + (tail if len(tail) <= 110 else tail[:110].rsplit(" ", 1)[0] + "…")
-    lines = ["# Katalog zespołu (generowany przez factory/build.py — nie edytuj)", "",
+    lines = ["# Katalog zespołu (generowany przez .tf/factory/build.py — nie edytuj)", "",
              "Do doboru skilli i person do problemu (skill core-problem-routing). Skill wczytujesz narzędziem Skill po nazwie.", ""]
     installed = cfg.get("_packs") or {}
     lines += ["Nakładki: " + (", ".join(f"`{pid}` ({p.get('title', '')})" for pid, p in installed.items()) or "brak — sam rdzeń"), ""]
@@ -756,7 +756,7 @@ def render_catalog() -> str:
 # ───────────────────────── walidacja ─────────────────────────
 
 def _skill_profile():
-    """factory/skill_profile.py — te same reguły widoczności opisów, które instalacja stosuje w projekcie."""
+    """.tf/factory/skill_profile.py — te same reguły widoczności opisów, które instalacja stosuje w projekcie."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("ctf_skill_profile", FACTORY / "skill_profile.py")
     mod = importlib.util.module_from_spec(spec)
@@ -807,7 +807,7 @@ def check_packs(cfg: dict) -> tuple[list[str], list[str]]:
     core_version = (FACTORY / "VERSION").read_text(encoding="utf-8").strip() if (FACTORY / "VERSION").exists() else "0.0.0"
     for pid, p in packs.items():
         if p.get("_dir") and p["_dir"].name != pid:
-            errors.append(f"nakładka {pid}: katalog factory/packs/{p['_dir'].name} ≠ id")
+            errors.append(f"nakładka {pid}: katalog .tf/factory/packs/{p['_dir'].name} ≠ id")
         spec = (p.get("requires") or {}).get("core")
         if spec and not version_ok(core_version, spec):
             errors.append(f"nakładka {pid}: wymaga rdzenia {spec}, a zainstalowany jest {core_version} — "
@@ -838,7 +838,7 @@ def validate() -> tuple[list[str], list[str]]:
         errors += e
         warnings += w
         if tm.stale(TARGETS["managed-agents"], files):
-            errors.append("pliki w managed-agents/ są nieaktualne — uruchom: python3 factory/build.py")
+            errors.append("pliki w managed-agents/ są nieaktualne — uruchom: python3 .tf/factory/build.py")
     for sub in ("roles", "personas"):
         warnings += packs_mod.load_items(ROOT, sub)[1]
     e, w = check_packs(cfg)
@@ -902,7 +902,7 @@ def validate() -> tuple[list[str], list[str]]:
             errors.append(f"skill {s['_dir']}: name '{name}' ≠ nazwa folderu")
         if not name.startswith(skill_prefixes(cfg)):   # skill projektu spoza fabryki — nie oceniamy go regułami fabryki
             warnings.append(f"skill {name}: spoza fabryki (brak prefiksu wymiaru) — pominięty w walidacji; "
-                            "żeby persona mogła go użyć, nadaj prefiks z factory/config.yaml → facets")
+                            "żeby persona mogła go użyć, nadaj prefiks z .tf/config/config.yaml → facets")
             continue
         d = s.get("description", "")
         katalog = (s.get("metadata") or {}).get("katalog", "")
@@ -938,9 +938,9 @@ def validate() -> tuple[list[str], list[str]]:
                             "kompaktowaniu Claude Code przywraca najwyżej ~5000 tokenów skilla; przenieś szczegóły do references/")
         rec = gate.get(name)
         if not rec:
-            warnings.append(f"skill {name}: nie przeszedł bramki jakości — python3 factory/skill_gate.py {name}")
+            warnings.append(f"skill {name}: nie przeszedł bramki jakości — python3 .tf/factory/skill_gate.py {name}")
         elif rec.get("fingerprint") != skill_fingerprint(s["_dir"]):
-            warnings.append(f"skill {name}: zmieniony po ostatniej bramce — python3 factory/skill_gate.py {name}")
+            warnings.append(f"skill {name}: zmieniony po ostatniej bramce — python3 .tf/factory/skill_gate.py {name}")
         if s["_lines"] > 300:
             warnings.append(f"skill {name}: SKILL.md ma {s['_lines']} linii — przenieś szczegóły do references/")
 
@@ -949,7 +949,7 @@ def validate() -> tuple[list[str], list[str]]:
                          tuple(cfg["skill_visibility"]["name_only_prefixes"]))
     if size > lim.get("skill_listing_max_chars", 10**9):
         warnings.append(f"lista skilli z opisem w typowym projekcie ma ≈{size} znaków (> {lim['skill_listing_max_chars']}): "
-                        "skille z opisem wg factory/skill_profile.py + rezerwa na wykryte technologie. Claude Code trzyma listę "
+                        "skille z opisem wg .tf/factory/skill_profile.py + rezerwa na wykryte technologie. Claude Code trzyma listę "
                         "w ~1% okna kontekstu i przy przepełnieniu usuwa opisy najrzadziej używanych skilli — skróć opisy, "
                         "przenieś rzadko potrzebne skille do sam-nazwa (reguły w skill_profile.py) albo ustaw "
                         "disable-model-invocation dla skilli uruchamianych ręcznie (`/doctor` pokaże koszt)")
@@ -1057,14 +1057,14 @@ def validate() -> tuple[list[str], list[str]]:
         on_disk = {str(p.relative_to(OUT_DIR)): p.read_text(encoding="utf-8")
                    for p in OUT_DIR.rglob("*.md")} if OUT_DIR.exists() else {}
         if on_disk != rendered:
-            errors.append("pliki w .claude/agents/_generated są nieaktualne — uruchom: python3 factory/build.py")
+            errors.append("pliki w .claude/agents/_generated są nieaktualne — uruchom: python3 .tf/factory/build.py")
         if not CATALOG.exists() or CATALOG.read_text(encoding="utf-8") != render_catalog():
-            errors.append(".claude/catalog.md jest nieaktualny — uruchom: python3 factory/build.py")
+            errors.append(".claude/catalog.md jest nieaktualny — uruchom: python3 .tf/factory/build.py")
         stale = [p.relative_to(ROOT).as_posix() for p in reference_files()
                  if with_toc(p.read_text(encoding="utf-8")) != p.read_text(encoding="utf-8")]
         if stale:
             errors.append(f"brak lub nieaktualny spis treści w {len(stale)} plikach referencyjnych (np. {stale[0]}) — "
-                          "uruchom: python3 factory/build.py")
+                          "uruchom: python3 .tf/factory/build.py")
         for pname, p in personas.items():
             for x in p.get("extra_agents") or []:
                 if not any(k.endswith(f"/{x}.md") for k in rendered):
@@ -1089,7 +1089,7 @@ def validate() -> tuple[list[str], list[str]]:
                 errors.append(f"{skill}/references/{f.name}: stałe sekcje "
                               + (f"brakujące {missing}" if missing else "w złej kolejności"))
 
-    # wersja fabryki wg SemVer 2.0.0 (factory/PUBLIC_API.md): VERSION, kolejność CHANGELOG, rodzaj podbicia od 1.35.0
+    # wersja fabryki wg SemVer 2.0.0 (.tf/factory/PUBLIC_API.md): VERSION, kolejność CHANGELOG, rodzaj podbicia od 1.35.0
     sv_path = SKILLS_DIR / "core-semver" / "scripts" / "semver.py"
     if sv_path.exists() and (FACTORY / "CHANGELOG.md").exists():
         import importlib.util
@@ -1101,10 +1101,10 @@ def validate() -> tuple[list[str], list[str]]:
             try:
                 sv.Version(version)
             except ValueError as e:
-                errors.append(f"factory/VERSION: {e}")
+                errors.append(f".tf/factory/VERSION: {e}")
         for p in sv.check_changelog((FACTORY / "CHANGELOG.md").read_text(encoding="utf-8"), version,
                                     cfg.get("semver_strict_from")):
-            errors.append(f"factory/CHANGELOG.md: {p}")
+            errors.append(f".tf/factory/CHANGELOG.md: {p}")
     return errors, warnings
 
 
@@ -1114,7 +1114,7 @@ def managed_target():
     """Moduł targetu `managed-agents` albo None, gdy projekt go nie włączył."""
     if "managed-agents" not in load_config()["_settings"]["targets"]:
         return None
-    import target_managed  # noqa: E402  (factory/target_managed.py)
+    import target_managed  # noqa: E402  (.tf/factory/target_managed.py)
     return target_managed
 
 
@@ -1144,7 +1144,7 @@ def cmd_build():
         tm.write(TARGETS["managed-agents"], files)
         print(f"✓ Managed Agents: {sum(k.startswith('agents/') for k in files)} agentów w "
               f"{TARGETS['managed-agents'].relative_to(ROOT)}/ — nic nie wysłano; plan i wgranie: "
-              "python3 factory/build.py managed-apply [--yes]")
+              "python3 .tf/factory/build.py managed-apply [--yes]")
     errors, warnings = validate()
     for w in warnings:
         print(f"  ⚠ {w}")
@@ -1211,7 +1211,7 @@ def cmd_new_skill(name: str, description: str, role: str | None = None, name_onl
     roles = load_dir("roles") if role else {}
     role_file = ROOT / roles[role]["_src"] if role in roles else None
     if role and not role_file:
-        print(f"✗ Nie ma roli {role} (factory/roles/ ani factory/packs/*/roles/)")
+        print(f"✗ Nie ma roli {role} (.tf/config/roles/ ani .tf/factory/packs/*/roles/)")
         return 2
     tpl = (FACTORY / "templates" / "SKILL.template.md").read_text(encoding="utf-8")
     (d / "references").mkdir(parents=True)
@@ -1262,8 +1262,8 @@ Dalej (skill core-skill-authoring):
   1. NAJPIERW scenariusze w {rel}: 2× trigger z luką, którą model ma bez skilla, 1× no-trigger z sąsiadem.
   2. Opcjonalnie punkt odniesienia: python3 {TESTS_REL}/run_skill_evals.py --skills {name} --models sonnet --baseline
   3. Treść SKILL.md — minimum, które zamyka luki; szczegóły do references/.
-  4. Dopisz skill do roli w factory/roles/ i uruchom python3 factory/build.py
-  5. Bramka: python3 factory/skill_gate.py {name}   (+ --model haiku,sonnet za zgodą człowieka — płatne)""")
+  4. Dopisz skill do roli w .tf/config/roles/ i uruchom python3 .tf/factory/build.py
+  5. Bramka: python3 .tf/factory/skill_gate.py {name}   (+ --model haiku,sonnet za zgodą człowieka — płatne)""")
     return 0
 
 

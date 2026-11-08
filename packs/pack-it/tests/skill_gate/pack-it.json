@@ -40,8 +40,8 @@
   "offline": "2026-10-22"
  },
  "ai-prompt-engineering": {
-  "fingerprint": "f0e34026688d4628",
-  "offline": "2026-10-22"
+  "fingerprint": "3af82e461978f36f",
+  "offline": "2026-11-08"
  },
  "ai-rag": {
   "fingerprint": "83da9012d9b764fc",
@@ -60,8 +60,8 @@
   "offline": "2026-10-30"
  },
  "arch-eu-product-law": {
-  "fingerprint": "37c91455efe899a1",
-  "offline": "2026-10-22"
+  "fingerprint": "102cf67a4f654430",
+  "offline": "2026-11-08"
  },
  "arch-multi-tenancy": {
   "fingerprint": "4e375830be645ad9",
@@ -80,8 +80,8 @@
   "offline": "2026-10-22"
  },
  "arch-tech-selection": {
-  "fingerprint": "b01a0204595daecc",
-  "offline": "2026-10-22"
+  "fingerprint": "8f63eaa8c5204322",
+  "offline": "2026-11-08"
  },
  "arch-threat-modeling": {
   "fingerprint": "ce4b156992d40ed0",
@@ -140,8 +140,8 @@
   "offline": "2026-10-22"
  },
  "ddd-es-simulation": {
-  "fingerprint": "1777ba0997250d92",
-  "offline": "2026-10-25"
+  "fingerprint": "87a4f56a5411c0e6",
+  "offline": "2026-11-08"
  },
  "ddd-event-storming": {
   "fingerprint": "d33da7c01e927476",
@@ -180,8 +180,8 @@
   "offline": "2026-10-22"
  },
  "eng-code-audit": {
-  "fingerprint": "7f6bdaa987e005b5",
-  "offline": "2026-10-21"
+  "fingerprint": "573a6d128fac8c5f",
+  "offline": "2026-11-08"
  },
  "eng-codebase-mapping": {
   "fingerprint": "0844cccf37f74dcd",

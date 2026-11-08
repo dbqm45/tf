@@ -68,7 +68,7 @@ def main() -> int:
         # 3. pliki nieobjęte bramką
         ok = all(pre(p, session="s2") is None for p in ("src/price.test.ts", "vite.config.ts", "src/types.d.ts",
                                                           "src/app.css", "docs/a.md", "src/app.component.html",
-                                                          ".claude/hooks/x.py", "factory/build.py", "package.json"))
+                                                          ".claude/hooks/x.py", ".tf/factory/build.py", "package.json"))
         check(ok, "testy, konfiguracja, style, dokumentacja i pliki fabryki nie podlegają bramce")
         # 4. zielony nowy test → jedno ostrzeżenie; test charakteryzujący dopuszcza refaktoryzację
         post_edit("src/price.test.ts", session="s3")

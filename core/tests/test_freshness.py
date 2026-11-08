@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy factory/freshness.py: terminy przeglądu skilli (metadata.przeglad) i znaczniki [niezweryfikowane]."""
+"""Testy .tf/factory/freshness.py: terminy przeglądu skilli (metadata.przeglad) i znaczniki [niezweryfikowane]."""
 import datetime as dt
 import importlib.util
 import json
@@ -8,8 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "freshness.py").is_file())
-SCRIPT = ROOT / "factory" / "freshness.py"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "freshness.py").is_file())
+SCRIPT = ROOT / ".tf" / "factory" / "freshness.py"
 TODAY = dt.date(2026, 10, 17)
 
 

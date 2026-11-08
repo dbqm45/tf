@@ -2,14 +2,14 @@
 """
 Statystyki kosztów per dzień, tydzień albo miesiąc z .tf/logs/usage.jsonl (hook log_usage) i historii git.
 
-  python3 factory/cost_stats.py                       # tygodnie (ostatnie 8)
-  python3 factory/cost_stats.py --period day --last 14
-  python3 factory/cost_stats.py --period month --json
-  python3 factory/cost_stats.py --usd-pln 3.65        # kurs ręcznie (np. bez sieci)
+  python3 .tf/factory/cost_stats.py                       # tygodnie (ostatnie 8)
+  python3 .tf/factory/cost_stats.py --period day --last 14
+  python3 .tf/factory/cost_stats.py --period month --json
+  python3 .tf/factory/cost_stats.py --usd-pln 3.65        # kurs ręcznie (np. bez sieci)
   --log <usage.jsonl> · --repo-root <repozytorium do liczenia zmian> · --config <config.yaml>
 
 Per okres: sesje i uruchomienia, tokeny (wejście, wyjście, odczyt i zapis cache), udział modeli w % tokenów, koszt
-w USD (ceny `prices_usd_per_mtok` z factory/config.yaml; dokładny identyfikator modelu ma pierwszeństwo przed rodziną)
+w USD (ceny `prices_usd_per_mtok` z .tf/config/config.yaml; dokładny identyfikator modelu ma pierwszeństwo przed rodziną)
 i w PLN po **kursie średnim NBP z tabeli A** z chwili wyliczenia (api.nbp.pl; zapamiętany na dzień w
 ~/.cache/claude-team-factory/, bez sieci ostatni znany kurs z oznaczeniem). Tokeny wejścia i cache rekordu dzielone są
 między modele proporcjonalnie do ich tokenów wyjścia (log zapisuje wyjście per model) — przybliżenie.
@@ -34,11 +34,20 @@ import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 NBP_URL = "https://api.nbp.pl/api/exchangerates/rates/a/usd/?format=json"
 FAMILIES = ("haiku", "sonnet", "opus", "fable", "mythos")
 TYPES = ("input", "output", "cache_read", "cache_write")
 
+
+
+def _tf_config(root: Path) -> dict:
+    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.load_config(root)
 
 def family(model: str) -> str:
     m = model.lower()
@@ -213,7 +222,7 @@ def render(rep: dict) -> str:
         kurs = (f"Kurs: 1 USD = {pl(rate['rate'], 4)} PLN — kurs średni NBP, tabela A nr {rate['table']} z {rate['date']}"
                 + (" (ostatni znany — brak sieci)" if rate.get("stale") else "") + ".")
     out = [f"# Statystyki kosztów ({rep['period_name']}, okresów: {len(rep['periods'])})", "", kurs,
-           f"Ceny: stan {rep['prices_checked']} (factory/config.yaml → prices_usd_per_mtok). Przy subskrypcji (Pro/Max) "
+           f"Ceny: stan {rep['prices_checked']} (.tf/config/config.yaml → prices_usd_per_mtok). Przy subskrypcji (Pro/Max) "
            "to koszt równoważny cenom API, nie faktyczny wydatek.", ""]
     if rep.get("gap"):
         out += [f"**Dane niepełne:** ostatni wpis logu {rep['gap']['last_log'][:16]}, ostatni commit "
@@ -268,12 +277,13 @@ def main(argv: list[str]) -> int:
     try:
         try:
             import yaml
-        except ImportError:  # dołączona kopia PyYAML (factory/_vendor)
+        except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
             sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
             import yaml
-        cfg = yaml.safe_load(Path(opts.get("--config") or ROOT / "factory" / "config.yaml").read_text(encoding="utf-8")) or {}
+        cfg = (yaml.safe_load(Path(opts["--config"]).read_text(encoding="utf-8")) or {}) if opts.get("--config") \
+            else _tf_config(ROOT)
     except ImportError:
-        print("✗ Brak PyYAML (pip install pyyaml) — potrzebny do cen z factory/config.yaml.")
+        print("✗ Brak PyYAML (pip install pyyaml) — potrzebny do cen z .tf/config/config.yaml.")
         return 2
     prices = cfg.get("prices_usd_per_mtok") or {}
     records = []

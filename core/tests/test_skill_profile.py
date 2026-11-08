@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy factory/skill_profile.py: widoczność opisów skilli (skillOverrides) dopasowana do projektu."""
+"""Testy .tf/factory/skill_profile.py: widoczność opisów skilli (skillOverrides) dopasowana do projektu."""
 import importlib.util
 import json
 import subprocess
@@ -7,8 +7,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "factory" / "skill_profile.py").is_file())
-SCRIPT = ROOT / "factory" / "skill_profile.py"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "skill_profile.py").is_file())
+SCRIPT = ROOT / ".tf" / "factory" / "skill_profile.py"
 
 
 def load():
@@ -31,12 +31,12 @@ NAME_ONLY = ("dom-", "sec-", "ai-", "ux-")   # prefiksy „sama nazwa” deklaro
 def with_pack(p: Path) -> None:
     """Fabryka w projekcie testowym: packs.py, config.yaml i nakładka z prefiksami „sama nazwa”."""
     import shutil
-    (p / "factory").mkdir(parents=True, exist_ok=True)
+    (p / ".tf" / "factory").mkdir(parents=True, exist_ok=True)
     for f in ("packs.py", "config.yaml"):
-        shutil.copy(ROOT / "factory" / f, p / "factory" / f)
-    if (ROOT / "factory" / "_vendor").is_dir():
-        shutil.copytree(ROOT / "factory" / "_vendor", p / "factory" / "_vendor", dirs_exist_ok=True)
-    pk = p / "factory" / "packs" / "pack-t"
+        shutil.copy(ROOT / ".tf" / "factory" / f, p / ".tf" / "factory" / f)
+    if (ROOT / ".tf" / "factory" / "_vendor").is_dir():
+        shutil.copytree(ROOT / ".tf" / "factory" / "_vendor", p / ".tf" / "factory" / "_vendor", dirs_exist_ok=True)
+    pk = p / ".tf" / "factory" / "packs" / "pack-t"
     pk.mkdir(parents=True, exist_ok=True)
     (pk / "pack.yaml").write_text("id: pack-t\nskill_visibility:\n  name_only_prefixes: [" + ", ".join(NAME_ONLY) + "]\n")
 

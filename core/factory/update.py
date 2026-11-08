@@ -2,17 +2,17 @@
 """
 Updates the team factory in this project, like a software update (standard library only).
 
-  python3 factory/update.py --check                      # is there a new version and what changed (changes nothing)
-  python3 factory/update.py                              # show the plan, ask, update
-  python3 factory/update.py --yes                        # no question (e.g. in a script)
-  python3 factory/update.py --source <source>            # set the source (remembered in the manifest)
-  python3 factory/update.py --yes --accept-audit         # apply despite high-severity skill audit findings
-  python3 factory/update.py --rollback                   # go back to the state before the last update (copy in .tf/backup/)
-  python3 factory/update.py --auto on|off                # automatic PATCH/MINOR releases (session start hook or a PR workflow)
-  python3 factory/update.py --auto-run                   # one automatic run (the session start hook runs it in the background)
-  python3 factory/update.py --ci --source <git URL>      # CI run (the team-factory-update workflow opens a PR from it)
-  python3 factory/update.py --packs a,b|all|none         # change packs (also --add x, --remove y); same version is re-applied
-  python3 factory/update.py --language pl --commit-language en   # change languages; same version is re-applied
+  python3 .tf/factory/update.py --check                      # is there a new version and what changed (changes nothing)
+  python3 .tf/factory/update.py                              # show the plan, ask, update
+  python3 .tf/factory/update.py --yes                        # no question (e.g. in a script)
+  python3 .tf/factory/update.py --source <source>            # set the source (remembered in the manifest)
+  python3 .tf/factory/update.py --yes --accept-audit         # apply despite high-severity skill audit findings
+  python3 .tf/factory/update.py --rollback                   # go back to the state before the last update (copy in .tf/backup/)
+  python3 .tf/factory/update.py --auto on|off                # automatic PATCH/MINOR releases (session start hook or a PR workflow)
+  python3 .tf/factory/update.py --auto-run                   # one automatic run (the session start hook runs it in the background)
+  python3 .tf/factory/update.py --ci --source <git URL>      # CI run (the team-factory-update workflow opens a PR from it)
+  python3 .tf/factory/update.py --packs a,b|all|none         # change packs (also --add x, --remove y); same version is re-applied
+  python3 .tf/factory/update.py --language pl --commit-language en   # change languages; same version is re-applied
 Before updating, the skills of the new version are audited (`skill_audit.py` from the INSTALLED version, not the
 downloaded one): high-severity findings stop an update with `--yes` and need explicit confirmation interactively.
 
@@ -26,7 +26,7 @@ The update runs the installer of the NEW version (`core/factory/install.py` in t
 
 What an update does: see `python3 <source>/core/factory/install.py --help` (manifest description). Your own skills,
 personas, roles and traits stay; factory files changed in the project are overwritten (like node_modules — make
-changes in the factory repository); your settings in `factory/config.yaml` stay and new keys are appended.
+changes in the factory repository); your settings in `.tf/config/config.yaml` stay and new keys are appended.
 """
 from __future__ import annotations
 
@@ -39,14 +39,14 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent          # katalog projektu (factory/ leży w projekcie)
+ROOT = Path(__file__).resolve().parents[2]          # katalog projektu (.tf/factory/ leży w projekcie)
 MANIFEST = ROOT / ".claude" / "factory-manifest.json"
 
 
 def _semver():
     """Moduł SemVer ze skilla core-semver (precedencja wg semver.org, także wersje przedpremierowe)."""
     import importlib.util
-    p = Path(__file__).resolve().parent.parent / ".claude" / "skills" / "core-semver" / "scripts" / "semver.py"
+    p = Path(__file__).resolve().parents[2] / ".claude" / "skills" / "core-semver" / "scripts" / "semver.py"
     if not p.exists():
         return None
     spec = importlib.util.spec_from_file_location("ctf_semver", p)
@@ -226,7 +226,7 @@ def notice(root: Path, env: dict | None = None, cache_dir: Path | None = None, n
         major = " — a MAJOR release (backward-incompatible changes, read „Breaking”)" \
             if vtuple(latest)[0] > vtuple(current)[0] else ""
         return (f"New team factory version available: {latest} (installed {current}){major}. "
-                "What changed: python3 factory/update.py --check · update: python3 factory/update.py "
+                "What changed: python3 .tf/factory/update.py --check · update: python3 .tf/factory/update.py "
                 "(or /core-factory-update).")
     except Exception:  # komunikat jest dodatkiem — nigdy nie psuje startu sesji
         return None
@@ -309,7 +309,7 @@ def backup(root: Path, now: float | None = None) -> Path:
     return dest
 
 
-PREFLIGHT_DIRS = (".claude", ".claude/skills", ".claude/hooks", ".claude/agents/_generated", ".claude/tests", "factory")
+PREFLIGHT_DIRS = (".claude", ".claude/skills", ".claude/hooks", ".claude/agents/_generated", ".claude/tests", ".tf/factory")
 PREFLIGHT_FILES = (".claude/settings.json", ".claude/factory-manifest.json", "CLAUDE.md", ".git/info/exclude")
 
 
@@ -385,7 +385,7 @@ def rollback(root: Path) -> tuple[int, str]:
 
 
 WORKFLOW = Path(".github") / "workflows" / "team-factory-update.yml"
-WORKFLOW_TEMPLATE = Path("factory") / "templates" / "team-factory-update.yml"
+WORKFLOW_TEMPLATE = (Path(".tf") / "factory") / "templates" / "team-factory-update.yml"
 
 
 def set_auto(root: Path, on: bool, env: dict | None = None) -> tuple[int, str]:
@@ -404,7 +404,7 @@ def set_auto(root: Path, on: bool, env: dict | None = None) -> tuple[int, str]:
         src = env.get("TEAM_FACTORY") or manifest.get("source") or ""
         if not is_git(src) or "#" in src:
             return 2, ("✗ Automatic updates need a git repository source with vX.Y.Z release tags "
-                       f"(no #branch), but it is: {src or 'none'}. Set it: python3 factory/update.py --source <git URL>")
+                       f"(no #branch), but it is: {src or 'none'}. Set it: python3 .tf/factory/update.py --source <git URL>")
         if shared:
             tpl = root / WORKFLOW_TEMPLATE
             if not tpl.is_file():
@@ -566,7 +566,7 @@ def lock_manifest(root: Path) -> dict | None:
 def _ci_manifest(root: Path, src: str) -> dict:
     """Manifest dla CI. W trybie zespołowym jest w .gitignore, więc po checkout go nie ma. Bazą jest wtedy commitowany
     `.claude/factory-lock.json` (skróty plików tak, jak są w repozytorium — także tych, które poprzednia aktualizacja
-    pominęła). Bez locka (instalacje sprzed 5.58.3) manifest odtwarza instalator wersji z `factory/VERSION`
+    pominęła). Bez locka (instalacje sprzed 5.58.3) manifest odtwarza instalator wersji z `.tf/factory/VERSION`
     (tag v<wersja>) uruchomiony na pustym katalogu — to zakłada, że pliki projektu mają dokładnie tę wersję."""
     man_p = root / ".claude" / "factory-manifest.json"
     if man_p.is_file():
@@ -578,12 +578,12 @@ def _ci_manifest(root: Path, src: str) -> dict:
         man_p.parent.mkdir(parents=True, exist_ok=True)
         man_p.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         return manifest
-    current = (root / "factory" / "VERSION").read_text(encoding="utf-8").strip()
+    current = (root / ".tf" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
     with tempfile.TemporaryDirectory(prefix="tf-ci-") as t:
         old = fetch(f"{src}#v{current}", Path(t))
         scratch = Path(t) / "scratch"
         scratch.mkdir()
-        packs = sorted(p.parent.name for p in (root / "factory" / "packs").glob("*/pack.yaml"))
+        packs = sorted(p.parent.name for p in (root / ".tf" / "factory" / "packs").glob("*/pack.yaml"))
         settings = {}
         try:
             settings = json.loads((root / ".claude" / "factory-settings.json").read_text(encoding="utf-8"))
@@ -609,7 +609,7 @@ def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
 
 def ci_run(root: Path, src: str, env: dict | None = None) -> int:
     """Tryb zespołowy w CI (workflow team-factory-update): najwyższe wydanie PATCH/MINOR → audyt skilli → instalator
-    → testy fabryki i `factory/build.py check`. Zielone → opis PR w `.tf/logs/update-pr.md` i `version=X`
+    → testy fabryki i `.tf/factory/build.py check`. Zielone → opis PR w `.tf/logs/update-pr.md` i `version=X`
     w `$GITHUB_OUTPUT` (workflow otwiera PR); czerwone → kod 1 (czerwony job to powiadomienie), bez PR."""
     env = os.environ if env is None else env
     if not is_git(src) or "#" in src:
@@ -623,7 +623,7 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
         return 1
     target, major = auto_target(tags, current)
     if major:
-        print(f"⚠ MAJOR release {major} available — not installed automatically (run python3 factory/update.py locally).")
+        print(f"⚠ MAJOR release {major} available — not installed automatically (run python3 .tf/factory/update.py locally).")
     if not target:
         print(f"✓ No new PATCH/MINOR release (installed {current}).")
         return 0
@@ -642,15 +642,15 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
             return 1
         notes = changelog_since(new, current)
     failed = _run_tests(root)
-    build = root / "factory" / "build.py"
+    build = root / ".tf" / "factory" / "build.py"
     if build.is_file():
         b = subprocess.run([sys.executable, str(build), "check"], cwd=root, capture_output=True, text=True)
         if b.returncode != 0:
-            failed.append("factory/build.py check")
+            failed.append(".tf/factory/build.py check")
             print((b.stdout + b.stderr).strip()[-1500:])
     if failed:
         print(f"✗ Failing after installing {target}: {', '.join(failed)} — no PR. Check locally: "
-              f"python3 factory/update.py --source {src}#v{target}")
+              f"python3 .tf/factory/update.py --source {src}#v{target}")
         return 1
     st = _git(root, "status", "--porcelain", "-uall", "--", WORKFLOWS.as_posix())
     workflows = sorted({ln[3:].strip() for ln in st.stdout.splitlines() if ln.strip()})
@@ -659,12 +659,12 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
         _git(root, "clean", "-fdq", "--", WORKFLOWS.as_posix())
     man = json.loads((root / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
     lines = [f"Team factory update {current} → {target} (PATCH/MINOR release; factory tests and "
-             "`factory/build.py check` green).", ""]
+             "`.tf/factory/build.py check` green).", ""]
     if notes:
         lines += ["## What's new", "", notes, ""]
     if major:
         lines += [f"⚠ MAJOR release {major} is also available — not installed automatically; update locally "
-                  "(`python3 factory/update.py`) after reading the „Breaking” section.", ""]
+                  "(`python3 .tf/factory/update.py`) after reading the „Breaking” section.", ""]
     fresh = _factory_new(root, man.get("files", {}))
     if fresh:
         lines += ["## Leftover `*.factory-new` files", "",
@@ -674,7 +674,7 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
     if workflows:
         lines += ["## Workflows to carry over by hand", "",
                   "GITHUB_TOKEN cannot push changes in `.github/workflows/`, so they are not in this PR. Carry them "
-                  "over by hand (e.g. `python3 factory/update.py` locally):", ""]
+                  "over by hand (e.g. `python3 .tf/factory/update.py` locally):", ""]
         lines += [f"- `{w}`" for w in workflows] + [""]
     body = root / PR_BODY
     body.parent.mkdir(parents=True, exist_ok=True)
@@ -736,10 +736,10 @@ def start_auto(root: Path, env: dict | None = None, cache_dir: Path | None = Non
         target, _ = auto_target(tags or [], current, skip)
         if not target:
             return None
-        (spawn or _spawn)([sys.executable, str(root / "factory" / "update.py"), "--auto-run"], root)
+        (spawn or _spawn)([sys.executable, str(root / ".tf" / "factory" / "update.py"), "--auto-run"], root)
         return (f"Installing the team factory update {current} → {target} in the background (PATCH/MINOR, backup "
                 "and tests); it takes effect in the next session, where the result is shown. To turn off: "
-                "python3 factory/update.py --auto off")
+                "python3 .tf/factory/update.py --auto off")
     except Exception:  # automat jest dodatkiem — nigdy nie psuje startu sesji
         return None
 
@@ -760,7 +760,7 @@ def pending_messages(root: Path) -> list[str]:
     for e in new:
         a, b, st = e.get("from"), e.get("to"), e.get("status")
         if st == "installed":
-            lines = [f"✓ Factory updated automatically: {a} → {b} (undo: python3 factory/update.py --rollback)."]
+            lines = [f"✓ Factory updated automatically: {a} → {b} (undo: python3 .tf/factory/update.py --rollback)."]
             notes = (e.get("notes") or "").splitlines()
             if notes:
                 lines += ["What's new:"] + notes[:15] + (["…"] if len(notes) > 15 else [])
@@ -769,10 +769,10 @@ def pending_messages(root: Path) -> list[str]:
         elif st == "tests_failed":
             lines = [f"✗ Automatic update {a} → {b} rolled back: tests failed after installing "
                      f"({', '.join(e.get('failed', []))}). Version {b} skipped — check by hand: "
-                     "python3 factory/update.py"]
+                     "python3 .tf/factory/update.py"]
         elif st == "audit_blocked":
             lines = [f"✗ Automatic update {a} → {b} stopped: the skill audit found high-severity findings. "
-                     f"Version {b} skipped — read them and decide: python3 factory/update.py"]
+                     f"Version {b} skipped — read them and decide: python3 .tf/factory/update.py"]
             lines += e.get("findings", [])[:10]
         elif st == "install_failed":
             lines = [f"✗ Automatic update {a} → {b} failed (installer) and was rolled back. "
@@ -781,7 +781,7 @@ def pending_messages(root: Path) -> list[str]:
             continue
         if e.get("major"):
             lines.append(f"⚠ MAJOR release {e['major']} available — not installed automatically (backward-incompatible "
-                         "changes). See: python3 factory/update.py --check")
+                         "changes). See: python3 .tf/factory/update.py --check")
         out.append("\n".join(lines))
     return out
 
@@ -799,13 +799,13 @@ def main(argv: list[str]) -> int:
         elif a == "--auto":
             val = next(it, "")
             if val not in ("on", "off"):
-                print("✗ Usage: python3 factory/update.py --auto on|off")
+                print("✗ Usage: python3 .tf/factory/update.py --auto on|off")
                 return 2
             code, msg = set_auto(ROOT, val == "on")
             print(msg)
             return code
         elif a == "--rollback":
-            code, msg = preflight(ROOT, "python3 factory/update.py --rollback")
+            code, msg = preflight(ROOT, "python3 .tf/factory/update.py --rollback")
             if not code:
                 code, msg = rollback(ROOT)
             print(msg)
@@ -829,14 +829,14 @@ def main(argv: list[str]) -> int:
     saved = manifest.get("source")
     if saved and not is_git(saved) and not Path(saved).exists() and not opts.get("source") and not env:
         print(f"✗ The saved source {saved} no longer exists (factory moved?). Give a new one:\n"
-              "  python3 factory/update.py --source <directory|file.zip|git URL>\n"
+              "  python3 .tf/factory/update.py --source <directory|file.zip|git URL>\n"
               "  or set it once in your shell profile: export TEAM_FACTORY=<factory directory>")
         return 2
     src = opts.get("source") or env or saved
     if not src:
         print("✗ No source to fetch the new version from. Give one, e.g.:\n"
-              "  python3 factory/update.py --source ~/Downloads/team-factory.zip\n"
-              "  python3 factory/update.py --source https://github.com/<you>/team-factory.git\n"
+              "  python3 .tf/factory/update.py --source ~/Downloads/team-factory.zip\n"
+              "  python3 .tf/factory/update.py --source https://github.com/<you>/team-factory.git\n"
               "  or set it once in your shell profile: export TEAM_FACTORY=<factory directory>")
         return 2
     src = normalize(src)
@@ -861,7 +861,7 @@ def main(argv: list[str]) -> int:
         if vtuple(new_version)[0] > vtuple(current)[0]:
             print(f"⚠ This is a MAJOR release ({current} → {new_version}) with backward-incompatible changes. Read the "
                   "„Breaking” sections above (in older entries: „Niezgodne”) — they say what to do after the update "
-                  "(SemVer, factory/PUBLIC_API.md).\n")
+                  "(SemVer, .tf/factory/PUBLIC_API.md).\n")
         if opts.get("--check"):
             return 0
 
@@ -889,13 +889,13 @@ def main(argv: list[str]) -> int:
             if input("\nApply the update? [y/N] ").strip().lower() not in ("t", "tak", "y", "yes"):
                 print("Aborted — nothing was changed.")
                 return 1
-        code, msg = preflight(ROOT, "python3 factory/update.py --yes")
+        code, msg = preflight(ROOT, "python3 .tf/factory/update.py --yes")
         if code:
             print(msg)
             return code
         if MANIFEST.exists():
             print(f"Backup before the update: {backup(ROOT).relative_to(ROOT).as_posix()} "
-                  "(undo: python3 factory/update.py --rollback)")
+                  "(undo: python3 .tf/factory/update.py --rollback)")
         r = subprocess.run(installer, check=False)
         if r.returncode != 0:
             return r.returncode

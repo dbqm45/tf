@@ -8,7 +8,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude").is_dir() and (p / "factory").is_dir())
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude").is_dir() and (p / ".tf" / "factory").is_dir())
 WF = ROOT / ".claude" / "workflows"
 
 # Uruchamia skrypt workflow jak funkcję: meta bez `export`, ciało w funkcji async (skrypty kończą się `return`).
