@@ -215,7 +215,8 @@ def main() -> int:
 
         # zgodność wersji rdzenia i wymagane nakładki
         y = p / ".tf" / "factory" / "packs" / "pack-a" / "pack.yaml"
-        y.write_text(y.read_text().replace(f'requires: {{core: "{core_range()}"}}', 'requires: {core: ">=9.0.0", packs: [pack-z]}'))
+        y.write_text(y.read_text().replace(f'requires: {{core: "{core_range()}"}}', 'requires: {core: ">=' + str(int((ROOT / ".tf" / "factory" / "VERSION").read_text(encoding="utf-8").split(".")[0]) + 1)
+                     + '.0.0", packs: [pack-z]}'))   # zawsze nowszy major niż zainstalowany rdzeń
         e, _ = b.check_packs(b.load_config())
         check(any("wymaga rdzenia" in x for x in e) and any("tf add pack-z" in x for x in e),
               f"P-15: niezgodny rdzeń i brakująca wymagana nakładka → błędy: {e}")
