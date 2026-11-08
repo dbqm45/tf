@@ -427,14 +427,19 @@ def changed_files(root: Path) -> list[str] | None:
     files = []
     for line in out.splitlines():
         path = line[3:].split(" -> ")[-1].strip().strip('"')
-        if path and not path.startswith(("docs/project/wip/", ".tf/")) and \
+        if path and not path.startswith((".tf/wip/", ".tf/")) and \
                 path not in ("docs/project/README.md", "docs/project/journal.md"):
             files.append(path)
     return files
 
 
+def wip_dir(root: Path) -> Path:
+    """Punkty kontrolne pracy w toku: `.tf/wip/` (wyniki pracy fabryki), archiwum w `.tf/wip/archive/`."""
+    return root / ".tf" / "wip"
+
+
 def wip_items(root: Path, statuses: tuple = WIP_ACTIVE) -> list[dict]:
-    folder = record_dir(root) / "wip"
+    folder = wip_dir(root)
     items = []
     for p in sorted(folder.glob("*.md")) if folder.exists() else []:
         meta, body = parse(p)
@@ -450,31 +455,31 @@ def unchecked(body: str) -> list[str]:
 
 
 def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
-    folder = record_dir(root) / "wip"
+    folder = wip_dir(root)
     folder.mkdir(parents=True, exist_ok=True)
     slug = slugify(slug or goal)
     path = folder / f"{slug}.md"
     if path.exists():
-        raise FileExistsError(f"docs/project/wip/{slug}.md już istnieje — wznów go albo podaj inne --slug")
+        raise FileExistsError(f".tf/wip/{slug}.md już istnieje — wznów go albo podaj inne --slug")
     now = f"{datetime.now():%Y-%m-%d %H:%M}"
     text = (from_template("wip.md").replace("<slug>", slug).replace("<kto>", by).replace("<cel>", goal)
             .replace("<RRRR-MM-DD GG:MM>", now).replace("<gałąź>", git(root, "branch", "--show-current") or "—"))
     path.write_text(text, encoding="utf-8")
-    log(root, by, "meta", f"Start pracy w toku: {goal} (docs/project/wip/{slug}.md)")
+    log(root, by, "meta", f"Start pracy w toku: {goal} (.tf/wip/{slug}.md)")
     write_index(root)
     return path
 
 
 def wip_set_status(root: Path, slug: str, status: str, by: str) -> Path:
-    path = record_dir(root) / "wip" / f"{slug}.md"
+    path = wip_dir(root) / f"{slug}.md"
     if not path.exists():
-        raise FileNotFoundError(f"brak docs/project/wip/{slug}.md")
+        raise FileNotFoundError(f"brak .tf/wip/{slug}.md")
     text = path.read_text(encoding="utf-8")
     now = f"{datetime.now():%Y-%m-%d %H:%M}"
     text = re.sub(r"^status: .*$", f"status: {status}", text, count=1, flags=re.M)
     text = re.sub(r"^updated: .*$", f"updated: {now}", text, count=1, flags=re.M)
     if status == "done":
-        target = record_dir(root) / "archive" / "wip" / f"{datetime.now():%Y%m%d}-{slug}.md"
+        target = wip_dir(root) / "archive" / f"{datetime.now():%Y%m%d}-{slug}.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
         path.unlink()
@@ -528,7 +533,7 @@ def stop_reminder(root: Path, data: dict) -> str | None:
     checkpoint = max(i["path"].stat().st_mtime for i in items)
     if newest - checkpoint < STALE_MINUTES * 60:
         return None
-    names = ", ".join(f"docs/project/wip/{i['slug']}.md" for i in items)
+    names = ", ".join(f".tf/wip/{i['slug']}.md" for i in items)
     return (f"Punkt kontrolny ({names}) jest starszy niż zmiany w plikach o ponad {STALE_MINUTES} min. Zanim skończysz, "
             "zaktualizuj go krótko: odhacz zakończone kroki z dowodem, wpisz „Następną czynność” i nowe ustalenia "
             "z rozmowy. Jeśli zadanie jest skończone: `project_record.py wip done <nazwa>`; jeśli wstrzymane: `wip pause <nazwa>`.")
@@ -564,7 +569,7 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
         m, body = it["meta"], it["body"]
         nxt = first_line(section(body, "Następna czynność"))
         todo = unchecked(body)
-        out.append(f"Praca w toku [{m.get('status', 'active')}]: docs/project/wip/{it['slug']}.md — "
+        out.append(f"Praca w toku [{m.get('status', 'active')}]: .tf/wip/{it['slug']}.md — "
                    f"{title(body, it['slug'])} (aktualizacja {m.get('updated', '?')}, kroki do zrobienia: {len(todo)})")
         if nxt:
             out.append(f"  Następna czynność: {nxt}")

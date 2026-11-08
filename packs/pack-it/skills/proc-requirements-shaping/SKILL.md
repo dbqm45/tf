@@ -120,7 +120,7 @@ właściciel przed kodem.
   Kod 1 = wyciek techniki albo szacunek ponad budżet bez potwierdzenia kosztu; gotowość < 2 to ostrzeżenie.
   Kształt historyjek (AC-001…004, STORY-001…003, brak `AC-n`) to ostrzeżenia z `US-NN` i regułą; `--strict`
   zamienia je w kod 1. Pojedynczą historyjkę sprawdza `--story <plik>`.
-- Sesja dłuższa niż jedna rozmowa: punkt kontrolny w `docs/project/wip/` z postępem faz (core-project-record).
+- Sesja dłuższa niż jedna rozmowa: punkt kontrolny w `.tf/wip/` z postępem faz (core-project-record).
 
 ## Kontrola po zapisie (zadaj człowiekowi)
 Czy to jeden konkretny użytkownik? Czy przepływ zmieści się w budżecie czasu? Czy reguła to decyzja domenowa,

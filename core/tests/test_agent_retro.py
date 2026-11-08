@@ -48,16 +48,18 @@ def make(root: Path, with_git: bool = True) -> None:
         {"ts": "2026-10-16T10:00:00+00:00", "session": "s2", "hinted": ["tool-nx"]},
     ])
     proj = root / "docs" / "project"
-    (proj / "archive" / "wip").mkdir(parents=True)
+    proj.mkdir(parents=True)
+    arch = root / ".tf" / "wip" / "archive"
+    arch.mkdir(parents=True)
     (proj / "journal.md").write_text(
         "# Dziennik\n\n| Kiedy | Kto | Faza | Zdarzenie |\n|---|---|---|---|\n"
         "| 2026-10-01 09:00 | claude | plan | Stary wpis spoza okna — błąd |\n"
         "| 2026-10-15 09:00 | claude | realizacja | Dodano formularz |\n"
         "| 2026-10-16 09:00 | claude | realizacja | Test nie zadziałał w CI, cofnięto zmianę |\n", encoding="utf-8")
-    (proj / "archive" / "wip" / "20261016-formularz.md").write_text(
+    (arch / "20261016-formularz.md").write_text(
         "---\ntask: formularz\nupdated: 2026-10-16 12:00\n---\n# Formularz\n\n## Pułapki i ślepe uliczki\n"
         "- Vitest w trybie watch zawiesza hook — uruchamiaj z --run.\n\n## Otwarte pytania\n", encoding="utf-8")
-    (proj / "archive" / "wip" / "20260901-stary.md").write_text(
+    (arch / "20260901-stary.md").write_text(
         "---\ntask: stary\nupdated: 2026-09-01 12:00\n---\n# Stary\n\n## Pułapki i ślepe uliczki\n- Stara pułapka.\n",
         encoding="utf-8")
     (proj / "lessons.md").write_text(
