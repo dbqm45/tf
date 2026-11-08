@@ -242,6 +242,28 @@
           ]
         ]
       }
+    },
+    {
+      "id": "raport-z-liczbami-przed-oddaniem",
+      "expect": "trigger",
+      "prompt": "Kończę raport z pomiaru: tabela ma wpisy typu 45/56 (85%), są koszty w USD i daty „stan na”. Jak sprawdzić skryptem fabryki, czy liczby i daty się zgadzają, zanim go oddam? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "claims_check"
+          ],
+          [
+            "45/56[^\\n]{0,80}(80|ułam|nie zgadza|błęd)",
+            "procent\\w*[^\\n]{0,80}(ułam\\w*|zgadz\\w*)",
+            "arytmety\\w*"
+          ],
+          [
+            "grounding_check",
+            "odwołani\\w*",
+            "plik:linia"
+          ]
+        ]
+      }
     }
   ]
 }

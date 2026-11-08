@@ -4,7 +4,7 @@ description: Użyj, gdy pytasz, czy podana wersja, flaga, data lub liczba jest p
 metadata:
   przeglad: "2027-10-10"
   katalog: "Użyj przy każdej odpowiedzi, raporcie i artefakcie, które zawierają fakty o kodzie, wersjach, API, poleceniach, liczbach lub źródłach — klasy twierdzeń i sposób ich sprawdzenia, miejsca, w których modele najczęściej zmyślają, higiena kontekstu, samosprawdzenie i skrypt sprawdzający odwołania. Nie do procedury badania źródeł zewnętrznych (core-source-research) ani testów kodu (skille testów, pack-it)."
-  slowa: "wynik skryptu, liczba z narzędzia, przepisać liczbę z wyniku, halucynacje, zmyślanie, nie zgaduj, czy to prawda, kolega twierdzi, podobno istnieje, czy taka opcja istnieje, sprawdź fakty, źródło, pewność, wymyślona flaga, nieistniejące API, za długi kontekst, model się myli, weryfikacja odpowiedzi, liczby w raporcie, dokładnie N wywołań, tylko w jednym miejscu, ile razy wywoływana, zużyty kontekst, pamięć automatyczna, podsumowanie długiego dokumentu, streszczenie umowy lub regulaminu, notatka z dokumentu, najpierw cytaty, niczego spoza dokumentu, z podanych materiałów, agent powtarza ustalenia, łata wokół czerwonego testu, długa sesja, skąd wiem że to prawda, czy to nie wymysł, asystent zmyśla, przyznać że nie wie, mówi pewnym tonem a zgaduje, dopisał coś od siebie, streszczenie długiego dokumentu, czy ta flaga istnieje, sprawdzić liczby przed wpisaniem do dokumentacji"
+  slowa: "wynik skryptu, liczba z narzędzia, przepisać liczbę z wyniku, halucynacje, zmyślanie, nie zgaduj, czy to prawda, kolega twierdzi, podobno istnieje, czy taka opcja istnieje, sprawdź fakty, źródło, pewność, wymyślona flaga, nieistniejące API, za długi kontekst, model się myli, weryfikacja odpowiedzi, liczby w raporcie, dokładnie N wywołań, tylko w jednym miejscu, ile razy wywoływana, zużyty kontekst, pamięć automatyczna, podsumowanie długiego dokumentu, streszczenie umowy lub regulaminu, notatka z dokumentu, najpierw cytaty, niczego spoza dokumentu, z podanych materiałów, agent powtarza ustalenia, łata wokół czerwonego testu, długa sesja, skąd wiem że to prawda, czy to nie wymysł, asystent zmyśla, przyznać że nie wie, mówi pewnym tonem a zgaduje, dopisał coś od siebie, streszczenie długiego dokumentu, czy ta flaga istnieje, sprawdzić liczby przed wpisaniem do dokumentacji, sprawdzić liczby w raporcie, czy procenty się zgadzają, raport z pomiaru przed oddaniem, liczby bez źródła, data w przyszłości, zweryfikować liczby z odpowiedzi, data wydania, liczby przed wpisaniem do dokumentacji"
 ---
 
 # Ugruntowanie odpowiedzi — jak nie zmyślać
@@ -108,6 +108,11 @@ Przed odpowiedzią z faktami, raportem kroku albo artefaktem:
    TYPESAFE_API_KEY) sprawdza też, czy wskazane linie **potwierdzają** zdanie, przy którym stoi odwołanie.
    - Sprzeczne i niepotwierdzające odwołania popraw.
    - Niepewne przejrzyj sam.
+   Liczby i daty: `python3 .claude/skills/core-grounding/scripts/claims_check.py <plik.md|katalog>` — pierwsza linia
+   to `Werdykt: OK | OSTRZEŻENIA | BŁĘDY`.
+   - Błąd: procent niezgodny z ułamkiem w zapisie `X/Y (Z%)`, nieistniejąca data, data stanu z przyszłości — popraw.
+   - Ostrzeżenie: liczba z jednostką (%, USD, ms…) bez śladu pochodzenia w tej linii — dopisz polecenie, ścieżkę,
+     link albo [założenie]; raport oparty na jednym pliku danych deklaruje go raz (linia „Pliki:” ze ścieżką pliku danych w backtickach).
 4. W diffie szukasz trzech typowych klas błędów modelu: kod poprawny składniowo, ale zły semantycznie (zgubiona
    transakcja, ponowienie, przypadek brzegowy); test utrwalający implementację zamiast zachowania; decyzja ze środka
    długiej rozmowy pominięta na rzecz nowszego kontekstu.
