@@ -467,30 +467,41 @@ def no_uplift(results: list[dict]) -> list[tuple[str, str]]:
 
 
 def contribution(results: list[dict]) -> list[dict]:
-    """Wkład skilla na model: odsetek scenariuszy trigger z poprawną treścią ze skillami i bez skilli — tylko scenariusze
-    z przebiegami w obu ramionach (ta sama miara: sprawdzenia treści)."""
-    arms = {}
+    """Wkład skilla na model: odsetek scenariuszy trigger z poprawną treścią ze skillami i bez skilli (ta sama miara:
+    sprawdzenia treści). Ramię „ze skillem” liczy tylko przebiegi, w których skill się uruchomił — przebieg bez
+    uruchomienia to w praktyce odpowiedź bez skilla i fałszowałby wkład; takie scenariusze są liczone osobno
+    (`not_triggered`). Tylko scenariusze z przebiegami w obu ramionach."""
+    arms, missed = {}, {}
     for r in results:
         if r.get("expect") != "trigger":
             continue
+        key = (r["skill"], r["model"])
+        if not r.get("baseline") and not r.get("triggered"):
+            missed.setdefault(key, set()).add(r["id"])
+            continue
         ok = bool(r.get("checks_ok")) and not r.get("error")
-        arms.setdefault((r["skill"], r["model"]), {}).setdefault(r["id"], {}).setdefault(bool(r.get("baseline")), []).append(ok)
+        arms.setdefault(key, {}).setdefault(r["id"], {}).setdefault(bool(r.get("baseline")), []).append(ok)
     rows = []
-    for (skill, model), by_id in sorted(arms.items()):
-        both = [v for v in by_id.values() if True in v and False in v]
+    for key in sorted(set(arms) | set(missed)):
+        skill, model = key
+        both = [v for v in arms.get(key, {}).values() if True in v and False in v]
+        used = {i for i, v in arms.get(key, {}).items() if False in v}
+        nt = len(missed.get(key, set()) - used)
         if not both:
             continue
         rate = lambda arm: sum(sum(v[arm]) / len(v[arm]) for v in both) / len(both)
         w, wo = rate(False), rate(True)
-        rows.append({"skill": skill, "model": model, "n": len(both), "with_skill": w, "without": wo, "uplift": w - wo})
+        rows.append({"skill": skill, "model": model, "n": len(both), "with_skill": w, "without": wo, "uplift": w - wo,
+                     "not_triggered": nt})
     return rows
 
 
 def contribution_lines(rows: list[dict]) -> list[str]:
-    lines = ["| Skill | Model | Scenariusze | Treść ze skillem | Treść bez skilli | Wkład |", "|---|---|---|---|---|---|"]
+    lines = ["| Skill | Model | Scenariusze | Treść ze skillem | Treść bez skilli | Wkład | Skill się nie uruchomił |",
+             "|---|---|---|---|---|---|---|"]
     for c in rows:
         lines.append(f"| {c['skill']} | {c['model']} | {c['n']} | {c['with_skill']:.0%} | {c['without']:.0%} | "
-                     f"{c['uplift']:+.0%} |")
+                     f"{c['uplift']:+.0%} | {c.get('not_triggered', 0)} |")
     return lines
 
 
@@ -575,8 +586,10 @@ def report(results: list[dict], out: Path) -> None:
     if contrib:
         lines += ["", "## Wkład skilla", "",
                   "Odsetek scenariuszy trigger z poprawną treścią ze skillami i bez skilli (te same sprawdzenia), tylko "
-                  "scenariusze z przebiegami w obu ramionach. Wkład bliski zeru: model radzi sobie bez skilla albo "
-                  "scenariusze są za łatwe.", ""] + contribution_lines(contrib)
+                  "scenariusze z przebiegami w obu ramionach. Ramię „ze skillem” liczy tylko przebiegi, w których skill "
+                  "się uruchomił; scenariusze bez uruchomienia są w ostatniej kolumnie (problem opisu lub podpowiedzi, "
+                  "nie treści). Wkład bliski zeru: model radzi sobie bez skilla albo scenariusze są za łatwe. Jeden "
+                  "przebieg to szum — przed decyzją o skillu powtórz pomiar (--repeats 3).", ""] + contribution_lines(contrib)
     easy = no_uplift(results)
     if easy:
         lines += ["", "## Zaliczane bez skilli", "",

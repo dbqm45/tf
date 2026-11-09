@@ -142,14 +142,17 @@ def contribution_tests() -> list[str]:
            r("b", "haiku", False, True), r("b", "haiku", True, False), r("b", "sonnet", False, True),
            r("b", "sonnet", True, True),
            r("c", "haiku", False, True),
+           r("d", "haiku", False, False, trig=False), r("d", "haiku", True, True),
            r("n", "haiku", False, True, exp="no-trigger")]
     nu = ev.no_uplift(res)
-    if nu != [("s", "a")]:
+    if nu != [("s", "a"), ("s", "d")]:   # d: bez skilli zaliczony, ze skillem skill się nie uruchomił
         fails.append(f"no_uplift: tylko scenariusz zaliczony bez skilli na każdym modelu z przebiegiem bez skilli: {nu}")
     rows = {(x["skill"], x["model"]): x for x in ev.contribution(res)}
     h = rows.get(("s", "haiku"))
-    if not h or (h["n"], h["with_skill"], h["without"]) != (2, 1.0, 0.5) or abs(h["uplift"] - 0.5) > 1e-9:
-        fails.append(f"contribution: haiku — 2 scenariusze z porównaniem, 100% ze skillem, 50% bez, wkład +50%: {h}")
+    if not h or (h["n"], h["with_skill"], h["without"], h["not_triggered"]) != (2, 1.0, 0.5, 1) \
+            or abs(h["uplift"] - 0.5) > 1e-9:
+        fails.append(f"contribution: haiku — tylko scenariusze z uruchomionym skillem (2), 100% ze skillem, 50% bez, "
+                     f"wkład +50%, 1 scenariusz bez uruchomienia osobno: {h}")
     s = rows.get(("s", "sonnet"))
     if not s or abs(s["uplift"]) > 1e-9:
         fails.append(f"contribution: sonnet bez wkładu: {s}")
@@ -165,7 +168,7 @@ def contribution_tests() -> list[str]:
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             code = ev.main(["run_skill_evals.py", "--contribution", str(jl)])
-        if code != 0 or "| s | haiku |" not in buf.getvalue() or "+50%" not in buf.getvalue():
+        if code != 0 or "| s | haiku |" not in buf.getvalue() or "+50% | 1 |" not in buf.getvalue():
             fails.append(f"--contribution: tabela wkładu z pliku .jsonl bez uruchamiania modelu: {code} {buf.getvalue()[:300]}")
         log = Path(d) / "holdout-dostep.jsonl"
         scs = [{"skill": "s", "id": "h1", "holdout": True}, {"skill": "s", "id": "a"}, {"skill": "t", "id": "h2", "holdout": True}]
