@@ -29,11 +29,21 @@ Sekcja A — luki w katalogu:
 - [ ] **A5:** sekcja „ład danych” w `arch-privacy-compliance` (własność, klasyfikacja, inwentarz PII).
 - [ ] **A6:** referencja formularzy (React Hook Form + schemat wspólny z serwerem) w `fw-react`.
 - [ ] **A7:** kolejne moduły `tf analyze` po jednym: `accessibility`, `tech-debt`, `i18n`, `observability`.
+- [ ] **A8:** `ai-agents` — wzorzec „pytanie o brakującą informację”: najpierw narzędzia i kontekst, potem pauza
+  z konkretnym pytaniem do człowieka, zachowany stan i wznowienie (np. interrupt/resume w LangGraph); scenariusz
+  ewaluacji, w którym agent ma zapytać, a nie zgadywać.
 
 Sekcja B — architektura agenta i autonomia:
 - [ ] **B1:** polityka autonomii `autonomy:` w `.tf/config/config.yaml` (poziomy `full` / `evidence` / `confirm` /
-  `deny` dla typów operacji), egzekwowana hookiem; najpierw plan kroku do akceptacji.
+  `deny` dla typów operacji), egzekwowana hookiem, z triażem ryzyka zmian na podstawie diffu (auth, finanse, schemat,
+  osłabione testy → człowiek; zależności i dokumentacja przy zielonych testach → automatycznie); najpierw plan kroku
+  do akceptacji.
 - [ ] **B2:** mapa pokrycia generowana z katalogu (zamiast ręcznej macierzy wiedzy), raport informacyjny w CI.
+- [ ] **B3:** `tf metrics` — odsetek revertów, mediana czasu cyklu, czas przeglądu na PR; okres bazowy 4 tygodnie
+  i pasma kontrolne; koszt przyjętej zmiany (z porzuconymi próbami) i pole przyczyny poprawki (luka specyfikacji /
+  błąd agenta / zmiana wymagań / nieznana); przed B2.
+- [ ] **B4:** ewaluacje skilli mierzą wkład: ostrzeżenie w `skill_gate` dla scenariusza zaliczanego bez skilla,
+  raport „wkład skilla na model” z istniejących wyników (wejście do core-cost-control).
 
 ## Prekontrola zlecenia przez Quorum (MCP ci_for_sdlc) — zapisane 2026-11-09
 Cel (właściciel): gdy zlecam coś do zrobienia, Quorum (ci_for_sdlc) przez swój serwer MCP wykrywa niejasności,

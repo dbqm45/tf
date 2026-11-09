@@ -70,6 +70,13 @@ Obecnie `security` i `architecture` (`pack-it`). Kandydaci, każdy jako osobny k
 - `i18n` (zahardkodowane teksty UI, formatowanie dat i kwot bez `Intl`), `pack-it`;
 - `observability` (brak health checków, logi nieustrukturyzowane, brak identyfikatora korelacji), `pack-it`.
 
+### A8. Pytanie o brakującą informację — `ai-agents` (`pack-it`, dopisane 2026-11-09, decyzja człowieka)
+Luka: `ai-agents` opisuje zatwierdzanie akcji przez człowieka, ale nie pauzę z pytaniem o brakującą informację
+(artykuł R. Gite, „Six Agent Harness Techniques That Actually Worked for Me”, 2026-11-02). Zakres: agent najpierw
+szuka informacji narzędziami i w kontekście; dopiero brak, którego nie da się uzupełnić, kończy się konkretnym
+pytaniem; stan przebiegu zachowany i wznowienie od miejsca przerwania; bez pytań, gdy odpowiedź jest dostępna.
+Nowy scenariusz ewaluacji (agent ma zapytać zamiast zgadywać) i sąsiad, w którym pytać nie należy.
+
 ### Kolejność sekcji A
 1. A1 i A2 (największe luki w aplikacjach biznesowych).
 2. A3 i A4 (rozszerzenia istniejących skilli).
@@ -101,6 +108,17 @@ w `core-async-delegation` i `core-agent-security`); brak jednego miejsca „typ 
 - Ryzyka: fałszywe trafienia blokujące pracę (rozpoznawanie „produkcji” po poleceniu jest zawodne — kontekst
   środowiska z konfiguracji projektu, nie zgadywanie); polityka jako jedyna obrona (zostaje `deny` w `settings.json`
   i piaskownica).
+- **Triaż ryzyka zmian** (dopisane 2026-11-09 po przeglądzie „The Agentic Software Factory”, decyzja człowieka):
+  przed PR deterministyczne drzewo decyzji na podstawie diffu, bez modelu:
+  - zmiana dotyka uwierzytelniania i autoryzacji, logiki finansowej (płatności, rozliczenia, ceny), schematu bazy
+    i migracji, sekretów albo konfiguracji wdrożenia → `confirm`: zatwierdza człowiek;
+  - zmiana osłabia testy (usunięte lub zmienione asercje, pominięte testy) albo zmienia specyfikację lub kryteria
+    akceptacji → `confirm` — tak agent „wygrywa” zielony build;
+  - aktualizacja zależności z lockfile'em albo zmiana tylko dokumentacji, przy zielonych testach → `full`;
+  - pozostałe → `evidence` (zielone testy, przegląd niezależnego recenzenta w osobnym kontekście).
+  Reguły (wzorce ścieżek i treści) w `autonomy.triage:` z wartościami domyślnymi rdzenia i nadpisaniem w
+  `.tf/config/`; wynik: etykieta PR (`risk: high|medium|low`) i lista „co musi zobaczyć człowiek” w opisie PR.
+  Wykorzystuje `tdd_guard` (wykrywanie osłabienia testów) zamiast drugiej implementacji. TDD na tabeli diffów.
 - Najpierw plan kroku do akceptacji (pliki, kolejność, testy), potem kod.
 
 ### B2. Mapa pokrycia generowana z katalogu (zamiast ręcznej macierzy wiedzy)
@@ -108,6 +126,46 @@ w `core-async-delegation` i `core-agent-security`); brak jednego miejsca „typ 
   albo w `docs/`, uruchamiany w CI jako informacja (bez blokowania).
 - Nowe skille powstają tam, gdzie mapa pokazuje dziurę, a scenariusz ewaluacji potwierdza, że brak szkodzi.
 
+### B3. Metryki skuteczności fabryki (dopisane 2026-11-09, decyzja człowieka)
+Cel: mierzyć, czy fabryka i jej zmiany pomagają, zamiast oceniać „na odczucie” (badanie METR 2025: doświadczeni
+programiści z AI byli wolniejsi, choć czuli się szybsi; DORA 2024: spadek stabilności dostaw przy większej
+adopcji AI).
+- Skrypt `tf metrics` (silnik, tylko biblioteka standardowa, dane z gita i — jeśli dostępne — z historii PR):
+  - **odsetek revertów** (commity `revert` i PR cofnięte w ciągu N dni wobec wszystkich zmian) — główny wskaźnik
+    jakości;
+  - **mediana czasu cyklu** od pierwszego commita gałęzi (albo przydzielenia zadania) do merge'a;
+  - **czas przeglądu na PR** (od otwarcia do merge'a, liczba rund poprawek), gdy dostępna jest historia PR;
+  - pomocniczo: rozmiar PR, odsetek PR z czerwonym CI przed merge'em.
+- Okres bazowy 4 tygodnie przed zmianą sposobu pracy; raport porównuje okno bieżące z bazowym i z pasmami
+  kontrolnymi (`control_band.py`). Bez liczenia samej liczby PR — łatwo ją zawyżyć.
+- Wynik w `.tf/reports/metrics.md` i JSON do dalszej analizy; TDD na sztucznym repo z historią.
+- **Koszt przyjętej zmiany** (dopisane 2026-11-09 po artykule J. Wąsowskiego o koszcie przyjętej zmiany i odsetku
+  poprawek specyfikacji, decyzja człowieka): (tokeny i narzędzia + czas człowieka na doprecyzowanie, przegląd
+  i poprawki + porzucone próby) / zmiany przyjęte przez człowieka. „Przyjęta” = zmergowana i niecofnięta przez N dni
+  (definicja zapisana w nagłówku raportu; zmiana definicji = nowa seria). Koszt tokenów z istniejących logów
+  (`log_usage`, `cost_report`), zmiany z gita i historii PR; czas człowieka opcjonalnie, z etykietą „bez pracy
+  ludzi”, gdy go brak. Porzucone próby zostają w liczniku.
+- **Przyczyna poprawki**: przy każdym powrocie zadania do poprawki jedno pole o czterech wartościach — `luka-specyfikacji`
+  (→ poprawić szablon wymagań), `blad-agenta` mimo jasnej specyfikacji (→ model, skill albo bramka),
+  `zmiana-wymagan` (liczona, nie strata), `nieznana` (nie domyślna). Miejsce zapisu: opis PR lub komentarz recenzenta
+  w ustalonym formacie oraz przebiegi Talosa (story → PR); liczymy defekty, nie czerwone testy. Raport: odsetek
+  zadań z co najmniej jednym powrotem, z podziałem na przyczyny.
+
+### B4. Ewaluacje skilli mierzą wkład skilla, nie tylko zaliczenie (dopisane 2026-11-09, decyzja człowieka)
+Powód: w ewaluacjach A1 i A2a modele bez skilla przechodziły sprawdzenia treści w większości scenariuszy
+(`pm-product-analytics` 3 z 4, `be-business-app-patterns` 5 z 5) — scenariusz zaliczony bez skilla nie dowodzi,
+że skill coś wnosi. Do tego „testy przeszły” to nie „zmiana przyjęta” (zaliczenie części sprawdzeń ≠ zaliczenie
+scenariusza).
+- `skill_gate` przy ewaluacji z `--baseline`: ostrzeżenie dla scenariusza trigger, który bez skilla przechodzi
+  sprawdzenia treści na wszystkich modelach — do zaostrzenia albo zastąpienia trudniejszym.
+- Raport „wkład skilla na model” z istniejących wyników (`.jsonl` w `docs/evals/` i logach): dla każdego skilla
+  i modelu odsetek scenariuszy zaliczonych ze skillem i bez; wejście do `core-cost-control` — czy przy silniejszym
+  modelu skill warto ładować (eksperyment N. Jaina, martinfowler.com, 2026-10 [niezweryfikowane]: struktura wokół
+  agenta pomogła tańszemu modelowi, a silniejszemu tylko podniosła koszt).
+- TDD na sztucznych wynikach ewaluacji; bez nowych płatnych przebiegów.
+
 ### Kolejność sekcji B
-1. B1 (po sekcji A albo równolegle, jeśli człowiek zdecyduje).
-2. B2.
+1. B1 z triażem ryzyka zmian (po sekcji A albo równolegle, jeśli człowiek zdecyduje).
+2. B3 — wcześnie, żeby okres bazowy zebrać przed dużymi zmianami sposobu pracy.
+3. B4 — przed kolejnymi skillami sekcji A, żeby ich ewaluacje mierzyły wkład.
+4. B2.
