@@ -6,7 +6,8 @@ python3 tests/test_engine_encoding.py
 Zgłoszenie 2026-11-09: `tf install` na Windows — `build.py` uruchomiony przez instalator z przechwyconym wyjściem
 pisał w cp1250 i padał na „✓” (UnicodeEncodeError). Symulujemy to przez PYTHONIOENCODING=cp1250 i PYTHONUTF8=0.
 E-1: każdy skrypt silnika i analizatora przestawia stdout/stderr na UTF-8. E-2: `build.py check` przy cp1250 kończy się
-bez UnicodeEncodeError i pisze UTF-8. E-3: skrypt uruchamiający inne skrypty silnika czyta ich wyjście jako UTF-8.
+bez UnicodeEncodeError i pisze UTF-8. E-3: skrypt uruchamiający inne skrypty silnika czyta ich wyjście jako UTF-8. E-4: procesy potomne
+silnika (np. testy po aktualizacji) startują w trybie UTF-8 (PYTHONUTF8=1).
 """
 import os
 import re
@@ -28,6 +29,10 @@ def main() -> int:
     for p in scripts():
         if "reconfigure(encoding=\"utf-8\"" not in p.read_text(encoding="utf-8"):
             fails.append(f"E-1: {p.relative_to(ROOT)} nie przestawia stdout/stderr na UTF-8")
+        # E-4: procesy potomne (testy po aktualizacji, build.py, hooki uruchamiane z testów) też w trybie UTF-8 —
+        # inaczej test drukujący „✓” do przechwyconego wyjścia albo czytający plik bez encoding pada na cp1250
+        if p.parent == ENGINE and 'os.environ.setdefault("PYTHONUTF8", "1")' not in p.read_text(encoding="utf-8"):
+            fails.append(f"E-4: {p.relative_to(ROOT)} nie włącza trybu UTF-8 (PYTHONUTF8) dla procesów potomnych")
     env = {**os.environ, "PYTHONIOENCODING": "cp1250", "PYTHONUTF8": "0"}
     r = subprocess.run([sys.executable, str(ENGINE / "build.py"), "check"], cwd=ROOT, capture_output=True, env=env,
                        timeout=600)
