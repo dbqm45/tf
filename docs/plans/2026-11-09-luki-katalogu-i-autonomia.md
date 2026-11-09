@@ -26,22 +26,18 @@ Luka: plan śledzenia zdarzeń (0 trafień). `pm-saas-metrics` liczy MRR i churn
 - Scenariusze ewaluacji przed treścią (np. „dodaj śledzenie rejestracji”, „lejek nie zgadza się z bazą”, „śledzenie bez
   zgody”).
 
-### A2. Panel administracyjny — nakładka `pack-admin` (pierwszy profil aplikacji)
-Luki: tabele danych z filtrowaniem i sortowaniem po stronie serwera, eksport dużych zbiorów, operacje masowe (słabo);
-command palette (1); soft delete (0); impersonacja z audytem (0); audit log jako funkcja produktu (4); ABAC (1).
-- A2a. Plan nakładki (`tools/workspace.py new-pack admin`, `docs/new-pack.md`): wymagane nakładki (`pack-it`,
-  `pack-ux`), prefiks, persona lub rola, macierz CI.
-- A2b. Skill `admin-patterns`: model uprawnień (RBAC → ABAC, kiedy które), autoryzacja na serwerze (frontend nie jest
-  granicą bezpieczeństwa), audit log (co, kto, kiedy, przed/po, odporność na manipulację, retencja), soft delete
-  (kiedy tak, kiedy nie, RODO a „usunięte”), impersonacja (zgoda, znacznik w sesji, audyt, zakaz operacji
-  wrażliwych), operacje masowe (podgląd, potwierdzenie, idempotencja, częściowe błędy, cofnięcie), potwierdzenia
-  operacji nieodwracalnych.
-- A2c. Skill `admin-data-tables` (jeśli A2b okaże się za duży): paginacja kursorowa, filtrowanie i sortowanie po
-  stronie serwera, URL jako stan, wirtualizacja, eksport w tle (zadanie, plik, powiadomienie), dostępność tabel,
-  command palette.
-- A2d. Moduł `tf analyze` `admin-authz` (tier 0): endpointy i akcje zmieniające dane bez sprawdzenia uprawnień po
-  stronie serwera; uprawnienie sprawdzane tylko w UI; usuwanie bez audytu. Fixtures z prawdziwymi i fałszywymi
-  trafieniami, bramka `min_recall` / `max_false_positives` jak w `security`.
+### A2. Wzorce aplikacji biznesowej — w `pack-it` (decyzja człowieka 2026-11-09: bez osobnej nakładki)
+Luki: soft delete (0), impersonacja (0), tabele danych z filtrowaniem po stronie serwera i eksport (słabo), command
+palette (1), audit log jako funkcja produktu (4), ABAC (1). Wzorce występują w każdej aplikacji biznesowej (CPMS,
+eMSP, systemy wewnętrzne, panele), więc trafiają do `pack-it`, a nie do nakładki „admin”. Plan szczegółowy:
+`docs/plans/2026-11-09-a2-wzorce-aplikacji-biznesowej.md`.
+- A2a. Skill `be-business-app-patterns` (nazwa robocza): uprawnienia sprawdzane na serwerze (RBAC, kiedy ABAC),
+  audit log, soft delete, impersonacja, operacje masowe, potwierdzenia operacji nieodwracalnych.
+- A2b. Tabele danych i eksport: referencje w `fe-architecture` (stan w URL, wirtualizacja, operacje masowe
+  z zaznaczania, command palette, dostępność tabel) i `be-api-design` (filtrowanie i sortowanie po stronie serwera,
+  paginacja kursorowa, eksport w tle).
+- A2c. Moduł `tf analyze` `authz` w `pack-it` (tier 0, TDD): endpointy zmieniające dane bez sprawdzenia uprawnień
+  po stronie serwera, uprawnienie sprawdzane tylko w UI, usuwanie bez audytu.
 
 ### A3. Developer Experience — rozszerzenie `eng-repo-readiness` (`pack-it`)
 Luka: devcontainer, `docker compose` dla środowiska deweloperskiego, `make`/`just`, czas wejścia do projektu, pętla
@@ -75,7 +71,7 @@ Obecnie `security` i `architecture` (`pack-it`). Kandydaci, każdy jako osobny k
 - `observability` (brak health checków, logi nieustrukturyzowane, brak identyfikatora korelacji), `pack-it`.
 
 ### Kolejność sekcji A
-1. A1 i A2 (największa luka przy panelach administracyjnych; A2 zaczyna się od planu A2a do akceptacji).
+1. A1 i A2 (największe luki w aplikacjach biznesowych).
 2. A3 i A4 (rozszerzenia istniejących skilli).
 3. A5 i A6.
 4. A7, gdy jest potrzeba — moduł po module.
@@ -83,8 +79,8 @@ Obecnie `security` i `architecture` (`pack-it`). Kandydaci, każdy jako osobny k
 ## Sekcja B — architektura agenta i autonomia
 
 Pięć warstw z propozycji odpowiada fabryce: warstwy 1–4 to skille i nakładki, warstwa 5 to persony, hooki, `.tf/wip`
-i bramki. Osobny projekt „standardu” nie jest potrzebny; profile aplikacji to nakładki (`pack-admin` jako pierwszy,
-A2). Ręcznie spisaną macierz wiedzy (20–30 domen, 150–250 subdomen, L1–L4) zastępuje B2.
+i bramki. Osobny projekt „standardu” nie jest potrzebny; profile aplikacji, gdy będą potrzebne, to nakładki;
+wzorce wspólne dla aplikacji biznesowych zostają w `pack-it` (A2). Ręcznie spisaną macierz wiedzy (20–30 domen, 150–250 subdomen, L1–L4) zastępuje B2.
 
 ### B1. Jawna polityka autonomii — `autonomy:` w `.tf/config/config.yaml`
 Luka: granice są rozproszone (`ask`/`deny` w `settings.json`, hooki `guard_bash` i `guard_paths`, zasady
