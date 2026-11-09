@@ -1,0 +1,212 @@
+{
+ "skill": "be-business-app-patterns",
+ "scenarios": [
+  {
+   "id": "usuniecie-projektu-nieodwracalne",
+   "expect": "trigger",
+   "prompt": "W naszej aplikacji usunięcie projektu kasuje wszystkie jego dane: zadania, pliki i historię. Klienci kilka razy usunęli projekt przez pomyłkę. Jak to zaprojektować lepiej? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "wpis\\w* nazw\\w*",
+      "wpisać nazwę",
+      "przepisa\\w*"
+     ],
+     [
+      "karencj\\w*",
+      "kosz\\w*",
+      "przywróc\\w*",
+      "odroczon\\w*",
+      "\\b(7|14|30) dni"
+     ],
+     [
+      "audyt\\w*",
+      "audit",
+      "dziennik\\w*",
+      "kto usunął"
+     ],
+     [
+      "uprawnieni\\w*",
+      "rol\\w*",
+      "MFA",
+      "drugi\\w* czynnik",
+      "ponown\\w* (uwierzytel|logow)",
+      "właściciel\\w*"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "audit-log-zamowien",
+   "expect": "trigger",
+   "prompt": "Musimy dodać audit log zmian w zamówieniach — kto, co i kiedy zmienił. Jak go zaprojektować? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "przed i po",
+      "stara i nowa",
+      "starą i nową",
+      "poprzedni\\w* wartoś\\w*",
+      "\\bdiff\\b",
+      "before",
+      "old_value"
+     ],
+     [
+      "transakcj\\w*",
+      "outbox"
+     ],
+     [
+      "tylko dopisywan\\w*",
+      "append",
+      "niezmienn\\w*",
+      "nie (można|da się|wolno) (edytować|zmieniać|usuwać)",
+      "immutable"
+     ],
+     [
+      "retencj\\w*",
+      "dan\\w* osobow\\w*",
+      "RODO",
+      "PII"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "soft-delete-a-rodo",
+   "expect": "trigger",
+   "prompt": "W systemie CRM wszędzie stosujemy soft delete (kolumna deleted_at). Klient zażądał usunięcia swoich danych na podstawie RODO. Wystarczy ustawić deleted_at? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "nie wystarczy",
+      "\\bnie\\b"
+     ],
+     [
+      "art\\.? ?17",
+      "prawo do usunięcia",
+      "bycia zapomnianym"
+     ],
+     [
+      "anonimiz\\w*",
+      "trwał\\w* usun\\w*",
+      "fizyczn\\w* usun\\w*",
+      "hard delete"
+     ],
+     [
+      "kopi\\w* zapas\\w*",
+      "backup\\w*",
+      "log\\w*",
+      "audyt\\w*",
+      "replik\\w*",
+      "system\\w* zewnętrzn\\w*"
+     ]
+    ],
+    "none": [
+     "(tak|wystarczy)[,.]? (ustawienie )?deleted_at (wystarczy|jest wystarczające)"
+    ]
+   }
+  },
+  {
+   "id": "impersonacja-supportu",
+   "expect": "trigger",
+   "prompt": "Support chce móc zalogować się jako klient, żeby zobaczyć jego problem w aplikacji. Jak to zaprojektować bezpiecznie? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "audyt\\w*",
+      "audit",
+      "dziennik\\w*",
+      "rejestr\\w*"
+     ],
+     [
+      "znacznik\\w*",
+      "oznacz\\w*",
+      "baner\\w*",
+      "actor",
+      "impersonator",
+      "kto naprawdę",
+      "obu identyfikator\\w*",
+      "dwa identyfikator\\w*"
+     ],
+     [
+      "hasł\\w*",
+      "płatnoś\\w*",
+      "MFA",
+      "2FA",
+      "wrażliw\\w*"
+     ],
+     [
+      "limit czasu",
+      "wygasa",
+      "czas\\w* trwania",
+      "krótk\\w* sesj\\w*",
+      "powód",
+      "zgod\\w*",
+      "zgłoszeni\\w*",
+      "ticket"
+     ]
+    ],
+    "none": [
+     "(poproś|zapytaj)\\w* klienta o hasło",
+     "(udostępni|podaj)\\w* hasł\\w* klienta"
+    ]
+   }
+  },
+  {
+   "id": "edge-operacja-masowa-50-tys",
+   "expect": "trigger",
+   "prompt": "Chcemy dodać przycisk „zmień status wszystkich zaznaczonych”. Czasem zaznaczonych będzie 50 tys. rekordów. Jak to zrobić? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "w tle",
+      "kolejk\\w*",
+      "asynchron\\w*",
+      "\\bjob\\w*",
+      "partiach",
+      "batch\\w*"
+     ],
+     [
+      "podgląd\\w*",
+      "potwierdz\\w*",
+      "liczb\\w* rekord\\w*",
+      "ile rekord\\w*"
+     ],
+     [
+      "częściow\\w*",
+      "idempoten\\w*",
+      "ponowi\\w*",
+      "wznowi\\w*",
+      "raport\\w* błęd\\w*",
+      "które się nie udały"
+     ],
+     [
+      "audyt\\w*",
+      "audit",
+      "cofn\\w*",
+      "undo",
+      "przywróc\\w*"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "sasiad-hasla-i-reset",
+   "expect": "no-trigger",
+   "neighbor": "be-auth-security",
+   "prompt": "Jak bezpiecznie przechowywać hasła użytkowników i zaimplementować reset hasła przez e-mail?"
+  },
+  {
+   "id": "sasiad-indeksy-zapytania",
+   "expect": "no-trigger",
+   "neighbor": "be-database",
+   "prompt": "Mamy wolne zapytanie z JOIN na trzech tabelach po 5 mln wierszy w PostgreSQL. Jak dobrać indeksy?"
+  },
+  {
+   "id": "sasiad-autoryzacja-endpointu",
+   "expect": "no-trigger",
+   "neighbor": "be-auth-security",
+   "prompt": "Endpoint GET /invoices/{id} zwraca fakturę każdemu zalogowanemu użytkownikowi, także cudzą. Jak poprawnie sprawdzać uprawnienia do obiektu?"
+  }
+ ]
+}
