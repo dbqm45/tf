@@ -37,6 +37,12 @@ import re
 import subprocess
 import sys
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
@@ -148,7 +154,7 @@ def check_hint(name: str, sc: dict) -> tuple[list[str], list[str], str]:
 
 
 def check_regression() -> list[str]:
-    r = subprocess.run([sys.executable, str(TESTS / "test_skill_evals.py")], capture_output=True, text=True, timeout=600)
+    r = subprocess.run([sys.executable, str(TESTS / "test_skill_evals.py")], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
     return [] if r.returncode == 0 else [ln for ln in r.stdout.splitlines() if ln.startswith("✗")][:5] or [r.stdout[-500:]]
 
 
@@ -157,7 +163,7 @@ def check_polish(name: str) -> tuple[list[str], list[str]]:
         return [], ["brak lintera polszczyzny — pominięto"]
     d = SKILLS / name
     targets = [str(d / "SKILL.md")] + ([str(d / "references")] if (d / "references").is_dir() else [])
-    r = subprocess.run([sys.executable, str(LINT), *targets], capture_output=True, text=True, timeout=120)
+    r = subprocess.run([sys.executable, str(LINT), *targets], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     m = re.search(r"wysokich: (\d+)", r.stdout)
     high = int(m.group(1)) if m else 0
     lines = [ln for ln in r.stdout.splitlines() if "[" in ln and "|" in ln]
@@ -178,7 +184,7 @@ def check_audit(name: str) -> tuple[list[str], list[str]]:
 def check_refs(name: str) -> list[str]:
     if not GROUND.exists():
         return []
-    r = subprocess.run([sys.executable, str(GROUND), str(SKILLS / name), "--warn"], capture_output=True, text=True,
+    r = subprocess.run([sys.executable, str(GROUND), str(SKILLS / name), "--warn"], capture_output=True, text=True, encoding="utf-8", errors="replace",
                        timeout=120, env={**__import__("os").environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
     return [ln[2:] for ln in r.stdout.splitlines() if ln.startswith("⚠ ") and "odwołania:" not in ln][:5]
 

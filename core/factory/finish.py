@@ -17,6 +17,12 @@ from __future__ import annotations
 import subprocess
 import sys
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
@@ -28,7 +34,7 @@ def git(root: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 def py(script: Path, *args: str, cwd: Path) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(script), *args], cwd=cwd, capture_output=True, text=True, timeout=1800)
+    return subprocess.run([sys.executable, str(script), *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
 
 
 def tail(r: subprocess.CompletedProcess, n: int = 8) -> str:

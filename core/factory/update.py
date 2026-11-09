@@ -36,6 +36,12 @@ import re
 import subprocess
 import sys
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 import tempfile
 import zipfile
@@ -518,7 +524,7 @@ def _auto_run(root: Path, manifest: dict, env, now: float, timeout: float) -> di
             return done("audit_blocked", findings=findings)
         backup(root, now)
         r = subprocess.run([sys.executable, str(installer_of(new)), str(root), "--update", "--source", src],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
         if r.returncode != 0:
             rollback(root)
             return done("install_failed", error=(r.stderr or r.stdout).strip()[-500:])
@@ -536,7 +542,7 @@ def _run_tests(root: Path) -> list[str]:
     failed = []
     for test in sorted((root / ".claude" / "tests").glob("test_*.py")):
         try:
-            res = subprocess.run([sys.executable, str(test)], cwd=root, capture_output=True, text=True, timeout=600)
+            res = subprocess.run([sys.executable, str(test)], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
             ok = res.returncode == 0
         except subprocess.TimeoutExpired:
             ok = False
@@ -594,7 +600,7 @@ def _ci_manifest(root: Path, src: str) -> dict:
         lang = [a for k in ("language", "commit_language") if settings.get(k)
                 for a in (f"--{k.replace('_', '-')}", settings[k])]
         r = subprocess.run([sys.executable, str(installer_of(old)), str(scratch), "--shared", "--yes",
-                            "--packs", ",".join(packs) or "none", *lang, "--source", src], capture_output=True, text=True)
+                            "--packs", ",".join(packs) or "none", *lang, "--source", src], capture_output=True, text=True, encoding="utf-8", errors="replace")
         rebuilt = scratch / ".claude" / "factory-manifest.json"
         if r.returncode != 0 or not rebuilt.is_file():
             sys.exit(f"✗ Could not rebuild the manifest of version {current}:\n{(r.stderr or r.stdout).strip()[-500:]}")
@@ -638,7 +644,7 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
             print("\n".join(findings[:30]))
             return 1
         r = subprocess.run([sys.executable, str(installer_of(new)), str(root), "--update", "--source", src],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
         if r.returncode != 0:
             print(f"✗ The installer of version {target} failed:\n{(r.stderr or r.stdout).strip()[-1500:]}")
             return 1
@@ -646,7 +652,7 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
     failed = _run_tests(root)
     build = root / ".tf" / "factory" / "build.py"
     if build.is_file():
-        b = subprocess.run([sys.executable, str(build), "check"], cwd=root, capture_output=True, text=True)
+        b = subprocess.run([sys.executable, str(build), "check"], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace")
         if b.returncode != 0:
             failed.append(".tf/factory/build.py check")
             print((b.stdout + b.stderr).strip()[-1500:])
@@ -903,7 +909,7 @@ def main(argv: list[str]) -> int:
             return r.returncode
     print("\nCheck after the update:")
     for test in sorted((ROOT / ".claude" / "tests").glob("test_*.py")):
-        res = subprocess.run([sys.executable, str(test)], cwd=ROOT, capture_output=True, text=True)
+        res = subprocess.run([sys.executable, str(test)], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
         print(("  " + (res.stdout.strip().splitlines() or ["?"])[-1]) if res.returncode == 0
               else f"  ✗ {test.name} — run `python3 .claude/tests/{test.name}` to see the details")
     print("Done. If Claude Code is open, restart it so it loads the new skills and agents.")
