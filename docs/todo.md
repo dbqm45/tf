@@ -29,6 +29,9 @@ Sekcja A — luki w katalogu:
 - [ ] **A5:** sekcja „ład danych” w `arch-privacy-compliance` (własność, klasyfikacja, inwentarz PII).
 - [ ] **A6:** referencja formularzy (React Hook Form + schemat wspólny z serwerem) w `fw-react`.
 - [ ] **A7:** kolejne moduły `tf analyze` po jednym: `accessibility`, `tech-debt`, `i18n`, `observability`.
+- [ ] **A8:** `ai-agents` — wzorzec „pytanie o brakującą informację”: najpierw narzędzia i kontekst, potem pauza
+  z konkretnym pytaniem do człowieka, zachowany stan i wznowienie (np. interrupt/resume w LangGraph); scenariusz
+  ewaluacji, w którym agent ma zapytać, a nie zgadywać.
 
 Sekcja B — architektura agenta i autonomia:
 - [ ] **B1:** polityka autonomii `autonomy:` w `.tf/config/config.yaml` (poziomy `full` / `evidence` / `confirm` /

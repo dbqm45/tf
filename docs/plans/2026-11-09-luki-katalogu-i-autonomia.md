@@ -70,6 +70,13 @@ Obecnie `security` i `architecture` (`pack-it`). Kandydaci, każdy jako osobny k
 - `i18n` (zahardkodowane teksty UI, formatowanie dat i kwot bez `Intl`), `pack-it`;
 - `observability` (brak health checków, logi nieustrukturyzowane, brak identyfikatora korelacji), `pack-it`.
 
+### A8. Pytanie o brakującą informację — `ai-agents` (`pack-it`, dopisane 2026-11-09, decyzja człowieka)
+Luka: `ai-agents` opisuje zatwierdzanie akcji przez człowieka, ale nie pauzę z pytaniem o brakującą informację
+(artykuł R. Gite, „Six Agent Harness Techniques That Actually Worked for Me”, 2026-11-02). Zakres: agent najpierw
+szuka informacji narzędziami i w kontekście; dopiero brak, którego nie da się uzupełnić, kończy się konkretnym
+pytaniem; stan przebiegu zachowany i wznowienie od miejsca przerwania; bez pytań, gdy odpowiedź jest dostępna.
+Nowy scenariusz ewaluacji (agent ma zapytać zamiast zgadywać) i sąsiad, w którym pytać nie należy.
+
 ### Kolejność sekcji A
 1. A1 i A2 (największe luki w aplikacjach biznesowych).
 2. A3 i A4 (rozszerzenia istniejących skilli).
