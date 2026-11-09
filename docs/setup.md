@@ -46,6 +46,9 @@ Gdy repozytorium stanie się publiczne, wystarczy samo
 4. Usuwa katalog tymczasowy. Jeśli `~/.local/bin` nie ma w PATH, mówi, co dopisać (na Windows pyta, czy dopisać do PATH
    użytkownika).
 
+Komunikaty skryptów są po angielsku i tylko w ASCII, bo Windows PowerShell 5.1 czyta `irm … | iex` w innym
+kodowaniu niż UTF-8 i psuje polskie litery i symbole.
+
 Poza plikiem `tf` (i `tf.cmd`) skrypt niczego nie instaluje i nie zmienia profilu powłoki. Skrypt pobrany z sieci
 przeczytaj przed uruchomieniem: `scripts/install.sh`, `scripts/install.ps1`.
 

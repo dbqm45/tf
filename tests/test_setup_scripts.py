@@ -28,6 +28,11 @@ def main() -> int:
     check(SH.is_file() and PS1.is_file(), "S-0: scripts/install.sh i scripts/install.ps1 istnieją")
     check((ROOT / "docs" / "setup.md").is_file() and "install.sh" in (ROOT / "docs" / "setup.md").read_text()
           and "install.ps1" in (ROOT / "docs" / "setup.md").read_text(), "S-0: docs/setup.md opisuje oba skrypty")
+    for f in (SH, PS1):
+        bad = [(i, ln) for i, ln in enumerate(f.read_text(encoding="utf-8").splitlines(), 1) if not ln.isascii()] \
+            if f.is_file() else []
+        check(not bad, f"S-7: {f.name} tylko ASCII (Windows PowerShell 5.1 czyta `irm | iex` bez UTF-8 i psuje znaki): "
+                       f"{bad[:3]}")
     if not SH.is_file() or not shutil.which("git") or not shutil.which("sh"):
         print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów skryptów instalacji")
         return 1 if fails else 0
