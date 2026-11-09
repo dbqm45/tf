@@ -132,8 +132,33 @@ adopcji AI).
 - Okres bazowy 4 tygodnie przed zmianą sposobu pracy; raport porównuje okno bieżące z bazowym i z pasmami
   kontrolnymi (`control_band.py`). Bez liczenia samej liczby PR — łatwo ją zawyżyć.
 - Wynik w `.tf/reports/metrics.md` i JSON do dalszej analizy; TDD na sztucznym repo z historią.
+- **Koszt przyjętej zmiany** (dopisane 2026-11-09 po artykule J. Wąsowskiego o koszcie przyjętej zmiany i odsetku
+  poprawek specyfikacji, decyzja człowieka): (tokeny i narzędzia + czas człowieka na doprecyzowanie, przegląd
+  i poprawki + porzucone próby) / zmiany przyjęte przez człowieka. „Przyjęta” = zmergowana i niecofnięta przez N dni
+  (definicja zapisana w nagłówku raportu; zmiana definicji = nowa seria). Koszt tokenów z istniejących logów
+  (`log_usage`, `cost_report`), zmiany z gita i historii PR; czas człowieka opcjonalnie, z etykietą „bez pracy
+  ludzi”, gdy go brak. Porzucone próby zostają w liczniku.
+- **Przyczyna poprawki**: przy każdym powrocie zadania do poprawki jedno pole o czterech wartościach — `luka-specyfikacji`
+  (→ poprawić szablon wymagań), `blad-agenta` mimo jasnej specyfikacji (→ model, skill albo bramka),
+  `zmiana-wymagan` (liczona, nie strata), `nieznana` (nie domyślna). Miejsce zapisu: opis PR lub komentarz recenzenta
+  w ustalonym formacie oraz przebiegi Talosa (story → PR); liczymy defekty, nie czerwone testy. Raport: odsetek
+  zadań z co najmniej jednym powrotem, z podziałem na przyczyny.
+
+### B4. Ewaluacje skilli mierzą wkład skilla, nie tylko zaliczenie (dopisane 2026-11-09, decyzja człowieka)
+Powód: w ewaluacjach A1 i A2a modele bez skilla przechodziły sprawdzenia treści w większości scenariuszy
+(`pm-product-analytics` 3 z 4, `be-business-app-patterns` 5 z 5) — scenariusz zaliczony bez skilla nie dowodzi,
+że skill coś wnosi. Do tego „testy przeszły” to nie „zmiana przyjęta” (zaliczenie części sprawdzeń ≠ zaliczenie
+scenariusza).
+- `skill_gate` przy ewaluacji z `--baseline`: ostrzeżenie dla scenariusza trigger, który bez skilla przechodzi
+  sprawdzenia treści na wszystkich modelach — do zaostrzenia albo zastąpienia trudniejszym.
+- Raport „wkład skilla na model” z istniejących wyników (`.jsonl` w `docs/evals/` i logach): dla każdego skilla
+  i modelu odsetek scenariuszy zaliczonych ze skillem i bez; wejście do `core-cost-control` — czy przy silniejszym
+  modelu skill warto ładować (eksperyment N. Jaina, martinfowler.com, 2026-10 [niezweryfikowane]: struktura wokół
+  agenta pomogła tańszemu modelowi, a silniejszemu tylko podniosła koszt).
+- TDD na sztucznych wynikach ewaluacji; bez nowych płatnych przebiegów.
 
 ### Kolejność sekcji B
 1. B1 z triażem ryzyka zmian (po sekcji A albo równolegle, jeśli człowiek zdecyduje).
 2. B3 — wcześnie, żeby okres bazowy zebrać przed dużymi zmianami sposobu pracy.
-3. B2.
+3. B4 — przed kolejnymi skillami sekcji A, żeby ich ewaluacje mierzyły wkład.
+4. B2.

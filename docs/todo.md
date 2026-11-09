@@ -37,7 +37,10 @@ Sekcja B — architektura agenta i autonomia:
   do akceptacji.
 - [ ] **B2:** mapa pokrycia generowana z katalogu (zamiast ręcznej macierzy wiedzy), raport informacyjny w CI.
 - [ ] **B3:** `tf metrics` — odsetek revertów, mediana czasu cyklu, czas przeglądu na PR; okres bazowy 4 tygodnie
-  i pasma kontrolne; przed B2.
+  i pasma kontrolne; koszt przyjętej zmiany (z porzuconymi próbami) i pole przyczyny poprawki (luka specyfikacji /
+  błąd agenta / zmiana wymagań / nieznana); przed B2.
+- [ ] **B4:** ewaluacje skilli mierzą wkład: ostrzeżenie w `skill_gate` dla scenariusza zaliczanego bez skilla,
+  raport „wkład skilla na model” z istniejących wyników (wejście do core-cost-control).
 
 ## Prekontrola zlecenia przez Quorum (MCP ci_for_sdlc) — zapisane 2026-11-09
 Cel (właściciel): gdy zlecam coś do zrobienia, Quorum (ci_for_sdlc) przez swój serwer MCP wykrywa niejasności,
