@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.2.0] — 2026-11-09
+### Added
+- **pack-it:** add the pm-product-analytics skill (#192)
+
 ## [9.1.3] — 2026-11-09
 ### Fixed
 - **core:** run child Python processes of the engine in UTF-8 mode (#190)
