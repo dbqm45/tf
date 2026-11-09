@@ -18,7 +18,8 @@ Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: 
 `core-skill-authoring` (scenariusze przed treścią, bramka), kod metodą TDD, każdy krok osobnym PR.
 
 Sekcja A — luki w katalogu:
-- [ ] **A1:** skill `pm-product-analytics` — plan śledzenia zdarzeń, instrumentacja, zgody RODO, lejki i retencja.
+- [x] **A1:** skill `pm-product-analytics` — plan śledzenia zdarzeń, instrumentacja, zgody RODO, lejki i retencja
+  (bramka bez ewaluacji na modelu; płatna ewaluacja za zgodą człowieka).
 - [ ] **A2:** nakładka `pack-admin` (pierwszy profil aplikacji): A2a plan nakładki do akceptacji; A2b skill
   `admin-patterns` (uprawnienia RBAC/ABAC na serwerze, audit log, soft delete, impersonacja, operacje masowe);
   A2c `admin-data-tables`, jeśli A2b za duży; A2d moduł `tf analyze` `admin-authz`.
