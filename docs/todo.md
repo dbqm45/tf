@@ -20,9 +20,9 @@ Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: 
 Sekcja A — luki w katalogu:
 - [x] **A1:** skill `pm-product-analytics` — plan śledzenia zdarzeń, instrumentacja, zgody RODO, lejki i retencja
   (bramka z ewaluacją: haiku 6/6, sonnet 6/6; bez skilla treść w 3 z 4 scenariuszy też przechodzi — luka mała).
-- [ ] **A2:** nakładka `pack-admin` (pierwszy profil aplikacji): A2a plan nakładki do akceptacji; A2b skill
-  `admin-patterns` (uprawnienia RBAC/ABAC na serwerze, audit log, soft delete, impersonacja, operacje masowe);
-  A2c `admin-data-tables`, jeśli A2b za duży; A2d moduł `tf analyze` `admin-authz`.
+- [ ] **A2:** wzorce aplikacji biznesowej w `pack-it` (bez osobnej nakładki, decyzja 2026-11-09): A2a skill
+  `be-business-app-patterns` (uprawnienia na serwerze, audit log, soft delete, impersonacja, operacje masowe); A2b
+  tabele danych i eksport w `fe-architecture` i `be-api-design`; A2c moduł `tf analyze` `authz`.
 - [ ] **A3:** `eng-repo-readiness` + Developer Experience (devcontainer, `docker compose` dev, `make`/`just`, czas
   od klonu do zielonych testów).
 - [ ] **A4:** mapa artefaktów (faza → artefakt → kto pisze → skill) w `core-delivery-lifecycle`; ERD w `be-database`.
