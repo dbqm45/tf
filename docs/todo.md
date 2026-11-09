@@ -13,6 +13,27 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
 - [x] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
+## Luki katalogu i polityka autonomii (przegląd listy „Autonomous Full Stack Agent”) — zapisane 2026-11-09
+Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: najpierw sekcja A, potem B. Skille wg
+`core-skill-authoring` (scenariusze przed treścią, bramka), kod metodą TDD, każdy krok osobnym PR.
+
+Sekcja A — luki w katalogu:
+- [ ] **A1:** skill `pm-product-analytics` — plan śledzenia zdarzeń, instrumentacja, zgody RODO, lejki i retencja.
+- [ ] **A2:** nakładka `pack-admin` (pierwszy profil aplikacji): A2a plan nakładki do akceptacji; A2b skill
+  `admin-patterns` (uprawnienia RBAC/ABAC na serwerze, audit log, soft delete, impersonacja, operacje masowe);
+  A2c `admin-data-tables`, jeśli A2b za duży; A2d moduł `tf analyze` `admin-authz`.
+- [ ] **A3:** `eng-repo-readiness` + Developer Experience (devcontainer, `docker compose` dev, `make`/`just`, czas
+  od klonu do zielonych testów).
+- [ ] **A4:** mapa artefaktów (faza → artefakt → kto pisze → skill) w `core-delivery-lifecycle`; ERD w `be-database`.
+- [ ] **A5:** sekcja „ład danych” w `arch-privacy-compliance` (własność, klasyfikacja, inwentarz PII).
+- [ ] **A6:** referencja formularzy (React Hook Form + schemat wspólny z serwerem) w `fw-react`.
+- [ ] **A7:** kolejne moduły `tf analyze` po jednym: `accessibility`, `tech-debt`, `i18n`, `observability`.
+
+Sekcja B — architektura agenta i autonomia:
+- [ ] **B1:** polityka autonomii `autonomy:` w `.tf/config/config.yaml` (poziomy `full` / `evidence` / `confirm` /
+  `deny` dla typów operacji), egzekwowana hookiem; najpierw plan kroku do akceptacji.
+- [ ] **B2:** mapa pokrycia generowana z katalogu (zamiast ręcznej macierzy wiedzy), raport informacyjny w CI.
+
 ## Prekontrola zlecenia przez Quorum (MCP ci_for_sdlc) — zapisane 2026-11-09
 Cel (właściciel): gdy zlecam coś do zrobienia, Quorum (ci_for_sdlc) przez swój serwer MCP wykrywa niejasności,
 sprzeczności i braki **zanim** persona zacznie pracę, a fabryka pokazuje je i pyta człowieka. Strona Quorum:
