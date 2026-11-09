@@ -456,6 +456,73 @@ def protocol(results: list[dict]) -> list[dict]:
                      "unstable": sum(len(v) > 1 for v in outcomes.values())})
     return rows
 
+def no_uplift(results: list[dict]) -> list[tuple[str, str]]:
+    """Scenariusze trigger, które bez skilli przechodzą sprawdzenia treści na każdym modelu z przebiegiem bez skilli —
+    nie mierzą wkładu skilla (do zaostrzenia albo zastąpienia trudniejszym)."""
+    base = {}
+    for r in results:
+        if r.get("expect") == "trigger" and r.get("baseline"):
+            base.setdefault((r["skill"], r["id"]), []).append(bool(r.get("checks_ok")) and not r.get("error"))
+    return sorted(k for k, oks in base.items() if oks and all(oks))
+
+
+def contribution(results: list[dict]) -> list[dict]:
+    """Wkład skilla na model: odsetek scenariuszy trigger z poprawną treścią ze skillami i bez skilli — tylko scenariusze
+    z przebiegami w obu ramionach (ta sama miara: sprawdzenia treści)."""
+    arms = {}
+    for r in results:
+        if r.get("expect") != "trigger":
+            continue
+        ok = bool(r.get("checks_ok")) and not r.get("error")
+        arms.setdefault((r["skill"], r["model"]), {}).setdefault(r["id"], {}).setdefault(bool(r.get("baseline")), []).append(ok)
+    rows = []
+    for (skill, model), by_id in sorted(arms.items()):
+        both = [v for v in by_id.values() if True in v and False in v]
+        if not both:
+            continue
+        rate = lambda arm: sum(sum(v[arm]) / len(v[arm]) for v in both) / len(both)
+        w, wo = rate(False), rate(True)
+        rows.append({"skill": skill, "model": model, "n": len(both), "with_skill": w, "without": wo, "uplift": w - wo})
+    return rows
+
+
+def contribution_lines(rows: list[dict]) -> list[str]:
+    lines = ["| Skill | Model | Scenariusze | Treść ze skillem | Treść bez skilli | Wkład |", "|---|---|---|---|---|---|"]
+    for c in rows:
+        lines.append(f"| {c['skill']} | {c['model']} | {c['n']} | {c['with_skill']:.0%} | {c['without']:.0%} | "
+                     f"{c['uplift']:+.0%} |")
+    return lines
+
+
+def holdout_log_path() -> Path:
+    """Dziennik uruchomień na zbiorze zamkniętym: w repo fabryki `docs/evals/`, w projekcie `.tf/logs/evals/`."""
+    d = ROOT / "docs" / "evals" if (ROOT / "docs" / "evals").is_dir() else ROOT / ".tf" / "logs" / "evals"
+    return d / "holdout-dostep.jsonl"
+
+
+def log_holdout_access(scenarios: list[dict], models: list[str], out_md: Path, log: Path) -> int:
+    """Zapisuje uruchomienie ze scenariuszami holdout i zwraca jego numer dla tych skilli (0 — bez holdoutu, bez wpisu).
+    Liczba zajrzeń do zbioru zamkniętego jest jawna (protokół audytowanego dostępu do zbioru testowego)."""
+    ho = [s for s in scenarios if s.get("holdout")]
+    if not ho:
+        return 0
+    skills = sorted({s["skill"] for s in ho})
+    prev = 0
+    if log.exists():
+        for line in log.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            prev += bool(set(rec.get("skills") or []) & set(skills))
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({"time": datetime.now().isoformat(timespec="seconds"), "skills": skills,
+                            "scenarios": len(ho), "models": list(models), "report": out_md.name},
+                           ensure_ascii=False) + "\n")
+    return prev + 1
+
+
 def report(results: list[dict], out: Path) -> None:
     limited = [r for r in results if r.get("error") and LIMIT_RE.search(r["error"])]
     results = [r for r in results if r not in limited]
@@ -504,6 +571,18 @@ def report(results: list[dict], out: Path) -> None:
             ut = "—" if "uplift_tuning" not in g else f"{g['uplift_tuning']:+.0%}"
             uh = "—" if "uplift_holdout" not in g else f"{g['uplift_holdout']:+.0%}"
             lines.append(f"| {g['model']} | {g['tuning']:.0%} | {g['holdout']:.0%} | {g['gap']:+.0%} | {ut} | {uh} |")
+    contrib = contribution(results)
+    if contrib:
+        lines += ["", "## Wkład skilla", "",
+                  "Odsetek scenariuszy trigger z poprawną treścią ze skillami i bez skilli (te same sprawdzenia), tylko "
+                  "scenariusze z przebiegami w obu ramionach. Wkład bliski zeru: model radzi sobie bez skilla albo "
+                  "scenariusze są za łatwe.", ""] + contribution_lines(contrib)
+    easy = no_uplift(results)
+    if easy:
+        lines += ["", "## Zaliczane bez skilli", "",
+                  "Scenariusze trigger, które bez skilli przechodzą sprawdzenia treści na każdym modelu — nie mierzą "
+                  "wkładu skilla; do zaostrzenia albo zastąpienia trudniejszym.", ""]
+        lines += [f"- `{s}` / {i}" for s, i in easy]
     fails = [r for r in results if not r["passed"]]
     if fails:
         lines += ["", "## Niezaliczone", ""]
@@ -550,8 +629,24 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--seed", type=int, default=0, help="ziarno losowania dla --per-skill")
     ap.add_argument("--yes", action="store_true", help="bez pytania o potwierdzenie")
     ap.add_argument("--validate", action="store_true", help="tylko sprawdź pliki scenariuszy")
+    ap.add_argument("--contribution", nargs="+", metavar="JSONL", help="tylko tabela wkładu skilla z plików .jsonl "
+                    "wcześniejszych przebiegów (bez uruchamiania modelu)")
     args = ap.parse_args(argv[1:])
 
+    if args.contribution:
+        res = []
+        for f in args.contribution:
+            for line in Path(f).read_text(encoding="utf-8").splitlines():
+                try:
+                    res.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+        rows = contribution(res)
+        print("\n".join(contribution_lines(rows)) if rows else "Brak scenariuszy z przebiegami ze skillami i bez skilli.")
+        easy = no_uplift(res)
+        if easy:
+            print("\nZaliczane bez skilli: " + ", ".join(f"{s}/{i}" for s, i in easy))
+        return 0
     errs = [("holdout/" if ho else "") + e for p, ho in scenario_files() for e in validate_file(p, holdout=ho)]
     if args.validate:
         for e in errs:
@@ -616,6 +711,9 @@ def main(argv: list[str]) -> int:
 
     stamp = datetime.now().strftime("%Y%m%d-%H%M")
     out_md = Path(args.out) if args.out else Path.cwd() / f"evals-report-{stamp}.md"
+    nth = log_holdout_access(scenarios, models, out_md, holdout_log_path())
+    if nth:
+        print(f"Zbiór zamknięty: {nth}. uruchomienie dla tych skilli (dziennik {holdout_log_path().name}).")
     out_jsonl = Path(args.resume) if args.resume else out_md.with_suffix(".jsonl")
     results, spent, lock = [], 0.0, threading.Lock()
     stop = threading.Event()
