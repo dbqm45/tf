@@ -23,6 +23,12 @@ import json
 import subprocess
 import sys
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
@@ -129,7 +135,7 @@ def main(argv: list[str]) -> int:
     PROFILE_FILE.parent.mkdir(parents=True, exist_ok=True)
     PROFILE_FILE.write_text(json.dumps({"profile": name, "settings": want}, ensure_ascii=False, indent=2) + "\n",
                             encoding="utf-8")
-    r = subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "build.py")], cwd=ROOT, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "build.py")], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         print("⚠ build.py zgłosił problemy:\n" + r.stdout[-1500:] + r.stderr[-500:])
         return 1

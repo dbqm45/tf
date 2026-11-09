@@ -17,6 +17,12 @@ import json
 import subprocess
 import sys
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
@@ -26,7 +32,7 @@ TAIL = 12
 
 def run(cmd: list[str], cwd: Path) -> tuple[bool, str]:
     try:
-        r = subprocess.run([sys.executable, *cmd], cwd=cwd, capture_output=True, text=True, timeout=900)
+        r = subprocess.run([sys.executable, *cmd], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
     except subprocess.TimeoutExpired:
         return False, "przekroczony limit czasu (900 s)"
     return r.returncode == 0, (r.stdout + ("\n" + r.stderr if r.stderr.strip() else "")).strip()

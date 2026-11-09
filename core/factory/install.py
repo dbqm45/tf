@@ -60,6 +60,12 @@ import shutil
 import subprocess
 import sys
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 from pathlib import Path
 
@@ -552,7 +558,7 @@ def rebuild(dst_root: Path, dry: bool) -> str:
     """Buduje agentów i katalog w projekcie dla wybranych nakładek i języków (.tf/factory/build.py)."""
     if dry:
         return ""
-    r = subprocess.run([sys.executable, ".tf/factory/build.py"], cwd=dst_root, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, ".tf/factory/build.py"], cwd=dst_root, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode == 0:
         n = len(list((dst_root / ".claude" / "agents" / "_generated").rglob("*.md")))
         return f"✓ Built {n} agents and the catalog (.tf/factory/build.py)."
@@ -802,7 +808,7 @@ def main(argv: list[str]) -> int:
         ensure_config(dst_root)
         if (dst_root / ".tf" / "factory" / "analyze.py").is_file():
             subprocess.run([sys.executable, ".tf/factory/analyze.py", "init"], cwd=dst_root, capture_output=True,
-                           text=True, timeout=120)
+                           text=True, encoding="utf-8", errors="replace", timeout=120)
         # build.py przetwarza pliki (np. spis treści w references/) — manifest i lock zapamiętują to, co jest na dysku,
         # inaczej następna aktualizacja wzięłaby nietknięty plik za zmieniony przez Ciebie (*.factory-new)
         written = [r for r in plan.created + plan.updated if r in new_manifest["files"] and (dst_root / r).is_file()]

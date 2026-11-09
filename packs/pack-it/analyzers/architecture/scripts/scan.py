@@ -17,6 +17,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 HUB_MIN = 15
 REL = Path("skills") / "eng-codebase-mapping" / "scripts" / "code_graph.py"
 

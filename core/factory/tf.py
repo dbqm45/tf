@@ -39,6 +39,12 @@ import re
 import subprocess
 import sys
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
 import tempfile
 from pathlib import Path
@@ -155,7 +161,7 @@ def need_project() -> bool:
 
 
 def run_build() -> int:
-    r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "build.py")], capture_output=True, text=True)
+    r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "build.py")], capture_output=True, text=True, encoding="utf-8", errors="replace")
     print("✓ Rebuilt the agents and the catalog (.tf/factory/build.py)" if r.returncode == 0
           else "⚠ .tf/factory/build.py reported problems:\n" + r.stdout[-1500:] + r.stderr[-500:])
     return r.returncode
@@ -219,7 +225,7 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     changes = mig.apply(Path.cwd(), dry=not fix)
     for c in changes:
         print(("✓ fixed: " if fix else "⚠ to fix (tf doctor --fix): ") + c)
-    r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "build.py"), "check"], capture_output=True, text=True)
+    r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "build.py"), "check"], capture_output=True, text=True, encoding="utf-8", errors="replace")
     out = r.stdout
     print("\n".join(ln for ln in out.splitlines() if not ln.startswith("⚠ skill ")) or "?")
     missing = sorted(set(re.findall(r"tf add (pack-[a-z0-9-]+)", out)))
