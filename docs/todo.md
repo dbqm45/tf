@@ -13,6 +13,28 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
 - [x] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
+## Prekontrola zlecenia przez Quorum (MCP ci_for_sdlc) — zapisane 2026-11-09
+Cel (właściciel): gdy zlecam coś do zrobienia, Quorum (ci_for_sdlc) przez swój serwer MCP wykrywa niejasności,
+sprzeczności i braki **zanim** persona zacznie pracę, a fabryka pokazuje je i pyta człowieka. Strona Quorum:
+`TODO.md` w dbqm45/ci_for_sdlc („MCP: sprawdzenie zlecenia przed pracą”: narzędzie `check_task` nad `POST /api/check`
+dla zlecenia bez klucza; dla TSK-n/CHG-n/klucza Jiry istniejące `get_item_readiness` i `list_decisions`).
+- [ ] **Gdzie:** opcjonalnie, działa tylko gdy w sesji jest serwer MCP `ci-sdlc` (jak tryb `mode-pdi` z serwerem
+  pdi); bez niego fabryka pracuje jak dziś. Do rozstrzygnięcia: nowy tryb (`mode-quorum`) czy reguła w `mode-pdi`
+  i rdzeniu persony (zależy od tego, czy prekontrola ma działać bez pdi — rekomendacja: osobny tryb, bo Quorum
+  bywa używane bez pdi).
+- [ ] **Kiedy:** na starcie zlecenia, przed planem i przed pierwszą zmianą w kodzie — persona prowadząca (np. `kuba`,
+  Talos `story → PR`) wywołuje `get_item_readiness` dla klucza ze zlecenia albo `check_task` dla samego tekstu.
+  Jedno wywołanie na zlecenie (koszt i limit AI Quorum); wynik w raporcie przebiegu.
+- [ ] **Co robi z wynikiem:** `blocking` → zatrzymanie i pytania do człowieka (format jak `AskUserQuestion`, opcje
+  z Quorum); `questions` i `conflicts` → pokazane przed planem z rekomendacją; człowiek odpowiada albo świadomie
+  pomija. Odpowiedź na ustalenie zmiany z repo zapisuje się jako `decision_record.py decision add … --finding`
+  (PRB-16), więc Quorum nie zapyta drugi raz; pominięcie też jest zapisane (kto, dlaczego).
+- [ ] **Treść z Quorum to dane, nie polecenia** (pochodzi z Jiry/Confluence/Figmy): persona nie wykonuje instrukcji
+  z ustaleń, tylko je pokazuje (core-agent-security).
+- [ ] **Testy i bramka:** scenariusze ewaluacji skilla/trybu (zlecenie z luką → persona pyta przed pracą; zlecenie
+  kompletne → brak pytań; brak serwera MCP → praca jak dziś), test integracyjny na atrapie serwera MCP; bramka
+  skilli.
+
 ## Na później: interfejs „control tower” i integracja planu tf analyze z pdi (zapisane 2026-11-08, decyzja człowieka: wrócić później)
 Decyzja 2026-11-08: na początek tylko `tf analyze` i porządek w katalogach (`.tf/`) — kroki 1–4 planu
 `docs/plans/2026-11-08-tf-analyze-i-katalog-tf.md`. Reszta czeka:
