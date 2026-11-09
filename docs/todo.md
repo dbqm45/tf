@@ -32,8 +32,12 @@ Sekcja A — luki w katalogu:
 
 Sekcja B — architektura agenta i autonomia:
 - [ ] **B1:** polityka autonomii `autonomy:` w `.tf/config/config.yaml` (poziomy `full` / `evidence` / `confirm` /
-  `deny` dla typów operacji), egzekwowana hookiem; najpierw plan kroku do akceptacji.
+  `deny` dla typów operacji), egzekwowana hookiem, z triażem ryzyka zmian na podstawie diffu (auth, finanse, schemat,
+  osłabione testy → człowiek; zależności i dokumentacja przy zielonych testach → automatycznie); najpierw plan kroku
+  do akceptacji.
 - [ ] **B2:** mapa pokrycia generowana z katalogu (zamiast ręcznej macierzy wiedzy), raport informacyjny w CI.
+- [ ] **B3:** `tf metrics` — odsetek revertów, mediana czasu cyklu, czas przeglądu na PR; okres bazowy 4 tygodnie
+  i pasma kontrolne; przed B2.
 
 ## Prekontrola zlecenia przez Quorum (MCP ci_for_sdlc) — zapisane 2026-11-09
 Cel (właściciel): gdy zlecam coś do zrobienia, Quorum (ci_for_sdlc) przez swój serwer MCP wykrywa niejasności,
