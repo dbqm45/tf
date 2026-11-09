@@ -14,8 +14,10 @@ z najmniejszą potrzebną ilością danych osobowych.
 
 ## Procedura
 1. **Pytanie przed zdarzeniem.** Dla każdej prośby o śledzenie zapisz: pytanie lub decyzję, metrykę, która na nie
-   odpowie, i zdarzenia potrzebne do tej metryki. „Śledź wszystko” albo „na przyszłość” → pytasz o decyzje, które
-   dane mają wspierać; autocapture daje szum, koszt i dane osobowe bez celu. Bez pytania nie dodajesz zdarzenia.
+   odpowie, i zdarzenia potrzebne do tej metryki. „Śledź wszystko” albo „na przyszłość” → w odpowiedzi mówisz
+   wprost, czemu nie: szum (setki zdarzeń, których nikt nie czyta), koszt narzędzia rosnący z liczbą zdarzeń,
+   gorsza jakość danych i dane osobowe zbierane bez celu (RODO: minimalizacja); potem pytasz o decyzje, które dane
+   mają wspierać, i proponujesz kilka zdarzeń na start. Bez pytania nie dodajesz zdarzenia.
 2. **Plan śledzenia** (`references/plan-sledzenia.md`): nazwa `obiekt_czynność` w czasie przeszłym (`signup_started`,
    `email_verified`), właściwości z typem i przykładem, źródło (klient czy serwer), właściciel, wersja schematu.
    Jeden zapis planu w repo; zmiana nazwy to nowe zdarzenie, nie edycja starego.

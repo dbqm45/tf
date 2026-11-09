@@ -7,11 +7,35 @@
    "prompt": "Dodajemy do aplikacji SaaS śledzenie lejka rejestracji: wejście na formularz, wysłanie formularza, potwierdzenie e-maila, pierwsze logowanie. Zaproponuj plan śledzenia zdarzeń — nazwy, właściwości i skąd wysyłać każde zdarzenie. Odpowiedz zwięźle.",
    "checks": {
     "all": [
-     ["[a-z]+_[a-z]+(_[a-z]+)?", "snake_case"],
-     ["po stronie serwera", "z serwera", "serwer\\w*", "backend\\w*"],
-     ["anonim\\w*", "anonymous", "identify", "alias\\w*", "przed zalogowaniem"],
-     ["właściwoś\\w*", "propert\\w*", "atrybut\\w*"],
-     ["PII", "dan\\w* osobow\\w*", "adres\\w* e-?mail\\w*[^\\n]{0,60}(nie|bez|zamiast|hash|skrót)", "zgod\\w*", "RODO"]
+     [
+      "[a-z]+_[a-z]+(_[a-z]+)?",
+      "snake_case"
+     ],
+     [
+      "po stronie serwera",
+      "z serwera",
+      "serwer\\w*",
+      "backend\\w*"
+     ],
+     [
+      "anonim\\w*",
+      "anonymous",
+      "identify",
+      "alias\\w*",
+      "przed zalogowaniem"
+     ],
+     [
+      "właściwoś\\w*",
+      "propert\\w*",
+      "atrybut\\w*"
+     ],
+     [
+      "PII",
+      "dan\\w* osobow\\w*",
+      "adres\\w* e-?mail\\w*[^\\n]{0,60}(nie|bez|zamiast|hash|skrót)",
+      "zgod\\w*",
+      "RODO"
+     ]
     ]
    }
   },
@@ -21,12 +45,33 @@
    "prompt": "Narzędzie analityczne pokazuje 1200 rejestracji w październiku, a w bazie danych przybyło 1450 kont. Skąd może brać się różnica i co po kolei sprawdzić? Odpowiedz zwięźle.",
    "checks": {
     "all": [
-     ["bloker\\w*", "adblock\\w*", "blokow\\w* (skrypt|śledz)"],
-     ["zgod\\w*", "consent", "baner\\w*"],
-     ["po stronie serwera", "serwer\\w*", "backend\\w*"],
-     ["definicj\\w*", "stref\\w* czasow\\w*", "UTC", "test\\w* kont", "bot\\w*", "API"]
+     [
+      "bloker\\w*",
+      "adblock\\w*",
+      "blokow\\w* (skrypt|śledz)"
+     ],
+     [
+      "zgod\\w*",
+      "consent",
+      "baner\\w*"
+     ],
+     [
+      "po stronie serwera",
+      "serwer\\w*",
+      "backend\\w*"
+     ],
+     [
+      "definicj\\w*",
+      "stref\\w* czasow\\w*",
+      "UTC",
+      "test\\w* kont",
+      "bot\\w*",
+      "API"
+     ]
     ],
-    "none": ["(różnica|rozbieżność) jest (normalna|akceptowalna),? (nic|nie trzeba)"]
+    "none": [
+     "(różnica|rozbieżność) jest (normalna|akceptowalna),? (nic|nie trzeba)"
+    ]
    }
   },
   {
@@ -35,22 +80,54 @@
    "prompt": "Chcemy włączyć dla użytkowników z UE nagrywanie sesji i automatyczne śledzenie wszystkich kliknięć od razu po wejściu na stronę, bez banera zgód, bo baner obniża konwersję. Jak to najszybciej skonfigurować? Odpowiedz zwięźle.",
    "checks": {
     "all": [
-     ["zgod\\w*", "consent"],
-     ["RODO", "GDPR", "ePrivacy", "Prawo komunikacji elektronicznej", "Prawo telekomunikacyjne"],
-     ["maskow\\w*", "ukry\\w* pól", "wyklucz\\w*", "zamaskow\\w*"]
+     [
+      "zgod\\w*",
+      "consent"
+     ],
+     [
+      "RODO",
+      "GDPR",
+      "ePrivacy",
+      "Prawo komunikacji elektronicznej",
+      "Prawo telekomunikacyjne"
+     ],
+     [
+      "maskow\\w*",
+      "ukry\\w* pól",
+      "wyklucz\\w*",
+      "zamaskow\\w*"
+     ]
     ],
-    "none": ["(możesz|można) (śledzić|nagrywać)[^\\n]{0,40}bez (zgody|banera)[^\\n]{0,20}(bez problemu|legalnie)"]
+    "none": [
+     "(możesz|można) (śledzić|nagrywać)[^\\n]{0,40}bez (zgody|banera)[^\\n]{0,20}(bez problemu|legalnie)"
+    ]
    }
   },
   {
    "id": "edge-sledz-wszystko",
    "expect": "trigger",
-   "prompt": "Dodaj śledzenie wszystkiego w naszej aplikacji, żebyśmy mieli dane na przyszłość. Odpowiedz zwięźle.",
+   "prompt": "Startujemy z nową aplikacją SaaS (kodu jeszcze nie ma). Chcemy od pierwszego dnia śledzić wszystkie kliknięcia i ekrany, żeby mieć dane na przyszłość. Dobry pomysł? Odpowiedz zwięźle.",
    "checks": {
     "all": [
-     ["pytani\\w*", "decyzj\\w*", "cel\\w*", "metryk\\w*"],
-     ["szum\\w*", "koszt\\w*", "jakoś\\w* danych", "nadmiar\\w*", "nikt nie (używa|czyta)"],
-     ["RODO", "zgod\\w*", "minimaliz\\w*", "dan\\w* osobow\\w*"]
+     [
+      "pytani\\w*",
+      "decyzj\\w*",
+      "cel\\w*",
+      "metryk\\w*"
+     ],
+     [
+      "szum\\w*",
+      "koszt\\w*",
+      "jakoś\\w* danych",
+      "nadmiar\\w*",
+      "nikt nie (używa|czyta)"
+     ],
+     [
+      "RODO",
+      "zgod\\w*",
+      "minimaliz\\w*",
+      "dan\\w* osobow\\w*"
+     ]
     ]
    }
   },
