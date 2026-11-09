@@ -32,6 +32,8 @@ Sekcja A — luki w katalogu:
 - [ ] **A8:** `ai-agents` — wzorzec „pytanie o brakującą informację”: najpierw narzędzia i kontekst, potem pauza
   z konkretnym pytaniem do człowieka, zachowany stan i wznowienie (np. interrupt/resume w LangGraph); scenariusz
   ewaluacji, w którym agent ma zapytać, a nie zgadywać.
+- [ ] **A9:** przegląd specyfikacji przez panel 2–3 niezależnych recenzentów (przeciwnik, operator, wykonawca) przed
+  planem w `core-delivery-lifecycle`; raport zbieżne / pojedyncze / rozbieżne, bramka: blokujące i poważne zamknięte śladem.
 
 Sekcja B — architektura agenta i autonomia:
 - [ ] **B1:** polityka autonomii `autonomy:` w `.tf/config/config.yaml` (poziomy `full` / `evidence` / `confirm` /
@@ -43,7 +45,8 @@ Sekcja B — architektura agenta i autonomia:
   i pasma kontrolne; koszt przyjętej zmiany (z porzuconymi próbami) i pole przyczyny poprawki (luka specyfikacji /
   błąd agenta / zmiana wymagań / nieznana); przed B2.
 - [ ] **B4:** ewaluacje skilli mierzą wkład: ostrzeżenie w `skill_gate` dla scenariusza zaliczanego bez skilla,
-  raport „wkład skilla na model” z istniejących wyników (wejście do core-cost-control).
+  raport „wkład skilla na model” z istniejących wyników (wejście do core-cost-control); dziennik każdego
+  uruchomienia na zbiorze zamkniętym (holdout).
 
 ## Prekontrola zlecenia przez Quorum (MCP ci_for_sdlc) — zapisane 2026-11-09
 Cel (właściciel): gdy zlecam coś do zrobienia, Quorum (ci_for_sdlc) przez swój serwer MCP wykrywa niejasności,

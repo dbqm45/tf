@@ -234,7 +234,18 @@ def paid_eval(name: str, models: str, budget: float, baseline: bool, yes: bool) 
         base = [x for x in res if x["model"] == m and x.get("baseline") and x["expect"] == "trigger"]
         if base:
             summary[m + "_bez_skilli"] = f"{sum(x['checks_ok'] for x in base)}/{len(base)} treści"
+    if baseline and res:
+        easy = load_module(TESTS / "run_skill_evals.py", "run_skill_evals").no_uplift(res)
+        if easy:
+            summary["bez_wkladu"] = [i for _, i in easy]
     return ok, summary
+
+
+def paid_warnings(summary: dict) -> list[str]:
+    """Ostrzeżenia kroku 8 (nie błędy): scenariusze zaliczane bez skilli nie mierzą wkładu skilla."""
+    easy = summary.get("bez_wkladu") or []
+    return [f"bez skilli też zaliczone: {', '.join(easy)} — scenariusze nie mierzą wkładu skilla; zaostrz je "
+            f"albo zastąp trudniejszymi (core-skill-authoring)"] if easy else []
 
 
 # ───────────── przebieg ─────────────
@@ -281,8 +292,8 @@ def gate(name: str, args) -> bool:
             step("8. ewaluacja na modelu", [f"przerwana: {paid['przerwano']}"], [])
             print("  ✗ bramka NIE przeszła (ewaluacja przerwana); wynik bezpłatnych sprawdzeń z rejestru bez zmian")
             return False
-        step("8. ewaluacja na modelu", [] if ok else [f"nie wszystkie scenariusze zaliczone: {paid}"], [],
-             ", ".join(f"{k} {v}" for k, v in paid.items() if k not in ("report",)))
+        step("8. ewaluacja na modelu", [] if ok else [f"nie wszystkie scenariusze zaliczone: {paid}"],
+             paid_warnings(paid), ", ".join(f"{k} {v}" for k, v in paid.items() if k not in ("report", "bez_wkladu")))
         if not ok:
             print(f"  ✗ bramka NIE przeszła — raport: {paid.get('report')}")
             return False

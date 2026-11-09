@@ -77,6 +77,19 @@ szuka informacji narzędziami i w kontekście; dopiero brak, którego nie da si�
 pytaniem; stan przebiegu zachowany i wznowienie od miejsca przerwania; bez pytań, gdy odpowiedź jest dostępna.
 Nowy scenariusz ewaluacji (agent ma zapytać zamiast zgadywać) i sąsiad, w którym pytać nie należy.
 
+### A9. Przegląd specyfikacji przez panel recenzentów — `core-delivery-lifecycle` (dopisane 2026-11-09, decyzja człowieka)
+Luka: jest „przegląd planu” w fazie 5 i `ddd-model-stress-test` dla modelu domeny, ale brak niezależnego przeglądu
+specyfikacji przed kodem (artykuł G. Trisciuoglio, „Spec-Driven Development: How I Stopped Vibe Coding My AI
+Agents”, 2026-08-19). Zakres, bez zewnętrznych narzędzi — podagenci Claude w osobnych kontekstach:
+- 2–3 recenzentów bez wglądu w siebie nawzajem, każdy z innym zadaniem: przeciwnik (dziury, sprzeczności,
+  niesprawdzalne wymagania), operator (awarie, częściowe zapisy, współbieżność, ponowienia, obserwowalność),
+  wykonawca (czy da się zbudować i sprawdzić testem w ustalonym stacku);
+- raport: ustalenia z wagą (blokujące / poważne / drobne), zbieżne u wszystkich (defekt) osobno od pojedynczych
+  (do zważenia) i rozbieżnych (decyzja człowieka); uwaga o ograniczonej niezależności (ten sam dostawca modeli);
+- bramka: specyfikacja przechodzi do planu, gdy blokujące i poważne ustalenia są zamknięte śladem (nowe lub
+  zmienione wymaganie, zapisana decyzja); recenzent zadania może odrzucić pracę, cytując ustalenie;
+- referencja w `core-delivery-lifecycle`, szablon raportu w `core-project-record`, scenariusz ewaluacji.
+
 ### Kolejność sekcji A
 1. A1 i A2 (największe luki w aplikacjach biznesowych).
 2. A3 i A4 (rozszerzenia istniejących skilli).
@@ -162,7 +175,20 @@ scenariusza).
   i modelu odsetek scenariuszy zaliczonych ze skillem i bez; wejście do `core-cost-control` — czy przy silniejszym
   modelu skill warto ładować (eksperyment N. Jaina, martinfowler.com, 2026-10 [niezweryfikowane]: struktura wokół
   agenta pomogła tańszemu modelowi, a silniejszemu tylko podniosła koszt).
+- Zamknięty zbiór (holdout): każde uruchomienie, które czyta lub ocenia scenariusze holdout, zapisuje wpis w dzienniku
+  (data, skille, modele, kto uruchomił, wynik) — liczba zajrzeń jest jawna w raporcie, jak w protokole „audytowanego
+  dostępu do zbioru testowego” (E. Eshratifar, „You Don't Need Jev”, 2026-10-20 [niezweryfikowane]).
 - TDD na sztucznych wynikach ewaluacji; bez nowych płatnych przebiegów.
+- **Plan kroku (2026-11-09):**
+  1. testy (czerwone) w `core/tests/test_skill_evals.py`: `no_uplift` (scenariusz trigger zaliczony bez skilli na
+     każdym modelu z przebiegiem bez skilli), `contribution` (skill × model: treść ze skillem, bez skilli, wkład),
+     sekcje raportu, dziennik holdout (wpis przy uruchomieniu ze scenariuszami holdout, licznik wcześniejszych),
+     `--contribution <plik.jsonl>` bez uruchamiania modelu; w `core/tests/test_skill_gate.py`: ostrzeżenia kroku 8
+     z podsumowania (`paid_warnings`);
+  2. kod w `core/tests/run_skill_evals.py` (funkcje, raport, opcja, dziennik
+     `docs/evals/holdout-dostep.jsonl` w repo fabryki, `.tf/logs/evals/holdout-dostep.jsonl` w projekcie) i
+     `core/factory/skill_gate.py` (`bez_wkladu` w podsumowaniu, ostrzeżenie — nie błąd);
+  3. `workspace.py check --packs all`, `refs`, testy repo.
 
 ### Kolejność sekcji B
 1. B1 z triażem ryzyka zmian (po sekcji A albo równolegle, jeśli człowiek zdecyduje).

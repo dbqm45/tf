@@ -80,6 +80,13 @@ def main() -> int:
         if first == second or not second.name.endswith("-bramka-x-2.md"):
             fails.append(f"report_path: {first.name} / {second.name}")
 
+    # 6. B4: scenariusze zaliczane bez skilli to ostrzeżenie kroku 8, nie błąd
+    total += 1
+    g = load(ROOT / ".tf" / "factory" / "skill_gate.py", "gate_mod")
+    warns = g.paid_warnings({"haiku": "5/5", "bez_wkladu": ["a", "b"]})
+    if len(warns) != 1 or "a, b" not in warns[0] or g.paid_warnings({"haiku": "5/5"}):
+        fails.append(f"paid_warnings: ostrzeżenie tylko przy scenariuszach zaliczanych bez skilli: {warns}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów bramki skilli")

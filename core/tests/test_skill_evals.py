@@ -129,6 +129,59 @@ def protocol_tests() -> list[str]:
     return fails
 
 
+
+def contribution_tests() -> list[str]:
+    """B4: wkład skilla — scenariusze zaliczane bez skilli, wkład na model, dziennik zbioru zamkniętego."""
+    fails = []
+    r = lambda sid, model, base, ok, ho=False, trig=True, exp="trigger": {
+        "skill": "s", "id": sid, "expect": exp, "model": model, "baseline": base, "holdout": ho, "repeat": 0,
+        "checks_ok": ok, "triggered": (not base) and trig, "passed": (ok and trig) if not base else False,
+        "error": None, "cost": 0.1, "groups_total": 1, "groups_met": int(ok), "skills_used": [], "misses": []}
+    res = [r("a", "haiku", False, True), r("a", "haiku", True, True), r("a", "sonnet", False, True),
+           r("a", "sonnet", True, True),
+           r("b", "haiku", False, True), r("b", "haiku", True, False), r("b", "sonnet", False, True),
+           r("b", "sonnet", True, True),
+           r("c", "haiku", False, True),
+           r("d", "haiku", False, False, trig=False), r("d", "haiku", True, True),
+           r("n", "haiku", False, True, exp="no-trigger")]
+    nu = ev.no_uplift(res)
+    if nu != [("s", "a"), ("s", "d")]:   # d: bez skilli zaliczony, ze skillem skill się nie uruchomił
+        fails.append(f"no_uplift: tylko scenariusz zaliczony bez skilli na każdym modelu z przebiegiem bez skilli: {nu}")
+    rows = {(x["skill"], x["model"]): x for x in ev.contribution(res)}
+    h = rows.get(("s", "haiku"))
+    if not h or (h["n"], h["with_skill"], h["without"], h["not_triggered"]) != (2, 1.0, 0.5, 1) \
+            or abs(h["uplift"] - 0.5) > 1e-9:
+        fails.append(f"contribution: haiku — tylko scenariusze z uruchomionym skillem (2), 100% ze skillem, 50% bez, "
+                     f"wkład +50%, 1 scenariusz bez uruchomienia osobno: {h}")
+    s = rows.get(("s", "sonnet"))
+    if not s or abs(s["uplift"]) > 1e-9:
+        fails.append(f"contribution: sonnet bez wkładu: {s}")
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d) / "raport.md"
+        ev.report(res, out)
+        txt = out.read_text(encoding="utf-8")
+        if "## Wkład skilla" not in txt or "## Zaliczane bez skilli" not in txt or "`s` / a" not in txt:
+            fails.append("report: sekcje „Wkład skilla” i „Zaliczane bez skilli” z listą scenariuszy")
+        jl = Path(d) / "w.jsonl"
+        jl.write_text("\n".join(json.dumps(x) for x in res) + "\n", encoding="utf-8")
+        import contextlib, io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = ev.main(["run_skill_evals.py", "--contribution", str(jl)])
+        if code != 0 or "| s | haiku |" not in buf.getvalue() or "+50% | 1 |" not in buf.getvalue():
+            fails.append(f"--contribution: tabela wkładu z pliku .jsonl bez uruchamiania modelu: {code} {buf.getvalue()[:300]}")
+        log = Path(d) / "holdout-dostep.jsonl"
+        scs = [{"skill": "s", "id": "h1", "holdout": True}, {"skill": "s", "id": "a"}, {"skill": "t", "id": "h2", "holdout": True}]
+        n1 = ev.log_holdout_access(scs, ["haiku"], Path(d) / "r1.md", log)
+        n2 = ev.log_holdout_access(scs, ["haiku", "sonnet"], Path(d) / "r2.md", log)
+        n0 = ev.log_holdout_access([{"skill": "s", "id": "a"}], ["haiku"], Path(d) / "r3.md", log)
+        lines = [json.loads(x) for x in log.read_text(encoding="utf-8").splitlines()]
+        if (n1, n2, n0) != (1, 2, 0) or len(lines) != 2 or lines[1]["skills"] != ["s", "t"] \
+                or lines[1]["scenarios"] != 2 or lines[1]["models"] != ["haiku", "sonnet"]:
+            fails.append(f"log_holdout_access: wpis tylko przy scenariuszach holdout, numer kolejnego uruchomienia: "
+                         f"{(n1, n2, n0)} {lines}")
+    return fails
+
 def main() -> int:
     fails = []
     # 1–2. sprawdzenia treści
@@ -303,6 +356,7 @@ def main() -> int:
         if api and (r["hit"].get("be-api-design") != 1 or r["missed"].get("be-database") != 1):   # podpowiedź z pack-it
             fails.append(f"hint_report: trafione/przeoczone niepoprawne: {r}")
     fails += protocol_tests()
+    fails += contribution_tests()
     total = 12 + PROTOCOL_TESTS
     for f in fails:
         print(f"✗ {f}")
