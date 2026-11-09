@@ -101,7 +101,16 @@
  },
  "be-business-app-patterns": {
   "fingerprint": "077c9aac9126da41",
-  "offline": "2026-11-09"
+  "offline": "2026-11-09",
+  "model": {
+   "report": ".tf/logs/evals/2026-11-09-bramka-be-business-app-patterns.md",
+   "cost": 3.05,
+   "haiku": "8/8",
+   "haiku_bez_skilli": "5/5 treści",
+   "sonnet": "8/8",
+   "sonnet_bez_skilli": "5/5 treści",
+   "date": "2026-11-09"
+  }
  },
  "be-database": {
   "fingerprint": "5ade0b01b28ffe03",
