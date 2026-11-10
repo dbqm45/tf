@@ -18,6 +18,7 @@ docs/project/
   README.md                  # INDEKS — generowany automatycznie, nie edytuj
   journal.md                 # dziennik zdarzeń (tylko dopisywanie)
   decisions.md               # rejestr decyzji D-001, D-002… (linki do ADR)
+  00-reconstruction/         # rekonstrukcja istniejącego kodu przed zmianami (pack-it: eng-project-reconstruction)
   01-discovery/brief.md      # problem, cel, użytkownicy, zakres, ograniczenia
   01-discovery/project-plan.md  # plan projektu: koszt i termin jako przedziały, kamienie milowe, ryzyka (pack-it: proc-project-planning)
   01-discovery/pre-flight.md # ocena wstępna „czy modularyzować” (pack-it: ddd-discovery-intake)

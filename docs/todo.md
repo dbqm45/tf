@@ -25,7 +25,7 @@ Sekcja A — luki w katalogu:
   tabele danych i eksport w `fe-architecture` i `be-api-design`; A2c moduł `tf analyze` `authz`.
 - [x] **A3:** `eng-repo-readiness` + Developer Experience (devcontainer, `docker compose` dev, `make`/`just`, czas
   od klonu do zielonych testów).
-- [ ] **A4:** mapa artefaktów (faza → artefakt → kto pisze → skill) w `core-delivery-lifecycle`; ERD w `be-database`.
+- [x] **A4:** mapa artefaktów (faza → artefakt → kto pisze → skill) w `core-delivery-lifecycle`; ERD w `be-database`.
 - [x] **A5:** sekcja „ład danych” w `arch-privacy-compliance` (własność, klasyfikacja, inwentarz PII). Razem z modułem `tf analyze` `data-classification` (decyzja 2026-11-10; plan w A5).
 - [ ] **A6:** referencja formularzy (React Hook Form + schemat wspólny z serwerem) w `fw-react`.
 - [x] **A7:** kolejne moduły `tf analyze` po jednym: `accessibility` (`pack-ux`), `tech-debt`, `i18n`, `observability` (`pack-it`); piętro 0, każdy z zestawami testowymi i bramką, sprawdzony na prawdziwym kodzie.

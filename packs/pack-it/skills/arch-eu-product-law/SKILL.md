@@ -55,7 +55,7 @@ sprawdza `researcher` w EUR-Lex lub ISAP (`python3 .tf/factory/facts.py`, jeśli
    o zmianie dostawcy), idą jako zadania do backlogu z kryterium akceptacji.
 6. **Pytania do prawnika:** kwalifikacje niepewne (np. „czy jesteśmy dostawcą usługi przetwarzania danych w rozumieniu
    Data Act?”) wypisujesz osobno; tematy spoza zakresu fabryki też trafiają na tę listę.
-7. Zapis: `docs/project/03-architecture/<data>-mapa-prawna.md` (core-project-record) z datą przeglądu.
+7. Zapis: `docs/project/04-architecture/<data>-mapa-prawna.md` (core-project-record) z datą przeglądu.
 
 ## Zasady
 - Fakty tego skilla pochodzą ze źródeł wtórnych: na początku pracy przypomnij człowiekowi o sprawdzeniu ich w EUR-Lex

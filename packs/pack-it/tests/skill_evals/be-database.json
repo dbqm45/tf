@@ -82,6 +82,20 @@
           ["formularz\\w*", "kilka żądań", "wiele żądań", "poza (jedną )?transakcj\\w+", "dług\\w+ (transakcj|czas)"]
         ]
       }
+    },
+    {
+      "id": "erd-z-migracji",
+      "expect": "trigger",
+      "prompt": "W projekcie mamy 40 migracji PostgreSQL i nikt nie ma aktualnego obrazu tabel i relacji. Chcemy diagram encji w repozytorium, który nie zestarzeje się po tygodniu. Jak go zrobić i gdzie trzymać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["erDiagram", "Mermaid"],
+          ["docs/project/04-architecture/erd\\.md", "04-architecture/erd"],
+          ["migracj\\w*"],
+          ["(ten sam|tym samym|jednym) (PR|pull request|commit\\w*)", "razem z migracj\\w*"],
+          ["CI", "wygeneruj\\w*", "generowa\\w*", "sprawdz\\w* (w|przez) (CI|test)"]
+        ]
+      }
     }
   ]
 }

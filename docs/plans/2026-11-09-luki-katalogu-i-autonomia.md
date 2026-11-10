@@ -72,6 +72,25 @@ Luka: jedno miejsce „faza → artefakt → kto pisze → skill źródłowy”;
   pisze, który skill prowadzi, kiedy artefakt jest zbędny (mały projekt).
 - ERD: dopisać do `be-database` (diagram encji jako kod, np. Mermaid, z migracji).
 
+#### A4 — plan realizacji (2026-11-10, decyzja człowieka: „tak”, po rekomendacji)
+Mapa zamiast tabeli nazw z innych metodyk (PRD, SPEC…): fabryka ma już własne ścieżki w `docs/project/`, rozsiane po
+~60 skillach. Sprawdzenie ich wykazało dwie niespójności: `03-architecture/` w arch-eu-product-law i `05-delivery/` w
+ops-cloud-migration (pack-it) — katalogów nie ma w strukturze core-project-record.
+1. Test (najpierw, czerwony) `tests/test_artifact_map.py` w repo fabryki:
+   - numerowane katalogi `docs/project/NN-…/` we wszystkich skillach (core, packs, modes) należą do struktury
+     z core-project-record;
+   - każdy artefakt (plik) wymieniony w skillach pod numerowanym katalogiem jest w mapie; nazwy z datą, numerem
+     kroku i `<…>` porównywane po normalizacji;
+   - `be-database` opisuje ERD (`erDiagram`, `docs/project/04-architecture/erd.md`), a mapa go zawiera;
+   - SKILL.md core-delivery-lifecycle odsyła do mapy.
+2. Poprawki ścieżek: `04-architecture/<data>-mapa-prawna.md`, `05-plan/migration-plan.md`.
+3. `core/skills/core-delivery-lifecycle/references/mapa-artefaktow.md`: tabela na fazę (artefakt, kto pisze, skill
+   z nakładką, kto czyta, kiedy pominąć w małym projekcie) oraz artefakty spoza `docs/project/` (raporty
+   `tf analyze`, `metrics.md`, triaż ryzyka w opisie PR, README, CHANGELOG, kontrakt API przy kodzie).
+4. `be-database`: sekcja ERD — Mermaid `erDiagram` w `04-architecture/erd.md`, generowany lub sprawdzany względem
+   migracji, aktualizowany w tym samym PR co migracja.
+5. Scenariusz ewaluacji core-delivery-lifecycle `mapa-artefaktow` (przed treścią), bramka.
+
 ### A5. Ład danych — sekcja w `arch-privacy-compliance` (`pack-it`)
 Luka: własność danych, klasyfikacja (public, internal, confidential, PII), katalog i pochodzenie danych są
 rozproszone po `data-engineering` i skillach bezpieczeństwa; retencja i RODO są pokryte.
