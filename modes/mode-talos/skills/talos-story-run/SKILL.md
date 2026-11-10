@@ -111,7 +111,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
    (także po commicie raportu cięcia) — `Werdykt: PRZEKROCZONY` (artefakty > 50% dodanych linii, artefakt > 600 linii,
    plan > 300) → skracasz artefakty albo przenosisz surowe dowody poza repozytorium; wyjątek opisujesz w PR.
 3. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
-   z `parked.md`), wynik `plan_drift` (pokrycie, odstępstwa) i `pr_budget`, skrót raportu kosztu. Nie scalasz — decyzja człowieka.
+   z `parked.md`), wynik `plan_drift` i `pr_budget`, skrót kosztu oraz do opisu PR sekcja triażu ryzyka
+   `python3 .tf/factory/risk_triage.py --md` (doradcza; „wysokie” = człowiek przegląda wskazane pliki). Nie scalasz.
 4. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
    Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`

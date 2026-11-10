@@ -15,6 +15,9 @@ tf — the team factory command: install, update, packs, languages, health check
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
+  tf risk [--base <branch>] [--md|--json]
+                              # change risk triage of this branch: what a human must review (advisory)
+                              # (.tf/factory/risk_triage.py)
   tf metrics [--weeks N] [--revert-days N] [--no-gh]
                               # factory effectiveness: revert rate, cost per accepted change, cycle time,
                               # rework causes → .tf/reports/metrics.md (.tf/factory/metrics.py)
@@ -282,6 +285,10 @@ def main(argv: list[str]) -> int:
             return 2
         sub = ["init"] if cmd == "init" else (["list"] if "--list" in rest else ["run", *rest])
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "analyze.py"), *sub]).returncode
+    if cmd == "risk":
+        if not need_project():
+            return 2
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "risk_triage.py"), *rest]).returncode
     if cmd == "metrics":
         if not need_project():
             return 2

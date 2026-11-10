@@ -55,6 +55,9 @@ def main() -> int:
     check("Rework-Cause:" in fixes and all(v in fixes for v in ("luka-specyfikacji", "blad-agenta", "zmiana-wymagan",
                                                                  "nieznana")),
           "T-11: commit poprawki z pętli PR ma trailer `Rework-Cause:` z jedną z 4 przyczyn (tf metrics, B3)")
+    finish = body.split("## 4.", 1)[-1].split("## 5.", 1)[0]
+    check("risk_triage.py --md" in finish and "opis" in finish,
+          "T-12: przy otwarciu PR Talos dołącza do opisu sekcję triażu ryzyka zmian (risk_triage.py --md, B1b)")
     scan = ".claude/skills/talos-story-run/scripts/security_scan.py"
     check((ROOT / scan).is_file() and any(scan in a for a in allow)
           and (skill / "templates" / "verify.sh").is_file()
