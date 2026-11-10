@@ -296,6 +296,17 @@ w `core-async-delegation` i `core-agent-security`); brak jednego miejsca „typ 
   albo w `docs/`, uruchamiany w CI jako informacja (bez blokowania).
 - Nowe skille powstają tam, gdzie mapa pokazuje dziurę, a scenariusz ewaluacji potwierdza, że brak szkodzi.
 
+#### B2 — plan realizacji (2026-11-10, decyzja człowieka: „ruszaj z B2, a potem A6”)
+1. Test (najpierw) `tests/test_coverage_map.py`: na sztucznym drzewie skilli (core, pack, mode) hasło trafia
+   w `description`, `katalog` i `slowa`, wielkość liter bez znaczenia; hasło bez trafień to dziura, z jednym —
+   „cienkie”; raport Markdown z tabelą na obszar; kod wyjścia 0 także przy dziurach (informacja); na prawdziwym
+   repo każdy obszar z pliku ma hasła, a raport powstaje.
+2. `tools/coverage_areas.json` (obszar → hasła, rdzenie wyrazów zamiast pełnych form) i `tools/coverage_map.py`
+   (`--summary` do CI, `--out <plik>` z pełnym raportem, `--areas`, `--root`). Dopasowanie po metadanych, które
+   widzi trasowanie (opis, katalog, słowa), nie po treści skilla.
+3. Krok w CI (`factory-checks.yml`, job repo) z `--summary` — informacja, bez blokowania. Raport nie jest
+   commitowany (starzałby się); generuje się na żądanie.
+
 ### B3. Metryki skuteczności fabryki (dopisane 2026-11-09, decyzja człowieka)
 Cel: mierzyć, czy fabryka i jej zmiany pomagają, zamiast oceniać „na odczucie” (badanie METR 2025: doświadczeni
 programiści z AI byli wolniejsi, choć czuli się szybsi; DORA 2024: spadek stabilności dostaw przy większej
