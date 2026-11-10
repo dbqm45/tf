@@ -4,7 +4,7 @@ description: Użyj przy projekcie agenta LLM lub przepływu agentowego — workf
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj, gdy projektujesz agenta LLM albo przepływ agentowy w kodzie — czy w ogóle potrzebny agent, wzorce workflow (prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer), projekt narzędzi (nazwy, opisy, parametry, błędy, idempotencja) i serwerów MCP, inżynieria kontekstu (co trafia do kontekstu, kompaktowanie, pamięć), kompromisy multi-agent, guardrails i uprawnienia, zatwierdzanie przez człowieka akcji nieodwracalnych, tracing i obserwowalność, warunki stopu i budżety, typowe porażki, wybór frameworka (Claude Agent SDK, LangGraph) wg kryteriów. Nie do wywołań SDK, kontraktu wyjścia i pętli narzędzi w kodzie (eng-llm-features), uruchamiania Claude Code bez nadzoru (core-async-delegation), doboru modelu i kosztu pracy z agentem (core-cost-control), bezpieczeństwa agenta-programisty (core-agent-security) ani RAG (ai-rag)."
-  slowa: "agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała, agent wywołuje narzędzie, a potem pisze odpowiedź klientowi, inny limit niż zwróciło narzędzie, liczby z wyników narzędzi, rozbieżność odpowiedzi z narzędziem, wyłapać przed wysłaniem, a2a, agent2agent, agent card, acp, agent client protocol, protokół agent agent, agent partnera w innym frameworku, opentelemetry genai, gen_ai, śledzić agenta w opentelemetry"
+  slowa: "agent zgaduje brakujące dane, agent pyta o wszystko, kiedy agent ma pytać człowieka, pytanie o brakującą informację, pauza i wznowienie agenta, interrupt, agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała, agent wywołuje narzędzie, a potem pisze odpowiedź klientowi, inny limit niż zwróciło narzędzie, liczby z wyników narzędzi, rozbieżność odpowiedzi z narzędziem, wyłapać przed wysłaniem, a2a, agent2agent, agent card, acp, agent client protocol, protokół agent agent, agent partnera w innym frameworku, opentelemetry genai, gen_ai, śledzić agenta w opentelemetry"
 ---
 
 # Projekt agenta LLM — od „czy agent” do granic i obserwowalności
@@ -58,7 +58,9 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    narzędzia, które by je wykonało, razem z dostępem do danych poufnych i kanałem wyjścia na zewnątrz jednocześnie.
 7. **Stop i budżet.** Zawsze: maksymalna liczba kroków, budżet kosztu i czasu na przebieg, wykrywanie powtarzanych
    tych samych wywołań, wyraźny stan końcowy (zrobione / nie da się / potrzebny człowiek). Po osiągnięciu limitu
-   agent oddaje stan i powód, a nie urywa się po cichu. Szczegóły liczenia w kodzie: **eng-llm-features**, dobór
+   agent oddaje stan i powód, a nie urywa się po cichu. „Potrzebny człowiek” to konkretne pytanie po wyczerpaniu narzędzi,
+   z punktem kontrolnym i wznowieniem od niego; kiedy pytać, a kiedy założyć wartość domyślną:
+   `references/pytanie-o-brakujace-dane.md`. Szczegóły liczenia w kodzie: **eng-llm-features**, dobór
    modeli: **core-cost-control**.
 8. **Tracing.** Każdy przebieg ma identyfikator; zapisujesz kroki: wejście, wywołanie narzędzia z argumentami
    i wynikiem, tokeny, czas, powód zakończenia. Bez tego nie zdiagnozujesz zapętlenia ani złej decyzji (ogólnie:
@@ -97,6 +99,7 @@ zleca przelew.”
 - [ ] przypadki z oczekiwanym wynikiem; najprostszy szczebel, który je zalicza, wybrany świadomie
 - [ ] narzędzia: mało, o wysokim poziomie, z opisem „kiedy”, czytelne błędy, zapisy idempotentne
 - [ ] kontekst: minimum, ładowanie na żądanie, plan kompaktowania i notatek
+- [ ] brak danych: najpierw narzędzia; pytanie tylko o decyzję człowieka lub brak nie do uzupełnienia, z opcjami; punkt kontrolny i wznowienie
 - [ ] multi-agent tylko z uzasadnieniem kosztu (ok. 15×) i niezależnych podzadań
 - [ ] akcje nieodwracalne za zatwierdzeniem człowieka lub twardą walidacją; treść = dane
 - [ ] limit kroków, budżet, wykrywanie pętli, jawny stan końcowy

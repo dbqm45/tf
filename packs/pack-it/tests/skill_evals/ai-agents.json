@@ -284,6 +284,8 @@
           ]
         ]
       }
-    }
+    },
+    {"id": "agent-zgaduje-zamiast-pytac", "expect": "trigger", "prompt": "Nasz agent obsługi zamówień B2B, gdy w zamówieniu brakuje adresu dostawy albo terminu, po prostu zgaduje (bierze adres z poprzedniego zamówienia, termin „za tydzień”). Klienci reklamują pomyłki. Jak przeprojektować agenta, żeby w takiej sytuacji zatrzymał się i zapytał człowieka, a potem dokończył zadanie? Odpowiedz zwięźle.", "checks": {"all": [["najpierw (sprawdź|szuka|przeszuka|użyj\\w* narzędzi)", "narzędzi\\w* .{0,40}(najpierw|przed pytaniem)", "CRM", "histori\\w* (zamówień|klienta)"], ["konkretn\\w* pytani\\w*", "jedno pytanie", "opcj\\w*", "propozycj\\w*"], ["punkt\\w* kontroln\\w*", "checkpoint\\w*", "zapis\\w* stan\\w*", "stan\\w* przebiegu"], ["wznow\\w*", "resume", "dokończ\\w*", "kontynu\\w*"], ["interrupt", "pauz\\w*", "wstrzym\\w*", "czeka\\w* na (człowieka|odpowied)"], ["idempoten\\w*", "ponown\\w* wykona\\w*", "dwa razy", "od początku węzła"]]}},
+    {"id": "agent-pyta-o-dostepne-dane", "expect": "trigger", "prompt": "Wdrożyliśmy agenta wsparcia z zasadą „zawsze pytaj, gdy nie masz pewności”. Teraz zasypuje klientów pytaniami o numer zamówienia, e-mail i adres, które ma w CRM, a przy drobnych sprawach pyta o zgodę na wszystko. Jak ustawić, kiedy agent ma pytać, a kiedy działać sam? Odpowiedz zwięźle.", "checks": {"all": [["najpierw .{0,40}(narzędzi|CRM|sprawdź|szuka)", "(sprawdź|szukaj|pobierz) .{0,30}(w CRM|narzędzi)", "dostępn\\w* .{0,30}(narzędzi|CRM)"], ["decyzj\\w* (człowieka|klienta|użytkownika)", "preferencj\\w*", "zgod\\w* na (akcj|operacj)", "nieodwracaln\\w*"], ["wartoś\\w* domyśln\\w*", "założeni\\w*", "odwracaln\\w*", "tani\\w* do cofnięcia"], ["jedn\\w* .{0,20}pytani\\w*", "zbierz .{0,30}pytani\\w*", "naraz", "seri\\w* pytań"], ["miar\\w*", "mierz\\w*", "odset\\w*", "ewaluac\\w*", "przypadk\\w* testow\\w*"]]}}
   ]
 }

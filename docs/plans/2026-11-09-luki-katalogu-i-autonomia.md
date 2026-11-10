@@ -198,6 +198,16 @@ szuka informacji narzędziami i w kontekście; dopiero brak, którego nie da si�
 pytaniem; stan przebiegu zachowany i wznowienie od miejsca przerwania; bez pytań, gdy odpowiedź jest dostępna.
 Nowy scenariusz ewaluacji (agent ma zapytać zamiast zgadywać) i sąsiad, w którym pytać nie należy.
 
+#### A8 — plan realizacji (2026-11-10, decyzja człowieka: „tak”; bez płatnych ewaluacji — limit tygodniowy)
+1. Scenariusze (najpierw): `agent-zgaduje-zamiast-pytac` (agent zamówień zgaduje brakujące dane i robi błędy)
+   i `agent-pyta-o-dostepne-dane` (agent zasypuje użytkownika pytaniami o rzeczy, które ma w CRM).
+2. `references/pytanie-o-brakujace-dane.md`: najpierw narzędzia i kontekst (z listą sprawdzonych miejsc); pytanie
+   tylko o decyzję człowieka albo brak nie do uzupełnienia; tanie i odwracalne → wartość domyślna z zapisanym
+   założeniem; forma pytania (jedno, z opcjami, rekomendacją, skutkiem i wartością domyślną); pauza z punktem
+   kontrolnym i wznowienie od niego (LangGraph `interrupt` — API sprawdzone w paczce); antywzorce; miary i
+   ewaluacja (przypadki „trzeba zapytać” i „nie trzeba”).
+3. SKILL.md krok 7: odnośnik; `slowa`; bramka bez modelu. Płatna ewaluacja po odnowieniu limitu.
+
 ### A9. Przegląd specyfikacji przez panel recenzentów — `core-delivery-lifecycle` (dopisane 2026-11-09, decyzja człowieka)
 Luka: jest „przegląd planu” w fazie 5 i `ddd-model-stress-test` dla modelu domeny, ale brak niezależnego przeglądu
 specyfikacji przed kodem (artykuł G. Trisciuoglio, „Spec-Driven Development: How I Stopped Vibe Coding My AI
