@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.15.0] — 2026-11-10
+### Added
+- **pack-it:** add data table and data export guidance (#208)
+
 ## [9.14.0] — 2026-11-10
 ### Added
 - **pack-it:** add the ask-for-missing-information pattern to ai-agents (#207)
