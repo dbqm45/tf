@@ -342,3 +342,19 @@ default_targets: [claude]
 # w tierze lub profilu przechodzi bez zmian.
 managed_agents:
   models: {haiku: claude-haiku-5-5, sonnet: claude-sonnet-5-5, opus: claude-opus-5-5, fable: claude-fable-5-1, inherit: claude-opus-5-5}
+
+# Polityka autonomii (B1a): typy operacji, o które hook guard_bash pyta człowieka. Poziom: confirm (zgoda człowieka)
+# albo deny (blokada). W .tf/config/config.yaml projekt może tylko zaostrzyć (confirm → deny); wartość słabsza jest
+# ignorowana — sprawdzenie: python3 .claude/hooks/guard_bash.py --check-policy. Stała lista blokad rdzenia (rm -rf /,
+# push --force, curl | sh, terraform destroy…) nie zależy od polityki. Triaż ryzyka zmian (tf risk): autonomy.triage.
+autonomy:
+  operations:
+    dependency_add: confirm     # npm/pnpm/yarn/bun add — łańcuch dostaw
+    prod_command: confirm       # kubectl/helm/terraform/aws/gcloud/az z prod
+    destructive_sql: confirm    # DROP DATABASE/TABLE/SCHEMA, TRUNCATE
+    infra_change: confirm       # terraform apply/import/state, kubectl delete/apply/scale, helm install/upgrade
+    publish: confirm            # npm publish, docker push
+    git_push: confirm           # git push, reset --hard, clean -f
+    persistence: confirm        # cron, systemd, LaunchAgent
+    data_upload: confirm        # wysyłanie pliku na zewnątrz (curl -F @, --upload-file)
+    sudo: confirm

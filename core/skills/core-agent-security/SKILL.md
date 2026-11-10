@@ -42,6 +42,7 @@ Dla każdego polecenia spoza zwykłej pracy (build, test, lint, git na własnej 
 
 5. **Czy da się to cofnąć?** Nieodwracalne lub dotykające powyższych obszarów → zgoda człowieka.
 Część tych wzorców blokuje hook `guard_bash.py`, ale hook nie zna wszystkich wariantów — przegląd jest Twoim obowiązkiem.
+Poziomy pytanych operacji: `autonomy.operations` (`guard_bash.py --check-policy`); ryzyko zmiany przed PR: `tf risk`.
 - **Zapis przez powłokę podlega tym samym bramkom co Edit:** `>`, `tee`, `sed -i`, `cp`/`mv`, `python -c "open(…,'w')"`
   do sekretów → odmowa; do `.claude/settings*.json`, `.claude/hooks/`, `.git/` → pytanie; do kodu produkcyjnego →
   bramka TDD (czerwony test najpierw). Blokady nie obchodzisz innym poleceniem — piszesz test albo pytasz człowieka.
