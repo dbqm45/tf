@@ -46,6 +46,13 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    def record_error(hook: str, exc: BaseException) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -431,15 +438,16 @@ def main() -> int:
         event = data.get("hook_event_name")
         state = load(root)
         guard = guard_note(root, state, data)   # reguła F działa też przy CLAUDE_TDD=off
-    except Exception:
+    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        record_error("tdd_guard", e)
         return 0
     if os.environ.get("CLAUDE_TDD", "strict").lower() == "off":
         try:
             if str(event).startswith("PostToolUse"):
                 emit(event, [], guard)
                 save(root, state)
-        except Exception:
-            pass
+        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+            record_error("tdd_guard", e)
         return 0
     try:
         tool = data.get("tool_name") or ""
@@ -497,8 +505,8 @@ def main() -> int:
                 return 0
         s["ts"] = int(time.time())
         save(root, state)
-    except Exception:
-        pass
+    except Exception as e:  # błąd strażnika nie blokuje edycji (fałszywa blokada byłaby gorsza), ale w tym
+        record_error("tdd_guard", e)  # wywołaniu TDD nie zostało sprawdzone — dziennik i tf doctor to pokazują
     return 0
 
 

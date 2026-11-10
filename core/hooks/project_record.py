@@ -26,6 +26,13 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    def record_error(hook: str, exc: BaseException) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -673,23 +680,23 @@ def main(argv: list[str]) -> int:
     if "--hook-session" in args:
         try:
             print(status_text(root, compact=True))
-        except Exception:
-            pass
+        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+            record_error("project_record", e)
         return 0
     if "--hook-snapshot" in args:
         try:
             i = args.index("--hook-snapshot")
             snapshot(root, args[i + 1] if len(args) > i + 1 else "hook")
-        except Exception:
-            pass
+        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+            record_error("project_record", e)
         return 0
     if "--hook-stop" in args:
         try:
             reason = stop_reminder(root, json.load(sys.stdin))
             if reason:
                 print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
-        except Exception:
-            pass
+        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+            record_error("project_record", e)
         return 0
     if "--hook-index" in args:
         try:
@@ -698,8 +705,8 @@ def main(argv: list[str]) -> int:
             rec = record_dir(root)
             if rec in path.parents and path.name != "README.md" and "exports" not in path.parts:
                 write_index(root)
-        except Exception:
-            pass
+        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+            record_error("project_record", e)
         return 0
     cmd = args[0] if args else "status"
     if cmd == "init":

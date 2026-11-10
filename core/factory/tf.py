@@ -235,6 +235,12 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     r = subprocess.run([sys.executable, str((Path(".tf") / "factory") / "build.py"), "check"], capture_output=True, text=True, encoding="utf-8", errors="replace")
     out = r.stdout
     print("\n".join(ln for ln in out.splitlines() if not ln.startswith("⚠ skill ")) or "?")
+    hook_log = Path(".claude") / "hooks" / "hook_errors.py"
+    if hook_log.is_file():   # błędy hooków z ostatnich 7 dni — informacja, nie zmienia wyniku doctora
+        h = subprocess.run([sys.executable, str(hook_log), "--summary", "--days", "7"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if h.stdout.strip():
+            print(h.stdout.strip())
     missing = sorted(set(re.findall(r"tf add (pack-[a-z0-9-]+)", out)))
     stale = "nieaktualne" in out or "nieaktualny" in out
     if fix and stale:
