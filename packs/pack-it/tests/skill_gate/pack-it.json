@@ -68,7 +68,7 @@
   "offline": "2026-10-22"
  },
  "arch-privacy-compliance": {
-  "fingerprint": "391490f47ff6499f",
+  "fingerprint": "60d420172dd633ab",
   "offline": "2026-11-10"
  },
  "arch-quality-attributes": {
@@ -100,16 +100,17 @@
   "offline": "2026-10-22"
  },
  "be-business-app-patterns": {
-  "fingerprint": "077c9aac9126da41",
-  "offline": "2026-11-09",
-  "model": {
+  "fingerprint": "18ee341d7f217b53",
+  "offline": "2026-11-10",
+  "model_previous": {
    "report": ".tf/logs/evals/2026-11-09-bramka-be-business-app-patterns.md",
    "cost": 3.05,
    "haiku": "8/8",
    "haiku_bez_skilli": "5/5 treści",
    "sonnet": "8/8",
    "sonnet_bez_skilli": "5/5 treści",
-   "date": "2026-11-09"
+   "date": "2026-11-09",
+   "uwaga": "dla wcześniejszej wersji skilla"
   }
  },
  "be-database": {
@@ -245,7 +246,7 @@
   "offline": "2026-10-22"
  },
  "eng-repo-readiness": {
-  "fingerprint": "a6c4d7ddb0456e15",
+  "fingerprint": "ccebc7167fca17aa",
   "offline": "2026-11-10"
  },
  "eng-tech-debt-audit": {
@@ -472,8 +473,8 @@
   "offline": "2026-10-04"
  },
  "qa-change-review": {
-  "fingerprint": "cff37d8366bee583",
-  "offline": "2026-10-10"
+  "fingerprint": "975255aaff642ac4",
+  "offline": "2026-11-10"
  },
  "qa-exploratory-manual": {
   "fingerprint": "19d5e38c82137350",

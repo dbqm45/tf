@@ -97,6 +97,16 @@
             "czas\\w* .{0,40}(zielon|test)",
             "zmierz",
             "pomiar"
+          ],
+          [
+            "--wait",
+            "service_healthy"
+          ],
+          [
+            "świeży\\w* klon\\w*",
+            "czyst\\w* katalog\\w*",
+            "katalog\\w* tymczasow\\w*",
+            "od klonu"
           ]
         ]
       }
@@ -132,6 +142,17 @@
             "jedn\\w* polece",
             "make\\b",
             "just\\b"
+          ],
+          [
+            "--wait",
+            "service_healthy"
+          ],
+          [
+            "vitest related",
+            "findRelatedTests",
+            "nx affected",
+            "pytest --lf",
+            "testmon"
           ]
         ]
       }
