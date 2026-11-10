@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.13.0] — 2026-11-10
+### Added
+- add the artifact map and ERD guidance, fix two artifact paths (#205)
+
 ## [9.12.0] — 2026-11-10
 ### Added
 - **pack-it:** add developer experience checks to eng-repo-readiness (#204)
