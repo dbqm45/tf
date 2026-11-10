@@ -24,8 +24,8 @@
   "offline": "2026-11-08"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "7329571a6fad97f0",
-  "offline": "2026-11-08"
+  "fingerprint": "29ede9be01bae4ee",
+  "offline": "2026-11-10"
  },
  "core-factory-update": {
   "fingerprint": "49a19cdcb8cfce48",
@@ -52,8 +52,8 @@
   "offline": "2026-11-08"
  },
  "core-project-record": {
-  "fingerprint": "d5ae52157a2ec477",
-  "offline": "2026-11-08"
+  "fingerprint": "a84e71228febad56",
+  "offline": "2026-11-10"
  },
  "core-semver": {
   "fingerprint": "c913226a202728a7",
