@@ -1,0 +1,20 @@
+{
+  "Produkt i odkrywanie": ["odkrywani", "hipotez", "persona", "jtbd", "priorytet", "roadmap", "analityk", "metryk"],
+  "Wymagania i specyfikacja": ["wymagani", "kryteri", "historyjk", "specyfikac", "przypadk", "user story", "bdd"],
+  "Architektura": ["architektur", "adr", "c4", "modularn", "mikroserwis", "atrybut", "skalowan", "kontekst"],
+  "Domena": ["event storming", "agregat", "słownik", "mapa kontekstów", "archetyp", "dziedzin"],
+  "Backend i API": ["api", "endpoint", "openapi", "idempoten", "kolejk", "outbox", "webhook", "graphql"],
+  "Dane": ["baz", "migracj", "indeks", "sql", "etl", "hurtowni", "dbt", "jakość danych"],
+  "Frontend": ["komponent", "react", "angular", "next.js", "formularz", "tabel", "stan aplikacji", "renderowan"],
+  "UX i treści": ["ux", "makiet", "prototyp", "użyteczności", "dostępnoś", "wcag", "tekst", "system projektowy"],
+  "Testy i jakość": ["test", "regresj", "e2e", "playwright", "mutac", "tdd", "flaky", "wydajnoś"],
+  "Bezpieczeństwo": ["bezpieczeńst", "owasp", "uwierzytelni", "autoryzac", "sekret", "podatnoś", "zagrożeń", "kryptograf"],
+  "Operacje i niezawodność": ["ci/cd", "kontener", "kubernetes", "terraform", "wdrożeni", "slo", "incydent", "obserwowaln", "kopie zapasow"],
+  "Koszty i chmura": ["koszt", "finops", "chmur", "landing zone", "migracj"],
+  "AI i LLM": ["llm", "rag", "agent", "ewaluac", "prompt", "fine-tuning", "mcp", "halucynac"],
+  "Zgodność i prawo": ["rodo", "ai act", "nis2", "dora", "cra", "dane osobowe", "eaa", "licencj"],
+  "Proces i zespół": ["scrum", "kanban", "retrospektyw", "przegląd", "pull request", "commit", "wersj", "szacowan"],
+  "Dokumentacja": ["dokumentacj", "readme", "changelog", "runbook", "instrukcj"],
+  "Utrzymanie i dług": ["dług", "refaktor", "legacy", "aktualizacj", "zależnoś", "modernizac"],
+  "Aplikacja biznesowa": ["audit log", "soft delete", "impersonac", "operacje masow", "eksport", "uprawnieni", "subskrypc", "faktur"]
+}
