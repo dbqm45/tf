@@ -36,7 +36,7 @@ Sekcja A — luki w katalogu:
   planem w `core-delivery-lifecycle`; raport zbieżne / pojedyncze / rozbieżne, bramka: blokujące i poważne zamknięte śladem.
 
 Sekcja B — architektura agenta i autonomia:
-- [ ] **B1:** (B1b triaż ryzyka — zrobione: `tf risk`, sekcja w opisie PR Talosa; B1a polityka w hooku — następny PR) polityka autonomii `autonomy:` w `.tf/config/config.yaml` (poziomy `full` / `evidence` / `confirm` /
+- [x] **B1:** (B1b `tf risk` i B1a polityka w `guard_bash` — zrobione) polityka autonomii `autonomy:` w `.tf/config/config.yaml` (poziomy `full` / `evidence` / `confirm` /
   `deny` dla typów operacji), egzekwowana hookiem, z triażem ryzyka zmian na podstawie diffu (auth, finanse, schemat,
   osłabione testy → człowiek; zależności i dokumentacja przy zielonych testach → automatycznie); najpierw plan kroku
   do akceptacji.

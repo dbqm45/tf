@@ -48,21 +48,62 @@ DENY = [
     # opcje gita uruchamiające dowolny program: git_exec_option() (po tokenach, bez komunikatów commita)
 ]
 
+# Typy operacji polityki autonomii (B1a, `autonomy.operations` w .tf/factory/config.yaml i .tf/config/config.yaml):
+# domyślnie „confirm” (zgoda człowieka); projekt może tylko zaostrzyć do „deny” (decyzja człowieka 2026-11-10, D1).
 ASK = [
-    (r"\bsudo\b", "sudo"),
-    (r"\bgit\s+(reset\s+--hard|clean\s+-[a-zA-Z]*f|push\b)", "git reset --hard / clean -f / push"),
-    (r"\bterraform\s+(apply|import|state\s+(rm|mv))\b", "zmiana stanu infrastruktury"),
-    (r"\b(kubectl\s+(delete|apply|scale|rollout)|helm\s+(install|upgrade|uninstall|rollback))\b", "zmiana w klastrze Kubernetes"),
-    (r"\b(npm|pnpm|yarn)\s+publish\b|\bdocker\s+push\b", "publikacja paczki/obrazu"),
-    (r"\b(DROP\s+(DATABASE|TABLE|SCHEMA)|TRUNCATE\s+TABLE?)\b", "destrukcyjne SQL"),
-    (r"\b(curl|wget)\b.*(\s-d\s*@|--data(-binary)?\s*@|\s-T\s|--upload-file|-F\s+\S+=@|--post-file)", "wysyłanie pliku na zewnątrz"),
+    (r"\bsudo\b", "sudo", "sudo"),
+    (r"\bgit\s+(reset\s+--hard|clean\s+-[a-zA-Z]*f|push\b)", "git reset --hard / clean -f / push", "git_push"),
+    (r"\bterraform\s+(apply|import|state\s+(rm|mv))\b", "zmiana stanu infrastruktury", "infra_change"),
+    (r"\b(kubectl\s+(delete|apply|scale|rollout)|helm\s+(install|upgrade|uninstall|rollback))\b", "zmiana w klastrze Kubernetes",
+     "infra_change"),
+    (r"\b(npm|pnpm|yarn)\s+publish\b|\bdocker\s+push\b", "publikacja paczki/obrazu", "publish"),
+    (r"\b(DROP\s+(DATABASE|TABLE|SCHEMA)|TRUNCATE\s+TABLE?)\b", "destrukcyjne SQL", "destructive_sql"),
+    (r"\b(curl|wget)\b.*(\s-d\s*@|--data(-binary)?\s*@|\s-T\s|--upload-file|-F\s+\S+=@|--post-file)", "wysyłanie pliku na zewnątrz",
+     "data_upload"),
     (r"\bcrontab\b(?!\s+-l\b)|\bsystemctl\s+(--user\s+)?(enable|link)\b|\blaunchctl\s+(load|bootstrap)\b|"
      r"(LaunchAgents|LaunchDaemons|/etc/cron\.|/etc/systemd/|\.config/systemd/)",
-     "trwałość: cron, usługa systemd lub LaunchAgent"),
+     "trwałość: cron, usługa systemd lub LaunchAgent", "persistence"),
     (r"\b(npm\s+(i|install|add)|pnpm\s+(add|i|install)|yarn\s+add|bun\s+add)\b(\s+-{1,2}[\w-]+(=\S+)?)*\s+[@\w][^\s;&|]*",
-     "dodanie lub zmiana zależności (łańcuch dostaw)"),
-    (r"\b(kubectl|helm|terraform|aws|gcloud|az)\b.*\b(prod|production|prd)\b", "polecenie dotyczące PRODUKCJI"),
+     "dodanie lub zmiana zależności (łańcuch dostaw)", "dependency_add"),
+    (r"\b(kubectl|helm|terraform|aws|gcloud|az)\b.*\b(prod|production|prd)\b", "polecenie dotyczące PRODUKCJI", "prod_command"),
 ]
+OPERATIONS = sorted({op for _, _, op in ASK})
+LEVELS = {"confirm": 1, "deny": 2}
+
+
+def _project_root() -> Path:
+    return Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+
+
+def load_policy(root: Path | None = None) -> tuple[dict, list[str]]:
+    """Poziom każdego typu operacji i ostrzeżenia. Konfiguracja silnika i projektu może tylko zaostrzać: wartość
+    słabsza niż „confirm” (np. full, allow) albo nieznany typ jest ignorowany i zgłaszany w ostrzeżeniach."""
+    root = root or _project_root()
+    levels, warns = {op: "confirm" for op in OPERATIONS}, []
+    packs_py = next((c for c in (root / ".tf" / "factory" / "packs.py", Path(__file__).resolve().parents[2] / ".tf" / "factory"
+                                 / "packs.py") if c.is_file()), None)
+    if not packs_py:
+        return levels, warns
+    try:
+        spec = importlib.util.spec_from_file_location("tf_packs_guard", packs_py)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        sources = [root / ".tf" / "factory" / "config.yaml", root / ".tf" / "config" / "config.yaml"]
+        for src in sources:
+            if not src.is_file():
+                continue
+            ops = ((mod.load_yaml(src) or {}).get("autonomy") or {}).get("operations") or {}
+            for op, val in ops.items():
+                val = str(val).strip().lower()
+                if op not in levels:
+                    warns.append(f"{src}: nieznany typ operacji `{op}` (znane: {', '.join(OPERATIONS)})")
+                elif val not in LEVELS:
+                    warns.append(f"{src}: `{op}: {val}` ignorowane — polityka może tylko zaostrzać (confirm albo deny)")
+                elif LEVELS[val] > LEVELS[levels[op]]:
+                    levels[op] = val
+    except Exception as e:   # błąd konfiguracji nigdy nie rozluźnia — zostają wartości domyślne
+        warns.append(f"nie udało się wczytać polityki autonomii: {e}")
+    return levels, warns
 
 
 GIT_GLOBAL_OPTS = re.compile(
@@ -284,7 +325,17 @@ def decide(decision: str, reason: str) -> None:
     sys.exit(0)
 
 
+def check_policy() -> int:
+    levels, warns = load_policy()
+    for w in warns:
+        print(f"⚠ {w}")
+    print("Polityka autonomii (guard_bash): " + ", ".join(f"{op}={lv}" for op, lv in sorted(levels.items())))
+    return 1 if warns else 0
+
+
 def main() -> None:
+    if "--check-policy" in sys.argv[1:]:
+        sys.exit(check_policy())
     try:
         data = json.load(sys.stdin)
     except json.JSONDecodeError:
@@ -304,9 +355,15 @@ def main() -> None:
         check_writes(data, cmd)
     except Exception:
         pass   # błąd rozpoznawania zapisu nigdy nie blokuje (decide kończy proces przez SystemExit — nie łapiemy go)
-    for pattern, reason in ASK:
-        if re.search(pattern, cmd, re.IGNORECASE):
-            decide("ask", f"Wymaga zgody: {reason}.")
+    hits = [(reason, op) for pattern, reason, op in ASK if re.search(pattern, cmd, re.IGNORECASE)]
+    if hits:
+        levels, _ = load_policy()
+        for reason, op in hits:
+            if levels.get(op) == "deny":
+                decide("deny", f"Zablokowano przez politykę autonomii projektu ({op}: deny): {reason}. "
+                               f"Poproś człowieka o wykonanie ręczne.")
+        reason, op = hits[0]
+        decide("ask", f"Wymaga zgody ({op}): {reason}.")
     sys.exit(0)  # brak decyzji → normalny przepływ uprawnień
 
 
