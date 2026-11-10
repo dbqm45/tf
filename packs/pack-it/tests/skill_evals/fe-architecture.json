@@ -92,6 +92,7 @@
           ["monolit\\w* modularn\\w+", "modularn\\w+ monolit\\w*", "niezależn\\w+ wdroże\\w+"]
         ]
       }
-    }
+    },
+    {"id": "tabela-zamowien-100-tys", "expect": "trigger", "prompt": "Panel administracyjny ma tabelę zamówień (ok. 100 tys. rekordów) z filtrowaniem, sortowaniem i zaznaczaniem. Po odświeżeniu strony filtry znikają, przewijanie się zacina, czytnik ekranu nie mówi, po czym tabela jest posortowana, a „zaznacz wszystko” zaznacza tylko widoczną stronę, choć użytkownicy myślą, że wszystkie wyniki. Jak to poprawić? Odpowiedz zwięźle.", "checks": {"all": [["URL", "query string", "searchParams", "parametr\\w* adresu"], ["po stronie serwera", "serwer\\w* .{0,30}(sortuj|filtruj|paginuj|stronicuj)", "paginac\\w*", "stronicowan\\w*"], ["wirtualiz\\w*", "virtual\\w*", "windowing"], ["aria-sort"], ["wszystkie pasujące", "wszystkich pasujących", "filtr\\w* .{0,40}(zaznacz|operacj)", "(zaznacz|operacj)\\w* .{0,40}filtr\\w*", "liczb\\w* (wszystkich )?(wyników|rekordów)"]]}}
   ]
 }

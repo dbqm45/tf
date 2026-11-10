@@ -34,6 +34,18 @@ Rozszerzenia istniejących skilli (nowe scenariusze do ich plików ewaluacji):
 - `be-api-design` — filtrowanie i sortowanie po stronie serwera (lista dozwolonych pól, indeksy), paginacja
   kursorowa, eksport w tle (zadanie → plik → powiadomienie, limit, dane osobowe w pliku).
 
+### A2b — plan realizacji (2026-11-10, decyzja człowieka: „działaj A2b”; bez płatnych ewaluacji — limit tygodniowy)
+`be-api-design` ma już paginację kursorową i filtry z allowlisty (`references/http-w-praktyce.md` §4) — bez
+powtórzeń. Nowe: eksport i tabele po stronie interfejsu.
+1. Scenariusze (najpierw): `fe-architecture` / `tabela-zamowien-100-tys`; `be-api-design` / `eksport-csv-duzy`.
+2. `fe-architecture/references/data-tables.md`: stan filtrów, sortowania i strony w URL; paginacja i sortowanie po
+   stronie serwera; wirtualizacja wierszy; „zaznacz wszystkie pasujące” jako filtr (operacja masowa:
+   be-business-app-patterns); paleta poleceń; dostępność (`<table>`, `<th scope>`, `aria-sort`, ogłaszanie wyników).
+3. `be-api-design/references/eksport-danych.md`: próg synchroniczny / w tle (`202` + zasób zadania), te same filtry
+   i uprawnienia co lista, spójna migawka, limit, plik z wygasającym linkiem, dane osobowe i kolumny, wstrzykiwanie
+   formuł do CSV, audyt, idempotencja żądania.
+4. Odnośniki w SKILL.md (indeks, checklista, słowa); bramki bez modelu.
+
 ## A2c — moduł `tf analyze` `authz` w `pack-it`, osobny PR (TDD)
 Wzorzec modułu `security` (`packs/pack-it/analyzers/security/`): `analyzer.yaml`, `scripts/scan.py`, fixtures
 z trafieniami prawdziwymi i fałszywymi, bramka `min_recall` / `max_false_positives`. Reguły startowe:
