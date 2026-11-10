@@ -64,6 +64,7 @@ problemów; moduły dostarczają nakładki (`pack-it`):
 | `security` | sekrety w kodzie, pliki `.env` w repo, niebezpieczne API, wyłączony TLS, słaby skrót haseł, brak lockfile'a |
 | `architecture` | cykle importów, zależności w obie strony między grupami modułów, huby (graf importów) |
 | `authz` | endpointy zmieniające dane (POST/PUT/PATCH/DELETE) bez widocznego sprawdzenia uprawnień: Express, NestJS, Next.js, FastAPI, Spring |
+| `data-classification` | pola z danymi osobowymi bez klasy w migracjach, schematach i modelach (szkic inwentarza danych), dane osobowe w logach i w analityce |
 
 - `tf analyze --list` pokazuje moduły i to, czy pasują do repo; `tf analyze` uruchamia wszystkie pasujące,
   `--only security,authz` wybrane, `--since <commit>` tylko pliki zmienione od commita, `--top N` skraca raport.

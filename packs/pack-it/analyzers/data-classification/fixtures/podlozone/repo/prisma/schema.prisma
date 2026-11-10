@@ -1,0 +1,5 @@
+model Customer {
+  id        Int      @id @default(autoincrement())
+  pesel     String
+  createdAt DateTime @default(now())
+}
