@@ -11,7 +11,10 @@ Wykrywa (manifesty do głębokości 2, z pominięciem node_modules, .git, dist, 
 - runner testów i komendę „na sucho” (lista testów bez wykonania);
 - etapy CI: lint, test, build, typy, bezpieczeństwo (GitHub Actions, GitLab CI, Azure, CircleCI, Bitbucket, Jenkins);
 - konfigurację: .gitignore, TypeScript strict, linter, formatter, .editorconfig, .env.example;
-- pliki instrukcji agenta (CLAUDE.md, AGENTS.md, .claude/).
+- pliki instrukcji agenta (CLAUDE.md, AGENTS.md, .claude/);
+- pętlę deweloperską: polecenie startowe (make/just/Taskfile, skrypty dev/setup, sekcja w README), usługi
+  potrzebne kodowi (Postgres, Redis…) i ich compose z healthcheckiem, devcontainer, dane startowe, wartości
+  w .env.example wyglądające na prawdziwe sekrety (tylko nazwy zmiennych w wyniku), polecenie testów powiązanych.
 Audytu, testów ani builda NIE uruchamia — robi to agent za zgodą człowieka, z komendami podanymi w wyniku.
 
 Werdykt projektu: krytyczne (brak runnera testów albo ≥3 ustalenia wysokie) / wymaga-uwagi / zdrowe.
@@ -167,6 +170,131 @@ def runner_for(family: str, mdir: Path, manifest: Path) -> tuple[str | None, str
     return None, None
 
 
+# Pętla deweloperska (DX): usługi, których kod potrzebuje lokalnie — po zależnościach i obrazach w compose.
+SERVICE_DEPS = {
+    "postgres": r"\b(pg|postgres|postgresql|psycopg2?(-binary)?|asyncpg|pgx|lib/pq|org\.postgresql|npgsql|pg-promise)\b",
+    "mysql": r"\b(mysql2?|pymysql|mysqlclient|mysql-connector[\w-]*|go-sql-driver/mysql|mysql-connector-j)\b",
+    "redis": r"\b(redis|ioredis|bullmq|go-redis|spring-boot-starter-data-redis|valkey)\b",
+    "mongodb": r"\b(mongodb|mongoose|pymongo|motor|mongo-driver|spring-boot-starter-data-mongodb)\b",
+    "rabbitmq": r"\b(amqplib|pika|aio-pika|spring-boot-starter-amqp)\b",
+    "kafka": r"\b(kafkajs|confluent-kafka|kafka-python|spring-kafka|segmentio/kafka-go)\b",
+    "elasticsearch": r"(@elastic/elasticsearch|\belasticsearch\b|\bopensearch(-py)?\b)",
+}
+SERVICE_IMAGES = {"postgres": r"postgres|postgis|timescale", "mysql": r"mysql|mariadb", "redis": r"redis|valkey",
+                  "mongodb": r"mongo", "rabbitmq": r"rabbitmq", "kafka": r"kafka|redpanda",
+                  "elasticsearch": r"elasticsearch|opensearch"}
+COMPOSE_FILES = ["compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml", "compose.dev.yaml",
+                 "compose.dev.yml", "docker-compose.dev.yml", "docker-compose.override.yml"]
+SETUP_TARGETS = {"setup", "bootstrap", "init", "install", "dev", "up", "start", "run", "serve"}
+README_START = re.compile(r"^#{1,4}\s*(quick ?start|getting started|szybki start|uruchomienie|jak uruchomić|"
+                          r"local development|development setup|praca lokalna|setup)\b", re.I | re.M)
+SECRET_VALUE = re.compile(r"sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|AKIA[0-9A-Z]{16}|"
+                          r"xox[abprs]-[\w-]{10,}|AIza[0-9A-Za-z_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY|"
+                          r"sk_live_[A-Za-z0-9]{16,}|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}")
+PLACEHOLDER = re.compile(r"example|changeme|change-me|your|xxx|dummy|fake|placeholder|dev|test|local|<|\$\{", re.I)
+
+
+def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict, list[tuple]]:
+    """Fakty o pętli deweloperskiej i ustalenia obszaru `dx` (bez uruchamiania czegokolwiek)."""
+    findings, setup = [], []
+    for name in ("Makefile", "makefile", "GNUmakefile"):
+        text = read(root / name)
+        setup += [f"make {t}" for t in re.findall(r"^([A-Za-z][\w-]*)\s*:(?!=)", text, re.M) if t in SETUP_TARGETS]
+    for name in ("justfile", "Justfile", ".justfile"):
+        text = read(root / name)
+        setup += [f"just {t}" for t in re.findall(r"^([A-Za-z][\w-]*)[^:=\n]*:(?!=)", text, re.M) if t in SETUP_TARGETS]
+    for name in ("Taskfile.yml", "Taskfile.yaml"):
+        text = read(root / name)
+        setup += [f"task {t}" for t in re.findall(r"^  ([A-Za-z][\w-]*):\s*$", text, re.M) if t in SETUP_TARGETS]
+    pkgs = [f for f in files if f.name == "package.json"]
+    all_deps: dict = {}
+    for pkg in pkgs:
+        deps, scripts = js_deps(pkg)
+        all_deps.update(deps)
+        if pkg.parent == root:
+            setup += [("npm start" if k == "start" else f"npm run {k}") for k in scripts if k in SETUP_TARGETS]
+    readme = next((read(root / n) for n in ("README.md", "readme.md", "README.rst", "README") if (root / n).exists()), "")
+    m = README_START.search(readme)
+    if m:
+        setup.append(f"README: {m.group(0).lstrip('#').strip()}")
+    if families and not setup:
+        findings.append(("dx", "średnia", "brak jednego polecenia startowego (make/just/Taskfile, skrypt dev/setup) "
+                         "ani instrukcji uruchomienia w README", "—",
+                         "dodaj `make setup` lub `just dev` (zależności, usługi, dane startowe) i opisz w README "
+                         "i CLAUDE.md — agent i nowa osoba zaczynają od jednego polecenia"))
+    # zależności usług
+    dep_text = " ".join(all_deps) + " " + " ".join(
+        read(f) for f in files if f.name in ("pyproject.toml", "requirements.txt", "requirements-dev.txt", "Pipfile",
+                                             "Gemfile", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts"))
+    needed = sorted(k for k, rx in SERVICE_DEPS.items() if re.search(rx, dep_text, re.I))
+    compose = next((root / n for n in COMPOSE_FILES if (root / n).is_file()), None)
+    services, no_health, covered = [], [], set()
+    if compose:
+        text = read(compose)
+        parts = ("\n" + text).split("\nservices:", 1)
+        body = parts[1] if len(parts) == 2 else ""
+        blocks = re.split(r"^  ([\w.-]+):\s*$", body, flags=re.M)
+        for i in range(1, len(blocks), 2):
+            name, block = blocks[i], blocks[i + 1]
+            services.append(name)
+            kinds = {kind for kind, rx in SERVICE_IMAGES.items()
+                     if re.search(rx, name + " " + " ".join(re.findall(r"image:\s*(\S+)", block)), re.I)}
+            covered |= kinds
+            if kinds and "healthcheck:" not in block:   # healthcheck liczy się dla usług, na które czeka aplikacja
+                no_health.append(name)
+    devcontainer = (root / ".devcontainer" / "devcontainer.json").is_file() or (root / ".devcontainer.json").is_file()
+    if devcontainer and "dockerComposeFile" in read(root / ".devcontainer" / "devcontainer.json"):
+        covered |= set(needed) if compose else set()
+    testcontainers = bool(re.search(r"testcontainers", dep_text, re.I))
+    missing = [k for k in needed if k not in covered]
+    if missing and not testcontainers:
+        findings.append(("dx", "średnia", f"zależności usług ({', '.join(missing)}) bez lokalnego środowiska "
+                         "(compose, devcontainer, Testcontainers)", "—",
+                         "dodaj `compose.yaml` z tymi usługami i healthcheckami — agent uruchomi testy bez "
+                         "ręcznej konfiguracji"))
+    if no_health:
+        findings.append(("dx", "niska", f"usługi w compose bez healthcheck: {', '.join(no_health)}",
+                         compose.name if compose else "—",
+                         "dodaj healthcheck i `depends_on: condition: service_healthy` — testy nie startują przed bazą"))
+    # dane startowe
+    seed = any(re.search(r"seed", f.name, re.I) for f in walk(root, 3)) or any(
+        "seed" in k for pkg in pkgs for k in js_deps(pkg)[1]) or "loaddata" in read(root / "Makefile")
+    if any(k in needed for k in ("postgres", "mysql", "mongodb")) and not seed:
+        findings.append(("dx", "niska", "brak danych startowych (seed) dla lokalnej bazy", "—",
+                         "dodaj idempotentny skrypt danych startowych z danymi syntetycznymi (bez kopii produkcji)"))
+    # sekrety w .env.example — tylko nazwy zmiennych, nigdy wartości
+    leaked = []
+    for line in read(root / ".env.example").splitlines():
+        mm = re.match(r"^\s*(?:export\s+)?([A-Za-z_][\w]*)\s*=\s*(.*)$", line)
+        if not mm or not mm.group(2).strip():
+            continue
+        name, value = mm.group(1), mm.group(2).strip().strip("\"'")
+        if SECRET_VALUE.search(value) or (re.search(r"KEY|SECRET|TOKEN|PASSWORD|PRIVATE", name, re.I)
+                                          and len(value) >= 20 and not PLACEHOLDER.search(value)):
+            leaked.append(name)
+    if leaked:
+        findings.append(("dx", "wysoka", f".env.example zawiera wartości wyglądające na prawdziwe sekrety: "
+                         f"{', '.join(leaked)}", ".env.example",
+                         "zostaw puste wartości albo oczywiste atrapy; jeśli klucz był prawdziwy — unieważnij go "
+                         "(ops-secrets-identities)"))
+    # testy powiązane ze zmianą
+    runners = [f.get("runner") or "" for f in families]
+    related = None
+    if (root / "nx.json").is_file():
+        related = "npx nx affected -t test"
+    elif "vitest" in runners:
+        related = "npx vitest related <zmienione pliki> --run"
+    elif "jest" in runners:
+        related = "npx jest --findRelatedTests <zmienione pliki>"
+    elif "pytest" in runners:
+        related = "pytest --lf (ostatnio nieudane) albo pytest-testmon (testy dotknięte zmianą)"
+    elif "go test" in runners:
+        related = "go test ./<zmieniony pakiet>/..."
+    dx = {"setup": setup, "services": services, "services_without_healthcheck": no_health,
+          "services_needed": needed, "devcontainer": devcontainer, "related_tests": related}
+    return dx, findings
+
+
 def detect(root: Path) -> dict:
     families, findings = [], []
     seen = set()
@@ -261,6 +389,8 @@ def detect(root: Path) -> dict:
             findings.append(("konfiguracja", "niska", msg, "—", f"dodaj {name}"))
 
     instructions = [n for n in ("CLAUDE.md", "AGENTS.md", ".claude") if (root / n).exists()]
+    dx, dx_findings = dev_loop(root, files, families)
+    findings += dx_findings
 
     high = [f for f in findings if f[1] == "wysoka"]
     no_runner = any("runnera testów" in f[2] for f in findings)
@@ -273,6 +403,7 @@ def detect(root: Path) -> dict:
         "ci": ci,
         "config": config,
         "instructions": instructions,
+        "dx": dx,
         "findings": [{"area": a, "severity": s, "message": m, "evidence": e, "fix": fx} for a, s, m, e, fx in findings],
         "verdict": verdict,
         "note": "audyt, testy i build nie były uruchamiane; krytyczne podatności z audytu podnoszą werdykt",
@@ -291,7 +422,11 @@ def to_text(r: dict) -> str:
     st = r["ci"]["stages"]
     out += ["", f"CI: {', '.join(r['ci']['files']) or 'BRAK'}"
             + (" — " + " · ".join(f"{k} {'✓' if v else '✗'}" for k, v in st.items()) if st else ""),
-            f"Instrukcje agenta: {', '.join(r['instructions']) or 'BRAK'}", "",
+            f"Instrukcje agenta: {', '.join(r['instructions']) or 'BRAK'}",
+            f"Pętla deweloperska: start {', '.join(r['dx']['setup']) or 'BRAK'} · usługi "
+            f"{', '.join(r['dx']['services']) or '—'} (potrzebne: {', '.join(r['dx']['services_needed']) or '—'}) · "
+            f"devcontainer {'✓' if r['dx']['devcontainer'] else '✗'} · testy powiązane: "
+            f"{r['dx']['related_tests'] or '—'}", "",
             "| Waga | Obszar | Ustalenie | Dowód | Poprawka |", "|---|---|---|---|---|"]
     for x in r["findings"]:
         out.append(f"| {x['severity']} | {x['area']} | {x['message']} | {x['evidence']} | {x['fix']} |")

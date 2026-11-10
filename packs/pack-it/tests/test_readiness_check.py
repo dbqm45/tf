@@ -38,7 +38,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as d:
         # Repo „zdrowe”: TS strict, lockfile, vitest, CI z etapami, linter, formatter, instrukcje agenta
         good = Path(d) / "good"
-        write(good, "package.json", json.dumps({"name": "a", "scripts": {"test": "vitest run", "lint": "eslint ."},
+        write(good, "package.json", json.dumps({"name": "a", "scripts": {"dev": "vite", "test": "vitest run", "lint": "eslint ."},
                                                  "devDependencies": {"vitest": "3.2.4", "typescript": "5.9.0",
                                                                      "eslint": "9.39.1", "prettier": "3.6.0"}}))
         write(good, "package-lock.json", "{}")
@@ -87,6 +87,51 @@ def main() -> int:
               and "collect-only" in (fam["python"].get("dry_run") or ""), f"python w podkatalogu: {fam}")
         check("python" in fam and "słaby" in (fam["python"].get("lockfile_note") or ""),
               f"requirements.txt jako słaby zamiennik lockfile: {fam}")
+
+        # DX: pętla deweloperska kompletna — polecenie startowe, usługi lokalnie z healthcheckiem, dane startowe,
+        # fikcyjne wartości w .env.example, polecenie testów powiązanych ze zmianą
+        dxg = Path(d) / "dx-good"
+        write(dxg, "package.json", json.dumps({"name": "c", "scripts": {"test": "vitest run", "seed": "tsx db/seed.ts"},
+                                                "dependencies": {"pg": "8.16.0"},
+                                                "devDependencies": {"vitest": "3.2.4"}}))
+        write(dxg, "package-lock.json", "{}")
+        write(dxg, ".gitignore", "node_modules\n")
+        write(dxg, "Makefile", "setup:\n\tnpm ci && docker compose up -d && npm run seed\n\ntest:\n\tnpm test\n")
+        write(dxg, "compose.yaml", "services:\n  app:\n    build: .\n  postgres:\n    image: postgres:17\n"
+                                   "    healthcheck:\n      test: [\"CMD\", \"pg_isready\"]\n")
+        write(dxg, ".env.example", "DATABASE_URL=postgres://dev:dev@localhost:5432/app\nSTRIPE_KEY=\n")
+        r = run(str(dxg), "--json")
+        data = json.loads(r.stdout or "{}")
+        dx = data.get("dx", {})
+        dxf = [x for x in data.get("findings", []) if x.get("area") == "dx"]
+        check(not dxf, f"DX kompletne: bez ustaleń dx: {dxf}")
+        check("make setup" in (dx.get("setup") or []), f"DX: polecenie startowe z Makefile: {dx}")
+        check(dx.get("services") == ["app", "postgres"] and dx.get("services_without_healthcheck") == [],
+              f"DX: usługi z compose i healthcheck: {dx}")
+        check("vitest related" in (dx.get("related_tests") or ""), f"DX: testy powiązane ze zmianą: {dx}")
+
+        # DX: brak polecenia startowego, usługi (Postgres, Redis) bez środowiska lokalnego, klucz w .env.example,
+        # brak danych startowych
+        dxb = Path(d) / "dx-bad"
+        write(dxb, "package.json", json.dumps({"name": "e", "scripts": {"test": "vitest run"},
+                                                "dependencies": {"pg": "8.16.0", "ioredis": "5.6.0"},
+                                                "devDependencies": {"vitest": "3.2.4"}}))
+        write(dxb, "package-lock.json", "{}")
+        write(dxb, ".gitignore", "node_modules\n")
+        write(dxb, ".env.example", "DATABASE_URL=\nOPENAI_API_KEY=sk-proj-" + "Ab3dE6gH9jK2mN5pQ8sT1vW4yZ7" + "\n")
+        r = run(str(dxb), "--json")
+        data = json.loads(r.stdout or "{}")
+        dxf = {x.get("message", ""): x.get("severity") for x in data.get("findings", []) if x.get("area") == "dx"}
+        joined = " | ".join(f"{s}:{m}" for m, s in dxf.items())
+        check(any("polecenia startowego" in m and s == "średnia" for m, s in dxf.items()),
+              f"DX: brak polecenia startowego (średnia): {joined}")
+        check(any("postgres" in m and "redis" in m and s == "średnia" for m, s in dxf.items()),
+              f"DX: usługi bez środowiska lokalnego (średnia): {joined}")
+        check(any(".env.example" in m and s == "wysoka" for m, s in dxf.items()),
+              f"DX: sekret w .env.example (wysoka): {joined}")
+        check(any("danych startowych" in m and s == "niska" for m, s in dxf.items()),
+              f"DX: brak danych startowych (niska): {joined}")
+        check("sk-proj-Ab3d" not in r.stdout, "DX: wartość klucza nie trafia do wyniku")
 
         # Tekst: tabela i rodzina bez audytu wbudowanego → „pominięto”, nie „0”
         java = Path(d) / "java"

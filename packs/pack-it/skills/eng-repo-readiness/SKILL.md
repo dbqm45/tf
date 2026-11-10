@@ -3,8 +3,8 @@ name: eng-repo-readiness
 description: Użyj, gdy repo ma być gotowe dla agentów — szkielet z generatora albo audyt lockfile, testów, CI.
 metadata:
   przeglad: "2027-10-10"
-  katalog: "Użyj, gdy repozytorium ma być gotowe do bezpiecznej, weryfikowalnej pracy agentów — nowy projekt: szkielet z oficjalnego generatora z decyzji o stacku, świeżość startera, katalog tymczasowy i polityka konfliktów plików, raport z kodem wyjścia; istniejący projekt: audyt tylko do odczytu (lockfile, komenda audytu zależności, runner testów na sucho, etapy CI, konfiguracja, cztery bramki stacku z kompensacją w CLAUDE.md), werdykt i lista poprawek. Skrypt scripts/readiness_check.py. Nie do wyboru stacku (arch-tech-selection), audytu długu w kodzie (eng-tech-debt-audit), dopasowania skilli do wersji (core-stack-sync) ani podnoszenia zależności (ops-dependency-upgrades)."
-  slowa: "gotowość repo, repo gotowe dla agentów, czy agent może tu pracować, przejmujemy repo, postaw szkielet, szkielet projektu, scaffold, bootstrap, generator projektu, starter, create-app, nowy projekt od zera, audyt repo, health check repo, brak lockfile, brak testów, runner testów, porzucony starter, generator zwrócił błąd"
+  katalog: "Użyj, gdy repozytorium ma być gotowe do bezpiecznej, weryfikowalnej pracy agentów — nowy projekt: szkielet z oficjalnego generatora z decyzji o stacku, świeżość startera, katalog tymczasowy i polityka konfliktów plików, raport z kodem wyjścia; istniejący projekt: audyt tylko do odczytu (lockfile, komenda audytu zależności, runner testów na sucho, etapy CI, konfiguracja, cztery bramki stacku z kompensacją w CLAUDE.md, pętla deweloperska: jedno polecenie startowe, usługi lokalnie z healthcheckiem, dane startowe, testy powiązane, czas od klonu do zielonych testów), werdykt i lista poprawek. Skrypt scripts/readiness_check.py. Nie do wyboru stacku (arch-tech-selection), audytu długu w kodzie (eng-tech-debt-audit), dopasowania skilli do wersji (core-stack-sync) ani podnoszenia zależności (ops-dependency-upgrades)."
+  slowa: "gotowość repo, repo gotowe dla agentów, czy agent może tu pracować, przejmujemy repo, postaw szkielet, szkielet projektu, scaffold, bootstrap, generator projektu, starter, create-app, nowy projekt od zera, audyt repo, health check repo, brak lockfile, brak testów, runner testów, porzucony starter, generator zwrócił błąd, developer experience, DX, uruchomienie projektu lokalnie, nowa osoba nie może uruchomić projektu, onboarding programisty, devcontainer, docker compose dla deweloperów, make setup, justfile, dane startowe, seed, agent nie potrafi uruchomić testów, testy wymagają bazy, czas od klonu do zielonych testów, testy trwają za długo"
 ---
 
 # Gotowość repozytorium do pracy agentów
@@ -47,7 +47,8 @@ z rozmowy nie zastępują pliku.
 ## Ścieżka B — istniejący projekt (audyt tylko do odczytu)
 Najpierw fakty, potem ocena:
 `python3 .claude/hooks/detect_stack.py` oraz **uruchom** `python3 .claude/skills/eng-repo-readiness/scripts/readiness_check.py [katalog] [--json]`
-(rodziny, lockfile, komenda audytu, runner i komenda na sucho, etapy CI, konfiguracja, pliki instrukcji; kod 1 =
+(rodziny, lockfile, komenda audytu, runner i komenda na sucho, etapy CI, konfiguracja, pliki instrukcji, pętla
+deweloperska; kod 1 =
 ustalenia wysokiej wagi). Skrypt niczego nie uruchamia — audyt i listę testów puszczasz sam, za zgodą człowieka.
 1. **Fundament:** lockfile właściwy dla ekosystemu (`requirements.txt` to słaby zamiennik), wynik audytu
    zależności (bezpośrednie osobno od przechodnich), zależności zaległe o ≥ 1–2 wersje główne (tylko główne luki).
@@ -62,10 +63,20 @@ ustalenia wysokiej wagi). Skrypt niczego nie uruchamia — audyt i listę testó
    wersjonowana dokumentacja**. Dla oblanej bramki: **gotowe do wklejenia reguły do CLAUDE.md**, np. „trasy
    w `src/routes/`, każda eksportuje `router`; middleware w kolejności rejestracji w `src/app.js`”. Nie „dodaj
    dokumentację”.
-4. **Werdykt** (informuje, nie blokuje; nigdy nie rekomenduje zmiany stacku):
+4. **Pętla deweloperska (DX):**
+   - jedno polecenie startowe (`make setup` / `just setup`), opisane w README i CLAUDE.md;
+   - usługi (baza, Redis, kolejka) w `compose.yaml` z healthcheckiem, `docker compose up -d --wait`, albo
+     Testcontainers;
+   - idempotentne dane startowe z danymi syntetycznymi i `.env.example` bez prawdziwych kluczy;
+   - polecenie testów powiązanych ze zmianą (`vitest related`, `jest --findRelatedTests`, `nx affected`,
+     `pytest --lf`) wpisane w CLAUDE.md jako to, które agent puszcza po każdej zmianie.
+   Fakty daje sekcja `dx` skryptu. Miarą jest **czas od klonu do zielonych testów**: świeży klon w katalogu
+   tymczasowym, tylko według README, `time make setup && time make test` — za zgodą człowieka, wynik w raporcie.
+   Procedura i progi: `references/petla-deweloperska.md`.
+5. **Werdykt** (informuje, nie blokuje; nigdy nie rekomenduje zmiany stacku):
    - stack: `gotowe` / `gotowe-z-kompensacją` / `duże-tarcie`;
    - projekt: `zdrowe` / `wymaga-uwagi` / `krytyczne` (krytyczne podatności, brak runnera testów, ≥ 3 luki wysokie).
-5. **Lista poprawek** w kolejności wpływu na pracę agenta (brak testów > niski alert audytu): co · dlaczego dla
+6. **Lista poprawek** w kolejności wpływu na pracę agenta (brak testów > niski alert audytu): co · dlaczego dla
    agenta · konkretne polecenie · wysiłek (szybko < 5 min / średnio 15–30 min / duże > 1 h). Nic nie naprawiasz sam.
 
 Raport: `docs/project/07-review/<data>-gotowosc-repo.md` (core-project-record). Szablon obu raportów:
@@ -87,6 +98,8 @@ podatności — czekamy na opiekuna albo `overrides` po przeglądzie.
 - [ ] (B) fakty ze skryptu i poleceń przed oceną; każda ocena z dowodem `plik` lub polecenie
 - [ ] (B) pominięty audyt opisany jako „pominięto”, nie „0”; bezpośrednie osobno od przechodnich
 - [ ] kompensacje jako konkretne reguły do CLAUDE.md; runner testów działa albo jest poprawką nr 1
+- [ ] (B) jedno polecenie startowe, usługi z healthcheckiem, dane startowe, testy powiązane w CLAUDE.md; czas od
+  klonu do zielonych testów zmierzony albo wpisany jako „nie mierzono”
 - [ ] raport w `docs/project/`; nic nie zainstalowano ani nie naprawiono bez zgody
 
 ## Źródła

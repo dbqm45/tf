@@ -7,11 +7,19 @@
       "prompt": "Mamy zaakceptowaną decyzję o stacku (SvelteKit + TypeScript). W repo są już CLAUDE.md, katalog .claude/ i docs/project/. Postaw szkielet aplikacji tak, żeby nic z naszych plików nie zginęło. Jak to zrobić krok po kroku? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["oficjaln\\w* generator|sv create|create-\\w+|generator\\w* projektu"],
-          ["\\.scaffold|katalog\\w* tymczasow|polityk\\w* konflikt|istniejący wygrywa"],
-          ["kod\\w* wyjścia|zatrzym|stop|nie dopisuj"]
+          [
+            "oficjaln\\w* generator|sv create|create-\\w+|generator\\w* projektu"
+          ],
+          [
+            "\\.scaffold|katalog\\w* tymczasow|polityk\\w* konflikt|istniejący wygrywa"
+          ],
+          [
+            "kod\\w* wyjścia|zatrzym|stop|nie dopisuj"
+          ]
         ],
-        "none": ["skopiuj pliki z pamięci"]
+        "none": [
+          "skopiuj pliki z pamięci"
+        ]
       }
     },
     {
@@ -20,9 +28,15 @@
       "prompt": "Przejmujemy repo z API w Express (czysty JavaScript, bez TypeScriptu). Czy agenci mogą w nim od jutra bezpiecznie pracować? Co sprawdzić, w jakiej kolejności i jaki ma być wynik? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["lockfile|npm audit|audyt\\w* zależności"],
-          ["runner\\w* testów|--listTests|vitest list|na sucho|bez testów"],
-          ["kompensac|reguł\\w* do CLAUDE|gotowe-z-kompensacją|bramk"]
+          [
+            "lockfile|npm audit|audyt\\w* zależności"
+          ],
+          [
+            "runner\\w* testów|--listTests|vitest list|na sucho|bez testów"
+          ],
+          [
+            "kompensac|reguł\\w* do CLAUDE|gotowe-z-kompensacją|bramk"
+          ]
         ]
       }
     },
@@ -32,9 +46,15 @@
       "prompt": "Starter projektu, którego chcemy użyć, wygląda na porzucony. Jak ocenić jego świeżość przed startem i co zrobić, gdy generator wywali się w połowie tworzenia projektu? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["npm view|time\\.modified|pushed_at|dat\\w* ostatniego wydania"],
-          ["3 mies|6 mies|starzej|nieaktualn"],
-          ["nie (dopisuj|uzupełniaj)|ręczn\\w* (uzupełni|dopis)|zatrzym|zostaw\\w* do inspekcji"]
+          [
+            "npm view|time\\.modified|pushed_at|dat\\w* ostatniego wydania"
+          ],
+          [
+            "3 mies|6 mies|starzej|nieaktualn"
+          ],
+          [
+            "nie (dopisuj|uzupełniaj)|ręczn\\w* (uzupełni|dopis)|zatrzym|zostaw\\w* do inspekcji"
+          ]
         ]
       }
     },
@@ -43,6 +63,78 @@
       "expect": "no-trigger",
       "prompt": "Wybieramy stack dla nowej aplikacji rezerwacyjnej: SvelteKit czy Next.js, jaka baza i hosting? Porównaj kandydatów w macierzy i zarekomenduj jeden. Odpowiedz zwięźle.",
       "neighbor": "arch-tech-selection"
+    },
+    {
+      "id": "dx-wejscie-do-projektu",
+      "expect": "trigger",
+      "prompt": "Nowa osoba w zespole potrzebuje dwóch dni, żeby uruchomić nasz projekt lokalnie (Node, PostgreSQL, Redis, zmienne środowiskowe przekazywane na Slacku). Agenci AI też często nie potrafią odpalić testów. Co zmienić w repozytorium, żeby to skrócić, i jak sprawdzić, że się udało? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "make\\b",
+            "just\\b",
+            "jedn\\w* polece",
+            "npm run (dev|setup)"
+          ],
+          [
+            "compose"
+          ],
+          [
+            "healthcheck",
+            "service_healthy",
+            "gotowoś\\w* (baz|usług)"
+          ],
+          [
+            "seed",
+            "dan\\w* startow",
+            "dan\\w* syntetyczn"
+          ],
+          [
+            "\\.env\\.example"
+          ],
+          [
+            "od klon\\w*",
+            "czas\\w* .{0,40}(zielon|test)",
+            "zmierz",
+            "pomiar"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "dx-testy-wymagaja-uslug",
+      "expect": "trigger",
+      "prompt": "Agent w naszym repo nie potrafi uruchomić testów integracyjnych, bo wymagają Postgresa i Redisa, a on nie wie, jak je postawić. Testy jednostkowe trwają 6 minut i agent puszcza je w całości po każdej zmianie. Jak przygotować repo, żeby agent sam uruchamiał testy szybko i powtarzalnie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "compose",
+            "testcontainers"
+          ],
+          [
+            "healthcheck",
+            "service_healthy",
+            "gotowoś"
+          ],
+          [
+            "related",
+            "findRelatedTests",
+            "affected",
+            "testmon",
+            "powiązan\\w* (ze zmian|test)",
+            "dotknięt"
+          ],
+          [
+            "CLAUDE\\.md",
+            "AGENTS\\.md"
+          ],
+          [
+            "jedn\\w* polece",
+            "make\\b",
+            "just\\b"
+          ]
+        ]
+      }
     }
   ]
 }
