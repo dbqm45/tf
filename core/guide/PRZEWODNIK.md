@@ -109,6 +109,8 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
 ## 6. Bezpieczeństwo i rzetelność
 - **Hooki-strażnicy** (`guard_bash`, `guard_paths`, `cleanroom_guard`) blokują groźne polecenia, odczyt sekretów
   i wyciek informacji między agentami. Gdy hook zawiedzie, akcja jest blokowana (`onFailure: "block"`).
+  Własny błąd hooka (np. uszkodzone dane stanu) nie przerywa pracy, ale trafia do `.tf/logs/hook-errors.jsonl`,
+  a `tf doctor` pokazuje podsumowanie z ostatnich 7 dni — wtedy ochrona tego hooka mogła nie zadziałać.
 - **Polityka autonomii:** operacje, przy których `guard_bash` pyta człowieka, mają nazwane typy: `dependency_add`,
   `prod_command`, `destructive_sql`, `infra_change`, `publish`, `git_push`, `persistence`, `data_upload`, `sudo`.
   W `.tf/config/config.yaml` (`autonomy.operations`) możesz zmienić `confirm` (pytaj) na `deny` (blokuj), np.

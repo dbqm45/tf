@@ -18,6 +18,13 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    def record_error(hook: str, exc: BaseException) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -101,8 +108,8 @@ def main() -> int:
             on_stop(data)
         else:
             on_edit(data)
-    except Exception:
-        pass
+    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        record_error("skill_change_guard", e)
     return 0
 
 

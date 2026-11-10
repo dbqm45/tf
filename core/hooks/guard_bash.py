@@ -12,6 +12,13 @@ import shlex
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    def record_error(hook: str, exc: BaseException) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -353,8 +360,8 @@ def main() -> None:
                        "--exec). Jeśli to konieczne, poproś człowieka o wykonanie ręczne.")
     try:
         check_writes(data, cmd)
-    except Exception:
-        pass   # błąd rozpoznawania zapisu nigdy nie blokuje (decide kończy proces przez SystemExit — nie łapiemy go)
+    except Exception as e:  # błąd rozpoznawania zapisu nigdy nie blokuje (decide kończy proces przez SystemExit — nie łapiemy go)
+        record_error("guard_bash", e)
     hits = [(reason, op) for pattern, reason, op in ASK if re.search(pattern, cmd, re.IGNORECASE)]
     if hits:
         levels, _ = load_policy()

@@ -23,6 +23,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    def record_error(hook: str, exc: BaseException) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -410,7 +417,8 @@ def main(argv: list[str]) -> int:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or ".")
         try:
             out = to_hook(analyze(root))
-        except Exception:  # hook nigdy nie może zablokować startu sesji
+        except Exception as e:  # hook nigdy nie może zablokować startu sesji
+            record_error("detect_stack", e)
             return 0
         if out:
             print(out)
