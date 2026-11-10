@@ -95,6 +95,10 @@ def main() -> int:
             ("deleted-test", {"src/app.py": "def run():\n    return 3\n"}, ("tests/test_app.py",), "high",
              "tests-weakened"),
             ("spec", {"docs/project/02-requirements/acceptance.feature": "Feature: x\n"}, (), "high", "spec"),
+            # pominięcie jako dane (napis w kodzie testu), nie dekorator — bez alarmu; zmiana zwykłego kodu = medium
+            ("skip-in-string", {"tests/test_app.py": BASE_FILES["tests/test_app.py"]
+                                + "\nSAMPLE = \"@pytest.mark.skip\"\n\ndef test_sample():\n    assert SAMPLE\n"}, (),
+             "medium", None),
         ]
         for name, changes, deletes, level, cat in cases:
             repo = repo_with(t, name, changes, deletes)
@@ -138,7 +142,7 @@ def main() -> int:
         fails.append("R-tf: tf risk w pomocy i dyspozycji launchera")
     for f in fails:
         print(f"✗ {f}")
-    total = 17
+    total = 18
     print(f"{'✓' if not fails else '✗'} triaż ryzyka zmian: {total - len(fails)}/{total}")
     return 1 if fails else 0
 

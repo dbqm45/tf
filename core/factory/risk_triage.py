@@ -60,8 +60,9 @@ DEFAULT_RULES: dict = {
     "test_files": [r"(^|/)(tests?|__tests__|spec)/", r"(^|/)test_[^/]*\.py$", r"_test\.(py|go)$",
                    r"\.(test|spec)\.[cm]?[jt]sx?$", r"Tests?\.(java|kt|cs)$"],
     "assert_lines": r"\b(assert\w*|expect\s*\(|should\b|verify\s*\()",
-    "skip_lines": r"(@pytest\.mark\.(skip|xfail)|pytest\.skip\(|\.skip\(|\bx(it|describe|test)\(|@Disabled|@Ignore|"
-                  r"\bt\.Skip\(|\[Fact\(Skip|unittest\.skip)",
+    # znacznik na początku linii kodu (dekorator, wywołanie) — nie napis z takim tekstem w danych testu
+    "skip_lines": r"^\s*(@pytest\.mark\.(skip|xfail)|pytest\.skip\(|@unittest\.skip|@Disabled|@Ignore|\[Fact\(Skip|"
+                  r"t\.Skip\(|(it|describe|test)\.skip\(|x(it|describe|test)\()",
     "adr": [r"(^|/)(adr|ADR|decisions)/", r"(^|/)ADR-?\d+"],
     "new_module_skip": [r"^\.", r"^(docs|tests?|__tests__|migrations?|scripts)/"],
 }
