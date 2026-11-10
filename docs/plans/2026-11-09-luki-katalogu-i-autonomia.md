@@ -134,6 +134,32 @@ w `core-async-delegation` i `core-agent-security`); brak jednego miejsca „typ 
   Wykorzystuje `tdd_guard` (wykrywanie osłabienia testów) zamiast drugiej implementacji. TDD na tabeli diffów.
 - Najpierw plan kroku do akceptacji (pliki, kolejność, testy), potem kod.
 
+- **Plan kroku (2026-11-10, do akceptacji człowieka):**
+  Stan: `core/hooks/guard_bash.py` już pyta (ASK) o zależności, polecenia z `prod`, `DROP`/`TRUNCATE`, `terraform
+  apply`, `kubectl`, publikację, `git push`, i blokuje (DENY) m.in. `rm -rf /`, `push --force`, `terraform destroy` —
+  wzorce wpisane w kod, bez nazwanych typów operacji i bez ustawień projektu. Triażu diffu nie ma.
+  - **B1a — polityka `autonomy:`** w `.tf/factory/config.yaml` (wartości domyślne) z nadpisaniem w
+    `.tf/config/config.yaml`: nazwane typy operacji (`dependency_add`, `prod_command`, `destructive_sql`,
+    `infra_change`, `publish`, `git_push`, `persistence`, `data_upload`) → poziom `confirm` (ASK) albo `deny`.
+    `guard_bash` czyta poziom z polityki zamiast stałej listy; **projekt może tylko zaostrzać** (`confirm` → `deny`),
+    rozluźnienie poniżej wartości domyślnej jest ignorowane z ostrzeżeniem; lista DENY rdzenia zostaje stała.
+    Testy: tabela polecenie → typ → decyzja, nadpisanie z `.tf/config/`, próba rozluźnienia = bez skutku,
+    istniejące testy hooka bez zmian.
+  - **B1b — triaż ryzyka zmian** `.tf/factory/risk_triage.py` (i `tf risk`): diff `base...HEAD` → poziom
+    `high` / `medium` / `low` i lista „co musi zobaczyć człowiek” (z powodem i plikiem). Reguły domyślne
+    (ścieżki i treść diffu) w `autonomy.triage`, nadpisanie w `.tf/config/`:
+    - `high`: uwierzytelnianie i uprawnienia, płatności i rozliczenia, migracje i schemat bazy, sekrety
+      i konfiguracja wdrożenia (CI, IaC, Dockerfile), osłabione testy (usunięte lub zmienione asercje, `skip`,
+      usunięte pliki testów) albo zmienione kryteria akceptacji i specyfikacje;
+    - `low`: tylko dokumentacja albo tylko manifest i lockfile zależności (przy zielonych testach);
+    - `medium`: reszta — dowód: zielone testy i przegląd niezależnego recenzenta.
+    Wynik jako sekcja opisu PR (Talos dopisuje ją przy otwarciu PR) i JSON; **doradczy** — nie blokuje merge'a,
+    mówi, co człowiek musi przejrzeć. Testy na sztucznych repo z diffami każdej klasy.
+  - Kolejność: B1a i B1b jako osobne PR (B1b najpierw — nie dotyka hooków bezpieczeństwa).
+  - Decyzje do akceptacji: (D1) polityka tylko zaostrza, (D2) triaż doradczy, bez blokady merge'a,
+    (D3) poziom `evidence` w B1 tylko jako punkt na liście triażu (np. „zmiana architektury bez ADR”), bez
+    egzekwowania w hooku.
+
 ### B2. Mapa pokrycia generowana z katalogu (zamiast ręcznej macierzy wiedzy)
 - Plik obszarów (domena → hasła) i skrypt liczący skille z trafieniem dla każdego hasła; raport w `.tf/reports/`
   albo w `docs/`, uruchamiany w CI jako informacja (bez blokowania).
