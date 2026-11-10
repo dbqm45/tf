@@ -57,7 +57,7 @@ Agenci wspólni, dostępni dla każdej persony:
 
 ### Analiza projektu: `tf analyze`
 Szybki przegląd repozytorium skryptami, bez modelu i bez kosztu tokenów. Każdy moduł analizy szuka jednej klasy
-problemów; moduły dostarczają nakładki (`pack-it`):
+problemów; moduły dostarczają nakładki (`pack-it`, `accessibility` — `pack-ux`):
 
 | Moduł | Czego szuka |
 |---|---|
@@ -65,6 +65,10 @@ problemów; moduły dostarczają nakładki (`pack-it`):
 | `architecture` | cykle importów, zależności w obie strony między grupami modułów, huby (graf importów) |
 | `authz` | endpointy zmieniające dane (POST/PUT/PATCH/DELETE) bez widocznego sprawdzenia uprawnień: Express, NestJS, Next.js, FastAPI, Spring |
 | `data-classification` | pola z danymi osobowymi bez klasy w migracjach, schematach i modelach (szkic inwentarza danych), dane osobowe w logach i w analityce |
+| `tech-debt` | TODO/FIXME bez zgłoszenia (z wiekiem z gita), pominięte testy bez powodu, wyciszone sprawdzenia, pliki powyżej 1000 linii |
+| `observability` | usługa bez health checka i bez identyfikatora żądania, `console.log`/`print` zamiast loggera, połknięte błędy |
+| `i18n` | tekst interfejsu poza tłumaczeniem (w projekcie z biblioteką tłumaczeń), daty bez locale, kwoty bez `Intl.NumberFormat` |
+| `accessibility` (`pack-ux`) | obrazy bez `alt`, przyciski i linki bez nazwy, pola bez etykiety, kliknięcie bez klawiatury, `tabindex` > 0, brak `lang` |
 
 - `tf analyze --list` pokazuje moduły i to, czy pasują do repo; `tf analyze` uruchamia wszystkie pasujące,
   `--only security,authz` wybrane, `--since <commit>` tylko pliki zmienione od commita, `--top N` skraca raport.

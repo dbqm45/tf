@@ -142,9 +142,16 @@ Spring Boot, route handlers Next.js):
 vue-i18n, ngx-translate, `@angular/localize`, Lingui — bo wtedy tekst poza nią jest błędem, a nie decyzją):
 - `hardcoded-ui-text` — tekst w JSX/szablonie i w atrybutach `placeholder`, `title`, `aria-label`, `alt` poza
   funkcją tłumaczącą;
-- `locale-less-format` — `toLocaleDateString()`/`toLocaleString()`/`toLocaleTimeString()` bez locale;
-- `money-without-intl` — kwota z `toFixed` sklejona z symbolem waluty (`zł`, `PLN`, `€`, `$`) zamiast
-  `Intl.NumberFormat`.
+- `locale-less-format` — `toLocaleDateString()`/`toLocaleString()`/`toLocaleTimeString()` bez locale; tylko
+  z biblioteką tłumaczeń albo SSR (w zwykłej SPA locale przeglądarki to zwykle właściwy wybór — wniosek ze
+  sprawdzenia na prawdziwym kodzie);
+- `money-without-intl` — w komponencie UI kwota z `toFixed` sklejona z symbolem waluty (`zł`, `PLN`, `€`, `$`)
+  zamiast `Intl.NumberFormat` (koszt w logu serwera to nie interfejs).
+
+Zmiany po sprawdzeniu na prawdziwym kodzie (realizacja 2026-11-10): `swallowed-error` w Pythonie i Javie tylko dla
+szerokiego wyjątku (wąski, nazwany wyjątek z `pass` to idiom); `input-without-label` uznaje komponent z `label`
+(`<Field label="…">`), a `control-without-name` treść z `<ng-content>`/`<slot>`; `tech-debt` pomija napisy
+wieloliniowe i rozpoznaje plik wygenerowany po typowych nagłówkach.
 
 ### A8. Pytanie o brakującą informację — `ai-agents` (`pack-it`, dopisane 2026-11-09, decyzja człowieka)
 Luka: `ai-agents` opisuje zatwierdzanie akcji przez człowieka, ale nie pauzę z pytaniem o brakującą informację
