@@ -164,6 +164,17 @@ adopcji AI).
   w ustalonym formacie oraz przebiegi Talosa (story → PR); liczymy defekty, nie czerwone testy. Raport: odsetek
   zadań z co najmniej jednym powrotem, z podziałem na przyczyny.
 
+- **Plan kroku (2026-11-10):**
+  1. testy (czerwone) `core/tests/test_metrics.py` na sztucznym repo git z datami commitów: zmiany na głównej linii
+     (`--first-parent`, bez `chore(release)`), reverty (`Revert "…"` / `This reverts commit <sha>`) w oknie N dni,
+     zmiany „w toku” (młodsze niż N dni) poza licznikiem przyjętych, trailer `Rework-Cause:` (4 wartości, inne →
+     `nieznana`), koszt z `.tf/logs/usage.jsonl` (cennik jak w `cost_report`), dane PR z `gh` (atrapa w PATH; bez
+     `gh` — tylko git), okno bieżące i bazowe, raport `.tf/reports/metrics.md` i `metrics.json`, polecenie `tf metrics`;
+  2. kod: `core/factory/metrics.py` (tylko biblioteka standardowa), dyspozycja w `core/factory/tf.py`;
+  3. `workspace.py check --packs all` i `--packs none`, `refs`, testy repo.
+  Pole przyczyny poprawki w MVP: trailer `Rework-Cause:` w commicie poprawki (Talos i ręczne poprawki); opis PR —
+  później. Czas człowieka nie jest mierzony — raport oznacza koszt jako „bez pracy ludzi”.
+
 ### B4. Ewaluacje skilli mierzą wkład skilla, nie tylko zaliczenie (dopisane 2026-11-09, decyzja człowieka)
 Powód: w ewaluacjach A1 i A2a modele bez skilla przechodziły sprawdzenia treści w większości scenariuszy
 (`pm-product-analytics` 3 z 4, `be-business-app-patterns` 5 z 5) — scenariusz zaliczony bez skilla nie dowodzi,
