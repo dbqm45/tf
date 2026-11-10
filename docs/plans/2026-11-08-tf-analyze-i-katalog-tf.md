@@ -296,6 +296,40 @@ Na wspólnym kontrakcie `module.yaml` (sekcja 9.2):
 4. Notatki dokumentacji w `.tf/cache/docs/`; `kind: gate` z nakładek.
 5. Włączenie pętli w personach deweloperskich za flagą; pomiar `flow_compare` (za zgodą) przed domyślnym.
 
+### 10.6. Wnioski ze specyfikacji Symphony (OpenAI, dopisane 2026-11-10, decyzja człowieka)
+Źródło: `SPEC.md` z repozytorium `openai/symphony` (Apache 2.0, przeczytane 2026-11-10; artykuł na openai.com
+niedostępny dla pobierania automatycznego). Symphony to usługa działająca w tle: czyta tracker (domyślnie Linear),
+dla każdego zadania zakłada osobny katalog roboczy i uruchamia w nim agenta Codex; autorzy nazywają ją podglądem
+inżynierskim do zaufanych środowisk.
+
+Decyzja: **nie budujemy Symphony teraz** — to osobna usługa (kolejka, ponowienia, adapter trackera, protokół
+agenta), a fabryka to pliki i polecenia CLI; człowiek nie chce kolejnych aplikacji obok. Sedno („zadanie → agent →
+PR do przeglądu”) ma już Talos. Przy powrocie do pętli pracy przejmujemy:
+- **polityka w repozytorium** (u nich `WORKFLOW.md`: konfiguracja i prompt wersjonowane z kodem) — u nas
+  `CLAUDE.md` i konfiguracja Talosa;
+- **stany zajęcia zadania**: wolne → zajęte → w trakcie → do ponowienia → zwolnione; sprawdzenie „zajęte / w trakcie”
+  przed każdym startem, żeby dwa przebiegi nie wzięły tego samego zadania;
+- **osobny `git worktree` na zadanie** i trzy reguły bezpieczeństwa ścieżek: agent działa tylko w katalogu
+  zadania; ścieżka nie wychodzi poza katalog główny; nazwa katalogu oczyszczona (`[A-Za-z0-9._-]`, przy zmianie
+  dopisany skrót identyfikatora);
+- **zawieszenie i ponowienia**: zawieszenie wykrywane po czasie bez zdarzeń agenta; ponowienie z narastającą
+  przerwą (u nich 10 s × 2^(n−1), najwyżej 5 min); wznowienie ze stanu w `plan.md`, nie od zera;
+- **uzgadnianie co cykl**: zadanie przeniesione przez człowieka do stanu końcowego zatrzymuje przebieg i czyści
+  katalog; restart usługi odtwarza stan z trackera i katalogów, bez bazy danych;
+- **koniec w stanie „do przeglądu”**, nie „zrobione” — przegląd i merge należą do człowieka (zgodnie z B1);
+- **agent bez danych logowania** do trackera i produkcji — zapisy w trackerze wykonuje host
+  (core-agent-security);
+- **limit agentów naraz**, także osobno dla stanów zadań.
+
+**Wariant minimalny** (gdy człowiek zdecyduje): `tf work --once` — bierze jedną gotową historyjkę (pliki Talosa albo
+GitHub Issues z etykietą), zakłada worktree, uruchamia Talosa przez `claude -p` z budżetem i kończy w stanie „do
+przeglądu”; powtarzanie przez cron albo zaplanowane zadanie, bez własnej usługi w tle. TDD.
+
+**Warunek wstępny:** B1 (triaż ryzyka zmian) i B3 (metryki z okresem bazowym) z planu
+`docs/plans/2026-11-09-luki-katalogu-i-autonomia.md` — automat mnoży liczbę PR, więc najpierw wiadomo, co oddać
+człowiekowi i czy przyjęte zmiany są tańsze, a nie tylko liczniejsze. Pilotaż na zadaniach niskiego ryzyka
+(zależności, dokumentacja), mierzony kosztem przyjętej zmiany.
+
 ## Kolejność realizacji (każdy krok osobny PR, TDD, bramki)
 1. `.tf/` (config, reports, register) + format ustalenia + rdzeń `tf analyze` z piętrem 0 i raportem ze scalaniem
    checkboxów.

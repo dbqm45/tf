@@ -51,6 +51,10 @@ def main() -> int:
           and "story/tsk-" in body,
           "T-9: wejście TSK z planu zmiany (`run_report.py start --task`), gałąź z kluczem, `Change:` w commitach, "
           "raport w changes/CHG-n/runs/")
+    fixes = body.split("## 5.", 1)[-1].split("## Kto co robi", 1)[0]
+    check("Rework-Cause:" in fixes and all(v in fixes for v in ("luka-specyfikacji", "blad-agenta", "zmiana-wymagan",
+                                                                 "nieznana")),
+          "T-11: commit poprawki z pętli PR ma trailer `Rework-Cause:` z jedną z 4 przyczyn (tf metrics, B3)")
     scan = ".claude/skills/talos-story-run/scripts/security_scan.py"
     check((ROOT / scan).is_file() and any(scan in a for a in allow)
           and (skill / "templates" / "verify.sh").is_file()

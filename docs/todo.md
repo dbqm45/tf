@@ -41,10 +41,10 @@ Sekcja B — architektura agenta i autonomia:
   osłabione testy → człowiek; zależności i dokumentacja przy zielonych testach → automatycznie); najpierw plan kroku
   do akceptacji.
 - [ ] **B2:** mapa pokrycia generowana z katalogu (zamiast ręcznej macierzy wiedzy), raport informacyjny w CI.
-- [ ] **B3:** `tf metrics` — odsetek revertów, mediana czasu cyklu, czas przeglądu na PR; okres bazowy 4 tygodnie
+- [x] **B3:** `tf metrics` — odsetek revertów, mediana czasu cyklu, czas przeglądu na PR; okres bazowy 4 tygodnie
   i pasma kontrolne; koszt przyjętej zmiany (z porzuconymi próbami) i pole przyczyny poprawki (luka specyfikacji /
   błąd agenta / zmiana wymagań / nieznana); przed B2.
-- [ ] **B4:** ewaluacje skilli mierzą wkład: ostrzeżenie w `skill_gate` dla scenariusza zaliczanego bez skilla,
+- [x] **B4:** ewaluacje skilli mierzą wkład: ostrzeżenie w `skill_gate` dla scenariusza zaliczanego bez skilla,
   raport „wkład skilla na model” z istniejących wyników (wejście do core-cost-control); dziennik każdego
   uruchomienia na zbiorze zamkniętym (holdout).
 

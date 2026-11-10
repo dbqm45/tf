@@ -15,6 +15,9 @@ tf — the team factory command: install, update, packs, languages, health check
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
+  tf metrics [--weeks N] [--revert-days N] [--no-gh]
+                              # factory effectiveness: revert rate, cost per accepted change, cycle time,
+                              # rework causes → .tf/reports/metrics.md (.tf/factory/metrics.py)
   tf --repo <url>             # another factory repository (also <url>#branch-or-tag)
 
 Install the launcher once, from a factory clone or from a project that already has the factory:
@@ -279,6 +282,10 @@ def main(argv: list[str]) -> int:
             return 2
         sub = ["init"] if cmd == "init" else (["list"] if "--list" in rest else ["run", *rest])
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "analyze.py"), *sub]).returncode
+    if cmd == "metrics":
+        if not need_project():
+            return 2
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "metrics.py"), *rest]).returncode
     if cmd not in (None, "install", "update"):
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2
