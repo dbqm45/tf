@@ -32,7 +32,7 @@ Sekcja A — luki w katalogu:
 - [ ] **A8:** `ai-agents` — wzorzec „pytanie o brakującą informację”: najpierw narzędzia i kontekst, potem pauza
   z konkretnym pytaniem do człowieka, zachowany stan i wznowienie (np. interrupt/resume w LangGraph); scenariusz
   ewaluacji, w którym agent ma zapytać, a nie zgadywać.
-- [ ] **A9:** przegląd specyfikacji przez panel 2–3 niezależnych recenzentów (przeciwnik, operator, wykonawca) przed
+- [x] **A9:** przegląd specyfikacji przez panel 2–3 niezależnych recenzentów (przeciwnik, operator, wykonawca) przed
   planem w `core-delivery-lifecycle`; raport zbieżne / pojedyncze / rozbieżne, bramka: blokujące i poważne zamknięte śladem.
 
 Sekcja B — architektura agenta i autonomia:

@@ -40,7 +40,7 @@ Start: `python3 .claude/hooks/project_record.py init` (tworzy strukturę). Szabl
 Nagłówek (prosty YAML: `klucz: wartość` lub `klucz: [a, b]`):
 ```yaml
 ---
-artifact: stack-decision        # brief | pre-flight | corpus | contradictions | areas | algorithms | domain | requirements | stack-decision | architecture | adr | plan | test-plan | delivery | behavior-contract | review
+artifact: stack-decision        # brief | pre-flight | corpus | contradictions | areas | algorithms | domain | requirements | stack-decision | architecture | adr | spec-review | plan | test-plan | delivery | behavior-contract | review
 phase: architecture             # discovery | domain | requirements | architecture | plan | delivery | review
 status: proposed                # draft | proposed | accepted | superseded | rejected
 version: 1

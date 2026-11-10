@@ -134,6 +134,7 @@ zależności bez prośby. To wszystko jest w planie faz jako zadania dla człowi
 - Definicja „gotowe do produkcji” i przegląd gotowości: `references/gotowosc-produkcyjna.md`.
 - Przebieg próbny na małym projekcie (jak sprawdzić, czy fabryka dowozi): `references/przebieg-probny.md`.
 - Wycofywanie funkcji i wygaszanie systemu (faza 9): `references/utrzymanie.md`.
+- Przegląd specyfikacji przed planem (panel 2–3 niezależnych recenzentów, bramka): `references/przeglad-specyfikacji.md`.
 - Plan cięć — kolejność pozycji, fundamenty, niewiadome, samokontrola: `references/plan-ciec.md`.
 - Pętla AI-native: artefakty, miary każdego etapu, ewaluacje, przegląd PR, pasma kontrolne, źródło prawdy, ustawienia
   zarządzane, AI-DLC, refinement z opowiedzeniem rozwiązania i miary autonomii w parze z miarą wyniku:
