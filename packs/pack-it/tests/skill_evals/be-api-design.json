@@ -96,6 +96,55 @@
           ]
         ]
       }
+    },
+    {
+      "id": "eksport-csv-duzy",
+      "expect": "trigger",
+      "prompt": "Użytkownicy chcą eksportować do CSV listę klientów (do 2 mln wierszy) z bieżącymi filtrami. Dziś endpoint generuje plik w trakcie żądania i po 30 sekundach pada na timeout. Jak zaprojektować eksport po stronie API? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "w tle",
+            "asynchron\\w*",
+            "zadani\\w* (w tle|eksportu)",
+            "\\b202\\b",
+            "job\\w*",
+            "kolejk\\w*"
+          ],
+          [
+            "status\\w*",
+            "powiadom\\w*",
+            "postęp\\w*",
+            "polling",
+            "webhook"
+          ],
+          [
+            "wygas\\w*",
+            "podpisan\\w* (URL|link|adres)",
+            "presigned",
+            "signed URL",
+            "czas\\w* ważności"
+          ],
+          [
+            "uprawnie\\w*",
+            "autoryzac\\w*",
+            "te same filtr\\w*"
+          ],
+          [
+            "dan\\w* osobow\\w*",
+            "PII",
+            "RODO",
+            "kolumn\\w*"
+          ],
+          [
+            "wstrzykiw\\w* formuł",
+            "formula injection",
+            "CSV injection",
+            "znak\\w* =",
+            "zaczyna\\w* się od (=|znaku)"
+          ]
+        ]
+      }
     }
   ]
 }

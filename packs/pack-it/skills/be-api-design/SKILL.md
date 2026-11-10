@@ -4,7 +4,7 @@ description: Użyj przy projekcie API HTTP — zasoby, kody, błędy, paginacja,
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy projektowaniu i implementacji endpointów HTTP/REST — ścieżki, metody, kody statusu, paginacja, błędy, wersjonowanie, idempotencja, OpenAPI, cache HTTP, limity żądań, webhooki, GraphQL/gRPC/SSE, OWASP API Top 10. Nie do schematu bazy (be-database) ani mechanizmów logowania (be-auth-security)."
-  slowa: "ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu, metody HTTP GET PUT PATCH DELETE, kod statusu odpowiedzi"
+  slowa: "eksport do CSV, eksport do Excela, eksport w tle, timeout przy eksporcie, CSV injection, wstrzykiwanie formuł, ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu, metody HTTP GET PUT PATCH DELETE, kod statusu odpowiedzi"
 ---
 
 # Projektowanie API
@@ -31,6 +31,8 @@ Nigdy nie zwracaj stack trace ani komunikatów bazy danych.
 ## Kolekcje
 Kursor dla dużych zbiorów, twardy `limit` po stronie serwera, filtry i sortowanie z białej listy pól
 (`references/http-w-praktyce.md` §4).
+Eksport (CSV, XLSX) dużych zbiorów w tle, z tymi samymi filtrami i uprawnieniami, wygasającym linkiem, kolumnami
+z allowlisty i ochroną przed wstrzykiwaniem formuł: `references/eksport-danych.md`.
 
 ## Idempotencja i spójność
 - `POST` z efektem finansowym lub zewnętrznym przyjmuje nagłówek `Idempotency-Key`.
@@ -50,6 +52,7 @@ Każde wejście walidowane schematem na granicy (body, query, params). Nieznane 
 - `http-w-praktyce.md` — cache HTTP (`Cache-Control`, `ETag`/304, `Vary`), negocjacja treści (406/415), limity żądań
   (algorytmy, 429, nagłówki RateLimit), paginacja kursorowa, filtry i sortowanie, batch vs bulk (207), ponowienia, HATEOAS,
   model dojrzałości Richardsona i komendy jako dokumenty.
+- `eksport-danych.md` — eksport CSV/XLSX: synchronicznie czy w tle (`202`, zasób zadania), te same filtry i uprawnienia, spójna migawka, podpisany link i retencja pliku, kolumny i dane osobowe, wstrzykiwanie formuł, testy.
 - Checklista bezpieczeństwa przed wydaniem: be-auth-security, `.claude/skills/be-auth-security/references/checklista-bezpieczenstwa-api.md`.
 - `checklista-wydajnosci-backendu.md` — checklista wydajności (wzorce cache i unieważnianie, limity czasu i ponowienia, keep-alive, asynchroniczność, skalowanie, profilowanie, logowanie asynchroniczne).
 - `cykl-zycia-i-bezpieczenstwo.md` — design-first (lint, mock), wersjonowanie i wycofywanie (`Deprecation`, `Sunset`),

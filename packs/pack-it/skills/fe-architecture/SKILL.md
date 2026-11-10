@@ -4,7 +4,7 @@ description: Użyj przy strukturze frontendu w dowolnym frameworku — stan i da
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy decyzjach o strukturze frontendu (każdy framework) — styl architektury, FSD/feature folders, stan i warstwa danych, granice komponentów, renderowanie (SSR/RSC), wydajność, odporność (błędy, ładowanie, retry), routing, bezpieczeństwo klienta (CSP, CSRF, tokeny), testy komponentów, UI czatu AI. Nie do stylów (fe-css), API przeglądarki i a11y (fe-web-platform) ani składni (lang-*, fw-*)."
-  slowa: "architektura frontendu, SPA, ponawianie żądań, retry w przeglądarce, odporność frontendu, stan aplikacji, zarządzanie stanem, warstwa danych frontu, podatność we frameworku frontendowym, czy to problem tylko frontendu, Server Components, mikrofrontendy, routing, micro-frontendy, micro-frontends, Module Federation, dwie wersje Reacta, współdzielone zależności, BFF, backend for frontend, SSR na brzegu, edge rendering"
+  slowa: "tabela danych, tabela z filtrowaniem i sortowaniem, filtry znikają po odświeżeniu, filtry w URL, wirtualizacja listy, zaznacz wszystkie, aria-sort, architektura frontendu, SPA, ponawianie żądań, retry w przeglądarce, odporność frontendu, stan aplikacji, zarządzanie stanem, warstwa danych frontu, podatność we frameworku frontendowym, czy to problem tylko frontendu, Server Components, mikrofrontendy, routing, micro-frontendy, micro-frontends, Module Federation, dwie wersje Reacta, współdzielone zależności, BFF, backend for frontend, SSR na brzegu, edge rendering"
 ---
 
 # Architektura frontendu
@@ -74,6 +74,7 @@ Czytaj tylko plik potrzebny do bieżącego pytania:
 - `performance/` — `code-splitting`, `lazy-loading`, `debounce` (i throttle), `memoization`.
 - `resilience/` — `async-boundary`, `error-boundary`, `error-handling`, `loading-state`, `retry`.
 - `routing/client-side-routing.md` — router klienta, Navigation API, scroll i fokus po nawigacji.
+- `data-tables.md` — **tabele danych**: stan filtrów i sortowania w URL, dane po stronie serwera, wirtualizacja, „zaznacz wszystkie pasujące” a operacja masowa, paleta poleceń, dostępność (`aria-sort`).
 - `security/` — `content-security-policy`, `csrf-protection`, `samesite-cookie`, `secure-token-storage`, `input-sanitization`, `output-encoding`, `trusted-types`, `subresource-integrity`, `pii-redaction`.
 - `testing/component-testing.md` — testy komponentów z perspektywy użytkownika (narzędzia: tool-vitest, tool-jest, tool-playwright).
 - `ai-chat-ui/` — **interfejsy czatu z modelem AI**: model wątku jako lista wiadomości ze statusem (`message-thread`),
@@ -87,6 +88,7 @@ Pliki wzorców mają sekcję „Uwagi (stan 2026)” — poprawki względem źr�
 - [ ] Granice funkcji i publiczne API modułów zachowane; importy tylko w dozwolonym kierunku
 - [ ] Stan na najniższym wystarczającym poziomie; dane serwera w warstwie z cache
 - [ ] Każdy widok danych obsługuje ładowanie/błąd/pusto/dane; błędy nie kładą całej strony
+- [ ] Tabela: filtry i sortowanie w URL, dane z serwera, „wszystkie pasujące” jako filtr, `aria-sort` na sortowanej kolumnie
 - [ ] Brak `innerHTML` z niezaufanymi danymi; tokeny poza `localStorage`
 - [ ] Podział kodu i model renderowania uzasadnione pomiarem
 - [ ] Decyzja strukturalna opisana w ADR
