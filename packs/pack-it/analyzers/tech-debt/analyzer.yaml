@@ -1,0 +1,14 @@
+name: tech-debt
+prefix: DEBT
+title: Dług techniczny (znaczniki, pominięte testy, wyciszenia)
+description: TODO/FIXME/HACK bez zgłoszenia (z wiekiem z gita), pominięte testy bez powodu, wyciszone sprawdzenia (ts-ignore, eslint-disable, noqa, type ignore), pliki kodu powyżej 1000 linii
+version: 0.1.0
+przeglad: "2027-05-10"
+skills: [eng-tech-debt-audit, eng-clean-code, qa-regression]
+applies_when:
+  files_any: ["**/*.py", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.java", "**/*.kt", "**/*.go", "**/*.cs", "**/*.rb", "**/*.php", "**/*.rs"]
+tier0:
+  script: scripts/scan.py
+gate:
+  min_recall: 1.0
+  max_false_positives: 0
