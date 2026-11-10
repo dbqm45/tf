@@ -32,6 +32,13 @@
       "drugi\\w* czynnik",
       "ponown\\w* (uwierzytel|logow)",
       "właściciel\\w*"
+     ],
+     [
+      "indeks\\w* unikaln\\w* częściow\\w*",
+      "WHERE deleted_at IS NULL",
+      "nazw\\w* (ponownie |znów )?dostępn\\w*",
+      "purge\\w*",
+      "magazyn\\w* (plików|obiektów)"
      ]
     ]
    }
@@ -67,6 +74,13 @@
       "dan\\w* osobow\\w*",
       "RODO",
       "PII"
+     ],
+     [
+      "(bez|nie ma|odebra\\w*) (prawa|uprawnie\\w*) (do )?(UPDATE|DELETE)",
+      "(UPDATE|DELETE) .{0,40}(zabronion|odebra|brak uprawnie)",
+      "warstw\\w* usług",
+      "zadani\\w* w tle",
+      "migracj\\w* danych"
      ]
     ]
    }
@@ -99,6 +113,19 @@
       "audyt\\w*",
       "replik\\w*",
       "system\\w* zewnętrzn\\w*"
+     ],
+     [
+      "księgow\\w*",
+      "obowiąz\\w* prawn\\w*",
+      "art\\.? ?17 ust\\.? ?3",
+      "wyjąt\\w*"
+     ],
+     [
+      "wyszukiwar\\w*",
+      "analityk\\w*",
+      "podwykonaw\\w*",
+      "procesor\\w*",
+      "cache"
      ]
     ],
     "none": [
@@ -144,6 +171,16 @@
       "zgod\\w*",
       "zgłoszeni\\w*",
       "ticket"
+     ],
+     [
+      "powiadom\\w* klient\\w*",
+      "klient\\w* (dostaje|otrzymuje|widzi) .{0,30}(powiadom|e-mail|informacj)",
+      "histori\\w* konta"
+     ],
+     [
+      "tylko do odczytu",
+      "read-only",
+      "udostępni\\w* ekran\\w*"
      ]
     ],
     "none": [
@@ -186,6 +223,16 @@
       "cofn\\w*",
       "undo",
       "przywróc\\w*"
+     ],
+     [
+      "filtr\\w*",
+      "nie (jako )?(lista|listę|listy) (ID|identyfikator)"
+     ],
+     [
+      "per rekord",
+      "dla każdego rekordu",
+      "każd\\w* rekord\\w* (osobno|z osobna)",
+      "uprawnie\\w* .{0,40}(każd|per) .{0,10}rekord"
      ]
     ]
    }

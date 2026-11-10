@@ -147,6 +147,11 @@
           ],
           [
             "log"
+          ],
+          [
+            "data-inventory",
+            "tf analyze",
+            "data-classification"
           ]
         ]
       }

@@ -29,6 +29,7 @@ Sekcja A — luki w katalogu:
 - [x] **A5:** sekcja „ład danych” w `arch-privacy-compliance` (własność, klasyfikacja, inwentarz PII). Razem z modułem `tf analyze` `data-classification` (decyzja 2026-11-10; plan w A5).
 - [ ] **A6:** referencja formularzy (React Hook Form + schemat wspólny z serwerem) w `fw-react`.
 - [x] **A7:** kolejne moduły `tf analyze` po jednym: `accessibility` (`pack-ux`), `tech-debt`, `i18n`, `observability` (`pack-it`); piętro 0, każdy z zestawami testowymi i bramką, sprawdzony na prawdziwym kodzie.
+- [x] **Ewaluacja A3, A4, A5, A9 i zaostrzenie A2a** (2026-11-10, 6,13 USD, zgoda człowieka): `docs/evals/2026-11-10-podsumowanie.md` — A4, A5, A9 z wkładem +100%; A9 po poprawce wyboru skilla; A3 i A2a modele znają bez skilla — bez kolejnych rund strojenia, ewentualnie pomiar procedury przez flow-evals (decyzja człowieka).
 - [ ] **A8:** `ai-agents` — wzorzec „pytanie o brakującą informację”: najpierw narzędzia i kontekst, potem pauza
   z konkretnym pytaniem do człowieka, zachowany stan i wznowienie (np. interrupt/resume w LangGraph); scenariusz
   ewaluacji, w którym agent ma zapytać, a nie zgadywać.
