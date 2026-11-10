@@ -74,6 +74,49 @@
       "expect": "no-trigger",
       "neighbor": "fw-angular",
       "prompt": "W Angularze 22 jak zrobić wyszukiwanie z debounce przez httpResource, bez ręcznego subscribe?"
+    },
+    {
+      "id": "formularz-wielokrokowy-zod",
+      "expect": "trigger",
+      "prompt": "Robimy w React kreator rejestracji firmy w 4 krokach (dane firmy, adres, osoby kontaktowe — można dodać kilka, zgody). Walidację piszemy osobno w przeglądarce i na serwerze i już się rozjechała, błędy z API (np. NIP zajęty) giną, a użytkownik czytnika ekranu nie wie, że coś jest źle. Jak to zbudować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "React Hook Form",
+            "react-hook-form",
+            "useForm"
+          ],
+          [
+            "jed\\w* schemat\\w*",
+            "wspóln\\w* schemat\\w*",
+            "współdzielon\\w*",
+            "zodResolver",
+            "Zod"
+          ],
+          [
+            "serwer\\w* (zawsze )?(też |również )?waliduje",
+            "walidac\\w* (na|po stronie) serwer\\w*",
+            "safeParse"
+          ],
+          [
+            "setError",
+            "errors\\.root",
+            "422"
+          ],
+          [
+            "aria-invalid",
+            "aria-describedby"
+          ],
+          [
+            "trigger",
+            "krok\\w* .{0,40}waliduj\\w*",
+            "waliduj\\w* .{0,40}krok\\w*"
+          ],
+          [
+            "useFieldArray"
+          ]
+        ]
+      }
     }
   ]
 }

@@ -4,7 +4,7 @@ description: Użyj przy kodzie Reacta 18–19.3 — czyste komponenty, stan, kie
 metadata:
   przeglad: "2027-01-03"
   katalog: "Użyj przy kodzie Reacta (18–19.3) bez względu na framework — komponenty i hooki, struktura stanu, efekty i ich zamienniki (wyliczenie w renderze, key, useEffectEvent), Actions i formularze (useActionState, useOptimistic, use), React Compiler zamiast ręcznego memo, granice Suspense i błędów, testy z Testing Library, aktualizacja 18→19 — oraz przy decyzji, gdzie w aplikacji React umieścić pojęcia domenowe. Nie do routingu, cache i Server Actions Next.js (fw-nextjs), składni TypeScript (lang-typescript) ani ogólnej architektury frontu (fe-architecture)."
-  slowa: "React, komponent Reacta, hook, useEffect, useState, useMemo, useCallback, memo, re-render, useActionState, useOptimistic, useEffectEvent, React Compiler, JSX, tsx, Vite"
+  slowa: "formularz w React, React Hook Form, react-hook-form, walidacja formularza, zod, zodResolver, schemat wspólny z serwerem, formularz wielokrokowy, kreator, useFieldArray, błędy z API w formularzu, React, komponent Reacta, hook, useEffect, useState, useMemo, useCallback, memo, re-render, useActionState, useOptimistic, useEffectEvent, React Compiler, JSX, tsx, Vite"
 ---
 
 # React
@@ -41,6 +41,8 @@ projekcie bierz odpowiedniki z sekcji „Zależne od wersji”. Nową aplikację
    - `<form action={fn}>` i Actions (funkcje asynchroniczne w `startTransition`);
    - `useActionState` daje wynik i flagę oczekiwania;
    - `useFormStatus` daje stan formularza w komponencie potomnym;
+   - złożone formularze (walidacja w trakcie, kreator, listy pól) z React Hook Form i schematem wspólnym z serwerem,
+     błędy z API, dostępność: `references/formularze.md`;
    - `useOptimistic` pokazuje wynik przed odpowiedzią serwera.
    Odrzucenie biznesowe zwracaj jako stan akcji, nie wyjątek.
 7. **Memoizacja:** w nowym kodzie włącz **React Compiler** (`babel-plugin-react-compiler` 1.x, plugin uruchamiany
@@ -101,6 +103,7 @@ swojej linii (19.0.x / 19.1.x / 19.2.x); zgłoś to człowiekowi, jeśli wersja 
 - [ ] każdy efekt synchronizuje z czymś zewnętrznym i ma sprzątanie
 - [ ] lint `eslint-plugin-react-hooks` bez wyłączeń; kompilator włączony albo świadomie pominięty
 - [ ] `domain/` bez importów z `react`; odrzucenia jako stan akcji
+- [ ] Formularz: jeden schemat z serwerem, serwer zawsze waliduje, błędy 422 przy polach, `aria-invalid`/`aria-describedby`, fokus na pierwszym błędzie
 
 ## Źródła
 - react.dev/reference/react, react.dev/learn (m.in. „You Might Not Need an Effect”, „Keeping Components Pure”,
