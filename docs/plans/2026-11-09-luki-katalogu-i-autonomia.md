@@ -102,6 +102,50 @@ Obecnie `security` i `architecture` (`pack-it`). Kandydaci, każdy jako osobny k
 - `i18n` (zahardkodowane teksty UI, formatowanie dat i kwot bez `Intl`), `pack-it`;
 - `observability` (brak health checków, logi nieustrukturyzowane, brak identyfikatora korelacji), `pack-it`.
 
+#### A7 — reguły modułów (plan realizacji 2026-11-10, decyzja człowieka: „domknij analyzer”)
+Każdy moduł: najpierw zestawy `podlozone`/`czyste` i wpis w teście nakładki (czerwony), potem skrypt; bramka recall
+1.0 i 0 fałszywych trafień; sprawdzenie szumu na prawdziwym kodzie (repozytoria fabryki i publiczne aplikacje
+przykładowe, tylko odczyt). Tylko piętro 0 — reguły, które da się sprawdzić bez modelu i bez sieci.
+
+`accessibility` (`pack-ux`, test `packs/pack-ux/tests/test_analyzers_ux.py`; HTML, JSX/TSX, Vue, Svelte, szablony
+Angulara; skaner tagów z obsługą `{…}` i cudzysłowów, element ze spreadem `{...props}` pomijany):
+- `img-without-alt` — `<img>` bez `alt` (puste `alt=""` dla grafiki dekoracyjnej jest w porządku), WCAG 1.1.1;
+- `control-without-name` — `<button>` lub `<a>` bez tekstu (np. sama ikona) i bez `aria-label`,
+  `aria-labelledby`, `title`, WCAG 4.1.2;
+- `input-without-label` — `input` (poza hidden/submit/button/reset/image), `select`, `textarea` bez etykiety
+  (`<label for>`/`htmlFor`, otaczający `<label>`, `aria-label`, `aria-labelledby`); placeholder nie jest etykietą,
+  WCAG 1.3.1 i 3.3.2;
+- `click-without-keyboard` — `div`/`span` z obsługą kliknięcia bez `role` i bez obsługi klawiatury lub `tabindex`,
+  WCAG 2.1.1;
+- `positive-tabindex` — `tabindex` > 0, WCAG 2.4.3;
+- `html-without-lang` — `<html>` bez `lang`, WCAG 3.1.1.
+Poza piętrem 0: kontrast, fokus, treść dynamiczna (Playwright, później).
+
+`tech-debt` (`pack-it`):
+- `marker-without-ticket` — TODO/FIXME/HACK/XXX w komentarzu bez odwołania do zgłoszenia (`#123`, `ABC-123`, URL);
+  przy repozytorium git wiek z `git blame` w dowodzie, a starsze niż 180 dni mają wagę średnią;
+- `skipped-test` — pominięty test (`it.skip`, `describe.skip`, `xit`, `test.skip`, `@pytest.mark.skip`,
+  `@unittest.skip`, `@Disabled`, `@Ignore`) bez powodu; tylko na początku linii (lekcja z triażu ryzyka);
+- `suppressed-check` — `@ts-ignore`, `eslint-disable` bez ` -- powód`, gołe `# noqa` i `# type: ignore` bez kodu;
+- `large-file` — plik kodu powyżej 1000 linii (bez wygenerowanych i zminifikowanych).
+Poza piętrem 0: martwy kod (wymaga grafu wywołań), przestarzałe zależności (wymaga sieci).
+
+`observability` (`pack-it`; dotyczy plików usługi HTTP — Express, Fastify, Koa, NestJS, FastAPI, Flask, Django,
+Spring Boot, route handlers Next.js):
+- `no-health-endpoint` — usługa bez trasy `health`/`healthz`/`livez`/`readyz`/`ready`/`ping` ani Actuatora;
+- `print-instead-of-logger` — `console.log`/`print` w pliku usługi;
+- `swallowed-error` — pusty `catch` albo `except …: pass` (błąd znika bez logu i bez ponowienia);
+- `no-correlation-id` — usługa z logowaniem bez identyfikatora żądania lub śledzenia (`x-request-id`,
+  `correlation`, `traceparent`, OpenTelemetry).
+
+`i18n` (`pack-it`; tylko w projekcie, który już używa biblioteki tłumaczeń — i18next, react-intl, next-intl,
+vue-i18n, ngx-translate, `@angular/localize`, Lingui — bo wtedy tekst poza nią jest błędem, a nie decyzją):
+- `hardcoded-ui-text` — tekst w JSX/szablonie i w atrybutach `placeholder`, `title`, `aria-label`, `alt` poza
+  funkcją tłumaczącą;
+- `locale-less-format` — `toLocaleDateString()`/`toLocaleString()`/`toLocaleTimeString()` bez locale;
+- `money-without-intl` — kwota z `toFixed` sklejona z symbolem waluty (`zł`, `PLN`, `€`, `$`) zamiast
+  `Intl.NumberFormat`.
+
 ### A8. Pytanie o brakującą informację — `ai-agents` (`pack-it`, dopisane 2026-11-09, decyzja człowieka)
 Luka: `ai-agents` opisuje zatwierdzanie akcji przez człowieka, ale nie pauzę z pytaniem o brakującą informację
 (artykuł R. Gite, „Six Agent Harness Techniques That Actually Worked for Me”, 2026-11-02). Zakres: agent najpierw
