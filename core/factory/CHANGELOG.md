@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.10.0] — 2026-11-10
+### Added
+- **pack-it:** add data governance and the data-classification module (#201)
+
 ## [9.9.0] — 2026-11-10
 ### Added
 - **pack-it:** add the authz tf analyze module (#199)
