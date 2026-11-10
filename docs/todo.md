@@ -30,7 +30,8 @@ Sekcja A — luki w katalogu:
 - [ ] **A6:** referencja formularzy (React Hook Form + schemat wspólny z serwerem) w `fw-react`.
 - [x] **A7:** kolejne moduły `tf analyze` po jednym: `accessibility` (`pack-ux`), `tech-debt`, `i18n`, `observability` (`pack-it`); piętro 0, każdy z zestawami testowymi i bramką, sprawdzony na prawdziwym kodzie.
 - [x] **Ewaluacja A3, A4, A5, A9 i zaostrzenie A2a** (2026-11-10, 6,13 USD, zgoda człowieka): `docs/evals/2026-11-10-podsumowanie.md` — A4, A5, A9 z wkładem +100%; A9 po poprawce wyboru skilla; A3 i A2a modele znają bez skilla — bez kolejnych rund strojenia, ewentualnie pomiar procedury przez flow-evals (decyzja człowieka).
-- [ ] **A8:** `ai-agents` — wzorzec „pytanie o brakującą informację”: najpierw narzędzia i kontekst, potem pauza
+- [ ] **Odłożone decyzje (2026-11-10, człowiek: „nie wiem”, limit tygodniowy):** (1) `tdd_guard` przy własnym błędzie — rekomendacja: zostaje fail-open z wpisem w `.tf/logs/hook-errors.jsonl` i podsumowaniem w `tf doctor`; wrócić, gdy błędy `tdd_guard` zaczną się powtarzać; (2) pomiar procedury A3 i A2a ewaluacją przebiegu (flow-evals) — przy decyzji o pozostawieniu tych skilli; (3) płatne ewaluacje nowych scenariuszy (A8 i dalsze) — po odnowieniu limitu.
+- [x] **A8:** `ai-agents` — wzorzec „pytanie o brakującą informację”: najpierw narzędzia i kontekst, potem pauza
   z konkretnym pytaniem do człowieka, zachowany stan i wznowienie (np. interrupt/resume w LangGraph); scenariusz
   ewaluacji, w którym agent ma zapytać, a nie zgadywać.
 - [x] **A9:** przegląd specyfikacji przez panel 2–3 niezależnych recenzentów (przeciwnik, operator, wykonawca) przed
