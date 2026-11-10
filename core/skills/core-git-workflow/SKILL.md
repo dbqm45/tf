@@ -22,6 +22,9 @@ metadata:
 - Format commit message i tytułu PR: skill **core-conventional-commits** (tam też: jak poprawić zły typ commita —
   `--amend` tylko dla ostatniego, niewypchniętego commita i na wyraźną prośbę).
 - Jeden commit = jedna logiczna zmiana; małe, częste commity (łatwy review i revert).
+- Commit poprawki po przeglądzie PR albo po wróceniu zadania do poprawki: trailer `Rework-Cause:` z jedną wartością —
+  `luka-specyfikacji`, `blad-agenta` (wymaganie było jasne), `zmiana-wymagan` albo `nieznana` (nie domyślnie);
+  `tf metrics` liczy z nich przyczyny poprawek.
 
 ## Przed commitem
 1. `git status` i `git diff --staged` — sprawdź, że commitujesz tylko zamierzone pliki.
