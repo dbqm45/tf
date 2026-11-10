@@ -29,7 +29,7 @@ def main() -> int:
             fails.append(msg)
             print(f"✗ {msg}")
 
-    for name in ("security", "architecture"):
+    for name in ("security", "architecture", "authz"):
         check((MODS / name / "analyzer.yaml").is_file(), f"Z-1: moduł {name} zainstalowany w .tf/factory/analyzers/")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", name], cwd=ROOT, capture_output=True,
                            text=True, timeout=300)

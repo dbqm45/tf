@@ -1,0 +1,7 @@
+[
+  {"rule": "write-without-authz", "file": "src/routes/orders.js"},
+  {"rule": "write-without-authz", "file": "src/orders/orders.controller.ts"},
+  {"rule": "write-without-authz", "file": "app/api/orders/[id]/route.ts"},
+  {"rule": "write-without-authz", "file": "api/orders.py"},
+  {"rule": "write-without-authz", "file": "src/main/java/shop/OrderController.java"}
+]

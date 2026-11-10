@@ -1,0 +1,12 @@
+name: authz
+prefix: AUTHZ
+title: Autoryzacja po stronie serwera
+description: endpointy zmieniające dane (POST/PUT/PATCH/DELETE) bez widocznego sprawdzenia uprawnień — Express, NestJS, Next.js route handlers, FastAPI, Spring
+version: 0.1.0
+przeglad: "2027-05-10"
+skills: [be-auth-security, be-business-app-patterns, sec-web-vulnerabilities]
+tier0:
+  script: scripts/scan.py
+gate:
+  min_recall: 1.0
+  max_false_positives: 0
