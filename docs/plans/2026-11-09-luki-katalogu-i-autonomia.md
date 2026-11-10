@@ -133,6 +133,17 @@ Moduł `packs/pack-it/analyzers/data-classification/` (TDD: najpierw zestawy tes
 Luka: React Hook Form (0 trafień), walidacja (Zod) jest. Referencja: formularz z walidacją schematem współdzielonym
 z serwerem, błędy pól i formularza, dostępność, formularze wielokrokowe.
 
+#### A6 — plan realizacji (2026-11-10, decyzja człowieka: „ruszaj z B2, a potem A6”)
+1. Scenariusz (najpierw): `fw-react` / `formularz-wielokrokowy-zod` — kreator rejestracji firmy, walidacja dubluje się
+   z serwerem, błędy z API giną, czytnik ekranu nie ogłasza błędów.
+2. `fw-react/references/formularze.md` (API sprawdzone w paczkach: react-hook-form 7.91.0, @hookform/resolvers 7.0.5,
+   zod 4.6.7): kiedy natywne `<form action>` + `useActionState`, a kiedy React Hook Form; jeden schemat współdzielony
+   z serwerem (serwer zawsze waliduje); błędy pól i formularza, mapowanie 422 przez `setError` i `errors.root`;
+   tryb walidacji; dostępność (etykiety, `aria-invalid`, `aria-describedby`, fokus na pierwszym błędzie,
+   podsumowanie); kreator (`trigger` na krok, jeden stan, szkic); pola dynamiczne (`useFieldArray`, klucz `id`),
+   kontrolki zewnętrzne (`Controller`); wysyłka (podwójne kliknięcie, idempotencja); testy.
+3. SKILL.md: odnośnik w zasadzie 6, punkt checklisty, słowa; bramka bez modelu.
+
 ### A7. Kolejne moduły `tf analyze` (tier 0)
 Obecnie `security` i `architecture` (`pack-it`). Kandydaci, każdy jako osobny krok z fixtures i bramką:
 - `accessibility` (odłożony krok 3 planu `2026-11-08-tf-analyze-i-katalog-tf.md`), `pack-ux`;
