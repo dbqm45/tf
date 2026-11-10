@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.17.0] — 2026-11-10
+### Added
+- **pack-it:** add React form guidance with a shared schema (#210)
+
 ## [9.16.0] — 2026-11-10
 ### Added
 - add the catalog coverage map tool (#209)
