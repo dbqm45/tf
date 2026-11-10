@@ -369,6 +369,39 @@
      ]
     ]
    }
+  },
+  {
+   "id": "mapa-artefaktow",
+   "expect": "trigger",
+   "prompt": "Zaczynamy fazę architektury w nowym systemie zamówień: będzie API dla partnerów, baza PostgreSQL i dane osobowe klientów. Jakie dokumenty powinny powstać w tej fazie, gdzie w repozytorium je zapisać, kto je pisze i które mogę pominąć, bo projekt jest mały? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "04-architecture"
+     ],
+     [
+      "stack-decision|decyzj\\w* o stacku"
+     ],
+     [
+      "\\bADR\\b|adr/"
+     ],
+     [
+      "threat-model|model\\w* zagrożeń"
+     ],
+     [
+      "privacy\\.md|data-inventory|inwentarz\\w* danych"
+     ],
+     [
+      "\\bERD\\b|erDiagram|diagram\\w* encji"
+     ],
+     [
+      "OpenAPI|kontrakt\\w* API"
+     ],
+     [
+      "pomi\\w*|zbędn\\w*|mał\\w* projekt\\w*"
+     ]
+    ]
+   }
   }
  ]
 }

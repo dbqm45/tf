@@ -11,7 +11,7 @@ metadata:
 # Migracja do chmury: portfel, fale, cutover
 
 Cel: przenieść obciążenia przewidywalnie, z odwracalnym przełączeniem i dowodem, że po migracji jest nie gorzej.
-Wynik: `docs/project/05-delivery/migration-plan.md` (core-project-record): portfel ze strategią, fale, plan danych,
+Wynik: `docs/project/05-plan/migration-plan.md` (core-project-record): portfel ze strategią, fale, plan danych,
 runbook cutover, kryteria sukcesu. Fundament docelowy (konta, sieć, tożsamość) to ops-cloud-landing-zones i musi
 istnieć przed pierwszą falą. Skill niczego nie przełącza: zmiany na produkcji idą z planem, oknem zmian i zgodą
 człowieka; każdy krok ma właściciela.

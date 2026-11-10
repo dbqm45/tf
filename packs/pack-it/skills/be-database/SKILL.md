@@ -4,7 +4,7 @@ description: Użyj przy relacyjnej bazie — schemat, migracje, indeksy, zapytan
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy pracy z relacyjną bazą danych — schemat, migracje, indeksy, zapytania SQL/ORM, transakcje, wydajność zapytań (N+1), wzorce PoEAA (Unit of Work, Identity Map, Data Mapper). Nie do projektowania endpointów (be-api-design) ani infrastruktury bazy (ops-iac-terraform)."
-  slowa: "blokada optymistyczna, blokada pesymistyczna, blokady w PostgreSQL, wyścig o ostatnie miejsce, dwóch użytkowników kupuje to samo, nadpisują sobie edycję, SELECT FOR UPDATE, wersja wiersza, zakleszczenie, write skew"
+  slowa: "diagram encji, ERD, erDiagram, diagram bazy danych, schemat bazy jako diagram, blokada optymistyczna, blokada pesymistyczna, blokady w PostgreSQL, wyścig o ostatnie miejsce, dwóch użytkowników kupuje to samo, nadpisują sobie edycję, SELECT FOR UPDATE, wersja wiersza, zakleszczenie, write skew"
 ---
 
 # Baza danych
@@ -56,7 +56,17 @@ Schemat per moduł (np. osobny `schema` w PostgreSQL) wzmacnia granice modułów
 - Klucze obce, `UNIQUE`, `CHECK` w bazie — nie tylko walidacja w aplikacji.
 - Czas w UTC (`timestamptz`), pieniądze jako `numeric`/liczby całkowite w groszach, nigdy `float`.
 
+## Diagram encji (ERD)
+- Diagram jako kod: Mermaid `erDiagram` w `docs/project/04-architecture/erd.md` (GitHub i większość narzędzi go
+  renderuje). Bez obrazków z narzędzi graficznych — nie da się ich przejrzeć w PR ani porównać.
+- Źródłem prawdy są migracje, nie diagram. Najlepiej generuj go ze schematu (np. `prisma-erd-generator`, SchemaSpy,
+  skrypt z `information_schema`) albo sprawdzaj w CI, że tabele z diagramu istnieją w bazie po migracjach.
+- Migracja zmieniająca tabele lub relacje aktualizuje `erd.md` w tym samym PR. Diagram ma tylko tabele domeny,
+  klucze i krotności relacji; kolumny techniczne pomijasz.
+- Przy kilku modułach osobny diagram na moduł (schemat), plus jeden przeglądowy z relacjami między modułami.
+
 ## Checklista
 - [ ] migracja kompatybilna wstecz i przetestowana (up + down)
 - [ ] brak N+1, indeksy dla nowych zapytań
 - [ ] brak surowego SQL z konkatenacją
+- [ ] zmiana tabel lub relacji zaktualizowała `erd.md` w tym samym PR
