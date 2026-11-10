@@ -1,0 +1,14 @@
+name: accessibility
+prefix: A11Y
+title: Dostępność (statyka szablonów)
+description: obrazy bez alt, przyciski i linki bez nazwy, pola bez etykiety, kliknięcie bez klawiatury, tabindex > 0, brak lang — HTML, JSX/TSX, Vue, Svelte, Angular
+version: 0.1.0
+przeglad: "2027-05-10"
+skills: [ux-accessibility, fe-web-platform]
+applies_when:
+  files_any: ["**/*.html", "**/*.htm", "**/*.jsx", "**/*.tsx", "**/*.vue", "**/*.svelte", "**/*.astro"]
+tier0:
+  script: scripts/scan.py
+gate:
+  min_recall: 1.0
+  max_false_positives: 0

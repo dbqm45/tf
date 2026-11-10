@@ -1,0 +1,15 @@
+name: observability
+prefix: OBS
+title: Obserwowalność usług
+description: usługa HTTP bez health checka i bez identyfikatora korelacji, console.log/print zamiast loggera, połknięte błędy (pusty catch, except pass) — Express, Fastify, Koa, NestJS, Hono, FastAPI, Flask, Django, Spring
+version: 0.1.0
+przeglad: "2027-05-10"
+skills: [ops-observability, ops-sre-incidents, ops-kubernetes]
+incremental: false   # reguły na poziomie repozytorium (trasa health, identyfikator) potrzebują wszystkich plików
+applies_when:
+  files_any: ["**/*.py", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.mjs", "**/*.java", "**/*.kt"]
+tier0:
+  script: scripts/scan.py
+gate:
+  min_recall: 1.0
+  max_false_positives: 0

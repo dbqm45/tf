@@ -1,0 +1,11 @@
+[
+  {"rule": "no-health-endpoint", "file": "src/server.ts"},
+  {"rule": "no-health-endpoint", "file": "api/main.py"},
+  {"rule": "no-correlation-id", "file": "src/server.ts"},
+  {"rule": "no-correlation-id", "file": "api/main.py"},
+  {"rule": "print-instead-of-logger", "file": "src/routes/orders.ts"},
+  {"rule": "print-instead-of-logger", "file": "api/main.py"},
+  {"rule": "swallowed-error", "file": "src/jobs/sync.ts"},
+  {"rule": "swallowed-error", "file": "api/repo.py"},
+  {"rule": "swallowed-error", "file": "src/main/java/shop/PaymentClient.java"}
+]

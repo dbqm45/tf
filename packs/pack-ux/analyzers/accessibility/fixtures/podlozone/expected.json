@@ -1,0 +1,11 @@
+[
+  {"rule": "html-without-lang", "file": "public/index.html"},
+  {"rule": "img-without-alt", "file": "public/index.html"},
+  {"rule": "control-without-name", "file": "public/index.html"},
+  {"rule": "input-without-label", "file": "src/components/SearchBox.tsx"},
+  {"rule": "control-without-name", "file": "src/components/SearchBox.tsx"},
+  {"rule": "click-without-keyboard", "file": "src/components/Card.jsx"},
+  {"rule": "click-without-keyboard", "file": "src/app/menu.component.html"},
+  {"rule": "positive-tabindex", "file": "src/views/Settings.vue"},
+  {"rule": "input-without-label", "file": "src/views/Settings.vue"}
+]

@@ -1,0 +1,9 @@
+[
+  {"rule": "hardcoded-ui-text", "file": "src/components/Cart.tsx"},
+  {"rule": "hardcoded-ui-text", "file": "src/views/Profile.vue"},
+  {"rule": "hardcoded-ui-text", "file": "src/app/header.component.html"},
+  {"rule": "hardcoded-ui-text", "file": "src/components/Footer.js"},
+  {"rule": "money-without-intl", "file": "src/components/Cart.tsx"},
+  {"rule": "locale-less-format", "file": "src/components/Cart.tsx"},
+  {"rule": "locale-less-format", "file": "src/utils/format.ts"}
+]

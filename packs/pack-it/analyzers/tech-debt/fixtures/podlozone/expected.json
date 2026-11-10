@@ -1,0 +1,11 @@
+[
+  {"rule": "marker-without-ticket", "file": "src/billing.py"},
+  {"rule": "suppressed-check", "file": "src/billing.py"},
+  {"rule": "marker-without-ticket", "file": "src/api.ts"},
+  {"rule": "suppressed-check", "file": "src/api.ts"},
+  {"rule": "skipped-test", "file": "tests/test_billing.py"},
+  {"rule": "skipped-test", "file": "web/cart.test.ts"},
+  {"rule": "skipped-test", "file": "src/test/java/shop/OrderServiceTest.java"},
+  {"rule": "large-file", "file": "src/legacy/big.js"},
+  {"rule": "large-file", "file": "src/builder.py"}
+]

@@ -1,0 +1,15 @@
+name: i18n
+prefix: I18N
+title: Umiędzynarodowienie
+description: tekst interfejsu poza funkcją tłumaczącą w projekcie z biblioteką tłumaczeń, daty i liczby formatowane bez locale, kwoty z toFixed sklejone z walutą zamiast Intl.NumberFormat
+version: 0.1.0
+przeglad: "2027-05-10"
+skills: [eng-i18n, fe-web-platform, ux-content-design]
+incremental: false   # stosowalność reguły tekstów zależy od package.json całego projektu
+applies_when:
+  files_any: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.html", "**/*.ts", "**/*.js"]
+tier0:
+  script: scripts/scan.py
+gate:
+  min_recall: 1.0
+  max_false_positives: 0

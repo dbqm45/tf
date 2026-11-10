@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Moduły tf analyze z pack-it (security, architecture, authz, data-classification): obecne po instalacji, przechodzą bramkę na swoich zestawach
-testowych, sekret nie trafia do raportu. python3 .claude/tests/test_analyzers.py"""
+"""Moduły tf analyze z pack-it (security, architecture, authz, data-classification, tech-debt, observability,
+i18n): obecne po instalacji, przechodzą bramkę na swoich zestawach testowych, sekret nie trafia do raportu.
+python3 .claude/tests/test_analyzers.py"""
 import json
 import os
 import subprocess
@@ -29,7 +30,7 @@ def main() -> int:
             fails.append(msg)
             print(f"✗ {msg}")
 
-    for name in ("security", "architecture", "authz", "data-classification"):
+    for name in ("security", "architecture", "authz", "data-classification", "tech-debt", "observability", "i18n"):
         check((MODS / name / "analyzer.yaml").is_file(), f"Z-1: moduł {name} zainstalowany w .tf/factory/analyzers/")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", name], cwd=ROOT, capture_output=True,
                            text=True, timeout=300)
