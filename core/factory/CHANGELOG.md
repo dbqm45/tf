@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.7.0] — 2026-11-10
+### Added
+- **core:** read guard_bash confirm levels from an autonomy policy (#197)
+
 ## [9.6.0] — 2026-11-10
 ### Added
 - **core:** add tf risk change triage for pull requests (#196)
