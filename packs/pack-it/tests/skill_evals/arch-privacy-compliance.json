@@ -114,6 +114,42 @@
       "expect": "no-trigger",
       "neighbor": "be-auth-security",
       "prompt": "Jak bezpiecznie przechowywać hasła użytkowników i jakie parametry Argon2id ustawić?"
+    },
+    {
+      "id": "klasyfikacja-danych",
+      "expect": "trigger",
+      "prompt": "Mamy działający od trzech lat system obsługi klientów (PostgreSQL, kilkadziesiąt tabel, logi w Elasticsearch, eksport do hurtowni). Nikt nie wie, które kolumny zawierają dane osobowe ani kto za które dane odpowiada. Jak uporządkować ład danych: od czego zacząć i co ustalić dla każdej kolumny? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "właściciel",
+            "odpowiedzialn\\w* za (zbiór|dane|tabel)"
+          ],
+          [
+            "klas\\w* (danych|poufności)",
+            "klasyfikac"
+          ],
+          [
+            "poufn",
+            "confidential"
+          ],
+          [
+            "szyfrow"
+          ],
+          [
+            "maskow",
+            "pseudonimiz"
+          ],
+          [
+            "inwentarz",
+            "rejestr\\w* (danych|pól|kolumn)",
+            "art\\.? 30"
+          ],
+          [
+            "log"
+          ]
+        ]
+      }
     }
   ]
 }

@@ -1,0 +1,11 @@
+[
+  {"rule": "pii-field-unclassified", "file": "db/migrations/001_users.sql"},
+  {"rule": "pii-field-unclassified", "file": "db/migrations/002_add_phone.sql"},
+  {"rule": "pii-field-unclassified", "file": "prisma/schema.prisma"},
+  {"rule": "pii-field-unclassified", "file": "app/models.py"},
+  {"rule": "pii-field-unclassified", "file": "src/main/java/clinic/Patient.java"},
+  {"rule": "pii-field-unclassified", "file": "src/entities/user.entity.ts"},
+  {"rule": "pii-in-logs", "file": "src/services/signup.ts"},
+  {"rule": "pii-in-logs", "file": "api/notify.py"},
+  {"rule": "pii-to-analytics", "file": "src/web/track.ts"}
+]

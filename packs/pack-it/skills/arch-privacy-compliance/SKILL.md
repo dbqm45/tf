@@ -3,8 +3,8 @@ name: arch-privacy-compliance
 description: Użyj, gdy system przetwarza dane osobowe (RODO) — podstawy, minimalizacja, retencja, DPIA, procesory.
 metadata:
   przeglad: "2027-04-09"
-  katalog: "Użyj, gdy system przetwarza dane osobowe — nowa funkcja, integracja, analityka, logi, wysyłanie danych do zewnętrznych usług (także AI) — przy projektowaniu i przeglądzie: inwentarz danych (wkład do art. 30), cel i podstawa prawna, prywatność w fazie projektowania i domyślna (minimalizacja, pseudonimizacja), retencja i usuwanie, realizacja praw osób (dostęp, usunięcie, przenoszenie) także w kopiach zapasowych, logach i u procesorów, umowy powierzenia i transfery poza EOG, ocena skutków (DPIA), naruszenia ochrony danych (72 godziny), cookies. Nie do uwierzytelniania i haseł (be-auth-security), modelu zagrożeń (arch-threat-modeling), reagowania na incydent bezpieczeństwa (ops-security-operations) ani zarządzania danymi w potokach i AI Act (data-engineering). Nie jest poradą prawną."
-  slowa: "RODO, GDPR, dane osobowe, ochrona danych, prywatność, UODO, IOD, inspektor ochrony danych, DPIA, ocena skutków, prawo do usunięcia, bycia zapomnianym, retencja danych, zgoda, cookies, ciasteczka, umowa powierzenia, wyciek danych, naruszenie ochrony danych, pseudonimizacja, anonimizacja, pod kątem RODO, zgodnie z RODO, analityka zachowań użytkowników, żądanie usunięcia danych"
+  katalog: "Użyj, gdy system przetwarza dane osobowe — nowa funkcja, integracja, analityka, logi, wysyłanie danych do zewnętrznych usług (także AI) — przy projektowaniu i przeglądzie: inwentarz danych (wkład do art. 30) i ład danych (właściciel, klasy, oznaczanie pól), cel i podstawa prawna, prywatność w fazie projektowania i domyślna (minimalizacja, pseudonimizacja), retencja i usuwanie, realizacja praw osób (dostęp, usunięcie, przenoszenie) także w kopiach zapasowych, logach i u procesorów, umowy powierzenia i transfery poza EOG, ocena skutków (DPIA), naruszenia ochrony danych (72 godziny), cookies. Nie do uwierzytelniania i haseł (be-auth-security), modelu zagrożeń (arch-threat-modeling), reagowania na incydent bezpieczeństwa (ops-security-operations) ani zarządzania danymi w potokach i AI Act (data-engineering). Nie jest poradą prawną."
+  slowa: "RODO, GDPR, dane osobowe, ochrona danych, prywatność, UODO, IOD, inspektor ochrony danych, DPIA, ocena skutków, prawo do usunięcia, bycia zapomnianym, retencja danych, zgoda, cookies, ciasteczka, umowa powierzenia, wyciek danych, naruszenie ochrony danych, pseudonimizacja, anonimizacja, pod kątem RODO, zgodnie z RODO, analityka zachowań użytkowników, żądanie usunięcia danych, ład danych, klasyfikacja danych, klasy danych, właściciel danych, inwentarz danych osobowych, które kolumny zawierają dane osobowe, data governance"
 ---
 
 # Ochrona danych osobowych (RODO) w projekcie
@@ -20,6 +20,12 @@ prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-proj
      zapasowe, analityka, środowiska testowe, kolejki, zewnętrzni dostawcy** — i kto ma dostęp.
    - Przepływy zaznacz na diagramie przepływu danych z arch-threat-modeling.
    - To wkład do rejestru czynności przetwarzania (art. 30), który prowadzi administrator.
+   - **Ład danych:** każdy zbiór ma właściciela biznesowego. Każde pole ma klasę: publiczne, wewnętrzne, poufne,
+     dane osobowe albo szczególne kategorie. Klasa wyznacza dostęp, szyfrowanie, maskowanie w logach
+     i poza produkcją oraz retencję. Inwentarz pól prowadzisz w `docs/project/04-architecture/data-inventory.md`,
+     a klasę oznaczasz też przy polu w kodzie. W istniejącym systemie szkic inwentarza daje
+     `tf analyze --only data-classification`. Tabela wymagań, format inwentarza i kolejność porządków:
+     `references/lad-danych.md`.
 2. **Cel i podstawa prawna dla każdego celu** (art. 5–6):
    - podstawy z art. 6 ust. 1: umowa, obowiązek prawny, prawnie uzasadniony interes, zgoda i inne;
    - szczególne kategorie danych (zdrowie, biometria do identyfikacji, poglądy i inne z art. 9) wymagają dodatkowej
@@ -107,6 +113,7 @@ prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-proj
 
 ## Checklista
 - [ ] inwentarz danych (z logami, kopiami, testami, dostawcami) i przepływy na diagramie
+- [ ] właściciel i klasa każdego zbioru; pola osobowe oznaczone w kodzie i w `data-inventory.md`
 - [ ] cel i podstawa prawna dla każdego celu — zatwierdzone przez człowieka/IOD
 - [ ] minimalizacja i pseudonimizacja w projekcie; brak prawdziwych danych w testach
 - [ ] okresy retencji i automatyczne usuwanie z testem

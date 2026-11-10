@@ -59,6 +59,38 @@ rozproszone po `data-engineering` i skillach bezpieczeństwa; retencja i RODO s�
 - Sekcja „ład danych”: właściciel zbioru, klasy i wymagania na klasę (szyfrowanie, dostęp, maskowanie, retencja),
   inwentarz danych osobowych, odwołanie do `data-engineering` (pochodzenie, kontrakty danych).
 
+#### A5 razem z modułem `data-classification` (decyzja człowieka 2026-11-10)
+Inwentarz danych osobowych z A5 nie powstaje ręcznie od zera: moduł `tf analyze` (tier 0, `pack-it`) daje jego
+szkic i pilnuje, żeby nowe pola osobowe nie pojawiały się bez klasy. Potem A7 moduł po module.
+
+Skill (`arch-privacy-compliance`):
+1. Scenariusz ewaluacji `klasyfikacja-danych` (najpierw): pytanie o klasy danych, właściciela i inwentarz w
+   istniejącym systemie; sprawdza właściciela zbioru, klasy, wymagania na klasę (szyfrowanie, dostęp, maskowanie,
+   retencja) i inwentarz pól.
+2. Treść: zasada „Ład danych” w SKILL.md (krótko) i `references/lad-danych.md` — właściciel zbioru, cztery klasy
+   (publiczne, wewnętrzne, poufne, dane osobowe; szczególne kategorie z art. 9 osobno) z tabelą wymagań na klasę,
+   format inwentarza (`docs/project/04-architecture/data-inventory.md`: tabela, pole, klasa, cel, retencja,
+   właściciel, gdzie jeszcze leży), oznaczanie klasy w kodzie (komentarz lub adnotacja przy polu), odwołanie do
+   `data-engineering` (pochodzenie, kontrakty danych) i do modułu `data-classification`.
+3. `katalog`, `slowa`, checklista; bramka `skill_gate.py`. Płatna ewaluacja tylko za zgodą.
+
+Moduł `packs/pack-it/analyzers/data-classification/` (TDD: najpierw zestawy testowe i wpis w
+`tests/test_analyzers.py`, uruchomienie na czerwono, potem skrypt):
+- `pii-field-unclassified` (średnia): pole o nazwie typowej dla danych osobowych (e-mail, telefon, PESEL, IBAN, data
+  urodzenia, imię i nazwisko, adres, IP, dokument tożsamości, zdrowie; nazwy angielskie i polskie, camelCase
+  i snake_case) w migracji SQL, `schema.prisma`, modelu Django/SQLAlchemy, encji TypeORM lub JPA — bez znacznika
+  klasy przy polu (komentarz `pii`, `confidential`, `klasa:` itp. w tej samej lub dwóch poprzednich liniach) i bez
+  wpisu w inwentarzu (`docs/**/data-inventory*.md`, `docs/**/privacy.md`);
+- `pii-in-logs` (wysoka): wywołanie loggera, `console.*` lub `print` z identyfikatorem osobowym w argumentach
+  (poza samymi napisami; interpolacje `${…}` i f-stringi się liczą);
+- `pii-to-analytics` (wysoka): wywołanie narzędzia analityki (`analytics.track`, `posthog.capture`,
+  `mixpanel.track`, `gtag`, `segment`…) z identyfikatorem osobowym.
+- Poza zakresem tier 0 (za dużo szumu): dane osobowe w odpowiedziach API — do piętra z modelem.
+- Fixtures `podlozone` (każda reguła i każdy format) i `czyste` (znacznik klasy, wpis w inwentarzu, pola podobne,
+  ale nie osobowe jak `email_verified`, `is_mobile`; sam napis w logu; skrót identyfikatora w analityce; testy
+  pomijane). Bramka: recall 1.0, 0 fałszywych trafień.
+- Przewodnik (tabela modułów) i CHANGELOG przez commit.
+
 ### A6. Biblioteki formularzy — referencja w `fw-react` (`pack-it`)
 Luka: React Hook Form (0 trafień), walidacja (Zod) jest. Referencja: formularz z walidacją schematem współdzielonym
 z serwerem, błędy pól i formularza, dostępność, formularze wielokrokowe.
