@@ -23,7 +23,7 @@ Sekcja A — luki w katalogu:
 - [ ] **A2:** (A2a i A2c zrobione; zostaje A2b) wzorce aplikacji biznesowej w `pack-it` (bez osobnej nakładki, decyzja 2026-11-09): A2a skill
   `be-business-app-patterns` (uprawnienia na serwerze, audit log, soft delete, impersonacja, operacje masowe); A2b
   tabele danych i eksport w `fe-architecture` i `be-api-design`; A2c moduł `tf analyze` `authz`.
-- [ ] **A3:** `eng-repo-readiness` + Developer Experience (devcontainer, `docker compose` dev, `make`/`just`, czas
+- [x] **A3:** `eng-repo-readiness` + Developer Experience (devcontainer, `docker compose` dev, `make`/`just`, czas
   od klonu do zielonych testów).
 - [ ] **A4:** mapa artefaktów (faza → artefakt → kto pisze → skill) w `core-delivery-lifecycle`; ERD w `be-database`.
 - [x] **A5:** sekcja „ład danych” w `arch-privacy-compliance` (własność, klasyfikacja, inwentarz PII). Razem z modułem `tf analyze` `data-classification` (decyzja 2026-11-10; plan w A5).

@@ -46,6 +46,25 @@ feedbacku (0 trafień dla devcontainera). Skill dziś patrzy pod kątem agentów
   deweloperskie bez prawdziwych kluczy, czas od klonu do zielonych testów jako miara, szybkie testy powiązane.
 - Rozszerzenie zamiast nowego skilla; nowe scenariusze ewaluacji dla części DX.
 
+#### A3 — plan realizacji (2026-11-10, decyzja człowieka: „tak”, po rekomendacji)
+Pętla deweloperska jako część ścieżki B skilla (audyt) i nowa referencja `references/petla-deweloperska.md`; fakty
+zbiera `scripts/readiness_check.py` (sekcja `dx`), ocena i pomiar czasu zostają przy agencie.
+1. Testy skryptu (najpierw, czerwone) w `packs/pack-it/tests/test_readiness_check.py`:
+   - repo z `Makefile` (`setup`, `test`), `compose.yaml` z Postgresem i healthcheckiem, skryptem `seed`
+     i fikcyjnymi wartościami w `.env.example` → bez ustaleń DX, `dx.setup` i `dx.services` wypełnione, polecenie
+     testów powiązanych (`vitest related`);
+   - repo z `pg` i `ioredis` bez compose/devcontainera, bez polecenia startowego i z kluczem w `.env.example` →
+     ustalenia: brak polecenia startowego (średnia), usługi bez środowiska lokalnego (średnia), sekret w
+     `.env.example` (wysoka), brak danych startowych (niska);
+   - repo „zdrowe” z istniejącego testu dostaje skrypt `dev` (nowy wymóg: jedno polecenie startowe).
+2. Skrypt: polecenie startowe (`make`/`just`/Taskfile, skrypty `dev`/`start`/`setup`, sekcja uruchomienia w README),
+   usługi z compose i ich healthchecki, devcontainer (informacja), dane startowe, wartości w `.env.example`
+   wyglądające na prawdziwe klucze, polecenie testów powiązanych ze zmianą dla wykrytego runnera.
+3. Scenariusze ewaluacji (przed treścią): `dx-wejscie-do-projektu` (nowa osoba potrzebuje dwóch dni) i
+   `dx-testy-wymagaja-uslug` (agent nie uruchomi testów, bo potrzebują Postgresa i Redisa).
+4. Treść: krok 6 w ścieżce B, referencja z miarą „od klonu do zielonych testów” (procedura pomiaru w czystym
+   katalogu, cel i zapis w raporcie), checklista, `slowa`, `katalog`; bramka `skill_gate.py`.
+
 ### A4. Mapa artefaktów — `core-delivery-lifecycle` (`core`)
 Luka: jedno miejsce „faza → artefakt → kto pisze → skill źródłowy”; brak ERD (0 trafień).
 - Tabela artefaktów: PRD, SPEC, ARCHITECTURE, ADR, ERD, openapi, DESIGN_SYSTEM, ACCESSIBILITY, SECURITY,
