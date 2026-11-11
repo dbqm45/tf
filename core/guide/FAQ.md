@@ -50,6 +50,7 @@ Skrypty uruchamiane przez Claude Code przy zdarzeniach, niezależnie od decyzji 
 - `guard_bash` — groźne polecenia powłoki;
 - `guard_paths` — pliki z sekretami;
 - `cleanroom_guard` — izolacja informacji między agentami;
+- `model_guard` — delegacja z modelem spoza listy `approved_models` (działa tylko, gdy lista jest ustawiona);
 - `tdd_guard` — kod dopiero po czerwonym teście;
 - `quality_gate` — z `.claude/quality-gate.json` tura i podagent nie kończą się z czerwonymi testami (blokada
   testów: `test_lock.py`);

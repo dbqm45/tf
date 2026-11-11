@@ -73,6 +73,16 @@ def effective_tiers(cfg: dict, name: str) -> dict:
     return tiers
 
 
+def unapproved(cfg: dict, name: str) -> list[str]:
+    """Modele profilu `name` spoza listy zatwierdzonych (approved_models) — .tf/factory/models_policy.py."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_models_policy_profile", ROOT / ".tf" / "factory" / "models_policy.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    errors, _ = mod.check(cfg, name, mod.project_state(ROOT)[2])
+    return errors
+
+
 def show(cfg: dict) -> int:
     state = read_json(PROFILE_FILE)
     active = state.get("profile") or cfg.get("default_profile")
@@ -103,6 +113,14 @@ def main(argv: list[str]) -> int:
     if name not in profiles:
         print(f"✗ Nie ma profilu „{name}”. Dostępne: {', '.join(profiles)}")
         return 2
+
+    blocked = unapproved(cfg, name)
+    if blocked:
+        print(f"✗ Profil „{name}” używa modeli spoza listy approved_models — nie przełączam:")
+        for b in blocked:
+            print(f"  ✗ {b}")
+        print("  Zmień listę w .tf/config/config.yaml albo wybierz inny profil (python3 .tf/factory/models_policy.py).")
+        return 1
 
     state = read_json(PROFILE_FILE)
     prev_set: dict = state.get("settings") or {}

@@ -13,6 +13,23 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
 - [x] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
+## Zadania fabryki z planu programu AI (T1–T14) — zapisane 2026-11-11
+Plan i porównanie ze stanem 9.17: `docs/plans/2026-11-11-program-ai-luki-w-fabryce.md` (źródło: pdi
+`docs/plan-program-ai-wg-aplikacji.md` §2.1). Decyzja człowieka 2026-11-11: zacząć od fabryki. Większość T1–T14 już
+jest (ai-evals, ai-mlops, ai-governance-compliance, polityka autonomii, przegląd AI w CI); realne kroki to cztery.
+- [x] **Krok 1 (T6):** lista zatwierdzonych modeli `approved_models` — `models_policy.py`, błąd w `build.py check`,
+  odmowa w `profile.py`, hook `model_guard` dla parametru `model` delegacji; bez listy bez zmian.
+- [ ] **Krok 2 (T2):** `tf standard` — jeden wynik z `readiness_check.py`, `instructions_lint.py`, `build.py check`
+  i nowej kontroli dziennika `docs/project/`; kod wyjścia dla CI.
+- [ ] **Krok 3 (T4):** `eval_gate.py` dla produktu (zestaw, grader z kodu, próg wobec linii bazowej, budżet) i szablon
+  `eval-gate.yml`; w trybie pdi wynik jako warunek bramki.
+- [ ] **Krok 4 (T13):** nakładka z innego repozytorium (`tf add <repo>#tag:pack-x`) z audytem i przypięciem wersji —
+  warunek wydzielenia `pack-ev` do linii EV.
+- [ ] **Po decyzjach / innych aplikacjach:** T9 i T10 (cykl życia funkcji AI, role ludzi) po operating modelu w pdi;
+  T7 (eksport dziennika agentów) po schemacie w kontrakcie pdi; T8 poziom organizacji i T12 po rejestrze i bramce
+  modeli; T14 (wersje technologii per aplikacja) po rozmowie z człowiekiem; T1 — porównać metodykę oceny z aiux
+  z `ai-evals`, zanim powstanie cokolwiek nowego.
+
 ## Luki katalogu i polityka autonomii (przegląd listy „Autonomous Full Stack Agent”) — zapisane 2026-11-09
 Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: najpierw sekcja A, potem B. Skille wg
 `core-skill-authoring` (scenariusze przed treścią, bramka), kod metodą TDD, każdy krok osobnym PR.

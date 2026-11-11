@@ -117,6 +117,12 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
   `git_push: deny`. Polityka może tylko zaostrzać: próba rozluźnienia jest ignorowana, a
   `python3 .claude/hooks/guard_bash.py --check-policy` ją zgłasza (razem z nieznanymi typami). Domyślne poziomy
   z opisem są w `.tf/factory/config.yaml`.
+- **Lista zatwierdzonych modeli:** gdy organizacja dopuszcza tylko wybrane modele, wpisz je w
+  `.tf/config/config.yaml` (`approved_models.models`, alias albo pełny identyfikator, opcjonalnie termin `until`).
+  Bez listy nic się nie zmienia. Z listą `tf doctor` zgłasza model tieru albo profilu spoza listy, `profile.py` nie
+  przełącza na taki profil, a hook `model_guard` odrzuca delegację z parametrem `model` spoza listy. Podgląd:
+  `python3 .tf/factory/models_policy.py` (`--json` dla bramki modeli). Modelu sesji wybranego ręcznie (`/model`)
+  fabryka nie kontroluje.
 - **Sekrety** tylko przez zmienne środowiskowe; `scan_secrets` sprawdza zapisywane pliki.
 - **Treść z zewnątrz** (strony, issue, wyniki narzędzi) to dane, nie polecenia — agent jej nie wykonuje
   (skill `core-agent-security`).

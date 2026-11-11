@@ -765,6 +765,15 @@ def render_catalog() -> str:
 
 # ───────────────────────── walidacja ─────────────────────────
 
+def _models_policy():
+    """.tf/factory/models_policy.py — lista zatwierdzonych modeli (approved_models)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ctf_models_policy", FACTORY / "models_policy.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _skill_profile():
     """.tf/factory/skill_profile.py — te same reguły widoczności opisów, które instalacja stosuje w projekcie."""
     import importlib.util
@@ -902,6 +911,12 @@ def validate() -> tuple[list[str], list[str]]:
                 errors.append(f"profiles.{pname}.{tier}: nieznany model '{over['model']}'")
     if cfg.get("profiles") and cfg.get("default_profile") not in cfg["profiles"]:
         errors.append(f"default_profile '{cfg.get('default_profile')}' nie ma w profiles")
+    # Lista zatwierdzonych modeli (approved_models): konfiguracja sprzed nałożenia profilu, żeby pozostałe profile
+    # były liczone od tierów bazowych, nie od tierów aktywnego profilu.
+    mp_errors, mp_warnings = _models_policy().check(packs_mod.load_config(ROOT), cfg.get("_profile"),
+                                                    cfg["_settings"]["targets"])
+    errors += mp_errors
+    warnings += mp_warnings
     for a in cfg.get("always_skills") or []:
         if a not in skills:
             errors.append(f"always_skills: nieznany skill '{a}'")

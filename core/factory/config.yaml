@@ -343,6 +343,21 @@ default_targets: [claude]
 managed_agents:
   models: {haiku: claude-haiku-5-5, sonnet: claude-sonnet-5-5, opus: claude-opus-5-5, fable: claude-fable-5-1, inherit: claude-opus-5-5}
 
+# Lista zatwierdzonych modeli (T6): których modeli wolno używać w tym projekcie. Pusta = bez ograniczeń (jak dotąd).
+# Ustawiasz ją w .tf/config/config.yaml; kluczem jest nazwa użyta w konfiguracji — alias (haiku, sonnet, opus, fable)
+# albo pełny identyfikator `claude-…`; dopasowanie dokładne. `until` po terminie = model niezatwierdzony. Pola opisu
+# (provider, regions, data, contract, note) są dla ludzi i dla bramki modeli organizacji; fabryka ich nie interpretuje.
+# Z listą: model tieru po nałożeniu aktywnego profilu i ustawienia sesji profilu (model, advisorModel) spoza listy to
+# błąd `build.py check` (tf doctor); pozostałe profile i `inherit` to ostrzeżenia; profile.py nie przełącza na profil
+# z modelem spoza listy; hook model_guard odrzuca delegację z parametrem `model` spoza listy.
+# Podgląd i JSON dla bramki: python3 .tf/factory/models_policy.py [--json]. Przykład:
+#   approved_models:
+#     source: "Polityka AI 2026-11"
+#     models:
+#       haiku:  {provider: anthropic, regions: [eu], data: [public, internal], contract: "DPA 2026-03"}
+#       sonnet: {provider: anthropic, regions: [eu], data: [public, internal, personal], until: "2027-06-30"}
+approved_models: {}
+
 # Polityka autonomii (B1a): typy operacji, o które hook guard_bash pyta człowieka. Poziom: confirm (zgoda człowieka)
 # albo deny (blokada). W .tf/config/config.yaml projekt może tylko zaostrzyć (confirm → deny); wartość słabsza jest
 # ignorowana — sprawdzenie: python3 .claude/hooks/guard_bash.py --check-policy. Stała lista blokad rdzenia (rm -rf /,
