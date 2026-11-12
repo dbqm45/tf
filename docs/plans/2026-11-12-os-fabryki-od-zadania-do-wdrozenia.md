@@ -566,6 +566,23 @@ kalibracja reguły, `AGENTS.md` obok `CLAUDE.md` — tu chodzi o wpięcie ich w 
   doprowadziły do zmiany wyboru, trzeba je przepisać. Ta sama miara dla naszych bramek: bramka, która nigdy nie
   czerwienieje, i bramka, którą zawsze się obchodzi, idą do przeglądu (`tf metrics`).
 
+**Z plików pomocniczych skilli** (schematy raportów, protokół odmów, scalanie szkieletu, dziennik weryfikacji):
+- **Dwa rodzaje zatrzymania i jedno źródło komunikatów.** Twarda odmowa tylko wtedy, gdy narzędzie naprawdę nie może
+  wykonać pracy (brak pliku wejściowego, nieznany wariant); wszystko inne to ostrzeżenie z wyborem „kontynuuj /
+  przerwij”. Teksty zatrzymań leżą w jednym pliku, więc brzmią tak samo wszędzie. U nas: jeden plik komunikatów
+  zatrzymań osi w prostym języku (1a), testowany jak kod.
+- **Zapis do istniejącego repo nigdy nie kasuje pracy człowieka:** istniejący plik wygrywa, wersja narzędzia ląduje obok
+  (do porównania), `.gitignore` jest dopisywany, a katalog z ustaleniami projektu jest nietykalny. Reguła dla
+  `tf onboard` i instalatora.
+- **Raport jest śladem, a nie listą wyjątków:** zawiera także sprawdzenia, które się nie wykonały, z powodem („nie
+  uruchomiono: brak narzędzia”), kopię wejść, z których powstał, oraz listę informacji odczytanych, ale
+  niewykorzystanych. Przy przerwaniu powstaje raport częściowy; gdy zapis na dysk zawiedzie, treść trafia do rozmowy.
+  To doprecyzowuje `report.md` i `evidence/` z sekcji 5: „nie sprawdzono” jest jawne i nigdy nie wygląda jak „zielone”.
+- **Nagłówek dla maszyny, treść dla człowieka:** werdykt i liczby w nagłówku pliku, opis w stałej kolejności sekcji —
+  ten sam układ co nasze pliki etapów.
+- **Świeżość zależności w obie strony:** obok karencji 7 dni dla wersji zbyt nowych (Talos) — ostrzeżenie dla
+  narzędzi i szablonów nieaktualizowanych od ponad 6 miesięcy; to ostrzeżenie, nie blokada.
+
 **Przygotowanie repo — jednorazowo, przed pierwszym zadaniem.** Oś zakłada repo, w którym agent może sprawdzić własną
 pracę. `tf onboard` zaczyna więc od raportu gotowości w zwykłym języku: co jest (testy, lint, typy, CI, lockfile), czego
 brakuje i w jakiej kolejności to naprawić — najpierw to, bez czego fabryka nie zweryfikuje zmian. Braki blokujące
@@ -584,7 +601,7 @@ wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
 - PDF „AI Playbook” (szkic do przeglądu, 18 stron, przeczytany 2026-11-12) — opis dev-kitu i tabela podejść.
 - Skille `10x-init`, `10x-shape`, `10x-prd`, `10x-stack-assess`, `10x-tech-stack-selector`, `10x-health-check`,
   `10x-bootstrapper`, `10x-agents-md`, `10x-lesson`, `10x-rule-review`, `10x-infra-research` z kryteriami platform
-  oraz pliki instrukcji lekcji M1L1–M1L5
+  oraz pliki instrukcji lekcji M1L1–M1L5 i pięć plików pomocniczych (schematy, protokół odmów, scalanie szkieletu)
   (załączone 2026-11-12, przeczytane w całości; sekcja 17).
 - 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).
