@@ -126,7 +126,7 @@ flowchart LR
 | 1. Przyjęcie | `ticket.md`: treść zgłoszenia, źródło, data; fakty o repo (`plik:linia`); triaż ryzyka | skrypt pobrania, `scout` | zgłoszenie ma kto/co/po co; `tf risk` policzony |
 | 2. Specyfikacja | `spec.md`: scenariusze `AC-n` (Given/When/Then), poza zakresem, otwarte pytania | model std | `requirements_lint.py` bez błędów; brak otwartych pytań blokujących |
 | 3. Plan | `plan.md`: kawałki pionowe, pokrywane `AC-n`, pliki, zależności, weryfikacja, tier | model std (deep przy wysokim ryzyku) | każde `AC-n` przypisane do kawałka; ≤5 kawałków |
-| 4. Realizacja | commit na kawałek; `evidence/K<n>.json` | pętla kawałka | test czerwony → zielony, weryfikacja, skan, zakres; ślad AC → test |
+| 4. Realizacja | commit na kawałek, wszystko za flagą historyjki (6a); `evidence/K<n>.json` | pętla kawałka | test czerwony → zielony w obu stanach flagi, weryfikacja, skan, zakres; ślad AC → test |
 | 5. Przegląd | `review.md`: werdykt i ustalenia | `scope-reviewer`, drugi model przy wysokim ryzyku | brak ustaleń blokujących |
 | 6. PR | jeden PR: spec, kawałki, dowody, odłożone, ryzyko, koszt | skrypt + model fast | CI zielone; `plan_drift`, `pr_budget` |
 | 7. Wdrożenie | wpis `release` w `task.json`: wersja, środowisko, wynik sprawdzenia | CI projektu; fabryka obserwuje | wydanie i sprawdzenie po wdrożeniu zielone |
@@ -166,6 +166,7 @@ podnieść, obniżenie wymaga jego potwierdzenia):
 1. scalenie PR i wdrożenie na produkcję (polityka autonomii B1: merge należy do człowieka);
 2. operacje z `autonomy.operations` (nowa zależność, polecenie na produkcji, destrukcyjny SQL, publikacja…);
 3. zmiana kontraktu: publiczne API, schemat danych, migracja, decyzja biznesowa (plan §10.2 pkt 3);
+   oraz włączenie flagi funkcji na środowisku innym niż testowe (sekcja 6a);
 4. otwarte pytanie oznaczone jako blokujące, gdy nie ma już kawałka niezależnego;
 5. przekroczony budżet (`--budget`) albo dwie nieudane próby bramki po eskalacji modelu (sekcja 8);
 6. waga „pełna”: tryb Auto jest dla niej niedostępny — fabryka przechodzi na zwykły i mówi dlaczego.
@@ -237,6 +238,47 @@ docs/project/changes/<KEY>/        trwałe, w gicie, czytane przez ludzi i nast�
    czerwony przed kodem (z logu `tdd_guard`). Wynik trafia do PR jako tabela AC → test → commit → dowód.
 6. **Ochrona wyroczni** (tf-5): w trakcie realizacji `spec.md`, zatwierdzone testy akceptacyjne i konfiguracja bramek
    są chronione przed zapisem (`guard_paths`); zmiana wymaga zdarzenia „zmiana wymagań” i zgody człowieka.
+
+## 6a. Kawałki jak u dewelopera i flaga funkcji na historyjkę
+
+Wymaganie człowieka (2026-11-12). Fabryka pracuje tak, jak pracuje deweloper: bierze historyjkę, dzieli ją na zadania
+i commituje każde osobno. To już robi pętla kawałka Talosa (kawałek = commit) — zostaje bez zmian. Dochodzi stała
+reguła flag.
+
+**Reguła flagi:**
+1. **Jedna flaga na historyjkę**, zakładana w pierwszym kawałku, z kluczem od numeru zadania (`proj_123_eksport_csv`).
+   Wartość domyślna: **wyłączona na każdym środowisku**.
+2. **Każdy kawałek chowa swoje zachowanie za tą flagą.** Dopóki historyjka nie jest skończona, użytkownik nie widzi
+   żadnego jej elementu — także na środowisku testowym. Kawałki mogą być scalane po kolei bez ryzyka pokazania
+   połowy funkcji.
+3. **Gdy wszystkie kawałki są zweryfikowane**, ostatni commit historyjki włącza flagę **tylko na środowisku testowym**.
+   Na pozostałych środowiskach zostaje wyłączona.
+4. **Włączenie gdziekolwiek poza testem to decyzja człowieka** — punkt stały z sekcji 4, w każdym trybie, także Auto.
+   Fabryka może przygotować zmianę konfiguracji i pokazać ją do zatwierdzenia; sama jej nie stosuje.
+5. **Flaga ma datę usunięcia.** Po pełnym udostępnieniu fabryka proponuje zadanie sprzątające: usunięcie flagi
+   i martwej gałęzi kodu.
+
+**Co pilnuje reguły (mechanizm, nie prośba):**
+- `task.json` ma pole `flag` (klucz, stan na środowisko, data usunięcia); commit kawałka ma stopkę `Flag: <klucz>`
+  — tę stopkę Talos stosuje już dziś dla cięć z flagą;
+- skrypt sprawdza diff konfiguracji flag: zmiana stanu na środowisku innym niż testowe bez zapisanej decyzji człowieka
+  w `decisions.md` zatrzymuje przebieg;
+- testy kawałka idą w obu stanach: z flagą włączoną (nowe zachowanie, kryteria `AC-n`) i wyłączoną (stare zachowanie
+  bez zmian — to „strażnik” z sekcji 17);
+- bramka zamknięcia historyjki: flaga włączona na teście, wyłączona wszędzie indziej, wszystkie `AC-n` zielone.
+
+**Skąd fabryka wie, jak w projekcie działają flagi i środowiska.** Z karty operacyjnej (sekcja 11), wypełnianej raz
+w `tf onboard`: jaki jest mechanizm flag (plik konfiguracji, zmienna środowiska, usługa), lista środowisk i które jest
+testowe. Gdy projekt nie ma żadnego mechanizmu, fabryka proponuje najprostszy (plik konfiguracji na środowisko) jako
+osobne, pierwsze zadanie — nie wymyśla go w trakcie historyjki.
+
+**Kiedy flagi nie ma:** zmiana, której nie da się ukryć albo nie ma czego ukrywać — poprawka błędu, refaktor bez
+zmiany zachowania, dokumentacja, konfiguracja, waga lekka. Fabryka mówi wtedy wprost: „bez flagi, bo…”. Migracja
+danych nie chowa się za flagą — idzie osobną ścieżką wstecznie zgodną (`ops-release-engineering`) i ma wagę pełną.
+
+**Związek z tym, co jest:** plan wydania `release.yaml` (flagi z etapami udostępniania i datą usunięcia) i bramka B5
+w `core-delivery-lifecycle` opisują to samo dla całego projektu; tu reguła staje się domyślna dla każdej historyjki,
+a etap „test” jest jedynym, który fabryka przechodzi sama.
 
 ## 7. Jakość pilnowana mechanizmem
 

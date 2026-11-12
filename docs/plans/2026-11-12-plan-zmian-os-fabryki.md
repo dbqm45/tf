@@ -1,6 +1,6 @@
 # Plan zmian: od obecnej fabryki do osi „zadanie → wdrożenie”
 
-Data: 2026-11-12. Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
+Data: 2026-11-12 (22 pozycje). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
 `2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md` (dalej „dokument osi”; numery sekcji i decyzji D1–D12 pochodzą
 z niego). Status: propozycja; każda pozycja to osobny PR, kod metodą TDD.
 
@@ -70,8 +70,9 @@ kontraktu. Rodzaj: nowe / rozszerzenie / przeniesienie / treść.
 | 19 | `tf work --once` (bez nadzoru, worktree, stany zajęcia, limit wydatku) | nowe | `tf.py`, nowy skrypt | L | opcjonalne |
 | 20 | odcisk harnessu w logu, pasmo szumu w raportach ewaluacji, sprawdzenie nazw modeli | rozszerzenie | `log_usage.py`, `run_skill_evals.py`, CI | S–M | tak |
 | 21 | przegląd `CLAUDE.md` i skilli pod kątem nadmiaru reguł; pięć kontroli w `tf doctor` | treść + rozszerzenie | `instructions_lint.py`, skille | M (rozłożone) | tak |
+| 22 | flaga funkcji na historyjkę: domyślnie wyłączona, włączana tylko na teście po ukończeniu, inne środowiska za zgodą człowieka; testy w obu stanach; kontrola diffu konfiguracji flag | rozszerzenie (stopka `Flag:` i pole `flag` w Talosie już są) | skill osi, `task_state.py`, nowy mały skrypt kontroli, karta operacyjna w `tf onboard` | M | tak |
 
-Podsumowanie: 4 zmiany duże (4, 9, 11, 19), 12 średnich, 5 małych. Dwie z dużych (11, 19) są opcjonalne na start.
+Podsumowanie: 4 zmiany duże (4, 9, 11, 19), 13 średnich, 5 małych. Dwie z dużych (11, 19) są opcjonalne na start.
 
 ## 4. Kolejność i zależności
 
@@ -80,7 +81,7 @@ Podsumowanie: 4 zmiany duże (4, 9, 11, 19), 12 średnich, 5 małych. Dwie z du�
 | A. Pomiar bazowy i start | E0: pomiar na repo testowym, test laika; 3 | — | wiemy, od czego mierzymy; nowy użytkownik ma jedną stronę |
 | B. Kontrole od pierwszego dnia | 1, 2 | — | bramki działają bez ręcznej konfiguracji — największy zysk jakości najmniejszym kosztem |
 | C. Jedno miejsce na zadanie | 4, 5 | D1, D5 | przebieg wznawia się z plików; dowody ukończenia |
-| D. Specyfikacja i ślad | 6, 7, 8 | — | Given/When/Then → testy, tabela w PR |
+| D. Specyfikacja, ślad i flagi | 6, 7, 8, 22 | — | Given/When/Then → testy, tabela w PR |
 | E. Jedno polecenie | 9, 10, 12 | D2, D3, D12 | `/tf KEY` z trybami; fabryka sama dobiera wagę i model |
 | F. Płynność i podgląd | 11, 13, 14 | — (15 po D9) | pytanie nie zatrzymuje całości; widać, co czeka na człowieka |
 | G. Wejście i wyjście | 16, 17, 18 | D4, D6 | od numeru zadania do wdrożenia i zamknięcia |
