@@ -13,6 +13,14 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
 - [x] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
+## Oś fabryki: od numeru zadania do wdrożenia — zapisane 2026-11-12
+Dokument zbiorczy (propozycja, czeka na decyzje D1–D8 człowieka):
+`docs/plans/2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md`. Łączy Talosa, dashboard, pdi, plany §9–10 z 2026-11-08,
+politykę autonomii i propozycje tf-1…tf-13 w jeden przebieg `/tf <KEY>` z trybami Plan / zwykły / Auto, jednym
+katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
+- [ ] **Decyzje D1–D8** (sekcja 15 dokumentu) — człowiek.
+- [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D8.
+
 ## Luki katalogu i polityka autonomii (przegląd listy „Autonomous Full Stack Agent”) — zapisane 2026-11-09
 Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: najpierw sekcja A, potem B. Skille wg
 `core-skill-authoring` (scenariusze przed treścią, bramka), kod metodą TDD, każdy krok osobnym PR.
