@@ -57,7 +57,7 @@ kontraktu. Rodzaj: nowe / rozszerzenie / przeniesienie / treść.
 | 6 | etap specyfikacji: `spec.md` (GWT, strażnicy, zachowane, otwarte pytania), lint jako bramka | rozszerzenie | `requirements_lint.py`, skill osi | M | tak |
 | 7 | `trace_check.py`: kryterium → test → commit → dowód; tabela w PR | nowe | rdzeń, Talos | M | tak |
 | 8 | ochrona specyfikacji i testów akceptacyjnych przed zapisem w trakcie realizacji | rozszerzenie | `guard_paths.py` | S | tak |
-| 9 | jedno wejście `/tf`: skill osi, dobór wagi z `tf risk`, tryby Plan / zwykły / Auto, punkty stałe | nowe (cienka warstwa nad Talosem) | nowy skill w rdzeniu, `risk_triage.py`, `pack.yaml` Talosa | L | `/talos-story-run` zostaje jako alias; decyzje D2, D3 |
+| 9 | jedno wejście `/tf`: rozpoznanie zadanie / pytanie / drobna zmiana przez dyspozytorkę, skill osi, dobór wagi z `tf risk`, tryby Plan / zwykły / Auto, punkty stałe | nowe (cienka warstwa nad Talosem i dyspozytorką) | nowy skill w rdzeniu, prompt `maja`, `risk_triage.py`, `pack.yaml` Talosa | L | `/talos-story-run` zostaje jako alias; decyzje D2, D3 |
 | 10 | plik komunikatów zatrzymań w prostym języku + pytania przez narzędzie z opcjami | nowe | skill osi, test treści | S | tak |
 | 11 | `work_events.py`: zdarzenia, reguła czekać / iść dalej, `parked.md` jako widok; kawałek zablokowany zamiast STOP | nowe + zmiana pętli | rdzeń, `SKILL.md` Talosa | L | zmiana zachowania Talosa za flagą do pomiaru |
 | 12 | model i effort na krok; eskalacja: sprawdzalność → effort → model | rozszerzenie | `config.yaml` (`tiers`), `build.py`, skill osi | M | stare `tiers` czytane dalej; decyzje D10, D12 |

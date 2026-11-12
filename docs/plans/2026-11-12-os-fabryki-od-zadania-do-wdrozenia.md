@@ -37,6 +37,20 @@ i jeden ekran**:
 | trzy odpowiedzi | gdy fabryka pyta: **tak**, **popraw: …** albo **zdecyduj sam** |
 | jeden ekran | podgląd: co jest robione, co czeka na Ciebie, co gotowe |
 
+**Trzy sposoby użycia, jedno wejście** (wymaganie człowieka, 2026-11-12). Użytkownik pisze zwykłym zdaniem, a
+fabryka rozpoznaje, czego chce, i mówi, co wybrała:
+
+| Co pisze użytkownik | Co robi fabryka | Ślad |
+|---|---|---|
+| zadanie albo jego numer („zrób PROJ-123”, „dodaj eksport do CSV”) | pełny przebieg osi, automatycznie, z zatrzymaniami z sekcji 4 | katalog zadania |
+| pytanie („jak działa logowanie?”, „dlaczego ten test pada?”) | odpowiedź z dowodami z kodu i bazy wiedzy; nic nie zmienia w repo | brak (albo notatka na życzenie) |
+| drobna zmiana („popraw literówkę w README”, „zmień nazwę tej funkcji”) | dyspozytorka robi to od razu albo zleca wykonawcy; bramki i hooki działają jak zawsze; jeden commit | wpis w dzienniku, bez katalogu zadania |
+
+Rozpoznanie robi dyspozytorka (`maja`) według prostych reguł; w razie wątpliwości pyta jednym zdaniem („To wygląda
+na większą zmianę — poprowadzić jako zadanie?”). Drobna zmiana, która w trakcie okazuje się większa (dotyka kontraktu,
+więcej niż kilka plików, potrzebuje decyzji), jest przerywana z propozycją przejścia na przebieg zadania. Każdy sposób
+można też wymusić: `/tf zadanie …`, `/tf pytanie …`, `/tf szybko …`.
+
 Reguły, które obowiązują każdy element osi:
 1. **Użytkownik nie wybiera** persony, wagi, modelu ani plików — fabryka dobiera sama i mówi jednym zdaniem, co
    wybrała i dlaczego („Zmiana dotyka logowania, więc pokażę Ci plan przed kodem”).
@@ -430,7 +444,7 @@ zadania i `git worktree` na zadanie (Symphony).
 | `.tf/runs/talos/<data>-<slug>/` | katalog roboczy | przechodzi w `.tf/runs/<KEY>/`; trwałe pliki do `docs/project/changes/<KEY>/` |
 | pdi | opcjonalna skrzynka bramek i rejestr decyzji | ten sam katalog zadania; bez zmian w kontrakcie pdi |
 | persony | specjaliści wołani przez oś; praca koncepcyjna poza zadaniem | bez zmian; wykonawcy person znikają z listy widocznej dla użytkownika |
-| `maja` (dyspozytorka) | wybór wagi i specjalistów w etapie 1 | reguły wyboru przechodzą do skryptu triażu; maja zostaje dla problemów bez zadania |
+| `maja` (dyspozytorka) | pierwsza linia wejścia: rozpoznaje zadanie / pytanie / drobną zmianę (1a); wybór wagi i specjalistów w etapie 1 | reguły wyboru przechodzą do skryptu triażu; pytania i drobne zmiany obsługuje sama, poza przebiegiem zadania |
 | `core-delivery-lifecycle`, mapa artefaktów | mapa faz projektu (większa skala niż zadanie) | dopisać sekcję „zadanie” wskazującą katalog z sekcji 5 |
 | `project_record wip` | punkt kontrolny pracy poza osią | bez zmian; w osi zastępuje go `task.json` |
 | `proc-requirements-shaping`, `qa-*` | treść etapów 2 i 4 | wpięcie jako kroki; bez zmiany treści skilli |
