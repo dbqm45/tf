@@ -1,0 +1,106 @@
+# Plan zmian: od obecnej fabryki do osi „zadanie → wdrożenie”
+
+Data: 2026-11-12. Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
+`2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md` (dalej „dokument osi”; numery sekcji i decyzji D1–D12 pochodzą
+z niego). Status: propozycja; każda pozycja to osobny PR, kod metodą TDD.
+
+## 1. Werdykt: ani kosmetyka, ani przebudowa
+
+**To średnia zmiana o charakterze „spięcia”, nie przepisania.** Silnik zostaje; dochodzi warstwa, która łączy
+istniejące części w jeden przebieg, oraz kilka nowych skryptów stanu. Dla użytkownika zmiana będzie duża (jedno
+polecenie zamiast wyboru między personą, Talosem i pdi), dla kodu — umiarkowana.
+
+Liczby z repo (2026-11-12):
+
+| Obszar | Dziś | Co się z nim dzieje |
+|---|---|---|
+| hooki rdzenia | 18 plików, ok. 4,0 tys. linii | bez zmian w logice; 2–3 nowe małe hooki, jeden włączany na czas kawałka |
+| silnik (`core/factory/`) | ok. 7,9 tys. linii | `tf.py` (316 linii) dostaje 3 polecenia; `config.yaml` — przypisanie model/effort na krok |
+| Talos (skill, 4 skrypty, testy) | ok. 3,0 tys. linii | pętla zostaje; zmienia się miejsce zapisu i sposób eskalacji; `run_state.py` (420 linii) uogólniony |
+| pdi (skrypty trybu) | ok. 3,3 tys. linii | bez zmian w kontrakcie |
+| lint historyjek, przegląd gotowości, szablon hooka po edycji | ok. 1,3 tys. linii | użyte ponownie jako kroki i części `tf onboard` |
+| skille | 20 w rdzeniu, 189 w nakładkach | treść bez zmian; przegląd pod kątem nadmiaru reguł (osobno, później) |
+| testy rdzenia | 43 pliki, ok. 7,9 tys. linii | dochodzą testy nowych skryptów |
+
+Szacunek nowego kodu [założenie, do weryfikacji po E1–E2]: 2,5–4 tys. linii skryptów i testów, czyli 10–15% obecnej
+bazy skryptów fabryki. Dla porównania: w ostatnich dwóch tygodniach podobny rozmiar miały `tf analyze` z modułami.
+
+Co decyduje, że to nie kosmetyka:
+1. **Nowe pojęcie i nowy stan:** „zadanie” z własnym katalogiem, plikami etapów i dowodami (sekcja 5) — dziś nie
+   istnieje poza przebiegiem Talosa.
+2. **Zmiana publicznego układu:** katalog przebiegu `.tf/runs/talos/<data>-<slug>/` i klucz `tiers` są w
+   `PUBLIC_API.md`. Przeniesienie trwałych plików do `docs/project/changes/<KEY>/` i rozdzielenie modelu od effortu
+   to zmiany, które bez aliasów oznaczałyby wydanie MAJOR. Plan zakłada aliasy i okres przejściowy (MINOR).
+3. **Kontrole włączone domyślnie:** `tf onboard` zmienia zachowanie w każdym projekcie (bramka zaczyna blokować).
+
+Co decyduje, że to nie przebudowa: żaden hook, skill ani skrypt Talosa nie jest wyrzucany; pdi i persony działają
+dalej; każdy etap można wydać osobno i zatrzymać się po nim.
+
+## 2. Co zostaje bez zmian
+
+Hooki bezpieczeństwa i TDD, `skill_gate`, `skill_audit`, ewaluacje skilli, `tf analyze`, `tf risk`, `tf metrics`,
+instalator i aktualizator, persony i dyspozytorki, kontrakt pdi, dziennik projektu `docs/project/`, wszystkie skille
+nakładek, pętla kawałka Talosa (test → kod → weryfikacja → skan → zakres → commit), skan bezpieczeństwa i karencja.
+
+## 3. Zmiany według wielkości
+
+Wielkość: **S** — do ok. 150 linii z testami, jeden PR; **M** — 150–600 linii; **L** — ponad 600 linii albo zmiana
+kontraktu. Rodzaj: nowe / rozszerzenie / przeniesienie / treść.
+
+| # | Zmiana | Rodzaj | Dotyka | Wielkość | Zgodność wstecz |
+|---|---|---|---|---|---|
+| 1 | `tf onboard`: raport gotowości, wykrycie poleceń, zapis `quality-gate.json`, hook po edycji, `verify.sh`, PR | nowe (składa istniejące: `readiness_check.py`, `detect_stack.py`, `post_edit_checks.py`) | `tf.py`, nowy `onboard.py`, szablony | M | tak (nowe polecenie) |
+| 2 | komunikat „bramka wyłączona” w `tf doctor` i na starcie sesji | rozszerzenie | `tf.py`, `detect_stack.py` | S | tak |
+| 3 | strona „Zacznij tutaj” i tabela wyboru w przewodniku | treść | `core/guide/PRZEWODNIK.md`, `GUIDE.md` Talosa | S | tak |
+| 4 | katalog zadania i `task_state.py`: stan, nagłówki plików, skróty wejść, nieaktualność, dowody | nowe + uogólnienie `run_state.py` | rdzeń (nowy skrypt), testy | L | nowe; stare przebiegi czytane dalej |
+| 5 | Talos pisze do nowego układu (trwałe w `docs/project/changes/<KEY>/`, robocze w `.tf/runs/<KEY>/`) | przeniesienie | `run_report.py`, `SKILL.md`, `PUBLIC_API.md`, `.gitignore`, 9 plików z odwołaniami do `.tf/runs` | M | alias starej ścieżki przez jedno wydanie MINOR; decyzja D1 |
+| 6 | etap specyfikacji: `spec.md` (GWT, strażnicy, zachowane, otwarte pytania), lint jako bramka | rozszerzenie | `requirements_lint.py`, skill osi | M | tak |
+| 7 | `trace_check.py`: kryterium → test → commit → dowód; tabela w PR | nowe | rdzeń, Talos | M | tak |
+| 8 | ochrona specyfikacji i testów akceptacyjnych przed zapisem w trakcie realizacji | rozszerzenie | `guard_paths.py` | S | tak |
+| 9 | jedno wejście `/tf`: skill osi, dobór wagi z `tf risk`, tryby Plan / zwykły / Auto, punkty stałe | nowe (cienka warstwa nad Talosem) | nowy skill w rdzeniu, `risk_triage.py`, `pack.yaml` Talosa | L | `/talos-story-run` zostaje jako alias; decyzje D2, D3 |
+| 10 | plik komunikatów zatrzymań w prostym języku + pytania przez narzędzie z opcjami | nowe | skill osi, test treści | S | tak |
+| 11 | `work_events.py`: zdarzenia, reguła czekać / iść dalej, `parked.md` jako widok; kawałek zablokowany zamiast STOP | nowe + zmiana pętli | rdzeń, `SKILL.md` Talosa | L | zmiana zachowania Talosa za flagą do pomiaru |
+| 12 | model i effort na krok; eskalacja: sprawdzalność → effort → model | rozszerzenie | `config.yaml` (`tiers`), `build.py`, skill osi | M | stare `tiers` czytane dalej; decyzje D10, D12 |
+| 13 | przegląd z limitem rund, filtr szumu, etykiety ważne / drobne / zastane | rozszerzenie | agent `scope-reviewer`, skill osi | M | tak |
+| 14 | podgląd: strona z `task.json` i zdarzeń, lista „czeka na Ciebie”, `tf status` | rozszerzenie | szablon dashboardu, `task_state.py`, `tf.py` | M | tak |
+| 15 | podgląd i pytania jako mod w oknie Claude Code | nowe, osobna wtyczka | nowy katalog poza silnikiem | M | opcjonalne; decyzja D9 |
+| 16 | wejście z trackera skryptem (`ticket.md`), kwarantanna treści | nowe | moduł źródła (plan 2026-11-08 §9) | M | opcjonalne; decyzja D4 |
+| 17 | karta operacyjna wdrożenia, pola PR „jak sprawdzono / ryzyko / jak cofnąć”, obserwacja wydania | nowe + treść | szablony, skill osi | M | tak |
+| 18 | zamknięcie: ustalenie → kontrola, zapadki jakości, incydent → test recenzenta | rozszerzenie | `factory_feedback.py` (201 linii), CI projektu | M | tak |
+| 19 | `tf work --once` (bez nadzoru, worktree, stany zajęcia, limit wydatku) | nowe | `tf.py`, nowy skrypt | L | opcjonalne |
+| 20 | odcisk harnessu w logu, pasmo szumu w raportach ewaluacji, sprawdzenie nazw modeli | rozszerzenie | `log_usage.py`, `run_skill_evals.py`, CI | S–M | tak |
+| 21 | przegląd `CLAUDE.md` i skilli pod kątem nadmiaru reguł; pięć kontroli w `tf doctor` | treść + rozszerzenie | `instructions_lint.py`, skille | M (rozłożone) | tak |
+
+Podsumowanie: 4 zmiany duże (4, 9, 11, 19), 12 średnich, 5 małych. Dwie z dużych (11, 19) są opcjonalne na start.
+
+## 4. Kolejność i zależności
+
+| Krok | Pozycje | Wymaga decyzji | Efekt po wydaniu |
+|---|---|---|---|
+| A. Pomiar bazowy i start | E0: pomiar na repo testowym, test laika; 3 | — | wiemy, od czego mierzymy; nowy użytkownik ma jedną stronę |
+| B. Kontrole od pierwszego dnia | 1, 2 | — | bramki działają bez ręcznej konfiguracji — największy zysk jakości najmniejszym kosztem |
+| C. Jedno miejsce na zadanie | 4, 5 | D1, D5 | przebieg wznawia się z plików; dowody ukończenia |
+| D. Specyfikacja i ślad | 6, 7, 8 | — | Given/When/Then → testy, tabela w PR |
+| E. Jedno polecenie | 9, 10, 12 | D2, D3, D12 | `/tf KEY` z trybami; fabryka sama dobiera wagę i model |
+| F. Płynność i podgląd | 11, 13, 14 | — (15 po D9) | pytanie nie zatrzymuje całości; widać, co czeka na człowieka |
+| G. Wejście i wyjście | 16, 17, 18 | D4, D6 | od numeru zadania do wdrożenia i zamknięcia |
+| H. Bez nadzoru i higiena | 19, 20, 21 | D10, D11 | pilotaż na zadaniach niskiego ryzyka; powtórka pomiaru z A |
+
+Kroki A i B nie zależą od żadnej decyzji i nie zmieniają publicznego układu — można je zrobić od razu. Krok C jest
+punktem, od którego zmiana staje się „duża”: po nim cofnięcie kosztuje migrację plików.
+
+## 5. Ryzyka samej zmiany
+
+| Ryzyko | Jak ograniczamy |
+|---|---|
+| złamanie publicznego API (ścieżki Talosa, `tiers`) | aliasy i odczyt starego układu przez jedno wydanie MINOR; wpis `Deprecated` w `CHANGELOG`; `migrations.py` przenosi stare przebiegi |
+| oś gorsza od Talosa uruchamianego ręcznie | Talos zostaje jako alias; porównanie `flow_compare` przed wygaszeniem (za zgodą na koszt) |
+| bramka włączona przez `tf onboard` blokuje zespół z czerwonymi testami | raport gotowości najpierw; bramka z `max_blocks` i jawnym wyłącznikiem lokalnym — jak dziś |
+| rozrost instrukcji razem z osią (wbrew S6) | skill osi opisuje cel i punkty stałe, a kroki pilnują skrypty; limit długości w bramce skilla |
+| dwa układy plików zadań w okresie przejściowym | jeden skrypt stanu czyta oba; nowy zapis tylko w nowym układzie |
+| koszt pomiarów (ewaluacje, `flow_compare`) | tylko za zgodą człowieka; dziś wstrzymane |
+
+## 6. Co musi zdecydować człowiek, żeby ruszyć
+
+Do kroków A–B: nic. Do kroku C: **D1** (pliki zadania w gicie czy poza) i **D5** (co z folderem po zamknięciu).
+Do kroku E: **D2**, **D3**, **D12**. Reszta decyzji (D4, D6, D8–D11) może poczekać na wyniki pierwszych kroków.
