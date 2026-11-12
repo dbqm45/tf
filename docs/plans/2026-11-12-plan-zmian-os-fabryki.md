@@ -162,6 +162,54 @@ tf-7 z `propozycje-wdrozen.md`. Krok H planu.
 Wniosek: plan pokrywa wszystkie dziesięć ryzyk co najmniej częściowo; jedyną nazwaną luką jest ASI07. Tabela nie
 jest audytem — jest listą kontrolną do sprawdzenia z pełnym dokumentem OWASP.
 
+## 4c. Granice wobec Delivery Intelligence Suite (2026-11-12)
+
+Podstawa: strona propozycji Suite z 2026-11-10 (sześć produktów i dwie usługi wspólne; fabryka to „DI Agent
+Factory”, krok „Budowa”). Stan pozostałych produktów znany tylko z tej strony [niezweryfikowane w ich repozytoriach].
+
+**Zasada:** fabryka powstaje raz, jako samodzielna. Nie ma osobnej wersji „pod Suite”. Jedynym stykiem jest
+repozytorium projektu: fabryka zapisuje w nim pliki zadania, PR-y i stopkę `Flag:` w commitach, a produkty Suite to
+czytają. Fabryka nie wywołuje żadnego z nich i działa bez nich.
+
+### Co należy do fabryki, a co do pozostałych części
+
+| Część Suite | Odpowiada za | Co zostaje w fabryce |
+|---|---|---|
+| DI Agent Factory (tf) | budowę: kawałki, TDD, bramki, przegląd, PR, pliki zadania, lokalny podgląd | całość pozycji 1–5, 7–10, 12–15, 19, 21, 23, 25, 26 |
+| DI Definition | gotowość zgłoszenia, konflikty między źródłami, czytanie Jiry i Confluence | lint scenariuszy jako kontrola wejścia (6); czytanie zgłoszenia skryptem przy pracy samodzielnej (16) |
+| DI Decision | bramki B1–B5, rejestr decyzji, konsola „czyja kolej” | pytanie w sesji i `decisions.md` jako zapis w repo (9–11); dashboard tylko jako lokalny widok zadań i plików (14) |
+| DI Release Control | stan flagi na środowiskach, kolejność test → QA → PROD, audyt | flaga w kodzie, stopka `Flag:`, testy w obu stanach (22) |
+| DI Release | co wdrożone i widoczne, rollback, metryki przepływu | pola PR „jak sprawdzono / ryzyko / jak cofnąć” (17), lekcje i zapadki jakości (18) |
+| DI Assistant (planowany) | pytania o proces [założenie — strona tego nie precyzuje] | pytania o kod przez `/tf` (9) |
+| DI Model Gateway, DI AI Registry (planowane) | zatwierdzone modele, koszt, dziennik agentów | dobór modelu i effortu na krok (12), odcisk harnessu i telemetria jako dane do oddania (20, 24) |
+
+### Co robimy teraz ze względu na Suite
+
+1. **D1 rozstrzygnięte: pliki zadania w gicie** (przyjęte 2026-11-12 razem z tą sekcją). DI Decision i DI Release
+   czytają repozytorium, więc pliki poza gitem byłyby dla nich niewidoczne.
+2. **Układ `docs/project/changes/<KEY>/` jest kontraktem.** Pozycje 4 i 5 dostają test zgodności z kontraktem pdi
+   (obok istniejącego `tools/sync_contract.py check`); zmiana układu wymaga aliasu jak każda zmiana publicznego API.
+3. **Etap 7 (wdrożenie) i dashboard zostają cienkie.** Fabryka nie buduje własnej obserwacji wydań ani konsoli
+   procesu.
+
+### Co odkładamy (adaptery)
+
+Powstają dopiero wtedy, gdy istnieje produkt po drugiej stronie. Do tego czasu fabryka używa wersji minimalnej.
+
+| Adapter | Wersja minimalna w fabryce | Produkt |
+|---|---|---|
+| prośba o bramkę zamiast pytania w sesji | pytanie z opcjami i wpis w `decisions.md` | DI Decision |
+| uruchomienie fazy z zewnątrz | `tf work --once` (19) — to samo wejście posłuży Suite | DI Decision |
+| ustawianie flagi na środowisku | plik konfiguracji flag i kontrola jego diffu (22) | DI Release Control |
+| przyjęcie gotowej definicji | `ticket.md` pobrany skryptem albo wklejony przez człowieka (16) | DI Definition |
+| eksport dziennika agenta | `events.jsonl` w katalogu zadania (11) | DI AI Registry |
+| lista zatwierdzonych modeli | sprawdzenie nazw modeli w CI (20) | DI Model Gateway |
+| macierz uprawnień | polityka `autonomy.operations` | DI AI Registry |
+
+Skutek dla planu: liczba pozycji i ich wielkość się nie zmieniają. Zmienia się kolejność jednej: pozycja 19
+przesuwa się z kroku H bliżej kroku E, jeśli Suite ma uruchamiać fazy w CI — do decyzji, gdy tor Suite będzie tego
+potrzebował.
+
 ## 5. Ryzyka samej zmiany
 
 | Ryzyko | Jak ograniczamy |
@@ -176,5 +224,6 @@ jest audytem — jest listą kontrolną do sprawdzenia z pełnym dokumentem OWAS
 
 ## 6. Co musi zdecydować człowiek, żeby ruszyć
 
-Do kroków A–B: nic. Do kroku C: **D1** (pliki zadania w gicie czy poza) i **D5** (co z folderem po zamknięciu).
+Do kroków A–B: nic. Do kroku C: **D5** (co z folderem po zamknięciu); **D1** jest rozstrzygnięte — pliki zadania
+w gicie (sekcja 4c).
 Do kroku E: **D2**, **D3**, **D12**. Reszta decyzji (D4, D6, D8–D11) może poczekać na wyniki pierwszych kroków.
