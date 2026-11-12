@@ -106,19 +106,70 @@ silnikiem etapu realizacji (zgodnie z planem 2026-11-08 §10.3: pętla jako skil
 tf work --once          bez nadzoru: jedno gotowe zadanie, koniec w stanie „do przeglądu” (plan §10.6)
 ```
 
+**Diagram przepływu po wdrożeniu wszystkich zmian** (nowy, 2026-11-12 — zastępuje wcześniejszy, uproszczony schemat;
+obejmuje trzy sposoby użycia, flagę funkcji, eskalację i podgląd). Czerwone: decyzja człowieka; pomarańczowe:
+kontrola automatyczna; szare: katalog zadania i podgląd.
+
 ```mermaid
-flowchart LR
-  A[1 Przyjęcie<br/>skrypt + scout] --> B[2 Specyfikacja<br/>GWT, AC-n]
-  B --> C[3 Plan<br/>kawałki, zależności]
-  C --> D[4 Realizacja<br/>pętla kawałka]
-  D --> E[5 Przegląd<br/>świeży kontekst]
-  E --> F[6 PR<br/>dowody, ryzyko]
-  F --> G[7 Wdrożenie<br/>CI projektu]
-  G --> H[8 Zamknięcie<br/>raport, lekcje]
-  B -. czeka .-> M((człowiek))
-  C -. czeka .-> M
-  F -. merge .-> M
-  G -. produkcja .-> M
+flowchart TD
+  U(["Użytkownik pisze jedno zdanie<br/>/tf ..."]) --> D{"Dyspozytorka:<br/>co to jest?"}
+
+  D -- "pytanie" --> Q["Odpowiedź z dowodami z kodu<br/>bez zmian w repo"]
+  D -- "drobna zmiana" --> S["Zmiana od razu<br/>bramki i hooki działają<br/>jeden commit"]
+  S -. "okazuje się większa" .-> D
+  D -- "zadanie lub numer zadania" --> E1
+
+  subgraph OS["Przebieg zadania"]
+    direction TB
+    E1["1. Przyjęcie<br/>skrypt pobiera zgłoszenie<br/>fakty o repo, ocena ryzyka<br/>fabryka dobiera wagę: lekka / zwykła / pełna"]
+    E2["2. Specyfikacja<br/>scenariusze Given / When / Then<br/>co ma zostać bez zmian, otwarte pytania"]
+    G2{{"Kontrola skryptem:<br/>lint scenariuszy"}}
+    E3["3. Plan<br/>kawałki jak zadania dewelopera<br/>flaga funkcji dla historyjki"]
+    H1[/"CZŁOWIEK: zatwierdza specyfikację i plan<br/>(tryb Auto pomija, gdy ryzyko niskie)"/]
+
+    subgraph LOOP["4. Realizacja — pętla dla każdego kawałka"]
+      direction TB
+      K1["Test, który nie przechodzi"] --> K2["Najmniejszy kod<br/>schowany za flagą (wyłączona)"]
+      K2 --> K3{{"Bramki: testy w obu stanach flagi,<br/>lint, typy, skan bezpieczeństwa,<br/>przegląd zakresu"}}
+      K3 -- "zielone" --> K4["Commit kawałka + dowód"]
+      K3 -- "czerwone" --> K5["Poprawka: najpierw sprawdzalność,<br/>potem więcej wysiłku, potem mocniejszy model"]
+      K5 --> K3
+      K4 --> K6{"Są kolejne kawałki?"}
+      K6 -- "tak" --> K1
+    end
+
+    E5["5. Przegląd całości<br/>świeży kontekst, najwyżej 3 rundy"]
+    FT["Flaga włączona TYLKO na środowisku testowym"]
+    E6["6. Pull request<br/>tabela: kryterium → test → commit → dowód<br/>jak sprawdzono, ryzyko, jak cofnąć"]
+    H2[/"CZŁOWIEK: przegląda i scala"/]
+    E7["7. Wdrożenie<br/>fabryka obserwuje wydanie<br/>i sprawdza działanie po wdrożeniu"]
+    H3[/"CZŁOWIEK: decyduje o włączeniu flagi<br/>na innych środowiskach i o produkcji"/]
+    E8["8. Zamknięcie<br/>raport: czeka na Ciebie / zmienione / znalezione<br/>lekcje, nowe kontrole, usunięcie flagi"]
+
+    E1 --> E2 --> G2
+    G2 -- "błędy" --> E2
+    G2 -- "ok" --> E3 --> H1
+    H1 -- "popraw" --> E2
+    H1 -- "tak" --> K1
+    K6 -- "nie" --> E5
+    E5 -- "uwagi" --> K1
+    E5 -- "ok" --> FT --> E6 --> H2 --> E7 --> H3 --> E8
+  end
+
+  K3 -. "pytanie blokujące albo<br/>zmiana kontraktu" .-> HQ[/"CZŁOWIEK: tak / popraw / zdecyduj sam<br/>fabryka robi w tym czasie inne kawałki"/]
+  HQ -. "odpowiedź" .-> K1
+
+  P[("Katalog zadania:<br/>zgłoszenie, specyfikacja, plan,<br/>decyzje, zdarzenia, dowody, raport")]
+  V["Podgląd na żywo:<br/>etap, co czeka na Ciebie, koszt"]
+  OS -. "każdy etap zapisuje" .-> P
+  P -. "czyta" .-> V
+
+  classDef human fill:#c62828,stroke:#7f0000,color:#ffffff;
+  classDef gate fill:#ef6c00,stroke:#a84300,color:#ffffff;
+  classDef store fill:#eceff1,stroke:#607d8b,color:#000000;
+  class H1,H2,H3,HQ human;
+  class G2,K3 gate;
+  class P,V store;
 ```
 
 | Etap | Co powstaje | Kto | Bramka wyjścia (bez modelu) |
@@ -545,6 +596,10 @@ Talosa jako osobnej persony dopiero po danych z pomiaru; E1 i E2 nie zależą od
 | D10 | czwarty poziom `lead` (Fable 5.2) dla wagi pełnej i długich przebiegów bez nadzoru | tak, ale dopiero po pomiarze na własnych zadaniach; domyślnie wyłączony |
 | D11 | pełna waga: panel recenzentów i weryfikacja reguła po regule jako zapisany przepływ agentów (S3) czy jako proza w skillu | przepływ, tylko dla wagi pełnej — kosztuje więcej tokenów |
 | D12 | zmiana `tiers`: rozdzielenie modelu i effortu na krok (sekcja 8) zamiast stałych par | tak, po pomiarze E0 |
+
+**Poza zakresem (decyzja człowieka, 2026-11-12):** fabryka nie wprowadza na razie Definition of Ready ani oceny
+gotowości zgłoszenia z ci_for_sdlc. O właściwy opis zadania dba człowiek; fabryka robi tylko to, co opisuje etap 2
+(lint scenariuszy, otwarte pytania).
 
 ## 16. Wnioski ze źródeł Anthropic (claude.dev)
 
