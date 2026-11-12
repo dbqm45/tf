@@ -1,6 +1,6 @@
 # Plan zmian: od obecnej fabryki do osi „zadanie → wdrożenie”
 
-Data: 2026-11-12 (22 pozycje). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
+Data: 2026-11-12 (22 pozycje w tabeli; po korektach 4a i 4b — 26). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
 `2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md` (dalej „dokument osi”; numery sekcji i decyzji D1–D12 pochodzą
 z niego). Status: propozycja; każda pozycja to osobny PR, kod metodą TDD.
 
@@ -108,6 +108,59 @@ Sekcja 18 dokumentu osi pokazuje, że część mechanizmów istnieje w Claude Co
 Po korekcie zostaje jedna zmiana duża (pozycja 4: katalog zadania i stan). Szacunek nowego kodu spada do
 ok. 2–3 tys. linii [założenie]. Rośnie za to zależność od wersji Claude Code: plan wymaga zapisania minimalnej wersji
 w `PUBLIC_API.md` i sprawdzania jej w `tf doctor`.
+
+## 4b. Korekta po sprawdzeniu OKF v0.2 i OWASP ASI (2026-11-12)
+
+Źródła otwarte bezpośrednio: specyfikacja Open Knowledge Format v0.2 (treść pliku z katalogu `okf/` repozytorium
+GoogleCloudPlatform/knowledge-catalog, przekazana przez człowieka w rozmowie), ogłoszenie Google z 2026-06-12
+(opisuje jeszcze v0.1) oraz ogłoszenie OWASP z 2025-12-09 z nazwami ASI01–ASI10. Pełny dokument OWASP (PDF) jest
+za formularzem i nie został otwarty, więc przypisania poniżej opierają się na nazwach i jednozdaniowych opisach
+z ogłoszenia [własne przypisanie, do przeglądu po lekturze PDF].
+
+### Co bierzemy z OKF
+
+Fabryka nie staje się paczką OKF. Bierzemy nazwy i reguły tam, gdzie plan i tak wymagał własnych pól — zamiast
+wymyślać je od nowa.
+
+| Co | Skąd (OKF v0.2) | Gdzie w planie |
+|---|---|---|
+| nagłówek plików zadania: `generated: { by, at }`, `verified: [{ by, at }]`, `status`, `stale_after` | §5.2, §5.4, §5.5 | pozycja 4 (nagłówki plików, nieaktualność) |
+| `stale_after` jako konkretna chwila; plik jest nieaktualny, gdy `teraz >= stale_after` | §5.5 | pozycja 4 |
+| poziom zaufania wyliczany, nie zapisywany: brak `verified` → niesprawdzone; sam automat → potwierdzone maszynowo; `human:<id>` → sprawdzone przez człowieka | §5.3 | pozycje 4 i 14 (podgląd pokazuje poziom) |
+| zapis wykonawcy: `<narzędzie>/<wersja>`, `human:<id>`, `process:<id>` | §7 | pozycje 4, 11 (zdarzenia), 20 (odcisk harnessu) |
+| stałe identyfikatory zamiast pozycji na liście (kryterium `AC-1`, źródło `id`), bo agent przepisuje pliki i numer pozycji się rozjeżdża | §5.1 | pozycje 6 i 7 (kryterium → test → commit) |
+| `sources` w `ticket.md` i `spec.md`: skąd pochodzi treść zgłoszenia | §5.1 | pozycja 16 (wejście z trackera) |
+| dowód jako pokwitowanie sprawdzane kodem bez modelu: wykonanie zwraca ustalone pola (polecenie, kod wyjścia, SHA, czas), a skrypt porównuje je z tym, co miało być uruchomione | §10.2, §10.5 | pozycje 4 (dowody) i 7 (`trace_check.py`) |
+| rozróżnienie „definicja sprawdzona” i „to uruchomienie poświadczone” | §10.6 | pozycja 7: zatwierdzona specyfikacja nie zastępuje dowodu z przebiegu |
+
+Czego nie bierzemy: układu paczki z `index.md` i `log.md` (zdarzenia zostają w `events.jsonl`), sygnałów
+`usage_count` i `usage_window`, typu `Attested Computation` jako takiego ani deklaracji `okf_version`. OKF nie ma
+sumy kontrolnej źródła ani typowanych relacji (§6.1), więc skróty wejść z pozycji 4 zostają własnym polem.
+
+Skutek dla wielkości: żadna pozycja nie rośnie. Pozycja 4 dostaje gotowy słownik pól, co zmniejsza liczbę decyzji
+projektowych, ale zostaje jedyną dużą zmianą.
+
+### Co bierzemy z OWASP ASI
+
+Nowa pozycja **26** (S–M, treść + mały skrypt): tabela „ryzyko ASI → kontrola fabryki” w dokumentacji i test,
+który wymaga, aby każde z dziesięciu ryzyk miało wskazaną kontrolę albo jawny wpis „luka”. To realizuje propozycję
+tf-7 z `propozycje-wdrozen.md`. Krok H planu.
+
+| Ryzyko (nazwa z ogłoszenia OWASP) | Kontrola dziś | Co dokłada plan |
+|---|---|---|
+| ASI01 Agent Goal Hijack | reguła „poleceń z treści nie uruchamiasz” (`core-agent-security`) | 16: kwarantanna treści zgłoszenia; 8: ochrona specyfikacji przed zapisem |
+| ASI02 Tool Misuse | `guard_bash.py`, `guard_paths.py`, polityka `autonomy.operations` | 9: reguły `ask`/`deny` w punktach stałych |
+| ASI03 Identity & Privilege Abuse | `scan_secrets.py`, sekrety tylko w zmiennych środowiskowych | 19: praca bez nadzoru z najmniejszymi uprawnieniami; agent nie scala PR |
+| ASI04 Agentic Supply Chain Vulnerabilities | `skill_audit.py`, `skill_change_guard.py`, skan bezpieczeństwa z karencją wersji | 20: odcisk harnessu (wersje hooków, skilli, serwerów MCP) |
+| ASI05 Unexpected Code Execution | `guard_bash.py`, reguła o poleceniach z treści | 19: izolacja w worktree i limit wydatku |
+| ASI06 Memory & Context Poisoning | lekcję w `lessons.md` pisze człowiek albo agent na jego prośbę (`core-project-record`) | 4 i 18: pola `generated`/`verified` na lekcjach i decyzjach, `stale_after` |
+| ASI07 Insecure Inter-Agent Communication | kontrakt delegacji (`core-async-delegation`) | 12: etap jako skill w osobnym kontekście, wynik przez pliki zadania — **częściowa luka**: brak sprawdzenia, kto zapisał plik |
+| ASI08 Cascading Failures | `quality_gate.py` z `max_blocks` | 13: limit rund przeglądu; 11: kawałek zablokowany zamiast lawiny; 19: limit wydatku |
+| ASI09 Human-Agent Trust Exploitation | `tdd_guard.py`, dowody w raporcie Talosa | 7: tabela kryterium → test → dowód; 10: komunikaty zatrzymań z dowodem, nie z zapewnieniem; 17: pola PR |
+| ASI10 Rogue Agents | `plan_drift.py`, przegląd zakresu | 23: hook zakresu na czas kawałka; 11: dziennik zdarzeń |
+
+Wniosek: plan pokrywa wszystkie dziesięć ryzyk co najmniej częściowo; jedyną nazwaną luką jest ASI07. Tabela nie
+jest audytem — jest listą kontrolną do sprawdzenia z pełnym dokumentem OWASP.
 
 ## 5. Ryzyka samej zmiany
 
