@@ -4,7 +4,7 @@ Data: 2026-11-12. Status: **propozycja do decyzji człowieka** — nic z tego do
 sekcja 2 nie mówi inaczej. Dokument łączy w jedną całość: plany z `docs/plans/` (zwłaszcza
 `2026-11-08-tf-analyze-i-katalog-tf.md` §8–10 i `2026-11-09-luki-katalogu-i-autonomia.md`), tryb Talos z dashboardem
 (tf#211), plik `propozycje-wdrozen.md` (tf-1…tf-13, plik użytkownika spoza repo, 2026-11-12), porównanie z dev-kitem
-(PDF „AI Playbook”, szkic, 2026-11-12), łańcuch skilli `10x-*` załączony 2026-11-12 (dziesięć skilli i cztery pliki lekcji, sekcja 17) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
+(PDF „AI Playbook”, szkic, 2026-11-12), łańcuch skilli `10x-*` załączony 2026-11-12 (jedenaście skilli i pięć plików lekcji, sekcja 17) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
 
 ## 1. Cel i podział ról
 
@@ -378,6 +378,10 @@ Stan uczciwie: dziś fabryka kończy na PR. Wdrożenie należy do CI projektu, a
   czerwony → zdarzenie „wycofać?” z rekomendacją.
 - Produkcja zawsze za zgodą człowieka (`prod_command: confirm`). Automatyczne scalanie zmian niskiego ryzyka — dopiero
   po danych z `tf metrics` i osobnej decyzji.
+- **Karta operacyjna wdrożenia** — jeden plik na projekt, wypełniany raz (w `tf onboard` albo przy pierwszym
+  wdrożeniu), po jednej konkretnej odpowiedzi na linię: jak powstaje podgląd zmiany, gdzie są sekrety i kto je czyta,
+  jak cofnąć wydanie i ile to trwa, które działania zatwierdza człowiek, jak agent czyta logi (polecenie). Etap 7
+  czyta tę kartę; bez niej fabryka kończy na scaleniu i mówi o tym wprost.
 - Opis PR ma zawsze trzy pola: **jak sprawdzono**, **ryzyko**, **jak cofnąć** (S12). Nowe zachowanie widoczne dla
   użytkownika idzie za krótkotrwałą flagą; wdrożenie stopniowe (najpierw zespół, potem część użytkowników); cofnięcie
   jednym krokiem. Flaga ma w zadaniu datę usunięcia.
@@ -512,7 +516,8 @@ przepływów agentów dla zwykłych zadań (S3: zużywają znacznie więcej toke
 
 ## 17. Wnioski z łańcucha skilli `10x-*`
 
-Dziesięć skilli i cztery pliki instrukcji lekcji (moduł 1, lekcje 1–4) załączone przez człowieka 2026-11-12. Pliki
+Jedenaście skilli, pięć plików instrukcji lekcji (moduł 1, lekcje 1–5) i kryteria oceny platform załączone przez
+człowieka 2026-11-12. Pliki
 lekcji wymieniają dalsze skille pracy nad pojedynczą zmianą (`new`, `frame`, `research`, `plan`, `plan-review`,
 `implement`, `impl-review`, `archive`, `contract`) — to odcinek najbliższy naszej osi; nie były załączone, więc
 tabela jest do uzupełnienia [niezweryfikowane]. Łańcuch
@@ -533,8 +538,11 @@ Bierzemy wzorce, nie treść; odpowiedniki w fabryce są wskazane, żeby nie bud
 | `agents-md` | plik instrukcji 200–400 słów; każda reguła sprawdzalna na diffie; nic, co widać z repo; najważniejsze na górze; aktualizacja punktowa: zachowaj / popraw / usuń / dodaj na podstawie zmian w repo od ostatniej edycji pliku; osobne pliki dla katalogów o własnych zasadach | `core-agent-instructions` | `tf doctor`: wykrywanie nieaktualnych wpisów `CLAUDE.md` (polecenie lub ścieżka już nie istnieje) skryptem; zgodne z S6 |
 | `lesson` | lekcja = reguła powtarzalna, nie opis jednego błędu; pola: gdzie dotyczy, co się psuje, reguła, których etapów dotyczy; treść pisze człowiek; plik tylko do dopisywania | `lessons.md`, `core-agent-retro` | pole „dotyczy etapów”, żeby etap czytał tylko swoje lekcje; lekcja bez kontroli (sekcja 7) jest niedokończona |
 | `rule-review` | karta oceny pliku instrukcji w pięciu punktach: długość (do 200 niepustych linii dobrze, powyżej 500 źle), wklejony kod zamiast odwołania do pliku, sformułowania niesprawdzalne na diffie (z propozycją sprawdzalnej wersji, nie „usuń”), wiedza, którą model i tak ma, kolejność (najważniejsze na górze); zmiany pojedynczo, każda sprawdzona w następnej sesji | `core-agent-instructions` (test włączenia, karta kontroli), lint instrukcji | te pięć punktów jako część `tf doctor` dla `CLAUDE.md` projektu i dla skilli fabryki (przegląd z S6) |
+| `infra-research` | decyzja o platformie wdrożenia jako plik-kontrakt: ograniczenia twarde ze stacku, krótki wywiad, badanie kandydatów równolegle, ocena wg pięciu cech „platformy dla agenta” (wszystko z CLI, usługa zarządzana, dokumentacja czytelna dla agenta, stabilne i skryptowalne wdrożenie, integracja MCP jako dodatek), trzech finalistów; przed zapisem trzy spojrzenia przeciw własnej rekomendacji: adwokat diabła, „pół roku później to była katastrofa — dlaczego”, czego nie widać w dokumentacji; rejestr ryzyk ze wskazaniem, które spojrzenie je ujawniło; status funkcji (beta, podgląd) z datą sprawdzenia; polecenia sprawdzone dla wersji z projektu | `arch-tech-selection`, `ops-release-engineering`, `core-source-research` | karta operacyjna wdrożenia (sekcja 11); trzy spojrzenia jako obowiązkowy krok przy decyzji trudnej do odwrócenia (waga pełna) |
 
-**Z plików lekcji** (reguły pracy z instrukcjami dla agenta, spójne z S6 i S13):
+**Z plików lekcji** (reguły pracy z instrukcjami dla agenta, spójne z S6 i S13; część fabryka już ma
+w `core-agent-instructions` — test włączenia, karta pięciu kontroli ze skryptem, aktualizacja z historii gita,
+kalibracja reguły, `AGENTS.md` obok `CLAUDE.md` — tu chodzi o wpięcie ich w `tf onboard` i `tf doctor`):
 - **Reguła zarabia na miejsce pomiarem.** Zanim reguła trafi do instrukcji: 3–5 przebiegów tego samego zadania bez niej
   w czystej sesji; jeśli agent i tak trzyma konwencję, reguła jest zbędna. Fabryka mierzy tak wkład skilli (B4) —
   tę samą miarę stosujemy do reguł w `CLAUDE.md` i do lekcji.
@@ -547,6 +555,16 @@ Bierzemy wzorce, nie treść; odpowiedniki w fabryce są wskazane, żeby nie bud
   z którego skrypt rozpoznaje „zmianę kontraktu” — punkt stały 3 z sekcji 4 przestaje zależeć od oceny modelu.
 - **Tabela „użyj, gdy…”** jako pierwsza rzecz w instrukcji: jedno zdanie na polecenie. Wzór dla strony startowej (1a).
 - **Archiwum jest niezmienne:** skrypt odmawia zapisu do zamkniętego zadania i każe otworzyć nowe (D5).
+- **Pierwsze wdrożenie w trybie Plan:** agent pisze plan (kroki własne, kroki ręczne człowieka, dokładne polecenia,
+  sprawdzenie), człowiek go poprawia i zatwierdza, zatwierdzony plan zostaje w repo jako ślad „co miało się stać”.
+- **CLI przed MCP:** do obsługi platformy najpierw CLI (jawne, tanie w kontekście); serwer MCP dopiero, gdy agent
+  wielokrotnie odpytuje stan na żywo — każdy podłączony serwer kosztuje kontekst w każdej sesji.
+- **Dostęp do produkcji:** token o wąskim zakresie, w zmiennej środowiska; działania nieodwracalne (usunięcie bazy,
+  rotacja głównego sekretu) wykonuje człowiek ręcznie; docelowo pełny dostęp agenta do środowiska testowego, a do
+  produkcji tylko odczyt. Zgodne z polityką autonomii (B1) i S2.
+- **Kontrola, która nigdy nie zmienia decyzji, jest rytuałem** — jeśli spojrzenia przeciw rekomendacji ani razu nie
+  doprowadziły do zmiany wyboru, trzeba je przepisać. Ta sama miara dla naszych bramek: bramka, która nigdy nie
+  czerwienieje, i bramka, którą zawsze się obchodzi, idą do przeglądu (`tf metrics`).
 
 **Przygotowanie repo — jednorazowo, przed pierwszym zadaniem.** Oś zakłada repo, w którym agent może sprawdzić własną
 pracę. `tf onboard` zaczyna więc od raportu gotowości w zwykłym języku: co jest (testy, lint, typy, CI, lockfile), czego
@@ -565,7 +583,8 @@ wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
 - `propozycje-wdrozen.md` (2026-11-12, plik użytkownika; źródła wtórne — autor sam oznacza je jako hipotezy).
 - PDF „AI Playbook” (szkic do przeglądu, 18 stron, przeczytany 2026-11-12) — opis dev-kitu i tabela podejść.
 - Skille `10x-init`, `10x-shape`, `10x-prd`, `10x-stack-assess`, `10x-tech-stack-selector`, `10x-health-check`,
-  `10x-bootstrapper`, `10x-agents-md`, `10x-lesson`, `10x-rule-review` oraz pliki instrukcji lekcji M1L1–M1L4
+  `10x-bootstrapper`, `10x-agents-md`, `10x-lesson`, `10x-rule-review`, `10x-infra-research` z kryteriami platform
+  oraz pliki instrukcji lekcji M1L1–M1L5
   (załączone 2026-11-12, przeczytane w całości; sekcja 17).
 - 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).
