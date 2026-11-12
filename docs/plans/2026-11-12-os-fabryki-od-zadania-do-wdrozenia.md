@@ -602,6 +602,24 @@ kalibracja reguły, `AGENTS.md` obok `CLAUDE.md` — tu chodzi o wpięcie ich w 
 - **Tabele wyboru jako dane, nie proza:** polecenie audytu dla języka, sposób uruchomienia narzędzia — w pliku
   konfiguracji ze sprawdzeniem zgodności w CI. Tak samo wykrywanie poleceń projektu w `tf onboard` (sekcja 7).
 
+**Ze schematu wymagań, przebiegu decyzji i przypadków ewaluacji** (trzecia paczka):
+- **Kształt `spec.md`** (uzupełnienie sekcji 6): kryteria sukcesu w trzech grupach — główne, dodatkowe i **strażnicy**
+  (co nie może się zepsuć; z nich powstają testy regresji); zakres zmiany w istniejącym systemie ze znacznikami
+  nowe / zmienione (było → jest) / usunięte / **zachowane**; wymagania jakościowe jako własność widoczna z zewnątrz
+  z mierzalnym progiem, bez nazywania mechanizmu („odpowiedź w 200 ms”, nie „cache”); otwarte pytanie ma właściciela,
+  termin i znacznik „blokuje: tak/nie”.
+- **Status pliku podnosi kto inny niż autor:** generator zapisuje „szkic”; „sprawdzony” i „zatwierdzony” nadaje
+  dopiero przegląd albo człowiek. U nas tak samo dla `spec.md` i `plan.md` — etap nie zatwierdza własnego wyniku.
+- **Najpierw filtry twarde, potem osąd:** to, co niezgodne z ograniczeniami, odpada skryptem; wśród pozostałych
+  model wybiera z uzasadnieniem z 2–3 czynników, bez udawanej punktacji. Wzór dla doboru wagi i specjalistów w etapie 1.
+- **Poziom wsparcia mówiony zawsze:** narzędzie podaje wprost, czy dany stack jest sprawdzony w całości, obsługiwany,
+  czy „na miarę możliwości”, i co to oznacza dla człowieka. Raport gotowości w `tf onboard` podaje to samo dla
+  wykrytego stacku; braki stacku (brak typów, brak konwencji) kompensują wpisy w instrukcji — jawnie, jako dług.
+- **Zmiana kontraktu zaczyna się od schematu:** najpierw dokument schematu, potem piszący i czytający, na końcu
+  walidator. Kolejność do zapisania w zasadach rozwoju samej fabryki.
+- **Przypadki ewaluacji z oczekiwaniem negatywnym** („nie może zaproponować…”, „ma uczciwie nazwać lukę”): fabryka ma
+  scenariusze skilli; dla osi dochodzą przypadki „tu ma się zatrzymać” i „tu nie wolno mu pytać” (E4).
+
 **Przygotowanie repo — jednorazowo, przed pierwszym zadaniem.** Oś zakłada repo, w którym agent może sprawdzić własną
 pracę. `tf onboard` zaczyna więc od raportu gotowości w zwykłym języku: co jest (testy, lint, typy, CI, lockfile), czego
 brakuje i w jakiej kolejności to naprawić — najpierw to, bez czego fabryka nie zweryfikuje zmian. Braki blokujące
@@ -620,7 +638,8 @@ wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
 - PDF „AI Playbook” (szkic do przeglądu, 18 stron, przeczytany 2026-11-12) — opis dev-kitu i tabela podejść.
 - Skille `10x-init`, `10x-shape`, `10x-prd`, `10x-stack-assess`, `10x-tech-stack-selector`, `10x-health-check`,
   `10x-bootstrapper`, `10x-agents-md`, `10x-lesson`, `10x-rule-review`, `10x-infra-research` z kryteriami platform
-  oraz pliki instrukcji lekcji M1L1–M1L5 i dziesięć plików pomocniczych (schematy, protokół odmów, scalanie szkieletu, kontrakt przekazania, wywiad, konfiguracja)
+  oraz pliki instrukcji lekcji M1L1–M1L5 i czternaście plików pomocniczych (schematy, protokół odmów, scalanie szkieletu, kontrakt przekazania, wywiad,
+  konfiguracja, przebieg decyzji, kryteria, przypadki ewaluacji)
   (załączone 2026-11-12, przeczytane w całości; sekcja 17).
 - 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).
