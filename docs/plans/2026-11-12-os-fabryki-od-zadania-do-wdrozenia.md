@@ -4,8 +4,8 @@ Data: 2026-11-12. Status: **propozycja do decyzji człowieka** — nic z tego do
 sekcja 2 nie mówi inaczej. Dokument łączy w jedną całość: plany z `docs/plans/` (zwłaszcza
 `2026-11-08-tf-analyze-i-katalog-tf.md` §8–10 i `2026-11-09-luki-katalogu-i-autonomia.md`), tryb Talos z dashboardem
 (tf#211), plik `propozycje-wdrozen.md` (tf-1…tf-13, plik użytkownika spoza repo, 2026-11-12), porównanie z dev-kitem
-(PDF „AI Playbook”, szkic, 2026-11-12) oraz łańcuch skilli `10x-*` załączony 2026-11-12 (`init`, `shape`, `prd`,
-`stack-assess`).
+(PDF „AI Playbook”, szkic, 2026-11-12), łańcuch skilli `10x-*` załączony 2026-11-12 (`init`, `shape`, `prd`,
+`stack-assess`) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
 
 ## 1. Cel i podział ról
 
@@ -45,13 +45,17 @@ Reguły, które obowiązują każdy element osi:
    harness). Zamiast „BRAMKA K2: FAIL” — „Testy drugiego kroku nie przechodzą, poprawiam (próba 2 z 3)”. Słownik
    wewnętrzny zostaje w plikach technicznych i w tym dokumencie.
 3. **Pytanie ma zawsze ten sam kształt:** jedno zdanie o co chodzi, 2–3 opcje, rekomendacja i skutek każdej opcji.
-   Bez odsyłania do plików, żeby zrozumieć pytanie.
+   Bez odsyłania do plików, żeby zrozumieć pytanie. Pytanie zadaje narzędzie pytań z opcjami do wyboru
+   (AskUserQuestion), a nie umówiony format tekstu — format w tekście model gubi (S4).
 4. **Każdy komunikat kończy się następnym krokiem:** co fabryka zrobi teraz albo czego potrzebuje od Ciebie.
 5. **Jedna strona startowa** („Zacznij tutaj”, do 1 ekranu): instalacja, wdrożenie w repo, pierwsze zadanie,
    przegląd wyniku. Reszta przewodnika to materiał dla dociekliwych.
-6. **Folder zadania da się przeczytać bez fabryki:** `report.md` zaczyna się od 5 linii zwykłym językiem — co
-   zrobiono, co sprawdzono, co zostało do decyzji, ile kosztowało, gdzie jest PR.
+6. **Folder zadania da się przeczytać bez fabryki:** `report.md` i każde podsumowanie zaczynają się od trzech
+   nagłówków w stałej kolejności: **Czeka na Ciebie**, **Zmienione**, **Znalezione** (S10) — potem koszt i link do PR.
+   To, czego fabryka nie zdołała potwierdzić, jest wymienione wprost, z informacją, gdzie szukała.
 7. **Nowa funkcja nie dokłada polecenia**, jeśli da się ją schować za `/tf` albo wykonać automatycznie.
+8. **Zrozumienie kodu na żądanie:** zamiast czytać diffy linia po linii, człowiek prosi o wyjaśnienie wskazanej części
+   systemu (tekst albo strona z diagramem), zgodne z kodem z dziś (S12). Uwaga człowieka idzie na decyzje i dowody.
 
 Miara (wchodzi do E0 i powtórki w E8): osoba, która nie zna fabryki, z samą stroną startową doprowadza zadanie do PR;
 liczymy polecenia, które musiała wpisać, pytania, których nie zrozumiała, i miejsca, w których utknęła. Cel: ≤3
@@ -153,6 +157,17 @@ podnieść, obniżenie wymaga jego potwierdzenia):
 5. przekroczony budżet (`--budget`) albo dwie nieudane próby bramki po eskalacji modelu (sekcja 8);
 6. waga „pełna”: tryb Auto jest dla niej niedostępny — fabryka przechodzi na zwykły i mówi dlaczego.
 
+**Ryzyko wyznacza zmiana, nie autor** (praktyka zespołu Claude Code, S12; u nas jako reguły triażu):
+- ścieżki, które zawsze wymagają człowieka, niezależnie od wagi: pliki workflow CI, auth, rozliczenia, instalator
+  i aktualizator, wszystko, co właściciel oznaczył jako wrażliwe (CODEOWNERS, ochrona gałęzi);
+- akceptacja agenta nigdy nie zastępuje akceptacji człowieka; zgoda człowieka dotyczy konkretnego commita i wygasa,
+  gdy dojdą commity, których fabryka nie może poświadczyć;
+- osoba, która zleciła zmianę, odpowiada za nią tak, jakby sama napisała kod.
+
+**Agent nie rezygnuje na podstawie własnej oceny trudności.** W eksperymencie S1 wykonawcy uznali 47 z 60 zadań
+za niewykonalne w budżecie, a zespół udowodnił większość z nich. „To niewykonalne” nie jest powodem zatrzymania —
+powodem jest dowód (polecenie i wynik) po wyczerpaniu eskalacji z sekcji 8.
+
 Każde zatrzymanie to jedno pytanie z opcjami i rekomendacją (core-plan-interview), zapisane jako zdarzenie
 (sekcja 5), widoczne na podglądzie (sekcja 10). Odpowiedź „zdecyduj sam” jest dozwolona tylko dla pytań
 nieblokujących i odwracalnych.
@@ -187,6 +202,9 @@ docs/project/changes/<KEY>/        trwałe, w gicie, czytane przez ludzi i nast�
 - **Kontrakt ukończenia** (tf-9): kawałek ma stan `planned → implemented → verified | blocked`; `verified` wymaga pliku
   w `evidence/` powstałego po ostatniej edycji plików kawałka. Zdanie „zrobione” bez dowodu nie zmienia stanu.
 - Budżet artefaktów (`pr_budget.py`) zostaje: surowe dowody idą do `.tf/runs/`, w gicie zostają skróty.
+- **Działanie na zewnątrz jest zapisywane przed i po** (S2): przed otwarciem PR, komentarzem czy zmianą statusu stan
+  to `wysyłam`, po potwierdzeniu przez system zewnętrzny — `wysłane` z identyfikatorem, przy niejasnym wyniku —
+  `niepewne` i nic więcej się nie zmienia. Przed ponowieniem fabryka sprawdza, czy PR lub komentarz już istnieje.
 - Waga lekka: `ticket.md`, `spec.md` i `plan.md` łączą się w jeden `task.md`, żeby drobna zmiana nie niosła pięciu
   plików.
 
@@ -217,13 +235,32 @@ Zasada: reguła, której nie pilnuje czujnik, jest sugestią. Każda reguła „
 | czerwony build nie kończy tury | `quality_gate` (hook Stop) | jest, **ale wymaga konfiguracji** |
 | lint i format po edycji pliku | `post_edit_checks.py` | szablon — **do włączenia przy wdrożeniu** |
 | bezpieczeństwo zmiany | semgrep OWASP na plikach kawałka, audyt zależności, karencja 7 dni | jest (Talos) |
-| zakres zmiany | `scope-reviewer`, `plan_drift`; nowy hook budżetu diffu (tf-2): pliki spoza planu → pytanie | częściowo |
+| zakres zmiany | `scope-reviewer`, `plan_drift`; nowy hook budżetu diffu (tf-2): pliki spoza planu → pytanie; jako hook włączany przez przebieg na czas kawałka, nie stale (S13: hooki na żądanie) | częściowo |
 | czytelność i projekt | przegląd wg `eng-clean-code`, `eng-design-principles`; `architect` przy decyzji trudnej do odwrócenia | jest jako skille; do wpięcia w etap 5 |
 | niezależny przegląd | świeży kontekst; przy wadze pełnej drugi model (`second_review.py`) | częściowo |
 | ustalenie → kontrola (tf-11) | wpis w `factory_feedback.py` wymaga pola „kontrola, która to złapie” | do zrobienia |
 | „nigdy” → egzekutor (tf-3) | skrypt sprawdza, że każda reguła „nigdy” z `CLAUDE.md` ma hook, CI albo CODEOWNERS | do zrobienia |
 | zasada dwóch z trzech (tf-10) | sesja z niezaufaną treścią (zgłoszenie, strona) nie ma naraz dostępu do danych wrażliwych i zapisu na zewnątrz bez człowieka | reguła + sprawdzenie w hookach, do zrobienia |
+| przegląd, który się kończy (S12) | limit 3 rund, potem „cofnij się i przemyśl podejście”; po pierwszych rundach przegląd tylko nowego diffu; ustalenie nazywa klasę błędu (poprawka wszystkich wystąpień); bez powtórek | do zrobienia |
+| mniej szumu w przeglądzie (S12) | ustalenia potwierdza druga grupa agentów; czysto stylistyczne odpadają; etykiety: ważne / drobne / zastane (błąd sprzed zmiany nie obciąża autora); każde ustalenie ma odpowiedź: poprawka albo powód | do zrobienia |
+| `REVIEW.md` właścicieli kodu (S12) | krótko: jak wygląda porażka w tym repo, limit drobiazgów, ścieżki do pominięcia, dowód `plik:linia`, podsumowanie od liczby ustaleń | do zrobienia w `tf onboard` |
+| incydent → test recenzenta (S12) | cofnięte PR-y i incydenty tworzą zbiór ewaluacyjny; recenzent jest oceniany na nim po każdej zmianie promptu, narzędzi i modelu | do zrobienia |
+| zapadki jakości (S5) | liczba, która w CI może tylko się poprawiać (pokrycie, liczba ostrzeżeń, rozmiar paczki, czas testów); miara bez związku z celem jest usuwana, nie optymalizowana | do zrobienia |
+| skill weryfikacji produktu (S13) | jak uruchomić i sprawdzić ten produkt (przeglądarka, CLI, asercje stanu po każdym kroku); wg S13 ten rodzaj skilli najmocniej poprawia jakość | do zrobienia w `tf onboard` |
 | audyt fail-closed (tf-13) | awaria zapisu logu przy operacji wysokiego ryzyka blokuje operację | do sprawdzenia testem |
+
+**Lżejsze instrukcje, mocniejsze mechanizmy** (S6, S10, S11, S13). Zespół Claude Code usunął ponad 80% promptu
+systemowego dla modeli generacji 5 bez mierzalnej straty w ewaluacjach; sprzeczne i nadmiarowe reguły każą modelowi
+tracić namysł na ich godzenie. Dla fabryki (212 skilli, hooki dopisujące kontekst) oznacza to przegląd:
+- `CLAUDE.md` krótki: do czego jest repo i pułapki, których nie widać z plików; reszta w skillach wczytywanych na
+  żądanie; z promptów znikają „pomyśl uważnie”, „nie bądź leniwy” i prośby o wypisanie rozumowania;
+- skill opisuje cel i ograniczenia, nie każdy krok; najcenniejsza jest sekcja pułapek dopisywana po realnych
+  porażkach; skill, który mówi to, co model zrobiłby sam, tylko zajmuje kontekst;
+- zamiast przykładów użycia — dobrze zaprojektowany interfejs skryptu (wyliczenia stanów w `task_state.py` podpowiadają
+  poprawne użycie);
+- specyfikacją może być kod: zestaw testów, makieta HTML, funkcja wzorcowa — model czyta to dokładniej niż opis;
+- reguła zostaje w prompcie tylko wtedy, gdy nie da się jej zamienić na mechanizm; raz na wydanie modelu sprawdzamy,
+  które ograniczenia harnessu są jeszcze potrzebne (S4: narzędzie, które pomagało, z czasem przeszkadza).
 
 **Wdrożenie w repo jednym poleceniem** (`tf onboard`, największa luka z porównania z dev-kitem): wykrywa polecenia
 testów, lintu, typów i buildu z manifestów i CI, pyta o potwierdzenie, zapisuje `quality-gate.json`, hook po edycji,
@@ -232,33 +269,68 @@ u każdego po `git pull`, a `tf doctor` i start sesji mówią wprost, gdy która
 
 ## 8. Model i effort dla każdego kroku
 
-Fabryka ma już trzy poziomy (`fast` = Haiku/low, `std` = Sonnet/medium, `deep` = Opus/high) i profile kosztu.
-Brakuje przypisania do kroków osi i reguły eskalacji. Zasada z `CLAUDE.md` zostaje: modelu ani effortu **sesji** nie
-zmienia się w środku zadania (kasuje cache) — dobór odbywa się przez wykonawców (parametr `model` narzędzia Agent).
+Fabryka ma trzy poziomy (`fast` = Haiku/low, `std` = Sonnet/medium, `deep` = Opus/high) i profile kosztu. Brakuje
+przypisania do kroków osi, rozdzielenia modelu od effortu i reguły eskalacji. Ta sekcja opiera się na źródłach S8–S11
+(sekcja 16); liczby pochodzą z nich i wymagają potwierdzenia na własnych zadaniach (E0, E8).
 
-| Krok | Wykonawca | Poziom |
-|---|---|---|
-| pobranie zgłoszenia, stan, lint, ślad, skan, raport | skrypt | bez modelu |
-| fakty o repo | `scout` | fast |
-| wersje i dokumentacja zewnętrzna | `researcher` | fast |
-| specyfikacja GWT | autor specyfikacji | std |
-| plan | planista | std; deep przy wadze pełnej |
-| test i kod kawałka | wykonawca | std; fast dla zmiany mechanicznej ze specyfikacją |
-| przegląd zakresu i czytelności | recenzent w świeżym kontekście | std |
-| decyzja trudna do odwrócenia, auth, sekrety, IaC | `architect`, `security-reviewer` | deep |
-| opis PR, podsumowanie | skrypt + model | fast |
+**Zasady doboru:**
+1. **Najpierw sprawdzalność, potem effort, na końcu model.** Gdy wynik jest za słaby: (1) daj modelowi sposób
+   sprawdzenia własnej pracy (test, build, skrypt), (2) podnieś effort o jeden poziom, (3) przejdź na model wyżej,
+   zaczynając od niższego effortu (S9). Powyżej `high` kolejny poziom effortu kosztuje tyle co większy model — wtedy
+   testujemy większy model, nie `xhigh`.
+2. **Effort to ilość weryfikacji i samodzielnych założeń, nie „mądrość”.** Wyższy effort ogranicza błędy z pominiętych
+   przypadków brzegowych, ale nie naprawia złego podejścia (S8). Dlatego: implementacja z dokładnej specyfikacji —
+   `low`/`medium`; weryfikacja, przegląd, bezpieczeństwo, błąd w istniejącym kodzie — `high`. Złe podejście wraca do
+   planu, a nie na wyższy effort.
+3. **Dokładna specyfikacja wyrównuje wyniki.** Przy szczegółowej specyfikacji modele na różnych poziomach effortu
+   budują podobnie (S8) — to uzasadnia etap 2: dobry `spec.md` pozwala realizować taniej.
+4. **Tanio wszystko, drogo tylko porażki.** Skoro bramki etapów sprawdzają wynik automatycznie, kawałek idzie najpierw
+   na niskim poziomie, a wyżej powtarzane są tylko te, które nie przeszły. W źródle S9 (podzbiór SWE-bench Pro, Opus
+   5.5): `low` z powtórką porażek na `high` — ok. 97% zadań po ok. 0,17 USD; wszystko na `high` — 95,3% po 0,29 USD.
+5. **Edycja kodu i osąd zostają na modelu głównym etapu;** małe modele dostają pracę, w której błąd tanio widać:
+   szukanie plików, uruchamianie testów, czytanie logów (S9). Prompty `scout` krótkie: Haiku 5.5 powyżej 100 tys.
+   tokenów promptu kosztuje pięć razy więcej za token.
+6. **Regułę prostą wykonuje kod.** Przypisanie modelu do rodzaju kroku robi skrypt, nie model (S9).
+7. **Modelu nie zmienia się w środku sesji** — cache należy do modelu, a model niższy nie czyta rozumowania wyższego
+   (S7, S9). Granice etapów są naturalnymi miejscami zmiany: nowy etap dostaje krótki plik wejściowy, nie historię.
+   Stąd wymóg z sekcji 3: decyzje i uzasadnienia muszą być w plikach zadania. Reguła `CLAUDE.md` o niezmienianiu
+   **effortu** sesji wymaga ponownego sprawdzenia: S8 podaje, że najnowsze modele w Claude Code reagują na effort bez
+   utraty cache, a S11 — że w API zmiana effortu najwyższego poziomu unieważnia cache [do sprawdzenia w dokumentacji].
 
-**Eskalacja zamiast zgadywania** (kaskada z `core-cost-control`): bramka czerwona → druga próba na tym samym poziomie
-z ustaleniami bramki; znów czerwona → jedna próba poziom wyżej; znów czerwona → kawałek zablokowany i pytanie do
-człowieka. Każda eskalacja zapisuje się w `task.json` — z tych danych `tf metrics` policzy, który poziom wystarcza
-dla jakiego typu kawałka, i przypisanie w tabeli będzie korygowane pomiarem, a nie opinią.
+**Punkt startowy przypisania** (do korekty pomiarem):
 
-**Pomiar** (bez niego „najtaniej” jest hasłem):
+| Krok | Wykonawca | Model | Effort |
+|---|---|---|---|
+| pobranie zgłoszenia, stan, lint, ślad, skan, raport | skrypt | — | — |
+| fakty o repo, logi, wyniki testów | `scout` | Haiku | domyślny |
+| wersje i dokumentacja zewnętrzna | `researcher` | Haiku albo Sonnet | domyślny |
+| specyfikacja GWT i plan (osąd przy niepełnym zgłoszeniu) | autor etapu | Opus | medium |
+| test i kod kawałka z dokładnej specyfikacji | wykonawca | Sonnet | medium; low dla zmiany mechanicznej |
+| weryfikacja i przegląd kawałka | recenzent w świeżym kontekście | Sonnet albo Opus | high |
+| auth, sekrety, IaC, decyzja trudna do odwrócenia | `security-reviewer`, `architect` | Opus | high |
+| waga pełna: plan dużej migracji, prowadzenie wielu wykonawców, długi przebieg bez nadzoru | prowadzący | Fable (nowy poziom `lead`, D10) | medium, potem high |
+| opis PR, podsumowanie | skrypt + model | Haiku | domyślny |
+
+Ceny katalogowe za milion tokenów wejścia / wyjścia (S9, 2026-11-09): Haiku 5.5 — 0,10 / 0,50 USD (prompt do 100 tys.
+tokenów), Sonnet 5.5 — 2 / 10, Opus 5.5 — 4 / 20, Fable 5.2 — 8 / 40. Fabryka trzyma te liczby w jednym pliku
+konfiguracji z datą, nie w treści skilli.
+
+**Eskalacja kawałka:** bramka czerwona → sprawdź, czy kawałek ma wykonywalne sprawdzenie; druga próba z ustaleniami
+bramki i effortem o poziom wyżej; trzecia próba na modelu wyżej z niższym effortem; potem kawałek zablokowany
+i pytanie do człowieka. Każda eskalacja zapisuje się w `task.json`.
+
+**Czego nie przyjmujemy bez pomiaru:** doradca (`advisorModel` w profilu `quality`) — w S9 żadna z czterech par nie
+pobiła wyraźnie samego wykonawcy (Opus 5.5 `high` z doradcą: +1,7 pkt za ok. 2,1 raza większy koszt); alias
+`opusplan` (planuje Opus, koduje Sonnet). Najpierw mierzymy, jak często wykonawca w ogóle pyta doradcę.
+
+**Pomiar** (bez niego „najtaniej” jest hasłem), wg S9:
+- próbka prawdziwych zadań z automatycznym sprawdzeniem wyniku; każdy kandydat na 2–3 poziomach effortu, w osobnych
+  sesjach; wykres wynik–koszt; układ wielu modeli zostaje tylko wtedy, gdy bije każdy punkt jednego modelu;
+- wycena także najtrudniejszych zadań: w jednym z pomiarów w S9 dwa z dwudziestu zadań dały 43% kosztu;
 - koszt na zaakceptowaną zmianę i odsetek przeróbek po przeglądzie (`tf metrics`, B3);
-- odcisk harnessu w każdym śladzie (tf-1, tf-12): wersje modelu, promptów, schematów narzędzi, hooków — żeby zmianę
-  wyniku dało się przypisać do zmiany harnessu;
-- pasmo szumu w ewaluacjach (tf-4): różnica liczy się dopiero powyżej rozrzutu z ≥5 powtórzeń;
-- okresowe sprawdzenie nazw modeli w konfiguracji (tf-6).
+- odsetek trafień w cache jako metryka kosztu (S7: traktowany jak dostępność usługi);
+- odcisk harnessu w każdym śladzie (tf-1, tf-12), pasmo szumu z ≥5 powtórzeń (tf-4), okresowe sprawdzenie nazw modeli
+  w konfiguracji (tf-6).
 
 ## 9. Wejście z trackera i wiedza o projekcie
 
@@ -271,6 +343,13 @@ dla jakiego typu kawałka, i przypisanie w tabeli będzie korygowane pomiarem, a
   i walidatorem; odświeżanie po TTL. Przebieg korzysta z tego w etapach 1–3 zamiast pytać człowieka o to, co jest
   zapisane.
 - Zapis do trackera (status, komentarz z linkiem do PR) to osobny, opcjonalny moduł ze zgodą na każdą akcję.
+- **Kwarantanna treści niezaufanej** (S3): to, co czyta zgłoszenia, komentarze i strony, nie ma uprawnień do zapisu
+  ani sieci; wykonawca z uprawnieniami widzi tylko plik wynikowy. To praktyczna postać zasady „dwóch z trzech” (tf-10).
+- **Reguły pracy bez nadzoru** (S2), dla `tf work --once` i zadań cyklicznych: czytanie od zakładki, nie z okna
+  czasu; nieudany odczyt źródła to błąd w raporcie, a nie „brak zadań”; ponowne sprawdzenie stanu tuż przed
+  działaniem; ustawienia czytane na świeżo w każdym przebiegu z miejsca, którego agent nie może zmienić; dostęp tylko
+  do odczytu wszędzie, gdzie agent tylko czyta; limit wydatku na przebieg ustawiony na 3–5 razy koszt zwykłego
+  przebiegu i zacieśniany po danych — z jasnym komunikatem, bo przebieg zatrzymany limitem wygląda jak cisza.
 
 ## 10. Stały podgląd
 
@@ -283,6 +362,14 @@ Dashboard z tf#211 zostaje i rośnie razem z osią:
 
 Podgląd tylko czyta pliki. Nie jest drugą aplikacją ani źródłem prawdy (decyzja 2026-11-10: bez nowych usług).
 
+**Podgląd w oknie Claude Code (S14, do decyzji D9).** Od Claude Code 2.1.287 wtyczka może rysować własny interfejs
+w sesji („mod”): pasek nad polem wpisywania, panel obok rozmowy, własne polecenie, wstrzymanie wywołania narzędzia
+z przyciskami. Dla prostoty to więcej niż osobna strona HTML: pasek „PROJ-123 · krok 4 z 8 · czeka na Ciebie: 1”,
+panel z pytaniem i przyciskami **Tak / Popraw / Zdecyduj sam**, panel „co ryzykowne polecenie zmieni” przed zgodą.
+Zastrzeżenia ze źródła: API modów może się zmieniać między wydaniami; mod działa z uprawnieniami Claude Code, więc
+podlega tym samym regułom co obcy kod; wstrzymanie polecenia po treści to siatka bezpieczeństwa, a twardą blokadą
+pozostają reguły uprawnień i hooki. Strona HTML i `tf status` zostają dla CI i pracy poza Claude Code.
+
 ## 11. Wdrożenie i zamknięcie
 
 Stan uczciwie: dziś fabryka kończy na PR. Wdrożenie należy do CI projektu, a fabryka ma je dopilnować, nie zastąpić.
@@ -292,6 +379,11 @@ Stan uczciwie: dziś fabryka kończy na PR. Wdrożenie należy do CI projektu, a
   czerwony → zdarzenie „wycofać?” z rekomendacją.
 - Produkcja zawsze za zgodą człowieka (`prod_command: confirm`). Automatyczne scalanie zmian niskiego ryzyka — dopiero
   po danych z `tf metrics` i osobnej decyzji.
+- Opis PR ma zawsze trzy pola: **jak sprawdzono**, **ryzyko**, **jak cofnąć** (S12). Nowe zachowanie widoczne dla
+  użytkownika idzie za krótkotrwałą flagą; wdrożenie stopniowe (najpierw zespół, potem część użytkowników); cofnięcie
+  jednym krokiem. Flaga ma w zadaniu datę usunięcia.
+- Zmiany widoczne dla użytkownika fabryka pokazuje człowiekowi jako „przed i po” (zrzut ekranu, nagranie) — o smaku
+  decyduje człowiek (S5).
 - Zamknięcie: `report.md`, status zadania `done`, lekcje do `lessons.md`, a każde ustalenie z przeglądu dostaje
   kontrolę (sekcja 7). Folder zadania zostaje w `changes/` jako ślad; archiwizacja — do decyzji (D5).
 
@@ -349,14 +441,14 @@ Każdy etap to osobny plan w `docs/plans/`, TDD i osobny PR. Etap ma sprawdzalne
 | Etap | Zakres | Kryterium końca |
 |---|---|---|
 | E0 | pomiar bazowy na repo testowym: liczba decyzji i poleceń od instalacji do zielonego PR, czas, koszt; test laika (sekcja 1a); strona „Zacznij tutaj” | raport w `docs/evals/` |
-| E1 | `tf onboard`: bramki włączone przy wdrożeniu; komunikat w `tf doctor` i na starcie sesji | w czystym repo bramka blokuje czerwony test bez ręcznej konfiguracji |
+| E1 | `tf onboard`: bramki włączone przy wdrożeniu; skill weryfikacji produktu i `REVIEW.md`; komunikat w `tf doctor` i na starcie sesji | w czystym repo bramka blokuje czerwony test bez ręcznej konfiguracji |
 | E2 | katalog zadania i `task_state.py` (stan, nagłówki, dowody, nieaktualność); Talos pisze do nowego układu | testy Talosa zielone; przerwany przebieg wznawia się z plików |
 | E3 | etap specyfikacji: `spec.md` z GWT, lint jako bramka, `trace_check.py`, ochrona wyroczni | PR zawiera tabelę AC → test → commit → dowód |
 | E4 | jedno wejście `/tf`, waga z triażu, tryby Plan / zwykły / Auto, punkty stałe | scenariusze flow-evals: lekka, zwykła i pełna zatrzymują się tam, gdzie mówi sekcja 4 |
-| E5 | `events.jsonl` (`work_events.py`), kawałek zablokowany zamiast STOP, eskalacja modelu, podgląd „czeka na Ciebie” | pytanie blokujące nie zatrzymuje kawałka niezależnego |
+| E5 | `events.jsonl` (`work_events.py`), kawałek zablokowany zamiast STOP, eskalacja effortu i modelu, przegląd z limitem rund, podgląd „czeka na Ciebie” (strona, a po D9 także mod) | pytanie blokujące nie zatrzymuje kawałka niezależnego; przegląd kończy się w ≤3 rundach albo pytaniem |
 | E6 | wejście z trackera skryptem; `tf po setup` z podpowiedzią przy pierwszym uruchomieniu | `/tf KEY` działa na fixture zgłoszenia bez sieci |
-| E7 | wdrożenie i zamknięcie: obserwacja wydania, sprawdzenie po wdrożeniu, ustalenie → kontrola | wynik wydania w `task.json`; ustalenie bez kontroli czerwieni bramkę zamknięcia |
-| E8 | `tf work --once` (bez nadzoru, worktree na zadanie), odcisk harnessu, pasmo szumu | pilotaż na zadaniach niskiego ryzyka; powtórka pomiaru E0 |
+| E7 | wdrożenie i zamknięcie: obserwacja wydania, sprawdzenie po wdrożeniu, ustalenie → kontrola, zapadki jakości, incydent → test recenzenta | wynik wydania w `task.json`; ustalenie bez kontroli czerwieni bramkę zamknięcia |
+| E8 | `tf work --once` (bez nadzoru, worktree na zadanie, reguły S2), odcisk harnessu, pasmo szumu, przegląd instrukcji i skilli pod kątem nadmiaru reguł (S6) | pilotaż na zadaniach niskiego ryzyka; powtórka pomiaru E0 |
 
 Warunki: płatne ewaluacje i `flow_compare` tylko za zgodą człowieka (dziś wstrzymane — limit tygodniowy); wygaszenie
 Talosa jako osobnej persony dopiero po danych z pomiaru; E1 i E2 nie zależą od żadnej decyzji z sekcji 15 poza D1.
@@ -372,7 +464,52 @@ Talosa jako osobnej persony dopiero po danych z pomiaru; E1 i E2 nie zależą od
 | D5 | co z folderem zadania po zamknięciu: zostaje czy archiwum | zostaje; archiwizacja po 90 dniach skryptem |
 | D6 | czy tryb Auto może scalać zmiany niskiego ryzyka | nie teraz; wrócić po danych z `tf metrics` |
 | D7 | kolejność: E1 (kontrole) przed E2–E4 (oś) czy odwrotnie | E1 najpierw — najtańsze i daje największy zysk jakości |
-| D8 | domyślna instalacja: zestaw minimalny (rdzeń, `pack-it`, Talos) czy jak dziś | minimalny, po pomiarze kosztu kontekstu listy agentów |
+| D8 | domyślna instalacja: zestaw minimalny (rdzeń, `pack-it`, Talos) czy jak dziś | minimalny, po pomiarze kosztu kontekstu listy agentów (S13: każdy skill w repo dokłada kontekst) |
+| D9 | podgląd i pytania jako mod w oknie Claude Code (S14) obok strony HTML; wymaga wtyczki, a decyzja 2026-10-21 była przeciw eksportowi tf jako pluginu | tak, jako mała osobna wtyczka tylko z interfejsem; silnik zostaje w plikach |
+| D10 | czwarty poziom `lead` (Fable 5.2) dla wagi pełnej i długich przebiegów bez nadzoru | tak, ale dopiero po pomiarze na własnych zadaniach; domyślnie wyłączony |
+| D11 | pełna waga: panel recenzentów i weryfikacja reguła po regule jako zapisany przepływ agentów (S3) czy jako proza w skillu | przepływ, tylko dla wagi pełnej — kosztuje więcej tokenów |
+| D12 | zmiana `tiers`: rozdzielenie modelu i effortu na krok (sekcja 8) zamiast stałych par | tak, po pomiarze E0 |
+
+## 16. Wnioski ze źródeł Anthropic (claude.dev)
+
+Czternaście artykułów wskazanych przez człowieka, przeczytanych w całości 2026-11-12. To źródła pierwotne od zespołów
+budujących Claude Code i modele; liczby są ich pomiarami na ich zadaniach, więc u nas są hipotezami do potwierdzenia.
+
+| # | Artykuł (autor, data) | Co bierzemy | Gdzie |
+|---|---|---|---|
+| S1 | Safely scaling multi-agent teams with Claude Fable 5.2 (Zhang i in., 2026-11-09) | koordynacja przez wspólny stan z transakcjami (zajęcie zadania, notatki, log ukończeń), nie przez wiadomości; każdy agent na własnej gałęzi, scala osobne zadanie; trzy warstwy: piaskownica, kontrola każdego wywołania, przegląd po fakcie; tożsamość agenta nadawana poza piaskownicą; blokada → stop i przegląd człowieka; agenci zaniżają wykonalność | 4, 5, 9; `tf work` |
+| S2 | Building effective agent automations (Martin, Avilla, 2026-10-08) | sześć reguł pracy bez nadzoru: zakładki, błąd odczytu ≠ cisza, sprawdzenie tuż przed działaniem, potwierdzenie przed zapisem stanu, ustawienia czytane na świeżo, tylko odczyt i limit wydatku | 5, 9 |
+| S3 | A harness for every task: dynamic workflows (Shihipar, Bidasaria, 2026-06-02) | trzy błędy długiej pracy w jednym kontekście: przedwczesne „zrobione”, faworyzowanie własnych wyników, dryf celu — stąd osobne konteksty na etap i weryfikator inny niż autor; wzorce: weryfikacja przeciwna, reguła po regule ze sceptykiem, pętla do warunku końca, kwarantanna; „zwykłe zadanie nie potrzebuje pięciu recenzentów” | 3, 4, 7, 9; D11 |
+| S4 | Seeing like an agent (Shihipar, 2026-04-10) | pytania przez narzędzie z opcjami; zadania z zależnościami zamiast listy do odhaczania; wiedza rzadko potrzebna — przez osobnego agenta, nie w prompcie; wysoki próg dodania narzędzia; przegląd założeń po każdym nowym modelu | 1a, 7 |
+| S5 | How we made claude.ai 3x faster in two weeks (Wang, Attard, Issac G., 2026-09-23) | „co da się policzyć, to da się poprawiać”: miara z laboratorium + zapadka w CI; miara, która nie przekłada się na cel, jest usuwana; wąski zakres na wątek i imienny właściciel; rola człowieka: ambicja, smak, kierunek; ponad 3000 zmian bez incydentu dzięki przeglądowi, testom przed zmianą, flagom i wdrożeniu stopniowemu | 7, 11 |
+| S6 | The new rules of context engineering (Shihipar, 2026-07-24) | mniej reguł, więcej osądu; interfejs zamiast przykładów; wczytywanie na żądanie; `CLAUDE.md` z pułapkami, nie z oczywistościami; bogate odniesienia (testy, HTML, rubryki); `/doctor` do odchudzenia instrukcji | 7; E8 |
+| S7 | Prompt caching is everything (Shihipar, 2026-04-30) | treść stała na początku, zmienna na końcu; aktualizacje wiadomością, nie zmianą promptu; bez zmiany modelu i zestawu narzędzi w sesji; tryb jako narzędzie, nie podmiana narzędzi; odsetek trafień w cache jako metryka | 8; hooki startu sesji bez zmiennych wstawek na początku kontekstu |
+| S8 | Spending your effort (Shihipar, 2026-09-25) | effort = ilość weryfikacji i samodzielnych założeń; pętla: wywiad → implementacja na niskim → przegląd → weryfikacja na wysokim; zysk największy tam, gdzie są ukryte przypadki brzegowe; effort nie naprawia złego podejścia | 8 |
+| S9 | Which Claude model should you build with? (Osmani, 2026-11-09) | tabela doboru i ceny; kolejność: sprawdzalność → effort → model; tanio wszystko, drogo porażki; małe modele do pracy, w której błąd tanio widać; routing prostą regułą w kodzie; pomiar na własnych zadaniach; ostrożnie z doradcą | 8; D10, D12 |
+| S10 | Getting the most out of Opus 5.5 (Osmani, 2026-09-22) | całe zadanie z definicją „zrobione” i nazwanymi zatrzymaniami; lista zadań w pliku; raport od „czego potrzebuję od Ciebie”; oznaczanie tego, czego nie potwierdzono; bez „pomyśl uważnie” i bez prośby o rozumowanie w odpowiedzi | 1a, 3, 4, 7 |
+| S11 | Building with Claude Sonnet 5.5 (Osmani, 2026-09-28) | Sonnet do zadań z jasną specyfikacją i sposobem sprawdzenia; na niskim efforcie wymagać prawdziwego sprawdzenia (test, build), nie samej składni; usunąć stare obejścia z promptów; ponowny przegląd poziomów effortu po zmianie modelu | 7, 8 |
+| S12 | How the Claude Code team does code review (Osmani, Lunt, Wang, 2026-10-15) | przegląd ciągły przed PR; warstwy zamiast jednej bramki; ryzyko ze zmiany; przegląd zbieżny; `REVIEW.md`; incydenty jako ewaluacja; miara: czas człowieka, z odsetkiem cofnięć i incydentów jako ogranicznikiem (u nich: dwa razy więcej scalonych PR i ponad 40% mniej cofnięć od czerwca do września) | 1a, 4, 7, 11 |
+| S13 | How we use skills (Shihipar, 2026-06-03) | dziewięć rodzajów skilli jako mapa luk; skille weryfikacji; sekcja pułapek; cel zamiast kroków; opis jako warunek uruchomienia; konfiguracja skilla w pliku i pytanie przy pierwszym użyciu; pamięć skilla w logu; hooki na żądanie; pomiar użycia skilli | 7; D8; `tf onboard` |
+| S14 | Getting started with Claude Code mods (Osmani, 2026-10-01) | interfejs w sesji: pasek, panel, polecenie, wstrzymanie wywołania; stan w hoście, testy wtyczki (`claude plugin validate`, `claude plugin test`) | 10; D9 |
+
+**Co te źródła potwierdzają w naszym projekcie:** specyfikację przed kodem i zatwierdzany plan (S8, S10); etap
+w świeżym kontekście z plikiem jako wejściem (S3, S7, S9); dowód zamiast deklaracji (S11, S12); wagę i zgodę
+człowieka zależną od ryzyka zmiany (S12); mechanizm zamiast reguły w prompcie (S6); pomiar przed zmianą modelu (S9).
+
+**Co zmieniają względem pierwszej wersji tego dokumentu:**
+1. Eskalacja nie zaczyna od „modelu wyżej”: najpierw sprawdzalność, potem effort, potem model (sekcja 8).
+2. Model i effort są osobnymi pokrętłami na krok; domyślnie tanio, a drożej tylko to, co nie przeszło bramki.
+3. Przegląd ma limit rund i filtr szumu — bez tego agent-autor i agent-recenzent mogą zajmować się sobą bez końca
+   (w S12: ponad pięćdziesiąt rund na jednym PR w nocy; ok. 59% ponawianych uwag dotyczyło kodu sprzed zmiany).
+4. Instrukcje fabryki mają się skracać, a nie rosnąć razem z osią (sekcja 7).
+5. Podgląd i pytania mogą żyć w oknie Claude Code jako mod, co wprost służy wymaganiu W8 (sekcja 10).
+6. Automatyczne scalanie zmian niskiego ryzyka jest praktykowane (S12), ale przy zaufanych autorach, kompletnych
+   kontrolach, szybkim cofaniu i pilnowanym odsetku cofnięć; autorzy sami chcą bezpieczników, zanim pójdą dalej.
+   D6 zostaje „nie teraz”, z tymi warunkami jako listą do spełnienia.
+
+**Czego nie bierzemy:** zespołu tysiąca agentów (S1 to eksperyment na zadaniu, które dzieli się na niezależne części;
+przy jednym łańcuchu zależnych kroków koszt koordynacji przewyższa zysk — S9); doradcy i `opusplan` bez pomiaru (S9);
+przepływów agentów dla zwykłych zadań (S3: zużywają znacznie więcej tokenów).
 
 ## Źródła
 - Repo fabryki, stan `main` e5d5a52 (2026-11-12): pliki wymienione w sekcji 2.
@@ -380,4 +517,5 @@ Talosa jako osobnej persony dopiero po danych z pomiaru; E1 i E2 nie zależą od
 - `propozycje-wdrozen.md` (2026-11-12, plik użytkownika; źródła wtórne — autor sam oznacza je jako hipotezy).
 - PDF „AI Playbook” (szkic do przeglądu, 18 stron, przeczytany 2026-11-12) — opis dev-kitu i tabela podejść.
 - Skille `10x-init`, `10x-shape`, `10x-prd`, `10x-stack-assess` (załączone 2026-11-12, przeczytane w całości).
+- 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).
