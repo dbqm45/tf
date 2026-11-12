@@ -4,7 +4,7 @@ Data: 2026-11-12. Status: **propozycja do decyzji człowieka** — nic z tego do
 sekcja 2 nie mówi inaczej. Dokument łączy w jedną całość: plany z `docs/plans/` (zwłaszcza
 `2026-11-08-tf-analyze-i-katalog-tf.md` §8–10 i `2026-11-09-luki-katalogu-i-autonomia.md`), tryb Talos z dashboardem
 (tf#211), plik `propozycje-wdrozen.md` (tf-1…tf-13, plik użytkownika spoza repo, 2026-11-12), porównanie z dev-kitem
-(PDF „AI Playbook”, szkic, 2026-11-12), łańcuch skilli `10x-*` załączony 2026-11-12 (dziewięć skilli, sekcja 17) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
+(PDF „AI Playbook”, szkic, 2026-11-12), łańcuch skilli `10x-*` załączony 2026-11-12 (dziesięć skilli i cztery pliki lekcji, sekcja 17) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
 
 ## 1. Cel i podział ról
 
@@ -512,7 +512,10 @@ przepływów agentów dla zwykłych zadań (S3: zużywają znacznie więcej toke
 
 ## 17. Wnioski z łańcucha skilli `10x-*`
 
-Dziewięć skilli załączonych przez człowieka 2026-11-12 (kolejne mają dojść — tabela jest do uzupełnienia). Łańcuch
+Dziesięć skilli i cztery pliki instrukcji lekcji (moduł 1, lekcje 1–4) załączone przez człowieka 2026-11-12. Pliki
+lekcji wymieniają dalsze skille pracy nad pojedynczą zmianą (`new`, `frame`, `research`, `plan`, `plan-review`,
+`implement`, `impl-review`, `archive`, `contract`) — to odcinek najbliższy naszej osi; nie były załączone, więc
+tabela jest do uzupełnienia [niezweryfikowane]. Łańcuch
 prowadzi projekt od pomysłu do gotowego repo: `init` → `shape` → `prd` → `tech-stack-selector` → `bootstrapper`
 (nowy projekt) albo `shape` → `prd` → `stack-assess` → `health-check` (istniejący), a obok `agents-md` i `lesson`.
 To inny odcinek niż nasza oś: oś zaczyna od zadania w gotowym repo, łańcuch kończy tam, gdzie oś się zaczyna.
@@ -529,6 +532,21 @@ Bierzemy wzorce, nie treść; odpowiedniki w fabryce są wskazane, żeby nie bud
 | `health-check` | przegląd tylko do odczytu: lockfile, audyt zależności wg języka, czy testy w ogóle ruszają, co robi CI, brakująca konfiguracja; kolejność napraw wg wpływu na agenta (brak testów ważniejszy niż drobna podatność); każda naprawa z poleceniem i szacunkiem czasu | `readiness_check.py`, `tf analyze` | raport gotowości w `tf onboard` |
 | `agents-md` | plik instrukcji 200–400 słów; każda reguła sprawdzalna na diffie; nic, co widać z repo; najważniejsze na górze; aktualizacja punktowa: zachowaj / popraw / usuń / dodaj na podstawie zmian w repo od ostatniej edycji pliku; osobne pliki dla katalogów o własnych zasadach | `core-agent-instructions` | `tf doctor`: wykrywanie nieaktualnych wpisów `CLAUDE.md` (polecenie lub ścieżka już nie istnieje) skryptem; zgodne z S6 |
 | `lesson` | lekcja = reguła powtarzalna, nie opis jednego błędu; pola: gdzie dotyczy, co się psuje, reguła, których etapów dotyczy; treść pisze człowiek; plik tylko do dopisywania | `lessons.md`, `core-agent-retro` | pole „dotyczy etapów”, żeby etap czytał tylko swoje lekcje; lekcja bez kontroli (sekcja 7) jest niedokończona |
+| `rule-review` | karta oceny pliku instrukcji w pięciu punktach: długość (do 200 niepustych linii dobrze, powyżej 500 źle), wklejony kod zamiast odwołania do pliku, sformułowania niesprawdzalne na diffie (z propozycją sprawdzalnej wersji, nie „usuń”), wiedza, którą model i tak ma, kolejność (najważniejsze na górze); zmiany pojedynczo, każda sprawdzona w następnej sesji | `core-agent-instructions` (test włączenia, karta kontroli), lint instrukcji | te pięć punktów jako część `tf doctor` dla `CLAUDE.md` projektu i dla skilli fabryki (przegląd z S6) |
+
+**Z plików lekcji** (reguły pracy z instrukcjami dla agenta, spójne z S6 i S13):
+- **Reguła zarabia na miejsce pomiarem.** Zanim reguła trafi do instrukcji: 3–5 przebiegów tego samego zadania bez niej
+  w czystej sesji; jeśli agent i tak trzyma konwencję, reguła jest zbędna. Fabryka mierzy tak wkład skilli (B4) —
+  tę samą miarę stosujemy do reguł w `CLAUDE.md` i do lekcji.
+- **Reguły obszaru leżą przy kodzie obszaru** (plik instrukcji w katalogu), a nie w jednym długim pliku; ładują się
+  tylko tam, gdzie agent pracuje.
+- **Jedno źródło instrukcji dla wielu narzędzi:** `AGENTS.md` jako źródło, `CLAUDE.md` jako cienka nakładka — do
+  rozważenia przy `tf onboard`, gdy zespół używa kilku agentów.
+- **Sprawdzenia deterministyczne w hookach, procedury w skillach** — to samo rozróżnienie co w sekcji 7.
+- **Rejestr nazw nośnych** (ścieżki API, nazwy zdarzeń, zmienne środowiska, na których polegają inni): plik w repo,
+  z którego skrypt rozpoznaje „zmianę kontraktu” — punkt stały 3 z sekcji 4 przestaje zależeć od oceny modelu.
+- **Tabela „użyj, gdy…”** jako pierwsza rzecz w instrukcji: jedno zdanie na polecenie. Wzór dla strony startowej (1a).
+- **Archiwum jest niezmienne:** skrypt odmawia zapisu do zamkniętego zadania i każe otworzyć nowe (D5).
 
 **Przygotowanie repo — jednorazowo, przed pierwszym zadaniem.** Oś zakłada repo, w którym agent może sprawdzić własną
 pracę. `tf onboard` zaczyna więc od raportu gotowości w zwykłym języku: co jest (testy, lint, typy, CI, lockfile), czego
@@ -547,6 +565,7 @@ wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
 - `propozycje-wdrozen.md` (2026-11-12, plik użytkownika; źródła wtórne — autor sam oznacza je jako hipotezy).
 - PDF „AI Playbook” (szkic do przeglądu, 18 stron, przeczytany 2026-11-12) — opis dev-kitu i tabela podejść.
 - Skille `10x-init`, `10x-shape`, `10x-prd`, `10x-stack-assess`, `10x-tech-stack-selector`, `10x-health-check`,
-  `10x-bootstrapper`, `10x-agents-md`, `10x-lesson` (załączone 2026-11-12, przeczytane w całości; sekcja 17).
+  `10x-bootstrapper`, `10x-agents-md`, `10x-lesson`, `10x-rule-review` oraz pliki instrukcji lekcji M1L1–M1L4
+  (załączone 2026-11-12, przeczytane w całości; sekcja 17).
 - 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).
