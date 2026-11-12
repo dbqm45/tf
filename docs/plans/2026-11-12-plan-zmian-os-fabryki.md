@@ -62,7 +62,7 @@ kontraktu. Rodzaj: nowe / rozszerzenie / przeniesienie / treść.
 | 11 | `work_events.py`: zdarzenia, reguła czekać / iść dalej, `parked.md` jako widok; kawałek zablokowany zamiast STOP | nowe + zmiana pętli | rdzeń, `SKILL.md` Talosa | L | zmiana zachowania Talosa za flagą do pomiaru |
 | 12 | model i effort na krok; eskalacja: sprawdzalność → effort → model | rozszerzenie | `config.yaml` (`tiers`), `build.py`, skill osi | M | stare `tiers` czytane dalej; decyzje D10, D12 |
 | 13 | przegląd z limitem rund, filtr szumu, etykiety ważne / drobne / zastane | rozszerzenie | agent `scope-reviewer`, skill osi | M | tak |
-| 14 | podgląd: strona z `task.json` i zdarzeń, lista „czeka na Ciebie”, `tf status` | rozszerzenie | szablon dashboardu, `task_state.py`, `tf.py` | M | tak |
+| 14 | podgląd: dashboard otwierany od razu przy każdym użyciu fabryki (jak dziś w Talosie), strona z `task.json` i zdarzeń, panel wszystkich tworzonych i zmienianych plików (zadanie, kod wg kawałka, robocze), lista „czeka na Ciebie”, `tf status` | rozszerzenie | szablon dashboardu, `task_state.py`, `tf.py` | M | tak |
 | 15 | podgląd i pytania jako mod w oknie Claude Code | nowe, osobna wtyczka | nowy katalog poza silnikiem | M | opcjonalne; decyzja D9 |
 | 16 | wejście z trackera skryptem (`ticket.md`), kwarantanna treści | nowe | moduł źródła (plan 2026-11-08 §9) | M | opcjonalne; decyzja D4 |
 | 17 | karta operacyjna wdrożenia, pola PR „jak sprawdzono / ryzyko / jak cofnąć”, obserwacja wydania | nowe + treść | szablony, skill osi | M | tak |
@@ -80,7 +80,7 @@ Podsumowanie: 4 zmiany duże (4, 9, 11, 19), 13 średnich, 5 małych. Dwie z du�
 |---|---|---|---|
 | A. Pomiar bazowy i start | E0: pomiar na repo testowym, test laika; 3 | — | wiemy, od czego mierzymy; nowy użytkownik ma jedną stronę |
 | B. Kontrole od pierwszego dnia | 1, 2 | — | bramki działają bez ręcznej konfiguracji — największy zysk jakości najmniejszym kosztem |
-| C. Jedno miejsce na zadanie | 4, 5 | D1, D5 | przebieg wznawia się z plików; dowody ukończenia |
+| C. Jedno miejsce na zadanie i podgląd od startu | 4, 5, 14 (część: otwieranie od razu i panel plików) | D1, D5 | przebieg wznawia się z plików; dowody ukończenia; dashboard z plikami od pierwszej chwili |
 | D. Specyfikacja, ślad i flagi | 6, 7, 8, 22 | — | Given/When/Then → testy, tabela w PR |
 | E. Jedno polecenie | 9, 10, 12 | D2, D3, D12 | `/tf KEY` z trybami; fabryka sama dobiera wagę i model |
 | F. Płynność i podgląd | 11, 13, 14 | — (15 po D9) | pytanie nie zatrzymuje całości; widać, co czeka na człowieka |
