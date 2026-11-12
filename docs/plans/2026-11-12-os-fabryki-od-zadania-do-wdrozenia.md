@@ -400,8 +400,9 @@ przypisania do kroków osi, rozdzielenia modelu od effortu i reguły eskalacji. 
 7. **Modelu nie zmienia się w środku sesji** — cache należy do modelu, a model niższy nie czyta rozumowania wyższego
    (S7, S9). Granice etapów są naturalnymi miejscami zmiany: nowy etap dostaje krótki plik wejściowy, nie historię.
    Stąd wymóg z sekcji 3: decyzje i uzasadnienia muszą być w plikach zadania. Reguła `CLAUDE.md` o niezmienianiu
-   **effortu** sesji wymaga ponownego sprawdzenia: S8 podaje, że najnowsze modele w Claude Code reagują na effort bez
-   utraty cache, a S11 — że w API zmiana effortu najwyższego poziomu unieważnia cache [do sprawdzenia w dokumentacji].
+   **effortu** sesji jest częściowo nieaktualna (dokumentacja Claude Code, `prompt-caching`, odczyt 2026-11-12): przy
+   kluczu API albo subskrypcji zmiana effortu zachowuje cache na Fable 5.1 i nowszych, Opus 5.5, Sonnet 5.5 i Haiku 5.5;
+   na starszych modelach i u dostawców chmurowych nadal go kasuje. Zmiana **modelu** kasuje cache zawsze (sekcja 18).
 
 **Punkt startowy przypisania** (do korekty pomiarem):
 
@@ -592,7 +593,7 @@ Talosa jako osobnej persony dopiero po danych z pomiaru; E1 i E2 nie zależą od
 | D6 | czy tryb Auto może scalać zmiany niskiego ryzyka | nie teraz; wrócić po danych z `tf metrics` |
 | D7 | kolejność: E1 (kontrole) przed E2–E4 (oś) czy odwrotnie | E1 najpierw — najtańsze i daje największy zysk jakości |
 | D8 | domyślna instalacja: zestaw minimalny (rdzeń, `pack-it`, Talos) czy jak dziś | minimalny, po pomiarze kosztu kontekstu listy agentów (S13: każdy skill w repo dokłada kontekst) |
-| D9 | podgląd i pytania jako mod w oknie Claude Code (S14) obok strony HTML; wymaga wtyczki, a decyzja 2026-10-21 była przeciw eksportowi tf jako pluginu | tak, jako mała osobna wtyczka tylko z interfejsem; silnik zostaje w plikach |
+| D9 | podgląd i pytania jako mod w oknie Claude Code (S14) obok strony HTML; wymaga wtyczki z marketplace'u, a decyzja 2026-10-21 była przeciw eksportowi tf jako pluginu | najpierw strona HTML i linia stanu z odświeżaniem (sekcja 18, C15); mod później, jako mała osobna wtyczka tylko z interfejsem |
 | D10 | czwarty poziom `lead` (Fable 5.2) dla wagi pełnej i długich przebiegów bez nadzoru | tak, ale dopiero po pomiarze na własnych zadaniach; domyślnie wyłączony |
 | D11 | pełna waga: panel recenzentów i weryfikacja reguła po regule jako zapisany przepływ agentów (S3) czy jako proza w skillu | przepływ, tylko dla wagi pełnej — kosztuje więcej tokenów |
 | D12 | zmiana `tiers`: rozdzielenie modelu i effortu na krok (sekcja 8) zamiast stałych par | tak, po pomiarze E0 |
@@ -759,6 +760,68 @@ zostawia plik, z którego rusza następny.
 i czeka na człowieka; kontrolę wyniku robi model według opisu w skillu. U nas przejście robi fabryka, zatrzymanie
 wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
 
+## 18. Wnioski z dokumentacji Claude Code
+
+Przegląd 2026-11-12 (wymaganie człowieka: korzystać z pełnych możliwości Claude Code). Dokumentacja ma ok. 190 stron;
+przejrzano 61 dotyczących fabryki (ok. 440 tys. słów) w czterech równoległych przeglądach, a cytaty, na których opiera
+się ta sekcja, sprawdzono osobno w pobranych stronach. Stron o SDK, dostawcach chmurowych i administracji nie czytano.
+Funkcje oznaczone jako „podgląd badawczy” mogą się zmienić — nie budujemy na nich niczego, czego nie da się zastąpić.
+
+**Co fabryka wykorzystuje dziś, a co nie:**
+- z ponad 30 zdarzeń hooków używa 9 (przed i po narzędziu, błąd narzędzia, start i koniec sesji, koniec tury i
+  podagenta, przed kompaktowaniem, wysłanie polecenia); wszystkie hooki są skryptami i wszystkie działają globalnie;
+- z ok. 20 pól nagłówka skilla używa 5 (`name`, `description`, `metadata`, `argument-hint`,
+  `disable-model-invocation`); nie używa `model`, `effort`, `context: fork`, `hooks`, `paths`, `allowed-tools`.
+
+| # | Możliwość Claude Code | Do czego w osi | Stan w fabryce | Zastrzeżenia z dokumentacji |
+|---|---|---|---|---|
+| C1 | **Hooki w nagłówku skilla i podagenta** — działają tylko, gdy dany skill lub podagent pracuje | bramki etapu włączane przez etap (budżet diffu, ochrona specyfikacji, tryb tylko-do-odczytu recenzenta) zamiast hooków globalnych | brak | hooki podagenta projektu wymagają zaufania do katalogu; sesja `-p` się nie liczy |
+| C2 | **Skill jako osobny kontekst** (`context: fork`) z własnym `model` i `effort` | każdy etap osi w świeżym kontekście, na przypisanym modelu i efforcie — wprost realizuje sekcje 3 i 8 | brak; `build.py` ostrzega przed `model`/`effort` w skillu | fork nie widzi historii rozmowy — wejściem muszą być pliki zadania (tak zakładamy) |
+| C3 | **Hook oceniający modelem** (`type: prompt` albo `agent`) na końcu tury, podagenta lub zadania | niezależne „czy kawałek spełnia kryteria” wymuszone przez harness | brak | hooki `agent` są eksperymentalne; dokumentacja zaleca hooki-skrypty w produkcji — u nas tylko jako dodatek do bramek skryptowych |
+| C4 | **Koniec tury blokowany hookiem** z informacją zwrotną; limit 8 kolejnych blokad | pętla „czerwone → popraw” i limit rund przeglądu | częściowo (`quality_gate`, własny limit 3) | hook końca tury nie działa po przerwaniu przez człowieka |
+| C5 | **Decyzja hooka przed narzędziem:** odmowa obowiązuje w każdym trybie uprawnień; `ask` wymusza pytanie; `defer` wstrzymuje przebieg `-p` i pozwala go wznowić | punkty stałe z sekcji 4 jako mechanizm; pytanie do człowieka w pracy bez nadzoru | częściowo (odmowy są, `ask` i `defer` nie) | `defer` tylko w `-p` i przy jednym wywołaniu narzędzia w turze |
+| C6 | **Tryb Auto** (klasyfikator działań) z regułami `ask` i `deny` | nasz tryb Auto nie musi wymyślać własnej kontroli; domyślnie klasyfikator blokuje m.in. scalenie PR-a bez akceptacji człowieka, przełączenie flagi funkcji na produkcji, wdrożenie produkcyjne, force push | brak | ustawień trybu Auto nie czyta z plików projektu, tylko z ustawień użytkownika lub zarządzanych; klasyfikator „nie gwarantuje bezpieczeństwa”; kosztuje tokeny |
+| C7 | **Tryb Plan** — czytanie i plan bez edycji źródeł aż do zatwierdzenia | nasz tryb Plan i zatwierdzanie planu natywnym oknem | brak | hook nie może w trybie Plan zezwolić na zapis |
+| C8 | **Piaskownica poleceń** (system plików i sieć na poziomie systemu) | twarda granica dla pracy bez nadzoru i dla czytania treści niezaufanej | brak | obejmuje tylko polecenia powłoki — narzędzia plikowe, MCP i hooki działają poza nią; bez natywnego Windows |
+| C9 | **Sesje w tle** (`claude --bg`) i odczyt stanu `claude agents --json`: `working`, `blocked`, `done`, `failed`, z polem „na co czeka” | gotowe źródło dla listy „czeka na Ciebie” i dla `tf work --once`; sesja sama izoluje edycje w worktree | brak | podgląd badawczy; sesje są lokalne; wiele sesji szybko zużywa limit |
+| C10 | **`/goal`** — warunek ukończenia sprawdzany po każdej turze przez osobny, świeży model | warunek końca kawałka lub zadania w pracy bez nadzoru | tylko wzmianki w skillach | oceniający widzi wyłącznie rozmowę — dowody z plików trzeba w niej pokazać |
+| C11 | **Praca bez terminala:** `--permission-prompts none`, limit budżetu, wynik wg schematu JSON | deterministyczne, ograniczone kosztem kroki `tf work --once` | częściowo (pdi) | `--bare` pomija hooki, skille i `CLAUDE.md` — kroki fabryki nie mogą iść w `--bare`, bo znikłyby bramki |
+| C12 | **Worktree:** `--worktree`, `.worktreeinclude`, izolacja podagenta | katalog roboczy na zadanie z tym samym środowiskiem testów | częściowo (izolacja person) | w worktree `CLAUDE_PROJECT_DIR` wskazuje główny katalog — hooki fabryki muszą czytać `cwd` z wejścia |
+| C13 | **Reguły w `.claude/rules/` ze ścieżkami** — ładują się dopiero przy pracy na pasujących plikach | krótszy `CLAUDE.md`, reguły obszaru przy obszarze (sekcje 7 i 17) | brak | po kompaktowaniu reguła ze ścieżką znika z kontekstu; zalecany rozmiar `CLAUDE.md`: do 200 linii |
+| C14 | **Pytania z opcjami** (AskUserQuestion) i **powiadomienia** (zdarzenie Notification, powiadomienie na pulpit i telefon) | pytania „tak / popraw / zdecyduj sam”; sygnał „czekam na Ciebie” | częściowo (jeden skill) | powiadomienia na telefon wymagają Remote Control |
+| C15 | **Linia stanu** z odświeżaniem co N sekund i wierszami podagentów | stały pasek: zadanie, etap, koszt — bez wtyczki | częściowo (`statusline.py` bez odświeżania) | ukryta podczas pytań o uprawnienia |
+| C16 | **Artefakt** — strona publikowana na claude.ai, aktualizowana w trakcie sesji | podgląd dostępny z telefonu i dla zespołu, bez lokalnego serwera | brak | wymaga planu z claude.ai; wyłączone domyślnie w `-p`; każda aktualizacja kosztuje tokeny |
+| C17 | **Telemetria OpenTelemetry:** model, effort, skill, agent, trafienia w cache dla każdego żądania | pomiar z sekcji 8 bez czytania transkryptów | brak | wymaga włączenia zmiennymi środowiska |
+| C18 | **`/code-review` z poziomami i `--fix`**, zdalny przegląd wieloagentowy (`ultra`) | etap 5; głęboki przegląd dla wagi pełnej | częściowo (własny recenzent) | lokalny przegląd czyta `CLAUDE.md`, nie `REVIEW.md`; `ultra` to podgląd badawczy, płatny po 3 darmowych przebiegach |
+| C19 | **Ewaluacje wtyczek** (`claude plugin eval`) i pomiar kosztu kontekstu skilli | porównanie z własną bramką i ewaluacjami skilli | własne narzędzia | wymaga katalogu wtyczki; płatne wywołania sędziego |
+
+**Co to zmienia w planie:**
+1. **Mniej własnego kodu w krokach E i F.** Tryby Plan i Auto, zatrzymanie z pytaniem, odmowa w każdym trybie
+   i stan „czeka na człowieka” istnieją w Claude Code. Oś ma je skonfigurować i spiąć z plikami zadania, a nie pisać
+   od nowa. Pozycje 9, 11 i 14 planu zmian maleją; `work_events.py` zostaje jako zapis decyzji, nie jako mechanizm
+   zatrzymań.
+2. **Etap = skill w osobnym kontekście z własnym modelem, effortem i hookami** (C1, C2). To natywna postać zasad
+   „plik jest wejściem etapu” i „model na krok”. Ostrzeżenie w `build.py` przed `model`/`effort` w skillu trzeba
+   zawęzić: dotyczy skilla wykonywanego w głównej rozmowie, nie forka.
+3. **Reguła o efforcie do poprawy** (sekcja 8 pkt 7): na modelach generacji 5.5 zmiana effortu nie kasuje cache.
+   Zmiana modelu kasuje zawsze — także przełączanie `opusplan` przy wejściu i wyjściu z trybu Plan.
+4. **Cache podagentów żyje 5 minut** (rozmowa główna na subskrypcji: godzinę). Etap czekający na człowieka dłużej
+   zaczyna z zimnym cache — kolejny powód, by etapy były krótkie i startowały z małego pliku wejściowego.
+5. **Koszt nie z transkryptów.** Dokumentacja zastrzega, że format transkryptów jest wewnętrzny i skrypty, które go
+   parsują, mogą przestać działać. `cost_report.py` i raport Talosa tak dziś liczą — docelowo telemetria (C17)
+   albo dane linii stanu.
+6. **Podgląd: trzy warstwy zamiast jednej decyzji** (D9). Strona HTML zostaje podstawą (działa wszędzie, także w CI
+   i w chmurze). Linia stanu z odświeżaniem (C15) daje pasek w terminalu bez wtyczki. Mod jest dodatkiem: instaluje
+   się jako wtyczka z marketplace'u (nie z `.claude/` projektu), nie rysuje w `-p` ani w sesjach chmurowych i nie
+   działa w piaskownicy. Powody decyzji z 2026-10-21 przeciw eksportowi fabryki jako wtyczki pozostają aktualne.
+7. **Praca bez nadzoru** (pozycja 19): zamiast własnej obsługi worktree i stanów zajęcia — sesje w tle (C9) tam,
+   gdzie są dostępne, z własnym skryptem jako zapasem, bo to podgląd badawczy.
+8. **Flaga funkcji** (6a): klasyfikator trybu Auto sam blokuje przełączenie flagi produkcyjnej; nasza kontrola diffu
+   konfiguracji zostaje, bo działa też poza trybem Auto i obejmuje środowiska inne niż produkcja.
+
+**Czego nie bierzemy teraz:** zespołów agentów (eksperymentalne, wyłączone domyślnie), kanałów i zadań w chmurze
+(podgląd badawczy, wymagają konta i sieci), doradcy i `opusplan` bez pomiaru (sekcja 8).
+
 ## Źródła
 - Repo fabryki, stan `main` e5d5a52 (2026-11-12): pliki wymienione w sekcji 2.
 - `docs/plans/2026-11-08-tf-analyze-i-katalog-tf.md` §8–10; `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md` B1–B4.
@@ -769,5 +832,6 @@ wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
   oraz pliki instrukcji lekcji M1L1–M1L5 i czternaście plików pomocniczych (schematy, protokół odmów, scalanie szkieletu, kontrakt przekazania, wywiad,
   konfiguracja, przebieg decyzji, kryteria, przypadki ewaluacji)
   (załączone 2026-11-12, przeczytane w całości; sekcja 17).
+- Dokumentacja Claude Code, code.claude.com/docs (61 stron, pobrane 2026-11-12; lista możliwości w sekcji 18).
 - 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).

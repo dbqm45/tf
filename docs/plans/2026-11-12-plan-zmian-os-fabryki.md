@@ -90,6 +90,25 @@ Podsumowanie: 4 zmiany duże (4, 9, 11, 19), 13 średnich, 5 małych. Dwie z du�
 Kroki A i B nie zależą od żadnej decyzji i nie zmieniają publicznego układu — można je zrobić od razu. Krok C jest
 punktem, od którego zmiana staje się „duża”: po nim cofnięcie kosztuje migrację plików.
 
+## 4a. Korekta po przeglądzie dokumentacji Claude Code (2026-11-12)
+
+Sekcja 18 dokumentu osi pokazuje, że część mechanizmów istnieje w Claude Code. Skutki dla tego planu:
+
+| Pozycja | Było | Jest |
+|---|---|---|
+| 9 (jedno wejście, tryby) | L — własna obsługa trybów i zatrzymań | M — konfiguracja trybów Plan i Auto, reguł `ask`/`deny` i pytań z opcjami; własny pozostaje dobór wagi i spięcie z plikami zadania |
+| 11 (zdarzenia, kawałek zablokowany) | L | M — stan „czeka na człowieka” i wstrzymanie przebiegu daje harness; `work_events.py` zapisuje decyzje i zależności kawałków |
+| 12 (model i effort na krok) | M | M, prostsze — etap jako skill w osobnym kontekście z `model` i `effort` w nagłówku; do zmiany ostrzeżenie w `build.py` |
+| 14 (podgląd) | M | M — dochodzi linia stanu z odświeżaniem; źródłem kosztu przestają być transkrypty |
+| 19 (praca bez nadzoru) | L | M — sesje w tle i `claude agents --json` zamiast własnych stanów zajęcia, ze skryptem zapasowym |
+| nowa 23 | — | S–M — hooki etapów w nagłówkach skilli i podagentów zamiast globalnych; reguły w `.claude/rules/` ze ścieżkami |
+| nowa 24 | — | M — pomiar z telemetrii (model, effort, skill, cache) zamiast parsowania transkryptów |
+| nowa 25 | — | S — poprawka reguły o efforcie w `CLAUDE.md` fabryki i w `core-cost-control` (za zgodą człowieka — to zmiana instrukcji) |
+
+Po korekcie zostaje jedna zmiana duża (pozycja 4: katalog zadania i stan). Szacunek nowego kodu spada do
+ok. 2–3 tys. linii [założenie]. Rośnie za to zależność od wersji Claude Code: plan wymaga zapisania minimalnej wersji
+w `PUBLIC_API.md` i sprawdzania jej w `tf doctor`.
+
 ## 5. Ryzyka samej zmiany
 
 | Ryzyko | Jak ograniczamy |
@@ -100,6 +119,7 @@ punktem, od którego zmiana staje się „duża”: po nim cofnięcie kosztuje m
 | rozrost instrukcji razem z osią (wbrew S6) | skill osi opisuje cel i punkty stałe, a kroki pilnują skrypty; limit długości w bramce skilla |
 | dwa układy plików zadań w okresie przejściowym | jeden skrypt stanu czyta oba; nowy zapis tylko w nowym układzie |
 | koszt pomiarów (ewaluacje, `flow_compare`) | tylko za zgodą człowieka; dziś wstrzymane |
+| oparcie na funkcjach Claude Code w podglądzie badawczym (sesje w tle, hooki `agent`, zdalny przegląd) | każda ma zapas w postaci skryptu fabryki; funkcje eksperymentalne nie są warunkiem żadnej bramki |
 
 ## 6. Co musi zdecydować człowiek, żeby ruszyć
 
