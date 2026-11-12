@@ -51,7 +51,7 @@ Klient nie może ponowić nieudanej płatności i porzuca zamówienie.
 
 
 def run(args, cwd, cfg):
-    env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg)}
+    env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TALOS_DASHBOARD_OPEN": "0"}   # testy nie otwierają przeglądarki
     return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True, env=env,
                           timeout=60)
 

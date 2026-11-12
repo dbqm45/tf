@@ -66,6 +66,12 @@ def main() -> int:
           "T-10: skan bezpieczeństwa w pętli kawałka (skrypt, uprawnienie, FAIL → feedback.md, STOP), karencja "
           "wersji na starcie, szablon verify.sh")
 
+    state = ".claude/skills/talos-story-run/scripts/run_state.py"
+    check((ROOT / state).is_file() and (skill / "templates" / "dashboard.html").is_file()
+          and any(state in a for a in allow) and "run_state.py stage" in body and "run_state.py step" in body
+          and "dashboard.html" in (ROOT / ".tf" / "factory" / "packs" / "mode-talos" / "GUIDE.md").read_text(encoding="utf-8"),
+          "T-11: stan przebiegu dla podglądu (skrypt, szablon dashboardu, uprawnienie, polecenia w skillu, opis w GUIDE)")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów trybu Talos")

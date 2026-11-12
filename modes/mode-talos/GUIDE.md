@@ -64,6 +64,16 @@ sesji, nie model, więc nie zużywa tokenów. Koszt to szacunek z cennika API �
 faktura. W trakcie przebiegu jedna linia stanu:
 `python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog>`.
 
+Podgląd na żywo: `python3 .claude/skills/talos-story-run/scripts/run_state.py dashboard` buduje
+`.tf/runs/talos/dashboard.html` (otwierasz plik w przeglądarce, odświeża się sam co 5 s). Kolumny to etapy przebiegu
+(Przyjęcie, Plan, Kawałki, PR, Czeka na człowieka, Gotowe), karta pokazuje rundy bieżącego kawałka (R1, R2…) i etapy
+pętli (test, kod, weryf, skan, zakres), a panel plików — `story.md`, `plan.md`, `parked.md`, wyniki skanów, STOP
+i `report.md`. Stan zapisuje Talos poleceniami `run_state.py stage` i `run_state.py step`; koszt i czas liczy skrypt
+z transkryptów (`dashboard` bez `--no-cost`). `run_report.py start` buduje dashboard sam i otwiera go w przeglądarce
+(cięcie z kluczem, wołane przez fazę pdi, tylko go buduje). Wyłączysz to w `.claude/talos.json` (osobisty plik, aktualizacja
+fabryki go nie rusza): `{"dashboard": false}` — wcale, `{"dashboard_open": false}` — buduje, ale nie otwiera;
+domyślnie oba `true`. To samo robią zmienne `TALOS_DASHBOARD=0` i `TALOS_DASHBOARD_OPEN=0`.
+
 Zgodność zmian z planem (`python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog> --base main`):
 pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem i testy w diffie — trafia do opisu PR.
 Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), Talos przy przyjęciu historyjki czyta
