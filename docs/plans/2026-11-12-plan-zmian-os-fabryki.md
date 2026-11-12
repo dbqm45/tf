@@ -1,6 +1,6 @@
 # Plan zmian: od obecnej fabryki do osi „zadanie → wdrożenie”
 
-Data: 2026-11-12 (22 pozycje w tabeli; po korektach 4a i 4b — 26). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
+Data: 2026-11-12 (22 pozycje w tabeli; po korektach 4a, 4b i 4d — 28). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
 `2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md` (dalej „dokument osi”; numery sekcji i decyzji D1–D12 pochodzą
 z niego). Status: propozycja; każda pozycja to osobny PR, kod metodą TDD.
 
@@ -209,6 +209,30 @@ Powstają dopiero wtedy, gdy istnieje produkt po drugiej stronie. Do tego czasu 
 Skutek dla planu: liczba pozycji i ich wielkość się nie zmieniają. Zmienia się kolejność jednej: pozycja 19
 przesuwa się z kroku H bliżej kroku E, jeśli Suite ma uruchamiać fazy w CI — do decyzji, gdy tor Suite będzie tego
 potrzebował.
+
+## 4d. Dwie pozycje z porównania z dev-kitem (2026-11-12)
+
+Źródło: AI Playbook (szkic do przeglądu) opisujący dev-kit. Dev-kit ma dwie rzeczy, których plan nie miał.
+
+| # | Zmiana | Rodzaj | Dotyka | Wielkość | Zgodność wstecz |
+|---|---|---|---|---|---|
+| 27 | próba na działającej aplikacji po ostatnim kawałku: uruchomienie, przejście głównego scenariusza z kryteriów, zrzut ekranu lub odpowiedź API jako dowód w `evidence/` | nowe (opcjonalny krok etapu 5) | skill osi, `tf onboard` (polecenie uruchomienia aplikacji), `task_state.py` | M | tak; krok pomijany, gdy projekt nie poda polecenia uruchomienia |
+| 28 | personalizacja w trzech warstwach — konfiguracja, własne skille, własne nakładki — z jedną ścieżką tworzenia i sprawdzania | rozszerzenie (większość części istnieje) | `tf.py`, szablony, `PRZEWODNIK.md` | M | tak |
+
+### Pozycja 28: co już jest, a czego brakuje
+
+Zasada: zespół nie edytuje plików fabryki, tylko dokłada swoje obok. Dzięki temu aktualizacja fabryki nie gubi
+zmian zespołu (plik fabryki zmieniony ręcznie przestaje dostawać aktualizacje — nowa wersja ląduje obok jako
+`*.factory-new`).
+
+| Warstwa | Co już jest | Czego brakuje |
+|---|---|---|
+| 1. Konfiguracja rdzenia | `.tf/config/config.yaml` (m.in. `tiers`, `autonomy`, `limits`), `.claude/factory-settings.json` (języki); aktualizacja ich nie rusza | jedna strona „co mogę ustawić” z listą kluczy i przykładami; `tf config show` pokazujący wartości i ich źródło |
+| 2. Własny skill | szablon `core/factory/templates/SKILL.template.md`, zasady `core-skill-authoring` (najpierw scenariusze), bramka `skill_gate.py` z rejestrem projektu `.claude/skill-gate.json`, migracje nazw stosowane do skilli projektu | polecenie `tf new skill <nazwa>` tworzące szkielet z szablonu razem z plikiem scenariuszy; sposób rozszerzenia skilla fabryki bez jego edycji (do zaprojektowania: dopisek projektu wczytywany razem ze skillem) |
+| 3. Własna nakładka | generator `tools/workspace.py new-pack` i skill `tf-new-pack` — tylko w repozytorium fabryki; własne role, persony i cechy projektu mają pierwszeństwo przed nakładkami | to samo w projekcie: `tf new pack <id>`; opis, jak nakładkę zespołu współdzielić między repozytoriami [do sprawdzenia, jak instalator traktuje nakładkę spoza fabryki] |
+| Sprawdzenie i poprawki | `skill_gate.py` (format, scenariusze), `skill_audit.py` (bezpieczeństwo), `run_skill_evals.py` (ewaluacja na modelu) | jedna ścieżka `tf skill check <nazwa>`: bramka → audyt → ewaluacja na modelu za zgodą na koszt → lista poprawek → ponowna bramka; wynik zapisany w rejestrze projektu |
+
+Kolejność: warstwa 1 i `tf new skill` ze ścieżką sprawdzenia (krok B lub E), własne nakładki później (krok H).
 
 ## 5. Ryzyka samej zmiany
 
