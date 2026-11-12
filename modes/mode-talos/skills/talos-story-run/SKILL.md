@@ -43,8 +43,16 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
      `git switch -c story/<slug>`.
    Przy cięciu z kluczem slug zaczyna się od klucza (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki
    `Change: TSK-57`.
+4. **Stan dla podglądu:** `python3 .claude/skills/talos-story-run/scripts/run_state.py` (dalej `run_state.py`) zapisuje
+   etap i rundę przebiegu w `run.json` i buduje `.tf/runs/talos/dashboard.html` — człowiek widzi go na żywo. Wołasz go
+   w miejscach opisanych niżej (`stage`, `step`); z `--auto` dopisz `--auto` do pierwszego `stage`. Zapis stanu służy
+   tylko podglądowi: jego błąd nie jest powodem do STOP, idziesz dalej. `run_report.py start` sam buduje dashboard
+   i otwiera go w przeglądarce człowieka (cięcie z `--task` go nie otwiera); podaj człowiekowi linię `Dashboard: …`
+   z wyniku `start`. Człowiek wyłącza to w `.claude/talos.json` (`dashboard`, `dashboard_open`) — wtedy `start` nic
+   nie buduje i nie drukuje linii, a ty nie wspominasz o dashboardzie.
 
 ## 1. Przyjęcie historyjki
+`run_state.py stage <katalog> intake [--auto]`.
 Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria akceptacji** sprawdzalne testem;
 **zakres** (czego nie robimy). Stan repozytorium zbiera `scout` (lista `plik:linia`, bez całych plików).
 - **Wiedza o projekcie, jeśli jest:** gdy istnieje `docs/project/00-reconstruction/standards/INDEX.md` (rekonstrukcja
@@ -73,10 +81,15 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 - Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest w `.tf/runs/talos/<data>-<slug>/`
   (poza gitem) — w commitach i kodzie nie odsyłasz do niego; pozycje trafiają do opisu PR i raportu przebiegu
   (sekcja „Odłożone do decyzji”, przy cięciu z kluczem w `docs/project/changes/CHG-n/runs/TSK-n.md`).
-- **Bez `--auto`:** pokaż plan (kawałki, fazy warunkowe, założenia, odłożone) i czekaj na akceptację człowieka.
-  **Z `--auto`:** idziesz dalej; plan i założenia trafią do opisu PR.
+- **Bez `--auto`:** `run_state.py stage <katalog> needs --needs plan`, pokaż plan (kawałki, fazy warunkowe, założenia,
+  odłożone) i czekaj na akceptację człowieka. **Z `--auto`:** idziesz dalej; plan i założenia trafią do opisu PR.
+- Po zapisaniu planu: `run_state.py stage <katalog> plan` (dashboard czyta kawałki z `plan.md`).
 
 ## 3. Pętla kawałka
+Stan pętli zapisujesz poleceniem `run_state.py step <katalog> K<n> R<k> <etap> <stan>`: etapy `test`, `kod`, `weryf`,
+`skan`, `zakres`; stany `run`, `pass`, `fail`. **R<k>** to runda kawałka: R1 to pierwsze przejście, a po nieudanej
+bramce wracasz na początek pętli i liczysz kolejną rundę (R2, najwyżej dwie próby naprawy). Wołasz `step` przy starcie
+etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłoszonego skrypt sam uznaje za zaliczone.
 1. **Test czerwony** z kryteriów kawałka (TDD; hook `tdd_guard` pilnuje kolejności). Tylko przypadki z kryteriów.
 2. **Najmniejszy kod**, który go zazieleni. Pracujesz we własnym kontekście (cache); mechaniczną zmianę w 1–2
    plikach z gotową specyfikacją zlecasz `quick-fixer`.
@@ -92,6 +105,7 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
    nie commitujesz, tak jak przy czerwonym teście. Brak skanera to FAIL z poleceniem instalacji, nie cichy PASS.
    Ustalenia poniżej progu trafiają do raportu przebiegu (sekcja „Bezpieczeństwo”). Nowa zależność młodsza niż
    7 dni (menedżer pakietów odmawia instalacji) → STOP z wyjaśnieniem, nie obejście.
+   Przykład: `run_state.py step <katalog> K2 R1 weryf fail`, potem w rundzie 2 `… K2 R2 kod run`.
 4. **Przegląd zakresu:** `scope-reviewer` dostaje kawałek z planu i `git diff`. Kod spoza kryteriów (obsługa
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
@@ -110,10 +124,12 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
    **Budżet artefaktów:** `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <baza cięcia>`
    (także po commicie raportu cięcia) — `Werdykt: PRZEKROCZONY` (artefakty > 50% dodanych linii, artefakt > 600 linii,
    plan > 300) → skracasz artefakty albo przenosisz surowe dowody poza repozytorium; wyjątek opisujesz w PR.
-3. Push gałęzi i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
+3. `run_state.py stage <katalog> pr` i `run_state.py step <katalog> PR plan_drift pass` (albo `fail`). Push gałęzi
+   i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
    z `parked.md`), wynik `plan_drift` i `pr_budget`, skrót kosztu oraz do opisu PR sekcja triażu ryzyka
    `python3 .tf/factory/risk_triage.py --md` (doradcza; „wysokie” = człowiek przegląda wskazane pliki). Nie scalasz.
-4. `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
+4. Po otwarciu PR: `run_state.py stage <katalog> done --pr <numer>` (dashboard pokaże przebieg w kolumnie „Gotowe”).
+   `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
    człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
    Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`
    (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`. Bez dostępu do
@@ -147,7 +163,9 @@ Zrobione: <kawałki z SHA commitów>
 Potrzebne od człowieka: <decyzja / dostęp / informacja>
 Wznowienie: od <K<n> w plan.md>
 ```
-Po STOP i tak uruchamiasz `run_report.py finish` — raport kosztu powstaje zawsze.
+Po STOP: `run_state.py stage <katalog> needs --needs stop --reason "<powód z bloku STOP>"`, a potem i tak
+`run_report.py finish` — raport kosztu powstaje zawsze. Po decyzji człowieka pierwszy `step` wznawia przebieg
+(`needs` → `slices`).
 
 ## Przykład
 **Wejście:** `/talos-story-run "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
@@ -168,6 +186,7 @@ Po STOP i tak uruchamiasz `run_report.py finish` — raport kosztu powstaje zaws
 - [ ] każdy kawałek: test czerwony → kod → weryfikacja i skan bezpieczeństwa → przegląd zakresu → commit;
       ≤2 próby naprawy; blokujące ustalenie skanu = czerwona bramka
 - [ ] przypadki brzegowe w `parked.md`, nie w kodzie; lista w opisie PR
+- [ ] stan dla podglądu: `run_state.py stage` na granicach etapów i `step` w pętli kawałka (błąd skryptu to nie STOP)
 - [ ] jeden PR, bez scalania; `run_report.py finish` uruchomiony, skrót pokazany człowiekowi
 
 ## Źródła

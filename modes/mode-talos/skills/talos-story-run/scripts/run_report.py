@@ -426,6 +426,13 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
     (run_dir / "plan.md").write_text(PLAN_TEMPLATE.format(title=title), encoding="utf-8")
     (run_dir / "parked.md").write_text(PARKED_TEMPLATE.format(title=title), encoding="utf-8")
     print(run_dir.relative_to(project) if run_dir.is_relative_to(project) else run_dir)
+    try:   # podgląd: zbuduj dashboard i otwórz go (opcje w .claude/talos.json); przebieg cięcia (--task) nie otwiera
+        import run_state
+        uri = run_state.launch(project, open_browser=not task)
+        if uri:
+            print(f"Dashboard: {uri}", file=sys.stderr)
+    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje startu przebiegu
+        pass
     return 0
 
 

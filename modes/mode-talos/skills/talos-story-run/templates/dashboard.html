@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talos · podgląd przebiegów</title>
+<style>
+:root{
+  --bg:#0e1116; --panel:#151a22; --panel2:#1b212b; --line:#262e3a; --text:#e6e9ef; --muted:#8b95a5;
+  --accent:#7aa2ff; --ok:#3fb68b; --warn:#e5a93d; --bad:#e5604d; --dim:#4a5362;
+  --ok-bg:rgba(63,182,139,.14); --warn-bg:rgba(229,169,61,.16); --bad-bg:rgba(229,96,77,.14);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+:root[data-theme="light"]{
+  --bg:#f4f6f9; --panel:#ffffff; --panel2:#f0f3f7; --line:#dde2ea; --text:#1b2330; --muted:#5d6877;
+  --accent:#2f5fd0; --ok:#12805c; --warn:#9a6700; --bad:#b3341f; --dim:#aab3c0;
+  --ok-bg:rgba(18,128,92,.10); --warn-bg:rgba(154,103,0,.12); --bad-bg:rgba(179,52,31,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--sans)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1600px;margin:0 auto;padding:20px 24px 40px}
+
+header.top{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:20px;margin:0 0 2px;font-weight:650}
+.sub{color:var(--muted);font-size:12.5px}
+.sub code,.banner code{font-family:var(--mono);font-size:12px}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block}
+.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--muted)}
+.btn:hover{color:var(--text);border-color:var(--muted)}
+.banner{margin:14px 0 18px;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;color:var(--muted);font-size:12.5px;background:var(--panel)}
+.banner b{color:var(--text)}
+
+/* tablica: 6 kolumn */
+.board{display:grid;grid-template-columns:repeat(6,minmax(280px,1fr));gap:0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.col{border-right:1px solid var(--line);min-height:460px}
+.col:last-child{border-right:0}
+.col h3{display:block;margin:0;padding:11px 12px 8px;font-size:13px;font-weight:650;border-bottom:1px solid var(--line)}
+.col h3 .hrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.col h3 .hsub{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--muted);margin-top:2px;cursor:help}
+.col h3 .mdl{color:var(--accent)}
+.col h3 .nomdl{color:var(--dim)}
+.col h3 .n{font-size:11.5px;color:var(--muted);font-weight:500}
+.col.needs h3{color:var(--bad);box-shadow:inset 0 -2px 0 var(--bad)}
+.col.done h3{color:var(--ok)}
+.cards{padding:10px;display:flex;flex-direction:column;gap:9px}
+.none{color:var(--dim);padding:2px 4px}
+
+.card{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.card:hover{border-color:var(--muted)}
+.card.sel{border-color:var(--accent)}
+.card.attn{border-color:var(--bad)}
+.card.ask{border-color:var(--warn)}
+.card .id{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:space-between}
+.card .id .l{display:flex;gap:7px;align-items:center;min-width:0}
+.card .id .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .id .live{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.card .id .call{color:var(--bad);font-weight:700;letter-spacing:.6px;font-size:11px;white-space:nowrap}
+.card .id .try{font-size:11px;color:var(--muted);white-space:nowrap;cursor:help}
+.card .title{font-weight:600;font-size:14px;margin:7px 0 4px}
+.card .refs{font-family:var(--mono);font-size:12px;color:#8ec5ff;margin:0 0 8px;display:flex;gap:10px;flex-wrap:wrap}
+:root[data-theme="light"] .card .refs{color:#1a5fb4}
+.rows{display:flex;flex-direction:column;gap:5px;margin:8px 0}
+.rrow{display:grid;grid-template-columns:22px repeat(5,1fr);gap:4px;align-items:center}
+.rl{font-family:var(--mono);font-size:10.5px;white-space:nowrap;color:var(--muted);cursor:help}
+.rl.bad{color:var(--bad)}
+.rl.cur{color:var(--warn)}
+.chip{font-family:var(--mono);font-size:10px;border-radius:6px;padding:4px 0;text-align:center;border:1px solid transparent;color:var(--dim);white-space:nowrap;cursor:help;background:transparent}
+.chip.done{color:var(--ok);background:var(--ok-bg)}
+.chip.cur{color:var(--warn);background:var(--warn-bg)}
+.chip.fail{color:var(--bad);background:var(--bad-bg);border-color:var(--bad)}
+.chip.todo{border-style:dashed;border-color:var(--line)}
+.chip.span2{grid-column:span 2}
+.strip{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:8px 0 2px}
+.strip .chip{padding:3px 10px;font-size:10.5px}
+.strip .chip.plus{color:var(--accent);border:1px dashed var(--accent);padding:2px 8px}
+.rcap{font-size:12px;color:var(--text);margin:10px 0 2px;padding:5px 8px;border-left:3px solid var(--warn);background:var(--warn-bg);border-radius:0 6px 6px 0;cursor:help}
+.rcap.bad{border-left-color:var(--bad);background:var(--bad-bg)}
+.striplbl{font-size:10.5px;color:var(--muted);margin-right:2px}
+.rcap b{color:var(--text);font-weight:500}
+.plusrow{display:flex;gap:4px;margin:0 0 8px}
+.plusrow .chip{padding:2px 8px;font-size:10.5px;color:var(--accent);border:1px dashed var(--accent)}
+.why{font-size:12px;margin:2px 0 8px}
+.why.stop{color:var(--bad)}
+.why.plan{color:var(--warn)}
+.meta1{display:flex;gap:12px;align-items:baseline;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.meta1 .eff{cursor:help;font-weight:600}
+.meta1 .eff.e-low{color:var(--muted)}
+.meta1 .eff.e-medium{color:var(--warn)}
+.meta1 .eff.e-high{color:var(--bad)}
+.meta1 .cost,.meta1 .min{cursor:help}
+.meta2{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
+.meta2 span{cursor:help}
+.meta2 .r{color:var(--warn)}
+.hint{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+.bar{display:flex;gap:18px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12px;font-family:var(--mono);margin:12px 2px 0}
+.bar .sp{margin-left:auto}
+.legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin:10px 2px 0;align-items:center}
+.legend .chip{padding:2px 9px;cursor:default;margin-right:4px}
+.legend .chip.plus{color:var(--accent);border:1px dashed var(--accent)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:6px 28px;margin:14px 2px 0;font-size:12px;color:var(--muted)}
+.gloss b{color:var(--text);font-family:var(--mono);font-weight:500}
+
+/* panel */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:15;display:none}
+.scrim.on{display:block}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(900px,100%);background:var(--panel);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(0,0,0,.35);transform:translateX(102%);transition:transform .18s ease;z-index:20;display:flex;flex-direction:column}
+.drawer.open{transform:none}
+.drawer header{padding:14px 18px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.drawer h2{margin:0 0 3px;font-size:16px}
+.dmeta{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.dwrap{display:grid;grid-template-columns:230px 1fr;min-height:0;flex:1}
+.files{border-right:1px solid var(--line);padding:12px 8px;overflow:auto}
+.files .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:10px 8px 4px}
+.fbtn{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:6px 8px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.fbtn:hover{background:var(--panel2);color:var(--text)}
+.fbtn[aria-current="true"]{background:var(--panel2);color:var(--text)}
+.content{padding:16px 20px 30px;overflow:auto}
+.content h4{margin:0 0 10px;font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:500}
+.content pre{margin:0;white-space:pre-wrap;word-wrap:break-word;font-family:var(--mono);font-size:12.5px;line-height:1.55}
+.nextbox{margin:0 0 14px;padding:9px 12px;border-radius:9px;border:1px solid var(--warn);background:var(--warn-bg);font-size:12.5px}
+.nextbox.stop{border-color:var(--bad);background:var(--bad-bg)}
+.nextbox .cmd{display:block;margin-top:5px;font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
+@media (max-width:700px){.dwrap{grid-template-columns:1fr}.files{border-right:0;border-bottom:1px solid var(--line)}}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Talos <span class="sub" style="font-weight:400">· historyjka → PR</span></h1>
+    <div class="sub">Przebiegi z <code>.tf/runs/talos/</code> · tryb <code>mode-talos</code></div>
+  </div>
+  <div class="tools">
+    <span class="pill"><span class="dot warn"></span> stan z <span id="gen">/*GENERATED*/</span></span>
+    <button class="btn" id="themeBtn" type="button">Jasny / ciemny</button>
+  </div>
+</header>
+
+<div class="banner">Stan zapisują <code>run_state.py stage</code> i <code>run_state.py step</code>, a ten plik buduje <code>run_state.py dashboard</code> (odświeża się sam co 5 s, gdy panel jest zamknięty). Koszt i czas liczy skrypt z transkryptów, nie model.</div>
+
+<div class="board" id="board" aria-label="Przebiegi Talosa wg etapu"></div>
+
+<div class="bar">
+  <span>/talos-story-run &lt;story&gt; [--auto] [--budget USD]</span>
+  <span>/talos-story-run TSK-n --change CHG-n</span>
+  <span class="sp" id="summary"></span>
+</div>
+<div class="legend">
+  <span><span class="chip done">test</span>zaliczony</span>
+  <span><span class="chip cur">skan</span>w toku</span>
+  <span><span class="chip fail">skan</span>nieudany</span>
+  <span><span class="chip todo">zakres</span>jeszcze nie uruchomiony</span>
+</div>
+<div class="gloss">
+  <div><b>R1, R2</b> — kolejne rundy bieżącego kawałka. Po nieudanej bramce Talos wraca na początek i robi następną rundę; po 2 nieudanych STOP</div>
+  <div><b>kawałki 1/3</b> — tyle kawałków planu jest już zacommitowanych (jeden kawałek = jeden commit, max 5)</div>
+  <div><b>odłożone 2</b> — sprawy z <code>parked.md</code>, czekają na Twoją decyzję</div>
+  <div><b>medium</b> — effort modelu: <span style="color:var(--muted)">low</span>, <span style="color:var(--warn)">medium</span>, <span style="color:var(--bad)">high</span> · <b>$0.18</b> szacunek z cennika API · <b>--auto</b> plan bez akceptacji</div>
+</div>
+
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Szczegóły przebiegu">
+  <header>
+    <div><h2 id="dTitle"></h2><div class="dmeta" id="dMeta"></div></div>
+    <button class="btn" id="dClose" type="button" aria-label="Zamknij panel">Zamknij ✕</button>
+  </header>
+  <div class="dwrap">
+    <nav class="files" id="files" aria-label="Pliki przebiegu"></nav>
+    <div class="content" id="content"></div>
+  </div>
+</aside>
+
+<script>
+/* ===== STAN =====
+   Dane wstrzykuje run_state.py dashboard z katalogów przebiegów w .tf/runs/talos (run.json, plan.md, parked.md, security/, report.md). */
+const COLS = [
+  {id:"intake", label:"Przyjęcie", agent:"scout", model:"haiku", tip:"Fakty o repozytorium zbiera scout (fast); historyjkę czyta Talos (sonnet)."},
+  {id:"plan",   label:"Plan",      agent:"talos", model:"sonnet", tip:"Plan z kawałków pisze Talos (std)."},
+  {id:"slices", label:"Kawałki",   agent:"talos", model:"sonnet", tip:"Pętla kawałka: test → kod → bramka (weryf, skan, zakres) → commit. Pasek K = kawałki, wiersze R = próby bramki."},
+  {id:"pr",     label:"PR",        agent:"plan_drift", model:null, tip:"plan_drift.py (skrypt), potem Talos otwiera jeden PR. Nie scala."},
+  {id:"needs",  label:"Czeka na człowieka", agent:"Ty", model:null, cls:"needs", tip:"Decyzja człowieka: akceptacja planu albo rozstrzygnięcie blokady po STOP."},
+  {id:"done",   label:"Gotowe",    agent:"PR otwarty", model:null, cls:"done"}
+];
+
+const RUNS = /*RUNS_JSON*/[];
+
+/* ===== POMOCNICZE ===== */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let sel = null, curFile = null;
+const MARK = {pass:"✓", fail:"✗", run:"…", todo:"○"};
+const CLS  = {pass:"done", fail:"fail", run:"cur", todo:"todo"};
+const runDir = r => `.tf/runs/talos/${r.date}-${r.slug}`;
+const filesFor = r => r.files;
+
+/* ===== RENDER ===== */
+const STATE_PL = {pass:"zaliczony", run:"w toku", fail:"nieudany", todo:"jeszcze nie uruchomiony"};
+const STATE_K = {pass:"zacommitowany", run:"w toku", fail:"bramka nieudana", todo:"w kolejce"};
+const VERDICTS = [
+  {id:"test",   tip:"Test czerwony z kryteriów kawałka — talos · sonnet"},
+  {id:"kod",    tip:"Najmniejszy kod, który zazielenia test — talos · sonnet"},
+  {id:"weryf",  tip:"Polecenie weryfikacji: format, lint, typy, testy — skrypt, bez modelu"},
+  {id:"skan",   tip:"semgrep OWASP Top 10 na plikach kawałka — skrypt, bez modelu"},
+  {id:"zakres", tip:"Przegląd zakresu — scope-reviewer · sonnet, świeży kontekst"}
+];
+function chip(label, st, tip, extra){
+  const t = label + ": " + STATE_PL[st] + (tip ? " — " + tip : "");
+  return `<span class="chip ${CLS[st]} ${extra||""}" title="${esc(t)}" aria-label="${esc(label+": "+STATE_PL[st])}">${esc(label)}</span>`;
+}
+function rowsHtml(r){
+  let out = "";
+  if (r.cur) out += `<div class="rows">` + r.cur.rounds.map((rd,i)=>`<div class="rrow"><span class="rl" title="Runda ${i+1} kawałka ${r.cur.k}. Po nieudanej bramce Talos wraca na początek pętli.">R${i+1}</span>${VERDICTS.map(v=>chip(v.id, rd[v.id], v.tip)).join("")}</div>`).join("") + `</div>`;
+  if (r.prSteps) out += `<div class="rows"><div class="rrow"><span class="rl"></span>${chip("plan_drift", r.prSteps.drift, "plan_drift.py — zgodność zmian z planem (skrypt)", "span2")}${chip("PR", r.prSteps.pr, "jeden PR, bez scalania — talos · sonnet")}<span></span></div></div>`;
+  return out;
+}
+function card(r){
+  const needs = r.stage==="needs", live = !needs && r.stage!=="done";
+  const done = r.slices.filter(s=>s.state==="done").length;
+  const right = needs ? `<span class="call">TWOJA DECYZJA</span>` : "";
+  const refs = [r.key, r.change, r.pr?("PR #"+r.pr):null, r.flag?("⚑ "+r.flag):null].filter(Boolean);
+  let why = "", hint = "";
+  if (needs && r.needs==="stop"){ hint = (r.stopText||"STOP.")+" Zdecyduj i napisz do Talosa: wznów od "+(r.cur?r.cur.k:"bieżącego kawałka"); }
+  if (needs && r.needs==="plan"){ hint = "Plan do akceptacji (bez --auto): zaakceptuj albo napisz uwagi do Talosa"; }
+  const cls = needs && r.needs==="stop" ? "attn" : needs ? "ask" : "";
+  return `<button class="card ${cls} ${sel===r.slug?"sel":""}" type="button" data-run="${esc(r.slug)}">
+    <div class="id"><span class="l">${live?'<span class="live" title="w toku"></span>':""}<span class="nm">${esc(r.date.slice(5))} · ${esc(r.slug)}</span></span>${right}</div>
+    <div class="title">${esc(r.title)}</div>
+    ${refs.length?`<div class="refs">${refs.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:""}
+    ${rowsHtml(r)}${why}
+    <div class="meta1">${r.effort?`<span class="eff e-${["low","medium"].includes(r.effort)?r.effort:"high"}" title="Effort modelu Talosa: szary = low, żółty = medium, czerwony = high lub wyższy">${esc(r.effort)}</span>`:""}${r.cost==null?"":`<span class="cost" title="Szacunek z cennika API, nie faktura">$${r.cost.toFixed(2)}</span><span class="min" title="Czas od startu przebiegu">${r.min}m</span>`}</div>
+    <div class="meta2">${r.slices.length?`<span title="Kawałki planu już zacommitowane">kawałki ${done}/${r.slices.length}</span>`:""}${r.parked?`<span class="r" title="Sprawy z parked.md: przypadki brzegowe i pomysły poza kryteriami. Czekają na Twoją decyzję.">odłożone ${r.parked}</span>`:""}${r.auto===true?'<span title="Plan bez czekania na akceptację człowieka">--auto</span>':""}</div>
+    ${hint?`<div class="hint">${esc(hint)}</div>`:""}
+  </button>`;
+}
+function renderBoard(){
+  $("#board").innerHTML = COLS.map(c => {
+    const rs = RUNS.filter(r => r.stage===c.id);
+    const sub = c.agent ? `<div class="hsub" ${c.tip?`title="${esc(c.tip)}"`:""}>${esc(c.agent)}${c.model?` · <span class="mdl">${esc(c.model)}</span>`:(c.agent==="plan_drift"?` · <span class="nomdl">bez modelu</span>`:"")}</div>` : "";
+    return `<section class="col ${c.cls||""}" aria-label="${esc(c.label)}">
+      <h3><div class="hrow"><span>${esc(c.label)}</span><span class="n">${rs.length||""}</span></div>${sub}</h3>
+      <div class="cards">${rs.length?rs.map(card).join(""):`<div class="none">—</div>`}</div></section>`;
+  }).join("");
+  const active = RUNS.filter(r => r.stage!=="done" && r.stage!=="needs").length;
+  const wait = RUNS.filter(r => r.stage==="needs").length;
+  const total = RUNS.reduce((s,r)=>s+(r.cost||0),0);
+  $("#summary").textContent = `${active} w toku · ${wait} czeka na Ciebie · $${total.toFixed(2)} równowartość API`;
+}
+
+/* panel */
+function openRun(slug){
+  const r = RUNS.find(x=>x.slug===slug); if(!r) return;
+  sel = slug; renderBoard();
+  $("#dTitle").textContent = r.title;
+  $("#dMeta").innerHTML = [runDir(r), "gałąź: story/" + r.slug, "modele: " + ((r.models||[]).join(", ")||"—")].map(x => `<div>${esc(x)}</div>`).join("");
+  window.__files = filesFor(r); window.__run = r;
+  curFile = (r.stage==="needs"&&r.needs==="stop" && window.__files.some(g=>g.items.some(i=>i.name==="STOP"))) ? "STOP" : window.__files[0].items[0].name;
+  renderFiles();
+  $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden","false"); $("#scrim").classList.add("on");
+  $("#dClose").focus();
+}
+function renderFiles(){
+  const r = window.__run, groups = window.__files;
+  $("#files").innerHTML = groups.map(g => `<div class="grp">${esc(g.grp)}</div>` + g.items.map(i =>
+    `<button class="fbtn" type="button" data-file="${esc(i.name)}" aria-current="${i.name===curFile}"><span class="dot ${i.dot}"></span>${esc(i.name)}</button>`).join("")).join("");
+  const it = groups.flatMap(g=>g.items).find(i=>i.name===curFile);
+  let next = "";
+  if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop"><b>Co dalej:</b> zdecyduj i poproś Talosa o wznowienie od ${esc(r.cur?r.cur.k:"bieżącego kawałka")}.<span class="cmd">claude --agent talos  →  „wznów ${esc(runDir(r))}”</span></div>`;
+  if (r.stage==="needs"&&r.needs==="plan") next = `<div class="nextbox"><b>Co dalej:</b> przeczytaj plan i zaakceptuj albo zgłoś uwagi w rozmowie z Talosem. Bez akceptacji nie ruszy do kodu.</div>`;
+  $("#content").innerHTML = next + `<h4>${esc(it.name)}</h4><pre></pre>`;
+  $("#content pre").textContent = it.text;
+}
+function closeDrawer(){ sel=null; renderBoard(); $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden","true"); $("#scrim").classList.remove("on"); }
+
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-run]"); if (c) return openRun(c.dataset.run);
+  const f = e.target.closest("[data-file]"); if (f){ curFile = f.dataset.file; renderFiles(); }
+});
+$("#dClose").addEventListener("click", closeDrawer);
+$("#scrim").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e => { if (e.key==="Escape") closeDrawer(); });
+$("#themeBtn").addEventListener("click", () => { const r=document.documentElement; r.dataset.theme = r.dataset.theme==="light"?"dark":"light"; });
+try { const t = localStorage.getItem("talos-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+$("#themeBtn").addEventListener("click", () => { try { localStorage.setItem("talos-theme", document.documentElement.dataset.theme); } catch (e) {} });
+renderBoard();
+setTimeout(function tick(){ if (!sel) location.reload(); else setTimeout(tick, 5000); }, 5000);
+</script>
+</body>
+</html>
