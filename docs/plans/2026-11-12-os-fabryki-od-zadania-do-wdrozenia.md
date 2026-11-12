@@ -583,6 +583,25 @@ kalibracja reguły, `AGENTS.md` obok `CLAUDE.md` — tu chodzi o wpięcie ich w 
 - **Świeżość zależności w obie strony:** obok karencji 7 dni dla wersji zbyt nowych (Talos) — ostrzeżenie dla
   narzędzi i szablonów nieaktualizowanych od ponad 6 miesięcy; to ostrzeżenie, nie blokada.
 
+**Z kontraktów przekazania, wywiadu i konfiguracji** (druga paczka plików pomocniczych):
+- **Kontrakt pliku ma jednego właściciela.** Schemat pliku przekazania opisuje ten, kto plik pisze; czytający ma
+  osobną, krótką listę: których pól używa, które tylko pokazuje człowiekowi, które zapisuje w śladzie bez działania.
+  Nowe pole to zmiana schematu oraz piszącego i czytającego naraz. Rozjazd ze schematem daje ostrzeżenie, a odmowę
+  tylko brak pliku. U nas: schemat każdego pliku etapu obok skryptu, który go zapisuje (`task_state.py`), a etap
+  czytający deklaruje używane pola — test sprawdza zgodność obu stron.
+- **Część dla maszyny minimalna, uzasadnienie w jednym akapicie dla człowieka.** Skrypty czytają wyłącznie nagłówek;
+  akapit „dlaczego” nie jest parsowany. Chroni to przed budowaniem logiki na prozie.
+- **Reguły pytań** (uzupełnienie 1a): nie pytać o to, co jest już w plikach wcześniejszych etapów; pytanie pojawia się
+  tylko wtedy, gdy istnieją realne opcje do wyboru; zawsze jest opcja „nie wiem — wybierz za mnie”, która zapisuje
+  konkretną wartość domyślną, a nie „nieokreślone”; nie porównywać wariantów „w próżni”, zanim znany jest kontekst
+  zadania; ścieżka własna kończy się krótką samokontrolą, a przy dwóch lub więcej odpowiedziach „nie” fabryka
+  proponuje powrót do rekomendacji — i szanuje każdą decyzję.
+- **Wyniki skanów bez zmęczenia alarmami:** w rozmowie tylko krytyczne i wysokie, reszta w raporcie; podatności
+  w zależnościach bezpośrednich osobno od pośrednich (pierwsze człowiek naprawia od razu, drugie czekają na dostawcę);
+  każda linia podsumowania ma liczbę i kategorię. Do raportu skanu w pętli kawałka i w `tf onboard`.
+- **Tabele wyboru jako dane, nie proza:** polecenie audytu dla języka, sposób uruchomienia narzędzia — w pliku
+  konfiguracji ze sprawdzeniem zgodności w CI. Tak samo wykrywanie poleceń projektu w `tf onboard` (sekcja 7).
+
 **Przygotowanie repo — jednorazowo, przed pierwszym zadaniem.** Oś zakłada repo, w którym agent może sprawdzić własną
 pracę. `tf onboard` zaczyna więc od raportu gotowości w zwykłym języku: co jest (testy, lint, typy, CI, lockfile), czego
 brakuje i w jakiej kolejności to naprawić — najpierw to, bez czego fabryka nie zweryfikuje zmian. Braki blokujące
@@ -601,7 +620,7 @@ wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
 - PDF „AI Playbook” (szkic do przeglądu, 18 stron, przeczytany 2026-11-12) — opis dev-kitu i tabela podejść.
 - Skille `10x-init`, `10x-shape`, `10x-prd`, `10x-stack-assess`, `10x-tech-stack-selector`, `10x-health-check`,
   `10x-bootstrapper`, `10x-agents-md`, `10x-lesson`, `10x-rule-review`, `10x-infra-research` z kryteriami platform
-  oraz pliki instrukcji lekcji M1L1–M1L5 i pięć plików pomocniczych (schematy, protokół odmów, scalanie szkieletu)
+  oraz pliki instrukcji lekcji M1L1–M1L5 i dziesięć plików pomocniczych (schematy, protokół odmów, scalanie szkieletu, kontrakt przekazania, wywiad, konfiguracja)
   (załączone 2026-11-12, przeczytane w całości; sekcja 17).
 - 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).
