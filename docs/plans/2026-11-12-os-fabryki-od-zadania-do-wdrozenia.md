@@ -408,6 +408,23 @@ pobiła wyraźnie samego wykonawcy (Opus 5.5 `high` z doradcą: +1,7 pkt za ok. 
 
 ## 10. Stały podgląd
 
+**Dashboard otwiera się od razu** (wymaganie człowieka, 2026-11-12). Tak jak dziś przy starcie przebiegu Talosa
+(`run_report.py start` buduje stronę i otwiera ją w przeglądarce), po zmianie robi to każde użycie fabryki: start
+zadania, pytanie i drobna zmiana przez dyspozytorkę oraz `tf onboard`. Jedna strona na projekt, odświeżana sama;
+ponowne użycie fabryki nie otwiera drugiej karty, tylko aktualizuje tę samą. Wyłączniki zostają jak w Talosie (plik
+ustawień albo zmienna środowiska); w CI i w pracy bez nadzoru strona się buduje, ale nie otwiera.
+
+**Podgląd wszystkich tworzonych plików.** Panel plików (dziś: pliki przebiegu Talosa) obejmuje wszystko, co fabryka
+tworzy lub zmienia w ramach zadania:
+- pliki zadania: zgłoszenie, specyfikacja, plan, decyzje, zdarzenia, przegląd, raport, dowody — z podglądem treści
+  i znacznikiem stanu (szkic, zatwierdzony, nieaktualny);
+- pliki kodu i testów zmienione w każdym kawałku, pogrupowane według kawałka i commita, z różnicą „przed i po”;
+- pliki robocze spoza gita (notatki z prac w tle, wyniki skanów) — osobna, zwinięta grupa;
+- przy każdym pliku: który etap go utworzył i kiedy; nowe i zmienione od ostatniego spojrzenia są wyróżnione.
+
+Strona tylko czyta: listę plików bierze ze stanu zadania i z gita (`git status`, `git diff`), a nie z pamięci modelu,
+więc pokazuje także pliki, o których agent nie wspomniał.
+
 Dashboard z tf#211 zostaje i rośnie razem z osią:
 - źródłem jest `task.json` i `events.jsonl` wszystkich zadań, nie tylko przebiegi Talosa;
 - kolumny to etapy 1–8; na karcie zadania: tryb, waga, ryzyko, bieżący kawałek i runda bramki, koszt, poziomy modeli;
