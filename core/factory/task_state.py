@@ -6,11 +6,19 @@ tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i be
   tf task start <KEY> --title "<tytuł>" [--weight lekka|zwykla|pelna] [--mode plan|zwykly|auto]
   tf task stage <KEY> <etap> [--force]
   tf task status <KEY> [--json]
+  tf task slice <KEY> K1 planned|implemented|blocked [--title "<wartość>"] [--reason "<powód blokady>"]
+  tf task verify <KEY> K1 --files <plik>[,<plik>…] [--command "<polecenie>"] [--timeout <s>]
 
 Klucz: numer z trackera (PROJ-123), klucz pdi (CHG-12, TSK-57) albo T-<RRRRMMDD>-<slug>. Etapy idą w kolejności:
 przyjecie → specyfikacja → plan → realizacja → przeglad → pr → wdrozenie → zamkniecie; cofnięcie wymaga --force.
 `start` w istniejącym katalogu zmiany (np. z trybu pdi) dokłada sam `task.json` i nie rusza innych plików.
 Każdy zapis odświeża `docs/project/changes/INDEX.md` — jeden wiersz na zadanie, żeby agent nie przeglądał folderów.
+
+Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruchamia polecenie (domyślnie to z
+`.claude/quality-gate.json`), więc kodu wyjścia nie da się zadeklarować, i zapisuje `evidence/K1-<n>.json`
+(polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
+pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. Do etapu `przeglad` i dalszych zadanie
+przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force).
 
 Kod wyjścia: 0 — zrobione; 1 — odmowa (zadanie istnieje, nie ma go, etap wstecz); 2 — błąd wywołania.
 Tylko biblioteka standardowa.
@@ -19,9 +27,12 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 from pathlib import Path
 
@@ -38,6 +49,9 @@ KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
 STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
 WEIGHTS = ("lekka", "zwykla", "pelna")
 MODES = ("plan", "zwykly", "auto")
+SLICE = re.compile(r"K[1-9][0-9]?")
+SLICE_STATES = ("planned", "implemented", "blocked")
+GATED = STAGES[STAGES.index("przeglad"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
 INDEX_HEAD = ("# Zadania\n\nGenerowany przez `tf task` — nie edytuj ręcznie. Szczegóły zadania: "
               "`docs/project/changes/<klucz>/`.\n\n| Klucz | Tytuł | Etap | Zmieniono |\n|---|---|---|---|\n")
 
@@ -88,6 +102,132 @@ def write_index(root: Path) -> None:
     write_atomic(base / "INDEX.md", INDEX_HEAD + "\n".join(rows) + ("\n" if rows else ""))
 
 
+def sha256(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def evidence_of(root: Path, key: str, sl: dict) -> dict | None:
+    rel = sl.get("evidence")
+    if not rel:
+        return None
+    try:
+        data = json.loads((root / CHANGES / key / rel).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def slice_state(root: Path, key: str, sl: dict) -> tuple[str, str]:
+    """(stan, powód) wyliczony z dowodu i bieżących plików — nie z deklaracji."""
+    if sl.get("state") == "blocked":
+        return "zablokowany", sl.get("reason") or "bez podanego powodu"
+    ev = evidence_of(root, key, sl)
+    if ev is None:
+        return ("zaplanowany", "") if sl.get("state") == "planned" else ("niezweryfikowany", "brak dowodu")
+    if ev.get("exit_code") != 0:
+        return "czerwony", f"`{ev.get('command')}` zakończone kodem {ev.get('exit_code')}"
+    changed = [f for f, h in (ev.get("files") or {}).items() if sha256(root / f) != h]
+    if changed:
+        return "niezweryfikowany", "pliki zmienione po dowodzie: " + ", ".join(changed)
+    return "zweryfikowany", ""
+
+
+def slice_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
+    return {k: slice_state(root, task["key"], v) for k, v in sorted((task.get("slices") or {}).items())}
+
+
+def cmd_slice(root: Path, key: str, slice_id: str, state: str, title: str | None, reason: str | None) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    sl = task.setdefault("slices", {}).setdefault(slice_id, {})
+    sl["state"] = state
+    if title:
+        sl["title"] = title.strip()
+    if state == "blocked":
+        sl["reason"] = (reason or "").strip()
+    else:
+        sl.pop("reason", None)
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key} {slice_id}: {slice_state(root, key, sl)[0]}")
+    return 0
+
+
+def run_command(root: Path, command: str, timeout: float) -> tuple[int, str]:
+    """Uruchamia polecenie weryfikacji (bez powłoki; przez blokadę testów, gdy fabryka ją ma): (kod wyjścia, wyjście)."""
+    argv = shlex.split(command)
+    lock = root / ".claude" / "hooks" / "test_lock.py"
+    if lock.is_file():
+        argv = [sys.executable, str(lock), "--", *argv]
+    try:
+        r = subprocess.run(argv, cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=timeout, env={**os.environ, "CLAUDE_PROJECT_DIR": str(root)})
+    except subprocess.TimeoutExpired as e:
+        out = e.stdout if isinstance(e.stdout, str) else (e.stdout or b"").decode("utf-8", "replace")
+        return 124, f"przekroczony limit czasu {timeout:g} s\n{out}"
+    except OSError as e:
+        return 127, str(e)
+    return r.returncode, r.stdout + r.stderr
+
+
+def clip(out: str, saved: str) -> str:
+    if len(out) <= 3000:
+        return out
+    return out[:1000] + f"\n… [pominięto {len(out) - 3000} znaków; całość: {saved}] …\n" + out[-2000:]
+
+
+def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[str], timeout: float) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    hashes = {}
+    for f in files:
+        target = (root / f).resolve()
+        if Path(f).is_absolute() or root not in target.parents:
+            return fail(f"plik „{f}” jest poza projektem — podaj ścieżki względne plików kawałka", 2)
+        digest = sha256(target)
+        if digest is None:
+            return fail(f"nie ma pliku {f} — dowód wiąże się z istniejącymi plikami kawałka", 2)
+        hashes[f] = digest
+    folder = root / CHANGES / key / "evidence"
+    n = 1 + max([int(m.group(1)) for m in (re.fullmatch(rf"{slice_id}-(\d+)\.json", x.name) for x in folder.glob(f"{slice_id}-*.json")) if m]
+                or [0]) if folder.is_dir() else 1
+    try:
+        head = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=20)
+        commit = head.stdout.strip() if head.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        commit = None
+    code, out = run_command(root, command, timeout)
+    log = Path(".tf") / "runs" / key / f"{slice_id}-{n}.log"
+    try:   # pełne wyjście poza gitem; w dowodzie zostaje tylko ścieżka
+        (root / log).parent.mkdir(parents=True, exist_ok=True)
+        (root / log).write_text(out, encoding="utf-8")
+    except OSError:
+        pass
+    rel = f"evidence/{slice_id}-{n}.json"
+    write_atomic(root / CHANGES / key / rel, json.dumps(
+        {"slice": slice_id, "command": command, "exit_code": code, "sha": commit, "at": now(), "files": hashes,
+         "log": str(log)},
+        ensure_ascii=False, indent=1) + "\n")
+    sl = task.setdefault("slices", {}).setdefault(slice_id, {})
+    if sl.get("state") != "implemented":
+        sl["state"] = "implemented"
+        sl.pop("reason", None)
+    sl["evidence"] = rel
+    task["updated"] = now()
+    save(root, task)
+    state, why = slice_state(root, key, sl)
+    print(f"{'✓' if code == 0 else '✗'} {key} {slice_id}: {state} (dowód: {CHANGES / key / rel})"
+          + (f" — {why}" if why else ""))
+    if code != 0:
+        print(f"--- wyjście ---\n{clip(out, str(log))}")
+    return 0 if code == 0 else 1
+
+
 def cmd_start(root: Path, key: str, title: str, weight: str, mode: str) -> int:
     if load(root, key) is not None:
         return fail(f"zadanie {key} już istnieje ({CHANGES / key / 'task.json'}) — stan: tf task status {key}")
@@ -105,6 +245,11 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     was = task.get("stage", STAGES[0])
     if was in STAGES and STAGES.index(stage) < STAGES.index(was) and not force:
         return fail(f"etap {stage} jest wcześniejszy niż obecny ({was}); cofnięcie wymaga --force")
+    if stage in GATED and not force:
+        open_ = [f"{k} ({s}{': ' + w if w else ''})" for k, (s, w) in slice_states(root, task).items() if s != "zweryfikowany"]
+        if open_:
+            return fail(f"do etapu {stage} przechodzi zadanie ze zweryfikowanymi kawałkami; brakuje: " + "; ".join(open_)
+                        + f". Dowód: tf task verify {key} K<n> --files <pliki kawałka>")
     task["stage"], task["updated"] = stage, now()
     save(root, task)
     print(f"✓ {key}: {was} → {stage}")
@@ -115,13 +260,17 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
     task = load(root, key)
     if task is None:
         return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    states = slice_states(root, task)
     if as_json:
-        print(json.dumps(task, ensure_ascii=False, indent=1))
+        print(json.dumps({**task, "slice_states": {k: s for k, (s, _) in states.items()}}, ensure_ascii=False, indent=1))
         return 0
     done = STAGES.index(task["stage"]) + 1 if task.get("stage") in STAGES else 0
     print(f"{task['key']} — {task.get('title', '')}\n"
           f"etap: {task.get('stage', '?')} ({done} z {len(STAGES)}) · waga: {task.get('weight', '?')} · "
           f"tryb: {task.get('mode', '?')} · zmieniono: {task.get('updated', '?')}")
+    for k, (state, why) in states.items():
+        title = (task["slices"][k].get("title") or "").strip()
+        print(f"  {k}: {state}" + (f" — {title}" if title else "") + (f" ({why})" if why else ""))
     return 0
 
 
@@ -137,6 +286,18 @@ def main(argv: list[str]) -> int:
     g.add_argument("key")
     g.add_argument("stage")
     g.add_argument("--force", action="store_true")
+    c = sub.add_parser("slice")
+    c.add_argument("key")
+    c.add_argument("slice_id")
+    c.add_argument("state")
+    c.add_argument("--title", default=None)
+    c.add_argument("--reason", default=None)
+    v = sub.add_parser("verify")
+    v.add_argument("key")
+    v.add_argument("slice_id")
+    v.add_argument("--command", default=None)
+    v.add_argument("--timeout", type=float, default=900)
+    v.add_argument("--files", default="")
     q = sub.add_parser("status")
     q.add_argument("key")
     q.add_argument("--json", action="store_true")
@@ -159,6 +320,28 @@ def main(argv: list[str]) -> int:
         if a.stage not in STAGES:
             return fail(f"nieznany etap „{a.stage}” — kolejno: {', '.join(STAGES)}", 2)
         return cmd_stage(root, a.key, a.stage, a.force)
+    if a.cmd in ("slice", "verify"):
+        if not SLICE.fullmatch(a.slice_id):
+            return fail(f"identyfikator kawałka „{a.slice_id}” — oczekiwany K1…K99", 2)
+        if a.cmd == "slice":
+            if a.state not in SLICE_STATES:
+                return fail(f"nieznany stan „{a.state}” — do wyboru: {', '.join(SLICE_STATES)} "
+                            "(zweryfikowany wynika z dowodu: tf task verify)", 2)
+            return cmd_slice(root, a.key, a.slice_id, a.state, a.title, a.reason)
+        files = [f.strip() for f in a.files.split(",") if f.strip()]
+        if not files:
+            return fail("podaj pliki kawałka: --files <plik>[,<plik>…] — bez nich dowód nie wiąże się z kodem", 2)
+        command = a.command
+        if not command:   # domyślnie to samo polecenie, którego pilnuje bramka jakości
+            try:
+                gate = json.loads((root / ".claude" / "quality-gate.json").read_text(encoding="utf-8")).get("command")
+            except (OSError, ValueError, AttributeError):
+                gate = None
+            command = gate if isinstance(gate, str) else (" ".join(map(shlex.quote, gate)) if gate else None)
+        if not command:
+            return fail("nie ma czego uruchomić: podaj --command albo ustaw polecenie w .claude/quality-gate.json "
+                        "(tf onboard --yes)", 2)
+        return cmd_verify(root, a.key, a.slice_id, command, files, a.timeout)
     return cmd_status(root, a.key, a.json)
 
 

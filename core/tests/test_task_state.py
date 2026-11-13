@@ -13,6 +13,8 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory
 SCRIPT = ROOT / ".tf" / "factory" / "task_state.py"
 CTF = ROOT / ".tf" / "factory" / "tf.py"
 CHANGES = Path("docs") / "project" / "changes"
+OK = f'{sys.executable} -c "print(\'8 passed\')"'
+RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
 
 
 def run(project: Path, *args: str):
@@ -117,6 +119,80 @@ def main() -> int:
         check(r.returncode == 2 and "--title" in r.stdout, f"TS-17: start bez tytułu → użycie: {r.stdout}")
         r = run(p, "start", "T-20261113-waga", "--title", "x", "--weight", "ogromna")
         check(r.returncode == 2 and not (p / CHANGES / "T-20261113-waga").exists(), f"TS-18: nieznana waga odrzucona: {r.stdout}")
+
+        # C2: kawałki i dowody — „zrobione” znaczy „jest dowód powstały po ostatniej zmianie plików”
+        def states(key):
+            r = run(p, "status", key, "--json")
+            try:
+                return json.loads(r.stdout).get("slice_states", {})
+            except ValueError:
+                return {"błąd": r.stdout + r.stderr}
+
+        (p / "src").mkdir()
+        (p / "src" / "fees.py").write_text("CAP = 4000\n", encoding="utf-8")
+        run(p, "start", "EV-1", "--title", "Dowody")
+        r = run(p, "slice", "EV-1", "K1", "planned", "--title", "limit 45 zł")
+        check(r.returncode == 0 and states("EV-1") == {"K1": "zaplanowany"}, f"TS-20: kawałek zaplanowany: {r.stdout}{states('EV-1')}")
+        run(p, "slice", "EV-1", "K1", "implemented")
+        check(states("EV-1") == {"K1": "niezweryfikowany"}, f"TS-21: zrobione bez dowodu to niezweryfikowany: {states('EV-1')}")
+        r = run(p, "verify", "EV-1", "K1", "--command", OK, "--files", "src/fees.py")
+        ev = p / CHANGES / "EV-1" / "evidence" / "K1-1.json"
+        e = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
+        check(r.returncode == 0 and e.get("command") == OK and e.get("exit_code") == 0 and e.get("at")
+              and len((e.get("files") or {}).get("src/fees.py", "")) == 64 and e.get("slice") == "K1",
+              f"TS-22: dowód w evidence/K1-1.json: polecenie, kod wyjścia, czas, skróty plików: {r.stdout}{r.stderr}{e}")
+        check(states("EV-1") == {"K1": "zweryfikowany"}, f"TS-23: zielony dowód na bieżących plikach → zweryfikowany: {states('EV-1')}")
+        (p / "src" / "fees.py").write_text("CAP = 4500\n", encoding="utf-8")
+        r = run(p, "status", "EV-1")
+        check(states("EV-1") == {"K1": "niezweryfikowany"} and "zmienion" in r.stdout and "K1" in r.stdout,
+              f"TS-24: zmiana pliku po dowodzie → niezweryfikowany, z powodem: {r.stdout}")
+        r = run(p, "stage", "EV-1", "przeglad")
+        check(r.returncode == 1 and "K1" in r.stdout and task(p, "EV-1")["stage"] == "przyjecie",
+              f"TS-25: przegląd odrzucony, gdy kawałek nie jest zweryfikowany: {r.returncode} {r.stdout}")
+        r = run(p, "verify", "EV-1", "K1", "--command", RED, "--files", "src/fees.py")
+        e2 = json.loads((ev.parent / "K1-2.json").read_text(encoding="utf-8")) if (ev.parent / "K1-2.json").is_file() else {}
+        log = p / ".tf" / "runs" / "EV-1" / "K1-2.log"
+        check(r.returncode == 1 and e2.get("exit_code") == 3 and log.is_file() and "FAILED test_x" in log.read_text(encoding="utf-8")
+              and "FAILED test_x" in r.stdout,
+              f"TS-37: verify samo uruchamia polecenie: prawdziwy kod wyjścia w dowodzie, wyjście w .tf/runs/: {r.returncode} {r.stdout}{e2}")
+        check(states("EV-1") == {"K1": "czerwony"} and ev.is_file() and (ev.parent / "K1-2.json").is_file(),
+              f"TS-26: czerwony dowód → czerwony; poprzedni dowód zostaje, nowy ma kolejny numer: {states('EV-1')}")
+        run(p, "verify", "EV-1", "K1", "--command", OK, "--files", "src/fees.py")
+        r = run(p, "stage", "EV-1", "przeglad")
+        check(r.returncode == 0 and task(p, "EV-1")["stage"] == "przeglad", f"TS-27: po zielonym dowodzie przegląd dozwolony: {r.stdout}")
+        (p / "src" / "fees.py").unlink()
+        check(states("EV-1") == {"K1": "niezweryfikowany"}, f"TS-28: usunięty plik po dowodzie → niezweryfikowany: {states('EV-1')}")
+
+        (p / "src" / "cli.py").write_text("x = 1\n", encoding="utf-8")
+        run(p, "start", "EV-2", "--title", "Blokada")
+        r = run(p, "slice", "EV-2", "K1", "blocked", "--reason", "czeka na decyzję o stawce")
+        check(states("EV-2") == {"K1": "zablokowany"} and run(p, "stage", "EV-2", "przeglad").returncode == 1
+              and "czeka na decyzję" in run(p, "status", "EV-2").stdout,
+              f"TS-29: kawałek zablokowany z powodem wstrzymuje przegląd: {r.stdout}{states('EV-2')}")
+        r = run(p, "verify", "EV-2", "K2", "--command", OK)
+        check(r.returncode == 2 and "--files" in r.stdout, f"TS-30: dowód bez plików odrzucony: {r.returncode} {r.stdout}")
+        r = run(p, "verify", "EV-2", "K2", "--command", OK, "--files", "../poza.py")
+        check(r.returncode == 2 and not (p / CHANGES / "EV-2" / "evidence").exists(), f"TS-31: plik spoza projektu odrzucony: {r.stdout}")
+        r = run(p, "verify", "EV-2", "K2", "--command", OK, "--files", "src/nie-ma.py")
+        check(r.returncode == 2 and "nie-ma.py" in r.stdout, f"TS-32: nieistniejący plik odrzucony: {r.stdout}")
+        r = run(p, "slice", "EV-2", "X1", "planned")
+        check(r.returncode == 2, f"TS-33: zły identyfikator kawałka odrzucony: {r.returncode} {r.stdout}")
+        r = run(p, "slice", "EV-2", "K3", "gotowe")
+        check(r.returncode == 2 and "implemented" in r.stdout, f"TS-34: nieznany stan kawałka → lista stanów: {r.stdout}")
+        run(p, "start", "EV-3", "--title", "Bez kawałków")
+        check(run(p, "stage", "EV-3", "przeglad").returncode == 0, "TS-35: zadanie bez kawałków przechodzi do przeglądu")
+        r = run(p, "verify", "EV-3", "K1", "--command", OK, "--files", "src/cli.py")
+        check(r.returncode == 0 and states("EV-3") == {"K1": "zweryfikowany"}, f"TS-36: verify zakłada kawałek, jeśli go nie było: {r.stdout}")
+        r = run(p, "verify", "EV-3", "K2", "--files", "src/cli.py")
+        check(r.returncode == 2 and "quality-gate.json" in r.stdout, f"TS-38: bez --command i bez bramki → nie ma czego uruchomić: {r.stdout}")
+        (p / ".claude").mkdir(exist_ok=True)
+        (p / ".claude" / "quality-gate.json").write_text(json.dumps({"command": OK}), encoding="utf-8")
+        r = run(p, "verify", "EV-3", "K2", "--files", "src/cli.py")
+        e3 = json.loads((p / CHANGES / "EV-3" / "evidence" / "K2-1.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
+        check(r.returncode == 0 and e3.get("command") == OK and states("EV-3").get("K2") == "zweryfikowany",
+              f"TS-39: bez --command verify uruchamia polecenie bramki jakości: {r.stdout}{r.stderr}")
+        r = run(p, "verify", "EV-3", "K2", "--command", OK, "--exit", "0", "--files", "src/cli.py")
+        check(r.returncode == 2, f"TS-40: kodu wyjścia nie da się zadeklarować (--exit odrzucone): {r.returncode}")
 
         # tf task … uruchamia skrypt w projekcie
         q = Path(t) / "viatf"
