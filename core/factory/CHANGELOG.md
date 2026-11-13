@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.21.0] — 2026-11-13
+### Added
+- **core:** make lint and types block through verify.sh in onboard (#217)
+
 ## [9.20.0] — 2026-11-13
 ### Added
 - **core:** add tf onboard to detect commands and turn the gate on (#216)
