@@ -8,6 +8,9 @@ tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i be
   tf task status <KEY> [--json]
   tf task slice <KEY> K1 planned|implemented|blocked [--title "<wartość>"] [--reason "<powód blokady>"]
   tf task verify <KEY> K1 --files <plik>[,<plik>…] [--command "<polecenie>"] [--timeout <s>]
+  tf task artifact <KEY> <plik> --stage <etap> --by <wykonawca> [--inputs <plik>[,<plik>…]]
+  tf task approve <KEY> <plik> --by human:<id>
+  tf task check <KEY>
 
 Klucz: numer z trackera (PROJ-123), klucz pdi (CHG-12, TSK-57) albo T-<RRRRMMDD>-<slug>. Etapy idą w kolejności:
 przyjecie → specyfikacja → plan → realizacja → przeglad → pr → wdrozenie → zamkniecie; cofnięcie wymaga --force.
@@ -19,6 +22,12 @@ Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruc
 (polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
 pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. Do etapu `przeglad` i dalszych zadanie
 przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force).
+
+Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
+wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
+zmiana pliku po zatwierdzeniu → do ponownego zatwierdzenia. Stan jest w `task.json`, nie w nagłówkach plików — plików
+skrypt nigdy nie zmienia (nagłówki kontraktu pdi zostają nietknięte). Wykonawca: `<narzędzie>/<wersja>`,
+`human:<id>` albo `process:<id>` (jak w OKF 0.2). `check` kończy się kodem 1, gdy któryś plik nie jest aktualny.
 
 Kod wyjścia: 0 — zrobione; 1 — odmowa (zadanie istnieje, nie ma go, etap wstecz); 2 — błąd wywołania.
 Tylko biblioteka standardowa.
@@ -52,6 +61,7 @@ MODES = ("plan", "zwykly", "auto")
 SLICE = re.compile(r"K[1-9][0-9]?")
 SLICE_STATES = ("planned", "implemented", "blocked")
 GATED = STAGES[STAGES.index("przeglad"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
+ACTOR = re.compile(r"(human|process):[\w.@-]+|[\w.-]+/[\w.-]+")
 INDEX_HEAD = ("# Zadania\n\nGenerowany przez `tf task` — nie edytuj ręcznie. Szczegóły zadania: "
               "`docs/project/changes/<klucz>/`.\n\n| Klucz | Tytuł | Etap | Zmieniono |\n|---|---|---|---|\n")
 
@@ -137,6 +147,83 @@ def slice_state(root: Path, key: str, sl: dict) -> tuple[str, str]:
 
 def slice_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
     return {k: slice_state(root, task["key"], v) for k, v in sorted((task.get("slices") or {}).items())}
+
+
+def inside(folder: Path, name: str) -> Path | None:
+    """Plik zadania po nazwie względem katalogu zadania; None, gdy wskazuje poza katalog albo nie istnieje."""
+    target = (folder / name).resolve()
+    if Path(name).is_absolute() or folder.resolve() not in target.parents or not target.is_file():
+        return None
+    return target
+
+
+def artifact_state(root: Path, key: str, art: dict, name: str) -> tuple[str, str]:
+    """(stan, powód) pliku zadania wyliczony ze skrótów: szkic / zatwierdzony / nieaktualny / zmieniony po zatwierdzeniu."""
+    folder = root / CHANGES / key
+    changed = [f for f, h in (art.get("inputs") or {}).items() if sha256(folder / f) != h]
+    if changed:
+        return "nieaktualny", "zmienione wejścia: " + ", ".join(changed)
+    if art.get("status") == "zatwierdzony":
+        if sha256(folder / name) != art.get("approved_sha"):
+            return "zmieniony po zatwierdzeniu", "wymaga ponownego zatwierdzenia przez człowieka"
+        return "zatwierdzony", ""
+    return "szkic", ""
+
+
+def artifact_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
+    return {n: artifact_state(root, task["key"], a, n) for n, a in sorted((task.get("artifacts") or {}).items())}
+
+
+def cmd_artifact(root: Path, key: str, name: str, stage: str, by: str, inputs: list[str]) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    folder = root / CHANGES / key
+    if inside(folder, name) is None:
+        return fail(f"nie ma pliku {name} w {CHANGES / key}/ — rejestrujesz istniejący plik zadania", 2)
+    hashes = {}
+    for f in inputs:
+        target = inside(folder, f)
+        if target is None:
+            return fail(f"wejście „{f}” nie jest plikiem w {CHANGES / key}/", 2)
+        hashes[f] = sha256(target)
+    task.setdefault("artifacts", {})[name] = {"stage": stage, "status": "szkic", "generated": {"by": by, "at": now()},
+                                              "inputs": hashes}
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key} {name}: szkic (etap {stage}" + (f"; wejścia: {', '.join(hashes)}" if hashes else "") + ")")
+    return 0
+
+
+def cmd_approve(root: Path, key: str, name: str, by: str) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    art = (task.get("artifacts") or {}).get(name)
+    if art is None:
+        return fail(f"plik {name} nie jest zarejestrowany — najpierw: tf task artifact {key} {name} --stage … --by …", 2)
+    state, why = artifact_state(root, key, art, name)
+    if state == "nieaktualny":
+        return fail(f"{name} jest nieaktualny ({why}) — odśwież go i zarejestruj ponownie przed zatwierdzeniem")
+    art["status"] = "zatwierdzony"
+    art["approved_sha"] = sha256(root / CHANGES / key / name)
+    art["verified"] = [{"by": by, "at": now()}]
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key} {name}: zatwierdzony przez {by}")
+    return 0
+
+
+def cmd_check(root: Path, key: str) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    bad = {n: (s, w) for n, (s, w) in artifact_states(root, task).items() if s in ("nieaktualny", "zmieniony po zatwierdzeniu")}
+    for n, (s, w) in bad.items():
+        print(f"⚠ {n}: {s} ({w})")
+    if not bad:
+        print(f"✓ {key}: pliki zadania są aktualne")
+    return 1 if bad else 0
 
 
 def cmd_slice(root: Path, key: str, slice_id: str, state: str, title: str | None, reason: str | None) -> int:
@@ -250,6 +337,11 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
         if open_:
             return fail(f"do etapu {stage} przechodzi zadanie ze zweryfikowanymi kawałkami; brakuje: " + "; ".join(open_)
                         + f". Dowód: tf task verify {key} K<n> --files <pliki kawałka>")
+        stale = [f"{n} ({s})" for n, (s, _) in artifact_states(root, task).items()
+                 if s in ("nieaktualny", "zmieniony po zatwierdzeniu")]
+        if stale:
+            return fail(f"do etapu {stage} przechodzi zadanie z aktualnymi plikami; do odświeżenia: " + "; ".join(stale)
+                        + f". Szczegóły: tf task check {key}")
     task["stage"], task["updated"] = stage, now()
     save(root, task)
     print(f"✓ {key}: {was} → {stage}")
@@ -262,7 +354,9 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
         return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
     states = slice_states(root, task)
     if as_json:
-        print(json.dumps({**task, "slice_states": {k: s for k, (s, _) in states.items()}}, ensure_ascii=False, indent=1))
+        print(json.dumps({**task, "slice_states": {k: s for k, (s, _) in states.items()},
+                          "artifact_states": {n: s for n, (s, _) in artifact_states(root, task).items()}},
+                         ensure_ascii=False, indent=1))
         return 0
     done = STAGES.index(task["stage"]) + 1 if task.get("stage") in STAGES else 0
     print(f"{task['key']} — {task.get('title', '')}\n"
@@ -271,6 +365,8 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
     for k, (state, why) in states.items():
         title = (task["slices"][k].get("title") or "").strip()
         print(f"  {k}: {state}" + (f" — {title}" if title else "") + (f" ({why})" if why else ""))
+    for n, (state, why) in artifact_states(root, task).items():
+        print(f"  {n}: {state}" + (f" ({why})" if why else ""))
     return 0
 
 
@@ -298,6 +394,18 @@ def main(argv: list[str]) -> int:
     v.add_argument("--command", default=None)
     v.add_argument("--timeout", type=float, default=900)
     v.add_argument("--files", default="")
+    r = sub.add_parser("artifact")
+    r.add_argument("key")
+    r.add_argument("name")
+    r.add_argument("--stage", required=True)
+    r.add_argument("--by", required=True)
+    r.add_argument("--inputs", default="")
+    o = sub.add_parser("approve")
+    o.add_argument("key")
+    o.add_argument("name")
+    o.add_argument("--by", required=True)
+    k = sub.add_parser("check")
+    k.add_argument("key")
     q = sub.add_parser("status")
     q.add_argument("key")
     q.add_argument("--json", action="store_true")
@@ -320,6 +428,18 @@ def main(argv: list[str]) -> int:
         if a.stage not in STAGES:
             return fail(f"nieznany etap „{a.stage}” — kolejno: {', '.join(STAGES)}", 2)
         return cmd_stage(root, a.key, a.stage, a.force)
+    if a.cmd == "check":
+        return cmd_check(root, a.key)
+    if a.cmd in ("artifact", "approve"):
+        if not ACTOR.fullmatch(a.by):
+            return fail(f"wykonawca „{a.by}” — oczekiwany zapis: <narzędzie>/<wersja>, human:<id> albo process:<id>", 2)
+        if a.cmd == "approve":
+            if not a.by.startswith("human:"):
+                return fail("zatwierdza tylko człowiek: --by human:<id>", 2)
+            return cmd_approve(root, a.key, a.name, a.by)
+        if a.stage not in STAGES:
+            return fail(f"nieznany etap „{a.stage}” — kolejno: {', '.join(STAGES)}", 2)
+        return cmd_artifact(root, a.key, a.name, a.stage, a.by, [f.strip() for f in a.inputs.split(",") if f.strip()])
     if a.cmd in ("slice", "verify"):
         if not SLICE.fullmatch(a.slice_id):
             return fail(f"identyfikator kawałka „{a.slice_id}” — oczekiwany K1…K99", 2)

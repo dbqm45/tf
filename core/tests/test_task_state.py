@@ -194,6 +194,71 @@ def main() -> int:
         r = run(p, "verify", "EV-3", "K2", "--command", OK, "--exit", "0", "--files", "src/cli.py")
         check(r.returncode == 2, f"TS-40: kodu wyjścia nie da się zadeklarować (--exit odrzucone): {r.returncode}")
 
+        # C3: pliki zadania — kto je wygenerował i zatwierdził, z czego powstały, czy są jeszcze aktualne
+        def astates(key):
+            r = run(p, "status", key, "--json")
+            try:
+                return json.loads(r.stdout).get("artifact_states", {})
+            except ValueError:
+                return {"błąd": r.stdout + r.stderr}
+
+        run(p, "start", "AR-1", "--title", "Pliki zadania")
+        folder = p / CHANGES / "AR-1"
+        (folder / "spec.md").write_text("# Specyfikacja\nAC-1: limit 45 zł\n", encoding="utf-8")
+        (folder / "plan.md").write_text("# Plan\n- [ ] K1\n", encoding="utf-8")
+        r = run(p, "artifact", "AR-1", "spec.md", "--stage", "specyfikacja", "--by", "talos/1.3.0")
+        a = task(p, "AR-1").get("artifacts", {}).get("spec.md", {})
+        check(r.returncode == 0 and a.get("stage") == "specyfikacja" and a.get("generated", {}).get("by") == "talos/1.3.0"
+              and a.get("generated", {}).get("at") and astates("AR-1") == {"spec.md": "szkic"},
+              f"TS-41: plik zarejestrowany jako szkic, z wykonawcą i czasem: {r.stdout}{r.stderr}{a}")
+        r = run(p, "artifact", "AR-1", "nie-ma.md", "--stage", "plan", "--by", "talos/1.3.0")
+        check(r.returncode == 2 and "nie-ma.md" in r.stdout, f"TS-42: nieistniejący plik odrzucony: {r.stdout}")
+        r = run(p, "approve", "AR-1", "spec.md", "--by", "talos/1.3.0")
+        check(r.returncode == 2 and astates("AR-1") == {"spec.md": "szkic"} and "human:" in r.stdout,
+              f"TS-43: zatwierdza tylko człowiek (human:<id>): {r.returncode} {r.stdout}")
+        r = run(p, "approve", "AR-1", "spec.md", "--by", "human:anna")
+        a = task(p, "AR-1")["artifacts"]["spec.md"]
+        check(r.returncode == 0 and astates("AR-1") == {"spec.md": "zatwierdzony"}
+              and a.get("verified", [{}])[-1].get("by") == "human:anna" and a["verified"][-1].get("at"),
+              f"TS-44: zatwierdzenie przez człowieka zapisane z czasem: {r.stdout}{a}")
+        run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "talos/1.3.0", "--inputs", "spec.md")
+        run(p, "approve", "AR-1", "plan.md", "--by", "human:anna")
+        r = run(p, "check", "AR-1")
+        check(r.returncode == 0 and astates("AR-1") == {"plan.md": "zatwierdzony", "spec.md": "zatwierdzony"},
+              f"TS-45: wszystko aktualne → check 0: {r.returncode} {r.stdout}")
+        (folder / "spec.md").write_text("# Specyfikacja\nAC-1: limit 50 zł\n", encoding="utf-8")
+        r = run(p, "check", "AR-1")
+        s = astates("AR-1")
+        check(r.returncode == 1 and s.get("plan.md") == "nieaktualny" and s.get("spec.md") == "zmieniony po zatwierdzeniu"
+              and "spec.md" in r.stdout and "plan.md" in r.stdout,
+              f"TS-46: zmiana spec.md po zatwierdzeniu planu → plan nieaktualny, spec do ponownego zatwierdzenia: {r.stdout}{s}")
+        r = run(p, "status", "AR-1")
+        check("nieaktualny" in r.stdout and "plan.md" in r.stdout, f"TS-47: status dla człowieka pokazuje nieaktualny plik: {r.stdout}")
+        run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "talos/1.3.0", "--inputs", "spec.md")
+        check(astates("AR-1").get("plan.md") == "szkic", f"TS-48: ponowna rejestracja odświeża wejścia i kasuje zatwierdzenie: {astates('AR-1')}")
+        run(p, "approve", "AR-1", "spec.md", "--by", "human:anna")
+        run(p, "approve", "AR-1", "plan.md", "--by", "human:jan")
+        r = run(p, "check", "AR-1")
+        check(r.returncode == 0 and len(task(p, "AR-1")["artifacts"]["plan.md"]["verified"]) == 1,
+              f"TS-49: po ponownym zatwierdzeniu check 0; stare zatwierdzenia nie zostają: {r.stdout}")
+        for bad, why in ((("artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "talos/1.3.0", "--inputs", "../../x.md"), "wejście spoza katalogu"),
+                         (("artifact", "AR-1", "plan.md", "--stage", "wymyslony", "--by", "talos/1.3.0"), "nieznany etap"),
+                         (("artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "ktoś"), "zły zapis wykonawcy"),
+                         (("artifact", "AR-1", "../EV-1/task.json", "--stage", "plan", "--by", "talos/1.3.0"), "plik spoza katalogu"),
+                         (("approve", "AR-1", "report.md", "--by", "human:anna"), "plik niezarejestrowany")):
+            r = run(p, *bad)
+            check(r.returncode == 2, f"TS-50: odrzucone ({why}): {r.returncode} {r.stdout}")
+        # plik z nagłówkiem kontraktu pdi: rejestracja i zatwierdzenie nie zmieniają ani bajtu
+        run(p, "artifact", "CHG-12", "plan.md", "--stage", "plan", "--by", "process:pdi")
+        run(p, "approve", "CHG-12", "plan.md", "--by", "human:anna")
+        check((pdi / "plan.md").read_text(encoding="utf-8") == plan and astates("CHG-12") == {"plan.md": "zatwierdzony"},
+              f"TS-51: plik pdi zarejestrowany i zatwierdzony bez zmiany treści: {astates('CHG-12')}")
+        r = run(p, "stage", "AR-1", "realizacja")
+        (folder / "spec.md").write_text("# Specyfikacja\nAC-1: limit 55 zł\n", encoding="utf-8")
+        r = run(p, "stage", "AR-1", "przeglad")
+        check(r.returncode == 1 and "plan.md" in r.stdout and task(p, "AR-1")["stage"] == "realizacja",
+              f"TS-52: przegląd odrzucony, gdy plik zadania jest nieaktualny: {r.returncode} {r.stdout}")
+
         # tf task … uruchamia skrypt w projekcie
         q = Path(t) / "viatf"
         (q / ".tf" / "factory").mkdir(parents=True)
