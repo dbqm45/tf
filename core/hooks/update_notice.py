@@ -4,7 +4,8 @@
 W projekcie z zainstalowaną fabryką: raz na dobę pyta źródło aktualizacji (.tf/factory/update.py → notice) i, gdy jest
 nowsze wydanie, pokazuje komunikat człowiekowi (systemMessage) i agentowi. Z `update.py --auto on` (tryb prywatny)
 nowe wydanie PATCH/MINOR instaluje w tle (`update.py --auto-run`), a wynik pokazuje przy starcie następnej sesji. Wszędzie, gdzie jest .tf/factory/freshness.py:
-lista skilli po terminie przeglądu — agent sprawdza w nich ulotne fakty w źródłach przed użyciem. Wyłącznik
+lista skilli po terminie przeglądu — agent sprawdza w nich ulotne fakty w źródłach przed użyciem. W projekcie z fabryką
+także jedno zdanie, gdy bramka jakości jest wyłączona (`quality_gate.py`: brak konfiguracji, wyłącznik, czerwona partia). Wyłącznik
 sprawdzania wydań: CTF_UPDATE_CHECK=0. Hook nigdy nie blokuje startu sesji (kod 0, cisza, gdy nie ma czego zgłosić).
 """
 import importlib.util
@@ -58,6 +59,14 @@ def messages(root: Path) -> list[str]:
             out.append(f"Skille po terminie przeglądu ({len(rows)}): {names}. Ulotne fakty z nich (wersje, przepisy, "
                        "terminy, progi) sprawdź w źródłach przed użyciem (core-source-research). Lista: "
                        "python3 .tf/factory/freshness.py; nowsza fabryka mogła je już odświeżyć.")
+    gate = root / ".claude" / "hooks" / "quality_gate.py"
+    if gate.is_file() and (root / ".claude" / "factory-manifest.json").is_file():
+        try:   # wyłączona bramka jakości: człowiek i agent mają to wiedzieć od pierwszej chwili sesji
+            state, text = load(gate, "ctf_gate_notice").gate_status(root)
+        except Exception:
+            state, text = "on", ""
+        if state != "on":
+            out.append(text)
     return out
 
 

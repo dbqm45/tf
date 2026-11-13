@@ -155,6 +155,24 @@ def main() -> int:
         check(r.returncode == 0 and "s3kr3t" not in text + r.stdout + r.stderr
               and "'https://example.test/f.git'" in text, f"CTF-11: dane logowania z adresu nie trafiają do launchera")
 
+    # tf doctor mówi wprost, że bramka jakości jest wyłączona (i milczy o niej, gdy działa)
+    with tempfile.TemporaryDirectory() as t:
+        doc = Path(t) / "doc"
+        (doc / ".tf" / "factory").mkdir(parents=True)
+        (doc / ".claude" / "hooks").mkdir(parents=True)
+        (doc / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0"}))
+        (doc / ".tf" / "factory" / "migrations.py").write_text("def apply(root, dry=True):\n    return []\n")
+        (doc / ".tf" / "factory" / "build.py").write_text("print('ok build check')\n")
+        shutil.copy(ROOT / ".claude" / "hooks" / "quality_gate.py", doc / ".claude" / "hooks" / "quality_gate.py")
+        denv = {k: v for k, v in env.items() if k != "QG_GATE_DISABLE"}
+        r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
+        check(r.returncode == 0 and "Bramka jakości wyłączona" in r.stdout and "ok build check" in r.stdout,
+              f"CTF-12: doctor zgłasza wyłączoną bramkę i nie zmienia kodu wyjścia: {r.returncode} {r.stdout}{r.stderr}")
+        (doc / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "npm test"}))
+        r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
+        check(r.returncode == 0 and "Bramka jakości włączona" in r.stdout and "npm test" in r.stdout,
+              f"CTF-13: doctor potwierdza działającą bramkę z poleceniem: {r.stdout}{r.stderr}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów tf")
