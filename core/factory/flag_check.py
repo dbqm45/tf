@@ -20,6 +20,9 @@ której zadanie nie ma zapisanej zgody człowieka. Z tym błędem `tf task stage
 Gdy karty nie ma, nie wskazuje pliku, plik ma inny format albo flagami steruje inny mechanizm (zmienne środowiska,
 usługa), skrypt mówi wprost „sprawdź ręcznie” i kończy kodem 0 — nie udaje kontroli, której nie umie zrobić.
 
+Wyłącznik: `feature_flags.auto` w konfiguracji (`.tf/config/config.yaml`, domyślnie `true`). Z `auto: false` flagi
+dodaje człowiek sam — zadanie bez flagi przechodzi bez błędu, a flaga zapisana w zadaniu jest sprawdzana jak zwykle.
+
 Kod wyjścia: 0 — zgodnie z regułą (albo kontroli nie dało się wykonać); 1 — FLAG-001 albo zadanie ze specyfikacją
 bez flagi i bez powodu; 2 — błąd wywołania. Tylko biblioteka standardowa (PyYAML opcjonalnie).
 """
@@ -62,6 +65,22 @@ def card(root: Path) -> dict:
         return {}
     flags = data.get("flags") if isinstance(data, dict) else None
     return flags if isinstance(flags, dict) else {}
+
+
+def auto_flags(root: Path) -> bool:
+    """`feature_flags.auto` z konfiguracji: domyślna silnika (config.yaml obok skryptu) z nadpisaniem projektu
+    (.tf/config/config.yaml). Gdy konfiguracji nie da się odczytać — włączone, jak domyślnie."""
+    try:
+        spec = importlib.util.spec_from_file_location("tf_packs_cfg", Path(__file__).resolve().with_name("packs.py"))
+        packs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(packs)
+        cfg = packs.load_yaml(Path(__file__).resolve().with_name("config.yaml"))
+        own = root / ".tf" / "config" / "config.yaml"
+        if own.is_file():
+            cfg = packs.deep_merge(cfg, packs.load_yaml(own))
+        return (cfg.get("feature_flags") or {}).get("auto", True) is not False
+    except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienie domyślne, nie awaria
+        return True
 
 
 def parse(text: str, name: str):
@@ -124,7 +143,18 @@ def check(root: Path, key: str, base: str | None = None) -> dict:
     task = load_task(root, key) or {}
     flag = task.get("flag") if isinstance(task.get("flag"), dict) else None
     has_spec = (root / CHANGES / key / "spec.md").is_file()
+    auto = auto_flags(root)
+    result = _check(root, key, base, flag, has_spec, auto)
+    result["auto"] = auto
+    return result
+
+
+def _check(root: Path, key: str, base: str | None, flag: dict | None, has_spec: bool, auto: bool) -> dict:
     if flag is None:
+        if not auto:
+            return {"checked": False, "flag": None, "errors": [],
+                    "note": "automatyczne flagi są wyłączone (feature_flags.auto: false) — flagę dodajesz samodzielnie; "
+                            "fabryka jej nie zakłada i nie wymaga"}
         if has_spec:
             return {"checked": True, "flag": None, "errors": [{
                 "rule": "FLAG-000", "env": None,

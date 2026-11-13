@@ -165,6 +165,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | ogólny poziom kosztu | profil kosztów | `python3 .tf/factory/profile.py <profil>` |
 | operacje, o które fabryka pyta albo które blokuje | `.tf/config/config.yaml` → `autonomy` | można tylko zaostrzyć (pytanie → blokada) |
 | język rozmowy i commitów | ustawienia fabryki | `tf language <kod>`, `tf commit-language <kod>` |
+| czy fabryka sama prowadzi flagi funkcji | `.tf/config/config.yaml` → `feature_flags.auto` | domyślnie `true`: fabryka pyta Cię o nazwę flagi, zakłada ją i pilnuje, żeby poza środowiskiem testowym była wyłączona; `false`: flagi dodajesz samodzielnie (w kodzie, w zewnętrznej usłudze), a fabryka ich nie zakłada i nie wymaga |
 | polecenia weryfikacji projektu | `verify.sh`, `.claude/quality-gate.json` | `tf onboard --yes` albo ręcznie |
 | wyłączenie bramki jakości u siebie | `.claude/settings.local.json` → `env` | `"QG_GATE_DISABLE": "1"` — `tf doctor` będzie o tym przypominać |
 | własną personę, rolę, cechę | `.tf/config/personas/`, `roles/`, `traits/` | plik YAML, potem `python3 .tf/factory/build.py` |

@@ -137,6 +137,23 @@ def main() -> int:
         r = run(p, TASK, "stage", "PROJ-4", "pr")
         check(r.returncode == 1 and "FLAG-001" in r.stdout, f"F-17: etap pr odrzucony, gdy flaga jest włączona na prod bez decyzji: {r.stdout}")
 
+        # wyłącznik w konfiguracji: flagi dodaje człowiek sam (w kodzie, w zewnętrznej usłudze) — fabryka ich nie wymaga
+        run(p, TASK, "start", "PROJ-5", "--title", "Flagi ręcznie")
+        write(p, f"{CHANGES.as_posix()}/PROJ-5/spec.md", SPEC)
+        r = run(p, SCRIPT, "PROJ-5", "--json")
+        data = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
+        check(r.returncode == 1 and data.get("auto") is True, f"F-21: domyślnie automatyczne flagi są włączone: {r.stdout[:200]}")
+        write(p, ".tf/config/config.yaml", "feature_flags:\n  auto: false\n")
+        r = run(p, SCRIPT, "PROJ-5")
+        check(r.returncode == 0 and "feature_flags.auto" in r.stdout and "samodzielnie" in r.stdout,
+              f"F-22: feature_flags.auto: false → zadanie bez flagi przechodzi, z wyjaśnieniem: {r.returncode} {r.stdout}")
+        r = run(p, TASK, "stage", "PROJ-5", "pr")
+        check(r.returncode == 0, f"F-23: przy wyłączonych automatycznych flagach etap pr nie wymaga flagi: {r.stdout}")
+        r = run(p, SCRIPT, "PROJ-4")
+        check(r.returncode == 1 and "FLAG-001" in r.stdout,
+              f"F-24: flaga zapisana w zadaniu jest sprawdzana także przy wyłączonym automacie: {r.stdout}")
+        (p / ".tf" / "config" / "config.yaml").unlink()
+
     with tempfile.TemporaryDirectory() as t:      # karta operacyjna z tf onboard
         p = Path(t)
         git(p, "init", "-q", "-b", "main")

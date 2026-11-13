@@ -57,6 +57,14 @@ tylko za zgodą człowieka.
 - **Flaga:** kontrola diffu obsługuje plik JSON albo YAML w układzie `środowisko → flaga → stan` lub
   `flaga → środowisko → stan`. Inny mechanizm (zmienne środowiska, usługa) → skrypt mówi wprost, że sprawdzić trzeba
   ręcznie, i nie udaje kontroli. Testów „w obu stanach flagi” skrypt nie wymusza — to reguła w skillu Talosa.
+- **Automatyczne flagi można wyłączyć** (decyzja człowieka z 2026-11-13): `feature_flags.auto` w
+  `.tf/config/config.yaml`, domyślnie `true`. Przy `true` fabryka pyta człowieka o nazwę flagi (z `--auto` bierze
+  propozycję od klucza zadania i oznacza ją jako założenie do potwierdzenia). Przy `false` flagi dodaje człowiek sam
+  — w kodzie, w zewnętrznej usłudze — a fabryka flagi nie zakłada i nie wymaga; flagę zapisaną ręcznie dalej sprawdza.
+- **Szablon `spec.md` powstaje dopiero, gdy Talos zaczyna specyfikację** (decyzja człowieka z 2026-11-13, po pomiarze):
+  `run_state.py spec <katalog> new`, nie `start` — po wczesnym STOP w repozytorium nie zostaje pusty plik. Etap `plan`
+  przebiegu Talosa jest odrzucany, dopóki `spec.md` nie istnieje i nie przechodzi sprawdzenia.
+- **Odłożone do wyraźnego sygnału człowieka:** pomiar po D4 i przygotowanie decyzji D2, D3, D12 do kroku E.
 - **Waga lekka i brak flagi:** zadanie bez `spec.md` działa jak dotąd (żadna bramka kroku D go nie dotyczy), dopóki
   pozycja 9 nie wprowadzi wag. Flaga jest wymagana dopiero wtedy, gdy zadanie ma `spec.md`.
 - **Przebieg cięcia pdi** (`--task`) zostaje bez zmian, jak w kroku C.
