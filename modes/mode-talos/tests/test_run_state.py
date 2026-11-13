@@ -49,6 +49,7 @@ def main() -> int:
             return 1
         doc = proj / CHANGES / d.name          # katalog trwały zadania (krok C4): plan, ticket i raport
         (doc / "spec.md").write_text(SPEC, encoding="utf-8")      # gotowa specyfikacja (krok D1) — bez niej nie ma planu
+        run(SCRIPT, ["flag", str(d), "none", "--reason", "test stanu przebiegu, nie ma czego ukrywać"], proj, cfg)   # krok D4
         dash = proj / ".tf" / "runs" / "talos" / "dashboard.html"
 
         def one():
@@ -222,7 +223,14 @@ def main() -> int:
         def task():
             return json.loads((doc / "task.json").read_text(encoding="utf-8"))
 
-        # specyfikacja przed planem (krok D1): start zakłada szablon spec.md; z niewypełnionym nie ma etapu plan
+        # specyfikacja przed planem (krok D1): szablon powstaje dopiero na polecenie `spec <katalog> new` (po wczesnym
+        # STOP w repozytorium nie zostaje pusty plik); bez spec.md i z niewypełnionym nie ma etapu plan
+        check(not (doc / "spec.md").exists(), "P-0a: start nie zakłada spec.md")
+        r = run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
+        check(r.returncode == 2 and "spec" in r.stdout and " new" in r.stdout and task().get("stage") == "przyjecie",
+              f"P-0b: etap plan odrzucony, gdy specyfikacji jeszcze nie ma: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["spec", str(d), "new"], proj, cfg)
+        check(r.returncode == 0 and (doc / "spec.md").is_file(), f"P-0c: spec new zakłada szablon: {r.returncode} {r.stdout}{r.stderr}")
         r = run(SCRIPT, ["spec", str(d)], proj, cfg)
         check(r.returncode == 1 and "SPEC-007" in r.stdout, f"P-1a: spec na szablonie → kod 1 z regułą: {r.returncode} {r.stdout}{r.stderr}")
         r = run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
@@ -289,6 +297,21 @@ def main() -> int:
               f"V-6b: step PR też nie wchodzi do etapu pr bez dowodów: {r.returncode} {r.stdout}")
         for k in ("K1", "K2"):
             run(SCRIPT, ["verify", str(d), k, "--files", "fees.py", "--command", OK], proj, cfg)
+        # flaga funkcji (krok D4): zadanie ze specyfikacją nie wchodzi do etapu pr bez flagi albo powodu jej braku
+        r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
+        check(r.returncode == 2 and "flag" in r.stdout, f"FL-1: etap pr odrzucony bez decyzji o fladze: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["flag", str(d), "mode"], proj, cfg)
+        check(r.returncode == 0 and r.stdout.strip().startswith("auto"), f"FL-0a: domyślnie tryb flag to auto: {r.stdout}{r.stderr}")
+        (proj / ".tf" / "config").mkdir(parents=True, exist_ok=True)
+        (proj / ".tf" / "config" / "config.yaml").write_text("feature_flags:\n  auto: false\n", encoding="utf-8")
+        r = run(SCRIPT, ["flag", str(d), "mode"], proj, cfg)
+        check(r.returncode == 0 and r.stdout.strip().startswith("manual"), f"FL-0b: feature_flags.auto: false → tryb manual: {r.stdout}{r.stderr}")
+        (proj / ".tf" / "config" / "config.yaml").unlink()
+        r = run(SCRIPT, ["flag", str(d), "none"], proj, cfg)
+        check(r.returncode == 2, f"FL-2: „bez flagi” wymaga powodu: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["flag", str(d), "set", "limit_dobowy", "--remove-by", "2027-01-31"], proj, cfg)
+        check(r.returncode == 0 and task().get("flag", {}).get("key") == "limit_dobowy",
+              f"FL-3: flag set przez skrypt przebiegu trafia do task.json: {r.returncode} {r.stdout}{r.stderr}")
         # zmiana specyfikacji po planie: plan jest nieaktualny, dopóki Talos nie przejdzie etapu plan ponownie
         (doc / "spec.md").write_text(SPEC.replace("45 zł", "50 zł"), encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)

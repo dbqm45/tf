@@ -39,6 +39,11 @@ akceptacyjne) — hook `guard_paths` pyta człowieka przed zapisem do nich, do z
 `spec.md` od etapu realizacji, a zmiana zamrożonego pliku inną drogą blokuje `check` i etap `przeglad`.
 `reopen <KEY> <plik> --by human:<id> --reason "<powód>"` zdejmuje zatwierdzenie albo zamrożenie i zapisuje powód.
 
+Flaga funkcji: `flag <KEY> set <klucz> [--remove-by RRRR-MM-DD]` zapisuje flagę, za którą chowa się nowe zachowanie;
+`flag <KEY> none --reason "bez flagi, bo …"` — jawny brak flagi; `flag <KEY> allow <środowisko> --by human:<id>` —
+zgodę człowieka na włączenie poza środowiskiem testowym. Zadanie ze `spec.md` przechodzi do etapu `pr` dopiero
+z flagą albo powodem jej braku i bez błędu `tf flag check <KEY>` (flaga włączona poza testem bez zgody).
+
 Kod wyjścia: 0 — zrobione; 1 — odmowa (zadanie istnieje, nie ma go, etap wstecz); 2 — błąd wywołania.
 Tylko biblioteka standardowa.
 """
@@ -428,6 +433,52 @@ def trace_errors(root: Path, key: str) -> list[dict]:
     return result["errors"] if result else []
 
 
+def flag_errors(root: Path, key: str) -> list[dict]:
+    """Błędy flagi zadania wg `flag_check.py` obok tego skryptu; pusta lista, gdy skryptu nie ma."""
+    script = Path(__file__).resolve().with_name("flag_check.py")
+    if not script.is_file():
+        return []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_flag_check", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.check(root, key)["errors"]
+
+
+def cmd_flag(root: Path, key: str, action: str, value: str | None, remove_by: str | None, reason: str, by: str | None) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    if action == "set":
+        if not value or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", value):
+            return fail("podaj klucz flagi (litery, cyfry, _ . -), np. proj_123_eksport_csv", 2)
+        if remove_by and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", remove_by):
+            return fail("data usunięcia flagi w formacie RRRR-MM-DD", 2)
+        old = task.get("flag") if isinstance(task.get("flag"), dict) else {}
+        task["flag"] = {"key": value, "remove_by": remove_by or old.get("remove_by"),
+                        "allowed": old.get("allowed", {}) if old.get("key") == value else {}}
+        msg = f"flaga {value}" + (f", do usunięcia do {task['flag']['remove_by']}" if task["flag"]["remove_by"] else "")
+    elif action == "none":
+        if not reason.strip():
+            return fail("podaj powód: --reason \"bez flagi, bo …\"", 2)
+        task["flag"] = {"none": " ".join(reason.split())}
+        msg = f"bez flagi: {task['flag']['none']}"
+    else:   # allow
+        flag = task.get("flag") if isinstance(task.get("flag"), dict) else None
+        if not flag or not flag.get("key"):
+            return fail(f"zadanie nie ma flagi — najpierw: tf task flag {key} set <klucz>")
+        if not value:
+            return fail("podaj środowisko, np. tf task flag <KEY> allow prod --by human:<id>", 2)
+        if not by or not by.startswith("human:") or not ACTOR.fullmatch(by):
+            return fail("zgodę na włączenie flagi poza środowiskiem testowym zapisuje człowiek: --by human:<id>", 2)
+        flag.setdefault("allowed", {})[value] = {"by": by, "at": now()}
+        msg = f"flaga {flag['key']}: zgoda {by} na środowisko „{value}”"
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key}: {msg}")
+    return 0
+
+
 def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     task = load(root, key)
     if task is None:
@@ -457,6 +508,11 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
         if stale:
             return fail(f"do etapu {stage} przechodzi zadanie z aktualnymi plikami; do odświeżenia: " + "; ".join(stale)
                         + f". Szczegóły: tf task check {key}")
+    if STAGES.index(stage) >= STAGES.index("pr") and not force:
+        bad = flag_errors(root, key)
+        if bad:
+            return fail(f"do etapu {stage} przechodzi zadanie z uporządkowaną flagą funkcji: "
+                        + "; ".join(f"{e['rule']} {e['message']}" for e in bad) + f". Całość: tf flag check {key}")
     task["stage"], task["updated"] = stage, now()
     save(root, task)
     print(f"✓ {key}: {was} → {stage}")
@@ -515,6 +571,12 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
         print(f"  {k}: {state}" + (f" — {title}" if title else "") + (f" ({why})" if why else ""))
     for n, (state, why) in artifact_states(root, task).items():
         print(f"  {n}: {state}" + (f" ({why})" if why else ""))
+    flag = task.get("flag") if isinstance(task.get("flag"), dict) else None
+    if flag and flag.get("key"):
+        print(f"  flaga: {flag['key']}" + (f" (do usunięcia do {flag['remove_by']})" if flag.get("remove_by") else "")
+              + (f" — zgoda na: {', '.join(sorted(flag['allowed']))}" if flag.get("allowed") else ""))
+    elif flag and flag.get("none"):
+        print(f"  flaga: brak — {flag['none']}")
     changed = set(frozen_changed(root, task))
     for rel in sorted(task.get("frozen") or {}):
         print(f"  {rel}: zamrożony" + (" — zmieniony bez decyzji człowieka" if rel in changed else ""))
@@ -557,6 +619,13 @@ def main(argv: list[str]) -> int:
     o.add_argument("--by", required=True)
     k = sub.add_parser("check")
     k.add_argument("key")
+    fl = sub.add_parser("flag")
+    fl.add_argument("key")
+    fl.add_argument("action", choices=["set", "none", "allow"])
+    fl.add_argument("value", nargs="?")
+    fl.add_argument("--remove-by", default=None)
+    fl.add_argument("--reason", default="")
+    fl.add_argument("--by", default=None)
     fz = sub.add_parser("freeze")
     fz.add_argument("key")
     fz.add_argument("files")
@@ -594,6 +663,8 @@ def main(argv: list[str]) -> int:
         return cmd_stage(root, a.key, a.stage, a.force)
     if a.cmd == "check":
         return cmd_check(root, a.key)
+    if a.cmd == "flag":
+        return cmd_flag(root, a.key, a.action, a.value, a.remove_by, a.reason, a.by)
     if a.cmd in ("freeze", "reopen"):
         if not a.by.startswith("human:") or not ACTOR.fullmatch(a.by):
             return fail(f"{a.cmd} to decyzja człowieka: --by human:<id>", 2)

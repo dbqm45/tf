@@ -7,7 +7,10 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
-  python3 .claude/skills/talos-story-run/scripts/run_state.py spec <katalog-przebiegu>
+  python3 .claude/skills/talos-story-run/scripts/run_state.py spec <katalog-przebiegu> [new]
+  python3 .claude/skills/talos-story-run/scripts/run_state.py flag <katalog-przebiegu> mode      # auto | manual
+  python3 .claude/skills/talos-story-run/scripts/run_state.py flag <katalog-przebiegu> set <klucz> [--remove-by RRRR-MM-DD]
+  python3 .claude/skills/talos-story-run/scripts/run_state.py flag <katalog-przebiegu> none --reason "bez flagi, bo …"
   python3 .claude/skills/talos-story-run/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
   python3 .claude/skills/talos-story-run/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
@@ -22,10 +25,16 @@ po nieudanej bramce (R1, R2, …). Etapy wcześniejsze od zapisywanego, które n
 Talos zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
 decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
 
-`spec` sprawdza `spec.md` zadania (`tf spec check`): kryteria AC-n z Zakładając / Gdy / Wtedy, sekcje „Bez zmian”
+`spec <katalog> new` zakłada szablon `spec.md` (dopiero wtedy, gdy Talos zaczyna specyfikację — po wczesnym STOP
+w repozytorium nie zostaje pusty plik). `spec` sprawdza `spec.md` zadania (`tf spec check`): kryteria AC-n z Zakładając / Gdy / Wtedy, sekcje „Bez zmian”
 i „Poza zakresem”, brak pytań [blokuje]. Etap `plan` (i każdy dalszy) jest odrzucany, dopóki specyfikacja ma błędy;
 `stage plan` zapisuje też, z których plików powstał plan — zmiana `spec.md` po planie blokuje etap `pr`, dopóki
 `stage plan` nie zostanie wywołane ponownie.
+
+`flag mode` mówi, kto prowadzi flagi: `auto` (domyślnie — fabryka, po zapytaniu człowieka o nazwę) albo `manual`
+(`feature_flags.auto: false` w `.tf/config/config.yaml` — człowiek dodaje flagi sam, Talos ich nie zakłada).
+`flag` zapisuje flagę funkcji historyjki (`tf task flag`) albo jawny powód jej braku; bez tego, albo z flagą włączoną
+poza środowiskiem testowym bez zgody człowieka, etap `pr` jest odrzucany. Zgody na inne środowisko Talos nie zapisuje.
 
 `trace` drukuje tabelę kryterium → test → commit → dowód (`tf trace --md`) do opisu PR; kryterium bez testu albo
 test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
@@ -156,11 +165,16 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
         cur = json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("stage")
     except (OSError, ValueError, AttributeError):
         cur = None
+    if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") \
+            and not (run_report.docs_dir(run_dir, meta) / "spec.md").is_file():
+        return (f"✗ zadanie {key} nie ma jeszcze specyfikacji — załóż szablon: run_state.py spec {run_dir} new, "
+                f"wypełnij go i sprawdź: run_state.py spec {run_dir}")
     if cur in TASK_ORDER and TASK_ORDER.index(target) <= TASK_ORDER.index(cur):
         return None
     r = run_report.task_state(project, "stage", key, target)
     if r is not None and r.returncode != 0:
-        hint = (f"Specyfikacja: run_state.py spec {run_dir} · dowód kawałka: run_state.py verify {run_dir} K<n> "
+        hint = (f"Flaga: run_state.py flag {run_dir} set <klucz> albo none --reason \"bez flagi, bo …\" · "
+                f"specyfikacja: run_state.py spec {run_dir} · dowód kawałka: run_state.py verify {run_dir} K<n> "
                 f"--files <pliki kawałka> · plan po zmianie specyfikacji: run_state.py stage {run_dir} plan")
         return ((r.stdout + r.stderr).strip() or f"✗ zadanie {key} nie przeszło do etapu {target}") + "\n" + hint
     return None
@@ -176,6 +190,33 @@ def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
                               "--inputs", ",".join(inputs))
 
 
+def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | None, reason: str, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return fail("ten przebieg jest w starym układzie (bez zadania) — flagę cięcia podaje plan zmiany.")
+    if action == "mode":
+        r = run_report.engine(project, "flag_check.py", meta["key"], "--json")
+        try:
+            auto = json.loads(r.stdout).get("auto", True)
+        except (AttributeError, ValueError):
+            auto = True
+        print("auto — fabryka prowadzi flagę historyjki; o nazwę zapytaj człowieka" if auto else
+              "manual — flagi dodaje człowiek samodzielnie (feature_flags.auto: false); nie zakładasz flagi i jej nie zapisujesz")
+        return 0
+    args = ["flag", meta["key"], action, *([value] if value else [])]
+    if remove_by:
+        args += ["--remove-by", remove_by]
+    if reason:
+        args += ["--reason", reason]
+    r = run_report.task_state(project, *args)
+    if r is None:
+        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    return r.returncode
+
+
 def cmd_trace(run_dir: Path, base: str | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
@@ -189,13 +230,13 @@ def cmd_trace(run_dir: Path, base: str | None, project: Path) -> int:
     return r.returncode
 
 
-def cmd_spec(run_dir: Path, project: Path) -> int:
+def cmd_spec(run_dir: Path, project: Path, new: bool = False) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
         return fail("ten przebieg jest w starym układzie (bez zadania) i nie ma spec.md.")
-    r = run_report.engine(project, "spec_check.py", "check", meta["key"])
+    r = run_report.engine(project, "spec_check.py", "new" if new else "check", meta["key"])
     if r is None:
         return fail("brak .tf/factory/spec_check.py — zaktualizuj fabrykę (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
@@ -680,6 +721,13 @@ def main(argv: list[str]) -> int:
     t.add_argument("rest", nargs="*")
     sp = sub.add_parser("spec")
     sp.add_argument("run_dir")
+    sp.add_argument("action", nargs="?", choices=["new"])
+    fg = sub.add_parser("flag")
+    fg.add_argument("run_dir")
+    fg.add_argument("action", choices=["mode", "set", "none"])      # zgodę na inne środowisko zapisuje człowiek: tf task flag … allow
+    fg.add_argument("value", nargs="?")
+    fg.add_argument("--remove-by", default=None)
+    fg.add_argument("--reason", default="")
     tr = sub.add_parser("trace")
     tr.add_argument("run_dir")
     tr.add_argument("--base", default=None)
@@ -706,10 +754,12 @@ def main(argv: list[str]) -> int:
                          project)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
+    if args.cmd == "flag":
+        return cmd_flag(Path(args.run_dir), args.action, args.value, args.remove_by, args.reason, project)
     if args.cmd == "trace":
         return cmd_trace(Path(args.run_dir), args.base, project)
     if args.cmd == "spec":
-        return cmd_spec(Path(args.run_dir), project)
+        return cmd_spec(Path(args.run_dir), project, new=args.action == "new")
     if args.cmd == "verify":
         return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project)
     if args.cmd == "tick":

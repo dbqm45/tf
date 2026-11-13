@@ -358,3 +358,10 @@ autonomy:
     persistence: confirm        # cron, systemd, LaunchAgent
     data_upload: confirm        # wysyłanie pliku na zewnątrz (curl -F @, --upload-file)
     sudo: confirm
+
+# Flagi funkcji (krok D osi przebiegu). auto: true — fabryka sama prowadzi flagę historyjki: pyta człowieka o nazwę,
+# zakłada flagę w pierwszym kawałku, chowa za nią nowe zachowanie i nie przepuszcza zadania do PR bez flagi albo
+# zapisanego powodu jej braku. auto: false — flagi dodajesz samodzielnie (w kodzie, w zewnętrznej usłudze…): fabryka
+# flagi nie zakłada i jej nie wymaga; flagę zapisaną ręcznie (`tf task flag <KEY> set …`) dalej sprawdza.
+feature_flags:
+  auto: true

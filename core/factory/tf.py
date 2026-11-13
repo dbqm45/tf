@@ -27,6 +27,8 @@ tf — the team factory command: install, update, packs, languages, health check
   tf status [--json]          # all tasks: stage, slices with current evidence, files to refresh
   tf spec new <KEY> | check <KEY> [--json]   # task specification (spec.md): template, readiness check
   tf trace <KEY> [--base <branch>] [--md|--json]   # criterion → test → commit → evidence
+  tf task flag <KEY> set <key> [--remove-by YYYY-MM-DD] | none --reason "<why>" | allow <env> --by human:<id>
+  tf flag check <KEY> [--base <branch>] [--json]   # the task's feature flag is on outside the test environment only by human decision
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
@@ -373,6 +375,11 @@ def main(argv: list[str]) -> int:
         return engine("spec_check.py", rest)
     if cmd == "trace":
         return engine("trace_check.py", rest)
+    if cmd == "flag":
+        if not rest or rest[0] != "check":
+            print("✗ Usage: tf flag check <KEY> [--base <branch>] [--json]   (set the flag with: tf task flag <KEY> set <key>)")
+            return 2
+        return engine("flag_check.py", rest)
     if cmd == "onboard":
         if not need_project():
             return 2

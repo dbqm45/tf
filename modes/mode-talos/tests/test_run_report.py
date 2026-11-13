@@ -94,7 +94,8 @@ def main() -> int:
             d = runs[0]
             doc = proj / "docs" / "project" / "changes" / d.name
             check(all((d / f).is_file() for f in ("run.json", "parked.md"))
-                  and all((doc / f).is_file() for f in ("ticket.md", "spec.md", "plan.md", "task.json"))
+                  and all((doc / f).is_file() for f in ("ticket.md", "plan.md", "task.json"))
+                  and not (doc / "spec.md").exists()      # szablon specyfikacji powstaje dopiero przy jej wypełnianiu
                   and not (d / "plan.md").exists() and not (d / "story.md").exists(),
                   f"R-2: pliki robocze i trwałe: {sorted(x.name for x in d.iterdir())} "
                   f"{sorted(x.name for x in doc.iterdir()) if doc.is_dir() else '—'}")

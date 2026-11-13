@@ -165,6 +165,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | ogólny poziom kosztu | profil kosztów | `python3 .tf/factory/profile.py <profil>` |
 | operacje, o które fabryka pyta albo które blokuje | `.tf/config/config.yaml` → `autonomy` | można tylko zaostrzyć (pytanie → blokada) |
 | język rozmowy i commitów | ustawienia fabryki | `tf language <kod>`, `tf commit-language <kod>` |
+| czy fabryka sama prowadzi flagi funkcji | `.tf/config/config.yaml` → `feature_flags.auto` | domyślnie `true`: fabryka pyta Cię o nazwę flagi, zakłada ją i pilnuje, żeby poza środowiskiem testowym była wyłączona; `false`: flagi dodajesz samodzielnie (w kodzie, w zewnętrznej usłudze), a fabryka ich nie zakłada i nie wymaga |
 | polecenia weryfikacji projektu | `verify.sh`, `.claude/quality-gate.json` | `tf onboard --yes` albo ręcznie |
 | wyłączenie bramki jakości u siebie | `.claude/settings.local.json` → `env` | `"QG_GATE_DISABLE": "1"` — `tf doctor` będzie o tym przypominać |
 | własną personę, rolę, cechę | `.tf/config/personas/`, `roles/`, `traits/` | plik YAML, potem `python3 .tf/factory/build.py` |
@@ -183,6 +184,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | `tf spec new <KLUCZ>`, `tf spec check <KLUCZ>` | specyfikacja zadania (`spec.md`): szablon i sprawdzenie, czy kryteria mają Zakładając / Gdy / Wtedy, co zostaje bez zmian i czy nie ma pytań blokujących; z błędami zadanie nie przejdzie do planu |
 | `tf task freeze <KLUCZ> <plik> --by human:<id>`, `tf task reopen <KLUCZ> <plik> --by human:<id> --reason "…"` | ochrona podstawy zadania: zamrożony plik (np. test akceptacyjny), zatwierdzony plik zadania i `spec.md` od etapu realizacji agent zmieni tylko za Twoją zgodą; `reopen` zdejmuje ochronę i zapisuje powód |
 | `tf trace <KLUCZ> [--md]` | ślad: każde kryterium `AC-n` ze specyfikacji → test z tym identyfikatorem → czy hook TDD widział go jako czerwony → commit → dowód kawałka; kryterium bez testu blokuje przegląd; `--md` daje tabelę do opisu PR |
+| `tf task flag <KLUCZ> set <flaga>`, `… none --reason "…"`, `… allow <środowisko> --by human:<id>`, `tf flag check <KLUCZ>` | flaga funkcji na historyjkę: nowe zachowanie jest za flagą włączaną tylko na środowisku testowym; włączenie gdzie indziej wymaga Twojej zgody. Plik flag i środowiska fabryka bierze z karty `.tf/config/operations.json` (zakłada ją `tf onboard`); bez niej mówi wprost, że flagę trzeba sprawdzić ręcznie |
 | `tf status` | lista zadań: etap, ile kawałków ma aktualny dowód, które pliki trzeba odświeżyć |
 | `tf task start <KLUCZ> --title "…"`, `tf task stage <KLUCZ> <etap>`, `tf task status <KLUCZ>` | jedno miejsce na zadanie: `docs/project/changes/<KLUCZ>/task.json` i indeks zadań `INDEX.md` |
 | `tf onboard [--yes] [--verify] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, `verify.sh`, raport gotowości, bramka jakości, polecenia w pliku instrukcji |

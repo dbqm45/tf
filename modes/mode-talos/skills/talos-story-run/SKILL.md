@@ -31,8 +31,8 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
 2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`; numer z trackera:
    `--key PROJ-123`) zakłada zadanie i drukuje **katalog przebiegu** `.tf/runs/<KEY>/` (roboczy, poza gitem:
    `run.json`, `parked.md`, skany) — jego podajesz jako `<katalog>` w każdym poleceniu. Pliki trwałe zadania leżą
-   w `docs/project/changes/<KEY>/`: `ticket.md` (historyjka), `spec.md` (szablon specyfikacji), `plan.md`, `task.json`,
-   potem `evidence/` i `report.md`;
+   w `docs/project/changes/<KEY>/`: `ticket.md` (historyjka), `plan.md`, `task.json`, potem `spec.md`, `evidence/`
+   i `report.md`;
    do gita trafiają jednym commitem na końcu (§4), więc w commitach kawałków ich nie dodajesz. `task.json`
    i `INDEX.md` pisze tylko skrypt — nie edytujesz ich.
    **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
@@ -78,7 +78,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
   głównych, którą wypisuje lint).
 - Drobna niejasność → wariant zachowawczy (mniej plików, mniejsza zmiana zachowania), zapisany w planie jako
   **[założenie]**.
-- **Specyfikacja przed planem:** wypełnij `docs/project/changes/<KEY>/spec.md` (narzędziem Write) — kryteria
+- **Specyfikacja przed planem** (dopiero gdy historyjka jest gotowa — przy STOP z pytaniami szablonu nie zakładasz):
+  `run_state.py spec <katalog> new` zakłada szablon `docs/project/changes/<KEY>/spec.md`; wypełnij go (Write) — kryteria
   `- AC-n: Zakładając <stan>, gdy <jedna akcja>, wtedy <wynik sprawdzalny testem>` wprost z kryteriów historyjki
   (niczego nie dopisujesz), „Bez zmian” (co ma działać jak dotąd), „Poza zakresem”, „Otwarte pytania” (pytanie, bez
   którego nie da się zacząć, ze znacznikiem `[blokuje]` → pytasz człowieka; z `--auto` STOP). Sprawdzenie:
@@ -88,6 +89,18 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 `plan.md` — jeden wiersz na kawałek, pola do odhaczenia (stan wznowienia):
 `- [ ] K<n> — <wartość> · kryteria: <AC-n i testy> · pliki: <ścieżki> · weryfikacja: \`<polecenie>\` · kto: <tier>`
 Każde `AC-n` ze specyfikacji trafia do któregoś kawałka. Zmieniasz `spec.md` po planie → powtórz `stage <katalog> plan`.
+- **Flaga funkcji na historyjkę.** Najpierw `run_state.py flag <katalog> mode`. Wynik `manual` (człowiek wyłączył
+  automatyczne flagi w konfiguracji): flagi nie zakładasz i niczego o niej nie zapisujesz; w opisie PR piszesz
+  „flagę dodaje człowiek”. Wynik `auto` — decyzja w planie, zapisana skryptem (bez niej etap `pr` jest odrzucany):
+  nowe zachowanie widoczne dla użytkownika → **zapytaj człowieka o nazwę flagi**, podając propozycję od klucza
+  zadania (np. `proj_123_eksport_csv`); z `--auto` nie ma kogo zapytać, więc bierzesz propozycję i zapisujesz ją
+  w planie i w opisie PR jako **[założenie: nazwa flagi do potwierdzenia]**. Potem
+  `run_state.py flag <katalog> set <klucz> --remove-by <RRRR-MM-DD>`; flagę zakłada pierwszy kawałek, każdy kawałek chowa za nią swoje
+  zachowanie, testy idą w obu stanach (włączona: kryteria `AC-n`; wyłączona: stare zachowanie bez zmian), commity mają
+  stopkę `Flag: <klucz>`, a ostatni commit włącza flagę **tylko na środowisku testowym** (plik i środowiska:
+  `.tf/config/operations.json`). Poprawka błędu, refaktor, dokumentacja, konfiguracja albo projekt bez mechanizmu
+  flag → `run_state.py flag <katalog> none --reason "bez flagi, bo …"`. Flagi na innym środowisku nie włączasz
+  i zgody na to nie zapisujesz — to decyzja człowieka.
 - **Kawałek pionowy** (INVEST): niesie wartość widoczną dla użytkownika albo systemu, sam przechodzi testy i build,
   nie zostawia połowy funkcji (gdy trzeba — za flagą). Pierwszy kawałek to najcieńsza działająca ścieżka.
 - Więcej niż 5 kawałków → historyjka za duża: zaproponuj podział i STOP.
@@ -109,8 +122,9 @@ Stan pętli zapisujesz poleceniem `run_state.py step <katalog> K<n> R<k> <etap> 
 bramce wracasz na początek pętli i liczysz kolejną rundę (R2, najwyżej dwie próby naprawy). Wołasz `step` przy starcie
 etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłoszonego skrypt sam uznaje za zaliczone.
 1. **Test czerwony** z kryteriów kawałka (TDD; hook `tdd_guard` pilnuje kolejności). Tylko przypadki z kryteriów.
-   Test nosi identyfikator kryterium w nazwie albo komentarzu (`test_ac1_…`, `# AC-1`), a plik testu podajesz
-   w `--files` przy `verify` — z tego powstaje ślad kryterium → test → commit → dowód.
+   **Od pierwszej wersji** test nosi identyfikator kryterium w nazwie albo komentarzu (`test_ac1_…`, `# AC-1`) —
+   dopisywanie go po odmowie etapu `pr` to dodatkowy commit i tury. Plik testu podajesz w `--files` przy `verify`;
+   z tego powstaje ślad kryterium → test → commit → dowód.
 2. **Najmniejszy kod**, który go zazieleni. Pracujesz we własnym kontekście (cache); mechaniczną zmianę w 1–2
    plikach z gotową specyfikacją zlecasz `quick-fixer`.
 3. **Weryfikacja z dowodem:** polecenie z planu, potem `run_state.py verify <katalog> K<n> --files <pliki kawałka
@@ -208,7 +222,8 @@ Po STOP: `run_state.py stage <katalog> needs --needs stop --reason "<powód z bl
 ## Checklista
 - [ ] czyste drzewo, katalog przebiegu i gałąź `story/<slug>`
 - [ ] historyjka gotowa (kryteria sprawdzalne) albo pytania / STOP; założenia zapisane; `spec.md` przechodzi `spec`
-- [ ] plan: ≤5 kawałków pionowych, każdy z testem, plikami i weryfikacją; fazy warunkowe z powodem
+- [ ] plan: ≤5 kawałków pionowych, każdy z testem, plikami i weryfikacją; fazy warunkowe z powodem; flaga funkcji
+      zapisana (`flag set`) albo powód jej braku (`flag none`)
 - [ ] bez `--auto` — akceptacja planu przez człowieka
 - [ ] karencja wersji (`security_scan.py cooldown`) PASS albo STOP
 - [ ] każdy kawałek: test czerwony → kod → weryfikacja z dowodem (`verify`) i skan → przegląd zakresu → commit → `tick`;
