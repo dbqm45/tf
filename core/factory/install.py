@@ -900,7 +900,8 @@ def main(argv: list[str]) -> int:
         start = {"pack-it": "`claude --agent maja` (describe the problem)", "pack-ev": "`claude --agent iwona` (EV)"}
         print(f"""
 Next:
-  1. Fill in your project's test/lint/build commands in {md}.
+  1. Prepare the repository: `tf onboard --yes` detects the test/lint/build commands, writes them to {md}
+     and turns the quality gate on.
   2. Run `claude` once in the project directory and accept folder trust (hooks and permissions need it).
   3. Start: {' or '.join(start[d] for d in dispatchers) or 'a persona from .claude/catalog.md'}, e.g. `claude --agent <name>`.
   4. Costs: the `zrownowazony` profile works right away; `{py} .tf/factory/profile.py oszczedny|jakosc` switches the team.

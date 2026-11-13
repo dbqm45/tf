@@ -298,6 +298,40 @@ def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, st
     return r.returncode == 0, (r.stdout + r.stderr)[-2000:]
 
 
+LOCAL_FILES = ("verify.sh", ".claude/quality-gate.json")   # pliki z tf onboard, które należą do repozytorium projektu
+
+
+def _git(root: Path, *args: str) -> tuple[int, str]:
+    try:
+        r = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return 1, ""
+    return r.returncode, r.stdout.strip()
+
+
+def settle_files(root: Path) -> str:
+    """Co zrobić z plikami onboardingu w git. Instalacja prywatna niczego nie commituje, więc pliki zostają lokalne
+    (wpis w .git/info/exclude) i drzewo robocze jest czyste; w zespołowej trafiają do commita. Zwraca zdanie dla człowieka."""
+    code, exclude = _git(root, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude")
+    if code != 0 or not exclude:
+        return ""
+    mine = [f for f in LOCAL_FILES if (root / f).is_file() and _git(root, "ls-files", "--error-unmatch", f)[0] != 0]
+    if not mine:
+        return ""
+    if _json(root / ".claude" / "factory-manifest.json").get("mode") != "private":
+        return "Do commita: " + ", ".join(mine) + " — wtedy kontrole działają u każdego po `git pull`."
+    path = Path(exclude)
+    have = _read(path).splitlines()
+    new = [f for f in mine if f not in have]
+    if new:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as f:
+            f.write(("" if not have or have[-1] == "" else "\n") + "\n".join(new) + "\n")
+    return ("Instalacja prywatna: " + ", ".join(mine) + " zostają lokalne (wpis w .git/info/exclude), "
+            "więc drzewo robocze jest czyste. Żeby kontrole działały u całego zespołu: tf install --shared.")
+
+
 def main(argv: list[str]) -> int:
     flags = set(argv[1:])
     unknown = flags - {"--yes", "--dry-run", "--json", "--verify", "-h", "--help"}
@@ -329,6 +363,9 @@ def main(argv: list[str]) -> int:
         if path.name == "verify.sh":
             path.chmod(0o755)
     print("\n✓ Zapisano. Sprawdź stan: tf doctor")
+    note = settle_files(root)
+    if note:
+        print(note)
     if "--verify" in flags:
         command = _json(root / ".claude" / "quality-gate.json").get("command")
         if not command:
