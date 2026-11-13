@@ -49,7 +49,16 @@
  },
  "core-problem-routing": {
   "fingerprint": "c616a763c07ff1e9",
-  "offline": "2026-11-13"
+  "offline": "2026-11-13",
+  "model": {
+   "report": ".tf/logs/evals/2026-11-13-bramka-core-problem-routing.md",
+   "cost": 2.35,
+   "haiku": "5/5",
+   "haiku_bez_skilli": "1/4 treści",
+   "sonnet": "5/5",
+   "sonnet_bez_skilli": "1/4 treści",
+   "date": "2026-11-13"
+  }
  },
  "core-project-record": {
   "fingerprint": "a382771d5c8dab1e",
