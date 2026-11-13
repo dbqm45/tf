@@ -148,10 +148,27 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
 ## 7. Własne zmiany
 - **Persony, role, cechy:** pliki YAML w `.tf/config/personas/`, `.tf/config/roles/`, `.tf/config/traits/`; po zmianie
   `python3 .tf/factory/build.py`. Pliki w `.claude/agents/_generated/` są nadpisywane przy budowie.
-- **Własny skill:** według `core-skill-authoring` (najpierw scenariusze), potem `python3 .tf/factory/skill_gate.py <skill>`.
-  Skill z obcego źródła: najpierw `python3 .tf/factory/skill_audit.py <katalog>` i przeczytanie.
+- **Własny skill:** `tf new skill <nazwa> "<opis z granicami>"` tworzy szkielet z szablonu i plik scenariuszy. Najpierw
+  wypełnij scenariusze, potem treść (`core-skill-authoring`). `tf skill check <nazwa>` sprawdza strukturę, scenariusze
+  i bezpieczeństwo i mówi, co poprawić; ewaluacja na modelu (`--model …`) jest płatna. Skill z obcego źródła: najpierw
+  `tf skill audit <katalog>` i przeczytanie.
 - **Pliki fabryki są jak `node_modules`:** aktualizacja je nadpisuje; zmianę wprowadzasz w repo fabryki i aktualizujesz.
   Własne pliki i ustawienia w `.tf/config/config.yaml` zostają (nowe klucze dochodzą na końcu).
+
+### Co mogę ustawić
+Zasada: swoje dokładasz obok plików fabryki, wtedy aktualizacja niczego nie gubi. `tf config show` pokazuje każdą
+wartość i to, czy pochodzi z fabryki, czy z projektu.
+
+| Chcę zmienić… | Gdzie | Jak |
+|---|---|---|
+| modele i effort poziomów `fast` / `std` / `deep` | `.tf/config/config.yaml` → `tiers` | wpisz tylko zmieniane pola, potem `python3 .tf/factory/build.py` |
+| ogólny poziom kosztu | profil kosztów | `python3 .tf/factory/profile.py <profil>` |
+| operacje, o które fabryka pyta albo które blokuje | `.tf/config/config.yaml` → `autonomy` | można tylko zaostrzyć (pytanie → blokada) |
+| język rozmowy i commitów | ustawienia fabryki | `tf language <kod>`, `tf commit-language <kod>` |
+| polecenia weryfikacji projektu | `verify.sh`, `.claude/quality-gate.json` | `tf onboard --yes` albo ręcznie |
+| wyłączenie bramki jakości u siebie | `.claude/settings.local.json` → `env` | `"QG_GATE_DISABLE": "1"` — `tf doctor` będzie o tym przypominać |
+| własną personę, rolę, cechę | `.tf/config/personas/`, `roles/`, `traits/` | plik YAML, potem `python3 .tf/factory/build.py` |
+| własny skill | `.claude/skills/<nazwa>/` | `tf new skill`, `tf skill check` |
 
 ## 8. Ściąga poleceń
 | Polecenie | Co robi |
@@ -161,6 +178,8 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
 | `tf add <id>` / `tf remove <id>` | nakładka lub tryb |
 | `tf language <kod>` / `tf commit-language <kod>` | język pracy / język commitów i PR |
 | `tf list`, `tf doctor [--fix]` | co jest zainstalowane; stan instalacji i naprawy |
+| `tf new skill <nazwa> "<opis>"`, `tf skill check <nazwa>`, `tf skill audit <katalog>` | własny skill: szkielet ze scenariuszami, bramka jakości, audyt bezpieczeństwa |
+| `tf config show [<klucz>]` | konfiguracja po scaleniu i skąd pochodzi każda wartość |
 | `tf onboard [--yes] [--verify] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, `verify.sh`, raport gotowości, bramka jakości, polecenia w pliku instrukcji |
 | `tf init` | szkielet `.tf/` na wyniki fabryki (raporty, rejestr, cache, logi) |
 | `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analiza projektu modułami → `.tf/reports/<moduł>.md` |

@@ -173,6 +173,50 @@ def main() -> int:
         check(r.returncode == 0 and "Bramka jakości włączona" in r.stdout and "npm test" in r.stdout,
               f"CTF-13: doctor potwierdza działającą bramkę z poleceniem: {r.stdout}{r.stderr}")
 
+    # personalizacja: jedno miejsce na polecenia — tf new skill, tf skill check/audit, tf config show
+    with tempfile.TemporaryDirectory() as t:
+        per = Path(t) / "per"
+        shutil.copytree(ROOT / ".tf" / "factory", per / ".tf" / "factory",
+                        ignore=shutil.ignore_patterns("packs", "__pycache__"))
+        (per / ".claude").mkdir()
+        (per / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0"}))
+        echo = "import json, sys\nfrom pathlib import Path\n" \
+               "Path('called.json').write_text(json.dumps([Path(__file__).name, *sys.argv[1:]]))\n"
+        for name in ("build.py", "skill_gate.py", "skill_audit.py"):
+            (per / ".tf" / "factory" / name).write_text(echo)
+
+        def called(*args):
+            (per / "called.json").unlink(missing_ok=True)
+            r = subprocess.run([sys.executable, str(CTF), *args], cwd=per, env=env, capture_output=True, text=True)
+            f = per / "called.json"
+            return r, (json.loads(f.read_text()) if f.exists() else None)
+
+        r, c = called("new", "skill", "app-faktury", "Użyj przy fakturach. Nie do płatności.", "--role", "backend")
+        check(c == ["build.py", "new-skill", "app-faktury", "Użyj przy fakturach. Nie do płatności.", "--role", "backend"],
+              f"CTF-14: tf new skill → build.py new-skill z tymi samymi argumentami: {c} {r.stdout}{r.stderr}")
+        r, c = called("new", "skill", "app-faktury")
+        check(c is None and r.returncode == 2 and "tf new skill" in r.stdout and "Nie do" in r.stdout,
+              f"CTF-15: bez opisu → podpowiedź użycia z przykładem opisu, nic nie uruchamia: {r.stdout}")
+        r, c = called("skill", "check", "app-faktury", "--model", "haiku")
+        check(c == ["skill_gate.py", "app-faktury", "--model", "haiku"], f"CTF-16: tf skill check → skill_gate.py: {c}")
+        r, c = called("skill", "audit", ".claude/skills/app-faktury")
+        check(c == ["skill_audit.py", ".claude/skills/app-faktury"], f"CTF-17: tf skill audit → skill_audit.py: {c}")
+        r, c = called("skill", "zrob-cos")
+        check(c is None and r.returncode == 2 and "tf skill check" in r.stdout, f"CTF-18: nieznane podpolecenie → użycie: {r.stdout}")
+
+        (per / ".tf" / "config").mkdir()
+        (per / ".tf" / "config" / "config.yaml").write_text("default_profile: oszczedny\ntiers:\n  std:\n    effort: low\n")
+        r, _ = called("config", "show")
+        lines = {ln.split()[0]: ln for ln in r.stdout.splitlines() if ln.strip() and not ln.startswith(("#", " "))}
+        check(r.returncode == 0 and "projekt" in lines.get("default_profile", "") and "oszczedny" in lines.get("default_profile", "")
+              and "projekt" in lines.get("tiers", "") and "fabryka" in lines.get("limits", ""),
+              f"CTF-19: tf config show pokazuje wartości i skąd pochodzą (projekt / fabryka): {r.stdout[:600]}{r.stderr}")
+        r, _ = called("config", "show", "tiers")
+        check(r.returncode == 0 and '"effort": "low"' in r.stdout and "haiku" in r.stdout and "limits" not in r.stdout,
+              f"CTF-20: tf config show <klucz> pokazuje scaloną wartość jednego klucza: {r.stdout[:400]}")
+        r, _ = called("config", "show", "nie-ma")
+        check(r.returncode == 2 and "nie-ma" in r.stdout, f"CTF-21: nieznany klucz → kod 2: {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów tf")
