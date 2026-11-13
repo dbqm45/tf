@@ -14,6 +14,8 @@ SCRIPT = ROOT / ".tf" / "factory" / "task_state.py"
 CTF = ROOT / ".tf" / "factory" / "tf.py"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'8 passed\')"'
+SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi "
+        "{limit} zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
 RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
 
 
@@ -204,7 +206,7 @@ def main() -> int:
 
         run(p, "start", "AR-1", "--title", "Pliki zadania")
         folder = p / CHANGES / "AR-1"
-        (folder / "spec.md").write_text("# Specyfikacja\nAC-1: limit 45 zł\n", encoding="utf-8")
+        (folder / "spec.md").write_text(SPEC.format(limit=45), encoding="utf-8")
         (folder / "plan.md").write_text("# Plan\n- [ ] K1\n", encoding="utf-8")
         r = run(p, "artifact", "AR-1", "spec.md", "--stage", "specyfikacja", "--by", "talos/1.3.0")
         a = task(p, "AR-1").get("artifacts", {}).get("spec.md", {})
@@ -226,7 +228,7 @@ def main() -> int:
         r = run(p, "check", "AR-1")
         check(r.returncode == 0 and astates("AR-1") == {"plan.md": "zatwierdzony", "spec.md": "zatwierdzony"},
               f"TS-45: wszystko aktualne → check 0: {r.returncode} {r.stdout}")
-        (folder / "spec.md").write_text("# Specyfikacja\nAC-1: limit 50 zł\n", encoding="utf-8")
+        (folder / "spec.md").write_text(SPEC.format(limit=50), encoding="utf-8")
         r = run(p, "check", "AR-1")
         s = astates("AR-1")
         check(r.returncode == 1 and s.get("plan.md") == "nieaktualny" and s.get("spec.md") == "zmieniony po zatwierdzeniu"
@@ -254,7 +256,7 @@ def main() -> int:
         check((pdi / "plan.md").read_text(encoding="utf-8") == plan and astates("CHG-12") == {"plan.md": "zatwierdzony"},
               f"TS-51: plik pdi zarejestrowany i zatwierdzony bez zmiany treści: {astates('CHG-12')}")
         r = run(p, "stage", "AR-1", "realizacja")
-        (folder / "spec.md").write_text("# Specyfikacja\nAC-1: limit 55 zł\n", encoding="utf-8")
+        (folder / "spec.md").write_text(SPEC.format(limit=55), encoding="utf-8")
         r = run(p, "stage", "AR-1", "przeglad")
         check(r.returncode == 1 and "plan.md" in r.stdout and task(p, "AR-1")["stage"] == "realizacja",
               f"TS-52: przegląd odrzucony, gdy plik zadania jest nieaktualny: {r.returncode} {r.stdout}")

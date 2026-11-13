@@ -31,7 +31,8 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
 2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`; numer z trackera:
    `--key PROJ-123`) zakłada zadanie i drukuje **katalog przebiegu** `.tf/runs/<KEY>/` (roboczy, poza gitem:
    `run.json`, `parked.md`, skany) — jego podajesz jako `<katalog>` w każdym poleceniu. Pliki trwałe zadania leżą
-   w `docs/project/changes/<KEY>/`: `ticket.md` (historyjka), `plan.md`, `task.json`, potem `evidence/` i `report.md`;
+   w `docs/project/changes/<KEY>/`: `ticket.md` (historyjka), `spec.md` (szablon specyfikacji), `plan.md`, `task.json`,
+   potem `evidence/` i `report.md`;
    do gita trafiają jednym commitem na końcu (§4), więc w commitach kawałków ich nie dodajesz. `task.json`
    i `INDEX.md` pisze tylko skrypt — nie edytujesz ich.
    **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
@@ -53,8 +54,9 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
    `Change: TSK-57`.
 4. **Stan dla podglądu:** `python3 .claude/skills/talos-story-run/scripts/run_state.py` (dalej `run_state.py`) zapisuje
    etap i rundę przebiegu w `run.json` i buduje `.tf/runs/talos/dashboard.html` — człowiek widzi go na żywo. Wołasz go
-   w miejscach opisanych niżej (`stage`, `step`); z `--auto` dopisz `--auto` do pierwszego `stage`. Zapis stanu służy
-   tylko podglądowi: jego błąd nie jest powodem do STOP, idziesz dalej. `run_report.py start` sam buduje dashboard
+   w miejscach opisanych niżej (`stage`, `step`); z `--auto` dopisz `--auto` do pierwszego `stage`. Błąd samego
+   podglądu nie jest powodem do STOP. **Odmowa** (`✗`, kod 2) to co innego — bramka: specyfikacja z błędami, kawałek
+   bez dowodu albo plan starszy niż specyfikacja; usuwasz przyczynę z komunikatu i powtarzasz polecenie. `run_report.py start` sam buduje dashboard
    i otwiera go w przeglądarce człowieka (cięcie z `--task` go nie otwiera); podaj człowiekowi linię `Dashboard: …`
    z wyniku `start`. Człowiek wyłącza to w `.claude/talos.json` (`dashboard`, `dashboard_open`) — wtedy `start` nic
    nie buduje i nie drukuje linii, a ty nie wspominasz o dashboardzie.
@@ -76,10 +78,16 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
   głównych, którą wypisuje lint).
 - Drobna niejasność → wariant zachowawczy (mniej plików, mniejsza zmiana zachowania), zapisany w planie jako
   **[założenie]**.
+- **Specyfikacja przed planem:** wypełnij `docs/project/changes/<KEY>/spec.md` (narzędziem Write) — kryteria
+  `- AC-n: Zakładając <stan>, gdy <jedna akcja>, wtedy <wynik sprawdzalny testem>` wprost z kryteriów historyjki
+  (niczego nie dopisujesz), „Bez zmian” (co ma działać jak dotąd), „Poza zakresem”, „Otwarte pytania” (pytanie, bez
+  którego nie da się zacząć, ze znacznikiem `[blokuje]` → pytasz człowieka; z `--auto` STOP). Sprawdzenie:
+  `run_state.py spec <katalog>`, aż będzie `✓`. Przebieg cięcia (`--task`) specyfikacji nie ma.
 
 ## 2. Plan z kawałków
 `plan.md` — jeden wiersz na kawałek, pola do odhaczenia (stan wznowienia):
-`- [ ] K<n> — <wartość> · kryteria: <testy> · pliki: <ścieżki> · weryfikacja: \`<polecenie>\` · kto: <tier>`
+`- [ ] K<n> — <wartość> · kryteria: <AC-n i testy> · pliki: <ścieżki> · weryfikacja: \`<polecenie>\` · kto: <tier>`
+Każde `AC-n` ze specyfikacji trafia do któregoś kawałka. Zmieniasz `spec.md` po planie → powtórz `stage <katalog> plan`.
 - **Kawałek pionowy** (INVEST): niesie wartość widoczną dla użytkownika albo systemu, sam przechodzi testy i build,
   nie zostawia połowy funkcji (gdy trzeba — za flagą). Pierwszy kawałek to najcieńsza działająca ścieżka.
 - Więcej niż 5 kawałków → historyjka za duża: zaproponuj podział i STOP.
@@ -195,7 +203,7 @@ Po STOP: `run_state.py stage <katalog> needs --needs stop --reason "<powód z bl
 
 ## Checklista
 - [ ] czyste drzewo, katalog przebiegu i gałąź `story/<slug>`
-- [ ] historyjka gotowa (kryteria sprawdzalne) albo pytania / STOP; założenia zapisane
+- [ ] historyjka gotowa (kryteria sprawdzalne) albo pytania / STOP; założenia zapisane; `spec.md` przechodzi `spec`
 - [ ] plan: ≤5 kawałków pionowych, każdy z testem, plikami i weryfikacją; fazy warunkowe z powodem
 - [ ] bez `--auto` — akceptacja planu przez człowieka
 - [ ] karencja wersji (`security_scan.py cooldown`) PASS albo STOP

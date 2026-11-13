@@ -7,6 +7,7 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
+  python3 .claude/skills/talos-story-run/scripts/run_state.py spec <katalog-przebiegu>
   python3 .claude/skills/talos-story-run/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
   python3 .claude/skills/talos-story-run/scripts/run_state.py tick <katalog-przebiegu> K2
@@ -19,6 +20,11 @@ bieżącego kawałka: etapy test, kod, weryf, skan, zakres; stany run, pass, fai
 po nieudanej bramce (R1, R2, …). Etapy wcześniejsze od zapisywanego, które nie mają stanu albo trwają, dostają pass —
 Talos zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
 decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
+
+`spec` sprawdza `spec.md` zadania (`tf spec check`): kryteria AC-n z Zakładając / Gdy / Wtedy, sekcje „Bez zmian”
+i „Poza zakresem”, brak pytań [blokuje]. Etap `plan` (i każdy dalszy) jest odrzucany, dopóki specyfikacja ma błędy;
+`stage plan` zapisuje też, z których plików powstał plan — zmiana `spec.md` po planie blokuje etap `pr`, dopóki
+`stage plan` nie zostanie wywołane ponownie.
 
 `verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
 `tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
@@ -137,8 +143,8 @@ def task_view(project: Path, key: str) -> dict | None:
 
 
 def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | None:
-    """Przenosi etap przebiegu do task.json (tylko do przodu). Zwraca odmowę wejścia do etapu `pr` (kawałek bez
-    aktualnego dowodu, nieaktualny plik); inne niepowodzenia nie zatrzymują przebiegu."""
+    """Przenosi etap przebiegu do task.json (tylko do przodu). Zwraca odmowę `tf task` (specyfikacja z błędami,
+    kawałek bez aktualnego dowodu, nieaktualny plik) — to bramka, nie błąd podglądu."""
     key, target = meta.get("key"), TASK_STAGE.get(stage)
     if not key or not target:
         return None
@@ -149,10 +155,34 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
     if cur in TASK_ORDER and TASK_ORDER.index(target) <= TASK_ORDER.index(cur):
         return None
     r = run_report.task_state(project, "stage", key, target)
-    if r is not None and r.returncode != 0 and stage == "pr":
-        return ((r.stdout + r.stderr).strip() or f"✗ zadanie {key} nie przeszło do etapu pr") \
-            + f"\nDowód kawałka: run_state.py verify {run_dir} K<n> --files <pliki kawałka>"
+    if r is not None and r.returncode != 0:
+        hint = (f"Specyfikacja: run_state.py spec {run_dir} · dowód kawałka: run_state.py verify {run_dir} K<n> "
+                f"--files <pliki kawałka> · plan po zmianie specyfikacji: run_state.py stage {run_dir} plan")
+        return ((r.stdout + r.stderr).strip() or f"✗ zadanie {key} nie przeszło do etapu {target}") + "\n" + hint
     return None
+
+
+def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
+    """Zapisuje w task.json, z których plików powstał plan (skróty spec.md i ticket.md) — zmiana specyfikacji po
+    planie oznacza plan jako nieaktualny, co wykrywa `tf task`, nie model."""
+    docs = run_report.docs_dir(run_dir, meta)
+    inputs = [n for n in ("spec.md", "ticket.md") if (docs / n).is_file()]
+    if meta.get("key") and inputs and (docs / "plan.md").is_file():
+        run_report.task_state(project, "artifact", meta["key"], "plan.md", "--stage", "plan", "--by", "process:talos",
+                              "--inputs", ",".join(inputs))
+
+
+def cmd_spec(run_dir: Path, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return fail("ten przebieg jest w starym układzie (bez zadania) i nie ma spec.md.")
+    r = run_report.engine(project, "spec_check.py", "check", meta["key"])
+    if r is None:
+        return fail("brak .tf/factory/spec_check.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    return r.returncode
 
 
 def slice_evidence(project: Path, meta: dict, slice_id: str) -> str:
@@ -201,6 +231,8 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     if refused:
         print(refused)
         return 2
+    if stage == "plan":
+        register_plan(project, run_dir, meta)
     meta["stage"] = stage
     meta.pop("needs", None)
     meta.pop("stop_text", None)
@@ -262,7 +294,10 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
             row[later] = "todo"               # nowy start etapu unieważnia stany późniejszych
     meta["current"] = cur
     if meta.get("stage") in (None, "intake", "plan", "needs", "pr", "done"):
-        sync_task(project, run_dir, meta, "slices")
+        refused = sync_task(project, run_dir, meta, "slices")
+        if refused:
+            print(refused)
+            return 2
         meta["stage"] = "slices"
         meta.pop("needs", None)
         meta.pop("stop_text", None)
@@ -384,7 +419,7 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     main, work = [], []
     task_dir = meta.get("task_dir")
     docs = run_report.docs_dir(run_dir, meta)       # nowy układ: historyjka, plan i raport w katalogu zadania
-    for path in (run_report.story_file(run_dir, meta), docs / "plan.md", run_dir / "parked.md"):
+    for path in (run_report.story_file(run_dir, meta), docs / "spec.md", docs / "plan.md", run_dir / "parked.md"):
         name, text = path.name, read_text(path)
         if text is None:
             continue
@@ -626,6 +661,8 @@ def main(argv: list[str]) -> int:
     t.add_argument("run_dir")
     t.add_argument("target")
     t.add_argument("rest", nargs="*")
+    sp = sub.add_parser("spec")
+    sp.add_argument("run_dir")
     v = sub.add_parser("verify")
     v.add_argument("run_dir")
     v.add_argument("slice_id")
@@ -649,6 +686,8 @@ def main(argv: list[str]) -> int:
                          project)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
+    if args.cmd == "spec":
+        return cmd_spec(Path(args.run_dir), project)
     if args.cmd == "verify":
         return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project)
     if args.cmd == "tick":
