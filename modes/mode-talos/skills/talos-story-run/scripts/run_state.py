@@ -35,13 +35,17 @@ domyślnie oba włączone. Zmienne TALOS_DASHBOARD=0 i TALOS_DASHBOARD_OPEN=0 ro
 
 `dashboard` buduje samodzielny plik .tf/runs/talos/dashboard.html z wszystkich przebiegów w .tf/runs/<KEY>/ i starych
 w .tf/runs/talos/ (ignorowany przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
-(run_report.py) i zapamiętuje w run.json; `stage` i `step` odświeżają plik bez liczenia kosztu. Etap, którego nikt nie
+(run_report.py) i zapamiętuje w run.json; `stage` i `step` odświeżają plik bez liczenia kosztu. Karta zadania
+pokazuje etap z task.json i pasek kawałków; kawałek odhaczony, który stracił aktualny dowód, ma osobny stan (`stale`).
+Zadanie bez przebiegu Talosa (samo `tf task`, świeży klon bez `.tf/runs/`) też dostaje kartę. Panel plików dzieli
+pliki na katalog zadania (git), katalog roboczy i dowody. Etap, którego nikt nie
 zapisał, wynika z plan.md (kawałki odhaczone i nie) i report.md.
 Zapis stanu służy podglądowi: błąd tego skryptu nie jest powodem do STOP przebiegu.
 """
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -61,6 +65,10 @@ PR_STEPS = {"plan_drift": "drift", "pr": "pr"}
 NEEDS = ("plan", "stop")
 TASK_STAGE = {"intake": "przyjecie", "plan": "plan", "slices": "realizacja", "pr": "pr"}   # etap przebiegu → etap zadania
 TASK_ORDER = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
+BARE_STAGE = {"przyjecie": "intake", "specyfikacja": "intake", "plan": "plan", "realizacja": "slices",
+              "przeglad": "slices", "pr": "pr", "wdrozenie": "done", "zamkniecie": "done"}   # zadanie bez przebiegu
+PROOF_STATE = {"zweryfikowany": "done", "czerwony": "fail", "zablokowany": "fail", "zaplanowany": "todo"}
+_TASK_API = None
 SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(K\d+)\s*[—-]\s*(.+)$")
 MAX_TEXT = 40000
 MAX_RUNS = 40
@@ -98,6 +106,35 @@ def load(run_dir: Path) -> dict | None:
 
 
 # ---- zadanie (task.json pisze tylko `tf task`) -------------------------------------------------------------------
+
+def task_api(project: Path):
+    """`task_state.py` silnika jako moduł — odczyt stanu zadań bez podprocesu na każdą kartę; None, gdy go nie ma."""
+    global _TASK_API
+    if _TASK_API is None:
+        _TASK_API = False
+        for base in (run_report.ROOT, project):
+            f = base / ".tf" / "factory" / "task_state.py"
+            if f.is_file():
+                spec = importlib.util.spec_from_file_location("tf_task_state", f)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                _TASK_API = mod
+                break
+    return _TASK_API or None
+
+
+def task_view(project: Path, key: str) -> dict | None:
+    """Zadanie i wyliczone stany jego kawałków; None, gdy zadania nie ma albo nie da się go odczytać."""
+    try:
+        api = task_api(project)
+        root = project.resolve()
+        task = api.load(root, key) if api else None
+        if not task:
+            return None
+        return {"task": task, "slices": {k: s for k, (s, _) in api.slice_states(root, task).items()}}
+    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje przebiegu
+        return None
+
 
 def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | None:
     """Przenosi etap przebiegu do task.json (tylko do przodu). Zwraca odmowę wejścia do etapu `pr` (kawałek bez
@@ -322,9 +359,30 @@ def dot_for(text: str) -> str:
     return "ok" if re.search(r"\bPASS\b", text) else "warn"
 
 
+def evidence_items(docs: Path) -> list[dict]:
+    """Ostatni dowód każdego kawałka (evidence/K<n>-<m>.json): zielona kropka przy kodzie wyjścia 0."""
+    last: dict[int, tuple[int, Path]] = {}
+    for f in docs.glob("evidence/K*-*.json"):
+        m = re.fullmatch(r"K(\d+)-(\d+)\.json", f.name)
+        if m and int(m.group(2)) >= last.get(int(m.group(1)), (0, f))[0]:
+            last[int(m.group(1))] = (int(m.group(2)), f)
+    out = []
+    for _, (_, f) in sorted(last.items()):
+        text = read_text(f)
+        if text is None:
+            continue
+        try:
+            ok = json.loads(text).get("exit_code") == 0
+        except (ValueError, AttributeError):
+            ok = False
+        out.append({"name": f"evidence/{f.name}", "dot": "ok" if ok else "bad", "text": text})
+    return out
+
+
 def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked: list[str]) -> list[dict]:
     groups: list[dict] = []
-    main = []
+    main, work = [], []
+    task_dir = meta.get("task_dir")
     docs = run_report.docs_dir(run_dir, meta)       # nowy układ: historyjka, plan i raport w katalogu zadania
     for path in (run_report.story_file(run_dir, meta), docs / "plan.md", run_dir / "parked.md"):
         name, text = path.name, read_text(path)
@@ -335,9 +393,14 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
             dot = "warn" if stage == "needs" and needs == "plan" else "ok"
         if name == "parked.md":
             dot = "warn" if parked else ""
-        main.append({"name": name, "dot": dot, "text": text})
+        (work if task_dir and name == "parked.md" else main).append({"name": name, "dot": dot, "text": text})
     if main:
-        groups.append({"grp": "Przebieg", "items": main})
+        groups.append({"grp": f"Zadanie (git) · {task_dir}/" if task_dir else "Przebieg", "items": main})
+    if work:
+        groups.append({"grp": f"Robocze · .tf/runs/{meta.get('key')}/", "items": work})
+    proofs = evidence_items(docs) if task_dir else []
+    if proofs:
+        groups.append({"grp": "Dowody", "items": proofs})
     sec_root = run_dir / "security"
     sec = []
     for f in sorted(sec_root.glob("**/summary.md")) if sec_root.is_dir() else []:
@@ -402,18 +465,8 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
     stage = infer_stage(meta, run_dir, slices)
     needs = meta.get("needs") if stage == "needs" else None
     cur = meta.get("current") if isinstance(meta.get("current"), dict) else None
-    out_slices = []
-    first_open = next((s["id"] for s in slices if not s["checked"]), None)
-    for s in slices:
-        if s["checked"]:
-            state = "done"
-        elif cur and cur.get("k") == s["id"]:
-            state = "fail" if stage == "needs" and needs == "stop" else "cur"
-        elif not cur and stage == "slices" and s["id"] == first_open:
-            state = "cur"
-        else:
-            state = "todo"
-        out_slices.append({"id": s["id"], "value": s["value"], "state": state})
+    view = task_view(project, meta["key"]) if meta.get("key") else None
+    out_slices = slice_items(slices, view, cur, stage, needs)
     parked = [ln[2:].strip() for ln in run_report.parked_items(run_dir)]
     m = re.match(r"(\d{4}-\d{2}-\d{2})-", run_dir.name)
     usage = meta.get("usage") if isinstance(meta.get("usage"), dict) else {}
@@ -424,12 +477,69 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
            "key": meta.get("task") or meta.get("key"), "change": meta.get("change"), "flag": meta.get("flag"), "pr": meta.get("pr"),
            "stopText": meta.get("stop_text"), "slices": out_slices, "parked": len(parked), "parkedList": parked,
            "cost": usage.get("cost_usd"), "min": usage.get("minutes"), "models": usage.get("models") or [],
-           "started": meta.get("started_at", "")}
+           "started": meta.get("started_at", ""),
+           "dir": run_dir.resolve().relative_to(project.resolve()).as_posix()
+           if run_dir.resolve().is_relative_to(project.resolve()) else str(run_dir),
+           "taskDir": meta.get("task_dir"), "taskStage": view["task"].get("stage") if view else None}
     if cur and stage in ("slices", "needs"):
         obj["cur"] = {"k": cur.get("k"), "rounds": normalize_rounds(cur) or [{s: "todo" for s in STEPS}]}
     if stage == "pr":
         obj["prSteps"] = {"drift": pr_steps.get("drift", "todo"), "pr": pr_steps.get("pr", "todo")}
     obj["files"] = file_groups(run_dir, meta, stage, needs, parked)
+    return obj
+
+
+def slice_items(slices: list[dict], view: dict | None, cur: dict | None, stage: str, needs: str | None) -> list[dict]:
+    """Stan kawałków planu na karcie. Z zadaniem (`view`) kawałek odhaczony bez aktualnego dowodu ma stan `stale`,
+    a każdy kawałek niesie `proof` — stan wyliczony przez `tf task`."""
+    out = []
+    first_open = next((s["id"] for s in slices if not s["checked"]), None)
+    for s in slices:
+        proof = (view["slices"].get(s["id"]) or "brak dowodu") if view else None
+        if s["checked"]:
+            state = "stale" if view and proof != "zweryfikowany" else "done"
+        elif cur and cur.get("k") == s["id"]:
+            state = "fail" if stage == "needs" and needs == "stop" else "cur"
+        elif not cur and stage == "slices" and s["id"] == first_open:
+            state = "cur"
+        else:
+            state = "todo"
+        item = {"id": s["id"], "value": s["value"], "state": state}
+        if view:
+            item["proof"] = proof
+        out.append(item)
+    return out
+
+
+def task_object(task_dir: Path, project: Path) -> dict | None:
+    """Karta zadania, które nie ma przebiegu Talosa w `.tf/runs/` (samo `tf task` albo świeży klon): etap z task.json,
+    kawałki z plan.md, a bez planu — z samego zadania."""
+    key = task_dir.name
+    view = task_view(project, key)
+    if view is None:
+        return None
+    task = view["task"]
+    stage = BARE_STAGE.get(task.get("stage"), "intake")
+    rel = task_dir.resolve().relative_to(project.resolve()).as_posix()
+    meta = {"key": key, "task_dir": rel}
+    plan = parse_slices(task_dir)
+    if plan:
+        slices = slice_items(plan, view, None, stage, None)
+    else:
+        slices = [{"id": k, "value": (task.get("slices", {}).get(k) or {}).get("title") or "", "proof": s,
+                   "state": PROOF_STATE.get(s, "stale")} for k, s in view["slices"].items()]
+    work = project / run_report.WORK / key          # może nie istnieć — wtedy panel pokazuje tylko katalog zadania
+    files = file_groups(work, meta, stage, None, [])
+    if not any(g["grp"] != "Dowody" for g in files):
+        files.insert(0, {"grp": f"Zadanie (git) · {rel}/", "items": [
+            {"name": "task.json", "dot": "", "text": json.dumps(task, ensure_ascii=False, indent=1)}]})
+    created = str(task.get("created", ""))
+    obj = {"slug": key, "title": task.get("title") or key, "date": created[:10], "stage": stage, "needs": None,
+           "auto": False, "effort": None, "key": key, "change": None, "flag": None, "pr": None, "stopText": None,
+           "slices": slices, "parked": 0, "parkedList": [], "cost": None, "min": None, "models": [],
+           "started": created, "dir": None, "taskDir": rel, "taskStage": task.get("stage"), "files": files}
+    if stage == "pr":
+        obj["prSteps"] = {"drift": "todo", "pr": "todo"}
     return obj
 
 
@@ -439,6 +549,11 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
     runs = []
     for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
         obj = run_object(d.parent, project, costs)
+        if obj:
+            runs.append(obj)
+    seen = {r["key"] for r in runs}
+    for f in sorted((project / run_report.CHANGES).glob("*/task.json")):   # zadania bez przebiegu w .tf/runs/
+        obj = task_object(f.parent, project) if f.parent.name not in seen else None
         if obj:
             runs.append(obj)
     runs.sort(key=lambda r: (r["date"], r["started"]), reverse=True)

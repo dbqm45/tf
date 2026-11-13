@@ -68,6 +68,8 @@ def main() -> int:
         o = one()
         check(o.get("stage") == "plan" and [s["id"] for s in o["slices"]] == ["K1", "K2", "K3"],
               f"S-2a: plan z kawałkami → etap plan: {o.get('stage')}")
+        (proj / "sort.py").write_text("ASC = True\n", encoding="utf-8")     # odhaczony kawałek ma dowód (krok C4)
+        run(SCRIPT, ["verify", str(d), "K1", "--files", "sort.py", "--command", OK], proj, cfg)
         (doc / "plan.md").write_text("# Plan\n- [x] K1 — sortowanie rosnące · kryteria: t\n- [ ] K2 — malejące · kryteria: t\n"
                                    "- [ ] K3 — po dacie · kryteria: t\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
@@ -291,6 +293,46 @@ def main() -> int:
         check("stary" in slugs and len(rs) == 2 and [s["id"] for s in new.get("slices", [])] == ["K1", "K2"]
               and any(i["name"] == "ticket.md" for g in new.get("files", []) for i in g["items"]),
               f"V-8: stary i nowy przebieg na jednej stronie, nowy z planem i ticket.md: {slugs} {new.get('slices')}")
+
+        # podgląd zadania (krok C5): etap zadania, katalog trwały i roboczy, dowody, osobny stan kawałka bez dowodu
+        key = d.name
+        grp = {g["grp"]: [i["name"] for i in g["items"]] for g in new.get("files", [])}
+        durable = next((v for k, v in grp.items() if f"docs/project/changes/{key}" in k), [])
+        working = next((v for k, v in grp.items() if f".tf/runs/{key}" in k), [])
+        check(new.get("dir") == f".tf/runs/{key}" and new.get("taskDir") == f"docs/project/changes/{key}"
+              and new.get("taskStage") == "pr" and new.get("key") == key,
+              f"D-1: karta zna katalogi i etap zadania: {new.get('dir')} {new.get('taskDir')} {new.get('taskStage')}")
+        check("ticket.md" in durable and "plan.md" in durable and "parked.md" in working,
+              f"D-2: panel plików dzieli pliki na katalog trwały i roboczy: {grp}")
+        check(any(n.startswith("evidence/K1-") for v in grp.values() for n in v),
+              f"D-3: ostatni dowód kawałka w panelu plików: {grp}")
+        old_o = next((x for x in rs if x.get("slug") == "stary"), {})
+        check(old_o.get("dir") == ".tf/runs/talos/2026-10-01-stary" and not old_o.get("taskDir"),
+              f"D-4: stary przebieg wskazuje swój katalog: {old_o.get('dir')}")
+        run(SCRIPT, ["tick", str(d), "K2"], proj, cfg)
+        (proj / "fees.py").write_text("LIMIT = 55\n", encoding="utf-8")
+        run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
+        html = (proj / ".tf" / "runs" / "talos" / "dashboard.html").read_text(encoding="utf-8")
+        new = next((x for x in runs_json(html) if x.get("slug") != "stary"), {})
+        st = {s["id"]: s["state"] for s in new.get("slices", [])}
+        check(st == {"K1": "stale", "K2": "stale"} and all(s.get("proof") == "niezweryfikowany" for s in new["slices"]),
+              f"D-5: odhaczony kawałek ze zmienionym plikiem ma stan stale: {new.get('slices')}")
+        check(".chip.stale" in html and "r.slices.map" in html and "r.dir" in html,
+              "D-6: szablon rysuje pasek kawałków, stan stale i katalog z danych przebiegu")
+
+        # zadanie założone przez `tf task` (bez przebiegu Talosa, np. świeży klon) też ma kartę
+        ts = ROOT / ".tf" / "factory" / "task_state.py"
+        env = {**os.environ, "CLAUDE_PROJECT_DIR": str(proj)}
+        subprocess.run([sys.executable, str(ts), "start", "PROJ-7", "--title", "Eksport faktur"], cwd=proj, env=env,
+                       capture_output=True, text=True, timeout=60)
+        subprocess.run([sys.executable, str(ts), "verify", "PROJ-7", "K1", "--files", "fees.py", "--command", OK],
+                       cwd=proj, env=env, capture_output=True, text=True, timeout=60)
+        run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
+        rs = runs_json((proj / ".tf" / "runs" / "talos" / "dashboard.html").read_text(encoding="utf-8"))
+        bare = next((x for x in rs if x.get("key") == "PROJ-7"), {})
+        check(len(rs) == 3 and bare.get("title") == "Eksport faktur" and bare.get("stage") == "intake"
+              and bare.get("taskStage") == "przyjecie" and [(s["id"], s["state"]) for s in bare.get("slices", [])] == [("K1", "done")],
+              f"D-7: zadanie bez przebiegu ma kartę z etapem i kawałkami: {len(rs)} {bare.get('stage')} {bare.get('slices')}")
 
     for f in fails:
         print(f"✗ {f}")

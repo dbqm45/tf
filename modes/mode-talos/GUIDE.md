@@ -73,8 +73,10 @@ faktura. W trakcie przebiegu jedna linia stanu:
 Podgląd na żywo: `python3 .claude/skills/talos-story-run/scripts/run_state.py dashboard` buduje
 `.tf/runs/talos/dashboard.html` (otwierasz plik w przeglądarce, odświeża się sam co 5 s). Kolumny to etapy przebiegu
 (Przyjęcie, Plan, Kawałki, PR, Czeka na człowieka, Gotowe), karta pokazuje rundy bieżącego kawałka (R1, R2…) i etapy
-pętli (test, kod, weryf, skan, zakres), a panel plików — `ticket.md`, `plan.md`, `parked.md`, wyniki skanów, STOP
-i `report.md`. Stan zapisuje Talos poleceniami `run_state.py stage` i `run_state.py step`; koszt i czas liczy skrypt
+pętli (test, kod, weryf, skan, zakres) oraz pasek kawałków K1, K2… — fioletowy kawałek był odhaczony, ale nie ma
+aktualnego dowodu (plik zmienił się po weryfikacji). Karta pokazuje też etap zadania, a zadanie bez przebiegu Talosa
+(założone samym `tf task`, świeży klon) ma własną kartę. Panel plików dzieli pliki na katalog zadania (git), katalog
+roboczy, dowody, wyniki skanów, STOP i `report.md`. To samo tekstem: `tf status`. Stan zapisuje Talos poleceniami `run_state.py stage` i `run_state.py step`; koszt i czas liczy skrypt
 z transkryptów (`dashboard` bez `--no-cost`). `run_report.py start` buduje dashboard sam i otwiera go w przeglądarce
 (cięcie z kluczem, wołane przez fazę pdi, tylko go buduje). Wyłączysz to w `.claude/talos.json` (osobisty plik, aktualizacja
 fabryki go nie rusza): `{"dashboard": false}` — wcale, `{"dashboard_open": false}` — buduje, ale nie otwiera;

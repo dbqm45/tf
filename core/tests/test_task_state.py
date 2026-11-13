@@ -269,6 +269,33 @@ def main() -> int:
                            capture_output=True, text=True, timeout=60)
         check(r.returncode == 0 and task(q, "PROJ-9").get("title") == "Przez tf", f"TS-19: tf task start: {r.stdout}{r.stderr}")
 
+        # lista zadań (krok C5): `tf status` — etap, kawałki z dowodem, pliki do odświeżenia; stan liczony przy odczycie
+        r = run(q, "list")
+        check(r.returncode == 0 and "PROJ-9" in r.stdout and "przyjecie" in r.stdout and "Przez tf" in r.stdout,
+              f"TS-53: list pokazuje zadanie z etapem i tytułem: {r.stdout}{r.stderr}")
+        (q / "src").mkdir(exist_ok=True)
+        (q / "src" / "a.py").write_text("a = 1\n", encoding="utf-8")
+        run(q, "verify", "PROJ-9", "K1", "--command", OK, "--files", "src/a.py")
+        run(q, "slice", "PROJ-9", "K2", "planned")
+        r = run(q, "list", "--json")
+        try:
+            rows = {x["key"]: x for x in json.loads(r.stdout)}
+        except (ValueError, KeyError, TypeError):
+            rows = {}
+        row = rows.get("PROJ-9", {})
+        check(row.get("stage") == "przyjecie" and row.get("slices") == {"K1": "zweryfikowany", "K2": "zaplanowany"}
+              and row.get("verified") == 1 and row.get("stale") == [],
+              f"TS-54: list --json: etap, stany kawałków, liczba zweryfikowanych: {r.stdout[:300]}{r.stderr}")
+        (q / "src" / "a.py").write_text("a = 2\n", encoding="utf-8")
+        r = run(q, "list")
+        line = next((ln for ln in r.stdout.splitlines() if "PROJ-9" in ln), "")
+        check("0/2" in line and "niezweryfikowany" in r.stdout, f"TS-55: zmiana pliku po dowodzie widać na liście: {r.stdout}")
+        r = subprocess.run([sys.executable, str(CTF), "status"], cwd=q, capture_output=True, text=True, timeout=60)
+        check(r.returncode == 0 and "PROJ-9" in r.stdout, f"TS-56: tf status to lista zadań: {r.stdout}{r.stderr}")
+        with tempfile.TemporaryDirectory() as e:
+            r = run(Path(e), "list")
+            check(r.returncode == 0 and "tf task start" in r.stdout, f"TS-57: brak zadań → podpowiedź, kod 0: {r.returncode} {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów stanu zadania")

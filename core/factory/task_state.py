@@ -12,6 +12,9 @@ tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i be
   tf task approve <KEY> <plik> --by human:<id>
   tf task check <KEY>
 
+`tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
+i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md.
+
 Klucz: numer z trackera (PROJ-123), klucz pdi (CHG-12, TSK-57) albo T-<RRRRMMDD>-<slug>. Etapy idą w kolejności:
 przyjecie → specyfikacja → plan → realizacja → przeglad → pr → wdrozenie → zamkniecie; cofnięcie wymaga --force.
 `start` w istniejącym katalogu zmiany (np. z trybu pdi) dokłada sam `task.json` i nie rusza innych plików.
@@ -348,6 +351,39 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     return 0
 
 
+def task_rows(root: Path) -> list[dict]:
+    """Wszystkie zadania ze stanem wyliczonym teraz (kawałki, pliki do odświeżenia)."""
+    rows = []
+    for f in sorted((root / CHANGES).glob("*/task.json")):
+        t = load(root, f.parent.name)
+        if not t:
+            continue
+        slices = {k: s for k, (s, _) in slice_states(root, t).items()}
+        stale = [n for n, (s, _) in artifact_states(root, t).items() if s in ("nieaktualny", "zmieniony po zatwierdzeniu")]
+        rows.append({"key": t.get("key", f.parent.name), "title": t.get("title", ""), "stage": t.get("stage", "?"),
+                     "updated": t.get("updated", ""), "slices": slices,
+                     "verified": sum(s == "zweryfikowany" for s in slices.values()), "stale": stale})
+    return rows
+
+
+def cmd_list(root: Path, as_json: bool) -> int:
+    rows = task_rows(root)
+    if as_json:
+        print(json.dumps(rows, ensure_ascii=False, indent=1))
+        return 0
+    if not rows:
+        print(f"Brak zadań w {CHANGES}/. Pierwsze założysz: tf task start <KEY> --title \"<tytuł>\"")
+        return 0
+    for r in rows:
+        print(f"{r['key']}  {r['stage']}  kawałki z dowodem {r['verified']}/{len(r['slices'])}  {r['title']}")
+        for k, s in r["slices"].items():
+            if s != "zweryfikowany":
+                print(f"    {k}: {s}")
+        for name in r["stale"]:
+            print(f"    {name}: do odświeżenia (tf task check {r['key']})")
+    return 0
+
+
 def cmd_status(root: Path, key: str, as_json: bool) -> int:
     task = load(root, key)
     if task is None:
@@ -409,11 +445,15 @@ def main(argv: list[str]) -> int:
     q = sub.add_parser("status")
     q.add_argument("key")
     q.add_argument("--json", action="store_true")
+    ls = sub.add_parser("list")
+    ls.add_argument("--json", action="store_true")
     try:
         a = ap.parse_args(argv[1:])
     except SystemExit as e:
         return 2 if e.code else 0
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
+    if a.cmd == "list":
+        return cmd_list(root, a.json)
     if not KEY.fullmatch(a.key):
         return fail(f"klucz „{a.key}” nie pasuje do wzorca (np. PROJ-123, CHG-12, T-20261113-limit)", 2)
     if a.cmd == "start":
