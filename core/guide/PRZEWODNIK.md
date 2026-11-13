@@ -4,6 +4,26 @@ Fabryka instaluje w projekcie zespół agentów Claude Code: persony (prowadząc
 wspólnych, skille z wiedzą i procedurami, hooki pilnujące zasad oraz skrypty, które robią mechaniczną pracę bez
 tokenów. Ten plik opisuje codzienną pracę; odpowiedzi na częste pytania są w `.tf/factory/FAQ.md`.
 
+## Zacznij tutaj
+Cztery kroki od zera do pierwszego PR. Reszta tego pliku to szczegóły dla dociekliwych.
+
+1. **Zainstaluj.** W katalogu projektu wpisz `tf`. Odpowiedz na pytania o język i nakładki.
+2. **Sprawdź.** `tf doctor` mówi, czy instalacja jest zdrowa. Wpisz polecenie testów projektu do
+   `.claude/quality-gate.json`, np. `{"command": "npm test"}` — bez tego fabryka nie zablokuje czerwonych testów.
+3. **Zleć pierwsze zadanie.** Uruchom `claude` w katalogu projektu i wybierz sposób z tabeli poniżej.
+4. **Przejrzyj wynik.** `tf risk` pokazuje, co w zmianie musi obejrzeć człowiek. Scalasz Ty, nie agent.
+
+| Chcę… | Użyj | Co dostanę |
+|---|---|---|
+| zrobić zadanie z kryteriami akceptacji | `/talos-story-run <historyjka>` | plan, testy, kod, commit na każdy kawałek, jeden PR |
+| zapytać o kod albo nie wiem, od czego zacząć | `claude --agent maja` (nakładka `pack-it`) | odpowiedź albo dobór osób i podejścia |
+| zrobić drobną zmianę | zwykła sesja `claude` | zmiana pod kontrolą hooków, bez planu |
+| pracować w jednej roli (testy, UX, domena…) | `claude --agent <persona>` z `.claude/catalog.md` | rozmowa z personą i jej wykonawcami |
+| przejrzeć repozytorium bez kosztu modelu | `tf analyze` | raporty w `.tf/reports/` |
+
+Coś nie działa albo polecenie zostało zablokowane? Zapytaj w sesji: „co mnie zablokowało i co mogę zrobić?” —
+agent wskaże plik, który podjął decyzję. Częste pytania: `.tf/factory/FAQ.md`.
+
 ## 1. Z czego składa się instalacja
 | Element | Gdzie w projekcie | Co robi |
 |---|---|---|
