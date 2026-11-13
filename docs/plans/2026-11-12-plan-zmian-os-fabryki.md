@@ -274,6 +274,9 @@ tu uwzględnione.
 
 ## 6. Co musi zdecydować człowiek, żeby ruszyć
 
-Do kroków A–B: nic. Do kroku C: **D5** (co z folderem po zamknięciu); **D1** jest rozstrzygnięte — pliki zadania
-w gicie (sekcja 4c).
+Do kroku C nic już nie brakuje: **D1** — pliki zadania w gicie (sekcja 4c); **D5** — folder zadania zostaje
+w repozytorium, a po 90 dniach skrypt przenosi go do archiwum (decyzja człowieka z 2026-11-13).
+
+Stan na 2026-11-13: kroki A i B są zrobione (#214–#219), pomiar bazowy i powtórka po poprawkach Talosa są
+w `docs/evals/2026-11-13-pomiar-bazowy-e0.md` (#220, #221). Następny jest krok C.
 Do kroku E: **D2**, **D3**, **D12**. Reszta decyzji (D4, D6, D8–D11, D13) może poczekać na wyniki pierwszych kroków.
