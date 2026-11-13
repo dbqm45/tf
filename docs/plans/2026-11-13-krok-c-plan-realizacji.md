@@ -18,13 +18,13 @@ gitem. Stan zadania czyta i pisze wyłącznie skrypt. Przerwaną pracę da się 
   i `runs/TSK-n.md`; nagłówki tych plików sprawdza `decision_record.py check` względem kontraktu pdi.
 - Dashboard Talosa (`run_state.py dashboard`) otwiera się przy starcie przebiegu i ma panel plików.
 
-## Decyzja projektowa do potwierdzenia (D14)
+## Decyzja projektowa D14 — przyjęta przez człowieka 2026-11-13
 
 Dokument osi mówi, że każdy plik etapu ma własny nagłówek ze stanem i skrótami wejść. **Proponuję trzymać ten stan
 w `task.json`, a nie w nagłówkach plików.** Powody: pliki `plan.md` i `intent.md` mają już nagłówki sprawdzane przez
 kontrakt pdi, więc dopisywanie własnych pól groziłoby jego złamaniem; jeden plik stanu ma jednego pisarza; pliki dla
 ludzi zostają czyste. Nazwy pól w `task.json` biorę z OKF (`generated`, `verified`, `status`, `stale_after`).
-Kawałki C1–C2 nie zależą od tej decyzji; C3 tak.
+Zatwierdza tylko człowiek (`tf task approve --by human:<id>`).
 
 ## Kawałki
 
