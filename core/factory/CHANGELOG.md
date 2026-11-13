@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.19.0] — 2026-11-13
+### Added
+- **core:** report a disabled quality gate in doctor and at start (#215)
+
 ## [9.18.0] — 2026-11-12
 ### Added
 - **talos:** record run state and open a live dashboard on start (#211)
