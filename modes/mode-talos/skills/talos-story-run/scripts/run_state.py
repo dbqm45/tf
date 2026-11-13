@@ -8,6 +8,7 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
   python3 .claude/skills/talos-story-run/scripts/run_state.py spec <katalog-przebiegu>
+  python3 .claude/skills/talos-story-run/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
   python3 .claude/skills/talos-story-run/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
   python3 .claude/skills/talos-story-run/scripts/run_state.py tick <katalog-przebiegu> K2
@@ -25,6 +26,9 @@ decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i
 i „Poza zakresem”, brak pytań [blokuje]. Etap `plan` (i każdy dalszy) jest odrzucany, dopóki specyfikacja ma błędy;
 `stage plan` zapisuje też, z których plików powstał plan — zmiana `spec.md` po planie blokuje etap `pr`, dopóki
 `stage plan` nie zostanie wywołane ponownie.
+
+`trace` drukuje tabelę kryterium → test → commit → dowód (`tf trace --md`) do opisu PR; kryterium bez testu albo
+test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
 
 `verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
 `tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
@@ -170,6 +174,19 @@ def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
     if meta.get("key") and inputs and (docs / "plan.md").is_file():
         run_report.task_state(project, "artifact", meta["key"], "plan.md", "--stage", "plan", "--by", "process:talos",
                               "--inputs", ",".join(inputs))
+
+
+def cmd_trace(run_dir: Path, base: str | None, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return fail("ten przebieg jest w starym układzie (bez zadania i specyfikacji) — śladu kryteriów nie ma.")
+    r = run_report.engine(project, "trace_check.py", meta["key"], "--md", *(["--base", base] if base else []))
+    if r is None:
+        return fail("brak .tf/factory/trace_check.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    return r.returncode
 
 
 def cmd_spec(run_dir: Path, project: Path) -> int:
@@ -663,6 +680,9 @@ def main(argv: list[str]) -> int:
     t.add_argument("rest", nargs="*")
     sp = sub.add_parser("spec")
     sp.add_argument("run_dir")
+    tr = sub.add_parser("trace")
+    tr.add_argument("run_dir")
+    tr.add_argument("--base", default=None)
     v = sub.add_parser("verify")
     v.add_argument("run_dir")
     v.add_argument("slice_id")
@@ -686,6 +706,8 @@ def main(argv: list[str]) -> int:
                          project)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
+    if args.cmd == "trace":
+        return cmd_trace(Path(args.run_dir), args.base, project)
     if args.cmd == "spec":
         return cmd_spec(Path(args.run_dir), project)
     if args.cmd == "verify":

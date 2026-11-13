@@ -182,6 +182,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | `tf config show [<klucz>]` | konfiguracja po scaleniu i skąd pochodzi każda wartość |
 | `tf spec new <KLUCZ>`, `tf spec check <KLUCZ>` | specyfikacja zadania (`spec.md`): szablon i sprawdzenie, czy kryteria mają Zakładając / Gdy / Wtedy, co zostaje bez zmian i czy nie ma pytań blokujących; z błędami zadanie nie przejdzie do planu |
 | `tf task freeze <KLUCZ> <plik> --by human:<id>`, `tf task reopen <KLUCZ> <plik> --by human:<id> --reason "…"` | ochrona podstawy zadania: zamrożony plik (np. test akceptacyjny), zatwierdzony plik zadania i `spec.md` od etapu realizacji agent zmieni tylko za Twoją zgodą; `reopen` zdejmuje ochronę i zapisuje powód |
+| `tf trace <KLUCZ> [--md]` | ślad: każde kryterium `AC-n` ze specyfikacji → test z tym identyfikatorem → czy hook TDD widział go jako czerwony → commit → dowód kawałka; kryterium bez testu blokuje przegląd; `--md` daje tabelę do opisu PR |
 | `tf status` | lista zadań: etap, ile kawałków ma aktualny dowód, które pliki trzeba odświeżyć |
 | `tf task start <KLUCZ> --title "…"`, `tf task stage <KLUCZ> <etap>`, `tf task status <KLUCZ>` | jedno miejsce na zadanie: `docs/project/changes/<KLUCZ>/task.json` i indeks zadań `INDEX.md` |
 | `tf onboard [--yes] [--verify] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, `verify.sh`, raport gotowości, bramka jakości, polecenia w pliku instrukcji |

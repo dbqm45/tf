@@ -25,7 +25,8 @@ Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruc
 (polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
 pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. Do etapu `przeglad` i dalszych zadanie
 przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force). Gdy zadanie ma `spec.md`, do etapu `plan`
-i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`); zadanie bez `spec.md` działa jak dotąd.
+i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`), a do etapu `przeglad` i dalszych —
+gdy każde kryterium ma test (`tf trace <KEY>`); zadanie bez `spec.md` działa jak dotąd.
 
 Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
 wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
@@ -323,6 +324,25 @@ def clip(out: str, saved: str) -> str:
     return out[:1000] + f"\n… [pominięto {len(out) - 3000} znaków; całość: {saved}] …\n" + out[-2000:]
 
 
+def red_tests(root: Path, files: list[str]) -> dict[str, str]:
+    """Pliki kawałka, które hook TDD widział jako czerwony test (`.tf/logs/tdd-red.jsonl`): plik → czas pierwszego
+    czerwonego uruchomienia. Dziennik jest poza gitem, więc wpis trafia do dowodu kawałka."""
+    out: dict[str, str] = {}
+    try:
+        lines = (root / ".tf" / "logs" / "tdd-red.jsonl").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return out
+    for line in lines:
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        for rel in (row.get("tests") or []) if isinstance(row, dict) else []:
+            if rel in files and str(row.get("at", "")) < out.get(rel, "~"):
+                out[rel] = str(row.get("at", ""))
+    return out
+
+
 def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[str], timeout: float) -> int:
     task = load(root, key)
     if task is None:
@@ -354,7 +374,7 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
     rel = f"evidence/{slice_id}-{n}.json"
     write_atomic(root / CHANGES / key / rel, json.dumps(
         {"slice": slice_id, "command": command, "exit_code": code, "sha": commit, "at": now(), "files": hashes,
-         "log": str(log)},
+         "log": str(log), **({"red_tests": red} if (red := red_tests(root, list(hashes))) else {})},
         ensure_ascii=False, indent=1) + "\n")
     sl = task.setdefault("slices", {}).setdefault(slice_id, {})
     if sl.get("state") != "implemented":
@@ -394,6 +414,20 @@ def spec_errors(root: Path, key: str) -> list[dict]:
     return result["errors"] if result else []
 
 
+def trace_errors(root: Path, key: str) -> list[dict]:
+    """Błędy śladu kryterium → test wg `trace_check.py` obok tego skryptu; pusta lista, gdy zadanie nie ma spec.md,
+    skryptu nie ma albo śladu nie da się policzyć (katalog poza gitem, brak gałęzi bazowej)."""
+    script = Path(__file__).resolve().with_name("trace_check.py")
+    if not script.is_file() or not (root / CHANGES / key / "spec.md").is_file():
+        return []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_trace_check", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    result = mod.trace(root, key)
+    return result["errors"] if result else []
+
+
 def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     task = load(root, key)
     if task is None:
@@ -415,6 +449,11 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
         stale = [f"{n} ({s})" for n, (s, _) in artifact_states(root, task).items()
                  if s in ("nieaktualny", "zmieniony po zatwierdzeniu")]
         stale += [f"{rel} (zamrożony plik zmieniony)" for rel in frozen_changed(root, task)]
+        missing = trace_errors(root, key)
+        if missing:
+            return fail(f"do etapu {stage} przechodzi zadanie, w którym każde kryterium ma test; do poprawy: "
+                        + "; ".join(e["message"] for e in missing[:3])
+                        + (f" (i {len(missing) - 3} więcej)" if len(missing) > 3 else "") + f". Całość: tf trace {key}")
         if stale:
             return fail(f"do etapu {stage} przechodzi zadanie z aktualnymi plikami; do odświeżenia: " + "; ".join(stale)
                         + f". Szczegóły: tf task check {key}")

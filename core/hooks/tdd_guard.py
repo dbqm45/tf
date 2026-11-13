@@ -2,6 +2,8 @@
 """
 Bramka TDD: kod produkcyjny dopiero po czerwonym teście. Tylko biblioteka standardowa; błąd hooka nigdy nie blokuje.
 
+Czerwone uruchomienie po edycji testu zostawia trwały wpis w `.tf/logs/tdd-red.jsonl` (pliki testów, czas) — z niego
+`tf task verify` i `tf trace` biorą odpowiedź „czy test był czerwony przed kodem”.
 Śledzi osobno każdy kontekst (sesja główna i każdy subagent) w `.tf/logs/tdd-state.json`:
   - PostToolUse Edit|Write   — edycja pliku testów;
   - PostToolUse / PostToolUseFailure Bash — uruchomienie testów i jego wynik (czerwony / zielony);
@@ -212,6 +214,17 @@ def weaken_check(tool: str, inp: dict, root: Path, path: str) -> None:
         print(json.dumps({"systemMessage": reason,
                           "hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": reason}},
                          ensure_ascii=False))
+
+
+def log_red(root: Path, tests: list, command: str) -> None:
+    """Trwały wpis „te testy były czerwone” (`.tf/logs/tdd-red.jsonl`): po edycji testu uruchomienie nie przeszło na
+    asercji. `tf task verify` przenosi wpisy plików kawałka do dowodu, a `tf trace` pokazuje je w śladzie kryterium."""
+    import datetime as dt
+    p = root / ".tf" / "logs" / "tdd-red.jsonl"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    row = {"at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "tests": tests, "command": command[:200]}
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def ctx_state(state: dict, key: str) -> dict:
@@ -461,6 +474,8 @@ def main() -> int:
             if TEST_CMD_RE.search(str(inp.get("command") or "")):
                 if bash_failed(data):
                     s["red"] = s["seq"]
+                    if not red_without_assertion(data) and s.get("tests"):
+                        log_red(root, s.pop("tests"), str(inp.get("command") or ""))
                     if red_without_assertion(data):
                         notes.append("[tdd_guard] To uruchomienie nie wykonało asercji (brak plików testów, błąd "
                                      "składni albo konfiguracji runnera) — to nie jest czerwony test. Napraw "
@@ -470,6 +485,7 @@ def main() -> int:
                 else:
                     s["green"] = s["seq"]
                     s["fail_fp"], s["fail_n"] = None, 0
+                    s.pop("tests", None)
             if os.environ.get("CLAUDE_TDD_BASH", "on").lower() != "off":
                 changed = bash_changes(root, state, data)
                 if changed and not (s["started"] or may_start(s)):
@@ -480,6 +496,7 @@ def main() -> int:
         elif event == "PostToolUse" and tool in ("Edit", "Write", "MultiEdit") and path:
             if is_test(path):
                 s["test_edit"], s["prod_since_test"] = s["seq"], 0
+                s["tests"] = ([t for t in s.get("tests", []) if t != path] + [path])[-20:]   # do wpisu o czerwonym teście
                 try:
                     s["marked"] = s["marked"] or bool(MARK_RE.search((root / path).read_text(encoding="utf-8",
                                                                                                 errors="ignore")))

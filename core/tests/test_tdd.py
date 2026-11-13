@@ -57,6 +57,25 @@ def main() -> int:
         post_edit("src/price.test.ts")
         run_tests(failed=True)
         check(pre("src/price.ts") is None, "po czerwonym teście kod powinien być dozwolony")
+        # 2-log. czerwone uruchomienie po edycji testu zostawia trwały wpis (dla śladu kryterium → test, krok D3)
+        red_log = proj / ".tf" / "logs" / "tdd-red.jsonl"
+
+        def red_rows():
+            return [json.loads(ln) for ln in red_log.read_text(encoding="utf-8").splitlines()] if red_log.is_file() else []
+
+        rows = red_rows()
+        check(len(rows) == 1 and rows[0].get("tests") == ["src/price.test.ts"] and rows[0].get("at")
+              and "vitest" in rows[0].get("command", ""),
+              f"czerwony test po edycji testu → wpis w tdd-red.jsonl z plikiem testu: {rows}")
+        post_edit("src/legacy.test.ts", session="rl")
+        call("PostToolUseFailure", "Bash", {"command": "npx vitest run"}, {"stdout": "No test files found"}, session="rl")
+        check(len(red_rows()) == 1, f"„czerwony” bez wykonanej asercji nie jest wpisem: {red_rows()}")
+        run_tests(failed=True, session="rl")
+        check(len(red_rows()) == 2 and red_rows()[-1].get("tests") == ["src/legacy.test.ts"],
+              f"prawdziwy czerwony w innej sesji → drugi wpis: {red_rows()}")
+        run_tests(failed=False, session="rl")
+        run_tests(failed=True, session="rl")
+        check(len(red_rows()) == 2, f"czerwony bez nowej edycji testu (po zielonym) nie dopisuje wpisu: {red_rows()}")
         # 2a. „czerwony” bez wykonanej asercji → ostrzeżenie (2.6.0; bez zmiany decyzji bramki)
         for out in ("No test files found, exiting with code 1", "collected 0 items\n no tests ran",
                     "src/price.test.ts(3,5): error TS1005: ';' expected."):
