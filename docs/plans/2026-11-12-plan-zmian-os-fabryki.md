@@ -1,6 +1,6 @@
 # Plan zmian: od obecnej fabryki do osi „zadanie → wdrożenie”
 
-Data: 2026-11-12 (22 pozycje w tabeli; po korektach 4a, 4b i 4d — 28). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
+Data: 2026-11-12 (22 pozycje w tabeli; po korektach 4a, 4b, 4d i 4e — 29). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
 `2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md` (dalej „dokument osi”; numery sekcji i decyzji D1–D12 pochodzą
 z niego). Status: propozycja; każda pozycja to osobny PR, kod metodą TDD.
 
@@ -234,6 +234,32 @@ zmian zespołu (plik fabryki zmieniony ręcznie przestaje dostawać aktualizacje
 
 Kolejność: warstwa 1 i `tf new skill` ze ścieżką sprawdzenia (krok B lub E), własne nakładki później (krok H).
 
+## 4e. Dodatki z przeglądu katalogu fab1 (2026-11-13)
+
+Źródło: `propozycje-wdrozen-2.md` (przegląd 70 PDF z katalogu fab1; plik spoza repozytorium, przekazany przez
+człowieka). Autor przeglądu zastrzega, że żadnego artykułu nie czytał w całości i że to głównie wpisy blogowe —
+traktujemy je jako hipotezy. Z pliku wzięte są tylko rzeczy dotyczące fabryki.
+
+| Z pliku | Co robimy w planie | Wielkość |
+|---|---|---|
+| **tf-20: brak dowodu liczy się jako porażka** — gdy artefakt dowodu nie istnieje albo jest starszy niż ostatnia edycja, stan to „niezweryfikowane”, nie „zielone” | bez nowej pozycji: reguła wchodzi do pozycji 4 (`task_state.py`) i 7 (`trace_check.py`). Stan kawałka i zadania ma trzy wartości: zweryfikowane / niezweryfikowane / czerwone; bramka etapu przepuszcza tylko „zweryfikowane”; podgląd (14) pokazuje „niezweryfikowane” osobnym kolorem. Zgodne z regułą OKF z sekcji 4b (poziom zaufania wyliczany z dowodu) | wlicza się w 4 i 7 |
+| **tf-19: wersjonowany harness z wycofaniem po degradacji** | nowa pozycja **29**: `tf doctor` i `tf metrics` ostrzegają, gdy odsetek revertów albo liczba blokad hooków po aktualizacji fabryki przekroczy próg, i podają gotowe polecenie powrotu do poprzedniej wersji (`tf update` ze źródłem `#vX.Y.Z` już to umożliwia). Korzysta z odcisku harnessu (20). Krok H | M |
+| **mało blokujących kontroli i jawna reguła eskalacji** (3–5 kontroli; bramka, którą wszyscy obchodzą, jest gorsza niż jej brak) | bez nowej pozycji: doprecyzowanie pozycji 1. `tf onboard` włącza jako blokujące najwyżej pięć kontroli (testy, sekrety, lint, typy, skan zależności — tylko te, dla których wykrył polecenie), resztę jako ostrzeżenia; raport gotowości mówi, kiedy ma spojrzeć człowiek | wlicza się w 1 |
+
+Nowa decyzja **D13** (do pozycji 29): czy fabryka ma wracać do poprzedniej wersji sama, czy tylko ostrzegać.
+Rekomendacja: tylko ostrzegać. `metrics.py` liczy odsetek revertów z gita, a przy małej liczbie zmian ten wskaźnik
+jest zbyt zaszumiony, żeby na jego podstawie automatycznie zmieniać instalację; samoczynna zmiana hooków i skilli
+w trakcie pracy zespołu byłaby też trudna do wytłumaczenia laikowi.
+
+Potwierdzenia bez działań (plik, sekcja 3):
+- agent nie zaświadcza o własnej pracy — odpowiada pozycji 13 (przegląd w świeżym kontekście) i 7 (dowód ze skryptu);
+- kontrakt zwrotny podagentów z dowodami i niepewnością — jest w `core-async-delegation`;
+- zmiany promptów, narzędzi i harnessu przechodzą ewaluacje przed wdrożeniem — jest `flow-evals.yml`, pozycja 20
+  dokłada pasmo szumu.
+
+Plik odwołuje się do pozycji tf-14…tf-18 z nowszej wersji pliku głównego, której ta sesja nie widziała; nie są
+tu uwzględnione.
+
 ## 5. Ryzyka samej zmiany
 
 | Ryzyko | Jak ograniczamy |
@@ -250,4 +276,4 @@ Kolejność: warstwa 1 i `tf new skill` ze ścieżką sprawdzenia (krok B lub E)
 
 Do kroków A–B: nic. Do kroku C: **D5** (co z folderem po zamknięciu); **D1** jest rozstrzygnięte — pliki zadania
 w gicie (sekcja 4c).
-Do kroku E: **D2**, **D3**, **D12**. Reszta decyzji (D4, D6, D8–D11) może poczekać na wyniki pierwszych kroków.
+Do kroku E: **D2**, **D3**, **D12**. Reszta decyzji (D4, D6, D8–D11, D13) może poczekać na wyniki pierwszych kroków.
