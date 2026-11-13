@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.31.0] — 2026-11-13
+### Added
+- **core:** protect the task specification and frozen files from edits (#233)
+
 ## [9.30.0] — 2026-11-13
 ### Added
 - **core:** check the task specification before planning (#232)
