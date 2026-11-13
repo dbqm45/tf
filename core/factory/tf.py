@@ -26,6 +26,7 @@ tf — the team factory command: install, update, packs, languages, health check
   tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
   tf status [--json]          # all tasks: stage, slices with current evidence, files to refresh
   tf spec new <KEY> | check <KEY> [--json]   # task specification (spec.md): template, readiness check
+  tf trace <KEY> [--base <branch>] [--md|--json]   # criterion → test → commit → evidence
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
@@ -370,6 +371,8 @@ def main(argv: list[str]) -> int:
         return engine("task_state.py", ["list", *rest])
     if cmd == "spec":
         return engine("spec_check.py", rest)
+    if cmd == "trace":
+        return engine("trace_check.py", rest)
     if cmd == "onboard":
         if not need_project():
             return 2

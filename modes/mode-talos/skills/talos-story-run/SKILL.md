@@ -109,6 +109,8 @@ Stan pętli zapisujesz poleceniem `run_state.py step <katalog> K<n> R<k> <etap> 
 bramce wracasz na początek pętli i liczysz kolejną rundę (R2, najwyżej dwie próby naprawy). Wołasz `step` przy starcie
 etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłoszonego skrypt sam uznaje za zaliczone.
 1. **Test czerwony** z kryteriów kawałka (TDD; hook `tdd_guard` pilnuje kolejności). Tylko przypadki z kryteriów.
+   Test nosi identyfikator kryterium w nazwie albo komentarzu (`test_ac1_…`, `# AC-1`), a plik testu podajesz
+   w `--files` przy `verify` — z tego powstaje ślad kryterium → test → commit → dowód.
 2. **Najmniejszy kod**, który go zazieleni. Pracujesz we własnym kontekście (cache); mechaniczną zmianę w 1–2
    plikach z gotową specyfikacją zlecasz `quick-fixer`.
 3. **Weryfikacja z dowodem:** polecenie z planu, potem `run_state.py verify <katalog> K<n> --files <pliki kawałka
@@ -145,8 +147,10 @@ etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłosz
    **Budżet artefaktów:** `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <baza cięcia>`
    (także po commicie raportu cięcia) — `Werdykt: PRZEKROCZONY` (artefakty > 50% dodanych linii, artefakt > 600 linii,
    plan > 300) → skracasz artefakty albo przenosisz surowe dowody poza repozytorium; wyjątek opisujesz w PR.
+   **Ślad kryteriów:** `run_state.py trace <katalog> --base <baza cięcia>` — tabela trafia do opisu PR; kod 1
+   (kryterium bez testu, test z `AC-n` spoza specyfikacji) naprawiasz przed PR, bo etap `pr` zostanie odrzucony.
 3. `run_state.py stage <katalog> pr` i `run_state.py step <katalog> PR plan_drift pass` (albo `fail`). Push gałęzi
-   i jeden PR: historyjka, kawałki = commity, weryfikacja, założenia, **Odłożone do decyzji** (lista
+   i jeden PR: historyjka, kawałki = commity, ślad kryteriów, weryfikacja, założenia, **Odłożone do decyzji** (lista
    z `parked.md`), wynik `plan_drift` i `pr_budget`, skrót kosztu oraz do opisu PR sekcja triażu ryzyka
    `python3 .tf/factory/risk_triage.py --md` (doradcza; „wysokie” = człowiek przegląda wskazane pliki). Nie scalasz.
 4. Po otwarciu PR: `run_state.py stage <katalog> done --pr <numer>` (dashboard pokaże przebieg w kolumnie „Gotowe”).

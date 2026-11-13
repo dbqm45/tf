@@ -264,6 +264,10 @@ def main() -> int:
         rep = run(REPORT, ["status", str(d)], proj, cfg)
         check("2" in rep.stdout or "odłożon" in rep.stdout.lower(), f"T-6: raport przebiegu widzi odłożone sprawy: {rep.stdout[-300:]}")
 
+        # ślad kryteriów (krok D3): poza repozytorium git skrypt mówi wprost, że śladu nie policzy
+        r = run(SCRIPT, ["trace", str(d)], proj, cfg)
+        check(r.returncode == 2 and "git" in r.stdout, f"TRC-1: trace poza gitem → kod 2 z wyjaśnieniem: {r.returncode} {r.stdout}{r.stderr}")
+
         # zmiana pliku po dowodzie unieważnia go; etap przebiegu trafia do task.json; do PR tylko ze zweryfikowanymi
         run(SCRIPT, ["verify", str(d), "K2", "--files", "fees.py", "--command", OK], proj, cfg)
         (proj / "fees.py").write_text("LIMIT = 50\n", encoding="utf-8")
@@ -306,6 +310,8 @@ def main() -> int:
         r = run(SCRIPT, ["tick", str(old), "K1"], proj, cfg)
         check(r.returncode == 0 and "- [x] K1" in (old / "plan.md").read_text(encoding="utf-8"),
               f"V-7a: stary przebieg — tick bez dowodu jak dotąd: {r.returncode} {r.stdout}{r.stderr}")
+        r = run(SCRIPT, ["trace", str(old)], proj, cfg)
+        check(r.returncode == 2 and "starym układzie" in r.stdout, f"TRC-2: trace w starym przebiegu → kod 2: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["verify", str(old), "K1", "--files", "fees.py", "--command", OK], proj, cfg)
         check(r.returncode == 2 and not (old / "evidence").exists(),
               f"V-7b: verify w starym przebiegu → kod 2 z wyjaśnieniem: {r.returncode} {r.stdout}")
