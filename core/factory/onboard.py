@@ -287,7 +287,7 @@ def with_commands(text: str, line: str) -> str:
 
 
 def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, str]:
-    """Uruchamia weryfikację raz (tylko z --verify): (zielona?, koniec wyjścia)."""
+    """Uruchamia weryfikację raz (tylko z --verify): (zielona?, wyjście przycięte do początku i końca)."""
     try:
         r = subprocess.run(shlex.split(command), cwd=root, capture_output=True, text=True, encoding="utf-8",
                            errors="replace", timeout=timeout)
@@ -295,7 +295,16 @@ def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, st
         return False, f"przekroczony limit czasu {timeout:g} s"
     except OSError as e:
         return False, str(e)
-    return r.returncode == 0, (r.stdout + r.stderr)[-2000:]
+    out = r.stdout + r.stderr
+    saved = ".tf/logs/verify-output.txt"
+    try:   # pełne wyjście do pliku; na ekran początek i koniec (pierwszy błąd bywa na początku logu)
+        (root / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
+        (root / saved).write_text(out, encoding="utf-8")
+    except OSError:
+        pass
+    if len(out) > 3000:
+        out = out[:1000] + f"\n… [pominięto {len(out) - 3000} znaków; całość: {saved}] …\n" + out[-2000:]
+    return r.returncode == 0, out
 
 
 LOCAL_FILES = ("verify.sh", ".claude/quality-gate.json")   # pliki z tf onboard, które należą do repozytorium projektu
@@ -375,7 +384,7 @@ def main(argv: list[str]) -> int:
         ok, tail = run_verify(root, command)
         print(f"✓ Weryfikacja przechodzi: `{command}`." if ok
               else f"✗ Weryfikacja nie przechodzi: `{command}`. Napraw to przed pierwszym zadaniem.\n"
-                   f"--- koniec wyjścia ---\n{tail}")
+                   f"--- wyjście ---\n{tail}")
         return code if ok else 1
     return code
 
