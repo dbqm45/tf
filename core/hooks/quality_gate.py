@@ -162,7 +162,7 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
         return "disabled", (f"⚠ Bramka jakości wyłączona zmienną QG_GATE_DISABLE=1 ({where}). {OFF} "
                             "Włącz: usuń tę zmienną.")
     cfg_path = root / ".claude" / "quality-gate.json"
-    hint = 'Włącz: wpisz do tego pliku polecenie testów, np. {"command": "npm test"}.'
+    hint = 'Włącz: tf onboard --yes (wykryje polecenie testów) albo wpisz je do tego pliku, np. {"command": "npm test"}.'
     if not cfg_path.is_file():
         return "no-config", f"⚠ Bramka jakości wyłączona: brak pliku .claude/quality-gate.json. {OFF} {hint}"
     try:

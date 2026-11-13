@@ -13,6 +13,9 @@ tf — the team factory command: install, update, packs, languages, health check
   tf commit-language <code>   # language of commit messages, PR titles and descriptions
   tf doctor [--fix]           # check the install: core/pack versions, required packs, language pack, agents, renames
                               # and whether the quality gate is on (.claude/quality-gate.json)
+  tf onboard [--yes] [--dry-run] [--json]
+                              # prepare the repository: detect test/lint/type/build commands, write the readiness
+                              # report (.tf/reports/readiness.md) and turn the quality gate on (.tf/factory/onboard.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
@@ -302,6 +305,10 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "risk_triage.py"), *rest]).returncode
+    if cmd == "onboard":
+        if not need_project():
+            return 2
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "onboard.py"), *rest]).returncode
     if cmd == "metrics":
         if not need_project():
             return 2
