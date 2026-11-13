@@ -108,6 +108,18 @@ def main() -> int:
         check(r.returncode == 1 and "SPEC-006" in r.stdout, f"SP-11: pytanie blokujące → SPEC-006: {r.stdout}")
         r = verdict(GOOD.replace("## Kryteria", "## Kryteria\n\nTu nic nie ma.").replace("- AC-1:", "- ").replace("- AC-2:", "- "))
         check(r.returncode == 1 and "SPEC-001" in r.stdout, f"SP-12: brak kryteriów AC-n → SPEC-001: {r.stdout}")
+        # reguły treści w rdzeniu (bez nakładki pack-it): wynik, którego nie da się sprawdzić, i druga akcja
+        r = verdict(GOOD.replace("wtedy opłata wynosi 45 zł", "wtedy system działa poprawnie"))
+        check(r.returncode == 1 and "SPEC-008" in r.stdout and "AC-1" in r.stdout and "poprawnie" in r.stdout,
+              f"SP-24: słaby wynik („działa poprawnie”) → SPEC-008 ze słowem: {r.stdout}")
+        r = verdict(GOOD.replace("wtedy opłata wynosi 45 zł", "wtedy opłata 45 zł jest naliczona poprawnie"))
+        check(r.returncode == 0, f"SP-25: wynik z konkretną wartością przechodzi mimo słowa „poprawnie”: {r.stdout}")
+        r = verdict(GOOD_EN.replace("Then the fee is 45 PLN", "Then everything works as expected"))
+        check(r.returncode == 1 and "SPEC-008" in r.stdout, f"SP-26: słaby wynik po angielsku → SPEC-008: {r.stdout}")
+        r = verdict(GOOD.replace("gdy kierowca płaci, wtedy opłata wynosi", "gdy kierowca płaci, a następnie wyjeżdża, wtedy opłata wynosi"))
+        check(r.returncode == 1 and "SPEC-004" in r.stdout, f"SP-27: „a następnie” w części Gdy to druga akcja → SPEC-004: {r.stdout}")
+        r = verdict(GOOD.replace("Zakładając postój 12 godzin, gdy", "Zakładając postój 12 godzin oraz kartę mieszkańca, gdy"))
+        check(r.returncode == 0, f"SP-28: spójnik w części Zakładając nie jest drugą akcją: {r.stdout}")
         r = verdict(GOOD, "--json")
         try:
             data = json.loads(r.stdout)

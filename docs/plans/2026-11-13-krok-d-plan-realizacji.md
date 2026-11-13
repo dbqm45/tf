@@ -36,9 +36,10 @@ tylko za zgodą człowieka.
 
 ## Ustalenia
 
-- **Reguły specyfikacji w rdzeniu są strukturalne** (czy kryterium ma trzy części, czy sekcje są wypełnione). Reguły
-  językowe (słaby wynik, szczegół implementacji, kilka akcji w historyjce) zostają w `requirements_lint.py` nakładki
-  pack-it; Talos uruchamia je dodatkowo, gdy nakładka jest zainstalowana — tak jak dziś.
+- **Reguły specyfikacji w rdzeniu** to budowa (trzy części kryterium, wypełnione sekcje) oraz — decyzją człowieka
+  z 2026-11-13 — dwie reguły treści: wynik, którego nie da się sprawdzić (SPEC-008), i druga akcja w części Gdy
+  (SPEC-004). Pozostałe reguły językowe (szczegół implementacji, kilka akcji w historyjce, pełny słownik) zostają
+  w `requirements_lint.py` nakładki pack-it; Talos uruchamia je dodatkowo, gdy nakładka jest zainstalowana.
 - **Format `spec.md`:** nagłówek `# Specyfikacja: <tytuł>`, sekcje `## Kryteria` (pozycje `- AC-n: Zakładając …, gdy
   …, wtedy …` albo trzy linie pod identyfikatorem), `## Bez zmian` (strażnicy: co ma działać jak dotąd), `## Poza
   zakresem`, `## Otwarte pytania` (pytanie blokujące ma znacznik `[blokuje]`). Plik bez nagłówka artefaktu — stan
@@ -46,8 +47,10 @@ tylko za zgodą człowieka.
 - **Test wskazuje kryterium identyfikatorem w nazwie albo komentarzu** (`AC-3`), w pliku rozpoznanym jako test
   (katalogi `tests/`, `__tests__/`, `e2e/`, nazwy `test_*.py`, `*.test.*`, `*.spec.*`, `*_test.go`, `*Test.java`).
   Ślad patrzy tylko na pliki zmienione na gałęzi względem bazy, więc `AC-3` innego zadania się nie miesza.
-- **„Test był czerwony przed kodem”** nie trafia do śladu w tym kroku: `tdd_guard` nie prowadzi trwałego dziennika.
-  Kolumna pojawi się razem ze zdarzeniami (pozycja 11).
+- **„Test był czerwony przed kodem”** trafia do śladu w D3 (decyzja człowieka z 2026-11-13): `tdd_guard` dopisuje
+  czerwone uruchomienie do `.tf/logs/tdd-red.jsonl`, `tf task verify` przenosi wpisy plików kawałka do dowodu
+  (w gicie), a `tf trace` pokazuje kolumnę „czerwony przed kodem: tak / brak zapisu”. Hook widzi tylko testy
+  uruchomione w sesji Claude Code — test puszczony ręcznie w terminalu zostawia „brak zapisu”.
 - **Ochrona pyta, nie blokuje na stałe.** Hook zwraca `ask`: człowiek przy klawiaturze może zezwolić, a przebieg bez
   nadzoru zostaje zatrzymany. Obejście przez powłokę (`sed`) wykrywa już `tf task check` (plik zmieniony po
   zatwierdzeniu blokuje etap `przeglad`).

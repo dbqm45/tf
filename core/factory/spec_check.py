@@ -21,9 +21,11 @@ Reguły — strukturalne, bez modelu:
   SPEC-001 brak kryteriów `AC-n` · SPEC-002 kryterium bez części Zakładając, Gdy albo Wtedy · SPEC-003 powtórzony
   identyfikator · SPEC-004 więcej niż jedno „Gdy” (jedna akcja na kryterium) · SPEC-005 sekcja „Bez zmian” albo „Poza
   zakresem” pusta, nieobecna albo samo „brak” bez powodu · SPEC-006 otwarte pytanie ze znacznikiem [blokuje] ·
-  SPEC-007 niewypełniony szablon (`<…>` w kryterium albo w sekcji).
-Reguły językowe (słaby wynik, szczegół implementacji, kilka akcji w historyjce) sprawdza `requirements_lint.py`
-z nakładki pack-it, gdy jest zainstalowana.
+  SPEC-007 niewypełniony szablon (`<…>` w kryterium albo w sekcji) · SPEC-008 wynik, którego nie da się sprawdzić
+  („działa poprawnie”, „works as expected”) bez liczby ani cytowanej wartości w części Wtedy.
+SPEC-004 obejmuje też łącznik kolejnej akcji w części Gdy („a następnie”, „potem”, „oraz”, „and then”).
+Pozostałe reguły językowe (szczegół implementacji, kilka akcji w historyjce, pełny słownik) sprawdza
+`requirements_lint.py` z nakładki pack-it, gdy jest zainstalowana.
 
 Z niepoprawną specyfikacją `tf task stage <KEY> plan` (i dalsze etapy) kończy się odmową. Zadanie bez `spec.md`
 działa jak dotąd.
@@ -57,6 +59,10 @@ AC_START = re.compile(r"^\s*(?:[-*]\s+|#{3,6}\s+)?\**(AC-\d+)\**\s*[:—–-]?\s
 GIVEN = re.compile(r"\b(zakładając|zakladajac|mając|majac|przy założeniu|given)\b", re.I)
 WHEN = re.compile(r"\b(gdy|kiedy|when)\b", re.I)
 THEN = re.compile(r"\b(wtedy|then)\b", re.I)
+NEXT_ACTION = re.compile(r"\b(a następnie|następnie|potem|oraz|po czym|and then|after that|afterwards)\b", re.I)
+WEAK = re.compile(r"\b(poprawnie|prawidłowo|właściwie|odpowiednio|dobrze|sprawnie|bez problemu|bez problemów|zgodnie z oczekiwani\w+|"
+                  r"działa|działają|correctly|properly|successfully|as expected|works|work fine|is fine)\b", re.I)
+CONCRETE = re.compile(r"\d|[\"„“”'`«»]")       # liczba albo cytowana wartość — wynik da się porównać w teście
 PLACEHOLDER = re.compile(r"<[^<>\n]{2,}>")
 NONE_ONLY = re.compile(r"^(brak|nie dotyczy|none|n/a|-|—)[.!]?$", re.I)
 BLOCKING = re.compile(r"\[(blokuje|blocking)\]", re.I)
@@ -141,8 +147,18 @@ def check_text(text: str) -> dict:
         missing = [name for name, rx in (("Zakładając", GIVEN), ("Gdy", WHEN), ("Wtedy", THEN)) if not rx.search(c["text"])]
         if missing:
             add("SPEC-002", c["line"], f"{c['id']}: brakuje części {', '.join(missing)}")
+        when, then = WHEN.search(c["text"]), THEN.search(c["text"])
+        action = c["text"][when.end():then.start()] if when and then and then.start() > when.end() else ""
         if len(WHEN.findall(c["text"])) > 1:
             add("SPEC-004", c["line"], f"{c['id']}: więcej niż jedno „gdy” — jedna akcja na kryterium, drugą opisz osobnym AC")
+        elif NEXT_ACTION.search(action):
+            add("SPEC-004", c["line"], f"{c['id']}: druga akcja w części Gdy („{NEXT_ACTION.search(action).group(0)}”) — "
+                                       "jedna akcja na kryterium, drugą opisz osobnym AC")
+        outcome = c["text"][then.end():] if then else ""
+        weak = [m.group(0) for m in WEAK.finditer(outcome)]
+        if weak and not CONCRETE.search(outcome):
+            add("SPEC-008", c["line"], f"{c['id']}: wyniku „{' '.join(weak)}” nie da się sprawdzić testem — napisz, co "
+                                       "dokładnie widać (wartość, komunikat, stan)")
     for name in ("unchanged", "out"):
         if name not in data["sections"]:
             add("SPEC-005", 1, f"brak sekcji „{LABEL[name]}” — wpisz pozycje albo „brak, bo …”")
