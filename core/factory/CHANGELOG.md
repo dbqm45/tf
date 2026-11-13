@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.23.0] — 2026-11-13
+### Added
+- **core:** add a gated wide search for options to problem routing (#223)
+
 ## [9.22.2] — 2026-11-13
 ### Fixed
 - **talos:** stop asking for consent on the factory's own steps (#221)
