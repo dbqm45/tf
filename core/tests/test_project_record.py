@@ -164,6 +164,18 @@ def main() -> int:
         run(root, "--hook-index", stdin=json.dumps({"tool_input": {"file_path": str(root / "docs/project/01-discovery/brief.md")}}))
         if not (root / "docs/project/README.md").exists():
             fails.append("hook indeksu po zapisie")
+        # pliki zadania (docs/project/changes/<KEY>/, bez nagłówka artefaktu) nie należą do dziennika: zapis planu
+        # zadania nie przebudowuje README (Talos zostawiałby nieśledzony plik) i plik nie trafia do indeksu
+        chg = root / "docs/project/changes/T-20261113-limit"
+        chg.mkdir(parents=True)
+        (chg / "plan.md").write_text("# Plan: limit dobowy\n\n- [ ] K1 — limit\n", encoding="utf-8")
+        (root / "docs/project/README.md").unlink()
+        run(root, "--hook-index", stdin=json.dumps({"tool_input": {"file_path": str(chg / "plan.md")}}))
+        if (root / "docs/project/README.md").exists():
+            fails.append("hook indeksu przebudował README po zapisie pliku zadania")
+        run(root, "index")
+        if "limit dobowy" in (root / "docs/project/README.md").read_text() or "changes/T-20261113-limit" in (root / "docs/project/README.md").read_text():
+            fails.append("plik zadania bez nagłówka trafił do indeksu dziennika")
         rep = run(root, "report").stdout
         exports = list((root / "docs/project/exports").glob("report-*.md"))
         if not exports or "Pytanie → PO" not in exports[0].read_text():

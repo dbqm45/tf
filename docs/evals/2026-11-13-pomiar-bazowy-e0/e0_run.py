@@ -125,6 +125,31 @@ def main(argv):
         parked = d / "parked.md"
         row["parked_lines"] = len([ln for ln in parked.read_text().splitlines() if ln.strip().startswith(("-", "*", "1"))]) \
             if parked.is_file() else 0
+    # układ z kroku C4: zadanie w docs/project/changes/<KEY>/, katalog roboczy w .tf/runs/<KEY>/
+    tasks = sorted((repo / "docs" / "project" / "changes").glob("*/task.json"))
+    if tasks:
+        d = tasks[-1].parent
+        row["task_key"] = d.name
+        row["task_files"] = sorted(p.name for p in d.iterdir())
+        row["evidence_files"] = len(list(d.glob("evidence/*.json")))
+        st = sh([sys.executable, ".tf/factory/task_state.py", "status", d.name, "--json"], repo,
+                env={**os.environ, "CLAUDE_PROJECT_DIR": str(repo)})
+        try:
+            status = json.loads(st.stdout)
+        except ValueError:
+            status = {}
+        row["task_stage"] = status.get("stage")
+        row["slice_states"] = status.get("slice_states")
+        plan = (d / "plan.md").read_text() if (d / "plan.md").is_file() else ""
+        row["plan_ticked"] = plan.count("- [x]")
+        row["plan_open"] = sum(1 for ln in plan.splitlines() if ln.strip().startswith("- [ ] K") and "<" not in ln[:12])
+        row["task_commit"] = bool(git(repo, "log", "main..HEAD", "--grep", "^docs(task): record", "--oneline").stdout.strip())
+        row["task_tracked"] = bool(git(repo, "ls-files", str(d.relative_to(repo))).stdout.strip())
+        work = repo / ".tf" / "runs" / d.name
+        row["run_files"] = sorted(p.name for p in work.iterdir()) if work.is_dir() else []
+        parked = work / "parked.md"
+        row["parked_lines"] = len([ln for ln in parked.read_text().splitlines() if ln.strip().startswith(("-", "*", "1"))
+                                   and not ln.startswith("- <")]) if parked.is_file() else 0
     with (OUT / "results.jsonl").open("a") as f:
         f.write(json.dumps(row, ensure_ascii=False) + "\n")
     print(json.dumps(row, ensure_ascii=False, indent=1))
