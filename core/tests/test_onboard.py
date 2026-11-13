@@ -158,6 +158,15 @@ def main() -> int:
                 r = run(p, "--yes", "--verify")
                 check(r.returncode == 1 and "nie przechodzi" in r.stdout and "FAILED test_x" in r.stdout,
                       f"O-25: --verify przy czerwonych testach → kod 1 i koniec wyjścia: {r.stdout}{r.stderr}")
+                (p / "gen.py").write_text("import sys\nprint('PIERWSZY-BLAD')\nfor i in range(300):\n"
+                                          "    print(f'linia-{i}-' + 'x' * 20)\nprint('PODSUMOWANIE-1-failed')\nsys.exit(1)\n")
+                (p / "Makefile").write_text(f"test:\n\t@{sys.executable} gen.py\nlint:\n\t@echo lint-ok\n")
+                r = run(p, "--yes", "--verify")
+                saved = p / ".tf" / "logs" / "verify-output.txt"
+                check(r.returncode == 1 and "PIERWSZY-BLAD" in r.stdout and "PODSUMOWANIE-1-failed" in r.stdout
+                      and "linia-150-" not in r.stdout and "pominięto" in r.stdout and ".tf/logs/verify-output.txt" in r.stdout
+                      and saved.is_file() and "linia-150-" in saved.read_text(encoding="utf-8"),
+                      f"O-34: długie wyjście --verify → początek i koniec na ekranie, całość w pliku: {r.stdout[-400:]}")
 
         block = ("moje zasady\n\n<!-- team-factory:begin -->\n## Zespół agentów (team factory)\n\n### Komendy\n"
                  "- Test: `npm test` · Lint: `npm run lint` · Typecheck: `npm run typecheck` · Build: `npm run build`\n"

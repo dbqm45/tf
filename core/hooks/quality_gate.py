@@ -13,6 +13,8 @@ Polecenie biegnie tylko, gdy zmienił się kod w `watch` względem HEAD (odcisk 
 przebiegu ten sam odcisk nie uruchamia testów drugi raz. Świadomie czerwona partia (TDD, test przed kodem): plik
 `.claude/quality-gate.expected-red` z powodem — bramka przepuszcza; usuń go po partii. `QG_GATE_DISABLE=1` wyłącza
 bramkę (np. w `.claude/settings.local.json`). Stan: `.tf/logs/quality-gate.json`. Tylko biblioteka standardowa.
+Długie wyjście polecenia agent dostaje jako początek i koniec; całość ostatniego przebiegu jest w
+`.tf/logs/quality-gate-output.txt`.
 
   python3 .claude/hooks/quality_gate.py --status [--quiet-ok]   # czy bramka działa i dlaczego nie (tf doctor, start sesji)
 """
@@ -35,7 +37,27 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
         pass
 
 HERE = Path(__file__).resolve().parent
-TAIL = 3000
+HEAD, TAIL = 1000, 2000   # tyle znaków początku i końca wyjścia trafia do agenta
+OUTPUT = "quality-gate-output.txt"
+
+
+def clip(out: str, saved: str) -> str:
+    """Wyjście dla agenta: krótkie w całości, długie jako początek i koniec z informacją, ile pominięto i gdzie jest
+    całość. Pierwszy błąd bywa na początku logu, podsumowanie na końcu — sam koniec gubi przyczynę."""
+    if len(out) <= HEAD + TAIL:
+        return out
+    return (out[:HEAD] + f"\n… [pominięto {len(out) - HEAD - TAIL} znaków; całość: {saved}] …\n" + out[-TAIL:])
+
+
+def save_output(root: Path, name: str, out: str) -> str:
+    """Zapisuje pełne wyjście ostatniego przebiegu w .tf/logs/ i zwraca ścieżkę względną (błąd zapisu nie przerywa)."""
+    rel = f".tf/logs/{name}"
+    try:
+        (root / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(out, encoding="utf-8")
+    except OSError:
+        pass
+    return rel
 
 
 def _lock():
@@ -74,7 +96,7 @@ def load_state(path: Path) -> dict:
 
 
 def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
-    """(zielone?, koniec wyjścia); None = blokada testów zajęta."""
+    """(zielone?, wyjście przycięte do początku i końca); None = blokada testów zajęta. Pełne wyjście: .tf/logs/."""
     argv = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
     with _lock().held(root) as ok:
         if not ok:
@@ -90,8 +112,10 @@ def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
             except (OSError, AttributeError):
                 proc.kill()
             out, _ = proc.communicate()
-            return False, f"przekroczony limit czasu {timeout:g} s\n" + (out or "")[-TAIL:]
-    return proc.returncode == 0, (out or "")[-TAIL:]
+            saved = save_output(root, OUTPUT, out or "")
+            return False, f"przekroczony limit czasu {timeout:g} s\n" + clip(out or "", saved)
+    saved = save_output(root, OUTPUT, out or "")
+    return proc.returncode == 0, clip(out or "", saved)
 
 
 def decide(root: Path, data: dict) -> dict | None:
@@ -135,7 +159,7 @@ def decide(root: Path, data: dict) -> dict | None:
     return {"decision": "block",
             "reason": f"Bramka jakości: `{cfg['command']}` nie przechodzi — popraw przed zakończeniem {who} "
                       f"(próba {count}/{max_blocks}). Jeśli czerwony test jest zamierzony (TDD), zapisz powód w "
-                      f".claude/quality-gate.expected-red.\n--- koniec wyjścia ---\n{tail}"}
+                      f".claude/quality-gate.expected-red.\n--- wyjście (całość: .tf/logs/{OUTPUT}) ---\n{tail}"}
 
 
 OFF = "Fabryka nie zablokuje czerwonych testów."

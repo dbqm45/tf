@@ -19,6 +19,12 @@ p = pathlib.Path(__file__).parent
 mode = (p / "mode.txt").read_text().strip() if (p / "mode.txt").exists() else "pass"
 if mode == "slow":
     time.sleep(5)
+if mode == "long":   # długi log: pierwszy błąd na początku, podsumowanie na końcu
+    print("PIERWSZY BLAD test_start: oczekiwano 1, jest 2")
+    for i in range(400):
+        print(f"linia {i:04d} " + ("SRODEK " if i == 200 else "") + "x" * 30)
+    print("PODSUMOWANIE 1 failed, 399 passed")
+    sys.exit(1)
 if mode == "fail":
     print("FAILED test_suma: oczekiwano 4, jest 5")
     sys.exit(1)
@@ -154,6 +160,29 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(LOCK), "--", sys.executable, "-c", "import sys; sys.exit(3)"], cwd=repo,
                            capture_output=True, text=True, timeout=30, env={**os.environ, "CLAUDE_PROJECT_DIR": str(repo)})
         check(r.returncode == 3, f"L-3: wolna blokada → kod wyjścia polecenia: {r.returncode}")
+
+    # ograniczone wyjście: agent dostaje początek i koniec długiego logu, całość jest w pliku
+    with tempfile.TemporaryDirectory() as t:
+        repo = setup(Path(t) / "o1", cfg)
+        (repo / "src" / "app.py").write_text("x = 3\n")
+        (repo / "mode.txt").write_text("long")
+        b = blocked(hook(repo)) or {}
+        reason = b.get("reason", "")
+        full = repo / ".tf" / "logs" / "quality-gate-output.txt"
+        saved = full.read_text(encoding="utf-8") if full.is_file() else ""
+        check("PIERWSZY BLAD test_start" in reason and "PODSUMOWANIE 1 failed" in reason and "SRODEK" not in reason,
+              f"B-1: długi log → w komunikacie początek i koniec, bez środka: {reason[:200]} … {reason[-200:]}")
+        check(".tf/logs/quality-gate-output.txt" in reason and "pominięto" in reason and len(reason) < 5000,
+              f"B-2: komunikat podaje, ile pominięto i gdzie jest całość; pozostaje krótki ({len(reason)} znaków)")
+        check("PIERWSZY BLAD" in saved and "SRODEK" in saved and "PODSUMOWANIE" in saved,
+              f"B-3: pełne wyjście zapisane w .tf/logs/quality-gate-output.txt ({len(saved)} znaków)")
+        (repo / "src" / "app.py").write_text("x = 4\n")
+        (repo / "mode.txt").write_text("fail")
+        b = blocked(hook(repo)) or {}
+        check("test_suma" in b.get("reason", "") and "pominięto" not in b.get("reason", ""),
+              f"B-4: krótkie wyjście trafia do komunikatu w całości, bez dopisku o pominięciu: {b.get('reason', '')[-200:]}")
+        now = full.read_text(encoding="utf-8") if full.is_file() else ""
+        check("test_suma" in now and "SRODEK" not in now, "B-5: plik z pełnym wyjściem zawiera ostatni przebieg, nie poprzedni")
 
     # stan bramki w zwykłym języku (tf doctor, start sesji)
     def status(repo, *flags, **env):
