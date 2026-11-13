@@ -23,6 +23,7 @@ tf — the team factory command: install, update, packs, languages, health check
   tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project)
   tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
+  tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
   tf status [--json]          # all tasks: stage, slices with current evidence, files to refresh
   tf spec new <KEY> | check <KEY> [--json]   # task specification (spec.md): template, readiness check
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index

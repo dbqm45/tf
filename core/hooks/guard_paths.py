@@ -2,6 +2,11 @@
 """
 PreToolUse (Read|Edit|Write|NotebookEdit|Grep|Glob): chroni pliki z sekretami
 i konfigurację zabezpieczeń przed zmianą przez samego agenta.
+
+Chroni też „wyrocznię” zadania (docs/project/changes/<KEY>/): zapis narzędziem Edit/Write wymaga zgody człowieka dla
+`spec.md` od etapu realizacji, pliku zadania zatwierdzonego przez człowieka, pliku zamrożonego (`tf task freeze`,
+np. test akceptacyjny) oraz plików, które pisze tylko skrypt (task.json, INDEX.md, evidence/). Zatwierdzenie albo
+zamrożenie zdejmuje `tf task reopen <KEY> <plik> --by human:<id> --reason "…"`. Zadanie zamknięte niczego nie chroni.
 """
 from __future__ import annotations
 
@@ -45,6 +50,53 @@ def project_relative(norm: str, root: str) -> str | None:
     return None
 
 
+TASKS = "docs/project/changes"
+TASK_FILE = re.compile(r"^docs/project/changes/(?:INDEX\.md|([^/]+)/(.+))$")
+LOCKED_FROM = ("realizacja", "przeglad", "pr", "wdrozenie")     # etapy, w których specyfikacja jest wyrocznią
+CLOSED = "zamkniecie"
+
+
+def load_task(root: str, key: str) -> dict:
+    try:
+        with open(os.path.join(root, TASKS, key, "task.json"), encoding="utf-8") as fh:
+            task = json.load(fh)
+    except (OSError, ValueError):
+        return {}
+    return task if isinstance(task, dict) else {}
+
+
+def oracle_reason(rel: str, root: str) -> str | None:
+    """Powód, dla którego zapis do pliku wymaga zgody człowieka (wyrocznia zadania); None, gdy plik nie jest chroniony."""
+    m = TASK_FILE.match(rel)
+    if m:
+        key, name = m.group(1), m.group(2)
+        if key is None or name == "task.json" or name.startswith("evidence/"):
+            return (f"{rel} pisze tylko `tf task` (stan zadania, dowody, spis) — użyj poleceń tf task zamiast edycji pliku.")
+        task = load_task(root, key)
+        stage = task.get("stage")
+        if not task or stage == CLOSED:
+            return None
+        art = (task.get("artifacts") or {}).get(name) or {}
+        if art.get("status") == "zatwierdzony":
+            return (f"{rel} jest zatwierdzony przez człowieka w zadaniu {key}. Zmiana wymaga jego decyzji: "
+                    f"tf task reopen {key} {name} --by human:<id> --reason \"<powód>\".")
+        if name == "spec.md" and stage in LOCKED_FROM:
+            return (f"specyfikacja zadania {key} ({rel}) jest w etapie „{stage}” podstawą testów i planu. Jej zmiana "
+                    f"to zmiana wymagań i wymaga zgody człowieka; po zmianie plan trzeba odświeżyć.")
+        return None
+    tasks_dir = os.path.join(root, TASKS)
+    try:
+        keys = sorted(os.listdir(tasks_dir))
+    except OSError:
+        return None
+    for key in keys:
+        task = load_task(root, key)
+        if task and task.get("stage") != CLOSED and rel in (task.get("frozen") or {}):
+            return (f"{rel} jest zamrożony w zadaniu {key} (np. zatwierdzony test akceptacyjny). Zmiana wymaga decyzji "
+                    f"człowieka: tf task reopen {key} {rel} --by human:<id> --reason \"<powód>\".")
+    return None
+
+
 def decide(decision: str, reason: str) -> None:
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
@@ -75,6 +127,12 @@ def main() -> None:
             decide("deny", f"Dostęp do pliku z sekretami ({p}) jest zablokowany. Używaj zmiennych środowiskowych i plików *.example.")
         if tool in ("Edit", "Write", "NotebookEdit") and GUARDRAILS.search(norm):
             decide("ask", f"Zmiana konfiguracji zabezpieczeń lub .git ({p}) wymaga zgody człowieka.")
+        if tool in ("Edit", "Write", "NotebookEdit"):
+            root = data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", "")
+            rel = project_relative(norm, root)
+            why = oracle_reason(rel, root or ".") if rel is not None else None
+            if why:
+                decide("ask", why)
         if tool in CONTEXT_TOOLS:
             rel = project_relative(norm, data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", ""))
             if (CONTEXT_ANY.search(norm) or (rel is not None and CONTEXT_ROOT.search(rel))

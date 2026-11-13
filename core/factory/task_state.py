@@ -33,6 +33,11 @@ zmiana pliku po zatwierdzeniu → do ponownego zatwierdzenia. Stan jest w `task.
 skrypt nigdy nie zmienia (nagłówki kontraktu pdi zostają nietknięte). Wykonawca: `<narzędzie>/<wersja>`,
 `human:<id>` albo `process:<id>` (jak w OKF 0.2). `check` kończy się kodem 1, gdy któryś plik nie jest aktualny.
 
+Wyrocznia zadania: `freeze <KEY> <plik>[,<plik>…] --by human:<id>` zamraża pliki spoza katalogu zadania (np. testy
+akceptacyjne) — hook `guard_paths` pyta człowieka przed zapisem do nich, do zatwierdzonych plików zadania i do
+`spec.md` od etapu realizacji, a zmiana zamrożonego pliku inną drogą blokuje `check` i etap `przeglad`.
+`reopen <KEY> <plik> --by human:<id> --reason "<powód>"` zdejmuje zatwierdzenie albo zamrożenie i zapisuje powód.
+
 Kod wyjścia: 0 — zrobione; 1 — odmowa (zadanie istnieje, nie ma go, etap wstecz); 2 — błąd wywołania.
 Tylko biblioteka standardowa.
 """
@@ -178,6 +183,49 @@ def artifact_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
     return {n: artifact_state(root, task["key"], a, n) for n, a in sorted((task.get("artifacts") or {}).items())}
 
 
+def frozen_changed(root: Path, task: dict) -> list[str]:
+    """Zamrożone pliki, których treść różni się od zapisanej przy zamrożeniu (albo których już nie ma)."""
+    return [rel for rel, f in sorted((task.get("frozen") or {}).items()) if sha256(root / rel) != f.get("sha")]
+
+
+def cmd_freeze(root: Path, key: str, files: list[str], by: str) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    entries = {}
+    for rel in files:
+        target = inside(root, rel)
+        if target is None:
+            return fail(f"„{rel}” nie jest plikiem w projekcie — podaj ścieżkę względem katalogu głównego", 2)
+        entries[target.relative_to(root).as_posix()] = {"sha": sha256(target), "by": by, "at": now()}
+    task.setdefault("frozen", {}).update(entries)
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key}: zamrożone {', '.join(entries)} — zmiana wymaga: tf task reopen {key} <plik> --by human:<id> --reason \"…\"")
+    return 0
+
+
+def cmd_reopen(root: Path, key: str, name: str, by: str, reason: str) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    art = (task.get("artifacts") or {}).get(name)
+    if art is not None and art.get("status") == "zatwierdzony":
+        art["status"] = "szkic"
+        art.pop("approved_sha", None)
+        what = "zatwierdzenie zdjęte"
+    elif name in (task.get("frozen") or {}):
+        del task["frozen"][name]
+        what = "zamrożenie zdjęte"
+    else:
+        return fail(f"{name} nie jest ani zatwierdzonym plikiem zadania {key}, ani plikiem zamrożonym — nie ma czego otwierać")
+    task.setdefault("reopened", []).append({"file": name, "by": by, "at": now(), "reason": reason})
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key} {name}: {what} ({reason}). Po zmianie zarejestruj i zatwierdź plik ponownie.")
+    return 0
+
+
 def cmd_artifact(root: Path, key: str, name: str, stage: str, by: str, inputs: list[str]) -> int:
     task = load(root, key)
     if task is None:
@@ -225,9 +273,13 @@ def cmd_check(root: Path, key: str) -> int:
     bad = {n: (s, w) for n, (s, w) in artifact_states(root, task).items() if s in ("nieaktualny", "zmieniony po zatwierdzeniu")}
     for n, (s, w) in bad.items():
         print(f"⚠ {n}: {s} ({w})")
-    if not bad:
+    changed = frozen_changed(root, task)
+    for rel in changed:
+        print(f"⚠ {rel}: zamrożony plik zmieniony bez decyzji człowieka — cofnij zmianę albo: tf task reopen {key} {rel} "
+              "--by human:<id> --reason \"…\"")
+    if not bad and not changed:
         print(f"✓ {key}: pliki zadania są aktualne")
-    return 1 if bad else 0
+    return 1 if bad or changed else 0
 
 
 def cmd_slice(root: Path, key: str, slice_id: str, state: str, title: str | None, reason: str | None) -> int:
@@ -362,6 +414,7 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
                         + f". Dowód: tf task verify {key} K<n> --files <pliki kawałka>")
         stale = [f"{n} ({s})" for n, (s, _) in artifact_states(root, task).items()
                  if s in ("nieaktualny", "zmieniony po zatwierdzeniu")]
+        stale += [f"{rel} (zamrożony plik zmieniony)" for rel in frozen_changed(root, task)]
         if stale:
             return fail(f"do etapu {stage} przechodzi zadanie z aktualnymi plikami; do odświeżenia: " + "; ".join(stale)
                         + f". Szczegóły: tf task check {key}")
@@ -423,6 +476,9 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
         print(f"  {k}: {state}" + (f" — {title}" if title else "") + (f" ({why})" if why else ""))
     for n, (state, why) in artifact_states(root, task).items():
         print(f"  {n}: {state}" + (f" ({why})" if why else ""))
+    changed = set(frozen_changed(root, task))
+    for rel in sorted(task.get("frozen") or {}):
+        print(f"  {rel}: zamrożony" + (" — zmieniony bez decyzji człowieka" if rel in changed else ""))
     return 0
 
 
@@ -462,6 +518,15 @@ def main(argv: list[str]) -> int:
     o.add_argument("--by", required=True)
     k = sub.add_parser("check")
     k.add_argument("key")
+    fz = sub.add_parser("freeze")
+    fz.add_argument("key")
+    fz.add_argument("files")
+    fz.add_argument("--by", required=True)
+    ro = sub.add_parser("reopen")
+    ro.add_argument("key")
+    ro.add_argument("name")
+    ro.add_argument("--by", required=True)
+    ro.add_argument("--reason", default="")
     q = sub.add_parser("status")
     q.add_argument("key")
     q.add_argument("--json", action="store_true")
@@ -490,6 +555,15 @@ def main(argv: list[str]) -> int:
         return cmd_stage(root, a.key, a.stage, a.force)
     if a.cmd == "check":
         return cmd_check(root, a.key)
+    if a.cmd in ("freeze", "reopen"):
+        if not a.by.startswith("human:") or not ACTOR.fullmatch(a.by):
+            return fail(f"{a.cmd} to decyzja człowieka: --by human:<id>", 2)
+        if a.cmd == "freeze":
+            files = [f.strip() for f in a.files.split(",") if f.strip()]
+            return cmd_freeze(root, a.key, files, a.by) if files else fail("podaj pliki do zamrożenia", 2)
+        if not a.reason.strip():
+            return fail("podaj powód: --reason \"<dlaczego plik się zmienia>\"", 2)
+        return cmd_reopen(root, a.key, a.name, a.by, " ".join(a.reason.split()))
     if a.cmd in ("artifact", "approve"):
         if not ACTOR.fullmatch(a.by):
             return fail(f"wykonawca „{a.by}” — oczekiwany zapis: <narzędzie>/<wersja>, human:<id> albo process:<id>", 2)
