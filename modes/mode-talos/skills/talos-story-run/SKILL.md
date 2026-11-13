@@ -145,6 +145,7 @@ etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłosz
    `run_report.py finish <katalog>` → `report.md` w katalogu zadania (czas, tokeny, koszt, modele, agenci).
    **Pliki zadania — jeden commit:** `git add docs/project/changes/<KEY> docs/project/changes/INDEX.md`, potem
    `git commit -m "docs(task): record <KEY>"` i push (dokładne polecenia drukuje `finish`); tak samo po STOP.
+   Ten commit robisz na gałęzi `story/<slug>`, nigdy na gałęzi domyślnej — także gdy STOP wypadł przed planem.
    Pokaż człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
    Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`
    (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`. Bez dostępu do

@@ -108,6 +108,8 @@ def artifacts(rec: Path) -> list[dict]:
         if rel == "README.md" or rel.startswith(("exports/", "archive/", "wip/")):
             continue
         meta, body = parse(p)
+        if meta is None and rel.startswith("changes/"):   # plik zadania (ticket, plan, raport) — spis: changes/INDEX.md
+            continue
         items.append({"path": p, "rel": rel, "meta": meta, "body": body,
                       "main": any(re.fullmatch(pat, rel) for pat in MAIN_PATTERNS)})
     return items
@@ -703,7 +705,9 @@ def main(argv: list[str]) -> int:
             data = json.load(sys.stdin)
             path = Path((data.get("tool_input") or {}).get("file_path", "")).resolve()
             rec = record_dir(root)
-            if rec in path.parents and path.name != "README.md" and "exports" not in path.parts:
+            task_file = (rec / "changes") in path.parents and (not path.is_file() or path.suffix != ".md"
+                                                               or parse(path)[0] is None)
+            if rec in path.parents and path.name != "README.md" and "exports" not in path.parts and not task_file:
                 write_index(root)
         except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
             record_error("project_record", e)
