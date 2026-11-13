@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""Testy stanu zadania (.tf/factory/task_state.py): katalog `docs/project/changes/<KEY>/` z `task.json`, etapy
+i indeks zadań — jeden pisarz, bez modelu i bez sieci. python3 tests/test_task_state.py"""
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
+SCRIPT = ROOT / ".tf" / "factory" / "task_state.py"
+CTF = ROOT / ".tf" / "factory" / "tf.py"
+CHANGES = Path("docs") / "project" / "changes"
+
+
+def run(project: Path, *args: str):
+    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=project, capture_output=True, text=True, timeout=60,
+                          env={**os.environ, "CLAUDE_PROJECT_DIR": str(project)})
+
+
+def task(project: Path, key: str) -> dict:
+    f = project / CHANGES / key / "task.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else {}
+
+
+def index_rows(project: Path) -> list[str]:
+    f = project / CHANGES / "INDEX.md"
+    text = f.read_text(encoding="utf-8") if f.is_file() else ""
+    return [ln for ln in text.splitlines() if ln.startswith("| ") and not ln.startswith(("| Klucz", "| ---", "|---"))]
+
+
+def main() -> int:
+    fails, total = [], 0
+
+    def check(cond, msg):
+        nonlocal total
+        total += 1
+        if not cond:
+            fails.append(msg)
+
+    if not SCRIPT.is_file():
+        print(f"✗ brak {SCRIPT}")
+        return 1
+    with tempfile.TemporaryDirectory() as t:
+        p = Path(t) / "proj"
+        p.mkdir()
+        r = run(p, "start", "PROJ-123", "--title", "Limit dobowy 45 zł", "--weight", "lekka", "--mode", "auto")
+        d = task(p, "PROJ-123")
+        check(r.returncode == 0 and d.get("key") == "PROJ-123" and d.get("title") == "Limit dobowy 45 zł"
+              and d.get("stage") == "przyjecie" and d.get("weight") == "lekka" and d.get("mode") == "auto"
+              and d.get("schema") == 1 and d.get("created") and d.get("created") == d.get("updated"),
+              f"TS-1: start tworzy docs/project/changes/<KEY>/task.json z etapem przyjecie: {r.stdout}{r.stderr}{d}")
+        rows = index_rows(p)
+        check(len(rows) == 1 and "PROJ-123" in rows[0] and "Limit dobowy 45 zł" in rows[0] and "przyjecie" in rows[0],
+              f"TS-2: indeks ma wiersz zadania z etapem: {rows}")
+
+        before = (p / CHANGES / "PROJ-123" / "task.json").read_text(encoding="utf-8")
+        r = run(p, "start", "PROJ-123", "--title", "Inny tytuł")
+        check(r.returncode == 1 and (p / CHANGES / "PROJ-123" / "task.json").read_text(encoding="utf-8") == before
+              and "już istnieje" in r.stdout, f"TS-3: ponowny start nie nadpisuje zadania: {r.returncode} {r.stdout}")
+
+        for bad in ("abc", "../x", "proj-1", "PROJ 1", "PROJ-"):
+            r = run(p, "start", bad, "--title", "x")
+            check(r.returncode == 2 and not any(p.glob(f"**/{bad.strip('./')}/task.json")),
+                  f"TS-4: klucz spoza wzorca odrzucony ({bad!r}): {r.returncode} {r.stdout}")
+        check(not (p.parent / "x").exists(), "TS-5: klucz ze ścieżką nie tworzy niczego poza katalogiem zadań")
+
+        r = run(p, "stage", "PROJ-123", "wymyslony")
+        check(r.returncode == 2 and task(p, "PROJ-123")["stage"] == "przyjecie" and "specyfikacja" in r.stdout,
+              f"TS-6: nieznany etap → błąd z listą etapów, stan bez zmian: {r.stdout}")
+        r = run(p, "stage", "PROJ-123", "plan")
+        d = task(p, "PROJ-123")
+        check(r.returncode == 0 and d["stage"] == "plan" and d["updated"] >= d["created"]
+              and "plan" in index_rows(p)[0], f"TS-7: etap do przodu zapisany w task.json i w indeksie: {r.stdout}{d}")
+        r = run(p, "stage", "PROJ-123", "specyfikacja")
+        check(r.returncode == 1 and task(p, "PROJ-123")["stage"] == "plan" and "--force" in r.stdout,
+              f"TS-8: etap wstecz bez --force odrzucony: {r.returncode} {r.stdout}")
+        r = run(p, "stage", "PROJ-123", "specyfikacja", "--force")
+        check(r.returncode == 0 and task(p, "PROJ-123")["stage"] == "specyfikacja", f"TS-9: --force cofa etap: {r.stdout}")
+
+        run(p, "start", "ABC-7", "--title", "Raport | z kreską")
+        run(p, "stage", "ABC-7", "specyfikacja")
+        run(p, "stage", "PROJ-123", "plan")
+        rows = index_rows(p)
+        check(len(rows) == 2 and rows[0].startswith("| ABC-7 ") and rows[1].startswith("| PROJ-123 ")
+              and rows[0].replace("\\|", "").count("|") == rows[1].count("|") and "\\|" in rows[0],
+              f"TS-10: jeden wiersz na zadanie, posortowane; kreska w tytule nie psuje tabeli: {rows}")
+
+        r = run(p, "status", "PROJ-123", "--json")
+        try:
+            s = json.loads(r.stdout)
+        except ValueError:
+            s = {}
+        check(r.returncode == 0 and s.get("stage") == "plan" and s.get("key") == "PROJ-123", f"TS-11: status --json: {r.stdout}")
+        r = run(p, "status", "PROJ-123")
+        check(r.returncode == 0 and "PROJ-123" in r.stdout and "plan" in r.stdout and "{" not in r.stdout,
+              f"TS-12: status dla człowieka w zwykłym tekście: {r.stdout}")
+        r = run(p, "status", "NIE-MA")
+        check(r.returncode == 1 and "NIE-MA" in r.stdout and "start" in r.stdout, f"TS-13: nieznane zadanie → podpowiedź: {r.stdout}")
+        r = run(p, "stage", "NIE-MA", "plan")
+        check(r.returncode == 1 and not (p / CHANGES / "NIE-MA").exists(), "TS-14: etap nieistniejącego zadania niczego nie tworzy")
+
+        # katalog zmiany z trybu pdi: skrypt dokłada task.json i nie rusza plików pdi
+        pdi = p / CHANGES / "CHG-12"
+        pdi.mkdir(parents=True)
+        plan = "---\nartifact: plan\nchange: CHG-12\nstatus: draft\ntasks: [TSK-57]\n---\n# Plan\n"
+        (pdi / "plan.md").write_text(plan, encoding="utf-8")
+        r = run(p, "start", "CHG-12", "--title", "Import CDR")
+        check(r.returncode == 0 and task(p, "CHG-12").get("key") == "CHG-12"
+              and (pdi / "plan.md").read_text(encoding="utf-8") == plan,
+              f"TS-15: istniejący katalog pdi dostaje task.json, plan.md bez zmian: {r.stdout}{r.stderr}")
+        check((p / CHANGES / "INDEX.md").read_text(encoding="utf-8").count("CHG-12") == 1, "TS-16: zadanie pdi jest w indeksie raz")
+
+        r = run(p, "start", "T-20261113-bez-tytulu")
+        check(r.returncode == 2 and "--title" in r.stdout, f"TS-17: start bez tytułu → użycie: {r.stdout}")
+        r = run(p, "start", "T-20261113-waga", "--title", "x", "--weight", "ogromna")
+        check(r.returncode == 2 and not (p / CHANGES / "T-20261113-waga").exists(), f"TS-18: nieznana waga odrzucona: {r.stdout}")
+
+        # tf task … uruchamia skrypt w projekcie
+        q = Path(t) / "viatf"
+        (q / ".tf" / "factory").mkdir(parents=True)
+        (q / ".claude").mkdir()
+        (q / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0"}))
+        shutil.copy(SCRIPT, q / ".tf" / "factory" / "task_state.py")
+        r = subprocess.run([sys.executable, str(CTF), "task", "start", "PROJ-9", "--title", "Przez tf"], cwd=q,
+                           capture_output=True, text=True, timeout=60)
+        check(r.returncode == 0 and task(q, "PROJ-9").get("title") == "Przez tf", f"TS-19: tf task start: {r.stdout}{r.stderr}")
+
+    for f in fails:
+        print(f"✗ {f}")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów stanu zadania")
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

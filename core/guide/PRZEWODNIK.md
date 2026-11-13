@@ -180,6 +180,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | `tf list`, `tf doctor [--fix]` | co jest zainstalowane; stan instalacji i naprawy |
 | `tf new skill <nazwa> "<opis>"`, `tf skill check <nazwa>`, `tf skill audit <katalog>` | własny skill: szkielet ze scenariuszami, bramka jakości, audyt bezpieczeństwa |
 | `tf config show [<klucz>]` | konfiguracja po scaleniu i skąd pochodzi każda wartość |
+| `tf task start <KLUCZ> --title "…"`, `tf task stage <KLUCZ> <etap>`, `tf task status <KLUCZ>` | jedno miejsce na zadanie: `docs/project/changes/<KLUCZ>/task.json` i indeks zadań `INDEX.md` |
 | `tf onboard [--yes] [--verify] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, `verify.sh`, raport gotowości, bramka jakości, polecenia w pliku instrukcji |
 | `tf init` | szkielet `.tf/` na wyniki fabryki (raporty, rejestr, cache, logi) |
 | `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analiza projektu modułami → `.tf/reports/<moduł>.md` |
