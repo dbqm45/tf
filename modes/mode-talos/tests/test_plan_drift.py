@@ -81,6 +81,21 @@ def main() -> int:
         r = run(str(repo / "nie-ma"), cwd=repo)
         check(r.returncode == 2, "P-9: brak katalogu przebiegu → kod 2")
 
+        # krok C4: plan leży w katalogu zadania (run.json: task_dir); pliki zadania nie są „zmianą spoza planu”
+        key = "T-20261113-export"
+        write(repo, f".tf/runs/{key}/run.json", json.dumps({"key": key, "task_dir": f"docs/project/changes/{key}"}))
+        write(repo, f"docs/project/changes/{key}/plan.md", PLAN)
+        write(repo, f"docs/project/changes/{key}/task.json", "{}")
+        write(repo, "docs/project/changes/INDEX.md", "# Zadania\n")
+        git(repo, "add", "-A")
+        git(repo, "commit", "-qm", "docs(task): record")
+        r = run(str(repo / ".tf" / "runs" / key), "--base", "main", "--json", cwd=repo)
+        out = json.loads(r.stdout) if r.returncode == 0 else {}
+        check(r.returncode == 0 and {s["id"] for s in out.get("slices", [])} == {"K1", "K2", "K3"},
+              f"P-10: plan z katalogu zadania: {r.returncode} {r.stdout[:200]}{r.stderr}")
+        check(out.get("unplanned") == ["src/util/helpers.py"] and out.get("coverage") == 75,
+              f"P-11: pliki zadania (docs/project/changes/) poza porównaniem: {out.get('unplanned')} {out.get('coverage')}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów plan_drift")

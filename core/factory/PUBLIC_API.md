@@ -22,10 +22,13 @@ czyli co obiecujemy zachować w obrębie tej samej wersji MAJOR — także wobec
 
 Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API tej nakładki lub trybu (wersja w jej
 `pack.yaml`). Tryb `mode-talos`: agent sesji głównej `talos`, skill `talos-story-run`, skrypt
-`.claude/skills/talos-story-run/scripts/run_report.py` (`start [--task TSK-n [--change CHG-n]]`, `status`, `finish`),
-katalog przebiegu `.tf/runs/talos/<data>-<slug>/` (`run.json`, `story.md`, `plan.md`, `parked.md`, `report.md`;
-od 7.0.0 — wcześniej `tmp/talos/runs/`, a przed 5.58.5 `.claude/runs/`), raport przebiegu cięcia
-`docs/project/changes/CHG-n/runs/TSK-n.md`. Tryb `mode-team`: skill `team-session`, skrypt
+`.claude/skills/talos-story-run/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]`, `status`,
+`finish`) i `run_state.py` (`stage`, `step`, `verify`, `tick`, `park`, `dashboard`), katalog roboczy przebiegu
+`.tf/runs/<KEY>/` (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania
+`docs/project/changes/<KEY>/` (`ticket.md`, `plan.md`, `report.md`, `task.json`, `evidence/`); **przestarzały** układ
+`.tf/runs/talos/<data>-<slug>/` (`run.json`, `story.md`, `plan.md`, `parked.md`, `report.md`; od 7.0.0 — wcześniej
+`tmp/talos/runs/`, a przed 5.58.5 `.claude/runs/`) jest dalej czytany przez `status`, `finish` i dashboard, a zapisuje
+go już tylko przebieg cięcia (`--task`); raport przebiegu cięcia `docs/project/changes/CHG-n/runs/TSK-n.md`. Tryb `mode-team`: skill `team-session`, skrypt
 `.claude/skills/team-session/scripts/team_switch.py` (`on`, `off`, `status`).
 
 **Nie** należą do publicznego API:

@@ -48,16 +48,21 @@ claude --agent talos
 7. **Koniec:** jeden PR (Talos go nie scala) i raport.
 
 ## Co dostajesz
-Katalog `.tf/runs/talos/<data>-<slug>/` (ignorowany przez git — `.claude/` jest ścieżką chronioną w Claude Code,
-więc `--permission-mode acceptEdits` nie pozwoliłby pisać do `.claude/runs/`; code.claude.com/docs/en/permission-modes,
-odczyt 2026-11-05):
+Każda historyjka to **zadanie** z kluczem (`T-<data>-<slug>` albo numer z trackera: `start --key PROJ-123`) i dwoma
+katalogami:
 
-| Plik | Treść |
-|---|---|
-| `story.md` | historyjka |
-| `plan.md` | kawałki z polami do odhaczenia — stan, od którego wznawiasz przerwany przebieg |
-| `parked.md` | sprawy odłożone do Twojej decyzji |
-| `report.md` | raport przebiegu |
+| Gdzie | Co | Git |
+|---|---|---|
+| `docs/project/changes/<KEY>/` | `ticket.md` (historyjka), `plan.md` (kawałki do odhaczenia — od niego wznawiasz przerwany przebieg), `task.json` (stan), `evidence/` (dowody weryfikacji kawałków), `report.md` (raport) | tak — jednym commitem `docs(task): record <KEY>` na końcu przebiegu |
+| `.tf/runs/<KEY>/` | `run.json`, `parked.md` (sprawy odłożone do Twojej decyzji), wyniki skanów, pełne logi weryfikacji | nie |
+
+Spis zadań: `docs/project/changes/INDEX.md`; stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
+z dowodem: Talos uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
+i nie przepuści przebiegu do PR. Bramka jakości nie reaguje na zmiany w `docs/project/changes/`.
+
+Przebiegi sprzed tej zmiany (`.tf/runs/talos/<data>-<slug>/`, wszystkie pliki w jednym katalogu) są dalej czytane
+przez `status`, `finish` i dashboard — przez jedno wydanie MINOR; nowe tam nie powstają. Wyjątek: przebieg cięcia
+z planu zmiany (`start --task TSK-n`, tryb pdi) na razie zostaje w starym układzie.
 
 Raport (`python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog>`): czas, tokeny (wejście, wyjście, odczyt i zapis cache),
 koszt w USD, modele i agenci, kawałki zrobione / plan, liczba odłożonych spraw. Liczy go skrypt z transkryptów
@@ -68,7 +73,7 @@ faktura. W trakcie przebiegu jedna linia stanu:
 Podgląd na żywo: `python3 .claude/skills/talos-story-run/scripts/run_state.py dashboard` buduje
 `.tf/runs/talos/dashboard.html` (otwierasz plik w przeglądarce, odświeża się sam co 5 s). Kolumny to etapy przebiegu
 (Przyjęcie, Plan, Kawałki, PR, Czeka na człowieka, Gotowe), karta pokazuje rundy bieżącego kawałka (R1, R2…) i etapy
-pętli (test, kod, weryf, skan, zakres), a panel plików — `story.md`, `plan.md`, `parked.md`, wyniki skanów, STOP
+pętli (test, kod, weryf, skan, zakres), a panel plików — `ticket.md`, `plan.md`, `parked.md`, wyniki skanów, STOP
 i `report.md`. Stan zapisuje Talos poleceniami `run_state.py stage` i `run_state.py step`; koszt i czas liczy skrypt
 z transkryptów (`dashboard` bez `--no-cost`). `run_report.py start` buduje dashboard sam i otwiera go w przeglądarce
 (cięcie z kluczem, wołane przez fazę pdi, tylko go buduje). Wyłączysz to w `.claude/talos.json` (osobisty plik, aktualizacja

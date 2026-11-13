@@ -73,8 +73,9 @@ def git(root: Path, *args: str) -> bytes:
 
 
 def fingerprint(root: Path, watch: list[str]) -> str | None:
-    """Odcisk zmian w `watch` względem HEAD; None, gdy nic się nie zmieniło."""
-    paths = ["--", *watch] if watch else []
+    """Odcisk zmian w `watch` względem HEAD; None, gdy nic się nie zmieniło. Pliki zadań (`docs/project/changes/`,
+    pisze je `tf task` po każdym kroku) nie są zmianą kodu i nie uruchamiają bramki."""
+    paths = ["--", *(watch or ["."]), ":(exclude)docs/project/changes"]
     diff = git(root, "diff", "HEAD", "--binary", *paths)
     new = git(root, "ls-files", "--others", "--exclude-standard", *paths).decode(errors="replace").split()
     if not diff and not new:

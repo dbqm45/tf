@@ -2,16 +2,19 @@
 """
 Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): katalog przebiegu i raport kosztu.
 
-  python3 .claude/skills/talos-story-run/scripts/run_report.py start "<tytuł>" [--story "<treść>" | --story-file PLIK]
+  python3 .claude/skills/talos-story-run/scripts/run_report.py start "<tytuł>" [--key PROJ-123] [--story "<treść>" | --story-file PLIK]
   python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-57 [--change CHG-12] ["<tytuł>"]   # cięcie z planu zmiany
   python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
   python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
-`start` zakłada `.tf/runs/talos/<RRRR-MM-DD>-<slug>/` (ignorowany przez git, PRB-32: ścieżka poza listą chronionych
-w code.claude.com/docs/en/permission-modes; `.claude/runs/` jest w `.claude/` i pisanie do niej Claude Code odmawia
-w `--print --permission-mode acceptEdits` nawet z `permissions.allow`): run.json (czas startu), story.md, plan.md,
-parked.md.
-Z `--task` story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
+`start` zakłada zadanie (`.tf/factory/task_state.py start`) z kluczem `T-<RRRRMMDD>-<slug>` albo podanym w `--key`
+(numer z trackera) i dwa katalogi: trwały `docs/project/changes/<KEY>/` (task.json, ticket.md, plan.md, potem
+report.md i evidence/ — do gita, jednym commitem `docs(task): record <KEY>` na końcu przebiegu) oraz roboczy
+`.tf/runs/<KEY>/` (run.json, parked.md, skany, logi — ignorowany przez git; PRB-32: ścieżka poza `.claude/`, chronioną
+w Claude Code). Katalog roboczy jest „katalogiem przebiegu” w pozostałych poleceniach; `run.json` wskazuje katalog
+trwały polem `task_dir`. Przebieg bez tego pola (stary układ `.tf/runs/talos/<RRRR-MM-DD>-<slug>/` ze story.md,
+plan.md i report.md w jednym katalogu) jest dalej czytany przez `status`, `finish` i dashboard.
+Przebieg cięcia (`--task`) zostaje w starym układzie: story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
 zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`); z `--task` w dwóch
 planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish` zapisuje wtedy też kopię raportu
 w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
@@ -48,8 +51,10 @@ except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
     sys.path.insert(0, str(ROOT / ".tf" / "factory" / "_vendor"))
     import yaml
 
-RUNS = Path(".tf") / "runs" / "talos"   # wyniki pracy fabryki w .tf/ (poza .claude/ — ścieżką chronioną, PRB-32)
+RUNS = Path(".tf") / "runs" / "talos"   # stary układ i przebiegi cięć pdi; tu też leży dashboard.html
+WORK = Path(".tf") / "runs"             # katalog roboczy zadania: .tf/runs/<KEY>/ (poza .claude/ — PRB-32)
 CHANGES = Path("docs") / "project" / "changes"
+TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")   # ten sam wzorzec co w task_state.py
 EMPTY_CELL = ("", "—", "-", "–")
 KEYS = ("input", "output", "cache_read", "cache_write_5m", "cache_write_1h")
 FAMILIES = ("haiku", "sonnet", "opus", "fable", "mythos")
@@ -75,6 +80,37 @@ def _tf_config(root: Path) -> dict:
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.load_config(root)
+
+def task_state(project: Path, *args: str) -> subprocess.CompletedProcess | None:
+    """Polecenie `tf task` (jedyny pisarz task.json i INDEX.md); None, gdy silnik fabryki go nie ma."""
+    script = next((p for p in (ROOT / ".tf" / "factory" / "task_state.py", project / ".tf" / "factory" / "task_state.py")
+                   if p.is_file()), None)
+    if script is None:
+        return None
+    return subprocess.run([sys.executable, str(script), *args], cwd=project, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace",
+                          env={**os.environ, "CLAUDE_PROJECT_DIR": str(project), "PYTHONUTF8": "1"})
+
+
+def read_meta(run_dir: Path) -> dict:
+    try:
+        meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return meta if isinstance(meta, dict) else {}
+
+
+def docs_dir(run_dir: Path, meta: dict | None = None) -> Path:
+    """Katalog plików trwałych przebiegu (plan.md, report.md): `task_dir` z run.json liczony od katalogu projektu
+    (.tf/runs/<KEY>/ → trzy poziomy wyżej), a w starym układzie sam katalog przebiegu."""
+    rel = (read_meta(run_dir) if meta is None else meta).get("task_dir")
+    return run_dir.resolve().parents[2] / rel if rel else run_dir
+
+
+def story_file(run_dir: Path, meta: dict | None = None) -> Path:
+    meta = read_meta(run_dir) if meta is None else meta
+    return docs_dir(run_dir, meta) / "ticket.md" if meta.get("task_dir") else run_dir / "story.md"
+
 
 def slugify(text: str) -> str:
     t = unicodedata.normalize("NFKD", text.lower().replace("ł", "l"))
@@ -235,14 +271,15 @@ def committed_pieces(project: Path, meta: dict) -> int | None:
 
 def plan_progress(run_dir: Path, commits: int | None = None) -> dict:
     """Kawałki odhaczone w plan.md, a gdy Talos odhaczenie pominął — kawałki z commitem (nie więcej niż w planie)."""
-    text = (run_dir / "plan.md").read_text(encoding="utf-8") if (run_dir / "plan.md").exists() else ""
+    plan = docs_dir(run_dir) / "plan.md"
+    text = plan.read_text(encoding="utf-8") if plan.exists() else ""
     done = len(re.findall(r"^\s*- \[[xX]\]", text, re.M))
     total = done + len(re.findall(r"^\s*- \[ \]", text, re.M))
     return {"done": max(done, min(total, commits or 0)), "total": total}
 
 
 def parked_items(run_dir: Path) -> list[str]:
-    """Pozycje z parked.md (bez wiersza formatu). Plik leży w `.tf/runs/talos/` poza gitem — do repo trafiają w raporcie."""
+    """Pozycje z parked.md (bez wiersza formatu). Plik leży w katalogu roboczym poza gitem — do repo trafiają w raporcie."""
     text = (run_dir / "parked.md").read_text(encoding="utf-8") if (run_dir / "parked.md").exists() else ""
     return [ln for ln in text.splitlines() if ln.startswith("- ") and not ln.startswith("- <")]
 
@@ -378,8 +415,11 @@ def task_story(task: str, ctx: dict, extra: str | None) -> str:
 
 
 def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None,
-              change: str | None = None) -> int:
+              change: str | None = None, key: str | None = None) -> int:
     meta = {}
+    if task and key:
+        print("✗ `--key` nie łączy się z `--task`: przebieg cięcia bierze klucz z planu zmiany.")
+        return 2
     if task:
         matches = task_contexts(project, task)
         if change:                       # PRB-33: `--change` zawęża do jednej zmiany
@@ -407,23 +447,41 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         return 2
     slug = slugify(title)
     now = datetime.now(timezone.utc)
-    run_dir = project / RUNS / f"{now:%Y-%m-%d}-{slug}"
-    if run_dir.exists():
-        print(f"✗ Przebieg już istnieje: {run_dir} — dokończ go albo nadaj inny tytuł.")
-        return 2
+    if task:                             # przebieg cięcia pdi: stary układ, raport w docs/project/changes/CHG-n/runs/
+        run_dir = project / RUNS / f"{now:%Y-%m-%d}-{slug}"
+        docs, story_name = run_dir, "story.md"
+        if run_dir.exists():
+            print(f"✗ Przebieg już istnieje: {run_dir} — dokończ go albo nadaj inny tytuł.")
+            return 2
+    else:                                # zadanie: katalog trwały w gicie i roboczy poza nim
+        key = key or f"T-{now:%Y%m%d}-{slug}"
+        if not TASK_KEY.fullmatch(key):
+            print(f"✗ klucz „{key}” nie pasuje do wzorca (np. PROJ-123 albo T-20261113-limit).")
+            return 2
+        run_dir, docs, story_name = project / WORK / key, project / CHANGES / key, "ticket.md"
+        taken = [p for p in (run_dir, docs / "task.json", docs / "plan.md", docs / story_name) if p.exists()]
+        if taken:
+            print(f"✗ Przebieg już istnieje: {taken[0]} — dokończ go albo nadaj inny tytuł lub `--key`.")
+            return 2
+        r = task_state(project, "start", key, "--title", title)
+        if r is None or r.returncode != 0:
+            print(f"✗ nie udało się założyć zadania {key}: "
+                  + ((r.stdout + r.stderr).strip() if r else "brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update)"))
+            return 2
+        meta = {"key": key, "task_dir": (CHANGES / key).as_posix()}
     run_dir.mkdir(parents=True)
-    # PRB-32: w klonie produktu `.tf/runs/talos/` często nie jest jeszcze w .gitignore (fabryka 5.58.5 dodaje go
-    # do szablonu, ale starsze klony — np. sdlc-proba — tego nie mają). Bez tego pierwszy `start` zostawiłby
-    # „?? tmp/” w statusie i hook „czyste drzewo robocze” (SKILL §0.1) padłby na kolejnym cięciu. Zakładamy
-    # lokalny `.gitignore` z `*` — tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
-    gi = run_dir.parent / ".gitignore"
+    docs.mkdir(parents=True, exist_ok=True)
+    # PRB-32: w klonie produktu `.tf/runs/` często nie jest jeszcze w .gitignore (starsze klony, samodzielna
+    # instalacja trybu). Bez tego pierwszy `start` zostawiłby nieśledzone pliki i warunek „czyste drzewo robocze”
+    # (SKILL §0.1) padłby na kolejnym przebiegu. Zakładamy lokalny `.gitignore` z `*` dla całego `.tf/runs/`.
+    gi = project / WORK / ".gitignore"
     if not gi.is_file():
         gi.write_text("*\n", encoding="utf-8")
     (run_dir / "run.json").write_text(json.dumps({"slug": slug, "title": title,
                                                   "started_at": now.isoformat(timespec="seconds"), **meta},
                                                  ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    (run_dir / "story.md").write_text(f"# {title}\n\n{(story or '').strip()}\n", encoding="utf-8")
-    (run_dir / "plan.md").write_text(PLAN_TEMPLATE.format(title=title), encoding="utf-8")
+    (docs / story_name).write_text(f"# {title}\n\n{(story or '').strip()}\n", encoding="utf-8")
+    (docs / "plan.md").write_text(PLAN_TEMPLATE.format(title=title), encoding="utf-8")
     (run_dir / "parked.md").write_text(PARKED_TEMPLATE.format(title=title), encoding="utf-8")
     print(run_dir.relative_to(project) if run_dir.is_relative_to(project) else run_dir)
     try:   # podgląd: zbuduj dashboard i otwórz go (opcje w .claude/talos.json); przebieg cięcia (--task) nie otwiera
@@ -472,7 +530,9 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
               f"{rep['plan']['done']}/{rep['plan']['total']} · odłożone: {rep['parked']}")
         return 0
     md = report_md(meta.get("slug") or run_dir.name, rep)
-    (run_dir / "report.md").write_text(md, encoding="utf-8")
+    (docs_dir(run_dir, meta) / "report.md").write_text(md, encoding="utf-8")
+    if meta.get("task_dir"):
+        rep["task_dir"] = meta["task_dir"]
     kept = None
     if meta.get("change") and meta.get("task"):   # przebieg cięcia zmiany: raport zostaje w repo
         kept = CHANGES / meta["change"] / "runs" / f"{meta['task']}.md"
@@ -482,6 +542,9 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     print(json.dumps(rep, ensure_ascii=False, default=str) if as_json else md, end="" if not as_json else "\n")
     if kept and not as_json:
         print(f"Raport w repo: {kept.as_posix()}")
+    if meta.get("task_dir") and meta.get("key") and not as_json:   # pliki zadania: jeden commit na końcu przebiegu
+        print(f"Pliki zadania: {meta['task_dir']}/ — zapisz je jednym commitem: `git add {meta['task_dir']} "
+              f"{(CHANGES / 'INDEX.md').as_posix()}`, potem `git commit -m \"docs(task): record {meta['key']}\"`.")
     return 2 if usage_missing else 0   # kod 2 jak dotąd: brak danych o koszcie, ale raport już jest
 
 
@@ -493,6 +556,7 @@ def main(argv: list[str]) -> int:
     s.add_argument("--task", default=None, help="klucz cięcia z docs/project/changes/*/plan.md, np. TSK-57")
     s.add_argument("--change", default=None,
                    help="klucz zmiany, np. CHG-12 — wymagany, gdy TSK jest w planach wielu zmian (PRB-33)")
+    s.add_argument("--key", default=None, help="klucz zadania z trackera, np. PROJ-123 (domyślnie T-<data>-<slug>)")
     s.add_argument("--story", default=None)
     s.add_argument("--story-file", default=None)
     for name in ("status", "finish"):
@@ -504,7 +568,7 @@ def main(argv: list[str]) -> int:
     project = Path.cwd()
     if args.cmd == "start":
         story = Path(args.story_file).read_text(encoding="utf-8") if args.story_file else args.story
-        return cmd_start(args.title, story, project, args.task, args.change)
+        return cmd_start(args.title, story, project, args.task, args.change, args.key)
     return cmd_finish(Path(args.run_dir), args.session, args.json, project, status=args.cmd == "status")
 
 
