@@ -22,6 +22,9 @@ tf — the team factory command: install, update, packs, languages, health check
   tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
   tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project)
+  tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
+                              # one place per task: docs/project/changes/<KEY>/task.json and the task index
+                              # (.tf/factory/task_state.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
@@ -358,6 +361,8 @@ def main(argv: list[str]) -> int:
             print("✗ Usage: tf config show [<key>]")
             return 2
         return cmd_config_show(rest[1] if len(rest) == 2 else None) if need_project() else 2
+    if cmd == "task":
+        return engine("task_state.py", rest)
     if cmd == "onboard":
         if not need_project():
             return 2
