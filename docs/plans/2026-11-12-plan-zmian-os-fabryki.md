@@ -1,6 +1,6 @@
 # Plan zmian: od obecnej fabryki do osi „zadanie → wdrożenie”
 
-Data: 2026-11-12 (22 pozycje w tabeli; po korektach 4a, 4b, 4d i 4e — 29). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
+Data: 2026-11-12 (22 pozycje w tabeli; po korektach 4a, 4b, 4d, 4e i 4f — 30). Podstawa: stan `main` (rdzeń 9.17.0, tryb Talos 1.3.0) i dokument
 `2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md` (dalej „dokument osi”; numery sekcji i decyzji D1–D12 pochodzą
 z niego). Status: propozycja; każda pozycja to osobny PR, kod metodą TDD.
 
@@ -259,6 +259,21 @@ Potwierdzenia bez działań (plik, sekcja 3):
 
 Plik odwołuje się do pozycji tf-14…tf-18 z nowszej wersji pliku głównego, której ta sesja nie widziała; nie są
 tu uwzględnione.
+
+## 4f. Doprecyzowania z materiału o harnessie produkcyjnym (2026-11-13)
+
+Źródło: spis treści i diagramy kursu o harnessie agentów w produkcji (pętla, narzędzia, kontekst, pamięć,
+wyszukiwanie), przekazane przez człowieka; sama treść kursu nie była czytana [niezweryfikowane]. Większość tematów
+dostarcza Claude Code (pętla agenta, cache promptu, kompaktowanie) albo fabryka już ma (limit opisów i budżet listy
+skilli, widoczność według stacku, podpowiedź skilla, dziennik projektu z TL;DR, wyszukiwanie w kodzie zamiast RAG).
+Własnej pętli, własnego kompaktowania ani bazy wektorowej fabryka nie buduje.
+
+| Co | Zmiana w planie | Wielkość |
+|---|---|---|
+| **Ograniczone wyjście skryptów: początek i koniec, pełny wynik w pliku** | nowa pozycja **30**: bramka jakości oddaje dziś agentowi tylko ostatnie 3000 znaków wyjścia (`TAIL` w `core/hooks/quality_gate.py`), więc przy długim logu ginie początek z pierwszym błędem. Bramka ma oddawać początek i koniec, a całość zapisywać do pliku w `.tf/logs/` ze ścieżką w komunikacie. Ta sama reguła dla skryptów fabryki, których wynik trafia do kontekstu. Krok C albo wcześniej — nie zależy od decyzji | S |
+| **Indeks zadań** | doprecyzowanie pozycji 4: `task_state.py` utrzymuje jeden plik z wierszem na zadanie (klucz, tytuł, etap, stan, data), żeby agent nie przeglądał folderów zadań; folder czyta dopiero po wybraniu zadania. Archiwizacja z decyzji D5 usuwa wiersz z indeksu bieżącego | wlicza się w 4 |
+| **Porządkowanie pamięci skryptem** | doprecyzowanie pozycji 18: wygaszanie po dacie (`stale_after` z sekcji 4b) i wykrywanie duplikatów w `lessons.md` robi skrypt bez modelu; model scala i przeredagowuje tylko to, co skrypt wskaże | wlicza się w 18 |
+| **Stała część na początku briefu etapu** | doprecyzowanie pozycji 12: brief każdego etapu zaczyna się od części wspólnej (zasady, format wyniku), a treść zadania idzie po niej — kolejne etapy korzystają wtedy z cache promptu | wlicza się w 12 |
 
 ## 5. Ryzyka samej zmiany
 
