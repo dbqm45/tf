@@ -49,6 +49,7 @@ def main() -> int:
             return 1
         doc = proj / CHANGES / d.name          # katalog trwały zadania (krok C4): plan, ticket i raport
         (doc / "spec.md").write_text(SPEC, encoding="utf-8")      # gotowa specyfikacja (krok D1) — bez niej nie ma planu
+        run(SCRIPT, ["flag", str(d), "none", "--reason", "test stanu przebiegu, nie ma czego ukrywać"], proj, cfg)   # krok D4
         dash = proj / ".tf" / "runs" / "talos" / "dashboard.html"
 
         def one():
@@ -289,6 +290,14 @@ def main() -> int:
               f"V-6b: step PR też nie wchodzi do etapu pr bez dowodów: {r.returncode} {r.stdout}")
         for k in ("K1", "K2"):
             run(SCRIPT, ["verify", str(d), k, "--files", "fees.py", "--command", OK], proj, cfg)
+        # flaga funkcji (krok D4): zadanie ze specyfikacją nie wchodzi do etapu pr bez flagi albo powodu jej braku
+        r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
+        check(r.returncode == 2 and "flag" in r.stdout, f"FL-1: etap pr odrzucony bez decyzji o fladze: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["flag", str(d), "none"], proj, cfg)
+        check(r.returncode == 2, f"FL-2: „bez flagi” wymaga powodu: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["flag", str(d), "set", "limit_dobowy", "--remove-by", "2027-01-31"], proj, cfg)
+        check(r.returncode == 0 and task().get("flag", {}).get("key") == "limit_dobowy",
+              f"FL-3: flag set przez skrypt przebiegu trafia do task.json: {r.returncode} {r.stdout}{r.stderr}")
         # zmiana specyfikacji po planie: plan jest nieaktualny, dopóki Talos nie przejdzie etapu plan ponownie
         (doc / "spec.md").write_text(SPEC.replace("45 zł", "50 zł"), encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)

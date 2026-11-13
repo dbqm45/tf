@@ -179,6 +179,27 @@ VERDICTS = {"gotowe": "Repozytorium jest gotowe do pracy z fabryką.",
             "brak-testow": "Repozytorium nie jest gotowe: fabryka nie ma czym sprawdzić zmian."}
 
 
+FLAG_FILES = ("config/flags.json", "flags.json", "feature-flags.json", "config/feature-flags.json",
+              "config/feature_flags.json", "config/flags.yaml", "config/flags.yml", "flags.yaml", "flags.yml")
+TEST_ENVS = ("test", "testing", "dev", "development", "local", "staging", "stage", "qa")
+ENV_NAMES = (*TEST_ENVS, "uat", "preprod", "prod", "production", "live")
+
+
+def detect_flags(root: Path) -> dict:
+    """Plik flag funkcji i środowiska (z kluczy pliku JSON); puste pola, gdy niczego nie wykryto."""
+    for rel in FLAG_FILES:
+        if not (root / rel).is_file():
+            continue
+        data = _json(root / rel) if rel.endswith(".json") else {}
+        top = [k for k in data if isinstance(data[k], dict)]
+        envs = [k for k in top if k.lower() in ENV_NAMES]
+        if not envs:                        # układ flaga → środowisko → stan
+            envs = sorted({e for k in top for e in data[k] if str(e).lower() in ENV_NAMES})
+        test = next((e for name in TEST_ENVS for e in envs if e.lower() == name), None)
+        return {"file": rel, "envs": envs, "test_env": test}
+    return {"file": None, "envs": [], "test_env": None}
+
+
 def uses_verify(root: Path, det: dict) -> bool:
     """Czy bramka uruchamia verify.sh: jest już w repozytorium albo da się go wygenerować (nie w Windows)."""
     return os.name != "nt" and ((root / "verify.sh").is_file() or "test" in det["commands"])
@@ -265,6 +286,14 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
         if new != old:
             files[root / name] = new
             say.append(f"• {name} — polecenia projektu w sekcji „Komendy”.")
+    card = root / ".tf" / "config" / "operations.json"
+    if not card.exists():                 # karta operacyjna: skąd fabryka wie, jak w projekcie działają flagi
+        flags = detect_flags(root)
+        files[card] = json.dumps({"flags": flags}, ensure_ascii=False, indent=1) + "\n"
+        say.append(f"• .tf/config/operations.json — karta operacyjna: plik flag {flags['file']}, środowiska "
+                   f"{', '.join(flags['envs'])}, testowe: {flags['test_env']}." if flags["file"] else
+                   "• .tf/config/operations.json — karta operacyjna: pliku flag funkcji nie wykryto; uzupełnij "
+                   "`file`, `envs` i `test_env`, jeśli projekt używa flag (bez tego fabryka każe sprawdzać je ręcznie).")
     files[root / ".tf" / "reports" / "readiness.md"] = report(det, verify)
     say.append("• .tf/reports/readiness.md — raport gotowości.")
     return say, files

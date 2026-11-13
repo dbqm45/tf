@@ -145,6 +145,26 @@ def main(argv):
         row["plan_open"] = sum(1 for ln in plan.splitlines() if ln.strip().startswith("- [ ] K") and "<" not in ln[:12])
         row["task_commit"] = bool(git(repo, "log", "main..HEAD", "--grep", "^docs(task): record", "--oneline").stdout.strip())
         row["task_tracked"] = bool(git(repo, "ls-files", str(d.relative_to(repo))).stdout.strip())
+        # krok D: specyfikacja i ślad kryterium → test → commit → dowód
+        env = {**os.environ, "CLAUDE_PROJECT_DIR": str(repo)}
+        for name, script, args in (("spec", "spec_check.py", ["check", d.name, "--json"]),
+                                   ("trace", "trace_check.py", [d.name, "--json", "--base", "main"])):
+            out = sh([sys.executable, f".tf/factory/{script}", *args], repo, env=env)
+            try:
+                res_ = json.loads(out.stdout)
+            except ValueError:
+                res_ = {}
+            row[f"{name}_ok"] = res_.get("ok")
+            if name == "spec":
+                row["spec_criteria"] = len(res_.get("criteria") or [])
+                row["spec_errors"] = [e.get("rule") for e in res_.get("errors") or []]
+            else:
+                rows_ = res_.get("rows") or []
+                row["trace_with_test"] = sum(1 for r in rows_ if r.get("tests"))
+                row["trace_red"] = sum(1 for r in rows_ if r.get("red"))
+                row["trace_verified"] = sum(1 for r in rows_ if r.get("evidence") == "zweryfikowany")
+                row["trace_errors"] = [e.get("rule") for e in res_.get("errors") or []]
+        row["flag"] = status.get("flag")
         work = repo / ".tf" / "runs" / d.name
         row["run_files"] = sorted(p.name for p in work.iterdir()) if work.is_dir() else []
         parked = work / "parked.md"
