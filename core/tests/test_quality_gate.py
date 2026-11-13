@@ -154,6 +154,39 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(LOCK), "--", sys.executable, "-c", "import sys; sys.exit(3)"], cwd=repo,
                            capture_output=True, text=True, timeout=30, env={**os.environ, "CLAUDE_PROJECT_DIR": str(repo)})
         check(r.returncode == 3, f"L-3: wolna blokada → kod wyjścia polecenia: {r.returncode}")
+
+    # stan bramki w zwykłym języku (tf doctor, start sesji)
+    def status(repo, *flags, **env):
+        base = {k: v for k, v in os.environ.items() if k != "QG_GATE_DISABLE"}
+        return subprocess.run([sys.executable, str(GATE), "--status", *flags], capture_output=True, text=True,
+                              timeout=30, env={**base, "CLAUDE_PROJECT_DIR": str(repo), **env})
+
+    with tempfile.TemporaryDirectory() as t:
+        repo = setup(Path(t) / "s1", None)
+        r = status(repo)
+        check(r.returncode == 0 and "wyłączona" in r.stdout and "quality-gate.json" in r.stdout
+              and "nie zablokuje czerwonych testów" in r.stdout, f"S-1: brak konfiguracji → wyłączona, z powodem i skutkiem: {r.stdout}{r.stderr}")
+        repo = setup(Path(t) / "s2", cfg)
+        r = status(repo)
+        check(r.returncode == 0 and "włączona" in r.stdout and "check.py" in r.stdout and "wyłączona" not in r.stdout,
+              f"S-2: konfiguracja z poleceniem → włączona, z poleceniem: {r.stdout}{r.stderr}")
+        r = status(repo, "--quiet-ok")
+        check(r.returncode == 0 and r.stdout.strip() == "", f"S-3: --quiet-ok milczy, gdy bramka działa: {r.stdout!r}")
+        r = status(repo, "--quiet-ok", QG_GATE_DISABLE="1")
+        check("wyłączona" in r.stdout and "QG_GATE_DISABLE" in r.stdout, f"S-4: wyłącznik w środowisku → wyłączona: {r.stdout}")
+        (repo / ".claude" / "settings.local.json").write_text(json.dumps({"env": {"QG_GATE_DISABLE": "1"}}))
+        r = status(repo)
+        check("wyłączona" in r.stdout and "settings.local.json" in r.stdout, f"S-5: wyłącznik w ustawieniach → wskazany plik: {r.stdout}")
+        (repo / ".claude" / "settings.local.json").unlink()
+        (repo / ".claude" / "quality-gate.expected-red").write_text("partia TDD: import CDR")
+        r = status(repo, "--quiet-ok")
+        check("przepuszcza czerwone testy" in r.stdout and "import CDR" in r.stdout, f"S-6: znacznik czerwonej partii → ostrzeżenie z powodem: {r.stdout}")
+        repo = setup(Path(t) / "s7", {"watch": ["src/"]})
+        r = status(repo)
+        check("wyłączona" in r.stdout and "command" in r.stdout, f"S-7: konfiguracja bez polecenia → wyłączona: {r.stdout}")
+        (repo / ".claude" / "quality-gate.json").write_text("{nie json")
+        r = status(repo)
+        check(r.returncode == 0 and "wyłączona" in r.stdout and "JSON" in r.stdout, f"S-8: uszkodzony plik → wyłączona, bez wyjątku: {r.stdout}{r.stderr}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów bramki jakości")
     return 1 if fails else 0
 

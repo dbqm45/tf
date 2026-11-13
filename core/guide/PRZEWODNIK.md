@@ -65,7 +65,8 @@ Agenci wspólni, dostępni dla każdej persony:
 - **Plan przed kodem, potem TDD:** najpierw test, który nie przechodzi, potem kod. Hook `tdd_guard` blokuje kod
   produkcyjny bez czerwonego testu. Bramka jakości: plik `.claude/quality-gate.json` z poleceniem testów, np.
   `{"command": "npm test", "watch": ["src/", "test/"]}` — hook `quality_gate` nie pozwoli zakończyć tury z czerwonym
-  buildem (opis w nagłówku `.claude/hooks/quality_gate.py`).
+  buildem (opis w nagłówku `.claude/hooks/quality_gate.py`). Gdy bramka jest wyłączona (brak pliku, wyłącznik,
+  zadeklarowana czerwona partia), `tf doctor` i start sesji mówią o tym jednym zdaniem.
 
 ## 4. Tryby i automaty na żądanie
 | Co | Jak | Kiedy |

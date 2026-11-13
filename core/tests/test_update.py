@@ -116,6 +116,23 @@ def notice_tests(up, check) -> None:
         r = subprocess.run([sys.executable, str(app / ".claude" / "hooks" / "update_notice.py")], capture_output=True,
                            text=True, env={**env, "CLAUDE_PROJECT_DIR": str(bare)}, input="{}", timeout=30)
         check(r.returncode == 0 and r.stdout.strip() == "", f"UN-11: nic do powiedzenia → hook milczy: {r.stdout}{r.stderr}")
+        # bramka jakości bez konfiguracji: start sesji mówi o tym wprost (tylko w projekcie z fabryką)
+        gated = base / "gate-app"
+        (gated / ".claude" / "hooks").mkdir(parents=True)
+        (gated / ".claude" / "factory-manifest.json").write_text("{}")
+        for name in ("update_notice.py", "quality_gate.py"):
+            shutil.copy(ROOT / ".claude" / "hooks" / name, gated / ".claude" / "hooks" / name)
+        genv = {k: v for k, v in env.items() if k != "QG_GATE_DISABLE"}
+        r = subprocess.run([sys.executable, str(gated / ".claude" / "hooks" / "update_notice.py")], capture_output=True,
+                           text=True, env={**genv, "CLAUDE_PROJECT_DIR": str(gated), "CTF_UPDATE_CHECK": "0"},
+                           input="{}", timeout=30)
+        check(r.returncode == 0 and "Bramka jakości wyłączona" in r.stdout and "systemMessage" in r.stdout,
+              f"UN-12: brak quality-gate.json → komunikat przy starcie sesji: {r.stdout}{r.stderr}")
+        (gated / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "npm test"}))
+        r = subprocess.run([sys.executable, str(gated / ".claude" / "hooks" / "update_notice.py")], capture_output=True,
+                           text=True, env={**genv, "CLAUDE_PROJECT_DIR": str(gated), "CTF_UPDATE_CHECK": "0"},
+                           input="{}", timeout=30)
+        check(r.returncode == 0 and r.stdout.strip() == "", f"UN-13: bramka skonfigurowana → hook milczy: {r.stdout}{r.stderr}")
 
 
 def preflight_tests(up, check) -> None:

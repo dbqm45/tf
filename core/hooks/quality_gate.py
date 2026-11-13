@@ -13,6 +13,8 @@ Polecenie biegnie tylko, gdy zmienił się kod w `watch` względem HEAD (odcisk 
 przebiegu ten sam odcisk nie uruchamia testów drugi raz. Świadomie czerwona partia (TDD, test przed kodem): plik
 `.claude/quality-gate.expected-red` z powodem — bramka przepuszcza; usuń go po partii. `QG_GATE_DISABLE=1` wyłącza
 bramkę (np. w `.claude/settings.local.json`). Stan: `.tf/logs/quality-gate.json`. Tylko biblioteka standardowa.
+
+  python3 .claude/hooks/quality_gate.py --status [--quiet-ok]   # czy bramka działa i dlaczego nie (tf doctor, start sesji)
 """
 from __future__ import annotations
 
@@ -136,7 +138,61 @@ def decide(root: Path, data: dict) -> dict | None:
                       f".claude/quality-gate.expected-red.\n--- koniec wyjścia ---\n{tail}"}
 
 
+OFF = "Fabryka nie zablokuje czerwonych testów."
+
+
+def _disabled_by(root: Path, env) -> str | None:
+    """Skąd pochodzi wyłącznik QG_GATE_DISABLE=1: środowisko sesji albo plik ustawień projektu."""
+    for name in ("settings.local.json", "settings.json"):
+        try:
+            cfg = json.loads((root / ".claude" / name).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if str((cfg.get("env") or {}).get("QG_GATE_DISABLE", "")) == "1":
+            return f"w .claude/{name}"
+    return "w środowisku sesji" if env.get("QG_GATE_DISABLE") == "1" else None
+
+
+def gate_status(root: Path, env=None) -> tuple[str, str]:
+    """Stan bramki w zwykłym języku: (stan, komunikat). Stany: on, expected-red, disabled, no-config, invalid,
+    no-command. Niczego nie uruchamia."""
+    env = os.environ if env is None else env
+    where = _disabled_by(root, env)
+    if where:
+        return "disabled", (f"⚠ Bramka jakości wyłączona zmienną QG_GATE_DISABLE=1 ({where}). {OFF} "
+                            "Włącz: usuń tę zmienną.")
+    cfg_path = root / ".claude" / "quality-gate.json"
+    hint = 'Włącz: wpisz do tego pliku polecenie testów, np. {"command": "npm test"}.'
+    if not cfg_path.is_file():
+        return "no-config", f"⚠ Bramka jakości wyłączona: brak pliku .claude/quality-gate.json. {OFF} {hint}"
+    try:
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cfg = None
+    if not isinstance(cfg, dict):
+        return "invalid", (f"⚠ Bramka jakości wyłączona: plik .claude/quality-gate.json nie jest poprawnym JSON-em. "
+                           f"{OFF} Popraw plik.")
+    if not cfg.get("command"):
+        return "no-command", (f"⚠ Bramka jakości wyłączona: w .claude/quality-gate.json brakuje pola „command”. "
+                              f"{OFF} {hint}")
+    command = cfg["command"] if isinstance(cfg["command"], str) else " ".join(map(str, cfg["command"]))
+    marker = root / ".claude" / "quality-gate.expected-red"
+    if marker.is_file():
+        try:
+            reason = marker.read_text(encoding="utf-8").strip()[:200]
+        except OSError:
+            reason = ""
+        return "expected-red", ("⚠ Bramka jakości przepuszcza czerwone testy: plik .claude/quality-gate.expected-red"
+                                + (f" ({reason})" if reason else "") + ". Usuń go po zakończeniu partii.")
+    return "on", f"✓ Bramka jakości włączona: `{command}`."
+
+
 def main() -> int:
+    if "--status" in sys.argv[1:]:   # tf doctor i start sesji: jedno zdanie o stanie bramki, zawsze kod 0
+        state, text = gate_status(Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve())
+        if state != "on" or "--quiet-ok" not in sys.argv[1:]:
+            print(text)
+        return 0
     try:
         data = json.load(sys.stdin)
     except ValueError:

@@ -12,6 +12,7 @@ tf — the team factory command: install, update, packs, languages, health check
   tf language <code>          # working language (conversation, documentation); pl installs pack-editorial-pl
   tf commit-language <code>   # language of commit messages, PR titles and descriptions
   tf doctor [--fix]           # check the install: core/pack versions, required packs, language pack, agents, renames
+                              # and whether the quality gate is on (.claude/quality-gate.json)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
@@ -241,6 +242,12 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
                            encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if h.stdout.strip():
             print(h.stdout.strip())
+    gate = Path(".claude") / "hooks" / "quality_gate.py"
+    if gate.is_file():   # czy bramka jakości działa (komunikat w zwykłym języku) — informacja, nie zmienia wyniku
+        g = subprocess.run([sys.executable, str(gate), "--status"], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if g.stdout.strip():
+            print(g.stdout.strip())
     missing = sorted(set(re.findall(r"tf add (pack-[a-z0-9-]+)", out)))
     stale = "nieaktualne" in out or "nieaktualny" in out
     if fix and stale:
