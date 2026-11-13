@@ -4,7 +4,7 @@ description: Użyj, gdy problem opisano zwykłym tekstem — rozpoznanie wymiar�
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj, gdy dostajesz problem opisany zwykłym tekstem i nie wiadomo, kto i jak ma się nim zająć — rozpoznanie wymiarów, dobór skilli i person z katalogu, zestawienie doraźnego zespołu, wybór formy wyniku (rekomendacja, plan, rozwiązanie krok po kroku). Nie do samej wiedzy merytorycznej (skille wymiarów) ani łączenia skilli w jednej odpowiedzi (core-skill-composition)."
-  slowa: "od czego zacząć, kogo zaangażować, dobierz zespół, skład zespołu, podejście do problemu, nie wiem jak się do tego zabrać, nikt u nas nie zna protokołów, kogo zaangażować z innej dziedziny"
+  slowa: "od czego zacząć, kogo zaangażować, dobierz zespół, skład zespołu, podejście do problemu, nie wiem jak się do tego zabrać, nikt u nas nie zna protokołów, kogo zaangażować z innej dziedziny, przeoczymy lepszą drogę, oczywiste pomysły, szerokie szukanie opcji, pułapka w decyzji"
 argument-hint: "[opis problemu]"
 ---
 
@@ -81,10 +81,33 @@ która go ma).
 Równoległe perspektywy wywołuj w **jednej wiadomości** (osobne konteksty = niezależne spojrzenia). Brief dla każdego: problem,
 ograniczenia, założenia, lista skilli do wczytania, pytanie, na które ma odpowiedzieć, format raportu (≤ 20 linii).
 
+### Szerokie szukanie opcji — gdy oczywiste odpowiedzi nie wystarczają
+Drogi tryb (5–8 wykonawców), więc najpierw bramka. Uruchamiasz go na prośbę człowieka albo gdy wszystkie trzy odpowiedzi
+brzmią „tak”: problem jest otwarty (kilka sensownych dróg, nie jedna kanoniczna) · pomyłka jest kosztowna albo trudna do
+cofnięcia · człowiek nie prosił o szybką, standardową odpowiedź. W innym razie dajesz zwykłą rekomendację.
+1. **Generowanie bez oceniania.** 3–5 wykonawców `specialist` w jednej wiadomości, na najtańszym modelu (parametr
+   `model` narzędzia Agent). Każdy dostaje problem, ograniczenia i **jedną ramę** z tabeli. Polecenie: 4–6 krótkich
+   pomysłów, bez oceny i bez rankingu; trzy najbardziej oczywiste odpowiedzi pomiń. Wykonawcy nie widzą swoich wyników.
+2. **Ocena osobno, po zebraniu pomysłów.** Grupujesz je według mechanizmu, nie według słów. Oceniasz wykonalność
+   i dopasowanie do kryterium sukcesu. **Pułapki** — pomysły, które dobrze wyglądają, a mają ukryty koszt albo się nie
+   skalują — wypisujesz osobno, każdą z jednozdaniowym powodem. Dziesięć wariantów jednego założenia to nie szerokość.
+3. **Pogłębienie 2–3 najlepszych** (`specialist-deep` przy decyzji trudnej do odwrócenia): jak to działa, ryzyko, od
+   którego wszystko zależy, pierwszy krok. Kończysz własnym stanowiskiem i wskazujesz wybór nieoczywisty, lecz
+   wykonalny — lista „do wyboru” bez stanowiska to nie wynik.
+
+| Rama | Polecenie dla wykonawcy |
+|---|---|
+| odwrócenie | Jak zagwarantować porażkę? Odwróć każdą odpowiedź. |
+| usunięte założenie | Nazwij to, co wszyscy uważają za stałe (baza, framework, model żądanie–odpowiedź), i załóż, że tego nie ma. |
+| napastnik | Jak konkurent albo atakujący złamałby oczywiste rozwiązanie? Zamień to na pomysły. |
+| dyżurny o 3 w nocy | Jaki projekt sprawi, że po awarii nikt nie zostanie obudzony? |
+| zerowy budżet | Godzina, bez pieniędzy: najprostsza wersja, która robi to, co najważniejsze. |
+| audytor | Co musi dać się udowodnić, prześledzić albo odmówić? |
+
 ## 4. Wybierz formę wyniku
 | Forma | Kiedy | Zawartość |
 |---|---|---|
-| **Rekomendacja** | decyzja, niepewność, kilka dróg | 2–3 opcje z kompromisami · rekomendacja z warunkami, kiedy zmienić zdanie · ryzyka |
+| **Rekomendacja** | decyzja, niepewność, kilka dróg | 2–3 opcje z kompromisami · rekomendacja z warunkami, kiedy zmienić zdanie · ryzyka · po szerokim szukaniu także pułapki z powodem |
 | **Plan** | przejście z A do B, wiele osób | fazy z celem i kryterium wyjścia · kto (zespół/rola) · zależności i kolejność · kamienie milowe · ryzyka i plan B |
 | **Rozwiązanie krok po kroku** | wykonanie jest jasne | kroki z poleceniami i weryfikacją po każdym · punkty kontrolne · wycofanie |
 Nie wskazano → rekomendacja + plan (najczęściej to, czego człowiek potrzebuje). Zawsze: **założenia**, **co sprawdzić najpierw**
@@ -117,5 +140,6 @@ Po zrozumieniu plik można usunąć — trwały wynik trafia do `docs/project/` 
 - [ ] problem sparafrazowany, kryterium sukcesu i ograniczenia nazwane; założenia wypisane
 - [ ] wymiary z katalogu przejrzane; wybrane skille (3–6) i uzasadnienie; luki nazwane
 - [ ] wykonawcy od najtańszego, tylko z katalogu; fakty zewnętrzne przez `researcher`; inna dziedzina → konsultant nakładki
+- [ ] szerokie szukanie tylko po bramce; generowanie i ocena rozdzielone; pułapki wypisane osobno; własne stanowisko na końcu
 - [ ] forma wyniku i nośnik dobrane (tekst, tabela, diagram, jednorazowy HTML w `.claude/scratch/`); opcje z kompromisami, ryzyka, co sprawdzić najpierw
 - [ ] skład zespołu podany; ewentualna propozycja stałej persony

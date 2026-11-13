@@ -67,6 +67,35 @@
       }
     },
     {
+      "id": "szerokie-szukanie-opcji",
+      "expect": "trigger",
+      "prompt": "Projektujemy publiczne API eksportu danych dla partnerów. Wszystkie pomysły zespołu są oczywiste i boję się, że przeoczymy lepszą drogę albo wejdziemy w coś, co ładnie wygląda, a potem nas pogrąży. Tej decyzji nie cofniemy łatwo. Jak to rozegrać i kogo zaangażować?",
+      "checks": {
+        "all": [
+          [
+            "pułapk"
+          ],
+          [
+            "bez oceni",
+            "nie oceni",
+            "generuj\\w*[^.]{0,80}oceni",
+            "oceni\\w*[^.]{0,60}osobn",
+            "najpierw[^.]{0,80}pomysł"
+          ],
+          [
+            "odwróć|odwróc|odwrotn",
+            "napastnik|konkurent",
+            "dyżurn",
+            "usu\\w+ założeni|założenie[^.]{0,40}stałe",
+            "zerow\\w+ budżet"
+          ]
+        ],
+        "none": [
+          "30 pomysłów"
+        ]
+      }
+    },
+    {
       "id": "laczenie-skilli",
       "expect": "no-trigger",
       "prompt": "Mam już wybrane skille: DDD, Angular i TypeScript do formularza produktu. Jak połączyć je w jednej odpowiedzi?",
