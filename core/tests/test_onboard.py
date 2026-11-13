@@ -195,6 +195,44 @@ def main() -> int:
               f"O-29: niedostosowana sekcja (z dopiskiem „dostosuj”) jest podmieniana na bieżącą: {out}")
         check(keep and keep(fresh, "bez bloku") == fresh, "O-30: pierwszy zapis bloku bez zmian")
 
+        # instalacja prywatna: pliki z tf onboard zostają lokalne, drzewo robocze czyste (Talos tego wymaga)
+        if shutil.which("git") and os.name != "nt":
+            def git(repo, *a):
+                return subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *a], cwd=repo,
+                                      capture_output=True, text=True)
+            for mode in ("private", "shared"):
+                p = make(base, f"git-{mode}", {"package.json": NODE, "package-lock.json": "{}"})
+                git(p, "init", "-q", "-b", "main")
+                git(p, "add", "-A")
+                git(p, "commit", "-qm", "init")
+                (p / ".claude").mkdir()
+                (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"mode": mode}))
+                (p / ".git" / "info").mkdir(exist_ok=True)
+                with (p / ".git" / "info" / "exclude").open("a") as f:
+                    f.write(".claude/factory-manifest.json\n.tf/\n")
+                r = run(p, "--yes")
+                run(p, "--yes")
+                dirty = git(p, "status", "--porcelain", "-uall").stdout.strip()   # -uall: pliki, nie zwinięte katalogi
+                excl = (p / ".git" / "info" / "exclude").read_text()
+                if mode == "private":
+                    check(dirty == "" and excl.count("verify.sh") == 1 and excl.count(".claude/quality-gate.json") == 1
+                          and "lokaln" in r.stdout,
+                          f"O-31: instalacja prywatna → czyste drzewo, wpisy w .git/info/exclude raz: {dirty!r} {r.stdout[-300:]}")
+                else:
+                    check("verify.sh" in dirty and "quality-gate.json" in dirty and "verify.sh" not in excl
+                          and "Do commita" in r.stdout,
+                          f"O-32: instalacja zespołowa → pliki do commita, bez wpisów ignorowania: {dirty!r} {r.stdout[-300:]}")
+            p = make(base, "git-tracked", {"package.json": NODE, "verify.sh": "#!/bin/sh\n"})
+            git(p, "init", "-q", "-b", "main")
+            git(p, "add", "-A")
+            git(p, "commit", "-qm", "init")
+            (p / ".claude").mkdir()
+            (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"mode": "private"}))
+            run(p, "--yes")
+            excl = (p / ".git" / "info" / "exclude").read_text() if (p / ".git" / "info" / "exclude").exists() else ""
+            check("verify.sh" not in excl and ".claude/quality-gate.json" in excl,
+                  f"O-33: plik już śledzony przez git nie trafia do wpisów ignorowania: {excl}")
+
         # tf onboard przekazuje argumenty do skryptu w projekcie
         p = make(base, "tf", {"package.json": NODE, "package-lock.json": "{}",
                               ".claude/factory-manifest.json": {"version": "1.0.0"}})
