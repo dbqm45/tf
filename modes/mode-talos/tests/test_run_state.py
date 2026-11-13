@@ -15,6 +15,8 @@ SCRIPT = ROOT / REL
 REPORT = SCRIPT.with_name("run_report.py")
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'8 passed\')"'
+SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi 45 zł.\n"
+        "\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
 RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
 
 
@@ -46,6 +48,7 @@ def main() -> int:
             print("✗ brak katalogu przebiegu")
             return 1
         doc = proj / CHANGES / d.name          # katalog trwały zadania (krok C4): plan, ticket i raport
+        (doc / "spec.md").write_text(SPEC, encoding="utf-8")      # gotowa specyfikacja (krok D1) — bez niej nie ma planu
         dash = proj / ".tf" / "runs" / "talos" / "dashboard.html"
 
         def one():
@@ -219,6 +222,17 @@ def main() -> int:
         def task():
             return json.loads((doc / "task.json").read_text(encoding="utf-8"))
 
+        # specyfikacja przed planem (krok D1): start zakłada szablon spec.md; z niewypełnionym nie ma etapu plan
+        r = run(SCRIPT, ["spec", str(d)], proj, cfg)
+        check(r.returncode == 1 and "SPEC-007" in r.stdout, f"P-1a: spec na szablonie → kod 1 z regułą: {r.returncode} {r.stdout}{r.stderr}")
+        r = run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
+        check(r.returncode == 2 and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") != "plan"
+              and task().get("stage") == "przyjecie" and "spec" in r.stdout,
+              f"P-1b: etap plan odrzucony bez gotowej specyfikacji: {r.returncode} {r.stdout}")
+        (doc / "spec.md").write_text(SPEC, encoding="utf-8")
+        r = run(SCRIPT, ["spec", str(d)], proj, cfg)
+        check(r.returncode == 0 and "AC-1" in r.stdout, f"P-2: gotowa specyfikacja → kod 0: {r.returncode} {r.stdout}{r.stderr}")
+
         # dowód przed odhaczeniem (krok C4): tick przechodzi tylko dla kawałka zweryfikowanego przez `verify`
         r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
         check(r.returncode != 0 and "verify" in r.stdout + r.stderr and plan.read_text(encoding="utf-8").count("[x]") == 0,
@@ -258,6 +272,8 @@ def main() -> int:
               f"V-4: plik zmieniony po dowodzie → tick odrzucony: {r.returncode} {r.stdout}{r.stderr}")
         run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
         check(task().get("stage") == "plan", f"V-5a: stage plan trafia do task.json: {task().get('stage')}")
+        inputs = sorted((task().get("artifacts", {}).get("plan.md", {}).get("inputs") or {}))
+        check(inputs == ["spec.md", "ticket.md"], f"P-3: stage plan zapisuje, z czego powstał plan: {inputs}")
         run(SCRIPT, ["step", str(d), "K2", "R1", "test", "run"], proj, cfg)
         check(task().get("stage") == "realizacja", f"V-5b: pierwszy step → realizacja: {task().get('stage')}")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
@@ -269,6 +285,13 @@ def main() -> int:
               f"V-6b: step PR też nie wchodzi do etapu pr bez dowodów: {r.returncode} {r.stdout}")
         for k in ("K1", "K2"):
             run(SCRIPT, ["verify", str(d), k, "--files", "fees.py", "--command", OK], proj, cfg)
+        # zmiana specyfikacji po planie: plan jest nieaktualny, dopóki Talos nie przejdzie etapu plan ponownie
+        (doc / "spec.md").write_text(SPEC.replace("45 zł", "50 zł"), encoding="utf-8")
+        r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
+        check(r.returncode == 2 and "plan.md" in r.stdout and task().get("stage") == "realizacja",
+              f"P-4a: specyfikacja zmieniona po planie → etap pr odrzucony (plan nieaktualny): {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
+        check(r.returncode == 0, f"P-4b: ponowny etap plan odświeża wejścia planu: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
         check(r.returncode == 0 and task().get("stage") == "pr"
               and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") == "pr",

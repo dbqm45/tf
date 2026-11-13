@@ -8,8 +8,8 @@ Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): ka
   python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
 `start` zakłada zadanie (`.tf/factory/task_state.py start`) z kluczem `T-<RRRRMMDD>-<slug>` albo podanym w `--key`
-(numer z trackera) i dwa katalogi: trwały `docs/project/changes/<KEY>/` (task.json, ticket.md, plan.md, potem
-report.md i evidence/ — do gita, jednym commitem `docs(task): record <KEY>` na końcu przebiegu) oraz roboczy
+(numer z trackera) i dwa katalogi: trwały `docs/project/changes/<KEY>/` (task.json, ticket.md, spec.md — szablon
+specyfikacji do wypełnienia przed planem, plan.md, potem report.md i evidence/ — do gita, jednym commitem `docs(task): record <KEY>` na końcu przebiegu) oraz roboczy
 `.tf/runs/<KEY>/` (run.json, parked.md, skany, logi — ignorowany przez git; PRB-32: ścieżka poza `.claude/`, chronioną
 w Claude Code). Katalog roboczy jest „katalogiem przebiegu” w pozostałych poleceniach; `run.json` wskazuje katalog
 trwały polem `task_dir`. Przebieg bez tego pola (stary układ `.tf/runs/talos/<RRRR-MM-DD>-<slug>/` ze story.md,
@@ -83,8 +83,12 @@ def _tf_config(root: Path) -> dict:
 
 def task_state(project: Path, *args: str) -> subprocess.CompletedProcess | None:
     """Polecenie `tf task` (jedyny pisarz task.json i INDEX.md); None, gdy silnik fabryki go nie ma."""
-    script = next((p for p in (ROOT / ".tf" / "factory" / "task_state.py", project / ".tf" / "factory" / "task_state.py")
-                   if p.is_file()), None)
+    return engine(project, "task_state.py", *args)
+
+
+def engine(project: Path, name: str, *args: str) -> subprocess.CompletedProcess | None:
+    """Skrypt silnika fabryki (.tf/factory/<name>) uruchomiony w projekcie; None, gdy silnik go nie ma."""
+    script = next((p for p in (ROOT / ".tf" / "factory" / name, project / ".tf" / "factory" / name) if p.is_file()), None)
     if script is None:
         return None
     return subprocess.run([sys.executable, str(script), *args], cwd=project, capture_output=True, text=True,
@@ -459,7 +463,7 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
             print(f"✗ klucz „{key}” nie pasuje do wzorca (np. PROJ-123 albo T-20261113-limit).")
             return 2
         run_dir, docs, story_name = project / WORK / key, project / CHANGES / key, "ticket.md"
-        taken = [p for p in (run_dir, docs / "task.json", docs / "plan.md", docs / story_name) if p.exists()]
+        taken = [p for p in (run_dir, docs / "task.json", docs / "plan.md", docs / "spec.md", docs / story_name) if p.exists()]
         if taken:
             print(f"✗ Przebieg już istnieje: {taken[0]} — dokończ go albo nadaj inny tytuł lub `--key`.")
             return 2
@@ -482,6 +486,8 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
                                                  ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     (docs / story_name).write_text(f"# {title}\n\n{(story or '').strip()}\n", encoding="utf-8")
     (docs / "plan.md").write_text(PLAN_TEMPLATE.format(title=title), encoding="utf-8")
+    if meta.get("key"):                  # szablon specyfikacji — bez wypełnionej zadanie nie przejdzie do planu
+        engine(project, "spec_check.py", "new", meta["key"])
     (run_dir / "parked.md").write_text(PARKED_TEMPLATE.format(title=title), encoding="utf-8")
     print(run_dir.relative_to(project) if run_dir.is_relative_to(project) else run_dir)
     try:   # podgląd: zbuduj dashboard i otwórz go (opcje w .claude/talos.json); przebieg cięcia (--task) nie otwiera

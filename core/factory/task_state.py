@@ -24,7 +24,8 @@ Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruc
 `.claude/quality-gate.json`), więc kodu wyjścia nie da się zadeklarować, i zapisuje `evidence/K1-<n>.json`
 (polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
 pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. Do etapu `przeglad` i dalszych zadanie
-przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force).
+przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force). Gdy zadanie ma `spec.md`, do etapu `plan`
+i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`); zadanie bez `spec.md` działa jak dotąd.
 
 Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
 wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
@@ -328,6 +329,19 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str) -> int:
     return 0
 
 
+def spec_errors(root: Path, key: str) -> list[dict]:
+    """Błędy spec.md zadania wg `spec_check.py` obok tego skryptu; pusta lista, gdy pliku albo skryptu nie ma."""
+    script = Path(__file__).resolve().with_name("spec_check.py")
+    if not script.is_file() or not (root / CHANGES / key / "spec.md").is_file():
+        return []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_spec_check", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    result = mod.check_task(root, key)
+    return result["errors"] if result else []
+
+
 def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     task = load(root, key)
     if task is None:
@@ -335,6 +349,12 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     was = task.get("stage", STAGES[0])
     if was in STAGES and STAGES.index(stage) < STAGES.index(was) and not force:
         return fail(f"etap {stage} jest wcześniejszy niż obecny ({was}); cofnięcie wymaga --force")
+    if STAGES.index(stage) >= STAGES.index("plan") and not force:
+        spec = spec_errors(root, key)
+        if spec:
+            return fail(f"do etapu {stage} przechodzi zadanie z gotową specyfikacją; do poprawy w spec.md: "
+                        + "; ".join(f"linia {e['line']} {e['rule']} {e['message']}" for e in spec[:3])
+                        + (f" (i {len(spec) - 3} więcej)" if len(spec) > 3 else "") + f". Całość: tf spec check {key}")
     if stage in GATED and not force:
         open_ = [f"{k} ({s}{': ' + w if w else ''})" for k, (s, w) in slice_states(root, task).items() if s != "zweryfikowany"]
         if open_:
