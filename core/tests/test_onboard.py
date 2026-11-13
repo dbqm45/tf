@@ -104,8 +104,9 @@ def main() -> int:
         r = run(p, "--yes")
         gate = p / ".claude" / "quality-gate.json"
         report = p / ".tf" / "reports" / "readiness.md"
-        check(r.returncode == 0 and gate.is_file() and json.loads(gate.read_text()).get("command") == "npm test",
-              f"O-11: --yes zapisuje polecenie testów do bramki: {r.stdout}{r.stderr}")
+        want = "npm test" if os.name == "nt" else "./verify.sh"
+        check(r.returncode == 0 and gate.is_file() and json.loads(gate.read_text()).get("command") == want,
+              f"O-11: --yes zapisuje polecenie weryfikacji do bramki ({want}): {r.stdout}{r.stderr}")
         text = report.read_text(encoding="utf-8") if report.is_file() else ""
         check(all(h in text for h in ("## Co jest", "## Czego brakuje", "## Co fabryka blokuje", "## Kiedy ma spojrzeć człowiek")),
               f"O-12: raport gotowości ma stałe sekcje: {text[:300]}")
@@ -125,6 +126,74 @@ def main() -> int:
         r = run(p, "--dry-run", "--yes")
         check(not (p / ".claude").exists() and not (p / ".tf").exists(), "O-17: --dry-run niczego nie zapisuje")
         check("lockfile" not in r.stdout.lower() or "brak" in r.stdout.lower(), f"O-18: brak pliku blokady wersji jest nazwany: {r.stdout}")
+
+        # część 2: jedno polecenie weryfikacji (lint, typy, testy), polecenia w pliku instrukcji, próba na żądanie
+        if os.name != "nt":
+            p = make(base, "verify", {"package.json": NODE, "package-lock.json": "{}"})
+            run(p, "--yes")
+            v = p / "verify.sh"
+            body = v.read_text(encoding="utf-8") if v.is_file() else ""
+            order = [body.find(c) for c in ("npm run lint", "npm run typecheck", "npm test")]
+            check(v.is_file() and os.access(v, os.X_OK) and -1 not in order and order == sorted(order)
+                  and "set -e" in body and "npm run build" not in body,
+                  f"O-21: verify.sh wykonywalny, w kolejności lint → typy → testy, bez buildu: {body}")
+            text = (p / ".tf" / "reports" / "readiness.md").read_text(encoding="utf-8")
+            blocking = text.split("## Co fabryka blokuje", 1)[-1].split("## ", 1)[0]
+            n = sum(1 for ln in blocking.splitlines() if ln.startswith("- "))
+            check(n == 5 and "npm run lint" in blocking and "npm run typecheck" in blocking and "Tylko ostrzega" in text
+                  and "npm run build" in text.split("Tylko ostrzega", 1)[-1],
+                  f"O-22: lint i typy blokują (razem pięć kontroli), build tylko ostrzega: {blocking}")
+
+            p = make(base, "own-verify", {"package.json": NODE, "verify.sh": "#!/bin/sh\necho moje\n"})
+            r = run(p, "--yes")
+            check((p / "verify.sh").read_text() == "#!/bin/sh\necho moje\n" and "zostaje" in r.stdout
+                  and json.loads((p / ".claude" / "quality-gate.json").read_text()).get("command") == "./verify.sh",
+                  f"O-23: istniejący verify.sh zostaje i jest poleceniem bramki: {r.stdout}")
+
+            p = make(base, "run", {"Makefile": "test:\n\t@echo testy-ok\nlint:\n\t@echo lint-ok\n"})
+            if shutil.which("make"):
+                r = run(p, "--yes", "--verify")
+                check(r.returncode == 0 and "przechodzi" in r.stdout, f"O-24: --verify uruchamia weryfikację raz, zielona: {r.stdout}{r.stderr}")
+                (p / "Makefile").write_text("test:\n\t@echo FAILED test_x; exit 1\nlint:\n\t@echo lint-ok\n")
+                r = run(p, "--yes", "--verify")
+                check(r.returncode == 1 and "nie przechodzi" in r.stdout and "FAILED test_x" in r.stdout,
+                      f"O-25: --verify przy czerwonych testach → kod 1 i koniec wyjścia: {r.stdout}{r.stderr}")
+
+        block = ("moje zasady\n\n<!-- team-factory:begin -->\n## Zespół agentów (team factory)\n\n### Komendy\n"
+                 "- Test: `npm test` · Lint: `npm run lint` · Typecheck: `npm run typecheck` · Build: `npm run build`\n"
+                 "  (dostosuj do swojego projektu — wykonawcy używają ich do weryfikacji)\n\n### Stack\n- x\n"
+                 "<!-- team-factory:end -->\nna końcu\n")
+        p = make(base, "md", {"pyproject.toml": "[tool.pytest.ini_options]\n[tool.ruff]\n", "uv.lock": "",
+                              "CLAUDE.local.md": block})
+        r = run(p, "--yes")
+        md = (p / "CLAUDE.local.md").read_text(encoding="utf-8")
+        check("Test: `uv run pytest`" in md and "Lint: `uv run ruff check .`" in md and "npm" not in md
+              and "dostosuj do swojego projektu" not in md and md.startswith("moje zasady\n") and md.endswith("na końcu\n")
+              and "### Stack\n- x" in md and "CLAUDE.local.md" in r.stdout,
+              f"O-26: polecenia projektu w sekcji „Komendy” bloku fabryki, reszta pliku bez zmian: {md}")
+        p = make(base, "nomd", {"pyproject.toml": "[tool.pytest.ini_options]\n", "CLAUDE.md": "# moje\n"})
+        run(p, "--yes")
+        check((p / "CLAUDE.md").read_text() == "# moje\n" and not (p / "CLAUDE.local.md").exists(),
+              "O-27: plik instrukcji bez bloku fabryki zostaje nietknięty; nowy nie powstaje")
+
+        # instalator przy aktualizacji zachowuje polecenia dostosowane do projektu
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("tf_install_t", ROOT / ".tf" / "factory" / "install.py")
+        inst = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(inst)
+            keep = getattr(inst, "keep_commands", None)
+        except Exception as e:  # noqa: BLE001
+            keep = None
+            fails.append(f"install.py nie daje się zaimportować: {e}")
+        fresh = "<!-- team-factory:begin -->" + block.split("<!-- team-factory:begin -->", 1)[1].split("na końcu")[0]
+        out = keep(fresh, md) if keep else ""
+        check("Test: `uv run pytest`" in out and "npm" not in out and "### Stack" in out,
+              f"O-28: aktualizacja zachowuje polecenia wpisane przez tf onboard: {out}")
+        out = keep(fresh.replace("### Stack\n- x", "### Stack\n- nowe"), block) if keep else ""
+        check("npm test" in out and "dostosuj do swojego projektu" in out and "- nowe" in out,
+              f"O-29: niedostosowana sekcja (z dopiskiem „dostosuj”) jest podmieniana na bieżącą: {out}")
+        check(keep and keep(fresh, "bez bloku") == fresh, "O-30: pierwszy zapis bloku bez zmian")
 
         # tf onboard przekazuje argumenty do skryptu w projekcie
         p = make(base, "tf", {"package.json": NODE, "package-lock.json": "{}",

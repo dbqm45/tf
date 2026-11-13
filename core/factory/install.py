@@ -57,6 +57,7 @@ import importlib.util
 import json
 import os
 import shutil
+import re
 import subprocess
 import sys
 
@@ -412,6 +413,20 @@ def drop_legacy_blocks(text: str, marks: list[tuple[str, str]]) -> str:
     return text
 
 
+COMMANDS_SECTION = re.compile(r"(### Komendy\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
+COMMANDS_DEFAULT_HINT = "dostosuj do swojego projektu"
+
+
+def keep_commands(section: str, old: str) -> str:
+    """Aktualizacja zachowuje polecenia projektu w podsekcji „Komendy” (wpisane przez `tf onboard` albo człowieka).
+    Podsekcja z dopiskiem „dostosuj do swojego projektu” jest wzorcem fabryki — ta jest podmieniana jak reszta bloku."""
+    start = old.find(MARK_BEGIN)
+    mine = COMMANDS_SECTION.search(old, start) if start >= 0 else None
+    if not mine or COMMANDS_DEFAULT_HINT in mine.group(2):
+        return section
+    return COMMANDS_SECTION.sub(lambda m: m.group(1) + mine.group(2), section, count=1)
+
+
 def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> str:
     """Wstawia blok między znacznikami na końcu pliku albo (przy replace) podmienia istniejący."""
     if begin not in text:
@@ -737,7 +752,8 @@ def main(argv: list[str]) -> int:
     md_p = dst_root / ("CLAUDE.md" if shared else "CLAUDE.local.md")
     md_old = md_p.read_text(encoding="utf-8") if md_p.exists() else ""
     md_base = drop_legacy_blocks(md_old, LEGACY_MARKS)
-    section = claude_md_section(py, {"language": language, "commit_language": commit_language}, cfg)
+    section = keep_commands(claude_md_section(py, {"language": language, "commit_language": commit_language}, cfg),
+                            md_base)
     plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
                f"{md_p.name} (factory section)")
 

@@ -8,8 +8,9 @@ tokenów. Ten plik opisuje codzienną pracę; odpowiedzi na częste pytania są 
 Cztery kroki od zera do pierwszego PR. Reszta tego pliku to szczegóły dla dociekliwych.
 
 1. **Zainstaluj.** W katalogu projektu wpisz `tf`. Odpowiedz na pytania o język i nakładki.
-2. **Przygotuj repozytorium.** `tf onboard --yes` wykrywa polecenie testów, włącza bramkę jakości i zapisuje raport
-   gotowości w `.tf/reports/readiness.md`. `tf doctor` mówi, czy instalacja jest zdrowa i czy bramka działa.
+2. **Przygotuj repozytorium.** `tf onboard --yes` wykrywa polecenia projektu, tworzy `verify.sh` (lint, typy, testy
+   jednym poleceniem), włącza bramkę jakości i zapisuje raport gotowości w `.tf/reports/readiness.md`. Z `--verify`
+   uruchamia weryfikację raz. `tf doctor` mówi, czy instalacja jest zdrowa i czy bramka działa.
 3. **Zleć pierwsze zadanie.** Uruchom `claude` w katalogu projektu i wybierz sposób z tabeli poniżej.
 4. **Przejrzyj wynik.** `tf risk` pokazuje, co w zmianie musi obejrzeć człowiek. Scalasz Ty, nie agent.
 
@@ -160,7 +161,7 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
 | `tf add <id>` / `tf remove <id>` | nakładka lub tryb |
 | `tf language <kod>` / `tf commit-language <kod>` | język pracy / język commitów i PR |
 | `tf list`, `tf doctor [--fix]` | co jest zainstalowane; stan instalacji i naprawy |
-| `tf onboard [--yes] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, raport gotowości, włączenie bramki jakości |
+| `tf onboard [--yes] [--verify] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, `verify.sh`, raport gotowości, bramka jakości, polecenia w pliku instrukcji |
 | `tf init` | szkielet `.tf/` na wyniki fabryki (raporty, rejestr, cache, logi) |
 | `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analiza projektu modułami → `.tf/reports/<moduł>.md` |
 | `tf risk [--base <gałąź>] [--md\|--json]` | triaż ryzyka zmiany na gałęzi (doradczy) |

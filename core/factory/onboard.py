@@ -4,22 +4,28 @@ tf onboard — przygotowanie repozytorium do pracy z fabryką: wykrywa polecenia
 gotowości w zwykłym języku i włącza bramkę jakości.
 
   tf onboard                 # propozycja i pytanie o zgodę (bez terminala: sama propozycja)
-  tf onboard --yes           # zapis bez pytania: .claude/quality-gate.json i .tf/reports/readiness.md
+  tf onboard --yes           # zapis bez pytania: verify.sh, .claude/quality-gate.json, .tf/reports/readiness.md
+                             # i polecenia w sekcji „Komendy” pliku instrukcji (CLAUDE.md / CLAUDE.local.md)
+  tf onboard --yes --verify  # po zapisie uruchamia weryfikację raz i mówi, czy przechodzi
   tf onboard --dry-run       # tylko propozycja, niczego nie zapisuje
   tf onboard --json          # wynik wykrywania dla skryptów, niczego nie zapisuje
 
 Wykrywa z manifestów w katalogu głównym (Node, Python, Go, Rust, Java, .NET; Makefile jako zapas): polecenie testów,
-lintu, typów i buildu, plik blokady wersji, CI, plik instrukcji agenta, .gitignore. Niczego w projekcie nie uruchamia.
-Istniejącej konfiguracji bramki nie nadpisuje. Blokujących kontroli jest najwyżej pięć — reszta to ostrzeżenia.
+lintu, typów i buildu, plik blokady wersji, CI, plik instrukcji agenta, .gitignore. Bez --verify niczego w projekcie
+nie uruchamia. `verify.sh` to jedno polecenie weryfikacji (lint → typy → testy) dla bramki jakości, Talosa i CI;
+w Windows bramka dostaje samo polecenie testów. Istniejącego verify.sh ani konfiguracji bramki nie nadpisuje.
+Blokujących kontroli jest najwyżej pięć — reszta to ostrzeżenia.
 
 Werdykt: gotowe / gotowe-z-brakami / brak-testow. Kod wyjścia: 0 — są testy; 1 — brak polecenia testów (fabryka nie
-sprawdzi zmian); 2 — błąd wywołania. Tylko biblioteka standardowa, bez sieci.
+sprawdzi zmian) albo --verify czerwone; 2 — błąd wywołania. Tylko biblioteka standardowa, bez sieci.
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 from pathlib import Path
 
@@ -37,6 +43,11 @@ LOCKFILES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bu
 CI_FILES = (".gitlab-ci.yml", "azure-pipelines.yml", "Jenkinsfile", ".circleci/config.yml", "bitbucket-pipelines.yml")
 NO_TEST = re.compile(r"no test specified", re.I)
 MAX_BLOCKING = 5
+VERIFY = "./verify.sh"
+VERIFY_KINDS = ("lint", "typecheck", "test")   # kolejność w verify.sh: od najszybszej kontroli
+MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"   # jak w install.py
+COMMANDS = re.compile(r"(### Komendy\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
+LABELS = {"test": "Test", "lint": "Lint", "typecheck": "Typecheck", "build": "Build"}
 
 
 def _read(path: Path) -> str:
@@ -168,17 +179,36 @@ VERDICTS = {"gotowe": "Repozytorium jest gotowe do pracy z fabryką.",
             "brak-testow": "Repozytorium nie jest gotowe: fabryka nie ma czym sprawdzić zmian."}
 
 
-def blocking(det: dict) -> list[str]:
+def uses_verify(root: Path, det: dict) -> bool:
+    """Czy bramka uruchamia verify.sh: jest już w repozytorium albo da się go wygenerować (nie w Windows)."""
+    return os.name != "nt" and ((root / "verify.sh").is_file() or "test" in det["commands"])
+
+
+def verify_script(det: dict) -> str:
+    lines = ["#!/usr/bin/env bash",
+             "# Jedno polecenie weryfikacji projektu: lint, typy, testy. Wygenerowane przez `tf onboard`.",
+             "# Uruchamia je bramka jakości fabryki (.claude/quality-gate.json); to samo polecenie nadaje się do CI.",
+             "# Gdy polecenia projektu się zmienią, popraw je tutaj.",
+             "set -euo pipefail", 'cd "$(dirname "$0")"', ""]
+    for kind in VERIFY_KINDS:
+        if kind in det["commands"]:
+            lines += [f'echo "== {NAMES[kind]}"', det["commands"][kind]["command"]]
+    return "\n".join(lines) + "\n"
+
+
+def blocking(det: dict, verify: bool = False) -> list[str]:
     """Kontrole, które zatrzymują pracę (najwyżej MAX_BLOCKING). Reszta to ostrzeżenia."""
     out = []
-    if "test" in det["commands"]:
-        out.append(f"Testy: `{det['commands']['test']['command']}` — praca nie kończy się, dopóki nie przejdą.")
+    for kind in (VERIFY_KINDS if verify else ("test",)):
+        if kind in det["commands"]:
+            out.append(f"{NAMES[kind].capitalize()}: `{det['commands'][kind]['command']}` — praca nie kończy się, "
+                       "dopóki nie przejdą.")
     out.append("Sekrety: zapis kluczy i haseł do plików jest zatrzymywany.")
     out.append("Test przed kodem: kod produkcyjny bez wcześniejszego testu, który nie przechodzi, jest zatrzymywany.")
     return out[:MAX_BLOCKING]
 
 
-def report(det: dict) -> str:
+def report(det: dict, verify: bool = False) -> str:
     cmds, facts = det["commands"], det["facts"]
     lines = ["# Gotowość repozytorium do pracy z fabryką", "", VERDICTS[det["verdict"]], "", "## Co jest"]
     for kind in KINDS:
@@ -197,8 +227,9 @@ def report(det: dict) -> str:
     lines += ["", "## Czego brakuje (w kolejności naprawy)"]
     gaps = [GAPS[k] for k in GAPS if (k == "test" and "test" not in cmds) or k in det["missing"]]
     lines += [f"{i}. {g}" for i, g in enumerate(gaps, 1)] or ["Niczego istotnego."]
-    lines += ["", "## Co fabryka blokuje"] + [f"- {b}" for b in blocking(det)]
-    warn = [f"{NAMES[k]} (`{cmds[k]['command']}`)" for k in ("lint", "typecheck", "build") if k in cmds]
+    lines += ["", "## Co fabryka blokuje"] + [f"- {b}" for b in blocking(det, verify)]
+    warn = [f"{NAMES[k]} (`{cmds[k]['command']}`)" for k in (("build",) if verify else ("lint", "typecheck", "build"))
+            if k in cmds]
     if warn:
         lines += ["", "Tylko ostrzega (nie zatrzymuje pracy): " + ", ".join(warn) + "."]
     lines += ["", "## Kiedy ma spojrzeć człowiek",
@@ -211,22 +242,65 @@ def report(det: dict) -> str:
 def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
     """Co zostanie zapisane: opis dla człowieka i treść plików (ścieżka → tekst)."""
     say, files = [], {}
+    verify = uses_verify(root, det)
+    if verify and (root / "verify.sh").is_file():
+        say.append("• verify.sh już istnieje — zostaje bez zmian.")
+    elif verify:
+        files[root / "verify.sh"] = verify_script(det)
+        say.append("• verify.sh — jedno polecenie weryfikacji: "
+                   + " → ".join(NAMES[k] for k in VERIFY_KINDS if k in det["commands"]) + ".")
+    command = VERIFY if verify else (det["commands"].get("test") or {}).get("command")
     gate = root / ".claude" / "quality-gate.json"
     if gate.is_file():
         say.append("• .claude/quality-gate.json już istnieje — zostaje bez zmian.")
-    elif "test" in det["commands"]:
-        files[gate] = json.dumps({"command": det["commands"]["test"]["command"]}, ensure_ascii=False, indent=2) + "\n"
-        say.append(f"• .claude/quality-gate.json — bramka jakości z poleceniem `{det['commands']['test']['command']}`.")
+    elif command:
+        files[gate] = json.dumps({"command": command}, ensure_ascii=False, indent=2) + "\n"
+        say.append(f"• .claude/quality-gate.json — bramka jakości z poleceniem `{command}`.")
     else:
         say.append("• bramka jakości zostaje wyłączona: nie wykryto polecenia testów.")
-    files[root / ".tf" / "reports" / "readiness.md"] = report(det)
+    line = commands_line(det, verify)
+    for name in ("CLAUDE.local.md", "CLAUDE.md"):
+        old = _read(root / name)
+        new = with_commands(old, line) if line else old
+        if new != old:
+            files[root / name] = new
+            say.append(f"• {name} — polecenia projektu w sekcji „Komendy”.")
+    files[root / ".tf" / "reports" / "readiness.md"] = report(det, verify)
     say.append("• .tf/reports/readiness.md — raport gotowości.")
     return say, files
 
 
+def commands_line(det: dict, verify: bool) -> str:
+    parts = ([f"Weryfikacja: `{VERIFY}`"] if verify else []) + [
+        f"{LABELS[k]}: `{det['commands'][k]['command']}`" for k in KINDS if k in det["commands"]]
+    return "- " + " · ".join(parts) if parts else ""
+
+
+def with_commands(text: str, line: str) -> str:
+    """Podmienia treść podsekcji „Komendy” w bloku fabryki; plik bez bloku albo bez podsekcji zostaje bez zmian."""
+    start = text.find(MARK_BEGIN)
+    end = text.find(MARK_END, start)
+    if start < 0 or end < 0:
+        return text
+    block = text[start:end + len(MARK_END)]
+    return text[:start] + COMMANDS.sub(lambda m: m.group(1) + line + "\n", block, count=1) + text[end + len(MARK_END):]
+
+
+def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, str]:
+    """Uruchamia weryfikację raz (tylko z --verify): (zielona?, koniec wyjścia)."""
+    try:
+        r = subprocess.run(shlex.split(command), cwd=root, capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return False, f"przekroczony limit czasu {timeout:g} s"
+    except OSError as e:
+        return False, str(e)
+    return r.returncode == 0, (r.stdout + r.stderr)[-2000:]
+
+
 def main(argv: list[str]) -> int:
     flags = set(argv[1:])
-    unknown = flags - {"--yes", "--dry-run", "--json", "-h", "--help"}
+    unknown = flags - {"--yes", "--dry-run", "--json", "--verify", "-h", "--help"}
     if unknown or flags & {"-h", "--help"}:
         print(__doc__)
         return 2 if unknown else 0
@@ -236,7 +310,7 @@ def main(argv: list[str]) -> int:
     if "--json" in flags:
         print(json.dumps(det, ensure_ascii=False, indent=2))
         return code
-    print(report(det))
+    print(report(det, uses_verify(root, det)))
     say, files = proposal(root, det)
     print("Do zapisania:\n" + "\n".join(say))
     if "--dry-run" in flags:
@@ -252,7 +326,20 @@ def main(argv: list[str]) -> int:
     for path, text in files.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
+        if path.name == "verify.sh":
+            path.chmod(0o755)
     print("\n✓ Zapisano. Sprawdź stan: tf doctor")
+    if "--verify" in flags:
+        command = _json(root / ".claude" / "quality-gate.json").get("command")
+        if not command:
+            print("⚠ Nie ma czego uruchomić: bramka jakości nie ma polecenia.")
+            return 1
+        command = command if isinstance(command, str) else " ".join(map(str, command))
+        ok, tail = run_verify(root, command)
+        print(f"✓ Weryfikacja przechodzi: `{command}`." if ok
+              else f"✗ Weryfikacja nie przechodzi: `{command}`. Napraw to przed pierwszym zadaniem.\n"
+                   f"--- koniec wyjścia ---\n{tail}")
+        return code if ok else 1
     return code
 
 
