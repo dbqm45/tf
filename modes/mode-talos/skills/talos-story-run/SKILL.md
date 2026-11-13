@@ -17,6 +17,10 @@ Automat na żądanie. Zasady, które wygrywają z każdą pokusą „zrobić wi�
   gdy są potrzebne. Bez domyślnego budżetu — `--budget` to twardy STOP.
 - **Dowody:** każdy krok kończy polecenie weryfikacji z wynikiem; fakt o kodzie z `plik:linia` (core-grounding).
 - **STOP zamiast brnięcia:** najwyżej 2 próby naprawy na bramkę; blokada → blok STOP i raport, nie obejście.
+- **Jedna czynność na polecenie:** nie łączysz poleceń przez `;`, `&&` ani potok i nie używasz `sed`, `>>` ani
+  heredoc — o polecenie złożone Claude Code pyta człowieka, a bez nadzoru je odrzuca. Pliki przebiegu czytasz
+  narzędziem Read, plan zapisujesz narzędziem Write albo Edit, kawałek odhaczasz przez `run_state.py tick`,
+  sprawę odkładasz przez `run_state.py park`.
 
 ## 0. Start
 Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py` (dalej `run_report.py`).
@@ -78,7 +82,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
 - **Fazy warunkowe** wpisz do planu tylko z powodem: dokumentacja przy zmianie publicznego API lub zachowania
   opisanego w docs; `security-reviewer` przy auth, sekretach, uprawnieniach, IaC, CI; `architect` przy decyzji
   trudnej do odwrócenia.
-- Przypadki brzegowe znalezione przy planowaniu → `parked.md` w formacie z nagłówka pliku. Plik jest w `.tf/runs/talos/<data>-<slug>/`
+- Przypadki brzegowe znalezione przy planowaniu → `run_state.py park <katalog> "<sprawa>"` (dopisuje do `parked.md`
+  w formacie z nagłówka pliku). Plik jest w `.tf/runs/talos/<data>-<slug>/`
   (poza gitem) — w commitach i kodzie nie odsyłasz do niego; pozycje trafiają do opisu PR i raportu przebiegu
   (sekcja „Odłożone do decyzji”, przy cięciu z kluczem w `docs/project/changes/CHG-n/runs/TSK-n.md`).
 - **Bez `--auto`:** `run_state.py stage <katalog> needs --needs plan`, pokaż plan (kawałki, fazy warunkowe, założenia,
@@ -109,7 +114,7 @@ etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłosz
 4. **Przegląd zakresu:** `scope-reviewer` dostaje kawałek z planu i `git diff`. Kod spoza kryteriów (obsługa
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
-   Odhacz kawałek w `plan.md`. Przebieg cięcia z kluczem: każdy commit ma stopkę `Change: TSK-n`
+   Odhacz kawałek: `run_state.py tick <katalog> K<n>`. Przebieg cięcia z kluczem: każdy commit ma stopkę `Change: TSK-n`
    (core-conventional-commits). Kawałek cięcia z flagą (kolumna „Flaga” w planie cięć albo `flags`
    w `release.yaml`, w `run.json` pole `flag`): nowe zachowanie jest za flagą (domyślnie wyłączoną), a commit ma też
    stopkę `Flag: <klucz>`.

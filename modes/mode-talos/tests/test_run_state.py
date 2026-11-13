@@ -197,6 +197,38 @@ def main() -> int:
         r = run(REPORT, ["start", "Piata historyjka", "--story", "x"], proj, cfg)
         check(r.returncode == 0 and dash.is_file(), f"S-10e: uszkodzony talos.json → opcje domyślne: {r.stderr!r}")
 
+    # jedna czynność na polecenie: odhaczenie kawałka i odłożenie sprawy skryptem (bez sed, >> i heredoc w powłoce)
+    with tempfile.TemporaryDirectory() as t:
+        proj, cfg = Path(t) / "proj", Path(t) / "cfg"
+        proj.mkdir()
+        run(REPORT, ["start", "Limit dobowy", "--story", "Jako operator chcę limit."], proj, cfg)
+        d = next((proj / ".tf" / "runs" / "talos").glob("*-limit-dobowy"), None)
+        plan = d / "plan.md"
+        head = plan.read_text(encoding="utf-8")
+        plan.write_text(head + "- [ ] K1 — limit 45 zł · kryteria: AC1 · pliki: fees.py\n"
+                               "- [ ] K2 — druga doba · kryteria: AC3 · pliki: fees.py\n", encoding="utf-8")
+        r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
+        text = plan.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "- [x] K1 — limit 45 zł" in text and "- [ ] K2 — druga doba" in text
+              and text.startswith(head), f"T-1: tick odhacza tylko wskazany kawałek, reszta pliku bez zmian: {r.stdout}{r.stderr}{text[-200:]}")
+        r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
+        check(r.returncode == 0 and plan.read_text(encoding="utf-8") == text, f"T-2: ponowny tick niczego nie zmienia: {r.stdout}{r.stderr}")
+        r = run(SCRIPT, ["tick", str(d), "K7"], proj, cfg)
+        check(r.returncode != 0 and "K7" in (r.stdout + r.stderr) and plan.read_text(encoding="utf-8") == text,
+              f"T-3: nieznany kawałek → błąd z nazwą, plik bez zmian: {r.returncode} {r.stdout}{r.stderr}")
+        parked = d / "parked.md"
+        before = parked.read_text(encoding="utf-8")
+        r = run(SCRIPT, ["park", str(d), "Strefy czasowe w znacznikach — do decyzji"], proj, cfg)
+        run(SCRIPT, ["park", str(d), "Pliki > 50 MB"], proj, cfg)
+        after = parked.read_text(encoding="utf-8")
+        check(r.returncode == 0 and after.startswith(before.rstrip("\n")) and after.rstrip().endswith("- Pliki > 50 MB")
+              and "- Strefy czasowe w znacznikach — do decyzji\n" in after,
+              f"T-4: park dopisuje pozycje na końcu parked.md, każdą w osobnym wierszu: {after[-200:]}")
+        r = run(SCRIPT, ["park", str(d), "  "], proj, cfg)
+        check(r.returncode != 0 and parked.read_text(encoding="utf-8") == after, f"T-5: pusta sprawa → błąd, plik bez zmian: {r.returncode}")
+        rep = run(REPORT, ["status", str(d)], proj, cfg)
+        check("2" in rep.stdout or "odłożon" in rep.stdout.lower(), f"T-6: raport przebiegu widzi odłożone sprawy: {rep.stdout[-300:]}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} testów stanu przebiegu Talosa: {'wszystkie przeszły' if not fails else len(fails)}")

@@ -33,6 +33,7 @@
       "Bash(docker build *)",
       "Bash(python3 .tf/factory/build.py *)",
       "Bash(python3 .tf/factory/cost_report.py *)",
+      "Bash(python3 .tf/factory/risk_triage.py *)",
       "Bash(python3 .tf/factory/hint_report.py *)",
       "Bash(python3 .claude/hooks/detect_stack.py *)",
       "Bash(python3 .claude/hooks/project_record.py *)",
