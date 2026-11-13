@@ -1,7 +1,8 @@
 # Pomiar bazowy osi fabryki (E0) — 2026-11-13
 
 Pliki: `docs/evals/2026-11-13-pomiar-bazowy-e0.jsonl` (surowe wyniki, 16 wierszy: 1 próba i 15 przebiegów),
-`docs/evals/2026-11-13-pomiar-bazowy-e0/` (repozytorium testowe, historyjki, skrypt pomiaru).
+`docs/evals/2026-11-13-pomiar-bazowy-e0/` (repozytorium testowe, historyjki, skrypt pomiaru),
+`docs/evals/2026-11-13-pomiar-po-poprawkach-talosa.jsonl` (powtórka po poprawkach, 15 wierszy).
 
 Cel: punkt odniesienia dla planu `docs/plans/2026-11-12-plan-zmian-os-fabryki.md` (krok A). Mierzymy drogę od
 instalacji fabryki do gałęzi z zielonymi testami na stanie `main` po krokach A i B (commit `06dc908`,
@@ -88,6 +89,30 @@ i odmów ma duży rozrzut (w S2 od 8 do 47 tur i od 2 do 13 odmów), więc pojed
    pozycji 4 planu (skrypt stanu zadania).
 3. Etap PR potrzebuje jasnego wejścia: zdalne repozytorium i zgoda na wypchnięcie (pozycje 9 i 17 planu).
 4. Cel „najwyżej 3 polecenia do PR” mierzyć ponownie po kroku E.
+
+## Powtórka po poprawkach Talosa
+
+Dwa pierwsze wnioski zostały wdrożone tego samego dnia (commit `d3cd256`, rdzeń 9.22.1): `risk_triage.py` jest na
+liście dozwolonych poleceń, a Talos odhacza kawałek i odkłada sprawę pojedynczym poleceniem skryptu stanu
+(`run_state.py tick`, `run_state.py park`) i nie łączy poleceń w powłoce. Potem ta sama seria: 3 historyjki po
+5 powtórzeń, ten sam model i budżet, skrypt z repozytorium.
+
+| Historyjka | Zaliczone | Koszt USD: mediana (zakres) | Czas s: mediana (zakres) | Tury (zakres) | Odmowy uprawnień (wszystkie przebiegi) |
+|---|---|---|---|---|---|
+| S1 lekka | 5/5 | 0,45 (0,42–0,46) | 66 (63–78) | 11–14 | 0, 0, 0, 0, 0 |
+| S2 zwykła | 5/5 | 0,58 (0,51–0,68) | 120 (80–133) | 12–41 | 0, 0, 0, 0, 1 |
+| S3 niejasna | 5/5 zatrzymań | 0,25 (0,23–0,30) | 24 (22–34) | 1–10 | 0, 0, 0, 0, 0 |
+
+- **Odmowy uprawnień:** 1 w 15 przebiegach zamiast 44. Jedyna pozostała to ręczne uruchomienie programu projektu
+  (`python3 -m parking.cli 180 --subscriber`), czyli polecenie spoza fabryki.
+- **Ocena ryzyka zmian:** jej wynik jest w raporcie końcowym 9 z 10 przebiegów S1 i S2; w pomiarze bazowym nie
+  wykonała się w żadnym.
+- **Poprawność bez zmian:** 10/10 przebiegów S1 i S2 zalicza ukryte sprawdzenia akceptacji, 5/5 przebiegów S3
+  zatrzymuje się z pytaniami.
+- **Koszt i czas:** bez wyraźnej zmiany. Mediany są zbliżone do bazowych, a zakres kosztu S2 (0,51–0,68 USD)
+  wychodzi poza pasmo bazowe w obie strony, więc nie da się mówić ani o poprawie, ani o pogorszeniu.
+
+Łączny koszt powtórki: 6,47 USD.
 
 ## Jak powtórzyć
 
