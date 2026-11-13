@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.33.0] — 2026-11-13
+### Added
+- **core:** add a feature flag per task with a human gate outside test (#236)
+
 ## [9.32.0] — 2026-11-13
 ### Added
 - **core:** trace each acceptance criterion to its test and evidence (#235)
