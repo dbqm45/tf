@@ -17,6 +17,11 @@ tf — the team factory command: install, update, packs, languages, health check
                               # prepare the repository: detect test/lint/type/build commands, write verify.sh, the
                               # readiness report (.tf/reports/readiness.md) and the commands in the instructions file,
                               # turn the quality gate on; --verify runs the verification once (.tf/factory/onboard.py)
+  tf new skill <name> "<description>" [--role <role>]
+                              # your own skill from the template, with a scenario file (.tf/factory/build.py new-skill)
+  tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
+  tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
+  tf config show [<key>]      # merged configuration and where each value comes from (factory or project)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
@@ -229,6 +234,35 @@ def cmd_list() -> int:
     return r.returncode
 
 
+def engine(script: str, args: list[str]) -> int:
+    """Run a script of the project's engine (.tf/factory/) with the given arguments."""
+    if not need_project():
+        return 2
+    return subprocess.run([sys.executable, str((Path(".tf") / "factory") / script), *args]).returncode
+
+
+def cmd_config_show(key: str | None) -> int:
+    """Merged configuration and where each top-level key comes from: the factory default or the project override."""
+    packs = project_module("packs")
+    root = Path.cwd()
+    own_path = root / ".tf" / "config" / "config.yaml"
+    own = packs.load_yaml(own_path) if own_path.is_file() else {}
+    cfg = packs.load_config(root)
+    if key is not None:
+        if key not in cfg:
+            print(f"✗ Nie ma klucza „{key}”. Lista kluczy: tf config show")
+            return 2
+        print(json.dumps(cfg[key], ensure_ascii=False, indent=2))
+        return 0
+    print("# Konfiguracja fabryki. Swoje wartości wpisujesz w .tf/config/config.yaml — aktualizacja ich nie rusza.")
+    for k in sorted(cfg):
+        shown = json.dumps(cfg[k], ensure_ascii=False)
+        shown = shown if len(shown) <= 70 else shown[:67] + "…"
+        print(f"{k:<28} {'projekt' if k in own else 'fabryka':<8} {shown}")
+    print("# Cała wartość jednego klucza: tf config show <klucz>")
+    return 0
+
+
 def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
@@ -306,6 +340,24 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "risk_triage.py"), *rest]).returncode
+    if cmd == "new":
+        if len(rest) < 3 or rest[0] != "skill":
+            print('✗ Usage: tf new skill <name> "<description>" [--role <role>] [--name-only]\n'
+                  '  e.g. tf new skill app-faktury "Użyj przy fakturach korygujących — numeracja, stawki. Nie do płatności."')
+            return 2
+        return engine("build.py", ["new-skill", *rest[1:]])
+    if cmd == "skill":
+        scripts = {"check": "skill_gate.py", "audit": "skill_audit.py"}
+        if len(rest) < 2 or rest[0] not in scripts:
+            print("✗ Usage: tf skill check <name> [--model haiku,sonnet --yes]   # quality gate (model runs cost money)\n"
+                  "         tf skill audit <skill directory>                     # security audit, before using a foreign skill")
+            return 2
+        return engine(scripts[rest[0]], rest[1:])
+    if cmd == "config":
+        if not rest or rest[0] != "show" or len(rest) > 2:
+            print("✗ Usage: tf config show [<key>]")
+            return 2
+        return cmd_config_show(rest[1] if len(rest) == 2 else None) if need_project() else 2
     if cmd == "onboard":
         if not need_project():
             return 2
