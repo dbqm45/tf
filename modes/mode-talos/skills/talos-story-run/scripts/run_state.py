@@ -7,6 +7,8 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
+  python3 .claude/skills/talos-story-run/scripts/run_state.py tick <katalog-przebiegu> K2
+  python3 .claude/skills/talos-story-run/scripts/run_state.py park <katalog-przebiegu> "<sprawa do decyzji>"
   python3 .claude/skills/talos-story-run/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
 
 `stage` ustawia etap przebiegu: intake, plan, slices, pr, needs, done. Etap `needs` wymaga `--needs plan` (plan czeka
@@ -15,6 +17,9 @@ bieżącego kawałka: etapy test, kod, weryf, skan, zakres; stany run, pass, fai
 po nieudanej bramce (R1, R2, …). Etapy wcześniejsze od zapisywanego, które nie mają stanu albo trwają, dostają pass —
 Talos zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
 decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
+
+`tick` odhacza kawałek w plan.md, `park` dopisuje sprawę na końcu parked.md — jedno polecenie z listy dozwolonych
+zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (pomiar E0, 2026-11-13).
 
 `launch` (wołane przez `run_report.py start`) buduje dashboard i otwiera go w przeglądarce; wyłączysz to w
 `.claude/talos.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
@@ -161,6 +166,39 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
 
 
 # ---- odczyt stanu i dashboard ------------------------------------------------------------------------------------
+
+def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
+    """Odhacza kawałek w plan.md (`- [ ] K<n>` → `- [x] K<n>`); powtórzenie niczego nie zmienia."""
+    path = run_dir / "plan.md"
+    if not path.is_file():
+        return fail(f"nie ma {path}")
+    lines = path.read_text(encoding="utf-8").split("\n")
+    for i, line in enumerate(lines):
+        m = SLICE.match(line)
+        if m and m.group(2) == slice_id and not m.group(3).lstrip().startswith("<"):   # nie wiersz szablonu
+            if m.group(1) == " ":
+                lines[i] = line.replace("- [ ]", "- [x]", 1)
+                path.write_text("\n".join(lines), encoding="utf-8")
+            print(f"✓ {slice_id} odhaczony w {path.name}")
+            refresh(project)
+            return 0
+    return fail(f"w {path.name} nie ma kawałka {slice_id}")
+
+
+def cmd_park(run_dir: Path, item: str, project: Path) -> int:
+    """Dopisuje sprawę odłożoną do decyzji człowieka na końcu parked.md (jeden wiersz)."""
+    item = " ".join(item.split())
+    if not item:
+        return fail("pusta sprawa — podaj, co odkładasz i dlaczego")
+    path = run_dir / "parked.md"
+    if not run_dir.is_dir():
+        return fail(f"nie ma katalogu przebiegu {run_dir}")
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    path.write_text(text.rstrip("\n") + ("\n" if text.strip() else "") + f"- {item.lstrip('- ')}\n", encoding="utf-8")
+    print(f"✓ odłożono do decyzji w {path.name}")
+    refresh(project)
+    return 0
+
 
 def parse_slices(run_dir: Path) -> list[dict]:
     path = run_dir / "plan.md"
@@ -395,6 +433,12 @@ def main(argv: list[str]) -> int:
     t.add_argument("run_dir")
     t.add_argument("target")
     t.add_argument("rest", nargs="*")
+    k = sub.add_parser("tick")
+    k.add_argument("run_dir")
+    k.add_argument("slice_id")
+    p = sub.add_parser("park")
+    p.add_argument("run_dir")
+    p.add_argument("item")
     d = sub.add_parser("dashboard")
     d.add_argument("--no-cost", action="store_true")
     d.add_argument("--out", default=None)
@@ -406,6 +450,10 @@ def main(argv: list[str]) -> int:
                          project)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
+    if args.cmd == "tick":
+        return cmd_tick(Path(args.run_dir), args.slice_id, project)
+    if args.cmd == "park":
+        return cmd_park(Path(args.run_dir), args.item, project)
     path = build_dashboard(project, Path(args.out) if args.out else None, costs=not args.no_cost)
     print(path.resolve().as_uri())
     if args.open:
