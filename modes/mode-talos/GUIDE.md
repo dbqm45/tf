@@ -3,6 +3,7 @@
 Talos (`mode-talos`) to tryb fabryki, który bierze jedną historyjkę użytkownika i prowadzi ją do jednego PR: plan, testy, kod,
 weryfikacja, commity i raport kosztu. Działa tylko wtedy, gdy go uruchomisz — model nigdy nie włącza go sam.
 Instaluje się domyślnie; bez niego: `tf remove mode-talos`, z powrotem: `tf add mode-talos`.
+Pierwszy raz z fabryką? Zacznij od sekcji „Zacznij tutaj” w `.tf/factory/PRZEWODNIK.md`.
 
 ## Do czego
 - **Pasuje:** historyjka z kryteriami akceptacji, które da się sprawdzić testem; zmiana mieści się w kilku
