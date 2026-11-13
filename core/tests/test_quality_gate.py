@@ -117,6 +117,20 @@ def main() -> int:
         r = hook(repo)
         check(blocked(r) is None and runs(repo) == n, f"Q-5: zmiana poza watch nie uruchamia testów: {runs(repo)} vs {n}")
 
+        # katalog zadania (docs/project/changes/, pisze go `tf task`) nie jest zmianą kodu — także bez `watch`
+        wide = setup(Path(t) / "b2", {k: v for k, v in cfg.items() if k != "watch"})
+        (wide / "mode.txt").write_text("fail")
+        git(wide, "add", "-A")
+        git(wide, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "konfiguracja")
+        (wide / "docs" / "project" / "changes" / "T-1").mkdir(parents=True)
+        (wide / "docs" / "project" / "changes" / "T-1" / "task.json").write_text("{}")
+        (wide / "docs" / "project" / "changes" / "INDEX.md").write_text("# Zadania\n")
+        r = hook(wide)
+        check(blocked(r) is None and runs(wide) == 0, f"Q-5a: zmiana tylko w katalogu zadania nie uruchamia bramki: {r.stdout} {runs(wide)}")
+        (wide / "src" / "app.py").write_text("x = 9\n")
+        r = hook(wide)
+        check(blocked(r) is not None and runs(wide) == 1, f"Q-5b: zmiana kodu obok plików zadania nadal uruchamia bramkę: {r.stdout} {runs(wide)}")
+
         (repo / "mode.txt").write_text("fail")
         (repo / "src" / "app.py").write_text("x = 4\n")
         (repo / ".claude" / "quality-gate.expected-red").write_text("partia K2: test czerwony z planu")

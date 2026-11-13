@@ -19,8 +19,8 @@ Automat na żądanie. Zasady, które wygrywają z każdą pokusą „zrobić wi�
 - **STOP zamiast brnięcia:** najwyżej 2 próby naprawy na bramkę; blokada → blok STOP i raport, nie obejście.
 - **Jedna czynność na polecenie:** nie łączysz poleceń przez `;`, `&&` ani potok i nie używasz `sed`, `>>` ani
   heredoc — o polecenie złożone Claude Code pyta człowieka, a bez nadzoru je odrzuca. Pliki przebiegu czytasz
-  narzędziem Read, plan zapisujesz narzędziem Write albo Edit, kawałek odhaczasz przez `run_state.py tick`,
-  sprawę odkładasz przez `run_state.py park`.
+  narzędziem Read, plan zapisujesz narzędziem Write albo Edit, dowód kawałka zapisujesz przez `run_state.py verify`,
+  kawałek odhaczasz przez `run_state.py tick`, sprawę odkładasz przez `run_state.py park`.
 
 ## 0. Start
 Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py` (dalej `run_report.py`).
@@ -28,13 +28,17 @@ Skrypt przebiegu: `python3 .claude/skills/talos-story-run/scripts/run_report.py`
    **Karencja wersji (N10):** `python3 .claude/skills/talos-story-run/scripts/security_scan.py cooldown` — FAIL
    (brak `min-release-age=7` npm, `minimumReleaseAge: 10080` pnpm, `npmMinimalAgeGate` Yarn, `exclude-newer` uv albo
    lockfile poza gitem) → STOP z linią do dodania z wyniku; ustawień nie zmieniasz sam.
-2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`) →
-   katalog `.tf/runs/talos/<data>-<slug>/` (ignorowany przez git): `story.md`, `plan.md`, `parked.md`.
-   Ścieżka celowo poza `.claude/` — Claude Code ma `.claude/` na liście chronionych (code.claude.com
-   /docs/en/permission-modes), więc `--permission-mode acceptEdits` i tak odmówiłby pisania do `.claude/runs/`.
+2. `run_report.py start "<tytuł historyjki>" --story-file <plik>` (albo `--story "<treść>"`; numer z trackera:
+   `--key PROJ-123`) zakłada zadanie i drukuje **katalog przebiegu** `.tf/runs/<KEY>/` (roboczy, poza gitem:
+   `run.json`, `parked.md`, skany) — jego podajesz jako `<katalog>` w każdym poleceniu. Pliki trwałe zadania leżą
+   w `docs/project/changes/<KEY>/`: `ticket.md` (historyjka), `plan.md`, `task.json`, potem `evidence/` i `report.md`;
+   do gita trafiają jednym commitem na końcu (§4), więc w commitach kawałków ich nie dodajesz. `task.json`
+   i `INDEX.md` pisze tylko skrypt — nie edytujesz ich.
    **Wejście to klucz cięcia** (`/talos-story-run TSK-57`, tak woła Talosa faza realizacji zmiany): `run_report.py
    start --task TSK-57 --change CHG-12` składa `story.md` z wiersza cięcia w `docs/project/changes/CHG-12/plan.md`
    (wartość, wydanie, flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`.
+   Przebieg cięcia zostaje w starym układzie: jeden katalog `.tf/runs/talos/<data>-<slug>/` ze `story.md` i `plan.md`,
+   bez zadania i dowodów — weryfikację produktu (pierwsza linia CLAUDE.md) uruchamiasz sam, a `tick` odhacza od razu.
    TSK spoza planów zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”); TSK w planach wielu zmian bez
    `--change` → kod 2 i lista zmian (PRB-33).
 3. Gałąź `story/<slug>` od bazy cięcia (core-git-workflow). Zapamiętaj bazę przed `git switch -c` i wracaj do niej
@@ -64,7 +68,8 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
   i kodzie, nazwy bierzesz ze słownika. Pełnego raportu nie czytasz; konkretny standard otwierasz, gdy kawałek go dotyczy.
 - Brak kryteriów akceptacji → do 3 pytań do człowieka; z `--auto` → STOP z tymi pytaniami.
 - **Kształt historyjki**, gdy jest zainstalowany lint (pack-it):
-  `python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py --story <katalog-przebiegu>/story.md`.
+  `python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py --story docs/project/changes/<KEY>/ticket.md`
+  (cięcie: `<katalog>/story.md`).
   Uwagi AC-001…004 (scenariusz bez Wtedy, słaby wynik, szczegół implementacji, druga akcja) trafiają do planu jako
   **[założenie]** albo pytanie. STORY-001 (kilka akcji, kilku aktorów) — historyjki nie zaczynasz: bez `--auto` pytasz
   człowieka o podział; z `--auto` → blok STOP z propozycją podziału (jedna historyjka na akcję z listy akcji
@@ -83,7 +88,7 @@ Sprawdź, czy da się ją zrobić bez zgadywania: **kto, co, po co**; **kryteria
   opisanego w docs; `security-reviewer` przy auth, sekretach, uprawnieniach, IaC, CI; `architect` przy decyzji
   trudnej do odwrócenia.
 - Przypadki brzegowe znalezione przy planowaniu → `run_state.py park <katalog> "<sprawa>"` (dopisuje do `parked.md`
-  w formacie z nagłówka pliku). Plik jest w `.tf/runs/talos/<data>-<slug>/`
+  w formacie z nagłówka pliku). Plik jest w katalogu przebiegu
   (poza gitem) — w commitach i kodzie nie odsyłasz do niego; pozycje trafiają do opisu PR i raportu przebiegu
   (sekcja „Odłożone do decyzji”, przy cięciu z kluczem w `docs/project/changes/CHG-n/runs/TSK-n.md`).
 - **Bez `--auto`:** `run_state.py stage <katalog> needs --needs plan`, pokaż plan (kawałki, fazy warunkowe, założenia,
@@ -98,9 +103,12 @@ etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłosz
 1. **Test czerwony** z kryteriów kawałka (TDD; hook `tdd_guard` pilnuje kolejności). Tylko przypadki z kryteriów.
 2. **Najmniejszy kod**, który go zazieleni. Pracujesz we własnym kontekście (cache); mechaniczną zmianę w 1–2
    plikach z gotową specyfikacją zlecasz `quick-fixer`.
-3. **Weryfikacja:** polecenie z planu, potem jedno polecenie weryfikacji produktu z pierwszej linii CLAUDE.md
-   (format, lint, typy, testy i skan; wzór `templates/verify.sh`), a bez niego testy, lint i typy z CLAUDE.md. Linia
-   werdyktu: `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
+3. **Weryfikacja z dowodem:** polecenie z planu, potem `run_state.py verify <katalog> K<n> --files <pliki kawałka
+   po przecinku>` — skrypt sam uruchamia weryfikację produktu (polecenie z `.claude/quality-gate.json`; gdy go nie
+   ma, dodaj `--command "<polecenie weryfikacji z pierwszej linii CLAUDE.md>"`) i zapisuje dowód w
+   `docs/project/changes/<KEY>/evidence/`. Kod 0 = zielono; kod 1 = czerwono (wyjście w wyniku). Wyniku nie da się
+   zadeklarować: bez aktualnego dowodu `tick` i etap `pr` są odrzucane, a zmiana pliku kawałka po dowodzie go
+   unieważnia (powtórz `verify`). Linia werdyktu: `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
    **Skan bezpieczeństwa** po zielonych testach: `python3 .claude/skills/talos-story-run/scripts/security_scan.py scan
    --slice K<n> --attempt <k> --out <katalog-przebiegu>/security/K<n>` — semgrep (OWASP Top 10 i `.semgrep.yml`
    produktu) na plikach kawałka, audyt zależności tylko przy zmianie manifestu lub lockfile'a; SARIF, werdykt
@@ -114,7 +122,7 @@ etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłosz
 4. **Przegląd zakresu:** `scope-reviewer` dostaje kawałek z planu i `git diff`. Kod spoza kryteriów (obsługa
    nieproszonych przypadków, refaktor obok, nowa zależność bez potrzeby) → wycofujesz, a sprawa trafia do `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`.
-   Odhacz kawałek: `run_state.py tick <katalog> K<n>`. Przebieg cięcia z kluczem: każdy commit ma stopkę `Change: TSK-n`
+   Odhacz kawałek: `run_state.py tick <katalog> K<n>` (odmowa = brak aktualnego dowodu → `verify`). Przebieg cięcia z kluczem: każdy commit ma stopkę `Change: TSK-n`
    (core-conventional-commits). Kawałek cięcia z flagą (kolumna „Flaga” w planie cięć albo `flags`
    w `release.yaml`, w `run.json` pole `flag`): nowe zachowanie jest za flagą (domyślnie wyłączoną), a commit ma też
    stopkę `Flag: <klucz>`.
@@ -134,8 +142,10 @@ etapu (`run`) i przy jego wyniku (`pass`/`fail`); etapy wcześniejsze od zgłosz
    z `parked.md`), wynik `plan_drift` i `pr_budget`, skrót kosztu oraz do opisu PR sekcja triażu ryzyka
    `python3 .tf/factory/risk_triage.py --md` (doradcza; „wysokie” = człowiek przegląda wskazane pliki). Nie scalasz.
 4. Po otwarciu PR: `run_state.py stage <katalog> done --pr <numer>` (dashboard pokaże przebieg w kolumnie „Gotowe”).
-   `run_report.py finish <katalog>` → `report.md` (czas, tokeny, koszt, modele, agenci). Pokaż
-   człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
+   `run_report.py finish <katalog>` → `report.md` w katalogu zadania (czas, tokeny, koszt, modele, agenci).
+   **Pliki zadania — jeden commit:** `git add docs/project/changes/<KEY> docs/project/changes/INDEX.md`, potem
+   `git commit -m "docs(task): record <KEY>"` i push (dokładne polecenia drukuje `finish`); tak samo po STOP.
+   Pokaż człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
    Przebieg cięcia z kluczem: `finish` zapisuje też raport w repo, `docs/project/changes/CHG-n/runs/TSK-n.md`
    (ślad audytowy zmiany) — ten plik dołączasz do PR cięcia osobnym commitem z `Change: TSK-n`. Bez dostępu do
    transkryptów (np. sandbox fazy pdi) `finish` kończy się kodem 2, ale raport z planem i odłożonymi i tak zapisuje
@@ -188,11 +198,12 @@ Po STOP: `run_state.py stage <katalog> needs --needs stop --reason "<powód z bl
 - [ ] plan: ≤5 kawałków pionowych, każdy z testem, plikami i weryfikacją; fazy warunkowe z powodem
 - [ ] bez `--auto` — akceptacja planu przez człowieka
 - [ ] karencja wersji (`security_scan.py cooldown`) PASS albo STOP
-- [ ] każdy kawałek: test czerwony → kod → weryfikacja i skan bezpieczeństwa → przegląd zakresu → commit;
+- [ ] każdy kawałek: test czerwony → kod → weryfikacja z dowodem (`verify`) i skan → przegląd zakresu → commit → `tick`;
       ≤2 próby naprawy; blokujące ustalenie skanu = czerwona bramka
 - [ ] przypadki brzegowe w `parked.md`, nie w kodzie; lista w opisie PR
 - [ ] stan dla podglądu: `run_state.py stage` na granicach etapów i `step` w pętli kawałka (błąd skryptu to nie STOP)
-- [ ] jeden PR, bez scalania; `run_report.py finish` uruchomiony, skrót pokazany człowiekowi
+- [ ] jeden PR, bez scalania; `run_report.py finish` uruchomiony, pliki zadania w commicie `docs(task): record <KEY>`,
+      skrót pokazany człowiekowi
 
 ## Źródła
 - Anthropic, „Prompting Claude Opus 5.5” i „Prompting Claude Sonnet 5.5” (platform.claude.com, odczyt 2026-10-20):

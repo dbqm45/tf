@@ -5,8 +5,9 @@ Zgodność zmian z planem przebiegu Talosa: pliki zmienione na gałęzi historyj
   python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog przebiegu> [--base main] [--json]
 
 Kawałek w plan.md: `- [x] K<n> — <wartość> · … · pliki: <ścieżki po przecinku> · …` (ścieżka może być katalogiem
-albo wzorcem glob). Wynik: per kawałek pliki ruszone i nietknięte, zmiany spoza planu (bez katalogu przebiegu —
-i inne wyniki pracy fabryki w `.tf/`), pokrycie diffu planem w % i liczba
+albo wzorcem glob). Plan leży w katalogu przebiegu albo — gdy `run.json` ma `task_dir` — w katalogu zadania
+`docs/project/changes/<KEY>/`. Wynik: per kawałek pliki ruszone i nietknięte, zmiany spoza planu (bez wyników pracy
+fabryki w `.tf/` i plików zadań w `docs/project/changes/`), pokrycie diffu planem w % i liczba
 zmienionych plików testów. Skrypt tylko raportuje (kod 0); 2 — złe wywołanie.
 """
 from __future__ import annotations
@@ -44,7 +45,20 @@ def matches(path: str, spec: str) -> bool:
     return path == spec or fnmatch.fnmatch(path, spec) or path.startswith(spec.rstrip("/") + "/")
 
 
-RUN_PREFIXES = (".tf/",)   # wyniki pracy fabryki (przebiegi Talosa, raporty, logi)
+RUN_PREFIXES = (".tf/", "docs/project/changes/")   # wyniki pracy fabryki i pliki zadań (pisze je `tf task`)
+
+
+def plan_file(run_dir: str) -> str:
+    """plan.md przebiegu: w katalogu zadania wskazanym przez `task_dir` w run.json (od katalogu projektu, trzy
+    poziomy nad .tf/runs/<KEY>/), a w starym układzie w samym katalogu przebiegu."""
+    try:
+        with open(os.path.join(run_dir, "run.json"), encoding="utf-8") as fh:
+            rel = json.load(fh).get("task_dir")
+    except (OSError, ValueError, AttributeError):
+        rel = None
+    if rel:
+        return os.path.normpath(os.path.join(os.path.abspath(run_dir), "..", "..", "..", rel, "plan.md"))
+    return os.path.join(run_dir, "plan.md")
 
 
 def changed_files(base: str) -> list[str]:
@@ -92,7 +106,7 @@ def main(argv: list[str]) -> int:
             return 0
         else:
             args.append(a)
-    plan_md = os.path.join(args[0], "plan.md") if args else ""
+    plan_md = plan_file(args[0]) if args else ""
     if len(args) != 1 or not os.path.isfile(plan_md):
         print(f"✗ podaj katalog przebiegu z plan.md (jest: {args})", file=sys.stderr)
         return 2

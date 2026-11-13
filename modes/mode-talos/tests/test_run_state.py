@@ -13,6 +13,9 @@ REL = Path(".claude") / "skills" / "talos-story-run" / "scripts" / "run_state.py
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / REL).is_file())
 SCRIPT = ROOT / REL
 REPORT = SCRIPT.with_name("run_report.py")
+CHANGES = Path("docs") / "project" / "changes"
+OK = f'{sys.executable} -c "print(\'8 passed\')"'
+RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
 
 
 def run(script, args, cwd, cfg, extra_env=None):
@@ -37,11 +40,12 @@ def main() -> int:
         proj, cfg = Path(t) / "proj", Path(t) / "cfg"
         proj.mkdir()
         r = run(REPORT, ["start", "Sortowanie listy", "--story", "Jako admin chcę sortować."], proj, cfg)
-        d = next((proj / ".tf" / "runs" / "talos").glob("*-sortowanie-listy"), None)
+        d = next((proj / ".tf" / "runs").glob("T-*-sortowanie-listy"), None)
         check(r.returncode == 0 and d is not None, f"S-0: przygotowanie przebiegu: {r.stdout} {r.stderr}")
         if d is None:
             print("✗ brak katalogu przebiegu")
             return 1
+        doc = proj / CHANGES / d.name          # katalog trwały zadania (krok C4): plan, ticket i raport
         dash = proj / ".tf" / "runs" / "talos" / "dashboard.html"
 
         def one():
@@ -58,13 +62,13 @@ def main() -> int:
               f"S-1b: bez planu etap intake: {o.get('stage')} {o.get('slices')}")
 
         # S-2: plan z kawałkami → etap plan, potem odhaczenie → slices
-        (d / "plan.md").write_text("# Plan\n- [ ] K1 — sortowanie rosnące · kryteria: t\n- [ ] K2 — malejące · kryteria: t\n"
+        (doc / "plan.md").write_text("# Plan\n- [ ] K1 — sortowanie rosnące · kryteria: t\n- [ ] K2 — malejące · kryteria: t\n"
                                    "- [ ] K3 — po dacie · kryteria: t\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         o = one()
         check(o.get("stage") == "plan" and [s["id"] for s in o["slices"]] == ["K1", "K2", "K3"],
               f"S-2a: plan z kawałkami → etap plan: {o.get('stage')}")
-        (d / "plan.md").write_text("# Plan\n- [x] K1 — sortowanie rosnące · kryteria: t\n- [ ] K2 — malejące · kryteria: t\n"
+        (doc / "plan.md").write_text("# Plan\n- [x] K1 — sortowanie rosnące · kryteria: t\n- [ ] K2 — malejące · kryteria: t\n"
                                    "- [ ] K3 — po dacie · kryteria: t\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         o = one()
@@ -132,7 +136,7 @@ def main() -> int:
         check(o.get("stage") == "pr" and o.get("prSteps") == {"drift": "pass", "pr": "todo"},
               f"S-7a: plan_drift → etap pr: {o.get('stage')} {o.get('prSteps')}")
         run(SCRIPT, ["stage", str(d), "done", "--pr", "41", "--auto", "--effort", "high"], proj, cfg)
-        (d / "report.md").write_text("# Raport\nok\n", encoding="utf-8")
+        (doc / "report.md").write_text("# Raport\nok\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         o = one()
         check(o.get("stage") == "done" and o.get("pr") == 41 and o.get("auto") is True and o.get("effort") == "high"
@@ -164,7 +168,7 @@ def main() -> int:
         check(one().get("cost") == o.get("cost"), "S-8c: odświeżenie po step zachowuje zapamiętany koszt")
 
         # S-9: bezpieczeństwo HTML — treść plików z </script> nie wychodzi z bloku danych
-        (d / "story.md").write_text("# s\n</script><b>x</b>\n", encoding="utf-8")
+        (doc / "ticket.md").write_text("# s\n</script><b>x</b>\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         html = dash.read_text(encoding="utf-8")
         check(html.count("</script>") == 1 and "</script><b>" not in html,
@@ -177,7 +181,7 @@ def main() -> int:
         dash = proj / ".tf" / "runs" / "talos" / "dashboard.html"
         r = run(REPORT, ["start", "Pierwsza historyjka", "--story", "x"], proj, cfg)
         check(r.returncode == 0 and dash.is_file() and "Dashboard: file://" in r.stderr
-              and r.stdout.strip().startswith(".tf/runs/talos/"),
+              and r.stdout.strip().startswith(".tf/runs/T-"),
               f"S-10a: start buduje dashboard, adres na stderr, stdout bez zmian: {r.stdout!r} {r.stderr!r}")
         dash.unlink()
         (proj / ".claude").mkdir()
@@ -202,11 +206,26 @@ def main() -> int:
         proj, cfg = Path(t) / "proj", Path(t) / "cfg"
         proj.mkdir()
         run(REPORT, ["start", "Limit dobowy", "--story", "Jako operator chcę limit."], proj, cfg)
-        d = next((proj / ".tf" / "runs" / "talos").glob("*-limit-dobowy"), None)
-        plan = d / "plan.md"
+        d = next((proj / ".tf" / "runs").glob("T-*-limit-dobowy"), None)
+        doc = proj / CHANGES / d.name
+        plan = doc / "plan.md"
         head = plan.read_text(encoding="utf-8")
         plan.write_text(head + "- [ ] K1 — limit 45 zł · kryteria: AC1 · pliki: fees.py\n"
                                "- [ ] K2 — druga doba · kryteria: AC3 · pliki: fees.py\n", encoding="utf-8")
+        (proj / "fees.py").write_text("LIMIT = 45\n", encoding="utf-8")
+
+        def task():
+            return json.loads((doc / "task.json").read_text(encoding="utf-8"))
+
+        # dowód przed odhaczeniem (krok C4): tick przechodzi tylko dla kawałka zweryfikowanego przez `verify`
+        r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
+        check(r.returncode != 0 and "verify" in r.stdout + r.stderr and plan.read_text(encoding="utf-8").count("[x]") == 0,
+              f"V-1: tick bez dowodu odrzucony, plan bez zmian: {r.returncode} {r.stdout}{r.stderr}")
+        r = run(SCRIPT, ["verify", str(d), "K1", "--files", "fees.py", "--command", RED], proj, cfg)
+        check(r.returncode == 1 and "FAILED test_x" in r.stdout, f"V-2: verify z czerwonym poleceniem → kod 1 i wyjście: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["verify", str(d), "K1", "--files", "fees.py", "--command", OK], proj, cfg)
+        check(r.returncode == 0 and (doc / "evidence" / "K1-2.json").is_file(),
+              f"V-3: verify zapisuje dowód w katalogu zadania: {r.returncode} {r.stdout}{r.stderr}")
         r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
         text = plan.read_text(encoding="utf-8")
         check(r.returncode == 0 and "- [x] K1 — limit 45 zł" in text and "- [ ] K2 — druga doba" in text
@@ -228,6 +247,50 @@ def main() -> int:
         check(r.returncode != 0 and parked.read_text(encoding="utf-8") == after, f"T-5: pusta sprawa → błąd, plik bez zmian: {r.returncode}")
         rep = run(REPORT, ["status", str(d)], proj, cfg)
         check("2" in rep.stdout or "odłożon" in rep.stdout.lower(), f"T-6: raport przebiegu widzi odłożone sprawy: {rep.stdout[-300:]}")
+
+        # zmiana pliku po dowodzie unieważnia go; etap przebiegu trafia do task.json; do PR tylko ze zweryfikowanymi
+        run(SCRIPT, ["verify", str(d), "K2", "--files", "fees.py", "--command", OK], proj, cfg)
+        (proj / "fees.py").write_text("LIMIT = 50\n", encoding="utf-8")
+        r = run(SCRIPT, ["tick", str(d), "K2"], proj, cfg)
+        check(r.returncode != 0 and "- [ ] K2" in plan.read_text(encoding="utf-8"),
+              f"V-4: plik zmieniony po dowodzie → tick odrzucony: {r.returncode} {r.stdout}{r.stderr}")
+        run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
+        check(task().get("stage") == "plan", f"V-5a: stage plan trafia do task.json: {task().get('stage')}")
+        run(SCRIPT, ["step", str(d), "K2", "R1", "test", "run"], proj, cfg)
+        check(task().get("stage") == "realizacja", f"V-5b: pierwszy step → realizacja: {task().get('stage')}")
+        r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
+        meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
+        check(r.returncode == 2 and meta.get("stage") != "pr" and task().get("stage") == "realizacja" and "K2" in r.stdout,
+              f"V-6a: etap pr odrzucony z niezweryfikowanym kawałkiem: {r.returncode} {r.stdout} {meta.get('stage')}")
+        r = run(SCRIPT, ["step", str(d), "PR", "plan_drift", "pass"], proj, cfg)
+        check(r.returncode == 2 and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") != "pr",
+              f"V-6b: step PR też nie wchodzi do etapu pr bez dowodów: {r.returncode} {r.stdout}")
+        for k in ("K1", "K2"):
+            run(SCRIPT, ["verify", str(d), k, "--files", "fees.py", "--command", OK], proj, cfg)
+        r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
+        check(r.returncode == 0 and task().get("stage") == "pr"
+              and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") == "pr",
+              f"V-6c: po dowodach etap pr przechodzi w run.json i task.json: {r.returncode} {r.stdout} {task().get('stage')}")
+
+        # stary przebieg (.tf/runs/talos/<data>-<slug>/, bez zadania) działa jak dotąd i jest na tej samej stronie
+        old = proj / ".tf" / "runs" / "talos" / "2026-10-01-stary"
+        old.mkdir(parents=True)
+        (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary przebieg",
+                                                  "started_at": "2026-10-01T10:00:00+00:00"}), encoding="utf-8")
+        (old / "plan.md").write_text("# Plan\n- [ ] K1 — stara lista · pliki: a.py\n", encoding="utf-8")
+        r = run(SCRIPT, ["tick", str(old), "K1"], proj, cfg)
+        check(r.returncode == 0 and "- [x] K1" in (old / "plan.md").read_text(encoding="utf-8"),
+              f"V-7a: stary przebieg — tick bez dowodu jak dotąd: {r.returncode} {r.stdout}{r.stderr}")
+        r = run(SCRIPT, ["verify", str(old), "K1", "--files", "fees.py", "--command", OK], proj, cfg)
+        check(r.returncode == 2 and not (old / "evidence").exists(),
+              f"V-7b: verify w starym przebiegu → kod 2 z wyjaśnieniem: {r.returncode} {r.stdout}")
+        run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
+        rs = runs_json((proj / ".tf" / "runs" / "talos" / "dashboard.html").read_text(encoding="utf-8"))
+        slugs = {x.get("slug") for x in rs}
+        new = next((x for x in rs if x.get("slug") != "stary"), {})
+        check("stary" in slugs and len(rs) == 2 and [s["id"] for s in new.get("slices", [])] == ["K1", "K2"]
+              and any(i["name"] == "ticket.md" for g in new.get("files", []) for i in g["items"]),
+              f"V-8: stary i nowy przebieg na jednej stronie, nowy z planem i ticket.md: {slugs} {new.get('slices')}")
 
     for f in fails:
         print(f"✗ {f}")

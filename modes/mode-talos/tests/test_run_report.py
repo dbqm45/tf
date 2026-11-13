@@ -81,33 +81,64 @@ def main() -> int:
         proj, cfg = Path(t) / "proj", Path(t) / "cfg"
         proj.mkdir()
 
-        # start: katalog przebiegu w .tf/runs/talos/ (nie `.claude/runs/`, chroniony przez Claude Code —
-        # permission-modes 2026-11-05: writes to protected paths are never auto-approved, even with permissions.allow),
-        # slug bez polskich znaków
+        # start (krok C4): zadanie ma katalog trwały docs/project/changes/<KEY>/ (ticket.md, plan.md, task.json — do gita)
+        # i roboczy .tf/runs/<KEY>/ (run.json, parked.md — poza gitem; nie `.claude/runs/`, chroniony przez Claude Code);
+        # klucz T-<RRRRMMDD>-<slug>, slug bez polskich znaków; w .tf/runs/talos/ nowy przebieg już nie powstaje
         r = run(["start", "Import rozliczeń CDR", "--story", "Jako operator chcę importować CDR."], proj, cfg)
-        runs = sorted((proj / ".tf" / "runs" / "talos").glob("*-import-rozliczen-cdr"))
-        check(r.returncode == 0 and len(runs) == 1 and not (proj / ".claude" / "runs").exists(),
-              f"R-1: start tworzy katalog w .tf/runs/talos/, bez .claude/runs/: {r.stdout} {r.stderr}")
+        runs = sorted((proj / ".tf" / "runs").glob("T-*-import-rozliczen-cdr"))
+        old = sorted((proj / ".tf" / "runs" / "talos").glob("*-import-rozliczen-cdr"))
+        check(r.returncode == 0 and len(runs) == 1 and not old and not (proj / ".claude" / "runs").exists()
+              and r.stdout.strip() == f".tf/runs/{runs[0].name if runs else '?'}",
+              f"R-1: start tworzy .tf/runs/<KEY>/ i drukuje jego ścieżkę, bez .tf/runs/talos/<slug>: {r.stdout} {r.stderr}")
         if runs:
             d = runs[0]
-            check(all((d / f).is_file() for f in ("run.json", "story.md", "plan.md", "parked.md")),
-                  f"R-2: pliki przebiegu: {sorted(x.name for x in d.iterdir())}")
-            check("importować CDR" in (d / "story.md").read_text(encoding="utf-8"), "R-3: treść story zapisana")
-            check(re.match(r"\d{4}-\d{2}-\d{2}-", d.name) is not None, f"R-4: data w nazwie katalogu: {d.name}")
+            doc = proj / "docs" / "project" / "changes" / d.name
+            check(all((d / f).is_file() for f in ("run.json", "parked.md"))
+                  and all((doc / f).is_file() for f in ("ticket.md", "plan.md", "task.json"))
+                  and not (d / "plan.md").exists() and not (d / "story.md").exists(),
+                  f"R-2: pliki robocze i trwałe: {sorted(x.name for x in d.iterdir())} "
+                  f"{sorted(x.name for x in doc.iterdir()) if doc.is_dir() else '—'}")
+            check(doc.is_dir() and "importować CDR" in (doc / "ticket.md").read_text(encoding="utf-8"),
+                  "R-3: treść historyjki zapisana w ticket.md")
+            check(re.fullmatch(r"T-\d{8}-import-rozliczen-cdr", d.name) is not None, f"R-4: klucz z datą i slugiem: {d.name}")
+            meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
+            index = proj / "docs" / "project" / "changes" / "INDEX.md"
+            check(meta.get("key") == d.name and meta.get("task_dir") == f"docs/project/changes/{d.name}"
+                  and index.is_file() and d.name in index.read_text(encoding="utf-8"),
+                  f"R-4a: run.json wskazuje zadanie, zadanie jest w indeksie: {meta}")
         # PRB-32 — klon produktu bez `.tf/runs/talos/` w .gitignore ma „?? tmp/” w statusie po pierwszym start i hook
         # „czyste drzewo robocze” Talosa (SKILL §0.1) oraz dispatch_local pdi uznają klon za brudny. Skrypt zakłada
         # `.tf/runs/talos/.gitignore` z `*`, tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
-        gi = proj / ".tf" / "runs" / "talos" / ".gitignore"
+        gi = proj / ".tf" / "runs" / ".gitignore"
         check(gi.is_file() and gi.read_text(encoding="utf-8").strip() == "*",
-              f"R-1a: start zakłada .tf/runs/talos/.gitignore z `*`: istnieje={gi.is_file()}, "
+              f"R-1a: start zakłada .tf/runs/.gitignore z `*`: istnieje={gi.is_file()}, "
               f"treść={gi.read_text(encoding='utf-8') if gi.is_file() else '—'!r}")
         import subprocess as _sp
         _sp.run(["git", "init", "-q", "-b", "main", str(proj)], check=True, capture_output=True)
         for _k, _v in (("user.name", "t"), ("user.email", "t@t"), ("commit.gpgsign", "false")):
             _sp.run(["git", "-C", str(proj), "config", _k, _v], check=True, capture_output=True)
-        porcelain = _sp.run(["git", "-C", str(proj), "status", "--porcelain", ".tf/runs/talos/"],
+        porcelain = _sp.run(["git", "-C", str(proj), "status", "--porcelain", ".tf/runs/"],
                             capture_output=True, text=True).stdout
-        check(porcelain == "", f"R-1b: po start git status pusty w .tf/runs/talos/: {porcelain!r}")
+        check(porcelain == "", f"R-1b: po start git status pusty w .tf/runs/: {porcelain!r}")
+
+        # klucz z trackera, powtórny start, zły klucz; finish w nowym układzie zapisuje raport w katalogu zadania
+        r = run(["start", "Limit dobowy", "--key", "PROJ-123", "--story", "x"], proj, cfg)
+        pdoc = proj / "docs" / "project" / "changes" / "PROJ-123"
+        check(r.returncode == 0 and r.stdout.strip() == ".tf/runs/PROJ-123" and (pdoc / "task.json").is_file(),
+              f"R-25: --key nadaje klucz z trackera: {r.stdout} {r.stderr}")
+        r = run(["start", "Limit dobowy", "--key", "PROJ-123", "--story", "x"], proj, cfg)
+        check(r.returncode == 2 and "już istnieje" in r.stdout + r.stderr, f"R-26: powtórny start tego samego klucza: {r.stdout}")
+        r = run(["start", "Zły klucz", "--key", "proj 1", "--story", "x"], proj, cfg)
+        check(r.returncode == 2 and not (proj / ".tf" / "runs" / "proj 1").exists(),
+              f"R-27: klucz spoza wzorca odrzucony, nic nie powstaje: {r.returncode} {r.stdout}")
+        (pdoc / "plan.md").write_text("# Plan\n- [x] K1 — limit\n- [ ] K2 — druga doba\n", encoding="utf-8")
+        prun = proj / ".tf" / "runs" / "PROJ-123"
+        r = run(["finish", str(prun)], proj, Path(t) / "cfg-pusty")
+        rep = (pdoc / "report.md").read_text(encoding="utf-8") if (pdoc / "report.md").is_file() else ""
+        check(r.returncode == 2 and "1/2" in rep and not (prun / "report.md").exists(),
+              f"R-28: finish czyta plan z katalogu zadania i tam zapisuje raport: {r.returncode} {rep[:200]}")
+        check("docs(task): record PROJ-123" in r.stdout and "docs/project/changes/PROJ-123" in r.stdout,
+              f"R-29: finish podpowiada jeden commit plików zadania: {r.stdout[-300:]}")
 
         # finish: transkrypty sesji i podagenta od chwili startu (przebieg w .tf/runs/talos/)
         run_dir = proj / ".tf" / "runs" / "talos" / "2026-10-21-test"
@@ -331,7 +362,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {29 - len(fails)}/29 testów raportu przebiegu")
+    print(f"{'✓' if not fails else '✗'} {35 - len(fails)}/35 testów raportu przebiegu")
     return 1 if fails else 0
 
 

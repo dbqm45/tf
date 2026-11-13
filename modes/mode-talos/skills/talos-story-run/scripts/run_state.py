@@ -7,6 +7,8 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
   python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
+  python3 .claude/skills/talos-story-run/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
+        [--command "<polecenie>"] [--timeout <s>]
   python3 .claude/skills/talos-story-run/scripts/run_state.py tick <katalog-przebiegu> K2
   python3 .claude/skills/talos-story-run/scripts/run_state.py park <katalog-przebiegu> "<sprawa do decyzji>"
   python3 .claude/skills/talos-story-run/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
@@ -18,6 +20,12 @@ po nieudanej bramce (R1, R2, …). Etapy wcześniejsze od zapisywanego, które n
 Talos zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
 decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
 
+`verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
+`tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
+z aktualnym dowodem, a etap `pr` przechodzi tylko wtedy, gdy każdy kawałek zadania go ma. Etap przebiegu trafia też
+do `task.json` (intake → przyjecie, plan → plan, slices → realizacja, pr → pr). Przebieg w starym układzie (bez
+zadania w run.json) dowodów nie zapisuje i odhacza jak dotąd.
+
 `tick` odhacza kawałek w plan.md, `park` dopisuje sprawę na końcu parked.md — jedno polecenie z listy dozwolonych
 zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (pomiar E0, 2026-11-13).
 
@@ -25,8 +33,8 @@ zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (
 `.claude/talos.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
 domyślnie oba włączone. Zmienne TALOS_DASHBOARD=0 i TALOS_DASHBOARD_OPEN=0 robią to samo bez pliku.
 
-`dashboard` buduje samodzielny plik .tf/runs/talos/dashboard.html z wszystkich przebiegów w .tf/runs/talos/ (ignorowany
-przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
+`dashboard` buduje samodzielny plik .tf/runs/talos/dashboard.html z wszystkich przebiegów w .tf/runs/<KEY>/ i starych
+w .tf/runs/talos/ (ignorowany przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
 (run_report.py) i zapamiętuje w run.json; `stage` i `step` odświeżają plik bez liczenia kosztu. Etap, którego nikt nie
 zapisał, wynika z plan.md (kawałki odhaczone i nie) i report.md.
 Zapis stanu służy podglądowi: błąd tego skryptu nie jest powodem do STOP przebiegu.
@@ -51,6 +59,8 @@ STEPS = ("test", "kod", "weryf", "skan", "zakres")
 STATES = ("run", "pass", "fail")
 PR_STEPS = {"plan_drift": "drift", "pr": "pr"}
 NEEDS = ("plan", "stop")
+TASK_STAGE = {"intake": "przyjecie", "plan": "plan", "slices": "realizacja", "pr": "pr"}   # etap przebiegu → etap zadania
+TASK_ORDER = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
 SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(K\d+)\s*[—-]\s*(.+)$")
 MAX_TEXT = 40000
 MAX_RUNS = 40
@@ -87,6 +97,56 @@ def load(run_dir: Path) -> dict | None:
         return None
 
 
+# ---- zadanie (task.json pisze tylko `tf task`) -------------------------------------------------------------------
+
+def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | None:
+    """Przenosi etap przebiegu do task.json (tylko do przodu). Zwraca odmowę wejścia do etapu `pr` (kawałek bez
+    aktualnego dowodu, nieaktualny plik); inne niepowodzenia nie zatrzymują przebiegu."""
+    key, target = meta.get("key"), TASK_STAGE.get(stage)
+    if not key or not target:
+        return None
+    try:
+        cur = json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("stage")
+    except (OSError, ValueError, AttributeError):
+        cur = None
+    if cur in TASK_ORDER and TASK_ORDER.index(target) <= TASK_ORDER.index(cur):
+        return None
+    r = run_report.task_state(project, "stage", key, target)
+    if r is not None and r.returncode != 0 and stage == "pr":
+        return ((r.stdout + r.stderr).strip() or f"✗ zadanie {key} nie przeszło do etapu pr") \
+            + f"\nDowód kawałka: run_state.py verify {run_dir} K<n> --files <pliki kawałka>"
+    return None
+
+
+def slice_evidence(project: Path, meta: dict, slice_id: str) -> str:
+    """Stan kawałka wyliczony przez `tf task` (zweryfikowany, niezweryfikowany, czerwony…); bez wpisu — brak dowodu."""
+    r = run_report.task_state(project, "status", meta["key"], "--json")
+    try:
+        return json.loads(r.stdout).get("slice_states", {}).get(slice_id) or "brak dowodu"
+    except (AttributeError, ValueError):
+        return "stan zadania nieczytelny"
+
+
+def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, timeout: float | None, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return fail("ten przebieg jest w starym układzie (bez zadania), więc dowodów nie zapisuje — kawałek odhaczasz "
+                    "przez `tick` jak dotąd.")
+    args = ["verify", meta["key"], slice_id, "--files", files]
+    if command:
+        args += ["--command", command]
+    if timeout:
+        args += ["--timeout", str(timeout)]
+    r = run_report.task_state(project, *args)
+    if r is None:
+        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    refresh(project)
+    return r.returncode
+
+
 # ---- zapis stanu -------------------------------------------------------------------------------------------------
 
 def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, pr: int | None, auto: bool,
@@ -100,6 +160,10 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         return fail("etap needs wymaga `--needs plan` (plan czeka na akceptację) albo `--needs stop` (blok STOP).")
     if stage != "needs" and (needs or reason):
         return fail("`--needs` i `--reason` dotyczą tylko etapu needs.")
+    refused = sync_task(project, run_dir, meta, stage)
+    if refused:
+        print(refused)
+        return 2
     meta["stage"] = stage
     meta.pop("needs", None)
     meta.pop("stop_text", None)
@@ -126,9 +190,14 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     if target.upper() == "PR":
         if len(rest) != 2 or rest[0] not in PR_STEPS or rest[1] not in STATES:
             return fail(f"użycie: step <katalog> PR <{'|'.join(PR_STEPS)}> <{'|'.join(STATES)}>")
+        entering = meta.get("stage") in (None, "intake", "plan", "slices", "needs")
+        refused = sync_task(project, run_dir, meta, "pr") if entering else None
+        if refused:
+            print(refused)
+            return 2
         steps = meta.setdefault("pr_steps", {})
         steps[PR_STEPS[rest[0]]] = rest[1]
-        if meta.get("stage") in (None, "intake", "plan", "slices", "needs"):
+        if entering:
             meta["stage"] = "pr"
             meta.pop("needs", None)
             meta.pop("stop_text", None)
@@ -156,6 +225,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
             row[later] = "todo"               # nowy start etapu unieważnia stany późniejszych
     meta["current"] = cur
     if meta.get("stage") in (None, "intake", "plan", "needs", "pr", "done"):
+        sync_task(project, run_dir, meta, "slices")
         meta["stage"] = "slices"
         meta.pop("needs", None)
         meta.pop("stop_text", None)
@@ -168,8 +238,10 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
 # ---- odczyt stanu i dashboard ------------------------------------------------------------------------------------
 
 def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
-    """Odhacza kawałek w plan.md (`- [ ] K<n>` → `- [x] K<n>`); powtórzenie niczego nie zmienia."""
-    path = run_dir / "plan.md"
+    """Odhacza kawałek w plan.md (`- [ ] K<n>` → `- [x] K<n>`); powtórzenie niczego nie zmienia. Przebieg z zadaniem
+    odhacza tylko kawałek z aktualnym dowodem (`verify`)."""
+    meta = load(run_dir) or {}
+    path = run_report.docs_dir(run_dir, meta) / "plan.md"
     if not path.is_file():
         return fail(f"nie ma {path}")
     lines = path.read_text(encoding="utf-8").split("\n")
@@ -177,6 +249,10 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
         m = SLICE.match(line)
         if m and m.group(2) == slice_id and not m.group(3).lstrip().startswith("<"):   # nie wiersz szablonu
             if m.group(1) == " ":
+                state = slice_evidence(project, meta, slice_id) if meta.get("key") else "zweryfikowany"
+                if state != "zweryfikowany":
+                    return fail(f"{slice_id} nie ma aktualnego dowodu ({state}) — najpierw: run_state.py verify "
+                                f"{run_dir} {slice_id} --files <pliki kawałka>")
                 lines[i] = line.replace("- [ ]", "- [x]", 1)
                 path.write_text("\n".join(lines), encoding="utf-8")
             print(f"✓ {slice_id} odhaczony w {path.name}")
@@ -201,7 +277,7 @@ def cmd_park(run_dir: Path, item: str, project: Path) -> int:
 
 
 def parse_slices(run_dir: Path) -> list[dict]:
-    path = run_dir / "plan.md"
+    path = run_report.docs_dir(run_dir) / "plan.md"
     text = path.read_text(encoding="utf-8") if path.is_file() else ""
     out = []
     for line in text.splitlines():
@@ -218,7 +294,7 @@ def parse_slices(run_dir: Path) -> list[dict]:
 def infer_stage(meta: dict, run_dir: Path, slices: list[dict]) -> str:
     if meta.get("stage") in STAGES:
         return meta["stage"]
-    if (run_dir / "report.md").is_file():
+    if (run_report.docs_dir(run_dir, meta) / "report.md").is_file():
         return "done"
     if not slices:
         return "intake"
@@ -249,8 +325,9 @@ def dot_for(text: str) -> str:
 def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked: list[str]) -> list[dict]:
     groups: list[dict] = []
     main = []
-    for name in ("story.md", "plan.md", "parked.md"):
-        text = read_text(run_dir / name)
+    docs = run_report.docs_dir(run_dir, meta)       # nowy układ: historyjka, plan i raport w katalogu zadania
+    for path in (run_report.story_file(run_dir, meta), docs / "plan.md", run_dir / "parked.md"):
+        name, text = path.name, read_text(path)
         if text is None:
             continue
         dot = "ok"
@@ -276,7 +353,7 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
         result.append({"name": "STOP", "dot": "bad", "text": "\n".join(
             [f"STOP — {cur or 'przebieg'}", f"Powód: {meta.get('stop_text') or '(brak opisu)'}",
              f"Wznowienie: od {cur or 'pierwszego nieodhaczonego kawałka'} w plan.md"])})
-    report = read_text(run_dir / "report.md")
+    report = read_text(docs / "report.md")
     if report is not None:
         result.append({"name": "report.md", "dot": "ok", "text": report})
     if result:
@@ -344,7 +421,7 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
     obj = {"slug": meta.get("slug") or run_dir.name, "title": meta.get("title") or run_dir.name,
            "date": m.group(1) if m else str(meta.get("started_at", ""))[:10],
            "stage": stage, "needs": needs, "auto": bool(meta.get("auto")), "effort": meta.get("effort"),
-           "key": meta.get("task"), "change": meta.get("change"), "flag": meta.get("flag"), "pr": meta.get("pr"),
+           "key": meta.get("task") or meta.get("key"), "change": meta.get("change"), "flag": meta.get("flag"), "pr": meta.get("pr"),
            "stopText": meta.get("stop_text"), "slices": out_slices, "parked": len(parked), "parkedList": parked,
            "cost": usage.get("cost_usd"), "min": usage.get("minutes"), "models": usage.get("models") or [],
            "started": meta.get("started_at", "")}
@@ -357,9 +434,10 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
 
 
 def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) -> Path:
-    root = project / run_report.RUNS
+    root = project / run_report.RUNS                # stary układ, przebiegi cięć i sam dashboard
+    work = project / run_report.WORK                # nowy układ: .tf/runs/<KEY>/
     runs = []
-    for d in sorted(root.glob("*/run.json")) if root.is_dir() else []:
+    for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
         obj = run_object(d.parent, project, costs)
         if obj:
             runs.append(obj)
@@ -433,6 +511,12 @@ def main(argv: list[str]) -> int:
     t.add_argument("run_dir")
     t.add_argument("target")
     t.add_argument("rest", nargs="*")
+    v = sub.add_parser("verify")
+    v.add_argument("run_dir")
+    v.add_argument("slice_id")
+    v.add_argument("--files", default="")
+    v.add_argument("--command", default=None)
+    v.add_argument("--timeout", type=float, default=None)
     k = sub.add_parser("tick")
     k.add_argument("run_dir")
     k.add_argument("slice_id")
@@ -450,6 +534,8 @@ def main(argv: list[str]) -> int:
                          project)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
+    if args.cmd == "verify":
+        return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project)
     if args.cmd == "tick":
         return cmd_tick(Path(args.run_dir), args.slice_id, project)
     if args.cmd == "park":
