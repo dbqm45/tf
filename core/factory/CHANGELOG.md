@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [9.26.0] — 2026-11-13
+### Added
+- **core:** add slices with evidence to tf task (#227)
+
 ## [9.25.0] — 2026-11-13
 ### Added
 - **core:** add tf task with one state file and an index per task (#226)
