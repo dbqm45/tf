@@ -82,12 +82,24 @@ człowieka. Pomiar po E0 ma wykazać brak zmiany względem pomiaru po D4 (ten sa
 - **Poza zakresem kroku E:** zdarzenia i kawałek zablokowany zamiast STOP (pozycja 11), poziom `lead` (D10), zapis do
   trackera (komentarz, zmiana statusu), eskalacja modelu po porażce bramki.
 
+## Do sprawdzenia przez właściciela
+
+- [x] **Czy repozytorium `dbqm45/pdi` wpisuje u siebie nazwę agenta `talos` albo polecenie `/talos-story-run`.**
+  Sprawdzone 2026-11-14 na commicie `873f7b2` (z 2026-10-30), wyszukiwaniem w całym repozytorium: w kodzie (`src/`),
+  kontrakcie (`contract/`), integracjach, testach i konfiguracji nazw tych **nie ma**. Słowo „Talos” występuje tylko
+  w 10 plikach dokumentacji (`docs/`) i w 4 makietach (`design/konsola/`, `design/platforma/`) — jako opis, nie jako
+  wywołanie. Działanie pdi od tej zmiany nie zależy.
+- [ ] **Do decyzji:** czy poprawić słowo „Talos” w tych 14 plikach repozytorium pdi (teksty i dane przykładowe
+  makiet). To osobna zmiana w innym repozytorium; bez niej nic się nie psuje.
+- [ ] **Po `tf update` u siebie:** zmienić nazwę `.claude/talos.json` na `.claude/tf.json` i zmienne `TALOS_*` na
+  `TF_*` (jeśli ich używasz) oraz poprawić ścieżkę skryptu skanu i nazwę zmiennej w skopiowanym `change-check.yml`.
+
 ## Ryzyka
 
 | Ryzyko | Ograniczenie |
 |---|---|
 | przeniesienie zmienia zachowanie pętli | E0 to zmiana ścieżek i nazw; te same testy w nowym miejscu; pomiar po E0 względem pomiaru po D4 |
-| pdi przestaje działać | testy pdi aktualizowane tylko o nazwy; przebieg cięcia sprawdzony na plikach wyjściowych; strona pdi poza tym repozytorium (jeśli gdzieś wpisuje nazwę agenta) do sprawdzenia przez właściciela |
+| pdi przestaje działać | testy pdi aktualizowane tylko o nazwy; przebieg cięcia sprawdzony na plikach wyjściowych; repozytorium `dbqm45/pdi` sprawdzone — nazw w kodzie nie ma (sekcja „Do sprawdzenia przez właściciela”) |
 | CI projektu ze starą ścieżką skryptu skanu | instrukcja migracji w opisie wydania (`BREAKING CHANGE:`); nowy szablon `change-check.yml` |
 | skill włącza pętlę, gdy człowiek chciał tylko porozmawiać (E1) | scenariusze „nie włączaj się” w bramce skilla; wątpliwość → jedno pytanie; pomiar po E3 |
 | treść z trackera zawiera polecenia | zgłoszenie jest danymi (`ticket.md`), nie instrukcją; reguła z `core-agent-security` |
