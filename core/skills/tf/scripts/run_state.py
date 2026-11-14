@@ -877,8 +877,11 @@ def rollback_steps(project: Path) -> tuple[list[str], str]:
         return [], ""
     lines = value.splitlines() if isinstance(value, str) else value if isinstance(value, list) else []
     steps = [s for s in (as_data(x) for x in lines if isinstance(x, str)) if s][:10]
-    timed = isinstance(mins, (int, float)) and not isinstance(mins, bool) and mins > 0
-    return steps, (f"ok. {mins:g} min" if steps and timed else "")
+    try:
+        timed = isinstance(mins, (int, float)) and not isinstance(mins, bool) and 0 < mins < 100000
+        return steps, (f"ok. {float(mins):g} min" if steps and timed else "")
+    except (OverflowError, ValueError):
+        return steps, ""
 
 
 def engine_md(project: Path, name: str, *args: str) -> str | None:

@@ -131,3 +131,8 @@ Sekcja `deploy` karty operacyjnej (`.tf/config/operations.json`):
 - G3 gotowe: sekcja `deploy` karty (zakłada ją `tf onboard`), `tf task deployed` z testem dymnym, pytanie „wycofać?”
   na liście „czeka na Ciebie”, czas cofnięcia w opisie PR, następny krok w zakończeniu przebiegu (23 testy
   w `test_deploy.py`). Niezweryfikowane: prawdziwe wdrożenie — testy uruchamiają polecenia zastępcze.
+  Przegląd `security-reviewer`: bez nowej drogi do powłoki, poza katalog zadania ani do sekretów w gicie. Poprawione
+  i pokryte testami: bardzo duża liczba w `rollback_minutes` wywracała `tf status` i opis PR, limit czasu `nan`/`inf`,
+  znaki sterujące z karty na terminalu, wycofanie zapisywane bez czerwonego wyniku, nietypowy zapis w `task.json`.
+  Zostaje jak w całym silniku: `--by human:<id>` to sprawdzenie zapisu, nie tożsamości; polecenie testu dymnego jest
+  powielone w dowodzie, więc nie może zawierać sekretów.

@@ -168,6 +168,34 @@ def main() -> int:
         check(r.returncode == 0 and "deploy.smoke" in r.stdout and task(p)["stage"] == "pr",
               f"DP-17: test dymny, który nie jest tekstem, nie jest uruchamiany: {r.returncode} {r.stdout}")
 
+        # ustalenia przeglądu bezpieczeństwa: wrogie wartości w karcie i w zadaniu nie wywracają poleceń
+        p = Path(t) / "hostile"
+        new_task(p)
+        (p / CARD).parent.mkdir(parents=True, exist_ok=True)
+        (p / CARD).write_text('{"deploy": {"smoke": %s, "rollback": "cofnij", "rollback_minutes": 1%s, '
+                              '"logs": "logi \\u001b[2J tu"}}' % (json.dumps(RED), "0" * 400), encoding="utf-8")
+        r = call(p, TASK, "deployed", "IMP-1")
+        r2 = call(p, TASK, "list")
+        check(r.returncode == 1 and "Traceback" not in r.stdout + r.stderr + r2.stdout + r2.stderr
+              and "czeka na Ciebie" in r2.stdout and "cofnij" in r.stdout,
+              f"DP-24: ogromna liczba w rollback_minutes nie wywraca deployed ani tf status: {r.stderr[-300:]} {r2.stderr[-300:]}")
+        check("\x1b" not in r.stdout and "logi" in r.stdout,
+              f"DP-25: znaki sterujące z karty nie trafiają na terminal: {r.stdout!r}")
+        for bad in ("nan", "inf", "1e20", "0"):
+            r = call(p, TASK, "deployed", "IMP-1", "--timeout", bad)
+            check(r.returncode == 2 and "Traceback" not in r.stdout + r.stderr,
+                  f"DP-26: limit czasu {bad} jest odrzucany z kodem 2: {r.returncode} {r.stdout} {r.stderr[-200:]}")
+        p = Path(t) / "noRed"
+        new_task(p)
+        r = call(p, TASK, "deployed", "IMP-1", "--rolled-back", "--by", "human:anna")
+        check(r.returncode != 0 and "deploy" not in task(p),
+              f"DP-27: wycofanie da się zapisać tylko po czerwonym teście dymnym: {r.returncode} {r.stdout}")
+        f = p / CHANGES / "IMP-1" / "task.json"
+        f.write_text(json.dumps({**task(p), "deploy": {"state": ["ok"]}}), encoding="utf-8")
+        r = call(p, TASK, "status", "IMP-1")
+        check(r.returncode == 0 and "Traceback" not in r.stderr,
+              f"DP-28: nietypowy zapis wdrożenia w task.json nie wywraca tf task status: {r.stderr[-200:]}")
+
         # tf onboard dopisuje sekcję deploy i wykrywa test dymny; istniejących pól nie zmienia
         p = Path(t) / "onb"
         p.mkdir()

@@ -302,7 +302,7 @@ def after_merge(project: Path, key: str) -> str:
     except (OSError, ValueError, KeyError, TypeError):
         smoke = None
     if isinstance(smoke, str) and smoke.strip():
-        return f"Po scaleniu i wdrożeniu: `tf task deployed {key}` — uruchomi test dymny z karty operacyjnej i zapisze wynik."
+        return f"Po scaleniu i wdrożeniu: `tf task deployed {key}` — uruchomi polecenie testu dymnego zapisane w karcie operacyjnej i zapisze wynik."
     return ("Po scaleniu: karta operacyjna nie ma testu dymnego (pole `deploy.smoke` w .tf/config/operations.json), "
             "więc fabryka kończy na scaleniu i wdrożenia nie sprawdza.")
 

@@ -458,7 +458,17 @@ def deploy_card(root: Path) -> dict:
 
 
 def one_line(value, limit: int = 300) -> str:
-    return " ".join(str(value).split())[:limit]
+    """Jedna linia bez znaków sterujących — tekst z karty i z poleceń trafia na terminal i do task.json."""
+    return " ".join(re.sub(r"[\x00-\x1f\x7f-\x9f]", " ", str(value)).split())[:limit]
+
+
+def minutes(value) -> str:
+    """„ok. N min” dla rozsądnej liczby minut z karty; pusty tekst dla każdej innej wartości."""
+    try:
+        ok = isinstance(value, (int, float)) and not isinstance(value, bool) and 0 < value < 100000
+        return f"ok. {float(value):g} min" if ok else ""
+    except (OverflowError, ValueError):
+        return ""
 
 
 def rollback_text(dep: dict) -> str:
@@ -469,9 +479,8 @@ def rollback_text(dep: dict) -> str:
     if not steps:
         return ("git revert commita scalenia na gałęzi domyślnej i zwykłe wdrożenie (karta operacyjna nie opisuje "
                 "cofania: pole deploy.rollback)")
-    mins = dep.get("rollback_minutes")
-    timed = isinstance(mins, (int, float)) and not isinstance(mins, bool) and mins > 0
-    return "; ".join(steps) + (f" (ok. {mins:g} min)" if timed else "")
+    timed = minutes(dep.get("rollback_minutes"))
+    return "; ".join(steps) + (f" ({timed})" if timed else "")
 
 
 def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, rolled_back: bool, by: str | None,
@@ -484,6 +493,9 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
         return fail(f"zadanie {key} jest na etapie {stage} — wdrożenie zapisujesz po scaleniu PR (etap pr)")
     prev = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
     if rolled_back:
+        if prev.get("state") != "czerwone":
+            return fail(f"wycofanie zapisuje się po czerwonym teście dymnym, a zadanie {key} takiego wyniku nie ma "
+                        f"(najpierw: tf task deployed {key})")
         task["deploy"] = {**prev, "state": "wycofane", "decided_by": by, "decided_at": now(),
                           **({"note": one_line(note)} if note.strip() else {})}
         task["updated"] = now()
@@ -937,9 +949,9 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
     elif flag and flag.get("none"):
         print(f"  flaga: brak — {flag['none']}")
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else None
-    if dep and dep.get("state") in DEPLOY_STATES:
-        print(f"  wdrożenie: {DEPLOY_STATES[dep['state']]}" + (f" · wersja {dep['version']}" if dep.get("version") else "")
-              + (f" · {dep['at']}" if dep.get("at") else ""))
+    if dep and isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES:
+        print(f"  wdrożenie: {DEPLOY_STATES[dep['state']]}" + (f" · wersja {one_line(dep['version'], 60)}" if dep.get("version") else "")
+              + (f" · {one_line(dep['at'], 40)}" if dep.get("at") else ""))
     changed = set(frozen_changed(root, task))
     for rel in sorted(task.get("frozen") or {}):
         print(f"  {rel}: zamrożony" + (" — zmieniony bez decyzji człowieka" if rel in changed else ""))
@@ -1050,8 +1062,8 @@ def main(argv: list[str]) -> int:
     if a.cmd == "deployed":
         if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):
             return fail("wycofanie wdrożenia to decyzja człowieka: --rolled-back --by human:<id>", 2)
-        if a.timeout <= 0:
-            return fail("limit czasu testu dymnego musi być dodatni", 2)
+        if not 0 < a.timeout <= 86400:      # odrzuca też nan i inf
+            return fail("limit czasu testu dymnego: liczba sekund od 1 do 86400", 2)
         return cmd_deployed(root, a.key, a.version, a.timeout, a.rolled_back, a.by, a.note)
     if a.cmd == "stage":
         if a.stage not in STAGES:

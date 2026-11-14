@@ -165,6 +165,11 @@ def main() -> int:
         check("ok. 12 min" in section(body(p), "## Jak cofnąć"),
               f"PB-23: czas cofnięcia z karty (rollback_minutes) jest w opisie: {section(body(p), '## Jak cofnąć')}")
 
+        card.write_text('{"deploy": {"rollback": "cofnij", "rollback_minutes": 1%s}}' % ("0" * 400), encoding="utf-8")
+        r = call(p, rs, "pr-body", d, "--base", "main")
+        check(r.returncode == 0 and "Traceback" not in r.stderr and "cofnij" in section(body(p), "## Jak cofnąć"),
+              f"PB-24: ogromna liczba w rollback_minutes nie wywraca opisu PR: {r.stderr[-200:]}")
+
         # flaga zadania → wyłączenie flagi jako krok cofania
         r = call(p, rs, "flag", d, "set", "limit-dobowy", "--remove-by", "2027-01-31")
         call(p, rs, "pr-body", d, "--base", "main")
