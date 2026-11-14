@@ -798,8 +798,10 @@ BASES = ("origin/main", "main", "origin/master", "master")
 
 def as_data(value, limit: int = 600) -> str:
     """Tekst z plików zadania i z karty operacyjnej wstawiany do opisu PR: jedna linia bez znaków nagłówka i listy na
-    początku — treść jest danymi, nie strukturą opisu."""
+    początku — treść jest danymi, nie strukturą opisu. Wzmianka `@nazwa` trafia do kodu (nikogo nie powiadamia),
+    a obraz staje się zwykłym odnośnikiem (opis nie pobiera niczego z obcego adresu)."""
     text = re.sub(r"^(?:[#>]+\s*|[-*+]\s+)+", "", " ".join(str(value).split()))
+    text = re.sub(r"(?<![`\w])@([A-Za-z0-9][\w/-]*)", r"`@\1`", text.replace("![", "["))
     return text[:limit] + ("…" if len(text) > limit else "")
 
 
@@ -970,7 +972,7 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
         out.append(f"- Karta operacyjna (`{CARD.as_posix()}`, pole `deploy.rollback`) nie opisuje cofania wdrożenia — "
                    "powyżej krok domyślny.")
 
-    out += ["", "## Odłożone do decyzji", "", *(run_report.parked_items(run_dir) or ["- brak"])]
+    out += ["", "## Odłożone do decyzji", "", *([f"- {as_data(x, 400)}" for x in run_report.parked_items(run_dir)] or ["- brak"])]
     notes = [as_data(ln, 400) for name in ("plan.md", "spec.md")
              for ln in (read_text(docs / name) or "").splitlines() if ASSUMPTION.search(ln)]
     out += ["", "## Założenia", "", *([f"- {n}" for n in notes] or ["- brak zapisanych założeń"])]

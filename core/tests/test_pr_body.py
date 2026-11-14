@@ -4,6 +4,7 @@
 python3 .claude/tests/test_pr_body.py"""
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -172,6 +173,19 @@ def main() -> int:
         text = body(p)
         check(text.count("\n## Ryzyko") == 1 and ROLLBACK in text,
               f"PB-18: nagłówek wpisany w karcie nie tworzy drugiej sekcji: {text.count(chr(10) + '## Ryzyko')}")
+
+        # treść z zewnątrz (tytuł zgłoszenia, karta, odłożone) nie powiadamia ludzi i nie ładuje obrazów w opisie PR
+        card.write_text(json.dumps({"deploy": {"rollback": "Zapytaj @octocat ![x](http://example.com/p.png)"}}),
+                        encoding="utf-8")
+        call(p, rs, "park", d, "Do decyzji @acme/platform — limit dla flot")
+        meta_file = p / ".tf" / "runs" / "IMP-1" / "run.json"
+        meta = json.loads(meta_file.read_text(encoding="utf-8"))
+        meta_file.write_text(json.dumps({**meta, "title": "Limit dobowy @hubot"}, ensure_ascii=False), encoding="utf-8")
+        call(p, rs, "pr-body", d, "--base", "main")
+        text = body(p)
+        bare = re.findall(r"(?<![`\\w])@[A-Za-z0-9]", text)
+        check(not bare and "![" not in text and "`@octocat`" in text and "`@acme/platform`" in text and "`@hubot`" in text,
+              f"PB-22: wzmianki @… są w kodzie, a obrazy nie są osadzane: {bare} {'![' in text}")
 
         # bez gałęzi bazowej opis nadal powstaje
         r = call(p, rs, "pr-body", d, "--base", "nie-ma-takiej")
