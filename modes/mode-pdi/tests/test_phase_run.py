@@ -89,10 +89,10 @@ class Catch(BaseHTTPRequestHandler):
 
 
 def project(tmp: Path) -> Path:
-    """Projekt z dziennikiem zmiany CHG-12 i personami ewa, tomasz, talos."""
+    """Projekt z dziennikiem zmiany CHG-12 i personami ewa, tomasz oraz agentem tf (pętla fabryki)."""
     subprocess.run([sys.executable, str(ROOT / DREC), "change", "new", "CHG-12"], cwd=tmp, capture_output=True,
                    check=True)
-    for p in ("ewa", "tomasz", "talos"):
+    for p in ("ewa", "tomasz", "tf"):
         f = tmp / ".claude" / "agents" / "_generated" / p / f"{p}.md"
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(f"---\nname: {p}\n---\n", encoding="utf-8")
@@ -145,17 +145,17 @@ def main() -> int:
               f"R-3: ponowna praca wskazuje decyzję i decisions.md: {text[:500]}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "delivery", "--budget-usd", "5"], repo)
         p = jl(r) or {}
-        check(p.get("persona") == "talos" and p.get("gate") is None and "/talos-story-run" in p.get("prompt", "")
+        check(p.get("persona") == "tf" and p.get("gate") is None and "/tf <TSK>" in p.get("prompt", "")
               and "--auto" in p.get("prompt", "") and "--budget 5" in p.get("prompt", "")
-              # PRB-33: delivery prompt podaje `--change CHG-n`, żeby Talos nie zgadywał, do której zmiany należy TSK
+              # PRB-33: delivery prompt podaje `--change CHG-n`, żeby pętla nie zgadywała, do której zmiany należy TSK
               # (ten sam TSK może być w dwóch planach, zob. test_run_report.py R-33a)
               and "--change CHG-12" in p.get("prompt", "")
               # pdi #148: cięcia odgałęziają się od gałęzi fazy (pdi/CHG-n-delivery), bo pdi commituje na niej
-              # `decisions.md` tuż przed uruchomieniem Talosa — bez tego cięcia straciłyby wiążące decyzje
+              # `decisions.md` tuż przed uruchomieniem pętli — bez tego cięcia straciłyby wiążące decyzje
               and "pdi/CHG-12-delivery" in p.get("prompt", "")
               and "git switch pdi/CHG-12-delivery" in p.get("prompt", "")
               and "--base pdi/CHG-12-delivery" in p.get("prompt", ""),
-              f"R-4: delivery przez Talosa, bez bramki, z --change i gałęzią fazy jako bazą cięć: {r.stdout}")
+              f"R-4: delivery przez pętlę fabryki (agent tf), bez bramki, z --change i gałęzią fazy jako bazą cięć: {r.stdout}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "intent"], repo)
         check(r.returncode != 0 and "maja" in r.stdout and "pdi-phases.json" in r.stdout,
               f"R-5: brak persony → błąd z podpowiedzią: {r.stdout}{r.stderr}")
@@ -507,7 +507,7 @@ def main() -> int:
         check("COVERAGE_REPORTS: ''" in cbody and "MUTATION_REPORTS: ''" in cbody
               and '--coverage "$GITHUB_WORKSPACE/$p"' in cbody and '--mutation "$GITHUB_WORKSPACE/$p"' in cbody,
               f"W-17: change-check przekazuje opcjonalne raporty pokrycia i mutacji do ci_for_sdlc (Z7b-1b): {r.stdout}")
-        check("semgrep.dev" in cbody and "TALOS_SEMGREP_CONFIG: ${{ vars.TALOS_SEMGREP_CONFIG }}" in cbody,
+        check("semgrep.dev" in cbody and "TF_SEMGREP_CONFIG: ${{ vars.TF_SEMGREP_CONFIG }}" in cbody,
               "W-17: szablon mówi o hoście reguł (Z8a) i pozwala podać reguły lokalne")
         r = run(["workflow", "install", "--workflow", "change-check"], repo)
         check(r.returncode != 0, "W-18: change-check bez nadpisania")
@@ -695,7 +695,7 @@ if sys.argv[1:3] == ["pr", "create"]:
     check("if: env.PHASE == 'delivery'" in scanners and "pipx install semgrep==" in scanners
           and "pipx install pip-audit==" in scanners and list(steps).index("Skanery bezpieczeństwa (delivery)")
           < list(steps).index("Faza bez interakcji"),
-          f"W-19: przed fazą delivery skanery dla pętli kawałka Talosa (security_scan.py): {scanners}")
+          f"W-19: przed fazą delivery skanery dla pętli kawałka (security_scan.py): {scanners}")
     with_token = {h for h, c in steps.items() if "github.token" in c or "GITHUB_TOKEN" in c or "GH_TOKEN" in c}
     check(with_token == {"Gałąź fazy (poprawki trafiają do tego samego PR)", "PR-y cięć (delivery)", "PR fazy"},
           f"W-11: GH_TOKEN tylko w krokach gałęzi i PR: {sorted(with_token)}")

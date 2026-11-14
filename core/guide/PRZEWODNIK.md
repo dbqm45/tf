@@ -72,7 +72,7 @@ Agenci wspólni, dostępni dla każdej persony:
 ## 4. Tryby i automaty na żądanie
 | Co | Jak | Kiedy |
 |---|---|---|
-| pętla fabryki (w rdzeniu) | `/tf <zadanie>` albo `claude --agent tf` | jedno zadanie z kryteriami akceptacji → specyfikacja, plan z kawałków, commit na kawałek, dowody, jeden PR, raport kosztu; podgląd na żywo w `.tf/runs/dashboard.html`; przewodnik: `.tf/factory/PETLA.md`. Stare nazwy `/talos-story-run` i agent `talos` działają tylko z warstwą zgodności `mode-talos` (przestarzałe) |
+| pętla fabryki (w rdzeniu) | `/tf <zadanie>` albo `claude --agent tf` | jedno zadanie z kryteriami akceptacji → specyfikacja, plan z kawałków, commit na kawałek, dowody, jeden PR, raport kosztu; podgląd na żywo w `.tf/runs/dashboard.html`; przewodnik: `.tf/factory/PETLA.md` |
 | Agent teams (`mode-team`, `tf add mode-team`) | `team_switch.py on`, nowa sesja, `/team-session <zadanie>` | role muszą rozmawiać ze sobą w trakcie; eksperymentalne i drogie; przewodnik: `.tf/factory/packs/mode-team/GUIDE.md` |
 | Audyt kodu (`pack-it`) | po zatwierdzeniu zakresu: workflow `/code-audit` | pełny audyt w wielu wymiarach z rankingiem (skill `eng-code-audit`) |
 | Symulacja Event Stormingu (`pack-it`) | `/ddd-es-simulation` albo `claude --agent es-host` | trening facylitacji z uczestnikami AI |

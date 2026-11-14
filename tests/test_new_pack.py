@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
-MATRIX = "        packs: [none, pack-it, mode-talos, all]\n"
+MATRIX = "        packs: [none, pack-it, mode-team, all]\n"
 
 
 def write(path: Path, text: str) -> None:
@@ -69,7 +69,7 @@ def main() -> int:
         role = (base / "roles" / "demo-role.yaml").read_text(encoding="utf-8") if (base / "roles" / "demo-role.yaml").is_file() else ""
         check("name: demo-role" in role and "skills: [dm-start]" in role and "verify: \"" in role, f"N-6: rola: {role}")
         ci = (root / ".github" / "workflows" / "factory-checks.yml").read_text(encoding="utf-8")
-        check("packs: [none, pack-it, mode-talos, pack-demo, all]" in ci, f"N-7: macierz CI: {ci}")
+        check("packs: [none, pack-it, mode-team, pack-demo, all]" in ci, f"N-7: macierz CI: {ci}")
         check("Do zrobienia" in r.stdout and "skill_gate" in r.stdout, f"N-8: lista do zrobienia: {r.stdout}")
 
         before = (base / "pack.yaml").read_text(encoding="utf-8") if (base / "pack.yaml").is_file() else ""

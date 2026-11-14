@@ -206,19 +206,6 @@ def main() -> int:
         (proj / ".claude" / "tf.json").write_text("{nie json", encoding="utf-8")
         r = run(REPORT, ["start", "Piata historyjka", "--story", "x"], proj, cfg)
         check(r.returncode == 0 and dash.is_file(), f"S-10e: uszkodzony tf.json → opcje domyślne: {r.stderr!r}")
-        # stare nazwy (sprzed przeniesienia pętli do rdzenia) są czytane dalej: plik .claude/talos.json i zmienna TALOS_DASHBOARD
-        dash.unlink()
-        (proj / ".claude" / "tf.json").unlink()
-        (proj / ".claude" / "talos.json").write_text('{"dashboard": false}', encoding="utf-8")
-        r = run(REPORT, ["start", "Szosta historyjka", "--story", "x"], proj, cfg)
-        check(r.returncode == 0 and not dash.exists(), f"S-10f: stary plik opcji .claude/talos.json nadal działa: {r.stderr!r}")
-        (proj / ".claude" / "tf.json").write_text('{"dashboard": true}', encoding="utf-8")
-        r = run(REPORT, ["start", "Siodma historyjka", "--story", "x"], proj, cfg)
-        check(r.returncode == 0 and dash.is_file(), f"S-10g: nowy plik .claude/tf.json wygrywa ze starym: {r.stderr!r}")
-        dash.unlink()
-        (proj / ".claude" / "talos.json").unlink()
-        r = run(REPORT, ["start", "Osma historyjka", "--story", "x"], proj, cfg, {"TALOS_DASHBOARD": "0"})
-        check(r.returncode == 0 and not dash.exists(), "S-10h: stara zmienna TALOS_DASHBOARD=0 nadal wyłącza podgląd")
 
     # jedna czynność na polecenie: odhaczenie kawałka i odłożenie sprawy skryptem (bez sed, >> i heredoc w powłoce)
     with tempfile.TemporaryDirectory() as t:
@@ -337,8 +324,8 @@ def main() -> int:
               and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") == "pr",
               f"V-6c: po dowodach etap pr przechodzi w run.json i task.json: {r.returncode} {r.stdout} {task().get('stage')}")
 
-        # stary przebieg (.tf/runs/talos/<data>-<slug>/, bez zadania) działa jak dotąd i jest na tej samej stronie
-        old = proj / ".tf" / "runs" / "talos" / "2026-10-01-stary"
+        # stary przebieg (.tf/runs/cuts/<data>-<slug>/, bez zadania) działa jak dotąd i jest na tej samej stronie
+        old = proj / ".tf" / "runs" / "cuts" / "2026-10-01-stary"
         old.mkdir(parents=True)
         (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary przebieg",
                                                   "started_at": "2026-10-01T10:00:00+00:00"}), encoding="utf-8")
@@ -372,7 +359,7 @@ def main() -> int:
         check(any(n.startswith("evidence/K1-") for v in grp.values() for n in v),
               f"D-3: ostatni dowód kawałka w panelu plików: {grp}")
         old_o = next((x for x in rs if x.get("slug") == "stary"), {})
-        check(old_o.get("dir") == ".tf/runs/talos/2026-10-01-stary" and not old_o.get("taskDir"),
+        check(old_o.get("dir") == ".tf/runs/cuts/2026-10-01-stary" and not old_o.get("taskDir"),
               f"D-4: stary przebieg wskazuje swój katalog: {old_o.get('dir')}")
         run(SCRIPT, ["tick", str(d), "K2"], proj, cfg)
         (proj / "fees.py").write_text("LIMIT = 55\n", encoding="utf-8")

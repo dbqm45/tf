@@ -54,10 +54,10 @@ def main() -> int:
         git(repo, "add", "-A")
         git(repo, "commit", "-qm", "init")
         git(repo, "checkout", "-qb", "story/export")
-        # PRB-32: katalog przebiegu w .tf/runs/talos/ (nie `.claude/runs/`, chroniony przez Claude Code);
+        # PRB-32: katalog przebiegu w .tf/runs/cuts/ (nie `.claude/runs/`, chroniony przez Claude Code);
         # plan_drift ignoruje wyniki pracy fabryki w .tf/ (przebiegi, raporty, logi)
-        run_dir = repo / ".tf" / "runs" / "talos" / "2026-10-23-export"
-        write(repo, ".tf/runs/talos/2026-10-23-export/plan.md", PLAN)
+        run_dir = repo / ".tf" / "runs" / "cuts" / "2026-10-23-export"
+        write(repo, ".tf/runs/cuts/2026-10-23-export/plan.md", PLAN)
         write(repo, ".tf/reports/security.md", "# raport\n")
         for f in ("src/export/csv.py", "tests/test_export.py", "web/src/export/Button.tsx", "src/util/helpers.py"):
             write(repo, f)

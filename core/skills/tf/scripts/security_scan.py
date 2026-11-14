@@ -21,7 +21,6 @@ cooldown — karencja wersji (N10): min-release-age npm, minimumReleaseAge pnpm,
 Blokujące: poziom error albo warning z CWE z OWASP Top 10 2021 lub 2025; poziom wyniku → domyślny poziom reguły →
 warning; poziom none pomijany. Reszta trafia do raportu. Kod wyjścia: 0 PASS, 1 FAIL, 2 złe wywołanie.
 Skanery szukane w PATH, albo tylko w TF_SCAN_PATH, jeśli ustawione. Reguły semgrep: TF_SEMGREP_CONFIG
-(stare nazwy TALOS_SCAN_PATH i TALOS_SEMGREP_CONFIG działają dalej)
 (domyślnie p/owasp-top-ten z rejestru semgrep.dev; host musi być na liście dozwolonych kontenera).
 """
 from __future__ import annotations
@@ -205,15 +204,10 @@ def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
 # ── skanery ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def tool(name: str) -> str | None:
-    return shutil.which(name, path=env_any("TF_SCAN_PATH", "TALOS_SCAN_PATH"))
+    return shutil.which(name, path=os.environ.get("TF_SCAN_PATH") or None)
 
 
 SEMGREP_STATE = Path(".tf") / "cache" / "semgrep"
-
-
-def env_any(*names: str) -> str | None:
-    """Pierwsza ustawiona zmienna z listy: nowa nazwa przed starą (sprzed przeniesienia pętli do rdzenia)."""
-    return next((os.environ[n] for n in names if os.environ.get(n)), None)
 SEMGREP_STATE_VARS = {"SEMGREP_SETTINGS_FILE": "settings.yml", "SEMGREP_LOG_FILE": "semgrep.log",
                       "SEMGREP_VERSION_CACHE_PATH": "version-cache"}
 
@@ -239,7 +233,7 @@ def run_semgrep(root: Path, files: list[str], out: Path) -> None:
         target.write_text(json.dumps(empty_sarif("Semgrep"), indent=2) + "\n", encoding="utf-8")
         return
     cmd = [tool("semgrep"), "scan", "--metrics=off", "--sarif", "--output", str(target),
-           "--config", env_any("TF_SEMGREP_CONFIG", "TALOS_SEMGREP_CONFIG") or SEMGREP_DEFAULT]
+           "--config", os.environ.get("TF_SEMGREP_CONFIG") or SEMGREP_DEFAULT]
     if (root / ".semgrep.yml").is_file():
         cmd += ["--config", ".semgrep.yml"]
     r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True, env=semgrep_env(root))

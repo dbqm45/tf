@@ -68,14 +68,6 @@ def main() -> int:
         check(r.returncode == 0 and "pokrytych przez allow" in r.stdout and "pomijam" not in r.stdout,
               f"C-4: sam rdzeń — polecenia pętli pokryte, bez pominięcia: {r.stdout[-800:]} {r.stderr[-300:]}")
 
-        # C-5: z warstwą zgodności mode-talos (stare nazwy) ustawienia dalej pokrywają polecenia pętli
-        proj = Path(t) / "compat"
-        r = install(proj, "mode-talos")
-        check(r.returncode == 0, f"C-0: instalacja mode-talos: {r.stdout[-600:]} {r.stderr[-300:]}")
-        r = coverage(proj)
-        check(r.returncode == 0 and "pokrytych przez allow" in r.stdout,
-              f"C-5: z warstwą zgodności mode-talos przechodzi: {r.stdout[-800:]} {r.stderr[-300:]}")
-
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} test_settings_coverage w zainstalowanym projekcie")

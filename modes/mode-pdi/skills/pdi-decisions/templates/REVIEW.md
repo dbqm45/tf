@@ -1,7 +1,7 @@
 # Zasady przeglądu PR
 
 Szablon z tf (mode-pdi, pętla PR N2; wzór: `core-git-workflow/references/review-md.md`). Czyta go przegląd AI PR-ów
-cięć talosa (`pr_loop.py review`) i człowiek jako checklistę. Dopasuj zakres do produktu, a zmianę tego pliku
+cięć (`pr_loop.py review`) i człowiek jako checklistę. Dopasuj zakres do produktu, a zmianę tego pliku
 przejdź tak jak zmianę kodu — przez PR.
 
 ## Zakres

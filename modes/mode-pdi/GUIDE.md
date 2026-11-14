@@ -15,7 +15,7 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
 - **Fazy uruchamiane przez pdi (F4):** po decyzji na bramce skrzynka pdi wywołuje w repo workflow `sdlc-phase.yml`
   (`python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install`). Workflow zapisuje decyzję w
   `decisions.md` (`decision_record.py decision gate`), uruchamia personę fazy bez interakcji (`phase_run.py run`:
-  `intent` — maja, `requirements` — ewa, `architecture` — tomasz, `design` — natalia, `delivery` — talos; inna
+  `intent` — maja, `requirements` — ewa, `architecture` — tomasz, `design` — natalia, `delivery` — tf (pętla fabryki); inna
   persona w `.claude/pdi-phases.json`), otwiera PR fazy na gałęzi `pdi/CHG-n-<faza>` i wysyła do pdi prośbę o
   następną bramkę (`phase_run.py gate request`, podpisane `gate.requested` na `PDI_EVENTS_URL/events/tf`).
   Potrzebne: sekrety `ANTHROPIC_API_KEY` i `PDI_TF_SIGNING_SECRET` (ten sam w odbiorniku pdi), zmienna
@@ -26,15 +26,15 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   ShipScope liczy lead time od zgłoszenia), a persona pisze `intent.md` z problemu zgłaszającego.
 
 - **Skan bezpieczeństwa na każdym PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` instaluje
-  `change-check.yml`: ten sam skan co w pętli kawałka Talosa (`security_scan.py scan` z trybu mode-talos — semgrep
+  `change-check.yml`: ten sam skan co w pętli kawałka fabryki (`security_scan.py scan` ze skilla tf — semgrep
   z regułami OWASP Top 10 i `.semgrep.yml` produktu na plikach zmienionych od bazy PR, `npm audit` / `pip-audit` przy
   zmianie manifestu lub lockfile'a), a SARIF z `reports/security` sprawdza ci_for_sdlc (`--sarif`, SEC-001…003) razem
   z definicją zmian. Błąd skanu (brak skanera, audyt, który się nie wykonał) czerwieni PR. W fazie `delivery`
-  `sdlc-phase.yml` instaluje semgrep i pip-audit przed personą, żeby Talos mógł skanować kawałki. Reguły
+  `sdlc-phase.yml` instaluje semgrep i pip-audit przed personą, żeby pętla fabryki mogła skanować kawałki. Reguły
   `p/owasp-top-ten` pobiera się z `semgrep.dev` — w sandboxie persony host jest na liście dozwolonych (Z8a,
   `sandbox_settings.py`) i działa bez logowania (zestaw węższy niż po `semgrep login` — własne wzorce produktu
-  w `.semgrep.yml`); w CI bez sieci ustaw zmienną repozytorium `TALOS_SEMGREP_CONFIG` na plik reguł w repo.
-  Wymaga trybu mode-talos.
+  w `.semgrep.yml`); w CI bez sieci ustaw zmienną repozytorium `TF_SEMGREP_CONFIG` na plik reguł w repo.
+  Skan jest częścią rdzenia fabryki (skill tf).
 
 - **Drugi przegląd przed bramkami B2 i B3 (N1, DZ12):** `second_review.py artifact --change CHG-n --phase P`
   po fazie `requirements`/`architecture`, a przed prośbą o bramkę, czyta artefakt razem z decyzjami zmiany i
@@ -50,10 +50,10 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
   w sidecarze (`docs/project/changes/CHG-n/.review/<phase>.json`) wchodzi w budżet fazy (`PDI_PHASE_BUDGET_USD`)
   obok kosztu persony. Druga podkomenda `comments` sprawdza uwagi recenzenta z PR (N2, A5).
 
-- **Pętla PR talosa (N2):** po fazie `delivery` w trybie lokalnym pdi prowadzi każdy PR cięcia przez rundy:
+- **Pętla PR (N2):** po fazie `delivery` w trybie lokalnym pdi prowadzi każdy PR cięcia przez rundy:
   przegląd AI według `REVIEW.md` produktu (`pr_loop.py review`, w kontenerze fazy; bez pliku — szablon tf, a
   `pr_loop.py scaffold` dodaje go do produktu) → walidacja uwag drugim modelem (`second_review.py comments`, N1) →
-  talos poprawia tylko potwierdzone uwagi `critical`/`important` i czerwone checki (`pr_loop.py fix`, log CI jako
+  agent `tf` poprawia tylko potwierdzone uwagi `critical`/`important` i czerwone checki (`pr_loop.py fix`, log CI jako
   dane cytowane) → ponowny przegląd; najwyżej 2 rundy (jak DZ6). Uwagi niepotwierdzone, przy niedostępnym drugim
   modelu i sprzeczne z decyzją zmiany idą do człowieka jako pytania; drobne (`minor`) — jako lista w PR. **Zielone**
   = co najmniej jeden check CI na głowie PR i wszystkie `pass`/`skipping`; dlatego `change-check.yml` ma obowiązkowy

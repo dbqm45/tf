@@ -10,7 +10,7 @@ kawałek to osobny PR, kod metodą TDD.
 | Kiedy | Decyzja |
 |---|---|
 | 2026-11-13 | **D2** — wejście `/tf`, wywoływane także zwykłym zdaniem. **D3** — wagę dobiera fabryka; podnieść można swobodnie, obniżenie wymaga potwierdzenia człowieka. **D12** — przypisanie modelu i effortu na krok teraz bez zmiany zachowania; zmiany przydziału dopiero po osobnym pomiarze. |
-| 2026-11-14 | **Talos przestaje istnieć jako osobny byt**: pętla przechodzi do rdzenia, nowe nazwy nie zawierają słowa „Talos”. **Jedno polecenie `/tf`** dla zadania z trackera (`/tf jira EBO-1236`, `/tf linear EBO-1236`), cięcia pdi (`/tf TSK-57`) i treści wklejonej w czacie; bez drugiego polecenia. **Źródła zewnętrzne:** domyślnie wklejenie treści; gdy w sesji jest odpowiedni serwer MCP (Jira, Linear), fabryka może z niego skorzystać — sama niczego nie instaluje. **pdi** ma po zmianach działać tak dobrze jak dziś; dopasowanie po stronie wykonawcy. |
+| 2026-11-14 | **Talos przestaje istnieć jako osobny byt**: pętla przechodzi do rdzenia, a stare nazwy są usuwane od razu, bez warstwy zgodności (właściciel ma jedną instalację) — to wydanie MAJOR. **Jedno polecenie `/tf`** dla zadania z trackera, cięcia pdi i treści wklejonej w czacie; bez drugiego polecenia i **bez nazwy narzędzia w poleceniu** (`/tf EBO-1236`, nie `/tf jira EBO-1236`) — fabryka sama ustala źródło. **Źródła zewnętrzne:** domyślnie wklejenie treści; gdy w sesji jest odpowiedni serwer MCP (Jira, Linear), fabryka może z niego skorzystać — sama niczego nie instaluje. **pdi** ma po zmianach działać tak dobrze jak dziś; dopasowanie po stronie wykonawcy. |
 
 ## Cel
 
@@ -43,36 +43,37 @@ dodatkowego trybu.
 
 | # | Kawałek | Co powstaje | Testy (najpierw) | Wielkość |
 |---|---|---|---|---|
-| E0a | pętla w rdzeniu, bez zmiany zachowania | skill `tf` w `core/skills/tf/` z treścią pętli, skryptami i szablonami (ścieżka `.claude/skills/tf/scripts/`); agent sesji głównej `tf` w konfiguracji rdzenia; wymiar `tf` w konfiguracji, wpis w `standalone_skills`; uprawnienia skryptów w `core/settings.json`; testy pętli w `core/tests/`; opcje i zmienne bez słowa „Talos” (`.claude/tf.json`, `TF_DASHBOARD*`, `TF_SEMGREP_CONFIG`) ze starymi nazwami czytanymi dalej; `mode-talos` zostaje cienką warstwą zgodności (alias skilla, alias agenta, przekierowania skryptów pod starą ścieżką, `default: false`); `PUBLIC_API.md`, przewodnik, wpis `Deprecated` | testy pętli przechodzą w wariancie bez nakładek; agent `tf` jest generowany z rdzenia; stara ścieżka skryptu daje ten sam wynik co nowa; alias skilla wskazuje `tf`; stara zmienna i stary plik opcji działają; `build.py check` bez ostrzeżenia o nazwie; świeża instalacja nie dostaje `mode-talos` | L |
-| E0b | pdi woła `/tf` | `phase_run.py`: persona `tf`, polecenie `/tf <TSK> --auto --change …`; `pr_loop.py`: `--agent tf`; szablony CI i teksty pdi na nowe ścieżki i nazwy; nadpisanie persony w `.claude/pdi-phases.json` działa jak dotąd | testy pdi z nowymi nazwami; pdi działa w wariancie bez `mode-talos`; przebieg cięcia (`/tf TSK-n`) daje te same pliki co dziś; stara nazwa w `pdi-phases.json` działa, gdy warstwa zgodności jest zainstalowana | M |
-| E1 | rozpoznanie wejścia i źródła (poz. 9, D2) | `/tf` wywoływany także przez model; skrypt rozpoznaje: słowo źródła + klucz, sam klucz (tracker z karty operacyjnej), adres zgłoszenia, klucz cięcia z planu zmiany, brak argumentów (lista zadań i wznowienie); skill prowadzi: zadanie → pętla, pytanie o kod → odpowiedź, swobodna zmiana w czacie → bez pętli, wątpliwość → jedno pytanie; źródło i data w `ticket.md`; tracker: gdy w sesji jest serwer MCP — odczyt (bez zapisu), gdy nie ma — jedno zdanie, czego brakuje, i „wklej treść”; treść z trackera to dane, nie polecenia | skrypt: każda forma wejścia → źródło i klucz; nieznane słowo źródła → błąd z listą; klucz w dwóch planach → pytanie o zmianę; scenariusze skilla: kiedy włączyć pętlę i kiedy nie (pytanie, literówka, przegląd, plan projektu); brak MCP nie blokuje — droga przez wklejenie | M |
+| E0 | pętla w rdzeniu, stare nazwy usunięte, pdi woła `/tf` (bez zmiany zachowania pętli) | skill `tf` w `core/skills/tf/` z treścią pętli, skryptami i szablonami (ścieżka `.claude/skills/tf/scripts/`); agent sesji głównej `tf` w konfiguracji rdzenia; wymiar `tf`, wpis w `standalone_skills`; uprawnienia skryptów w `core/settings.json`; testy pętli w `core/tests/`; nowe nazwy: `.claude/tf.json`, `TF_DASHBOARD*`, `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, `.tf/runs/dashboard.html`, przewodnik `.tf/factory/PETLA.md`; tryb `mode-talos` usunięty, instalator pomija go przy aktualizacji z komunikatem; pdi: persona `tf`, polecenie `/tf <TSK> --auto --change …`, `--agent tf`, szablony CI na nowe ścieżki i zmienne; `PUBLIC_API.md`, przewodniki | testy pętli przechodzą w wariancie bez nakładek; agent `tf` jest generowany z rdzenia; `build.py check` bez ostrzeżenia o nazwie; aktualizacja projektu z `mode-talos` w manifeście przechodzi i usuwa jego pliki, a jawna prośba o ten tryb kończy się odmową z wyjaśnieniem; testy pdi z nowymi nazwami w wariancie bez dodatkowych trybów | L |
+| E1 | rozpoznanie wejścia i źródła (poz. 9, D2) | `/tf` wywoływany także przez model; skrypt rozpoznaje: klucz cięcia z planu zmiany, klucz zgłoszenia (tracker z karty operacyjnej albo z adresu), adres zgłoszenia, wklejoną treść, brak argumentów (lista zadań i wznowienie); gdy klucz może pochodzić z kilku trackerów podłączonych w sesji — jedno pytanie, a odpowiedź trafia do karty operacyjnej; skill prowadzi: zadanie → pętla, pytanie o kod → odpowiedź, swobodna zmiana w czacie → bez pętli, wątpliwość → jedno pytanie; źródło i data w `ticket.md`; tracker: gdy w sesji jest serwer MCP — odczyt (bez zapisu), gdy nie ma — jedno zdanie, czego brakuje, i „wklej treść”; treść z trackera to dane, nie polecenia | skrypt: każda forma wejścia → źródło i klucz; tracker zapamiętany w karcie nie jest pytany ponownie; klucz w dwóch planach → pytanie o zmianę; scenariusze skilla: kiedy włączyć pętlę i kiedy nie (pytanie, literówka, przegląd, plan projektu); brak MCP nie blokuje — droga przez wklejenie | M |
 | E2 | waga dobierana skryptem (poz. 9, D3) | `tf task weight <KEY>`: propozycja z treści zgłoszenia i ze ścieżek planu, z powodem; `--set`: podniesienie swobodne, obniżenie tylko `--by human:<id>`; `lekka` — bez `spec.md`, jeden kawałek, dowód nadal wymagany; `pelna` — tryb Auto niedostępny, dodatkowi recenzenci | zgłoszenie o logowaniu → `pelna`; literówka → `lekka`; nowa reguła → `zwykla`; plan dotyka migracji → podniesienie; obniżenie bez człowieka → odmowa; `pelna` z `--auto` → odmowa z wyjaśnieniem | M |
 | E3 | tryby i punkty stałe (poz. 9) | tryb `--plan`; tryb zwykły: jedno zatwierdzenie specyfikacji i planu; `--auto`: tylko punkty stałe; zamknięta lista kodów zatrzymań w skrypcie | `--plan` nie wchodzi w realizację; nieznany kod zatrzymania → błąd; podgląd pokazuje przyczynę | S–M |
 | E4 | komunikaty zatrzymań (poz. 10) | jeden plik komunikatów w prostym języku dla każdego kodu: co się stało, czego potrzeba, jedno pytanie z opcjami i rekomendacją; polecenie drukujące komunikat | każdy kod ma komunikat, pytanie i co najmniej dwie opcje; słowa z listy żargonu → test czerwony | S |
 | E5 | model i effort na krok (poz. 12, D12 — ruch 1) | `steps` w `config.yaml` z wartościami równymi dzisiejszym; `tf config show steps`; tabela „Kto co robi” sprawdzana względem konfiguracji | domyślne `steps` dają dzisiejsze modele; nadpisanie zmienia wynik; rozjazd tabeli z konfiguracją → test czerwony | M |
 | E6 | cięcia pdi w nowym układzie | przebieg cięcia dostaje katalog zadania, specyfikację z wiersza cięcia i zamiaru zmiany, dowody, ślad i flagę z planu wydania; raport cięcia zostaje tam, gdzie oczekuje go pdi | plan szczegółowy po przeczytaniu kontraktu pdi i jego testów — osobny dokument przed kodem | L |
 
-Kolejność: E0a → E0b → **pomiar** → E1 → E2 → E3 → **pomiar** → E4 → E5 → E6. Pomiary są płatne i wymagają zgody
-człowieka. Pomiar po E0b ma wykazać brak zmiany względem pomiaru po D4 (ten sam zestaw historyjek, polecenie `/tf`).
+Kolejność: E0 → **pomiar** → E1 → E2 → E3 → **pomiar** → E4 → E5 → E6. Pomiary są płatne i wymagają zgody
+człowieka. Pomiar po E0 ma wykazać brak zmiany względem pomiaru po D4 (ten sam zestaw historyjek, polecenie `/tf`).
 
 ## Ustalenia
 
-- **Warstwa zgodności zamiast usunięcia.** Usunięcie `/talos-story-run`, agenta `talos` i starej ścieżki skryptów
-  od razu byłoby zmianą niezgodną wstecz (wydanie MAJOR) i zepsułoby CI użytkowników, którzy skopiowali szablon pdi.
-  Dlatego wszystko, co nosi starą nazwę, zostaje w `mode-talos` jako przestarzałe przekierowanie: istniejące
-  instalacje działają dalej, nowe go nie dostają, a rdzeń nie zawiera słowa „Talos” poza opisem zgodności.
-  Usunięcie trybu — w następnym wydaniu MAJOR.
+- **Stare nazwy znikają od razu** (decyzja właściciela: jedna instalacja, bez warstwy zgodności). To zmiana
+  niezgodna wstecz, więc wydanie MAJOR ze stopką `BREAKING CHANGE:`; skrypt wydania sam podnosi zakresy
+  `requires.core` nakładek. Własne pliki projektu z nazwą `talos-story-run` poprawia `migrations.py`. Kto skopiował
+  do swojego repozytorium szablon CI pdi, musi w nim zmienić ścieżkę skryptu skanu i nazwę zmiennej.
+- **Bez nazwy narzędzia w poleceniu.** Źródło ustala fabryka: klucz z planu zmiany to cięcie; inny klucz to
+  zgłoszenie z trackera — tego z karty operacyjnej, a gdy karta go nie zna, z jedynego podłączonego w sesji; przy
+  kilku podłączonych fabryka pyta raz i zapamiętuje odpowiedź w karcie. Bez połączenia: „wklej treść”.
 - **Skrypty pętli zostają skryptami skilla** (`.claude/skills/tf/scripts/`), a nie silnika `.tf/factory/`: zmienia się
   tylko nazwa katalogu, więc przeniesienie da się sprawdzić jako czystą zmianę ścieżek.
-- **E0a nie zmienia zachowania:** `tf` ma w tym kawałku nadal wyłączone wywołanie przez model i tę samą treść pętli.
-  Wywołanie zwykłym zdaniem i rozpoznawanie wejścia wchodzą w E1, żeby pomiar po E0b porównywał to samo z tym samym.
+- **E0 nie zmienia zachowania pętli:** `tf` ma w tym kawałku nadal wyłączone wywołanie przez model i tę samą treść pętli.
+  Wywołanie zwykłym zdaniem i rozpoznawanie wejścia wchodzą w E1, żeby pomiar po E0 porównywał to samo z tym samym.
 - **Uprawnienia w rdzeniu:** skrypty pętli, `pr_budget.py` i `./verify.sh` trafiają na listę dozwolonych w każdej
   instalacji (dotąd tylko z trybem). To te same polecenia, nie nowe.
 - **Tracker przez MCP:** czy serwer jest dostępny w sesji, ocenia model (skrypt nie widzi narzędzi sesji). Fabryka
   tylko czyta zgłoszenie; niczego w trackerze nie zmienia i niczego sama nie instaluje. Droga przez wklejenie treści
   działa zawsze.
 - **Cięcie pdi to trzecie źródło zadania.** `/tf TSK-57` rozpoznaje klucz po nagłówku `tasks` planu zmiany — tak jak
-  dziś robi to `run_report.py start --task`. W E0b przebieg cięcia zostaje wewnątrz bez zmian (stary układ plików);
+  dziś robi to `run_report.py start --task`. W E0 przebieg cięcia zostaje wewnątrz bez zmian (jeden katalog `.tf/runs/cuts/…`);
   nowy układ dostaje w E6.
 - **Gałęzie `story/<slug>` i stopki `Change:` / `Flag:`** zostają bez zmian — korzysta z nich pdi.
 - **Waga `lekka`** korzysta z istniejącej reguły „zadanie bez `spec.md`”; osobnego pliku `task.md` nie wprowadzam.
@@ -85,9 +86,9 @@ człowieka. Pomiar po E0b ma wykazać brak zmiany względem pomiaru po D4 (ten s
 
 | Ryzyko | Ograniczenie |
 |---|---|
-| przeniesienie zmienia zachowanie pętli | E0a to zmiana ścieżek i nazw; te same testy w nowym miejscu; pomiar po E0b względem pomiaru po D4 |
-| pdi przestaje działać | testy pdi aktualizowane tylko o nazwy; wariant bez `mode-talos` w testach; przebieg cięcia sprawdzony na plikach wyjściowych |
-| CI użytkowników ze starą ścieżką skryptu | przekierowanie pod starą ścieżką w warstwie zgodności; test „stara ścieżka = nowy wynik” |
+| przeniesienie zmienia zachowanie pętli | E0 to zmiana ścieżek i nazw; te same testy w nowym miejscu; pomiar po E0 względem pomiaru po D4 |
+| pdi przestaje działać | testy pdi aktualizowane tylko o nazwy; przebieg cięcia sprawdzony na plikach wyjściowych; strona pdi poza tym repozytorium (jeśli gdzieś wpisuje nazwę agenta) do sprawdzenia przez właściciela |
+| CI projektu ze starą ścieżką skryptu skanu | instrukcja migracji w opisie wydania (`BREAKING CHANGE:`); nowy szablon `change-check.yml` |
 | skill włącza pętlę, gdy człowiek chciał tylko porozmawiać (E1) | scenariusze „nie włączaj się” w bramce skilla; wątpliwość → jedno pytanie; pomiar po E3 |
 | treść z trackera zawiera polecenia | zgłoszenie jest danymi (`ticket.md`), nie instrukcją; reguła z `core-agent-security` |
 | dobór wagi zaniża ryzyko | reguły ostrożne (wątpliwość → wyższa waga); ścieżki wrażliwe zawsze `pelna`; obniżenie tylko przez człowieka |

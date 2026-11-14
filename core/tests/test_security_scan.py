@@ -229,8 +229,6 @@ def main() -> int:
         r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH=str(empty))
         check(r.returncode == 1 and "semgrep" in r.stdout and "pipx install semgrep" in r.stdout and "SKAN: FAIL" in r.stdout,
               f"S-16: brak semgrep: {r.returncode} {r.stdout} {r.stderr}")
-        r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH="", TALOS_SCAN_PATH=str(empty))
-        check(r.returncode == 1 and "semgrep" in r.stdout, f"S-16a: stara zmienna TALOS_SCAN_PATH jest czytana dalej: {r.returncode} {r.stdout}")
         write(repo, "requirements.txt", "jinja2==3.1.4\n")
         r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH=str(fake_bin(tmp / "semonly", {"semgrep": FAKE_SEMGREP})))
         check(r.returncode == 1 and "pip install pip-audit" in r.stdout, f"S-17: brak pip-audit przy zmianie manifestu: {r.stdout}")

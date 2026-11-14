@@ -12,9 +12,9 @@ Przebieg zadania („zadanie → PR”, skill tf): katalog przebiegu i raport ko
 szablon zakłada `run_state.py spec <katalog> new`, gdy pętla zaczyna specyfikację — oraz report.md i evidence/ — do gita, jednym commitem `docs(task): record <KEY>` na końcu przebiegu) oraz roboczy
 `.tf/runs/<KEY>/` (run.json, parked.md, skany, logi — ignorowany przez git; PRB-32: ścieżka poza `.claude/`, chronioną
 w Claude Code). Katalog roboczy jest „katalogiem przebiegu” w pozostałych poleceniach; `run.json` wskazuje katalog
-trwały polem `task_dir`. Przebieg bez tego pola (stary układ `.tf/runs/talos/<RRRR-MM-DD>-<slug>/` ze story.md,
-plan.md i report.md w jednym katalogu) jest dalej czytany przez `status`, `finish` i dashboard.
-Przebieg cięcia (`--task`) zostaje w starym układzie: story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
+trwały polem `task_dir`.
+Przebieg cięcia (`--task`) ma jeden katalog `.tf/runs/cuts/<RRRR-MM-DD>-<slug>/` (run.json, story.md, plan.md,
+parked.md, report.md), bez katalogu zadania: story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
 zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`); z `--task` w dwóch
 planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish` zapisuje wtedy też kopię raportu
 w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
@@ -51,7 +51,7 @@ except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
     sys.path.insert(0, str(ROOT / ".tf" / "factory" / "_vendor"))
     import yaml
 
-RUNS = Path(".tf") / "runs" / "talos"   # stary układ i przebiegi cięć pdi (nazwa katalogu sprzed przeniesienia pętli)
+RUNS = Path(".tf") / "runs" / "cuts"    # przebiegi cięć pdi (`--task`): jeden katalog na przebieg, bez katalogu zadania
 WORK = Path(".tf") / "runs"             # katalog roboczy zadania: .tf/runs/<KEY>/ (poza .claude/ — PRB-32)
 CHANGES = Path("docs") / "project" / "changes"
 TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")   # ten sam wzorzec co w task_state.py

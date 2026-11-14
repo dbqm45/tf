@@ -1,12 +1,12 @@
 # Sprawdzenie definicji zmian i skan bezpieczeństwa na każdym PR (tryb mode-pdi; ci_for_sdlc, Z8c-2).
 # Instalacja: python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install --workflow change-check
-# Ten sam skan co w pętli kawałka Talosa (`security_scan.py scan`, tryb mode-talos): semgrep z regułami OWASP Top 10
+# Ten sam skan co w pętli kawałka fabryki (`security_scan.py scan`, skill tf): semgrep z regułami OWASP Top 10
 # (i `.semgrep.yml` produktu) na plikach zmienionych od bazy PR, audyt zależności (npm audit / pip-audit) tylko przy
 # zmianie manifestu lub lockfile'a; SARIF w reports/security trafia do ci_for_sdlc (`--sarif`): SEC-001 (error albo
 # warning z CWE z OWASP Top 10) blokuje, SEC-002 i SEC-003 informują; adnotacje na pliku i linii.
 # Brak skanera albo skan, który nie zapisał SARIF, to czerwona bramka (brak pliku), nigdy cichy PASS.
 # Sieć: reguły `p/owasp-top-ten` pobiera się z semgrep.dev przy każdym uruchomieniu (w sandboxie persony host jest na
-# liście dozwolonych, pdi Z8a); bez sieci ustaw zmienną repozytorium TALOS_SEMGREP_CONFIG na plik reguł w repo.
+# liście dozwolonych, pdi Z8a); bez sieci ustaw zmienną repozytorium TF_SEMGREP_CONFIG na plik reguł w repo.
 # Uwaga: dla bezpieczeństwa przypnij akcje do pełnego SHA commita, a ci_for_sdlc do tagu wydania (vX.Y.Z).
 name: Definition check
 
@@ -34,15 +34,15 @@ jobs:
         run: |
           pipx install semgrep==1.183.0
           pipx install pip-audit==2.10.1
-      # Jedno polecenie weryfikacji produktu (N3, pierwsza linia CLAUDE.md) — to samo co u Talosa. Obowiązkowe: pętla PR
-      # talosa (pdi N2) uznaje PR za zielony tylko z checkami CI, a ten krok uruchamia testy produktu na każdym PR kodu.
+      # Jedno polecenie weryfikacji produktu (N3, pierwsza linia CLAUDE.md) — to samo co w pętli fabryki. Obowiązkowe: pętla PR
+      # (pdi N2) uznaje PR za zielony tylko z checkami CI, a ten krok uruchamia testy produktu na każdym PR kodu.
       # Brak verify.sh to czerwony krok z poleceniem dodania, nigdy cichy PASS. Narzędzia stosu (node, uv…) ustaw wyżej.
       - name: Weryfikacja produktu (N3)
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if [ ! -f verify.sh ]; then
-            echo "::error::Brak ./verify.sh (N3) — skopiuj .claude/skills/talos-story-run/templates/verify.sh, wpisz komendy stosu i nazwij go w pierwszej linii CLAUDE.md"
+            echo "::error::Brak ./verify.sh (N3) — skopiuj .claude/skills/tf/templates/verify.sh, wpisz komendy stosu i nazwij go w pierwszej linii CLAUDE.md"
             exit 1
           fi
           BASE="origin/$BASE_REF" SCAN_OUT=reports/security-verify bash verify.sh
@@ -52,9 +52,9 @@ jobs:
         continue-on-error: true
         env:
           BASE_REF: ${{ github.base_ref }}
-          TALOS_SEMGREP_CONFIG: ${{ vars.TALOS_SEMGREP_CONFIG }}
+          TF_SEMGREP_CONFIG: ${{ vars.TF_SEMGREP_CONFIG }}
         run: |
-          python3 .claude/skills/talos-story-run/scripts/security_scan.py scan --base "origin/$BASE_REF" --out reports/security
+          python3 .claude/skills/tf/scripts/security_scan.py scan --base "origin/$BASE_REF" --out reports/security
       # Ustalenia ocenia ci_for_sdlc niżej; błąd skanu (brak skanera, audyt, który się nie wykonał) czerwieni od razu,
       # także gdy część SARIF powstała — inaczej brakujący audyt wyglądałby jak czysty.
       - name: Błędy skanu

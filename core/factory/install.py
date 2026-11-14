@@ -337,6 +337,12 @@ def retarget(data: bytes) -> bytes:
     return data.replace(b" tests/test_", b" .claude/tests/test_").replace(b"(python3 tests/", b"(python3 .claude/tests/")
 
 
+# Nakładki i tryby wycofane z fabryki: id → co je zastąpiło. Aktualizacja projektu, który je miał, pomija je
+# z komunikatem (pliki trafiają do .tf/backup/ jak każdy plik, którego fabryka już nie dostarcza); jawna prośba
+# o taki identyfikator (--packs, --add) kończy się odmową z wyjaśnieniem.
+RETIRED_PACKS = {"mode-talos": "the task loop is part of the core now: use /tf (agent `tf`)"}
+
+
 # Reguły wycofane z szablonu: piaskownica Bash zamienia Read(...) z permissions.deny w zakaz odczytu dla programów,
 # więc npm test i build nie przeczytałyby node_modules. Ekonomię kontekstu pilnuje teraz hook guard_paths.
 RETIRED_DENY = ("Read(./node_modules/**)", "Read(./dist/**)", "Read(./build/**)", "Read(./coverage/**)",
@@ -677,6 +683,10 @@ def main(argv: list[str]) -> int:
             return 2
     legacy = legacy_packs(manifest, dst_root)
     previous = list((manifest or {}).get("packs") or {}) if manifest and "packs" in manifest else legacy
+    for pid in [p for p in (previous or []) if p in RETIRED_PACKS]:   # wycofane: aktualizacja je pomija, nie kończy się błędem
+        print(f"ℹ {pid} was retired — {RETIRED_PACKS[pid]}. Its files move to .tf/backup/.")
+    if previous:
+        previous = [p for p in previous if p not in RETIRED_PACKS]
     offered = offered_before(manifest, available)
     new_defaults = [pid for pid, p in available.items() if p.get("default") and offered is not None
                     and pid not in offered and pid not in (previous or [])]
@@ -698,6 +708,10 @@ def main(argv: list[str]) -> int:
     if lang_pack and lang_pack in split_ids(opts.get("remove")):
         print(f"✗ {lang_pack} is required by the working language '{language}'. Change the language first "
               f"(tf language <code>) or keep the pack.")
+        return 2
+    retired = [c for c in dict.fromkeys(chosen) if c in RETIRED_PACKS]
+    if retired:
+        print("✗ " + "; ".join(f"{c} was retired — {RETIRED_PACKS[c]}" for c in retired))
         return 2
     packs, unknown = resolve_packs(list(dict.fromkeys(chosen)), available, language, cfg)
     if unknown:

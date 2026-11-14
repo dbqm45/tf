@@ -204,7 +204,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 let sel = null, curFile = null;
 const MARK = {pass:"✓", fail:"✗", run:"…", todo:"○"};
 const CLS  = {pass:"done", fail:"fail", run:"cur", todo:"todo"};
-const runDir = r => r.dir || r.taskDir || `.tf/runs/talos/${r.date}-${r.slug}`;
+const runDir = r => r.dir || r.taskDir || `.tf/runs/cuts/${r.date}-${r.slug}`;
 const SLICE_PL = {done:"zrobiony", cur:"w toku", fail:"bramka nieudana", todo:"w kolejce",
   stale:"bez aktualnego dowodu — plik zmienił się po weryfikacji albo dowodu nie ma; uruchom weryfikację ponownie"};
 function sliceStrip(r){

@@ -50,11 +50,10 @@ zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (
 
 `launch` (wołane przez `run_report.py start`) buduje dashboard i otwiera go w przeglądarce; wyłączysz to w
 `.claude/tf.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
-domyślnie oba włączone. Zmienne TF_DASHBOARD=0 i TF_DASHBOARD_OPEN=0 robią to samo bez pliku. Stare nazwy
-(`.claude/talos.json`, TALOS_DASHBOARD*) działają dalej.
+domyślnie oba włączone. Zmienne TF_DASHBOARD=0 i TF_DASHBOARD_OPEN=0 robią to samo bez pliku.
 
-`dashboard` buduje samodzielny plik .tf/runs/dashboard.html z wszystkich przebiegów w .tf/runs/<KEY>/ i starych
-w .tf/runs/talos/ (ignorowany przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
+`dashboard` buduje samodzielny plik .tf/runs/dashboard.html z wszystkich przebiegów w .tf/runs/<KEY>/ i przebiegów cięć
+w .tf/runs/cuts/ (ignorowany przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
 (run_report.py) i zapamiętuje w run.json; `stage` i `step` odświeżają plik bez liczenia kosztu. Karta zadania
 pokazuje etap z task.json i pasek kawałków; kawałek odhaczony, który stracił aktualny dowód, ma osobny stan (`stale`).
 Zadanie bez przebiegu (samo `tf task`, świeży klon bez `.tf/runs/`) też dostaje kartę. Panel plików dzieli
@@ -94,7 +93,6 @@ MAX_TEXT = 40000
 MAX_RUNS = 40
 TEMPLATE = HERE.parent / "templates" / "dashboard.html"
 CONFIG = Path(".claude") / "tf.json"         # opcje podglądu; plik osobisty, aktualizacja fabryki go nie rusza
-LEGACY_CONFIG = Path(".claude") / "talos.json"   # nazwa sprzed przeniesienia pętli do rdzenia — czytana dalej
 DEFAULTS = {"dashboard": True, "dashboard_open": True}
 
 
@@ -639,7 +637,7 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
 
 
 def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) -> Path:
-    root = project / run_report.RUNS                # stary układ, przebiegi cięć i sam dashboard
+    root = project / run_report.RUNS                # przebiegi cięć pdi (jeden katalog na przebieg)
     work = project / run_report.WORK                # nowy układ: .tf/runs/<KEY>/
     runs = []
     for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
@@ -665,18 +663,15 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
 
 def options(project: Path) -> dict:
     """Opcje z `.claude/tf.json` (brak pliku albo klucza = domyślnie włączone); zmienne TF_DASHBOARD=0
-    i TF_DASHBOARD_OPEN=0 wyłączają opcję bez edycji pliku. Stare nazwy — plik `.claude/talos.json` i zmienne
-    TALOS_DASHBOARD* — są czytane dalej; nowy plik wygrywa ze starym."""
+    i TF_DASHBOARD_OPEN=0 wyłączają opcję bez edycji pliku."""
     opts = dict(DEFAULTS)
-    for name in (LEGACY_CONFIG, CONFIG):
-        try:
-            data = json.loads((project / name).read_text(encoding="utf-8"))
-            opts.update({k: bool(v) for k, v in data.items() if k in DEFAULTS})
-        except (OSError, ValueError, AttributeError):
-            pass
-    for key, envs in (("dashboard", ("TF_DASHBOARD", "TALOS_DASHBOARD")),
-                      ("dashboard_open", ("TF_DASHBOARD_OPEN", "TALOS_DASHBOARD_OPEN"))):
-        if any(os.environ.get(env, "").strip().lower() in ("0", "false", "no", "off") for env in envs):
+    try:
+        data = json.loads((project / CONFIG).read_text(encoding="utf-8"))
+        opts.update({k: bool(v) for k, v in data.items() if k in DEFAULTS})
+    except (OSError, ValueError, AttributeError):
+        pass
+    for key, env in (("dashboard", "TF_DASHBOARD"), ("dashboard_open", "TF_DASHBOARD_OPEN")):
+        if os.environ.get(env, "").strip().lower() in ("0", "false", "no", "off"):
             opts[key] = False
     if os.environ.get("CI"):          # CI i testy: bez otwierania przeglądarki
         opts["dashboard_open"] = False

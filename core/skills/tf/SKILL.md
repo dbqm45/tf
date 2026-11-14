@@ -38,7 +38,7 @@ Skrypt przebiegu: `python3 .claude/skills/tf/scripts/run_report.py` (dalej `run_
    **Wejście to klucz cięcia** (`/tf TSK-57`, tak woła pętlę faza realizacji zmiany): `run_report.py
    start --task TSK-57 --change CHG-12` składa `story.md` z wiersza cięcia w `docs/project/changes/CHG-12/plan.md`
    (wartość, wydanie, flaga, pliki, weryfikacja) i z `intent.md` zmiany; `run.json` dostaje `change`, `task` i `flag`.
-   Przebieg cięcia zostaje w starym układzie: jeden katalog `.tf/runs/talos/<data>-<slug>/` ze `story.md` i `plan.md`,
+   Przebieg cięcia zostaje w starym układzie: jeden katalog `.tf/runs/cuts/<data>-<slug>/` ze `story.md` i `plan.md`,
    bez zadania i dowodów — weryfikację produktu (pierwsza linia CLAUDE.md) uruchamiasz sam, a `tick` odhacza od razu.
    TSK spoza planów zmian → kod 2 i STOP („nie ma cięcia TSK-57 w planach zmian”); TSK w planach wielu zmian bez
    `--change` → kod 2 i lista zmian (PRB-33).

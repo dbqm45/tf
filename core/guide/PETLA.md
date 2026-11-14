@@ -53,16 +53,15 @@ katalogami:
 
 | Gdzie | Co | Git |
 |---|---|---|
-| `docs/project/changes/<KEY>/` | `ticket.md` (historyjka), `spec.md` (kryteria AC-n w formie Zakładając / Gdy / Wtedy, co zostaje bez zmian, co poza zakresem, otwarte pytania — sprawdza ją skrypt; z błędami nie ma planu; plik powstaje dopiero, gdy Talos zaczyna specyfikację), `plan.md` (kawałki do odhaczenia — od niego wznawiasz przerwany przebieg), `task.json` (stan), `evidence/` (dowody weryfikacji kawałków), `report.md` (raport) | tak — jednym commitem `docs(task): record <KEY>` na końcu przebiegu |
+| `docs/project/changes/<KEY>/` | `ticket.md` (historyjka), `spec.md` (kryteria AC-n w formie Zakładając / Gdy / Wtedy, co zostaje bez zmian, co poza zakresem, otwarte pytania — sprawdza ją skrypt; z błędami nie ma planu; plik powstaje dopiero, gdy pętla zaczyna specyfikację), `plan.md` (kawałki do odhaczenia — od niego wznawiasz przerwany przebieg), `task.json` (stan), `evidence/` (dowody weryfikacji kawałków), `report.md` (raport) | tak — jednym commitem `docs(task): record <KEY>` na końcu przebiegu |
 | `.tf/runs/<KEY>/` | `run.json`, `parked.md` (sprawy odłożone do Twojej decyzji), wyniki skanów, pełne logi weryfikacji | nie |
 
 Spis zadań: `docs/project/changes/INDEX.md`; stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
 z dowodem: pętla uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
 i nie przepuści przebiegu do PR. Bramka jakości nie reaguje na zmiany w `docs/project/changes/`.
 
-Przebiegi sprzed tej zmiany (`.tf/runs/talos/<data>-<slug>/`, wszystkie pliki w jednym katalogu) są dalej czytane
-przez `status`, `finish` i dashboard — przez jedno wydanie MINOR; nowe tam nie powstają. Wyjątek: przebieg cięcia
-z planu zmiany (`start --task TSK-n`, tryb pdi) na razie zostaje w starym układzie.
+Wyjątek: przebieg cięcia z planu zmiany (`start --task TSK-n`, tryb pdi) ma na razie jeden katalog
+`.tf/runs/cuts/<data>-<slug>/` ze wszystkimi plikami, bez katalogu zadania i dowodów.
 
 Raport (`python3 .claude/skills/tf/scripts/run_report.py finish <katalog>`): czas, tokeny (wejście, wyjście, odczyt i zapis cache),
 koszt w USD, modele i agenci, kawałki zrobione / plan, liczba odłożonych spraw. Liczy go skrypt z transkryptów
@@ -124,4 +123,4 @@ w `plan.md` to miejsce, od którego kontynuuje. Raport kosztu powstaje także po
 
 Szczegóły przebiegu: `.claude/skills/tf/SKILL.md` (w źródłach fabryki:
 `core/skills/tf/SKILL.md`); mechanizm: `docs/insights.md` w repozytorium fabryki, sekcje
-„Tryby” i „Talos” (nazwa pętli do wersji 9.33).
+„Tryby” i „Talos” (tak nazywała się pętla do wersji 9.33).

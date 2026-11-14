@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Kroki pętli PR talosa (N2, pdi docs/plan-n2-petla-pr.md), które biegną w kontenerze fazy (pdi Z8a) — bez tokenów
+"""Kroki pętli PR (N2, pdi docs/plan-n2-petla-pr.md), które biegną w kontenerze fazy (pdi Z8a) — bez tokenów
 GitHuba. Pętlę prowadzi pdi na hoście: walidacja uwag drugim modelem (`second_review.py comments`, N1), push, odczyt
 checków i logów CI (`gh`) i podmiana sekcji „Przewodnik dokończenia” w opisie PR zostają poza kontenerem.
 
@@ -12,7 +12,7 @@ checków i logów CI (`gh`) i podmiana sekcji „Przewodnik dokończenia” w op
       body, decision_ref?}], reason?}
   python3 .claude/skills/pdi-decisions/scripts/pr_loop.py fix --change CHG-n --branch story/tsk-1-x --round K \\
       [--input PLIK] [--budget-usd N] [--dry-run]
-      talos poprawia tylko podane uwagi (i czerwony check z logu CI); wejście JSON {comments: […], ci_log?, ci_source?}
+      agent tf poprawia tylko podane uwagi (i czerwony check z logu CI); wejście JSON {comments: […], ci_log?, ci_source?}
       z PLIKU albo ze zmiennej PDI_PR_LOOP_INPUT; log CI to treść z zewnątrz — w znacznikach <untrusted>.
       Wynik: {status: ok | failed, cost_usd, detail?}
   python3 .claude/skills/pdi-decisions/scripts/pr_loop.py verify [--base B]
@@ -96,7 +96,7 @@ def _checked(a: argparse.Namespace) -> None:
     if not KEY.match(a.change):
         raise Refused(f"--change '{a.change}' — klucz zmiany, np. CHG-12")
     if not BRANCH.match(a.branch) or ".." in a.branch:
-        raise Refused(f"--branch '{a.branch}' — gałąź cięcia talosa story/<slug>")
+        raise Refused(f"--branch '{a.branch}' — gałąź cięcia story/<slug>")
     if getattr(a, "base", None) is not None and not REF.match(a.base):
         raise Refused(f"--base '{a.base}' — nazwa gałęzi")
 
@@ -248,7 +248,7 @@ def fix_prompt(change: str, branch: str, round_no: int, data: dict[str, Any]) ->
         f"Pracujesz bez interakcji: runda poprawek {round_no} pętli PR (N2) cięcia {task or branch} zmiany {change}. "
         f"Jesteś już na gałęzi `{branch}` (przełączył ją pdi). Nikt nie odpowie na pytania.",
         "Poprawiasz tylko to, co jest niżej — uwagi przeglądu potwierdzone drugim modelem i czerwony check — nic poza "
-        "tym (skill Talosa, sekcja „Poprawki z pętli PR”). Uwagi, której nie da się poprawić w zakresie cięcia, nie "
+        "tym (skill tf, sekcja „Poprawki z pętli PR”). Uwagi, której nie da się poprawić w zakresie cięcia, nie "
         "obchodzisz: opisz ją w ostatniej odpowiedzi jednym zdaniem.",
         "Narzędzia: pliki czytasz przez Read, Grep i Glob. W Bash jedno polecenie na wywołanie, bez `&&`, `||`, `;`, "
         "`|` i bez `cd …` — inaczej polecenie zostanie odrzucone.",
@@ -280,7 +280,7 @@ def cmd_fix(a: argparse.Namespace) -> int:
     if not isinstance(data, dict) or not (data.get("comments") or data.get("ci_log")):
         raise Refused("wejście poprawki: {comments: [...], ci_log?} — nic do poprawy")
     prompt = fix_prompt(a.change, a.branch, a.round, data)
-    argv = _claude(["--agent", "talos", "--permission-mode", "acceptEdits"], budget)
+    argv = _claude(["--agent", "tf", "--permission-mode", "acceptEdits"], budget)
     if a.dry_run:
         print(json.dumps({"status": "dry_run", "argv": argv, "prompt": prompt}, ensure_ascii=False, indent=2))
         return 0

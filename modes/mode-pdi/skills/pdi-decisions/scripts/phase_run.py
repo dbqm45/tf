@@ -72,7 +72,7 @@ PHASES = {
     "requirements": {"persona": "ewa", "artifact": "requirements.md", "gate": "B2"},
     "architecture": {"persona": "tomasz", "artifact": "plan.md", "gate": "B3"},
     "design": {"persona": "natalia", "artifact": "design.md", "gate": "design-review"},
-    "delivery": {"persona": "talos", "artifact": None, "gate": None},
+    "delivery": {"persona": "tf", "artifact": None, "gate": None},
 }
 # Wynik poprzedniej fazy, bez którego faza nie startuje (poza szkicem z `change new`). Brak = PR poprzedniej fazy
 # nie jest scalony, a gałąź tej fazy rozjechałaby się z nim w dzienniku projektu i decisions.md.
@@ -264,14 +264,14 @@ def build_prompt(a) -> dict:
         budget_flag = f" --budget {budget}" if budget else ""
         # PRB-33: `--change CHG-n` wymagane, bo ten sam klucz TSK może być w planach wielu zmian — bez niego
         # `run_report.py start --task TSK-n` zgaduje (pierwsze trafienie) albo kończy się błędem z listą zmian.
-        # Gałąź fazy pdi (pdi/CHG-n-delivery) ma commit `decisions.md` zrobiony tuż przed uruchomieniem Talosa
+        # Gałąź fazy pdi (pdi/CHG-n-delivery) ma commit `decisions.md` zrobiony tuż przed uruchomieniem pętli
         # (pdi #148) — cięcia odgałęziają się od niej, nie od `main`, inaczej straciłyby decyzje wiążące.
         lines.append(f"Jesteś na gałęzi fazy pdi/{a.change}-delivery (commit `decisions.md` zrobiony przez pdi tuż "
                      f"przed Twoim uruchomieniem). Każde cięcie zaczyna `story/<slug>` od tej gałęzi — "
                      f"`git switch -c story/<slug>`, bez `git switch main` — i wraca na nią między cięciami "
                      f"(`git switch pdi/{a.change}-delivery`), żeby cięcia nie dziedziczyły commitów poprzedniego. "
                      f"`plan_drift.py` uruchom z `--base pdi/{a.change}-delivery`.")
-        lines.append(f"Zrealizuj cięcia TSK z {d}/plan.md: dla każdego `/talos-story-run <TSK> --auto "
+        lines.append(f"Zrealizuj cięcia TSK z {d}/plan.md: dla każdego `/tf <TSK> --auto "
                      f"--change {a.change}{budget_flag}` (commit na kawałek z dopiskiem `Change: <TSK>`, "
                      f"jeden PR na cięcie). Nie scalasz PR-ów.")
     else:
@@ -333,7 +333,7 @@ def cmd_run(a) -> int:
         open_qs = unanswered(a.change, plan)
         if open_qs:
             raise Refused(f"{plan} ma w `## {QUESTIONS}` pytania bez odpowiedzi w decisions.md — delivery nie rusza, "
-                          "bo talos zgadywałby odpowiedź (PRB-3): " + "; ".join(f"„{q}”" for q in open_qs)
+                          "bo pętla /tf zgadywałaby odpowiedź (PRB-3): " + "; ".join(f"„{q}”" for q in open_qs)
                           + ". Odpowiedz na nie przy bramce w pdi (answers w decide_inbox_item) albo usuń je z plan.md "
                           "poprawkami fazy architecture.")
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -638,8 +638,8 @@ def cmd_workflow_install(a) -> int:
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(TEMPLATE.with_name(f"{a.workflow}.yml"), target)
     if a.workflow == "change-check":
-        print(f"✓ {target} — skan wymaga trybu mode-talos (security_scan.py); bez sieci do semgrep.dev ustaw zmienną "
-              "TALOS_SEMGREP_CONFIG na plik reguł w repo")
+        print(f"✓ {target} — skan robi pętla fabryki (skill tf, security_scan.py); bez sieci do semgrep.dev ustaw zmienną "
+              "TF_SEMGREP_CONFIG na plik reguł w repo")
     else:
         print(f"✓ {target} — ustaw sekrety ANTHROPIC_API_KEY i PDI_TF_SIGNING_SECRET oraz zmienną PDI_EVENTS_URL")
     return 0
