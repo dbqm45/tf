@@ -406,8 +406,11 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str) -> int:
     if load(root, key) is not None:
         return fail(f"zadanie {key} już istnieje ({CHANGES / key / 'task.json'}) — stan: tf task status {key}")
     stamp = now()
-    save(root, {"schema": SCHEMA, "key": key, "title": title, "stage": STAGES[0], "weight": weight, "mode": mode,
-                "created": stamp, "updated": stamp})
+    task = {"schema": SCHEMA, "key": key, "title": title, "stage": STAGES[0], "weight": weight, "mode": mode,
+            "created": stamp, "updated": stamp}
+    if weight != "zwykla":           # waga podana wprost przy zakładaniu to już przydział — `weight --apply` jej nie obniży
+        task["weight_log"] = [{"from": "zwykla", "to": weight, "by": "process:start", "at": stamp}]
+    save(root, task)
     print(f"✓ zadanie {key} założone: {CHANGES / key}/ (etap: {STAGES[0]})")
     return 0
 

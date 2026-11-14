@@ -118,6 +118,11 @@ def main() -> int:
         code, out, raw = weight(p, "REG-1", "--apply")
         check(task(p, "REG-1").get("weight") == "zwykla" and out.get("proposal") == "pelna" and "człowiek" in out.get("note", ""),
               f"W-14a: po decyzji człowieka --apply nie zmienia wagi, tylko mówi o propozycji: {raw}")
+        tf(p, "start", "TYP-9", "--title", "Literówka w stopce", "--weight", "pelna")
+        (p / CHANGES / "TYP-9" / "ticket.md").write_text("# Literówka w stopce\n\nPopraw literówkę w stopce.\n", encoding="utf-8")
+        code, out, raw = weight(p, "TYP-9", "--apply")
+        check(task(p, "TYP-9").get("weight") == "pelna" and out.get("proposal") == "lekka",
+              f"W-14b: waga podana przy zakładaniu zadania nie jest obniżana przez --apply: {raw}")
         r = tf(p, "weight", "REG-1", "--set", "ogromna")
         check(r.returncode == 2, f"W-15: nieznana waga → kod 2: {r.returncode} {r.stdout}")
         r = tf(p, "weight", "NIE-1")
