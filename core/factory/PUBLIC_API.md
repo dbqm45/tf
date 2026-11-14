@@ -22,8 +22,10 @@ czyli co obiecujemy zachować w obrębie tej samej wersji MAJOR — także wobec
 
 Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API tej nakładki lub trybu (wersja w jej
 `pack.yaml`). **Pętla „zadanie → PR” jest częścią rdzenia** (od 10.0.0): agent sesji głównej `tf`, skill `tf`
-(polecenie `/tf`), skrypty `.claude/skills/tf/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]`,
-`status`, `finish`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `trace`, `verify`, `tick`, `park`, `dashboard`),
+(polecenie `/tf`), skrypty `.claude/skills/tf/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]
+[--source "<skąd>"]`, `status`, `finish`), `intake.py` (`resolve [--json] <wejście>` z polami `kind`, `key`, `tracker`,
+`changes`, `options`, `intent`, `ask`, `next`; `tracker [<typ> [--prefix P]]`), sekcja `tracker` (`type`, `prefixes`)
+karty operacyjnej `.tf/config/operations.json`, `run_state.py` (`stage`, `step`, `spec`, `flag`, `trace`, `verify`, `tick`, `park`, `dashboard`),
 `plan_drift.py` i `security_scan.py`, opcje `.claude/tf.json`, zmienne `TF_DASHBOARD`, `TF_DASHBOARD_OPEN`,
 `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, podgląd `.tf/runs/dashboard.html`, katalog roboczy przebiegu `.tf/runs/<KEY>/`
 (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania `docs/project/changes/<KEY>/` (`ticket.md`,

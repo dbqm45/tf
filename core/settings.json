@@ -44,6 +44,7 @@
       "Bash(python3 .tf/factory/skill_audit.py *)",
       "Bash(python3 .claude/hooks/jev_client.py --tier *)",
       "Bash(python3 .claude/skills/core-semver/scripts/semver.py *)",
+      "Bash(python3 .claude/skills/tf/scripts/intake.py *)",
       "Bash(python3 .claude/skills/tf/scripts/run_report.py *)",
       "Bash(python3 .claude/skills/tf/scripts/run_state.py *)",
       "Bash(python3 .claude/skills/tf/scripts/plan_drift.py *)",

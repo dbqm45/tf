@@ -156,6 +156,8 @@ def main() -> int:
     # W zainstalowanym projekcie pomijamy skrypty skilli spoza instalacji (np. requirements_lint.py z pack-it).
     skill = skill_path()
     text = skill.read_text(encoding="utf-8") if skill.is_file() else ""
+    for extra in sorted((skill.parent / "references").glob("*.md")):   # polecenia z plików szczegółów skilla też
+        text += "\n" + extra.read_text(encoding="utf-8")
     script_calls = set(re.findall(r"python3 \.claude/skills/[^\s`]+\.py", text))
     if INSTALLED:
         script_calls = {c for c in script_calls if (ROOT / c.split(" ", 1)[1]).is_file()}

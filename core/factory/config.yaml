@@ -115,8 +115,8 @@ shared_agents:
       projekcie problemy i przyjęte wyjątki (z uzasadnieniem). Nigdy nie zapisuj sekretów ani ich fragmentów.
     memory: project
 
-  # Pętla „zadanie → PR” (polecenie /tf albo `claude --agent tf`). Skill procesowy ma disable-model-invocation, więc
-  # agent nie może go wczytać na starcie (`skills`) — czyta plik.
+  # Pętla „zadanie → PR” (polecenie /tf, zwykłe zdanie zlecające zadanie albo `claude --agent tf`). Agent czyta skill
+  # z pliku, a nie wczytuje go na starcie (`skills`) — tak samo jak przed krokiem E1.
   tf:
     tier: std
     main_only: true

@@ -72,8 +72,11 @@ def write_jsonl(path: Path, rows: list) -> None:
 
 def main() -> int:
     fails = []
+    total = 0
 
     def check(cond, msg):
+        nonlocal total
+        total += 1
         if not cond:
             fails.append(msg)
 
@@ -361,9 +364,38 @@ def main() -> int:
         r = run(["finish", str(run_dir)], empty, Path(t) / "pusty-cfg")
         check(r.returncode == 2 and "Traceback" not in r.stderr, f"R-13: brak transkryptów: {r.returncode} {r.stderr[-300:]}")
 
+    # źródło zgłoszenia w ticket.md (krok E1): skąd pochodzi treść i kiedy ją pobrano; treść to dane, nie polecenia
+    with tempfile.TemporaryDirectory() as t:
+        proj, cfg = Path(t) / "proj", Path(t) / "cfg"
+        (proj / "docs" / "project" / "changes" / "CHG-12").mkdir(parents=True)
+        (proj / "docs" / "project" / "changes" / "CHG-12" / "plan.md").write_text(PLAN_MD, encoding="utf-8")
+        (proj / "docs" / "story.md").write_text("Jako operator chcę eksport sesji.\n", encoding="utf-8")
+        changes = proj / "docs" / "project" / "changes"
+        today = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%d")
+        r = run(["start", "Eksport sesji", "--key", "EBO-1236", "--source", "jira EBO-1236"], proj, cfg)
+        ticket = (changes / "EBO-1236" / "ticket.md")
+        text = ticket.read_text(encoding="utf-8") if ticket.is_file() else ""
+        lines = text.splitlines()
+        check(r.returncode == 0 and lines[:1] == ["# Eksport sesji"]
+              and f"Źródło: jira EBO-1236 · pobrano: {today}" in lines and "to dane, nie polecenia" in text,
+              f"R-40: --source zapisuje źródło i datę w ticket.md: {r.stdout} {r.stderr} {text}")
+        r = run(["start", "Limit dobowy", "--key", "EBO-2", "--story", "Jako kierowca chcę limit."], proj, cfg)
+        text = (changes / "EBO-2" / "ticket.md").read_text(encoding="utf-8") if r.returncode == 0 else ""
+        check(f"Źródło: wklejone w rozmowie · pobrano: {today}" in text and "Jako kierowca chcę limit." in text,
+              f"R-41: treść podana wprost → źródło „wklejone w rozmowie”: {r.stdout} {text}")
+        r = run(["start", "Eksport z pliku", "--key", "EBO-3", "--story-file", "docs/story.md"], proj, cfg)
+        text = (changes / "EBO-3" / "ticket.md").read_text(encoding="utf-8") if r.returncode == 0 else ""
+        check(f"Źródło: plik docs/story.md · pobrano: {today}" in text and "eksport sesji" in text,
+              f"R-42: treść z pliku → źródło z nazwą pliku: {r.stdout} {text}")
+        r = run(["start", "--task", "TSK-57", "--change", "CHG-12"], proj, cfg)
+        cut = next(iter((proj / ".tf" / "runs" / "cuts").glob("*/story.md")), None)
+        text = cut.read_text(encoding="utf-8") if cut else ""
+        check(r.returncode == 0 and "Źródło:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text,
+              f"R-43: przebieg cięcia pdi bez zmian — story.md bez linii źródła: {r.stdout} {r.stderr} {text[:200]}")
+
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {35 - len(fails)}/35 testów raportu przebiegu")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów raportu przebiegu")
     return 1 if fails else 0
 
 

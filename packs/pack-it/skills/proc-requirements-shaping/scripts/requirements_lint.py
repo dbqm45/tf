@@ -62,7 +62,9 @@ DEFAULT_POLICY = {"acFormat": "gwt", "maxScenarios": 6, "maxActions": 3}
 AC_ID = re.compile(r"^(?:[-*•]\s*)?(?:\*\*)?(AC-\d+)(?:\*\*)?\s*[:.)—–-]\s*")
 BULLET = re.compile(r"^[-*•]\s+")
 AC_LABEL = re.compile(r"^(?:#{1,6}\s*)?(kryteria akceptacji|acceptance criteria)\b.*$", re.I)
-ACTOR = re.compile(r"^\s*(?:jako|as an?|as)\s+(.+?)\s+(?:chcę|chciał\w*|i want|i would like|i'd like)\b", re.I)
+# zdanie „Jako … chcę” nie musi otwierać opisu (opis to linie sklejone spacją): ticket.md zadania zaczyna się od linii
+# źródła (pętla /tf), więc aktor może stać także po końcu poprzedniego zdania
+ACTOR = re.compile(r"(?:^\s*|(?<=[.!?]\s))(?:jako|as an?|as)\s+(.+?)\s+(?:chcę|chciał\w*|i want|i would like|i'd like)\b", re.I)
 GOAL = re.compile(r"\b(?:chcę|chciał\w*(?: bym)?|i want to|i would like to|i'd like to|i want)\s+(.*)", re.I | re.S)
 PURPOSE = re.compile(r",?\s+(?:aby|żeby|by|so that|in order to)\b", re.I)
 DETERMINERS = {"the", "a", "an", "my", "your", "his", "her", "its", "our", "their", "this", "that", "these", "those",

@@ -3,9 +3,47 @@
   "scenarios": [
     {
       "id": "zwykla-implementacja-historyjki",
+      "expect": "trigger",
+      "prompt": "Zaimplementuj tę historyjkę: jako użytkownik chcę zresetować hasło linkiem z maila, link ważny 30 minut.",
+      "checks": {
+        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri"], ["kawałk", "K1"]]
+      }
+    },
+    {
+      "id": "numer-zgloszenia-bez-trackera",
+      "expect": "trigger",
+      "prompt": "Zrealizuj zgłoszenie EBO-1236, jest następne w kolejce na ten sprint.",
+      "checks": {
+        "all": [["intake\\.py", "tracker", "Jir", "Linear"], ["wklej", "treś[ćc] zgłoszenia", "treś[ćc] zadania"]],
+        "none": ["zainstaluj[ęe] serwer MCP", "npx .*mcp"]
+      }
+    },
+    {
+      "id": "edge-zadanie-bez-tresci",
+      "expect": "trigger",
+      "prompt": "Weź się za następne zadanie z trackera.",
+      "checks": {
+        "all": [["numer", "klucz", "które zadanie", "treś[ćc]"], ["wklej", "podaj", "wznowi"]],
+        "none": ["K1 —", "BRAMKA K1"]
+      }
+    },
+    {
+      "id": "pytanie-o-kod",
       "expect": "no-trigger",
       "neighbor": "brak",
-      "prompt": "Zaimplementuj tę historyjkę: jako użytkownik chcę zresetować hasło linkiem z maila, link ważny 30 minut."
+      "prompt": "Jak w tym repozytorium działa logowanie i w którym miejscu sprawdzany jest token sesji?"
+    },
+    {
+      "id": "literowka-w-readme",
+      "expect": "no-trigger",
+      "neighbor": "brak",
+      "prompt": "Popraw literówkę w README: „instlacja” na „instalacja”."
+    },
+    {
+      "id": "przeglad-cudzego-pr",
+      "expect": "no-trigger",
+      "neighbor": "core-git-workflow",
+      "prompt": "Przejrzyj pull request kolegi przed scaleniem: na co patrzeć w diffie i jak opisać uwagi?"
     },
     {
       "id": "zadanie-na-noc-bez-nadzoru",
