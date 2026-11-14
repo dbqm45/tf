@@ -36,6 +36,17 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 .btn:hover{color:var(--text);border-color:var(--muted)}
 .banner{margin:14px 0 18px;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;color:var(--muted);font-size:12.5px;background:var(--panel)}
 .banner b{color:var(--text)}
+.waiting{margin:0 0 18px;border:1px solid var(--warn);border-radius:12px;background:var(--warn-bg);padding:10px 14px}
+.waiting[hidden]{display:none}
+.waiting h2{margin:0 0 6px;font-size:14px;color:var(--text)}
+.waiting .w{border-top:1px solid var(--line);padding:8px 0;cursor:pointer}
+.waiting .w:first-of-type{border-top:0}
+.waiting .w .who{font-weight:700}
+.waiting .w .since{color:var(--muted);font-size:12px;margin-left:8px}
+.waiting .w .q{margin-top:2px}
+.waiting .w ol{margin:4px 0 0 18px;padding:0;font-size:12.5px}
+.waiting .w li.rec{font-weight:700}
+.waiting .w .how{color:var(--muted);font-size:12px;font-family:var(--mono);margin-top:2px}
 
 /* tablica: 6 kolumn */
 .board{display:grid;grid-template-columns:repeat(6,minmax(280px,1fr));gap:0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
@@ -149,6 +160,8 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 
 <div class="banner">Stan zapisują <code>run_state.py stage</code> i <code>run_state.py step</code>, a ten plik buduje <code>run_state.py dashboard</code> (odświeża się sam co 5 s, gdy panel jest zamknięty). Koszt i czas liczy skrypt z transkryptów, nie model.</div>
 
+<section class="waiting" id="waiting" aria-label="Czeka na Ciebie" hidden></section>
+
 <div class="board" id="board" aria-label="Zadania wg etapu"></div>
 
 <div class="bar">
@@ -255,7 +268,26 @@ function card(r){
     ${hint?`<div class="hint">${esc(hint)}</div>`:""}
   </button>`;
 }
+function since(ts){
+  const d = ts ? new Date(ts) : null; if(!d || isNaN(d)) return "";
+  const min = Math.max(0, Math.round((Date.now() - d.getTime())/60000));
+  return "czeka od " + (min < 60 ? `${min} min` : min < 2880 ? `${Math.round(min/60)} godz.` : `${Math.round(min/1440)} dni`);
+}
+function renderWaiting(){
+  /* lista „Czeka na Ciebie”: wszystko, czego fabryka nie rozstrzygnie bez człowieka — z task.json i run.json */
+  const rows = RUNS.flatMap(r => (r.waiting||[]).map(w => ({r, w})));
+  const box = $("#waiting");
+  box.hidden = rows.length === 0;
+  box.innerHTML = rows.length ? `<h2>Czeka na Ciebie (${rows.length})</h2>` + rows.map(({r, w}) =>
+    `<div class="w" data-run="${esc(r.slug)}"><span class="who">${esc(r.key||r.slug)} · ${esc(r.title)}</span><span class="since">${esc(since(w.since))}</span>
+      <div>${esc(w.what)}${w.details?` — ${esc(w.details)}`:""}</div>
+      ${w.question?`<div class="q"><b>Pytanie:</b> ${esc(w.question)}</div>`:""}
+      ${(w.options||[]).length?`<ol>${w.options.map(o=>`<li class="${o.rekomendowana?"rec":""}">${esc(o.opcja)} — ${esc(o.skutek)}${o.rekomendowana?" (rekomendowana)":""}</li>`).join("")}</ol>`:""}
+      ${w.how&&w.kind!=="stop"?`<div class="how">${esc(w.how)}</div>`:""}</div>`).join("") : "";
+  box.querySelectorAll(".w").forEach(el => el.addEventListener("click", () => openRun(el.dataset.run)));
+}
 function renderBoard(){
+  renderWaiting();
   $("#board").innerHTML = COLS.map(c => {
     const rs = RUNS.filter(r => r.stage===c.id);
     const sub = c.agent ? `<div class="hsub" ${c.tip?`title="${esc(c.tip)}"`:""}>${esc(c.agent)}${c.model?` · <span class="mdl">${esc(c.model)}</span>`:(c.agent==="plan_drift"?` · <span class="nomdl">bez modelu</span>`:"")}</div>` : "";
@@ -264,7 +296,7 @@ function renderBoard(){
       <div class="cards">${rs.length?rs.map(card).join(""):`<div class="none">—</div>`}</div></section>`;
   }).join("");
   const active = RUNS.filter(r => r.stage!=="done" && r.stage!=="needs").length;
-  const wait = RUNS.filter(r => r.stage==="needs").length;
+  const wait = RUNS.filter(r => r.stage==="needs" || (r.waiting||[]).length).length;
   const total = RUNS.reduce((s,r)=>s+(r.cost||0),0);
   $("#summary").textContent = `${active} w toku · ${wait} czeka na Ciebie · $${total.toFixed(2)} równowartość API`;
 }

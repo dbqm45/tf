@@ -127,7 +127,10 @@ Podgląd na żywo: `python3 .claude/skills/tf/scripts/run_state.py dashboard` bu
 pętli (test, kod, weryf, skan, zakres) oraz pasek kawałków K1, K2… — fioletowy kawałek był odhaczony, ale nie ma
 aktualnego dowodu (plik zmienił się po weryfikacji). Karta pokazuje też etap zadania, a zadanie bez przebiegu
 (założone samym `tf task`, świeży klon) ma własną kartę. Panel plików dzieli pliki na katalog zadania (git), katalog
-roboczy, dowody, wyniki skanów, STOP i `report.md`. To samo tekstem: `tf status`. Stan zapisuje pętla poleceniami `run_state.py stage` i `run_state.py step`; koszt i czas liczy skrypt
+roboczy, dowody, pliki kodu każdego kawałka, wyniki skanów, STOP i `report.md`. Nad tablicą jest lista **„Czeka na
+Ciebie”**: plan do zatwierdzenia, zatrzymanie przebiegu (co się stało, pytanie, opcje z rekomendacją, od kiedy czeka)
+albo kawałek zablokowany pytaniem. To samo tekstem: `tf status` (linia „czeka na Ciebie” pod zadaniem); `tf status
+--open` buduje podgląd i otwiera go w przeglądarce w dowolnej chwili. Stan zapisuje pętla poleceniami `run_state.py stage` i `run_state.py step`; koszt i czas liczy skrypt
 z transkryptów (`dashboard` bez `--no-cost`). `run_report.py start` buduje dashboard sam i otwiera go w przeglądarce
 (cięcie z kluczem, wołane przez fazę pdi, tylko go buduje). Wyłączysz to w `.claude/tf.json` (osobisty plik, aktualizacja
 fabryki go nie rusza): `{"dashboard": false}` — wcale, `{"dashboard_open": false}` — buduje, ale nie otwiera;

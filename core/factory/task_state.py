@@ -16,7 +16,10 @@ tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i be
   tf task mode <KEY> [plan|zwykly|auto]
 
 `tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
-i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md.
+i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md. Pod zadaniem, które czeka na człowieka,
+jest linia „czeka na Ciebie”: plan do zatwierdzenia, zatrzymanie przebiegu (co się stało, powód, pytanie
+i rekomendowana opcja — z `.tf/runs/<KEY>/run.json` i komunikatów pętli) albo kawałek zablokowany pytaniem;
+w `--json` to pole `waiting`.
 
 Klucz: numer z trackera (PROJ-123), klucz pdi (CHG-12, TSK-57) albo T-<RRRRMMDD>-<slug>. Etapy idą w kolejności:
 przyjecie → specyfikacja → plan → realizacja → przeglad → pr → wdrozenie → zamkniecie; cofnięcie wymaga --force.
@@ -87,6 +90,8 @@ os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne też piszą i czytaj
 
 SCHEMA = 1
 CHANGES = Path("docs") / "project" / "changes"
+RUNS = Path(".tf") / "runs"                       # katalogi robocze przebiegów pętli /tf (run.json: etap, zatrzymanie)
+STOP_MESSAGES = Path(".claude") / "skills" / "tf" / "templates" / "stop_messages.json"
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
 STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
 WEIGHTS = ("lekka", "zwykla", "pelna")
@@ -706,6 +711,49 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     return 0
 
 
+def stop_message(root: Path, code: str | None) -> dict:
+    """Komunikat zatrzymania pętli /tf dla człowieka (co, potrzeba, pytanie, opcje); pusty, gdy pętli albo kodu nie ma."""
+    for base in (Path(__file__).resolve().parents[2], root):
+        try:
+            msg = json.loads((base / STOP_MESSAGES).read_text(encoding="utf-8")).get(code or "")
+        except (OSError, ValueError, AttributeError):
+            continue
+        if isinstance(msg, dict):
+            return msg
+    return {}
+
+
+def waiting(root: Path, task: dict) -> list[dict]:
+    """Na co zadanie czeka u człowieka: plan do zatwierdzenia albo zatrzymanie przebiegu (`.tf/runs/<KEY>/run.json`)
+    oraz kawałki zablokowane pytaniem. Pusta lista — nic nie czeka."""
+    key, out = task.get("key", ""), []
+    try:
+        run = json.loads((root / RUNS / key / "run.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        run = {}
+    if isinstance(run, dict) and run.get("stage") == "needs":
+        since = run.get("needs_at")
+        if run.get("needs") == "plan":
+            out.append({"kind": "plan", "what": "plan czeka na Twoją zgodę", "details": f"{(CHANGES / key).as_posix()}/plan.md",
+                        "question": "Czy zatwierdzasz plan?", "options": [], "recommended": None,
+                        "how": f"tf task approve {key} plan.md --by human:<id>", "since": since})
+        elif run.get("needs") == "stop":
+            msg = stop_message(root, run.get("stop_code"))
+            options = [{"opcja": o.get("opcja"), "skutek": o.get("skutek"), "rekomendowana": bool(o.get("rekomendowana"))}
+                       for o in msg.get("opcje") or [] if isinstance(o, dict)]
+            out.append({"kind": "stop", "code": run.get("stop_code"),
+                        "what": msg.get("co") or f"przebieg zatrzymany ({run.get('stop_code') or 'bez kodu'})",
+                        "details": run.get("stop_text"), "question": msg.get("pytanie"), "options": options,
+                        "recommended": next((o["opcja"] for o in options if o["rekomendowana"]), None),
+                        "how": msg.get("potem"), "since": since})
+    for k, (state, why) in slice_states(root, task).items():
+        if state == "zablokowany":
+            out.append({"kind": "kawalek", "slice": k, "what": f"kawałek {k} czeka na Twoją odpowiedź", "details": why,
+                        "question": None, "options": [], "recommended": None,
+                        "how": f"po odpowiedzi: tf task slice {key} {k} planned", "since": None})
+    return out
+
+
 def task_rows(root: Path) -> list[dict]:
     """Wszystkie zadania ze stanem wyliczonym teraz (kawałki, pliki do odświeżenia)."""
     rows = []
@@ -718,6 +766,7 @@ def task_rows(root: Path) -> list[dict]:
         rows.append({"key": t.get("key", f.parent.name), "title": t.get("title", ""), "stage": t.get("stage", "?"),
                      "updated": t.get("updated", ""), "slices": slices,
                      "verified": sum(s == "zweryfikowany" for s in slices.values()), "stale": stale,
+                     "waiting": waiting(root, t),
                      **({"change": t["change"], "cut": t.get("cut")} if t.get("change") else {})})
     return rows
 
@@ -738,6 +787,13 @@ def cmd_list(root: Path, as_json: bool) -> int:
                 print(f"    {k}: {s}")
         for name in r["stale"]:
             print(f"    {name}: do odświeżenia (tf task check {r['key']})")
+        for w in r["waiting"]:
+            print(f"    czeka na Ciebie: {w['what']}" + (f" — {w['details']}" if w.get("details") else ""))
+            if w.get("question"):
+                print(f"      pytanie: {w['question']}"
+                      + (f" (rekomendacja: {w['recommended']})" if w.get("recommended") else ""))
+            if w.get("how") and w["kind"] != "stop":
+                print(f"      {w['how']}")
     return 0
 
 
