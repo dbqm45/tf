@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """
 SubagentStop / SessionEnd: zapisuje zużycie tokenów per agent i model oraz użyte skille do .tf/logs/usage.jsonl.
+Każdy wpis ma odcisk harnessu (`harness`): wersję Claude Code z transkryptu, wersję fabryki i nakładek
+z `.claude/factory-manifest.json` oraz skrót sum kontrolnych zainstalowanych plików — wyniki i koszty da się
+porównać między wersjami (krok H20).
 PostToolUse narzędzia Agent (dawniej Task): wpis delegowania do .tf/logs/delegation.jsonl — wykonawca, model,
 klasa zadania z linii „Klasa: …” briefu, długość briefu i raportu; agent_id łączy go z wpisem w usage.jsonl.
 Raport: python3 .tf/factory/cost_report.py [--delegation]
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -82,6 +86,7 @@ def usage_from_transcript(path: Path) -> dict:
     per_msg: dict[str, tuple[str, dict]] = {}
     skills: list[str] = []
     last_text = ""
+    version = None
     if path.is_file():
         with path.open(encoding="utf-8", errors="ignore") as f:
             for line in f:
@@ -89,6 +94,8 @@ def usage_from_transcript(path: Path) -> dict:
                     entry = json.loads(line)
                 except json.JSONDecodeError:
                     continue
+                if isinstance(entry.get("version"), str) and entry["version"].strip():
+                    version = entry["version"].strip()[:40]
                 msg = entry.get("message") or {}
                 for c in (msg.get("content") or []) if entry.get("type") == "assistant" else []:
                     if isinstance(c, dict) and c.get("type") == "text" and c.get("text"):
@@ -119,7 +126,27 @@ def usage_from_transcript(path: Path) -> dict:
         models[model] = models.get(model, 0) + (u.get("output_tokens") or 0)
     m = TIER_RE.search(last_text[-2000:])     # samoocena wykonawcy z raportu: „Tier: za niski/za wysoki — powód”
     return {**totals, "models": models, "skills": list(dict.fromkeys(skills)),
-            "tier_feedback": m.group(1).lower() if m else None}
+            "tier_feedback": m.group(1).lower() if m else None, "claude_code": version}
+
+
+def harness(root: Path, claude_code: str | None) -> dict:
+    """Odcisk harnessu: wersja Claude Code, fabryki i nakładek oraz 12 znaków SHA-256 z sum kontrolnych plików
+    z manifestu instalacji. Bez manifestu — tylko to, co da się ustalić."""
+    out = {"claude_code": claude_code} if claude_code else {}
+    try:
+        man = json.loads((root / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return out
+    if not isinstance(man, dict):
+        return out
+    if isinstance(man.get("version"), str):
+        out["factory"] = man["version"][:40]
+    if isinstance(man.get("packs"), dict):
+        out["packs"] = {str(k)[:60]: str(v)[:40] for k, v in sorted(man["packs"].items())}
+    if isinstance(man.get("files"), dict) and man["files"]:
+        digest = hashlib.sha256(json.dumps(man["files"], sort_keys=True, ensure_ascii=False).encode("utf-8"))
+        out["files"] = digest.hexdigest()[:12]
+    return out
 
 
 def main() -> None:
@@ -149,6 +176,8 @@ def main() -> None:
     usage = usage_from_transcript(Path(path).expanduser())
     if usage["requests"] == 0:
         sys.exit(0)
+    root = Path(os.environ.get("CLAUDE_PROJECT_DIR", data.get("cwd", ".")))
+    usage["harness"] = harness(root, usage.pop("claude_code", None))
     record = {
         "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "session": data.get("session_id"),
