@@ -4,6 +4,7 @@ tf task — stan zadania w jednym miejscu: `docs/project/changes/<KEY>/task.json
 tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
 
   tf task start <KEY> --title "<tytuł>" [--weight lekka|zwykla|pelna] [--mode plan|zwykly|auto]
+  tf task start <CHG>-<TSK> --title "<tytuł>" --change <CHG> --cut <TSK>      # zadanie cięcia zmiany pdi
   tf task stage <KEY> <etap> [--force]
   tf task status <KEY> [--json]
   tf task slice <KEY> K1 planned|implemented|blocked [--title "<wartość>"] [--reason "<powód blokady>"]
@@ -22,6 +23,11 @@ przyjecie → specyfikacja → plan → realizacja → przeglad → pr → wdroz
 `start` w istniejącym katalogu zmiany (np. z trybu pdi) dokłada sam `task.json` i nie rusza innych plików.
 Każdy zapis odświeża `docs/project/changes/INDEX.md` — jeden wiersz na zadanie, żeby agent nie przeglądał folderów.
 
+Zadanie cięcia zmiany pdi (`--change CHG-12 --cut TSK-57`) ma klucz `<CHG>-<TSK>` (`CHG-12-TSK-57`) i pola `change`
+oraz `cut` w `task.json`. Nie ma wiersza w INDEX.md — cięcia jednej zmiany powstają na osobnych gałęziach i każde
+dopisywałoby wiersz w tym samym miejscu; ich spisem jest plan zmiany, a `list` i `status` je pokazują. Plan zmiany
+człowiek zatwierdził na bramce pdi przed fazą realizacji, dlatego cięcie o wadze pełnej może iść w trybie `auto`.
+
 Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruchamia polecenie (domyślnie to z
 `.claude/quality-gate.json`), więc kodu wyjścia nie da się zadeklarować, i zapisuje `evidence/K1-<n>.json`
 (polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
@@ -38,7 +44,7 @@ zatwierdzonym przez człowieka (`approve <KEY> plan.md`); zadanie o wadze `lekka
 Tryb zadania (`mode`; wybiera go człowiek w poleceniu): `plan` — zadanie nie wchodzi do etapu `realizacja` (przebieg
 kończy się na planie); `zwykly` — zadanie z zarejestrowanym `plan.md` wchodzi do realizacji po zgodzie człowieka
 (`approve <KEY> plan.md`); `auto` — bez zgody, chyba że waga jest pełna. Trybu `auto` nie da się ustawić przy wadze
-pełnej: zostaje `zwykly`, a polecenie mówi dlaczego.
+pełnej: zostaje `zwykly`, a polecenie mówi dlaczego (wyjątek: zadanie cięcia, opis wyżej).
 
 Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
 wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
@@ -85,6 +91,7 @@ KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
 STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
 WEIGHTS = ("lekka", "zwykla", "pelna")
 MODES = ("plan", "zwykly", "auto")
+PDI_KEY = re.compile(r"[A-Z][A-Z0-9]+-[0-9]+")   # klucz zmiany i cięcia pdi (CHG-12, TSK-57)
 SLICE = re.compile(r"K[1-9][0-9]?")
 SLICE_STATES = ("planned", "implemented", "blocked")
 GATED = STAGES[STAGES.index("przeglad"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
@@ -127,15 +134,22 @@ def save(root: Path, task: dict) -> None:
     write_index(root)
 
 
+def cut_note(task: dict) -> str:
+    """„cięcie TSK-57 zmiany CHG-12” dla zadania cięcia; pusty tekst dla zwykłego zadania."""
+    return f"cięcie {task.get('cut')} zmiany {task['change']}" if task.get("change") else ""
+
+
 def write_index(root: Path) -> None:
     rows = []
     base = root / CHANGES
     for f in sorted(base.glob("*/task.json")):
         t = load(root, f.parent.name)
-        if not t:
+        if not t or t.get("change"):   # zadania cięć nie mają wiersza: PR-y cięć jednej zmiany zderzałyby się w spisie
             continue
         title = str(t.get("title", "")).replace("|", "\\|").replace("\n", " ")
         rows.append(f"| {t.get('key', f.parent.name)} | {title} | {t.get('stage', '?')} | {str(t.get('updated', ''))[:10]} |")
+    if not rows and not (base / "INDEX.md").exists():
+        return
     write_atomic(base / "INDEX.md", INDEX_HEAD + "\n".join(rows) + ("\n" if rows else ""))
 
 
@@ -422,12 +436,15 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
     return 0 if code == 0 else 1
 
 
-def cmd_start(root: Path, key: str, title: str, weight: str, mode: str) -> int:
+def cmd_start(root: Path, key: str, title: str, weight: str, mode: str, change: str | None = None,
+              cut: str | None = None) -> int:
     if load(root, key) is not None:
         return fail(f"zadanie {key} już istnieje ({CHANGES / key / 'task.json'}) — stan: tf task status {key}")
     stamp = now()
     task = {"schema": SCHEMA, "key": key, "title": title, "stage": STAGES[0], "weight": weight, "mode": mode,
             "created": stamp, "updated": stamp}
+    if change:                       # zadanie cięcia zmiany pdi
+        task["change"], task["cut"] = change, cut
     if weight != "zwykla":           # waga podana wprost przy zakładaniu to już przydział — `weight --apply` jej nie obniży
         task["weight_log"] = [{"from": "zwykla", "to": weight, "by": "process:start", "at": stamp}]
     save(root, task)
@@ -468,7 +485,8 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
                 f"człowiek osobnym poleceniem (/tf {key}); wtedy zmień tryb: tf task mode {key} zwykly (albo auto)")
     art = (task.get("artifacts") or {}).get("plan.md")
     state = artifact_state(root, key, art, "plan.md")[0] if art else "brak"
-    if weight == "pelna" and state != "zatwierdzony":
+    upstream = bool(task.get("change")) and mode == "auto"   # cięcie: plan zmiany zatwierdzono na bramce pdi
+    if weight == "pelna" and state != "zatwierdzony" and not upstream:
         return (f"zadanie ma wagę pełną (obszar wrażliwy), więc do etapu {stage} przechodzi dopiero z planem "
                 f"zatwierdzonym przez człowieka (stan planu: {state}): pokaż plan człowiekowi, a po jego zgodzie "
                 f"tf task approve {key} plan.md --by human:<id>. Przebieg bez nadzoru (--auto) kończy się tu "
@@ -495,7 +513,10 @@ def cmd_mode(root: Path, key: str, new: str | None) -> int:
     if new not in MODES:
         return fail(f"nieznany tryb „{new}” — do wyboru: {', '.join(MODES)}", 2)
     note = ""
-    if new == "auto" and task.get("weight") == "pelna":
+    if new == "auto" and task.get("weight") == "pelna" and task.get("change"):
+        note = (f" — waga pełna (obszar wrażliwy), ale to cięcie zmiany {task['change']}: jej plan człowiek zatwierdził "
+                "na bramce pdi, więc przebieg nie czeka na drugą zgodę; przegląd bezpieczeństwa zostaje obowiązkowy")
+    elif new == "auto" and task.get("weight") == "pelna":
         new = "zwykly"
         note = (" — tryb Auto nie obejmuje zadań o wadze pełnej (obszar wrażliwy): zostaje tryb zwykły, "
                 "plan zatwierdza człowiek")
@@ -696,7 +717,8 @@ def task_rows(root: Path) -> list[dict]:
         stale = [n for n, (s, _) in artifact_states(root, t).items() if s in ("nieaktualny", "zmieniony po zatwierdzeniu")]
         rows.append({"key": t.get("key", f.parent.name), "title": t.get("title", ""), "stage": t.get("stage", "?"),
                      "updated": t.get("updated", ""), "slices": slices,
-                     "verified": sum(s == "zweryfikowany" for s in slices.values()), "stale": stale})
+                     "verified": sum(s == "zweryfikowany" for s in slices.values()), "stale": stale,
+                     **({"change": t["change"], "cut": t.get("cut")} if t.get("change") else {})})
     return rows
 
 
@@ -709,7 +731,8 @@ def cmd_list(root: Path, as_json: bool) -> int:
         print(f"Brak zadań w {CHANGES}/. Pierwsze założysz: tf task start <KEY> --title \"<tytuł>\"")
         return 0
     for r in rows:
-        print(f"{r['key']}  {r['stage']}  kawałki z dowodem {r['verified']}/{len(r['slices'])}  {r['title']}")
+        print(f"{r['key']}  {r['stage']}  kawałki z dowodem {r['verified']}/{len(r['slices'])}  {r['title']}"
+              + (f"  ({cut_note(r)})" if cut_note(r) else ""))
         for k, s in r["slices"].items():
             if s != "zweryfikowany":
                 print(f"    {k}: {s}")
@@ -731,7 +754,8 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
     done = STAGES.index(task["stage"]) + 1 if task.get("stage") in STAGES else 0
     print(f"{task['key']} — {task.get('title', '')}\n"
           f"etap: {task.get('stage', '?')} ({done} z {len(STAGES)}) · waga: {task.get('weight', '?')} · "
-          f"tryb: {task.get('mode', '?')} · zmieniono: {task.get('updated', '?')}")
+          f"tryb: {task.get('mode', '?')} · zmieniono: {task.get('updated', '?')}"
+          + (f"\n{cut_note(task)}" if cut_note(task) else ""))
     for k, (state, why) in states.items():
         title = (task["slices"][k].get("title") or "").strip()
         print(f"  {k}: {state}" + (f" — {title}" if title else "") + (f" ({why})" if why else ""))
@@ -757,6 +781,8 @@ def main(argv: list[str]) -> int:
     s.add_argument("--title", default=None)
     s.add_argument("--weight", default="zwykla")
     s.add_argument("--mode", default="zwykly")
+    s.add_argument("--change", default=None, help="klucz zmiany pdi, np. CHG-12 (zadanie cięcia; razem z --cut)")
+    s.add_argument("--cut", default=None, help="klucz cięcia z planu zmiany, np. TSK-57 (razem z --change)")
     g = sub.add_parser("stage")
     g.add_argument("key")
     g.add_argument("stage")
@@ -832,7 +858,15 @@ def main(argv: list[str]) -> int:
             return fail(f"nieznana waga „{a.weight}” — do wyboru: {', '.join(WEIGHTS)}", 2)
         if a.mode not in MODES:
             return fail(f"nieznany tryb „{a.mode}” — do wyboru: {', '.join(MODES)}", 2)
-        return cmd_start(root, a.key, a.title.strip(), a.weight, a.mode)
+        if bool(a.change) != bool(a.cut):
+            return fail("zadanie cięcia podaje oba: --change <CHG> i --cut <TSK>", 2)
+        if a.change:
+            if not PDI_KEY.fullmatch(a.change) or not PDI_KEY.fullmatch(a.cut):
+                return fail("klucz zmiany i cięcia w kształcie LITERY-liczba, np. --change CHG-12 --cut TSK-57", 2)
+            if a.key != f"{a.change}-{a.cut}":
+                return fail(f"zadanie cięcia ma klucz <CHG>-<TSK>: tf task start {a.change}-{a.cut} --title \"…\" "
+                            f"--change {a.change} --cut {a.cut}", 2)
+        return cmd_start(root, a.key, a.title.strip(), a.weight, a.mode, a.change, a.cut)
     if a.cmd == "stage":
         if a.stage not in STAGES:
             return fail(f"nieznany etap „{a.stage}” — kolejno: {', '.join(STAGES)}", 2)
