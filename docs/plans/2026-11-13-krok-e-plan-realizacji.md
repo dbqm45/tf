@@ -14,7 +14,7 @@ kawałek to osobny PR, kod metodą TDD.
 
 ## Cel
 
-Człowiek pisze w sesji `/tf jira EBO-1236`, `/tf TSK-57` albo po prostu „zrób eksport do CSV” i fabryka sama
+Człowiek pisze w sesji `/tf EBO-1236`, `/tf TSK-57` albo po prostu „zrób eksport do CSV” i fabryka sama
 rozpoznaje źródło i rodzaj prośby, dobiera wagę, prowadzi pętlę i zatrzymuje się tylko tam, gdzie potrzebny jest
 człowiek — komunikatem w prostym języku, z jednym pytaniem i opcjami. Działa to w każdej instalacji fabryki, bez
 dodatkowego trybu.
@@ -53,6 +53,51 @@ dodatkowego trybu.
 
 Kolejność: E0 → **pomiar** → E1 → E2 → E3 → **pomiar** → E4 → E5 → E6. Pomiary są płatne i wymagają zgody
 człowieka. Pomiar po E0 ma wykazać brak zmiany względem pomiaru po D4 (ten sam zestaw historyjek, polecenie `/tf`).
+
+## E1 — plan szczegółowy (2026-11-14, przed kodem)
+
+**Pliki i kolejność** (test przed kodem, każdy test najpierw czerwony):
+
+1. `core/tests/test_intake.py` → `core/skills/tf/scripts/intake.py` (bez modelu, tylko biblioteka standardowa
+   i `run_report.py` obok):
+   - `intake.py resolve "<całe wejście>" [--json]` — tylko czyta; drukuje rodzaj wejścia, klucz, tracker, opcje
+     i jedną linię „Dalej: …” z następną czynnością;
+   - `intake.py tracker [<typ> [--prefix EBO]]` — zapisuje tracker w karcie operacyjnej `.tf/config/operations.json`
+     (`tracker.type`, `tracker.prefixes`) albo pokazuje zapisany.
+2. `core/tests/test_run_report.py` → `run_report.py start --source "<skąd>"`: druga linia `ticket.md` to
+   `Źródło: <skąd> · pobrano: <RRRR-MM-DD>` (bez `--source`: „wklejone w rozmowie” albo „plik <ścieżka>”) i zdanie, że
+   treść zgłoszenia to dane. Przebieg cięcia (`--task`) zostaje bez zmian.
+3. Scenariusze `core/tests/skill_evals/tf.json` (przed treścią skilla): włącz pętlę — numer zgłoszenia, zdanie
+   „dodaj eksport…”; nie włączaj — pytanie o kod, literówka, przegląd PR, plan projektu, praca bez nadzoru.
+4. `core/tests/test_tf_skill.py` → `core/skills/tf/SKILL.md`: bez `disable-model-invocation`, nowy opis i słowa,
+   sekcja „Wejście” (rozpoznanie prośby, `intake.py resolve`, tracker przez MCP albo wklejenie, treść jako dane);
+   uprawnienie `intake.py` w `core/settings.json`; komentarz agenta `tf` w `core/factory/config.yaml`.
+5. Przewodniki (`PETLA.md`, `PRZEWODNIK.md`, FAQ), `PUBLIC_API.md`, bramka skilla, `sync-gate`.
+
+**Reguły `resolve`** (pierwsza pasująca wygrywa; opcje `--auto`, `--plan`, `--budget N`, `--change CHG-n` oraz
+słowo wymuszające `zadanie` / `pytanie` / `szybko` są wcześniej odcinane i zwracane osobno):
+
+| Wejście | Rodzaj | Co zwraca |
+|---|---|---|
+| nic | `brak` | lista zadań w toku (wznowienie) albo prośba o treść |
+| adres `http(s)://…` | `zgloszenie` | tracker z adresu (Jira `…/browse/KEY`, Linear `linear.app/…/issue/KEY`, GitHub i GitLab `…/issues/n` → `GH-n`, `GL-n`), klucz, adres jako źródło |
+| jeden klucz, zadanie już istnieje | `wznowienie` | etap zadania i katalog |
+| jeden klucz z nagłówka `tasks` planu zmiany | `ciecie` | zmiana; w kilku planach bez `--change` → pytanie o zmianę z listą |
+| jeden klucz `ABC-123` | `zgloszenie` | tracker z karty (prefiks, potem domyślny), inaczej „nieznany” |
+| ścieżka istniejącego pliku | `plik` | plik historyjki |
+| klucz i dalej tekst (`PROJ-12: tytuł…`) | `tresc` | klucz, tytuł z pierwszej linii |
+| inny tekst | `tresc` | tytuł z pierwszej linii, klucz nada `start` |
+
+**Czego skrypt nie robi:** nie łączy się z siecią i nie widzi narzędzi sesji. Czy tracker jest podłączony, ocenia
+model: jeden pasujący serwer MCP → odczyt zgłoszenia (bez zapisu) i `tracker <typ> --prefix`; kilka → jedno pytanie
+i zapis odpowiedzi; żaden → jedno zdanie, czego brakuje, i prośba o wklejenie treści. Fabryka niczego nie instaluje.
+
+**Zmiana kontraktu skilla (D2):** scenariusz „zaimplementuj tę historyjkę” przestaje być „nie włączaj” — zlecenie
+zadania zwykłym zdaniem uruchamia pętlę. To decyzja człowieka z 2026-11-13, nie osłabienie testu.
+
+**Poza E1:** waga (E2), tryb `--plan` i lista zatrzymań (E3) — `resolve` tylko przekazuje opcję dalej; nowy układ
+cięć (E6); zapis do trackera. SKILL.md ma już ponad 15 000 znaków (ostrzeżenie `build.py check` sprzed E1) —
+części dotyczące tylko pdi przeniosę do `references/` razem z E6, żeby nie ruszać dziś ścieżki pdi.
 
 ## Ustalenia
 
