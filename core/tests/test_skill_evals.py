@@ -95,6 +95,32 @@ def protocol_tests() -> list[str]:
         fails.append(f"protocol: bez skilli pełna odpowiedź po kryteriach; holdout osobno, niestabilny między powtórzeniami: {b} {h}")
     if w.get("triggered") != 1:
         fails.append(f"protocol: uruchomienie skilla raportowane osobno: {w}")
+    # pasmo szumu (krok H20): rozpiętość odsetka zaliczeń między powtórzeniami ramienia
+    if w.get("band") is not None or h.get("band") != 1.0 or h.get("repeats") != 2:
+        fails.append(f"protocol: pasmo szumu tylko przy powtórzeniach (h: 1/1 i 0/1 → 100 pkt), bez nich brak: {w} {h}")
+    noisy = []
+    for rep, (a_ok, b_ok) in enumerate([(True, True), (True, False), (True, True), (True, True), (True, False)]):
+        noisy += [row("a", False, a_ok, 2, 0.1, rep=rep), row("b", False, b_ok, 2, 0.1, rep=rep),
+                  row("a", True, True, 2, 0.1, rep=rep), row("b", True, False, 1, 0.1, rep=rep)]
+    pr = {(r["baseline"], r["set"]): r for r in ev.protocol(noisy)}
+    if pr[(False, "strojenie")].get("band") != 0.5 or pr[(True, "strojenie")].get("band") != 0.0 \
+            or pr[(False, "strojenie")].get("repeats") != 5:
+        fails.append(f"protocol: pasmo szumu z 5 powtórzeń (ze skillami 100%/50% → 50 pkt; bez skilli stałe → 0): {pr}")
+    g = ev.gap([{"model": "haiku", "baseline": False, "set": "strojenie", "tasks": 10, "full_pass": 8, "band": 0.2},
+                {"model": "haiku", "baseline": True, "set": "strojenie", "tasks": 10, "full_pass": 5, "band": 0.1},
+                {"model": "haiku", "baseline": False, "set": "holdout", "tasks": 10, "full_pass": 6, "band": None},
+                {"model": "haiku", "baseline": True, "set": "holdout", "tasks": 10, "full_pass": 5, "band": 0.3}])
+    if not g or g[0].get("band_tuning") != 0.2 or g[0].get("band_holdout") != 0.3:
+        fails.append(f"gap: pasmo przewagi to większe z pasm obu ramion w danym zbiorze: {g}")
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d) / "r.md"
+        ev.report([{**r, "triggered": True, "skills_used": [], "judged": False} for r in noisy], out)
+        text = out.read_text(encoding="utf-8")
+        if "Pasmo szumu" not in text or "w paśmie szumu" not in text:
+            fails.append(f"report: kolumna „Pasmo szumu” i znacznik różnicy w paśmie (przewaga +30 pkt ≤ pasmo 50 pkt): {text[:1500]}")
+        ev.report([{**r, "triggered": True, "skills_used": [], "judged": False} for r in noisy if r["repeat"] < 2], out)
+        if "orientacyjn" not in out.read_text(encoding="utf-8"):
+            fails.append("report: przy mniej niż 5 powtórzeniach pasmo jest opisane jako orientacyjne")
     # 5. --per-skill: równa próba zbioru strojenia na skill (powtarzalna), holdout zawsze w całości
     pool = ([{"skill": "a", "id": f"t{i}", "expect": "trigger"} for i in range(6)]
             + [{"skill": "b", "id": f"t{i}", "expect": "trigger"} for i in range(2)]
