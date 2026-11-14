@@ -19,6 +19,9 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
         [--command "<polecenie>"] [--timeout <s>]
   python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> K2
   python3 .claude/skills/tf/scripts/run_state.py park <katalog-przebiegu> "<sprawa do decyzji>"
+  python3 .claude/skills/tf/scripts/run_state.py block <katalog-przebiegu> K2 --question "<pytanie do człowieka>"
+  python3 .claude/skills/tf/scripts/run_state.py answer <katalog-przebiegu> K2 "<odpowiedź>" --by human:<id>
+  python3 .claude/skills/tf/scripts/run_state.py next <katalog-przebiegu>
   python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
 
 `stage` ustawia etap przebiegu: intake, plan, slices, pr, needs, done. Etap `needs` wymaga `--needs plan` (plan czeka
@@ -61,6 +64,14 @@ do `task.json` (intake → przyjecie, plan → plan, slices → realizacja, pr �
 
 `tick` odhacza kawałek w plan.md, `park` dopisuje sprawę na końcu parked.md — jedno polecenie z listy dozwolonych
 zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (pomiar E0, 2026-11-13).
+
+`block`, `answer` i `next` działają z przełącznikiem `loop.blocked_slices` (`.tf/config/config.yaml`, domyślnie
+wyłączony): pytanie blokuje tylko swój kawałek (`block`), skrypt mówi, który kawałek można robić dalej (`Dalej: K3`
+albo `Dalej: STOP`, gdy żaden nie jest niezależny), a `answer` zapisuje odpowiedź człowieka i odblokowuje kawałek.
+Zależności kawałków zapisuje plan (`· po: K1`, `· po: brak`; bez dopisku — po poprzednim), pytania i odpowiedzi —
+`events.jsonl` zadania (jeden wpis w wierszu: `at`, `type` — `question`
+albo `answer`, `slice`, `text`, `by`; plik zapisuje decyzje, stanem przebiegu nie steruje). Z włączonym przełącznikiem STOP z kodem `pytanie` dla bieżącego kawałka
+jest odrzucany, gdy został kawałek niezależny; pytanie o całe zadanie przechodzi z `--task`.
 
 `launch` (wołane przez `run_report.py start`) buduje dashboard i otwiera go w przeglądarce; wyłączysz to w
 `.claude/tf.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
@@ -441,7 +452,8 @@ def criterion_hints(project: Path, run_dir: Path, meta: dict, files: str) -> lis
 # ---- zapis stanu -------------------------------------------------------------------------------------------------
 
 def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, pr: int | None, auto: bool,
-              effort: str | None, project: Path, plan_mode: bool = False, code: str | None = None) -> int:
+              effort: str | None, project: Path, plan_mode: bool = False, code: str | None = None,
+              whole_task: bool = False) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
@@ -459,6 +471,15 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
                     + f": `--needs stop --code <kod> --reason \"<powód z dowodem>\"`. Kody: {codes}.")
     if code and needs != "stop":
         return fail("`--code` dotyczy tylko `--needs stop`.")
+    if code == "pytanie" and not whole_task and meta.get("key") and blocked_slices_enabled(project):
+        cur_k = (meta.get("current") or {}).get("k") if meta.get("stage") == "slices" else None
+        slices, blocked = plan_and_blocked(project, run_dir, meta)
+        open_cur = cur_k and cur_k not in blocked and any(s["id"] == cur_k and not s["checked"] for s in slices)
+        other = next_slice(slices, blocked | {cur_k}) if open_cur else None
+        if other:       # pytanie o jeden kawałek nie zatrzymuje całości, gdy jest co robić dalej
+            return fail(f"pytanie dotyczy kawałka {cur_k}, a {other['id']} od niego nie zależy — zablokuj tylko {cur_k}: "
+                        f"run_state.py block {run_dir} {cur_k} --question \"<pytanie>\" i rób {other['id']}. Gdy pytanie "
+                        "dotyczy całego zadania, dodaj `--task`.")
     if (auto or plan_mode) and meta.get("key"):               # tryb zadania wybiera człowiek w poleceniu /tf
         m = run_report.task_state(project, "mode", meta["key"], "auto" if auto else "plan")
         if m is not None and "—" in m.stdout:                  # np. Auto przy wadze pełnej: zostaje tryb zwykły
@@ -497,6 +518,10 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     write_run(run_dir, meta)
     refresh(project)
     print(f"✓ etap: {stage}" + (f" ({needs})" if needs else ""))
+    if stage == "plan" and meta.get("key") and blocked_slices_enabled(project):
+        print("Zależności kawałków: dopisz w wierszu kawałka `· po: K<n>` (po którym można go zacząć) albo `· po: brak` "
+              "(niezależny); bez dopisku kawałek zależy od poprzedniego. Dzięki temu pytanie w jednym kawałku nie "
+              "zatrzyma pozostałych.")
     msg = stop_message(code) if needs == "stop" else None
     if msg:     # komunikat dla człowieka: pętla pokazuje go zamiast własnego opisu
         print("Komunikat dla człowieka — pokaż go z dowodem (polecenie i wynik); w rozmowie pytanie zadaj narzędziem "
@@ -592,6 +617,170 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
             refresh(project)
             return 0
     return fail(f"w {path.name} nie ma kawałka {slice_id}")
+
+
+# ---- pytania i zależności kawałków (krok F3, przełącznik loop.blocked_slices) ---------------------------------
+NO_DEPS = ("brak", "-", "—", "–", "nic")
+HUMAN = re.compile(r"human:[\w.@-]+")
+
+
+def blocked_slices_enabled(project: Path) -> bool:
+    """`loop.blocked_slices`: domyślna silnika z nadpisaniem projektu; bez konfiguracji — wyłączone."""
+    for base in (next((p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "packs.py").is_file()),
+                      project), project):
+        try:
+            spec = importlib.util.spec_from_file_location("tf_packs_cfg", base / ".tf" / "factory" / "packs.py")
+            packs = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(packs)
+            cfg = packs.load_yaml(base / ".tf" / "factory" / "config.yaml")
+            own = project / ".tf" / "config" / "config.yaml"
+            if own.is_file():
+                cfg = packs.deep_merge(cfg, packs.load_yaml(own))
+            return (cfg.get("loop") or {}).get("blocked_slices") is True
+        except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienie domyślne, nie awaria
+            continue
+    return False
+
+
+def plan_with_deps(text: str) -> list[dict]:
+    """Kawałki planu w kolejności: `id`, `checked`, `value` i `deps` — lista kawałków, po których można zacząć."""
+    out: list[dict] = []
+    for line in text.splitlines():
+        m = SLICE.match(line)
+        if not m or m.group(3).lstrip().startswith("<"):      # wiersz szablonu planu nie jest kawałkiem
+            continue
+        parts = [p.strip() for p in m.group(3).split("·")]
+        deps: list[str] | None = None
+        for part in parts[1:]:
+            k, _, v = part.partition(":")
+            if k.strip().lower() == "po":
+                names = [x.strip().strip("`") for x in v.split(",") if x.strip()]
+                deps = [] if any(n.lower() in NO_DEPS for n in names) else [n.upper() for n in names if re.fullmatch(r"[Kk]\d+", n)]
+        if deps is None:                                       # bez dopisku: po poprzednim kawałku
+            deps = [out[-1]["id"]] if out else []
+        out.append({"id": m.group(2), "checked": m.group(1) != " ", "value": parts[0], "deps": deps})
+    return out
+
+
+def next_slice(slices: list[dict], blocked: set[str]) -> dict | None:
+    """Pierwszy nieodhaczony i niezablokowany kawałek, którego wszystkie zależności są odhaczone."""
+    done = {s["id"] for s in slices if s["checked"]}
+    for s in slices:
+        if not s["checked"] and s["id"] not in blocked and all(d in done for d in s["deps"]):
+            return s
+    return None
+
+
+def held_slices(slices: list[dict], blocked: set[str]) -> list[tuple[str, list[str]]]:
+    """Nieodhaczone kawałki, które czekają na inne: (kawałek, nieodhaczone zależności)."""
+    done = {s["id"] for s in slices if s["checked"]}
+    return [(s["id"], [d for d in s["deps"] if d not in done]) for s in slices
+            if not s["checked"] and s["id"] not in blocked and any(d not in done for d in s["deps"])]
+
+
+def append_event(task_dir: Path, kind: str, slice_id: str, text: str, by: str) -> dict:
+    """Dopisuje wpis do events.jsonl zadania i go zwraca."""
+    event = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "type": kind, "slice": slice_id,
+             "text": " ".join(text.split()), "by": by}
+    with (task_dir / "events.jsonl").open("a", encoding="utf-8") as f:
+        f.write(json.dumps(event, ensure_ascii=False) + "\n")
+    return event
+
+
+def plan_and_blocked(project: Path, run_dir: Path, meta: dict) -> tuple[list[dict], set[str]]:
+    """Kawałki planu z zależnościami i zbiór kawałków zablokowanych pytaniem (z task.json)."""
+    try:
+        text = (run_report.docs_dir(run_dir, meta) / "plan.md").read_text(encoding="utf-8")
+    except OSError:
+        text = ""
+    view = task_view(project, meta["key"]) if meta.get("key") else None
+    blocked = {k for k, s in (view["slices"] if view else {}).items() if s == "zablokowany"}
+    return plan_with_deps(text), blocked
+
+
+def print_next(project: Path, run_dir: Path, meta: dict) -> None:
+    """`Dalej: K<n>` — kawałek, który można robić; `Dalej: STOP` — gdy każdy czeka na odpowiedź człowieka."""
+    slices, blocked = plan_and_blocked(project, run_dir, meta)
+    nxt = next_slice(slices, blocked)
+    if nxt:
+        print(f"Dalej: {nxt['id']} — {nxt['value']}")
+        return
+    if not blocked:
+        print("Dalej: zakończenie — wszystkie kawałki planu są odhaczone." if slices and all(s["checked"] for s in slices)
+              else "Dalej: brak kawałka do zrobienia — sprawdź plan.md.")
+        return
+    view = task_view(project, meta["key"]) or {"task": {}}
+    asked = {k: ((view["task"].get("slices") or {}).get(k) or {}).get("reason") or "(bez treści pytania)"
+             for k in sorted(blocked, key=lambda x: int(x[1:]))}
+    print("Dalej: STOP — każdy pozostały kawałek czeka na odpowiedź człowieka.")
+    for k, q in asked.items():
+        print(f"  {k}: {q}")
+    for k, deps in held_slices(slices, blocked):
+        print(f"  {k} czeka na {', '.join(deps)}")
+    print(f"Zakończ blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code pytanie --reason "
+          f"\"{'; '.join(f'{k}: {q}' for k, q in asked.items())}\"")
+
+
+def cmd_block(run_dir: Path, slice_id: str, question: str, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if not blocked_slices_enabled(project):
+        return fail("przełącznik `loop.blocked_slices` jest wyłączony (.tf/config/config.yaml) — pytanie kończy przebieg "
+                    f"blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code pytanie --reason \"<pytanie>\".")
+    question = " ".join(question.split())
+    slices, blocked = plan_and_blocked(project, run_dir, meta)
+    found = next((s for s in slices if s["id"] == slice_id), None)
+    if not question or found is None or found["checked"]:
+        return fail(f"podaj pytanie i nieodhaczony kawałek z plan.md (jest: {', '.join(s['id'] for s in slices) or 'brak'}).")
+    r = run_report.task_state(project, "slice", meta["key"], slice_id, "blocked", "--reason", question)
+    if r is None or r.returncode != 0:
+        return fail(((r.stdout + r.stderr).strip() if r else "brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update)."))
+    if slice_id not in blocked:
+        append_event(run_report.docs_dir(run_dir, meta), "question", slice_id, question, "process:tf")
+    refresh(project)
+    print(f"✓ {slice_id} czeka na odpowiedź człowieka: {question}")
+    print_next(project, run_dir, meta)
+    return 0
+
+
+def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if not by or not HUMAN.fullmatch(by):
+        return fail("odpowiedź zapisujesz z identyfikatorem człowieka, który jej udzielił: --by human:<id>.")
+    text = " ".join(text.split())
+    _, blocked = plan_and_blocked(project, run_dir, meta)
+    if not text or slice_id not in blocked:
+        return fail(f"podaj odpowiedź i kawałek, który czeka na człowieka (czekają: {', '.join(sorted(blocked)) or 'żaden'}).")
+    r = run_report.task_state(project, "slice", meta["key"], slice_id, "planned")
+    if r is None or r.returncode != 0:
+        return fail(((r.stdout + r.stderr).strip() if r else "brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update)."))
+    append_event(run_report.docs_dir(run_dir, meta), "answer", slice_id, text, by)
+    if meta.get("stage") == "needs" and meta.get("stop_code") == "pytanie" and blocked == {slice_id}:
+        meta["stage"] = "slices"            # ostatnie pytanie ma odpowiedź: przebieg już na nikogo nie czeka
+        for name in ("needs", "stop_text", "stop_code", "needs_at"):
+            meta.pop(name, None)
+        write_run(run_dir, meta)
+    refresh(project)
+    print(f"✓ {slice_id} odblokowany — odpowiedź zapisana ({by}).")
+    print_next(project, run_dir, meta)
+    return 0
+
+
+def cmd_next(run_dir: Path, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    print_next(project, run_dir, meta)
+    return 0
 
 
 def cmd_park(run_dir: Path, item: str, project: Path) -> int:
@@ -696,7 +885,8 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     main, work = [], []
     task_dir = meta.get("task_dir")
     docs = run_report.docs_dir(run_dir, meta)       # nowy układ: historyjka, plan i raport w katalogu zadania
-    for path in (run_report.story_file(run_dir, meta), docs / "spec.md", docs / "plan.md", run_dir / "parked.md"):
+    for path in (run_report.story_file(run_dir, meta), docs / "spec.md", docs / "plan.md", docs / "events.jsonl",
+                 run_dir / "parked.md"):
         name, text = path.name, read_text(path)
         if text is None:
             continue
@@ -975,6 +1165,8 @@ def main(argv: list[str]) -> int:
     s.add_argument("--auto", action="store_true")
     s.add_argument("--plan", dest="plan_mode", action="store_true")
     s.add_argument("--code", default=None)
+    s.add_argument("--task", dest="whole_task", action="store_true",
+                   help="pytanie dotyczy całego zadania, nie jednego kawałka (z przełącznikiem loop.blocked_slices)")
     s.add_argument("--effort", default=None, choices=["low", "medium", "high", "xhigh", "max"])
     t = sub.add_parser("step")
     t.add_argument("run_dir")
@@ -1015,6 +1207,17 @@ def main(argv: list[str]) -> int:
     p = sub.add_parser("park")
     p.add_argument("run_dir")
     p.add_argument("item")
+    bl = sub.add_parser("block")
+    bl.add_argument("run_dir")
+    bl.add_argument("slice_id")
+    bl.add_argument("--question", required=True)
+    an = sub.add_parser("answer")
+    an.add_argument("run_dir")
+    an.add_argument("slice_id")
+    an.add_argument("text")
+    an.add_argument("--by", default=None)
+    nx = sub.add_parser("next")
+    nx.add_argument("run_dir")
     d = sub.add_parser("dashboard")
     d.add_argument("--no-cost", action="store_true")
     d.add_argument("--out", default=None)
@@ -1023,7 +1226,7 @@ def main(argv: list[str]) -> int:
     project = Path.cwd()
     if args.cmd == "stage":
         return cmd_stage(Path(args.run_dir), args.stage, args.needs, args.reason, args.pr, args.auto, args.effort,
-                         project, plan_mode=args.plan_mode, code=args.code)
+                         project, plan_mode=args.plan_mode, code=args.code, whole_task=args.whole_task)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
     if args.cmd == "flag":
@@ -1046,6 +1249,12 @@ def main(argv: list[str]) -> int:
         return cmd_tick(Path(args.run_dir), args.slice_id, project)
     if args.cmd == "park":
         return cmd_park(Path(args.run_dir), args.item, project)
+    if args.cmd == "block":
+        return cmd_block(Path(args.run_dir), args.slice_id, args.question, project)
+    if args.cmd == "answer":
+        return cmd_answer(Path(args.run_dir), args.slice_id, args.text, args.by, project)
+    if args.cmd == "next":
+        return cmd_next(Path(args.run_dir), project)
     path = build_dashboard(project, Path(args.out) if args.out else None, costs=not args.no_cost)
     print(path.resolve().as_uri())
     if args.open:

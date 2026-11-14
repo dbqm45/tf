@@ -1,7 +1,8 @@
 # Tryby pracy i zatrzymania w pętli /tf
 
 Czytasz, gdy człowiek podał `--plan` albo `--auto`, gdy skrypt odmawia wejścia w pętlę kawałka („zgoda człowieka na
-plan”, „tryb Plan”) albo gdy kończysz blokiem STOP i musisz dobrać kod.
+plan”, „tryb Plan”), gdy kończysz blokiem STOP i musisz dobrać kod albo gdy skrypt odrzuca STOP z kodem `pytanie`
+i każe zablokować jeden kawałek.
 
 ## Tryby
 Tryb wybiera człowiek w poleceniu; Ty go tylko zapisujesz przy pierwszym `run_state.py stage <katalog> intake`
@@ -40,6 +41,22 @@ brak kodu to błąd polecenia. Wybierasz kod, który mówi, **czego potrzeba od 
 | `uprawnienia` | operacja zastrzeżona dla człowieka: produkcja, publikacja, flaga poza środowiskiem testowym, scalenie PR | wykonania operacji albo wyraźnej zgody |
 
 „To za trudne” nie jest kodem: zatrzymujesz się na dowodzie (polecenie i wynik), nie na własnej ocenie trudności.
+
+## Pytanie o jeden kawałek (przełącznik `loop.blocked_slices`)
+Działa tylko wtedy, gdy projekt włączył przełącznik w `.tf/config/config.yaml`; domyślnie jest wyłączony i każde
+pytanie to blok STOP. Z włączonym przełącznikiem pytanie zatrzymuje swój kawałek, a nie cały przebieg:
+
+- **Plan zapisuje zależności** w wierszu kawałka: `· po: K1` (można zacząć po K1), `· po: brak` (niezależny); bez
+  dopisku kawałek zależy od poprzedniego. Etap `plan` o tym przypomina.
+- **Pytanie w trakcie kawałka:** `run_state.py block <katalog> K2 --question "<pytanie do człowieka>"`. Skrypt
+  odpowiada `Dalej: K3` (rób ten kawałek) albo `Dalej: STOP` z listą pytań i gotowym poleceniem zatrzymania. STOP
+  z kodem `pytanie` dla bieżącego kawałka skrypt odrzuca, dopóki został kawałek niezależny.
+- **Pytanie o całe zadanie** (bez odpowiedzi nie da się zrobić żadnego kawałka): STOP jak zwykle, z `--task`.
+- **Po odpowiedzi człowieka:** `run_state.py answer <katalog> K2 "<odpowiedź>" --by human:<id>` — kawałek wraca do
+  planu, a skrypt mówi, co dalej. Odpowiedzi nie zapisujesz za człowieka. Który kawałek teraz: `run_state.py next
+  <katalog>`.
+- Zablokowany kawałek nie ma dowodu, więc etap `pr` nie przejdzie, dopóki pytanie czeka — przebieg kończy się
+  wtedy blokiem STOP z pytaniami, a zrobione kawałki zostają w commitach.
 
 ## Co pokazujesz człowiekowi
 Po zapisie zatrzymania skrypt drukuje **Komunikat dla człowieka**: co się stało, czego potrzeba, jedno pytanie

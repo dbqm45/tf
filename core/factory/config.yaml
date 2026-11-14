@@ -401,3 +401,9 @@ steps:
 # flagi nie zakłada i jej nie wymaga; flagę zapisaną ręcznie (`tf task flag <KEY> set …`) dalej sprawdza.
 feature_flags:
   auto: true
+
+# Pętla /tf. blocked_slices: true — pytanie blokuje tylko swój kawałek (`run_state.py block`), a pętla robi w tym
+# czasie kawałki, które od niego nie zależą (zależności zapisuje plan: `· po: K1`, `· po: brak`); STOP dopiero wtedy,
+# gdy żaden kawałek nie jest niezależny. false (domyślnie, do czasu pomiaru) — każde pytanie to blok STOP, jak dotąd.
+loop:
+  blocked_slices: false

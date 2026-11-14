@@ -82,6 +82,9 @@ Fabryka sama ocenia, ile ostrożności potrzebuje zadanie, i mówi Ci to jednym 
    poprawy w tym kawałku — tylko ono zaczyna drugą rundę), **drobne** albo **zastane** (było w kodzie przed zmianą) —
    te dwa trafiają do odłożonych spraw. Kawałek ma najwyżej 2 rundy; trzeciej skrypt odmawia i przebieg kończy się
    blokiem STOP z opisem blokady, a po Twojej decyzji dostaje dwie kolejne.
+   **Opcja (domyślnie wyłączona):** z `loop: {blocked_slices: true}` w `.tf/config/config.yaml` pytanie zatrzymuje
+   tylko kawałek, którego dotyczy — fabryka robi w tym czasie kawałki od niego niezależne, a pytanie widać na liście
+   „Czeka na Ciebie”. Pytania i odpowiedzi zapisuje `events.jsonl` w katalogu zadania.
 5. **KISS:** przypadki brzegowe, pomysły i ryzyka spoza kryteriów nie trafiają do kodu, tylko do `parked.md`
    i do sekcji „Odłożone do decyzji” w opisie PR.
 6. **Fazy warunkowe:** dokumentacja tylko przy zmianie publicznego API, przegląd bezpieczeństwa tylko przy auth,
