@@ -636,7 +636,8 @@ def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, projec
 
 def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
     """Odhacza kawałek w plan.md (`- [ ] K<n>` → `- [x] K<n>`); powtórzenie niczego nie zmienia. Przebieg z zadaniem
-    odhacza tylko kawałek z aktualnym dowodem (`verify`)."""
+    odhacza tylko kawałek z aktualnym dowodem (`verify`) i z zapisanym, zaliczonym przeglądem zakresu (`step … zakres
+    pass`) — pomiar po kroku G: bez tego warunku wynik przeglądu był zapisany w 7 z 15 przebiegów."""
     meta = load(run_dir) or {}
     path = run_report.docs_dir(run_dir, meta) / "plan.md"
     if not path.is_file():
@@ -650,12 +651,32 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
                 if state != "zweryfikowany":
                     return fail(f"{slice_id} nie ma aktualnego dowodu ({state}) — najpierw: run_state.py verify "
                                 f"{run_dir} {slice_id} --files <pliki kawałka>")
+                refused = review_missing(run_dir, meta, slice_id) if meta.get("key") else None
+                if refused:
+                    return fail(refused)
                 lines[i] = line.replace("- [ ]", "- [x]", 1)
                 path.write_text("\n".join(lines), encoding="utf-8")
             print(f"✓ {slice_id} odhaczony w {path.name}")
             refresh(project)
             return 0
     return fail(f"w {path.name} nie ma kawałka {slice_id}")
+
+
+def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
+    """Powód odmowy odhaczenia, gdy ostatnia runda kawałka nie ma zaliczonego przeglądu zakresu; None — jest."""
+    cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
+    rounds = cur.get("rounds") if cur.get("k") == slice_id and isinstance(cur.get("rounds"), list) else []
+    last = rounds[-1].get("zakres") if rounds and isinstance(rounds[-1], dict) else None
+    if last == "pass":
+        return None
+    k = len(rounds) or 1
+    if last == "fail":
+        return (f"{slice_id}: przegląd zakresu w R{k} nie przeszedł — wycofaj ustalenie [ważne] i zrób nową rundę: "
+                f"run_state.py step {run_dir} {slice_id} R{k + 1} kod run, a po ponownym przeglądzie scope-reviewer "
+                f"run_state.py step {run_dir} {slice_id} R{k + 1} zakres pass")
+    return (f"{slice_id}: nie ma zapisanego wyniku przeglądu zakresu (R{k}: {last or 'brak zapisu'}). Po przeglądzie "
+            f"scope-reviewer zapisz go: run_state.py step {run_dir} {slice_id} R{k} zakres pass — a przy ustaleniu "
+            f"[ważne]: run_state.py finding {run_dir} {slice_id} \"<ustalenie>\" i step … zakres fail, potem nowa runda")
 
 
 # ---- pytania i zależności kawałków (krok F3, przełącznik loop.blocked_slices) ---------------------------------

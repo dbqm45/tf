@@ -67,6 +67,7 @@ def slice_done(project: Path, d: str) -> None:
     call(project, TASK, "verify", "IMP-1", "K1", "--files", "fees.py", "--command", OK)
     git(project, "add", "fees.py")
     git(project, "commit", "-q", "-m", "feat(fees): add the daily cap\n\nKawałek K1: limit dobowy")
+    call(project, SCRIPTS / "run_state.py", "step", d, "K1", "R1", "zakres", "pass")
     call(project, SCRIPTS / "run_state.py", "tick", d, "K1")
 
 

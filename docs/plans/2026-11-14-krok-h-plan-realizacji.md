@@ -65,3 +65,15 @@ Pełne sprawdzenie dopiero po zakończeniu serii pomiarowej po kroku G (żeby ni
   o skróceniu wymagają przebiegów bez reguły, więc wchodzą do kolejnego pomiaru.
 - Testy: `test_instructions_lint.py` (nieaktualne, aktualne, `tf doctor`); scenariusz ewaluacji
   `nieaktualne-wpisy-po-refaktorze` przed zmianą treści skilla.
+
+## Poprawki z pomiaru po kroku G (`docs/evals/2026-11-14-pomiar-po-kroku-g.md`)
+
+- **`tick` wymaga zaliczonego przeglądu zakresu.** Ostatnia runda kawałka musi mieć zapis `zakres pass`; bez zapisu,
+  z przeglądem w toku albo po `zakres fail` skrypt odmawia (kod 2) i podaje dokładne polecenie (zapis wyniku albo
+  nowa runda). Przebiegi bez zadania (stary układ) bez zmian. Testy: `test_review_rounds.py` PR-10…PR-14; testy,
+  które odhaczały kawałek bez przeglądu, zapisują teraz jego wynik (zmiana kontraktu, nie osłabienie testów).
+- **Komunikat po zapisie ustalenia** nie każe od razu podawać kontroli: każe wycofać kod i zrobić nową rundę;
+  kontrolę dopisuje się przy zamknięciu zadania.
+- Scenariusz `przeglad-zakresu-etykiety` sprawdza też zapis wyniku przeglądu (przed zmianą treści skilla).
+- Zmiana zachowania pętli: jedno polecenie więcej na kawałek tam, gdzie pętla je pomijała. Niezmierzone na
+  przebiegach z modelem.

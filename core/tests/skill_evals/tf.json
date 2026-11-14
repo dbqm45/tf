@@ -50,7 +50,7 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Przegląd zakresu kawałka K2 zwrócił jedno ustalenie ważne i dwa drobne — co robisz dalej?",
       "checks": {
-        "all": [["ważn"], ["wycof", "popraw"], ["parked"], ["rund", "R2"], ["run_state\\.py finding", "finding "]],
+        "all": [["ważn"], ["wycof", "popraw"], ["parked"], ["rund", "R2"], ["run_state\\.py finding", "finding "], ["zakres fail", "zakres pass", "run_state\\.py step"]],
         "none": ["R3 ", "trzeci[aą] rund[aęy] bez"]
       }
     },

@@ -73,6 +73,38 @@ def main() -> int:
         r = call(p, cfg, "run_state.py", "step", d, "K2", "R3", "test", "run")
         check(r.returncode == 2, f"PR-6: nowy kawałek też nie zaczyna od trzeciej rundy: {r.returncode} {r.stdout}")
 
+    # odhaczenie kawałka wymaga zapisanego wyniku przeglądu zakresu (po pomiarze po kroku G: zapis w 7 z 15 przebiegów)
+    with tempfile.TemporaryDirectory() as t:
+        p, cfg = Path(t) / "proj", Path(t) / "cfg"
+        p.mkdir()
+        (p / "fees.py").write_text("x = 1\n", encoding="utf-8")
+        call(p, cfg, "run_report.py", "start", "Limit dobowy", "--key", "IMP-1", "--story", "Popraw literówkę w README.")
+        d = str(p / ".tf" / "runs" / "IMP-1")
+        (p / "docs" / "project" / "changes" / "IMP-1" / "plan.md").write_text(
+            "# Plan\n\n- [ ] K1 — literówka · pliki: fees.py · weryfikacja: `pytest`\n", encoding="utf-8")
+        ok = f'{sys.executable} -c "print(1)"'
+        subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "task_state.py"), "verify", "IMP-1", "K1", "--files",
+                        "fees.py", "--command", ok], cwd=p, capture_output=True, text=True,
+                       env={**os.environ, "CLAUDE_PROJECT_DIR": str(p)})
+        plan = lambda: (p / "docs" / "project" / "changes" / "IMP-1" / "plan.md").read_text(encoding="utf-8")
+        r = call(p, cfg, "run_state.py", "tick", d, "K1")
+        check(r.returncode == 2 and "zakres" in r.stdout and "scope-reviewer" in r.stdout and "- [ ] K1" in plan(),
+              f"PR-10: bez zapisanego wyniku przeglądu zakresu kawałek nie jest odhaczany: {r.returncode} {r.stdout}")
+        call(p, cfg, "run_state.py", "step", d, "K1", "R1", "zakres", "run")
+        r = call(p, cfg, "run_state.py", "tick", d, "K1")
+        check(r.returncode == 2 and "- [ ] K1" in plan(), f"PR-11: przegląd w toku to nie wynik: {r.returncode} {r.stdout}")
+        call(p, cfg, "run_state.py", "finding", d, "K1", "kod spoza kryteriów")
+        call(p, cfg, "run_state.py", "step", d, "K1", "R1", "zakres", "fail")
+        r = call(p, cfg, "run_state.py", "tick", d, "K1")
+        check(r.returncode == 2 and "R2" in r.stdout and "- [ ] K1" in plan(),
+              f"PR-12: po nieudanym przeglądzie odmowa wskazuje nową rundę: {r.returncode} {r.stdout}")
+        call(p, cfg, "run_state.py", "step", d, "K1", "R2", "zakres", "pass")
+        r = call(p, cfg, "run_state.py", "tick", d, "K1")
+        check(r.returncode == 0 and "- [x] K1" in plan(), f"PR-13: przegląd zapisany jako zaliczony → odhaczenie: {r.returncode} {r.stdout}")
+        r = call(p, cfg, "run_state.py", "finding", d, "K1", "drugie ustalenie")
+        check("zamknię" in r.stdout and "control" not in r.stdout,
+              f"PR-14: komunikat po zapisie ustalenia odsyła kontrolę do zamknięcia zadania, nie każe jej podać od razu: {r.stdout}")
+
     # agent przeglądu: etykiety ustaleń i reguła nowej rundy
     cfg_text = (ROOT / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8")
     prompt = cfg_text.split("\n  scope-reviewer:", 1)[-1][:2500] if "\n  scope-reviewer:" in cfg_text else ""
