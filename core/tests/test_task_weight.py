@@ -154,8 +154,9 @@ def main() -> int:
         state = json.loads(tf(p, "status", "LOG-1", "--json").stdout).get("artifact_states", {}).get("plan.md")
         check(state == "zmieniony po zatwierdzeniu", f"W-19b: nowy kawałek w planie wymaga ponownej zgody: {state}")
         tf(p, "artifact", "REG-1", "plan.md", "--stage", "plan", "--by", "process:tf")
+        tf(p, "mode", "REG-1", "auto")
         r = tf(p, "stage", "REG-1", "realizacja")
-        check(r.returncode == 0, f"W-20: waga zwykla nie wymaga zatwierdzenia planu: {r.stdout}")
+        check(r.returncode == 0, f"W-20: waga zwykla w trybie Auto nie wymaga zatwierdzenia planu: {r.stdout}")
 
         # skutek wagi lekka: jeden kawałek, specyfikacja nie jest potrzebna
         tf(p, "start", "TYP-2", "--title", "Literówka w stopce")
