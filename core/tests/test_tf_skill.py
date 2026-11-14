@@ -151,6 +151,9 @@ def main() -> int:
           and all(w in modes for w in ("Plan", "Auto", "approve", "mode")),
           f"T-30: blok STOP ma kod z zamkniętej listy; references/tryby-i-zatrzymania.md opisuje każdy kod ze skryptu: "
           f"{[c for c in codes if f'`{c}`' not in modes]}")
+    check(all(w in modes for w in ("Komunikat dla człowieka", "AskUserQuestion", "run_state.py message", "własnego opisu")),
+          "T-31: po zapisie zatrzymania pętla pokazuje człowiekowi komunikat ze skryptu (pytanie narzędziem z opcjami), "
+          "a nie własny opis")
     rules = body.split("## Wejście", 1)[0]
     check("nie łączysz poleceń" in rules and all(s in rules for s in ("`;`", "`&&`", "potok")),
           "T-24: reguła „jedna czynność na polecenie” mówi wprost, czego nie łączyć (`;`, `&&`, potok)")

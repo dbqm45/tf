@@ -40,3 +40,14 @@ brak kodu to błąd polecenia. Wybierasz kod, który mówi, **czego potrzeba od 
 | `uprawnienia` | operacja zastrzeżona dla człowieka: produkcja, publikacja, flaga poza środowiskiem testowym, scalenie PR | wykonania operacji albo wyraźnej zgody |
 
 „To za trudne” nie jest kodem: zatrzymujesz się na dowodzie (polecenie i wynik), nie na własnej ocenie trudności.
+
+## Co pokazujesz człowiekowi
+Po zapisie zatrzymania skrypt drukuje **Komunikat dla człowieka**: co się stało, czego potrzeba, jedno pytanie
+z 2–3 opcjami (przy każdej skutek, jedna rekomendowana) i co fabryka zrobi po odpowiedzi. Ten komunikat pokazujesz
+zamiast własnego opisu — bez słów z budowy fabryki (kawałek, bramka, tier, hook) i bez odsyłania do plików, żeby
+zrozumieć pytanie:
+- uzupełniasz go o konkret z tego przebiegu: dowód (polecenie i wynik), pytania do człowieka albo propozycję podziału;
+- w rozmowie pytanie zadajesz narzędziem AskUserQuestion z opcjami ze skryptu (rekomendowana pierwsza); odpowiedź
+  „zdecyduj sam” przyjmujesz tylko wtedy, gdy decyzja jest odwracalna i nie blokuje pracy;
+- w przebiegu bez nadzoru (`--auto`) komunikat trafia do raportu i do odpowiedzi kończącej przebieg;
+- podgląd komunikatu bez zapisywania zatrzymania: `run_state.py message <kod>`.

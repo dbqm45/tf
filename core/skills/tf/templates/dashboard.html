@@ -287,7 +287,7 @@ function renderFiles(){
     `<button class="fbtn" type="button" data-file="${esc(i.name)}" aria-current="${i.name===curFile}"><span class="dot ${i.dot}"></span>${esc(i.name)}</button>`).join("")).join("");
   const it = groups.flatMap(g=>g.items).find(i=>i.name===curFile);
   let next = "";
-  if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop"><b>Co dalej:</b> zdecyduj i poproś w sesji o wznowienie od ${esc(r.cur?r.cur.k:"bieżącego kawałka")}.<span class="cmd">claude --agent tf  →  „wznów ${esc(runDir(r))}”</span></div>`;
+  if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop">${r.stopNeed?`<b>Czego potrzeba:</b> ${esc(r.stopNeed)}<br>`:""}${r.stopQuestion?`<b>Pytanie:</b> ${esc(r.stopQuestion)}<br>${(r.stopOptions||[]).map((o,i)=>`${i+1}. ${esc(o.opcja)} — ${esc(o.skutek)}${o.rekomendowana?" (rekomendowana)":""}`).join("<br>")}<br>`:""}<b>Co dalej:</b> odpowiedz w sesji; fabryka wznowi od ${esc(r.cur?r.cur.k:"miejsca, w którym przerwała")}.<span class="cmd">claude --agent tf  →  „wznów ${esc(runDir(r))}”</span></div>`;
   if (r.stage==="needs"&&r.needs==="plan") next = `<div class="nextbox"><b>Co dalej:</b> przeczytaj plan i zaakceptuj albo zgłoś uwagi w rozmowie. Bez akceptacji nie ruszy do kodu.</div>`;
   $("#content").innerHTML = next + `<h4>${esc(it.name)}</h4><pre></pre>`;
   $("#content pre").textContent = it.text;
