@@ -131,6 +131,52 @@ def main() -> int:
         ok(run("--help").returncode == 0, "--help powinien kończyć się kodem 0")
         ok(run(root / "nie-ma.md").returncode == 2, "nieistniejący plik: oczekiwany kod 2")
 
+    # nieaktualne odwołania (krok H21): ścieżki i polecenia, których w repozytorium już nie ma; blok fabryki pominięty
+    with tempfile.TemporaryDirectory() as d:
+        r = Path(d)
+        write(r / "src" / "app.py", "x = 1\n")
+        write(r / "package.json", json.dumps({"scripts": {"test": "vitest", "lint": "eslint ."}}))
+        write(r / "Makefile", "build:\n\techo b\n")
+        write(r / "CLAUDE.md", "# Zasady\n\n## Komendy\n- Test: `npm test` · Lint: `npm run lint` · Typy: `npm run typecheck`\n"
+              "- Build: `make build` · Wydanie: `make release`\n\n## Mapa\n- Kod w `src/app.py`, stare w `src/legacy.py` "
+              "i `lib/old/`; adres `https://example.com/a/b`, wzór `src/<moduł>/*.py`, opcja `--dry-run`\n"
+              "- Nie czytaj: `vendor/`, `dist/` · skrypt `semver.py` · punkt kontrolny w `docs/project/wip/`\n\n"
+              "<!-- team-factory:begin -->\n- Nie czytaj `node_modules/` ani `.tf/wip/nie-ma.md`\n<!-- team-factory:end -->\n")
+        res = run("--root", r, "--json")
+        data = json.loads(res.stdout)
+        c = checks(data, "CLAUDE.md").get("nieaktualne") or {}
+        found = sorted(f.get("text", "") for f in c.get("findings") or [])
+        ok(c.get("verdict") == "UWAGA" and any("src/legacy.py" in x for x in found) and any("lib/old/" in x for x in found)
+           and any("typecheck" in x for x in found) and any("release" in x for x in found) and len(found) == 4,
+           f"nieaktualne: brakujące pliki, katalogi, skrypt npm i cel make; bez adresów, wzorców, opcji i bloku fabryki: {c}")
+        ok(res.returncode == 0, f"nieaktualne to UWAGA, nie BŁĄD (kod 0 bez --strict): {res.returncode}")
+        write(r / "CLAUDE.md", "# Zasady\n\n- Kod w `src/app.py`, test: `npm test`, build: `make build`\n")
+        c = checks(json.loads(run("--root", r, "--json").stdout), "CLAUDE.md").get("nieaktualne") or {}
+        ok(c.get("verdict") == "OK" and not c.get("findings"), f"nieaktualne: aktualne odwołania → OK: {c}")
+
+    # tf doctor pokazuje kartę instrukcji projektu w jednej linii na plik (informacja; krok H21)
+    ctf = ROOT / ".tf" / "factory" / "tf.py"
+    if ctf.is_file():
+        import os
+        import shutil
+        with tempfile.TemporaryDirectory() as d:
+            r = Path(d)
+            shutil.copytree(ROOT / ".tf" / "factory", r / ".tf" / "factory", ignore=shutil.ignore_patterns("__pycache__"))
+            shutil.copytree(LINT.parent.parent, r / ".claude" / "skills" / "core-agent-instructions")
+            write(r / ".claude" / "factory-manifest.json", json.dumps({"version": "0", "packs": {}, "files": {}}))
+            write(r / "CLAUDE.md", "# Zasady\n\n- Kod w `src/stary.py`\n")
+            res = subprocess.run([sys.executable, str(r / ".tf" / "factory" / "tf.py"), "doctor"], cwd=r, capture_output=True,
+                                 text=True, encoding="utf-8", timeout=300, env={**os.environ, "CLAUDE_PROJECT_DIR": str(r)})
+            line = next((ln for ln in res.stdout.splitlines() if "instrukcje" in ln), "")
+            ok("CLAUDE.md" in line and "nieaktualne" in line and "instructions_lint.py --root" in res.stdout
+               and "Traceback" not in res.stderr,
+               f"tf doctor: linia o instrukcjach projektu z nazwą kontroli i poleceniem szczegółów: {res.stdout[-800:]} {res.stderr[-300:]}")
+            write(r / "CLAUDE.md", "# Zasady\n\n- Testy: `python3 -m unittest`\n")
+            res = subprocess.run([sys.executable, str(r / ".tf" / "factory" / "tf.py"), "doctor"], cwd=r, capture_output=True,
+                                 text=True, encoding="utf-8", timeout=300, env={**os.environ, "CLAUDE_PROJECT_DIR": str(r)})
+            ok(any("instrukcje" in ln and "✓" in ln for ln in res.stdout.splitlines()),
+               f"tf doctor: instrukcje bez uwag → jedna linia ✓: {res.stdout[-600:]}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów instructions_lint")

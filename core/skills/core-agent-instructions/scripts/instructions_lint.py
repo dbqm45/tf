@@ -16,6 +16,9 @@ Kontrole na plik:
   kolejnosc pierwsza reguła krytyczna (nigdy/zawsze/never/must…) w pierwszej trzeciej pliku; BŁĄD, gdy dopiero
             po linii 200 albo gdy plik > 30 linii nie ma nagłówków
   importy   importy @ścieżka (poza `kodem`): brakujące pliki, długość z importami (importy ładują się przy starcie)
+  nieaktualne odwołania w `kodzie`, których w repozytorium już nie ma: ścieżki plików i katalogów, `npm run <skrypt>`
+            bez skryptu w package.json, `make <cel>` bez celu w Makefile: OK 0, UWAGA ≥ 1 (blok fabryki
+            `<!-- team-factory:begin/end -->` pominięty — jest wspólny dla wszystkich projektów)
 Tryb --root dodatkowo: zagnieżdżone CLAUDE.md/AGENTS.md niewymienione w pliku głównym (indeks) i linie
 skopiowane z pliku głównego do pliku modułu.
 
@@ -43,6 +46,10 @@ INTRO_RE = re.compile(r"^#+\s*(o projekcie|wstęp|wprowadzenie|misja|wartości|a
                       re.IGNORECASE)
 IMPORT_RE = re.compile(r"(?<![\w`/])@((?:~/|\.{1,2}/|/)?[\w.\-][\w.\-/]*(?:\\ [\w.\-/]+)*)")
 EXCLUDED_LANGS = {"mermaid"}
+SPAN_RE = re.compile(r"`([^`\n]+)`")
+NEGATIVE_RE = re.compile(r"(?i)\b(nie czytaj|nie zmieniaj|nie edytuj|nie commituj|pomijaj|ignor\w*|never|don't|do not)\b")
+ON_DEMAND = ("docs/project/", ".tf/", ".claude/")   # katalogi fabryki tworzone, gdy są potrzebne
+FACTORY_BLOCK = ("<!-- team-factory:begin -->", "<!-- team-factory:end -->")
 
 
 def strip_comments(lines):
@@ -101,7 +108,70 @@ def prose_lines(numbered):
     return out
 
 
-def check_file(path: Path, warn: int, error: int):
+def outside_factory_block(raw):
+    """Numery linii poza blokiem fabryki (`<!-- team-factory:begin -->` … `<!-- team-factory:end -->`)."""
+    keep, inside = set(), False
+    for i, line in enumerate(raw, 1):
+        s = line.strip()
+        if s == FACTORY_BLOCK[0]:
+            inside = True
+        elif s == FACTORY_BLOCK[1]:
+            inside = False
+        elif not inside:
+            keep.add(i)
+    return keep
+
+
+def manifest_names(root: Path):
+    """Skrypty package.json i cele Makefile w katalogu głównym; None, gdy pliku nie ma (nie ma czego sprawdzać)."""
+    try:
+        scripts = json.loads((root / "package.json").read_text(encoding="utf-8")).get("scripts")
+        npm = set(scripts) if isinstance(scripts, dict) else set()
+    except (OSError, ValueError, AttributeError):
+        npm = None
+    try:
+        make = set(re.findall(r"(?m)^([A-Za-z0-9][\w.\-]*)\s*:(?!=)", (root / "Makefile").read_text(encoding="utf-8")))
+    except OSError:
+        make = None
+    return npm, make
+
+
+def stale_refs(numbered, keep, path: Path, root: Path):
+    """Odwołania w `kodzie` do ścieżek, skryptów npm i celów make, których nie ma. Heurystyka: pomija wzorce, adresy,
+    opcje, ścieżki bezwzględne, same nazwy plików (bez `/`), katalogi fabryki tworzone na żądanie i linie z zakazem
+    („nie czytaj `dist/`” — taki katalog może nie istnieć)."""
+    npm, make = manifest_names(root)
+    out, in_fence = [], False
+    for i, line in numbered:
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence or i not in keep or NEGATIVE_RE.search(line):
+            continue
+        for m in SPAN_RE.finditer(line):
+            span = m.group(1).strip()
+            words = span.split()
+            if len(words) >= 2 and words[0] in ("npm", "pnpm") and npm is not None:
+                name = words[2] if words[1] in ("run", "run-script") and len(words) > 2 else words[1]
+                if words[1] in ("run", "run-script", "test", "start") and name not in npm and not name.startswith("-"):
+                    out.append({"line": i, "text": f"{span} — package.json nie ma skryptu „{name}”"})
+                continue
+            if len(words) == 2 and words[0] == "make" and make is not None and not words[1].startswith("-"):
+                if words[1] not in make:
+                    out.append({"line": i, "text": f"{span} — Makefile nie ma celu „{words[1]}”"})
+                continue
+            if len(words) != 1 or "://" in span or re.search(r"[<>{}*?$|=:@\\]", span) or span.startswith(("-", "/", "~")):
+                continue                      # polecenie, adres, wzorzec, opcja albo ścieżka spoza repozytorium
+            target = span.rstrip(".,;)")
+            if "/" not in target or target.startswith(ON_DEMAND) or target.lstrip("./").startswith(ON_DEMAND):
+                continue
+            if (root / target).exists() or (path.parent / target).exists():
+                continue
+            out.append({"line": i, "text": f"{target} — nie ma takiej ścieżki"})
+    return out
+
+
+def check_file(path: Path, warn: int, error: int, root: Path | None = None):
     text = path.read_text(encoding="utf-8", errors="replace")
     raw = text.splitlines()
     # frontmatter reguły (.claude/rules) nie trafia do kontekstu
@@ -178,6 +248,9 @@ def check_file(path: Path, warn: int, error: int):
     checks.append({"id": "importy", "value": len(imports), "verdict": "UWAGA" if missing else "OK",
                    "findings": imports, "effective_lines": effective,
                    "detail": f"długość z importami: {effective} (importy ładują się przy starcie — nie oszczędzają kontekstu)"})
+    stale = stale_refs(numbered, outside_factory_block(raw), path, root or path.parent)
+    checks.append({"id": "nieaktualne", "value": len(stale), "verdict": "UWAGA" if stale else "OK", "findings": stale,
+                   "detail": "odwołania do plików i poleceń, których nie ma — popraw albo usuń wpis"})
     return {"path": str(path), "checks": checks}
 
 
@@ -280,7 +353,7 @@ def main(argv=None):
             return 2
     if root:
         paths += [p for p in discover(root) if p.resolve() not in {x.resolve() for x in paths}]
-    results = [check_file(p, a.warn, a.error) for p in paths]
+    results = [check_file(p, a.warn, a.error, root) for p in paths]
     repo = repo_checks(root, [p.resolve() for p in paths]) if root else None
     if a.json:
         print(json.dumps({"files": results, "repo": repo}, ensure_ascii=False, indent=2))
