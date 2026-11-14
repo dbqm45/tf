@@ -162,6 +162,7 @@ def gap(proto: list[dict]) -> list[dict]:
     """Luka „strojenie − holdout” dla każdego modelu (ze skillami): duża luka = skille nauczyły się egzaminu.
     Gdy jest ramię bez skilli, także przewaga skilli w każdym zbiorze — różnica przewag nie zależy od trudności pytań."""
     rate = {(p["model"], p["baseline"], p["set"]): p["full_pass"] / p["tasks"] for p in proto if p.get("tasks")}
+    band = {(p["model"], p["baseline"], p["set"]): p.get("band") for p in proto}
     out = []
     for model in sorted({m for m, _, _ in rate}):
         t, h = rate.get((model, False, "strojenie")), rate.get((model, False, "holdout"))
@@ -171,6 +172,10 @@ def gap(proto: list[dict]) -> list[dict]:
         bt, bh = rate.get((model, True, "strojenie")), rate.get((model, True, "holdout"))
         if bt is not None and bh is not None:
             row.update(uplift_tuning=t - bt, uplift_holdout=h - bh)
+            for kind, key in (("strojenie", "band_tuning"), ("holdout", "band_holdout")):
+                bands = [b for b in (band.get((model, False, kind)), band.get((model, True, kind))) if b is not None]
+                if bands:
+                    row[key] = max(bands)
         out.append(row)
     return out
 
@@ -449,7 +454,12 @@ def protocol(results: list[dict]) -> list[dict]:
         outcomes = {}
         for r in rs:
             outcomes.setdefault((r["skill"], r["id"]), set()).add(full(r))
+        per_rep = {}
+        for r in rs:
+            per_rep.setdefault(r.get("repeat", 0), []).append(full(r))
+        rates = [sum(v) / len(v) for v in per_rep.values() if v]
         rows.append({"model": model, "baseline": base, "set": kind, "tasks": len(rs), "full_pass": solved,
+                     "repeats": len(rates), "band": (max(rates) - min(rates)) if len(rates) > 1 else None,
                      "triggered": None if base else sum(bool(r.get("triggered")) for r in rs),
                      "criteria": (sum(r.get("groups_met") or 0 for r in rs) / total) if total else None,
                      "cost": cost, "cost_per_solved": cost / solved if solved else None,
@@ -496,13 +506,29 @@ def contribution(results: list[dict]) -> list[dict]:
     return rows
 
 
-def contribution_lines(rows: list[dict]) -> list[str]:
+def contribution_lines(rows: list[dict], proto: list[dict] | None = None) -> list[str]:
     lines = ["| Skill | Model | Scenariusze | Treść ze skillem | Treść bez skilli | Wkład | Skill się nie uruchomił |",
              "|---|---|---|---|---|---|---|"]
     for c in rows:
+        band = max((p["band"] for p in proto or [] if p["model"] == c["model"] and p["set"] == "strojenie"
+                    and p.get("band") is not None), default=None)
         lines.append(f"| {c['skill']} | {c['model']} | {c['n']} | {c['with_skill']:.0%} | {c['without']:.0%} | "
-                     f"{c['uplift']:+.0%} | {c.get('not_triggered', 0)} |")
+                     f"{c['uplift']:+.0%}{in_band(c['uplift'], band)} | {c.get('not_triggered', 0)} |")
     return lines
+
+
+def in_band(diff: float, band: float | None) -> str:
+    """Dopisek do różnicy, która mieści się w paśmie szumu (krok H20)."""
+    return " (w paśmie szumu)" if band is not None and abs(diff) <= band + 1e-9 else ""
+
+
+def band_note(proto: list[dict]) -> str:
+    reps = [p["repeats"] for p in proto if p.get("band") is not None]
+    if not reps:
+        return " Bez powtórzeń pasma nie ma — przed decyzją o skillu powtórz pomiar (--repeats 5)."
+    if min(reps) < 5:
+        return f" Powtórzeń: {min(reps)} — pasmo jest orientacyjne (pewniejsze od 5)."
+    return ""
 
 
 def holdout_log_path() -> Path:
@@ -559,16 +585,19 @@ def report(results: list[dict], out: Path) -> None:
                   "Główny wynik: zadania zaliczone w całości (odpowiedź spełnia wszystkie kryteria — ta sama miara "
                   "w obu ramionach). Uruchomienie: skill wczytany. Średnia kryteriów to diagnostyka. Koszt na rozwiązane "
                   "zadanie obejmuje wszystkie przebiegi ramienia. Niestabilne: scenariusz z różnym wynikiem między "
-                  "powtórzeniami (--repeats). Holdout to zamknięty zbiór — nie stroimy pod jego pytania.", "",
-                  "| Model | Ramię | Zbiór | Zaliczone w całości | Uruchomienie | Średnia kryteriów | Koszt | Koszt na rozwiązane | Niestabilne |",
-                  "|---|---|---|---|---|---|---|---|---|"]
+                  "powtórzeniami (--repeats). Holdout to zamknięty zbiór — nie stroimy pod jego pytania. Pasmo szumu: "
+                  "rozpiętość odsetka zaliczeń w całości między powtórzeniami ramienia — różnica między ramionami "
+                  "mniejsza niż pasmo to szum, nie wynik." + band_note(proto), "",
+                  "| Model | Ramię | Zbiór | Zaliczone w całości | Uruchomienie | Średnia kryteriów | Koszt | Koszt na rozwiązane | Niestabilne | Pasmo szumu |",
+                  "|---|---|---|---|---|---|---|---|---|---|"]
         for p in proto:
             arm = "bez skilli" if p["baseline"] else "ze skillami"
             crit = "—" if p["criteria"] is None else f"{p['criteria']:.0%}"
             per = "—" if p["cost_per_solved"] is None else f"${p['cost_per_solved']:.3f}"
             trig = "—" if p["triggered"] is None else f"{p['triggered']}/{p['tasks']}"
             lines.append(f"| {p['model']} | {arm} | {p['set']} | {p['full_pass']}/{p['tasks']} "
-                         f"({p['full_pass'] / p['tasks']:.0%}) | {trig} | {crit} | ${p['cost']:.2f} | {per} | {p['unstable']} |")
+                         f"({p['full_pass'] / p['tasks']:.0%}) | {trig} | {crit} | ${p['cost']:.2f} | {per} | {p['unstable']} | "
+                         f"{'—' if p.get('band') is None else format(p['band'], '.0%')} |")
     gaps = gap(proto) if proto else []
     if gaps:
         lines += ["", "## Luka strojenie − holdout", "",
@@ -579,8 +608,8 @@ def report(results: list[dict], out: Path) -> None:
                   "| Model | Strojenie | Holdout | Luka | Przewaga skilli: strojenie | Przewaga skilli: holdout |",
                   "|---|---|---|---|---|---|"]
         for g in gaps:
-            ut = "—" if "uplift_tuning" not in g else f"{g['uplift_tuning']:+.0%}"
-            uh = "—" if "uplift_holdout" not in g else f"{g['uplift_holdout']:+.0%}"
+            ut = "—" if "uplift_tuning" not in g else f"{g['uplift_tuning']:+.0%}" + in_band(g["uplift_tuning"], g.get("band_tuning"))
+            uh = "—" if "uplift_holdout" not in g else f"{g['uplift_holdout']:+.0%}" + in_band(g["uplift_holdout"], g.get("band_holdout"))
             lines.append(f"| {g['model']} | {g['tuning']:.0%} | {g['holdout']:.0%} | {g['gap']:+.0%} | {ut} | {uh} |")
     contrib = contribution(results)
     if contrib:
@@ -589,7 +618,7 @@ def report(results: list[dict], out: Path) -> None:
                   "scenariusze z przebiegami w obu ramionach. Ramię „ze skillem” liczy tylko przebiegi, w których skill "
                   "się uruchomił; scenariusze bez uruchomienia są w ostatniej kolumnie (problem opisu lub podpowiedzi, "
                   "nie treści). Wkład bliski zeru: model radzi sobie bez skilla albo scenariusze są za łatwe. Jeden "
-                  "przebieg to szum — przed decyzją o skillu powtórz pomiar (--repeats 3).", ""] + contribution_lines(contrib)
+                  "przebieg to szum — przed decyzją o skillu powtórz pomiar (--repeats 5).", ""] + contribution_lines(contrib, proto)
     easy = no_uplift(results)
     if easy:
         lines += ["", "## Zaliczane bez skilli", "",

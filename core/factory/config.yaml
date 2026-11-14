@@ -280,16 +280,24 @@ limits:
 # zapisu na 1 h, droższego: Sonnet $4, Opus $8), więc raport lekko zaniża koszt. Dla Haiku ceny cache wyliczone
 # z typowych proporcji (zapis ×1,25, odczyt ×0,1) — strona modelu ich nie podaje. Sprawdzaj przy zmianie cennika.
 # Przy subskrypcji (Pro/Max/Team) to szacunek równoważnej kwoty, nie faktura.
-# Ceny API Anthropic (USD za milion tokenów; cache_write = zapis 5-minutowy, 1,25× wejścia). Rodzina = bieżący model
-# (Haiku 5.5 do 100K tokenów promptu, Sonnet 5.5, Opus 5.5, Fable 5.1); dokładny identyfikator modelu ma pierwszeństwo.
-# Źródło: cennik w skillu claude-api (stan 2026-10-06). Przy subskrypcji (Pro/Max) to koszt równoważny, nie wydatek.
-prices_checked: "2026-10-06"
+# Ceny API Anthropic (USD za milion tokenów; cache_write = zapis 5-minutowy, 1,25× wejścia [założenie: proporcja jak
+# dotąd — tabela w skillu podaje wejście, wyjście i odczyt cache]). Rodzina = bieżący model (Haiku 5.5 do 100K tokenów
+# promptu, Sonnet 5.5, Opus 5.5, Fable 5.2); dokładny identyfikator modelu ma pierwszeństwo. Źródło: tabela modeli
+# w skillu claude-api (stan 2026-11-03). Przy subskrypcji (Pro/Max) to koszt równoważny, nie wydatek.
+prices_checked: "2026-11-14"
 prices_usd_per_mtok:
   haiku:  {input: 0.10, output: 0.50, cache_read: 0.01, cache_write: 0.125}
-  sonnet: {input: 2, output: 10, cache_read: 0.20, cache_write: 2.50}
+  sonnet: {input: 2, output: 10, cache_read: 0.10, cache_write: 2.50}
   opus:   {input: 4, output: 20, cache_read: 0.20, cache_write: 5}
-  fable:  {input: 10, output: 50, cache_read: 0.25, cache_write: 12.50}
+  fable:  {input: 8, output: 40, cache_read: 0.20, cache_write: 10}
   claude-haiku-4-5: {input: 1, output: 5, cache_read: 0.10, cache_write: 1.25}
+
+# Nazwy modeli (krok H20): jedno źródło prawdy dla `.tf/factory/model_check.py` (też w `tf doctor` i w CI). Każdy
+# identyfikator `claude-…` w konfiguracji i w silniku musi być bieżący albo dozwolony starszy. Źródło: tabela modeli
+# w skillu claude-api (stan 2026-11-03); sprawdzenie starsze niż 90 dni to ostrzeżenie.
+models_checked: "2026-11-14"
+models_current: {fable: claude-fable-5-2, opus: claude-opus-5-5, sonnet: claude-sonnet-5-5, haiku: claude-haiku-5-5}
+models_legacy: [claude-fable-5-1, claude-fable-5, claude-opus-5, claude-opus-4-8, claude-sonnet-5, claude-haiku-4-5]
 
 # ─────────────────────────────────────────────────────────────
 #  Kompozycja skilli
@@ -364,7 +372,7 @@ default_targets: [claude]
 # Target managed-agents: model dla aliasu tieru (haiku, sonnet, opus, fable, inherit). Pełny identyfikator `claude-…`
 # w tierze lub profilu przechodzi bez zmian.
 managed_agents:
-  models: {haiku: claude-haiku-5-5, sonnet: claude-sonnet-5-5, opus: claude-opus-5-5, fable: claude-fable-5-1, inherit: claude-opus-5-5}
+  models: {haiku: claude-haiku-5-5, sonnet: claude-sonnet-5-5, opus: claude-opus-5-5, fable: claude-fable-5-2, inherit: claude-opus-5-5}
 
 # Polityka autonomii (B1a): typy operacji, o które hook guard_bash pyta człowieka. Poziom: confirm (zgoda człowieka)
 # albo deny (blokada). W .tf/config/config.yaml projekt może tylko zaostrzyć (confirm → deny); wartość słabsza jest

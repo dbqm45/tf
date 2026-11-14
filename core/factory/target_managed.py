@@ -29,7 +29,7 @@ TOOL_NAMES = ["bash", "read", "write", "edit", "glob", "grep", "web_fetch", "web
 CLAUDE_TOOLS = {"Bash": "bash", "Read": "read", "Write": "write", "Edit": "edit", "Glob": "glob", "Grep": "grep",
                 "WebFetch": "web_fetch", "WebSearch": "web_search"}
 MODEL_IDS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5", "opus": "claude-opus-5-5",
-             "fable": "claude-fable-5-1", "inherit": "claude-opus-5-5"}
+             "fable": "claude-fable-5-2", "inherit": "claude-opus-5-5"}
 
 ENVIRONMENT = """# {mark} Źródło: .tf/factory/target_managed.py
 name: tf-default

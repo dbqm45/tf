@@ -107,6 +107,42 @@ def main() -> int:
         if rec.get("agent_id") != "a1":
             fails.append(f"log_usage: SubagentStop bez agent_id (łączenie z delegation.jsonl) — {rec}")
 
+    # ── log_usage: odcisk harnessu (krok H20) — wersja Claude Code, fabryki, nakładek i skrót zainstalowanych plików ──
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        tr = root / "main.jsonl"
+        tr.write_text(json.dumps({"type": "user", "version": "2.1.325", "message": {"content": "x"}}) + "\n"
+                      + json.dumps({"type": "assistant", "version": "2.1.325", "message": {
+                          "id": "m1", "model": "claude-sonnet-5-5", "usage": {"input_tokens": 10, "output_tokens": 5},
+                          "content": [{"type": "text", "text": "ok"}]}}) + "\n")
+        env = {**os.environ, "CLAUDE_PROJECT_DIR": str(root)}
+        man = root / ".claude" / "factory-manifest.json"
+        man.parent.mkdir(parents=True)
+        files = {".claude/skills/tf/SKILL.md": "aa11", ".tf/factory/tf.py": "bb22"}
+        man.write_text(json.dumps({"version": "10.11.0", "packs": {"pack-it": "1.0.2"}, "files": files}))
+
+        def harness():
+            run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SessionEnd", "transcript_path": str(tr),
+                                                                 "session_id": "s"}))
+            return json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1]).get("harness") or {}
+
+        h1 = harness()
+        total += 1
+        if not (h1.get("claude_code") == "2.1.325" and h1.get("factory") == "10.11.0"
+                and h1.get("packs") == {"pack-it": "1.0.2"} and len(h1.get("files") or "") == 12):
+            fails.append(f"log_usage: wpis bez odcisku harnessu (Claude Code, fabryka, nakładki, skrót plików) — {h1}")
+        man.write_text(json.dumps({"version": "10.11.0", "packs": {"pack-it": "1.0.2"},
+                                   "files": {**files, ".tf/factory/tf.py": "cc33"}}))
+        h2 = harness()
+        total += 1
+        if not h2.get("files") or h2.get("files") == h1.get("files"):
+            fails.append(f"log_usage: zmiana zainstalowanego pliku nie zmienia skrótu w odcisku — {h1} {h2}")
+        man.unlink()
+        h3 = harness()
+        total += 1
+        if h3 != {"claude_code": "2.1.325"}:
+            fails.append(f"log_usage: bez manifestu odcisk ma tylko to, co da się ustalić — {h3}")
+
     # ── log_usage: dziennik delegowań (PostToolUse narzędzia Agent) ──
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)

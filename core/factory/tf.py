@@ -307,6 +307,12 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
                            encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if h.stdout.strip():
             print(h.stdout.strip())
+    models = Path(".tf") / "factory" / "model_check.py"
+    if models.is_file():   # nazwy modeli w konfiguracji (krok H20) — informacja, nie zmienia wyniku doctora
+        m = subprocess.run([sys.executable, str(models)], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if m.stdout.strip():
+            print(m.stdout.strip())
     gate = Path(".claude") / "hooks" / "quality_gate.py"
     if gate.is_file():   # czy bramka jakości działa (komunikat w zwykłym języku) — informacja, nie zmienia wyniku
         g = subprocess.run([sys.executable, str(gate), "--status"], capture_output=True, text=True, encoding="utf-8",

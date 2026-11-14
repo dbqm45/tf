@@ -93,6 +93,10 @@ Wycofywanie odbywa się tak:
 ## Zgodność nakładek z rdzeniem (autokorekta)
 - `build.py check` (także w `tf doctor`) sprawdza: zakres `requires.core` każdej nakładki, wymagane nakładki,
   nakładkę języka pracy, kolizje nazw (wymiary, agenci, persony) i odwołania do nieistniejących skilli.
+- `model_check.py [--json] [--today RRRR-MM-DD]` (także w `tf doctor`, kod 1 przy błędzie): klucze konfiguracji
+  `models_current`, `models_legacy`, `models_checked`; pole `harness` (`claude_code`, `factory`, `packs`, `files`)
+  we wpisach `.tf/logs/usage.jsonl`; kolumna „Pasmo szumu” i dopisek „(w paśmie szumu)” w raporcie
+  `run_skill_evals.py`.
 - Odwołania nakładki do elementów nakładek z `optional_packs`, których nie zainstalowano, są pomijane bez błędu.
 - Zmiany nazw w rdzeniu i nakładkach opisuje `.tf/factory/migrations.py`; instalator stosuje je po każdej aktualizacji
   do plików projektu (własnych person, ról, nakładek i skilli), a `tf doctor --fix` — na żądanie.
