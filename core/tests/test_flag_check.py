@@ -168,6 +168,12 @@ def main() -> int:
         card.write_text(json.dumps(CARD), encoding="utf-8")
         run(p, ONBOARD, "--yes")
         check(json.loads(card.read_text(encoding="utf-8")) == CARD, "F-19: onboard nie nadpisuje istniejącej karty")
+        card.write_text(json.dumps({"tracker": {"type": "jira"}}), encoding="utf-8")
+        r = run(p, ONBOARD, "--yes")
+        data = json.loads(card.read_text(encoding="utf-8"))
+        check(data.get("tracker") == {"type": "jira"} and data.get("flags", {}).get("file") == "config/flags.json"
+              and "operations.json" in r.stdout,
+              f"F-19a: karta bez sekcji flag (założona przy zapisie trackera) dostaje flagi, tracker zostaje: {data}")
     with tempfile.TemporaryDirectory() as t:
         p = Path(t)
         write(p, "package.json", json.dumps({"scripts": {"test": "node -e 0"}}))

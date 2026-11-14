@@ -287,9 +287,13 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
             files[root / name] = new
             say.append(f"• {name} — polecenia projektu w sekcji „Komendy”.")
     card = root / ".tf" / "config" / "operations.json"
-    if not card.exists():                 # karta operacyjna: skąd fabryka wie, jak w projekcie działają flagi
+    try:                                  # karta mogła powstać wcześniej bez flag (np. zapis trackera przez pętlę /tf)
+        known = json.loads(card.read_text(encoding="utf-8")) if card.exists() else {}
+    except (OSError, ValueError):
+        known = None                      # nieczytelna karta zostaje nietknięta
+    if isinstance(known, dict) and "flags" not in known:   # skąd fabryka wie, jak w projekcie działają flagi
         flags = detect_flags(root)
-        files[card] = json.dumps({"flags": flags}, ensure_ascii=False, indent=1) + "\n"
+        files[card] = json.dumps({**known, "flags": flags}, ensure_ascii=False, indent=1) + "\n"
         say.append(f"• .tf/config/operations.json — karta operacyjna: plik flag {flags['file']}, środowiska "
                    f"{', '.join(flags['envs'])}, testowe: {flags['test_env']}." if flags["file"] else
                    "• .tf/config/operations.json — karta operacyjna: pliku flag funkcji nie wykryto; uzupełnij "
