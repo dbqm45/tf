@@ -276,9 +276,10 @@ ich skuteczność sprawdzi pomiar po E3. Kolejność dalej: E2 → E3 → **pomi
   nieodtwarzany na żywym przebiegu). Polecenia `/talos-story-run` ani agenta `talos` kod pdi sam nie wywołuje — robi
   to tryb pdi fabryki, poprawiony w E0.
 - [x] **Poprawka w `dbqm45/pdi`** (decyzja właściciela z 2026-11-14: poprawić słowo „Talos”): gałąź
-  `claude/rename-talos-to-tf` — pdi rozpoznaje skaner w ścieżce `.claude/skills/tf/…` (i nadal w starej, dla produktu
-  na fabryce 9.x), a nazwa w dokumentach, makietach, komentarzach i testach zmienia się na „agent tf” / `/tf`.
-  Scalenie PR w pdi należy do właściciela.
+  `claude/rename-talos-to-tf` (pdi#180) — pdi rozpoznaje skaner tylko w ścieżce `.claude/skills/tf/…` (decyzja
+  właściciela: bez ścieżki zgodności, pdi wymaga produktu na fabryce 10.0.0 lub nowszej), a nazwa w dokumentach,
+  makietach, komentarzach i testach zmienia się na „agent tf” / `/tf`. Stara nazwa zostaje w jednym zdaniu README
+  pdi, które mówi, jak pętla nazywała się wcześniej. Scalenie PR w pdi należy do właściciela.
 - [ ] **Po `tf update` u siebie:** zmienić nazwę `.claude/talos.json` na `.claude/tf.json` i zmienne `TALOS_*` na
   `TF_*` (jeśli ich używasz) oraz poprawić ścieżkę skryptu skanu i nazwę zmiennej w skopiowanym `change-check.yml`.
 
