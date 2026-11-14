@@ -867,15 +867,18 @@ def scan_status(run_dir: Path, slice_id: str) -> str | None:
     return status if isinstance(status, str) and re.fullmatch(r"[A-Z]{2,12}", status) else None
 
 
-def rollback_steps(project: Path) -> list[str]:
-    """Kroki cofnięcia wdrożenia z karty operacyjnej (`deploy.rollback`: tekst albo lista); bez karty — pusta lista."""
+def rollback_steps(project: Path) -> tuple[list[str], str]:
+    """Kroki cofnięcia wdrożenia z karty operacyjnej (`deploy.rollback`: tekst albo lista) i czas cofnięcia
+    (`deploy.rollback_minutes`); bez karty — pusta lista i pusty tekst."""
     try:
-        card = json.loads((project / CARD).read_text(encoding="utf-8"))
-        value = card["deploy"]["rollback"]
-    except (OSError, ValueError, KeyError, TypeError):
-        return []
+        dep = json.loads((project / CARD).read_text(encoding="utf-8"))["deploy"]
+        value, mins = dep["rollback"], dep.get("rollback_minutes")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return [], ""
     lines = value.splitlines() if isinstance(value, str) else value if isinstance(value, list) else []
-    return [s for s in (as_data(x) for x in lines if isinstance(x, str)) if s][:10]
+    steps = [s for s in (as_data(x) for x in lines if isinstance(x, str)) if s][:10]
+    timed = isinstance(mins, (int, float)) and not isinstance(mins, bool) and mins > 0
+    return steps, (f"ok. {mins:g} min" if steps and timed else "")
 
 
 def engine_md(project: Path, name: str, *args: str) -> str | None:
@@ -961,13 +964,15 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
     steps = []
     if flag.get("key"):
         steps.append(f"Wyłącz flagę {code_span(flag['key'])} — zmiana przestaje działać bez wdrożenia.")
-    card_steps = rollback_steps(project)
+    card_steps, card_time = rollback_steps(project)
     steps += [f"{s} _(z karty operacyjnej `{CARD.as_posix()}`)_" for s in card_steps]
     steps.append("Kod: `git revert <commit scalenia>` na gałęzi domyślnej, potem zwykłe wdrożenie.")
     out += ["", "## Jak cofnąć", "", *(f"{i}. {s}" for i, s in enumerate(steps, 1)), ""]
     if not flag.get("key"):
         out.append(f"- Flaga: brak — {as_data(flag['none'], 300)}." if flag.get("none") else
                    "- Flaga: nie zapisano w zadaniu (flagi może prowadzić człowiek).")
+    if card_time:
+        out.append(f"- Czas cofnięcia według karty operacyjnej: {card_time}.")
     if not card_steps:
         out.append(f"- Karta operacyjna (`{CARD.as_posix()}`, pole `deploy.rollback`) nie opisuje cofania wdrożenia — "
                    "powyżej krok domyślny.")

@@ -26,9 +26,12 @@ Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API 
 [--source "<skąd>"]`, `status`, `finish`), `intake.py` (`resolve [--json] <wejście>` z polami `kind`, `key`, `tracker`,
 `changes`, `options`, `intent`, `ask`, `next`; `tracker [<typ> [--prefix P]]`; `fetch <KLUCZ> [--json]` — zgłoszenie z Jiry,
 tylko odczyt; `run_report.py start --key <KLUCZ> --from-tracker`; zmienne `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`,
-`JIRA_TOKEN`; adres wyłącznie z `JIRA_BASE_URL`), sekcja `tracker` (`type`, `prefixes`, `fields.acceptance`; `url` — tylko do
-wykrycia rozjazdu z `JIRA_BASE_URL`)
-karty operacyjnej `.tf/config/operations.json`, przydział kroków pętli (klucz `steps` w konfiguracji: identyfikator
+`JIRA_TOKEN`; adres wyłącznie z `JIRA_BASE_URL`), sekcje `tracker` (`type`, `prefixes`, `fields.acceptance`; `url` — tylko do
+wykrycia rozjazdu z `JIRA_BASE_URL`) i `deploy` (`smoke`, `rollback`, `rollback_minutes`, `approval`, `logs`)
+karty operacyjnej `.tf/config/operations.json`, sprawdzenie po wdrożeniu (`tf task deployed <KEY> [--version X]
+[--timeout s]`, `tf task deployed <KEY> --rolled-back --by human:<id> [--note]`; pole `deploy` w `task.json`: `state` =
+`ok` | `czerwone` | `wycofane`, `evidence`, `version`, `at`; dowód `evidence/deploy-<n>.json`; pozycja `wdrozenie` na
+liście `waiting`), przydział kroków pętli (klucz `steps` w konfiguracji: identyfikator
 kroku → `label`, `who`, `tier`; `tf config show steps`), waga zadania (`tf task weight <KEY> [--apply | --set <waga>] [--by]
 [--reason] [--json]`, wartości `lekka`/`zwykla`/`pelna`, pola `weight` i `weight_log` w `task.json`, linia `Waga:`
 na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`), tryb zadania (`tf task mode <KEY>

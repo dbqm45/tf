@@ -159,6 +159,12 @@ def main() -> int:
         check("Abonamenty — czy limit ich dotyczy" in section(text, "## Odłożone do decyzji"),
               f"PB-16: sprawa odłożona jest w opisie: {section(text, '## Odłożone do decyzji')}")
 
+        card.write_text(json.dumps({"deploy": {"rollback": ROLLBACK, "rollback_minutes": 12}}, ensure_ascii=False),
+                        encoding="utf-8")
+        call(p, rs, "pr-body", d, "--base", "main")
+        check("ok. 12 min" in section(body(p), "## Jak cofnąć"),
+              f"PB-23: czas cofnięcia z karty (rollback_minutes) jest w opisie: {section(body(p), '## Jak cofnąć')}")
+
         # flaga zadania → wyłączenie flagi jako krok cofania
         r = call(p, rs, "flag", d, "set", "limit-dobowy", "--remove-by", "2027-01-31")
         call(p, rs, "pr-body", d, "--base", "main")

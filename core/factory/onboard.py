@@ -200,6 +200,19 @@ def detect_flags(root: Path) -> dict:
     return {"file": None, "envs": [], "test_env": None}
 
 
+def detect_smoke(root: Path) -> str | None:
+    """Polecenie testu dymnego po wdrożeniu, jeśli projekt je ma: skrypt, skrypt `smoke` w package.json, cel w Makefile."""
+    if (root / "scripts" / "smoke.sh").is_file():
+        return "./scripts/smoke.sh"
+    scripts = _json(root / "package.json").get("scripts")
+    for name in ("smoke", "test:smoke"):
+        if isinstance(scripts, dict) and isinstance(scripts.get(name), str):
+            return f"npm run {name}"
+    if re.search(r"(?m)^smoke\s*:", _read(root / "Makefile")):
+        return "make smoke"
+    return None
+
+
 def uses_verify(root: Path, det: dict) -> bool:
     """Czy bramka uruchamia verify.sh: jest już w repozytorium albo da się go wygenerować (nie w Windows)."""
     return os.name != "nt" and ((root / "verify.sh").is_file() or "test" in det["commands"])
@@ -291,13 +304,22 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
         known = json.loads(card.read_text(encoding="utf-8")) if card.exists() else {}
     except (OSError, ValueError):
         known = None                      # nieczytelna karta zostaje nietknięta
+    added = {}
     if isinstance(known, dict) and "flags" not in known:   # skąd fabryka wie, jak w projekcie działają flagi
-        flags = detect_flags(root)
-        files[card] = json.dumps({**known, "flags": flags}, ensure_ascii=False, indent=1) + "\n"
+        flags = added["flags"] = detect_flags(root)
         say.append(f"• .tf/config/operations.json — karta operacyjna: plik flag {flags['file']}, środowiska "
                    f"{', '.join(flags['envs'])}, testowe: {flags['test_env']}." if flags["file"] else
                    "• .tf/config/operations.json — karta operacyjna: pliku flag funkcji nie wykryto; uzupełnij "
                    "`file`, `envs` i `test_env`, jeśli projekt używa flag (bez tego fabryka każe sprawdzać je ręcznie).")
+    if isinstance(known, dict) and "deploy" not in known:  # jak sprawdzić i cofnąć wdrożenie (tf task deployed, opis PR)
+        smoke = detect_smoke(root)
+        added["deploy"] = {"rollback": "", "rollback_minutes": None, "smoke": smoke or "", "approval": "", "logs": ""}
+        say.append("• .tf/config/operations.json — karta operacyjna, część o wdrożeniu (`deploy`): test dymny "
+                   + (f"`{smoke}` (wykryty)" if smoke else "nie wykryty — wpisz polecenie w `smoke`")
+                   + "; uzupełnij `rollback` (jak cofnąć wdrożenie) i `rollback_minutes` (ile to trwa), `approval` "
+                     "(co zatwierdza człowiek) i `logs` (polecenie logów). Bez `smoke` fabryka kończy na scaleniu.")
+    if added:
+        files[card] = json.dumps({**known, **added}, ensure_ascii=False, indent=1) + "\n"
     files[root / ".tf" / "reports" / "readiness.md"] = report(det, verify)
     say.append("• .tf/reports/readiness.md — raport gotowości.")
     return say, files

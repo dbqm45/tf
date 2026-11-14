@@ -14,6 +14,8 @@ model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
   tf task check <KEY>
   tf task weight <KEY> [--apply | --set lekka|zwykla|pelna] [--by human:<id> --reason "<dlaczego>"] [--json]
   tf task mode <KEY> [plan|zwykly|auto]
+  tf task deployed <KEY> [--version <X>] [--timeout <s>]           # test dymny z karty operacyjnej po wdrożeniu
+  tf task deployed <KEY> --rolled-back --by human:<id> [--note "<co zrobiono>"]   # decyzja człowieka o wycofaniu
 
 `tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
 i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md. Pod zadaniem, które czeka na człowieka,
@@ -94,6 +96,9 @@ SCHEMA = 1
 CHANGES = Path("docs") / "project" / "changes"
 RUNS = Path(".tf") / "runs"                       # katalogi robocze przebiegów pętli /tf (run.json: etap, zatrzymanie)
 STOP_MESSAGES = Path(".claude") / "skills" / "tf" / "templates" / "stop_messages.json"
+CARD = Path(".tf") / "config" / "operations.json"   # karta operacyjna projektu; sekcja `deploy`: jak sprawdzić i cofnąć wdrożenie
+DEPLOY_STATES = {"ok": "test dymny zielony", "czerwone": "test dymny czerwony — czeka na decyzję o wycofaniu",
+                 "wycofane": "wycofane decyzją człowieka"}
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
 STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
 WEIGHTS = ("lekka", "zwykla", "pelna")
@@ -442,6 +447,103 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
     return 0 if code == 0 else 1
 
 
+def deploy_card(root: Path) -> dict:
+    """Sekcja `deploy` karty operacyjnej: `smoke` (test dymny), `rollback`, `rollback_minutes`, `approval`, `logs`.
+    Pusta, gdy karty nie ma albo nie da się jej odczytać."""
+    try:
+        dep = json.loads((root / CARD).read_text(encoding="utf-8")).get("deploy")
+    except (OSError, ValueError, AttributeError):
+        return {}
+    return dep if isinstance(dep, dict) else {}
+
+
+def one_line(value, limit: int = 300) -> str:
+    return " ".join(str(value).split())[:limit]
+
+
+def rollback_text(dep: dict) -> str:
+    """Jak cofnąć wdrożenie: kroki z karty (tekst albo lista) z czasem, a bez nich krok domyślny."""
+    value = dep.get("rollback")
+    lines = value.splitlines() if isinstance(value, str) else value if isinstance(value, list) else []
+    steps = [one_line(x) for x in lines if isinstance(x, str) and x.strip()][:10]
+    if not steps:
+        return ("git revert commita scalenia na gałęzi domyślnej i zwykłe wdrożenie (karta operacyjna nie opisuje "
+                "cofania: pole deploy.rollback)")
+    mins = dep.get("rollback_minutes")
+    timed = isinstance(mins, (int, float)) and not isinstance(mins, bool) and mins > 0
+    return "; ".join(steps) + (f" (ok. {mins:g} min)" if timed else "")
+
+
+def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, rolled_back: bool, by: str | None,
+                 note: str) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    stage = task.get("stage", STAGES[0])
+    if stage not in STAGES or STAGES.index(stage) < STAGES.index("pr"):
+        return fail(f"zadanie {key} jest na etapie {stage} — wdrożenie zapisujesz po scaleniu PR (etap pr)")
+    prev = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
+    if rolled_back:
+        task["deploy"] = {**prev, "state": "wycofane", "decided_by": by, "decided_at": now(),
+                          **({"note": one_line(note)} if note.strip() else {})}
+        task["updated"] = now()
+        save(root, task)
+        print(f"✓ {key}: zapisano wycofanie wdrożenia ({by}). Po naprawie i ponownym wdrożeniu: tf task deployed {key}")
+        return 0
+    card = deploy_card(root)
+    smoke = card.get("smoke")
+    if not isinstance(smoke, str) or not smoke.strip():
+        print(f"• {key}: karta operacyjna nie ma testu dymnego (pole `deploy.smoke` w {CARD.as_posix()}) — fabryka "
+              "kończy na scaleniu i wdrożenia nie sprawdza.\n  Wpisz polecenie testu dymnego (czego brakuje w karcie, "
+              f"pokaże `tf onboard`) i uruchom ponownie: tf task deployed {key}")
+        return 0
+    smoke = smoke.strip()
+    folder = root / CHANGES / key / "evidence"
+    n = 1 + max([int(m.group(1)) for m in (re.fullmatch(r"deploy-(\d+)\.json", x.name) for x in folder.glob("deploy-*.json")) if m]
+                or [0]) if folder.is_dir() else 1
+    try:
+        head = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=20)
+        commit = head.stdout.strip() if head.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        commit = None
+    try:
+        code, out = run_command(root, smoke, timeout)
+    except ValueError as e:          # polecenie z karty nie daje się podzielić na argumenty (np. niedomknięty cudzysłów)
+        code, out = 127, f"polecenie testu dymnego jest niepoprawne: {e}"
+    log = RUNS / key / f"deploy-{n}.log"
+    try:   # pełne wyjście poza gitem; w dowodzie zostaje tylko ścieżka
+        (root / log).parent.mkdir(parents=True, exist_ok=True)
+        (root / log).write_text(out, encoding="utf-8")
+    except OSError:
+        pass
+    rel, at = f"evidence/deploy-{n}.json", now()
+    ver = one_line(version, 60) if version and version.strip() else None
+    write_atomic(root / CHANGES / key / rel, json.dumps(
+        {"kind": "deploy", "command": smoke, "exit_code": code, "version": ver, "sha": commit, "at": at, "log": str(log)},
+        ensure_ascii=False, indent=1) + "\n")
+    why = f"`{smoke}` zakończone kodem {code}"
+    task["deploy"] = {"state": "ok" if code == 0 else "czerwone", "evidence": rel, "at": at,
+                      **({"version": ver} if ver else {}), **({} if code == 0 else {"why": why})}
+    if code == 0 and STAGES.index(stage) < STAGES.index("wdrozenie"):
+        task["stage"] = "wdrozenie"
+    task["updated"] = at
+    save(root, task)
+    where = CHANGES / key / rel
+    if code == 0:
+        print(f"✓ {key}: test dymny po wdrożeniu zielony (`{smoke}`) — etap {task['stage']}; dowód: {where}")
+        if isinstance(card.get("approval"), str) and card["approval"].strip():
+            print(f"  Zatwierdza człowiek: {one_line(card['approval'])}")
+        return 0
+    print(f"✗ {key}: test dymny po wdrożeniu jest czerwony — {why} (dowód: {where})\n--- wyjście ---\n{clip(out, str(log))}\n"
+          "Wycofać wdrożenie? Decyzja należy do Ciebie — fabryka sama niczego nie cofa.\n"
+          f"  Jak cofnąć: {rollback_text(card)}")
+    if isinstance(card.get("logs"), str) and card["logs"].strip():
+        print(f"  Logi (polecenie z karty, fabryka go nie uruchamia): {one_line(card['logs'])}")
+    print(f"  Po wycofaniu: tf task deployed {key} --rolled-back --by human:<id>\n"
+          f"  Po naprawie i ponownym wdrożeniu: tf task deployed {key}")
+    return 1
+
+
 def cmd_start(root: Path, key: str, title: str, weight: str, mode: str, change: str | None = None,
               cut: str | None = None) -> int:
     if load(root, key) is not None:
@@ -747,6 +849,16 @@ def waiting(root: Path, task: dict) -> list[dict]:
                         "details": run.get("stop_text"), "question": msg.get("pytanie"), "options": options,
                         "recommended": next((o["opcja"] for o in options if o["rekomendowana"]), None),
                         "how": msg.get("potem"), "since": since})
+    dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
+    if dep.get("state") == "czerwone":
+        out.append({"kind": "wdrozenie", "what": "test dymny po wdrożeniu jest czerwony", "details": dep.get("why"),
+                    "question": "Wycofać wdrożenie?",
+                    "options": [{"opcja": "wycofaj", "skutek": rollback_text(deploy_card(root)), "rekomendowana": True},
+                                {"opcja": "napraw i wdróż ponownie",
+                                 "skutek": "zmiana zostaje wdrożona do czasu poprawki", "rekomendowana": False}],
+                    "recommended": "wycofaj",
+                    "how": f"po wycofaniu: tf task deployed {key} --rolled-back --by human:<id>; po naprawie "
+                           f"i ponownym wdrożeniu: tf task deployed {key}", "since": dep.get("at")})
     for k, (state, why) in slice_states(root, task).items():
         if state == "zablokowany":
             out.append({"kind": "kawalek", "slice": k, "what": f"kawałek {k} czeka na Twoją odpowiedź", "details": why,
@@ -824,6 +936,10 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
               + (f" — zgoda na: {', '.join(sorted(flag['allowed']))}" if flag.get("allowed") else ""))
     elif flag and flag.get("none"):
         print(f"  flaga: brak — {flag['none']}")
+    dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else None
+    if dep and dep.get("state") in DEPLOY_STATES:
+        print(f"  wdrożenie: {DEPLOY_STATES[dep['state']]}" + (f" · wersja {dep['version']}" if dep.get("version") else "")
+              + (f" · {dep['at']}" if dep.get("at") else ""))
     changed = set(frozen_changed(root, task))
     for rel in sorted(task.get("frozen") or {}):
         print(f"  {rel}: zamrożony" + (" — zmieniony bez decyzji człowieka" if rel in changed else ""))
@@ -894,6 +1010,13 @@ def main(argv: list[str]) -> int:
     ro.add_argument("name")
     ro.add_argument("--by", required=True)
     ro.add_argument("--reason", default="")
+    dp = sub.add_parser("deployed")
+    dp.add_argument("key")
+    dp.add_argument("--version", default=None)
+    dp.add_argument("--timeout", type=float, default=600)
+    dp.add_argument("--rolled-back", action="store_true")
+    dp.add_argument("--by", default=None)
+    dp.add_argument("--note", default="")
     q = sub.add_parser("status")
     q.add_argument("key")
     q.add_argument("--json", action="store_true")
@@ -924,6 +1047,12 @@ def main(argv: list[str]) -> int:
                 return fail(f"zadanie cięcia ma klucz <CHG>-<TSK>: tf task start {a.change}-{a.cut} --title \"…\" "
                             f"--change {a.change} --cut {a.cut}", 2)
         return cmd_start(root, a.key, a.title.strip(), a.weight, a.mode, a.change, a.cut)
+    if a.cmd == "deployed":
+        if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):
+            return fail("wycofanie wdrożenia to decyzja człowieka: --rolled-back --by human:<id>", 2)
+        if a.timeout <= 0:
+            return fail("limit czasu testu dymnego musi być dodatni", 2)
+        return cmd_deployed(root, a.key, a.version, a.timeout, a.rolled_back, a.by, a.note)
     if a.cmd == "stage":
         if a.stage not in STAGES:
             return fail(f"nieznany etap „{a.stage}” — kolejno: {', '.join(STAGES)}", 2)

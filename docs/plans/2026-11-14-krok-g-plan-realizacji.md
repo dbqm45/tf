@@ -52,6 +52,35 @@ i drukuje ścieżkę z podpowiedzią `--body-file`. Skrypt niczego nie wypycha i
   już policzony.
 - Treść z plików zadania i z karty to dane: trafia do opisu jako tekst, skrypt niczego z niej nie uruchamia.
 
+## G3 — plan realizacji (zapisany przed kodem)
+
+Sekcja `deploy` karty operacyjnej (`.tf/config/operations.json`):
+
+| Pole | Znaczenie | Kto czyta |
+|---|---|---|
+| `rollback` | jak cofnąć wdrożenie (tekst albo lista kroków) | opis PR (G2), komunikat po czerwonym teście dymnym |
+| `rollback_minutes` | ile trwa cofnięcie | jw. |
+| `smoke` | polecenie testu dymnego po wdrożeniu | `tf task deployed` |
+| `approval` | co zatwierdza człowiek (np. wdrożenie na produkcję) | komunikat `tf task deployed` |
+| `logs` | polecenie pokazujące logi (fabryka je podaje, nie uruchamia) | komunikat po czerwonym teście |
+
+- `tf onboard` dopisuje pustą sekcję `deploy` (z wykrytym testem dymnym: `scripts/smoke.sh`, skrypt `smoke` w
+  `package.json`, cel `smoke` w `Makefile`) i mówi, co uzupełnić; istniejących pól karty nie zmienia.
+- `tf task deployed <KEY> [--version X] [--timeout s]`: zadanie musi być na etapie `pr` albo dalszym. Bez `deploy.smoke`
+  — komunikat „fabryka kończy na scaleniu”, kod 0, bez zmiany etapu. Z testem dymnym: uruchamia go, zapisuje dowód
+  `evidence/deploy-<n>.json` (polecenie, kod wyjścia, wersja, commit, data) i pełne wyjście poza gitem. Zielony →
+  etap `wdrozenie`. Czerwony → kod 1, pytanie „wycofać?” z krokiem cofania, czasem i poleceniem logów z karty;
+  zadanie trafia na listę „czeka na Ciebie” (`tf status`, podgląd).
+- `tf task deployed <KEY> --rolled-back --by human:<id>` zapisuje decyzję człowieka o wycofaniu i zdejmuje zadanie
+  z listy; ponowny zielony test po naprawie robi to samo.
+- `run_report.py finish` podaje następny krok po scaleniu (`tf task deployed <KEY>`) albo mówi wprost, że karta nie
+  ma testu dymnego. Opis PR dopisuje czas cofnięcia z karty.
+- Pliki: `core/factory/task_state.py`, `core/factory/onboard.py`, `core/factory/tf.py` (pomoc), `run_report.py`,
+  `run_state.py` (czas cofnięcia), `core/tests/test_deploy.py`, `test_onboard.py`, `test_pr_body.py`, przewodniki.
+- Kolejność: testy (czerwone) → `task_state.py` → `onboard.py` → komunikat `finish` → przewodniki → pełne sprawdzenie.
+- Test dymny to polecenie z pliku w repozytorium — tak jak polecenie bramki jakości (`.claude/quality-gate.json`);
+  uruchamiane bez powłoki, z limitem czasu. Fabryka niczego nie wdraża i niczego sama nie cofa (D6).
+
 ## Decyzje projektowe
 
 - **Skrypt, nie model, czyta tracker** (dokument osi, §9): model dostaje gotowy plik. Treść zgłoszenia to dane —
