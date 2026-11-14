@@ -127,3 +127,7 @@ Sekcja `deploy` karty operacyjnej (`.tf/config/operations.json`):
   zgłoszenia, karta, sprawy odłożone) nie powiadamia ludzi przez `@nazwa` i nie osadza obrazów w opisie PR. Test
   treści skilla T-12 sprawdza teraz polecenie `pr-body` zamiast ręcznego `risk_triage.py --md` — triaż w opisie
   sprawdza test PB-8. Niezweryfikowane: jak model używa polecenia w prawdziwym przebiegu (wymaga płatnego pomiaru).
+- G2 scalone (tf#253).
+- G3 gotowe: sekcja `deploy` karty (zakłada ją `tf onboard`), `tf task deployed` z testem dymnym, pytanie „wycofać?”
+  na liście „czeka na Ciebie”, czas cofnięcia w opisie PR, następny krok w zakończeniu przebiegu (23 testy
+  w `test_deploy.py`). Niezweryfikowane: prawdziwe wdrożenie — testy uruchamiają polecenia zastępcze.
