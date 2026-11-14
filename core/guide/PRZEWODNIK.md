@@ -16,7 +16,7 @@ Cztery kroki od zera do pierwszego PR. Reszta tego pliku to szczegóły dla doci
 
 | Chcę… | Użyj | Co dostanę |
 |---|---|---|
-| zrobić zadanie z kryteriami akceptacji | `/tf <zadanie>` | plan, testy, kod, commit na każdy kawałek, jeden PR |
+| zrobić zadanie z kryteriami akceptacji | `/tf <numer zgłoszenia albo treść>` albo zwykłe zdanie („zrealizuj EBO-1236”) | plan, testy, kod, commit na każdy kawałek, jeden PR |
 | zapytać o kod albo nie wiem, od czego zacząć | `claude --agent maja` (nakładka `pack-it`) | odpowiedź albo dobór osób i podejścia |
 | zrobić drobną zmianę | zwykła sesja `claude` | zmiana pod kontrolą hooków, bez planu |
 | pracować w jednej roli (testy, UX, domena…) | `claude --agent <persona>` z `.claude/catalog.md` | rozmowa z personą i jej wykonawcami |

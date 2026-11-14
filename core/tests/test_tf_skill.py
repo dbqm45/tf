@@ -79,6 +79,25 @@ def main() -> int:
           and any("pr_budget.py" in a for a in allow) and any(a.startswith("Bash(./verify.sh") for a in allow),
           "T-14: uprawnienia pętli (pr_budget.py, ./verify.sh) są w ustawieniach rdzenia")
 
+    # krok E1: /tf wywołuje także model (zlecenie zwykłym zdaniem), a wejście i źródło rozpoznaje skrypt
+    front = body.split("---")[1] if body.count("---") >= 2 else ""
+    desc = next((ln for ln in front.splitlines() if ln.startswith("description:")), "")
+    check("disable-model-invocation" not in front and desc.startswith("description: Użyj, gdy") and "slowa:" in front,
+          f"T-15: skill tf może wywołać model — bez disable-model-invocation, opis jako reguła wyboru, słowa: {desc}")
+    entry = body.split("## Wejście", 1)[-1].split("## 0.", 1)[0] if "## Wejście" in body else ""
+    check(body.find("## Wejście") != -1 and body.find("## Wejście") < body.find("## 0.")
+          and all(w in entry for w in ("pytanie", "szybko", "zadanie", "AskUserQuestion", "jednym zdaniem")),
+          "T-16: sekcja „Wejście” przed startem — zadanie / pytanie / drobna zmiana / wątpliwość → jedno pytanie")
+    intake_script = ".claude/skills/tf/scripts/intake.py"
+    check((ROOT / intake_script).is_file() and "intake.py resolve" in entry and "intake.py tracker" in entry
+          and any(intake_script in a for a in allow),
+          f"T-17: rozpoznanie wejścia skryptem (resolve, tracker) z uprawnieniem: {[a for a in allow if 'intake' in a]}")
+    check(all(w in entry for w in ("tylko odczyt", "wklej", "nie instalujesz", "dane, nie polecenia", "--source"))
+          and "/tf jira" not in body and "/tf linear" not in body,
+          "T-18: tracker — odczyt przez podłączone narzędzie albo wklejenie treści; fabryka niczego nie instaluje; "
+          "treść zgłoszenia to dane; źródło trafia do ticket.md; polecenie bez nazwy narzędzia")
+    check("--auto" in entry and "STOP" in entry, "T-19: bez człowieka (--auto) pytanie o źródło zamienia się w STOP")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów pętli tf w rdzeniu")

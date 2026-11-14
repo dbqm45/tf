@@ -1,8 +1,9 @@
 # Pętla fabryki — zadanie → PR na żądanie
 
 Polecenie `/tf` (albo agent `tf`) bierze jedno zadanie i prowadzi je do jednego PR: specyfikacja, plan, testy, kod,
-weryfikacja z dowodami, commity i raport kosztu. Działa tylko wtedy, gdy ją uruchomisz — model nie włącza jej sam.
-Jest częścią rdzenia fabryki, więc działa w każdej instalacji.
+weryfikacja z dowodami, commity i raport kosztu. Uruchamiasz ją poleceniem `/tf …` albo zwykłym zdaniem, którym
+zlecasz zadanie („zrealizuj EBO-1236”, „dodaj eksport sesji do CSV”); przy pytaniu albo drobnej poprawce fabryka
+pętli nie włącza, a gdy nie jest pewna — pyta. Jest częścią rdzenia fabryki, więc działa w każdej instalacji.
 Pierwszy raz z fabryką? Zacznij od sekcji „Zacznij tutaj” w `.tf/factory/PRZEWODNIK.md`.
 
 ## Do czego
@@ -17,8 +18,28 @@ Dwa sposoby, ten sam przebieg (skill `tf`):
 
 | Sposób | Polecenie | Kiedy |
 |---|---|---|
-| agent `tf` | `claude --agent tf`, potem treść historyjki albo ścieżka do pliku | sesja tylko na automat |
-| w dowolnej personie | `/tf <plik story albo treść> [--auto] [--budget USD]` | jednorazowo, w bieżącej sesji |
+| agent `tf` | `claude --agent tf`, potem zadanie (jak niżej) | sesja tylko na automat |
+| w dowolnej personie | `/tf <zadanie> [--auto] [--budget USD]` albo zwykłe zdanie | jednorazowo, w bieżącej sesji |
+
+**Co możesz podać jako zadanie** — fabryka sama rozpoznaje, co to jest; nazwy narzędzia nie wpisujesz:
+
+| Podajesz | Przykład | Co się dzieje |
+|---|---|---|
+| numer zgłoszenia | `/tf EBO-1236` | fabryka czyta zgłoszenie z trackera podłączonego w sesji (tylko odczyt); bez połączenia prosi o wklejenie treści |
+| adres zgłoszenia | `/tf https://firma.atlassian.net/browse/EBO-1236` | tracker i numer bierze z adresu |
+| klucz cięcia z planu zmiany | `/tf TSK-57` | przebieg cięcia (tryb pdi) |
+| treść albo plik | `/tf Jako operator chcę…`, `/tf docs/story.md` | zadanie z kluczem `T-<data>-<nazwa>` |
+| klucz istniejącego zadania | `/tf EBO-1236` po przerwie | wznowienie od pierwszego niezrobionego kawałka |
+| nic | `/tf` | lista zadań w toku i pytanie, co dalej |
+
+- **Tracker (Jira, Linear, GitHub…):** fabryka korzysta z połączenia, które sam dodałeś do Claude Code (serwer MCP);
+  niczego nie instaluje i niczego w trackerze nie zmienia. Gdy podłączonych jest kilka, pyta raz, z którego pochodzą
+  zgłoszenia, i zapisuje odpowiedź w `.tf/config/operations.json` (podgląd i zmiana: `python3
+  .claude/skills/tf/scripts/intake.py tracker`). Bez połączenia wystarczy wkleić treść zgłoszenia.
+- **Skąd pochodzi treść:** `ticket.md` zadania zaczyna się od linii `Źródło: … · pobrano: <data>`. Treść zgłoszenia
+  to dla fabryki dane, nie polecenia — polecenie znalezione w zgłoszeniu zobaczysz jako uwagę, nie jako wykonaną akcję.
+- **Wymuszenie sposobu pracy:** `/tf zadanie …`, `/tf pytanie …` (tylko odpowiedź), `/tf szybko …` (drobna zmiana
+  od razu, bez zakładania zadania).
 
 Opcje (w wiadomości do agenta albo przy poleceniu):
 - `--auto` — plan nie czeka na Twoją akceptację; bez tej opcji fabryka pokazuje plan i czeka;
