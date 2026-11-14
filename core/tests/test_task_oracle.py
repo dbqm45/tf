@@ -80,11 +80,11 @@ def main() -> int:
             check(d == "ask" and "tf task" in why, f"O-8: {rel} pisze tylko `tf task` → ask: {d} {why}")
 
         # plik zadania zatwierdzony przez człowieka: zapis wymaga zgody; reopen zdejmuje zatwierdzenie z powodem
-        tf(p, "artifact", "PROJ-1", "plan.md", "--stage", "plan", "--by", "process:talos", "--inputs", "spec.md")
+        tf(p, "artifact", "PROJ-1", "plan.md", "--stage", "plan", "--by", "process:tf", "--inputs", "spec.md")
         tf(p, "approve", "PROJ-1", "plan.md", "--by", "human:anna")
         d, why = guard(p, "Edit", f"{CHANGES.as_posix()}/PROJ-1/plan.md")
         check(d == "ask" and "tf task reopen PROJ-1 plan.md" in why, f"O-9: zatwierdzony plan → ask z poleceniem reopen: {d} {why}")
-        r = tf(p, "reopen", "PROJ-1", "plan.md", "--by", "process:talos", "--reason", "x")
+        r = tf(p, "reopen", "PROJ-1", "plan.md", "--by", "process:tf", "--reason", "x")
         check(r.returncode == 2, f"O-10: reopen tylko przez człowieka: {r.returncode} {r.stdout}")
         r = tf(p, "reopen", "PROJ-1", "plan.md", "--by", "human:anna")
         check(r.returncode == 2 and "--reason" in r.stdout, f"O-11: reopen wymaga powodu: {r.returncode} {r.stdout}")
@@ -99,7 +99,7 @@ def main() -> int:
         check(d == "", f"O-13: po reopen zapis planu bez pytania: {d} {why}")
 
         # test akceptacyjny zamrożony przez człowieka (plik poza katalogiem zadania)
-        r = tf(p, "freeze", "PROJ-1", "tests/test_fees.py", "--by", "process:talos")
+        r = tf(p, "freeze", "PROJ-1", "tests/test_fees.py", "--by", "process:tf")
         check(r.returncode == 2, f"O-14: freeze tylko przez człowieka: {r.returncode} {r.stdout}")
         r = tf(p, "freeze", "PROJ-1", "tests/nie-ma.py", "--by", "human:anna")
         check(r.returncode == 2, f"O-15: freeze nieistniejącego pliku → kod 2: {r.returncode} {r.stdout}")

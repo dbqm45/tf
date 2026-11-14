@@ -454,7 +454,7 @@ def check_entries(path: Path) -> list[str]:
 def load_yaml(text: str):
     try:
         import yaml
-    except ImportError:   # dołączona kopia PyYAML (.tf/factory/_vendor), jak w skryptach trybu Talos
+    except ImportError:   # dołączona kopia PyYAML (.tf/factory/_vendor), jak w skryptach pętli (skill tf)
         vendor = next((p / ".tf" / "factory" / "_vendor" for p in Path(__file__).resolve().parents
                        if (p / ".tf" / "factory" / "_vendor").is_dir()), None)
         if vendor is None:

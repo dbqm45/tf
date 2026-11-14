@@ -34,13 +34,13 @@ def main() -> int:
             fails.append(msg)
 
     with tempfile.TemporaryDirectory() as t:
-        # C-1/C-2: oba tryby, ustawienia prywatne (settings.local.json) — sprawdza zainstalowany układ
+        # C-1/C-2: pętla z rdzenia i tryb pdi, ustawienia prywatne (settings.local.json) — sprawdza zainstalowany układ
         proj = Path(t) / "both"
-        r = install(proj, "mode-talos,mode-pdi")
-        check(r.returncode == 0, f"C-0: instalacja mode-talos,mode-pdi: {r.stdout[-600:]} {r.stderr[-300:]}")
+        r = install(proj, "mode-pdi")
+        check(r.returncode == 0, f"C-0: instalacja mode-pdi: {r.stdout[-600:]} {r.stderr[-300:]}")
         r = coverage(proj)
         check(r.returncode == 0 and "pokrytych przez allow" in r.stdout and "decision_record.py" not in r.stdout,
-              f"C-1: zainstalowany układ (talos + pdi) przechodzi: {r.stdout[-800:]} {r.stderr[-300:]}")
+              f"C-1: zainstalowany układ (pętla rdzenia + pdi) przechodzi: {r.stdout[-800:]} {r.stderr[-300:]}")
 
         # C-2: usunięta reguła w zainstalowanych ustawieniach → test czerwony (sprawdza instalację, nie źródło)
         set_p = proj / ".claude" / "settings.local.json"
@@ -52,21 +52,21 @@ def main() -> int:
         check(r.returncode == 1 and "decision_record.py check" in r.stdout and "git switch main" in r.stdout,
               f"C-2: brak reguły w zainstalowanych ustawieniach wykryty: {r.stdout[-800:]}")
 
-        # C-3: tryb zespołowy (settings.json), sam mode-talos — bez pdi-decisions polecenie pdi pominięte
-        proj = Path(t) / "talos"
-        r = install(proj, "mode-talos", "--shared")
-        check(r.returncode == 0, f"C-0: instalacja mode-talos --shared: {r.stdout[-600:]} {r.stderr[-300:]}")
+        # C-3: tryb zespołowy (settings.json), sam rdzeń — bez pdi-decisions polecenie pdi pominięte
+        proj = Path(t) / "shared"
+        r = install(proj, "none", "--shared")
+        check(r.returncode == 0, f"C-0: instalacja bez nakładek --shared: {r.stdout[-600:]} {r.stderr[-300:]}")
         r = coverage(proj)
         check(r.returncode == 0 and "decision_record.py" not in r.stdout and "pokrytych przez allow" in r.stdout,
-              f"C-3: sam mode-talos przechodzi bez poleceń pdi: {r.stdout[-800:]} {r.stderr[-300:]}")
+              f"C-3: sam rdzeń (tryb zespołowy) przechodzi bez poleceń pdi: {r.stdout[-800:]} {r.stderr[-300:]}")
 
-        # C-4: bez talos i pdi — pominięcie z jasnym komunikatem, kod 0
+        # C-4: sam rdzeń, ustawienia prywatne — pętla /tf jest w rdzeniu, więc sprawdzenie biegnie (bez pominięcia)
         proj = Path(t) / "none"
         r = install(proj, "none")
         check(r.returncode == 0, f"C-0: instalacja bez nakładek: {r.stdout[-600:]} {r.stderr[-300:]}")
         r = coverage(proj)
-        check(r.returncode == 0 and "pomijam" in r.stdout and "brak katalogu" not in r.stdout,
-              f"C-4: bez talos i pdi — pominięcie, nie błąd: {r.stdout[-800:]} {r.stderr[-300:]}")
+        check(r.returncode == 0 and "pokrytych przez allow" in r.stdout and "pomijam" not in r.stdout,
+              f"C-4: sam rdzeń — polecenia pętli pokryte, bez pominięcia: {r.stdout[-800:]} {r.stderr[-300:]}")
 
     for f in fails:
         print(f"✗ {f}")

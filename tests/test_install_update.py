@@ -166,6 +166,35 @@ def main() -> int:
         check(not factory_new(clone) and not (clone / "factory").exists(), f"N-4: żadnych *.factory-new ani factory/: "
               f"{factory_new(clone)}")
 
+    # tryb wycofany z fabryki (mode-talos: pętla jest w rdzeniu jako /tf) — aktualizacja projektu, który go miał,
+    # pomija go z komunikatem zamiast kończyć się błędem „Unknown packs”, a jego pliki trafiają do kopii zapasowej
+    with tempfile.TemporaryDirectory() as t:
+        proj = Path(t) / "app"
+        proj.mkdir()
+        r = install(ROOT, proj, "--packs", "none")
+        check(r.returncode == 0, f"W-0: instalacja: {r.stdout[-400:]} {r.stderr[-300:]}")
+        man = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
+        man["packs"]["mode-talos"] = "1.3.0"
+        if "offered" in man:
+            man["offered"] = sorted({*man["offered"], "mode-talos"})
+        old = proj / ".claude" / "skills" / "talos-story-run" / "SKILL.md"
+        write(old, "---\nname: talos-story-run\n---\n# stary skill\n")
+        spec = importlib.util.spec_from_file_location("tf_install_w", ROOT / "core" / "factory" / "install.py")
+        inst = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(inst)
+        man["files"][".claude/skills/talos-story-run/SKILL.md"] = inst.sha(old.read_bytes())
+        (proj / MANIFEST).write_text(json.dumps(man), encoding="utf-8")
+        r = install(ROOT, proj, "--update")
+        after = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
+        check(r.returncode == 0 and "mode-talos" in r.stdout and "/tf" in r.stdout and "Unknown packs" not in r.stdout,
+              f"W-1: aktualizacja z wycofanym trybem przechodzi i mówi, co go zastąpiło: {r.returncode} {r.stdout[-500:]}")
+        check("mode-talos" not in (after.get("packs") or {}) and not old.exists()
+              and (proj / ".claude" / "skills" / "tf" / "SKILL.md").is_file(),
+              f"W-2: wycofany tryb znika z manifestu, jego plik z projektu, a pętla jest w rdzeniu: {list(after.get('packs') or {})}")
+        r = install(ROOT, proj, "--add", "mode-talos")
+        check(r.returncode == 2 and "mode-talos" in r.stdout and "/tf" in r.stdout,
+              f"W-3: jawna prośba o wycofany tryb → odmowa z wyjaśnieniem: {r.returncode} {r.stdout[-300:]}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów aktualizacji instalatora")

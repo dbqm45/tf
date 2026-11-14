@@ -204,7 +204,7 @@ def main() -> int:
               f"O-29: niedostosowana sekcja (z dopiskiem „dostosuj”) jest podmieniana na bieżącą: {out}")
         check(keep and keep(fresh, "bez bloku") == fresh, "O-30: pierwszy zapis bloku bez zmian")
 
-        # instalacja prywatna: pliki z tf onboard zostają lokalne, drzewo robocze czyste (Talos tego wymaga)
+        # instalacja prywatna: pliki z tf onboard zostają lokalne, drzewo robocze czyste (pętla /tf tego wymaga)
         if shutil.which("git") and os.name != "nt":
             def git(repo, *a):
                 return subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *a], cwd=repo,

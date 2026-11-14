@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy zgodności zmian z planem Talosa (tryb mode-talos, scripts/plan_drift.py): pliki w diffie vs pliki kawałków
+"""Testy zgodności zmian z planem przebiegu (skill tf, scripts/plan_drift.py): pliki w diffie vs pliki kawałków
 z plan.md, zmiany spoza planu, kawałki bez zmian, testy w diffie. python3 .claude/tests/test_plan_drift.py"""
 import json
 import os
@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-REL = Path(".claude") / "skills" / "talos-story-run" / "scripts" / "plan_drift.py"
+REL = Path(".claude") / "skills" / "tf" / "scripts" / "plan_drift.py"
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / REL).is_file()), None)
 SCRIPT = ROOT / REL if ROOT else None
 
@@ -54,10 +54,10 @@ def main() -> int:
         git(repo, "add", "-A")
         git(repo, "commit", "-qm", "init")
         git(repo, "checkout", "-qb", "story/export")
-        # PRB-32: katalog przebiegu w .tf/runs/talos/ (nie `.claude/runs/`, chroniony przez Claude Code);
+        # PRB-32: katalog przebiegu w .tf/runs/cuts/ (nie `.claude/runs/`, chroniony przez Claude Code);
         # plan_drift ignoruje wyniki pracy fabryki w .tf/ (przebiegi, raporty, logi)
-        run_dir = repo / ".tf" / "runs" / "talos" / "2026-10-23-export"
-        write(repo, ".tf/runs/talos/2026-10-23-export/plan.md", PLAN)
+        run_dir = repo / ".tf" / "runs" / "cuts" / "2026-10-23-export"
+        write(repo, ".tf/runs/cuts/2026-10-23-export/plan.md", PLAN)
         write(repo, ".tf/reports/security.md", "# raport\n")
         for f in ("src/export/csv.py", "tests/test_export.py", "web/src/export/Button.tsx", "src/util/helpers.py"):
             write(repo, f)

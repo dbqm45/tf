@@ -7,7 +7,8 @@
 Przebieg jest płatny (wywołuje `claude -p`) — uruchamiaj tylko za zgodą człowieka. Katalog roboczy i wyniki:
 zmienna E0_OUT (domyślnie katalog tymczasowy), żeby kopie repozytorium nie trafiały do repozytorium fabryki.
 
-Jeden przebieg = świeża kopia repozytorium → instalacja fabryki → tf onboard → Talos bez nadzoru (claude -p).
+Jeden przebieg = świeża kopia repozytorium → instalacja fabryki → tf onboard → pętla /tf bez nadzoru (claude -p)
+(do 2026-11-13 polecenie nazywało się /talos-story-run i wymagało trybu mode-talos).
 Wynik dopisywany do $E0_OUT/results.jsonl. Sprawdzenia akceptacji są ukryte przed agentem (leżą tutaj, nie w repozytorium).
 """
 import json
@@ -78,7 +79,7 @@ def main(argv):
 
     t0 = time.time()
     r = sh([sys.executable, str(FACTORY / "core" / "factory" / "install.py"), ".", "--yes", "--packs",
-            "pack-it,mode-talos"], repo)
+            "pack-it"], repo)
     row["install_ok"], row["install_s"] = r.returncode == 0, round(time.time() - t0, 1)
     t0 = time.time()
     r = sh([sys.executable, ".tf/factory/tf.py", "onboard", "--yes", "--verify"], repo)
@@ -88,7 +89,7 @@ def main(argv):
 
     # treść historyjki wklejona do polecenia — tak, jak zrobi to człowiek; plik poza repozytorium byłby niedostępny
     text = (HERE / "stories" / STORIES[story]).read_text()
-    prompt = f"/talos-story-run {text.strip()}\n\n--auto --budget {budget}"
+    prompt = f"/tf {text.strip()}\n\n--auto --budget {budget}"
     t0 = time.time()
     try:
         r = sh(["claude", "-p", prompt, "--model", model, "--output-format", "json", "--permission-mode", "acceptEdits"],

@@ -18,8 +18,8 @@ Run it from the project directory — the project is the current directory, the 
   python3 "$TEAM_FACTORY/core/factory/install.py" --yes               # no questions: defaults or the previous choice
 
 The core is always installed. Packs (`packs/pack-*`) are chosen interactively on the first install (or with
-`--packs`); later runs keep the previous choice. Modes (`modes/mode-*`, e.g. `mode-talos`) are on-demand ways of
-working installed like packs (`--add mode-talos`, `--remove mode-talos`). A default pack or mode that is new in this
+`--packs`); later runs keep the previous choice. Modes (`modes/mode-*`, e.g. `mode-team`) are on-demand ways of
+working installed like packs (`--add mode-team`, `--remove mode-team`). A default pack or mode that is new in this
 version is added once on update; one you removed does not come back. A pack's required packs and the pack of the chosen working language
 (e.g. `pack-editorial-pl` for `pl`) are added automatically. On the first install you also choose the working
 language (conversation, documentation; default `pl`) and the commit language (commit messages, PR titles and
@@ -90,7 +90,8 @@ LEGACY_GI = [(f"# {n}:begin (zarządzane przez factory/install.py)", f"# {n}:end
 CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": ".tf/factory",
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
 CORE_FILES = {"guide/JEV.md": ".claude/JEV.md",   # przewodnik i FAQ w .tf/factory/ — bez README w korzeniu projektu
-              "guide/PRZEWODNIK.md": ".tf/factory/PRZEWODNIK.md", "guide/FAQ.md": ".tf/factory/FAQ.md"}
+              "guide/PRZEWODNIK.md": ".tf/factory/PRZEWODNIK.md", "guide/FAQ.md": ".tf/factory/FAQ.md",
+              "guide/PETLA.md": ".tf/factory/PETLA.md"}
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests",
              "workflows": ".claude/workflows",   # workflows: skrypty wieloagentowe Claude Code (Workflow)
              "analyzers": ".tf/factory/analyzers"}   # moduły tf analyze (analyzer.yaml, scripts/, fixtures/)
@@ -334,6 +335,12 @@ class Plan:
 def retarget(data: bytes) -> bytes:
     """W projekcie docelowym testy fabryki leżą w `.claude/tests/`."""
     return data.replace(b" tests/test_", b" .claude/tests/test_").replace(b"(python3 tests/", b"(python3 .claude/tests/")
+
+
+# Nakładki i tryby wycofane z fabryki: id → co je zastąpiło. Aktualizacja projektu, który je miał, pomija je
+# z komunikatem (pliki trafiają do .tf/backup/ jak każdy plik, którego fabryka już nie dostarcza); jawna prośba
+# o taki identyfikator (--packs, --add) kończy się odmową z wyjaśnieniem.
+RETIRED_PACKS = {"mode-talos": "the task loop is part of the core now: use /tf (agent `tf`)"}
 
 
 # Reguły wycofane z szablonu: piaskownica Bash zamienia Read(...) z permissions.deny w zakaz odczytu dla programów,
@@ -676,6 +683,10 @@ def main(argv: list[str]) -> int:
             return 2
     legacy = legacy_packs(manifest, dst_root)
     previous = list((manifest or {}).get("packs") or {}) if manifest and "packs" in manifest else legacy
+    for pid in [p for p in (previous or []) if p in RETIRED_PACKS]:   # wycofane: aktualizacja je pomija, nie kończy się błędem
+        print(f"ℹ {pid} was retired — {RETIRED_PACKS[pid]}. Its files move to .tf/backup/.")
+    if previous:
+        previous = [p for p in previous if p not in RETIRED_PACKS]
     offered = offered_before(manifest, available)
     new_defaults = [pid for pid, p in available.items() if p.get("default") and offered is not None
                     and pid not in offered and pid not in (previous or [])]
@@ -697,6 +708,10 @@ def main(argv: list[str]) -> int:
     if lang_pack and lang_pack in split_ids(opts.get("remove")):
         print(f"✗ {lang_pack} is required by the working language '{language}'. Change the language first "
               f"(tf language <code>) or keep the pack.")
+        return 2
+    retired = [c for c in dict.fromkeys(chosen) if c in RETIRED_PACKS]
+    if retired:
+        print("✗ " + "; ".join(f"{c} was retired — {RETIRED_PACKS[c]}" for c in retired))
         return 2
     packs, unknown = resolve_packs(list(dict.fromkeys(chosen)), available, language, cfg)
     if unknown:

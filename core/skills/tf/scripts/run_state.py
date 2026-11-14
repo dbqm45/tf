@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
 """
-Stan przebiegu Talosa i podgląd (skill talos-story-run, tryb mode-talos): jedyny pisarz etapu i rundy w run.json
+Stan przebiegu zadania i podgląd (skill tf): jedyny pisarz etapu i rundy w run.json
 oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła polecenie.
 
-  python3 .claude/skills/talos-story-run/scripts/run_state.py stage <katalog-przebiegu> <etap> [--needs plan|stop]
+  python3 .claude/skills/tf/scripts/run_state.py stage <katalog-przebiegu> <etap> [--needs plan|stop]
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
-  python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
-  python3 .claude/skills/talos-story-run/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
-  python3 .claude/skills/talos-story-run/scripts/run_state.py spec <katalog-przebiegu> [new]
-  python3 .claude/skills/talos-story-run/scripts/run_state.py flag <katalog-przebiegu> mode      # auto | manual
-  python3 .claude/skills/talos-story-run/scripts/run_state.py flag <katalog-przebiegu> set <klucz> [--remove-by RRRR-MM-DD]
-  python3 .claude/skills/talos-story-run/scripts/run_state.py flag <katalog-przebiegu> none --reason "bez flagi, bo …"
-  python3 .claude/skills/talos-story-run/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
-  python3 .claude/skills/talos-story-run/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
+  python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
+  python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
+  python3 .claude/skills/tf/scripts/run_state.py spec <katalog-przebiegu> [new]
+  python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> mode      # auto | manual
+  python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> set <klucz> [--remove-by RRRR-MM-DD]
+  python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> none --reason "bez flagi, bo …"
+  python3 .claude/skills/tf/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
+  python3 .claude/skills/tf/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
-  python3 .claude/skills/talos-story-run/scripts/run_state.py tick <katalog-przebiegu> K2
-  python3 .claude/skills/talos-story-run/scripts/run_state.py park <katalog-przebiegu> "<sprawa do decyzji>"
-  python3 .claude/skills/talos-story-run/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
+  python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> K2
+  python3 .claude/skills/tf/scripts/run_state.py park <katalog-przebiegu> "<sprawa do decyzji>"
+  python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
 
 `stage` ustawia etap przebiegu: intake, plan, slices, pr, needs, done. Etap `needs` wymaga `--needs plan` (plan czeka
 na akceptację) albo `--needs stop` (blok STOP; `--reason` to powód). `step` zapisuje wynik etapu pętli w rundzie
 bieżącego kawałka: etapy test, kod, weryf, skan, zakres; stany run, pass, fail. Rundę zaczyna kolejna próba kawałka
 po nieudanej bramce (R1, R2, …). Etapy wcześniejsze od zapisywanego, które nie mają stanu albo trwają, dostają pass —
-Talos zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
+pętla zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
 decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
 
-`spec <katalog> new` zakłada szablon `spec.md` (dopiero wtedy, gdy Talos zaczyna specyfikację — po wczesnym STOP
+`spec <katalog> new` zakłada szablon `spec.md` (dopiero wtedy, gdy pętla zaczyna specyfikację — po wczesnym STOP
 w repozytorium nie zostaje pusty plik). `spec` sprawdza `spec.md` zadania (`tf spec check`): kryteria AC-n z Zakładając / Gdy / Wtedy, sekcje „Bez zmian”
 i „Poza zakresem”, brak pytań [blokuje]. Etap `plan` (i każdy dalszy) jest odrzucany, dopóki specyfikacja ma błędy;
 `stage plan` zapisuje też, z których plików powstał plan — zmiana `spec.md` po planie blokuje etap `pr`, dopóki
 `stage plan` nie zostanie wywołane ponownie.
 
 `flag mode` mówi, kto prowadzi flagi: `auto` (domyślnie — fabryka, po zapytaniu człowieka o nazwę) albo `manual`
-(`feature_flags.auto: false` w `.tf/config/config.yaml` — człowiek dodaje flagi sam, Talos ich nie zakłada).
+(`feature_flags.auto: false` w `.tf/config/config.yaml` — człowiek dodaje flagi sam, pętla ich nie zakłada).
 `flag` zapisuje flagę funkcji historyjki (`tf task flag`) albo jawny powód jej braku; bez tego, albo z flagą włączoną
-poza środowiskiem testowym bez zgody człowieka, etap `pr` jest odrzucany. Zgody na inne środowisko Talos nie zapisuje.
+poza środowiskiem testowym bez zgody człowieka, etap `pr` jest odrzucany. Zgody na inne środowisko pętla nie zapisuje.
 
 `trace` drukuje tabelę kryterium → test → commit → dowód (`tf trace --md`) do opisu PR; kryterium bez testu albo
 test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
@@ -49,14 +49,14 @@ zadania w run.json) dowodów nie zapisuje i odhacza jak dotąd.
 zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (pomiar E0, 2026-11-13).
 
 `launch` (wołane przez `run_report.py start`) buduje dashboard i otwiera go w przeglądarce; wyłączysz to w
-`.claude/talos.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
-domyślnie oba włączone. Zmienne TALOS_DASHBOARD=0 i TALOS_DASHBOARD_OPEN=0 robią to samo bez pliku.
+`.claude/tf.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
+domyślnie oba włączone. Zmienne TF_DASHBOARD=0 i TF_DASHBOARD_OPEN=0 robią to samo bez pliku.
 
-`dashboard` buduje samodzielny plik .tf/runs/talos/dashboard.html z wszystkich przebiegów w .tf/runs/<KEY>/ i starych
-w .tf/runs/talos/ (ignorowany przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
+`dashboard` buduje samodzielny plik .tf/runs/dashboard.html z wszystkich przebiegów w .tf/runs/<KEY>/ i przebiegów cięć
+w .tf/runs/cuts/ (ignorowany przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
 (run_report.py) i zapamiętuje w run.json; `stage` i `step` odświeżają plik bez liczenia kosztu. Karta zadania
 pokazuje etap z task.json i pasek kawałków; kawałek odhaczony, który stracił aktualny dowód, ma osobny stan (`stale`).
-Zadanie bez przebiegu Talosa (samo `tf task`, świeży klon bez `.tf/runs/`) też dostaje kartę. Panel plików dzieli
+Zadanie bez przebiegu (samo `tf task`, świeży klon bez `.tf/runs/`) też dostaje kartę. Panel plików dzieli
 pliki na katalog zadania (git), katalog roboczy i dowody. Etap, którego nikt nie
 zapisał, wynika z plan.md (kawałki odhaczone i nie) i report.md.
 Zapis stanu służy podglądowi: błąd tego skryptu nie jest powodem do STOP przebiegu.
@@ -92,7 +92,7 @@ SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(K\d+)\s*[—-]\s*(.+)$")
 MAX_TEXT = 40000
 MAX_RUNS = 40
 TEMPLATE = HERE.parent / "templates" / "dashboard.html"
-CONFIG = Path(".claude") / "talos.json"      # opcje trybu; plik osobisty, aktualizacja fabryki go nie rusza
+CONFIG = Path(".claude") / "tf.json"         # opcje podglądu; plik osobisty, aktualizacja fabryki go nie rusza
 DEFAULTS = {"dashboard": True, "dashboard_open": True}
 
 
@@ -186,7 +186,7 @@ def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
     docs = run_report.docs_dir(run_dir, meta)
     inputs = [n for n in ("spec.md", "ticket.md") if (docs / n).is_file()]
     if meta.get("key") and inputs and (docs / "plan.md").is_file():
-        run_report.task_state(project, "artifact", meta["key"], "plan.md", "--stage", "plan", "--by", "process:talos",
+        run_report.task_state(project, "artifact", meta["key"], "plan.md", "--stage", "plan", "--by", "process:tf",
                               "--inputs", ",".join(inputs))
 
 
@@ -345,7 +345,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     row = rounds[rnd - 1]
     for earlier in STEPS[:STEPS.index(step)]:
         if row.get(earlier, "todo") in ("todo", "run"):
-            row[earlier] = "pass"             # Talos zgłasza tylko początek i koniec — wcześniejsze przeszły
+            row[earlier] = "pass"             # pętla zgłasza tylko początek i koniec — wcześniejsze przeszły
     row[step] = state
     for later in STEPS[STEPS.index(step) + 1:]:
         if state == "run" or row.get(later) not in STATES:
@@ -605,7 +605,7 @@ def slice_items(slices: list[dict], view: dict | None, cur: dict | None, stage: 
 
 
 def task_object(task_dir: Path, project: Path) -> dict | None:
-    """Karta zadania, które nie ma przebiegu Talosa w `.tf/runs/` (samo `tf task` albo świeży klon): etap z task.json,
+    """Karta zadania, które nie ma przebiegu w `.tf/runs/` (samo `tf task` albo świeży klon): etap z task.json,
     kawałki z plan.md, a bez planu — z samego zadania."""
     key = task_dir.name
     view = task_view(project, key)
@@ -637,7 +637,7 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
 
 
 def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) -> Path:
-    root = project / run_report.RUNS                # stary układ, przebiegi cięć i sam dashboard
+    root = project / run_report.RUNS                # przebiegi cięć pdi (jeden katalog na przebieg)
     work = project / run_report.WORK                # nowy układ: .tf/runs/<KEY>/
     runs = []
     for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
@@ -653,7 +653,7 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
     html = TEMPLATE.read_text(encoding="utf-8")
     data = json.dumps(runs[:MAX_RUNS], ensure_ascii=False).replace("</", "<\\/")
     html = html.replace("/*RUNS_JSON*/[]", data, 1).replace("/*GENERATED*/", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    target = out or (root / "dashboard.html")
+    target = out or (work / "dashboard.html")
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix(".tmp")
     tmp.write_text(html, encoding="utf-8")
@@ -662,15 +662,15 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
 
 
 def options(project: Path) -> dict:
-    """Opcje z `.claude/talos.json` (brak pliku albo klucza = domyślnie włączone); zmienne TALOS_DASHBOARD=0
-    i TALOS_DASHBOARD_OPEN=0 wyłączają opcję bez edycji pliku."""
+    """Opcje z `.claude/tf.json` (brak pliku albo klucza = domyślnie włączone); zmienne TF_DASHBOARD=0
+    i TF_DASHBOARD_OPEN=0 wyłączają opcję bez edycji pliku."""
     opts = dict(DEFAULTS)
     try:
         data = json.loads((project / CONFIG).read_text(encoding="utf-8"))
         opts.update({k: bool(v) for k, v in data.items() if k in DEFAULTS})
     except (OSError, ValueError, AttributeError):
         pass
-    for key, env in (("dashboard", "TALOS_DASHBOARD"), ("dashboard_open", "TALOS_DASHBOARD_OPEN")):
+    for key, env in (("dashboard", "TF_DASHBOARD"), ("dashboard_open", "TF_DASHBOARD_OPEN")):
         if os.environ.get(env, "").strip().lower() in ("0", "false", "no", "off"):
             opts[key] = False
     if os.environ.get("CI"):          # CI i testy: bez otwierania przeglądarki

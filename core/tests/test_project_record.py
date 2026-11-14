@@ -165,7 +165,7 @@ def main() -> int:
         if not (root / "docs/project/README.md").exists():
             fails.append("hook indeksu po zapisie")
         # pliki zadania (docs/project/changes/<KEY>/, bez nagłówka artefaktu) nie należą do dziennika: zapis planu
-        # zadania nie przebudowuje README (Talos zostawiałby nieśledzony plik) i plik nie trafia do indeksu
+        # zadania nie przebudowuje README (pętla zostawiałaby nieśledzony plik) i plik nie trafia do indeksu
         chg = root / "docs/project/changes/T-20261113-limit"
         chg.mkdir(parents=True)
         (chg / "plan.md").write_text("# Plan: limit dobowy\n\n- [ ] K1 — limit\n", encoding="utf-8")

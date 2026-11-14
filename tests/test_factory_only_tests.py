@@ -43,8 +43,8 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as t:
         proj = Path(t) / "app"
-        r = install(proj, "mode-pdi,mode-talos")
-        check(r.returncode == 0, f"FO-0: instalacja mode-pdi,mode-talos: {r.stdout[-600:]} {r.stderr[-300:]}")
+        r = install(proj, "mode-pdi,mode-team")
+        check(r.returncode == 0, f"FO-0: instalacja mode-pdi,mode-team: {r.stdout[-600:]} {r.stderr[-300:]}")
         present = [rel for rel in FACTORY_ONLY if (proj / rel).exists()]
         check(not present, f"FO-1: testy tylko dla fabryki nie trafiają do projektu: {present}")
         check(not (proj / ".claude" / "tests" / "flow_evals").exists(), "FO-1: brak katalogu .claude/tests/flow_evals/")
@@ -68,7 +68,7 @@ def main() -> int:
             (proj / rel).write_bytes(src.read_bytes())
             man["files"][rel] = inst.sha(src.read_bytes())
         (proj / MANIFEST).write_text(json.dumps(man), encoding="utf-8")
-        r = install(proj, "mode-pdi,mode-talos", "--update")
+        r = install(proj, "mode-pdi,mode-team", "--update")
         check(r.returncode == 0, f"FO-5: aktualizacja: {r.stdout[-600:]} {r.stderr[-300:]}")
         still = [rel for rel in old if (proj / rel).exists()]
         check(not still, f"FO-5: aktualizacja usuwa kopie testów tylko dla fabryki z poprzedniej wersji: {still}")

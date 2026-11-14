@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Skan bezpieczeństwa kawałka Talosa: semgrep (reguły OWASP Top 10 i .semgrep.yml produktu) na plikach zmienionych
+Skan bezpieczeństwa kawałka: semgrep (reguły OWASP Top 10 i .semgrep.yml produktu) na plikach zmienionych
 przez kawałek, audyt zależności tylko przy zmianie manifestu albo lockfile'a, SARIF w katalogu wyniku, werdykt jak
 SEC-001 w ci_for_sdlc. Brak skanera to FAIL z poleceniem instalacji, nigdy cichy PASS.
 
-  python3 .claude/skills/talos-story-run/scripts/security_scan.py scan [--base REF] [--out DIR]
+  python3 .claude/skills/tf/scripts/security_scan.py scan [--base REF] [--out DIR]
                                                                        [--slice K<n> --attempt k] [--json]
-  python3 .claude/skills/talos-story-run/scripts/security_scan.py verdict PLIK.sarif... [--json]
-  python3 .claude/skills/talos-story-run/scripts/security_scan.py cooldown
+  python3 .claude/skills/tf/scripts/security_scan.py verdict PLIK.sarif... [--json]
+  python3 .claude/skills/tf/scripts/security_scan.py cooldown
 
 scan     — bez --base: zmiany nieskomitowane i nowe pliki (pętla kawałka); z --base: także commity od bazy (CI na PR).
            Zapisuje do --out (domyślnie reports/security): semgrep.sarif, npm-audit.sarif, pip-audit.sarif,
@@ -20,7 +20,7 @@ cooldown — karencja wersji (N10): min-release-age npm, minimumReleaseAge pnpm,
 
 Blokujące: poziom error albo warning z CWE z OWASP Top 10 2021 lub 2025; poziom wyniku → domyślny poziom reguły →
 warning; poziom none pomijany. Reszta trafia do raportu. Kod wyjścia: 0 PASS, 1 FAIL, 2 złe wywołanie.
-Skanery szukane w PATH, albo tylko w TALOS_SCAN_PATH, jeśli ustawione. Reguły semgrep: TALOS_SEMGREP_CONFIG
+Skanery szukane w PATH, albo tylko w TF_SCAN_PATH, jeśli ustawione. Reguły semgrep: TF_SEMGREP_CONFIG
 (domyślnie p/owasp-top-ten z rejestru semgrep.dev; host musi być na liście dozwolonych kontenera).
 """
 from __future__ import annotations
@@ -196,7 +196,7 @@ def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
     names |= set(git("ls-files", "--others", "--exclude-standard", cwd=root).splitlines())
     if base:
         names |= set(git("diff", "--name-only", f"{base}...HEAD", cwd=root).splitlines())
-    # Wyniki pracy fabryki (.tf/: przebiegi Talosa, raporty, logi) poza skanem.
+    # Wyniki pracy fabryki (.tf/: przebiegi, raporty, logi) poza skanem.
     prefixes = [".tf/", *(s.rstrip("/") + "/" for s in skip if s)]
     return sorted(n for n in names if n and (root / n).is_file() and not any(n.startswith(p) for p in prefixes))
 
@@ -204,7 +204,7 @@ def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
 # ── skanery ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def tool(name: str) -> str | None:
-    return shutil.which(name, path=os.environ.get("TALOS_SCAN_PATH") or None)
+    return shutil.which(name, path=os.environ.get("TF_SCAN_PATH") or None)
 
 
 SEMGREP_STATE = Path(".tf") / "cache" / "semgrep"
@@ -233,7 +233,7 @@ def run_semgrep(root: Path, files: list[str], out: Path) -> None:
         target.write_text(json.dumps(empty_sarif("Semgrep"), indent=2) + "\n", encoding="utf-8")
         return
     cmd = [tool("semgrep"), "scan", "--metrics=off", "--sarif", "--output", str(target),
-           "--config", os.environ.get("TALOS_SEMGREP_CONFIG") or SEMGREP_DEFAULT]
+           "--config", os.environ.get("TF_SEMGREP_CONFIG") or SEMGREP_DEFAULT]
     if (root / ".semgrep.yml").is_file():
         cmd += ["--config", ".semgrep.yml"]
     r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True, env=semgrep_env(root))

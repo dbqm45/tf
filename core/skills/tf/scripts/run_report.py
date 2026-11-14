@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Przebieg Talosa („story → PR”, skill talos-story-run, tryb mode-talos): katalog przebiegu i raport kosztu.
+Przebieg zadania („zadanie → PR”, skill tf): katalog przebiegu i raport kosztu.
 
-  python3 .claude/skills/talos-story-run/scripts/run_report.py start "<tytuł>" [--key PROJ-123] [--story "<treść>" | --story-file PLIK]
-  python3 .claude/skills/talos-story-run/scripts/run_report.py start --task TSK-57 [--change CHG-12] ["<tytuł>"]   # cięcie z planu zmiany
-  python3 .claude/skills/talos-story-run/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
-  python3 .claude/skills/talos-story-run/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
+  python3 .claude/skills/tf/scripts/run_report.py start "<tytuł>" [--key PROJ-123] [--story "<treść>" | --story-file PLIK]
+  python3 .claude/skills/tf/scripts/run_report.py start --task TSK-57 [--change CHG-12] ["<tytuł>"]   # cięcie z planu zmiany
+  python3 .claude/skills/tf/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
+  python3 .claude/skills/tf/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
 `start` zakłada zadanie (`.tf/factory/task_state.py start`) z kluczem `T-<RRRRMMDD>-<slug>` albo podanym w `--key`
 (numer z trackera) i dwa katalogi: trwały `docs/project/changes/<KEY>/` (task.json, ticket.md, plan.md, potem spec.md —
-szablon zakłada `run_state.py spec <katalog> new`, gdy Talos zaczyna specyfikację — oraz report.md i evidence/ — do gita, jednym commitem `docs(task): record <KEY>` na końcu przebiegu) oraz roboczy
+szablon zakłada `run_state.py spec <katalog> new`, gdy pętla zaczyna specyfikację — oraz report.md i evidence/ — do gita, jednym commitem `docs(task): record <KEY>` na końcu przebiegu) oraz roboczy
 `.tf/runs/<KEY>/` (run.json, parked.md, skany, logi — ignorowany przez git; PRB-32: ścieżka poza `.claude/`, chronioną
 w Claude Code). Katalog roboczy jest „katalogiem przebiegu” w pozostałych poleceniach; `run.json` wskazuje katalog
-trwały polem `task_dir`. Przebieg bez tego pola (stary układ `.tf/runs/talos/<RRRR-MM-DD>-<slug>/` ze story.md,
-plan.md i report.md w jednym katalogu) jest dalej czytany przez `status`, `finish` i dashboard.
-Przebieg cięcia (`--task`) zostaje w starym układzie: story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
+trwały polem `task_dir`.
+Przebieg cięcia (`--task`) ma jeden katalog `.tf/runs/cuts/<RRRR-MM-DD>-<slug>/` (run.json, story.md, plan.md,
+parked.md, report.md), bez katalogu zadania: story powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
 zmiany, a run.json dostaje `change`, `task` i `flag` (kolumna „Flaga” albo `release.yaml`); z `--task` w dwóch
 planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish` zapisuje wtedy też kopię raportu
 w `docs/project/changes/CHG-n/runs/TSK-n.md` (ślad w repo). `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
@@ -43,7 +43,7 @@ from pathlib import Path
 
 ATTEMPT = re.compile(r"proba-(\d+)")  # katalog próby kawałka z security_scan.py scan --slice
 
-# projekt: katalog z .tf/config/config.yaml nad skryptem (.claude/skills/talos-story-run/scripts/), inaczej bieżący
+# projekt: katalog z .tf/config/config.yaml nad skryptem (.claude/skills/tf/scripts/), inaczej bieżący
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "config.yaml").is_file()), Path.cwd())
 try:
     import yaml
@@ -51,7 +51,7 @@ except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
     sys.path.insert(0, str(ROOT / ".tf" / "factory" / "_vendor"))
     import yaml
 
-RUNS = Path(".tf") / "runs" / "talos"   # stary układ i przebiegi cięć pdi; tu też leży dashboard.html
+RUNS = Path(".tf") / "runs" / "cuts"    # przebiegi cięć pdi (`--task`): jeden katalog na przebieg, bez katalogu zadania
 WORK = Path(".tf") / "runs"             # katalog roboczy zadania: .tf/runs/<KEY>/ (poza .claude/ — PRB-32)
 CHANGES = Path("docs") / "project" / "changes"
 TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")   # ten sam wzorzec co w task_state.py
@@ -61,7 +61,7 @@ FAMILIES = ("haiku", "sonnet", "opus", "fable", "mythos")
 
 PLAN_TEMPLATE = """# Plan: {title}
 
-Kawałki pionowe: każdy niesie wartość, przechodzi testy i jest osobnym commitem (skill talos-story-run, tryb mode-talos).
+Kawałki pionowe: każdy niesie wartość, przechodzi testy i jest osobnym commitem (skill tf).
 
 - [ ] K1 — <wartość dla użytkownika> · kryteria: <testy> · pliki: <ścieżki> · weryfikacja: `<polecenie>`
 """
@@ -274,7 +274,7 @@ def committed_pieces(project: Path, meta: dict) -> int | None:
 
 
 def plan_progress(run_dir: Path, commits: int | None = None) -> dict:
-    """Kawałki odhaczone w plan.md, a gdy Talos odhaczenie pominął — kawałki z commitem (nie więcej niż w planie)."""
+    """Kawałki odhaczone w plan.md, a gdy pętla odhaczenie pominęła — kawałki z commitem (nie więcej niż w planie)."""
     plan = docs_dir(run_dir) / "plan.md"
     text = plan.read_text(encoding="utf-8") if plan.exists() else ""
     done = len(re.findall(r"^\s*- \[[xX]\]", text, re.M))
@@ -488,7 +488,7 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
     (docs / "plan.md").write_text(PLAN_TEMPLATE.format(title=title), encoding="utf-8")
     (run_dir / "parked.md").write_text(PARKED_TEMPLATE.format(title=title), encoding="utf-8")
     print(run_dir.relative_to(project) if run_dir.is_relative_to(project) else run_dir)
-    try:   # podgląd: zbuduj dashboard i otwórz go (opcje w .claude/talos.json); przebieg cięcia (--task) nie otwiera
+    try:   # podgląd: zbuduj dashboard i otwórz go (opcje w .claude/tf.json); przebieg cięcia (--task) nie otwiera
         import run_state
         uri = run_state.launch(project, open_browser=not task)
         if uri:

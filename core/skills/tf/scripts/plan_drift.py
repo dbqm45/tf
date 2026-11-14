@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Zgodność zmian z planem przebiegu Talosa: pliki zmienione na gałęzi historyjki vs pliki kawałków w plan.md.
+Zgodność zmian z planem przebiegu: pliki zmienione na gałęzi historyjki vs pliki kawałków w plan.md.
 
-  python3 .claude/skills/talos-story-run/scripts/plan_drift.py <katalog przebiegu> [--base main] [--json]
+  python3 .claude/skills/tf/scripts/plan_drift.py <katalog przebiegu> [--base main] [--json]
 
 Kawałek w plan.md: `- [x] K<n> — <wartość> · … · pliki: <ścieżki po przecinku> · …` (ścieżka może być katalogiem
 albo wzorcem glob). Plan leży w katalogu przebiegu albo — gdy `run.json` ma `task_dir` — w katalogu zadania

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Talos · podgląd przebiegów</title>
+<title>Fabryka · podgląd zadań</title>
 <style>
 :root{
   --bg:#0e1116; --panel:#151a22; --panel2:#1b212b; --line:#262e3a; --text:#e6e9ef; --muted:#8b95a5;
@@ -138,8 +138,8 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 
 <header class="top">
   <div>
-    <h1>Talos <span class="sub" style="font-weight:400">· historyjka → PR</span></h1>
-    <div class="sub">Zadania z <code>docs/project/changes/</code> i przebiegi z <code>.tf/runs/</code> · tryb <code>mode-talos</code></div>
+    <h1>Fabryka <span class="sub" style="font-weight:400">· zadanie → PR</span></h1>
+    <div class="sub">Zadania z <code>docs/project/changes/</code> i przebiegi z <code>.tf/runs/</code></div>
   </div>
   <div class="tools">
     <span class="pill"><span class="dot warn"></span> stan z <span id="gen">/*GENERATED*/</span></span>
@@ -149,11 +149,11 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 
 <div class="banner">Stan zapisują <code>run_state.py stage</code> i <code>run_state.py step</code>, a ten plik buduje <code>run_state.py dashboard</code> (odświeża się sam co 5 s, gdy panel jest zamknięty). Koszt i czas liczy skrypt z transkryptów, nie model.</div>
 
-<div class="board" id="board" aria-label="Przebiegi Talosa wg etapu"></div>
+<div class="board" id="board" aria-label="Zadania wg etapu"></div>
 
 <div class="bar">
-  <span>/talos-story-run &lt;story&gt; [--auto] [--budget USD]</span>
-  <span>/talos-story-run TSK-n --change CHG-n</span>
+  <span>/tf &lt;story&gt; [--auto] [--budget USD]</span>
+  <span>/tf TSK-n --change CHG-n</span>
   <span class="sp" id="summary"></span>
 </div>
 <div class="legend">
@@ -164,7 +164,7 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
   <span><span class="chip stale">K2</span>kawałek bez aktualnego dowodu</span>
 </div>
 <div class="gloss">
-  <div><b>R1, R2</b> — kolejne rundy bieżącego kawałka. Po nieudanej bramce Talos wraca na początek i robi następną rundę; po 2 nieudanych STOP</div>
+  <div><b>R1, R2</b> — kolejne rundy bieżącego kawałka. Po nieudanej bramce pętla wraca na początek i robi następną rundę; po 2 nieudanych STOP</div>
   <div><b>kawałki 1/3</b> — tyle kawałków planu jest już zacommitowanych (jeden kawałek = jeden commit, max 5)</div>
   <div><b>odłożone 2</b> — sprawy z <code>parked.md</code>, czekają na Twoją decyzję</div>
   <div><b>medium</b> — effort modelu: <span style="color:var(--muted)">low</span>, <span style="color:var(--warn)">medium</span>, <span style="color:var(--bad)">high</span> · <b>$0.18</b> szacunek z cennika API · <b>--auto</b> plan bez akceptacji</div>
@@ -186,12 +186,12 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 
 <script>
 /* ===== STAN =====
-   Dane wstrzykuje run_state.py dashboard z katalogów przebiegów w .tf/runs/talos (run.json, plan.md, parked.md, security/, report.md). */
+   Dane wstrzykuje run_state.py dashboard z katalogów zadań i przebiegów (run.json, plan.md, parked.md, security/, report.md). */
 const COLS = [
-  {id:"intake", label:"Przyjęcie", agent:"scout", model:"haiku", tip:"Fakty o repozytorium zbiera scout (fast); historyjkę czyta Talos (sonnet)."},
-  {id:"plan",   label:"Plan",      agent:"talos", model:"sonnet", tip:"Plan z kawałków pisze Talos (std)."},
-  {id:"slices", label:"Kawałki",   agent:"talos", model:"sonnet", tip:"Pętla kawałka: test → kod → bramka (weryf, skan, zakres) → commit. Pasek K = kawałki, wiersze R = próby bramki."},
-  {id:"pr",     label:"PR",        agent:"plan_drift", model:null, tip:"plan_drift.py (skrypt), potem Talos otwiera jeden PR. Nie scala."},
+  {id:"intake", label:"Przyjęcie", agent:"scout", model:"haiku", tip:"Fakty o repozytorium zbiera scout (fast); historyjkę czyta sesja główna (sonnet)."},
+  {id:"plan",   label:"Plan",      agent:"tf", model:"sonnet", tip:"Plan z kawałków pisze sesja główna (std)."},
+  {id:"slices", label:"Kawałki",   agent:"tf", model:"sonnet", tip:"Pętla kawałka: test → kod → bramka (weryf, skan, zakres) → commit. Pasek K = kawałki, wiersze R = próby bramki."},
+  {id:"pr",     label:"PR",        agent:"plan_drift", model:null, tip:"plan_drift.py (skrypt), potem sesja główna otwiera jeden PR. Nie scala."},
   {id:"needs",  label:"Czeka na człowieka", agent:"Ty", model:null, cls:"needs", tip:"Decyzja człowieka: akceptacja planu albo rozstrzygnięcie blokady po STOP."},
   {id:"done",   label:"Gotowe",    agent:"PR otwarty", model:null, cls:"done"}
 ];
@@ -204,7 +204,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 let sel = null, curFile = null;
 const MARK = {pass:"✓", fail:"✗", run:"…", todo:"○"};
 const CLS  = {pass:"done", fail:"fail", run:"cur", todo:"todo"};
-const runDir = r => r.dir || r.taskDir || `.tf/runs/talos/${r.date}-${r.slug}`;
+const runDir = r => r.dir || r.taskDir || `.tf/runs/cuts/${r.date}-${r.slug}`;
 const SLICE_PL = {done:"zrobiony", cur:"w toku", fail:"bramka nieudana", todo:"w kolejce",
   stale:"bez aktualnego dowodu — plik zmienił się po weryfikacji albo dowodu nie ma; uruchom weryfikację ponownie"};
 function sliceStrip(r){
@@ -220,8 +220,8 @@ const filesFor = r => r.files;
 const STATE_PL = {pass:"zaliczony", run:"w toku", fail:"nieudany", todo:"jeszcze nie uruchomiony"};
 const STATE_K = {pass:"zacommitowany", run:"w toku", fail:"bramka nieudana", todo:"w kolejce"};
 const VERDICTS = [
-  {id:"test",   tip:"Test czerwony z kryteriów kawałka — talos · sonnet"},
-  {id:"kod",    tip:"Najmniejszy kod, który zazielenia test — talos · sonnet"},
+  {id:"test",   tip:"Test czerwony z kryteriów kawałka — tf · sonnet"},
+  {id:"kod",    tip:"Najmniejszy kod, który zazielenia test — tf · sonnet"},
   {id:"weryf",  tip:"Polecenie weryfikacji: format, lint, typy, testy — skrypt, bez modelu"},
   {id:"skan",   tip:"semgrep OWASP Top 10 na plikach kawałka — skrypt, bez modelu"},
   {id:"zakres", tip:"Przegląd zakresu — scope-reviewer · sonnet, świeży kontekst"}
@@ -232,8 +232,8 @@ function chip(label, st, tip, extra){
 }
 function rowsHtml(r){
   let out = "";
-  if (r.cur) out += `<div class="rows">` + r.cur.rounds.map((rd,i)=>`<div class="rrow"><span class="rl" title="Runda ${i+1} kawałka ${r.cur.k}. Po nieudanej bramce Talos wraca na początek pętli.">R${i+1}</span>${VERDICTS.map(v=>chip(v.id, rd[v.id], v.tip)).join("")}</div>`).join("") + `</div>`;
-  if (r.prSteps) out += `<div class="rows"><div class="rrow"><span class="rl"></span>${chip("plan_drift", r.prSteps.drift, "plan_drift.py — zgodność zmian z planem (skrypt)", "span2")}${chip("PR", r.prSteps.pr, "jeden PR, bez scalania — talos · sonnet")}<span></span></div></div>`;
+  if (r.cur) out += `<div class="rows">` + r.cur.rounds.map((rd,i)=>`<div class="rrow"><span class="rl" title="Runda ${i+1} kawałka ${r.cur.k}. Po nieudanej bramce pętla wraca na początek pętli.">R${i+1}</span>${VERDICTS.map(v=>chip(v.id, rd[v.id], v.tip)).join("")}</div>`).join("") + `</div>`;
+  if (r.prSteps) out += `<div class="rows"><div class="rrow"><span class="rl"></span>${chip("plan_drift", r.prSteps.drift, "plan_drift.py — zgodność zmian z planem (skrypt)", "span2")}${chip("PR", r.prSteps.pr, "jeden PR, bez scalania — tf · sonnet")}<span></span></div></div>`;
   return out;
 }
 function card(r){
@@ -242,15 +242,15 @@ function card(r){
   const right = needs ? `<span class="call">TWOJA DECYZJA</span>` : "";
   const refs = [r.key, r.change, r.taskStage?("etap: "+r.taskStage):null, r.pr?("PR #"+r.pr):null, r.flag?("⚑ "+r.flag):null].filter(Boolean);
   let why = "", hint = "";
-  if (needs && r.needs==="stop"){ hint = (r.stopText||"STOP.")+" Zdecyduj i napisz do Talosa: wznów od "+(r.cur?r.cur.k:"bieżącego kawałka"); }
-  if (needs && r.needs==="plan"){ hint = "Plan do akceptacji (bez --auto): zaakceptuj albo napisz uwagi do Talosa"; }
+  if (needs && r.needs==="stop"){ hint = (r.stopText||"STOP.")+" Zdecyduj i napisz w sesji: wznów od "+(r.cur?r.cur.k:"bieżącego kawałka"); }
+  if (needs && r.needs==="plan"){ hint = "Plan do akceptacji (bez --auto): zaakceptuj albo napisz uwagi w sesji"; }
   const cls = needs && r.needs==="stop" ? "attn" : needs ? "ask" : "";
   return `<button class="card ${cls} ${sel===r.slug?"sel":""}" type="button" data-run="${esc(r.slug)}">
     <div class="id"><span class="l">${live?'<span class="live" title="w toku"></span>':""}<span class="nm">${esc(r.date.slice(5))} · ${esc(r.slug)}</span></span>${right}</div>
     <div class="title">${esc(r.title)}</div>
     ${refs.length?`<div class="refs">${refs.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:""}
     ${sliceStrip(r)}${rowsHtml(r)}${why}
-    <div class="meta1">${r.effort?`<span class="eff e-${["low","medium"].includes(r.effort)?r.effort:"high"}" title="Effort modelu Talosa: szary = low, żółty = medium, czerwony = high lub wyższy">${esc(r.effort)}</span>`:""}${r.cost==null?"":`<span class="cost" title="Szacunek z cennika API, nie faktura">$${r.cost.toFixed(2)}</span><span class="min" title="Czas od startu przebiegu">${r.min}m</span>`}</div>
+    <div class="meta1">${r.effort?`<span class="eff e-${["low","medium"].includes(r.effort)?r.effort:"high"}" title="Effort modelu sesji: szary = low, żółty = medium, czerwony = high lub wyższy">${esc(r.effort)}</span>`:""}${r.cost==null?"":`<span class="cost" title="Szacunek z cennika API, nie faktura">$${r.cost.toFixed(2)}</span><span class="min" title="Czas od startu przebiegu">${r.min}m</span>`}</div>
     <div class="meta2">${r.slices.length?`<span title="Kawałki planu już zacommitowane">kawałki ${done}/${r.slices.length}</span>`:""}${r.parked?`<span class="r" title="Sprawy z parked.md: przypadki brzegowe i pomysły poza kryteriami. Czekają na Twoją decyzję.">odłożone ${r.parked}</span>`:""}${r.auto===true?'<span title="Plan bez czekania na akceptację człowieka">--auto</span>':""}</div>
     ${hint?`<div class="hint">${esc(hint)}</div>`:""}
   </button>`;
@@ -287,8 +287,8 @@ function renderFiles(){
     `<button class="fbtn" type="button" data-file="${esc(i.name)}" aria-current="${i.name===curFile}"><span class="dot ${i.dot}"></span>${esc(i.name)}</button>`).join("")).join("");
   const it = groups.flatMap(g=>g.items).find(i=>i.name===curFile);
   let next = "";
-  if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop"><b>Co dalej:</b> zdecyduj i poproś Talosa o wznowienie od ${esc(r.cur?r.cur.k:"bieżącego kawałka")}.<span class="cmd">claude --agent talos  →  „wznów ${esc(runDir(r))}”</span></div>`;
-  if (r.stage==="needs"&&r.needs==="plan") next = `<div class="nextbox"><b>Co dalej:</b> przeczytaj plan i zaakceptuj albo zgłoś uwagi w rozmowie z Talosem. Bez akceptacji nie ruszy do kodu.</div>`;
+  if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop"><b>Co dalej:</b> zdecyduj i poproś w sesji o wznowienie od ${esc(r.cur?r.cur.k:"bieżącego kawałka")}.<span class="cmd">claude --agent tf  →  „wznów ${esc(runDir(r))}”</span></div>`;
+  if (r.stage==="needs"&&r.needs==="plan") next = `<div class="nextbox"><b>Co dalej:</b> przeczytaj plan i zaakceptuj albo zgłoś uwagi w rozmowie. Bez akceptacji nie ruszy do kodu.</div>`;
   $("#content").innerHTML = next + `<h4>${esc(it.name)}</h4><pre></pre>`;
   $("#content pre").textContent = it.text;
 }
@@ -302,8 +302,8 @@ $("#dClose").addEventListener("click", closeDrawer);
 $("#scrim").addEventListener("click", closeDrawer);
 document.addEventListener("keydown", e => { if (e.key==="Escape") closeDrawer(); });
 $("#themeBtn").addEventListener("click", () => { const r=document.documentElement; r.dataset.theme = r.dataset.theme==="light"?"dark":"light"; });
-try { const t = localStorage.getItem("talos-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
-$("#themeBtn").addEventListener("click", () => { try { localStorage.setItem("talos-theme", document.documentElement.dataset.theme); } catch (e) {} });
+try { const t = localStorage.getItem("tf-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+$("#themeBtn").addEventListener("click", () => { try { localStorage.setItem("tf-theme", document.documentElement.dataset.theme); } catch (e) {} });
 renderBoard();
 setTimeout(function tick(){ if (!sel) location.reload(); else setTimeout(tick, 5000); }, 5000);
 </script>
