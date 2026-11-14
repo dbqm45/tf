@@ -91,8 +91,11 @@ Zatrzymanie (STOP) ma zawsze jeden z jedenastu powodów — skrypt nie przyjmie 
 brak informacji (`pytanie`), zadanie do podziału (`podzial`), brak treści albo dostępu do zgłoszenia (`zrodlo`), plan
 czeka na zgodę (`zgoda-na-plan`), testy czerwone po dwóch próbach (`testy`), skan bezpieczeństwa (`skan`),
 przekroczony budżet (`budzet`), nieprzygotowane repozytorium (`srodowisko`), decyzja o zależności (`zaleznosc`),
-zmiana kontraktu albo decyzja biznesowa (`kontrakt`), operacja zastrzeżona dla Ciebie (`uprawnienia`). Powód
-i wyjaśnienie widać na podglądzie w kolumnie „Czeka na człowieka”.
+zmiana kontraktu albo decyzja biznesowa (`kontrakt`), operacja zastrzeżona dla Ciebie (`uprawnienia`).
+
+Każde zatrzymanie dostajesz w tym samym kształcie: **co się stało**, **czego potrzeba**, **jedno pytanie** z 2–3
+opcjami (przy każdej skutek i jedna rekomendacja) oraz co fabryka zrobi po Twojej odpowiedzi. To samo widać na
+podglądzie w kolumnie „Czeka na człowieka”. Treść komunikatów jest w `.claude/skills/tf/templates/stop_messages.json`.
 
 ## Co dostajesz
 Każda historyjka to **zadanie** z kluczem (`T-<data>-<slug>` albo numer z trackera: `start --key PROJ-123`) i dwoma

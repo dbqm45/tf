@@ -505,6 +505,29 @@ def main() -> int:
         r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "plan", "--code", "pytanie"], proj, cfg)
         check(r.returncode == 2, f"T-11: --code tylko dla --needs stop: {r.returncode} {r.stdout}")
 
+        # komunikat zatrzymania w prostym języku (krok E4): co się stało, czego potrzeba, pytanie z opcjami
+        r = run(SCRIPT, ["message", "pytanie"], proj, cfg)
+        check(r.returncode == 0 and all(s in r.stdout for s in ("Co się stało:", "Czego potrzeba:", "Pytanie:", "Potem:"))
+              and r.stdout.count("(rekomendowana)") == 1 and "  1. " in r.stdout and "  2. " in r.stdout,
+              f"K-1: message <kod> drukuje komunikat ze stałymi polami i jedną rekomendacją: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["message", "zmeczenie"], proj, cfg)
+        check(r.returncode == 2 and "pytanie" in r.stdout, f"K-2: message z kodem spoza listy → kod 2: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["message", "budzet", "--json"], proj, cfg)
+        msg = json.loads(r.stdout) if r.returncode == 0 else {}
+        check(msg.get("kod") == "budzet" and msg.get("pytanie", "").endswith("?") and len(msg.get("opcje", [])) >= 2,
+              f"K-3: message --json: {r.stdout[:200]}")
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "testy", "--reason",
+                         "pytest: 2 failed (test_fees.py)"], proj, cfg)
+        check(r.returncode == 0 and "Co się stało: Testy nie przechodzą" in r.stdout and "pytest: 2 failed (test_fees.py)" in r.stdout
+              and "Pytanie:" in r.stdout and "AskUserQuestion" in r.stdout,
+              f"K-4: zapis STOP drukuje komunikat dla człowieka z powodem przebiegu: {r.stdout}")
+        html = (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8")
+        card = next((x for x in runs_json(html) if x.get("key") == "IMP-1"), {})
+        stop_file = next((i for g in card.get("files", []) for i in g.get("items", []) if i.get("name") == "STOP"), {})
+        check(card.get("stopNeed") and card.get("stopQuestion", "").endswith("?") and len(card.get("stopOptions") or []) >= 2
+              and "Czego potrzeba" in stop_file.get("text", "") and "r.stopQuestion" in html,
+              f"K-5: podgląd pokazuje, czego potrzeba, i pytanie z opcjami: {card.get('stopNeed')} {card.get('stopQuestion')}")
+
         old = proj / ".tf" / "runs" / "cuts" / "2026-10-01-stary"
         old.mkdir(parents=True)
         (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary przebieg",

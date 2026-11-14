@@ -1,0 +1,119 @@
+{
+  "pytanie": {
+    "co": "Nie mogę zacząć, bo w zadaniu brakuje informacji, bez której musiałbym zgadywać.",
+    "potrzeba": "Odpowiedzi na pytania wypisane niżej — wystarczy jedno zdanie na każde.",
+    "pytanie": "Czy odpowiesz teraz na te pytania?",
+    "opcje": [
+      {"opcja": "Odpowiadam teraz", "skutek": "fabryka dopisze odpowiedzi do zadania i ruszy dalej", "rekomendowana": true},
+      {"opcja": "Wstrzymaj zadanie", "skutek": "zadanie zostaje zapisane i czeka; w kodzie nic się nie zmienia"}
+    ],
+    "potem": "Po odpowiedziach fabryka wraca do zadania od miejsca, w którym przerwała."
+  },
+  "podzial": {
+    "co": "Zadanie jest za duże na jedną zmianę albo łączy kilka niezależnych rzeczy.",
+    "potrzeba": "Wyboru, od której części zacząć — propozycja podziału jest niżej.",
+    "pytanie": "Którą część zrobić najpierw?",
+    "opcje": [
+      {"opcja": "Pierwsza część z propozycji", "skutek": "fabryka zrobi ją jako osobne zadanie, a pozostałe zapisze do zrobienia później", "rekomendowana": true},
+      {"opcja": "Inny podział", "skutek": "podajesz własny podział, fabryka zaczyna od wskazanej części"},
+      {"opcja": "Całość naraz", "skutek": "większa zmiana, trudniejsza do sprawdzenia; fabryka pokaże plan i poprosi o Twoją zgodę"}
+    ],
+    "potem": "Po wyborze fabryka zakłada zadanie dla wybranej części i zaczyna od planu."
+  },
+  "zrodlo": {
+    "co": "Nie mam treści zadania: nie udało się odczytać zgłoszenia albo nic nie zostało podane.",
+    "potrzeba": "Treści zadania wklejonej w rozmowie albo połączenia z systemem zgłoszeń.",
+    "pytanie": "Jak chcesz przekazać treść zadania?",
+    "opcje": [
+      {"opcja": "Wklejam treść", "skutek": "fabryka zaczyna od razu, z wklejonego tekstu", "rekomendowana": true},
+      {"opcja": "Podłączę system zgłoszeń", "skutek": "po podłączeniu fabryka odczyta zgłoszenie sama; do tego czasu zadanie czeka"}
+    ],
+    "potem": "Gdy treść będzie dostępna, fabryka założy zadanie i powie, jak je oceniła."
+  },
+  "zgoda-na-plan": {
+    "co": "Plan jest gotowy i czeka na Twoją zgodę — bez niej fabryka nie zmienia kodu.",
+    "potrzeba": "Przeczytania planu i decyzji: zgoda albo uwagi.",
+    "pytanie": "Czy akceptujesz plan?",
+    "opcje": [
+      {"opcja": "Tak, zaczynaj", "skutek": "fabryka zapisuje Twoją zgodę i zaczyna zmiany w kodzie", "rekomendowana": true},
+      {"opcja": "Popraw plan", "skutek": "podajesz uwagi, fabryka poprawia plan i pokazuje go ponownie"},
+      {"opcja": "Nie rób tego zadania", "skutek": "zadanie zostaje zapisane, kod pozostaje bez zmian"}
+    ],
+    "potem": "Po zgodzie fabryka realizuje plan krok po kroku i pokazuje postęp na podglądzie."
+  },
+  "testy": {
+    "co": "Testy nie przechodzą mimo dwóch prób naprawy.",
+    "potrzeba": "Decyzji, co dalej — niżej jest wynik testów i to, co zostało już sprawdzone.",
+    "pytanie": "Jak postąpić z tą częścią zadania?",
+    "opcje": [
+      {"opcja": "Spróbuj inną drogą", "skutek": "fabryka proponuje inne rozwiązanie tej części i próbuje ponownie", "rekomendowana": true},
+      {"opcja": "Zmieniam wymaganie", "skutek": "podajesz poprawione wymaganie, fabryka dostosowuje testy i kod"},
+      {"opcja": "Przerwij zadanie", "skutek": "zrobione części zostają, reszta czeka na Ciebie"}
+    ],
+    "potem": "Po decyzji fabryka wraca do tej części zadania; wcześniejsze części zostają bez zmian."
+  },
+  "skan": {
+    "co": "Kontrola bezpieczeństwa znalazła problem, którego nie udało się usunąć w dwóch próbach.",
+    "potrzeba": "Decyzji o znalezionym problemie — opis i miejsce w kodzie są niżej.",
+    "pytanie": "Co zrobić ze znalezionym problemem?",
+    "opcje": [
+      {"opcja": "Napraw inaczej", "skutek": "fabryka próbuje innego rozwiązania i powtarza kontrolę", "rekomendowana": true},
+      {"opcja": "To fałszywy alarm", "skutek": "podajesz uzasadnienie, fabryka zapisuje wyjątek z Twoim podpisem i idzie dalej"},
+      {"opcja": "Przerwij zadanie", "skutek": "ta część nie trafia do kodu; reszta czeka na Ciebie"}
+    ],
+    "potem": "Po decyzji fabryka powtarza kontrolę bezpieczeństwa, zanim zapisze tę część."
+  },
+  "budzet": {
+    "co": "Koszt zadania przekroczył ustalony limit.",
+    "potrzeba": "Zgody na dalszy koszt albo decyzji o zakończeniu — niżej jest dotychczasowy koszt i to, co zostało do zrobienia.",
+    "pytanie": "Czy kontynuować mimo przekroczenia limitu?",
+    "opcje": [
+      {"opcja": "Zakończ na tym, co zrobione", "skutek": "gotowe części trafiają do przeglądu, reszta jest zapisana jako niezrobiona", "rekomendowana": true},
+      {"opcja": "Podnieś limit", "skutek": "podajesz nowy limit, fabryka kończy zadanie"}
+    ],
+    "potem": "Po decyzji fabryka albo kończy zadanie, albo zamyka je raportem z tym, co zostało."
+  },
+  "srodowisko": {
+    "co": "Repozytorium albo narzędzia nie są gotowe do pracy.",
+    "potrzeba": "Przygotowania tego, co wypisano niżej — na przykład zapisania własnych zmian albo doinstalowania narzędzia.",
+    "pytanie": "Czy przygotujesz to teraz?",
+    "opcje": [
+      {"opcja": "Przygotuję i dam znać", "skutek": "fabryka zaczyna od tego samego miejsca, gdy potwierdzisz", "rekomendowana": true},
+      {"opcja": "Wstrzymaj zadanie", "skutek": "nic się nie zmienia; zadanie czeka"}
+    ],
+    "potem": "Po Twoim potwierdzeniu fabryka sprawdza gotowość jeszcze raz i rusza dalej."
+  },
+  "zaleznosc": {
+    "co": "Zadanie wymaga nowej biblioteki albo jej wersji, która jest zbyt świeża, żeby dodać ją bez Twojej decyzji.",
+    "potrzeba": "Decyzji o tej bibliotece — nazwa, wersja i powód są niżej.",
+    "pytanie": "Czy dodać tę bibliotekę?",
+    "opcje": [
+      {"opcja": "Użyj starszej wersji albo poczekaj", "skutek": "fabryka bierze wersję, która przeszła okres karencji, albo wstrzymuje tę część", "rekomendowana": true},
+      {"opcja": "Dodaj mimo to", "skutek": "biblioteka zostaje dodana, a Twoja zgoda jest zapisana w opisie zmiany"},
+      {"opcja": "Zrób bez niej", "skutek": "fabryka szuka rozwiązania bez nowej biblioteki"}
+    ],
+    "potem": "Po decyzji fabryka wraca do tej części zadania."
+  },
+  "kontrakt": {
+    "co": "Zadanie wymaga decyzji, która zmienia umowę z innymi: publiczne API, strukturę danych albo regułę biznesową.",
+    "potrzeba": "Twojej decyzji — warianty i ich skutki są niżej.",
+    "pytanie": "Który wariant wybrać?",
+    "opcje": [
+      {"opcja": "Wariant zgodny wstecz", "skutek": "dotychczasowe zachowanie zostaje, nowe dochodzi obok", "rekomendowana": true},
+      {"opcja": "Zmiana niezgodna wstecz", "skutek": "inni użytkownicy tej części muszą się dostosować; fabryka opisuje to w zmianie"},
+      {"opcja": "Wstrzymaj do ustalenia", "skutek": "zadanie czeka, aż decyzja zapadnie poza fabryką"}
+    ],
+    "potem": "Po decyzji fabryka dopisuje ją do zadania i poprawia plan."
+  },
+  "uprawnienia": {
+    "co": "Ten krok jest zastrzeżony dla człowieka: dotyczy produkcji, publikacji albo włączenia funkcji poza środowiskiem testowym.",
+    "potrzeba": "Żebyś wykonał ten krok samodzielnie albo wyraźnie się na niego zgodził.",
+    "pytanie": "Kto wykona ten krok?",
+    "opcje": [
+      {"opcja": "Zrobię to sam", "skutek": "fabryka podaje dokładne polecenie i czeka na wynik", "rekomendowana": true},
+      {"opcja": "Zgadzam się, wykonaj", "skutek": "fabryka wykonuje krok i zapisuje Twoją zgodę"},
+      {"opcja": "Nie teraz", "skutek": "zadanie kończy się bez tego kroku"}
+    ],
+    "potem": "Po wykonaniu kroku fabryka zamyka zadanie raportem."
+  }
+}

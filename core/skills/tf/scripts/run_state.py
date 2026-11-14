@@ -6,6 +6,7 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/tf/scripts/run_state.py stage <katalog-przebiegu> <etap> [--needs plan|stop] [--code <kod>] [--auto|--plan]
   python3 .claude/skills/tf/scripts/run_state.py mode <katalog-przebiegu> [plan|zwykly|auto]   # tryb zadania
   python3 .claude/skills/tf/scripts/run_state.py approve <katalog-przebiegu>                   # zgoda człowieka na plan
+  python3 .claude/skills/tf/scripts/run_state.py message <kod> [--json]                        # komunikat zatrzymania dla człowieka
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
@@ -118,6 +119,7 @@ SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(K\d+)\s*[—-]\s*(.+)$")
 MAX_TEXT = 40000
 MAX_RUNS = 40
 TEMPLATE = HERE.parent / "templates" / "dashboard.html"
+MESSAGES = HERE.parent / "templates" / "stop_messages.json"   # komunikaty zatrzymań dla człowieka, jeden na kod
 CONFIG = Path(".claude") / "tf.json"         # opcje podglądu; plik osobisty, aktualizacja fabryki go nie rusza
 DEFAULTS = {"dashboard": True, "dashboard_open": True}
 
@@ -254,6 +256,31 @@ def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | Non
         return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return r.returncode
+
+
+def stop_message(code: str | None) -> dict | None:
+    """Komunikat zatrzymania dla człowieka (prosty język): co, potrzeba, pytanie, opcje, potem. None, gdy go nie ma."""
+    try:
+        msg = json.loads(MESSAGES.read_text(encoding="utf-8")).get(code or "")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return msg if isinstance(msg, dict) and isinstance(msg.get("opcje"), list) else None
+
+
+def message_lines(msg: dict, reason: str | None = None) -> list[str]:
+    lines = [f"Co się stało: {msg.get('co', '')}"] + ([f"Szczegóły: {reason.strip()}"] if reason and reason.strip() else [])
+    lines += [f"Czego potrzeba: {msg.get('potrzeba', '')}", f"Pytanie: {msg.get('pytanie', '')}"]
+    for n, o in enumerate(msg.get("opcje") or [], 1):
+        lines.append(f"  {n}. {o.get('opcja', '')} — {o.get('skutek', '')}" + (" (rekomendowana)" if o.get("rekomendowana") else ""))
+    return lines + [f"Potem: {msg.get('potem', '')}"]
+
+
+def cmd_message(code: str, as_json: bool) -> int:
+    msg = stop_message(code) if code in STOP_CODES else None
+    if msg is None:
+        return fail(f"nie ma komunikatu dla kodu „{code}”. Kody: {', '.join(STOP_CODES)}.")
+    print(json.dumps({"kod": code, **msg}, ensure_ascii=False, indent=1) if as_json else "\n".join(message_lines(msg)))
+    return 0
 
 
 def cmd_mode(run_dir: Path, new: str | None, project: Path) -> int:
@@ -429,6 +456,11 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     write_run(run_dir, meta)
     refresh(project)
     print(f"✓ etap: {stage}" + (f" ({needs})" if needs else ""))
+    msg = stop_message(code) if needs == "stop" else None
+    if msg:     # komunikat dla człowieka: pętla pokazuje go zamiast własnego opisu
+        print("Komunikat dla człowieka — pokaż go z dowodem (polecenie i wynik); w rozmowie pytanie zadaj narzędziem "
+              "AskUserQuestion z tymi opcjami, w przebiegu bez nadzoru wpisz go do raportu:")
+        print("\n".join(message_lines(msg, reason)))
     return 0
 
 
@@ -629,10 +661,11 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     if stage == "needs" and needs == "stop":
         cur = (meta.get("current") or {}).get("k")
         result.append({"name": "STOP", "dot": "bad", "text": "\n".join(
-            [f"STOP — {cur or 'przebieg'}"] + ([f"Co się stało: {STOP_CODES[meta['stop_code']]} ({meta['stop_code']})"]
-                                               if meta.get("stop_code") in STOP_CODES else [])
-            + [f"Powód: {meta.get('stop_text') or '(brak opisu)'}",
-             f"Wznowienie: od {cur or 'pierwszego nieodhaczonego kawałka'} w plan.md"])})
+            [f"Zatrzymanie — {cur or 'przebieg'}"]
+            + (message_lines(stop_message(meta.get("stop_code")), meta.get("stop_text"))
+               if stop_message(meta.get("stop_code")) else [f"Powód: {meta.get('stop_text') or '(brak opisu)'}"])
+            + [
+             f"Wznowienie: od {cur or 'miejsca, w którym fabryka przerwała'}"])})
     report = read_text(docs / "report.md")
     if report is not None:
         result.append({"name": "report.md", "dot": "ok", "text": report})
@@ -693,7 +726,11 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
            "stage": stage, "needs": needs, "auto": bool(meta.get("auto")), "effort": meta.get("effort"),
            "key": meta.get("task") or meta.get("key"), "change": meta.get("change"), "flag": meta.get("flag"), "pr": meta.get("pr"),
            "stopText": meta.get("stop_text"), "stopCode": meta.get("stop_code"),
-           "stopLabel": STOP_CODES.get(meta.get("stop_code") or ""),
+           "stopLabel": (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or ""),
+           "stopNeed": (stop_message(meta.get("stop_code")) or {}).get("potrzeba"),
+           "stopQuestion": (stop_message(meta.get("stop_code")) or {}).get("pytanie"),
+           "stopOptions": [{"opcja": o.get("opcja"), "skutek": o.get("skutek"), "rekomendowana": bool(o.get("rekomendowana"))}
+                           for o in (stop_message(meta.get("stop_code")) or {}).get("opcje") or []],
            "slices": out_slices, "parked": len(parked), "parkedList": parked,
            "cost": usage.get("cost_usd"), "min": usage.get("minutes"), "models": usage.get("models") or [],
            "started": meta.get("started_at", ""),
@@ -856,6 +893,9 @@ def main(argv: list[str]) -> int:
     fg.add_argument("value", nargs="?")
     fg.add_argument("--remove-by", default=None)
     fg.add_argument("--reason", default="")
+    ms = sub.add_parser("message")
+    ms.add_argument("code")
+    ms.add_argument("--json", action="store_true")
     mo = sub.add_parser("mode")
     mo.add_argument("run_dir")
     mo.add_argument("new", nargs="?")
@@ -894,6 +934,8 @@ def main(argv: list[str]) -> int:
         return cmd_flag(Path(args.run_dir), args.action, args.value, args.remove_by, args.reason, project)
     if args.cmd == "weight":
         return cmd_weight(Path(args.run_dir), args.new, project)
+    if args.cmd == "message":
+        return cmd_message(args.code, args.json)
     if args.cmd == "mode":
         return cmd_mode(Path(args.run_dir), args.new, project)
     if args.cmd == "approve":
