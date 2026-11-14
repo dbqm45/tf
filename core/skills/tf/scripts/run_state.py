@@ -54,8 +54,9 @@ test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
 `verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
 `tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
 z aktualnym dowodem, a etap `pr` przechodzi tylko wtedy, gdy każdy kawałek zadania go ma. Etap przebiegu trafia też
-do `task.json` (intake → przyjecie, plan → plan, slices → realizacja, pr → pr). Przebieg w starym układzie (bez
-zadania w run.json) dowodów nie zapisuje i odhacza jak dotąd.
+do `task.json` (intake → przyjecie, plan → plan, slices → realizacja, pr → pr). Katalog przebiegu bez zadania w run.json
+(stary układ cięć `.tf/runs/cuts/`) nie przyjmuje poleceń zadania (`spec`, `flag`, `verify`, `trace`, `mode`, `weight`,
+`approve`) — polecenie mówi, jak zacząć cięcie od nowa.
 
 `tick` odhacza kawałek w plan.md, `park` dopisuje sprawę na końcu parked.md — jedno polecenie z listy dozwolonych
 zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (pomiar E0, 2026-11-13).
@@ -231,12 +232,19 @@ def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
                               "--inputs", ",".join(inputs))
 
 
+def no_task(meta: dict) -> int:
+    """Katalog przebiegu bez zadania (stary układ cięć `.tf/runs/cuts/`): poleceń zadania nie da się na nim wykonać."""
+    again = f"/tf {meta['task']}" + (f" --change {meta['change']}" if meta.get("change") else "") if meta.get("task") \
+        else "/tf <TSK-n>"
+    return fail(f"ten katalog przebiegu jest w starym układzie (bez zadania) — zacznij cięcie od nowa: {again}")
+
+
 def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | None, reason: str, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
-        return fail("ten przebieg jest w starym układzie (bez zadania) — flagę cięcia podaje plan zmiany.")
+        return no_task(meta)
     if action == "mode":
         r = run_report.engine(project, "flag_check.py", meta["key"], "--json")
         try:
@@ -288,7 +296,7 @@ def cmd_mode(run_dir: Path, new: str | None, project: Path) -> int:
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
-        return fail("przebieg cięcia jest w starym układzie (bez zadania) — nie ma trybu.")
+        return no_task(meta)
     r = run_report.task_state(project, "mode", meta["key"], *([new] if new else []))
     if r is None:
         return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
@@ -320,7 +328,7 @@ def cmd_approve(run_dir: Path, project: Path) -> int:
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
-        return fail("przebieg cięcia jest w starym układzie (bez zadania) — planu się nie zatwierdza.")
+        return no_task(meta)
     if task_field(run_dir, meta, "mode") == "auto":
         return fail("przebieg jest w trybie Auto — nie ma człowieka, który zatwierdziłby plan. Zgodę zapisujesz tylko "
                     "po odpowiedzi człowieka w rozmowie; wtedy najpierw: run_state.py mode <katalog> zwykly.")
@@ -336,7 +344,7 @@ def cmd_weight(run_dir: Path, new: str | None, project: Path) -> int:
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
-        return fail("przebieg cięcia jest w starym układzie (bez zadania) — nie ma wagi.")
+        return no_task(meta)
     r = run_report.task_state(project, "weight", meta["key"], *(["--set", new] if new else ["--apply"]))
     if r is None:
         return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
@@ -349,7 +357,7 @@ def cmd_trace(run_dir: Path, base: str | None, project: Path) -> int:
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
-        return fail("ten przebieg jest w starym układzie (bez zadania i specyfikacji) — śladu kryteriów nie ma.")
+        return no_task(meta)
     r = run_report.engine(project, "trace_check.py", meta["key"], "--md", *(["--base", base] if base else []))
     if r is None:
         return fail("brak .tf/factory/trace_check.py — zaktualizuj fabrykę (tf update).")
@@ -362,7 +370,7 @@ def cmd_spec(run_dir: Path, project: Path, new: bool = False) -> int:
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
-        return fail("ten przebieg jest w starym układzie (bez zadania) i nie ma spec.md.")
+        return no_task(meta)
     r = run_report.engine(project, "spec_check.py", "new" if new else "check", meta["key"])
     if r is None:
         return fail("brak .tf/factory/spec_check.py — zaktualizuj fabrykę (tf update).")
@@ -384,8 +392,7 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
-        return fail("ten przebieg jest w starym układzie (bez zadania), więc dowodów nie zapisuje — kawałek odhaczasz "
-                    "przez `tick` jak dotąd.")
+        return no_task(meta)
     args = ["verify", meta["key"], slice_id, "--files", files]
     if command:
         args += ["--command", command]
@@ -830,8 +837,8 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
 
 
 def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) -> Path:
-    root = project / run_report.RUNS                # przebiegi cięć pdi (jeden katalog na przebieg)
-    work = project / run_report.WORK                # nowy układ: .tf/runs/<KEY>/
+    root = project / run_report.RUNS                # stary układ cięć (już nie powstaje): historia zostaje w podglądzie
+    work = project / run_report.WORK                # katalogi robocze zadań: .tf/runs/<KEY>/
     runs = []
     for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
         obj = run_object(d.parent, project, costs)

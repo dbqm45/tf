@@ -27,7 +27,7 @@ Dwa sposoby, ten sam przebieg (skill `tf`):
 |---|---|---|
 | numer zgłoszenia | `/tf EBO-1236` | fabryka czyta zgłoszenie z trackera podłączonego w sesji (tylko odczyt); bez połączenia prosi o wklejenie treści |
 | adres zgłoszenia | `/tf https://firma.atlassian.net/browse/EBO-1236` | tracker i numer bierze z adresu |
-| klucz cięcia z planu zmiany | `/tf TSK-57` | przebieg cięcia (tryb pdi) |
+| klucz cięcia z planu zmiany | `/tf TSK-57` | zadanie cięcia `CHG-12-TSK-57` (tryb pdi) |
 | treść albo plik | `/tf Jako operator chcę…`, `/tf docs/story.md` | zadanie z kluczem `T-<data>-<nazwa>` |
 | klucz istniejącego zadania | `/tf EBO-1236` po przerwie | wznowienie od pierwszego niezrobionego kawałka |
 | nic | `/tf` | lista zadań w toku i pytanie, co dalej |
@@ -110,8 +110,10 @@ Spis zadań: `docs/project/changes/INDEX.md`; stan jednego: `tf task status <KEY
 z dowodem: pętla uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
 i nie przepuści przebiegu do PR. Bramka jakości nie reaguje na zmiany w `docs/project/changes/`.
 
-Wyjątek: przebieg cięcia z planu zmiany (`start --task TSK-n`, tryb pdi) ma na razie jeden katalog
-`.tf/runs/cuts/<data>-<slug>/` ze wszystkimi plikami, bez katalogu zadania i dowodów.
+Cięcie z planu zmiany (`/tf TSK-57`, tryb pdi) to takie samo zadanie, z kluczem złożonym ze zmiany i cięcia:
+`docs/project/changes/CHG-12-TSK-57/` i `.tf/runs/CHG-12-TSK-57/`. Różnice: treść zadania pochodzi z wiersza cięcia
+i zamiaru zmiany, flaga — z planu wydania, raport trafia też do `docs/project/changes/CHG-12/runs/TSK-57.md` (stamtąd
+pdi bierze opis PR), a w spisie `INDEX.md` zadań cięć nie ma — ich spisem jest plan zmiany (`tf status` je pokazuje).
 
 Raport (`python3 .claude/skills/tf/scripts/run_report.py finish <katalog>`): czas, tokeny (wejście, wyjście, odczyt i zapis cache),
 koszt w USD, modele i agenci, kawałki zrobione / plan, liczba odłożonych spraw. Liczy go skrypt z transkryptów

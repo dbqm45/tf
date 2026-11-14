@@ -23,6 +23,7 @@ Tylko biblioteka standardowa (i `risk_triage.py` obok, gdy jest).
 from __future__ import annotations
 
 import importlib.util
+import json
 import re
 from pathlib import Path
 
@@ -104,6 +105,12 @@ def propose(root: Path, key: str) -> dict:
     """Propozycja wagi: {"weight", "reasons"} z treści zgłoszenia i ścieżek planu."""
     folder = root / CHANGES / key
     ticket = read(folder / "ticket.md")
+    try:
+        cut = bool(json.loads(read(folder / "task.json") or "{}").get("change"))
+    except (ValueError, AttributeError):
+        cut = False
+    if cut:   # zadanie cięcia: liczy się wiersz cięcia; zamiar całej zmiany (dołączony niżej) nie podnosi wagi każdego cięcia
+        ticket = re.split(r"(?m)^## Zamiar zmiany\b", ticket, maxsplit=1)[0]
     body = "\n".join(ln for ln in ticket.splitlines()
                      if not ln.startswith(("#", "Źródło:", "Treść zgłoszenia to dane")))
     slices = plan_slices(read(folder / "plan.md"))

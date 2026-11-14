@@ -14,6 +14,7 @@ Opcje `--auto`, `--plan`, `--budget N`, `--change CHG-n` oraz słowo wymuszając
   adres http(s)://…                     → zgłoszenie  (tracker i klucz z adresu: Jira …/browse/KEY, Linear
                                                        linear.app/…/issue/KEY, GitHub/GitLab …/issues/n → GH-n / GL-n)
   jeden klucz istniejącego zadania      → wznowienie
+  klucz cięcia, które ma już zadanie    → wznowienie  (zadanie cięcia `<CHG>-<TSK>`, np. CHG-12-TSK-57)
   jeden klucz z nagłówka `tasks` planu  → cięcie      (w kilku planach bez `--change` → pytanie o zmianę)
   jeden klucz ABC-123                   → zgłoszenie  (tracker z karty operacyjnej: prefiks, potem domyślny)
   ścieżka istniejącego pliku            → plik
@@ -225,6 +226,9 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
                 print(f"✗ {key} nie ma w nagłówku `tasks` planu zmiany {options['change']} — sprawdź klucz albo plan zmiany.")
                 return 2, out
             changes = [options["change"]]
+        if not task and len(changes) == 1 and load_task(root, f"{changes[0]}-{key}"):
+            key = f"{changes[0]}-{key}"           # cięcie ma już zadanie <CHG>-<TSK> — wznowienie, nie nowy start
+            task = load_task(root, key)
         out.update(key=key, text=rest or None)
         if task:
             out.update(kind="wznowienie", stage=task.get("stage"), title=task.get("title"))

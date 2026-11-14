@@ -84,3 +84,15 @@ z nimi).
   bramkę ShipScope z ustalenia 1. To błąd istniejący od kroku C, poza cięciami. Poprawka należy do `ci_for_sdlc`:
   folder z `task.json` to zadanie, nie zmiana. Do decyzji właściciela, bo to inne repozytorium.
 - Kodu pdi, kontraktu pdi i polecenia w `phase_run.py` E6 nie zmienia.
+
+## Stan realizacji (2026-11-14)
+
+- E6a scalone (tf#245). E6b i E6c w drugim PR.
+- Zmiany względem planu: podgląd (dashboard) nadal pokazuje stare katalogi `.tf/runs/cuts/` jako historię; waga
+  cięcia liczy się z wiersza cięcia, bez zamiaru całej zmiany (inaczej jedno słowo w zamiarze podnosiłoby wagę
+  każdego cięcia).
+- Sprawdzenie po stronie pdi: funkcja `pr_loop._outside_plan` wyczytała z raportu nowego układu obie odłożone sprawy
+  (zwykłą i z dopiskiem `[założenie]`); testy repozytorium pdi bez zmian: 1132 zaliczone (`uv run pytest -q`,
+  commit `b40dbe8`).
+- Niezmierzone: koszt przebiegu cięcia w nowym układzie i zachowanie modelu w całej fazie pdi — testy sprawdzają
+  skrypty i pliki, nie przebieg z modelem.

@@ -176,6 +176,26 @@ def main() -> int:
         r = tf(p, "status", "TYP-2")
         check("waga: lekka" in r.stdout, f"W-23: status pokazuje wagę: {r.stdout}")
 
+        # zadanie cięcia zmiany pdi (krok E6): waga z wiersza cięcia, nie z zamiaru całej zmiany dołączonego do ticket.md
+        cut_ticket = ("# TSK-59: historia prób w panelu\n\nCięcie TSK-59 zmiany CHG-12 (`docs/project/changes/CHG-12/plan.md`). "
+                      "Każdy commit przebiegu ma stopki `Change: TSK-59`.\n\n| Pole | Wartość |\n|---|---|\n"
+                      "| Cięcie | TSK-59 |\n| Wartość | historia prób w panelu operatora |\n| Pliki | src/history.py |\n\n"
+                      "## Zamiar zmiany (`docs/project/changes/CHG-12/intent.md`)\n\n## Problem\n"
+                      "Klient nie może ponowić nieudanej płatności kartą i porzuca zamówienie.\n")
+        tf(p, "start", "CHG-12-TSK-59", "--title", "TSK-59: historia prób w panelu", "--change", "CHG-12", "--cut", "TSK-59")
+        (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(cut_ticket, encoding="utf-8")
+        tf(p, "start", "HIS-1", "--title", "Historia prób w panelu")
+        (p / CHANGES / "HIS-1" / "ticket.md").write_text(cut_ticket, encoding="utf-8")
+        code, out, raw = weight(p, "CHG-12-TSK-59")
+        code2, out2, raw2 = weight(p, "HIS-1")
+        check(out.get("proposal") == "zwykla" and out2.get("proposal") == "pelna",
+              f"W-24: waga cięcia nie rośnie od zamiaru całej zmiany; zwykłe zadanie z tą samą treścią — pełna: {raw} | {raw2}")
+        (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(cut_ticket.replace("historia prób w panelu operatora",
+                                                                                   "zmiana hasła operatora"), encoding="utf-8")
+        code, out, raw = weight(p, "CHG-12-TSK-59")
+        check(out.get("proposal") == "pelna" and any("hasł" in r for r in out.get("reasons", [])),
+              f"W-25: obszar wrażliwy w wierszu cięcia podnosi wagę cięcia do pełnej: {raw}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów wagi zadania")

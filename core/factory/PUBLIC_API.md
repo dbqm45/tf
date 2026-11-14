@@ -40,8 +40,9 @@ na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`)
 `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, podgląd `.tf/runs/dashboard.html`, katalog roboczy przebiegu `.tf/runs/<KEY>/`
 (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania `docs/project/changes/<KEY>/` (`ticket.md`,
 `spec.md`, `plan.md`, `report.md`, `task.json`, `evidence/`); raport przebiegu cięcia
-`docs/project/changes/CHG-n/runs/TSK-n.md`. Przebieg cięcia (`--task`) ma jeden katalog `.tf/runs/cuts/<data>-<slug>/` (`run.json`,
-`story.md`, `plan.md`, `parked.md`, `report.md`). **Usunięte w 10.0.0** (pętla była wcześniej trybem `mode-talos`):
+`docs/project/changes/CHG-n/runs/TSK-n.md`. Przebieg cięcia (`--task TSK-n`) jest zadaniem o kluczu `<CHG>-<TSK>`
+(`docs/project/changes/CHG-n-TSK-n/`, `.tf/runs/CHG-n-TSK-n/`; `run.json` ma też `change`, `task`, `flag`); katalog
+`.tf/runs/cuts/<data>-<slug>/` (`story.md`) już nie powstaje. **Usunięte w 10.0.0** (pętla była wcześniej trybem `mode-talos`):
 tryb `mode-talos`, polecenie `/talos-story-run`, agent `talos`, ścieżka `.claude/skills/talos-story-run/scripts/`,
 plik opcji `.claude/talos.json`, zmienne `TALOS_DASHBOARD`, `TALOS_DASHBOARD_OPEN`, `TALOS_SCAN_PATH`,
 `TALOS_SEMGREP_CONFIG` i katalog `.tf/runs/talos/` — odpowiedniki: `/tf`, agent `tf`, `.claude/skills/tf/scripts/`,
