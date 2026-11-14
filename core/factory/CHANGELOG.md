@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.13.0] — 2026-11-14
+### Added
+- **core:** check model names, fingerprint usage logs, show noise band (#257)
+
 ## [10.12.0] — 2026-11-14
 ### Added
 - **core:** close a task only when merged and findings are covered (#255)
