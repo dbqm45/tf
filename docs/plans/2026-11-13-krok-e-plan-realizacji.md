@@ -102,8 +102,14 @@ treść zgłoszenia pobraną z trackera pętla dopisuje do `ticket.md` po `start
 zostawiać nieśledzonych plików przed startem.
 
 **Poza E1:** waga (E2), tryb `--plan` i lista zatrzymań (E3) — `resolve` tylko przekazuje opcję dalej; nowy układ
-cięć (E6); zapis do trackera. SKILL.md ma już ponad 15 000 znaków (ostrzeżenie `build.py check` sprzed E1) —
-części dotyczące tylko pdi przeniosę do `references/` razem z E6, żeby nie ruszać dziś ścieżki pdi.
+cięć (E6); zapis do trackera.
+
+**SKILL.md pętli skrócony** (prośba właściciela, 2026-11-14): z 24 749 do 14 859 znaków, poniżej limitu 15 000
+z `build.py check` (po kompaktowaniu Claude Code przywraca tylko początek dłuższego skilla). Szczegóły są w czterech
+plikach `core/skills/tf/references/`: `wejscie.md` (rodzaje wejścia, tracker), `ciecia-pdi.md` (przebieg cięcia
+i poprawki z pętli PR), `flaga-funkcji.md`, `bezpieczenstwo.md` (karencja wersji, skan). `intake.py` przy cięciu
+i prompt poprawek `pr_loop.py` wskazują `ciecia-pdi.md` wprost. Test `T-20` pilnuje limitu, `T-21` — że każdy plik
+jest wymieniony w SKILL.md. Kolejne kawałki (E2–E4) dopisują szczegóły do `references/`, nie do SKILL.md.
 
 ## Ustalenia
 

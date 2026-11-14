@@ -55,6 +55,7 @@ ASK = {"tracker": "z którego trackera pochodzi zgłoszenie", "change": "do któ
        "content": "o treść zgłoszenia (wklejenie)"}
 START = "python3 .claude/skills/tf/scripts/run_report.py start"
 PASTE = "wklej treść zgłoszenia w rozmowie"
+CUTS = ".claude/skills/tf/references/ciecia-pdi.md"     # zasady przebiegu cięcia pdi
 
 
 def load_card(root: Path) -> dict | None:
@@ -236,9 +237,10 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
             if len(changes) > 1:
                 out["ask"] = "change"
                 out["next"] = (f"{key} jest w planach zmian: {', '.join(changes)} — zapytaj człowieka, o którą chodzi, "
-                               f"potem: {START} --task {key} --change <CHG-n>")
+                               f"potem przeczytaj {CUTS} i: {START} --task {key} --change <CHG-n>")
             else:
-                out["next"] = f"{START} --task {key} --change {changes[0]}" + (" --story \"<uwagi człowieka>\"" if rest else "")
+                out["next"] = (f"przeczytaj {CUTS}, potem: {START} --task {key} --change {changes[0]}"
+                               + (" --story \"<uwagi człowieka>\"" if rest else ""))
             return done()
         if TICKET.fullmatch(head) and len(tokens) == 1:
             saved = card_tracker(root, key)
