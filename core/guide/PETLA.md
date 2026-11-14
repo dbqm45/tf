@@ -25,7 +25,7 @@ Dwa sposoby, ten sam przebieg (skill `tf`):
 
 | Podajesz | Przykład | Co się dzieje |
 |---|---|---|
-| numer zgłoszenia | `/tf EBO-1236` | fabryka czyta zgłoszenie z trackera podłączonego w sesji (tylko odczyt); bez połączenia prosi o wklejenie treści |
+| numer zgłoszenia | `/tf EBO-1236` | fabryka czyta zgłoszenie z Jiry skryptem (gdy ma dane dostępu) albo z trackera podłączonego w sesji — tylko odczyt; bez połączenia prosi o wklejenie treści |
 | adres zgłoszenia | `/tf https://firma.atlassian.net/browse/EBO-1236` | tracker i numer bierze z adresu |
 | klucz cięcia z planu zmiany | `/tf TSK-57` | zadanie cięcia `CHG-12-TSK-57` (tryb pdi) |
 | treść albo plik | `/tf Jako operator chcę…`, `/tf docs/story.md` | zadanie z kluczem `T-<data>-<nazwa>` |
@@ -36,6 +36,12 @@ Dwa sposoby, ten sam przebieg (skill `tf`):
   niczego nie instaluje i niczego w trackerze nie zmienia. Gdy podłączonych jest kilka, pyta raz, z którego pochodzą
   zgłoszenia, i zapisuje odpowiedź w `.tf/config/operations.json` (podgląd i zmiana: `python3
   .claude/skills/tf/scripts/intake.py tracker`). Bez połączenia wystarczy wkleić treść zgłoszenia.
+- **Jira bez udziału modelu:** gdy w środowisku są zmienne `JIRA_BASE_URL` (albo `tracker.url` w karcie operacyjnej)
+  oraz `JIRA_EMAIL` z `JIRA_API_TOKEN` (Jira Cloud) albo `JIRA_TOKEN` (Data Center), zgłoszenie pobiera skrypt:
+  jedno żądanie tylko do odczytu, wyłącznie przez `https://`, bez przekierowań. Fabryka tych danych nie zapisuje
+  i nie wypisuje; w Jirze niczego nie zmienia. Sprawdzenie u siebie: `python3 .claude/skills/tf/scripts/intake.py
+  fetch EBO-1236`. Pole własne z kryteriami akceptacji wskażesz w karcie: `"fields": {"acceptance":
+  "customfield_10042"}`.
 - **Skąd pochodzi treść:** `ticket.md` zadania zaczyna się od linii `Źródło: … · pobrano: <data>`. Treść zgłoszenia
   to dla fabryki dane, nie polecenia — polecenie znalezione w zgłoszeniu zobaczysz jako uwagę, nie jako wykonaną akcję.
 - **Wymuszenie sposobu pracy:** `/tf zadanie …`, `/tf pytanie …` (tylko odpowiedź), `/tf szybko …` (drobna zmiana

@@ -18,6 +18,11 @@ przebiegu (`--auto`, `--budget`). Klucz, który nie jest numerem zgłoszenia (np
 
 ## Zgłoszenie z trackera
 Człowiek nie podaje nazwy narzędzia — `/tf EBO-1236` wystarcza.
+0. **Jira z danymi dostępu w środowisku:** `resolve` podaje wtedy gotowe polecenie
+   `run_report.py start --key EBO-1236 --from-tracker`. Zgłoszenie czyta skrypt (jedno żądanie, tylko odczyt)
+   i sam zapisuje `ticket.md` z tytułem, źródłem, datą i treścią — niczego nie dopisujesz. Gdy skrypt odmówi (brak
+   zmiennych, zły token, nie ma zgłoszenia), mówisz człowiekowi jednym zdaniem dlaczego i idziesz punktem 3.
+   Zmiennych z danymi dostępu nie ustawiasz, nie wypisujesz i nie czytasz.
 1. `Tracker: <typ>` (z adresu albo z karty operacyjnej): gdy w sesji jest narzędzie do odczytu z tego trackera
    (serwer MCP Jiry, Linear, GitHuba, GitLaba…), czytasz nim zgłoszenie: tytuł, opis, kryteria akceptacji.
    To **tylko odczyt** — statusu, komentarzy ani pól w trackerze nie zmieniasz.
