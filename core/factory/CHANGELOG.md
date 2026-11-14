@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.8.0] — 2026-11-14
+### Added
+- **core:** label review findings and let the script keep the round limit (#248)
+
 ## [10.7.0] — 2026-11-14
 ### Added
 - **core:** show what waits for the human in tf status and the live view (#247)
