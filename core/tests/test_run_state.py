@@ -26,6 +26,15 @@ def run(script, args, cwd, cfg, extra_env=None):
                           timeout=60)
 
 
+def review_pass(run_dir: Path, slice_id: str) -> None:
+    """Stan po zaliczonym przeglądzie zakresu kawałka (zapis `step … zakres pass`), wpisany wprost do run.json."""
+    f = run_dir / "run.json"
+    meta = json.loads(f.read_text(encoding="utf-8"))
+    meta["current"] = {"k": slice_id, "rounds": [{"test": "pass", "kod": "pass", "weryf": "pass", "skan": "pass",
+                                                  "zakres": "pass"}]}
+    f.write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def runs_json(html: str) -> list:
     m = re.search(r"const RUNS = (\[.*?\]);\n", html, re.S)
     return json.loads(m.group(1).replace("<\\/", "</")) if m else []
@@ -251,6 +260,7 @@ def main() -> int:
         r = run(SCRIPT, ["verify", str(d), "K1", "--files", "fees.py", "--command", OK], proj, cfg)
         check(r.returncode == 0 and (doc / "evidence" / "K1-2.json").is_file(),
               f"V-3: verify zapisuje dowód w katalogu zadania: {r.returncode} {r.stdout}{r.stderr}")
+        review_pass(d, "K1")   # wynik przeglądu zakresu przed tick (bez zmiany etapu, który sprawdzają dalsze testy)
         r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
         text = plan.read_text(encoding="utf-8")
         check(r.returncode == 0 and "- [x] K1 — limit 45 zł" in text and "- [ ] K2 — druga doba" in text
@@ -362,6 +372,7 @@ def main() -> int:
         old_o = next((x for x in rs if x.get("slug") == "stary"), {})
         check(old_o.get("dir") == ".tf/runs/cuts/2026-10-01-stary" and not old_o.get("taskDir"),
               f"D-4: stary przebieg wskazuje swój katalog: {old_o.get('dir')}")
+        review_pass(d, "K2")
         run(SCRIPT, ["tick", str(d), "K2"], proj, cfg)
         (proj / "fees.py").write_text("LIMIT = 55\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)

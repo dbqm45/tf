@@ -64,6 +64,7 @@ def events(project: Path) -> list[dict]:
 
 def done(project: Path, d: str, slice_id: str, file: str) -> None:
     call(project, TASK, "verify", "IMP-1", slice_id, "--files", file, "--command", OK)
+    call(project, SCRIPTS / "run_state.py", "step", d, slice_id, "R1", "zakres", "pass")   # przegląd zakresu przed tick
     call(project, SCRIPTS / "run_state.py", "tick", d, slice_id)
 
 

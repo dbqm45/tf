@@ -578,8 +578,8 @@ def cmd_finding(root: Path, key: str, action: str, first: str | None, second: st
                       **({"round": rnd} if rnd else {}), "at": now()})
         task["updated"] = now()
         save(root, task)
-        print(f"✓ {key}: ustalenie {fid} zapisane. Przed zamknięciem zadania podaj kontrolę, która złapie to następnym "
-              f"razem: tf task finding {key} control {fid} \"<test, hook, reguła albo powód jej braku>\"")
+        print(f"✓ {key}: ustalenie {fid} zapisane. Teraz wycofaj kod i zrób nową rundę kawałka; kontrolę, która złapie "
+              "to następnym razem, dopisuje się przy zamknięciu zadania (tf task close pokaże, czego brakuje)")
         return 0
     item = next((f for f in found if f.get("id") == first), None)
     if item is None:

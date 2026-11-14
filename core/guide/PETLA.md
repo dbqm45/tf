@@ -120,7 +120,9 @@ katalogami:
 
 Lista zadań: `tf status` (liczona na żywo z folderów zadań); stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
 z dowodem: pętla uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
-i nie przepuści przebiegu do PR. Bramka jakości nie reaguje na zmiany w `docs/project/changes/`.
+i nie przepuści przebiegu do PR. Tak samo bez zapisanego, zaliczonego przeglądu zakresu (`run_state.py step … zakres
+pass`): w pomiarze po kroku G pętla wywoływała recenzenta zawsze, ale wynik zapisywała w 7 z 15 przebiegów. Bramka
+jakości nie reaguje na zmiany w `docs/project/changes/`.
 
 Cięcie z planu zmiany (`/tf TSK-57`, tryb pdi) to takie samo zadanie, z kluczem złożonym ze zmiany i cięcia:
 `docs/project/changes/CHG-12-TSK-57/` i `.tf/runs/CHG-12-TSK-57/`. Różnice: treść zadania pochodzi z wiersza cięcia
