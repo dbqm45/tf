@@ -48,3 +48,20 @@ a w tabelach „Luka” i „Wkład skilla” oznacza różnicę mieszczącą si
 
 Kolejność: testy (czerwone) → a → b → c → przewodniki (`PRZEWODNIK.md`, `PUBLIC_API.md`) → pełne sprawdzenie.
 Pełne sprawdzenie dopiero po zakończeniu serii pomiarowej po kroku G (żeby nie zakłócać jej czasów).
+
+## H21 — plan realizacji (zapisany przed kodem)
+
+- **Nieaktualne wpisy w plikach instrukcji:** `instructions_lint.py` dostaje kontrolę `nieaktualne`: ścieżki
+  w `kodzie` (z `/`), których w repozytorium nie ma, `npm run <skrypt>` bez skryptu w `package.json`, `make <cel>`
+  bez celu w `Makefile`. Werdykt UWAGA, nie BŁĄD. Pomijane: blok fabryki (`<!-- team-factory:begin/end -->`, wspólny
+  dla wszystkich projektów), linie z zakazem („nie czytaj `dist/`” — taki katalog może nie istnieć), katalogi fabryki
+  tworzone na żądanie (`docs/project/`, `.tf/`, `.claude/`), same nazwy plików, wzorce, adresy i opcje.
+  Sprawdzone na pięciu repozytoriach tej sesji (tf, pdi, ci_for_sdlc i dwie starsze instalacje fabryki): po
+  zawężeniu heurystyki zero fałszywych alarmów.
+- **`tf doctor`** pokazuje kartę plików instrukcji projektu w jednej linii (kontrole z uwagami i polecenie
+  szczegółów) — informacja, kod wyjścia bez zmian. To wpina pięć kontroli karty (`core-agent-instructions`) w doctora.
+- **Przegląd treści rdzenia pod kątem nadmiaru reguł** (S6) — bez usuwania reguł bez pomiaru („reguła zarabia na
+  miejsce pomiarem”, sekcja 1 dokumentu osi). Na tym etapie tylko karta kontroli dla `core/CLAUDE.md`; decyzje
+  o skróceniu wymagają przebiegów bez reguły, więc wchodzą do kolejnego pomiaru.
+- Testy: `test_instructions_lint.py` (nieaktualne, aktualne, `tf doctor`); scenariusz ewaluacji
+  `nieaktualne-wpisy-po-refaktorze` przed zmianą treści skilla.

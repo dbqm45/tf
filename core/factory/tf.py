@@ -290,6 +290,31 @@ def cmd_config_show(key: str | None) -> int:
     return 0
 
 
+def instructions_summary(lint: Path) -> str:
+    """Jedna linia o plikach instrukcji projektu (CLAUDE.md, AGENTS.md…): kontrole z uwagami albo „bez uwag”."""
+    try:
+        r = subprocess.run([sys.executable, str(lint), "--root", ".", "--json"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=120)
+        files = json.loads(r.stdout).get("files") or []
+    except (OSError, ValueError, subprocess.SubprocessError, AttributeError):
+        return "⚠ instrukcje: karty plików instrukcji nie udało się policzyć"
+    if not files:
+        return "• instrukcje: projekt nie ma pliku CLAUDE.md ani AGENTS.md"
+    notes = []
+    for f in files:
+        bad = [f"{c['id']} ({len(c.get('findings') or []) or c.get('verdict')})" for c in f.get("checks") or []
+               if c.get("verdict") in ("UWAGA", "BŁĄD")]
+        if bad:
+            try:
+                name = Path(f["path"]).resolve().relative_to(Path.cwd().resolve()).as_posix()
+            except ValueError:
+                name = f["path"]
+            notes.append(f"{name}: {', '.join(bad)}")
+    if not notes:
+        return f"✓ instrukcje: {len(files)} plik(i) bez uwag"
+    return ("⚠ instrukcje: " + "; ".join(notes) + f"\n  szczegóły: python3 {lint.as_posix()} --root .")
+
+
 def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
@@ -313,6 +338,9 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
                            errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if m.stdout.strip():
             print(m.stdout.strip())
+    lint = Path(".claude") / "skills" / "core-agent-instructions" / "scripts" / "instructions_lint.py"
+    if lint.is_file():   # karta plików instrukcji projektu (krok H21) — informacja, nie zmienia wyniku doctora
+        print(instructions_summary(lint))
     gate = Path(".claude") / "hooks" / "quality_gate.py"
     if gate.is_file():   # czy bramka jakości działa (komunikat w zwykłym języku) — informacja, nie zmienia wyniku
         g = subprocess.run([sys.executable, str(gate), "--status"], capture_output=True, text=True, encoding="utf-8",
