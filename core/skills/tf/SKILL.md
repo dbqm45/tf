@@ -108,7 +108,7 @@ Każde `AC-n` trafia do któregoś kawałka. Zmieniasz `spec.md` po planie → p
 ## 3. Pętla kawałka
 Stan: `run_state.py step <katalog> K<n> R<k> <etap> <stan>` — etapy `test`, `kod`, `weryf`, `skan`, `zakres`; stany
 `run`, `pass`, `fail`; wołasz przy starcie etapu i przy wyniku. **R<k>** to runda: po nieudanej bramce wracasz na
-początek pętli z kolejną (najwyżej dwie próby naprawy), np. `… K2 R1 weryf fail`, potem `… K2 R2 kod run`.
+początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… K2 R1 weryf fail`, potem `… K2 R2 kod run`.
 1. **Test czerwony** z kryteriów kawałka, tylko przypadki z kryteriów (TDD; hook `tdd_guard` pilnuje kolejności).
    Od pierwszej wersji test nosi identyfikator kryterium w nazwie albo komentarzu (`test_ac1_…`, `# AC-1`) —
    z niego powstaje ślad kryterium; dopisywanie po fakcie to dodatkowy commit.
@@ -123,8 +123,8 @@ początek pętli z kolejną (najwyżej dwie próby naprawy), np. `… K2 R1 wery
    FAIL → ustalenia z `security/K<n>/feedback.md` są wejściem następnej próby; po 2 próbach STOP, kawałka nie
    commitujesz. Brak skanera to FAIL, nie cichy PASS (`references/bezpieczenstwo.md`).
 4. **Przegląd zakresu:** zawsze `scope-reviewer` (nie Ty, także przy małym diffie) dostaje kawałek z planu
-   i `git diff`. Kod spoza kryteriów (nieproszone przypadki, refaktor obok, zbędna zależność) → wycofujesz, a sprawa
-   trafia do `parked.md`.
+   i `git diff`. Ustalenie **ważne** (kod spoza kryteriów) → wycofujesz, nowa runda; **drobne** i **zastane**
+   → `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`; z flagą
    stopka `Flag: <klucz>`. Potem `run_state.py tick <katalog> K<n>` (odmowa = brak aktualnego dowodu → `verify`).
    Stopki i flaga przebiegu cięcia: `references/ciecia-pdi.md`.

@@ -78,8 +78,10 @@ Fabryka sama ocenia, ile ostrożności potrzebuje zadanie, i mówi Ci to jednym 
    Historyjka na więcej kawałków → propozycja podziału i STOP.
 4. **Kawałek po kawałku:** test, który nie przechodzi → najmniejszy kod → weryfikacja (testy, lint, typy) → skan
    bezpieczeństwa (semgrep OWASP Top 10 na plikach kawałka, audyt zależności przy zmianie manifestu) → przegląd
-   zakresu przez `scope-reviewer` w świeżym kontekście → commit. Najwyżej 2 próby naprawy, potem STOP z opisem
-   blokady.
+   zakresu przez `scope-reviewer` w świeżym kontekście → commit. Recenzent oznacza każde ustalenie: **ważne** (do
+   poprawy w tym kawałku — tylko ono zaczyna drugą rundę), **drobne** albo **zastane** (było w kodzie przed zmianą) —
+   te dwa trafiają do odłożonych spraw. Kawałek ma najwyżej 2 rundy; trzeciej skrypt odmawia i przebieg kończy się
+   blokiem STOP z opisem blokady, a po Twojej decyzji dostaje dwie kolejne.
 5. **KISS:** przypadki brzegowe, pomysły i ryzyka spoza kryteriów nie trafiają do kodu, tylko do `parked.md`
    i do sekcji „Odłożone do decyzji” w opisie PR.
 6. **Fazy warunkowe:** dokumentacja tylko przy zmianie publicznego API, przegląd bezpieczeństwa tylko przy auth,

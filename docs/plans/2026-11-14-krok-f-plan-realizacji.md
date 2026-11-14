@@ -50,3 +50,13 @@ Kolejność: F1 → F2 → F3. Każdy kawałek to osobny PR. F1 nie zmienia zach
 
 F2 i F3 zmieniają zachowanie pętli. Po F3 potrzebny jest płatny pomiar na tym samym zestawie historyjek co dotąd
 (z włączonym przełącznikiem) — **wymaga osobnej zgody właściciela**. Do tego czasu przełącznik F3 zostaje wyłączony.
+
+## Stan realizacji (2026-11-14)
+
+- F1 w PR tf#247 (z poprawką opisu zatrzymania na karcie podglądu: podwójna kropka i zlane zdania).
+- F2 gotowe lokalnie. Limit to dwie rundy kawałka bez decyzji człowieka (tak liczy je dotychczasowy werdykt „próba
+  k/2”); po zatrzymaniu i decyzji człowieka kawałek dostaje dwie kolejne. Wznowienie przez `step` czyści teraz cały
+  zapis zatrzymania (wcześniej w `run.json` zostawał kod).
+- Ryzyko zauważone przy okazji, niezmienione: spis `docs/project/changes/INDEX.md` jest w gicie i przepisuje go
+  każdy zapis zadania, więc dwa otwarte naraz PR-y zwykłych zadań mogą mieć w nim konflikt. Zadań cięć to nie
+  dotyczy (nie mają wiersza). Usunięcie spisu z gita zmienia układ ustalony w kroku C — do decyzji właściciela.

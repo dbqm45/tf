@@ -143,8 +143,13 @@ shared_agents:
       kawałka — zostaje; wykracza poza nie — „spoza zakresu”. Spoza zakresu są: obsługa przypadków, których kryteria
       nie wymieniają, refaktor obok, nowa zależność, której kawałek nie potrzebuje, kod „na przyszłość”.
       Wyjątek: zmiana potrzebna, żeby kryterium albo bezpieczeństwo nie zostało złamane — zostaje z uzasadnieniem.
-      Wynik (≤ 15 linii): `Werdykt: W ZAKRESIE` albo `Werdykt: SPOZA ZAKRESU`, potem lista `plik:linia — co — dlaczego
-      poza zakresem — propozycja wpisu do parked.md`. Plików nie zmieniasz.
+      Każde ustalenie oznacz jedną etykietą: `[ważne]` — kod spoza kryteriów, który trzeba wycofać albo poprawić
+      w tym kawałku; `[drobne]` — uwaga, która nie zmienia zachowania (nazwa, komentarz, styl); `[zastane]` — problem
+      w kodzie sprzed zmiany, którego ten diff nie wprowadził. Ustalenie nazywa klasę problemu (jedna poprawka
+      wszystkich wystąpień), bez powtórek. W drugiej rundzie oglądasz tylko zmiany od poprzedniej rundy.
+      Wynik (≤ 15 linii): `Werdykt: SPOZA ZAKRESU` tylko wtedy, gdy jest ustalenie `[ważne]`; inaczej `Werdykt:
+      W ZAKRESIE`. Potem lista `[etykieta] plik:linia — co — dlaczego — propozycja wpisu do parked.md`.
+      Plików nie zmieniasz.
 
   # Wykonawcy doraźnego zespołu dyspozytora (core-problem-routing): „persona na chwilę” — skille podane w briefie.
   specialist:
