@@ -3,6 +3,7 @@
 
   python3 docs/evals/2026-11-13-pomiar-bazowy-e0/e0_run.py <historyjka: S1|S2|S3> <powtórzenie>
           [--model sonnet] [--budget 3] [--timeout 2400]
+  E0_CONFIG="loop:\n  blocked_slices: true" python3 … e0_run.py S2 1    # z ustawieniem projektu na czas pomiaru
 
 Przebieg jest płatny (wywołuje `claude -p`) — uruchamiaj tylko za zgodą człowieka. Katalog roboczy i wyniki:
 zmienna E0_OUT (domyślnie katalog tymczasowy), żeby kopie repozytorium nie trafiały do repozytorium fabryki.
@@ -86,6 +87,16 @@ def main(argv):
     row["onboard_ok"], row["onboard_s"] = r.returncode == 0, round(time.time() - t0, 1)
     row["tree_clean_after_onboard"] = git(repo, "status", "--porcelain").stdout.strip() == ""
     (run_dir / "onboard.txt").write_text(r.stdout + r.stderr)
+    # opcjonalne ustawienia projektu na czas pomiaru (np. E0_CONFIG="loop:\n  blocked_slices: true"): dopisane do
+    # .tf/config/config.yaml i zapisane commitem, żeby pętla startowała z czystym drzewem roboczym
+    extra = (os.environ.get("E0_CONFIG") or "").replace("\\n", "\n").strip()
+    if extra:
+        cfg = repo / ".tf" / "config" / "config.yaml"
+        cfg.parent.mkdir(parents=True, exist_ok=True)
+        cfg.write_text((cfg.read_text().rstrip("\n") + "\n\n" if cfg.is_file() else "") + extra + "\n")
+        git(repo, "add", "-A")
+        git(repo, "commit", "-qm", "chore: project settings for the measurement")
+        row["config_extra"] = extra
 
     # treść historyjki wklejona do polecenia — tak, jak zrobi to człowiek; plik poza repozytorium byłby niedostępny
     text = (HERE / "stories" / STORIES[story]).read_text()
