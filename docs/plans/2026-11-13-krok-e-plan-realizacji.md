@@ -111,6 +111,47 @@ i poprawki z pętli PR), `flaga-funkcji.md`, `bezpieczenstwo.md` (karencja wersj
 i prompt poprawek `pr_loop.py` wskazują `ciecia-pdi.md` wprost. Test `T-20` pilnuje limitu, `T-21` — że każdy plik
 jest wymieniony w SKILL.md. Kolejne kawałki (E2–E4) dopisują szczegóły do `references/`, nie do SKILL.md.
 
+## E2 — plan szczegółowy (2026-11-14, przed kodem)
+
+**Pliki i kolejność** (test przed kodem):
+
+1. `core/tests/test_task_weight.py` → `core/factory/task_weight.py` (reguły propozycji, bez modelu) i polecenie
+   `tf task weight <KEY> [--apply | --set <waga>] [--by <kto>] [--reason "…"] [--json]` w `task_state.py`.
+2. Bramki w `task_state.py stage`: waga `pelna` — etap `realizacja` dopiero po zatwierdzeniu `plan.md` przez człowieka
+   (`tf task approve <KEY> plan.md --by human:<id>`); waga `lekka` — plan ma najwyżej jeden kawałek.
+3. `core/tests/test_run_state.py` → `run_state.py weight <katalog>` (pętla stosuje propozycję i drukuje skutki);
+   przy wadze `lekka` etap `plan` przebiegu nie wymaga `spec.md`.
+4. `core/tests/test_tf_skill.py` → jedna linia w SKILL.md i `references/waga.md`; przewodniki, `PUBLIC_API.md`.
+
+**Reguły propozycji** (ostrożne: wątpliwość → wyższa waga; każda propozycja ma powód zwykłym zdaniem):
+
+| Waga | Kiedy |
+|---|---|
+| `pelna` | treść zgłoszenia mówi o logowaniu, hasłach, uprawnieniach, płatnościach, fakturach, migracji lub schemacie bazy, danych osobowych, sekretach albo wdrożeniu; albo plan wymienia ścieżkę z kategorii wysokiego ryzyka triażu (`autonomy.triage.high`: auth, płatności, schemat, wdrożenie) |
+| `lekka` | treść mówi o literówce, nazwie, komentarzu, dokumentacji albo tekście; nie ma kryteriów akceptacji; jest krótka; plan (jeśli jest) ma jeden kawałek i najwyżej 2 pliki |
+| `zwykla` | wszystko inne |
+
+**Kto zmienia wagę:** pierwszy przydział robi fabryka (`--apply`). Potem podnieść może każdy; obniżenie wymaga
+`--by human:<id>` i powodu. `--apply` po planie tylko podnosi — propozycja niższa niż obecna waga nic nie zmienia.
+Historia zmian zostaje w `task.json` (`weight_log`).
+
+**Skutki wagi:** `lekka` — bez `spec.md` (a więc bez flagi i śladu kryteriów), jeden kawałek, dowód weryfikacji
+nadal wymagany. `pelna` — plan zatwierdza człowiek przed realizacją, więc przebieg z `--auto` zatrzymuje się blokiem
+STOP z wyjaśnieniem; przegląd `security-reviewer` obowiązkowy (reguła w skillu, skrypt jej nie wymusza).
+
+**Ustalenia w trakcie (2026-11-14):**
+- Wagę przydziela `run_report.py start` (linia `Waga: …` z powodem), a etapy `intake` i `plan` ponawiają przydział —
+  pętla nie musi pamiętać o osobnym poleceniu; `run_state.py weight <katalog>` zostaje do podglądu i podniesienia.
+- Decyzja człowieka o wadze jest trwała: po `--set … --by human:<id>` skrypt wagi już nie zmienia, tylko pokazuje
+  swoją propozycję. Waga podana wprost przy `tf task start --weight` też nie jest obniżana.
+- Zatwierdzenie `plan.md` nie liczy odhaczeń kawałków (`- [x] K1`): bez tego pierwsze odhaczenie unieważniałoby
+  zgodę człowieka i blokowało etap `pr`. Nowy albo zmieniony kawałek nadal wymaga ponownej zgody.
+- Słowa wrażliwe dobrane ostrożnie pod fałszywe trafienia: „sesja ładowania”, „płatna godzina” i „token” nie
+  podnoszą wagi; historyjki pomiarowe S1–S3 dostają wagę zwykłą (sprawdzone testem i ręcznie na ich treści).
+
+**Poza E2:** tryb `--plan` i lista kodów zatrzymań (E3), komunikaty zatrzymań (E4), waga dla cięć pdi (E6 — przebieg
+cięcia nie ma zadania, więc nie ma wagi).
+
 ## Pomiar po E0 i E1 (2026-11-14)
 
 Jedna seria po obu kawałkach (decyzja właściciela: pomiar po zakończeniu E1), raport

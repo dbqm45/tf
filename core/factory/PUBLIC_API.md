@@ -25,7 +25,9 @@ Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API 
 (polecenie `/tf`), skrypty `.claude/skills/tf/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]
 [--source "<skąd>"]`, `status`, `finish`), `intake.py` (`resolve [--json] <wejście>` z polami `kind`, `key`, `tracker`,
 `changes`, `options`, `intent`, `ask`, `next`; `tracker [<typ> [--prefix P]]`), sekcja `tracker` (`type`, `prefixes`)
-karty operacyjnej `.tf/config/operations.json`, `run_state.py` (`stage`, `step`, `spec`, `flag`, `trace`, `verify`, `tick`, `park`, `dashboard`),
+karty operacyjnej `.tf/config/operations.json`, waga zadania (`tf task weight <KEY> [--apply | --set <waga>] [--by]
+[--reason] [--json]`, wartości `lekka`/`zwykla`/`pelna`, pola `weight` i `weight_log` w `task.json`, linia `Waga:`
+na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `weight`, `trace`, `verify`, `tick`, `park`, `dashboard`),
 `plan_drift.py` i `security_scan.py`, opcje `.claude/tf.json`, zmienne `TF_DASHBOARD`, `TF_DASHBOARD_OPEN`,
 `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, podgląd `.tf/runs/dashboard.html`, katalog roboczy przebiegu `.tf/runs/<KEY>/`
 (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania `docs/project/changes/<KEY>/` (`ticket.md`,

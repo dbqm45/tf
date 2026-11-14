@@ -386,6 +386,72 @@ def main() -> int:
               and bare.get("taskStage") == "przyjecie" and [(s["id"], s["state"]) for s in bare.get("slices", [])] == [("K1", "done")],
               f"D-7: zadanie bez przebiegu ma kartę z etapem i kawałkami: {len(rs)} {bare.get('stage')} {bare.get('slices')}")
 
+    # waga zadania w pętli (krok E2): fabryka przydziela wagę i mówi dlaczego; skutki pilnuje skrypt
+    with tempfile.TemporaryDirectory() as t:
+        proj, cfg = Path(t) / "proj", Path(t) / "cfg"
+        proj.mkdir()
+        ts = ROOT / ".tf" / "factory" / "task_state.py"
+        env = {**os.environ, "CLAUDE_PROJECT_DIR": str(proj)}
+        run(REPORT, ["start", "Reset hasła", "--key", "LOG-1", "--story",
+                     "Jako użytkownik chcę zresetować hasło linkiem z maila. AC1: link ważny 30 minut."], proj, cfg)
+        d = proj / ".tf" / "runs" / "LOG-1"
+        r = run(SCRIPT, ["weight", str(d)], proj, cfg)
+        data = json.loads((proj / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8"))
+        check(r.returncode == 0 and data.get("weight") == "pelna" and "pełna" in r.stdout and "hasł" in r.stdout
+              and "człowiek" in r.stdout,
+              f"W-1: run_state weight przydziela wagę pełną, podaje powód i skutek: {r.returncode} {r.stdout}{r.stderr}")
+        (proj / CHANGES / "LOG-1" / "spec.md").write_text(SPEC, encoding="utf-8")
+        (proj / CHANGES / "LOG-1" / "plan.md").write_text("# Plan\n- [ ] K1 — reset · pliki: reset.py\n", encoding="utf-8")
+        r = run(SCRIPT, ["stage", str(d), "plan", "--auto"], proj, cfg)
+        check(r.returncode == 0, f"W-2: plan zadania o wadze pełnej da się zapisać: {r.stdout}{r.stderr}")
+        r = run(SCRIPT, ["step", str(d), "K1", "R1", "test", "run"], proj, cfg)
+        meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
+        check(r.returncode == 2 and "approve LOG-1 plan.md" in r.stdout and "STOP" in r.stdout
+              and meta.get("stage") == "plan",
+              f"W-3: waga pełna z --auto — pętla kawałka odrzucona z wyjaśnieniem, etap bez zmian: {r.returncode} {r.stdout}")
+        subprocess.run([sys.executable, str(ts), "approve", "LOG-1", "plan.md", "--by", "human:anna"], cwd=proj, env=env,
+                       capture_output=True, text=True, timeout=60)
+        r = run(SCRIPT, ["step", str(d), "K1", "R1", "test", "run"], proj, cfg)
+        check(r.returncode == 0, f"W-4: po zatwierdzeniu planu przez człowieka pętla rusza: {r.stdout}{r.stderr}")
+
+        run(REPORT, ["start", "Literówka w README", "--key", "TYP-1", "--story",
+                     "Popraw literówkę w README: instlacja na instalacja."], proj, cfg)
+        d2 = proj / ".tf" / "runs" / "TYP-1"
+        r = run(SCRIPT, ["weight", str(d2)], proj, cfg)
+        check(r.returncode == 0 and "lekka" in r.stdout and "bez spec.md" in r.stdout,
+              f"W-5: literówka → waga lekka ze skutkiem: {r.stdout}{r.stderr}")
+        (proj / CHANGES / "TYP-1" / "plan.md").write_text("# Plan\n- [ ] K1 — literówka · pliki: README.md\n", encoding="utf-8")
+        r = run(SCRIPT, ["stage", str(d2), "plan"], proj, cfg)
+        check(r.returncode == 0 and not (proj / CHANGES / "TYP-1" / "spec.md").exists(),
+              f"W-6: waga lekka — etap plan przebiegu bez spec.md: {r.returncode} {r.stdout}{r.stderr}")
+        r = run(SCRIPT, ["weight", str(d2), "--set", "zwykla"], proj, cfg)
+        r2 = run(SCRIPT, ["stage", str(d2), "plan"], proj, cfg)
+        check(r.returncode == 0 and r2.returncode == 2 and "spec" in r2.stdout,
+              f"W-7: po podniesieniu wagi do zwykłej specyfikacja znów jest wymagana: {r.stdout} | {r2.returncode} {r2.stdout}")
+        r = run(SCRIPT, ["weight", str(d2), "--set", "lekka"], proj, cfg)
+        check(r.returncode != 0 and "human:" in r.stdout, f"W-8: obniżenie wagi z pętli → odmowa: {r.returncode} {r.stdout}")
+        run(REPORT, ["start", "Limit dobowy", "--key", "REG-1", "--story",
+                     "Jako operator chcę podnieść limit dobowy opłaty z 40 zł do 45 zł. AC1: 12 h = 45 zł."], proj, cfg)
+        d3 = proj / ".tf" / "runs" / "REG-1"
+        (proj / CHANGES / "REG-1" / "spec.md").write_text(SPEC, encoding="utf-8")
+        (proj / CHANGES / "REG-1" / "plan.md").write_text(
+            "# Plan\n- [ ] K1 — limit · pliki: fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
+        r = run(SCRIPT, ["stage", str(d3), "plan"], proj, cfg)
+        w = json.loads((proj / CHANGES / "REG-1" / "task.json").read_text(encoding="utf-8")).get("weight")
+        check(r.returncode == 0 and w == "pelna" and "pełna" in r.stdout and "db/migrations/0008_limit.sql" in r.stdout,
+              f"W-10: etap plan ponawia przydział — plan z migracją podnosi wagę i mówi dlaczego: {w} {r.stdout}{r.stderr}")
+        subprocess.run([sys.executable, str(ts), "weight", "REG-1", "--set", "zwykla", "--by", "human:anna", "--reason",
+                        "migracja dodaje tylko indeks"], cwd=proj, env=env, capture_output=True, text=True, timeout=60)
+        r = run(SCRIPT, ["stage", str(d3), "plan"], proj, cfg)
+        w = json.loads((proj / CHANGES / "REG-1" / "task.json").read_text(encoding="utf-8")).get("weight")
+        check(r.returncode == 0 and w == "zwykla", f"W-11: waga obniżona przez człowieka zostaje przy kolejnym etapie: {w} {r.stdout}")
+        old = proj / ".tf" / "runs" / "cuts" / "2026-10-01-stary"
+        old.mkdir(parents=True)
+        (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary przebieg",
+                                                  "started_at": "2026-10-01T10:00:00+00:00"}), encoding="utf-8")
+        r = run(SCRIPT, ["weight", str(old)], proj, cfg)
+        check(r.returncode == 2 and "cięci" in r.stdout, f"W-9: przebieg cięcia nie ma wagi: {r.returncode} {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} testów stanu przebiegu: {'wszystkie przeszły' if not fails else len(fails)}")

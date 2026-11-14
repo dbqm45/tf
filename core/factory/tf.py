@@ -29,6 +29,7 @@ tf — the team factory command: install, update, packs, languages, health check
   tf trace <KEY> [--base <branch>] [--md|--json]   # criterion → test → commit → evidence
   tf task flag <KEY> set <key> [--remove-by YYYY-MM-DD] | none --reason "<why>" | allow <env> --by human:<id>
   tf flag check <KEY> [--base <branch>] [--json]   # the task's feature flag is on outside the test environment only by human decision
+  tf task weight <KEY> [--apply | --set lekka|zwykla|pelna [--by human:<id> --reason "<why>"]]   # task weight: proposal with a reason; lowering is a human decision
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)

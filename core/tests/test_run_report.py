@@ -387,10 +387,19 @@ def main() -> int:
         text = (changes / "EBO-3" / "ticket.md").read_text(encoding="utf-8") if r.returncode == 0 else ""
         check(f"Źródło: plik docs/story.md · pobrano: {today}" in text and "eksport sesji" in text,
               f"R-42: treść z pliku → źródło z nazwą pliku: {r.stdout} {text}")
+        # waga zadania (krok E2): start przydziela propozycję fabryki i mówi dlaczego (na stderr, stdout to sama ścieżka)
+        r = run(["start", "Reset hasła", "--key", "EBO-4", "--story", "Jako użytkownik chcę zresetować hasło."], proj, cfg)
+        task = json.loads((changes / "EBO-4" / "task.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
+        check(r.stdout.strip() == ".tf/runs/EBO-4" and task.get("weight") == "pelna"
+              and "Waga: pełna" in r.stderr and "hasł" in r.stderr,
+              f"R-44: start przydziela wagę i podaje powód: {r.stdout} | {r.stderr} | {task.get('weight')}")
+        task2 = json.loads((changes / "EBO-2" / "task.json").read_text(encoding="utf-8"))
+        check(task2.get("weight") == "zwykla" and task2.get("weight_log"),
+              f"R-45: zwykła historyjka dostaje wagę zwykłą z zapisem przydziału: {task2.get('weight')} {task2.get('weight_log')}")
         r = run(["start", "--task", "TSK-57", "--change", "CHG-12"], proj, cfg)
         cut = next(iter((proj / ".tf" / "runs" / "cuts").glob("*/story.md")), None)
         text = cut.read_text(encoding="utf-8") if cut else ""
-        check(r.returncode == 0 and "Źródło:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text,
+        check(r.returncode == 0 and "Źródło:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text and "Waga:" not in r.stderr,
               f"R-43: przebieg cięcia pdi bez zmian — story.md bez linii źródła: {r.stdout} {r.stderr} {text[:200]}")
 
     for f in fails:

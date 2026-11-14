@@ -52,6 +52,21 @@ claude --agent tf
 > Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem. --auto
 ```
 
+## Waga zadania
+Fabryka sama ocenia, ile ostrożności potrzebuje zadanie, i mówi Ci to jednym zdaniem przy starcie:
+
+| Waga | Kiedy | Co to zmienia |
+|---|---|---|
+| lekka | literówka, nazwa, komentarz, dokumentacja — bez kryteriów akceptacji, jeden kawałek | bez specyfikacji i flagi; test, dowód i przegląd zakresu zostają |
+| zwykła | wszystko inne | pełny przebieg opisany niżej |
+| pełna | logowanie, hasła, uprawnienia, płatności, migracje bazy, dane osobowe, sekrety, wdrożenie — w treści zadania albo w plikach planu | plan zatwierdzasz Ty, zanim powstanie kod; z `--auto` fabryka zatrzyma się i poczeka na Twoją zgodę; przegląd bezpieczeństwa jest obowiązkowy |
+
+- Wagę liczy skrypt z treści zadania i ze ścieżek planu, nie model. Gdy plan dotknie np. migracji, waga sama rośnie.
+- Podnieść wagę może każdy (także fabryka). **Obniżyć możesz tylko Ty**, z powodem:
+  `tf task weight <KLUCZ> --set zwykla --by human:<Twój identyfikator> --reason "…"`. Po Twojej decyzji fabryka
+  wagi już nie zmienia.
+- Podgląd wagi z powodem: `tf task weight <KLUCZ>`.
+
 ## Co robi
 1. **Start:** wymaga czystego drzewa roboczego, zakłada katalog przebiegu i gałąź `story/<slug>`.
 2. **Przyjęcie historyjki:** sprawdza, kto, co i po co oraz kryteria akceptacji. Gdy ich brakuje, zadaje do 3 pytań
