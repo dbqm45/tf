@@ -268,12 +268,17 @@ ich skuteczność sprawdzi pomiar po E3. Kolejność dalej: E2 → E3 → **pomi
 ## Do sprawdzenia przez właściciela
 
 - [x] **Czy repozytorium `dbqm45/pdi` wpisuje u siebie nazwę agenta `talos` albo polecenie `/talos-story-run`.**
-  Sprawdzone 2026-11-14 na commicie `873f7b2` (z 2026-10-30), wyszukiwaniem w całym repozytorium: w kodzie (`src/`),
-  kontrakcie (`contract/`), integracjach, testach i konfiguracji nazw tych **nie ma**. Słowo „Talos” występuje tylko
-  w 10 plikach dokumentacji (`docs/`) i w 4 makietach (`design/konsola/`, `design/platforma/`) — jako opis, nie jako
-  wywołanie. Działanie pdi od tej zmiany nie zależy.
-- [ ] **Do decyzji:** czy poprawić słowo „Talos” w tych 14 plikach repozytorium pdi (teksty i dane przykładowe
-  makiet). To osobna zmiana w innym repozytorium; bez niej nic się nie psuje.
+  **Korekta z 2026-11-14:** pierwsze sprawdzenie (commit `873f7b2` z 2026-10-30) dotyczyło starej gałęzi lokalnej
+  kopii, nie `main`, i jego wniosek był błędny. Na `main` (`74d201a`) słowo „Talos” jest w 42 plikach (ok. 290
+  wystąpień, policzone `git grep -i talos`), także w kodzie i testach. Jedna zależność jest funkcjonalna:
+  `src/pdi/phase_sandbox.py` rozpoznawał skaner pętli po ścieżce `.claude/skills/talos-story-run/scripts/security_scan.py`,
+  więc z fabryką 10.x obraz fazy nie dostałby semgrepa i faza realizacji zatrzymałaby się na skanie (wniosek z kodu,
+  nieodtwarzany na żywym przebiegu). Polecenia `/talos-story-run` ani agenta `talos` kod pdi sam nie wywołuje — robi
+  to tryb pdi fabryki, poprawiony w E0.
+- [x] **Poprawka w `dbqm45/pdi`** (decyzja właściciela z 2026-11-14: poprawić słowo „Talos”): gałąź
+  `claude/rename-talos-to-tf` — pdi rozpoznaje skaner w ścieżce `.claude/skills/tf/…` (i nadal w starej, dla produktu
+  na fabryce 9.x), a nazwa w dokumentach, makietach, komentarzach i testach zmienia się na „agent tf” / `/tf`.
+  Scalenie PR w pdi należy do właściciela.
 - [ ] **Po `tf update` u siebie:** zmienić nazwę `.claude/talos.json` na `.claude/tf.json` i zmienne `TALOS_*` na
   `TF_*` (jeśli ich używasz) oraz poprawić ścieżkę skryptu skanu i nazwę zmiennej w skopiowanym `change-check.yml`.
 
