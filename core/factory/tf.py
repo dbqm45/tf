@@ -33,6 +33,7 @@ tf — the team factory command: install, update, packs, languages, health check
   tf task flag <KEY> set <key> [--remove-by YYYY-MM-DD] | none --reason "<why>" | allow <env> --by human:<id>
   tf flag check <KEY> [--base <branch>] [--json]   # the task's feature flag is on outside the test environment only by human decision
   tf task weight <KEY> [--apply | --set lekka|zwykla|pelna [--by human:<id> --reason "<why>"]]   # task weight: proposal with a reason; lowering is a human decision
+  tf task deployed <KEY> [--version X] | --rolled-back --by human:<id>   # after deployment: run the smoke test from the operations card, record the result; a red result asks whether to roll back
   tf task mode <KEY> [plan|zwykly|auto]   # who approves: plan stops after the plan, zwykly waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)

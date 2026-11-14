@@ -295,6 +295,18 @@ def parked_count(run_dir: Path) -> int:
     return len(parked_items(run_dir))
 
 
+def after_merge(project: Path, key: str) -> str:
+    """Co po scaleniu PR: test dymny z karty operacyjnej (`deploy.smoke`) albo jasna informacja, że go nie ma."""
+    try:
+        smoke = json.loads((project / ".tf" / "config" / "operations.json").read_text(encoding="utf-8"))["deploy"]["smoke"]
+    except (OSError, ValueError, KeyError, TypeError):
+        smoke = None
+    if isinstance(smoke, str) and smoke.strip():
+        return f"Po scaleniu i wdrożeniu: `tf task deployed {key}` — uruchomi polecenie testu dymnego zapisane w karcie operacyjnej i zapisze wynik."
+    return ("Po scaleniu: karta operacyjna nie ma testu dymnego (pole `deploy.smoke` w .tf/config/operations.json), "
+            "więc fabryka kończy na scaleniu i wdrożenia nie sprawdza.")
+
+
 def fmt_tokens(n: int) -> str:
     return f"{n:,}".replace(",", " ")
 
@@ -576,6 +588,7 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
             index = f" {(CHANGES / 'INDEX.md').as_posix()}" if (project / CHANGES / "INDEX.md").is_file() else ""
             print(f"Pliki zadania: {meta['task_dir']}/ — zapisz je jednym commitem: `git add {meta['task_dir']}{index}`, "
                   f"potem `git commit -m \"docs(task): record {meta['key']}\"`.")
+            print(after_merge(project, meta["key"]))
     return 2 if usage_missing else 0   # kod 2 jak dotąd: brak danych o koszcie, ale raport już jest
 
 

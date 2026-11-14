@@ -158,6 +158,15 @@ kawałka, werdykt skanu bezpieczeństwa, zgodność z planem), **Ryzyko** (waga 
 **Jak cofnąć**, odłożone sprawy i założenia. Kawałek bez zielonego dowodu jest w opisie nazwany wprost. Krok cofania
 wdrożenia skrypt bierze z karty operacyjnej (`.tf/config/operations.json`, pole `deploy.rollback` — tekst albo
 lista kroków); bez niego podaje `git revert` commita scalenia, a przy zadaniu z flagą zaczyna od jej wyłączenia.
+
+**Po scaleniu.** Karta operacyjna ma część o wdrożeniu (`deploy`), którą zakłada `tf onboard`: `smoke` (polecenie
+testu dymnego), `rollback` i `rollback_minutes` (jak cofnąć i ile to trwa), `approval` (co zatwierdza człowiek),
+`logs` (polecenie logów). Po wdrożeniu uruchamiasz `tf task deployed <KLUCZ> [--version X]`: fabryka puszcza test
+dymny i zapisuje wynik w zadaniu (`evidence/deploy-<n>.json`). Zielony wynik przenosi zadanie na etap „wdrożenie”.
+Czerwony kończy się pytaniem „wycofać?” z krokiem cofania i poleceniem logów z karty, a zadanie jest na liście
+„czeka na Ciebie”, dopóki nie zapiszesz decyzji (`tf task deployed <KLUCZ> --rolled-back --by human:<id>`) albo
+ponowny test po naprawie nie będzie zielony. Bez `smoke` w karcie fabryka kończy na scaleniu — mówi to zakończenie
+przebiegu i samo polecenie. Fabryka niczego nie wdraża i niczego sama nie cofa.
 Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), pętla przy przyjęciu historyjki czyta
 spis standardów i słownik domeny.
 
