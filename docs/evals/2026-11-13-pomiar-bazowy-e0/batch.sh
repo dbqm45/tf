@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Pomiar bazowy E0: 3 historyjki × 5 powtórzeń, kolejno; stop, gdy łączny koszt przekroczy LIMIT (USD).
+# Pomiar bazowy E0: historyjki (STORY_SET) × 5 powtórzeń, kolejno; stop, gdy łączny koszt przekroczy LIMIT (USD).
 # Płatne — uruchamiaj tylko za zgodą człowieka. Wyniki: $E0_OUT/results.jsonl.
 HERE="$(cd "$(dirname "$0")" && pwd)"
 export E0_OUT="${E0_OUT:-$(mktemp -d)}"
 cd "$E0_OUT"
 LIMIT="${LIMIT:-15}"
+STORY_SET="${STORY_SET:-S1 S2 S3}"   # po kroku G: STORY_SET="S1 S2 S3 S4"
 for rep in 1 2 3 4 5; do
-  for story in S1 S2 S3; do
+  for story in $STORY_SET; do
     spent=$(python3 -c "
 import json,os
 print(sum((json.loads(l).get('cost_usd') or 0) for l in open('results.jsonl')) if os.path.exists('results.jsonl') else 0)")
