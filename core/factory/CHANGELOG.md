@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.9.0] — 2026-11-14
+### Added
+- **core:** let a question block one slice instead of the whole run (#250)
+
 ## [10.8.1] — 2026-11-14
 ### Fixed
 - **core:** stop rewriting the task list file on every task write (#249)
