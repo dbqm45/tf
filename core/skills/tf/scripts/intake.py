@@ -231,6 +231,10 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
             out["next"] = (f"wznów zadanie {key} (etap: {task.get('stage', '?')}): przeczytaj "
                            f"{(CHANGES / key).as_posix()}/plan.md i kontynuuj od pierwszego nieodhaczonego kawałka; "
                            f"katalog przebiegu: .tf/runs/{key}")
+            if task.get("mode") == "plan" and not options["plan"]:   # realizacja po trybie Plan: tryb z polecenia
+                mode = "auto" if options["auto"] else "zwykly"
+                out["next"] += (f"; zadanie było w trybie Plan — ustaw tryb z polecenia człowieka: "
+                                f"python3 .claude/skills/tf/scripts/run_state.py mode .tf/runs/{key} {mode}")
             return done()
         if changes:
             out.update(kind="ciecie", changes=changes)

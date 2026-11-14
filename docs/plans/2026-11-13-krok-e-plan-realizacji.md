@@ -152,6 +152,59 @@ STOP z wyjaśnieniem; przegląd `security-reviewer` obowiązkowy (reguła w skil
 **Poza E2:** tryb `--plan` i lista kodów zatrzymań (E3), komunikaty zatrzymań (E4), waga dla cięć pdi (E6 — przebieg
 cięcia nie ma zadania, więc nie ma wagi).
 
+## E3 — plan szczegółowy (2026-11-14, przed kodem)
+
+**Pliki i kolejność** (test przed kodem):
+
+1. `core/tests/test_task_mode.py` → `tf task mode <KEY> [plan|zwykly|auto]` i bramka etapu `realizacja`
+   w `task_state.py` (rozszerzenie bramki wagi z E2).
+2. `core/tests/test_run_state.py` → `run_state.py`: `stage … --plan | --auto` zapisuje tryb zadania, `mode <katalog>
+   [tryb]`, `approve <katalog>` (zgoda człowieka na plan), `stage … needs --needs stop --code <kod>` z zamkniętą listą
+   kodów, kod i jego opis na podglądzie.
+3. `core/tests/test_tf_skill.py` → jedna linia w SKILL.md i `references/tryby-i-zatrzymania.md`; przewodniki,
+   `PUBLIC_API.md`.
+
+**Tryby** (wybiera człowiek w poleceniu; skrypt pilnuje wejścia do etapu `realizacja`):
+
+| Tryb | Polecenie | Wejście do realizacji |
+|---|---|---|
+| Plan | `/tf KEY --plan` | odmowa — przebieg kończy się na planie; realizacja po osobnym poleceniu `/tf KEY` (tryb zmienia `mode`) |
+| zwykły (domyślny) | `/tf KEY` | po zgodzie człowieka na plan (jedna zgoda obejmuje specyfikację — plan ma ją w wejściach) |
+| Auto | `/tf KEY --auto` | bez zgody, chyba że waga jest pełna (wtedy STOP, jak w E2) |
+
+- Zgodę zapisuje `run_state.py approve <katalog>` (pod spodem `tf task approve <KEY> plan.md --by human:<id>`,
+  identyfikator z `git config user.name`); w trybie Auto polecenie odmawia, bo nie ma człowieka.
+- Wymóg zgody dotyczy zadań z zarejestrowanym planem (zakłada go pętla). Zadanie prowadzone ręcznie przez `tf task`
+  bez zarejestrowanego `plan.md` działa jak dotąd — poza wagą pełną, która zgody wymaga zawsze.
+
+**Zamknięta lista kodów zatrzymań** (`--needs stop --code <kod>`; nieznany kod albo brak kodu → kod wyjścia 2
+z listą; komunikaty dla człowieka dopisze E4):
+
+| Kod | Kiedy |
+|---|---|
+| `pytanie` | brakuje informacji, bez której nie da się zacząć (kryteria, pytanie `[blokuje]`) |
+| `podzial` | zadanie za duże albo łączy kilka akcji — propozycja podziału |
+| `zrodlo` | nie ma treści zadania albo dostępu do zgłoszenia |
+| `zgoda-na-plan` | plan czeka na człowieka (waga pełna z `--auto`, koniec trybu Plan) |
+| `testy` | testy albo weryfikacja czerwone po dwóch próbach naprawy |
+| `skan` | skan bezpieczeństwa blokuje po dwóch próbach |
+| `budzet` | przekroczony `--budget` |
+| `srodowisko` | repozytorium nie jest gotowe: niezacommitowane zmiany, brak zdalnego repozytorium, brak narzędzia |
+| `zaleznosc` | nowa zależność albo karencja wersji wymaga decyzji |
+| `kontrakt` | zmiana kontraktu albo decyzja biznesowa: publiczne API, schemat danych, migracja |
+| `uprawnienia` | operacja zastrzeżona dla człowieka: produkcja, publikacja, flaga poza środowiskiem testowym |
+
+**Zmiana kontraktu testów:** przebiegi testowe, które wchodziły w pętlę kawałka bez `--auto` i bez zgody na plan,
+dostają zgodę albo `--auto` — to nowa reguła trybu zwykłego, nie osłabienie.
+
+**Ustalenia w trakcie (2026-11-14):**
+- Kod zatrzymania obowiązuje także przebieg cięcia pdi (ten sam blok STOP); trybu i zgody na plan cięcie nie ma.
+- `intake.py resolve` przy wznowieniu zadania z trybu Plan podaje polecenie ustawienia trybu z polecenia człowieka.
+- SKILL.md ma po E3 14 985 znaków (limit 15 000) — kawałki E4 i E5 dopisują treść tylko do `references/`.
+
+**Poza E3:** treść komunikatów i pytań dla każdego kodu (E4); zatrzymania z `autonomy.operations` wykrywane hookiem
+(są już w `guard_paths` i polityce autonomii); wygaszanie zgody po nowych commitach.
+
 ## Pomiar po E0 i E1 (2026-11-14)
 
 Jedna seria po obu kawałkach (decyzja właściciela: pomiar po zakończeniu E1), raport

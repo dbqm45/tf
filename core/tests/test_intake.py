@@ -151,6 +151,11 @@ def main() -> int:
         code, out, raw = resolve(p, "PROJ-7")
         check(out.get("kind") == "wznowienie" and out.get("stage") == "realizacja" and "PROJ-7" in out.get("next", ""),
               f"I-17: klucz istniejącego zadania → wznowienie z etapem: {raw}")
+        (p / CHANGES / "PROJ-7" / "task.json").write_text(json.dumps(
+            {"key": "PROJ-7", "title": "Zadanie PROJ-7", "stage": "plan", "mode": "plan"}), encoding="utf-8")
+        code, out, raw = resolve(p, "PROJ-7", "--auto")
+        check(out.get("kind") == "wznowienie" and "run_state.py mode .tf/runs/PROJ-7 auto" in out.get("next", ""),
+              f"I-17a: wznowienie zadania z trybu Plan — następny krok ustawia tryb z polecenia: {raw}")
         code, out, raw = resolve(p, "docs/story.md")
         check(out.get("kind") == "plik" and out.get("file") == "docs/story.md"
               and "--story-file docs/story.md" in out.get("next", ""), f"I-18: ścieżka istniejącego pliku: {raw}")

@@ -47,6 +47,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         p = Path(t)
         tf(p, "start", "PROJ-1", "--title", "Limit dobowy")
+        tf(p, "mode", "PROJ-1", "auto")          # test dotyczy ochrony plików, nie zgody na plan (tryb zwykły, krok E3)
         folder = p / CHANGES / "PROJ-1"
         (folder / "spec.md").write_text(SPEC, encoding="utf-8")
         (folder / "plan.md").write_text("# Plan\n- [ ] K1 — limit\n", encoding="utf-8")

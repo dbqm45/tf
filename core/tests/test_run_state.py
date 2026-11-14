@@ -120,7 +120,7 @@ def main() -> int:
         (d / "security" / "K2" / "proba-2").mkdir(parents=True)
         (d / "security" / "K2" / "proba-2" / "summary.md").write_text("## Bezpieczeństwo\nWerdykt: FAIL\n", encoding="utf-8")
         run(SCRIPT, ["step", str(d), "K2", "R2", "skan", "fail"], proj, cfg)
-        r = run(SCRIPT, ["stage", str(d), "needs", "--needs", "stop", "--reason", "Skan czerwony po 2 próbach (K2)."],
+        r = run(SCRIPT, ["stage", str(d), "needs", "--needs", "stop", "--code", "skan", "--reason", "Skan czerwony po 2 próbach (K2)."],
                 proj, cfg)
         o = one()
         names = [i["name"] for g in o.get("files", []) for i in g["items"]]
@@ -213,6 +213,7 @@ def main() -> int:
         proj.mkdir()
         run(REPORT, ["start", "Limit dobowy", "--story", "Jako operator chcę limit."], proj, cfg)
         d = next((proj / ".tf" / "runs").glob("T-*-limit-dobowy"), None)
+        run(SCRIPT, ["stage", str(d), "intake", "--auto"], proj, cfg)     # przebieg bez nadzoru: plan bez zgody (krok E3)
         doc = proj / CHANGES / d.name
         plan = doc / "plan.md"
         head = plan.read_text(encoding="utf-8")
@@ -445,10 +446,71 @@ def main() -> int:
         r = run(SCRIPT, ["stage", str(d3), "plan"], proj, cfg)
         w = json.loads((proj / CHANGES / "REG-1" / "task.json").read_text(encoding="utf-8")).get("weight")
         check(r.returncode == 0 and w == "zwykla", f"W-11: waga obniżona przez człowieka zostaje przy kolejnym etapie: {w} {r.stdout}")
+        # tryby (krok E3): Plan kończy się na planie, zwykły czeka na zgodę człowieka, Auto idzie dalej
+        run(REPORT, ["start", "Eksport sesji", "--key", "EXP-1", "--story", "Jako operator chcę eksport sesji do pliku."],
+            proj, cfg)
+        d4 = proj / ".tf" / "runs" / "EXP-1"
+
+        def t4():
+            return json.loads((proj / CHANGES / "EXP-1" / "task.json").read_text(encoding="utf-8"))
+
+        r = run(SCRIPT, ["stage", str(d4), "intake", "--plan", "--auto"], proj, cfg)
+        check(r.returncode == 2, f"T-1: --plan i --auto naraz → kod 2: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["stage", str(d4), "intake", "--plan"], proj, cfg)
+        check(r.returncode == 0 and t4().get("mode") == "plan", f"T-2: stage --plan zapisuje tryb Plan: {r.stdout} {t4().get('mode')}")
+        (proj / CHANGES / "EXP-1" / "spec.md").write_text(SPEC, encoding="utf-8")
+        (proj / CHANGES / "EXP-1" / "plan.md").write_text("# Plan\n- [ ] K1 — eksport · pliki: export.py\n", encoding="utf-8")
+        run(SCRIPT, ["stage", str(d4), "plan"], proj, cfg)
+        r = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
+        check(r.returncode == 2 and "Plan" in r.stdout and json.loads((d4 / "run.json").read_text(encoding="utf-8")).get("stage") == "plan",
+              f"T-3: tryb Plan nie wchodzi w pętlę kawałka: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["mode", str(d4), "zwykly"], proj, cfg)
+        r2 = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
+        check(r.returncode == 0 and t4().get("mode") == "zwykly" and r2.returncode == 2 and "approve" in r2.stdout,
+              f"T-4: po przejściu na tryb zwykły pętla czeka na zgodę człowieka: {r.stdout} | {r2.returncode} {r2.stdout}")
+        r = run(SCRIPT, ["approve", str(d4)], proj, cfg, {"GIT_AUTHOR_NAME": "Anna Nowak"})
+        art = (t4().get("artifacts") or {}).get("plan.md") or {}
+        who = (art.get("verified") or [{}])[-1].get("by", "")
+        r2 = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
+        check(r.returncode == 0 and art.get("status") == "zatwierdzony" and who.startswith("human:") and r2.returncode == 0,
+              f"T-5: approve zapisuje zgodę człowieka na plan i pętla rusza: {r.stdout}{r.stderr} {who} | {r2.stdout}")
+        run(REPORT, ["start", "Import sesji", "--key", "IMP-1", "--story", "Jako operator chcę import sesji z pliku."],
+            proj, cfg)
+        d5 = proj / ".tf" / "runs" / "IMP-1"
+        r = run(SCRIPT, ["stage", str(d5), "intake", "--auto"], proj, cfg)
+        mode = json.loads((proj / CHANGES / "IMP-1" / "task.json").read_text(encoding="utf-8")).get("mode")
+        r2 = run(SCRIPT, ["approve", str(d5)], proj, cfg)
+        check(r.returncode == 0 and mode == "auto" and r2.returncode == 2 and "człowiek" in r2.stdout,
+              f"T-6: --auto zapisuje tryb Auto; zgody na plan nie da się zapisać bez człowieka: {mode} | {r2.returncode} {r2.stdout}")
+        r = run(SCRIPT, ["stage", str(d), "intake", "--auto"], proj, cfg)        # LOG-1: waga pełna
+        mode = json.loads((proj / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8")).get("mode")
+        check(r.returncode == 0 and mode == "zwykly" and "pełn" in r.stdout,
+              f"T-7: --auto przy wadze pełnej — zostaje tryb zwykły z wyjaśnieniem: {mode} {r.stdout}")
+
+        # zamknięta lista kodów zatrzymań: brak kodu albo kod spoza listy to błąd; podgląd pokazuje przyczynę
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--reason", "Brak kryteriów."], proj, cfg)
+        check(r.returncode == 2 and "pytanie" in r.stdout and "budzet" in r.stdout,
+              f"T-8: STOP bez kodu → kod 2 z listą kodów: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "zmeczenie", "--reason", "x"], proj, cfg)
+        check(r.returncode == 2 and "pytanie" in r.stdout, f"T-9: kod spoza listy → kod 2: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "pytanie", "--reason",
+                         "Brak kryteriów akceptacji."], proj, cfg)
+        meta = json.loads((d5 / "run.json").read_text(encoding="utf-8"))
+        card = next((x for x in runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
+                     if x.get("key") == "IMP-1"), {})
+        check(r.returncode == 0 and meta.get("stop_code") == "pytanie" and card.get("stopCode") == "pytanie"
+              and card.get("stopLabel") and "Brak kryteriów akceptacji." in (card.get("stopText") or "")
+              and "r.stopLabel" in (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"),
+              f"T-10: STOP z kodem — kod w run.json, kod, opis i powód na podglądzie: {r.stdout} {card.get('stopCode')} {card.get('stopLabel')}")
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "plan", "--code", "pytanie"], proj, cfg)
+        check(r.returncode == 2, f"T-11: --code tylko dla --needs stop: {r.returncode} {r.stdout}")
+
         old = proj / ".tf" / "runs" / "cuts" / "2026-10-01-stary"
         old.mkdir(parents=True)
         (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary przebieg",
                                                   "started_at": "2026-10-01T10:00:00+00:00"}), encoding="utf-8")
+        r = run(SCRIPT, ["stage", str(old), "needs", "--needs", "stop", "--code", "testy", "--reason", "czerwone"], proj, cfg)
+        check(r.returncode == 0, f"T-12: przebieg cięcia też zapisuje STOP z kodem: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["weight", str(old)], proj, cfg)
         check(r.returncode == 2 and "cięci" in r.stdout, f"W-9: przebieg cięcia nie ma wagi: {r.returncode} {r.stdout}")
 

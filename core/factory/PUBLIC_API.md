@@ -27,7 +27,11 @@ Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API 
 `changes`, `options`, `intent`, `ask`, `next`; `tracker [<typ> [--prefix P]]`), sekcja `tracker` (`type`, `prefixes`)
 karty operacyjnej `.tf/config/operations.json`, waga zadania (`tf task weight <KEY> [--apply | --set <waga>] [--by]
 [--reason] [--json]`, wartości `lekka`/`zwykla`/`pelna`, pola `weight` i `weight_log` w `task.json`, linia `Waga:`
-na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `weight`, `trace`, `verify`, `tick`, `park`, `dashboard`),
+na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`), tryb zadania (`tf task mode <KEY>
+[plan|zwykly|auto]`, pole `mode` w `task.json`, `run_state.py stage … --plan|--auto`, `run_state.py mode <katalog>
+[tryb]`, `run_state.py approve <katalog>`), kody zatrzymań (`run_state.py stage <katalog> needs --needs stop --code
+<kod>`; lista `STOP_CODES`: `pytanie`, `podzial`, `zrodlo`, `zgoda-na-plan`, `testy`, `skan`, `budzet`, `srodowisko`,
+`zaleznosc`, `kontrakt`, `uprawnienia`; pole `stop_code` w `run.json`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `weight`, `mode`, `approve`, `trace`, `verify`, `tick`, `park`, `dashboard`),
 `plan_drift.py` i `security_scan.py`, opcje `.claude/tf.json`, zmienne `TF_DASHBOARD`, `TF_DASHBOARD_OPEN`,
 `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, podgląd `.tf/runs/dashboard.html`, katalog roboczy przebiegu `.tf/runs/<KEY>/`
 (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania `docs/project/changes/<KEY>/` (`ticket.md`,

@@ -3,7 +3,9 @@
 Stan przebiegu zadania i podgląd (skill tf): jedyny pisarz etapu i rundy w run.json
 oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła polecenie.
 
-  python3 .claude/skills/tf/scripts/run_state.py stage <katalog-przebiegu> <etap> [--needs plan|stop]
+  python3 .claude/skills/tf/scripts/run_state.py stage <katalog-przebiegu> <etap> [--needs plan|stop] [--code <kod>] [--auto|--plan]
+  python3 .claude/skills/tf/scripts/run_state.py mode <katalog-przebiegu> [plan|zwykly|auto]   # tryb zadania
+  python3 .claude/skills/tf/scripts/run_state.py approve <katalog-przebiegu>                   # zgoda człowieka na plan
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
@@ -19,7 +21,10 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
 
 `stage` ustawia etap przebiegu: intake, plan, slices, pr, needs, done. Etap `needs` wymaga `--needs plan` (plan czeka
-na akceptację) albo `--needs stop` (blok STOP; `--reason` to powód). `step` zapisuje wynik etapu pętli w rundzie
+na akceptację) albo `--needs stop --code <kod>` (blok STOP; kod z zamkniętej listy `STOP_CODES`, `--reason` to powód
+z dowodem; bez kodu albo z kodem spoza listy polecenie kończy się kodem 2 i wypisuje listę). `--auto` i `--plan`
+zapisują tryb zadania (`tf task mode`): Plan kończy przebieg na planie, zwykły (domyślny) wpuszcza pętlę kawałka po
+zgodzie człowieka na plan (`approve`), Auto — bez zgody, chyba że waga jest pełna. `step` zapisuje wynik etapu pętli w rundzie
 bieżącego kawałka: etapy test, kod, weryf, skan, zakres; stany run, pass, fail. Rundę zaczyna kolejna próba kawałka
 po nieudanej bramce (R1, R2, …). Etapy wcześniejsze od zapisywanego, które nie mają stanu albo trwają, dostają pass —
 pętla zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
@@ -74,6 +79,7 @@ import importlib.util
 import json
 import os
 import re
+import subprocess
 import sys
 import webbrowser
 from datetime import datetime, timezone
@@ -88,6 +94,20 @@ STEPS = ("test", "kod", "weryf", "skan", "zakres")
 STATES = ("run", "pass", "fail")
 PR_STEPS = {"plan_drift": "drift", "pr": "pr"}
 NEEDS = ("plan", "stop")
+# Zamknięta lista kodów zatrzymań (`stage … needs --needs stop --code <kod>`): kod → co się stało, zwykłym zdaniem.
+STOP_CODES = {
+    "pytanie": "brakuje informacji, bez której nie da się zacząć",
+    "podzial": "zadanie jest za duże albo łączy kilka akcji — trzeba je podzielić",
+    "zrodlo": "nie ma treści zadania albo dostępu do zgłoszenia",
+    "zgoda-na-plan": "plan czeka na zgodę człowieka",
+    "testy": "testy albo weryfikacja nie przechodzą po dwóch próbach naprawy",
+    "skan": "skan bezpieczeństwa blokuje po dwóch próbach",
+    "budzet": "przekroczony budżet przebiegu",
+    "srodowisko": "repozytorium nie jest gotowe (niezacommitowane zmiany, brak zdalnego repozytorium albo narzędzia)",
+    "zaleznosc": "nowa zależność albo karencja wersji wymaga decyzji",
+    "kontrakt": "zmiana kontraktu albo decyzja biznesowa (publiczne API, schemat danych, migracja)",
+    "uprawnienia": "operacja zastrzeżona dla człowieka (produkcja, publikacja, flaga poza środowiskiem testowym)",
+}
 TASK_STAGE = {"intake": "przyjecie", "plan": "plan", "slices": "realizacja", "pr": "pr"}   # etap przebiegu → etap zadania
 TASK_ORDER = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
 BARE_STAGE = {"przyjecie": "intake", "specyfikacja": "intake", "plan": "plan", "realizacja": "slices",
@@ -161,12 +181,17 @@ def task_view(project: Path, key: str) -> dict | None:
         return None
 
 
-def task_weight(run_dir: Path, meta: dict) -> str | None:
-    """Waga zadania z task.json (lekka / zwykla / pelna); None, gdy przebieg nie ma zadania."""
+def task_field(run_dir: Path, meta: dict, name: str) -> str | None:
+    """Pole zadania z task.json (np. weight, mode); None, gdy przebieg nie ma zadania."""
     try:
-        return json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("weight")
+        return json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get(name)
     except (OSError, ValueError, AttributeError):
         return None
+
+
+def task_weight(run_dir: Path, meta: dict) -> str | None:
+    """Waga zadania (lekka / zwykla / pelna); None, gdy przebieg nie ma zadania."""
+    return task_field(run_dir, meta, "weight")
 
 
 def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | None:
@@ -229,6 +254,54 @@ def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | Non
         return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return r.returncode
+
+
+def cmd_mode(run_dir: Path, new: str | None, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return fail("przebieg cięcia jest w starym układzie (bez zadania) — nie ma trybu.")
+    r = run_report.task_state(project, "mode", meta["key"], *([new] if new else []))
+    if r is None:
+        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    if r.returncode == 0 and new:
+        mode = task_field(run_dir, meta, "mode")
+        meta["auto"], meta["plan_only"] = mode == "auto", mode == "plan"
+        write_run(run_dir, meta)
+        refresh(project)
+    return r.returncode
+
+
+def human_id(project: Path) -> str:
+    """Identyfikator człowieka do zapisu zgody: nazwa z gita (zmienna albo konfiguracja), inaczej użytkownik systemu."""
+    name = os.environ.get("GIT_AUTHOR_NAME") or ""
+    if not name:
+        try:
+            name = subprocess.run(["git", "config", "user.name"], cwd=project, capture_output=True, text=True,
+                                  timeout=10).stdout.strip()
+        except (OSError, subprocess.TimeoutExpired):
+            name = ""
+    name = name or os.environ.get("USER") or os.environ.get("USERNAME") or "czlowiek"
+    return "human:" + (run_report.slugify(name) or "czlowiek")
+
+
+def cmd_approve(run_dir: Path, project: Path) -> int:
+    """Zgoda człowieka na plan (i specyfikację, z której powstał). W trybie Auto nie ma człowieka — odmowa."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return fail("przebieg cięcia jest w starym układzie (bez zadania) — planu się nie zatwierdza.")
+    if task_field(run_dir, meta, "mode") == "auto":
+        return fail("przebieg jest w trybie Auto — nie ma człowieka, który zatwierdziłby plan. Zgodę zapisujesz tylko "
+                    "po odpowiedzi człowieka w rozmowie; wtedy najpierw: run_state.py mode <katalog> zwykly.")
+    r = run_report.task_state(project, "approve", meta["key"], "plan.md", "--by", human_id(project))
+    if r is None:
+        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    return 0 if r.returncode == 0 else 2
 
 
 def cmd_weight(run_dir: Path, new: str | None, project: Path) -> int:
@@ -302,7 +375,7 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
 # ---- zapis stanu -------------------------------------------------------------------------------------------------
 
 def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, pr: int | None, auto: bool,
-              effort: str | None, project: Path) -> int:
+              effort: str | None, project: Path, plan_mode: bool = False, code: str | None = None) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
@@ -310,8 +383,20 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         return fail(f"etap „{stage}” nie istnieje; dozwolone: {', '.join(STAGES)}.")
     if stage == "needs" and needs not in NEEDS:
         return fail("etap needs wymaga `--needs plan` (plan czeka na akceptację) albo `--needs stop` (blok STOP).")
-    if stage != "needs" and (needs or reason):
-        return fail("`--needs` i `--reason` dotyczą tylko etapu needs.")
+    if stage != "needs" and (needs or reason or code):
+        return fail("`--needs`, `--code` i `--reason` dotyczą tylko etapu needs.")
+    if auto and plan_mode:
+        return fail("podaj jeden tryb: `--plan` (koniec na planie) albo `--auto` (bez zatwierdzania planu).")
+    codes = "; ".join(f"{k} — {v}" for k, v in STOP_CODES.items())
+    if stage == "needs" and needs == "stop" and code not in STOP_CODES:
+        return fail(("blok STOP wymaga kodu z listy" if not code else f"kod zatrzymania „{code}” nie istnieje")
+                    + f": `--needs stop --code <kod> --reason \"<powód z dowodem>\"`. Kody: {codes}.")
+    if code and needs != "stop":
+        return fail("`--code` dotyczy tylko `--needs stop`.")
+    if (auto or plan_mode) and meta.get("key"):               # tryb zadania wybiera człowiek w poleceniu /tf
+        m = run_report.task_state(project, "mode", meta["key"], "auto" if auto else "plan")
+        if m is not None and "—" in m.stdout:                  # np. Auto przy wadze pełnej: zostaje tryb zwykły
+            print(m.stdout.strip())
     if stage in ("intake", "plan") and meta.get("key"):      # waga: ponowny przydział (tylko w górę) po treści i planie
         before = task_weight(run_dir, meta)
         w = run_report.task_state(project, "weight", meta["key"], "--apply")
@@ -326,14 +411,19 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     meta["stage"] = stage
     meta.pop("needs", None)
     meta.pop("stop_text", None)
+    meta.pop("stop_code", None)
     if stage == "needs":
         meta["needs"] = needs
-        if needs == "stop" and reason:
-            meta["stop_text"] = reason.strip()
+        if needs == "stop":
+            meta["stop_code"] = code
+            if reason:
+                meta["stop_text"] = reason.strip()
     if pr is not None:
         meta["pr"] = pr
     if auto:
         meta["auto"] = True
+    if plan_mode:
+        meta["plan_only"] = True
     if effort:
         meta["effort"] = effort
     write_run(run_dir, meta)
@@ -539,7 +629,9 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     if stage == "needs" and needs == "stop":
         cur = (meta.get("current") or {}).get("k")
         result.append({"name": "STOP", "dot": "bad", "text": "\n".join(
-            [f"STOP — {cur or 'przebieg'}", f"Powód: {meta.get('stop_text') or '(brak opisu)'}",
+            [f"STOP — {cur or 'przebieg'}"] + ([f"Co się stało: {STOP_CODES[meta['stop_code']]} ({meta['stop_code']})"]
+                                               if meta.get("stop_code") in STOP_CODES else [])
+            + [f"Powód: {meta.get('stop_text') or '(brak opisu)'}",
              f"Wznowienie: od {cur or 'pierwszego nieodhaczonego kawałka'} w plan.md"])})
     report = read_text(docs / "report.md")
     if report is not None:
@@ -600,7 +692,9 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
            "date": m.group(1) if m else str(meta.get("started_at", ""))[:10],
            "stage": stage, "needs": needs, "auto": bool(meta.get("auto")), "effort": meta.get("effort"),
            "key": meta.get("task") or meta.get("key"), "change": meta.get("change"), "flag": meta.get("flag"), "pr": meta.get("pr"),
-           "stopText": meta.get("stop_text"), "slices": out_slices, "parked": len(parked), "parkedList": parked,
+           "stopText": meta.get("stop_text"), "stopCode": meta.get("stop_code"),
+           "stopLabel": STOP_CODES.get(meta.get("stop_code") or ""),
+           "slices": out_slices, "parked": len(parked), "parkedList": parked,
            "cost": usage.get("cost_usd"), "min": usage.get("minutes"), "models": usage.get("models") or [],
            "started": meta.get("started_at", ""),
            "dir": run_dir.resolve().relative_to(project.resolve()).as_posix()
@@ -746,6 +840,8 @@ def main(argv: list[str]) -> int:
     s.add_argument("--reason", default=None)
     s.add_argument("--pr", type=int, default=None)
     s.add_argument("--auto", action="store_true")
+    s.add_argument("--plan", dest="plan_mode", action="store_true")
+    s.add_argument("--code", default=None)
     s.add_argument("--effort", default=None, choices=["low", "medium", "high", "xhigh", "max"])
     t = sub.add_parser("step")
     t.add_argument("run_dir")
@@ -760,6 +856,11 @@ def main(argv: list[str]) -> int:
     fg.add_argument("value", nargs="?")
     fg.add_argument("--remove-by", default=None)
     fg.add_argument("--reason", default="")
+    mo = sub.add_parser("mode")
+    mo.add_argument("run_dir")
+    mo.add_argument("new", nargs="?")
+    apv = sub.add_parser("approve")
+    apv.add_argument("run_dir")
     wg = sub.add_parser("weight")
     wg.add_argument("run_dir")
     wg.add_argument("--set", dest="new", default=None)      # obniżenie zapisuje człowiek: tf task weight … --by human:<id>
@@ -786,13 +887,17 @@ def main(argv: list[str]) -> int:
     project = Path.cwd()
     if args.cmd == "stage":
         return cmd_stage(Path(args.run_dir), args.stage, args.needs, args.reason, args.pr, args.auto, args.effort,
-                         project)
+                         project, plan_mode=args.plan_mode, code=args.code)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
     if args.cmd == "flag":
         return cmd_flag(Path(args.run_dir), args.action, args.value, args.remove_by, args.reason, project)
     if args.cmd == "weight":
         return cmd_weight(Path(args.run_dir), args.new, project)
+    if args.cmd == "mode":
+        return cmd_mode(Path(args.run_dir), args.new, project)
+    if args.cmd == "approve":
+        return cmd_approve(Path(args.run_dir), project)
     if args.cmd == "trace":
         return cmd_trace(Path(args.run_dir), args.base, project)
     if args.cmd == "spec":

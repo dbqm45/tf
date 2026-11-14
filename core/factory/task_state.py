@@ -12,6 +12,7 @@ tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i be
   tf task approve <KEY> <plik> --by human:<id>
   tf task check <KEY>
   tf task weight <KEY> [--apply | --set lekka|zwykla|pelna] [--by human:<id> --reason "<dlaczego>"] [--json]
+  tf task mode <KEY> [plan|zwykly|auto]
 
 `tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
 i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md.
@@ -33,6 +34,11 @@ Waga zadania (`weight`, reguły w `task_weight.py`): bez opcji pokazuje obecną 
 przydziela propozycję (pierwszy raz dowolną, potem tylko wyższą; po decyzji człowieka nic nie zmienia); `--set` podnosi swobodnie, a obniża tylko z
 `--by human:<id>` i `--reason`. Skutki: zadanie o wadze `pelna` wchodzi do etapu `realizacja` dopiero z planem
 zatwierdzonym przez człowieka (`approve <KEY> plan.md`); zadanie o wadze `lekka` ma w planie najwyżej jeden kawałek.
+
+Tryb zadania (`mode`; wybiera go człowiek w poleceniu): `plan` — zadanie nie wchodzi do etapu `realizacja` (przebieg
+kończy się na planie); `zwykly` — zadanie z zarejestrowanym `plan.md` wchodzi do realizacji po zgodzie człowieka
+(`approve <KEY> plan.md`); `auto` — bez zgody, chyba że waga jest pełna. Trybu `auto` nie da się ustawić przy wadze
+pełnej: zostaje `zwykly`, a polecenie mówi dlaczego.
 
 Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
 wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
@@ -454,15 +460,50 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
         if len(slices) > 1:
             return (f"zadanie ma wagę lekką, czyli jeden kawałek, a plan ma ich {len(slices)} — połącz kawałki albo "
                     f"podnieś wagę: tf task weight {key} --set zwykla")
-    if weight == "pelna" and STAGES.index(stage) >= STAGES.index("realizacja"):
-        art = (task.get("artifacts") or {}).get("plan.md")
-        state = artifact_state(root, key, art, "plan.md")[0] if art else "brak"
-        if state != "zatwierdzony":
-            return (f"zadanie ma wagę pełną (obszar wrażliwy), więc do etapu {stage} przechodzi dopiero z planem "
-                    f"zatwierdzonym przez człowieka (stan planu: {state}): pokaż plan człowiekowi, a po jego zgodzie "
-                    f"tf task approve {key} plan.md --by human:<id>. Przebieg bez nadzoru (--auto) kończy się tu "
-                    "blokiem STOP — zgody człowieka nie da się zastąpić")
+    if STAGES.index(stage) < STAGES.index("realizacja"):
+        return None
+    mode = task.get("mode")
+    if mode == "plan":
+        return (f"zadanie jest w trybie Plan — przebieg kończy się na planie, bez zmian w kodzie. Realizację uruchamia "
+                f"człowiek osobnym poleceniem (/tf {key}); wtedy zmień tryb: tf task mode {key} zwykly (albo auto)")
+    art = (task.get("artifacts") or {}).get("plan.md")
+    state = artifact_state(root, key, art, "plan.md")[0] if art else "brak"
+    if weight == "pelna" and state != "zatwierdzony":
+        return (f"zadanie ma wagę pełną (obszar wrażliwy), więc do etapu {stage} przechodzi dopiero z planem "
+                f"zatwierdzonym przez człowieka (stan planu: {state}): pokaż plan człowiekowi, a po jego zgodzie "
+                f"tf task approve {key} plan.md --by human:<id>. Przebieg bez nadzoru (--auto) kończy się tu "
+                "blokiem STOP — zgody człowieka nie da się zastąpić")
+    if mode != "auto" and art and state != "zatwierdzony":
+        return (f"w trybie zwykłym do etapu {stage} zadanie przechodzi po zgodzie człowieka na plan (stan planu: "
+                f"{state}): pokaż plan i specyfikację człowiekowi, a po jego zgodzie tf task approve {key} plan.md "
+                f"--by human:<id>. Tryb bez zatwierdzania (--auto) wybiera człowiek w poleceniu /tf: jeśli go podał, "
+                f"zapisz tryb (tf task mode {key} auto); sam go nie ustawiasz, żeby ominąć zgodę")
     return None
+
+
+MODE_LABEL = {"plan": "Plan", "zwykly": "zwykły", "auto": "Auto"}
+
+
+def cmd_mode(root: Path, key: str, new: str | None) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    current = task.get("mode") if task.get("mode") in MODES else "zwykly"
+    if new is None:
+        print(f"{key}: tryb {MODE_LABEL[current]}")
+        return 0
+    if new not in MODES:
+        return fail(f"nieznany tryb „{new}” — do wyboru: {', '.join(MODES)}", 2)
+    note = ""
+    if new == "auto" and task.get("weight") == "pelna":
+        new = "zwykly"
+        note = (" — tryb Auto nie obejmuje zadań o wadze pełnej (obszar wrażliwy): zostaje tryb zwykły, "
+                "plan zatwierdza człowiek")
+    if new != task.get("mode"):
+        task["mode"], task["updated"] = new, now()
+        save(root, task)
+    print(f"✓ {key}: tryb {MODE_LABEL[new]}{note}")
+    return 0
 
 
 def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | None, reason: str, as_json: bool) -> int:
@@ -744,6 +785,9 @@ def main(argv: list[str]) -> int:
     o.add_argument("--by", required=True)
     k = sub.add_parser("check")
     k.add_argument("key")
+    md = sub.add_parser("mode")
+    md.add_argument("key")
+    md.add_argument("new", nargs="?")
     w = sub.add_parser("weight")
     w.add_argument("key")
     w.add_argument("--apply", action="store_true")
@@ -795,6 +839,8 @@ def main(argv: list[str]) -> int:
         return cmd_stage(root, a.key, a.stage, a.force)
     if a.cmd == "check":
         return cmd_check(root, a.key)
+    if a.cmd == "mode":
+        return cmd_mode(root, a.key, a.new)
     if a.cmd == "weight":
         if a.apply and a.new is not None:
             return fail("podaj jedno: --apply (propozycja fabryki) albo --set <waga>", 2)
