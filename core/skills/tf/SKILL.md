@@ -152,7 +152,7 @@ początek pętli z kolejną (najwyżej dwie próby naprawy), np. `… K2 R1 wery
 |---|---|---|
 | fakty o repozytorium | `scout` | fast |
 | wersje, dokumentacja zewnętrzna | `researcher` | fast |
-| plan, test, kod | sesja główna we własnym kontekście | std |
+| plan, test, kod | `tf` (sesja główna, własny kontekst) | std |
 | zmiana mechaniczna ze specyfikacją | `quick-fixer` | fast |
 | przegląd zakresu kawałka | `scope-reviewer` (świeży kontekst) | std |
 | decyzja trudna do odwrócenia | `architect` (tylko analiza) | deep |

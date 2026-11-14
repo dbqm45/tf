@@ -163,6 +163,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 |---|---|---|
 | modele i effort poziomów `fast` / `std` / `deep` | `.tf/config/config.yaml` → `tiers` | wpisz tylko zmieniane pola, potem `python3 .tf/factory/build.py` |
 | ogólny poziom kosztu | profil kosztów | `python3 .tf/factory/profile.py <profil>` |
+| kto wykonuje krok pętli `/tf` i na jakim poziomie | `.tf/config/config.yaml` → `steps` | np. `steps: {przeglad: {tier: deep}}`, potem `python3 .tf/factory/build.py`; podgląd z modelem i effortem: `tf config show steps` |
 | operacje, o które fabryka pyta albo które blokuje | `.tf/config/config.yaml` → `autonomy` | można tylko zaostrzyć (pytanie → blokada) |
 | język rozmowy i commitów | ustawienia fabryki | `tf language <kod>`, `tf commit-language <kod>` |
 | czy fabryka sama prowadzi flagi funkcji | `.tf/config/config.yaml` → `feature_flags.auto` | domyślnie `true`: fabryka pyta Cię o nazwę flagi, zakłada ją i pilnuje, żeby poza środowiskiem testowym była wyłączona; `false`: flagi dodajesz samodzielnie (w kodzie, w zewnętrznej usłudze), a fabryka ich nie zakłada i nie wymaga |
