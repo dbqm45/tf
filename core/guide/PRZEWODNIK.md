@@ -106,7 +106,7 @@ problemów; moduły dostarczają nakładki (`pack-it`, `accessibility` — `pack
 `tf risk [--base main]` ocenia diff bieżącej gałęzi względem bazy: poziom wysoki, średni lub niski i lista „co musi
 zobaczyć człowiek” (plik, powód). Wysoki poziom dają m.in. uwierzytelnianie, płatności, schemat bazy, wdrożenie
 i CI, specyfikacja oraz osłabione testy (usunięte asercje, pominięcia, skasowany test); nowy moduł bez ADR to punkt
-„dowód” na liście. `--md` daje sekcję do opisu PR (pętla `/tf` dodaje ją sama), `--json` wynik dla skryptów. Triaż jest
+„dowód” na liście. `--md` daje sekcję do opisu PR (pętla `/tf` wstawia ją sama: `run_state.py pr-body`), `--json` wynik dla skryptów. Triaż jest
 doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jako wysokie ryzyko) wpisujesz w
 `autonomy.triage` w `.tf/config/config.yaml`.
 

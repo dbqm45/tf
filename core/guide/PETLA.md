@@ -150,6 +150,14 @@ domyślnie oba `true`. To samo robią zmienne `TF_DASHBOARD=0` i `TF_DASHBOARD_O
 
 Zgodność zmian z planem (`python3 .claude/skills/tf/scripts/plan_drift.py <katalog> --base main`):
 pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem i testy w diffie — trafia do opisu PR.
+
+**Opis PR składa skrypt, nie model** (`python3 .claude/skills/tf/scripts/run_state.py pr-body <katalog> --base main`
+→ plik `.tf/runs/<KLUCZ>/pr-body.md`, podawany przez `gh pr create --body-file`). Każdy PR ma te same pola:
+historyjka, kawałki z commitami, ślad kryteriów, **Jak sprawdzono** (polecenie, kod wyjścia i plik dowodu każdego
+kawałka, werdykt skanu bezpieczeństwa, zgodność z planem), **Ryzyko** (waga zadania i triaż `tf risk`),
+**Jak cofnąć**, odłożone sprawy i założenia. Kawałek bez zielonego dowodu jest w opisie nazwany wprost. Krok cofania
+wdrożenia skrypt bierze z karty operacyjnej (`.tf/config/operations.json`, pole `deploy.rollback` — tekst albo
+lista kroków); bez niego podaje `git revert` commita scalenia, a przy zadaniu z flagą zaczyna od jej wyłączenia.
 Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), pętla przy przyjęciu historyjki czyta
 spis standardów i słownik domeny.
 
