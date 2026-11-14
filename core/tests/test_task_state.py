@@ -30,9 +30,9 @@ def task(project: Path, key: str) -> dict:
 
 
 def index_rows(project: Path) -> list[str]:
-    f = project / CHANGES / "INDEX.md"
-    text = f.read_text(encoding="utf-8") if f.is_file() else ""
-    return [ln for ln in text.splitlines() if ln.startswith("| ") and not ln.startswith(("| Klucz", "| ---", "|---"))]
+    """Wiersze listy zadań (`tf status`): jeden na zadanie. Spisu w pliku INDEX.md już nie ma (test_task_index.py)."""
+    out = run(project, "list").stdout
+    return [ln for ln in out.splitlines() if ln and not ln.startswith(" ")]
 
 
 def main() -> int:
@@ -57,8 +57,9 @@ def main() -> int:
               and d.get("schema") == 1 and d.get("created") and d.get("created") == d.get("updated"),
               f"TS-1: start tworzy docs/project/changes/<KEY>/task.json z etapem przyjecie: {r.stdout}{r.stderr}{d}")
         rows = index_rows(p)
-        check(len(rows) == 1 and "PROJ-123" in rows[0] and "Limit dobowy 45 zł" in rows[0] and "przyjecie" in rows[0],
-              f"TS-2: indeks ma wiersz zadania z etapem: {rows}")
+        check(len(rows) == 1 and "PROJ-123" in rows[0] and "Limit dobowy 45 zł" in rows[0] and "przyjecie" in rows[0]
+              and not (p / CHANGES / "INDEX.md").exists(),
+              f"TS-2: lista ma wiersz zadania z etapem; pliku INDEX.md skrypt nie zakłada: {rows}")
 
         before = (p / CHANGES / "PROJ-123" / "task.json").read_text(encoding="utf-8")
         r = run(p, "start", "PROJ-123", "--title", "Inny tytuł")
@@ -77,7 +78,7 @@ def main() -> int:
         r = run(p, "stage", "PROJ-123", "plan")
         d = task(p, "PROJ-123")
         check(r.returncode == 0 and d["stage"] == "plan" and d["updated"] >= d["created"]
-              and "plan" in index_rows(p)[0], f"TS-7: etap do przodu zapisany w task.json i w indeksie: {r.stdout}{d}")
+              and "plan" in index_rows(p)[0], f"TS-7: etap do przodu zapisany w task.json i widoczny na liście: {r.stdout}{d}")
         r = run(p, "stage", "PROJ-123", "specyfikacja")
         check(r.returncode == 1 and task(p, "PROJ-123")["stage"] == "plan" and "--force" in r.stdout,
               f"TS-8: etap wstecz bez --force odrzucony: {r.returncode} {r.stdout}")
@@ -88,9 +89,9 @@ def main() -> int:
         run(p, "stage", "ABC-7", "specyfikacja")
         run(p, "stage", "PROJ-123", "plan")
         rows = index_rows(p)
-        check(len(rows) == 2 and rows[0].startswith("| ABC-7 ") and rows[1].startswith("| PROJ-123 ")
-              and rows[0].replace("\\|", "").count("|") == rows[1].count("|") and "\\|" in rows[0],
-              f"TS-10: jeden wiersz na zadanie, posortowane; kreska w tytule nie psuje tabeli: {rows}")
+        check(len(rows) == 2 and rows[0].startswith("ABC-7 ") and rows[1].startswith("PROJ-123 ")
+              and "Raport | z kreską" in rows[0],
+              f"TS-10: jeden wiersz na zadanie, posortowane; kreska w tytule zostaje w tytule: {rows}")
 
         r = run(p, "status", "PROJ-123", "--json")
         try:
@@ -115,7 +116,7 @@ def main() -> int:
         check(r.returncode == 0 and task(p, "CHG-12").get("key") == "CHG-12"
               and (pdi / "plan.md").read_text(encoding="utf-8") == plan,
               f"TS-15: istniejący katalog pdi dostaje task.json, plan.md bez zmian: {r.stdout}{r.stderr}")
-        check((p / CHANGES / "INDEX.md").read_text(encoding="utf-8").count("CHG-12") == 1, "TS-16: zadanie pdi jest w indeksie raz")
+        check(sum(ln.startswith("CHG-12 ") for ln in index_rows(p)) == 1, "TS-16: zadanie pdi jest na liście raz")
 
         r = run(p, "start", "T-20261113-bez-tytulu")
         check(r.returncode == 2 and "--title" in r.stdout, f"TS-17: start bez tytułu → użycie: {r.stdout}")
@@ -306,14 +307,13 @@ def main() -> int:
         check(r.returncode == 0 and t.get("change") == "CHG-12" and t.get("cut") == "TSK-57",
               f"TS-58: zadanie cięcia zapisuje zmianę i cięcie: {r.returncode} {r.stdout}{r.stderr} {t}")
         check(not (c / CHANGES / "INDEX.md").exists(),
-              "TS-59: samo zadanie cięcia nie zakłada INDEX.md (PR-y cięć jednej zmiany nie mają o co się zderzyć)")
+              "TS-59: zadanie cięcia nie zakłada INDEX.md (PR-y cięć jednej zmiany nie mają o co się zderzyć)")
         run(c, "start", "PROJ-9", "--title", "Eksport sesji")
-        before = (c / CHANGES / "INDEX.md").read_bytes()
         r = run(c, "start", "CHG-12-TSK-58", "--title", "TSK-58: brak podwójnego obciążenia", "--change", "CHG-12", "--cut", "TSK-58")
         run(c, "stage", "CHG-12-TSK-58", "specyfikacja")
-        check(r.returncode == 0 and (c / CHANGES / "INDEX.md").read_bytes() == before
-              and [ln for ln in index_rows(c) if "TSK-5" in ln] == [],
-              f"TS-60: zapis zadania cięcia nie zmienia INDEX.md: {index_rows(c)}")
+        check(r.returncode == 0 and not (c / CHANGES / "INDEX.md").exists()
+              and len([ln for ln in index_rows(c) if "TSK-5" in ln]) == 2,
+              f"TS-60: zapisy zadań nie zakładają INDEX.md; cięcia są na liście: {index_rows(c)}")
         r = run(c, "list")
         line = next((ln for ln in r.stdout.splitlines() if "CHG-12-TSK-57" in ln), "")
         check("cięcie TSK-57 zmiany CHG-12" in line, f"TS-61: lista pokazuje cięcie i jego zmianę: {r.stdout}")

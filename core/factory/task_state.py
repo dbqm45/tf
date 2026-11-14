@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-tf task — stan zadania w jednym miejscu: `docs/project/changes/<KEY>/task.json` i indeks zadań. Jedyny pisarz
-tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
+tf task — stan zadania w jednym miejscu: `docs/project/changes/<KEY>/task.json`. Jedyny pisarz tego pliku;
+model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
 
   tf task start <KEY> --title "<tytuł>" [--weight lekka|zwykla|pelna] [--mode plan|zwykly|auto]
   tf task start <CHG>-<TSK> --title "<tytuł>" --change <CHG> --cut <TSK>      # zadanie cięcia zmiany pdi
@@ -24,11 +24,13 @@ w `--json` to pole `waiting`.
 Klucz: numer z trackera (PROJ-123), klucz pdi (CHG-12, TSK-57) albo T-<RRRRMMDD>-<slug>. Etapy idą w kolejności:
 przyjecie → specyfikacja → plan → realizacja → przeglad → pr → wdrozenie → zamkniecie; cofnięcie wymaga --force.
 `start` w istniejącym katalogu zmiany (np. z trybu pdi) dokłada sam `task.json` i nie rusza innych plików.
-Każdy zapis odświeża `docs/project/changes/INDEX.md` — jeden wiersz na zadanie, żeby agent nie przeglądał folderów.
+Listę zadań daje `tf status` — liczy ją z folderów, więc agent nie musi ich przeglądać. Spisu w pliku nie ma:
+`docs/project/changes/INDEX.md` przepisywał każdy zapis zadania, przez co dwa otwarte naraz pull requesty zadań miały
+w nim konflikt. Plik, który już jest w repozytorium, pierwszy zapis zamienia na stałą notkę („listę podaje tf
+status”) i więcej go nie zmienia; nowego pliku skrypt nie zakłada.
 
 Zadanie cięcia zmiany pdi (`--change CHG-12 --cut TSK-57`) ma klucz `<CHG>-<TSK>` (`CHG-12-TSK-57`) i pola `change`
-oraz `cut` w `task.json`. Nie ma wiersza w INDEX.md — cięcia jednej zmiany powstają na osobnych gałęziach i każde
-dopisywałoby wiersz w tym samym miejscu; ich spisem jest plan zmiany, a `list` i `status` je pokazują. Plan zmiany
+oraz `cut` w `task.json`; `list` i `status` pokazują je razem z ich zmianą. Plan zmiany
 człowiek zatwierdził na bramce pdi przed fazą realizacji, dlatego cięcie o wadze pełnej może iść w trybie `auto`.
 
 Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruchamia polecenie (domyślnie to z
@@ -101,8 +103,10 @@ SLICE = re.compile(r"K[1-9][0-9]?")
 SLICE_STATES = ("planned", "implemented", "blocked")
 GATED = STAGES[STAGES.index("przeglad"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
 ACTOR = re.compile(r"(human|process):[\w.@-]+|[\w.-]+/[\w.-]+")
-INDEX_HEAD = ("# Zadania\n\nGenerowany przez `tf task` — nie edytuj ręcznie. Szczegóły zadania: "
-              "`docs/project/changes/<klucz>/`.\n\n| Klucz | Tytuł | Etap | Zmieniono |\n|---|---|---|---|\n")
+INDEX_NOTE = ("# Zadania\n\nListę zadań z etapem i stanem podaje polecenie `tf status` — liczy ją na żywo z folderów "
+              "obok (jeden folder to jedno zadanie albo jedna zmiana).\n\nTen plik nie jest już spisem. Dawniej "
+              "przepisywał go każdy zapis zadania, przez co dwa otwarte naraz pull requesty zadań miały w nim "
+              "konflikt. Można go usunąć.\n")
 
 
 def now() -> str:
@@ -136,7 +140,7 @@ def write_atomic(path: Path, text: str) -> None:
 
 def save(root: Path, task: dict) -> None:
     write_atomic(task_path(root, task["key"]), json.dumps(task, ensure_ascii=False, indent=1) + "\n")
-    write_index(root)
+    retire_index(root)
 
 
 def cut_note(task: dict) -> str:
@@ -144,18 +148,15 @@ def cut_note(task: dict) -> str:
     return f"cięcie {task.get('cut')} zmiany {task['change']}" if task.get("change") else ""
 
 
-def write_index(root: Path) -> None:
-    rows = []
-    base = root / CHANGES
-    for f in sorted(base.glob("*/task.json")):
-        t = load(root, f.parent.name)
-        if not t or t.get("change"):   # zadania cięć nie mają wiersza: PR-y cięć jednej zmiany zderzałyby się w spisie
-            continue
-        title = str(t.get("title", "")).replace("|", "\\|").replace("\n", " ")
-        rows.append(f"| {t.get('key', f.parent.name)} | {title} | {t.get('stage', '?')} | {str(t.get('updated', ''))[:10]} |")
-    if not rows and not (base / "INDEX.md").exists():
-        return
-    write_atomic(base / "INDEX.md", INDEX_HEAD + "\n".join(rows) + ("\n" if rows else ""))
+def retire_index(root: Path) -> None:
+    """Dawny spis `INDEX.md` zamienia raz na stałą notkę; nowego pliku nie zakłada. Spis przepisywany przy każdym
+    zapisie dawał konflikt między gałęziami dwóch zadań — listę daje `tf status`."""
+    index = root / CHANGES / "INDEX.md"
+    try:
+        if index.is_file() and index.read_text(encoding="utf-8") != INDEX_NOTE:
+            write_atomic(index, INDEX_NOTE)
+    except OSError:
+        pass
 
 
 def sha256(path: Path) -> str | None:

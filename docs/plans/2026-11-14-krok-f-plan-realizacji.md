@@ -57,6 +57,8 @@ F2 i F3 zmieniają zachowanie pętli. Po F3 potrzebny jest płatny pomiar na tym
 - F2 gotowe lokalnie. Limit to dwie rundy kawałka bez decyzji człowieka (tak liczy je dotychczasowy werdykt „próba
   k/2”); po zatrzymaniu i decyzji człowieka kawałek dostaje dwie kolejne. Wznowienie przez `step` czyści teraz cały
   zapis zatrzymania (wcześniej w `run.json` zostawał kod).
-- Ryzyko zauważone przy okazji, niezmienione: spis `docs/project/changes/INDEX.md` jest w gicie i przepisuje go
-  każdy zapis zadania, więc dwa otwarte naraz PR-y zwykłych zadań mogą mieć w nim konflikt. Zadań cięć to nie
-  dotyczy (nie mają wiersza). Usunięcie spisu z gita zmienia układ ustalony w kroku C — do decyzji właściciela.
+- Spis `docs/project/changes/INDEX.md` przepisywał każdy zapis zadania, więc gałęzie dwóch zadań z tej samej bazy
+  miały w nim konflikt (odtworzone testem: `git merge` kończył się konfliktem). Decyzja właściciela z 2026-11-14:
+  „zrób, co konieczne”. Poprawka: spisu w pliku skrypt już nie prowadzi — listę daje `tf status`; plik, który jest
+  w repozytorium, pierwszy zapis zamienia na stałą notkę i więcej go nie zmienia, nowego nie zakłada. Nie wymaga to
+  żadnej czynności od użytkownika.

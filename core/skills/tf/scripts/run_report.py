@@ -15,7 +15,7 @@ w Claude Code). Katalog roboczy jest „katalogiem przebiegu” w pozostałych p
 trwały polem `task_dir`.
 Przebieg cięcia zmiany pdi (`--task TSK-n`) to takie samo zadanie, z kluczem `<CHG>-<TSK>` (np. `CHG-12-TSK-57`):
 `ticket.md` powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
-zmiany, task.json dostaje zmianę i cięcie (`tf task start … --change --cut`, bez wiersza w INDEX.md) oraz flagę
+zmiany, task.json dostaje zmianę i cięcie (`tf task start … --change --cut`) oraz flagę
 z planu wydania (kolumna „Flaga” albo `release.yaml`; gdy jej tam nie ma — jawny brak flagi z powodem), a run.json
 — `change`, `task` i `flag`; z `--task` w dwóch planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish`
 zapisuje wtedy raport także w `docs/project/changes/CHG-n/runs/TSK-n.md` — stamtąd pdi bierze opis PR cięcia.
@@ -84,7 +84,7 @@ def _tf_config(root: Path) -> dict:
     return mod.load_config(root)
 
 def task_state(project: Path, *args: str) -> subprocess.CompletedProcess | None:
-    """Polecenie `tf task` (jedyny pisarz task.json i INDEX.md); None, gdy silnik fabryki go nie ma."""
+    """Polecenie `tf task` (jedyny pisarz task.json); None, gdy silnik fabryki go nie ma."""
     return engine(project, "task_state.py", *args)
 
 
@@ -567,13 +567,14 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     if kept and not as_json:
         print(f"Raport w repo: {kept.as_posix()}")
     if meta.get("task_dir") and meta.get("key") and not as_json:   # pliki zadania: jeden commit na końcu przebiegu
-        if kept:   # cięcie: katalog zadania i raport cięcia razem; INDEX.md cięć nie zawiera
+        if kept:   # cięcie: katalog zadania i raport cięcia razem
             print(f"Pliki zadania: {meta['task_dir']}/ — zapisz je razem z raportem cięcia jednym commitem: "
                   f"`git add {meta['task_dir']} {kept.as_posix()}`, potem `git commit -m \"docs(task): record "
                   f"{meta['key']}\" -m \"Change: {meta['task']}\"`.")
-        else:
-            print(f"Pliki zadania: {meta['task_dir']}/ — zapisz je jednym commitem: `git add {meta['task_dir']} "
-                  f"{(CHANGES / 'INDEX.md').as_posix()}`, potem `git commit -m \"docs(task): record {meta['key']}\"`.")
+        else:   # dawny spis INDEX.md (jeśli jest w repozytorium) idzie w tym samym commicie — zapis zadania go zmienił
+            index = f" {(CHANGES / 'INDEX.md').as_posix()}" if (project / CHANGES / "INDEX.md").is_file() else ""
+            print(f"Pliki zadania: {meta['task_dir']}/ — zapisz je jednym commitem: `git add {meta['task_dir']}{index}`, "
+                  f"potem `git commit -m \"docs(task): record {meta['key']}\"`.")
     return 2 if usage_missing else 0   # kod 2 jak dotąd: brak danych o koszcie, ale raport już jest
 
 

@@ -47,7 +47,7 @@ flagi nie przewiduje, `start` zapisał jawny brak flagi z powodem — nie dodaje
   `docs/project/changes/CHG-n/runs/TSK-n.md` — stamtąd pdi bierze opis PR cięcia. Oba idą **jednym commitem
   końcowym**, który `finish` wypisuje gotowy: `git add docs/project/changes/CHG-12-TSK-57
   docs/project/changes/CHG-12/runs/TSK-57.md`, potem `docs(task): record CHG-12-TSK-57` ze stopką `Change: TSK-57`.
-  `INDEX.md` nie dodajesz — zadań cięć w nim nie ma. `pr_budget.py` uruchamiasz też po tym commicie.
+  `pr_budget.py` uruchamiasz też po tym commicie.
 - Bez dostępu do transkryptów (np. sandbox fazy pdi) `finish` kończy się kodem 2, ale raport z planem i odłożonymi
   i tak zapisuje („brak danych o koszcie”) — commitujesz go tak samo; koszt podaje wtedy wynik fazy pdi.
 

@@ -108,8 +108,8 @@ def main() -> int:
             meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
             index = proj / "docs" / "project" / "changes" / "INDEX.md"
             check(meta.get("key") == d.name and meta.get("task_dir") == f"docs/project/changes/{d.name}"
-                  and index.is_file() and d.name in index.read_text(encoding="utf-8"),
-                  f"R-4a: run.json wskazuje zadanie, zadanie jest w indeksie: {meta}")
+                  and not index.exists(),
+                  f"R-4a: run.json wskazuje zadanie; spisu INDEX.md start nie zakłada (listę daje tf status): {meta}")
         # PRB-32 — klon produktu bez `.tf/runs/cuts/` w .gitignore ma „?? tmp/” w statusie po pierwszym start i hook
         # „czyste drzewo robocze” pętli (SKILL §0.1) oraz dispatch_local pdi uznają klon za brudny. Skrypt zakłada
         # `.tf/runs/cuts/.gitignore` z `*`, tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.

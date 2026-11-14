@@ -189,7 +189,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | `tf task weight <KLUCZ>`, `… --set <waga> [--by human:<id> --reason "…"]` | waga zadania: lekka (drobna zmiana, bez specyfikacji, jeden kawałek), zwykła albo pełna (logowanie, płatności, migracje, sekrety — plan zatwierdzasz Ty przed kodem); fabryka dobiera ją sama i podaje powód, podnieść może każdy, obniżyć tylko Ty |
 | `tf task mode <KLUCZ> [plan\|zwykly\|auto]`, `tf task approve <KLUCZ> plan.md --by human:<id>` | tryb zadania: Plan kończy na planie, zwykły wpuszcza kod po Twojej zgodzie na plan, Auto idzie bez zgody (nie przy wadze pełnej) |
 | `tf status` | lista zadań: etap, ile kawałków ma aktualny dowód, które pliki trzeba odświeżyć i co czeka na Ciebie (pytanie z rekomendacją); `tf status --open` otwiera podgląd w przeglądarce |
-| `tf task start <KLUCZ> --title "…"`, `tf task stage <KLUCZ> <etap>`, `tf task status <KLUCZ>` | jedno miejsce na zadanie: `docs/project/changes/<KLUCZ>/task.json` i indeks zadań `INDEX.md` |
+| `tf task start <KLUCZ> --title "…"`, `tf task stage <KLUCZ> <etap>`, `tf task status <KLUCZ>` | jedno miejsce na zadanie: `docs/project/changes/<KLUCZ>/task.json`; listę zadań podaje `tf status` |
 | `tf onboard [--yes] [--verify] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, `verify.sh`, raport gotowości, bramka jakości, polecenia w pliku instrukcji |
 | `tf init` | szkielet `.tf/` na wyniki fabryki (raporty, rejestr, cache, logi) |
 | `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analiza projektu modułami → `.tf/reports/<moduł>.md` |
