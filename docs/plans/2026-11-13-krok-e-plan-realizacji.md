@@ -237,6 +237,16 @@ krótszy o 16–23% (średnie `wall_s` z plików `.jsonl` obu pomiarów). Cztery
 zawsze przez `scope-reviewer`, zakaz łączenia poleceń wprost, identyfikatory kryteriów od pierwszej wersji testu);
 ich skuteczność sprawdzi pomiar po E3. Kolejność dalej: E2 → E3 → **pomiar** → E4 → E5 → E6.
 
+## Pomiar po E2 i E3 (2026-11-14)
+
+Raport `docs/evals/2026-11-14-pomiar-po-kroku-e3.md` (fabryka `744e1bb`, bez E4): 8,93 USD wobec 8,12 USD (+10%),
+akceptacja 10/10, STOP 5/5; czasów nie da się porównać, bo w trakcie serii maszyna była obciążona innymi pracami.
+Trzy z czterech poprawek z poprzedniego pomiaru zadziałały (ślad po STOP 5/5, przegląd zakresu 10/10, zero poleceń
+złożonych); czwarta nie (identyfikator kryterium dopisywany osobnym commitem, nadal 3/5). Dwie nowe poprawki w tym
+samym PR co raport: kody zatrzymań wymienione wprost w SKILL.md (pętla zgadywała kod w 8 z 15 przebiegów) oraz
+ostrzeżenie `run_state.py verify` o teście bez `AC-n`. Ich skuteczność i wpływ E4 pokaże kolejny pomiar — nie jest
+zaplanowany; przypada naturalnie po E6 albo wcześniej na życzenie właściciela.
+
 ## Ustalenia
 
 - **Stare nazwy znikają od razu** (decyzja właściciela: jedna instalacja, bez warstwy zgodności). To zmiana

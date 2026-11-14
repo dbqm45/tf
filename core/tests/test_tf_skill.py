@@ -151,6 +151,9 @@ def main() -> int:
           and all(w in modes for w in ("Plan", "Auto", "approve", "mode")),
           f"T-30: blok STOP ma kod z zamkniętej listy; references/tryby-i-zatrzymania.md opisuje każdy kod ze skryptu: "
           f"{[c for c in codes if f'`{c}`' not in modes]}")
+    check(all(f"`{c}`" in stop_part for c in codes),
+          f"T-32: sekcja „Blok STOP” w SKILL.md wymienia wszystkie kody (pomiar po E3: w 8 z 15 przebiegów pętla "
+          f"zgadywała kod i dostawała odmowę): brak {[c for c in codes if f'`{c}`' not in stop_part]}")
     check(all(w in modes for w in ("Komunikat dla człowieka", "AskUserQuestion", "run_state.py message", "własnego opisu")),
           "T-31: po zapisie zatrzymania pętla pokazuje człowiekowi komunikat ze skryptu (pytanie narzędziem z opcjami), "
           "a nie własny opis")
