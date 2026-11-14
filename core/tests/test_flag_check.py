@@ -167,7 +167,11 @@ def main() -> int:
               f"F-18: onboard wykrywa plik flag, środowiska i środowisko testowe: {data} {r.stdout[-300:]}")
         card.write_text(json.dumps(CARD), encoding="utf-8")
         run(p, ONBOARD, "--yes")
-        check(json.loads(card.read_text(encoding="utf-8")) == CARD, "F-19: onboard nie nadpisuje istniejącej karty")
+        after = json.loads(card.read_text(encoding="utf-8"))
+        check({k: v for k, v in after.items() if k != "deploy"} == CARD,
+              f"F-19: onboard nie zmienia istniejących pól karty (od kroku G3 dopisuje tylko brakującą sekcję deploy): {after}")
+        run(p, ONBOARD, "--yes")
+        check(json.loads(card.read_text(encoding="utf-8")) == after, "F-19b: ponowny onboard niczego w karcie nie zmienia")
         card.write_text(json.dumps({"tracker": {"type": "jira"}}), encoding="utf-8")
         r = run(p, ONBOARD, "--yes")
         data = json.loads(card.read_text(encoding="utf-8"))
