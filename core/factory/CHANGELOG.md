@@ -3,6 +3,11 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.10.0] — 2026-11-14
+### Added
+- **core:** build the pull request description by script (#253)
+- **core:** read a Jira ticket by script instead of by the model (#252)
+
 ## [10.9.0] — 2026-11-14
 ### Added
 - **core:** let a question block one slice instead of the whole run (#250)
