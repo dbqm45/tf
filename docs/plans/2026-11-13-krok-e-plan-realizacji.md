@@ -95,6 +95,12 @@ i zapis odpowiedzi; żaden → jedno zdanie, czego brakuje, i prośba o wklejeni
 **Zmiana kontraktu skilla (D2):** scenariusz „zaimplementuj tę historyjkę” przestaje być „nie włączaj” — zlecenie
 zadania zwykłym zdaniem uruchamia pętlę. To decyzja człowieka z 2026-11-13, nie osłabienie testu.
 
+**Odstępstwa od planu w trakcie (2026-11-14):** linia źródła w `ticket.md` psuła kontrolę kształtu historyjki
+w pack-it (aktor rozpoznawany tylko na początku opisu) — poprawione w `requirements_lint.py` z testem; `tf onboard`
+uzupełnia sekcję flag w karcie operacyjnej, która już istnieje (kartę może wcześniej założyć zapis trackera);
+treść zgłoszenia pobraną z trackera pętla dopisuje do `ticket.md` po `start`, a nie przez plik pośredni, żeby nie
+zostawiać nieśledzonych plików przed startem.
+
 **Poza E1:** waga (E2), tryb `--plan` i lista zatrzymań (E3) — `resolve` tylko przekazuje opcję dalej; nowy układ
 cięć (E6); zapis do trackera. SKILL.md ma już ponad 15 000 znaków (ostrzeżenie `build.py check` sprzed E1) —
 części dotyczące tylko pdi przeniosę do `references/` razem z E6, żeby nie ruszać dziś ścieżki pdi.
