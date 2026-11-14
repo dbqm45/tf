@@ -116,7 +116,13 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
   - `zrownowazony` — domyślny: Haiku do mechaniki, Sonnet na co dzień, Opus do drogich pomyłek;
   - `jakosc` — wyższy effort i doradca Opus.
 - **Pomiar:** `python3 .tf/factory/cost_report.py --days 7` (zużycie per agent i model z `.tf/logs/usage.jsonl`);
-  pasek stanu pokazuje koszt sesji i zapełnienie kontekstu.
+  pasek stanu pokazuje koszt sesji i zapełnienie kontekstu. Każdy wpis w `usage.jsonl` ma odcisk harnessu (pole
+  `harness`: wersja Claude Code, fabryki i nakładek, skrót zainstalowanych plików), więc koszty z różnych wersji
+  fabryki da się rozdzielić.
+- **Nazwy i ceny modeli:** `python3 .tf/factory/model_check.py` (także w `tf doctor`) sprawdza, czy konfiguracja
+  i silnik nie odwołują się do nieznanego albo starszego modelu. Bieżące modele są w `models_current`, dozwolone
+  starsze w `models_legacy`, data sprawdzenia w `models_checked` (konfiguracja silnika; własne przypięcia modeli
+  w `.tf/config/config.yaml`). Data starsza niż 90 dni to przypomnienie, żeby sprawdzić nazwy i cennik.
 - **Skuteczność fabryki:** `tf metrics [--weeks 4] [--revert-days 7] [--no-gh]` → `.tf/reports/metrics.md`
   i `metrics.json`: odsetek cofniętych zmian, zmiany przyjęte i oczekujące, koszt na przyjętą zmianę, mediana czasu
   PR (z `gh`, chyba że `--no-gh`) i przyczyny poprawek. Przyczynę poprawki fabryka dopisuje sama w commicie
