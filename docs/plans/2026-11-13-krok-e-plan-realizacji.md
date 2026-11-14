@@ -139,6 +139,16 @@ Historia zmian zostaje w `task.json` (`weight_log`).
 nadal wymagany. `pelna` — plan zatwierdza człowiek przed realizacją, więc przebieg z `--auto` zatrzymuje się blokiem
 STOP z wyjaśnieniem; przegląd `security-reviewer` obowiązkowy (reguła w skillu, skrypt jej nie wymusza).
 
+**Ustalenia w trakcie (2026-11-14):**
+- Wagę przydziela `run_report.py start` (linia `Waga: …` z powodem), a etapy `intake` i `plan` ponawiają przydział —
+  pętla nie musi pamiętać o osobnym poleceniu; `run_state.py weight <katalog>` zostaje do podglądu i podniesienia.
+- Decyzja człowieka o wadze jest trwała: po `--set … --by human:<id>` skrypt wagi już nie zmienia, tylko pokazuje
+  swoją propozycję. Waga podana wprost przy `tf task start --weight` też nie jest obniżana.
+- Zatwierdzenie `plan.md` nie liczy odhaczeń kawałków (`- [x] K1`): bez tego pierwsze odhaczenie unieważniałoby
+  zgodę człowieka i blokowało etap `pr`. Nowy albo zmieniony kawałek nadal wymaga ponownej zgody.
+- Słowa wrażliwe dobrane ostrożnie pod fałszywe trafienia: „sesja ładowania”, „płatna godzina” i „token” nie
+  podnoszą wagi; historyjki pomiarowe S1–S3 dostają wagę zwykłą (sprawdzone testem i ręcznie na ich treści).
+
 **Poza E2:** tryb `--plan` i lista kodów zatrzymań (E3), komunikaty zatrzymań (E4), waga dla cięć pdi (E6 — przebieg
 cięcia nie ma zadania, więc nie ma wagi).
 

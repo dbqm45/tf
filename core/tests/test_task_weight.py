@@ -144,6 +144,15 @@ def main() -> int:
         tf(p, "approve", "LOG-1", "plan.md", "--by", "human:anna")
         r = tf(p, "stage", "LOG-1", "realizacja")
         check(r.returncode == 0, f"W-19: po zatwierdzeniu planu realizacja przechodzi: {r.stdout}")
+        # odhaczenie kawałka w zatwierdzonym planie nie unieważnia zgody człowieka; zmiana treści planu — tak
+        (folder / "plan.md").write_text("# Plan\n- [x] K1 — reset · pliki: src/reset.py\n", encoding="utf-8")
+        state = json.loads(tf(p, "status", "LOG-1", "--json").stdout).get("artifact_states", {}).get("plan.md")
+        r = tf(p, "stage", "LOG-1", "realizacja", "--force")
+        check(state == "zatwierdzony", f"W-19a: odhaczony kawałek — plan nadal zatwierdzony: {state}")
+        (folder / "plan.md").write_text("# Plan\n- [x] K1 — reset · pliki: src/reset.py\n- [ ] K2 — mail · pliki: src/mail.py\n",
+                                        encoding="utf-8")
+        state = json.loads(tf(p, "status", "LOG-1", "--json").stdout).get("artifact_states", {}).get("plan.md")
+        check(state == "zmieniony po zatwierdzeniu", f"W-19b: nowy kawałek w planie wymaga ponownej zgody: {state}")
         tf(p, "artifact", "REG-1", "plan.md", "--stage", "plan", "--by", "process:tf")
         r = tf(p, "stage", "REG-1", "realizacja")
         check(r.returncode == 0, f"W-20: waga zwykla nie wymaga zatwierdzenia planu: {r.stdout}")

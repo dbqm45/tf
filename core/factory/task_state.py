@@ -140,6 +140,20 @@ def sha256(path: Path) -> str | None:
         return None
 
 
+TICKED = re.compile(rb"(?m)^(\s*-\s*)\[[xX]\](\s*K\d+\b)")
+
+
+def approval_sha(path: Path) -> str | None:
+    """Skrót pliku do zatwierdzenia. W `plan.md` nie liczy się odhaczenie kawałka (`- [x] K1`): pętla odhacza kawałki
+    po zatwierdzeniu planu i nie zmienia przez to jego treści; nowy albo zmieniony kawałek zmienia skrót."""
+    if path.name != "plan.md":
+        return sha256(path)
+    try:
+        return hashlib.sha256(TICKED.sub(rb"\1[ ]\2", path.read_bytes())).hexdigest()
+    except OSError:
+        return None
+
+
 def evidence_of(root: Path, key: str, sl: dict) -> dict | None:
     rel = sl.get("evidence")
     if not rel:
@@ -185,7 +199,7 @@ def artifact_state(root: Path, key: str, art: dict, name: str) -> tuple[str, str
     if changed:
         return "nieaktualny", "zmienione wejścia: " + ", ".join(changed)
     if art.get("status") == "zatwierdzony":
-        if sha256(folder / name) != art.get("approved_sha"):
+        if approval_sha(folder / name) != art.get("approved_sha"):
             return "zmieniony po zatwierdzeniu", "wymaga ponownego zatwierdzenia przez człowieka"
         return "zatwierdzony", ""
     return "szkic", ""
@@ -270,7 +284,7 @@ def cmd_approve(root: Path, key: str, name: str, by: str) -> int:
     if state == "nieaktualny":
         return fail(f"{name} jest nieaktualny ({why}) — odśwież go i zarejestruj ponownie przed zatwierdzeniem")
     art["status"] = "zatwierdzony"
-    art["approved_sha"] = sha256(root / CHANGES / key / name)
+    art["approved_sha"] = approval_sha(root / CHANGES / key / name)
     art["verified"] = [{"by": by, "at": now()}]
     task["updated"] = now()
     save(root, task)
