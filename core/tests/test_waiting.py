@@ -87,6 +87,9 @@ def main() -> int:
         check(len(cw) == 1 and cw[0].get("kind") == "stop" and cw[0].get("question") == w[0].get("question")
               and cw[0].get("since") == w[0].get("since"),
               f"Z-6: karta podglądu ma tę samą listę oczekujących co tf status: {cw}")
+        hint = card.get("stopHint") or ""
+        check(".." not in hint and "naprawy. pytest: 2 failed (test_fees.py). Zdecyduj" in hint and "r.stopHint" in html,
+              f"Z-6a: opis zatrzymania na karcie składa się z pełnych zdań (bez „..” i bez zlanych zdań): {hint!r}")
         check('id="waiting"' in html and "Czeka na Ciebie" in html and "r.waiting" in html and "rekomendowana" in html,
               "Z-7: szablon rysuje wyróżnioną listę „Czeka na Ciebie” z pytaniem i rekomendacją")
 

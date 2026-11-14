@@ -785,6 +785,7 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
            "key": meta.get("task") or meta.get("key"), "change": meta.get("change"), "flag": meta.get("flag"), "pr": meta.get("pr"),
            "stopText": meta.get("stop_text"), "stopCode": meta.get("stop_code"),
            "stopLabel": (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or ""),
+           "stopHint": stop_hint(meta, cur) if needs == "stop" else None,
            "stopNeed": (stop_message(meta.get("stop_code")) or {}).get("potrzeba"),
            "stopQuestion": (stop_message(meta.get("stop_code")) or {}).get("pytanie"),
            "stopOptions": [{"opcja": o.get("opcja"), "skutek": o.get("skutek"), "rekomendowana": bool(o.get("rekomendowana"))}
@@ -802,6 +803,22 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
         obj["prSteps"] = {"drift": pr_steps.get("drift", "todo"), "pr": pr_steps.get("pr", "todo")}
     obj["files"] = file_groups(run_dir, meta, stage, needs, parked)
     return obj
+
+
+def sentence(text: str | None, capital: bool = False) -> str:
+    """Tekst zakończony jedną kropką (bez „..”), na życzenie od wielkiej litery; pusty zostaje pusty."""
+    s = (text or "").strip()
+    if not s:
+        return s
+    return (s[0].upper() + s[1:] if capital else s) + ("" if s[-1] in ".!?…" else ".")
+
+
+def stop_hint(meta: dict, cur: dict | None) -> str:
+    """Opis zatrzymania na karcie: co się stało, powód z przebiegu i co zrobić — każda część osobnym zdaniem."""
+    label = (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or "")
+    resume = (cur or {}).get("k") or "bieżącego kawałka"
+    return " ".join(x for x in (sentence(label, capital=True), sentence(meta.get("stop_text") or "STOP"),
+                                f"Zdecyduj i napisz w sesji: wznów od {resume}") if x)
 
 
 def waiting_items(project: Path, view: dict | None) -> list[dict]:

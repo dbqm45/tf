@@ -255,7 +255,7 @@ function card(r){
   const right = needs ? `<span class="call">TWOJA DECYZJA</span>` : "";
   const refs = [r.key, r.change, r.taskStage?("etap: "+r.taskStage):null, r.pr?("PR #"+r.pr):null, r.flag?("⚑ "+r.flag):null].filter(Boolean);
   let why = "", hint = "";
-  if (needs && r.needs==="stop"){ hint = (r.stopLabel ? r.stopLabel.charAt(0).toUpperCase()+r.stopLabel.slice(1)+". " : "")+(r.stopText||"STOP.")+" Zdecyduj i napisz w sesji: wznów od "+(r.cur?r.cur.k:"bieżącego kawałka"); }
+  if (needs && r.needs==="stop"){ hint = r.stopHint || ((r.stopLabel||"STOP")+" — zdecyduj i napisz w sesji: wznów od "+(r.cur?r.cur.k:"bieżącego kawałka")); }
   if (needs && r.needs==="plan"){ hint = "Plan do akceptacji (bez --auto): zaakceptuj albo napisz uwagi w sesji"; }
   const cls = needs && r.needs==="stop" ? "attn" : needs ? "ask" : "";
   return `<button class="card ${cls} ${sel===r.slug?"sel":""}" type="button" data-run="${esc(r.slug)}">
