@@ -21,7 +21,8 @@ tf — the team factory command: install, update, packs, languages, health check
                               # your own skill from the template, with a scenario file (.tf/factory/build.py new-skill)
   tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
   tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
-  tf config show [<key>]      # merged configuration and where each value comes from (factory or project)
+  tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
+                              # `tf config show steps`: who runs each /tf loop step, with model and effort
   tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
   tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
   tf status [--json]          # all tasks: stage, slices with current evidence, files to refresh
@@ -259,6 +260,16 @@ def cmd_config_show(key: str | None) -> int:
     own_path = root / ".tf" / "config" / "config.yaml"
     own = packs.load_yaml(own_path) if own_path.is_file() else {}
     cfg = packs.load_config(root)
+    if key == "steps" and cfg.get("steps"):     # kroki pętli /tf z modelem i effortem po nałożeniu profilu kosztów
+        full = project_module("build").load_config()
+        print(f"# Kroki pętli /tf (profil kosztów: {full.get('_profile')}). Zmiana: steps w .tf/config/config.yaml, "
+              "potem python3 .tf/factory/build.py")
+        print(f"{'krok':<16} {'co':<38} {'kto':<18} {'tier':<5} {'model':<8} effort")
+        for sid, step in full["steps"].items():
+            tier = full["tiers"].get(step.get("tier"), {})
+            print(f"{sid:<16} {step.get('label', ''):<38} {step.get('who', ''):<18} {step.get('tier', ''):<5} "
+                  f"{tier.get('model', '?'):<8} {tier.get('effort', '?')}")
+        return 0
     if key is not None:
         if key not in cfg:
             print(f"✗ Nie ma klucza „{key}”. Lista kluczy: tf config show")

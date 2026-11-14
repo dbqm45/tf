@@ -377,6 +377,19 @@ autonomy:
     data_upload: confirm        # wysyłanie pliku na zewnątrz (curl -F @, --upload-file)
     sudo: confirm
 
+# Kroki pętli /tf (krok E osi przebiegu): kto wykonuje krok i na jakim poziomie. Tier kroku staje się tierem jego
+# wykonawcy przy budowaniu agentów (model i effort z `tiers` po nałożeniu profilu kosztów). Wartości są równe
+# dotychczasowym — zmiana przydziału to osobna decyzja po pomiarze. Projekt nadpisuje w .tf/config/config.yaml, np.
+# `steps: {przeglad: {tier: deep}}`, i przebudowuje agentów (python3 .tf/factory/build.py). Podgląd: tf config show steps.
+steps:
+  fakty:          {label: "fakty o repozytorium", who: scout, tier: fast}
+  wersje:         {label: "wersje, dokumentacja zewnętrzna", who: researcher, tier: fast}
+  realizacja:     {label: "plan, test, kod", who: tf, tier: std}
+  mechanika:      {label: "zmiana mechaniczna ze specyfikacją", who: quick-fixer, tier: fast}
+  przeglad:       {label: "przegląd zakresu kawałka", who: scope-reviewer, tier: std}
+  decyzja:        {label: "decyzja trudna do odwrócenia", who: architect, tier: deep}
+  bezpieczenstwo: {label: "auth, sekrety, IaC, CI", who: security-reviewer, tier: deep}
+
 # Flagi funkcji (krok D osi przebiegu). auto: true — fabryka sama prowadzi flagę historyjki: pyta człowieka o nazwę,
 # zakłada flagę w pierwszym kawałku, chowa za nią nowe zachowanie i nie przepuszcza zadania do PR bez flagi albo
 # zapisanego powodu jej braku. auto: false — flagi dodajesz samodzielnie (w kodzie, w zewnętrznej usłudze…): fabryka

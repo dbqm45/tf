@@ -119,9 +119,57 @@ def active_profile(cfg: dict) -> str:
     return name if name in (cfg.get("profiles") or {}) else cfg.get("default_profile")
 
 
+def apply_steps(cfg: dict) -> dict:
+    """Przydział kroków pętli /tf (`steps`): tier kroku staje się tierem jego wykonawcy (agenta wspólnego)."""
+    agents = cfg.get("shared_agents") or {}
+    for step in (cfg.get("steps") or {}).values():
+        if isinstance(step, dict) and step.get("who") in agents and step.get("tier") in (cfg.get("tiers") or {}):
+            agents[step["who"]]["tier"] = step["tier"]
+    return cfg
+
+
+def steps_errors(cfg: dict) -> list[str]:
+    """Błędy konfiguracji `steps`: brak pola, nieznany wykonawca albo tier, wykonawca z dwoma różnymi tierami."""
+    errors, seen = [], {}
+    for sid, step in (cfg.get("steps") or {}).items():
+        if not isinstance(step, dict) or not all(step.get(k) for k in ("label", "who", "tier")):
+            errors.append(f"steps.{sid}: krok ma mieć pola label, who i tier")
+            continue
+        if step["who"] not in (cfg.get("shared_agents") or {}):
+            errors.append(f"steps.{sid}: nieznany wykonawca '{step['who']}' (agent wspólny z shared_agents)")
+        if step["tier"] not in (cfg.get("tiers") or {}):
+            errors.append(f"steps.{sid}: nieznany tier '{step['tier']}'")
+        if seen.setdefault(step["who"], step["tier"]) != step["tier"]:
+            errors.append(f"steps.{sid}: wykonawca '{step['who']}' ma w krokach dwa różne tiery "
+                          f"({seen[step['who']]} i {step['tier']}) — agent ma jeden model")
+    return errors
+
+
+def steps_table_errors(cfg: dict, skill_text: str) -> list[str]:
+    """Tabela „Kto co robi” w skillu pętli wobec `steps`: każdy krok ma wiersz z tym samym wykonawcą i tierem."""
+    section = skill_text.split("## Kto co robi", 1)[-1].split("\n## ", 1)[0] if "## Kto co robi" in skill_text else ""
+    rows = {}
+    for line in section.splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if line.strip().startswith("|") and len(cells) == 3 and cells[0] not in ("Krok", "") and not set(cells[0]) <= {"-"}:
+            rows[cells[0]] = (cells[1], cells[2])
+    errors = []
+    steps = {s["label"]: s for s in (cfg.get("steps") or {}).values() if isinstance(s, dict) and s.get("label")}
+    for label, step in steps.items():
+        if label not in rows:
+            errors.append(f"skill tf, tabela „Kto co robi”: brak wiersza kroku „{label}” (steps w konfiguracji)")
+        elif f"`{step.get('who')}`" not in rows[label][0] or rows[label][1] != step.get("tier"):
+            errors.append(f"skill tf, tabela „Kto co robi”: krok „{label}” ma w konfiguracji wykonawcę "
+                          f"`{step.get('who')}` i tier {step.get('tier')}, a w tabeli: {rows[label][0]} / {rows[label][1]}")
+    errors += [f"skill tf, tabela „Kto co robi”: wiersz „{label}” nie ma kroku w konfiguracji (steps)"
+               for label in rows if label not in steps]
+    return errors
+
+
 def load_config() -> dict:
     """config.yaml rdzenia złożony z nakładkami (.tf/factory/packs.py) i z nałożonym profilem kosztów (pola tierów)."""
     cfg = packs_mod.compose(ROOT, packs_mod.load_config(ROOT))
+    apply_steps(cfg)
     name = active_profile(cfg)
     cfg["_profile"] = name
     for tier, over in (((cfg.get("profiles") or {}).get(name) or {}).get("tiers") or {}).items():
@@ -1115,6 +1163,10 @@ def validate() -> tuple[list[str], list[str]]:
         for p in sv.check_changelog((FACTORY / "CHANGELOG.md").read_text(encoding="utf-8"), version,
                                     cfg.get("semver_strict_from")):
             errors.append(f".tf/factory/CHANGELOG.md: {p}")
+    errors += steps_errors(cfg)
+    loop_skill = SKILLS_DIR / "tf" / "SKILL.md"
+    if loop_skill.is_file() and cfg.get("steps"):
+        errors += steps_table_errors(cfg, loop_skill.read_text(encoding="utf-8"))
     return errors, warnings
 
 
