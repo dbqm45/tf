@@ -26,7 +26,7 @@ dokłada autonomii, a pomiar po kroku G dopiero pokaże, jak pętla zachowuje si
   (data sprawdzenia). Źródło: skill `claude-api`, tabela modeli w stanie z 2026-11-03.
 - Poprawki znalezione przy tym sprawdzeniu: `claude-fable-5-1` → `claude-fable-5-2` w `managed_agents.models`
   i w `target_managed.py`; ceny Fable 10/50 → 8/40 USD (odczyt cache 0,20); odczyt cache Sonneta 0,20 → 0,10 USD.
-  Ceny zapisu cache (5 min) liczone jako 1,25 × wejście [założenie: ta sama proporcja co dla pozostałych modeli].
+  Ceny zapisu cache (5 min) liczone jako 1,25 × wejście, jak dla pozostałych modeli [założenie].
 - Nowy skrypt silnika `core/factory/model_check.py`: każdy identyfikator `claude-…` w konfiguracji fabryki (rdzeń
   i nadpisania projektu) i w kodzie silnika musi być w `models_current` albo `models_legacy`; aliasy w
   `managed_agents.models` muszą wskazywać na `models_current`. Data sprawdzenia starsza niż 90 dni to ostrzeżenie
