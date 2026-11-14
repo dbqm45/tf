@@ -37,6 +37,15 @@
       }
     },
     {
+      "id": "pytanie-blokuje-jeden-kawalek",
+      "expect": "trigger",
+      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). W projekcie włączono loop.blocked_slices. W kawałku K2 brakuje odpowiedzi na pytanie o abonamenty, a K3 od niego nie zależy — co robisz dalej?",
+      "checks": {
+        "all": [["run_state\\.py block", "zablok"], ["K3"], ["pytani"]],
+        "none": ["zgaduj[ęe]", "przyjmuj[ęe] założenie i robi[ęe] K2"]
+      }
+    },
+    {
       "id": "edge-zadanie-bez-tresci",
       "expect": "trigger",
       "prompt": "Weź się za następne zadanie z trackera.",

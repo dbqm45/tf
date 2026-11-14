@@ -62,3 +62,9 @@ F2 i F3 zmieniają zachowanie pętli. Po F3 potrzebny jest płatny pomiar na tym
   „zrób, co konieczne”. Poprawka: spisu w pliku skrypt już nie prowadzi — listę daje `tf status`; plik, który jest
   w repozytorium, pierwszy zapis zamienia na stałą notkę i więcej go nie zmienia, nowego nie zakłada. Nie wymaga to
   żadnej czynności od użytkownika.
+- F1, F2 i poprawka spisu zadań scalone (tf#247, tf#248, tf#249).
+- F3 gotowe: przełącznik `loop.blocked_slices` (domyślnie wyłączony), polecenia `block`, `answer`, `next`, odmowa
+  STOP z pytaniem o jeden kawałek, gdy został kawałek niezależny, `events.jsonl` w katalogu zadania i w panelu
+  plików. Zmiana względem planu: funkcje są w `run_state.py`, bez osobnego pliku `work_events.py` — osobny skrypt
+  wymagałby nowej reguły uprawnień, a nie jest poleceniem. Odpowiedź człowieka na ostatnie pytanie wznawia przebieg
+  (nic już nie „czeka na Ciebie”). Zachowanie z włączonym przełącznikiem nie jest zmierzone na przebiegach z modelem.

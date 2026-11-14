@@ -32,7 +32,10 @@ na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`)
 [plan|zwykly|auto]`, pole `mode` w `task.json`, `run_state.py stage … --plan|--auto`, `run_state.py mode <katalog>
 [tryb]`, `run_state.py approve <katalog>`), limit rund kawałka (`run_state.py step … R<k>`: najwyżej 2 rundy bez decyzji człowieka, trzecia to odmowa z kodem 2;
 po etapie `needs` dwie kolejne; pole `limit` w `current` pliku `run.json`), etykiety ustaleń agenta `scope-reviewer`
-(`[ważne]`, `[drobne]`, `[zastane]`), lista „czeka na Ciebie” (`tf status [--json] [--open]`: pole `waiting` z wpisami `kind` = `plan` / `stop` / `kawalek`,
+(`[ważne]`, `[drobne]`, `[zastane]`), kawałek zablokowany pytaniem (klucz konfiguracji `loop.blocked_slices`, domyślnie `false`; `run_state.py block <katalog>
+K<n> --question`, `answer <katalog> K<n> "<odpowiedź>" --by human:<id>`, `next <katalog>`, `stage … --task`; dopisek
+`· po: K<n>` / `· po: brak` w wierszu kawałka `plan.md`; `events.jsonl` w katalogu zadania z polami `at`, `type`, `slice`,
+`text`, `by`), lista „czeka na Ciebie” (`tf status [--json] [--open]`: pole `waiting` z wpisami `kind` = `plan` / `stop` / `kawalek`,
 `what`, `details`, `question`, `options`, `recommended`, `how`, `since`; pole `needs_at` w `run.json`; to samo pole `waiting`
 na karcie podglądu), zadanie cięcia zmiany pdi (`tf task start <CHG>-<TSK> --title … --change <CHG>
 --cut <TSK>`, pola `change` i `cut` w `task.json`), lista zadań (`tf status`; spisu w pliku `docs/project/changes/INDEX.md`
