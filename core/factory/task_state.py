@@ -476,7 +476,8 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
     if mode != "auto" and art and state != "zatwierdzony":
         return (f"w trybie zwykłym do etapu {stage} zadanie przechodzi po zgodzie człowieka na plan (stan planu: "
                 f"{state}): pokaż plan i specyfikację człowiekowi, a po jego zgodzie tf task approve {key} plan.md "
-                "--by human:<id>. Tryb bez zatwierdzania (--auto) wybiera człowiek w poleceniu /tf — sam go nie ustawiasz")
+                f"--by human:<id>. Tryb bez zatwierdzania (--auto) wybiera człowiek w poleceniu /tf: jeśli go podał, "
+                f"zapisz tryb (tf task mode {key} auto); sam go nie ustawiasz, żeby ominąć zgodę")
     return None
 
 

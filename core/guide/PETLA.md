@@ -42,7 +42,10 @@ Dwa sposoby, ten sam przebieg (skill `tf`):
   od razu, bez zakładania zadania).
 
 Opcje (w wiadomości do agenta albo przy poleceniu):
-- `--auto` — plan nie czeka na Twoją akceptację; bez tej opcji fabryka pokazuje plan i czeka;
+- bez opcji (tryb zwykły) — fabryka pokazuje specyfikację i plan i czeka na Twoją zgodę; zgodę zapisuje i dopiero
+  wtedy zaczyna kod;
+- `--plan` — tylko specyfikacja i plan, bez zmian w kodzie; realizację uruchamiasz później poleceniem `/tf <KLUCZ>`;
+- `--auto` — plan nie czeka na Twoją zgodę (poza zadaniami o wadze pełnej);
 - `--budget <USD>` — twardy limit: po kawałku, który go przekroczy, pętla się zatrzymuje. Domyślnie budżetu nie ma,
   ale fabryka zawsze wybiera najtańszy wystarczający model i najmniej pracy.
 
@@ -82,6 +85,14 @@ Fabryka sama ocenia, ile ostrożności potrzebuje zadanie, i mówi Ci to jednym 
 6. **Fazy warunkowe:** dokumentacja tylko przy zmianie publicznego API, przegląd bezpieczeństwa tylko przy auth,
    sekretach, IaC lub CI, architekt tylko przy decyzji trudnej do odwrócenia.
 7. **Koniec:** jeden PR (fabryka go nie scala) i raport.
+
+## Kiedy fabryka się zatrzymuje
+Zatrzymanie (STOP) ma zawsze jeden z jedenastu powodów — skrypt nie przyjmie innego — i mówi, czego potrzeba od Ciebie:
+brak informacji (`pytanie`), zadanie do podziału (`podzial`), brak treści albo dostępu do zgłoszenia (`zrodlo`), plan
+czeka na zgodę (`zgoda-na-plan`), testy czerwone po dwóch próbach (`testy`), skan bezpieczeństwa (`skan`),
+przekroczony budżet (`budzet`), nieprzygotowane repozytorium (`srodowisko`), decyzja o zależności (`zaleznosc`),
+zmiana kontraktu albo decyzja biznesowa (`kontrakt`), operacja zastrzeżona dla Ciebie (`uprawnienia`). Powód
+i wyjaśnienie widać na podglądzie w kolumnie „Czeka na człowieka”.
 
 ## Co dostajesz
 Każda historyjka to **zadanie** z kluczem (`T-<data>-<slug>` albo numer z trackera: `start --key PROJ-123`) i dwoma

@@ -111,7 +111,8 @@ def main() -> int:
     refs = sorted(f.name for f in (skill / "references").glob("*.md")) if (skill / "references").is_dir() else []
     check(len(body) <= limit, f"T-20: SKILL.md ma {len(body)} znaków (limit {limit}) — szczegóły przenieś do references/")
     check(refs and all(f"references/{n}" in body for n in refs)
-          and {"wejscie.md", "ciecia-pdi.md", "flaga-funkcji.md", "bezpieczenstwo.md", "waga.md"} <= set(refs),
+          and {"wejscie.md", "ciecia-pdi.md", "flaga-funkcji.md", "bezpieczenstwo.md", "waga.md",
+               "tryby-i-zatrzymania.md"} <= set(refs),
           f"T-21: każdy plik references/ jest wymieniony w SKILL.md: {refs}")
     check("tylko odczyt" in ref("wejscie.md") and "intake.py tracker" in ref("wejscie.md")
           and "Flag: <klucz>" in ref("flaga-funkcji.md") and "środowisku testowym" in ref("flaga-funkcji.md")
@@ -135,6 +136,21 @@ def main() -> int:
     check(all(w in waga for w in ("lekka", "zwykła", "pełna", "run_state.py weight", "--by human:", "security-reviewer",
                                   "approve", "STOP", "bez `spec.md`")),
           "T-28: references/waga.md — trzy wagi, skutki, kto zmienia, obowiązkowy przegląd przy pełnej, STOP bez nadzoru")
+    # krok E3: tryby (Plan / zwykły / Auto), zgoda człowieka na plan zapisana skryptem, zamknięta lista kodów STOP
+    import re as _re
+    modes = ref("tryby-i-zatrzymania.md")
+    plan_part = body.split("## 2.", 1)[-1].split("## 3.", 1)[0]
+    stop_part = body.split("## Blok STOP", 1)[-1].split("## Przykład", 1)[0]
+    check("`--plan`" in start and "run_state.py approve" in plan_part and "references/tryby-i-zatrzymania.md" in plan_part,
+          "T-29: tryb z polecenia człowieka trafia do pierwszego `stage` (--auto albo --plan); zgodę na plan zapisuje "
+          "`run_state.py approve`; szczegóły w references/tryby-i-zatrzymania.md")
+    script_text = (ROOT / state).read_text(encoding="utf-8")
+    block = script_text.split("STOP_CODES = {", 1)[-1].split("}", 1)[0]
+    codes = _re.findall(r'^\s*"([a-z-]+)":', block, _re.M)
+    check("--code" in stop_part and len(codes) >= 10 and all(f"`{c}`" in modes for c in codes)
+          and all(w in modes for w in ("Plan", "Auto", "approve", "mode")),
+          f"T-30: blok STOP ma kod z zamkniętej listy; references/tryby-i-zatrzymania.md opisuje każdy kod ze skryptu: "
+          f"{[c for c in codes if f'`{c}`' not in modes]}")
     rules = body.split("## Wejście", 1)[0]
     check("nie łączysz poleceń" in rules and all(s in rules for s in ("`;`", "`&&`", "potok")),
           "T-24: reguła „jedna czynność na polecenie” mówi wprost, czego nie łączyć (`;`, `&&`, potok)")

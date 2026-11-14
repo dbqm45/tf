@@ -197,6 +197,11 @@ z listą; komunikaty dla człowieka dopisze E4):
 **Zmiana kontraktu testów:** przebiegi testowe, które wchodziły w pętlę kawałka bez `--auto` i bez zgody na plan,
 dostają zgodę albo `--auto` — to nowa reguła trybu zwykłego, nie osłabienie.
 
+**Ustalenia w trakcie (2026-11-14):**
+- Kod zatrzymania obowiązuje także przebieg cięcia pdi (ten sam blok STOP); trybu i zgody na plan cięcie nie ma.
+- `intake.py resolve` przy wznowieniu zadania z trybu Plan podaje polecenie ustawienia trybu z polecenia człowieka.
+- SKILL.md ma po E3 14 985 znaków (limit 15 000) — kawałki E4 i E5 dopisują treść tylko do `references/`.
+
 **Poza E3:** treść komunikatów i pytań dla każdego kodu (E4); zatrzymania z `autonomy.operations` wykrywane hookiem
 (są już w `guard_paths` i polityce autonomii); wygaszanie zgody po nowych commitach.
 

@@ -59,7 +59,7 @@ drukuje `Wejście`, `Klucz`, `Tracker` i `Dalej`; robisz to, co stoi w `Dalej` (
    inna niż zwykła zmienia przebieg — `references/waga.md`.
 3. Gałąź od domyślnej (zwykle `main`): `git switch main`, potem `git switch -c story/<slug>` (core-git-workflow).
 4. **Podgląd:** `run_state.py stage` i `step` zapisują etap w `run.json` i budują `.tf/runs/dashboard.html`; wołasz
-   je w miejscach opisanych niżej (z `--auto` dopisz `--auto` do pierwszego `stage`). `start` sam otwiera dashboard —
+   je w miejscach opisanych niżej (tryb z polecenia, `--auto` albo `--plan`, dopisz do pierwszego `stage`). `start` sam otwiera dashboard —
    podaj człowiekowi linię `Dashboard: …` z wyniku; gdy jej nie ma (wyłączony w `.claude/tf.json`), o dashboardzie
    nie wspominasz. Błąd podglądu to nie STOP. **Odmowa** (`✗`, kod 2) to bramka — usuwasz przyczynę z komunikatu
    (błędy specyfikacji, brak dowodu, plan starszy niż specyfikacja) i powtarzasz polecenie.
@@ -100,9 +100,10 @@ Każde `AC-n` trafia do któregoś kawałka. Zmieniasz `spec.md` po planie → p
   `security-reviewer` przy auth, sekretach, uprawnieniach, IaC, CI; `architect` przy decyzji trudnej do odwrócenia.
 - Przypadki brzegowe → `run_state.py park <katalog> "<sprawa>"`. `parked.md` jest poza gitem — w commitach i kodzie
   do niego nie odsyłasz; pozycje trafiają do opisu PR i raportu (sekcja „Odłożone do decyzji”).
-- **Bez `--auto`:** `run_state.py stage <katalog> needs --needs plan`, pokaż plan (kawałki, fazy warunkowe,
-  założenia, odłożone) i czekaj na akceptację. **Z `--auto`:** idziesz dalej; plan i założenia trafią do opisu PR.
-- Po zapisaniu planu: `run_state.py stage <katalog> plan`.
+- Po zapisaniu planu: `run_state.py stage <katalog> plan`. **Bez `--auto`:** `run_state.py stage <katalog> needs
+  --needs plan`, pokaż plan (kawałki, fazy warunkowe, założenia, odłożone) i czekaj; po zgodzie człowieka
+  `run_state.py approve <katalog>`. Z `--plan` tu kończysz. **Z `--auto`:** idziesz dalej; plan trafi do opisu PR.
+  Tryby: `references/tryby-i-zatrzymania.md`.
 
 ## 3. Pętla kawałka
 Stan: `run_state.py step <katalog> K<n> R<k> <etap> <stan>` — etapy `test`, `kod`, `weryf`, `skan`, `zakres`; stany
@@ -165,20 +166,19 @@ Zrobione: <kawałki z SHA commitów>
 Potrzebne od człowieka: <decyzja / dostęp / informacja>
 Wznowienie: od <K<n> w plan.md>
 ```
-Po STOP: `run_state.py stage <katalog> needs --needs stop --reason "<powód>"`, potem i tak `run_report.py finish`
-— raport kosztu powstaje zawsze. Po decyzji człowieka pierwszy `step` wznawia przebieg.
+Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason "<powód>"` (kody:
+`references/tryby-i-zatrzymania.md`), potem i tak `run_report.py finish`. Po decyzji człowieka `step` wznawia przebieg.
 
 ## Przykład
 **Wejście:** `/tf "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
 
 **Wynik:**
-- plan: K1 import poprawnego CSV (test na pliku z 3 wierszami) · K2 lista sesji z błędem walidacji (test: wiersz
-  bez EVSE ID trafia na listę) · K3 komunikat o odrzuconym pliku (test: zły nagłówek → 422);
+- plan: K1 import poprawnego CSV (test: plik z 3 wierszami) · K2 lista sesji z błędem (test: wiersz bez EVSE ID)
+  · K3 komunikat o odrzuconym pliku (test: zły nagłówek → 422);
 - `parked.md`: duplikaty CDR między plikami, strefy czasowe, pliki > 50 MB — do decyzji;
 - 3 commity `feat(cdr): …`, jeden PR z sekcją „Odłożone do decyzji”;
-- raport: 14 min, 0,41 USD [przykładowe liczby].
+- raport: 14 min, 0,41 USD [przykład].
 
 ## Źródła
-- Anthropic, „Prompting Claude Opus 5.5” i „Prompting Claude Sonnet 5.5” (platform.claude.com, odczyt 2026-10-20):
-  praca do końca bez niezamówionych dodatków.
+- Anthropic, „Prompting Claude Opus 5.5” i „Prompting Claude Sonnet 5.5” (platform.claude.com, odczyt 2026-10-20).
 - Bill Wake, „INVEST in Good Stories, and SMART Tasks” (2003). Skan i karencja: `references/bezpieczenstwo.md`.

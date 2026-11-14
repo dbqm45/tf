@@ -499,7 +499,8 @@ def main() -> int:
         card = next((x for x in runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
                      if x.get("key") == "IMP-1"), {})
         check(r.returncode == 0 and meta.get("stop_code") == "pytanie" and card.get("stopCode") == "pytanie"
-              and card.get("stopLabel") and "Brak kryteriów akceptacji." in (card.get("stopText") or ""),
+              and card.get("stopLabel") and "Brak kryteriów akceptacji." in (card.get("stopText") or "")
+              and "r.stopLabel" in (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"),
               f"T-10: STOP z kodem — kod w run.json, kod, opis i powód na podglądzie: {r.stdout} {card.get('stopCode')} {card.get('stopLabel')}")
         r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "plan", "--code", "pytanie"], proj, cfg)
         check(r.returncode == 2, f"T-11: --code tylko dla --needs stop: {r.returncode} {r.stdout}")
