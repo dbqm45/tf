@@ -11,6 +11,7 @@ tych plików; model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i be
   tf task artifact <KEY> <plik> --stage <etap> --by <wykonawca> [--inputs <plik>[,<plik>…]]
   tf task approve <KEY> <plik> --by human:<id>
   tf task check <KEY>
+  tf task weight <KEY> [--apply | --set lekka|zwykla|pelna] [--by human:<id> --reason "<dlaczego>"] [--json]
 
 `tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
 i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md.
@@ -27,6 +28,11 @@ pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. D
 przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force). Gdy zadanie ma `spec.md`, do etapu `plan`
 i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`), a do etapu `przeglad` i dalszych —
 gdy każde kryterium ma test (`tf trace <KEY>`); zadanie bez `spec.md` działa jak dotąd.
+
+Waga zadania (`weight`, reguły w `task_weight.py`): bez opcji pokazuje obecną wagę i propozycję z powodem; `--apply`
+przydziela propozycję (pierwszy raz dowolną, potem tylko wyższą); `--set` podnosi swobodnie, a obniża tylko z
+`--by human:<id>` i `--reason`. Skutki: zadanie o wadze `pelna` wchodzi do etapu `realizacja` dopiero z planem
+zatwierdzonym przez człowieka (`approve <KEY> plan.md`); zadanie o wadze `lekka` ma w planie najwyżej jeden kawałek.
 
 Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
 wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
@@ -406,6 +412,99 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str) -> int:
     return 0
 
 
+def weight_rules():
+    """Reguły wagi zadania z `task_weight.py` obok tego skryptu; None, gdy pliku nie ma (starsza instalacja)."""
+    script = Path(__file__).resolve().with_name("task_weight.py")
+    if not script.is_file():
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_task_weight", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def weight_gate(root: Path, task: dict, stage: str) -> str | None:
+    """Skutki wagi przy zmianie etapu: `lekka` — plan z jednym kawałkiem; `pelna` — plan zatwierdzony przez człowieka
+    przed realizacją. Zwraca powód odmowy albo None."""
+    key, weight = task["key"], task.get("weight")
+    rules = weight_rules()
+    if weight == "lekka" and rules and STAGES.index(stage) >= STAGES.index("plan"):
+        try:
+            slices = rules.plan_slices((root / CHANGES / key / "plan.md").read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            slices = []
+        if len(slices) > 1:
+            return (f"zadanie ma wagę lekką, czyli jeden kawałek, a plan ma ich {len(slices)} — połącz kawałki albo "
+                    f"podnieś wagę: tf task weight {key} --set zwykla")
+    if weight == "pelna" and STAGES.index(stage) >= STAGES.index("realizacja"):
+        art = (task.get("artifacts") or {}).get("plan.md")
+        state = artifact_state(root, key, art, "plan.md")[0] if art else "brak"
+        if state != "zatwierdzony":
+            return (f"zadanie ma wagę pełną (obszar wrażliwy), więc do etapu {stage} przechodzi dopiero z planem "
+                    f"zatwierdzonym przez człowieka (stan planu: {state}): pokaż plan człowiekowi, a po jego zgodzie "
+                    f"tf task approve {key} plan.md --by human:<id>. Przebieg bez nadzoru (--auto) kończy się tu "
+                    "blokiem STOP — zgody człowieka nie da się zastąpić")
+    return None
+
+
+def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | None, reason: str, as_json: bool) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    rules = weight_rules()
+    if rules is None:
+        return fail("brak .tf/factory/task_weight.py — zaktualizuj fabrykę (tf update)", 2)
+    if new is not None and new not in WEIGHTS:
+        return fail(f"nieznana waga „{new}” — do wyboru: {', '.join(WEIGHTS)}", 2)
+    current = task.get("weight") if task.get("weight") in WEIGHTS else "zwykla"
+    assigned = bool(task.get("weight_log"))
+    prop = rules.propose(root, key)
+    note = ""
+
+    def record(weight: str, who: str, **extra) -> None:
+        task.setdefault("weight_log", []).append({"from": current, "to": weight, "by": who, "at": now(), **extra})
+        task["weight"], task["updated"] = weight, now()
+        save(root, task)
+
+    if new is not None:
+        who = by or "process:tf"
+        if not ACTOR.fullmatch(who):
+            return fail(f"wykonawca „{who}” — oczekiwany zapis: human:<id> albo process:<id>", 2)
+        if rules.rank(new) < rules.rank(current):
+            if not who.startswith("human:"):
+                return fail(f"obniżenie wagi ({rules.LABEL[current]} → {rules.LABEL[new]}) to decyzja człowieka: "
+                            f"tf task weight {key} --set {new} --by human:<id> --reason \"<dlaczego>\"")
+            if not reason.strip():
+                return fail("podaj powód obniżenia: --reason \"<dlaczego mniejsza waga wystarczy>\"", 2)
+        if new != current or not assigned:
+            record(new, who, **({"reason": " ".join(reason.split())} if reason.strip() else {}))
+        current, assigned = new, True
+    elif apply:
+        if not assigned or rules.rank(prop["weight"]) > rules.rank(current):
+            record(prop["weight"], "process:tf", reasons=prop["reasons"])
+            current, assigned = prop["weight"], True
+        elif rules.rank(prop["weight"]) < rules.rank(current):
+            note = (f"propozycja ({rules.LABEL[prop['weight']]}) jest niższa niż przydzielona waga — zostaje "
+                    f"{rules.LABEL[current]}; obniżyć może tylko człowiek: tf task weight {key} --set {prop['weight']} "
+                    "--by human:<id> --reason \"<dlaczego>\"")
+    if as_json:
+        print(json.dumps({"key": key, "weight": current, "assigned": assigned, "proposal": prop["weight"],
+                          "reasons": prop["reasons"], "effect": rules.EFFECT[current], "note": note},
+                         ensure_ascii=False, indent=1))
+        return 0
+    state = "" if assigned else " (domyślna, jeszcze nieprzydzielona)"
+    print(f"{key}: waga {rules.LABEL[current]}{state} · propozycja: {rules.LABEL[prop['weight']]}")
+    for r in prop["reasons"]:
+        print(f"  powód: {r}")
+    print(f"  skutek: {rules.EFFECT[current]}")
+    if note:
+        print(f"  {note}")
+    elif not assigned:
+        print(f"  Przydziel: tf task weight {key} --apply")
+    return 0
+
+
 def spec_errors(root: Path, key: str) -> list[dict]:
     """Błędy spec.md zadania wg `spec_check.py` obok tego skryptu; pusta lista, gdy pliku albo skryptu nie ma."""
     script = Path(__file__).resolve().with_name("spec_check.py")
@@ -492,6 +591,10 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
             return fail(f"do etapu {stage} przechodzi zadanie z gotową specyfikacją; do poprawy w spec.md: "
                         + "; ".join(f"linia {e['line']} {e['rule']} {e['message']}" for e in spec[:3])
                         + (f" (i {len(spec) - 3} więcej)" if len(spec) > 3 else "") + f". Całość: tf spec check {key}")
+    if not force:
+        refused = weight_gate(root, task, stage)
+        if refused:
+            return fail(refused)
     if stage in GATED and not force:
         open_ = [f"{k} ({s}{': ' + w if w else ''})" for k, (s, w) in slice_states(root, task).items() if s != "zweryfikowany"]
         if open_:
@@ -619,6 +722,13 @@ def main(argv: list[str]) -> int:
     o.add_argument("--by", required=True)
     k = sub.add_parser("check")
     k.add_argument("key")
+    w = sub.add_parser("weight")
+    w.add_argument("key")
+    w.add_argument("--apply", action="store_true")
+    w.add_argument("--set", dest="new", default=None)
+    w.add_argument("--by", default=None)
+    w.add_argument("--reason", default="")
+    w.add_argument("--json", action="store_true")
     fl = sub.add_parser("flag")
     fl.add_argument("key")
     fl.add_argument("action", choices=["set", "none", "allow"])
@@ -663,6 +773,10 @@ def main(argv: list[str]) -> int:
         return cmd_stage(root, a.key, a.stage, a.force)
     if a.cmd == "check":
         return cmd_check(root, a.key)
+    if a.cmd == "weight":
+        if a.apply and a.new is not None:
+            return fail("podaj jedno: --apply (propozycja fabryki) albo --set <waga>", 2)
+        return cmd_weight(root, a.key, a.apply, a.new, a.by, a.reason, a.json)
     if a.cmd == "flag":
         return cmd_flag(root, a.key, a.action, a.value, a.remove_by, a.reason, a.by)
     if a.cmd in ("freeze", "reopen"):
