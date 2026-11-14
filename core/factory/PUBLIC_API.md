@@ -31,7 +31,11 @@ wykrycia rozjazdu z `JIRA_BASE_URL`) i `deploy` (`smoke`, `rollback`, `rollback_
 karty operacyjnej `.tf/config/operations.json`, sprawdzenie po wdrożeniu (`tf task deployed <KEY> [--version X]
 [--timeout s]`, `tf task deployed <KEY> --rolled-back --by human:<id> [--note]`; pole `deploy` w `task.json`: `state` =
 `ok` | `czerwone` | `wycofane`, `evidence`, `version`, `at`; dowód `evidence/deploy-<n>.json`; pozycja `wdrozenie` na
-liście `waiting`), przydział kroków pętli (klucz `steps` w konfiguracji: identyfikator
+liście `waiting`), zamknięcie zadania (`tf task close <KEY> [--lesson "…" --by human:<id>] [--base <gałąź>] [--force --by
+human:<id>]`; `tf task finding <KEY> add "<ustalenie>" [--slice K<n>] [--round R]` i `… control <F-n> "<kontrola>"`;
+`run_state.py finding <katalog> K<n> "<ustalenie>" [--round R]`; odmowa `run_state.py step … zakres fail` bez ustalenia
+z tej rundy; pola `findings` (`id`, `text`, `slice`, `round`, `control`) i `closed` (`at`, `by`, `forced`, `lesson`)
+w `task.json`; `tf status --all`; plik `docs/project/lessons.md`), przydział kroków pętli (klucz `steps` w konfiguracji: identyfikator
 kroku → `label`, `who`, `tier`; `tf config show steps`), waga zadania (`tf task weight <KEY> [--apply | --set <waga>] [--by]
 [--reason] [--json]`, wartości `lekka`/`zwykla`/`pelna`, pola `weight` i `weight_log` w `task.json`, linia `Waga:`
 na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`), tryb zadania (`tf task mode <KEY>
@@ -49,7 +53,7 @@ skrypt już nie prowadzi — istniejący plik staje się stałą notką), kody z
 <kod>`; lista `STOP_CODES`: `pytanie`, `podzial`, `zrodlo`, `zgoda-na-plan`, `testy`, `skan`, `budzet`, `srodowisko`,
 `zaleznosc`, `kontrakt`, `uprawnienia`; pole `stop_code` w `run.json`), komunikaty zatrzymań
 (`.claude/skills/tf/templates/stop_messages.json`: dla każdego kodu `co`, `potrzeba`, `pytanie`, `opcje` z polami
-`opcja`, `skutek`, `rekomendowana`, oraz `potem`; `run_state.py message <kod> [--json]`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `weight`, `mode`, `approve`, `message`, `trace`, `verify`, `tick`, `park`, `pr-body`, `dashboard`), opis PR ze skryptu (`run_state.py pr-body <katalog> [--base <gałąź>]` → `.tf/runs/<KEY>/pr-body.md`; nagłówki sekcji „Jak sprawdzono”, „Ryzyko”, „Jak cofnąć”; pole karty operacyjnej `deploy.rollback`),
+`opcja`, `skutek`, `rekomendowana`, oraz `potem`; `run_state.py message <kod> [--json]`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `weight`, `mode`, `approve`, `message`, `trace`, `verify`, `tick`, `park`, `pr-body`, `finding`, `dashboard`), opis PR ze skryptu (`run_state.py pr-body <katalog> [--base <gałąź>]` → `.tf/runs/<KEY>/pr-body.md`; nagłówki sekcji „Jak sprawdzono”, „Ryzyko”, „Jak cofnąć”; pole karty operacyjnej `deploy.rollback`),
 `plan_drift.py` i `security_scan.py`, opcje `.claude/tf.json`, zmienne `TF_DASHBOARD`, `TF_DASHBOARD_OPEN`,
 `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, podgląd `.tf/runs/dashboard.html`, katalog roboczy przebiegu `.tf/runs/<KEY>/`
 (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania `docs/project/changes/<KEY>/` (`ticket.md`,

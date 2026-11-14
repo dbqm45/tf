@@ -26,7 +26,7 @@ tf — the team factory command: install, update, packs, languages, health check
   tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
   tf task start <CHG>-<TSK> --title "<title>" --change <CHG> --cut <TSK>   # task of a pdi change cut
   tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
-  tf status [--json] [--open] # all tasks: stage, slices with current evidence, files to refresh, what waits for you;
+  tf status [--json] [--open] [--all] # open tasks (--all: closed ones too): stage, slices with current evidence, files to refresh, what waits for you;
                               # --open builds the live view (.tf/runs/dashboard.html) and opens it in the browser
   tf spec new <KEY> | check <KEY> [--json]   # task specification (spec.md): template, readiness check
   tf trace <KEY> [--base <branch>] [--md|--json]   # criterion → test → commit → evidence
@@ -34,6 +34,8 @@ tf — the team factory command: install, update, packs, languages, health check
   tf flag check <KEY> [--base <branch>] [--json]   # the task's feature flag is on outside the test environment only by human decision
   tf task weight <KEY> [--apply | --set lekka|zwykla|pelna [--by human:<id> --reason "<why>"]]   # task weight: proposal with a reason; lowering is a human decision
   tf task deployed <KEY> [--version X] | --rolled-back --by human:<id>   # after deployment: run the smoke test from the operations card, record the result; a red result asks whether to roll back
+  tf task finding <KEY> add "<finding>" | control F1 "<control>"   # important review findings and the control that will catch each next time
+  tf task close <KEY> [--lesson "<lesson>" --by human:<id>]   # close a merged task; refuses with an open rollback decision or a finding without a control
   tf task mode <KEY> [plan|zwykly|auto]   # who approves: plan stops after the plan, zwykly waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)

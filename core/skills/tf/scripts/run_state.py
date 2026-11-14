@@ -16,6 +16,7 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> none --reason "bez flagi, bo …"
   python3 .claude/skills/tf/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
   python3 .claude/skills/tf/scripts/run_state.py pr-body <katalog-przebiegu> [--base <gałąź>]   # opis PR do --body-file
+  python3 .claude/skills/tf/scripts/run_state.py finding <katalog-przebiegu> K2 "<ważne ustalenie przeglądu>" [--round R]
   python3 .claude/skills/tf/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
   python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> K2
@@ -60,6 +61,10 @@ test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
 z commitami, ślad kryteriów, **Jak sprawdzono** (dowody, skan, plan_drift), **Ryzyko** (waga i `tf risk`), **Jak
 cofnąć** (karta operacyjna `deploy.rollback`, `git revert`, flaga), odłożone sprawy i założenia. Kawałek bez
 zielonego dowodu jest w opisie nazwany wprost. Skrypt niczego nie wypycha i nie zakłada PR.
+
+`finding` zapisuje w zadaniu ważne ustalenie przeglądu zakresu (z kawałkiem i rundą). `step … zakres fail` jest
+odrzucany, dopóki kawałek nie ma ustalenia z tej rundy — przy zamknięciu zadania (`tf task close`) każde ważne
+ustalenie musi mieć kontrolę, która złapie je następnym razem.
 
 `verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
 `tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
@@ -574,6 +579,11 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
                     f"blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code <kod> --reason \"<powód "
                     "z dowodem>\" (kod: testy — weryfikacja czerwona, skan — skan blokuje, pytanie — ustalenie "
                     "przeglądu, którego nie da się usunąć w zakresie kawałka).")
+    if step == "zakres" and state == "fail" and meta.get("key") and not slice_finding(project, meta["key"], target, rnd):
+        return fail(f"przegląd zakresu {target} R{rnd} nie przeszedł, a ważne ustalenie nie jest zapisane — najpierw: "
+                    f"run_state.py finding {run_dir} {target} \"<ustalenie [ważne] z przeglądu>\" --round {rnd}, potem "
+                    "powtórz to polecenie. Zapis służy zamknięciu zadania: każde ważne ustalenie dostaje kontrolę, "
+                    "która złapie je następnym razem.")
     while len(rounds) < rnd:
         rounds.append({s: "todo" for s in STEPS})
     row = rounds[rnd - 1]
@@ -597,6 +607,29 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     refresh(project)
     print(f"✓ {target} R{rnd}: {step} = {state}")
     return 0
+
+
+def slice_finding(project: Path, key: str, slice_id: str, rnd: int) -> bool:
+    """Czy zadanie ma zapisane ważne ustalenie przeglądu dla tego kawałka i tej rundy."""
+    view = task_view(project, key)
+    return any(isinstance(f, dict) and f.get("slice") == slice_id and f.get("round") == rnd
+               for f in ((view or {}).get("task") or {}).get("findings") or [])
+
+
+def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, project: Path) -> int:
+    """Zapisuje ważne ustalenie przeglądu zakresu w zadaniu (`tf task finding … add`), z kawałkiem i rundą."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
+    rnd = rnd or (len(cur.get("rounds") or []) if cur.get("k") == slice_id else 0) or 1
+    r = run_report.task_state(project, "finding", meta["key"], "add", text, "--slice", slice_id, "--round", str(rnd))
+    if r is None:
+        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    return r.returncode
 
 
 # ---- odczyt stanu i dashboard ------------------------------------------------------------------------------------
@@ -1451,6 +1484,11 @@ def main(argv: list[str]) -> int:
     an.add_argument("--by", default=None)
     nx = sub.add_parser("next")
     nx.add_argument("run_dir")
+    fd = sub.add_parser("finding")
+    fd.add_argument("run_dir")
+    fd.add_argument("slice_id")
+    fd.add_argument("text")
+    fd.add_argument("--round", type=int, default=None)
     pb = sub.add_parser("pr-body")
     pb.add_argument("run_dir")
     pb.add_argument("--base", default=None)
@@ -1491,6 +1529,8 @@ def main(argv: list[str]) -> int:
         return cmd_answer(Path(args.run_dir), args.slice_id, args.text, args.by, project)
     if args.cmd == "next":
         return cmd_next(Path(args.run_dir), project)
+    if args.cmd == "finding":
+        return cmd_finding(Path(args.run_dir), args.slice_id, args.text, args.round, project)
     if args.cmd == "pr-body":
         return cmd_pr_body(Path(args.run_dir), args.base, project)
     path = build_dashboard(project, Path(args.out) if args.out else None, costs=not args.no_cost)
