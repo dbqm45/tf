@@ -27,7 +27,8 @@ z dowodem; bez kodu albo z kodem spoza listy polecenie kończy się kodem 2 i wy
 zapisują tryb zadania (`tf task mode`): Plan kończy przebieg na planie, zwykły (domyślny) wpuszcza pętlę kawałka po
 zgodzie człowieka na plan (`approve`), Auto — bez zgody, chyba że waga jest pełna. `step` zapisuje wynik etapu pętli w rundzie
 bieżącego kawałka: etapy test, kod, weryf, skan, zakres; stany run, pass, fail. Rundę zaczyna kolejna próba kawałka
-po nieudanej bramce (R1, R2, …). Etapy wcześniejsze od zapisywanego, które nie mają stanu albo trwają, dostają pass —
+po nieudanej bramce (R1, R2). Trzeciej rundy skrypt odmawia: kawałek kończy się blokiem STOP, a po decyzji człowieka
+(etap `needs`) dostaje dwie kolejne. Etapy wcześniejsze od zapisywanego, które nie mają stanu albo trwają, dostają pass —
 pętla zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
 decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
 
@@ -119,6 +120,7 @@ _TASK_API = None
 SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(K\d+)\s*[—-]\s*(.+)$")
 MAX_TEXT = 40000
 MAX_RUNS = 40
+MAX_ROUNDS = 2      # rundy jednego kawałka bez decyzji człowieka (pierwsza próba i jedna naprawa); potem blok STOP
 TEMPLATE = HERE.parent / "templates" / "dashboard.html"
 MESSAGES = HERE.parent / "templates" / "stop_messages.json"   # komunikaty zatrzymań dla człowieka, jeden na kod
 CONFIG = Path(".claude") / "tf.json"         # opcje podglądu; plik osobisty, aktualizacja fabryki go nie rusza
@@ -533,6 +535,14 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     if not isinstance(cur, dict) or cur.get("k") != target:
         cur = {"k": target, "rounds": []}      # nowy kawałek: rundy liczą się od R1
     rounds = cur.setdefault("rounds", [])
+    limit = cur.get("limit") or MAX_ROUNDS
+    if rnd > limit and meta.get("stage") == "needs":
+        limit = cur["limit"] = len(rounds) + MAX_ROUNDS     # człowiek zdecydował po STOP: kolejne próby
+    if rnd > limit:                                         # limitu rund pilnuje skrypt, nie deklaracja modelu
+        return fail(f"{target} miał już {limit} rundy — kolejna zaczyna się dopiero po decyzji człowieka. Zakończ "
+                    f"blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code <kod> --reason \"<powód "
+                    "z dowodem>\" (kod: testy — weryfikacja czerwona, skan — skan blokuje, pytanie — ustalenie "
+                    "przeglądu, którego nie da się usunąć w zakresie kawałka).")
     while len(rounds) < rnd:
         rounds.append({s: "todo" for s in STEPS})
     row = rounds[rnd - 1]
@@ -550,8 +560,8 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
             print(refused)
             return 2
         meta["stage"] = "slices"
-        meta.pop("needs", None)
-        meta.pop("stop_text", None)
+        for name in ("needs", "stop_text", "stop_code", "needs_at"):
+            meta.pop(name, None)
     write_run(run_dir, meta)
     refresh(project)
     print(f"✓ {target} R{rnd}: {step} = {state}")

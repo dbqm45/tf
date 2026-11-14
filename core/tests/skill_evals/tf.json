@@ -28,6 +28,15 @@
       }
     },
     {
+      "id": "przeglad-zakresu-etykiety",
+      "expect": "trigger",
+      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Przegląd zakresu kawałka K2 zwrócił jedno ustalenie ważne i dwa drobne — co robisz dalej?",
+      "checks": {
+        "all": [["ważn"], ["wycof", "popraw"], ["parked"], ["rund", "R2"]],
+        "none": ["R3 ", "trzeci[aą] rund[aęy] bez"]
+      }
+    },
+    {
       "id": "edge-zadanie-bez-tresci",
       "expect": "trigger",
       "prompt": "Weź się za następne zadanie z trackera.",

@@ -94,5 +94,8 @@ z nimi).
 - Sprawdzenie po stronie pdi: funkcja `pr_loop._outside_plan` wyczytała z raportu nowego układu obie odłożone sprawy
   (zwykłą i z dopiskiem `[założenie]`); testy repozytorium pdi bez zmian: 1132 zaliczone (`uv run pytest -q`,
   commit `b40dbe8`).
+- Błąd bramki ShipScope dla folderów zadań (ustalenie 1; także zwykłe zadanie z kluczem z trackera) poprawiony
+  w `ci_for_sdlc` — PR `dbqm45/ci_for_sdlc#134` (folder z `task.json` bez `intent.md` jest pomijany). Jego CI nie
+  startuje (zadania kończą się po 2 sekundach bez logu, tak samo jak w PR #133), więc scalenie czeka na właściciela.
 - Niezmierzone: koszt przebiegu cięcia w nowym układzie i zachowanie modelu w całej fazie pdi — testy sprawdzają
   skrypty i pliki, nie przebieg z modelem.

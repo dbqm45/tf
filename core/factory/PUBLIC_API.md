@@ -30,7 +30,9 @@ kroku → `label`, `who`, `tier`; `tf config show steps`), waga zadania (`tf tas
 [--reason] [--json]`, wartości `lekka`/`zwykla`/`pelna`, pola `weight` i `weight_log` w `task.json`, linia `Waga:`
 na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`), tryb zadania (`tf task mode <KEY>
 [plan|zwykly|auto]`, pole `mode` w `task.json`, `run_state.py stage … --plan|--auto`, `run_state.py mode <katalog>
-[tryb]`, `run_state.py approve <katalog>`), lista „czeka na Ciebie” (`tf status [--json] [--open]`: pole `waiting` z wpisami `kind` = `plan` / `stop` / `kawalek`,
+[tryb]`, `run_state.py approve <katalog>`), limit rund kawałka (`run_state.py step … R<k>`: najwyżej 2 rundy bez decyzji człowieka, trzecia to odmowa z kodem 2;
+po etapie `needs` dwie kolejne; pole `limit` w `current` pliku `run.json`), etykiety ustaleń agenta `scope-reviewer`
+(`[ważne]`, `[drobne]`, `[zastane]`), lista „czeka na Ciebie” (`tf status [--json] [--open]`: pole `waiting` z wpisami `kind` = `plan` / `stop` / `kawalek`,
 `what`, `details`, `question`, `options`, `recommended`, `how`, `since`; pole `needs_at` w `run.json`; to samo pole `waiting`
 na karcie podglądu), zadanie cięcia zmiany pdi (`tf task start <CHG>-<TSK> --title … --change <CHG>
 --cut <TSK>`, pola `change` i `cut` w `task.json`, brak wiersza w `INDEX.md`), kody zatrzymań (`run_state.py stage <katalog> needs --needs stop --code
