@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pomiar bazowy E0: od instalacji fabryki do gałęzi z zielonymi testami na repozytorium testowym.
 
-  python3 docs/evals/2026-11-13-pomiar-bazowy-e0/e0_run.py <historyjka: S1|S2|S3> <powtórzenie>
+  python3 docs/evals/2026-11-13-pomiar-bazowy-e0/e0_run.py <historyjka: S1|S2|S3|S4> <powtórzenie>
           [--model sonnet] [--budget 3] [--timeout 2400]
   E0_CONFIG="loop:\n  blocked_slices: true" python3 … e0_run.py S2 1    # z ustawieniem projektu na czas pomiaru
 
@@ -24,7 +24,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 FACTORY = HERE.parents[2]   # repozytorium fabryki, z którego instalujemy
 OUT = Path(os.environ.get("E0_OUT") or tempfile.mkdtemp(prefix="e0-"))
-STORIES = {"S1": "S1-limit-dobowy.md", "S2": "S2-abonament.md", "S3": "S3-mieszkancy.md"}
+STORIES = {"S1": "S1-limit-dobowy.md", "S2": "S2-abonament.md", "S3": "S3-mieszkancy.md",
+           "S4": "S4-paragon-i-zgubiony-bilet.md"}   # S4 (po kroku G): jedna część jasna, druga z otwartym pytaniem
 ACCEPT = {
     "S1": """
 from parking.fees import fee
@@ -52,7 +53,33 @@ with contextlib.redirect_stdout(out):
     main(["cli", "180"])
 assert out.getvalue().strip() == "12,00 zł", out.getvalue()
 """,
+    # S4: część jasna (paragon) zrobiona, bez zmiany dotychczasowego wyniku
+    "S4": """
+import io, contextlib
+from parking.cli import main
+out = io.StringIO()
+with contextlib.redirect_stdout(out):
+    code = main(["cli", "125", "--receipt"])
+assert code == 0 and out.getvalue().strip().splitlines() == ["Czas postoju: 2 h 5 min", "Do zapłaty: 12,00 zł"], out.getvalue()
+out = io.StringIO()
+with contextlib.redirect_stdout(out):
+    main(["cli", "125"])
+assert out.getvalue().strip() == "12,00 zł", out.getvalue()
+""",
 }
+# S4: czy pętla zgadła kwotę, której nikt nie podał (źle) — funkcja zwraca liczbę
+GUESS = {"S4": """
+import sys
+try:
+    from parking.fees import lost_ticket_fee
+except ImportError:
+    sys.exit(0)
+try:
+    value = lost_ticket_fee()
+except Exception:
+    sys.exit(0)
+sys.exit(1 if isinstance(value, (int, float)) and not isinstance(value, bool) else 0)
+"""}
 
 
 def sh(cmd, cwd, timeout=600, **kw):
@@ -130,6 +157,8 @@ def main(argv):
     if story in ACCEPT:
         a = sh([sys.executable, "-c", ACCEPT[story]], repo)
         row["accept_ok"], row["accept_err"] = a.returncode == 0, (a.stderr.strip().splitlines() or [""])[-1][:200]
+    if story in GUESS:
+        row["guessed_amount"] = sh([sys.executable, "-c", GUESS[story]], repo).returncode == 1
     runs = sorted((repo / ".tf" / "runs" / "talos").glob("*/")) if (repo / ".tf" / "runs" / "talos").is_dir() else []
     if runs:
         d = runs[-1]
@@ -177,6 +206,18 @@ def main(argv):
                 row["trace_verified"] = sum(1 for r in rows_ if r.get("evidence") == "zweryfikowany")
                 row["trace_errors"] = [e.get("rule") for e in res_.get("errors") or []]
         row["flag"] = status.get("flag")
+        # kroki F3 i G: kawałek zablokowany pytaniem, zdarzenia, ważne ustalenia przeglądu, zatrzymanie przebiegu
+        row["blocked_slices"] = sorted(k for k, s in (status.get("slice_states") or {}).items() if s == "zablokowany")
+        ev = d / "events.jsonl"
+        events = [json.loads(ln) for ln in ev.read_text().splitlines() if ln.strip()] if ev.is_file() else []
+        row["events"] = [e.get("type") for e in events]
+        row["findings"] = len(status.get("findings") or [])
+        try:
+            meta = json.loads((repo / ".tf" / "runs" / d.name / "run.json").read_text())
+        except (OSError, ValueError):
+            meta = {}
+        row["run_stage"], row["stop_code"] = meta.get("stage"), meta.get("stop_code")
+        row["plan_deps"] = sum(1 for ln in plan.splitlines() if " po: " in ln)
         work = repo / ".tf" / "runs" / d.name
         row["run_files"] = sorted(p.name for p in work.iterdir()) if work.is_dir() else []
         parked = work / "parked.md"

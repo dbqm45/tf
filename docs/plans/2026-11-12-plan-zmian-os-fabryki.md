@@ -302,3 +302,27 @@ Decyzje właściciela z 2026-11-14 (do kroku G):
   i prosi, żeby go zapisać na przyszłość. Do tematu wracamy, gdy będą dane z `tf metrics` i spełnione warunki
   z dokumentu osi (sekcja 16, punkt 6): zaufani autorzy, kompletne kontrole, szybkie cofanie, pilnowany odsetek
   cofnięć. [interpretacja: w wiadomości właściciela było „niestreszczenie”; odczytane jako „nie teraz”]
+
+Decyzje właściciela z 2026-11-14, po kroku G (do kroku H):
+- **Zgoda na płatny pomiar** po kroku G (ten sam zestaw i nowa historyjka, która sprawdza kawałek zablokowany
+  pytaniem — F3). Zgoda dotyczy tego jednego pomiaru.
+  Wykonany: `docs/evals/2026-11-14-pomiar-po-kroku-g.md` (12,67 USD); zgoda wykorzystana.
+- **D9 — na sam koniec.** Podgląd i pytania jako mod w oknie Claude Code wracają do decyzji po kroku H.
+- **D10 — zgodnie z rekomendacją:** poziom `lead` dla wagi pełnej i długich przebiegów bez nadzoru, ale dopiero
+  po pomiarze na własnych zadaniach i domyślnie wyłączony.
+- **D11 i D13 — właściciel zostawia wybór fabryce** („tak, żeby było jak najlepiej i najbardziej efektywnie”).
+  Wybór i powód:
+  - **D11: panel recenzentów jako zapisany przepływ, tylko przy wadze pełnej.** Recenzent w osobnym kontekście nie
+    faworyzuje własnego kodu, a przepływ zapisany skryptem nie zależy od tego, czy model przeczyta prozę skilla
+    (pomiary po E3 i F pokazały, że wskazówki w treści bywają pomijane, a polecenia skryptów — nie). Koszt rośnie
+    tylko przy wadze pełnej, która jest rzadka; lekka i zwykła zostają przy jednym przeglądzie zakresu.
+  - **D13: fabryka tylko ostrzega i podaje polecenie powrotu, nie cofa się sama.** Przy małej liczbie zmian odsetek
+    cofnięć jest zaszumiony; samoczynna podmiana hooków i skilli w trakcie pracy zespołu byłaby trudna do
+    wyjaśnienia i mogłaby cofnąć poprawkę bezpieczeństwa. Decyzja o powrocie zostaje u człowieka.
+- **D8 — właściciel pyta o rekomendację.** Dziś domyślna instalacja to rdzeń (21 skilli), `pack-docs` i nakładka
+  języka (`pack-editorial-pl` przy `pl`); `pack-it` (141 skilli) wybiera się samemu. Talosa już nie ma, więc
+  „zestaw minimalny” z pierwotnego pytania to właśnie dzisiejszy stan. Rekomendacja: zostawić jak jest — każdy
+  skill w repozytorium dokłada kontekst, a pomiary pętli robimy z `pack-it` wybranym jawnie. Do czasu odpowiedzi
+  nic się nie zmienia.
+- **Jira i test laika — odłożone jak najdalej.** Pierwsze pobranie z prawdziwej Jiry i test „Zacznij tutaj”
+  z osobą spoza projektu właściciel zrobi później; prace, które ich nie wymagają, idą dalej.
