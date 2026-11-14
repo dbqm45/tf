@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.5.0] — 2026-11-14
+### Added
+- **core:** keep the model assignment of loop steps in the configuration (#244)
+
 ## [10.4.1] — 2026-11-14
 ### Fixed
 - **core:** name the stop codes in the loop skill and warn about untagged tests (#243)
