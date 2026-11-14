@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.3.0] — 2026-11-14
+### Added
+- **core:** add task modes, recorded plan approval and stop codes (#241)
+
 ## [10.2.0] — 2026-11-14
 ### Added
 - **core:** let the factory choose the task weight and guard its effects (#240)
