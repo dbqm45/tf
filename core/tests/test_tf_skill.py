@@ -118,6 +118,19 @@ def main() -> int:
           and "feedback.md" in ref("bezpieczenstwo.md") and "min-release-age" in ref("bezpieczenstwo.md"),
           "T-22: szczegóły trackera, flagi funkcji i skanu bezpieczeństwa są w plikach references/")
 
+    # pomiar po E1: STOP przed założeniem zadania nie zostawia śladu ani raportu; polecenia złożone są odrzucane
+    check("zawsze zakładasz" in entry and "§1" in entry and "ślad" in entry,
+          "T-23: gdy treść zadania jest (nawet niepełna), pętla zawsze zakłada zadanie; pytania o kryteria idą w §1, "
+          "żeby STOP zostawił ślad i raport")
+    review = next((ln for ln in loop.splitlines() if "**Przegląd zakresu:**" in ln), "")
+    check("zawsze" in review and "`scope-reviewer`" in review and "małym diffie" in review,
+          f"T-25: przegląd zakresu robi zawsze scope-reviewer, także przy małym diffie (nie sesja główna): {review}")
+    check("AC-1" in loop and "dodatkowy commit" in loop,
+          "T-26: identyfikator kryterium w teście od pierwszej wersji — dopisywanie po fakcie to dodatkowy commit")
+    rules = body.split("## Wejście", 1)[0]
+    check("nie łączysz poleceń" in rules and all(s in rules for s in ("`;`", "`&&`", "potok")),
+          "T-24: reguła „jedna czynność na polecenie” mówi wprost, czego nie łączyć (`;`, `&&`, potok)")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów pętli tf w rdzeniu")

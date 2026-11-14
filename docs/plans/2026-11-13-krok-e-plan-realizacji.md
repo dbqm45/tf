@@ -111,6 +111,14 @@ i poprawki z pętli PR), `flaga-funkcji.md`, `bezpieczenstwo.md` (karencja wersj
 i prompt poprawek `pr_loop.py` wskazują `ciecia-pdi.md` wprost. Test `T-20` pilnuje limitu, `T-21` — że każdy plik
 jest wymieniony w SKILL.md. Kolejne kawałki (E2–E4) dopisują szczegóły do `references/`, nie do SKILL.md.
 
+## Pomiar po E0 i E1 (2026-11-14)
+
+Jedna seria po obu kawałkach (decyzja właściciela: pomiar po zakończeniu E1), raport
+`docs/evals/2026-11-14-pomiar-po-kroku-e1.md`: 8,12 USD wobec 8,58 USD po D4, akceptacja 10/10, STOP 5/5, czas
+krótszy o 16–23% (średnie `wall_s` z plików `.jsonl` obu pomiarów). Cztery obserwacje poprawione w treści skilla (zadanie zakładane zawsze przed pytaniami, przegląd zakresu
+zawsze przez `scope-reviewer`, zakaz łączenia poleceń wprost, identyfikatory kryteriów od pierwszej wersji testu);
+ich skuteczność sprawdzi pomiar po E3. Kolejność dalej: E2 → E3 → **pomiar** → E4 → E5 → E6.
+
 ## Ustalenia
 
 - **Stare nazwy znikają od razu** (decyzja właściciela: jedna instalacja, bez warstwy zgodności). To zmiana
