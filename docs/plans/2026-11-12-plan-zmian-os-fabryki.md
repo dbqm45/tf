@@ -306,6 +306,7 @@ Decyzje właściciela z 2026-11-14 (do kroku G):
 Decyzje właściciela z 2026-11-14, po kroku G (do kroku H):
 - **Zgoda na płatny pomiar** po kroku G (ten sam zestaw i nowa historyjka, która sprawdza kawałek zablokowany
   pytaniem — F3). Zgoda dotyczy tego jednego pomiaru.
+  Wykonany: `docs/evals/2026-11-14-pomiar-po-kroku-g.md` (12,67 USD); zgoda wykorzystana.
 - **D9 — na sam koniec.** Podgląd i pytania jako mod w oknie Claude Code wracają do decyzji po kroku H.
 - **D10 — zgodnie z rekomendacją:** poziom `lead` dla wagi pełnej i długich przebiegów bez nadzoru, ale dopiero
   po pomiarze na własnych zadaniach i domyślnie wyłączony.
