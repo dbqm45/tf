@@ -4,6 +4,7 @@ Przebieg zadania („zadanie → PR”, skill tf): katalog przebiegu i raport ko
 
   python3 .claude/skills/tf/scripts/run_report.py start "<tytuł>" [--key PROJ-123] [--story "<treść>" | --story-file PLIK] [--source "<skąd>"]
   python3 .claude/skills/tf/scripts/run_report.py start --task TSK-57 [--change CHG-12] ["<tytuł>"]   # cięcie z planu zmiany pdi
+  python3 .claude/skills/tf/scripts/run_report.py start --key EBO-1236 --from-tracker ["<tytuł>"]     # treść z Jiry pobiera skrypt
   python3 .claude/skills/tf/scripts/run_report.py status <katalog-przebiegu> [--session ID]   # jedna linia: koszt, czas, plan
   python3 .claude/skills/tf/scripts/run_report.py finish <katalog-przebiegu> [--session ID] [--json]
 
@@ -589,6 +590,8 @@ def main(argv: list[str]) -> int:
     s.add_argument("--key", default=None, help="klucz zadania z trackera, np. PROJ-123 (domyślnie T-<data>-<slug>)")
     s.add_argument("--story", default=None)
     s.add_argument("--story-file", default=None)
+    s.add_argument("--from-tracker", action="store_true",
+                   help="pobierz zgłoszenie --key z Jiry skryptem (tylko odczyt; dane dostępu ze zmiennych środowiska)")
     s.add_argument("--source", default=None,
                    help="skąd pochodzi treść zadania, np. \"jira EBO-1236\" albo adres zgłoszenia (trafia do ticket.md)")
     for name in ("status", "finish"):
@@ -601,6 +604,19 @@ def main(argv: list[str]) -> int:
     if args.cmd == "start":
         story = Path(args.story_file).read_text(encoding="utf-8") if args.story_file else args.story
         source = args.source or (f"plik {args.story_file}" if args.story_file else None)
+        if args.from_tracker:           # zgłoszenie czyta skrypt, nie model; treść to dane, nie polecenia
+            if not args.key or args.task:
+                print("✗ `--from-tracker` wymaga `--key <numer zgłoszenia>` (np. --key EBO-1236).")
+                return 2
+            import intake
+            try:
+                ticket = intake.fetch_jira(project, args.key)
+            except intake.FetchError as e:
+                print(f"✗ {e}. Inna droga: {intake.PASTE} i uruchom start z --story.")
+                return 2
+            args.key, args.title = ticket["key"], args.title or ticket["title"]
+            story = ticket["text"] + (f"\n\n## Dodatkowo od człowieka\n\n{story.strip()}" if story and story.strip() else "")
+            source = ticket["source"]
         return cmd_start(args.title, story, project, args.task, args.change, args.key, source)
     return cmd_finish(Path(args.run_dir), args.session, args.json, project, status=args.cmd == "status")
 

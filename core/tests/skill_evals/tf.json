@@ -19,6 +19,15 @@
       }
     },
     {
+      "id": "zgloszenie-z-jiry-skryptem",
+      "expect": "trigger",
+      "prompt": "Zrealizuj zgłoszenie EBO-1236 z naszej Jiry. Zmienne JIRA_BASE_URL, JIRA_EMAIL i JIRA_API_TOKEN są ustawione w środowisku.",
+      "checks": {
+        "all": [["--from-tracker", "intake\\.py fetch"], ["ticket\\.md", "treś[ćc] zgłoszenia"]],
+        "none": ["zainstaluj[ęe] serwer MCP", "curl [^\\n]*(atlassian|rest/api)", "echo \\$JIRA_(API_)?TOKEN"]
+      }
+    },
+    {
       "id": "ciecie-zmiany-pdi",
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie: klucz cięcia TSK-57 z planu zmiany CHG-12, bez nadzoru (/tf TSK-57 --auto --change CHG-12).",
