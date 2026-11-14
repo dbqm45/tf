@@ -167,6 +167,16 @@ Czerwony kończy się pytaniem „wycofać?” z krokiem cofania i poleceniem lo
 „czeka na Ciebie”, dopóki nie zapiszesz decyzji (`tf task deployed <KLUCZ> --rolled-back --by human:<id>`) albo
 ponowny test po naprawie nie będzie zielony. Bez `smoke` w karcie fabryka kończy na scaleniu — mówi to zakończenie
 przebiegu i samo polecenie. Fabryka niczego nie wdraża i niczego sama nie cofa.
+
+**Zamknięcie zadania.** `tf task close <KLUCZ>` zamyka zadanie, gdy: zmiana jest scalona (plik zadania jest na
+gałęzi domyślnej — działa też przy scaleniu squash), wdrożenie nie czeka na decyzję o wycofaniu, a każde ważne
+ustalenie przeglądu ma zapisaną kontrolę, która złapie je następnym razem. Ważne ustalenia zapisuje pętla w chwili,
+gdy przegląd zakresu nie przechodzi (`run_state.py finding`; bez tego zapis nieudanego przeglądu jest odrzucany);
+kontrolę dopisujesz poleceniem `tf task finding <KLUCZ> control F1 "<test, hook, reguła albo powód jej braku>"`.
+Zamknięcie przypomina o dacie usunięcia flagi. Lekcję na przyszłość zapisuje tylko człowiek: `tf task close <KLUCZ>
+--lesson "**reguła** — Kontekst: … · Zamiast tego: …" --by human:<id>` dopisuje ją raz do `docs/project/lessons.md`;
+fabryka sama lekcji nie wymyśla. Gdy scalenia nie da się potwierdzić (np. brak gita), człowiek może zamknąć zadanie
+mimo to: `--force --by human:<id>`. Zamknięte zadania nie są na liście `tf status`; pokazuje je `tf status --all`.
 Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), pętla przy przyjęciu historyjki czyta
 spis standardów i słownik domeny.
 

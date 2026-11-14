@@ -124,8 +124,8 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
    FAIL → ustalenia z `security/K<n>/feedback.md` są wejściem następnej próby; po 2 próbach STOP, kawałka nie
    commitujesz. Brak skanera to FAIL, nie cichy PASS (`references/bezpieczenstwo.md`).
 4. **Przegląd zakresu:** zawsze `scope-reviewer` (nie Ty, także przy małym diffie) dostaje kawałek z planu
-   i `git diff`. Ustalenie **ważne** (kod spoza kryteriów) → wycofujesz, nowa runda; **drobne** i **zastane**
-   → `parked.md`.
+   i `git diff`. Ustalenie **ważne** (kod spoza kryteriów) → `run_state.py finding <katalog> K<n> "<ustalenie>"`,
+   wycofujesz, nowa runda; **drobne** i **zastane** → `parked.md`.
 5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`; z flagą
    stopka `Flag: <klucz>`. Potem `run_state.py tick <katalog> K<n>` (odmowa = brak aktualnego dowodu → `verify`).
    Stopki i flaga przebiegu cięcia: `references/ciecia-pdi.md`.
@@ -140,8 +140,8 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
    --base <gałąź domyślna>` — kod 1 (kryterium bez testu, test z obcym `AC-n`) naprawiasz.
 3. `run_state.py stage <katalog> pr` i `run_state.py step <katalog> PR plan_drift pass` (albo `fail`). Push gałęzi
    i jeden PR. Opis składa skrypt: `run_state.py pr-body <katalog> --base <gałąź domyślna>` → `gh pr create
-   --body-file <plik>` (stałe pola, m.in. „Jak sprawdzono”, „Ryzyko”, „Jak cofnąć”); sam dopisujesz na końcu
-   pliku tylko odstępstwa od planu i wyjątek `pr_budget`. Nie scalasz.
+   --body-file <plik>` (stałe pola, m.in. „Jak cofnąć”); sam dopisujesz na końcu tylko odstępstwa od planu
+   i wyjątek `pr_budget`. Nie scalasz.
 4. `run_state.py stage <katalog> done --pr <numer>`, potem `run_report.py finish <katalog>` → `report.md`.
    **Pliki zadania — jeden commit** na gałęzi `story/<slug>`, nigdy na domyślnej:
    `git add docs/project/changes/<KEY>`, potem `git commit -m "docs(task): record <KEY>"` i push (dokładne

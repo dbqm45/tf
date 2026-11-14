@@ -182,6 +182,10 @@ def main() -> int:
     check(guide is not None and ".tf/runs/cuts" not in gtext and "CHG-12-TSK-57" in gtext,
           f"T-37: PETLA.md opisuje cięcie jako zadanie `<CHG>-<TSK>`, bez wyjątku starego układu: {guide}")
 
+    check("run_state.py finding" in body.split("## 3.", 1)[-1].split("## 4.", 1)[0],
+          "T-40: ustalenie ważne z przeglądu zakresu pętla zapisuje poleceniem `run_state.py finding` (krok G4)")
+    check("tf task close" in gtext and "tf task finding" in gtext and "lessons.md" in gtext and "tf status --all" in gtext,
+          "T-41: PETLA.md opisuje zamknięcie zadania: scalenie, kontrola do ustaleń, lekcja od człowieka, lista w toku")
     check("Jak cofnąć" in finish and "risk_triage.py --md" not in finish,
           "T-38: krok PR wymienia pola opisu (m.in. „Jak cofnąć”) i nie każe już składać triażu ryzyka ręcznie")
     check("pr-body" in gtext and all(w in gtext for w in ("Jak sprawdzono", "Ryzyko", "Jak cofnąć", "deploy.rollback")),

@@ -81,6 +81,33 @@ Sekcja `deploy` karty operacyjnej (`.tf/config/operations.json`):
 - Test dymny to polecenie z pliku w repozytorium — tak jak polecenie bramki jakości (`.claude/quality-gate.json`);
   uruchamiane bez powłoki, z limitem czasu. Fabryka niczego nie wdraża i niczego sama nie cofa (D6).
 
+## G4 — plan realizacji (zapisany przed kodem)
+
+- **Ważne ustalenia przeglądu są zapisywane.** `tf task finding <KEY> add "<ustalenie>" [--slice K<n>]` zapisuje
+  ustalenie w `task.json` (`F1`, `F2`…); pętla woła to przez `run_state.py finding <katalog> K<n> "<ustalenie>"`.
+  `run_state.py step … zakres fail` jest odrzucany, dopóki kawałek nie ma zapisanego ustalenia z tej rundy — werdykt
+  „SPOZA ZAKRESU” powstaje tylko przy ustaleniu `[ważne]`, więc jego treść zawsze jest. Przebiegi bez zadania (stary
+  układ) są z tego zwolnione.
+- **Kontrola do ustalenia:** `tf task finding <KEY> control F1 "<test, hook, reguła albo powód jej braku>"`.
+- **`tf task close <KEY> [--by human:<id>] [--lesson "<lekcja>"] [--base <gałąź>]`:**
+  1. zmiana jest scalona — plik `task.json` zadania jest na gałęzi domyślnej (`git cat-file`); działa przy scaleniu
+     zwykłym, squash i rebase. Bez potwierdzenia: odmowa; człowiek może zamknąć mimo to (`--force --by human:<id>`,
+     zapisane w zadaniu);
+  2. wdrożenie nie czeka na decyzję o wycofaniu (czerwony test dymny bez decyzji → odmowa);
+  3. każde ważne ustalenie ma zapisaną kontrolę — inaczej odmowa z listą i poleceniem;
+  4. przypomnienie o fladze: data usunięcia albo jej brak;
+  5. lekcja tylko wtedy, gdy poda ją człowiek (`--lesson … --by human:<id>`, z częścią „Zamiast tego:”): trafia do
+     `docs/project/lessons.md` raz. Fabryka sama lekcji nie wymyśla — tak stanowi skill core-project-record;
+  6. etap `zamkniecie` i zapis `closed` w `task.json`.
+- **`tf status` pokazuje zadania w toku**; zamknięte liczy jedną linią, a `tf status --all` pokazuje wszystkie.
+  Wynik `--json` zawiera wszystkie zadania jak dotąd.
+- Pliki: `core/factory/task_state.py`, `core/skills/tf/scripts/run_state.py` (`finding`, odmowa `zakres fail`),
+  `core/tests/test_close.py`, poprawki `test_review_rounds.py` i innych testów, które zapisują `zakres fail`,
+  `references/tryby-i-zatrzymania.md`, przewodniki, `PUBLIC_API.md`.
+- Kolejność: testy (czerwone) → `task_state.py` → `run_state.py` → przewodniki → bramka skilla → pełne sprawdzenie.
+- Zmiana zachowania pętli: jedno dodatkowe polecenie przy nieudanym przeglądzie zakresu (w pomiarze po kroku F:
+  1 przebieg na 15). Niezmierzone na przebiegach z modelem.
+
 ## Decyzje projektowe
 
 - **Skrypt, nie model, czyta tracker** (dokument osi, §9): model dostaje gotowy plik. Treść zgłoszenia to dane —
@@ -136,3 +163,9 @@ Sekcja `deploy` karty operacyjnej (`.tf/config/operations.json`):
   znaki sterujące z karty na terminalu, wycofanie zapisywane bez czerwonego wyniku, nietypowy zapis w `task.json`.
   Zostaje jak w całym silniku: `--by human:<id>` to sprawdzenie zapisu, nie tożsamości; polecenie testu dymnego jest
   powielone w dowodzie, więc nie może zawierać sekretów.
+- G3 scalone (tf#254).
+- G4 gotowe: `tf task finding`, `tf task close`, `run_state.py finding` z odmową `zakres fail` bez ustalenia,
+  `tf status` bez zadań zamkniętych (31 testów w `test_close.py`). Zmiana względem pierwszego zapisu planu: lekcję
+  do `docs/project/lessons.md` dopisuje tylko człowiek (`--lesson … --by human:<id>`), bo tak stanowi skill
+  core-project-record. Niezweryfikowane: jak model reaguje na odmowę `zakres fail` w prawdziwym przebiegu.
+- Krok G zrobiony w całości. Poza nim zostają pozycje z sekcji „Poza krokiem G”.

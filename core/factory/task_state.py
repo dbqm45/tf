@@ -16,6 +16,9 @@ model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
   tf task mode <KEY> [plan|zwykly|auto]
   tf task deployed <KEY> [--version <X>] [--timeout <s>]           # test dymny z karty operacyjnej po wdrożeniu
   tf task deployed <KEY> --rolled-back --by human:<id> [--note "<co zrobiono>"]   # decyzja człowieka o wycofaniu
+  tf task finding <KEY> add "<ważne ustalenie przeglądu>" [--slice K1] [--round 1]
+  tf task finding <KEY> control F1 "<test, hook, reguła albo powód jej braku>"   # co złapie to następnym razem
+  tf task close <KEY> [--lesson "<lekcja>" --by human:<id>] [--base <gałąź>] [--force --by human:<id>]
 
 `tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
 i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md. Pod zadaniem, które czeka na człowieka,
@@ -97,6 +100,9 @@ CHANGES = Path("docs") / "project" / "changes"
 RUNS = Path(".tf") / "runs"                       # katalogi robocze przebiegów pętli /tf (run.json: etap, zatrzymanie)
 STOP_MESSAGES = Path(".claude") / "skills" / "tf" / "templates" / "stop_messages.json"
 CARD = Path(".tf") / "config" / "operations.json"   # karta operacyjna projektu; sekcja `deploy`: jak sprawdzić i cofnąć wdrożenie
+LESSONS = Path("docs") / "project" / "lessons.md"
+LESSON_HEAD = "Wykonanie i weryfikacja"           # kategoria lekcji zapisywanych przy zamknięciu zadania
+BASES = ("origin/main", "main", "origin/master", "master")
 DEPLOY_STATES = {"ok": "test dymny zielony", "czerwone": "test dymny czerwony — czeka na decyzję o wycofaniu",
                  "wycofane": "wycofane decyzją człowieka"}
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
@@ -556,6 +562,127 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
     return 1
 
 
+def cmd_finding(root: Path, key: str, action: str, first: str | None, second: str | None, slice_id: str | None,
+                rnd: int | None) -> int:
+    """Ważne ustalenia przeglądu (`findings` w task.json) i kontrola, która złapie je następnym razem."""
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    found = task.setdefault("findings", [])
+    if action == "add":
+        text = one_line(first or "", 400)
+        if not text:
+            return fail(f"podaj ustalenie: tf task finding {key} add \"<co przegląd uznał za ważne>\"", 2)
+        fid = f"F{len(found) + 1}"
+        found.append({"id": fid, "text": text, **({"slice": slice_id} if slice_id else {}),
+                      **({"round": rnd} if rnd else {}), "at": now()})
+        task["updated"] = now()
+        save(root, task)
+        print(f"✓ {key}: ustalenie {fid} zapisane. Przed zamknięciem zadania podaj kontrolę, która złapie to następnym "
+              f"razem: tf task finding {key} control {fid} \"<test, hook, reguła albo powód jej braku>\"")
+        return 0
+    item = next((f for f in found if f.get("id") == first), None)
+    if item is None:
+        return fail(f"nie ma ustalenia {first} w zadaniu {key} — zapisane: "
+                    + (", ".join(f.get("id", "?") for f in found) or "brak"))
+    text = one_line(second or "", 400)
+    if not text:
+        return fail(f"podaj kontrolę: tf task finding {key} control {first} \"<test, hook, reguła albo powód jej braku>\"", 2)
+    item["control"], item["control_at"] = text, now()
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key}: kontrola do {first} zapisana")
+    return 0
+
+
+def merged_on(root: Path, key: str, base: str | None) -> tuple[bool | None, str]:
+    """Czy zmiana jest scalona: plik task.json zadania jest na gałęzi domyślnej (działa też przy squash i rebase).
+    (True, gałąź) | (False, sprawdzone gałęzie) | (None, powód) — None, gdy nie da się tego sprawdzić."""
+    rel, seen = (CHANGES / key / "task.json").as_posix(), []
+    for cand in ([base] if base else BASES):
+        try:
+            if subprocess.run(["git", "-C", str(root), "cat-file", "-e", f"{cand}:{rel}"], capture_output=True,
+                              timeout=20).returncode == 0:
+                return True, cand
+            known = subprocess.run(["git", "-C", str(root), "rev-parse", "--verify", "--quiet", f"{cand}^{{commit}}"],
+                                   capture_output=True, timeout=20).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            return None, "git nie odpowiada"
+        if known:
+            seen.append(cand)
+    return (False, ", ".join(seen)) if seen else (None, "git nie zna gałęzi " + (base or "main ani master"))
+
+
+def add_lesson(root: Path, key: str, lesson: str) -> bool:
+    """Dopisuje lekcję człowieka do docs/project/lessons.md (raz); True, gdy plik się zmienił."""
+    path = root / LESSONS
+    text = path.read_text(encoding="utf-8") if path.is_file() else "# Lekcje projektu\n"
+    if lesson in text:
+        return False
+    entry = f"- {now()[:10]} {lesson} · Zadanie: {key}"
+    lines = text.rstrip("\n").split("\n")
+    at = next((i for i, ln in enumerate(lines) if re.fullmatch(rf"##\s+{LESSON_HEAD}\s*", ln, re.I)), None)
+    if at is None:
+        lines += ["", f"## {LESSON_HEAD}", "", entry]
+    elif at + 1 < len(lines) and not lines[at + 1].strip():
+        lines.insert(at + 2, entry)                 # pod nagłówkiem, przed starszymi wpisami (najnowsze na górze)
+    else:
+        lines[at + 1:at + 1] = ["", entry]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_atomic(path, "\n".join(lines) + "\n")
+    return True
+
+
+def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: str | None, force: bool) -> int:
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — lista zadań: tf status --all")
+    stage = task.get("stage", STAGES[0])
+    if stage == "zamkniecie":
+        print(f"• {key} jest już zamknięte" + (f" ({task['closed']['at']})" if isinstance(task.get("closed"), dict)
+                                              and task["closed"].get("at") else ""))
+        return 0
+    if stage not in STAGES or STAGES.index(stage) < STAGES.index("pr"):
+        return fail(f"zadanie {key} jest na etapie {stage} — zamykasz je po scaleniu PR (etap pr albo wdrozenie)")
+    if not force:
+        merged, where = merged_on(root, key, base)
+        if merged is None:
+            return fail(f"nie da się potwierdzić, że zmiana {key} jest scalona ({where}). Zamknięcie mimo to jest "
+                        f"decyzją człowieka: tf task close {key} --force --by human:<id>")
+        if not merged:
+            return fail(f"zmiana {key} nie jest scalona: na gałęzi domyślnej ({where}) nie ma pliku "
+                        f"{(CHANGES / key / 'task.json').as_posix()}. Po scaleniu PR pobierz gałąź (git fetch) i powtórz; "
+                        f"zamknięcie mimo to: tf task close {key} --force --by human:<id>")
+    dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
+    if dep.get("state") == "czerwone":
+        return fail(f"wdrożenie {key} czeka na decyzję o wycofaniu (czerwony test dymny). Po wycofaniu: tf task deployed "
+                    f"{key} --rolled-back --by human:<id>; po naprawie i ponownym wdrożeniu: tf task deployed {key}")
+    open_ = [f for f in task.get("findings") or [] if isinstance(f, dict) and not f.get("control")]
+    if open_:
+        return fail("ważne ustalenia przeglądu bez kontroli, która złapie je następnym razem: "
+                    + "; ".join(f"{f.get('id')} — {f.get('text')}" for f in open_)
+                    + f". Zapisz ją dla każdego: tf task finding {key} control <F-n> \"<test, hook, reguła albo powód "
+                      "jej braku>\"")
+    wrote = add_lesson(root, key, lesson) if lesson else False
+    task["stage"], task["updated"] = "zamkniecie", now()
+    task["closed"] = {"at": now(), **({"by": by} if by else {}), **({"forced": True} if force else {}),
+                      **({"lesson": True} if lesson else {})}
+    save(root, task)
+    print(f"✓ {key} zamknięte ({stage} → zamkniecie)")
+    print("  wdrożenie: " + (DEPLOY_STATES[dep["state"]] if isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES
+                             else "niesprawdzone testem dymnym (tf task deployed nie było uruchomione)"))
+    flag = task.get("flag") if isinstance(task.get("flag"), dict) else {}
+    if flag.get("key") and flag.get("remove_by"):
+        print(f"  flaga {flag['key']}: do usunięcia do {flag['remove_by']} — zadanie jest zamknięte, flaga zostaje do tej daty")
+    elif flag.get("key"):
+        print(f"  flaga {flag['key']} nie ma daty usunięcia — ustaw ją: tf task flag {key} set {flag['key']} --remove-by RRRR-MM-DD")
+    if lesson:
+        print(f"  lekcja: {'dopisana do' if wrote else 'była już w'} {LESSONS.as_posix()}")
+    else:
+        print(f"  lekcja: nie zapisano (jeśli z zadania wynika reguła na przyszłość, dopisz ją do {LESSONS.as_posix()})")
+    return 0
+
+
 def cmd_start(root: Path, key: str, title: str, weight: str, mode: str, change: str | None = None,
               cut: str | None = None) -> int:
     if load(root, key) is not None:
@@ -896,7 +1023,7 @@ def task_rows(root: Path) -> list[dict]:
     return rows
 
 
-def cmd_list(root: Path, as_json: bool) -> int:
+def cmd_list(root: Path, as_json: bool, show_all: bool = False) -> int:
     rows = task_rows(root)
     if as_json:
         print(json.dumps(rows, ensure_ascii=False, indent=1))
@@ -904,6 +1031,11 @@ def cmd_list(root: Path, as_json: bool) -> int:
     if not rows:
         print(f"Brak zadań w {CHANGES}/. Pierwsze założysz: tf task start <KEY> --title \"<tytuł>\"")
         return 0
+    closed = sum(r["stage"] == "zamkniecie" for r in rows)
+    if not show_all:
+        rows = [r for r in rows if r["stage"] != "zamkniecie"]
+        if not rows:
+            print("Brak zadań w toku.")
     for r in rows:
         print(f"{r['key']}  {r['stage']}  kawałki z dowodem {r['verified']}/{len(r['slices'])}  {r['title']}"
               + (f"  ({cut_note(r)})" if cut_note(r) else ""))
@@ -919,6 +1051,8 @@ def cmd_list(root: Path, as_json: bool) -> int:
                       + (f" (rekomendacja: {w['recommended']})" if w.get("recommended") else ""))
             if w.get("how") and w["kind"] != "stop":
                 print(f"      {w['how']}")
+    if closed and not show_all:
+        print(f"zamknięte: {closed} (pokaż wszystkie: tf status --all)")
     return 0
 
 
@@ -948,6 +1082,13 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
               + (f" — zgoda na: {', '.join(sorted(flag['allowed']))}" if flag.get("allowed") else ""))
     elif flag and flag.get("none"):
         print(f"  flaga: brak — {flag['none']}")
+    for f in task.get("findings") or []:
+        if isinstance(f, dict):
+            print(f"  ustalenie {one_line(f.get('id'), 8)}" + (f" ({one_line(f['slice'], 4)})" if f.get("slice") else "")
+                  + f": {one_line(f.get('text'), 400)} — "
+                  + (f"kontrola: {one_line(f['control'], 400)}" if f.get("control") else "bez kontroli"))
+    if isinstance(task.get("closed"), dict):
+        print(f"  zamknięte: {task['closed'].get('at', '?')}" + (f" ({task['closed']['by']})" if task["closed"].get("by") else ""))
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else None
     if dep and isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES:
         print(f"  wdrożenie: {DEPLOY_STATES[dep['state']]}" + (f" · wersja {one_line(dep['version'], 60)}" if dep.get("version") else "")
@@ -1034,13 +1175,27 @@ def main(argv: list[str]) -> int:
     q.add_argument("--json", action="store_true")
     ls = sub.add_parser("list")
     ls.add_argument("--json", action="store_true")
+    ls.add_argument("--all", action="store_true", help="także zadania zamknięte")
+    fi = sub.add_parser("finding")
+    fi.add_argument("key")
+    fi.add_argument("action", choices=["add", "control"])
+    fi.add_argument("first", nargs="?")
+    fi.add_argument("second", nargs="?")
+    fi.add_argument("--slice", default=None)
+    fi.add_argument("--round", type=int, default=None)
+    cl = sub.add_parser("close")
+    cl.add_argument("key")
+    cl.add_argument("--by", default=None)
+    cl.add_argument("--lesson", default=None)
+    cl.add_argument("--base", default=None)
+    cl.add_argument("--force", action="store_true")
     try:
         a = ap.parse_args(argv[1:])
     except SystemExit as e:
         return 2 if e.code else 0
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     if a.cmd == "list":
-        return cmd_list(root, a.json)
+        return cmd_list(root, a.json, a.all)
     if not KEY.fullmatch(a.key):
         return fail(f"klucz „{a.key}” nie pasuje do wzorca (np. PROJ-123, CHG-12, T-20261113-limit)", 2)
     if a.cmd == "start":
@@ -1059,6 +1214,25 @@ def main(argv: list[str]) -> int:
                 return fail(f"zadanie cięcia ma klucz <CHG>-<TSK>: tf task start {a.change}-{a.cut} --title \"…\" "
                             f"--change {a.change} --cut {a.cut}", 2)
         return cmd_start(root, a.key, a.title.strip(), a.weight, a.mode, a.change, a.cut)
+    if a.cmd == "finding":
+        if a.slice and not SLICE.fullmatch(a.slice):
+            return fail(f"kawałek „{a.slice}” — oczekiwany zapis K1, K2…", 2)
+        if a.action == "control" and not (a.first and re.fullmatch(r"F[1-9][0-9]*", a.first)):
+            return fail(f"podaj identyfikator ustalenia: tf task finding {a.key} control F1 \"<kontrola>\"", 2)
+        return cmd_finding(root, a.key, a.action, a.first, a.second, a.slice, a.round if a.round and a.round > 0 else None)
+    if a.cmd == "close":
+        human = bool(a.by) and a.by.startswith("human:") and bool(ACTOR.fullmatch(a.by))
+        if a.by and not ACTOR.fullmatch(a.by):
+            return fail(f"wykonawca „{a.by}” — oczekiwany zapis: human:<id> albo process:<id>", 2)
+        if a.force and not human:
+            return fail("zamknięcie bez potwierdzenia scalenia to decyzja człowieka: --force --by human:<id>", 2)
+        lesson = one_line(a.lesson, 600) if a.lesson and a.lesson.strip() else None
+        if lesson and not human:
+            return fail("lekcję zapisuje człowiek: --lesson \"…\" --by human:<id>", 2)
+        if lesson and "Zamiast tego:" not in lesson:
+            return fail("lekcja ma część „Zamiast tego: <działanie>” — bez niej to opis błędu, nie reguła "
+                        "(format: **reguła** — Kontekst: … · Zamiast tego: … · Dotyczy: …)", 2)
+        return cmd_close(root, a.key, a.by, lesson, a.base, a.force)
     if a.cmd == "deployed":
         if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):
             return fail("wycofanie wdrożenia to decyzja człowieka: --rolled-back --by human:<id>", 2)

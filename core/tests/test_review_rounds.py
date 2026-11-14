@@ -48,6 +48,7 @@ def main() -> int:
             encoding="utf-8")
         call(p, cfg, "run_state.py", "flag", d, "none", "--reason", "bez flagi, bo zmiana jest w konfiguracji")
 
+        call(p, cfg, "run_state.py", "finding", d, "K1", "kod spoza kryteriów w fees.py")   # krok G4: ustalenie przed „fail”
         r1 = call(p, cfg, "run_state.py", "step", d, "K1", "R1", "zakres", "fail")
         r2 = call(p, cfg, "run_state.py", "step", d, "K1", "R2", "kod", "run")
         check(r1.returncode == 0 and r2.returncode == 0 and rounds(p) == 2,
