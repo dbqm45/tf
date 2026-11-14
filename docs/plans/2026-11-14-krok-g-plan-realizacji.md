@@ -93,3 +93,8 @@ i drukuje ścieżkę z podpowiedzią `--body-file`. Skrypt niczego nie wypycha i
   z treści zgłoszenia nie stają się nagłówkami `ticket.md`, adres lokalny nie idzie przez proxy, błędy połączenia
   i niepoprawne dane dostępu kończą się komunikatem zamiast śladu wyjątku, a ucinany jest opis, nie kryteria.
 - Niezweryfikowane: pobranie z prawdziwej Jiry (Cloud i Data Center) — testy używają atrapy serwera.
+- G1 scalone (tf#252).
+- G2 gotowe: `run_state.py pr-body` (22 testy w `test_pr_body.py`). Dodatek względem planu: tekst z zewnątrz (tytuł
+  zgłoszenia, karta, sprawy odłożone) nie powiadamia ludzi przez `@nazwa` i nie osadza obrazów w opisie PR. Test
+  treści skilla T-12 sprawdza teraz polecenie `pr-body` zamiast ręcznego `risk_triage.py --md` — triaż w opisie
+  sprawdza test PB-8. Niezweryfikowane: jak model używa polecenia w prawdziwym przebiegu (wymaga płatnego pomiaru).
