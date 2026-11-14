@@ -167,8 +167,10 @@ def main() -> int:
           "T-33: references/ciecia-pdi.md opisuje zadanie cięcia `<CHG>-<TSK>`, bez starego układu `.tf/runs/cuts/`")
     check(all(w in cuts for w in ("spec", "verify", "trace", "ticket.md")) and "bramce" in cuts and "security-reviewer" in cuts,
           "T-34: cięcie ma specyfikację, dowody i ślad; zgodę na plan daje bramka zmiany, przegląd bezpieczeństwa zostaje")
-    check("docs(task): record" in cuts and "runs/TSK-" in cuts and "INDEX.md" in cuts and "pierwszy commit" in " ".join(cuts.split()),
-          "T-35: jeden commit końcowy (katalog zadania i raport cięcia, bez INDEX.md); pierwszy commit gałęzi to kawałek "
+    check("docs(task): record" in cuts and "runs/TSK-" in cuts and "changes/INDEX.md" not in body + cuts
+          and "pierwszy commit" in " ".join(cuts.split()),
+          "T-35: jeden commit końcowy (katalog zadania i raport cięcia); skill nie każe już dodawać INDEX.md — polecenie "
+          "commitu drukuje `finish`; pierwszy commit gałęzi to kawałek "
           "— z niego pdi bierze tytuł PR")
     weight_ref = ref("waga.md")
     check("nie ma wagi" not in weight_ref and "cięci" in weight_ref and "bramce" in weight_ref,

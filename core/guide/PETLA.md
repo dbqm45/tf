@@ -108,14 +108,14 @@ katalogami:
 | `docs/project/changes/<KEY>/` | `ticket.md` (historyjka), `spec.md` (kryteria AC-n w formie Zakładając / Gdy / Wtedy, co zostaje bez zmian, co poza zakresem, otwarte pytania — sprawdza ją skrypt; z błędami nie ma planu; plik powstaje dopiero, gdy pętla zaczyna specyfikację), `plan.md` (kawałki do odhaczenia — od niego wznawiasz przerwany przebieg), `task.json` (stan), `evidence/` (dowody weryfikacji kawałków), `report.md` (raport) | tak — jednym commitem `docs(task): record <KEY>` na końcu przebiegu |
 | `.tf/runs/<KEY>/` | `run.json`, `parked.md` (sprawy odłożone do Twojej decyzji), wyniki skanów, pełne logi weryfikacji | nie |
 
-Spis zadań: `docs/project/changes/INDEX.md`; stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
+Lista zadań: `tf status` (liczona na żywo z folderów zadań); stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
 z dowodem: pętla uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
 i nie przepuści przebiegu do PR. Bramka jakości nie reaguje na zmiany w `docs/project/changes/`.
 
 Cięcie z planu zmiany (`/tf TSK-57`, tryb pdi) to takie samo zadanie, z kluczem złożonym ze zmiany i cięcia:
 `docs/project/changes/CHG-12-TSK-57/` i `.tf/runs/CHG-12-TSK-57/`. Różnice: treść zadania pochodzi z wiersza cięcia
 i zamiaru zmiany, flaga — z planu wydania, raport trafia też do `docs/project/changes/CHG-12/runs/TSK-57.md` (stamtąd
-pdi bierze opis PR), a w spisie `INDEX.md` zadań cięć nie ma — ich spisem jest plan zmiany (`tf status` je pokazuje).
+pdi bierze opis PR); `tf status` pokazuje cięcia razem z ich zmianą.
 
 Raport (`python3 .claude/skills/tf/scripts/run_report.py finish <katalog>`): czas, tokeny (wejście, wyjście, odczyt i zapis cache),
 koszt w USD, modele i agenci, kawałki zrobione / plan, liczba odłożonych spraw. Liczy go skrypt z transkryptów

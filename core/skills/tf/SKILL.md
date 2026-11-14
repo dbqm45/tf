@@ -55,7 +55,7 @@ drukuje `Wejście`, `Klucz`, `Tracker` i `Dalej`; robisz to, co stoi w `Dalej` (
    --source "<skąd>"`) zakłada zadanie i drukuje katalog przebiegu `.tf/runs/<KEY>/` (roboczy, poza gitem).
    Pliki trwałe są w `docs/project/changes/<KEY>/` (`ticket.md`, `plan.md`, `task.json`, potem `spec.md`,
    `evidence/`, `report.md`) — do gita trafiają jednym commitem na końcu (§4), nie w commitach kawałków.
-   `task.json` i `INDEX.md` pisze tylko skrypt. Linię `Waga: …` z wyniku przekaż człowiekowi jednym zdaniem; waga
+   `task.json` pisze tylko skrypt. Linię `Waga: …` z wyniku przekaż człowiekowi jednym zdaniem; waga
    inna niż zwykła zmienia przebieg — `references/waga.md`.
 3. Gałąź od domyślnej (zwykle `main`): `git switch main`, potem `git switch -c story/<slug>` (core-git-workflow).
 4. **Podgląd:** `run_state.py stage` i `step` zapisują etap w `run.json` i budują `.tf/runs/dashboard.html`; wołasz
@@ -143,8 +143,8 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
    `python3 .tf/factory/risk_triage.py --md` (doradcza). Nie scalasz.
 4. `run_state.py stage <katalog> done --pr <numer>`, potem `run_report.py finish <katalog>` → `report.md`.
    **Pliki zadania — jeden commit** na gałęzi `story/<slug>`, nigdy na domyślnej:
-   `git add docs/project/changes/<KEY> docs/project/changes/INDEX.md`, potem
-   `git commit -m "docs(task): record <KEY>"` i push (polecenia drukuje `finish`); tak samo po STOP. Pokaż
+   `git add docs/project/changes/<KEY>`, potem `git commit -m "docs(task): record <KEY>"` i push (dokładne
+   polecenia drukuje `finish`); tak samo po STOP. Pokaż
    człowiekowi skrót: czas, koszt, kawałki zrobione/plan, odłożone, link do PR.
 
 ## Kto co robi

@@ -35,7 +35,8 @@ po etapie `needs` dwie kolejne; pole `limit` w `current` pliku `run.json`), etyk
 (`[ważne]`, `[drobne]`, `[zastane]`), lista „czeka na Ciebie” (`tf status [--json] [--open]`: pole `waiting` z wpisami `kind` = `plan` / `stop` / `kawalek`,
 `what`, `details`, `question`, `options`, `recommended`, `how`, `since`; pole `needs_at` w `run.json`; to samo pole `waiting`
 na karcie podglądu), zadanie cięcia zmiany pdi (`tf task start <CHG>-<TSK> --title … --change <CHG>
---cut <TSK>`, pola `change` i `cut` w `task.json`, brak wiersza w `INDEX.md`), kody zatrzymań (`run_state.py stage <katalog> needs --needs stop --code
+--cut <TSK>`, pola `change` i `cut` w `task.json`), lista zadań (`tf status`; spisu w pliku `docs/project/changes/INDEX.md`
+skrypt już nie prowadzi — istniejący plik staje się stałą notką), kody zatrzymań (`run_state.py stage <katalog> needs --needs stop --code
 <kod>`; lista `STOP_CODES`: `pytanie`, `podzial`, `zrodlo`, `zgoda-na-plan`, `testy`, `skan`, `budzet`, `srodowisko`,
 `zaleznosc`, `kontrakt`, `uprawnienia`; pole `stop_code` w `run.json`), komunikaty zatrzymań
 (`.claude/skills/tf/templates/stop_messages.json`: dla każdego kodu `co`, `potrzeba`, `pytanie`, `opcje` z polami
