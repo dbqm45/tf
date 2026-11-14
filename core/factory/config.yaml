@@ -115,7 +115,24 @@ shared_agents:
       projekcie problemy i przyjęte wyjątki (z uzasadnieniem). Nigdy nie zapisuj sekretów ani ich fragmentów.
     memory: project
 
-  # Przegląd zakresu w świeżym kontekście: diff względem kawałka planu (KISS, YAGNI). Używa go np. tryb mode-talos.
+  # Pętla „zadanie → PR” (polecenie /tf albo `claude --agent tf`). Skill procesowy ma disable-model-invocation, więc
+  # agent nie może go wczytać na starcie (`skills`) — czyta plik.
+  tf:
+    tier: std
+    main_only: true
+    description: Pętla fabryki „zadanie → PR” na żądanie (uruchom `claude --agent tf` i podaj zadanie; --auto pomija zatwierdzenie planu, --budget USD to twardy limit). Specyfikacja, plan z kawałków, commit na kawałek, dowody, jeden PR, raport czasu i kosztu.
+    tools: ["Agent(scout, researcher, quick-fixer, scope-reviewer, architect, security-reviewer)", Read, Grep, Glob, Edit, Write, Bash]
+    prompt: |
+      Prowadzisz pętlę fabryki: zamieniasz jedno zadanie w jeden PR. Pracujesz wyłącznie w tym trybie.
+      Zanim zrobisz cokolwiek innego, przeczytaj narzędziem Read `.claude/skills/tf/SKILL.md` i prowadź
+      przebieg dokładnie według niego: start (`run_report.py start`), przyjęcie historyjki, plan z kawałków, pętla
+      kawałka, zakończenie z PR i `run_report.py finish`.
+      Opcje bierzesz z wiadomości człowieka: `--auto` — plan nie czeka na akceptację; `--budget <USD>` — twardy STOP
+      po kawałku, który przekroczy budżet. Bez zadania w wiadomości poproś o nie jednym zdaniem.
+      Najtaniej i najprościej: kryteria akceptacji, nic ponad nie; przypadki brzegowe do `parked.md`; najtańszy
+      wystarczający wykonawca; najwyżej 2 próby naprawy na bramkę, potem blok STOP. Nie scalasz PR.
+
+  # Przegląd zakresu w świeżym kontekście: diff względem kawałka planu (KISS, YAGNI). Używa go pętla /tf.
   scope-reviewer:
     tier: std
     description: Przegląd diffu względem planu kroku w świeżym kontekście — kod spoza zakresu, nieproszone przypadki brzegowe, zbędne zależności. Tylko odczyt.
@@ -285,6 +302,7 @@ facets:
   - {prefix: lang-, order: 100, name: język,           question: "JAK wyrazić pojęcia w konkretnym języku", contract: true, versioned: true}
   - {prefix: tool-, order: 110, name: narzędzia,       question: "czym budujemy i jak organizujemy repozytorium (monorepo, build)", versioned: true}
   - {prefix: core-, order: 900, name: praktyki,        question: "jak pracujemy (kompozycja skilli, wersje, git, commity, dziennik projektu)"}
+  - {prefix: tf,    order: 950, name: przebieg,        question: "jak przeprowadzić zadanie od zgłoszenia do PR (pętla fabryki, polecenie /tf)"}
 
 # Słownik pojęć — kontrakt, który musi pokryć każdy skill z `contract: true`
 # (sekcja „## Pojęcia domenowe w …” z mapowaniem pojęcie → idiom).
@@ -306,7 +324,7 @@ skill_requires: {}
 
 # Skille samodzielne: bez roli i persony, wywoływane ręcznie (`/<skill>`) albo dobierane przez dyspozytora
 # (core-problem-routing). `build.py check` nie ostrzega, że nikt ich nie używa.
-standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-retro]   # dwa uruchamiane tylko ręcznie (/…), retrospektywa agentów
+standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-retro, tf]   # dwa uruchamiane tylko ręcznie (/…), retrospektywa agentów, pętla /tf
 
 # Skille dokładane każdemu agentowi person i wykonawców (wszystkich nakładek). Nakładka może dołożyć własne
 # `always_skills` — trafiają tylko do jej person i wykonawców.

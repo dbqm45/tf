@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Testy skanu bezpieczeństwa kawałka Talosa (tryb mode-talos, scripts/security_scan.py): skan tylko zmienionych
+"""Testy skanu bezpieczeństwa kawałka (skill tf, scripts/security_scan.py): skan tylko zmienionych
 plików, audyt zależności tylko przy zmianie manifestu albo lockfile'a, SARIF w katalogu wyniku, brak skanera to FAIL,
 werdykt jak SEC-001 w ci_for_sdlc, ścieżka FAIL → STOP pętli kawałka, karencja wersji (N10).
-Skanery są podstawione (TALOS_SCAN_PATH). python3 .claude/tests/test_security_scan.py"""
+Skanery są podstawione (TF_SCAN_PATH). python3 .claude/tests/test_security_scan.py"""
 import json
 import os
 import subprocess
@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-REL = Path(".claude") / "skills" / "talos-story-run" / "scripts" / "security_scan.py"
+REL = Path(".claude") / "skills" / "tf" / "scripts" / "security_scan.py"
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / REL).is_file()), None)
 SCRIPT = ROOT / REL if ROOT else None
 
@@ -122,7 +122,7 @@ def main() -> int:
         log = tmp / "log.jsonl"
         full = fake_bin(tmp / "bin", {"semgrep": FAKE_SEMGREP, "npm": FAKE_NPM, "pip-audit": FAKE_PIP_AUDIT})
         empty = fake_bin(tmp / "empty", {})
-        env = {**os.environ, "TALOS_SCAN_PATH": str(full), "FAKE_LOG": str(log)}
+        env = {**os.environ, "TF_SCAN_PATH": str(full), "FAKE_LOG": str(log)}
 
         def run(*args, cwd, **extra):
             return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True,
@@ -226,11 +226,13 @@ def main() -> int:
 
         # S-16: brak skanera → FAIL z poleceniem instalacji, nigdy cichy PASS
         write(repo, "a.py")
-        r = run("scan", "--out", str(out), cwd=repo, TALOS_SCAN_PATH=str(empty))
+        r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH=str(empty))
         check(r.returncode == 1 and "semgrep" in r.stdout and "pipx install semgrep" in r.stdout and "SKAN: FAIL" in r.stdout,
               f"S-16: brak semgrep: {r.returncode} {r.stdout} {r.stderr}")
+        r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH="", TALOS_SCAN_PATH=str(empty))
+        check(r.returncode == 1 and "semgrep" in r.stdout, f"S-16a: stara zmienna TALOS_SCAN_PATH jest czytana dalej: {r.returncode} {r.stdout}")
         write(repo, "requirements.txt", "jinja2==3.1.4\n")
-        r = run("scan", "--out", str(out), cwd=repo, TALOS_SCAN_PATH=str(fake_bin(tmp / "semonly", {"semgrep": FAKE_SEMGREP})))
+        r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH=str(fake_bin(tmp / "semonly", {"semgrep": FAKE_SEMGREP})))
         check(r.returncode == 1 and "pip install pip-audit" in r.stdout, f"S-17: brak pip-audit przy zmianie manifestu: {r.stdout}")
         git(repo, "checkout", "-q", "--", "requirements.txt")
 

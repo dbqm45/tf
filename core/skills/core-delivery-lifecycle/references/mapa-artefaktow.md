@@ -27,7 +27,7 @@ jest artefaktem.
 | Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
 |---|---|---|---|---|
 | `00-reconstruction/report.md`, `00-reconstruction/plan.md`, `00-reconstruction/manifest.json` | architekt / analityk | eng-project-reconstruction (pack-it) | każda persona przed zmianą | pomiń w nowym projekcie |
-| `00-reconstruction/domain.md`, `00-reconstruction/standards/INDEX.md` | jak wyżej | eng-project-reconstruction (pack-it) | Talos przed historyjką (mode-talos: talos-story-run) | pomiń w nowym projekcie |
+| `00-reconstruction/domain.md`, `00-reconstruction/standards/INDEX.md` | jak wyżej | eng-project-reconstruction (pack-it) | pętla `/tf` przed historyjką (skill tf) | pomiń w nowym projekcie |
 
 ## 1. Przyjęcie, plan faz i odkrywanie produktu — `01-discovery/`
 | Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
@@ -122,7 +122,7 @@ jest artefaktem.
 | `.tf/reports/<moduł>.md` i `.tf/register/items.jsonl` | `tf analyze` (skrypty) | persona przy przeglądzie i planie poprawek; odhaczenia zostają przy ponownej analizie |
 | `.tf/reports/metrics.md` | `tf metrics` | człowiek: skuteczność fabryki (reverty, koszt na przyjętą zmianę, przyczyny poprawek) |
 | `.tf/logs/` (`usage.jsonl`, `hook-errors.jsonl`) | hooki | `cost_report.py`, `tf doctor` |
-| `docs/project/changes/CHG-n/` | tryby z cyklem zmiany (np. mode-pdi, mode-talos) | persony trybu: plan i decyzje jednej zmiany |
+| `docs/project/changes/CHG-n/` | tryby z cyklem zmiany (np. mode-pdi) | persony trybu: plan i decyzje jednej zmiany |
 | `docs/project/vendors/` | persony sprzętowe (np. pack-ev) | onboarding modelu urządzenia |
 | `CLAUDE.md` / `AGENTS.md` | autor instrukcji (core-agent-instructions) | każdy agent w każdej sesji |
 

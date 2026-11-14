@@ -12,7 +12,7 @@ gotowości w zwykłym języku i włącza bramkę jakości.
 
 Wykrywa z manifestów w katalogu głównym (Node, Python, Go, Rust, Java, .NET; Makefile jako zapas): polecenie testów,
 lintu, typów i buildu, plik blokady wersji, CI, plik instrukcji agenta, .gitignore. Bez --verify niczego w projekcie
-nie uruchamia. `verify.sh` to jedno polecenie weryfikacji (lint → typy → testy) dla bramki jakości, Talosa i CI;
+nie uruchamia. `verify.sh` to jedno polecenie weryfikacji (lint → typy → testy) dla bramki jakości, pętli `/tf` i CI;
 w Windows bramka dostaje samo polecenie testów. Istniejącego verify.sh ani konfiguracji bramki nie nadpisuje.
 Blokujących kontroli jest najwyżej pięć — reszta to ostrzeżenia.
 

@@ -1,7 +1,7 @@
 # Przegląd specyfikacji przez panel recenzentów
 
 ## Kiedy
-Po fazie 3 (wymagania) i przed planem cięć — gdy wymagania mają być realizowane przez agentów (Talos, wykonawcy),
+Po fazie 3 (wymagania) i przed planem cięć — gdy wymagania mają być realizowane przez agentów (pętla `/tf`, wykonawcy),
 zmiana jest duża albo dotyka obszarów z triażu wysokiego ryzyka (`tf risk`: uprawnienia, pieniądze, dane, schemat).
 Mała zmiana z kilkoma kryteriami: wystarczy zwykły przegląd planu.
 

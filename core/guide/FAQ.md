@@ -93,6 +93,6 @@ Kopie z aktualizacji leżą w `.tf/backup/`.
 
 ## Gdzie czytać dalej?
 - `.claude/catalog.md` — persony, role i skille tej instalacji.
-- `.tf/factory/packs/<id>/GUIDE.md` — przewodniki trybów (np. `mode-talos`, `mode-team`).
+- `.tf/factory/packs/<id>/GUIDE.md` — przewodniki trybów (np. `mode-pdi`, `mode-team`).
 - `.tf/factory/PUBLIC_API.md` — co jest publicznym API fabryki i jak są numerowane wersje.
 - `.tf/factory/CHANGELOG.md` — co zmieniło się w kolejnych wersjach.

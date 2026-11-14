@@ -1,6 +1,6 @@
 # Publiczne API fabryki i zasady wersjonowania
 
-Fabryka to **rdzeń** (`core/`), **nakładki** (`packs/pack-*`) i **tryby** (`modes/mode-*`, np. `mode-talos`). Rdzeń jest wersjonowany zgodnie z **Semantic
+Fabryka to **rdzeń** (`core/`), **nakładki** (`packs/pack-*`) i **tryby** (`modes/mode-*`, np. `mode-pdi`). Rdzeń jest wersjonowany zgodnie z **Semantic
 Versioning 2.0.0** (semver.org): numer w `core/factory/VERSION` (w projekcie `.tf/factory/VERSION`), historia zmian
 w `core/factory/CHANGELOG.md`. Każda nakładka ma własną wersję (`version` w `pack.yaml`) i deklaruje zakres wersji
 rdzenia, z którym działa (`requires.core`, np. `">=3.0.0 <6.0.0"`). Tryb to sposób pracy włączany przez człowieka
@@ -21,14 +21,20 @@ czyli co obiecujemy zachować w obrębie tej samej wersji MAJOR — także wobec
 | formaty danych | artefakty `docs/project/` (TL;DR, Przekazanie, status), punkt kontrolny `.tf/wip/`, plik pytań między personami `docs/project/questions.md`, scenariusze `skill_evals/*.json`, rejestr bramki (`.claude/tests/skill_gate/<id>.json`, `.claude/skill-gate.json`), logi `.tf/logs/*.jsonl`, katalog przebiegów trybów `.tf/runs/talos/` (ignorowany przez git; od 5.58.5 — wcześniej `.claude/runs/`, które `status`/`finish` dalej odczytują dla wznawiania), stopki commitów `Change: <klucz>` i `Flag: <klucz>` (hook `commit-msg` z core-conventional-commits), rejestry źródeł bazy wiedzy `.claude/skills/*/references/zrodla.json` (`version`, `areas`, `sources`) i jej cache `.claude/knowledge/<id>/` (`doc.txt`, `meta.json`, ignorowany przez git); moduł analizy `analyzer.yaml` (`name`, `prefix`, `title`, `description`, `version`, `przeglad`, `skills`, `applies_when.files_any`, `incremental`, `tier0.script`, `gate.min_recall`, `gate.max_false_positives`; zestaw bramki `fixtures/<przypadek>/repo/` i `expected.json` z listą `{rule, file}`) i wyjście skryptu piętra 0 (JSON Lines: `rule`, `title`, `file`, `line`, `snippet`, `severity`, `confidence`, `evidence`, `basis`, `suggestion`), id ustalenia `<PREFIX>-<6 hex>`, raport `.tf/reports/<moduł>.md` (druga linia `Werdykt:`, sekcja `## Rekomendowane działania` z checkboxami), `.tf/reports/<moduł>.json`, rejestr `.tf/register/items.jsonl` (`id`, `kind`, `module`, `title`, `status`, `source`, `refs`, `created`, `updated`, `note`), zmienne `TF_ANALYZERS_PATH`, `TF_ANALYZE_NO_CACHE` |
 
 Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API tej nakładki lub trybu (wersja w jej
-`pack.yaml`). Tryb `mode-talos`: agent sesji głównej `talos`, skill `talos-story-run`, skrypt
-`.claude/skills/talos-story-run/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]`, `status`,
-`finish`) i `run_state.py` (`stage`, `step`, `spec`, `flag`, `trace`, `verify`, `tick`, `park`, `dashboard`), katalog roboczy przebiegu
-`.tf/runs/<KEY>/` (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania
-`docs/project/changes/<KEY>/` (`ticket.md`, `spec.md`, `plan.md`, `report.md`, `task.json`, `evidence/`); **przestarzały** układ
+`pack.yaml`). **Pętla „zadanie → PR” jest częścią rdzenia** (od 9.34.0): agent sesji głównej `tf`, skill `tf`
+(polecenie `/tf`), skrypty `.claude/skills/tf/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]`,
+`status`, `finish`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `trace`, `verify`, `tick`, `park`, `dashboard`),
+`plan_drift.py` i `security_scan.py`, opcje `.claude/tf.json`, zmienne `TF_DASHBOARD`, `TF_DASHBOARD_OPEN`,
+`TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, podgląd `.tf/runs/dashboard.html`, katalog roboczy przebiegu `.tf/runs/<KEY>/`
+(`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania `docs/project/changes/<KEY>/` (`ticket.md`,
+`spec.md`, `plan.md`, `report.md`, `task.json`, `evidence/`); raport przebiegu cięcia
+`docs/project/changes/CHG-n/runs/TSK-n.md`. **Przestarzałe** (działają dalej, do usunięcia w następnym wydaniu MAJOR):
+tryb `mode-talos` jako warstwa zgodności — agent `talos`, skill `talos-story-run` i ścieżka
+`.claude/skills/talos-story-run/scripts/` (przekierowania do skryptów rdzenia); plik opcji `.claude/talos.json`
+i zmienne `TALOS_DASHBOARD`, `TALOS_DASHBOARD_OPEN`, `TALOS_SCAN_PATH`, `TALOS_SEMGREP_CONFIG`; układ
 `.tf/runs/talos/<data>-<slug>/` (`run.json`, `story.md`, `plan.md`, `parked.md`, `report.md`; od 7.0.0 — wcześniej
-`tmp/talos/runs/`, a przed 5.58.5 `.claude/runs/`) jest dalej czytany przez `status`, `finish` i dashboard, a zapisuje
-go już tylko przebieg cięcia (`--task`); raport przebiegu cięcia `docs/project/changes/CHG-n/runs/TSK-n.md`. Tryb `mode-team`: skill `team-session`, skrypt
+`tmp/talos/runs/`, a przed 5.58.5 `.claude/runs/`) — czytany przez `status`, `finish` i dashboard, a zapisuje go już
+tylko przebieg cięcia (`--task`). Tryb `mode-team`: skill `team-session`, skrypt
 `.claude/skills/team-session/scripts/team_switch.py` (`on`, `off`, `status`).
 
 **Nie** należą do publicznego API:

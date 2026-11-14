@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Testy pętli „zadanie → PR” w rdzeniu: agent sesji głównej `tf`, skill `tf`, skrypty przebiegu, uprawnienia
+i przewodnik. python3 .claude/tests/test_tf_skill.py"""
+import json
+from pathlib import Path
+
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "skills" / "tf").is_dir())
+
+
+def main() -> int:
+    fails, total = [], 0
+
+    def check(cond, msg):
+        nonlocal total
+        total += 1
+        if not cond:
+            fails.append(msg)
+
+    agents = ROOT / ".claude" / "agents" / "_generated"
+    agent = next(iter(agents.rglob("tf.md")), None)
+    text = agent.read_text(encoding="utf-8") if agent else ""
+    fm = text.split("---")[1] if text.count("---") >= 2 else ""
+    check("Agent(scout, researcher, quick-fixer, scope-reviewer, architect, security-reviewer)" in fm
+          and "skills:" not in fm and "maxTurns" not in fm,
+          f"T-1: agent tf — sesja główna z listą agentów, bez preładowania skilli i limitu tur: {fm[:300]}")
+    skill = ROOT / ".claude" / "skills" / "tf"
+    check(".claude/skills/tf/SKILL.md" in text and "talos" not in text.lower() and (skill / "SKILL.md").is_file(),
+          "T-2: agent czyta skill procesowy z pliku, który jest zainstalowany; w rdzeniu nie ma starej nazwy")
+    script = ".claude/skills/tf/scripts/run_report.py"
+    check((ROOT / script).is_file() and script in (skill / "SKILL.md").read_text(encoding="utf-8"),
+          "T-3: skrypt przebiegu przy skillu i ścieżka w skillu")
+    allow = []
+    for name in ("settings.json", "settings.local.json"):
+        f = ROOT / ".claude" / name
+        if f.is_file():
+            allow += json.loads(f.read_text(encoding="utf-8")).get("permissions", {}).get("allow", [])
+    check(any(script in a for a in allow), f"T-4: uprawnienie dla skryptu przebiegu: {[a for a in allow if 'run' in a]}")
+    guide = ROOT / ".tf" / "factory" / "PRZEWODNIK.md"
+    guide_text = guide.read_text(encoding="utf-8") if guide.is_file() else ""
+    check("/tf" in guide_text and "claude --agent tf" in guide_text, "T-5: przewodnik rdzenia opisuje /tf i agenta tf")
+    personas = [p for p in agents.rglob("*.md") if p.parent.name not in ("shared", "consult") and p.stem == p.parent.name]
+    check(personas == [] or all("`tf`" not in p.read_text(encoding="utf-8") for p in personas),
+          "T-6: persony nie delegują do agenta tf (to sesja główna, nie wykonawca)")
+    body = (skill / "SKILL.md").read_text(encoding="utf-8") if (skill / "SKILL.md").is_file() else ""
+    intake = body.split("## 1.", 1)[-1].split("## 2.", 1)[0]
+    check("requirements_lint.py --story" in intake and "STORY-001" in intake and "--auto" in intake
+          and "STOP" in intake and "podzia" in intake and "(pack-it)" in intake,
+          "T-7: przyjęcie historyjki — lint kształtu (pack-it, warunkowo); z --auto STORY-001 → STOP z propozycją podziału")
+    loop = body.split("## 3.", 1)[-1].split("## 4.", 1)[0]
+    check("`Flag: " in loop and "release.yaml" in loop and "za flagą" in loop,
+          "T-8: kawałek z flagą — kod za flagą i dopisek `Flag: <klucz>` w commicie (plan wydania release.yaml)")
+    check("--task" in body and "Change: TSK" in body and "changes/" in body and "/runs/" in body
+          and "story/tsk-" in body,
+          "T-9: wejście TSK z planu zmiany (`run_report.py start --task`), gałąź z kluczem, `Change:` w commitach, "
+          "raport w changes/CHG-n/runs/")
+    fixes = body.split("## 5.", 1)[-1].split("## Kto co robi", 1)[0]
+    check("Rework-Cause:" in fixes and all(v in fixes for v in ("luka-specyfikacji", "blad-agenta", "zmiana-wymagan",
+                                                                 "nieznana")),
+          "T-11: commit poprawki z pętli PR ma trailer `Rework-Cause:` z jedną z 4 przyczyn (tf metrics, B3)")
+    finish = body.split("## 4.", 1)[-1].split("## 5.", 1)[0]
+    check("risk_triage.py --md" in finish and "opis" in finish,
+          "T-12: przy otwarciu PR pętla dołącza do opisu sekcję triażu ryzyka zmian (risk_triage.py --md, B1b)")
+    scan = ".claude/skills/tf/scripts/security_scan.py"
+    check((ROOT / scan).is_file() and any(scan in a for a in allow)
+          and (skill / "templates" / "verify.sh").is_file()
+          and "security_scan.py scan" in loop and "feedback.md" in loop and "STOP" in loop
+          and "security_scan.py cooldown" in body,
+          "T-10: skan bezpieczeństwa w pętli kawałka (skrypt, uprawnienie, FAIL → feedback.md, STOP), karencja "
+          "wersji na starcie, szablon verify.sh")
+
+    state = ".claude/skills/tf/scripts/run_state.py"
+    check((ROOT / state).is_file() and (skill / "templates" / "dashboard.html").is_file()
+          and any(state in a for a in allow) and "run_state.py stage" in body and "run_state.py step" in body
+          and "dashboard.html" in guide_text,
+          "T-11: stan przebiegu dla podglądu (skrypt, szablon dashboardu, uprawnienie, polecenia w skillu, opis w przewodniku)")
+    body_names = [w for w in ("Talos", "talos-story-run", "mode-talos") if w in body]
+    check(body_names == [], f"T-13: skill tf nie używa starych nazw: {body_names}")
+    check((ROOT / ".claude" / "skills" / "core-delivery-lifecycle" / "scripts" / "pr_budget.py").is_file()
+          and any("pr_budget.py" in a for a in allow) and any(a.startswith("Bash(./verify.sh") for a in allow),
+          "T-14: uprawnienia pętli (pr_budget.py, ./verify.sh) są w ustawieniach rdzenia")
+
+    for f in fails:
+        print(f"✗ {f}")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów pętli tf w rdzeniu")
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

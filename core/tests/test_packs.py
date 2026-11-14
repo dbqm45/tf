@@ -23,11 +23,11 @@ def core_range() -> str:
 
 
 def project(base: Path) -> Path:
-    """Projekt z rdzeniem tej instalacji (.tf/factory/, skille core-*, hooki) i dwiema sztucznymi nakładkami."""
+    """Projekt z rdzeniem tej instalacji (.tf/factory/, skille rdzenia: core-* i tf, hooki) i dwiema sztucznymi nakładkami."""
     p = base / "proj"
     shutil.copytree(ROOT / ".tf" / "factory", p / ".tf" / "factory", ignore=shutil.ignore_patterns("packs", "__pycache__", "personas",
                                                                                      "roles"))
-    for d in (ROOT / ".claude" / "skills").glob("core-*"):
+    for d in [*(ROOT / ".claude" / "skills").glob("core-*"), ROOT / ".claude" / "skills" / "tf"]:   # skille rdzenia
         shutil.copytree(d, p / ".claude" / "skills" / d.name)
     skill = "---\nname: {n}\ndescription: Użyj przy {n}.\nmetadata:\n  katalog: \"Użyj przy {n}. Nie do niczego.\"\n" \
             "  przeglad: \"2099-01-01\"\n---\n# {n}\n"

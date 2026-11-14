@@ -16,7 +16,7 @@ Cztery kroki od zera do pierwszego PR. Reszta tego pliku to szczegóły dla doci
 
 | Chcę… | Użyj | Co dostanę |
 |---|---|---|
-| zrobić zadanie z kryteriami akceptacji | `/talos-story-run <historyjka>` | plan, testy, kod, commit na każdy kawałek, jeden PR |
+| zrobić zadanie z kryteriami akceptacji | `/tf <zadanie>` | plan, testy, kod, commit na każdy kawałek, jeden PR |
 | zapytać o kod albo nie wiem, od czego zacząć | `claude --agent maja` (nakładka `pack-it`) | odpowiedź albo dobór osób i podejścia |
 | zrobić drobną zmianę | zwykła sesja `claude` | zmiana pod kontrolą hooków, bez planu |
 | pracować w jednej roli (testy, UX, domena…) | `claude --agent <persona>` z `.claude/catalog.md` | rozmowa z personą i jej wykonawcami |
@@ -30,7 +30,7 @@ agent wskaże plik, który podjął decyzję. Częste pytania: `.tf/factory/FAQ.
 |---|---|---|
 | rdzeń | `.tf/factory/`, `.claude/skills/core-*`, `.claude/hooks/`, `.claude/tests/` | budowa agentów, aktualizacja, koszty, zasady pracy, dziennik projektu |
 | nakładki (`pack-*`) | `.tf/factory/packs/<id>/`, ich skille w `.claude/skills/` | wiedza dziedzinowa, role i persony (np. `pack-it`, `pack-ux`, `pack-ev`, `pack-docs`, `pack-editorial-pl`) |
-| tryby (`mode-*`) | jak nakładki | sposób pracy włączany na żądanie: `mode-talos` (historyjka → PR), `mode-team` (agent teams) |
+| tryby (`mode-*`) | jak nakładki | sposób pracy włączany na żądanie: `mode-team` (agent teams), `mode-pdi` (cykl zmiany) |
 | agenci | `.claude/agents/_generated/` | budowani przez `python3 .tf/factory/build.py` z rdzenia i nakładek — nie edytuj ręcznie |
 | katalog | `.claude/catalog.md` | lista person, ról i skilli tej instalacji |
 | ustawienia projektu | `.tf/config/` | `config.yaml`, własne persony, role i cechy — aktualizacja ich nie rusza |
@@ -72,7 +72,7 @@ Agenci wspólni, dostępni dla każdej persony:
 ## 4. Tryby i automaty na żądanie
 | Co | Jak | Kiedy |
 |---|---|---|
-| Talos (`mode-talos`, domyślnie zainstalowany) | `claude --agent talos` albo `/talos-story-run <historyjka>` | jedna historyjka z kryteriami akceptacji → plan z kawałków, commit na kawałek, jeden PR, raport kosztu; przewodnik: `.tf/factory/packs/mode-talos/GUIDE.md` |
+| pętla fabryki (w rdzeniu) | `/tf <zadanie>` albo `claude --agent tf` | jedno zadanie z kryteriami akceptacji → specyfikacja, plan z kawałków, commit na kawałek, dowody, jeden PR, raport kosztu; podgląd na żywo w `.tf/runs/dashboard.html`; przewodnik: `.tf/factory/PETLA.md`. Stare nazwy `/talos-story-run` i agent `talos` działają tylko z warstwą zgodności `mode-talos` (przestarzałe) |
 | Agent teams (`mode-team`, `tf add mode-team`) | `team_switch.py on`, nowa sesja, `/team-session <zadanie>` | role muszą rozmawiać ze sobą w trakcie; eksperymentalne i drogie; przewodnik: `.tf/factory/packs/mode-team/GUIDE.md` |
 | Audyt kodu (`pack-it`) | po zatwierdzeniu zakresu: workflow `/code-audit` | pełny audyt w wielu wymiarach z rankingiem (skill `eng-code-audit`) |
 | Symulacja Event Stormingu (`pack-it`) | `/ddd-es-simulation` albo `claude --agent es-host` | trening facylitacji z uczestnikami AI |
@@ -106,7 +106,7 @@ problemów; moduły dostarczają nakładki (`pack-it`, `accessibility` — `pack
 `tf risk [--base main]` ocenia diff bieżącej gałęzi względem bazy: poziom wysoki, średni lub niski i lista „co musi
 zobaczyć człowiek” (plik, powód). Wysoki poziom dają m.in. uwierzytelnianie, płatności, schemat bazy, wdrożenie
 i CI, specyfikacja oraz osłabione testy (usunięte asercje, pominięcia, skasowany test); nowy moduł bez ADR to punkt
-„dowód” na liście. `--md` daje sekcję do opisu PR (Talos dodaje ją sam), `--json` wynik dla skryptów. Triaż jest
+„dowód” na liście. `--md` daje sekcję do opisu PR (pętla `/tf` dodaje ją sama), `--json` wynik dla skryptów. Triaż jest
 doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jako wysokie ryzyko) wpisujesz w
 `autonomy.triage` w `.tf/config/config.yaml`.
 

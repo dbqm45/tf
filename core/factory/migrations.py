@@ -38,7 +38,10 @@ RENAMES: dict[str, dict[str, str]] = {
         "core-knowledge-base": "dom-ev-knowledge-base",  # pack-ev
     },
     "5.0.0": {
-        "core-story-run": "talos-story-run",            # mode-talos
+        "core-story-run": "tf",                         # pętla „zadanie → PR” (w mode-talos jako talos-story-run do 9.33)
+    },
+    "9.34.0": {
+        "talos-story-run": "tf",                        # pętla przeniesiona z trybu mode-talos do rdzenia
     },
 }
 

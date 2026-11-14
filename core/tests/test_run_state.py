@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy stanu przebiegu Talosa i dashboardu (tryb mode-talos, skill talos-story-run, scripts/run_state.py).
+"""Testy stanu przebiegu i dashboardu (skill tf, scripts/run_state.py).
 python3 .claude/tests/test_run_state.py"""
 import json
 import os
@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-REL = Path(".claude") / "skills" / "talos-story-run" / "scripts" / "run_state.py"
+REL = Path(".claude") / "skills" / "tf" / "scripts" / "run_state.py"
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / REL).is_file())
 SCRIPT = ROOT / REL
 REPORT = SCRIPT.with_name("run_report.py")
@@ -21,7 +21,7 @@ RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
 
 
 def run(script, args, cwd, cfg, extra_env=None):
-    env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TALOS_DASHBOARD_OPEN": "0", **(extra_env or {})}
+    env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TF_DASHBOARD_OPEN": "0", **(extra_env or {})}
     return subprocess.run([sys.executable, str(script), *args], cwd=cwd, capture_output=True, text=True, env=env,
                           timeout=60)
 
@@ -50,7 +50,7 @@ def main() -> int:
         doc = proj / CHANGES / d.name          # katalog trwały zadania (krok C4): plan, ticket i raport
         (doc / "spec.md").write_text(SPEC, encoding="utf-8")      # gotowa specyfikacja (krok D1) — bez niej nie ma planu
         run(SCRIPT, ["flag", str(d), "none", "--reason", "test stanu przebiegu, nie ma czego ukrywać"], proj, cfg)   # krok D4
-        dash = proj / ".tf" / "runs" / "talos" / "dashboard.html"
+        dash = proj / ".tf" / "runs" / "dashboard.html"
 
         def one():
             html = dash.read_text(encoding="utf-8")
@@ -180,32 +180,45 @@ def main() -> int:
         check(html.count("</script>") == 1 and "</script><b>" not in html,
               f"S-9: </script> w treści pliku nie rozbija strony: {html.count('</script>')}")
 
-    # S-10: start przebiegu buduje dashboard (domyślnie włączony), a opcje w .claude/talos.json i zmienne go wyłączają
+    # S-10: start przebiegu buduje dashboard (domyślnie włączony), a opcje w .claude/tf.json i zmienne go wyłączają
     with tempfile.TemporaryDirectory() as t:
         proj, cfg = Path(t) / "proj", Path(t) / "cfg"
         proj.mkdir()
-        dash = proj / ".tf" / "runs" / "talos" / "dashboard.html"
+        dash = proj / ".tf" / "runs" / "dashboard.html"
         r = run(REPORT, ["start", "Pierwsza historyjka", "--story", "x"], proj, cfg)
         check(r.returncode == 0 and dash.is_file() and "Dashboard: file://" in r.stderr
               and r.stdout.strip().startswith(".tf/runs/T-"),
               f"S-10a: start buduje dashboard, adres na stderr, stdout bez zmian: {r.stdout!r} {r.stderr!r}")
         dash.unlink()
         (proj / ".claude").mkdir()
-        (proj / ".claude" / "talos.json").write_text('{"dashboard": false}', encoding="utf-8")
+        (proj / ".claude" / "tf.json").write_text('{"dashboard": false}', encoding="utf-8")
         r = run(REPORT, ["start", "Druga historyjka", "--story", "x"], proj, cfg)
         check(r.returncode == 0 and not dash.exists() and "Dashboard" not in r.stderr,
               f"S-10b: {{\"dashboard\": false}} — start niczego nie buduje: {r.stderr!r}")
-        (proj / ".claude" / "talos.json").write_text('{"dashboard_open": false}', encoding="utf-8")
+        (proj / ".claude" / "tf.json").write_text('{"dashboard_open": false}', encoding="utf-8")
         r = run(REPORT, ["start", "Trzecia historyjka", "--story", "x"], proj, cfg)
         check(dash.is_file(), "S-10c: dashboard_open=false — buduje, ale nie otwiera (plik jest)")
         dash.unlink()
-        (proj / ".claude" / "talos.json").unlink()
-        r = run(REPORT, ["start", "Czwarta historyjka", "--story", "x"], proj, cfg, {"TALOS_DASHBOARD": "0"})
-        check(r.returncode == 0 and not dash.exists(), "S-10d: TALOS_DASHBOARD=0 wyłącza bez pliku")
+        (proj / ".claude" / "tf.json").unlink()
+        r = run(REPORT, ["start", "Czwarta historyjka", "--story", "x"], proj, cfg, {"TF_DASHBOARD": "0"})
+        check(r.returncode == 0 and not dash.exists(), "S-10d: TF_DASHBOARD=0 wyłącza bez pliku")
         # uszkodzony plik opcji → domyślne (włączone), przebieg się nie wywraca
-        (proj / ".claude" / "talos.json").write_text("{nie json", encoding="utf-8")
+        (proj / ".claude" / "tf.json").write_text("{nie json", encoding="utf-8")
         r = run(REPORT, ["start", "Piata historyjka", "--story", "x"], proj, cfg)
-        check(r.returncode == 0 and dash.is_file(), f"S-10e: uszkodzony talos.json → opcje domyślne: {r.stderr!r}")
+        check(r.returncode == 0 and dash.is_file(), f"S-10e: uszkodzony tf.json → opcje domyślne: {r.stderr!r}")
+        # stare nazwy (sprzed przeniesienia pętli do rdzenia) są czytane dalej: plik .claude/talos.json i zmienna TALOS_DASHBOARD
+        dash.unlink()
+        (proj / ".claude" / "tf.json").unlink()
+        (proj / ".claude" / "talos.json").write_text('{"dashboard": false}', encoding="utf-8")
+        r = run(REPORT, ["start", "Szosta historyjka", "--story", "x"], proj, cfg)
+        check(r.returncode == 0 and not dash.exists(), f"S-10f: stary plik opcji .claude/talos.json nadal działa: {r.stderr!r}")
+        (proj / ".claude" / "tf.json").write_text('{"dashboard": true}', encoding="utf-8")
+        r = run(REPORT, ["start", "Siodma historyjka", "--story", "x"], proj, cfg)
+        check(r.returncode == 0 and dash.is_file(), f"S-10g: nowy plik .claude/tf.json wygrywa ze starym: {r.stderr!r}")
+        dash.unlink()
+        (proj / ".claude" / "talos.json").unlink()
+        r = run(REPORT, ["start", "Osma historyjka", "--story", "x"], proj, cfg, {"TALOS_DASHBOARD": "0"})
+        check(r.returncode == 0 and not dash.exists(), "S-10h: stara zmienna TALOS_DASHBOARD=0 nadal wyłącza podgląd")
 
     # jedna czynność na polecenie: odhaczenie kawałka i odłożenie sprawy skryptem (bez sed, >> i heredoc w powłoce)
     with tempfile.TemporaryDirectory() as t:
@@ -312,7 +325,7 @@ def main() -> int:
         r = run(SCRIPT, ["flag", str(d), "set", "limit_dobowy", "--remove-by", "2027-01-31"], proj, cfg)
         check(r.returncode == 0 and task().get("flag", {}).get("key") == "limit_dobowy",
               f"FL-3: flag set przez skrypt przebiegu trafia do task.json: {r.returncode} {r.stdout}{r.stderr}")
-        # zmiana specyfikacji po planie: plan jest nieaktualny, dopóki Talos nie przejdzie etapu plan ponownie
+        # zmiana specyfikacji po planie: plan jest nieaktualny, dopóki pętla nie przejdzie etapu plan ponownie
         (doc / "spec.md").write_text(SPEC.replace("45 zł", "50 zł"), encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
         check(r.returncode == 2 and "plan.md" in r.stdout and task().get("stage") == "realizacja",
@@ -339,7 +352,7 @@ def main() -> int:
         check(r.returncode == 2 and not (old / "evidence").exists(),
               f"V-7b: verify w starym przebiegu → kod 2 z wyjaśnieniem: {r.returncode} {r.stdout}")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
-        rs = runs_json((proj / ".tf" / "runs" / "talos" / "dashboard.html").read_text(encoding="utf-8"))
+        rs = runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
         slugs = {x.get("slug") for x in rs}
         new = next((x for x in rs if x.get("slug") != "stary"), {})
         check("stary" in slugs and len(rs) == 2 and [s["id"] for s in new.get("slices", [])] == ["K1", "K2"]
@@ -364,7 +377,7 @@ def main() -> int:
         run(SCRIPT, ["tick", str(d), "K2"], proj, cfg)
         (proj / "fees.py").write_text("LIMIT = 55\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
-        html = (proj / ".tf" / "runs" / "talos" / "dashboard.html").read_text(encoding="utf-8")
+        html = (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8")
         new = next((x for x in runs_json(html) if x.get("slug") != "stary"), {})
         st = {s["id"]: s["state"] for s in new.get("slices", [])}
         check(st == {"K1": "stale", "K2": "stale"} and all(s.get("proof") == "niezweryfikowany" for s in new["slices"]),
@@ -372,7 +385,7 @@ def main() -> int:
         check(".chip.stale" in html and "r.slices.map" in html and "r.dir" in html,
               "D-6: szablon rysuje pasek kawałków, stan stale i katalog z danych przebiegu")
 
-        # zadanie założone przez `tf task` (bez przebiegu Talosa, np. świeży klon) też ma kartę
+        # zadanie założone przez `tf task` (bez przebiegu, np. świeży klon) też ma kartę
         ts = ROOT / ".tf" / "factory" / "task_state.py"
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(proj)}
         subprocess.run([sys.executable, str(ts), "start", "PROJ-7", "--title", "Eksport faktur"], cwd=proj, env=env,
@@ -380,7 +393,7 @@ def main() -> int:
         subprocess.run([sys.executable, str(ts), "verify", "PROJ-7", "K1", "--files", "fees.py", "--command", OK],
                        cwd=proj, env=env, capture_output=True, text=True, timeout=60)
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
-        rs = runs_json((proj / ".tf" / "runs" / "talos" / "dashboard.html").read_text(encoding="utf-8"))
+        rs = runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
         bare = next((x for x in rs if x.get("key") == "PROJ-7"), {})
         check(len(rs) == 3 and bare.get("title") == "Eksport faktur" and bare.get("stage") == "intake"
               and bare.get("taskStage") == "przyjecie" and [(s["id"], s["state"]) for s in bare.get("slices", [])] == [("K1", "done")],
@@ -388,7 +401,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} testów stanu przebiegu Talosa: {'wszystkie przeszły' if not fails else len(fails)}")
+    print(f"{'✓' if not fails else '✗'} testów stanu przebiegu: {'wszystkie przeszły' if not fails else len(fails)}")
     return 1 if fails else 0
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Jedno polecenie weryfikacji produktu (N3): format, lint, typy, testy i skan bezpieczeństwa.
-# Ten sam skrypt uruchamia Talos (pętla kawałka) i CI (change-check / sdlc-phase) — bez zmian.
+# Ten sam skrypt uruchamia fabryka (pętla kawałka) i CI (change-check / sdlc-phase) — bez zmian.
 # Nazwij go w pierwszej linii CLAUDE.md produktu, np.: „Weryfikacja: `./verify.sh`”.
 #
 #   ./verify.sh                 # zmiany nieskomitowane (pętla kawałka)
@@ -20,5 +20,5 @@ echo "== testy"
 # npm test                        | pytest -q
 
 echo "== skan bezpieczeństwa"
-python3 .claude/skills/talos-story-run/scripts/security_scan.py cooldown
-python3 .claude/skills/talos-story-run/scripts/security_scan.py scan ${BASE:+--base "$BASE"} --out "${SCAN_OUT:-reports/security}"
+python3 .claude/skills/tf/scripts/security_scan.py cooldown
+python3 .claude/skills/tf/scripts/security_scan.py scan ${BASE:+--base "$BASE"} --out "${SCAN_OUT:-reports/security}"

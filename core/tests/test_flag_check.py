@@ -99,7 +99,7 @@ def main() -> int:
         data = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         check(r.returncode == 1 and data.get("checked") is True and [e.get("env") for e in data.get("errors", [])] == ["prod"],
               f"F-9: to samo po commicie (diff gałęzi względem bazy), --json: {r.stdout[:300]}")
-        r = run(p, TASK, "flag", "PROJ-1", "allow", "prod", "--by", "process:talos")
+        r = run(p, TASK, "flag", "PROJ-1", "allow", "prod", "--by", "process:tf")
         check(r.returncode == 2, f"F-10: decyzję o innym środowisku zapisuje tylko człowiek: {r.returncode} {r.stdout}")
         r = run(p, TASK, "flag", "PROJ-1", "allow", "prod", "--by", "human:anna")
         check(r.returncode == 0 and task()["flag"].get("allowed", {}).get("prod", {}).get("by") == "human:anna"

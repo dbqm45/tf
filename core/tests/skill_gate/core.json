@@ -24,8 +24,8 @@
   "offline": "2026-11-08"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "1f7bc03e2b4b60af",
-  "offline": "2026-11-10"
+  "fingerprint": "95cc987c208e45fd",
+  "offline": "2026-11-14"
  },
  "core-factory-update": {
   "fingerprint": "49a19cdcb8cfce48",
@@ -87,5 +87,9 @@
  "core-teaching-workspace": {
   "fingerprint": "1821daf347233c4e",
   "offline": "2026-10-20"
+ },
+ "tf": {
+  "fingerprint": "3df6e5cfcea44937",
+  "offline": "2026-11-14"
  }
 }

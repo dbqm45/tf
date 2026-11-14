@@ -208,14 +208,14 @@ def main() -> int:
         folder = p / CHANGES / "AR-1"
         (folder / "spec.md").write_text(SPEC.format(limit=45), encoding="utf-8")
         (folder / "plan.md").write_text("# Plan\n- [ ] K1\n", encoding="utf-8")
-        r = run(p, "artifact", "AR-1", "spec.md", "--stage", "specyfikacja", "--by", "talos/1.3.0")
+        r = run(p, "artifact", "AR-1", "spec.md", "--stage", "specyfikacja", "--by", "tf/1.0.0")
         a = task(p, "AR-1").get("artifacts", {}).get("spec.md", {})
-        check(r.returncode == 0 and a.get("stage") == "specyfikacja" and a.get("generated", {}).get("by") == "talos/1.3.0"
+        check(r.returncode == 0 and a.get("stage") == "specyfikacja" and a.get("generated", {}).get("by") == "tf/1.0.0"
               and a.get("generated", {}).get("at") and astates("AR-1") == {"spec.md": "szkic"},
               f"TS-41: plik zarejestrowany jako szkic, z wykonawcą i czasem: {r.stdout}{r.stderr}{a}")
-        r = run(p, "artifact", "AR-1", "nie-ma.md", "--stage", "plan", "--by", "talos/1.3.0")
+        r = run(p, "artifact", "AR-1", "nie-ma.md", "--stage", "plan", "--by", "tf/1.0.0")
         check(r.returncode == 2 and "nie-ma.md" in r.stdout, f"TS-42: nieistniejący plik odrzucony: {r.stdout}")
-        r = run(p, "approve", "AR-1", "spec.md", "--by", "talos/1.3.0")
+        r = run(p, "approve", "AR-1", "spec.md", "--by", "tf/1.0.0")
         check(r.returncode == 2 and astates("AR-1") == {"spec.md": "szkic"} and "human:" in r.stdout,
               f"TS-43: zatwierdza tylko człowiek (human:<id>): {r.returncode} {r.stdout}")
         r = run(p, "approve", "AR-1", "spec.md", "--by", "human:anna")
@@ -223,7 +223,7 @@ def main() -> int:
         check(r.returncode == 0 and astates("AR-1") == {"spec.md": "zatwierdzony"}
               and a.get("verified", [{}])[-1].get("by") == "human:anna" and a["verified"][-1].get("at"),
               f"TS-44: zatwierdzenie przez człowieka zapisane z czasem: {r.stdout}{a}")
-        run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "talos/1.3.0", "--inputs", "spec.md")
+        run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "tf/1.0.0", "--inputs", "spec.md")
         run(p, "approve", "AR-1", "plan.md", "--by", "human:anna")
         r = run(p, "check", "AR-1")
         check(r.returncode == 0 and astates("AR-1") == {"plan.md": "zatwierdzony", "spec.md": "zatwierdzony"},
@@ -236,17 +236,17 @@ def main() -> int:
               f"TS-46: zmiana spec.md po zatwierdzeniu planu → plan nieaktualny, spec do ponownego zatwierdzenia: {r.stdout}{s}")
         r = run(p, "status", "AR-1")
         check("nieaktualny" in r.stdout and "plan.md" in r.stdout, f"TS-47: status dla człowieka pokazuje nieaktualny plik: {r.stdout}")
-        run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "talos/1.3.0", "--inputs", "spec.md")
+        run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "tf/1.0.0", "--inputs", "spec.md")
         check(astates("AR-1").get("plan.md") == "szkic", f"TS-48: ponowna rejestracja odświeża wejścia i kasuje zatwierdzenie: {astates('AR-1')}")
         run(p, "approve", "AR-1", "spec.md", "--by", "human:anna")
         run(p, "approve", "AR-1", "plan.md", "--by", "human:jan")
         r = run(p, "check", "AR-1")
         check(r.returncode == 0 and len(task(p, "AR-1")["artifacts"]["plan.md"]["verified"]) == 1,
               f"TS-49: po ponownym zatwierdzeniu check 0; stare zatwierdzenia nie zostają: {r.stdout}")
-        for bad, why in ((("artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "talos/1.3.0", "--inputs", "../../x.md"), "wejście spoza katalogu"),
-                         (("artifact", "AR-1", "plan.md", "--stage", "wymyslony", "--by", "talos/1.3.0"), "nieznany etap"),
+        for bad, why in ((("artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "tf/1.0.0", "--inputs", "../../x.md"), "wejście spoza katalogu"),
+                         (("artifact", "AR-1", "plan.md", "--stage", "wymyslony", "--by", "tf/1.0.0"), "nieznany etap"),
                          (("artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "ktoś"), "zły zapis wykonawcy"),
-                         (("artifact", "AR-1", "../EV-1/task.json", "--stage", "plan", "--by", "talos/1.3.0"), "plik spoza katalogu"),
+                         (("artifact", "AR-1", "../EV-1/task.json", "--stage", "plan", "--by", "tf/1.0.0"), "plik spoza katalogu"),
                          (("approve", "AR-1", "report.md", "--by", "human:anna"), "plik niezarejestrowany")):
             r = run(p, *bad)
             check(r.returncode == 2, f"TS-50: odrzucone ({why}): {r.returncode} {r.stdout}")

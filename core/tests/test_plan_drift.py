@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy zgodności zmian z planem Talosa (tryb mode-talos, scripts/plan_drift.py): pliki w diffie vs pliki kawałków
+"""Testy zgodności zmian z planem przebiegu (skill tf, scripts/plan_drift.py): pliki w diffie vs pliki kawałków
 z plan.md, zmiany spoza planu, kawałki bez zmian, testy w diffie. python3 .claude/tests/test_plan_drift.py"""
 import json
 import os
@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-REL = Path(".claude") / "skills" / "talos-story-run" / "scripts" / "plan_drift.py"
+REL = Path(".claude") / "skills" / "tf" / "scripts" / "plan_drift.py"
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / REL).is_file()), None)
 SCRIPT = ROOT / REL if ROOT else None
 

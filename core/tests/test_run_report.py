@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy raportu przebiegu Talosa (tryb mode-talos, skill talos-story-run, scripts/run_report.py).
+"""Testy raportu przebiegu (skill tf, scripts/run_report.py).
 python3 .claude/tests/test_run_report.py"""
 import json
 import os
@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-REL = Path(".claude") / "skills" / "talos-story-run" / "scripts" / "run_report.py"
+REL = Path(".claude") / "skills" / "tf" / "scripts" / "run_report.py"
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / REL).is_file())
 SCRIPT = ROOT / REL
 
@@ -51,7 +51,7 @@ Klient nie może ponowić nieudanej płatności i porzuca zamówienie.
 
 
 def run(args, cwd, cfg):
-    env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TALOS_DASHBOARD_OPEN": "0"}   # testy nie otwierają przeglądarki
+    env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TF_DASHBOARD_OPEN": "0"}   # testy nie otwierają przeglądarki
     return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True, env=env,
                           timeout=60)
 
@@ -108,7 +108,7 @@ def main() -> int:
                   and index.is_file() and d.name in index.read_text(encoding="utf-8"),
                   f"R-4a: run.json wskazuje zadanie, zadanie jest w indeksie: {meta}")
         # PRB-32 — klon produktu bez `.tf/runs/talos/` w .gitignore ma „?? tmp/” w statusie po pierwszym start i hook
-        # „czyste drzewo robocze” Talosa (SKILL §0.1) oraz dispatch_local pdi uznają klon za brudny. Skrypt zakłada
+        # „czyste drzewo robocze” pętli (SKILL §0.1) oraz dispatch_local pdi uznają klon za brudny. Skrypt zakłada
         # `.tf/runs/talos/.gitignore` z `*`, tak jak docs/plugins.md opisuje dla samodzielnych instalacji trybu.
         gi = proj / ".tf" / "runs" / ".gitignore"
         check(gi.is_file() and gi.read_text(encoding="utf-8").strip() == "*",
@@ -183,7 +183,7 @@ def main() -> int:
         check("opus" in md and "haiku" in md and "USD" in md and "2/3" in md, f"R-12: report.md: {md[:400]}")
         check("## Bezpieczeństwo" in md and "brak wyniku skanu" in md, f"R-14: bez skanu sekcja mówi o braku: {md[-300:]}")
 
-        # R-11a: kawałek z commitem liczy się jako zrobiony, nawet gdy Talos nie odhaczył go w plan.md (CHG-4, 2026-11-07:
+        # R-11a: kawałek z commitem liczy się jako zrobiony, nawet gdy pętla nie odhaczyła go w plan.md (CHG-4, 2026-11-07:
         # „Plan: 0/1” przy gotowym commicie). Baza: gałąź fazy pdi/<CHG>-delivery, gdy przebieg ma zmianę, inaczej main.
         def git(*a: str) -> None:
             _sp.run(["git", "-C", str(proj), *a], check=True, capture_output=True)
