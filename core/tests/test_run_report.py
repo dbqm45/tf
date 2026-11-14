@@ -253,15 +253,17 @@ def main() -> int:
         (chg / "plan.md").write_text(PLAN_MD, encoding="utf-8")
         (chg / "intent.md").write_text(INTENT_MD, encoding="utf-8")
         r = run(["start", "--task", "TSK-58"], proj, cfg)
-        tr = sorted((proj / ".tf" / "runs" / "cuts").glob("*tsk-58*"))
-        meta = json.loads((tr[0] / "run.json").read_text(encoding="utf-8")) if tr else {}
-        story = (tr[0] / "story.md").read_text(encoding="utf-8") if tr else ""
+        tr = proj / ".tf" / "runs" / "CHG-12-TSK-58"                    # krok E6: cięcie to zadanie <CHG>-<TSK>
+        cut_doc = proj / "docs" / "project" / "changes" / "CHG-12-TSK-58"
+        meta = json.loads((tr / "run.json").read_text(encoding="utf-8")) if (tr / "run.json").is_file() else {}
+        story = (cut_doc / "ticket.md").read_text(encoding="utf-8") if (cut_doc / "ticket.md").is_file() else ""
         check(r.returncode == 0 and meta.get("change") == "CHG-12" and meta.get("task") == "TSK-58"
-              and meta.get("flag") == "payment-retry",
-              f"R-15: start --task — katalog przebiegu, run.json z change/task/flag: {r.stdout} {r.stderr} {meta}")
+              and meta.get("flag") == "payment-retry" and meta.get("key") == "CHG-12-TSK-58"
+              and not list((proj / ".tf" / "runs" / "cuts").glob("*tsk-58*")),
+              f"R-15: start --task — katalog przebiegu zadania cięcia, run.json z change/task/flag: {r.stdout} {r.stderr} {meta}")
         check("TSK-58" in story and "brak podwójnego obciążenia" in story and "R1" in story
               and "Klient nie może ponowić" in story and "docs/project/changes/CHG-12" in story,
-              f"R-16: story z wiersza planu i zamiaru zmiany: {story[:600]}")
+              f"R-16: ticket.md z wiersza planu i zamiaru zmiany: {story[:600]}")
         r = run(["start", "--task", "TSK-99"], proj, cfg)
         check(r.returncode == 2 and "TSK-99" in r.stdout + r.stderr and "Traceback" not in r.stderr,
               f"R-17: TSK spoza planów zmian → kod 2 z komunikatem: {r.returncode} {r.stdout} {r.stderr[-300:]}")
@@ -281,8 +283,8 @@ def main() -> int:
               f"R-33a: dwa dziennika z TSK-58 → kod 2 z listą zmian i podpowiedzią --change: {r.returncode} "
               f"{r.stdout} {r.stderr[-400:]}")
         r = run(["start", "--task", "TSK-58", "--change", "CHG-13"], proj, cfg)
-        tr13 = sorted((proj / ".tf" / "runs" / "cuts").glob("*tsk-58*"))
-        meta13 = json.loads((tr13[-1] / "run.json").read_text(encoding="utf-8")) if tr13 else {}
+        tr13 = proj / ".tf" / "runs" / "CHG-13-TSK-58"                  # ten sam TSK w dwóch zmianach: osobne zadania
+        meta13 = json.loads((tr13 / "run.json").read_text(encoding="utf-8")) if (tr13 / "run.json").is_file() else {}
         check(r.returncode == 0 and meta13.get("change") == "CHG-13",
               f"R-33b: --change CHG-13 wybiera CHG-13: {r.returncode} {r.stdout} {r.stderr} {meta13}")
         r = run(["start", "--task", "TSK-58", "--change", "CHG-77"], proj, cfg)
@@ -291,8 +293,8 @@ def main() -> int:
         # usuwamy drugi dziennik, żeby reszta testów miała jeden wpis
         import shutil as _sh
         _sh.rmtree(chg2)
-        for leftover in sorted((proj / ".tf" / "runs" / "cuts").glob("*tsk-58*"))[1:]:
-            _sh.rmtree(leftover)
+        for leftover in (tr13, proj / "docs" / "project" / "changes" / "CHG-13-TSK-58"):
+            _sh.rmtree(leftover, ignore_errors=True)
         meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         (run_dir / "run.json").write_text(json.dumps({**meta, "change": "CHG-12", "task": "TSK-58"}), encoding="utf-8")
         with (run_dir / "parked.md").open("a", encoding="utf-8") as f:
@@ -397,10 +399,10 @@ def main() -> int:
         check(task2.get("weight") == "zwykla" and task2.get("weight_log"),
               f"R-45: zwykła historyjka dostaje wagę zwykłą z zapisem przydziału: {task2.get('weight')} {task2.get('weight_log')}")
         r = run(["start", "--task", "TSK-57", "--change", "CHG-12"], proj, cfg)
-        cut = next(iter((proj / ".tf" / "runs" / "cuts").glob("*/story.md")), None)
-        text = cut.read_text(encoding="utf-8") if cut else ""
-        check(r.returncode == 0 and "Źródło:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text and "Waga:" not in r.stderr,
-              f"R-43: przebieg cięcia pdi bez zmian — story.md bez linii źródła: {r.stdout} {r.stderr} {text[:200]}")
+        cut = changes / "CHG-12-TSK-57" / "ticket.md"
+        text = cut.read_text(encoding="utf-8") if cut.is_file() else ""
+        check(r.returncode == 0 and "Źródło:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text and "Waga:" in r.stderr,
+              f"R-43: zadanie cięcia pdi — ticket.md bez linii źródła (ma nagłówek cięcia), z wagą: {r.stdout} {r.stderr} {text[:200]}")
 
     for f in fails:
         print(f"✗ {f}")

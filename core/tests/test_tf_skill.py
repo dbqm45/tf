@@ -161,6 +161,24 @@ def main() -> int:
     check("nie łączysz poleceń" in rules and all(s in rules for s in ("`;`", "`&&`", "potok")),
           "T-24: reguła „jedna czynność na polecenie” mówi wprost, czego nie łączyć (`;`, `&&`, potok)")
 
+    # krok E6: cięcie zmiany pdi idzie drogą zadania — ten sam przebieg ze specyfikacją, dowodami i śladem kryteriów
+    check("CHG-12-TSK-57" in cuts and ".tf/runs/cuts" not in cuts and "stary" not in cuts and "odmawia" not in cuts
+          and "bez zadania" not in cuts,
+          "T-33: references/ciecia-pdi.md opisuje zadanie cięcia `<CHG>-<TSK>`, bez starego układu `.tf/runs/cuts/`")
+    check(all(w in cuts for w in ("spec", "verify", "trace", "ticket.md")) and "bramce" in cuts and "security-reviewer" in cuts,
+          "T-34: cięcie ma specyfikację, dowody i ślad; zgodę na plan daje bramka zmiany, przegląd bezpieczeństwa zostaje")
+    check("docs(task): record" in cuts and "runs/TSK-" in cuts and "INDEX.md" in cuts and "pierwszy commit" in " ".join(cuts.split()),
+          "T-35: jeden commit końcowy (katalog zadania i raport cięcia, bez INDEX.md); pierwszy commit gałęzi to kawałek "
+          "— z niego pdi bierze tytuł PR")
+    weight_ref = ref("waga.md")
+    check("nie ma wagi" not in weight_ref and "cięci" in weight_ref and "bramce" in weight_ref,
+          "T-36: references/waga.md — cięcie ma wagę; przy pełnej przebieg bez nadzoru nie staje, bo plan zmiany "
+          "zatwierdzono na bramce pdi")
+    guide = next((p for p in (ROOT / ".tf" / "factory" / "PETLA.md",) if p.is_file()), None)
+    gtext = guide.read_text(encoding="utf-8") if guide else ""
+    check(guide is not None and ".tf/runs/cuts" not in gtext and "CHG-12-TSK-57" in gtext,
+          f"T-37: PETLA.md opisuje cięcie jako zadanie `<CHG>-<TSK>`, bez wyjątku starego układu: {guide}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów pętli tf w rdzeniu")

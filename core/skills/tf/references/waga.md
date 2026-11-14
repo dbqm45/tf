@@ -28,4 +28,5 @@ przy starcie i ze ścieżek planu przy etapie `plan`. Człowiekowi mówisz jedny
   --reason "<dlaczego>"`. Gdy uważasz, że waga jest za wysoka, mówisz to człowiekowi i podajesz mu to polecenie —
   sam go nie uruchamiasz. Po decyzji człowieka skrypt wagi już nie zmienia.
 - Waga lekka, a plan wyszedł na więcej niż jeden kawałek → podnosisz ją do zwykłej i zakładasz specyfikację.
-- Przebieg cięcia pdi nie ma wagi.
+- Cięcie pdi ma wagę liczoną z wiersza cięcia (zamiar całej zmiany jej nie podnosi). Przy wadze pełnej przebieg
+  `--auto` nie staje po zgodę: plan zmiany człowiek zatwierdził na bramce pdi. Przegląd `security-reviewer` zostaje.
