@@ -68,3 +68,7 @@ F2 i F3 zmieniają zachowanie pętli. Po F3 potrzebny jest płatny pomiar na tym
   plików. Zmiana względem planu: funkcje są w `run_state.py`, bez osobnego pliku `work_events.py` — osobny skrypt
   wymagałby nowej reguły uprawnień, a nie jest poleceniem. Odpowiedź człowieka na ostatnie pytanie wznawia przebieg
   (nic już nie „czeka na Ciebie”). Zachowanie z włączonym przełącznikiem nie jest zmierzone na przebiegach z modelem.
+- Pomiar po kroku F wykonany za zgodą właściciela (`docs/evals/2026-11-14-pomiar-po-kroku-f.md`): akceptacja 10/10,
+  STOP 5/5, koszt 9,00 USD wobec 8,93 USD po E3 (sumy `cost_usd` z plików `.jsonl` w `docs/evals/`). Przełącznik F3 był włączony i niczego nie zepsuł, ale blokowanie
+  kawałka nie zostało użyte ani razu — zestaw nie ma pytania w trakcie kawałka. Przełącznik zostaje domyślnie
+  wyłączony do czasu pomiaru na historyjce, która to sprawdza.

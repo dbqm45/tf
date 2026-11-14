@@ -295,3 +295,10 @@ w repozytorium, a po 90 dniach skrypt przenosi go do archiwum (decyzja człowiek
 Stan na 2026-11-13: kroki A i B są zrobione (#214–#219), pomiar bazowy i powtórka po poprawkach Talosa są
 w `docs/evals/2026-11-13-pomiar-bazowy-e0.md` (#220, #221). Następny jest krok C.
 Do kroku E: **D2**, **D3**, **D12**. Reszta decyzji (D4, D6, D8–D11, D13) może poczekać na wyniki pierwszych kroków.
+
+Decyzje właściciela z 2026-11-14 (do kroku G):
+- **D4 — pierwszy tracker: Jira.**
+- **D6 — tryb Auto nie scala sam zmian niskiego ryzyka; nie teraz.** Właściciel uważa ten kierunek za dobry
+  i prosi, żeby go zapisać na przyszłość. Do tematu wracamy, gdy będą dane z `tf metrics` i spełnione warunki
+  z dokumentu osi (sekcja 16, punkt 6): zaufani autorzy, kompletne kontrole, szybkie cofanie, pilnowany odsetek
+  cofnięć. [interpretacja: w wiadomości właściciela było „niestreszczenie”; odczytane jako „nie teraz”]
