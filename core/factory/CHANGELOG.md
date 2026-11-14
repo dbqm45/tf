@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.6.0] — 2026-11-14
+### Added
+- **core:** let a task belong to a pdi change cut (#245)
+
 ## [10.5.0] — 2026-11-14
 ### Added
 - **core:** keep the model assignment of loop steps in the configuration (#244)
