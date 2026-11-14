@@ -278,8 +278,8 @@ ich skuteczność sprawdzi pomiar po E3. Kolejność dalej: E2 → E3 → **pomi
 - [x] **Poprawka w `dbqm45/pdi`** (decyzja właściciela z 2026-11-14: poprawić słowo „Talos”): gałąź
   `claude/rename-talos-to-tf` (pdi#180) — pdi rozpoznaje skaner tylko w ścieżce `.claude/skills/tf/…` (decyzja
   właściciela: bez ścieżki zgodności, pdi wymaga produktu na fabryce 10.0.0 lub nowszej), a nazwa w dokumentach,
-  makietach, komentarzach i testach zmienia się na „agent tf” / `/tf`. Stara nazwa zostaje w jednym zdaniu README
-  pdi, które mówi, jak pętla nazywała się wcześniej. Scalenie PR w pdi należy do właściciela.
+  makietach, komentarzach i testach zmienia się na „agent tf” / `/tf`. Po zmianie `git grep -i talos` w pdi nie
+  zwraca nic (decyzja właściciela: usunąć także wzmiankę z README). Scalenie PR w pdi należy do właściciela.
 - [ ] **Po `tf update` u siebie:** zmienić nazwę `.claude/talos.json` na `.claude/tf.json` i zmienne `TALOS_*` na
   `TF_*` (jeśli ich używasz) oraz poprawić ścieżkę skryptu skanu i nazwę zmiennej w skopiowanym `change-check.yml`.
 
