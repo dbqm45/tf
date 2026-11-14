@@ -100,6 +100,24 @@ def main() -> int:
         r = tf(p, "mode", "NIE-1")
         check(r.returncode != 0 and "Traceback" not in r.stderr, f"M-14: brak zadania → błąd bez wyjątku: {r.returncode}")
 
+        # zadanie cięcia zmiany pdi (krok E6): plan zmiany zatwierdzono na bramce pdi, więc waga pełna nie zatrzymuje
+        # przebiegu bez nadzoru; w trybie zwykłym człowiek jest obecny i zatwierdza plan jak w każdym zadaniu
+        tf(p, "start", "CHG-12-TSK-57", "--title", "TSK-57: ponowienie płatności", "--change", "CHG-12", "--cut", "TSK-57")
+        folder = p / CHANGES / "CHG-12-TSK-57"
+        (folder / "ticket.md").write_text("# TSK-57\n\nCięcie TSK-57 zmiany CHG-12.\n", encoding="utf-8")
+        (folder / "plan.md").write_text("# Plan\n- [ ] K1 — ponowienie · pliki: pay.py\n", encoding="utf-8")
+        tf(p, "artifact", "CHG-12-TSK-57", "plan.md", "--stage", "plan", "--by", "process:tf", "--inputs", "ticket.md")
+        tf(p, "weight", "CHG-12-TSK-57", "--set", "pelna")
+        r = tf(p, "stage", "CHG-12-TSK-57", "realizacja")
+        check(r.returncode == 1 and "approve CHG-12-TSK-57 plan.md" in r.stdout,
+              f"M-15: cięcie o wadze pełnej w trybie zwykłym czeka na zgodę człowieka: {r.returncode} {r.stdout}")
+        r = tf(p, "mode", "CHG-12-TSK-57", "auto")
+        check(r.returncode == 0 and task(p, "CHG-12-TSK-57").get("mode") == "auto" and "CHG-12" in r.stdout
+              and "bramce" in r.stdout,
+              f"M-16: cięcie o wadze pełnej dostaje tryb Auto z wyjaśnieniem (bramka zmiany): {r.returncode} {r.stdout}")
+        r = tf(p, "stage", "CHG-12-TSK-57", "realizacja")
+        check(r.returncode == 0, f"M-17: cięcie o wadze pełnej w trybie Auto wchodzi w realizację bez zgody: {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów trybu zadania")

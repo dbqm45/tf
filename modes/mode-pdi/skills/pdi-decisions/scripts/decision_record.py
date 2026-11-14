@@ -11,6 +11,8 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0
       i spójnością: mvp.release wśród linii, TSK w jednej linii i zgodne z plan.md (tasks, kolumny Wydanie i Flaga),
       flaga z etapami (rollout) i datą usunięcia (remove_by), TSK flagi w liniach; w plan.md samokontrolę planu cięć
       (fundament z „Odblokowuje” wskazującym TSK tej zmiany, cięcie z ID wymagania albo weryfikacją — jak REL-008)
+      folder zadania fabryki (z `task.json`, bez `intent.md`, np. zadanie cięcia CHG-12-TSK-57) jest pomijany — jego
+      pliki nie są artefaktami zmiany
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision add CHG-12 --statement "…" --why "…" \
       --kind product --by "kto" [--date RRRR-MM-DD] [--source-kind claude-cli] [--drafted-by ai]
       [--finding DES-001:TSK-1 [--effect resolve|accept_risk|dismiss|confirm]]
@@ -645,6 +647,12 @@ def check_release(d: Path) -> list[str]:
     return errs
 
 
+def is_task_folder(folder: Path) -> bool:
+    """Folder zadania fabryki (`task.json`, bez `intent.md`): jego pliki nie są artefaktami zmiany i nie mają
+    nagłówka kontraktu pdi. Zmiana, w której ktoś założył też `task.json`, ma `intent.md` i jest sprawdzana."""
+    return (folder / "task.json").is_file() and not (folder / "intent.md").is_file()
+
+
 def check(change: str | None = None) -> int:
     """Nagłówki, wpisy decyzji, plan i plan wydania. `change` zawęża do jednej zmiany: faza pdi sprawdza swoją,
     a artefakty starszych zmian (pisane pod wcześniejszy kontrakt) jej nie blokują."""
@@ -658,6 +666,7 @@ def check(change: str | None = None) -> int:
             return 1
         pattern = change
     files = sorted(CHANGES.glob(f"{pattern}/*.md")) if CHANGES.is_dir() else []
+    files = [f for f in files if not is_task_folder(f.parent)]
     releases = sorted(CHANGES.glob(f"{pattern}/release.yaml")) if CHANGES.is_dir() else []
     if not files and not releases:
         print(f"Brak artefaktów zmian w {CHANGES} — nic do sprawdzenia.")

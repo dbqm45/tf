@@ -113,6 +113,26 @@ def main() -> int:
             check(sec in intent, f"D-2a: intent.md ma sekcję {sec!r} (ograniczenia, porażka i powiązania pisze człowiek)")
         r = run(["check"], repo)
         check(r.returncode == 0, f"D-7: świeży dziennik przechodzi check: {r.stdout}{r.stderr}")
+        # folder zadania fabryki obok zmiany (task.json, pliki bez nagłówka pdi) nie jest zmianą — check go pomija
+        for key in ("CHG-12-TSK-57", "PROJ-123"):
+            folder = repo / "docs/project/changes" / key
+            folder.mkdir(parents=True)
+            (folder / "task.json").write_text('{"schema": 1, "key": "%s"}\n' % key, encoding="utf-8")
+            for name in ("ticket.md", "plan.md", "spec.md", "report.md"):
+                (folder / name).write_text(f"# {name}\n\n- [ ] K1 — coś\n", encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode == 0 and "ticket.md" not in r.stdout,
+              f"D-7a: check pomija foldery zadań (task.json bez intent.md): {r.returncode} {r.stdout}{r.stderr}")
+        (d / "task.json").write_text('{"schema": 1, "key": "CHG-12"}\n', encoding="utf-8")
+        (d / "notatka.md").write_text("# bez nagłówka\n", encoding="utf-8")
+        r = run(["check"], repo)
+        check(r.returncode == 1 and "notatka.md" in r.stdout,
+              f"D-7b: zmiana z task.json (ma intent.md) jest nadal sprawdzana: {r.returncode} {r.stdout}")
+        (d / "notatka.md").unlink()
+        (d / "task.json").unlink()
+        import shutil
+        for key in ("CHG-12-TSK-57", "PROJ-123"):
+            shutil.rmtree(repo / "docs/project/changes" / key)
         r = run(["change", "new", "CHG-12"], repo)
         check(r.returncode != 0 and "istnieje" in r.stdout + r.stderr, "D-8: istniejący katalog → błąd")
         check(header(d / "intent.md").get("source") == "PRB-34", "D-9: bez nadpisania istniejących plików")

@@ -298,6 +298,45 @@ def main() -> int:
             r = run(Path(e), "list")
             check(r.returncode == 0 and "tf task start" in r.stdout, f"TS-57: brak zadań → podpowiedź, kod 0: {r.returncode} {r.stdout}")
 
+    # zadanie cięcia zmiany pdi (krok E6): klucz <CHG>-<TSK>, pola `change` i `cut`, bez wiersza w INDEX.md
+    with tempfile.TemporaryDirectory() as tmp:
+        c = Path(tmp)
+        r = run(c, "start", "CHG-12-TSK-57", "--title", "TSK-57: ponowienie płatności", "--change", "CHG-12", "--cut", "TSK-57")
+        t = task(c, "CHG-12-TSK-57")
+        check(r.returncode == 0 and t.get("change") == "CHG-12" and t.get("cut") == "TSK-57",
+              f"TS-58: zadanie cięcia zapisuje zmianę i cięcie: {r.returncode} {r.stdout}{r.stderr} {t}")
+        check(not (c / CHANGES / "INDEX.md").exists(),
+              "TS-59: samo zadanie cięcia nie zakłada INDEX.md (PR-y cięć jednej zmiany nie mają o co się zderzyć)")
+        run(c, "start", "PROJ-9", "--title", "Eksport sesji")
+        before = (c / CHANGES / "INDEX.md").read_bytes()
+        r = run(c, "start", "CHG-12-TSK-58", "--title", "TSK-58: brak podwójnego obciążenia", "--change", "CHG-12", "--cut", "TSK-58")
+        run(c, "stage", "CHG-12-TSK-58", "specyfikacja")
+        check(r.returncode == 0 and (c / CHANGES / "INDEX.md").read_bytes() == before
+              and [ln for ln in index_rows(c) if "TSK-5" in ln] == [],
+              f"TS-60: zapis zadania cięcia nie zmienia INDEX.md: {index_rows(c)}")
+        r = run(c, "list")
+        line = next((ln for ln in r.stdout.splitlines() if "CHG-12-TSK-57" in ln), "")
+        check("cięcie TSK-57 zmiany CHG-12" in line, f"TS-61: lista pokazuje cięcie i jego zmianę: {r.stdout}")
+        r = run(c, "list", "--json")
+        try:
+            rows = {x["key"]: x for x in json.loads(r.stdout)}
+        except (ValueError, KeyError, TypeError):
+            rows = {}
+        check(rows.get("CHG-12-TSK-57", {}).get("change") == "CHG-12" and rows.get("CHG-12-TSK-57", {}).get("cut") == "TSK-57"
+              and "change" not in rows.get("PROJ-9", {"change": 1}),
+              f"TS-62: list --json podaje zmianę i cięcie tylko dla zadania cięcia: {r.stdout[:400]}")
+        r = run(c, "status", "CHG-12-TSK-57")
+        check("cięcie TSK-57 zmiany CHG-12" in r.stdout, f"TS-63: status pokazuje cięcie i jego zmianę: {r.stdout}")
+        r = run(c, "start", "CHG-12-TSK-60", "--title", "x", "--cut", "TSK-60")
+        r2 = run(c, "start", "CHG-12-TSK-61", "--title", "x", "--change", "CHG-12")
+        check(r.returncode == 2 and r2.returncode == 2 and not task(c, "CHG-12-TSK-60") and not task(c, "CHG-12-TSK-61"),
+              f"TS-64: --cut i --change tylko razem → kod 2: {r.returncode} {r2.returncode}")
+        r = run(c, "start", "TSK-62", "--title", "x", "--change", "CHG-12", "--cut", "TSK-62")
+        check(r.returncode == 2 and "CHG-12-TSK-62" in r.stdout and not task(c, "TSK-62"),
+              f"TS-65: klucz zadania cięcia to <CHG>-<TSK> → kod 2 z podpowiedzią: {r.returncode} {r.stdout}")
+        r = run(c, "start", "CHG-12-TSK-63", "--title", "x", "--change", "chg/12", "--cut", "TSK-63")
+        check(r.returncode == 2, f"TS-66: zły kształt klucza zmiany → kod 2: {r.returncode} {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów stanu zadania")
