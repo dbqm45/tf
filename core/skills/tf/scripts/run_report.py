@@ -491,6 +491,14 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
     (docs / "plan.md").write_text(PLAN_TEMPLATE.format(title=title), encoding="utf-8")
     (run_dir / "parked.md").write_text(PARKED_TEMPLATE.format(title=title), encoding="utf-8")
     print(run_dir.relative_to(project) if run_dir.is_relative_to(project) else run_dir)
+    if not task:                         # waga zadania: propozycja fabryki z treści zgłoszenia, z powodem (krok E2)
+        w = task_state(project, "weight", key, "--apply")
+        if w is not None and w.returncode == 0 and w.stdout.strip():
+            lines = [ln.strip() for ln in w.stdout.splitlines() if ln.strip()]
+            head = lines[0].split("waga ", 1)[-1].split(" · ", 1)[0]
+            why = next((ln.split("powód: ", 1)[1] for ln in lines if ln.startswith("powód: ")), "")
+            print(f"Waga: {head}" + (f" — {why}" if why else "")
+                  + f" (wyższa waga: run_state.py weight {(WORK / key).as_posix()} --set <waga>)", file=sys.stderr)
     try:   # podgląd: zbuduj dashboard i otwórz go (opcje w .claude/tf.json); przebieg cięcia (--task) nie otwiera
         import run_state
         uri = run_state.launch(project, open_browser=not task)

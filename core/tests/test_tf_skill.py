@@ -111,7 +111,7 @@ def main() -> int:
     refs = sorted(f.name for f in (skill / "references").glob("*.md")) if (skill / "references").is_dir() else []
     check(len(body) <= limit, f"T-20: SKILL.md ma {len(body)} znaków (limit {limit}) — szczegóły przenieś do references/")
     check(refs and all(f"references/{n}" in body for n in refs)
-          and {"wejscie.md", "ciecia-pdi.md", "flaga-funkcji.md", "bezpieczenstwo.md"} <= set(refs),
+          and {"wejscie.md", "ciecia-pdi.md", "flaga-funkcji.md", "bezpieczenstwo.md", "waga.md"} <= set(refs),
           f"T-21: każdy plik references/ jest wymieniony w SKILL.md: {refs}")
     check("tylko odczyt" in ref("wejscie.md") and "intake.py tracker" in ref("wejscie.md")
           and "Flag: <klucz>" in ref("flaga-funkcji.md") and "środowisku testowym" in ref("flaga-funkcji.md")
@@ -127,6 +127,14 @@ def main() -> int:
           f"T-25: przegląd zakresu robi zawsze scope-reviewer, także przy małym diffie (nie sesja główna): {review}")
     check("AC-1" in loop and "dodatkowy commit" in loop,
           "T-26: identyfikator kryterium w teście od pierwszej wersji — dopisywanie po fakcie to dodatkowy commit")
+    # krok E2: waga zadania — przydziela ją skrypt, pętla mówi człowiekowi, co wybrano, i zna skutki
+    start = body.split("## 0.", 1)[-1].split("## 1.", 1)[0]
+    waga = ref("waga.md")
+    check("`Waga:" in start and "references/waga.md" in start and "jednym zdaniem" in start,
+          "T-27: start — linię `Waga:` pętla przekazuje człowiekowi jednym zdaniem; skutki w references/waga.md")
+    check(all(w in waga for w in ("lekka", "zwykła", "pełna", "run_state.py weight", "--by human:", "security-reviewer",
+                                  "approve", "STOP", "bez `spec.md`")),
+          "T-28: references/waga.md — trzy wagi, skutki, kto zmienia, obowiązkowy przegląd przy pełnej, STOP bez nadzoru")
     rules = body.split("## Wejście", 1)[0]
     check("nie łączysz poleceń" in rules and all(s in rules for s in ("`;`", "`&&`", "potok")),
           "T-24: reguła „jedna czynność na polecenie” mówi wprost, czego nie łączyć (`;`, `&&`, potok)")

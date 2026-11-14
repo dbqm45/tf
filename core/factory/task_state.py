@@ -30,7 +30,7 @@ i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KE
 gdy każde kryterium ma test (`tf trace <KEY>`); zadanie bez `spec.md` działa jak dotąd.
 
 Waga zadania (`weight`, reguły w `task_weight.py`): bez opcji pokazuje obecną wagę i propozycję z powodem; `--apply`
-przydziela propozycję (pierwszy raz dowolną, potem tylko wyższą); `--set` podnosi swobodnie, a obniża tylko z
+przydziela propozycję (pierwszy raz dowolną, potem tylko wyższą; po decyzji człowieka nic nie zmienia); `--set` podnosi swobodnie, a obniża tylko z
 `--by human:<id>` i `--reason`. Skutki: zadanie o wadze `pelna` wchodzi do etapu `realizacja` dopiero z planem
 zatwierdzonym przez człowieka (`approve <KEY> plan.md`); zadanie o wadze `lekka` ma w planie najwyżej jeden kawałek.
 
@@ -481,7 +481,12 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
             record(new, who, **({"reason": " ".join(reason.split())} if reason.strip() else {}))
         current, assigned = new, True
     elif apply:
-        if not assigned or rules.rank(prop["weight"]) > rules.rank(current):
+        last = (task.get("weight_log") or [{}])[-1]
+        if str(last.get("by", "")).startswith("human:"):      # decyzja człowieka zostaje; fabryka tylko mówi, co widzi
+            if prop["weight"] != current:
+                note = (f"wagę ustawił człowiek ({last['by']}) — fabryka jej nie zmienia; jej propozycja to "
+                        f"{rules.LABEL[prop['weight']]}")
+        elif not assigned or rules.rank(prop["weight"]) > rules.rank(current):
             record(prop["weight"], "process:tf", reasons=prop["reasons"])
             current, assigned = prop["weight"], True
         elif rules.rank(prop["weight"]) < rules.rank(current):

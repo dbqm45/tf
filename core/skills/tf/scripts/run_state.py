@@ -36,6 +36,12 @@ i „Poza zakresem”, brak pytań [blokuje]. Etap `plan` (i każdy dalszy) jest
 `flag` zapisuje flagę funkcji historyjki (`tf task flag`) albo jawny powód jej braku; bez tego, albo z flagą włączoną
 poza środowiskiem testowym bez zgody człowieka, etap `pr` jest odrzucany. Zgody na inne środowisko pętla nie zapisuje.
 
+`weight` pokazuje wagę zadania (lekka / zwykła / pełna) z powodem i skutkami. Wagę przydziela `run_report.py start`
+z treści zgłoszenia, a etapy `intake` i `plan` ponawiają przydział (`tf task weight --apply`: tylko w górę, np. gdy
+plan dotyka migracji; decyzji człowieka nie zmieniają); `weight --set <waga>` podnosi wagę, a obniżyć może tylko człowiek (`tf task weight … --by
+human:<id>`). Zadanie o wadze lekkiej nie potrzebuje `spec.md`; zadanie o wadze pełnej nie wejdzie w pętlę kawałka
+bez planu zatwierdzonego przez człowieka.
+
 `trace` drukuje tabelę kryterium → test → commit → dowód (`tf trace --md`) do opisu PR; kryterium bez testu albo
 test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
 
@@ -155,6 +161,14 @@ def task_view(project: Path, key: str) -> dict | None:
         return None
 
 
+def task_weight(run_dir: Path, meta: dict) -> str | None:
+    """Waga zadania z task.json (lekka / zwykla / pelna); None, gdy przebieg nie ma zadania."""
+    try:
+        return json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("weight")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | None:
     """Przenosi etap przebiegu do task.json (tylko do przodu). Zwraca odmowę `tf task` (specyfikacja z błędami,
     kawałek bez aktualnego dowodu, nieaktualny plik) — to bramka, nie błąd podglądu."""
@@ -165,7 +179,7 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
         cur = json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("stage")
     except (OSError, ValueError, AttributeError):
         cur = None
-    if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") \
+    if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") and task_weight(run_dir, meta) != "lekka" \
             and not (run_report.docs_dir(run_dir, meta) / "spec.md").is_file():
         return (f"✗ zadanie {key} nie ma jeszcze specyfikacji — załóż szablon: run_state.py spec {run_dir} new, "
                 f"wypełnij go i sprawdź: run_state.py spec {run_dir}")
@@ -211,6 +225,19 @@ def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | Non
     if reason:
         args += ["--reason", reason]
     r = run_report.task_state(project, *args)
+    if r is None:
+        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    return r.returncode
+
+
+def cmd_weight(run_dir: Path, new: str | None, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return fail("przebieg cięcia jest w starym układzie (bez zadania) — nie ma wagi.")
+    r = run_report.task_state(project, "weight", meta["key"], *(["--set", new] if new else ["--apply"]))
     if r is None:
         return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
@@ -285,6 +312,11 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         return fail("etap needs wymaga `--needs plan` (plan czeka na akceptację) albo `--needs stop` (blok STOP).")
     if stage != "needs" and (needs or reason):
         return fail("`--needs` i `--reason` dotyczą tylko etapu needs.")
+    if stage in ("intake", "plan") and meta.get("key"):      # waga: ponowny przydział (tylko w górę) po treści i planie
+        before = task_weight(run_dir, meta)
+        w = run_report.task_state(project, "weight", meta["key"], "--apply")
+        if w is not None and w.returncode == 0 and task_weight(run_dir, meta) != before:
+            print("Waga zadania zmieniona — " + " ".join(ln.strip() for ln in w.stdout.splitlines()[:3] if ln.strip()))
     refused = sync_task(project, run_dir, meta, stage)
     if refused:
         print(refused)
@@ -728,6 +760,9 @@ def main(argv: list[str]) -> int:
     fg.add_argument("value", nargs="?")
     fg.add_argument("--remove-by", default=None)
     fg.add_argument("--reason", default="")
+    wg = sub.add_parser("weight")
+    wg.add_argument("run_dir")
+    wg.add_argument("--set", dest="new", default=None)      # obniżenie zapisuje człowiek: tf task weight … --by human:<id>
     tr = sub.add_parser("trace")
     tr.add_argument("run_dir")
     tr.add_argument("--base", default=None)
@@ -756,6 +791,8 @@ def main(argv: list[str]) -> int:
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
     if args.cmd == "flag":
         return cmd_flag(Path(args.run_dir), args.action, args.value, args.remove_by, args.reason, project)
+    if args.cmd == "weight":
+        return cmd_weight(Path(args.run_dir), args.new, project)
     if args.cmd == "trace":
         return cmd_trace(Path(args.run_dir), args.base, project)
     if args.cmd == "spec":

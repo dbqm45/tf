@@ -113,6 +113,11 @@ def main() -> int:
         check(r.returncode == 0 and task(p, "REG-1").get("weight") == "zwykla" and log and log[-1].get("by") == "human:anna"
               and "kalkulatorze" in log[-1].get("reason", "") and log[-1].get("from") == "pelna",
               f"W-14: człowiek obniża z powodem, zapis w historii: {r.stdout} {log[-1:]}")
+        (p / CHANGES / "REG-1" / "plan.md").write_text(
+            "# Plan\n- [ ] K1 — limit · pliki: parking/fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
+        code, out, raw = weight(p, "REG-1", "--apply")
+        check(task(p, "REG-1").get("weight") == "zwykla" and out.get("proposal") == "pelna" and "człowiek" in out.get("note", ""),
+              f"W-14a: po decyzji człowieka --apply nie zmienia wagi, tylko mówi o propozycji: {raw}")
         r = tf(p, "weight", "REG-1", "--set", "ogromna")
         check(r.returncode == 2, f"W-15: nieznana waga → kod 2: {r.returncode} {r.stdout}")
         r = tf(p, "weight", "NIE-1")
