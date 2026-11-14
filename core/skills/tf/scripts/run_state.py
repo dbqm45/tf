@@ -476,8 +476,10 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     meta.pop("needs", None)
     meta.pop("stop_text", None)
     meta.pop("stop_code", None)
+    meta.pop("needs_at", None)
     if stage == "needs":
         meta["needs"] = needs
+        meta["needs_at"] = now_iso()                # od kiedy zadanie czeka na człowieka (lista „Czeka na Ciebie”)
         if needs == "stop":
             meta["stop_code"] = code
             if reason:
@@ -663,6 +665,22 @@ def evidence_items(docs: Path) -> list[dict]:
     return out
 
 
+def code_items(run_dir: Path, proofs: list[dict]) -> list[dict]:
+    """Pliki kodu każdego kawałka — z ostatniego dowodu weryfikacji, więc także te, o których agent nie wspomniał."""
+    project, out = run_dir.resolve().parents[2], []
+    for proof in proofs:
+        m = re.match(r"evidence/(K\d+)-", proof["name"])
+        try:
+            files = json.loads(proof["text"]).get("files") or {}
+        except (ValueError, AttributeError):
+            files = {}
+        for rel in sorted(files) if m else []:
+            text = read_text(project / rel)
+            out.append({"name": f"{m.group(1)} · {rel}", "dot": "ok" if text is not None else "warn",
+                        "text": text if text is not None else "(pliku już nie ma)"})
+    return out
+
+
 def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked: list[str]) -> list[dict]:
     groups: list[dict] = []
     main, work = [], []
@@ -685,6 +703,9 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     proofs = evidence_items(docs) if task_dir else []
     if proofs:
         groups.append({"grp": "Dowody", "items": proofs})
+    code = code_items(run_dir, proofs) if task_dir else []
+    if code:
+        groups.append({"grp": "Kod kawałków (pliki z dowodów)", "items": code})
     sec_root = run_dir / "security"
     sec = []
     for f in sorted(sec_root.glob("**/summary.md")) if sec_root.is_dir() else []:
@@ -764,6 +785,7 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
            "key": meta.get("task") or meta.get("key"), "change": meta.get("change"), "flag": meta.get("flag"), "pr": meta.get("pr"),
            "stopText": meta.get("stop_text"), "stopCode": meta.get("stop_code"),
            "stopLabel": (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or ""),
+           "stopHint": stop_hint(meta, cur) if needs == "stop" else None,
            "stopNeed": (stop_message(meta.get("stop_code")) or {}).get("potrzeba"),
            "stopQuestion": (stop_message(meta.get("stop_code")) or {}).get("pytanie"),
            "stopOptions": [{"opcja": o.get("opcja"), "skutek": o.get("skutek"), "rekomendowana": bool(o.get("rekomendowana"))}
@@ -773,13 +795,39 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
            "started": meta.get("started_at", ""),
            "dir": run_dir.resolve().relative_to(project.resolve()).as_posix()
            if run_dir.resolve().is_relative_to(project.resolve()) else str(run_dir),
-           "taskDir": meta.get("task_dir"), "taskStage": view["task"].get("stage") if view else None}
+           "taskDir": meta.get("task_dir"), "taskStage": view["task"].get("stage") if view else None,
+           "waiting": waiting_items(project, view)}
     if cur and stage in ("slices", "needs"):
         obj["cur"] = {"k": cur.get("k"), "rounds": normalize_rounds(cur) or [{s: "todo" for s in STEPS}]}
     if stage == "pr":
         obj["prSteps"] = {"drift": pr_steps.get("drift", "todo"), "pr": pr_steps.get("pr", "todo")}
     obj["files"] = file_groups(run_dir, meta, stage, needs, parked)
     return obj
+
+
+def sentence(text: str | None, capital: bool = False) -> str:
+    """Tekst zakończony jedną kropką (bez „..”), na życzenie od wielkiej litery; pusty zostaje pusty."""
+    s = (text or "").strip()
+    if not s:
+        return s
+    return (s[0].upper() + s[1:] if capital else s) + ("" if s[-1] in ".!?…" else ".")
+
+
+def stop_hint(meta: dict, cur: dict | None) -> str:
+    """Opis zatrzymania na karcie: co się stało, powód z przebiegu i co zrobić — każda część osobnym zdaniem."""
+    label = (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or "")
+    resume = (cur or {}).get("k") or "bieżącego kawałka"
+    return " ".join(x for x in (sentence(label, capital=True), sentence(meta.get("stop_text") or "STOP"),
+                                f"Zdecyduj i napisz w sesji: wznów od {resume}") if x)
+
+
+def waiting_items(project: Path, view: dict | None) -> list[dict]:
+    """Na co zadanie czeka u człowieka — ta sama lista co w `tf status` (`task_state.waiting`)."""
+    try:
+        api = task_api(project)
+        return api.waiting(project.resolve(), view["task"]) if api and view and hasattr(api, "waiting") else []
+    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje przebiegu
+        return []
 
 
 def slice_items(slices: list[dict], view: dict | None, cur: dict | None, stage: str, needs: str | None) -> list[dict]:
@@ -830,6 +878,7 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
     obj = {"slug": key, "title": task.get("title") or key, "date": created[:10], "stage": stage, "needs": None,
            "auto": False, "effort": None, "key": key, "change": None, "flag": None, "pr": None, "stopText": None,
            "slices": slices, "parked": 0, "parkedList": [], "cost": None, "min": None, "models": [],
+           "waiting": waiting_items(project, view),
            "started": created, "dir": None, "taskDir": rel, "taskStage": task.get("stage"), "files": files}
     if stage == "pr":
         obj["prSteps"] = {"drift": "todo", "pr": "todo"}

@@ -30,7 +30,9 @@ kroku → `label`, `who`, `tier`; `tf config show steps`), waga zadania (`tf tas
 [--reason] [--json]`, wartości `lekka`/`zwykla`/`pelna`, pola `weight` i `weight_log` w `task.json`, linia `Waga:`
 na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`), tryb zadania (`tf task mode <KEY>
 [plan|zwykly|auto]`, pole `mode` w `task.json`, `run_state.py stage … --plan|--auto`, `run_state.py mode <katalog>
-[tryb]`, `run_state.py approve <katalog>`), zadanie cięcia zmiany pdi (`tf task start <CHG>-<TSK> --title … --change <CHG>
+[tryb]`, `run_state.py approve <katalog>`), lista „czeka na Ciebie” (`tf status [--json] [--open]`: pole `waiting` z wpisami `kind` = `plan` / `stop` / `kawalek`,
+`what`, `details`, `question`, `options`, `recommended`, `how`, `since`; pole `needs_at` w `run.json`; to samo pole `waiting`
+na karcie podglądu), zadanie cięcia zmiany pdi (`tf task start <CHG>-<TSK> --title … --change <CHG>
 --cut <TSK>`, pola `change` i `cut` w `task.json`, brak wiersza w `INDEX.md`), kody zatrzymań (`run_state.py stage <katalog> needs --needs stop --code
 <kod>`; lista `STOP_CODES`: `pytanie`, `podzial`, `zrodlo`, `zgoda-na-plan`, `testy`, `skan`, `budzet`, `srodowisko`,
 `zaleznosc`, `kontrakt`, `uprawnienia`; pole `stop_code` w `run.json`), komunikaty zatrzymań
