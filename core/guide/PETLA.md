@@ -36,10 +36,11 @@ Dwa sposoby, ten sam przebieg (skill `tf`):
   niczego nie instaluje i niczego w trackerze nie zmienia. Gdy podłączonych jest kilka, pyta raz, z którego pochodzą
   zgłoszenia, i zapisuje odpowiedź w `.tf/config/operations.json` (podgląd i zmiana: `python3
   .claude/skills/tf/scripts/intake.py tracker`). Bez połączenia wystarczy wkleić treść zgłoszenia.
-- **Jira bez udziału modelu:** gdy w środowisku są zmienne `JIRA_BASE_URL` (albo `tracker.url` w karcie operacyjnej)
-  oraz `JIRA_EMAIL` z `JIRA_API_TOKEN` (Jira Cloud) albo `JIRA_TOKEN` (Data Center), zgłoszenie pobiera skrypt:
-  jedno żądanie tylko do odczytu, wyłącznie przez `https://`, bez przekierowań. Fabryka tych danych nie zapisuje
-  i nie wypisuje; w Jirze niczego nie zmienia. Sprawdzenie u siebie: `python3 .claude/skills/tf/scripts/intake.py
+- **Jira bez udziału modelu:** gdy w środowisku są zmienne `JIRA_BASE_URL` oraz `JIRA_EMAIL` z `JIRA_API_TOKEN`
+  (Jira Cloud) albo `JIRA_TOKEN` (Data Center), zgłoszenie pobiera skrypt: jedno żądanie tylko do odczytu, wyłącznie
+  przez `https://`, bez przekierowań. Fabryka tych danych nie zapisuje i nie wypisuje; w Jirze niczego nie zmienia.
+  Adres bierze tylko ze zmiennej — nie z pliku w repozytorium, który mógłby zmienić cudzy pull request; gdy karta
+  operacyjna ma wpisany inny adres Jiry niż zmienna, skrypt odmawia. Sprawdzenie u siebie: `python3 .claude/skills/tf/scripts/intake.py
   fetch EBO-1236`. Pole własne z kryteriami akceptacji wskażesz w karcie: `"fields": {"acceptance":
   "customfield_10042"}`.
 - **Skąd pochodzi treść:** `ticket.md` zadania zaczyna się od linii `Źródło: … · pobrano: <data>`. Treść zgłoszenia

@@ -26,7 +26,8 @@ Nazwy skilli, person i agentów **nakładki** albo **trybu** są publicznym API 
 [--source "<skąd>"]`, `status`, `finish`), `intake.py` (`resolve [--json] <wejście>` z polami `kind`, `key`, `tracker`,
 `changes`, `options`, `intent`, `ask`, `next`; `tracker [<typ> [--prefix P]]`; `fetch <KLUCZ> [--json]` — zgłoszenie z Jiry,
 tylko odczyt; `run_report.py start --key <KLUCZ> --from-tracker`; zmienne `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`,
-`JIRA_TOKEN`), sekcja `tracker` (`type`, `prefixes`, `url`, `fields.acceptance`)
+`JIRA_TOKEN`; adres wyłącznie z `JIRA_BASE_URL`), sekcja `tracker` (`type`, `prefixes`, `fields.acceptance`; `url` — tylko do
+wykrycia rozjazdu z `JIRA_BASE_URL`)
 karty operacyjnej `.tf/config/operations.json`, przydział kroków pętli (klucz `steps` w konfiguracji: identyfikator
 kroku → `label`, `who`, `tier`; `tf config show steps`), waga zadania (`tf task weight <KEY> [--apply | --set <waga>] [--by]
 [--reason] [--json]`, wartości `lekka`/`zwykla`/`pelna`, pola `weight` i `weight_log` w `task.json`, linia `Waga:`

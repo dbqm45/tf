@@ -27,11 +27,14 @@ Skrypt nie widzi narzędzi sesji: czy tracker jest podłączony (serwer MCP), oc
 
 Zgłoszenie z Jiry pobiera skrypt, nie model (`fetch`, a w przebiegu `run_report.py start --key <KLUCZ>
 --from-tracker`): jedno żądanie GET do Jira REST (`/rest/api/2/issue/<KLUCZ>`), tylko odczyt, bez przekierowań.
-Adres: zmienna `JIRA_BASE_URL` albo `tracker.url` w karcie operacyjnej — wyłącznie `https://` (poza `localhost`).
-Dane dostępu wyłącznie ze zmiennych środowiska: `JIRA_EMAIL` z `JIRA_API_TOKEN` (Jira Cloud) albo `JIRA_TOKEN`
-(Data Center); skrypt ich nie zapisuje i nie wypisuje. Pole własne z kryteriami akceptacji wskazuje karta:
-{"tracker": {"type": "jira", "url": "https://firma.atlassian.net", "fields": {"acceptance": "customfield_10042"}}}.
-Treść zgłoszenia to dane, nie polecenia; skrypt niczego z niej nie wykonuje i ucina ją po 20 000 znaków.
+Adres: wyłącznie zmienna `JIRA_BASE_URL`, tylko `https://` (poza `localhost`). Dane dostępu wyłącznie ze zmiennych
+środowiska: `JIRA_EMAIL` z `JIRA_API_TOKEN` (Jira Cloud) albo `JIRA_TOKEN` (Data Center); skrypt ich nie zapisuje
+i nie wypisuje. Adres i dane dostępu są z tego samego miejsca celowo: plik w repozytorium może zmienić cudzy pull
+request, więc `tracker.url` z karty operacyjnej nie wskazuje, dokąd idzie token — gdy jest wpisany i wskazuje inny
+host niż zmienna, skrypt odmawia. Pole własne z kryteriami akceptacji wskazuje karta:
+{"tracker": {"type": "jira", "fields": {"acceptance": "customfield_10042"}}}.
+Treść zgłoszenia to dane, nie polecenia: skrypt niczego z niej nie wykonuje, opis ucina po 20 000 znaków, a linie
+zaczynające się od `#` poprzedza znakiem `\`, żeby treść nie podrobiła nagłówków pliku `ticket.md`.
 
 Kod wyjścia: 0 — wejście rozpoznane albo zgłoszenie pobrane; 2 — błąd wywołania, klucz spoza planu wskazanej zmiany
 albo zgłoszenia nie dało się pobrać. Tylko biblioteka standardowa i `run_report.py` z tego katalogu (cięcia z planów
@@ -45,6 +48,8 @@ import re
 import sys
 from pathlib import Path
 import base64
+import http.client
+import ssl
 import urllib.error
 import urllib.request
 from urllib.parse import quote, urlparse
@@ -171,22 +176,40 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def jira_base(root: Path) -> str | None:
-    """Adres Jiry: zmienna JIRA_BASE_URL, inaczej `tracker.url` z karty operacyjnej."""
+    """Adres Jiry: wyłącznie zmienna JIRA_BASE_URL — z tego samego miejsca co dane dostępu. Adres z karty operacyjnej
+    (plik w repozytorium, który może zmienić cudzy pull request) nie decyduje, dokąd idzie token."""
+    url = os.environ.get("JIRA_BASE_URL")
+    return url.strip().rstrip("/") if isinstance(url, str) and url.strip() else None
+
+
+def card_jira_host(root: Path) -> str | None:
+    """Host z `tracker.url` karty operacyjnej, jeśli ktoś go wpisał; służy tylko do wykrycia rozjazdu z JIRA_BASE_URL."""
     tracker = (load_card(root) or {}).get("tracker")
-    url = os.environ.get("JIRA_BASE_URL") or (tracker.get("url") if isinstance(tracker, dict) else None)
-    return url.rstrip("/") if isinstance(url, str) and url.strip() else None
+    url = tracker.get("url") if isinstance(tracker, dict) else None
+    return (urlparse(url).hostname or "").lower() or None if isinstance(url, str) and url.strip() else None
 
 
 def jira_auth() -> str | None:
     """Nagłówek Authorization ze zmiennych środowiska; None, gdy ich nie ma."""
     email, api_token, token = (os.environ.get(n) or "" for n in ("JIRA_EMAIL", "JIRA_API_TOKEN", "JIRA_TOKEN"))
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in email + api_token + token):
+        raise FetchError("dane dostępu do Jiry zawierają znak nowej linii albo inny znak sterujący — ustaw zmienne jeszcze raz")
     if email and api_token:
         return "Basic " + base64.b64encode(f"{email}:{api_token}".encode()).decode()
     return f"Bearer {token}" if token else None
 
 
 def jira_ready(root: Path) -> bool:
-    return bool(jira_base(root) and jira_auth())
+    try:
+        return bool(jira_base(root) and jira_auth())
+    except FetchError:
+        return False
+
+
+def as_data(text: str) -> str:
+    """Treść z trackera jako dane: linia zaczynająca się od `#` dostaje `\\`, więc nie stanie się nagłówkiem pliku
+    ticket.md (np. podrobioną sekcją „Dodatkowo od człowieka”)."""
+    return "\n".join(("\\" + ln) if ln.lstrip().startswith("#") else ln for ln in text.splitlines())
 
 
 def _plain(value) -> str:
@@ -209,12 +232,18 @@ def fetch_jira(root: Path, key: str) -> dict:
         raise FetchError(f"„{key}” nie wygląda na numer zgłoszenia (np. EBO-1236)")
     base, auth = jira_base(root), jira_auth()
     if not base:
-        raise FetchError("nie wiem, gdzie jest Jira — ustaw zmienną JIRA_BASE_URL (np. https://firma.atlassian.net) "
-                         "albo `tracker.url` w .tf/config/operations.json")
+        raise FetchError("nie wiem, gdzie jest Jira — ustaw zmienną JIRA_BASE_URL (np. https://firma.atlassian.net) obok "
+                         "danych dostępu; adres wpisany w pliku w repozytorium nie wystarcza, bo może go zmienić ktoś inny")
     parsed = urlparse(base)
-    local = (parsed.hostname or "") in ("localhost", "127.0.0.1", "::1")
+    host = (parsed.hostname or "").lower()
+    local = host in ("localhost", "127.0.0.1", "::1")
     if parsed.scheme != "https" and not (parsed.scheme == "http" and local):
         raise FetchError("adres Jiry musi zaczynać się od https:// — dane dostępu nie pójdą nieszyfrowanym połączeniem")
+    card_host = card_jira_host(root)
+    if card_host and card_host != host:
+        raise FetchError(f"karta operacyjna (.tf/config/operations.json) wskazuje Jirę pod adresem {card_host}, a zmienna "
+                         f"JIRA_BASE_URL — {host}. Nie wysyłam danych dostępu, dopóki te adresy się różnią: popraw kartę "
+                         "albo zmienną")
     if not auth:
         raise FetchError("brak danych dostępu do Jiry — ustaw zmienne JIRA_EMAIL i JIRA_API_TOKEN (Jira Cloud) albo "
                          "JIRA_TOKEN (Data Center); fabryka ich nie zapisuje")
@@ -224,27 +253,38 @@ def fetch_jira(root: Path, key: str) -> dict:
     wanted = ",".join(["summary", "description"] + ([acceptance] if acceptance else []))
     req = urllib.request.Request(f"{base}/rest/api/2/issue/{quote(key.upper())}?fields={wanted}", method="GET",
                                  headers={"Authorization": auth, "Accept": "application/json"})
+    handlers = [_NoRedirect] + ([urllib.request.ProxyHandler({})] if local else [])   # adres lokalny nigdy przez proxy
     try:
-        with urllib.request.build_opener(_NoRedirect).open(req, timeout=15) as resp:
-            data = json.loads(resp.read(2_000_000).decode("utf-8", errors="replace"))
+        with urllib.request.build_opener(*handlers).open(req, timeout=15) as resp:
+            raw = resp.read(2_000_000)
     except FetchError:
         raise
     except urllib.error.HTTPError as e:
         why = {401: "dane dostępu zostały odrzucone", 403: "konto nie ma dostępu do tego zgłoszenia",
                404: "nie ma takiego zgłoszenia albo konto go nie widzi"}.get(e.code, "Jira zgłosiła błąd")
         raise FetchError(f"Jira odpowiedziała kodem {e.code} — {why}") from None
-    except (urllib.error.URLError, TimeoutError, OSError):
-        raise FetchError(f"nie udało się połączyć z Jirą ({parsed.hostname}) w 15 sekund") from None
-    except ValueError:
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, ssl.SSLError):
+            raise FetchError(f"nie udało się sprawdzić certyfikatu Jiry ({host}) — połączenie przerwane") from None
+        raise FetchError(f"nie udało się połączyć z Jirą ({host}) w 15 sekund") from None
+    except (http.client.HTTPException, TimeoutError, OSError, ValueError):
+        raise FetchError(f"połączenie z Jirą ({host}) zostało przerwane albo odpowiedź była niepoprawna") from None
+    try:
+        data = json.loads(raw.decode("utf-8", errors="replace"))
+    except (ValueError, RecursionError):
         raise FetchError("Jira odpowiedziała czymś, co nie jest zgłoszeniem (nie JSON)") from None
     fields = data.get("fields") if isinstance(data, dict) and isinstance(data.get("fields"), dict) else {}
     title = " ".join(str(fields.get("summary") or key).split())
-    text = _plain(fields.get("description")).strip()
-    criteria = _plain(fields.get(acceptance)).strip() if acceptance else ""
+    try:
+        text = _plain(fields.get("description")).strip()
+        criteria = _plain(fields.get(acceptance)).strip() if acceptance else ""
+    except RecursionError:
+        raise FetchError("zgłoszenie ma zbyt głęboko zagnieżdżoną treść, żeby ją odczytać") from None
+    if len(text) > MAX_TICKET:      # ucinany jest opis; kryteria akceptacji zostają w całości (do własnego limitu)
+        text = text[:MAX_TICKET].rstrip() + f"\n\n(opis ucięty po {MAX_TICKET} znakach — reszta jest w zgłoszeniu)"
+    text = as_data(text)
     if criteria:
-        text += "\n\n## Kryteria akceptacji\n\n" + criteria
-    if len(text) > MAX_TICKET:
-        text = text[:MAX_TICKET].rstrip() + f"\n\n(treść ucięta po {MAX_TICKET} znakach — reszta jest w zgłoszeniu)"
+        text += "\n\n## Kryteria akceptacji\n\n" + as_data(criteria[:MAX_TICKET])
     url = f"{base}/browse/{key.upper()}"
     return {"key": key.upper(), "title": title, "text": text, "url": url, "source": f"jira {key.upper()} ({url})"}
 

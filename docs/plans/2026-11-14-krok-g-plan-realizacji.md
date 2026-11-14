@@ -21,7 +21,7 @@ Decyzje właściciela z 2026-11-14: **D4 — pierwszy tracker to Jira**; **D6 �
 
 | # | Kawałek | Co powstaje | Testy (najpierw) |
 |---|---|---|---|
-| G1 | zgłoszenie z Jiry skryptem (poz. 16) | `run_report.py start --key EBO-1236 --from-tracker`: skrypt czyta zgłoszenie przez Jira REST (tylko odczyt) i zapisuje `ticket.md` ze źródłem, adresem i datą; dane dostępu wyłącznie ze zmiennych środowiska; adres Jiry z karty operacyjnej albo ze zmiennej; bez danych dostępu — jasny komunikat i dotychczasowa droga (wklejenie). `intake.py resolve` dla numeru z Jiry podaje to polecenie jako następną czynność | atrapa serwera Jiry na `localhost` (bez sieci): poprawne zgłoszenie → `ticket.md` z tytułem, opisem i kryteriami; brak zmiennych, błąd 401/404, przekroczony czas → kod 2 z komunikatem i bez pliku; treść dłuższa niż limit jest ucinana; adres spoza `https://` (poza `localhost`) odrzucony; token nie pojawia się w pliku ani na wyjściu |
+| G1 | zgłoszenie z Jiry skryptem (poz. 16) | `run_report.py start --key EBO-1236 --from-tracker`: skrypt czyta zgłoszenie przez Jira REST (tylko odczyt) i zapisuje `ticket.md` ze źródłem, adresem i datą; dane dostępu i adres Jiry wyłącznie ze zmiennych środowiska; bez danych dostępu — jasny komunikat i dotychczasowa droga (wklejenie). `intake.py resolve` dla numeru z Jiry podaje to polecenie jako następną czynność | atrapa serwera Jiry na `localhost` (bez sieci): poprawne zgłoszenie → `ticket.md` z tytułem, opisem i kryteriami; brak zmiennych, błąd 401/404, przekroczony czas → kod 2 z komunikatem i bez pliku; treść dłuższa niż limit jest ucinana; adres spoza `https://` (poza `localhost`) odrzucony; token nie pojawia się w pliku ani na wyjściu |
 | G2 | opis PR z trzema polami (poz. 17) | `run_state.py pr-body <katalog> --base <gałąź>` składa opis PR z plików zadania: historyjka, kawałki i commity, ślad kryteriów, **Jak sprawdzono** (dowody weryfikacji i skany), **Ryzyko** (triaż ryzyka i waga), **Jak cofnąć** (z karty operacyjnej; domyślnie `git revert` i wyłączenie flagi), odłożone sprawy, założenia. Pętla podaje go przez `--body-file` | pola obecne zawsze, także bez karty i bez flagi; treść z dowodów i z karty; kawałek bez dowodu jest w opisie nazwany wprost |
 | G3 | karta wdrożenia i sprawdzenie po scaleniu (poz. 17) | sekcja `deploy` karty operacyjnej (jak cofnąć i ile to trwa, test dymny, co zatwierdza człowiek, polecenie logów) — pyta o nią `tf onboard`; `tf task deployed <KEY> [--version X]` uruchamia test dymny z karty, zapisuje wynik i etap `wdrozenie`; wynik czerwony → komunikat z pytaniem „wycofać?” i krokiem cofnięcia z karty. Produkcję zatwierdza człowiek; bez karty fabryka kończy na scaleniu i mówi to wprost | karta zakładana i uzupełniana bez nadpisywania; zielony i czerwony test dymny; brak karty → komunikat, nie błąd; `tf status` pokazuje zadanie czekające na decyzję o wycofaniu |
 | G4 | zamknięcie zadania (poz. 18) | `tf task close <KEY>`: sprawdza, że zmiana jest scalona, przypomina o dacie usunięcia flagi, wymaga dla każdego ważnego ustalenia przeglądu zapisu „kontrola, która to złapie” (test, hook, reguła albo powód jej braku), dopisuje lekcję do `docs/project/lessons.md`, ustawia etap `zamkniecie` | odmowa zamknięcia niescalonej zmiany i ustalenia bez kontroli; lekcja dopisana raz; zamknięte zadanie znika z listy „w toku” |
@@ -32,10 +32,11 @@ Kolejność: G1 → G2 → G3 → G4. Każdy kawałek to osobny PR.
 
 - **Skrypt, nie model, czyta tracker** (dokument osi, §9): model dostaje gotowy plik. Treść zgłoszenia to dane —
   `ticket.md` ma tę samą linię ostrzeżenia co dziś, a skrypt niczego z treści nie wykonuje.
-- **Tylko odczyt i tylko skonfigurowany adres.** Skrypt woła wyłącznie adres Jiry z karty albo ze zmiennej, przez
-  HTTPS, jednym żądaniem `GET`. Niczego w Jirze nie zmienia (komentarz i status to osobny, późniejszy moduł ze zgodą
+- **Tylko odczyt i tylko adres ze zmiennej.** Skrypt woła wyłącznie adres z `JIRA_BASE_URL`, przez HTTPS, jednym
+  żądaniem `GET`. Adres z karty operacyjnej nie decyduje, dokąd idzie token — to wniosek z przeglądu bezpieczeństwa:
+  plik w repozytorium może zmienić cudzy pull request. Niczego w Jirze nie zmienia (komentarz i status to osobny, późniejszy moduł ze zgodą
   na każdą akcję).
-- **Dane dostępu:** `JIRA_BASE_URL`, oraz `JIRA_EMAIL` z `JIRA_API_TOKEN` (Jira Cloud) albo sam `JIRA_TOKEN`
+- **Dane dostępu:** `JIRA_BASE_URL` oraz `JIRA_EMAIL` z `JIRA_API_TOKEN` (Jira Cloud) albo sam `JIRA_TOKEN`
   (Data Center). Fabryka ich nie zapisuje; `.env*` nadal nie czyta. [założenie: nazwy zmiennych — do zmiany, jeśli
   w firmie obowiązują inne]
 - **Fabryka niczego nie instaluje.** Droga przez wklejenie treści i przez serwer MCP podłączony w sesji zostaje;
@@ -60,3 +61,11 @@ Kolejność: G1 → G2 → G3 → G4. Każdy kawałek to osobny PR.
   środowiska — podam jedno polecenie do sprawdzenia.
 - Pola „kryteria akceptacji”: w Jirze bywa polem własnym o innej nazwie w każdej firmie. Skrypt weźmie je z opisu,
   a nazwę pola własnego da się wpisać w karcie operacyjnej.
+
+## Stan realizacji (2026-11-14)
+
+- G1 gotowe. Przegląd `security-reviewer` znalazł jedno ważne ustalenie i trzy mniejsze; wszystkie poprawione
+  i pokryte testami: dane dostępu idą tylko pod adres ze zmiennej środowiska (karta z innym adresem → odmowa), nagłówki
+  z treści zgłoszenia nie stają się nagłówkami `ticket.md`, adres lokalny nie idzie przez proxy, błędy połączenia
+  i niepoprawne dane dostępu kończą się komunikatem zamiast śladu wyjątku, a ucinany jest opis, nie kryteria.
+- Niezweryfikowane: pobranie z prawdziwej Jiry (Cloud i Data Center) — testy używają atrapy serwera.
