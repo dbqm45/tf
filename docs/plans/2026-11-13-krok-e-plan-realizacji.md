@@ -205,6 +205,30 @@ dostają zgodę albo `--auto` — to nowa reguła trybu zwykłego, nie osłabien
 **Poza E3:** treść komunikatów i pytań dla każdego kodu (E4); zatrzymania z `autonomy.operations` wykrywane hookiem
 (są już w `guard_paths` i polityce autonomii); wygaszanie zgody po nowych commitach.
 
+## E4 — plan szczegółowy (2026-11-14, przed kodem)
+
+**Pliki i kolejność** (test przed kodem):
+
+1. `core/tests/test_stop_messages.py` → `core/skills/tf/templates/stop_messages.json`: dla każdego kodu z listy
+   `STOP_CODES` cztery pola — `co` (co się stało, jedno zdanie), `potrzeba` (czego fabryka potrzebuje od człowieka),
+   `pytanie` (jedno pytanie) i `opcje` (2–3 opcje, każda ze skutkiem; dokładnie jedna rekomendowana).
+2. `core/tests/test_run_state.py` → `run_state.py`: `message <kod>` drukuje komunikat; `stage … needs --needs stop
+   --code <kod>` po zapisie zatrzymania drukuje ten sam komunikat z powodem przebiegu; podgląd pokazuje „czego
+   potrzeba” i pytanie z opcjami zamiast samego powodu.
+3. `core/tests/test_tf_skill.py` → `references/tryby-i-zatrzymania.md`: pętla pokazuje człowiekowi wydrukowany
+   komunikat (w rozmowie pytanie zadaje narzędziem z opcjami), nie własny opis. SKILL.md bez zmian (limit znaków).
+
+**Reguły komunikatów** (dokument osi §1a, reguły 2–4):
+- prosty język: bez słów z budowy fabryki — test ma listę (`tier`, `hook`, `bramka`, `kawałek`, `triaż`, `harness`,
+  `slice`, `gate`, `artefakt`, `STOP`) i jest czerwony, gdy któreś wystąpi w komunikacie;
+- pytanie ma stały kształt: jedno zdanie, 2–3 opcje, przy każdej skutek, jedna rekomendacja;
+- każdy komunikat kończy się tym, co fabryka zrobi po odpowiedzi.
+
+**Jedno źródło:** lista kodów zostaje w `run_state.py` (`STOP_CODES`), a test pilnuje, że plik komunikatów ma
+dokładnie te same kody. Krótki opis kodu na podglądzie pochodzi z pola `co`.
+
+**Poza E4:** tłumaczenie komunikatów na inne języki; komunikaty odmów skryptów (`✗ …`) — są pisane dla agenta.
+
 ## Pomiar po E0 i E1 (2026-11-14)
 
 Jedna seria po obu kawałkach (decyzja właściciela: pomiar po zakończeniu E1), raport
