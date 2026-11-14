@@ -229,6 +229,40 @@ dokładnie te same kody. Krótki opis kodu na podglądzie pochodzi z pola `co`.
 
 **Poza E4:** tłumaczenie komunikatów na inne języki; komunikaty odmów skryptów (`✗ …`) — są pisane dla agenta.
 
+## E5 — plan szczegółowy (2026-11-14, przed kodem)
+
+Decyzja D12, ruch 1: przypisanie modelu i effortu do kroku trafia do konfiguracji **z dzisiejszymi wartościami** —
+zachowanie się nie zmienia. Zmiana przydziału to osobna decyzja po osobnym, płatnym pomiarze.
+
+**Pliki i kolejność** (test przed kodem):
+
+1. `core/tests/test_steps.py` → klucz `steps` w `core/factory/config.yaml` (krok → opis, wykonawca, tier) oraz
+   w `build.py`: `apply_steps` (tier kroku staje się tierem jego wykonawcy przy budowaniu agentów), sprawdzenia
+   w `build.py check` (nieznany wykonawca albo tier, ten sam wykonawca z dwoma tierami, tabela w skillu niezgodna
+   z konfiguracją).
+2. `tf config show steps` — tabela: krok, kto, tier, model i effort po nałożeniu profilu kosztów.
+3. Tabela „Kto co robi” w `core/skills/tf/SKILL.md` zgodna z `steps` (kolumna „Kto” nazywa agenta); przewodnik
+   („Co mogę ustawić”), `PUBLIC_API.md`.
+
+**Kroki i dzisiejsze wartości** (z `shared_agents` w konfiguracji rdzenia, odczyt 2026-11-14):
+
+| Krok | Wykonawca | Tier |
+|---|---|---|
+| fakty o repozytorium | `scout` | fast |
+| wersje, dokumentacja zewnętrzna | `researcher` | fast |
+| plan, test, kod | `tf` (sesja główna) | std |
+| zmiana mechaniczna ze specyfikacją | `quick-fixer` | fast |
+| przegląd zakresu kawałka | `scope-reviewer` | std |
+| decyzja trudna do odwrócenia | `architect` | deep |
+| auth, sekrety, IaC, CI | `security-reviewer` | deep |
+
+**Ustalenia:** tier kroku nadpisuje tier wykonawcy tylko dla agentów wymienionych w `steps`; projekt zmienia przydział
+w `.tf/config/config.yaml` (`steps: {przeglad: {tier: deep}}`) i przebudowuje agentów. Model sesji głównej bez
+`claude --agent tf` nadal wybiera człowiek — fabryka go nie przełącza w trakcie zadania (reguła o cache).
+
+**Poza E5:** zmiana wartości domyślnych, eskalacja modelu po porażce bramki, poziom `lead` (D10), effort rozdzielony
+od tieru.
+
 ## Pomiar po E0 i E1 (2026-11-14)
 
 Jedna seria po obu kawałkach (decyzja właściciela: pomiar po zakończeniu E1), raport
