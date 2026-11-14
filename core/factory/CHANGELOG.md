@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.1.0] — 2026-11-14
+### Added
+- **core:** recognise the /tf input and its source without a tool name (#238)
+
 ## [10.0.0] — 2026-11-14
 ### Breaking
 - **core:** move the task loop into the core as /tf and remove Talos (#237)
