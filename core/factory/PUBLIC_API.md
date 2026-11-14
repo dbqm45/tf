@@ -46,7 +46,7 @@ skrypt już nie prowadzi — istniejący plik staje się stałą notką), kody z
 <kod>`; lista `STOP_CODES`: `pytanie`, `podzial`, `zrodlo`, `zgoda-na-plan`, `testy`, `skan`, `budzet`, `srodowisko`,
 `zaleznosc`, `kontrakt`, `uprawnienia`; pole `stop_code` w `run.json`), komunikaty zatrzymań
 (`.claude/skills/tf/templates/stop_messages.json`: dla każdego kodu `co`, `potrzeba`, `pytanie`, `opcje` z polami
-`opcja`, `skutek`, `rekomendowana`, oraz `potem`; `run_state.py message <kod> [--json]`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `weight`, `mode`, `approve`, `message`, `trace`, `verify`, `tick`, `park`, `dashboard`),
+`opcja`, `skutek`, `rekomendowana`, oraz `potem`; `run_state.py message <kod> [--json]`), `run_state.py` (`stage`, `step`, `spec`, `flag`, `weight`, `mode`, `approve`, `message`, `trace`, `verify`, `tick`, `park`, `pr-body`, `dashboard`), opis PR ze skryptu (`run_state.py pr-body <katalog> [--base <gałąź>]` → `.tf/runs/<KEY>/pr-body.md`; nagłówki sekcji „Jak sprawdzono”, „Ryzyko”, „Jak cofnąć”; pole karty operacyjnej `deploy.rollback`),
 `plan_drift.py` i `security_scan.py`, opcje `.claude/tf.json`, zmienne `TF_DASHBOARD`, `TF_DASHBOARD_OPEN`,
 `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, podgląd `.tf/runs/dashboard.html`, katalog roboczy przebiegu `.tf/runs/<KEY>/`
 (`run.json` z polami `key` i `task_dir`, `parked.md`) i katalog zadania `docs/project/changes/<KEY>/` (`ticket.md`,

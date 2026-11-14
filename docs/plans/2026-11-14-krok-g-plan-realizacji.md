@@ -28,6 +28,30 @@ Decyzje właściciela z 2026-11-14: **D4 — pierwszy tracker to Jira**; **D6 �
 
 Kolejność: G1 → G2 → G3 → G4. Każdy kawałek to osobny PR.
 
+## G2 — plan realizacji (zapisany przed kodem)
+
+Polecenie `run_state.py pr-body <katalog> [--base <gałąź>]` zapisuje opis w `.tf/runs/<KEY>/pr-body.md` (poza gitem)
+i drukuje ścieżkę z podpowiedzią `--body-file`. Skrypt niczego nie wypycha i nie zakłada PR.
+
+| Sekcja opisu | Skąd |
+|---|---|
+| Historyjka | tytuł i klucz zadania, wiersz „Źródło” z `ticket.md`, katalog zadania |
+| Kawałki | `plan.md` + stan kawałka z `tf task` + commit ze stopką „Kawałek K<n>” (`git log <baza>..HEAD`) |
+| Ślad kryteriów | `trace_check.py --md`; zadanie bez `spec.md` → jedno zdanie zamiast tabeli |
+| **Jak sprawdzono** | ostatni dowód każdego kawałka (`evidence/K<n>-<m>.json`: polecenie, kod wyjścia, data); kawałek bez dowodu albo z czerwonym dowodem nazwany wprost; werdykt skanu bezpieczeństwa; wynik `plan_drift` |
+| **Ryzyko** | waga zadania i wynik `risk_triage.py --md` |
+| **Jak cofnąć** | `deploy.rollback` z karty operacyjnej, gdy jest (sekcję zakłada G3); zawsze `git revert` commita scalenia; flaga zadania: „wyłącz flagę” albo zapisany powód jej braku |
+| Odłożone do decyzji | `parked.md` |
+| Założenia | wiersze planu i specyfikacji z `[założenie` |
+
+- Pliki: `core/skills/tf/scripts/run_state.py` (funkcje w istniejącym skrypcie — nowy plik wymagałby nowej reguły
+  uprawnień), `core/tests/test_pr_body.py`, `core/tests/skill_evals/tf.json`, `core/skills/tf/SKILL.md` (§4, krok 3 —
+  krócej niż dziś), `core/guide/PETLA.md`.
+- Kolejność: scenariusz ewaluacji → test (czerwony) → kod → treść skilla → bramka skilla → pełne sprawdzenie.
+- Koszt przebiegu zostaje w `report.md` (powstaje po PR); w opisie PR jest jedna linia z `run.json`, gdy koszt jest
+  już policzony.
+- Treść z plików zadania i z karty to dane: trafia do opisu jako tekst, skrypt niczego z niej nie uruchamia.
+
 ## Decyzje projektowe
 
 - **Skrypt, nie model, czyta tracker** (dokument osi, §9): model dostaje gotowy plik. Treść zgłoszenia to dane —
@@ -69,3 +93,8 @@ Kolejność: G1 → G2 → G3 → G4. Każdy kawałek to osobny PR.
   z treści zgłoszenia nie stają się nagłówkami `ticket.md`, adres lokalny nie idzie przez proxy, błędy połączenia
   i niepoprawne dane dostępu kończą się komunikatem zamiast śladu wyjątku, a ucinany jest opis, nie kryteria.
 - Niezweryfikowane: pobranie z prawdziwej Jiry (Cloud i Data Center) — testy używają atrapy serwera.
+- G1 scalone (tf#252).
+- G2 gotowe: `run_state.py pr-body` (22 testy w `test_pr_body.py`). Dodatek względem planu: tekst z zewnątrz (tytuł
+  zgłoszenia, karta, sprawy odłożone) nie powiadamia ludzi przez `@nazwa` i nie osadza obrazów w opisie PR. Test
+  treści skilla T-12 sprawdza teraz polecenie `pr-body` zamiast ręcznego `risk_triage.py --md` — triaż w opisie
+  sprawdza test PB-8. Niezweryfikowane: jak model używa polecenia w prawdziwym przebiegu (wymaga płatnego pomiaru).

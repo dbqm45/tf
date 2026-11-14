@@ -28,6 +28,15 @@
       }
     },
     {
+      "id": "opis-pr-ze-skryptu",
+      "expect": "trigger",
+      "prompt": "Zrealizuj zadanie do końca: oba kawałki historyjki o limicie dobowym są zrobione i zacommitowane, zgodność z planem sprawdzona. Wypchnij gałąź i wystaw PR.",
+      "checks": {
+        "all": [["pr-body"], ["--body-file"], ["Jak cofnąć", "jak cofnąć"]],
+        "none": ["gh pr merge", "git push --force"]
+      }
+    },
+    {
       "id": "ciecie-zmiany-pdi",
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie: klucz cięcia TSK-57 z planu zmiany CHG-12, bez nadzoru (/tf TSK-57 --auto --change CHG-12).",

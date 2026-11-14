@@ -15,6 +15,7 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> set <klucz> [--remove-by RRRR-MM-DD]
   python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> none --reason "bez flagi, bo …"
   python3 .claude/skills/tf/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
+  python3 .claude/skills/tf/scripts/run_state.py pr-body <katalog-przebiegu> [--base <gałąź>]   # opis PR do --body-file
   python3 .claude/skills/tf/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
   python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> K2
@@ -54,6 +55,11 @@ bez planu zatwierdzonego przez człowieka.
 
 `trace` drukuje tabelę kryterium → test → commit → dowód (`tf trace --md`) do opisu PR; kryterium bez testu albo
 test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
+
+`pr-body` składa opis PR z plików zadania i zapisuje go w `<katalog-przebiegu>/pr-body.md`: historyjka, kawałki
+z commitami, ślad kryteriów, **Jak sprawdzono** (dowody, skan, plan_drift), **Ryzyko** (waga i `tf risk`), **Jak
+cofnąć** (karta operacyjna `deploy.rollback`, `git revert`, flaga), odłożone sprawy i założenia. Kawałek bez
+zielonego dowodu jest w opisie nazwany wprost. Skrypt niczego nie wypycha i nie zakłada PR.
 
 `verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
 `tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
@@ -783,6 +789,225 @@ def cmd_next(run_dir: Path, project: Path) -> int:
     return 0
 
 
+# --- opis PR składany z plików zadania (krok G2) -------------------------------------------------------------------
+WEIGHT_PL = {"lekka": "lekka", "zwykla": "zwykła", "pelna": "pełna"}
+CARD = Path(".tf") / "config" / "operations.json"
+ASSUMPTION = re.compile(r"\[zało[żz]eni", re.I)
+BASES = ("origin/main", "main", "origin/master", "master")
+
+
+def as_data(value, limit: int = 600) -> str:
+    """Tekst z plików zadania i z karty operacyjnej wstawiany do opisu PR: jedna linia bez znaków nagłówka i listy na
+    początku — treść jest danymi, nie strukturą opisu. Wzmianka `@nazwa` trafia do kodu (nikogo nie powiadamia),
+    a obraz staje się zwykłym odnośnikiem (opis nie pobiera niczego z obcego adresu)."""
+    text = re.sub(r"^(?:[#>]+\s*|[-*+]\s+)+", "", " ".join(str(value).split()))
+    text = re.sub(r"(?<![`\w])@([A-Za-z0-9][\w/-]*)", r"`@\1`", text.replace("![", "["))
+    return text[:limit] + ("…" if len(text) > limit else "")
+
+
+def code_span(value) -> str:
+    text = " ".join(str(value).split())
+    return f"`` {text} ``" if "`" in text else f"`{text}`"
+
+
+def pick_base(project: Path, base: str | None) -> str | None:
+    """Gałąź bazowa do listy commitów: podana, a bez niej pierwsza istniejąca z typowych; None, gdy git jej nie zna."""
+    for cand in ([base] if base else BASES):
+        try:
+            r = subprocess.run(["git", "-C", str(project), "rev-parse", "--verify", "--quiet", f"{cand}^{{commit}}"],
+                               capture_output=True, text=True, timeout=20)
+        except (OSError, subprocess.SubprocessError):
+            return None
+        if r.returncode == 0:
+            return cand
+    return None
+
+
+def slice_commits(project: Path, base: str) -> dict[str, str]:
+    """Kawałek → najnowszy commit ze stopką „Kawałek K<n>” na gałęzi (skrót i tytuł)."""
+    try:
+        r = subprocess.run(["git", "-C", str(project), "log", "--format=%h%x1f%s%x1f%b%x1e", f"{base}..HEAD"],
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    out: dict[str, str] = {}
+    for rec in (r.stdout.split("\x1e") if r.returncode == 0 else []):
+        parts = rec.strip("\n").split("\x1f")
+        if len(parts) == 3:
+            for k in re.findall(r"^Kawałek (K\d+)\b", parts[2], re.M):
+                out.setdefault(k, f"{parts[0]} {parts[1]}")
+    return out
+
+
+def last_evidence(docs: Path) -> dict[str, tuple[str, dict]]:
+    """Kawałek → (ścieżka względna, treść) ostatniego dowodu `evidence/K<n>-<m>.json`."""
+    best: dict[str, tuple[int, Path]] = {}
+    for f in docs.glob("evidence/K*-*.json"):
+        m = re.fullmatch(r"(K\d+)-(\d+)\.json", f.name)
+        if m and int(m.group(2)) >= best.get(m.group(1), (0, f))[0]:
+            best[m.group(1)] = (int(m.group(2)), f)
+    out = {}
+    for k, (_, f) in best.items():
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            data = None
+        out[k] = (f"evidence/{f.name}", data if isinstance(data, dict) else {})
+    return out
+
+
+def scan_status(run_dir: Path, slice_id: str) -> str | None:
+    """Werdykt skanu bezpieczeństwa kawałka (ostatnia próba); None, gdy skanu nie było albo wynik jest nieczytelny."""
+    base = run_dir / "security" / slice_id
+    tries = sorted(base.glob("proba-*/verdict.json"), key=lambda f: int(re.sub(r"\D", "", f.parent.name) or 0))
+    try:
+        status = json.loads((tries[-1] if tries else base / "verdict.json").read_text(encoding="utf-8")).get("status")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return status if isinstance(status, str) and re.fullmatch(r"[A-Z]{2,12}", status) else None
+
+
+def rollback_steps(project: Path) -> list[str]:
+    """Kroki cofnięcia wdrożenia z karty operacyjnej (`deploy.rollback`: tekst albo lista); bez karty — pusta lista."""
+    try:
+        card = json.loads((project / CARD).read_text(encoding="utf-8"))
+        value = card["deploy"]["rollback"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return []
+    lines = value.splitlines() if isinstance(value, str) else value if isinstance(value, list) else []
+    return [s for s in (as_data(x) for x in lines if isinstance(x, str)) if s][:10]
+
+
+def engine_md(project: Path, name: str, *args: str) -> str | None:
+    """Wyjście skryptu silnika do wklejenia pod własny nagłówek: jego nagłówki stają się pogrubieniem."""
+    r = run_report.engine(project, name, *args)
+    text = (r.stdout if r is not None else "").strip("\n")
+    if r is None or not text:
+        return None
+    return "\n".join(f"**{ln.lstrip('# ').strip()}**" if ln.startswith("#") else ln for ln in text.splitlines())
+
+
+def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple[str, list[str]]:
+    """Opis PR i lista kawałków bez zielonego dowodu."""
+    key, docs = meta["key"], run_report.docs_dir(run_dir, meta)
+    view = task_view(project, key) or {"task": {}, "slices": {}}
+    task, states = view["task"], view["slices"]
+    slices, proofs = parse_slices(run_dir), last_evidence(docs)
+    found = pick_base(project, base)
+    commits = slice_commits(project, found) if found else {}
+    base_args = ["--base", found] if found else []
+
+    ticket = read_text(docs / "ticket.md") or ""
+    source = next((ln for ln in ticket.splitlines() if ln.startswith("Źródło:")), None)
+    out = ["## Historyjka", "", f"**{as_data(meta.get('title') or task.get('title') or key, 200)}** ({code_span(key)})", ""]
+    if source:
+        out.append(f"- {as_data(source, 300)}")
+    if meta.get("change") or task.get("change"):
+        out.append(f"- Zmiana pdi: {as_data(meta.get('change') or task.get('change'), 40)}"
+                   + (f", cięcie {as_data(meta['task'], 40)}" if meta.get("task") else ""))
+    try:
+        rel_docs = docs.resolve().relative_to(project.resolve()).as_posix()
+    except ValueError:
+        rel_docs = str(docs)
+    out.append(f"- Pliki zadania: `{rel_docs}/` (zgłoszenie, specyfikacja, plan, dowody)")
+
+    out += ["", "## Kawałki", ""]
+    for s in slices:
+        out.append(f"- [{'x' if s['checked'] else ' '}] **{s['id']}** — {as_data(s['value'], 200)} · stan: "
+                   f"{states.get(s['id'], 'bez wpisu w zadaniu')} · commit: "
+                   + (code_span(commits[s['id']]) if s['id'] in commits else "brak"))
+    if not slices:
+        out.append("- brak planu (`plan.md`)")
+    if not found:
+        out.append(f"- Commitów kawałków nie ustalono: git nie zna gałęzi bazowej {code_span(base or ', '.join(BASES))}.")
+
+    out += ["", "## Ślad kryteriów", ""]
+    if (docs / "spec.md").is_file():
+        out.append(engine_md(project, "trace_check.py", key, "--md", *base_args)
+                   or "- Śladu nie udało się policzyć (`tf trace`).")
+    else:
+        out.append("- Zadanie nie ma specyfikacji (`spec.md`) — waga lekka jej nie wymaga, więc śladu kryteriów nie ma.")
+
+    out += ["", "## Jak sprawdzono", ""]
+    missing = []
+    for s in slices:
+        rel, ev = proofs.get(s["id"], (None, {}))
+        scan = scan_status(run_dir, s["id"]) or "brak wyniku"
+        if rel is None:
+            line, why = "**brak dowodu weryfikacji**", "brak dowodu"
+        else:
+            code = ev.get("exit_code")
+            green = code == 0
+            why = None if green else f"czerwony dowód, kod wyjścia {code}"
+            line = (f"{'zielone' if green else '**czerwone**'}: {code_span(ev.get('command') or '?')} (kod wyjścia {code}, "
+                    f"{as_data(ev.get('at') or 'bez daty', 40)}, dowód `{rel}`)")
+            state = states.get(s["id"])
+            if green and state and state != "zweryfikowany":
+                line += f" — **dowód nieaktualny** (stan: {state})"
+                why = f"dowód nieaktualny, stan: {state}"
+        if why:
+            missing.append(f"{s['id']} ({why})")
+        out.append(f"- **{s['id']}** — {line} · skan bezpieczeństwa: {scan}")
+    if not slices:
+        out.append("- brak kawałków w planie, więc nie ma dowodów weryfikacji")
+    drift = (meta.get("pr_steps") or {}).get("drift")
+    out += [f"- Zgodność z planem (`plan_drift`): {drift if drift in STATES else 'nie zapisano'}",
+            f"- Dowody są w `{rel_docs}/evidence/` (w tym PR); pełne wyjście poleceń zostaje poza repozytorium."]
+
+    out += ["", "## Ryzyko", "", f"- Waga zadania: {WEIGHT_PL.get(task.get('weight'), 'nie zapisano')}", ""]
+    out.append(engine_md(project, "risk_triage.py", "--md", *base_args) or "- Triażu ryzyka nie udało się policzyć (`tf risk`).")
+
+    flag = task.get("flag") if isinstance(task.get("flag"), dict) else {}
+    steps = []
+    if flag.get("key"):
+        steps.append(f"Wyłącz flagę {code_span(flag['key'])} — zmiana przestaje działać bez wdrożenia.")
+    card_steps = rollback_steps(project)
+    steps += [f"{s} _(z karty operacyjnej `{CARD.as_posix()}`)_" for s in card_steps]
+    steps.append("Kod: `git revert <commit scalenia>` na gałęzi domyślnej, potem zwykłe wdrożenie.")
+    out += ["", "## Jak cofnąć", "", *(f"{i}. {s}" for i, s in enumerate(steps, 1)), ""]
+    if not flag.get("key"):
+        out.append(f"- Flaga: brak — {as_data(flag['none'], 300)}." if flag.get("none") else
+                   "- Flaga: nie zapisano w zadaniu (flagi może prowadzić człowiek).")
+    if not card_steps:
+        out.append(f"- Karta operacyjna (`{CARD.as_posix()}`, pole `deploy.rollback`) nie opisuje cofania wdrożenia — "
+                   "powyżej krok domyślny.")
+
+    out += ["", "## Odłożone do decyzji", "", *([f"- {as_data(x, 400)}" for x in run_report.parked_items(run_dir)] or ["- brak"])]
+    notes = [as_data(ln, 400) for name in ("plan.md", "spec.md")
+             for ln in (read_text(docs / name) or "").splitlines() if ASSUMPTION.search(ln)]
+    out += ["", "## Założenia", "", *([f"- {n}" for n in notes] or ["- brak zapisanych założeń"])]
+    usage = meta.get("usage") if isinstance(meta.get("usage"), dict) else None
+    if usage and isinstance(usage.get("cost_usd"), (int, float)):
+        out += ["", "## Przebieg", "", f"- Koszt do tej chwili: {usage['cost_usd']:.2f} USD (szacunek z cennika API), "
+                f"czas: {usage.get('minutes', '?')} min. Pełny raport: `report.md` w katalogu zadania."]
+    out += ["", "_Opis złożony skryptem `run_state.py pr-body` z plików zadania._"]
+    return "\n".join(out) + "\n", missing
+
+
+def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    try:
+        update_usage(run_dir, meta, project)
+    except Exception:  # noqa: BLE001 — koszt jest dodatkiem do opisu
+        pass
+    text, missing = pr_body(run_dir, meta, project, base)
+    target = run_dir / "pr-body.md"
+    target.write_text(text, encoding="utf-8")
+    try:
+        shown = target.resolve().relative_to(project.resolve()).as_posix()
+    except ValueError:
+        shown = str(target)
+    print(f"✓ opis PR: {shown}\n  użyj: gh pr create --title \"<typ>(<zakres>): <opis>\" --body-file {shown}\n"
+          "  własne uwagi (odstępstwa od planu, wyjątek budżetu artefaktów) dopisz na końcu pliku")
+    if missing:
+        print(f"⚠ bez zielonego dowodu: {', '.join(missing)} — opis mówi to wprost")
+    return 0
+
+
 def cmd_park(run_dir: Path, item: str, project: Path) -> int:
     """Dopisuje sprawę odłożoną do decyzji człowieka na końcu parked.md (jeden wiersz)."""
     item = " ".join(item.split())
@@ -1218,6 +1443,9 @@ def main(argv: list[str]) -> int:
     an.add_argument("--by", default=None)
     nx = sub.add_parser("next")
     nx.add_argument("run_dir")
+    pb = sub.add_parser("pr-body")
+    pb.add_argument("run_dir")
+    pb.add_argument("--base", default=None)
     d = sub.add_parser("dashboard")
     d.add_argument("--no-cost", action="store_true")
     d.add_argument("--out", default=None)
@@ -1255,6 +1483,8 @@ def main(argv: list[str]) -> int:
         return cmd_answer(Path(args.run_dir), args.slice_id, args.text, args.by, project)
     if args.cmd == "next":
         return cmd_next(Path(args.run_dir), project)
+    if args.cmd == "pr-body":
+        return cmd_pr_body(Path(args.run_dir), args.base, project)
     path = build_dashboard(project, Path(args.out) if args.out else None, costs=not args.no_cost)
     print(path.resolve().as_uri())
     if args.open:

@@ -66,8 +66,9 @@ def main() -> int:
                                                                  "nieznana")),
           "T-11: commit poprawki z pętli PR ma trailer `Rework-Cause:` z jedną z 4 przyczyn (tf metrics, B3)")
     finish = body.split("## 4.", 1)[-1].split("## Kto co robi", 1)[0]
-    check("risk_triage.py --md" in finish and "opis" in finish,
-          "T-12: przy otwarciu PR pętla dołącza do opisu sekcję triażu ryzyka zmian (risk_triage.py --md, B1b)")
+    check("run_state.py pr-body" in finish and "--body-file" in finish and "opis" in finish,
+          "T-12: opis PR składa skrypt (`run_state.py pr-body` → `--body-file`); sekcję triażu ryzyka zmian (B1b) "
+          "wstawia on sam — sprawdza to test_pr_body PB-8")
     scan = ".claude/skills/tf/scripts/security_scan.py"
     check((ROOT / scan).is_file() and any(scan in a for a in allow)
           and (skill / "templates" / "verify.sh").is_file()
@@ -180,6 +181,11 @@ def main() -> int:
     gtext = guide.read_text(encoding="utf-8") if guide else ""
     check(guide is not None and ".tf/runs/cuts" not in gtext and "CHG-12-TSK-57" in gtext,
           f"T-37: PETLA.md opisuje cięcie jako zadanie `<CHG>-<TSK>`, bez wyjątku starego układu: {guide}")
+
+    check("Jak cofnąć" in finish and "risk_triage.py --md" not in finish,
+          "T-38: krok PR wymienia pola opisu (m.in. „Jak cofnąć”) i nie każe już składać triażu ryzyka ręcznie")
+    check("pr-body" in gtext and all(w in gtext for w in ("Jak sprawdzono", "Ryzyko", "Jak cofnąć", "deploy.rollback")),
+          "T-39: PETLA.md opisuje opis PR ze skryptu: trzy stałe pola i krok cofania z karty operacyjnej")
 
     for f in fails:
         print(f"✗ {f}")

@@ -137,11 +137,11 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
    opisujesz w PR jako odstępstwo. **Budżet artefaktów:**
    `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <gałąź domyślna>` — `Werdykt:
    PRZEKROCZONY` → skracasz artefakty albo opisujesz wyjątek w PR. **Ślad kryteriów:** `run_state.py trace <katalog>
-   --base <gałąź domyślna>` — tabela do opisu PR; kod 1 (kryterium bez testu, test z obcym `AC-n`) naprawiasz.
+   --base <gałąź domyślna>` — kod 1 (kryterium bez testu, test z obcym `AC-n`) naprawiasz.
 3. `run_state.py stage <katalog> pr` i `run_state.py step <katalog> PR plan_drift pass` (albo `fail`). Push gałęzi
-   i jeden PR: historyjka, kawałki = commity, ślad kryteriów, weryfikacja, założenia, **Odłożone do decyzji**
-   (z `parked.md`), wynik `plan_drift` i `pr_budget`, skrót kosztu oraz do opisu PR sekcja triażu ryzyka
-   `python3 .tf/factory/risk_triage.py --md` (doradcza). Nie scalasz.
+   i jeden PR. Opis składa skrypt: `run_state.py pr-body <katalog> --base <gałąź domyślna>` → `gh pr create
+   --body-file <plik>` (stałe pola, m.in. „Jak sprawdzono”, „Ryzyko”, „Jak cofnąć”); sam dopisujesz na końcu
+   pliku tylko odstępstwa od planu i wyjątek `pr_budget`. Nie scalasz.
 4. `run_state.py stage <katalog> done --pr <numer>`, potem `run_report.py finish <katalog>` → `report.md`.
    **Pliki zadania — jeden commit** na gałęzi `story/<slug>`, nigdy na domyślnej:
    `git add docs/project/changes/<KEY>`, potem `git commit -m "docs(task): record <KEY>"` i push (dokładne
