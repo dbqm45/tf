@@ -237,6 +237,16 @@ krótszy o 16–23% (średnie `wall_s` z plików `.jsonl` obu pomiarów). Cztery
 zawsze przez `scope-reviewer`, zakaz łączenia poleceń wprost, identyfikatory kryteriów od pierwszej wersji testu);
 ich skuteczność sprawdzi pomiar po E3. Kolejność dalej: E2 → E3 → **pomiar** → E4 → E5 → E6.
 
+## Pomiar po E2 i E3 (2026-11-14)
+
+Raport `docs/evals/2026-11-14-pomiar-po-kroku-e3.md` (fabryka `744e1bb`, bez E4): 8,93 USD wobec 8,12 USD (+10%),
+akceptacja 10/10, STOP 5/5; czasów nie da się porównać, bo w trakcie serii maszyna była obciążona innymi pracami.
+Trzy z czterech poprawek z poprzedniego pomiaru zadziałały (ślad po STOP 5/5, przegląd zakresu 10/10, zero poleceń
+złożonych); czwarta nie (identyfikator kryterium dopisywany osobnym commitem, nadal 3/5). Dwie nowe poprawki w tym
+samym PR co raport: kody zatrzymań wymienione wprost w SKILL.md (pętla zgadywała kod w 8 z 15 przebiegów) oraz
+ostrzeżenie `run_state.py verify` o teście bez `AC-n`. Ich skuteczność i wpływ E4 pokaże kolejny pomiar — nie jest
+zaplanowany; przypada naturalnie po E6 albo wcześniej na życzenie właściciela.
+
 ## Ustalenia
 
 - **Stare nazwy znikają od razu** (decyzja właściciela: jedna instalacja, bez warstwy zgodności). To zmiana
@@ -268,12 +278,18 @@ ich skuteczność sprawdzi pomiar po E3. Kolejność dalej: E2 → E3 → **pomi
 ## Do sprawdzenia przez właściciela
 
 - [x] **Czy repozytorium `dbqm45/pdi` wpisuje u siebie nazwę agenta `talos` albo polecenie `/talos-story-run`.**
-  Sprawdzone 2026-11-14 na commicie `873f7b2` (z 2026-10-30), wyszukiwaniem w całym repozytorium: w kodzie (`src/`),
-  kontrakcie (`contract/`), integracjach, testach i konfiguracji nazw tych **nie ma**. Słowo „Talos” występuje tylko
-  w 10 plikach dokumentacji (`docs/`) i w 4 makietach (`design/konsola/`, `design/platforma/`) — jako opis, nie jako
-  wywołanie. Działanie pdi od tej zmiany nie zależy.
-- [ ] **Do decyzji:** czy poprawić słowo „Talos” w tych 14 plikach repozytorium pdi (teksty i dane przykładowe
-  makiet). To osobna zmiana w innym repozytorium; bez niej nic się nie psuje.
+  **Korekta z 2026-11-14:** pierwsze sprawdzenie (commit `873f7b2` z 2026-10-30) dotyczyło starej gałęzi lokalnej
+  kopii, nie `main`, i jego wniosek był błędny. Na `main` (`74d201a`) słowo „Talos” jest w 42 plikach (ok. 290
+  wystąpień, policzone `git grep -i talos`), także w kodzie i testach. Jedna zależność jest funkcjonalna:
+  `src/pdi/phase_sandbox.py` rozpoznawał skaner pętli po ścieżce `.claude/skills/talos-story-run/scripts/security_scan.py`,
+  więc z fabryką 10.x obraz fazy nie dostałby semgrepa i faza realizacji zatrzymałaby się na skanie (wniosek z kodu,
+  nieodtwarzany na żywym przebiegu). Polecenia `/talos-story-run` ani agenta `talos` kod pdi sam nie wywołuje — robi
+  to tryb pdi fabryki, poprawiony w E0.
+- [x] **Poprawka w `dbqm45/pdi`** (decyzja właściciela z 2026-11-14: poprawić słowo „Talos”): gałąź
+  `claude/rename-talos-to-tf` (pdi#180) — pdi rozpoznaje skaner tylko w ścieżce `.claude/skills/tf/…` (decyzja
+  właściciela: bez ścieżki zgodności, pdi wymaga produktu na fabryce 10.0.0 lub nowszej), a nazwa w dokumentach,
+  makietach, komentarzach i testach zmienia się na „agent tf” / `/tf`. Po zmianie `git grep -i talos` w pdi nie
+  zwraca nic (decyzja właściciela: usunąć także wzmiankę z README). Scalenie PR w pdi należy do właściciela.
 - [ ] **Po `tf update` u siebie:** zmienić nazwę `.claude/talos.json` na `.claude/tf.json` i zmienne `TALOS_*` na
   `TF_*` (jeśli ich używasz) oraz poprawić ścieżkę skryptu skanu i nazwę zmiennej w skopiowanym `change-check.yml`.
 

@@ -34,7 +34,7 @@ Ustal, o co prosi człowiek, i powiedz mu **jednym zdaniem**, co wybrałeś:
 | drobna zmiana w 1–2 plikach bez zmiany zachowania (literówka, nazwa) | od razu, bez pętli, jeden commit; okazuje się większa → przerywasz i proponujesz przebieg zadania |
 | nie da się rozstrzygnąć | jedno pytanie z opcjami (AskUserQuestion): „Poprowadzić to jako zadanie?” |
 
-Słowo na początku wymusza sposób pracy: `zadanie …`, `pytanie …`, `szybko …`.
+Słowo na początku wymusza sposób: `zadanie …`, `pytanie …`, `szybko …`.
 
 **Źródło ustala skrypt** — człowiek nie podaje nazwy narzędzia: `intake.py resolve "<pierwsza linia wejścia>"`
 drukuje `Wejście`, `Klucz`, `Tracker` i `Dalej`; robisz to, co stoi w `Dalej` (każdy rodzaj wejścia opisuje
@@ -145,9 +145,9 @@ początek pętli z kolejną (najwyżej dwie próby naprawy), np. `… K2 R1 wery
    **Pliki zadania — jeden commit** na gałęzi `story/<slug>`, nigdy na domyślnej:
    `git add docs/project/changes/<KEY> docs/project/changes/INDEX.md`, potem
    `git commit -m "docs(task): record <KEY>"` i push (polecenia drukuje `finish`); tak samo po STOP. Pokaż
-   człowiekowi skrót: czas, koszt, modele, kawałki zrobione/plan, liczba odłożonych, link do PR.
+   człowiekowi skrót: czas, koszt, kawałki zrobione/plan, odłożone, link do PR.
 
-## Kto co robi (koszt)
+## Kto co robi
 | Krok | Kto | Tier |
 |---|---|---|
 | fakty o repozytorium | `scout` | fast |
@@ -162,12 +162,12 @@ początek pętli z kolejną (najwyżej dwie próby naprawy), np. `… K2 R1 wery
 ```
 STOP — <faza / K<n>>
 Powód: <co blokuje, z dowodem: polecenie i wynik albo plik:linia>
-Zrobione: <kawałki z SHA commitów>
+Zrobione: <kawałki z SHA commitów> · Wznowienie: od <K<n>>
 Potrzebne od człowieka: <decyzja / dostęp / informacja>
-Wznowienie: od <K<n> w plan.md>
 ```
-Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason "<powód>"` (kody:
-`references/tryby-i-zatrzymania.md`), potem i tak `run_report.py finish`. Po decyzji człowieka `step` wznawia przebieg.
+Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason "<powód>"`, potem i tak
+`run_report.py finish`. Kod tylko z listy: `pytanie`, `podzial`, `zrodlo`, `zgoda-na-plan`, `testy`, `skan`, `budzet`,
+`srodowisko`, `zaleznosc`, `kontrakt`, `uprawnienia` (`references/tryby-i-zatrzymania.md`).
 
 ## Przykład
 **Wejście:** `/tf "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
@@ -175,9 +175,8 @@ Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason 
 **Wynik:**
 - plan: K1 import poprawnego CSV (test: plik z 3 wierszami) · K2 lista sesji z błędem (test: wiersz bez EVSE ID)
   · K3 komunikat o odrzuconym pliku (test: zły nagłówek → 422);
-- `parked.md`: duplikaty CDR między plikami, strefy czasowe, pliki > 50 MB — do decyzji;
-- 3 commity `feat(cdr): …`, jeden PR z sekcją „Odłożone do decyzji”;
-- raport: 14 min, 0,41 USD [przykład].
+- `parked.md`: duplikaty CDR, strefy czasowe, pliki > 50 MB — do decyzji;
+- 3 commity `feat(cdr): …`, jeden PR; raport: 14 min, 0,41 USD [przykład].
 
 ## Źródła
 - Anthropic, „Prompting Claude Opus 5.5” i „Prompting Claude Sonnet 5.5” (platform.claude.com, odczyt 2026-10-20).

@@ -474,6 +474,23 @@ def main() -> int:
         r2 = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
         check(r.returncode == 0 and art.get("status") == "zatwierdzony" and who.startswith("human:") and r2.returncode == 0,
               f"T-5: approve zapisuje zgodę człowieka na plan i pętla rusza: {r.stdout}{r.stderr} {who} | {r2.stdout}")
+        # identyfikator kryterium w teście już przy weryfikacji kawałka (pomiar po E3: dopisywany osobnym commitem)
+        (proj / "export.py").write_text("ROWS = 1\n", encoding="utf-8")
+        (proj / "tests").mkdir(exist_ok=True)
+        (proj / "tests" / "test_export.py").write_text("def test_export():\n    assert True\n", encoding="utf-8")
+        r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
+        check(r.returncode == 0 and "⚠" in r.stdout and "AC-" in r.stdout and "tests/test_export.py" in r.stdout
+              and "przed commitem" in r.stdout,
+              f"A-1: verify ostrzega, gdy test kawałka nie ma identyfikatora kryterium: {r.returncode} {r.stdout}")
+        (proj / "tests" / "test_export.py").write_text("def test_ac1_export():  # AC-1\n    assert True\n", encoding="utf-8")
+        r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
+        check(r.returncode == 0 and "⚠" not in r.stdout, f"A-2: z identyfikatorem w teście bez ostrzeżenia: {r.stdout}")
+        r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py", "--command", OK], proj, cfg)
+        check(r.returncode == 0 and "⚠" in r.stdout and "pliku testu" in r.stdout,
+              f"A-3: verify ostrzega, gdy wśród plików kawałka nie ma testu: {r.stdout}")
+        r = run(SCRIPT, ["verify", str(d2), "K1", "--files", "README.md", "--command", OK], proj, cfg)
+        check("⚠" not in r.stdout, f"A-4: zadanie bez specyfikacji (waga lekka) — bez ostrzeżenia o kryteriach: {r.stdout}")
+
         run(REPORT, ["start", "Import sesji", "--key", "IMP-1", "--story", "Jako operator chcę import sesji z pliku."],
             proj, cfg)
         d5 = proj / ".tf" / "runs" / "IMP-1"

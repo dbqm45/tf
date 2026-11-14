@@ -395,8 +395,38 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
     if r is None:
         return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
+    for line in criterion_hints(project, run_dir, meta, files):
+        print(line)
     refresh(project)
     return r.returncode
+
+
+TEST_FILE = re.compile(r"(^|/)(tests?|__tests__|e2e|spec)/|\.(test|spec)\.|(^|/)test_[^/]*\.py$|_test\.(py|go)$|"
+                       r"(Test|Tests)\.(java|cs)$")          # te same wzorce co w śladzie kryteriów (trace_check.py)
+CRITERION = re.compile(r"\bAC[-_ ]?\d+\b", re.I)
+
+
+def criterion_hints(project: Path, run_dir: Path, meta: dict, files: str) -> list[str]:
+    """Ostrzeżenia przy weryfikacji kawałka zadania ze specyfikacją: test bez identyfikatora kryterium (`AC-n`) albo
+    brak pliku testu wśród plików kawałka. Dopisanie teraz trafia do commita kawałka, a nie do osobnego commita."""
+    if not (run_report.docs_dir(run_dir, meta) / "spec.md").is_file():
+        return []
+    tests = [f.strip() for f in files.split(",") if f.strip() and TEST_FILE.search(f.strip())]
+    if not tests:
+        return ["⚠ wśród plików kawałka nie ma pliku testu — dodaj go do `--files`, inaczej kryterium nie będzie miało "
+                "dowodu w śladzie (etap pr zostanie odrzucony)"]
+    bare = []
+    for rel in tests:
+        try:
+            text = (project / rel).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if not CRITERION.search(text):
+            bare.append(rel)
+    if bare:
+        return [f"⚠ test bez identyfikatora kryterium: {', '.join(bare)} — dopisz AC-n w nazwie albo komentarzu testu "
+                "teraz, przed commitem kawałka (i powtórz verify); dopisywanie później to osobny commit"]
+    return []
 
 
 # ---- zapis stanu -------------------------------------------------------------------------------------------------
