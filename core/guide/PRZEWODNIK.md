@@ -111,6 +111,16 @@ i CI, specyfikacja oraz osłabione testy (usunięte asercje, pominięcia, skasow
 doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jako wysokie ryzyko) wpisujesz w
 `autonomy.triage` w `.tf/config/config.yaml`.
 
+### Praca bez nadzoru: `tf work --once`
+`tf work --once --budget 5` bierze jedno zadanie, któremu dałeś tryb Auto (`tf task mode <KLUCZ> auto` — to Twoja
+zgoda na pracę bez nadzoru), o wadze lekkiej albo zwykłej, i prowadzi je pętlą `/tf --auto` w osobnym worktree
+(`.tf/worktrees/<KLUCZ>`, gałąź `story/<klucz>`). Limit wydatku jest obowiązkowy (`--budget` albo `work.budget_usd`
+w `.tf/config/config.yaml`); agent działa w trybie uprawnień `dontAsk`, więc narzędzie spoza listy dozwolonych
+w `.claude/settings.json` jest odrzucane, a nie czeka na Ciebie. Zadanie zajmuje blokada (`.tf/locks/`), więc dwa
+równoległe przebiegi nie wezmą tego samego. Wynik to PR albo blok STOP w worktree zadania, wpis trafia do
+`.tf/logs/work.jsonl`; fabryka niczego nie scala ani nie wdraża. Zadania z worktree nie bierze ponownie sama —
+wznowienie: `tf work --once --key <KLUCZ>`. `--dry-run` pokazuje zadanie i polecenie bez uruchamiania.
+
 ## 5. Koszty
 - **Profil zespołu:** `python3 .tf/factory/profile.py` pokazuje aktywny profil. Dostępne są:
   - `oszczedny` — bez Opusa;
@@ -209,6 +219,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analiza projektu modułami → `.tf/reports/<moduł>.md` |
 | `tf risk [--base <gałąź>] [--md\|--json]` | triaż ryzyka zmiany na gałęzi (doradczy) |
 | `tf metrics [--weeks N] [--revert-days N] [--no-gh]` | skuteczność fabryki → `.tf/reports/metrics.md` |
+| `tf work --once --budget <USD> [--key <KLUCZ>] [--dry-run]` | praca bez nadzoru: jedno zadanie w trybie Auto w osobnym worktree, z limitem wydatku; bez scalania |
 | `python3 .claude/hooks/guard_bash.py --check-policy` | sprawdzenie polityki autonomii z `.tf/config/config.yaml` |
 | `python3 .tf/factory/update.py --rollback` | powrót do stanu sprzed ostatniej aktualizacji |
 | `python3 .tf/factory/build.py` | przebudowa agentów i katalogu |

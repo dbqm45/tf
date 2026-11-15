@@ -97,6 +97,11 @@ Wycofywanie odbywa się tak:
   `task.json`: `verdict`, `sha`, `at`, `note`), `run_state.py panel <katalog> [--record <recenzent> pass|fail --note]
   [--base]`, agent `spec-reviewer`; etap `pr` zadania o wadze pełnej wymaga `pass` od `security-reviewer`
   i `spec-reviewer` dla bieżącego commita.
+- `tf work --once --budget <USD> [--key <KEY>] [--base <gałąź>] [--dry-run]` (`work.py`; klucze konfiguracji
+  `work.budget_usd`, `work.permission_mode`, `work.lock_hours`, `work.timeout_minutes`; blokada `.tf/locks/<KEY>.json`
+  z polami `pid`, `host`, `at`; worktree `.tf/worktrees/<KEY>` na gałęzi `story/<key>`; dziennik `.tf/logs/work.jsonl`
+  z polami `key`, `started`, `ended`, `exit`, `stage`, `worktree`, `budget_usd`; kody wyjścia 0, 2, 3; zmienna
+  `TF_WORK_AGENT`).
 - `metrics.py --after-update [--json]` (także w `tf doctor` i w raporcie `tf metrics`; pola `update`, `from`, `to`,
   `before`, `after`, `warnings`, `notes`, `rollback`) i dziennik `.tf/logs/hook-blocks.jsonl` (`ts`, `hook`,
   `decision`) zapisywany przez `hook_errors.record_block` z hooków, które blokują.

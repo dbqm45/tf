@@ -145,3 +145,33 @@ w następnym płatnym pomiarze].
   Scenariusz ewaluacji przed zmianą treści.
 - Testy: `core/tests/test_slice_done.py` (repozytorium git, przebieg z zadaniem, dowód, flaga, druga runda,
   ponowienie, plik spoza kawałka zostaje niezatwierdzony).
+
+## H19 — plan realizacji (zapisany przed kodem; zgoda człowieka 2026-11-15, bez płatnych uruchomień do czasu pomiaru)
+
+`tf work --once` bierze jedno zadanie, które człowiek oznaczył do pracy bez nadzoru, i prowadzi je pętlą `/tf`
+w osobnym worktree, z twardym limitem wydatku. Nie scala, nie wdraża; wynik to gałąź z PR albo blok STOP.
+
+- **Które zadanie:** tylko zadanie z trybem `auto` (`tf task mode <KEY> auto` — decyzja człowieka jest zgodą na
+  pracę bez nadzoru), otwarte, bez blokady i bez wagi `pelna` (pilotaż na niskim ryzyku: waga pełna wymaga panelu
+  i człowieka). Kolejność: najstarsze `created`. `--key <KEY>` wskazuje zadanie wprost (te same warunki).
+- **Blokada zajęcia:** `.tf/locks/<KEY>.json` tworzony atomowo (`O_CREAT|O_EXCL`) z `pid`, `host`, `at`; drugi
+  `tf work` pomija zajęte zadanie. Blokada starsza niż `work.lock_hours` (domyślnie 6) z martwym procesem na tym
+  samym hoście → przejęta z ostrzeżeniem. Zwolnienie zawsze w `finally`.
+- **Worktree:** `.tf/worktrees/<KEY>` na gałęzi `story/<key>` od gałęzi bazowej (`--base`, domyślnie bieżąca);
+  zadanie z istniejącym worktree nie jest brane samo (po STOP czeka na człowieka); wznowienie w nim tylko przez
+  `--key`. Brudne drzewo robocze nie blokuje (worktree jest osobny). Przy instalacji prywatnej pliki fabryki są
+  w `.git/info/exclude`, więc worktree dostaje kopię plików z manifestu, `.tf/config/` i folderu zadania.
+- **Uruchomienie:** `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode
+  <tryb>` w worktree (flagi sprawdzone w `claude --help`, Claude Code 2.1.325, 2026-11-15). Limit `--budget`
+  wymagany (albo `work.budget_usd` w konfiguracji); bez niego odmowa. Tryb uprawnień domyślnie `dontAsk` (narzędzie
+  spoza listy dozwolonych w `.claude/settings.json` jest odrzucane, nie czeka na człowieka); `work.permission_mode`
+  zmienia go w konfiguracji projektu. Polecenie agenta można podmienić zmienną
+  `TF_WORK_AGENT` (testy używają fałszywego agenta).
+- **`--dry-run`:** pokazuje wybrane zadanie, worktree i polecenie, niczego nie tworzy (bez kosztu).
+- **Wynik:** jedna linia i wpis `.tf/logs/work.jsonl` (`key`, `started`, `ended`, `exit`, `stage` zadania po
+  przebiegu, koszt z raportu, gdy jest). Kod wyjścia: 0 — przebieg zakończony (PR albo STOP), 3 — nie ma zadania,
+  inne — błąd agenta.
+- Treść: `PRZEWODNIK.md` (sekcja „Praca bez nadzoru”), `PUBLIC_API.md`, usage `tf.py`. Skill `tf` bez zmian.
+- Testy: `core/tests/test_work_once.py` — wybór zadania (tryb, waga, zamknięte), blokada (dwa równoległe
+  zajęcia → jedno), blokada martwa, worktree i gałąź, `--dry-run` bez skutków, brak limitu → odmowa, zwolnienie
+  blokady po błędzie agenta, dziennik.
