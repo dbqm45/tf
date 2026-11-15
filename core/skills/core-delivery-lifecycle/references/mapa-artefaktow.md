@@ -123,7 +123,7 @@ jest artefaktem.
 | `.tf/reports/metrics.md` | `tf metrics` | człowiek: skuteczność fabryki (reverty, koszt na przyjętą zmianę, przyczyny poprawek) |
 | `.tf/logs/` (`usage.jsonl`, `hook-errors.jsonl`) | hooki | `cost_report.py`, `tf doctor` |
 | `docs/project/changes/CHG-n/` | tryby z cyklem zmiany (np. mode-pdi) | persony trybu: plan i decyzje jednej zmiany |
-| `docs/project/vendors/` | persony sprzętowe (np. pack-ev) | onboarding modelu urządzenia |
+| `docs/project/vendors/` | persony sprzętowe nakładki domenowej | onboarding modelu urządzenia |
 | `CLAUDE.md` / `AGENTS.md` | autor instrukcji (core-agent-instructions) | każdy agent w każdej sesji |
 
 ## Jak używać
