@@ -86,7 +86,7 @@ Pokryte częściowo:
   sygnałów, wykrywanie sprzeczności, przyczyna źródłowa, pewność i dowód; decyzja z listy: rozwijać, poprawić,
   uprościć, wycofać, zbadać, zatrzymać; wyjście: aktualizacja zgłoszeń, specyfikacji, ewaluacji, `lessons.md`
   i kontekstu agentów. Odnośnik z `core-delivery-lifecycle` („co po wdrożeniu”).
-- [ ] **K8: specyfikacja — przykłady negatywne i synchronizacja z główną specyfikacją** — `spec.md` ma sekcje „Bez
+- [x] **K8: specyfikacja — przykłady negatywne i synchronizacja z główną specyfikacją** (zrobione 2026-11-15 w zakresie przykładów negatywnych: ostrzeżenie SPEC-009 w `tf spec check`, gdy żadne kryterium nie opisuje zachowania niedozwolonego — bez blokady etapu, bo nie każda historyjka ma przypadek negatywny; szablon `tf spec new` z kryterium negatywnym; kryteria negatywne to zwykłe `AC-n`, więc `tf trace` wymaga dla nich testu bez zmian w kodzie śladu. Synchronizacja z główną specyfikacją zostaje przy pozycji „OpenSpec: zmiana jako delta” w sekcji Spec Kit) — `spec.md` ma sekcje „Bez
   zmian” i „Poza zakresem”, ale nie ma miejsca na przykłady zachowania niedozwolonego. Dodać opcjonalną sekcję
   „Przykłady negatywne” (Zakładając / Gdy / Wtedy **nie** …) do szablonu `tf spec new` i reguł `spec_check.py`
   (puste przykłady jak SPEC-005; `tf trace` traktuje je jak kryteria z testem). Synchronizacja: domknąć istniejącą
