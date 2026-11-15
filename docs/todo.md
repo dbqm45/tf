@@ -42,7 +42,7 @@ Braki (brak pokrycia):
   → weryfikacja programu (Dafny, solver SMT Z3) → dowód; specyfikacja formalna jako deterministyczna wyrocznia dla
   agenta (agent pisze model, checker szuka kontrprzykładu, kontrprzykład staje się testem `AC-n`); typowe pułapki
   (model rozjeżdża się z kodem, zbyt mała przestrzeń stanów daje fałszywe „OK”). Scenariusze ewaluacji: wyścig przy
-  rezerwacji ostatniego miejsca, idempotentna płatność z ponowieniem, maszyna stanów sesji (np. OCPP z `pack-ev`).
+  rezerwacji ostatniego miejsca, idempotentna płatność z ponowieniem, maszyna stanów sesji (np. OCPP).
   Odnośniki z `eng-testing`, `qa-spec-first-testing`, `arch-quality-attributes`, `ddd-tactical-design`.
 - [x] **K2: system diff i warstwowy przegląd w `qa-change-review`** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona — haiku i sonnet bez skilla wypisują zmiany systemowe 8/8 na małym diffie i 4/4 na 609-liniowym PR z szumem, 1,96 USD: `docs/evals/2026-11-15-k2-diff-systemu-luka.md`; wrócić przy prawdziwym przeoczeniu w przeglądzie albo PR większym niż kontekst) — przegląd mówi dziś, czy kod zgadza się
   z planem, ale nie, co zmiana zmienia w systemie. Raport „diff systemu” w stałych sekcjach: zachowanie (kryteria
@@ -96,8 +96,9 @@ Pokryte częściowo:
 - [x] **K9: hasła w `tools/coverage_areas.json`** (zrobione 2026-11-15; dziury po zmianie: diff systemu, okno kontekstu, code mode — K2, K5, K3) — dopisać hasła, po których mapa pokrycia wykryje powyższe obszary
   (np. „metody formalne”, „tla+”, „diff systemu”, „code mode”, „a2a”, „po wydaniu”, „syntetyczny użytkownik”,
   „tokeniz”), żeby kolejny przegląd był powtarzalny bez ręcznego szukania. Mały krok, można razem z K1.
-- [ ] **K10: metody formalne w wiedzy EV — wstrzymane** (decyzja człowieka 2026-11-15: czy `pack-ev` zostaje w `tf`,
-  czy przechodzi do `ev-intelligence`, jest otwarte). Treść niezależna od miejsca: sekcja „model przed symulacją”
+- [ ] **K10: metody formalne w wiedzy EV — przeniesione do `ev-intelligence`** (decyzja człowieka 2026-11-15:
+  `pack-ev` wycofany z `tf`, wiedza EV scalana ze skillami `ev-*` w `dbqm45/ev-intelligence`, stan w
+  `todo/tf-pack-ev/STATUS.md` tam). Zapis historyczny poniżej. Treść niezależna od miejsca: sekcja „model przed symulacją”
   w odpowiedniku `dom-ev-simulation-testing` z odnośnikiem do `qa-formal-methods` (przy `pack-ev` w `tf` sprawdzić
   zależność `pack-ev` → `pack-it` dla `refs`), tłumaczenie śladu TLC na oś czasu scenariusza `evtest`; scenariusz
   ewaluacji przed treścią, bramka. Pilot w kodzie `evtest` i uzasadnienie są w repo `dbqm45/ev-testing`:

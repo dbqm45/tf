@@ -9,7 +9,7 @@
   `security-reviewer`, …). Rdzeń nie zakłada, że jakakolwiek nakładka jest zainstalowana.
 - **Nakładki** (`packs/pack-*`) — wiedza dziedziny: skille, role, persony, cechy, agenci, konsultanci. Każda ma
   `pack.yaml` z własną wersją i zakresem wersji rdzenia (`requires.core`). Dziś: `pack-it`, `pack-ux`, `pack-docs`,
-  `pack-editorial-pl`, `pack-ev`. Nowa dziedzina = nowy katalog `packs/pack-<nazwa>/` z `pack.yaml`.
+  `pack-editorial-pl` (`pack-ev` do 10.17 — wiedza EV jest teraz w projekcie EV Intelligence). Nowa dziedzina = nowy katalog `packs/pack-<nazwa>/` z `pack.yaml`.
 
 ### Źródło a projekt
 Repozytorium to **drzewo źródłowe**. Instalator składa z niego projekt w **układzie instalacji**:

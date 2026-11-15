@@ -207,9 +207,11 @@ def main() -> int:
         check(r.returncode == 0 and "pack-mig" in (m.get("packs") or {}),
               f"EP-15: migrates_from wybiera nakładkę: {m.get('packs')} {(r.stdout + r.stderr)[-600:]}")
 
-    # EP-16: rdzeń fabryki nie zna nazw nakładki EV (dane nakładek zamiast stałych w kodzie)
+    # EP-16: rdzeń fabryki nie zna nazw nakładki EV poza rejestrem wycofanych (dane nakładek zamiast stałych w kodzie)
+    import re
     for rel in ("core/factory/install.py", "core/factory/migrations.py", "core/factory/tf.py"):
         body = (ROOT / rel).read_text(encoding="utf-8")
+        body = re.sub(r"RETIRED_PACKS = \{.*?\n\}?\n\n", "", body, flags=re.S)   # rejestr wycofanych id to dane migracji
         check("pack-ev" not in body and "iwona" not in body and "dom-ev-" not in body, f"EP-16: {rel} nazywa pack-ev")
 
     # EP-13: tools/workspace.py przekazuje --pack-dir do instalatora i nazywa przestrzeń po nakładkach

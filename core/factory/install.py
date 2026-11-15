@@ -430,7 +430,9 @@ def retarget(data: bytes) -> bytes:
 # Nakładki i tryby wycofane z fabryki: id → co je zastąpiło. Aktualizacja projektu, który je miał, pomija je
 # z komunikatem (pliki trafiają do .tf/backup/ jak każdy plik, którego fabryka już nie dostarcza); jawna prośba
 # o taki identyfikator (--packs, --add) kończy się odmową z wyjaśnieniem.
-RETIRED_PACKS = {"mode-talos": "the task loop is part of the core now: use /tf (agent `tf`)"}
+RETIRED_PACKS = {"mode-talos": "the task loop is part of the core now: use /tf (agent `tf`)",
+                 "pack-ev": "EV knowledge lives in the EV Intelligence project (github.com/dbqm45/ev-intelligence): "
+                            "ev-* skills and an MCP server for Claude Code (integrations/claude-code/README.md there)"}
 
 
 # Reguły wycofane z szablonu: piaskownica Bash zamienia Read(...) z permissions.deny w zakaz odczytu dla programów,
@@ -606,8 +608,8 @@ def legacy_packs(manifest: dict | None, dst_root: Path, available: dict) -> list
         return sorted(dict.fromkeys(found + extra))
     old = next((n for n in ("ev-team-factory",) if n in src or f"{n}:begin" in md), None)
     if old:
-        print(f"ℹ This is an install of {old}, but no available pack migrates from it — give its pack source: "
-              "--pack-dir <directory|git URL>.")
+        print(f"ℹ This is an install of {old}, but no available pack migrates from it — give its pack source "
+              "(--pack-dir <directory|git URL>) or use the EV Intelligence project (github.com/dbqm45/ev-intelligence).")
         return [p for p in ("pack-docs",) if p in available]
     return [p for p in LEGACY_DEFAULT if p in available]
 
