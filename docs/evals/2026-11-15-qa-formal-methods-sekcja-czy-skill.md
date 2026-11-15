@@ -29,3 +29,10 @@ sprawdzeń) zawyżał wynik bez skilla — nie sprawdzał elementów specyficzny
 
 Surowe wyniki: `2026-11-15-qa-formal-methods-sekcja-czy-skill.jsonl` (pole `baseline`: przebieg bez skilli;
 `skill`: wariant A = `qa-spec-first-testing`, wariant B = `qa-formal-methods`).
+
+## Dopisek: przykłady TLA+ i Alloy (tego samego dnia)
+Po dodaniu uruchomionych przykładów TLA+ (TLC) i Alloy oraz ich skrótu w sekcji „Przykład” SKILL.md: ewaluacja
+haiku 4/5, sonnet 4/5 (1,33 USD) — `fm-caly-modul-fakturowania` bez testów właściwości jako tańszego szczebla.
+Przyczyna: przykład w SKILL.md pokazywał tylko narzędzia formalne, a drabina kosztu była wyłącznie w referencji.
+Poprawka: krok 0 procedury (najtańszy szczebel, który wyraża właściwość). Po niej haiku 5/5, sonnet 5/5 (1,66 USD):
+`2026-11-15-bramka-qa-formal-methods.md`. Łączny koszt ewaluacji K1: 6,56 USD.

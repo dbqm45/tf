@@ -481,8 +481,15 @@
   "offline": "2026-10-04"
  },
  "qa-formal-methods": {
-  "fingerprint": "f238f803893683ce",
-  "offline": "2026-11-15"
+  "fingerprint": "8c97d738a542d2dc",
+  "offline": "2026-11-15",
+  "model": {
+   "report": ".tf/logs/evals/2026-11-15-bramka-qa-formal-methods.md",
+   "cost": 1.66,
+   "haiku": "5/5",
+   "sonnet": "5/5",
+   "date": "2026-11-15"
+  }
  },
  "qa-fuzzing": {
   "fingerprint": "92ffda19a9af1dcf",

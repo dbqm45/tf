@@ -13,6 +13,9 @@ Współbieżność i ponowienia, protokoły i maszyny stanów, reguły kombinato
 (Z3) albo model checker (TLA+/TLC, Alloy), a nie losowanie. Nie cały moduł — 1–3 właściwości o najwyższym koszcie błędu.
 
 ## Procedura
+0. **Najtańszy szczebel, który wyraża właściwość:** kontrakty i asercje → testy właściwości (Hypothesis, fast-check)
+   → solver Z3 → model checking (TLA+/TLC, Alloy) → Dafny. Wyżej tylko wtedy, gdy niższy nie umie wyrazić właściwości
+   albo nie trafia w próg lub przeplot. Zespół bez doświadczenia zaczyna od testów właściwości i Z3.
 1. Właściwość z kryterium `AC-n`; model tylko ze stanu i kroków, które jej dotyczą; narzędzie szuka negacji.
 2. **Kontrprzykład → test akceptacyjny z `AC-n`** (czerwony przed poprawką, widoczny w `tf trace`); poprawka najpierw
    w modelu, potem w kodzie.
