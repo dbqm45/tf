@@ -23,6 +23,8 @@ Reguły — strukturalne, bez modelu:
   zakresem” pusta, nieobecna albo samo „brak” bez powodu · SPEC-006 otwarte pytanie ze znacznikiem [blokuje] ·
   SPEC-007 niewypełniony szablon (`<…>` w kryterium albo w sekcji) · SPEC-008 wynik, którego nie da się sprawdzić
   („działa poprawnie”, „works as expected”) bez liczby ani cytowanej wartości w części Wtedy.
+SPEC-009 (ostrzeżenie, nie blokuje etapu): żadne kryterium nie opisuje zachowania niedozwolonego — odmowy, błędu,
+„nie …” w części Wtedy; sprawdzane tylko przy specyfikacji bez błędów.
 SPEC-004 obejmuje też łącznik kolejnej akcji w części Gdy („a następnie”, „potem”, „oraz”, „and then”).
 Pozostałe reguły językowe (szczegół implementacji, kilka akcji w historyjce, pełny słownik) sprawdza
 `requirements_lint.py` z nakładki pack-it, gdy jest zainstalowana.
@@ -66,6 +68,9 @@ CONCRETE = re.compile(r"\d|[\"„“”'`«»]")       # liczba albo cytowana wa
 PLACEHOLDER = re.compile(r"<[^<>\n]{2,}>")
 NONE_ONLY = re.compile(r"^(brak|nie dotyczy|none|n/a|-|—)[.!]?$", re.I)
 BLOCKING = re.compile(r"\[(blokuje|blocking)\]", re.I)
+# wynik opisujący zachowanie niedozwolone: odmowa, blokada, błąd, „nie …” (SPEC-009, tylko ostrzeżenie)
+NEGATIVE = re.compile(r"\b(nie|odmaw\w*|odmow\w*|odrzuc\w*|blokuj\w*|zablok\w*|błęd\w*|zabron\w*|brak\w*|"
+                      r"not|no|never|cannot|rejects?|rejected|denie[sd]|deny|error|forbidden|blocked)\b", re.I)
 TEMPLATE = """# Specyfikacja: {title}
 
 Źródło: `ticket.md`. Każde kryterium to jedno zachowanie: Zakładając <stan>, gdy <jedna akcja>, wtedy <wynik, który
@@ -74,6 +79,8 @@ da się sprawdzić testem>. Sprawdzenie: `tf spec check {key}`.
 ## Kryteria
 
 - AC-1: Zakładając <stan początkowy>, gdy <jedna akcja>, wtedy <obserwowalny wynik>.
+- AC-2: Zakładając <stan>, gdy <akcja niedozwolona albo błędne dane>, wtedy <czego system nie robi — odmowa, komunikat>.
+  (kryterium negatywne: czego wynik nie może być; usuń, gdy historyjka go nie ma)
 
 ## Bez zmian
 
@@ -176,7 +183,14 @@ def check_text(text: str) -> dict:
         if not PLACEHOLDER.search(line) and BLOCKING.search(line):
             add("SPEC-006", n, "otwarte pytanie blokuje start — potrzebna odpowiedź człowieka: " + line[:120])
     errors.sort(key=lambda e: (e["line"], e["rule"]))
-    return {"ok": not errors, "criteria": [c["id"] for c in criteria], "errors": errors}
+    warnings: list[dict] = []
+    outcomes = [c["text"][THEN.search(c["text"]).end():] for c in criteria if THEN.search(c["text"])]
+    if criteria and not errors and not any(NEGATIVE.search(o) for o in outcomes):
+        line = data["sections"]["criteria"][0][0] if data["sections"].get("criteria") else 1
+        warnings.append({"rule": "SPEC-009", "line": line,
+                         "message": "żadne kryterium nie opisuje zachowania niedozwolonego (odmowa, błąd, „nie …”) — "
+                                    "dopisz kryterium negatywne albo potwierdź, że historyjka go nie ma"})
+    return {"ok": not errors, "criteria": [c["id"] for c in criteria], "errors": errors, "warnings": warnings}
 
 
 def spec_path(root: Path, key: str) -> Path:
@@ -202,6 +216,8 @@ def cmd_check(root: Path, key: str, as_json: bool) -> int:
         return 0 if result["ok"] else 1
     if result["ok"]:
         print(f"✓ {rel}: {len(result['criteria'])} kryteriów ({', '.join(result['criteria'])}), gotowa do planu")
+        for w in result.get("warnings", []):
+            print(f"  ⚠ {rel}:{w['line']}  {w['rule']}  {w['message']}")
         return 0
     print(f"✗ {rel}: {len(result['errors'])} do poprawy")
     for e in result["errors"]:

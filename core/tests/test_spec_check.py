@@ -120,6 +120,26 @@ def main() -> int:
         check(r.returncode == 1 and "SPEC-004" in r.stdout, f"SP-27: „a następnie” w części Gdy to druga akcja → SPEC-004: {r.stdout}")
         r = verdict(GOOD.replace("Zakładając postój 12 godzin, gdy", "Zakładając postój 12 godzin oraz kartę mieszkańca, gdy"))
         check(r.returncode == 0, f"SP-28: spójnik w części Zakładając nie jest drugą akcją: {r.stdout}")
+        # SPEC-009: ostrzeżenie (nie błąd), gdy żadne kryterium nie opisuje zachowania niedozwolonego
+        r = verdict(GOOD)
+        check(r.returncode == 0 and "SPEC-009" in r.stdout and "⚠" in r.stdout,
+              f"SP-29: same kryteria pozytywne → ostrzeżenie SPEC-009, kod 0: {r.stdout}")
+        NEG = GOOD.replace("\n\n## Bez zmian", "\n- AC-3: Zakładając nieopłacony postój, gdy kierowca podjeżdża do wyjazdu, "
+                           "wtedy szlaban się nie otwiera.\n\n## Bez zmian")
+        r = verdict(NEG)
+        check(r.returncode == 0 and "SPEC-009" not in r.stdout, f"SP-30: kryterium negatywne („nie otwiera”) → bez ostrzeżenia: {r.stdout}")
+        r = verdict(NEG.replace("wtedy szlaban się nie otwiera", "wtedy system odmawia wyjazdu z komunikatem „Opłać postój”"))
+        check(r.returncode == 0 and "SPEC-009" not in r.stdout, f"SP-31: odmowa jako wynik → bez ostrzeżenia: {r.stdout}")
+        r = verdict(GOOD_EN.replace("Then the fee is 45 PLN", "Then the fee is 45 PLN\n\n### AC-2\nGiven an unpaid stay\n"
+                                    "When the driver reaches the exit\nThen the barrier does not open"))
+        check(r.returncode == 0 and "SPEC-009" not in r.stdout, f"SP-32: negatywne po angielsku („does not”) → bez ostrzeżenia: {r.stdout}")
+        r = verdict(GOOD, "--json")
+        try:
+            data = json.loads(r.stdout)
+        except ValueError:
+            data = {}
+        check(data.get("ok") is True and [w.get("rule") for w in data.get("warnings", [])] == ["SPEC-009"],
+              f"SP-33: --json: ostrzeżenie w polu warnings, ok bez zmian: {r.stdout[:300]}")
         r = verdict(GOOD, "--json")
         try:
             data = json.loads(r.stdout)
@@ -133,6 +153,7 @@ def main() -> int:
         r = run(p, SCRIPT, "new", "PROJ-1")
         text = spec.read_text(encoding="utf-8") if spec.is_file() else ""
         check(r.returncode == 0 and "Limit dobowy" in text and "AC-1" in text, f"SP-14: new zakłada spec.md z tytułem zadania: {r.stdout}{r.stderr}")
+        check("negatywn" in text, f"SP-34: szablon podpowiada kryterium negatywne: {text[:400]}")
         r = run(p, SCRIPT, "check", "PROJ-1")
         check(r.returncode == 1 and "SPEC-007" in r.stdout, f"SP-15: niewypełniony szablon → SPEC-007: {r.stdout}")
         r = run(p, SCRIPT, "new", "PROJ-1")
