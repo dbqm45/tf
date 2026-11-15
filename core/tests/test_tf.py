@@ -46,6 +46,15 @@ def make_repo(base: Path) -> str:
     return str(bare)
 
 
+def public_url(url: str) -> str:
+    """Adres zapisany w launcherze: bez danych logowania i bez #ref (jak tf.py public())."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ctf_tf", CTF)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.public(url.partition("#")[0])
+
+
 def main() -> int:
     if not shutil.which("git"):
         print("✓ 0/0 testów tf (brak git — pominięto)")
@@ -138,6 +147,28 @@ def main() -> int:
         check(r.returncode == 2 and "tf install" in r.stdout, f"CTF-15: tf add bez fabryki → podpowiedź: {r.stdout}")
         r = ctf(p, "nieznane", repo=repo)
         check(r.returncode == 2, f"CTF-16: nieznane polecenie → kod 2: {r.returncode}")
+
+        # CTF-18–20: launcher w ~/.local/bin to kopia tf.py z chwili instalacji; nowsze polecenia ma silnik projektu
+        binl = base / "bin-stary"
+        ctf(base, "--install-launcher", "--bin", str(binl), "--repo", repo)
+        old_launcher = binl / "tf"
+        p = project(base, "nowszy-silnik", source=repo)
+        (p / ".tf" / "factory" / "tf.py").write_text(
+            "import json, sys\nfrom pathlib import Path\nREPO = None\n# nowa wersja silnika\n"
+            "(Path.cwd() / 'delegated.json').write_text(json.dumps(sys.argv[1:]))\nraise SystemExit(7)\n")
+        r = ctf(p, "polecenie-z-przyszlosci", "--yes", script=old_launcher)
+        got = json.loads((p / "delegated.json").read_text()) if (p / "delegated.json").exists() else None
+        check(got == ["polecenie-z-przyszlosci", "--yes"] and r.returncode == 7 and "Unknown command" not in r.stdout,
+              f"CTF-18: nieznane polecenie launchera → silnik projektu z tymi samymi argumentami: {got} {r.returncode} {r.stdout}")
+        (p / "delegated.json").unlink(missing_ok=True)
+        r = ctf(p, script=old_launcher)
+        text = old_launcher.read_text()
+        check(r.returncode == 0 and "# nowa wersja silnika" in text and repr(public_url(repo)) in text,
+              f"CTF-19: po udanej aktualizacji launcher przejmuje tf.py projektu i zachowuje adres repo: {r.stdout}{r.stderr}")
+        own = p / ".tf" / "factory" / "tf.py"
+        before = own.read_text()
+        subprocess.run([sys.executable, str(CTF), "--help"], cwd=p, env=env, capture_output=True, text=True)
+        check(own.read_text() == before, "CTF-20: tf.py silnika projektu nie nadpisuje sam siebie")
 
         binp = base / "bin"
         r = ctf(base, "--install-launcher", "--bin", str(binp), "--repo", repo)
