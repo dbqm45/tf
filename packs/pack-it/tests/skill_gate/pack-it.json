@@ -480,6 +480,18 @@
   "fingerprint": "19d5e38c82137350",
   "offline": "2026-10-04"
  },
+ "qa-formal-methods": {
+  "fingerprint": "c22597d77b71fc6b",
+  "offline": "2026-11-15",
+  "model_previous": {
+   "report": ".tf/logs/evals/2026-11-15-bramka-qa-formal-methods.md",
+   "cost": 1.66,
+   "haiku": "5/5",
+   "sonnet": "5/5",
+   "date": "2026-11-15",
+   "uwaga": "dla wcześniejszej wersji skilla"
+  }
+ },
  "qa-fuzzing": {
   "fingerprint": "92ffda19a9af1dcf",
   "offline": "2026-10-24"
@@ -493,8 +505,8 @@
   "offline": "2026-10-22"
  },
  "qa-spec-first-testing": {
-  "fingerprint": "d0962703ec6dcd8a",
-  "offline": "2026-10-31"
+  "fingerprint": "ec51cce89ddf3a9e",
+  "offline": "2026-11-15"
  },
  "qa-test-design": {
   "fingerprint": "216764727344a675",

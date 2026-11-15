@@ -22,6 +22,87 @@ katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
 - [ ] **Decyzje D1–D12** (sekcja 15 dokumentu) — człowiek.
 - [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
 
+## Luki z przeglądu agend szkoleń (AI, agenci, product engineering) — zapisane 2026-11-15
+Przegląd 2026-11-15: przeszukanie skilli, hooków i skryptów po hasłach z agend szkoleń (mechanika LLM, sterowanie
+kontekstem, systemy wiedzy, harnessy, workflowy, agenci, product engineering) oraz pytanie człowieka o Spec Driven,
+analizę statyczną, piramidę testów, metody formalne, dokumentację i monitoring. Pokryte: spec-driven (`tf spec`,
+`tf trace`, `qa-spec-first-testing`), analiza statyczna (`tool-semgrep`, `sec-variant-analysis`, `tf analyze`),
+piramida testów (`eng-testing`), dokumentacja (`docs-tech-writing`), monitoring (`ops-observability`,
+`ops-sre-incidents`, `control_band.py`). Przegląd był po słowach kluczowych z odczytem kluczowych skilli, bez oceny
+jakości każdej treści. Decyzja człowieka: do planu trafiają wszystkie braki, także pokryte częściowo; kolejność —
+K1, potem K2, dalej wg priorytetu. Skille wg `core-skill-authoring` (scenariusze ewaluacji przed treścią, bramka
+`skill_gate.py`, ewaluacja na modelu tylko za zgodą), kod metodą TDD, każdy krok osobnym PR. Wersje narzędzi
+i specyfikacji sprawdzić u źródła z datą przed wpisaniem do skilla.
+
+Braki (brak pokrycia):
+- [x] **K1: skill `qa-formal-methods` (`pack-it`)** (zrobione 2026-11-15: osobny skill wygrał z sekcją w `qa-spec-first-testing` — wczytanie 8/8 wobec 1/8, treść 8/8 wobec 6/8, bez skilli 4/8, koszt 3,57 USD: `docs/evals/2026-11-15-qa-formal-methods-sekcja-czy-skill.md`; przykład Z3 uruchomiony, TLA+ i Alloy bez uruchomienia — pobranie narzędzi zablokowane w sesji; odnośnik z `qa-spec-first-testing`, role qa-automation i solution-architect) — jedyna dziura z pytania wprost; dziś są tylko testy
+  właściwości (Hypothesis w `tool-pytest`, fast-check) i niezmienniki w DDD. Treść: kiedy metoda formalna się opłaca
+  (współbieżność, rozproszone protokoły, maszyny stanów, pieniądze i limity, uprawnienia), a kiedy nie; drabina
+  kosztu: asercje i design by contract → testy właściwości → model checking (TLA+/PlusCal z TLC lub Apalache, Alloy)
+  → weryfikacja programu (Dafny, solver SMT Z3) → dowód; specyfikacja formalna jako deterministyczna wyrocznia dla
+  agenta (agent pisze model, checker szuka kontrprzykładu, kontrprzykład staje się testem `AC-n`); typowe pułapki
+  (model rozjeżdża się z kodem, zbyt mała przestrzeń stanów daje fałszywe „OK”). Scenariusze ewaluacji: wyścig przy
+  rezerwacji ostatniego miejsca, idempotentna płatność z ponowieniem, maszyna stanów sesji (np. OCPP z `pack-ev`).
+  Odnośniki z `eng-testing`, `qa-spec-first-testing`, `arch-quality-attributes`, `ddd-tactical-design`.
+- [x] **K2: system diff i warstwowy przegląd w `qa-change-review`** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona — haiku i sonnet bez skilla wypisują zmiany systemowe 8/8 na małym diffie i 4/4 na 609-liniowym PR z szumem, 1,96 USD: `docs/evals/2026-11-15-k2-diff-systemu-luka.md`; wrócić przy prawdziwym przeoczeniu w przeglądzie albo PR większym niż kontekst) — przegląd mówi dziś, czy kod zgadza się
+  z planem, ale nie, co zmiana zmienia w systemie. Raport „diff systemu” w stałych sekcjach: zachowanie (kryteria
+  `AC-n` nowe, zmienione, usunięte), UX (ekrany, teksty, przepływy), dane (migracje, schematy, retencja), architektura
+  (nowe zależności, moduły, granice), złożoność (przyrost kodu, nowe punkty konfiguracji), operacje (zmienne
+  środowiskowe, flagi, zadania w tle, alerty, koszt). Część deterministyczna skryptem (migracje, manifesty
+  zależności, pliki konfiguracji, nowe endpointy — z `git diff` i `code_graph.py`), część oceniana modelem. Warstwowy
+  diff: kolejność czytania kontrakt → dane → logika → UI → testy, z osobnym werdyktem na warstwę. Sekcja trafia do
+  opisu PR (sprawdzić zgodność z `pr_body` i testami `test_pr_body.py`).
+- [ ] **K3: code mode w `ai-agents` i `core-cost-control`** (pomiar 2026-11-15, `docs/evals/2026-11-15-luki-k3-k7.md`: katalog = bez skilli 14/18; jedyna powtarzalna luka — rozdzielenie odczytu od zapisu i zatwierdzanie akcji zapisu w kodzie agenta, limit czasu i kosztu; zakres zawężony do 2–3 zdań w `ai-agents`, sprawdzonych scenariuszem `gap-k3-code-mode-crm`) — agent pisze krótki program, który sam woła narzędzia
+  lub API i filtruje wyniki, zamiast wielu wywołań narzędzi z pełnym wynikiem w kontekście. Kiedy (duże wyniki,
+  pętle po wielu elementach, łączenie danych z kilku narzędzi), kiedy nie (pojedyncze wywołanie, akcje wymagające
+  zatwierdzenia każdej z osobna); wymagania: piaskownica, limit czasu i budżetu, zwracany tylko wynik końcowy;
+  związek z MCP (narzędzia serwera jako API w kodzie). Wzorce i nazewnictwo dostawców sprawdzić z datą
+  [niezweryfikowane].
+- [x] **K4: syntetyczni użytkownicy, nagrania i analiza zachowań (`ux-research-methods`, `tool-playwright`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 17/18 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) —
+  persony z `pack-ux` jako agenci przechodzący przepływ w przeglądarce (Playwright) z celem i ograniczeniami persony;
+  nagrania i ślady (trace, wideo, zrzuty) jako materiał do notatek wizualnych; analiza: gdzie agent utknął, wrócił,
+  zgadywał. Granica: wynik syntetyczny to hipoteza do sprawdzenia na ludziach, nie zastępuje badań z użytkownikami.
+  Scenariusz ewaluacji: formularz z mylącym polem, które syntetyczny użytkownik powinien wskazać.
+
+Pokryte częściowo:
+- [x] **K5: mechanika modelu jako referencja `ai-prompt-engineering/references/mechanika-modelu.md`** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 16/18 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`; „J-space” nadal bez źródła) — dziś są
+  tylko praktyczne konsekwencje rozproszone w `core-grounding`, `ai-prompt-engineering` i `core-cost-control`.
+  Treść: tokenizacja (koszt, liczby, tekst polski zużywa więcej tokenów — zmierzyć), przewidywanie kolejnego tokenu
+  i skąd biorą się konfabulacje, uwaga i pozycja instrukcji w długim kontekście („lost in the middle”), data
+  odcięcia wiedzy (odnośnik do `core-grounding`), okno kontekstu i limit wyjścia, rozumowanie i effort, uogólnianie
+  i skojarzenia jako mechanizm sterowania kontekstem (przestrzeń ukryta). Każda sekcja kończy się konsekwencją dla
+  promptu, skilla lub agenta. Termin „J-space” z agendy — ustalić źródło i definicję przed wpisaniem
+  [niezweryfikowane].
+- [x] **K6: A2A w praktyce (`ai-agents`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 22/22 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) — mapa protokołów jest (`references/protokoly-i-tracing.md` §1–2), brak
+  procedury: wystawienie agenta przez A2A (Agent Card zgodna z tym, co agent naprawdę robi; uwierzytelnianie
+  i autoryzacja), odkrywanie i wybór współpracownika po karcie, kontrakt przekazania (zakres, kontekst, właściciel,
+  widoczność postępu, format wyniku, raport porażki — spiąć z `core-async-delegation`), testy interoperacyjności.
+  Rozważyć deterministyczny walidator karty (schemat, deklarowane umiejętności a testy). Wersję A2A sprawdzić
+  w repozytorium specyfikacji z datą.
+- [x] **K7: skill `pm-release-learning` — pętla po wydaniu** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 20/24 z katalogiem i bez skilli, braki rozproszone, `docs/evals/2026-11-15-luki-k3-k7.md`) — są elementy (`control_band.py`, `metric_watch.py`
+  w `mode-pdi`, `pm-product-analytics`, `ops-sre-incidents`, `core-agent-retro`), brak procedury, która je łączy.
+  Treść: sygnały (analityka, logi, incydenty, zgłoszenia wsparcia, język klienta, obserwowane zachowanie); zamierzony
+  a faktyczny wynik (metryki z `intent.md`), tarcie, obejścia, regresje, skutki uboczne; synteza: grupowanie
+  sygnałów, wykrywanie sprzeczności, przyczyna źródłowa, pewność i dowód; decyzja z listy: rozwijać, poprawić,
+  uprościć, wycofać, zbadać, zatrzymać; wyjście: aktualizacja zgłoszeń, specyfikacji, ewaluacji, `lessons.md`
+  i kontekstu agentów. Odnośnik z `core-delivery-lifecycle` („co po wdrożeniu”).
+- [ ] **K8: specyfikacja — przykłady negatywne i synchronizacja z główną specyfikacją** — `spec.md` ma sekcje „Bez
+  zmian” i „Poza zakresem”, ale nie ma miejsca na przykłady zachowania niedozwolonego. Dodać opcjonalną sekcję
+  „Przykłady negatywne” (Zakładając / Gdy / Wtedy **nie** …) do szablonu `tf spec new` i reguł `spec_check.py`
+  (puste przykłady jak SPEC-005; `tf trace` traktuje je jak kryteria z testem). Synchronizacja: domknąć istniejącą
+  pozycję „OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji” (sekcja Spec Kit) dla `tf spec`, nie
+  tylko `mode-pdi` — przy zamknięciu zadania kryteria trafiają do globalnej specyfikacji modułu, rozjazd jest
+  ustaleniem.
+- [x] **K9: hasła w `tools/coverage_areas.json`** (zrobione 2026-11-15; dziury po zmianie: diff systemu, okno kontekstu, code mode — K2, K5, K3) — dopisać hasła, po których mapa pokrycia wykryje powyższe obszary
+  (np. „metody formalne”, „tla+”, „diff systemu”, „code mode”, „a2a”, „po wydaniu”, „syntetyczny użytkownik”,
+  „tokeniz”), żeby kolejny przegląd był powtarzalny bez ręcznego szukania. Mały krok, można razem z K1.
+- [ ] **K10: metody formalne w wiedzy EV — wstrzymane** (decyzja człowieka 2026-11-15: czy `pack-ev` zostaje w `tf`,
+  czy przechodzi do `ev-intelligence`, jest otwarte). Treść niezależna od miejsca: sekcja „model przed symulacją”
+  w odpowiedniku `dom-ev-simulation-testing` z odnośnikiem do `qa-formal-methods` (przy `pack-ev` w `tf` sprawdzić
+  zależność `pack-ev` → `pack-it` dla `refs`), tłumaczenie śladu TLC na oś czasu scenariusza `evtest`; scenariusz
+  ewaluacji przed treścią, bramka. Pilot w kodzie `evtest` i uzasadnienie są w repo `dbqm45/ev-testing`:
+  `docs/todo.md`, `docs/plans/2026-11-15-metody-formalne.md` (gałąź `claude/intelligent-ramanujan-rjm26k`).
+
 ## Luki katalogu i polityka autonomii (przegląd listy „Autonomous Full Stack Agent”) — zapisane 2026-11-09
 Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: najpierw sekcja A, potem B. Skille wg
 `core-skill-authoring` (scenariusze przed treścią, bramka), kod metodą TDD, każdy krok osobnym PR.

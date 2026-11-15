@@ -1,0 +1,151 @@
+{
+  "skill": "qa-formal-methods",
+  "scenarios": [
+    {
+      "id": "fm-podwojna-rezerwacja",
+      "expect": "trigger",
+      "prompt": "Mamy system rezerwacji miejsc: dwa serwisy mogą jednocześnie zarezerwować ostatnie miejsce, mamy blokady optymistyczne i ponowienia po timeoucie. Testy integracyjne przechodzą, ale w produkcji raz na kilka tygodni zdarza się podwójna rezerwacja. Jak systematycznie sprawdzić, czy sam projekt protokołu jest poprawny, zanim zaczniemy łatać kod? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "TLA\\+",
+            "PlusCal",
+            "Alloy"
+          ],
+          [
+            "TLC",
+            "Apalache",
+            "model[- ]check\\w*"
+          ],
+          [
+            "kontrprzykład\\w*",
+            "counterexample",
+            "ślad\\w* (błędu|naruszenia)"
+          ],
+          [
+            "AC-\\d",
+            "AC-n",
+            "test\\w* akceptac\\w*",
+            "test\\w* regresyjn\\w*"
+          ],
+          [
+            "granic\\w* modelu",
+            "liczb\\w* (procesów|serwisów|węzłów|uczestników)",
+            "mał\\w* model\\w*",
+            "w tym modelu",
+            "nie (jest )?dow[óo]d\\w* dla produkcji",
+            "rozmiar\\w* modelu"
+          ]
+        ],
+        "none": [
+          "wystarczą testy integracyjne"
+        ]
+      }
+    },
+    {
+      "id": "fm-caly-modul-fakturowania",
+      "expect": "trigger",
+      "prompt": "Architekt chce, żebyśmy weryfikowali formalnie cały nowy moduł fakturowania. Zespół nie zna TLA+ ani Dafny. Czy to ma sens i jak wybrać, co weryfikować formalnie, a co wystarczy przetestować? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "test\\w* (opart\\w* na )?właściwoś\\w*",
+            "property[- ]based",
+            "Hypothesis",
+            "fast-check"
+          ],
+          [
+            "Z3",
+            "SMT",
+            "solver\\w*"
+          ],
+          [
+            "współbieżn\\w*",
+            "ponowie\\w*",
+            "maszyn\\w* stanów",
+            "przejś\\w* stan\\w*",
+            "protok\\w*"
+          ],
+          [
+            "model\\w* (obok|przy|razem z) kod\\w*",
+            "rozjeżdża\\w*",
+            "rozjazd\\w*",
+            "aktualiz\\w* model\\w*",
+            "utrzym\\w* model\\w*",
+            "model w repo\\w*"
+          ],
+          [
+            "kontrprzykład\\w*.{0,80}test",
+            "test\\w*.{0,40}kontrprzykład\\w*",
+            "AC-\\d",
+            "AC-n"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "fm-rabaty-limit",
+      "expect": "trigger",
+      "prompt": "Mamy 12 reguł rabatowych, które łączą się warunkami (progi koszyka, kody, lojalność). Wymaganie: łączny rabat nigdy nie przekracza 30% i cena nigdy nie jest ujemna. Testy z losowymi koszykami nic nie znalazły. Jak wykazać, że żadna kombinacja nie łamie limitu, zamiast losować przypadki? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Z3",
+            "SMT"
+          ],
+          [
+            "unsat"
+          ],
+          [
+            "kontrprzykład\\w*",
+            "\\bsat\\b"
+          ],
+          [
+            "gros\\w*",
+            "zaokrągl\\w*",
+            "Decimal",
+            "liczb\\w* całkowit\\w*"
+          ],
+          [
+            "AC-\\d",
+            "AC-n",
+            "test\\w* (akceptac|regresyjn)\\w*",
+            "zamie\\w* (go |je )?w test",
+            "staje się test\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "edge-fm-bez-opisu",
+      "expect": "trigger",
+      "prompt": "Zweryfikuj formalnie nasz protokół synchronizacji.",
+      "checks": {
+        "all": [
+          [
+            "opis\\w*",
+            "podaj\\w*",
+            "prześlij\\w*",
+            "potrzebuj\\w*",
+            "brak\\w*",
+            "jaki\\w*",
+            "nie mam",
+            "nie widzę"
+          ]
+        ],
+        "none": [
+          "-{4,} ?MODULE",
+          "VARIABLES\\s+\\w+",
+          "\\bInit ==",
+          "Protokół jest poprawny"
+        ]
+      }
+    },
+    {
+      "id": "fm-agregat-niezmiennik",
+      "expect": "no-trigger",
+      "neighbor": "ddd-tactical-design",
+      "prompt": "Jak zaprojektować agregat Zamówienie, żeby pilnował niezmiennika, że suma pozycji zawsze równa się sumie zamówienia? Gdzie sprawdzać ten warunek?"
+    }
+  ]
+}

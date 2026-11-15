@@ -3,8 +3,8 @@ name: qa-spec-first-testing
 description: Użyj, gdy testy mają sprawdzać wymaganie, nie implementację — niezależna wyrocznia, clean-room, ATDD, mutacje.
 metadata:
   przeglad: "2027-10-09"
-  katalog: "Użyj przy każdym pisaniu testów — jak sprawić, by test sprawdzał WYMAGANIE, a nie powielał implementację (wyrocznia niezależna od kodu, TDD/ATDD, clean-room, protokół rozbieżności, testy charakteryzujące, mutacyjne i oparte na właściwościach). Nie do technik wyboru przypadków (qa-test-design) ani składni narzędzi (tool-*)."
-  slowa: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu"
+  katalog: "Użyj przy każdym pisaniu testów — jak sprawić, by test sprawdzał WYMAGANIE, a nie powielał implementację (wyrocznia niezależna od kodu, TDD/ATDD, clean-room, protokół rozbieżności, testy charakteryzujące, mutacyjne i oparte na właściwościach). Nie do technik wyboru przypadków (qa-test-design), weryfikacji formalnej (qa-formal-methods) ani składni narzędzi (tool-*)."
+  slowa: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu, zgłoszony błąd, testy do poprawki błędu, przykład ze zgłoszenia, próg nie działa, dokładnie na progu, jakie przypadki dodać do poprawki"
 ---
 
 # Testy od specyfikacji, nie od implementacji
@@ -80,6 +80,8 @@ czyta wyłącznie brief biznesowy — wymagania pisane ze znajomością architek
   Zakres: moduły z mapy ryzyk lub bieżącej zmiany, zawężone do pliku albo zakresu linii — nie całe repo po każdym commicie.
 - **Testy oparte na właściwościach** (fast-check, jqwik) dla obliczeń i niezmienników — wyrocznią jest właściwość, nie kod.
 - **Wartości brzegowe** z qa-test-design — tam najczęściej chowają się błędy „o jeden”.
+- **Metody formalne** (solver Z3, model checking TLA+ lub Alloy) dla współbieżności, protokołów i reguł z limitem —
+  wyrocznią jest narzędzie, nie losowanie (qa-formal-methods).
 
 ### Przeżyły mutant — decyzja, nie automat
 Dla każdego pytasz: „czy realny błąd tego kształtu zabolałby użytkownika lub biznes?”
