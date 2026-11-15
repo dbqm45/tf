@@ -24,7 +24,7 @@
   "offline": "2026-11-15"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "82ba9f15fe0a9a42",
+  "fingerprint": "653d159bc9d1d8a7",
   "offline": "2026-11-15"
  },
  "core-factory-update": {
@@ -48,18 +48,8 @@
   "offline": "2026-10-31"
  },
  "core-problem-routing": {
-  "fingerprint": "e181d58cc96d2447",
-  "offline": "2026-11-15",
-  "model_previous": {
-   "report": ".tf/logs/evals/2026-11-13-bramka-core-problem-routing.md",
-   "cost": 2.35,
-   "haiku": "5/5",
-   "haiku_bez_skilli": "1/4 treści",
-   "sonnet": "5/5",
-   "sonnet_bez_skilli": "1/4 treści",
-   "date": "2026-11-13",
-   "uwaga": "dla wcześniejszej wersji skilla"
-  }
+  "fingerprint": "78051726c246666a",
+  "offline": "2026-11-15"
  },
  "core-project-record": {
   "fingerprint": "475f95f2d1c6f356",
