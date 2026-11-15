@@ -729,6 +729,95 @@ def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
             f"[ważne]: run_state.py finding {run_dir} {slice_id} \"<ustalenie>\" i step … zakres fail, potem nowa runda")
 
 
+CONVENTIONAL = re.compile(r"^[a-z]+(\([^()\s]+\))?!?: \S")
+TRAILER = re.compile(r"^[\w-]+: \S")
+
+
+def slice_files(project: Path, key: str, slice_id: str) -> list[str]:
+    """Pliki z dowodu kawałka (`verify --files`), w kolejności zapisu; pusta lista — dowodu nie ma."""
+    view = task_view(project, key)
+    sl = (((view or {}).get("task") or {}).get("slices") or {}).get(slice_id) or {}
+    rel = sl.get("evidence") if isinstance(sl, dict) else None
+    try:
+        data = json.loads((project / run_report.CHANGES / key / rel).read_text(encoding="utf-8")) if rel else {}
+    except (OSError, ValueError):
+        return []
+    files = data.get("files") if isinstance(data, dict) else None
+    return [f for f in files if isinstance(f, str)] if isinstance(files, dict) else []
+
+
+def commit_message(message: str, slice_id: str, value: str, footers: list[str]) -> str:
+    """Tytuł i treść z `--message`; dopisuje `Kawałek K<n>: <wartość>` i brakujące stopki (ostatni akapit)."""
+    text = message.strip().replace("\r\n", "\n")
+    if not re.search(rf"^Kawałek {re.escape(slice_id)}:", text, re.M):
+        title, _, rest = text.partition("\n")
+        text = f"{title}\n\nKawałek {slice_id}: {value}" + (f"\n{rest.strip(chr(10))}" if rest.strip() else "")
+    missing = [f for f in footers if not re.search(rf"^{re.escape(f.split(':', 1)[0])}:", text, re.M)]
+    if not missing:
+        return text + "\n"
+    paras = text.split("\n\n")
+    if len(paras) > 1 and all(TRAILER.match(ln) for ln in paras[-1].splitlines() if ln.strip()):
+        return text + "\n" + "\n".join(missing) + "\n"
+    return text + "\n\n" + "\n".join(missing) + "\n"
+
+
+def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
+    """Koniec kawałka jednym poleceniem: zaliczony przegląd zakresu bieżącej rundy, commit plików z dowodu z treścią
+    i stopkami, odhaczenie i następny kawałek. Odmowa przed zapisem, gdy brak dowodu albo tytuł jest zły."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if not re.fullmatch(r"K\d+", slice_id):
+        return fail("użycie: done <katalog> K<n> --message \"<typ>(<zakres>): <opis>\"")
+    if not CONVENTIONAL.match(message.strip()):
+        return fail(f"tytuł commita poza Conventional Commits: „{message.strip().splitlines()[0] if message.strip() else ''}” "
+                    "— podaj --message \"<typ>(<zakres>): <opis>\", np. feat(pay): add card payment")
+    slices = plan_and_blocked(project, run_dir, meta)[0]
+    entry = next((s for s in slices if s["id"] == slice_id), None)
+    if entry is None:
+        return fail(f"w plan.md nie ma kawałka {slice_id}")
+    state = slice_evidence(project, meta, slice_id)
+    files = slice_files(project, meta["key"], slice_id)
+    if state != "zweryfikowany" or not files:
+        return fail(f"{slice_id} nie ma aktualnego dowodu ({state}) — najpierw: run_state.py verify {run_dir} "
+                    f"{slice_id} --files <pliki kawałka>; nic nie zapisano")
+    cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
+    rnd = len(cur.get("rounds") or []) if cur.get("k") == slice_id else 0
+    code = cmd_step(run_dir, slice_id, [f"R{rnd or 1}", "zakres", "pass"], project)
+    if code:
+        return code
+    meta = load(run_dir) or meta
+    flag = task_field(run_dir, meta, "flag")
+    flag_key = (flag.get("key") if isinstance(flag, dict) else None) or meta.get("flag")
+    footers = ([f"Change: {meta['task']}"] if meta.get("task") else []) + ([f"Flag: {flag_key}"] if flag_key else [])
+    try:
+        add = subprocess.run(["git", "-C", str(project), "add", "--", *files], capture_output=True, text=True, timeout=60)
+        staged = subprocess.run(["git", "-C", str(project), "diff", "--cached", "--quiet", "--", *files],
+                                capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as e:
+        return fail(f"git nie odpowiada ({e}) — kawałek nie jest odhaczony")
+    if add.returncode != 0 or staged.returncode not in (0, 1):
+        return fail(f"git add odrzucony — kawałek nie jest odhaczony:\n{(add.stdout + add.stderr + staged.stderr).strip()}")
+    if staged.returncode == 0:
+        print(f"• pliki {slice_id} są już zatwierdzone — bez nowego commita")
+    else:
+        msg = commit_message(message, slice_id, entry["value"], footers)
+        r = subprocess.run(["git", "-C", str(project), "commit", "-q", "-F", "-", "--", *files], input=msg,
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            return fail(f"commit odrzucony — kawałek nie jest odhaczony; popraw i powtórz done:\n{(r.stdout + r.stderr).strip()}")
+        sha = subprocess.run(["git", "-C", str(project), "rev-parse", "--short", "HEAD"], capture_output=True,
+                             text=True, timeout=30).stdout.strip()
+        print(f"✓ commit {sha}: {msg.splitlines()[0]} ({', '.join(files)})")
+    code = cmd_tick(run_dir, slice_id, project)
+    if code:
+        return code
+    print_next(project, run_dir, load(run_dir) or meta)
+    return 0
+
+
 # ---- pytania i zależności kawałków (krok F3, przełącznik loop.blocked_slices) ---------------------------------
 NO_DEPS = ("brak", "-", "—", "–", "nic")
 HUMAN = re.compile(r"human:[\w.@-]+")
@@ -1551,6 +1640,10 @@ def main(argv: list[str]) -> int:
     v.add_argument("--files", default="")
     v.add_argument("--command", default=None)
     v.add_argument("--timeout", type=float, default=None)
+    dn = sub.add_parser("done")
+    dn.add_argument("run_dir")
+    dn.add_argument("slice_id")
+    dn.add_argument("--message", required=True)
     k = sub.add_parser("tick")
     k.add_argument("run_dir")
     k.add_argument("slice_id")
@@ -1608,6 +1701,8 @@ def main(argv: list[str]) -> int:
         return cmd_spec(Path(args.run_dir), project, new=args.action == "new")
     if args.cmd == "verify":
         return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project)
+    if args.cmd == "done":
+        return cmd_done(Path(args.run_dir), args.slice_id, args.message, project)
     if args.cmd == "tick":
         return cmd_tick(Path(args.run_dir), args.slice_id, project)
     if args.cmd == "park":

@@ -118,17 +118,17 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
 3. **Weryfikacja z dowodem:** `run_state.py verify <katalog> K<n> --files <pliki kawałka po przecinku, z plikiem
    testu>` — skrypt sam uruchamia weryfikację produktu (polecenie z `.claude/quality-gate.json`; gdy go nie ma,
    dodaj `--command "<polecenie z pierwszej linii CLAUDE.md>"`) i zapisuje dowód w `evidence/`. Kod 0 = zielono,
-   1 = czerwono. Bez aktualnego dowodu `tick` i etap `pr` są odrzucane; zmiana pliku po dowodzie go unieważnia.
+   1 = czerwono. Bez aktualnego dowodu `done` i etap `pr` są odrzucane; zmiana pliku po dowodzie go unieważnia.
    Werdykt: `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
    **Skan** po zielonych testach: `security_scan.py scan --slice K<n> --attempt <k> --out <katalog>/security/K<n>`.
    FAIL → ustalenia z `security/K<n>/feedback.md` są wejściem następnej próby; po 2 próbach STOP, kawałka nie
    commitujesz. Brak skanera to FAIL, nie cichy PASS (`references/bezpieczenstwo.md`).
 4. **Przegląd zakresu:** zawsze `scope-reviewer` (nie Ty, także przy małym diffie) dostaje kawałek z planu
-   i `git diff`; wynik: `step <katalog> K<n> R<k> zakres pass|fail`. Ustalenie **ważne** → `run_state.py finding
-   <katalog> K<n> "<ustalenie>"`, `zakres fail`, wycofujesz, nowa runda; **drobne**, **zastane** → `parked.md`.
-5. **Commit** plików kawałka po nazwie: `<typ>(<zakres>): <opis>` + w treści `Kawałek K<n>: <wartość>`; z flagą
-   stopka `Flag: <klucz>`. Potem `run_state.py tick <katalog> K<n>` (odmowa mówi, czego brak).
-   Stopki i flaga przebiegu cięcia: `references/ciecia-pdi.md`.
+   i `git diff`. Ustalenie **ważne** → `run_state.py finding <katalog> K<n> "<ustalenie>"`, `step <katalog> K<n>
+   R<k> zakres fail`, wycofujesz, nowa runda; **drobne**, **zastane** → `parked.md`.
+5. **Bez ważnych:** `run_state.py done <katalog> K<n> --message "<typ>(<zakres>): <opis>"` zapisuje przegląd,
+   commituje pliki z dowodu (treść `Kawałek K<n>`, stopka `Flag:`), odhacza i podaje następny kawałek.
+   Odmowa mówi, czego brak. Stopki i flaga cięcia: `references/ciecia-pdi.md`.
 6. Z `--budget`: `run_report.py status <katalog>` — koszt powyżej budżetu → STOP po tym kawałku.
 
 ## 4. Zakończenie
