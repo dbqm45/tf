@@ -2,7 +2,7 @@
 
 Czytasz, gdy wejściem jest klucz cięcia z planu zmiany (`/tf TSK-57`, tak woła pętlę faza realizacji zmiany pdi)
 albo gdy pdi woła pętlę w rundzie pętli PR. Cięcie to zwykłe zadanie: ten sam przebieg ze SKILL.md — specyfikacja,
-plan z kawałków, dowód `verify` przed `tick`, ślad kryteriów `trace`. Tu są tylko różnice.
+plan z kawałków, dowód `verify` przed `done`, ślad kryteriów `trace`. Tu są tylko różnice.
 
 ## Start
 `run_report.py start --task TSK-57 --change CHG-12` zakłada zadanie cięcia o kluczu `<CHG>-<TSK>`:
@@ -34,8 +34,9 @@ dziedziczyły commitów poprzedniego — chyba że plan mówi inaczej. Slug zacz
 (`story/tsk-57-…`), więc hook `commit-msg` pilnuje stopki `Change: TSK-57`.
 
 ## Commity i flaga
-Każdy commit przebiegu cięcia ma stopkę `Change: TSK-n` (core-conventional-commits). Na gałęzi cięcia **pierwszy
-commit to pierwszy kawałek** — pdi bierze z niego tytuł PR, więc plików zadania nie commitujesz wcześniej.
+Każdy commit przebiegu cięcia ma stopkę `Change: TSK-n` (core-conventional-commits); `run_state.py done` dopisuje
+ją sam. Na gałęzi cięcia **pierwszy commit to pierwszy kawałek** — pdi bierze z niego tytuł PR, więc plików zadania
+nie commitujesz wcześniej.
 Kawałek cięcia z flagą (kolumna „Flaga” w planie cięć albo `flags` w `release.yaml`; `start` zapisał ją w zadaniu):
 nowe zachowanie jest za flagą (domyślnie wyłączoną), a commit ma też stopkę `Flag: <klucz>`. Gdy plan wydania
 flagi nie przewiduje, `start` zapisał jawny brak flagi z powodem — nie dodajesz własnej.

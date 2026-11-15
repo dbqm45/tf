@@ -121,3 +121,27 @@ skrypt.
   co zrobić). Scenariusz ewaluacji przed zmianą treści.
 - Testy: `core/tests/test_panel.py`; agent `spec-reviewer` w `config.yaml` i w narzędziach agenta `tf`.
 - Koszt: dwa przeglądy w osobnych kontekstach przy zadaniu o wadze pełnej (rzadkim). Niezmierzone na modelu.
+
+## Koniec kawałka jednym poleceniem — plan realizacji (zapisany przed kodem; zgoda człowieka 2026-11-15)
+
+Po zaliczonym przeglądzie zakresu pętla robi dziś trzy do czterech wywołań: zapis wyniku przeglądu (`step … zakres
+pass`), `git add` i `git commit` z treścią i stopkami, `tick` i często `next`. Każde to osobna tura modelu
+z pełnym kontekstem. Pomiar po kroku G: zapis przeglądu był pomijany (7/15). Jedno polecenie zmniejsza liczbę tur
+i nie da się w nim pominąć zapisu. Szacunek oszczędności: około 2 tury na kawałek [szacunek, do sprawdzenia
+w następnym płatnym pomiarze].
+
+- **`run_state.py done <katalog> K<n> --message "<typ>(<zakres>): <opis>"`** po kolei:
+  1. sprawdza aktualny dowód kawałka (`verify`); bez niego odmawia i niczego nie zapisuje;
+  2. sprawdza format tytułu commita (Conventional Commits); zły → odmowa przed zapisem;
+  3. zapisuje `zakres pass` dla bieżącej rundy kawałka (ostatnia runda w `run.json`, bez rundy — R1);
+  4. robi commit **tylko plików z dowodu** (po nazwie): tytuł z `--message`, w treści `Kawałek K<n>: <wartość
+     z planu>` (gdy go nie ma), stopki `Change: <TSK>` (przebieg cięcia) i `Flag: <klucz>` (flaga zadania albo
+     cięcia), gdy ich nie ma; pliki już zatwierdzone → bez commita, z informacją;
+  5. odhacza kawałek (`tick`) i drukuje `Dalej: …` jak `next`.
+  Odmowa commita (hook `commit-msg`, brak repozytorium) → kod ≠ 0, kawałek nieodhaczony, wyjście gita w odpowiedzi.
+- Przegląd z ustaleniem **ważnym** zostaje jak dziś (`finding`, `step … zakres fail`, nowa runda); `tick` i `step`
+  zostają dla zgodności.
+- Treść: `SKILL.md` krok 4–5 — `done` zamiast opisu commita i `tick` (limit 15000 znaków: zamiana, nie dopisek).
+  Scenariusz ewaluacji przed zmianą treści.
+- Testy: `core/tests/test_slice_done.py` (repozytorium git, przebieg z zadaniem, dowód, flaga, druga runda,
+  ponowienie, plik spoza kawałka zostaje niezatwierdzony).

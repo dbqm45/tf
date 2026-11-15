@@ -82,6 +82,15 @@
       }
     },
     {
+      "id": "koniec-kawalka-jednym-poleceniem",
+      "expect": "trigger",
+      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Kawałek K1 ma zielony dowód z verify, a scope-reviewer nie zgłosił ustaleń ważnych. Jak zamykasz kawałek?",
+      "checks": {
+        "all": [["run_state\\.py done", "done <katalog>"], ["--message"], ["feat\\(", "fix\\(", "<typ>"]],
+        "none": ["git add -A", "git add \\.", "git commit -am"]
+      }
+    },
+    {
       "id": "pytanie-o-kod",
       "expect": "no-trigger",
       "neighbor": "brak",

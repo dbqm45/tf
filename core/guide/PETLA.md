@@ -121,7 +121,9 @@ katalogami:
 Lista zadań: `tf status` (liczona na żywo z folderów zadań); stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
 z dowodem: pętla uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
 i nie przepuści przebiegu do PR. Tak samo bez zapisanego, zaliczonego przeglądu zakresu (`run_state.py step … zakres
-pass`): w pomiarze po kroku G pętla wywoływała recenzenta zawsze, ale wynik zapisywała w 7 z 15 przebiegów. Bramka
+pass`): w pomiarze po kroku G pętla wywoływała recenzenta zawsze, ale wynik zapisywała w 7 z 15 przebiegów. Po
+przeglądzie bez ustaleń ważnych pętla kończy kawałek jednym poleceniem `run_state.py done <katalog> K<n> --message
+"<typ>(<zakres>): <opis>"`: zapis przeglądu, commit plików z dowodu ze stopkami, odhaczenie i następny kawałek. Bramka
 jakości nie reaguje na zmiany w `docs/project/changes/`.
 
 Cięcie z planu zmiany (`/tf TSK-57`, tryb pdi) to takie samo zadanie, z kluczem złożonym ze zmiany i cięcia:
