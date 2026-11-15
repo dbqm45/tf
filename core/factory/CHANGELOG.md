@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.20.0] — 2026-11-15
+### Added
+- **core:** require a reviewer panel before a full-weight PR (#268)
+
 ## [10.19.0] — 2026-11-15
 ### Added
 - **core:** warn when quality drops after a factory update (#267)
