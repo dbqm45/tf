@@ -195,6 +195,22 @@ def main() -> int:
         check(r.returncode == 2 and "mode-talos" in r.stdout and "/tf" in r.stdout,
               f"W-3: jawna prośba o wycofany tryb → odmowa z wyjaśnieniem: {r.returncode} {r.stdout[-300:]}")
 
+        # pack-ev wycofany: wiedza EV jest w projekcie EV Intelligence (skille ev-*, serwer MCP), nie w fabryce
+        man = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
+        man["packs"]["pack-ev"] = "1.1.0"
+        man["offered"] = sorted({*(man.get("offered") or []), "pack-ev"})
+        ev = proj / ".claude" / "skills" / "dom-ev-glossary" / "SKILL.md"
+        write(ev, "---\nname: dom-ev-glossary\n---\n# słownik\n")
+        man["files"][".claude/skills/dom-ev-glossary/SKILL.md"] = inst.sha(ev.read_bytes())
+        (proj / MANIFEST).write_text(json.dumps(man), encoding="utf-8")
+        r = install(ROOT, proj, "--update")
+        after = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
+        check(r.returncode == 0 and "pack-ev" in r.stdout and "ev-intelligence" in r.stdout and "Unknown packs" not in r.stdout
+              and "pack-ev" not in (after.get("packs") or {}) and not ev.exists(),
+              f"W-4: aktualizacja z pack-ev przechodzi, wskazuje ev-intelligence, pliki do kopii: {r.returncode} {r.stdout[-500:]}")
+        r = install(ROOT, proj, "--add", "pack-ev")
+        check(r.returncode == 2 and "ev-intelligence" in r.stdout, f"W-5: --add pack-ev → odmowa z adresem: {r.stdout[-300:]}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów aktualizacji instalatora")
