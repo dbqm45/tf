@@ -98,7 +98,10 @@ Wycofywanie odbywa się tak:
   [--base]`, agent `spec-reviewer`; etap `pr` zadania o wadze pełnej wymaga `pass` od `security-reviewer`
   i `spec-reviewer` dla bieżącego commita.
 - `tf work --once --budget <USD> [--key <KEY>] [--base <gałąź>] [--dry-run]` (`work.py`; klucze konfiguracji
-  `work.budget_usd`, `work.task_budget_usd`, `work.permission_mode` (`dontAsk` albo `plan`), `work.lock_hours`, `work.timeout_minutes`; blokada `.tf/locks/<KEY>.json`
+  `work.budget_usd`, `work.task_budget_usd`, `work.permission_mode` (`dontAsk` albo `plan`), `work.lock_hours`, `work.timeout_minutes`; agent z `--strict-mcp-config` i tylko z dozwolonymi
+  zmiennymi środowiskowymi (dodatkowe: zmienna `TF_WORK_ENV_ALLOW` człowieka, lista po przecinku); ostrzeżenie i pole
+  `root_changed` wpisu `event: end`, gdy w trakcie zmienią się pliki sterujące w kopii projektu; odmowa, gdy pliki sterujące agentem w worktree różnią się od kopii projektu, wpis
+  `event: refused` z polem `drift`; blokada `.tf/locks/<KEY>.json`
   z polami `pid`, `host`, `at`; worktree `.tf/worktrees/<KEY>` na gałęzi `story/<key>`; dziennik `.tf/logs/work.jsonl`
   z wpisami `event: start` (`key`, `started`, `budget_usd`, `worktree`; przed uruchomieniem agenta) i `event: end`
   (`key`, `started`, `ended`, `exit`, `stage`, `worktree`); kody wyjścia 0, 2, 3; zmienna

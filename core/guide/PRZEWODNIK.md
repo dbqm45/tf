@@ -122,9 +122,17 @@ równoległe przebiegi nie wezmą tego samego. Wynik to PR albo blok STOP w work
 wznowienie: `tf work --once --key <KLUCZ>`; wszystkie przebiegi jednego zadania razem nie przekroczą
 `work.task_budget_usd` (domyślnie 20 USD). `--dry-run` pokazuje zadanie i polecenie bez uruchamiania. Do worktree
 trafiają z instalacji tylko pliki fabryki (`.claude/`, `.tf/factory/`), konfiguracja i folder zadania — bez symlinków
-i bez plików spoza nich (np. `.env`). Hooki i reguły z `.claude/settings.json` gałęzi działają bez pytania, a agent
-dostaje Twoje zmienne środowiskowe: uruchamiaj `tf work` tylko w repozytorium, któremu ufasz, i przejrzyj
-`settings.json` przed pierwszym przebiegiem.
+i bez plików spoza nich (np. `.env`). Przed startem fabryka porównuje pliki, które sterują agentem
+(`.claude/settings.json` i skrypty, które wskazują jego polecenia, hooki, agenci, skille, `CLAUDE.md` — także
+w podkatalogach — `.mcp.json`, `.tf/factory/`, `.tf/config/`), z Twoją kopią projektu: gdy gałąź zadania ma którykolwiek inny (np. po cudzym pushu albo Twojej niezatwierdzonej zmianie),
+przebieg nie rusza i dostajesz listę plików. Agent nie ładuje żadnych serwerów MCP (`--strict-mcp-config`) i dostaje
+tylko zmienne środowiskowe systemu, proxy i uwierzytelniania Claude; token GitHuba czy chmury przekazujesz świadomie
+w swoim środowisku: `TF_WORK_ENV_ALLOW=GITHUB_TOKEN tf work --once …` (konfiguracja z repozytorium tej listy nie
+rozszerzy; bez tokenu pętla zatrzyma się przed wypchnięciem gałęzi z jasnym komunikatem). Gdy w trakcie przebiegu
+zmienią się pliki sterujące w Twojej kopii projektu, dostajesz ostrzeżenie z listą. Czego te blokady z natury nie
+obejmują: pętla uruchamia testy i skrypty budowania projektu z gałęzi zadania (to jest jej praca), a agent widzi pliki
+Twojego katalogu domowego. Pełna izolacja to uruchomienie `tf work` w kontenerze albo osobnej maszynie bez Twoich
+poświadczeń.
 
 ## 5. Koszty
 - **Profil zespołu:** `python3 .tf/factory/profile.py` pokazuje aktywny profil. Dostępne są:

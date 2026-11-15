@@ -8,8 +8,10 @@ wynikiem jest gałąź `story/<key>` z PR albo blok STOP w worktree zadania.
 Zadanie do wzięcia: tryb Auto, waga lekka albo zwykła, etap przed PR, nie czeka na człowieka, nie ma jeszcze worktree
 (wznowienie w istniejącym worktree tylko przez `--key`) i nie jest zajęte przez inny przebieg (`.tf/locks/<KEY>.json`).
 Kod wyjścia: 0 — przebieg zakończony, 2 — odmowa, 3 — nie ma zadania do wzięcia, inny — kod agenta.
-Agent: `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <tryb>`; zmienna
-`TF_WORK_AGENT` podmienia polecenie `claude` (testy). Dziennik: `.tf/logs/work.jsonl`.
+Agent: `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <tryb>
+--strict-mcp-config`, tylko z dozwolonymi zmiennymi środowiskowymi; przed startem pliki sterujące agentem w worktree
+muszą być takie jak w kopii człowieka. Zmienna `TF_WORK_AGENT` podmienia polecenie `claude` (testy). Dziennik:
+`.tf/logs/work.jsonl`.
 """
 from __future__ import annotations
 
@@ -45,6 +47,24 @@ DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "dontAsk"
 MODES = ("dontAsk", "plan")       # bez nadzoru nikt nie odpowie na pytanie o zgodę; szersze tryby są odrzucane
 COPY_PREFIXES = (".claude/", ".tf/factory/")   # z manifestu kopiowane są tylko pliki fabryki
 MAX_RUN_USD = 500
+# pliki, które sterują agentem (uprawnienia, hooki, instrukcje, serwery MCP): w worktree muszą być takie jak w kopii
+# człowieka — inaczej gałąź zadania (np. z cudzego pusha) wykonałaby bez pytania własny hook albo instrukcję
+CONTROL_FILES = (".claude/settings.json", ".claude/settings.local.json", ".mcp.json", "CLAUDE.md", "CLAUDE.local.md",
+                 "AGENTS.md", ".claude/CLAUDE.md", ".claude/rules", ".claude/output-styles", ".claude/hooks",
+                 ".claude/agents", ".claude/skills", ".claude/commands", ".tf/factory", ".tf/config")
+INSTRUCTION_NAMES = ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md")     # także zagnieżdżone w katalogach projektu
+# zmienne środowiskowe przekazywane agentowi: system, proxy i certyfikaty, uwierzytelnianie Claude; reszta (tokeny
+# GitHuba, chmury, bazy) tylko z listy człowieka w zmiennej TF_WORK_ENV_ALLOW
+ENV_ALLOW = {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LANGUAGE", "TERM", "TMPDIR", "TMP", "TEMP", "TZ",
+             "PWD", "PYTHONUTF8", "PYTHONIOENCODING", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy",
+             "http_proxy", "no_proxy", "ALL_PROXY", "all_proxy", "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS",
+             "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE", "GIT_SSL_CAINFO", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN",
+             "ANTHROPIC_BASE_URL", "CLAUDE_CONFIG_DIR", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME",
+             "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT", "APPDATA", "LOCALAPPDATA", "USERPROFILE",
+             "HOMEDRIVE", "HOMEPATH", "PROGRAMFILES", "PROGRAMDATA", "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE",
+             "TF_WORK_AGENT"}
+ENV_PREFIXES = ("LC_", "CLAUDE_CODE_", "ANTHROPIC_MODEL", "ANTHROPIC_DEFAULT_")   # bez TF_: Terraform trzyma tam sekrety
+ENV_EXTRA = "TF_WORK_ENV_ALLOW"   # dodatkowe zmienne (np. GITHUB_TOKEN) podaje człowiek w swoim środowisku, nie repozytorium
 CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
@@ -244,8 +264,10 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
         files = json.loads((root / MANIFEST).read_text(encoding="utf-8")).get("files") or {}
     except (OSError, ValueError, AttributeError):
         files = {}
-    rels = [MANIFEST.as_posix(), ".claude/settings.json", OWN_CONFIG.as_posix(), (CHANGES / key).as_posix(),
+    rels = [MANIFEST.as_posix(), *CONTROL_FILES, (CHANGES / key).as_posix(),
             *[r for r in files if isinstance(r, str) and r.startswith(COPY_PREFIXES) and ".." not in Path(r).parts]]
+    # brakujące w worktree pliki sterujące (niezatwierdzone albo poza gitem) pochodzą z kopii człowieka; pliki, które
+    # gałąź ma inne niż ta kopia, nie są nadpisywane — wykrywa je control_drift i przebieg jest odrzucany
     copied = sum(copy_missing(src, wt / rel, root, wt) for rel in dict.fromkeys(rels)
                  if (src := inside(root, rel)) and src.exists())
     return wt, f"{copied} plików fabryki i zadania skopiowanych do worktree" if copied else ""
@@ -253,7 +275,98 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
 
 def agent_command(key: str, budget: str, mode: str) -> list[str]:
     agent = shlex.split(os.environ.get("TF_WORK_AGENT") or "claude")
-    return [*agent, "-p", f"/tf {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode", mode]
+    return [*agent, "-p", f"/tf {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode", mode,
+            "--strict-mcp-config"]        # bez --mcp-config: żadnych serwerów MCP z repozytorium ani z konfiguracji
+
+
+def agent_env() -> dict:
+    """Środowisko agenta: zmienne z listy dozwolonych i te, które człowiek wymienił w `TF_WORK_ENV_ALLOW` swojego
+    środowiska (konfiguracja z repozytorium nie może tej listy rozszerzyć — przyszłaby z cudzym PR)."""
+    allow = set(ENV_ALLOW) | {x.strip() for x in (os.environ.get(ENV_EXTRA) or "").split(",") if x.strip()}
+    return {k: v for k, v in os.environ.items() if k in allow or k.startswith(ENV_PREFIXES)}
+
+
+def files_of(base: Path, rel: str) -> dict[str, str]:
+    """Pliki ścieżki sterującej (plik albo katalog) z ich skrótem; symlink dostaje znacznik, nie treść."""
+    import hashlib
+    top = base / rel
+    paths = [top] if top.is_file() or top.is_symlink() else (sorted(top.rglob("*")) if top.is_dir() else [])
+    out = {}
+    for f in paths:
+        if "__pycache__" in f.parts or f.suffix == ".pyc" or (f.is_dir() and not f.is_symlink()):
+            continue
+        name = f.relative_to(base).as_posix()
+        try:
+            out[name] = (f"symlink:{os.readlink(f)}" if f.is_symlink() else
+                         f"{hashlib.sha256(f.read_bytes()).hexdigest()}:{f.stat().st_mode & 0o111:o}")
+        except OSError:
+            out[name] = "nieczytelny"
+    return out
+
+
+def settings_paths(base: Path) -> set[str]:
+    """Pliki projektu, które wskazują polecenia w ustawieniach (hooki, statusLine, apiKeyHelper…): wykonuje je claude,
+    więc należą do plików sterujących. Bierze każdy napis z ustawień i każde jego słowo, które jest plikiem projektu."""
+    out: set[str] = set()
+
+    def strings(x):
+        if isinstance(x, str):
+            yield x
+        elif isinstance(x, dict):
+            for v in x.values():
+                yield from strings(v)
+        elif isinstance(x, list):
+            for v in x:
+                yield from strings(v)
+
+    for name in (".claude/settings.json", ".claude/settings.local.json"):
+        f = base / name
+        try:
+            if f.is_symlink() or not f.is_file() or f.stat().st_size > 1_000_000:
+                continue                   # symlink i plik nienaturalnej wielkości trafią do różnic przez files_of
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for text in strings(data):
+            try:
+                words = shlex.split(text)
+            except ValueError:
+                words = text.split()
+            for w in words:
+                w = re.sub(r"^\$\{?CLAUDE_PROJECT_DIR\}?/", "", w.strip("\"'"))
+                if w and not w.startswith(("-", "/")) and ".." not in Path(w).parts and (base / w).is_file():
+                    out.add(Path(w).as_posix())
+    return out
+
+
+def instruction_files(base: Path) -> set[str]:
+    """Zatwierdzone pliki instrukcji w całym projekcie (także zagnieżdżone `CLAUDE.md` modułów)."""
+    pats = [f":(glob)**/{n}" for n in INSTRUCTION_NAMES]
+    out: set[str] = set()
+    for extra in ([], ["-o", "--exclude-standard"]):          # zatwierdzone i nowe, niezignorowane
+        r = git(base, "ls-files", "-z", *extra, "--", *pats)
+        out |= {p for p in r.stdout.split("\0") if p} if r.returncode == 0 else set()
+    return out
+
+
+def control_set(root: Path, wt: Path) -> list[str]:
+    return sorted(set(CONTROL_FILES) | settings_paths(root) | settings_paths(wt) | instruction_files(root)
+                  | instruction_files(wt))
+
+
+def snapshot(base: Path, rels: list[str]) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for rel in rels:
+        out.update(files_of(base, rel))
+    return out
+
+
+def control_drift(root: Path, wt: Path) -> list[str]:
+    """Pliki sterujące agentem, które w worktree różnią się od kopii człowieka (brak po jednej stronie też)."""
+    diff = [f"{d} (symlink)" for d in (".claude", ".tf") if (wt / d).is_symlink()]
+    rels = control_set(root, wt)
+    mine, theirs = snapshot(root, rels), snapshot(wt, rels)
+    return diff + sorted(n for n in set(mine) | set(theirs) if mine.get(n) != theirs.get(n))
 
 
 def budget_text(value) -> str | None:
@@ -348,11 +461,22 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
                 return 2
             if info:
                 print(f"• {info}")
+            drift = control_drift(root, wt)
+            if drift:
+                shown = ", ".join(drift[:12]) + (f" i {len(drift) - 12} więcej" if len(drift) > 12 else "")
+                print(f"✗ {k}: pliki sterujące agentem w worktree różnią się od Twojej kopii projektu: {shown}. Bez "
+                      "nadzoru agent nie uruchomi cudzego hooka, instrukcji ani serwera MCP — przejrzyj różnice (git diff "
+                      f"w {wt.relative_to(root).as_posix()}), zatwierdź swoje zmiany albo usuń worktree i gałąź zadania")
+                write_log(root, {"key": k, "event": "refused", "started": started, "ended": now(), "exit": 2,
+                                 "drift": drift[:50]})
+                return 2
+            watched = control_set(root, wt)
+            before = snapshot(root, [*watched, ".git/hooks", ".git/config"])
             print(f"• {k}: pętla /tf w {wt.as_posix()}, limit {budget} USD")
             write_log(root, {"key": k, "event": "start", "started": started, "budget_usd": float(budget),
                              "worktree": wt.relative_to(root).as_posix()})   # przed agentem: przerwanie też się liczy
             try:
-                code = subprocess.run(agent_command(k, budget, mode), cwd=wt,
+                code = subprocess.run(agent_command(k, budget, mode), cwd=wt, env=agent_env(),
                                       timeout=float(cfg.get("timeout_minutes") or 180) * 60).returncode
             except FileNotFoundError:
                 print("✗ nie ma polecenia claude (Claude Code) w PATH")
@@ -361,8 +485,14 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
                 print(f"✗ {k}: przebieg przerwany po {cfg.get('timeout_minutes')} min")
                 code = 124
             after = load_task(wt, k) or {}
+            now_root = snapshot(root, [*sorted(set(watched) | instruction_files(root)), ".git/hooks", ".git/config"])
+            changed = sorted(n for n in set(before) | set(now_root) if before.get(n) != now_root.get(n))
+            if changed:
+                print(f"⚠ {k}: w trakcie przebiegu zmieniły się pliki sterujące w Twojej kopii projektu (poza worktree): "
+                      f"{', '.join(changed[:12])} — przejrzyj je przed kolejną sesją (git diff)")
             entry = {"key": k, "event": "end", "started": started, "ended": now(), "exit": code,
-                     "stage": after.get("stage"), "worktree": wt.relative_to(root).as_posix()}
+                     "stage": after.get("stage"), "worktree": wt.relative_to(root).as_posix(),
+                     **({"root_changed": changed[:50]} if changed else {})}
             write_log(root, entry)
             print(f"{'✓' if code == 0 else '✗'} {k}: kod {code}, etap {after.get('stage') or '?'} — wynik w "
                   f"{entry['worktree']} (tf status w worktree); scalenie zostaje dla człowieka")

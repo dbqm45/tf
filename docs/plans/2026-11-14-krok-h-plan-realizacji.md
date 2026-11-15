@@ -175,6 +175,16 @@ w osobnym worktree, z twardym limitem wydatku. Nie scala, nie wdraża; wynik to 
   po ponownym odczycie (wygrywa jeden proces); wpis startu z limitem w dzienniku przed agentem (przerwany przebieg też
   się liczy); zepsuta wartość `task_budget_usd` daje domyślne 20 USD; znaki sterujące z tytułu usuwane; `--base` zaczynające się od `-` odrzucane. Zostaje opisane
   w przewodniku: hooki z `.claude/settings.json` gałęzi i zmienne środowiskowe człowieka trafiają do agenta.
+- **Ryzyko usunięte (decyzja człowieka 2026-11-15: „fabryka musi być mocna i niezawodna”):** przed startem pliki
+  sterujące agentem w worktree (`.claude/settings*.json`, hooki, agenci, skille, komendy, `CLAUDE.md`, `AGENTS.md`,
+  `.mcp.json`, `.tf/factory/`, `.tf/config/`) muszą mieć ten sam skrót co w kopii człowieka — inaczej odmowa z listą;
+  brakujące są kopiowane z kopii człowieka. Agent bez serwerów MCP (`--strict-mcp-config`, sprawdzone w `claude
+  --help` 2.1.325) i z listą dozwolonych zmiennych środowiskowych (system, proxy, uwierzytelnianie Claude); inne tylko
+  przez `TF_WORK_ENV_ALLOW` w środowisku człowieka. Trzecia runda przeglądu: skrypty wskazywane przez polecenia
+  w ustawieniach i zagnieżdżone `CLAUDE.md`/`AGENTS.md` też porównywane; symlink porównywany z celem, plik z bitem
+  wykonywalności; `.claude` albo `.tf` jako symlink → odmowa; zmiana plików sterujących w kopii człowieka w trakcie
+  przebiegu → ostrzeżenie i `root_changed` w dzienniku. Granica, której skrypt nie zamknie: testy i budowanie projektu
+  z gałęzi oraz pliki w katalogu domowym — pełna izolacja to kontener albo osobna maszyna (opisane w przewodniku).
 - **`--dry-run`:** pokazuje wybrane zadanie, worktree i polecenie, niczego nie tworzy (bez kosztu).
 - **Wynik:** jedna linia i wpis `.tf/logs/work.jsonl` (`key`, `started`, `ended`, `exit`, `stage` zadania po
   przebiegu, koszt z raportu, gdy jest). Kod wyjścia: 0 — przebieg zakończony (PR albo STOP), 3 — nie ma zadania,

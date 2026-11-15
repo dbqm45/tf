@@ -445,3 +445,5 @@ work:
   permission_mode: dontAsk
   lock_hours: 6
   timeout_minutes: 180
+# Dodatkowe zmienne środowiskowe dla agenta (np. GITHUB_TOKEN) podajesz w swoim środowisku: TF_WORK_ENV_ALLOW=GITHUB_TOKEN
+# — celowo nie tutaj, bo ten plik przychodzi z repozytorium.
