@@ -52,20 +52,20 @@ Braki (brak pokrycia):
   zależności, pliki konfiguracji, nowe endpointy — z `git diff` i `code_graph.py`), część oceniana modelem. Warstwowy
   diff: kolejność czytania kontrakt → dane → logika → UI → testy, z osobnym werdyktem na warstwę. Sekcja trafia do
   opisu PR (sprawdzić zgodność z `pr_body` i testami `test_pr_body.py`).
-- [ ] **K3: code mode w `ai-agents` i `core-cost-control`** — agent pisze krótki program, który sam woła narzędzia
+- [ ] **K3: code mode w `ai-agents` i `core-cost-control`** (pomiar 2026-11-15, `docs/evals/2026-11-15-luki-k3-k7.md`: katalog = bez skilli 14/18; jedyna powtarzalna luka — rozdzielenie odczytu od zapisu i zatwierdzanie akcji zapisu w kodzie agenta, limit czasu i kosztu; zakres zawężony do 2–3 zdań w `ai-agents`, sprawdzonych scenariuszem `gap-k3-code-mode-crm`) — agent pisze krótki program, który sam woła narzędzia
   lub API i filtruje wyniki, zamiast wielu wywołań narzędzi z pełnym wynikiem w kontekście. Kiedy (duże wyniki,
   pętle po wielu elementach, łączenie danych z kilku narzędzi), kiedy nie (pojedyncze wywołanie, akcje wymagające
   zatwierdzenia każdej z osobna); wymagania: piaskownica, limit czasu i budżetu, zwracany tylko wynik końcowy;
   związek z MCP (narzędzia serwera jako API w kodzie). Wzorce i nazewnictwo dostawców sprawdzić z datą
   [niezweryfikowane].
-- [ ] **K4: syntetyczni użytkownicy, nagrania i analiza zachowań (`ux-research-methods`, `tool-playwright`)** —
+- [x] **K4: syntetyczni użytkownicy, nagrania i analiza zachowań (`ux-research-methods`, `tool-playwright`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 17/18 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) —
   persony z `pack-ux` jako agenci przechodzący przepływ w przeglądarce (Playwright) z celem i ograniczeniami persony;
   nagrania i ślady (trace, wideo, zrzuty) jako materiał do notatek wizualnych; analiza: gdzie agent utknął, wrócił,
   zgadywał. Granica: wynik syntetyczny to hipoteza do sprawdzenia na ludziach, nie zastępuje badań z użytkownikami.
   Scenariusz ewaluacji: formularz z mylącym polem, które syntetyczny użytkownik powinien wskazać.
 
 Pokryte częściowo:
-- [ ] **K5: mechanika modelu jako referencja `ai-prompt-engineering/references/mechanika-modelu.md`** — dziś są
+- [x] **K5: mechanika modelu jako referencja `ai-prompt-engineering/references/mechanika-modelu.md`** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 16/18 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`; „J-space” nadal bez źródła) — dziś są
   tylko praktyczne konsekwencje rozproszone w `core-grounding`, `ai-prompt-engineering` i `core-cost-control`.
   Treść: tokenizacja (koszt, liczby, tekst polski zużywa więcej tokenów — zmierzyć), przewidywanie kolejnego tokenu
   i skąd biorą się konfabulacje, uwaga i pozycja instrukcji w długim kontekście („lost in the middle”), data
@@ -73,13 +73,13 @@ Pokryte częściowo:
   i skojarzenia jako mechanizm sterowania kontekstem (przestrzeń ukryta). Każda sekcja kończy się konsekwencją dla
   promptu, skilla lub agenta. Termin „J-space” z agendy — ustalić źródło i definicję przed wpisaniem
   [niezweryfikowane].
-- [ ] **K6: A2A w praktyce (`ai-agents`)** — mapa protokołów jest (`references/protokoly-i-tracing.md` §1–2), brak
+- [x] **K6: A2A w praktyce (`ai-agents`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 22/22 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) — mapa protokołów jest (`references/protokoly-i-tracing.md` §1–2), brak
   procedury: wystawienie agenta przez A2A (Agent Card zgodna z tym, co agent naprawdę robi; uwierzytelnianie
   i autoryzacja), odkrywanie i wybór współpracownika po karcie, kontrakt przekazania (zakres, kontekst, właściciel,
   widoczność postępu, format wyniku, raport porażki — spiąć z `core-async-delegation`), testy interoperacyjności.
   Rozważyć deterministyczny walidator karty (schemat, deklarowane umiejętności a testy). Wersję A2A sprawdzić
   w repozytorium specyfikacji z datą.
-- [ ] **K7: skill `pm-release-learning` — pętla po wydaniu** — są elementy (`control_band.py`, `metric_watch.py`
+- [x] **K7: skill `pm-release-learning` — pętla po wydaniu** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 20/24 z katalogiem i bez skilli, braki rozproszone, `docs/evals/2026-11-15-luki-k3-k7.md`) — są elementy (`control_band.py`, `metric_watch.py`
   w `mode-pdi`, `pm-product-analytics`, `ops-sre-incidents`, `core-agent-retro`), brak procedury, która je łączy.
   Treść: sygnały (analityka, logi, incydenty, zgłoszenia wsparcia, język klienta, obserwowane zachowanie); zamierzony
   a faktyczny wynik (metryki z `intent.md`), tarcie, obejścia, regresje, skutki uboczne; synteza: grupowanie
