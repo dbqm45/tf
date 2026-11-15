@@ -44,7 +44,7 @@ Braki (brak pokrycia):
   (model rozjeżdża się z kodem, zbyt mała przestrzeń stanów daje fałszywe „OK”). Scenariusze ewaluacji: wyścig przy
   rezerwacji ostatniego miejsca, idempotentna płatność z ponowieniem, maszyna stanów sesji (np. OCPP z `pack-ev`).
   Odnośniki z `eng-testing`, `qa-spec-first-testing`, `arch-quality-attributes`, `ddd-tactical-design`.
-- [ ] **K2: system diff i warstwowy przegląd w `qa-change-review`** — przegląd mówi dziś, czy kod zgadza się
+- [x] **K2: system diff i warstwowy przegląd w `qa-change-review`** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona — haiku i sonnet bez skilla wypisują zmiany systemowe 8/8 na małym diffie i 4/4 na 609-liniowym PR z szumem, 1,96 USD: `docs/evals/2026-11-15-k2-diff-systemu-luka.md`; wrócić przy prawdziwym przeoczeniu w przeglądzie albo PR większym niż kontekst) — przegląd mówi dziś, czy kod zgadza się
   z planem, ale nie, co zmiana zmienia w systemie. Raport „diff systemu” w stałych sekcjach: zachowanie (kryteria
   `AC-n` nowe, zmienione, usunięte), UX (ekrany, teksty, przepływy), dane (migracje, schematy, retencja), architektura
   (nowe zależności, moduły, granice), złożoność (przyrost kodu, nowe punkty konfiguracji), operacje (zmienne
