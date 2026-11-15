@@ -4,7 +4,7 @@ description: Użyj, gdy testy mają sprawdzać wymaganie, nie implementację —
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj przy każdym pisaniu testów — jak sprawić, by test sprawdzał WYMAGANIE, a nie powielał implementację (wyrocznia niezależna od kodu, TDD/ATDD, clean-room, protokół rozbieżności, testy charakteryzujące, mutacyjne i oparte na właściwościach). Nie do technik wyboru przypadków (qa-test-design), weryfikacji formalnej (qa-formal-methods) ani składni narzędzi (tool-*)."
-  slowa: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu"
+  slowa: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu, zgłoszony błąd, testy do poprawki błędu, przykład ze zgłoszenia, próg nie działa, dokładnie na progu, jakie przypadki dodać do poprawki"
 ---
 
 # Testy od specyfikacji, nie od implementacji
