@@ -98,6 +98,9 @@ def main() -> int:
         task(p, "", "start", "IMP-2", "--title", "Eksport CSV", "--mode", "auto")
         task(p, "", "start", "IMP-3", "--title", "Płatności", "--weight", "pelna", "--mode", "auto")
         task(p, "", "start", "IMP-4", "--title", "Sortowanie", "--mode", "auto")
+        run2 = p / ".tf" / "runs" / "IMP-2"                       # katalog przebiegu z run_report.py start (ignorowany)
+        run2.mkdir(parents=True)
+        (run2 / "run.json").write_text(json.dumps({"key": "IMP-2", "stage": "intake"}), encoding="utf-8")
 
         # bez limitu wydatku: odmowa, nic nie powstaje
         r = work(p, "--once")
@@ -119,12 +122,13 @@ def main() -> int:
         argv = calls[0]["argv"] if calls else []
         check("-p" in argv and "/tf IMP-2 --auto --budget 3" in argv and "--max-budget-usd" in argv
               and argv[argv.index("--max-budget-usd") + 1] == "3" and "--permission-mode" in argv
-              and argv[argv.index("--permission-mode") + 1] == "dontAsk",
-              f"WO-4: polecenie agenta z /tf --auto, limitem wydatku i trybem dontAsk: {argv}")
+              and argv[argv.index("--permission-mode") + 1] == "acceptEdits",
+              f"WO-4: polecenie agenta z /tf --auto, limitem wydatku i trybem acceptEdits (pilotaż 2026-11-15: w dontAsk "
+              f"agent nie zapisze pliku, bo ustawienia fabryki nie dopuszczają Edit/Write): {argv}")
         branch = git(wt, "branch", "--show-current").stdout.strip() if wt.is_dir() else ""
         check(branch == "story/imp-2" and (wt / ".tf" / "factory" / "marker.py").is_file()
               and (wt / ".claude" / "skills" / "tf" / "SKILL.md").is_file()
-              and (wt / CHANGES / "IMP-2" / "task.json").is_file(),
+              and (wt / CHANGES / "IMP-2" / "task.json").is_file() and (wt / ".tf" / "runs" / "IMP-2" / "run.json").is_file(),
               f"WO-5: worktree na gałęzi story/imp-2 z plikami fabryki z manifestu i folderem zadania: {branch}")
         entries = log(p)
         check(len(entries) == 2 and entries[0].get("event") == "start" and entries[0].get("budget_usd") == 3
@@ -322,6 +326,20 @@ def main() -> int:
         r = work(g, "--once", "--budget", "2", "--key", "IMP-16", TF_FAKE_TOUCH=str(g / ".git" / "hooks" / "pre-commit"))
         check(r.returncode == 0 and ".git/hooks/pre-commit" in r.stdout,
               f"WO-33: zmiana hooka gita w trakcie przebiegu → ostrzeżenie: {r.stdout}")
+
+        # polecenie bramki jakości (verify.sh z tf onboard, poza gitem przy instalacji prywatnej) trafia do worktree
+        v = project(base, "verify")
+        (v / "verify.sh").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (v / "verify.sh").chmod(0o755)
+        (v / ".git" / "info" / "exclude").write_text(".tf/\n.claude/\nverify.sh\n", encoding="utf-8")
+        (v / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "set -a; . .env; ./verify.sh"}), encoding="utf-8")
+        (v / ".env").write_text("TOKEN=x\n", encoding="utf-8")
+        task(v, "", "start", "IMP-17", "--title", "Zadanie", "--mode", "auto")
+        r = work(v, "--once", "--budget", "2")
+        wv = v / ".tf" / "worktrees" / "IMP-17"
+        check(r.returncode == 0 and (wv / "verify.sh").is_file() and os.access(wv / "verify.sh", os.X_OK)
+              and not (wv / ".env").exists(),
+              f"WO-34: verify.sh z polecenia bramki jakości skopiowany do worktree (z bitem wykonywalności): {r.returncode} {r.stdout}")
 
     # tf work w launcherze i w opisie poleceń
     tf = (ROOT / ".tf" / "factory" / "tf.py").read_text(encoding="utf-8")
