@@ -3,6 +3,13 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.14.0] — 2026-11-15
+### Added
+- **pack-it:** skill qa-formal-methods i plan luk K1–K10 (#260)
+- **core:** flag stale entries in agent instruction files (#258)
+### Fixed
+- **core:** tick a slice only after a recorded scope review (#259)
+
 ## [10.13.0] — 2026-11-14
 ### Added
 - **core:** check model names, fingerprint usage logs, show noise band (#257)
