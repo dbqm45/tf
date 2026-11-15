@@ -1,6 +1,6 @@
 ---
 name: fw-spring-boot
-description: Użyj przy aplikacji Spring Boot — struktura modułów, warstwa web i danych, konfiguracja, bezpieczeństwo, obserwowalność, testy (JUnit, slice testy, Testcontainers).
+description: Użyj przy aplikacji Spring Boot — moduły, web i dane, konfiguracja, bezpieczeństwo, obserwowalność, testy (Testcontainers).
 metadata:
   katalog: "Użyj przy aplikacji Spring Boot — struktura modułów, warstwa web i danych, konfiguracja, bezpieczeństwo, obserwowalność, testy (JUnit, slice testy, Testcontainers). Nie do składni i idiomów Javy (lang-java), modelowania domeny (ddd-*), ogólnego projektu API (be-api-design) ani baz danych niezależnie od frameworka (be-database)."
   przeglad: "2027-01-20"

@@ -1,6 +1,6 @@
 ---
 name: eng-design-patterns
-description: Użyj przy projekcie i review, gdy kusi wzorzec GoF — diagnoza symptom → wzorzec, kiedy nie, lżejsze formy w TS.
+description: Użyj, gdy w projekcie lub review kusi wzorzec GoF — diagnoza symptom → wzorzec, kiedy nie, lżejsze formy.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj, gdy projektujesz lub refaktoryzujesz kod i rozważasz wzorzec GoF albo oceniasz jego użycie w review — diagnoza „symptom → wzorzec”, kiedy NIE używać, klasyfikacja, 22 wzorce (fabryki, budowniczy, adapter, dekorator, pełnomocnik, obserwator, stan, strategia, odwiedzający…) z lżejszymi formami w TS. Nie do zasad SOLID/KISS (eng-design-principles) ani building blocks DDD (ddd-tactical-design)."

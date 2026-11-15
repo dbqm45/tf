@@ -16,6 +16,16 @@ Run it from the project directory — the project is the current directory, the 
   python3 "$TEAM_FACTORY/core/factory/install.py" --gitignore         # private, but entries go to .gitignore, not .git/info/exclude
   python3 "$TEAM_FACTORY/core/factory/install.py" --python py         # force the Python command for hooks (default: detected)
   python3 "$TEAM_FACTORY/core/factory/install.py" --yes               # no questions: defaults or the previous choice
+  python3 "$TEAM_FACTORY/core/factory/install.py" --pack-dir ~/src/ev-intelligence/factory-pack --add pack-ev
+                                                                      # a pack from outside the factory's packs/
+
+External packs: `--pack-dir <source>` (comma-separated or repeated) adds a pack source outside the factory's `packs/`:
+a directory with `pack.yaml`, a directory whose subdirectories hold packs (`*/pack.yaml`), or a git repository URL
+(`https://…`, `file://…`, `…/repo.git`; `#<ref>` pins a tag or branch, without it the latest `vX.Y.Z` tag, else the
+default branch) searched the same way. The same contract applies as to `packs/`: `kind` and id prefix, `requires.core`
+(checked by `.tf/factory/build.py check`), the skill gate. Their skills pass `skill_audit.py` first (high severity
+stops the install). The sources are remembered in the manifest (and the team lock), so updates fetch the packs again;
+`--drop-pack-dir <source>` forgets one (remove its packs with `--remove`). A pack id taken by the factory is refused.
 
 The core is always installed. Packs (`packs/pack-*`) are chosen interactively on the first install (or with
 `--packs`); later runs keep the previous choice. Modes (`modes/mode-*`, e.g. `mode-team`) are on-demand ways of
@@ -145,8 +155,9 @@ def load_packs_module():
     return mod
 
 
-def available_packs() -> dict[str, dict]:
-    """Nakładki z packs/ i tryby z modes/ (ten sam pack.yaml); kind i prefiks id muszą pasować do katalogu."""
+def available_packs(external: dict[str, Path] | None = None) -> dict[str, dict]:
+    """Nakładki z packs/ i tryby z modes/ (ten sam pack.yaml); kind i prefiks id muszą pasować do katalogu.
+    `external`: źródło → katalog nakładek spoza fabryki (--pack-dir); te same reguły, id nie może być zajęte."""
     pm = load_packs_module()
     out = {}
     for root, kind, prefix in ITEM_DIRS:
@@ -157,7 +168,86 @@ def available_packs() -> dict[str, dict]:
             if data.get("kind", "pack") != kind or not pid.startswith(prefix):
                 raise ValueError(f"{pid} in {root.name}/ needs `kind: {kind}` and an id starting with {prefix}")
             out[pid] = data
+    prefixes = {kind: prefix for _, kind, prefix in ITEM_DIRS}
+    for src, base in (external or {}).items():
+        files = pack_yaml_files(base)
+        if not files:
+            raise ValueError(f"no pack.yaml in the pack source {src} (expected pack.yaml or */pack.yaml)")
+        for p in files:
+            data = pm.load_yaml(p)
+            data["_dir"], data["_external"] = p.parent, src
+            pid = data.get("id") or p.parent.name
+            kind = data.get("kind", "pack")
+            if kind not in prefixes or not str(pid).startswith(prefixes[kind]):
+                raise ValueError(f"{pid} in the pack source {src} needs `kind: pack` and an id starting with pack- "
+                                 "(or `kind: mode` and mode-)")
+            if pid in out:
+                where = out[pid].get("_external") or "the factory"
+                raise ValueError(f"{pid} from the pack source {src}: the id is already used by {where} — rename the pack")
+            out[pid] = data
     return out
+
+
+def pack_yaml_files(base: Path) -> list[Path]:
+    """Nakładka w katalogu (pack.yaml) albo katalog nakładek (*/pack.yaml)."""
+    return [base / "pack.yaml"] if (base / "pack.yaml").is_file() else sorted(base.glob("*/pack.yaml"))
+
+
+def is_git(src: str) -> bool:
+    return src.startswith(("https://", "http://", "git@", "ssh://", "file://")) or src.split("#")[0].endswith(".git")
+
+
+def normalize_source(src: str) -> str:
+    """Ścieżka lokalna → bezwzględna (od bieżącego katalogu); adres git bez zmian."""
+    return src if is_git(src) else str(Path(src).expanduser().resolve())
+
+
+def _vt(tag: str) -> tuple[int, ...]:
+    return tuple(int(x) for x in tag[1:].split("."))
+
+
+def latest_release_tag(url: str) -> str | None:
+    """Najwyższy tag `vX.Y.Z` repozytorium (git ls-remote); None, gdy brak tagów lub błąd."""
+    try:
+        r = subprocess.run(["git", "ls-remote", "--tags", "--refs", url], capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    tags = re.findall(r"refs/tags/(v\d+\.\d+\.\d+)$", r.stdout, re.M) if r.returncode == 0 else []
+    return max(tags, key=_vt) if tags else None
+
+
+def fetch_pack_source(src: str, tmp: Path) -> tuple[Path | None, str]:
+    """Katalog źródła nakładek (repozytorium git klonowane do `tmp`). Zwraca (katalog albo None, opis problemu)."""
+    if not is_git(src):
+        p = Path(src)
+        return (p, "") if p.is_dir() else (None, "directory not found")
+    url, _, ref = src.partition("#")
+    ref = ref or latest_release_tag(url) or ""
+    dest = tmp / f"src{len(list(tmp.iterdir()))}"
+    cmd = ["git", "clone", "--depth", "1", "--quiet"] + (["--branch", ref] if ref else []) + [url, str(dest)]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    except (OSError, subprocess.SubprocessError) as e:
+        return None, str(e)
+    return (dest, "") if r.returncode == 0 else (None, r.stderr.strip()[-400:])
+
+
+def audit_external(packs: list[str], available: dict) -> tuple[int, list[str]]:
+    """skill_audit.py (z tej wersji fabryki) na skillach nakładek zewnętrznych: (liczba wysokich, wiersze)."""
+    spec = importlib.util.spec_from_file_location("tf_skill_audit_src", CORE / "factory" / "skill_audit.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    high, lines = 0, []
+    for pid in packs:
+        if not available[pid].get("_external") or not (available[pid]["_dir"] / "skills").is_dir():
+            continue
+        for d in mod.find_skills(available[pid]["_dir"] / "skills"):
+            for f in mod.audit_skill(d)["findings"]:
+                if f["severity"] in ("high", "medium"):
+                    high += f["severity"] == "high"
+                    lines.append(f"  {'✗' if f['severity'] == 'high' else '⚠'} {pid}/{d.name}: {f['code']} — "
+                                 f"{f['file']}:{f['line']} {f['message']}")
+    return high, lines
 
 
 def offered_before(manifest: dict | None, available: dict) -> set[str] | None:
@@ -573,7 +663,8 @@ def save_manifest(dst_root: Path, manifest: dict, shared: bool, language: str, c
     (dst_root / MANIFEST).write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if shared:
         lock = {"version": manifest["version"], "packs": list(manifest["packs"]), "language": language,
-                "commit_language": commit_language, "offered": manifest["offered"], "files": manifest["files"]}
+                "commit_language": commit_language, "offered": manifest["offered"],
+                **({"pack_dirs": manifest["pack_dirs"]} if manifest.get("pack_dirs") else {}), "files": manifest["files"]}
         (dst_root / LOCK).write_text(json.dumps(lock, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
@@ -615,6 +706,8 @@ def parse_args(argv: list[str]) -> tuple[list[str], dict]:
     for a in it:
         if a in ("--source", "--python", "--packs", "--add", "--remove", "--language", "--commit-language"):
             opts[a.lstrip("-")] = next(it, "")
+        elif a in ("--pack-dir", "--drop-pack-dir"):          # można podać kilka razy
+            opts.setdefault(a.lstrip("-"), []).extend(split_ids(next(it, "")))
         elif a.startswith("--") or a == "-h":
             opts[a] = True
         else:
@@ -627,6 +720,12 @@ def split_ids(raw: str | None) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="tf-packs-") as tmp:   # klony źródeł nakładek zewnętrznych
+        return _main(argv, Path(tmp))
+
+
+def _main(argv: list[str], tmp: Path) -> int:
     args, opts = parse_args(argv)
     if opts.get("--help") or opts.get("-h"):
         print(__doc__)
@@ -652,7 +751,8 @@ def main(argv: list[str]) -> int:
     if manifest is None and lock:          # klon instalacji zespołowej: baza aktualizacji z locka
         print(f"ℹ No local manifest — using {LOCK} (version {lock.get('version')}) as the update base.")
         manifest = {"version": lock.get("version"), "mode": "shared", "packs": {p: "0.0.0" for p in lock.get("packs") or []},
-                    "offered": lock.get("offered") or [], "files": lock.get("files") or {}}
+                    "offered": lock.get("offered") or [], "pack_dirs": lock.get("pack_dirs") or [],
+                    "files": lock.get("files") or {}}
     if manifest and not update:
         print(f"ℹ The factory is already installed (version {manifest.get('version')}) — updating.")
         update = True
@@ -667,11 +767,27 @@ def main(argv: list[str]) -> int:
     # nakładki i języki
     cfg = core_config()
     pm = load_packs_module()
+    # źródła nakładek zewnętrznych: zapamiętane + --pack-dir − --drop-pack-dir
+    dropped = {normalize_source(s) for s in opts.get("drop-pack-dir") or []}
+    given = [normalize_source(s) for s in opts.get("pack-dir") or []]
+    pack_dirs = [s for s in dict.fromkeys([*((manifest or {}).get("pack_dirs") or []), *given]) if s not in dropped]
+    external, missing = {}, {}
+    for s in pack_dirs:
+        d, why = fetch_pack_source(s, tmp)
+        if d is None:
+            missing[s] = why
+        else:
+            external[s] = d
+    for s in given:
+        if s in missing:
+            print(f"✗ Pack source not found: {s} ({missing[s]})")
+            return 2
     try:
-        available = available_packs()
+        available = available_packs(external)
     except ValueError as e:
-        print(f"✗ Factory source: {e}")
+        print(f"✗ Pack source: {e}")
         return 2
+    old_sources = (manifest or {}).get("pack_sources") or {}
     settings = pm.load_settings(dst_root, cfg)
     had_settings = (dst_root / pm.SETTINGS_REL).exists()
     language = opts.get("language") or (None if had_settings else (lock or {}).get("language")) or settings["language"]
@@ -714,9 +830,33 @@ def main(argv: list[str]) -> int:
         print("✗ " + "; ".join(f"{c} was retired — {RETIRED_PACKS[c]}" for c in retired))
         return 2
     packs, unknown = resolve_packs(list(dict.fromkeys(chosen)), available, language, cfg)
+    lost = [u for u in unknown if old_sources.get(u) in missing]
+    if lost:
+        for u in lost:
+            print(f"✗ {u} comes from an external pack source that was not found: {old_sources[u]} "
+                  f"({missing[old_sources[u]]}).")
+        print("  Give its new location: --pack-dir <directory|git URL>, or drop the pack: "
+              f"--remove {','.join(lost)} --drop-pack-dir <old source>. Nothing was changed.")
+        return 2
+    for s in missing:
+        print(f"ℹ Pack source {s} not found ({missing[s]}) — forgotten (none of the chosen packs comes from it).")
+    pack_dirs = [s for s in pack_dirs if s not in missing]
     if unknown:
         print(f"✗ Unknown packs: {', '.join(unknown)}. Available: {', '.join(available) or '—'}")
         return 2
+    high, findings = audit_external(packs, available)
+    if findings:
+        print(f"Skill audit of external packs ({len(findings)} findings, high severity: {high}):")
+        print("\n".join(findings[:30]) + ("\n  …" if len(findings) > 30 else ""))
+    if high:
+        print("✗ External pack skills have high-severity audit findings — nothing installed. Read the skills "
+              "(.tf/factory/skill_audit.py <dir>) and fix the pack, or drop it.")
+        return 2
+    if shared:
+        for s in pack_dirs:
+            if not is_git(s):
+                print(f"⚠ Team mode: the pack source {s} is a local path — teammates and CI need the same path. "
+                      "A git URL works everywhere.")
     if legacy is not None:
         print(f"ℹ Migrating an install of {manifest.get('source') or 'an older factory'} "
               f"(version {manifest.get('version')}) — packs: {', '.join(packs) or 'none'}.")
@@ -805,6 +945,9 @@ def main(argv: list[str]) -> int:
             "python": py,
             "ignore": "gitignore" if force_gitignore else "exclude",
             "packs": {pid: str(available[pid].get("version", "0.0.0")) for pid in packs},
+            **({"pack_dirs": pack_dirs} if pack_dirs else {}),     # źródła nakładek spoza fabryki (--pack-dir)
+            **({"pack_sources": {pid: available[pid]["_external"] for pid in packs if available[pid].get("_external")}}
+               if any(available[pid].get("_external") for pid in packs) else {}),
             "offered": sorted(set(available) | (offered or set())),   # nowe domyślne dochodzą tylko raz
             "installed_at": _dt.datetime.now().isoformat(timespec="seconds"),
             "files": dict(sorted(plan.files.items())),

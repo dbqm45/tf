@@ -1,6 +1,6 @@
 ---
 name: fe-web-platform
-description: Użyj przy API przeglądarki i dostępności — fetch, DOM, event loop, Core Web Vitals, storage, service workers, XSS, WCAG.
+description: Użyj przy API przeglądarki i dostępności — fetch, DOM, event loop, Core Web Vitals, service workers, WCAG.
 metadata:
   przeglad: "2027-10-20"
   slowa: "wspierane przeglądarki, które przeglądarki wspieramy, polityka wsparcia przeglądarek, zgodność przeglądarek, browserslist, Baseline, Widely available, Newly available, caniuse, eslint-plugin-compat, use-baseline, polyfill, wykrywanie funkcji, feature detection, @supports, progressive enhancement, macierz przeglądarek, Safari, iPhone, iOS, WebKit, Firefox, cross-browser, nie działa w Safari, wyszukiwarka na żywo, wyniki starszego zapytania, wyścig odpowiedzi, AbortController, czysty fetch, response.ok"

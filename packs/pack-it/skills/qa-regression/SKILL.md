@@ -1,6 +1,6 @@
 ---
 name: qa-regression
-description: Użyj przy regresji — zestawy (smoke, PR, nocne), testy dotknięte zmianą, flaky i kwarantanna, dane testowe, metryki.
+description: Użyj przy regresji — zestawy (smoke, PR, nocne), testy dotknięte zmianą, flaky i kwarantanna, dane testowe.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy budowie i utrzymaniu regresji — warstwy zestawów testów (smoke, PR, nocne, przed wydaniem), wybór testów dotkniętych zmianą, niestabilne testy (flaky) i kwarantanna, dane testowe, regresja wizualna i kontraktowa, metryki jakości testów. Nie do projektowania pojedynczych przypadków (qa-test-design)."

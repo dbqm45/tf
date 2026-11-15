@@ -1,6 +1,6 @@
 ---
 name: ddd-discovery-intake
-description: Użyj przy surowych materiałach (wywiady, notatki, tablice ES) — obszary biznesowe z dowodami, cytaty, sprzeczności.
+description: Użyj przy surowych materiałach (wywiady, notatki, tablice ES) — obszary biznesowe z dowodami, sprzeczności.
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj, gdy z surowych materiałów (wywiady, notatki, zdjęcia tablic Event Stormingu, dokumenty) trzeba wyprowadzić obszary biznesowe OPARTE NA DOWODACH — ocena „czy warto”, bank cytatów, progi dowodowe, wykrywanie sprzeczności, pytania strategiczne, zamrożenie obszarów. Nie do prowadzenia warsztatu (ddd-event-storming) ani granic kontekstów (ddd-strategic-analysis)."

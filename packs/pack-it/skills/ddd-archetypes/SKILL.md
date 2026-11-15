@@ -1,7 +1,7 @@
 ---
 name: ddd-archetypes
 argument-hint: "[archetyp] [wymagania]"
-description: Użyj przy archetypach biznesowych — strony, rezerwacje, pieniądze, produkt, księgowanie, cennik, adresy, umowy, dokumenty, zasoby, produkcja.
+description: Użyj przy archetypach biznesowych — strony, rezerwacje, pieniądze, produkt, księgowanie, cennik, umowy, zasoby.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj, gdy modelujesz, mapujesz wymagania na archetyp lub analizujesz (także istniejący kod) obszar ze sprawdzonym wzorcem biznesowym — strony i relacje, dostępność i rezerwacje, ilości i pieniądze, produkt, księgowanie, cennik, konfigurator, kolejka oczekujących, przydział zasobów, planowanie etapów, lokalizacje i adresy, zasoby i usługi, procedury i czynności, umowy i zamówienia, dokumenty i retencja, produkcja i identyfikowalność partii. Nie do domen czysto technicznych ani nowatorskich bez wzorca ani dokumentacji w repozytorium (docs-tech-writing)."

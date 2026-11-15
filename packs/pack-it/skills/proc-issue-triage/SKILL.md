@@ -1,6 +1,6 @@
 ---
 name: proc-issue-triage
-description: Użyj przy przeglądzie zgłoszeń i zewnętrznych PR — kategorie i stany, odtworzenie błędu, odrzucone pomysły, brief.
+description: Użyj przy przeglądzie zgłoszeń i zewnętrznych PR — kategorie i stany, odtworzenie błędu, brief.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy przeglądzie zgłoszeń i zewnętrznych PR, których zespół sam nie napisał — kategorie i stany, weryfikacja (odtworzenie błędu, uruchomienie testów PR), szukanie istniejącej funkcji, baza odrzuconych pomysłów .out-of-scope/, trwały brief dla agenta. Nie do planowania własnej pracy (proc-agile) ani diagnozy przyczyny błędu."

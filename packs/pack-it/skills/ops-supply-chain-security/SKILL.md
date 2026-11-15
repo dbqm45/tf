@@ -1,6 +1,6 @@
 ---
 name: ops-supply-chain-security
-description: Użyj przy zależnościach i łańcuchu dostaw — lockfile, karencja wersji, skrypty instalacyjne, SBOM, przejęte paczki.
+description: Użyj przy łańcuchu dostaw zależności — lockfile, karencja wersji, skrypty instalacyjne, SBOM, przejęte paczki.
 metadata:
   przeglad: "2027-04-10"
   katalog: "Użyj przy dodawaniu i aktualizacji zależności, przeglądzie lockfile, konfiguracji menedżera pakietów, publikacji paczek i pytaniu „czy dotknęła nas skompromitowana paczka” — lockfile i npm ci, karencja nowych wersji, skrypty instalacyjne, provenance, tokeny publikacji, SBOM, szybka ścieżka łatek, procedura po incydencie. Nie do samego pipeline'u (ops-ci-cd) ani auth aplikacji (be-auth-security)."
