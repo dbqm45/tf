@@ -124,6 +124,11 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
   i silnik nie odwołują się do nieznanego albo starszego modelu. Bieżące modele są w `models_current`, dozwolone
   starsze w `models_legacy`, data sprawdzenia w `models_checked` (konfiguracja silnika; własne przypięcia modeli
   w `.tf/config/config.yaml`). Data starsza niż 90 dni to przypomnienie, żeby sprawdzić nazwy i cennik.
+- **Po aktualizacji fabryki:** `python3 .tf/factory/metrics.py --after-update` (także w `tf doctor` i w raporcie
+  `tf metrics`) porównuje okno po ostatniej aktualizacji z oknem tej samej długości przed nią: odsetek cofniętych
+  zmian, blokady hooków (`.tf/logs/hook-blocks.jsonl` — czas, hook i decyzja, bez treści) i błędy hooków. Przy
+  wyraźnym pogorszeniu podaje polecenie powrotu do poprzedniej wersji (`python3 .tf/factory/update.py --rollback`).
+  Fabryka sama się nie cofa: przy niewielu zmianach ten wskaźnik bywa przypadkowy, więc decyzja należy do Ciebie.
 - **Skuteczność fabryki:** `tf metrics [--weeks 4] [--revert-days 7] [--no-gh]` → `.tf/reports/metrics.md`
   i `metrics.json`: odsetek cofniętych zmian, zmiany przyjęte i oczekujące, koszt na przyjętą zmianę, mediana czasu
   PR (z `gh`, chyba że `--no-gh`) i przyczyny poprawek. Przyczynę poprawki fabryka dopisuje sama w commicie

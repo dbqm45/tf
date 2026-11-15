@@ -362,6 +362,12 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
                            errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if m.stdout.strip():
             print(m.stdout.strip())
+    health = Path(".tf") / "factory" / "metrics.py"
+    if health.is_file():   # pogorszenie po aktualizacji fabryki (krok H29, D13) — tylko ostrzeżenie, kod bez zmian
+        u = subprocess.run([sys.executable, str(health), "--after-update"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if u.stdout.startswith("⚠"):
+            print(u.stdout.strip())
     lint = Path(".claude") / "skills" / "core-agent-instructions" / "scripts" / "instructions_lint.py"
     if lint.is_file():   # karta plików instrukcji projektu (krok H21) — informacja, nie zmienia wyniku doctora
         print(instructions_summary(lint))

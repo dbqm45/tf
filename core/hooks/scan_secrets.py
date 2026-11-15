@@ -8,6 +8,13 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
+except ImportError:  # starsza instalacja bez dziennika blokad — hook działa jak dotąd
+    def record_block(hook: str, decision: str) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -55,6 +62,7 @@ def main() -> None:
         print("[scan_secrets] W zapisanym pliku wykryto prawdopodobne sekrety:\n" + "\n".join(findings[:10]) +
               "\nUsuń je i odczytuj wartość ze zmiennej środowiskowej. Jeśli to prawdziwy sekret, "
               "poinformuj użytkownika, że należy go zrotować.", file=sys.stderr)
+        record_block("scan_secrets", "deny")
         sys.exit(2)
     sys.exit(0)
 

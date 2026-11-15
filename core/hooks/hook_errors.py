@@ -22,6 +22,7 @@ from pathlib import Path
 
 MAX_BYTES = 256_000
 LOG = Path(".tf") / "logs" / "hook-errors.jsonl"
+BLOCKS = Path(".tf") / "logs" / "hook-blocks.jsonl"   # blokady hooków (czas, hook, decyzja) — bez treści
 
 
 def _log_path() -> Path:
@@ -49,6 +50,25 @@ def record(hook: str, exc: BaseException) -> None:
                 keep.append(line)
             p.write_text("\n".join(reversed(keep)) + "\n", encoding="utf-8")
     except Exception:  # noqa: BLE001 — dziennik błędów nie może sam wywrócić hooka
+        return None
+
+
+def _append(p: Path, entry: dict) -> None:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    if p.stat().st_size > MAX_BYTES:
+        lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        p.write_text("\n".join(lines[len(lines) // 2:]) + "\n", encoding="utf-8")
+
+
+def record_block(hook: str, decision: str) -> None:
+    """Zapisz blokadę hooka (`deny` albo `ask`): czas, hook, decyzja — bez polecenia, ścieżki i treści. Z tego
+    dziennika `metrics.py --after-update` liczy blokady przed i po aktualizacji fabryki. Nigdy nie rzuca."""
+    try:
+        _append(Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".") / BLOCKS,
+                {"ts": round(time.time(), 3), "hook": str(hook)[:40], "decision": str(decision)[:10]})
+    except Exception:  # noqa: BLE001
         return None
 
 

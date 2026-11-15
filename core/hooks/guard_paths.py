@@ -14,6 +14,14 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
+except ImportError:  # starsza instalacja bez dziennika blokad — hook działa jak dotąd
+    def record_block(hook: str, decision: str) -> None:
+        return None
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
@@ -98,6 +106,8 @@ def oracle_reason(rel: str, root: str) -> str | None:
 
 
 def decide(decision: str, reason: str) -> None:
+    if decision in ("deny", "ask"):
+        record_block("guard_paths", decision)
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": decision,

@@ -54,6 +54,11 @@ try:
 except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
     def record_error(hook: str, exc: BaseException) -> None:
         return None
+try:
+    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
+except ImportError:
+    def record_block(hook: str, decision: str) -> None:
+        return None
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
@@ -169,6 +174,7 @@ def bash_failed(data: dict) -> bool:
 
 def deny(reason: str) -> None:
     mode = os.environ.get("CLAUDE_TDD", "strict").lower()
+    record_block("tdd_guard", "ask" if mode == "ask" else "deny")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
                                              "permissionDecision": "ask" if mode == "ask" else "deny",
                                              "permissionDecisionReason": reason}}, ensure_ascii=False))
@@ -208,6 +214,7 @@ def weaken_check(tool: str, inp: dict, root: Path, path: str) -> None:
     reason = (f"TDD: ta edycja może osłabić test {path}: {', '.join(found)}. Testów nie osłabiasz, żeby przeszły — "
               "popraw kod albo uzasadnij zmianę testu (zmienione wymaganie, refaktoryzacja testu bez utraty sprawdzeń).")
     if mode in ("ask", "deny"):
+        record_block("tdd_guard", mode)
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": mode,
                                                  "permissionDecisionReason": reason}}, ensure_ascii=False))
     else:   # warn: ostrzeżenie dla człowieka i kontekst dla modelu, bez decyzji o uprawnieniach
