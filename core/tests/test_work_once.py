@@ -176,6 +176,55 @@ def main() -> int:
         check(r.returncode == 0 and len(agent_calls(z)) == 1 and "przej" in r.stdout,
               f"WO-16: martwa blokada starsza niż 6 h → przejęta z ostrzeżeniem: {r.returncode} {r.stdout}{r.stderr}")
 
+        # przegląd bezpieczeństwa: klucz z task.json, symlinki, sekrety z manifestu, tryb uprawnień, łączny limit
+        s = project(base, "sec")
+        task(s, "", "start", "IMP-9", "--title", "Zwykłe zadanie", "--mode", "auto")
+        tj = s / CHANGES / "IMP-9" / "task.json"
+        data = json.loads(tj.read_text(encoding="utf-8"))
+        data["key"] = "../../../victim"
+        tj.write_text(json.dumps(data), encoding="utf-8")
+        r = work(s, "--once", "--budget", "2", "--dry-run")
+        r2 = work(s, "--once", "--budget", "2", "--key", "IMP-9", "--dry-run")
+        check("victim" not in r.stdout + r2.stdout and r2.returncode == 2,
+              f"WO-18: klucz w task.json inny niż nazwa folderu → zadanie pominięte i odrzucone: {r.stdout} | {r2.stdout}")
+        data["key"] = "IMP-9"
+        data["title"] = "Tytuł\x1b[31m z sekwencją\x07"
+        tj.write_text(json.dumps(data), encoding="utf-8")
+        r = work(s, "--once", "--budget", "2", "--dry-run")
+        check("IMP-9" in r.stdout and "\x1b" not in r.stdout and "\x07" not in r.stdout,
+              f"WO-19: znaki sterujące z tytułu nie trafiają na terminal: {r.stdout!r}")
+        outside = base / "outside-secret.txt"
+        outside.write_text("tajne\n", encoding="utf-8")
+        (s / CHANGES / "IMP-9" / "link.txt").symlink_to(outside)
+        (s / ".env").write_text("TOKEN=x\n", encoding="utf-8")
+        (s / "secrets").mkdir()
+        (s / "secrets" / "key.txt").write_text("k\n", encoding="utf-8")
+        man = s / ".claude" / "factory-manifest.json"
+        m = json.loads(man.read_text(encoding="utf-8"))
+        m["files"].update({".env": "z", "secrets/key.txt": "z", ".git/config": "z"})
+        man.write_text(json.dumps(m), encoding="utf-8")
+        (s / ".tf" / "config").mkdir(parents=True, exist_ok=True)
+        (s / ".tf" / "config" / "config.yaml").write_text("work:\n  permission_mode: bypassPermissions\n", encoding="utf-8")
+        r = work(s, "--once", "--budget", "2")
+        check(r.returncode == 2 and "permission_mode" in r.stdout and not agent_calls(s),
+              f"WO-20: tryb uprawnień spoza dozwolonych (bypassPermissions) → odmowa: {r.returncode} {r.stdout}")
+        (s / ".tf" / "config" / "config.yaml").write_text("work:\n  task_budget_usd: 5\n", encoding="utf-8")
+        r = work(s, "--once", "--budget", "2")
+        wt9 = s / ".tf" / "worktrees" / "IMP-9"
+        check(r.returncode == 0 and (wt9 / ".claude" / "skills" / "tf" / "SKILL.md").is_file()
+              and not (wt9 / ".env").exists() and not (wt9 / "secrets").exists()
+              and not (wt9 / CHANGES / "IMP-9" / "link.txt").exists(),
+              f"WO-21: do worktree trafiają tylko pliki fabryki (.claude/, .tf/factory/) i zadania, bez symlinków i sekretów: "
+              f"{r.returncode} {r.stdout}{r.stderr}")
+        r = work(s, "--once", "--budget", "2", "--key", "IMP-9")
+        r = work(s, "--once", "--budget", "2", "--key", "IMP-9")
+        check(r.returncode == 2 and "task_budget_usd" in r.stdout and len(agent_calls(s)) == 2,
+              f"WO-22: łączny limit zadania (2 + 2 + 2 > 5 USD) → trzeci przebieg odrzucony: {r.returncode} {r.stdout} {len(agent_calls(s))}")
+        r = work(s, "--once", "--budget", "2", "--base", "--upload-pack=x", "--dry-run")
+        check(r.returncode == 2, f"WO-23: --base zaczynające się od „-” → odmowa: {r.returncode} {r.stdout}")
+        r = work(s, "--once", "--budget", "5000", "--dry-run")
+        check(r.returncode == 2, f"WO-24: limit jednego przebiegu powyżej 500 USD → odmowa: {r.returncode} {r.stdout}")
+
     # tf work w launcherze i w opisie poleceń
     tf = (ROOT / ".tf" / "factory" / "tf.py").read_text(encoding="utf-8")
     check("tf work --once" in tf and '"work.py"' in tf, "WO-17: tf work --once w opisie i w dyspozytorze tf.py")

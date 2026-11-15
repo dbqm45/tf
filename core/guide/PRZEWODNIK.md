@@ -119,7 +119,12 @@ w `.tf/config/config.yaml`); agent działa w trybie uprawnień `dontAsk`, więc 
 w `.claude/settings.json` jest odrzucane, a nie czeka na Ciebie. Zadanie zajmuje blokada (`.tf/locks/`), więc dwa
 równoległe przebiegi nie wezmą tego samego. Wynik to PR albo blok STOP w worktree zadania, wpis trafia do
 `.tf/logs/work.jsonl`; fabryka niczego nie scala ani nie wdraża. Zadania z worktree nie bierze ponownie sama —
-wznowienie: `tf work --once --key <KLUCZ>`. `--dry-run` pokazuje zadanie i polecenie bez uruchamiania.
+wznowienie: `tf work --once --key <KLUCZ>`; wszystkie przebiegi jednego zadania razem nie przekroczą
+`work.task_budget_usd` (domyślnie 20 USD). `--dry-run` pokazuje zadanie i polecenie bez uruchamiania. Do worktree
+trafiają z instalacji tylko pliki fabryki (`.claude/`, `.tf/factory/`), konfiguracja i folder zadania — bez symlinków
+i bez plików spoza nich (np. `.env`). Hooki i reguły z `.claude/settings.json` gałęzi działają bez pytania, a agent
+dostaje Twoje zmienne środowiskowe: uruchamiaj `tf work` tylko w repozytorium, któremu ufasz, i przejrzyj
+`settings.json` przed pierwszym przebiegiem.
 
 ## 5. Koszty
 - **Profil zespołu:** `python3 .tf/factory/profile.py` pokazuje aktywny profil. Dostępne są:

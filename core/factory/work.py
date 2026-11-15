@@ -41,7 +41,11 @@ LOG = Path(".tf") / "logs" / "work.jsonl"
 MANIFEST = Path(".claude") / "factory-manifest.json"
 OWN_CONFIG = Path(".tf") / "config"
 OPEN_STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad")
-DEFAULTS = {"budget_usd": 0, "permission_mode": "dontAsk", "lock_hours": 6, "timeout_minutes": 180}
+DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "dontAsk", "lock_hours": 6, "timeout_minutes": 180}
+MODES = ("dontAsk", "plan")       # bez nadzoru nikt nie odpowie na pytanie o zgodę; szersze tryby są odrzucane
+COPY_PREFIXES = (".claude/", ".tf/factory/")   # z manifestu kopiowane są tylko pliki fabryki
+MAX_RUN_USD = 500
+CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 
@@ -81,9 +85,16 @@ def waits_for_human(root: Path, key: str) -> bool:
     return isinstance(run, dict) and run.get("stage") == "needs"
 
 
-def refusal(root: Path, task: dict) -> str | None:
-    """Dlaczego zadania nie wolno wziąć bez nadzoru; None — wolno."""
-    key = task.get("key", "?")
+def clean(text, limit: int = 120) -> str:
+    return CONTROL.sub(" ", str(text or ""))[:limit]
+
+
+def refusal(root: Path, task: dict, folder: str) -> str | None:
+    """Dlaczego zadania nie wolno wziąć bez nadzoru; None — wolno. Klucz to nazwa folderu zadania, a pole `key`
+    w task.json musi się z nią zgadzać (task.json przychodzi z repozytorium, np. z cudzego PR)."""
+    if not KEY.fullmatch(folder) or task.get("key") != folder:
+        return f"{clean(folder)}: klucz w task.json nie zgadza się z nazwą folderu zadania — zadanie pominięte"
+    key = folder
     if task.get("closed") or task.get("stage") not in OPEN_STAGES:
         return f"{key}: etap {task.get('stage')} — praca bez nadzoru prowadzi zadanie tylko do PR"
     if task.get("weight") == "pelna":
@@ -101,7 +112,7 @@ def candidates(root: Path) -> list[dict]:
     out = []
     for f in sorted((root / CHANGES).glob("*/task.json")):
         task = load_task(root, f.parent.name)
-        if task and KEY.match(f.parent.name) and refusal(root, task) is None and not (root / WORKTREES / f.parent.name).exists():
+        if task and refusal(root, task, f.parent.name) is None and not (root / WORKTREES / f.parent.name).exists():
             out.append(task)
     return sorted(out, key=lambda t: str(t.get("created") or ""))
 
@@ -132,6 +143,7 @@ def claim(root: Path, key: str, hours: float) -> tuple[bool, str]:
                 held = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 held = {}
+            held = held if isinstance(held, dict) else {}
             at = held.get("at") if isinstance(held.get("at"), (int, float)) else path.stat().st_mtime
             stale = (time.time() - at > hours * 3600 and held.get("host") == socket.gethostname()
                      and not alive(held.get("pid")))
@@ -139,7 +151,11 @@ def claim(root: Path, key: str, hours: float) -> tuple[bool, str]:
                 return False, ""
             note = (f"⚠ blokada {key} martwego procesu {held.get('pid')} z {datetime.fromtimestamp(at).isoformat(timespec='minutes')} "
                     "przejęta")
-            path.unlink(missing_ok=True)
+            try:                           # przejęcie przez rename: z dwóch procesów wygrywa jeden
+                os.rename(path, path.with_name(f"{path.name}.{os.getpid()}.stale"))
+            except OSError:
+                return False, ""
+            path.with_name(f"{path.name}.{os.getpid()}.stale").unlink(missing_ok=True)
             continue
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump({"pid": os.getpid(), "host": socket.gethostname(), "at": time.time()}, f)
@@ -160,10 +176,20 @@ def inside(root: Path, rel: str) -> Path | None:
     return p if not Path(rel).is_absolute() and root.resolve() in p.parents else None
 
 
-def copy_missing(src: Path, dst: Path) -> int:
-    """Kopiuje plik albo katalog, pomijając to, co w miejscu docelowym już jest; zwraca liczbę plików."""
+def within(base: Path, path: Path) -> bool:
+    try:
+        return base.resolve() in path.resolve().parents
+    except OSError:
+        return False
+
+
+def copy_missing(src: Path, dst: Path, src_root: Path, dst_root: Path) -> int:
+    """Kopiuje plik albo katalog, pomijając to, co w miejscu docelowym już jest, symlinki i ścieżki wychodzące poza
+    katalogi źródłowy i docelowy; zwraca liczbę plików."""
+    if src.is_symlink() or not within(src_root, src) or not within(dst_root, dst.parent / "x"):
+        return 0
     if src.is_file():
-        if dst.exists():
+        if dst.exists() or dst.is_symlink():
             return 0
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
@@ -171,7 +197,7 @@ def copy_missing(src: Path, dst: Path) -> int:
     n = 0
     for f in sorted(src.rglob("*")) if src.is_dir() else []:
         if f.is_file() and "__pycache__" not in f.parts:
-            n += copy_missing(f, dst / f.relative_to(src))
+            n += copy_missing(f, dst / f.relative_to(src), src_root, dst_root)
     return n
 
 
@@ -179,6 +205,8 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
     """Worktree zadania na gałęzi `story/<key>`; przy instalacji prywatnej pliki fabryki nie są w gicie, więc kopiuje
     pliki z manifestu, konfigurację projektu i folder zadania, których w worktree brakuje."""
     wt = root / WORKTREES / key
+    if not within(root / WORKTREES, wt):
+        return None, "ścieżka worktree poza .tf/worktrees"
     if not wt.exists():
         branch = f"story/{key.lower()}"
         has = git(root, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}").returncode == 0
@@ -191,8 +219,9 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
     except (OSError, ValueError, AttributeError):
         files = {}
     rels = [MANIFEST.as_posix(), ".claude/settings.json", OWN_CONFIG.as_posix(), (CHANGES / key).as_posix(),
-            *[r for r in files if isinstance(r, str)]]
-    copied = sum(copy_missing(src, wt / rel) for rel in dict.fromkeys(rels) if (src := inside(root, rel)) and src.exists())
+            *[r for r in files if isinstance(r, str) and r.startswith(COPY_PREFIXES) and ".." not in Path(r).parts]]
+    copied = sum(copy_missing(src, wt / rel, root, wt) for rel in dict.fromkeys(rels)
+                 if (src := inside(root, rel)) and src.exists())
     return wt, f"{copied} plików fabryki i zadania skopiowanych do worktree" if copied else ""
 
 
@@ -206,7 +235,24 @@ def budget_text(value) -> str | None:
         v = float(value)
     except (TypeError, ValueError):
         return None
-    return f"{v:g}" if 0 < v < 10_000 else None
+    return f"{v:g}" if 0 < v <= MAX_RUN_USD else None
+
+
+def spent(root: Path, key: str) -> float:
+    """Suma limitów wcześniejszych przebiegów zadania z dziennika (górne oszacowanie wydatku)."""
+    total = 0.0
+    try:
+        lines = (root / LOG).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return 0.0
+    for line in lines:
+        try:
+            e = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(e, dict) and e.get("key") == key and isinstance(e.get("budget_usd"), (int, float)):
+            total += float(e["budget_usd"])
+    return total
 
 
 def write_log(root: Path, entry: dict) -> None:
@@ -220,16 +266,26 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
     cfg = config(root)
     budget = budget_text(budget_arg if budget_arg is not None else cfg.get("budget_usd"))
     if budget is None:
-        print("✗ podaj limit wydatku: tf work --once --budget <USD> (albo work.budget_usd w .tf/config/config.yaml) — "
-              "bez limitu praca bez nadzoru nie rusza")
+        print(f"✗ podaj limit wydatku od 0 do {MAX_RUN_USD} USD: tf work --once --budget <USD> (albo work.budget_usd "
+              "w .tf/config/config.yaml) — bez limitu praca bez nadzoru nie rusza")
         return 2
     mode = str(cfg.get("permission_mode") or "dontAsk")
+    if mode not in MODES:
+        print(f"✗ work.permission_mode „{clean(mode, 40)}” — bez nadzoru dozwolone tylko: {', '.join(MODES)}")
+        return 2
+    if base is not None and (not base or base.startswith("-") or CONTROL.search(base)):
+        print("✗ --base: podaj nazwę gałęzi albo commita")
+        return 2
+    try:
+        cap = float(cfg.get("task_budget_usd") or 0)
+    except (TypeError, ValueError):
+        cap = 0.0
     if key:
-        task = load_task(root, key) if KEY.match(key) else None
+        task = load_task(root, key) if KEY.fullmatch(key) else None
         if task is None:
-            print(f"✗ nie ma zadania {key}")
+            print(f"✗ nie ma zadania {clean(key, 64)}")
             return 2
-        why = refusal(root, task)
+        why = refusal(root, task, key)
         if why:
             print(f"✗ {why}")
             return 2
@@ -238,8 +294,16 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
         queue = candidates(root)
     for task in queue:
         k = task["key"]
+        if cap and spent(root, k) + float(budget) > cap:
+            msg = (f"{k}: łączny limit zadania work.task_budget_usd = {cap:g} USD — wcześniejsze przebiegi "
+                   f"{spent(root, k):g} USD + ten {budget} USD; decyzję o dalszym wydatku podejmuje człowiek")
+            if key:
+                print(f"✗ {msg}")
+                return 2
+            print(f"• {msg}")
+            continue
         if dry:
-            print(f"• zadanie: {k} — {task.get('title', '')}")
+            print(f"• zadanie: {k} — {clean(task.get('title'))}")
             print(f"• worktree: {(root / WORKTREES / k).as_posix()} (gałąź story/{k.lower()} od {base or 'HEAD'})")
             print(f"• polecenie: {shlex.join(agent_command(k, budget, mode))}")
             return 0
