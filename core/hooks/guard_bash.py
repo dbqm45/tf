@@ -18,6 +18,11 @@ try:
 except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
     def record_error(hook: str, exc: BaseException) -> None:
         return None
+try:
+    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
+except ImportError:
+    def record_block(hook: str, decision: str) -> None:
+        return None
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
@@ -322,6 +327,8 @@ def check_writes(data: dict, cmd: str) -> None:
 
 
 def decide(decision: str, reason: str) -> None:
+    if decision in ("deny", "ask"):
+        record_block("guard_bash", decision)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

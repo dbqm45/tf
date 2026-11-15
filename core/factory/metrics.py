@@ -5,6 +5,7 @@
   python3 .tf/factory/metrics.py --weeks 2 --revert-days 14
   python3 .tf/factory/metrics.py --no-gh            # bez historii PR (tylko git)
   tf metrics [opcje]
+  python3 .tf/factory/metrics.py --after-update [--json]   # czy po ostatniej aktualizacji fabryki coś się pogorszyło
 
 Liczy z gita (główna linia, `--first-parent`, bez `chore(release)` i commitów revert):
 - zmiany i przyjęte zmiany — przyjęta = zmergowana i niecofnięta przez N dni (`--revert-days`, domyślnie 7);
@@ -14,6 +15,13 @@ Liczy z gita (główna linia, `--first-parent`, bez `chore(release)` i commitów
 - koszt tokenów z `.tf/logs/usage.jsonl` (cennik `prices_usd_per_mtok`) i koszt przyjętej zmiany — bez pracy ludzi;
 - z historii PR (`gh pr list`, gdy jest): mediana czasu od otwarcia PR do merge'a i liczba commitów na PR.
 Liczba zmian sama w sobie nie jest celem — łatwo ją zawyżyć. Raport: `.tf/reports/metrics.md` i `metrics.json`.
+
+`--after-update` (krok H29, decyzja D13): ostatnia kopia w `.tf/backup/` wyznacza chwilę aktualizacji fabryki
+i wersję sprzed niej. Okno po aktualizacji (do 14 dni) jest porównane z oknem tej samej długości przed nią:
+odsetek cofnięć (ostrzeżenie przy wzroście o ≥ 15 punktów, gdy w obu oknach jest ≥ 5 rozstrzygniętych zmian),
+blokady hooków z `.tf/logs/hook-blocks.jsonl` (≥ 5 po i co najmniej dwukrotny wzrost) i błędy hooków z
+`.tf/logs/hook-errors.jsonl` (≥ 3 po i ponad dwukrotny wzrost). Ostrzeżenie podaje polecenie powrotu
+(`update.py --rollback`); fabryka sama się nie cofa — przy małej liczbie zmian ten wskaźnik jest zaszumiony.
 """
 from __future__ import annotations
 
@@ -148,17 +156,111 @@ def _window(commits: list[dict], start: datetime, end: datetime, reverts: dict, 
     return w
 
 
-def compute(repo: Path, now: datetime | None = None, weeks: int = 4, revert_days: int = 7, prices: dict | None = None,
-            prs: list[dict] | None = None) -> dict:
-    """Okno bieżące (ostatnie `weeks` tygodni) i bazowe (`weeks` tygodni wcześniej)."""
-    now = now or datetime.now(timezone.utc)
-    log = git_log(repo)
+def _reverts(log: list[dict]) -> dict[str, datetime]:
+    """sha zmiany → czas pierwszego commita, który ją cofa."""
     reverts: dict[str, datetime] = {}
     for c in log:
         if REVERT_SUBJECT.match(c["subject"]):
             for sha in REVERTS_SHA.findall(c["body"]):
                 full = next((x["sha"] for x in log if x["sha"].startswith(sha)), sha)
                 reverts[full] = min(reverts.get(full, c["ts"]), c["ts"])
+    return reverts
+
+
+BACKUP = Path(".tf") / "backup"
+BLOCKS = Path(".tf") / "logs" / "hook-blocks.jsonl"
+ERRORS = Path(".tf") / "logs" / "hook-errors.jsonl"
+ROLLBACK = "python3 .tf/factory/update.py --rollback"
+MIN_DECIDED, REVERT_RISE, MIN_BLOCKS, MIN_ERRORS = 5, 0.15, 5, 3
+
+
+def last_update(repo: Path) -> tuple[datetime, str] | None:
+    """Chwila ostatniej aktualizacji i wersja sprzed niej — z nazwy i znacznika najnowszej kopii w `.tf/backup/`."""
+    best = None
+    for d in (repo / BACKUP).glob("*/backup.json") if (repo / BACKUP).is_dir() else []:
+        m = re.match(r"(\d{8}-\d{6})-v", d.parent.name)
+        if not m:
+            continue
+        try:
+            at = datetime.strptime(m.group(1), "%Y%m%d-%H%M%S").astimezone()   # nazwa kopii w czasie lokalnym
+            version = str(json.loads(d.read_text(encoding="utf-8")).get("version") or "?")
+        except (ValueError, OSError, AttributeError):
+            continue
+        if best is None or at > best[0]:
+            best = (at.astimezone(timezone.utc), version)
+    return best
+
+
+def _events(path: Path, start: datetime, end: datetime) -> int:
+    """Wpisy dziennika (pole `ts` w sekundach) w oknie (start, end]."""
+    n = 0
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return 0
+    for line in lines:
+        try:
+            ts = datetime.fromtimestamp(float(json.loads(line).get("ts")), timezone.utc)
+        except (ValueError, TypeError, AttributeError, OverflowError, OSError):
+            continue
+        n += start < ts <= end
+    return n
+
+
+def update_health(repo: Path, now: datetime | None = None, days: int = 14, revert_days: int = 7) -> dict:
+    """Porównanie okna po ostatniej aktualizacji fabryki z oknem tej samej długości przed nią (D13: tylko ostrzega)."""
+    now = now or datetime.now(timezone.utc)
+    up = last_update(repo)
+    if up is None:
+        return {"update": None, "warnings": [], "notes": ["brak kopii sprzed aktualizacji w .tf/backup/ — nie ma z czym "
+                                                          "porównać (kopię robi każda aktualizacja fabryki)"]}
+    at, old = up
+    try:
+        new = json.loads((repo / ".claude" / "factory-manifest.json").read_text(encoding="utf-8")).get("version") or "?"
+    except (OSError, ValueError, AttributeError):
+        new = "?"
+    span = min(timedelta(days=days), max(now - at, timedelta(0)))
+    log = git_log(repo)
+    reverts = _reverts(log)
+    commits = [c for c in log if not RELEASE.match(c["subject"]) and not REVERT_SUBJECT.match(c["subject"])]
+    side = {}
+    for name, (a, b) in (("before", (at - span, at)), ("after", (at, at + span))):
+        w = _window(commits, a, b, reverts, now, revert_days, None, {}, None)
+        side[name] = {"decided": w["changes"] - w["pending"], "reverted": w["reverted"], "revert_rate": w["revert_rate"],
+                      "blocks": _events(repo / BLOCKS, a, b), "errors": _events(repo / ERRORS, a, b)}
+    before, after = side["before"], side["after"]
+    warnings, notes = [], []
+    if before["decided"] >= MIN_DECIDED and after["decided"] >= MIN_DECIDED:
+        if after["revert_rate"] - before["revert_rate"] >= REVERT_RISE - 1e-9:
+            warnings.append(f"odsetek cofniętych zmian wzrósł z {before['revert_rate']:.0%} do {after['revert_rate']:.0%}")
+    else:
+        notes.append(f"za mało rozstrzygniętych zmian do porównania cofnięć ({before['decided']} przed, "
+                     f"{after['decided']} po; potrzeba co najmniej {MIN_DECIDED} w każdym oknie)")
+    if after["blocks"] >= MIN_BLOCKS and after["blocks"] >= 2 * before["blocks"]:
+        warnings.append(f"blokad hooków było {before['blocks']} przed i {after['blocks']} po")
+    if after["errors"] >= MIN_ERRORS and after["errors"] > 2 * before["errors"]:
+        warnings.append(f"błędów hooków było {before['errors']} przed i {after['errors']} po")
+    return {"update": at.isoformat(), "from": old, "to": new, "window_days": round(span.total_seconds() / 86400, 1),
+            "before": before, "after": after, "warnings": warnings, "notes": notes,
+            "rollback": ROLLBACK if warnings else None}
+
+
+def health_text(res: dict) -> str:
+    if not res.get("update"):
+        return "• po aktualizacji fabryki: " + "; ".join(res.get("notes") or [])
+    head = f"po aktualizacji fabryki {res['from']} → {res['to']} ({res['update'][:10]}, okna po {res['window_days']} dni)"
+    if res["warnings"]:
+        return (f"⚠ {head}: {'; '.join(res['warnings'])}. Jeśli to skutek aktualizacji, wróć do poprzedniej wersji: "
+                f"{ROLLBACK} (kopia sprzed aktualizacji). Fabryka sama się nie cofa — decyzja należy do Ciebie.")
+    return f"✓ {head}: bez pogorszenia" + (f" ({'; '.join(res['notes'])})" if res.get("notes") else "")
+
+
+def compute(repo: Path, now: datetime | None = None, weeks: int = 4, revert_days: int = 7, prices: dict | None = None,
+            prs: list[dict] | None = None) -> dict:
+    """Okno bieżące (ostatnie `weeks` tygodni) i bazowe (`weeks` tygodni wcześniej)."""
+    now = now or datetime.now(timezone.utc)
+    log = git_log(repo)
+    reverts = _reverts(log)
     commits = [c for c in log if not RELEASE.match(c["subject"]) and not REVERT_SUBJECT.match(c["subject"])]
     if prices is None:
         try:
@@ -213,6 +315,8 @@ def write_report(repo: Path, res: dict) -> Path:
                      "(luka-specyfikacji, blad-agenta, zmiana-wymagan, nieznana).")
     if not res["pr_history"]:
         lines += ["", "Bez historii PR (`gh` niedostępne albo bez logowania) — czas cyklu nieznany."]
+    if res.get("after_update"):
+        lines += ["", "## Po ostatniej aktualizacji fabryki", "", health_text(res["after_update"])]
     p = out / "metrics.md"
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return p
@@ -223,12 +327,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--weeks", type=int, default=4, help="długość okna bieżącego i bazowego (tygodnie)")
     ap.add_argument("--revert-days", type=int, default=7, help="ile dni zmiana musi przetrwać bez revertu")
     ap.add_argument("--no-gh", action="store_true", help="bez historii PR z gh")
+    ap.add_argument("--after-update", action="store_true", help="porównanie przed i po ostatniej aktualizacji fabryki")
+    ap.add_argument("--json", action="store_true", help="z --after-update: wynik jako JSON")
     args = ap.parse_args(argv)
-    root = Path.cwd()
+    root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
+    if args.after_update:
+        res = update_health(root, revert_days=args.revert_days)
+        print(json.dumps(res, ensure_ascii=False, indent=1) if args.json else health_text(res))
+        return 0
     if not (root / ".git").exists() and subprocess.run(["git", "-C", str(root), "rev-parse"], capture_output=True).returncode:
         print("✗ To nie jest repozytorium git.")
         return 2
     res = compute(root, weeks=args.weeks, revert_days=args.revert_days, prs=None if args.no_gh else pr_history(root))
+    res["after_update"] = update_health(root, revert_days=args.revert_days)
     out = write_report(root, res)
     print(out.read_text(encoding="utf-8"))
     print(f"✓ Raport: {out.relative_to(root)} (+ metrics.json)")

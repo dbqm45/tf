@@ -21,6 +21,13 @@ import shlex
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
+except ImportError:  # starsza instalacja bez dziennika blokad — hook działa jak dotąd
+    def record_block(hook: str, decision: str) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -119,6 +126,7 @@ def bash_allowed(cmd: str, prefixes: list[str]) -> bool:
 
 
 def deny(reason: str, hint: str) -> None:
+    record_block("cleanroom_guard", "deny")
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "deny",

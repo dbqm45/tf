@@ -93,6 +93,9 @@ Wycofywanie odbywa się tak:
 ## Zgodność nakładek z rdzeniem (autokorekta)
 - `build.py check` (także w `tf doctor`) sprawdza: zakres `requires.core` każdej nakładki, wymagane nakładki,
   nakładkę języka pracy, kolizje nazw (wymiary, agenci, persony) i odwołania do nieistniejących skilli.
+- `metrics.py --after-update [--json]` (także w `tf doctor` i w raporcie `tf metrics`; pola `update`, `from`, `to`,
+  `before`, `after`, `warnings`, `notes`, `rollback`) i dziennik `.tf/logs/hook-blocks.jsonl` (`ts`, `hook`,
+  `decision`) zapisywany przez `hook_errors.record_block` z hooków, które blokują.
 - `model_check.py [--json] [--today RRRR-MM-DD]` (także w `tf doctor`, kod 1 przy błędzie): klucze konfiguracji
   `models_current`, `models_legacy`, `models_checked`; pole `harness` (`claude_code`, `factory`, `packs`, `files`)
   we wpisach `.tf/logs/usage.jsonl`; kolumna „Pasmo szumu” i dopisek „(w paśmie szumu)” w raporcie

@@ -77,3 +77,24 @@ Pełne sprawdzenie dopiero po zakończeniu serii pomiarowej po kroku G (żeby ni
 - Scenariusz `przeglad-zakresu-etykiety` sprawdza też zapis wyniku przeglądu (przed zmianą treści skilla).
 - Zmiana zachowania pętli: jedno polecenie więcej na kawałek tam, gdzie pętla je pomijała. Niezmierzone na
   przebiegach z modelem.
+
+## H29 — plan realizacji (zapisany przed kodem; decyzja D13: tylko ostrzegać)
+
+Mechanizm powrotu już jest: przed każdą aktualizacją `update.py` robi kopię w `.tf/backup/<data>-v<wersja>/`
+(`backup.json`), a `update.py --rollback` ją przywraca. Brakuje sygnału, że po aktualizacji coś się pogorszyło.
+
+- **Dziennik blokad hooków.** `hook_errors.py` dostaje `record_block(hook, decyzja)`: wpis w
+  `.tf/logs/hook-blocks.jsonl` (czas, hook, `deny` albo `ask`), bez treści polecenia ani pliku. Wołają go hooki,
+  które blokują: `tdd_guard`, `guard_paths`, `guard_bash`, `cleanroom_guard`, `scan_secrets`.
+- **`metrics.py --after-update [--json]`:** ostatnia kopia z `.tf/backup/` wyznacza chwilę aktualizacji i wersję
+  sprzed niej. Porównuje okno po aktualizacji (do 14 dni) z oknem tej samej długości przed nią:
+  - odsetek cofnięć z gita — ostrzeżenie przy wzroście o co najmniej 15 punktów i co najmniej 5 rozstrzygniętych
+    zmianach w obu oknach;
+  - blokady hooków na dzień — ostrzeżenie przy co najmniej 5 blokadach po i co najmniej dwukrotnym wzroście;
+  - błędy hooków — ostrzeżenie przy co najmniej 3 po i ponad dwukrotnym wzroście.
+  Mniej danych → „za mało danych”, bez ostrzeżenia. Ostrzeżenie podaje gotowe polecenie powrotu
+  (`python3 .tf/factory/update.py --rollback`) i mówi wprost, że fabryka sama się nie cofa.
+- **`tf doctor`** pokazuje ostrzeżenie (informacja, kod wyjścia bez zmian); **`tf metrics`** — sekcję w raporcie.
+- Testy: `core/tests/test_update_health.py` (repozytorium git z datami commitów, kopia z `.tf/backup/`,
+  dzienniki hooków); `test_cost.py` albo testy hooków — wpis blokady bez treści.
+- Pliki: `core/hooks/hook_errors.py`, pięć hooków, `core/factory/metrics.py`, `core/factory/tf.py`, przewodniki.
