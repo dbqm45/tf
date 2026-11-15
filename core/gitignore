@@ -10,3 +10,5 @@
 .claude/scratch/
 __pycache__/
 .idea
+.tf/locks/
+.tf/worktrees/

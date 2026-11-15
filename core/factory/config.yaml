@@ -432,3 +432,18 @@ feature_flags:
 # gdy żaden kawałek nie jest niezależny. false (domyślnie, do czasu pomiaru) — każde pytanie to blok STOP, jak dotąd.
 loop:
   blocked_slices: false
+
+# Praca bez nadzoru (`tf work --once`): bierze zadanie w trybie Auto (`tf task mode <KEY> auto`), o wadze lekkiej albo
+# zwykłej, i prowadzi pętlę /tf w osobnym worktree (.tf/worktrees/<KEY>). budget_usd — limit wydatku jednego przebiegu
+# (0: trzeba podać --budget; najwyżej 500), task_budget_usd — łączny limit wszystkich przebiegów jednego zadania
+# (suma limitów z .tf/logs/work.jsonl; 0 — bez limitu), permission_mode — tryb uprawnień agenta: dontAsk (narzędzie
+# spoza listy dozwolonych jest odrzucane, nikt nie czeka na zgodę) albo plan; innych tryb bez nadzoru nie przyjmuje, lock_hours — po ilu godzinach blokadę martwego procesu można przejąć,
+# timeout_minutes — po ilu minutach przebieg jest przerywany.
+work:
+  budget_usd: 0
+  task_budget_usd: 20
+  permission_mode: dontAsk
+  lock_hours: 6
+  timeout_minutes: 180
+# Dodatkowe zmienne środowiskowe dla agenta (np. GITHUB_TOKEN) podajesz w swoim środowisku: TF_WORK_ENV_ALLOW=GITHUB_TOKEN
+# — celowo nie tutaj, bo ten plik przychodzi z repozytorium.
