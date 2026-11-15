@@ -44,10 +44,10 @@ def with_pack(p: Path) -> None:
 def project(base: Path, name: str, stack: list[str] | None) -> Path:
     p = base / name
     with_pack(p)
-    for s in ("eng-testing", "lang-python", "fw-angular", "dom-ev-charging", "core-factory-update", "moj-skill"):
+    for s in ("eng-testing", "lang-python", "fw-angular", "dom-demo-orders", "core-factory-update", "moj-skill"):
         skill(p, s, manual=s == "core-factory-update")
     files = {f".claude/skills/{s}/SKILL.md": "x" for s in
-             ("eng-testing", "lang-python", "fw-angular", "dom-ev-charging", "core-factory-update")}
+             ("eng-testing", "lang-python", "fw-angular", "dom-demo-orders", "core-factory-update")}
     (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0", "files": files}))
     if stack is not None:
         (p / ".claude" / "hooks").mkdir()
@@ -67,9 +67,9 @@ def main() -> int:
             fails.append(msg)
 
     d = lambda name, stack, *a, **k: sp.desired(name, stack, *a, **{"name_only": NAME_ONLY, **k})
-    check(sp.desired("dom-ev-charging", set()) == "on", "SP-0: rdzeń bez nakładek nie ukrywa żadnego wymiaru")
+    check(sp.desired("dom-demo-orders", set()) == "on", "SP-0: rdzeń bez nakładek nie ukrywa żadnego wymiaru")
     check(d("fw-angular", {"fw-angular"}) == "on" and d("lang-java", set()) == "name-only"
-          and d("dom-ev-charging", set()) == "name-only" and d("eng-testing", set()) == "on",
+          and d("dom-demo-orders", set()) == "name-only" and d("eng-testing", set()) == "on",
           "SP-1: technologie wg wykrytego stacku, dom-* tylko nazwa (prefiks z nakładki), reszta z opisem")
     check(d("lang-java", None) == "on", "SP-1b: stack nieznany (wykrywanie nie zadziałało) → technologie z opisem")
 
@@ -114,10 +114,10 @@ def main() -> int:
         sp.apply(p)
         st = json.loads((p / ".claude" / "settings.local.json").read_text())
         ov = st.get("skillOverrides", {})
-        check(ov == {"dom-ev-charging": "name-only"},
+        check(ov == {"dom-demo-orders": "name-only"},
               f"SP-7: bez detect_stack technologie zostają z opisem, ręczne skille i własne pominięte: {ov}")
         man = json.loads((p / ".claude" / "factory-manifest.json").read_text())
-        check(man.get("skill_overrides") == {"dom-ev-charging": "name-only"} and man.get("version") == "1.0.0",
+        check(man.get("skill_overrides") == {"dom-demo-orders": "name-only"} and man.get("version") == "1.0.0",
               f"SP-8: manifest pamięta wpisy fabryki i zachowuje resztę: {man}")
 
         p = project(base, "python", ["lang-python"])
@@ -128,7 +128,7 @@ def main() -> int:
               f"SP-9: --dry-run pokazuje plan i nic nie zapisuje: {r.stdout}{r.stderr}")
         r = subprocess.run([sys.executable, str(SCRIPT), str(p)], capture_output=True, text=True)
         st = json.loads((p / ".claude" / "settings.local.json").read_text())
-        check(r.returncode == 0 and st.get("skillOverrides") == {"fw-angular": "name-only", "dom-ev-charging": "name-only"}
+        check(r.returncode == 0 and st.get("skillOverrides") == {"fw-angular": "name-only", "dom-demo-orders": "name-only"}
               and st.get("permissions") == {"allow": ["Bash(ls)"]},
               f"SP-10: wykryty Python → lang-python z opisem, Angular tylko nazwa, uprawnienia nietknięte: {st}")
 
@@ -163,13 +163,13 @@ def main() -> int:
             p = Path(t) / "projekt"
             p.mkdir()
             (p / "pyproject.toml").write_text('[project]\nname = "x"\nrequires-python = ">=3.12"\n')
-            inst = [sys.executable, str(installer), str(p), "--yes", "--packs", "pack-it,pack-ev"]
+            inst = [sys.executable, str(installer), str(p), "--yes", "--packs", "pack-it"]
             r = subprocess.run(inst, capture_output=True, text=True)
             st = json.loads((p / ".claude" / "settings.local.json").read_text()) if r.returncode == 0 else {}
             ov = st.get("skillOverrides", {})
             man = json.loads((p / ".claude" / "factory-manifest.json").read_text()) if r.returncode == 0 else {}
             check(r.returncode == 0 and ov.get("fw-angular") == "name-only" and "lang-python" not in ov
-                  and ov.get("sec-cryptography-pki") == "name-only" and "dom-ev-ocpi" not in ov
+                  and ov.get("sec-cryptography-pki") == "name-only"
                   and man.get("skill_overrides") == ov and "skill visibility" in r.stdout,
                   f"SP-11: instalacja dopasowuje widoczność do projektu (Python): {ov} {r.stdout[-400:]}{r.stderr[-400:]}")
             st.setdefault("skillOverrides", {})["fw-angular"] = "on"

@@ -184,6 +184,34 @@ def main() -> int:
         check(r.returncode == 2 and "curl-pipe-shell" in o and not (q / ".claude/skills/ev-run").exists(),
               f"EP-12: audyt skilli nakładki zewnętrznej blokuje: {r.returncode} {o[-800:]}")
 
+        # EP-14: dyspozytor z persony `dispatcher: true` nakładki (nie z listy w rdzeniu) w podpowiedzi „Next”
+        disp = make_pack(base / "disp", "pack-d", major, prefix="da-")
+        write(disp / "roles" / "rola-d.yaml", "name: rola-d\ntitle: Rola D\ntier: std\ntriggers: d\nidentity: d\n"
+                                              "tools: [Read, Skill]\nskills: [da-run]\n")
+        write(disp / "personas" / "dora.yaml", "name: dora\ntitle: Dora — dyspozytorka D\ndescription: Persona D.\n"
+                                                "identity: d\ndispatcher: true\nroles: [rola-d]\nskills: [da-run]\n")
+        q = base / "app-disp"
+        q.mkdir()
+        r = install(src, q, "--packs", "pack-d", "--pack-dir", str(disp))
+        o = r.stdout + r.stderr
+        check(r.returncode == 0 and "claude --agent dora" in o, f"EP-14: start od dyspozytora nakładki: {o[-600:]}")
+
+        # EP-15: migracja starej fabryki wg `migrates_from` w pack.yaml (nie wg nazw w rdzeniu)
+        mig = make_pack(base / "mig", "pack-mig", major, prefix="mg-")
+        y = mig / "pack.yaml"
+        y.write_text(y.read_text(encoding="utf-8") + "migrates_from: [old-domain-factory]\n", encoding="utf-8")
+        q = base / "app-legacy"
+        write(q / MANIFEST, json.dumps({"version": "1.0.0", "source": "/x/old-domain-factory", "files": {}}))
+        r = install(src, q, "--pack-dir", str(mig))
+        m = manifest(q)
+        check(r.returncode == 0 and "pack-mig" in (m.get("packs") or {}),
+              f"EP-15: migrates_from wybiera nakładkę: {m.get('packs')} {(r.stdout + r.stderr)[-600:]}")
+
+    # EP-16: rdzeń fabryki nie zna nazw nakładki EV (dane nakładek zamiast stałych w kodzie)
+    for rel in ("core/factory/install.py", "core/factory/migrations.py", "core/factory/tf.py"):
+        body = (ROOT / rel).read_text(encoding="utf-8")
+        check("pack-ev" not in body and "iwona" not in body and "dom-ev-" not in body, f"EP-16: {rel} nazywa pack-ev")
+
     # EP-13: tools/workspace.py przekazuje --pack-dir do instalatora i nazywa przestrzeń po nakładkach
     sys.path.insert(0, str(ROOT / "tools"))
     import workspace

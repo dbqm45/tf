@@ -8,7 +8,7 @@ Run it from the project directory — the project is the current directory, the 
   cd ~/projects/my-app
   python3 "$TEAM_FACTORY/core/factory/install.py"                     # private install (default): nothing gets committed
   python3 "$TEAM_FACTORY/core/factory/install.py" --dry-run           # show what would happen
-  python3 "$TEAM_FACTORY/core/factory/install.py" --packs pack-it,pack-ev   # choose packs without asking
+  python3 "$TEAM_FACTORY/core/factory/install.py" --packs pack-it,pack-ux   # choose packs without asking
   python3 "$TEAM_FACTORY/core/factory/install.py" --add pack-ux       # add a pack to an existing install
   python3 "$TEAM_FACTORY/core/factory/install.py" --remove pack-ux    # remove a pack
   python3 "$TEAM_FACTORY/core/factory/install.py" --language pl --commit-language en
@@ -16,7 +16,7 @@ Run it from the project directory — the project is the current directory, the 
   python3 "$TEAM_FACTORY/core/factory/install.py" --gitignore         # private, but entries go to .gitignore, not .git/info/exclude
   python3 "$TEAM_FACTORY/core/factory/install.py" --python py         # force the Python command for hooks (default: detected)
   python3 "$TEAM_FACTORY/core/factory/install.py" --yes               # no questions: defaults or the previous choice
-  python3 "$TEAM_FACTORY/core/factory/install.py" --pack-dir ~/src/ev-intelligence/factory-pack --add pack-ev
+  python3 "$TEAM_FACTORY/core/factory/install.py" --pack-dir ~/src/my-domain/factory-pack --add pack-my-domain
                                                                       # a pack from outside the factory's packs/
 
 External packs: `--pack-dir <source>` (comma-separated or repeated) adds a pack source outside the factory's `packs/`:
@@ -56,8 +56,8 @@ update:
   touches `.tf/config/` (your config.yaml overrides, own personas, roles and traits);
 - moves files removed from the factory (or from a removed pack) to `.tf/backup/<date>/` (if unchanged);
 - never touches your own skills, personas, roles and traits (files the factory did not install).
-Installs of claude-team-factory or ev-team-factory are migrated: the matching packs are selected and the old
-instruction and ignore blocks are replaced.
+Installs of claude-team-factory or ev-team-factory are migrated: the old instruction and ignore blocks are replaced
+and the packs whose `migrates_from` names the old factory are selected (with their available `optional_packs`).
 """
 from __future__ import annotations
 
@@ -588,16 +588,39 @@ def detect_mode(dst_root: Path) -> str | None:
     return None
 
 
-def legacy_packs(manifest: dict | None, dst_root: Path) -> list[str] | None:
-    """Nakładki dla instalacji claude-team-factory / ev-team-factory (manifest bez listy nakładek)."""
+LEGACY_DEFAULT = ("pack-it", "pack-ux", "pack-docs")   # claude-team-factory: fabryka IT, z której wyrósł rdzeń
+
+
+def legacy_packs(manifest: dict | None, dst_root: Path, available: dict) -> list[str] | None:
+    """Nakładki dla instalacji starej fabryki (manifest bez listy nakładek): te, których `migrates_from` w pack.yaml
+    wymienia jej nazwę (ze źródła w manifeście albo znacznika w CLAUDE.md), z dostępnymi `optional_packs`."""
     if not manifest or "packs" in manifest:
         return None
     src = str(manifest.get("source", "")).lower()
     md = " ".join((dst_root / n).read_text(encoding="utf-8") for n in ("CLAUDE.md", "CLAUDE.local.md")
                   if (dst_root / n).exists())
-    if "ev-team-factory" in src or "ev-team-factory:begin" in md:
-        return ["pack-ev", "pack-docs"]
-    return ["pack-it", "pack-ux", "pack-docs"]
+    found = [pid for pid, p in available.items()
+             if any(str(n).lower() in src or f"{n}:begin" in md for n in p.get("migrates_from") or [])]
+    if found:
+        extra = [o for pid in found for o in available[pid].get("optional_packs") or [] if o in available]
+        return sorted(dict.fromkeys(found + extra))
+    old = next((n for n in ("ev-team-factory",) if n in src or f"{n}:begin" in md), None)
+    if old:
+        print(f"ℹ This is an install of {old}, but no available pack migrates from it — give its pack source: "
+              "--pack-dir <directory|git URL>.")
+        return [p for p in ("pack-docs",) if p in available]
+    return [p for p in LEGACY_DEFAULT if p in available]
+
+
+def dispatcher_hints(packs: list[str], available: dict, pm) -> list[str]:
+    """Polecenia startu od dyspozytorów nakładek (persony z `dispatcher: true`)."""
+    out = []
+    for pid in packs:
+        for f in sorted((available[pid]["_dir"] / "personas").glob("*.yaml")):
+            data = pm.load_yaml(f)
+            if data.get("dispatcher") and data.get("name"):
+                out.append(f"`claude --agent {data['name']}` ({available[pid].get('title') or pid} — describe the problem)")
+    return out
 
 
 def resolve_packs(chosen: list[str], available: dict, language: str, cfg: dict) -> tuple[list[str], list[str]]:
@@ -797,7 +820,7 @@ def _main(argv: list[str], tmp: Path) -> int:
         if code not in (cfg.get("languages") or {}):
             print(f"✗ Unknown {label} '{code}'. Available: {', '.join(cfg.get('languages') or {})}")
             return 2
-    legacy = legacy_packs(manifest, dst_root)
+    legacy = legacy_packs(manifest, dst_root, available)
     previous = list((manifest or {}).get("packs") or {}) if manifest and "packs" in manifest else legacy
     for pid in [p for p in (previous or []) if p in RETIRED_PACKS]:   # wycofane: aktualizacja je pomija, nie kończy się błędem
         print(f"ℹ {pid} was retired — {RETIRED_PACKS[pid]}. Its files move to .tf/backup/.")
@@ -1054,14 +1077,13 @@ def _main(argv: list[str], tmp: Path) -> int:
                   "`@AGENTS.md` at the top of CLAUDE.local.md.")
     if not dry and not update:
         md = "CLAUDE.md" if shared else "CLAUDE.local.md"
-        dispatchers = [pid for pid in packs if pid in ("pack-it", "pack-ev")]
-        start = {"pack-it": "`claude --agent maja` (describe the problem)", "pack-ev": "`claude --agent iwona` (EV)"}
+        start = dispatcher_hints(packs, available, pm)
         print(f"""
 Next:
   1. Prepare the repository: `tf onboard --yes` detects the test/lint/build commands, writes them to {md}
      and turns the quality gate on.
   2. Run `claude` once in the project directory and accept folder trust (hooks and permissions need it).
-  3. Start: {' or '.join(start[d] for d in dispatchers) or 'a persona from .claude/catalog.md'}, e.g. `claude --agent <name>`.
+  3. Start: {' or '.join(start) or 'a persona from .claude/catalog.md'}, e.g. `claude --agent <name>`.
   4. Costs: the `zrownowazony` profile works right away; `{py} .tf/factory/profile.py oszczedny|jakosc` switches the team.
   Packs: `tf add <pack>` / `tf remove <pack>` · languages: `tf language <code>`, `tf commit-language <code>`.
   Updates: `{py} .tf/factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")

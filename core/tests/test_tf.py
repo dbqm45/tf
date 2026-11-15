@@ -135,15 +135,15 @@ def main() -> int:
               f"CTF-17: stary układ factory/ → kod 2 i polecenie ponownej instalacji: {r.returncode} {r.stdout}")
 
         p = project(base, "nakladki", source=repo)
-        r = ctf(p, "add", "pack-ev", "pack-ux", repo=repo)
+        r = ctf(p, "add", "pack-docs", "pack-ux", repo=repo)
         upd = json.loads((p / "updated.json").read_text()) if (p / "updated.json").exists() else None
-        check(r.returncode == 0 and upd == ["--add", "pack-ev,pack-ux"], f"CTF-12: tf add → update.py --add: {upd}")
+        check(r.returncode == 0 and upd == ["--add", "pack-docs,pack-ux"], f"CTF-12: tf add → update.py --add: {upd}")
         r = ctf(p, "remove", "pack-ux", repo=repo)
         upd = json.loads((p / "updated.json").read_text()) if (p / "updated.json").exists() else None
         check(r.returncode == 0 and upd == ["--remove", "pack-ux"], f"CTF-13: tf remove → update.py --remove: {upd}")
         r = ctf(p, "add", repo=repo)
         check(r.returncode == 2 and "Usage" in r.stdout, f"CTF-14: tf add bez nakładki → kod 2: {r.stdout}")
-        r = ctf(base, "add", "pack-ev", repo=repo)
+        r = ctf(base, "add", "pack-ux", repo=repo)
         check(r.returncode == 2 and "tf install" in r.stdout, f"CTF-15: tf add bez fabryki → podpowiedź: {r.stdout}")
         r = ctf(p, "nieznane", repo=repo)
         check(r.returncode == 2, f"CTF-16: nieznane polecenie → kod 2: {r.returncode}")

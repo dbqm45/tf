@@ -29,7 +29,7 @@ agent wskaże plik, który podjął decyzję. Częste pytania: `.tf/factory/FAQ.
 | Element | Gdzie w projekcie | Co robi |
 |---|---|---|
 | rdzeń | `.tf/factory/`, `.claude/skills/core-*`, `.claude/hooks/`, `.claude/tests/` | budowa agentów, aktualizacja, koszty, zasady pracy, dziennik projektu |
-| nakładki (`pack-*`) | `.tf/factory/packs/<id>/`, ich skille w `.claude/skills/` | wiedza dziedzinowa, role i persony (np. `pack-it`, `pack-ux`, `pack-ev`, `pack-docs`, `pack-editorial-pl`) |
+| nakładki (`pack-*`) | `.tf/factory/packs/<id>/`, ich skille w `.claude/skills/` | wiedza dziedzinowa, role i persony (np. `pack-it`, `pack-ux`, `pack-docs`, `pack-editorial-pl`; nakładki domenowe także spoza fabryki: `tf install --pack-dir`) |
 | tryby (`mode-*`) | jak nakładki | sposób pracy włączany na żądanie: `mode-team` (agent teams), `mode-pdi` (cykl zmiany) |
 | agenci | `.claude/agents/_generated/` | budowani przez `python3 .tf/factory/build.py` z rdzenia i nakładek — nie edytuj ręcznie |
 | katalog | `.claude/catalog.md` | lista person, ról i skilli tej instalacji |
@@ -42,7 +42,8 @@ Co jest zainstalowane: `tf list`. Stan instalacji: `tf doctor`.
 1. **Wybierz personę** z `.claude/catalog.md` i uruchom ją: `claude --agent <nazwa>` (np. `kuba` — product
    engineer, `ewa` — analityczka domeny, `kasia` — testy, `natalia` — UX). Persona rozmawia z Tobą i deleguje
    pracę swoim wykonawcom (`<persona>-<rola>`) oraz agentom wspólnym.
-2. **Nie wiesz, kogo wybrać?** Dyspozytorka (`maja` w `pack-it`, `iwona` w `pack-ev`) rozpozna problem opisany
+2. **Nie wiesz, kogo wybrać?** Dyspozytor nakładki (`maja` w `pack-it`; nakładka domenowa może mieć własnego —
+   `tf list` i `.claude/catalog.md`) rozpozna problem opisany
    zwykłym tekstem i dobierze persony, skille i podejście.
 3. **Wpisz polecenia projektu** (test, lint, typy, build) w sekcji fabryki w `CLAUDE.local.md` (albo `CLAUDE.md`
    w instalacji zespołowej) — wykonawcy używają ich do weryfikacji.

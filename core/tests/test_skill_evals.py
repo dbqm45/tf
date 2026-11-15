@@ -363,7 +363,7 @@ def main() -> int:
                capture_output=True, text=True, env=env)
         log = proj / ".tf" / "logs" / "skill-hints.jsonl"
         rec = json.loads(log.read_text(encoding="utf-8").splitlines()[0]) if log.exists() else {}
-        # pierwsza podpowiedź to skill API; kolejne mogą dojść z innych nakładek (np. paginacja w OCPI przy pack-ev)
+        # pierwsza podpowiedź to skill API; kolejne mogą dojść z innych nakładek (np. paginacja w protokole z nakładki domenowej)
         api = (ev.SKILLS / "be-api-design").is_dir()      # skill z pack-it; bez niego sprawdzamy tylko brak treści w logu
         if ((api and (rec.get("hinted") or [None])[0] != "be-api-design")
                 or "TAJNE" in log.read_text(encoding="utf-8") if log.exists() else api):

@@ -1,7 +1,7 @@
 # Gotowe do produkcji — definicja i przegląd gotowości
 
 Przegląd przeprowadza w fazie 7 DevOps/SRE z security-reviewerem i projektantem testów (pack-it: Piotr i Kasia;
-pack-ev: Nadia i Kamil). Wynik zapisuje w `docs/project/07-review/<data>-gotowosc.md` (artefakt `review`)
+nakładka domenowa: jej persony operacji i testów). Wynik zapisuje w `docs/project/07-review/<data>-gotowosc.md` (artefakt `review`)
 i przedstawia człowiekowi na bramce B4. Każdy punkt ma
 jeden z trzech stanów: **spełniony** (z dowodem: link do testu, raportu, pliku, wyniku polecenia), **niespełniony**
 albo **ryzyko zaakceptowane** (kto zaakceptował i do kiedy naprawić). Punkty oznaczone *(minimum)* obowiązują także
