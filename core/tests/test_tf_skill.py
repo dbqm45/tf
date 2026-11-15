@@ -20,7 +20,7 @@ def main() -> int:
     agent = next(iter(agents.rglob("tf.md")), None)
     text = agent.read_text(encoding="utf-8") if agent else ""
     fm = text.split("---")[1] if text.count("---") >= 2 else ""
-    check("Agent(scout, researcher, quick-fixer, scope-reviewer, architect, security-reviewer)" in fm
+    check("Agent(scout, researcher, quick-fixer, scope-reviewer, spec-reviewer, architect, security-reviewer)" in fm
           and "skills:" not in fm and "maxTurns" not in fm,
           f"T-1: agent tf — sesja główna z listą agentów, bez preładowania skilli i limitu tur: {fm[:300]}")
     skill = ROOT / ".claude" / "skills" / "tf"

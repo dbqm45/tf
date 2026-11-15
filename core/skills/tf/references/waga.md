@@ -17,7 +17,11 @@ przy starcie i ze ścieżek planu przy etapie `plan`. Człowiekowi mówisz jedny
    plan.md --by human:<id>` (identyfikator człowieka, który się zgodził) — dopiero wtedy `step` wpuści pętlę kawałka.
    **Z `--auto` nie ma kogo zapytać:** kończysz blokiem STOP („zadanie o wadze pełnej — plan czeka na Twoją zgodę”),
    z planem w raporcie. Zgody nie zapisujesz sam.
-2. **Przegląd `security-reviewer` jest obowiązkowy** przed PR (faza warunkowa bez warunku), a `architect` — gdy plan
+2. **Panel recenzentów przed PR pilnuje skrypt.** `run_state.py panel <katalog>` podaje skład i zlecenia:
+   `security-reviewer` (bezpieczeństwo diffu) i `spec-reviewer` (każde kryterium `AC-n` i każda reguła „Bez zmian”
+   ze `spec.md`, z dowodem plik:linia) — każdy w osobnym kontekście, przez narzędzie Agent. Werdykt zapisujesz:
+   `run_state.py panel <katalog> --record <recenzent> pass|fail --note "<najważniejsze ustalenie>"`. Etap `pr` przejdzie
+   dopiero z `pass` od obu dla bieżącego commita; po poprawce w nowym commicie przegląd od nowa. `architect` — gdy plan
    zawiera decyzję trudną do odwrócenia (migracja danych, zmiana kontraktu).
 
 ## Zmiana wagi

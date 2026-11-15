@@ -16,6 +16,7 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> none --reason "bez flagi, bo …"
   python3 .claude/skills/tf/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
   python3 .claude/skills/tf/scripts/run_state.py pr-body <katalog-przebiegu> [--base <gałąź>]   # opis PR do --body-file
+  python3 .claude/skills/tf/scripts/run_state.py panel <katalog-przebiegu> [--record <recenzent> pass|fail --note "…"]
   python3 .claude/skills/tf/scripts/run_state.py finding <katalog-przebiegu> K2 "<ważne ustalenie przeglądu>" [--round R]
   python3 .claude/skills/tf/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
@@ -61,6 +62,10 @@ test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
 z commitami, ślad kryteriów, **Jak sprawdzono** (dowody, skan, plan_drift), **Ryzyko** (waga i `tf risk`), **Jak
 cofnąć** (karta operacyjna `deploy.rollback`, `git revert`, flaga), odłożone sprawy i założenia. Kawałek bez
 zielonego dowodu jest w opisie nazwany wprost. Skrypt niczego nie wypycha i nie zakłada PR.
+
+`panel` (waga pełna, krok H11): skład panelu recenzentów w osobnych kontekstach (`security-reviewer`, `spec-reviewer`)
+z gotowym zleceniem dla każdego i zapisanymi werdyktami; `--record` zapisuje werdykt w zadaniu (`tf task review`).
+Etap `pr` zadania o wadze pełnej wymaga werdyktu `pass` od obu dla bieżącego commita.
 
 `finding` zapisuje w zadaniu ważne ustalenie przeglądu zakresu (z kawałkiem i rundą). `step … zakres fail` jest
 odrzucany, dopóki kawałek nie ma ustalenia z tej rundy — przy zamknięciu zadania (`tf task close`) każde ważne
@@ -614,6 +619,51 @@ def slice_finding(project: Path, key: str, slice_id: str, rnd: int) -> bool:
     view = task_view(project, key)
     return any(isinstance(f, dict) and f.get("slice") == slice_id and f.get("round") == rnd
                for f in ((view or {}).get("task") or {}).get("findings") or [])
+
+
+PANEL_BRIEFS = {
+    "security-reviewer": "przegląd bezpieczeństwa `git diff {base}...HEAD` (uwierzytelnianie, uprawnienia, sekrety, "
+                         "wejście użytkownika, płatności, migracje); wynik: Krytyczne / Ważne / Do rozważenia z plik:linia "
+                         "i na końcu `Werdykt: PASS` (brak krytycznych i ważnych) albo `Werdykt: FAIL`",
+    "spec-reviewer": "weryfikacja `{spec}` reguła po regule wobec `git diff {base}...HEAD`: każde kryterium AC-n "
+                     "(spełnione / niespełnione / nie da się sprawdzić, z plik:linia i testem) i każda reguła „Bez zmian” "
+                     "(zachowana / naruszona); na końcu `Werdykt: PASS` albo `Werdykt: FAIL`",
+}
+
+
+def cmd_panel(run_dir: Path, record: list[str] | None, note: str, base: str | None, project: Path) -> int:
+    """Panel recenzentów przy wadze pełnej: skład, zlecenia, zapisane werdykty i zapis nowego (`--record`)."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if record:
+        r = run_report.task_state(project, "review", meta["key"], record[0], record[1], "--note", note)
+        if r is None:
+            return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+        print((r.stdout + r.stderr).rstrip("\n"))
+        return r.returncode
+    weight = task_weight(run_dir, meta)
+    if weight != "pelna":
+        print(f"Waga zadania: {WEIGHT_PL.get(weight, weight or '?')}. To zadanie nie wymaga panelu recenzentów (dotyczy tylko "
+              "wagi pełnej); przegląd zakresu kawałków zostaje jak zwykle.")
+        return 0
+    docs = run_report.docs_dir(run_dir, meta)
+    try:
+        spec = docs.resolve().relative_to(project.resolve()).joinpath("spec.md").as_posix()
+    except ValueError:
+        spec = str(docs / "spec.md")
+    found = pick_base(project, base) or "<gałąź domyślna>"
+    reviews = ((task_view(project, meta["key"]) or {}).get("task") or {}).get("reviews") or {}
+    print(f"Panel recenzentów (waga pełna): każdy w osobnym kontekście, przez narzędzie Agent, przed etapem pr.")
+    for name, brief in PANEL_BRIEFS.items():
+        done = reviews.get(name) if isinstance(reviews.get(name), dict) else None
+        state = f"{done.get('verdict')}" + (f" — {as_data(done['note'], 200)}" if done.get("note") else "") if done else "brak werdyktu"
+        print(f"- {name}: {state}\n  zlecenie: {brief.format(spec=spec, base=found)}\n  zapis: run_state.py panel {run_dir} "
+              f"--record {name} pass|fail --note \"<najważniejsze ustalenie>\"")
+    print("Werdykt FAIL → poprawka w nowym commicie, potem przegląd od nowa (werdykt dotyczy commita).")
+    return 0
 
 
 def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, project: Path) -> int:
@@ -1505,6 +1555,11 @@ def main(argv: list[str]) -> int:
     an.add_argument("--by", default=None)
     nx = sub.add_parser("next")
     nx.add_argument("run_dir")
+    pn = sub.add_parser("panel")
+    pn.add_argument("run_dir")
+    pn.add_argument("--record", nargs=2, metavar=("RECENZENT", "WERDYKT"), default=None)
+    pn.add_argument("--note", default="")
+    pn.add_argument("--base", default=None)
     fd = sub.add_parser("finding")
     fd.add_argument("run_dir")
     fd.add_argument("slice_id")
@@ -1550,6 +1605,8 @@ def main(argv: list[str]) -> int:
         return cmd_answer(Path(args.run_dir), args.slice_id, args.text, args.by, project)
     if args.cmd == "next":
         return cmd_next(Path(args.run_dir), project)
+    if args.cmd == "panel":
+        return cmd_panel(Path(args.run_dir), args.record, args.note, args.base, project)
     if args.cmd == "finding":
         return cmd_finding(Path(args.run_dir), args.slice_id, args.text, args.round, project)
     if args.cmd == "pr-body":

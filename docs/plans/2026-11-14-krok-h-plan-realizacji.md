@@ -98,3 +98,26 @@ Mechanizm powrotu już jest: przed każdą aktualizacją `update.py` robi kopię
 - Testy: `core/tests/test_update_health.py` (repozytorium git z datami commitów, kopia z `.tf/backup/`,
   dzienniki hooków); `test_cost.py` albo testy hooków — wpis blokady bez treści.
 - Pliki: `core/hooks/hook_errors.py`, pięć hooków, `core/factory/metrics.py`, `core/factory/tf.py`, przewodniki.
+
+## H11 — plan realizacji (zapisany przed kodem; decyzja D11: panel jako przepływ skryptu, tylko waga pełna)
+
+Dziś przy wadze pełnej przegląd `security-reviewer` jest obowiązkowy tylko w treści `references/waga.md`.
+Pomiar po kroku G pokazał, że kroki opisane prozą pętla pomija (zapis przeglądu zakresu: 7/15), więc panel pilnuje
+skrypt.
+
+- **Panel:** `security-reviewer` (istnieje) i nowy `spec-reviewer` — w świeżym kontekście sprawdza diff reguła po
+  regule: każde kryterium `AC-n` (spełnione / niespełnione / nie da się sprawdzić, z dowodem plik:linia i testem) oraz
+  każdą regułę „Bez zmian” ze `spec.md`. Tylko odczyt. `architect` zostaje jak dziś (przy decyzji trudnej do
+  odwrócenia), bez wymogu skryptu.
+- **Zapis werdyktu:** `tf task review <KEY> <recenzent> pass|fail [--note "…"]` → `reviews` w `task.json` (werdykt,
+  commit `HEAD`, czas, uwaga). Pętla woła to przez `run_state.py panel <katalog> --record <recenzent> pass|fail`.
+- **Bramka:** etap `pr` (i dalsze) zadania o wadze pełnej wymaga werdyktu `pass` od obu recenzentów, wydanego dla
+  bieżącego commita — zmiana kodu po przeglądzie wymaga przeglądu od nowa. Odmowa podaje polecenie panelu.
+  Waga lekka i zwykła bez zmian. Cięcia pdi o wadze pełnej też przechodzą panel (przegląd bezpieczeństwa i tak
+  zostawał).
+- **`run_state.py panel <katalog>`** drukuje skład panelu z gotowym zleceniem dla każdego recenzenta (co dostaje,
+  w jakim formacie odpowiada) i polecenie zapisu werdyktu; pokazuje też werdykty już zapisane.
+- Treść: `references/waga.md` punkt 2 (bez zmiany `SKILL.md` — jest na granicy limitu; odmowa etapu `pr` mówi pętli,
+  co zrobić). Scenariusz ewaluacji przed zmianą treści.
+- Testy: `core/tests/test_panel.py`; agent `spec-reviewer` w `config.yaml` i w narzędziach agenta `tf`.
+- Koszt: dwa przeglądy w osobnych kontekstach przy zadaniu o wadze pełnej (rzadkim). Niezmierzone na modelu.
