@@ -1,7 +1,7 @@
 ---
 name: core-agent-retro
 argument-hint: "[--days N | --since RRRR-MM-DD]"
-description: Użyj przy retrospektywie pracy agentów na koniec etapu — dowody z logów, dziennika i gita, przyczyny, propozycje zmian w fabryce do decyzji człowieka.
+description: Użyj przy retrospektywie pracy agentów na koniec etapu — dowody z logów i gita, propozycje zmian w fabryce.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj, gdy po etapie, serii sesji albo powtarzającym się błędzie agenta trzeba sprawdzić, co w pracy agentów poszło źle lub drogo, i zamienić to w trwałe zmiany: skrypt zbiera dowody (tokeny i tiery per agent, podpowiedzi skilli trafione i przeoczone, wpisy dziennika z problemami, pułapki z punktów kontrolnych, poprawki po własnych commitach, cofnięcia, commity WIP), procedura szuka przyczyn bez szukania winnych, klasyfikuje ustalenia (lekcja, reguła w CLAUDE.md, poprawka skilla, tier modelu, hook lub skrypt, nic) i daje najwyżej pięć propozycji z dowodem i miarą skutku; człowiek decyduje, następna retrospektywa sprawdza skutek. Nie do retrospektywy sprintu zespołu ludzi (skill procesu, np. proc-agile z pack-it), postmortemu incydentu produkcyjnego (skill operacji, np. ops-sre-incidents z pack-it), samego raportu kosztów (core-cost-control) ani pisania reguł CLAUDE.md od zera (core-agent-instructions)."

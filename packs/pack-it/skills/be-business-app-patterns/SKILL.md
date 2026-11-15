@@ -1,6 +1,6 @@
 ---
 name: be-business-app-patterns
-description: Użyj przy wzorcach aplikacji biznesowej — audit log, soft delete a RODO, impersonacja przez support, operacje masowe, usuwanie nieodwracalne.
+description: Użyj przy wzorcach aplikacji biznesowej — audit log, soft delete a RODO, impersonacja, operacje masowe.
 metadata:
   przeglad: "2027-05-09"
   katalog: "Użyj, gdy aplikacja biznesowa (CRM, CPMS, eMSP, system wewnętrzny, panel administracyjny) potrzebuje funkcji wokół danych i odpowiedzialności — audit log zmian (pola, transakcja lub outbox, tylko dopisywanie, retencja), soft delete i jego granice (przywracanie, unikalność, RODO art. 17 i anonimizacja, kopie zapasowe), impersonacja przez support (uprawnienie, powód, znacznik w sesji i audycie, zakazane operacje, limit czasu), operacje masowe na tysiącach rekordów (podgląd, potwierdzenie, zadanie w tle, częściowe błędy, idempotencja, cofnięcie) i ochrona przed nieodwracalnym usunięciem (wpisanie nazwy, okres karencji, kosz). Nie do uwierzytelniania, sesji, haseł i sprawdzania uprawnień do obiektu (be-auth-security), schematu, indeksów i migracji (be-database), projektu endpointów i paginacji (be-api-design) ani podstaw prawnych przetwarzania i DPIA (arch-privacy-compliance)."

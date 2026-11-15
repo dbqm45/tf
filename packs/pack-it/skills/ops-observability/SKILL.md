@@ -1,6 +1,6 @@
 ---
 name: ops-observability
-description: Użyj przy logach, metrykach, tracingu, healthcheckach, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana).
+description: Użyj przy logach, metrykach, tracingu, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana).
 metadata:
   przeglad: "2027-04-17"
   katalog: "Użyj przy logowaniu, metrykach, tracingu, healthcheckach, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana). Nie do debugowania logiki biznesowej ani pipeline'ów CI."
