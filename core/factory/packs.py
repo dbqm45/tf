@@ -152,6 +152,7 @@ def compose(root: Path, cfg: dict) -> dict:
     rows, notes = [cfg.get("routing", "").rstrip()], [cfg.get("routing_notes", "").strip()]
     fresh = {"prefixes": {}, "skills": {}}
     name_only: list[str] = []
+    keep_described: list[str] = []
     persona_contrib: dict[str, list] = {k: [] for k in LIST_KEYS}
     role_contrib: dict[str, dict] = {}
     for pid, p in packs.items():
@@ -162,7 +163,12 @@ def compose(root: Path, cfg: dict) -> dict:
         cfg.setdefault("reference_sections", {}).update(p.get("reference_sections") or {})
         for k in ("prefixes", "skills"):
             fresh[k].update((p.get("freshness") or {}).get(k) or {})
-        name_only = _union(name_only, (p.get("skill_visibility") or {}).get("name_only_prefixes"))
+        vis = p.get("skill_visibility") or {}
+        name_only = _union(name_only, vis.get("name_only_prefixes"))
+        for rule in vis.get("name_only_when") or []:   # warunkowo: tylko gdy zainstalowane są nakładki z `with`
+            if all(w in packs for w in rule.get("with") or []):
+                name_only = _union(name_only, rule.get("prefixes"))
+                keep_described = _union(keep_described, rule.get("except"))
         if pid not in cfg["_active"]:
             continue
         for n, s in (p.get("shared_agents") or {}).items():
@@ -196,7 +202,7 @@ def compose(root: Path, cfg: dict) -> dict:
     cfg["routing"] = "\n".join(r for r in rows if r) + "\n"
     cfg["routing_notes"] = "\n".join(n for n in notes if n) + "\n"
     cfg["freshness"] = fresh
-    cfg["skill_visibility"] = {"name_only_prefixes": name_only}
+    cfg["skill_visibility"] = {"name_only_prefixes": name_only, "keep_described": keep_described}
     cfg["_persona_contrib"], cfg["_role_contrib"] = persona_contrib, role_contrib
     cfg["_errors"] = errors
     return cfg

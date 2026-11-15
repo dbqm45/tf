@@ -19,6 +19,16 @@ facets:
 
 always_skills: [core-knowledge, dom-ev-knowledge-base]
 
+# Lista skilli: sama nakładka EV mieści się w budżecie (≈9.1k znaków < 14000), więc dom-ev-* mają opis. Obok pack-it
+# (≈13.5k bez EV; z pack-docs i mode-pdi ≈13.8k) opis zostaje tylko punktowi wejścia dom-ev-knowledge-base; reszta
+# jest widoczna jako sama nazwa — persony i konsultanci EV mają je w prompcie, a hook skill_hint podpowiada je po
+# metadata.slowa (decyzja człowieka 2026-11-15).
+skill_visibility:
+  name_only_when:
+    - with: [pack-it]
+      prefixes: [dom-]
+      except: [dom-ev-knowledge-base]
+
 freshness:
   prefixes: {dom-: 6}
   # przepisy EV z terminami stosowania (AFIR, NIS2, CRA, UDT, EIPA, NEVI…) zmieniają się najszybciej

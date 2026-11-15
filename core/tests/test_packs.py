@@ -47,6 +47,10 @@ consultants:
     tier: std
     description: Konsultant A — test.
     skills: [aa-model]
+skill_visibility:
+  name_only_when:
+    - {with: [pack-b], prefixes: [aa-], except: [aa-model]}
+    - {with: [pack-c], prefixes: [zz-]}
 contributes:
   roles:
     rola-b: {skills: [aa-model]}
@@ -125,6 +129,11 @@ def main() -> int:
         check([f["prefix"] for f in cfg["facets"]][:2] == ["aa-", "bb-"], f"P-1: wymiary nakładek po order: {cfg['facets'][:2]}")
         check("b-agent" in cfg["shared_agents"] and "| sygnał B |" in cfg["routing"],
               "P-2: agent i wiersz routingu nakładki przy spełnionym contributes_when (język pl domyślnie)")
+        # widoczność warunkowa: reguła nakładki działa, gdy są zainstalowane nakładki z `with`
+        check("aa-" in cfg["skill_visibility"]["name_only_prefixes"] and cfg["skill_visibility"]["keep_described"] == ["aa-model"]
+              and "zz-" not in cfg["skill_visibility"]["name_only_prefixes"],
+              f"P-1b: name_only_when z pack-b → aa- sama nazwa poza aa-model; reguła z brakującą nakładką pominięta: "
+              f"{cfg['skill_visibility']}")
         roles, personas, traits, skills, errors = b.load_team(cfg)
         ala = personas["ala"]
         check(ala["roles"] == ["rola-a"] and "rola rola-c" in ala["_dropped"] and "cecha cecha-c" in ala["_dropped"]

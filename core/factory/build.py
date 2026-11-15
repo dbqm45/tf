@@ -823,12 +823,12 @@ def _skill_profile():
 
 
 def skill_listing(entries: dict[str, int], stack_slots: int, marked: set[str] = frozenset(),
-                  name_only: tuple[str, ...] = ()) -> int:
+                  name_only: tuple[str, ...] = (), keep: tuple[str, ...] = ()) -> int:
     """Rozmiar listy skilli w typowym projekcie: wpisy z opisem wg skill_profile (stack pusty) + `stack_slots`
     najdłuższych wpisów technologii (fw-/lang-/tool-), które projekt może wykryć. `entries`: nazwa → znaki wpisu;
-    `marked`: skille z `metadata.widocznosc: nazwa`."""
+    `marked`: skille z `metadata.widocznosc: nazwa`; `keep`: wyjątki reguł `name_only_when` nakładek."""
     sp = _skill_profile()
-    base = sum(n for name, n in entries.items() if sp.desired(name, set(), name in marked, (), name_only) == "on")
+    base = sum(n for name, n in entries.items() if sp.desired(name, set(), name in marked, (), name_only, keep) == "on")
     stack = sorted((n for name, n in entries.items() if name.startswith(sp.STACK_PREFIXES)), reverse=True)
     return base + sum(stack[:stack_slots])
 
@@ -1004,7 +1004,8 @@ def validate() -> tuple[list[str], list[str]]:
 
     marked = {n for n, s in skills.items() if (s.get("metadata") or {}).get("widocznosc") == "nazwa"}
     size = skill_listing(listing, lim.get("skill_listing_stack_slots", 6), marked,
-                         tuple(cfg["skill_visibility"]["name_only_prefixes"]))
+                         tuple(cfg["skill_visibility"]["name_only_prefixes"]),
+                         tuple(cfg["skill_visibility"].get("keep_described") or ()))
     if size > lim.get("skill_listing_max_chars", 10**9):
         warnings.append(f"lista skilli z opisem w typowym projekcie ma ≈{size} znaków (> {lim['skill_listing_max_chars']}): "
                         "skille z opisem wg .tf/factory/skill_profile.py + rezerwa na wykryte technologie. Claude Code trzyma listę "

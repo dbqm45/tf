@@ -46,6 +46,8 @@ def main() -> int:
           f"{b.skill_listing(entries, 2, name_only=('dom-',))}")
     check(b.skill_listing(entries, 0, name_only=("dom-",)) == 150, "LB-2: bez rezerwy technologii")
     check(b.skill_listing(entries, 0) == 550, f"LB-3: bez prefiksów nakładek dom-* z opisem: {b.skill_listing(entries, 0)}")
+    check(b.skill_listing(entries, 0, name_only=("dom-",), keep=("dom-x",)) == 550,
+          f"LB-4: wyjątek reguły nakładki (keep) liczony z opisem: {b.skill_listing(entries, 0, name_only=('dom-',), keep=('dom-x',))}")
 
     # Termin przeglądu (metadata.przeglad): format daty sprawdzany; zmiana samego terminu nie unieważnia bramki.
     check(b.check_review_date("eng-a", {"przeglad": "2027-04-17"}) == ([], []), "RD-1: poprawna data bez uwag")

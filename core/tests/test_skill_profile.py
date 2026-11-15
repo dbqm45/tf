@@ -72,6 +72,9 @@ def main() -> int:
           and d("dom-demo-orders", set()) == "name-only" and d("eng-testing", set()) == "on",
           "SP-1: technologie wg wykrytego stacku, dom-* tylko nazwa (prefiks z nakładki), reszta z opisem")
     check(d("lang-java", None) == "on", "SP-1b: stack nieznany (wykrywanie nie zadziałało) → technologie z opisem")
+    check(d("dom-demo-start", set(), keep=("dom-demo-start",)) == "on" and d("dom-demo-orders", set(), keep=("dom-demo-start",))
+          == "name-only" and d("dom-demo-start", set(), True, keep=("dom-demo-start",)) == "name-only",
+          "SP-1c: wyjątek reguły nakładki (keep) zostaje z opisem; widocznosc: nazwa autora ma pierwszeństwo")
 
     with tempfile.TemporaryDirectory() as t:
         p = Path(t)

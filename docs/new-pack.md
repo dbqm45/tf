@@ -40,7 +40,8 @@ nie powstaną prawdziwe scenariusze i treść.
    gdy nakładki nie ma). Tylko do tych nakładek wolno odwoływać się z treści skilli — pilnuje tego `refs`.
 4. **Scenariusze przed treścią** (core-skill-authoring): 2× trigger z luką, 1× no-trigger z sąsiadem.
 5. **Treść skilli**, role i persony (`roles/`, `personas/`); przy wielu rzadko używanych skillach rozważ
-   `skill_visibility.name_only_prefixes` — opis nie zabiera budżetu listy skilli.
+   `skill_visibility.name_only_prefixes` — opis nie zabiera budżetu listy skilli; `name_only_when` (`with`, `prefixes`,
+   `except`) robi to tylko obok wskazanych nakładek (np. wiedza domenowa obok pack-it).
 6. **Bramki** w workspace: `python3 factory/skill_gate.py <skill>` i `--hints` (także na `--packs all`), potem
    `python3 tools/workspace.py sync-gate --out .work/<id>`.
 7. **Sprawdzenie**: `python3 tools/workspace.py check --packs <id>`, `check --packs all`, `refs`; PR z tytułem

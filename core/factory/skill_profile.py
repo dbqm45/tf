@@ -16,6 +16,9 @@ podpowiada je z opisem, gdy polecenie ich dotyczy. Reguły:
   - wymiary specjalistyczne wskazane przez nakładki (`skill_visibility.name_only_prefixes` w pack.yaml, np. `sec-`,
     `ai-`, `ux-` — persony znają je ze swojego promptu) i skille oznaczone przez autora `metadata.widocznosc: nazwa`:
     sama nazwa, chyba że projekt włączy wymiar przez `--describe` (np. zespół UX pracuje nimi na co dzień);
+  - reguły warunkowe nakładek (`skill_visibility.name_only_when: [{with: [pack-…], prefixes: [...], except: [...]}]`):
+    prefiksy „sama nazwa” tylko wtedy, gdy zainstalowane są nakładki z `with` (np. wiedza domenowa obok pack-it),
+    a skille z `except` (punkty wejścia) zostają z opisem;
   - pozostałe skille fabryki: opis.
 Zmieniane są tylko wpisy, które zapisała fabryka (pamięta je manifest, klucz `skill_overrides`). Twoje ustawienia
 w `skillOverrides` — także usunięcie wpisu fabryki — mają pierwszeństwo. Własnych skilli ani skilli uruchamianych
@@ -44,28 +47,35 @@ STACK_PREFIXES = ("fw-", "lang-", "tool-")
 NAME_ONLY_PREFIXES: tuple[str, ...] = ()   # rdzeń: brak; nakładki dokładają swoje (name_only_prefixes)
 
 
-def pack_name_only(root: Path) -> tuple[str, ...]:
-    """Prefiksy „sama nazwa” z zainstalowanych nakładek (.tf/factory/packs.py)."""
+def pack_visibility(root: Path) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """(prefiksy „sama nazwa”, skille z opisem mimo prefiksu) z zainstalowanych nakładek (.tf/factory/packs.py):
+    `name_only_prefixes` oraz reguły `name_only_when` ({with, prefixes, except}) spełnione w tym projekcie."""
     try:
         spec = importlib.util.spec_from_file_location("tf_packs_sp", root / ".tf" / "factory" / "packs.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         cfg = mod.compose(root, mod.load_config(root))
-        return tuple(cfg["skill_visibility"]["name_only_prefixes"])
+        vis = cfg["skill_visibility"]
+        return tuple(vis["name_only_prefixes"]), tuple(vis.get("keep_described") or ())
     except Exception:  # brak fabryki w projekcie albo uszkodzony pack.yaml — bez prefiksów nakładek
-        return ()
+        return (), ()
+
+
+def pack_name_only(root: Path) -> tuple[str, ...]:
+    """Prefiksy „sama nazwa” z zainstalowanych nakładek."""
+    return pack_visibility(root)[0]
 MANIFEST = Path(".claude") / "factory-manifest.json"
 SETTINGS = Path(".claude") / "settings.local.json"
 
 
 def desired(name: str, stack: set[str] | None, marked: bool = False, describe: tuple[str, ...] = (),
-            name_only: tuple[str, ...] = NAME_ONLY_PREFIXES) -> str:
+            name_only: tuple[str, ...] = NAME_ONLY_PREFIXES, keep: tuple[str, ...] = ()) -> str:
     """Widoczność skilla: "on" (nazwa i opis) albo "name-only". `stack=None` — stack nieznany;
     `marked` — autor oznaczył skill `metadata.widocznosc: nazwa` (rzadko potrzebny, znajduje go skill_hint);
     `describe` — prefiksy wymiarów, które projekt chce mieć z opisem."""
     if describe and name.startswith(tuple(describe)):
         return "on"
-    if marked or (name_only and name.startswith(name_only)):
+    if marked or (name_only and name.startswith(name_only) and name not in keep):
         return "name-only"
     if name.startswith(STACK_PREFIXES) and stack is not None and name not in stack:
         return "name-only"
@@ -150,8 +160,9 @@ def apply(root: Path, dry: bool = False, describe: list[str] | None = None) -> d
         describe = manifest.get("skill_describe") or []
     stack = detect_stack(root)
     skills_dir = root / ".claude" / "skills"
-    name_only = NAME_ONLY_PREFIXES + pack_name_only(root)
-    want = {n: desired(n, stack, marked_name_only(skills_dir / n / "SKILL.md"), tuple(describe), name_only)
+    prefixes, keep = pack_visibility(root)
+    name_only = NAME_ONLY_PREFIXES + prefixes
+    want = {n: desired(n, stack, marked_name_only(skills_dir / n / "SKILL.md"), tuple(describe), name_only, keep)
             for n in factory_skills(root, manifest)}
     new_settings, managed, kept = plan(settings, want, manifest.get("skill_overrides") or {})
     hidden = sorted(n for n, v in want.items() if v == "name-only")
