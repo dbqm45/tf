@@ -96,6 +96,15 @@ Pokryte częściowo:
 - [x] **K9: hasła w `tools/coverage_areas.json`** (zrobione 2026-11-15; dziury po zmianie: diff systemu, okno kontekstu, code mode — K2, K5, K3) — dopisać hasła, po których mapa pokrycia wykryje powyższe obszary
   (np. „metody formalne”, „tla+”, „diff systemu”, „code mode”, „a2a”, „po wydaniu”, „syntetyczny użytkownik”,
   „tokeniz”), żeby kolejny przegląd był powtarzalny bez ręcznego szukania. Mały krok, można razem z K1.
+- [ ] **K10: metody formalne w `pack-ev`** — sekcja „model przed symulacją” w `dom-ev-simulation-testing`
+  z odnośnikiem do `qa-formal-methods` (sprawdzić zależność `pack-ev` → `pack-it` dla `refs`); tłumaczenie śladu TLC
+  na oś czasu scenariusza `evtest`; scenariusz ewaluacji przed treścią, bramka, ewaluacja za zgodą. Uzasadnienie,
+  miejsca w kodzie i kolejność: `docs/plans/2026-11-15-metody-formalne-ev-testing.md`.
+- [ ] **K10-pilot: model TLA+ kolejki offline w repo `ev-testing`** (decyzja człowieka 2026-11-15: teraz nic w kodzie
+  `ev-testing`; wrócić później, za zgodą i z dostępem do zapisu) — `txCall` w `internal/charger/charger.go`:
+  kolejność Start/Stop/MeterValues, Stop nigdy nie ginie, duplikat po zerwaniu; hipoteza: po `ErrTimeout` wiadomość
+  nie trafia do kolejki [niezweryfikowane]. Kontrprzykład → scenariusz YAML i test w Go. Dalej: reconnect z 409,
+  firmware w trakcie sesji, composite schedule (Z3). Szczegóły: tamże.
 
 ## Luki katalogu i polityka autonomii (przegląd listy „Autonomous Full Stack Agent”) — zapisane 2026-11-09
 Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: najpierw sekcja A, potem B. Skille wg
