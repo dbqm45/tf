@@ -480,6 +480,10 @@
   "fingerprint": "19d5e38c82137350",
   "offline": "2026-10-04"
  },
+ "qa-formal-methods": {
+  "fingerprint": "f238f803893683ce",
+  "offline": "2026-11-15"
+ },
  "qa-fuzzing": {
   "fingerprint": "92ffda19a9af1dcf",
   "offline": "2026-10-24"
@@ -493,8 +497,8 @@
   "offline": "2026-10-22"
  },
  "qa-spec-first-testing": {
-  "fingerprint": "d0962703ec6dcd8a",
-  "offline": "2026-10-31"
+  "fingerprint": "1d882fa64808f7a9",
+  "offline": "2026-11-15"
  },
  "qa-test-design": {
   "fingerprint": "216764727344a675",

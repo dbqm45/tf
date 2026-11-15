@@ -3,8 +3,8 @@ name: qa-spec-first-testing
 description: Użyj, gdy testy mają sprawdzać wymaganie, nie implementację — niezależna wyrocznia, clean-room, ATDD, mutacje.
 metadata:
   przeglad: "2027-10-09"
-  katalog: "Użyj przy każdym pisaniu testów — jak sprawić, by test sprawdzał WYMAGANIE, a nie powielał implementację (wyrocznia niezależna od kodu, TDD/ATDD, clean-room, protokół rozbieżności, testy charakteryzujące, mutacyjne i oparte na właściwościach, metody formalne jako wyrocznia — solver Z3, model checking TLA+ i Alloy, kontrprzykład jako test). Nie do technik wyboru przypadków (qa-test-design) ani składni narzędzi (tool-*)."
-  slowa: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu, weryfikacja formalna, metody formalne, zweryfikować formalnie, TLA+, PlusCal, TLC, Alloy, Z3, solver SMT, model checking, udowodnić, że żadna kombinacja, wyścig przy rezerwacji, podwójna rezerwacja, protokół synchronizacji, kontrprzykład"
+  katalog: "Użyj przy każdym pisaniu testów — jak sprawić, by test sprawdzał WYMAGANIE, a nie powielał implementację (wyrocznia niezależna od kodu, TDD/ATDD, clean-room, protokół rozbieżności, testy charakteryzujące, mutacyjne i oparte na właściwościach). Nie do technik wyboru przypadków (qa-test-design), weryfikacji formalnej (qa-formal-methods) ani składni narzędzi (tool-*)."
+  slowa: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu"
 ---
 
 # Testy od specyfikacji, nie od implementacji
@@ -80,18 +80,8 @@ czyta wyłącznie brief biznesowy — wymagania pisane ze znajomością architek
   Zakres: moduły z mapy ryzyk lub bieżącej zmiany, zawężone do pliku albo zakresu linii — nie całe repo po każdym commicie.
 - **Testy oparte na właściwościach** (fast-check, jqwik) dla obliczeń i niezmienników — wyrocznią jest właściwość, nie kod.
 - **Wartości brzegowe** z qa-test-design — tam najczęściej chowają się błędy „o jeden”.
-
-### Metody formalne — gdy przykłady i losowanie nie wystarczą
-Współbieżność i ponowienia, protokoły i maszyny stanów, reguły kombinatoryczne z limitem: wyrocznią jest solver
-(Z3) albo model checker (TLA+/TLC, Alloy), a nie losowanie. Nie cały moduł — 1–3 właściwości o najwyższym koszcie błędu.
-1. Właściwość z kryterium `AC-n`; model tylko ze stanu i kroków, które jej dotyczą; narzędzie szuka negacji.
-2. **Kontrprzykład → test akceptacyjny z `AC-n`** (czerwony przed poprawką, widoczny w `tf trace`); poprawka najpierw
-   w modelu, potem w kodzie.
-3. „Brak kontrprzykładu” raportujesz **z granicami modelu** (liczba procesów, zakres liczb, głębokość) — to nie dowód
-   dla produkcji. Kwoty w groszach albo z zaokrągleniem jak w kodzie.
-4. Model w repozytorium obok kodu; zmiana protokołu bez zmiany modelu to ustalenie w przeglądzie.
-Kiedy który szczebel, granice wyniku i uruchomiony przykład Z3 (rabat ujemny przy koszyku 0,50 zł):
-`references/metody-formalne.md`.
+- **Metody formalne** (solver Z3, model checking TLA+ lub Alloy) dla współbieżności, protokołów i reguł z limitem —
+  wyrocznią jest narzędzie, nie losowanie (qa-formal-methods).
 
 ### Przeżyły mutant — decyzja, nie automat
 Dla każdego pytasz: „czy realny błąd tego kształtu zabolałby użytkownika lub biznes?”
@@ -138,6 +128,5 @@ nie procentem linii.
 ## Źródła
 - Kurs 10xDevs, ed. 3 (2026), moduł 3, lekcja 2 (testy jednostkowe z agentem, testy mutacyjne) i moduł 5 (kontrola
   „celowego zepsucia” w pracy bez nadzoru) — materiał szkoleniowy (dostęp 2026-10-09).
-- Z3 (`z3-solver` 4.15.4) — przykład z `references/metody-formalne.md` uruchomiony 2026-11-15.
 - Stryker 10.0 `stryker run --help` — zawężenie `--mutate` do pliku lub zakresu linii (sprawdzone 2026-10-10).
 Opisane własnymi słowami.

@@ -35,7 +35,7 @@ K1, potem K2, dalej wg priorytetu. Skille wg `core-skill-authoring` (scenariusze
 i specyfikacji sprawdzić u źródła z datą przed wpisaniem do skilla.
 
 Braki (brak pokrycia):
-- [ ] **K1: skill `qa-formal-methods` (`pack-it`)** — jedyna dziura z pytania wprost; dziś są tylko testy
+- [x] **K1: skill `qa-formal-methods` (`pack-it`)** (zrobione 2026-11-15: osobny skill wygrał z sekcją w `qa-spec-first-testing` — wczytanie 8/8 wobec 1/8, treść 8/8 wobec 6/8, bez skilli 4/8, koszt 3,57 USD: `docs/evals/2026-11-15-qa-formal-methods-sekcja-czy-skill.md`; przykład Z3 uruchomiony, TLA+ i Alloy bez uruchomienia — pobranie narzędzi zablokowane w sesji; odnośnik z `qa-spec-first-testing`, role qa-automation i solution-architect) — jedyna dziura z pytania wprost; dziś są tylko testy
   właściwości (Hypothesis w `tool-pytest`, fast-check) i niezmienniki w DDD. Treść: kiedy metoda formalna się opłaca
   (współbieżność, rozproszone protokoły, maszyny stanów, pieniądze i limity, uprawnienia), a kiedy nie; drabina
   kosztu: asercje i design by contract → testy właściwości → model checking (TLA+/PlusCal z TLC lub Apalache, Alloy)
@@ -93,7 +93,7 @@ Pokryte częściowo:
   pozycję „OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji” (sekcja Spec Kit) dla `tf spec`, nie
   tylko `mode-pdi` — przy zamknięciu zadania kryteria trafiają do globalnej specyfikacji modułu, rozjazd jest
   ustaleniem.
-- [ ] **K9: hasła w `tools/coverage_areas.json`** — dopisać hasła, po których mapa pokrycia wykryje powyższe obszary
+- [x] **K9: hasła w `tools/coverage_areas.json`** (zrobione 2026-11-15; dziury po zmianie: diff systemu, okno kontekstu, code mode — K2, K5, K3) — dopisać hasła, po których mapa pokrycia wykryje powyższe obszary
   (np. „metody formalne”, „tla+”, „diff systemu”, „code mode”, „a2a”, „po wydaniu”, „syntetyczny użytkownik”,
   „tokeniz”), żeby kolejny przegląd był powtarzalny bez ręcznego szukania. Mały krok, można razem z K1.
 
