@@ -21,9 +21,15 @@ Współbieżność i ponowienia, protokoły i maszyny stanów, reguły kombinato
 4. Model w repozytorium obok kodu; zmiana protokołu bez zmiany modelu to ustalenie w przeglądzie.
 
 ## Przykład
-Kiedy który szczebel, granice wyniku i uruchomiony przykład Z3 (rabat ujemny przy koszyku 0,50 zł):
-`references/metody-formalne.md`.
+Trzy uruchomione modele z wynikami: `references/metody-formalne.md`.
+- **Z3, reguły rabatowe:** `sat` → koszyk 0,50 zł z rabatem lojalnościowym 20 zł daje ujemną cenę; z limitem w kodzie `unsat`.
+- **TLA+/TLC, ponowienie po zgubionej odpowiedzi:** ślad 6 stanów kończy się dwiema rezerwacjami jednego klienta;
+  z kluczem idempotencji brak naruszenia w 382 stanach (2 klientów, 3 miejsca, 1 ponowienie).
+- **Alloy, uprawnienia przez zagnieżdżone grupy:** podgrupa innego najemcy daje dostęp do cudzej faktury; z regułą
+  dla podgrup `UNSAT` w zakresie 4.
+Każdy kontrprzykład ma gotowy test `AC-n` i raport z granicami modelu.
 
 ## Źródła
-- Z3 (`z3-solver` 4.15.4) — przykład uruchomiony 2026-11-15.
+- Z3 (`z3-solver` 4.15.4), TLA+ (`tla2tools.jar` z wydania v1.8.0, TLC rev bc1b506), Alloy 6.2.0 — przykłady
+  uruchomione 2026-11-15; wersje i polecenia w `references/metody-formalne.md` §Źródła.
 Opisane własnymi słowami.
