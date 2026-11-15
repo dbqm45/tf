@@ -199,6 +199,17 @@ def main() -> int:
         check(not bare and "![" not in text and "`@octocat`" in text and "`@acme/platform`" in text and "`@hubot`" in text,
               f"PB-22: wzmianki @… są w kodzie, a obrazy nie są osadzane: {bare} {'![' in text}")
 
+        # brak zdalnego repozytorium: zamiast próby push — wskazanie zatrzymania z kodem srodowisko (pomiar po kroku G)
+        r = call(p, rs, "pr-body", d, "--base", "main")
+        check("zdalnego" in r.stdout and "--code srodowisko" in r.stdout and "git push" not in r.stdout.split("⚠", 1)[-1][:40],
+              f"PB-25: bez zdalnego repozytorium pr-body mówi, żeby nie wypychać, i podaje STOP z kodem srodowisko: {r.stdout}")
+        bare = Path(t) / "remote.git"
+        git(Path(t), "init", "-q", "--bare", str(bare))
+        git(p, "remote", "add", "origin", str(bare))
+        r = call(p, rs, "pr-body", d, "--base", "main")
+        check("zdalnego" not in r.stdout and "--body-file" in r.stdout,
+              f"PB-26: ze zdalnym repozytorium bez ostrzeżenia: {r.stdout}")
+
         # bez gałęzi bazowej opis nadal powstaje
         r = call(p, rs, "pr-body", d, "--base", "nie-ma-takiej")
         check(r.returncode == 0 and "## Jak cofnąć" in body(p) and "nie-ma-takiej" in section(body(p), "## Kawałki"),
