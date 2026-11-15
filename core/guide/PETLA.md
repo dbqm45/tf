@@ -170,6 +170,13 @@ Czerwony kończy się pytaniem „wycofać?” z krokiem cofania i poleceniem lo
 ponowny test po naprawie nie będzie zielony. Bez `smoke` w karcie fabryka kończy na scaleniu — mówi to zakończenie
 przebiegu i samo polecenie. Fabryka niczego nie wdraża i niczego sama nie cofa.
 
+**Panel recenzentów przy wadze pełnej.** Zadanie o wadze pełnej (logowanie, płatności, uprawnienia, migracje,
+sekrety, dane osobowe) przechodzi do etapu PR dopiero po dwóch przeglądach w osobnych kontekstach: `security-reviewer`
+(bezpieczeństwo zmiany) i `spec-reviewer` (każde kryterium i każda reguła „Bez zmian” ze specyfikacji, z dowodem).
+Skład i zlecenia podaje `run_state.py panel <katalog>`; werdykt zapisuje pętla (`--record <recenzent> pass|fail`),
+a ręcznie: `tf task review <KLUCZ> <recenzent> pass|fail --note "…"`. Werdykt dotyczy commita — po poprawce w nowym
+commicie przegląd jest od nowa. Waga lekka i zwykła nie mają panelu.
+
 **Zamknięcie zadania.** `tf task close <KLUCZ>` zamyka zadanie, gdy: zmiana jest scalona (plik zadania jest na
 gałęzi domyślnej — działa też przy scaleniu squash), wdrożenie nie czeka na decyzję o wycofaniu, a każde ważne
 ustalenie przeglądu ma zapisaną kontrolę, która złapie je następnym razem. Ważne ustalenia zapisuje pętla w chwili,

@@ -93,6 +93,10 @@ Wycofywanie odbywa się tak:
 ## Zgodność nakładek z rdzeniem (autokorekta)
 - `build.py check` (także w `tf doctor`) sprawdza: zakres `requires.core` każdej nakładki, wymagane nakładki,
   nakładkę języka pracy, kolizje nazw (wymiary, agenci, persony) i odwołania do nieistniejących skilli.
+- Panel recenzentów przy wadze pełnej: `tf task review <KEY> <recenzent> pass|fail [--note]` (pole `reviews` w
+  `task.json`: `verdict`, `sha`, `at`, `note`), `run_state.py panel <katalog> [--record <recenzent> pass|fail --note]
+  [--base]`, agent `spec-reviewer`; etap `pr` zadania o wadze pełnej wymaga `pass` od `security-reviewer`
+  i `spec-reviewer` dla bieżącego commita.
 - `metrics.py --after-update [--json]` (także w `tf doctor` i w raporcie `tf metrics`; pola `update`, `from`, `to`,
   `before`, `after`, `warnings`, `notes`, `rollback`) i dziennik `.tf/logs/hook-blocks.jsonl` (`ts`, `hook`,
   `decision`) zapisywany przez `hook_errors.record_block` z hooków, które blokują.

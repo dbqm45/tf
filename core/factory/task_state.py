@@ -18,6 +18,7 @@ model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
   tf task deployed <KEY> --rolled-back --by human:<id> [--note "<co zrobiono>"]   # decyzja człowieka o wycofaniu
   tf task finding <KEY> add "<ważne ustalenie przeglądu>" [--slice K1] [--round 1]
   tf task finding <KEY> control F1 "<test, hook, reguła albo powód jej braku>"   # co złapie to następnym razem
+  tf task review <KEY> <recenzent> pass|fail [--note "<uwaga>"]   # werdykt panelu przy wadze pełnej
   tf task close <KEY> [--lesson "<lekcja>" --by human:<id>] [--base <gałąź>] [--force --by human:<id>]
 
 `tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
@@ -100,6 +101,7 @@ CHANGES = Path("docs") / "project" / "changes"
 RUNS = Path(".tf") / "runs"                       # katalogi robocze przebiegów pętli /tf (run.json: etap, zatrzymanie)
 STOP_MESSAGES = Path(".claude") / "skills" / "tf" / "templates" / "stop_messages.json"
 CARD = Path(".tf") / "config" / "operations.json"   # karta operacyjna projektu; sekcja `deploy`: jak sprawdzić i cofnąć wdrożenie
+PANEL = ("security-reviewer", "spec-reviewer")   # panel recenzentów przy wadze pełnej (krok H11, decyzja D11)
 LESSONS = Path("docs") / "project" / "lessons.md"
 LESSON_HEAD = "Wykonanie i weryfikacja"           # kategoria lekcji zapisywanych przy zamknięciu zadania
 BASES = ("origin/main", "main", "origin/master", "master")
@@ -909,6 +911,45 @@ def cmd_flag(root: Path, key: str, action: str, value: str | None, remove_by: st
     return 0
 
 
+def git_head(root: Path) -> str | None:
+    try:
+        r = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def cmd_review(root: Path, key: str, reviewer: str, verdict: str, note: str) -> int:
+    """Werdykt recenzenta panelu (waga pełna): werdykt, commit HEAD, czas i uwaga w `reviews` zadania."""
+    task = load(root, key)
+    if task is None:
+        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+    head = git_head(root)
+    task.setdefault("reviews", {})[reviewer] = {"verdict": verdict, **({"sha": head} if head else {}), "at": now(),
+                                                **({"note": one_line(note, 300)} if note.strip() else {})}
+    task["updated"] = now()
+    save(root, task)
+    print(f"✓ {key}: {reviewer} — {verdict}" + (f" (commit {head[:12]})" if head else ""))
+    return 0
+
+
+def panel_errors(root: Path, task: dict) -> list[str]:
+    """Czego brakuje w panelu recenzentów zadania o wadze pełnej; pusta lista — panel kompletny (albo niewymagany)."""
+    if task.get("weight") != "pelna":
+        return []
+    head, reviews = git_head(root), task.get("reviews") if isinstance(task.get("reviews"), dict) else {}
+    out = []
+    for name in PANEL:
+        r = reviews.get(name) if isinstance(reviews.get(name), dict) else None
+        if r is None:
+            out.append(f"{name} (brak werdyktu)")
+        elif r.get("verdict") != "pass":
+            out.append(f"{name} ({r.get('verdict')}" + (f": {r['note']}" if r.get("note") else "") + ")")
+        elif head and r.get("sha") and r["sha"] != head:
+            out.append(f"{name} (werdykt dla commita {str(r['sha'])[:12]}, a kod ma nowszy {head[:12]} — przegląd od nowa)")
+    return out
+
+
 def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     task = load(root, key)
     if task is None:
@@ -947,6 +988,11 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
         if bad:
             return fail(f"do etapu {stage} przechodzi zadanie z uporządkowaną flagą funkcji: "
                         + "; ".join(f"{e['rule']} {e['message']}" for e in bad) + f". Całość: tf flag check {key}")
+        missing = panel_errors(root, task)
+        if missing:
+            return fail(f"zadanie o wadze pełnej przechodzi do etapu {stage} po panelu recenzentów w osobnych "
+                        f"kontekstach; brakuje: {'; '.join(missing)}. Zlecenia i zapis werdyktu: run_state.py panel "
+                        f"<katalog przebiegu> (albo tf task review {key} <recenzent> pass|fail --note \"…\")")
     task["stage"], task["updated"] = stage, now()
     save(root, task)
     print(f"✓ {key}: {was} → {stage}")
@@ -1087,6 +1133,10 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
             print(f"  ustalenie {one_line(f.get('id'), 8)}" + (f" ({one_line(f['slice'], 4)})" if f.get("slice") else "")
                   + f": {one_line(f.get('text'), 400)} — "
                   + (f"kontrola: {one_line(f['control'], 400)}" if f.get("control") else "bez kontroli"))
+    for name, r in sorted((task.get("reviews") or {}).items()) if isinstance(task.get("reviews"), dict) else []:
+        if isinstance(r, dict):
+            print(f"  przegląd {one_line(name, 40)}: {one_line(r.get('verdict'), 10)}"
+                  + (f" (commit {str(r['sha'])[:12]})" if r.get("sha") else "") + (f" — {one_line(r['note'], 200)}" if r.get("note") else ""))
     if isinstance(task.get("closed"), dict):
         print(f"  zamknięte: {task['closed'].get('at', '?')}" + (f" ({task['closed']['by']})" if task["closed"].get("by") else ""))
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else None
@@ -1183,6 +1233,11 @@ def main(argv: list[str]) -> int:
     fi.add_argument("second", nargs="?")
     fi.add_argument("--slice", default=None)
     fi.add_argument("--round", type=int, default=None)
+    rv = sub.add_parser("review")
+    rv.add_argument("key")
+    rv.add_argument("reviewer")
+    rv.add_argument("verdict", choices=["pass", "fail"])
+    rv.add_argument("--note", default="")
     cl = sub.add_parser("close")
     cl.add_argument("key")
     cl.add_argument("--by", default=None)
@@ -1220,6 +1275,10 @@ def main(argv: list[str]) -> int:
         if a.action == "control" and not (a.first and re.fullmatch(r"F[1-9][0-9]*", a.first)):
             return fail(f"podaj identyfikator ustalenia: tf task finding {a.key} control F1 \"<kontrola>\"", 2)
         return cmd_finding(root, a.key, a.action, a.first, a.second, a.slice, a.round if a.round and a.round > 0 else None)
+    if a.cmd == "review":
+        if not re.fullmatch(r"[a-z][a-z0-9-]{1,39}", a.reviewer):
+            return fail(f"recenzent „{a.reviewer}” — nazwa agenta, np. {', '.join(PANEL)}", 2)
+        return cmd_review(root, a.key, a.reviewer, a.verdict, a.note)
     if a.cmd == "close":
         human = bool(a.by) and a.by.startswith("human:") and bool(ACTOR.fullmatch(a.by))
         if a.by and not ACTOR.fullmatch(a.by):
