@@ -251,6 +251,30 @@ def cmd_list() -> int:
     return r.returncode
 
 
+PROJECT_TF = Path(".tf") / "factory" / "tf.py"
+
+
+def is_launcher() -> bool:
+    """Ten plik to launcher (kopia w ~/.local/bin), a nie tf.py silnika w .tf/factory/ ani w klonie fabryki."""
+    return Path(__file__).resolve().parent.name != "factory"
+
+
+def refresh_launcher() -> None:
+    """Po aktualizacji projektu launcher przejmuje tf.py silnika projektu (z zachowanym adresem repo), żeby znał
+    nowe polecenia. Nic nie robi, gdy to nie launcher albo projekt nie ma .tf/factory/tf.py."""
+    if not is_launcher() or not PROJECT_TF.is_file():
+        return
+    me = Path(__file__).resolve()
+    text = PROJECT_TF.read_text(encoding="utf-8")
+    text = re.sub(r"^REPO = .*$", lambda m: f"REPO = {REPO!r}", text, count=1, flags=re.M)
+    try:
+        if text != me.read_text(encoding="utf-8"):
+            me.write_text(text, encoding="utf-8")
+            print(f"✓ Launcher {me} updated to the project's factory version")
+    except OSError as e:
+        print(f"⚠ Could not update the launcher {me}: {e} — run: python3 .tf/factory/tf.py --install-launcher")
+
+
 def engine(script: str, args: list[str]) -> int:
     """Run a script of the project's engine (.tf/factory/) with the given arguments."""
     if not need_project():
@@ -446,10 +470,15 @@ def main(argv: list[str]) -> int:
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "metrics.py"), *rest]).returncode
     if cmd not in (None, "install", "update"):
+        if is_launcher() and PROJECT_TF.is_file():   # polecenie nowsze niż launcher — zna je silnik projektu
+            return subprocess.run([sys.executable, str(PROJECT_TF), *argv[1:]]).returncode
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2
     if MANIFEST.exists() and cmd != "install":
-        return update(repo or REPO or None, rest)
+        rc = update(repo or REPO or None, rest)
+        if rc == 0:
+            refresh_launcher()
+        return rc
     repo = repo or REPO
     if not repo:
         print("✗ The factory repository URL is unknown. Pass --repo <url>, set TF_REPO or install the launcher:\n"

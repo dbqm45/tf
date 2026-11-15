@@ -43,6 +43,9 @@ Gdy repozytorium stanie się publiczne, wystarczy samo
 2. Pobiera fabrykę (`git clone --depth 1`) do katalogu tymczasowego.
 3. Instaluje komendę `tf` w `~/.local/bin` (`core/factory/tf.py --install-launcher`) z adresem repozytorium zapisanym
    w środku; na Windows także `tf.cmd`.
+   Launcher to kopia `tf.py` z chwili instalacji: po udanym `tf` (aktualizacji) w projekcie podmienia się na
+   `tf.py` zaktualizowanego silnika, a polecenie, którego jeszcze nie zna, przekazuje do `.tf/factory/tf.py`
+   projektu. Launcher sprzed tej zmiany odświeżysz raz ręcznie: `python3 .tf/factory/tf.py --install-launcher`.
 4. Usuwa katalog tymczasowy. Jeśli `~/.local/bin` nie ma w PATH, mówi, co dopisać (na Windows pyta, czy dopisać do PATH
    użytkownika).
 
