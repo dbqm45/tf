@@ -8,7 +8,7 @@ wynikiem jest gałąź `story/<key>` z PR albo blok STOP w worktree zadania.
 Zadanie do wzięcia: tryb Auto, waga lekka albo zwykła, etap przed PR, nie czeka na człowieka, nie ma jeszcze worktree
 (wznowienie w istniejącym worktree tylko przez `--key`) i nie jest zajęte przez inny przebieg (`.tf/locks/<KEY>.json`).
 Kod wyjścia: 0 — przebieg zakończony, 2 — odmowa, 3 — nie ma zadania do wzięcia, inny — kod agenta.
-Agent: `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <tryb>
+Agent: `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <tryb, domyślnie acceptEdits>
 --strict-mcp-config`, tylko z dozwolonymi zmiennymi środowiskowymi; przed startem pliki sterujące agentem w worktree
 muszą być takie jak w kopii człowieka. Zmienna `TF_WORK_AGENT` podmienia polecenie `claude` (testy). Dziennik:
 `.tf/logs/work.jsonl`.
@@ -43,8 +43,11 @@ LOG = Path(".tf") / "logs" / "work.jsonl"
 MANIFEST = Path(".claude") / "factory-manifest.json"
 OWN_CONFIG = Path(".tf") / "config"
 OPEN_STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad")
-DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "dontAsk", "lock_hours": 6, "timeout_minutes": 180}
-MODES = ("dontAsk", "plan")       # bez nadzoru nikt nie odpowie na pytanie o zgodę; szersze tryby są odrzucane
+DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "acceptEdits", "lock_hours": 6, "timeout_minutes": 180}
+# bez nadzoru nikt nie odpowie na pytanie o zgodę: w trybie -p narzędzie spoza listy dozwolonych jest odrzucane.
+# acceptEdits (domyślny) przyjmuje edycje plików w katalogu roboczym (worktree) — bez tego pętla nie napisze kodu, bo
+# ustawienia fabryki nie dopuszczają Edit/Write (pilotaż 2026-11-15); dontAsk odrzuca też edycje; szersze tryby odpadają
+MODES = ("acceptEdits", "dontAsk", "plan")
 COPY_PREFIXES = (".claude/", ".tf/factory/")   # z manifestu kopiowane są tylko pliki fabryki
 MAX_RUN_USD = 500
 # pliki, które sterują agentem (uprawnienia, hooki, instrukcje, serwery MCP): w worktree muszą być takie jak w kopii
@@ -264,7 +267,10 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
         files = json.loads((root / MANIFEST).read_text(encoding="utf-8")).get("files") or {}
     except (OSError, ValueError, AttributeError):
         files = {}
-    rels = [MANIFEST.as_posix(), *CONTROL_FILES, (CHANGES / key).as_posix(),
+    referenced = sorted(r for r in settings_paths(root)            # bez sekretów, nawet gdy polecenie je wskazuje
+                        if not any(part.startswith((".env", ".git")) for part in Path(r).parts))
+    rels = [MANIFEST.as_posix(), *CONTROL_FILES, *referenced, (CHANGES / key).as_posix(),
+            (Path(".tf") / "runs" / key).as_posix(),
             *[r for r in files if isinstance(r, str) and r.startswith(COPY_PREFIXES) and ".." not in Path(r).parts]]
     # brakujące w worktree pliki sterujące (niezatwierdzone albo poza gitem) pochodzą z kopii człowieka; pliki, które
     # gałąź ma inne niż ta kopia, nie są nadpisywane — wykrywa je control_drift i przebieg jest odrzucany
@@ -305,8 +311,9 @@ def files_of(base: Path, rel: str) -> dict[str, str]:
 
 
 def settings_paths(base: Path) -> set[str]:
-    """Pliki projektu, które wskazują polecenia w ustawieniach (hooki, statusLine, apiKeyHelper…): wykonuje je claude,
-    więc należą do plików sterujących. Bierze każdy napis z ustawień i każde jego słowo, które jest plikiem projektu."""
+    """Pliki projektu, które wskazują polecenia w ustawieniach (hooki, statusLine, apiKeyHelper…) i polecenie bramki
+    jakości (`.claude/quality-gate.json`, np. `./verify.sh` z tf onboard): wykonują je claude i hooki, więc należą do
+    plików sterujących. Bierze każdy napis z ustawień i każde jego słowo, które jest plikiem projektu."""
     out: set[str] = set()
 
     def strings(x):
@@ -319,7 +326,7 @@ def settings_paths(base: Path) -> set[str]:
             for v in x:
                 yield from strings(v)
 
-    for name in (".claude/settings.json", ".claude/settings.local.json"):
+    for name in (".claude/settings.json", ".claude/settings.local.json", ".claude/quality-gate.json"):
         f = base / name
         try:
             if f.is_symlink() or not f.is_file() or f.stat().st_size > 1_000_000:
@@ -408,7 +415,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
         print(f"✗ podaj limit wydatku od 0 do {MAX_RUN_USD} USD: tf work --once --budget <USD> (albo work.budget_usd "
               "w .tf/config/config.yaml) — bez limitu praca bez nadzoru nie rusza")
         return 2
-    mode = str(cfg.get("permission_mode") or "dontAsk")
+    mode = str(cfg.get("permission_mode") or DEFAULTS["permission_mode"])
     if mode not in MODES:
         print(f"✗ work.permission_mode „{clean(mode, 40)}” — bez nadzoru dozwolone tylko: {', '.join(MODES)}")
         return 2

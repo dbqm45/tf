@@ -185,6 +185,10 @@ w osobnym worktree, z twardym limitem wydatku. Nie scala, nie wdraża; wynik to 
   wykonywalności; `.claude` albo `.tf` jako symlink → odmowa; zmiana plików sterujących w kopii człowieka w trakcie
   przebiegu → ostrzeżenie i `root_changed` w dzienniku. Granica, której skrypt nie zamknie: testy i budowanie projektu
   z gałęzi oraz pliki w katalogu domowym — pełna izolacja to kontener albo osobna maszyna (opisane w przewodniku).
+- **Pilotaż (2026-11-15, 0,37 USD):** worktree nie dostawał katalogu przebiegu `.tf/runs/<KEY>` (ignorowany przez
+  gita), więc pętla zatrzymała się na przyjęciu z poprawnym STOP; w trybie `dontAsk` agent nie zapisałby też pliku,
+  bo ustawienia fabryki nie dopuszczają Edit/Write. Poprawka: katalog przebiegu kopiowany, domyślny tryb `acceptEdits`
+  (ten sam co w pomiarach; w `-p` niedozwolone narzędzie jest odrzucane, a nie czeka).
 - **`--dry-run`:** pokazuje wybrane zadanie, worktree i polecenie, niczego nie tworzy (bez kosztu).
 - **Wynik:** jedna linia i wpis `.tf/logs/work.jsonl` (`key`, `started`, `ended`, `exit`, `stage` zadania po
   przebiegu, koszt z raportu, gdy jest). Kod wyjścia: 0 — przebieg zakończony (PR albo STOP), 3 — nie ma zadania,
