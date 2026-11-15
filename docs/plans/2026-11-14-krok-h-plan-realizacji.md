@@ -171,8 +171,9 @@ w osobnym worktree, z twardym limitem wydatku. Nie scala, nie wdraża; wynik to 
   w `task.json` musi się z nią zgadzać (inaczej cudzy `task.json` wskazałby worktree poza `.tf/worktrees`);
   z manifestu kopiowane są tylko ścieżki `.claude/` i `.tf/factory/`, bez symlinków i bez wyjścia poza katalogi;
   tryb uprawnień tylko `dontAsk` albo `plan`; łączny limit zadania `work.task_budget_usd` (domyślnie 20 USD, suma
-  limitów z dziennika); limit jednego przebiegu najwyżej 500 USD; przejęcie martwej blokady przez `rename` (wygrywa
-  jeden proces); znaki sterujące z tytułu usuwane; `--base` zaczynające się od `-` odrzucane. Zostaje opisane
+  limitów z dziennika); limit jednego przebiegu najwyżej 500 USD; przejęcie martwej blokady pod osobnym muteksem `O_EXCL`
+  po ponownym odczycie (wygrywa jeden proces); wpis startu z limitem w dzienniku przed agentem (przerwany przebieg też
+  się liczy); zepsuta wartość `task_budget_usd` daje domyślne 20 USD; znaki sterujące z tytułu usuwane; `--base` zaczynające się od `-` odrzucane. Zostaje opisane
   w przewodniku: hooki z `.claude/settings.json` gałęzi i zmienne środowiskowe człowieka trafiają do agenta.
 - **`--dry-run`:** pokazuje wybrane zadanie, worktree i polecenie, niczego nie tworzy (bez kosztu).
 - **Wynik:** jedna linia i wpis `.tf/logs/work.jsonl` (`key`, `started`, `ended`, `exit`, `stage` zadania po

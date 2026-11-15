@@ -96,11 +96,11 @@ def refusal(root: Path, task: dict, folder: str) -> str | None:
         return f"{clean(folder)}: klucz w task.json nie zgadza się z nazwą folderu zadania — zadanie pominięte"
     key = folder
     if task.get("closed") or task.get("stage") not in OPEN_STAGES:
-        return f"{key}: etap {task.get('stage')} — praca bez nadzoru prowadzi zadanie tylko do PR"
+        return f"{key}: etap {clean(task.get('stage'), 30)} — praca bez nadzoru prowadzi zadanie tylko do PR"
     if task.get("weight") == "pelna":
         return f"{key}: waga pełna — bez nadzoru tylko zadania o wadze lekkiej i zwykłej (pełna wymaga panelu i człowieka)"
     if task.get("mode") != "auto":
-        return (f"{key}: tryb {task.get('mode') or 'zwykly'}, nie auto — zgodę na pracę bez nadzoru daje człowiek: "
+        return (f"{key}: tryb {clean(task.get('mode') or 'zwykly', 30)}, nie auto — zgodę na pracę bez nadzoru daje człowiek: "
                 f"tf task mode {key} auto")
     if waits_for_human(root, key):
         return f"{key}: czeka na człowieka (tf status) — po odpowiedzi wróci do kolejki"
@@ -151,16 +151,42 @@ def claim(root: Path, key: str, hours: float) -> tuple[bool, str]:
                 return False, ""
             note = (f"⚠ blokada {key} martwego procesu {held.get('pid')} z {datetime.fromtimestamp(at).isoformat(timespec='minutes')} "
                     "przejęta")
-            try:                           # przejęcie przez rename: z dwóch procesów wygrywa jeden
-                os.rename(path, path.with_name(f"{path.name}.{os.getpid()}.stale"))
-            except OSError:
+            if not take_over(path, held, hours):
                 return False, ""
-            path.with_name(f"{path.name}.{os.getpid()}.stale").unlink(missing_ok=True)
             continue
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump({"pid": os.getpid(), "host": socket.gethostname(), "at": time.time()}, f)
         return True, note
     return False, ""
+
+
+def take_over(path: Path, seen: dict, hours: float) -> bool:
+    """Usuwa martwą blokadę pod osobnym muteksem (`<KEY>.json.takeover`, `O_EXCL`): przejmuje jeden proces, a przed
+    usunięciem sprawdza, że blokada to nadal ta sama martwa, którą odczytał (nie świeża blokada innego procesu)."""
+    mutex = path.with_name(path.name + ".takeover")
+    try:
+        if time.time() - mutex.stat().st_mtime > hours * 3600:
+            mutex.unlink(missing_ok=True)          # muteks po przerwanym przejęciu
+    except OSError:
+        pass
+    try:
+        fd = os.open(mutex, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    except OSError:
+        return False
+    os.close(fd)
+    try:
+        try:
+            now_held = json.loads(path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return True
+        except (OSError, ValueError):
+            now_held = {}
+        if (now_held if isinstance(now_held, dict) else {}) != seen:
+            return False
+        path.unlink(missing_ok=True)
+        return True
+    finally:
+        mutex.unlink(missing_ok=True)
 
 
 def release(root: Path, key: str) -> None:
@@ -277,9 +303,10 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
         print("✗ --base: podaj nazwę gałęzi albo commita")
         return 2
     try:
-        cap = float(cfg.get("task_budget_usd") or 0)
+        cap = float(cfg.get("task_budget_usd"))        # 0 — świadomie bez łącznego limitu
+        cap = cap if cap >= 0 and cap == cap else float(DEFAULTS["task_budget_usd"])
     except (TypeError, ValueError):
-        cap = 0.0
+        cap = float(DEFAULTS["task_budget_usd"])       # zepsuta wartość nie wyłącza limitu
     if key:
         task = load_task(root, key) if KEY.fullmatch(key) else None
         if task is None:
@@ -322,6 +349,8 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
             if info:
                 print(f"• {info}")
             print(f"• {k}: pętla /tf w {wt.as_posix()}, limit {budget} USD")
+            write_log(root, {"key": k, "event": "start", "started": started, "budget_usd": float(budget),
+                             "worktree": wt.relative_to(root).as_posix()})   # przed agentem: przerwanie też się liczy
             try:
                 code = subprocess.run(agent_command(k, budget, mode), cwd=wt,
                                       timeout=float(cfg.get("timeout_minutes") or 180) * 60).returncode
@@ -332,8 +361,8 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
                 print(f"✗ {k}: przebieg przerwany po {cfg.get('timeout_minutes')} min")
                 code = 124
             after = load_task(wt, k) or {}
-            entry = {"key": k, "started": started, "ended": now(), "exit": code, "stage": after.get("stage"),
-                     "worktree": wt.relative_to(root).as_posix(), "budget_usd": float(budget)}
+            entry = {"key": k, "event": "end", "started": started, "ended": now(), "exit": code,
+                     "stage": after.get("stage"), "worktree": wt.relative_to(root).as_posix()}
             write_log(root, entry)
             print(f"{'✓' if code == 0 else '✗'} {k}: kod {code}, etap {after.get('stage') or '?'} — wynik w "
                   f"{entry['worktree']} (tf status w worktree); scalenie zostaje dla człowieka")

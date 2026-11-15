@@ -100,7 +100,8 @@ Wycofywanie odbywa się tak:
 - `tf work --once --budget <USD> [--key <KEY>] [--base <gałąź>] [--dry-run]` (`work.py`; klucze konfiguracji
   `work.budget_usd`, `work.task_budget_usd`, `work.permission_mode` (`dontAsk` albo `plan`), `work.lock_hours`, `work.timeout_minutes`; blokada `.tf/locks/<KEY>.json`
   z polami `pid`, `host`, `at`; worktree `.tf/worktrees/<KEY>` na gałęzi `story/<key>`; dziennik `.tf/logs/work.jsonl`
-  z polami `key`, `started`, `ended`, `exit`, `stage`, `worktree`, `budget_usd`; kody wyjścia 0, 2, 3; zmienna
+  z wpisami `event: start` (`key`, `started`, `budget_usd`, `worktree`; przed uruchomieniem agenta) i `event: end`
+  (`key`, `started`, `ended`, `exit`, `stage`, `worktree`); kody wyjścia 0, 2, 3; zmienna
   `TF_WORK_AGENT`).
 - `metrics.py --after-update [--json]` (także w `tf doctor` i w raporcie `tf metrics`; pola `update`, `from`, `to`,
   `before`, `after`, `warnings`, `notes`, `rollback`) i dziennik `.tf/logs/hook-blocks.jsonl` (`ts`, `hook`,

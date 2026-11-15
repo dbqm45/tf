@@ -124,9 +124,11 @@ def main() -> int:
               and (wt / CHANGES / "IMP-2" / "task.json").is_file(),
               f"WO-5: worktree na gałęzi story/imp-2 z plikami fabryki z manifestu i folderem zadania: {branch}")
         entries = log(p)
-        check(len(entries) == 1 and entries[0].get("key") == "IMP-2" and entries[0].get("exit") == 0
-              and entries[0].get("started") and entries[0].get("ended") and entries[0].get("worktree"),
-              f"WO-6: wpis w .tf/logs/work.jsonl: {entries}")
+        check(len(entries) == 2 and entries[0].get("event") == "start" and entries[0].get("budget_usd") == 3
+              and entries[1].get("event") == "end" and entries[1].get("key") == "IMP-2" and entries[1].get("exit") == 0
+              and entries[1].get("started") and entries[1].get("ended") and entries[1].get("worktree"),
+              f"WO-6: wpis startu z limitem (przed agentem — przerwany przebieg też się liczy) i wpis końca w "
+              f".tf/logs/work.jsonl: {entries}")
         check(not (p / ".tf" / "locks" / "IMP-2.json").exists(), "WO-7: blokada zwolniona po przebiegu")
 
         # następny przebieg: IMP-2 ma już worktree (wznowienie tylko przez --key), więc bierze IMP-4; IMP-1 i IMP-3 nigdy
@@ -224,6 +226,17 @@ def main() -> int:
         check(r.returncode == 2, f"WO-23: --base zaczynające się od „-” → odmowa: {r.returncode} {r.stdout}")
         r = work(s, "--once", "--budget", "5000", "--dry-run")
         check(r.returncode == 2, f"WO-24: limit jednego przebiegu powyżej 500 USD → odmowa: {r.returncode} {r.stdout}")
+
+        # zepsuta wartość łącznego limitu nie wyłącza go (domyślnie 20 USD)
+        b2 = project(base, "badcap")
+        task(b2, "", "start", "IMP-5", "--title", "Cennik", "--mode", "auto")
+        (b2 / ".tf" / "config").mkdir(parents=True, exist_ok=True)
+        (b2 / ".tf" / "config" / "config.yaml").write_text("work:\n  task_budget_usd: dużo\n", encoding="utf-8")
+        (b2 / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
+        (b2 / ".tf" / "logs" / "work.jsonl").write_text(json.dumps({"key": "IMP-5", "event": "start", "budget_usd": 19}) + "\n",
+                                                        encoding="utf-8")
+        r = work(b2, "--once", "--budget", "2", "--key", "IMP-5")
+        check(r.returncode == 2 and not agent_calls(b2), f"WO-25: zepsuty task_budget_usd → domyślne 20 USD, 19 + 2 odrzucone: {r.returncode} {r.stdout}")
 
     # tf work w launcherze i w opisie poleceń
     tf = (ROOT / ".tf" / "factory" / "tf.py").read_text(encoding="utf-8")
