@@ -1,7 +1,6 @@
 # Metody formalne jako wyrocznia
 
-Spis treści: 1. Kiedy warto · 2. Drabina kosztu · 3. Przebieg · 4. Granice wyniku · 5. Przykład: reguły (Z3) ·
-6. Przykład: protokół (TLA+, TLC) · 7. Przykład: uprawnienia (Alloy) · Źródła
+> **Spis treści:** 1. Kiedy warto · 2. Drabina kosztu (od najtańszego) · 3. Przebieg · 4. Granice wyniku · 5. Przykład: reguły rabatowe (Z3, uruchomiony) · 6. Przykład: ponowienie po zgubionej odpowiedzi (TLA+, TLC,… · 7. Przykład: uprawnienia przez zagnieżdżone grupy (Alloy,…
 
 ## 1. Kiedy warto
 Model sprawdzany narzędziem opłaca się tam, gdzie przykładów i losowania jest za mało, a błąd jest drogi:
