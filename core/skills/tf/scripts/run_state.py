@@ -1117,7 +1117,20 @@ def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
           "  własne uwagi (odstępstwa od planu, wyjątek budżetu artefaktów) dopisz na końcu pliku")
     if missing:
         print(f"⚠ bez zielonego dowodu: {', '.join(missing)} — opis mówi to wprost")
+    if not has_remote(project):
+        print(f"⚠ repozytorium nie ma zdalnego źródła (git remote) — gałęzi nie da się wypchnąć ani otworzyć PR. Nie "
+              f"próbuj wypychać; zakończ blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code srodowisko "
+              "--reason \"brak zdalnego repozytorium; opis PR gotowy w pr-body.md\"")
     return 0
+
+
+def has_remote(project: Path) -> bool:
+    """Czy repozytorium ma skonfigurowane zdalne źródło; przy błędzie gita zakładamy, że ma (bez fałszywego STOP)."""
+    try:
+        r = subprocess.run(["git", "-C", str(project), "remote"], capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return True
+    return r.returncode != 0 or bool(r.stdout.strip())
 
 
 def cmd_park(run_dir: Path, item: str, project: Path) -> int:
