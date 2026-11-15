@@ -4,6 +4,7 @@ Development workspace for the factory: an installed project assembled from core/
 and the factory tests run (tests and build expect the installed layout, not the source tree).
 
   python3 tools/workspace.py assemble [--packs all|none|a,b] [--out DIR] [--language pl] [--commit-language en]
+                                     [--pack-dir DIR|git URL]   # also packs from outside packs/ (install.py --pack-dir)
   python3 tools/workspace.py check    [same options]   # assemble + build check + tests + scenario validation + gate status
   python3 tools/workspace.py matrix                    # check: core only, each pack and mode alone, all
   python3 tools/workspace.py sync-gate [--out DIR]     # copy gate results back to core/, packs/ and modes/
@@ -17,7 +18,7 @@ and the factory tests run (tests and build expect the installed layout, not the 
                                                        # evale przebiegu (N5, DZ13): bramka zmian modelu/skilla/persony/
                                                        # promptu fazy; raport porównuje wynik i koszt z poprzednim przebiegiem
 
-Default workspace: .work/<packs> (git-ignored). The workspace is recreated on every `assemble`/`check`.
+Default workspace: .work/<packs> (git-ignored; `+ext` appended with --pack-dir). The workspace is recreated on every `assemble`/`check`.
 Gate results (`python3 .tf/factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
 `sync-gate` moves them into `core/tests/skill_gate/core.json` or `{packs,modes}/<id>/tests/skill_gate/<id>.json`.
 """
@@ -42,18 +43,43 @@ def item_dirs() -> list[Path]:
 
 
 def opts_of(argv: list[str]) -> dict:
-    out = {"packs": "all", "out": None, "language": None, "commit-language": None, "keep": False}
+    out = {"packs": "all", "out": None, "language": None, "commit-language": None, "keep": False, "pack-dir": None}
     it = iter(argv)
     for a in it:
         if a in ("--packs", "--out", "--language", "--commit-language"):
             out[a[2:]] = next(it, "")
+        elif a == "--pack-dir":     # nakładki spoza packs/ (np. ../ev-intelligence/factory-pack); można powtórzyć
+            out["pack-dir"] = ",".join(x for x in (out["pack-dir"], next(it, "")) if x)
         elif a == "--keep":
             out["keep"] = True
     return out
 
 
 def workspace_dir(o: dict) -> Path:
-    return Path(o["out"]).resolve() if o["out"] else ROOT / ".work" / (o["packs"].replace(",", "+") or "none")
+    if o["out"]:
+        return Path(o["out"]).resolve()
+    name = o["packs"].replace(",", "+") or "none"
+    return ROOT / ".work" / (name + "+ext" if o.get("pack-dir") else name)
+
+
+def install_cmd(ws: Path, o: dict) -> list[str]:
+    cmd = [sys.executable, str(INSTALL), str(ws), "--yes", "--packs", o["packs"] or "none"]
+    for k in ("language", "commit-language"):
+        if o.get(k):
+            cmd += [f"--{k}", o[k]]
+    if o.get("pack-dir"):
+        cmd += ["--pack-dir", o["pack-dir"]]
+    return cmd
+
+
+def external_dirs(o: dict) -> list[Path]:
+    """Lokalne katalogi nakładek zewnętrznych z --pack-dir (do sync-gate); adresów git nie ma gdzie zapisać."""
+    out = []
+    for src in (o.get("pack-dir") or "").split(","):
+        base = Path(src).expanduser() if src and "://" not in src else None
+        if base and base.is_dir():
+            out += [base] if (base / "pack.yaml").is_file() else sorted(p.parent for p in base.glob("*/pack.yaml"))
+    return out
 
 
 def assemble(o: dict) -> Path:
@@ -62,11 +88,7 @@ def assemble(o: dict) -> Path:
         shutil.rmtree(ws)
     ws.mkdir(parents=True, exist_ok=True)
     subprocess.run(["git", "init", "-q"], cwd=ws, check=False)
-    cmd = [sys.executable, str(INSTALL), str(ws), "--yes", "--packs", o["packs"] or "none"]
-    for k in ("language", "commit-language"):
-        if o[k]:
-            cmd += [f"--{k}", o[k]]
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = subprocess.run(install_cmd(ws, o), capture_output=True, text=True)
     if r.returncode != 0:
         print(r.stdout[-3000:] + r.stderr[-2000:])
         sys.exit(f"✗ install failed in {ws}")
@@ -116,7 +138,7 @@ def sync_gate(o: dict) -> int:
         return 0
     reg = json.loads(reg_p.read_text(encoding="utf-8"))
     owners = {d.name: ROOT / "core" for d in (ROOT / "core" / "skills").iterdir() if d.is_dir()}
-    for p in (s for d in item_dirs() for s in sorted(d.glob("skills/*"))):
+    for p in (s for d in [*item_dirs(), *external_dirs(o)] for s in sorted(d.glob("skills/*"))):
         owners[p.name] = p.parent.parent
     moved = 0
     for skill, rec in reg.items():
@@ -124,14 +146,23 @@ def sync_gate(o: dict) -> int:
         if base is None:
             print(f"  ? {skill}: not a factory skill — skipped")
             continue
-        f = base / "tests" / "skill_gate" / f"{'core' if base.name == 'core' else base.name}.json"
+        gid = "core" if base == ROOT / "core" else pack_id(base)
+        f = base / "tests" / "skill_gate" / f"{gid}.json"
         data = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
         data[skill] = rec
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(dict(sorted(data.items())), ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         moved += 1
-    print(f"✓ Synced {moved} gate records into core/, packs/ and modes/")
+    print(f"✓ Synced {moved} gate records into core/, packs/ and modes/"
+          + (" and the external packs" if external_dirs(o) else ""))
     return 0
+
+
+def pack_id(base: Path) -> str:
+    """Id nakładki z pack.yaml (katalog nakładki zewnętrznej może się nazywać inaczej, np. factory-pack/)."""
+    import re
+    m = re.search(r"^id:\s*(\S+)", (base / "pack.yaml").read_text(encoding="utf-8"), re.M) if (base / "pack.yaml").is_file() else None
+    return m.group(1) if m else base.name
 
 
 def skill_owners() -> dict[str, str]:

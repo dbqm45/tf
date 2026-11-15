@@ -46,6 +46,19 @@ nie powstaną prawdziwe scenariusze i treść.
 7. **Sprawdzenie**: `python3 tools/workspace.py check --packs <id>`, `check --packs all`, `refs`; PR z tytułem
    `feat(<id>): …`.
 
+## Nakładka poza repozytorium fabryki
+Nakładka może żyć w innym repozytorium (np. wiedza domenowa razem z jej źródłami). Kontrakt jest ten sam co w `packs/`:
+`pack.yaml` z `kind` i prefiksem id (`pack-`/`mode-`), `requires.core`, scenariusze i rejestr bramki w `tests/`.
+- Instalacja w projekcie: `install.py --pack-dir <katalog|adres git> --add <id>` (albo `update.py`/`tf` z tymi flagami).
+  Źródło to katalog z `pack.yaml`, katalog z `*/pack.yaml` albo repozytorium git (`#<tag|gałąź>`; bez tego najnowszy
+  tag `vX.Y.Z`, a bez tagów gałąź domyślna). Manifest (i lock zespołowy) zapamiętuje źródło w `pack_dirs`, więc
+  aktualizacja pobiera nakładkę ponownie; `--drop-pack-dir <źródło>` je zapomina.
+- Instalator odmawia, gdy id zajmuje nakładka fabryki, gdy źródła nie ma, a nakładka z niego jest wybrana (podaj nowe
+  położenie `--pack-dir`), i gdy `skill_audit.py` zgłasza wysoką wagę w skillach nakładki.
+- Sprawdzenie z fabryką: `python3 tools/workspace.py check --packs pack-it,<id> --pack-dir <katalog>` (przestrzeń
+  `.work/<nakładki>+ext`); `sync-gate --out <ta przestrzeń> --pack-dir <katalog>` zapisuje wyniki bramki do
+  `<katalog>/tests/skill_gate/<id>.json`.
+
 ## Wersjonowanie
 - Wersję rdzenia i CHANGELOG liczy workflow wydania z Conventional Commits (`docs/RELEASING.md`). Wersji nakładki
   (`version` w `pack.yaml`) nic nie podbija automatycznie — zmieniasz ją ręcznie według SemVer [zalecenie, nie
