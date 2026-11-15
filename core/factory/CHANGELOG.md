@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.15.0] — 2026-11-15
+### Added
+- **core:** ostrzeżenie SPEC-009 o braku kryterium negatywnego w tf spec check (#261)
+
 ## [10.14.0] — 2026-11-15
 ### Added
 - **pack-it:** skill qa-formal-methods i plan luk K1–K10 (#260)
