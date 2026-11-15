@@ -1,6 +1,6 @@
 ---
 name: tool-semgrep
-description: Użyj przy pisaniu własnych reguł Semgrep (i zapytań CodeQL) — wzorce, taint, autofix, testy reguł, mniej fałszywych trafień, CI.
+description: Użyj przy własnych regułach Semgrep i CodeQL — wzorce, taint, autofix, testy reguł, fałszywe trafienia, CI.
 metadata:
   przeglad: "2027-01-24"
   katalog: "Użyj, gdy piszesz, testujesz lub poprawiasz własną regułę Semgrep albo zapytanie CodeQL — składnia reguły (pattern, patterns, pattern-either, pattern-inside, pattern-not, metazmienne, metavariable-regex, focus-metavariable), tryb taint (źródła, sanityzatory, ujścia), autofix (fix:) z testem poprawki (.fixed), testy reguł (ruleid:, ok:, todoruleid:, todook:, semgrep scan --test), ograniczanie fałszywych trafień (ograniczenia metazmiennych, paths.exclude, przypadki ok: z prawdziwych alarmów), reguły w CI (testy reguł, --baseline-commit, --error), licencje reguł z rejestru, testy zapytań CodeQL (.qlref, .expected, codeql test run). Nie do szukania wariantów znalezionej podatności (sec-variant-analysis), doboru skanerów i progów w programie AppSec (sec-appsec-devsecops) ani reguł detekcji w SIEM (sec-detection-engineering)."

@@ -1,6 +1,6 @@
 ---
 name: core-grounding
-description: Użyj, gdy pytasz, czy podana wersja, flaga, data lub liczba jest prawdziwa albo asystent może zmyślać (długi dokument, rozmowa) — źródło, „nie wiem”.
+description: Użyj, gdy pytasz, czy wersja, flaga, data lub liczba jest prawdziwa, albo asystent może zmyślać — źródło, „nie wiem”.
 metadata:
   przeglad: "2027-10-10"
   katalog: "Użyj przy każdej odpowiedzi, raporcie i artefakcie, które zawierają fakty o kodzie, wersjach, API, poleceniach, liczbach lub źródłach — klasy twierdzeń i sposób ich sprawdzenia, miejsca, w których modele najczęściej zmyślają, higiena kontekstu, samosprawdzenie i skrypt sprawdzający odwołania. Nie do procedury badania źródeł zewnętrznych (core-source-research) ani testów kodu (skille testów, pack-it)."

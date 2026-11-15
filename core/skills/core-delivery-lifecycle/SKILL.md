@@ -1,6 +1,6 @@
 ---
 name: core-delivery-lifecycle
-description: Użyj, gdy pytasz, na jakim etapie jest projekt, co gotowe przed kodem lub wydaniem, kto zatwierdza przejście i co po wdrożeniu — fazy, bramki, agenci.
+description: Użyj, gdy pytasz o etap projektu, gotowość przed kodem lub wydaniem, zatwierdzenie przejścia — fazy, bramki.
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj, gdy projekt ma przejść od pomysłu do oprogramowania gotowego do wdrożenia — kolejność faz, persony i skille faz, kryteria wejścia i wyjścia, bramki zatwierdzane przez człowieka, definicja „gotowe do produkcji”, utrzymanie po wydaniu (łatki, aktualizacje, wygaszanie funkcji, pasma kontrolne metryk), proces wytwarzania z agentami AI (pętla artefaktów, plan przed kodem, ewaluacje konfiguracji agenta, przegląd PR przez AI, miary etapów), ścieżka skrócona dla małych projektów i przebieg próbny. Nie do treści pojedynczej fazy (skille wymiarów z nakładek: domena, architektura, testy, operacje — lista w .claude/catalog.md)."

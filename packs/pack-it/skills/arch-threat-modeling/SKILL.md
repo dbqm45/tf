@@ -1,6 +1,6 @@
 ---
 name: arch-threat-modeling
-description: Użyj przy modelu zagrożeń funkcji lub integracji — DFD z granicami zaufania, STRIDE, PASTA, ocena ryzyka, OWASP Top 10.
+description: Użyj przy modelu zagrożeń funkcji lub integracji — DFD z granicami zaufania, STRIDE, PASTA, ocena ryzyka.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy projektowaniu funkcji, usługi lub integracji i przy zmianie granic zaufania — model zagrożeń (DFD z granicami zaufania, powierzchnia ataku, STRIDE per element, PASTA dla krytycznych procesów), ocena i kwantyfikacja ryzyka, decyzje o ryzyku, OWASP Top 10:2025. Nie do przeglądu konkretnego diffu (security-reviewer) ani reagowania na incydent (ops-security-operations)."

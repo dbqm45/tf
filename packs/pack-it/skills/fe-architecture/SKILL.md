@@ -1,6 +1,6 @@
 ---
 name: fe-architecture
-description: Użyj przy strukturze frontendu w dowolnym frameworku — stan i dane, granice komponentów, SSR/RSC, wydajność, odporność.
+description: Użyj przy strukturze frontendu — stan i dane, granice komponentów, SSR/RSC, wydajność, odporność.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy decyzjach o strukturze frontendu (każdy framework) — styl architektury, FSD/feature folders, stan i warstwa danych, granice komponentów, renderowanie (SSR/RSC), wydajność, odporność (błędy, ładowanie, retry), routing, bezpieczeństwo klienta (CSP, CSRF, tokeny), testy komponentów, UI czatu AI. Nie do stylów (fe-css), API przeglądarki i a11y (fe-web-platform) ani składni (lang-*, fw-*)."

@@ -1,6 +1,6 @@
 ---
 name: txt-polish-style
-description: Użyj przy redakcji tekstu po polsku do gotowej wersji — skracanie, strona czynna, konkret, jeden ton, typografia.
+description: Użyj przy redakcji tekstu po polsku do gotowej wersji — skracanie, strona czynna, konkret, typografia.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy redakcji polskiego tekstu, gdy wynikiem ma być gotowa, poprawiona wersja — skracanie i wzmacnianie zdań, strona czynna, konkret, jeden ton i perspektywa, czytelność instrukcji i komunikatów, spójność między rozdziałami, typografia dokumentu. Nie do raportu błędów (txt-polish-correctness) ani zmian merytorycznych."

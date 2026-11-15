@@ -1,6 +1,6 @@
 ---
 name: core-project-record
-description: Użyj przy dzienniku projektu w docs/project/ — artefakty faz z TL;DR i Przekazaniem, decyzje, punkt kontrolny pracy.
+description: Użyj przy dzienniku projektu w docs/project/ — artefakty faz, decyzje, punkt kontrolny pracy.
 metadata:
   przeglad: "2027-10-09"
   katalog: "Użyj zawsze, gdy praca wykracza poza jedną krótką zmianę — dziennik projektu w docs/project/ (artefakty faz z TL;DR i Przekazaniem, dziennik zdarzeń, rejestr decyzji, indeks) i punkt kontrolny pracy w toku (wip/), który pozwala przerwać sesję i wrócić w dowolnym momencie. Nie do treści merytorycznej faz (skille ddd-*, arch-*, proc-*)."

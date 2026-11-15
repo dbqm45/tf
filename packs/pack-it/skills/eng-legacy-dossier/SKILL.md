@@ -1,6 +1,6 @@
 ---
 name: eng-legacy-dossier
-description: Użyj przy opisie lub audycie architektury kodu legacy przed refaktorem — as-is, reguły, ocena z dowodami, roadmapa.
+description: Użyj przy opisie architektury kodu legacy przed refaktorem — as-is, reguły, ocena z dowodami, roadmapa.
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj, gdy trzeba opisać i wytłumaczyć istniejący kod (legacy) przed poprawkami i refaktorem — teczka systemu: karty modułów z odpowiedzialnością, wejściami i wyjściami, reguły biznesowe wydobyte z kodu z dowodem plik:linia i pewnością, dane i integracje, kluczowe przepływy, słownik kod ↔ biznes, pytania do ludzi, stan modułów i kandydaci do refaktoru; tryb audytu architektury (np. Angular w monorepo Nx): Architecture Inventory (as-is), Assessment (ustalenia z dowodem, kategorie, mocne strony) i Recommendations & Roadmap (decyzja od „bez zmian” do przeprojektowania, priorytet, weryfikacja); skrypt sprawdza kompletność teczki i dowody. Nie do samej mapy struktury i punktów wejścia (eng-codebase-mapping), oceny długu (eng-tech-debt-audit), wyboru refaktoryzacji (eng-refactor-planning) ani analizy binariów bez źródeł."
