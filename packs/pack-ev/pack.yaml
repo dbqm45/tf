@@ -8,6 +8,11 @@ content_language: pl
 requires:
   core: ">=3.0.0 <11.0.0"
 optional_packs: [pack-docs, pack-editorial-pl]
+# instalacje dawnej ev-team-factory aktualizują się do tej nakładki (install.py: legacy_packs)
+migrates_from: [ev-team-factory]
+# zmiany nazw skilli dla własnych plików projektu (migrations.py)
+renames:
+  "3.0.0": {core-knowledge-base: dom-ev-knowledge-base}
 
 facets:
   - {prefix: dom-, order: 150, name: wiedza branżowa EV, question: "jak działa branża pojazdów elektrycznych — pojęcia, standardy, protokoły, regulacje"}

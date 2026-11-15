@@ -230,6 +230,14 @@ def main() -> int:
         mig.apply(p, dry=False)
         text = (p / ".tf/config/personas/moja.yaml").read_text()
         check("docs-tech-writing" in text and "ux-feature-design" in text, f"P-17: migracja poprawia plik projektu: {text}")
+        # zmiany nazw z nakładki (`renames` w pack.yaml) — rdzeń nie wymienia skilli nakładek
+        y = p / ".tf" / "factory" / "packs" / "pack-a" / "pack.yaml"
+        y.write_text(y.read_text() + 'renames:\n  "1.0.0": {aa-stary: aa-model}\n')
+        write(p / ".tf" / "config" / "personas" / "moja2.yaml", "name: moja2\nskills: [aa-stary]\n")
+        mig = load(p, "migrations")
+        mig.apply(p, dry=False)
+        text = (p / ".tf/config/personas/moja2.yaml").read_text()
+        check("aa-model" in text and "aa-stary" not in text, f"P-17b: migracja wg `renames` nakładki: {text}")
 
         # sekcja języka w CLAUDE.local.md
         md_p = p / "CLAUDE.local.md"

@@ -10,7 +10,7 @@ argument-hint: "[opis problemu]"
 
 # Dobór zespołu i podejścia do problemu
 
-Procedura dyspozytora nakładki (persona z `dispatcher: true`, np. Maja w pack-it, Iwona w pack-ev). Źródło prawdy o tym,
+Procedura dyspozytora nakładki (persona z `dispatcher: true`, np. Maja w pack-it albo dyspozytor nakładki domenowej). Źródło prawdy o tym,
 co zespół potrafi: **`.claude/catalog.md`** (generowany — zainstalowane nakładki, skille wg wymiarów i nakładek, persony
 z wykonawcami, agenci wspólni, konsultanci nakładek). Czytasz go zamiast wszystkich skilli; skill wczytujesz dopiero wtedy,
 gdy go wybrałeś. Dobierasz **tylko to, co jest w katalogu** — nie zakładaj, że jakaś nakładka jest zainstalowana.
@@ -30,7 +30,7 @@ ma tę składową?* Wymiaru, którego nie ma w katalogu, nie ma w projekcie. Typ
 | wersje, migracja, aktualizacja bibliotek | `tool-`, `fw-`, `lang-` (sekcje „Zależne od wersji”) + core-stack-sync | pack-it: tool-nx, fw-angular, ops-dependency-upgrades |
 | wiele zespołów, własność, koordynacja, priorytety, przepływ pracy | `proc-` | pack-it: proc-team-topologies, proc-agile, proc-lean, proc-safe |
 | co budować, metryki sukcesu, A/B, pomysł → wymagania (PRD), za duże MVP, zgłoszenia i backlog, plan dla sponsora | `proc-` | pack-it: proc-product-discovery, proc-requirements-shaping, proc-issue-triage, proc-project-planning |
-| podział na domeny/moduły, zależności między nimi, reguły biznesowe, pojęcia domeny, DDD na starym kodzie | `ddd-`, `dom-` | pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-connascence-analysis, ddd-legacy-modernization; pack-ev: `dom-ev-*` |
+| podział na domeny/moduły, zależności między nimi, reguły biznesowe, pojęcia domeny, DDD na starym kodzie | `ddd-`, `dom-` | pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-connascence-analysis, ddd-legacy-modernization; nakładka domenowa: `dom-*` |
 | decyzja technologiczna, projekt systemu od wymagań, atrybuty jakości, praca architekta (arc42/C4, ATAM) | `arch-` | pack-it: arch-system-design (podobne systemy: `.claude/skills/arch-system-design/references/przyklady-projektow.md`), arch-tech-selection, arch-quality-attributes, arch-architect-practice |
 | model zagrożeń, RODO, wielu klientów w jednym SaaS, przepisy UE dla produktu z AI | `arch-` | pack-it: arch-threat-modeling, arch-privacy-compliance, arch-multi-tenancy, arch-eu-product-law |
 | API, baza, uwierzytelnianie, kolejki, subskrypcje i płatności cykliczne | `be-` | pack-it: be-api-design, be-database, be-auth-security, be-messaging-outbox, be-billing-subscriptions |
@@ -73,9 +73,9 @@ która go ma).
    właściwego zestawu, użyj `specialist` z listą skilli w briefie (wczyta je sam) — to persona „na chwilę”.
 3. **Decyzja trudna do odwrócenia / sprzeczne kompromisy** → `specialist-deep` albo `architect` (Opus) tylko do oceny opcji.
 4. **Fakty zewnętrzne** (wersje, zgodność, EOL, changelogi) → `researcher` (tani), nigdy z pamięci.
-5. **Problem przecina dziedziny nakładek** (np. backend z pack-it przy protokole ładowania z pack-ev) → pytanie do
-   **konsultanta** tej nakładki (katalog: „Konsultanci nakładek”, np. `ev-consult-protocols` w pack-ev, `it-consult-backend`
-   w pack-it). Konsultant tylko odpowiada ze źródłem i nie zmienia plików; wywołuje go persona w sesji głównej, nie wykonawca —
+5. **Problem przecina dziedziny nakładek** (np. backend z pack-it przy protokole z nakładki domenowej) → pytanie do
+   **konsultanta** tej nakładki (katalog: „Konsultanci nakładek”, np. `it-consult-backend` w pack-it, konsultanci
+   nakładki domenowej). Konsultant tylko odpowiada ze źródłem i nie zmienia plików; wywołuje go persona w sesji głównej, nie wykonawca —
    wykonawca zgłasza potrzebę w raporcie. Dłuższa praca w innej dziedzinie → osobna sesja persony tej nakładki i pytanie
    w `docs/project/questions.md`.
 Równoległe perspektywy wywołuj w **jednej wiadomości** (osobne konteksty = niezależne spojrzenia). Brief dla każdego: problem,

@@ -8,9 +8,10 @@ Migracje rdzenia — autokorekta plików projektu po zmianach w publicznym API f
 Uruchamiają je instalator (po każdej aktualizacji) i `tf doctor --fix`. Poprawiane są tylko pliki projektu, których
 fabryka nie instalowała: własne persony i role (`.tf/config/personas/`, `.tf/config/roles/`), własne nakładki
 (`.tf/factory/packs/<id>/` spoza manifestu) i własne skille (`.claude/skills/<skill>/SKILL.md` spoza manifestu).
-Pliki fabryki aktualizuje instalator. Tylko biblioteka standardowa.
+Pliki fabryki aktualizuje instalator. Biblioteka standardowa + PyYAML (przez packs.py) do czytania pack.yaml.
 
-Nowa zmiana nazwy w rdzeniu lub nakładce = nowy wpis w RENAMES (z wersją rdzenia, od której obowiązuje).
+Nowa zmiana nazwy w rdzeniu = nowy wpis w RENAMES (z wersją rdzenia, od której obowiązuje). Zmiana nazwy w nakładce =
+wpis `renames: {"<wersja>": {stara: nowa}}` w jej pack.yaml (działa też dla nakładek spoza repozytorium fabryki).
 """
 from __future__ import annotations
 
@@ -35,7 +36,6 @@ RENAMES: dict[str, dict[str, str]] = {
     "3.0.0": {
         "core-tech-docs": "docs-tech-writing",          # pack-docs
         "fe-ux-design": "ux-feature-design",            # pack-ux
-        "core-knowledge-base": "dom-ev-knowledge-base",  # pack-ev
     },
     "5.0.0": {
         "core-story-run": "tf",                         # pętla „zadanie → PR” (do 9.33 skill talos-story-run trybu mode-talos)
@@ -61,9 +61,27 @@ def own_files(root: Path) -> list[Path]:
     return [p for p in cands if p.is_file() and p.relative_to(root).as_posix() not in installed]
 
 
+def pack_renames(root: Path) -> dict[str, str]:
+    """Zmiany nazw zadeklarowane przez zainstalowane nakładki (`renames` w .tf/factory/packs/<id>/pack.yaml)."""
+    base = root / ".tf" / "factory" / "packs"
+    files = sorted(base.glob("*/pack.yaml")) if base.is_dir() else []
+    if not files:
+        return {}
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_packs_mig", Path(__file__).resolve().parent / "packs.py")
+    pm = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pm)
+    out: dict[str, str] = {}
+    for f in files:
+        for table in (pm.load_yaml(f).get("renames") or {}).values():
+            out.update({str(k): str(v) for k, v in (table or {}).items()})
+    return out
+
+
 def apply(root: Path = ROOT, dry: bool = True) -> list[str]:
     """Zmiany nazw w plikach projektu. Zwraca opis zmian (przy dry=True — zmian do zrobienia)."""
     mapping = {old: new for table in RENAMES.values() for old, new in table.items()}
+    mapping.update(pack_renames(root))
     pattern = re.compile(r"\b(" + "|".join(map(re.escape, mapping)) + r")\b")
     out = []
     for p in own_files(root):

@@ -18,7 +18,7 @@ faza może być osobną sesją innej persony. Następna sesja zaczyna od `python
 TL;DR i sekcji Przekazanie.
 
 ## Kto prowadzi
-- **Start**: dyspozytor nakładki (pack-it: `claude --agent maja`; pack-ev: `claude --agent iwona`). Przepytuje
+- **Start**: dyspozytor nakładki (persona z `dispatcher: true`, np. pack-it: `claude --agent maja`). Przepytuje
   (core-plan-interview), ocenia skalę i ryzyko, wybiera ścieżkę (pełną albo skróconą) i zapisuje plan faz
   z personami w `01-discovery/brief.md` (sekcja „Plan faz”). Bez dyspozytora: core-problem-routing.
 - **Fazy**: człowiek uruchamia personę wskazaną w Przekazaniu poprzedniej fazy. Persona robi zadania sama (core-cost-control §0).
@@ -43,7 +43,7 @@ dobierasz do problemu; pytanie spoza swojej dziedziny persona zadaje konsultanto
 | 9 | Utrzymanie | `08-operations/` | DevOps/SRE + implementer + projektant testów | SRE, triaż, debugowanie, aktualizacje zależności, regresja, koszty | cykliczny przegląd utrzymania (`operations-review.md`), poprawki błędów z testem regresyjnym, łatki bezpieczeństwa w terminie, aktualizacje przed końcem wsparcia, wycofywanie funkcji, koszty |
 
 Przykład (pack-it): Maja → Natalia (pack-ux) → Ewa → Tomasz → Tomasz + Kasia → wykonawca wg stacku + Kasia → Piotr.
-Obsada ze skillami, też pack-ev: `references/obsada-nakladek.md`.
+Obsada ze skillami: `references/obsada-nakladek.md` (nakładka domenowa: jej `GUIDE.md`).
 
 Dokumentacja powstaje w trakcie: README i uruchomienie od fazy 6, runbook w fazie 7 (pack-docs: docs-tech-writing).
 Korekta języka przed oddaniem ludziom (pack-editorial-pl: Stefan, txt-polish-correctness).
