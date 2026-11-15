@@ -52,7 +52,7 @@ Braki (brak pokrycia):
   zależności, pliki konfiguracji, nowe endpointy — z `git diff` i `code_graph.py`), część oceniana modelem. Warstwowy
   diff: kolejność czytania kontrakt → dane → logika → UI → testy, z osobnym werdyktem na warstwę. Sekcja trafia do
   opisu PR (sprawdzić zgodność z `pr_body` i testami `test_pr_body.py`).
-- [ ] **K3: code mode w `ai-agents` i `core-cost-control`** (pomiar 2026-11-15, `docs/evals/2026-11-15-luki-k3-k7.md`: katalog = bez skilli 14/18; jedyna powtarzalna luka — rozdzielenie odczytu od zapisu i zatwierdzanie akcji zapisu w kodzie agenta, limit czasu i kosztu; zakres zawężony do 2–3 zdań w `ai-agents`, sprawdzonych scenariuszem `gap-k3-code-mode-crm`) — agent pisze krótki program, który sam woła narzędzia
+- [x] **K3: code mode w `ai-agents` i `core-cost-control`** (zrobione 2026-11-15: punkt „Code mode” w kroku 4 `ai-agents`, scenariusz `code-mode-crm`; przed 3/5 i 4/5, po 5/5 w 4 przebiegach, 0,59 USD: `docs/evals/2026-11-15-k3-code-mode.md`; `core-cost-control` bez zmian) (pomiar 2026-11-15, `docs/evals/2026-11-15-luki-k3-k7.md`: katalog = bez skilli 14/18; jedyna powtarzalna luka — rozdzielenie odczytu od zapisu i zatwierdzanie akcji zapisu w kodzie agenta, limit czasu i kosztu; zakres zawężony do 2–3 zdań w `ai-agents`, sprawdzonych scenariuszem `gap-k3-code-mode-crm`) — agent pisze krótki program, który sam woła narzędzia
   lub API i filtruje wyniki, zamiast wielu wywołań narzędzi z pełnym wynikiem w kontekście. Kiedy (duże wyniki,
   pętle po wielu elementach, łączenie danych z kilku narzędzi), kiedy nie (pojedyncze wywołanie, akcje wymagające
   zatwierdzenia każdej z osobna); wymagania: piaskownica, limit czasu i budżetu, zwracany tylko wynik końcowy;
