@@ -22,6 +22,40 @@ katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
 - [ ] **Decyzje D1–D12** (sekcja 15 dokumentu) — człowiek.
 - [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
 
+## Ustawienia firmy (nakładka firmowa) — na później, zapisane 2026-11-16
+Stan: nakładka firmowa działa (`org_defaults`, zestaw w `org/`: generator, szablon, przewodnik `org/README.md`).
+Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić później.
+- [ ] **Gdzie leżą wygenerowane ustawienia firmy** — decyzja człowieka. Dziś (wariant B) paczka firmy żyje
+  w osobnym repozytorium firmy i trafia do projektu przez `tf install --pack-dir … --add pack-<firma>`.
+  - **Wariant A:** katalog `custom-settings/` w repozytorium fabryki, obok `packs/` i `modes/`. Zalety: jedno repo
+    zamiast dwóch, instalator bierze ustawienia sam (bez `--pack-dir`), `tf update` przynosi je razem z fabryką,
+    widać od razu, że to konfiguracja, a nie wiedza dziedzinowa. Wady: fabryka staje się specyficzna dla jednej firmy
+    (trudniej ją udostępnić albo pobierać zmiany z innego źródła fabryki); każda zmiana standardów to commit i wydanie
+    fabryki, choć rdzeń się nie zmienił.
+  - **Wariant B (obecny):** osobne repozytorium firmy. Zalety: fabryka zostaje ogólna, firma zmienia standardy we
+    własnym rytmie i uprawnieniach, kilka firm może używać tej samej fabryki. Wady: jedno repo więcej i jednorazowe
+    `--pack-dir`.
+  - **Rekomendacja:** A, gdy fabryki używa tylko jedna firma; B, gdy fabryka ma służyć wielu firmom.
+  - **W obu wariantach format zostaje nakładką** (`pack.yaml`): instalacja, aktualizacja, audyt skilli, bramka i testy
+    działają już dla tego formatu; własny format `custom-settings/` wymagałby zbudowania ich drugi raz.
+  - **Zakres zmiany dla A:** instalator i sprawdzenia fabryki (CI, `tools/workspace.py`) traktują `custom-settings/`
+    jak dodatkowe źródło nakładek, włączane domyślnie; generator `org/new_org_pack.py` dostaje opcję zapisu tam;
+    `org/README.md` opisuje oba warianty; testy instalacji i aktualizacji z ustawieniami w `custom-settings/`.
+- [ ] **Generator standardów z dokumentów firmy z kontrolą cytatów skryptem.** Dziś `org/README.md` daje gotowe
+  polecenie dla agenta, a cytaty sprawdza człowiek. Plan (wzorzec rekonstrukcji projektu z kodu): (1) dokumenty
+  (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `zrodla/`;
+  (2) skrypt dzieli je na sekcje po nagłówkach, usuwa duplikaty, zapisuje manifest z odciskami sekcji; (3) model
+  przypisuje każde ustalenie do obszaru (UI, API, dane, wydania, wspólne) i rodzaju (sprawdzalne wzorcem →
+  kandydat do `rules.yaml` z przykładem w `fixtures/`; wymaga oceny → `references/<obszar>.md`; ogólna wiedza →
+  pominięte; sprzeczne → lista do decyzji); (4) skrypt generuje pliki, scenariusze na obszar i raport;
+  (5) kontrola bez modelu: każdy cytat istnieje w źródle (jak `recon_check`), każdy wzorzec się kompiluje i przechodzi
+  bramkę na przykładach; (6) odświeżanie tylko zmienionych sekcji z manifestu. Skill procesowy (np.
+  `core-org-standards`) w zestawie `org/` albo w rdzeniu — do decyzji przy planie. Ryzyka: przeinaczone ustalenia
+  (cytat obowiązkowy), zbyt szerokie wzorce (kandydaci z przykładem i zgodą człowieka), poufność dokumentów (treść
+  idzie do modelu — polityka danych firmy).
+- [ ] **Pomiar generatora na prawdziwych dokumentach firmy** — trafność przypisania obszaru i rodzaju, odsetek
+  poprawnych cytatów, koszt; płatny, za zgodą człowieka i na dokumentach, które firma udostępni.
+
 ## Luki z przeglądu agend szkoleń (AI, agenci, product engineering) — zapisane 2026-11-15
 Przegląd 2026-11-15: przeszukanie skilli, hooków i skryptów po hasłach z agend szkoleń (mechanika LLM, sterowanie
 kontekstem, systemy wiedzy, harnessy, workflowy, agenci, product engineering) oraz pytanie człowieka o Spec Driven,
