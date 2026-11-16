@@ -27,6 +27,13 @@ import sys
 import zipfile
 from pathlib import Path
 
+for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (git) też piszą i czytają UTF-8
+
 ROOT = Path.cwd()
 MANIFEST = ".claude/factory-manifest.json"
 LOCK = ".claude/factory-lock.json"
