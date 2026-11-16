@@ -73,11 +73,11 @@ człowieka, i z kontrolą wyniku skryptem.
      w `.git/info/exclude`) jako ostatnia warstwa `config_layers` — skrypt;
    - [x] granice: osoba nie rozluźnia polityki autonomii ani sufitów firmy i zespołu — sprawdzenie w składaniu
      warstw (skrypt), z testem;
-   - [x] trzy style (`samodzielny`, `krok-po-kroku`, `rozmowa`) jako gotowe wartości istniejących przełączników
+   - [x] trzy style (`autonomous`, `step-by-step`, `conversation`) jako gotowe wartości istniejących przełączników
      (domyślny tryb zadania, `loop.blocked_slices`, …) — dane w konfiguracji, polecenie `tf style <nazwa>`;
-   - [x] zatrzymanie pętli `/tf` po każdym kawałku dla stylu `krok-po-kroku` — stan w `run_state.py` (skrypt), model
+   - [x] zatrzymanie pętli `/tf` po każdym kawałku dla stylu `step-by-step` — stan w `run_state.py` (skrypt), model
      tylko pokazuje plan i diff i czeka na zgodę;
-   - [x] styl `rozmowa`: zadanie kończy się na planie (domyślny tryb `plan` przy `tf task start`), kod dopiero po
+   - [x] styl `conversation`: zadanie kończy się na planie (domyślny tryb `plan` przy `tf task start`), kod dopiero po
      zmianie trybu przez człowieka, potem zgoda po każdym kawałku — wszystko w skryptach, bez instrukcji w prompcie.
      Pętla `/tf` i tak startuje tylko na polecenie człowieka; rozmowa z personą poza pętlą nie zmienia plików bez
      prośby tak jak dotąd [do rozważenia: tryb uprawnień Claude Code `plan` w `.claude/settings.local.json`];
@@ -149,11 +149,11 @@ człowieka, i z kontrolą wyniku skryptem.
   dozwolony”, „najwyżej X USD na przebieg”), a osoba wybiera w jego granicach. Skille bezpieczeństwa, rzetelności
   i TDD (`core-agent-security`, `core-grounding`, hooki `tdd_guard`, `guard_*`) wyłącza tylko firma.
 - [ ] **Style pracy osoby** (preset, który ustawia kilka istniejących przełączników naraz):
-  - **samodzielny** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
+  - **autonomous** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
     wymaga limitów `work` i obowiązującej polityki autonomii;
-  - **krok po kroku** — tryb `zwykly` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
+  - **step-by-step** — tryb `zwykly` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
     następnym), widoczny plan i diff każdego kroku;
-  - **rozmowa** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
+  - **conversation** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
     bez automatycznego startu przebiegu z numeru zadania.
   Preset to tylko domyślne wartości: każde zadanie nadal może dostać inny tryb (`tf task mode`).
 - [ ] **`skills_off`** — odłożone po pomiarze z 2026-11-16 (bez zysku trafności i kosztu); w każdej warstwie: skill zostaje w instalacji i działa ręcznie (`/nazwa`), ale

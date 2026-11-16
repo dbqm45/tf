@@ -21,7 +21,7 @@ tf — the team factory command: install, update, packs, languages, health check
                               # your own skill from the template, with a scenario file (.tf/factory/build.py new-skill)
   tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
   tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
-  tf style [<name>] [--here]  # your work style: samodzielny | krok-po-kroku | rozmowa; no name — show the current one;
+  tf style [<name>] [--here]  # your work style: autonomous | step-by-step | conversation; no name — show the current one;
                               # saved in ~/.tf/preferences.yaml (all your projects) or, with --here, .tf/config/me.yaml
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
                               # `tf config show steps`: who runs each /tf loop step, with model and effort

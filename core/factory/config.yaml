@@ -446,13 +446,13 @@ task:
 # Style pracy osoby (`tf style <nazwa>`, docs/todo.md): gotowe wartości przełączników wyżej. Styl to tylko wartości
 # domyślne — pojedyncze zadanie nadal może dostać inny tryb (`tf task mode`), w granicach `task.allowed_modes`.
 styles:
-  samodzielny:     # „niech się dzieje samo”: tryb Auto, pytanie wstrzymuje tylko swój kawałek, raport na końcu
+  autonomous:      # „niech się dzieje samo”: tryb Auto, pytanie wstrzymuje tylko swój kawałek, raport na końcu
     task: {default_mode: auto}
     loop: {blocked_slices: true, confirm_each_slice: false}
-  krok-po-kroku:   # „zatwierdzam każdy krok”: plan do zgody, po każdym kawałku zatrzymanie i zgoda na następny
+  step-by-step:    # „zatwierdzam każdy krok”: plan do zgody, po każdym kawałku zatrzymanie i zgoda na następny
     task: {default_mode: zwykly}
     loop: {blocked_slices: false, confirm_each_slice: true}
-  rozmowa:         # „najpierw porozmawiajmy”: zadanie kończy się na planie, kod dopiero po zmianie trybu przez człowieka
+  conversation:    # „najpierw porozmawiajmy”: zadanie kończy się na planie, kod dopiero po zmianie trybu przez człowieka
     task: {default_mode: plan}
     loop: {blocked_slices: false, confirm_each_slice: true}
 

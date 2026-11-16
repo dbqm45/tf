@@ -236,9 +236,9 @@ repozytorium). `tf style` bez nazwy pokazuje bieżący styl.
 
 | Styl | Domyślny tryb zadania | Co się dzieje |
 |---|---|---|
-| `samodzielny` | Auto | agent idzie bez zgody na plan (nie przy wadze pełnej); pytanie wstrzymuje tylko swój kawałek |
-| `krok-po-kroku` | zwykły | plan zatwierdzasz Ty; po każdym kawałku agent pokazuje zmiany i czeka na Twoją zgodę |
-| `rozmowa` | Plan | zadanie kończy się na planie; kod dopiero, gdy zmienisz tryb (`tf task mode <KLUCZ> zwykly`) |
+| `autonomous` | Auto | agent idzie bez zgody na plan (nie przy wadze pełnej); pytanie wstrzymuje tylko swój kawałek |
+| `step-by-step` | zwykły | plan zatwierdzasz Ty; po każdym kawałku agent pokazuje zmiany i czeka na Twoją zgodę |
+| `conversation` | Plan | zadanie kończy się na planie; kod dopiero, gdy zmienisz tryb (`tf task mode <KLUCZ> zwykly`) |
 
 Styl to tylko wartości domyślne: pojedyncze zadanie może dostać inny tryb. Firma, zespół albo projekt ustala, które
 tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicach. Polityki autonomii styl nie rozluźnia.
@@ -265,7 +265,7 @@ tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicac
 | `tf language <kod>` / `tf commit-language <kod>` | język pracy / język commitów i PR |
 | `tf list`, `tf doctor [--fix]` | co jest zainstalowane; stan instalacji i naprawy |
 | `tf new skill <nazwa> "<opis>"`, `tf skill check <nazwa>`, `tf skill audit <katalog>` | własny skill: szkielet ze scenariuszami, bramka jakości, audyt bezpieczeństwa |
-| `tf style [<nazwa>] [--here]` | Twój styl pracy: `samodzielny`, `krok-po-kroku`, `rozmowa`; bez nazwy — bieżący |
+| `tf style [<nazwa>] [--here]` | Twój styl pracy: `autonomous`, `step-by-step`, `conversation`; bez nazwy — bieżący |
 | `tf config show [<klucz>]` | konfiguracja po scaleniu i skąd pochodzi każda wartość |
 | `tf spec new <KLUCZ>`, `tf spec check <KLUCZ>` | specyfikacja zadania (`spec.md`): szablon i sprawdzenie, czy kryteria mają Zakładając / Gdy / Wtedy, co zostaje bez zmian i czy nie ma pytań blokujących; z błędami zadanie nie przejdzie do planu |
 | `tf task freeze <KLUCZ> <plik> --by human:<id>`, `tf task reopen <KLUCZ> <plik> --by human:<id> --reason "…"` | ochrona podstawy zadania: zamrożony plik (np. test akceptacyjny), zatwierdzony plik zadania i `spec.md` od etapu realizacji agent zmieni tylko za Twoją zgodą; `reopen` zdejmuje ochronę i zapisuje powód |

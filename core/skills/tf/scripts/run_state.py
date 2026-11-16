@@ -89,7 +89,7 @@ Zależności kawałków zapisuje plan (`· po: K1`, `· po: brak`; bez dopisku �
 albo `answer`, `slice`, `text`, `by`; plik zapisuje decyzje, stanem przebiegu nie steruje). Z włączonym przełącznikiem STOP z kodem `pytanie` dla bieżącego kawałka
 jest odrzucany, gdy został kawałek niezależny; pytanie o całe zadanie przechodzi z `--task`.
 
-`proceed` działa z przełącznikiem `loop.confirm_each_slice` (styl pracy `krok-po-kroku` albo `rozmowa`, `tf style`):
+`proceed` działa z przełącznikiem `loop.confirm_each_slice` (styl pracy `step-by-step` albo `conversation`, `tf style`):
 po `done` przebieg czeka na zgodę człowieka (`Dalej: STOP`), a `verify` i `step` następnego kawałka odmawiają, dopóki
 `proceed` nie zapisze zgody. W trybie Auto przełącznik nie działa — nie ma człowieka, który by ją dał.
 
@@ -827,7 +827,7 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
     if rest and confirm_each_slice(project) and task_field(run_dir, meta, "mode") != "auto":
         meta["hold"] = slice_id
         write_run(run_dir, meta)
-        print(f"Dalej: STOP — styl krok po kroku: pokaż człowiekowi zmiany {slice_id} (git show --stat HEAD) i zapytaj, "
+        print(f"Dalej: STOP — styl step-by-step: pokaż człowiekowi zmiany {slice_id} (git show --stat HEAD) i zapytaj, "
               f"czy iść dalej. Po zgodzie: run_state.py proceed {run_dir}")
         return 0
     print_next(project, run_dir, meta)
@@ -835,7 +835,7 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
 
 
 def cmd_proceed(run_dir: Path, project: Path) -> int:
-    """Zgoda człowieka na następny kawałek po wstrzymaniu (styl krok po kroku); bez wstrzymania — tylko `Dalej:`."""
+    """Zgoda człowieka na następny kawałek po wstrzymaniu (styl step-by-step); bez wstrzymania — tylko `Dalej:`."""
     meta = load(run_dir)
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
@@ -875,20 +875,20 @@ def loop_setting(project: Path, name: str) -> bool:
 
 
 def blocked_slices_enabled(project: Path) -> bool:
-    """`loop.blocked_slices`: pytanie blokuje tylko swój kawałek (styl `samodzielny`)."""
+    """`loop.blocked_slices`: pytanie blokuje tylko swój kawałek (styl `autonomous`)."""
     return loop_setting(project, "blocked_slices")
 
 
 def confirm_each_slice(project: Path) -> bool:
-    """`loop.confirm_each_slice`: po każdym kawałku zgoda człowieka przed następnym (style `krok-po-kroku`, `rozmowa`)."""
+    """`loop.confirm_each_slice`: po każdym kawałku zgoda człowieka przed następnym (style `step-by-step`, `conversation`)."""
     return loop_setting(project, "confirm_each_slice")
 
 
 def hold_refusal(meta: dict, slice_id: str, run_dir: Path) -> str | None:
-    """Wstrzymanie po kawałku (krok po kroku): inny kawałek dopiero po `proceed` — po zgodzie człowieka w rozmowie."""
+    """Wstrzymanie po kawałku (step-by-step): inny kawałek dopiero po `proceed` — po zgodzie człowieka w rozmowie."""
     held = meta.get("hold")
     if held and slice_id != held:
-        return (f"przebieg czeka na zgodę człowieka po kawałku {held} (styl krok po kroku) — pokaż zmiany "
+        return (f"przebieg czeka na zgodę człowieka po kawałku {held} (styl step-by-step) — pokaż zmiany "
                 f"(git show --stat HEAD), a po zgodzie: run_state.py proceed {run_dir}")
     return None
 

@@ -72,8 +72,8 @@ nakładka nie zawiera: Jira bierze adres i dane dostępu ze zmiennych `JIRA_BASE
 `JIRA_API_TOKEN` (albo `JIRA_TOKEN`), a dostęp do Confluence na żywo to połączenie (serwer MCP) w Claude Code.
 
 ## Jak ustawić swój sposób pracy z agentem?
-`tf style samodzielny` (agent idzie sam, raport na końcu), `tf style krok-po-kroku` (zatwierdzasz plan i każdy kawałek
-pracy) albo `tf style rozmowa` (zadanie kończy się na planie, kod dopiero na Twoją prośbę). Styl obowiązuje we
+`tf style autonomous` (agent idzie sam, raport na końcu), `tf style step-by-step` (zatwierdzasz plan i każdy kawałek
+pracy) albo `tf style conversation` (zadanie kończy się na planie, kod dopiero na Twoją prośbę). Styl obowiązuje we
 wszystkich Twoich projektach; tylko w bieżącym: `--here`. Nie trafia do repozytorium i nie zmienia pracy innych osób.
 Granice ustala firma, zespół albo projekt: styl nie włączy trybu, którego nie dopuszczają (`task.allowed_modes`), ani
 nie rozluźni zakazów polityki autonomii. Szczegóły: `.tf/factory/PRZEWODNIK.md`, sekcja „Co mogę ustawić”.
