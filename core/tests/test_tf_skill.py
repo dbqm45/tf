@@ -95,7 +95,7 @@ def main() -> int:
           f"T-15: skill tf może wywołać model — bez disable-model-invocation, opis jako reguła wyboru, słowa: {desc}")
     entry = body.split("## Wejście", 1)[-1].split("## 0.", 1)[0] if "## Wejście" in body else ""
     check(body.find("## Wejście") != -1 and body.find("## Wejście") < body.find("## 0.")
-          and all(w in entry for w in ("question", "szybko", "zadanie", "AskUserQuestion", "jednym zdaniem")),
+          and all(w in entry for w in ("pytanie", "szybko", "zadanie", "AskUserQuestion", "jednym zdaniem")),
           "T-16: sekcja „Wejście” przed startem — zadanie / pytanie / drobna zmiana / wątpliwość → jedno pytanie")
     intake_script = ".claude/skills/tf/scripts/intake.py"
     check((ROOT / intake_script).is_file() and "intake.py resolve" in entry and "intake.py tracker" in entry

@@ -39,8 +39,8 @@ Pokaż człowiekowi propozycję i poczekaj na zgodę:
   zgody (core-agent-security §5b).
 
 **Uruchomienie po zgodzie:** workflow `/code-audit` (`.claude/workflows/code-audit.js`) przeprowadza etapy 0–2
-i raport. Argumenty to zatwierdzony zakres: `{"date": "RRRR-MM-DD", "dimensions": ["architektura", "security",
-"quality", "tests", "dostepnosc", "uzytecznosc", "wydajnosc", "prawo"], "depth": "standard", "limit": 8,
+i raport. Argumenty to zatwierdzony zakres: `{"date": "RRRR-MM-DD", "dimensions": ["architektura", "bezpieczenstwo",
+"jakosc", "testy", "dostepnosc", "uzytecznosc", "wydajnosc", "prawo"], "depth": "standard", "limit": 8,
 "modules": [], "exclude": ["vendor/"]}` (opcjonalnie `executors`: wymiar → agent, np. persona z tabeli).
 - Ranking, duplikaty, blokery i hipotezy liczy skrypt, bez modelu.
 - Wymiar bez zainstalowanych skilli i wymiar ponad limit trafiają do „Czego nie sprawdzono”.

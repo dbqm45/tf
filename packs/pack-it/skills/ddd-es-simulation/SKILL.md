@@ -5,7 +5,7 @@ metadata:
   review: "2027-10-17"
   catalog: "Użyj WYŁĄCZNIE na wyraźne żądanie użytkownika („symulowany warsztat”, „trening facylitacji Event Stormingu”) — symulacja sesji Big Picture z uczestnikami odgrywanymi przez AI i coachem oceniającym prowadzenie; wersja pełna lub oszczędna, zawsze wybierana przez człowieka po ostrzeżeniu o kosztach. Nie do prawdziwej analizy domeny (ddd-event-storming, ddd-discovery-intake)."
 disable-model-invocation: true
-argument-hint: "[full|oszczedna] [scenariusz]"
+argument-hint: "[pelna|oszczedna] [scenariusz]"
 ---
 
 # Symulowany warsztat Event Storming (trening facylitatora)
@@ -43,7 +43,7 @@ Brak odpowiedzi / praca bez człowieka → **nie startuj**.
 
 ## 2. Przebieg (wszystko, co mechaniczne, robi skrypt — zero tokenów)
 Skrypt: `python3 .claude/skills/ddd-es-simulation/scripts/es_sim.py` (katalog sesji `docs/training/es-sim/<id>/`).
-1. **Start:** `es_sim.py init --variant full|oszczedna [--scenario weterynaria]` → id sesji, obecni, nieobecni (dołączają na zaproszenie).
+1. **Start:** `es_sim.py init --variant pelna|oszczedna [--scenario weterynaria]` → id sesji, obecni, nieobecni (dołączają na zaproszenie).
    Skrypt wypisuje gotowe wprowadzenie (domena, obecni, polecenia) po znaczniku `=== POKAŻ DOSŁOWNIE ===` — pokaż je bez zmian.
    **Nie czytaj `brief.md` ani kart osób** — zawierają wiedzę ukrytą i celowe sprzeczności; czyta je tylko coach.
 2. **Runda** (każda wypowiedź facylitatora):
@@ -81,7 +81,7 @@ na zaproszenie; `formy_imienia` = odmiany imienia dla routera). Scenariusz fikcy
 
 ## 5. Próba scenariusza (bez człowieka, płatna — za zgodą)
 Nowy lub zmieniony scenariusz sprawdzasz automatem, zanim ktoś na nim trenuje:
-`python3 .claude/skills/ddd-es-simulation/scripts/es_probe.py --variant full|oszczedna [--scenario <s>] [--budget-usd 2.5]`.
+`python3 .claude/skills/ddd-es-simulation/scripts/es_probe.py --variant pelna|oszczedna [--scenario <s>] [--budget-usd 2.5]`.
 - Gotowe wypowiedzi facylitatora i oczekiwania są w `scenarios/<s>/trial.json`: wiedza ukryta (słowa w transkrypcji),
   celowe sprzeczności (hot spot), zachowania z kart (np. „pytana po imieniu → odpowiada”).
 - Bez gospodarza: skrypt robi rundy przez `es_sim.py`, a uczestnik to osobne wywołanie modelu bez narzędzi (`claude -p`).

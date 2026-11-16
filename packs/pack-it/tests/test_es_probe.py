@@ -82,7 +82,7 @@ def main() -> int:
         probe.write_text(json.dumps(PROBE, ensure_ascii=False), encoding="utf-8")
         log = root / "calls.jsonl"
 
-        r = run(root, fake, "--variant", "full", "--probe", str(probe), "--id", "p1", log=log)
+        r = run(root, fake, "--variant", "pelna", "--probe", str(probe), "--id", "p1", log=log)
         sd = root / "docs/training/es-sim/p1"
         rep = sd / "probe-report.md"
         text = rep.read_text(encoding="utf-8") if rep.exists() else ""
@@ -110,13 +110,13 @@ def main() -> int:
               "EP-9: coach zapisał debrief")
         check(len(r.stdout.splitlines()) <= 40, f"EP-10: zwięzłe wyjście: {len(r.stdout.splitlines())} linii")
 
-        r = run(root, fake, "--variant", "full", "--probe", str(probe), "--id", "p2", "--budget-usd", "0.05", "--coach", "none")
+        r = run(root, fake, "--variant", "pelna", "--probe", str(probe), "--id", "p2", "--budget-usd", "0.05", "--coach", "none")
         st = json.loads((root / "docs/training/es-sim/p2/state.json").read_text(encoding="utf-8"))
         check(r.returncode == 3 and "budżet" in r.stdout.lower() and st.get("round") == 1
               and not (root / "docs/training/es-sim/p2/debrief.md").exists(),
               f"EP-11: przekroczony budżet zatrzymuje próbę po rundzie: rc={r.returncode} {r.stdout[-300:]}")
 
-        r = run(root, fake, "--variant", "full", "--probe", str(root / "brak.json"), "--id", "p3")
+        r = run(root, fake, "--variant", "pelna", "--probe", str(root / "brak.json"), "--id", "p3")
         check(r.returncode == 2, f"EP-12: brak pliku próby → 2: {r.returncode}")
 
     for f in fails:

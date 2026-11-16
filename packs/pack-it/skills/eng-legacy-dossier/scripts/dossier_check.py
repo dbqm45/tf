@@ -28,8 +28,8 @@ INDEX_SECTIONS = ["TL;DR", "Moduły", "Przepływy", "Słownik", "Stan i kandydac
                   "Ograniczenia"]
 MODULE_SECTIONS = ["Po co", "Odpowiedzialności", "Wejścia i wyjścia", "Reguły biznesowe", "Dane", "Zależności",
                    "Pułapki", "Testy", "Pytania"]
-CONFIDENCE = {"test", "code", "do weryfikacji"}
-STATES = ("zielony", "żółty", "red")
+CONFIDENCE = {"test", "kod", "do weryfikacji"}
+STATES = ("zielony", "żółty", "czerwony")
 ASSESS_MARK, RECS_MARK = "<!-- legacy-dossier:assessment -->", "<!-- legacy-dossier:recommendations -->"
 ASSESS_SECTIONS = ["Podsumowanie", "Zakres i metoda", "Kryteria oceny", "Ustalenia", "Mocne strony", "Do dalszego zbadania"]
 RECS_SECTIONS = ["Docelowe zasady", "Rekomendacje", "Roadmapa", "Kryteria sukcesu"]
@@ -172,7 +172,7 @@ def check(dossier: Path, root: Path) -> dict:
         if not mt.startswith(MODULE_MARK):
             errors.append(f"{rel}: brak znacznika {MODULE_MARK} w pierwszej linii")
         if not re.search(rf"^Stan: ({'|'.join(STATES)}) — \S", mt, re.M):
-            errors.append(f"{rel}: brak pola „Stan: zielony|żółty|red — <powód>”")
+            errors.append(f"{rel}: brak pola „Stan: zielony|żółty|czerwony — <powód>”")
         ms = sections(mt)
         errors += [f"{rel}: brak sekcji „## {s}”" for s in MODULE_SECTIONS if s not in ms]
         for row in table_rows(ms.get("Reguły biznesowe", "")):

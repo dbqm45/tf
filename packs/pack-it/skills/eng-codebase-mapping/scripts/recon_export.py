@@ -30,7 +30,7 @@ from recon_check import MARK, QUOTE, REF, norm  # noqa: E402  (ten sam format do
 
 SOURCES = (("rules", "rules.md"), ("requirements", "requirements.md"), ("domain", "domain.md"))
 CONFIDENCE = re.compile(r"\(\s*pewność:?\s*([^)]+?)\s*\)", re.I)
-STATUS = {"założenie": "assumption", "niezweryfikowane": "unverified", "question": "question"}
+STATUS = {"założenie": "assumption", "niezweryfikowane": "unverified", "pytanie": "question"}
 MODULE_HEAD = re.compile(r"^(.+?)\s+\(szczegóły: modules/[^)]+\)$")
 
 

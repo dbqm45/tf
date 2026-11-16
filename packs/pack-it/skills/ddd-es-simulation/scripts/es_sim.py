@@ -3,7 +3,7 @@
 Stan symulowanego warsztatu Event Storming (skill ddd-es-simulation). Tylko biblioteka standardowa, zero tokenów:
 księgowość sesji, budowa promptów uczestników, tani router, tablica, statystyki dla coacha.
 
-  es_sim.py init --variant full|oszczedna [--scenario weterynaria] [--id 2026-09-27-a]
+  es_sim.py init --variant pelna|oszczedna [--scenario weterynaria] [--id 2026-09-27-a]
   es_sim.py round-begin --id <id> --text "<wypowiedź facylitatora>"   # zapisuje prompty rundy, wypisuje kogo wywołać
   es_sim.py round-end --id <id>                                      # wczytuje odpowiedzi, aktualizuje tablicę, wypisuje streszczenie
   es_sim.py invite --id <id> --persona <id>                          # dołącza osobę spoza sali
@@ -111,7 +111,7 @@ def cmd_init(a) -> None:
     title = re.search(r"^#\s+(.+)$", brief, re.M)
     who = "\n".join(f"| {ps[p]['meta'].get('imie', p)} | {ps[p]['meta'].get('rola', '')} |" for p in present)
     absent = ", ".join(f"{ps[p]['meta'].get('imie', p)} ({ps[p]['meta'].get('rola', '')})" for p in ps if p not in present) or "—"
-    intro = (f"## Sesja `{sid}` — wersja {'pełna' if a.variant == 'full' else 'oszczędna'}\n"
+    intro = (f"## Sesja `{sid}` — wersja {'pełna' if a.variant == 'pelna' else 'oszczędna'}\n"
              f"**{title.group(1) if title else a.scenario}**\n\n{m.group(1).strip() if m else ''}\n\n"
              f"| Na sali | Rola |\n|---|---|\n{who}\n\nDołączają na zaproszenie: {absent}\n\n"
              "**Cel:** Event Storming Big Picture — chronologia zdarzeń biznesowych, hot spoty, zdarzenia przełomowe.\n\n"
@@ -229,14 +229,14 @@ def cmd_round_begin(a) -> None:
     rd.mkdir(parents=True, exist_ok=True)
     with (session_dir(a.id) / "transcript.md").open("a", encoding="utf-8") as f:
         f.write(f"\n## Runda {n}\n**Facylitator:** {a.text}\n")
-    if st["variant"] == "full":
+    if st["variant"] == "pelna":
         called = [p for p in st["present"] if p in ps]
         for p in called:
             prompt = (RULES + "\n## Twoja karta\n" + card_block(p, ps[p], st, compact=False) + "\n\n"
                       + dynamic_block(p, st, a.text, [p]) + "\n" + CONTRACT.replace("<id>", p)
                       + f"\n\nZapisz ten JSON do pliku `{(rd / (p + '.reply.json')).relative_to(root())}` i odpowiedz jednym słowem: ok.")
             (rd / f"{p}.prompt.md").write_text(prompt, encoding="utf-8")
-        out = {"round": n, "variant": "full", "agent": "es-participant",
+        out = {"round": n, "variant": "pelna", "agent": "es-participant",
                "calls": [{"persona": p, "prompt_file": str((rd / f'{p}.prompt.md').relative_to(root()))} for p in called]}
     else:
         called = route(st, ps, a.text)
@@ -281,7 +281,7 @@ def cmd_round_end(a) -> None:
     rnd = st["rounds"][-1]
     replies: dict[str, dict] = {}
     problems: list[str] = []
-    if st["variant"] == "full":
+    if st["variant"] == "pelna":
         for p in rnd["called"]:
             f = rd / f"{p}.reply.json"
             data = extract_json(f.read_text(encoding="utf-8")) if f.exists() else None
@@ -369,7 +369,7 @@ def stats(st: dict) -> dict:
                 s["sentences"] += k
                 s["long_turns"] += k > LONG_TURN
                 s["_cur"] = 0
-            elif p in r.get("called", []) or st["variant"] == "full":
+            elif p in r.get("called", []) or st["variant"] == "pelna":
                 s["_cur"] += 1
                 s["max_silence"] = max(s["max_silence"], s["_cur"])
     for s in per.values():
@@ -414,7 +414,7 @@ def cmd_board(a) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    p = sub.add_parser("init"); p.add_argument("--variant", choices=["full", "oszczedna"], required=True)
+    p = sub.add_parser("init"); p.add_argument("--variant", choices=["pelna", "oszczedna"], required=True)
     p.add_argument("--scenario", default="veterinary"); p.add_argument("--id")
     p = sub.add_parser("round-begin"); p.add_argument("--id", required=True); p.add_argument("--text", required=True)
     p = sub.add_parser("round-end"); p.add_argument("--id", required=True)

@@ -43,7 +43,7 @@ niezaufane i czy po drodze jest kontrola. Znalezione wystąpienie → poszukaj w
 ## JavaScript i Node.js
 | Kandydat | Bezpieczniej |
 |---|---|
-| `eval`, `new Function`, `setTimeout("code")` | funkcje, nie stringi |
+| `eval`, `new Function`, `setTimeout("kod")` | funkcje, nie stringi |
 | `child_process.exec` ze sklejonym poleceniem | `execFile` / `spawn` z tablicą argumentów |
 | moduł `vm` jako „piaskownica” | to nie jest granica bezpieczeństwa — osobny proces lub izolacja |
 | `innerHTML`, `dangerouslySetInnerHTML`, `v-html` z danymi | tekst albo sanityzacja (DOMPurify) |

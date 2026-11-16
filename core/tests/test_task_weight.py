@@ -174,7 +174,7 @@ def main() -> int:
         check(r.returncode == 0 and not (p / CHANGES / "TYP-2" / "spec.md").exists(),
               f"W-22: waga lekka z jednym kawałkiem przechodzi do planu bez spec.md: {r.stdout}")
         r = tf(p, "status", "TYP-2")
-        check("waga: lekka" in r.stdout, f"W-23: status pokazuje wagę: {r.stdout}")
+        check("waga: light" in r.stdout, f"W-23: status pokazuje wagę: {r.stdout}")
 
         # zadanie cięcia zmiany pdi (krok E6): waga z wiersza cięcia, nie z zamiaru całej zmiany dołączonego do ticket.md
         cut_ticket = ("# TSK-59: historia prób w panelu\n\nCięcie TSK-59 zmiany CHG-12 (`docs/project/changes/CHG-12/plan.md`). "

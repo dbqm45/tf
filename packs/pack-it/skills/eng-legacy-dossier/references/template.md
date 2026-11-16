@@ -49,7 +49,7 @@ ile reguł „do weryfikacji”.>
 ```markdown
 <!-- legacy-dossier:module -->
 # Moduł: <nazwa>
-Stan: zielony|żółty|red — <powód jednym zdaniem>
+Stan: zielony|żółty|czerwony — <powód jednym zdaniem>
 
 ## Po co
 ## Odpowiedzialności
@@ -57,7 +57,7 @@ Stan: zielony|żółty|red — <powód jednym zdaniem>
 ## Reguły biznesowe
 | ID | Reguła | Dowód | Pewność |
 |---|---|---|---|
-| R-<MOD>-01 | <zdanie dla biznesu> | ścieżka/Plik.java:42 | test|code|do weryfikacji |
+| R-<MOD>-01 | <zdanie dla biznesu> | ścieżka/Plik.java:42 | test|kod|do weryfikacji |
 ## Dane
 ## Zależności
 ## Pułapki
@@ -83,7 +83,7 @@ Stan: zielony|żółty|red — <powód jednym zdaniem>
 | historia gita (`git log -S`, opisy „fix”) | reguły dodane po incydencie | „fix: korekta po zapłacie” |
 | triggery i procedury w bazie | reguły poza kodem aplikacji | `BEFORE UPDATE ON invoices` |
 
-Reguła z testu ma pewność `test`. Reguła z samego kodu — `code`. Wniosek z nazwy, komentarza albo historii bez
+Reguła z testu ma pewność `test`. Reguła z samego kodu — `kod`. Wniosek z nazwy, komentarza albo historii bez
 potwierdzenia w kodzie — `do weryfikacji`. Gdy test i kod mówią co innego, wpisz obie wersje i pytanie.
 
 ## 4. Kontrakt dla `dossier_check.py`
@@ -91,5 +91,5 @@ potwierdzenia w kodzie — `do weryfikacji`. Gdy test i kod mówią co innego, w
 - Pierwsza linia indeksu: `<!-- legacy-dossier -->`, karty: `<!-- legacy-dossier:module -->`.
 - Sekcje indeksu: TL;DR, Moduły, Przepływy, Słownik, Stan i kandydaci do refaktoru, Pytania otwarte, Ograniczenia.
 - Sekcje karty: Po co, Odpowiedzialności, Wejścia i wyjścia, Reguły biznesowe, Dane, Zależności, Pułapki, Testy,
-  Pytania; linia `Stan: <zielony|żółty|red> — <powód>`.
+  Pytania; linia `Stan: <zielony|żółty|czerwony> — <powód>`.
 - Moduł z indeksu bez pliku i błędny dowód to błąd; karta spoza indeksu — ostrzeżenie.

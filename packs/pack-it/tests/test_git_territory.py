@@ -45,7 +45,7 @@ def main() -> int:
             fails.append(msg)
 
     r = run("--help")
-    check(r.returncode == 0 and "--cochange" in r.stdout and "code" in r.stdout.lower(), f"--help: {r.stdout[:200]}")
+    check(r.returncode == 0 and "--cochange" in r.stdout and "kod" in r.stdout.lower(), f"--help: {r.stdout[:200]}")
 
     with tempfile.TemporaryDirectory() as d:
         repo = Path(d) / "repo"

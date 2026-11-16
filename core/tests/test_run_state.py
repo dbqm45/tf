@@ -134,7 +134,7 @@ def main() -> int:
         o = one()
         names = [i["name"] for g in o.get("files", []) for i in g["items"]]
         check(r.returncode == 0 and o.get("stage") == "needs" and o.get("needs") == "stop"
-              and "red" in (o.get("stopText") or "") and "STOP" in names
+              and "czerwony" in (o.get("stopText") or "") and "STOP" in names
               and "security/K2/proba-2/summary.md" in names,
               f"S-6a: STOP z powodem i plikami w panelu: {o.get('stage')} {o.get('needs')} {names}")
         check([s["state"] for s in o["slices"]][1] == "fail", f"S-6b: kawałek K2 w STOP = fail: {o['slices']}")

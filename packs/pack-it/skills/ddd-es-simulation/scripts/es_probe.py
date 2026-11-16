@@ -5,7 +5,7 @@ przez es_sim.py, uczestnicy jako osobne wywołania modelu bez narzędzi (`claude
 scenariusz działa: czy wiedza ukryta wychodzi, czy celowe sprzeczności dają hot spoty, czy karty osób zachowują się
 zgodnie z opisem, ile odpowiedzi to niepoprawny JSON. Płatne — uruchamiaj tylko za zgodą człowieka.
 
-  es_probe.py --variant full|oszczedna [--scenario weterynaria] [--probe <trial.json>] [--id <id>]
+  es_probe.py --variant pelna|oszczedna [--scenario weterynaria] [--probe <trial.json>] [--id <id>]
               [--coach full|light|none] [--budget-usd 2.5]
 
 Plik próby (domyślnie scenarios/<scenariusz>/trial.json):
@@ -35,7 +35,7 @@ HERE = Path(__file__).resolve().parent
 SKILL = HERE.parent
 ES_SIM = HERE / "es_sim.py"
 DEFAULT_CMD = ["claude", "-p", "--tools", "", "--strict-mcp-config", "--no-session-persistence", "--output-format", "json"]
-MODELS = {"full": "sonnet", "oszczedna": "haiku"}
+MODELS = {"pelna": "sonnet", "oszczedna": "haiku"}
 PARTICIPANT_SYS = ("Jesteś uczestnikiem symulacji warsztatu Event Storming. Zagraj osobę (albo osoby) opisaną w wiadomości "
                    "dokładnie według karty i zasad. Odpowiedz wyłącznie blokiem JSON w podanym kształcie. Nie komentuj symulacji.")
 COACH_SYS = ("Oceniasz PROWADZENIE sesji, nie treść domenową. Wejście: transkrypcja, statystyki (JSON ze skryptu), brief "
@@ -100,7 +100,7 @@ def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool | None,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--variant", choices=["full", "oszczedna"], required=True)
+    ap.add_argument("--variant", choices=["pelna", "oszczedna"], required=True)
     ap.add_argument("--scenario", default="veterinary")
     ap.add_argument("--probe")
     ap.add_argument("--id")
