@@ -60,8 +60,8 @@ def project_relative(norm: str, root: str) -> str | None:
 
 TASKS = "docs/project/changes"
 TASK_FILE = re.compile(r"^docs/project/changes/(?:INDEX\.md|([^/]+)/(.+))$")
-LOCKED_FROM = ("realizacja", "przeglad", "pr", "wdrozenie")     # etapy, w których specyfikacja jest wyrocznią
-CLOSED = "zamkniecie"
+LOCKED_FROM = ("implementation", "review", "pr", "deploy")     # etapy, w których specyfikacja jest wyrocznią
+CLOSED = "closed"
 
 
 def load_task(root: str, key: str) -> dict:

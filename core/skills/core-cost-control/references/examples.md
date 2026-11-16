@@ -54,4 +54,4 @@ zapisuje, a przy podobnym zadaniu od razu wybierasz `opus` do diagnozy.
 | wykonawca dokumentacji zgłasza „Tier: za wysoki” | raport: 4 z 9 zadań | obniż tier roli w `.tf/config/config.yaml` |
 | niskie trafienia cache w głównej sesji | pasek stanu „zimny” po przerwach | po długiej przerwie nowa sesja od punktu kontrolnego |
 | `/model` przełączany w trakcie zadania | historia sesji | model ustalany na początku; trudne kroki do wykonawcy z `model: opus` |
-| krótkie zadania przy profilu `jakosc` | doradca wzywany w krótkich zadaniach | `python3 .tf/factory/profile.py zrownowazony --dry-run`, potem zmiana za zgodą |
+| krótkie zadania przy profilu `quality` | doradca wzywany w krótkich zadaniach | `python3 .tf/factory/profile.py balanced --dry-run`, potem zmiana za zgodą |

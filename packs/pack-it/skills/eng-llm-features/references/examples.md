@@ -93,7 +93,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, ValidationError
 
 class Klasyfikacja(BaseModel):
-    kategoria: Literal["platnosci", "konto", "blad", "inne"] = Field(
+    kategoria: Literal["platnosci", "konto", "blad", "other"] = Field(
         description="Jedna kategoria. 'blad' tylko, gdy klient opisuje niedziałającą funkcję, nie pytanie.")
     priorytet: int = Field(description="1–5. 5: klient nie może płacić ani się zalogować; 1: pytanie bez pilności.")
     uzasadnienie: str = Field(description="Jedno zdanie z cytatem ze zgłoszenia, na którym opierasz priorytet.")

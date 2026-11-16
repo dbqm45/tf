@@ -37,7 +37,7 @@ for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie 
 os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne też piszą i czytają UTF-8
 
 KINDS = ("test", "lint", "typecheck", "build")
-NAMES = {"test": "testy", "lint": "lint", "typecheck": "typy", "build": "build"}
+NAMES = {"test": "tests", "lint": "lint", "typecheck": "typy", "build": "build"}
 LOCKFILES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb", "uv.lock", "poetry.lock",
              "Pipfile.lock", "pylock.toml", "go.sum", "Cargo.lock", "gradle.lockfile", "packages.lock.json")
 CI_FILES = (".gitlab-ci.yml", "azure-pipelines.yml", "Jenkinsfile", ".circleci/config.yml", "bitbucket-pipelines.yml")

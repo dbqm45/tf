@@ -24,8 +24,8 @@ CODE = {
 }
 BILLING = {"module": "billing", "batch": "svc/billing", "purpose": "Liczy faktury.",
            "rules": [{"rule": "Faktura bez pozycji jest odrzucana (kod 422).", "evidence": "svc/billing/invoice.py:4",
-                      "quote": "raise ValueError('empty')", "confidence": "kod"},
-                     {"rule": "VAT wynosi 23%.", "evidence": "svc/billing/tax.py:1", "quote": "RATE = 0.23", "confidence": "kod"}]}
+                      "quote": "raise ValueError('empty')", "confidence": "code"},
+                     {"rule": "VAT wynosi 23%.", "evidence": "svc/billing/tax.py:1", "quote": "RATE = 0.23", "confidence": "code"}]}
 CUSTOMERS = {"module": "customers", "batch": "svc/customers", "purpose": "Klienci.",
              "terms": [{"term": "klient", "code_name": "Customer", "evidence": "svc/customers/model.py:1"}]}
 JAVA = "package billing;\n/* Stawki */\npublic class Rate {\n    // VAT\n    static final double VAT = 0.23;\n}\n"
@@ -119,7 +119,7 @@ def main() -> int:
 
         # wykonawca zaktualizował kartę: reguła „422” zmieniona na „co najmniej dwie pozycje”
         new = dict(BILLING, rules=[{"rule": "Faktura musi mieć co najmniej dwie pozycje.", "evidence": "svc/billing/invoice.py:3",
-                                    "quote": "if len(lines) < 2:", "confidence": "kod"}, BILLING["rules"][1]])
+                                    "quote": "if len(lines) < 2:", "confidence": "code"}, BILLING["rules"][1]])
         write(rep, {"modules/billing.json": json.dumps(new, ensure_ascii=False)})
         before = json.loads((rep / "manifest.json").read_text(encoding="utf-8"))
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
@@ -254,7 +254,7 @@ def main() -> int:
         cj = json.loads((rep / "modules/billing.json").read_text(encoding="utf-8"))
         cj["rules"][0]["evidence"] = "svc/billing/invoice.py:1"                    # cytat jest jednoznacznie w linii 6
         cj["rules"].append({"rule": "Brak pozycji to błąd.", "evidence": "svc/billing/invoice.py:4",
-                            "quote": "if not lines:", "confidence": "kod"})        # takiego kodu już nie ma
+                            "quote": "if not lines:", "confidence": "code"})        # takiego kodu już nie ma
         write(rep, {"modules/billing.json": json.dumps(cj, ensure_ascii=False)})
         r = run("recon_refresh.py", "card", str(repo), "billing", cwd=d)
         cj = json.loads((rep / "modules/billing.json").read_text(encoding="utf-8"))

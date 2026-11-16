@@ -58,7 +58,7 @@ def facet_of(skill: str, cfg: dict) -> dict:
     for f in cfg["facets"]:
         if skill.startswith(f["prefix"]):
             return f
-    return {"prefix": "", "name": "inne", "question": ""}
+    return {"prefix": "", "name": "other", "question": ""}
 
 
 def expand_requires(names: list[str], cfg: dict) -> list[str]:

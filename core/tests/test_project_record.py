@@ -131,13 +131,13 @@ def main() -> int:
         if chk.returncode != 0 or (lint.exists() and "uwag językowych" not in chk.stdout):
             fails.append(f"check: ostrzeżenie językowe dla artefaktu po polsku: {chk.stdout[-300:]}")
         (root / "docs/project/07-review/2026-09-27-retro.md").unlink()
-        artifact(root, "08-operations/2026-10-03-przeglad-utrzymania.md", artifact="operations-review", phase="operations",
+        artifact(root, "08-operations/2026-10-03-review-utrzymania.md", artifact="operations-review", phase="operations",
                  _body="# Przegląd utrzymania\n## TL;DR\nTrzy łatki wdrożone.\n## Otwarte pytania\n## Przekazanie\n- Dla: piotr\n")
         chk = run(root, "check")
         idx = (root / "docs/project/README.md").read_text() if (root / "docs/project/README.md").exists() else ""
         if chk.returncode != 0 or "Utrzymanie" not in idx:
             fails.append(f"faza 9 (operations, 08-operations/) jako artefakt dziennika: {chk.stdout[-300:]}")
-        (root / "docs/project/08-operations/2026-10-03-przeglad-utrzymania.md").unlink()
+        (root / "docs/project/08-operations/2026-10-03-review-utrzymania.md").unlink()
         bad = [
             ("brak TL;DR", dict(_body="# X\n## Przekazanie\n- Dla: a\n")),
             ("zła faza vs katalog", dict(phase="plan")),

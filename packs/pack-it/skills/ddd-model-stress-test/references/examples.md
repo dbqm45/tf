@@ -33,7 +33,7 @@ Rozkład klas (8 wymagań): lokalne 3 · rozproszone 4 · nowy moduł 1. Zestawi
 `fakturowanie` — 2 zmiany. Bez ocen jakości; nota: „ten zbiór można powtórzyć na innej dekompozycji”.
 
 ## 2. Ten sam zbiór, dwie dekompozycje
-**Sytuacja.** „Architekt proponuje połączyć `czas-pracy` z `projekty` w jeden moduł `realizacja`. Czy to lepszy podział?”
+**Sytuacja.** „Architekt proponuje połączyć `czas-pracy` z `projekty` w jeden moduł `implementation`. Czy to lepszy podział?”
 
 **Jak.**
 1. Nie generuję nowych wymagań — biorę **zamrożony** zbiór z przykładu 1 (8 wymagań).
@@ -42,12 +42,12 @@ Rozkład klas (8 wymagań): lokalne 3 · rozproszone 4 · nowy moduł 1. Zestawi
 
 **Wynik**:
 
-| Klasa | Wariant A (4 moduły) | Wariant B (`realizacja`) |
+| Klasa | Wariant A (4 moduły) | Wariant B (`implementation`) |
 |---|---|---|
 | lokalne (0–1) | 3 | 5 |
 | rozproszone (≥ 2) | 4 | 2 |
 | nowy moduł | 1 | 1 |
-| moduł z największą liczbą zmian | `projekty` (4) | `realizacja` (6) |
+| moduł z największą liczbą zmian | `projekty` (4) | `implementation` (6) |
 
 Obserwacja do ADR: B lokalizuje W-5 i W-6, ale skupia 6 zmian w jednym module — tam przenosi się napięcie.
 W-7 w obu wariantach wymaga nowego modułu.

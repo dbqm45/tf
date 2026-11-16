@@ -107,7 +107,7 @@ jest artefaktem.
 | `07-review/<data>-audyt-kodu.md`, `07-review/<data>-audyt-inwentarz.md` | zespół audytu | eng-code-audit (pack-it) | człowiek: ranking problemów | na żądanie |
 | `07-review/<data>-dlug-techniczny.md` | audytor | eng-tech-debt-audit (pack-it) | człowiek: priorytety długu | na żądanie |
 | `07-review/<data>-poglebienia.md` | architekt | eng-module-depth (pack-it) | implementer: płytkie moduły | na żądanie |
-| `07-review/<data>-przeglad-planu-<krok>.md` | recenzent zmian | qa-change-review (pack-it) | wykonawca przed realizacją | przy ryzykownym kroku |
+| `07-review/<data>-review-planu-<krok>.md` | recenzent zmian | qa-change-review (pack-it) | wykonawca przed realizacją | przy ryzykownym kroku |
 | `07-review/<data>-facilitation.md` | coach facylitacji | ddd-facilitation (pack-it) | facylitator | po warsztacie |
 | `07-review/<data>-jezyk-<dokument>.md` | redaktor | txt-polish-correctness (pack-editorial-pl) | autor dokumentu | dokumenty dla ludzi |
 

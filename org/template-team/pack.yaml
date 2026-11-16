@@ -34,9 +34,9 @@ team_defaults:
     #   operations:
     #     publish: deny
     # task:
-    #   allowed_modes: [plan, zwykly]
-    # Profil kosztów zespołu: oszczedny | zrownowazony | jakosc.
-    default_profile: zrownowazony     # TODO: albo usuń, wtedy obowiązuje profil firmy
+    #   allowed_modes: [plan, normal]
+    # Profil kosztów zespołu: economy | balanced | quality.
+    default_profile: balanced     # TODO: albo usuń, wtedy obowiązuje profil firmy
   operations:
     tracker:
       # TODO: prefiksy kluczy zgłoszeń zespołu; zastępują prefiksy firmy w projektach zespołu, np. {BE: jira}

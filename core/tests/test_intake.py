@@ -67,7 +67,7 @@ def main() -> int:
             d.mkdir(parents=True)
             rows = "\n".join(f"| {k} | R1 | — | wartość {k} | src/a.ts | `npm test` |" for k in tasks)
             (d / "plan.md").write_text(PLAN.format(change=change, tasks=", ".join(tasks), rows=rows), encoding="utf-8")
-        for key, stage in (("PROJ-7", "realizacja"), ("PROJ-8", "zamkniecie")):
+        for key, stage in (("PROJ-7", "implementation"), ("PROJ-8", "closed")):
             d = p / CHANGES / key
             d.mkdir(parents=True)
             (d / "task.json").write_text(json.dumps({"key": key, "title": f"Zadanie {key}", "stage": stage}),
@@ -150,7 +150,7 @@ def main() -> int:
 
         # wznowienie, plik, treść
         code, out, raw = resolve(p, "PROJ-7")
-        check(out.get("kind") == "wznowienie" and out.get("stage") == "realizacja" and "PROJ-7" in out.get("next", ""),
+        check(out.get("kind") == "wznowienie" and out.get("stage") == "implementation" and "PROJ-7" in out.get("next", ""),
               f"I-17: klucz istniejącego zadania → wznowienie z etapem: {raw}")
         (p / CHANGES / "PROJ-7" / "task.json").write_text(json.dumps(
             {"key": "PROJ-7", "title": "Zadanie PROJ-7", "stage": "plan", "mode": "plan"}), encoding="utf-8")
@@ -180,8 +180,8 @@ def main() -> int:
         check(out.get("kind") == "brak" and keys == ["PROJ-7"], f"I-21: bez wejścia → lista zadań w toku: {raw}")
 
         # słowo wymuszające sposób pracy
-        code, out, raw = resolve(p, "pytanie", "jak", "działa", "logowanie?")
-        check(out.get("intent") == "pytanie" and out.get("kind") == "tresc" and out.get("title") == "jak działa logowanie?",
+        code, out, raw = resolve(p, "question", "jak", "działa", "logowanie?")
+        check(out.get("intent") == "question" and out.get("kind") == "tresc" and out.get("title") == "jak działa logowanie?",
               f"I-22: „pytanie …” → wymuszona odpowiedź bez pętli: {raw}")
         code, out, raw = resolve(p, "szybko", "popraw", "literówkę", "w", "README")
         check(out.get("intent") == "szybko" and "bez" in out.get("next", "").lower(), f"I-23: „szybko …”: {raw}")

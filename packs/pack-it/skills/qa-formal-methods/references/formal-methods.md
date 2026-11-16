@@ -52,7 +52,7 @@ zakresie (50–500 zł) nic nie znalazły.
 from z3 import Real, Bool, If, Solver, Or, sat
 
 koszyk = Real("koszyk")
-kod, lojalny = Bool("kod"), Bool("lojalny")
+kod, lojalny = Bool("code"), Bool("lojalny")
 
 def rabat(z_limitem):
     r = If(koszyk >= 200, 0.10 * koszyk, 0)      # R1: próg koszyka

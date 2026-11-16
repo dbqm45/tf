@@ -76,7 +76,7 @@ def main() -> int:
         check(r.returncode == 2 and "human:" in r.stdout and task(p)["stage"] == "pr",
               f"CL-2: zamknięcie mimo braku scalenia to decyzja człowieka (--force --by human:<id>): {r.returncode} {r.stdout}")
         r = call(p, TASK, "close", "IMP-1", "--force", "--by", "human:anna")
-        check(r.returncode == 0 and task(p)["stage"] == "zamkniecie" and task(p)["closed"].get("forced") is True
+        check(r.returncode == 0 and task(p)["stage"] == "closed" and task(p)["closed"].get("forced") is True
               and task(p)["closed"].get("by") == "human:anna",
               f"CL-3: człowiek zamyka mimo braku potwierdzenia scalenia; zapis w zadaniu: {r.stdout} {task(p).get('closed')}")
 
@@ -84,9 +84,9 @@ def main() -> int:
         p = Path(t) / "merged"
         new_task(p)
         r = call(p, TASK, "close", "IMP-1")
-        check(r.returncode == 0 and task(p)["stage"] == "zamkniecie" and task(p)["closed"].get("at")
+        check(r.returncode == 0 and task(p)["stage"] == "closed" and task(p)["closed"].get("at")
               and "zamknięte" in r.stdout and "forced" not in task(p)["closed"],
-              f"CL-4: scalona zmiana (squash) → etap zamkniecie i zapis closed: {r.returncode} {r.stdout}")
+              f"CL-4: scalona zmiana (squash) → etap closed i zapis closed: {r.returncode} {r.stdout}")
         check("testem dymnym" in r.stdout,
               f"CL-5: zamknięcie mówi wprost, że wdrożenie nie było sprawdzone testem dymnym: {r.stdout}")
         r = call(p, TASK, "close", "IMP-1")
@@ -113,7 +113,7 @@ def main() -> int:
         check("F1" in r.stdout and "test_cap_at_midnight" in r.stdout and FINDING in r.stdout,
               f"CL-10: tf task status pokazuje ustalenia z kontrolami: {r.stdout}")
         r = call(p, TASK, "close", "IMP-1")
-        check(r.returncode == 0 and task(p)["stage"] == "zamkniecie",
+        check(r.returncode == 0 and task(p)["stage"] == "closed",
               f"CL-11: po zapisaniu kontroli zamknięcie przechodzi: {r.returncode} {r.stdout}")
 
         p = Path(t) / "odd"
@@ -214,12 +214,12 @@ def main() -> int:
         rs = SCRIPTS / "run_state.py"
         call(p, SCRIPTS / "run_report.py", "start", "Limit dobowy", "--key", "IMP-1", "--story", "Popraw literówkę w README.")
         d = str(p / ".tf" / "runs" / "IMP-1")
-        call(p, rs, "weight", d, "--set", "zwykla")
+        call(p, rs, "weight", d, "--set", "normal")
         call(p, TASK, "mode", "IMP-1", "auto")
         (p / CHANGES / "IMP-1" / "spec.md").write_text(SPEC, encoding="utf-8")
         call(p, rs, "flag", d, "none", "--reason", "bez flagi, bo zmiana jest w konfiguracji")
-        call(p, rs, "step", d, "K1", "R1", "kod", "run")
-        r = call(p, rs, "step", d, "K1", "R1", "zakres", "fail")
+        call(p, rs, "step", d, "K1", "R1", "code", "run")
+        r = call(p, rs, "step", d, "K1", "R1", "scope", "fail")
         check(r.returncode == 2 and "finding" in r.stdout and "K1" in r.stdout and not task(p).get("findings"),
               f"CL-25: `zakres fail` bez zapisanego ustalenia → odmowa z poleceniem: {r.returncode} {r.stdout}")
         r = call(p, rs, "finding", d, "K1", FINDING)
@@ -227,13 +227,13 @@ def main() -> int:
         check(r.returncode == 0 and len(fs) == 1 and fs[0].get("slice") == "K1" and fs[0].get("round") == 1
               and fs[0].get("text") == FINDING,
               f"CL-26: run_state.py finding zapisuje ustalenie z kawałkiem i rundą: {r.returncode} {r.stdout} {fs}")
-        r = call(p, rs, "step", d, "K1", "R1", "zakres", "fail")
+        r = call(p, rs, "step", d, "K1", "R1", "scope", "fail")
         check(r.returncode == 0, f"CL-27: po zapisie ustalenia `zakres fail` przechodzi: {r.returncode} {r.stdout}")
-        call(p, rs, "step", d, "K1", "R2", "kod", "run")
-        r = call(p, rs, "step", d, "K1", "R2", "zakres", "fail")
+        call(p, rs, "step", d, "K1", "R2", "code", "run")
+        r = call(p, rs, "step", d, "K1", "R2", "scope", "fail")
         check(r.returncode == 2 and "finding" in r.stdout,
               f"CL-28: druga runda wymaga własnego ustalenia: {r.returncode} {r.stdout}")
-        r = call(p, rs, "step", d, "K1", "R2", "zakres", "pass")
+        r = call(p, rs, "step", d, "K1", "R2", "scope", "pass")
         check(r.returncode == 0, f"CL-29: `zakres pass` nie wymaga ustalenia: {r.returncode} {r.stdout}")
 
     for f in fails:

@@ -149,7 +149,7 @@ def main() -> int:
         d = str(run_dir)
         r = script(p, cfg, "run_state.py", "stage", d, "intake", "--auto")
         task = json.loads((doc / "task.json").read_text(encoding="utf-8"))
-        check(r.returncode == 0 and task.get("mode") == "auto" and task.get("weight") == "pelna",
+        check(r.returncode == 0 and task.get("mode") == "auto" and task.get("weight") == "full",
               f"C-11: --auto zapisuje tryb Auto także przy wadze pełnej cięcia (płatności): {r.returncode} {r.stdout} {r.stderr} "
               f"{task.get('mode')} {task.get('weight')}")
         r = script(p, cfg, "run_state.py", "spec", d, "new")
@@ -178,7 +178,7 @@ def main() -> int:
         r = script(p, cfg, "run_state.py", "verify", d, "K1", "--files", "src/retry.py,tests/test_retry.py", "--command", OK)
         ev = sorted((doc / "evidence").glob("K1-*.json")) if (doc / "evidence").is_dir() else []
         check(r.returncode == 0 and len(ev) == 1, f"C-15: dowód weryfikacji kawałka cięcia: {r.returncode} {r.stdout} {r.stderr}")
-        script(p, cfg, "run_state.py", "step", d, "K1", "R1", "zakres", "pass")   # przegląd zakresu przed tick
+        script(p, cfg, "run_state.py", "step", d, "K1", "R1", "scope", "pass")   # przegląd zakresu przed tick
         r = script(p, cfg, "run_state.py", "tick", d, "K1")
         check(r.returncode == 0 and "- [x] K1" in (doc / "plan.md").read_text(encoding="utf-8"),
               f"C-16: tick odhacza kawałek z dowodem: {r.returncode} {r.stdout} {r.stderr}")

@@ -58,7 +58,7 @@ def main() -> int:
               and all((tfd / "config" / d).is_dir() for d in ("personas", "roles", "traits")),
               f"T-2: .tf/config/ — config.yaml tylko na nadpisania i katalogi własnych person, ról, cech")
         own_cfg.parent.mkdir(parents=True, exist_ok=True)
-        own_cfg.write_text("default_profile: oszczedny\ntiers:\n  fast: {maxTurns: 7}\n", encoding="utf-8")
+        own_cfg.write_text("default_profile: economy\ntiers:\n  fast: {maxTurns: 7}\n", encoding="utf-8")
         r2 = subprocess.run([sys.executable, str(tfd / "factory" / "packs.py"), "--json"], cwd=proj,
                             capture_output=True, text=True, timeout=120)
         try:
@@ -66,7 +66,7 @@ def main() -> int:
         except ValueError:
             composed = {}
         cfg = composed.get("config", composed)
-        check(cfg.get("default_profile") == "oszczedny" and (cfg.get("tiers") or {}).get("fast", {}).get("maxTurns") == 7
+        check(cfg.get("default_profile") == "economy" and (cfg.get("tiers") or {}).get("fast", {}).get("maxTurns") == 7
               and (cfg.get("tiers") or {}).get("fast", {}).get("model") and "std" in (cfg.get("tiers") or {}),
               f"T-3: nadpisania z .tf/config/config.yaml nałożone na domyślne silnika: {r2.stdout[:300]} {r2.stderr[-300:]}")
         caches = sorted(str(x.relative_to(proj)) for x in (tfd / "factory").rglob("__pycache__"))
@@ -76,7 +76,7 @@ def main() -> int:
               f"T-4: instrukcje projektu wskazują .tf/factory/: {instr[-400:]}")
         r3 = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes"],
                             capture_output=True, text=True, timeout=300)
-        check(r3.returncode == 0 and "oszczedny" in own_cfg.read_text(encoding="utf-8"),
+        check(r3.returncode == 0 and "economy" in own_cfg.read_text(encoding="utf-8"),
               f"T-5: aktualizacja nie rusza .tf/config/config.yaml: {r3.stdout[-400:]}")
         skill = proj / ".claude" / "skills" / "aa-run"
         read = lambda p: p.read_text(encoding="utf-8") if p.exists() else ""

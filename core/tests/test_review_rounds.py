@@ -39,7 +39,7 @@ def main() -> int:
         p.mkdir()
         call(p, cfg, "run_report.py", "start", "Limit dobowy", "--key", "IMP-1", "--story", "Popraw literówkę w README.")
         d = str(p / ".tf" / "runs" / "IMP-1")
-        call(p, cfg, "run_state.py", "weight", d, "--set", "zwykla")
+        call(p, cfg, "run_state.py", "weight", d, "--set", "normal")
         subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "task_state.py"), "mode", "IMP-1", "auto"], cwd=p,
                        capture_output=True, text=True, env={**os.environ, "CLAUDE_PROJECT_DIR": str(p)})
         (p / "docs" / "project" / "changes" / "IMP-1" / "spec.md").write_text(
@@ -49,8 +49,8 @@ def main() -> int:
         call(p, cfg, "run_state.py", "flag", d, "none", "--reason", "bez flagi, bo zmiana jest w konfiguracji")
 
         call(p, cfg, "run_state.py", "finding", d, "K1", "kod spoza kryteriów w fees.py")   # krok G4: ustalenie przed „fail”
-        r1 = call(p, cfg, "run_state.py", "step", d, "K1", "R1", "zakres", "fail")
-        r2 = call(p, cfg, "run_state.py", "step", d, "K1", "R2", "kod", "run")
+        r1 = call(p, cfg, "run_state.py", "step", d, "K1", "R1", "scope", "fail")
+        r2 = call(p, cfg, "run_state.py", "step", d, "K1", "R2", "code", "run")
         check(r1.returncode == 0 and r2.returncode == 0 and rounds(p) == 2,
               f"PR-1: dwie rundy kawałka przechodzą: {r1.stdout}{r1.stderr} | {r2.stdout}{r2.stderr}")
         r = call(p, cfg, "run_state.py", "step", d, "K1", "R3", "test", "run")
@@ -58,9 +58,9 @@ def main() -> int:
               f"PR-2: trzecia runda bez decyzji człowieka → odmowa z podpowiedzią STOP, stan bez zmian: {r.returncode} {r.stdout}")
 
         # po zatrzymaniu i decyzji człowieka pętla dostaje kolejne dwie próby
-        call(p, cfg, "run_state.py", "stage", d, "needs", "--needs", "stop", "--code", "testy", "--reason", "pytest: 1 failed")
+        call(p, cfg, "run_state.py", "stage", d, "needs", "--needs", "stop", "--code", "tests", "--reason", "pytest: 1 failed")
         r3 = call(p, cfg, "run_state.py", "step", d, "K1", "R3", "test", "run")
-        r4 = call(p, cfg, "run_state.py", "step", d, "K1", "R4", "kod", "run")
+        r4 = call(p, cfg, "run_state.py", "step", d, "K1", "R4", "code", "run")
         r5 = call(p, cfg, "run_state.py", "step", d, "K1", "R5", "test", "run")
         meta = json.loads((p / ".tf" / "runs" / "IMP-1" / "run.json").read_text(encoding="utf-8"))
         check(r3.returncode == 0 and r4.returncode == 0 and r5.returncode == 2 and rounds(p) == 4,
@@ -88,17 +88,17 @@ def main() -> int:
                        env={**os.environ, "CLAUDE_PROJECT_DIR": str(p)})
         plan = lambda: (p / "docs" / "project" / "changes" / "IMP-1" / "plan.md").read_text(encoding="utf-8")
         r = call(p, cfg, "run_state.py", "tick", d, "K1")
-        check(r.returncode == 2 and "zakres" in r.stdout and "scope-reviewer" in r.stdout and "- [ ] K1" in plan(),
+        check(r.returncode == 2 and "scope" in r.stdout and "scope-reviewer" in r.stdout and "- [ ] K1" in plan(),
               f"PR-10: bez zapisanego wyniku przeglądu zakresu kawałek nie jest odhaczany: {r.returncode} {r.stdout}")
-        call(p, cfg, "run_state.py", "step", d, "K1", "R1", "zakres", "run")
+        call(p, cfg, "run_state.py", "step", d, "K1", "R1", "scope", "run")
         r = call(p, cfg, "run_state.py", "tick", d, "K1")
         check(r.returncode == 2 and "- [ ] K1" in plan(), f"PR-11: przegląd w toku to nie wynik: {r.returncode} {r.stdout}")
         call(p, cfg, "run_state.py", "finding", d, "K1", "kod spoza kryteriów")
-        call(p, cfg, "run_state.py", "step", d, "K1", "R1", "zakres", "fail")
+        call(p, cfg, "run_state.py", "step", d, "K1", "R1", "scope", "fail")
         r = call(p, cfg, "run_state.py", "tick", d, "K1")
         check(r.returncode == 2 and "R2" in r.stdout and "- [ ] K1" in plan(),
               f"PR-12: po nieudanym przeglądzie odmowa wskazuje nową rundę: {r.returncode} {r.stdout}")
-        call(p, cfg, "run_state.py", "step", d, "K1", "R2", "zakres", "pass")
+        call(p, cfg, "run_state.py", "step", d, "K1", "R2", "scope", "pass")
         r = call(p, cfg, "run_state.py", "tick", d, "K1")
         check(r.returncode == 0 and "- [x] K1" in plan(), f"PR-13: przegląd zapisany jako zaliczony → odhaczenie: {r.returncode} {r.stdout}")
         r = call(p, cfg, "run_state.py", "finding", d, "K1", "drugie ustalenie")

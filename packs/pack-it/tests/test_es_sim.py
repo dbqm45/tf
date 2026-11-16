@@ -67,7 +67,7 @@ def main() -> int:
         if "hodowca" not in json.loads((root / "docs/training/es-sim/t1/state.json").read_text())["present"]:
             fails.append("invite")
         # wersja pełna: prompt na osobę z pełną kartą i jednym wariantem dnia
-        run(root, "init", "--variant", "pelna", "--id", "t2")
+        run(root, "init", "--variant", "full", "--id", "t2")
         out = json.loads(run(root, "round-begin", "--id", "t2", "--text", "Opowiedzcie wszyscy.").stdout)
         p = (root / out["calls"][0]["prompt_file"]).read_text()
         if len(out["calls"]) != 6 or "wie dobrze" not in p or p.count("Warianty dnia") or "Dziś (wariant dnia)" not in p:

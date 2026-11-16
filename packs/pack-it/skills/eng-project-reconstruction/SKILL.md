@@ -40,7 +40,7 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    modelu; reguły przekrojowe i ograniczenia ze `schema.json` dopisujesz pod nagłówkiem `## Reguły przekrojowe`
    (ponowne składanie go zachowuje). Wymagania z testów (nazwy, asercje),
    walidacji i endpointów z kart; każde
-   z pewnością: `test` (jest test) / `kod` (tylko kod) / `do potwierdzenia`. Mapowanie (błąd → kod HTTP, lista błędów
+   z pewnością: `test` (jest test) / `code` (tylko kod) / `do potwierdzenia`. Mapowanie (błąd → kod HTTP, lista błędów
    domenowych, wartości enuma) wypisujesz w całości, łącznie z przypadkiem domyślnym i kodem sukcesu.
 5. **Standardy:** sygnał z `standards_scan` (udział, przykłady, wyjątki) → reguła po obejrzeniu przykładów. Plik na
    obszar w `standards/` + `standards/INDEX.md`. Udział < 70% to nie standard, tylko „mieszane” z wyjątkami.

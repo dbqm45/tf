@@ -28,13 +28,13 @@ niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:li
      wychodzące i przychodzące z rodzajem); DI, kolejki, rejestry i wywołania po nazwie graf pomija — do Pytań;
    - **Reguły biznesowe** — tabela `ID | Reguła | Dowód | Pewność`. Regułę piszesz jako zdanie dla biznesu
      („Faktura po 30 dniach jest przeterminowana”), nie jako opis kodu. Pewność: `test` (jest test, który jej
-     pilnuje), `kod` (wynika wprost z kodu), `do weryfikacji` (wnioskowana, sprzeczna lub bez dowodu — trafia też do
+     pilnuje), `code` (wynika wprost z kodu), `do weryfikacji` (wnioskowana, sprzeczna lub bez dowodu — trafia też do
      Pytań). Gdzie szukać reguł: `references/template.md` § Skąd brać reguły;
    - **Pułapki** — zachowania zaskakujące: efekty uboczne, stan globalny, magiczne stałe, zależność od kolejności,
      ta sama reguła w kilku miejscach (często inaczej);
    - **Testy** — co jest pokryte, czego brakuje dla reguł z tabeli;
    - **Stan** w nagłówku: `zielony` (zrozumiały, przetestowany), `żółty` (działa, ale ryzykowny w zmianie),
-     `czerwony` (niezrozumiały lub bez testów przy krytycznych regułach) — zawsze z powodem.
+     `red` (niezrozumiały lub bez testów przy krytycznych regułach) — zawsze z powodem.
 3. **Przepływy (3–5 kluczowych)** w indeksie: krok po kroku przez moduły z plikami, diagram sekwencji (Mermaid).
    Pogłębienie jednego przepływu: `.claude/skills/eng-codebase-mapping/references/flow-analysis.md`.
 4. **Słownik** kod ↔ biznes: nazwa w kodzie, pojęcie biznesowe, uwaga o rozjeździe (`Doc` = faktura, ale też

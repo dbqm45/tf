@@ -134,7 +134,7 @@ def main() -> int:
         check(r.returncode == 2 and not (base / "z2").exists(), f"OP-19: zajęty prefiks zespołu → kod 2: {r.stdout}{r.stderr}")
         if isinstance(tp.get("team_defaults"), dict):
             td = tp["team_defaults"]
-            td["config"] = {**(td.get("config") or {}), "task": {"allowed_modes": ["plan", "zwykly"]},
+            td["config"] = {**(td.get("config") or {}), "task": {"allowed_modes": ["plan", "normal"]},
                             "autonomy": {"operations": {"git_push": "deny"}}}
             td["operations"] = {"tracker": {"prefixes": {"BE": "jira"}}}
             (team / "pack.yaml").write_text(pm.yaml.safe_dump(tp, allow_unicode=True, sort_keys=False), encoding="utf-8")
@@ -149,7 +149,7 @@ def main() -> int:
               f"OP-20: instalacja nakładki zespołu dociąga nakładkę firmy: {(r.stdout + r.stderr)[-1500:]}")
         if r.returncode == 0:
             (app2 / ".tf/config").mkdir(parents=True, exist_ok=True)
-            (app2 / ".tf/config/config.yaml").write_text("task:\n  allowed_modes: [plan, zwykly, auto]\n",
+            (app2 / ".tf/config/config.yaml").write_text("task:\n  allowed_modes: [plan, normal, auto]\n",
                                                          encoding="utf-8")
             pa = packs_mod(app2 / ".tf" / "factory")
             labels = [lbl for lbl, _ in pa.config_layers(app2)]
@@ -158,7 +158,7 @@ def main() -> int:
             proj_i = next((i for i, l in enumerate(labels) if l.endswith(".tf/config/config.yaml")), -1)
             check(0 < org_i < team_i < proj_i, f"OP-21: kolejność warstw silnik ← firma ← zespół ← projekt: {labels}")
             ws = pa.work_style(app2)
-            check(ws["allowed_modes"] == ["plan", "zwykly"],
+            check(ws["allowed_modes"] == ["plan", "normal"],
                   f"OP-22: dozwolone tryby to przecięcie warstw — projekt nie przywraca Auto zabranego przez zespół: {ws}")
             guard = importlib.util.spec_from_file_location("op_guard", app2 / ".claude/hooks/guard_bash.py")
             gm = importlib.util.module_from_spec(guard)

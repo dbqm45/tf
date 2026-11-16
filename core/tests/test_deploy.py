@@ -44,7 +44,7 @@ def task(project: Path, key: str = "IMP-1") -> dict:
 def new_task(project: Path, stage: str = "pr") -> None:
     project.mkdir(parents=True)
     call(project, TASK, "start", "IMP-1", "--title", "Limit dobowy")
-    if stage != "przyjecie":
+    if stage != "intake":
         call(project, TASK, "stage", "IMP-1", stage, "--force")
 
 
@@ -68,10 +68,10 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         # zadanie przed PR: wdrożenia nie da się zapisać
         p = Path(t) / "early"
-        new_task(p, "przyjecie")
+        new_task(p, "intake")
         card(p, {"smoke": GREEN})
         r = call(p, TASK, "deployed", "IMP-1")
-        check(r.returncode != 0 and "pr" in r.stdout and task(p)["stage"] == "przyjecie" and "deploy" not in task(p),
+        check(r.returncode != 0 and "pr" in r.stdout and task(p)["stage"] == "intake" and "deploy" not in task(p),
               f"DP-1: wdrożenie zapisuje się po etapie pr; wcześniej odmowa: {r.returncode} {r.stdout}")
 
         # bez karty i bez testu dymnego: komunikat, nie błąd; etap bez zmian
@@ -86,7 +86,7 @@ def main() -> int:
         check(r.returncode == 0 and "deploy.smoke" in r.stdout and task(p)["stage"] == "pr",
               f"DP-3: karta bez polecenia testu dymnego — to samo: {r.returncode} {r.stdout}")
 
-        # zielony test dymny → dowód i etap wdrozenie
+        # zielony test dymny → dowód i etap deploy
         p = Path(t) / "green"
         new_task(p)
         card(p, {"smoke": GREEN, "rollback": ROLLBACK, "rollback_minutes": 5, "logs": LOGS,
@@ -94,10 +94,10 @@ def main() -> int:
         r = call(p, TASK, "deployed", "IMP-1", "--version", "2.4.0")
         ev = p / CHANGES / "IMP-1" / "evidence" / "deploy-1.json"
         data = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
-        check(r.returncode == 0 and task(p)["stage"] == "wdrozenie" and data.get("exit_code") == 0
+        check(r.returncode == 0 and task(p)["stage"] == "deploy" and data.get("exit_code") == 0
               and data.get("command") == GREEN and data.get("version") == "2.4.0" and data.get("at")
               and data.get("kind") == "deploy",
-              f"DP-4: zielony test dymny zapisuje dowód (polecenie, kod, wersja, data) i etap wdrozenie: {r.stdout} {data}")
+              f"DP-4: zielony test dymny zapisuje dowód (polecenie, kod, wersja, data) i etap deploy: {r.stdout} {data}")
         check(task(p).get("deploy", {}).get("state") == "ok" and task(p)["deploy"].get("evidence") == "evidence/deploy-1.json"
               and not waiting(p) and set(data) == {"kind", "command", "exit_code", "version", "sha", "at", "log"}
               and "smoke ok" in (p / ".tf" / "runs" / "IMP-1" / "deploy-1.log").read_text(encoding="utf-8"),
@@ -117,11 +117,11 @@ def main() -> int:
               and LOGS in r.stdout and "HTTP 500 /health" in r.stdout and "kodem 7" in r.stdout,
               f"DP-8: czerwony test: pytanie o wycofanie, krok i czas cofania, polecenie logów, wyjście testu: "
               f"{r.returncode} {r.stdout}")
-        check(task(p)["stage"] == "pr" and task(p).get("deploy", {}).get("state") == "czerwone"
+        check(task(p)["stage"] == "pr" and task(p).get("deploy", {}).get("state") == "red"
               and (p / CHANGES / "IMP-1" / "evidence" / "deploy-1.json").is_file(),
-              f"DP-9: czerwony wynik zapisany z dowodem; etap nie przechodzi do wdrozenie: {task(p).get('deploy')}")
+              f"DP-9: czerwony wynik zapisany z dowodem; etap nie przechodzi do deploy: {task(p).get('deploy')}")
         w = waiting(p)
-        check(len(w) == 1 and w[0].get("kind") == "wdrozenie" and "ycofać" in (w[0].get("question") or "")
+        check(len(w) == 1 and w[0].get("kind") == "deploy" and "ycofać" in (w[0].get("question") or "")
               and w[0].get("recommended") and any(ROLLBACK in (o.get("skutek") or "") for o in w[0].get("options") or [])
               and "--rolled-back" in (w[0].get("how") or ""),
               f"DP-10: lista „czeka na Ciebie”: pytanie o wycofanie z opcjami, rekomendacją i poleceniem: {w}")
@@ -135,16 +135,16 @@ def main() -> int:
               f"DP-12: wycofanie zapisuje człowiek (--by human:<id>): {r.returncode} {r.stdout}")
         r = call(p, TASK, "deployed", "IMP-1", "--rolled-back", "--by", "human:anna")
         d = task(p).get("deploy", {})
-        check(r.returncode == 0 and d.get("state") == "wycofane" and d.get("decided_by") == "human:anna"
+        check(r.returncode == 0 and d.get("state") == "rolled-back" and d.get("decided_by") == "human:anna"
               and d.get("decided_at") and not waiting(p),
               f"DP-13: zapis decyzji o wycofaniu zdejmuje zadanie z listy: {r.returncode} {r.stdout} {d}")
 
-        # po naprawie ponowny zielony test → wdrozenie, drugi dowód
+        # po naprawie ponowny zielony test → deploy, drugi dowód
         card(p, {"smoke": GREEN, "rollback": ROLLBACK})
         r = call(p, TASK, "deployed", "IMP-1", "--version", "2.4.1")
-        check(r.returncode == 0 and task(p)["stage"] == "wdrozenie" and task(p)["deploy"].get("state") == "ok"
+        check(r.returncode == 0 and task(p)["stage"] == "deploy" and task(p)["deploy"].get("state") == "ok"
               and task(p)["deploy"].get("evidence") == "evidence/deploy-2.json" and not waiting(p),
-              f"DP-14: ponowny zielony test po naprawie: etap wdrozenie i drugi dowód: {r.stdout} {task(p).get('deploy')}")
+              f"DP-14: ponowny zielony test po naprawie: etap deploy i drugi dowód: {r.stdout} {task(p).get('deploy')}")
 
         # przekroczony czas testu dymnego to wynik czerwony, nie ślad wyjątku
         p = Path(t) / "slow"
@@ -152,7 +152,7 @@ def main() -> int:
         card(p, {"smoke": SLOW})
         r = call(p, TASK, "deployed", "IMP-1", "--timeout", "1")
         check(r.returncode == 1 and "Traceback" not in r.stdout + r.stderr and "limit czasu" in r.stdout
-              and "git revert" in r.stdout and task(p)["deploy"].get("state") == "czerwone",
+              and "git revert" in r.stdout and task(p)["deploy"].get("state") == "red",
               f"DP-15: limit czasu → czerwony wynik; bez kroku w karcie podany jest krok domyślny: {r.returncode} {r.stdout} {r.stderr}")
 
         # karta nieczytelna albo o złym kształcie nie wywraca polecenia

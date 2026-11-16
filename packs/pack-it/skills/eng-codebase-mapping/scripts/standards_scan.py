@@ -154,7 +154,7 @@ def scan(root: str) -> dict:
         texts = {p: read(root, p) for p in files}
         # nazwy plików (produkcyjnych): styl dominujący + wyjątki
         stems = {p: os.path.basename(p).split(".")[0] for p in prod}
-        styles = {p: next((k for k, rx in NAMING.items() if rx.match(s)), "inne") for p, s in stems.items()}
+        styles = {p: next((k for k, rx in NAMING.items() if rx.match(s)), "other") for p, s in stems.items()}
         cnt = collections.Counter(v for v in styles.values() if v != "lowercase")
         if cnt:
             top = cnt.most_common(1)[0][0]
@@ -180,15 +180,15 @@ def scan(root: str) -> dict:
             hit = {p: lines_matching(texts[p], rx) for p in tests}
             hit = {p: l for p, l in hit.items() if l}
             if hit:
-                sigs.append(signal("testy", lang, fw, list(hit), len(tests), [f"{p}:{l[0]}" for p, l in hit.items()]))
+                sigs.append(signal("tests", lang, fw, list(hit), len(tests), [f"{p}:{l[0]}" for p, l in hit.items()]))
         if tests:
             sep = [p for p in tests if re.search(r"(^|/)(tests?|__tests__|spec)/|\.Tests?/", p)]
             if sep:
-                sigs.append(signal("testy", lang, "osobny katalog tests/", sep, len(tests), sep,
+                sigs.append(signal("tests", lang, "osobny katalog tests/", sep, len(tests), sep,
                                    [p for p in tests if p not in sep]))
             col = [p for p in tests if p not in sep]
             if col:
-                sigs.append(signal("testy", lang, "test obok kodu", col, len(tests), col, sep))
+                sigs.append(signal("tests", lang, "test obok kodu", col, len(tests), col, sep))
         # idiomy: testów (w testach) i kodu (w kodzie produkcyjnym)
         for area, table, pool in (("idiomy testów", TEST_IDIOMS, tests), ("idiomy kodu", CODE_IDIOMS, prod)):
             for rule, rx in table.get(lang, []):

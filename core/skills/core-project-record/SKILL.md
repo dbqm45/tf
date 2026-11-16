@@ -125,7 +125,7 @@ Krótki, kuratorowany zbiór reguł, żeby kolejna sesja nie powtarzała tych sa
 - Kategorie (w tej kolejności): **wykonanie i weryfikacja**, **powłoka i narzędzia**, **domena i ograniczenia**,
   **ustalenia człowieka**. Najwyżej 10 wpisów na kategorię, najważniejsze na górze.
 - Wpis: `- RRRR-MM-DD **reguła w trybie rozkazującym** — Kontekst: <obszar, ścieżka lub faza, na tyle konkretnie,
-  żeby dało się dopasować do pracy> · Zamiast tego: <działanie> · Dotyczy: plan|realizacja|przegląd|wszystko`.
+  żeby dało się dopasować do pracy> · Zamiast tego: <działanie> · Dotyczy: plan|implementation|przegląd|wszystko`.
   Bez „zamiast tego” to nie lekcja.
 - Lekcję pisze człowiek albo agent na jego prośbę (np. decyzja „zapisz jako lekcję” w triażu przeglądu zmiany, pack-it: qa-change-review),
   jedna na raz; nie powstaje automatycznie z wypełnionych z góry pól.

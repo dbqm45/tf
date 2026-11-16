@@ -35,7 +35,7 @@ Beurer-Kellner i in., „Design Patterns for Securing LLM Agents against Prompt 
 Przykład w kodzie (podwójny LLM, szkic):
 ```python
 summary = quarantined_llm(email_body, schema={"type": "object", "additionalProperties": False,
-    "properties": {"topic": {"enum": ["faktura", "reklamacja", "inne"]},
+    "properties": {"topic": {"enum": ["faktura", "reklamacja", "other"]},
                    "invoice_id": {"type": "string", "pattern": "^FV/[0-9]{4}/[0-9]+$"}}})
 validate(summary)                     # w kodzie; niezgodność = odrzucenie
 recipient = customer_db.owner_of(summary["invoice_id"])   # adresat z naszych danych, nigdy z treści e-maila

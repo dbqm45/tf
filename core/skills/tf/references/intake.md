@@ -13,7 +13,7 @@ zadanie z tego, co podał człowiek. Skrypt: `python3 .claude/skills/tf/scripts/
 | `treść` | wklejona historyjka albo zdanie | `run_report.py start "<tytuł>" --story "<treść>"`; z kluczem na początku (`PROJ-12: …`) dodajesz `--key PROJ-12` |
 | `brak` | samo `/tf` | pokazujesz zadania w toku (linie `W toku:`) i pytasz, które wznowić albo jaka jest treść nowego |
 
-Pole `Sposób` (słowo `zadanie`, `pytanie`, `szybko` na początku) wygrywa z Twoją oceną. `Opcje` przenosisz do
+Pole `Sposób` (słowo `zadanie`, `question`, `szybko` na początku) wygrywa z Twoją oceną. `Opcje` przenosisz do
 przebiegu (`--auto`, `--budget`). Klucz, który nie jest numerem zgłoszenia (np. `UTF-8` na początku zdania), pomijasz.
 
 ## Zgłoszenie z trackera

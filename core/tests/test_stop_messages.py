@@ -11,7 +11,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / SKILL / "scripts
 MESSAGES = ROOT / SKILL / "templates" / "stop_messages.json"
 # słowa z budowy fabryki, których człowiek nie musi znać (dokument osi, §1a reguła 2)
 JARGON = ("tier", "hook", "bramk", "kawał", "triaż", "harness", "slice", "gate", "artefakt", "stop", "spec.md",
-          "plan.md", "run_state", "task.json", "commit", "diff", "skan", "agent")
+          "plan.md", "run_state", "task.json", "commit", "diff", "scan", "agent")
 
 
 def main() -> int:
@@ -37,11 +37,11 @@ def main() -> int:
           f"nadmiar {sorted(set(data) - set(codes))}")
     for code in codes:
         m = data.get(code) or {}
-        texts = [str(m.get(k, "")) for k in ("co", "potrzeba", "pytanie", "potem")]
+        texts = [str(m.get(k, "")) for k in ("co", "potrzeba", "question", "potem")]
         options = m.get("opcje") if isinstance(m.get("opcje"), list) else []
         check(all(t.strip() for t in texts), f"K-2 {code}: pola co, potrzeba, pytanie i potem są wypełnione")
-        check(str(m.get("pytanie", "")).strip().endswith("?") and str(m.get("pytanie", "")).count("?") == 1,
-              f"K-3 {code}: jedno pytanie, zakończone znakiem zapytania: {m.get('pytanie')}")
+        check(str(m.get("question", "")).strip().endswith("?") and str(m.get("question", "")).count("?") == 1,
+              f"K-3 {code}: jedno pytanie, zakończone znakiem zapytania: {m.get('question')}")
         check(2 <= len(options) <= 3 and all(isinstance(o, dict) and str(o.get("opcja", "")).strip()
                                               and str(o.get("skutek", "")).strip() for o in options),
               f"K-4 {code}: 2–3 opcje, każda ze skutkiem: {options}")

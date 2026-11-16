@@ -68,14 +68,14 @@ def main() -> int:
               f"Z-3: list --json: jeden wpis „plan” z czasem, od kiedy czeka: {w}")
 
         # blok STOP z kodem: co się stało, powód, pytanie, rekomendacja
-        call(p, cfg, SCRIPTS / "run_state.py", "stage", d, "needs", "--needs", "stop", "--code", "testy", "--reason",
+        call(p, cfg, SCRIPTS / "run_state.py", "stage", d, "needs", "--needs", "stop", "--code", "tests", "--reason",
              "pytest: 2 failed (test_fees.py)")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
         check("czeka na Ciebie" in r.stdout and "Testy nie przechodzą" in r.stdout and "pytest: 2 failed" in r.stdout
               and "pytanie:" in r.stdout and "rekomendacja:" in r.stdout,
               f"Z-4: tf status pokazuje zatrzymanie: co się stało, powód, pytanie i rekomendację: {r.stdout}")
-        check(len(w) == 1 and w[0].get("kind") == "stop" and w[0].get("code") == "testy"
+        check(len(w) == 1 and w[0].get("kind") == "stop" and w[0].get("code") == "tests"
               and str(w[0].get("question", "")).endswith("?") and w[0].get("recommended")
               and len(w[0].get("options") or []) >= 2 and w[0].get("details") == "pytest: 2 failed (test_fees.py)",
               f"Z-5: list --json: wpis „stop” z kodem, pytaniem, opcjami i rekomendacją: {w}")

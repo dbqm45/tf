@@ -27,8 +27,8 @@ przy starcie i ze ścieżek planu przy etapie `plan`. Człowiekowi mówisz jedny
 ## Zmiana wagi
 - Podgląd z powodem: `run_state.py weight <katalog>`.
 - **Podnieść** może każdy, także Ty, gdy widzisz ryzyko, którego skrypt nie złapał:
-  `run_state.py weight <katalog> --set pelna`.
-- **Obniżyć** może tylko człowiek, z powodem: `python3 .tf/factory/tf.py task weight <KEY> --set zwykla --by human:<id>
+  `run_state.py weight <katalog> --set full`.
+- **Obniżyć** może tylko człowiek, z powodem: `python3 .tf/factory/tf.py task weight <KEY> --set normal --by human:<id>
   --reason "<dlaczego>"`. Gdy uważasz, że waga jest za wysoka, mówisz to człowiekowi i podajesz mu to polecenie —
   sam go nie uruchamiasz. Po decyzji człowieka skrypt wagi już nie zmienia.
 - Waga lekka, a plan wyszedł na więcej niż jeden kawałek → podnosisz ją do zwykłej i zakładasz specyfikację.

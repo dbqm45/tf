@@ -96,7 +96,7 @@ def main() -> int:
         p = project(base, "main")
         task(p, "", "start", "IMP-1", "--title", "Literówka w stopce")                       # tryb zwykły
         task(p, "", "start", "IMP-2", "--title", "Eksport CSV", "--mode", "auto")
-        task(p, "", "start", "IMP-3", "--title", "Płatności", "--weight", "pelna", "--mode", "auto")
+        task(p, "", "start", "IMP-3", "--title", "Płatności", "--weight", "full", "--mode", "auto")
         task(p, "", "start", "IMP-4", "--title", "Sortowanie", "--mode", "auto")
         run2 = p / ".tf" / "runs" / "IMP-2"                       # katalog przebiegu z run_report.py start (ignorowany)
         run2.mkdir(parents=True)

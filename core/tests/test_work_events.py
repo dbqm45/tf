@@ -38,7 +38,7 @@ def new_run(project: Path, plan: str = PLAN) -> str:
         (project / name).write_text("x = 1\n", encoding="utf-8")
     call(project, SCRIPTS / "run_report.py", "start", "Limit dobowy", "--key", "IMP-1", "--story", "Popraw literówkę w README.")
     d = str(project / ".tf" / "runs" / "IMP-1")
-    call(project, SCRIPTS / "run_state.py", "weight", d, "--set", "zwykla")
+    call(project, SCRIPTS / "run_state.py", "weight", d, "--set", "normal")
     call(project, TASK, "mode", "IMP-1", "auto")
     doc = project / CHANGES / "IMP-1"
     (doc / "spec.md").write_text(SPEC, encoding="utf-8")
@@ -64,7 +64,7 @@ def events(project: Path) -> list[dict]:
 
 def done(project: Path, d: str, slice_id: str, file: str) -> None:
     call(project, TASK, "verify", "IMP-1", slice_id, "--files", file, "--command", OK)
-    call(project, SCRIPTS / "run_state.py", "step", d, slice_id, "R1", "zakres", "pass")   # przegląd zakresu przed tick
+    call(project, SCRIPTS / "run_state.py", "step", d, slice_id, "R1", "scope", "pass")   # przegląd zakresu przed tick
     call(project, SCRIPTS / "run_state.py", "tick", d, slice_id)
 
 
@@ -88,13 +88,13 @@ def main() -> int:
               and not events(p) and (task(p).get("slices") or {}).get("K1", {}).get("state") != "blocked",
               f"WE-1: bez przełącznika `block` odmawia i wskazuje STOP z kodem pytanie: {r.returncode} {r.stdout}")
         call(p, rs, "step", d, "K1", "R1", "test", "run")
-        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "pytanie", "--reason", QUESTION)
+        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
         check(r.returncode == 0, f"WE-2: bez przełącznika STOP z kodem pytanie przechodzi jak dotąd: {r.returncode} {r.stdout}")
         call(p, rs, "step", d, "K1", "R1", "test", "run")
 
         switch(p, True)
         # STOP z pytaniem o bieżący kawałek, gdy jest kawałek niezależny → odmowa z podpowiedzią `block`
-        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "pytanie", "--reason", QUESTION)
+        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
         check(r.returncode == 2 and "block" in r.stdout and "K2" in r.stdout and "--task" in r.stdout,
               f"WE-3: z przełącznikiem STOP z pytaniem o jeden kawałek jest odrzucany, gdy jest co robić dalej: {r.returncode} {r.stdout}")
         r = call(p, rs, "block", d, "K1", "--question", QUESTION)
@@ -118,7 +118,7 @@ def main() -> int:
         check(r.returncode == 0 and "Dalej: STOP" in r.stdout and QUESTION in r.stdout and "--code pytanie" in r.stdout
               and "K4" in r.stdout,
               f"WE-8: gdy nic niezależnego nie zostało (K4 czeka na K1) → STOP z listą pytań: {r.stdout}")
-        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "pytanie", "--reason", QUESTION)
+        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
         check(r.returncode == 0, f"WE-9: STOP z pytaniem przechodzi, gdy nie ma już kawałka do zrobienia: {r.returncode} {r.stdout}")
 
         # odpowiedź człowieka odblokowuje kawałek
@@ -144,7 +144,7 @@ def main() -> int:
         check(r.returncode == 0 and "Dalej: STOP" in r.stdout and "--code pytanie" in r.stdout,
               f"WE-13: plan bez dopisków „po:” — pytanie w K1 nie zostawia nic do zrobienia: {r.stdout}")
         # pytanie o całe zadanie: STOP od razu, bez blokowania kawałka
-        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "pytanie", "--reason", QUESTION, "--task")
+        r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION, "--task")
         check(r.returncode == 0, f"WE-14: `--task` (pytanie o całe zadanie) przepuszcza STOP: {r.returncode} {r.stdout}")
         r = call(p, rs, "stage", d, "plan")
         check("po:" in r.stdout and "po: brak" in r.stdout,

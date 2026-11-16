@@ -93,7 +93,7 @@ Dla każdego ustalenia człowiek wybiera decyzję:
 Nie każde ustalenie trzeba naprawić. Po każdej decyzji aktualizuj zapisany raport.
 
 ## Zapis
-- `docs/project/07-review/<data>-przeglad-planu-<krok>.md` albo `…-przeglad-impl-<krok>[-fN].md`, szablon
+- `docs/project/07-review/<data>-review-planu-<krok>.md` albo `…-review-impl-<krok>[-fN].md`, szablon
   `review` (core-project-record) z kolumnami Wpływ i Decyzja oraz linią „Ugruntowanie”.
 - Decyzje: `OCZEKUJE` / `NAPRAWIONE` / `POMINIĘTE` / `RYZYKO PRZYJĘTE` / `ODRZUCONE` / `LEKCJA`.
 - Poprawki odłożone → „Otwarte pytania” raportu kroku.

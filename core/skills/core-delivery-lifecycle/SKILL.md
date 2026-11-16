@@ -81,7 +81,7 @@ zapisuje je jako pytanie z adresatem. Każda zmiana zaakceptowanego artefaktu to
 
 ## Faza 9 — utrzymanie
 Wydanie nie kończy projektu. Utrzymanie to stały rytm, a nie reakcja na awarie:
-- **Cykl:** przegląd utrzymania co tydzień lub co sprint (`08-operations/<data>-przeglad.md`, szablon
+- **Cykl:** przegląd utrzymania co tydzień lub co sprint (`08-operations/<data>-review.md`, szablon
   `operations-review`) — SLO i incydenty, zgłoszenia według wagi, łatki, aktualizacje, koszty, funkcje do wycofania.
   Metryki (odsetek 5xx, porażki testów, czas cyklu PR) sprawdzasz pasmami kontrolnymi:
   `python3 .claude/skills/core-delivery-lifecycle/scripts/control_band.py metryka.csv --baseline 30 --side upper`.

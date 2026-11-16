@@ -65,11 +65,11 @@ def main() -> int:
         ts = sig.get(("nazwy plików", "TypeScript", "kebab-case"))
         check(ts and ts["count"] == 2 and ts["total"] == 3 and any("OrderItem.ts" in e for e in ts["exceptions"]),
               f"S-4: nazwy plików TS kebab-case 2/3: {ts}")
-        tf = sig.get(("testy", "Python", "pytest"))
+        tf = sig.get(("tests", "Python", "pytest"))
         check(tf and tf["count"] == 2 and any(e.startswith("app/tests/test_user.py:1") for e in tf["examples"]),
               f"S-5: framework testów z przykładem plik:linia: {tf}")
-        check(("testy", "TypeScript", "vitest") in sig, f"S-6: vitest: {[k for k in sig if k[0] == 'testy']}")
-        loc = sig.get(("testy", "Python", "osobny katalog tests/"))
+        check(("tests", "TypeScript", "vitest") in sig, f"S-6: vitest: {[k for k in sig if k[0] == 'tests']}")
+        loc = sig.get(("tests", "Python", "osobny katalog tests/"))
         check(loc and loc["count"] == 2, f"S-7: położenie testów Python: {loc}")
         bare = sig.get(("błędy", "Python", "except bez typu"))
         check(bare and bare["count"] == 1 and any(e.startswith("app/order_service.py:6") for e in bare["examples"]),

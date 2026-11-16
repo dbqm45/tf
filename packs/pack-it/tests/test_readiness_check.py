@@ -33,7 +33,7 @@ def main() -> int:
 
     # 1. --help działa i opisuje kody wyjścia
     r = run("--help")
-    check(r.returncode == 0 and "kod" in r.stdout.lower(), f"--help: {r.returncode} {r.stdout[:200]}")
+    check(r.returncode == 0 and "code" in r.stdout.lower(), f"--help: {r.returncode} {r.stdout[:200]}")
 
     with tempfile.TemporaryDirectory() as d:
         # Repo „zdrowe”: TS strict, lockfile, vitest, CI z etapami, linter, formatter, instrukcje agenta

@@ -44,9 +44,9 @@ def main() -> int:
         p = Path(t) / "proj"
         p.mkdir()
         call(p, TASK, "start", "PROJ-1", "--title", "Limit dobowy")
-        call(p, TASK, "stage", "PROJ-1", "specyfikacja")
+        call(p, TASK, "stage", "PROJ-1", "spec")
         r = call(p, TASK, "list")
-        check(not (p / CHANGES / "INDEX.md").exists() and "PROJ-1" in r.stdout and "specyfikacja" in r.stdout,
+        check(not (p / CHANGES / "INDEX.md").exists() and "PROJ-1" in r.stdout and "spec" in r.stdout,
               f"I-1: zapis zadania nie zakłada INDEX.md; listę z etapem daje `tf status`: {r.stdout}")
         r = call(p, REPORT, "start", "Eksport sesji", "--key", "PROJ-2", "--story", "Jako operator chcę eksport.")
         f = call(p, REPORT, "finish", str(p / ".tf" / "runs" / "PROJ-2"))
@@ -72,7 +72,7 @@ def main() -> int:
         note = (p / CHANGES / "INDEX.md").read_text(encoding="utf-8")
         check("tf status" in note and "OLD-1" not in note and "|" not in note,
               f"I-3: istniejący spis staje się stałą notką wskazującą `tf status`, bez wierszy zadań: {note}")
-        call(p, TASK, "stage", "PROJ-2", "specyfikacja")
+        call(p, TASK, "stage", "PROJ-2", "spec")
         call(p, TASK, "slice", "PROJ-2", "K1", "planned", "--title", "limit")
         check((p / CHANGES / "INDEX.md").read_text(encoding="utf-8") == note,
               "I-4: kolejne zapisy zadania nie zmieniają już pliku INDEX.md")
@@ -82,7 +82,7 @@ def main() -> int:
         git(p, "switch", "-q", "main")
         git(p, "switch", "-q", "-c", "story/b")
         call(p, TASK, "start", "PROJ-3", "--title", "Zadanie B")
-        call(p, TASK, "stage", "PROJ-3", "specyfikacja")
+        call(p, TASK, "stage", "PROJ-3", "spec")
         git(p, "add", "-A")
         git(p, "commit", "-q", "-m", "docs(task): record PROJ-3")
         m = git(p, "merge", "-q", "--no-edit", "story/a", ok=False)

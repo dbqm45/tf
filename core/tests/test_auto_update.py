@@ -272,14 +272,14 @@ def auto_run_tests(up, check) -> None:
 
         off = auto_project(base, "wylaczony", src, on=False)
         check(up.auto_run(off, env=env).get("status") == "off", "AA-5: bez --auto on automat nic nie robi")
-        locked = auto_project(base, "zablokowany", src)
+        locked = auto_project(base, "blocked", src)
         (locked / ".tf" / "logs").mkdir(parents=True)
         (locked / ".tf" / "logs" / "update.lock").write_text("123")
         check(up.auto_run(locked, env=env).get("status") == "locked" and manifest(locked)["version"] == "2.0.0",
               "AA-6: świeża blokada (trwa inna instalacja) → nic nie robi")
 
         src = factory_repo(base, "fab-zle-testy", [("2.0.1", PASS, False), ("2.1.0", FAIL, False)])
-        p = auto_project(base, "testy", src)
+        p = auto_project(base, "tests", src)
         r = up.auto_run(p, env=env)
         check(r.get("status") == "tests_failed" and manifest(p)["version"] == "2.0.0"
               and (p / ".claude" / "hooks" / "f.py").read_text() == "2.0.0"

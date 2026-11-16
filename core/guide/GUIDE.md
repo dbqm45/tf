@@ -178,9 +178,9 @@ poświadczeń.
 
 ## 5. Koszty
 - **Profil zespołu:** `python3 .tf/factory/profile.py` pokazuje aktywny profil. Dostępne są:
-  - `oszczedny` — bez Opusa;
-  - `zrownowazony` — domyślny: Haiku do mechaniki, Sonnet na co dzień, Opus do drogich pomyłek;
-  - `jakosc` — wyższy effort i doradca Opus.
+  - `economy` — bez Opusa;
+  - `balanced` — domyślny: Haiku do mechaniki, Sonnet na co dzień, Opus do drogich pomyłek;
+  - `quality` — wyższy effort i doradca Opus.
 - **Pomiar:** `python3 .tf/factory/cost_report.py --days 7` (zużycie per agent i model z `.tf/logs/usage.jsonl`);
   pasek stanu pokazuje koszt sesji i zapełnienie kontekstu. Każdy wpis w `usage.jsonl` ma odcisk harnessu (pole
   `harness`: wersja Claude Code, fabryki i nakładek, skrót zainstalowanych plików), więc koszty z różnych wersji
@@ -244,7 +244,7 @@ repozytorium). `tf style` bez nazwy pokazuje bieżący styl.
 |---|---|---|
 | `autonomous` | Auto | agent idzie bez zgody na plan (nie przy wadze pełnej); pytanie wstrzymuje tylko swój kawałek |
 | `step-by-step` | zwykły | plan zatwierdzasz Ty; po każdym kawałku agent pokazuje zmiany i czeka na Twoją zgodę |
-| `conversation` | Plan | zadanie kończy się na planie; kod dopiero, gdy zmienisz tryb (`tf task mode <KLUCZ> zwykly`). Do tego tryb planowania Claude Code w `.claude/settings.local.json` projektu: także rozmowa poza `/tf` nie zmienia plików, dopóki nie zatwierdzisz planu (wyjście z trybu: Shift+Tab) |
+| `conversation` | Plan | zadanie kończy się na planie; kod dopiero, gdy zmienisz tryb (`tf task mode <KLUCZ> normal`). Do tego tryb planowania Claude Code w `.claude/settings.local.json` projektu: także rozmowa poza `/tf` nie zmienia plików, dopóki nie zatwierdzisz planu (wyjście z trybu: Shift+Tab) |
 
 Tryb uprawnień Claude Code styl ustawia tylko w miejsce domyślnego: jeśli wybrałeś własny (np. `acceptEdits`), zostaje,
 a zmiana stylu oddaje to, co było przedtem. Styl z `~/.tf/preferences.yaml` trafia do kolejnych projektów przy
@@ -257,7 +257,7 @@ tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicac
 |---|---|---|
 | modele i effort poziomów `fast` / `std` / `deep` | `.tf/config/config.yaml` → `tiers` | wpisz tylko zmieniane pola, potem `python3 .tf/factory/build.py` |
 | ogólny poziom kosztu | profil kosztów | `python3 .tf/factory/profile.py <profil>` |
-| kto wykonuje krok pętli `/tf` i na jakim poziomie | `.tf/config/config.yaml` → `steps` | np. `steps: {przeglad: {tier: deep}}`, potem `python3 .tf/factory/build.py`; podgląd z modelem i effortem: `tf config show steps` |
+| kto wykonuje krok pętli `/tf` i na jakim poziomie | `.tf/config/config.yaml` → `steps` | np. `steps: {review: {tier: deep}}`, potem `python3 .tf/factory/build.py`; podgląd z modelem i effortem: `tf config show steps` |
 | operacje, o które fabryka pyta albo które blokuje | `.tf/config/config.yaml` → `autonomy` | można tylko zaostrzyć (pytanie → blokada) |
 | język rozmowy i commitów | ustawienia fabryki | `tf language <kod>`, `tf commit-language <kod>` |
 | czy fabryka sama prowadzi flagi funkcji | `.tf/config/config.yaml` → `feature_flags.auto` | domyślnie `true`: fabryka pyta Cię o nazwę flagi, zakłada ją i pilnuje, żeby poza środowiskiem testowym była wyłączona; `false`: flagi dodajesz samodzielnie (w kodzie, w zewnętrznej usłudze), a fabryka ich nie zakłada i nie wymaga |
@@ -286,7 +286,7 @@ tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicac
 | `tf task weight <KLUCZ>`, `… --set <waga> [--by human:<id> --reason "…"]` | waga zadania: lekka (drobna zmiana, bez specyfikacji, jeden kawałek), zwykła albo pełna (logowanie, płatności, migracje, sekrety — plan zatwierdzasz Ty przed kodem); fabryka dobiera ją sama i podaje powód, podnieść może każdy, obniżyć tylko Ty |
 | `tf task deployed <KLUCZ> [--version X]`, `… --rolled-back --by human:<id>` | sprawdzenie po wdrożeniu: uruchamia test dymny z karty operacyjnej (`deploy.smoke` w `.tf/config/operations.json`) i zapisuje wynik w zadaniu. Zielony → etap „wdrożenie”. Czerwony → pytanie „wycofać?” z krokiem cofania, czasem i poleceniem logów z karty, a zadanie trafia na listę „czeka na Ciebie”; decyzję o wycofaniu zapisujesz Ty. Bez testu dymnego w karcie fabryka kończy na scaleniu i mówi to wprost. Fabryka niczego nie wdraża i niczego sama nie cofa |
 | `tf task close <KLUCZ> [--lesson "…" --by human:<id>]`, `tf task finding <KLUCZ> control F1 "…"`, `tf status --all` | zamknięcie zadania: tylko scalona zmiana, bez wdrożenia czekającego na decyzję i z kontrolą zapisaną do każdego ważnego ustalenia przeglądu (test, hook, reguła albo powód jej braku); przypomina o dacie usunięcia flagi; lekcję do `docs/project/lessons.md` dopisuje tylko na Twoje polecenie. Zamknięte zadania znikają z `tf status` (wszystkie: `--all`) |
-| `tf task mode <KLUCZ> [plan\|zwykly\|auto]`, `tf task approve <KLUCZ> plan.md --by human:<id>` | tryb zadania: Plan kończy na planie, zwykły wpuszcza kod po Twojej zgodzie na plan, Auto idzie bez zgody (nie przy wadze pełnej) |
+| `tf task mode <KLUCZ> [plan\|normal\|auto]`, `tf task approve <KLUCZ> plan.md --by human:<id>` | tryb zadania: Plan kończy na planie, zwykły wpuszcza kod po Twojej zgodzie na plan, Auto idzie bez zgody (nie przy wadze pełnej) |
 | `tf status` | lista zadań: etap, ile kawałków ma aktualny dowód, które pliki trzeba odświeżyć i co czeka na Ciebie (pytanie z rekomendacją); `tf status --open` otwiera podgląd w przeglądarce |
 | `tf task start <KLUCZ> --title "…"`, `tf task stage <KLUCZ> <etap>`, `tf task status <KLUCZ>` | jedno miejsce na zadanie: `docs/project/changes/<KLUCZ>/task.json`; listę zadań podaje `tf status` |
 | `tf onboard [--yes] [--verify] [--dry-run] [--json]` | przygotowanie repozytorium: wykrycie poleceń, `verify.sh`, raport gotowości, bramka jakości, polecenia w pliku instrukcji |

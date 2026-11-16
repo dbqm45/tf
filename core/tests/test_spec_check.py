@@ -165,16 +165,16 @@ def main() -> int:
         r = run(p, TASK, "stage", "PROJ-1", "plan")
         check(r.returncode == 1 and "SPEC-007" in r.stdout and "tf spec check PROJ-1" in r.stdout,
               f"SP-18: etap plan odrzucony przy błędach specyfikacji: {r.returncode} {r.stdout}")
-        r = run(p, TASK, "stage", "PROJ-1", "specyfikacja")
+        r = run(p, TASK, "stage", "PROJ-1", "spec")
         check(r.returncode == 0, f"SP-19: do etapu specyfikacja wchodzi się z niegotowym plikiem: {r.stdout}")
         spec.write_text(GOOD, encoding="utf-8")
         r = run(p, TASK, "stage", "PROJ-1", "plan")
         check(r.returncode == 0, f"SP-20: po poprawce etap plan przechodzi: {r.stdout}{r.stderr}")
         run(p, TASK, "start", "PROJ-2", "--title", "Bez specyfikacji")
-        r = run(p, TASK, "stage", "PROJ-2", "realizacja")
+        r = run(p, TASK, "stage", "PROJ-2", "implementation")
         check(r.returncode == 0, f"SP-21: zadanie bez spec.md działa jak dotąd: {r.stdout}")
         spec.write_text(GOOD.replace(", wtedy opłata wynosi 45 zł", ""), encoding="utf-8")
-        r = run(p, TASK, "stage", "PROJ-1", "realizacja", "--force")
+        r = run(p, TASK, "stage", "PROJ-1", "implementation", "--force")
         check(r.returncode == 0, f"SP-22: --force pomija bramkę specyfikacji: {r.stdout}")
 
         # przez `tf`: projekt z silnikiem w .tf/factory/ i manifestem instalacji

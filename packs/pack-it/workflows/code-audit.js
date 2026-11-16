@@ -16,14 +16,14 @@ export const meta = {
 const DIMENSIONS = {
   architektura: { agent: 'architect', skills: ['arch-quality-attributes', 'eng-module-depth', 'ddd-connascence-analysis'] },
   bezpieczenstwo: { agent: 'security-reviewer', skills: ['sec-appsec-devsecops', 'be-auth-security', 'arch-threat-modeling'] },
-  jakosc: { agent: 'specialist', skills: ['eng-tech-debt-audit', 'eng-clean-code'] },
+  quality: { agent: 'specialist', skills: ['eng-tech-debt-audit', 'eng-clean-code'] },
   testy: { agent: 'specialist', skills: ['qa-test-design', 'qa-regression'] },
   dostepnosc: { agent: 'specialist', skills: ['ux-accessibility'] },
   uzytecznosc: { agent: 'specialist', skills: ['ux-feature-design'] },
   wydajnosc: { agent: 'specialist', skills: ['fe-web-platform', 'fe-architecture'] },
   prawo: { agent: 'specialist', skills: ['arch-eu-product-law', 'arch-privacy-compliance', 'sec-eu-regulations'] },
 }
-const DEEP = ['architektura', 'bezpieczenstwo']   // pełny: te wymiary na opus
+const DEEP = ['architektura', 'security']   // pełny: te wymiary na opus
 const COST = { S: 1, M: 2, L: 4 }
 
 const a = args || {}

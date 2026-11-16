@@ -236,10 +236,10 @@ def main() -> int:
         check(c is None and r.returncode == 2 and "tf skill check" in r.stdout, f"CTF-18: nieznane podpolecenie → użycie: {r.stdout}")
 
         (per / ".tf" / "config").mkdir()
-        (per / ".tf" / "config" / "config.yaml").write_text("default_profile: oszczedny\ntiers:\n  std:\n    effort: low\n")
+        (per / ".tf" / "config" / "config.yaml").write_text("default_profile: economy\ntiers:\n  std:\n    effort: low\n")
         r, _ = called("config", "show")
         lines = {ln.split()[0]: ln for ln in r.stdout.splitlines() if ln.strip() and not ln.startswith(("#", " "))}
-        check(r.returncode == 0 and "projekt" in lines.get("default_profile", "") and "oszczedny" in lines.get("default_profile", "")
+        check(r.returncode == 0 and "projekt" in lines.get("default_profile", "") and "economy" in lines.get("default_profile", "")
               and "projekt" in lines.get("tiers", "") and "fabryka" in lines.get("limits", ""),
               f"CTF-19: tf config show pokazuje wartości i skąd pochodzą (projekt / fabryka): {r.stdout[:600]}{r.stderr}")
         r, _ = called("config", "show", "tiers")
@@ -250,7 +250,7 @@ def main() -> int:
         org = per / ".tf" / "factory" / "packs" / "pack-firma" / "pack.yaml"
         org.parent.mkdir(parents=True, exist_ok=True)
         org.write_text("id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n  config:\n    work:\n"
-                       "      budget_usd: 3\n    default_profile: jakosc\n", encoding="utf-8")
+                       "      budget_usd: 3\n    default_profile: quality\n", encoding="utf-8")
         r, _ = called("config", "show")
         lines = {ln.split()[0]: ln for ln in r.stdout.splitlines() if ln.strip() and not ln.startswith(("#", " "))}
         check(r.returncode == 0 and "organizacja" in lines.get("work", "") and "projekt" in lines.get("default_profile", ""),

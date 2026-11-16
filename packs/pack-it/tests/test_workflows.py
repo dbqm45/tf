@@ -54,7 +54,7 @@ def finding(**kw):
     return {**base, **kw}
 
 
-def scenario(depth="standard", limit=8, dims=("architektura", "bezpieczenstwo", "jakosc", "dostepnosc"), date="2026-10-21"):
+def scenario(depth="standard", limit=8, dims=("architektura", "security", "quality", "dostepnosc"), date="2026-10-21"):
     return {"args": {"date": date, "dimensions": list(dims), "depth": depth, "limit": limit, "modules": [],
                      "exclude": ["vendor/"]},
             "replies": [
@@ -67,7 +67,7 @@ def scenario(depth="standard", limit=8, dims=("architektura", "bezpieczenstwo", 
                             evidence="api/a.py:10 bez walidacji"),
                     finding(title="brak sprawdzenia właściciela", file="api/b.py", line=5, risk=4, reach=3, cost="S",
                             evidence="api/b.py:5", blocker="autoryzacja")]}},
-                {"label": "przegląd:jakosc", "reply": {"findings": [
+                {"label": "przegląd:quality", "reply": {"findings": [
                     finding(title="podejrzenie martwego kodu", risk=1, reach=1, cost="S")]}},
                 {"label": "raport", "reply": "docs/project/07-review/2026-10-21-audyt-kodu.md"},
                 {"contains": "Spróbuj obalić", "reply": {"refuted": False, "reason": "potwierdzone"}},
@@ -122,7 +122,7 @@ def main() -> int:
             check(out.get("ok"), f"W-6: przebieg bez błędu: {out.get('error')}")
             types = {c.get("label"): c.get("agentType") for c in out.get("calls", [])}
             check(types.get("przegląd:architektura") == "architect" and types.get("przegląd:bezpieczenstwo") ==
-                  "security-reviewer" and types.get("przegląd:jakosc") == "specialist",
+                  "security-reviewer" and types.get("przegląd:quality") == "specialist",
                   f"W-7: wykonawcy wymiarów: {types}")
             inv = next((c for c in out.get("calls", []) if c.get("label") == "inwentarz"), {})
             check(inv.get("model") == "haiku" and "2026-10-21-audyt-inwentarz.md" in inv.get("prompt", ""),
@@ -130,7 +130,7 @@ def main() -> int:
             ranking = res.get("ranking", [])
             merged = next((r for r in ranking if r.get("file") == "api/a.py"), {})
             check(len([r for r in ranking if r.get("file") == "api/a.py"]) == 1
-                  and sorted(merged.get("dimensions", [])) == ["architektura", "bezpieczenstwo"],
+                  and sorted(merged.get("dimensions", [])) == ["architektura", "security"],
                   f"W-9: duplikat po plik:linia scalony z etykietami wymiarów: {ranking}")
             # ryzyko 3 × zasięg 3 ÷ koszt M (2) — wartości najostrożniejsze z duplikatów
             check(merged.get("score") == 4.5 and merged.get("id") == "A-01", f"W-10: ranking ryzyko × zasięg ÷ koszt: {merged}")
@@ -149,14 +149,14 @@ def main() -> int:
             out = run_node(audit, scenario(limit=2), tmp)
             res = out.get("result") or {}
             reviews = [c for c in out.get("calls", []) if str(c.get("label", "")).startswith("przegląd:")]
-            check(len(reviews) == 2 and "jakosc" in " ".join(res.get("not_checked", [])),
+            check(len(reviews) == 2 and "quality" in " ".join(res.get("not_checked", [])),
                   f"W-16: limit wykonawców — nadmiarowe wymiary pominięte jawnie: {[c.get('label') for c in reviews]}")
 
             out = run_node(audit, scenario(depth="pelny"), tmp)
             calls = out.get("calls", [])
             models = {c.get("label"): c.get("model") for c in calls}
             check(models.get("przegląd:architektura") == "opus" and models.get("przegląd:bezpieczenstwo") == "opus"
-                  and models.get("przegląd:jakosc") is None, f"W-17: pełny — architektura i bezpieczeństwo na opus: {models}")
+                  and models.get("przegląd:quality") is None, f"W-17: pełny — architektura i bezpieczeństwo na opus: {models}")
             check(any("Spróbuj obalić" in c.get("prompt", "") for c in calls), "W-18: pełny — weryfikacja blokerów i top")
 
             out = run_node(audit, scenario(date=""), tmp)

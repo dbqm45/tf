@@ -27,7 +27,7 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 
 TIER_RE = re.compile(r"Tier:\**\s*za\s+(niski|wysoki)", re.I)
 KLASA_RE = re.compile(r"^[\s*_`>#-]*Klasa\s*:[\s*_`]*([^\s—–,.;:*_`-]+)", re.I | re.M)
-CLASSES = ("czytanie", "rownolegle", "przeglad", "mechaniczna", "decyzja", "inne")   # core-cost-control §0
+CLASSES = ("reading", "parallel", "review", "mechanical", "decision", "other")   # core-cost-control §0
 
 
 def task_class(brief: str) -> str | None:
@@ -37,7 +37,7 @@ def task_class(brief: str) -> str | None:
         return None
     word = unicodedata.normalize("NFKD", m.group(1).lower().replace("ł", "l"))
     word = "".join(c for c in word if not unicodedata.combining(c))
-    return word if word in CLASSES else "inne"
+    return word if word in CLASSES else "other"
 
 
 def text_len(value) -> int:

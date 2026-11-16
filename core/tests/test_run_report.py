@@ -392,11 +392,11 @@ def main() -> int:
         # waga zadania (krok E2): start przydziela propozycję fabryki i mówi dlaczego (na stderr, stdout to sama ścieżka)
         r = run(["start", "Reset hasła", "--key", "EBO-4", "--story", "Jako użytkownik chcę zresetować hasło."], proj, cfg)
         task = json.loads((changes / "EBO-4" / "task.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
-        check(r.stdout.strip() == ".tf/runs/EBO-4" and task.get("weight") == "pelna"
+        check(r.stdout.strip() == ".tf/runs/EBO-4" and task.get("weight") == "full"
               and "Waga: pełna" in r.stderr and "hasł" in r.stderr,
               f"R-44: start przydziela wagę i podaje powód: {r.stdout} | {r.stderr} | {task.get('weight')}")
         task2 = json.loads((changes / "EBO-2" / "task.json").read_text(encoding="utf-8"))
-        check(task2.get("weight") == "zwykla" and task2.get("weight_log"),
+        check(task2.get("weight") == "normal" and task2.get("weight_log"),
               f"R-45: zwykła historyjka dostaje wagę zwykłą z zapisem przydziału: {task2.get('weight')} {task2.get('weight_log')}")
         r = run(["start", "--task", "TSK-57", "--change", "CHG-12"], proj, cfg)
         cut = changes / "CHG-12-TSK-57" / "ticket.md"

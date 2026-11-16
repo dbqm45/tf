@@ -78,9 +78,9 @@ def main() -> int:
         r = run(p, SCRIPT, "PROJ-1")
         check(r.returncode == 1 and "TRACE-001" in r.stdout and "AC-2" in r.stdout and "AC-7" not in r.stdout,
               f"TR-2: kryterium bez testu → TRACE-001; komentarz w kodzie i stary test spoza gałęzi się nie liczą: {r.stdout}{r.stderr}")
-        r = run(p, TASK, "stage", "PROJ-1", "przeglad")
+        r = run(p, TASK, "stage", "PROJ-1", "review")
         check(r.returncode == 1 and "AC-2" in r.stdout and "tf trace PROJ-1" in r.stdout,
-              f"TR-3: etap przeglad odrzucony, gdy kryterium nie ma testu: {r.returncode} {r.stdout}")
+              f"TR-3: etap review odrzucony, gdy kryterium nie ma testu: {r.returncode} {r.stdout}")
 
         write(p, "tests/test_free.py", "def test_ac2_pierwsze_pol_godziny():  # AC-2\n    assert True\n\n"
                                         "def test_ac9_cos_innego():  # AC-9\n    assert True\n")
@@ -96,7 +96,7 @@ def main() -> int:
         rows = {x["criterion"]: x for x in data.get("rows", [])}
         check(r.returncode == 0 and data.get("ok") is True
               and rows.get("AC-1", {}).get("tests") == ["tests/test_fees.py:1"] and rows["AC-1"].get("commit") == sha1
-              and rows["AC-1"].get("slice") == "K1" and rows["AC-1"].get("evidence") == "zweryfikowany",
+              and rows["AC-1"].get("slice") == "K1" and rows["AC-1"].get("evidence") == "verified",
               f"TR-5: pełny ślad AC-1: test, commit, kawałek, stan dowodu: {r.stdout[:400]}{r.stderr}")
         check(rows.get("AC-1", {}).get("red") is True and rows.get("AC-2", {}).get("red") is False,
               f"TR-16: ślad mówi, czy test był widziany jako czerwony: {rows.get('AC-1')} {rows.get('AC-2')}")
@@ -112,13 +112,13 @@ def main() -> int:
         lines = [ln for ln in r.stdout.splitlines() if ln.startswith("| AC-")]
         check("Czerwony przed kodem" in r.stdout and "| tak |" in lines[0] and "brak zapisu" in lines[1],
               f"TR-17: tabela ma kolumnę „Czerwony przed kodem”: {r.stdout}")
-        check(r.returncode == 0 and len(lines) == 2 and sha1 in lines[0] and "K1" in lines[0] and "zweryfikowany" in lines[0]
+        check(r.returncode == 0 and len(lines) == 2 and sha1 in lines[0] and "K1" in lines[0] and "verified" in lines[0]
               and sha2 in lines[1] and "tests/test_free.py" in lines[1] and "K2" in lines[1],
               f"TR-7: --md daje tabelę kryterium → test → commit → dowód: {r.stdout}")
         r = run(p, SCRIPT, "PROJ-1")
         check(r.returncode == 0 and "2/2" in r.stdout, f"TR-8: tekst: wszystkie kryteria mają test: {r.stdout}")
-        r = run(p, TASK, "stage", "PROJ-1", "przeglad")
-        check(r.returncode == 0, f"TR-9: z pełnym śladem etap przeglad przechodzi: {r.stdout}{r.stderr}")
+        r = run(p, TASK, "stage", "PROJ-1", "review")
+        check(r.returncode == 0, f"TR-9: z pełnym śladem etap review przechodzi: {r.stdout}{r.stderr}")
 
         write(p, "src/fees.py", "LIMIT = 46\n")
         r = run(p, SCRIPT, "PROJ-1", "--json")
@@ -143,7 +143,7 @@ def main() -> int:
         write(p, f"{CHANGES.as_posix()}/PROJ-2/spec.md", SPEC)
         r = run(p, SCRIPT, "PROJ-2")
         check(r.returncode == 2 and "git" in r.stdout, f"TR-13: poza repozytorium git → kod 2 z wyjaśnieniem: {r.returncode} {r.stdout}")
-        r = run(p, TASK, "stage", "PROJ-2", "przeglad")
+        r = run(p, TASK, "stage", "PROJ-2", "review")
         check(r.returncode == 0, f"TR-14: bez gita bramka śladu nie blokuje etapu: {r.returncode} {r.stdout}")
 
     for f in fails:
