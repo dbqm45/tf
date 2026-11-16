@@ -433,6 +433,28 @@ feature_flags:
 # gdy żaden kawałek nie jest niezależny. false (domyślnie, do czasu pomiaru) — każde pytanie to blok STOP, jak dotąd.
 loop:
   blocked_slices: false
+  # confirm_each_slice: true — po każdym kawałku (`run_state.py done`) przebieg czeka na zgodę człowieka
+  # (`run_state.py proceed`), zanim zacznie następny; w trybie Auto nie działa (nie ma człowieka).
+  confirm_each_slice: false
+
+# Tryb zadania (`tf task mode`): domyślny dla nowego zadania i dozwolone. Firma, zespół albo projekt zawęża
+# `allowed_modes` (np. bez `auto`); osoba wybiera domyślny tryb tylko z tej listy.
+task:
+  default_mode: zwykly
+  allowed_modes: [plan, zwykly, auto]
+
+# Style pracy osoby (`tf style <nazwa>`, docs/todo.md): gotowe wartości przełączników wyżej. Styl to tylko wartości
+# domyślne — pojedyncze zadanie nadal może dostać inny tryb (`tf task mode`), w granicach `task.allowed_modes`.
+styles:
+  samodzielny:     # „niech się dzieje samo”: tryb Auto, pytanie wstrzymuje tylko swój kawałek, raport na końcu
+    task: {default_mode: auto}
+    loop: {blocked_slices: true, confirm_each_slice: false}
+  krok-po-kroku:   # „zatwierdzam każdy krok”: plan do zgody, po każdym kawałku zatrzymanie i zgoda na następny
+    task: {default_mode: zwykly}
+    loop: {blocked_slices: false, confirm_each_slice: true}
+  rozmowa:         # „najpierw porozmawiajmy”: zadanie kończy się na planie, kod dopiero po zmianie trybu przez człowieka
+    task: {default_mode: plan}
+    loop: {blocked_slices: false, confirm_each_slice: true}
 
 # Praca bez nadzoru (`tf work --once`): bierze zadanie w trybie Auto (`tf task mode <KEY> auto`), o wadze lekkiej albo
 # zwykłej, i prowadzi pętlę /tf w osobnym worktree (.tf/worktrees/<KEY>). budget_usd — limit wydatku jednego przebiegu

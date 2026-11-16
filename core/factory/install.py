@@ -945,7 +945,7 @@ def _main(argv: list[str], tmp: Path) -> int:
     outside = ign_old.split(GI_BEGIN)[0] + (ign_old.split(GI_END, 1)[1] if GI_END in ign_old else "")
     have = set(outside.splitlines())
     temp = [ln for ln in (CORE / "gitignore").read_text(encoding="utf-8").splitlines() if ln]
-    extra = [MANIFEST, BACKUP_DIR + "/", "*.factory-new", ".claude/factory-settings.json"] if shared \
+    extra = [MANIFEST, BACKUP_DIR + "/", "*.factory-new", ".claude/factory-settings.json", ".tf/config/me.yaml"] if shared \
         else ignored_paths(plan.files)
     lines = [ln for ln in dict.fromkeys(temp + extra) if ln not in have]
     if lines:

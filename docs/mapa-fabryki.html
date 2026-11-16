@@ -120,6 +120,7 @@ section>header p{max-width:68ch;color:var(--muted)}
 /* style i tryby */
 .styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .style{border:2px dashed var(--plan);background:var(--plan-soft);border-radius:6px;padding:16px;display:grid;gap:10px;align-content:start}
+.style.now{border:2px solid var(--core);background:var(--core-soft)}
 .style .who{font-style:italic;color:var(--muted)}
 .style ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:.93rem}
 .modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -185,8 +186,8 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
         <text x="690" y="34" class="w-col">DROGA ZADANIA</text>
 
         <!-- piętra ustawień -->
-        <rect x="30" y="60" width="300" height="54" rx="5" class="w-plan"/>
-        <text x="46" y="84" class="w-h">Ty</text><text x="46" y="103" class="w-s">styl pracy, preferencje · planowane</text>
+        <rect x="30" y="60" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="84" class="w-h">Ty</text><text x="46" y="103" class="w-s">styl pracy (tf style), preferencje</text>
         <rect x="30" y="124" width="300" height="54" rx="5" class="w-box"/>
         <text x="46" y="148" class="w-h">Projekt</text><text x="46" y="167" class="w-s">własne persony, skille, limity</text>
         <rect x="30" y="188" width="300" height="54" rx="5" class="w-plan"/>
@@ -282,13 +283,13 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
     <div class="building">
       <div class="floors">
         <div class="roof">najwęższy zasięg · decyduje ostatni</div>
-        <div class="floor planned">
-          <div class="name"><b>Ty</b><span class="pill plan">planowane</span></div>
+        <div class="floor">
+          <div class="name"><b>Ty</b><span class="pill now">działa</span></div>
           <div class="what">
             <p>Twój sposób pracy: czy agent ma działać sam, pytać o zgodę na każdy krok, czy po prostu rozmawiać. Do tego
               domyślny tryb zadań i Twoje skróty. Działa we wszystkich Twoich projektach i nie trafia do repozytorium.</p>
-            <div class="where">~/.tf/preferences.yaml · .tf/config/me.yaml (projekt) — propozycja</div>
-            <div class="where">już dziś: CLAUDE.local.md, .claude/settings.local.json, język pracy i commitów</div>
+            <div class="where">tf style · ~/.tf/preferences.yaml · .tf/config/me.yaml (tylko ten projekt)</div>
+            <div class="where">do tego: CLAUDE.local.md, .claude/settings.local.json, język pracy i commitów</div>
           </div>
         </div>
         <div class="floor">
@@ -420,12 +421,13 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
 
   <section aria-labelledby="s4">
     <header>
-      <h2 id="s4">Twój styl pracy <span class="pill plan">planowane</span></h2>
+      <h2 id="s4">Twój styl pracy <span class="pill now">działa</span></h2>
       <p>Każdy developer pracuje inaczej. Styl to gotowy zestaw ustawień na piętrze „Ty”, który ustawia kilka przełączników
-        naraz. Pojedyncze zadanie nadal może dostać inny tryb. Styl działa w granicach ustawionych przez firmę i zespół.</p>
+        naraz: <code>tf style samodzielny</code>, <code>tf style krok-po-kroku</code> albo <code>tf style rozmowa</code>.
+        Pojedyncze zadanie nadal może dostać inny tryb. Styl działa w granicach ustawionych przez firmę i projekt.</p>
     </header>
     <div class="styles">
-      <div class="style">
+      <div class="style now">
         <h3>Samodzielny</h3>
         <p class="who">„Niech się dzieje samo, pokaż mi wynik”.</p>
         <ul>
@@ -434,7 +436,7 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
           <li>raport na końcu, limity kosztów obowiązują</li>
         </ul>
       </div>
-      <div class="style">
+      <div class="style now">
         <h3>Krok po kroku</h3>
         <p class="who">„Chcę widzieć i zatwierdzać każdy krok”.</p>
         <ul>
@@ -443,13 +445,13 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
           <li>plan i zmiany do przejrzenia przed następnym krokiem</li>
         </ul>
       </div>
-      <div class="style">
+      <div class="style now">
         <h3>Rozmowa</h3>
         <p class="who">„Wolę pogadać i sam zdecydować, co dalej”.</p>
         <ul>
-          <li>agent odpowiada, doradza i proponuje</li>
-          <li>zmiany w plikach dopiero na Twoją prośbę</li>
-          <li>pętla <code>/tf</code> nie startuje sama</li>
+          <li>zadanie kończy się na planie</li>
+          <li>kod dopiero, gdy zmienisz tryb zadania</li>
+          <li>potem zgoda po każdym kawałku pracy</li>
         </ul>
       </div>
     </div>
@@ -468,7 +470,7 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
           <tr><td>Firma</td><td>zespół standardów firmy</td><td>repozytorium firmy (<code>pack-&lt;firma&gt;</code>)</td><td>przy instalacji zespołowej</td><td><span class="pill now">działa</span></td></tr>
           <tr><td>Zespół</td><td>lider zespołu</td><td>repozytorium zespołu (<code>pack-&lt;firma&gt;-&lt;zespół&gt;</code>)</td><td>przy instalacji zespołowej</td><td><span class="pill plan">planowane</span></td></tr>
           <tr><td>Projekt</td><td>zespół projektu</td><td><code>.tf/config/</code>, <code>.claude/skills/</code></td><td>tak, jak zwykły kod</td><td><span class="pill now">działa</span></td></tr>
-          <tr><td>Ty</td><td>Ty</td><td><code>~/.tf/preferences.yaml</code>, pliki <code>*.local</code></td><td>nigdy</td><td><span class="pill plan">planowane</span> częściowo działa</td></tr>
+          <tr><td>Ty</td><td>Ty (<code>tf style</code>)</td><td><code>~/.tf/preferences.yaml</code>, <code>.tf/config/me.yaml</code>, pliki <code>*.local</code></td><td>nigdy</td><td><span class="pill now">działa</span></td></tr>
         </tbody>
       </table>
     </div>
