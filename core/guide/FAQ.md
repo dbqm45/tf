@@ -71,6 +71,14 @@ i `.tf/config/operations.json`; zakazu z polityki autonomii firmy nie rozluźni.
 nakładka nie zawiera: Jira bierze adres i dane dostępu ze zmiennych `JIRA_BASE_URL`, `JIRA_EMAIL`,
 `JIRA_API_TOKEN` (albo `JIRA_TOKEN`), a dostęp do Confluence na żywo to połączenie (serwer MCP) w Claude Code.
 
+## Jak ustawić swój sposób pracy z agentem?
+`tf style autonomous` (agent idzie sam, raport na końcu), `tf style step-by-step` (zatwierdzasz plan i każdy kawałek
+pracy) albo `tf style conversation` (zadanie kończy się na planie, a Claude Code startuje w trybie planowania, więc
+także zwykła rozmowa nie zmienia plików bez Twojej zgody). Styl obowiązuje we
+wszystkich Twoich projektach; tylko w bieżącym: `--here`. Nie trafia do repozytorium i nie zmienia pracy innych osób.
+Granice ustala firma, zespół albo projekt: styl nie włączy trybu, którego nie dopuszczają (`task.allowed_modes`), ani
+nie rozluźni zakazów polityki autonomii. Szczegóły: `.tf/factory/PRZEWODNIK.md`, sekcja „Co mogę ustawić”.
+
 ## Który model i ile to kosztuje?
 - Role mają tiery: `fast` (Haiku), `std` (Sonnet), `deep` (Opus).
 - Profil zespołu przestawia je jednym poleceniem: `python3 .tf/factory/profile.py oszczedny|zrownowazony|jakosc`.

@@ -228,7 +228,24 @@ poświadczeń.
 
 ### Co mogę ustawić
 Zasada: swoje dokładasz obok plików fabryki, wtedy aktualizacja niczego nie gubi. `tf config show` pokazuje każdą
-wartość i to, czy pochodzi z fabryki, czy z projektu.
+wartość i to, skąd pochodzi: z fabryki, od firmy (organizacja), z projektu albo z Twoich preferencji (osoba).
+
+**Twój styl pracy.** `tf style <nazwa>` ustawia, jak chcesz pracować z agentem, we wszystkich Twoich projektach
+(`~/.tf/preferences.yaml`; tylko w tym projekcie: `--here`, plik `.tf/config/me.yaml`, który nigdy nie trafia do
+repozytorium). `tf style` bez nazwy pokazuje bieżący styl.
+
+| Styl | Domyślny tryb zadania | Co się dzieje |
+|---|---|---|
+| `autonomous` | Auto | agent idzie bez zgody na plan (nie przy wadze pełnej); pytanie wstrzymuje tylko swój kawałek |
+| `step-by-step` | zwykły | plan zatwierdzasz Ty; po każdym kawałku agent pokazuje zmiany i czeka na Twoją zgodę |
+| `conversation` | Plan | zadanie kończy się na planie; kod dopiero, gdy zmienisz tryb (`tf task mode <KLUCZ> zwykly`). Do tego tryb planowania Claude Code w `.claude/settings.local.json` projektu: także rozmowa poza `/tf` nie zmienia plików, dopóki nie zatwierdzisz planu (wyjście z trybu: Shift+Tab) |
+
+Tryb uprawnień Claude Code styl ustawia tylko w miejsce domyślnego: jeśli wybrałeś własny (np. `acceptEdits`), zostaje,
+a zmiana stylu oddaje to, co było przedtem. Styl z `~/.tf/preferences.yaml` trafia do kolejnych projektów przy
+`tf update` albo `tf style` (bez nazwy) w danym projekcie; działa od następnej sesji Claude Code.
+
+Styl to tylko wartości domyślne: pojedyncze zadanie może dostać inny tryb. Firma, zespół albo projekt ustala, które
+tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicach. Polityki autonomii styl nie rozluźnia.
 
 | Chcę zmienić… | Gdzie | Jak |
 |---|---|---|
@@ -252,6 +269,7 @@ wartość i to, czy pochodzi z fabryki, czy z projektu.
 | `tf language <kod>` / `tf commit-language <kod>` | język pracy / język commitów i PR |
 | `tf list`, `tf doctor [--fix]` | co jest zainstalowane; stan instalacji i naprawy |
 | `tf new skill <nazwa> "<opis>"`, `tf skill check <nazwa>`, `tf skill audit <katalog>` | własny skill: szkielet ze scenariuszami, bramka jakości, audyt bezpieczeństwa |
+| `tf style [<nazwa>] [--here]` | Twój styl pracy: `autonomous`, `step-by-step`, `conversation`; bez nazwy — bieżący |
 | `tf config show [<klucz>]` | konfiguracja po scaleniu i skąd pochodzi każda wartość |
 | `tf spec new <KLUCZ>`, `tf spec check <KLUCZ>` | specyfikacja zadania (`spec.md`): szablon i sprawdzenie, czy kryteria mają Zakładając / Gdy / Wtedy, co zostaje bez zmian i czy nie ma pytań blokujących; z błędami zadanie nie przejdzie do planu |
 | `tf task freeze <KLUCZ> <plik> --by human:<id>`, `tf task reopen <KLUCZ> <plik> --by human:<id> --reason "…"` | ochrona podstawy zadania: zamrożony plik (np. test akceptacyjny), zatwierdzony plik zadania i `spec.md` od etapu realizacji agent zmieni tylko za Twoją zgodą; `reopen` zdejmuje ochronę i zapisuje powód |

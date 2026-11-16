@@ -68,23 +68,28 @@ każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `
 **Kolejność prac (ustalona przez człowieka 2026-11-16).** Zasada dla każdego punktu: co da się zrobić
 deterministycznie (skrypt, reguła, test), robi skrypt; model tylko tam, gdzie potrzebna jest ocena albo wsparcie
 człowieka, i z kontrolą wyniku skryptem.
-1. [ ] **Styl pracy i warstwa osoby.**
-   - [ ] plik preferencji osoby (`~/.tf/preferences.yaml`) i nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze
+1. [x] **Styl pracy i warstwa osoby** (zrobione 2026-11-16, `core/tests/test_work_style.py`).
+   - [x] plik preferencji osoby (`~/.tf/preferences.yaml`) i nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze
      w `.git/info/exclude`) jako ostatnia warstwa `config_layers` — skrypt;
-   - [ ] granice: osoba nie rozluźnia polityki autonomii ani sufitów firmy i zespołu — sprawdzenie w składaniu
+   - [x] granice: osoba nie rozluźnia polityki autonomii ani sufitów firmy i zespołu — sprawdzenie w składaniu
      warstw (skrypt), z testem;
-   - [ ] trzy style (`samodzielny`, `krok-po-kroku`, `rozmowa`) jako gotowe wartości istniejących przełączników
+   - [x] trzy style (`autonomous`, `step-by-step`, `conversation`) jako gotowe wartości istniejących przełączników
      (domyślny tryb zadania, `loop.blocked_slices`, …) — dane w konfiguracji, polecenie `tf style <nazwa>`;
-   - [ ] zatrzymanie pętli `/tf` po każdym kawałku dla stylu `krok-po-kroku` — stan w `run_state.py` (skrypt), model
+   - [x] zatrzymanie pętli `/tf` po każdym kawałku dla stylu `step-by-step` — stan w `run_state.py` (skrypt), model
      tylko pokazuje plan i diff i czeka na zgodę;
-   - [ ] styl `rozmowa`: bez automatycznego startu pętli z numeru zadania — reguła w konfiguracji czytana przez
-     skrypt intake, nie instrukcja w prompcie;
-   - [ ] `tf config show` z warstwą „osoba” i źródłem każdej wartości; opis w PRZEWODNIK i FAQ; mapa fabryki
+   - [x] styl `conversation`: zadanie kończy się na planie (domyślny tryb `plan` przy `tf task start`), kod dopiero po
+     zmianie trybu przez człowieka, potem zgoda po każdym kawałku — wszystko w skryptach, bez instrukcji w prompcie.
+     Pętla `/tf` i tak startuje tylko na polecenie człowieka; rozmowa z personą poza pętlą nie zmienia plików bez
+     prośby tak jak dotąd;
+   - [x] styl `conversation` ustawia tryb uprawnień Claude Code `plan` w `.claude/settings.local.json` projektu
+     (`tf style`, także po `tf install` i `tf update`): rozmowa poza `/tf` też nie zmienia plików bez zgody. Trybu
+     wybranego przez człowieka nie nadpisuje, zmiana stylu oddaje poprzedni (znacznik w `.claude/factory-settings.json`);
+   - [x] `tf config show` z warstwą „osoba” i źródłem każdej wartości; opis w PRZEWODNIK i FAQ; mapa fabryki
      (`docs/mapa-fabryki.html`) — status „działa”.
-2. [ ] **Trafność podpowiedzi skilli** (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).
-   - [ ] walidacja DTO w repo Spring Boot bez podpowiedzi — słowa kluczowe w opisie `fw-spring-boot` (pack-it);
-   - [ ] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
-   - [ ] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
+2. [x] **Trafność podpowiedzi skilli** (zrobione 2026-11-16, `packs/pack-it/tests/test_hint_backend.py`) (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).
+   - [x] walidacja DTO w repo Spring Boot bez podpowiedzi — słowa kluczowe w opisie `fw-spring-boot` (pack-it);
+   - [x] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
+   - [x] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
      hooka, uruchamiany w CI bez modelu.
 3. [ ] **Warstwa zespołu.**
    - [ ] `org/new_org_pack.py <firma> --team <zespół>` → `pack-<firma>-<zespół>` z `requires` nakładki firmy
@@ -147,11 +152,11 @@ człowieka, i z kontrolą wyniku skryptem.
   dozwolony”, „najwyżej X USD na przebieg”), a osoba wybiera w jego granicach. Skille bezpieczeństwa, rzetelności
   i TDD (`core-agent-security`, `core-grounding`, hooki `tdd_guard`, `guard_*`) wyłącza tylko firma.
 - [ ] **Style pracy osoby** (preset, który ustawia kilka istniejących przełączników naraz):
-  - **samodzielny** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
+  - **autonomous** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
     wymaga limitów `work` i obowiązującej polityki autonomii;
-  - **krok po kroku** — tryb `zwykly` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
+  - **step-by-step** — tryb `zwykly` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
     następnym), widoczny plan i diff każdego kroku;
-  - **rozmowa** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
+  - **conversation** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
     bez automatycznego startu przebiegu z numeru zadania.
   Preset to tylko domyślne wartości: każde zadanie nadal może dostać inny tryb (`tf task mode`).
 - [ ] **`skills_off`** — odłożone po pomiarze z 2026-11-16 (bez zysku trafności i kosztu); w każdej warstwie: skill zostaje w instalacji i działa ręcznie (`/nazwa`), ale

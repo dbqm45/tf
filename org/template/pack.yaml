@@ -43,6 +43,10 @@ org_defaults:
     work:
       budget_usd: 5                 # TODO: limit jednego przebiegu
       task_budget_usd: 20           # TODO: limit wszystkich przebiegów jednego zadania
+    # Tryby zadania dozwolone w firmie (tf task mode, styl pracy osoby: tf style). Bez `auto` nikt w firmie nie
+    # włączy trybu, w którym agent idzie dalej bez zgody człowieka na plan.
+    task:
+      allowed_modes: [plan, zwykly, auto]   # TODO: usuń auto, jeśli firma wymaga zgody człowieka na każdy plan
     # Profil kosztów: oszczedny | zrownowazony | jakosc.
     default_profile: zrownowazony
     # Język pracy agentów i język commitów.

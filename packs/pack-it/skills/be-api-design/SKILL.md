@@ -4,7 +4,7 @@ description: Użyj przy projekcie API HTTP — zasoby, kody, błędy, paginacja,
 metadata:
   przeglad: "2027-10-17"
   katalog: "Użyj przy projektowaniu i implementacji endpointów HTTP/REST — ścieżki, metody, kody statusu, paginacja, błędy, wersjonowanie, idempotencja, OpenAPI, cache HTTP, limity żądań, webhooki, GraphQL/gRPC/SSE, OWASP API Top 10. Nie do schematu bazy (be-database) ani mechanizmów logowania (be-auth-security)."
-  slowa: "eksport do CSV, eksport do Excela, eksport w tle, timeout przy eksporcie, CSV injection, wstrzykiwanie formuł, ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu, metody HTTP GET PUT PATCH DELETE, kod statusu odpowiedzi"
+  slowa: "obsługa błędów API, format błędów, RFC 7807, RFC 9457, problem details, application/problem+json, eksport do CSV, eksport do Excela, eksport w tle, timeout przy eksporcie, CSV injection, wstrzykiwanie formuł, ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu, metody HTTP GET PUT PATCH DELETE, kod statusu odpowiedzi"
 ---
 
 # Projektowanie API

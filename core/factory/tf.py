@@ -21,6 +21,8 @@ tf — the team factory command: install, update, packs, languages, health check
                               # your own skill from the template, with a scenario file (.tf/factory/build.py new-skill)
   tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
   tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
+  tf style [<name>] [--here]  # your work style: autonomous | step-by-step | conversation; no name — show the current one;
+                              # saved in ~/.tf/preferences.yaml (all your projects) or, with --here, .tf/config/me.yaml
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
                               # `tf config show steps`: who runs each /tf loop step, with model and effort
   tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
@@ -293,6 +295,7 @@ def cmd_config_show(key: str | None) -> int:
     own = packs.load_yaml(own_path) if own_path.is_file() else {}
     layers = packs.config_layers(root) if hasattr(packs, "config_layers") else []
     org = next((d for label, d in layers if "org_defaults" in label), {})   # nakładka firmowa
+    person = next((d for label, d in layers if label.endswith("(osoba)")), {})   # preferencje osoby (tf style)
     cfg = packs.load_config(root)
     if key == "steps" and cfg.get("steps"):     # kroki pętli /tf z modelem i effortem po nałożeniu profilu kosztów
         full = project_module("build").load_config()
@@ -314,10 +317,72 @@ def cmd_config_show(key: str | None) -> int:
     for k in sorted(cfg):
         shown = json.dumps(cfg[k], ensure_ascii=False)
         shown = shown if len(shown) <= 70 else shown[:67] + "…"
-        src = "projekt" if k in own else "organizacja" if k in org else "fabryka"
+        src = "osoba" if k in person else "projekt" if k in own else "organizacja" if k in org else "fabryka"
         print(f"{k:<28} {src:<11} {shown}")
+    for w in (packs.work_style(root).get("warnings") or []) if hasattr(packs, "work_style") else []:
+        print(f"⚠ preferencje osoby: {w}")
     print("# Cała wartość jednego klucza: tf config show <klucz>")
     return 0
+
+
+def cmd_style(rest: list[str]) -> int:
+    """Styl pracy osoby: pokaż albo zapisz w ~/.tf/preferences.yaml (--here: .tf/config/me.yaml, poza repozytorium)."""
+    here = "--here" in rest
+    names = [a for a in rest if a != "--here"]
+    packs = project_module("packs")
+    root = Path.cwd()
+    if not hasattr(packs, "work_style"):
+        print("✗ Silnik w .tf/factory/ nie zna stylów pracy — zaktualizuj fabrykę: tf update")
+        return 2
+    styles = packs.load_config(root).get("styles") or {}
+    if not names:
+        ws = packs.work_style(root)
+        print(f"Styl pracy: {ws.get('style') or 'brak (ustawienia projektu)'}")
+        for m in packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []:
+            print(f"• {m}")
+        print(f"  domyślny tryb zadania: {ws['default_mode']} (dozwolone: {', '.join(ws['allowed_modes'])})")
+        print(f"  pytanie wstrzymuje tylko swój kawałek: {'tak' if ws['blocked_slices'] else 'nie'}")
+        print(f"  zgoda człowieka po każdym kawałku: {'tak' if ws['confirm_each_slice'] else 'nie'}")
+        for w in ws.get("warnings") or []:
+            print(f"⚠ {w}")
+        print(f"Zmiana: tf style <{'|'.join(styles)}> [--here]")
+        return 0
+    if len(names) != 1 or names[0] not in styles:
+        print(f"✗ Nieznany styl „{' '.join(names)}”. Do wyboru: {', '.join(styles)}")
+        return 2
+    path = root / ".tf" / "config" / "me.yaml" if here else packs.preferences_path()
+    data = packs.load_yaml(path) if path.is_file() else {}
+    data = {**(data if isinstance(data, dict) else {}), "style": names[0]}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(packs.yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    if here:
+        ensure_excluded(root, ".tf/config/me.yaml")
+    ws = packs.work_style(root)
+    perm_msgs = packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []
+    print(f"✓ styl {names[0]} zapisany w {path if not here else '.tf/config/me.yaml'} — domyślny tryb zadania: "
+          f"{ws['default_mode']}, zgoda po każdym kawałku: {'tak' if ws['confirm_each_slice'] else 'nie'}")
+    for m in perm_msgs:
+        print(f"• {m}")
+    for w in ws.get("warnings") or []:
+        print(f"⚠ {w}")
+    return 0
+
+
+def ensure_excluded(root: Path, rel: str) -> None:
+    """Plik osoby nie trafia do repozytorium: wpis w .git/info/exclude, jeśli git go jeszcze nie ignoruje."""
+    try:
+        if subprocess.run(["git", "-C", str(root), "check-ignore", "-q", rel], capture_output=True).returncode == 0:
+            return
+        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-path", "info/exclude"], capture_output=True,
+                             text=True)
+        if top.returncode != 0:
+            return
+        exclude = (root / top.stdout.strip()).resolve()
+        exclude.parent.mkdir(parents=True, exist_ok=True)
+        old = exclude.read_text(encoding="utf-8") if exclude.is_file() else ""
+        exclude.write_text(old + ("" if old.endswith("\n") or not old else "\n") + rel + "\n", encoding="utf-8")
+    except OSError:
+        pass
 
 
 def instructions_summary(lint: Path) -> str:
@@ -455,6 +520,8 @@ def main(argv: list[str]) -> int:
             print("✗ Usage: tf config show [<key>]")
             return 2
         return cmd_config_show(rest[1] if len(rest) == 2 else None) if need_project() else 2
+    if cmd == "style":
+        return cmd_style(rest) if need_project() else 2
     if cmd == "task":
         return engine("task_state.py", rest)
     if cmd == "status":
@@ -492,13 +559,28 @@ def main(argv: list[str]) -> int:
         rc = update(repo or REPO or None, rest)
         if rc == 0:
             refresh_launcher()
+            sync_style_permissions()
         return rc
     repo = repo or REPO
     if not repo:
         print("✗ The factory repository URL is unknown. Pass --repo <url>, set TF_REPO or install the launcher:\n"
               "  python3 core/factory/tf.py --install-launcher --repo https://github.com/<you>/tf.git")
         return 2
-    return install(repo, rest)
+    rc = install(repo, rest)
+    if rc == 0 and MANIFEST.exists():
+        sync_style_permissions()
+    return rc
+
+
+def sync_style_permissions() -> None:
+    """Po instalacji i aktualizacji: tryb uprawnień Claude Code ze stylu pracy osoby w tym projekcie (np. `plan` dla
+    `conversation`) — styl ustawiony raz w ~/.tf/preferences.yaml działa w każdym projekcie po `tf update`."""
+    try:
+        packs = project_module("packs")
+        for m in packs.apply_style_permissions(Path.cwd()) if hasattr(packs, "apply_style_permissions") else []:
+            print(f"• {m}")
+    except Exception as e:  # noqa: BLE001 — instalacja się udała; styl to dodatek
+        print(f"⚠ styl pracy: nie udało się uzgodnić trybu uprawnień Claude Code ({e})")
 
 
 if __name__ == "__main__":

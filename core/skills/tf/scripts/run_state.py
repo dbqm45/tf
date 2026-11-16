@@ -89,6 +89,10 @@ Zależności kawałków zapisuje plan (`· po: K1`, `· po: brak`; bez dopisku �
 albo `answer`, `slice`, `text`, `by`; plik zapisuje decyzje, stanem przebiegu nie steruje). Z włączonym przełącznikiem STOP z kodem `pytanie` dla bieżącego kawałka
 jest odrzucany, gdy został kawałek niezależny; pytanie o całe zadanie przechodzi z `--task`.
 
+`proceed` działa z przełącznikiem `loop.confirm_each_slice` (styl pracy `step-by-step` albo `conversation`, `tf style`):
+po `done` przebieg czeka na zgodę człowieka (`Dalej: STOP`), a `verify` i `step` następnego kawałka odmawiają, dopóki
+`proceed` nie zapisze zgody. W trybie Auto przełącznik nie działa — nie ma człowieka, który by ją dał.
+
 `launch` (wołane przez `run_report.py start`) buduje dashboard i otwiera go w przeglądarce; wyłączysz to w
 `.claude/tf.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
 domyślnie oba włączone. Zmienne TF_DASHBOARD=0 i TF_DASHBOARD_OPEN=0 robią to samo bez pliku.
@@ -422,6 +426,8 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
         return no_task(meta)
+    if hold_refusal(meta, slice_id, run_dir):
+        return fail(hold_refusal(meta, slice_id, run_dir))
     args = ["verify", meta["key"], slice_id, "--files", files]
     if command:
         args += ["--command", command]
@@ -550,6 +556,8 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if re.fullmatch(r"K\d+", target) and hold_refusal(meta, target, run_dir):
+        return fail(hold_refusal(meta, target, run_dir))
     if target.upper() == "PR":
         if len(rest) != 2 or rest[0] not in PR_STEPS or rest[1] not in STATES:
             return fail(f"użycie: step <katalog> PR <{'|'.join(PR_STEPS)}> <{'|'.join(STATES)}>")
@@ -814,7 +822,29 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
     code = cmd_tick(run_dir, slice_id, project)
     if code:
         return code
-    print_next(project, run_dir, load(run_dir) or meta)
+    meta = load(run_dir) or meta
+    rest = [s for s in plan_and_blocked(project, run_dir, meta)[0] if not s["checked"]]
+    if rest and confirm_each_slice(project) and task_field(run_dir, meta, "mode") != "auto":
+        meta["hold"] = slice_id
+        write_run(run_dir, meta)
+        print(f"Dalej: STOP — styl step-by-step: pokaż człowiekowi zmiany {slice_id} (git show --stat HEAD) i zapytaj, "
+              f"czy iść dalej. Po zgodzie: run_state.py proceed {run_dir}")
+        return 0
+    print_next(project, run_dir, meta)
+    return 0
+
+
+def cmd_proceed(run_dir: Path, project: Path) -> int:
+    """Zgoda człowieka na następny kawałek po wstrzymaniu (styl step-by-step); bez wstrzymania — tylko `Dalej:`."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if meta.pop("hold", None):
+        write_run(run_dir, meta)
+        print("✓ zgoda człowieka na następny kawałek")
+    print_next(project, run_dir, meta)
     return 0
 
 
@@ -823,22 +853,44 @@ NO_DEPS = ("brak", "-", "—", "–", "nic")
 HUMAN = re.compile(r"human:[\w.@-]+")
 
 
-def blocked_slices_enabled(project: Path) -> bool:
-    """`loop.blocked_slices`: domyślna silnika z nadpisaniem projektu; bez konfiguracji — wyłączone."""
+def loop_setting(project: Path, name: str) -> bool:
+    """Przełącznik `loop.<name>` po złożeniu warstw konfiguracji (silnik ← firma ← projekt ← osoba, packs.work_style);
+    starsza instalacja bez work_style — silnik i projekt; bez konfiguracji — wyłączony."""
     for base in (next((p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "packs.py").is_file()),
                       project), project):
         try:
             spec = importlib.util.spec_from_file_location("tf_packs_cfg", base / ".tf" / "factory" / "packs.py")
             packs = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(packs)
+            if hasattr(packs, "work_style"):
+                return packs.work_style(project).get(name) is True
             cfg = packs.load_yaml(base / ".tf" / "factory" / "config.yaml")
             own = project / ".tf" / "config" / "config.yaml"
             if own.is_file():
                 cfg = packs.deep_merge(cfg, packs.load_yaml(own))
-            return (cfg.get("loop") or {}).get("blocked_slices") is True
+            return (cfg.get("loop") or {}).get(name) is True
         except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienie domyślne, nie awaria
             continue
     return False
+
+
+def blocked_slices_enabled(project: Path) -> bool:
+    """`loop.blocked_slices`: pytanie blokuje tylko swój kawałek (styl `autonomous`)."""
+    return loop_setting(project, "blocked_slices")
+
+
+def confirm_each_slice(project: Path) -> bool:
+    """`loop.confirm_each_slice`: po każdym kawałku zgoda człowieka przed następnym (style `step-by-step`, `conversation`)."""
+    return loop_setting(project, "confirm_each_slice")
+
+
+def hold_refusal(meta: dict, slice_id: str, run_dir: Path) -> str | None:
+    """Wstrzymanie po kawałku (step-by-step): inny kawałek dopiero po `proceed` — po zgodzie człowieka w rozmowie."""
+    held = meta.get("hold")
+    if held and slice_id != held:
+        return (f"przebieg czeka na zgodę człowieka po kawałku {held} (styl step-by-step) — pokaż zmiany "
+                f"(git show --stat HEAD), a po zgodzie: run_state.py proceed {run_dir}")
+    return None
 
 
 def plan_with_deps(text: str) -> list[dict]:
@@ -1661,6 +1713,8 @@ def main(argv: list[str]) -> int:
     an.add_argument("--by", default=None)
     nx = sub.add_parser("next")
     nx.add_argument("run_dir")
+    pc = sub.add_parser("proceed")
+    pc.add_argument("run_dir")
     pn = sub.add_parser("panel")
     pn.add_argument("run_dir")
     pn.add_argument("--record", nargs=2, metavar=("RECENZENT", "WERDYKT"), default=None)
@@ -1713,6 +1767,8 @@ def main(argv: list[str]) -> int:
         return cmd_answer(Path(args.run_dir), args.slice_id, args.text, args.by, project)
     if args.cmd == "next":
         return cmd_next(Path(args.run_dir), project)
+    if args.cmd == "proceed":
+        return cmd_proceed(Path(args.run_dir), project)
     if args.cmd == "panel":
         return cmd_panel(Path(args.run_dir), args.record, args.note, args.base, project)
     if args.cmd == "finding":

@@ -685,10 +685,35 @@ def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: st
     return 0
 
 
-def cmd_start(root: Path, key: str, title: str, weight: str, mode: str, change: str | None = None,
+def work_style(root: Path) -> dict:
+    """Domyślny i dozwolone tryby po złożeniu warstw (silnik ← firma ← projekt ← osoba, `packs.work_style`); bez
+    packs.py (sam skrypt) — tryb zwykły i wszystkie tryby, jak dotąd."""
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("tf_packs_style", Path(__file__).resolve().with_name("packs.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.work_style(root)
+    except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienia domyślne
+        return {"default_mode": "zwykly", "allowed_modes": list(MODES)}
+
+
+def mode_refusal(root: Path, mode: str) -> str | None:
+    allowed = work_style(root).get("allowed_modes") or list(MODES)
+    if mode not in allowed:
+        return (f"tryb „{mode}” jest wyłączony w tym projekcie (task.allowed_modes: {', '.join(allowed)} — ustawia firma, "
+                "zespół albo projekt; tf config show task)")
+    return None
+
+
+def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, change: str | None = None,
               cut: str | None = None) -> int:
     if load(root, key) is not None:
         return fail(f"zadanie {key} już istnieje ({CHANGES / key / 'task.json'}) — stan: tf task status {key}")
+    if mode is None:                 # domyślny tryb z konfiguracji (styl pracy osoby w granicach firmy i projektu)
+        mode = work_style(root).get("default_mode") or "zwykly"
+    elif mode_refusal(root, mode):
+        return fail(mode_refusal(root, mode), 2)
     stamp = now()
     task = {"schema": SCHEMA, "key": key, "title": title, "stage": STAGES[0], "weight": weight, "mode": mode,
             "created": stamp, "updated": stamp}
@@ -761,6 +786,8 @@ def cmd_mode(root: Path, key: str, new: str | None) -> int:
         return 0
     if new not in MODES:
         return fail(f"nieznany tryb „{new}” — do wyboru: {', '.join(MODES)}", 2)
+    if mode_refusal(root, new):
+        return fail(mode_refusal(root, new), 2)
     note = ""
     if new == "auto" and task.get("weight") == "pelna" and task.get("change"):
         note = (f" — waga pełna (obszar wrażliwy), ale to cięcie zmiany {task['change']}: jej plan człowiek zatwierdził "
@@ -1156,7 +1183,7 @@ def main(argv: list[str]) -> int:
     s.add_argument("key")
     s.add_argument("--title", default=None)
     s.add_argument("--weight", default="zwykla")
-    s.add_argument("--mode", default="zwykly")
+    s.add_argument("--mode", default=None, help="plan|zwykly|auto; bez opcji — task.default_mode (styl pracy, tf style)")
     s.add_argument("--change", default=None, help="klucz zmiany pdi, np. CHG-12 (zadanie cięcia; razem z --cut)")
     s.add_argument("--cut", default=None, help="klucz cięcia z planu zmiany, np. TSK-57 (razem z --change)")
     g = sub.add_parser("stage")
@@ -1258,7 +1285,7 @@ def main(argv: list[str]) -> int:
             return fail("podaj tytuł: tf task start <KEY> --title \"<tytuł>\"", 2)
         if a.weight not in WEIGHTS:
             return fail(f"nieznana waga „{a.weight}” — do wyboru: {', '.join(WEIGHTS)}", 2)
-        if a.mode not in MODES:
+        if a.mode is not None and a.mode not in MODES:
             return fail(f"nieznany tryb „{a.mode}” — do wyboru: {', '.join(MODES)}", 2)
         if bool(a.change) != bool(a.cut):
             return fail("zadanie cięcia podaje oba: --change <CHG> i --cut <TSK>", 2)

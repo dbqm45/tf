@@ -13,6 +13,7 @@ Układ w projekcie:
   .tf/factory/packs/<id>/pack.yaml → org_defaults   domyślne organizacji (nakładka firmowa, najwyżej jedna)
   .tf/config/config.yaml                  nadpisania projektu (nakładane rekurencyjnie na domyślną konfigurację)
   .tf/config/{roles,personas,traits}/     własne role, persony i cechy projektu (nadpisują te z rdzenia i nakładek)
+  ~/.tf/preferences.yaml, .tf/config/me.yaml   preferencje osoby: styl pracy (`tf style`), ostatnia warstwa
   .claude/skills/                         skille rdzenia i nakładek (Claude Code czyta je tylko stąd)
   .claude/factory-settings.json           ustawienia projektu: language, commit_language, targets
 
@@ -69,7 +70,7 @@ def deep_merge(base: dict, over: dict) -> dict:
 
 # Nakładka firmowa (`org_defaults` w pack.yaml): domyślne organizacji między silnikiem a projektem. Tylko te klucze
 # konfiguracji — reszta to składanie fabryki (wymiary, agenci), którego nakładka firmowa nie przestawia.
-ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "loop", "steps",
+ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "loop", "steps", "task",
                    "default_language", "default_commit_language")
 ORG_OPERATIONS_KEYS = ("tracker",)
 
@@ -84,7 +85,7 @@ def org_defaults(root: Path) -> tuple[str | None, dict]:
 
 
 def config_layers(root: Path) -> list[tuple[str, dict]]:
-    """Warstwy konfiguracji od najsłabszej: silnik, organizacja (nakładka firmowa), projekt. Każdy czytelnik
+    """Warstwy konfiguracji od najsłabszej: silnik, organizacja (nakładka firmowa), projekt, osoba. Każdy czytelnik
     konfiguracji (build, hooki, tf risk, tf work) składa je w tej kolejności."""
     engine, own = root / ENGINE_REL / "config.yaml", root / CONFIG_REL / "config.yaml"
     layers = [((ENGINE_REL / "config.yaml").as_posix(), load_yaml(engine) if engine.is_file() else {})]
@@ -94,7 +95,169 @@ def config_layers(root: Path) -> list[tuple[str, dict]]:
         layers.append((f"{(PACKS_REL / pid / 'pack.yaml').as_posix()} (org_defaults)", part))
     if own.is_file():
         layers.append(((CONFIG_REL / "config.yaml").as_posix(), load_yaml(own)))
+    below: dict = {}
+    for _label, layer in layers:
+        below = deep_merge(below, layer)
+    person, _warns, sources = person_layer(root, below)
+    if person:
+        layers.append((f"{' + '.join(sources)} (osoba)", person))
     return layers
+
+
+# Warstwa osoby (docs/todo.md, „Warstwy zespołu i preferencji osoby”): ostatnia, najwęższa. Osoba ustawia tylko styl
+# i przełączniki sposobu pracy — bez limitów `work`, reguł `autonomy.triage` i składania fabryki. Operacje autonomii
+# może tylko zaostrzyć (sprawdza guard_bash przy składaniu warstw), a domyślny tryb zadania musi być w
+# `task.allowed_modes` wyższych warstw (firma, zespół, projekt).
+PERSON_REL = CONFIG_REL / "me.yaml"
+PERSON_KEYS = {"task": ("default_mode",), "loop": ("blocked_slices", "confirm_each_slice"), "autonomy": ("operations",)}
+TASK_MODES = ("plan", "zwykly", "auto")
+
+
+def preferences_path() -> Path:
+    """Preferencje osoby wspólne dla wszystkich jej projektów; `TF_PREFERENCES` podmienia ścieżkę (testy)."""
+    return Path(os.environ.get("TF_PREFERENCES") or Path.home() / ".tf" / "preferences.yaml")
+
+
+def _person_part(data: dict, warns: list[str], src: str) -> dict:
+    out: dict = {}
+    for k, v in (data or {}).items():
+        if k == "style":
+            continue
+        if k not in PERSON_KEYS or not isinstance(v, dict):
+            warns.append(f"{src}: `{k}` — tego osoba nie ustawia (dozwolone: style, "
+                         f"{', '.join(f'{s}.{x}' for s, xs in PERSON_KEYS.items() for x in xs)}); pominięte")
+            continue
+        part = {x: v[x] for x in PERSON_KEYS[k] if x in v}
+        for x in sorted(set(v) - set(PERSON_KEYS[k])):
+            warns.append(f"{src}: `{k}.{x}` — tego osoba nie ustawia; pominięte")
+        if part:
+            out[k] = part
+    return out
+
+
+def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
+    """Warstwa osoby: `~/.tf/preferences.yaml` ← `.tf/config/me.yaml`, styl rozwinięty do wartości przełączników
+    (`styles` w konfiguracji silnika), potem wartości podane wprost. Zwraca (warstwa, ostrzeżenia, źródła)."""
+    warns: list[str] = []
+    raw, sources = {}, []
+    for path, label in ((preferences_path(), "~/.tf/preferences.yaml"), (root / PERSON_REL, PERSON_REL.as_posix())):
+        try:
+            data = load_yaml(path) if path.is_file() else None
+        except Exception as e:  # noqa: BLE001 — zły plik osoby nie psuje konfiguracji; zostaje ostrzeżenie
+            warns.append(f"{label}: nie da się odczytać ({e})")
+            continue
+        if isinstance(data, dict) and data:
+            raw, sources = deep_merge(raw, {**_person_part(data, warns, label),
+                                            **({"style": data["style"]} if data.get("style") else {})}), [*sources, label]
+    if not raw:
+        return {}, warns, sources
+    out: dict = {}
+    style = raw.pop("style", None)
+    if style:
+        styles = below.get("styles") or {}
+        if style in styles:
+            preset = {k: v for k, v in (styles[style] or {}).items() if k != "claude"}   # claude: tf style, nie konfiguracja
+            out = deep_merge(_person_part(preset, warns, f"styles.{style}"), {})
+            out["style"] = style
+        else:
+            warns.append(f"nieznany styl „{style}” (są: {', '.join(styles) or 'brak'}); pominięty")
+    out = deep_merge(out, raw)
+    allowed = (below.get("task") or {}).get("allowed_modes") or list(TASK_MODES)
+    mode = (out.get("task") or {}).get("default_mode")
+    if mode is not None and (mode not in TASK_MODES or mode not in allowed):
+        warns.append(f"task.default_mode: {mode} — poza task.allowed_modes ({', '.join(allowed)}) ustawionym wyżej; "
+                     "zostaje wartość firmy, zespołu albo projektu")
+        out["task"].pop("default_mode")
+        if not out["task"]:
+            out.pop("task")
+    return out, warns, sources
+
+
+LOCAL_SETTINGS_REL = Path(".claude") / "settings.local.json"
+STYLE_MARK = "style_permission_mode"   # w .claude/factory-settings.json: co ustawił styl i co było przedtem
+
+
+def apply_style_permissions(root: Path) -> list[str]:
+    """Tryb uprawnień Claude Code ze stylu pracy (`styles.<styl>.claude.permission_mode`) w `.claude/settings.local.json`
+    projektu. Ustawia go tylko w miejsce domyślnego (`default` albo brak) albo wcześniej ustawionego przez styl — trybu
+    wybranego przez człowieka nie nadpisuje. Styl bez trybu oddaje to, co było przed nim. Zwraca komunikaty."""
+    cfg = load_config(root)
+    style = cfg.get("style")
+    want = ((((cfg.get("styles") or {}).get(style) or {}) if style else {}).get("claude") or {}).get("permission_mode")
+    local, mark_path = root / LOCAL_SETTINGS_REL, root / SETTINGS_REL
+
+    def read(path: Path) -> dict:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        except (json.JSONDecodeError, OSError):
+            data = None
+        return data
+
+    data, marks = read(local), read(mark_path)
+    if data is None:
+        return [f"{LOCAL_SETTINGS_REL.as_posix()}: niepoprawny JSON — trybu uprawnień stylu nie zmieniam"]
+    marks = marks if isinstance(marks, dict) else {}
+    mark = marks.get(STYLE_MARK) if isinstance(marks.get(STYLE_MARK), dict) else None
+    perms = data.get("permissions") if isinstance(data.get("permissions"), dict) else {}
+    cur = perms.get("defaultMode")
+    msgs: list[str] = []
+    if mark and cur != mark.get("mode"):
+        mark = None                      # człowiek zmienił tryb po stylu — jego wybór, styl go już nie oddaje
+    if want:
+        if cur == want:
+            return msgs
+        if mark is None and cur not in (None, "default"):
+            msgs = [f"tryb uprawnień Claude Code zostaje `{cur}` (wybrany przez Ciebie w {LOCAL_SETTINGS_REL.as_posix()}); "
+                    f"styl {style} ustawiłby `{want}` — zmień go sam, jeśli chcesz"]
+            if STYLE_MARK in marks:
+                marks.pop(STYLE_MARK)
+                mark_path.write_text(json.dumps(marks, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+            return msgs
+        previous = mark.get("previous") if mark else cur
+        perms["defaultMode"] = want
+        mark = {"mode": want, "previous": previous}
+        msgs.append(f"tryb uprawnień Claude Code: `{want}` w {LOCAL_SETTINGS_REL.as_posix()} (styl {style}); działa od "
+                    "następnej sesji Claude Code")
+    elif mark or STYLE_MARK in marks:
+        if mark:
+            if mark.get("previous") is None:
+                perms.pop("defaultMode", None)
+            else:
+                perms["defaultMode"] = mark["previous"]
+            msgs.append(f"tryb uprawnień Claude Code przywrócony: `{mark.get('previous') or 'domyślny'}` "
+                        f"(działa od następnej sesji)")
+        mark = None
+    else:
+        return msgs
+    if msgs:                             # zmieniony tryb — zapis ustawień Claude Code (reszta pliku bez zmian)
+        if perms:
+            data["permissions"] = perms
+        else:
+            data.pop("permissions", None)
+        local.parent.mkdir(parents=True, exist_ok=True)
+        local.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if mark:
+        marks[STYLE_MARK] = mark
+    else:
+        marks.pop(STYLE_MARK, None)
+    mark_path.write_text(json.dumps(marks, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return msgs
+
+
+def work_style(root: Path) -> dict:
+    """Sposób pracy po złożeniu warstw: styl, domyślny i dozwolone tryby zadania, przełączniki pętli, ostrzeżenia."""
+    cfg = load_config(root)
+    below: dict = {}
+    for label, layer in config_layers(root):
+        if not label.endswith("(osoba)"):
+            below = deep_merge(below, layer)
+    warns = person_layer(root, below)[1]
+    task, loop = cfg.get("task") or {}, cfg.get("loop") or {}
+    allowed = [m for m in (task.get("allowed_modes") or TASK_MODES) if m in TASK_MODES]
+    mode = task.get("default_mode") if task.get("default_mode") in allowed else ("zwykly" if "zwykly" in allowed else allowed[0])
+    return {"style": cfg.get("style"), "default_mode": mode, "allowed_modes": allowed,
+            "blocked_slices": loop.get("blocked_slices") is True,
+            "confirm_each_slice": loop.get("confirm_each_slice") is True, "warnings": warns}
 
 
 def org_operations(root: Path) -> dict:
@@ -107,7 +270,7 @@ def org_operations(root: Path) -> dict:
 
 def load_config(root: Path) -> dict:
     """Konfiguracja rdzenia: silnik (`.tf/factory/config.yaml`) ← domyślne organizacji (nakładka firmowa) ←
-    nadpisania projektu (`.tf/config/config.yaml`)."""
+    nadpisania projektu (`.tf/config/config.yaml`) ← preferencje osoby (styl pracy)."""
     cfg: dict = {}
     for _label, layer in config_layers(root):
         cfg = deep_merge(cfg, layer)
