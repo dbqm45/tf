@@ -2,9 +2,9 @@
 name: ddd-algorithm-recognition
 description: Użyj, gdy w domenie kryje się problem algorytmiczny — przydział, kolejność, pakowanie, trasy, kolizje w czasie.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy w obszarze domeny szukasz ukrytego klasycznego problemu algorytmicznego (kolejność i zależności, przydział, pakowanie w limity, pokrycie, trasy, kolizje w czasie, podobieństwo) — dwa tory dopasowania, mapowanie domena→algorytm, pewność, raport. Nie do klasy problemu (ddd-deep-modeling) ani doboru bibliotek (arch-tech-selection)."
-  slowa: "znany problem algorytmiczny, harmonogram etapów, zależności między etapami, równolegle, kara za opóźnienie, ścieżka krytyczna, kolejkowanie zadań, przydział, plan tras, pakowanie"
+  review: "2027-10-17"
+  catalog: "Użyj, gdy w obszarze domeny szukasz ukrytego klasycznego problemu algorytmicznego (kolejność i zależności, przydział, pakowanie w limity, pokrycie, trasy, kolizje w czasie, podobieństwo) — dwa tory dopasowania, mapowanie domena→algorytm, pewność, raport. Nie do klasy problemu (ddd-deep-modeling) ani doboru bibliotek (arch-tech-selection)."
+  keywords: "znany problem algorytmiczny, harmonogram etapów, zależności między etapami, równolegle, kara za opóźnienie, ścieżka krytyczna, kolejkowanie zadań, przydział, plan tras, pakowanie"
 ---
 
 # Rozpoznawanie problemów algorytmicznych w domenie

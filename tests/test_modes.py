@@ -28,8 +28,8 @@ def item(src: Path, folder: str, pid: str, prefix: str, default: bool, kind: str
                               f"facets:\n  - {{prefix: {prefix}, order: 900, name: {pid}, question: \"{pid}\"}}\n")
     name = prefix + "run"
     write(base / "skills" / name / "SKILL.md",
-          f"---\nname: {name}\ndescription: Użyj przy {pid}.\nmetadata:\n  katalog: \"Użyj przy {pid}. Nie do niczego.\"\n"
-          f"  przeglad: 2099-01-01\n---\n# {name}\n")
+          f"---\nname: {name}\ndescription: Użyj przy {pid}.\nmetadata:\n  catalog: \"Użyj przy {pid}. Nie do niczego.\"\n"
+          f"  review: 2099-01-01\n---\n# {name}\n")
 
 
 def source(base: Path) -> Path:

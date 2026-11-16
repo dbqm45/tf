@@ -106,7 +106,7 @@ def main() -> int:
         skill = out / "ux-ds-demo"
         text = (skill / "SKILL.md").read_text(encoding="utf-8") if (skill / "SKILL.md").is_file() else ""
         check(r.returncode == 0 and "name: ux-ds-demo" in text and "description: Użyj, gdy" in text
-              and "przeglad:" in text and "references/tokens.md" in text and "## Przykład" in text,
+              and "review:" in text and "references/tokens.md" in text and "## Przykład" in text,
               f"S-3a: szkic skilla w formacie fabryki: {r.stdout}{r.stderr} {text[:400]}")
         ref = (skill / "references" / "tokens.md").read_text(encoding="utf-8") if (skill / "references" / "tokens.md").is_file() else ""
         data = json.loads((skill / "tokens.json").read_text(encoding="utf-8")) if (skill / "tokens.json").is_file() else {}

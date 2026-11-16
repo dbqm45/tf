@@ -5,7 +5,7 @@ Hook UserPromptSubmit: podpowiada modelowi 1–3 skille fabryki pasujące do pol
 Po co: Claude Code trzyma opisy skilli w ~1% okna kontekstu. Przy oknie 200 tys. tokenów (np. Haiku) opisy skilli
 fabryki wypadają z listy i model widzi same nazwy, a i przy pełnych opisach model często odpowiada z wiedzy ogólnej,
 nie wczytując skilla (pomiar: tests/run_skill_evals.py). Hook dopasowuje polecenie do opisów skilli (description
-i metadata.katalog) prostym dopasowaniem rdzeni słów z wagą rzadkości i dopisuje do kontekstu krótką podpowiedź.
+i metadata.catalog) prostym dopasowaniem rdzeni słów z wagą rzadkości i dopisuje do kontekstu krótką podpowiedź.
 
   python3 .claude/hooks/skill_hint.py --explain "Jak zrobić paginację GET /orders?"   # ranking z punktacją
 
@@ -88,15 +88,15 @@ def load_index() -> list[dict]:
         if re.search(r"^disable-model-invocation:\s*true", fm, re.M):
             continue                       # skill uruchamiany tylko ręcznie
         desc = (re.search(r"^description:\s*(.*)$", fm, re.M) or [None, ""])[1]
-        kat = (re.search(r"^\s+katalog:\s*(.*)$", fm, re.M) or [None, ""])[1].strip().strip('"')
+        kat = (re.search(r"^\s+catalog:\s*(.*)$", fm, re.M) or [None, ""])[1].strip().strip('"')
         kat = NEG_RE.sub("", kat)          # granice „Nie do …” opisują sąsiadów, nie ten skill
-        slowa = (re.search(r"^\s+slowa:\s*(.*)$", fm, re.M) or [None, ""])[1].strip().strip('"')
+        keywords = (re.search(r"^\s+keywords:\s*(.*)$", fm, re.M) or [None, ""])[1].strip().strip('"')
         name = p.parent.name
         name_words = name.split("-", 1)[-1].replace("-", " ")
         body = text[m.end() if m else 0:]
         body = re.sub(r"```.*?```", " ", body, flags=re.S)          # bez przykładów kodu
         body = re.sub(r"^## Źródła.*$", " ", body, flags=re.S | re.M)  # bez listy źródeł
-        head = stems(f"{desc} {kat} {name_words} {slowa}")
+        head = stems(f"{desc} {kat} {name_words} {keywords}")
         excerpt = re.sub(r"<!--.*?-->|\s+", " ", body, flags=re.S).strip()[:700]
         items.append({"name": name, "desc": desc.strip(), "kat": kat.strip(), "excerpt": excerpt,
                       "head": set(head), "body": set(stems(body)) - set(head)})
@@ -167,7 +167,7 @@ def log_decision(data: dict, prompt: str, items: list[dict], picks: list) -> Non
 JEV_GATE = 0.30          # średnia trzech pytań bramki — poniżej nie podpowiadamy nic
 JEV_FITS = 0.30          # „czy zwycięzca robi dokładnie to, o co proszono” — poniżej nie podpowiadamy nic
 JEV_SHORTLIST = 3
-LAST_VIA = "slowa"
+LAST_VIA = "keywords"
 GATE_QS = {
     "specialist": {"type": "noul", "instructions": "Would a good answer to `request` follow a documented specialist "
                    "procedure or checklist, rather than general knowledge?"},
@@ -263,14 +263,14 @@ def off_stack(prompt: str) -> set[str]:
 def suggest(prompt: str, items: list[dict]) -> list:
     """Słowa (domyślnie) albo Jev (CLAUDE_SKILL_HINT_JEV=1) z rezerwą w słowach, gdy Jev niedostępny."""
     global LAST_VIA
-    LAST_VIA = "slowa"
+    LAST_VIA = "keywords"
     exclude = off_stack(prompt)
     if os.environ.get("CLAUDE_SKILL_HINT_JEV") == "1":
         picks = jev_suggest(prompt, [it for it in items if it["name"] not in exclude])
         if picks is not None:
             LAST_VIA = "jev"
             return picks
-        LAST_VIA = "slowa (Jev niedostępny)"
+        LAST_VIA = "keywords (Jev niedostępny)"
     return select(prompt, items, exclude)
 
 

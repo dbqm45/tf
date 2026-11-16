@@ -2,9 +2,9 @@
 name: be-database
 description: Użyj przy relacyjnej bazie — schemat, migracje, indeksy, zapytania SQL/ORM, transakcje, N+1, wydajność i skalowanie.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy pracy z relacyjną bazą danych — schemat, migracje, indeksy, zapytania SQL/ORM, transakcje, wydajność zapytań (N+1), wzorce PoEAA (Unit of Work, Identity Map, Data Mapper). Nie do projektowania endpointów (be-api-design) ani infrastruktury bazy."
-  slowa: "diagram encji, ERD, erDiagram, diagram bazy danych, schemat bazy jako diagram, blokada optymistyczna, blokada pesymistyczna, blokady w PostgreSQL, wyścig o ostatnie miejsce, dwóch użytkowników kupuje to samo, nadpisują sobie edycję, SELECT FOR UPDATE, wersja wiersza, zakleszczenie, write skew"
+  review: "2027-10-17"
+  catalog: "Użyj przy pracy z relacyjną bazą danych — schemat, migracje, indeksy, zapytania SQL/ORM, transakcje, wydajność zapytań (N+1), wzorce PoEAA (Unit of Work, Identity Map, Data Mapper). Nie do projektowania endpointów (be-api-design) ani infrastruktury bazy."
+  keywords: "diagram encji, ERD, erDiagram, diagram bazy danych, schemat bazy jako diagram, blokada optymistyczna, blokada pesymistyczna, blokady w PostgreSQL, wyścig o ostatnie miejsce, dwóch użytkowników kupuje to samo, nadpisują sobie edycję, SELECT FOR UPDATE, wersja wiersza, zakleszczenie, write skew"
 ---
 
 # Baza danych

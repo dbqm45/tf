@@ -29,8 +29,8 @@ def project(base: Path) -> Path:
                                                                                      "roles"))
     for d in [*(ROOT / ".claude" / "skills").glob("core-*"), ROOT / ".claude" / "skills" / "tf"]:   # skille rdzenia
         shutil.copytree(d, p / ".claude" / "skills" / d.name)
-    skill = "---\nname: {n}\ndescription: Użyj przy {n}.\nmetadata:\n  katalog: \"Użyj przy {n}. Nie do niczego.\"\n" \
-            "  przeglad: \"2099-01-01\"\n---\n# {n}\n"
+    skill = "---\nname: {n}\ndescription: Użyj przy {n}.\nmetadata:\n  catalog: \"Użyj przy {n}. Nie do niczego.\"\n" \
+            "  review: \"2099-01-01\"\n---\n# {n}\n"
     for n in ("aa-model", "aa-extra", "bb-tekst"):
         write(p / ".claude" / "skills" / n / "SKILL.md", skill.format(n=n))
     a = p / ".tf" / "factory" / "packs" / "pack-a"

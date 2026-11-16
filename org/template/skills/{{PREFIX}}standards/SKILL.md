@@ -2,9 +2,9 @@
 name: {{PREFIX}}standards
 description: Użyj przy ustaleniach firmy {{TITLE}} — kto zatwierdza, progi, zakazy i wyjątki obowiązujące w {{TITLE}}.
 metadata:
-  przeglad: "{{REVIEW}}"
-  katalog: "Użyj, gdy odpowiedź zależy od ustaleń {{TITLE}}, a nie od ogólnej praktyki — kto w {{TITLE}} zatwierdza zmianę, progi i zakazy, wyjątki, okna wdrożeń, gdzie {{TITLE}} trzyma decyzje. Nie do ogólnych praktyk (skille fabryki)."
-  slowa: "TODO: słowa, którymi ludzie w firmie opisują te sprawy, np. nazwy systemów, zespołów, procesów"
+  review: "{{REVIEW}}"
+  catalog: "Użyj, gdy odpowiedź zależy od ustaleń {{TITLE}}, a nie od ogólnej praktyki — kto w {{TITLE}} zatwierdza zmianę, progi i zakazy, wyjątki, okna wdrożeń, gdzie {{TITLE}} trzyma decyzje. Nie do ogólnych praktyk (skille fabryki)."
+  keywords: "TODO: słowa, którymi ludzie w firmie opisują te sprawy, np. nazwy systemów, zespołów, procesów"
 ---
 
 # Standardy {{TITLE}}

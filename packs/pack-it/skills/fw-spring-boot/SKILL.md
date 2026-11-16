@@ -2,9 +2,9 @@
 name: fw-spring-boot
 description: Użyj przy aplikacji Spring Boot — moduły, web i dane, konfiguracja, bezpieczeństwo, obserwowalność, testy (Testcontainers).
 metadata:
-  katalog: "Użyj przy aplikacji Spring Boot — struktura modułów, warstwa web i danych, konfiguracja, bezpieczeństwo, obserwowalność, testy (JUnit, slice testy, Testcontainers). Nie do składni i idiomów Javy (lang-java), modelowania domeny (ddd-*), ogólnego projektu API (be-api-design) ani baz danych niezależnie od frameworka (be-database)."
-  przeglad: "2027-01-20"
-  slowa: "Spring Boot, Spring, walidacja DTO, walidacja żądania w kontrolerze, @Valid, @Validated, Bean Validation, jakarta.validation, @RestController, @SpringBootTest, @MockBean, @MockitoBean, @DataJpaTest, @WebMvcTest, slice test, Testcontainers, @ServiceConnection, SecurityFilterChain, WebSecurityConfigurerAdapter, ProblemDetail, application.yml, @ConfigurationProperties, Actuator, Micrometer, RestClient, Spring Modulith, spring-boot-starter"
+  catalog: "Użyj przy aplikacji Spring Boot — struktura modułów, warstwa web i danych, konfiguracja, bezpieczeństwo, obserwowalność, testy (JUnit, slice testy, Testcontainers). Nie do składni i idiomów Javy (lang-java), modelowania domeny (ddd-*), ogólnego projektu API (be-api-design) ani baz danych niezależnie od frameworka (be-database)."
+  review: "2027-01-20"
+  keywords: "Spring Boot, Spring, walidacja DTO, walidacja żądania w kontrolerze, @Valid, @Validated, Bean Validation, jakarta.validation, @RestController, @SpringBootTest, @MockBean, @MockitoBean, @DataJpaTest, @WebMvcTest, slice test, Testcontainers, @ServiceConnection, SecurityFilterChain, WebSecurityConfigurerAdapter, ProblemDetail, application.yml, @ConfigurationProperties, Actuator, Micrometer, RestClient, Spring Modulith, spring-boot-starter"
 ---
 
 # Spring Boot

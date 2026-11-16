@@ -119,7 +119,7 @@ def scan_file(root: Path, rel: str, text: str, git: bool) -> None:
                 if ages is None:
                     ages = blame_ages(root, rel) if git else {}
                 age = ages.get(i + 1)
-                sev = "średnia" if age is not None and age > OLD_DAYS else "niska"
+                sev = "medium" if age is not None and age > OLD_DAYS else "low"
                 emit("marker-without-ticket", rel, i + 1, line, f"{m.group(1)} bez zgłoszenia", sev,
                      f"znacznik w komentarzu bez odwołania do zgłoszenia"
                      + (f"; wiek linii {age} dni (git blame)" if age is not None else ""),
@@ -134,7 +134,7 @@ def scan_file(root: Path, rel: str, text: str, git: bool) -> None:
             elif ext == ".py" and re.search(r"#\s*noqa(?!\s*:)", com, re.I):
                 sup = "noqa bez kodu"
             if sup:
-                emit("suppressed-check", rel, i + 1, line, f"wyciszone sprawdzenie: {sup}", "niska",
+                emit("suppressed-check", rel, i + 1, line, f"wyciszone sprawdzenie: {sup}", "low",
                      "wyciszenie bez zawężenia albo bez powodu ukrywa też przyszłe błędy",
                      "zawęź wyciszenie (`@ts-expect-error`, kod reguły w `noqa:`/`type: ignore[…]`, reguła w "
                      "`eslint-disable`) i dopisz powód po ` -- `")
@@ -142,11 +142,11 @@ def scan_file(root: Path, rel: str, text: str, git: bool) -> None:
             prev = lines[i - 1].strip() if i else ""
             has_reason = TICKET.search(line) or prev.startswith(("//", "#", "/*", "*"))
             if not has_reason:
-                emit("skipped-test", rel, i + 1, line, "pominięty test bez powodu", "średnia",
+                emit("skipped-test", rel, i + 1, line, "pominięty test bez powodu", "medium",
                      "test wyłączony bez powodu i bez zgłoszenia — regresja w tym miejscu przejdzie niezauważona",
                      "napraw test albo zostaw powód ze zgłoszeniem (`reason=…`, `@Disabled(\"#123 …\")`, komentarz)")
     if ext in CODE_EXT and len(lines) > LARGE and not GENERATED.search("\n".join(lines[:5])):
-        emit("large-file", rel, 1, lines[0] if lines else "", f"plik ma {len(lines)} linii", "niska",
+        emit("large-file", rel, 1, lines[0] if lines else "", f"plik ma {len(lines)} linii", "low",
              f"{len(lines)} linii (próg {LARGE})", "podziel według odpowiedzialności (eng-module-depth, "
              "eng-refactor-planning); najpierw testy charakteryzujące", confidence=0.6)
 

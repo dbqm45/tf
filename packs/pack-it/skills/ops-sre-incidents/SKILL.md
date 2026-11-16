@@ -2,8 +2,8 @@
 name: ops-sre-incidents
 description: Użyj przy niezawodności i incydentach — SLI/SLO, budżet błędów, burn rate, dyżury, postmortem, kopie.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj przy niezawodności usług i incydentach — SLI, SLO i SLA, budżet błędów i jego polityka, alerty burn rate, dyżury, poziomy ważności, dowodzenie incydentem, postmortem bez winnych, toil, projektowanie na awarię, chaos engineering, poziomy autonomii agentów AI w operacjach. Nie do instrumentacji i dashboardów (ops-observability) ani strategii wydań (ops-release-engineering)."
+  review: "2027-04-17"
+  catalog: "Użyj przy niezawodności usług i incydentach — SLI, SLO i SLA, budżet błędów i jego polityka, alerty burn rate, dyżury, poziomy ważności, dowodzenie incydentem, postmortem bez winnych, toil, projektowanie na awarię, chaos engineering, poziomy autonomii agentów AI w operacjach. Nie do instrumentacji i dashboardów (ops-observability) ani strategii wydań (ops-release-engineering)."
 ---
 
 # SRE i obsługa incydentów

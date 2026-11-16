@@ -12,7 +12,7 @@ Raport skuteczności podpowiedzi skilli (hook skill_hint) na prawdziwej pracy w 
 Wynik per skill:
 - trafione: podpowiedziany i użyty w tej samej sesji,
 - zignorowane: podpowiedziany, a w sesji nieużyty (szum albo model uznał, że niepotrzebny),
-- przeoczone: użyty, a w sesji ani razu niepodpowiedziany (kandydat na `metadata.slowa` w SKILL.md).
+- przeoczone: użyty, a w sesji ani razu niepodpowiedziany (kandydat na `metadata.keywords` w SKILL.md).
 Porównanie jest na poziomie sesji, nie pojedynczego polecenia — to przybliżenie. Tylko biblioteka standardowa.
 """
 from __future__ import annotations
@@ -98,7 +98,7 @@ def render(r: dict) -> str:
     for n in names:
         if r["missed"][n] >= 2:
             tips.append(f"- {n}: używany bez podpowiedzi w {r['missed'][n]} sesjach — dopisz słowa użytkowników do "
-                        f"metadata.slowa (z CLAUDE_SKILL_HINT_LOG_PROMPT=1 zobaczysz brzmienie poleceń)")
+                        f"metadata.keywords (z CLAUDE_SKILL_HINT_LOG_PROMPT=1 zobaczysz brzmienie poleceń)")
         if r["ignored"][n] >= 3 and r["hit"][n] == 0:
             tips.append(f"- {n}: podpowiadany {r['ignored'][n]}× i ani razu nie użyty — sprawdź, czy opis nie łapie "
                         f"cudzych słów (python3 .claude/hooks/skill_hint.py --explain \"<polecenie>\")")

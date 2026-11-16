@@ -14,7 +14,7 @@ podpowiada je z opisem, gdy polecenie ich dotyczy. Reguły:
   - technologie (`fw-`, `lang-`, `tool-`): opis tylko dla wykrytych przez `.claude/hooks/detect_stack.py`
     (gdy wykrywanie nie zadziała — wszystkie z opisem, jak dotąd);
   - wymiary specjalistyczne wskazane przez nakładki (`skill_visibility.name_only_prefixes` w pack.yaml, np. `sec-`,
-    `ai-`, `ux-` — persony znają je ze swojego promptu) i skille oznaczone przez autora `metadata.widocznosc: nazwa`:
+    `ai-`, `ux-` — persony znają je ze swojego promptu) i skille oznaczone przez autora `metadata.visibility: name`:
     sama nazwa, chyba że projekt włączy wymiar przez `--describe` (np. zespół UX pracuje nimi na co dzień);
   - pozostałe skille fabryki: opis.
 Zmieniane są tylko wpisy, które zapisała fabryka (pamięta je manifest, klucz `skill_overrides`). Twoje ustawienia
@@ -61,7 +61,7 @@ SETTINGS = Path(".claude") / "settings.local.json"
 def desired(name: str, stack: set[str] | None, marked: bool = False, describe: tuple[str, ...] = (),
             name_only: tuple[str, ...] = NAME_ONLY_PREFIXES) -> str:
     """Widoczność skilla: "on" (nazwa i opis) albo "name-only". `stack=None` — stack nieznany;
-    `marked` — autor oznaczył skill `metadata.widocznosc: nazwa` (rzadko potrzebny, znajduje go skill_hint);
+    `marked` — autor oznaczył skill `metadata.visibility: name` (rzadko potrzebny, znajduje go skill_hint);
     `describe` — prefiksy wymiarów, które projekt chce mieć z opisem."""
     if describe and name.startswith(tuple(describe)):
         return "on"
@@ -106,7 +106,7 @@ def manual_only(skill_md: Path) -> bool:
 
 
 def marked_name_only(skill_md: Path) -> bool:
-    return bool(re.search(r"^\s+widocznosc:\s*[\"']?nazwa[\"']?\s*$", _front(skill_md), re.M))
+    return bool(re.search(r"^\s+visibility:\s*[\"']?name[\"']?\s*$", _front(skill_md), re.M))
 
 
 def factory_skills(root: Path, manifest: dict) -> list[str]:

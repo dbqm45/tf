@@ -264,9 +264,9 @@ def write_skill(tok: dict, name: str, out: Path, force: bool = False) -> Path:
 name: ux-ds-{slug}
 description: {desc}
 metadata:
-  przeglad: "{review}"
-  katalog: "Użyj, gdy interfejs ma wyglądać jak system projektowy {slug}: dobór kolorów, fontów, skali rozmiarów, odstępów, promieni, cieni i breakpointów oraz nazw klas komponentów z tego systemu. Szkic z tools/ui-deconstruct.py — dopracuj wg core-skill-authoring. Nie do zasad projektowania systemów (ux-design-systems) ani dostępności (ux-accessibility)."
-  slowa: "styl {slug}, wygląd jak {slug}, kolory {slug}, font {slug}, odstępy {slug}, komponenty {slug}"
+  review: "{review}"
+  catalog: "Użyj, gdy interfejs ma wyglądać jak system projektowy {slug}: dobór kolorów, fontów, skali rozmiarów, odstępów, promieni, cieni i breakpointów oraz nazw klas komponentów z tego systemu. Szkic z tools/ui-deconstruct.py — dopracuj wg core-skill-authoring. Nie do zasad projektowania systemów (ux-design-systems) ani dostępności (ux-accessibility)."
+  keywords: "styl {slug}, wygląd jak {slug}, kolory {slug}, font {slug}, odstępy {slug}, komponenty {slug}"
 ---
 
 # System projektowy {slug}

@@ -2,9 +2,9 @@
 name: proc-team-topologies
 description: Użyj przy strukturze zespołów i ich interakcji — cztery typy zespołów, tryby współpracy, prawo Conwaya.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy projektowaniu struktury zespołów i ich interakcji — cztery typy zespołów, trzy tryby współpracy, obciążenie poznawcze, prawo Conwaya i dopasowanie zespołów do granic kontekstów DDD. Nie do rytuałów pracy zespołu (proc-agile) ani skalowania SAFe (proc-safe)."
-  slowa: "jak ułożyć zespoły, przeprojektować zespół organizacyjnie, zespół zawalony prośbami, zespół platformowy, zespół produktowy, zespół strumieniowy, zespół wspierający, prawo Conwaya, architektura a struktura zespołów, obciążenie poznawcze zespołu, platforma wewnętrzna"
+  review: "2027-10-17"
+  catalog: "Użyj przy projektowaniu struktury zespołów i ich interakcji — cztery typy zespołów, trzy tryby współpracy, obciążenie poznawcze, prawo Conwaya i dopasowanie zespołów do granic kontekstów DDD. Nie do rytuałów pracy zespołu (proc-agile) ani skalowania SAFe (proc-safe)."
+  keywords: "jak ułożyć zespoły, przeprojektować zespół organizacyjnie, zespół zawalony prośbami, zespół platformowy, zespół produktowy, zespół strumieniowy, zespół wspierający, prawo Conwaya, architektura a struktura zespołów, obciążenie poznawcze zespołu, platforma wewnętrzna"
 ---
 
 # Team Topologies

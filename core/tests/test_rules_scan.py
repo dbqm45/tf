@@ -19,14 +19,14 @@ RULES = r"""rules:
     files: ["**/*.py"]
     exclude: ["tests/**"]
     forbid: '^\s*print\('
-    severity: średnia
+    severity: medium
     suggestion: użyj acme.log
   - id: license-header
     title: brak nagłówka licencji
     files: ["src/**/*.py"]
     require: 'Copyright ACME'
     head: 3
-    severity: niska
+    severity: low
 """
 
 
@@ -71,7 +71,7 @@ def main() -> int:
               f"{got} {r.stderr}")
         first = json.loads(r.stdout.splitlines()[0]) if r.stdout.strip() else {}
         check({"rule", "title", "file", "line", "snippet", "severity", "confidence", "evidence", "basis",
-               "suggestion"} <= set(first) and first.get("severity") in ("niska", "średnia"),
+               "suggestion"} <= set(first) and first.get("severity") in ("low", "medium"),
               f"RS-2: ustalenie w kontrakcie tf analyze: {first}")
         r = scan(rules, repo, "--files", "src/app.py,tests/test_app.py")
         check(found(r) == [("no-print", "src/app.py", 3), ("no-print", "src/app.py", 4)],

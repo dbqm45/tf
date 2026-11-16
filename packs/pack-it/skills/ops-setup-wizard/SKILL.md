@@ -2,8 +2,8 @@
 name: ops-setup-wizard
 description: Użyj, gdy człowiek musi ręcznie skonfigurować klucze w panelach lub sekrety CI — interaktywny skrypt bash.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy człowiek musi ręcznie przejść procedurę, której agent nie może lub nie powinien wykonać — klucze i konta w panelach usług zewnętrznych, sekrety CI, jednorazowa migracja lub przełączenie. Agent pisze interaktywny skrypt bash (kreator), człowiek go uruchamia, sekrety omijają kontekst modelu. Nie do kroków, które agent zrobi sam, ani decyzji architektonicznych."
+  review: "2027-04-17"
+  catalog: "Użyj, gdy człowiek musi ręcznie przejść procedurę, której agent nie może lub nie powinien wykonać — klucze i konta w panelach usług zewnętrznych, sekrety CI, jednorazowa migracja lub przełączenie. Agent pisze interaktywny skrypt bash (kreator), człowiek go uruchamia, sekrety omijają kontekst modelu. Nie do kroków, które agent zrobi sam, ani decyzji architektonicznych."
 ---
 
 # Kreator konfiguracji (skrypt dla człowieka)

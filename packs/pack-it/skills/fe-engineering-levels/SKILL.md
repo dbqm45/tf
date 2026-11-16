@@ -2,9 +2,9 @@
 name: fe-engineering-levels
 description: Użyj przy ocenie poziomu rozwiązania frontendu (Senior, Staff, Principal) i inwestycji w DevEx.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy trzeba ocenić, na jakim poziomie (Senior → Staff → Principal) rozwiązać problem frontendowy, i przy pracy „ponad kodem” — review i mentoring, design system i standardy wielu zespołów, DevEx (FLOW, tight-loose), ROI i komunikacja z biznesem, wizja techniczna, sponsoring. Nie do wiedzy o kodzie (fe-architecture, fe-web-platform, fe-css) ani metryk DORA (eng-continuous-delivery)."
-  slowa: "tarcie programistów, wolny build, DevEx, standard dla wielu zespołów, koszt migracji, uzasadnienie dla biznesu"
+  review: "2027-10-17"
+  catalog: "Użyj, gdy trzeba ocenić, na jakim poziomie (Senior → Staff → Principal) rozwiązać problem frontendowy, i przy pracy „ponad kodem” — review i mentoring, design system i standardy wielu zespołów, DevEx (FLOW, tight-loose), ROI i komunikacja z biznesem, wizja techniczna, sponsoring. Nie do wiedzy o kodzie (fe-architecture, fe-web-platform, fe-css) ani metryk DORA (eng-continuous-delivery)."
+  keywords: "tarcie programistów, wolny build, DevEx, standard dla wielu zespołów, koszt migracji, uzasadnienie dla biznesu"
 ---
 
 # Poziomy inżyniera frontendu: Senior → Staff → Principal

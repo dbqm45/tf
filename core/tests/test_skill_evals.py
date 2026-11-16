@@ -72,12 +72,12 @@ def protocol_tests() -> list[str]:
         badh = ev.validate_file(ho, holdout=True)
         if okh or not badh:
             fails.append(f"validate_file(holdout): jeden scenariusz trigger wystarcza, no-trigger to błąd: {okh} {badh}")
-    # Skill wyłączony (metadata.status: nieaktywny): scenariusze trigger leżą w skill_evals/inactive/, w pliku głównym
+    # Skill wyłączony (metadata.status: inactive): scenariusze trigger leżą w skill_evals/inactive/, w pliku głównym
     # wystarcza jeden no-trigger; aktywny skill nadal potrzebuje co najmniej trzech.
     with tempfile.TemporaryDirectory() as d:
         old = ev.SKILLS
         ev.SKILLS = Path(d) / "skills"
-        for n, extra in (("x-off", 'disable-model-invocation: true\nmetadata:\n  status: "nieaktywny"\n'), ("x-on", "")):
+        for n, extra in (("x-off", 'disable-model-invocation: true\nmetadata:\n  status: "inactive"\n'), ("x-on", "")):
             (ev.SKILLS / n).mkdir(parents=True)
             (ev.SKILLS / n / "SKILL.md").write_text(f"---\nname: {n}\ndescription: Użyj przy x.\n{extra}---\n# X\n",
                                                     encoding="utf-8")

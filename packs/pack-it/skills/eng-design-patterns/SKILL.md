@@ -3,10 +3,10 @@ name: eng-design-patterns
 description: Użyj, gdy w projekcie lub review kusi wzorzec GoF — diagnoza symptom → wzorzec, kiedy nie, lżejsze formy.
 disable-model-invocation: true
 metadata:
-  status: "nieaktywny"  # pomiar 2026-11-16: docs/inactive-skills.md
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy projektujesz lub refaktoryzujesz kod i rozważasz wzorzec GoF albo oceniasz jego użycie w review — diagnoza „symptom → wzorzec”, kiedy NIE używać, klasyfikacja, 22 wzorce (fabryki, budowniczy, adapter, dekorator, pełnomocnik, obserwator, stan, strategia, odwiedzający…) z lżejszymi formami w TS. Nie do zasad SOLID/KISS (eng-design-principles) ani building blocks DDD (ddd-tactical-design)."
-  slowa: "role object, obiekt roli, ta sama osoba w wielu rolach, klient i dostawca, extension object, obiekt rozszerzenia, flagi isCustomer, klasa Person z polami null, każda rola ma inne dane"
+  status: "inactive"  # pomiar 2026-11-16: docs/inactive-skills.md
+  review: "2027-10-17"
+  catalog: "Użyj, gdy projektujesz lub refaktoryzujesz kod i rozważasz wzorzec GoF albo oceniasz jego użycie w review — diagnoza „symptom → wzorzec”, kiedy NIE używać, klasyfikacja, 22 wzorce (fabryki, budowniczy, adapter, dekorator, pełnomocnik, obserwator, stan, strategia, odwiedzający…) z lżejszymi formami w TS. Nie do zasad SOLID/KISS (eng-design-principles) ani building blocks DDD (ddd-tactical-design)."
+  keywords: "role object, obiekt roli, ta sama osoba w wielu rolach, klient i dostawca, extension object, obiekt rozszerzenia, flagi isCustomer, klasa Person z polami null, każda rola ma inne dane"
 ---
 
 # Wzorce projektowe (GoF)

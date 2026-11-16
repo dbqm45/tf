@@ -272,7 +272,7 @@ def evidence(d: dict) -> list[dict]:
         for k, n in a["tier_feedback"].items():
             add("tier", f"tier:{a['agent']}:{k}", f"{a['agent']}: „Tier: {k}” × {n}", n)
     for s, n in d["hints"]["missed"].items():
-        add("hint", f"hint-missed:{s}", f"{s}: użyty bez podpowiedzi w {n} sesjach (kandydat na metadata.slowa)", n)
+        add("hint", f"hint-missed:{s}", f"{s}: użyty bez podpowiedzi w {n} sesjach (kandydat na metadata.keywords)", n)
     for s, n in d["hints"]["ignored"].items():
         if n >= 2:
             add("hint", f"hint-ignored:{s}", f"{s}: podpowiadany, a nieużyty w {n} sesjach (szum podpowiedzi?)", n)
@@ -362,7 +362,7 @@ def suggestions(d: dict) -> list[dict]:
                             + " (core-cost-control)"})
     for s, n in d["hints"]["missed"].items():
         if n >= 2:
-            out.append({"key": f"hint-missed:{s}", "place": "metadata.slowa",
+            out.append({"key": f"hint-missed:{s}", "place": "metadata.keywords",
                         "text": f"{s}: użyty bez podpowiedzi w {n} sesjach — dopisz słowa z poleceń (core-skill-authoring)"})
     for s, n in d["hints"]["ignored"].items():
         if n >= 3:

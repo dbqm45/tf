@@ -2,8 +2,8 @@
 name: core-skill-composition
 description: Użyj, gdy zadanie dotyka kilku obszarów naraz (np. DDD + Angular) — łączenie skilli w jedno rozwiązanie.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj na początku każdego zadania, które dotyka więcej niż jednego obszaru (np. DDD + Angular, archetypy + Java, projekt systemu + UI) — jak rozłożyć zadanie na wymiary i połączyć niezależne skille w jedno rozwiązanie. Nie zawiera wiedzy merytorycznej — tę dają skille wymiarów."
+  review: "2027-10-17"
+  catalog: "Użyj na początku każdego zadania, które dotyka więcej niż jednego obszaru (np. DDD + Angular, archetypy + Java, projekt systemu + UI) — jak rozłożyć zadanie na wymiary i połączyć niezależne skille w jedno rozwiązanie. Nie zawiera wiedzy merytorycznej — tę dają skille wymiarów."
 ---
 
 # Łączenie skilli

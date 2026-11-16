@@ -91,7 +91,7 @@ def main() -> int:
     # krok E1: /tf wywołuje także model (zlecenie zwykłym zdaniem), a wejście i źródło rozpoznaje skrypt
     front = body.split("---")[1] if body.count("---") >= 2 else ""
     desc = next((ln for ln in front.splitlines() if ln.startswith("description:")), "")
-    check("disable-model-invocation" not in front and desc.startswith("description: Użyj, gdy") and "slowa:" in front,
+    check("disable-model-invocation" not in front and desc.startswith("description: Użyj, gdy") and "keywords:" in front,
           f"T-15: skill tf może wywołać model — bez disable-model-invocation, opis jako reguła wyboru, słowa: {desc}")
     entry = body.split("## Wejście", 1)[-1].split("## 0.", 1)[0] if "## Wejście" in body else ""
     check(body.find("## Wejście") != -1 and body.find("## Wejście") < body.find("## 0.")

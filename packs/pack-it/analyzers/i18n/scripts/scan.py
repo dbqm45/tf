@@ -105,7 +105,7 @@ def scan_text_nodes(rel: str, text: str) -> None:
                     continue
                 ln = src.count("\n", 0, m.start()) + 1
                 emit("hardcoded-ui-text", rel, ln, m.group(0), f"tekst atrybutu `{a.group(1)}` poza tłumaczeniem",
-                     "niska", "przenieś tekst do katalogu tłumaczeń i użyj funkcji `t(…)`/`$t(…)`/potoku `translate`")
+                     "low", "przenieś tekst do katalogu tłumaczeń i użyj funkcji `t(…)`/`$t(…)`/potoku `translate`")
         nxt = src.find("<", m.end())
         if nxt < 0:
             continue
@@ -119,7 +119,7 @@ def scan_text_nodes(rel: str, text: str) -> None:
             continue
         if WORD.search(literal):
             ln = src.count("\n", 0, m.end() + len(run) - len(run.lstrip())) + 1
-            emit("hardcoded-ui-text", rel, ln, literal.strip(), "tekst interfejsu poza tłumaczeniem", "niska",
+            emit("hardcoded-ui-text", rel, ln, literal.strip(), "tekst interfejsu poza tłumaczeniem", "low",
                  "przenieś tekst do katalogu tłumaczeń i użyj funkcji `t(…)`/`$t(…)`/potoku `translate` "
                  "albo atrybutu `i18n`")
 
@@ -129,10 +129,10 @@ def scan_formats(rel: str, text: str, locale_matters: bool, ui: bool) -> None:
         m = LOCALE_LESS.search(line) if locale_matters else None
         if m:
             emit("locale-less-format", rel, i + 1, line, f"formatowanie bez locale: {m.group(0).lstrip('.')}",
-                 "średnia", "podaj locale użytkownika jawnie, np. `toLocaleDateString(locale)` albo "
+                 "medium", "podaj locale użytkownika jawnie, np. `toLocaleDateString(locale)` albo "
                  "`new Intl.DateTimeFormat(locale, …)`", confidence=0.8)
         if ui and TOFIXED.search(line) and CURRENCY.search(TOFIXED.sub(" ", line)):
-            emit("money-without-intl", rel, i + 1, line, "kwota z toFixed sklejona z walutą", "średnia",
+            emit("money-without-intl", rel, i + 1, line, "kwota z toFixed sklejona z walutą", "medium",
                  "użyj `new Intl.NumberFormat(locale, { style: \"currency\", currency })`; kwoty licz w groszach "
                  "lub typem dziesiętnym", confidence=0.7)
 

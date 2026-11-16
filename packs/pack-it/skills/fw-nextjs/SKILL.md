@@ -2,9 +2,9 @@
 name: fw-nextjs
 description: Użyj przy kodzie Next.js 14–16.3 (App Router) — Server Components, Server Actions i autoryzacja, cache, proxy.ts, migracja.
 metadata:
-  przeglad: "2027-01-03"
-  katalog: "Użyj przy kodzie Next.js (14–16.3, App Router) — podział Server/Client Components, pobieranie danych na serwerze, Server Actions (autoryzacja w każdej akcji, odświeżanie przez updateTag/revalidatePath/refresh), cache i Cache Components ('use cache', cacheLife, cacheTag), proxy.ts (dawniej middleware), Route Handlers, zmienne środowiskowe, strumieniowanie i obsługa błędów, testy, migracja 15→16 i łatki bezpieczeństwa — oraz przy decyzji, gdzie w aplikacji Next.js umieścić pojęcia domenowe. Nie do samego Reacta bez frameworka (fw-react), projektu API HTTP (be-api-design) ani uwierzytelniania w ogóle (be-auth-security)."
-  slowa: "Next.js, Next, App Router, Server Action, server action, use server, use client, use cache, cacheComponents, revalidatePath, revalidateTag, updateTag, middleware.ts, proxy.ts, route.ts, page.tsx, layout.tsx, next.config, unstable_cache, cacheLife, hydration, hydratacja, błąd hydratacji, useSearchParams, standalone, Docker Next.js, wiele instancji, cacheHandler, serverExternalPackages, next/dist/docs"
+  review: "2027-01-03"
+  catalog: "Użyj przy kodzie Next.js (14–16.3, App Router) — podział Server/Client Components, pobieranie danych na serwerze, Server Actions (autoryzacja w każdej akcji, odświeżanie przez updateTag/revalidatePath/refresh), cache i Cache Components ('use cache', cacheLife, cacheTag), proxy.ts (dawniej middleware), Route Handlers, zmienne środowiskowe, strumieniowanie i obsługa błędów, testy, migracja 15→16 i łatki bezpieczeństwa — oraz przy decyzji, gdzie w aplikacji Next.js umieścić pojęcia domenowe. Nie do samego Reacta bez frameworka (fw-react), projektu API HTTP (be-api-design) ani uwierzytelniania w ogóle (be-auth-security)."
+  keywords: "Next.js, Next, App Router, Server Action, server action, use server, use client, use cache, cacheComponents, revalidatePath, revalidateTag, updateTag, middleware.ts, proxy.ts, route.ts, page.tsx, layout.tsx, next.config, unstable_cache, cacheLife, hydration, hydratacja, błąd hydratacji, useSearchParams, standalone, Docker Next.js, wiele instancji, cacheHandler, serverExternalPackages, next/dist/docs"
 ---
 
 # Next.js (App Router)

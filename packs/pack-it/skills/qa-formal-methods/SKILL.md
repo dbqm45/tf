@@ -2,9 +2,9 @@
 name: qa-formal-methods
 description: Użyj przy weryfikacji formalnej — kiedy warto, Z3, TLA+/TLC, Alloy, kontrprzykład jako test AC-n, granice modelu.
 metadata:
-  przeglad: "2027-11-15"
-  katalog: "Użyj, gdy przykłady i losowanie nie wystarczą jako wyrocznia — współbieżność i ponowienia, protokoły i maszyny stanów, reguły kombinatoryczne z limitem; wybór szczebla (kontrakty, testy właściwości, solver SMT Z3, model checking TLA+/TLC lub Alloy, Dafny), kontrprzykład jako test akceptacyjny z AC-n, granice modelu w raporcie, model obok kodu. Nie do projektowania agregatów i ich niezmienników (ddd-tactical-design) ani składni Hypothesis (tool-pytest)."
-  slowa: "weryfikacja formalna, metody formalne, zweryfikować formalnie, TLA+, PlusCal, TLC, Alloy, Z3, solver SMT, model checking, udowodnić, że żadna kombinacja, wyścig przy rezerwacji, podwójna rezerwacja, protokół synchronizacji, kontrprzykład, poprawność protokołu, projekt protokołu, przeploty, blokada optymistyczna, ponowienie po timeoucie"
+  review: "2027-11-15"
+  catalog: "Użyj, gdy przykłady i losowanie nie wystarczą jako wyrocznia — współbieżność i ponowienia, protokoły i maszyny stanów, reguły kombinatoryczne z limitem; wybór szczebla (kontrakty, testy właściwości, solver SMT Z3, model checking TLA+/TLC lub Alloy, Dafny), kontrprzykład jako test akceptacyjny z AC-n, granice modelu w raporcie, model obok kodu. Nie do projektowania agregatów i ich niezmienników (ddd-tactical-design) ani składni Hypothesis (tool-pytest)."
+  keywords: "weryfikacja formalna, metody formalne, zweryfikować formalnie, TLA+, PlusCal, TLC, Alloy, Z3, solver SMT, model checking, udowodnić, że żadna kombinacja, wyścig przy rezerwacji, podwójna rezerwacja, protokół synchronizacji, kontrprzykład, poprawność protokołu, projekt protokołu, przeploty, blokada optymistyczna, ponowienie po timeoucie"
 ---
 
 # Metody formalne jako wyrocznia

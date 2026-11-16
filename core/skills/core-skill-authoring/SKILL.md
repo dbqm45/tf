@@ -2,9 +2,9 @@
 name: core-skill-authoring
 description: Użyj przy dodaniu lub zmianie skilla — najpierw scenariusze ewaluacji, potem zwięzła treść z przykładami, bramka, audyt.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj, gdy dodajesz nowy skill do fabryki, zmieniasz istniejący, skill się nie uruchamia albo trzeba udowodnić, że skill coś wnosi — kolejność pracy od scenariuszy ewaluacji, punkt odniesienia bez skilla, reguły opisu i struktury, bramka jakości .tf/factory/skill_gate.py, ewaluacja na modelach i rejestr wyników. Nie do łączenia istniejących skilli w jednym zadaniu (core-skill-composition) ani testów kodu aplikacji (skill testów, pack-it)."
-  slowa: "nowy skill, dodaj skill, napisz skill, zmień skill, skill się nie uruchamia, model nie wczytuje skilla, ewaluacja skilla, scenariusze, bramka jakości, skill_gate, czy skill działa, baseline, skill procesowy, skill w CI, skill bez człowieka, claude -p, jak działa ten skill, przegląd skilla, dystrybucja skilli w zespole, paczka ze skillami, dodać skill do fabryki, nowy skill w fabryce, od czego zacząć nowy skill, sprawdzić, że skill naprawdę działa, zanim oddam skill, skill procesowy, skill działający w CI, skill dla claude -p, zaprojektować skill przewidywalny, skrypt w scripts/ skilla, wpiąć skrypt do SKILL.md, skrypt liczy metryki dla agentów, liczby ze skryptu do raportów"
+  review: "2027-10-09"
+  catalog: "Użyj, gdy dodajesz nowy skill do fabryki, zmieniasz istniejący, skill się nie uruchamia albo trzeba udowodnić, że skill coś wnosi — kolejność pracy od scenariuszy ewaluacji, punkt odniesienia bez skilla, reguły opisu i struktury, bramka jakości .tf/factory/skill_gate.py, ewaluacja na modelach i rejestr wyników. Nie do łączenia istniejących skilli w jednym zadaniu (core-skill-composition) ani testów kodu aplikacji (skill testów, pack-it)."
+  keywords: "nowy skill, dodaj skill, napisz skill, zmień skill, skill się nie uruchamia, model nie wczytuje skilla, ewaluacja skilla, scenariusze, bramka jakości, skill_gate, czy skill działa, baseline, skill procesowy, skill w CI, skill bez człowieka, claude -p, jak działa ten skill, przegląd skilla, dystrybucja skilli w zespole, paczka ze skillami, dodać skill do fabryki, nowy skill w fabryce, od czego zacząć nowy skill, sprawdzić, że skill naprawdę działa, zanim oddam skill, skill procesowy, skill działający w CI, skill dla claude -p, zaprojektować skill przewidywalny, skrypt w scripts/ skilla, wpiąć skrypt do SKILL.md, skrypt liczy metryki dla agentów, liczby ze skryptu do raportów, widoczność skilla, skille widoczne w każdej sesji, odchudzić skille, za długie skille"
 ---
 
 # Dodawanie i zmiana skilla — najpierw dowód, potem treść
@@ -24,8 +24,8 @@ Sama treść SKILL.md niczego nie dowodzi.
    kroków: wypisujesz decyzje, których ogólny szablon nie zna (kolejność sekcji pod czytelnika, nierówna głębia,
    ograniczenia wprost), i 2–3 pytania, które skill zadaje przed pisaniem. To staje się treścią i scenariuszami.
 2. **Szkielet.** `python3 .tf/factory/build.py new-skill <prefiks-nazwa> "<pełny opis z granicami>"` tworzy SKILL.md
-   z terminem przeglądu i polem `slowa` oraz szkielet scenariuszy `tests/skill_evals/<nazwa>.json` (w projekcie:
-   `.claude/tests/skill_evals/`). `--role <rola>` dopisuje skill do roli, `--name-only` ustawia `widocznosc: nazwa`.
+   z terminem przeglądu i polem `keywords` oraz szkielet scenariuszy `tests/skill_evals/<nazwa>.json` (w projekcie:
+   `.claude/tests/skill_evals/`). `--role <rola>` dopisuje skill do roli, `--name-only` ustawia `visibility: name`.
    Prefiks wybierz z wymiarów w `.tf/config/config.yaml → facets`.
 3. **Scenariusze przed treścią** (≥3):
    - **2× `trigger`** — pytania z luki z kroku 1, zadane słowami człowieka, a nie opisu skilla. Do tego `checks.all`:
@@ -67,11 +67,11 @@ Sama treść SKILL.md niczego nie dowodzi.
 6. **Opis i wyszukiwanie:**
    - `description` ≤170 znaków jako **reguła wyboru**: „Użyj, gdy/przy <sytuacja> — <kluczowe pojęcia>.”, bez „: ”
      (psuje YAML). Tylko to model widzi na starcie; pole `metadata` Claude Code pomija. Nie „Pomaga z dokumentami”.
-   - `metadata.katalog`: pełny opis z granicami („Nie do … (skill)”).
-   - `metadata.slowa`: słowa, którymi ludzie opisują problem. Indeksuje je hook `skill_hint`.
+   - `metadata.catalog`: pełny opis z granicami („Nie do … (skill)”).
+   - `metadata.keywords`: słowa, którymi ludzie opisują problem. Indeksuje je hook `skill_hint`.
    - Pola `paths` nie używasz: z nim skill wczytuje się automatycznie tylko przy pasujących plikach, a pytanie
      projektowe pada zwykle, zanim pliki istnieją. `when_to_use` dokleja się do opisu na liście skilli i zjada
-     budżet opisów — granice piszesz w `metadata.katalog`.
+     budżet opisów — granice piszesz w `metadata.catalog`.
    - `model` ani `effort` w nagłówku skilla: inny model niż model sesji to zmiana modelu w turze — następne
      zapytanie czyta całą historię bez cache (code.claude.com, „Skills” i „Prompt caching”, 2026-10-20).
    - `context: fork` (skill działa w osobnym podagencie, do rozmowy wraca wynik) tylko dla skilla, który czyta dużo,
@@ -81,15 +81,15 @@ Sama treść SKILL.md niczego nie dowodzi.
      `background: false` (inaczej wynik przychodzi w tle), na górze treści `**Zadanie:** $ARGUMENTS` z regułą „puste
      zadanie → odpowiedz BRAK ZADANIA” (podagent nie widzi rozmowy, a model wywołuje skill bez `args`), `argument-hint`
      i format krótkiego wyniku. Skill z krokiem „uzgodnij z człowiekiem” w forku nie zadziała.
-   - Skill rzadko potrzebny: `metadata.widocznosc: nazwa` — na liście tylko nazwa (nie zabiera budżetu opisów),
+   - Skill rzadko potrzebny: `metadata.visibility: name` — na liście tylko nazwa (nie zabiera budżetu opisów),
      a hook `skill_hint` podpowiada go z opisem przy pasującym poleceniu (`.tf/factory/skill_profile.py`).
    - Skill uruchamiany tylko ręcznie: `disable-model-invocation: true` i scenariusze wyłącznie `no-trigger`.
    - Skill bez przewagi w pomiarze (model bez skilla odpowiada tak samo): wyłącz, nie usuwaj —
-     `disable-model-invocation: true` i `metadata.status: "nieaktywny"`; scenariusze `trigger` przenieś do
+     `disable-model-invocation: true` i `metadata.status: "inactive"`; scenariusze `trigger` przenieś do
      `tests/skill_evals/inactive/<skill>.json`. `build.py` usuwa wtedy skill z ról, person i katalogu. Odsyłacze do niego
      w innych skillach usuń (`build.py check` je wypisuje). Powód i wyniki wpisz w `docs/inactive-skills.md`
      repozytorium fabryki.
-   - `metadata.przeglad`: termin przeglądu treści (RRRR-MM-DD). Ustawia go `python3 .tf/factory/freshness.py --reviewed
+   - `metadata.review`: termin przeglądu treści (RRRR-MM-DD). Ustawia go `python3 .tf/factory/freshness.py --reviewed
      <nazwa>` po sprawdzeniu faktów w źródłach (dziś + interwał: wersje 3 mies., przepisy 3–6, metody 12).
 7. **Wpięcie:** dopisz skill do roli (`.tf/config/roles/*.yaml`) albo persony i uruchom `python3 .tf/factory/build.py`.
 8. **Bramka jakości** (bezpłatna, obowiązkowa): `python3 .tf/factory/skill_gate.py <nazwa>`. Sprawdza:
@@ -144,18 +144,18 @@ Sama treść SKILL.md niczego nie dowodzi.
 ## Diagnoza: skill się nie uruchamia
 | Objaw | Przyczyna | Poprawka |
 |---|---|---|
-| bramka krok 3: hook nie podpowiada | słowa użytkownika ≠ słowa opisu | `metadata.slowa`, opis bliżej języka pytań; `skill_hint.py --explain "<pytanie>"`; propozycja fraz: `skill_gate.py --suggest <skill>` |
+| bramka krok 3: hook nie podpowiada | słowa użytkownika ≠ słowa opisu | `metadata.keywords`, opis bliżej języka pytań; `skill_hint.py --explain "<pytanie>"`; propozycja fraz: `skill_gate.py --suggest <skill>` |
 | hook podpowiada, model ignoruje | ogólny temat, model „wie sam” | w opisie konkretna luka („procedura…”, „pułapki wersji…”), scenariusz z tą luką |
-| skill uruchamia się przy cudzych pytaniach | za szeroki opis | granice w `metadata.katalog`, `no-trigger` z sąsiadem, zawężony opis |
+| skill uruchamia się przy cudzych pytaniach | za szeroki opis | granice w `metadata.catalog`, `no-trigger` z sąsiadem, zawężony opis |
 | „Unknown skill” | pole `paths` | usuń `paths` |
 | treść nie przechodzi, choć skill wczytany | instrukcja za ogólna albo za długa | konkretne kroki i przykłady; szczegóły do `references/` |
 | model nie sięga po skill mimo podpowiedzi | opis-hasło bez „kiedy” | opis jako reguła wyboru „Użyj, gdy …” |
 
 ## Checklista
 - [ ] luka zmierzona bez skilla; scenariusze (2× trigger, 1× no-trigger z sąsiadem) napisane przed treścią
-- [ ] description jako reguła wyboru „Użyj, gdy/przy …” (≤170 znaków), katalog z granicami, `metadata.slowa`, bez `paths`
+- [ ] description jako reguła wyboru „Użyj, gdy/przy …” (≤170 znaków), katalog z granicami, `metadata.keywords`, bez `paths`
 - [ ] jedno zadanie; sekcja `## Przykład`; skrypty dla operacji deterministycznych; sieć zadeklarowana
-- [ ] SKILL.md zwięzły, `references/` jeden poziom od SKILL.md ze spisem treści, źródła z datą, `metadata.przeglad`
+- [ ] SKILL.md zwięzły, `references/` jeden poziom od SKILL.md ze spisem treści, źródła z datą, `metadata.review`
 - [ ] skill procesowy: warunek wstępny pliku, raport ze statusami faz, bez łańcuchowania; w CI bez pytań, z linią werdyktu
 - [ ] `python3 .tf/factory/skill_gate.py <nazwa>` przechodzi (także regresja wszystkich skilli)
 - [ ] ewaluacja na haiku i sonnet zaliczona (za zgodą człowieka), wynik i koszt w CHANGELOG

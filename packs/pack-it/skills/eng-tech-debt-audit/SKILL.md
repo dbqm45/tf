@@ -2,8 +2,8 @@
 name: eng-tech-debt-audit
 description: Użyj przy audycie długu technicznego repo lub modułu — ustalenia z plik:linia, waga, wysiłek, priorytety.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy audycie długu technicznego repozytorium lub modułu — orientacja (rozmiar × częstość zmian), dziewięć wymiarów długu, tabela ustaleń z plik:linia, waga i wysiłek, priorytet, szybkie wygrane, „wygląda źle, ale jest w porządku”, ponowny audyt. Nie do pojedynczej refaktoryzacji (eng-behavior-preserving-refactoring) ani przeglądu jednego PR (eng-design-principles)."
+  review: "2027-10-09"
+  catalog: "Użyj przy audycie długu technicznego repozytorium lub modułu — orientacja (rozmiar × częstość zmian), dziewięć wymiarów długu, tabela ustaleń z plik:linia, waga i wysiłek, priorytet, szybkie wygrane, „wygląda źle, ale jest w porządku”, ponowny audyt. Nie do pojedynczej refaktoryzacji (eng-behavior-preserving-refactoring) ani przeglądu jednego PR (eng-design-principles)."
 ---
 
 # Audyt długu technicznego

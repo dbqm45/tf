@@ -45,7 +45,7 @@ except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
     import yaml
 
 TF = Path(".tf")
-SEVERITY = ["krytyczna", "wysoka", "średnia", "niska"]
+SEVERITY = ["critical", "high", "medium", "low"]
 NOTE = "  ↳ "  # adnotacje rdzenia w liście działań (odtwarzane przy każdej analizie; notatki człowieka zostają)
 DIRS = {
     "reports": ("Raporty `tf analyze`: przegląd (ten plik po pierwszej analizie), `<moduł>.md` z listą działań "

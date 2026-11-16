@@ -47,11 +47,11 @@ def main() -> int:
     check(b.skill_listing(entries, 0, name_only=("dom-",)) == 150, "LB-2: bez rezerwy technologii")
     check(b.skill_listing(entries, 0) == 550, f"LB-3: bez prefiksów nakładek dom-* z opisem: {b.skill_listing(entries, 0)}")
 
-    # Termin przeglądu (metadata.przeglad): format daty sprawdzany; zmiana samego terminu nie unieważnia bramki.
-    check(b.check_review_date("eng-a", {"przeglad": "2027-04-17"}) == ([], []), "RD-1: poprawna data bez uwag")
-    errors, _ = b.check_review_date("eng-a", {"przeglad": "kwiecień"})
-    check(len(errors) == 1 and "przeglad" in errors[0], f"RD-2: zły format daty → błąd: {errors}")
-    errors, warnings = b.check_review_date("eng-a", {"przeglad": __import__("datetime").date(2027, 4, 17)})
+    # Termin przeglądu (metadata.review): format daty sprawdzany; zmiana samego terminu nie unieważnia bramki.
+    check(b.check_review_date("eng-a", {"review": "2027-04-17"}) == ([], []), "RD-1: poprawna data bez uwag")
+    errors, _ = b.check_review_date("eng-a", {"review": "kwiecień"})
+    check(len(errors) == 1 and "review" in errors[0], f"RD-2: zły format daty → błąd: {errors}")
+    errors, warnings = b.check_review_date("eng-a", {"review": __import__("datetime").date(2027, 4, 17)})
     check(errors == [] and len(warnings) == 1 and "cudzysłow" in warnings[0],
           f"RD-2b: data YAML bez cudzysłowu → ostrzeżenie (specyfikacja Agent Skills: metadata to tekst): {errors} {warnings}")
     errors, warnings = b.check_review_date("eng-a", {})
@@ -62,7 +62,7 @@ def main() -> int:
         b.SKILLS_DIR = Path(t)
         md = Path(t) / "eng-odcisk" / "SKILL.md"
         md.parent.mkdir()
-        head = "---\nname: eng-odcisk\nmetadata:\n  katalog: \"x\"\n  przeglad: {}\n---\n# Treść\n"
+        head = "---\nname: eng-odcisk\nmetadata:\n  catalog: \"x\"\n  review: {}\n---\n# Treść\n"
         md.write_text(head.format("2026-10-17"))
         f1 = b.skill_fingerprint("eng-odcisk")
         md.write_text(head.format("2027-10-17"))
@@ -92,9 +92,9 @@ def main() -> int:
         check(sec and all(w in body for w in ("scout", "równolegle", "świeże spojrzenie", "Nie dziel")),
               f"OR-3 {k}: sekcja „Kiedy delegujesz” z przypadkami, w których przekazanie się opłaca")
 
-    # Skill wyłączony (metadata.status: nieaktywny, docs/inactive-skills.md): zostaje w instalacji, ale znika z list
+    # Skill wyłączony (metadata.status: inactive, docs/inactive-skills.md): zostaje w instalacji, ale znika z list
     # skilli ról, person, agentów wspólnych, konsultantów i always_skills — bez zmiany plików YAML nakładek.
-    skills_meta = {"a": {}, "b": {"metadata": {"status": "nieaktywny"}}, "c": {"metadata": {"status": "aktywny"}}}
+    skills_meta = {"a": {}, "b": {"metadata": {"status": "inactive"}}, "c": {"metadata": {"status": "aktywny"}}}
     check(b.inactive_skills(skills_meta) == {"b"}, f"IN-1: wyłączony tylko skill ze statusem nieaktywny: "
           f"{b.inactive_skills(skills_meta)}")
     cfg_in = {"always_skills": ["a", "b"], "_packs": {"p": {"always_skills": ["b", "c"]}},

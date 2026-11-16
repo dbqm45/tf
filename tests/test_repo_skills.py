@@ -33,7 +33,7 @@ def main() -> int:
         desc = (re.search(r"^description: (.*)$", head, re.M) or [None, ""])[1]
         check(re.search(rf"^name: {re.escape(name)}$", head, re.M), f"R-2 {name}: name = katalog")
         check(desc.startswith("Użyj") and len(desc) <= 170 and ": " not in desc, f"R-3 {name}: opis jako reguła wyboru ≤170: {desc}")
-        check("katalog:" in head and "Nie do" in head, f"R-4 {name}: metadata.katalog z granicami")
+        check("catalog:" in head and "Nie do" in head, f"R-4 {name}: metadata.catalog z granicami")
         ev = d / "evals.json"
         data = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
         sc = data.get("scenarios", [])

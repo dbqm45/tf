@@ -2,9 +2,9 @@
 name: eng-behavior-preserving-refactoring
 description: Użyj przy refaktoryzacji bez zmiany zachowania (legacy, inny paradygmat) — zamrożony kontrakt, równoważność.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy refaktoryzacji zmieniającej kształt lub idiom kodu bez zmiany zachowania (legacy, wydzielenie rdzenia domeny, zmiana paradygmatu, np. bogaty agregat → decider) — zamrożony kontrakt, testy czterowarstwowe, przepięcie poziomu testów, rejestr asercji, dowód zachowania. Nie do drobnych refaktoryzacji (eng-clean-code) ani projektowania przypadków (qa-test-design)."
-  slowa: "poprawka w starym module, naprawić błąd w legacy, nie zepsuć innych systemów, chronione zachowania, kontrakt zmiany, refaktoryzacja legacy"
+  review: "2027-10-09"
+  catalog: "Użyj przy refaktoryzacji zmieniającej kształt lub idiom kodu bez zmiany zachowania (legacy, wydzielenie rdzenia domeny, zmiana paradygmatu, np. bogaty agregat → decider) — zamrożony kontrakt, testy czterowarstwowe, przepięcie poziomu testów, rejestr asercji, dowód zachowania. Nie do drobnych refaktoryzacji (eng-clean-code) ani projektowania przypadków (qa-test-design)."
+  keywords: "poprawka w starym module, naprawić błąd w legacy, nie zepsuć innych systemów, chronione zachowania, kontrakt zmiany, refaktoryzacja legacy"
 ---
 
 # Refaktoryzacja z dowodem zachowania

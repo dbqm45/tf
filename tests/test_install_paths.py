@@ -35,8 +35,8 @@ def main() -> int:
                                   f"requires: {{core: \">={major}.0.0 <{major + 1}.0.0\"}}\n"
                                   "facets:\n  - {prefix: aa-, order: 900, name: a, question: \"a\"}\n")
         write(pack / "skills" / "aa-run" / "SKILL.md",
-              "---\nname: aa-run\ndescription: Użyj przy A.\nmetadata:\n  katalog: \"Użyj przy A. Nie do niczego.\"\n"
-              "  przeglad: 2099-01-01\n---\n# aa-run\nPrzykład: `python3 tests/test_orders.py`\n")
+              "---\nname: aa-run\ndescription: Użyj przy A.\nmetadata:\n  catalog: \"Użyj przy A. Nie do niczego.\"\n"
+              "  review: 2099-01-01\n---\n# aa-run\nPrzykład: `python3 tests/test_orders.py`\n")
         write(pack / "skills" / "aa-run" / "references" / "examples.md", "```python\n# tests/test_discount.py\n```\n")
         write(pack / "tests" / "skill_evals" / "aa-run.json",
               json.dumps({"skill": "aa-run", "scenarios": [{"id": "x", "expect": "trigger",

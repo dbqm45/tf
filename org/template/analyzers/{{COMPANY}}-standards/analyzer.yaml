@@ -4,7 +4,7 @@ prefix: {{COMPANY_UP}}
 title: "Standardy {{TITLE}}"
 description: "Reguły {{TITLE}}, które da się sprawdzić wzorcem: zakazane API i importy, wymagane nagłówki, nazwy plików"
 version: 0.1.0
-przeglad: "{{REVIEW}}"
+review: "{{REVIEW}}"
 skills: [{{PREFIX}}standards]
 tier0:
   rules: rules.yaml

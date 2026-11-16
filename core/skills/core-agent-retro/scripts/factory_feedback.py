@@ -83,7 +83,7 @@ def check_item(raw: str, skills: set, agents: set) -> tuple[dict | None, str]:
     return {"target": f"{kind}:{name}", "text": text.strip()}, ""
 
 
-HINT = {"hint-missed": "dopisać słowa do metadata.slowa", "hint-ignored": "zawęzić słowa lub opis",
+HINT = {"hint-missed": "dopisać słowa do metadata.keywords", "hint-ignored": "zawęzić słowa lub opis",
         "tier": "zmienić tier roli lub podział zadań"}
 
 

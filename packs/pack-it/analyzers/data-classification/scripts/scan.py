@@ -202,10 +202,10 @@ def expressions(args: str) -> str:
 
 def scan_calls(rel: str, text: str) -> None:
     for pat, rule, title, sev, sugg in (
-            (LOG_CALL, "pii-in-logs", "dane osobowe w logu", "wysoka",
+            (LOG_CALL, "pii-in-logs", "dane osobowe w logu", "high",
              "loguj identyfikator techniczny albo pseudonim (HMAC) zamiast danej; logi z danymi osobowymi mają "
              "klasę zbioru i retencję"),
-            (ANALYTICS_CALL, "pii-to-analytics", "dane osobowe wysyłane do analityki", "wysoka",
+            (ANALYTICS_CALL, "pii-to-analytics", "dane osobowe wysyłane do analityki", "high",
              "wysyłaj pseudonim (HMAC) albo agregat; dostawca analityki to procesor z umową powierzenia")):
         for m in pat.finditer(text):
             expr = expressions(call_args(text, m.end()))
@@ -254,7 +254,7 @@ def scan(root: Path, files: list[str]) -> None:
         for i, name in schema_fields(rel, text):
             if is_pii(name) and not marked(lines, i) and norm(name) not in inventory | commented:
                 emit("pii-field-unclassified", rel, i + 1, lines[i], f"pole z danymi osobowymi bez klasy: {name}",
-                     "średnia", "nazwa pola typowa dla danych osobowych; brak znacznika klasy i wpisu w inwentarzu",
+                     "medium", "nazwa pola typowa dla danych osobowych; brak znacznika klasy i wpisu w inwentarzu",
                      "nadaj klasę przy polu (komentarz `pii` lub adnotacja) i dopisz wiersz do "
                      "docs/project/04-architecture/data-inventory.md (klasa, cel, retencja, właściciel)")
         if Path(rel).suffix.lower() in CODE_EXT:

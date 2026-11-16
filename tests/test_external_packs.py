@@ -33,7 +33,7 @@ def make_pack(base: Path, pid: str, major: int, prefix: str = "xa-", core_spec: 
                               f"facets:\n  - {{prefix: {prefix}, order: 910, name: x, question: \"x\"}}\n")
     name = f"{prefix}run"
     write(base / "skills" / name / "SKILL.md",
-          f"---\nname: {name}\ndescription: Użyj przy X.\nmetadata:\n  katalog: \"Użyj przy X. Nie do niczego.\"\n"
+          f"---\nname: {name}\ndescription: Użyj przy X.\nmetadata:\n  catalog: \"Użyj przy X. Nie do niczego.\"\n"
           f"---\n# {name}\n\n{body}\n")
     return base
 

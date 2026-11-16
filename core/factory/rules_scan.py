@@ -15,7 +15,7 @@ Format reguły (lista `rules`):
   forbid      wyrażenie regularne zakazane w linii — ustalenie na każdej pasującej linii
   require     wyrażenie regularne wymagane w pliku (albo w pierwszych `head` liniach) — ustalenie w linii 1, gdy go brak
   head        liczba linii dla `require` (domyślnie cały plik)
-  severity    krytyczna | wysoka | średnia | niska (domyślnie średnia)
+  severity    critical | high | medium | low (domyślnie medium)
   suggestion  co zrobić;  basis — źródło reguły (np. dokument firmowy)
 Dokładnie jedno z `forbid` i `require`. Błędna reguła → kod 2 i opis na stderr, bez częściowego wyniku.
 Pomijane: zależności i wyniki budowania (node_modules, dist, build, .venv…), pliki fabryki (.tf/, .claude/), pliki
@@ -43,7 +43,7 @@ except ImportError:  # dołączona kopia PyYAML (licencja MIT, .tf/factory/_vend
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
-SEVERITY = ("krytyczna", "wysoka", "średnia", "niska")
+SEVERITY = ("critical", "high", "medium", "low")
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", "coverage", ".venv", "venv", "__pycache__", ".tf", ".claude",
              ".next", "target", "_vendor", "vendor", "third_party"}
 MAX_BYTES = 1_000_000
@@ -94,7 +94,7 @@ def load_rules(path: Path) -> list[dict]:
             raise RuleError(f"{where}: brak title")
         if bool(r.get("forbid")) == bool(r.get("require")):
             raise RuleError(f"{where}: podaj dokładnie jedno z forbid i require")
-        sev = r.get("severity", "średnia")
+        sev = r.get("severity", "medium")
         if sev not in SEVERITY:
             raise RuleError(f"{where}: severity — {' | '.join(SEVERITY)} (jest {sev!r})")
         try:

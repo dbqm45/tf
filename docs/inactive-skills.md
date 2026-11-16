@@ -13,10 +13,10 @@ w repozytorium i w instalacji, ale:
 
 Przy wyłączaniu kolejnego skilla usuń odsyłacze do niego: zostaw temat, usuń nazwę albo wskaż aktywny skill.
 
-Skill jest wyłączony, gdy w nagłówku SKILL.md ma `disable-model-invocation: true` i `metadata.status: "nieaktywny"`.
+Skill jest wyłączony, gdy w nagłówku SKILL.md ma `disable-model-invocation: true` i `metadata.status: "inactive"`.
 
 ## Jak włączyć skill z powrotem
-1. W SKILL.md usuń `disable-model-invocation: true` i `status: "nieaktywny"`.
+1. W SKILL.md usuń `disable-model-invocation: true` i `status: "inactive"`.
 2. Przenieś scenariusze z `tests/skill_evals/inactive/<skill>.json` z powrotem do `tests/skill_evals/<skill>.json`.
 3. `python3 .tf/factory/skill_gate.py <skill>` i `python3 .tf/factory/build.py`.
 4. Usuń wiersz z tej listy i dopisz powód powrotu (np. nowy pomiar z przewagą, nowa reguła fabryki w treści).

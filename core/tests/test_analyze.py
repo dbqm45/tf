@@ -27,7 +27,7 @@ for rel in files:
         continue
     for i, line in enumerate(p.read_text().splitlines(), 1):
         if "TODO-SEC" in line:
-            sev = "wysoka" if "HIGH" in line else "niska"
+            sev = "high" if "HIGH" in line else "low"
             print(json.dumps({"rule": "todo-sec", "title": "Znacznik TODO-SEC", "file": rel, "line": i,
                               "snippet": line.strip(), "severity": sev, "confidence": 0.9,
                               "evidence": line.strip(), "basis": "reguła testowa", "suggestion": "usuń znacznik"}))
@@ -271,7 +271,7 @@ def main() -> int:
         whole = ("import argparse, json\nap = argparse.ArgumentParser(); ap.add_argument('--root'); "
                  "ap.add_argument('--files', default='')\na = ap.parse_args()\n"
                  "print(json.dumps({'rule': 'args', 'file': 'x', 'line': 1, 'snippet': 'files=' + a.files, "
-                 "'severity': 'niska', 'confidence': 1}))\n")
+                 "'severity': 'low', 'confidence': 1}))\n")
         fm = make_module(full, name="calosc", prefix="CAL", script=whole)
         (fm / "analyzer.yaml").write_text((fm / "analyzer.yaml").read_text() + "incremental: false\n")
         fenv = {"TF_ANALYZERS_PATH": str(full)}

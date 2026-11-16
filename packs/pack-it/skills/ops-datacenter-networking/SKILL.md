@@ -2,10 +2,10 @@
 name: ops-datacenter-networking
 description: Użyj przy sieci centrum danych — fabryka leaf-spine, BGP, VXLAN i EVPN, automatyzacja i zmiany w sieci.
 metadata:
-  przeglad: "2027-04-17"
-  widocznosc: nazwa
-  katalog: "Użyj przy projekcie i zmianach sieci centrum danych lub kampusu — fabryka leaf-spine (Clos) i oversubscription, underlay (eBGP, OSPF, IS-IS), overlay VXLAN z EVPN, BGP dla operatorów (wybór trasy, communities, filtry, limity prefiksów, RPKI), ECMP i domeny awarii, automatyzacja (źródło prawdy, generowanie konfiguracji, CI, okna zmian), zapory na brzegu, telemetria, planowanie pojemności, metoda diagnozy. Wynik to projekt fabryki i plan zmiany. Nie do diagnozy hosta Linux (ops-linux-networking), polityki segmentacji i zaufania (sec-zero-trust-identity) ani sieci w chmurze jako kodu."
-  slowa: "leaf spine, fabryka sieciowa, centrum danych, datacenter, bgp, vxlan, evpn, underlay, overlay, ecmp, oversubscription, przełączniki, switch, router, netbox, automatyzacja sieci, okno zmian, rpki, prefix list, telemetria sieciowa, pojemność łączy, firewall brzegowy, sieć kampusowa"
+  review: "2027-04-17"
+  visibility: name
+  catalog: "Użyj przy projekcie i zmianach sieci centrum danych lub kampusu — fabryka leaf-spine (Clos) i oversubscription, underlay (eBGP, OSPF, IS-IS), overlay VXLAN z EVPN, BGP dla operatorów (wybór trasy, communities, filtry, limity prefiksów, RPKI), ECMP i domeny awarii, automatyzacja (źródło prawdy, generowanie konfiguracji, CI, okna zmian), zapory na brzegu, telemetria, planowanie pojemności, metoda diagnozy. Wynik to projekt fabryki i plan zmiany. Nie do diagnozy hosta Linux (ops-linux-networking), polityki segmentacji i zaufania (sec-zero-trust-identity) ani sieci w chmurze jako kodu."
+  keywords: "leaf spine, fabryka sieciowa, centrum danych, datacenter, bgp, vxlan, evpn, underlay, overlay, ecmp, oversubscription, przełączniki, switch, router, netbox, automatyzacja sieci, okno zmian, rpki, prefix list, telemetria sieciowa, pojemność łączy, firewall brzegowy, sieć kampusowa"
 ---
 
 # Sieć centrum danych: projekt fabryki i plan zmiany
