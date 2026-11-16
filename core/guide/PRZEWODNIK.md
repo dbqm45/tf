@@ -38,6 +38,36 @@ agent wskaże plik, który podjął decyzję. Częste pytania: `.tf/factory/FAQ.
 
 Co jest zainstalowane: `tf list`. Stan instalacji: `tf doctor`.
 
+### Instalacja prywatna i zespołowa
+| | Prywatna (domyślna) | Zespołowa (`--shared`) |
+|---|---|---|
+| ustawienia i hooki | `.claude/settings.local.json` | `.claude/settings.json` |
+| zasady fabryki | `CLAUDE.local.md` | `CLAUDE.md` |
+| wpisy ignorowania | `.git/info/exclude` (nie trafia do repo) | `.gitignore` (tylko pliki tymczasowe) |
+| co jest w repozytorium | nic | fabryka, ustawienia, zasady, workflow CI |
+
+W instalacji prywatnej fabryka wyklucza każdą swoją ścieżkę osobno (np. `.claude/skills/ai-evals/`), nie cały
+`.claude/`. Twój własny skill w `.claude/skills/` git widzi i commitujesz go jak zwykle. `--gitignore` daje instalację
+prywatną z wpisami w `.gitignore` zamiast w `.git/info/exclude`.
+
+**Wada instalacji prywatnej: fabryka jest tylko w Twojej kopii repozytorium.** `.git/info/exclude` i pliki
+lokalne nie przechodzą przez `git push` ani `git clone`. Skutki:
+- każda osoba w zespole instaluje fabrykę sama, więc wersje, nakładki i ustawienia (`.tf/config/`) mogą się różnić,
+  a agenci u dwóch osób działają inaczej;
+- nowy klon nie ma fabryki: nowa maszyna, CI i sesja Claude Code w chmurze (claude.ai/code klonuje repozytorium od
+  nowa) działają bez hooków i skilli fabryki, dopóki ktoś jej tam nie zainstaluje;
+- zmiana konfiguracji u Ciebie nie trafia do nikogo innego.
+
+Instalacja prywatna pasuje do próby fabryki, do pracy jednej osoby i do repozytorium, w którym zespół nie chce plików
+fabryki. Gdy fabryki używa cały zespół, CI albo sesje w chmurze, wybierz `--shared`.
+
+**Repozytorium z `AGENTS.md`.** Claude Code czyta `AGENTS.md` sam tylko wtedy, gdy w katalogu projektu i wyżej nie
+ma `CLAUDE.md`, `.claude/CLAUDE.md` ani `CLAUDE.local.md`. Instalacja prywatna tworzy `CLAUDE.local.md`, więc
+w repozytorium bez `CLAUDE.md` Claude przestaje czytać `AGENTS.md` (instalator ostrzega o tym jednym zdaniem).
+Naprawa: dopisz linię `@AGENTS.md` na początku `CLAUDE.local.md`, poza sekcją fabryki — aktualizacja podmienia tylko
+sekcję między znacznikami fabryki. Import działa w każdej wersji Claude Code. Szczegóły ładowania plików
+instrukcji: skill `core-agent-instructions` (`references/skalowanie-kontekstu.md`).
+
 ## 2. Jak zacząć pracę
 1. **Wybierz personę** z `.claude/catalog.md` i uruchom ją: `claude --agent <nazwa>` (np. `kuba` — product
    engineer, `ewa` — analityczka domeny, `kasia` — testy, `natalia` — UX). Persona rozmawia z Tobą i deleguje
