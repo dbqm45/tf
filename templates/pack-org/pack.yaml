@@ -1,0 +1,59 @@
+# Nakładka firmowa {{TITLE}}: standardy, zasady i domyślne ustawienia organizacji dla każdego projektu z fabryką.
+# Uzupełnij pola oznaczone TODO; reszta działa od razu. Przewodnik: README.md obok.
+id: pack-{{FIRMA}}
+version: 0.1.0
+title: "{{TITLE}}"
+description: "TODO: one sentence in English — company standards and defaults for {{TITLE}} projects."
+content_language: pl
+default: false
+requires:
+  core: "{{CORE_RANGE}}"
+# Nakładki fabryki, do których odwołują się skille firmy. Bez nich odwołania są tylko tekstem.
+optional_packs: [pack-it]
+
+facets:
+  - {prefix: {{PREFIX}}, order: 50, name: standardy firmy, question: "jak w {{TITLE}} piszemy, przeglądamy i wydajemy kod"}
+
+# Standardy firmy w każdej personie i u agentów, którzy przeglądają zmiany.
+contributes:
+  personas:
+    core_skills: [{{PREFIX}}standardy]
+  agents:
+    security-reviewer:
+      skills: [{{PREFIX}}standardy]
+      prompt: |
+        Sprawdź też zgodność zmiany ze standardami {{TITLE}} (skill {{PREFIX}}standardy, sekcja „Bezpieczeństwo”).
+
+# Domyślne organizacji: działają w każdym projekcie z tą nakładką, a projekt może je nadpisać w .tf/config/.
+# Silnik ← ta sekcja ← projekt. W projekcie może być najwyżej jedna nakładka z org_defaults.
+org_defaults:
+  config:
+    # Polityka autonomii. Organizacja może tylko zaostrzać: confirm (pytaj) → deny (blokuj).
+    # Typy: dependency_add, prod_command, destructive_sql, infra_change, publish, git_push, persistence, data_upload, sudo.
+    autonomy:
+      operations:
+        publish: confirm            # TODO: deny, jeśli agenci nigdy nie publikują paczek
+        destructive_sql: confirm    # TODO: deny, jeśli agenci nie mają dostępu do baz
+      # Reguły ryzyka zmiany (tf risk): ścieżki, które w firmie zawsze ogląda człowiek.
+      triage:
+        high:
+          TODO-obszar-firmy:
+            - '(^|/)TODO-katalog/'
+    # Praca bez nadzoru (tf work --once): limity wydatku w USD.
+    work:
+      budget_usd: 5                 # TODO: limit jednego przebiegu
+      task_budget_usd: 20           # TODO: limit wszystkich przebiegów jednego zadania
+    # Profil kosztów: oszczedny | zrownowazony | jakosc.
+    default_profile: zrownowazony
+    # Język pracy agentów i język commitów.
+    default_language: pl
+    default_commit_language: en
+  operations:
+    # Tracker zgłoszeń. Adres Jiry i token NIE trafiają tutaj: zmienne JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
+    # (albo JIRA_TOKEN) ustawia każdy w swoim środowisku.
+    tracker:
+      type: jira                    # TODO: jira | linear | github | …
+      prefixes: {TODO: jira}        # TODO: prefiksy kluczy zgłoszeń, np. {ABC: jira, OPS: jira}
+      # TODO: pole Jiry z kryteriami akceptacji, jeśli nie są w opisie zgłoszenia (odkomentuj i wpisz numer pola):
+      # fields:
+      #   acceptance: customfield_10042

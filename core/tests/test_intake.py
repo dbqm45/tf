@@ -110,6 +110,7 @@ def main() -> int:
         r = run(p, "tracker", "Jira Cloud!")
         check(r.returncode == 2, f"I-9: nazwa trackera spoza wzorca → kod 2: {r.returncode} {r.stdout}")
 
+
         # adres zgłoszenia: tracker i klucz z adresu, adres jako źródło
         for url, tracker, key in (
                 ("https://acme.atlassian.net/browse/EBO-1236", "jira", "EBO-1236"),
@@ -199,6 +200,24 @@ def main() -> int:
         code, out, raw = resolve(p, "EBO-1236")
         check(code == 0 and out.get("tracker") is None and "Traceback" not in raw,
               f"I-27: uszkodzona karta nie wywraca skryptu: {raw}")
+
+    # I-org: domyślny tracker organizacji z nakładki firmowej (org_defaults.operations.tracker); karta projektu wygrywa
+    with tempfile.TemporaryDirectory() as t:
+        p = Path(t)
+        f = p / ".tf" / "factory" / "packs" / "pack-firma" / "pack.yaml"
+        f.parent.mkdir(parents=True)
+        f.write_text("id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n  operations:\n    tracker:\n"
+                     "      type: linear\n      prefixes: {ACME: jira}\n", encoding="utf-8")
+        code, out, raw = resolve(p, "ACME-3")
+        check(out.get("tracker") == "jira" and out.get("tracker_from") == "organizacja" and out.get("ask") is None,
+              f"I-org-1: prefiks z nakładki firmowej → bez pytania, źródło „organizacja”: {raw}")
+        code, out, raw = resolve(p, "OPS-1")
+        check(out.get("tracker") == "linear", f"I-org-2: domyślny typ trackera organizacji: {raw}")
+        (p / CARD).parent.mkdir(parents=True, exist_ok=True)
+        (p / CARD).write_text(json.dumps({"tracker": {"prefixes": {"ACME": "github"}}}), encoding="utf-8")
+        code, out, raw = resolve(p, "ACME-3")
+        check(out.get("tracker") == "github" and out.get("tracker_from") == "karta",
+              f"I-org-3: karta projektu nadpisuje organizację: {raw}")
 
     for f in fails:
         print(f"✗ {f}")

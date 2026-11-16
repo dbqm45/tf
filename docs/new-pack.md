@@ -59,6 +59,22 @@ Nakładka może żyć w innym repozytorium (np. wiedza domenowa razem z jej źr�
   `.work/<nakładki>+ext`); `sync-gate --out <ta przestrzeń> --pack-dir <katalog>` zapisuje wyniki bramki do
   `<katalog>/tests/skill_gate/<id>.json`.
 
+## Nakładka firmowa
+Standardy i domyślne ustawienia jednej organizacji dla wszystkich jej projektów. Szkielet z polami `TODO` poza
+repozytorium fabryki:
+```
+python3 tools/workspace.py new-org-pack <firma> --out <katalog> [--prefix p-] [--title "Nazwa firmy"]
+```
+Szablon: `templates/pack-org/` (pack.yaml, skill standardów z scenariuszami, `settings.json`, README z listą pól).
+Nakładka firmowa to zwykła nakładka z kluczem `org_defaults`:
+- `config` — domyślne organizacji między silnikiem a projektem (`autonomy`, `tiers`, `profiles`, `default_profile`,
+  `work`, `loop`, `steps`, `default_language`, `default_commit_language`); czytają je `build.py`, `guard_bash`
+  (polityka autonomii nadal tylko zaostrza), `tf risk`, `tf work` i `tf config show` (źródło „organizacja”);
+- `operations.tracker` — domyślny tracker, prefiksy i `fields` karty operacyjnej; adresu (`url`) nie ma, bo dokąd
+  idzie token, mówi tylko zmienna `JIRA_BASE_URL`.
+W projekcie najwyżej jedna nakładka z `org_defaults`; klucz spoza listy to błąd `build.py check` bez skutku.
+Instalacja: `tf install --pack-dir <katalog|repozytorium git> --add pack-<firma>`.
+
 ## Wersjonowanie
 - Wersję rdzenia i CHANGELOG liczy workflow wydania z Conventional Commits (`docs/RELEASING.md`). Wersji nakładki
   (`version` w `pack.yaml`) nic nie podbija automatycznie — zmieniasz ją ręcznie według SemVer [zalecenie, nie

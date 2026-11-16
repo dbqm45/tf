@@ -247,6 +247,14 @@ def main() -> int:
               f"CTF-20: tf config show <klucz> pokazuje scaloną wartość jednego klucza: {r.stdout[:400]}")
         r, _ = called("config", "show", "nie-ma")
         check(r.returncode == 2 and "nie-ma" in r.stdout, f"CTF-21: nieznany klucz → kod 2: {r.stdout}")
+        org = per / ".tf" / "factory" / "packs" / "pack-firma" / "pack.yaml"
+        org.parent.mkdir(parents=True, exist_ok=True)
+        org.write_text("id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n  config:\n    work:\n"
+                       "      budget_usd: 3\n    default_profile: jakosc\n", encoding="utf-8")
+        r, _ = called("config", "show")
+        lines = {ln.split()[0]: ln for ln in r.stdout.splitlines() if ln.strip() and not ln.startswith(("#", " "))}
+        check(r.returncode == 0 and "organizacja" in lines.get("work", "") and "projekt" in lines.get("default_profile", ""),
+              f"CTF-21b: tf config show — wartość z nakładki firmowej jako „organizacja”, projekt nadal wygrywa: {r.stdout[:600]}")
 
     for f in fails:
         print(f"✗ {f}")

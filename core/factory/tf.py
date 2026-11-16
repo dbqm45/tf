@@ -286,11 +286,13 @@ def engine(script: str, args: list[str]) -> int:
 
 
 def cmd_config_show(key: str | None) -> int:
-    """Merged configuration and where each top-level key comes from: the factory default or the project override."""
+    """Merged configuration and where each top-level key comes from: factory default, organization pack or project."""
     packs = project_module("packs")
     root = Path.cwd()
     own_path = root / ".tf" / "config" / "config.yaml"
     own = packs.load_yaml(own_path) if own_path.is_file() else {}
+    layers = packs.config_layers(root) if hasattr(packs, "config_layers") else []
+    org = next((d for label, d in layers if "org_defaults" in label), {})   # nakładka firmowa
     cfg = packs.load_config(root)
     if key == "steps" and cfg.get("steps"):     # kroki pętli /tf z modelem i effortem po nałożeniu profilu kosztów
         full = project_module("build").load_config()
@@ -312,7 +314,8 @@ def cmd_config_show(key: str | None) -> int:
     for k in sorted(cfg):
         shown = json.dumps(cfg[k], ensure_ascii=False)
         shown = shown if len(shown) <= 70 else shown[:67] + "…"
-        print(f"{k:<28} {'projekt' if k in own else 'fabryka':<8} {shown}")
+        src = "projekt" if k in own else "organizacja" if k in org else "fabryka"
+        print(f"{k:<28} {src:<11} {shown}")
     print("# Cała wartość jednego klucza: tf config show <klucz>")
     return 0
 

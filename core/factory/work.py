@@ -77,15 +77,14 @@ def now() -> str:
 
 
 def config(root: Path) -> dict:
-    """Sekcja `work` konfiguracji: domyślna silnika z nadpisaniem projektu; bez konfiguracji — wartości domyślne."""
+    """Sekcja `work`: silnik ← organizacja (nakładka firmowa) ← projekt; bez konfiguracji — wartości domyślne."""
     try:
         spec = importlib.util.spec_from_file_location("tf_packs_cfg", Path(__file__).resolve().with_name("packs.py"))
         packs = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(packs)
         cfg = packs.load_yaml(Path(__file__).resolve().with_name("config.yaml"))
-        own = root / OWN_CONFIG / "config.yaml"
-        if own.is_file():
-            cfg = packs.deep_merge(cfg, packs.load_yaml(own))
+        for _label, layer in packs.config_layers(root)[1:]:   # organizacja (nakładka firmowa), potem projekt
+            cfg = packs.deep_merge(cfg, layer)
         section = cfg.get("work") if isinstance(cfg.get("work"), dict) else {}
     except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienia domyślne
         section = {}

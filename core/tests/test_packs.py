@@ -248,6 +248,57 @@ def main() -> int:
         check(changed and "- stare" not in txt and "po polsku" in txt and txt.startswith("x\n"),
               f"P-18: podmiana sekcji języka w bloku fabryki: {txt}")
 
+    # Nakładka firmowa (org_defaults): domyślne organizacji między silnikiem a projektem.
+    with tempfile.TemporaryDirectory() as t:
+        p = project(Path(t))
+        pm = load(p, "build").packs_mod
+        org = p / ".tf" / "factory" / "packs" / "pack-firma"
+        write(org / "pack.yaml", f"""id: pack-firma
+version: 0.1.0
+title: Firma
+requires: {{core: "{core_range()}"}}
+org_defaults:
+  config:
+    work: {{budget_usd: 3, task_budget_usd: 9}}
+    autonomy: {{operations: {{git_push: deny}}}}
+    facets: [{{prefix: zz-}}]
+  operations:
+    tracker: {{type: jira, prefixes: {{ACME: jira}}, url: "https://evil.example"}}
+""")
+        write(p / ".tf" / "config" / "config.yaml", "work:\n  budget_usd: 5\n")
+        cfg = pm.load_config(p)
+        total += 1
+        if cfg.get("work", {}).get("budget_usd") != 5 or cfg.get("work", {}).get("task_budget_usd") != 9 \
+                or cfg.get("autonomy", {}).get("operations", {}).get("git_push") != "deny":
+            fails.append(f"ORG-1: silnik ← organizacja ← projekt (projekt wygrywa, reszta z organizacji): {cfg.get('work')}")
+        labels = [lbl for lbl, _ in pm.config_layers(p)]
+        total += 1
+        if len(labels) != 3 or "pack-firma" not in labels[1]:
+            fails.append(f"ORG-2: warstwy konfiguracji z etykietą źródła: {labels}")
+        comp = pm.compose(p, cfg)
+        total += 1
+        if not any("facets" in e and "org_defaults" in e for e in comp["_errors"]) \
+                or any(f.get("prefix") == "zz-" for f in comp["facets"]):
+            fails.append(f"ORG-3: klucz spoza listy w org_defaults.config — błąd i bez skutku: {comp['_errors']}")
+        ops = pm.org_operations(p)
+        total += 1
+        if ops.get("tracker", {}).get("prefixes") != {"ACME": "jira"} or "url" in ops.get("tracker", {}):
+            fails.append(f"ORG-4: domyślny tracker organizacji bez adresu (adres tylko ze zmiennej JIRA_BASE_URL): {ops}")
+        wcfg = load(p, "work").config(p)
+        total += 1
+        if wcfg.get("budget_usd") != 5 or wcfg.get("task_budget_usd") != 9:
+            fails.append(f"ORG-6: budżet pracy bez nadzoru (work.py) z warstwą organizacji: {wcfg}")
+        write(p / ".tf" / "factory" / "packs" / "pack-firma2" / "pack.yaml", f"""id: pack-firma2
+version: 0.1.0
+title: Firma 2
+requires: {{core: "{core_range()}"}}
+org_defaults: {{config: {{work: {{budget_usd: 1}}}}}}
+""")
+        comp = pm.compose(p, pm.load_config(p))
+        total += 1
+        if not any("org_defaults" in e and "pack-firma2" in e for e in comp["_errors"]):
+            fails.append(f"ORG-5: dwie nakładki z org_defaults → błąd: {comp['_errors']}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów nakładek")

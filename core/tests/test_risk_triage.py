@@ -123,6 +123,14 @@ def main() -> int:
         res = m.triage(repo, base="main", rules=m.load_rules(repo))
         if res["level"] != "high" or not any(i["category"] == "ev-pricing" for i in res["items"]):
             fails.append(f"R-config: reguła projektu z .tf/config/config.yaml: {res['level']} {reasons(res)}")
+        # R-org: reguła organizacji z nakładki firmowej (org_defaults.config.autonomy.triage)
+        repo = repo_with(t, "org", {"src/kadry/umowy.py": "def umowa():\n    return 0\n"})
+        write(repo, ".tf/factory/packs/pack-firma/pack.yaml",
+              "id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n  config:\n    autonomy:\n      triage:\n"
+              "        high:\n          kadry:\n            - '(^|/)kadry/'\n")
+        res = m.triage(repo, base="main", rules=m.load_rules(repo))
+        if res["level"] != "high" or not any(i["category"] == "kadry" for i in res["items"]):
+            fails.append(f"R-org: reguła organizacji z nakładki firmowej: {res['level']} {reasons(res)}")
         # R-md: sekcja do opisu PR — poziom, lista z plikiem i powodem, uwaga, że to doradztwo
         md = m.to_markdown(m.triage(repo_with(t, "md", {"src/auth/login.py": "x = 1\n"}), base="main"))
         if "## Ryzyko zmiany: wysokie" not in md or "src/auth/login.py" not in md or "doradcz" not in md:
@@ -142,7 +150,7 @@ def main() -> int:
         fails.append("R-tf: tf risk w pomocy i dyspozycji launchera")
     for f in fails:
         print(f"✗ {f}")
-    total = 18
+    total = 19
     print(f"{'✓' if not fails else '✗'} triaż ryzyka zmian: {total - len(fails)}/{total}")
     return 1 if fails else 0
 
