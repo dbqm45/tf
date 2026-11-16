@@ -977,6 +977,7 @@ def _main(argv: list[str], tmp: Path) -> int:
             "installed_at": _dt.datetime.now().isoformat(timespec="seconds"),
             "files": dict(sorted(plan.files.items())),
             "skill_overrides": (manifest or {}).get("skill_overrides") or {},   # wpisy fabryki w skillOverrides
+            "settings": src_set,             # wpisy ustawień Claude Code dodane przez fabrykę (tf uninstall je usuwa)
             **({"skill_describe": manifest["skill_describe"]} if (manifest or {}).get("skill_describe") else {}),
             **({"auto_update": manifest["auto_update"]} if "auto_update" in (manifest or {}) else {}),   # update.py --auto
         }

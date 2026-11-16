@@ -27,6 +27,10 @@ nie działają.
 - `tf update --check` pokazuje, czy jest nowa wersja i co się zmieni, niczego nie zmieniając.
 - `tf` (albo `python3 .tf/factory/update.py`) aktualizuje.
 
+Po aktualizacji fabryka robi szybką kontrolę (skrypty silnika i hooki się kompilują, `build.py check` przechodzi) —
+kilka sekund. Pełne testy fabryki przeszły w CI wydania; w projekcie uruchomisz je poleceniem
+`python3 .tf/factory/update.py --full-check` (równolegle, kilka minut).
+
 Przed aktualizacją skille nowej wersji przechodzą audyt narzędziem z wersji zainstalowanej. Pliki fabryki w
 projekcie są jak `node_modules`: aktualizacja je nadpisuje, więc zmiany wprowadzasz w repo fabryki i aktualizujesz.
 Twoje pliki (własne skille, persony, role, `CLAUDE.local.md`) zostają; w `.tf/config/config.yaml` zostają Twoje
@@ -126,15 +130,14 @@ to, co wygląda na naprawione, i dopisuje nowe ustalenia na końcu. Na razie dzi
 modelu i bez kosztu; moduły dokładają nakładki albo własny katalog `.tf/analyzers/`.
 
 ## Jak odinstalować fabrykę?
-Polecenia odinstalowania nie ma. Instalator zapisuje w `.claude/factory-manifest.json` listę wszystkich swoich
-plików (`files`). Usuń:
-- te pliki;
-- blok między `<!-- team-factory:begin -->` a `<!-- team-factory:end -->` w `CLAUDE.local.md` albo `CLAUDE.md`;
-- blok `# team-factory:begin` … `# team-factory:end` w `.git/info/exclude` albo `.gitignore`;
-- wpisy fabryki w `.claude/settings.local.json` albo `.claude/settings.json`;
-- sam manifest.
+`tf uninstall --dry-run` pokazuje, co zostanie usunięte i zmienione. `tf uninstall --yes` usuwa:
+- pliki fabryki zapisane w manifeście (silnik, skille, hooki, testy) i pliki generowane (agenci, katalog);
+- blok fabryki w `CLAUDE.local.md` albo `CLAUDE.md` oraz w `.git/info/exclude` albo `.gitignore`;
+- wpisy fabryki w ustawieniach Claude Code (Twoje uprawnienia i hooki zostają) i tryb uprawnień ustawiony przez styl.
 
-Kopie z aktualizacji leżą w `.tf/backup/`.
+Twoje pliki zostają: własne skille, `.tf/config/`, wyniki pracy w `.tf/`. `--force` usuwa też je. `docs/project/`
+i kodu projektu polecenie nigdy nie rusza. Przed zmianą zapisuje kopię w `~/.tf/backups/<projekt>-<data>.zip`
+(przywrócenie: `unzip -o <plik> -d <projekt>`).
 
 ## Gdzie czytać dalej?
 - `.claude/catalog.md` — persony, role i skille tej instalacji.

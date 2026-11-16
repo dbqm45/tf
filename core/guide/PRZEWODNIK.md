@@ -270,7 +270,9 @@ tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicac
 | Polecenie | Co robi |
 |---|---|
 | `tf` | aktualizacja (albo instalacja, gdy fabryki nie ma) |
-| `tf update --check` | czy jest nowa wersja i co się zmieni (nic nie zmienia) |
+| `tf update --check` | czy jest nowa wersja i co się zmieni (nic nie zmienia; pobiera tylko wersję i listę zmian) |
+| `python3 .tf/factory/update.py --full-check` | wszystkie testy fabryki w projekcie, równolegle (po aktualizacji domyślnie tylko szybka kontrola) |
+| `tf uninstall [--dry-run] [--yes] [--force]` | odinstalowanie fabryki: usuwa jej pliki i wpisy, Twoje zostają (`--force`: też Twoje dodatki); kopia w `~/.tf/backups/` |
 | `tf add <id>` / `tf remove <id>` | nakładka lub tryb |
 | `tf language <kod>` / `tf commit-language <kod>` | język pracy / język commitów i PR |
 | `tf list`, `tf doctor [--fix]` | co jest zainstalowane; stan instalacji i naprawy |
