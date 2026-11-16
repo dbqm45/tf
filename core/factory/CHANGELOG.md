@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.31.0] — 2026-11-16
+### Added
+- **core:** tf uninstall and faster factory updates (#285)
+
 ## [10.30.0] — 2026-11-16
 ### Added
 - **org:** company standards from documents with script-checked quotes (#284)
