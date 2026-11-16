@@ -69,6 +69,20 @@ każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `
   `skill_hint` trafia w skille spoza dziedziny repo (np. `ux-*`, `ops-cloud-*` przy zadaniach backendu);
   (2) na modelu, za zgodą człowieka — czy wyłączenie zbędnych skilli zmienia trafność wyboru skilla i koszt sesji.
   Wynik decyduje, czy `skills_off` jest potrzebne, czy wystarczy wybór nakładek i wyłączenie MCP w `settings.json`.
+  **Wynik części (1), 2026-11-16** (repo Spring Boot, `install.py --packs pack-it`, język pl; 20 poleceń backendu
+  przez `skill_hint.suggest`; tokeny oszacowane jako znaki/3,5 [założenie: bez licznika tokenów]):
+  - w liście 155 skilli, opisy ≈ 21,3 tys. znaków ≈ 6,1 tys. tokenów; 36 skilli spoza dziedziny repo (`fe-`, `ai-`,
+    `pm-`, `data-`, `txt-`, `fw-`/`lang-` innych stacków) to 24,8% opisów. W cache to koszt pomijalny; problemem jest
+    budżet listy skilli w Claude Code (~1% okna według opisu hooka `skill_hint`), w który przy oknie 200 tys. opisy
+    się nie mieszczą [niezweryfikowane: liczba z opisu hooka];
+  - w 12/20 poleceń obcy skill był w trójce rankingu; 3 z 17 podpowiedzi były obce (`fw-nestjs` przy walidacji DTO,
+    `fw-angular` przy aktualizacji Spring Boot, `ai-mcp-server` przy RFC 7807);
+  - po odjęciu obcych skilli: 0 obcych podpowiedzi, 2 nowe trafne (`be-messaging-outbox`, `ops-docker`), 1 trafna
+    utracona (`be-api-design` przy RFC 7807), 1 nowa chybiona (`core-skill-authoring` przy audycie zmian) — wagi
+    rzadkości słów zależą od całego indeksu;
+  - **wniosek:** największy zysk bez żadnej konfiguracji daje pomijanie w `skill_hint` skilli `fw-`/`lang-`/`tool-`
+    stacków, których `detect_stack` nie wykrył w projekcie. `skills_off` potrzebne dla wymiarów spoza stacku
+    (`ai-`, `pm-`, `fe-` w repo backendu). Część (2) na modelu — za zgodą człowieka.
 - [ ] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
   `tf work`, `tf config show`) składa je w tej kolejności; `tf config show` przy każdej wartości podaje warstwę.
   - **Zespół:** nakładka z tego samego szablonu co firmowa (`org/new_org_pack.py <firma> --team <zespół>` →
