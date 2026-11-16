@@ -40,7 +40,7 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    Wystawiasz narzędzia przez **serwer MCP**, gdy korzysta z nich wielu klientów; ta sama zasada: narzędzia
    zorientowane na zadanie, nie na endpointy. Zaufanie do cudzych serwerów MCP: **core-agent-security**; budowa,
    bezpieczeństwo, testy i wersje własnego serwera: **ai-mcp-server**.
-   Agent ↔ agent (A2A) i edytor ↔ agent (ACP), kiedy który: `references/protokoly-i-tracing.md`.
+   Agent ↔ agent (A2A) i edytor ↔ agent (ACP), kiedy który: `references/protocols-and-tracing.md`.
 4. **Kontekst** (okno jest zasobem skończonym, jakość spada, gdy się zapełnia): do kontekstu trafia minimum, które
    pozwala na kolejny krok. Techniki: ładowanie na żądanie (agent trzyma ścieżki i zapytania, a treść pobiera
    narzędziem), usuwanie starych wyników narzędzi, **kompaktowanie** (streszczenie rozmowy w nowym oknie), notatki
@@ -64,14 +64,14 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    tych samych wywołań, wyraźny stan końcowy (zrobione / nie da się / potrzebny człowiek). Po osiągnięciu limitu
    agent oddaje stan i powód, a nie urywa się po cichu. „Potrzebny człowiek” to konkretne pytanie po wyczerpaniu narzędzi,
    z punktem kontrolnym i wznowieniem od niego; kiedy pytać, a kiedy założyć wartość domyślną:
-   `references/pytanie-o-brakujace-dane.md`. Szczegóły liczenia w kodzie: **eng-llm-features**, dobór
+   `references/asking-for-missing-data.md`. Szczegóły liczenia w kodzie: **eng-llm-features**, dobór
    modeli: **core-cost-control**.
 8. **Tracing.** Każdy przebieg ma identyfikator; zapisujesz kroki: wejście, wywołanie narzędzia z argumentami
    i wynikiem, tokeny, czas, powód zakończenia. Bez tego nie zdiagnozujesz zapętlenia ani złej decyzji (ogólnie:
    **ops-observability**; dane osobowe w śladach maskuj; span-y i atrybuty `gen_ai.*` wg konwencji OpenTelemetry —
-   `references/protokoly-i-tracing.md` §3). Pamięć długotrwała to kilka kontraktów (semantyczna,
+   `references/protocols-and-tracing.md` §3). Pamięć długotrwała to kilka kontraktów (semantyczna,
    epizodyczna, proceduralna, profil, robocza), a nie jeden indeks wektorowy; trwałe wykonanie zależy od granic
-   kroków — `references/pamiec-i-trwale-wykonanie.md`. Błędy stanu się kumulują, więc projektuj wznawianie
+   kroków — `references/memory-and-durable-execution.md`. Błędy stanu się kumulują, więc projektuj wznawianie
    od punktu kontrolnego zamiast restartu od zera.
 9. **Framework wg kryteriów.** Zacznij od surowego API i pętli, jeśli przypadek jest prosty. Kryteria: potrzebny
    trwały stan i wznawianie? sterowanie grafem i punkty zatwierdzenia? gotowe narzędzia plików i basha? wymienność
@@ -80,13 +80,13 @@ Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narz�
    sprawdź w dokumentacji i w paczce (core-grounding).
 
 Agent, który obsługuje program (desktop, przeglądarka): **najpierw podnieś interfejs**, zrzuty ekranu na końcu —
-`references/porazki-i-wzorce.md` §„Agent obsługujący program”.
+`references/failures-and-patterns.md` §„Agent obsługujący program”.
 
 Kilku wykonawców nad wspólnym stanem (dzierżawa, wersja rekordu, ponowienie / wznowienie / kompensacja), „kto jest
 świadkiem tego kroku” (reguła o stanie, akcji lub sekwencji poza modelem), długie przebiegi w wielu oknach kontekstu
-i interfejs harnessu, kontrola liczb z narzędzi przed odpowiedzią, sonda end-to-end: `references/wykonawcy-i-bramki.md`.
+i interfejs harnessu, kontrola liczb z narzędzi przed odpowiedzią, sonda end-to-end: `references/executors-and-gates.md`.
 
-Typowe porażki i środki: `references/porazki-i-wzorce.md`.
+Typowe porażki i środki: `references/failures-and-patterns.md`.
 
 ## Przykład
 **Wejście:** „Agent do reklamacji: czyta maila, sprawdza zamówienie w CRM, pisze odpowiedź, w razie zwrotu >500 zł

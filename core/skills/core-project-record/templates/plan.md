@@ -20,7 +20,7 @@ glowne_ryzyko: <decyzje | czas | przepustowość | zewnętrzne | umiejętności 
 ## Inwentarz repozytorium
 | Warstwa | Stan (obecna / częściowa / brak) | Dowód (plik) |
 |---|---|---|
-## Pozycje (fundamenty F-NN i cięcia pionowe S-NN — zasady: `.claude/skills/core-delivery-lifecycle/references/plan-ciec.md`)
+## Pozycje (fundamenty F-NN i cięcia pionowe S-NN — zasady: `.claude/skills/core-delivery-lifecycle/references/cut-plan.md`)
 | ID | Identyfikator zmiany | Wynik (użytkownik może …) | Wymagania | Warunki wstępne | Odblokowuje (F) | Równolegle z | Wykonawca | Status |
 |---|---|---|---|---|---|---|---|---|
 ## Niewiadome blokujące

@@ -28,7 +28,7 @@ Pełne teksty zostają poza gitem, bo normy, specyfikacje i dokumenty partnerów
 Do repozytorium trafiają rejestry i własne notatki, czyli streszczenie z cytatem, a nie kopia dokumentu.
 Kto co zmienia (źródła, strony agenta, decyzje zespołu), nagłówek notatki (`verified` tylko człowiek), pojęcia
 przypięte do ścieżek przed edycją, plik instrukcji czy pipeline i świeżość generowanej wiedzy:
-`references/notatki-i-wiki.md`.
+`references/notes-and-wiki.md`.
 
 ## Procedura „zapytaj fabrykę”
 1. **Doprecyzuj pytanie:** kogo dotyczy, jaki rynek lub jurysdykcja, jaka wersja standardu albo umowy. Gdy człowieka

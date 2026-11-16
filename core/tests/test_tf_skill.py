@@ -35,7 +35,7 @@ def main() -> int:
         if f.is_file():
             allow += json.loads(f.read_text(encoding="utf-8")).get("permissions", {}).get("allow", [])
     check(any(script in a for a in allow), f"T-4: uprawnienie dla skryptu przebiegu: {[a for a in allow if 'run' in a]}")
-    guide = ROOT / ".tf" / "factory" / "PRZEWODNIK.md"
+    guide = ROOT / ".tf" / "factory" / "GUIDE.md"
     guide_text = guide.read_text(encoding="utf-8") if guide.is_file() else ""
     check("/tf" in guide_text and "claude --agent tf" in guide_text, "T-5: przewodnik rdzenia opisuje /tf i agenta tf")
     personas = [p for p in agents.rglob("*.md") if p.parent.name not in ("shared", "consult") and p.stem == p.parent.name]
@@ -48,19 +48,19 @@ def main() -> int:
         f = skill / "references" / name
         return f.read_text(encoding="utf-8") if f.is_file() and f"references/{name}" in body else ""
 
-    cuts = ref("ciecia-pdi.md")
+    cuts = ref("pdi-cuts.md")
     intake = body.split("## 1.", 1)[-1].split("## 2.", 1)[0]
     check("requirements_lint.py --story" in intake and "STORY-001" in intake and "--auto" in intake
           and "STOP" in intake and "podzia" in intake and "(pack-it)" in intake,
           "T-7: przyjęcie historyjki — lint kształtu (pack-it, warunkowo); z --auto STORY-001 → STOP z propozycją podziału")
     loop = body.split("## 3.", 1)[-1].split("## 4.", 1)[0]
-    check("`Flag: " in cuts and "release.yaml" in cuts and "za flagą" in cuts and "references/ciecia-pdi.md" in loop,
+    check("`Flag: " in cuts and "release.yaml" in cuts and "za flagą" in cuts and "references/pdi-cuts.md" in loop,
           "T-8: kawałek cięcia z flagą — kod za flagą i dopisek `Flag: <klucz>` w commicie (plan wydania release.yaml); "
-          "pętla kawałka odsyła do references/ciecia-pdi.md")
+          "pętla kawałka odsyła do references/pdi-cuts.md")
     check("--task" in body and "--task" in cuts and "Change: TSK" in cuts and "changes/" in cuts and "/runs/" in cuts
           and "story/tsk-" in cuts and "pdi/CHG-n-delivery" in cuts,
           "T-9: wejście TSK z planu zmiany (`run_report.py start --task`), gałąź z kluczem od gałęzi fazy, `Change:` "
-          "w commitach, raport w changes/CHG-n/runs/ — w references/ciecia-pdi.md")
+          "w commitach, raport w changes/CHG-n/runs/ — w references/pdi-cuts.md")
     fixes = cuts.split("## Poprawki z pętli PR", 1)[-1] if "## Poprawki z pętli PR" in cuts else ""
     check("Rework-Cause:" in fixes and all(v in fixes for v in ("luka-specyfikacji", "blad-agenta", "zmiana-wymagan",
                                                                  "nieznana")),
@@ -112,12 +112,12 @@ def main() -> int:
     refs = sorted(f.name for f in (skill / "references").glob("*.md")) if (skill / "references").is_dir() else []
     check(len(body) <= limit, f"T-20: SKILL.md ma {len(body)} znaków (limit {limit}) — szczegóły przenieś do references/")
     check(refs and all(f"references/{n}" in body for n in refs)
-          and {"wejscie.md", "ciecia-pdi.md", "flaga-funkcji.md", "bezpieczenstwo.md", "waga.md",
-               "tryby-i-zatrzymania.md"} <= set(refs),
+          and {"intake.md", "pdi-cuts.md", "feature-flag.md", "security.md", "weight.md",
+               "modes-and-stops.md"} <= set(refs),
           f"T-21: każdy plik references/ jest wymieniony w SKILL.md: {refs}")
-    check("tylko odczyt" in ref("wejscie.md") and "intake.py tracker" in ref("wejscie.md")
-          and "Flag: <klucz>" in ref("flaga-funkcji.md") and "środowisku testowym" in ref("flaga-funkcji.md")
-          and "feedback.md" in ref("bezpieczenstwo.md") and "min-release-age" in ref("bezpieczenstwo.md"),
+    check("tylko odczyt" in ref("intake.md") and "intake.py tracker" in ref("intake.md")
+          and "Flag: <klucz>" in ref("feature-flag.md") and "środowisku testowym" in ref("feature-flag.md")
+          and "feedback.md" in ref("security.md") and "min-release-age" in ref("security.md"),
           "T-22: szczegóły trackera, flagi funkcji i skanu bezpieczeństwa są w plikach references/")
 
     # pomiar po E1: STOP przed założeniem zadania nie zostawia śladu ani raportu; polecenia złożone są odrzucane
@@ -131,26 +131,26 @@ def main() -> int:
           "T-26: identyfikator kryterium w teście od pierwszej wersji — dopisywanie po fakcie to dodatkowy commit")
     # krok E2: waga zadania — przydziela ją skrypt, pętla mówi człowiekowi, co wybrano, i zna skutki
     start = body.split("## 0.", 1)[-1].split("## 1.", 1)[0]
-    waga = ref("waga.md")
-    check("`Waga:" in start and "references/waga.md" in start and "jednym zdaniem" in start,
-          "T-27: start — linię `Waga:` pętla przekazuje człowiekowi jednym zdaniem; skutki w references/waga.md")
+    waga = ref("weight.md")
+    check("`Waga:" in start and "references/weight.md" in start and "jednym zdaniem" in start,
+          "T-27: start — linię `Waga:` pętla przekazuje człowiekowi jednym zdaniem; skutki w references/weight.md")
     check(all(w in waga for w in ("lekka", "zwykła", "pełna", "run_state.py weight", "--by human:", "security-reviewer",
                                   "approve", "STOP", "bez `spec.md`")),
-          "T-28: references/waga.md — trzy wagi, skutki, kto zmienia, obowiązkowy przegląd przy pełnej, STOP bez nadzoru")
+          "T-28: references/weight.md — trzy wagi, skutki, kto zmienia, obowiązkowy przegląd przy pełnej, STOP bez nadzoru")
     # krok E3: tryby (Plan / zwykły / Auto), zgoda człowieka na plan zapisana skryptem, zamknięta lista kodów STOP
     import re as _re
-    modes = ref("tryby-i-zatrzymania.md")
+    modes = ref("modes-and-stops.md")
     plan_part = body.split("## 2.", 1)[-1].split("## 3.", 1)[0]
     stop_part = body.split("## Blok STOP", 1)[-1].split("## Przykład", 1)[0]
-    check("`--plan`" in start and "run_state.py approve" in plan_part and "references/tryby-i-zatrzymania.md" in plan_part,
+    check("`--plan`" in start and "run_state.py approve" in plan_part and "references/modes-and-stops.md" in plan_part,
           "T-29: tryb z polecenia człowieka trafia do pierwszego `stage` (--auto albo --plan); zgodę na plan zapisuje "
-          "`run_state.py approve`; szczegóły w references/tryby-i-zatrzymania.md")
+          "`run_state.py approve`; szczegóły w references/modes-and-stops.md")
     script_text = (ROOT / state).read_text(encoding="utf-8")
     block = script_text.split("STOP_CODES = {", 1)[-1].split("}", 1)[0]
     codes = _re.findall(r'^\s*"([a-z-]+)":', block, _re.M)
     check("--code" in stop_part and len(codes) >= 10 and all(f"`{c}`" in modes for c in codes)
           and all(w in modes for w in ("Plan", "Auto", "approve", "mode")),
-          f"T-30: blok STOP ma kod z zamkniętej listy; references/tryby-i-zatrzymania.md opisuje każdy kod ze skryptu: "
+          f"T-30: blok STOP ma kod z zamkniętej listy; references/modes-and-stops.md opisuje każdy kod ze skryptu: "
           f"{[c for c in codes if f'`{c}`' not in modes]}")
     check(all(f"`{c}`" in stop_part for c in codes),
           f"T-32: sekcja „Blok STOP” w SKILL.md wymienia wszystkie kody (pomiar po E3: w 8 z 15 przebiegów pętla "
@@ -165,7 +165,7 @@ def main() -> int:
     # krok E6: cięcie zmiany pdi idzie drogą zadania — ten sam przebieg ze specyfikacją, dowodami i śladem kryteriów
     check("CHG-12-TSK-57" in cuts and ".tf/runs/cuts" not in cuts and "stary" not in cuts and "odmawia" not in cuts
           and "bez zadania" not in cuts,
-          "T-33: references/ciecia-pdi.md opisuje zadanie cięcia `<CHG>-<TSK>`, bez starego układu `.tf/runs/cuts/`")
+          "T-33: references/pdi-cuts.md opisuje zadanie cięcia `<CHG>-<TSK>`, bez starego układu `.tf/runs/cuts/`")
     check(all(w in cuts for w in ("spec", "verify", "trace", "ticket.md")) and "bramce" in cuts and "security-reviewer" in cuts,
           "T-34: cięcie ma specyfikację, dowody i ślad; zgodę na plan daje bramka zmiany, przegląd bezpieczeństwa zostaje")
     check("docs(task): record" in cuts and "runs/TSK-" in cuts and "changes/INDEX.md" not in body + cuts
@@ -173,23 +173,23 @@ def main() -> int:
           "T-35: jeden commit końcowy (katalog zadania i raport cięcia); skill nie każe już dodawać INDEX.md — polecenie "
           "commitu drukuje `finish`; pierwszy commit gałęzi to kawałek "
           "— z niego pdi bierze tytuł PR")
-    weight_ref = ref("waga.md")
+    weight_ref = ref("weight.md")
     check("nie ma wagi" not in weight_ref and "cięci" in weight_ref and "bramce" in weight_ref,
-          "T-36: references/waga.md — cięcie ma wagę; przy pełnej przebieg bez nadzoru nie staje, bo plan zmiany "
+          "T-36: references/weight.md — cięcie ma wagę; przy pełnej przebieg bez nadzoru nie staje, bo plan zmiany "
           "zatwierdzono na bramce pdi")
-    guide = next((p for p in (ROOT / ".tf" / "factory" / "PETLA.md",) if p.is_file()), None)
+    guide = next((p for p in (ROOT / ".tf" / "factory" / "LOOP.md",) if p.is_file()), None)
     gtext = guide.read_text(encoding="utf-8") if guide else ""
     check(guide is not None and ".tf/runs/cuts" not in gtext and "CHG-12-TSK-57" in gtext,
-          f"T-37: PETLA.md opisuje cięcie jako zadanie `<CHG>-<TSK>`, bez wyjątku starego układu: {guide}")
+          f"T-37: LOOP.md opisuje cięcie jako zadanie `<CHG>-<TSK>`, bez wyjątku starego układu: {guide}")
 
     check("run_state.py finding" in body.split("## 3.", 1)[-1].split("## 4.", 1)[0],
           "T-40: ustalenie ważne z przeglądu zakresu pętla zapisuje poleceniem `run_state.py finding` (krok G4)")
     check("tf task close" in gtext and "tf task finding" in gtext and "lessons.md" in gtext and "tf status --all" in gtext,
-          "T-41: PETLA.md opisuje zamknięcie zadania: scalenie, kontrola do ustaleń, lekcja od człowieka, lista w toku")
+          "T-41: LOOP.md opisuje zamknięcie zadania: scalenie, kontrola do ustaleń, lekcja od człowieka, lista w toku")
     check("Jak cofnąć" in finish and "risk_triage.py --md" not in finish,
           "T-38: krok PR wymienia pola opisu (m.in. „Jak cofnąć”) i nie każe już składać triażu ryzyka ręcznie")
     check("pr-body" in gtext and all(w in gtext for w in ("Jak sprawdzono", "Ryzyko", "Jak cofnąć", "deploy.rollback")),
-          "T-39: PETLA.md opisuje opis PR ze skryptu: trzy stałe pola i krok cofania z karty operacyjnej")
+          "T-39: LOOP.md opisuje opis PR ze skryptu: trzy stałe pola i krok cofania z karty operacyjnej")
 
     for f in fails:
         print(f"✗ {f}")

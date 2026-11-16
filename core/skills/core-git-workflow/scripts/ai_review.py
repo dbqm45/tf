@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Przegląd PR przez AI w CI (skill core-git-workflow, references/przeglad-ai-w-ci.md).
+Przegląd PR przez AI w CI (skill core-git-workflow, references/ai-review-in-ci.md).
 
   python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--force] [--all-prs]
       zapisuje .github/workflows/ai-review.yml z szablonu obok skryptu: przegląd PR z etykietą ai-review

@@ -42,7 +42,7 @@ const data = await res.json(); // dane z sieci są niezaufane — waliduj na gra
 ## API urządzeń i systemu
 - Przed dodaniem biblioteki sprawdź API platformy (udostępnianie, schowek, synchronizacja kart, wake lock, pliki), ale
   też jego obsługę: wiele działa tylko w Chromium. Wykrywanie funkcji, HTTPS, wywołanie w obsłudze kliknięcia, uprawnienia
-  w kontekście, ścieżka zastępcza, dostęp za adapterem, osłona SSR — `references/natywne-api-przegladarki.md`.
+  w kontekście, ścieżka zastępcza, dostęp za adapterem, osłona SSR — `references/native-browser-apis.md`.
 
 ## Dostępność i semantyka
 - **Najpierw natywny HTML**: `button` dla akcji, `a href` dla nawigacji, `label` dla pól, landmarki (`header`, `nav`, `main`, `footer`), nagłówki w kolejności. `div` z `click` to błąd.
@@ -66,19 +66,19 @@ const data = await res.json(); // dane z sieci są niezaufane — waliduj na gra
 - **Macierz testów:** Playwright `chromium` w każdym PR, `firefox` i `webkit` nocnie (qa-regression, tool-playwright).
   WebKit z Playwright to nie Safari — prawdziwe Safari i iOS (urządzenie lub chmura, płatne) tylko przy wymaganiu
   biznesowym lub zgłoszeniach od tych użytkowników.
-Narzędzia, zapytania i macierz: `references/zgodnosc-przegladarek.md`.
+Narzędzia, zapytania i macierz: `references/browser-compatibility.md`.
 
 ## i18n
 - Teksty w ICU MessageFormat (liczba mnoga w komunikacie), formaty wyłącznie przez `Intl.*`; `<html lang dir>`; układ na CSS logical properties (RTL). Całość systemu (backend, strefy, waluty, przepływ tłumaczeń): eng-i18n.
 
 ## Indeks references
 - `rendering-pipeline.md` — event loop (zadania/mikrozadania, long tasks), Critical Rendering Path, koszt zmian stylu, priorytety ładowania.
-- `checklista-wydajnosci.md` — checklista wydajności przed wydaniem (priorytety, poprawki przestarzałych zaleceń, bfcache, budżety w CI, Angular).
+- `performance-checklist.md` — checklista wydajności przed wydaniem (priorytety, poprawki przestarzałych zaleceń, bfcache, budżety w CI, Angular).
 - `core-web-vitals.md` — LCP/INP/CLS: progi, przyczyny, poprawki; dane polowe vs laboratoryjne.
-- `seo-publiczne-strony.md` — publiczna aplikacja (SSR/prerendering): indeksowanie, metadane, dane strukturalne, roboty AI.
-- `natywne-api-przegladarki.md` — 21 API (Web Share, BroadcastChannel, Wake Lock, Clipboard, File System Access, WebOTP…): mapa obsługi, ścieżki zastępcze, czego nie używać.
+- `seo-public-pages.md` — publiczna aplikacja (SSR/prerendering): indeksowanie, metadane, dane strukturalne, roboty AI.
+- `native-browser-apis.md` — 21 API (Web Share, BroadcastChannel, Wake Lock, Clipboard, File System Access, WebOTP…): mapa obsługi, ścieżki zastępcze, czego nie używać.
 - `service-workers.md` — cykl życia, strategie cache, aktualizacje, push/background sync, kiedy nie.
-- `zgodnosc-przegladarek.md` — polityka wsparcia (browserslist, Baseline), wykrywanie funkcji, polyfille, lint zgodności, macierz testów i prawdziwe urządzenia.
+- `browser-compatibility.md` — polityka wsparcia (browserslist, Baseline), wykrywanie funkcji, polyfille, lint zgodności, macierz testów i prawdziwe urządzenia.
 - `i18n.md` — i18n vs l10n, ICU, polska liczba mnoga, `Intl`, RTL, pseudolokalizacja.
 - `accessibility/` — czytaj plik zależnie od problemu:
   `semantic-html` (natywne elementy), `aria-roles-and-attributes` (role, stany, combobox 1.2), `accessible-forms`,

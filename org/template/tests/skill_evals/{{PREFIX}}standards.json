@@ -1,0 +1,28 @@
+{
+  "skill": "{{PREFIX}}standards",
+  "scenarios": [
+    {
+      "id": "TODO-obszar-ui",
+      "expect": "trigger",
+      "prompt": "TODO: prawdziwe pytanie z pracy w {{TITLE}} o sam wygląd (np. dodaję w panelu sekcję z dwiema kolumnami — z której biblioteki komponentów i jakie odstępy?)",
+      "checks": {
+        "all": [["TODO: ustalenie z references/ui.md"], ["TODO: drugie ustalenie UI"]],
+        "none": ["TODO: ustalenie z innego obszaru, np. z api.md — przy samym wyglądzie nie powinno paść"]
+      }
+    },
+    {
+      "id": "TODO-obszar-api",
+      "expect": "trigger",
+      "prompt": "TODO: prawdziwe pytanie o API w {{TITLE}} (np. dodaję endpoint zwracający zamówienia klienta — jaki format błędów i kto zatwierdza kontrakt?)",
+      "checks": {
+        "all": [["TODO: ustalenie z references/api.md"], ["TODO: drugie ustalenie API"]]
+      }
+    },
+    {
+      "id": "TODO-ogolne-pytanie",
+      "expect": "no-trigger",
+      "neighbor": "core-git-workflow",
+      "prompt": "TODO: ogólne pytanie bez związku z firmą, np. jak rozwiązać konflikt przy rebase?"
+    }
+  ]
+}

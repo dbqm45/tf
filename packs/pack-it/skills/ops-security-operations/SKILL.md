@@ -10,11 +10,11 @@ metadata:
 # Operacje bezpieczeństwa: wykrywanie i reagowanie
 
 Zapobieganie kiedyś zawiedzie. Ten skill dotyczy tego, jak to zauważyć i co zrobić potem. Sieć, chmura, segmentacja,
-DDoS i CSPM: `references/siec-i-chmura.md`. Katalog ataków z sygnałami
+DDoS i CSPM: `references/network-and-cloud.md`. Katalog ataków z sygnałami
 i kontrolami, modele analizy (Kill Chain, ATT&CK, model diamentu), polowanie na zagrożenia, wywiad i wabiki:
-`references/ataki-i-analiza.md`. Forensyka (kolejność ulotności, łańcuch dowodowy) i testy penetracyjne z zasadami
-zaangażowania: `references/forensyka-i-testy-penetracyjne.md`. Utwardzanie systemu serwera (linia bazowa CIS, SSH,
-konta, zapora hosta, audyt, sprawdzenie dryfu): `references/utwardzanie-hosta.md`. Mapowanie na SOC 2, ISO 27001 i NIST CSF: `references/zgodnosc.md`.
+`references/attacks-and-analysis.md`. Forensyka (kolejność ulotności, łańcuch dowodowy) i testy penetracyjne z zasadami
+zaangażowania: `references/forensics-and-penetration-testing.md`. Utwardzanie systemu serwera (linia bazowa CIS, SSH,
+konta, zapora hosta, audyt, sprawdzenie dryfu): `references/host-hardening.md`. Mapowanie na SOC 2, ISO 27001 i NIST CSF: `references/compliance.md`.
 
 ## 1. Telemetria bezpieczeństwa
 - Źródła (od najważniejszych): IdP i logowania (sukcesy, porażki, MFA, zmiany metod), logi audytowe chmury (API
@@ -62,7 +62,7 @@ konta, zapora hosta, audyt, sprawdzenie dryfu): `references/utwardzanie-hosta.md
 
 ## 5. Podatności i łatki
 1. **Inwentarz zasobów** (hosty, obrazy, funkcje, domeny, zależności — SBOM) — nie załatasz tego, czego nie znasz.
-   Każdy host ma linię bazową utwardzenia i sprawdzany dryf (`references/utwardzanie-hosta.md`).
+   Każdy host ma linię bazową utwardzenia i sprawdzany dryf (`references/host-hardening.md`).
 2. **Skanowanie** regularne: hosty i sieć (np. OpenVAS, Nessus, Qualys), obrazy i zależności (ops-supply-chain-security),
    konfiguracja chmury (CSPM), aplikacja (DAST na stagingu). Skan zewnętrzny z perspektywy internetu.
 3. **Priorytet** nie z samego CVSS: podatność wykorzystywana w praktyce (np. lista CISA KEV), prawdopodobieństwo

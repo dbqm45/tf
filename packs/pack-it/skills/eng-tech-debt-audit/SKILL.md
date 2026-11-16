@@ -93,7 +93,7 @@ Audyt raz na kwartał nie nadąża za kodem pisanym z agentami. Pętla:
 | D3 | `src/payments/webhook.ts:42` (`catch {}`) | krytyczna | S | 6 | 4×6÷1 = 24 |
 
 Szybka wygrana: D3. „Wygląda źle, ale OK”: dwa `retry.ts` — celowo (ADR-007).
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] orientacja i model architektury przed oceną; plan pokazany człowiekowi

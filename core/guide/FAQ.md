@@ -1,6 +1,6 @@
 # FAQ
 
-Codzienna praca: `.tf/factory/PRZEWODNIK.md`.
+Codzienna praca: `.tf/factory/GUIDE.md`.
 
 ## Czym jest fabryka?
 Zestaw do pracy z agentami Claude Code. Instaluje w projekcie persony (agentów, z którymi rozmawiasz), ich
@@ -18,7 +18,7 @@ wybierasz język pracy, język commitów oraz nakładki i tryby.
 
 Instalacja prywatna nie przechodzi przez `git clone`: każdy instaluje fabrykę sam, a CI i sesje w chmurze jej nie mają.
 Repozytorium z `AGENTS.md` bez `CLAUDE.md` potrzebuje linii `@AGENTS.md` w `CLAUDE.local.md`. Oba tematy:
-`.tf/factory/PRZEWODNIK.md`, sekcja „Instalacja prywatna i zespołowa”.
+`.tf/factory/GUIDE.md`, sekcja „Instalacja prywatna i zespołowa”.
 
 Potem uruchom raz `claude` w katalogu projektu i zaakceptuj zaufanie do folderu. Bez tego hooki i uprawnienia
 nie działają.
@@ -59,9 +59,9 @@ Confluence) skryptem `org/standards_from_docs.py`, który sprawdza cytaty bez mo
      zaostrzanie), ścieżki zawsze do przeglądu człowieka (`autonomy.triage`), limity `tf work` (`work`), profil
      kosztów, języki;
    - `pack.yaml` → `org_defaults.operations.tracker`: tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami;
-   - reguły sprawdzalne wzorcem (`analyzers/<firma>-standardy/rules.yaml`, z przykładami w `fixtures/`): działają
+   - reguły sprawdzalne wzorcem (`analyzers/<firma>-standards/rules.yaml`, z przykładami w `fixtures/`): działają
      bez modelu w `tf analyze`; reguły semgrep — `semgrep.yml`, używany w skanie pętli `/tf`;
-   - skill standardów (`skills/<firma>-standardy/`): tylko ustalenia wymagające oceny — najpierw scenariusze
+   - skill standardów (`skills/<firma>-standards/`): tylko ustalenia wymagające oceny — najpierw scenariusze
      w `tests/skill_evals/`, potem treść;
    - `settings.json`: uprawnienia Claude Code dla całej firmy.
 3. **Sprawdź** w repozytorium fabryki: `python3 tools/workspace.py check --packs pack-it,pack-<firma> --pack-dir
@@ -85,7 +85,7 @@ pracy) albo `tf style conversation` (zadanie kończy się na planie, a Claude Co
 także zwykła rozmowa nie zmienia plików bez Twojej zgody). Styl obowiązuje we
 wszystkich Twoich projektach; tylko w bieżącym: `--here`. Nie trafia do repozytorium i nie zmienia pracy innych osób.
 Granice ustala firma, zespół albo projekt: styl nie włączy trybu, którego nie dopuszczają (`task.allowed_modes`), ani
-nie rozluźni zakazów polityki autonomii. Szczegóły: `.tf/factory/PRZEWODNIK.md`, sekcja „Co mogę ustawić”.
+nie rozluźni zakazów polityki autonomii. Szczegóły: `.tf/factory/GUIDE.md`, sekcja „Co mogę ustawić”.
 
 ## Który model i ile to kosztuje?
 - Role mają tiery: `fast` (Haiku), `std` (Sonnet), `deep` (Opus).

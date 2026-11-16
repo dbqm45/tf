@@ -37,7 +37,7 @@ def main() -> int:
         write(pack / "skills" / "aa-run" / "SKILL.md",
               "---\nname: aa-run\ndescription: Użyj przy A.\nmetadata:\n  katalog: \"Użyj przy A. Nie do niczego.\"\n"
               "  przeglad: 2099-01-01\n---\n# aa-run\nPrzykład: `python3 tests/test_orders.py`\n")
-        write(pack / "skills" / "aa-run" / "references" / "przyklady.md", "```python\n# tests/test_discount.py\n```\n")
+        write(pack / "skills" / "aa-run" / "references" / "examples.md", "```python\n# tests/test_discount.py\n```\n")
         write(pack / "tests" / "skill_evals" / "aa-run.json",
               json.dumps({"skill": "aa-run", "scenarios": [{"id": "x", "expect": "trigger",
                                                              "prompt": "W tests/test_discount.py mam kopie testu."}]}))
@@ -82,8 +82,8 @@ def main() -> int:
         read = lambda p: p.read_text(encoding="utf-8") if p.exists() else ""
         check("python3 tests/test_orders.py" in read(skill / "SKILL.md"),
               f"I-2: SKILL.md bez zmian ścieżek testów projektu: {read(skill / 'SKILL.md')[-120:]}")
-        check("# tests/test_discount.py" in read(skill / "references" / "przyklady.md"),
-              f"I-3: przykłady w references bez zmian: {read(skill / 'references' / 'przyklady.md')}")
+        check("# tests/test_discount.py" in read(skill / "references" / "examples.md"),
+              f"I-3: przykłady w references bez zmian: {read(skill / 'references' / 'examples.md')}")
         check("W tests/test_discount.py" in read(proj / ".claude" / "tests" / "skill_evals" / "aa-run.json"),
               "I-4: scenariusz ewaluacji bez zmian")
         wf = read(proj / ".github" / "workflows" / "team-factory.yml")
@@ -93,7 +93,7 @@ def main() -> int:
               "I-5a: workflow CI fabryki da się uruchomić ręcznie (workflow_dispatch), np. po włączeniu Actions")
         check("name: 'aa-audit'" in read(proj / ".claude" / "workflows" / "aa-audit.js"),
               "I-7: workflow nakładki w .claude/workflows/ (tam Claude Code szuka zapisanych workflows)")
-        guide, faq = read(proj / ".tf" / "factory" / "PRZEWODNIK.md"), read(proj / ".tf" / "factory" / "FAQ.md")
+        guide, faq = read(proj / ".tf" / "factory" / "GUIDE.md"), read(proj / ".tf" / "factory" / "FAQ.md")
         check(guide.startswith("# ") and faq.startswith("# ") and "tf " in guide,
               "I-9: przewodnik i FAQ rdzenia w .tf/factory/ (bez README w korzeniu projektu)")
         sett = read(proj / ".claude" / "settings.json")

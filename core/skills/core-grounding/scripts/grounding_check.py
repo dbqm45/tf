@@ -4,7 +4,7 @@ Sprawdza, czy odwołania w dokumentach markdown wskazują rzeczy, które istniej
 
   python3 .claude/skills/core-grounding/scripts/grounding_check.py docs/project/06-delivery/003-logowanie.md
   python3 .claude/skills/core-grounding/scripts/grounding_check.py docs/project/ --warn   # tylko ostrzeżenia, kod 0
-  python3 .claude/skills/core-grounding/scripts/grounding_check.py raport.md --jev       # + czy treść linii potwierdza zdanie
+  python3 .claude/skills/core-grounding/scripts/grounding_check.py report.md --jev       # + czy treść linii potwierdza zdanie
 
 Sprawdza:
 - ścieżki w `kodzie` (z ukośnikiem albo znanym rozszerzeniem), także w poleceniach (`python3 tools/x.py`),

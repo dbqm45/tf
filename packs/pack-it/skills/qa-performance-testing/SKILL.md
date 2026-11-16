@@ -35,7 +35,7 @@ Kolejność: dymny → obciążenia → reszta według ryzyka.
    (płatności, SMS) — zaślepki o realistycznych czasach odpowiedzi, nigdy prawdziwe usługi i prawdziwe pieniądze.
    Test na produkcji tylko za zgodą człowieka, z planem i oknem czasowym.
 4. **Dane testowe**: dość kont i rekordów, żeby cache i indeksy zachowywały się jak w produkcji; dane syntetyczne
-   (qa-regression, `.claude/skills/qa-regression/references/dane-srodowiska-i-specjalne.md`).
+   (qa-regression, `.claude/skills/qa-regression/references/environment-and-special-data.md`).
 5. **Skrypt** (k6 dla TS/JS, Gatling dla zespołów Javy): scenariusze ze sprawdzeniami odpowiedzi (status i treść —
    szybka odpowiedź z błędem to nie sukces), parametryzacja danych, korelacja tokenów i identyfikatorów, tagi per
    ścieżka, progi.

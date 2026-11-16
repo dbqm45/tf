@@ -84,4 +84,4 @@ informacja: `core-git-workflow/SKILL.md` nadpisany wersją fabryki; jeśli zmian
 → raport: wersja przed i po, nadpisane pliki, nowe klucze konfiguracji, wynik testów, przypomnienie o ponownym
 uruchomieniu.
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

@@ -21,10 +21,10 @@ Ochrona agenta Claude Code, który pracuje na Twoim repo: `core-agent-security`.
    element albo rozdziel przebiegi — to najtańsza decyzja projektowa. Wersja z „Reguły dwóch” (Meta) liczy też
    zmianę stanu. Gdy agent musi czytać obce treści i działać, wybierz wzorzec izolacji (podwójny LLM,
    plan-then-execute, action-selector, map-reduce, CaMeL), a zgodę człowieka zwiąż ze skrótem argumentów
-   (`references/wzorce-projektowe-agentow.md`).
+   (`references/agent-design-patterns.md`).
 3. **Model zagrożeń** (`arch-threat-modeling`: DFD z granicami zaufania; model, wyniki narzędzi i RAG to osobne byty
    po stronie niezaufanej) i mapowanie na OWASP Top 10 for LLM 2026, a dla agentów także na Agentic Top 10 2026
-   (`references/zagrozenia-i-kontrole.md`).
+   (`references/threats-and-controls.md`).
 4. **Kontrole** w kolejności skuteczności:
    - **najmniejsze uprawnienia narzędzi**: tylko odczyt domyślnie, zakres zasobu zawężony do użytkownika, w imieniu
      którego działa agent (poświadczenia użytkownika, nie konta serwisowego z szerokim dostępem);
@@ -90,10 +90,10 @@ obcej treści; (4) render bez zdalnych obrazów. Test regresji: mail z instrukcj
   (tożsamość agenta, tokeny związane z kluczem i wymiana tokenu: `sec-zero-trust-identity`).
 - Wynik jednego modelu wklejony do drugiego (łańcuch) przenosi injection dalej; traktuj go jak dane obce.
 - SQL od modelu: tryb tylko do odczytu nie wystarcza (SELECT czyta pliki, dołącza bazy, ładuje rozszerzenia). Ściany
-  w trzech warstwach: strażnik tekstu, blokada w silniku, limity czasu i wierszy — `references/zagrozenia-i-kontrole.md`
+  w trzech warstwach: strażnik tekstu, blokada w silniku, limity czasu i wierszy — `references/threats-and-controls.md`
   §„SQL generowany przez model”.
 - Agent wysyłający wiadomości w imieniu użytkownika: klasy danych z regułą („nigdy”, „tylko na wyraźne polecenie”)
-  i osobny klasyfikator każdej wiadomości wychodzącej, poza głównym agentem (`references/wzorce-projektowe-agentow.md` §8).
+  i osobny klasyfikator każdej wiadomości wychodzącej, poza głównym agentem (`references/agent-design-patterns.md` §8).
 
 ## Checklista
 - [ ] potrójna kombinacja (dane prywatne, niezaufana treść, wyjście) przerwana

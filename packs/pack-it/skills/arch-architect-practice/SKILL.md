@@ -17,7 +17,7 @@ o tyle, o ile trzeba, żeby decyzje były osadzone w rzeczywistości (prototyp, 
 |---|---|---|---|
 | **aplikacja** | wnętrze jednego systemu: moduły, warstwy, wzorce | jak podzielić kod, gdzie granice modułów, jak testować | struktura modułów, ADR, fitness functions (eng-*, ddd-tactical-design) |
 | **rozwiązanie** | kilka systemów dla jednej potrzeby biznesowej | jak systemy się integrują, przepływ danych, technologie | architektura rozwiązania, mapa kontekstów, kontrakty (ddd-context-mapping, be-api-design) |
-| **przedsiębiorstwo** | cała organizacja: zdolności biznesowe, portfel systemów | które systemy rozwijać, wygaszać, łączyć; standardy | mapy zdolności i aplikacji, zasady, mapa drogowa (`references/ramy-korporacyjne.md`) |
+| **przedsiębiorstwo** | cała organizacja: zdolności biznesowe, portfel systemów | które systemy rozwijać, wygaszać, łączyć; standardy | mapy zdolności i aplikacji, zasady, mapa drogowa (`references/corporate-frameworks.md`) |
 Zadanie zawsze nazywa poziom — inaczej rozmowa o „architekturze” miesza wnętrze modułu ze strategią firmy.
 
 ## Oczekiwania wobec architekta (wg Richardsa i Forda)
@@ -49,7 +49,7 @@ organizację i jej politykę (bez tego najlepsza decyzja nie zostanie wdrożona)
    Wynik każdej soczewki: akceptuję ryzyko / zapisuję jako znane ograniczenie (w rejestrze ryzyk ze źródłem —
    która soczewka je ujawniła) / zmieniam wybór. Pytaj „dlaczego X to zły wybór dla Y”, nie „czy X pasuje do Y”.
    Gdy w wielu decyzjach test nigdy nic nie zmienia, stał się rytuałem. Szczegóły i przykład:
-   `references/test-odpornosci-decyzji.md`.
+   `references/decision-resilience-test.md`.
 Anty-wzorce: decyzja odkładana bez końca w oczekiwaniu na pełną informację; „architektura z wieży” bez kontaktu
 z kodem; ta sama dyskusja co miesiąc, bo decyzja nie została zapisana.
 
@@ -74,7 +74,7 @@ z kodem; ta sama dyskusja co miesiąc, bo decyzja nie została zapisana.
 ## Dokumentacja architektury
 - **ADR** dla decyzji (docs-tech-writing) — najważniejszy dokument, bo zapisuje „dlaczego”.
 - **Model C4** dla widoków: kontekst (system i otoczenie), kontenery (aplikacje i magazyny danych), komponenty (w razie
-  potrzeby); poziom kodu zwykle zbędny. Diagram jako kod w repo (docs-tech-writing, `diagramy-i-prezentacje.md`).
+  potrzeby); poziom kodu zwykle zbędny. Diagram jako kod w repo (docs-tech-writing, `diagrams-and-presentations.md`).
 - **arc42** jako szablon dokumentu architektury (cele, ograniczenia, kontekst, strategia rozwiązania, widoki, koncepcje
   przekrojowe, decyzje, wymagania jakości, ryzyka, słownik) — wypełniasz tylko sekcje, które ktoś przeczyta.
 - Dokumentacja żyje w repo i jest aktualizowana z kodem; to, co da się wygenerować (grafy zależności —

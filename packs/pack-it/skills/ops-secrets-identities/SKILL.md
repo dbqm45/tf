@@ -47,7 +47,7 @@ co kod ludzi — raporty dostawców wskazują, że w repozytoriach pisanych z as
 ## 5. Klucze, certyfikaty i kryptografia
 - Certyfikaty z automatycznym odnawianiem i alarmem na zbliżające się wygaśnięcie.
 - Wybór algorytmów, KMS i szyfrowanie kopertowe, cykl życia certyfikatów, własna PKI z odpornością na awarię,
-  kryptografia postkwantowa: `references/kryptografia-i-pki.md`.
+  kryptografia postkwantowa: `references/cryptography-and-pki.md`.
 - Inwentarz kryptografii (CBOM, format CycloneDX): jakie algorytmy, biblioteki, protokoły, certyfikaty i klucze
   używa każda aplikacja i jak wrażliwe dane chronią. To pierwszy krok przed migracją na algorytmy odporne na komputery
   kwantowe; priorytet mają dane wrażliwe i przechowywane długo.
@@ -61,7 +61,7 @@ co kod ludzi — raporty dostawców wskazują, że w repozytoriach pisanych z as
 4. 24 h: rotacja wszystkiego, co osiągalne z tej roli (hasło bazy, token płatności).
 5. 2 dni: czyszczenie historii, push protection, skan `--staged` w hooku; stary klucz usunięty.
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] każda tożsamość maszynowa ma właściciela, zakres i datę wygaśnięcia; brak tokenów bez końca ważności

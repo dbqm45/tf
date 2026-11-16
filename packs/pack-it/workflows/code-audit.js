@@ -158,7 +158,7 @@ phase('Raport')
 const reportPath = `${dir}/${a.date}-audyt-kodu.md`
 const data = { depth, dimensions: reviewed.map(d => d.key), inventory, blockers, ranking, quick_wins: quickWins, hypotheses, not_checked: notChecked }
 const report = await agent(
-  `Napisz raport audytu kodu do ${reportPath} według references/szablon-raportu.md skilla eng-code-audit ` +
+  `Napisz raport audytu kodu do ${reportPath} według references/report-template.md skilla eng-code-audit ` +
   `(sekcja 5 skilla: TL;DR, blokery, ranking i top 10, szybkie wygrane, „Czego nie sprawdzono”, sprzeczności, koszt). ` +
   `Ranking, blokery i hipotezy są już policzone — przepisz je bez zmiany kolejności i wartości. Koszt audytu: ` +
   `python3 .tf/factory/cost_report.py --days 1. Na koniec python3 .claude/skills/core-grounding/scripts/grounding_check.py ` +

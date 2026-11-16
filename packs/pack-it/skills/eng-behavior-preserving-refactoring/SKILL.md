@@ -26,7 +26,7 @@ najpierw test istniejącej ścieżki, potem edycja. Wybór, CO refaktoryzować i
 Każda zmiana któregoś z tych trzech wymaga jawnej zgody człowieka i wpisu w `decisions.md` — to już nie jest refaktoryzacja.
 Zmiana w legacy, która **ma** zmienić zachowanie (naprawa, mała funkcja), a reszta ma zostać: kontrakt zmiany
 (warunek, wynik, chronione zachowania z decyzją, zakres plików, dowód naprawy i braku regresji) —
-`references/kontrakt-zmiany.md`.
+`references/change-contract.md`.
 
 ## Testy w czterech warstwach
 | Warstwa | Zmienia się przy refaktoryzacji? | Rola |
@@ -60,7 +60,7 @@ typów implementacji i nie zagląda do tabel bazy; sterownik wiąże się z **is
   nazwach, test „zapisz → odczytaj → porównaj” zostaje zielony przy zamienionych kolumnach, a porównanie typów per
   indeks przepuszcza zamianę sąsiednich pól tego samego typu. Użyj **wartości-wartowników**: każde pole dostaje
   unikalną wartość, zapis idzie produkcyjną ścieżką, odczyt surowym zapytaniem po nazwach, asercja per nazwa
-  (`references/przyklady.md`, przykład 4).
+  (`references/examples.md`, przykład 4).
 - **Mechanizm na zielono, egzekwowanie osobno:** nowa walidacja lub osłona wchodzi wyłączona (albo w trybie
   ostrzeżenia); włączenie to osobny, odwracalny commit (np. per warstwa, z listą wyjątków z uzasadnieniem).
 
@@ -79,7 +79,7 @@ i wyjątek `ReservationExpired`. Commity: (1) `test:` scenariusze + DSL przez fa
 (`getStatus() === CONFIRMED` → `thenReservationIsConfirmed()`, nie rozróżnia enuma — status widać w DTO);
 (2) `refactor:` `decide(stan, komenda)` obok starego kodu, powłoka zapisuje jawnie; (3) sterownik domenowy na
 `decide`, stary agregat usunięty. Luka: anulowanie bez testu (tryb oszczędny).
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Źródła
 - Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcje 3–4 (szwy i testy charakteryzujące, zapis pozycyjny i osłona,

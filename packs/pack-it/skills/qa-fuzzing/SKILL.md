@@ -44,7 +44,7 @@ nieoczekiwany wyjątek, zawieszenie albo złamanie właściwości. Uzupełnia te
    przebiegami. Fuzzing bez limitu czasu nie mieści się w PR.
 7. **Narzędzie wg języka**: Go — `testing.F` (`go test -fuzz`); Python — Atheris; C/C++ — libFuzzer (lub AFL++);
    Java — Jazzer z JUnit 5.9+ (`jazzer-junit`, `@FuzzTest`) [niezweryfikowane: nie uruchamiano]. Przykłady
-   z kodem i wynikami: `references/harness-i-przyklady.md`.
+   z kodem i wynikami: `references/harness-and-examples.md`.
 
 ## Pułapki (każda sprawdzona)
 - **Go**: wycinek do pojemności nie panikuje, a fuzzer podaje `[]byte` z zapasem pojemności — odczyt poza danymi
@@ -60,7 +60,7 @@ w `f.Add` i właściwością round-trip. Fuzzer znalazł wejście `"000"`, ale d
 — wcześniej 2 × 40 s bez znaleziska. Plik z `testdata/fuzz/FuzzDecode/` oblewa `go test` przed naprawą
 i przechodzi po niej. Analogicznie: Atheris znalazł nieudokumentowany `ValueError` w parserze konfiguracji
 po ~80 wykonaniach, libFuzzer z ASan — przepełnienie sterty w dekoderze RLE z linią źródła.
-Kod: `references/harness-i-przyklady.md`.
+Kod: `references/harness-and-examples.md`.
 
 ## Checklista
 - [ ] cel deterministyczny, na granicy zaufania; harness odróżnia oczekiwane błędy od znalezisk

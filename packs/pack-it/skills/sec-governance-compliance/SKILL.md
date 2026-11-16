@@ -13,7 +13,7 @@ metadata:
 stwierdza** — robi to audytor, a interpretację przepisów prawnik. Nie jest to porada prawna. Artefakt:
 `docs/project/04-architecture/compliance.md` (core-project-record). RODO — **arch-privacy-compliance**; AI Act i ISO 42001 —
 **ai-governance-compliance**; proces ryzyka i akceptacje — **sec-risk-management**; incydenty i podatności —
-**ops-security-operations** (jego `.claude/skills/ops-security-operations/references/zgodnosc.md` to skrót; tu pełna procedura).
+**ops-security-operations** (jego `.claude/skills/ops-security-operations/references/compliance.md` to skrót; tu pełna procedura).
 
 ## Procedura
 1. **Motyw, nie moda.** Zapisz, kto i czego żąda: klient (umowa, kwestionariusz), regulacja (NIS2, DORA — prawnik), sektor
@@ -28,7 +28,7 @@ stwierdza** — robi to audytor, a interpretację przepisów prawnik. Nie jest t
 2. **Zakres (scope)** — najtańsza dźwignia. Zapisz: produkty i usługi, lokalizacje, systemy, ludzie, dostawcy w łańcuchu,
    wyłączenia z uzasadnieniem. Zakres zbyt wąski nie spełni oczekiwań klienta, zbyt szeroki mnoży dowody. Dla PCI
    zmniejszaj zakres tokenizacją i segmentacją.
-3. **Rama szkieletowa** — fakty i pułapki w `references/ramy.md`. Skrót stanu na 2026-10-17:
+3. **Rama szkieletowa** — fakty i pułapki w `references/frameworks.md`. Skrót stanu na 2026-10-17:
    - **ISO/IEC 27001:2022** — klauzule 4–10 (kontekst, przywództwo, planowanie z oceną ryzyka, wsparcie, działanie,
      ocena skuteczności z audytem wewnętrznym i przeglądem zarządzania, doskonalenie) plus **Załącznik A: 93 kontrole
      w 4 tematach** (organizacyjne 37, ludzkie 8, fizyczne 14, technologiczne 34). Kontrole wybiera ocena ryzyka;
@@ -42,7 +42,7 @@ stwierdza** — robi to audytor, a interpretację przepisów prawnik. Nie jest t
    bez standardu i dowodu jest dekoracją; procedura bez polityki nie ma mandatu.
 5. **Macierz kontroli** — jeden rejestr dla organizacji, nie lista na audyt. Pola: ID kontroli, opis działania,
    właściciel, system, częstotliwość, dowód (źródło, ścieżka), **mapowanie wiele-do-wielu** (A.5.15, CC6.1, CSF PR.AA,
-   PCI 8.x). Jedna kontrola „MFA odporne na phishing dla administratorów” spełnia kilka ram. Szablon: `references/macierz-i-plan.md`.
+   PCI 8.x). Jedna kontrola „MFA odporne na phishing dla administratorów” spełnia kilka ram. Szablon: `references/matrix-and-plan.md`.
 6. **Analiza luk** względem ramy szkieletowej: dla każdej kontroli status (działa i jest dowód / działa bez dowodu /
    do wdrożenia / nie dotyczy). Luka to zadanie z właścicielem i terminem; wyjątek idzie do akceptacji ryzyka
    (**sec-risk-management**), nie jest „po cichu” pomijany.
@@ -51,7 +51,7 @@ stwierdza** — robi to audytor, a interpretację przepisów prawnik. Nie jest t
    Harmonogram: przeglądy dostępów, testy odtworzenia, szkolenia, przegląd dostawców — kalendarz z właścicielem.
 8. **Audyt wewnętrzny i przegląd zarządzania** przed zewnętrznym: niezależny od właściciela kontroli, według
    planu programu audytów; ustalenia jako niezgodności z działaniem korygującym. ISO wymaga obu.
-9. **Audyt zewnętrzny** — przebieg i przygotowanie w `references/macierz-i-plan.md`: ISO — etap 1 (dokumentacja) i etap 2
+9. **Audyt zewnętrzny** — przebieg i przygotowanie w `references/matrix-and-plan.md`: ISO — etap 1 (dokumentacja) i etap 2
    (wdrożenie), potem audyty nadzoru w cyklu certyfikacji [niezweryfikowane: długość cyklu i częstość ustala jednostka];
    SOC 2 — okres obserwacji, potem raport; PCI — ocena (QSA lub samoocena wg poziomu).
 10. **Wynik** do `compliance.md`: motyw → zakres → rama → macierz → luki → plan gotowości (data, właściciele, dowody)
@@ -83,8 +83,8 @@ Wynik (fragment) [przykład]:
 - [ ] zapis „nie ocena zgodności, nie porada prawna” i zatwierdzający
 
 ## Materiały dodatkowe
-- `references/ramy.md` — ISO 27001, NIST CSF 2.0, SOC 2, PCI DSS: struktura, wersje, daty, pułapki; czytaj przy doborze i analizie luk.
-- `references/macierz-i-plan.md` — szablon macierzy kontroli, plan gotowości do audytu, przebieg audytów; czytaj przy tworzeniu `compliance.md`.
+- `references/frameworks.md` — ISO 27001, NIST CSF 2.0, SOC 2, PCI DSS: struktura, wersje, daty, pułapki; czytaj przy doborze i analizie luk.
+- `references/matrix-and-plan.md` — szablon macierzy kontroli, plan gotowości do audytu, przebieg audytów; czytaj przy tworzeniu `compliance.md`.
 
 ## Źródła
 - ISO/IEC 27001:2022 oraz Amendment 1:2024 (klimat) — iso.org; liczby kontroli wg serwisów wtórnych (Sprinto, Presencis), dostęp 2026-10-17 [niezweryfikowane u źródła].

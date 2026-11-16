@@ -50,14 +50,14 @@ Implementacje z `lang-typescript/references/domain-building-blocks.md` przenosz�
 ## Indeks `references/` (czytaj tylko potrzebny plik)
 | Plik | Czytaj, gdy… |
 |---|---|
-| `typy-i-porownania.md` | `==` vs `===`, algorytm koercji, `typeof`/`instanceof`, truthy/falsy |
-| `zasieg-i-domkniecia.md` | `var`/`let`/`const`, TDZ, domknięcia, `var` w pętli, koszt closures |
-| `this-i-funkcje.md` | reguły `this` w każdym kontekście, `call`/`apply`/`bind`, strzałki |
-| `klasy-i-prototypy.md` | pola `#`, statyczne bloki, `extends`/`super`, kolejność ewaluacji, prototypy |
-| `asynchronicznosc.md` | stany Promise, `all`/`allSettled`/`race`/`any`, mikro- vs makrozadania |
-| `iteracje-i-tablice.md` | wybór pętli, metody mutujące vs nie, 10 pułapek, nowsze API tablic/Set |
-| `moduly.md` | ESM vs CommonJS, live bindings, cykle, `require(esm)`, `import.meta` w Node |
-| `bledy-i-wyjatki.md` | `try/catch/finally`, `Error.cause`, własne klasy błędów, typy błędów |
+| `types-and-comparisons.md` | `==` vs `===`, algorytm koercji, `typeof`/`instanceof`, truthy/falsy |
+| `scope-and-closures.md` | `var`/`let`/`const`, TDZ, domknięcia, `var` w pętli, koszt closures |
+| `this-and-functions.md` | reguły `this` w każdym kontekście, `call`/`apply`/`bind`, strzałki |
+| `classes-and-prototypes.md` | pola `#`, statyczne bloki, `extends`/`super`, kolejność ewaluacji, prototypy |
+| `asynchrony.md` | stany Promise, `all`/`allSettled`/`race`/`any`, mikro- vs makrozadania |
+| `iteration-and-arrays.md` | wybór pętli, metody mutujące vs nie, 10 pułapek, nowsze API tablic/Set |
+| `modules.md` | ESM vs CommonJS, live bindings, cykle, `require(esm)`, `import.meta` w Node |
+| `errors-and-exceptions.md` | `try/catch/finally`, `Error.cause`, własne klasy błędów, typy błędów |
 
 ## Wersje ECMAScript / Node (sprawdź `target` i środowisko)
 | Od | Co wolno użyć |

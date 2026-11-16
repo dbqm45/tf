@@ -12,7 +12,7 @@ metadata:
 „Zrefaktoruj ten moduł” to zlecenie bez celu (jaki kształt na końcu?), bez historii (co jest dziwactwem, a co
 decyzją nośną?) i bez drogi odwrotu (40 plików naraz nie zweryfikujesz po kawałku). Agentowi zlecasz więc **opcje
 z rankingiem**, a refaktor zaczyna się od decyzji człowieka. Wejście: raport długu (eng-tech-debt-audit), analiza
-przepływu (`.claude/skills/eng-codebase-mapping/references/analiza-przeplywu.md`) albo lista hotspotów.
+przepływu (`.claude/skills/eng-codebase-mapping/references/flow-analysis.md`) albo lista hotspotów.
 
 ## Etapy (każdy w osobnej sesji, intencja zapisana na górze kroku — core-project-record)
 **eksploracja → lektura człowieka → decyzja i plan → realizacja.** Eksploracja tylko czyta i kończy się raportem.
@@ -61,7 +61,7 @@ Bez tego filtra powstają wzorce wszędzie i wartość nigdzie. Kolejność spł
 - **Mikado:** spróbuj docelowej zmiany, zapisz, co pękło (graf prerekwizytów), **cofnij**, rozwiązuj od liści do
   korzenia; każdy liść to mały, osobno odwracalny commit. Odpowiedź na „wszystko zależy od wszystkiego”.
 - **Przepisanie od zera — nie:** gubi wiedzę zaszytą w poprawkach; tanie generowanie kodu tego nie zmienia.
-Szczegóły kroków, test charakteryzujący i przykłady grafów: `references/sciezki-i-weryfikacja.md`.
+Szczegóły kroków, test charakteryzujący i przykłady grafów: `references/paths-and-verification.md`.
 
 ## 5. Raport eksploracji — sekcja „Opcje refaktoryzacji (ranking)”
 - **2–3 najmocniejsze opcje**, każda: obecny → docelowy kształt · dlaczego to miejsce (koszt długu vs koszt zmiany)

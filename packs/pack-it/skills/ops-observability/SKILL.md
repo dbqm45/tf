@@ -102,7 +102,7 @@ sygnały, zgłasza je człowiekowi (core-agent-security).
   annotations: { runbook_url: "https://wiki.acme.example/runbooks/checkout-api#bledy-5xx" }
 ```
 Objaw z SLO zamiast przyczyny, czas trwania, właściciel i runbook; p95 to drugi alert.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista dla nowej usługi
 - [ ] logi strukturalne z trace_id

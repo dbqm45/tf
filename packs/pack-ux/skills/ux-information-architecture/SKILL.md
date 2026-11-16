@@ -17,7 +17,7 @@ rekrutacja i zgody uczestników: **ux-research-methods**; dla sortowania kart i 
 ## Procedura
 1. **Cel i zakres.** Kto szuka czego (5–10 najważniejszych zadań użytkowników, z badań lub analityki wyszukiwarki
    i ścieżek), które treści są w zakresie, jaki wskaźnik się poprawi (np. odsetek zadań ukończonych w teście drzewa).
-2. **Inwentarz i audyt treści** (`references/inwentarz-i-metadane.md`): lista wszystkich stron z adresem, tytułem,
+2. **Inwentarz i audyt treści** (`references/inventory-and-metadata.md`): lista wszystkich stron z adresem, tytułem,
    typem, właścicielem, datą aktualizacji, ruchem. Inwentarz to **liczenie**, audyt to **ocena** (aktualne,
    dokładne, potrzebne, zrozumiałe). Decyzja dla każdej: zostaw / popraw / połącz / usuń / dopisz. Skrypt lub eksport
    z CMS, nie ręczne przepisywanie.
@@ -26,17 +26,17 @@ rekrutacja i zgody uczestników: **ux-research-methods**; dla sortowania kart i 
    - **zamknięte** — przydzielają karty do **gotowych** kategorii; gdy chcesz sprawdzić lub rozbudować istniejące;
    - **hybrydowe** — gotowe kategorie plus możliwość dodania własnych.
    Karty: 30–60 pozycji, nazwy w języku użytkowników, bez słów z docelowych etykiet (nie sugeruj). Liczba uczestników
-   i analiza (macierz podobieństw, dendrogram, standaryzacja nazw): `references/sortowanie-kart-i-test-drzewa.md`.
+   i analiza (macierz podobieństw, dendrogram, standaryzacja nazw): `references/card-sorting-and-tree-testing.md`.
 4. **Projekt struktury.** Z wyników: hierarchia (szeroka i płytka zwykle lepsza niż wąska i głęboka — sprawdź testem,
    nie regułą), nazwy kategorii z języka uczestników, **jedna** zasada grupowania na poziom (temat, zadanie,
    odbiorca, czas — nie mieszaj), obsługa treści w dwóch miejscach (odsyłacz, nie kopia). Wzorce nawigacji
-   i etykiety: `references/nawigacja-i-etykiety.md`. Zapisz mapę serwisu (Mermaid lub lista wcięta).
+   i etykiety: `references/navigation-and-labels.md`. Zapisz mapę serwisu (Mermaid lub lista wcięta).
 5. **Test drzewa** na samej hierarchii (tekst, bez wyglądu): 8–10 zadań o prawdziwych celach, każde z jedną (lub
    kilkoma) poprawną ścieżką. Miary: **odsetek sukcesu** (dotarł do poprawnego węzła), **bezpośredniość**
    (dotarł bez cofania), czas, **węzeł pierwszego kliknięcia** i miejsca, w których ludzie się mylą. Czytaj razem:
    wysoki sukces przy niskiej bezpośredniości = etykiety wprowadzają w błąd, ale ludzie dochodzą metodą prób;
    niski sukces z wysoką bezpośredniością = pewny wybór złego węzła (konkurencyjne etykiety). Poprawki → ponowny test.
-6. **Wyszukiwarka** (`references/nawigacja-i-etykiety.md` § Wyszukiwanie): analiza zapytań bez wyników, synonimy,
+6. **Wyszukiwarka** (`references/navigation-and-labels.md` § Wyszukiwanie): analiza zapytań bez wyników, synonimy,
    podpowiedzi, filtry z metadanych, strona wyników z komunikatem przy braku.
 7. **Test odnajdywalności** na prototypie lub działającym serwisie: zadania „znajdź…” w moderowanym lub niemoderowanym
    teście; porównanie ze wskaźnikiem bazowym. Wynik zgłoś zespołowi wg ux-research-methods.
@@ -68,9 +68,9 @@ Z1 „Złóż wniosek urlopowy”, Z2 „Sprawdź zasady pracy zdalnej”… Wsk
 - [ ] ia-documentation.md z wynikami testów i datami
 
 ## Materiały dodatkowe
-- `references/inwentarz-i-metadane.md` — inwentarz, audyt, metadane, taksonomia; czytaj przy porządkowaniu treści.
-- `references/sortowanie-kart-i-test-drzewa.md` — uczestnicy, analiza, progi i pułapki obu metod.
-- `references/nawigacja-i-etykiety.md` — wzorce nawigacji, etykiety, wyszukiwanie, mapa serwisu.
+- `references/inventory-and-metadata.md` — inwentarz, audyt, metadane, taksonomia; czytaj przy porządkowaniu treści.
+- `references/card-sorting-and-tree-testing.md` — uczestnicy, analiza, progi i pułapki obu metod.
+- `references/navigation-and-labels.md` — wzorce nawigacji, etykiety, wyszukiwanie, mapa serwisu.
 
 ## Źródła
 - Tullis i Wood (2004), próba w sortowaniu kart — 20–30 osób wg wtórnych streszczeń; korelacja z „prawdziwym” wynikiem

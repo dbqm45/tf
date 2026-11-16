@@ -1,6 +1,6 @@
 # Nakładka firmowa {{TITLE}}: standardy, zasady i domyślne ustawienia organizacji dla każdego projektu z fabryką.
 # Uzupełnij pola oznaczone TODO; reszta działa od razu. Przewodnik: README.md obok.
-id: pack-{{FIRMA}}
+id: pack-{{COMPANY}}
 version: 0.1.0
 title: "{{TITLE}}"
 description: "TODO: one sentence in English — company standards and defaults for {{TITLE}} projects."
@@ -17,12 +17,12 @@ facets:
 # Standardy firmy w każdej personie i u agentów, którzy przeglądają zmiany.
 contributes:
   personas:
-    core_skills: [{{PREFIX}}standardy]
+    core_skills: [{{PREFIX}}standards]
   agents:
     security-reviewer:
-      skills: [{{PREFIX}}standardy]
+      skills: [{{PREFIX}}standards]
       prompt: |
-        Sprawdź też zgodność zmiany ze standardami {{TITLE}} (skill {{PREFIX}}standardy, sekcja „Bezpieczeństwo”).
+        Sprawdź też zgodność zmiany ze standardami {{TITLE}} (skill {{PREFIX}}standards, sekcja „Bezpieczeństwo”).
 
 # Domyślne organizacji: działają w każdym projekcie z tą nakładką, a projekt może je nadpisać w .tf/config/.
 # Silnik ← ta sekcja ← projekt. W projekcie może być najwyżej jedna nakładka z org_defaults.

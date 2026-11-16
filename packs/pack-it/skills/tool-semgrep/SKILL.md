@@ -53,10 +53,10 @@ Reguła `shell-injection-from-request` (taint: `request.args.get` → pierwszy a
 shell=True)`, sanityzator `shlex.quote`) z testem: dwa `ruleid`, dwa `ok`, jeden `todoruleid` (wartość przez
 obiekt pomocniczy). `semgrep scan --test` przechodzi; po usunięciu sanityzatora test oblewa na linii z
 `shlex.quote` — dowód, że test pilnuje reguły. Kod tej reguły, autofixu `yaml.load` → `yaml.safe_load` z plikiem
-.fixed.py i reguły na hasła z `paths.exclude`: `references/reguly-i-testy.md`.
+.fixed.py i reguły na hasła z `paths.exclude`: `references/rules-and-tests.md`.
 
 ## Zależne od wersji
-Przykłady z `references/reguly-i-testy.md` przechodzą na 1.50.0, 1.100.0 i 1.182.1 (2026-10-24); progi podpoleceń
+Przykłady z `references/rules-and-tests.md` przechodzą na 1.50.0, 1.100.0 i 1.182.1 (2026-10-24); progi podpoleceń
 sprawdzone `semgrep --help` kolejnych wydań z PyPI (1.99.0 bez `test`, 1.149.0 bez `mcp`). Wydania co tydzień.
 | Wersja | Zmiany istotne dla tego skilla |
 |---|---|

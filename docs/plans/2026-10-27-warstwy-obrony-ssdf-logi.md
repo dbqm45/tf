@@ -5,10 +5,10 @@ Data: 2026-10-27 · Status: zrobione (kroki 1–3), commit i PR na prośbę czł
 w domenach nist.gov i owasp.org 2026-10-27 (strony csrc.nist.gov i owasp.org niedostępne z sandboxu).
 
 ## TL;DR
-1. `arch-threat-modeling/references/warstwy-obrony.md` — mapa defence in depth: warstwa (sieć, tożsamość, host,
+1. `arch-threat-modeling/references/defense-layers.md` — mapa defence in depth: warstwa (sieć, tożsamość, host,
    aplikacja, dane, monitorowanie, reagowanie, łańcuch dostaw) → kontrole → skill fabryki → pytanie przeglądowe.
    Procedura pkt 7 (weryfikacja) odsyła: każda warstwa ma co najmniej jedną kontrolę albo zapisaną decyzję.
-2. `sec-appsec-devsecops/references/standardy-i-metryki.md` — sekcje NIST SSDF (SP 800-218 v1.1, cztery grupy
+2. `sec-appsec-devsecops/references/standards-and-metrics.md` — sekcje NIST SSDF (SP 800-218 v1.1, cztery grupy
    praktyk PO/PS/PW/RV i jak je mapować na pipeline; v1.2 to projekt) i OWASP DSOMM (miara dojrzałości pipeline'u,
    obok SAMM dla programu); SKILL.md: „shift left” i bezpieczne ustawienia domyślne nazwane wprost w celu skilla
    i procedurze pkt 2.

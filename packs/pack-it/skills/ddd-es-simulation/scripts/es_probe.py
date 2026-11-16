@@ -5,10 +5,10 @@ przez es_sim.py, uczestnicy jako osobne wywołania modelu bez narzędzi (`claude
 scenariusz działa: czy wiedza ukryta wychodzi, czy celowe sprzeczności dają hot spoty, czy karty osób zachowują się
 zgodnie z opisem, ile odpowiedzi to niepoprawny JSON. Płatne — uruchamiaj tylko za zgodą człowieka.
 
-  es_probe.py --variant pelna|oszczedna [--scenario weterynaria] [--probe <proba.json>] [--id <id>]
+  es_probe.py --variant pelna|oszczedna [--scenario weterynaria] [--probe <trial.json>] [--id <id>]
               [--coach full|light|none] [--budget-usd 2.5]
 
-Plik próby (domyślnie scenarios/<scenariusz>/proba.json):
+Plik próby (domyślnie scenarios/<scenariusz>/trial.json):
   {"lines": ["<wypowiedź facylitatora>", {"invite": "<id osoby>"}, …],
    "expect": {"hidden": [{"fact": "…", "any": ["słowo", …]}],
               "contradictions": [{"name": "…", "hot_spot_any": ["słowo", …]}],
@@ -101,13 +101,13 @@ def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool | None,
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--variant", choices=["pelna", "oszczedna"], required=True)
-    ap.add_argument("--scenario", default="weterynaria")
+    ap.add_argument("--scenario", default="veterinary")
     ap.add_argument("--probe")
     ap.add_argument("--id")
     ap.add_argument("--coach", choices=["full", "light", "none"], default="full")
     ap.add_argument("--budget-usd", type=float, default=2.5)
     a = ap.parse_args()
-    probe_path = Path(a.probe) if a.probe else SKILL / "scenarios" / a.scenario / "proba.json"
+    probe_path = Path(a.probe) if a.probe else SKILL / "scenarios" / a.scenario / "trial.json"
     try:
         probe = json.loads(probe_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:

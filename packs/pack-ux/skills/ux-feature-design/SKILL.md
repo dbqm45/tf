@@ -29,22 +29,22 @@ tokeny, dokument główny) ma pierwszeństwo przed nowym pomysłem.
 6. **Prototyp** o wierności dopasowanej do pytania: klikalny przepływ dla testu zadania, wysoka wierność dopiero
    dla pytań o wygląd i ruch. Prototyp w kodzie: strona HTML lub komponenty w repo za flagą.
 7. **Ocena**: heurystyki i przegląd ekspercki, potem test z 5 użytkownikami na segment
-   (`references/heurystyki-i-testy.md`). Wyniki → poprawki → kolejna iteracja.
+   (`references/heuristics-and-tests.md`). Wyniki → poprawki → kolejna iteracja.
 8. **Specyfikacja dla programistów** (sekcja niżej) i przegląd z inżynierią **przed** końcem projektu — ograniczenia
    API, danych, wydajności i platformy wychodzą wtedy taniej.
 
 ## Interfejs wizualny i ruch
 Hierarchia wizualna, typografia, kolor, siatka, stany komponentów, mikrointerakcje i zasady ruchu:
-`references/ui-wizualny-i-ruch.md`. Progi dostępności i lista przed oddaniem: fe-css (`przeglad-ui.md`) i fe-web-platform.
+`references/visual-ui-and-motion.md`. Progi dostępności i lista przed oddaniem: fe-css (`ui-review.md`) i fe-web-platform.
 
 ## Treść, włączanie, etyka
 Teksty interfejsu (komunikaty błędów, przyciski, puste stany, ton), projekt włączający i wzorce zwodnicze, których
-nie stosujesz: `references/tresci-i-etyka.md`.
+nie stosujesz: `references/content-and-ethics.md`.
 
 ## Zmiana zachowań
 Gdy funkcja ma sprawić, że ludzie zaczną, będą kontynuować albo przestaną coś robić: bramka etyczna, cel (aktor,
 działanie, wynik), diagnoza modelem Fogga i lejkiem CREATE, strategie (zrób za użytkownika → nawyk → świadome
-działanie), techniki z granicami nadużyć, pomiar — `references/projektowanie-zachowan.md`.
+działanie), techniki z granicami nadużyć, pomiar — `references/behavior-design.md`.
 
 ## Specyfikacja dla programistów (handoff)
 Ramki Figmy powiązane z wymaganiami i stanami (tabela `Wymaganie | Ścieżka | Stan | Ramka | Uwagi`, Figma MCP,

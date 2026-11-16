@@ -120,7 +120,7 @@ Refs: 676104e, a215868
 ```
 
 ## Indeks references
-- Czytaj `references/specyfikacja-i-faq.md`, gdy potrzebujesz dosłownego brzmienia 16 reguł (MUST/SHOULD/MAY), FAQ
+- Czytaj `references/specification-and-faq.md`, gdy potrzebujesz dosłownego brzmienia 16 reguł (MUST/SHOULD/MAY), FAQ
   specyfikacji albo parsowania commitów (regex, polecenia `git log`).
 
 ## Checklista

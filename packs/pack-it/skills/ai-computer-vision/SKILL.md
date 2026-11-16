@@ -18,7 +18,7 @@ w produkcji — **ai-mlops**, podstawy prawne — **arch-privacy-compliance**, h
 1. **Warunki wdrożenia.** Zapisz: kto korzysta z wyniku i jaki błąd boli bardziej (fałszywy alarm czy przeoczenie),
    kamera lub źródło, oświetlenie, odległość, rozdzielczość, urządzenie (serwer GPU, CPU, urządzenie brzegowe),
    budżet opóźnienia p95. Bez tego nie da się dobrać ani modelu, ani metryki.
-2. **Sformułuj zadanie** (tabela i metryki: `references/zadania-i-metryki.md`). Najprostsze zadanie, które rozwiązuje problem:
+2. **Sformułuj zadanie** (tabela i metryki: `references/tasks-and-metrics.md`). Najprostsze zadanie, które rozwiązuje problem:
    „czy jest wada” to klasyfikacja, „gdzie jest” to detekcja, „jaka powierzchnia” to segmentacja, poza tym punkty
    kluczowe, OCR i Document AI, śledzenie w wideo. Zadanie trudniejsze oznacza droższe adnotacje.
 3. **Dobierz podejście, od najtańszego** (kolejne tylko po porażce na zbiorze oceny z kroku 5):
@@ -45,7 +45,7 @@ w produkcji — **ai-mlops**, podstawy prawne — **arch-privacy-compliance**, h
    zmiennym świetle, rozmycie ruchu, szum, kompresja JPEG, przesunięcia i skala. Odbicie poziome psuje OCR, tekst,
    strony lewa i prawa (np. anatomia); obrót o 90 stopni psuje obiekty zawsze stojące pionowo. Augmentację stosuj
    po podziale i tylko do zbioru treningowego. Sprawdź wzrokiem próbkę augmentowanych obrazów.
-8. **Metryki i próg** (`references/zadania-i-metryki.md`). Metrykę wiąż z kosztem błędu z kroku 1, próg
+8. **Metryki i próg** (`references/tasks-and-metrics.md`). Metrykę wiąż z kosztem błędu z kroku 1, próg
    akceptacji ustal przed pomiarem. Raportuj precision i recall przy konkretnym progu pewności, nie samo mAP.
    Dla wideo osobno metryki śledzenia.
 9. **Analiza błędów po kawałkach.** Wynik w podziale na: oświetlenie, kamerę, rozmiar obiektu (mały, średni, duży),
@@ -91,7 +91,7 @@ Wynik:
 - [ ] anonimizacja i retencja obrazów; monitoring dryfu z próbką ręczną
 
 ## Materiały dodatkowe
-- `references/zadania-i-metryki.md` — zadania, metryki (COCO), CER i WER, pułapki oceny.
+- `references/tasks-and-metrics.md` — zadania, metryki (COCO), CER i WER, pułapki oceny.
 
 ## Źródła
 - COCO, „Detection Evaluation” (cocodataset.org) i opisy protokołu w pracach cytujących (np. arXiv 1804.07437):

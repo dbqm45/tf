@@ -20,7 +20,7 @@ Prowadzisz krótki dziennik (co sprawdzone, wynik), żeby nie sprawdzać dwa raz
    - pełny komunikat i stos wywołań, bez streszczania.
    Rozbieżność „działa u mnie / nie działa w CI” to już informacja: różnica środowisk jest pierwszym podejrzanym.
    Zgłoszenie użytkownika w jednym zdaniu, bez stack trace → najpierw pytania (kroki, zakres, częstotliwość, obszar),
-   potem źródła dowodów: monitoring, logi, przeglądarka, kod — `references/dowody-z-wielu-zrodel.md`.
+   potem źródła dowodów: monitoring, logi, przeglądarka, kod — `references/evidence-from-many-sources.md`.
 2. **Odtwórz błąd:**
    - najmniejszy, powtarzalny przypadek, najlepiej **test automatyczny, który jest czerwony** z właściwego powodu;
      to jest też pierwszy krok TDD przy poprawce (hook `tdd_guard`);
@@ -33,7 +33,7 @@ Prowadzisz krótki dziennik (co sprawdzone, wynik), żeby nie sprawdzać dwa raz
    - zmieniaj jedną rzecz naraz.
 4. **Zawężaj o połowę:**
    - **w historii**: `git bisect run <skrypt>` znajduje pierwszy zły commit w log₂(n) krokach (200 commitów → ok. 8);
-     kod 125 pomija commit, którego nie da się sprawdzić — `references/bisekcja-i-narzedzia.md`;
+     kod 125 pomija commit, którego nie da się sprawdzić — `references/bisection-and-tools.md`;
    - **w danych**: dziel wejście na połowy, dopóki zostanie najmniejszy przypadek wywołujący błąd (delta debugging);
    - **w kodzie**: logi lub asercje na granicach modułów — gdzie stan jest jeszcze dobry, a gdzie już zły;
    - **w środowisku**: porównaj działające i niedziałające (wersje z lockfile, zmienne, flagi, dane, system).
@@ -62,7 +62,7 @@ Prowadzisz krótki dziennik (co sprawdzone, wynik), żeby nie sprawdzać dwa raz
       albo oddaj problem agentowi w świeżym kontekście;
     - błąd na produkcji z wpływem na użytkowników: najpierw przywrócenie usługi (ops-sre-incidents), diagnoza potem;
     - druga nieudana poprawka tego samego objawu, plan, który nie zbiega się do decyzji, albo zgłoszenie z gotową
-      poprawką („X się psuje, zróbmy Y”) → przeramowanie (`references/przeramowanie.md`): problem może być źle
+      poprawką („X się psuje, zróbmy Y”) → przeramowanie (`references/reframing.md`): problem może być źle
       nazwany, a nie słabo zbadany.
 
 ## Typowe klasy przyczyn

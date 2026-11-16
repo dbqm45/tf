@@ -21,13 +21,13 @@ podajesz z wzorem i danymi wejściowymi, żeby dało się go sprawdzić.
    się policzyć; nie zakładasz po cichu churnu ani marży.
 2. **Definicje przed liczbami** — zapisz, co wchodzi do MRR (tylko opłaty powtarzalne; wdrożenia i usługi
    jednorazowe poza MRR; roczna przedpłata to 1/12 miesięcznie) i jaki jest okres.
-3. **Policz** według wzorów z `references/wzory-i-progi.md`: churn, GRR i NRR na kohorcie z początku okresu, LTV,
+3. **Policz** według wzorów z `references/formulas-and-thresholds.md`: churn, GRR i NRR na kohorcie z początku okresu, LTV,
    CAC, LTV:CAC, okres zwrotu CAC, burn multiple, Rule of 40, quick ratio.
 4. **Porównaj z progami** z tego pliku i powiedz, który próg dotyczy etapu firmy (progi to orientacja z praktyki
    inwestorów, nie norma).
-5. **Pułapki** — przejdź listę z `references/pulapki.md` (średnie zamiast kohort, NRR przykrywający odejścia, LTV
+5. **Pułapki** — przejdź listę z `references/pitfalls.md` (średnie zamiast kohort, NRR przykrywający odejścia, LTV
    przy bardzo małym churnie, CAC bez pełnych kosztów).
-6. **Zmiana ceny** — scenariusze i test: `references/zmiana-ceny.md`.
+6. **Zmiana ceny** — scenariusze i test: `references/price-change.md`.
 7. **Wynik**: tabela metryka → wzór → wartość → próg → ocena, potem 3 wnioski i decyzje do podjęcia; dane
    brakujące osobno.
 

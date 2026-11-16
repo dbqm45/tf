@@ -415,7 +415,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("init"); p.add_argument("--variant", choices=["pelna", "oszczedna"], required=True)
-    p.add_argument("--scenario", default="weterynaria"); p.add_argument("--id")
+    p.add_argument("--scenario", default="veterinary"); p.add_argument("--id")
     p = sub.add_parser("round-begin"); p.add_argument("--id", required=True); p.add_argument("--text", required=True)
     p = sub.add_parser("round-end"); p.add_argument("--id", required=True)
     p = sub.add_parser("invite"); p.add_argument("--id", required=True); p.add_argument("--persona", required=True)

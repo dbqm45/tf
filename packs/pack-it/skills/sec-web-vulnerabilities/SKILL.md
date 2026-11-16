@@ -19,8 +19,8 @@ w repozytorium albo żądanie do lokalnej instancji, nigdy atak na cudzy lub pro
 |---|---|---|
 | **pisanie** | nowa funkcja, endpoint, formularz | przed kodem: tabela „wejście → klasa → obrona → test” (niżej); obronę piszesz od razu, test przed implementacją (TDD) |
 | **przegląd** | diff, PR | tylko klasy, których dotyka diff (mapa niżej); ustalenie bez dowodu z diffu to pytanie, nie błąd |
-| **audyt podstawowy** | aplikacja, moduł, przed wydaniem | wszystkie klasy z `references/klasy-podstawowe.md` po kolei, z obejściami |
-| **audyt zaawansowany** | na prośbę albo gdy aplikacja ma pieniądze, wielu najemców, cache/CDN, własne parsery | audyt podstawowy + wybrane moduły z `references/moduly-zaawansowane.md` |
+| **audyt podstawowy** | aplikacja, moduł, przed wydaniem | wszystkie klasy z `references/core-classes.md` po kolei, z obejściami |
+| **audyt zaawansowany** | na prośbę albo gdy aplikacja ma pieniądze, wielu najemców, cache/CDN, własne parsery | audyt podstawowy + wybrane moduły z `references/advanced-modules.md` |
 
 Moduły zaawansowane wybierasz po cechach aplikacji, nie wszystkie naraz:
 - **A1 logika i wyścigi** — pieniądze, kupony, limity, stany zamówień, zaproszenia;
@@ -49,9 +49,9 @@ Moduły zaawansowane wybierasz po cechach aplikacji, nie wszystkie naraz:
 ## Procedura audytu
 1. **Zakres i mapa wejść:** trasy, akcje serwera, handlery webhooków, kolejki, zadania cykliczne, upload. Dla każdego:
    kto może wywołać (anonim, użytkownik, admin, inny najemca), jakie dane przyjmuje, co zmienia.
-2. **Klasy podstawowe** wg `references/klasy-podstawowe.md`: dla każdej najpierw znajdź miejsca (grep po wzorcach z
+2. **Klasy podstawowe** wg `references/core-classes.md`: dla każdej najpierw znajdź miejsca (grep po wzorcach z
    pliku), potem sprawdź obronę i jej obejścia. Nie kończ na pierwszym znalezisku w klasie.
-3. **Moduły zaawansowane** — tylko wybrane (wyżej), wg `references/moduly-zaawansowane.md`.
+3. **Moduły zaawansowane** — tylko wybrane (wyżej), wg `references/advanced-modules.md`.
 4. **Dowód:** dla każdego ustalenia test, który bez poprawki nie przechodzi (żądanie innego użytkownika, równoległe
    żądania, ładunek obejścia). Bez dowodu ustalenie ma wagę „do potwierdzenia”.
 5. **Poprawka u źródła:** jedna wspólna funkcja (np. `loadOwned(model, id, user)`), nie łatki w każdym endpoincie.

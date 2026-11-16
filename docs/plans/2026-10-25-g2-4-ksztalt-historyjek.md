@@ -9,7 +9,7 @@ Data: 2026-10-25 · Status: zrobione (kroki 1–6), commit i PR na prośbę czł
 story points) z regułami kontraktu AC-001…004 i STORY-001…003. Lint pliku `requirements.md` używa jej dla każdej
 historyjki `US-NN`; nowe problemy są ostrzeżeniami (kod 0), `--strict` zamienia je w kod 1. Test na kopii zestawu
 wzorcowego pdi porównuje wynik z `expected.json` i raportuje precyzję i czułość per reguła. Skille: faza 4
-proc-requirements-shaping, sygnały mieszania w mapa-i-dzielenie.md, przyjęcie historyjki w talos-story-run, nazwa
+proc-requirements-shaping, sygnały mieszania w map-and-split.md, przyjęcie historyjki w talos-story-run, nazwa
 testu akceptacyjnego w qa-spec-first-testing.
 
 ## Decyzje

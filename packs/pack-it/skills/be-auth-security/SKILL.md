@@ -26,7 +26,7 @@ metadata:
 - Limit bezczynności i limit bezwzględny sesji; ponowne uwierzytelnienie (step-up) przed operacjami wrażliwymi: zmiana
   e-maila lub MFA, wypłata, uprawnienia, eksport danych.
 - Tam, gdzie się da, wiąż token z urządzeniem lub kluczem (DPoP, mTLS między usługami, DBSC w przeglądarce).
-Szczegóły i sygnały nadużyć: `references/tokeny-sesje-oauth.md`.
+Szczegóły i sygnały nadużyć: `references/tokens-sessions-oauth.md`.
 
 ## OAuth / OIDC
 - Authorization Code + **PKCE** dla każdego klienta; redirect URI zarejestrowane i porównywane dokładnie (bez wzorców,
@@ -38,12 +38,12 @@ Szczegóły i sygnały nadużyć: `references/tokeny-sesje-oauth.md`.
   popularna metoda phishingu, która omija MFA.
 - **Zdalny serwer MCP** to serwer zasobów OAuth: OAuth 2.1 z PKCE, odkrywanie serwera autoryzacji z metadanych,
   rejestracja klienta przez Client ID Metadata Documents (Dynamic Client Registration przestarzałe), walidacja
-  odbiorcy tokenu i `iss` — `references/tokeny-sesje-oauth.md` §7.
+  odbiorcy tokenu i `iss` — `references/tokens-sessions-oauth.md` §7.
 
 ## Autoryzacja
 - Sprawdzana na serwerze **per zasób i per akcja** (nie tylko „czy zalogowany”). Najczęstszy błąd: IDOR — `GET /invoices/{id}` bez sprawdzenia właściciela.
 - Domyślnie odmowa (deny by default); uprawnienia w jednym module, nie rozsiane po kontrolerach.
-- Wybór modelu (RBAC, ABAC, ReBAC, PBAC, DAC, MAC) i macierz testów autoryzacji: `references/modele-autoryzacji.md`.
+- Wybór modelu (RBAC, ABAC, ReBAC, PBAC, DAC, MAC) i macierz testów autoryzacji: `references/authorization-models.md`.
 - Konta usług: jedna tożsamość na usługę, własne poświadczenia o minimalnym zakresie; nigdy wspólny superużytkownik bazy.
 - Panel administracyjny i endpointy zarządzania: osobny host, SSO z MFA, dostęp z VPN/sieci firmowej — nie z internetu.
   Uprawnienia administracyjne nadawane na czas (just-in-time) i zapisywane w logu audytowym.
@@ -72,7 +72,7 @@ odpowiedzieć na pytanie „czy ktoś miał dostęp” (ops-observability).
 
 Pełna checklista przed wydaniem API (uwierzytelnianie, JWT z ustalonym algorytmem i JWKS, transport i HSTS, XXE
 i „billion laughs”, upload przez podpisany URL, nagłówki odpowiedzi, CI/CD, monitorowanie):
-`references/checklista-bezpieczenstwa-api.md`.
+`references/api-security-checklist.md`.
 
 ## Checklista przeglądu
 - [ ] każdy nowy endpoint ma sprawdzenie autoryzacji per zasób + test na 403

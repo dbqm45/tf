@@ -35,7 +35,7 @@ metadata:
 Heurystyka: metody charakterystyczne i wielokrotnie używane w wielu przypadkach użycia → do agregatu;
 specyficzne dla jednego przypadku → do serwisu.
 
-**Gdy jedna polityka nie wystarcza** (`references/reguly-dynamiczne.md`):
+**Gdy jedna polityka nie wystarcza** (`references/dynamic-rules.md`):
 - polityki jako czyste funkcje składane w łańcuchy, drzewa i dekoratory, zbudowane z konfiguracji przez fabrykę
   polityk;
 - scoring z wersjonowanymi składnikami i progami;

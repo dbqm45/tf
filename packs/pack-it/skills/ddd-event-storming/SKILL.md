@@ -104,13 +104,13 @@ silnik procesów), zapisz go po warsztacie:
   zdarzenie pośrednie, aktor → tor.
 - **EPC** (łańcuch procesów sterowany zdarzeniami): naprzemiennie zdarzenie → funkcja → zdarzenie, z łącznikami
   AND/OR/XOR; spotykany w organizacjach używających ARIS i SAP.
-- Prosty przepływ bez wielu ról: Mermaid `flowchart` (docs-tech-writing, `diagramy-i-prezentacje.md`).
+- Prosty przepływ bez wielu ról: Mermaid `flowchart` (docs-tech-writing, `diagrams-and-presentations.md`).
 Diagram procesu nie zastępuje modelu domeny — reguły i niezmienniki zostają w agregatach i politykach.
 
 ## 7. Jak prowadzisz to jako agent (bez fizycznej ściany)
 Jesteś facylitatorem: **pytasz i zapisujesz**, a wiedzę i decyzje dają ludzie. Sesja idzie przez 5 faz:
 kontekst sesji → zdarzenia → komendy i polityki → agregaty → konteksty i mapa. Wczytujesz kartę **tylko bieżącej
-fazy** z `references/fazy-agenta.md`, tam też jest protokół tury.
+fazy** z `references/agent-phases.md`, tam też jest protokół tury.
 - **Tablica:** `python3 .claude/skills/ddd-event-storming/scripts/es_board.py init --id RRRR-MM-DD-<temat> --topic … --question …`,
   potem `add`/`edit`/`move`/`undo`/`resolve`. Dziennik zdarzeń jest w `docs/project/02-domain/event-storming/<id>/`,
   a `show` zapisuje `board.md` wg `references/board-template.md`. Skrypt odrzuca kartkę późniejszej fazy
@@ -127,7 +127,7 @@ fazy** z `references/fazy-agenta.md`, tam też jest protokół tury.
 ## Materiały dodatkowe
 - `references/session-scripts.md` — scenariusze minutowe sesji Big Picture / Process / Design, przygotowanie sali, wersja zdalna.
 - `references/board-template.md` — szablon zapisu tablicy w Markdown + Mermaid.
-- `references/fazy-agenta.md` — sesja prowadzona przez agenta: protokół tury i karty 5 faz (kryteria wyjścia, bramki).
+- `references/agent-phases.md` — sesja prowadzona przez agenta: protokół tury i karty 5 faz (kryteria wyjścia, bramki).
 - `scripts/es_board.py` — tablica sesji: dziennik zdarzeń z cofnięciem, kontrola struktury fazy, zapis Markdown.
 
 ## Wejście z tablicy (zdjęcie, eksport)

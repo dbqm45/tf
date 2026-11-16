@@ -40,7 +40,7 @@ metadata:
 ## References
 - `references/css-modules-and-scoped-styles.md` — CSS Modules, `scoped`, `:global`, `composes`, typy, konfiguracja build, odpowiedniki we frameworkach i `@scope`. Czytaj przy wyborze lub konfiguracji izolacji stylów.
 
-- `references/przeglad-ui.md` — kolejność ważności, progi (kontrast, cele dotyku, CLS, typografia), lista przed oddaniem UI, dokument główny systemu projektowego z nadpisaniami. Czytaj przy przeglądzie lub oddawaniu ekranu.
+- `references/ui-review.md` — kolejność ważności, progi (kontrast, cele dotyku, CLS, typografia), lista przed oddaniem UI, dokument główny systemu projektowego z nadpisaniami. Czytaj przy przeglądzie lub oddawaniu ekranu.
 
 ## Checklista
 - [ ] brak twardych kolorów/odstępów

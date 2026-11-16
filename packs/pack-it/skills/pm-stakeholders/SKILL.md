@@ -29,7 +29,7 @@ przyczynę i działanie. Mapa jest dokumentem roboczym zespołu — nie publikuj
    Działanie dopasowane do przyczyny: udział w decyzji, pilotaż u nich, szkolenie, zmiana harmonogramu, wsparcie
    w szczycie pracy — nie „więcej komunikacji”.
 5. **Plan zaangażowania** — tabela: osoba/grupa · interes (na czym im zależy) · luka zaangażowania · komunikat ·
-   kanał · częstotliwość · właściciel kontaktu · następny krok. Szablon i przykład: `references/plan-zaangazowania.md`.
+   kanał · częstotliwość · właściciel kontaktu · następny krok. Szablon i przykład: `references/engagement-plan.md`.
 6. **Przegląd** mapy na każdym etapie (start, przed decyzją, przed wdrożeniem, po wdrożeniu) i po zmianie ludzi —
    wpływ i zainteresowanie się zmieniają.
 

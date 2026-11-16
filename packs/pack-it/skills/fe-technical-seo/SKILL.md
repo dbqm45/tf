@@ -55,7 +55,7 @@ Sklep w Next.js 16.4.3 z `/pl` i `/en`: `generateMetadata` zwraca canonical tej 
 i `alternates.languages` z `pl`, `en`, `x-default` z jednej funkcji używanej też przez `app/sitemap.js`;
 nieznany produkt → `notFound()` → kod 404 i `noindex`; `app/robots.js` blokuje `/koszyk` i `/*?sort=`
 i podaje adres mapy; JSON-LD `Product` z `Offer` w PLN. Wynik `curl` każdej odpowiedzi:
-`references/nextjs-i-sprawdzenie.md`.
+`references/nextjs-and-verification.md`.
 
 ## Checklista
 - [ ] nic, co ma być poza indeksem, nie polega tylko na robots.txt; strony z `noindex` nie są w nim zablokowane

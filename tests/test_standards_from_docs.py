@@ -158,22 +158,22 @@ def main() -> int:
         run_check(good)
         r = tool("apply", str(pack))
         check(r.returncode == 0, f"SD-6: apply po zaliczonej kontroli: {r.stdout}{r.stderr}")
-        refs = pack / "skills" / "acme-standardy" / "references"
+        refs = pack / "skills" / "acme-standards" / "references"
         api = (refs / "api.md").read_text(encoding="utf-8")
         check("RFC 9457" in api and "api.md › Standard API › Błędy" in api and "kolor" not in api.lower()
               and "[U2]" not in api,
               f"SD-6: ustalenie z cytatem i źródłem w pliku swojego obszaru, wzorce tylko w rules.yaml: {api}")
         wyd = (refs / "releases.md").read_text(encoding="utf-8")
         check("U6" in wyd and "sprzeczn" in wyd.lower(), f"SD-6: sprzeczność oznaczona przy ustaleniu: {wyd}")
-        mod = pack / "analyzers" / "acme-standardy"
+        mod = pack / "analyzers" / "acme-standards"
         rules = rs.load_rules(mod / "rules.yaml")
         ids = {x["id"] for x in rules}
         check({"api-sciezka-bez-wersji", "ui-kolor-na-sztywno", "przyklad-print"} <= ids,
               f"SD-7: reguły z dokumentów dopisane do rules.yaml obok istniejących: {ids}")
-        found = {(f["rule"], f["file"]) for f in rs.scan(rules, mod / "fixtures/naruszenia/repo",
-                                                          rs.repo_files(mod / "fixtures/naruszenia/repo"))}
-        expected = {(e["rule"], e["file"]) for e in json.loads((mod / "fixtures/naruszenia/expected.json").read_text())}
-        clean = rs.scan(rules, mod / "fixtures/czyste/repo", rs.repo_files(mod / "fixtures/czyste/repo"))
+        found = {(f["rule"], f["file"]) for f in rs.scan(rules, mod / "fixtures/violations/repo",
+                                                          rs.repo_files(mod / "fixtures/violations/repo"))}
+        expected = {(e["rule"], e["file"]) for e in json.loads((mod / "fixtures/violations/expected.json").read_text())}
+        clean = rs.scan(rules, mod / "fixtures/clean/repo", rs.repo_files(mod / "fixtures/clean/repo"))
         check(found == expected and ("api-sciezka-bez-wersji", "src/api/orders.ts") in expected and not clean,
               f"SD-8: przykłady reguł w fixtures, bramka modułu spełniona: {found} vs {expected}; czyste: {clean}")
         rap = (src / "REPORT.md").read_text(encoding="utf-8") if (src / "REPORT.md").is_file() else ""
@@ -185,7 +185,7 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(ROOT / "core" / "factory" / "install.py"), str(app), "--yes",
                             "--language", "en", "--packs", "pack-acme", "--pack-dir", str(pack)],
                            capture_output=True, text=True, timeout=300)
-        g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standardy"],
+        g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standards"],
                            cwd=app, capture_output=True, text=True, timeout=120) if r.returncode == 0 else r
         leaked = [str(f) for f in app.rglob("*") if f.is_file() and ".git" not in f.parts
                   and "zgodnie z RFC 9457." in f.read_text(encoding="utf-8", errors="ignore")

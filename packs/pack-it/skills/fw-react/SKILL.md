@@ -42,7 +42,7 @@ projekcie bierz odpowiedniki z sekcji „Zależne od wersji”. Nową aplikację
    - `useActionState` daje wynik i flagę oczekiwania;
    - `useFormStatus` daje stan formularza w komponencie potomnym;
    - złożone formularze (walidacja w trakcie, kreator, listy pól) z React Hook Form i schematem wspólnym z serwerem,
-     błędy z API, dostępność: `references/formularze.md`;
+     błędy z API, dostępność: `references/forms.md`;
    - `useOptimistic` pokazuje wynik przed odpowiedzią serwera.
    Odrzucenie biznesowe zwracaj jako stan akcji, nie wyjątek.
 7. **Memoizacja:** w nowym kodzie włącz **React Compiler** (`babel-plugin-react-compiler` 1.x, plugin uruchamiany
@@ -63,7 +63,7 @@ projekcie bierz odpowiedniki z sekcji „Zależne od wersji”. Nową aplikację
     Runner: tool-vitest albo tool-jest.
 
 Przykłady (efekt → wyliczenie, reset przez `key`, `useEffectEvent`, formularz z `useActionState`, wyścig przy
-pobieraniu) i odpowiedniki dla React 18: `references/wzorce.md`.
+pobieraniu) i odpowiedniki dla React 18: `references/patterns.md`.
 
 ## Pojęcia domenowe w React — gdzie co mieszka
 | Pojęcie (słownik) | Miejsce w aplikacji React |

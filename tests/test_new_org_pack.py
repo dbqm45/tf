@@ -42,11 +42,11 @@ def main() -> int:
         out = base / "acme-factory"
         r = gen("acme", "--out", str(out), "--title", "ACME Sp. z o.o.")
         check(r.returncode == 0, f"OP-1: generator działa: {r.stdout}{r.stderr}")
-        files = ["pack.yaml", "README.md", "settings.json", "skills/acme-standardy/SKILL.md",
-                 "tests/skill_evals/acme-standardy.json", "analyzers/acme-standardy/analyzer.yaml",
-                 "analyzers/acme-standardy/rules.yaml", "analyzers/acme-standardy/fixtures/naruszenia/expected.json",
-                 "analyzers/acme-standardy/fixtures/czyste/expected.json", "semgrep.yml",
-                 *(f"skills/acme-standardy/references/{a}.md" for a in ("ui", "api", "data", "releases"))]
+        files = ["pack.yaml", "README.md", "settings.json", "skills/acme-standards/SKILL.md",
+                 "tests/skill_evals/acme-standards.json", "analyzers/acme-standards/analyzer.yaml",
+                 "analyzers/acme-standards/rules.yaml", "analyzers/acme-standards/fixtures/violations/expected.json",
+                 "analyzers/acme-standards/fixtures/clean/expected.json", "semgrep.yml",
+                 *(f"skills/acme-standards/references/{a}.md" for a in ("ui", "api", "data", "releases"))]
         check(all((out / f).is_file() for f in files), f"OP-1: pliki: {[f for f in files if not (out / f).is_file()]}")
         left = [str(f.relative_to(out)) for f in out.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
         check(not left, f"OP-2: wszystkie pola szablonu podstawione: {left}")
@@ -58,16 +58,16 @@ def main() -> int:
               and isinstance(pack.get("org_defaults"), dict)
               and set(pack["org_defaults"].get("config") or {}) <= set(pm.ORG_CONFIG_KEYS),
               f"OP-3: pack.yaml z id, tytułem, zakresem rdzenia i org_defaults z dozwolonymi kluczami: {pack}")
-        check("acme-standardy" in json.dumps(pack.get("contributes", {})),
+        check("acme-standards" in json.dumps(pack.get("contributes", {})),
               f"OP-4: standardy firmy trafiają do każdej persony (contributes): {pack.get('contributes')}")
         try:
             json.loads((out / "settings.json").read_text(encoding="utf-8"))
-            ev = json.loads((out / "tests" / "skill_evals" / "acme-standardy.json").read_text(encoding="utf-8"))
-            ok = ev.get("skill") == "acme-standardy" and len(ev.get("scenarios", [])) >= 3
+            ev = json.loads((out / "tests" / "skill_evals" / "acme-standards.json").read_text(encoding="utf-8"))
+            ok = ev.get("skill") == "acme-standards" and len(ev.get("scenarios", [])) >= 3
         except (OSError, ValueError):
             ok = False
         check(ok, "OP-5: settings.json i scenariusze to poprawny JSON, scenariusze dla skilla standardów")
-        spis = (out / "skills/acme-standardy/SKILL.md").read_text(encoding="utf-8") if (out / "skills/acme-standardy/SKILL.md").is_file() else ""
+        spis = (out / "skills/acme-standards/SKILL.md").read_text(encoding="utf-8") if (out / "skills/acme-standards/SKILL.md").is_file() else ""
         check(all(f"references/{a}.md" in spis for a in ("ui", "api", "data", "releases")) and len(spis.splitlines()) < 60,
               f"OP-15: SKILL.md to krótki spis wskazujący plik każdego obszaru: {len(spis.splitlines())} linii")
 
@@ -92,7 +92,7 @@ def main() -> int:
                             "--language", "en", "--packs", "pack-acme", "--pack-dir", str(out)],
                            capture_output=True, text=True, timeout=300)
         check(r.returncode == 0 and (app / ".tf/factory/packs/pack-acme/pack.yaml").is_file()
-              and (app / ".claude/skills/acme-standardy/SKILL.md").is_file(),
+              and (app / ".claude/skills/acme-standards/SKILL.md").is_file(),
               f"OP-10: instalacja nakładki firmowej przez --pack-dir: {(r.stdout + r.stderr)[-1500:]}")
         if r.returncode == 0:
             pa = packs_mod(app / ".tf" / "factory")
@@ -102,8 +102,8 @@ def main() -> int:
                   and not [e for e in comp["_errors"] if "org_defaults" in e],
                   f"OP-11: warstwa organizacji w konfiguracji projektu, bez błędów składania: {labels} {comp['_errors']}")
             # standardy sprawdzane bez modelu: moduł reguł nakładki działa w projekcie i przechodzi swoją bramkę
-            an = pa.load_yaml(app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml") \
-                if (app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml").is_file() else {}
+            an = pa.load_yaml(app / ".tf/factory/analyzers/acme-standards/analyzer.yaml") \
+                if (app / ".tf/factory/analyzers/acme-standards/analyzer.yaml").is_file() else {}
             leaked = [str(f) for f in app.rglob("*") if f.is_file() and ".git" not in f.parts
                       and "Standard API (poufne)" in f.read_text(encoding="utf-8", errors="ignore")]
             check(not leaked, f"OP-16: dokumenty źródłowe firmy (sources/) nie trafiają do projektu: {leaked}")
@@ -111,15 +111,15 @@ def main() -> int:
                   "OP-14: semgrep.yml nakładki w .tf/factory/packs/pack-acme/ (skan kawałka pętli /tf)")
             check(an.get("prefix") == "ACME" and (an.get("tier0") or {}).get("rules") == "rules.yaml",
                   f"OP-12: moduł reguł firmy zainstalowany, prefiks ustaleń z nazwy firmy: {an}")
-            g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standardy"],
+            g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standards"],
                                cwd=app, capture_output=True, text=True, timeout=120)
             check(g.returncode == 0, f"OP-13: bramka modułu reguł na przykładach z szablonu: {g.stdout[-600:]}{g.stderr[-300:]}")
         # warstwa zespołu: nakładka zespołu na bazie firmowej (silnik ← firma ← zespół ← projekt ← osoba)
         team = base / "acme-backend-factory"
         r = gen("acme", "--team", "backend", "--out", str(team), "--title", "ACME Backend")
         check(r.returncode == 0 and (team / "pack.yaml").is_file()
-              and (team / "skills/backend-standardy/SKILL.md").is_file()
-              and (team / "analyzers/acme-backend-standardy/rules.yaml").is_file(),
+              and (team / "skills/backend-standards/SKILL.md").is_file()
+              and (team / "analyzers/acme-backend-standards/rules.yaml").is_file(),
               f"OP-17: generator nakładki zespołu (--team): {r.stdout}{r.stderr}")
         left = [str(f.relative_to(team)) for f in team.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
         check(not left, f"OP-17: wszystkie pola szablonu zespołu podstawione: {left}")
@@ -176,7 +176,7 @@ def main() -> int:
             check(any(ln.split()[:2] == ["task", "projekt"] for ln in r.stdout.splitlines())
                   and "zespół" in r.stdout, f"OP-25: tf config show zna źródło „zespół”: {r.stdout}{r.stderr}")
             g = subprocess.run([sys.executable, str(app2 / ".tf/factory/analyze.py"), "gate", "--module",
-                                "acme-backend-standardy"], cwd=app2, capture_output=True, text=True, timeout=120)
+                                "acme-backend-standards"], cwd=app2, capture_output=True, text=True, timeout=120)
             check(g.returncode == 0, f"OP-26: bramka modułu reguł zespołu: {g.stdout[-600:]}{g.stderr[-300:]}")
     for f in fails:
         print(f"✗ {f}")

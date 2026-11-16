@@ -12,7 +12,7 @@ metadata:
 Wynik pracy: plik `docs/project/04-architecture/cloud-security-baseline.md` (core-project-record) z dwiema częściami:
 **baseline** (co obowiązuje każde konto, subskrypcję i projekt) oraz **mapowanie kontroli** (kontrola → AWS / Azure / GCP
 → jak wymuszana → jak weryfikowana → właściciel). Tabelę wyjściową i odpowiedniki usług daje
-`references/mapowanie-kontroli.md`. Ten skill niczego nie wdraża: zmiany w chmurze przechodzą przez
+`references/control-mapping.md`. Ten skill niczego nie wdraża: zmiany w chmurze przechodzą przez
 IaC z planem w PR i akceptację człowieka.
 
 ## Procedura

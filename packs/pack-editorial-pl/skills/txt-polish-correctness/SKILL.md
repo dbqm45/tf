@@ -17,7 +17,7 @@ tam decyduje kontekst i jednoznaczność.
 | Tryb | Kiedy | Wynik |
 |---|---|---|
 | **Autokontrola** | każdy agent piszący po polsku | tekst poprawny od razu; przed oddaniem: linter + ściągawka niżej |
-| **Analiza (korekta)** | prośba o sprawdzenie tekstu, przegląd przez redaktora | raport uwag wg `references/raport-analizy.md` (+ poprawione fragmenty na życzenie) |
+| **Analiza (korekta)** | prośba o sprawdzenie tekstu, przegląd przez redaktora | raport uwag wg `references/analysis-report.md` (+ poprawione fragmenty na życzenie) |
 Gotowy, przeredagowany tekst (styl, skracanie, ton) → **txt-polish-style**.
 
 ## Krok 0 — linter (zero tokenów)
@@ -42,7 +42,7 @@ nie każdy*) oraz przy przeciwstawieniu („nie zapisany, lecz odrzucony”).
 tekście; nazwy dni, miesięcy małą. Tytuły dokumentów: wielka tylko pierwsza litera i nazwy własne (nie „Title Case”).
 **Zmiany od 2026** (pamięć modelu podpowiada stare zasady): nazwy mieszkańców miast i wsi wielką (*Warszawianin,
 Krakowianie*); wyraz rodzajowy obiektu przestrzeni publicznej wielką jako część nazwy (*Plac Zbawiciela, Aleja Róż*),
-ale *ulica* zawsze małą (`references/pisownia.md`, sekcja 8.1.2).
+ale *ulica* zawsze małą (`references/spelling.md`, sekcja 8.1.2).
 
 **Typografia** — cudzysłów `„…”` (zagnieżdżony `»…«`); łącznik `-` w wyrazach złożonych; półpauza `–` w zakresach bez spacji
 (2020–2026); myślnik ` – ` lub ` — ` ze spacjami, jedna forma w dokumencie; wielokropek `…`; brak spacji przed `, . : ; ! ?`;
@@ -54,7 +54,7 @@ spacja przed jednostką (`10 GB`); tysiące ze spacją (`10 000`), ułamki z prz
 - Jeden termin na jedno pojęcie w całym dokumencie (słownik projektu: `docs/project/02-domain/glossary.md`); skrót rozwinięty przy
   pierwszym użyciu. Nie zmieniaj terminów dla „urozmaicenia”.
 - Liczebnik + rzeczownik: 2–4 pliki, 5–21 plików, 22–24 pliki.
-Niepewność (ó/u, rz/ż, h/ch bez wymiany, rzadka nazwa) → nie zgaduj: sprawdź w `references/pisownia.md` albo oznacz do weryfikacji.
+Niepewność (ó/u, rz/ż, h/ch bez wymiany, rzadka nazwa) → nie zgaduj: sprawdź w `references/spelling.md` albo oznacz do weryfikacji.
 <!-- polish-lint: on -->
 
 ## Czego nie poprawiasz
@@ -64,11 +64,11 @@ ustaloną w słowniku projektu. Commity i komentarze w kodzie są po angielsku (
 ## Materiały (czytaj tylko potrzebny plik)
 | Plik | Kiedy |
 |---|---|
-| `references/pisownia.md` | RJP cz. I: ó/u, rz/ż, h/ch, łączna/rozdzielna, `nie`, łącznik, skróty i skrótowce, wielkie litery, nazwy obce |
-| `references/interpunkcja.md` | RJP cz. II: kropka, przecinek (kiedy stawiać i kiedy nie), średnik, dwukropek, myślnik, nawias, cudzysłów |
-| `references/semantyka-i-skladnia.md` | norma i rejestr, typologia błędów, pleonazmy, kontaminacje, paronimy, kalki, związki składniowe, spójność terminów |
-| `references/wzorce-praktyczne.md` | szybki katalog błędów w tekstach użytkowych + progi czytelności |
-| `references/raport-analizy.md` | format uwag, kategorie i priorytety, podsumowanie, raport do pliku |
+| `references/spelling.md` | RJP cz. I: ó/u, rz/ż, h/ch, łączna/rozdzielna, `nie`, łącznik, skróty i skrótowce, wielkie litery, nazwy obce |
+| `references/punctuation.md` | RJP cz. II: kropka, przecinek (kiedy stawiać i kiedy nie), średnik, dwukropek, myślnik, nawias, cudzysłów |
+| `references/semantics-and-syntax.md` | norma i rejestr, typologia błędów, pleonazmy, kontaminacje, paronimy, kalki, związki składniowe, spójność terminów |
+| `references/practical-patterns.md` | szybki katalog błędów w tekstach użytkowych + progi czytelności |
+| `references/analysis-report.md` | format uwag, kategorie i priorytety, podsumowanie, raport do pliku |
 
 ## Checklista
 - [ ] linter uruchomiony, uwagi WYSOKIE i ŚREDNIE rozstrzygnięte

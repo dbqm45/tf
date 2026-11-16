@@ -64,12 +64,12 @@ Nowe wpisy słownika trafiają do `glossary.md` jako **propozycje** do akceptacj
 5. **Dowód izolacji:** lista „zna dziś / zna po refaktorze”.
 6. **Kryterium ukończenia (sprawdzalne poleceniem):** wyszukanie nazwy pakietu zwraca **wyłącznie pliki katalogu
    adaptera**. Utrwalasz je regułą w CI — dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit;
-   gotowe szablony: `references/szablony-regul.md`.
+   gotowe szablony: `references/rule-templates.md`.
 
 ## Dalej
 Artefakty A–C są wejściem do planowania kroku (core-plan-interview → plan z fazami). Hot spoty z Event Stormingu
 (ddd-event-storming) to kandydaci na kolejne kroki. Cykl: odkryj → nazwij rozjazdy → zabezpiecz niezmiennik →
-odizoluj zależność → zaplanuj. Szablony dokumentów A–C: `references/szablony-dokumentow.md`.
+odizoluj zależność → zaplanuj. Szablony dokumentów A–C: `references/document-templates.md`.
 
 ## Przykład
 **Sytuacja:** aplikacja do fiszek po MVP; PRD opisuje „sesję generacji” z cyklem życia.

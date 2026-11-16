@@ -35,7 +35,7 @@ także po kompaktowaniu kontekstu. CI nadal uruchamia pełny zestaw — warstwy 
    nie cały `src/`.
 3. **Hook agenta po edycji** — szablon niżej. Zmiana `.claude/settings.json` i `.claude/hooks/` tylko na prośbę
    człowieka (CLAUDE.md); bez zgody oddajesz gotowy fragment do wklejenia.
-4. **Hooki gita** — `references/hooki-gita.md` (Husky + lint-staged, Lefthook, pre-commit; wersje sprawdzone).
+4. **Hooki gita** — `references/git-hooks.md` (Husky + lint-staged, Lefthook, pre-commit; wersje sprawdzone).
 5. **Test bramek:** edycja pliku → hook się uruchamia → błąd wraca do agenta; zepsuty plik w stage → commit odrzucony;
    czerwony test → push odrzucony. Bez tego bramka jest życzeniem.
 6. **Zapis:** tabela „bramka → warstwa → od kiedy” w strategii testów; polecenia w sekcji „Komendy” w `CLAUDE.md` projektu.

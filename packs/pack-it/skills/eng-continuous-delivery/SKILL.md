@@ -57,4 +57,4 @@ parytet środowisk, logi jako strumień zdarzeń, zadania administracyjne jako j
 (2) `CheckoutFlowV2` za flagą `checkout-v2` (właściciel, data usunięcia, domyślnie wyłączona), (3) migracja *expand*,
 (4) flaga dla zespołu wewnętrznego, (5) włączenie dla wszystkich i *contract* — usunięcie starego kodu i flagi.
 Dalej gałęzie ≤ 1–2 dni i integracja codzienna.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

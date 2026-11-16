@@ -14,7 +14,7 @@ Red → green → refactor; w kroku red sprawdź, że najmniejszy nowy test pada
 najpierw test odtwarzający błąd. Testuj **zachowanie przez publiczne API**, nie implementację.
 Praca agenta: najpierw uzgodnione spoiny, potem pionowe plasterki po jednym teście, refaktoryzacja jako jawny osobny krok,
 anty-wzorce (test związany z implementacją, tautologiczny, cięcie poziome) i **bramka przed fazą** (kiedy TDD, a kiedy
-zwykła implementacja; budżet 2–5 testów na fazę) — `references/tdd-z-agentem.md`.
+zwykła implementacja; budżet 2–5 testów na fazę) — `references/tdd-with-agent.md`.
 
 ### TDD w fabryce — obowiązkowe dla kodu produkcyjnego
 - **Kolejność, nie deklaracja:**

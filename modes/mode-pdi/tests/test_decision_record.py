@@ -335,7 +335,7 @@ def main() -> int:
     r = release_case(RELEASE_OK, rows=PLAN_ROWS.replace("| TSK-58 | R1 | payment-retry |", "| TSK-58 | R1 | — |"))
     check(r.returncode != 0 and "TSK-58" in r.stdout and "Flaga" in r.stdout,
           f"R-7: kolumna „Flaga” w plan.md niezgodna z release.yaml: {r.stdout}")
-    # Samokontrola planu cięć (core-delivery-lifecycle plan-ciec.md) = REL-008 w ci_for_sdlc: fundament z „Odblokowuje”,
+    # Samokontrola planu cięć (core-delivery-lifecycle cut-plan.md) = REL-008 w ci_for_sdlc: fundament z „Odblokowuje”,
     # cięcie z wymaganiem albo weryfikacją. Kolumny jak w szablonie: Rodzaj, Wymagania, Odblokowuje.
     plan_head = ("| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje | Pliki | Weryfikacja |\n|"
                  + "---|" * 9 + "\n")

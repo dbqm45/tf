@@ -10,7 +10,7 @@ metadata:
 
 Celem jest dostarczanie **wiarygodnych danych na czas** tym, którzy z nich korzystają (analityka, aplikacje, modele).
 Wybór architektury (hurtownia, lakehouse, OLTP vs OLAP, ETL vs ELT, CDC, wsad vs strumień): arch-quality-attributes,
-`architektura-danych.md`. Jakość, pochodzenie, katalog, maskowanie i prawo: `references/jakosc-zarzadzanie-i-zgodnosc.md`.
+`data-architecture.md`. Jakość, pochodzenie, katalog, maskowanie i prawo: `references/quality-management-and-compliance.md`.
 
 ## Pozyskiwanie
 | Sposób | Kiedy | Uwaga |
@@ -54,7 +54,7 @@ Wybór architektury (hurtownia, lakehouse, OLTP vs OLAP, ETL vs ELT, CDC, wsad v
 - **dbt**: modele jako `SELECT` w repozytorium, zależności przez `ref()`, źródła z testami świeżości, testy danych
   (`unique`, `not_null`, relacje, wartości dozwolone), migawki dla historii zmian (SCD2), dokumentacja i graf pochodzenia
   generowane z projektu. Przegląd w PR, uruchomienie w CI na próbce danych.
-- Modelowanie: schemat gwiazdy dla analityki (`architektura-danych.md`), normalizacja w systemach źródłowych,
+- Modelowanie: schemat gwiazdy dla analityki (`data-architecture.md`), normalizacja w systemach źródłowych,
   denormalizacja w warstwie udostępniania.
 
 ## Przechowywanie: formaty

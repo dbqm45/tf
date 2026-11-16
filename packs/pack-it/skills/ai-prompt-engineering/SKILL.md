@@ -13,7 +13,7 @@ Prompt to kod z niedeterministycznym wykonawcą: zmienia się go hipotezą i spr
 miej kryterium sukcesu i sposób jego sprawdzenia (`ai-evals`); bez tego „poprawa” jest wrażeniem. Nie każda porażka
 jest problemem promptu — czasem pomaga zmiana modelu, schematu wyjścia lub narzędzia (**eng-llm-features**, kontrakt
 wyjścia i SDK). Nazwy modeli i parametrów API sprawdzasz w dokumentacji dostawcy (core-grounding); dla Claude:
-wbudowany w Claude Code skill `claude-api` (aktualizuje go Anthropic). Stan z 2026-10-20 i szczegóły: `references/techniki-i-migracja.md`.
+wbudowany w Claude Code skill `claude-api` (aktualizuje go Anthropic). Stan z 2026-10-20 i szczegóły: `references/techniques-and-migration.md`.
 
 ## Procedura
 1. **Zdiagnozuj, co się psuje**, na 5–10 konkretnych złych wyjściach: zła treść, zły format, pominięta instrukcja,
@@ -37,7 +37,7 @@ wbudowany w Claude Code skill `claude-api` (aktualizuje go Anthropic). Stan z 20
    pytanie **na końcu**; przy gęstych dokumentach poproś najpierw o wypisanie cytatów istotnych dla pytania.
 8. **Układ pod cache:** część stała (instrukcje, narzędzia, przykłady, dokumenty) na początku, zmienna (data, dane
    użytkownika, pytanie) na końcu. Cache pasuje po dokładnym prefiksie w kolejności narzędzia → system → wiadomości;
-   znacznik czasu lub identyfikator użytkownika w prefiksie zeruje trafienia. Zasady, minimalne długości i ceny: core-cost-control i `references/techniki-i-migracja.md`.
+   znacznik czasu lub identyfikator użytkownika w prefiksie zeruje trafienia. Zasady, minimalne długości i ceny: core-cost-control i `references/techniques-and-migration.md`.
 9. **Szablony i wersje.** Prompt w pliku lub rejestrze, nie sklejany stringami po kodzie: szablon z nazwanymi
    zmiennymi, wersja (SemVer lub data), opis zmiany, przypięty model. Zmianę wersji zawsze przepuszczasz przez zestaw
    regresyjny (`ai-evals`); cykl życia w produkcji: ai-mlops.

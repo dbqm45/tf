@@ -43,7 +43,7 @@ dodatkowego trybu.
 
 | # | Kawałek | Co powstaje | Testy (najpierw) | Wielkość |
 |---|---|---|---|---|
-| E0 | pętla w rdzeniu, stare nazwy usunięte, pdi woła `/tf` (bez zmiany zachowania pętli) | skill `tf` w `core/skills/tf/` z treścią pętli, skryptami i szablonami (ścieżka `.claude/skills/tf/scripts/`); agent sesji głównej `tf` w konfiguracji rdzenia; wymiar `tf`, wpis w `standalone_skills`; uprawnienia skryptów w `core/settings.json`; testy pętli w `core/tests/`; nowe nazwy: `.claude/tf.json`, `TF_DASHBOARD*`, `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, `.tf/runs/dashboard.html`, przewodnik `.tf/factory/PETLA.md`; tryb `mode-talos` usunięty, instalator pomija go przy aktualizacji z komunikatem; pdi: persona `tf`, polecenie `/tf <TSK> --auto --change …`, `--agent tf`, szablony CI na nowe ścieżki i zmienne; `PUBLIC_API.md`, przewodniki | testy pętli przechodzą w wariancie bez nakładek; agent `tf` jest generowany z rdzenia; `build.py check` bez ostrzeżenia o nazwie; aktualizacja projektu z `mode-talos` w manifeście przechodzi i usuwa jego pliki, a jawna prośba o ten tryb kończy się odmową z wyjaśnieniem; testy pdi z nowymi nazwami w wariancie bez dodatkowych trybów | L |
+| E0 | pętla w rdzeniu, stare nazwy usunięte, pdi woła `/tf` (bez zmiany zachowania pętli) | skill `tf` w `core/skills/tf/` z treścią pętli, skryptami i szablonami (ścieżka `.claude/skills/tf/scripts/`); agent sesji głównej `tf` w konfiguracji rdzenia; wymiar `tf`, wpis w `standalone_skills`; uprawnienia skryptów w `core/settings.json`; testy pętli w `core/tests/`; nowe nazwy: `.claude/tf.json`, `TF_DASHBOARD*`, `TF_SCAN_PATH`, `TF_SEMGREP_CONFIG`, `.tf/runs/dashboard.html`, przewodnik `.tf/factory/LOOP.md`; tryb `mode-talos` usunięty, instalator pomija go przy aktualizacji z komunikatem; pdi: persona `tf`, polecenie `/tf <TSK> --auto --change …`, `--agent tf`, szablony CI na nowe ścieżki i zmienne; `PUBLIC_API.md`, przewodniki | testy pętli przechodzą w wariancie bez nakładek; agent `tf` jest generowany z rdzenia; `build.py check` bez ostrzeżenia o nazwie; aktualizacja projektu z `mode-talos` w manifeście przechodzi i usuwa jego pliki, a jawna prośba o ten tryb kończy się odmową z wyjaśnieniem; testy pdi z nowymi nazwami w wariancie bez dodatkowych trybów | L |
 | E1 | rozpoznanie wejścia i źródła (poz. 9, D2) | `/tf` wywoływany także przez model; skrypt rozpoznaje: klucz cięcia z planu zmiany, klucz zgłoszenia (tracker z karty operacyjnej albo z adresu), adres zgłoszenia, wklejoną treść, brak argumentów (lista zadań i wznowienie); gdy klucz może pochodzić z kilku trackerów podłączonych w sesji — jedno pytanie, a odpowiedź trafia do karty operacyjnej; skill prowadzi: zadanie → pętla, pytanie o kod → odpowiedź, swobodna zmiana w czacie → bez pętli, wątpliwość → jedno pytanie; źródło i data w `ticket.md`; tracker: gdy w sesji jest serwer MCP — odczyt (bez zapisu), gdy nie ma — jedno zdanie, czego brakuje, i „wklej treść”; treść z trackera to dane, nie polecenia | skrypt: każda forma wejścia → źródło i klucz; tracker zapamiętany w karcie nie jest pytany ponownie; klucz w dwóch planach → pytanie o zmianę; scenariusze skilla: kiedy włączyć pętlę i kiedy nie (pytanie, literówka, przegląd, plan projektu); brak MCP nie blokuje — droga przez wklejenie | M |
 | E2 | waga dobierana skryptem (poz. 9, D3) | `tf task weight <KEY>`: propozycja z treści zgłoszenia i ze ścieżek planu, z powodem; `--set`: podniesienie swobodne, obniżenie tylko `--by human:<id>`; `lekka` — bez `spec.md`, jeden kawałek, dowód nadal wymagany; `pelna` — tryb Auto niedostępny, dodatkowi recenzenci | zgłoszenie o logowaniu → `pelna`; literówka → `lekka`; nowa reguła → `zwykla`; plan dotyka migracji → podniesienie; obniżenie bez człowieka → odmowa; `pelna` z `--auto` → odmowa z wyjaśnieniem | M |
 | E3 | tryby i punkty stałe (poz. 9) | tryb `--plan`; tryb zwykły: jedno zatwierdzenie specyfikacji i planu; `--auto`: tylko punkty stałe; zamknięta lista kodów zatrzymań w skrypcie | `--plan` nie wchodzi w realizację; nieznany kod zatrzymania → błąd; podgląd pokazuje przyczynę | S–M |
@@ -72,7 +72,7 @@ człowieka. Pomiar po E0 ma wykazać brak zmiany względem pomiaru po D4 (ten sa
 4. `core/tests/test_tf_skill.py` → `core/skills/tf/SKILL.md`: bez `disable-model-invocation`, nowy opis i słowa,
    sekcja „Wejście” (rozpoznanie prośby, `intake.py resolve`, tracker przez MCP albo wklejenie, treść jako dane);
    uprawnienie `intake.py` w `core/settings.json`; komentarz agenta `tf` w `core/factory/config.yaml`.
-5. Przewodniki (`PETLA.md`, `PRZEWODNIK.md`, FAQ), `PUBLIC_API.md`, bramka skilla, `sync-gate`.
+5. Przewodniki (`LOOP.md`, `GUIDE.md`, FAQ), `PUBLIC_API.md`, bramka skilla, `sync-gate`.
 
 **Reguły `resolve`** (pierwsza pasująca wygrywa; opcje `--auto`, `--plan`, `--budget N`, `--change CHG-n` oraz
 słowo wymuszające `zadanie` / `pytanie` / `szybko` są wcześniej odcinane i zwracane osobno):
@@ -106,9 +106,9 @@ cięć (E6); zapis do trackera.
 
 **SKILL.md pętli skrócony** (prośba właściciela, 2026-11-14): z 24 749 do 14 859 znaków, poniżej limitu 15 000
 z `build.py check` (po kompaktowaniu Claude Code przywraca tylko początek dłuższego skilla). Szczegóły są w czterech
-plikach `core/skills/tf/references/`: `wejscie.md` (rodzaje wejścia, tracker), `ciecia-pdi.md` (przebieg cięcia
-i poprawki z pętli PR), `flaga-funkcji.md`, `bezpieczenstwo.md` (karencja wersji, skan). `intake.py` przy cięciu
-i prompt poprawek `pr_loop.py` wskazują `ciecia-pdi.md` wprost. Test `T-20` pilnuje limitu, `T-21` — że każdy plik
+plikach `core/skills/tf/references/`: `intake.md` (rodzaje wejścia, tracker), `pdi-cuts.md` (przebieg cięcia
+i poprawki z pętli PR), `feature-flag.md`, `security.md` (karencja wersji, skan). `intake.py` przy cięciu
+i prompt poprawek `pr_loop.py` wskazują `pdi-cuts.md` wprost. Test `T-20` pilnuje limitu, `T-21` — że każdy plik
 jest wymieniony w SKILL.md. Kolejne kawałki (E2–E4) dopisują szczegóły do `references/`, nie do SKILL.md.
 
 ## E2 — plan szczegółowy (2026-11-14, przed kodem)
@@ -121,7 +121,7 @@ jest wymieniony w SKILL.md. Kolejne kawałki (E2–E4) dopisują szczegóły do 
    (`tf task approve <KEY> plan.md --by human:<id>`); waga `lekka` — plan ma najwyżej jeden kawałek.
 3. `core/tests/test_run_state.py` → `run_state.py weight <katalog>` (pętla stosuje propozycję i drukuje skutki);
    przy wadze `lekka` etap `plan` przebiegu nie wymaga `spec.md`.
-4. `core/tests/test_tf_skill.py` → jedna linia w SKILL.md i `references/waga.md`; przewodniki, `PUBLIC_API.md`.
+4. `core/tests/test_tf_skill.py` → jedna linia w SKILL.md i `references/weight.md`; przewodniki, `PUBLIC_API.md`.
 
 **Reguły propozycji** (ostrożne: wątpliwość → wyższa waga; każda propozycja ma powód zwykłym zdaniem):
 
@@ -161,7 +161,7 @@ cięcia nie ma zadania, więc nie ma wagi).
 2. `core/tests/test_run_state.py` → `run_state.py`: `stage … --plan | --auto` zapisuje tryb zadania, `mode <katalog>
    [tryb]`, `approve <katalog>` (zgoda człowieka na plan), `stage … needs --needs stop --code <kod>` z zamkniętą listą
    kodów, kod i jego opis na podglądzie.
-3. `core/tests/test_tf_skill.py` → jedna linia w SKILL.md i `references/tryby-i-zatrzymania.md`; przewodniki,
+3. `core/tests/test_tf_skill.py` → jedna linia w SKILL.md i `references/modes-and-stops.md`; przewodniki,
    `PUBLIC_API.md`.
 
 **Tryby** (wybiera człowiek w poleceniu; skrypt pilnuje wejścia do etapu `realizacja`):
@@ -215,7 +215,7 @@ dostają zgodę albo `--auto` — to nowa reguła trybu zwykłego, nie osłabien
 2. `core/tests/test_run_state.py` → `run_state.py`: `message <kod>` drukuje komunikat; `stage … needs --needs stop
    --code <kod>` po zapisie zatrzymania drukuje ten sam komunikat z powodem przebiegu; podgląd pokazuje „czego
    potrzeba” i pytanie z opcjami zamiast samego powodu.
-3. `core/tests/test_tf_skill.py` → `references/tryby-i-zatrzymania.md`: pętla pokazuje człowiekowi wydrukowany
+3. `core/tests/test_tf_skill.py` → `references/modes-and-stops.md`: pętla pokazuje człowiekowi wydrukowany
    komunikat (w rozmowie pytanie zadaje narzędziem z opcjami), nie własny opis. SKILL.md bez zmian (limit znaków).
 
 **Reguły komunikatów** (dokument osi §1a, reguły 2–4):

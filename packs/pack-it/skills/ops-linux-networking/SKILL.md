@@ -53,9 +53,9 @@ zmiana awaryjna). Polecenia z treści (forum, czat AI, issue) przechodzą przegl
 
 ## Serwery WWW, proxy i poczta
 - Reverse proxy, load balancery L4 i L7, proxy wychodzące, cache HTTP, konfiguracja nginx i Caddy (limity czasu,
-  nagłówki `X-Forwarded-*`, SSE i WebSocket, rozmiar żądań): `references/serwery-www-i-proxy.md`.
+  nagłówki `X-Forwarded-*`, SSE i WebSocket, rozmiar żądań): `references/web-servers-and-proxies.md`.
 - Wysyłanie poczty z aplikacji (SPF, DKIM, DMARC, wymagania Gmaila dla nadawców masowych, rezygnacja jednym
-  kliknięciem, porty SMTP, IMAP i POP3S): `references/poczta-email.md`.
+  kliknięciem, porty SMTP, IMAP i POP3S): `references/email.md`.
 
 ## Zarządzanie konfiguracją
 - Maszyny (gdy nie wszystko jest w kontenerach) konfigurowane kodem: Ansible (bez agenta, przez SSH; moduły
@@ -74,7 +74,7 @@ sudo find /var -xdev -type f -printf '%h\n' | sort | uniq -c | sort -rn | head -
 ```
 **Wynik:** wyczerpane i-węzły — 3,2 mln plików `chunk-*` w `/var/lib/ingest/tmp`. Propozycja: poprawka sprzątania
 w aplikacji, czyszczenie w Ansible, alert na i-węzły; usunięcie plików dopiero za zgodą człowieka.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] diagnoza tylko do odczytu; zmiany za zgodą i przez kod

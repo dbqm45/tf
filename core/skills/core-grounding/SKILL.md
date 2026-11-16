@@ -42,7 +42,7 @@ Twierdzenia bez dowodu nie podajesz jako faktu. Do wyboru:
 Wersje i zgodność wersji · nazwy API, metod i opcji · flagi CLI · nazwy pakietów · ścieżki i nazwy plików
 w repozytorium · numery (porty, limity, kody błędów, CVE, RFC, artykuły ustaw) · daty i terminy · cytaty
 i przypisanie źródeł · wynik polecenia, którego nie uruchomiłeś · zachowanie kodu, którego nie przeczytałeś ·
-liczby w szacunkach (pokaż rachunek). Szczegóły i polecenia sprawdzające: `references/sprawdzanie.md`.
+liczby w szacunkach (pokaż rachunek). Szczegóły i polecenia sprawdzające: `references/checking.md`.
 
 ### Twierdzenia strukturalne o kodzie
 „Dokładnie 4 wywołania”, „tylko w module X”, „zawsze przez Y”, „interfejs ma 54 metody” — modele liczą to najsłabiej,

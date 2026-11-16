@@ -32,7 +32,7 @@ Szczegóły i treść zasad [niezweryfikowane] w źródle pierwotnym (strona NIS
 Model logiczny: **PDP** (policy decision point = policy engine + policy administrator) decyduje, **PEP** (policy
 enforcement point) egzekwuje i jest jedyną drogą do zasobu. Dane wejściowe PDP: IdP i MFA, rejestr urządzeń i postura,
 inteligencja zagrożeń, logi, polityki dostępu do danych. Wzorce wdrożenia: oparty na tożsamości agent/bramka,
-mikrosegmentacja, sieć programowalna (SDP). Zdecyduj, które pasuje do zasobów (`references/architektura-i-sase.md`).
+mikrosegmentacja, sieć programowalna (SDP). Zdecyduj, które pasuje do zasobów (`references/architecture-and-sase.md`).
 
 ## Procedura
 1. **Zasoby i przepływy.** Inwentarz aplikacji, danych, tożsamości (ludzi i maszyn), urządzeń; mapa „kto do czego”.
@@ -42,11 +42,11 @@ mikrosegmentacja, sieć programowalna (SDP). Zdecyduj, które pasuje do zasobów
    zarządzanie), cztery stopnie (Traditional, Initial, Advanced, Optimal). Oceń każdy filar osobno, filary
    rozwijają się w różnym tempie. Data publikacji wersji 2.0 (kwiecień 2023) i ewentualne nowsze wersje:
    [niezweryfikowane].
-3. **Tożsamość jako perymetr** (priorytet nr 1, `references/tozsamosc-i-dostep.md`): jedno IdP z SSO, MFA odporne
+3. **Tożsamość jako perymetr** (priorytet nr 1, `references/identity-and-access.md`): jedno IdP z SSO, MFA odporne
    na phishing (FIDO2/WebAuthn, passkeys, klucze sprzętowe), CIAM dla klientów oddzielony od katalogu pracowników,
    PAM i dostęp just-in-time dla uprawnień administracyjnych, przeglądy uprawnień, szybkie odbieranie dostępu.
    Agenci AI: własna tożsamość obciążenia dla każdej instancji (SPIFFE/SVID), token użytkownika związany z kluczem
-   agenta (mTLS, DPoP), wymiana tokenu przy przejściu między usługami (`references/tozsamosc-i-dostep.md`, ostatnia sekcja).
+   agenta (mTLS, DPoP), wymiana tokenu przy przejściu między usługami (`references/identity-and-access.md`, ostatnia sekcja).
 4. **Urządzenie:** rejestr, szyfrowanie dysku, aktualność systemu, EDR; sygnał postury trafia do PDP, a niezgodne
    urządzenie dostaje mniej, nie „wszystko albo nic”. Urządzenia prywatne (BYOD) — dostęp przez przeglądarkę/VDI.
 5. **Dostęp do aplikacji:** ZTNA per aplikacja zamiast VPN do całej sieci; stare aplikacje za proxy świadomym

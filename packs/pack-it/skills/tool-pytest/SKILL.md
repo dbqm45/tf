@@ -73,7 +73,7 @@ markers = ["slow: wolne testy, poza szybkim zestawem"]
     - nie dodajesz `@pytest.mark.flaky`.
 
 Przykłady (fixture-fabryka, parametrize z `pytest.param`, `tmp_path`, `monkeypatch`, fake repozytorium, test
-asyncio, Hypothesis, subtesty) uruchomione na pytest 9.1.1: `references/przyklady.md`.
+asyncio, Hypothesis, subtesty) uruchomione na pytest 9.1.1: `references/examples.md`.
 
 ## Zależne od wersji
 | Wersja | Zmiany istotne dla tego skilla |

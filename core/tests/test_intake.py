@@ -135,7 +135,7 @@ def main() -> int:
         code, out, raw = resolve(p, "TSK-57")
         check(out.get("kind") == "ciecie" and out.get("key") == "TSK-57" and out.get("changes") == ["CHG-12"]
               and out.get("ask") is None and "start --task TSK-57 --change CHG-12" in out.get("next", "")
-              and ".claude/skills/tf/references/ciecia-pdi.md" in out.get("next", ""),
+              and ".claude/skills/tf/references/pdi-cuts.md" in out.get("next", ""),
               f"I-13: klucz z nagłówka tasks → cięcie: najpierw zasady cięć (references), potem gotowe polecenie: {raw}")
         code, out, raw = resolve(p, "TSK-58")
         check(out.get("kind") == "ciecie" and out.get("changes") == ["CHG-12", "CHG-13"] and out.get("ask") == "change",

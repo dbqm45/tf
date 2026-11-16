@@ -11,7 +11,7 @@ metadata:
 
 **Rola agenta:** projektuje system tak, żeby nowy język, kraj lub strefa czasowa wymagały tłumaczeń i konfiguracji,
 a nie zmian w kodzie — na froncie, w backendzie, w e-mailach i w danych. Szczegóły API przeglądarki (`Intl`, RTL
-w CSS, SSR): fe-web-platform, `i18n.md`. Fakty i źródła: `references/fakty-i-zrodla.md`.
+w CSS, SSR): fe-web-platform, `i18n.md`. Fakty i źródła: `references/facts-and-sources.md`.
 
 ## 1. Locale — skąd i gdzie
 - Locale użytkownika (język + region, np. `pl-PL`, `en-US`) z profilu, potem z `Accept-Language` / `navigator.languages`;
@@ -77,7 +77,7 @@ arabski.”
   America/New_York`, UTC liczone przy wyświetlaniu i przypomnieniu; migracja istniejących wpisów ze strefą twórcy.
 - Testy: spotkanie cykliczne przez zmianę czasu w USA i w UE (różne daty), uczestnik w innej strefie.
 - Arabski: `dir="rtl"`, logical properties, odwrócone ikony strzałek, pseudolokalizacja RTL w CI, liczby i daty przez
-  `Intl` z `ar`; komunikaty ICU z kategoriami arabskimi (zero, one, two, few, many, other; CLDR, `references/fakty-i-zrodla.md`).
+  `Intl` z `ar`; komunikaty ICU z kategoriami arabskimi (zero, one, two, few, many, other; CLDR, `references/facts-and-sources.md`).
 
 ## Checklista
 - [ ] locale, region, strefa i waluta jako osobne ustawienia; przechodzą do zadań w tle i e-maili (locale odbiorcy)
@@ -88,4 +88,4 @@ arabski.”
 - [ ] przepływ tłumaczeń z walidacją w CI; język zapasowy; pseudolokalizacja i RTL w testach
 
 ## Źródła
-Opisane własnymi słowami; fakty z datą dostępu w `references/fakty-i-zrodla.md`.
+Opisane własnymi słowami; fakty z datą dostępu w `references/facts-and-sources.md`.

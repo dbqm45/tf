@@ -99,7 +99,7 @@ Nie każde ustalenie trzeba naprawić. Po każdej decyzji aktualizuj zapisany ra
 - Poprawki odłożone → „Otwarte pytania” raportu kroku.
 - Większa zmiana: zapisz raport, daj człowiekowi przeczytać go spokojnie, triaż w kolejnej rozmowie.
 - Ten sam wzorzec w CI (werdykt jako bramka workflow, komentarze inline): core-git-workflow,
-  `.claude/skills/core-git-workflow/references/przeglad-ai-w-ci.md`.
+  `.claude/skills/core-git-workflow/references/ai-review-in-ci.md`.
 
 ## Przykład
 **Sytuacja:** przegląd implementacji kroku „zapis zaakceptowanych fiszek”, faza 2. Trzy zbiory: 6 plików zgodnych,
@@ -113,7 +113,7 @@ Ugruntowanie: 6/6 ścieżek, 4/4 symbole, TL;DR zgodne z planem · npm test → 
 | F3 | ostrzeżenie | niski | wzorce | actions/deck.ts:12 | ręczne sprawdzanie userId zamiast strażnika | LEKCJA + NAPRAWIONE |
 Werdykt: wymaga uwagi → po triażu zatwierdzone
 ```
-Więcej (przegląd planu, dobry plan bez ustaleń): `references/przyklady.md`.
+Więcej (przegląd planu, dobry plan bez ustaleń): `references/examples.md`.
 
 ## Checklista
 - [ ] tryb wybrany (plan / implementacja); wejście przeczytane, lekcje uwzględnione

@@ -3,7 +3,7 @@
   "based_on": "19.3",
   "min_supported": "18",
   "verified": "2026-10-03",
-  "verified_with": "react 19.3.0 + react-dom 19.3.0, TypeScript (tsc --noEmit) dla przykładów w references/wzorce.md",
+  "verified_with": "react 19.3.0 + react-dom 19.3.0, TypeScript (tsc --noEmit) dla przykładów w references/patterns.md",
   "sources": [
     "https://react.dev/reference/react",
     "https://react.dev/learn",

@@ -23,10 +23,10 @@ klientów, bez utraty ich danych i bez złamania umów. Decyduje człowiek; ty d
    - **zastąpić** — nowy produkt lub moduł przejmuje klientów (migracja jako projekt);
    - **utrzymać bez rozwoju** — tylko poprawki i bezpieczeństwo, koszt minimalny, przychód zbierany do końca;
    - **wycofać** — gdy koszt i ryzyko (bezpieczeństwo, zależności bez wsparcia) przewyższają wartość.
-3. **Go/no-go dla wycofania** — kryteria w `references/wycofanie.md` (użycie, przychód, koszt, umowy, zastępstwo,
+3. **Go/no-go dla wycofania** — kryteria w `references/rollback.md` (użycie, przychód, koszt, umowy, zastępstwo,
    wpływ na kluczowych klientów); wynik zapisany jako decyzja z datą (core-project-record).
 4. **Plan wycofania** — harmonogram, kolejność interesariuszy, komunikat, migracja, checklista z właścicielami:
-   `references/wycofanie.md`. Kolejność ludzi i plan komunikacji wg pm-stakeholders.
+   `references/rollback.md`. Kolejność ludzi i plan komunikacji wg pm-stakeholders.
 5. **Prawo i umowy** — umowy z klientami i SLA, regulamin, eksport i usunięcie danych (RODO), przy usługach
    chmurowych prawo klienta do zmiany dostawcy i przeniesienia danych (Data Act) — z arch-eu-product-law.
 6. **Po wyłączeniu** — zmierz: ilu klientów przeszło na zamiennik, ilu odeszło, zgłoszenia do wsparcia,

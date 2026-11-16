@@ -1,6 +1,6 @@
 # Nakładka zespołu {{TITLE}}: standardy i domyślne ustawienia jednego zespołu, ponad nakładką firmy pack-{{ORG}}.
 # Uzupełnij pola oznaczone TODO; reszta działa od razu. Przewodnik: README.md obok.
-id: pack-{{FIRMA}}
+id: pack-{{COMPANY}}
 version: 0.1.0
 title: "{{TITLE}}"
 description: "TODO: one sentence in English — team standards and defaults for {{TITLE}} projects."
@@ -18,10 +18,10 @@ facets:
 # Standardy zespołu w każdej personie i u agentów, którzy przeglądają zmiany (obok standardów firmy).
 contributes:
   personas:
-    core_skills: [{{PREFIX}}standardy]
+    core_skills: [{{PREFIX}}standards]
   agents:
     security-reviewer:
-      skills: [{{PREFIX}}standardy]
+      skills: [{{PREFIX}}standards]
 
 # Domyślne zespołu: silnik ← firma (pack-{{ORG}}) ← ta sekcja ← projekt ← osoba. Klucze jak w org_defaults firmy.
 # Zespół może tylko zaostrzyć politykę autonomii firmy i tylko zawęzić dozwolone tryby (task.allowed_modes);

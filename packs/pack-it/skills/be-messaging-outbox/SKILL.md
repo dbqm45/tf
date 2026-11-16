@@ -88,4 +88,4 @@ co pozostało sprzężone logicznie · wyniki trzech rodzajów testów.
 - kolejność niepotrzebna; odbiorca: inbox `INSERT … ON CONFLICT DO NOTHING` w transakcji faktury;
 - test: to samo id dwa razy → dokładnie jedna faktura.
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

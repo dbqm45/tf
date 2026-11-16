@@ -22,7 +22,7 @@ Delegujesz tylko, gdy przekazanie się opłaca: dużo czytania i krótki wynik (
 niezależne (równolegle), świeże spojrzenie (przegląd bezpieczeństwa, testy clean-room, przegląd diffu), zmiana
 mechaniczna z pełną specyfikacją i testem (`quick-fixer`), decyzja trudna do odwrócenia (analiza na mocniejszym
 modelu, wykonanie wraca do sesji). Jednej spójnej zmiany nie dzielisz między wykonawców.
-Fork, sesja z worktree, subagent czy agent teams (i limit zagnieżdżania): `references/rownoleglosc.md`.
+Fork, sesja z worktree, subagent czy agent teams (i limit zagnieżdżania): `references/parallelism.md`.
 Brief zaczynasz linią `Klasa: czytanie|rownolegle|przeglad|mechaniczna|decyzja|inne` — powód delegowania, który
 potem da się zmierzyć (§7).
 
@@ -86,7 +86,7 @@ Tokeny myślenia liczą się jak tokeny wyjścia, czyli najdroższe.
 Effort agentów wynika z tieru (`.tf/config/config.yaml`), a skill może ustawić własny polem `effort`. Na większości
 modeli zmiana effortu w trakcie sesji też kasuje cache; wyjątek: Opus 5.5, Sonnet 5.5, Haiku 5.5 i Fable 5.1 przez
 API Anthropic lub subskrypcję. Jedna trudna tura: `ultrathink` w treści polecenia zamiast zmiany effortu sesji;
-`ultracode` to orkiestracja workflow wielu agentów, nie poziom effortu (`references/model-i-automatyzacja.md` §8).
+`ultracode` to orkiestracja workflow wielu agentów, nie poziom effortu (`references/model-and-automation.md` §8).
 
 ## 5. Cache — co go psuje, a co nie
 Cache działa automatycznie i dopasowuje **początek** zapytania. Odczyt z cache kosztuje 10% ceny wejścia, a na
@@ -135,13 +135,13 @@ Praktyka:
 ## 7. Pomiar
 **Diagnoza przed dźwignią:** zanim zmienisz model, ustal, czy problem dotyczy kontekstu (pliki czytane w całości
 wiele razy, wejście:wyjście ~100:1, niskie trafienia cache), modelu (porażki klasy zadań mimo dobrego kontekstu) czy
-pomiaru (tokeny szacowane ze znaków) — `references/model-i-automatyzacja.md` §6.
+pomiaru (tokeny szacowane ze znaków) — `references/model-and-automation.md` §6.
 
 - **Pasek stanu** (`.claude/hooks/statusline.py`): model, effort, zapełnienie kontekstu, trafienia cache (z dopiskiem
   „zimny”, gdy cache wygasł), koszt sesji, limity. Nie zużywa tokenów modelu.
 - `/usage` — trafienia cache sesji i prawdopodobna przyczyna ostatniego pudła.
 - Raporty kosztów z logów (`.tf/factory/cost_report.py`, `.tf/factory/cost_stats.py`) — polecenia i opcje:
-  `references/model-i-automatyzacja.md` §7; przyczyny kosztu etapu ocenia core-agent-retro.
+  `references/model-and-automation.md` §7; przyczyny kosztu etapu ocenia core-agent-retro.
 
 ## 8. Ocena nowego modelu (zanim zmienisz domyślny)
 - **Wyników z różnych raportów nie porównujesz wprost.** Wynik w rankingu to zestaw zadań + metryka + protokół (harness stały
@@ -153,7 +153,7 @@ pomiaru (tokeny szacowane ze znaków) — `references/model-i-automatyzacja.md` 
   który potrzebuje trzech rund poprawek, jest droższy.
 - Rozstrzyga własny test: 3–5 prawdziwych zadań projektu z tą samą weryfikacją (testy, build), dla agentów w kodzie —
   zestaw ewaluacji (pack-it: eng-llm-features §8). Przegląd nowości w modelach co ok. 2 tygodnie, nie codziennie.
-Szczegóły i polecenie dla modelu rozumującego: `references/model-i-automatyzacja.md` §1.
+Szczegóły i polecenie dla modelu rozumującego: `references/model-and-automation.md` §1.
 
 ## 9. Agenci w automatyzacji (CI, harmonogram, własny agent)
 - Uruchamiasz na zdarzenie, które ma znaczenie (PR, czerwony build, nowe zgłoszenie), nigdy „w kółko na wszelki
@@ -163,11 +163,11 @@ Szczegóły i polecenie dla modelu rozumującego: `references/model-i-automatyza
 - Model per rola: triaż i etykiety najtańszym; rozumowanie nad kodem średnim; drogi tylko dla ścieżek krytycznych.
 - Koszt z wyniku każdego przebiegu do tabeli lub dashboardu: per PR, per poziom triażu, per tydzień.
 - Kod firmy w automatyzacji → klucz API z sekretu, nie login subskrypcji dewelopera (inne warunki danych i rozliczenia).
-Szczegóły: `references/model-i-automatyzacja.md` §2–3; kontrakt pracy bez nadzoru: core-async-delegation.
+Szczegóły: `references/model-and-automation.md` §2–3; kontrakt pracy bez nadzoru: core-async-delegation.
 
 ## Przykład
 Eskalacja `sonnet` → `opus` po dwóch nieudanych poprawkach niestabilnego testu i powrót implementacji na `sonnet`:
-`references/przyklady.md` §2; tam też pozostałe przykłady.
+`references/examples.md` §2; tam też pozostałe przykłady.
 
 ## Checklista
 - [ ] tier wybrany rubryką (sprawdzalność, odwracalność, decyzja, ryzyko, zakres), a nie z przyzwyczajenia

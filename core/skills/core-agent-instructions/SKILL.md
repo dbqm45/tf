@@ -12,7 +12,7 @@ metadata:
 Plik instrukcji to wdrożenie agenta, który zna język i framework, ale nie zna Waszych lokalnych umów. Każda linia
 kosztuje kontekst w każdej sesji i u każdego wykonawcy, a reguły z długiego pliku są przestrzegane słabiej.
 Skill daje kryteria, co wpisać, gdzie to trzymać, jak plik przejrzeć i jak sprawdzić, że reguła działa.
-Architektura plików w dużym repo (moduły, indeks, wiele repozytoriów): `references/skalowanie-kontekstu.md`.
+Architektura plików w dużym repo (moduły, indeks, wiele repozytoriów): `references/context-scaling.md`.
 
 ## 1. Test włączenia (przed dopisaniem każdej linii)
 „Czy agent wiedziałby to bez tego pliku — z danych treningowych, dokumentacji frameworka, README, konfiguracji
@@ -44,7 +44,7 @@ albo w README repo B; regułę krytyczną wymusza skrypt lub hook.
 
 Jedna reguła żyje w jednym miejscu. Kilka narzędzi AI w zespole: `AGENTS.md` jako źródło prawdy, a `CLAUDE.md`
 z jedną linią `@AGENTS.md` (i ewentualnie regułami tylko dla Claude Code pod nią). Jak Claude Code ładuje te pliki
-(podkatalogi na żądanie, importy, AGENTS.md bez CLAUDE.md): `references/skalowanie-kontekstu.md`, sekcja 4.
+(podkatalogi na żądanie, importy, AGENTS.md bez CLAUDE.md): `references/context-scaling.md`, sekcja 4.
 
 **Mapa własności artefaktów harnessu:** każdy plik instrukcji, skill, hook, kontrakt narzędzia, polityka uprawnień
 i czujnik ma właściciela z domeny, której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu

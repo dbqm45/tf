@@ -50,7 +50,7 @@ metadata:
   migracje, usługi zewnętrzne. Konflikt → po kolei.
 - Jedna zmiana = jeden worktree + jedna gałąź + jedna świeża sesja agenta:
   `git worktree add ../<repo>-<zmiana> -b feat/<zmiana>`; główny katalog służy do koordynacji.
-  Fork, nowa sesja czy subagent (koszt, izolacja): `.claude/skills/core-cost-control/references/rownoleglosc.md`.
+  Fork, nowa sesja czy subagent (koszt, izolacja): `.claude/skills/core-cost-control/references/parallelism.md`.
 - **Zmiana kontraktu w trakcie** (API, typy, schemat) → od razu wiadomość do drugiej sesji:
   `Zmiana kontraktu: <co> · <plik/commit> · co musisz zrobić · odpowiedz „przyjęte”`. Bez „przyjęte” druga sesja
   nie scala. Kanał: od v2.1.224 `SendMessage` (lista sesji: `/peers`), od v2.1.232 `@nazwa-sesji`; tylko tekst,
@@ -110,7 +110,7 @@ scenariusz można „zazielenić” w adapterze.
   sprawdza CI. Nienastrojony przegląd zasypuje zespół uwagami i przestaje być czytany.
 - Przegląd bezpieczeństwa zmian w uwierzytelnianiu, IaC i CI: agent `security-reviewer` przed scaleniem.
 - **Przegląd AI jako krok CI** (triaż ryzyka, kontrakt wyjścia, werdykt jako status commita, `[skip ci]` przy
-  commitach bota, komentarze tylko na liniach diffu, deduplikacja): `references/przeglad-ai-w-ci.md`. Bramka
+  commitach bota, komentarze tylko na liniach diffu, deduplikacja): `references/ai-review-in-ci.md`. Bramka
   blokująca żyje w workflow (krok po agencie czyta werdykt), nie w odpowiedzi modelu.
 - **Gotowy workflow:** `python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--all-prs]` →
   `.github/workflows/ai-review.yml`: przegląd PR z etykietą `ai-review` (albo każdego) według `REVIEW.md`, agent tylko
@@ -122,7 +122,7 @@ scenariusz można „zazielenić” w adapterze.
 
 ## Scalanie i stos PR-ów
 - Jedna strategia scalania w repozytorium (squash, rebase albo merge commit); przy squash tytuł commita podajesz
-  wprost (tytuł PR z numerem). Wybór strategii i polecenia: `references/scalanie-i-stos-pr.md`.
+  wprost (tytuł PR z numerem). Wybór strategii i polecenia: `references/merging-and-pr-stacks.md`.
 - **Stos PR-ów** (każdy celuje w gałąź poprzedniego): po squash pierwszego następny przenosisz
   `git rebase --onto origin/main <stara-baza> <gałąź>`, wypychasz `--force-with-lease` (za zgodą), zmieniasz gałąź
   docelową PR na `main` i scalasz po zielonym CI. Konflikty w trakcie pokazujesz człowiekowi.
@@ -136,4 +136,4 @@ Rozwiązuj, rozumiejąc obie strony — nigdy „weź wszystko moje”. Po rozwi
   dokumentacja Claude Code (code.claude.com/docs: sesje równoległe, komunikacja między sesjami, `claude agents`),
   dostęp 2026-10-18. Opisane własnymi słowami.
 - Scalanie i stos PR-ów: callstackincubator/agent-skills, skill `github` (wersja sprzed usunięcia 2026-08-07), MIT;
-  szczegóły w `references/scalanie-i-stos-pr.md`.
+  szczegóły w `references/merging-and-pr-stacks.md`.

@@ -42,8 +42,8 @@ Nie podano trybu → standardowy (powiedz o tym).
 5. **Czytelność** — czytelnik wie, gdzie jest, co ma zrobić i co się stanie potem.
 6. *(rozszerzony)* **Spójność** — terminy, poziom szczegółowości, przejścia.
 7. *(premium)* **Obrazowość** — oszczędnie, tylko gdy wzmacnia.
-Szczegóły, tabele zamienników i przykłady: `references/redakcja.md`. Tekst, który brzmi jak wygenerowany
-(puenty, trójki, „kluczowy”, resztki czatu): `references/slady-pisania-ai.md` — z porównaniem faktów przed i po. Dokument do druku/PDF/DOCX: `references/typografia-i-sklad.md`.
+Szczegóły, tabele zamienników i przykłady: `references/editing.md`. Tekst, który brzmi jak wygenerowany
+(puenty, trójki, „kluczowy”, resztki czatu): `references/ai-writing-traces.md` — z porównaniem faktów przed i po. Dokument do druku/PDF/DOCX: `references/typography-and-typesetting.md`.
 
 ## Wynik
 - Zmiany w pliku wprowadzaj punktowo (Edit), nie przepisuj całych plików; długi tekst — sekcja po sekcji.

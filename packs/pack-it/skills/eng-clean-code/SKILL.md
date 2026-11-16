@@ -62,7 +62,7 @@ metadata:
 **Wynik:** nazwa z domeny `blockResource(resourceId, ownerId)`; flaga → osobne `blockResourceAndNotify`; `null` →
 `blockResourceBySystem(resourceId)`; wczesny powrót zamiast trzech poziomów `if`. Każdy krok osobno, testy zielone,
 commit `refactor:`; zmianę zwracanego `boolean` na wynik operacji (CQS) proponujesz w osobnym PR.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Źródła
 - Kurs 10xDevs, ed. 3 (2026), moduł 3, lekcja 5 (połknięte błędy) — materiał szkoleniowy (dostęp 2026-10-09).

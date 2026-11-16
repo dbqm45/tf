@@ -13,7 +13,7 @@ przyjmuje wartość, zapisuje ją tam, gdzie trzeba (`.env`, sekret lub zmienna 
 nieodwracalnym krokiem i pokazuje postęp. **Agent go pisze, ale nigdy nie uruchamia** — klucze wpisuje człowiek, bez echa,
 więc nie trafiają do kontekstu modelu (o ile nikt nie wklei ich do rozmowy — ostrzeż przed tym).
 
-Szablon: `scripts/kreator.template.sh` (postęp z szacunkiem czasu, potwierdzenia, otwieranie URL także w WSL, ukryty wpis
+Szablon: `scripts/wizard.template.sh` (postęp z szacunkiem czasu, potwierdzenia, otwieranie URL także w WSL, ukryty wpis
 sekretów, idempotentny zapis do `.env` z prawami 600, `gh secret`/`gh variable` przez stdin, podsumowanie z listą rzeczy
 do zrobienia ręcznie). Bibliotekę nad znacznikiem `### ETAPY ###` zostawiasz bez zmian — piszesz tylko etapy.
 

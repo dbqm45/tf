@@ -46,7 +46,7 @@ zaliczeń osobno w każdym powtórzeniu; pasmo szumu to rozpiętość tych odset
 a w tabelach „Luka” i „Wkład skilla” oznacza różnicę mieszczącą się w paśmie jako „w paśmie szumu”. Mniej niż
 5 powtórzeń → dopisek, że pasmo jest orientacyjne. Testy: `test_skill_evals.py`.
 
-Kolejność: testy (czerwone) → a → b → c → przewodniki (`PRZEWODNIK.md`, `PUBLIC_API.md`) → pełne sprawdzenie.
+Kolejność: testy (czerwone) → a → b → c → przewodniki (`GUIDE.md`, `PUBLIC_API.md`) → pełne sprawdzenie.
 Pełne sprawdzenie dopiero po zakończeniu serii pomiarowej po kroku G (żeby nie zakłócać jej czasów).
 
 ## H21 — plan realizacji (zapisany przed kodem)
@@ -101,7 +101,7 @@ Mechanizm powrotu już jest: przed każdą aktualizacją `update.py` robi kopię
 
 ## H11 — plan realizacji (zapisany przed kodem; decyzja D11: panel jako przepływ skryptu, tylko waga pełna)
 
-Dziś przy wadze pełnej przegląd `security-reviewer` jest obowiązkowy tylko w treści `references/waga.md`.
+Dziś przy wadze pełnej przegląd `security-reviewer` jest obowiązkowy tylko w treści `references/weight.md`.
 Pomiar po kroku G pokazał, że kroki opisane prozą pętla pomija (zapis przeglądu zakresu: 7/15), więc panel pilnuje
 skrypt.
 
@@ -117,7 +117,7 @@ skrypt.
   zostawał).
 - **`run_state.py panel <katalog>`** drukuje skład panelu z gotowym zleceniem dla każdego recenzenta (co dostaje,
   w jakim formacie odpowiada) i polecenie zapisu werdyktu; pokazuje też werdykty już zapisane.
-- Treść: `references/waga.md` punkt 2 (bez zmiany `SKILL.md` — jest na granicy limitu; odmowa etapu `pr` mówi pętli,
+- Treść: `references/weight.md` punkt 2 (bez zmiany `SKILL.md` — jest na granicy limitu; odmowa etapu `pr` mówi pętli,
   co zrobić). Scenariusz ewaluacji przed zmianą treści.
 - Testy: `core/tests/test_panel.py`; agent `spec-reviewer` w `config.yaml` i w narzędziach agenta `tf`.
 - Koszt: dwa przeglądy w osobnych kontekstach przy zadaniu o wadze pełnej (rzadkim). Niezmierzone na modelu.
@@ -193,7 +193,7 @@ w osobnym worktree, z twardym limitem wydatku. Nie scala, nie wdraża; wynik to 
 - **Wynik:** jedna linia i wpis `.tf/logs/work.jsonl` (`key`, `started`, `ended`, `exit`, `stage` zadania po
   przebiegu, koszt z raportu, gdy jest). Kod wyjścia: 0 — przebieg zakończony (PR albo STOP), 3 — nie ma zadania,
   inne — błąd agenta.
-- Treść: `PRZEWODNIK.md` (sekcja „Praca bez nadzoru”), `PUBLIC_API.md`, usage `tf.py`. Skill `tf` bez zmian.
+- Treść: `GUIDE.md` (sekcja „Praca bez nadzoru”), `PUBLIC_API.md`, usage `tf.py`. Skill `tf` bez zmian.
 - Testy: `core/tests/test_work_once.py` — wybór zadania (tryb, waga, zamknięte), blokada (dwa równoległe
   zajęcia → jedno), blokada martwa, worktree i gałąź, `--dry-run` bez skutków, brak limitu → odmowa, zwolnienie
   blokady po błędzie agenta, dziennik.

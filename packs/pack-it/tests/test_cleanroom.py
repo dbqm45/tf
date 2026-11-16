@@ -54,11 +54,11 @@ CASES = [
     # profil es-sim — uczestnicy symulacji widzą tylko prompty rund
     ("es-participant", "Read", {"file_path": "docs/training/es-sim/2026-09-27-a/rounds/01/recepcja.prompt.md"}, "none"),
     ("es-room", "Read", {"file_path": "docs/training/es-sim/2026-09-27-a/rounds/03/room.prompt.md"}, "none"),
-    ("es-participant", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/weterynaria/brief.md"}, "deny"),
+    ("es-participant", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/veterinary/brief.md"}, "deny"),
     ("es-participant", "Read", {"file_path": "docs/training/es-sim/2026-09-27-a/state.json"}, "deny"),
     ("es-room", "Read", {"file_path": "docs/project/02-domain/corpus.md"}, "deny"),
     ("es-room", "Grep", {"pattern": "sprzeczn"}, "deny"),
-    ("es-coach", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/weterynaria/brief.md"}, "none"),
+    ("es-coach", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/veterinary/brief.md"}, "none"),
     # inni agenci — bez zmian
     ("kasia-qa-automation", "Read", {"file_path": "src/pricing.ts"}, "none"),
     ("filip-frontend", "Grep", {"pattern": "x"}, "none"),

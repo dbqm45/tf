@@ -47,7 +47,7 @@ Sama treść SKILL.md niczego nie dowodzi.
    - procedura (kroki, kolejność, punkty decyzji, format wyniku), a nie wykład; zakładaj, że model jest bystry —
      pisz tylko to, czego nie wie;
    - **przykłady ważniejsze niż reguły:** sekcja `## Przykład` (wejście → wynik, konkretne nazwy i liczby),
-     kolejne w `<skill>/references/przyklady.md`;
+     kolejne w `<skill>/references/examples.md`;
    - **kod tam, gdzie pasuje:** sortowanie, parsowanie, liczenie, walidacja → skrypt w `scripts/` (deterministyczny,
      tańszy, jego treść nie zajmuje kontekstu); napisz, czy skrypt uruchomić, czy przeczytać; obsługuje błędy sam,
      bez „magicznych” stałych; łączenie z siecią deklarujesz linią „Sieć: …” w SKILL.md; skrypt, z którego agenci
@@ -126,8 +126,8 @@ Sama treść SKILL.md niczego nie dowodzi.
   (mniej plików, mniejsza zmiana zachowania, najbliżej litery planu) zapisany w raporcie; każda bramka drukuje linię
   werdyktu, bo oceniający widzi tylko transkrypt.
 - Ewaluacje projektuj pod granice kontraktu i przypadki brzegowe (brak pliku, kolizja zapisu), nie tylko pod ścieżkę szczęśliwą.
-- Analiza cudzego lub własnego skilla („jak działa, jak zrobić podobny”): `references/przeglad-skilla.md`.
-  Udostępnianie skilli kilku repozytoriom i narzędziom: `references/dystrybucja-w-zespole.md`.
+- Analiza cudzego lub własnego skilla („jak działa, jak zrobić podobny”): `references/skill-review.md`.
+  Udostępnianie skilli kilku repozytoriom i narzędziom: `references/team-distribution.md`.
 
 ## Zmiana istniejącego skilla
 - Ten sam cykl w skrócie:
@@ -137,7 +137,7 @@ Sama treść SKILL.md niczego nie dowodzi.
   4. bramka, a przy zmianie treści merytorycznej także ewaluacja na modelu.
 - **Wiedzy nie usuwasz przy porządkach.** Przenosisz ją do `references/` i zostawiasz odnośnik.
 - Mniej tokenów (test „no-op” zdanie po zdaniu, instrukcje pozytywne, pojęcia po nazwie, koszt opisów wszystkich
-  skilli): `references/przeglad-skilla.md` §„Odchudzanie”.
+  skilli): `references/skill-review.md` §„Odchudzanie”.
 - Hook `skill_change_guard` przypomina o bramce po każdej edycji skilla, a na koniec sesji wymienia skille bez
   zaliczonej bramki.
 

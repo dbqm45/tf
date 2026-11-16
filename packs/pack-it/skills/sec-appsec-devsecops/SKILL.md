@@ -22,13 +22,13 @@ to `ops-security-operations`.
 2. **Wymagania.** Wybierz poziom ASVS dla aplikacji (L1 każda, L2 domyślnie dla danych wrażliwych, L3 krytyczne)
    i zapisz wybrane rozdziały jako kryteria akceptacji. Dojrzałość całego programu (nie jednej aplikacji) ocenia SAMM,
    dojrzałość pipeline'u DSOMM; wymóg zgodności z NIST SSDF to tabela praktyka → kontrola → dowód z pipeline'u.
-   Szczegóły i wersje: `references/standardy-i-metryki.md`.
+   Szczegóły i wersje: `references/standards-and-metrics.md`.
 3. **Warstwy kontroli** (tabela niżej): dla każdej wskaż etap, narzędzie, tryb (blokuje / ostrzega) i właściciela.
    Zaczynaj od tych o najlepszym stosunku sygnału do szumu: sekrety, SCA, SAST z małym zestawem reguł.
 4. **Strojenie przed blokowaniem.** Nowe narzędzie działa 2–4 tygodnie w trybie ostrzegania; mierz odsetek
    znalezisk uznanych za prawdziwe, wyłącz reguły o niskiej precyzji, dodaj reguły własne dla wzorców firmy.
    Wyjątki (suppress) mają powód, właściciela i datę wygaśnięcia, nie wpis „ignore” w kodzie bez śladu.
-5. **Triaż i terminy.** Reguły priorytetu i przykładowa tabela SLA: `references/triaz-i-sla.md`. Skrót: ważność bazowa
+5. **Triaż i terminy.** Reguły priorytetu i przykładowa tabela SLA: `references/triage-and-sla.md`. Skrót: ważność bazowa
    (CVSS), do tego znane wykorzystanie (CISA KEV), prawdopodobieństwo (EPSS), osiągalność w kodzie i ekspozycja usługi.
 6. **Polityka blokowania.** Blokuj tylko to, co ma wysoką precyzję i jasną naprawę: ujawniony sekret, znana
    wykorzystywana podatność w osiągalnej zależności, krytyczne ustalenie SAST nowe w diffie. Resztę zgłaszaj jako
@@ -60,7 +60,7 @@ Skanery nie widzą logiki. Człowiek (lub agent, wynik zatwierdza człowiek) spr
 zasobie (IDOR), walidację na granicy, budowanie zapytań i poleceń z wejścia, deserializację, SSRF przy pobieraniu URL,
 obsługę błędów bez wycieku, logi bez danych wrażliwych. Lista pytań wg ASVS, nie wg intuicji.
 Niebezpieczne API per język (Python, JS/Node, Java, C#, Go) i domyślne konfiguracje (konta, debug, TLS, CORS,
-usługi bez uwierzytelnienia, fail-open): `references/niebezpieczne-api.md`. Po znalezieniu podatności — jej
+usługi bez uwierzytelnienia, fail-open): `references/dangerous-apis.md`. Po znalezieniu podatności — jej
 warianty w reszcie kodu i reguła w CI: sec-variant-analysis.
 
 ## Łańcuch dostaw artefaktu

@@ -36,7 +36,7 @@ Heurystyka: konteksty core → chroń ACL-em albo bądź upstreamem z OHS; gener
 o kształcie zależności + wąski port w języku domeny + adapter owijający bibliotekę. Kryterium ukończenia jest
 sprawdzalne: `rg -l "from '<pakiet>'"` zwraca wyłącznie pliki katalogu adaptera. Egzekwujesz je regułą w CI
 (dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit), nie pamięcią — szablony:
-`.claude/skills/ddd-legacy-modernization/references/szablony-regul.md`. Szczególnie groźny przeciek: biblioteka
+`.claude/skills/ddd-legacy-modernization/references/rule-templates.md`. Szczególnie groźny przeciek: biblioteka
 serwerowa w paczce klienta.
 
 ## Serwisy krawędziowe i wewnętrzne

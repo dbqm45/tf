@@ -12,7 +12,7 @@ metadata:
 Zależność ma takie same uprawnienia jak Twój kod: w chwili instalacji uruchamia się na laptopie programisty i na
 runnerze CI, gdzie leżą tokeny npm, klucze SSH, dane dostępowe do chmury i pliki `.env`. Przypadek axios (marzec 2026):
 przejęte konto opiekuna, nowa zależność z hookiem `postinstall`, pierwsze zainfekowane maszyny po 89 sekundach, złośliwe
-wersje dostępne około 3 godzin. Szczegóły i inne przypadki: `references/przypadki.md`.
+wersje dostępne około 3 godzin. Szczegóły i inne przypadki: `references/cases.md`.
 
 ## 1. Instalacja powtarzalna
 - Lockfile w repozytorium; w CI wyłącznie `npm ci` / `pnpm install --frozen-lockfile` / `yarn install --immutable`.
@@ -64,7 +64,7 @@ z przeglądem diffu paczki, a nie przez wyłączenie karencji dla wszystkich.
 ## 5. Wiedza o tym, co masz
 - SBOM (CycloneDX) generowany w CI dla każdego artefaktu — odpowiedź na „czy mamy wersję X?” w minutach, nie w dniach.
 - **Audyt znanych podatności** w CI i przy starcie pracy w repo — polecenia dla npm, pnpm, Pythona, Rusta, Go, Ruby,
-  PHP i .NET, progi CVSS i czytanie wyników: `references/audyt-zaleznosci.md`. Zależności bezpośrednie raportujesz
+  PHP i .NET, progi CVSS i czytanie wyników: `references/dependency-audit.md`. Zależności bezpośrednie raportujesz
   osobno od przechodnich; ekosystem bez wbudowanego audytu (Java, Dart) to „pominięto”, nigdy „0 znalezisk”; audyt
   nie naprawia sam (`npm audit fix` tylko za zgodą, z przeglądem diffu lockfile).
 - Narzędzia bezpieczeństwa w CI (skanery, lintery) to też łańcuch dostaw: w kampanii TeamPCP podmieniono Trivy przez
@@ -78,7 +78,7 @@ z przeglądem diffu paczki, a nie przez wyłączenie karencji dla wszystkich.
   Model AI może wyjaśniać znalezisko, ale nie rozstrzyga, czy podatność jest wykorzystywalna.
 
 ## 6. Po zgłoszeniu kompromitacji paczki
-Procedura krok po kroku: `references/incydent-zaleznosci.md`. W skrócie: znajdź wersję w lockfile'ach i w `node_modules`,
+Procedura krok po kroku: `references/dependency-incident.md`. W skrócie: znajdź wersję w lockfile'ach i w `node_modules`,
 sprawdź ślady na maszynach, które instalowały w oknie ataku, **przebuduj** zainfekowane maszyny zamiast je „czyścić”,
 zrotuj każdy sekret dostępny z tych maszyn i runnerów, przypnij bezpieczną wersję (`overrides` / `resolutions`).
 
@@ -100,7 +100,7 @@ zrotuj każdy sekret dostępny z tych maszyn i runnerów, przypnij bezpieczną w
 - Trafienie: przebudowa maszyn z instalacją w oknie ataku, rotacja sekretów z nich, `overrides` z bezpieczną wersją.
 - Brak trafień: wpis w dzienniku i wniosek, co by zatrzymało atak (karencja, blokada skryptów, alarm o nowej paczce).
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] lockfile w repo, w CI instalacja „frozen”, diff lockfile przejrzany (nowe paczki przechodnie?)

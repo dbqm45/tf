@@ -75,5 +75,5 @@ tf install            # wybór nakładek i języka; zapisuje fabrykę do .claude
 tf                    # później: aktualizacja do najnowszego wydania
 ```
 
-Przewodnik po fabryce w projekcie: `.tf/factory/PRZEWODNIK.md`; najczęstsze pytania: `.tf/factory/FAQ.md`.
+Przewodnik po fabryce w projekcie: `.tf/factory/GUIDE.md`; najczęstsze pytania: `.tf/factory/FAQ.md`.
 Z klonu repozytorium działa też `sh scripts/install.sh` albo `python3 core/factory/tf.py --install-launcher`.

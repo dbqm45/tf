@@ -20,7 +20,7 @@ blokować merge.
    Kryterium sukcesu jest konkretne, mierzalne, osiągalne i trafne (np. „F1 ≥ 0,85 na zbiorze testowym”, nie „dobra
    jakość”); miękkie cechy (ton, spójność) mierzysz skalą z opisem poziomów. Więcej przypadków z oceną automatyczną
    daje więcej niż kilka ocenianych ręcznie.
-2. **Warstwy zbioru** (`references/zbiory-i-graderzy.md`): *złoty* (wzorcowe, małe, ręcznie sprawdzone), *regresyjny*
+2. **Warstwy zbioru** (`references/datasets-and-graders.md`): *złoty* (wzorcowe, małe, ręcznie sprawdzone), *regresyjny*
    (naprawione błędy; oczekiwane ok. 100%), *brzegowy* (puste, za długie, niejednoznaczne, w obcym języku),
    *adwersaryjny* (wstrzyknięcia, próby obejścia), *próbki z ruchu* (zanonimizowane, odświeżane). Dla każdego
    zachowania dodaj przypadki, w których ma wystąpić, **i** takie, w których nie ma (inaczej optymalizujesz jednostronnie).
@@ -36,7 +36,7 @@ blokować merge.
    ocenionych przez ludzi, zgodność liczysz (odsetek zgodnych albo kappa Cohena [próg ustal z zespołem]), rozbieżności
    czytasz i poprawiasz rubrykę. Bez tego sędzia jest nieznanym instrumentem. Potem sędzia żyje jak kod: zgodność
    uzasadnień (nie tylko etykiet), próg dryfu z rozrzutu ludzi, zmiana rubryki za zgodą człowieka z wersją do wycofania
-   (`references/zbiory-i-graderzy.md` §5–7).
+   (`references/datasets-and-graders.md` §5–7).
 6. **Agent: wynik czy trajektoria.** Podstawą jest **wynik** (stan środowiska po przebiegu: rezerwacja istnieje w
    bazie, testy przechodzą), bo sztywne sprawdzanie ścieżki karze poprawne, inne rozwiązania. Trajektorię (wywołania
    narzędzi, liczba kroków, koszt) sprawdzasz osobno: limity, zakazane narzędzia, diagnoza porażek. Dla zadań
@@ -47,20 +47,20 @@ blokować merge.
    Skuteczność 75% na próbę daje pass^3 ≈ 42%.
 8. **Offline, potem online.** Offline: zbiór przed wdrożeniem, bramka. Online (po wdrożeniu): shadow (nowa wersja
    liczy równolegle, użytkownik jej nie widzi), A/B na części ruchu z metryką biznesową, próbki do ręcznego
-   przeglądu i nowe porażki z ruchu wracają do zbioru. Wzorzec i progi: `references/ci-i-ruch.md`.
+   przeglądu i nowe porażki z ruchu wracają do zbioru. Wzorzec i progi: `references/ci-and-traffic.md`.
 9. **Bramka w CI.** Szybki podzbiór (smoke) na każdy PR, pełny zestaw nocą lub przy zmianie modelu, promptu, narzędzi.
    Próg ustaw względem **linii bazowej z rozrzutem** (powtórz bazę 3–5 razy), nie „na oko”; regresja = spadek poza
-   przedział szumu. Zmiana progu tylko świadomie, z zapisem. Szczegóły: `references/ci-i-ruch.md`.
+   przedział szumu. Zmiana progu tylko świadomie, z zapisem. Szczegóły: `references/ci-and-traffic.md`.
 10. **Koszt i wariancja.** Policz koszt przebiegu (przypadki × próby × kandydaci × sędzia) przed uruchomieniem;
     tani model do triażu, pełny zestaw tylko przy zmianie. 0% sukcesów w wielu próbach to zwykle zepsute zadanie lub
     grader, nie niezdolny agent. Czytaj transkrypty porażek — to najszybsza diagnoza.
-11. **Interpretuj wynik między granicami** (`references/pulapki-pomiaru.md`): stała klasa większościowa, ramię ślepe
+11. **Interpretuj wynik między granicami** (`references/measurement-pitfalls.md`): stała klasa większościowa, ramię ślepe
     (bez kontekstu), wyrocznia (złoty fragment); ramiona z tymi samymi stałymi, jedna zmienna naraz. Konfigurację
     wybierasz na zbiorze doboru, wynik raportujesz z odłożonego testu; kontrola na przetasowanych etykietach.
     Nowe reguły oceny puszczasz na zapisanych śladach (z wersją promptu i polityki), bez ponownego uruchamiania agenta.
 12. **Raport** w stałym formacie (niżej), z manifestem pary model + harness. Sygnał gotowości to odsetek zadań
     zaliczonych w całości, średnia kryteriów tylko jako diagnostyka; klasyfikator decyzji testujesz przetasowaniem opcji
-    i progiem per decyzja; agenta odpowiadającego liczbami — użytecznością z karą (`references/pulapki-pomiaru.md`
+    i progiem per decyzja; agenta odpowiadającego liczbami — użytecznością z karą (`references/measurement-pitfalls.md`
     §10–12). Saturacja (zbiór zdaje ~100% i nie
     odróżnia wersji) → dodaj trudniejsze zadania.
 

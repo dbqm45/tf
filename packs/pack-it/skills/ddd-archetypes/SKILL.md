@@ -4,7 +4,7 @@ argument-hint: "[archetyp] [wymagania]"
 description: Użyj przy archetypach biznesowych — strony, rezerwacje, pieniądze, produkt, księgowanie, cennik, umowy, zasoby.
 metadata:
   przeglad: "2027-10-17"
-  katalog: "Użyj, gdy modelujesz, mapujesz wymagania na archetyp lub analizujesz (także istniejący kod) obszar ze sprawdzonym wzorcem biznesowym — strony i relacje, dostępność i rezerwacje, ilości i pieniądze, produkt, księgowanie, cennik, konfigurator, kolejka oczekujących, przydział zasobów, planowanie etapów, lokalizacje i adresy, zasoby i usługi, procedury i czynności, umowy i zamówienia, dokumenty i retencja, produkcja i identyfikowalność partii. Nie do domen czysto technicznych ani nowatorskich bez wzorca ani dokumentacji w repozytorium (docs-tech-writing)."
+  katalog: "Użyj, gdy modelujesz, mapujesz wymagania na archetyp lub analizujesz (także istniejący kod) obszar ze sprawdzonym archetypem biznesowym — strony i relacje, dostępność i rezerwacje, ilości i pieniądze, produkt, księgowanie, cennik, konfigurator, kolejka oczekujących, przydział zasobów, planowanie etapów, lokalizacje i adresy, zasoby i usługi, procedury i czynności, umowy i zamówienia, dokumenty i retencja, produkcja i identyfikowalność partii. Nie do domen czysto technicznych ani nowatorskich bez wzorca ani dokumentacji w repozytorium (docs-tech-writing)."
   slowa: "program lojalnościowy, punkty lojalnościowe, saldo, wygasanie punktów, rezerwacja zasobu, dostępność terminu, cennik, rabat, kolejka oczekujących, przydział zasobów, strefy dostaw, adresy klientów, adres z dnia sprzedaży, kody pocztowe i gminy, umowa z aneksami, aneks zmienia cenę od daty, co obowiązywało w danym dniu, umowa ramowa i zamówienia, wersje dokumentu, podpisany dokument, okres przechowywania dokumentów, kategoria archiwalna, receptura, partia surowca, wycofanie partii, identyfikowalność, procedura i wykonanie, zlecenie pracy, checklista przeglądu, aktywa i serwis, katalog usług, lista rezerwowa, rezygnacja z miejsca, pierwszeństwo stałych klientów, limit miejsc"
 ---
 
@@ -57,7 +57,7 @@ i regulacji.
    Warstwy zależą tylko od niższych: polityka konfiguruje operacje, ale operacje nie znają polityk z nazwy. To wersja
    warstw odpowiedzialności Evansa (*Domain-Driven Design*, 2003, rozdz. 16 „Responsibility Layers”; u Evansa
    przykładowo także warstwa zobowiązań [niezweryfikowane: nazwy warstw ze źródeł wtórnych]). Poziom wiedzy i operacji:
-   ddd-deep-modeling, `.claude/skills/ddd-deep-modeling/references/rozplatywanie.md`.
+   ddd-deep-modeling, `.claude/skills/ddd-deep-modeling/references/untangling.md`.
 
 ## Mapper — wspólny protokół (każdy archetyp)
 Każdy plik `references/<archetyp>.md` to **procedura mapowania** wymagań na archetyp: test dopasowania → pytania → kroki →

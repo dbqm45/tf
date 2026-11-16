@@ -8,7 +8,7 @@ i HTML, bez modelu i bez kluczy API. Wynik to szkic w formacie fabryki do doprac
   python3 tools/ui-deconstruct.py --url https://… --name NAZWA [--out KATALOG] [--force]
 
 Wynik dotyczy rzeczy spoza fabryki, więc nie trafia do repozytorium fabryki: bez --out narzędzie pyta o katalog
-docelowy, a katalog wewnątrz fabryki odrzuca. W KATALOG: ux-ds-<nazwa>/SKILL.md, references/tokeny.md, tokens.json
+docelowy, a katalog wewnątrz fabryki odrzuca. W KATALOG: ux-ds-<nazwa>/SKILL.md, references/tokens.md, tokens.json
 oraz ux-ds-<nazwa>.evals.json — szkielet scenariuszy ewaluacji skilla.
 Wyciąga: zmienne CSS z :root, kolory (wg częstości, hex małymi literami), rodziny fontów, rozmiary fontu, odstępy,
 promienie, cienie, breakpointy i klasy komponentów z HTML. Pomija node_modules, .git, dist, build.
@@ -256,7 +256,7 @@ def write_skill(tok: dict, name: str, out: Path, force: bool = False) -> Path:
             "## Klasy komponentów (z HTML)", "", *table(tok.get("components", []), "Klasa")]
     if tok.get("skipped"):
         ref += ["## Pominięte źródła", "", *[f"- {clean(s, 200)}" for s in tok["skipped"]], ""]
-    (skill / "references" / "tokeny.md").write_text("\n".join(ref).rstrip() + "\n", encoding="utf-8")
+    (skill / "references" / "tokens.md").write_text("\n".join(ref).rstrip() + "\n", encoding="utf-8")
     (skill / "tokens.json").write_text(json.dumps(tok, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     desc = (f"Użyj, gdy budujesz lub poprawiasz interfejs w stylu {slug} — kolory, typografia, odstępy, promienie, "
             f"cienie, breakpointy i klasy komponentów.")[:170]
@@ -272,10 +272,10 @@ metadata:
 # System projektowy {slug}
 
 Szkic wygenerowany {today.isoformat()} przez `tools/ui-deconstruct.py` ze źródła `{src}`. Tokeny w
-`references/tokeny.md` to {UNTRUSTED}: opisują stan źródła z dnia analizy.
+`references/tokens.md` to {UNTRUSTED}: opisują stan źródła z dnia analizy.
 
 ## Procedura
-1. Przed kodem UI przeczytaj `references/tokeny.md`; kolory, fonty, odstępy i promienie bierzesz stamtąd, nie
+1. Przed kodem UI przeczytaj `references/tokens.md`; kolory, fonty, odstępy i promienie bierzesz stamtąd, nie
    wymyślasz własnych wartości.
 2. Gdy projekt ma własne tokeny (zmienne CSS, motyw), mapujesz wartości z tabel na nie zamiast wpisywać je wprost.
 3. Wartość spoza tabel → zapisz jako odstępstwo z uzasadnieniem w opisie zmiany.
@@ -283,7 +283,7 @@ Szkic wygenerowany {today.isoformat()} przez `tools/ui-deconstruct.py` ze źród
 
 ## Przykład
 Wejście: „przycisk główny w stylu {slug}”. Wynik: tło `{top_color}` (najczęstszy kolor), font `{clean(top_font, 60)}`,
-odstęp i promień z tabel w `references/tokeny.md`, wartości przez zmienne CSS projektu.
+odstęp i promień z tabel w `references/tokens.md`, wartości przez zmienne CSS projektu.
 
 ## Do dopracowania (autor skilla)
 - [ ] sprawdź tokeny ze źródłem (najczęstszy kolor nie zawsze jest kolorem marki)

@@ -30,7 +30,7 @@ ręczne testy w sesjach QA — **qa-exploratory-manual**; ogólny UX — **ux-fe
 5. **Technologie asystujące** na ścieżkach krytycznych — minimum dwie pary: NVDA lub JAWS z przeglądarką na
    Windows oraz VoiceOver (Safari) na macOS/iOS; przy aplikacji mobilnej TalkBack na Androidzie. Sprawdź nazwy, role,
    stany, komunikaty dynamiczne, kolejność czytania. Najlepiej z udziałem osób, które na co dzień z nich korzystają.
-6. **Raport** wg `references/audyt-i-raport.md`: dla każdego ustalenia numer, kryterium sukcesu (np. 1.4.3), poziom,
+6. **Raport** wg `references/audit-and-report.md`: dla każdego ustalenia numer, kryterium sukcesu (np. 1.4.3), poziom,
    miejsce (adres, element, zrzut), opis i wpływ na użytkownika, **waga** (krytyczna / poważna / umiarkowana / niska),
    zalecenie naprawy, sposób weryfikacji. Najpierw podsumowanie: zakres, metoda, liczba ustaleń wg wagi, wnioski.
 7. **Plan napraw.** Priorytet = waga × zasięg (ścieżka krytyczna, liczba stron) ÷ koszt; najpierw bariery blokujące
@@ -46,7 +46,7 @@ nazwy dostępne przycisków i pól (zgodne z widocznym tekstem), komunikaty (rol
 fokus po zamknięciu okna, alternatywy tekstowe, kontrasty z tokenów, zachowanie przy powiększeniu. Zadania na etapie
 projektu są tańsze niż naprawy po wdrożeniu. Treści dostępne — ux-content-design.
 
-## Prawo (stan sprawdzony 2026-10-17, szczegóły: `references/prawo-i-deklaracja.md`)
+## Prawo (stan sprawdzony 2026-10-17, szczegóły: `references/law-and-declaration.md`)
 - **Europejski akt o dostępności** — dyrektywa (UE) 2019/882, stosowana od **28 czerwca 2025**; w Polsce ustawa z dnia
   26 kwietnia 2024 r. o zapewnianiu spełniania wymagań dostępności niektórych produktów i usług przez podmioty
   gospodarcze (Dz.U. 2024 poz. 731). Dotyczy m.in. handlu elektronicznego, bankowości detalicznej, usług
@@ -64,7 +64,7 @@ projektu są tańsze niż naprawy po wdrożeniu. Treści dostępne — ux-conten
 - Dostępność jako **definicja ukończenia** komponentu i zadania, nie faza na końcu. Role: projektant (kontrast,
   adnotacje), autor treści (linki, nagłówki, alternatywy), programista (semantyka, klawiatura), QA (ścieżki z czytnikiem).
 - Szkolenie: warsztat z klawiaturą i czytnikiem ekranu (30 minut własnego doświadczenia przekonuje bardziej niż slajdy),
-  checklista roli, wyznaczona osoba (champion), mierzone ustalenia na sprint. Plan: `references/zespol-i-szkolenie.md`.
+  checklista roli, wyznaczona osoba (champion), mierzone ustalenia na sprint. Plan: `references/team-and-training.md`.
 
 ## Przykład
 Wejście: „Sklep z butami (45 osób, Polska), formularz zamówienia: pola bez etykiet, błąd tylko na czerwono.”
@@ -89,9 +89,9 @@ kolejnym wydaniem. Obowiązek: sklep (50 osób) podlega ustawie z 26.04.2024 od 
 - [ ] DoD z dostępnością, szkolenie, powtórka po naprawach
 
 ## Materiały dodatkowe
-- `references/audyt-i-raport.md` — szablon raportu, skala wagi, zestaw ręcznych kontroli i par czytnik–przeglądarka; czytaj przy audycie.
-- `references/prawo-i-deklaracja.md` — EAA, polskie ustawy, EN 301 549, treść deklaracji dostępności; czytaj przy pytaniu o obowiązki.
-- `references/zespol-i-szkolenie.md` — DoD, role, plan szkolenia, metryki; czytaj przy wdrażaniu dostępności w zespole.
+- `references/audit-and-report.md` — szablon raportu, skala wagi, zestaw ręcznych kontroli i par czytnik–przeglądarka; czytaj przy audycie.
+- `references/law-and-declaration.md` — EAA, polskie ustawy, EN 301 549, treść deklaracji dostępności; czytaj przy pytaniu o obowiązki.
+- `references/team-and-training.md` — DoD, role, plan szkolenia, metryki; czytaj przy wdrażaniu dostępności w zespole.
 
 ## Źródła
 - W3C, WCAG 2.2 (rekomendacja z 5 października 2023; 4.1.1 Parsing usunięte) i WCAG-EM (metodyka oceny) — potwierdzone

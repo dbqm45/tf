@@ -3,7 +3,7 @@ name: arch-eu-product-law
 description: Użyj, gdy trzeba ustalić przepisy UE dla produktu cyfrowego z AI — Data Act, PLD, obowiązki z terminami.
 metadata:
   przeglad: "2027-01-18"
-  katalog: "Użyj, gdy trzeba ustalić, które przepisy UE dotyczą budowy produktu cyfrowego (SaaS, aplikacja webowa lub mobilna, oprogramowanie z AI) i od kiedy — pytania kwalifikujące (dane osobowe, AI, produkt z elementami cyfrowymi, zmiana dostawcy, sektor finansowy, usługa z listy EAA), mapa obowiązków z aktem, artykułem, datą stosowania i datą sprawdzenia, miejsce w kodzie; tematy bez osobnego skilla: Data Act (zmiana dostawcy chmury i SaaS, opłaty za zmianę i transfer danych, eksport danych), PLD (odpowiedzialność za wadliwe oprogramowanie). Kieruje do sąsiadów: RODO i DPIA → arch-privacy-compliance, NIS2, DORA i CRA → sec-eu-regulations, AI Act → ai-governance-compliance, EAA i WCAG → ux-accessibility. Poza zakresem fabryki (notatki w references/poza-zakresem-fabryki.md): DSA, prawa konsumenta, KSeF, ViDA. Nie jest poradą prawną; decyzje podejmuje prawnik lub IOD."
+  katalog: "Użyj, gdy trzeba ustalić, które przepisy UE dotyczą budowy produktu cyfrowego (SaaS, aplikacja webowa lub mobilna, oprogramowanie z AI) i od kiedy — pytania kwalifikujące (dane osobowe, AI, produkt z elementami cyfrowymi, zmiana dostawcy, sektor finansowy, usługa z listy EAA), mapa obowiązków z aktem, artykułem, datą stosowania i datą sprawdzenia, miejsce w kodzie; tematy bez osobnego skilla: Data Act (zmiana dostawcy chmury i SaaS, opłaty za zmianę i transfer danych, eksport danych), PLD (odpowiedzialność za wadliwe oprogramowanie). Kieruje do sąsiadów: RODO i DPIA → arch-privacy-compliance, NIS2, DORA i CRA → sec-eu-regulations, AI Act → ai-governance-compliance, EAA i WCAG → ux-accessibility. Poza zakresem fabryki (notatki w references/outside-factory-scope.md): DSA, prawa konsumenta, KSeF, ViDA. Nie jest poradą prawną; decyzje podejmuje prawnik lub IOD."
   slowa: "które przepisy UE dotyczą, jakie przepisy nas dotyczą, mapa obowiązków prawnych, prawo UE dla SaaS, prawo UE dla oprogramowania z AI, zgodność produktu z prawem, Data Act, akt w sprawie danych, zmiana dostawcy chmury, zmiana dostawcy SaaS, przeniesienie danych do konkurencji, opłaty za eksport danych, egress, PLD, odpowiedzialność za produkt, wadliwe oprogramowanie"
 ---
 
@@ -15,7 +15,7 @@ Każdy fakt ma datę sprawdzenia; czego nie potwierdzono w tekście aktu, oznacz
 
 **Zakres:** fabryka IT zajmuje się prawem tylko w zakresie budowy oprogramowania, także z AI. DSA, prawa konsumenta
 (odstąpienie, przycisk odstąpienia), KSeF i ViDA są poza zakresem — dawne notatki w
-`references/poza-zakresem-fabryki.md`; pytania o nie kierujesz do prawnika, księgowości lub właściciela produktu.
+`references/outside-factory-scope.md`; pytania o nie kierujesz do prawnika, księgowości lub właściciela produktu.
 
 ## 1. Pytania kwalifikujące (najpierw, zanim wymienisz akty)
 Odpowiedzi bierzesz z kodu i dokumentów projektu (`scout`), o resztę pytasz człowieka:
@@ -31,7 +31,7 @@ Odpowiedzi bierzesz z kodu i dokumentów projektu (`scout`), o resztę pytasz cz
 
 PLD dotyczy praktycznie każdego oprogramowania wprowadzanego do obrotu w ramach działalności (także SaaS).
 
-## 2. Mapa aktów (stan na 2026-10-18, PLD 2026-10-20, źródła wtórne — szczegóły w `references/akty-i-obowiazki.md`)
+## 2. Mapa aktów (stan na 2026-10-18, PLD 2026-10-20, źródła wtórne — szczegóły w `references/acts-and-obligations.md`)
 
 | Akt | Kiedy dotyczy | Termin | Skill |
 |---|---|---|---|
@@ -90,4 +90,4 @@ dostawcy. Które przepisy UE nas dotyczą?”
 
 ## Źródła
 Tekstów aktów w EUR-Lex i ISAP nie udało się odczytać w sesji (proxy 403, 2026-10-18); daty i artykuły z komentarzy
-kancelarii i serwisów branżowych, dostęp 2026-10-18 — lista w `references/akty-i-obowiazki.md`. Opisane własnymi słowami.
+kancelarii i serwisów branżowych, dostęp 2026-10-18 — lista w `references/acts-and-obligations.md`. Opisane własnymi słowami.

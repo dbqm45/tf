@@ -19,9 +19,9 @@ zmieniasz rzadko. Ten katalog nie trafia do projektów: to zestaw do przygotowan
 | `pack.yaml` → `org_defaults.config.work`, `default_profile`, języki | limity `tf work`, profil kosztów, język pracy i commitów |
 | `pack.yaml` → `org_defaults.config.task.allowed_modes` | tryby zadania dozwolone w firmie; styl pracy osoby (`tf style`) wybiera tylko spośród nich |
 | `pack.yaml` → `org_defaults.operations.tracker` | tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami (bez adresu i tokenu) |
-| `analyzers/<firma>-standardy/rules.yaml` | standardy sprawdzane **bez modelu** (`tf analyze`): zakazane API i importy, wymagane nagłówki, nazwy plików |
+| `analyzers/<firma>-standards/rules.yaml` | standardy sprawdzane **bez modelu** (`tf analyze`): zakazane API i importy, wymagane nagłówki, nazwy plików |
 | `semgrep.yml` | reguły semgrep w skanie każdego kawałka pętli `/tf` |
-| `skills/<firma>-standardy/` | standardy wymagające oceny: `SKILL.md` to spis, ustalenia obszarów w `references/` (`ui.md`, `api.md`, `data.md`, `releases.md`) — agent czyta tylko obszar swojego zadania |
+| `skills/<firma>-standards/` | standardy wymagające oceny: `SKILL.md` to spis, ustalenia obszarów w `references/` (`ui.md`, `api.md`, `data.md`, `releases.md`) — agent czyta tylko obszar swojego zadania |
 | `settings.json` | uprawnienia Claude Code dla całej firmy |
 
 Paczka **nie zawiera** adresów ani tokenów (Jira bierze je ze zmiennych `JIRA_BASE_URL`, `JIRA_EMAIL`,
@@ -36,8 +36,8 @@ w konfiguracji Claude Code).
 2. **Uzupełnij pola `TODO`** (`grep -rn TODO ~/repos/acme-factory`), w tej kolejności:
    1. `pack.yaml` → `org_defaults`: polityka autonomii, ścieżki do przeglądu, limity, tracker;
    2. `rules.yaml` — każde ustalenie, które da się zapisać wzorcem (z przykładem naruszenia w
-      `fixtures/naruszenia/` i kodem zgodnym w `fixtures/czyste/`);
-   3. scenariusze `tests/skill_evals/<firma>-standardy.json` — pytanie na obszar;
+      `fixtures/violations/` i kodem zgodnym w `fixtures/clean/`);
+   3. scenariusze `tests/skill_evals/<firma>-standards.json` — pytanie na obszar;
    4. pliki obszarów `references/<obszar>.md` — tylko ustalenia wymagające oceny; spis w `SKILL.md`;
    5. `semgrep.yml` i `settings.json`, jeśli firma ich potrzebuje.
 3. **Sprawdź** (w repozytorium fabryki):
@@ -45,11 +45,11 @@ w konfiguracji Claude Code).
    python3 tools/workspace.py check --packs pack-it,pack-acme --pack-dir ~/repos/acme-factory
    ```
    Dopóki scenariusze mają `TODO`, nie przejdzie tylko bramka skilla. Po uzupełnieniu w przestrzeni roboczej:
-   `python3 .tf/factory/skill_gate.py acme-standardy` i
+   `python3 .tf/factory/skill_gate.py acme-standards` i
    `python3 tools/workspace.py sync-gate --out <przestrzeń> --pack-dir ~/repos/acme-factory`.
 4. **Opublikuj** katalog jako repozytorium git firmy z tagiem `v0.1.0`.
 5. **Zainstaluj w projekcie:** `tf install --pack-dir <adres repozytorium firmy> --add pack-acme`.
-   Wartości firmy pokazuje `tf config show` (źródło „organizacja”), reguły — `tf analyze --only acme-standardy`.
+   Wartości firmy pokazuje `tf config show` (źródło „organizacja”), reguły — `tf analyze --only acme-standards`.
 
 ## Jak wygenerować z dokumentów firmy (np. Confluence)
 Gdy standardy są już opisane, nie przepisujesz ich ręcznie. Wszystko, co da się sprawdzić, robi skrypt

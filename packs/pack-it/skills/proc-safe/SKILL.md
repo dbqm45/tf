@@ -50,4 +50,4 @@ rozmowy na PI Planning, nie wyrok.
 | Wymiana biblioteki szyfrowania | 2 + 8 + 7 = 17 | 5 | **3,4** |
 | Płatność BLIK | 9 + 7 + 2 = 18 | 6 | **3,0** |
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

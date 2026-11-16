@@ -93,11 +93,11 @@ def main() -> int:
                                      "applies_when: {files_any: ['**/*.py']}\ntier0: {rules: rules.yaml}\n"
                                      "gate: {min_recall: 1.0, max_false_positives: 0}\n")
         write(mod / "rules.yaml", RULES)
-        write(mod / "fixtures" / "podlozone" / "repo" / "src" / "a.py", "print('x')\n")
-        write(mod / "fixtures" / "podlozone" / "expected.json", json.dumps([
+        write(mod / "fixtures" / "planted" / "repo" / "src" / "a.py", "print('x')\n")
+        write(mod / "fixtures" / "planted" / "expected.json", json.dumps([
             {"rule": "no-print", "file": "src/a.py"}, {"rule": "license-header", "file": "src/a.py"}]))
-        write(mod / "fixtures" / "czyste" / "repo" / "src" / "a.py", "# Copyright ACME\nimport x\n")
-        write(mod / "fixtures" / "czyste" / "expected.json", "[]")
+        write(mod / "fixtures" / "clean" / "repo" / "src" / "a.py", "# Copyright ACME\nimport x\n")
+        write(mod / "fixtures" / "clean" / "expected.json", "[]")
         g = ["git", "-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false"]
         subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
         subprocess.run(g + ["add", "-A"], cwd=repo, check=True)

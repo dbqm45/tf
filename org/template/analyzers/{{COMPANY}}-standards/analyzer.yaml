@@ -1,0 +1,14 @@
+# Standardy {{TITLE}} sprawdzane bez modelu (tf analyze). Reguły są w rules.yaml; wykonuje je skaner fabryki.
+name: {{COMPANY}}-standards
+prefix: {{COMPANY_UP}}
+title: "Standardy {{TITLE}}"
+description: "Reguły {{TITLE}}, które da się sprawdzić wzorcem: zakazane API i importy, wymagane nagłówki, nazwy plików"
+version: 0.1.0
+przeglad: "{{REVIEW}}"
+skills: [{{PREFIX}}standards]
+tier0:
+  rules: rules.yaml
+# Bramka: reguły muszą znaleźć wszystkie naruszenia z fixtures/violations i nic w fixtures/clean.
+gate:
+  min_recall: 1.0
+  max_false_positives: 0

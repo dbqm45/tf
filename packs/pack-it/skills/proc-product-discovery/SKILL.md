@@ -14,12 +14,12 @@ i dostarczanie idą równolegle — małe testy co tydzień, nie jedna faza „b
 
 ## Procedura
 0. **Narzędzie wewnętrzne albo automatyzacja dla zespołu?** Najpierw kwalifikacja „kup / uzupełnij / zbuduj / czekaj”
-   z mapą okazji — `references/kup-uzupelnij-zbuduj.md`. „Zróbmy dashboard / agenta” to rozwiązanie, nie sygnał.
+   z mapą okazji — `references/buy-extend-build.md`. „Zróbmy dashboard / agenta” to rozwiązanie, nie sygnał.
 1. **Wynik, nie funkcja.** Zacznij od mierzalnego wyniku produktowego, na który zespół ma wpływ („odsetek nowych
    klientów, którzy w 7 dni wystawili pierwszą fakturę: 35% → 50%”). Prośba o funkcję („dodajmy eksport do Excela”)
    to hipoteza rozwiązania — zapytaj, jaki problem i jaki wynik za nią stoi.
 2. **Dowody od użytkowników**: wywiady o konkretnych, niedawnych zdarzeniach, dane z analityki, zgłoszenia
-   (ddd-discovery-intake, `badania-uzytkownikow.md`). Bez dowodów szanse są zgadywaniem — oznacz je jako założenia.
+   (ddd-discovery-intake, `user-research.md`). Bez dowodów szanse są zgadywaniem — oznacz je jako założenia.
 3. **Drzewo szans i rozwiązań** (opportunity solution tree): wynik → szanse (potrzeby, problemy, pragnienia klientów)
    → rozwiązania → testy założeń. Test szansy: „czy da się ją rozwiązać więcej niż jednym sposobem?” — jeśli nie, to
    rozwiązanie przebrane za szansę. Drzewo dla jednego zespołu i jednego wyniku, nie dla całej firmy.
@@ -40,12 +40,12 @@ i dostarczanie idą równolegle — małe testy co tydzień, nie jedna faza „b
    *ważność × siła dowodów*; testujesz najpierw ważne i słabo udowodnione.
 8. **Testy założeń od najtańszego**: rozmowa i dane, które już są → prototyp papierowy lub klikalny (ux-feature-design)
    → test „ręcznie zamiast automatu” (concierge) → wersja dla wąskiej grupy za flagą → A/B
-   (`references/eksperymenty-i-wydanie.md`). Przed testem zapisz kryterium sukcesu i decyzję, którą podejmiesz
+   (`references/experiments-and-release.md`). Przed testem zapisz kryterium sukcesu i decyzję, którą podejmiesz
    przy każdym wyniku. Test „fałszywych drzwi” (przycisk funkcji, której jeszcze nie ma) tylko z uczciwym komunikatem
    po kliknięciu.
 8a. **Duża inicjatywa przed budową** (nowy moduł, epik na kilka sprintów): komunikat prasowy z dnia premiery
    i FAQ (praca od klienta wstecz), epik zapisany jako hipoteza z miarą i kryterium przerwania —
-   `references/od-klienta-wstecz.md`. Jeśli komunikatu nie da się napisać tak, żeby klient chciał go przeczytać,
+   `references/working-backwards.md`. Jeśli komunikatu nie da się napisać tak, żeby klient chciał go przeczytać,
    problem albo klient są jeszcze niejasne.
 9. **Decyzja i zapis**: wybrane rozwiązanie, odrzucone z powodem, wyniki testów → `docs/project/01-discovery/`
    (core-project-record). Zakres pierwszej wersji tnij pionowo (proc-agile) — działająca funkcja przed dopracowaną.
@@ -53,14 +53,14 @@ i dostarczanie idą równolegle — małe testy co tydzień, nie jedna faza „b
    proc-requirements-shaping.
 
 ## Priorytety i metryki
-Szczegóły i wzory: `references/priorytety-i-metryki.md` — RICE, MoSCoW, Kano, wartość/wysiłek,
+Szczegóły i wzory: `references/priorities-and-metrics.md` — RICE, MoSCoW, Kano, wartość/wysiłek,
 HEART z celami, sygnałami i metrykami, OKR, metryka wiodąca z metrykami ochronnymi, dopasowanie produktu do rynku,
 plan zdarzeń analitycznych.
 
-Roadmapa według wyników (teraz / dalej / później zamiast listy funkcji z datami): `references/od-klienta-wstecz.md`.
+Roadmapa według wyników (teraz / dalej / później zamiast listy funkcji z datami): `references/working-backwards.md`.
 
 Model biznesowy, rynek i konkurencja (kanwa modelu biznesowego, Lean Canvas, analiza konkurencji, SWOT z działaniami,
-pięć sił Portera, mapa doświadczenia klienta): `references/model-biznesowy-i-rynek.md`.
+pięć sił Portera, mapa doświadczenia klienta): `references/business-model-and-market.md`.
 
 ## Zasady
 - Decyzje produktowe (co budujemy, co wycinamy, czy wydajemy) podejmuje człowiek. Agent przygotowuje dowody,

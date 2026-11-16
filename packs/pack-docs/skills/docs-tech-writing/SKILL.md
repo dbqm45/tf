@@ -21,7 +21,7 @@ metadata:
 - **Najpierw struktura** (rozdziały → podrozdziały), potem wypełnianie węzłów — nie pisz liniowo.
 - **KISS:** krótkie zdania i akapity; kroki jako lista numerowana, porównania jako tabela, nie wyliczenia po przecinku.
   Runbook, instalacja, kroki naprawcze: zasady ASD-STE100 — jedna czynność na krok, zdanie do ok. 20 słów,
-  ostrzeżenie przed krokiem (`references/styl-i-struktura.md`).
+  ostrzeżenie przed krokiem (`references/style-and-structure.md`).
 - **Spójność terminów ważniejsza niż elegancja** — raz „system”, zawsze „system”; to samo dla formatowania.
   Przy konflikcie reguły stylu z jednoznacznością wybierz jednoznaczność.
 - Każda komenda/metoda/endpoint z **przykładem kodu**, który da się skopiować i uruchomić (bloki z językiem, ```bash).
@@ -40,11 +40,11 @@ metadata:
 | Reakcja na alert | runbook | Objaw → potwierdzenie → naprawa → rollback → eskalacja |
 | Kontrakt HTTP | dokumentacja API / OpenAPI | aktualizuj spec, nie osobny dokument |
 | Praca użytkownika z systemem | podręcznik | zadaniowo; spis treści, słowniczek, indeks |
-| Pierwszy sukces, nauka | tutorial / szybki start | Diátaxis: `references/rodzaje-dokumentacji.md` |
+| Pierwszy sukces, nauka | tutorial / szybki start | Diátaxis: `references/documentation-types.md` |
 | Konkretny cel praktyka | instrukcja (how-to) | jw. |
 | Zmiany dla użytkowników (nie dla programistów) | notatki o wydaniu | co nowego, co zrobić, zmiany łamiące; jw. |
 | Błąd, objaw | rozwiązywanie problemów / lista błędów | według objawu; jw. |
-| Artykuł, porównanie, studium przypadku | treść techniczna poza dokumentacją | `references/tresci-techniczne-i-seo.md` |
+| Artykuł, porównanie, studium przypadku | treść techniczna poza dokumentacją | `references/technical-content-and-seo.md` |
 | Artefakty faz projektu (brief, wymagania, plan…) | — | **core-project-record**, nie tu |
 
 ## README — szkielet
@@ -94,17 +94,17 @@ Co zyskujemy, co tracimy, co trzeba zrobić dalej.
   lub persona Stefan (edytor).
 
 ## Indeks references
-- Czytaj `references/styl-i-struktura.md`, gdy planujesz strukturę większego dokumentu (co na początku/końcu, słowniczek,
+- Czytaj `references/style-and-structure.md`, gdy planujesz strukturę większego dokumentu (co na początku/końcu, słowniczek,
   nawigacja, formatowanie, cechy dobrej dokumentacji).
-- Czytaj `references/proces.md`, gdy prowadzisz pisanie jako proces: zbieranie informacji, konsultacje z developerami,
+- Czytaj `references/process.md`, gdy prowadzisz pisanie jako proces: zbieranie informacji, konsultacje z developerami,
   plan i kamienie milowe, metody recenzji, korekta, przejmowanie cudzej dokumentacji, post-mortem.
-- Czytaj `references/rodzaje-dokumentacji.md`, gdy wybierasz rodzaj strony (Diátaxis), piszesz dla programistów
+- Czytaj `references/documentation-types.md`, gdy wybierasz rodzaj strony (Diátaxis), piszesz dla programistów
   (szybki start, referencja, lista błędów), rozwiązywanie problemów, FAQ albo notatki o wydaniu.
-- Czytaj `references/utrzymanie-i-pomiar.md`, gdy utrzymujesz serwis dokumentacji: przeglądy, linki i przykłady w CI,
+- Czytaj `references/maintenance-and-measurement.md`, gdy utrzymujesz serwis dokumentacji: przeglądy, linki i przykłady w CI,
   luki ze zgłoszeń, przewodnik stylu i Vale, metryki.
-- Czytaj `references/tresci-techniczne-i-seo.md`, gdy piszesz artykuł, porównanie lub studium przypadku dla odbiorcy
+- Czytaj `references/technical-content-and-seo.md`, gdy piszesz artykuł, porównanie lub studium przypadku dla odbiorcy
   technicznego: lejek, SEO, dystrybucja.
-- Czytaj `references/diagramy-i-prezentacje.md`, gdy dokument potrzebuje diagramu (Mermaid, C4, UML), strony HTML
+- Czytaj `references/diagrams-and-presentations.md`, gdy dokument potrzebuje diagramu (Mermaid, C4, UML), strony HTML
   z wyjaśnieniem albo prezentacji: wybór formy, notacja, czytelny układ, pułapki Mermaid, dostępność, slajdy.
 
 ## Checklista

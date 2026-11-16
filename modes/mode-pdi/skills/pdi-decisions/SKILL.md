@@ -28,7 +28,7 @@ Gdy pdi przyjmie zgłoszenie jako zmianę (albo człowiek poda klucz zmiany):
    TSK tej zmiany, których wymaga; klucze cięć w `tasks` nagłówka — tylko w `plan.md`)
    i `release.yaml`: `mvp` (linia R1, wynik i metryka z `intent.md`), linie R1…Rn z TSK, flagi z właścicielem,
    `remove_by` i etapami `rollout` (kryterium wyjścia, minimalny czas) — według planu cięć (core-delivery-lifecycle,
-   `.claude/skills/core-delivery-lifecycle/references/plan-ciec.md`).
+   `.claude/skills/core-delivery-lifecycle/references/cut-plan.md`).
 3. Po każdej zmianie nagłówka albo planu wydania: `decision_record.py check` — wykrywa brak `change`, niezgodność
    z katalogiem, nieznane pola i wartości, `tasks` poza planem, złe klucze i daty; w `release.yaml` błędy schematu
    kontraktu, `mvp.release` spoza linii, TSK w dwóch liniach albo różne od `plan.md` (także kolumny „Wydanie”

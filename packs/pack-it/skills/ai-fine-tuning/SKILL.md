@@ -25,7 +25,7 @@ potok produkcyjny — **ai-mlops**, serwowanie wyniku — **ops-ai-inference** (
    | opóźnienie lub koszt za duże przy dużym modelu | destylacja lub fine-tuning mniejszego modelu |
    | styl lub preferencje trudne do opisania, łatwe do porównania | SFT, potem ewentualnie DPO |
    Fine-tuning i RAG się nie wykluczają: dostrojony model może lepiej czytać wstawiony kontekst.
-3. **Dane** (szczegóły: `references/dane-i-hiperparametry.md`):
+3. **Dane** (szczegóły: `references/data-and-hyperparameters.md`):
    - źródło i podstawa prawna: dane osobowe bez podstawy odpadają, licencja źródła zapisana (krok 8);
    - czyszczenie (kodowanie, puste i ucięte odpowiedzi, szablony), **deduplikacja** dokładna i przybliżona;
    - **podział według jednostki** (klient, rozmowa, zgłoszenie), nie losowych wierszy, i dopiero po deduplikacji;
@@ -37,7 +37,7 @@ potok produkcyjny — **ai-mlops**, serwowanie wyniku — **ops-ai-inference** (
 4. **Metoda:**
    - **SFT** (uczenie na parach wejście → pożądane wyjście) to domyślny start.
    - **LoRA/QLoRA (PEFT)** trenuje małe adaptery zamiast wszystkich wag; QLoRA robi to na modelu zamrożonym w 4 bitach.
-     Tańsze w pamięci i szybkie do iteracji. Punkty startowe: `references/dane-i-hiperparametry.md`.
+     Tańsze w pamięci i szybkie do iteracji. Punkty startowe: `references/data-and-hyperparameters.md`.
    - **Pełne dostrajanie** tylko gdy LoRA o wysokiej randze mierzalnie nie wystarcza, a masz pamięć i dużo danych.
    - **DPO** (pary „lepsza / gorsza odpowiedź”, bez osobnego modelu nagrody) po SFT, gdy cel to preferencje.
      RLHF z modelem nagrody i uczeniem ze wzmocnieniem jest cięższy; sięgaj po niego z zespołem, który go utrzyma.
@@ -59,7 +59,7 @@ potok produkcyjny — **ai-mlops**, serwowanie wyniku — **ops-ai-inference** (
      anonimizacja przed treningiem (**arch-privacy-compliance**); model może zapamiętać dane i trudno je z niego usunąć;
    - **model bazowy:** licencja pozwala na dostrajanie i dystrybucję pochodnej? Wymogi nazewnictwa lub progi użytkowników;
    - **wyniki nauczyciela:** regulaminy dostawców API często zabraniają trenowania na wynikach modeli konkurencyjnych;
-     licencje otwartych modeli bywają różne. Czytaj aktualny tekst, nie pamięć (`references/dane-i-hiperparametry.md`).
+     licencje otwartych modeli bywają różne. Czytaj aktualny tekst, nie pamięć (`references/data-and-hyperparameters.md`).
 9. **Gdzie trenować:** API dostawcy (mało pracy, brak wag, uzależnienie, zmienna dostępność) czy własne trenowanie
    (TRL + PEFT, Unsloth, Axolotl — kontrola i wagi, ale GPU i utrzymanie). Stan oferty sprawdź w dokumentacji
    w dniu decyzji; zapisz decyzję jako ADR z kosztem. Wdrożenie i wersjonowanie adaptera: **ai-mlops**, **ops-ai-inference**.
@@ -87,7 +87,7 @@ Wynik karty:
 - [ ] decyzja API vs własne trenowanie z kosztem; adapter wersjonowany
 
 ## Materiały dodatkowe
-- `references/dane-i-hiperparametry.md` — przygotowanie danych, punkty startowe LoRA/QLoRA/DPO ze źródłami, narzędzia, licencje.
+- `references/data-and-hyperparameters.md` — przygotowanie danych, punkty startowe LoRA/QLoRA/DPO ze źródłami, narzędzia, licencje.
 
 ## Źródła
 - Dettmers i in., „QLoRA” (arXiv 2305.14314, 2023) — NF4, podwójna kwantyzacja, optymalizatory stronicowane, model 65B na

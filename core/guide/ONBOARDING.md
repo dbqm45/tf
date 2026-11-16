@@ -1,6 +1,6 @@
 # Onboarding: pierwsza instalacja fabryki
 
-Ten plik prowadzi od zera do działającej fabryki w projekcie. Codzienna praca: `PRZEWODNIK.md`, częste pytania:
+Ten plik prowadzi od zera do działającej fabryki w projekcie. Codzienna praca: `GUIDE.md`, częste pytania:
 `FAQ.md` (oba trafiają przy instalacji do `.tf/factory/` w projekcie).
 
 ## 1. Raz na komputerze: polecenie `tf`
@@ -51,7 +51,7 @@ Prywatnie — gdy fabryka jest tylko Twoim narzędziem. Zespołowo — gdy ma dz
 1. W katalogu projektu uruchom `claude` i zaakceptuj zaufanie do folderu. Bez tego hooki i uprawnienia nie
    działają.
 2. Sprawdź instalację: `tf doctor` (naprawa: `tf doctor --fix`), lista nakładek i trybów: `tf list`.
-3. Wybierz personę z `.claude/catalog.md` i uruchom ją: `claude --agent <nazwa>`. Dalej: `.tf/factory/PRZEWODNIK.md`.
+3. Wybierz personę z `.claude/catalog.md` i uruchom ją: `claude --agent <nazwa>`. Dalej: `.tf/factory/GUIDE.md`.
 
 ## 5. Sesje w chmurze (claude.ai/code)
 - Hooki fabryki działają tylko w sesji uruchomionej w katalogu repozytorium projektu.

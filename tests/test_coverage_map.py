@@ -50,7 +50,7 @@ def main() -> int:
         areas.write_text(json.dumps({"Finanse": ["faktur", "chargeback", "zwrot"],
                                      "Plan": ["harmonogram", "kamień milow", "kamienie milow"]}, ensure_ascii=False),
                          encoding="utf-8")
-        out = root / "raport.md"
+        out = root / "report.md"
         r = run("--root", str(root), "--areas", str(areas), "--out", str(out))
         rep = out.read_text(encoding="utf-8") if out.is_file() else ""
         check(r.returncode == 0, f"C-1: kod 0 także przy dziurach: {r.returncode} {r.stderr[-300:]}")

@@ -32,14 +32,14 @@ Angular; w starszych wersjach bierz z tabeli „Zależne od wersji” odpowiedni
 9. **Routing:** trasy leniwe (`loadComponent`, `loadChildren`), guardy i resolvery funkcyjne, `withComponentInputBinding()`.
 10. **Testy:** Vitest (`@angular/build:unit-test`); logika domeny bez `TestBed`; komponenty `await fixture.whenStable()`.
 11. **Aktualizacje:** `ng update` (lub `nx migrate` w monorepo Nx) — migracje automatyczne zamiast ręcznych zmian;
-    modernizacja kodu schematami `ng generate @angular/core:<migracja>` (`references/ui-testy-migracje.md`).
+    modernizacja kodu schematami `ng generate @angular/core:<migracja>` (`references/ui-tests-migrations.md`).
 12. **CLI zamiast ręcznych plików:** nowa aplikacja `ng new … --interactive=false` z flagami z opisu, kod przez
     `ng generate`, biblioteki przez `ng add`; po każdej zmianie `ng build` i poprawka błędów przed oddaniem
-    (`references/nowa-aplikacja.md`). Nazwy plików zgodne ze stylem, który projekt już ma.
+    (`references/new-application.md`). Nazwy plików zgodne ze stylem, który projekt już ma.
 13. **Animacje** przez CSS i `animate.enter`/`animate.leave` (od v20.2); `@angular/animations` tylko w starszym kodzie.
     Wiązania hosta w polu `host`, nie `@HostBinding`/`@HostListener`.
 14. **SSR:** tryb renderowania per trasa (`RenderMode`), ten sam DOM na serwerze i w przeglądarce, praca tylko dla
-    przeglądarki w `afterNextRender`/`afterRenderEffect` (`references/renderowanie-i-ssr.md`).
+    przeglądarki w `afterNextRender`/`afterRenderEffect` (`references/rendering-and-ssr.md`).
 
 ## Pojęcia domenowe w Angularze — gdzie co mieszka
 | Pojęcie (słownik) | Miejsce w aplikacji Angular |
@@ -62,11 +62,11 @@ Reactive Forms z tej samej reguły, store z `@Service` + `httpResource` + stanem
 `references/domain-adapters.md` (z odpowiednikami dla starszych wersji).
 
 ## Materiały (czytaj tylko potrzebny plik)
-- `references/nowa-aplikacja.md` — `ng new` i flagi, `ng generate`, `ng add`, Tailwind v4, nazwy plików od v20,
+- `references/new-application.md` — `ng new` i flagi, `ng generate`, `ng add`, Tailwind v4, nazwy plików od v20,
   środowiska, serwer MCP Angular CLI.
-- `references/renderowanie-i-ssr.md` — CSR/SSG/SSR, `RenderMode` per trasa, hydratacja, kod zgodny z serwerem, tokeny
+- `references/rendering-and-ssr.md` — CSR/SSG/SSR, `RenderMode` per trasa, hydratacja, kod zgodny z serwerem, tokeny
   żądania, transfer cache, `@defer` (wyzwalacze, `hydrate on`, stabilność układu).
-- `references/ui-testy-migracje.md` — animacje, przejścia tras, Angular Aria, element hosta, testy bez
+- `references/ui-tests-migrations.md` — animacje, przejścia tras, Angular Aria, element hosta, testy bez
   `detectChanges`, component harnesses, `RouterTestingHarness`, schematy migracji.
 - `references/domain-adapters.md` — przetestowane adaptery domeny (niżej).
 
