@@ -31,6 +31,9 @@ def make_repo(base: Path, name: str, versions: list[tuple[str, str | None]]) -> 
     work = base / f"{name}-work"
     (work / "core" / "factory").mkdir(parents=True)
     (work / "core" / "factory" / "install.py").write_text("")
+    (work / "core" / "factory" / "CHANGELOG.md").write_text("# Changelog\n")
+    (work / "docs").mkdir()
+    (work / "docs" / "notes.md").write_text("duży katalog, którego --check nie pobiera\n")
     git(work, "init", "-q", "-b", "main")
     for version, tag in versions:
         (work / "core" / "factory" / "VERSION").write_text(version + "\n")
@@ -202,6 +205,42 @@ def main() -> int:
             got = up.notice(project(base, f"g{i}", "1.0.0", src), env={"PATH": os.environ.get("PATH", "")},
                             cache_dir=cache, now=1000.0)
             check((got is None) if want is None else (got and want in got), f"{msg}: {got}")
+
+        # UP-1: --check pobiera tylko VERSION, CHANGELOG i install.py (nie całe repozytorium)
+        (base / "m1").mkdir()
+        meta = up.fetch(repo, base / "m1", meta_only=True)
+        check((meta / "core/factory/VERSION").read_text().strip() == "1.10.0" and (meta / "core/factory/CHANGELOG.md").is_file()
+              and not (meta / "docs" / "notes.md").exists(),
+              f"UP-1: --check pobiera tylko wersję i listę zmian: {sorted(p.relative_to(meta).as_posix() for p in meta.rglob('*') if p.is_file() and '.git' not in p.parts)}")
+        (base / "m2").mkdir()
+        check((up.fetch(repo, base / "m2") / "docs" / "notes.md").is_file(), "UP-1: pełna aktualizacja pobiera całość")
+
+    # UP-2: testy fabryki równolegle — wynik ten sam, czas krótszy
+    import time
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        tests = root / ".claude" / "tests"
+        tests.mkdir(parents=True)
+        for i in range(4):
+            (tests / f"test_wolny_{i}.py").write_text("import time\ntime.sleep(1)\nprint('✓ 1/1')\n")
+        (tests / "test_zly.py").write_text("raise SystemExit(1)\n")
+        t0 = time.time()
+        failed = up.run_tests(root, workers=4)
+        check(failed == ["test_zly.py"] and time.time() - t0 < 3.5,
+              f"UP-2: równoległe testy: czerwone {failed}, czas {time.time() - t0:.1f} s (po kolei ≥ 4 s)")
+
+        # UP-3: szybka kontrola po aktualizacji: build.py check i kompilacja skryptów silnika i hooków
+        (root / ".tf" / "factory").mkdir(parents=True)
+        (root / ".tf" / "factory" / "build.py").write_text("import sys\nsys.exit(0)\n")
+        (root / ".claude" / "hooks").mkdir()
+        (root / ".claude" / "hooks" / "dobry.py").write_text("x = 1\n")
+        check(up.quick_check(root) == [], f"UP-3: zdrowa instalacja — bez uwag: {up.quick_check(root)}")
+        (root / ".claude" / "hooks" / "zly.py").write_text("def (:\n")
+        probs = up.quick_check(root)
+        check(any("zly.py" in x for x in probs), f"UP-3: błąd składni w hooku wykryty: {probs}")
+        (root / ".tf" / "factory" / "build.py").write_text("import sys\nprint('✗ brak skilla')\nsys.exit(1)\n")
+        probs = up.quick_check(root)
+        check(any("build.py check" in x for x in probs), f"UP-3: czerwony build.py check wykryty: {probs}")
 
     for f in fails:
         print(f"✗ {f}")

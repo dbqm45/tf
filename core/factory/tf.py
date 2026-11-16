@@ -21,6 +21,8 @@ tf — the team factory command: install, update, packs, languages, health check
                               # your own skill from the template, with a scenario file (.tf/factory/build.py new-skill)
   tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
   tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
+  tf uninstall [--dry-run] [--yes] [--force]   # remove the factory from this project (keeps your files; --force removes
+                              # them too); backup in ~/.tf/backups/
   tf style [<name>] [--here]  # your work style: autonomous | step-by-step | conversation; no name — show the current one;
                               # saved in ~/.tf/preferences.yaml (all your projects) or, with --here, .tf/config/me.yaml
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
@@ -522,6 +524,8 @@ def main(argv: list[str]) -> int:
             print("✗ Usage: tf config show [<key>]")
             return 2
         return cmd_config_show(rest[1] if len(rest) == 2 else None) if need_project() else 2
+    if cmd == "uninstall":
+        return engine("uninstall.py", rest) if need_project() else 2
     if cmd == "style":
         return cmd_style(rest) if need_project() else 2
     if cmd == "task":

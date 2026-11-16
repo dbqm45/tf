@@ -7,6 +7,7 @@ Updates the team factory in this project, like a software update (standard libra
   python3 .tf/factory/update.py --yes                        # no question (e.g. in a script)
   python3 .tf/factory/update.py --source <source>            # set the source (remembered in the manifest)
   python3 .tf/factory/update.py --yes --accept-audit         # apply despite high-severity skill audit findings
+  python3 .tf/factory/update.py --full-check                 # all factory tests here, in parallel (also after an update)
   python3 .tf/factory/update.py --rollback                   # go back to the state before the last update (copy in .tf/backup/)
   python3 .tf/factory/update.py --auto on|off                # automatic PATCH/MINOR releases (session start hook or a PR workflow)
   python3 .tf/factory/update.py --auto-run                   # one automatic run (the session start hook runs it in the background)
@@ -128,21 +129,41 @@ def installer_of(new: Path) -> Path:
     return new / "core" / "factory" / "install.py"
 
 
-def fetch(src: str, tmp: Path) -> Path:
+META_PATHS = ("/core/factory/VERSION", "/core/factory/CHANGELOG.md", "/core/factory/install.py")
+
+
+def _sparse_clone(url: str, ref: str, dest: Path) -> bool:
+    """Tylko pliki META_PATHS (wersja i lista zmian dla --check): bez pobierania treści całego repozytorium."""
+    cmd = ["git", "clone", "--depth", "1", "--quiet", "--filter=blob:none", "--no-checkout"] + \
+        (["--branch", ref] if ref else []) + [url, str(dest)]
+    if subprocess.run(cmd, capture_output=True, text=True).returncode != 0:
+        return False
+    for step in (["sparse-checkout", "set", "--no-cone", *META_PATHS], ["checkout", "--quiet"]):
+        if subprocess.run(["git", "-C", str(dest), *step], capture_output=True, text=True).returncode != 0:
+            return False
+    return (dest / "core" / "factory" / "VERSION").is_file()
+
+
+def fetch(src: str, tmp: Path, meta_only: bool = False) -> Path:
     """Zwraca katalog główny nowej wersji fabryki (zawierający core/factory/install.py).
 
-    Z repozytorium git bez `#ref` pobiera najnowsze wydanie (tag vX.Y.Z), a bez tagów — domyślną gałąź."""
+    Z repozytorium git bez `#ref` pobiera najnowsze wydanie (tag vX.Y.Z), a bez tagów — domyślną gałąź.
+    `meta_only` (dla --check): tylko wersja, lista zmian i instalator — reszta repozytorium nie jest pobierana; gdy git
+    nie obsługuje częściowego pobrania, pobiera całość jak dotąd."""
     if is_git(src):
         url, _, ref = src.partition("#")
         if not ref:
             ref = latest_tag(url) or ""
             print(f"ℹ Latest release: {ref} (unreleased changes: {url}#main)." if ref
                   else "ℹ The repository has no vX.Y.Z release tags — fetching the default branch.")
-        cmd = ["git", "clone", "--depth", "1", "--quiet"] + (["--branch", ref] if ref else []) + [url, str(tmp / "repo")]
-        r = subprocess.run(cmd, capture_output=True, text=True)
-        if r.returncode != 0:
-            sys.exit(f"✗ Could not fetch {src}:\n{r.stderr.strip()}")
-        base = tmp / "repo"
+        if meta_only and _sparse_clone(url, ref, tmp / "meta"):
+            base = tmp / "meta"
+        else:
+            cmd = ["git", "clone", "--depth", "1", "--quiet"] + (["--branch", ref] if ref else []) + [url, str(tmp / "repo")]
+            r = subprocess.run(cmd, capture_output=True, text=True)
+            if r.returncode != 0:
+                sys.exit(f"✗ Could not fetch {src}:\n{r.stderr.strip()}")
+            base = tmp / "repo"
     else:
         p = Path(src).expanduser().resolve()
         if p.is_file() and p.suffix == ".zip":
@@ -539,18 +560,52 @@ def _auto_run(root: Path, manifest: dict, env, now: float, timeout: float) -> di
     return done("installed", notes=notes, factory_new=_factory_new(root, man.get("files", {})))
 
 
-def _run_tests(root: Path) -> list[str]:
-    """Testy fabryki w projekcie (`.claude/tests/test_*.py`); zwraca nazwy czerwonych."""
-    failed = []
-    for test in sorted((root / ".claude" / "tests").glob("test_*.py")):
-        try:
-            res = subprocess.run([sys.executable, str(test)], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
-            ok = res.returncode == 0
-        except subprocess.TimeoutExpired:
-            ok = False
-        if not ok:
-            failed.append(test.name)
-    return failed
+def _one_test(root: Path, test: Path) -> tuple[str, bool, str]:
+    try:
+        res = subprocess.run([sys.executable, str(test)], cwd=root, capture_output=True, text=True, encoding="utf-8",
+                             errors="replace", timeout=600)
+        return test.name, res.returncode == 0, (res.stdout.strip().splitlines() or ["?"])[-1]
+    except subprocess.TimeoutExpired:
+        return test.name, False, "przekroczono 600 s"
+
+
+def run_tests(root: Path, workers: int | None = None, report=None) -> list[str]:
+    """Testy fabryki w projekcie (`.claude/tests/test_*.py`) równolegle (każdy działa w osobnym katalogu tymczasowym);
+    zwraca nazwy czerwonych. Pomiar 2026-11-16: 99 testów po kolei 518 s, w 8 wątkach 177 s."""
+    import concurrent.futures as cf
+    tests = sorted((root / ".claude" / "tests").glob("test_*.py"))
+    workers = workers or max(2, min(8, (os.cpu_count() or 2) * 2))
+    with cf.ThreadPoolExecutor(workers) as ex:
+        results = list(ex.map(lambda t: _one_test(root, t), tests))
+    for name, ok, last in results:
+        if report:
+            report(name, ok, last)
+    return [name for name, ok, _ in results if not ok]
+
+
+_run_tests = run_tests
+
+
+def quick_check(root: Path) -> list[str]:
+    """Szybka kontrola po aktualizacji (kilka sekund zamiast pełnych testów fabryki, które przeszły w CI wydania):
+    skrypty silnika i hooki się kompilują, `build.py check` przechodzi. Zwraca problemy."""
+    problems = []
+    for d in (root / ".tf" / "factory", root / ".claude" / "hooks"):
+        for f in sorted(d.rglob("*.py")) if d.is_dir() else []:
+            if "_vendor" in f.parts:
+                continue
+            try:
+                compile(f.read_text(encoding="utf-8"), str(f), "exec")   # bez zapisu .pyc
+            except (SyntaxError, ValueError, OSError) as e:
+                problems.append(f"{f.relative_to(root).as_posix()}: {e}")
+    build = root / ".tf" / "factory" / "build.py"
+    if build.is_file():
+        r = subprocess.run([sys.executable, str(build), "check"], cwd=root, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=600)
+        if r.returncode != 0:
+            tail = [ln for ln in (r.stdout + r.stderr).splitlines() if ln.strip()][-3:]
+            problems.append("build.py check: " + " | ".join(tail))
+    return problems
 
 
 PR_BODY = Path(".tf") / "logs" / "update-pr.md"
@@ -853,7 +908,7 @@ def main(argv: list[str]) -> int:
     src = normalize(src)
 
     with tempfile.TemporaryDirectory(prefix="tf-update-") as t:
-        new = fetch(src, Path(t))
+        new = fetch(src, Path(t), meta_only=bool(opts.get("--check")))
         new_version = (new / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip() \
             if (new / "core" / "factory" / "VERSION").exists() else "0.0.0"
         print(f"Installed version: {current}   available: {new_version}   (source: {src})")
@@ -865,6 +920,11 @@ def main(argv: list[str]) -> int:
                 print("ℹ The source has an older version than the installed one — doing nothing (force: --force).")
             else:
                 print("✓ You are up to date. (To re-apply the same version: --force.)")
+            if opts.get("--full-check"):
+                print("\nFactory tests in this project:")
+                failed = run_tests(ROOT, report=lambda name, ok, last: print(
+                    f"  {last}" if ok else f"  ✗ {name} — run `python3 .claude/tests/{name}` to see the details"))
+                return 1 if failed else 0
             return 0
         notes = changelog_since(new, current)
         if notes:
@@ -911,10 +971,16 @@ def main(argv: list[str]) -> int:
         if r.returncode != 0:
             return r.returncode
     print("\nCheck after the update:")
-    for test in sorted((ROOT / ".claude" / "tests").glob("test_*.py")):
-        res = subprocess.run([sys.executable, str(test)], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        print(("  " + (res.stdout.strip().splitlines() or ["?"])[-1]) if res.returncode == 0
-              else f"  ✗ {test.name} — run `python3 .claude/tests/{test.name}` to see the details")
+    if opts.get("--full-check"):
+        run_tests(ROOT, report=lambda name, ok, last: print(
+            f"  {last}" if ok else f"  ✗ {name} — run `python3 .claude/tests/{name}` to see the details"))
+    else:
+        problems = quick_check(ROOT)
+        for p in problems:
+            print(f"  ✗ {p}")
+        print("  ✓ engine scripts and hooks compile, build.py check passes" if not problems else
+              "  ✗ the installation needs attention — undo: python3 .tf/factory/update.py --rollback")
+        print("  (factory tests passed in the release CI; run them here: python3 .tf/factory/update.py --full-check)")
     print("Done. If Claude Code is open, restart it so it loads the new skills and agents.")
     return 0
 

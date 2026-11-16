@@ -115,6 +115,8 @@ def main() -> int:
 
     # 4–6. dwuetapowa podpowiedź skilli (cookbook skill suggestion)
     os.environ["CLAUDE_PROJECT_DIR"] = str(ROOT)   # skill_hint czyta katalog skilli z repo przy wczytaniu modułu
+    os.environ["CLAUDE_SKILL_HINT_STACK"] = "0"    # test Jev, nie filtra stacku: w projekcie z wykrytym stackiem
+                                                   # (np. Spring Boot) filtr odjąłby skille innych stacków z kryteriów
     hint = load(HOOKS / "skill_hint.py", "skill_hint")
     items = hint.load_index()
     os.environ["CLAUDE_PROJECT_DIR"] = tmp.name
