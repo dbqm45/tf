@@ -41,9 +41,9 @@ Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić p�
   - **Zakres zmiany dla A:** instalator i sprawdzenia fabryki (CI, `tools/workspace.py`) traktują `custom-settings/`
     jak dodatkowe źródło nakładek, włączane domyślnie; generator `org/new_org_pack.py` dostaje opcję zapisu tam;
     `org/README.md` opisuje oba warianty; testy instalacji i aktualizacji z ustawieniami w `custom-settings/`.
-- [ ] **Generator standardów z dokumentów firmy z kontrolą cytatów skryptem.** Dziś `org/README.md` daje gotowe
+- [x] **Generator standardów z dokumentów firmy z kontrolą cytatów skryptem** (zrobione 2026-11-16, `org/standards_from_docs.py`). Dziś `org/README.md` daje gotowe
   polecenie dla agenta, a cytaty sprawdza człowiek. Plan (wzorzec rekonstrukcji projektu z kodu): (1) dokumenty
-  (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `zrodla/`;
+  (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `sources/`;
   (2) skrypt dzieli je na sekcje po nagłówkach, usuwa duplikaty, zapisuje manifest z odciskami sekcji; (3) model
   przypisuje każde ustalenie do obszaru (UI, API, dane, wydania, wspólne) i rodzaju (sprawdzalne wzorcem →
   kandydat do `rules.yaml` z przykładem w `fixtures/`; wymaga oceny → `references/<obszar>.md`; ogólna wiedza →
@@ -97,8 +97,9 @@ człowieka, i z kontrolą wyniku skryptem.
    - [x] `config_layers`: silnik ← firma ← zespół ← projekt ← osoba; test kolejności i granic (`task.allowed_modes`
      to przecięcie warstw — wcześniej projekt mógł przywrócić tryb zabrany przez firmę; prefiksy trackera zespołu);
    - [x] standardy zespołu sprawdzane bez modelu (`rules.yaml`, semgrep) jak w nakładce firmy.
-4. [ ] **Generator standardów z dokumentów** (sekcja „Ustawienia firmy” niżej): podział, manifest i kontrola cytatów
-   skryptem; model tylko przypisuje ustalenia do obszaru i rodzaju.
+4. [x] **Generator standardów z dokumentów** (zrobione 2026-11-16: `org/standards_from_docs.py` split/check/apply,
+   `tests/test_standards_from_docs.py`): podział (Markdown, HTML, Word, PDF), manifest i kontrola cytatów skryptem;
+   model tylko przypisuje ustalenia do obszaru i rodzaju. Zostaje pomiar na prawdziwych dokumentach firmy (niżej).
 5. [ ] **Decyzje człowieka:** `custom-settings/` czy osobne repo firmy; monorepo (najpierw sprawdzić w dokumentacji,
    czy Claude Code wczytuje skille z podkatalogów).
 

@@ -46,7 +46,7 @@ def main() -> int:
                  "tests/skill_evals/acme-standardy.json", "analyzers/acme-standardy/analyzer.yaml",
                  "analyzers/acme-standardy/rules.yaml", "analyzers/acme-standardy/fixtures/naruszenia/expected.json",
                  "analyzers/acme-standardy/fixtures/czyste/expected.json", "semgrep.yml",
-                 *(f"skills/acme-standardy/references/{a}.md" for a in ("ui", "api", "dane", "wydania"))]
+                 *(f"skills/acme-standardy/references/{a}.md" for a in ("ui", "api", "data", "releases"))]
         check(all((out / f).is_file() for f in files), f"OP-1: pliki: {[f for f in files if not (out / f).is_file()]}")
         left = [str(f.relative_to(out)) for f in out.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
         check(not left, f"OP-2: wszystkie pola szablonu podstawione: {left}")
@@ -68,7 +68,7 @@ def main() -> int:
             ok = False
         check(ok, "OP-5: settings.json i scenariusze to poprawny JSON, scenariusze dla skilla standardów")
         spis = (out / "skills/acme-standardy/SKILL.md").read_text(encoding="utf-8") if (out / "skills/acme-standardy/SKILL.md").is_file() else ""
-        check(all(f"references/{a}.md" in spis for a in ("ui", "api", "dane", "wydania")) and len(spis.splitlines()) < 60,
+        check(all(f"references/{a}.md" in spis for a in ("ui", "api", "data", "releases")) and len(spis.splitlines()) < 60,
               f"OP-15: SKILL.md to krótki spis wskazujący plik każdego obszaru: {len(spis.splitlines())} linii")
 
         # odmowy: bez zmian na dysku
@@ -83,8 +83,8 @@ def main() -> int:
         check(r.returncode == 2 and not (base / "y").exists(), f"OP-9: zajęty prefiks → kod 2: {r.stdout}{r.stderr}")
 
         # cała droga: instalacja w projekcie i domyślne organizacji w konfiguracji
-        (out / "zrodla").mkdir()
-        (out / "zrodla" / "api.md").write_text("# Standard API (poufne)\n", encoding="utf-8")
+        (out / "sources").mkdir()
+        (out / "sources" / "api.md").write_text("# Standard API (poufne)\n", encoding="utf-8")
         app = base / "app"
         app.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=app, check=True)
@@ -106,7 +106,7 @@ def main() -> int:
                 if (app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml").is_file() else {}
             leaked = [str(f) for f in app.rglob("*") if f.is_file() and ".git" not in f.parts
                       and "Standard API (poufne)" in f.read_text(encoding="utf-8", errors="ignore")]
-            check(not leaked, f"OP-16: dokumenty źródłowe firmy (zrodla/) nie trafiają do projektu: {leaked}")
+            check(not leaked, f"OP-16: dokumenty źródłowe firmy (sources/) nie trafiają do projektu: {leaked}")
             check((app / ".tf/factory/packs/pack-acme/semgrep.yml").is_file(),
                   "OP-14: semgrep.yml nakładki w .tf/factory/packs/pack-acme/ (skan kawałka pętli /tf)")
             check(an.get("prefix") == "ACME" and (an.get("tier0") or {}).get("rules") == "rules.yaml",
