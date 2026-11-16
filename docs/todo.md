@@ -56,6 +56,47 @@ Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić p�
 - [ ] **Pomiar generatora na prawdziwych dokumentach firmy** — trafność przypisania obszaru i rodzaju, odsetek
   poprawnych cytatów, koszt; płatny, za zgodą człowieka i na dokumentach, które firma udostępni.
 
+## Warstwy zespołu i preferencji osoby, wyłączanie skilli — na później, zapisane 2026-11-16
+Cel człowieka: nad rdzeniem warstwy firmy, zespołu i osoby. Standardy firmy i zespołu obowiązują, a każdy developer
+ustawia swój sposób pracy: jeden chce, żeby wszystko szło samo, drugi zatwierdza każdy krok, trzeci woli luźną
+rozmowę z agentem. Do tego zespół wyłącza skille, których nie potrzebuje (backend bez Figmy, frontend bez AWS).
+Stan dziś: warstwy `config_layers` to silnik ← organizacja (`org_defaults`) ← projekt. Skill wyłącza się tylko
+w całej fabryce (`metadata.status`). Tryb zadania (`tf task mode <KLUCZ> plan|zwykly|auto`) ustawia się osobno dla
+każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `.claude/settings.local.json`,
+`CLAUDE.local.md`, `.claude/factory-settings.json`.
+- [ ] **Najpierw pomiar** (kolejność ustalona przez człowieka: zapis, potem pomiar). Na repo backendu z pełną nakładką
+  IT: (1) bez modelu — ile kontekstu zajmuje lista skilli (opisy) i schematy narzędzi serwerów MCP, ile podpowiedzi
+  `skill_hint` trafia w skille spoza dziedziny repo (np. `ux-*`, `ops-cloud-*` przy zadaniach backendu);
+  (2) na modelu, za zgodą człowieka — czy wyłączenie zbędnych skilli zmienia trafność wyboru skilla i koszt sesji.
+  Wynik decyduje, czy `skills_off` jest potrzebne, czy wystarczy wybór nakładek i wyłączenie MCP w `settings.json`.
+- [ ] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
+  `tf work`, `tf config show`) składa je w tej kolejności; `tf config show` przy każdej wartości podaje warstwę.
+  - **Zespół:** nakładka z tego samego szablonu co firmowa (`org/new_org_pack.py <firma> --team <zespół>` →
+    `pack-<firma>-<zespół>`, `requires` nakładki firmy): standardy zespołu (reguły, obszary, semgrep), domyślne
+    ustawienia, `settings.json` (np. wyłączone serwery MCP).
+  - **Osoba:** plik poza repozytorium (np. `~/.tf/preferences.yaml`, wspólny dla wszystkich projektów osoby) i
+    nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze w `.git/info/exclude`, także przy `--shared`).
+- [ ] **Zasada warstw:** niższa warstwa dodaje i zaostrza, nie rozluźnia tego, co wyższa zablokowała. Tak działa już
+  polityka autonomii (`deny` firmy obowiązuje projekt). Firma albo zespół może dać **sufit** (np. „tryb Auto
+  dozwolony”, „najwyżej X USD na przebieg”), a osoba wybiera w jego granicach. Skille bezpieczeństwa, rzetelności
+  i TDD (`core-agent-security`, `core-grounding`, hooki `tdd_guard`, `guard_*`) wyłącza tylko firma.
+- [ ] **Style pracy osoby** (preset, który ustawia kilka istniejących przełączników naraz):
+  - **samodzielny** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
+    wymaga limitów `work` i obowiązującej polityki autonomii;
+  - **krok po kroku** — tryb `zwykly` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
+    następnym), widoczny plan i diff każdego kroku;
+  - **rozmowa** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
+    bez automatycznego startu przebiegu z numeru zadania.
+  Preset to tylko domyślne wartości: każde zadanie nadal może dostać inny tryb (`tf task mode`).
+- [ ] **`skills_off`** w każdej warstwie (po pomiarze): skill zostaje w instalacji i działa ręcznie (`/nazwa`), ale
+  nie trafia do agentów ani katalogu — ten sam mechanizm co `drop_inactive` w `build.py`. Niższa warstwa może włączyć
+  z powrotem skill wyłączony wyżej, chyba że wyższa go zablokowała.
+- [ ] **Monorepo (później):** kilka zespołów w jednym repozytorium wymaga podziału po katalogach. Claude Code
+  wczytuje `CLAUDE.md` z podkatalogów; czy tak samo skille z podkatalogów — sprawdzić w dokumentacji przed planem
+  [niezweryfikowane].
+- [ ] **Testy:** składanie pięciu warstw, sufit firmy i zespołu nie do przekroczenia przez osobę, preset stylu
+  zmienia tylko wartości domyślne, `tf config show` pokazuje źródło, plik osoby nigdy nie trafia do repozytorium.
+
 ## Luki z przeglądu agend szkoleń (AI, agenci, product engineering) — zapisane 2026-11-15
 Przegląd 2026-11-15: przeszukanie skilli, hooków i skryptów po hasłach z agend szkoleń (mechanika LLM, sterowanie
 kontekstem, systemy wiedzy, harnessy, workflowy, agenci, product engineering) oraz pytanie człowieka o Spec Driven,
