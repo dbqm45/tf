@@ -34,7 +34,7 @@ i plikiem wyniku.
   i odpowiedzi na pytanie, które wymaga wiedzy z mapy.
 - **Fork nie oszczędza pieniędzy:** +33% (1,45 wobec 1,09 USD). Podagent wczytuje skill i pliki od zera, a nieudane
   pierwsze wywołanie dokłada turę. Mniejszy kontekst w kolejnych turach jest czytany z cache, więc zwraca się
-  powoli: odczyt cache Sonneta ok. 0,30 USD za mln tokenów [założenie: cennik nie sprawdzony w tej sesji],
+  powoli: odczyt cache Sonneta ok. 0,30 USD za mln tokenów [założenie] (cennika nie sprawdzałem w tej sesji),
   więc 35 tys. tokenów mniej to ok. 0,01 USD na turę [założenie], czyli kilkadziesiąt tur do zwrotu różnicy.
 - **Decyzja:** `eng-codebase-mapping` zostaje bez forka. Fork ma sens, gdy po skillu sesja trwa długo albo jest blisko
   limitu kontekstu — dla miejsca w kontekście i mniejszego ryzyka kompaktowania, nie dla kosztu. Reguła
