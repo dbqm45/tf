@@ -145,8 +145,8 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
 `tf work --once --budget 5` bierze jedno zadanie, któremu dałeś tryb Auto (`tf task mode <KLUCZ> auto` — to Twoja
 zgoda na pracę bez nadzoru), o wadze lekkiej albo zwykłej, i prowadzi je pętlą `/tf --auto` w osobnym worktree
 (`.tf/worktrees/<KLUCZ>`, gałąź `story/<klucz>`). Limit wydatku jest obowiązkowy (`--budget` albo `work.budget_usd`
-w `.tf/config/config.yaml`); agent działa w trybie uprawnień `dontAsk`, więc narzędzie spoza listy dozwolonych
-w `.claude/settings.json` jest odrzucane, a nie czeka na Ciebie. Zadanie zajmuje blokada (`.tf/locks/`), więc dwa
+w `.tf/config/config.yaml`); agent działa w trybie uprawnień `acceptEdits`: zapisuje pliki w swoim worktree,
+a każde inne narzędzie spoza listy dozwolonych w ustawieniach `.claude` jest odrzucane, a nie czeka na Ciebie. Zadanie zajmuje blokada (`.tf/locks/`), więc dwa
 równoległe przebiegi nie wezmą tego samego. Wynik to PR albo blok STOP w worktree zadania, wpis trafia do
 `.tf/logs/work.jsonl`; fabryka niczego nie scala ani nie wdraża. Zadania z worktree nie bierze ponownie sama —
 wznowienie: `tf work --once --key <KLUCZ>`; wszystkie przebiegi jednego zadania razem nie przekroczą
