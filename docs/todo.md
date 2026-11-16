@@ -64,7 +64,39 @@ Stan dziś: warstwy `config_layers` to silnik ← organizacja (`org_defaults`) �
 w całej fabryce (`metadata.status`). Tryb zadania (`tf task mode <KLUCZ> plan|zwykly|auto`) ustawia się osobno dla
 każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `.claude/settings.local.json`,
 `CLAUDE.local.md`, `.claude/factory-settings.json`.
-- [ ] **Najpierw pomiar** (kolejność ustalona przez człowieka: zapis, potem pomiar). Na repo backendu z pełną nakładką
+
+**Kolejność prac (ustalona przez człowieka 2026-11-16).** Zasada dla każdego punktu: co da się zrobić
+deterministycznie (skrypt, reguła, test), robi skrypt; model tylko tam, gdzie potrzebna jest ocena albo wsparcie
+człowieka, i z kontrolą wyniku skryptem.
+1. [ ] **Styl pracy i warstwa osoby.**
+   - [ ] plik preferencji osoby (`~/.tf/preferences.yaml`) i nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze
+     w `.git/info/exclude`) jako ostatnia warstwa `config_layers` — skrypt;
+   - [ ] granice: osoba nie rozluźnia polityki autonomii ani sufitów firmy i zespołu — sprawdzenie w składaniu
+     warstw (skrypt), z testem;
+   - [ ] trzy style (`samodzielny`, `krok-po-kroku`, `rozmowa`) jako gotowe wartości istniejących przełączników
+     (domyślny tryb zadania, `loop.blocked_slices`, …) — dane w konfiguracji, polecenie `tf style <nazwa>`;
+   - [ ] zatrzymanie pętli `/tf` po każdym kawałku dla stylu `krok-po-kroku` — stan w `run_state.py` (skrypt), model
+     tylko pokazuje plan i diff i czeka na zgodę;
+   - [ ] styl `rozmowa`: bez automatycznego startu pętli z numeru zadania — reguła w konfiguracji czytana przez
+     skrypt intake, nie instrukcja w prompcie;
+   - [ ] `tf config show` z warstwą „osoba” i źródłem każdej wartości; opis w PRZEWODNIK i FAQ; mapa fabryki
+     (`docs/mapa-fabryki.html`) — status „działa”.
+2. [ ] **Trafność podpowiedzi skilli** (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).
+   - [ ] walidacja DTO w repo Spring Boot bez podpowiedzi — słowa kluczowe w opisie `fw-spring-boot` (pack-it);
+   - [ ] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
+   - [ ] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
+     hooka, uruchamiany w CI bez modelu.
+3. [ ] **Warstwa zespołu.**
+   - [ ] `org/new_org_pack.py <firma> --team <zespół>` → `pack-<firma>-<zespół>` z `requires` nakładki firmy
+     (generator, skrypt);
+   - [ ] `config_layers`: silnik ← firma ← zespół ← projekt ← osoba; test kolejności i granic;
+   - [ ] standardy zespołu sprawdzane bez modelu (`rules.yaml`, semgrep) jak w nakładce firmy.
+4. [ ] **Generator standardów z dokumentów** (sekcja „Ustawienia firmy” niżej): podział, manifest i kontrola cytatów
+   skryptem; model tylko przypisuje ustalenia do obszaru i rodzaju.
+5. [ ] **Decyzje człowieka:** `custom-settings/` czy osobne repo firmy; monorepo (najpierw sprawdzić w dokumentacji,
+   czy Claude Code wczytuje skille z podkatalogów).
+
+- [x] **Najpierw pomiar** (kolejność ustalona przez człowieka: zapis, potem pomiar). Na repo backendu z pełną nakładką
   IT: (1) bez modelu — ile kontekstu zajmuje lista skilli (opisy) i schematy narzędzi serwerów MCP, ile podpowiedzi
   `skill_hint` trafia w skille spoza dziedziny repo (np. `ux-*`, `ops-cloud-*` przy zadaniach backendu);
   (2) na modelu, za zgodą człowieka — czy wyłączenie zbędnych skilli zmienia trafność wyboru skilla i koszt sesji.
@@ -122,7 +154,7 @@ każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `
   - **rozmowa** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
     bez automatycznego startu przebiegu z numeru zadania.
   Preset to tylko domyślne wartości: każde zadanie nadal może dostać inny tryb (`tf task mode`).
-- [ ] **`skills_off`** w każdej warstwie (po pomiarze): skill zostaje w instalacji i działa ręcznie (`/nazwa`), ale
+- [ ] **`skills_off`** — odłożone po pomiarze z 2026-11-16 (bez zysku trafności i kosztu); w każdej warstwie: skill zostaje w instalacji i działa ręcznie (`/nazwa`), ale
   nie trafia do agentów ani katalogu — ten sam mechanizm co `drop_inactive` w `build.py`. Niższa warstwa może włączyć
   z powrotem skill wyłączony wyżej, chyba że wyższa go zablokowała.
 - [ ] **Monorepo (później):** kilka zespołów w jednym repozytorium wymaga podziału po katalogach. Claude Code
