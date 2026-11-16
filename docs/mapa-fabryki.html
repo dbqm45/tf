@@ -50,6 +50,28 @@ section>header p{max-width:68ch;color:var(--muted)}
 .pill.now{background:var(--core-soft);color:var(--core)}
 .pill.plan{background:var(--plan-soft);color:var(--plan)}
 
+/* diagram całości */
+.whole{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px}
+.whole svg{display:block;width:100%;min-width:760px;height:auto}
+.w-col{font:600 12px var(--mono);letter-spacing:.08em;fill:var(--muted)}
+.w-h{font:700 16px var(--display);fill:var(--ink)}
+.w-h2{font:600 15px var(--body);fill:var(--ink)}
+.w-s{font:400 13.5px var(--body);fill:var(--ink)}
+.w-xs{font:400 12px var(--body);fill:var(--ink)}
+.w-lab{font:500 12px var(--mono);fill:var(--muted)}
+.w-sm{font-size:11px}
+.w-box{fill:var(--paper);stroke:var(--line);stroke-width:2}
+.w-core{fill:var(--core-soft);stroke:var(--core);stroke-width:2}
+.w-pack{fill:var(--pack-soft);stroke:var(--pack);stroke-width:2}
+.w-plan{fill:var(--plan-soft);stroke:var(--plan);stroke-width:2;stroke-dasharray:6 4}
+.w-guard{fill:var(--guard-soft);stroke:var(--guard);stroke-width:2}
+.w-gtext{fill:var(--guard)}
+.w-dev{fill:var(--bg);stroke:var(--ink);stroke-width:2}
+.w-line{fill:none;stroke:var(--muted);stroke-width:2}
+.w-back{stroke:var(--core);stroke-dasharray:5 4}
+.w-dash{stroke:var(--guard);stroke-width:2;stroke-dasharray:3 4}
+.w-arrowhead{fill:var(--muted)}
+
 /* przekrój budynku */
 .building{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px;align-items:stretch}
 .floors{display:grid;gap:8px;position:relative}
@@ -140,6 +162,114 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
       <span><i class="sw gd"></i>strażnicy (pilnują zasad)</span>
     </div>
   </div>
+
+  <section aria-labelledby="s0">
+    <header>
+      <h2 id="s0">Całość na jednym obrazku</h2>
+      <p>Po lewej ustawienia ułożone piętrami. Pośrodku agenci, z którymi pracujesz, i klocki, które dokładają im wiedzę.
+        Po prawej droga zadania od zgłoszenia do pull requestu. Na dole strażnicy, którzy pilnują zasad przy każdym kroku.
+        Szczegóły każdej części opisują kolejne sekcje.</p>
+    </header>
+    <div class="whole">
+      <svg viewBox="0 0 1000 620" role="img" aria-labelledby="wt wd">
+        <title id="wt">Fabryka tf w całości</title>
+        <desc id="wd">Piętra ustawień: Ty, projekt, zespół, firma i rdzeń ustawiają agentów w projekcie. Developer zleca zadania agentom. Nakładki i tryby dokładają agentom wiedzę. Agenci prowadzą zadanie: zgłoszenie, fakty i plan, test, kod, przegląd, pull request, po którym decyduje człowiek. Narzędzia bez modelu piszą raporty. Strażnicy pilnują każdego kroku.</desc>
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="w-arrowhead"/>
+          </marker>
+        </defs>
+
+        <text x="30" y="34" class="w-col">USTAWIENIA</text>
+        <text x="390" y="34" class="w-col">AGENCI I KLOCKI</text>
+        <text x="690" y="34" class="w-col">DROGA ZADANIA</text>
+
+        <!-- piętra ustawień -->
+        <rect x="30" y="60" width="300" height="54" rx="5" class="w-plan"/>
+        <text x="46" y="84" class="w-h">Ty</text><text x="46" y="103" class="w-s">styl pracy, preferencje · planowane</text>
+        <rect x="30" y="124" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="148" class="w-h">Projekt</text><text x="46" y="167" class="w-s">własne persony, skille, limity</text>
+        <rect x="30" y="188" width="300" height="54" rx="5" class="w-plan"/>
+        <text x="46" y="212" class="w-h">Zespół</text><text x="46" y="231" class="w-s">standardy zespołu · planowane</text>
+        <rect x="30" y="252" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="276" class="w-h">Firma</text><text x="46" y="295" class="w-s">zakazy, reguły kodu, Jira, koszty</text>
+        <rect x="30" y="316" width="300" height="64" rx="5" class="w-core"/>
+        <text x="46" y="342" class="w-h">Rdzeń</text><text x="46" y="362" class="w-s">silnik, pętla /tf, zasady, koszty</text>
+        <line x1="14" y1="376" x2="14" y2="66" class="w-line" marker-end="url(#ar)"/>
+        <text x="30" y="410" class="w-s">Każde piętro dopasowuje fabrykę</text>
+        <text x="30" y="428" class="w-s">w granicach piętra pod sobą.</text>
+
+        <!-- developer -->
+        <rect x="390" y="60" width="240" height="64" rx="5" class="w-dev"/>
+        <text x="406" y="86" class="w-h">Developer</text>
+        <text x="406" y="108" class="w-s">/tf, numer zgłoszenia, rozmowa</text>
+
+        <!-- agenci -->
+        <rect x="390" y="170" width="240" height="170" rx="5" class="w-core"/>
+        <text x="406" y="198" class="w-h">Agenci w projekcie</text>
+        <text x="406" y="226" class="w-s">persony: Jan, Ola, Kasia…</text>
+        <text x="406" y="250" class="w-s">wykonawcy kroków</text>
+        <text x="406" y="274" class="w-s">skille z wiedzą i procedurami</text>
+        <text x="406" y="298" class="w-s">model dobrany do kroku</text>
+        <text x="406" y="322" class="w-s">(najtańszy, który da radę)</text>
+
+        <!-- klocki -->
+        <rect x="390" y="400" width="115" height="92" rx="5" class="w-pack"/>
+        <text x="402" y="424" class="w-h">Nakładki</text>
+        <text x="402" y="446" class="w-xs">IT, UX, dokumenty,</text>
+        <text x="402" y="462" class="w-xs">polszczyzna, firma,</text>
+        <text x="402" y="478" class="w-xs">Twoja dziedzina</text>
+        <rect x="515" y="400" width="115" height="92" rx="5" class="w-pack"/>
+        <text x="527" y="424" class="w-h">Tryby</text>
+        <text x="527" y="446" class="w-xs">zespół agentów,</text>
+        <text x="527" y="462" class="w-xs">decyzje w pdi;</text>
+        <text x="527" y="478" class="w-xs">na żądanie</text>
+
+        <!-- droga zadania -->
+        <rect x="690" y="60" width="270" height="42" rx="5" class="w-box"/><text x="706" y="86" class="w-h2">Zgłoszenie z Jiry lub opis</text>
+        <rect x="690" y="122" width="270" height="42" rx="5" class="w-box"/><text x="706" y="148" class="w-h2">Fakty i plan</text>
+        <rect x="690" y="184" width="270" height="42" rx="5" class="w-box"/><text x="706" y="210" class="w-h2">Test, potem kod</text>
+        <rect x="690" y="246" width="270" height="42" rx="5" class="w-box"/><text x="706" y="272" class="w-h2">Przegląd i standardy firmy</text>
+        <rect x="690" y="308" width="270" height="42" rx="5" class="w-core"/><text x="706" y="334" class="w-h2">Pull request</text>
+        <line x1="825" y1="102" x2="825" y2="120" class="w-line" marker-end="url(#ar)"/>
+        <line x1="825" y1="164" x2="825" y2="182" class="w-line" marker-end="url(#ar)"/>
+        <line x1="825" y1="226" x2="825" y2="244" class="w-line" marker-end="url(#ar)"/>
+        <line x1="825" y1="288" x2="825" y2="306" class="w-line" marker-end="url(#ar)"/>
+
+        <rect x="690" y="400" width="270" height="92" rx="5" class="w-pack"/>
+        <text x="706" y="424" class="w-h">Narzędzia bez modelu</text>
+        <text x="706" y="446" class="w-xs">tf analyze: przegląd projektu i standardów</text>
+        <text x="706" y="462" class="w-xs">tf risk: ryzyko zmiany</text>
+        <text x="706" y="478" class="w-xs">wynik: raporty do odhaczania, bez kosztu</text>
+
+        <!-- strzałki między kolumnami -->
+        <path d="M330 215 C 360 215, 360 240, 388 240" class="w-line" marker-end="url(#ar)"/>
+        <text x="360" y="204" class="w-lab w-sm" text-anchor="middle">ustawiają</text>
+        <line x1="510" y1="124" x2="510" y2="168" class="w-line" marker-end="url(#ar)"/>
+        <text x="518" y="152" class="w-lab">zleca</text>
+        <line x1="447" y1="400" x2="447" y2="342" class="w-line" marker-end="url(#ar)"/>
+        <line x1="572" y1="400" x2="572" y2="342" class="w-line" marker-end="url(#ar)"/>
+        <text x="509.5" y="376" class="w-lab w-sm" text-anchor="middle">dokładają wiedzę</text>
+        <path d="M630 230 C 660 230, 660 205, 688 205" class="w-line" marker-end="url(#ar)"/>
+        <text x="636" y="254" class="w-lab">prowadzą</text>
+        <path d="M960 329 H 982 V 46 H 510 V 58" class="w-line w-back" marker-end="url(#ar)"/>
+        <text x="992" y="190" class="w-lab w-sm" transform="rotate(90 992 190)" text-anchor="middle">decyzja człowieka</text>
+
+        <!-- strażnicy -->
+        <rect x="390" y="530" width="570" height="64" rx="5" class="w-guard"/>
+        <text x="406" y="556" class="w-h w-gtext">Strażnicy przy każdym kroku</text>
+        <text x="406" y="578" class="w-xs">groźne polecenia · sekrety · kod bez testu · czerwone testy · długi kontekst · podpowiedź skilla</text>
+        <line x1="510" y1="528" x2="510" y2="494" class="w-dash"/>
+        <line x1="825" y1="528" x2="825" y2="494" class="w-dash"/>
+
+        <!-- legenda -->
+        <rect x="30" y="470" width="18" height="12" rx="2" class="w-core"/><text x="56" y="481" class="w-xs">rdzeń i jego elementy</text>
+        <rect x="30" y="494" width="18" height="12" rx="2" class="w-pack"/><text x="56" y="505" class="w-xs">klocki i narzędzia</text>
+        <rect x="30" y="518" width="18" height="12" rx="2" class="w-plan"/><text x="56" y="529" class="w-xs">planowane</text>
+        <rect x="30" y="542" width="18" height="12" rx="2" class="w-guard"/><text x="56" y="553" class="w-xs">strażnicy</text>
+      </svg>
+    </div>
+  </section>
 
   <section aria-labelledby="s1">
     <header>
