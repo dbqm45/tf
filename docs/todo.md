@@ -82,7 +82,25 @@ każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `
     rzadkości słów zależą od całego indeksu;
   - **wniosek:** największy zysk bez żadnej konfiguracji daje pomijanie w `skill_hint` skilli `fw-`/`lang-`/`tool-`
     stacków, których `detect_stack` nie wykrył w projekcie. `skills_off` potrzebne dla wymiarów spoza stacku
-    (`ai-`, `pm-`, `fe-` w repo backendu). Część (2) na modelu — za zgodą człowieka.
+    (`ai-`, `pm-`, `fe-` w repo backendu).
+  **Wynik części (2), 2026-11-16** (ten sam repo; 18 zadań backendu, `claude -p` w trybie plan, pełne środowisko
+  fabryki z hookami, `--setting-sources project,local`; trzy warianty: pełna instalacja 165 skilli, bez skilli innych
+  stacków 154, bez wszystkich obcych 127; Haiku i Sonnet, po jednym przebiegu; koszt 25,00 USD):
+  | model | wariant | właściwy skill | obcy skill | koszt / przebieg |
+  |---|---|---|---|---|
+  | Haiku | pełna | 18/18 | 1 | 0,248 USD |
+  | Haiku | bez innych stacków | 17/18 | 0 | 0,222 USD |
+  | Haiku | bez obcych | 17/18 | 0 | 0,221 USD |
+  | Sonnet | pełna | 18/18 | 1 | 0,227 USD |
+  | Sonnet | bez innych stacków | 18/18 | 0 | 0,242 USD |
+  | Sonnet | bez obcych | 18/18 | 0 | 0,229 USD |
+  - jedyny obcy skill w obu modelach to `fw-nestjs` przy walidacji DTO w repo Spring Boot — ten sam, którego
+    podsuwa `skill_hint` (część 1); jedyny chybiony to Haiku przy podziale `OrderService` w obu okrojonych wariantach
+    (jeden przebieg, w granicach rozrzutu); różnice kosztu ±10% przy jednym przebiegu to rozrzut, nie efekt;
+  - **wniosek:** wyłączanie skilli nie poprawia trafności ani kosztu w stopniu wartym nowego mechanizmu. Robimy tylko
+    filtr stacku w `skill_hint` (usuwa jedyny zaobserwowany błąd, bez konfiguracji). `skills_off` odkładamy; warstwy
+    zespołu i osoby uzasadniają standardy i styl pracy, nie oszczędność kontekstu. Powtórzenie pomiaru nie jest
+    potrzebne do tej decyzji.
 - [ ] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
   `tf work`, `tf config show`) składa je w tej kolejności; `tf config show` przy każdej wartości podaje warstwę.
   - **Zespół:** nakładka z tego samego szablonu co firmowa (`org/new_org_pack.py <firma> --team <zespół>` →
