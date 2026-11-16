@@ -149,6 +149,33 @@ def main() -> int:
         check(any(ln.split()[:2] == ["style", "osoba"] for ln in r.stdout.splitlines()),
               f"WS-10: tf config show podaje źródło „osoba”: {r.stdout}{r.stderr}")
 
+        # WS-12: styl conversation włącza tryb planowania Claude Code w .claude/settings.local.json i go oddaje
+        local = p / ".claude" / "settings.local.json"
+        local.write_text('{"permissions": {"defaultMode": "default", "allow": ["Bash(ls)"]}}', encoding="utf-8")
+        (p / ".tf/config/me.yaml").unlink()
+        mode_of = lambda: (json.loads(local.read_text(encoding="utf-8")).get("permissions", {}).get("defaultMode")
+                           if local.is_file() else None)
+        r = run(p, prefs, TF, "style", "conversation")
+        check(r.returncode == 0 and mode_of() == "plan"
+              and json.loads(local.read_text(encoding="utf-8"))["permissions"]["allow"] == ["Bash(ls)"],
+              f"WS-12: conversation → defaultMode plan, reszta ustawień bez zmian: {mode_of()} {r.stdout}{r.stderr}")
+        check(not any("claude" in w for w in packs.work_style(p)["warnings"]),
+              f"WS-12: ustawienia Claude Code stylu nie są kluczem konfiguracji osoby: {packs.work_style(p)['warnings']}")
+        r = run(p, prefs, TF, "style", "step-by-step")
+        check(r.returncode == 0 and mode_of() == "default",
+              f"WS-12: zmiana stylu przywraca poprzedni tryb uprawnień: {mode_of()} {r.stdout}{r.stderr}")
+        local.write_text('{"permissions": {"defaultMode": "acceptEdits"}}', encoding="utf-8")
+        r = run(p, prefs, TF, "style", "conversation")
+        check(r.returncode == 0 and mode_of() == "acceptEdits" and "acceptEdits" in r.stdout,
+              f"WS-12: własnego trybu uprawnień człowieka styl nie nadpisuje, tylko o nim mówi: {mode_of()} {r.stdout}{r.stderr}")
+        local.unlink()
+        r = run(p, prefs, TF, "style")
+        check(r.returncode == 0 and mode_of() == "plan",
+              f"WS-12: tf style bez nazwy uzgadnia tryb uprawnień w tym projekcie (styl z preferencji ogólnych): {r.stdout}{r.stderr}")
+        run(p, prefs, TF, "style", "autonomous")
+        check(not local.is_file() or mode_of() is None,
+              f"WS-12: bez wcześniejszej wartości zmiana stylu usuwa ustawiony tryb: {local.read_text(encoding='utf-8') if local.is_file() else ''}")
+
         # WS-11: step-by-step — po kawałku przebieg czeka na zgodę człowieka
         prefs.write_text("style: step-by-step\n", encoding="utf-8")
         s = project(base, "s")

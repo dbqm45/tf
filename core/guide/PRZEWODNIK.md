@@ -238,7 +238,11 @@ repozytorium). `tf style` bez nazwy pokazuje bieżący styl.
 |---|---|---|
 | `autonomous` | Auto | agent idzie bez zgody na plan (nie przy wadze pełnej); pytanie wstrzymuje tylko swój kawałek |
 | `step-by-step` | zwykły | plan zatwierdzasz Ty; po każdym kawałku agent pokazuje zmiany i czeka na Twoją zgodę |
-| `conversation` | Plan | zadanie kończy się na planie; kod dopiero, gdy zmienisz tryb (`tf task mode <KLUCZ> zwykly`) |
+| `conversation` | Plan | zadanie kończy się na planie; kod dopiero, gdy zmienisz tryb (`tf task mode <KLUCZ> zwykly`). Do tego tryb planowania Claude Code w `.claude/settings.local.json` projektu: także rozmowa poza `/tf` nie zmienia plików, dopóki nie zatwierdzisz planu (wyjście z trybu: Shift+Tab) |
+
+Tryb uprawnień Claude Code styl ustawia tylko w miejsce domyślnego: jeśli wybrałeś własny (np. `acceptEdits`), zostaje,
+a zmiana stylu oddaje to, co było przedtem. Styl z `~/.tf/preferences.yaml` trafia do kolejnych projektów przy
+`tf update` albo `tf style` (bez nazwy) w danym projekcie; działa od następnej sesji Claude Code.
 
 Styl to tylko wartości domyślne: pojedyncze zadanie może dostać inny tryb. Firma, zespół albo projekt ustala, które
 tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicach. Polityki autonomii styl nie rozluźnia.

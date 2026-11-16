@@ -156,7 +156,8 @@ def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
     if style:
         styles = below.get("styles") or {}
         if style in styles:
-            out = deep_merge(_person_part(styles[style], warns, f"styles.{style}"), {})
+            preset = {k: v for k, v in (styles[style] or {}).items() if k != "claude"}   # claude: tf style, nie konfiguracja
+            out = deep_merge(_person_part(preset, warns, f"styles.{style}"), {})
             out["style"] = style
         else:
             warns.append(f"nieznany styl „{style}” (są: {', '.join(styles) or 'brak'}); pominięty")
@@ -170,6 +171,77 @@ def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
         if not out["task"]:
             out.pop("task")
     return out, warns, sources
+
+
+LOCAL_SETTINGS_REL = Path(".claude") / "settings.local.json"
+STYLE_MARK = "style_permission_mode"   # w .claude/factory-settings.json: co ustawił styl i co było przedtem
+
+
+def apply_style_permissions(root: Path) -> list[str]:
+    """Tryb uprawnień Claude Code ze stylu pracy (`styles.<styl>.claude.permission_mode`) w `.claude/settings.local.json`
+    projektu. Ustawia go tylko w miejsce domyślnego (`default` albo brak) albo wcześniej ustawionego przez styl — trybu
+    wybranego przez człowieka nie nadpisuje. Styl bez trybu oddaje to, co było przed nim. Zwraca komunikaty."""
+    cfg = load_config(root)
+    style = cfg.get("style")
+    want = ((((cfg.get("styles") or {}).get(style) or {}) if style else {}).get("claude") or {}).get("permission_mode")
+    local, mark_path = root / LOCAL_SETTINGS_REL, root / SETTINGS_REL
+
+    def read(path: Path) -> dict:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        except (json.JSONDecodeError, OSError):
+            data = None
+        return data
+
+    data, marks = read(local), read(mark_path)
+    if data is None:
+        return [f"{LOCAL_SETTINGS_REL.as_posix()}: niepoprawny JSON — trybu uprawnień stylu nie zmieniam"]
+    marks = marks if isinstance(marks, dict) else {}
+    mark = marks.get(STYLE_MARK) if isinstance(marks.get(STYLE_MARK), dict) else None
+    perms = data.get("permissions") if isinstance(data.get("permissions"), dict) else {}
+    cur = perms.get("defaultMode")
+    msgs: list[str] = []
+    if mark and cur != mark.get("mode"):
+        mark = None                      # człowiek zmienił tryb po stylu — jego wybór, styl go już nie oddaje
+    if want:
+        if cur == want:
+            return msgs
+        if mark is None and cur not in (None, "default"):
+            msgs = [f"tryb uprawnień Claude Code zostaje `{cur}` (wybrany przez Ciebie w {LOCAL_SETTINGS_REL.as_posix()}); "
+                    f"styl {style} ustawiłby `{want}` — zmień go sam, jeśli chcesz"]
+            if STYLE_MARK in marks:
+                marks.pop(STYLE_MARK)
+                mark_path.write_text(json.dumps(marks, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+            return msgs
+        previous = mark.get("previous") if mark else cur
+        perms["defaultMode"] = want
+        mark = {"mode": want, "previous": previous}
+        msgs.append(f"tryb uprawnień Claude Code: `{want}` w {LOCAL_SETTINGS_REL.as_posix()} (styl {style}); działa od "
+                    "następnej sesji Claude Code")
+    elif mark or STYLE_MARK in marks:
+        if mark:
+            if mark.get("previous") is None:
+                perms.pop("defaultMode", None)
+            else:
+                perms["defaultMode"] = mark["previous"]
+            msgs.append(f"tryb uprawnień Claude Code przywrócony: `{mark.get('previous') or 'domyślny'}` "
+                        f"(działa od następnej sesji)")
+        mark = None
+    else:
+        return msgs
+    if msgs:                             # zmieniony tryb — zapis ustawień Claude Code (reszta pliku bez zmian)
+        if perms:
+            data["permissions"] = perms
+        else:
+            data.pop("permissions", None)
+        local.parent.mkdir(parents=True, exist_ok=True)
+        local.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if mark:
+        marks[STYLE_MARK] = mark
+    else:
+        marks.pop(STYLE_MARK, None)
+    mark_path.write_text(json.dumps(marks, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return msgs
 
 
 def work_style(root: Path) -> dict:

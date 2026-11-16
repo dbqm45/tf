@@ -80,7 +80,10 @@ człowieka, i z kontrolą wyniku skryptem.
    - [x] styl `conversation`: zadanie kończy się na planie (domyślny tryb `plan` przy `tf task start`), kod dopiero po
      zmianie trybu przez człowieka, potem zgoda po każdym kawałku — wszystko w skryptach, bez instrukcji w prompcie.
      Pętla `/tf` i tak startuje tylko na polecenie człowieka; rozmowa z personą poza pętlą nie zmienia plików bez
-     prośby tak jak dotąd [do rozważenia: tryb uprawnień Claude Code `plan` w `.claude/settings.local.json`];
+     prośby tak jak dotąd;
+   - [x] styl `conversation` ustawia tryb uprawnień Claude Code `plan` w `.claude/settings.local.json` projektu
+     (`tf style`, także po `tf install` i `tf update`): rozmowa poza `/tf` też nie zmienia plików bez zgody. Trybu
+     wybranego przez człowieka nie nadpisuje, zmiana stylu oddaje poprzedni (znacznik w `.claude/factory-settings.json`);
    - [x] `tf config show` z warstwą „osoba” i źródłem każdej wartości; opis w PRZEWODNIK i FAQ; mapa fabryki
      (`docs/mapa-fabryki.html`) — status „działa”.
 2. [x] **Trafność podpowiedzi skilli** (zrobione 2026-11-16, `packs/pack-it/tests/test_hint_backend.py`) (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).

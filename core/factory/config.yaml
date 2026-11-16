@@ -455,6 +455,9 @@ styles:
   conversation:    # „najpierw porozmawiajmy”: zadanie kończy się na planie, kod dopiero po zmianie trybu przez człowieka
     task: {default_mode: plan}
     loop: {blocked_slices: false, confirm_each_slice: true}
+    # Tryb uprawnień Claude Code w .claude/settings.local.json projektu (`tf style`): plan — także rozmowa poza
+    # pętlą /tf nie zmienia plików bez zgody. Własnego trybu człowieka styl nie nadpisuje; zmiana stylu go oddaje.
+    claude: {permission_mode: plan}
 
 # Praca bez nadzoru (`tf work --once`): bierze zadanie w trybie Auto (`tf task mode <KEY> auto`), o wadze lekkiej albo
 # zwykłej, i prowadzi pętlę /tf w osobnym worktree (.tf/worktrees/<KEY>). budget_usd — limit wydatku jednego przebiegu

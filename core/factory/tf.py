@@ -338,6 +338,8 @@ def cmd_style(rest: list[str]) -> int:
     if not names:
         ws = packs.work_style(root)
         print(f"Styl pracy: {ws.get('style') or 'brak (ustawienia projektu)'}")
+        for m in packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []:
+            print(f"• {m}")
         print(f"  domyślny tryb zadania: {ws['default_mode']} (dozwolone: {', '.join(ws['allowed_modes'])})")
         print(f"  pytanie wstrzymuje tylko swój kawałek: {'tak' if ws['blocked_slices'] else 'nie'}")
         print(f"  zgoda człowieka po każdym kawałku: {'tak' if ws['confirm_each_slice'] else 'nie'}")
@@ -356,8 +358,11 @@ def cmd_style(rest: list[str]) -> int:
     if here:
         ensure_excluded(root, ".tf/config/me.yaml")
     ws = packs.work_style(root)
+    perm_msgs = packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []
     print(f"✓ styl {names[0]} zapisany w {path if not here else '.tf/config/me.yaml'} — domyślny tryb zadania: "
           f"{ws['default_mode']}, zgoda po każdym kawałku: {'tak' if ws['confirm_each_slice'] else 'nie'}")
+    for m in perm_msgs:
+        print(f"• {m}")
     for w in ws.get("warnings") or []:
         print(f"⚠ {w}")
     return 0
@@ -554,13 +559,28 @@ def main(argv: list[str]) -> int:
         rc = update(repo or REPO or None, rest)
         if rc == 0:
             refresh_launcher()
+            sync_style_permissions()
         return rc
     repo = repo or REPO
     if not repo:
         print("✗ The factory repository URL is unknown. Pass --repo <url>, set TF_REPO or install the launcher:\n"
               "  python3 core/factory/tf.py --install-launcher --repo https://github.com/<you>/tf.git")
         return 2
-    return install(repo, rest)
+    rc = install(repo, rest)
+    if rc == 0 and MANIFEST.exists():
+        sync_style_permissions()
+    return rc
+
+
+def sync_style_permissions() -> None:
+    """Po instalacji i aktualizacji: tryb uprawnień Claude Code ze stylu pracy osoby w tym projekcie (np. `plan` dla
+    `conversation`) — styl ustawiony raz w ~/.tf/preferences.yaml działa w każdym projekcie po `tf update`."""
+    try:
+        packs = project_module("packs")
+        for m in packs.apply_style_permissions(Path.cwd()) if hasattr(packs, "apply_style_permissions") else []:
+            print(f"• {m}")
+    except Exception as e:  # noqa: BLE001 — instalacja się udała; styl to dodatek
+        print(f"⚠ styl pracy: nie udało się uzgodnić trybu uprawnień Claude Code ({e})")
 
 
 if __name__ == "__main__":
