@@ -30,9 +30,9 @@ Model znów wywołał skill bez argumentów, dostał „BRAK ZADANIA” i od raz
 i plikiem wyniku.
 
 ## Wnioski
-- **Fork zmniejsza kontekst głównej sesji o ok. 37%** (66 wobec 105 tys. tokenów), przy tej samej jakości mapy
+- **Fork zmniejsza kontekst głównej sesji o ok. 37%** (66 wobec 105 tys. tokenów, tabela wyżej), przy tej samej jakości mapy
   i odpowiedzi na pytanie, które wymaga wiedzy z mapy.
-- **Fork nie oszczędza pieniędzy:** +33% (1,45 wobec 1,09 USD). Podagent wczytuje skill i pliki od zera, a nieudane
+- **Fork nie oszczędza pieniędzy:** +33% (1,45 wobec 1,09 USD, tabela wyżej). Podagent wczytuje skill i pliki od zera, a nieudane
   pierwsze wywołanie dokłada turę. Mniejszy kontekst w kolejnych turach jest czytany z cache, więc zwraca się
   powoli: odczyt cache Sonneta ok. 0,30 USD za mln tokenów [założenie] (cennika nie sprawdzałem w tej sesji),
   więc 35 tys. tokenów mniej to ok. 0,01 USD na turę [założenie], czyli kilkadziesiąt tur do zwrotu różnicy.
