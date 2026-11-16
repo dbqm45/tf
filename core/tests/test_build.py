@@ -112,6 +112,13 @@ def main() -> int:
     check(cfg_in["_inactive"] == ["b"], f"IN-6: lista wyłączonych w konfiguracji: {cfg_in.get('_inactive')}")
     _, warnings = b.skill_usage(["a", "b"], {"a"}, {"_inactive": ["b"]})
     check(warnings == [], f"IN-7: wyłączony skill bez ostrzeżenia „nie jest używany”: {warnings}")
+    texts = {"s/SKILL.md": "Zobacz tool-nx.\nInne: tool-nxx, my-tool-nx, tool-nx-plus.\n(**tool-nx**), lista: a, tool-nx"}
+    hits = b.inactive_mentions({"tool-nx"}, texts)
+    check(hits == ["s/SKILL.md:1: tool-nx", "s/SKILL.md:3: tool-nx", "s/SKILL.md:3: tool-nx"],
+          f"IN-10: wzmianka o wyłączonym skillu tylko jako całe słowo, z numerem linii: {hits}")
+    # Treść fabryki (aktywne skille i wygenerowani agenci) nie odsyła do skilli wyłączonych.
+    left = b.inactive_mentions(set(b.inactive_skills(b.load_skills())), b.active_texts())
+    check(not left, f"IN-11: aktywne skille i agenci odsyłają do wyłączonych skilli: {left[:5]}")
     catalog = b.render_catalog()
     for n in b.inactive_skills(b.load_skills()):
         check(f"- `{n}` —" not in catalog, f"IN-8: wyłączony skill {n} poza listą wymiarów katalogu")

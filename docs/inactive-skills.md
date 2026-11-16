@@ -7,7 +7,11 @@ w repozytorium i w instalacji, ale:
   (`.claude/catalog.md`) są w osobnej sekcji „Wyłączone skille”; pliki YAML nakładek się nie zmieniają;
 - człowiek może wywołać skill ręcznie: `/<nazwa>`;
 - scenariusze `trigger` są w `tests/skill_evals/inactive/<skill>.json`, w pliku głównym zostają scenariusze
-  `no-trigger`.
+  `no-trigger`;
+- aktywne skille i prompty agentów nie odsyłają do nich po nazwie: `build.py check` ostrzega o każdym takim
+  odsyłaczu, a test `IN-11` w `test_build.py` nie przechodzi, dopóki odsyłacz zostaje w treści fabryki.
+
+Przy wyłączaniu kolejnego skilla usuń odsyłacze do niego: zostaw temat, usuń nazwę albo wskaż aktywny skill.
 
 Skill jest wyłączony, gdy w nagłówku SKILL.md ma `disable-model-invocation: true` i `metadata.status: "nieaktywny"`.
 
@@ -16,6 +20,7 @@ Skill jest wyłączony, gdy w nagłówku SKILL.md ma `disable-model-invocation: 
 2. Przenieś scenariusze z `tests/skill_evals/inactive/<skill>.json` z powrotem do `tests/skill_evals/<skill>.json`.
 3. `python3 .tf/factory/skill_gate.py <skill>` i `python3 .tf/factory/build.py`.
 4. Usuń wiersz z tej listy i dopisz powód powrotu (np. nowy pomiar z przewagą, nowa reguła fabryki w treści).
+5. Odsyłacze usunięte przy wyłączaniu (commit z 2026-11-16) możesz przywrócić tam, gdzie skill znów coś wnosi.
 
 Kiedy warto wrócić: skill dostał wiedzę, której modele nie mają (reguła fabryki, świeża wersja narzędzia), albo
 pomiar na Haiku albo na holdoucie pokazał przewagę.
@@ -72,5 +77,3 @@ skillom — brak przewagi mimo to jest mocnym sygnałem dublowania.
 ## Ograniczenia
 - Tylko Sonnet: Haiku bez skilla może wypaść gorzej. Tańsi wykonawcy (tier `fast`) też tracą te skille.
 - Jeden przebieg na scenariusz; scenariusze strojenia, nie holdout.
-- Inne skille nadal odsyłają do wyłączonych po nazwie (np. „skill IaC, np. ops-iac-terraform”). Agent może przeczytać
-  plik SKILL.md, ale narzędzie Skill go nie wczyta.

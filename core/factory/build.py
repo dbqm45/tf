@@ -802,6 +802,33 @@ def with_toc(text: str) -> str:
     return res + "\n"
 
 
+def inactive_mentions(inactive: set[str], texts: dict[str, str]) -> list[str]:
+    """Wzmianki o wyłączonych skillach (całe słowo) jako `plik:linia: nazwa`. Odsyłacz do wyłączonego skilla każe
+    agentowi wczytać skill, którego narzędzie Skill nie wczyta — agent traci turę albo czyta SKILL.md ręcznie."""
+    if not inactive:
+        return []
+    pat = re.compile(r"(?<![\w-])(" + "|".join(map(re.escape, sorted(inactive))) + r")(?![\w-])")
+    return [f"{rel}:{i}: {m.group(1)}" for rel, text in texts.items()
+            for i, line in enumerate(text.splitlines(), 1) for m in pat.finditer(line)]
+
+
+def active_texts() -> dict[str, str]:
+    """Pliki aktywnych skilli (SKILL.md i references/) oraz prompty wygenerowanych agentów."""
+    skills = load_skills()
+    off = inactive_skills(skills)
+    out = {}
+    for name, s in skills.items():
+        if name in off:
+            continue
+        d = SKILLS_DIR / s["_dir"]
+        for p in [d / "SKILL.md", *sorted(d.glob("references/**/*.md"))]:
+            if p.is_file():
+                out[str(p.relative_to(ROOT))] = p.read_text(encoding="utf-8")
+    for rel, txt in render_all().items():
+        out[f"{OUT_DIR.relative_to(ROOT)}/{rel}"] = txt
+    return out
+
+
 def reference_files() -> list[Path]:
     return sorted(p for p in SKILLS_DIR.glob("*/references/**/*.md") if p.is_file())
 
@@ -1137,6 +1164,9 @@ def validate() -> tuple[list[str], list[str]]:
     e, w = skill_usage(skills, used, cfg)
     errors += e
     warnings += w
+    for hit in inactive_mentions(inactive_skills(skills), active_texts() if inactive_skills(skills) else {}):
+        warnings.append(f"{hit} — odsyłacz do wyłączonego skilla (narzędzie Skill go nie wczyta); zostaw temat, "
+                        "usuń nazwę albo wskaż aktywny skill")
 
     if not errors:
         rendered = render_all()

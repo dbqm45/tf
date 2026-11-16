@@ -55,7 +55,7 @@ Angular; w starszych wersjach bierz z tabeli „Zależne od wersji” odpowiedni
 | **specyfikacja / reguły** | czyste funkcje w `domain/` → `validate()` w schemacie Signal Forms, `ValidatorFn` lub `computed` |
 | **repozytorium / port** | serwis danych (`@Service()`) z `HttpClient`/`httpResource`, mapujący DTO ↔ typy domenowe — **krawędź** funkcji |
 | **read model** | `httpResource`/`resource` w store funkcji; widoki czytają przez `computed` |
-| **moduł** | katalog funkcji (`features/<nazwa>/`) z trasą i publicznym `index.ts` (w Nx — biblioteka z tagami, tool-nx); `domain/` bez importów z `@angular/*` |
+| **moduł** | katalog funkcji (`features/<nazwa>/`) z trasą i publicznym `index.ts` (w Nx — biblioteka z tagami); `domain/` bez importów z `@angular/*` |
 
 Przetestowane adaptery (Angular 22, `ngc` + `strictTemplates`): pipe `money`, pole cechy w Signal Forms i walidator
 Reactive Forms z tej samej reguły, store z `@Service` + `httpResource` + stanem komendy, komponent wariantów Party:

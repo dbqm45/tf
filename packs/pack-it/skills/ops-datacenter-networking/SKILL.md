@@ -4,7 +4,7 @@ description: Użyj przy sieci centrum danych — fabryka leaf-spine, BGP, VXLAN 
 metadata:
   przeglad: "2027-04-17"
   widocznosc: nazwa
-  katalog: "Użyj przy projekcie i zmianach sieci centrum danych lub kampusu — fabryka leaf-spine (Clos) i oversubscription, underlay (eBGP, OSPF, IS-IS), overlay VXLAN z EVPN, BGP dla operatorów (wybór trasy, communities, filtry, limity prefiksów, RPKI), ECMP i domeny awarii, automatyzacja (źródło prawdy, generowanie konfiguracji, CI, okna zmian), zapory na brzegu, telemetria, planowanie pojemności, metoda diagnozy. Wynik to projekt fabryki i plan zmiany. Nie do diagnozy hosta Linux (ops-linux-networking), polityki segmentacji i zaufania (sec-zero-trust-identity) ani sieci w chmurze jako kodu (ops-iac-terraform)."
+  katalog: "Użyj przy projekcie i zmianach sieci centrum danych lub kampusu — fabryka leaf-spine (Clos) i oversubscription, underlay (eBGP, OSPF, IS-IS), overlay VXLAN z EVPN, BGP dla operatorów (wybór trasy, communities, filtry, limity prefiksów, RPKI), ECMP i domeny awarii, automatyzacja (źródło prawdy, generowanie konfiguracji, CI, okna zmian), zapory na brzegu, telemetria, planowanie pojemności, metoda diagnozy. Wynik to projekt fabryki i plan zmiany. Nie do diagnozy hosta Linux (ops-linux-networking), polityki segmentacji i zaufania (sec-zero-trust-identity) ani sieci w chmurze jako kodu."
   slowa: "leaf spine, fabryka sieciowa, centrum danych, datacenter, bgp, vxlan, evpn, underlay, overlay, ecmp, oversubscription, przełączniki, switch, router, netbox, automatyzacja sieci, okno zmian, rpki, prefix list, telemetria sieciowa, pojemność łączy, firewall brzegowy, sieć kampusowa"
 ---
 
@@ -13,7 +13,7 @@ metadata:
 Wynik: **projekt fabryki** (topologia, adresacja, routing, overlay, domeny awarii) i **plan zmiany** (kroki, weryfikacja,
 wycofanie). Zmiany na prawdziwych urządzeniach agent tylko proponuje: diff konfiguracji, dry-run i okno zmian,
 wdrożenie po zgodzie człowieka. Diagnoza pojedynczego hosta (ss, dig, curl, TLS): ops-linux-networking.
-Polityka segmentacji (kto z kim): sec-zero-trust-identity. Sieć chmurowa jako kod: ops-iac-terraform.
+Polityka segmentacji (kto z kim): sec-zero-trust-identity.
 
 ## Procedura projektu
 1. **Wymagania**: liczba szaf i serwerów, prędkość portów (np. 2x25G), ruch wschód-zachód vs północ-południe,

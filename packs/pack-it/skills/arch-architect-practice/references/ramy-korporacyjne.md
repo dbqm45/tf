@@ -26,7 +26,7 @@ w fabryce: ddd-discovery-intake, ddd-facilitation, proc-product-discovery, qa-te
 | **PRINCE2** | metodyka zarządzania projektem: uzasadnienie biznesowe, etapy, role, zarządzanie przez wyjątki | dziennik projektu i akceptacje (core-project-record) jako dowody etapów |
 | **PMI / PMBOK** | standard wiedzy o zarządzaniu projektami (zasady, domeny wyników, podejścia predykcyjne, zwinne i hybrydowe) | plan, ryzyka i interesariusze; sprawdź wydanie używane w organizacji |
 | **RUP** | iteracyjny proces (rozpoczęcie, opracowanie, konstrukcja, przejście) z naciskiem na architekturę wcześnie | historyczny; idea „ryzyka architektoniczne najpierw” żyje w spike'ach i szkieletach |
-| **Scrum, Kanban, XP, SAFe, LeSS** | zwinne ramy pracy i ich skalowanie | proc-agile, proc-safe, proc-lean; XP — praktyki inżynierskie (TDD, ciągła integracja, programowanie w parach) |
+| **Scrum, Kanban, XP, SAFe, LeSS** | zwinne ramy pracy i ich skalowanie | proc-agile, proc-safe; XP — praktyki inżynierskie (TDD, ciągła integracja, programowanie w parach) |
 
 ## Jak z tym pracować
 - Dowiedz się, której ramy i w jakim zakresie organizacja naprawdę używa (często „TOGAF” oznacza tylko szablon

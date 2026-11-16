@@ -3,7 +3,7 @@ name: ai-model-optimization
 description: Użyj przy zmniejszaniu lub przyspieszaniu modelu jako artefaktu — pomiar, kwantyzacja, GGUF, ONNX, TensorRT, OpenVINO, budżet pamięci wag, dobór rozmiaru.
 metadata:
   przeglad: "2027-04-17"
-  katalog: "Użyj, gdy model ma być mniejszy, szybszy lub tańszy jako plik i środowisko uruchomienia — pomiar wyjściowy (jakość, opóźnienie, koszt, pamięć), kwantyzacja po treningu (INT8, INT4, GPTQ, AWQ, FP8, FP4, GGUF z llama.cpp), ocena utraty jakości po kwantyzacji, destylacja dla rozmiaru, przycinanie, eksport i kompilacja modeli klasycznych i wizyjnych (ONNX, TensorRT, OpenVINO, torch.compile), dekodowanie spekulatywne jako wybór po stronie modelu, budżet pamięci GPU na wagi (parametry razy bajty), dobór rozmiaru modelu. Nie do serwerów, KV cache, batchingu i routingu (ops-ai-inference), trenowania i dostrajania (ai-fine-tuning), złożoności algorytmów w kodzie (eng-algorithms-data-structures) ani metody ewaluacji (ai-evals)."
+  katalog: "Użyj, gdy model ma być mniejszy, szybszy lub tańszy jako plik i środowisko uruchomienia — pomiar wyjściowy (jakość, opóźnienie, koszt, pamięć), kwantyzacja po treningu (INT8, INT4, GPTQ, AWQ, FP8, FP4, GGUF z llama.cpp), ocena utraty jakości po kwantyzacji, destylacja dla rozmiaru, przycinanie, eksport i kompilacja modeli klasycznych i wizyjnych (ONNX, TensorRT, OpenVINO, torch.compile), dekodowanie spekulatywne jako wybór po stronie modelu, budżet pamięci GPU na wagi (parametry razy bajty), dobór rozmiaru modelu. Nie do serwerów, KV cache, batchingu i routingu (ops-ai-inference), trenowania i dostrajania (ai-fine-tuning), złożoności algorytmów w kodzie ani metody ewaluacji (ai-evals)."
   slowa: "kwantyzacja, quantization, INT8, INT4, FP8, GPTQ, AWQ, GGUF, llama.cpp, Q4_K_M, zmniejszyć model, model za duży, nie mieści się w GPU, ile pamięci potrzebuje model, ile VRAM, ONNX, TensorRT, OpenVINO, torch.compile, przyspieszyć model, model za wolny, dekodowanie spekulatywne, speculative decoding, przycinanie, pruning, mniejszy model, Ollama, lokalnie na laptopie, wnioskowanie na CPU, ResNet, model wizyjny"
 ---
 
@@ -11,7 +11,7 @@ metadata:
 
 Ten skill dotyczy **artefaktu modelu** (wagi, format, kompilacja). Serwer, KV cache, batching i routing opisuje
 **ops-ai-inference** (`.claude/skills/ops-ai-inference/SKILL.md`) — nie powtarzaj tam treści. Trenowanie i dostrajanie to
-**ai-fine-tuning**, metoda ewaluacji — **ai-evals**, złożoność kodu — **eng-algorithms-data-structures**.
+**ai-fine-tuning**, metoda ewaluacji — **ai-evals**.
 
 ## Procedura
 1. **Cel i pomiar wyjściowy.** Zapisz, co ma się poprawić i do jakiej wartości (np. p95 < 40 ms, mieści się w 24 GB,

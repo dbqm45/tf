@@ -28,8 +28,8 @@
   "offline": "2026-10-22"
  },
  "ai-model-optimization": {
-  "fingerprint": "bb57115edc255a71",
-  "offline": "2026-10-22"
+  "fingerprint": "f7abe429ee0c20a5",
+  "offline": "2026-11-16"
  },
  "ai-nlp": {
   "fingerprint": "9e320534f4630349",
@@ -52,36 +52,36 @@
   "offline": "2026-11-08"
  },
  "arch-ai-solutions": {
-  "fingerprint": "fb2b1bbbe9c0d398",
-  "offline": "2026-11-15"
+  "fingerprint": "0c20961b3ae5ce7d",
+  "offline": "2026-11-16"
  },
  "arch-architect-practice": {
-  "fingerprint": "aaf47b42aa1515b5",
-  "offline": "2026-11-15"
+  "fingerprint": "3972f2a030b0ecb2",
+  "offline": "2026-11-16"
  },
  "arch-eu-product-law": {
   "fingerprint": "87cbb78d7b64a2c0",
   "offline": "2026-11-15"
  },
  "arch-multi-tenancy": {
-  "fingerprint": "4e375830be645ad9",
-  "offline": "2026-10-22"
+  "fingerprint": "d52618931e4657c7",
+  "offline": "2026-11-16"
  },
  "arch-privacy-compliance": {
   "fingerprint": "60d420172dd633ab",
   "offline": "2026-11-10"
  },
  "arch-quality-attributes": {
-  "fingerprint": "3d33d9bf5be081c9",
-  "offline": "2026-11-15"
+  "fingerprint": "6916d6e4783b1a9a",
+  "offline": "2026-11-16"
  },
  "arch-system-design": {
-  "fingerprint": "2aafc3b8b9666af4",
-  "offline": "2026-10-22"
+  "fingerprint": "e7f91f3197727d13",
+  "offline": "2026-11-16"
  },
  "arch-tech-selection": {
-  "fingerprint": "ded5b6a1e5d7e4f1",
-  "offline": "2026-11-15"
+  "fingerprint": "6a63ebd44c757a9d",
+  "offline": "2026-11-16"
  },
  "arch-threat-modeling": {
   "fingerprint": "cbdc8dbc07884f24",
@@ -92,8 +92,8 @@
   "offline": "2026-11-10"
  },
  "be-auth-security": {
-  "fingerprint": "bf4ad195458c7307",
-  "offline": "2026-10-31"
+  "fingerprint": "43f532c2e97ea12e",
+  "offline": "2026-11-16"
  },
  "be-billing-subscriptions": {
   "fingerprint": "086ddfca17de9dd3",
@@ -104,8 +104,8 @@
   "offline": "2026-11-15"
  },
  "be-database": {
-  "fingerprint": "26d3254c26aefc04",
-  "offline": "2026-11-10"
+  "fingerprint": "5f024cf2f94878c0",
+  "offline": "2026-11-16"
  },
  "be-messaging-outbox": {
   "fingerprint": "490113ecb9c33197",
@@ -120,8 +120,8 @@
   "offline": "2026-10-30"
  },
  "ddd-algorithm-recognition": {
-  "fingerprint": "ba3aed31d356eacc",
-  "offline": "2026-11-15"
+  "fingerprint": "c108f54910393e9b",
+  "offline": "2026-11-16"
  },
  "ddd-archetypes": {
   "fingerprint": "83922ef7e2e59026",
@@ -136,8 +136,8 @@
   "offline": "2026-11-15"
  },
  "ddd-deep-modeling": {
-  "fingerprint": "9faed253d61a96c2",
-  "offline": "2026-11-15"
+  "fingerprint": "5a114ef596bdb2eb",
+  "offline": "2026-11-16"
  },
  "ddd-discovery-intake": {
   "fingerprint": "1bcfeba5fbc8c6f5",
@@ -156,8 +156,8 @@
   "offline": "2026-10-22"
  },
  "ddd-legacy-modernization": {
-  "fingerprint": "aa3395e2e34f636d",
-  "offline": "2026-10-10"
+  "fingerprint": "f6626d9859bb9f19",
+  "offline": "2026-11-16"
  },
  "ddd-model-stress-test": {
   "fingerprint": "8b4108f836ca9cf0",
@@ -168,8 +168,8 @@
   "offline": "2026-11-15"
  },
  "ddd-tactical-design": {
-  "fingerprint": "49d579f004a78834",
-  "offline": "2026-10-22"
+  "fingerprint": "664f7a145b2bca45",
+  "offline": "2026-11-16"
  },
  "eng-algorithms-data-structures": {
   "fingerprint": "5ed576443fb4d134",
@@ -180,40 +180,40 @@
   "offline": "2026-11-15"
  },
  "eng-clean-code": {
-  "fingerprint": "b0c31be8b583ebb6",
-  "offline": "2026-11-15"
+  "fingerprint": "91cfb4e3b81f4839",
+  "offline": "2026-11-16"
  },
  "eng-code-audit": {
   "fingerprint": "a5ce7a40c681c241",
   "offline": "2026-11-15"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "4021b5f8cadf0a40",
-  "offline": "2026-11-15"
+  "fingerprint": "5d103b7b6bc8b516",
+  "offline": "2026-11-16"
  },
  "eng-continuous-delivery": {
   "fingerprint": "e8c4a342f363a4d7",
   "offline": "2026-11-15"
  },
  "eng-debugging": {
-  "fingerprint": "d4c554babef845b0",
-  "offline": "2026-11-15"
+  "fingerprint": "cc84967c9fed071e",
+  "offline": "2026-11-16"
  },
  "eng-design-patterns": {
   "fingerprint": "9f796a47618ae5d4",
   "offline": "2026-11-16"
  },
  "eng-design-principles": {
-  "fingerprint": "b38a95460c75040c",
-  "offline": "2026-11-15"
+  "fingerprint": "307c55a31e9c6e32",
+  "offline": "2026-11-16"
  },
  "eng-i18n": {
   "fingerprint": "69fee3edc0986d12",
   "offline": "2026-11-15"
  },
  "eng-legacy-dossier": {
-  "fingerprint": "651b2228dd3719b5",
-  "offline": "2026-11-15"
+  "fingerprint": "34e5f045d728d949",
+  "offline": "2026-11-16"
  },
  "eng-llm-features": {
   "fingerprint": "35a2582fb087f9b8",
@@ -224,8 +224,8 @@
   "offline": "2026-10-22"
  },
  "eng-module-depth": {
-  "fingerprint": "a525dd5870a2f839",
-  "offline": "2026-10-20"
+  "fingerprint": "7e1654651af45cb4",
+  "offline": "2026-11-16"
  },
  "eng-project-reconstruction": {
   "fingerprint": "86c574e7c2fc233f",
@@ -248,16 +248,16 @@
   "offline": "2026-11-01"
  },
  "fe-architecture": {
-  "fingerprint": "91052a2244213d99",
-  "offline": "2026-11-15"
+  "fingerprint": "a4fa8af061962942",
+  "offline": "2026-11-16"
  },
  "fe-css": {
   "fingerprint": "ea5115fb50cbd3fc",
   "offline": "2026-10-22"
  },
  "fe-engineering-levels": {
-  "fingerprint": "e31d6e599c1b6284",
-  "offline": "2026-11-15"
+  "fingerprint": "af65585937ed169d",
+  "offline": "2026-11-16"
  },
  "fe-technical-seo": {
   "fingerprint": "30bd640d4f922bc8",
@@ -268,8 +268,8 @@
   "offline": "2026-11-15"
  },
  "fw-angular": {
-  "fingerprint": "2e87bf9ec7ed856c",
-  "offline": "2026-10-22"
+  "fingerprint": "681706a196107128",
+  "offline": "2026-11-16"
  },
  "fw-aspnet-core": {
   "fingerprint": "30c94001e71aecc5",
@@ -324,40 +324,40 @@
   "offline": "2026-10-26"
  },
  "ops-cloud-landing-zones": {
-  "fingerprint": "e06ca63ef2c184fa",
-  "offline": "2026-10-22"
+  "fingerprint": "c53c1c3f2a0cfefe",
+  "offline": "2026-11-16"
  },
  "ops-cloud-migration": {
   "fingerprint": "5e34f57c5c8fe2ca",
   "offline": "2026-11-10"
  },
  "ops-datacenter-networking": {
-  "fingerprint": "944f6c30bfc5b6d4",
-  "offline": "2026-10-22"
+  "fingerprint": "ca7d662ba0b994dd",
+  "offline": "2026-11-16"
  },
  "ops-dependency-upgrades": {
   "fingerprint": "8a1ba25451a90b25",
   "offline": "2026-11-15"
  },
  "ops-docker": {
-  "fingerprint": "0450f68f97a250f1",
-  "offline": "2026-10-22"
+  "fingerprint": "214896124cfa11f8",
+  "offline": "2026-11-16"
  },
  "ops-finops": {
-  "fingerprint": "72930d8f69711eb2",
-  "offline": "2026-10-22"
+  "fingerprint": "bcabb4e0b80787a9",
+  "offline": "2026-11-16"
  },
  "ops-iac-terraform": {
   "fingerprint": "92bc7acf74defc6f",
   "offline": "2026-11-16"
  },
  "ops-kubernetes": {
-  "fingerprint": "e63efe4607ef13f3",
-  "offline": "2026-10-22"
+  "fingerprint": "a263fcff111d7e3a",
+  "offline": "2026-11-16"
  },
  "ops-linux-networking": {
-  "fingerprint": "6be34b6698ec8d99",
-  "offline": "2026-11-15"
+  "fingerprint": "8abe24f68053b233",
+  "offline": "2026-11-16"
  },
  "ops-linux-performance": {
   "fingerprint": "c1465754ce416b53",
@@ -372,20 +372,20 @@
   "offline": "2026-11-15"
  },
  "ops-platform-engineering": {
-  "fingerprint": "b99e676be94987d8",
-  "offline": "2026-10-22"
+  "fingerprint": "5a6d1adb11d4e7a1",
+  "offline": "2026-11-16"
  },
  "ops-release-engineering": {
-  "fingerprint": "1a4688f1a764fa27",
-  "offline": "2026-11-15"
+  "fingerprint": "944dea7640cc13ee",
+  "offline": "2026-11-16"
  },
  "ops-secrets-identities": {
   "fingerprint": "d735e5d3515d35db",
   "offline": "2026-11-15"
  },
  "ops-security-operations": {
-  "fingerprint": "c18c0e71296b2eb3",
-  "offline": "2026-11-15"
+  "fingerprint": "eb8a52db37cc1131",
+  "offline": "2026-11-16"
  },
  "ops-setup-wizard": {
   "fingerprint": "decf5a015efcd3bd",
@@ -400,27 +400,28 @@
   "offline": "2026-11-15"
  },
  "ops-virtualization-storage": {
-  "fingerprint": "4b2d423e8a53106c",
-  "offline": "2026-10-22"
+  "fingerprint": "43f7367096267b38",
+  "offline": "2026-11-16"
  },
  "pm-product-analytics": {
-  "fingerprint": "853f9f1188463112",
-  "offline": "2026-11-09",
-  "model": {
+  "fingerprint": "211a5046216f8945",
+  "offline": "2026-11-16",
+  "model_previous": {
    "report": ".tf/logs/evals/2026-11-09-bramka-pm-product-analytics.md",
    "cost": 1.62,
    "haiku": "6/6",
    "sonnet": "6/6",
-   "date": "2026-11-09"
+   "date": "2026-11-09",
+   "uwaga": "dla wcześniejszej wersji skilla"
   }
  },
  "pm-product-lifecycle": {
-  "fingerprint": "65c9cde06fb9241a",
-  "offline": "2026-10-23"
+  "fingerprint": "48776f5cf211a9a6",
+  "offline": "2026-11-16"
  },
  "pm-product-strategy": {
-  "fingerprint": "ad107995a8643abe",
-  "offline": "2026-10-23"
+  "fingerprint": "7ce5b930c4436744",
+  "offline": "2026-11-16"
  },
  "pm-saas-metrics": {
   "fingerprint": "e5793c87d5d656a1",
@@ -431,8 +432,8 @@
   "offline": "2026-10-23"
  },
  "proc-agile": {
-  "fingerprint": "68091e570b5fac2f",
-  "offline": "2026-11-01"
+  "fingerprint": "6f2ad12c8b135efe",
+  "offline": "2026-11-16"
  },
  "proc-issue-triage": {
   "fingerprint": "16b1aed2420e4007",
@@ -443,8 +444,8 @@
   "offline": "2026-11-16"
  },
  "proc-product-discovery": {
-  "fingerprint": "92f4048f9c7334ff",
-  "offline": "2026-11-15"
+  "fingerprint": "7b295b10aac976b7",
+  "offline": "2026-11-16"
  },
  "proc-project-planning": {
   "fingerprint": "1b0cb9263ab61c65",
@@ -459,8 +460,8 @@
   "offline": "2026-10-22"
  },
  "proc-team-topologies": {
-  "fingerprint": "ef00eb4be09372c9",
-  "offline": "2026-11-15"
+  "fingerprint": "8cfc7339b60ca732",
+  "offline": "2026-11-16"
  },
  "qa-change-review": {
   "fingerprint": "975255aaff642ac4",
@@ -507,8 +508,8 @@
   "offline": "2026-10-27"
  },
  "sec-cloud-security": {
-  "fingerprint": "c4d6647e14ed9b77",
-  "offline": "2026-10-22"
+  "fingerprint": "e2e24e02273b4ed6",
+  "offline": "2026-11-16"
  },
  "sec-cryptography-pki": {
   "fingerprint": "2c65f83d72c158d0",

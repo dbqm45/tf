@@ -73,7 +73,7 @@ Inspiracja: [ponytail](https://github.com/DietrichGebert/ponytail) — opisane w
 ## W review
 Uwaga = zasada + konkretny problem + propozycja. Bez „bo tak jest ładniej”. Uwagi stylistyczne automatyzuj (linter, formatter).
 
-Konkretny kształt rozwiązania (wzorce GoF, ich lżejsze formy i kiedy ich NIE używać) — eng-design-patterns.
+Konkretny kształt rozwiązania (wzorce GoF, ich lżejsze formy i kiedy ich NIE używać).
 
 ## Przykład
 **Sytuacja:** review PR eksportu do CSV: interfejs `ReportExporter`, `ExporterFactory`, jedna implementacja, własne

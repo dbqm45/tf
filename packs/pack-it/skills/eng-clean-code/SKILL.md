@@ -50,7 +50,7 @@ metadata:
 | zazdrość o dane (metoda używa cudzych pól) | przenieś metodę |
 | rozproszona zmiana (jedna zmiana → wiele plików) | zbierz odpowiedzialność w jednym module |
 | pole-flaga stanu | maszyna stanów / osobne pojęcia |
-| powtarzalny problem strukturalny (fabryki, warianty, warstwy, powiadomienia) | wzorzec z eng-design-patterns — najpierw jego lżejsza forma |
+| powtarzalny problem strukturalny (fabryki, warianty, warstwy, powiadomienia) | wzorzec projektowy — najpierw jego lżejsza forma |
 | martwy kod | usuń (historia jest w git) |
 
 ## Jak refaktoryzować

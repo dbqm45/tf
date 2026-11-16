@@ -55,10 +55,9 @@ platformę (roadmapa, wersjonowanie, ścieżki migracji, adopcja); rozmawia z in
 | Style architektury, FSD, micro-frontends, modele renderowania (SSR/RSC), wzorce, bezpieczeństwo klienta | fe-architecture |
 | Tokeny, motywy, izolacja stylów | fe-css |
 | Język i framework | lang-typescript, lang-javascript, fw-angular |
-| Wzorce GoF, zasady projektowe | eng-design-patterns, eng-design-principles |
+| Wzorce GoF, zasady projektowe | eng-design-principles |
 | DORA, trunk-based, feature flags | eng-continuous-delivery |
 | Granice zespołów, platform team | proc-team-topologies |
-| Monorepo i build | tool-nx |
 
 ## Checklista
 - [ ] Nazwana soczewka (Senior/Staff/Principal) i uzasadnienie, dlaczego nie niższa

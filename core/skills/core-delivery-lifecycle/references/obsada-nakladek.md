@@ -14,7 +14,7 @@ Wiersz = faza (numeracja jak w SKILL.md). Wiersz podaje nakładkę przy każdej 
 - **4** — pack-it: Tomasz; arch-system-design, arch-tech-selection, arch-quality-attributes, arch-threat-modeling, arch-privacy-compliance, arch-architect-practice
 - **5** — pack-it: Tomasz + Kasia; eng-continuous-delivery, qa-test-design, qa-change-review
 - **6** — pack-it: Ola / Jan / Filip / Ada / Marek (wg stacku) + Kasia; lang-*, fw-*, be-*, fe-*, eng-testing, qa-change-review
-- **7** — pack-it: Piotr + Kasia; ops-ci-cd, ops-docker, ops-iac-terraform, ops-kubernetes, ops-release-engineering, ops-observability, ops-sre-incidents, ops-supply-chain-security, ops-secrets-identities
+- **7** — pack-it: Piotr + Kasia; ops-ci-cd, ops-docker, ops-kubernetes, ops-release-engineering, ops-observability, ops-sre-incidents, ops-supply-chain-security, ops-secrets-identities
 - **8** — pack-it: Piotr; ops-release-engineering, ops-sre-incidents
 - **9** — pack-it: Piotr + persona realizująca + Kasia; ops-sre-incidents, proc-issue-triage, eng-debugging, ops-dependency-upgrades, ops-supply-chain-security, qa-regression, ops-finops
 

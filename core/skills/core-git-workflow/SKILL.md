@@ -92,7 +92,7 @@ scenariusz można „zazielenić” w adapterze.
   workflow, który go sprawdza. `tf risk` oznacza te ścieżki jako wysokie ryzyko.
 - **Zakres** ograniczony do zadania; zmiany poza nim wycofujesz (agent `scope-reviewer`).
 - **Testy akceptacyjne poza zasięgiem agenta** (akapit wyżej), żeby agent nie „zaliczył” sam siebie.
-- **Infrastruktura od AI** przechodzi więcej bramek niż ludzka, nie mniej (skill IaC, np. ops-iac-terraform z pack-it).
+- **Infrastruktura od AI** przechodzi więcej bramek niż ludzka, nie mniej: plan zmian w PR i wykrywanie dryfu.
   Dalszy krok: podpisana atestacja (in-toto, SLSA, Sigstore) z modelem, zadaniem i dozwolonymi narzędziami.
 - Uprawnienia agenta w CI (sekrety, prawo zapisu, PR z forka): core-agent-security.
 

@@ -3,7 +3,7 @@ name: sec-cloud-security
 description: Użyj przy bezpieczeństwie chmury AWS, Azure, GCP — model współdzielonej odpowiedzialności, guardrails kont, logi, CSPM i CNAPP, CIS, baseline.
 metadata:
   przeglad: "2027-04-17"
-  katalog: "Użyj przy projekcie lub przeglądzie bezpieczeństwa chmury publicznej (AWS, Azure, GCP) — współdzielona odpowiedzialność (IaaS, PaaS, SaaS), struktura kont, subskrypcji i projektów z guardrails (SCP, Azure Policy, Organization Policy), tożsamość bez długich kluczy, segmentacja sieci i prywatne punkty końcowe, szyfrowanie z kluczami klienta, klasyfikacja danych, baseline logowania, CSPM, CNAPP i CIEM, benchmarki CIS, kontenery w chmurze, polityki jako kod, gotowość na incydent. Wynik to dokument baseline i mapowanie kontroli. Nie do samego Terraform (ops-iac-terraform), RBAC i NetworkPolicy (ops-kubernetes), OIDC w CI i sekretów (ops-secrets-identities), zero trust i tożsamości ludzi (sec-zero-trust-identity), kosztów (ops-finops) ani obsługi incydentu (ops-security-operations)."
+  katalog: "Użyj przy projekcie lub przeglądzie bezpieczeństwa chmury publicznej (AWS, Azure, GCP) — współdzielona odpowiedzialność (IaaS, PaaS, SaaS), struktura kont, subskrypcji i projektów z guardrails (SCP, Azure Policy, Organization Policy), tożsamość bez długich kluczy, segmentacja sieci i prywatne punkty końcowe, szyfrowanie z kluczami klienta, klasyfikacja danych, baseline logowania, CSPM, CNAPP i CIEM, benchmarki CIS, kontenery w chmurze, polityki jako kod, gotowość na incydent. Wynik to dokument baseline i mapowanie kontroli. Nie do samego Terraform, RBAC i NetworkPolicy (ops-kubernetes), OIDC w CI i sekretów (ops-secrets-identities), zero trust i tożsamości ludzi (sec-zero-trust-identity), kosztów (ops-finops) ani obsługi incydentu (ops-security-operations)."
   slowa: "bezpieczeństwo chmury, cloud security, baseline chmury, landing zone, współdzielona odpowiedzialność, shared responsibility, SCP, Azure Policy, Organization Policy, guardrails, publiczny bucket, CloudTrail, Activity Log, Cloud Audit Logs, CSPM, CNAPP, CIEM, CIS Benchmark, prywatny endpoint, private link, VPC, VNet, klucze klienta, CMK, KMS, Checkov, Conftest, break-glass, mapowanie kontroli, multi-cloud, audyt chmury"
 ---
 
@@ -13,7 +13,7 @@ Wynik pracy: plik `docs/project/04-architecture/cloud-security-baseline.md` (cor
 **baseline** (co obowiązuje każde konto, subskrypcję i projekt) oraz **mapowanie kontroli** (kontrola → AWS / Azure / GCP
 → jak wymuszana → jak weryfikowana → właściciel). Tabelę wyjściową i odpowiedniki usług daje
 `references/mapowanie-kontroli.md`. Ten skill niczego nie wdraża: zmiany w chmurze przechodzą przez
-ops-iac-terraform i akceptację człowieka.
+IaC z planem w PR i akceptację człowieka.
 
 ## Procedura
 1. **Zakres i typy usług.** Spisz używane chmury i usługi, każdą oznacz IaaS / PaaS / SaaS. Dostawca odpowiada
@@ -71,7 +71,7 @@ ops-iac-terraform i akceptację człowieka.
    ops-docker.
 9. **Polityki jako kod.** Kolejność: skaner IaC (**Checkov**) → polityki własne w **OPA / Conftest** (Rego na planie
    Terraform w JSON) → guardrails w chmurze jako ostatnia linia. Ta sama reguła ma jedno źródło; bramki w PR:
-   ops-iac-terraform. Dryf i ręczne zmiany w konsoli zgłasza CSPM.
+   plan IaC. Dryf i ręczne zmiany w konsoli zgłasza CSPM.
 10. **Gotowość na incydent.** Przed incydentem: konto forensyczne (odizolowane), migawki dowodowe, uprawnienia
     zespołu reagowania z góry nadane na czas, scenariusze: wyciek klucza, zainfekowana instancja, publiczny bucket,
     przejęte konto root / globalnego administratora. Procedury: ops-security-operations. Koszt logów: ops-finops.

@@ -82,7 +82,7 @@ kontenery: **ops-kubernetes** (węzły Kubernetes na wirtualnych maszynach liczy
    - **Zdalne zarządzanie poza pasmem** (BMC: iDRAC, iLO, Redfish), zero-touch provisioning, obrazy zatwierdzone centralnie.
    - Małe klastry: 1 węzeł + szybka wymiana, 2 węzły + świadek, 3 węzły dla HA. Zapasowy węzeł wysłany kurierem bywa
      tańszy niż trzeci węzeł w każdej lokalizacji.
-   - Flotą zarządzasz jak kodem (**ops-iac-terraform**), aktualizacje falami (kanarki), telemetria przez bufor lokalny
+   - Flotą zarządzasz jak kodem, aktualizacje falami (kanarki), telemetria przez bufor lokalny
      (**ops-observability**). Kontenery na brzegu: **ops-kubernetes**.
 10. **Migracja między hiperwizorami.** Inwentarz VM i zależności, pilotaż na VM niekrytycznej, konwersja dysków
     (qcow2, VMDK, VHDX), sterowniki wirtualne (virtio), zmiana kart sieciowych i adresów MAC, licencje powiązane ze

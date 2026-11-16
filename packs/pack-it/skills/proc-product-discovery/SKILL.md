@@ -53,7 +53,7 @@ i dostarczanie idą równolegle — małe testy co tydzień, nie jedna faza „b
    proc-requirements-shaping.
 
 ## Priorytety i metryki
-Szczegóły i wzory: `references/priorytety-i-metryki.md` — RICE, MoSCoW, Kano, wartość/wysiłek (WSJF: proc-lean),
+Szczegóły i wzory: `references/priorytety-i-metryki.md` — RICE, MoSCoW, Kano, wartość/wysiłek,
 HEART z celami, sygnałami i metrykami, OKR, metryka wiodąca z metrykami ochronnymi, dopasowanie produktu do rynku,
 plan zdarzeń analitycznych.
 

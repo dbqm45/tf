@@ -171,7 +171,8 @@ zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różn
 ### Rozwój fabryki
 - **Wyłączone skille** (`metadata.status: "nieaktywny"` + `disable-model-invocation: true`): zostają w instalacji,
   ale `build.py` (`drop_inactive`) usuwa je z ról, person, agentów wspólnych, konsultantów i `always_skills`,
-  a katalog pokazuje je w sekcji „Wyłączone skille”. Lista z wynikami pomiaru: `docs/inactive-skills.md`.
+  a katalog pokazuje je w sekcji „Wyłączone skille”. Odsyłacze do nich w aktywnych skillach i promptach
+  agentów zgłasza `build.py check` (`inactive_mentions`). Lista z wynikami pomiaru: `docs/inactive-skills.md`.
 - `python3 tools/workspace.py assemble|check --packs <wybór>` — projekt złożony z bieżących źródeł w `.work/`
   (testy i `build.py` działają w układzie instalacji, nie w drzewie źródłowym).
 - `python3 tools/workspace.py matrix` — sam rdzeń, każda nakładka i każdy tryb osobno, wszystko razem (to samo

@@ -33,7 +33,7 @@ wpływająca na kilka atrybutów w przeciwnych kierunkach.
 ## Style architektury — domyślnie najprostszy
 | Styl | Kiedy | Koszt |
 |---|---|---|
-| **Modularny monolit** (domyślny) | jeden zespół lub kilka, konteksty jako moduły z granicami (ddd-context-mapping, tool-nx) | niski; granice pilnowane testami architektury |
+| **Modularny monolit** (domyślny) | jeden zespół lub kilka, konteksty jako moduły z granicami (ddd-context-mapping) | niski; granice pilnowane testami architektury |
 | Mikroserwisy | niezależne wdrażanie/skalowanie kontekstów, wiele autonomicznych zespołów (proc-team-topologies), różne wymagania niezawodności | wysoki: sieć, spójność ostateczna, obserwowalność, platforma |
 | Architektura zdarzeniowa | integracja wielu kontekstów, reakcje asynchroniczne, audyt | złożoność śledzenia przepływów |
 | Serverless / BaaS | nieregularny ruch, mały zespół, generyczne subdomeny | uzależnienie od dostawcy, limity |

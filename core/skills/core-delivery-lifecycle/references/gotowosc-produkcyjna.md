@@ -48,7 +48,7 @@ odpowiednik znajdziesz w `.claude/catalog.md` albo zapytasz konsultanta innej na
 - [ ] *(minimum)* Wycofanie opisane i **przećwiczone** na środowisku testowym, z czasem trwania (pack-it: ops-release-engineering).
 - [ ] Strategia stopniowa (canary, blue-green, flagi) z bramkami opartymi na SLO; migracje bazy zgodne wstecz
   (rozszerz → przenieś → zawęź; pack-it: be-database).
-- [ ] Infrastruktura jako kod, bez ręcznych zmian; wykrywanie dryfu (pack-it: ops-iac-terraform).
+- [ ] Infrastruktura jako kod, bez ręcznych zmian; wykrywanie dryfu.
 
 ## 6. Dane
 - [ ] *(minimum)* Kopie zapasowe automatyczne i **przywracanie przetestowane**, z RPO i RTO zgodnymi z wymaganiami

@@ -19,7 +19,7 @@
 ## Uwagi (stan 2026, poprawki względem źródła)
 
 - Barrel to naturalny **publiczny API modułu/slice'a** (FSD: `index.ts` każdego slice'a — fsd-screaming-architecture.md;
-  granice wymusza lint, np. `eslint-plugin-boundaries`, Nx `enforce-module-boundaries` — tool-nx).
+  granice wymusza lint, np. `eslint-plugin-boundaries`, Nx `enforce-module-boundaries`).
 - Koszt 2026: duże barrele spowalniają dev server/testy (ładowanie całego grafu modułów) i utrudniają tree-shaking
   przy efektach ubocznych. Nie rób barrela „wszystkiego” w `shared/`; importuj z podmodułów
   (`shared/ui/button`), oznacz pakiety `"sideEffects": false`.

@@ -30,7 +30,7 @@ Warstwa `processes/` z FSD 1.x jest przestarzała (przepływy międzystronicowe 
   rzeczy schodzą niżej albo są składane wyżej (widget/strona).
 - Każdy slice wystawia **publiczne API** (`index.ts`) — reszta to szczegół implementacji
   (fundamentals/barrel-export.md). Wymuszaj lintem (`eslint-plugin-boundaries`, Steiger — linter FSD, Nx
-  `enforce-module-boundaries` — tool-nx).
+  `enforce-module-boundaries`).
 - Segmenty wewnątrz slice'a nazwane po celu: `ui/`, `model/`, `api/`, `lib/`, `config/`.
 
 **Korzyści:** wyraźna ścieżka skalowania dla rosnących zespołów; jawne granice (wiadomo, gdzie szukać i co
@@ -93,7 +93,7 @@ Do tego **stan w URL** (filtry, paginacja, zakładki) — linkowalny i odporny n
 - **Meta-frameworki**: Next.js (App Router, RSC, Server Actions), React Router 7 (tryb frameworka, dawny Remix),
   Nuxt (Vue), SvelteKit, Angular SSR (`@angular/ssr`, hybrydowe renderowanie per trasa) — routing plikowy lub
   deklaratywny, kolokacja ładowania danych, SSR/SSG per trasa.
-- **Monorepo**: Nx (granice modułów, graf zależności, zadania z cache — tool-nx), Turborepo (cache zadań, remote
+- **Monorepo**: Nx (granice modułów, graf zależności, zadania z cache), Turborepo (cache zadań, remote
   cache) — przydatne szczególnie dla wielu aplikacji i micro-frontendów (architecture-styles.md).
 - **Stan serwera**: TanStack Query (React/Vue/Solid/Angular) — zastępuje ręczne `fetch` + efekt + własny cache.
 - **Stan globalny**: Zustand, Jotai, Redux Toolkit (React); Pinia (Vue); NgRx Signal Store (Angular).

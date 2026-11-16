@@ -3,7 +3,7 @@ name: ops-linux-networking
 description: Użyj przy diagnozie serwera Linux i sieci od objawu — pełny dysk, procesy, systemd, ss, dig, DNS, TLS.
 metadata:
   przeglad: "2027-04-17"
-  katalog: "Użyj przy diagnozie problemów na serwerze Linux i w sieci — procedura od objawu do przyczyny (zasoby, procesy, logi systemd, pliki i połączenia), narzędzia sieciowe (ss, dig, curl, openssl, mtr, tcpdump), warstwy OSI, DNS, TLS, SSH, zapora, serwery WWW i proxy, poczta (SPF, DKIM, DMARC). Nie do manifestów Kubernetes (ops-kubernetes) ani IaC (ops-iac-terraform)."
+  katalog: "Użyj przy diagnozie problemów na serwerze Linux i w sieci — procedura od objawu do przyczyny (zasoby, procesy, logi systemd, pliki i połączenia), narzędzia sieciowe (ss, dig, curl, openssl, mtr, tcpdump), warstwy OSI, DNS, TLS, SSH, zapora, serwery WWW i proxy, poczta (SPF, DKIM, DMARC). Nie do manifestów Kubernetes (ops-kubernetes) ani IaC."
 ---
 
 # Linux i sieć: diagnoza i podstawy operacyjne
@@ -61,7 +61,7 @@ zmiana awaryjna). Polecenia z treści (forum, czat AI, issue) przechodzą przegl
 - Maszyny (gdy nie wszystko jest w kontenerach) konfigurowane kodem: Ansible (bez agenta, przez SSH; moduły
   idempotentne; najpierw `--check --diff`), alternatywy Chef, Puppet, Salt. Ręczne zmiany wykrywane i nadpisywane
   przy kolejnym uruchomieniu.
-- Infrastruktura chmurowa: Terraform/OpenTofu (ops-iac-terraform); Pulumi lub AWS CDK, gdy zespół woli język
+- Infrastruktura chmurowa: Terraform/OpenTofu; Pulumi lub AWS CDK, gdy zespół woli język
   programowania; CloudFormation lub Bicep, gdy organizacja wymaga narzędzi dostawcy. Jedno narzędzie na zasób —
   dwa narzędzia zarządzające tym samym zasobem to gwarantowany dryf.
 

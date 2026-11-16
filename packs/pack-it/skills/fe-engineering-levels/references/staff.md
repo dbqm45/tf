@@ -57,7 +57,7 @@ które muszą go później migrować.
   niezależnie od rozmiaru projektu); od Vite 8 do budowania produkcyjnego używa **Rolldown** (Rust) zamiast
   Rollup + esbuild. Domyślny wybór dla nowych projektów (także Angular CLI buduje przez esbuild/Vite), głównie dzięki
   szybkości pętli deweloperskiej (koszt DevEx — `devex.md`, „flow efficiency”).
-- **Nx** — monorepo z grafem zależności, granicami modułów (lint), generatorami, cache i remote cache — tool-nx.
+- **Nx** — monorepo z grafem zależności, granicami modułów (lint), generatorami, cache i remote cache.
 - **Turborepo** — narzędzie do zarządzania monorepo z **cache'owaniem zadań** (build/test/lint) — zadanie
   ponownie uruchamiane tylko, gdy zmieniły się jego realne wejścia (kod, zależności), z możliwością
   cache'u współdzielonego przez zespół/CI (remote cache), nie tylko lokalnie. Kluczowe dla monorepo z wielu

@@ -7,7 +7,7 @@
 | **MoSCoW** | Must / Should / Could / Won't (tym razem) | zakres jednego wydania lub terminu | „Must” rośnie bez końca — limit (np. ≤ 60% wysiłku) i pytanie „czy bez tego wydanie nie ma sensu?” |
 | **Kano** | ankieta: dla każdej cechy pytanie „co czujesz, gdy jest” i „gdy jej nie ma” → kategorie: obowiązkowa, liniowa (im więcej, tym lepiej), atrakcyjna, obojętna, odwrotna | decyzja, co jest podstawą, a co wyróżnikiem | atrakcyjne z czasem stają się obowiązkowe; ankieta per segment |
 | **wartość / wysiłek** | macierz 2×2: szybkie wygrane, duże zakłady, wypełniacze, strata czasu | szybki przegląd na warsztacie | oceny z jednej głowy — rób to z inżynierią i danymi |
-| **WSJF** | koszt opóźnienia / czas trwania | gdy liczy się czas (terminy, okno rynkowe) | proc-lean |
+| **WSJF** | koszt opóźnienia / czas trwania | gdy liczy się czas (terminy, okno rynkowe) | koszt opóźnienia szacuj względnie, w tej samej skali dla wszystkich pozycji |
 Metoda porządkuje rozmowę, nie zastępuje decyzji. Zapisz dane wejściowe obok wyniku, żeby dało się je podważyć.
 
 ## Metryki sukcesu

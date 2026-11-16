@@ -58,7 +58,7 @@ dla wszystkich modeli.
 - Pula: jedna migracja, ale wykonywana na dużej tabeli — wzorzec rozszerz i zawęź (be-database).
 - Schemat lub silos: migracja w falach (najpierw najemcy wewnętrzni), status migracji per najemca, wznowienie
   od miejsca błędu; aplikacja działa ze starą i nową wersją schematu w trakcie fal.
-- **Wejście:** rejestr najemców, utworzenie zasobów automatem (ops-iac-terraform dla silosu), dane startowe.
+- **Wejście:** rejestr najemców, utworzenie zasobów automatem (IaC dla silosu), dane startowe.
 - **Odejście i prawa klienta:** pełny eksport danych najemcy w formacie ustrukturyzowanym (Data Act —
   arch-eu-product-law), usunięcie z kopiami zapasowymi wg retencji (arch-privacy-compliance), dowód usunięcia.
 

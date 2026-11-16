@@ -22,7 +22,7 @@ kilka tygodni czekania w kolejkach.
 | DevOps (3) | Zespół Platforma (3) | platform | X-as-a-Service: szablon usługi, pipeline, monitoring |
 
 Miara zmiany: liczba zależności między zespołami na funkcję (przed: 3 zespoły na każdą funkcję; cel: jeden
-zespół strumieniowy + usługi platformy). Każda pozostała zależność to czekanie (proc-lean).
+zespół strumieniowy + usługi platformy). Każda pozostała zależność to czekanie.
 
 ## 2. Długotrwała „współpraca” jako sygnał złej granicy
 **Sytuacja:** Zespoły Zamówienia i Płatności od pół roku mają wspólne planowanie, wspólne daily i co tydzień

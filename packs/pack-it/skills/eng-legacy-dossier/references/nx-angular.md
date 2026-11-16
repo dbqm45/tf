@@ -3,7 +3,7 @@
 Spis treści: 1. Obszary i pytania · 2. Workspace · 3. Inwentarz bibliotek · 4. Zależności · 5. Angular ·
 6. Pozostałe obszary · 7. Pierwsze kroki
 
-Zasady narzędzi i frameworka bierzesz z tool-nx (graf, tagi, granice, generatory), fw-angular (konwencje według
+Zasady frameworka bierzesz z fw-angular (konwencje według
 wersji) i fe-architecture (stan, komponenty, granice frontu) — ten plik mówi, **co zebrać do teczki**.
 
 ## 1. Obszary i pytania (checklista etapu 1)
@@ -23,7 +23,7 @@ wersji) i fe-architecture (stan, komponenty, granice frontu) — ten plik mówi,
 Biblioteki współdzielonej nie oceniasz w izolacji: w zakresie są też jej konsumenci i to, od czego zależy.
 
 ## 2. Workspace
-Polecenia (składnia zależy od wersji Nx — sprawdź `nx --version` i tool-nx; wynik zapisz w `evidence/`):
+Polecenia (składnia zależy od wersji Nx — sprawdź `nx --version` i dokumentację tej wersji; wynik zapisz w `evidence/`):
 ```bash
 npx nx show projects                      # lista projektów
 npx nx graph --file=evidence/graph.json    # graf zależności do pliku (dowód dla ustaleń)

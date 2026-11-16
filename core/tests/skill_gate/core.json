@@ -16,23 +16,23 @@
   "offline": "2026-11-01"
  },
  "core-conventional-commits": {
-  "fingerprint": "95a4893112e2c68e",
-  "offline": "2026-11-15"
+  "fingerprint": "5e5d84dbe0d3be16",
+  "offline": "2026-11-16"
  },
  "core-cost-control": {
   "fingerprint": "f490ac0fe2b2b958",
   "offline": "2026-11-15"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "653d159bc9d1d8a7",
-  "offline": "2026-11-15"
+  "fingerprint": "79313baeb5a3a56b",
+  "offline": "2026-11-16"
  },
  "core-factory-update": {
   "fingerprint": "49a19cdcb8cfce48",
   "offline": "2026-11-08"
  },
  "core-git-workflow": {
-  "fingerprint": "ea45689fd8dd0671",
+  "fingerprint": "0a62bd52aa061001",
   "offline": "2026-11-16"
  },
  "core-grounding": {
@@ -48,24 +48,24 @@
   "offline": "2026-10-31"
  },
  "core-problem-routing": {
-  "fingerprint": "78051726c246666a",
-  "offline": "2026-11-15"
+  "fingerprint": "1befec053acb8563",
+  "offline": "2026-11-16"
  },
  "core-project-record": {
   "fingerprint": "475f95f2d1c6f356",
   "offline": "2026-11-15"
  },
  "core-semver": {
-  "fingerprint": "eea85bbd5f82e7de",
-  "offline": "2026-11-15"
+  "fingerprint": "9a02e7100743dc28",
+  "offline": "2026-11-16"
  },
  "core-skill-authoring": {
-  "fingerprint": "309a5226395bb1c0",
+  "fingerprint": "b4025ec3b1aee9b2",
   "offline": "2026-11-16"
  },
  "core-skill-composition": {
-  "fingerprint": "6a97525970e9255d",
-  "offline": "2026-10-22"
+  "fingerprint": "bcdebb669413e699",
+  "offline": "2026-11-16"
  },
  "core-source-research": {
   "fingerprint": "678a9f630954f806",

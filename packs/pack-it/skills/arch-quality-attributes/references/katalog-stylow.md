@@ -8,7 +8,7 @@ domyślnie najprostszy, który spełnia scenariusze (H,H). Wybór zapisujesz w A
 |---|---|---|---|
 | **Warstwowa** (prezentacja → aplikacja → domena → infrastruktura) | prawie zawsze wewnątrz modułu | warstwy „przelotowe” bez logiki; zmiana funkcji przechodzi przez wszystkie warstwy | każda zmiana dotyka 4 katalogów → podział według funkcji (eng-design-principles, `komponenty-i-granice.md`) |
 | **Klient–serwer** | aplikacja z centralnymi danymi i wieloma klientami | serwer jako wąskie gardło i pojedynczy punkt awarii | — (to tło niemal każdego systemu webowego) |
-| **Modularny monolit** | domyślny start | dyscyplina granic (tool-nx, ArchUnit) | moduły wiedzą o swoich tabelach nawzajem |
+| **Modularny monolit** | domyślny start | dyscyplina granic (ArchUnit) | moduły wiedzą o swoich tabelach nawzajem |
 | **Mikroserwisy** | niezależne wdrażanie i skalowanie kontekstów, autonomiczne zespoły | sieć, spójność ostateczna, obserwowalność, platforma | rozproszony monolit: usługi wdrażane razem, wspólna baza, łańcuchy synchronicznych wywołań |
 | **SOA** | integracja wielu systemów organizacji przez wspólne kontrakty | szyna integracyjna (ESB) z logiką routingu i transformacji staje się centralnym monolitem | reguły biznesowe w szynie; mikroserwisy wolą „mądre końcówki, głupie rury” |
 | **Zdarzeniowa** | reakcje asynchroniczne, wielu odbiorców, audyt | trudne śledzenie przepływu, kolejność, duplikaty | łańcuch zdarzeń, którego nikt nie umie narysować |
