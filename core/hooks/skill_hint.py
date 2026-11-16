@@ -9,6 +9,9 @@ i metadata.katalog) prostym dopasowaniem rdzeni słów z wagą rzadkości i dopi
 
   python3 .claude/hooks/skill_hint.py --explain "Jak zrobić paginację GET /orders?"   # ranking z punktacją
 
+W projekcie z wykrytym stackiem (detect_stack) hook pomija skille frameworków i języków (`fw-`, `lang-`), których
+w projekcie nie ma, chyba że polecenie je wymienia; wyłączenie filtra: CLAUDE_SKILL_HINT_STACK=0.
+
 Wyłączenie: zmienna CLAUDE_SKILL_HINT=0. Tylko biblioteka standardowa; błąd nigdy nie blokuje polecenia.
 
 Log: każda decyzja trafia do .tf/logs/skill-hints.jsonl (czas, sesja, podpowiedziane skille, 5 najwyżej
@@ -131,9 +134,10 @@ def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
     return scored
 
 
-def select(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
-    """Skille do podpowiedzi: wynik ponad progiem i wyraźny lider (płaski ranking to zwykle szum słów ogólnych)."""
-    ranked = rank(prompt, items)
+def select(prompt: str, items: list[dict], exclude: set[str] | frozenset = frozenset()) -> list[tuple[float, dict]]:
+    """Skille do podpowiedzi: wynik ponad progiem i wyraźny lider (płaski ranking to zwykle szum słów ogólnych).
+    `exclude` (skille poza stackiem projektu) odpada po rankingu: wagi słów liczy cały indeks, jak przy kalibracji."""
+    ranked = [x for x in rank(prompt, items) if x[1]["name"] not in exclude]
     if not ranked or ranked[0][0] < MIN_SCORE:
         return []
     best = ranked[0][0]
@@ -214,17 +218,60 @@ def jev_suggest(prompt: str, items: list[dict]) -> list | None:
         return None
 
 
+STACK_PREFIXES = ("fw-", "lang-")   # tożsamość stacku; narzędzia (tool-) polecenie może dopiero dodawać
+
+
+def _mentioned(prompt: str, variants: list[str]) -> bool:
+    for v in variants:
+        v = v.strip()
+        if not v:
+            continue
+        flags = re.I if len(v) >= 4 else 0   # krótkie nazwy (Go, C#) tylko z wielkiej litery — „go” to też zaimek
+        if re.search(r"(?<![\w.#])" + re.escape(v) + r"(?![\w#])", prompt, flags):
+            return True
+    return False
+
+
+def off_stack(prompt: str) -> set[str]:
+    """Skille frameworków i języków z rejestru technologii (detect_stack), których w projekcie nie wykryto i których
+    polecenie nie wymienia. Pusty zbiór, gdy nie wykryto żadnej technologii (nowy projekt) albo przy
+    CLAUDE_SKILL_HINT_STACK=0. Pomiar 2026-11-16 (docs/todo.md): w repo Spring Boot hook podsuwał skill NestJS."""
+    if os.environ.get("CLAUDE_SKILL_HINT_STACK") == "0":
+        return set()
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import detect_stack as ds
+        root = SKILLS.parent.parent
+        entries = [t for t in ds.registry_entries() if str(t.get("skill", "")).startswith(STACK_PREFIXES)]
+        found = {t["skill"] for t in entries if ds.detect(root, t)[0]}
+        if not found:
+            return set()
+        out = set()
+        for t in entries:
+            s = t["skill"]
+            if s in found:
+                continue
+            names = [t.get("name", ""), *str(t.get("name", "")).split("/"), s.split("-", 1)[1].replace("-", " ")]
+            if not _mentioned(prompt, names):
+                out.add(s)
+        return out - found
+    except Exception as e:   # filtr to tylko optymalizacja: przy błędzie podpowiedź działa jak dotąd
+        record_error("skill_hint", e)
+        return set()
+
+
 def suggest(prompt: str, items: list[dict]) -> list:
     """Słowa (domyślnie) albo Jev (CLAUDE_SKILL_HINT_JEV=1) z rezerwą w słowach, gdy Jev niedostępny."""
     global LAST_VIA
     LAST_VIA = "slowa"
+    exclude = off_stack(prompt)
     if os.environ.get("CLAUDE_SKILL_HINT_JEV") == "1":
-        picks = jev_suggest(prompt, items)
+        picks = jev_suggest(prompt, [it for it in items if it["name"] not in exclude])
         if picks is not None:
             LAST_VIA = "jev"
             return picks
         LAST_VIA = "slowa (Jev niedostępny)"
-    return select(prompt, items)
+    return select(prompt, items, exclude)
 
 
 def hint(prompt: str, data: dict | None = None) -> str:
@@ -253,9 +300,10 @@ def hint(prompt: str, data: dict | None = None) -> str:
 def main(argv: list[str]) -> int:
     if "--explain" in argv:
         prompt = " ".join(a for a in argv[1:] if a != "--explain")
+        off = off_stack(prompt)
         for s, it in rank(prompt, load_index())[:8]:
             try:
-                print(f"{s:6.2f}  {it['name']}")
+                print(f"{s:6.2f}  {it['name']}" + ("   (poza stackiem projektu — pominięty)" if it["name"] in off else ""))
             except BrokenPipeError:
                 return 0
         print("---\n" + (hint(prompt) or "(brak podpowiedzi — poniżej progu)"))

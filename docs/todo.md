@@ -56,6 +56,113 @@ Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić p�
 - [ ] **Pomiar generatora na prawdziwych dokumentach firmy** — trafność przypisania obszaru i rodzaju, odsetek
   poprawnych cytatów, koszt; płatny, za zgodą człowieka i na dokumentach, które firma udostępni.
 
+## Warstwy zespołu i preferencji osoby, wyłączanie skilli — na później, zapisane 2026-11-16
+Cel człowieka: nad rdzeniem warstwy firmy, zespołu i osoby. Standardy firmy i zespołu obowiązują, a każdy developer
+ustawia swój sposób pracy: jeden chce, żeby wszystko szło samo, drugi zatwierdza każdy krok, trzeci woli luźną
+rozmowę z agentem. Do tego zespół wyłącza skille, których nie potrzebuje (backend bez Figmy, frontend bez AWS).
+Stan dziś: warstwy `config_layers` to silnik ← organizacja (`org_defaults`) ← projekt. Skill wyłącza się tylko
+w całej fabryce (`metadata.status`). Tryb zadania (`tf task mode <KLUCZ> plan|zwykly|auto`) ustawia się osobno dla
+każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `.claude/settings.local.json`,
+`CLAUDE.local.md`, `.claude/factory-settings.json`.
+
+**Kolejność prac (ustalona przez człowieka 2026-11-16).** Zasada dla każdego punktu: co da się zrobić
+deterministycznie (skrypt, reguła, test), robi skrypt; model tylko tam, gdzie potrzebna jest ocena albo wsparcie
+człowieka, i z kontrolą wyniku skryptem.
+1. [ ] **Styl pracy i warstwa osoby.**
+   - [ ] plik preferencji osoby (`~/.tf/preferences.yaml`) i nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze
+     w `.git/info/exclude`) jako ostatnia warstwa `config_layers` — skrypt;
+   - [ ] granice: osoba nie rozluźnia polityki autonomii ani sufitów firmy i zespołu — sprawdzenie w składaniu
+     warstw (skrypt), z testem;
+   - [ ] trzy style (`samodzielny`, `krok-po-kroku`, `rozmowa`) jako gotowe wartości istniejących przełączników
+     (domyślny tryb zadania, `loop.blocked_slices`, …) — dane w konfiguracji, polecenie `tf style <nazwa>`;
+   - [ ] zatrzymanie pętli `/tf` po każdym kawałku dla stylu `krok-po-kroku` — stan w `run_state.py` (skrypt), model
+     tylko pokazuje plan i diff i czeka na zgodę;
+   - [ ] styl `rozmowa`: bez automatycznego startu pętli z numeru zadania — reguła w konfiguracji czytana przez
+     skrypt intake, nie instrukcja w prompcie;
+   - [ ] `tf config show` z warstwą „osoba” i źródłem każdej wartości; opis w PRZEWODNIK i FAQ; mapa fabryki
+     (`docs/mapa-fabryki.html`) — status „działa”.
+2. [ ] **Trafność podpowiedzi skilli** (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).
+   - [ ] walidacja DTO w repo Spring Boot bez podpowiedzi — słowa kluczowe w opisie `fw-spring-boot` (pack-it);
+   - [ ] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
+   - [ ] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
+     hooka, uruchamiany w CI bez modelu.
+3. [ ] **Warstwa zespołu.**
+   - [ ] `org/new_org_pack.py <firma> --team <zespół>` → `pack-<firma>-<zespół>` z `requires` nakładki firmy
+     (generator, skrypt);
+   - [ ] `config_layers`: silnik ← firma ← zespół ← projekt ← osoba; test kolejności i granic;
+   - [ ] standardy zespołu sprawdzane bez modelu (`rules.yaml`, semgrep) jak w nakładce firmy.
+4. [ ] **Generator standardów z dokumentów** (sekcja „Ustawienia firmy” niżej): podział, manifest i kontrola cytatów
+   skryptem; model tylko przypisuje ustalenia do obszaru i rodzaju.
+5. [ ] **Decyzje człowieka:** `custom-settings/` czy osobne repo firmy; monorepo (najpierw sprawdzić w dokumentacji,
+   czy Claude Code wczytuje skille z podkatalogów).
+
+- [x] **Najpierw pomiar** (kolejność ustalona przez człowieka: zapis, potem pomiar). Na repo backendu z pełną nakładką
+  IT: (1) bez modelu — ile kontekstu zajmuje lista skilli (opisy) i schematy narzędzi serwerów MCP, ile podpowiedzi
+  `skill_hint` trafia w skille spoza dziedziny repo (np. `ux-*`, `ops-cloud-*` przy zadaniach backendu);
+  (2) na modelu, za zgodą człowieka — czy wyłączenie zbędnych skilli zmienia trafność wyboru skilla i koszt sesji.
+  Wynik decyduje, czy `skills_off` jest potrzebne, czy wystarczy wybór nakładek i wyłączenie MCP w `settings.json`.
+  **Wynik części (1), 2026-11-16** (repo Spring Boot, `install.py --packs pack-it`, język pl; 20 poleceń backendu
+  przez `skill_hint.suggest`; tokeny oszacowane jako znaki/3,5 [założenie: bez licznika tokenów]):
+  - w liście 155 skilli, opisy ≈ 21,3 tys. znaków ≈ 6,1 tys. tokenów; 36 skilli spoza dziedziny repo (`fe-`, `ai-`,
+    `pm-`, `data-`, `txt-`, `fw-`/`lang-` innych stacków) to 24,8% opisów. W cache to koszt pomijalny; problemem jest
+    budżet listy skilli w Claude Code (~1% okna według opisu hooka `skill_hint`), w który przy oknie 200 tys. opisy
+    się nie mieszczą [niezweryfikowane: liczba z opisu hooka];
+  - w 12/20 poleceń obcy skill był w trójce rankingu; 3 z 17 podpowiedzi były obce (`fw-nestjs` przy walidacji DTO,
+    `fw-angular` przy aktualizacji Spring Boot, `ai-mcp-server` przy RFC 7807);
+  - po odjęciu obcych skilli: 0 obcych podpowiedzi, 2 nowe trafne (`be-messaging-outbox`, `ops-docker`), 1 trafna
+    utracona (`be-api-design` przy RFC 7807), 1 nowa chybiona (`core-skill-authoring` przy audycie zmian) — wagi
+    rzadkości słów zależą od całego indeksu;
+  - **wniosek:** największy zysk bez żadnej konfiguracji daje pomijanie w `skill_hint` skilli `fw-`/`lang-`/`tool-`
+    stacków, których `detect_stack` nie wykrył w projekcie. `skills_off` potrzebne dla wymiarów spoza stacku
+    (`ai-`, `pm-`, `fe-` w repo backendu).
+  **Wynik części (2), 2026-11-16** (ten sam repo; 18 zadań backendu, `claude -p` w trybie plan, pełne środowisko
+  fabryki z hookami, `--setting-sources project,local`; trzy warianty: pełna instalacja 165 skilli, bez skilli innych
+  stacków 154, bez wszystkich obcych 127; Haiku i Sonnet, po jednym przebiegu; koszt 25,00 USD):
+  | model | wariant | właściwy skill | obcy skill | koszt / przebieg |
+  |---|---|---|---|---|
+  | Haiku | pełna | 18/18 | 1 | 0,248 USD |
+  | Haiku | bez innych stacków | 17/18 | 0 | 0,222 USD |
+  | Haiku | bez obcych | 17/18 | 0 | 0,221 USD |
+  | Sonnet | pełna | 18/18 | 1 | 0,227 USD |
+  | Sonnet | bez innych stacków | 18/18 | 0 | 0,242 USD |
+  | Sonnet | bez obcych | 18/18 | 0 | 0,229 USD |
+  - jedyny obcy skill w obu modelach to `fw-nestjs` przy walidacji DTO w repo Spring Boot — ten sam, którego
+    podsuwa `skill_hint` (część 1); jedyny chybiony to Haiku przy podziale `OrderService` w obu okrojonych wariantach
+    (jeden przebieg, w granicach rozrzutu); różnice kosztu ±10% przy jednym przebiegu to rozrzut, nie efekt;
+  - **wniosek:** wyłączanie skilli nie poprawia trafności ani kosztu w stopniu wartym nowego mechanizmu. Robimy tylko
+    filtr stacku w `skill_hint` (**zrobione 2026-11-16**: skille `fw-`/`lang-` spoza wykrytego stacku odpadają po
+    rankingu, chyba że polecenie je wymienia; w repo Spring Boot 0 z 16 podpowiedzi z innego stacku, wcześniej 3 z 17;
+    `CLAUDE_SKILL_HINT_STACK=0` wyłącza) (usuwa jedyny zaobserwowany błąd, bez konfiguracji). `skills_off` odkładamy; warstwy
+    zespołu i osoby uzasadniają standardy i styl pracy, nie oszczędność kontekstu. Powtórzenie pomiaru nie jest
+    potrzebne do tej decyzji.
+- [ ] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
+  `tf work`, `tf config show`) składa je w tej kolejności; `tf config show` przy każdej wartości podaje warstwę.
+  - **Zespół:** nakładka z tego samego szablonu co firmowa (`org/new_org_pack.py <firma> --team <zespół>` →
+    `pack-<firma>-<zespół>`, `requires` nakładki firmy): standardy zespołu (reguły, obszary, semgrep), domyślne
+    ustawienia, `settings.json` (np. wyłączone serwery MCP).
+  - **Osoba:** plik poza repozytorium (np. `~/.tf/preferences.yaml`, wspólny dla wszystkich projektów osoby) i
+    nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze w `.git/info/exclude`, także przy `--shared`).
+- [ ] **Zasada warstw:** niższa warstwa dodaje i zaostrza, nie rozluźnia tego, co wyższa zablokowała. Tak działa już
+  polityka autonomii (`deny` firmy obowiązuje projekt). Firma albo zespół może dać **sufit** (np. „tryb Auto
+  dozwolony”, „najwyżej X USD na przebieg”), a osoba wybiera w jego granicach. Skille bezpieczeństwa, rzetelności
+  i TDD (`core-agent-security`, `core-grounding`, hooki `tdd_guard`, `guard_*`) wyłącza tylko firma.
+- [ ] **Style pracy osoby** (preset, który ustawia kilka istniejących przełączników naraz):
+  - **samodzielny** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
+    wymaga limitów `work` i obowiązującej polityki autonomii;
+  - **krok po kroku** — tryb `zwykly` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
+    następnym), widoczny plan i diff każdego kroku;
+  - **rozmowa** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
+    bez automatycznego startu przebiegu z numeru zadania.
+  Preset to tylko domyślne wartości: każde zadanie nadal może dostać inny tryb (`tf task mode`).
+- [ ] **`skills_off`** — odłożone po pomiarze z 2026-11-16 (bez zysku trafności i kosztu); w każdej warstwie: skill zostaje w instalacji i działa ręcznie (`/nazwa`), ale
+  nie trafia do agentów ani katalogu — ten sam mechanizm co `drop_inactive` w `build.py`. Niższa warstwa może włączyć
+  z powrotem skill wyłączony wyżej, chyba że wyższa go zablokowała.
+- [ ] **Monorepo (później):** kilka zespołów w jednym repozytorium wymaga podziału po katalogach. Claude Code
+  wczytuje `CLAUDE.md` z podkatalogów; czy tak samo skille z podkatalogów — sprawdzić w dokumentacji przed planem
+  [niezweryfikowane].
+- [ ] **Testy:** składanie pięciu warstw, sufit firmy i zespołu nie do przekroczenia przez osobę, preset stylu
+  zmienia tylko wartości domyślne, `tf config show` pokazuje źródło, plik osoby nigdy nie trafia do repozytorium.
+
 ## Luki z przeglądu agend szkoleń (AI, agenci, product engineering) — zapisane 2026-11-15
 Przegląd 2026-11-15: przeszukanie skilli, hooków i skryptów po hasłach z agend szkoleń (mechanika LLM, sterowanie
 kontekstem, systemy wiedzy, harnessy, workflowy, agenci, product engineering) oraz pytanie człowieka o Spec Driven,
