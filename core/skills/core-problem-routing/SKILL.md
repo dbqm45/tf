@@ -27,8 +27,8 @@ Katalog grupuje skille wg wymiaru (prefiks nazwy) i podaje nakładkę. Dla każd
 ma tę składową?* Wymiaru, którego nie ma w katalogu, nie ma w projekcie. Typowe sygnały:
 | Sygnał w opisie | Wymiar w katalogu | Przykładowe skille (nakładka) |
 |---|---|---|
-| wersje, migracja, aktualizacja bibliotek | `tool-`, `fw-`, `lang-` (sekcje „Zależne od wersji”) + core-stack-sync | pack-it: tool-nx, fw-angular, ops-dependency-upgrades |
-| wiele zespołów, własność, koordynacja, priorytety, przepływ pracy | `proc-` | pack-it: proc-team-topologies, proc-agile, proc-lean, proc-safe |
+| wersje, migracja, aktualizacja bibliotek | `tool-`, `fw-`, `lang-` (sekcje „Zależne od wersji”) + core-stack-sync | pack-it: fw-angular, ops-dependency-upgrades |
+| wiele zespołów, własność, koordynacja, priorytety, przepływ pracy | `proc-` | pack-it: proc-team-topologies, proc-agile, proc-safe |
 | co budować, metryki sukcesu, A/B, pomysł → wymagania (PRD), za duże MVP, zgłoszenia i backlog, plan dla sponsora | `proc-` | pack-it: proc-product-discovery, proc-requirements-shaping, proc-issue-triage, proc-project-planning |
 | podział na domeny/moduły, zależności między nimi, reguły biznesowe, pojęcia domeny, DDD na starym kodzie | `ddd-`, `dom-` | pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-connascence-analysis, ddd-legacy-modernization; nakładka domenowa: `dom-*` |
 | decyzja technologiczna, projekt systemu od wymagań, atrybuty jakości, praca architekta (arc42/C4, ATAM) | `arch-` | pack-it: arch-system-design (podobne systemy: `.claude/skills/arch-system-design/references/przyklady-projektow.md`), arch-tech-selection, arch-quality-attributes, arch-architect-practice |
@@ -40,7 +40,7 @@ ma tę składową?* Wymiaru, którego nie ma w katalogu, nie ma w projekcie. Typ
 | ryzyko regresji, testy, test wydajnościowy, przegląd planu przed kodem albo kodu względem planu | `qa-`, `eng-` | pack-it: qa-regression, qa-performance-testing, qa-change-review, eng-testing, eng-behavior-preserving-refactoring |
 | nieznany kod, wpływ zmiany, dług, co refaktoryzować najpierw (Strangler, Mikado), pełny audyt kodu | `eng-` | pack-it: eng-codebase-mapping, eng-tech-debt-audit, eng-refactor-planning, eng-code-audit |
 | objaw + gotowa poprawka od zgłaszającego, „to na pewno X”; błąd bez oczywistej przyczyny | `eng-` | pack-it: eng-debugging (`.claude/skills/eng-debugging/references/przeramowanie.md`) |
-| wolny kod, algorytm, kształt interfejsu modułu, wiele języków i rynków, repo gotowe dla agentów, hooki i pre-commit | `eng-` | pack-it: eng-algorithms-data-structures, eng-module-depth, eng-i18n, eng-repo-readiness, eng-local-quality-gates |
+| wolny kod, algorytm, kształt interfejsu modułu, wiele języków i rynków, repo gotowe dla agentów, hooki i pre-commit | `eng-` | pack-it: eng-module-depth, eng-i18n, eng-repo-readiness, eng-local-quality-gates |
 | wdrożenia, Kubernetes, SLO, awarie, dyżury, koszty chmury, serwer i sieć (DNS, TLS, SSH), własne modele na GPU | `ops-` | pack-it: ops-kubernetes, ops-sre-incidents, ops-finops, ops-linux-networking, ops-ai-inference (persona Piotr) |
 | ręczna konfiguracja usług, klucze, sekrety CI, migracja krok po kroku dla człowieka | `ops-` | pack-it: ops-setup-wizard |
 | bezpieczeństwo: podejrzana paczka, sekrety, incydent, SIEM, zgodność (SOC 2, ISO 27001) | `sec-`, `ops-` + core-agent-security | pack-it: ops-supply-chain-security, ops-secrets-identities, ops-security-operations |

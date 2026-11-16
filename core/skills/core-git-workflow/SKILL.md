@@ -1,10 +1,10 @@
 ---
 name: core-git-workflow
-description: Użyj przy pracy z gitem — gałęzie, commity, pull requesty i ich przegląd (także AI), konflikty.
+description: Użyj przy pracy z gitem — gałęzie, commity, pull requesty (także PR agenta i auto-merge), ich przegląd, konflikty.
 metadata:
   przeglad: "2027-10-10"
-  katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
-  slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai-review.yml, ai_review.py, workflow przeglądu AI, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR, CODEOWNERS, ochrona gałęzi, chronione testy akceptacyjne, agent zmienia scenariusze Gherkin, agent naprawia testy zmieniając je, wymagany check w CI"
+  katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), PR napisany przez agenta (oznaczenie, ścieżki chronione, auto-merge), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
+  slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai-review.yml, ai_review.py, workflow przeglądu AI, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR, CODEOWNERS, ochrona gałęzi, chronione testy akceptacyjne, agent zmienia scenariusze Gherkin, agent naprawia testy zmieniając je, wymagany check w CI, PR agenta, agent sam otwiera PR, auto-merge, automatyczne scalanie, ścieżki chronione, oznaczenie PR agenta, etykieta PR agenta"
 ---
 
 # Git workflow
@@ -83,6 +83,18 @@ ochrona gałęzi („Require review from Code Owners”) i wymagany check. Zmian
 check w CI odrzuca PR, który zmienia oba. Liczba chronionych testów nie spada (alarm pomocniczy: asercję da się
 osłabić bez zmiany liczby). Zmiany w definicjach kroków (step definitions, adaptery) też przechodzą przegląd, bo
 scenariusz można „zazielenić” w adapterze.
+
+**PR napisany przez agenta.** Agent proponuje, pipeline rozstrzyga:
+- **Oznaczenie:** PR agenta ma etykietę (np. `agent`), a jego commity trailer (np. `Co-Authored-By:` z nazwą agenta).
+  Przegląd, metryki i audyt odróżniają wtedy pracę agenta od pracy człowieka.
+- **Ścieżki chronione** (`infra/`, auth, płatności, `.github/workflows/`, `.claude/`) w CODEOWNERS z „Require review
+  from Code Owners”. Auto-merge tylko dla PR, które ich nie dotykają. Zielone CI nie jest dowodem, gdy PR zmienia
+  workflow, który go sprawdza. `tf risk` oznacza te ścieżki jako wysokie ryzyko.
+- **Zakres** ograniczony do zadania; zmiany poza nim wycofujesz (agent `scope-reviewer`).
+- **Testy akceptacyjne poza zasięgiem agenta** (akapit wyżej), żeby agent nie „zaliczył” sam siebie.
+- **Infrastruktura od AI** przechodzi więcej bramek niż ludzka, nie mniej: plan zmian w PR i wykrywanie dryfu.
+  Dalszy krok: podpisana atestacja (in-toto, SLSA, Sigstore) z modelem, zadaniem i dozwolonymi narzędziami.
+- Uprawnienia agenta w CI (sekrety, prawo zapisu, PR z forka): core-agent-security.
 
 ## Przegląd PR — także przez AI
 - **Pierwszy przegląd może robić agent**, drugi i decydujący — człowiek. Człowiek skupia się na zachowaniu

@@ -41,4 +41,4 @@ Dobór: najtańsza metoda, która rozstrzyga najryzykowniejsze założenie (proc
 
 ## 3. Granice
 Pytanie o ekran lub stan formularza — ux-feature-design. Rozmowa z ekspertami o zdarzeniach domeny — ddd-event-storming.
-Wydajność procesu i kolejki — proc-lean. Etyka zgód i manipulacji — ux-feature-design (`tresci-i-etyka.md`).
+Etyka zgód i manipulacji — ux-feature-design (`tresci-i-etyka.md`).

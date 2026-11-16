@@ -287,6 +287,43 @@ def _union(a: list, b: list) -> list:
     return list(dict.fromkeys([*(a or []), *(b or [])]))
 
 
+INACTIVE_STATUS = "nieaktywny"   # metadata.status skilla wyłączonego po pomiarze (powód: docs/inactive-skills.md fabryki)
+
+
+def inactive_skills(skills: dict) -> set[str]:
+    """Skille wyłączone: zostają w instalacji (człowiek wywoła je `/nazwa`), ale nie trafiają do agentów ani katalogu."""
+    return {n for n, s in skills.items() if (s.get("metadata") or {}).get("status") == INACTIVE_STATUS}
+
+
+def drop_inactive(cfg: dict, roles: dict, personas: dict, inactive: set[str]) -> None:
+    """Usuwa wyłączone skille z list ról, person, agentów wspólnych, konsultantów i always_skills (w miejscu).
+    Pliki YAML nakładek się nie zmieniają, więc powrót skilla to tylko zmiana jego statusu."""
+    def keep(names):
+        return [n for n in names or [] if n not in inactive]
+    cfg["_inactive"] = sorted(inactive)
+    if not inactive:
+        return
+    if "always_skills" in cfg:
+        cfg["always_skills"] = keep(cfg["always_skills"])
+    for pack in (cfg.get("_packs") or {}).values():
+        if "always_skills" in pack:
+            pack["always_skills"] = keep(pack["always_skills"])
+    for group in ("shared_agents", "consultants"):
+        for spec in (cfg.get(group) or {}).values():
+            if "skills" in spec:
+                spec["skills"] = keep(spec["skills"])
+    for r in roles.values():
+        for k in ("skills", "preload"):
+            if k in r:
+                r[k] = keep(r[k])
+    for p in personas.values():
+        for k in PERSONA_SKILL_KEYS:
+            if k in p:
+                p[k] = keep(p[k])
+        if p.get("role_skills"):
+            p["role_skills"] = {r: keep(v) for r, v in p["role_skills"].items()}
+
+
 def resolve_persona(name: str, personas: dict, seen: tuple = ()) -> dict:
     """Rozwiązuje `extends`: listy są łączone, pola skalarne nadpisywane, drop_* usuwa."""
     if name in seen:
@@ -360,6 +397,7 @@ def load_team(cfg: dict) -> tuple[dict, dict, dict, dict, list[str]]:
             p["extra_agents"] = [x for x in p.get("extra_agents") or [] if x.split("-", 1)[0] in personas_raw]
             p["_dropped"] = dropped
         out_personas[name] = p
+    drop_inactive(cfg, out_roles, out_personas, inactive_skills(skills))
     return out_roles, out_personas, traits, skills, errors
 
 
@@ -764,6 +802,33 @@ def with_toc(text: str) -> str:
     return res + "\n"
 
 
+def inactive_mentions(inactive: set[str], texts: dict[str, str]) -> list[str]:
+    """Wzmianki o wyłączonych skillach (całe słowo) jako `plik:linia: nazwa`. Odsyłacz do wyłączonego skilla każe
+    agentowi wczytać skill, którego narzędzie Skill nie wczyta — agent traci turę albo czyta SKILL.md ręcznie."""
+    if not inactive:
+        return []
+    pat = re.compile(r"(?<![\w-])(" + "|".join(map(re.escape, sorted(inactive))) + r")(?![\w-])")
+    return [f"{rel}:{i}: {m.group(1)}" for rel, text in texts.items()
+            for i, line in enumerate(text.splitlines(), 1) for m in pat.finditer(line)]
+
+
+def active_texts() -> dict[str, str]:
+    """Pliki aktywnych skilli (SKILL.md i references/) oraz prompty wygenerowanych agentów."""
+    skills = load_skills()
+    off = inactive_skills(skills)
+    out = {}
+    for name, s in skills.items():
+        if name in off:
+            continue
+        d = SKILLS_DIR / s["_dir"]
+        for p in [d / "SKILL.md", *sorted(d.glob("references/**/*.md"))]:
+            if p.is_file():
+                out[str(p.relative_to(ROOT))] = p.read_text(encoding="utf-8")
+    for rel, txt in render_all().items():
+        out[f"{OUT_DIR.relative_to(ROOT)}/{rel}"] = txt
+    return out
+
+
 def reference_files() -> list[Path]:
     return sorted(p for p in SKILLS_DIR.glob("*/references/**/*.md") if p.is_file())
 
@@ -788,12 +853,18 @@ def render_catalog() -> str:
              "Do doboru skilli i person do problemu (skill core-problem-routing). Skill wczytujesz narzędziem Skill po nazwie.", ""]
     installed = cfg.get("_packs") or {}
     lines += ["Nakładki: " + (", ".join(f"`{pid}` ({p.get('title', '')})" for pid, p in installed.items()) or "brak — sam rdzeń"), ""]
+    inactive = set(cfg.get("_inactive") or [])
     for f in cfg["facets"]:
-        names = sorted(n for n in skills if n.startswith(f["prefix"]))
+        names = sorted(n for n in skills if n.startswith(f["prefix"]) and n not in inactive)
         if not names:
             continue
         lines += [f"## {f['name']} (`{f['prefix']}`) — {f['question']}", ""]
         lines += [f"- `{n}` — {entry(skills[n])}" for n in names] + [""]
+    if inactive:
+        lines += ["## Wyłączone skille", "",
+                  "Pomiar nie pokazał przewagi nad modelem bez skilla. Nie dobieraj ich do problemu; człowiek może wywołać"
+                  " je ręcznie (`/nazwa`). Wyniki: `docs/inactive-skills.md` w repozytorium fabryki.", "",
+                  ", ".join(f"`{n}`" for n in sorted(inactive)), ""]
     lines += ["## Persony (`claude --agent <nazwa>`) i ich wykonawcy", "",
               "| Persona | Nakładka | Kim jest | Wykonawcy (`persona-rola`) | Skille wiodące |", "|---|---|---|---|---|"]
     for pname in sorted(personas):
@@ -837,9 +908,11 @@ def skill_usage(skills, used: set, cfg: dict) -> tuple[list[str], list[str]]:
     """Skille bez roli i persony. Wpisane w `standalone_skills` (wywoływane ręcznie, np. wiedza branżowa) nie
     dostają ostrzeżenia; nieznany wpis to błąd, a wpis skilla, którego persona już używa, jest zbędny."""
     standalone = cfg.get("standalone_skills") or []
+    inactive = set(cfg.get("_inactive") or [])
     errors = [f"standalone_skills: nieznany skill '{s}'" for s in standalone if s not in skills]
     warnings = [f"skill {s}: nie jest używany przez żadną rolę ani personę" for s in skills
-                if s not in used and s not in standalone and not s.startswith("core-")]   # core-* to biblioteka dla nakładek
+                if s not in used and s not in standalone and s not in inactive
+                and not s.startswith("core-")]   # core-* to biblioteka dla nakładek
     warnings += [f"skill {s}: używany przez rolę lub personę — zbędny wpis w standalone_skills" for s in standalone
                  if s in skills and s in used]
     return errors, warnings
@@ -1091,6 +1164,9 @@ def validate() -> tuple[list[str], list[str]]:
     e, w = skill_usage(skills, used, cfg)
     errors += e
     warnings += w
+    for hit in inactive_mentions(inactive_skills(skills), active_texts() if inactive_skills(skills) else {}):
+        warnings.append(f"{hit} — odsyłacz do wyłączonego skilla (narzędzie Skill go nie wczyta); zostaw temat, "
+                        "usuń nazwę albo wskaż aktywny skill")
 
     if not errors:
         rendered = render_all()

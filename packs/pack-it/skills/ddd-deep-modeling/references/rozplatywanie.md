@@ -46,8 +46,8 @@ potrzeba kończy się kolejną wartością pola „status”.
 - **Zamiast nowej wartości statusu:**
   - inne dane, reguły i cykl życia oznaczają **osobne pojęcie** (Becoming: oferta przechodzi w umowę albo
     zamówienie, ale nią nie jest);
-  - ten sam byt w nowym kontekście to **rola** (Role Object, eng-design-patterns);
-  - dodatkowa zdolność dla części obiektów to **rozszerzenie** (Extension Object, eng-design-patterns);
+  - ten sam byt w nowym kontekście to **rola** (Role Object);
+  - dodatkowa zdolność dla części obiektów to **rozszerzenie** (Extension Object);
   - inny sposób liczenia to **polityka** (ddd-tactical-design).
 
 ## 4. Dwa poziomy modelu: wiedza i operacje

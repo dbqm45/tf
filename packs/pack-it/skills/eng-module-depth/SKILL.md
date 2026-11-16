@@ -84,7 +84,7 @@ głęboko (eng-testing).
 Głębokość opisana w ADR i tak się rozmyje, jeśli każdy plik da się zaimportować z dowolnego miejsca. Wybierz mechanizm:
 | Stack | Mechanizm | Koszt |
 |---|---|---|
-| TS w Nx | biblioteka z publicznym `index.ts`; reguła `@nx/enforce-module-boundaries` z tagami (`scope:`, `type:`) blokuje głębokie importy i zakazane kierunki | konfiguracja tagów (tool-nx) |
+| TS w Nx | biblioteka z publicznym `index.ts`; reguła `@nx/enforce-module-boundaries` z tagami (`scope:`, `type:`) blokuje głębokie importy i zakazane kierunki | konfiguracja tagów |
 | TS poza monorepo | pole `exports` w `package.json` pakietu; `no-restricted-imports` albo dependency-cruiser dla ścieżek wewnętrznych | reguły trzeba utrzymywać |
 | TS w jednym pliku | klasa lub domknięcie z jedną publiczną funkcją | duże pliki, słaba nawigacja |
 | Java | pakiet z klasami package-private i jedną klasą publiczną; moduły JPMS (`exports`); testy ArchUnit | dyscyplina pakietów |

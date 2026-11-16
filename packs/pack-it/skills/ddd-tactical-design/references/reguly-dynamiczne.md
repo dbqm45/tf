@@ -7,8 +7,7 @@ definiuje je biznes albo zależą od tego, co działo się wcześniej.
 - **Polityka** to czysta funkcja `(kontekst) → wynik`, np. rabat, kara, limit albo decyzja tak/nie z uzasadnieniem.
   Nie zapisuje stanu i nie robi wejścia/wyjścia (ddd-tactical-design: Decider).
 - **Kompozycja:** małe polityki łączysz w większe:
-  - **łańcuch:** kolejne kroki przetwarzają wynik albo decydują, kto obsłuży przypadek (łańcuch zobowiązań,
-    eng-design-patterns);
+  - **łańcuch:** kolejne kroki przetwarzają wynik albo decydują, kto obsłuży przypadek (łańcuch zobowiązań);
   - **drzewo:** węzły `I`, `LUB`, `NIE`, „pierwsza pasująca”, „suma”, „minimum” i liście z regułami prostymi.
     Specyfikacja z łączeniem `and`/`or`/`not` to drzewo reguł tak/nie;
   - **dekorator polityki:** opakowanie, które zmienia wynik innej polityki bez jej zmiany, np. limit rabatu do
@@ -73,7 +72,7 @@ definiuje je biznes albo zależą od tego, co działo się wcześniej.
   - Niedozwolone przejście to odrzucenie z powodem, a nie cichy brak zmiany.
 - **Warianty:**
   - mało stanów i prosta logika: wyliczenie z tabelą przejść;
-  - stany z różnymi danymi i zachowaniem: osobne typy stanów (wzorzec State, eng-design-patterns), np.
+  - stany z różnymi danymi i zachowaniem: osobne typy stanów (wzorzec State), np.
     `ZamówienieOpłacone` ma numer płatności, a `ZamówienieZłożone` go nie ma.
 - **Pułapka:** stan nie zastępuje osobnych pojęć. Gdy „stan” ma inne dane, reguły i właściciela, to inne pojęcie
   (ddd-deep-modeling, `.claude/skills/ddd-deep-modeling/references/rozplatywanie.md`).

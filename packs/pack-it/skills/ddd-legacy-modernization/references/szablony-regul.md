@@ -66,5 +66,5 @@ class AclRulesTest {
 ## Inne ekosystemy
 - Python: Tach (granice modułów) albo `import-linter` z kontraktem `forbidden` (moduły źródłowe → zabroniony pakiet),
   wyjątek dla pakietu adaptera [składnię sprawdź w dokumentacji narzędzia].
-- Monorepo Nx: tagi projektów i `@nx/enforce-module-boundaries` z `bannedExternalImports` (tool-nx).
+- Monorepo Nx: tagi projektów i `@nx/enforce-module-boundaries` z `bannedExternalImports`.
 - Bez narzędzia: polecenie `rg` z sekcji „Sprawdzenie ręczne” jako krok CI kończący się błędem przy niepustym wyniku.

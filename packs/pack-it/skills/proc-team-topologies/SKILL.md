@@ -29,7 +29,7 @@ Zmiana trybu to świadoma decyzja; długotrwała „współpraca” zwykle oznac
   jak chcesz, by wyglądała architektura.
 - **Zespoły wokół granic kontekstów** (ddd-strategic-analysis): jeden kontekst → jeden zespół właściciel; relacje na mapie
   kontekstów (ddd-context-mapping) odpowiadają trybom współpracy (np. Open Host Service ≈ X-as-a-Service).
-- Mierz zależności między zespołami — każda to czekanie (proc-lean).
+- Mierz zależności między zespołami — każda to czekanie.
 
 ## Platforma jako produkt
 Zespół platformowy (np. wewnętrzna platforma deweloperska, IDP) działa jak zespół produktowy:

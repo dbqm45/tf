@@ -33,7 +33,7 @@ krótkotrwałe poświadczenia.
 - **CSPM**: ciągłe sprawdzanie konfiguracji (publiczne zasobniki, otwarte porty, brak szyfrowania, za szerokie role)
   z benchmarkami CIS — narzędzia dostawcy (AWS Security Hub, Microsoft Defender for Cloud, Google Security Command
   Center) albo otwarte (np. Prowler). Wyniki jako zadania z właścicielem; nowe naruszenia blokowane wcześniej w IaC
-  (ops-iac-terraform, polityki jako kod).
+  (polityki jako kod).
 - **IAM**: logowanie ludzi przez SSO z MFA odpornym na phishing, bez długotrwałych kluczy użytkowników; uprawnienia
   administracyjne nadawane na czas; granice uprawnień na poziomie organizacji (np. SCP) blokujące wyłączenie logów
   audytowych i użycie nieużywanych regionów; konta usług — ops-secrets-identities.

@@ -90,7 +90,7 @@ z kodem; ta sama dyskusja co miesiąc, bo decyzja nie została zapisana.
 - Przegląd projektów i PR pod kątem decyzji architektonicznych, nie stylu (od tego są lintery).
 - Pytania zamiast gotowych odpowiedzi tam, gdzie zespół ma się czegoś nauczyć; gotowa odpowiedź tam, gdzie liczy się czas
   lub ryzyko.
-- Wiedza architekta skaluje się przez standardy w kodzie (generatory, szablony, reguły granic — tool-nx), przykłady
+- Wiedza architekta skaluje się przez standardy w kodzie (generatory, szablony, reguły granic), przykłady
   referencyjne i warsztaty, nie przez bycie wąskim gardłem każdej decyzji (fe-engineering-levels, proc-team-topologies).
 
 ## Checklista

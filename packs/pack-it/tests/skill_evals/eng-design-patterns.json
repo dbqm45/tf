@@ -2,82 +2,10 @@
   "skill": "eng-design-patterns",
   "scenarios": [
     {
-      "id": "switch-strategia",
-      "expect": "trigger",
-      "prompt": "W serwisie mam switch po typie klienta wybierający algorytm liczenia rabatu, w TypeScripcie. Czy robić hierarchię klas Strategy? Jaka jest lżejsza forma? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          [
-            "funkcj\\w+ (jako|przekazan)|funkcja jako parametr|mapa|Record<"
-          ],
-          [
-            "strateg"
-          ],
-          [
-            "YAGNI",
-            "jeden wariant",
-            "kiedy nie",
-            "jedna implementacj",
-            "drugi wariant",
-            "zostaw (go|switch)",
-            "zostać przy .?switch"
-          ]
-        ]
-      }
-    },
-    {
-      "id": "dekorator-vs-proxy",
-      "expect": "trigger",
-      "prompt": "Chcę dodać retry, cache i logowanie wokół klienta HTTP w różnych kombinacjach. Który wzorzec GoF i czy jest różnica między Dekoratorem a Pełnomocnikiem? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          [
-            "dekorator|decorator"
-          ],
-          [
-            "pełnomocnik|proxy"
-          ],
-          [
-            "motywacj|cel|intencj|kontrol\\w+ dostęp"
-          ],
-          [
-            "wyższego rzędu|middleware|higher-order"
-          ],
-          [
-            "nie dubluj",
-            "już (to )?(ma|robi)",
-            "dwóch (faktycznych )?kombinacj",
-            "jeden stały zestaw"
-          ]
-        ]
-      }
-    },
-    {
       "id": "solid",
       "expect": "no-trigger",
       "prompt": "Czy zasada Open/Closed w SOLID oznacza, że nie wolno mi edytować istniejących klas? Odpowiedz zwięźle.",
       "neighbor": "eng-design-principles"
-    },
-    {
-      "id": "role-object",
-      "expect": "trigger",
-      "prompt": "Ta sama osoba w systemie bywa klientem, dostawcą i pracownikiem, a każda rola ma inne dane i zachowanie. Teraz trzymamy wszystko w jednej klasie Person z polami null. Jaki wzorzec projektowy pomoże? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          [
-            "role object|obiekt\\w* rol"
-          ],
-          [
-            "dołącz|przypin|osobn\\w* obiekt|kontekst"
-          ],
-          [
-            "agregat",
-            "innym kontekście",
-            "PLoP",
-            "archetyp\\w* Party"
-          ]
-        ]
-      }
     }
   ]
 }

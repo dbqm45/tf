@@ -60,7 +60,7 @@ metadata:
 | co najmniej jeden `feat` | MINOR |
 | `!` lub `BREAKING CHANGE` w dowolnym | MAJOR |
 
-`nx release` (pack-it: tool-nx) wylicza wersję i changelog z historii (także per projekt, po zakresie/ścieżkach); podobnie
+`nx release` wylicza wersję i changelog z historii (także per projekt, po zakresie/ścieżkach); podobnie
 semantic-release, release-please. Walidacja: commitlint w hooku `commit-msg`. Dlatego format to **kontrakt**, nie estetyka.
 Numer liczy `python3 .claude/skills/core-semver/scripts/semver.py next`. Zasady SemVer (faza 0.y.z, wersje
 przedpremierowe, publiczne API, wycofywanie) opisuje core-semver.

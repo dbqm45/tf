@@ -23,7 +23,7 @@ Agent pomaga zbierać dowody i mapować kontrole. **Nie stwierdza zgodności** �
 
 ## Gdzie fabryka już dostarcza dowody
 Ochrona gałęzi i review (ops-ci-cd), skany zależności i SBOM (ops-supply-chain-security), inwentarz tożsamości
-i rotacja (ops-secrets-identities), IaC z planem w PR i wykrywaniem dryfu (ops-iac-terraform), postmortemy
+i rotacja (ops-secrets-identities), IaC z planem w PR i wykrywaniem dryfu, postmortemy
 i ćwiczenia odtwarzania (ops-sre-incidents), modele zagrożeń (arch-threat-modeling), dziennik decyzji i ADR
 (core-project-record).
 

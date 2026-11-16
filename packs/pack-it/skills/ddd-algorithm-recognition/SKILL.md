@@ -42,7 +42,6 @@ Każda pozycja ma pole **„to nie to, jeśli… → zobacz X”**: to nie odrzu
 - **średnia** — jeden tor i wiarygodne mapowanie.
 - **niska** — mapowanie spekulatywne. Niska pewność to uczciwy wynik, nie powód do pominięcia.
 
-Złożoność, dobór struktur danych w kodzie, wzorce i techniki algorytmiczne: eng-algorithms-data-structures.
 
 ## Twarde reguły
 - Każdy kandydat ma ≥ 1 **dosłowny cytat** ze źródłem i miejscem (bank dowodów z ddd-discovery-intake albo wymagania);

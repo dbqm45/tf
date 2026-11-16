@@ -81,7 +81,7 @@ Zasady:
   w CHANGELOG i poinformuj użytkowników (FAQ).
 - **Wycofywanie:** najpierw minor z oznaczeniem „przestarzałe”, opisem zastępstwa i dokumentacją. Usunięcie dopiero
   w następnym major, po co najmniej jednym minor z ostrzeżeniem.
-- Monorepo: każdy pakiet ma własną wersję (`nx release` — pack-it: tool-nx).
+- Monorepo: każdy pakiet ma własną wersję (`nx release`).
 - Numer wersji API w URL (`/v1/`) to osobna decyzja (skill projektu API, pack-it: be-api-design). Zmiana `/v1` → `/v2` zwykle idzie z major
   pakietu lub serwisu.
 - Wersji **zależności** projektu nie podnosisz bez prośby człowieka (core-stack-sync). Ten skill dotyczy numeru

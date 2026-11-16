@@ -22,9 +22,9 @@ Zainstalowane skille pogrupowane według wymiarów są w `.claude/catalog.md` �
 | Warstwa | np. `fe-`, `be-`, `ops-` | jakie zasady obowiązują w tej warstwie niezależnie od technologii | w pack-it: fe-architecture, be-api-design |
 | Framework | `fw-` | **GDZIE** i czym to umieścić w danym frameworku | w pack-it: fw-angular |
 | Język | `lang-` | **JAK** wyrazić pojęcia w danym języku | w pack-it: lang-typescript, lang-java |
-| Narzędzia | `tool-` | czym budujemy i jak organizujemy repozytorium | w pack-it: tool-nx |
+| Narzędzia | `tool-` | czym budujemy i jak organizujemy repozytorium | w pack-it: tool-vitest, tool-playwright |
 | Zasady inżynierskie | np. `eng-` | jak **dobrze** i **prosto** — ograniczenia i rozstrzyganie sporów | w pack-it: eng-design-principles, eng-testing |
-| Proces | np. `proc-` | jak planujemy, współpracujemy i dostarczamy | w pack-it: proc-agile, proc-lean, proc-safe |
+| Proces | np. `proc-` | jak planujemy, współpracujemy i dostarczamy | w pack-it: proc-agile, proc-safe |
 | Praktyki | `core-` | jak pracujemy | core-stack-sync, core-conventional-commits |
 
 Skille metody i warstwy są **agnostyczne** (bez kodu konkretnej technologii). Skille frameworka i języka zawierają
@@ -93,7 +93,7 @@ Przykłady zakładają nakładkę pack-it; z innymi nakładkami wymiary są te s
 | Projekt systemu (bez technologii) | metoda → warstwa (kontrakty); w pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-archetypes → be-api-design |
 | Implementacja agregatu w Javie | metoda → warstwa → język; w pack-it: ddd-tactical-design, ddd-archetypes → be-database → lang-java |
 | Formularz produktu z cechami | metoda → warstwa → framework → język; w pack-it: ddd-archetypes (Product) → fe-architecture → fw-angular → lang-typescript |
-| Nowy moduł zgodnie z ustaleniami firmy | metoda → `architecture` (skill projektu) → narzędzia → `documentation` (skill osobisty) do ADR; w pack-it: ddd-strategic-analysis, tool-nx |
+| Nowy moduł zgodnie z ustaleniami firmy | metoda → `architecture` (skill projektu) → narzędzia → `documentation` (skill osobisty) do ADR; w pack-it: ddd-strategic-analysis |
 
 ## Anty-wzorce
 - Wczytanie wszystkich skilli „na zapas” (koszt tokenów) — tylko potrzebne wymiary.

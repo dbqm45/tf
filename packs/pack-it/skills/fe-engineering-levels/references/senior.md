@@ -17,7 +17,7 @@ Vitals, Service Workers) została przeniesiona do skilli technicznych — tu zos
 | Offline/PWA | ocenić, czy service worker jest potrzebny, dobrać strategię cache i bezpieczną aktualizację | fe-web-platform `.claude/skills/fe-web-platform/references/service-workers.md` |
 | Język i typy | swobodnie czytać/pisać typy średniej złożoności; rozpoznać, kiedy typ jest bardziej skomplikowany niż wart (nadmiar generyków to zapach, nie cel) | lang-typescript, lang-javascript |
 | Framework | znać model zmian swojego frameworka i jego pułapki (klucze list, czystość renderu, efekty, signals/OnPush) | fw-angular, fe-architecture |
-| Architektura aplikacji | **zastosować** wzorzec do nazwanego problemu i **rozpoznać nadużycie** wzorca | fe-architecture, eng-design-principles, eng-design-patterns |
+| Architektura aplikacji | **zastosować** wzorzec do nazwanego problemu i **rozpoznać nadużycie** wzorca | fe-architecture, eng-design-principles |
 | Dostępność i bezpieczeństwo | dostarczać funkcje zgodne z WCAG AA i bez XSS domyślnie, nie „po audycie” | fe-web-platform, fe-architecture `references/security/` |
 | Testy | pisać testy zachowania (nie implementacji) i dobrać poziom testu do ryzyka | eng-testing, fe-architecture `references/testing/` |
 

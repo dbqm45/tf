@@ -35,7 +35,7 @@ Często wystarczy jeden albo dwa kroki z danego szczebla.
    odczytu i zapisu. CDN dla treści statycznych.
 4. **Przewaga odczytów**: cache w pamięci (popularne dane, sesje) i repliki do odczytu. Aplikacja kieruje zapisy do
    bazy głównej, a odczyty do replik.
-5. **Zmienny ruch**: autoskalowanie z minimum i maksimum, automatyzacja infrastruktury (ops-iac-terraform), metryki na
+5. **Zmienny ruch**: autoskalowanie z minimum i maksimum, automatyzacja infrastruktury, metryki na
    poziomie hosta i load balancera, analiza logów, monitoring z zewnątrz, dyżury, raportowanie błędów
    (ops-observability).
 6. **Duże dane i zapisy**: stare dane do hurtowni lub magazynu obiektów, federacja, sharding, denormalizacja, część
@@ -49,7 +49,7 @@ Często wystarczy jeden albo dwa kroki z danego szczebla.
 | **Robot sieciowy (web crawler)** | miliard stron, cykle w grafie linków, świeżość | kolejka linków z priorytetem (zbiór posortowany); przetworzone strony z **sygnaturą treści**, a podobna sygnatura obniża priorytet zamiast zapętlenia; duplikaty adresów usuwane wsadowo, a duplikaty treści przez miarę podobieństwa (Jaccard, kosinusowa); odświeżanie według częstotliwości zmian strony; **szacunek dla `robots.txt`** i limit żądań na domenę; własny cache DNS i pula połączeń; indeks odwrócony i opisy stron jako osobne usługi zasilane z kolejek |
 | **Budżet domowy (Mint)** | **przewaga zapisów** (transakcje codziennie, mało odwiedzin), integracje z bankami | pobieranie transakcji przez kolejkę (wolne, zawodne źródło); surowe dane w magazynie obiektów, a agregaty miesięczne w osobnej tabeli lub hurtowni; kategoryzacja ze słownika sprzedawca → kategoria (mały, w pamięci) z korektami użytkowników; budżet domyślny z szablonu, a w bazie tylko nadpisania użytkownika; powiadomienia asynchronicznie; automatyczna aktualizacja tylko dla aktywnych kont |
 | **Graf społecznościowy** | najkrótsza ścieżka między osobami, graf nie mieści się na jednej maszynie | BFS (graf bez wag) na danych podzielonych na serwery z usługą lokalizacji; ograniczanie skoków między maszynami: grupowanie zapytań o znajomych z tego samego serwera, podział według regionu; **dwukierunkowy BFS** (od źródła i od celu); limit czasu lub liczby kroków; cache wyników i wyliczanie wsadowe; baza grafowa, gdy wolno ją użyć |
-| **Cache wyników zapytań** | ograniczona pamięć, popularne zapytania, szybkie trafienia | **LRU**: mapa + lista dwukierunkowa, wszystkie operacje O(1) (eng-algorithms-data-structures); TTL na wypadek zmian źródła; skalowanie przez **podział cache między maszyny** z wyborem maszyny po skrócie klucza i **haszowaniem spójnym**. Odrzucone warianty: osobny cache na każdej maszynie (niski odsetek trafień), pełna kopia na każdej (marnuje pamięć) |
+| **Cache wyników zapytań** | ograniczona pamięć, popularne zapytania, szybkie trafienia | **LRU**: mapa + lista dwukierunkowa, wszystkie operacje O(1); TTL na wypadek zmian źródła; skalowanie przez **podział cache między maszyny** z wyborem maszyny po skrócie klucza i **haszowaniem spójnym**. Odrzucone warianty: osobny cache na każdej maszynie (niski odsetek trafień), pełna kopia na każdej (marnuje pamięć) |
 | **Ranking sprzedaży w kategoriach** | 100× więcej odczytów niż zapisów, wynik odświeżany co godzinę | **wyliczanie wsadowe** z logów (MapReduce lub zapytanie w hurtowni): suma ilości według (kategoria, produkt), potem sortowanie; wynik zapisany w gotowej tabeli i cache, więc odczyt nic nie liczy; stare dane do hurtowni |
 | **Skalowanie do milionów użytkowników** | rosnący ruch bez przepisywania wszystkiego | drabina skalowania powyżej |
 
@@ -71,8 +71,7 @@ Często wystarczy jeden albo dwa kroki z danego szczebla.
 
 ## Ćwiczenia z projektowania obiektowego (do nauki modelowania)
 Primer zawiera też małe zadania obiektowe: tablica mieszająca, cache LRU, centrum obsługi telefonicznej, talia kart,
-parking, czat. Przydają się jako ćwiczenie odpowiedzialności klas i stanów (eng-design-principles,
-eng-design-patterns). W prawdziwym projekcie model wynika z domeny (ddd-tactical-design), nie z ćwiczenia.
+parking, czat. Przydają się jako ćwiczenie odpowiedzialności klas i stanów (eng-design-principles). W prawdziwym projekcie model wynika z domeny (ddd-tactical-design), nie z ćwiczenia.
 
 ## Źródła
 - [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) — `solutions/system_design`

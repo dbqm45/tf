@@ -43,7 +43,7 @@ print(json.dumps({"type": "result", "subtype": "success", "result": "Użyj nagł
 """
 
 
-PROTOCOL_TESTS = 7
+PROTOCOL_TESTS = 8
 
 
 def protocol_tests() -> list[str]:
@@ -72,6 +72,25 @@ def protocol_tests() -> list[str]:
         badh = ev.validate_file(ho, holdout=True)
         if okh or not badh:
             fails.append(f"validate_file(holdout): jeden scenariusz trigger wystarcza, no-trigger to błąd: {okh} {badh}")
+    # Skill wyłączony (metadata.status: nieaktywny): scenariusze trigger leżą w skill_evals/inactive/, w pliku głównym
+    # wystarcza jeden no-trigger; aktywny skill nadal potrzebuje co najmniej trzech.
+    with tempfile.TemporaryDirectory() as d:
+        old = ev.SKILLS
+        ev.SKILLS = Path(d) / "skills"
+        for n, extra in (("x-off", 'disable-model-invocation: true\nmetadata:\n  status: "nieaktywny"\n'), ("x-on", "")):
+            (ev.SKILLS / n).mkdir(parents=True)
+            (ev.SKILLS / n / "SKILL.md").write_text(f"---\nname: {n}\ndescription: Użyj przy x.\n{extra}---\n# X\n",
+                                                    encoding="utf-8")
+        errs = {}
+        for n in ("x-off", "x-on"):
+            f = Path(d) / f"{n}.json"
+            f.write_text(json.dumps({"skill": n, "scenarios": [
+                {"id": "n", "expect": "no-trigger", "prompt": "Pytanie sąsiada o indeksy bazy", "neighbor": "be-database"}]}),
+                encoding="utf-8")
+            errs[n] = ev.validate_file(f)
+        ev.SKILLS = old
+        if errs["x-off"] or not any("co najmniej 3" in e for e in errs["x-on"]):
+            fails.append(f"validate_file: wyłączony skill — jeden no-trigger wystarcza, aktywny potrzebuje 3: {errs}")
     scs = [{"id": "a", "expect": "trigger"}, {"id": "h", "expect": "trigger", "holdout": True},
            {"id": "n", "expect": "no-trigger"}]
     if [s["id"] for s in ev.tuning_set(scs)] != ["a", "n"] or [s["id"] for s in ev.holdout_set(scs)] != ["h"]:

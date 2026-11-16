@@ -40,7 +40,7 @@ Przy ruchu rzadszym niż TTL cache `h` spada, więc szacuj `h` z realnego rozkł
 | wolumen dzienny | | 200 000 | wymagania |
 | udział trafień cache | h | 0,8 | pomiar po pilotażu |
 
-Pojemność: równoległe żądania w szczycie ≈ żądania/s × średni czas trwania (prawo Little'a, **proc-lean**);
+Pojemność: równoległe żądania w szczycie ≈ żądania/s × średni czas trwania (prawo Little'a);
 porównaj z limitami tokenów na minutę u dostawcy. Własny model: **ops-ai-inference**.
 
 ## Szablon ADR dla decyzji AI

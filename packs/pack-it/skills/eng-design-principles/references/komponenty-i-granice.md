@@ -73,7 +73,7 @@ współdzielonej — REP i CRP (stabilni klienci).
 
 **W praktyce (Nx / Java)**
 - Biblioteki z tagami typu (`type:feature`, `type:ui`, `type:data-access`, `type:util`, `type:domain`) i reguła
-  `@nx/enforce-module-boundaries` utrwalają kierunek zależności (tool-nx).
+  `@nx/enforce-module-boundaries` utrwalają kierunek zależności.
 - Metryki liczysz dla kilku krytycznych komponentów raz na kwartał lub przy przeglądzie architektury
   (eng-codebase-mapping daje graf), nie dla całego repo co commit. Wynik to sygnał do rozmowy, nie ocena.
 

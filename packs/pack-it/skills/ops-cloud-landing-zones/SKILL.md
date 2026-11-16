@@ -4,7 +4,7 @@ description: Użyj przy projekcie fundamentu chmury dla wielu zespołów — lan
 metadata:
   przeglad: "2027-04-17"
   widocznosc: nazwa
-  katalog: "Użyj, gdy projektujesz lub porządkujesz fundament chmury dla wielu zespołów (AWS, Azure, GCP) — czym jest landing zone, hierarchia kont, subskrypcji i projektów oraz środowiska, federacja tożsamości i SSO, topologia sieci (hub-and-spoke, transit gateway, Virtual WAN, Shared VPC), konta logów i narzędzi, guardrails zapobiegawcze i wykrywające, tagowanie i alokacja kosztów, account vending i subscription vending w IaC, bazowe konfiguracje per typ obciążenia, wersjonowanie i rozwój landing zone. Wynik to dokument projektowy i lista decyzji. Nie do samych kontroli bezpieczeństwa w chmurze (sec-cloud-security), modułów Terraform (ops-iac-terraform), optymalizacji kosztów (ops-finops), platformy dla deweloperów (ops-platform-engineering) ani przenoszenia obciążeń (ops-cloud-migration)."
+  katalog: "Użyj, gdy projektujesz lub porządkujesz fundament chmury dla wielu zespołów (AWS, Azure, GCP) — czym jest landing zone, hierarchia kont, subskrypcji i projektów oraz środowiska, federacja tożsamości i SSO, topologia sieci (hub-and-spoke, transit gateway, Virtual WAN, Shared VPC), konta logów i narzędzi, guardrails zapobiegawcze i wykrywające, tagowanie i alokacja kosztów, account vending i subscription vending w IaC, bazowe konfiguracje per typ obciążenia, wersjonowanie i rozwój landing zone. Wynik to dokument projektowy i lista decyzji. Nie do samych kontroli bezpieczeństwa w chmurze (sec-cloud-security), modułów Terraform, optymalizacji kosztów (ops-finops), platformy dla deweloperów (ops-platform-engineering) ani przenoszenia obciążeń (ops-cloud-migration)."
   slowa: "wprowadzanie zmian w landing zone, zmiany dotykają wielu istniejących subskrypcji i kont, aktualizacja landing zone, nowa wersja landing zone, wersjonowanie fundamentu chmury, rollout zmian na wszystkie konta, zmiana fundamentu chmury, setki istniejących subskrypcji, setki kont, landing zone, zmiany w landing zone, wersjonowanie landing zone, aktualizacja landing zone, wdrażanie zmian na wiele subskrypcji, dryf kont, fundament chmury, cloud foundation, Control Tower, Landing Zone Accelerator, Azure landing zones, Cloud Adoption Framework, account vending, subscription vending, hierarchia kont, organizacja AWS, grupy zarządzania, foldery GCP, hub and spoke, transit gateway, Virtual WAN, Shared VPC, konto logów, guardrails, SCP, tagowanie, alokacja kosztów, nowe konto dla zespołu, wiele zespołów w chmurze, SSO chmura"
 ---
 
@@ -12,8 +12,8 @@ metadata:
 
 Landing zone to wstępnie skonfigurowane, zautomatyzowane środowisko wielokontowe: hierarchia, tożsamość, sieć,
 logowanie, guardrails i proces zakładania nowych kont. Ten skill opisuje **strukturę i automatykę fundamentu**.
-Treść kontroli bezpieczeństwa (szyfrowanie, CSPM, break-glass, benchmarki) to sec-cloud-security; moduły i stan
-Terraform to ops-iac-terraform; optymalizacja rachunku to ops-finops. Wynik: `docs/project/04-architecture/landing-zone.md`
+Treść kontroli bezpieczeństwa (szyfrowanie, CSPM, break-glass, benchmarki) to sec-cloud-security;
+optymalizacja rachunku to ops-finops. Wynik: `docs/project/04-architecture/landing-zone.md`
 (core-project-record) z projektem i listą decyzji (format niżej). Niczego nie wdrażasz: zmiany w chmurze idą jako plan
 (`terraform plan`, tryb audytu, okno zmian) i wchodzą po akceptacji człowieka.
 
@@ -63,7 +63,7 @@ Terraform to ops-iac-terraform; optymalizacja rachunku to ops-finops. Wynik: `do
    z konsoli. Wejście: nazwa, właściciel, środowisko, typ obciążenia, centrum kosztów, CIDR z rejestru. Wyjście:
    konto we właściwej grupie, role SSO, budżet i alerty, tagi, połączenie z hubem, baseline, osobne pole
    tożsamości dla pipeline'u (OIDC). Realizacja: Account Factory for Terraform / customizations, Azure subscription
-   vending (moduł referencyjny), projekt factory w GCP. Moduły i stan: ops-iac-terraform. Czas od żądania do
+   vending (moduł referencyjny), projekt factory w GCP. Czas od żądania do
    użyteczności konta jest metryką fundamentu (cel [przykład]: < 1 dzień roboczy).
 9. **Bazy per typ obciążenia (golden baselines).** Mała liczba profili, np. `web-app`, `data-platform`, `batch`,
    `regulated`; każdy to zestaw: sieć, role, polityki, logi, backup, budżet. Wybór profilu przy vendingu. Nie

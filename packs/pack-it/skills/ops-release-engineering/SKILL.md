@@ -53,7 +53,7 @@ człowiek, gdy kryterium jest spełnione i minął minimalny czas — nie „na 
 
 ## 5. Środowiska podglądu (preview)
 - Środowisko per PR: izolowane, tworzone automatycznie, z obowiązkowym czasem życia i usuwaniem po zamknięciu PR.
-- Dane syntetyczne lub zamaskowane, osobne sekrety, brak portów zarządzania z internetu (ops-iac-terraform).
+- Dane syntetyczne lub zamaskowane, osobne sekrety, brak portów zarządzania z internetu.
 - Środowisko testów wydajności może być mniejsze niż produkcja, ale tworzone na żądanie, nie stałe.
 
 ## 6. Konfiguracja jako część wydania
@@ -78,7 +78,7 @@ jej nie dostanie.
   tego zasobu, inaczej narzędzie od razu cofnie zmianę.
 - Ta sama zmiana trafia do repozytorium (kod, IaC, manifest) **w ciągu jednego dnia roboczego**; potem wznawiasz
   synchronizację. Zasada: co istnieje na produkcji, istnieje w kontroli wersji.
-- Wykrywanie dryfu (ops-iac-terraform, GitOps) i tak złapie zmiany zapomniane.
+- Wykrywanie dryfu (GitOps) i tak złapie zmiany zapomniane.
 
 ## 6c. Pierwsze wdrożenie (sprint zero)
 Wdrożenie MVP robisz zaraz po szkielecie, nie po funkcjach — to tani test platformy i całej ścieżki do produkcji.

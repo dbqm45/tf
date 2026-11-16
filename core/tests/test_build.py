@@ -92,6 +92,38 @@ def main() -> int:
         check(sec and all(w in body for w in ("scout", "równolegle", "świeże spojrzenie", "Nie dziel")),
               f"OR-3 {k}: sekcja „Kiedy delegujesz” z przypadkami, w których przekazanie się opłaca")
 
+    # Skill wyłączony (metadata.status: nieaktywny, docs/inactive-skills.md): zostaje w instalacji, ale znika z list
+    # skilli ról, person, agentów wspólnych, konsultantów i always_skills — bez zmiany plików YAML nakładek.
+    skills_meta = {"a": {}, "b": {"metadata": {"status": "nieaktywny"}}, "c": {"metadata": {"status": "aktywny"}}}
+    check(b.inactive_skills(skills_meta) == {"b"}, f"IN-1: wyłączony tylko skill ze statusem nieaktywny: "
+          f"{b.inactive_skills(skills_meta)}")
+    cfg_in = {"always_skills": ["a", "b"], "_packs": {"p": {"always_skills": ["b", "c"]}},
+              "shared_agents": {"s": {"skills": ["b", "c"]}}, "consultants": {"k": {"skills": ["a", "b"]}}}
+    roles_in = {"r": {"skills": ["a", "b"], "preload": ["b"]}}
+    personas_in = {"x": {"skills": ["b", "c"], "methods": ["b"], "role_skills": {"r": ["a", "b"]}}}
+    b.drop_inactive(cfg_in, roles_in, personas_in, {"b"})
+    check(cfg_in["always_skills"] == ["a"] and cfg_in["_packs"]["p"]["always_skills"] == ["c"],
+          f"IN-2: always_skills rdzenia i nakładki bez wyłączonych: {cfg_in}")
+    check(cfg_in["shared_agents"]["s"]["skills"] == ["c"] and cfg_in["consultants"]["k"]["skills"] == ["a"],
+          f"IN-3: agenci wspólni i konsultanci bez wyłączonych: {cfg_in}")
+    check(roles_in["r"] == {"skills": ["a"], "preload": []}, f"IN-4: rola bez wyłączonych: {roles_in}")
+    check(personas_in["x"]["skills"] == ["c"] and personas_in["x"]["methods"] == []
+          and personas_in["x"]["role_skills"] == {"r": ["a"]}, f"IN-5: persona bez wyłączonych: {personas_in}")
+    check(cfg_in["_inactive"] == ["b"], f"IN-6: lista wyłączonych w konfiguracji: {cfg_in.get('_inactive')}")
+    _, warnings = b.skill_usage(["a", "b"], {"a"}, {"_inactive": ["b"]})
+    check(warnings == [], f"IN-7: wyłączony skill bez ostrzeżenia „nie jest używany”: {warnings}")
+    texts = {"s/SKILL.md": "Zobacz tool-nx.\nInne: tool-nxx, my-tool-nx, tool-nx-plus.\n(**tool-nx**), lista: a, tool-nx"}
+    hits = b.inactive_mentions({"tool-nx"}, texts)
+    check(hits == ["s/SKILL.md:1: tool-nx", "s/SKILL.md:3: tool-nx", "s/SKILL.md:3: tool-nx"],
+          f"IN-10: wzmianka o wyłączonym skillu tylko jako całe słowo, z numerem linii: {hits}")
+    # Treść fabryki (aktywne skille i wygenerowani agenci) nie odsyła do skilli wyłączonych.
+    left = b.inactive_mentions(set(b.inactive_skills(b.load_skills())), b.active_texts())
+    check(not left, f"IN-11: aktywne skille i agenci odsyłają do wyłączonych skilli: {left[:5]}")
+    catalog = b.render_catalog()
+    for n in b.inactive_skills(b.load_skills()):
+        check(f"- `{n}` —" not in catalog, f"IN-8: wyłączony skill {n} poza listą wymiarów katalogu")
+        check(n in catalog.split("## Wyłączone skille", 1)[-1], f"IN-9: wyłączony skill {n} w sekcji „Wyłączone skille”")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów build.py")

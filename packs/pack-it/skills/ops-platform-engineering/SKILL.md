@@ -3,7 +3,7 @@ name: ops-platform-engineering
 description: Użyj przy wewnętrznej platformie deweloperskiej (IDP) — platforma jako produkt, złote ścieżki, portal, samoobsługa, metryki.
 metadata:
   przeglad: "2027-04-17"
-  katalog: "Użyj przy budowie i prowadzeniu wewnętrznej platformy deweloperskiej dla wielu zespołów — platforma jako produkt (użytkownicy to deweloperzy, odkrywanie bólów, roadmapa, metryki adopcji), najcieńsza użyteczna platforma, złote ścieżki i szablony, samoobsługa z barierami, portal (np. Backstage), abstrakcje infrastruktury (kompozycje Crossplane, moduły Terraform, operatory Kubernetes), GitOps (Argo CD, Flux), policy as code, topologia zespołu platformowego i tryby interakcji, miary sukcesu (DORA, SPACE, ankiety doświadczenia deweloperów), CNCF Platforms White Paper i Platform Engineering Maturity Model. Wynik to karta platformy i roadmapa. Nie do podziału organizacji na typy zespołów (proc-team-topologies), budowy pipeline'ów (ops-ci-cd), manifestów Kubernetes (ops-kubernetes), pisania modułów Terraform (ops-iac-terraform), definicji metryk DORA (eng-continuous-delivery) ani fundamentu kont i sieci chmury (ops-cloud-landing-zones)."
+  katalog: "Użyj przy budowie i prowadzeniu wewnętrznej platformy deweloperskiej dla wielu zespołów — platforma jako produkt (użytkownicy to deweloperzy, odkrywanie bólów, roadmapa, metryki adopcji), najcieńsza użyteczna platforma, złote ścieżki i szablony, samoobsługa z barierami, portal (np. Backstage), abstrakcje infrastruktury (kompozycje Crossplane, moduły Terraform, operatory Kubernetes), GitOps (Argo CD, Flux), policy as code, topologia zespołu platformowego i tryby interakcji, miary sukcesu (DORA, SPACE, ankiety doświadczenia deweloperów), CNCF Platforms White Paper i Platform Engineering Maturity Model. Wynik to karta platformy i roadmapa. Nie do podziału organizacji na typy zespołów (proc-team-topologies), budowy pipeline'ów (ops-ci-cd), manifestów Kubernetes (ops-kubernetes), pisania modułów Terraform, definicji metryk DORA (eng-continuous-delivery) ani fundamentu kont i sieci chmury (ops-cloud-landing-zones)."
   slowa: "platforma wewnętrzna, platforma dla wielu zespołów, zespoły wdrażają po swojemu, od czego zacząć platformę, platforma której nikt nie użyje, czy platforma się opłaciła, metryki platformy, zwrot z platformy, wskaźniki sukcesu platformy, internal developer platform, IDP, platform engineering, zespół platformowy, złota ścieżka, golden path, paved road, portal deweloperski, Backstage, samoobsługa, self-service, Crossplane, GitOps, Argo CD, Flux, policy as code, developer experience, DevEx, adopcja platformy, roadmapa platformy, karta platformy, ticket do ops, szablony serwisów, dojrzałość platformy, SPACE, ankieta deweloperów"
   widocznosc: nazwa
 ---
@@ -11,8 +11,8 @@ metadata:
 # Platform engineering — wewnętrzna platforma deweloperska
 
 **Granica.** Typy zespołów i tryby interakcji (platform team, X-as-a-Service) — **proc-team-topologies**; tutaj tylko ich
-zastosowanie do zespołu platformowego. Pipeline'y — **ops-ci-cd**; manifesty — **ops-kubernetes**; moduły Terraform —
-**ops-iac-terraform**; definicje DORA — **eng-continuous-delivery**; fundament kont i sieci — **ops-cloud-landing-zones**;
+zastosowanie do zespołu platformowego. Pipeline'y — **ops-ci-cd**; manifesty — **ops-kubernetes**;
+definicje DORA — **eng-continuous-delivery**; fundament kont i sieci — **ops-cloud-landing-zones**;
 wydania i GitOps od strony wdrożenia — **ops-release-engineering**. Zmiany na realnych klastrach i kontach platformy
 proponujesz jako plan (diff, dry-run, okno zmian) i stosujesz po zatwierdzeniu przez człowieka.
 
@@ -23,8 +23,7 @@ proponujesz jako plan (diff, dry-run, okno zmian) i stosujesz po zatwierdzeniu p
 2. **Użytkownicy i bóle.** Użytkownikiem są zespoły deweloperskie. Przeprowadź 8–12 wywiadów (kilka zespołów, różne
    doświadczenie), zmapuj ścieżkę „pomysł → produkcja” z czasami oczekiwania, zbierz zgłoszenia do ops. Zapisz bóle
    z liczbą zespołów i kosztem (czas, ryzyko). Bez tego roadmapa jest zgadywaniem.
-3. **Platforma jako produkt.** Właściciel produktu, wizja, roadmapa wg wpływu na bóle (proc-product-discovery, RICE/WSJF
-   z proc-lean), publiczny backlog, cykl opinii. Platforma jest **dobrowolna**: zespół wybiera ją, bo jest łatwiejsza
+3. **Platforma jako produkt.** Właściciel produktu, wizja, roadmapa wg wpływu na bóle (proc-product-discovery, RICE/WSJF), publiczny backlog, cykl opinii. Platforma jest **dobrowolna**: zespół wybiera ją, bo jest łatwiejsza
    (CNCF Platforms White Paper: platforma nie powinna być obowiązkowa ani blokować narzędzi spoza niej). Obowiązkowe są
    tylko wymagania (bezpieczeństwo, koszt), nie sposób ich spełnienia.
 4. **Najcieńsza użyteczna platforma (TVP).** Zacznij od jednego, najboleśniejszego przepływu dla 1–2 zespołów pilotażowych
@@ -41,7 +40,7 @@ proponujesz jako plan (diff, dry-run, okno zmian) i stosujesz po zatwierdzeniu p
 
 | Potrzeba | Narzędzie | Uwaga |
 |---|---|---|
-| spójne zasoby chmury z własną polityką | moduły Terraform/OpenTofu (ops-iac-terraform) | prosty start; samoobsługa wymaga potoku i stanu |
+| spójne zasoby chmury z własną polityką | moduły Terraform/OpenTofu | prosty start; samoobsługa wymaga potoku i stanu |
 | własne API typu „Database” nad wieloma zasobami | Crossplane: XRD i Composition | reconcile w klastrze; koszt: model CRD i debugowanie |
 | logika dla jednego rodzaju zasobu w klastrze | operator Kubernetes | utrzymujesz kod; używaj gotowych, gdy są |
 | wdrożenie stanu z gita | GitOps: Argo CD lub Flux | reconcile i drift; wydania — ops-release-engineering |

@@ -80,7 +80,7 @@ Prowadzisz krótki dziennik (co sprawdzone, wynik), żeby nie sprawdzać dwa raz
 
 ## Granice
 - Incydent produkcyjny (dowodzenie, komunikacja, wycofanie): ops-sre-incidents. Objawy serwera i sieci (DNS, TLS,
-  porty, procesy): ops-linux-networking. Wydajność: qa-performance-testing, eng-algorithms-data-structures.
+  porty, procesy): ops-linux-networking. Wydajność: qa-performance-testing.
 - Zgłoszenie z zewnątrz (kategoria, odtworzenie, brief dla wykonawcy): proc-issue-triage. Niestabilne testy w CI
   (kwarantanna, metryki): qa-regression.
 

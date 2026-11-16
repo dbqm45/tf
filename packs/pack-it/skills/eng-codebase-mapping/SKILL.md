@@ -51,7 +51,7 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    HEAD; „krytyczne” = nikt aktywny, „wysokie” = jedna osoba). W zespole jednoosobowym wszędzie wyjdzie 1 — to fakt,
    nie wniosek. W mapie tylko login lub inicjały i obszar, bez ocen ludzi.
 2. **Graf zależności z narzędzi**, nie z czytania:
-   - Nx: `nx graph --file=graph.json` (projekty i zależności), granice modułów z tagów (tool-nx);
+   - Nx: `nx graph --file=graph.json` (projekty i zależności), granice modułów z tagów;
    - TS/JS: `madge --json` / `madge --circular`, dependency-cruiser (`--collapse`, `--focus`, `--reaches`, `--metrics`);
      Java: `jdeps`, ArchUnit, moduły Maven/Gradle; inne języki i ślepe plamy narzędzi: `references/wide-scan.md`.
    - Python, TS/JS, Java, C# i Go bez tych narzędzi (brak instalacji, brak sieci): **uruchom**
