@@ -79,6 +79,10 @@ Sama treść SKILL.md niczego nie dowodzi.
    - Skill rzadko potrzebny: `metadata.widocznosc: nazwa` — na liście tylko nazwa (nie zabiera budżetu opisów),
      a hook `skill_hint` podpowiada go z opisem przy pasującym poleceniu (`.tf/factory/skill_profile.py`).
    - Skill uruchamiany tylko ręcznie: `disable-model-invocation: true` i scenariusze wyłącznie `no-trigger`.
+   - Skill bez przewagi w pomiarze (model bez skilla odpowiada tak samo): wyłącz, nie usuwaj —
+     `disable-model-invocation: true` i `metadata.status: "nieaktywny"`; scenariusze `trigger` przenieś do
+     `tests/skill_evals/inactive/<skill>.json`. `build.py` usuwa wtedy skill z ról, person i katalogu. Powód i wyniki
+     wpisz w `docs/inactive-skills.md` repozytorium fabryki.
    - `metadata.przeglad`: termin przeglądu treści (RRRR-MM-DD). Ustawia go `python3 .tf/factory/freshness.py --reviewed
      <nazwa>` po sprawdzeniu faktów w źródłach (dziś + interwał: wersje 3 mies., przepisy 3–6, metody 12).
 7. **Wpięcie:** dopisz skill do roli (`.tf/config/roles/*.yaml`) albo persony i uruchom `python3 .tf/factory/build.py`.

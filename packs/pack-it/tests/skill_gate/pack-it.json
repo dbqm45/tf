@@ -172,8 +172,8 @@
   "offline": "2026-10-22"
  },
  "eng-algorithms-data-structures": {
-  "fingerprint": "12f1268f0562db79",
-  "offline": "2026-11-15"
+  "fingerprint": "5ed576443fb4d134",
+  "offline": "2026-11-16"
  },
  "eng-behavior-preserving-refactoring": {
   "fingerprint": "724505052f3cd62c",
@@ -200,8 +200,8 @@
   "offline": "2026-11-15"
  },
  "eng-design-patterns": {
-  "fingerprint": "a0219d04efcb68e3",
-  "offline": "2026-11-15"
+  "fingerprint": "9f796a47618ae5d4",
+  "offline": "2026-11-16"
  },
  "eng-design-principles": {
   "fingerprint": "b38a95460c75040c",
@@ -260,8 +260,8 @@
   "offline": "2026-11-15"
  },
  "fe-technical-seo": {
-  "fingerprint": "ab1dd88f689a377b",
-  "offline": "2026-10-24"
+  "fingerprint": "30bd640d4f922bc8",
+  "offline": "2026-11-16"
  },
  "fe-web-platform": {
   "fingerprint": "6f7f5f9e330871a2",
@@ -348,8 +348,8 @@
   "offline": "2026-10-22"
  },
  "ops-iac-terraform": {
-  "fingerprint": "383b5bcbe0c67401",
-  "offline": "2026-10-22"
+  "fingerprint": "92bc7acf74defc6f",
+  "offline": "2026-11-16"
  },
  "ops-kubernetes": {
   "fingerprint": "e63efe4607ef13f3",
@@ -423,8 +423,8 @@
   "offline": "2026-10-23"
  },
  "pm-saas-metrics": {
-  "fingerprint": "ac7390528002d10a",
-  "offline": "2026-10-23"
+  "fingerprint": "e5793c87d5d656a1",
+  "offline": "2026-11-16"
  },
  "pm-stakeholders": {
   "fingerprint": "ffb89e8f83398c87",
@@ -439,8 +439,8 @@
   "offline": "2026-11-15"
  },
  "proc-lean": {
-  "fingerprint": "45478877c4960d0c",
-  "offline": "2026-10-22"
+  "fingerprint": "5f13afe1262a07fe",
+  "offline": "2026-11-16"
  },
  "proc-product-discovery": {
   "fingerprint": "92f4048f9c7334ff",
@@ -559,8 +559,8 @@
   "offline": "2026-10-22"
  },
  "tool-nx": {
-  "fingerprint": "40049b3a3cf1c25e",
-  "offline": "2026-10-22"
+  "fingerprint": "014e87a4267984a5",
+  "offline": "2026-11-16"
  },
  "tool-playwright": {
   "fingerprint": "da6556f105efed1c",

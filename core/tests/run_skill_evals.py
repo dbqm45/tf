@@ -59,6 +59,13 @@ def skill_meta(name: str) -> dict:
     return meta
 
 
+def skill_inactive(name: str) -> bool:
+    """Skill wyłączony po pomiarze (`metadata.status: nieaktywny`): scenariusze trigger leżą w skill_evals/inactive/."""
+    p = SKILLS / name / "SKILL.md"
+    m = re.match(r"^---\n(.*?)\n---\n", p.read_text(encoding="utf-8"), re.S) if p.exists() else None
+    return bool(m and re.search(r"^\s+status:\s*[\"']?nieaktywny[\"']?", m.group(1), re.M))
+
+
 def validate_file(path: Path, holdout: bool = False) -> list[str]:
     """Plik scenariuszy skilla. `holdout`: plik zamkniętego zbioru testowego (skill_evals/holdout/) — tylko scenariusze
     trigger ze sprawdzeniami, bez minimum trzech i bez no-trigger (granice pilnuje plik główny)."""
@@ -79,6 +86,9 @@ def validate_file(path: Path, holdout: bool = False) -> list[str]:
         for s in sc:
             if s.get("expect") != "trigger":
                 errs.append(f"{path.name}#{s.get('id')}: w holdout tylko scenariusze trigger (pomiar wyniku)")
+    elif skill_inactive(str(name)):
+        if not sc:
+            errs.append(f"{path.name}: wyłączony skill bez scenariusza no-trigger")
     elif len(sc) < 3:
         errs.append(f"{path.name}: {len(sc)} scenariuszy (wymagane co najmniej 3)")
     manual = skill_meta(str(name)).get("disable-model-invocation") == "true"

@@ -1,7 +1,9 @@
 ---
 name: ops-iac-terraform
 description: Użyj przy infrastrukturze jako kod (Terraform/OpenTofu) — moduły, stan, zmienne, sieć, IAM, bazy, storage.
+disable-model-invocation: true
 metadata:
+  status: "nieaktywny"  # pomiar 2026-11-16: docs/inactive-skills.md
   przeglad: "2027-04-17"
   katalog: "Użyj przy infrastrukturze jako kod — Terraform/OpenTofu, moduły, stan, zmienne, zasoby chmurowe (sieć, IAM, bazy, storage). Nie do pipeline'ów (ops-ci-cd) ani kontenerów (ops-docker)."
 ---

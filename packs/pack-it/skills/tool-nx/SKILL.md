@@ -1,7 +1,9 @@
 ---
 name: tool-nx
 description: Użyj przy monorepo Nx — projekty i biblioteki, tagi i granice modułów, generatory, cache, affected, release, migrate.
+disable-model-invocation: true
 metadata:
+  status: "nieaktywny"  # pomiar 2026-11-16: docs/inactive-skills.md
   przeglad: "2027-01-17"
   katalog: "Użyj w monorepo Nx — struktura projektów i bibliotek, tagi i granice modułów, generatory, zadania i cache, affected, nx release, migracje (nx migrate). Także przy odwzorowaniu granic kontekstów DDD na biblioteki Nx. Nie do konwencji frameworka (fw-*) ani języka (lang-*)."
 ---
