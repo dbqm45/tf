@@ -307,7 +307,9 @@ Decyzje właściciela z 2026-11-14, po kroku G (do kroku H):
 - **Zgoda na płatny pomiar** po kroku G (ten sam zestaw i nowa historyjka, która sprawdza kawałek zablokowany
   pytaniem — F3). Zgoda dotyczy tego jednego pomiaru.
   Wykonany: `docs/evals/2026-11-14-pomiar-po-kroku-g.md` (12,67 USD); zgoda wykorzystana.
-- **D9 — na sam koniec.** Podgląd i pytania jako mod w oknie Claude Code wracają do decyzji po kroku H.
+- **D9 — odłożone (decyzja właściciela 2026-11-16).** Podgląd i pytania jako mod w oknie Claude Code wracają, gdy
+  praca z fabryką przeniesie się do lokalnego Claude Code: mod nie rysuje w `-p` (`tf work`, pomiary), w sesjach
+  chmurowych ani w piaskownicy. Do tego czasu zostają strona HTML (`tf status --open`), `tf status` i linia stanu.
 - **D10 — zgodnie z rekomendacją:** poziom `lead` dla wagi pełnej i długich przebiegów bez nadzoru, ale dopiero
   po pomiarze na własnych zadaniach i domyślnie wyłączony.
 - **D11 i D13 — właściciel zostawia wybór fabryce** („tak, żeby było jak najlepiej i najbardziej efektywnie”).
