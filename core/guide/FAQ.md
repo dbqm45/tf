@@ -44,17 +44,20 @@ i MINOR. Wydanie MAJOR, które zmienia publiczne API fabryki, wymaga Twojej decy
 
 ## Jak dodać ustawienia firmy?
 Standardy i domyślne ustawienia całej organizacji trzyma jedna **nakładka firmowa** we własnym repozytorium firmy.
-Robisz ją raz, potem instalujesz w każdym projekcie.
+Robisz ją raz, potem instalujesz w każdym projekcie. Pełny przewodnik, także generowanie z dokumentów firmy (np.
+Confluence): `org/README.md` w repozytorium fabryki.
 1. **Szkielet.** W klonie repozytorium fabryki (katalog wyniku musi leżeć poza nim):
    ```
-   python3 tools/workspace.py new-org-pack <firma> --out <katalog> --title "Nazwa firmy"
+   python3 org/new_org_pack.py <firma> --out <katalog> --title "Nazwa firmy"
    ```
 2. **Uzupełnij pola `TODO`** (`grep -rn TODO <katalog>`; opis każdego pola: `README.md` w nakładce):
    - `pack.yaml` → `org_defaults.config`: operacje agenta blokowane w firmie (`autonomy.operations`, tylko
      zaostrzanie), ścieżki zawsze do przeglądu człowieka (`autonomy.triage`), limity `tf work` (`work`), profil
      kosztów, języki;
    - `pack.yaml` → `org_defaults.operations.tracker`: tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami;
-   - skill standardów (`skills/<firma>-standardy/`): ustalenia firmy, których model nie zna — najpierw scenariusze
+   - reguły sprawdzalne wzorcem (`analyzers/<firma>-standardy/rules.yaml`, z przykładami w `fixtures/`): działają
+     bez modelu w `tf analyze`; reguły semgrep — `semgrep.yml`, używany w skanie pętli `/tf`;
+   - skill standardów (`skills/<firma>-standardy/`): tylko ustalenia wymagające oceny — najpierw scenariusze
      w `tests/skill_evals/`, potem treść;
    - `settings.json`: uprawnienia Claude Code dla całej firmy.
 3. **Sprawdź** w repozytorium fabryki: `python3 tools/workspace.py check --packs pack-it,pack-<firma> --pack-dir

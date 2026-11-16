@@ -8,7 +8,7 @@ tf init / tf analyze — katalog `.tf/` na wyniki pracy fabryki i modułowy prze
   python3 .tf/factory/analyze.py gate [--module m]          # bramka: moduł na swoim zestawie testowym (fixtures/)
 
 Moduł to katalog z `analyzer.yaml` (name, prefix, title, description, version, applies_when.files_any,
-tier0.script, incremental, gate) w `.tf/factory/analyzers/`, `.tf/analyzers/` albo katalogach z `TF_ANALYZERS_PATH`. Skrypt piętra 0
+tier0.script albo tier0.rules — reguły deklaratywne wykonywane przez rules_scan.py, incremental, gate) w `.tf/factory/analyzers/`, `.tf/analyzers/` albo katalogach z `TF_ANALYZERS_PATH`. Skrypt piętra 0
 dostaje `--root <repo> [--files a,b]` i wypisuje ustalenia jako JSON Lines (rule, title, file, line, snippet,
 severity, confidence, evidence, basis, suggestion). Rdzeń nadaje stabilne `id` (`<prefix>-<6 hex>` z reguły, pliku
 i treści, bez numeru linii), deduplikuje, szereguje, pisze `.tf/reports/<moduł>.md` (checkboxy scalane przy ponownej
@@ -208,10 +208,14 @@ def rank(f: dict) -> tuple:
 
 
 def run_script(m: dict, root: Path, files: list[str] | None) -> tuple[list[dict], str | None]:
-    script = (m.get("tier0") or {}).get("script")
-    if not script:
-        return [], "brak tier0.script w analyzer.yaml"
-    cmd = [sys.executable, str(m["_dir"] / script), "--root", str(root)]
+    tier0 = m.get("tier0") or {}
+    if tier0.get("rules"):     # reguły deklaratywne (rules.yaml) — wykonuje je skaner rdzenia rules_scan.py
+        cmd = [sys.executable, str(Path(__file__).resolve().with_name("rules_scan.py")), "--rules",
+               str(m["_dir"] / tier0["rules"]), "--root", str(root)]
+    elif tier0.get("script"):
+        cmd = [sys.executable, str(m["_dir"] / tier0["script"]), "--root", str(root)]
+    else:
+        return [], "brak tier0.script ani tier0.rules w analyzer.yaml"
     if files is not None:
         cmd += ["--files", ",".join(files)]
     try:

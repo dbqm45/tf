@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy generatora nakładki firmowej: `tools/workspace.py new-org-pack <firma> --out <katalog>` — szablon
-`templates/pack-org/` z polami do uzupełnienia, odmowy (katalog w repo fabryki, istniejący katalog, zła nazwa,
+"""Testy generatora nakładki firmowej: `org/new_org_pack.py <firma> --out <katalog>` — szablon
+`org/template/` z polami do uzupełnienia, odmowy (katalog w repo fabryki, istniejący katalog, zła nazwa,
 zajęty prefiks) i cała droga: instalacja w projekcie przez `install.py --pack-dir` i domyślne organizacji
 (`org_defaults`) w konfiguracji projektu. python3 tests/test_new_org_pack.py"""
 import importlib.util
@@ -15,7 +15,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factor
 
 
 def gen(*args: str) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(ROOT / "tools" / "workspace.py"), "new-org-pack", *args],
+    return subprocess.run([sys.executable, str(ROOT / "org" / "new_org_pack.py"), *args],
                           cwd=ROOT, capture_output=True, text=True, timeout=60)
 
 
@@ -42,7 +42,10 @@ def main() -> int:
         r = gen("acme", "--out", str(out), "--title", "ACME Sp. z o.o.")
         check(r.returncode == 0, f"OP-1: generator działa: {r.stdout}{r.stderr}")
         files = ["pack.yaml", "README.md", "settings.json", "skills/acme-standardy/SKILL.md",
-                 "tests/skill_evals/acme-standardy.json"]
+                 "tests/skill_evals/acme-standardy.json", "analyzers/acme-standardy/analyzer.yaml",
+                 "analyzers/acme-standardy/rules.yaml", "analyzers/acme-standardy/fixtures/naruszenia/expected.json",
+                 "analyzers/acme-standardy/fixtures/czyste/expected.json", "semgrep.yml",
+                 *(f"skills/acme-standardy/references/{a}.md" for a in ("ui", "api", "dane", "wydania"))]
         check(all((out / f).is_file() for f in files), f"OP-1: pliki: {[f for f in files if not (out / f).is_file()]}")
         left = [str(f.relative_to(out)) for f in out.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
         check(not left, f"OP-2: wszystkie pola szablonu podstawione: {left}")
@@ -63,6 +66,9 @@ def main() -> int:
         except (OSError, ValueError):
             ok = False
         check(ok, "OP-5: settings.json i scenariusze to poprawny JSON, scenariusze dla skilla standardów")
+        spis = (out / "skills/acme-standardy/SKILL.md").read_text(encoding="utf-8") if (out / "skills/acme-standardy/SKILL.md").is_file() else ""
+        check(all(f"references/{a}.md" in spis for a in ("ui", "api", "dane", "wydania")) and len(spis.splitlines()) < 60,
+              f"OP-15: SKILL.md to krótki spis wskazujący plik każdego obszaru: {len(spis.splitlines())} linii")
 
         # odmowy: bez zmian na dysku
         r = gen("acme", "--out", str(out))
@@ -76,6 +82,8 @@ def main() -> int:
         check(r.returncode == 2 and not (base / "y").exists(), f"OP-9: zajęty prefiks → kod 2: {r.stdout}{r.stderr}")
 
         # cała droga: instalacja w projekcie i domyślne organizacji w konfiguracji
+        (out / "zrodla").mkdir()
+        (out / "zrodla" / "api.md").write_text("# Standard API (poufne)\n", encoding="utf-8")
         app = base / "app"
         app.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=app, check=True)
@@ -92,6 +100,19 @@ def main() -> int:
             check(any("pack-acme" in lbl and "org_defaults" in lbl for lbl in labels)
                   and not [e for e in comp["_errors"] if "org_defaults" in e],
                   f"OP-11: warstwa organizacji w konfiguracji projektu, bez błędów składania: {labels} {comp['_errors']}")
+            # standardy sprawdzane bez modelu: moduł reguł nakładki działa w projekcie i przechodzi swoją bramkę
+            an = pa.load_yaml(app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml") \
+                if (app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml").is_file() else {}
+            leaked = [str(f) for f in app.rglob("*") if f.is_file() and ".git" not in f.parts
+                      and "Standard API (poufne)" in f.read_text(encoding="utf-8", errors="ignore")]
+            check(not leaked, f"OP-16: dokumenty źródłowe firmy (zrodla/) nie trafiają do projektu: {leaked}")
+            check((app / ".tf/factory/packs/pack-acme/semgrep.yml").is_file(),
+                  "OP-14: semgrep.yml nakładki w .tf/factory/packs/pack-acme/ (skan kawałka pętli /tf)")
+            check(an.get("prefix") == "ACME" and (an.get("tier0") or {}).get("rules") == "rules.yaml",
+                  f"OP-12: moduł reguł firmy zainstalowany, prefiks ustaleń z nazwy firmy: {an}")
+            g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standardy"],
+                               cwd=app, capture_output=True, text=True, timeout=120)
+            check(g.returncode == 0, f"OP-13: bramka modułu reguł na przykładach z szablonu: {g.stdout[-600:]}{g.stderr[-300:]}")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów new-org-pack")

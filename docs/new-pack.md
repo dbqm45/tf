@@ -60,20 +60,15 @@ Nakładka może żyć w innym repozytorium (np. wiedza domenowa razem z jej źr�
   `<katalog>/tests/skill_gate/<id>.json`.
 
 ## Nakładka firmowa
-Standardy i domyślne ustawienia jednej organizacji dla wszystkich jej projektów. Szkielet z polami `TODO` poza
-repozytorium fabryki:
-```
-python3 tools/workspace.py new-org-pack <firma> --out <katalog> [--prefix p-] [--title "Nazwa firmy"]
-```
-Szablon: `templates/pack-org/` (pack.yaml, skill standardów z scenariuszami, `settings.json`, README z listą pól).
-Nakładka firmowa to zwykła nakładka z kluczem `org_defaults`:
+Standardy i domyślne ustawienia jednej organizacji: osobny zestaw w katalogu `org/` (generator `org/new_org_pack.py`,
+szablon `org/template/`, przewodnik `org/README.md`). Nakładka firmowa to zwykła nakładka z kluczem `org_defaults`:
 - `config` — domyślne organizacji między silnikiem a projektem (`autonomy`, `tiers`, `profiles`, `default_profile`,
   `work`, `loop`, `steps`, `default_language`, `default_commit_language`); czytają je `build.py`, `guard_bash`
   (polityka autonomii nadal tylko zaostrza), `tf risk`, `tf work` i `tf config show` (źródło „organizacja”);
-- `operations.tracker` — domyślny tracker, prefiksy i `fields` karty operacyjnej; adresu (`url`) nie ma, bo dokąd
-  idzie token, mówi tylko zmienna `JIRA_BASE_URL`.
+- `operations.tracker` — domyślny tracker, prefiksy i `fields` karty operacyjnej; bez adresu (`url`).
 W projekcie najwyżej jedna nakładka z `org_defaults`; klucz spoza listy to błąd `build.py check` bez skutku.
-Instalacja: `tf install --pack-dir <katalog|repozytorium git> --add pack-<firma>`.
+Moduł reguł z `tier0.rules` wykonuje skaner rdzenia `.tf/factory/rules_scan.py`; `semgrep.yml` nakładki trafia do
+`.tf/factory/packs/<id>/` i do skanu kawałka pętli.
 
 ## Wersjonowanie
 - Wersję rdzenia i CHANGELOG liczy workflow wydania z Conventional Commits (`docs/RELEASING.md`). Wersji nakładki

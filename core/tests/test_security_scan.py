@@ -176,6 +176,15 @@ def main() -> int:
         check(sem and ".semgrep.yml" in sem[0], f"S-7: .semgrep.yml produktu w konfiguracji: {sem[:1]}")
         (repo / ".semgrep.yml").unlink()
 
+        # S-7b: reguły semgrep nakładek (np. firmowej) z .tf/factory/packs/<id>/semgrep.yml dochodzą do skanu kawałka
+        write(repo, ".tf/factory/packs/pack-firma/semgrep.yml", "rules: []\n")
+        log.unlink(missing_ok=True)
+        run("scan", "--out", str(out), cwd=repo)
+        sem = [c for c in log_of(log) if c[0] == "semgrep"]
+        check(sem and any(x.endswith(".tf/factory/packs/pack-firma/semgrep.yml") for x in sem[0]),
+              f"S-7b: reguły semgrep nakładki firmowej w konfiguracji: {sem[:1]}")
+        (repo / ".tf" / "factory" / "packs" / "pack-firma" / "semgrep.yml").unlink()
+
         # S-8: zmiana lockfile'a npm uruchamia npm audit; wynik jako SARIF z linią w lockfile'u
         write(repo, "package-lock.json", '{\n  "packages": {\n    "": {},\n    "node_modules/braces": {"version": "3.0.2"}\n  }\n}\n')
         log.unlink(missing_ok=True)
