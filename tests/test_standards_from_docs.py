@@ -46,7 +46,7 @@ def tool(*args: str) -> subprocess.CompletedProcess:
 
 def digest(d: Path) -> str:
     h = hashlib.sha256()
-    for f in sorted(p for p in d.rglob("*") if p.is_file() and "zrodla" not in p.parts):
+    for f in sorted(p for p in d.rglob("*") if p.is_file() and "sources" not in p.parts):
         h.update(f.relative_to(d).as_posix().encode() + f.read_bytes())
     return h.hexdigest()
 
@@ -69,7 +69,7 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(ROOT / "org" / "new_org_pack.py"), "acme", "--out", str(pack)],
                            capture_output=True, text=True, timeout=60)
         assert r.returncode == 0, r.stdout + r.stderr
-        src = pack / "zrodla"
+        src = pack / "sources"
         src.mkdir()
         (src / "api.md").write_text(API_MD, encoding="utf-8")
         (src / "kopia-api.md").write_text("# Kopia\n\n## Błędy\nKażdy endpoint zwraca błędy w formacie "
@@ -82,17 +82,17 @@ def main() -> int:
 
         # SD-1: podział na sekcje
         r = tool("split", str(pack))
-        man = src / "sekcje.jsonl"
+        man = src / "sections.jsonl"
         secs = [json.loads(ln) for ln in man.read_text(encoding="utf-8").splitlines()] if man.is_file() else []
-        by_head = {s["naglowek"]: s for s in secs}
+        by_head = {s["heading"]: s for s in secs}
         check(r.returncode == 0 and {"Standard API › Błędy", "Standard API › Wersje", "Interfejs › Kolory",
                                      "Wydania › Dni wdrożeń", "Wydania › Piątek"} <= set(by_head),
               f"SD-1: sekcje z Markdown, HTML i Word z ścieżką nagłówków: {sorted(by_head)} {r.stdout}{r.stderr}")
-        dup = [s for s in secs if s["plik"] == "kopia-api.md"]
-        check(dup and dup[0].get("duplikat") == by_head.get("Standard API › Błędy", {}).get("id"),
+        dup = [s for s in secs if s["file"] == "kopia-api.md"]
+        check(dup and dup[0].get("duplicate_of") == by_head.get("Standard API › Błędy", {}).get("id"),
               f"SD-2: powtórzona treść oznaczona jako duplikat pierwszej sekcji: {dup}")
-        check((src / "ZADANIE.md").is_file() and "przypisanie.json" in (src / "ZADANIE.md").read_text(encoding="utf-8"),
-              "SD-3: polecenie dla agenta (ZADANIE.md) z formatem przypisania")
+        check((src / "TASK.md").is_file() and "assignment.json" in (src / "TASK.md").read_text(encoding="utf-8"),
+              "SD-3: polecenie dla agenta (TASK.md) z formatem przypisania")
         if fails:
             for f in fails:
                 print(f"✗ {f}")
@@ -101,34 +101,34 @@ def main() -> int:
 
         sid = lambda h: by_head[h]["id"]
         good = {
-            "ustalenia": [
-                {"id": "U1", "sekcja": sid("Standard API › Błędy"), "obszar": "api", "rodzaj": "ocena",
-                 "cytat": "błędy w formacie application/problem+json zgodnie z RFC 9457",
-                 "tresc": "Błędy API w formacie problem details (RFC 9457)."},
-                {"id": "U2", "sekcja": sid("Standard API › Wersje"), "obszar": "api", "rodzaj": "wzorzec",
-                 "cytat": "zaczyna się od /v1/ albo wyższej wersji",
-                 "tresc": "Ścieżka endpointu publicznego z wersją /vN/.",
-                 "regula": {"id": "api-sciezka-bez-wersji", "title": "endpoint bez wersji w ścieżce",
+            "findings": [
+                {"id": "U1", "section": sid("Standard API › Błędy"), "area": "api", "kind": "judgement",
+                 "quote": "błędy w formacie application/problem+json zgodnie z RFC 9457",
+                 "statement": "Błędy API w formacie problem details (RFC 9457)."},
+                {"id": "U2", "section": sid("Standard API › Wersje"), "area": "api", "kind": "pattern",
+                 "quote": "zaczyna się od /v1/ albo wyższej wersji",
+                 "statement": "Ścieżka endpointu publicznego z wersją /vN/.",
+                 "rule": {"id": "api-sciezka-bez-wersji", "title": "endpoint bez wersji w ścieżce",
                             "files": ["src/api/**"], "forbid": "@(Get|Post|Put|Delete)\\(['\"]/(?!v\\d)",
                             "severity": "średnia", "suggestion": "dodaj /v1/ na początku ścieżki",
-                            "naruszenie": {"plik": "src/api/orders.ts", "tresc": "@Get('/orders')"},
-                            "zgodne": {"plik": "src/api/orders.ts", "tresc": "@Get('/v1/orders')"}}},
-                {"id": "U4", "sekcja": sid("Interfejs › Kolory"), "obszar": "ui", "rodzaj": "wzorzec",
-                 "cytat": "nigdy wpisane na sztywno", "tresc": "Kolory tylko z tokenów.",
-                 "regula": {"id": "ui-kolor-na-sztywno", "title": "kolor wpisany na sztywno",
+                            "violation": {"file": "src/api/orders.ts", "content": "@Get('/orders')"},
+                            "compliant": {"file": "src/api/orders.ts", "content": "@Get('/v1/orders')"}}},
+                {"id": "U4", "section": sid("Interfejs › Kolory"), "area": "ui", "kind": "pattern",
+                 "quote": "nigdy wpisane na sztywno", "statement": "Kolory tylko z tokenów.",
+                 "rule": {"id": "ui-kolor-na-sztywno", "title": "kolor wpisany na sztywno",
                             "files": ["src/components/**"], "forbid": "#[0-9a-fA-F]{6}\\b", "severity": "niska",
-                            "naruszenie": {"plik": "src/components/Card.css", "tresc": "color: #1a2b3c;"},
-                            "zgodne": {"plik": "src/components/Card.css", "tresc": "color: var(--ink);"}}},
-                {"id": "U5", "sekcja": sid("Wydania › Dni wdrożeń"), "obszar": "wydania", "rodzaj": "ocena",
-                 "cytat": "tylko od poniedziałku do czwartku", "tresc": "Wdrożenia produkcyjne pon.–czw.",
-                 "sprzeczne_z": ["U6"]},
-                {"id": "U6", "sekcja": sid("Wydania › Piątek"), "obszar": "wydania", "rodzaj": "ocena",
-                 "cytat": "możliwe po zgodzie kierownika zespołu", "tresc": "Piątek po zgodzie kierownika.",
-                 "sprzeczne_z": ["U5"]},
+                            "violation": {"file": "src/components/Card.css", "content": "color: #1a2b3c;"},
+                            "compliant": {"file": "src/components/Card.css", "content": "color: var(--ink);"}}},
+                {"id": "U5", "section": sid("Wydania › Dni wdrożeń"), "area": "releases", "kind": "judgement",
+                 "quote": "tylko od poniedziałku do czwartku", "statement": "Wdrożenia produkcyjne pon.–czw.",
+                 "conflicts_with": ["U6"]},
+                {"id": "U6", "section": sid("Wydania › Piątek"), "area": "releases", "kind": "judgement",
+                 "quote": "możliwe po zgodzie kierownika zespołu", "statement": "Piątek po zgodzie kierownika.",
+                 "conflicts_with": ["U5"]},
             ],
-            "pominiete": [{"sekcja": sid("Standard API › Ogólne"), "powod": "ogólna praktyka, którą zna każdy model"}],
+            "skipped": [{"section": sid("Standard API › Ogólne"), "reason": "ogólna praktyka, którą zna każdy model"}],
         }
-        asg = src / "przypisanie.json"
+        asg = src / "assignment.json"
 
         def run_check(data) -> subprocess.CompletedProcess:
             asg.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -137,16 +137,16 @@ def main() -> int:
         r = run_check(good)
         check(r.returncode == 0, f"SD-4: poprawne przypisanie przechodzi kontrolę: {r.stdout}{r.stderr}")
         for name, mutate, needle in [
-            ("cytat spoza sekcji", lambda d: d["ustalenia"][0].update(cytat="błędy zawsze w formacie XML"), "cytat"),
-            ("sekcja bez ustalenia i bez powodu pominięcia", lambda d: d.update(pominiete=[]), "Ogólne"),
-            ("przykład zgodny łamie regułę", lambda d: d["ustalenia"][1]["regula"]["zgodne"].update(tresc="@Get('/x')"),
-             "zgodne"),
+            ("cytat spoza sekcji", lambda d: d["findings"][0].update(quote="błędy zawsze w formacie XML"), "quote"),
+            ("sekcja bez ustalenia i bez powodu pominięcia", lambda d: d.update(skipped=[]), "Ogólne"),
+            ("przykład zgodny łamie regułę", lambda d: d["findings"][1]["rule"]["compliant"].update(content="@Get('/x')"),
+             "compliant"),
             ("przykład naruszenia nie łamie reguły",
-             lambda d: d["ustalenia"][2]["regula"]["naruszenie"].update(tresc="color: var(--x);"), "naruszenie"),
-            ("nieznany obszar", lambda d: d["ustalenia"][0].update(obszar="backend"), "obszar"),
-            ("nieznana sekcja", lambda d: d["ustalenia"][0].update(sekcja="nie-ma"), "sekcja"),
-            ("sprzeczność bez pary", lambda d: d["ustalenia"][3].update(sprzeczne_z=["U9"]), "U9"),
-            ("zły wzorzec", lambda d: d["ustalenia"][1]["regula"].update(forbid="(["), "wyrażenie"),
+             lambda d: d["findings"][2]["rule"]["violation"].update(content="color: var(--x);"), "violation"),
+            ("nieznany obszar", lambda d: d["findings"][0].update(area="backend"), "area"),
+            ("nieznana sekcja", lambda d: d["findings"][0].update(section="nie-ma"), "section"),
+            ("sprzeczność bez pary", lambda d: d["findings"][3].update(conflicts_with=["U9"]), "U9"),
+            ("zły wzorzec", lambda d: d["findings"][1]["rule"].update(forbid="(["), "wyrażenie"),
         ]:
             bad = copy.deepcopy(good)
             mutate(bad)
@@ -163,7 +163,7 @@ def main() -> int:
         check("RFC 9457" in api and "api.md › Standard API › Błędy" in api and "kolor" not in api.lower()
               and "[U2]" not in api,
               f"SD-6: ustalenie z cytatem i źródłem w pliku swojego obszaru, wzorce tylko w rules.yaml: {api}")
-        wyd = (refs / "wydania.md").read_text(encoding="utf-8")
+        wyd = (refs / "releases.md").read_text(encoding="utf-8")
         check("U6" in wyd and "sprzeczn" in wyd.lower(), f"SD-6: sprzeczność oznaczona przy ustaleniu: {wyd}")
         mod = pack / "analyzers" / "acme-standardy"
         rules = rs.load_rules(mod / "rules.yaml")
@@ -176,7 +176,7 @@ def main() -> int:
         clean = rs.scan(rules, mod / "fixtures/czyste/repo", rs.repo_files(mod / "fixtures/czyste/repo"))
         check(found == expected and ("api-sciezka-bez-wersji", "src/api/orders.ts") in expected and not clean,
               f"SD-8: przykłady reguł w fixtures, bramka modułu spełniona: {found} vs {expected}; czyste: {clean}")
-        rap = (src / "RAPORT.md").read_text(encoding="utf-8") if (src / "RAPORT.md").is_file() else ""
+        rap = (src / "REPORT.md").read_text(encoding="utf-8") if (src / "REPORT.md").is_file() else ""
         check("U5" in rap and "U6" in rap and "ogólna praktyka" in rap and "kopia-api.md" in rap,
               f"SD-9: raport: sprzeczności, pominięte z powodem, duplikaty: {rap}")
         app = base / "app"

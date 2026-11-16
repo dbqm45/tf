@@ -11,7 +11,7 @@ metadata:
 
 Ten plik to spis. Ustalenia każdego obszaru są w osobnym pliku: **wczytaj tylko plik obszaru, którego dotyczy
 zadanie** (zmiana w samym wyglądzie strony → tylko `ui.md`; nowy endpoint → `api.md`, a gdy zmienia schemat — też
-`dane.md`). Ustalenia sprawdzalne wzorcem (zakazany import, wymagany nagłówek) są w `rules.yaml` modułu
+`data.md`). Ustalenia sprawdzalne wzorcem (zakazany import, wymagany nagłówek) są w `rules.yaml` modułu
 `{{FIRMA}}-standardy` i sprawdza je `tf analyze` — w tych plikach ich nie powtarzasz.
 
 ## Wspólne dla każdej zmiany
@@ -22,8 +22,8 @@ zadanie** (zmiana w samym wyglądzie strony → tylko `ui.md`; nowy endpoint →
 |---|---|---|
 | UI | wygląd, układ, komponenty, teksty i dostępność ekranów | `references/ui.md` |
 | API | endpointy, kontrakty, błędy, wersje, autoryzacja wywołań | `references/api.md` |
-| Dane | schemat bazy, migracje, dane osobowe, retencja | `references/dane.md` |
-| Wydania | wdrożenia, okna, zatwierdzenie wydania, wycofanie | `references/wydania.md` |
+| Dane | schemat bazy, migracje, dane osobowe, retencja | `references/data.md` |
+| Wydania | wdrożenia, okna, zatwierdzenie wydania, wycofanie | `references/releases.md` |
 
 TODO: obszar, którego firma nie ma, usuń razem z plikiem; nowy obszar to nowy wiersz i plik w `references/`.
 Osobny skill zamiast pliku tylko dla dużego obszaru, o który ludzie pytają innymi słowami — kilka podobnych skilli
@@ -34,7 +34,7 @@ konkuruje o to samo pytanie.
   Confluence nie jest czytany automatycznie; treść, która ma działać, przenieś do plików obszarów.
 
 ## Przykład
-TODO: jedna prawdziwa sytuacja z firmy i poprawny wynik, np. „PR dodaje kolumnę w tabeli zamówień → `dane.md`:
+TODO: jedna prawdziwa sytuacja z firmy i poprawny wynik, np. „PR dodaje kolumnę w tabeli zamówień → `data.md`:
 migracja wsteczna zgodna, zatwierdzenie zespołu danych”.
 
 ## Źródła

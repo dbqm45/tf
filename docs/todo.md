@@ -43,7 +43,7 @@ Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić p�
     `org/README.md` opisuje oba warianty; testy instalacji i aktualizacji z ustawieniami w `custom-settings/`.
 - [x] **Generator standardów z dokumentów firmy z kontrolą cytatów skryptem** (zrobione 2026-11-16, `org/standards_from_docs.py`). Dziś `org/README.md` daje gotowe
   polecenie dla agenta, a cytaty sprawdza człowiek. Plan (wzorzec rekonstrukcji projektu z kodu): (1) dokumenty
-  (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `zrodla/`;
+  (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `sources/`;
   (2) skrypt dzieli je na sekcje po nagłówkach, usuwa duplikaty, zapisuje manifest z odciskami sekcji; (3) model
   przypisuje każde ustalenie do obszaru (UI, API, dane, wydania, wspólne) i rodzaju (sprawdzalne wzorcem →
   kandydat do `rules.yaml` z przykładem w `fixtures/`; wymaga oceny → `references/<obszar>.md`; ogólna wiedza →
