@@ -98,7 +98,9 @@ każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `
     podsuwa `skill_hint` (część 1); jedyny chybiony to Haiku przy podziale `OrderService` w obu okrojonych wariantach
     (jeden przebieg, w granicach rozrzutu); różnice kosztu ±10% przy jednym przebiegu to rozrzut, nie efekt;
   - **wniosek:** wyłączanie skilli nie poprawia trafności ani kosztu w stopniu wartym nowego mechanizmu. Robimy tylko
-    filtr stacku w `skill_hint` (usuwa jedyny zaobserwowany błąd, bez konfiguracji). `skills_off` odkładamy; warstwy
+    filtr stacku w `skill_hint` (**zrobione 2026-11-16**: skille `fw-`/`lang-` spoza wykrytego stacku odpadają po
+    rankingu, chyba że polecenie je wymienia; w repo Spring Boot 0 z 16 podpowiedzi z innego stacku, wcześniej 3 z 17;
+    `CLAUDE_SKILL_HINT_STACK=0` wyłącza) (usuwa jedyny zaobserwowany błąd, bez konfiguracji). `skills_off` odkładamy; warstwy
     zespołu i osoby uzasadniają standardy i styl pracy, nie oszczędność kontekstu. Powtórzenie pomiaru nie jest
     potrzebne do tej decyzji.
 - [ ] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
