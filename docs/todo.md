@@ -83,10 +83,10 @@ człowieka, i z kontrolą wyniku skryptem.
      prośby tak jak dotąd [do rozważenia: tryb uprawnień Claude Code `plan` w `.claude/settings.local.json`];
    - [x] `tf config show` z warstwą „osoba” i źródłem każdej wartości; opis w PRZEWODNIK i FAQ; mapa fabryki
      (`docs/mapa-fabryki.html`) — status „działa”.
-2. [ ] **Trafność podpowiedzi skilli** (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).
-   - [ ] walidacja DTO w repo Spring Boot bez podpowiedzi — słowa kluczowe w opisie `fw-spring-boot` (pack-it);
-   - [ ] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
-   - [ ] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
+2. [x] **Trafność podpowiedzi skilli** (zrobione 2026-11-16, `packs/pack-it/tests/test_hint_backend.py`) (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).
+   - [x] walidacja DTO w repo Spring Boot bez podpowiedzi — słowa kluczowe w opisie `fw-spring-boot` (pack-it);
+   - [x] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
+   - [x] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
      hooka, uruchamiany w CI bez modelu.
 3. [ ] **Warstwa zespołu.**
    - [ ] `org/new_org_pack.py <firma> --team <zespół>` → `pack-<firma>-<zespół>` z `requires` nakładki firmy
