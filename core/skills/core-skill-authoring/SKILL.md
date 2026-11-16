@@ -74,8 +74,13 @@ Sama treść SKILL.md niczego nie dowodzi.
      budżet opisów — granice piszesz w `metadata.katalog`.
    - `model` ani `effort` w nagłówku skilla: inny model niż model sesji to zmiana modelu w turze — następne
      zapytanie czyta całą historię bez cache (code.claude.com, „Skills” i „Prompt caching”, 2026-10-20).
-   - Skill, który czyta dużo i zwraca krótki wynik (audyt, przegląd wielu plików): `context: fork` z polem `agent` —
-     działa w osobnym podagencie, do rozmowy wraca wynik.
+   - `context: fork` (skill działa w osobnym podagencie, do rozmowy wraca wynik) tylko dla skilla, który czyta dużo,
+     zwraca krótki wynik i nie pyta człowieka w trakcie — a sesja po nim trwa długo albo jest blisko limitu kontekstu.
+     Pomiar 2026-11-16 (`eng-codebase-mapping`): kontekst głównej sesji −37%, koszt +33%, jakość bez zmian — fork
+     nie oszczędza pieniędzy, daje miejsce w kontekście (`docs/evals/2026-11-16-context-fork.md`). Warunki:
+     `background: false` (inaczej wynik przychodzi w tle), na górze treści `**Zadanie:** $ARGUMENTS` z regułą „puste
+     zadanie → odpowiedz BRAK ZADANIA” (podagent nie widzi rozmowy, a model wywołuje skill bez `args`), `argument-hint`
+     i format krótkiego wyniku. Skill z krokiem „uzgodnij z człowiekiem” w forku nie zadziała.
    - Skill rzadko potrzebny: `metadata.widocznosc: nazwa` — na liście tylko nazwa (nie zabiera budżetu opisów),
      a hook `skill_hint` podpowiada go z opisem przy pasującym poleceniu (`.tf/factory/skill_profile.py`).
    - Skill uruchamiany tylko ręcznie: `disable-model-invocation: true` i scenariusze wyłącznie `no-trigger`.
