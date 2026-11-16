@@ -1,66 +1,66 @@
 {
  "core-agent-instructions": {
-  "fingerprint": "eded0c1643da235e",
-  "offline": "2026-11-14"
+  "fingerprint": "641cf0bf71e94589",
+  "offline": "2026-11-16"
  },
  "core-agent-retro": {
   "fingerprint": "8145e6c3a29ead48",
   "offline": "2026-11-16"
  },
  "core-agent-security": {
-  "fingerprint": "bbee910e2bc31024",
+  "fingerprint": "404d70b2c929a0aa",
   "offline": "2026-11-16"
  },
  "core-async-delegation": {
-  "fingerprint": "e4a34890da1e5149",
-  "offline": "2026-11-01"
+  "fingerprint": "32c0070c4d8d120e",
+  "offline": "2026-11-16"
  },
  "core-conventional-commits": {
-  "fingerprint": "5e5d84dbe0d3be16",
+  "fingerprint": "d5b10bbd73d3c11a",
   "offline": "2026-11-16"
  },
  "core-cost-control": {
-  "fingerprint": "f490ac0fe2b2b958",
-  "offline": "2026-11-15"
+  "fingerprint": "4e88aec41c1674d8",
+  "offline": "2026-11-16"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "79313baeb5a3a56b",
+  "fingerprint": "4a77c123a19b13bd",
   "offline": "2026-11-16"
  },
  "core-factory-update": {
-  "fingerprint": "49a19cdcb8cfce48",
-  "offline": "2026-11-08"
+  "fingerprint": "4a639e70eeb66ce0",
+  "offline": "2026-11-16"
  },
  "core-git-workflow": {
-  "fingerprint": "0a62bd52aa061001",
+  "fingerprint": "32295b98213ada78",
   "offline": "2026-11-16"
  },
  "core-grounding": {
-  "fingerprint": "e030c67bfac0c57e",
-  "offline": "2026-11-15"
+  "fingerprint": "a7395f3e767dd968",
+  "offline": "2026-11-16"
  },
  "core-knowledge": {
-  "fingerprint": "301fd9e42798e40f",
-  "offline": "2026-11-15"
+  "fingerprint": "12c9e51867434e51",
+  "offline": "2026-11-16"
  },
  "core-plan-interview": {
-  "fingerprint": "375293c3a4952cd0",
-  "offline": "2026-10-31"
+  "fingerprint": "b1ec8c01d0b3e276",
+  "offline": "2026-11-16"
  },
  "core-problem-routing": {
-  "fingerprint": "1befec053acb8563",
+  "fingerprint": "71f83e806082824e",
   "offline": "2026-11-16"
  },
  "core-project-record": {
-  "fingerprint": "475f95f2d1c6f356",
-  "offline": "2026-11-15"
+  "fingerprint": "fbbbca3e7666a8b7",
+  "offline": "2026-11-16"
  },
  "core-semver": {
-  "fingerprint": "9a02e7100743dc28",
+  "fingerprint": "dca640dd75fb8957",
   "offline": "2026-11-16"
  },
  "core-skill-authoring": {
-  "fingerprint": "39f5ba55d620b5ff",
+  "fingerprint": "fc8282488ead23e0",
   "offline": "2026-11-16"
  },
  "core-skill-composition": {
@@ -68,19 +68,19 @@
   "offline": "2026-11-16"
  },
  "core-source-research": {
-  "fingerprint": "678a9f630954f806",
-  "offline": "2026-11-15"
+  "fingerprint": "711456508e0f43d3",
+  "offline": "2026-11-16"
  },
  "core-stack-sync": {
   "fingerprint": "c27ee2a2b3d1adf1",
   "offline": "2026-11-08"
  },
  "core-teaching-workspace": {
-  "fingerprint": "1821daf347233c4e",
-  "offline": "2026-10-20"
+  "fingerprint": "652d76962c0ce772",
+  "offline": "2026-11-16"
  },
  "tf": {
-  "fingerprint": "4cca8eb4da3b3c7f",
+  "fingerprint": "e6422875749a7404",
   "offline": "2026-11-16"
  }
 }
