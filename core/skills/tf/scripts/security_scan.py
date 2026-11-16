@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Skan bezpieczeństwa kawałka: semgrep (reguły OWASP Top 10 i .semgrep.yml produktu) na plikach zmienionych
+Skan bezpieczeństwa kawałka: semgrep (reguły OWASP Top 10, .semgrep.yml produktu i semgrep.yml nakładek) na plikach zmienionych
 przez kawałek, audyt zależności tylko przy zmianie manifestu albo lockfile'a, SARIF w katalogu wyniku, werdykt jak
 SEC-001 w ci_for_sdlc. Brak skanera to FAIL z poleceniem instalacji, nigdy cichy PASS.
 
@@ -236,6 +236,8 @@ def run_semgrep(root: Path, files: list[str], out: Path) -> None:
            "--config", os.environ.get("TF_SEMGREP_CONFIG") or SEMGREP_DEFAULT]
     if (root / ".semgrep.yml").is_file():
         cmd += ["--config", ".semgrep.yml"]
+    for rules in sorted((root / ".tf" / "factory" / "packs").glob("*/semgrep.yml")):   # reguły nakładek (np. firmowej)
+        cmd += ["--config", rules.relative_to(root).as_posix()]
     r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True, env=semgrep_env(root))
     if r.returncode != 0 or not target.is_file():
         tail = (r.stderr or r.stdout).strip().splitlines()[-5:]

@@ -54,7 +54,9 @@ Robisz ją raz, potem instalujesz w każdym projekcie.
      zaostrzanie), ścieżki zawsze do przeglądu człowieka (`autonomy.triage`), limity `tf work` (`work`), profil
      kosztów, języki;
    - `pack.yaml` → `org_defaults.operations.tracker`: tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami;
-   - skill standardów (`skills/<firma>-standardy/`): ustalenia firmy, których model nie zna — najpierw scenariusze
+   - reguły sprawdzalne wzorcem (`analyzers/<firma>-standardy/rules.yaml`, z przykładami w `fixtures/`): działają
+     bez modelu w `tf analyze`; reguły semgrep — `semgrep.yml`, używany w skanie pętli `/tf`;
+   - skill standardów (`skills/<firma>-standardy/`): tylko ustalenia wymagające oceny — najpierw scenariusze
      w `tests/skill_evals/`, potem treść;
    - `settings.json`: uprawnienia Claude Code dla całej firmy.
 3. **Sprawdź** w repozytorium fabryki: `python3 tools/workspace.py check --packs pack-it,pack-<firma> --pack-dir

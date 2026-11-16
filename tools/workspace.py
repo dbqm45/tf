@@ -386,7 +386,7 @@ def new_org_pack(argv: list[str]) -> int:
         print("✗ " + "\n✗ ".join(problems), file=sys.stderr)
         return 2
     version = (ROOT / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
-    subst = {"{{FIRMA}}": name, "{{PREFIX}}": prefix, "{{TITLE}}": title,
+    subst = {"{{FIRMA_UP}}": name.replace("-", "").upper()[:8], "{{FIRMA}}": name, "{{PREFIX}}": prefix, "{{TITLE}}": title,
              "{{CORE_RANGE}}": f">={version} <{int(version.split('.')[0]) + 1}.0.0",
              "{{REVIEW}}": (datetime.date.today() + datetime.timedelta(days=365)).isoformat()}
 

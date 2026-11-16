@@ -65,7 +65,10 @@ repozytorium fabryki:
 ```
 python3 tools/workspace.py new-org-pack <firma> --out <katalog> [--prefix p-] [--title "Nazwa firmy"]
 ```
-Szablon: `templates/pack-org/` (pack.yaml, skill standardów z scenariuszami, `settings.json`, README z listą pól).
+Szablon: `templates/pack-org/` (pack.yaml, moduł reguł `analyzers/<firma>-standardy/` z `rules.yaml` i fixtures,
+skill standardów ze scenariuszami, `settings.json`, README z listą pól). Moduł reguł ma `tier0.rules` zamiast
+`tier0.script`: reguły wykonuje skaner rdzenia `.tf/factory/rules_scan.py`, więc jego poprawki docierają do firm
+z aktualizacją fabryki. `semgrep.yml` w katalogu nakładki trafia do `.tf/factory/packs/<id>/` i do skanu kawałka pętli.
 Nakładka firmowa to zwykła nakładka z kluczem `org_defaults`:
 - `config` — domyślne organizacji między silnikiem a projektem (`autonomy`, `tiers`, `profiles`, `default_profile`,
   `work`, `loop`, `steps`, `default_language`, `default_commit_language`); czytają je `build.py`, `guard_bash`

@@ -9,7 +9,9 @@ metadata:
 
 # Standardy {{TITLE}}
 
-TODO: jedno-dwa zdania, czego dotyczy ten skill. Wpisuj **tylko ustalenia firmy, których model nie zna sam**:
+TODO: jedno-dwa zdania, czego dotyczy ten skill. Ustalenia sprawdzalne wzorcem (zakazany import, wymagany nagłówek)
+są w `rules.yaml` modułu `{{FIRMA}}-standardy` i sprawdza je `tf analyze` — tu ich nie powtarzaj. Wpisuj **tylko
+ustalenia firmy, które wymagają oceny i których model nie zna sam**:
 nazwy, progi, zakazy, wyjątki, kto zatwierdza. Ogólna wiedza („pisz testy”, „SOLID”) niczego nie dodaje — fabryka
 zmierzyła to na swoich skillach (`docs/inactive-skills.md` w repo fabryki).
 

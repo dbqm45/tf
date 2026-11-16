@@ -172,6 +172,8 @@ zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różn
 - **Nakładka firmowa** (`org_defaults` w `pack.yaml`, szkielet `tools/workspace.py new-org-pack`, szablon
   `templates/pack-org/`): warstwa konfiguracji silnik ← organizacja ← projekt (`packs.config_layers`) czytana przez
   build, `guard_bash`, `risk_triage`, `work.py` i `tf config show`; domyślny tracker organizacji w `intake.py`.
+  Standardy sprawdzalne wzorcem: moduł analizy z `tier0.rules` (skaner rdzenia `rules_scan.py`, zero tokenów) i
+  `semgrep.yml` nakładki w skanie kawałka (`security_scan.py`).
 - **Wyłączone skille** (`metadata.status: "nieaktywny"` + `disable-model-invocation: true`): zostają w instalacji,
   ale `build.py` (`drop_inactive`) usuwa je z ról, person, agentów wspólnych, konsultantów i `always_skills`,
   a katalog pokazuje je w sekcji „Wyłączone skille”. Odsyłacze do nich w aktywnych skillach i promptach

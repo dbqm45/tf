@@ -42,7 +42,9 @@ def main() -> int:
         r = gen("acme", "--out", str(out), "--title", "ACME Sp. z o.o.")
         check(r.returncode == 0, f"OP-1: generator działa: {r.stdout}{r.stderr}")
         files = ["pack.yaml", "README.md", "settings.json", "skills/acme-standardy/SKILL.md",
-                 "tests/skill_evals/acme-standardy.json"]
+                 "tests/skill_evals/acme-standardy.json", "analyzers/acme-standardy/analyzer.yaml",
+                 "analyzers/acme-standardy/rules.yaml", "analyzers/acme-standardy/fixtures/naruszenia/expected.json",
+                 "analyzers/acme-standardy/fixtures/czyste/expected.json", "semgrep.yml"]
         check(all((out / f).is_file() for f in files), f"OP-1: pliki: {[f for f in files if not (out / f).is_file()]}")
         left = [str(f.relative_to(out)) for f in out.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
         check(not left, f"OP-2: wszystkie pola szablonu podstawione: {left}")
@@ -92,6 +94,16 @@ def main() -> int:
             check(any("pack-acme" in lbl and "org_defaults" in lbl for lbl in labels)
                   and not [e for e in comp["_errors"] if "org_defaults" in e],
                   f"OP-11: warstwa organizacji w konfiguracji projektu, bez błędów składania: {labels} {comp['_errors']}")
+            # standardy sprawdzane bez modelu: moduł reguł nakładki działa w projekcie i przechodzi swoją bramkę
+            an = pa.load_yaml(app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml") \
+                if (app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml").is_file() else {}
+            check((app / ".tf/factory/packs/pack-acme/semgrep.yml").is_file(),
+                  "OP-14: semgrep.yml nakładki w .tf/factory/packs/pack-acme/ (skan kawałka pętli /tf)")
+            check(an.get("prefix") == "ACME" and (an.get("tier0") or {}).get("rules") == "rules.yaml",
+                  f"OP-12: moduł reguł firmy zainstalowany, prefiks ustaleń z nazwy firmy: {an}")
+            g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standardy"],
+                               cwd=app, capture_output=True, text=True, timeout=120)
+            check(g.returncode == 0, f"OP-13: bramka modułu reguł na przykładach z szablonu: {g.stdout[-600:]}{g.stderr[-300:]}")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów new-org-pack")
