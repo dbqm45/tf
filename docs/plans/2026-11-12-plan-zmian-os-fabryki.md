@@ -319,10 +319,10 @@ Decyzje właściciela z 2026-11-14, po kroku G (do kroku H):
   - **D13: fabryka tylko ostrzega i podaje polecenie powrotu, nie cofa się sama.** Przy małej liczbie zmian odsetek
     cofnięć jest zaszumiony; samoczynna podmiana hooków i skilli w trakcie pracy zespołu byłaby trudna do
     wyjaśnienia i mogłaby cofnąć poprawkę bezpieczeństwa. Decyzja o powrocie zostaje u człowieka.
-- **D8 — właściciel pyta o rekomendację.** Dziś domyślna instalacja to rdzeń (21 skilli), `pack-docs` i nakładka
+- **D8 — rozstrzygnięte 2026-11-16: zostaje jak jest (decyzja właściciela: „D8 tak”).** Dziś domyślna instalacja to rdzeń (21 skilli), `pack-docs` i nakładka
   języka (`pack-editorial-pl` przy `pl`); `pack-it` (141 skilli) wybiera się samemu. Talosa już nie ma, więc
   „zestaw minimalny” z pierwotnego pytania to właśnie dzisiejszy stan. Rekomendacja: zostawić jak jest — każdy
-  skill w repozytorium dokłada kontekst, a pomiary pętli robimy z `pack-it` wybranym jawnie. Do czasu odpowiedzi
-  nic się nie zmienia.
+  skill w repozytorium dokłada kontekst, a pomiary pętli robimy z `pack-it` wybranym jawnie. Właściciel przyjął
+  rekomendację: domyślny zestaw się nie zmienia, `pack-it` dodaje się poleceniem `tf add pack-it`.
 - **Jira i test laika — odłożone jak najdalej.** Pierwsze pobranie z prawdziwej Jiry i test „Zacznij tutaj”
   z osobą spoza projektu właściciel zrobi później; prace, które ich nie wymagają, idą dalej.
