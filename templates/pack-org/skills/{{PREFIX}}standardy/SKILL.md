@@ -9,32 +9,33 @@ metadata:
 
 # Standardy {{TITLE}}
 
-TODO: jedno-dwa zdania, czego dotyczy ten skill. Ustalenia sprawdzalne wzorcem (zakazany import, wymagany nagłówek)
-są w `rules.yaml` modułu `{{FIRMA}}-standardy` i sprawdza je `tf analyze` — tu ich nie powtarzaj. Wpisuj **tylko
-ustalenia firmy, które wymagają oceny i których model nie zna sam**:
-nazwy, progi, zakazy, wyjątki, kto zatwierdza. Ogólna wiedza („pisz testy”, „SOLID”) niczego nie dodaje — fabryka
-zmierzyła to na swoich skillach (`docs/inactive-skills.md` w repo fabryki).
+Ten plik to spis. Ustalenia każdego obszaru są w osobnym pliku: **wczytaj tylko plik obszaru, którego dotyczy
+zadanie** (zmiana w samym wyglądzie strony → tylko `ui.md`; nowy endpoint → `api.md`, a gdy zmienia schemat — też
+`dane.md`). Ustalenia sprawdzalne wzorcem (zakazany import, wymagany nagłówek) są w `rules.yaml` modułu
+`{{FIRMA}}-standardy` i sprawdza je `tf analyze` — w tych plikach ich nie powtarzasz.
 
-## Kod i repozytorium
-- TODO: konwencja nazw gałęzi i commitów, jeśli inna niż w fabryce.
-- TODO: wymagane narzędzia i ich konfiguracja (lint, formatowanie), wersje języków.
+## Wspólne dla każdej zmiany
+- TODO: najwyżej kilka ustaleń, które obowiązują zawsze (np. numer zgłoszenia w opisie PR, kto zatwierdza).
 
-## Przegląd zmian
-- TODO: kto zatwierdza jakie zmiany (np. zespół platformy dla `infra/`), ile zatwierdzeń.
+## Obszary
+| Obszar | Kiedy czytać | Plik |
+|---|---|---|
+| UI | wygląd, układ, komponenty, teksty i dostępność ekranów | `references/ui.md` |
+| API | endpointy, kontrakty, błędy, wersje, autoryzacja wywołań | `references/api.md` |
+| Dane | schemat bazy, migracje, dane osobowe, retencja | `references/dane.md` |
+| Wydania | wdrożenia, okna, zatwierdzenie wydania, wycofanie | `references/wydania.md` |
 
-## Bezpieczeństwo i dane
-- TODO: klasy danych w firmie i co wolno z nimi robić; gdzie zgłaszać incydent.
-
-## Wydania i wdrożenia
-- TODO: okna wdrożeń, kto zatwierdza wydanie, jak wycofać.
+TODO: obszar, którego firma nie ma, usuń razem z plikiem; nowy obszar to nowy wiersz i plik w `references/`.
+Osobny skill zamiast pliku tylko dla dużego obszaru, o który ludzie pytają innymi słowami — kilka podobnych skilli
+konkuruje o to samo pytanie.
 
 ## Gdzie szukać
 - TODO: gdzie są decyzje i dokumentacja (np. przestrzeń w Confluence) — ścieżka albo nazwa, bez haseł i tokenów.
-  Confluence nie jest czytany automatycznie; treść, która ma działać, przenieś tutaj albo do `references/`.
+  Confluence nie jest czytany automatycznie; treść, która ma działać, przenieś do plików obszarów.
 
 ## Przykład
-TODO: jedna prawdziwa sytuacja z firmy i poprawny wynik, np. „PR zmienia `billing/` → wymagane zatwierdzenie
-zespołu płatności, opis z numerem zgłoszenia”.
+TODO: jedna prawdziwa sytuacja z firmy i poprawny wynik, np. „PR dodaje kolumnę w tabeli zamówień → `dane.md`:
+migracja wsteczna zgodna, zatwierdzenie zespołu danych”.
 
 ## Źródła
 - TODO: dokument firmowy, z którego pochodzą ustalenia, i data sprawdzenia (RRRR-MM-DD).

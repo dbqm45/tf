@@ -2,20 +2,20 @@
   "skill": "{{PREFIX}}standardy",
   "scenarios": [
     {
-      "id": "TODO-regula-firmy-1",
+      "id": "TODO-obszar-ui",
       "expect": "trigger",
-      "prompt": "TODO: prawdziwe pytanie z pracy w {{TITLE}}, na które model bez tego skilla odpowie źle (np. kto zatwierdza zmianę w katalogu billing/?)",
+      "prompt": "TODO: prawdziwe pytanie z pracy w {{TITLE}} o sam wygląd (np. dodaję w panelu sekcję z dwiema kolumnami — z której biblioteki komponentów i jakie odstępy?)",
       "checks": {
-        "all": [["TODO: reguła firmy, np. zespół płatności"], ["TODO: druga reguła, np. numer zgłoszenia w opisie"]],
-        "none": ["TODO: typowa zła odpowiedź"]
+        "all": [["TODO: ustalenie z references/ui.md"], ["TODO: drugie ustalenie UI"]],
+        "none": ["TODO: ustalenie z innego obszaru, np. z api.md — przy samym wyglądzie nie powinno paść"]
       }
     },
     {
-      "id": "TODO-regula-firmy-2",
+      "id": "TODO-obszar-api",
       "expect": "trigger",
-      "prompt": "TODO: inna sytuacja z tego samego obszaru, innymi słowami",
+      "prompt": "TODO: prawdziwe pytanie o API w {{TITLE}} (np. dodaję endpoint zwracający zamówienia klienta — jaki format błędów i kto zatwierdza kontrakt?)",
       "checks": {
-        "all": [["TODO"], ["TODO"]]
+        "all": [["TODO: ustalenie z references/api.md"], ["TODO: drugie ustalenie API"]]
       }
     },
     {

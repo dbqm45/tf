@@ -44,7 +44,8 @@ def main() -> int:
         files = ["pack.yaml", "README.md", "settings.json", "skills/acme-standardy/SKILL.md",
                  "tests/skill_evals/acme-standardy.json", "analyzers/acme-standardy/analyzer.yaml",
                  "analyzers/acme-standardy/rules.yaml", "analyzers/acme-standardy/fixtures/naruszenia/expected.json",
-                 "analyzers/acme-standardy/fixtures/czyste/expected.json", "semgrep.yml"]
+                 "analyzers/acme-standardy/fixtures/czyste/expected.json", "semgrep.yml",
+                 *(f"skills/acme-standardy/references/{a}.md" for a in ("ui", "api", "dane", "wydania"))]
         check(all((out / f).is_file() for f in files), f"OP-1: pliki: {[f for f in files if not (out / f).is_file()]}")
         left = [str(f.relative_to(out)) for f in out.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
         check(not left, f"OP-2: wszystkie pola szablonu podstawione: {left}")
@@ -65,6 +66,9 @@ def main() -> int:
         except (OSError, ValueError):
             ok = False
         check(ok, "OP-5: settings.json i scenariusze to poprawny JSON, scenariusze dla skilla standardów")
+        spis = (out / "skills/acme-standardy/SKILL.md").read_text(encoding="utf-8") if (out / "skills/acme-standardy/SKILL.md").is_file() else ""
+        check(all(f"references/{a}.md" in spis for a in ("ui", "api", "dane", "wydania")) and len(spis.splitlines()) < 60,
+              f"OP-15: SKILL.md to krótki spis wskazujący plik każdego obszaru: {len(spis.splitlines())} linii")
 
         # odmowy: bez zmian na dysku
         r = gen("acme", "--out", str(out))
