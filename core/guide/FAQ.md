@@ -16,6 +16,10 @@ wybierasz język pracy, język commitów oraz nakładki i tryby.
 - **Zespołowo** (`--shared`): fabryka jest commitowana razem z projektem. Ustawienia są w `.claude/settings.json`,
   zasady w `CLAUDE.md`, do tego workflow CI.
 
+Instalacja prywatna nie przechodzi przez `git clone`: każdy instaluje fabrykę sam, a CI i sesje w chmurze jej nie mają.
+Repozytorium z `AGENTS.md` bez `CLAUDE.md` potrzebuje linii `@AGENTS.md` w `CLAUDE.local.md`. Oba tematy:
+`.tf/factory/PRZEWODNIK.md`, sekcja „Instalacja prywatna i zespołowa”.
+
 Potem uruchom raz `claude` w katalogu projektu i zaakceptuj zaufanie do folderu. Bez tego hooki i uprawnienia
 nie działają.
 
