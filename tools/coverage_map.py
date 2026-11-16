@@ -32,7 +32,7 @@ for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie 
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONT = re.compile(r"\A---\n(.*?)\n---", re.S)
-FIELD = re.compile(r"^\s*(description|katalog|keywords):\s*(.*)$", re.M)
+FIELD = re.compile(r"^\s*(description|catalog|keywords):\s*(.*)$", re.M)
 
 
 def load_skills(root: Path) -> dict[str, str]:

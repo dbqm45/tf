@@ -59,7 +59,7 @@ def main() -> int:
               and 'title: "Demo"' in pack and 'description: "Demo pack for tests."' in pack, f"N-3: pack.yaml:\n{pack}")
         sk = base / "skills" / "dm-start" / "SKILL.md"
         text = sk.read_text(encoding="utf-8") if sk.is_file() else ""
-        check("name: dm-start" in text and "description: Użyj" in text and "katalog:" in text and "przeglad:" in text
+        check("name: dm-start" in text and "description: Użyj" in text and "catalog:" in text and "review:" in text
               and "keywords:" in text and "## Przykład" in text and "## Źródła" in text, f"N-4: SKILL.md:\n{text}")
         ev = base / "tests" / "skill_evals" / "dm-start.json"
         data = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
