@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [10.29.0] — 2026-11-16
+### Added
+- **core:** team layer between company and project, with team pack generator (#283)
+
 ## [10.28.0] — 2026-11-16
 ### Added
 - **core:** personal work style layer and hint accuracy for backend repos (#282)
