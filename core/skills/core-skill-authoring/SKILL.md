@@ -76,7 +76,7 @@ Sama treść SKILL.md niczego nie dowodzi.
      zapytanie czyta całą historię bez cache (code.claude.com, „Skills” i „Prompt caching”, 2026-10-20).
    - `context: fork` (skill działa w osobnym podagencie, do rozmowy wraca wynik) tylko dla skilla, który czyta dużo,
      zwraca krótki wynik i nie pyta człowieka w trakcie — a sesja po nim trwa długo albo jest blisko limitu kontekstu.
-     Pomiar 2026-11-16 (`eng-codebase-mapping`): kontekst głównej sesji −37%, koszt +33%, jakość bez zmian — fork
+     Pomiar 2026-11-16 (`eng-codebase-mapping` z pack-it): kontekst głównej sesji −37%, koszt +33%, jakość bez zmian — fork
      nie oszczędza pieniędzy, daje miejsce w kontekście (`docs/evals/2026-11-16-context-fork.md`). Warunki:
      `background: false` (inaczej wynik przychodzi w tle), na górze treści `**Zadanie:** $ARGUMENTS` z regułą „puste
      zadanie → odpowiedz BRAK ZADANIA” (podagent nie widzi rozmowy, a model wywołuje skill bez `args`), `argument-hint`
