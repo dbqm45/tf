@@ -42,6 +42,8 @@ i persony: `roles/`, `personas/` (format jak w nakładkach fabryki).
   albo w ustawieniach zarządzanych przez organizację, nie w fabryce.
 - **Ogólnej wiedzy**, którą model zna sam — nic nie dodaje, a zajmuje kontekst w każdej sesji.
 
+Pełny przewodnik, także generowanie z dokumentów firmy (np. Confluence): `org/README.md` w repozytorium fabryki.
+
 ## Sprawdzenie
 Reguły bez modelu, w projekcie z nakładką: `tf analyze --only {{FIRMA}}-standardy` (raport `.tf/reports/`) i bramka
 modułu `python3 .tf/factory/analyze.py gate --module {{FIRMA}}-standardy`.

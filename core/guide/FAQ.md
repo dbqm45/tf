@@ -44,10 +44,11 @@ i MINOR. Wydanie MAJOR, które zmienia publiczne API fabryki, wymaga Twojej decy
 
 ## Jak dodać ustawienia firmy?
 Standardy i domyślne ustawienia całej organizacji trzyma jedna **nakładka firmowa** we własnym repozytorium firmy.
-Robisz ją raz, potem instalujesz w każdym projekcie.
+Robisz ją raz, potem instalujesz w każdym projekcie. Pełny przewodnik, także generowanie z dokumentów firmy (np.
+Confluence): `org/README.md` w repozytorium fabryki.
 1. **Szkielet.** W klonie repozytorium fabryki (katalog wyniku musi leżeć poza nim):
    ```
-   python3 tools/workspace.py new-org-pack <firma> --out <katalog> --title "Nazwa firmy"
+   python3 org/new_org_pack.py <firma> --out <katalog> --title "Nazwa firmy"
    ```
 2. **Uzupełnij pola `TODO`** (`grep -rn TODO <katalog>`; opis każdego pola: `README.md` w nakładce):
    - `pack.yaml` → `org_defaults.config`: operacje agenta blokowane w firmie (`autonomy.operations`, tylko

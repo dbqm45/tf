@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy generatora nakładki firmowej: `tools/workspace.py new-org-pack <firma> --out <katalog>` — szablon
-`templates/pack-org/` z polami do uzupełnienia, odmowy (katalog w repo fabryki, istniejący katalog, zła nazwa,
+"""Testy generatora nakładki firmowej: `org/new_org_pack.py <firma> --out <katalog>` — szablon
+`org/template/` z polami do uzupełnienia, odmowy (katalog w repo fabryki, istniejący katalog, zła nazwa,
 zajęty prefiks) i cała droga: instalacja w projekcie przez `install.py --pack-dir` i domyślne organizacji
 (`org_defaults`) w konfiguracji projektu. python3 tests/test_new_org_pack.py"""
 import importlib.util
@@ -15,7 +15,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factor
 
 
 def gen(*args: str) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(ROOT / "tools" / "workspace.py"), "new-org-pack", *args],
+    return subprocess.run([sys.executable, str(ROOT / "org" / "new_org_pack.py"), *args],
                           cwd=ROOT, capture_output=True, text=True, timeout=60)
 
 
@@ -82,6 +82,8 @@ def main() -> int:
         check(r.returncode == 2 and not (base / "y").exists(), f"OP-9: zajęty prefiks → kod 2: {r.stdout}{r.stderr}")
 
         # cała droga: instalacja w projekcie i domyślne organizacji w konfiguracji
+        (out / "zrodla").mkdir()
+        (out / "zrodla" / "api.md").write_text("# Standard API (poufne)\n", encoding="utf-8")
         app = base / "app"
         app.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=app, check=True)
@@ -101,6 +103,9 @@ def main() -> int:
             # standardy sprawdzane bez modelu: moduł reguł nakładki działa w projekcie i przechodzi swoją bramkę
             an = pa.load_yaml(app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml") \
                 if (app / ".tf/factory/analyzers/acme-standardy/analyzer.yaml").is_file() else {}
+            leaked = [str(f) for f in app.rglob("*") if f.is_file() and ".git" not in f.parts
+                      and "Standard API (poufne)" in f.read_text(encoding="utf-8", errors="ignore")]
+            check(not leaked, f"OP-16: dokumenty źródłowe firmy (zrodla/) nie trafiają do projektu: {leaked}")
             check((app / ".tf/factory/packs/pack-acme/semgrep.yml").is_file(),
                   "OP-14: semgrep.yml nakładki w .tf/factory/packs/pack-acme/ (skan kawałka pętli /tf)")
             check(an.get("prefix") == "ACME" and (an.get("tier0") or {}).get("rules") == "rules.yaml",

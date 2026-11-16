@@ -14,9 +14,6 @@ and the factory tests run (tests and build expect the installed layout, not the 
                                      [--skill p-name] [--role role-name] [--no-check]
                                                        # skeleton of packs/pack-<name>/ or modes/mode-<name>/, CI matrix
                                                        # entry, then check + refs and a to-do list (guide: docs/new-pack.md)
-  python3 tools/workspace.py new-org-pack <company> --out DIR [--prefix p-] [--title T]
-                                                       # company pack from templates/pack-org/ outside the factory repo
-                                                       # (fields to fill: TODO; guide: README.md in the pack)
   python3 tools/workspace.py flow-evals [--validate | --all | --ids <id>,<glob>] [--budget-usd N] [--baseline previous]
                                                        # evale przebiegu (N5, DZ13): bramka zmian modelu/skilla/persony/
                                                        # promptu fazy; raport porównuje wynik i koszt z poprzednim przebiegiem
@@ -347,70 +344,6 @@ def new_pack(argv: list[str]) -> int:
     return 0 if ok else 1
 
 
-ORG_TPL = ROOT / "templates" / "pack-org"
-
-
-def new_org_pack(argv: list[str]) -> int:
-    """Nakładka firmowa z szablonu templates/pack-org/ poza repozytorium fabryki (pola do uzupełnienia: TODO)."""
-    import datetime
-    import re
-    args, opts = [], {"out": None, "prefix": None, "title": None}
-    it = iter(argv)
-    for a in it:
-        if a.startswith("--") and a[2:] in opts:
-            opts[a[2:]] = next(it, "")
-        else:
-            args.append(a)
-    name = args[0] if args else ""
-    prefix = opts["prefix"] or f"{name}-"
-    title = opts["title"] or name.replace("-", " ").title()
-    out = Path(opts["out"]).expanduser().resolve() if opts["out"] else None
-    problems = []
-    if not re.fullmatch(r"[a-z][a-z0-9-]*[a-z0-9]", name):
-        problems.append(f"name: lowercase letters, digits and '-' (got {name!r})")
-    if not re.fullmatch(r"[a-z][a-z0-9]*-", prefix):
-        problems.append(f"prefix must look like 'abc-' (got {prefix!r})")
-    elif prefix in (taken := taken_prefixes()):
-        problems.append(f"prefix {prefix} is already used by {taken[prefix]}")
-    if any(c in title for c in '"\n\\'):
-        problems.append("title must not contain quotes, backslashes or new lines")
-    if (ROOT / "packs" / f"pack-{name}").exists():
-        problems.append(f"pack-{name} is a factory pack id — choose another name")
-    if out is None:
-        problems.append("--out <directory> is required: the company pack lives in the company's repository")
-    elif out == ROOT or ROOT in out.parents:
-        problems.append(f"{out} is inside the factory repository — the company pack lives outside it")
-    elif out.exists():
-        problems.append(f"{out} already exists — nothing overwritten")
-    if problems:
-        print("✗ " + "\n✗ ".join(problems), file=sys.stderr)
-        return 2
-    version = (ROOT / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
-    subst = {"{{FIRMA_UP}}": name.replace("-", "").upper()[:8], "{{FIRMA}}": name, "{{PREFIX}}": prefix, "{{TITLE}}": title,
-             "{{CORE_RANGE}}": f">={version} <{int(version.split('.')[0]) + 1}.0.0",
-             "{{REVIEW}}": (datetime.date.today() + datetime.timedelta(days=365)).isoformat()}
-
-    def fill(s: str) -> str:
-        for k, v in subst.items():
-            s = s.replace(k, v)
-        return s
-
-    written = []
-    for src in sorted(f for f in ORG_TPL.rglob("*") if f.is_file()):
-        rel = fill(src.relative_to(ORG_TPL).as_posix())
-        dst = out / rel
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_text(fill(src.read_text(encoding="utf-8")), encoding="utf-8")
-        written.append(rel)
-    print(f"✓ {out}: " + ", ".join(written))
-    print(f"""Do zrobienia (README.md w nakładce):
-  1. Uzupełnij pola TODO: grep -rn TODO {out}
-  2. Scenariusze tests/skill_evals/{prefix}standardy.json przed treścią skilla (core-skill-authoring).
-  3. Sprawdź: python3 tools/workspace.py check --packs pack-it,pack-{name} --pack-dir {out}
-  4. Projekt: tf install --pack-dir {out} --add pack-{name}""")
-    return 0
-
-
 def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else "check"
     o = opts_of(argv[2:])
@@ -433,8 +366,6 @@ def main(argv: list[str]) -> int:
         return refs("--verbose" in argv)
     if cmd == "new-pack":
         return new_pack(argv[2:])
-    if cmd == "new-org-pack":
-        return new_org_pack(argv[2:])
     if cmd == "flow-evals":
         # Evale przebiegu (N5, DZ13): bramka dla zmian modelu/skilla/persony/promptu fazy.
         # Raport porównuje wynik i koszt z poprzednim przebiegiem; walidacja (--validate) nie dotyka modelu.

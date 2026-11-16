@@ -169,8 +169,8 @@ zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różn
   a skrypt workflow nie ma dostępu do powłoki (`es_sim.py` musiałby uruchamiać dodatkowy agent).
 
 ### Rozwój fabryki
-- **Nakładka firmowa** (`org_defaults` w `pack.yaml`, szkielet `tools/workspace.py new-org-pack`, szablon
-  `templates/pack-org/`): warstwa konfiguracji silnik ← organizacja ← projekt (`packs.config_layers`) czytana przez
+- **Nakładka firmowa** (`org_defaults` w `pack.yaml`; zestaw w `org/`: generator `org/new_org_pack.py`, szablon
+  `org/template/`, przewodnik `org/README.md`): warstwa konfiguracji silnik ← organizacja ← projekt (`packs.config_layers`) czytana przez
   build, `guard_bash`, `risk_triage`, `work.py` i `tf config show`; domyślny tracker organizacji w `intake.py`.
   Standardy sprawdzalne wzorcem: moduł analizy z `tier0.rules` (skaner rdzenia `rules_scan.py`, zero tokenów) i
   `semgrep.yml` nakładki w skanie kawałka (`security_scan.py`).
