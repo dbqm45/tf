@@ -36,12 +36,12 @@ jakości — **ai-evals**; strategia produktu — **ai-product-management**; pol
       bez istotnego wpływu na wynik decyzji) wymaga udokumentowanej oceny i rejestracji; profilowanie osób go wyklucza.
    3. **Przejrzystość** (art. 50): chatbot (poinformuj o kontakcie z AI), treści syntetyczne (oznaczenie
       w formacie maszynowym; warstwy, kodeks praktyk z 2026-06 i granice znaku wodnego:
-      `references/znakowanie-techniczne.md`), deepfake, rozpoznawanie emocji. Może się nakładać na klasę 2.
+      `references/technical-tagging.md`), deepfake, rozpoznawanie emocji. Może się nakładać na klasę 2.
    4. **Ryzyko minimalne** — brak obowiązków poza kompetencjami (art. 4); kodeksy dobrych praktyk dobrowolne.
    5. **Model ogólnego przeznaczenia** (GPAI, art. 51–55) — osobna oś dla dostawcy modelu: dokumentacja techniczna,
       polityka praw autorskich, streszczenie danych treningowych; przy ryzyku systemowym dodatkowo ocena i zgłaszanie
       incydentów. Integrator cudzego modelu zwykle nie jest dostawcą GPAI, ale może być dostawcą systemu.
-4. **Obowiązki na rolę** — macierz w `references/macierz-i-dowody.md` (dostawca wysokiego ryzyka: art. 9–15, 17, 43,
+4. **Obowiązki na rolę** — macierz w `references/matrix-and-evidence.md` (dostawca wysokiego ryzyka: art. 9–15, 17, 43,
    47–49, 72–73; podmiot stosujący: art. 26–27; wszyscy: art. 4). Dla każdego wiersza: właściciel, dowód, termin, status.
    Podmiot stosujący system wysokiego ryzyka wyznacza nadzór człowieka (art. 26 ust. 2): przeszkolone osoby z kompetencjami
    i uprawnieniem do zakwestionowania i odrzucenia wyniku systemu.
@@ -49,9 +49,9 @@ jakości — **ai-evals**; strategia produktu — **ai-product-management**; pol
    z przypisem źródła; sprzeczne — oba warianty z [niezweryfikowane].
 6. **Ramy dobrowolne.** NIST AI RMF 1.0 (Govern, Map, Measure, Manage) i profil AI 600-1 porządkują ryzyka;
    ISO/IEC 42001:2023 to certyfikowalny system zarządzania AI (struktura jak ISO 27001, można je spiąć w jeden
-   system zarządzania). Nie zastępują AI Act, ale dostarczają dowodów. Szczegóły: `references/ramy-i-praktyka.md`.
+   system zarządzania). Nie zastępują AI Act, ale dostarczają dowodów. Szczegóły: `references/frameworks-and-practice.md`.
 7. **Praktyka:** ocena wpływu (prawa podstawowe), karty modelu i zbiorów danych, test stronniczości, proces incydentu AI,
-   polityka użycia AI dla pracowników — wzorce w `references/ramy-i-praktyka.md`.
+   polityka użycia AI dla pracowników — wzorce w `references/frameworks-and-practice.md`.
 8. **Styk z RODO.** Decyzja wyłącznie automatyczna z istotnym skutkiem (art. 22 RODO) i DPIA — oceń w arch-privacy-compliance.
    Podmiot stosujący system wysokiego ryzyka korzysta z instrukcji dostawcy przy DPIA (art. 26 ust. 9 AI Act).
 9. **Wynik** do `ai-compliance.md`: inwentarz → rola → klasa z uzasadnieniem → macierz obowiązków → luki i dowody →
@@ -97,8 +97,8 @@ Terminy: art. 50 od 2026-08-02 (potwierdzone na stronie Komisji); wysokie ryzyko
 - [ ] zapis „nie porada prawna” i zatwierdzający (prawnik/IOD)
 
 ## Materiały dodatkowe
-- `references/macierz-i-dowody.md` — macierz obowiązków wg roli, lista dowodów, kary; czytaj przy tworzeniu `ai-compliance.md`.
-- `references/ramy-i-praktyka.md` — NIST AI RMF, AI 600-1, ISO 42001 vs 27001, ocena wpływu, karty, stronniczość, incydent, polityka; czytaj przy wdrażaniu zarządzania AI.
+- `references/matrix-and-evidence.md` — macierz obowiązków wg roli, lista dowodów, kary; czytaj przy tworzeniu `ai-compliance.md`.
+- `references/frameworks-and-practice.md` — NIST AI RMF, AI 600-1, ISO 42001 vs 27001, ocena wpływu, karty, stronniczość, incydent, polityka; czytaj przy wdrażaniu zarządzania AI.
 
 ## Źródła
 - Rozporządzenie (UE) 2024/1689 (AI Act) — eur-lex.europa.eu; numery artykułów z tekstu rozporządzenia znanego

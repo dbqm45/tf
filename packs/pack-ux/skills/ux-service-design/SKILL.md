@@ -31,13 +31,13 @@ zapleczu, nie tylko w interfejsie.
    z dowodem (cytat, liczba). Osobna mapa na segment, jeśli ścieżki się różnią. Mapa pokazuje **perspektywę
    klienta**; zaplecze dodaje blueprint.
 4. **Inwentarz punktów styku.** Tabela: punkt styku, kanał, właściciel, system, cel, spójność z innymi kanałami
-   (te same dane, ten sam język, ta sama obietnica). Luki spójności to kandydaci do zmian (`references/szablony.md`).
+   (te same dane, ten sam język, ta sama obietnica). Luki spójności to kandydaci do zmian (`references/templates.md`).
 5. **Service blueprint** (obecny stan, potem docelowy). Poziome pasy od góry:
    dowody fizyczne i cyfrowe → **działania klienta** → *linia interakcji* → **frontstage** (widoczne czynności
    pracowników i interfejsów) → *linia widoczności* → **backstage** (niewidoczne czynności pracowników) →
    *linia interakcji wewnętrznej* → **procesy wspierające** (systemy, inne jednostki, partnerzy).
    Każdy krok: czas, kto, jakim narzędziem, jakie dane. Zaznacz punkty awarii, czekanie i przekazania.
-   Mermaid i szablon tabeli: `references/szablony.md`.
+   Mermaid i szablon tabeli: `references/templates.md`.
 6. **Diagnoza.** Na blueprincie zaznacz: przekazania bez danych, miejsca, gdzie klient robi pracę zaplecza,
    rozjazdy między kanałami, kroki bez właściciela. Rangę nadaj wpływem na klienta i kosztem obsługi.
    Najpierw rozwiąż **cały problem** (nie fragment) i spójność między kanałami.
@@ -55,7 +55,7 @@ zapleczu, nie tylko w interfejsie.
     czas od zgłoszenia do wyniku, kontakty ponowne w tej sprawie, koszt obsługi jednego przypadku, satysfakcja. Dla
     usług publicznych odnieś ocenę do GOV.UK Service Standard (14 punktów, m.in. „Solve a whole problem for users”,
     „Provide a joined up experience across channels”, „Define what success looks like and publish performance
-    data”) — pełna lista i uwagi: `references/standard-uslug.md`.
+    data”) — pełna lista i uwagi: `references/service-standard.md`.
 
 Wynik: `docs/project/01-discovery/service-blueprint.md` (+ mapy w tym samym katalogu); TL;DR i Przekazanie wg
 core-project-record. Pierwsza linia pliku: `Service blueprint: <usługa> — stan obecny|docelowy`.
@@ -92,8 +92,8 @@ Zmiana docelowa: formularz zapisuje się wprost w ERP, klient widzi status w e-m
 - [ ] [niezweryfikowane] i założenia oznaczone; wynik w `docs/project/01-discovery/`
 
 ## Materiały dodatkowe
-- `references/szablony.md` — szablony blueprintu (tabela i Mermaid), mapy podróży, interesariuszy i inwentarza; czytaj przy pisaniu artefaktu.
-- `references/standard-uslug.md` — GOV.UK Service Standard, metody prototypowania usługi i jak ich użyć.
+- `references/templates.md` — szablony blueprintu (tabela i Mermaid), mapy podróży, interesariuszy i inwentarza; czytaj przy pisaniu artefaktu.
+- `references/service-standard.md` — GOV.UK Service Standard, metody prototypowania usługi i jak ich użyć.
 
 ## Źródła
 - NN/g, *Service Blueprints: Definition* (nngroup.com/articles/service-blueprints-definition/) — elementy blueprintu;

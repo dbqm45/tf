@@ -12,7 +12,7 @@ metadata:
 Granica: **ops-security-operations** obsługuje SIEM, EDR, SOAR i incydenty (telemetria, triaż, reagowanie). Ten skill
 dotyczy **projektowania i testowania wykrywania**: skąd wiadomo, że reguła łapie technikę i że da się ją utrzymać.
 Ogólne alerty o awarii: ops-observability. Co może pójść źle w projekcie: arch-threat-modeling. Reguły z analizy
-próbki: sec-malware-analysis. Szczegóły, szablon reguły i metryki: `references/reguly-i-metryki.md`.
+próbki: sec-malware-analysis. Szczegóły, szablon reguły i metryki: `references/rules-and-metrics.md`.
 
 ## Procedura (cykl życia reguły)
 1. **Hipoteza.** Skąd wiemy, że to ważne: raport o zagrożeniu, incydent własny, technika ATT&CK istotna dla naszej branży
@@ -30,7 +30,7 @@ próbki: sec-malware-analysis. Szczegóły, szablon reguły i metryki: `referenc
 ## Detection-as-code (Sigma)
 - Sigma to otwarty, niezależny od dostawcy format reguł w YAML. Wymagane pola: `title`, `logsource`, `detection`
   z `condition`. Zalecane: `id` (UUID), `status`, `description`, `references`, `author`, `date`, `tags`
-  (np. `attack.t1059.001`), `falsepositives`, `level`. Wartości `status` i `level` — `references/reguly-i-metryki.md`.
+  (np. `attack.t1059.001`), `falsepositives`, `level`. Wartości `status` i `level` — `references/rules-and-metrics.md`.
 - Repozytorium: reguły w katalogach wg źródła, przegląd w PR, właściciel, historia zmian jako dziennik decyzji.
 - CI: (1) walidacja składni i schematu, (2) konwersja do zapytania docelowego SIEM-a (pySigma, `sigma convert`;
   pipeline mapujący pola), (3) test na zdarzeniach pozytywnych i negatywnych, (4) kontrola obowiązkowych pól

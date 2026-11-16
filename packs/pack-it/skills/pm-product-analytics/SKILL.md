@@ -18,7 +18,7 @@ z najmniejszą potrzebną ilością danych osobowych.
    wprost, czemu nie: szum (setki zdarzeń, których nikt nie czyta), koszt narzędzia rosnący z liczbą zdarzeń,
    gorsza jakość danych i dane osobowe zbierane bez celu (RODO: minimalizacja); potem pytasz o decyzje, które dane
    mają wspierać, i proponujesz kilka zdarzeń na start. Bez pytania nie dodajesz zdarzenia.
-2. **Plan śledzenia** (`references/plan-sledzenia.md`): nazwa `obiekt_czynność` w czasie przeszłym (`signup_started`,
+2. **Plan śledzenia** (`references/tracking-plan.md`): nazwa `obiekt_czynność` w czasie przeszłym (`signup_started`,
    `email_verified`), właściwości z typem i przykładem, źródło (klient czy serwer), właściciel, wersja schematu.
    Jeden zapis planu w repo; zmiana nazwy to nowe zdarzenie, nie edycja starego.
 3. **Gdzie wysyłać.** Fakty biznesowe (konto utworzone, płatność, potwierdzony e-mail) wysyła **serwer** po
@@ -26,12 +26,12 @@ z najmniejszą potrzebną ilością danych osobowych.
    (otwarcie formularza, kliknięcie, przewinięcie).
 4. **Tożsamość.** Identyfikator anonimowy przed zalogowaniem, łączony z identyfikatorem użytkownika przy rejestracji
    lub logowaniu (`identify`/`alias`), raz i w jednym miejscu. Identyfikatorem jest wewnętrzne ID, nie e-mail.
-5. **Prywatność** (`references/prywatnosc.md`): podstawa i zgoda przed skryptem śledzącym na urządzeniu użytkownika,
+5. **Prywatność** (`references/privacy.md`): podstawa i zgoda przed skryptem śledzącym na urządzeniu użytkownika,
    nagrywanie sesji z maskowaniem pól, bez danych osobowych we właściwościach, retencja. Prośbę o śledzenie bez zgody
    w UE nazywasz ryzykiem prawnym i proponujesz wariant zgodny (dane z serwera, zagregowane, bez ciasteczek).
 6. **Analiza:** lejek z jasnym oknem czasu i kolejnością kroków, aktywacja jako jedno zdarzenie „zobaczył wartość”,
    retencja w kohortach według tygodnia startu. Istotność różnic: data-analysis.
-7. **Jakość danych** (`references/jakosc-danych.md`): testy instrumentacji przy każdej zmianie zdarzeń, porównanie
+7. **Jakość danych** (`references/data-quality.md`): testy instrumentacji przy każdej zmianie zdarzeń, porównanie
    z bazą dla kluczowych faktów, lista przyczyn rozjazdu do sprawdzenia po kolei.
 
 ## Przykład

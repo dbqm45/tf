@@ -17,7 +17,7 @@ metadata:
 6. Unie dyskryminowane zamiast wielu opcjonalnych flag; wyczerpujący `switch` z `assertNever` w `default`.
 7. Funkcje publiczne mają jawnie typowany wynik; dane domyślnie `readonly`.
 8. Dane z sieci, storage, URL-i, formularzy, env są `unknown`, dopóki ich nie zwalidujesz — typ z walidatora
-   (`z.infer<typeof Schema>` lub odpowiednik) to jedyne źródło prawdy. Typy nie są obroną → `references/bezpieczenstwo.md`.
+   (`z.infer<typeof Schema>` lub odpowiednik) to jedyne źródło prawdy. Typy nie są obroną → `references/security.md`.
 
 ## Pułapki i decyzje (skrót)
 | Sytuacja | Zasada |
@@ -59,12 +59,12 @@ metadata:
 |---|---|
 | `domain-building-blocks.md` | implementujesz Money, Quantity, Party, TimeSlot, Result, agregat ze zdarzeniami |
 | `domain-modeling-patterns.md` | typ + towarzysz, zdarzenia wewnętrzne vs publikowane, decider, `#imports`, pułapki dat |
-| `podstawy-i-narrowing.md` | `any`/`unknown`, `type`/`interface`, asercje, `satisfies`, `enum`, zawężanie |
-| `funkcje-obiekty-klasy.md` | sygnatury, przeciążenia, wariancja, excess property checks, klasy, `this` |
-| `generyki-i-utility-types.md` | ograniczenia, `const T`, `NoInfer`, utility types |
-| `typy-zaawansowane.md` | `keyof`, typy warunkowe (`infer`), mapowane, template literal |
-| `moduly-dekoratory-i-merging.md` | importy typów, interop CJS, dekoratory standard/legacy, `accessor`, merging |
-| `bezpieczenstwo.md` | wejście z zewnątrz, SQL/NoSQL, merge obiektów, JWT, sekrety, URL-e, zależności npm |
+| `basics-and-narrowing.md` | `any`/`unknown`, `type`/`interface`, asercje, `satisfies`, `enum`, zawężanie |
+| `functions-objects-classes.md` | sygnatury, przeciążenia, wariancja, excess property checks, klasy, `this` |
+| `generics-and-utility-types.md` | ograniczenia, `const T`, `NoInfer`, utility types |
+| `advanced-types.md` | `keyof`, typy warunkowe (`infer`), mapowane, template literal |
+| `modules-decorators-and-merging.md` | importy typów, interop CJS, dekoratory standard/legacy, `accessor`, merging |
+| `security.md` | wejście z zewnątrz, SQL/NoSQL, merge obiektów, JWT, sekrety, URL-e, zależności npm |
 
 ## Zależne od wersji
 | Wersja | Zmiany istotne dla tego skilla |

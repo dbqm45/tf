@@ -36,11 +36,11 @@ zrównoważone tempo, prostota — sztuka maksymalizacji pracy **niewykonanej**,
 
 ## Historyjki i backlog
 - Historyjka = potrzeba użytkownika i wartość, nie zadanie techniczne: „Jako … chcę … aby …” + **kryteria akceptacji** (Given/When/Then — eng-testing).
-- Historyjki według INVEST, cięte pionowo; z wyników Event Stormingu tniesz po zdarzeniach (ddd-event-storming); przykład: `references/przyklady.md` §2.
+- Historyjki według INVEST, cięte pionowo; z wyników Event Stormingu tniesz po zdarzeniach (ddd-event-storming); przykład: `references/examples.md` §2.
 - **Mapa historyjek**, gdy backlog jest długi i nikt nie widzi całości: kręgosłup z aktywności i kroków użytkownika
   (od lewej do prawej), pod każdym krokiem historyjki (od najważniejszej), poziome linie wydań — pierwsze wydanie
   to najcieńszy plaster przez wszystkie kroki, który daje wynik (chodzący szkielet). Wzorce dzielenia za dużej
-  historyjki (kroki przepływu, warianty reguł, dane, interfejsy, ścieżki, rozpoznanie): `references/mapa-i-dzielenie.md`.
+  historyjki (kroki przepływu, warianty reguł, dane, interfejsy, ścieżki, rozpoznanie): `references/map-and-split.md`.
 - **Definition of Done** wspólna i sprawdzalna (testy, review, dokumentacja, wdrożone na środowisko…).
 
 ## Prognozowanie
@@ -62,4 +62,4 @@ z historii:
 
 Odpowiedź: „85% szans na co najmniej 25 elementów w 6 tygodni”; prognozę odświeżasz co tydzień.
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

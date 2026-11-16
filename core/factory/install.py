@@ -100,8 +100,8 @@ LEGACY_GI = [(f"# {n}:begin (zarządzane przez factory/install.py)", f"# {n}:end
 CORE_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "factory": ".tf/factory",
              "tests": ".claude/tests"}   # testy fabryki nie mieszają się z Twoimi `tests/` (pytest ich nie zbierze)
 CORE_FILES = {"guide/JEV.md": ".claude/JEV.md",   # przewodnik i FAQ w .tf/factory/ — bez README w korzeniu projektu
-              "guide/PRZEWODNIK.md": ".tf/factory/PRZEWODNIK.md", "guide/FAQ.md": ".tf/factory/FAQ.md",
-              "guide/PETLA.md": ".tf/factory/PETLA.md"}
+              "guide/GUIDE.md": ".tf/factory/GUIDE.md", "guide/FAQ.md": ".tf/factory/FAQ.md",
+              "guide/LOOP.md": ".tf/factory/LOOP.md"}
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests",
              "workflows": ".claude/workflows",   # workflows: skrypty wieloagentowe Claude Code (Workflow)
              "analyzers": ".tf/factory/analyzers"}   # moduły tf analyze (analyzer.yaml, scripts/, fixtures/)

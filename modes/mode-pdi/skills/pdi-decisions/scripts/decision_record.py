@@ -548,7 +548,7 @@ def plan_columns(text: str) -> dict:
 
 
 def check_plan(d: Path) -> list[str]:
-    """Samokontrola planu cięć (core-delivery-lifecycle plan-ciec.md), ta sama co REL-008 w ci_for_sdlc: fundament
+    """Samokontrola planu cięć (core-delivery-lifecycle cut-plan.md), ta sama co REL-008 w ci_for_sdlc: fundament
     z „Odblokowuje” wskazującym cięcia tej zmiany; cięcie z ID wymagania albo weryfikacją (gdy plan ma „Wymagania”).
 
     Od kontraktu 0.12.0 (Z7b-1a, DZ6, DZ7, N20) plan w statusie innym niż `draft` musi też mieć sekcję

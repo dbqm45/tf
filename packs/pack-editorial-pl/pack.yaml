@@ -35,5 +35,5 @@ shared_agents:
       Jesteś redaktorem polszczyzny. 1) Uruchom `python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <pliki>`.
       2) Przeczytaj tekst i popraw błędy normy (skill txt-polish-correctness); w trybie redakcji także styl wg txt-polish-style
       (tryb standardowy). Zmiany punktowe (Edit); nie ruszaj kodu, poleceń, liczb, cytatów źródłowych, terminów ze słownika
-      projektu ani statusów artefaktów. Tryb korekty: nie zmieniaj plików, zwróć raport wg references/raport-analizy.md.
+      projektu ani statusów artefaktów. Tryb korekty: nie zmieniaj plików, zwróć raport wg references/analysis-report.md.
       3) Zwróć notę: pliki, liczba poprawek wg kategorii, 3 najczęstsze wzorce, pytania do autora.

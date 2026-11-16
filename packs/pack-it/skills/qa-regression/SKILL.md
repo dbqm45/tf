@@ -33,7 +33,7 @@ Każdy test tworzy własne dane (fabryki/budowniczowie, API do przygotowania sta
 unikalne identyfikatory; brak danych produkcyjnych (RODO). Stan przygotowuj przez API, nie przez klikanie UI.
 
 Szerzej (dane syntetyczne i anonimizacja kopii produkcji, e-maile przez Mailpit, macierz kompatybilności, aplikacje
-mobilne, narzędzia testów API, DAST w CI, monitoring syntetyczny po wydaniu): `references/dane-srodowiska-i-specjalne.md`.
+mobilne, narzędzia testów API, DAST w CI, monitoring syntetyczny po wydaniu): `references/environment-and-special-data.md`.
 
 ## Regresja wizualna i dostępności
 Zrzuty ekranu komponentów/stron ze stabilizacją (czcionki, animacje wyłączone, stały zegar i dane); przegląd różnic
@@ -65,4 +65,4 @@ pokrycie **wymagań** testami (qa-spec-first-testing). Procent pokrycia linii �
 
 Flaky z raportu idzie do kwarantanny (właściciel, zgłoszenie, termin), nie do `retries: 3`.
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

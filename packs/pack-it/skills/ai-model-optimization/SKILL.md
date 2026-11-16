@@ -27,7 +27,7 @@ Ten skill dotyczy **artefaktu modelu** (wagi, format, kompilacja). Serwer, KV ca
 3. **Dobór rozmiaru modelu.** Najmniejszy model, który przechodzi ewaluację zadania, wygrywa. Porównaj na swoim zbiorze
    warianty o podobnej pamięci: większy skwantyzowany vs mniejszy w wyższej precyzji vs mniejszy dostrojony (**ai-fine-tuning**).
    Nie zakładaj kolejności — sprawdź.
-4. **Kwantyzacja** (tabela formatów i sprzętu: `references/kwantyzacja.md`):
+4. **Kwantyzacja** (tabela formatów i sprzętu: `references/quantization.md`):
    - najpierw najłagodniejszy wariant: FP8 lub INT8 (na GPU z natywnym wsparciem), potem 4 bity (AWQ, GPTQ);
    - GGUF dla llama.cpp, Ollamy i CPU lub laptopa; wybór poziomu (`Q8_0`, `Q5_K_M`, `Q4_K_M`) wg pamięci RAM;
    - dane kalibracyjne z rozkładu produkcyjnego (język, domena, długość), nie z cudzego benchmarku;
@@ -38,7 +38,7 @@ Ten skill dotyczy **artefaktu modelu** (wagi, format, kompilacja). Serwer, KV ca
    poza angielskim. Perplexity i dywergencja KL względem modelu pełnej precyzji to szybkie wskaźniki
    do porównania wariantów, ale nie zastępują zadania docelowego. Próg akceptacji ustal **przed** pomiarem.
 6. **Klasyczne DL i wizja:** eksport do ONNX, uruchomienie w ONNX Runtime, OpenVINO (CPU Intela) albo TensorRT (GPU NVIDIA),
-   kwantyzacja INT8 z kalibracją; `torch.compile` gdy zostajesz w PyTorch. Szczegóły i pułapki: `references/eksport-i-kompilacja.md`.
+   kwantyzacja INT8 z kalibracją; `torch.compile` gdy zostajesz w PyTorch. Szczegóły i pułapki: `references/export-and-compilation.md`.
    Po eksporcie sprawdź zgodność liczbową z modelem wyjściowym i metrykę zadania, nie tylko szybkość.
 7. **Destylacja dla rozmiaru, przycinanie.** Destylacja (nauczyciel → mniejszy uczeń) zwykle daje większy zysk niż przycinanie;
    mechanika treningu i licencje wyników nauczyciela: **ai-fine-tuning**. Przycinanie nieustrukturyzowane (zerowanie wag)
@@ -72,8 +72,8 @@ Następny krok: kalibracja AWQ na polskich dokumentach i ponowny pomiar; próg �
 - [ ] artefakt wersjonowany (skrót, parametry, wersje narzędzi)
 
 ## Materiały dodatkowe
-- `references/kwantyzacja.md` — formaty (FP8, INT8, GPTQ, AWQ, GGUF, FP4), sprzęt i dobór.
-- `references/eksport-i-kompilacja.md` — ONNX, ONNX Runtime, TensorRT, OpenVINO, torch.compile, pułapki.
+- `references/quantization.md` — formaty (FP8, INT8, GPTQ, AWQ, GGUF, FP4), sprzęt i dobór.
+- `references/export-and-compilation.md` — ONNX, ONNX Runtime, TensorRT, OpenVINO, torch.compile, pułapki.
 
 ## Źródła
 - Lin i in., „AWQ” (arXiv 2306.00978; MLSys 2024) — ochrona ok. 1% istotnych kanałów wg aktywacji; wyszukiwanie 2026-10-17.
@@ -82,5 +82,5 @@ Następny krok: kalibracja AWQ na polskich dokumentach i ponowny pomiar; próg �
   — liczby ze streszczenia, wyszukiwanie 2026-10-17.
 - Leviathan, Kalman, Matias, „Fast Inference from Transformers via Speculative Decoding” (2022/2023) — zachowany rozkład wyjścia;
   streszczenie z wyszukiwania 2026-10-17.
-- Wersje narzędzi i formatów: `references/kwantyzacja.md`, `references/eksport-i-kompilacja.md` (z datami).
+- Wersje narzędzi i formatów: `references/quantization.md`, `references/export-and-compilation.md` (z datami).
 Opisane własnymi słowami.

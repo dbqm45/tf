@@ -34,7 +34,7 @@ Zawsze nazywaj zasadę i konkretny koszt, którego unikamy („YAGNI: ta abstrak
 | **Reguła skauta** | Czy zostawiam kod trochę lepszym? | ale: bez refaktoru „przy okazji” w tym samym commicie co funkcja |
 
 Poziom komponentów (biblioteki, pakiety): zasady REP/CCP/CRP i ADP/SDP/SAP, metryki stabilności, polityka i szczegół,
-framework na dystans, struktura krzycząca domeną, granice — `references/komponenty-i-granice.md`.
+framework na dystans, struktura krzycząca domeną, granice — `references/components-and-boundaries.md`.
 
 ## Gdy zasady się kłócą
 - **KISS/YAGNI > DRY** przy przypadkowym podobieństwie kodu — duplikacja jest tańsza niż zła abstrakcja.
@@ -85,4 +85,4 @@ L31: usuń ExporterFactory → bezpośrednie wywołanie
 L58: stdlib formatDate() → Intl.DateTimeFormat("pl-PL")
 Bilans: −96 / +18 linii. Walidacja wierszy zostaje — granica zaufania.
 ```
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

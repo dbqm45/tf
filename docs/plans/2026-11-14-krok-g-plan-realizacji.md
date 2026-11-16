@@ -46,7 +46,7 @@ i drukuje ścieżkę z podpowiedzią `--body-file`. Skrypt niczego nie wypycha i
 
 - Pliki: `core/skills/tf/scripts/run_state.py` (funkcje w istniejącym skrypcie — nowy plik wymagałby nowej reguły
   uprawnień), `core/tests/test_pr_body.py`, `core/tests/skill_evals/tf.json`, `core/skills/tf/SKILL.md` (§4, krok 3 —
-  krócej niż dziś), `core/guide/PETLA.md`.
+  krócej niż dziś), `core/guide/LOOP.md`.
 - Kolejność: scenariusz ewaluacji → test (czerwony) → kod → treść skilla → bramka skilla → pełne sprawdzenie.
 - Koszt przebiegu zostaje w `report.md` (powstaje po PR); w opisie PR jest jedna linia z `run.json`, gdy koszt jest
   już policzony.
@@ -103,7 +103,7 @@ Sekcja `deploy` karty operacyjnej (`.tf/config/operations.json`):
   Wynik `--json` zawiera wszystkie zadania jak dotąd.
 - Pliki: `core/factory/task_state.py`, `core/skills/tf/scripts/run_state.py` (`finding`, odmowa `zakres fail`),
   `core/tests/test_close.py`, poprawki `test_review_rounds.py` i innych testów, które zapisują `zakres fail`,
-  `references/tryby-i-zatrzymania.md`, przewodniki, `PUBLIC_API.md`.
+  `references/modes-and-stops.md`, przewodniki, `PUBLIC_API.md`.
 - Kolejność: testy (czerwone) → `task_state.py` → `run_state.py` → przewodniki → bramka skilla → pełne sprawdzenie.
 - Zmiana zachowania pętli: jedno dodatkowe polecenie przy nieudanym przeglądzie zakresu (w pomiarze po kroku F:
   1 przebieg na 15). Niezmierzone na przebiegach z modelem.

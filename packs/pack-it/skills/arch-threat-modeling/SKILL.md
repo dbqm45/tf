@@ -37,7 +37,7 @@ modelu w review, bez nowego warsztatu.
    pobiera fakturę użytkownika A → 404”. Trafiają do planu (core-project-record) i do qa-test-design.
 7. **Weryfikacja**: czy każdy przepływ przez granicę zaufania ma zagrożenia S/T/I, czy każdy magazyn danych ma I/T/D,
    czy każda warstwa obrony (sieć, tożsamość, host, aplikacja, dane, łańcuch dostaw, wykrywanie, reagowanie) ma
-   kontrolę albo zapisaną decyzję (`references/warstwy-obrony.md`), czy każda decyzja ma właściciela.
+   kontrolę albo zapisaną decyzję (`references/defense-layers.md`), czy każda decyzja ma właściciela.
    Model `proposed` → akceptacja człowieka.
 
 ## STRIDE per element (wg Microsoft / Shostack)
@@ -67,7 +67,7 @@ wystarcza STRIDE.
 
 ## Klasy błędów do sprawdzenia — OWASP Top 10:2025
 A01 Broken Access Control · A02 Security Misconfiguration · A03 Software Supply Chain Failures (ops-supply-chain-security)
-· A04 Cryptographic Failures (ops-secrets-identities, `kryptografia-i-pki.md`) · A05 Injection · A06 Insecure Design (ten
+· A04 Cryptographic Failures (ops-secrets-identities, `cryptography-and-pki.md`) · A05 Injection · A06 Insecure Design (ten
 skill) · A07 Authentication Failures (be-auth-security) · A08 Software or Data Integrity Failures · A09 Security Logging
 and Alerting Failures (ops-security-operations) · A10 Mishandling of Exceptional Conditions (fail closed, bez wycieku
 szczegółów w błędach). Dla API: OWASP API Top 10 w be-api-design.
@@ -86,7 +86,7 @@ Ryzyka zaakceptowane (kto, do kiedy) · Założenia · Otwarte pytania · Przeka
 | Z-1 | operator → webhook | S | Napastnik wysyła fałszywe potwierdzenie, bo nie sprawdzamy nadawcy; skutek: towar bez zapłaty | 9 | ograniczyć: podpis (MAC) | brak podpisu → 401, stan bez zmian |
 | Z-2 | operator → webhook | T | Powtórzenie podpisanego żądania; skutek: podwójne księgowanie | 4 | ograniczyć: deduplikacja po id | to samo żądanie 2× → 1 efekt |
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] DFD z granicami zaufania i etykietami przepływów

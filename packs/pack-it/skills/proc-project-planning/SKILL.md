@@ -38,7 +38,7 @@ i zakresie podejmuje człowiek (bramka B1 w core-delivery-lifecycle); agent przy
    - wartość oczekiwana E = (O + 4M + P) / 6, odchylenie σ ≈ (P − O) / 6;
    - sumuj wartości E, nie „najbardziej prawdopodobne” M, bo rozkłady są prawoskośne;
    - przedział z sumy wariancji zakłada niezależność części, więc jest za wąski — koryguj go klasą referencyjną.
-   - Przykład liczbowy: `references/szacowanie.md`.
+   - Przykład liczbowy: `references/estimation.md`.
 5. **Koszt całkowity:**
    - ludzie × czas × stawka;
    - środowiska i chmura (ops-finops), licencje;

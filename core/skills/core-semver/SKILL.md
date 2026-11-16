@@ -20,7 +20,7 @@ Numer **liczy skrypt**, nie pamięć modelu:
 ## 1. Najpierw publiczne API
 Bez zadeklarowanego publicznego API nie da się ocenić zgodności (reguła 1). Zapisz je w README albo w pliku
 `PUBLIC_API.md`, zanim nadasz 1.0.0. Co zwykle do niego należy, zależy od typu produktu (szczegóły:
-`references/publiczne-api.md`):
+`references/public-api.md`):
 
 | Produkt | Publiczne API |
 |---|---|

@@ -16,9 +16,9 @@ kliknięciem. Sprawdzanie uprawnień do obiektu po stronie serwera to warunek ws
 ## Procedura
 1. **Rozpoznaj wzorzec** i wczytaj jego referencję:
    - historia zmian, zgodność, spory z klientem → `references/audit-log.md`;
-   - „usuń”, kosz, przywracanie, żądanie usunięcia danych → `references/usuwanie.md`;
-   - support działa w imieniu klienta → `references/impersonacja.md`;
-   - zmiana wielu rekordów naraz, import, eksport → `references/operacje-masowe.md`.
+   - „usuń”, kosz, przywracanie, żądanie usunięcia danych → `references/removal.md`;
+   - support działa w imieniu klienta → `references/impersonation.md`;
+   - zmiana wielu rekordów naraz, import, eksport → `references/bulk-operations.md`.
 2. **Ustal fakty projektu**: czy jest audit log i gdzie, czy usuwanie jest miękkie, czy dane osobowe są w tych
    tabelach, jaka jest kolejka zadań. Brak informacji → pytasz albo czytasz kod; nie zakładasz.
 3. **Zaprojektuj z checklisty referencji** — każdy punkt rozstrzygnięty albo świadomie pominięty z powodem.

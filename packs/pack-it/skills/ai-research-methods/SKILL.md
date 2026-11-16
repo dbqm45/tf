@@ -11,22 +11,22 @@ metadata:
 
 Wynik „model B jest lepszy” ma wartość tylko wtedy, gdy ktoś inny może go powtórzyć i wskazać, co go podważa.
 Skill prowadzi przez cały cykl badawczy. Zostawia sąsiadom ich zadania: ewaluację funkcji LLM i agentów (**ai-evals**),
-statystykę i testy A/B produktu (**data-analysis**, `.claude/skills/data-analysis/references/statystyka.md`,
-`.claude/skills/data-analysis/references/eksperymenty-zaawansowane.md`), dostrajanie (**ai-fine-tuning**), narzędzia
+statystykę i testy A/B produktu (**data-analysis**, `.claude/skills/data-analysis/references/statistics.md`,
+`.claude/skills/data-analysis/references/advanced-experiments.md`), dostrajanie (**ai-fine-tuning**), narzędzia
 śledzenia eksperymentów (**ai-mlops**) i badanie faktów w sieci (**core-source-research**).
 
 ## Procedura
 1. **Pytanie i decyzja.** Zapisz hipotezę falsyfikowalnie („dodanie cechy X podnosi PR-AUC o ≥ 1 pkt na danych z
    kwartału Q”), decyzję, którą wynik zmieni, i kryterium porażki. Bez kryterium porażki każdy wynik „coś pokazuje”.
-2. **Literatura przed kodem** (`references/literatura-i-prototyp.md`). Sprawdź, czy ktoś już to zrobił i czy
+2. **Literatura przed kodem** (`references/literature-and-prototype.md`). Sprawdź, czy ktoś już to zrobił i czy
    zreplikowano wynik. Ustalenie artykułu = twierdzenie + dowód + warunki. Fakty z sieci zbieraj wg **core-source-research**.
    Projekt z wiedzą spoza informatyki (biologia, chemia, medycyna, materiały): przegląd w Claude Science lub bazach
    dziedzinowych prowadzi człowiek, do repo wraca zapis dowodu z DOI, wersją, datą dostępu i odtwarzalnym notatnikiem
-   (`references/literatura-i-prototyp.md`).
+   (`references/literature-and-prototype.md`).
 3. **Mocny prosty baseline najpierw.** Reguła, regresja logistyczna, drzewo, ostatnia wartość, najczęstsza klasa
    albo istniejący system. Strojony baseline (tyle prób, co kandydat) jest uczciwym punktem odniesienia; kandydat
    bijący słaby baseline niczego nie dowodzi. Jeśli prosty model wystarcza do decyzji, badanie kończy się tutaj.
-4. **Podział danych i wyciek — przed pierwszym treningiem** (`references/wyciek-i-podzialy.md`). Podział wynika z
+4. **Podział danych i wyciek — przed pierwszym treningiem** (`references/leakage-and-splits.md`). Podział wynika z
    tego, jak model będzie użyty: przyszłość nie wpływa na przeszłość (podział czasowy), ta sama jednostka (klient,
    pacjent, dokument) nie trafia po obu stronach (podział grupowy). Przetwarzanie wstępne (skalowanie, imputacja,
    selekcja cech, kodowanie) uczysz tylko na treningu. **Zbiór testowy ogląda się raz**, na końcu; strojenie idzie
@@ -52,16 +52,16 @@ statystykę i testy A/B produktu (**data-analysis**, `.claude/skills/data-analys
    małej skali nie przenoś na dużą bez sprawdzenia trendu na 2–3 rozmiarach [założenie — ranking metod bywa niestabilny].
 10. **Reprodukowalność.** Dla każdego przebiegu zapisz: commit kodu, konfigurację (hiperparametry, seedy), wersję
     i skrót danych oraz podziału, środowisko (biblioteki, sprzęt), komendę uruchomienia. Śledzenie i rejestr
-    (MLflow, DVC) to **ai-mlops**. Lista kontrolna: `references/raport-i-szablon.md`.
-11. **Od artykułu i wyniku do produktu** (`references/literatura-i-prototyp.md`). Prototyp na własnych danych, nie na
+    (MLflow, DVC) to **ai-mlops**. Lista kontrolna: `references/report-and-template.md`.
+11. **Od artykułu i wyniku do produktu** (`references/literature-and-prototype.md`). Prototyp na własnych danych, nie na
     benchmarku; walidacja offline (dane historyczne, podział czasowy), potem online (shadow, A/B — **data-analysis**
     i **ai-evals**, krok 8). Różnica offline↔online jest wynikiem: zapisz ją i jej przyczynę.
 12. **Etyka danych.** Przed użyciem sprawdź pochodzenie i licencję danych, zgody, dane osobowe i szczególne
     (**arch-privacy-compliance**), reprezentatywność i ryzyko szkód dla grup; kontaminację benchmarków i nadużycia.
 12a. **Model zastępczy w pętli optymalizacji i rejestr hipotez** — optymalizacja na modelu wyszukuje jego błędy,
     więc zwycięzcę sprawdzasz prawdziwym symulatorem lub eksperymentem i raportujesz obie liczby; hipotezy jako graf
-    z werdyktami i warunkiem ponownego otwarcia (`references/optymalizacja-i-hipotezy.md`).
-13. **Raport** `docs/project/02-domain/experiment-<nazwa>.md` wg `references/raport-i-szablon.md`: hipoteza, metoda,
+    z werdyktami i warunkiem ponownego otwarcia (`references/optimization-and-hypotheses.md`).
+13. **Raport** `docs/project/02-domain/experiment-<nazwa>.md` wg `references/report-and-template.md`: hipoteza, metoda,
     wyniki z rozrzutem, **wyniki negatywne**, ograniczenia, decyzja. Wynik negatywny jest wartościowy:
     oszczędza następnym ślepe zaułki, ale tylko gdy opisano warunki, w których go uzyskano.
 

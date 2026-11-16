@@ -29,8 +29,8 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    nie czyta plików źródłowych partii; wykonawca zapisuje kartę do pliku i odpowiada jedną linią. Wszystkich
    wykonawców uruchamiasz w jednej wiadomości, na pierwszym planie (bez pracy w tle), i czekasz na ich odpowiedzi —
    nie odpytujesz katalogu `modules/` w pętli (każde sprawdzenie to tura z pełnym kontekstem). Prompt ze stałym
-   początkiem (`references/prompt-karty.md`) i zmienną końcówką (lista plików partii) — wspólny prefiks trafia
-   w cache. Wynik: JSON wg `references/karta-modulu.json` w `modules/<moduł>.json`.
+   początkiem (`references/prompt-cards.md`) i zmienną końcówką (lista plików partii) — wspólny prefiks trafia
+   w cache. Wynik: JSON wg `references/module-card.json` w `modules/<moduł>.json`.
    Wykonawca sam przepuszcza swoją kartę przez `recon_cards.py` (karta → `modules/<moduł>.md`, dowody względne wobec
    partii poprawione) i `recon_check.py` i poprawia złe dowody. Po wszystkich kartach `recon_check.py modules/ --repo
    <repo>`; kartę ze złym dowodem zwracasz wykonawcy raz (nie poprawiasz jej sam), potem eskalacja na mocniejszy model.
@@ -50,9 +50,9 @@ Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję 
    tabela, parametry), dane testowe (buildery, fixtures). Standard kodu: idiomy sygnatur, hermetyzacji i kontrolerów,
    czasy życia w rejestracji DI. Sygnał `układ` (pakiety według funkcji czy warstw) daje standard „gdzie kłaść nowy
    kod” z przykładami katalogów i wyjątkami.
-6. **Raport** `report.md` wg `references/raport.md`; sekcję Moduły wstawia `recon_cards.py modules/ --repo <repo>
+6. **Raport** `report.md` wg `references/report.md`; sekcję Moduły wstawia `recon_cards.py modules/ --repo <repo>
    --into report.md` (nie przepisujesz jej; szczegóły modułów są w `modules/*.md`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
-   (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`. Po zgodzie
+   (`references/sketches.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`. Po zgodzie
    `python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md` przenosi szkic do `REVIEW.md` (zasady
    przeglądu PR przez AI w CI: `ai_review.py install`).
 7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,

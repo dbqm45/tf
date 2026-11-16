@@ -47,7 +47,7 @@ feedbacku (0 trafień dla devcontainera). Skill dziś patrzy pod kątem agentów
 - Rozszerzenie zamiast nowego skilla; nowe scenariusze ewaluacji dla części DX.
 
 #### A3 — plan realizacji (2026-11-10, decyzja człowieka: „tak”, po rekomendacji)
-Pętla deweloperska jako część ścieżki B skilla (audyt) i nowa referencja `references/petla-deweloperska.md`; fakty
+Pętla deweloperska jako część ścieżki B skilla (audyt) i nowa referencja `references/developer-loop.md`; fakty
 zbiera `scripts/readiness_check.py` (sekcja `dx`), ocena i pomiar czasu zostają przy agencie.
 1. Testy skryptu (najpierw, czerwone) w `packs/pack-it/tests/test_readiness_check.py`:
    - repo z `Makefile` (`setup`, `test`), `compose.yaml` z Postgresem i healthcheckiem, skryptem `seed`
@@ -84,7 +84,7 @@ ops-cloud-migration (pack-it) — katalogów nie ma w strukturze core-project-re
    - `be-database` opisuje ERD (`erDiagram`, `docs/project/04-architecture/erd.md`), a mapa go zawiera;
    - SKILL.md core-delivery-lifecycle odsyła do mapy.
 2. Poprawki ścieżek: `04-architecture/<data>-mapa-prawna.md`, `05-plan/migration-plan.md`.
-3. `core/skills/core-delivery-lifecycle/references/mapa-artefaktow.md`: tabela na fazę (artefakt, kto pisze, skill
+3. `core/skills/core-delivery-lifecycle/references/artifact-map.md`: tabela na fazę (artefakt, kto pisze, skill
    z nakładką, kto czyta, kiedy pominąć w małym projekcie) oraz artefakty spoza `docs/project/` (raporty
    `tf analyze`, `metrics.md`, triaż ryzyka w opisie PR, README, CHANGELOG, kontrakt API przy kodzie).
 4. `be-database`: sekcja ERD — Mermaid `erDiagram` w `04-architecture/erd.md`, generowany lub sprawdzany względem
@@ -105,7 +105,7 @@ Skill (`arch-privacy-compliance`):
 1. Scenariusz ewaluacji `klasyfikacja-danych` (najpierw): pytanie o klasy danych, właściciela i inwentarz w
    istniejącym systemie; sprawdza właściciela zbioru, klasy, wymagania na klasę (szyfrowanie, dostęp, maskowanie,
    retencja) i inwentarz pól.
-2. Treść: zasada „Ład danych” w SKILL.md (krótko) i `references/lad-danych.md` — właściciel zbioru, cztery klasy
+2. Treść: zasada „Ład danych” w SKILL.md (krótko) i `references/data-governance.md` — właściciel zbioru, cztery klasy
    (publiczne, wewnętrzne, poufne, dane osobowe; szczególne kategorie z art. 9 osobno) z tabelą wymagań na klasę,
    format inwentarza (`docs/project/04-architecture/data-inventory.md`: tabela, pole, klasa, cel, retencja,
    właściciel, gdzie jeszcze leży), oznaczanie klasy w kodzie (komentarz lub adnotacja przy polu), odwołanie do
@@ -124,7 +124,7 @@ Moduł `packs/pack-it/analyzers/data-classification/` (TDD: najpierw zestawy tes
 - `pii-to-analytics` (wysoka): wywołanie narzędzia analityki (`analytics.track`, `posthog.capture`,
   `mixpanel.track`, `gtag`, `segment`…) z identyfikatorem osobowym.
 - Poza zakresem tier 0 (za dużo szumu): dane osobowe w odpowiedziach API — do piętra z modelem.
-- Fixtures `podlozone` (każda reguła i każdy format) i `czyste` (znacznik klasy, wpis w inwentarzu, pola podobne,
+- Fixtures `planted` (każda reguła i każdy format) i `clean` (znacznik klasy, wpis w inwentarzu, pola podobne,
   ale nie osobowe jak `email_verified`, `is_mobile`; sam napis w logu; skrót identyfikatora w analityce; testy
   pomijane). Bramka: recall 1.0, 0 fałszywych trafień.
 - Przewodnik (tabela modułów) i CHANGELOG przez commit.
@@ -136,7 +136,7 @@ z serwerem, błędy pól i formularza, dostępność, formularze wielokrokowe.
 #### A6 — plan realizacji (2026-11-10, decyzja człowieka: „ruszaj z B2, a potem A6”)
 1. Scenariusz (najpierw): `fw-react` / `formularz-wielokrokowy-zod` — kreator rejestracji firmy, walidacja dubluje się
    z serwerem, błędy z API giną, czytnik ekranu nie ogłasza błędów.
-2. `fw-react/references/formularze.md` (API sprawdzone w paczkach: react-hook-form 7.91.0, @hookform/resolvers 7.0.5,
+2. `fw-react/references/forms.md` (API sprawdzone w paczkach: react-hook-form 7.91.0, @hookform/resolvers 7.0.5,
    zod 4.6.7): kiedy natywne `<form action>` + `useActionState`, a kiedy React Hook Form; jeden schemat współdzielony
    z serwerem (serwer zawsze waliduje); błędy pól i formularza, mapowanie 422 przez `setError` i `errors.root`;
    tryb walidacji; dostępność (etykiety, `aria-invalid`, `aria-describedby`, fokus na pierwszym błędzie,
@@ -152,7 +152,7 @@ Obecnie `security` i `architecture` (`pack-it`). Kandydaci, każdy jako osobny k
 - `observability` (brak health checków, logi nieustrukturyzowane, brak identyfikatora korelacji), `pack-it`.
 
 #### A7 — reguły modułów (plan realizacji 2026-11-10, decyzja człowieka: „domknij analyzer”)
-Każdy moduł: najpierw zestawy `podlozone`/`czyste` i wpis w teście nakładki (czerwony), potem skrypt; bramka recall
+Każdy moduł: najpierw zestawy `planted`/`clean` i wpis w teście nakładki (czerwony), potem skrypt; bramka recall
 1.0 i 0 fałszywych trafień; sprawdzenie szumu na prawdziwym kodzie (repozytoria fabryki i publiczne aplikacje
 przykładowe, tylko odczyt). Tylko piętro 0 — reguły, które da się sprawdzić bez modelu i bez sieci.
 
@@ -212,7 +212,7 @@ Nowy scenariusz ewaluacji (agent ma zapytać zamiast zgadywać) i sąsiad, w kt�
 #### A8 — plan realizacji (2026-11-10, decyzja człowieka: „tak”; bez płatnych ewaluacji — limit tygodniowy)
 1. Scenariusze (najpierw): `agent-zgaduje-zamiast-pytac` (agent zamówień zgaduje brakujące dane i robi błędy)
    i `agent-pyta-o-dostepne-dane` (agent zasypuje użytkownika pytaniami o rzeczy, które ma w CRM).
-2. `references/pytanie-o-brakujace-dane.md`: najpierw narzędzia i kontekst (z listą sprawdzonych miejsc); pytanie
+2. `references/asking-for-missing-data.md`: najpierw narzędzia i kontekst (z listą sprawdzonych miejsc); pytanie
    tylko o decyzję człowieka albo brak nie do uzupełnienia; tanie i odwracalne → wartość domyślna z zapisanym
    założeniem; forma pytania (jedno, z opcjami, rekomendacją, skutkiem i wartością domyślną); pauza z punktem
    kontrolnym i wznowienie od niego (LangGraph `interrupt` — API sprawdzone w paczce); antywzorce; miary i

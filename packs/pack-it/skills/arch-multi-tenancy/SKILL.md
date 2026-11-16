@@ -80,7 +80,7 @@ ani kopii kodu. Fork każdego klienta mnoży koszt każdej poprawki i każdego w
   usunięcia;
 - **polityka per najemca:** wariant reguły jako polityka (strategia) w domenie, wybierana przez fabrykę po
   identyfikatorze najemcy i z konfiguracji
-  (`.claude/skills/ddd-tactical-design/references/reguly-dynamiczne.md`). Rdzeń nie zna nazw klientów;
+  (`.claude/skills/ddd-tactical-design/references/dynamic-rules.md`). Rdzeń nie zna nazw klientów;
   `if (tenantId == "ACME")` w logice to fork w przebraniu;
 - **handler komendy per najemca:** gdy różni się cały przebieg, rejestr handlerów wybiera implementację po
   `tenantId` z kontekstu najemcy, a domyślny handler obsługuje pozostałych. Wariant ma testy jak rdzeń;

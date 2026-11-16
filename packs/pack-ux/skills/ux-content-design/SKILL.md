@@ -11,7 +11,7 @@ metadata:
 
 Treść to część interfejsu, nie dekoracja. Zaczynasz od zadania użytkownika i prawdziwych słów, które pomagają je wykonać,
 nie od pustej makiety. Podstawowe reguły tekstów UI (czasownik na przycisku, błąd: co się stało i co zrobić, pusty
-stan) są w **ux-feature-design** (`.claude/skills/ux-feature-design/references/tresci-i-etyka.md`) — tu je rozwijasz do systemu i sprawdzasz na ludziach.
+stan) są w **ux-feature-design** (`.claude/skills/ux-feature-design/references/content-and-ethics.md`) — tu je rozwijasz do systemu i sprawdzasz na ludziach.
 
 ## Procedura
 1. **Zadanie i odbiorca.** Kto, w jakiej sytuacji (pośpiech, stres, telefon w ruchu), co chce zrobić, co już wie.
@@ -22,7 +22,7 @@ stan) są w **ux-feature-design** (`.claude/skills/ux-feature-design/references/
    reguły (obowiązkowe/opcjonalne), relacje. Jeden typ = jeden wzorzec, więc autorzy nie wymyślają układu za każdym razem.
 3. **Głos i ton.** Głos jest stały (3–4 cechy, każda z parą „jest / nie jest”: „rzeczowy, nie sztywny”), ton zmienia się
    z sytuacją użytkownika (błąd płatności ≠ sukces). Wybierz jedną formę zwracania się (ty / Pan, Pani / bezosobowo)
-   i trzymaj ją w całym produkcie. Pełna procedura i szablon: `references/przewodnik-stylu-i-mikrotekst.md`.
+   i trzymaj ją w całym produkcie. Pełna procedura i szablon: `references/style-guide-and-microcopy.md`.
 4. **Prosty język.** Zdania średnio do ok. 15–20 słów, strona czynna, jedno pojęcie = jedna nazwa, ważne na początku,
    liczby i terminy konkretne, bez rzeczowników odczasownikowych („dokonać weryfikacji” → „sprawdzić”). Dla treści
    urzędowych i prawnych dodaj obok oryginału wersję w prostym języku. To nie upraszczanie treści, tylko usuwanie
@@ -30,25 +30,25 @@ stan) są w **ux-feature-design** (`.claude/skills/ux-feature-design/references/
 5. **Mikrotekst wg wzorca.** Dla każdego stanu z tabeli stanów (ux-feature-design): błąd (co się stało → dlaczego → co zrobić,
    przy polu), pusty stan (dlaczego pusto → pierwszy krok), potwierdzenie (skutek → czasownik na przycisku), onboarding
    (jedna rzecz na ekran, wartość przed funkcją), powiadomienie (po co teraz → czego oczekujemy → jak wyłączyć).
-   Wzorce z przykładami i antywzorcami: `references/przewodnik-stylu-i-mikrotekst.md`.
+   Wzorce z przykładami i antywzorcami: `references/style-guide-and-microcopy.md`.
 6. **Treść dostępna.** Tekst linku sensowny bez kontekstu („Pobierz fakturę 03/2026”, nie „Kliknij tutaj”), nagłówki
    opisują sekcję, komunikat nie opiera się wyłącznie na kolorze lub ikonie, alternatywy tekstowe mówią funkcję, skróty
    rozwinięte przy pierwszym użyciu, język strony i fragmentów obcych oznaczony. Audyt dostępności — ux-accessibility.
 7. **Funkcje z AI.** Powiedz wprost, że odpowiada AI (od 2 sierpnia 2026 wymóg art. 50 ust. 1 AI Act, gdy użytkownik
    mógłby wziąć system za człowieka), co potrafi i czego nie, skąd bierze odpowiedzi, że może się mylić i co sprawdzić
    (pewność wyrażona słowami i źródłem, nie fałszywą precyzją „97%”). Dawaj wyjście: poprawienie, kontakt z człowiekiem,
-   zgłoszenie błędnej odpowiedzi. Szczegóły: `references/tresci-ai-i-lokalizacja.md`.
+   zgłoszenie błędnej odpowiedzi. Szczegóły: `references/ai-content-and-localization.md`.
 8. **Lokalizacja.** Teksty trzymaj w kluczach z opisem dla tłumacza (gdzie widać, limit znaków, zmienne), bez sklejania
    zdań z fragmentów; liczba mnoga i rodzaj przez ICU MessageFormat (mechanika — fe-web-platform, `i18n.md`). Zapas na
    długość (niemiecki, polski dłuższe niż angielski), glosariusz, przegląd w kontekście ekranu. Proces:
-   `references/tresci-ai-i-lokalizacja.md`.
+   `references/ai-content-and-localization.md`.
 9. **Test treści** przed wydaniem, dopasowany do pytania:
    - **cloze** — wytnij co 5.–6. słowo, badany uzupełnia luki; wynik ok. 60% i więcej oznacza zrozumiały tekst dla tej grupy;
    - **highlighter** — badani zaznaczają zielonym to, co jasne i budzi zaufanie, a czerwonym to, co niejasne lub
      niepokojące; liczysz, które fragmenty dostały czerwień u wielu osób;
    - **zadanie na zrozumienie** — „Co się stanie po kliknięciu?”, „Ile zapłacisz?”, odpowiedź własnymi słowami.
    5–8 osób na grupę wystarcza do znalezienia głównych problemów. Wskaźniki czytelności (np. Flesch) to najwyżej sygnał.
-   Szczegóły: `references/testy-tresci.md`.
+   Szczegóły: `references/content-testing.md`.
 10. **Wynik.** Przewodnik stylu (lub aktualizacja), teksty z kluczami i opisami, lista decyzji o słowach, wyniki testu
     z poprawkami. Kolejne iteracje: zmiana tekstu to zmiana w kodzie, przechodzi przegląd jak PR.
 
@@ -73,9 +73,9 @@ Wynik:
 - [ ] test treści (cloze, highlighter lub zadanie) albo jawne „nie testowano”
 
 ## Materiały dodatkowe
-- `references/przewodnik-stylu-i-mikrotekst.md` — szablon przewodnika stylu, głos i ton, wzorce mikrotekstu; czytaj przy pisaniu tekstów.
-- `references/testy-tresci.md` — przebieg cloze, highlightera i zadań na zrozumienie, interpretacja; czytaj przed testem.
-- `references/tresci-ai-i-lokalizacja.md` — teksty funkcji z AI, proces lokalizacji i zarządzanie ciągami; czytaj przy tych tematach.
+- `references/style-guide-and-microcopy.md` — szablon przewodnika stylu, głos i ton, wzorce mikrotekstu; czytaj przy pisaniu tekstów.
+- `references/content-testing.md` — przebieg cloze, highlightera i zadań na zrozumienie, interpretacja; czytaj przed testem.
+- `references/ai-content-and-localization.md` — teksty funkcji z AI, proces lokalizacji i zarządzanie ciągami; czytaj przy tych tematach.
 
 ## Źródła
 - GOV.UK, Content design guidance — „Writing for GOV.UK” i „Content design: planning, writing and managing content”

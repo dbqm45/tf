@@ -32,7 +32,7 @@ z rozmowy nie zastępują pliku.
 3. **Przeniesienie z polityką konfliktów** (tabela niżej). Klonowany starter: usuń jego `.git/` przed przeniesieniem.
    Plików człowieka nie kasujesz ani nie nadpisujesz.
 4. **Po przeniesieniu:** audyt zależności (komendy:
-   `.claude/skills/ops-supply-chain-security/references/audyt-zaleznosci.md`), testy i build szkieletu. Audyt nie naprawia sam — `npm audit fix` itp. tylko za zgodą.
+   `.claude/skills/ops-supply-chain-security/references/dependency-audit.md`), testy i build szkieletu. Audyt nie naprawia sam — `npm audit fix` itp. tylko za zgodą.
 5. **Raport** `docs/project/06-delivery/bootstrap-verification.md`: polecenie i wersja generatora, kod wyjścia,
    przeniesione pliki, konflikty `.scaffold`, wynik audytu (bezpośrednie / przechodnie), wynik testów i builda,
    następne kroki. `git init` i pierwszy commit to decyzja człowieka.
@@ -72,7 +72,7 @@ ustalenia wysokiej wagi). Skrypt niczego nie uruchamia — audyt i listę testó
      `pytest --lf`) wpisane w CLAUDE.md jako to, które agent puszcza po każdej zmianie.
    Fakty daje sekcja `dx` skryptu. Miarą jest **czas od klonu do zielonych testów**: świeży klon w katalogu
    tymczasowym, tylko według README, `time make setup && time make test` — za zgodą człowieka, wynik w raporcie.
-   Procedura i progi: `references/petla-deweloperska.md`.
+   Procedura i progi: `references/developer-loop.md`.
 5. **Werdykt** (informuje, nie blokuje; nigdy nie rekomenduje zmiany stacku):
    - stack: `gotowe` / `gotowe-z-kompensacją` / `duże-tarcie`;
    - projekt: `zdrowe` / `wymaga-uwagi` / `krytyczne` (krytyczne podatności, brak runnera testów, ≥ 3 luki wysokie).
@@ -80,7 +80,7 @@ ustalenia wysokiej wagi). Skrypt niczego nie uruchamia — audyt i listę testó
    agenta · konkretne polecenie · wysiłek (szybko < 5 min / średnio 15–30 min / duże > 1 h). Nic nie naprawiasz sam.
 
 Raport: `docs/project/07-review/<data>-gotowosc-repo.md` (core-project-record). Szablon obu raportów:
-`references/raporty.md`.
+`references/reports.md`.
 
 ## Przykład
 **Sytuacja:** „Przejmujemy API w Express (JavaScript, bez TS). Czy agenci mogą tu pracować?”

@@ -51,7 +51,7 @@ konfiguracji środowiska (setup, sieć, sekrety), reszta do polecenia:
 8. **kryteria przeglądu** — z góry: diff tylko w zakresie, raport z założeniami i niepewnościami, brak prośby
    o szersze uprawnienia.
 
-Szablon do wypełnienia, przykład i wariant „dry run”: `references/kontrakt-delegacji.md`.
+Szablon do wypełnienia, przykład i wariant „dry run”: `references/delegation-contract.md`.
 
 ## 4. Wykonanie planu bez człowieka
 Gdy delegujesz zatwierdzony plan kroku (core-delivery-lifecycle, core-project-record), agent dostaje politykę
@@ -76,7 +76,7 @@ zamiast pytań:
 - Na końcu **raport**: fazy z SHA, adaptacje, niepewności, lista weryfikacji ręcznej, propozycja przeglądu
   w świeżym kontekście.
 
-Format bloku STOP, raportu i polecenie `/goal` do skopiowania: `references/polityka-wykonania.md`.
+Format bloku STOP, raportu i polecenie `/goal` do skopiowania: `references/execution-policy.md`.
 
 **Koniec tury to raport, nie ukończenie.** Nowsze modele (Opus 5.5) w długim zadaniu kończą czasem turę samym
 tekstem — podsumowaniem z zapowiedzią kolejnego kroku. Pętla, która uznaje to za koniec, zatrzymuje pracę w połowie:
@@ -142,7 +142,7 @@ Przegląd: diff dotyczy tylko planu testów; raport wymienia założenia i niepe
 Tryb: sandbox (laptop zamknięty, zadanie bez sekretów). Rano: diff tylko w jednym pliku, raport z 2 niepewnościami
 → przegląd i PR. Wniosek do dziennika: „do sandboxa potrzebny jest dostęp tylko do odczytu do specyfikacji limitów”.
 
-Więcej: `references/kontrakt-delegacji.md` (szablon, dry run), `references/polityka-wykonania.md` (STOP, raport).
+Więcej: `references/delegation-contract.md` (szablon, dry run), `references/execution-policy.md` (STOP, raport).
 
 ## Checklista
 - [ ] zadanie przechodzi kwalifikację z §1 (sprawdzalne, nazwany zakres, bez produkcji i sekretów, odwracalne)

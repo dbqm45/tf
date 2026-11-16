@@ -96,7 +96,7 @@ API biblioteki z pamięci modelu to typowe źródło zmyślonych funkcji. Przed 
    dokumentacja i przykłady muszą dotyczyć tej wersji, nie najnowszej.
 3. **Aktualne API z dokumentacji na żywo** — serwer dokumentacji (zwykle dwa kroki: rozpoznanie identyfikatora
    biblioteki, potem pobranie fragmentów dla tematu pod budżet tokenów; gdy jedno wywołanie zwraca szum, rozbij je)
-   albo dokumentacja projektu, albo typy w paczce (`.claude/skills/core-grounding/references/sprawdzanie.md`).
+   albo dokumentacja projektu, albo typy w paczce (`.claude/skills/core-grounding/references/checking.md`).
 4. **Format przyjazny agentom przed HTML-em:** `/llms.txt` w katalogu głównym domeny dokumentacji (indeks „zacznij tu”),
    wersja `.md` adresu strony, nagłówek `Accept: text/markdown` (obsługuje go tylko część serwisów). Brak tych śladów
    to norma, nie wada.

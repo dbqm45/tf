@@ -90,7 +90,7 @@ def main() -> int:
                             inv["talos"]: {"score": 8, "mergeable": True},
                             inv["pdi"]: {"score": 8, "mergeable": False}}}
         (out / "oceny.json").write_text(json.dumps(verdicts))
-        rep = t / "raport.md"
+        rep = t / "report.md"
         r = run("report", str(mf), "--key", str(out / "key.json"), "--verdicts", str(out / "oceny.json"),
                 "--out", str(rep), cwd=t)
         text = rep.read_text() if rep.is_file() else ""

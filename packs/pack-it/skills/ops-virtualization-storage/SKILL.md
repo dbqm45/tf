@@ -23,13 +23,13 @@ kontenery: **ops-kubernetes** (węzły Kubernetes na wirtualnych maszynach liczy
 2. **Hiperwizor** — wybór kryteriami, nie marką:
    - **KVM + libvirt/QEMU**: jądro Linuksa, najwięcej swobody, zarządzanie i HA budujesz sam (Pacemaker, Ansible).
    - **Proxmox VE**: KVM i LXC z webowym zarządzaniem, klastrem, HA, Ceph i ZFS w pakiecie; licencja AGPL, płatne
-     jest wsparcie (subskrypcja). Wersje: `references/hiperwizory-i-storage.md`.
+     jest wsparcie (subskrypcja). Wersje: `references/hypervisors-and-storage.md`.
    - **VMware vSphere**: dojrzały ekosystem (DRS, vSAN, NSX), ale po przejęciu przez Broadcom zmieniły się licencje
      (subskrypcja zamiast wieczystych, rozliczenie za rdzeń, minima zakupowe) — **warunki sprawdź w aktualnej ofercie
      i umowie, nie z pamięci** [niezweryfikowane: szczegóły minimów i renewali, doniesienia resellerów z 2025-04].
    - Decyzja: umiejętności zespołu, wsparcie dostawcy aplikacji (certyfikacja pod hiperwizor), koszt 5 lat (licencje
      + wsparcie + ludzie), ryzyko uzależnienia. Dla małych lokalizacji licz minima zakupowe na lokalizację.
-3. **Wymiarowanie klastra** (tabela i wzory w `references/wymiarowanie.md`):
+3. **Wymiarowanie klastra** (tabela i wzory w `references/sizing.md`):
    - **Pojemność po awarii**: projektuj na **N+1** (utrata jednego węzła, przy HA bez przekroczenia limitów);
      przy dużych klastrach N+2. Nie licz węzłów „na styk” — HA uruchomi VM tylko tam, gdzie jest wolna pamięć.
    - **CPU**: stosunek vCPU do rdzeni fizycznych zależy od obciążenia; punktem wyjścia są wartości [przykład]

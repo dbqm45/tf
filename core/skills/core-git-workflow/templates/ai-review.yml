@@ -1,4 +1,4 @@
-# Przegląd PR przez Claude w CI (core-git-workflow, references/przeglad-ai-w-ci.md).
+# Przegląd PR przez Claude w CI (core-git-workflow, references/ai-review-in-ci.md).
 # Instalacja: python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--all-prs]
 # Wymaga: sekretu ANTHROPIC_API_KEY; zasad w REVIEW.md w katalogu głównym (bez pliku — przebiegi domyślne z promptu);
 # ochrony gałęzi wymagającej statusu ai-review/verdict. Domyślnie tylko PR z etykietą ai-review (koszt).

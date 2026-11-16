@@ -51,6 +51,6 @@ Dodatkowe testy (czerwone przed kodem):
   D-17 `query --version`, D-18 tarball z `..` w ścieżce odrzucony;
 - ui-deconstruct: S-1 katalog z CSS → tokeny (zmienne CSS, kolory z częstością, fonty, skala rozmiarów, odstępy, promienie,
   cienie, breakpointy), S-2 strona z lokalnego serwera z arkuszem CSS z tej samej domeny, S-3 wynik to szkic skilla
-  w formacie fabryki (SKILL.md z opisem „Użyj, gdy…”, `references/tokeny.md`, `tokens.json`), S-4 istniejący katalog
+  w formacie fabryki (SKILL.md z opisem „Użyj, gdy…”, `references/tokens.md`, `tokens.json`), S-4 istniejący katalog
   wyjścia bez `--force` → kod 1, S-5 adres prywatny przez CLI odrzucony, S-6 treść ze strony oznaczona jako dane;
 - `tools/`: T-1 oba wejścia przekazują argumenty do skryptów rdzenia.

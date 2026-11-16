@@ -44,7 +44,7 @@ metadata:
   linii. Użyj ogranicznika (`klucz<<EOF` … `EOF`) dla treści, w której ogranicznik nie wystąpi; treść dowolną (diff,
   wynik modelu) zapisz do pliku i przekaż ścieżkę — tak zaleca dokumentacja GitHub.
 - Workflow, który commituje na gałąź PR: `[skip ci]` w temacie i krok-strażnik pomijający commity bota. Przegląd PR
-  przez AI z bramką werdyktu: przykład 4 w `references/przyklady.md` i `.claude/skills/core-git-workflow/references/przeglad-ai-w-ci.md`.
+  przez AI z bramką werdyktu: przykład 4 w `references/examples.md` i `.claude/skills/core-git-workflow/references/ai-review-in-ci.md`.
 
 ## Wdrożenia
 - Strategia z szybkim rollbackiem: blue/green, canary lub rolling z healthcheckami; wybór, bramki canary, GitOps
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@<pełny-SHA> # v4
       - run: npm ci --ignore-scripts && npm run lint && npm run typecheck && npm test && npm run build
 ```
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Źródła
 - GitHub Docs: „Creating a composite action”, „Workflow commands — multiline strings” (`GITHUB_OUTPUT` z ogranicznikiem),

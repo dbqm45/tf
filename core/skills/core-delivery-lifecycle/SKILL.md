@@ -36,14 +36,14 @@ dobierasz do problemu; pytanie spoza swojej dziedziny persona zadaje konsultanto
 | 2 | Domena | `02-domain/` | analityk domeny | domena: Event Storming, podział strategiczny, mapa kontekstów | słownik, zdarzenia i procesy, konteksty i mapa kontekstów, sprzeczności i pytania do eksperta |
 | 3 | Wymagania | `03-requirements/` | analityk domeny + projektant produktu/UX | model taktyczny, testy od specyfikacji, atrybuty jakości | wymagania z kryteriami akceptacji (przykłady), wymagania jakości jako scenariusze, priorytety; dane osobowe wypisane przy wymaganiach, które ich dotyczą |
 | 4 | Architektura | `04-architecture/` | architekt rozwiązania | architektura: system, stack, atrybuty jakości, zagrożenia, prywatność | decyzja o stacku, dokument architektury (C4), ADR, model zagrożeń, szacunki, strategia danych, wdrożenia i obserwowalności; przy danych osobowych `privacy.md` (inwentarz, podstawy, retencja, decyzja o DPIA) |
-| 5 | Plan | `05-plan/` | architekt rozwiązania + projektant testów | ciągłe dostarczanie, projekt testów, przegląd planu | cięcia pionowe w kolejności (szkielet end-to-end jako pierwszy krok) wg `references/plan-ciec.md` (fundamenty z polem „Odblokowuje”, gwiazda przewodnia, niewiadome blokujące); plan wydania `release.yaml` (R1 = MVP z wynikiem i metryką, linie R2…, flagi z etapami udostępniania i datą usunięcia); plan testów z ryzykami, wykonawcy |
+| 5 | Plan | `05-plan/` | architekt rozwiązania + projektant testów | ciągłe dostarczanie, projekt testów, przegląd planu | cięcia pionowe w kolejności (szkielet end-to-end jako pierwszy krok) wg `references/cut-plan.md` (fundamenty z polem „Odblokowuje”, gwiazda przewodnia, niewiadome blokujące); plan wydania `release.yaml` (R1 = MVP z wynikiem i metryką, linie R2…, flagi z etapami udostępniania i datą usunięcia); plan testów z ryzykami, wykonawcy |
 | 6 | Realizacja | `06-delivery/` | implementer wg stacku + projektant testów | język, framework, serwer i UI, testy; core-git-workflow, przegląd zmian | dla każdego kroku: kod, testy, przegląd, raport kroku; pipeline CI zielony od pierwszego kroku |
-| 7 | Przygotowanie do wydania | `06-delivery/`, `07-review/` | DevOps/SRE + security-reviewer + projektant testów | operacje: CI/CD, kontenery, IaC, wydania, obserwowalność, łańcuch dostaw, sekrety | środowiska jako kod, wdrożenie na środowisko testowe, przegląd bezpieczeństwa, testy regresji i wydajności, runbook, przegląd gotowości (`references/gotowosc-produkcyjna.md`) |
+| 7 | Przygotowanie do wydania | `06-delivery/`, `07-review/` | DevOps/SRE + security-reviewer + projektant testów | operacje: CI/CD, kontenery, IaC, wydania, obserwowalność, łańcuch dostaw, sekrety | środowiska jako kod, wdrożenie na środowisko testowe, przegląd bezpieczeństwa, testy regresji i wydajności, runbook, przegląd gotowości (`references/production-readiness.md`) |
 | 8 | Wydanie i obserwacja | `07-review/` | **człowiek** wdraża; DevOps/SRE przygotowuje i obserwuje | operacje: wydania, SRE; core-semver | wdrożenie stopniowe według etapów z `release.yaml` (każde przejście etapu flagi to bramka B5) z bramkami SLO, obserwacja po wydaniu, usunięcie flag do `remove_by`, retrospektywa i lekcje |
 | 9 | Utrzymanie | `08-operations/` | DevOps/SRE + implementer + projektant testów | SRE, triaż, debugowanie, aktualizacje zależności, regresja, koszty | cykliczny przegląd utrzymania (`operations-review.md`), poprawki błędów z testem regresyjnym, łatki bezpieczeństwa w terminie, aktualizacje przed końcem wsparcia, wycofywanie funkcji, koszty |
 
 Przykład (pack-it): Maja → Natalia (pack-ux) → Ewa → Tomasz → Tomasz + Kasia → wykonawca wg stacku + Kasia → Piotr.
-Obsada ze skillami: `references/obsada-nakladek.md` (nakładka domenowa: jej `GUIDE.md`).
+Obsada ze skillami: `references/pack-staffing.md` (nakładka domenowa: jej `GUIDE.md`).
 
 Dokumentacja powstaje w trakcie: README i uruchomienie od fazy 6, runbook w fazie 7 (pack-docs: docs-tech-writing).
 Korekta języka przed oddaniem ludziom (pack-editorial-pl: Stefan, txt-polish-correctness).
@@ -92,13 +92,13 @@ Wydanie nie kończy projektu. Utrzymanie to stały rytm, a nie reakcja na awarie
   od karencji (skill łańcucha dostaw). Termin ustala człowiek.
 - **Aktualizacje zależności:** drobne regularnie, główne przed końcem wsparcia, pojedynczo i z planem.
   Agent nie podnosi zależności bez prośby — przegląd utrzymania zawiera propozycje do zatwierdzenia.
-- **Wycofywanie funkcji i koniec życia systemu:** decyzja człowieka; przebieg w `references/utrzymanie.md`.
+- **Wycofywanie funkcji i koniec życia systemu:** decyzja człowieka; przebieg w `references/maintenance.md`.
 
 ## Ścieżka skrócona (mały projekt, niskie ryzyko)
 Kryteria: jeden zespół, kilka ekranów lub endpointów, brak danych wrażliwych i regulacji, łatwe wycofanie.
 Fazy 0–1 łącznie w jednym briefie, faza 2 pominięta (słownik w briefie), 3–5 w jednym dokumencie
 (wymagania z przykładami + krótka architektura + plan), bramki B1+B2+B3 jako jedna akceptacja. **B4 i B5 zostają
-zawsze**, a przegląd gotowości w wersji skróconej (sekcje oznaczone „minimum” w `gotowosc-produkcyjna.md`).
+zawsze**, a przegląd gotowości w wersji skróconej (sekcje oznaczone „minimum” w `production-readiness.md`).
 
 ## Zasady przebiegu
 - **Szkielet najpierw**: pierwszy krok realizacji przechodzi przez wszystkie warstwy i pipeline aż do środowiska
@@ -131,12 +131,12 @@ i umów; dostarczenie sekretów; testy penetracyjne bez pisemnej zgody na zakres
 zależności bez prośby. To wszystko jest w planie faz jako zadania dla człowieka z terminem.
 
 ## Więcej
-- Mapa artefaktów (faza → plik → kto pisze → skill → kto czyta, co pominąć w małym projekcie): `references/mapa-artefaktow.md`.
-- Definicja „gotowe do produkcji” i przegląd gotowości: `references/gotowosc-produkcyjna.md`.
-- Przebieg próbny na małym projekcie (jak sprawdzić, czy fabryka dowozi): `references/przebieg-probny.md`.
-- Wycofywanie funkcji i wygaszanie systemu (faza 9): `references/utrzymanie.md`.
-- Przegląd specyfikacji przed planem (panel 2–3 niezależnych recenzentów, bramka): `references/przeglad-specyfikacji.md`.
-- Plan cięć — kolejność pozycji, fundamenty, niewiadome, samokontrola: `references/plan-ciec.md`.
+- Mapa artefaktów (faza → plik → kto pisze → skill → kto czyta, co pominąć w małym projekcie): `references/artifact-map.md`.
+- Definicja „gotowe do produkcji” i przegląd gotowości: `references/production-readiness.md`.
+- Przebieg próbny na małym projekcie (jak sprawdzić, czy fabryka dowozi): `references/dry-run.md`.
+- Wycofywanie funkcji i wygaszanie systemu (faza 9): `references/maintenance.md`.
+- Przegląd specyfikacji przed planem (panel 2–3 niezależnych recenzentów, bramka): `references/spec-review.md`.
+- Plan cięć — kolejność pozycji, fundamenty, niewiadome, samokontrola: `references/cut-plan.md`.
 - Pętla AI-native: artefakty, miary każdego etapu, ewaluacje, przegląd PR, pasma kontrolne, źródło prawdy, ustawienia
   zarządzane, AI-DLC, refinement z opowiedzeniem rozwiązania i miary autonomii w parze z miarą wyniku:
   `references/ai-native-sdlc.md`.

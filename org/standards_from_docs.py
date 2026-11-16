@@ -292,8 +292,8 @@ Zamiast `forbid` reguła może mieć `require` (wzorzec wymagany w pliku, z `hea
 # ───────────── check ─────────────
 
 def pack_paths(pack: Path) -> tuple[Path | None, Path | None]:
-    skills = sorted(p.parent for p in pack.glob("skills/*standardy/SKILL.md"))
-    mods = sorted(p.parent for p in pack.glob("analyzers/*-standardy/analyzer.yaml"))
+    skills = sorted(p.parent for p in pack.glob("skills/*standards/SKILL.md"))
+    mods = sorted(p.parent for p in pack.glob("analyzers/*-standards/analyzer.yaml"))
     return (skills[0] if skills else None), (mods[0] if mods else None)
 
 
@@ -354,7 +354,7 @@ def validate(pack: Path) -> tuple[list[str], list[str], dict, dict]:
         return [f"assignment.json: nie da się odczytać ({e})"], [], {}, secs
     skill, mod = pack_paths(pack)
     if skill is None or mod is None:
-        errors.append("nakładka bez skills/*standardy/ albo analyzers/*-standardy/ — wygeneruj ją org/new_org_pack.py")
+        errors.append("nakładka bez skills/*standards/ albo analyzers/*-standards/ — wygeneruj ją org/new_org_pack.py")
     ust = data.get("findings") if isinstance(data.get("findings"), list) else []
     ids = [u.get("id") for u in ust]
     for dup in sorted({i for i in ids if ids.count(i) > 1 and i}):
@@ -456,7 +456,7 @@ def gate_errors(mod: Path, mine: list[dict], data: dict, secs: dict) -> list[str
         (tp / "rules.yaml").write_text(rs.yaml.safe_dump({"rules": gen}, allow_unicode=True), encoding="utf-8")
         rules = mine + rs.load_rules(tp / "rules.yaml")
         out = []
-        for kind, files in (("naruszenia", bad), ("czyste", good)):
+        for kind, files in (("violations", bad), ("clean", good)):
             d = tp / kind
             src = mod / "fixtures" / kind / "repo"
             if src.is_dir():
@@ -469,10 +469,10 @@ def gate_errors(mod: Path, mine: list[dict], data: dict, secs: dict) -> list[str
                 old = (d / rel).read_text(encoding="utf-8") if (d / rel).is_file() else ""
                 (d / rel).write_text(old + "".join(f"{x}\n" for x in lines), encoding="utf-8")
             found = {(f["rule"], f["file"]) for f in rs.scan(rules, d, rs.repo_files(d))} if d.is_dir() else set()
-            if kind == "czyste":
+            if kind == "clean":
                 out += [f"przykład zgodny {f} wykrywa reguła {r} — bramka modułu nie przejdzie" for r, f in sorted(found)]
                 continue
-            exp_path = mod / "fixtures" / "naruszenia" / "expected.json"
+            exp_path = mod / "fixtures" / "violations" / "expected.json"
             old_exp = json.loads(exp_path.read_text(encoding="utf-8")) if exp_path.is_file() else []
             gen_ids = {r["id"] for r in gen} | set(load_applied(mod.parent.parent / "sources").get("rules") or [])
             exp = {(e["rule"], e["file"]) for e in old_exp if e.get("rule") not in gen_ids}
@@ -562,14 +562,14 @@ def cmd_apply(pack: Path) -> int:
     bad, good, expected_new = fixture_plan(data, secs)
     for rel in applied.get("fixtures") or []:          # przykłady z poprzedniego apply
         p = mod / "fixtures" / rel.split("/", 1)[0] / "repo" / rel.split("/", 1)[1]
-        if p.is_file() and rel.split("/", 1)[1] not in (bad if rel.startswith("naruszenia/") else good):
+        if p.is_file() and rel.split("/", 1)[1] not in (bad if rel.startswith("violations/") else good):
             p.unlink()
     fixtures = []
-    for kind, files in (("naruszenia", bad), ("czyste", good)):
+    for kind, files in (("violations", bad), ("clean", good)):
         for rel, lines in files.items():
             fixtures.append(f"{kind}/{rel}")
             write_if_changed(mod / "fixtures" / kind / "repo" / rel, "".join(f"{x}\n" for x in lines))
-    exp_path = mod / "fixtures" / "naruszenia" / "expected.json"
+    exp_path = mod / "fixtures" / "violations" / "expected.json"
     gen_ids = {r["id"] for r in gen} | set(applied.get("rules") or [])
     old = json.loads(exp_path.read_text(encoding="utf-8")) if exp_path.is_file() else []
     keep = [e for e in old if e.get("rule") not in gen_ids]

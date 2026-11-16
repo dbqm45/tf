@@ -21,10 +21,10 @@ metadata:
 - Wybieraj potrzebne kolumny, nie `SELECT *` w kodzie produkcyjnym.
 - Wykrywaj N+1: pętla z zapytaniem w środku → join / `IN (...)` / eager loading.
 - Wzorce logiki i dostępu do danych (skrypt transakcji vs model domeny, Active Record vs Data Mapper, Unit of Work,
-  Identity Map, lazy loading, ORM do zapisu i SQL do odczytu, DTO i mappery): `references/wzorce-dostepu-do-danych.md`.
+  Identity Map, lazy loading, ORM do zapisu i SQL do odczytu, DTO i mappery): `references/data-access-patterns.md`.
 - Każde zapytanie po kolumnie w `WHERE`/`JOIN`/`ORDER BY` na dużej tabeli ma indeks — sprawdź `EXPLAIN ANALYZE`.
 - Wydajność w produkcji (pula połączeń i jej rozmiar, wolne zapytania i `pg_stat_statements`, VACUUM, repliki,
-  widoki zmaterializowane, partycjonowanie, sharding): `references/wydajnosc-bazy.md`.
+  widoki zmaterializowane, partycjonowanie, sharding): `references/database-performance.md`.
 
 ## Transakcje
 - Operacje, które muszą się udać razem, w jednej transakcji; transakcje krótkie, bez wywołań sieciowych w środku.

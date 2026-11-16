@@ -14,7 +14,7 @@ Mapę budujesz z narzędzi deterministycznych, a model językowy tylko nazywa i 
 
 **Szeroki skan, potem pogłębienie.** Mapa repo to szeroki, płytki skan z CLI — może go robić tańszy model, bo
 narzędzia pracują poza kontekstem. Pogłębienie jednego przepływu to osobne zadanie z mapą jako wejściem
-(`references/analiza-przeplywu.md`). Nie łącz w jednym poleceniu szukania struktury, wyboru ważnych obszarów
+(`references/flow-analysis.md`). Nie łącz w jednym poleceniu szukania struktury, wyboru ważnych obszarów
 i rozumienia zachowania — „przeczytaj całe repo” daje płaskie streszczenie bez priorytetów. Drzewo katalogów
 to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
 
@@ -36,7 +36,7 @@ to hipoteza: nie pokazuje, co się zmienia, co pęka razem ani co jest martwe.
    logowanie, TODO) z udziałem, przykładami `plik:linia` i wyjątkami. To dane do standardu, nie standard.
    `scripts/schema_scan.py <repo>` — tabele, kolumny, ograniczenia i powiązania z migracji SQL (Flyway) oraz encji
    JPA i EF Core z `plik:linia` (ograniczenia = kandydaci na reguły). Raport z dowodami sprawdza
-   `scripts/recon_check.py <raport.md> --repo <repo>`: plik i linia istnieją, cytat zgadza się z kodem (±2 linie),
+   `scripts/recon_check.py <report.md> --repo <repo>`: plik i linia istnieją, cytat zgadza się z kodem (±2 linie),
    wypunktowania bez dowodu i bez [założenie]/[niezweryfikowane]/[pytanie] są zgłaszane.
    `scripts/recon_scan.py <repo> --out <raw/>` — powyższe skany jednym poleceniem, wyniki JSON do plików, na ekran
    streszczenie (rekonstrukcja projektu). `scripts/recon_cards.py <modules/> --repo <repo>` — karty modułów (JSON) jako `modules/<moduł>.md` z dowodami,
@@ -117,7 +117,7 @@ Gdy plan kroku wymaga wiedzy o istniejącym kodzie (wzorce, przepływ danych, pu
    · Otwarte pytania. Pytanie uzupełniające → sekcja „Badanie uzupełniające <data>” w tym samym pliku.
 Brak `plik:linia` = brak twierdzenia. Wcześniejsze raporty i mapa to prior, nie prawda — nieaktualne twierdzenie
 korygujesz jawnie. Badanie wewnętrzne odpowiada „co robi nasz kod”, nie „którą bibliotekę wybrać”
-(core-source-research). Głęboka analiza jednego przepływu: `references/analiza-przeplywu.md`.
+(core-source-research). Głęboka analiza jednego przepływu: `references/flow-analysis.md`.
 
 ## Wyszukiwanie strukturalne
 `rg` dla tekstu, ast-grep dla struktury (definicje, wywołania, sygnatury). Uruchamiaj binarkę `ast-grep`: na
@@ -132,7 +132,7 @@ importuje usługę (pod prąd, cykl — WYCIĄGNIĘTE); węzeł centralny `order
 token DI — WYWNIOSKOWANE. `git_territory.py`: `apps/api/src/orders` zmieniany w każdym kwartale (stałe centrum),
 para `orders` ↔ `libs/db/migrations` w 14 commitach, hub `libs/i18n`; dwa pliki z rankingu już usunięte. Strefa
 ryzyka: zamówienia (load-bearing, volatile); kogo zapytać: 2 loginy. Trasa 7 kroków, mapa z datą i commitem.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] graf z narzędzi, nie z domysłów; zakres uzgodniony przy dużym repo

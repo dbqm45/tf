@@ -2,7 +2,7 @@
 """
 Recenzent liczb w dokumentach markdown — bez modelu i bez sieci. Uzupełnia grounding_check.py (odwołania).
 
-  python3 .claude/skills/core-grounding/scripts/claims_check.py docs/project/07-review/raport.md
+  python3 .claude/skills/core-grounding/scripts/claims_check.py docs/project/07-review/report.md
   python3 .claude/skills/core-grounding/scripts/claims_check.py docs/evals/ [--strict]
 
 Sprawdza:

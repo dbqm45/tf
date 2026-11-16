@@ -19,7 +19,7 @@ Typy kartek i fazy (kartka późniejszej fazy jest odrzucana — mieszanie pozio
   policy, readmodel · 4 agregaty: + aggregate · 5 konteksty i mapa: + context, link
 Katalog: $CLAUDE_PROJECT_DIR/docs/project/02-domain/event-storming/<id>/ (board.jsonl, board.md).
 Struktura to warunek konieczny, nie wystarczający: treść (czas przeszły, język biznesu, sens agregatów) ocenia
-człowiek i przegląd fazy (references/fazy-agenta.md).
+człowiek i przegląd fazy (references/agent-phases.md).
 """
 from __future__ import annotations
 

@@ -185,13 +185,13 @@ def main() -> int:
     try:
         evals = tmp / "evals"
         # Fixture pre-intent ma tylko decisions.md (bez intent/plan/design/requirements)
-        chg_fix = evals / "fixtures" / "sdlc-proba" / "CHG-7" / "pre-intent" / "docs" / "project" / "changes" / "CHG-7"
+        chg_fix = evals / "fixtures" / "sdlc-trial" / "CHG-7" / "pre-intent" / "docs" / "project" / "changes" / "CHG-7"
         chg_fix.mkdir(parents=True)
         (chg_fix / "decisions.md").write_text("## triage approved\n- ref: CHG-7/D1\n", encoding="utf-8")
         # Produkt sdlc-proba w HEAD ma już pełne artefakty CHG-7 z poprzedniej (ukończonej) pracy
         # ORAZ obcą zmianę CHG-1 (którą prepare_workspace też powinien usunąć, inaczej globalny
         # `decision_record.py check` zawali się na CHG-1 z pre-N20 plan.md).
-        src_repo = tmp / "sdlc-proba"
+        src_repo = tmp / "sdlc-trial"
         src_chg = src_repo / "docs" / "project" / "changes" / "CHG-7"
         src_chg.mkdir(parents=True)
         (src_chg / "plan.md").write_text("# plan z A6 — bez N20\n", encoding="utf-8")
@@ -200,11 +200,11 @@ def main() -> int:
         (src_repo / "docs" / "project" / "changes" / "CHG-1" / "plan.md").write_text("# obca zmiana\n")
         (src_repo / "README.md").write_text("product readme (nie dotyczy fixtury)\n", encoding="utf-8")
 
-        task = {"id": "REPLACE-TEST", "repo": "sdlc-proba", "phase": "intent", "change": "CHG-7", "type": "happy",
-                "before_dir": "fixtures/sdlc-proba/CHG-7/pre-intent/", "expect": {"status": "waiting_gate"}}
+        task = {"id": "REPLACE-TEST", "repo": "sdlc-trial", "phase": "intent", "change": "CHG-7", "type": "happy",
+                "before_dir": "fixtures/sdlc-trial/CHG-7/pre-intent/", "expect": {"status": "waiting_gate"}}
         work_root = tmp / "work"
         work_root.mkdir()
-        work = fer.prepare_workspace(task, repos={"sdlc-proba": src_repo}, workdir_root=work_root,
+        work = fer.prepare_workspace(task, repos={"sdlc-trial": src_repo}, workdir_root=work_root,
                                      evals_root=evals)
         chg_work = work / "docs" / "project" / "changes" / "CHG-7"
         check((chg_work / "decisions.md").is_file(),

@@ -67,7 +67,7 @@ Testy API: fixture `request` (`request.post(...)`, `expect(res).toBeOK()`).
 plan zestawiaj z przypadkami z qa-test-design, a **healer nie może zmieniać oczekiwanych wartości** — tylko lokatory/czekanie.
 
 Generowanie E2E przez agenta (bramka przed testem, test wzorcowy `seed.spec.ts`, szablon zlecenia, CLI vs MCP, przegląd
-pięciu antywzorców, celowe psucie, sprzątanie danych): `references/e2e-z-agentem.md`.
+pięciu antywzorców, celowe psucie, sprzątanie danych): `references/e2e-with-agent.md`.
 
 ## Zależne od wersji
 | Wersja | Co się zmieniło |

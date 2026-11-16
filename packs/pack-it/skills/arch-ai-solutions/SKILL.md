@@ -12,7 +12,7 @@ metadata:
 Skill prowadzi od wymagań do udokumentowanych decyzji: jaki wzorzec, jaki model, jakie komponenty, jakie granice
 i ile to kosztuje. Ogólny projekt systemu (szacunki, API, dane, dostępność) daje **arch-system-design**; wybór
 technologii metodą kandydatów i macierzy — **arch-tech-selection**. Tu dodajesz to, co specyficzne dla AI.
-Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `references/szablony.md`).
+Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `references/templates.md`).
 
 ## Procedura
 1. **Wymagania, które rozstrzygają.** Zapisz sześć osi: świeżość wiedzy, wymagana trafność (cena błędu), opóźnienie,
@@ -78,7 +78,7 @@ Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `refe
      autoryzacja po stronie narzędzia, nie w prompcie;
    - **egress danych**: lista dozwolonych adresów wyjściowych, brak renderowania obrazków i linków z adresami
      z modelu bez kontroli, maskowanie PII przed wysłaniem do dostawcy (**arch-privacy-compliance**).
-8. **Koszt i pojemność** (wzór: `references/szablony.md`). Koszt żądania = Σ po wywołaniach (tokeny wejścia ×
+8. **Koszt i pojemność** (wzór: `references/templates.md`). Koszt żądania = Σ po wywołaniach (tokeny wejścia ×
    cena wejścia + tokeny wyjścia × cena wyjścia), osobno **bez cache** i **z cache** (odczyt z cache kosztuje ułamek
    ceny wejścia, zapis więcej). Pomnóż przez wolumen, dodaj wyszukiwanie, narzędzia i ewaluacje. Pojemność: żądania
    równoległe w szczycie × czas trwania, limity tokenów dostawcy; własny model — **ops-ai-inference**.
@@ -93,9 +93,9 @@ Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `refe
    Przed dołożeniem komponentu (wyszukiwanie wartości, wybór tabel) mierz, czy pomaga — gdy cały schemat mieści się
    w promptcie, dodatkowy etap potrafi pogorszyć wynik (F. Khan, 2026-10 [niezweryfikowane]).
    **Bramka przed modelami, ponowienia i strumień, wycofanie z wersją indeksu, zarządzany runtime agenta:**
-   `references/bramka-i-niezawodnosc.md`.
+   `references/gate-and-reliability.md`.
    **Obsługa dużego wolumenu spraw** (zwroty, reklamacje, zmiany danych): progi autonomii per intencja, macierz
-   pomyłek z kosztem i „model proponuje, orkiestrator wykonuje” — `references/obsluga-spraw.md`.
+   pomyłek z kosztem i „model proponuje, orkiestrator wykonuje” — `references/case-handling.md`.
 10. **Zapis.** `ai-architecture.md` (TL;DR, osie, wzorzec, komponenty, budżety, granice, koszt, ryzyka) i **ADR** dla
     każdej decyzji kluczowej: wzorzec, źródło modelu, rezydencja, fallback (**arch-architect-practice**,
     **docs-tech-writing**). Kryterium rewizji decyzji (np. jakość na zbiorze złotym poniżej progu) wpisz do ADR.
@@ -109,7 +109,7 @@ Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `refe
   progu kwoty); agent odrzucony — kroki znane, ADR-002;
 - model: usługa zarządzana w regionie UE albo API z umową powierzenia; bramka z własnym interfejsem, fallback na drugi model;
 - budżet p95: bramka 0,1 s + wyszukiwanie 0,4 s + model do pierwszego tokenu 1,2 s (streaming) + narzędzia 0,8 s [przykład];
-- koszt: wzór z `references/szablony.md` z cache i bez; stały prefiks (instrukcje, narzędzia) na początku promptu;
+- koszt: wzór z `references/templates.md` z cache i bez; stały prefiks (instrukcje, narzędzia) na początku promptu;
 - granice: regulamin to dane; `refund` z uprawnieniami agenta wsparcia, nie konta serwisowego.
 
 ## Checklista

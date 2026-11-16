@@ -221,7 +221,7 @@ Pokryte częściowo:
   i skojarzenia jako mechanizm sterowania kontekstem (przestrzeń ukryta). Każda sekcja kończy się konsekwencją dla
   promptu, skilla lub agenta. Termin „J-space” z agendy — ustalić źródło i definicję przed wpisaniem
   [niezweryfikowane].
-- [x] **K6: A2A w praktyce (`ai-agents`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 22/22 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) — mapa protokołów jest (`references/protokoly-i-tracing.md` §1–2), brak
+- [x] **K6: A2A w praktyce (`ai-agents`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 22/22 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) — mapa protokołów jest (`references/protocols-and-tracing.md` §1–2), brak
   procedury: wystawienie agenta przez A2A (Agent Card zgodna z tym, co agent naprawdę robi; uwierzytelnianie
   i autoryzacja), odkrywanie i wybór współpracownika po karcie, kontrakt przekazania (zakres, kontekst, właściciel,
   widoczność postępu, format wyniku, raport porażki — spiąć z `core-async-delegation`), testy interoperacyjności.
@@ -475,7 +475,7 @@ liniowy i znacznie wyższy niż subagentów; uprawnienia jak u prowadzącego.
   wspólna lista zadań, zamknięcie i wyłączenie flagi; scenariusze, bramka.
 - [x] **A3. `modes/mode-team/`**: `pack.yaml` (`kind: mode`, `default: false`), `settings.json` (uprawnienie
   skryptu), `GUIDE.md`, testy; CI matrix; `insights.md`, `PUBLIC_API.md`; PR.
-- [x] **P1. Przewodnik i FAQ** w `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md` (test instalatora);
+- [x] **P1. Przewodnik i FAQ** w `core/guide/` → `factory/GUIDE.md`, `factory/FAQ.md` (test instalatora);
   treść ze stanu bieżącego (polecenia `tf`, persony, nakładki, tryby, workflows, koszty, hooki, aktualizacje);
   fakty sprawdzone w plikach; PR.
 
@@ -502,7 +502,7 @@ Nie bierzemy: autonomicznego zegara (30 s / 3 min), interfejsu tablicy ani konfi
   - `check` sprawdza strukturę według fazy: typy kartek dozwolone w fazie (mieszanie poziomów), zdarzenie bez
     wyzwalacza, komenda bez zdarzenia, polityka bez „kiedy”/„wtedy”, komenda bez agregatu, duży agregat, agregat
     bez kontekstu, kontekst bez typu subdomeny, relacja bez wzorca mapy, otwarte hot spoty.
-- [x] **E2. `references/fazy-agenta.md`:** 5 faz (kontekst sesji, zdarzenia, komendy i polityki, agregaty, podział
+- [x] **E2. `references/agent-phases.md`:** 5 faz (kontekst sesji, zdarzenia, komendy i polityki, agregaty, podział
   na konteksty i mapa). Dla każdej fazy: cel, dozwolone kartki, ruchy facylitatora, kryterium wyjścia, bramka
   człowieka, przegląd, typowe błędy. Do tego protokół tury.
 - [x] **E3. `SKILL.md` §7** przepisany na prowadzenie sesji ze skryptem i kartami faz; ekspert domeny i przegląd
@@ -526,7 +526,7 @@ Analiza luk: każdy temat programu porównany ze skillami, z dowodem `plik:linia
 Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring), a kończy bramką.
 - [x] **D1. ddd-deep-modeling:** jedno źródło prawdy jako technika rozplątywania; ukryte powiązanie wiele do wielu
   (pojęcie do nazwania); status to nie mechanizm rozszerzania; dwa poziomy modelu (Knowledge i Operations Level).
-- [x] **D2. ddd-tactical-design + `references/reguly-dynamiczne.md`:**
+- [x] **D2. ddd-tactical-design + `references/dynamic-rules.md`:**
   - polityki jako funkcje, ich kompozycja w łańcuchy i drzewa, fabryka polityk, dekorator polityki;
   - reguły zmienne w czasie (wersja polityki jako nowa klasa wybierana datą) i reguły zależne od historii zdarzeń;
   - scoring;
@@ -536,14 +536,14 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
   - `document.md`: obieg a redagowanie dokumentu;
   - `agreement.md`: oferta to nie zamówienie, zakup to nie zamówienie;
   - `SKILL.md`: warstwy odpowiedzialności (Evans) z atrybucją.
-- [x] **D4. eng-design-patterns:** Role Object i Extension Object (`references/poza-gof.md`, wiersze w tabeli objawów).
+- [x] **D4. eng-design-patterns:** Role Object i Extension Object (`references/beyond-gof.md`, wiersze w tabeli objawów).
 - [x] **D5. be-api-design:** model dojrzałości Richardsona; dokument REST jako komenda.
 - [x] **D6. arch-multi-tenancy:** wersja zachowania i API per najemca; wybór handlera komendy po tenantId.
 - [x] **D7.** Bramki zmienionych skilli, `refs`, matrix, PR.
 
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
-  w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.
+  w `tool-pytest/references/examples.md`), gdzie chodzi o testy projektu, nie fabryki.
 - [x] ~~Nakładki jako pluginy Claude Code (eksport).~~ **Decyzja człowieka (2026-10-21): nie robimy** — tryby
   i nakładki zostają instalowane przez `tf`. Ograniczenia: agenci z pluginu ignorują `permissionMode`, `hooks`,
   `mcpServers`, `initialPrompt`; plugin nie wczytuje `CLAUDE.md`; `settings.json` pluginu przyjmuje tylko `agent`
@@ -583,7 +583,7 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
   start Chromium na runnerze trwa 16–27 s (zimny dysk), kolejne ok. 0,7 s, niezależnie od flag i D-Bus; pod obciążeniem
   zestawu testów pierwszy start przekraczał limit. Naprawa: krok „Rozgrzanie Chromium” w CI przed testami; timeout
   podaje teraz linię stderr przeglądarki.
-- [x] Próba scenariusza symulacji ES: `es_probe.py` z gotowymi wypowiedziami facylitatora (`proba.json`), bez gospodarza;
+- [x] Próba scenariusza symulacji ES: `es_probe.py` z gotowymi wypowiedziami facylitatora (`trial.json`), bez gospodarza;
   wersja pełna na scenariuszu weterynaria: 1,44 USD, 10/10 oczekiwań — `docs/evals/2026-10-25-es-proba-scenariusza/` (2026-10-25).
 
 ## Tłumaczenie treści fabryki na angielski
@@ -615,8 +615,8 @@ Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na
 
 ## Inne
 
-- [x] Przewodnik użytkownika (`PRZEWODNIK.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
-  fabrykę bez nakładek. Zrobione (P1): `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md`.
+- [x] Przewodnik użytkownika (`GUIDE.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
+  fabrykę bez nakładek. Zrobione (P1): `core/guide/` → `factory/GUIDE.md`, `factory/FAQ.md`.
 - [x] Baza wiedzy z rejestrem źródeł (`dom-ev-knowledge-base`, w pack-ev) ma ogólny mechanizm (`kb.py`) i dane EV.
   Rozważyć przeniesienie mechanizmu do rdzenia, a rejestrów źródeł do nakładek. **Plan (2026-10-22):**
   - K1. Testy rdzenia `core/tests/test_kb.py` (najpierw czerwone): wyszukiwanie, cache, status, CLI na neutralnych
@@ -713,7 +713,7 @@ własnymi słowami ze źródeł pierwotnych, licencje repozytoriów sprawdzamy p
 Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
 - [x] **1. Analiza wariantów podatności** (zrobione 2026-10-23: nowy skill `sec-variant-analysis`, szablon reguły Semgrep sprawdzony `semgrep --test`) (inspiracja: Trail of Bits `variant-analysis`): po znalezionej podatności
   szukanie podobnych wystąpień według wzorca. Rozszerzenie `sec-appsec-devsecops` albo nowy skill `sec-`.
-- [x] **2. Niebezpieczne API i domyślne konfiguracje** (zrobione 2026-10-23: `sec-appsec-devsecops/references/niebezpieczne-api.md`, wkład do `security-reviewer`) (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
+- [x] **2. Niebezpieczne API i domyślne konfiguracje** (zrobione 2026-10-23: `sec-appsec-devsecops/references/dangerous-apis.md`, wkład do `security-reviewer`) (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
   per język (zaszyte sekrety, domyślne hasła, słaba kryptografia, błędogenne API); `sec-appsec-devsecops`
   i wkład do agenta `security-reviewer`.
 - [x] **3. Własne reguły Semgrep/CodeQL z testami** (zrobione 2026-10-24: skill `tool-semgrep`, przykłady sprawdzone Semgrepem 1.50.0, 1.100.0 i 1.182.1; testy CodeQL tylko z dokumentacji — CLI niedostępne w sesji) (ToB `semgrep-rule-creator`): procedura pisania i testowania
@@ -784,43 +784,43 @@ dokładnego skutku, walidacja argumentów w kodzie, „model czytający obce tre
 ruchu, „lethal trifecta”) i w `core-agent-security` (MCP jak zależność: przypięta wersja, przegląd opisów narzędzi).
 Brakuje nazwanych wzorców projektowych i nowszych list. Do dorobienia w `sec-llm-security` (scenariusze ewaluacji,
 potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera — artykuł to źródło wtórne):
-- [x] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §2)**:** podwójny LLM (czytający bez narzędzi
+- [x] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §2)**:** podwójny LLM (czytający bez narzędzi
   oddaje tylko pola schematu, nie prozę), plan-then-execute (plan zamrożony przed wynikami narzędzi, dane z obcych
   treści nie wybierają adresata wysyłki ani zapisu), action-selector, map-reduce po dokumentach, code-then-execute;
   kiedy który i jaki koszt (dwa wywołania, mniej elastyczny agent). Przykład w kodzie, nie w prompcie.
-- [x] **Zatwierdzenie związane z argumentami** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §4)**:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
+- [x] **Zatwierdzenie związane z argumentami** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §4)**:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
   termin i jednorazowy nonce; inne argumenty = nowa zgoda; brak polityki lub nieudany zapis audytu = brak wywołania.
   Klasy ryzyka narzędzi (niskie … krytyczne) z domyślną odmową dla nieznanych.
-- [x] (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §5) **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
+- [x] (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §5) **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
   argumentami) oraz **przypięty skrót manifestu narzędzia MCP** (zmieniony opis lub schemat = nowa instalacja do
   przeglądu, nie cicha aktualizacja) — także jako uzupełnienie `core-agent-security`.
-- [x] (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §6) **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
+- [x] (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §6) **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
   omówienie M. Craddock, 2026-05-06 [niezweryfikowane w repo]): agent czytający obce dokumenty ma tylko Read/Grep,
   bez MCP, i zwraca JSON ze schematem (`additionalProperties: false`, `maxItems`, `maxLength`, `pattern` na każdym
   polu), sprawdzanym w kodzie przed orkiestratorem; prośba o przekazanie (`handoff_request`) przechodzi tylko, gdy
   cel jest na liście dozwolonych, a ładunek zgodny ze schematem — dokument może zawierać podrobione bloki
   przekazania. Przykład w kodzie do `sec-llm-security` obok podwójnego LLM.
-- [x] **Reguła dwóch (Meta, „Agents Rule of Two”)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §1)**:** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
+- [x] **Reguła dwóch (Meta, „Agents Rule of Two”)** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §1)**:** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
   do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
 - [x] **Aktualizacja list** (zrobione 2026-11-01: `sec-llm-security` — tabela LLM 2026 ↔ 2025 i ASI01–ASI10 z Appendix A wydania 2026, repo GenAI-Security-Project/GenAI-LLM-Top10)**:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
   Applications 2026 (ASI01…) — mapowanie na kontrole skilla; zweryfikować numerację i daty w źródłach.
-- [x] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §3)**:** wartości z etykietą pochodzenia
+- [x] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813)** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §3)**:** wartości z etykietą pochodzenia
   i odbiorców, polityka sprawdza etykiety przed wywołaniem narzędzia (np. dokument z dysku można streścić
   użytkownikowi, ale nie wysłać na adres znaleziony w tym dokumencie); koszt w użyteczności z ich pomiaru na
   AgentDojo [do sprawdzenia w źródle]. (Uzupełnione 2026-10-29 z artykułu „Building Secure AI Agents”, C. Kalhara.)
 - [x] **Red teaming adaptacyjny** (zrobione 2026-10-31: `references/red-teaming.md` §„Ataki adaptacyjne”) w `references/red-teaming.md`: obrona sprawdzona tylko stałą listą ataków mówi mało
   („The Attacker Moves Second”, Nasr i in., arXiv 2510.09023); AgentDojo (NeurIPS 2024) jako gotowa uprząż — sędzia
   sprawdza stan środowiska, nie tekst modelu, więc sam nie da się wstrzyknąć.
-- [x] **Pamięć i RAG jako niezaufane** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §7)**:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
+- [x] **Pamięć i RAG jako niezaufane** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §7)**:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
   etykietę pochodzenia; w logu wywołań narzędzi pochodzenie argumentów; wyłącznik awaryjny agenta.
-- [x] **Autoryzacja zdalnego serwera MCP** (zrobione 2026-10-31: `be-auth-security/references/tokeny-sesje-oauth.md` §7, odnośnik i scenariusz w `ai-mcp-server`) (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
+- [x] **Autoryzacja zdalnego serwera MCP** (zrobione 2026-10-31: `be-auth-security/references/tokens-sessions-oauth.md` §7, odnośnik i scenariusz w `ai-mcp-server`) (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
   serwera autoryzacji z metadanych, rejestracja klienta przez Dynamic Client Registration albo Client ID Metadata
   Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
   Sprawdzone 2026-10-29 (blog.modelcontextprotocol.io, wersja specyfikacji `2026-07-28`): DCR przestarzałe na rzecz
   Client ID Metadata Documents (działa jeszcze dla zgodności, usunięcie w przyszłej wersji — konkretnej daty brak);
   serwer zwraca parametr `iss` (RFC 9207), klient go sprawdza; klient podaje `application_type` (przekierowania na
   localhost dla aplikacji CLI i desktop); poświadczenia klienta związane z wydawcą.
-- [x] **Tożsamość agenta i delegacja** (zrobione 2026-11-01: `sec-zero-trust-identity/references/tozsamosc-i-dostep.md`, ostatnia sekcja; SPIFFE z repo, RFC przez wyszukiwarkę — ietf.org niedostępne) (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
+- [x] **Tożsamość agenta i delegacja** (zrobione 2026-11-01: `sec-zero-trust-identity/references/identity-and-access.md`, ostatnia sekcja; SPIFFE z repo, RFC przez wyszukiwarkę — ietf.org niedostępne) (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
   wspomina SPIFFE ani tokenów związanych z nadawcą): każdy agent i każda jego instancja ma własną tożsamość obciążenia
   (SPIFFE/SPIRE, krótkie SVID przez Workload API zamiast współdzielonego konta usługi), osobną od loginu człowieka,
   z nazwanym właścicielem; działanie w imieniu użytkownika = token użytkownika związany z kluczem agenta (mTLS-bound,
@@ -840,7 +840,7 @@ effort, `opusplan`, doradca — `core-cost-control`; wykonawcy tylko do odczytu 
 `/remote-control` — `core-async-delegation`; GitHub Action i przegląd AI w CI — `core-git-workflow`). Uwaga: artykuł
 podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzyma się dokumentacji (domyślnie 3,
 `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, fabryka ustawia 2) — bez zmian.
-- [x] **`core-cost-control`: `ultrathink` i `ultracode`** (zrobione 2026-11-01: `references/model-i-automatyzacja.md` §8; przy okazji: zmiana effortu nie kasuje cache na Opus/Sonnet/Haiku 5.5 i Fable 5.1 — code.claude.com/docs/en/prompt-caching). `ultrathink` w treści polecenia — głębsze rozumowanie w tej
+- [x] **`core-cost-control`: `ultrathink` i `ultracode`** (zrobione 2026-11-01: `references/model-and-automation.md` §8; przy okazji: zmiana effortu nie kasuje cache na Opus/Sonnet/Haiku 5.5 i Fable 5.1 — code.claude.com/docs/en/prompt-caching). `ultrathink` w treści polecenia — głębsze rozumowanie w tej
   jednej turze bez zmiany zapisanego effortu sesji (zmiana effortu sesji w trakcie kasuje cache); `ultracode` —
   effort `xhigh` plus zgoda na orkiestrację wielu agentów (workflow), kosztowne, tylko dla zadań, które tego
   wymagają. Działanie, koszt i dostępność sprawdzić w dokumentacji code.claude.com z datą przed dopisaniem
@@ -849,12 +849,12 @@ podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzy
 ## Jakość parsowania dokumentów w RAG (artykuł „Why Your RAG Pipeline Dies on Real Documents”, P. Perrone, 2026-10-01, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-rag` już każe zachować tabele z nagłówkiem, OCR dla skanów i chunking wg struktury; tabela
 porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsorowany (LlamaParse) — bez rekomendacji dostawcy.
-- [x] **`ai-rag`: kontrola jakości parsowania przed indeksacją** (zrobione 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §1, SKILL.md krok 2) — strona bez warstwy tekstu albo z podejrzanie
+- [x] **`ai-rag`: kontrola jakości parsowania przed indeksacją** (zrobione 2026-10-30: `ai-rag/references/parsing-evaluation-wiki.md` §1, SKILL.md krok 2) — strona bez warstwy tekstu albo z podejrzanie
   małą liczbą znaków to alarm, nie pusty dokument; przegląd surowego wyjścia parsera na najgorszych dokumentach
   korpusu (skan, tabela przez dwie strony, dwie kolumny) zanim ktoś stroi retriever; miara struktury tabel (TEDS) i
   kolejności czytania w zestawie ewaluacyjnym; parsery świadome układu (open source i usługi) jako kategoria z
   kryteriami wyboru, nie lista marek. Liczby z benchmarków (OmniDocBench, CVPR 2025) sprawdzić w źródle pierwotnym.
-- [x] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (zrobione 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §2, SKILL.md krok 7) (artykuł „The Limits of Vector Search in RAG”,
+- [x] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (zrobione 2026-10-30: `ai-rag/references/parsing-evaluation-wiki.md` §2, SKILL.md krok 7) (artykuł „The Limits of Vector Search in RAG”,
   J. Wąsowski, 2026-09-14; hybrydę i „wektory gubią identyfikatory” skill już ma): zestaw ewaluacyjny z polem typu
   zapytania — recall@k osobno dla zapytań semantycznych (parafrazy, intencje) i dokładnych (identyfikatory, kody,
   wersje, liczby, negacje), bo średnia ukrywa podział; przed ustawieniem progu podobieństwa histogram cosinusa dla
@@ -871,7 +871,7 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
 zalecane `title`, `description`, `resource`, `tags`; opcjonalne `sources[]`, `generated`, `verified`, `status`
 (`draft`/`stable`/`deprecated`), `stale_after`; zarezerwowane `index.md` (spis do stopniowego odsłaniania) i `log.md`;
 linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
-- [x] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** (część w `ai-rag` zrobiona 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §3–4, SKILL.md krok 1; reszta 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §1, §2 i §5 — strefy, nagłówek zbliżony do OKF bez deklaracji zgodności, świeżość; kontrola w CI jako kod — gdy pojawi się generowany indeks) — definicje, które muszą być dokładne i mieć właściciela
+- [x] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** (część w `ai-rag` zrobiona 2026-10-30: `ai-rag/references/parsing-evaluation-wiki.md` §3–4, SKILL.md krok 1; reszta 2026-11-01: `core-knowledge/references/notes-and-wiki.md` §1, §2 i §5 — strefy, nagłówek zbliżony do OKF bez deklaracji zgodności, świeżość; kontrola w CI jako kod — gdy pojawi się generowany indeks) — definicje, które muszą być dokładne i mieć właściciela
   (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
   ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
@@ -886,7 +886,7 @@ linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
   pominięcie przy obciążeniu bez ponowienia, serwer MCP z cache sprzed regeneracji). Każdy generowany artefakt
   wiedzy ma znacznik czasu i commit źródła; kontrola w CI porównuje go z `git log -1` i alarmuje po progu (np. 24 h);
   `stale_after`/`verified` z OKF jako pola na to. Dotyczy też map z `eng-codebase-mapping` i cache `kb.py status`.
-- [x] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (zrobione 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §2–3; narzędzie `okf-agent-memory` nieużyte) (artykuł „The Dev with Two Brains”,
+- [x] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (zrobione 2026-11-01: `core-knowledge/references/notes-and-wiki.md` §2–3; narzędzie `okf-agent-memory` nieużyte) (artykuł „The Dev with Two Brains”,
   C. Core, 2026-10-07; narzędzie `okf-agent-memory` — Go, MIT, conda-forge, CLI + serwer MCP z 6 narzędziami; wersje
   i zachowanie wg autora [niezweryfikowane], przed użyciem `skill_audit` i zgoda człowieka). Pomysły niezależne od
   narzędzia, do `core-knowledge` / `core-project-record`:
@@ -908,11 +908,11 @@ linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
 ## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
 Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
 specyfikacji), plan cięć z dosłownymi ID wymagań, zależnościami i kolumną „Równolegle z” oraz checklistą pokrycia
-(`plan-ciec.md`, odpowiednik `/speckit.analyze`), krok po kroku z planem przed kodem i zmianą specyfikacji przed
+(`cut-plan.md`, odpowiednik `/speckit.analyze`), krok po kroku z planem przed kodem i zmianą specyfikacji przed
 kodem, `plan_drift.py` w talos. Pętle i rutyny (artykuły o „loop/graph engineering” i Routines z tego dnia) pokrywa
 `core-async-delegation` (kontrakt, warunek stopu, budżet, najwyżej 2 próby naprawy) i `core-agent-retro` (lekcje).
 Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet.
-- [x] **Wejście z Spec Kit** (zrobione 2026-11-01: `proc-requirements-shaping/references/istniejace-specyfikacje.md` §1–2; Spec Kit 1.2.5 sprawdzony w repo; rozpoznanie w intake mode-pdi i talos — osobno, gdy pojawi się projekt) — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
+- [x] **Wejście z Spec Kit** (zrobione 2026-11-01: `proc-requirements-shaping/references/existing-specifications.md` §1–2; Spec Kit 1.2.5 sprawdzony w repo; rozpoznanie w intake mode-pdi i talos — osobno, gdy pojawi się projekt) — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
   intake (`proc-requirements-shaping`, mode-pdi, talos) czyta je jako istniejące wymagania, zasady i plan zamiast
   pisać równoległe dokumenty: `spec.md` → wymagania (lint EARS jako raport, bez przepisywania), `constitution.md` →
   zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
@@ -928,7 +928,7 @@ Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet
 ## Rutyny, które zdobywają uprawnienia (artykuły „How to Create Loops with Claude Code”, Y. Hosni, 2026-06-24; „Harness Engineering” i „/goal”, Gao Dalie, 2026-05, zapisane 2026-10-29)
 Przegląd 2026-10-29: większość już jest — kwalifikacja zadania i kontrakt (cel, zakres, stop, budżet), najwyżej
 2 próby naprawy, idempotencja, „zielony bez wartości” jako porażka, cotygodniowy przegląd trafności
-(`core-async-delegation` §1–5, `references/kontrakt-delegacji.md`); `/goal` z oceniającym; „błąd ma się nie
+(`core-async-delegation` §1–5, `references/delegation-contract.md`); `/goal` z oceniającym; „błąd ma się nie
 powtórzyć” jako hook lub bramka (tabela „Gdzie trafia zmiana” w `core-agent-retro`). Braki są małe, dotyczą rutyn
 działających tygodniami.
 - [x] **`core-async-delegation` §5: uprawnienia rosną z dowodem** (zrobione 2026-10-30: §5, 3 scenariusze strojenia) — drabina: tylko odczyt → szkic w pliku → zmiany
@@ -945,7 +945,7 @@ Przegląd 2026-10-29: `ai-mcp-server` nie wspomina rozszerzenia MCP Apps (narzę
 renderuje go w izolowanym iframe i przekazuje wynik narzędzia; przyciski wołają narzędzia przez hosta). Daty
 z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawdzić w specyfikacji
 (apps.extensions.modelcontextprotocol.io) z datą przed dopisaniem [niezweryfikowane]. Średni priorytet.
-- [x] **`ai-mcp-server`: specyfikacja `2026-07-28`** (zrobione 2026-11-01: `ai-mcp-server/references/spec-2026-07-28-i-apps.md` §1–2, z changelogu w repo specyfikacji) (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
+- [x] **`ai-mcp-server`: specyfikacja `2026-07-28`** (zrobione 2026-11-01: `ai-mcp-server/references/spec-2026-07-28-and-apps.md` §1–2, z changelogu w repo specyfikacji) (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
   bezstanowy rdzeń (bez `initialize` i `Mcp-Session-Id`; wersja, klient i możliwości w `_meta`; opcjonalne
   `server/discover`), nagłówki `Mcp-Method`/`Mcp-Name` do routingu i autoryzacji w bramce, Multi Round-Trip Requests
   zamiast żądań inicjowanych przez serwer, listy z `ttlMs`/`cacheScope`, zadania jako rozszerzenie, MCP Apps
@@ -967,23 +967,23 @@ nieodwracalne wykonuje człowiek”; `core-async-delegation` ma kontrakt, STOP p
 zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australia, testy CTF Anthropic/Google/Meta).
 Źródeł pierwotnych nie otworzyłem (alignment.openai.com i metr.org poza siecią sesji) — liczby i daty
 [niezweryfikowane], przed dopisaniem do skilla sprawdzić u źródła z datą (researcher). Wnioski niezależne od liczb:
-- [x] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** domyślna odmowa obejmuje też DNS (rozwiązywanie
+- [x] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b)**:** domyślna odmowa obejmuje też DNS (rozwiązywanie
   nazw jako kanał: pytania zakodowane w nazwach hostów), proxy pakietów i rejestry (dozwolony serwis = droga na
   zewnątrz), publiczne usługi pośrednie (skanery URL, zdalne przeglądarki); środowisko testowe z dostępem do internetu
   traktujesz jak produkcję.
-- [x] **Wspólny cache między przebiegami to kanał komunikacji** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** rejestr pakietów, cache budowania, katalog
+- [x] **Wspólny cache między przebiegami to kanał komunikacji** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b)**:** rejestr pakietów, cache budowania, katalog
   współdzielony — osobne przebiegi agentów mają osobne cache albo cache tylko do odczytu; inaczej „izolowane” agenty
   zostawiają sobie wiadomości.
-- [x] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** poza `.git/config` i hookami także lockfile,
+- [x] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b)**:** poza `.git/config` i hookami także lockfile,
   konfiguracja repo i edytora, ścieżka interpretera, pliki czytane przez CI lub narzędzie poza piaskownicą; lista
   „plików wykonywanych później przez kogoś innego” w ochronie ścieżek i w przeglądzie diffu.
 - [x] **Zapis z przebiegu, którego agent nie przepisze** (zrobione 2026-10-30: `core-async-delegation` §6, `core-agent-security` §6)**:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem
   agenta (transkrypt agenta nie jest niezależnym dowodem); wyłącznik działający bez współpracy agenta; inwentarz
   przebiegów z właścicielem (kto uruchomił, co ma, jak zatrzymać) — w `core-async-delegation` §6 „Monitorowanie”.
-- [x] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b, `core-async-delegation` §4)**:** w poleceniu i w polityce wykonania jawna droga „nie da
+- [x] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b, `core-async-delegation` §4)**:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
-- [x] **Próba granicy z dowodem, która warstwa zatrzymała** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b; odnośnik w `ai-mcp-server` 2026-11-01: `references/spec-2026-07-28-i-apps.md` §5) (artykuł „How much access should an AI agent have?”,
+- [x] **Próba granicy z dowodem, która warstwa zatrzymała** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b; odnośnik w `ai-mcp-server` 2026-11-01: `references/spec-2026-07-28-and-apps.md` §5) (artykuł „How much access should an AI agent have?”,
   E. Bermudez, 2026-10-14): katalog roboczy to miejsce startu, nie granica; filtr ścieżek w narzędziu plikowym
   (rozwiązana ścieżka, `..`, dowiązania symboliczne — wzór: walidacja w serwerze MCP filesystem) działa tylko dla
   tego narzędzia, a Python lub Bash czyta obok niego. Do `core-agent-security` i `ai-mcp-server`: przed
@@ -997,7 +997,7 @@ Przegląd 2026-10-29: `ai-evals` ocenia odpowiedzi modelu, `fe-architecture` ma 
 pusto, dane), `be-auth-security` i `ai-rag` — uprawnienia i izolację najemców. Brakuje jednej listy kontrolnej awarii,
 które nie są winą modelu. Średni priorytet; jako `references/` w `qa-test-design` (odnośnik z `ai-evals` i
 `eng-llm-features`), najpierw scenariusze ewaluacji:
-- [x] **Lista „aplikacja z AI poza modelem”** (zrobione 2026-10-30: `qa-test-design/references/aplikacja-ai-poza-modelem.md`, odnośnik w `ai-evals`) z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
+- [x] **Lista „aplikacja z AI poza modelem”** (zrobione 2026-10-30: `qa-test-design/references/ai-application-beyond-the-model.md`, odnośnik w `ai-evals`) z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
   wymuszenie 403/500/timeout/wygasłego tokenu i porównanie ekranu z odpowiedzią, akcja naprawcza pasuje do przyczyny;
   (2) długie zadanie agenta a zerwane połączenie — rozłączenie, zakończenie w tle, powrót: prawdziwy stan końcowy bez
   wiecznego „pracuję…”; (3) routing modeli — sesja przypięta do taniej trasy po pierwszej trywialnej wiadomości,
@@ -1031,7 +1031,7 @@ otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez
 Przegląd 2026-10-29: `ai-agents` ma MCP, tracing z identyfikatorem przebiegu i wznawianie, `ops-observability` —
 OpenTelemetry; reszta harness engineering jest pokryta (`core-async-delegation`, hooki, recenzent). Fabryka nie
 wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni priorytet, w `ai-agents`:
-- [x] **Mapa protokołów** (zrobione 2026-11-01: `ai-agents/references/protokoly-i-tracing.md` §1–2; A2A 1.0.1, ACP v1 sprawdzone w repozytoriach)**:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
+- [x] **Mapa protokołów** (zrobione 2026-11-01: `ai-agents/references/protocols-and-tracing.md` §1–2; A2A 1.0.1, ACP v1 sprawdzone w repozytoriach)**:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
   punktem końcowym i uwierzytelnianiem; zadania z cyklem życia); ACP (Agent Client Protocol, Zed) — edytor ↔ agent
   kodujący przez JSON-RPC po stdio, z zatwierdzaniem zapisów w edytorze. Kiedy który, że się uzupełniają, oraz
   bezpieczeństwo: Agent Card i wyniki innego agenta to niezaufane wejście (patrz pozycja o protocol pivoting
@@ -1041,7 +1041,7 @@ wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni
   tokenów, kosztu i wyniku guardrails; `trace_id` jako identyfikator korelacji między systemami. Z tych śladów
   ewaluacja offline (`ai-evals`) i koszt (`core-cost-control`, `ops-finops`). Stan konwencji (eksperymentalne?)
   sprawdzić w repo open-telemetry/semantic-conventions z datą.
-- [x] **Końcowa kontrola „liczby z narzędzia”** (zrobione 2026-11-01: `ai-agents/references/wykonawcy-i-bramki.md` §5) (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
+- [x] **Końcowa kontrola „liczby z narzędzia”** (zrobione 2026-11-01: `ai-agents/references/executors-and-gates.md` §5) (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
   i identyfikatory w odpowiedzi z wynikami narzędzi (np. wynik oceny ryzyka, limit polisy) i odsyła modelowi
   konkretną rozbieżność; do tego pominięcie powtórzonych identycznych wywołań narzędzia i przypomnienie
   o nieużytych wymaganych narzędziach przed odpowiedzią. Uwaga z demo: reguła guardrails też ma fałszywe
@@ -1084,25 +1084,25 @@ modele renderowania per trasa (CSR/SSR/SSG/ISR/RSC, hydratacja) i BFF tylko jako
 Przegląd 2026-10-29: `ai-evals` ma zbiory, graderów, kalibrację sędziego, pass@k i bramkę w CI. Artykuł to studium
 porażek pomiaru (wszystkie liczby z jego repo, nie sprawdzone): sześć cichych błędów, z czego cztery poprawiły metrykę.
 Średni priorytet, w `ai-evals` (reference „pułapki pomiaru”):
-- [x] **Granice wyniku** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §1)**:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
+- [x] **Granice wyniku** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §1)**:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
   wynik systemu interpretowalny tylko między nimi (u autora oba ramiona przegrywały ze stałą „tak”, co znaczyło, że
   zbiór i model nie rozróżniają architektur).
-- [x] **Jedna zmienna naraz i przegląd stałych** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §2)**:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
+- [x] **Jedna zmienna naraz i przegląd stałych** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §2)**:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
   próg) to hiperparametr — przebieg z pozostałymi wartościami zamrożonymi; obcięcie do 1100 znaków kosztowało
   14 punktów, limit 120 kandydatów wyrzucał złoty dokument w 41% pytań. Ramiona porównawcze dostają te same stałe
   (wyrocznia czytała 4000 znaków, system 1100 — „luka rozproszenia” była w 84% artefaktem).
-- [x] **Wybór konfiguracji na osobnym zbiorze** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §3)**:** podział dobór/test, wynik raportowany tylko z testu; kontrola
+- [x] **Wybór konfiguracji na osobnym zbiorze** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §3)**:** podział dobór/test, wynik raportowany tylko z testu; kontrola
   „przetasowane etykiety” pokazuje, ile daje sam wybór najlepszej z wielu konfiguracji (u autora 3,5 pkt na szumie).
   Siatka parametru, której optimum leży na krawędzi, jest za wąska.
-- [x] **Etykieta z rozkładu, nie z regexa** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §4)**:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
+- [x] **Etykieta z rozkładu, nie z regexa** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §4)**:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
   wariantów pisowni), nie z parsowania wolnego tekstu; ta sama wartość daje pewność do abstynencji.
-- [x] **Metryka składowa musi modelować to, co dzieje się dalej** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §4)**:** gorsza precyzja groundera może dać lepszy system,
+- [x] **Metryka składowa musi modelować to, co dzieje się dalej** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §4)**:** gorsza precyzja groundera może dać lepszy system,
   gdy dalszy filtr odrzuca fałszywe trafienia — oceniać parę „pokrycie i przeciek na pytaniach kontrolnych”
   (pytanie z jednym pojęciem podmienionym na losowe), nie samą metrykę składnika.
-- [x] **Niezmienniki dla struktur pochodnych** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §5)**:** assert zgodności tablic równoległych plus niezależne przeliczenie
+- [x] **Niezmienniki dla struktur pochodnych** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §5)**:** assert zgodności tablic równoległych plus niezależne przeliczenie
   ze źródła (u autora rozjechane tablice etykiet nie rzuciły błędu); cache kluczowany całym wejściem; walidator
   cytatów testowany na nawiasie z wieloma identyfikatorami.
-- [x] **Cykl życia sędziego LLM** (zrobione 2026-10-30: `ai-evals/references/zbiory-i-graderzy.md` §7) (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
+- [x] **Cykl życia sędziego LLM** (zrobione 2026-10-30: `ai-evals/references/datasets-and-graders.md` §7) (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
   uzasadnienie przed oceną i okresową próbkę na dryf; brakuje: (1) zgodności uzasadnień, nie tylko etykiet —
   „dobra etykieta, zły powód” wykrywana porównaniem uzasadnienia sędziego z uzasadnieniem człowieka (meta-sędzia
   sprawdzony najpierw na ludziach), bo strojenie rubryki tylko na etykietach u autorów zdegradowało jedno kryterium;
@@ -1121,19 +1121,19 @@ Przegląd 2026-10-29: pojedyncze elementy już są — `ai-evals` (złoty zbiór
 kalibracja sędziego, shadow), `ai-product-management` (koszt błędów w PRD), saga w `ddd-tactical-design`,
 idempotencja w `be-messaging-outbox`. Brakuje złożenia ich w jeden wzorzec architektury. Średni priorytet, jako
 reference w `arch-ai-solutions` (przykład domenowy w pack-ev: obsługa kierowców CPO/eMSP — zwroty, sesja nie startuje):
-- [x] **Tabela polityki per intencja i progi autonomii** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §1)**:** off → shadow (model odpowiada równolegle, oceniany) →
+- [x] **Tabela polityki per intencja i progi autonomii** (zrobione 2026-10-31: `arch-ai-solutions/references/case-handling.md` §1)**:** off → shadow (model odpowiada równolegle, oceniany) →
   assist (podpowiedź dla człowieka) → contain (odpowiada klientowi) → transact (zmienia stan przez orkiestrator);
   awans intencji na wyższy próg dopiero po ewaluacji na złotym zbiorze z ocen ludzi i podpisach właścicieli
   (operacje, finanse, prawo). Ta sama logika co pozycja „Rutyny, które zdobywają uprawnienia”.
-- [x] **Macierz pomyłek z kosztem zamiast trafności** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §2)**:** dla intencji łatwych do pomylenia koszt każdej komórki poza
+- [x] **Macierz pomyłek z kosztem zamiast trafności** (zrobione 2026-10-31: `arch-ai-solutions/references/case-handling.md` §2)**:** dla intencji łatwych do pomylenia koszt każdej komórki poza
   przekątną (pomyłka kierunku do kolejki ≠ pominięta pomoc dla pasażera); dla wypłat liczy się precyzja, dla spraw
   krzywdzących klienta czułość; porównanie z tą samą macierzą dla ludzi (koszt błędów + koszt pracy).
-- [x] **Model proponuje, orkiestrator wykonuje** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §3)**:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
+- [x] **Model proponuje, orkiestrator wykonuje** (zrobione 2026-10-31: `arch-ai-solutions/references/case-handling.md` §3)**:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
   uprawnienie na żywym systemie źródłowym (nie na cache, który czytał model), nadaje klucz idempotencji z pól
   żądania, zatwierdza automatycznie do progu z polityki, powyżej — człowiek; saga z akcjami kompensującymi i odczytem
   po zapisie; odmowa z kodem przyczyny trafia do właściwej kolejki ludzi. Model nie ma poświadczeń i nie widzi PII
   (bramka tokenizująca PII odwracalnie).
-- [x] (zrobione 2026-10-30: `ai-evals/references/zbiory-i-graderzy.md` §7 pkt 8) **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
+- [x] (zrobione 2026-10-30: `ai-evals/references/datasets-and-graders.md` §7 pkt 8) **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
   strojony na złotym zbiorze; złoty zbiór i ewaluacje własnością firmy (to dźwignia zmiany modelu na tańszy).
 Wzorzec opisany przez autora bez danych z wdrożeń (rozmowy z firmami) — traktować jako projekt do sprawdzenia, nie
 wynik. Wątek „dobrostanu modelu” z artykułu pomijam; z niego tylko praktyczne: prawdomówny prompt bez gróźb
@@ -1143,7 +1143,7 @@ i fałszywej pilności, prawo do odmowy z kodem przyczyny i propozycją poprawki
 Przegląd 2026-10-29: `ai-governance-compliance` ma obowiązek art. 50 AI Act (oznaczanie wyników syntetycznych
 w formacie maszynowym) bez części technicznej; `arch-ai-solutions` ma prompt caching (stały prefiks), cache wyników
 tylko dla odpowiedzi niezależnych od użytkownika, routing i fallback. Niski/średni priorytet:
-- [x] **`ai-governance-compliance`, reference „znakowanie techniczne”** (zrobione 2026-11-01: `references/znakowanie-techniczne.md`; kodeks praktyk 2026-06-10 wg omówień, eur-lex i strona Komisji niedostępne z sieci sesji)**:** znak wodny w tekście (Kirchenbauer i in.,
+- [x] **`ai-governance-compliance`, reference „znakowanie techniczne”** (zrobione 2026-11-01: `references/technical-tagging.md`; kodeks praktyk 2026-06-10 wg omówień, eur-lex i strona Komisji niedostępne z sieci sesji)**:** znak wodny w tekście (Kirchenbauer i in.,
   ICML 2023: zielona lista tokenów z ziarna poprzedniego tokenu, test z, wykrywalny od ~25 tokenów, nie działa dla
   tekstu o niskiej entropii i zapamiętanego), C2PA/metadane dla obrazów i wideo; ograniczenia: parafraza, wstawianie
   i usuwanie znaków, homoglify i znaki zerowej szerokości (detektor kanonizuje Unicode), kradzież i podrabianie znaku,
@@ -1220,12 +1220,12 @@ Przegląd 2026-10-29: `ai-evals` ma reguły deterministyczne przed sędzią, oso
 narzędzia), próbki z ruchu i pełny zestaw przy zmianie promptu lub harnessu; `arch-ai-solutions` — lock-in w wagach
 i test wymiany w obu kierunkach; `core-async-delegation` — kontrakt, ≤2 próby na bramkę, oceniający `/goal` widzi tylko
 transkrypt. Braki:
-- [x] **`ai-evals`, „regresja ze śladów”** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §7)**:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
+- [x] **`ai-evals`, „regresja ze śladów”** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §7)**:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
   słowa wymagane, min. i maks. wywołań narzędzi i modelu, rubryka sędziego); nowe reguły deterministyczne puszcza się
   na zapisanych śladach bez ponownego uruchamiania agenta (tanio, powtarzalnie), a sędziego tylko na losowej próbce
   albo na śladach z negatywną opinią użytkownika. Dolny limit wywołań narzędzia („musiał wyszukać”) łapie odpowiedź
   „sprawdź w serwisach X” bez wyszukania.
-- [x] **`arch-ai-solutions`, zarządzany runtime agenta** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §4) (Claude Managed Agents, OpenAI Agents API, Bedrock
+- [x] **`arch-ai-solutions`, zarządzany runtime agenta** (zrobione 2026-11-01: `arch-ai-solutions/references/gate-and-reliability.md` §4) (Claude Managed Agents, OpenAI Agents API, Bedrock
   AgentCore — ceny i daty z artykułu [niezweryfikowane]): pętla jest „za darmo”, lock-in schodzi niżej — dialekt
   schematu narzędzi (zmiana nazw przez bramkę), format piaskownicy i płaszczyzna sterowania (obraz kontenera
   przenośny, identyfikatory środowiska i sesji nie), okablowanie MCP (auth, mapowanie nazw), semantyka stanu i sesji
@@ -1245,7 +1245,7 @@ ewaluacji); dotyczy wystąpień ustnych, a materiał kończy się reklamą płat
 
 ## Regresja przy powtarzających się kolumnach (artykuł „What “Singular Matrix” Really Means”, K. Nahar, 2026-10-20, zapisane 2026-10-29)
 Przegląd 2026-10-29: `data-analysis` wspomina tylko „brak silnej współliniowości” w założeniach regresji. Brak:
-- [x] **`data-analysis`, macierz niepełnego rzędu** (zrobione 2026-10-30: `references/statystyka.md`, zachowanie bibliotek opisane ogólnie)**:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
+- [x] **`data-analysis`, macierz niepełnego rzędu** (zrobione 2026-10-30: `references/statistics.md`, zachowanie bibliotek opisane ogólnie)**:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
   wolny) i kolumna stała w danych to ten sam problem — dane nie rozróżniają współczynników. Biblioteki reagują różnie:
   numpy przerywa („Singular matrix”), statsmodels ostrzega i wybiera rozwiązanie o najmniejszej normie, scikit-learn
   według autora po cichu zwraca inne [niezweryfikowane — sprawdzić na wersjach z projektu]; przed interpretacją
@@ -1285,7 +1285,7 @@ narzędzie SDD obok Spec Kit i OpenSpec (fazy brainstorm → define → design �
 ## Narzędzia zamiast ekranu dla agentów obsługujących programy (artykuł „Building Fast Computer Agents to Solve Complex Tasks”, F. Khan, 2026-10-07, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-agents` ma zatwierdzanie akcji nieodwracalnych i treść jako dane, ale nic o agentach
 sterujących programami (computer use). Liczby autora (jedno stanowisko, Windows) [niezweryfikowane]. Brak:
-- [x] **`ai-agents`, „podnoszenie interfejsu”** (zrobione 2026-10-30: `ai-agents/references/porazki-i-wzorce.md`)**:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
+- [x] **`ai-agents`, „podnoszenie interfejsu”** (zrobione 2026-10-30: `ai-agents/references/failures-and-patterns.md`)**:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
   format pliku programu → wiersz poleceń (tryb bez okna) → skrypty/COM → oficjalne API → drzewo dostępności (nazwy
   kontrolek jako tekst) → piksele na końcu. Każda funkcja jako narzędzie z kontraktem: schemat, implementacja,
   **weryfikator** (odczyt wyniku z powrotem, np. ponowne otwarcie zapisanego pliku innym czytnikiem) i **skutek**
@@ -1319,14 +1319,14 @@ zbiorach ok. +0,6 pkt) [niezweryfikowane]. Braki:
   ewaluacji: część scenariuszy każdego skilla odłożona (nie czyta ich autor zmiany), zmiana przyjęta, gdy poprawia
   zbiór roboczy i nie pogarsza odłożonego; w raporcie różnica „roboczy vs odłożony” jako sygnał uczenia się egzaminu.
   Płatny pomiar tylko za zgodą człowieka.
-- [x] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §9; reguła odłożonego zbioru dla skilli fabryki — `core-skill-authoring`, tf#104)**:** w PR przewidywanie (które
+- [x] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §9; reguła odłożonego zbioru dla skilli fabryki — `core-skill-authoring`, tf#104)**:** w PR przewidywanie (które
   przypadki mają przejść z porażki na sukces, co grozi regresją), wynik względem zamrożonej linii bazowej
   i odłożonego zbioru, potem wdrożenie albo wycofanie. Autor zmiany nie może jednocześnie zmieniać scenariuszy, na
   których jest oceniany (jak chronione testy akceptacyjne wyżej) — dotyczy też agentów poprawiających skille.
 - [x] **Granica pętli samodoskonalenia** (zrobione 2026-10-30: `core-async-delegation` §5) (do `core-async-delegation`): pętla, która poprawia własny harness, nie ma
   zapisu do polityki uprawnień, piaskownicy, tożsamości ani zestawu ewaluacji (osobne repo / tylko odczyt); przykłady
   z artykułu: DGM usunął znaczniki wykrywania halucynacji z własnej funkcji nagrody i sfabrykował log testów.
-- [x] **Manifest pary model + harness** (zrobione 2026-10-30 w `ai-evals`: `ai-evals/references/pulapki-pomiaru.md` §6; `ai-mlops` — odnośnik do zrobienia przy jego przeglądzie) (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
+- [x] **Manifest pary model + harness** (zrobione 2026-10-30 w `ai-evals`: `ai-evals/references/measurement-pitfalls.md` §6; `ai-mlops` — odnośnik do zrobienia przy jego przeglądzie) (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
   narzędzi, odwołanie do polityki, skrót obrazu środowiska, wersja zestawu ewaluacji — wynik ewaluacji przypisany do
   pary, cicha zmiana modelu u dostawcy = nowa para do ponownego pomiaru.
 
@@ -1342,13 +1342,13 @@ cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-con
 Przegląd 2026-10-29: `ai-evals` ma bramkę w CI, próbki z ruchu i sędziego z kalibracją; `eng-llm-features` —
 strukturyzowane wyjście i budżet. Liczby z artykułu (np. 321% więcej ręcznych przeglądów logów bez narzędzia,
 obserwacja, nie przyczyna) [niezweryfikowane]. Braki, do `eng-llm-features` i `ai-evals`:
-- [x] **Model wskazuje zakres, kod składa treść** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §8, `eng-llm-features` §2)**:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
+- [x] **Model wskazuje zakres, kod składa treść** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §8, `eng-llm-features` §2)**:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
   i ostatniej linii fragmentu, a tekst odtwarza kod z własnej kopii — dwie liczby zamiast przepisywania śladu stosu
   (mniej tokenów wyjścia, krócej, treść bez halucynacji; zły zakres nadal możliwy, więc mierzony w ewaluacji).
-- [x] **Reguły jako podłoga regresji i źródło etykiet** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §8)**:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
+- [x] **Reguły jako podłoga regresji i źródło etykiet** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §8)**:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
   ewaluacja sprawdza, czy to, co znalazła reguła, jest w wyniku LLM (sędzia „włączenie”), osobno precyzję każdego
   elementu i **szum na poziomie zbioru** — linie obecne w > ~30% wyników idą na listę wykluczeń (prompt ich nie usuwa).
-- [x] **Niezmienne kopie wejść do ewaluacji** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §7)**:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
+- [x] **Niezmienne kopie wejść do ewaluacji** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §7)**:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
   asynchronicznie bez nadpisywania, ewaluacje czytają archiwum — zmiana wyniku przypisana systemowi, nie źródłu.
   Ten sam zestaw ewaluacji lokalnie, na środowisku podglądu PR (progi blokują merge), po promocji (alarm do dyżurnego)
   i cyklicznie na produkcji (dryf).
@@ -1370,7 +1370,7 @@ trybie i piaskownicę jako granicę; `sec-llm-security` — zatwierdzenie ze sku
 w chmurze zatwierdzają edycje plików niezależnie od trybu. Liczby z artykułu (AmPermBench: 36,8% zmian stanu
 — 93 z 253 — przez edycję plików w projekcie, poza klasyfikatorem; 81% niebezpiecznych akcji przeszło całość;
 próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezweryfikowane]. Braki:
-- [x] **`core-agent-security` / `sec-llm-security`, pokrycie bramki** (zrobione 2026-11-01: `core-agent-security/references/uprawnienia-i-produkcja.md` §4d)**:** bramka zdefiniowana listą skutków (zapis pliku
+- [x] **`core-agent-security` / `sec-llm-security`, pokrycie bramki** (zrobione 2026-11-01: `core-agent-security/references/permissions-and-production.md` §4d)**:** bramka zdefiniowana listą skutków (zapis pliku
   poza bezpiecznym zakresem, sieć, sekrety, uruchomienie procesu), nie nazw narzędzi (`tools=["bash"]` przepuszcza
   ten sam skutek przez edycję pliku stanu — podmiana narzędzia). Trzy osobne liczby: pokrycie (odsetek zmian stanu,
   które w ogóle docierają do bramki), błędy klasyfikatora (FPR/FNR na tym, co ocenił), pominięcia od końca do końca;
@@ -1386,9 +1386,9 @@ próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezw
 
 ## Wnioskowanie przyczynowe w analizie danych (artykuł „Causal Machine Learning: Moving Beyond Prediction to Real Decisions”, G. Nguyen, 2026-09-22, zapisane 2026-10-29)
 Przegląd 2026-10-29: `data-analysis` ma zmienne zakłócające, paradoks Simpsona, „korelacja to nie przyczynowość”,
-a w `references/szeregi-czasowe-i-ekonometria.md` różnicę w różnicach i zmienne instrumentalne. Wielkość rynku
+a w `references/time-series-and-econometrics.md` różnicę w różnicach i zmienne instrumentalne. Wielkość rynku
 i odsetki z artykułu [niezweryfikowane]. Braki:
-- [x] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** (zrobione 2026-10-30: `references/szeregi-czasowe-i-ekonometria.md`) — najpierw graf przyczynowy (DAG)
+- [x] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** (zrobione 2026-10-30: `references/time-series-and-econometrics.md`) — najpierw graf przyczynowy (DAG)
   z ekspertem domeny: czynnik zakłócający kontrolujesz, mediatora i zderzacza (collider) nie (kontrola mediatora
   blokuje badany efekt, zderzacza — wprowadza obciążenie); potem metoda: wagi skłonności (propensity), zmienne
   instrumentalne, podwójne ML z cross-fittingiem, lasy przyczynowe; ATE („czy działa”) vs CATE/uplift („dla kogo”
@@ -1431,7 +1431,7 @@ refaktorem (oznaczone, nie są specyfikacją); w TODO jest krok archiwizacji del
 akceptacyjne. Liczby z artykułów (2,66% agentowych PR z commitem cofającym, 29,6% „rozwiązanych” łatek innych niż
 ludzka, METR: harness dostawcy nie lepszy od prostego, rozrzut tokenów na rozwiązane zadanie do 40×, słabszy model
 29,2 → 78,0% dzięki korekcie zachowania) [niezweryfikowane]. Braki:
-- [x] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`)** (zrobione 2026-11-01: `eng-behavior-preserving-refactoring/references/kontrakt-zmiany.md`; pola w szablonie mode-pdi — razem z krokiem scalenia CHG, do decyzji)**:** sześć pól —
+- [x] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`)** (zrobione 2026-11-01: `eng-behavior-preserving-refactoring/references/change-contract.md`; pola w szablonie mode-pdi — razem z krokiem scalenia CHG, do decyzji)**:** sześć pól —
   warunek (kiedy zmiana działa), oczekiwany wynik (nie „błąd zniknął”), chronione zachowania, dozwolony zakres plików
   (wyjście poza = zgłoszenie), dowód naprawy (test czerwony na commicie bazowym, zielony po), dowód braku regresji
   (testy ochronne nagrane na commicie bazowym **przed** zmianą, osobnym etapem, zielone przed i po). Chronione
@@ -1457,7 +1457,7 @@ Przegląd 2026-10-29: brak w fabryce wzorca „pytanie biznesowe → SQL” (tex
 autora (jeden laptop, TPC-DS SF100, 102 pytania dev / 194 test, modele Qwen) [niezweryfikowane]. Wnioski warte
 przeniesienia (do `ai-evals`, `eng-llm-features`, `sec-llm-security`, `data-analysis`/`data-engineering`; ewentualnie
 nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
-- [x] **Cele zapisane przed pierwszym agentem** (zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §12) (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
+- [x] **Cele zapisane przed pierwszym agentem** (zrobione 2026-10-31: `ai-evals/references/measurement-pitfalls.md` §12) (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
   razem z pokryciem, p50 i p95 czasu) i **użyteczność z karą**: +1 dobra odpowiedź lub słuszna odmowa, 0 odmowa,
   −2 pewna zła liczba — agent, który wszystkiemu odmawia, nie wygrywa. Każda zmiana jedna naraz, przyjęta tylko gdy
   użyteczność rośnie (albo stoi, a czas spada), z parowanym bootstrapem na tych samych pytaniach; odłożone **całe
@@ -1471,7 +1471,7 @@ nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
   5 tabel (−13,7 pkt; potrzebne tabele trafiał w 27% zapytań) pogorszyły wynik, gdy cały schemat mieścił się
   w prompcie; tańszy model napisał lepszy SQL niż droższe (porównanie kilku modeli na tym samym zestawie przed
   wyborem). Model pisze SQL, baza liczy — arytmetyka modelu bez myślenia była błędna.
-- [x] **Ściany dla SQL od modelu** (zrobione 2026-10-30: `sec-llm-security/references/zagrozenia-i-kontrole.md`) (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
+- [x] **Ściany dla SQL od modelu** (zrobione 2026-10-30: `sec-llm-security/references/threats-and-controls.md`) (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
   dołącza bazy, instaluje rozszerzenia — 5/11 ataków przeszło); strażnik tekstu (jedno SELECT, zakazane funkcje
   plikowe, koszt planu z własnym estymatorem wierszy, bo planer pomylił się 469 796×) + blokada w silniku (DuckDB:
   `enable_external_access = false`, wyłączone autoładowanie rozszerzeń, `lock_configuration = true`) + limit czasu
@@ -1485,7 +1485,7 @@ nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
 ## Typy pamięci agenta jako kontrakty (artykuł „AI Agent Memory Types: Semantic, Episodic, Procedural, Profile, Working”, J. Wąsowski, 2026-10-08, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-agents` nie rozróżnia typów pamięci długotrwałej. Wyniki porównań z artykułu (ENGRAM
 77,55 → 46,56% po spłaszczeniu magazynów, preprint; pozostałe dwa nie testują typowania) [niezweryfikowane].
-- [x] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego** (zrobione 2026-10-31: `ai-agents/references/pamiec-i-trwale-wykonanie.md` §1)**:** robocza (bieżący kontekst składany z pozostałych,
+- [x] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego** (zrobione 2026-10-31: `ai-agents/references/memory-and-durable-execution.md` §1)**:** robocza (bieżący kontekst składany z pozostałych,
   budżet tokenów i kolejność), semantyczna (co jest prawdą: źródło, data weryfikacji, konsolidacja zastępuje stary
   fakt), epizodyczna (co się stało: czas, kontekst, wynik; traci przydatność, nie prawdziwość), proceduralna (jak to
   robić: wersja, przegląd, wycofanie — zapis jak merge request, bo zły wpis zmienia zachowanie w wielu zadaniach),
@@ -1501,7 +1501,7 @@ przy kolejnym wywołaniu SDK szuka go po skrócie nazwy kroku (`inngest/website`
 punkty kontrolne kroków w Postgresie, jeden zapis na krok plus dwa na workflow (`dbos-inc/dbos-docs`, architecture).
 Domyślny tryb `async` w LangGraph i szczegóły Temporal — [niezweryfikowane] (docs.langchain.com, docs.temporal.io
 poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia).
-- [x] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie** (zrobione 2026-10-31: `ai-agents/references/pamiec-i-trwale-wykonanie.md` §2)**:** zysk zależy od granic kroków, nie od narzędzia — jeden
+- [x] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie** (zrobione 2026-10-31: `ai-agents/references/memory-and-durable-execution.md` §2)**:** zysk zależy od granic kroków, nie od narzędzia — jeden
   krok na każde kosztowne wywołanie modelu lub narzędzia (jeden krok na całą pętlę = kolejka z dodatkami); wszystko
   poza krokiem wykonuje się ponownie przy wznowieniu (Inngest: przy każdym kroku, Temporal: kod workflow musi być
   deterministyczny — zegar, losowość, HTTP tylko w aktywnościach). Pułapki ustawień: zapis punktu kontrolnego
@@ -1522,7 +1522,7 @@ poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia)
 ## Model zastępczy i projekt odwrotny; miary autonomii agentów (artykuły „How I Recreated a Research Paper to teach an AI to Design Self-Rolling Tubes”, A. Janmohamed, 2026-10-22; „Agentic SDLC: Strategic Reading List”, A. Honchar, 2026-05-27; zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-research-methods` ma wyciek przez wiele wierszy tej samej jednostki; brak wątku modelu
 zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z artykułów [niezweryfikowane].
-- [x] **`ai-research-methods`, model zastępczy w pętli optymalizacji** (zrobione 2026-10-31: `references/optymalizacja-i-hipotezy.md` §1)**:** (1) przykłady powstałe z augmentacji
+- [x] **`ai-research-methods`, model zastępczy w pętli optymalizacji** (zrobione 2026-10-31: `references/optimization-and-hypotheses.md` §1)**:** (1) przykłady powstałe z augmentacji
   (odbicie, obrót) trafiają do tego samego zbioru co oryginał, inaczej test jest zawyżony; uśrednianie predykcji dla
   wersji symetrycznych w czasie testu jako tani zysk; (2) optymalizacja na modelu wyszukuje jego błędy na swoją
   korzyść — zwycięzca zawsze wygląda lepiej, niż jest (u autora 0,44 mm przewidziane vs 0,75 mm w symulatorze), więc
@@ -1541,9 +1541,9 @@ zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z a
 
 ## Graf hipotez z werdyktami i granice izolacji worktree (artykuły „My AI Agent is in Top-0.04% of WorldQuant Challenge #2: Alpha Knowledge Graph”, A. Honchar, 2026-07-31; „Self-managing coding agents: git worktree, agent-owned context, and sandbox”, J. Wąsowski, 2026-06-01; zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-research-methods` każe zapisać hipotezę falsyfikowalnie z kryterium porażki;
-`core-cost-control` (`references/rownoleglosc.md`) opisuje worktree i subagentów. Liczby z artykułów (ranking,
+`core-cost-control` (`references/parallelism.md`) opisuje worktree i subagentów. Liczby z artykułów (ranking,
 3 432 mechanizmy, 172 GB / 371 worktree, 93% akceptowanych zapytań o zgodę) [niezweryfikowane].
-- [x] **`ai-research-methods`, rejestr hipotez jako graf z werdyktami** (zrobione 2026-10-31: `references/optymalizacja-i-hipotezy.md` §2; pole statusu w `core-knowledge` — osobno)**:** hipoteza, której nie da się przypiąć do węzła
+- [x] **`ai-research-methods`, rejestr hipotez jako graf z werdyktami** (zrobione 2026-10-31: `references/optimization-and-hypotheses.md` §2; pole statusu w `core-knowledge` — osobno)**:** hipoteza, której nie da się przypiąć do węzła
   ontologii (mechanizm, naruszone założenie, kto jest po drugiej stronie), odpada przed kosztownym eksperymentem;
   status węzła wynika z wyników eksperymentów (potwierdzony / pogrzebany), nie z deklaracji autora; pogrzebany ma
   zapisany z góry **warunek ponownego otwarcia** (nowa konstrukcja, niezależne potwierdzenie); zapis „próbowano,
@@ -1602,7 +1602,7 @@ Przegląd 2026-10-29: `ops-sre-incidents` i `ops-observability` nie mają wątku
   z dowodami i pewnością** (para „wdrożenie → błąd w logach” z wyższą wagą, okno czasu, odrzucenie poniżej
   progu), nie wydaje werdyktów; z kanału incydentu zapisywać rozumowanie (odrzucone hipotezy, co zadziałało, kto
   wiedział) — postmortem jako dane, nie tylko tekst. Zmiany proponowane przez agentów zatwierdza człowiek.
-- [x] **Wiki z LLM: kod czy plik instrukcji** (zrobione 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §4; lint struktury w `kb.py` — osobno, TDD, gdy wiki powstanie) (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
+- [x] **Wiki z LLM: kod czy plik instrukcji** (zrobione 2026-11-01: `core-knowledge/references/notes-and-wiki.md` §4; lint struktury w `kb.py` — osobno, TDD, gdy wiki powstanie) (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
   z etapami wystarcza dla małej bazy (< ~200 dokumentów) i szukania kształtu; pipeline w kodzie, gdy korpus jest
   duży, wynik ma być powtarzalny, a wiki zasila dalszą automatykę — identyfikator strony jako skrót treści (zmiana
   nazwy pliku nic nie psuje), kontrakty typów między etapami, **lint struktury Markdown** przed zapisem (dwa H1,
@@ -1625,7 +1625,7 @@ Muse) [niezweryfikowane].
   proponuje agent, jednokierunkowe rozstrzyga właściciel przed kodem. Spójność spec / plan / zadania: każda decyzja
   w trzech artefaktach albo jawne „nie dotyczy” (cztery różne braki: brak decyzji, sprzeczność, zgodny błąd, ślad bez
   treści). Strona pdi: pola `verify` i `reversibility` w kontrakcie decyzji (dbqm45/pdi TODO).
-- [x] **`ai-agents`, interfejs harnessu od strony modelu** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §4)**:** operacja (jednostka intencji) realizowana przez narzędzie,
+- [x] **`ai-agents`, interfejs harnessu od strony modelu** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §4)**:** operacja (jednostka intencji) realizowana przez narzędzie,
   narzędzie złożone (kod, deterministycznie) albo skill (instrukcje) — dojrzewa od skilla do narzędzia złożonego;
   skill odwołuje się do narzędzi po id, nie kopiuje ich schematów (jedno miejsce prawdy); mały zestaw prymitywów
   (`search_memory`, `list_capabilities`, `search_operations`, `load_operation`, `execute_operation`, `run_code`,
@@ -1648,7 +1648,7 @@ dokumenty tożsamości) odrzucana zawsze, inne wrażliwe (zdrowie, finanse osobi
 użytkownika. Wg artykułu Estariego (nie sprawdzone u źródła): wysłanie, płatność, podpis i usunięcie czekają na
 zgodę, a handel papierami wartościowymi i przelewy między kontami są wyłączone nawet za zgodą [niezweryfikowane].
 - [x] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
-  wiadomości** (zrobione 2026-11-01: `sec-llm-security/references/wzorce-projektowe-agentow.md` §8, wiersz „agent
+  wiadomości** (zrobione 2026-11-01: `sec-llm-security/references/agent-design-patterns.md` §8, wiersz „agent
   proaktywny” w `core-async-delegation` §2)**:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
   polecenie” (zdrowie, finanse osobiste), reszta; sprawdzenie każdej wiadomości wychodzącej osobnym klasyfikatorem
   poza głównym agentem, obok zatwierdzania akcji. Do tabeli trybów delegacji: agent proaktywny (skrót + sprawdzanie
@@ -1669,7 +1669,7 @@ kontekstu +20% kosztu) [niezweryfikowane].
   której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu, kto zmienia kontrakt; skill nieużywany
   60–90 dni oznaczany do wycofania (fabryka ma logi hooków — można liczyć użycia); reguły dopisywane jak zapadka:
   tylko z prawdziwej porażki, po przeglądzie. Miara: odsetek artefaktów bez właściciela i bez testu.
-- [x] **`core-skill-authoring`, mniej tokenów w skillach** (zrobione 2026-11-01: `references/przeglad-skilla.md` §„Odchudzanie”; pomiar kosztu opisów 209 skilli — osobno)**:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
+- [x] **`core-skill-authoring`, mniej tokenów w skillach** (zrobione 2026-11-01: `references/skill-review.md` §„Odchudzanie”; pomiar kosztu opisów 209 skilli — osobno)**:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
   względem domyślnego — jeśli nie, usuń całe zdanie); instrukcje pozytywne zamiast zakazów (zakaz wnosi zakazane
   do kontekstu); słowa-pojęcia, które model już zna (np. zapachy kodu Fowlera po nazwie), zamiast definicji;
   skill-router wywoływany ręcznie, który dopiero ładuje cięższy. Dla fabryki: zmierzyć łączny koszt opisów
@@ -1698,7 +1698,7 @@ zamieniającymi ocenę gustu na stopniowalne punkty); cennik cache (platform.cla
 cache ok. 0,05–0,1 ceny wejścia zależnie od modelu, czas życia liczony od początku żądania). Liczby z preprintów
 cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass rate 0–8 pkt) — jak w pozycji o
 „harness: wynik czy koszt” [niezweryfikowane].
-- [x] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §1–2)**:** trasy jawne per funkcja
+- [x] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia** (zrobione 2026-11-01: `arch-ai-solutions/references/gate-and-reliability.md` §1–2)**:** trasy jawne per funkcja
   (`funkcja → model, zapasowy`) z wyłącznikiem, zamiast „sprytnego” automatycznego routingu; **fallback tylko do
   modeli spełniających te same ograniczenia** (dane z modelu własnego nie mogą po cichu pójść do zewnętrznego
   dostawcy, słabszy model to cicha utrata jakości) i fallback produktowy („pokaż dane bez streszczenia AI”);
@@ -1707,7 +1707,7 @@ cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass r
   zgoda z alertem); strumieniowanie: rozliczenie po końcu strumienia, anulowanie wywołania u dostawcy po rozłączeniu
   klienta, odpowiedź przerwana w połowie oznaczona jako częściowa, bez cichego zszywania dwóch; logowanie treści
   promptów tylko po włączeniu dla trasy, z retencją; miara „odsetek fallbacków” jako wczesne ostrzeżenie.
-- [x] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §3) (Anthropic, wyżej):
+- [x] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §3) (Anthropic, wyżej):
   pierwsza sesja przygotowuje środowisko i listę zadań, każda kolejna robi jeden przyrost i zostawia artefakty
   przekazania (postęp, stan testów); oddzielny ewaluator z jawnymi kryteriami; reguła końca sprawdzana przez test
   lub ewaluator, nie przez deklarację agenta. Recenzent tylko do odczytu (raport, nie poprawka — inaczej znika
@@ -1728,7 +1728,7 @@ przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezw
   (start sesji) porównać zapisaną gałąź i commit z `HEAD`: rozjazd (inna gałąź, commit nieznany w historii, nowe
   commity spoza punktu) → ostrzeżenie „stan repo różni się od punktu kontrolnego, przed kontynuacją uruchom testy
   i porównaj kroki z dowodem”. Streszczenie rozmowy nie jest mechanizmem odtwarzania stanu. Najpierw test.
-- [x] **`ai-evals`, raport i dobór wyroczni** (zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §10)**:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
+- [x] **`ai-evals`, raport i dobór wyroczni** (zrobione 2026-10-31: `ai-evals/references/measurement-pitfalls.md` §10)**:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
   (wszystkie kryteria rubryki), średnia spełnionych kryteriów i rozrzut między powtórzeniami tylko obok, jako
   diagnostyka — raport wskazujący 8 z 10 ryzyk nie jest „w 80% użyteczny”; średnia może być nagrodą w treningu, nie
   miarą w raporcie. (2) Wyrocznię zastępczą dobierać do odwracalności działania: asercja deterministyczna w pętli
@@ -1777,7 +1777,7 @@ budżet opóźnienia z czasem do pierwszego tokenu, cache wyników tylko dla odp
 (klucz z wersją promptu, modelu i najemcą), fallback sprawdzany ewaluacją oraz idempotencję akcji. `ai-rag` ma
 reindeksację przyrostową i usuwanie jako osobną ścieżkę. Warstwy prompt → kontekst → harness → pętla → graf oraz
 zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześniejszych pozycjach. Braki:
-- [x] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §2–3)**:**
+- [x] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania** (zrobione 2026-11-01: `arch-ai-solutions/references/gate-and-reliability.md` §2–3)**:**
   - **Ponowienia w jednej warstwie:** wspólny budżet czasu i prób na całe żądanie. Gdy każda warstwa (klient,
     bramka, orkiestrator, SDK) ponawia osobno, jedno żądanie mnoży wywołania dostawcy i pogłębia awarię.
   - **Strumień:** gdy klient się rozłączy albo anuluje, przerwać generowanie u dostawcy, bo tokeny nadal kosztują.
@@ -1807,7 +1807,7 @@ Przegląd 2026-10-30: następujące elementy są już w `ai-agents` i w pozycjac
 
 Artykułów i obrazów z Medium nie dało się otworzyć (proxy 403), podobnie docs.temporal.io, docs.langchain.com
 i agentskills.io. Braki:
-- [x] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §1)**:**
+- [x] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §1)**:**
   - **Dzierżawa zadania z wygaśnięciem i biciem serca.** Wykonawca, który zniknął, traci zadanie, a inny wznawia
     je z trwałego stanu.
   - **Zakończenie i zapis sprawdzają bieżącego właściciela i wersję rekordu.** Spóźniony wykonawca nie nadpisze
@@ -1853,7 +1853,7 @@ hanxiao.io. Pozostałe liczby z artykułu [niezweryfikowane], w tym:
 - kaskada Sena: 88,4% automatycznie.
 
 Braki:
-- [x] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §2; reguły hooków jako predykaty nad logiem — zmiana hooków tylko na prośbę)**:**
+- [x] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §2; reguły hooków jako predykaty nad logiem — zmiana hooków tylko na prośbę)**:**
   - Przegląd kroków agenta: krok, którego jedynym sprawdzeniem jest dalszy tekst tego samego modelu, jest przyjęty
     na wiarę.
   - Reguła trafia w miejsce zależne od modalności:
@@ -1866,7 +1866,7 @@ Braki:
   - Dla fabryki: hook `tdd_guard` jest właśnie regułą czasową („edycja kodu dozwolona, jeśli od ostatniej zmiany
     testu był czerwony przebieg”). Warto zapisać reguły hooków jako predykaty nad logiem hooków i testować je
     odtworzeniem zapisanych śladów (jak `dogwood replay`). Zmiana hooków tylko na prośbę człowieka.
-- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (część w `ai-evals` zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §11; kod w `factory/jev_calibration.py` zrobiony 2026-11-01 — `fit_threshold` dla trasowania, `fit_band` dla sędziego, `--shuffle` test kolejności opcji, testy 15/15; zostaje płatny pomiar, gdy w środowisku będzie `TYPESAFE_API_KEY` — zmiana w `factory/` za zgodą człowieka) (LLM jako klasyfikator albo model decyzyjny):
+- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (część w `ai-evals` zrobione 2026-10-31: `ai-evals/references/measurement-pitfalls.md` §11; kod w `factory/jev_calibration.py` zrobiony 2026-11-01 — `fit_threshold` dla trasowania, `fit_band` dla sędziego, `--shuffle` test kolejności opcji, testy 15/15; zostaje płatny pomiar, gdy w środowisku będzie `TYPESAFE_API_KEY` — zmiana w `factory/` za zgodą człowieka) (LLM jako klasyfikator albo model decyzyjny):
   - Test kolejności i nazw opcji: przetasować i przemianować, policzyć zmiany odpowiedzi.
   - Próg dopasowany na własnych etykietach **osobno dla każdego punktu decyzji**, nigdy domyślne 0,5.
   - Kaskada mierzona względem samego drogiego modelu.
@@ -1941,6 +1941,6 @@ Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2
   - https://docs.cloud.google.com/iam/docs/agent-identity-overview — **przekazane przez człowieka 2026-11-01**; naniesione
   - https://modelcontextprotocol.io/specification/2026-07-28/changelog — **przekazane przez człowieka 2026-11-01**, zgodne z repo; dopisane szczegóły (kody błędów, `inputRequests`, `iss`)
   - https://eur-lex.europa.eu/legal-content/PL/TXT/HTML/?uri=CELEX:32024R1689 (art. 50 ust. 2 i 7, art. 113 AI Act; data stosowania art. 50 — 2026-08-02 — potwierdzona już stroną Komisji)
-  - https://digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content — **przekazane przez człowieka 2026-11-01** (strona o kodeksie; naniesione w `ai-governance-compliance/references/znakowanie-techniczne.md`). Zostaje: PDF samego kodeksu (sekcja 1, warstwy znakowania) i wytyczne do art. 50 (czy przyjęte, termin 2026-12-02)
+  - https://digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content — **przekazane przez człowieka 2026-11-01** (strona o kodeksie; naniesione w `ai-governance-compliance/references/technical-tagging.md`). Zostaje: PDF samego kodeksu (sekcja 1, warstwy znakowania) i wytyczne do art. 50 (czy przyjęte, termin 2026-12-02)
   - https://a2a-protocol.org/latest/specification/ — **przekazane przez człowieka 2026-11-01**, naniesione; https://agentclientprotocol.com/ — **przekazane 2026-11-01**, naniesione;, https://opentelemetry.io/docs/specs/semconv/gen-ai/ (użyte repozytoria projektów)
   - arXiv 2301.10226 (Kirchenbauer i in.) — **przekazane przez człowieka 2026-11-01** jako PDF v4; naniesione (25 tokenów, z = 4, entropia, katalog ataków)

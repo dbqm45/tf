@@ -80,7 +80,7 @@ przejęte paczki, provenance) jest w ops-supply-chain-security i obowiązuje tak
   domyślnie 3 dni karencji dla aktualizacji wersji); łatki bezpieczeństwa idą bez karencji, ścieżką wyjątków.
 - **Automatyczne scalanie:** tylko patch/minor, tylko przy zielonym CI, nigdy dla major.
 - **Utrzymanie lockfile** (Renovate `lockFileMaintenance`): okresowe odświeżenie zależności przechodnich.
-- Przykładowe, sprawdzone konfiguracje: `references/konfiguracje.md`.
+- Przykładowe, sprawdzone konfiguracje: `references/configurations.md`.
 
 ## Checklista
 - [ ] prośba człowieka o aktualizację; inwentarz z datami końca wsparcia ze źródła

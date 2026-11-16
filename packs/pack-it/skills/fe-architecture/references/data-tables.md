@@ -16,7 +16,7 @@ serwera.
 ## 2. Dane po stronie serwera
 - Filtrowanie, sortowanie i paginacja są po stronie serwera, gdy zbiór nie jest mały i stały. Ściąganie 100 tys.
   rekordów do przeglądarki to wolny start i przestarzałe dane. Kontrakt API (kursor, lista dozwolonych pól):
-  be-api-design (pack-it), `.claude/skills/be-api-design/references/http-w-praktyce.md` §4.
+  be-api-design (pack-it), `.claude/skills/be-api-design/references/http-in-practice.md` §4.
 - Dane serwera trzymasz w warstwie z cache zapytań (np. TanStack Query, SWR, RTK Query). Klucz zapytania to
   parametry z URL, więc powrót do poprzedniego filtra jest natychmiastowy.
 - Każdy stan widoku: ładowanie (bez skakania układu), błąd z ponowieniem, pusto po filtrze („brak wyników dla…
@@ -35,7 +35,7 @@ serwera.
   („zaznaczono 50 na stronie — zaznacz wszystkie 12 413 pasujące”).
 - Operacja na „wszystkich pasujących” wysyła na serwer **filtr**, a nie listę ID z przeglądarki. Serwer liczy
   zbiór, sprawdza uprawnienia dla każdego rekordu i wykonuje operację w tle. Wzorzec: be-business-app-patterns
-  (pack-it), `.claude/skills/be-business-app-patterns/references/operacje-masowe.md`.
+  (pack-it), `.claude/skills/be-business-app-patterns/references/bulk-operations.md`.
 - Po zmianie filtra zaznaczenie „wszystkich pasujących” się kasuje: inny filtr to inny zbiór.
 
 ## 5. Paleta poleceń i skróty

@@ -3,7 +3,7 @@
   "based_on": "16.3",
   "min_supported": "14",
   "verified": "2026-10-03",
-  "verified_with": "next 16.3.8 + react 19.3.0, TypeScript (tsc --noEmit) dla przykładów w references/wzorce.md",
+  "verified_with": "next 16.3.8 + react 19.3.0, TypeScript (tsc --noEmit) dla przykładów w references/patterns.md",
   "constraints": {
     "15": {"fw-react": ">=19"},
     "16": {"fw-react": ">=19.2"}

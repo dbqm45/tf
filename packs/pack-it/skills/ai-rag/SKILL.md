@@ -20,7 +20,7 @@ wyjścia i pętlę narzędzi opisuje **eng-llm-features**; ten skill dotyczy teg
    - korpus duży, zmienny, z uprawnieniami albo wymaga cytatów → RAG;
    - dane ustrukturyzowane (zamówienie, stan konta) → narzędzie z zapytaniem do API lub SQL, nie wektory;
    - definicje, które muszą być dokładne i mieć właściciela (metryki, schematy, reguły) → kuratorowane pliki czytane
-     deterministycznie, RAG dla reszty, router między nimi (`references/parsowanie-ewaluacja-wiki.md` §3);
+     deterministycznie, RAG dla reszty, router między nimi (`references/parsing-evaluation-wiki.md` §3);
    - fine-tuning zmienia styl, format i zachowanie, a nie dostarcza aktualnych faktów; nie zastępuje RAG-a
      [założenie — zweryfikuj u dostawcy modelu].
 2. **Wczytywanie.** Parser dobierz do dokumentu i obejrzyj wynik na 10 stronach: kolejność kolumn, nagłówki, stopki
@@ -28,7 +28,7 @@ wyjścia i pętlę narzędzi opisuje **eng-llm-features**; ten skill dotyczy teg
    skanów. Do każdego fragmentu zapisz źródło, stronę, sekcję, datę, wersję i listę uprawnień. Strona bez warstwy
    tekstu albo z podejrzanie małą liczbą znaków to alarm, nie pusty dokument. Przy złych odpowiedziach najpierw
    czytasz surowe wyjście parsera na najgorszych dokumentach (skan, tabela przez dwie strony, dwie kolumny), dopiero
-   potem stroisz retriever (`references/parsowanie-ewaluacja-wiki.md` §1).
+   potem stroisz retriever (`references/parsing-evaluation-wiki.md` §1).
 3. **Chunking.** Zacznij od podziału wg struktury (sekcja, akapit, wiersz tabeli z nagłówkiem), nie od stałej liczby
    znaków. Punkt startowy: 200–500 tokenów i zakładka 10–20% [założenie — dobierz na zbiorze z kroku 7]. Za mały chunk
    gubi kontekst, za duży rozmywa embedding. Wariant „małe do szukania, duże do wysłania” (rodzic–dziecko) pomaga,
@@ -52,7 +52,7 @@ wyjścia i pętlę narzędzi opisuje **eng-llm-features**; ten skill dotyczy teg
    (parser, chunk, model, hybryda, reranker) i porównujesz z poprzednim wynikiem. Dopiero potem oceniasz odpowiedzi.
    Recall@k liczysz **osobno dla dwóch koszyków**: zapytania semantyczne (parafrazy) i dokładne (identyfikatory, kody,
    wersje, liczby); pytania łączące dwa fakty to trzecia kategoria. Próg podobieństwa ustawiasz dopiero po
-   histogramie cosinusa dla losowych, niepowiązanych par z własnego korpusu (`references/parsowanie-ewaluacja-wiki.md` §2).
+   histogramie cosinusa dla losowych, niepowiązanych par z własnego korpusu (`references/parsing-evaluation-wiki.md` §2).
 8. **Odpowiedź z cytatami.** Prompt: odpowiadaj wyłącznie z podanych fragmentów, przy każdym twierdzeniu podaj
    identyfikator źródła, a przy braku podstaw odpowiedz „nie wiem”. Kod sprawdza, że cytowany identyfikator istnieje
    wśród przekazanych fragmentów, a cytat występuje w jego treści. Do kontekstu dawaj mniej, lepszych fragmentów;
@@ -71,7 +71,7 @@ wyjścia i pętlę narzędzi opisuje **eng-llm-features**; ten skill dotyczy teg
     z treści fragmentów; fragmenty w wyraźnych znacznikach; źródła spoza zaufanych indeksów oznaczone. Jeśli pytanie
     brzmi „czy użytkownik widzi dokument, którego nie powinien”, to sprawa kroku 9, a nie promptu.
 
-Diagnoza porażek (objaw → przyczyna → poprawka) i dłuższa tabela baz: `references/porazki-i-baza-wektorowa.md`.
+Diagnoza porażek (objaw → przyczyna → poprawka) i dłuższa tabela baz: `references/failures-and-vector-store.md`.
 
 ## Przykład
 **Wejście:** „Czatbot HR na 1 800 PDF-ów, polski, kody typu ZUS-ZUA, pracownicy widzą tylko swój dział.”

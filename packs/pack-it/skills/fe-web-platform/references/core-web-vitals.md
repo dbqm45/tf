@@ -30,5 +30,5 @@ Przeniesione z importu frontend-developer (`senior.md`, „Core Web Vitals”), 
 - Mierz przed i po zmianie; optymalizuj najgorszy percentyl realnych urządzeń (średni Android, słaba sieć), nie
   MacBooka dewelopera.
 - Budżety wydajności (rozmiar JS na trasę, LCP) w CI zatrzymują regresje, zanim trafią do użytkowników.
-- Checklista przed wydaniem i budżety w CI: `checklista-wydajnosci.md`.
+- Checklista przed wydaniem i budżety w CI: `performance-checklist.md`.
 - Wzorce: code splitting, lazy loading, debounce, memoizacja — fe-architecture (`references/performance/`).

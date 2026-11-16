@@ -108,7 +108,7 @@ nie nadpisuje; poprawka to nowa wersja.
 - Trzeci nieudany pomiar = automatyczne wycofanie do stabilnej wersji, bez czekania na dyżurnego.
 - Obraz przypięty digestem, `revisionHistoryLimit: 5`; mierzysz czas od wykrycia do wycofania.
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] strategia dobrana do ryzyka i wymaganej szybkości powrotu

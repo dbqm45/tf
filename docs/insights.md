@@ -144,7 +144,7 @@ i tak wczytują skille narzędziem Skill według swojej treści. Zespół dział
 ### Event Storming prowadzony przez agenta (`ddd-event-storming`)
 Agent jest facylitatorem i skrybą: pyta, a wiedzę i decyzje dają ludzie. Sesja idzie przez 5 faz (kontekst sesji,
 zdarzenia, komendy i polityki, agregaty, konteksty i mapa), a agent wczytuje tylko kartę bieżącej fazy
-(`references/fazy-agenta.md`).
+(`references/agent-phases.md`).
 - **Skrypt `es_board.py`** prowadzi tablicę bez tokenów: dziennik zdarzeń z cofnięciem, odrzucanie kartek
   z późniejszej fazy, kontrola struktury fazy i zapis `board.md` z Mermaid.
 - **Bramki:** przy agregatach i mapie kontekstów obowiązuje przegląd w świeżym kontekście i zgoda człowieka,

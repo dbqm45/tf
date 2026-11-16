@@ -202,7 +202,7 @@ def contribution_tests() -> list[str]:
     if not s or abs(s["uplift"]) > 1e-9:
         fails.append(f"contribution: sonnet bez wkładu: {s}")
     with tempfile.TemporaryDirectory() as d:
-        out = Path(d) / "raport.md"
+        out = Path(d) / "report.md"
         ev.report(res, out)
         txt = out.read_text(encoding="utf-8")
         if "## Wkład skilla" not in txt or "## Zaliczane bez skilli" not in txt or "`s` / a" not in txt:
@@ -286,7 +286,7 @@ def main() -> int:
                         "checks": {"all": [["zwrot\\w* tej samej odpowiedzi"]]}}, "haiku", False, args)
         if not r.get("judge_same_model"):
             fails.append(f"sędzia = oceniany model powinien być oznaczony: {r}")
-        rep = Path(d) / "raport.md"
+        rep = Path(d) / "report.md"
         ev.report([r], rep)
         if "tej samej rodziny" not in rep.read_text(encoding="utf-8"):
             fails.append("raport: brak ostrzeżenia o sędzi tej samej rodziny co oceniany model")

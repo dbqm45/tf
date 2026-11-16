@@ -81,7 +81,7 @@ def main(argv: list[str]) -> int:
         print("✗ " + "\n✗ ".join(problems), file=sys.stderr)
         return 2
     version = (ROOT / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
-    subst = {"{{FIRMA_UP}}": name.replace("-", "").upper()[:8], "{{FIRMA}}": name, "{{ORG}}": org, "{{PREFIX}}": prefix,
+    subst = {"{{COMPANY_UP}}": name.replace("-", "").upper()[:8], "{{COMPANY}}": name, "{{ORG}}": org, "{{PREFIX}}": prefix,
              "{{TITLE}}": title, "{{CORE_RANGE}}": f">={version} <{int(version.split('.')[0]) + 1}.0.0",
              "{{REVIEW}}": (datetime.date.today() + datetime.timedelta(days=365)).isoformat()}
 
@@ -101,7 +101,7 @@ def main(argv: list[str]) -> int:
         text = fill(src.read_text(encoding="utf-8"))
         if team and rel_src.name == "SKILL.md":   # opis skilla: ustalenia zespołu ponad standardami firmy
             text = re.sub(r"^description: .*$", f"description: Użyj przy ustaleniach zespołu {title} ponad standardami "
-                          f"firmy ({org}-standardy) — kto zatwierdza, progi, zakazy i wyjątki obowiązujące w zespole.",
+                          f"firmy ({org}-standards) — kto zatwierdza, progi, zakazy i wyjątki obowiązujące w zespole.",
                           text, count=1, flags=re.M)
         dst.write_text(text, encoding="utf-8")
         written.append(rel)

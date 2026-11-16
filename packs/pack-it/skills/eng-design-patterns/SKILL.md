@@ -13,12 +13,12 @@ metadata:
 
 Wzorzec to odpowiedź na **rozpoznany, powtarzający się problem** — nie cel sam w sobie. Zaczynaj od nazwania problemu
 w kodzie; jeśli go nie umiesz nazwać (zmienność, która się powtarza, bolesne sprzężenie, wybuch podklas), wzorca nie
-potrzebujesz. Prostszy kod wygrywa remis (`references/krytyka-i-pulapki.md`).
+potrzebujesz. Prostszy kod wygrywa remis (`references/critique-and-pitfalls.md`).
 
 ## Jak pracować
 1. **Nazwij problem, nie wzorzec**: co wymaga edycji w wielu miejscach? który `switch` rośnie? co jest trudne do testu?
 2. **Zawęź kategorią**: tworzenie obiektów → kreacyjne; statyczny kształt i składanie → strukturalne; przepływ w czasie
-   → behawioralne (`references/podstawy.md`).
+   → behawioralne (`references/basics.md`).
 3. **Dobierz kandydata** z tabeli niżej i przeczytaj jego plik — zwłaszcza „Kiedy NIE używać”.
 4. **Wybierz najlżejszą formę**, jaką daje język (funkcja, closure, unia, generator, moduł), zanim sięgniesz po
    hierarchię klas z podręcznika.
@@ -75,15 +75,15 @@ Pary łatwe do pomylenia (rozstrzyga motywacja, nie kształt): Dekorator/Pełnom
 - **lang-typescript** — idiomy, którymi realizujesz lżejsze formy (unie, generatory, `satisfies`, `#pola`, `using`).
 
 ## Materiały (czytaj tylko potrzebny plik)
-- `references/podstawy.md` — gdy trzeba wyjaśnić, czym jest wzorzec, czym różni się od algorytmu/biblioteki,
+- `references/basics.md` — gdy trzeba wyjaśnić, czym jest wzorzec, czym różni się od algorytmu/biblioteki,
   klasyfikacja i mapa „wzorce w repozytorium”.
-- `references/krytyka-i-pulapki.md` — przed zaproponowaniem wzorca w review/refaktorze; tabela lżejszych form w TS,
+- `references/critique-and-pitfalls.md` — przed zaproponowaniem wzorca w review/refaktorze; tabela lżejszych form w TS,
   sygnały nadużycia.
-- `references/katalog.md` — gdy wybierasz między kilkoma kandydatami: 22 wzorce z „jednym zdaniem” i „kiedy NIE”.
-- `references/poza-gof.md` — obiekt roli (Role Object) i obiekt rozszerzenia (Extension Object) z katalogów PLoP.
-- `references/kreacyjne/{factory-method,abstract-factory,builder,prototype,singleton}.md`
-- `references/strukturalne/{adapter,bridge,composite,decorator,facade,flyweight,proxy}.md`
-- `references/behawioralne/{chain-of-responsibility,command,iterator,mediator,memento,observer,state,strategy,template-method,visitor}.md`
+- `references/catalog.md` — gdy wybierasz między kilkoma kandydatami: 22 wzorce z „jednym zdaniem” i „kiedy NIE”.
+- `references/beyond-gof.md` — obiekt roli (Role Object) i obiekt rozszerzenia (Extension Object) z katalogów PLoP.
+- `references/creational/{factory-method,abstract-factory,builder,prototype,singleton}.md`
+- `references/structural/{adapter,bridge,composite,decorator,facade,flyweight,proxy}.md`
+- `references/behavioral/{chain-of-responsibility,command,iterator,mediator,memento,observer,state,strategy,template-method,visitor}.md`
   — pełny opis wzorca: problem, uczestnicy, kiedy używać, koszty, powiązania, forma idiomatyczna w TS, przykład,
   pułapki. Przykłady (30 bloków) kompilują się w TS 6.0.3 i 7.0.2 (`strict`, `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, `erasableSyntaxOnly`) i uruchamiają w Node 22 przez usuwanie typów — bez `enum`

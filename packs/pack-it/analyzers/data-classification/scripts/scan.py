@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Moduł `data-classification` tf analyze, piętro 0 (bez modelu): szkic inwentarza danych osobowych i pilnowanie,
-żeby pole osobowe nie powstawało bez klasy (arch-privacy-compliance, references/lad-danych.md).
+żeby pole osobowe nie powstawało bez klasy (arch-privacy-compliance, references/data-governance.md).
 
   python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
 

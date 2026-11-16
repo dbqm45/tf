@@ -112,12 +112,12 @@ def main() -> int:
         write(repo / "packages" / "api" / "CLAUDE.md", "Tylko kontekst api.\n- Zapytania przez Knex, bez surowego SQL.\n")
         write(repo / "packages" / "cli" / "CLAUDE.md", "Tylko kontekst cli.\n"
                                                        "- Commity z prefiksem pakietu, np. `api: dodaj limit`.\n")
-        write(repo / ".claude" / "rules" / "testy.md", "---\npaths:\n  - \"**/*.test.ts\"\n---\n- Testy bez sieci.\n")
+        write(repo / ".claude" / "rules" / "tests.md", "---\npaths:\n  - \"**/*.test.ts\"\n---\n- Testy bez sieci.\n")
         write(repo / "node_modules" / "x" / "CLAUDE.md", "# obce\n")
         r = run("--root", repo, "--json")
         data = json.loads(r.stdout)
         paths = sorted(f["path"].replace("\\", "/") for f in data["files"])
-        ok(any(p.endswith(".claude/rules/testy.md") for p in paths), f"tryb katalogu: brak reguły z .claude/rules: {paths}")
+        ok(any(p.endswith(".claude/rules/tests.md") for p in paths), f"tryb katalogu: brak reguły z .claude/rules: {paths}")
         ok(not any("node_modules" in p for p in paths), f"tryb katalogu: node_modules nie pominięte: {paths}")
         repo_issues = json.dumps(data.get("repo", {}), ensure_ascii=False)
         ok("packages/cli/CLAUDE.md" in repo_issues and "packages/api/CLAUDE.md" not in repo_issues.split("poza_indeksem")[-1][:200],

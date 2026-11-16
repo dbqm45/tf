@@ -61,8 +61,8 @@ odpowiednikiem wyboru struktury jest indeks (B-drzewo, hash, GIN — be-database
   danych wersja iteracyjna z jawnym stosem.
 
 ## Więcej
-- Wzorce rozwiązywania problemów i techniki projektowania algorytmów: `references/wzorce-i-techniki.md`.
-- Drzewa, grafy i struktury zaawansowane: `references/drzewa-i-grafy.md`.
+- Wzorce rozwiązywania problemów i techniki projektowania algorytmów: `references/patterns-and-techniques.md`.
+- Drzewa, grafy i struktury zaawansowane: `references/trees-and-graphs.md`.
 
 ## Checklista przeglądu
 - [ ] złożoność pętli i zapytań oszacowana dla realnego n (także ukryte pętle i N+1)

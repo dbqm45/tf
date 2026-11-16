@@ -34,9 +34,9 @@ który jest Twój albo do którego masz zgodę (core-agent-security).
    niepewne, z `plik:linia` i uzasadnieniem. Niepewne sprawdza człowiek albo test.
 6. **Naprawa u źródła**: jedno bezpieczne API lub funkcja pomocnicza (np. lista dozwolonych pól sortowania,
    bezpieczny deserializator) zamiast łatki w każdym miejscu; kolejność napraw i terminy według
-   sec-appsec-devsecops (`.claude/skills/sec-appsec-devsecops/references/triaz-i-sla.md`).
+   sec-appsec-devsecops (`.claude/skills/sec-appsec-devsecops/references/triage-and-sla.md`).
 7. **Zapobieganie**: reguła (Semgrep albo CodeQL) z testami — przykład podatny i poprawny — w CI na diffie PR,
-   blokująca nowe wystąpienia; szablon w `references/regula-z-testami.md`, rzemiosło reguły (precyzja, autofix,
+   blokująca nowe wystąpienia; szablon w `references/rule-with-tests.md`, rzemiosło reguły (precyzja, autofix,
    testy CodeQL) — tool-semgrep. Wniosek w `docs/project/lessons.md`.
 8. **Raport**: klasa i wzorzec, zapytania, liczby (trafienia / prawdziwe / fałszywe / niepewne), lista z
    `plik:linia`, naprawy i reguły, czego nie sprawdzono.

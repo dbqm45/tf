@@ -122,10 +122,10 @@ def main() -> int:
         r, out = rec("--status", "duplicate", "--duplicate-of", "PRB-12", "--rationale", "to samo co PRB-12")
         check(out.get("tf_state") == "wontfix" and out.get("duplicate_of") == "PRB-12", f"R-7: duplicate: {r.stdout}")
         (d / ".out-of-scope").mkdir()
-        (d / ".out-of-scope" / "operacje-masowe.md").write_text("# Operacje masowe\n", encoding="utf-8")
+        (d / ".out-of-scope" / "bulk-operations.md").write_text("# Operacje masowe\n", encoding="utf-8")
         r, out = rec("--status", "rejected", "--reason", "out_of_scope_recorded", "--rationale", "decyzja z 2026",
-                     "--out-of-scope-file", ".out-of-scope/operacje-masowe.md")
-        check(r.returncode == 0 and out.get("out_of_scope_file") == ".out-of-scope/operacje-masowe.md",
+                     "--out-of-scope-file", ".out-of-scope/bulk-operations.md")
+        check(r.returncode == 0 and out.get("out_of_scope_file") == ".out-of-scope/bulk-operations.md",
               f"R-8: odrzucenie z wpisem w .out-of-scope/: {r.stdout}{r.stderr}")
 
         missing = {

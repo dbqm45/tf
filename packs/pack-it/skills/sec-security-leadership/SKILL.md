@@ -27,7 +27,7 @@ sec-eu-regulations. Tu: co z tego decyduje i mówi kierownictwo.
    „profil docelowy: …”. Szczegóły ram: sec-governance-compliance.
 3. **Strategia i mapa drogowa.** 3–5 filarów, każdy z wynikiem biznesowym, inicjatywą, miernikiem i właścicielem; mapa
    w etapach (0–6, 6–18, 18–36 miesięcy), czego **nie** robimy. Termin i koszt jako przedziały (proc-project-planning).
-   Szablon: `references/szablony.md`.
+   Szablon: `references/templates.md`.
 4. **Budżet i uzasadnienie.** Dla każdej inicjatywy: redukcja ryzyka (rozkład straty przed i po — sec-risk-management),
    koszt całkowity (licencje, ludzie, utrzymanie), alternatywa „nic nie robimy” i „ubezpieczamy”. Kolejność wg
    redukcji ryzyka na złotówkę oraz wymogów (klient, regulacja). Benchmarki (% budżetu IT, liczba etatów) tylko jako
@@ -39,13 +39,13 @@ sec-eu-regulations. Tu: co z tego decyduje i mówi kierownictwo.
 6. **Raport dla zarządu.** Jedna strona, język skutków (pieniądze, przestoje, klienci, prawo), nie alertów.
    **KPI** (czy program działa) i **KRI** (czy rośnie ryzyko) osobno, z progiem i trendem; ryzyka względem **apetytu**
    zatwierdzonego przez zarząd; na końcu **decyzje do podjęcia**. Rytm: kwartalnie plus zdarzenia. Szablon:
-   `references/szablony.md`.
+   `references/templates.md`.
 7. **Kultura i uświadamianie.** Mierz zachowania (odsetek zgłoszeń phishingu, czas zgłoszenia, powtarzalne
    błędy, użycie MFA), nie obecność na szkoleniu. Symulacje phishingu etycznie: zgoda zarządu i HR, bez
    upokarzania i listy „winnych” z nazwiskami, bez tematów wykorzystujących stres (premie, zwolnienia, choroba),
    uczenie zamiast kary, łatwy przycisk „zgłoś”.
 8. **Kryzys.** Przed zdarzeniem: zespół kryzysowy z zastępcami, mandat, kanał poza zaatakowanymi systemami, playbook
-   (`references/kryzys-i-ubezpieczenie.md`), ćwiczenie tabletop co najmniej raz w roku. W zdarzeniu: dziennik
+   (`references/crisis-and-insurance.md`), ćwiczenie tabletop co najmniej raz w roku. W zdarzeniu: dziennik
    decyzji, rytm odpraw, jeden głos na zewnątrz, komunikacja przez prawnika tam, gdzie trzeba chronić poufność.
    **Okup:** decyzja zarządu po opinii prawnika (sankcje, zgłoszenia), organów ścigania i doradcy kryzysowego;
    płatność nie gwarantuje odzyskania danych ani nie zamyka sprawy.
@@ -86,8 +86,8 @@ Nie robimy: własnego SOC (usługa zewnętrzna). Decyzje: (1) etat CISO, (2) ape
 - [ ] [niezweryfikowane] przy faktach bez źródła
 
 ## Materiały dodatkowe
-- `references/szablony.md` — jednostronicowa strategia, raport dla zarządu (KPI, KRI), RACI; czytaj przy pisaniu dokumentów.
-- `references/kryzys-i-ubezpieczenie.md` — zespół kryzysowy, playbook, okup, komunikacja, tabletop, polisa; czytaj przy kryzysie.
+- `references/templates.md` — jednostronicowa strategia, raport dla zarządu (KPI, KRI), RACI; czytaj przy pisaniu dokumentów.
+- `references/crisis-and-insurance.md` — zespół kryzysowy, playbook, okup, komunikacja, tabletop, polisa; czytaj przy kryzysie.
 
 ## Źródła
 - NIST CSF 2.0 (luty 2024) i NIST SP 1301, *Quick Start Guide for Creating and Using Organizational Profiles* (luty 2024):

@@ -25,15 +25,15 @@ Model subskrypcji, stany i windykacja niezależne od dostawcy: be-billing-subscr
 ## 2. Które API — mapa decyzji
 | Budujesz | Użyj | Szczegóły |
 |---|---|---|
-| płatność jednorazową | Checkout Sessions (hostowany lub osadzony) | `references/platnosci.md` |
-| własny formularz płatności | Checkout Sessions + Payment Element (`ui_mode: 'custom'`) | `references/platnosci.md` |
-| zapis metody płatności na później | SetupIntents | `references/platnosci.md` |
-| płatność bez obecności klienta, własny stan koszyka | PaymentIntents | `references/platnosci.md` |
+| płatność jednorazową | Checkout Sessions (hostowany lub osadzony) | `references/payments.md` |
+| własny formularz płatności | Checkout Sessions + Payment Element (`ui_mode: 'custom'`) | `references/payments.md` |
+| zapis metody płatności na później | SetupIntents | `references/payments.md` |
+| płatność bez obecności klienta, własny stan koszyka | PaymentIntents | `references/payments.md` |
 | subskrypcje i odnowienia | Billing API + Checkout (`mode: 'subscription'`) + portal klienta | `references/billing-connect-tax.md` |
 | rozliczanie za zużycie (nowa integracja) | Metronome (według Stripe); Billing Meters tylko przy istniejącym prostym użyciu | `references/billing-connect-tax.md` |
 | platformę lub marketplace | Connect, Accounts v2 (`/v2/core/accounts`) | `references/billing-connect-tax.md` |
 | podatek (sales tax, VAT, GST) | Stripe Tax + rejestracje | `references/billing-connect-tax.md` |
-| aktualizację wersji API, SDK, Stripe.js | procedura | `references/aktualizacja.md` |
+| aktualizację wersji API, SDK, Stripe.js | procedura | `references/update.md` |
 
 Kolejność preferencji interfejsu: Payment Links (bez kodu) → Checkout → Payment Element. Przed kodem przeczytaj
 właściwy plik z `references/`.
@@ -50,8 +50,8 @@ właściwy plik z `references/`.
 - **Podpis webhooka** weryfikujesz przed obsługą; sekret podpisu to sekret jak klucz API. Idempotencja i kolejność
   zdarzeń: be-billing-subscriptions §5.
 - **Klucz ograniczony (`rk_`) zamiast tajnego (`sk_`)**, osobny na usługę i środowisko, z minimalnymi uprawnieniami;
-  klucze w sejfie sekretów platformy, nigdy w repozytorium, logach ani kodzie klienta. `references/bezpieczenstwo.md`.
-- **Przestarzałe API:** nie proponuj Charges, Sources, Tokens ani Card Element; wskaż migrację (`references/platnosci.md`).
+  klucze w sejfie sekretów platformy, nigdy w repozytorium, logach ani kodzie klienta. `references/security.md`.
+- **Przestarzałe API:** nie proponuj Charges, Sources, Tokens ani Card Element; wskaż migrację (`references/payments.md`).
 - **`automatic_tax` bez aktywnej rejestracji nie pobiera podatku i nie zwraca błędu.** Najpierw potwierdź rejestrację
   w jurysdykcji klienta (`references/billing-connect-tax.md`).
 

@@ -35,7 +35,7 @@ komunikacja → monitorowanie i przegląd. Proces jest cykliczny; wejście do So
    **przedziały** (min, najbardziej prawdopodobna, max) z kalibrowanych ocen ekspertów i danych; **symulacja Monte
    Carlo** daje rozkład rocznej straty (np. mediana i P90). Rozkład porównujesz z kosztem kontroli i apetytem;
    wynik symulacji po wdrożeniu kontroli to **ryzyko rezydualne** — nazwij je tak w raporcie.
-   Macierzy nie zastępujesz całkiem: liczysz tylko wybrane scenariusze. Szczegóły: `references/analiza-i-postepowanie.md`.
+   Macierzy nie zastępujesz całkiem: liczysz tylko wybrane scenariusze. Szczegóły: `references/analysis-and-procedure.md`.
 4. **Ewaluacja.** Porównaj ryzyko z kryteriami: ponad tolerancję → postępowanie obowiązkowe; w granicach apetytu → można
    utrzymać. Rankinguj; ryzyka tej samej klasy grupuj, żeby rejestr nie rósł w setki wierszy.
 5. **Postępowanie** — jedna z opcji (nazwy z ISO 27005:2022):
@@ -50,13 +50,13 @@ komunikacja → monitorowanie i przegląd. Proces jest cykliczny; wejście do So
    obszaru, wysokie — dyrektor, krytyczne — zarząd). Nie akceptuje ryzyka ten, kto je tworzy ani zespół bezpieczeństwa
    za biznes. Ryzyka ponad tolerancję nie akceptuje się podpisem: wymaga postępowania albo decyzji zarządu o zmianie
    tolerancji. Akceptacja jest **czasowa** (zwykle ≤12 mies. [przykład]), z warunkami kompensującymi i wyzwalaczem
-   przeglądu (zmiana zakresu, incydent). Wzór: `references/rejestr-i-akceptacja.md`.
+   przeglądu (zmiana zakresu, incydent). Wzór: `references/register-and-acceptance.md`.
 7. **Ryzyko dostawców** (trzecich stron). Tiering wg dostępu do danych i krytyczności; due diligence proporcjonalne:
    kwestionariusz, raport **SOC 2 typu II** lub certyfikat ISO 27001 (sprawdź zakres, okres, wyjątki i kontrole
    uzupełniające użytkownika), testy dowodowe; klauzule umowne (zgłaszanie incydentów w terminie, prawo do audytu,
    podwykonawcy, zwrot i usunięcie danych, wymogi bezpieczeństwa); **monitoring ciągły** (przegląd raportów rocznie,
    zmiany właściciela, incydenty w mediach). Dane osobowe → umowa powierzenia (arch-privacy-compliance). Szczegóły:
-   `references/ryzyko-dostawcow.md`.
+   `references/vendor-risk.md`.
 8. **Monitorowanie i KRI.** Wskaźniki wczesnego ostrzegania z progami i właścicielem, np. odsetek krytycznych podatności
    po terminie, wyjątki bez ważnej akceptacji, dostawcy tier 1 bez aktualnej oceny, czas odtworzenia vs cel. Raport dla zarządu
    kwartalnie: najwyższe ryzyka, zmiany, akceptacje wygasające, trend KRI, decyzje do podjęcia.
@@ -83,9 +83,9 @@ Wynik (zapis akceptacji, fragment) [przykład]:
 - [ ] KRI z progami; raport kwartalny dla zarządu
 
 ## Materiały dodatkowe
-- `references/rejestr-i-akceptacja.md` — szablon rejestru ryzyk (pola), zapis akceptacji, uprawnienia; czytaj przy tworzeniu `risk-register.md`.
-- `references/analiza-i-postepowanie.md` — skale, FAIR krok po kroku, ubezpieczenie cyber, KRI; czytaj przy analizie ilościowej i raporcie.
-- `references/ryzyko-dostawcow.md` — tiering, kwestionariusz, czytanie raportu SOC 2, klauzule, monitoring; czytaj przy ocenie dostawcy.
+- `references/register-and-acceptance.md` — szablon rejestru ryzyk (pola), zapis akceptacji, uprawnienia; czytaj przy tworzeniu `risk-register.md`.
+- `references/analysis-and-procedure.md` — skale, FAIR krok po kroku, ubezpieczenie cyber, KRI; czytaj przy analizie ilościowej i raporcie.
+- `references/vendor-risk.md` — tiering, kwestionariusz, czytanie raportu SOC 2, klauzule, monitoring; czytaj przy ocenie dostawcy.
 
 ## Źródła
 - ISO/IEC 27005:2022 *Information security risk management* (październik 2022; dodaje akceptację ryzyka rezydualnego,

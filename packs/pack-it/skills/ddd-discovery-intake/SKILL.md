@@ -50,7 +50,7 @@ zaproponuj pracę taktyczną w jednym module lub prosty CRUD (ddd-deep-modeling)
 
 ## Badania z użytkownikami
 Gdy dowodów od ekspertów jest za mało albo chodzi o użytkowników końcowych: plan badania, rekrutacja, scenariusz
-wywiadu (krytyka pytań: zostaw / przepisz / usuń), ankieta, kryteria decyzji i synteza — `references/badania-uzytkownikow.md`.
+wywiadu (krytyka pytań: zostaw / przepisz / usuń), ankieta, kryteria decyzji i synteza — `references/user-research.md`.
 
 ## Koszt i stabilność
 - Krok 0–1 i odczyt tablic: tani model; bank i grupowanie: std; krytyk sprzeczności: osobny agent std (świeży kontekst = niezależność).

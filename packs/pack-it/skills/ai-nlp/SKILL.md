@@ -34,7 +34,7 @@ a metodę ewaluacji funkcji LLM opisuje **ai-evals**. Ten skill wybiera podejśc
 4. **Tekst przed modelem.** Ustal normalizację raz i stosuj tak samo w treningu i na produkcji: Unicode NFC,
    białe znaki, wielkość liter tylko jeśli model jej nie niesie, zamiana URL/liczb na tokeny — tylko gdy nie niesie
    sygnału. Nie usuwaj stop-słów dla modeli kontekstowych. Tokenizator musi pasować do modelu; nie licz „słów”
-   po spacjach przy fleksji. Specyfika polskiego: `references/polski-pii-i-adnotacja.md`.
+   po spacjach przy fleksji. Specyfika polskiego: `references/polish-pii-and-annotation.md`.
 5. **Miary.**
    - Klasyfikacja: precision, recall, F1 **per klasa** oraz macro-F1 (klasy równo) i micro-F1 (przykłady równo);
      przy niezbalansowaniu macro i recall rzadkiej klasy, nie sama accuracy. Macierz pomyłek czytaj ręcznie.
@@ -61,7 +61,7 @@ a metodę ewaluacji funkcji LLM opisuje **ai-evals**. Ten skill wybiera podejśc
    z drabiny; dane (źródło, liczba etykiet, podział); plan ewaluacji (zbiór, miary, próg akceptacji); ryzyka
    (niezbalansowanie, dryf, PII); następny krok, jeśli próg nie przejdzie.
 
-Polszczyzna, narzędzia, benchmarki, PII i adnotacja w szczegółach: `references/polski-pii-i-adnotacja.md`.
+Polszczyzna, narzędzia, benchmarki, PII i adnotacja w szczegółach: `references/polish-pii-and-annotation.md`.
 
 ## Przykład
 **Wejście:** „40 000 maili dziennie po polsku, 6 działów, 800 oznaczonych, rzadki dział „Windykacja” to 3% maili.”

@@ -153,7 +153,7 @@ w pamięci to cache; zaplanowane zadania idempotentne. Lokalny skrypt wystarcza,
 - klucz API z sekretu; diff traktowany jak dane;
 - przed zmianą modelu: promptfoo z 3 diffami (SQL injection, migracja z 3 wadami, czysty refaktor) × 2 modele.
 
-Pełny kod obu wariantów, dodanie narzędzia „czytaj plan” i konfiguracja ewaluacji: `references/przyklady.md`.
+Pełny kod obu wariantów, dodanie narzędzia „czytaj plan” i konfiguracja ewaluacji: `references/examples.md`.
 
 ## Checklista
 - [ ] kształt i kategoria SDK wybrane pytaniami z §1, wersja SDK przypięta, nazwy API sprawdzone w paczce

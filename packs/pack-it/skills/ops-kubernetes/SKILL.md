@@ -73,7 +73,7 @@ readinessProbe: { httpGet: { path: /health/ready, port: 8080 } }
 livenessProbe: { httpGet: { path: /health/live, port: 8080 } }
 securityContext: { runAsNonRoot: true, allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
 ```
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] requests, limit pamięci, sondy readiness/liveness, ≥ 2 repliki i PDB

@@ -96,7 +96,7 @@ przeliczania frontu; pytanie człowieka o fakty z repo; mieszanie w jednej rundz
 ```
 Forma wydania dużego pliku czeka do rundy 2 — zależy od filtrów z P3.
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Źródło
 Kurs 10xDevs, ed. 3 (2026), moduł 2 (planowanie kroku, roadmapa) i moduł 4, lekcja 4 (bramka decyzyjna w planie) —

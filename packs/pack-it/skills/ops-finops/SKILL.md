@@ -50,7 +50,7 @@ właściciela i człowieka (usuwanie to operacja nieodwracalna).
 | orders-preview-db | +630    | WARN: klasa spoza listy dla env=preview  |
 Decyzja: preview → najmniejsza dozwolona klasa (+90), tag expires=2026-11-15; razem +700 USD/mies.
 ```
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Checklista
 - [ ] tagi właściciela wymuszane polityką

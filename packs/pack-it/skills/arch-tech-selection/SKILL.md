@@ -51,7 +51,7 @@ Wejście uzupełniające (jeśli istnieje): `02-domain/algorithms.md`, `02-domai
 7. **Styl architektury** — domyślnie modularny monolit (arch-quality-attributes); inny tylko z uzasadnieniem w czynnikach.
 8. **Ryzyka i spike'i** — dla każdej niepewności: eksperyment ograniczony czasem i **kryterium porzucenia** wyboru.
    Lidera przepuść przez test odporności decyzji (adwokat diabła, pre-mortem, nieznane niewiadome —
-   arch-architect-practice), zanim zapiszesz rekomendację. Hosting MVP: `references/platforma-wdrozeniowa.md`.
+   arch-architect-practice), zanim zapiszesz rekomendację. Hosting MVP: `references/deployment-platform.md`.
 9. **Mapowanie na zespół agentów** — potrzebne skille: dostępne / do utworzenia (`python3 .tf/factory/build.py new-skill …`),
    sugerowany `stack` person realizujących (np. `[fw-angular, lang-typescript]`).
 9a. **Start z oficjalnego generatora i oblane bramki.**
@@ -84,7 +84,7 @@ rekomendacja bez kompetencji i ograniczeń zespołu; fakty (wersje, licencje, EO
 | **Suma ważona (7 kryteriów)** | **106** | 95 | 82 |
 
 Decyzja `proposed`: A + PostgreSQL (konkurencja o przydział zgłoszeń), modularny monolit; ADR, akceptuje człowiek.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.
 
 ## Źródła
 - Kurs 10xDevs, ed. 3 (2026), lekcja 4.1 (stack), moduł 1, lekcje 2 i 5 (kryteria przyjazności dla agentów, platforma

@@ -81,7 +81,7 @@ Nie buduj więcej, niż wymaga poziom ryzyka i częstość zmian.
 ## Wynik
 Dokument „Projekt potoku MLOps” (`docs/project/…`): poziom docelowy, diagram etapów, tabela
 artefaktów (co, gdzie, kto), bramki z progami, plan monitoringu z akcją na alert, luki i kolejność wdrożenia.
-Szablon i lista gotowości: `references/projekt-i-gotowosc.md`.
+Szablon i lista gotowości: `references/design-and-readiness.md`.
 
 ## Przykład
 Wejście: „Model churnu, trenowany w notebooku, wdrażany ręcznie co kwartał; etykieta po 90 dniach.”
@@ -102,7 +102,7 @@ jakość tygodniowo na kohorcie sprzed 90 dni. Alert driftu → decyzja człowie
 - [ ] karta modelu w rejestrze; LLM: prompty wersjonowane, ewaluacje w CI, tracing, koszt na zapytanie
 
 ## Materiały dodatkowe
-- `references/projekt-i-gotowosc.md` — szablon dokumentu projektu potoku, lista gotowości i kryteria doboru narzędzi.
+- `references/design-and-readiness.md` — szablon dokumentu projektu potoku, lista gotowości i kryteria doboru narzędzi.
 
 ## Źródła
 - Google Cloud Architecture Center, „MLOps: Continuous delivery and automation pipelines in machine learning” — poziomy 0–2;

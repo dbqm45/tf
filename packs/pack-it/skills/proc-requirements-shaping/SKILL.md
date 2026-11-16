@@ -20,7 +20,7 @@ architektura (B2 w core-delivery-lifecycle).
 - Przy każdej późniejszej większej zmianie zakresu wykonaj **mini-sesję** tej procedury dla samej delty.
 - Repo ma już specyfikacje (`.specify/` ze Spec Kit, `openspec/` z OpenSpec) → czytasz je jako istniejące wymagania
   i dopisujesz deltę, zamiast pisać równoległy dokument; delta zmiany scalana do bieżącego stanu wymagań:
-  `references/istniejace-specyfikacje.md`.
+  `references/existing-specifications.md`.
 
 Czy w ogóle warto to budować (wynik, szanse, eksperymenty) — najpierw proc-product-discovery.
 
@@ -38,7 +38,7 @@ i liczba integracji przed pierwszą wartością to **sygnały do rozmowy**, nie 
 ## Tryb
 Sprawdź repozytorium: historia gita albo lockfile → **brownfield** (wymagania jako delta); sam manifest bez
 historii → niejednoznaczne, zapytaj; nic → **greenfield**. Potwierdź z człowiekiem i zapisz w briefie
-(„Typ projektu”). Różnice brownfield w każdej fazie: `references/przyklady.md`.
+(„Typ projektu”). Różnice brownfield w każdej fazie: `references/examples.md`.
 
 ## Fazy sesji
 Każda faza: jedno pytanie otwarte → 3–5 **szarych stref** jako opcje z rekomendacją (plus „nie wiem”) →
@@ -64,7 +64,7 @@ potwierdzenie → zapis. Rundy pytań prowadzisz wg core-plan-interview (tylko p
    scenariusz `AC-n` w Given/When/Then (Zakładając, że / Gdy / Wtedy) i **jedną akcję**: czasownik z obiektem
    w kroku Gdy, a warianty danych idą do Zakładając. Więcej akcji (spójnik między czasownikami, kilku aktorów,
    różne akcje w scenariuszach) albo tytuł od warstwy (BE:, API:) → podział przed zapisem wg proc-agile
-   (`.claude/skills/proc-agile/references/mapa-i-dzielenie.md`):
+   (`.claude/skills/proc-agile/references/map-and-split.md`):
    ```
    ### US-02: Klient stosuje kod rabatowy
    Jako klient chcę użyć kodu rabatowego, aby zapłacić mniej.
@@ -142,7 +142,7 @@ Propozycja fiszki trafia do talii dopiero po akceptacji uczącego się, a zaakce
 - tekst źródłowy nie zostaje w logach
 ```
 Szacunek „logowanie + mobilna aplikacja” wyszedł 6 tygodni przy budżecie 3 → cięcia: tylko web, profil lokalny
-zamiast kont. Kontrola skryptem: gotowość 4/4, brak wycieku. Więcej (brownfield, wyzwania): `references/przyklady.md`.
+zamiast kont. Kontrola skryptem: gotowość 4/4, brak wycieku. Więcej (brownfield, wyzwania): `references/examples.md`.
 
 ## Checklista
 - [ ] budżet czasu MVP ustalony przez człowieka i zapisany w briefie; szacunek obok

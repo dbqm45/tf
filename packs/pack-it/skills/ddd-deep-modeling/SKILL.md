@@ -69,7 +69,7 @@ biznesowego; dopiero potem decyduj o maszynie stanów.
 
 ## Rozplątywanie modelu
 Gdy fakty się rozjeżdżają albo każda potrzeba dostaje nową wartość statusu, sięgnij po jedną z czterech technik
-z `references/rozplatywanie.md`:
+z `references/untangling.md`:
 - **Jedno źródło prawdy:** każdy fakt ma jednego właściciela, a reszta wskazuje go identyfikatorem albo odświeża
   kopię zdarzeniem.
 - **Ukryte pojęcie w relacji wiele do wielu:** nazwij je, np. lekarz ↔ przychodnia to Zatrudnienie z datami

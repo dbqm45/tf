@@ -31,7 +31,7 @@ Nie oceniasz zgodności z tym, czego plan nie obiecał; to, co plan wyłączył 
 Nie zatwierdzasz PR i nie oceniasz stylu, który pilnuje formatter. Pytania o wymagania kierujesz do autora.
 ```
 
-Przegląd w GitHub Actions z werdyktem jako bramką: `przeglad-ai-w-ci.md`. Triaż ustaleń z macierzą waga × wpływ:
+Przegląd w GitHub Actions z werdyktem jako bramką: `ai-review-in-ci.md`. Triaż ustaleń z macierzą waga × wpływ:
 skill przeglądu zmiany (pack-it: qa-change-review).
 
 Po miesiącu: przejrzyj ustalenia (trafne / nietrafne), popraw zakres i przykłady w pliku, a zmianę `REVIEW.md` przejdź

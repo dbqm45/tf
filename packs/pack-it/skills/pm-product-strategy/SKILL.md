@@ -22,15 +22,15 @@ opcje, liczby z założeniami i rekomendację.
    3. **wartość** — co te cechy dają klientowi, z dowodem (liczba, cytat klienta, przypadek);
    4. **najlepiej dopasowani klienci** — cechy klientów, dla których ta wartość jest największa (nie „wszyscy”);
    5. **kategoria rynku** — rama, w której klient od razu rozumie wartość; zła kategoria = „kolejny program X”.
-   Wynik: zdanie pozycjonujące i 3 komunikaty z dowodami — szablon w `references/pozycjonowanie.md`.
+   Wynik: zdanie pozycjonujące i 3 komunikaty z dowodami — szablon w `references/positioning.md`.
 3. **Wielkość rynku** od dołu: liczba klientów docelowych × roczny przychód na klienta, z rozdzieleniem TAM / SAM /
    SOM i źródłem z datą przy każdej liczbie; szacunek od góry („1% dużego rynku”) tylko jako kontrola —
-   `references/rynek-i-otoczenie.md`.
+   `references/market-and-environment.md`.
 4. **Konkurencja dla sprzedaży** — ściągawka na jednego konkurenta z danych o wygranych i przegranych:
-   `references/sciagawka-konkurencyjna.md`. Porównanie zadań klienta, SWOT i pięć sił Portera:
-   proc-product-discovery (`.claude/skills/proc-product-discovery/references/model-biznesowy-i-rynek.md`).
+   `references/competitive-cheatsheet.md`. Porównanie zadań klienta, SWOT i pięć sił Portera:
+   proc-product-discovery (`.claude/skills/proc-product-discovery/references/business-model-and-market.md`).
 5. **Otoczenie i kierunek wzrostu** — PESTEL dla rynku, na który wchodzisz, i macierz Ansoffa dla opcji wzrostu
-   (`references/rynek-i-otoczenie.md`). Każda opcja kończy się najtańszym testem kluczowego założenia
+   (`references/market-and-environment.md`). Każda opcja kończy się najtańszym testem kluczowego założenia
    (proc-product-discovery, krok 8).
 6. **Zapis**: decyzja, odrzucone opcje z powodem, założenia do sprawdzenia i termin przeglądu →
    `docs/project/01-discovery/` (core-project-record).

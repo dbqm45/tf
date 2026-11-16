@@ -60,4 +60,4 @@ raz (`02-domain/stress/modules.md`) i używaj ponownie.
 | W-7 premia od marży dla kierownika | 0 (+1 nowy) | nowy moduł | brak naturalnego miejsca |
 
 Rozkład: lokalne 3 · rozproszone 4 · nowy moduł 1. Bez ocen — decyzja człowieka.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

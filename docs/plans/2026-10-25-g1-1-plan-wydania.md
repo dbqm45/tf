@@ -41,6 +41,6 @@ i inżynierii wydań, kawałek z flagą w Talosie.
 3. Kod `decision_record.py`, szablony `release.yaml` i `plan.md`.
 4. Scenariusze ewaluacji (przed treścią): core-delivery-lifecycle, pdi-decisions, proc-requirements-shaping,
    eng-continuous-delivery, ops-release-engineering.
-5. Treść skilli i `plan-ciec.md`.
+5. Treść skilli i `cut-plan.md`.
 6. Bramki: `workspace.py check --packs all`, `matrix` dla mode-pdi i mode-talos osobno, `refs`, `tests/test_*.py`,
    `skill_gate` zmienionych skilli, `sync-gate`, tytuł przez `check_commit_message.py`.

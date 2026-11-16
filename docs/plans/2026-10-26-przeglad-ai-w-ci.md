@@ -2,9 +2,9 @@
 
 Data: 2026-10-26 · Status: zrobione (kroki 1–5), commit i PR na prośbę człowieka · Gałąź: `claude/great-hypatia-angvam`
 Źródło: pdi `docs/plan-jeden-flow-sdlc.md` §5 (wiersz „AI review w CI — szablon workflow z claude-code-action
-i `REVIEW.md` z rekonstrukcji”, F6); tf `core/skills/core-git-workflow/references/przeglad-ai-w-ci.md` (wzorzec),
-`references/review-md.md` (szablon zasad), pack-it `ops-ci-cd/references/przyklady.md` przykład 4 (szkielet YAML),
-`eng-project-reconstruction/references/szkice.md` (`REVIEW.draft.md`). SHA akcji sprawdzone `git ls-remote`
+i `REVIEW.md` z rekonstrukcji”, F6); tf `core/skills/core-git-workflow/references/ai-review-in-ci.md` (wzorzec),
+`references/review-md.md` (szablon zasad), pack-it `ops-ci-cd/references/examples.md` przykład 4 (szkielet YAML),
+`eng-project-reconstruction/references/sketches.md` (`REVIEW.draft.md`). SHA akcji sprawdzone `git ls-remote`
 2026-10-26: `actions/checkout` v7.0.1 = `3d3c42e5aac5ba805825da76410c181273ba90b1`, `anthropics/claude-code-action`
 v1.0.262 = `925afb53776cf1a2b738c6bdbed37b4d4000ef13`.
 
@@ -37,6 +37,6 @@ dodana przez człowieka zmienia status na zielony bez nowego przeglądu. `ai_rev
    obejścia; review-md (kopia szkicu, odmowa nadpisania, brak szkicu → 1).
 2. Kod: szablon `core/skills/core-git-workflow/templates/ai-review.yml`, skrypt `scripts/ai_review.py`.
 3. Scenariusze ewaluacji (przed treścią): core-git-workflow, eng-project-reconstruction.
-4. Treść: core-git-workflow (SKILL + `przeglad-ai-w-ci.md`: gotowy szablon), eng-project-reconstruction (szkic →
+4. Treść: core-git-workflow (SKILL + `ai-review-in-ci.md`: gotowy szablon), eng-project-reconstruction (szkic →
    `review-md`), pack-it ops-ci-cd przykład 4 (odesłanie do gotowego szablonu), `PUBLIC_API.md` jeśli dotyczy.
 5. Bramki: `workspace.py check --packs all` i `none`; `refs`; `tests/test_*.py`; `skill_gate`, `sync-gate`; tytuł.

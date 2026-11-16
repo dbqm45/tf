@@ -51,7 +51,7 @@ kontraktu. Rodzaj: nowe / rozszerzenie / przeniesienie / treść.
 |---|---|---|---|---|---|
 | 1 | `tf onboard`: raport gotowości, wykrycie poleceń, zapis `quality-gate.json`, hook po edycji, `verify.sh`, PR | nowe (składa istniejące: `readiness_check.py`, `detect_stack.py`, `post_edit_checks.py`) | `tf.py`, nowy `onboard.py`, szablony | M | tak (nowe polecenie) |
 | 2 | komunikat „bramka wyłączona” w `tf doctor` i na starcie sesji | rozszerzenie | `tf.py`, `detect_stack.py` | S | tak |
-| 3 | strona „Zacznij tutaj” i tabela wyboru w przewodniku | treść | `core/guide/PRZEWODNIK.md`, `GUIDE.md` Talosa | S | tak |
+| 3 | strona „Zacznij tutaj” i tabela wyboru w przewodniku | treść | `core/guide/GUIDE.md`, `GUIDE.md` Talosa | S | tak |
 | 4 | katalog zadania i `task_state.py`: stan, nagłówki plików, skróty wejść, nieaktualność, dowody | nowe + uogólnienie `run_state.py` | rdzeń (nowy skrypt), testy | L | nowe; stare przebiegi czytane dalej |
 | 5 | Talos pisze do nowego układu (trwałe w `docs/project/changes/<KEY>/`, robocze w `.tf/runs/<KEY>/`) | przeniesienie | `run_report.py`, `SKILL.md`, `PUBLIC_API.md`, `.gitignore`, 9 plików z odwołaniami do `.tf/runs` | M | alias starej ścieżki przez jedno wydanie MINOR; decyzja D1 |
 | 6 | etap specyfikacji: `spec.md` (GWT, strażnicy, zachowane, otwarte pytania), lint jako bramka | rozszerzenie | `requirements_lint.py`, skill osi | M | tak |
@@ -217,7 +217,7 @@ potrzebował.
 | # | Zmiana | Rodzaj | Dotyka | Wielkość | Zgodność wstecz |
 |---|---|---|---|---|---|
 | 27 | próba na działającej aplikacji po ostatnim kawałku: uruchomienie, przejście głównego scenariusza z kryteriów, zrzut ekranu lub odpowiedź API jako dowód w `evidence/` | nowe (opcjonalny krok etapu 5) | skill osi, `tf onboard` (polecenie uruchomienia aplikacji), `task_state.py` | M | tak; krok pomijany, gdy projekt nie poda polecenia uruchomienia |
-| 28 | personalizacja w trzech warstwach — konfiguracja, własne skille, własne nakładki — z jedną ścieżką tworzenia i sprawdzania | rozszerzenie (większość części istnieje) | `tf.py`, szablony, `PRZEWODNIK.md` | M | tak |
+| 28 | personalizacja w trzech warstwach — konfiguracja, własne skille, własne nakładki — z jedną ścieżką tworzenia i sprawdzania | rozszerzenie (większość części istnieje) | `tf.py`, szablony, `GUIDE.md` | M | tak |
 
 ### Pozycja 28: co już jest, a czego brakuje
 

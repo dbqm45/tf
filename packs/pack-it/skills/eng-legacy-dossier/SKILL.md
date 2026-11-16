@@ -20,7 +20,7 @@ niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:li
    warstwy, punkty wejścia, strefy ryzyka) — teczka korzysta z niej, nie powtarza jej.
 1. **Podział na moduły** z mapy (warstwy, legenda modułów). Moduł = część z jedną odpowiedzialnością biznesową,
    nie katalog. Kolejność opisu: rdzeń i strefy ryzyka najpierw, peryferia na końcu albo jedną linią w indeksie.
-2. **Karta modułu** `modules/<moduł>.md` wg `references/szablon.md`:
+2. **Karta modułu** `modules/<moduł>.md` wg `references/template.md`:
    - **Po co** — 1–2 zdania językiem biznesu, bez nazw klas;
    - **Odpowiedzialności, Wejścia i wyjścia** (endpointy, zdarzenia, pliki, zadania cykliczne), **Dane** (tabele,
      encje: kto pisze, kto czyta), **Zależności** (do i od modułu) — z grafu, nie z pamięci: dla Pythona i TS/JS
@@ -29,14 +29,14 @@ niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:li
    - **Reguły biznesowe** — tabela `ID | Reguła | Dowód | Pewność`. Regułę piszesz jako zdanie dla biznesu
      („Faktura po 30 dniach jest przeterminowana”), nie jako opis kodu. Pewność: `test` (jest test, który jej
      pilnuje), `kod` (wynika wprost z kodu), `do weryfikacji` (wnioskowana, sprzeczna lub bez dowodu — trafia też do
-     Pytań). Gdzie szukać reguł: `references/szablon.md` § Skąd brać reguły;
+     Pytań). Gdzie szukać reguł: `references/template.md` § Skąd brać reguły;
    - **Pułapki** — zachowania zaskakujące: efekty uboczne, stan globalny, magiczne stałe, zależność od kolejności,
      ta sama reguła w kilku miejscach (często inaczej);
    - **Testy** — co jest pokryte, czego brakuje dla reguł z tabeli;
    - **Stan** w nagłówku: `zielony` (zrozumiały, przetestowany), `żółty` (działa, ale ryzykowny w zmianie),
      `czerwony` (niezrozumiały lub bez testów przy krytycznych regułach) — zawsze z powodem.
 3. **Przepływy (3–5 kluczowych)** w indeksie: krok po kroku przez moduły z plikami, diagram sekwencji (Mermaid).
-   Pogłębienie jednego przepływu: `.claude/skills/eng-codebase-mapping/references/analiza-przeplywu.md`.
+   Pogłębienie jednego przepływu: `.claude/skills/eng-codebase-mapping/references/flow-analysis.md`.
 4. **Słownik** kod ↔ biznes: nazwa w kodzie, pojęcie biznesowe, uwaga o rozjeździe (`Doc` = faktura, ale też
    korekta). Rozjazdy modelu i niezmienniki pogłębia **ddd-legacy-modernization**.
 5. **Stan i kandydaci do refaktoru** — tabela modułów ze stanem i listą kandydatów (co, dlaczego, dowód). Teczka
@@ -68,7 +68,7 @@ Kolejność jest twarda: najpierw stan obecny z dowodami, ocena dopiero potem, r
    z nich i blokuje refaktoryzację strukturalną uzasadnioną samą preferencją.
 
 Szablony, kryteria (clarity, consistency, coupling, cohesion, testability, enforceability) i harmonogram:
-`references/audyt-architektury.md`. Głęboka ocena długu w skali repo — eng-tech-debt-audit; wybór wariantu
+`references/architecture-audit.md`. Głęboka ocena długu w skali repo — eng-tech-debt-audit; wybór wariantu
 refaktoryzacji — eng-refactor-planning.
 
 ## Zasady
@@ -110,8 +110,8 @@ W indeksie: kandydat „jedno miejsce zaokrągleń” z dowodem obu linii → en
 - [ ] `dossier_check.py` → `legacy-dossier-check: OK`; liczba reguł „do weryfikacji” w TL;DR
 
 ## Materiały dodatkowe
-- `references/szablon.md` — szablon indeksu i karty modułu, skąd brać reguły biznesowe; czytaj przy pisaniu teczki.
-- `references/audyt-architektury.md` — tryb audytu: etapy, szablony ustalenia i rekomendacji, kategorie, priorytety.
+- `references/template.md` — szablon indeksu i karty modułu, skąd brać reguły biznesowe; czytaj przy pisaniu teczki.
+- `references/architecture-audit.md` — tryb audytu: etapy, szablony ustalenia i rekomendacji, kategorie, priorytety.
 - `references/nx-angular.md` — inwentarz i analiza monorepo Nx z Angularem; czytaj przy audycie takiego repo.
 
 ## Źródła

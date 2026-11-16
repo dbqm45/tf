@@ -25,7 +25,7 @@ prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-proj
      i poza produkcją oraz retencję. Inwentarz pól prowadzisz w `docs/project/04-architecture/data-inventory.md`,
      a klasę oznaczasz też przy polu w kodzie. W istniejącym systemie szkic inwentarza daje
      `tf analyze --only data-classification`. Tabela wymagań, format inwentarza i kolejność porządków:
-     `references/lad-danych.md`.
+     `references/data-governance.md`.
 2. **Cel i podstawa prawna dla każdego celu** (art. 5–6):
    - podstawy z art. 6 ust. 1: umowa, obowiązek prawny, prawnie uzasadniony interes, zgoda i inne;
    - szczególne kategorie danych (zdrowie, biometria do identyfikacji, poglądy i inne z art. 9) wymagają dodatkowej
@@ -82,7 +82,7 @@ prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-proj
    - procesor zawiadamia administratora bez zbędnej zwłoki;
    - agent zatrzymuje wyciek i zabezpiecza dowody (ops-security-operations), przygotowuje fakty do zgłoszenia,
      a o zgłoszeniu decyduje człowiek;
-   - procedura z osią czasu: `references/rodo-w-praktyce.md`.
+   - procedura z osią czasu: `references/gdpr-in-practice.md`.
 10. **Cookies, SDK analityczne i dostęp do urządzenia (Prawo komunikacji elektronicznej, nie tylko RODO):**
     - poza technicznie niezbędnymi potrzebna jest zgoda przed zapisem;
     - bez domyślnie zaznaczonych zgód (TSUE, Planet49, C-673/17);
@@ -98,7 +98,7 @@ prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-proj
       aktualnych warunkach i zapisujesz z datą — polityki zmieniają się w miesiącach;
     - dostawca bez wyboru regionu i bez przedstawiciela w UE, przechowujący dane w państwie bez decyzji
       o adekwatności, oznacza transfer poza EOG bez podstawy z art. 45 — wymaga decyzji człowieka i oceny prawnika;
-    - obowiązki z AI Act: data-engineering (`.claude/skills/data-engineering/references/jakosc-zarzadzanie-i-zgodnosc.md`).
+    - obowiązki z AI Act: data-engineering (`.claude/skills/data-engineering/references/quality-management-and-compliance.md`).
 12. **Kary** (art. 83): do 10 mln EUR lub 2% światowego obrotu, a za naruszenie zasad, podstaw i praw osób do
     20 mln EUR lub 4% (wyższa z kwot).
 

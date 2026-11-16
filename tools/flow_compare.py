@@ -5,7 +5,7 @@ Narzędzie fabryki: porównanie przepływów pracy (np. sam tryb planu, talos, m
   python3 tools/flow_compare.py prepare flows.json --out <katalog> [--seed N]
       zanonimizowane diffy przebiegów (<zgłoszenie>/A.diff, B.diff…) i szablon oceny ocena.json dla oceniającego;
       klucz przypisania liter do przepływów w <katalog>/key.json (nie dawaj go oceniającemu)
-  python3 tools/flow_compare.py report flows.json --key <katalog>/key.json [--verdicts oceny.json] --out raport.md
+  python3 tools/flow_compare.py report flows.json --key <katalog>/key.json [--verdicts oceny.json] --out report.md
       tabela na zgłoszenie: koszt, czas, commity, linie kodu i artefaktów (udział), ocena, gotowy do merge, koszt na
       punkt oceny, krotność kosztu wobec przepływu bazowego; werdykt: najwyższa ocena wśród gotowych do merge, przy
       remisie tańszy

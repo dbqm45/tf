@@ -36,18 +36,18 @@ stronie agenta: ai-agents.
      „zdezorientowanego zastępcy”) — do API używa własnych poświadczeń z minimalnymi uprawnieniami;
      rejestracja klienta przez Client ID Metadata Documents (DCR przestarzałe), PKCE, `iss` (RFC 9207),
      `application_type` dla klientów CLI i desktop — stan specyfikacji `2026-07-28`: be-auth-security,
-     `.claude/skills/be-auth-security/references/tokeny-sesje-oauth.md` §7;
+     `.claude/skills/be-auth-security/references/tokens-sessions-oauth.md` §7;
    - sekrety ze zmiennych środowiskowych, nigdy w `.mcp.json` w repozytorium.
    - interfejs dla człowieka (MCP App): akcja tylko dla człowieka z `_meta.ui.visibility: ["app"]`, zatwierdzenie
-     z ID i wersją obiektu, autoryzacja i walidacja na serwerze — `references/spec-2026-07-28-i-apps.md` §3–4;
-5. **Testy w CI bez modelu** (szablon w `references/serwer-i-testy.md`): sesja w pamięci
+     z ID i wersją obiektu, autoryzacja i walidacja na serwerze — `references/spec-2026-07-28-and-apps.md` §3–4;
+5. **Testy w CI bez modelu** (szablon w `references/server-and-tests.md`): sesja w pamięci
    (`create_connected_server_and_client_session`) — migawka kontraktu (nazwy, wymagane parametry, adnotacje),
    wynik strukturalny, błędy, odrzucenie złego wejścia przez schemat; prawdziwy proces po stdio; surowy stdout
    tylko z JSON-RPC. Ręcznie: MCP Inspector. Jakość użycia przez model — ewaluacja (ai-evals, 10 pytań wg
    `mcp-builder`).
 6. **Wersja specyfikacji:** `2026-07-28` jest bezstanowa (bez `initialize` i `Mcp-Session-Id`, `server/discover`,
    nagłówki `Mcp-Method`/`Mcp-Name`, MRTR zamiast Sampling i żądań od serwera). Serwer z sesją przenosi stan do jawnych
-   uchwytów — `references/spec-2026-07-28-i-apps.md` §1–2.
+   uchwytów — `references/spec-2026-07-28-and-apps.md` §1–2.
 7. **Wersje**: kontrakt narzędzi to publiczne API serwera — usunięcie narzędzia, zmiana nazwy albo nowy wymagany
    parametr to MAJOR; nowe narzędzie lub parametr opcjonalny to MINOR (core-semver). Zmianę niezgodną
    wprowadzasz nowym narzędziem i wycofaniem starego, migawka kontraktu w teście wymusza świadomą decyzję.
@@ -60,7 +60,7 @@ Serwer `booking` (Python, `mcp` 1.29.0): `find_rooms(min_seats, limit)` — tylk
 z `total`; `block_room(room_id, by)` — `room_id` ze wzorcem `^sala-\d+$`, idempotentne dla tej samej osoby,
 konflikt → `ToolError("Sala sala-1 jest zajęta przez jan. Wybierz inną salę z find_rooms.")`. Sześć testów
 w CI bez modelu; test surowego stdout wykrył dopisany `print()`, którego test sesją nie zauważył. Kod, testy
-i `.mcp.json`: `references/serwer-i-testy.md`.
+i `.mcp.json`: `references/server-and-tests.md`.
 
 ## Checklista
 - [ ] uzasadnienie „serwer, nie skill” (klienci, stan, uwierzytelnienie)

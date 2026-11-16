@@ -38,11 +38,11 @@ wpływająca na kilka atrybutów w przeciwnych kierunkach.
 | Architektura zdarzeniowa | integracja wielu kontekstów, reakcje asynchroniczne, audyt | złożoność śledzenia przepływów |
 | Serverless / BaaS | nieregularny ruch, mały zespół, generyczne subdomeny | uzależnienie od dostawcy, limity |
 Pełniejszy katalog (warstwy, klient–serwer, SOA, peer-to-peer, mikrojądro, tablica, publish–subscribe, potoki
-i filtry, MVC/MVVM) z sygnałami złego wyboru: `references/katalog-stylow.md`.
+i filtry, MVC/MVVM) z sygnałami złego wyboru: `references/style-catalog.md`.
 Architektura danych (ACID, CAP i PACELC, spójność ostateczna, rodzaje baz NoSQL, OLTP vs OLAP, hurtownie, ETL/ELT,
-CDC, przetwarzanie wsadowe i strumieniowe): `references/architektura-danych.md`.
+CDC, przetwarzanie wsadowe i strumieniowe): `references/data-architecture.md`.
 Słownik wzorców chmurowych (44 wzorce z mapą na skille fabryki) i wybór platformy uruchomieniowej (PaaS, funkcje,
-kontenery, Kubernetes, maszyny): `references/wzorce-chmurowe.md`.
+kontenery, Kubernetes, maszyny): `references/cloud-patterns.md`.
 Przejście monolit → usługi rób dopiero, gdy konkretny scenariusz (H,H) tego wymaga — wydzielaj po granicach kontekstów.
 
 ## Fitness functions
@@ -66,4 +66,4 @@ styl i kompromisy w ADR (core-project-record).
 | QA-3 | użytkownik otwiera kalendarz → SLO 99,5% udanych żądań w oknie 30 dni | (H,M) |
 
 Styl: modularny monolit. Fitness functions: test obciążeniowy z progiem p95 dla QA-1, test współbieżny (50 prób → 1 sukces) dla QA-2.
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

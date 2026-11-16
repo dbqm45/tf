@@ -249,9 +249,9 @@ def main() -> int:
         (good / "analyzer.yaml").write_text((good / "analyzer.yaml").read_text()
                                             + "gate:\n  min_recall: 1.0\n  max_false_positives: 0\n")
         fixture(good, "zle", {"x.py": "# TODO-SEC HIGH\n"}, [{"rule": "todo-sec", "file": "x.py"}])
-        fixture(good, "czyste", {"y.py": "y = 1\n"}, [])
+        fixture(good, "clean", {"y.py": "y = 1\n"}, [])
         noisy = make_module(gm, name="szum", prefix="SZU")
-        fixture(noisy, "czyste", {"y.py": "# TODO-SEC drobne\n"}, [])
+        fixture(noisy, "clean", {"y.py": "# TODO-SEC drobne\n"}, [])
         make_module(gm, name="bez", prefix="BEZ")
         genv = {"TF_ANALYZERS_PATH": str(gm), "T_COUNTER": str(counter)}
         r = run("gate", "--module", "dobry", cwd=repo, env=genv)

@@ -78,7 +78,7 @@ ASK = {"tracker": "z którego trackera pochodzi zgłoszenie", "change": "do któ
 START = "python3 .claude/skills/tf/scripts/run_report.py start"
 PASTE = "wklej treść zgłoszenia w rozmowie"
 MAX_TICKET = 20000                                      # znaków treści zgłoszenia w ticket.md
-CUTS = ".claude/skills/tf/references/ciecia-pdi.md"     # zasady przebiegu cięcia pdi
+CUTS = ".claude/skills/tf/references/pdi-cuts.md"     # zasady przebiegu cięcia pdi
 
 
 def load_card(root: Path) -> dict | None:

@@ -14,7 +14,7 @@ metadata:
 - Akcje, które nie pasują do CRUD: `POST /orders/{id}/cancel`. Gdy akcja ma własne dane, autora, wynik albo historię
   (zatwierdzenie, odwołanie, korekta), modeluj ją jako **zasób-dokument komendy**: `POST /complaints/{id}/approvals`
   tworzy zatwierdzenie z identyfikatorem, które można odczytać, zaudytować i wycofać kolejną komendą
-  (`http-w-praktyce.md`, sekcja 8).
+  (`http-in-practice.md`, sekcja 8).
 
 ## Kody statusu, które łatwo pomylić
 - `201` z `Location` po utworzeniu; `404` także wtedy, gdy nie chcemy ujawniać istnienia zasobu.
@@ -30,9 +30,9 @@ Nigdy nie zwracaj stack trace ani komunikatów bazy danych.
 
 ## Kolekcje
 Kursor dla dużych zbiorów, twardy `limit` po stronie serwera, filtry i sortowanie z białej listy pól
-(`references/http-w-praktyce.md` §4).
+(`references/http-in-practice.md` §4).
 Eksport (CSV, XLSX) dużych zbiorów w tle, z tymi samymi filtrami i uprawnieniami, wygasającym linkiem, kolumnami
-z allowlisty i ochroną przed wstrzykiwaniem formuł: `references/eksport-danych.md`.
+z allowlisty i ochroną przed wstrzykiwaniem formuł: `references/data-export.md`.
 
 ## Idempotencja i spójność
 - `POST` z efektem finansowym lub zewnętrznym przyjmuje nagłówek `Idempotency-Key`.
@@ -47,15 +47,15 @@ z allowlisty i ochroną przed wstrzykiwaniem formuł: `references/eksport-danych
 Każde wejście walidowane schematem na granicy (body, query, params). Nieznane pola odrzucane lub ignorowane — konsekwentnie.
 
 ## Indeks references
-- `style-i-komunikacja.md` — REST, GraphQL, gRPC, SOAP, webhooki (podpisy, ponowienia, SSRF), SSE, WebSocket,
+- `styles-and-communication.md` — REST, GraphQL, gRPC, SOAP, webhooki (podpisy, ponowienia, SSRF), SSE, WebSocket,
   strumieniowanie, operacje asynchroniczne (`202`), brama API i BFF.
-- `http-w-praktyce.md` — cache HTTP (`Cache-Control`, `ETag`/304, `Vary`), negocjacja treści (406/415), limity żądań
+- `http-in-practice.md` — cache HTTP (`Cache-Control`, `ETag`/304, `Vary`), negocjacja treści (406/415), limity żądań
   (algorytmy, 429, nagłówki RateLimit), paginacja kursorowa, filtry i sortowanie, batch vs bulk (207), ponowienia, HATEOAS,
   model dojrzałości Richardsona i komendy jako dokumenty.
-- `eksport-danych.md` — eksport CSV/XLSX: synchronicznie czy w tle (`202`, zasób zadania), te same filtry i uprawnienia, spójna migawka, podpisany link i retencja pliku, kolumny i dane osobowe, wstrzykiwanie formuł, testy.
-- Checklista bezpieczeństwa przed wydaniem: be-auth-security, `.claude/skills/be-auth-security/references/checklista-bezpieczenstwa-api.md`.
-- `checklista-wydajnosci-backendu.md` — checklista wydajności (wzorce cache i unieważnianie, limity czasu i ponowienia, keep-alive, asynchroniczność, skalowanie, profilowanie, logowanie asynchroniczne).
-- `cykl-zycia-i-bezpieczenstwo.md` — design-first (lint, mock), wersjonowanie i wycofywanie (`Deprecation`, `Sunset`),
+- `data-export.md` — eksport CSV/XLSX: synchronicznie czy w tle (`202`, zasób zadania), te same filtry i uprawnienia, spójna migawka, podpisany link i retencja pliku, kolumny i dane osobowe, wstrzykiwanie formuł, testy.
+- Checklista bezpieczeństwa przed wydaniem: be-auth-security, `.claude/skills/be-auth-security/references/api-security-checklist.md`.
+- `backend-performance-checklist.md` — checklista wydajności (wzorce cache i unieważnianie, limity czasu i ponowienia, keep-alive, asynchroniczność, skalowanie, profilowanie, logowanie asynchroniczne).
+- `lifecycle-and-security.md` — design-first (lint, mock), wersjonowanie i wycofywanie (`Deprecation`, `Sunset`),
   OWASP API Top 10 (2023), klucze API, testy kontraktowe i wydajnościowe, dane osobowe.
 
 ## Checklista

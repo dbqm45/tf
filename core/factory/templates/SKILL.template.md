@@ -20,7 +20,7 @@ Zasady dobrego skilla:
 - Ten plik: maks. ~150–300 linii (Anthropic: < 500), mieści się „na ekranie telefonu” w części zasad; szczegóły,
   przypadki brzegowe i długie przykłady → references/ (jeden poziom od SKILL.md, spis treści przy > 100 liniach).
 - Przykłady > reguły: co najmniej jeden konkretny przykład (wejście → wynik) w sekcji „Przykład”, więcej
-  w references/przyklady.md.
+  w references/examples.md.
 - Kod tam, gdzie pasuje: sortowanie, parsowanie, liczenie, walidacja → skrypt w scripts/ (deterministyczny, tańszy).
   Napisz, czy skrypt URUCHOMIĆ, czy PRZECZYTAĆ. Skrypt łączący się z siecią deklarujesz linią „Sieć: …”.
 - Jeden skill, jedno zadanie: jeśli opis wymienia kilka niezależnych zadań, podziel skill.

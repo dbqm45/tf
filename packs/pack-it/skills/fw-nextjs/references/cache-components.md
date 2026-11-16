@@ -17,7 +17,7 @@ prerenderować, czy czekać na żądanie. Rozstrzygasz to jawnie jednym z dwóch
 ## 2. Gdzie stawiasz `'use cache'`
 - **Plik:** cała strona lub moduł jest cache'owany. Używaj rzadko, bo trudno potem wydzielić część dynamiczną.
 - **Komponent:** cache'owany fragment drzewa, np. lista produktów na stronie z koszykiem użytkownika.
-- **Funkcja:** odczyt danych w DAL (`references/wzorce.md`, sekcja 3). Najłatwiejszy do testów i ponownego użycia.
+- **Funkcja:** odczyt danych w DAL (`references/patterns.md`, sekcja 3). Najłatwiejszy do testów i ponownego użycia.
 
 ## 3. Czas życia i warianty
 - `cacheLife('minutes' | 'hours' | 'days' | 'weeks' | 'max')` albo obiekt z trzema czasami: jak długo podawać
@@ -51,7 +51,7 @@ czyta te dane, leży w `<Suspense>`.
 - Wartości niedeterministyczne (`Math.random()`, `Date.now()`, `crypto.randomUUID()`) w `'use cache'` liczą się
   raz i zostają w cache. Gdy mają być inne przy każdym żądaniu, poza cache wywołaj najpierw `await connection()`
   z `next/server`.
-- Przy kilku instancjach wpisy w pamięci jednej instancji nie są widoczne w innych (`references/wdrozenie.md`).
+- Przy kilku instancjach wpisy w pamięci jednej instancji nie są widoczne w innych (`references/deployment.md`).
 
 ## 8. Migracja ze starych ustawień
 | Było (15 i starsze) | Z Cache Components |

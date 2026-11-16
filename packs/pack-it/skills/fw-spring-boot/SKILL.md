@@ -38,7 +38,7 @@ metadata:
    `@PreAuthorize`; CSRF wyłączasz tylko dla API bezstanowego z tokenem w nagłówku.
 8. **Obserwowalność:** Actuator z wystawionymi tylko `health`, `info`, `prometheus` (osobny port lub ochrona);
    metryki i ślady przez Micrometer (Observation API); `health` z grupami `liveness`/`readiness` dla Kubernetesa.
-9. **Testy** (eng-testing, szczegóły `references/testy.md`):
+9. **Testy** (eng-testing, szczegóły `references/tests.md`):
    - domena — JUnit bez kontekstu Springa (milisekundy);
    - slice testy: `@WebMvcTest` (kontroler + bezpieczeństwo, serwis jako `@MockitoBean`), `@DataJpaTest`
      (repozytorium), `@JsonTest`;
@@ -83,7 +83,7 @@ class OrderRepositoryTest {
     }
 }
 ```
-Więcej: `references/testy.md`.
+Więcej: `references/tests.md`.
 
 ## Zależne od wersji
 | Wersja | Zmiany istotne dla tego skilla |
@@ -100,7 +100,7 @@ Więcej: `references/testy.md`.
 - [ ] brak `@MockBean` na Boot 3.4+; brak `RestTemplate` w nowym kodzie; timeouty klientów HTTP
 
 ## Materiały dodatkowe
-- `references/testy.md` — piramida testów w Spring Boot, slice testy, Testcontainers (`@ServiceConnection`,
+- `references/tests.md` — piramida testów w Spring Boot, slice testy, Testcontainers (`@ServiceConnection`,
   współdzielenie, Docker Compose w dewelopmencie), cache kontekstu, testy bezpieczeństwa i modułów.
 
 ## Pojęcia domenowe w spring-boot

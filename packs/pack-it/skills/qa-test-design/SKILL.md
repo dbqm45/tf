@@ -48,10 +48,10 @@ Kolumna **Źródło wyniku** jest obowiązkowa (qa-spec-first-testing). Brak źr
 - **Bezpieczeństwo**: walidacja wejścia, autoryzacja per zasób (test na 403 dla cudzego zasobu), brak danych wrażliwych w odpowiedziach.
 
 Strategia i plan testów (weryfikacja vs walidacja, czarna/biała/szara skrzynka, dymne, sanity, regresja, UAT, model V
-i praca zwinna, kryteria wejścia i wyjścia, raport z testów, analiza ucieczek defektów): `references/strategia-i-plan-testow.md`.
+i praca zwinna, kryteria wejścia i wyjścia, raport z testów, analiza ucieczek defektów): `references/test-strategy-and-plan.md`.
 Testy wydajnościowe: qa-performance-testing.
 Aplikacja z AI (narzędzia modelu, integracje, text-to-SQL): poza ewaluacjami modelu dziewięć klas awarii, które nie
-są winą modelu, z testem do każdej — `references/aplikacja-ai-poza-modelem.md`.
+są winą modelu, z testem do każdej — `references/ai-application-beyond-the-model.md`.
 
 ## Wynik
 `docs/project/05-plan/test-plan.md` (szablon core-project-record): zakres, ryzyka, techniki, poziomy, przypadki (lub link do
@@ -59,5 +59,5 @@ pliku z przypadkami), kryteria wejścia/wyjścia, podział na testy automatyczne
 
 Projekt bez testów albo z testami „tam, gdzie łatwo”: najpierw **strategia testów projektu**
 (`docs/project/05-plan/test-strategy.md`, szablon `templates/test-strategy.md`, procedura
-`references/strategia-testow-projektu.md`) — wywiad z człowiekiem, mapa ryzyk ze źródłami, fazy wdrażania, bramki,
+`references/project-test-strategy.md`) — wywiad z człowiekiem, mapa ryzyk ze źródłami, fazy wdrażania, bramki,
 przepisy, wykluczenia. Plan testów zmiany korzysta z niej i na końcu ją uzupełnia.

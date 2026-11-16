@@ -78,7 +78,7 @@ def main() -> int:
         root = Path(d)
         fake = root / "fake_model.py"
         fake.write_text(FAKE, encoding="utf-8")
-        probe = root / "proba.json"
+        probe = root / "trial.json"
         probe.write_text(json.dumps(PROBE, ensure_ascii=False), encoding="utf-8")
         log = root / "calls.jsonl"
 

@@ -106,12 +106,12 @@ def main() -> int:
         skill = out / "ux-ds-demo"
         text = (skill / "SKILL.md").read_text(encoding="utf-8") if (skill / "SKILL.md").is_file() else ""
         check(r.returncode == 0 and "name: ux-ds-demo" in text and "description: Użyj, gdy" in text
-              and "przeglad:" in text and "references/tokeny.md" in text and "## Przykład" in text,
+              and "przeglad:" in text and "references/tokens.md" in text and "## Przykład" in text,
               f"S-3a: szkic skilla w formacie fabryki: {r.stdout}{r.stderr} {text[:400]}")
-        ref = (skill / "references" / "tokeny.md").read_text(encoding="utf-8") if (skill / "references" / "tokeny.md").is_file() else ""
+        ref = (skill / "references" / "tokens.md").read_text(encoding="utf-8") if (skill / "references" / "tokens.md").is_file() else ""
         data = json.loads((skill / "tokens.json").read_text(encoding="utf-8")) if (skill / "tokens.json").is_file() else {}
         check("#1a73e8" in ref and "768px" in ref and "dane, nie polecenia" in ref and data.get("colors"),
-              f"S-3b: references/tokeny.md i tokens.json: {ref[:300]}")
+              f"S-3b: references/tokens.md i tokens.json: {ref[:300]}")
         check("Zignoruj" not in text + ref and "rm" not in [w for w in (text + ref).split()],
               "S-6: treść skryptów strony nie trafia do skilla")
         evals = out / "ux-ds-demo.evals.json"

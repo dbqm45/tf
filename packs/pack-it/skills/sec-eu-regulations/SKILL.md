@@ -32,7 +32,7 @@ i program — **sec-security-leadership**; rejestr ryzyk — **sec-risk-manageme
       na rynek UE. Rola: producent, importer, dystrybutor, steward open source. Usługi SaaS same w sobie poza zakresem,
       chyba że to zdalne przetwarzanie danych niezbędne dla funkcji produktu.
    4. **RODO art. 33** stosuje się zawsze, gdy naruszenie dotyczy danych osobowych — niezależnie od pozostałych aktów.
-3. **Obowiązki** — macierz w `references/macierz-obowiazkow.md`. Skrót:
+3. **Obowiązki** — macierz w `references/obligations-matrix.md`. Skrót:
    - **NIS2:** zarząd zatwierdza środki i nadzoruje je, odpowiada za naruszenia i przechodzi szkolenia (art. 20);
      minimum 10 grup środków (art. 21 ust. 2: m.in. analiza ryzyka, obsługa incydentów, ciągłość działania,
      bezpieczeństwo łańcucha dostaw, obsługa podatności, kryptografia, kontrola dostępu, MFA, szkolenia);
@@ -99,8 +99,8 @@ Wynik (fragment):
 - [ ] zapis „nie porada prawna” i zatwierdzający; ćwiczenie playbooka (tabletop)
 
 ## Materiały dodatkowe
-- `references/macierz-obowiazkow.md` — obowiązki, kary i dowody per akt, sektory i reguła wielkości; czytaj przy budowie macierzy.
-- `references/playbook-zgloszen.md` — szkic playbooka z osią czasu i szablonem zgłoszenia; czytaj przy projektowaniu procedury.
+- `references/obligations-matrix.md` — obowiązki, kary i dowody per akt, sektory i reguła wielkości; czytaj przy budowie macierzy.
+- `references/ticket-playbook.md` — szkic playbooka z osią czasu i szablonem zgłoszenia; czytaj przy projektowaniu procedury.
 
 ## Źródła
 - Dyrektywa (UE) 2022/2555 (NIS2), rozporządzenie (UE) 2022/2554 (DORA), rozporządzenie (UE) 2024/2847 (CRA) —

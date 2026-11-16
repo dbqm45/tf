@@ -15,7 +15,7 @@ procedurę dla osoby prowadzącej design; techniki pracy zespołu (badania, syst
 skille.
 
 ## Procedura
-1. **Diagnoza dojrzałości.** Oceń organizację modelem NN/g (`references/dojrzalosc-i-metryki.md`): sześć etapów
+1. **Diagnoza dojrzałości.** Oceń organizację modelem NN/g (`references/maturity-and-metrics.md`): sześć etapów
    (od „nieobecny” do „kierowany użytkownikiem”) wg czterech czynników — strategia, kultura, proces, wyniki.
    Model nie jest listą do odhaczenia po kolei: wskaż etap **na czynnik** i dowód (kto decyduje o priorytetach,
    czy jest budżet, czy badania poprzedzają decyzje). Wynik: `docs/project/01-discovery/ux-maturity.md`.
@@ -27,9 +27,9 @@ skille.
 4. **Metryki.** Dla każdego filaru ramka HEART (Happiness, Engagement, Adoption, Retention, Task success) w
    procesie Goals → Signals → Metrics; wybierz tylko kategorie istotne (zwykle 2–3 na produkt). Do ankiet SUS,
    do zachowań skuteczność i czas zadania. Metryka bez progu i właściciela nie jest metryką
-   (`references/dojrzalosc-i-metryki.md`). Samo NPS nie wskazuje, co poprawić.
+   (`references/maturity-and-metrics.md`). Samo NPS nie wskazuje, co poprawić.
 5. **Struktura zespołu.** Dobierz model do dojrzałości i liczby zespołów produktowych (tabela w
-   `references/organizacja-i-dojrzalosc-zespolu.md`): scentralizowany, wbudowany albo hybrydowy. Decyzja zapisana
+   `references/team-organization-and-maturity.md`): scentralizowany, wbudowany albo hybrydowy. Decyzja zapisana
    jako ADR (kontekst, opcje, kompromisy, kiedy wrócimy). Zespoły inżynierskie i prawo Conwaya — proc-team-topologies.
 6. **DesignOps i ResearchOps.** Zacznij od największego tarcia (np. brak jednego narzędzia, chaos w plikach, brak
    rekrutacji uczestników), nie od pełnej struktury: narzędzia i licencje, onboarding projektantów, standardy
@@ -73,8 +73,8 @@ Pierwsze 90 dni: wspólny plik biblioteki, krytyka co czwartek, rubryka rekrutac
 - [ ] argument ROI z przedziałem niepewności i źródłami; [niezweryfikowane] oznaczone
 
 ## Materiały dodatkowe
-- `references/dojrzalosc-i-metryki.md` — etapy NN/g, HEART, SUS, szablon ramki metryk; czytaj przy diagnozie i metrykach.
-- `references/organizacja-i-dojrzalosc-zespolu.md` — struktury zespołu, DesignOps, kariera, ROI; czytaj przy projekcie organizacji.
+- `references/maturity-and-metrics.md` — etapy NN/g, HEART, SUS, szablon ramki metryk; czytaj przy diagnozie i metrykach.
+- `references/team-organization-and-maturity.md` — struktury zespołu, DesignOps, kariera, ROI; czytaj przy projekcie organizacji.
 
 ## Źródła
 - NN/g, *UX Maturity Model* (nngroup.com/consulting/ux-maturity-assessment/ i artykuły o etapach 1–5), dostęp

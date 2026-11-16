@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
-MAP = ROOT / "core" / "skills" / "core-delivery-lifecycle" / "references" / "mapa-artefaktow.md"
+MAP = ROOT / "core" / "skills" / "core-delivery-lifecycle" / "references" / "artifact-map.md"
 RECORD = ROOT / "core" / "skills" / "core-project-record" / "SKILL.md"
 PATH = re.compile(r"docs/project/(\d\d-[a-z-]+)/([0-9A-Za-z_./<>{}*-]*)")
 
@@ -72,7 +72,7 @@ def main() -> int:
     check("erDiagram" in db and "docs/project/04-architecture/erd.md" in db,
           "M-5: be-database opisuje ERD (Mermaid erDiagram, docs/project/04-architecture/erd.md)")
     lifecycle = (ROOT / "core" / "skills" / "core-delivery-lifecycle" / "SKILL.md").read_text(encoding="utf-8")
-    check("references/mapa-artefaktow.md" in lifecycle, "M-6: SKILL.md core-delivery-lifecycle odsyła do mapy")
+    check("references/artifact-map.md" in lifecycle, "M-6: SKILL.md core-delivery-lifecycle odsyła do mapy")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} mapa artefaktów: {total - len(fails)}/{total}")

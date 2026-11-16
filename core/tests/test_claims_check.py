@@ -61,21 +61,21 @@ def main() -> int:
         return 1
     with tempfile.TemporaryDirectory() as t:
         d = Path(t)
-        (d / "raport.md").write_text(DOC, encoding="utf-8")
+        (d / "report.md").write_text(DOC, encoding="utf-8")
         (d / "czysty.md").write_text(CLEAN, encoding="utf-8")
-        r = run(["raport.md"], d)
+        r = run(["report.md"], d)
         out = r.stdout
         lines = out.splitlines()
         check(r.returncode == 1 and lines and lines[0].startswith("Werdykt: BŁĘDY"),
               f"C-1: błędy → kod 1 i werdykt w pierwszej linii: {out}")
-        check("raport.md:6" in out and "45/56" in out and "80%" in out,
+        check("report.md:6" in out and "45/56" in out and "80%" in out,
               f"C-2: zły procent przy 45/56 wskazany z plik:linia i wartością poprawną: {out}")
-        check("raport.md:5" not in out, f"C-3: poprawne 46/48 (96%) i 22/48 (46%) bez uwag: {out}")
+        check("report.md:5" not in out, f"C-3: poprawne 46/48 (96%) i 22/48 (46%) bez uwag: {out}")
         check("2026-02-30" in out, f"C-4: niepoprawna data wykryta: {out}")
         check(TOMORROW in out and "przyszło" in out, f"C-5: data stanu w przyszłości wykryta: {out}")
-        check("raport.md:9" in out and "30%" in out and "OSTRZEŻENIE" in out.upper(),
+        check("report.md:9" in out and "30%" in out and "OSTRZEŻENIE" in out.upper(),
               f"C-6: liczba bez źródła w akapicie → ostrzeżenie: {out}")
-        check("raport.md:8" not in out and "raport.md:10" not in out and "raport.md:11" not in out,
+        check("report.md:8" not in out and "report.md:10" not in out and "report.md:11" not in out,
               f"C-7: liczby ze źródłem (ścieżka, URL) i oznaczone [założenie] bez uwag: {out}")
         check("99%" not in out, f"C-8: bloki kodu pomijane: {out}")
         r = run(["czysty.md"], d)

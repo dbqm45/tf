@@ -75,14 +75,14 @@ Skrypt: `python3 .claude/skills/ddd-es-simulation/scripts/es_sim.py` (katalog se
 - Kolejność w promptach: część stała (zasady, karta) przed zmienną (tablica, echo) — działa cache promptów.
 
 ## 4. Własny scenariusz
-Skopiuj `scenarios/weterynaria/` i zmień: `brief.md` (domena, wiedza ukryta, celowe sprzeczności, czego nie zdradzać,
+Skopiuj `scenarios/veterinary/` i zmień: `brief.md` (domena, wiedza ukryta, celowe sprzeczności, czego nie zdradzać,
 oczekiwane zdarzenia przełomowe, tabela „kto trenuje co”) oraz karty osób (ten sam układ sekcji; `obecna_od_startu: nie` = dołącza
 na zaproszenie; `formy_imienia` = odmiany imienia dla routera). Scenariusz fikcyjny — nie opisuj realnych osób ani firm.
 
 ## 5. Próba scenariusza (bez człowieka, płatna — za zgodą)
 Nowy lub zmieniony scenariusz sprawdzasz automatem, zanim ktoś na nim trenuje:
 `python3 .claude/skills/ddd-es-simulation/scripts/es_probe.py --variant pelna|oszczedna [--scenario <s>] [--budget-usd 2.5]`.
-- Gotowe wypowiedzi facylitatora i oczekiwania są w `scenarios/<s>/proba.json`: wiedza ukryta (słowa w transkrypcji),
+- Gotowe wypowiedzi facylitatora i oczekiwania są w `scenarios/<s>/trial.json`: wiedza ukryta (słowa w transkrypcji),
   celowe sprzeczności (hot spot), zachowania z kart (np. „pytana po imieniu → odpowiada”).
 - Bez gospodarza: skrypt robi rundy przez `es_sim.py`, a uczestnik to osobne wywołanie modelu bez narzędzi (`claude -p`).
 - Wynik: `probe-report.md` (✓/✗ dla każdego oczekiwania, koszt, niepoprawny JSON, osoby bez wypowiedzi) i debrief coacha.

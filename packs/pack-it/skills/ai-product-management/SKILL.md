@@ -15,7 +15,7 @@ zaprojektować życie z błędami. Czego **nie** robi ten skill: wynik i prioryt
 PRD i budżet MVP to **proc-requirements-shaping**, metodę ewaluacji (zbiory, graderzy, CI) daje **ai-evals**.
 
 ## Procedura
-1. **Czy AI?** Zacznij od najprostszego narzędzia, które zamyka problem (`references/decyzje-i-ekonomia.md`):
+1. **Czy AI?** Zacznij od najprostszego narzędzia, które zamyka problem (`references/decisions-and-economics.md`):
    reguła deterministyczna, gdy logikę da się zapisać; klasyczny ML, gdy są etykiety i stały kształt danych; LLM,
    gdy wejście jest otwartym tekstem, a wyjście wymaga rozumienia lub generowania. Test: „co się stanie, gdy
    model się pomyli, i **kto to poniesie**?” — klient, pracownik czy firma. Wysoki koszt błędu bez możliwości
@@ -32,16 +32,16 @@ PRD i budżet MVP to **proc-requirements-shaping**, metodę ewaluacji (zbiory, g
 4. **Cele jakości, opóźnienia i kosztu.** Ustal razem: jakość (krok 3), opóźnienie (p50/p95 do pierwszego i ostatniego
    tokenu, budżet czasu użytkownika) i **koszt na udane zadanie** (nie na zapytanie: uwzględnij ponowienia, kontekst,
    sędziego, człowieka sprawdzającego). Zestaw z przychodem lub kosztem dzisiejszego procesu (unit economics:
-   `references/decyzje-i-ekonomia.md`). Cele się wykluczają — zapisz, który ustępuje.
+   `references/decisions-and-economics.md`). Cele się wykluczają — zapisz, który ustępuje.
 5. **Kup, zbuduj czy API.** Kolejność prób: gotowy produkt → API modelu z własnym promptem i kontekstem → dostrojenie
    → własny model. Każdy kolejny szczebel ma sens dopiero po zmierzonej luce na poprzednim. Decyzję techniczną
    i architekturę podaje **arch-ai-solutions**; PM dostarcza kryteria: dane, koszt, opóźnienie, zależność od dostawcy.
 6. **Dane.** Jakie dane są potrzebne (przykłady, etykiety, treści do wyszukiwania), czy je mamy, kto jest ich
    właścicielem, czy wolno ich użyć do tego celu, jak świeże. Brak danych na zbiór ewaluacyjny to blokada, nie ryzyko.
-7. **Rejestr ryzyk** (`references/ryzyka-i-ux.md`): halucynacje, uprzedzenia, bezpieczeństwo treści, prywatność,
+7. **Rejestr ryzyk** (`references/risks-and-ux.md`): halucynacje, uprzedzenia, bezpieczeństwo treści, prywatność,
    prompt injection, uzależnienie od dostawcy, drift. Każde: scenariusz, skutek, prawdopodobieństwo, środek, właściciel.
    Klasę regulacyjną (AI Act) i obowiązki ustala **ai-governance-compliance**; PM wpisuje wynik do rejestru.
-8. **UX niepewności i człowiek w pętli** (`references/ryzyka-i-ux.md`): ustaw oczekiwania („to propozycja”), pokaż
+8. **UX niepewności i człowiek w pętli** (`references/risks-and-ux.md`): ustaw oczekiwania („to propozycja”), pokaż
    źródła lub pewność tylko tam, gdzie jest skalibrowana, zaprojektuj wyjście awaryjne (fallback bez AI), łatwą
    korektę i zbieranie sygnałów z poprawek do zbioru ewaluacyjnego. Teksty: **ux-content-design**.
 9. **Wdrożenie etapowe.** Ewaluacja offline (bramka) → dogfooding wewnętrzny → beta z wąską grupą i wyłącznikiem →
@@ -57,7 +57,7 @@ PRD i budżet MVP to **proc-requirements-shaping**, metodę ewaluacji (zbiory, g
     (liczba z ewaluacji z datą), co dzieje się przy błędzie, co kosztuje. Bez obietnic „100%” i bez „AI wszystko
     załatwi”. Jedna strona z trzema blokami: potrafi / nie potrafi / nie wiemy jeszcze.
 13. **Zapis.** Sekcja funkcji AI w `docs/project/03-requirements/requirements.md` albo `ai-feature-brief.md`
-    (szablon: `references/szablon-sekcji-prd.md`; core-project-record). Decyzję o wdrożeniu podejmuje człowiek.
+    (szablon: `references/prd-section-template.md`; core-project-record). Decyzję o wdrożeniu podejmuje człowiek.
 
 ## Przykład
 **Wejście:** sklep chce, żeby AI zatwierdzała zwroty bez udziału obsługi (3 000 zgłoszeń/mies., 4 min pracy każde).

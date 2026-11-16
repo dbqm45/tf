@@ -11,7 +11,7 @@ metadata:
 
 **Granica.** Ten skill odpowiada na pytanie „jaką kryptografię wybrać i jak ją zaprojektować”. Eksploatację
 (inwentarz tożsamości maszynowych, skanowanie i rotacja sekretów, operacje PKI) opisuje `ops-secrets-identities`
-(`.claude/skills/ops-secrets-identities/references/kryptografia-i-pki.md` to skrót tabelaryczny, tu jest pełniejsza
+(`.claude/skills/ops-secrets-identities/references/cryptography-and-pki.md` to skrót tabelaryczny, tu jest pełniejsza
 decyzja). Hasła i tokeny w przepływach logowania: `be-auth-security`. Zagrożenia: `arch-threat-modeling`.
 Wynik pracy: sekcja „Kryptografia” w `docs/project/04-architecture/` (core-project-record) albo ADR.
 
@@ -19,17 +19,17 @@ Wynik pracy: sekcja „Kryptografia” w `docs/project/04-architecture/` (core-p
 1. **Co chronimy i przed kim.** Dane, ich poufność w czasie (lata → ryzyko „zbierz teraz, odszyfruj później”),
    stan (w spoczynku, w ruchu, w użyciu), wymagania prawne. Bez tego nie ma kryteriów wyboru. Dane w spoczynku:
    klasy danych, warstwy szyfrowania (nośnik, baza, pole, kopie) i cykl życia z usuwaniem —
-   `references/dane-w-spoczynku.md`.
+   `references/data-at-rest.md`.
 2. **Najpierw konstrukcja wysokiego poziomu**, dopiero potem prymitywy: TLS, KMS, biblioteka platformy, libsodium
    lub Tink. Nigdy własny algorytm, protokół ani „sprytne” złożenie prymitywów. Gdy nie ma gotowca, zapisz
    uzasadnienie i poproś o przegląd kryptografa.
 3. **Dobór prymitywu** wg tabeli niżej; odchylenie od niej to ADR z powodem.
 4. **Klucze:** wygenerowane CSPRNG, zapisane w KMS/HSM, z właścicielem, rolą i planem cyklu życia
-   (`references/cykl-zycia-kluczy-i-pki.md`).
+   (`references/key-lifecycle-and-pki.md`).
 5. **Transport:** TLS 1.3, ścisła walidacja certyfikatów, HSTS (sekcja TLS).
 6. **Inwentarz i zwinność:** każdy algorytm jest wymienialny konfiguracją, a nie przepisaniem kodu; wersja
    algorytmu zapisana przy danych (nagłówek szyfrogramu, `kid`).
-7. **Przegląd** wg checklisty i listy błędów (`references/typowe-bledy.md`).
+7. **Przegląd** wg checklisty i listy błędów (`references/common-mistakes.md`).
 
 ## Dobór prymitywów
 | Potrzeba | Wybór | Uwagi |
@@ -59,13 +59,13 @@ udało się pobrać bezpośrednio, więc przed wdrożeniem porównaj z aktualną
 - Klient waliduje łańcuch, nazwę hosta, ważność i przeznaczenie; nigdy `verify=false`, `InsecureSkipVerify` ani
   „akceptuj wszystko” poza testem jednostkowym. Pinning kluczy tylko tam, gdzie kontrolujesz klienta i ścieżkę
   wymiany (aplikacje mobilne: z kluczem zapasowym).
-- Wewnątrz organizacji mTLS z krótkotrwałymi certyfikatami (`references/cykl-zycia-kluczy-i-pki.md`).
+- Wewnątrz organizacji mTLS z krótkotrwałymi certyfikatami (`references/key-lifecycle-and-pki.md`).
 - HSTS: `Strict-Transport-Security: max-age=…; includeSubDomains`; `preload` dopiero po przetestowaniu wszystkich
   subdomen, bo cofnięcie trwa miesiącami. Nagłówki ogólne: `be-auth-security`.
 
 ## Postkwantowo i zwinność
 - NIST opublikował FIPS 203 (ML-KEM), 204 (ML-DSA) i 205 (SLH-DSA) w sierpniu 2024. Szczegóły, terminy
-  krajowe i plan: `references/migracja-postkwantowa.md`.
+  krajowe i plan: `references/post-quantum-migration.md`.
 - Kolejność: inwentarz (CBOM) → priorytet dla danych o długiej poufności i wymiany kluczy → tryb hybrydowy
   (X25519 + ML-KEM) → podpisy i PKI. Terminy NIST IR 8547 i CNSA 2.0 to [niezweryfikowane] w źródłach pierwotnych.
 
@@ -87,7 +87,7 @@ udało się pobrać bezpośrednio, więc przed wdrożeniem porównaj z aktualną
 - [ ] TLS 1.3, pełna walidacja certyfikatów, HSTS; brak wyłączonej weryfikacji
 - [ ] certyfikaty automatyczne (ACME) i monitoring wygasania, zgodnie z kalendarzem skracania ważności
 - [ ] inwentarz kryptografii i plan migracji postkwantowej dla danych długowiecznych
-- [ ] przegląd listy typowych błędów (`references/typowe-bledy.md`)
+- [ ] przegląd listy typowych błędów (`references/common-mistakes.md`)
 
 ## Źródła
 - OWASP Password Storage Cheat Sheet (parametry przez wyszukiwanie, 2026-10-17; strona nieosiągalna z sandboxu)

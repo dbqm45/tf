@@ -57,7 +57,7 @@ i regulacji.
    Warstwy zależą tylko od niższych: polityka konfiguruje operacje, ale operacje nie znają polityk z nazwy. To wersja
    warstw odpowiedzialności Evansa (*Domain-Driven Design*, 2003, rozdz. 16 „Responsibility Layers”; u Evansa
    przykładowo także warstwa zobowiązań [niezweryfikowane: nazwy warstw ze źródeł wtórnych]). Poziom wiedzy i operacji:
-   ddd-deep-modeling, `.claude/skills/ddd-deep-modeling/references/rozplatywanie.md`.
+   ddd-deep-modeling, `.claude/skills/ddd-deep-modeling/references/untangling.md`.
 
 ## Mapper — wspólny protokół (każdy archetyp)
 Każdy plik `references/<archetyp>.md` to **procedura mapowania** wymagań na archetyp: test dopasowania → pytania → kroki →

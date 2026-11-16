@@ -62,7 +62,7 @@ Wynik: `docs/project/07-review/<data>-audyt-inwentarz.md` — stack, moduły, ho
 ## 3. Etap 1 — przeglądy równoległe
 - Wszyscy wykonawcy w **jednej wiadomości** (osobne konteksty, cache 5-minutowy).
 - Każdy brief zawiera: zakres i moduły, ścieżkę inwentarza, skille do wczytania, jedno pytanie, format ustalenia
-  i limit (np. 10 najważniejszych). Wzór briefu: `references/szablon-raportu.md`.
+  i limit (np. 10 najważniejszych). Wzór briefu: `references/report-template.md`.
 - Format ustalenia: ID · wymiar · plik:linia · ryzyko · zasięg · koszt naprawy · dowód · propozycja.
 - „Nic istotnego w tym wymiarze” to poprawny wynik; ustaleń nie dopisuje się dla objętości.
 - Wykonawca, który przekroczył zakres lub nie podał dowodów, dostaje jedno dopytanie, nie nowy przebieg od zera.
@@ -82,10 +82,10 @@ Wynik: `docs/project/07-review/<data>-audyt-inwentarz.md` — stack, moduły, ho
 6. **Przekazanie:** architektura → ADR (arch-architect-practice); refaktoryzacja → eng-refactor-planning; brakujące
    testy → qa-test-design; poprawki bezpieczeństwa → sec-appsec-devsecops; prawo → arch-eu-product-law (mapa obowiązków),
    arch-privacy-compliance (RODO).
-7. `python3 .claude/skills/core-grounding/scripts/grounding_check.py <raport.md>` — ścieżki i odwołania istnieją.
+7. `python3 .claude/skills/core-grounding/scripts/grounding_check.py <report.md>` — ścieżki i odwołania istnieją.
 
 ## 5. Raport
-Plik `docs/project/07-review/<data>-audyt-kodu.md` (core-project-record), szablon w `references/szablon-raportu.md`:
+Plik `docs/project/07-review/<data>-audyt-kodu.md` (core-project-record), szablon w `references/report-template.md`:
 1. TL;DR (≤ 7 punktów) i blokery.
 2. Ranking (tabela) i top 10 z propozycją zmiany (bez wykonywania).
 3. Szybkie wygrane: koszt S przy ryzyku co najmniej średnim.

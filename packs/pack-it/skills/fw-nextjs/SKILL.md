@@ -78,13 +78,13 @@ wskazaniem na nią. W fabryce:
 Więcej, czytane tylko przy potrzebie:
 - `references/cache-components.md` — trzy rodzaje treści, klucz cache, `'use cache: private'` i `remote`,
   ograniczenia, migracja z `unstable_cache`, `revalidate` i `experimental.ppr`;
-- `references/diagnostyka.md` — granica serwer–klient, błędy hydratacji, brak `<Suspense>`, paczki niezgodne
+- `references/diagnostics.md` — granica serwer–klient, błędy hydratacji, brak `<Suspense>`, paczki niezgodne
   z serwerem, nawigacja w `try/catch`, narzędzia serwera deweloperskiego;
-- `references/wdrozenie.md` — obraz `standalone`, cache przy wielu instancjach, obrazy i zmienne środowiskowe,
+- `references/deployment.md` — obraz `standalone`, cache przy wielu instancjach, obrazy i zmienne środowiskowe,
   Node.js czy Edge, procedura aktualizacji wersji.
 
 Przykłady (DAL z `server-only`, Server Action z autoryzacją i `updateTag`, `'use cache'` z `cacheTag`, `proxy.ts`,
-strona z `await params`) i odpowiedniki dla 14/15: `references/wzorce.md`.
+strona z `await params`) i odpowiedniki dla 14/15: `references/patterns.md`.
 
 ## Pojęcia domenowe w Next.js — gdzie co mieszka
 | Pojęcie (słownik) | Miejsce w aplikacji Next.js |
@@ -114,7 +114,7 @@ strona z `await params`) i odpowiedniki dla 14/15: `references/wzorce.md`.
 
 Migracja 15 → 16: `npx @next/codemod@canary upgrade latest`, a w razie potrzeby osobno
 `npx @next/codemod@canary next-async-request-api .`, `middleware-to-proxy` i `next-lint-to-eslint-cli .`. Potem
-`next build`, testy i przegląd `revalidateTag` (drugi argument). Odpowiedniki dla 14/15 są w `references/wzorce.md`.
+`next build`, testy i przegląd `revalidateTag` (drugi argument). Odpowiedniki dla 14/15 są w `references/patterns.md`.
 
 ## Checklista
 - [ ] wersja Next.js i `cacheComponents` sprawdzone; użyte API dostępne w tej wersji

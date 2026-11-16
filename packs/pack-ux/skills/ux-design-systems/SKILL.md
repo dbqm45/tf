@@ -18,7 +18,7 @@ System to produkt z odbiorcami (zespoły), wersjami i mapą drogi. Decyzje o wyg
 1. **Wejście.** Ile zespołów i produktów, jakie platformy (web, iOS, Android), ile marek i trybów, kto utrzymuje, co
    już istnieje (audyt: ile unikalnych kolorów, rozmiarów, wariantów przycisku w kodzie). Mały system z jednym zespołem
    nie potrzebuje tej samej struktury co system dla sześciu — zaczynaj od tego, co się powtarza.
-2. **Warstwy tokenów** (szczegóły i nazwy: `references/tokeny.md`):
+2. **Warstwy tokenów** (szczegóły i nazwy: `references/tokens.md`):
    - **prymitywne** — surowe wartości bez znaczenia (`color.blue.600`, `space.4`);
    - **semantyczne** — rola, wskazuje na prymityw (`color.text.primary`, `color.action.bg`); to je zmieniają motywy;
    - **komponentowe** — tylko gdy komponent musi odbiegać od roli (`button.primary.bg`), zawsze wskazuje na semantyczny.
@@ -29,22 +29,22 @@ System to produkt z odbiorcami (zespoły), wersjami i mapą drogi. Decyzje o wyg
 4. **Format i potok.** Źródło prawdy w formacie DTCG (`$value`, `$type`, aliasy `{color.blue.600}`), plik
    `*.tokens.json`; z niego Style Dictionary generuje CSS, JS/TS, iOS, Android. Co jest źródłem — Figma czy repozytorium
    — ustal raz; druga strona jest generowana albo synchronizowana jednokierunkowo. Status specyfikacji i wersje:
-   `references/tokeny.md`.
+   `references/tokens.md`.
 5. **Komponenty.** Najpierw wzorce z produktów (zasada trzech użyć), potem komponent z API: warianty (rodzaj, rozmiar),
    stany, sloty, zasady użycia. Nazwy wariantów i właściwości zgodne w Figmie i kodzie. Dostępność w komponencie, nie
    „po stronie użytkownika”: rola i nazwa dostępna, klawiatura, fokus widoczny, cele dotyku, kontrast w obu motywach.
 6. **Dokumentacja.** Storybook (historyjki dla każdego wariantu i stanu, panel dostępności), strona zasad: kiedy użyć
    i kiedy nie, rób/nie rób z obrazkami, treść przycisków, kod do skopiowania, dostępność, zmiany. Format:
-   `references/komponenty-i-dokumentacja.md`.
+   `references/components-and-documentation.md`.
 7. **Testy.** Test dostępności automatyczny (axe) na każdej historyjce — wyłapuje tylko część problemów, resztę ręcznie
    (qa-exploratory-manual); zrzuty wizualne historyjek w CI z progiem różnicy i zatwierdzaniem zmian przez człowieka.
 8. **Wersje i zmiany.** SemVer biblioteki (core-semver): publiczne API to komponenty, ich propsy, nazwy tokenów
    i klasy. Zmiana wartości tokenu wizualna = minor lub patch wg ustalonej reguły; usunięcie lub zmiana nazwy
-   = major. Polityka wycofywania i changelog: `references/wersjonowanie-i-governance.md`.
+   = major. Polityka wycofywania i changelog: `references/versioning-and-governance.md`.
 9. **Współtworzenie i zarządzanie.** Kryteria przyjęcia (przydatne wielu zespołom, unikalne), droga zgłoszenia,
-   dyżur przeglądu, kto decyduje. Metryki adopcji: `references/wersjonowanie-i-governance.md`.
+   dyżur przeglądu, kto decyduje. Metryki adopcji: `references/versioning-and-governance.md`.
 10. **Wiele marek i motywów.** Motyw = wymiana wartości warstwy semantycznej; komponenty bez zmian. Zakres, nazwy
-    i pułapki: `references/tokeny.md` § Motywy i marki.
+    i pułapki: `references/tokens.md` § Motywy i marki.
 
 ## Przykład
 Wejście: „Trzy produkty, dwie marki, ciemny motyw; przycisk ma dziś 11 odcieni niebieskiego w kodzie.”
@@ -79,9 +79,9 @@ historyjek `Button` w obu motywach i obu markach (6 zrzutów).
 - [ ] model współtworzenia i metryki adopcji opisane
 
 ## Materiały dodatkowe
-- `references/tokeny.md` — warstwy, nazwy, DTCG i Style Dictionary (status), motywy i marki.
-- `references/komponenty-i-dokumentacja.md` — komponenty w Figmie i kodzie, Storybook, dostępność, testy zrzutowe.
-- `references/wersjonowanie-i-governance.md` — SemVer biblioteki, wycofywanie, współtworzenie, metryki.
+- `references/tokens.md` — warstwy, nazwy, DTCG i Style Dictionary (status), motywy i marki.
+- `references/components-and-documentation.md` — komponenty w Figmie i kodzie, Storybook, dostępność, testy zrzutowe.
+- `references/versioning-and-governance.md` — SemVer biblioteki, wycofywanie, współtworzenie, metryki.
 
 ## Źródła
 - Design Tokens Community Group, *Design Tokens Format Module 2025.10* — Final Community Group Report, 2025-10-28:

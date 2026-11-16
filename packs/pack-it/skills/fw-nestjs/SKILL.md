@@ -48,7 +48,7 @@ metadata:
    wyjątków — domyślnie wszystko wymaga uwierzytelnienia.
 8. **Cykl życia:** `app.enableShutdownHooks()` (zamyka połączenia przy SIGTERM); health przez `@nestjs/terminus`
    (`TypeOrmHealthIndicator`, `PrismaHealthIndicator`) z osobnym liveness i readiness.
-9. **Testy** (eng-testing, szczegóły `references/testy.md`):
+9. **Testy** (eng-testing, szczegóły `references/tests.md`):
    - domena — zwykłe testy jednostkowe bez Nesta;
    - serwis — `Test.createTestingModule({ providers: [OrdersService, OrdersRepository] })` i
      `.overrideProvider(OrdersRepository).useValue(fake)` zamiast ręcznego `new` z zależnościami;
@@ -83,7 +83,7 @@ const service = moduleRef.get(OrdersService);
 E2e: kontener `new PostgreSqlContainer('postgres:17-alpine').start()` w global setup, URL do zmiennej
 środowiskowej czytanej przez `ConfigService`, aplikacja przez `createNestApplication()` + `supertest`.
 Dlaczego: moduł testowy sprawdza też konfigurację DI (brakujący provider = błąd testu); SQLite nie wyłapie różnic
-dialektu (typy, `ON CONFLICT`, blokady). Więcej: `references/testy.md`.
+dialektu (typy, `ON CONFLICT`, blokady). Więcej: `references/tests.md`.
 
 ## Zależne od wersji
 | Wersja | Zmiany istotne dla tego skilla |
@@ -101,7 +101,7 @@ dialektu (typy, `ON CONFLICT`, blokady). Więcej: `references/testy.md`.
 - [ ] testy: `createTestingModule` + `overrideProvider`, e2e z `createNestApplication` + supertest, Testcontainers zamiast SQLite
 
 ## Materiały dodatkowe
-- `references/testy.md` — piramida testów w NestJS, moduł testowy i nadpisywanie providerów, e2e, Testcontainers
+- `references/tests.md` — piramida testów w NestJS, moduł testowy i nadpisywanie providerów, e2e, Testcontainers
   z global setup, Jest a Vitest (ESM/CJS), pułapki.
 
 ## Pojęcia domenowe w nestjs

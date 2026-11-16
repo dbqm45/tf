@@ -37,5 +37,5 @@ osiągnął 28%, a wyszukiwanie adaptacyjne 99%. Wnioski:
 - wynik „blokuje 99% z listy” nie jest dowodem odporności — testuj atakującym, który zna obronę i iteruje;
 - **AgentDojo** (NeurIPS 2024) to gotowa uprząż: sędzia sprawdza stan środowiska po przebiegu, a nie tekst modelu,
   więc sam nie da się wstrzyknąć;
-- odporność daje architektura (wzorce izolacji, uprawnienia — `wzorce-projektowe-agentow.md`), filtr jest warstwą
+- odporność daje architektura (wzorce izolacji, uprawnienia — `agent-design-patterns.md`), filtr jest warstwą
   dodatkową.

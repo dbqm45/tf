@@ -66,10 +66,10 @@ contributes:
       prompt: |
         Skille nakładki IT do przeglądu: zależności i publikacja — ops-supply-chain-security; pipeline CI — ops-ci-cd;
         sekrety, konta usług, tokeny, role chmurowe, kryptografia, KMS i certyfikaty — ops-secrets-identities
-        (`references/kryptografia-i-pki.md`); manifesty Kubernetes — ops-kubernetes; nowe punkty wejścia, granice zaufania,
+        (`references/cryptography-and-pki.md`); manifesty Kubernetes — ops-kubernetes; nowe punkty wejścia, granice zaufania,
         przepływy danych — arch-threat-modeling (czy model zagrożeń jest aktualny); logowanie zdarzeń bezpieczeństwa
         i reguły wykrywania — ops-security-operations; niebezpieczne API i domyślne konfiguracje w diffie —
-        sec-appsec-devsecops (`references/niebezpieczne-api.md`); znalezisko, które może mieć warianty w innych
+        sec-appsec-devsecops (`references/dangerous-apis.md`); znalezisko, które może mieć warianty w innych
         miejscach kodu — sec-variant-analysis; podatności kodu aplikacji webowej (IDOR, XSS, CSRF, SSRF, upload,
         wstrzyknięcia, obejścia filtrów) — sec-web-vulnerabilities.
 

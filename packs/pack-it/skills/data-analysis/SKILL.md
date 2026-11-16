@@ -31,15 +31,15 @@ na pytanie; każdy kolejny jest droższy.
 4. **Eksploracja (EDA)**: rozkłady (histogram, gęstość), miary położenia i rozproszenia, braki, zależności między
    zmiennymi, podział na segmenty i czas. Szukasz niespodzianek i błędów w danych, zanim zaczniesz wnioskować.
 5. **Analiza**: agregacje i porównania segmentów, korelacje, regresja, testy statystyczne
-   (`references/statystyka.md`), modele predykcyjne tylko gdy potrzebne (`references/uczenie-maszynowe.md`:
+   (`references/statistics.md`), modele predykcyjne tylko gdy potrzebne (`references/machine-learning.md`:
    także MLOps i inżynieria AI), prognozy i przyczynowość z danych obserwacyjnych
-   (`references/szeregi-czasowe-i-ekonometria.md`), czułość eksperymentów i metryki ilorazowe
-   (`references/eksperymenty-zaawansowane.md`).
+   (`references/time-series-and-econometrics.md`), czułość eksperymentów i metryki ilorazowe
+   (`references/advanced-experiments.md`).
    Kontroluj zmienne zakłócające i sprawdź paradoks Simpsona (trend w całości odwrotny niż w segmentach).
    Pytanie „ile da interwencja” bez eksperymentu: graf przyczynowy, metoda, efekt dla kogo (CATE/uplift) i próby
-   obalenia (`references/szeregi-czasowe-i-ekonometria.md`). „Singular matrix” w regresji = problem danych (pułapka
-   zmiennych zero-jedynkowych, stała kolumna), nie biblioteki (`references/statystyka.md`).
-6. **Wizualizacja** dopasowana do pytania (`references/wizualizacja.md`).
+   obalenia (`references/time-series-and-econometrics.md`). „Singular matrix” w regresji = problem danych (pułapka
+   zmiennych zero-jedynkowych, stała kolumna), nie biblioteki (`references/statistics.md`).
+6. **Wizualizacja** dopasowana do pytania (`references/visualization.md`).
 7. **Raport**: najpierw odpowiedź na pytanie i rekomendacja, potem dowody, potem metoda; **ograniczenia** (jakość
    danych, okres, czego nie da się stwierdzić — korelacja to nie przyczynowość), niepewność (przedziały, nie tylko
    punkt), jak powtórzyć analizę (skrypt lub notatnik w repo, wersja danych).
@@ -53,7 +53,7 @@ na pytanie; każdy kolejny jest droższy.
 - **BI** (Power BI, Tableau, Looker, Metabase) dla dashboardów wielokrotnego użytku — definicje miar w jednym miejscu
   (warstwa semantyczna), nie w każdym raporcie osobno.
 - Duże dane i przetwarzanie rozproszone: najpierw sprawdź, czy naprawdę potrzebne (arch-quality-attributes,
-  `architektura-danych.md`).
+  `data-architecture.md`).
 
 ## Zasady
 - Liczby sprawdzasz krzyżowo z drugim źródłem lub sumą kontrolną (np. suma przychodu zgodna z księgowością).

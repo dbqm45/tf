@@ -10,7 +10,7 @@ metadata:
 # Projekt wizualny interfejsu — decyzje z liczbami
 
 Cel: wygląd, który prowadzi wzrok, jest czytelny i da się go wiernie wdrożyć. Zasady podstawowe (jedna główna akcja,
-stany, mikrointerakcje) są w **ux-feature-design** (`.claude/skills/ux-feature-design/references/ui-wizualny-i-ruch.md`) — tu je pogłębiasz procedurą
+stany, mikrointerakcje) są w **ux-feature-design** (`.claude/skills/ux-feature-design/references/visual-ui-and-motion.md`) — tu je pogłębiasz procedurą
 i liczysz. Wdrożenie w CSS i tokenach w kodzie: **fe-css**; budowa i utrzymanie biblioteki: **ux-design-systems**.
 
 ## Procedura
@@ -19,7 +19,7 @@ i liczysz. Wdrożenie w CSS i tokenach w kodzie: **fe-css**; budowa i utrzymanie
    → zapytaj, nie wymyślaj logo ani palety.
 2. **Hierarchia.** Wypisz elementy ekranu w kolejności ważności dla zadania użytkownika (1 = główne, max 3 poziomy).
    Każdy poziom różnisz co najmniej dwoma środkami: rozmiar, grubość, kontrast, odstęp. Test: rozmycie ekranu —
-   nadal widać poziom 1? Szczegóły i typowe błędy: `references/typografia-kolor-siatka.md`.
+   nadal widać poziom 1? Szczegóły i typowe błędy: `references/typography-color-grid.md`.
 3. **Typografia.** Skala modularna (stosunek 1,2–1,25) z 5–7 stopni na tokenach; tekst ciągły 16 px, interlinia
    1,4–1,6, nagłówki 1,1–1,3; linia 45–75 znaków (twardy sufit 80). Nagłówek lepiej oddzielać odstępem niż kolorem.
 4. **Kolor i kontrast — liczysz, nie oceniasz na oko.** Role (tło, powierzchnia, tekst, akcent, stany) zamiast barw.
@@ -36,14 +36,14 @@ i liczysz. Wdrożenie w CSS i tokenach w kodzie: **fe-css**; budowa i utrzymanie
 7. **Ruch.** Najpierw cel (związek, zmiana stanu, kierunek, uwaga), potem czas: mikro 100–150 ms, panele i okna
    200–300 ms, duże przejścia ≤ 500 ms; wyjście ok. 70–80% czasu wejścia; wejście ease-out, wyjście ease-in.
    `prefers-reduced-motion`: przesunięcia i skalowanie zamień na przenikanie lub brak ruchu (nie usuwaj samej
-   informacji o zmianie). Szczegóły: `references/ruch-i-marka.md`.
+   informacji o zmianie). Szczegóły: `references/motion-and-brand.md`.
 8. **Marka.** Marka daje kolor akcentu, krój, ton ilustracji i zdjęć; nie nadpisuje progów kontrastu ani rozmiarów
    dotyku. Kolor marki nie przechodzi kontrastu → ciemniejszy wariant do tekstu i przycisków, oryginał do dużych
    powierzchni. Wiele marek: `ux-design-systems`.
 9. **Figma.** Zasady pracy (komponenty, warianty vs właściwości, auto layout, zmienne, nazwy warstw, przekazanie)
    w `references/figma.md`.
 10. **Przegląd zgodności wdrożenia i krytyka.** Procedura nakładki, tolerancje i format uwag:
-    `references/przeglad-wizualny.md`. Uwagi pisz wobec celu i progu („kontrast 3,45:1 < 4,5:1”), nie gustu.
+    `references/visual-review.md`. Uwagi pisz wobec celu i progu („kontrast 3,45:1 < 4,5:1”), nie gustu.
 
 ## Przykład
 Wejście: tekst pomocniczy `#8A8A8A` na `#FFFFFF`, przycisk `#3B82F6` z białym napisem 14 px.
@@ -66,10 +66,10 @@ Panel boczny: wejście 250 ms ease-out, wyjście 200 ms ease-in; przy reduced mo
 - [ ] marka nie łamie progów; przegląd wdrożenia z tolerancjami i listą różnic
 
 ## Materiały dodatkowe
-- `references/typografia-kolor-siatka.md` — skala, długość linii, kontrast i jego poprawki, siatka, odstępy, ikony.
-- `references/ruch-i-marka.md` — czasy i krzywe, reduced motion, nałożenie marki.
+- `references/typography-color-grid.md` — skala, długość linii, kontrast i jego poprawki, siatka, odstępy, ikony.
+- `references/motion-and-brand.md` — czasy i krzywe, reduced motion, nałożenie marki.
 - `references/figma.md` — komponenty, warianty, auto layout, zmienne, przekazanie.
-- `references/przeglad-wizualny.md` — zgodność wdrożenia z projektem i krytyka.
+- `references/visual-review.md` — zgodność wdrożenia z projektem i krytyka.
 
 ## Źródła
 - W3C, WCAG 2.2: Understanding SC 1.4.3 Contrast (Minimum), 1.4.12 Text Spacing, 2.4.11 Focus Not Obscured (Minimum),

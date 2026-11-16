@@ -53,4 +53,4 @@ Zespół platformowy (np. wewnętrzna platforma deweloperska, IDP) działa jak z
 | | Wycena (reguły rabatowe) | complicated-subsystem, X-as-a-Service |
 | DevOps | Platforma | platform, X-as-a-Service |
 
-Więcej przykładów: `references/przyklady.md`.
+Więcej przykładów: `references/examples.md`.

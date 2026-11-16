@@ -24,7 +24,7 @@ Konkretne API, webhooki, klucze i wersje u dostawcy Stripe: tool-stripe.
 
 ## 2. Stany subskrypcji i dostęp
 Typowe stany (nazwy jak u dostawcy, np. Stripe): okres próbny, aktywna, zaległa (pierwsza nieudana płatność),
-niezapłacona, anulowana, wstrzymana, niekompletna (pierwsza płatność nie przeszła). Szczegóły: `references/stany-i-webhooki.md`.
+niezapłacona, anulowana, wstrzymana, niekompletna (pierwsza płatność nie przeszła). Szczegóły: `references/states-and-webhooks.md`.
 - Dla każdego stanu zapisz decyzję: pełny dostęp, dostęp z ostrzeżeniem (okres łaski), tylko odczyt i eksport, brak.
 - Odcięcie dostępu nigdy nie kasuje danych — usunięcie wg retencji i prawa do eksportu (arch-multi-tenancy §5).
 
@@ -38,7 +38,7 @@ niezapłacona, anulowana, wstrzymana, niekompletna (pierwsza płatność nie prz
 
 ## 4. Nieudane płatności i windykacja (dunning)
 - Ponowienia wg harmonogramu dostawcy (np. Stripe Smart Retries — zalecane 8 prób w 2 tygodnie, konfigurowalne;
-  `references/stany-i-webhooki.md`) albo własnego, dobranego do biznesu; e-mail z linkiem do aktualizacji karty,
+  `references/states-and-webhooks.md`) albo własnego, dobranego do biznesu; e-mail z linkiem do aktualizacji karty,
   okres łaski z dostępem.
 - Po ostatniej próbie: stan „niezapłacona” lub anulowanie wg decyzji; dostęp wg tabeli z §2.
 - Uwierzytelnienie płatności (SCA, 3-D Secure) przy odnowieniu: stan „wymaga działania” i link dla klienta.
@@ -58,11 +58,11 @@ niezapłacona, anulowana, wstrzymana, niekompletna (pierwsza płatność nie prz
   liczba miejsc po przecinku zależy od waluty (ISO 4217). Zaokrąglenie w jednym miejscu, z jawną regułą.
 - **VAT:** usługa elektroniczna B2C w UE — stawka kraju konsumenta, rozliczenie przez OSS; B2B z ważnym numerem VAT UE —
   odwrotne obciążenie. Dowody miejsca konsumenta (adres, karta, IP) zapisujesz z fakturą. Fakty i progi:
-  `references/stany-i-webhooki.md` [do sprawdzenia przez księgowość].
+  `references/states-and-webhooks.md` [do sprawdzenia przez księgowość].
 - **Faktury:** numeracja ciągła, niezmienne po wystawieniu; zmiana = faktura korygująca. W Polsce KSeF
-  (terminy: księgowość; notatki `.claude/skills/arch-eu-product-law/references/poza-zakresem-fabryki.md`). Kwoty faktury = kwoty pobrane, z odtwarzalnym wyliczeniem pozycji.
+  (terminy: księgowość; notatki `.claude/skills/arch-eu-product-law/references/outside-factory-scope.md`). Kwoty faktury = kwoty pobrane, z odtwarzalnym wyliczeniem pozycji.
 - **Anulowanie i odstąpienie B2C:** anulowanie tak proste jak zakup, odstąpienie i zwrot wg praw konsumenta
-  (prawnik; notatki `.claude/skills/arch-eu-product-law/references/poza-zakresem-fabryki.md`).
+  (prawnik; notatki `.claude/skills/arch-eu-product-law/references/outside-factory-scope.md`).
 
 ## Zasady
 - Jedno źródło prawdy o stanie płatności (dostawca) i jedno o dostępie (subskrypcja), uzgadniane zadaniem.
@@ -90,4 +90,4 @@ od razu i dostał dwa e-maile.”
 - [ ] kwoty bez liczb zmiennoprzecinkowych; VAT/OSS i faktury potwierdzone przez księgowość; uzgadnianie z alertem
 
 ## Źródła
-Opisane własnymi słowami; fakty z datą dostępu w `references/stany-i-webhooki.md`.
+Opisane własnymi słowami; fakty z datą dostępu w `references/states-and-webhooks.md`.
