@@ -8,6 +8,7 @@ zmieniasz rzadko. Ten katalog nie trafia do projektów: to zestaw do przygotowan
 | `new_org_pack.py` | generator: kopiuje szablon do repozytorium firmy i wstawia nazwę, prefiks i wersję rdzenia |
 | `template/` | szablon paczki `pack-<firma>` z polami `TODO` |
 | `template-team/` | `pack.yaml` i `README.md` nakładki zespołu (`--team`); resztę plików bierze z `template/` |
+| `standards_from_docs.py` | standardy z dokumentów firmy: podział na sekcje, kontrola przypisania i cytatów, pliki nakładki |
 | `README.md` | ten przewodnik |
 
 ## Co ustawia paczka firmy
@@ -51,26 +52,45 @@ w konfiguracji Claude Code).
    Wartości firmy pokazuje `tf config show` (źródło „organizacja”), reguły — `tf analyze --only acme-standardy`.
 
 ## Jak wygenerować z dokumentów firmy (np. Confluence)
-Gdy standardy są już opisane, nie przepisujesz ich ręcznie: dajesz dokumenty agentowi i sprawdzasz wynik.
-1. **Dokumenty do katalogu.** Eksport stron z Confluence (HTML, Word, PDF) albo pliki Markdown do
-   `~/repos/acme-factory/zrodla/`. W sesji z połączeniem z Confluence (serwer MCP) agent może je pobrać sam — wtedy
-   zapisuje kopię z adresem i datą pobrania. Katalog `zrodla/` nie wchodzi do paczki: dodaj go do `.gitignore`,
-   jeśli dokumenty są poufne.
-2. **Polecenie dla agenta** (sesja Claude Code w katalogu paczki, po kroku 1 z listy wyżej):
-   > Przeczytaj dokumenty w `zrodla/` i rozdziel każde ustalenie firmy według obszaru (UI, API, dane, wydania,
-   > wspólne) i rodzaju: (a) sprawdzalne wzorcem → reguła w `analyzers/acme-standardy/rules.yaml` z przykładem
-   > naruszenia w `fixtures/naruszenia/` i oczekiwanym ustaleniem w `expected.json`; (b) wymaga oceny → plik obszaru
-   > w `skills/acme-standardy/references/`; (c) ogólna praktyka, którą zna każdy model → pomiń. Każde ustalenie
-   > podaj z cytatem i źródłem (plik, sekcja, data). Sprzeczności między dokumentami nie rozstrzygaj — wypisz je.
-   > Na końcu zapisz raport `zrodla/RAPORT.md`: co trafiło gdzie, co pominięto i dlaczego, sprzeczności.
-3. **Przegląd człowieka.** Przeczytaj `zrodla/RAPORT.md` i rozstrzygnij sprzeczności. Sprawdź, że cytaty są
-   w dokumentach. Reguły z `rules.yaml` traktuj jak kandydatów: każda musi przejść bramkę modułu na przykładach
-   (`python3 .tf/factory/analyze.py gate --module acme-standardy` w projekcie z paczką).
-4. Dalej kroki 3–5 z listy wyżej.
+Gdy standardy są już opisane, nie przepisujesz ich ręcznie. Wszystko, co da się sprawdzić, robi skrypt
+`org/standards_from_docs.py`; model tylko przypisuje ustalenia do obszaru i rodzaju (krok 3), a skrypt sprawdza wynik.
+1. **Dokumenty do katalogu** `~/repos/acme-factory/zrodla/`: eksport z Confluence (HTML), Word (`.docx`), PDF (przez
+   `pdftotext`) albo Markdown. W sesji z połączeniem z Confluence (serwer MCP) agent może je pobrać sam — wtedy zapisuje
+   kopię z adresem i datą pobrania. Katalog `zrodla/` nie trafia do projektów; dodaj go do `.gitignore` repozytorium
+   firmy, jeśli dokumenty są poufne.
+2. **Podział na sekcje (skrypt):**
+   ```
+   python3 org/standards_from_docs.py split ~/repos/acme-factory
+   ```
+   Sekcja to tekst pod jednym nagłówkiem, z pełną ścieżką nagłówków (`zrodla/sekcje.jsonl`); sekcje o tej samej treści
+   są oznaczone jako duplikaty. Skrypt zapisuje też `zrodla/ZADANIE.md` — polecenie dla agenta z formatem wyniku
+   i listą sekcji do pokrycia.
+3. **Przypisanie (model):** w sesji Claude Code w katalogu nakładki: „Wykonaj zrodla/ZADANIE.md”. Agent zapisuje
+   `zrodla/przypisanie.json`: każde ustalenie z obszarem (UI, API, dane, wydania, wspólne), rodzajem (`wzorzec` — reguła
+   z przykładem naruszenia i kodem zgodnym; `ocena` — do pliku obszaru), dosłownym cytatem i sprzecznościami; ogólną
+   praktykę wpisuje do `pominiete` z powodem.
+4. **Kontrola (skrypt, bez modelu):**
+   ```
+   python3 org/standards_from_docs.py check ~/repos/acme-factory
+   ```
+   Odrzuca: cytat, którego nie ma w sekcji; sekcję bez ustalenia i bez powodu pominięcia; nieznany obszar; sprzeczność
+   bez pary; regułę, która się nie wczytuje albo nie wykrywa swojego przykładu naruszenia (lub wykrywa kod zgodny);
+   przykłady, przez które bramka modułu reguł przestałaby przechodzić. Błędy poprawia agent w `przypisanie.json`.
+5. **Pliki nakładki (skrypt):**
+   ```
+   python3 org/standards_from_docs.py apply ~/repos/acme-factory
+   ```
+   Ustalenia do oceny trafiają do `references/<obszar>.md` (wspólne — do `SKILL.md`) z cytatem i źródłem, wzorce do
+   `rules.yaml` z przykładami w `fixtures/`, a `zrodla/RAPORT.md` zbiera sprzeczności, pominięte sekcje i duplikaty.
+   Skrypt zmienia tylko bloki `z-dokumentow` — ręczne ustalenia i reguły zostają. Bez zaliczonej kontroli nic nie zapisuje.
+6. **Przegląd człowieka:** `zrodla/RAPORT.md` — rozstrzygnij sprzeczności i przejrzyj przypisanie obszarów. Cytaty
+   sprawdził już skrypt. Potem scenariusze w `tests/skill_evals/` i kroki 3–5 z listy wyżej.
 
-Koszt to jednorazowe przetworzenie dokumentów przez model; zależy od ich objętości [założenie: nie mierzono].
-Automat z kontrolą cytatów skryptem (jak `recon_check` w rekonstrukcji projektu) jest planowany — do tego czasu
-cytaty sprawdza człowiek.
+**Gdy dokument się zmieni:** `split` pokazuje nowe, zmienione i usunięte sekcje od ostatniego `apply`, a `ZADANIE.md`
+wymienia tylko je — agent przypisuje tylko zmiany, `check` wskazuje ustalenia, których cytat zniknął ze źródła.
+
+Koszt modelu to jedno przypisanie sekcji (krok 3); zależy od objętości dokumentów [założenie: nie mierzono na
+dokumentach firmy]. Ten sam proces działa dla nakładki zespołu (`--team`).
 
 ## Nakładka zespołu
 Gdy zespoły w firmie pracują inaczej (np. backend ma własne zasady API i migracji, a frontend bibliotekę komponentów),
