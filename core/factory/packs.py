@@ -11,6 +11,7 @@ Układ w projekcie:
   .tf/factory/packs/<id>/pack.yaml        nakładka: wymiary, agenci, konsultanci, wkład do rdzenia i innych nakładek
   .tf/factory/packs/<id>/{roles,personas,traits}/
   .tf/factory/packs/<id>/pack.yaml → org_defaults   domyślne organizacji (nakładka firmowa, najwyżej jedna)
+  .tf/factory/packs/<id>/pack.yaml → team_defaults  domyślne zespołu (nakładka zespołu, najwyżej jedna, po firmowej)
   .tf/config/config.yaml                  nadpisania projektu (nakładane rekurencyjnie na domyślną konfigurację)
   .tf/config/{roles,personas,traits}/     własne role, persony i cechy projektu (nadpisują te z rdzenia i nakładek)
   ~/.tf/preferences.yaml, .tf/config/me.yaml   preferencje osoby: styl pracy (`tf style`), ostatnia warstwa
@@ -75,29 +76,48 @@ ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "
 ORG_OPERATIONS_KEYS = ("tracker",)
 
 
-def org_defaults(root: Path) -> tuple[str | None, dict]:
-    """Pierwsza (po id) zainstalowana nakładka z `org_defaults` i jej wartości; (None, {}) bez nakładki firmowej.
-    Więcej niż jedna to błąd zgłaszany przez `compose` (build.py check)."""
+def org_defaults(root: Path, key: str = "org_defaults") -> tuple[str | None, dict]:
+    """Pierwsza (po id) zainstalowana nakładka z `org_defaults` (albo `team_defaults`, key) i jej wartości; (None, {})
+    bez takiej nakładki. Więcej niż jedna to błąd zgłaszany przez `compose` (build.py check)."""
     for pid, p in installed_packs(root).items():
-        if isinstance(p.get("org_defaults"), dict):
-            return pid, p["org_defaults"]
+        if isinstance(p.get(key), dict):
+            return pid, p[key]
     return None, {}
 
 
+def team_defaults(root: Path) -> tuple[str | None, dict]:
+    """Nakładka zespołu (`team_defaults`): te same klucze co firmowa, warstwa między firmą a projektem."""
+    return org_defaults(root, "team_defaults")
+
+
+def narrowed_modes(layers: list[tuple[str, dict]]) -> list[str]:
+    """`task.allowed_modes` po wszystkich warstwach: przecięcie — niższa warstwa (zespół, projekt) tylko zawęża listę
+    wyższej (firma), nigdy nie przywraca trybu, który wyższa zabrała."""
+    allowed = list(TASK_MODES)
+    for _label, layer in layers:
+        modes = ((layer or {}).get("task") or {}).get("allowed_modes")
+        if isinstance(modes, list):
+            allowed = [m for m in allowed if m in modes]
+    return allowed
+
+
 def config_layers(root: Path) -> list[tuple[str, dict]]:
-    """Warstwy konfiguracji od najsłabszej: silnik, organizacja (nakładka firmowa), projekt, osoba. Każdy czytelnik
+    """Warstwy konfiguracji od najsłabszej: silnik, organizacja (nakładka firmowa), zespół (nakładka zespołu), projekt,
+    osoba. Każdy czytelnik
     konfiguracji (build, hooki, tf risk, tf work) składa je w tej kolejności."""
     engine, own = root / ENGINE_REL / "config.yaml", root / CONFIG_REL / "config.yaml"
     layers = [((ENGINE_REL / "config.yaml").as_posix(), load_yaml(engine) if engine.is_file() else {})]
-    pid, od = org_defaults(root)
-    if pid:
-        part = {k: v for k, v in (od.get("config") or {}).items() if k in ORG_CONFIG_KEYS}
-        layers.append((f"{(PACKS_REL / pid / 'pack.yaml').as_posix()} (org_defaults)", part))
+    for key in ("org_defaults", "team_defaults"):          # firma, potem zespół
+        pid, od = org_defaults(root, key)
+        if pid:
+            part = {k: v for k, v in (od.get("config") or {}).items() if k in ORG_CONFIG_KEYS}
+            layers.append((f"{(PACKS_REL / pid / 'pack.yaml').as_posix()} ({key})", part))
     if own.is_file():
         layers.append(((CONFIG_REL / "config.yaml").as_posix(), load_yaml(own)))
     below: dict = {}
     for _label, layer in layers:
         below = deep_merge(below, layer)
+    below.setdefault("task", {})["allowed_modes"] = narrowed_modes(layers)
     person, _warns, sources = person_layer(root, below)
     if person:
         layers.append((f"{' + '.join(sources)} (osoba)", person))
@@ -248,9 +268,10 @@ def work_style(root: Path) -> dict:
     """Sposób pracy po złożeniu warstw: styl, domyślny i dozwolone tryby zadania, przełączniki pętli, ostrzeżenia."""
     cfg = load_config(root)
     below: dict = {}
-    for label, layer in config_layers(root):
-        if not label.endswith("(osoba)"):
-            below = deep_merge(below, layer)
+    lower = [lv for lv in config_layers(root) if not lv[0].endswith("(osoba)")]
+    for _label, layer in lower:
+        below = deep_merge(below, layer)
+    below.setdefault("task", {})["allowed_modes"] = narrowed_modes(lower)
     warns = person_layer(root, below)[1]
     task, loop = cfg.get("task") or {}, cfg.get("loop") or {}
     allowed = [m for m in (task.get("allowed_modes") or TASK_MODES) if m in TASK_MODES]
@@ -261,10 +282,15 @@ def work_style(root: Path) -> dict:
 
 
 def org_operations(root: Path) -> dict:
-    """Domyślne karty operacyjnej z nakładki firmowej (dziś: `tracker`). Adresu trackera (`url`) organizacja nie
-    ustawia — dokąd idzie token, mówi tylko zmienna JIRA_BASE_URL (skill tf, intake.py)."""
-    ops = org_defaults(root)[1].get("operations") or {}
-    tracker = ops.get("tracker") if isinstance(ops.get("tracker"), dict) else {}
+    """Domyślne karty operacyjnej z nakładki firmowej, nadpisane przez nakładkę zespołu (dziś: `tracker`). Adresu
+    trackera (`url`) żadna nie ustawia — dokąd idzie token, mówi tylko zmienna JIRA_BASE_URL (skill tf, intake.py)."""
+    tracker: dict = {}
+    for key in ("org_defaults", "team_defaults"):
+        ops = org_defaults(root, key)[1].get("operations") or {}
+        if isinstance(ops.get("tracker"), dict):
+            # prefiksy zespołu zastępują prefiksy firmy (klucze zgłoszeń zespołu), reszta pól się scala
+            tracker = {**deep_merge(tracker, ops["tracker"]),
+                       **({"prefixes": ops["tracker"]["prefixes"]} if "prefixes" in ops["tracker"] else {})}
     return {"tracker": {k: v for k, v in tracker.items() if k != "url"}} if tracker else {}
 
 
@@ -272,8 +298,11 @@ def load_config(root: Path) -> dict:
     """Konfiguracja rdzenia: silnik (`.tf/factory/config.yaml`) ← domyślne organizacji (nakładka firmowa) ←
     nadpisania projektu (`.tf/config/config.yaml`) ← preferencje osoby (styl pracy)."""
     cfg: dict = {}
-    for _label, layer in config_layers(root):
+    layers = config_layers(root)
+    for _label, layer in layers:
         cfg = deep_merge(cfg, layer)
+    if layers:
+        cfg.setdefault("task", {})["allowed_modes"] = narrowed_modes([lv for lv in layers if not lv[0].endswith("(osoba)")])
     return cfg
 
 
@@ -336,22 +365,26 @@ def compose(root: Path, cfg: dict) -> dict:
     settings = load_settings(root, cfg)
     errors: list[str] = []
     cfg["_packs"], cfg["_settings"] = packs, settings
-    orgs = [pid for pid, p in packs.items() if p.get("org_defaults") is not None]
-    if len(orgs) > 1:
-        errors.append(f"org_defaults: {' i '.join(orgs)} — w projekcie może być tylko jedna nakładka firmowa "
-                      f"(działa {orgs[0]})")
-    for pid in orgs[:1]:
-        od = packs[pid]["org_defaults"]
-        if not isinstance(od, dict):
-            errors.append(f"{pid}: org_defaults musi być słownikiem (config, operations)")
-            continue
-        for k in sorted(set(od) - {"config", "operations"}):
-            errors.append(f"{pid}: org_defaults.{k} — nieznana sekcja (są: config, operations)")
-        for k in sorted(set(od.get("config") or {}) - set(ORG_CONFIG_KEYS)):
-            errors.append(f"{pid}: org_defaults.config.{k} — tego klucza nakładka firmowa nie ustawia "
-                          f"(dozwolone: {', '.join(ORG_CONFIG_KEYS)}); wartość pominięta")
-        for k in sorted(set(od.get("operations") or {}) - set(ORG_OPERATIONS_KEYS)):
-            errors.append(f"{pid}: org_defaults.operations.{k} — nieznana sekcja (jest: tracker); wartość pominięta")
+    for key, kind in (("org_defaults", "firmowa"), ("team_defaults", "zespołu")):
+        owners = [pid for pid, p in packs.items() if p.get(key) is not None]
+        if len(owners) > 1:
+            errors.append(f"{key}: {' i '.join(owners)} — w projekcie może być tylko jedna nakładka {kind} "
+                          f"(działa {owners[0]})")
+        if key == "team_defaults" and owners and not any(p.get("org_defaults") is not None for p in packs.values()):
+            errors.append(f"{owners[0]}: nakładka zespołu bez nakładki firmowej — zainstaluj pack-<firma> "
+                          "(requires.packs w pack.yaml zespołu)")
+        for pid in owners[:1]:
+            od = packs[pid][key]
+            if not isinstance(od, dict):
+                errors.append(f"{pid}: {key} musi być słownikiem (config, operations)")
+                continue
+            for k in sorted(set(od) - {"config", "operations"}):
+                errors.append(f"{pid}: {key}.{k} — nieznana sekcja (są: config, operations)")
+            for k in sorted(set(od.get("config") or {}) - set(ORG_CONFIG_KEYS)):
+                errors.append(f"{pid}: {key}.config.{k} — tego klucza nakładka {kind} nie ustawia "
+                              f"(dozwolone: {', '.join(ORG_CONFIG_KEYS)}); wartość pominięta")
+            for k in sorted(set(od.get("operations") or {}) - set(ORG_OPERATIONS_KEYS)):
+                errors.append(f"{pid}: {key}.operations.{k} — nieznana sekcja (jest: tracker); wartość pominięta")
     cfg["_active"] = {pid for pid, p in packs.items() if active(p, settings)}
 
     facets = [dict(f, _pack="core") for f in cfg.get("facets") or []]

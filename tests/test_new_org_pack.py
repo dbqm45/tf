@@ -5,6 +5,7 @@ zajęty prefiks) i cała droga: instalacja w projekcie przez `install.py --pack-
 (`org_defaults`) w konfiguracji projektu. python3 tests/test_new_org_pack.py"""
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -113,6 +114,70 @@ def main() -> int:
             g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standardy"],
                                cwd=app, capture_output=True, text=True, timeout=120)
             check(g.returncode == 0, f"OP-13: bramka modułu reguł na przykładach z szablonu: {g.stdout[-600:]}{g.stderr[-300:]}")
+        # warstwa zespołu: nakładka zespołu na bazie firmowej (silnik ← firma ← zespół ← projekt ← osoba)
+        team = base / "acme-backend-factory"
+        r = gen("acme", "--team", "backend", "--out", str(team), "--title", "ACME Backend")
+        check(r.returncode == 0 and (team / "pack.yaml").is_file()
+              and (team / "skills/backend-standardy/SKILL.md").is_file()
+              and (team / "analyzers/acme-backend-standardy/rules.yaml").is_file(),
+              f"OP-17: generator nakładki zespołu (--team): {r.stdout}{r.stderr}")
+        left = [str(f.relative_to(team)) for f in team.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
+        check(not left, f"OP-17: wszystkie pola szablonu zespołu podstawione: {left}")
+        tp = pm.load_yaml(team / "pack.yaml") if (team / "pack.yaml").is_file() else {}
+        check(tp.get("id") == "pack-acme-backend" and "pack-acme" in ((tp.get("requires") or {}).get("packs") or [])
+              and isinstance(tp.get("team_defaults"), dict) and "org_defaults" not in tp
+              and set((tp.get("team_defaults") or {}).get("config") or {}) <= set(pm.ORG_CONFIG_KEYS),
+              f"OP-18: pack.yaml zespołu: id, wymaga nakładki firmy, team_defaults z dozwolonymi kluczami: {tp}")
+        r = gen("acme", "--team", "Back End", "--out", str(base / "z1"))
+        check(r.returncode == 2 and not (base / "z1").exists(), f"OP-19: zła nazwa zespołu → kod 2: {r.stdout}{r.stderr}")
+        r = gen("acme", "--team", "web", "--prefix", "fe-", "--out", str(base / "z2"))
+        check(r.returncode == 2 and not (base / "z2").exists(), f"OP-19: zajęty prefiks zespołu → kod 2: {r.stdout}{r.stderr}")
+        if isinstance(tp.get("team_defaults"), dict):
+            td = tp["team_defaults"]
+            td["config"] = {**(td.get("config") or {}), "task": {"allowed_modes": ["plan", "zwykly"]},
+                            "autonomy": {"operations": {"git_push": "deny"}}}
+            td["operations"] = {"tracker": {"prefixes": {"BE": "jira"}}}
+            (team / "pack.yaml").write_text(pm.yaml.safe_dump(tp, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        app2 = base / "app2"
+        app2.mkdir()
+        subprocess.run(["git", "init", "-q"], cwd=app2, check=True)
+        r = subprocess.run([sys.executable, str(ROOT / "core" / "factory" / "install.py"), str(app2), "--yes",
+                            "--language", "en", "--packs", "pack-acme-backend", "--pack-dir", str(out),
+                            "--pack-dir", str(team)], capture_output=True, text=True, timeout=300)
+        check(r.returncode == 0 and (app2 / ".tf/factory/packs/pack-acme/pack.yaml").is_file()
+              and (app2 / ".tf/factory/packs/pack-acme-backend/pack.yaml").is_file(),
+              f"OP-20: instalacja nakładki zespołu dociąga nakładkę firmy: {(r.stdout + r.stderr)[-1500:]}")
+        if r.returncode == 0:
+            (app2 / ".tf/config").mkdir(parents=True, exist_ok=True)
+            (app2 / ".tf/config/config.yaml").write_text("task:\n  allowed_modes: [plan, zwykly, auto]\n",
+                                                         encoding="utf-8")
+            pa = packs_mod(app2 / ".tf" / "factory")
+            labels = [lbl for lbl, _ in pa.config_layers(app2)]
+            org_i = next((i for i, l in enumerate(labels) if "org_defaults" in l), -1)
+            team_i = next((i for i, l in enumerate(labels) if "team_defaults" in l), -1)
+            proj_i = next((i for i, l in enumerate(labels) if l.endswith(".tf/config/config.yaml")), -1)
+            check(0 < org_i < team_i < proj_i, f"OP-21: kolejność warstw silnik ← firma ← zespół ← projekt: {labels}")
+            ws = pa.work_style(app2)
+            check(ws["allowed_modes"] == ["plan", "zwykly"],
+                  f"OP-22: dozwolone tryby to przecięcie warstw — projekt nie przywraca Auto zabranego przez zespół: {ws}")
+            guard = importlib.util.spec_from_file_location("op_guard", app2 / ".claude/hooks/guard_bash.py")
+            gm = importlib.util.module_from_spec(guard)
+            guard.loader.exec_module(gm)
+            levels, _w = gm.load_policy(app2)
+            check(levels.get("git_push") == "deny", f"OP-23: zespół zaostrza politykę autonomii: {levels}")
+            ops = pa.org_operations(app2)
+            check((ops.get("tracker") or {}).get("prefixes") == {"BE": "jira"} and (ops.get("tracker") or {}).get("type"),
+                  f"OP-24: tracker zespołu nadpisuje prefiksy firmy, reszta zostaje z firmy: {ops}")
+            comp = pa.compose(app2, pa.load_config(app2))
+            check(not [e for e in comp["_errors"] if "defaults" in e], f"OP-24: składanie bez błędów: {comp['_errors']}")
+            env = {**os.environ, "TF_PREFERENCES": str(base / "none.yaml")}
+            r = subprocess.run([sys.executable, str(app2 / ".tf/factory/tf.py"), "config", "show"], cwd=app2,
+                               capture_output=True, text=True, timeout=120, env=env)
+            check(any(ln.split()[:2] == ["task", "projekt"] for ln in r.stdout.splitlines())
+                  and "zespół" in r.stdout, f"OP-25: tf config show zna źródło „zespół”: {r.stdout}{r.stderr}")
+            g = subprocess.run([sys.executable, str(app2 / ".tf/factory/analyze.py"), "gate", "--module",
+                                "acme-backend-standardy"], cwd=app2, capture_output=True, text=True, timeout=120)
+            check(g.returncode == 0, f"OP-26: bramka modułu reguł zespołu: {g.stdout[-600:]}{g.stderr[-300:]}")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów new-org-pack")

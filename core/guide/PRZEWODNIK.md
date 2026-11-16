@@ -44,6 +44,12 @@ Co jest zainstalowane: `tf list`. Stan instalacji: `tf doctor`.
 je w `.tf/config/` (polityki autonomii nie rozluźni). Adresów i tokenów (Jira, Confluence) nakładka nie zawiera —
 są w zmiennych środowiska i połączeniach Claude Code.
 
+**Nakładka zespołu.** Ponad firmą zespół może mieć swoją nakładkę `pack-<firma>-<zespół>` (generator:
+`org/new_org_pack.py <firma> --team <zespół>`): reguły kodu, standardy, prefiksy zgłoszeń, uprawnienia. Kolejność warstw:
+silnik ← firma ← zespół ← projekt ← osoba; `tf config show` pokazuje źródło („zespół”). Zespół i projekt tylko
+zaostrzają politykę autonomii i tylko zawężają dozwolone tryby zadania (`task.allowed_modes`). Instalacja:
+`tf install --pack-dir <repo firmy> --pack-dir <repo zespołu> --add pack-<firma>-<zespół>`.
+
 ### Instalacja prywatna i zespołowa
 | | Prywatna (domyślna) | Zespołowa (`--shared`) |
 |---|---|---|

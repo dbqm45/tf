@@ -1,0 +1,43 @@
+# Nakładka zespołu {{TITLE}}: standardy i domyślne ustawienia jednego zespołu, ponad nakładką firmy pack-{{ORG}}.
+# Uzupełnij pola oznaczone TODO; reszta działa od razu. Przewodnik: README.md obok.
+id: pack-{{FIRMA}}
+version: 0.1.0
+title: "{{TITLE}}"
+description: "TODO: one sentence in English — team standards and defaults for {{TITLE}} projects."
+content_language: pl
+default: false
+requires:
+  core: "{{CORE_RANGE}}"
+  # Nakładka firmy — instaluje się razem z tą (tf install --pack-dir <repo firmy> --pack-dir <repo zespołu>).
+  packs: [pack-{{ORG}}]
+optional_packs: [pack-it]
+
+facets:
+  - {prefix: {{PREFIX}}, order: 55, name: standardy zespołu, question: "jak w zespole {{TITLE}} piszemy, przeglądamy i wydajemy kod"}
+
+# Standardy zespołu w każdej personie i u agentów, którzy przeglądają zmiany (obok standardów firmy).
+contributes:
+  personas:
+    core_skills: [{{PREFIX}}standardy]
+  agents:
+    security-reviewer:
+      skills: [{{PREFIX}}standardy]
+
+# Domyślne zespołu: silnik ← firma (pack-{{ORG}}) ← ta sekcja ← projekt ← osoba. Klucze jak w org_defaults firmy.
+# Zespół może tylko zaostrzyć politykę autonomii firmy i tylko zawęzić dozwolone tryby (task.allowed_modes);
+# pozostałe wartości (limity, profil kosztów, języki) zastępują wartości firmy w projektach zespołu.
+# Wpisz tylko to, czym zespół różni się od firmy — reszta przychodzi z nakładki firmy.
+team_defaults:
+  config:
+    # TODO: przykład — zespół, który sam nie wypuszcza paczek i zatwierdza każdy plan (usuń, czego nie potrzebujesz):
+    # autonomy:
+    #   operations:
+    #     publish: deny
+    # task:
+    #   allowed_modes: [plan, zwykly]
+    # Profil kosztów zespołu: oszczedny | zrownowazony | jakosc.
+    default_profile: zrownowazony     # TODO: albo usuń, wtedy obowiązuje profil firmy
+  operations:
+    tracker:
+      # TODO: prefiksy kluczy zgłoszeń zespołu; zastępują prefiksy firmy w projektach zespołu, np. {BE: jira}
+      prefixes: {TODO: jira}

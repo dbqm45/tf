@@ -91,11 +91,12 @@ człowieka, i z kontrolą wyniku skryptem.
    - [x] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
    - [x] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
      hooka, uruchamiany w CI bez modelu.
-3. [ ] **Warstwa zespołu.**
-   - [ ] `org/new_org_pack.py <firma> --team <zespół>` → `pack-<firma>-<zespół>` z `requires` nakładki firmy
+3. [x] **Warstwa zespołu** (zrobione 2026-11-16, `tests/test_new_org_pack.py` OP-17…OP-26).
+   - [x] `org/new_org_pack.py <firma> --team <zespół>` → `pack-<firma>-<zespół>` z `requires` nakładki firmy
      (generator, skrypt);
-   - [ ] `config_layers`: silnik ← firma ← zespół ← projekt ← osoba; test kolejności i granic;
-   - [ ] standardy zespołu sprawdzane bez modelu (`rules.yaml`, semgrep) jak w nakładce firmy.
+   - [x] `config_layers`: silnik ← firma ← zespół ← projekt ← osoba; test kolejności i granic (`task.allowed_modes`
+     to przecięcie warstw — wcześniej projekt mógł przywrócić tryb zabrany przez firmę; prefiksy trackera zespołu);
+   - [x] standardy zespołu sprawdzane bez modelu (`rules.yaml`, semgrep) jak w nakładce firmy.
 4. [ ] **Generator standardów z dokumentów** (sekcja „Ustawienia firmy” niżej): podział, manifest i kontrola cytatów
    skryptem; model tylko przypisuje ustalenia do obszaru i rodzaju.
 5. [ ] **Decyzje człowieka:** `custom-settings/` czy osobne repo firmy; monorepo (najpierw sprawdzić w dokumentacji,

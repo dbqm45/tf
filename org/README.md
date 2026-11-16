@@ -7,6 +7,7 @@ zmieniasz rzadko. Ten katalog nie trafia do projektów: to zestaw do przygotowan
 |---|---|
 | `new_org_pack.py` | generator: kopiuje szablon do repozytorium firmy i wstawia nazwę, prefiks i wersję rdzenia |
 | `template/` | szablon paczki `pack-<firma>` z polami `TODO` |
+| `template-team/` | `pack.yaml` i `README.md` nakładki zespołu (`--team`); resztę plików bierze z `template/` |
 | `README.md` | ten przewodnik |
 
 ## Co ustawia paczka firmy
@@ -70,6 +71,24 @@ Gdy standardy są już opisane, nie przepisujesz ich ręcznie: dajesz dokumenty 
 Koszt to jednorazowe przetworzenie dokumentów przez model; zależy od ich objętości [założenie: nie mierzono].
 Automat z kontrolą cytatów skryptem (jak `recon_check` w rekonstrukcji projektu) jest planowany — do tego czasu
 cytaty sprawdza człowiek.
+
+## Nakładka zespołu
+Gdy zespoły w firmie pracują inaczej (np. backend ma własne zasady API i migracji, a frontend bibliotekę komponentów),
+każdy zespół dostaje nakładkę ponad firmową:
+```
+python3 org/new_org_pack.py acme --team backend --out ~/repos/acme-backend-factory --title "ACME Backend"
+```
+Powstaje `pack-acme-backend`, który wymaga `pack-acme`. Ma ten sam układ co nakładka firmy, ale w `pack.yaml` sekcję
+`team_defaults` (zamiast `org_defaults`) i prefiks skilli `backend-`. Wpisujesz tylko to, czym zespół różni się od firmy.
+- **Kolejność warstw:** silnik ← firma ← zespół ← projekt ← osoba. `tf config show` pokazuje źródło każdej wartości.
+- **Granice:** zespół, projekt i osoba tylko zaostrzają politykę autonomii firmy; dozwolone tryby zadania
+  (`task.allowed_modes`) to przecięcie warstw — nikt niżej nie przywróci trybu, który firma zabrała. Inne wartości
+  (limity `tf work`, profil kosztów, języki) zespół zmienia dla swoich projektów.
+- **Tracker:** prefiksy zgłoszeń zespołu zastępują prefiksy firmy; typ i pola przychodzą z firmy.
+- **Sprawdzenie:** `python3 tools/workspace.py check --packs pack-it,pack-acme,pack-acme-backend --pack-dir
+  ~/repos/acme-factory --pack-dir ~/repos/acme-backend-factory`.
+- **Instalacja w projekcie zespołu:** `tf install --pack-dir <repo firmy> --pack-dir <repo zespołu> --add
+  pack-acme-backend` (nakładka firmy dochodzi sama). W projekcie może być najwyżej jedna nakładka zespołu.
 
 ## Zmiany później
 Zmiana standardów to zmiana w repozytorium firmy: popraw pliki, podbij `version` w `pack.yaml` według SemVer (nowa

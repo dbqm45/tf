@@ -92,10 +92,10 @@ def _merge(base: dict, over: dict) -> dict:
 
 
 def load_rules(repo: Path) -> dict:
-    """Reguły domyślne + `autonomy.triage` z silnika, nakładki firmowej (`org_defaults`) i projektu."""
+    """Reguły domyślne + `autonomy.triage` z silnika, nakładki firmowej (`org_defaults`), zespołu (`team_defaults`) i projektu."""
     rules = copy.deepcopy(DEFAULT_RULES)
     try:
-        layers = _packs().config_layers(repo)   # silnik ← organizacja (nakładka firmowa) ← projekt
+        layers = _packs().config_layers(repo)   # silnik ← firma ← zespół ← projekt ← osoba
     except Exception:   # bez packs.py (np. sam skrypt) — tylko reguły domyślne
         return rules
     for _label, data in layers:

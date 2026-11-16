@@ -66,7 +66,11 @@ Confluence): `org/README.md` w repozytorium fabryki.
 5. **Zainstaluj w projekcie:** `tf install --pack-dir <adres repozytorium firmy> --add pack-<firma>`. `tf update`
    pobiera potem nowe wersje nakładki.
 
-Wartości firmy pokazuje `tf config show` (źródło „organizacja”). Projekt nadpisuje je w `.tf/config/config.yaml`
+**Zespół** ma własną nakładkę ponad firmową: `python3 org/new_org_pack.py <firma> --team <zespół> --out <katalog>`
+(standardy, reguły i prefiksy zgłoszeń zespołu; zakazy firmy tylko zaostrza). Instalacja w projekcie zespołu:
+`tf install --pack-dir <repo firmy> --pack-dir <repo zespołu> --add pack-<firma>-<zespół>`.
+
+Wartości firmy pokazuje `tf config show` (źródło „organizacja”, dla zespołu „zespół”). Projekt nadpisuje je w `.tf/config/config.yaml`
 i `.tf/config/operations.json`; zakazu z polityki autonomii firmy nie rozluźni. Adresów i tokenów (Jira, Confluence)
 nakładka nie zawiera: Jira bierze adres i dane dostępu ze zmiennych `JIRA_BASE_URL`, `JIRA_EMAIL`,
 `JIRA_API_TOKEN` (albo `JIRA_TOKEN`), a dostęp do Confluence na żywo to połączenie (serwer MCP) w Claude Code.
