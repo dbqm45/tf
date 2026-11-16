@@ -100,7 +100,7 @@ def load_policy(root: Path | None = None) -> tuple[dict, list[str]]:
         spec = importlib.util.spec_from_file_location("tf_packs_guard", packs_py)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        if hasattr(mod, "config_layers"):     # silnik ← organizacja (nakładka firmowa) ← projekt
+        if hasattr(mod, "config_layers"):     # silnik ← firma ← zespół ← projekt ← osoba
             layers = mod.config_layers(root)
         else:
             layers = [(str(s), mod.load_yaml(s)) for s in (root / ".tf" / "factory" / "config.yaml",

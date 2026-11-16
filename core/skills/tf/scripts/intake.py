@@ -94,7 +94,7 @@ def load_card(root: Path) -> dict | None:
 
 
 def org_tracker(root: Path) -> dict:
-    """Domyślny tracker organizacji z nakładki firmowej (`org_defaults.operations.tracker`, bez adresu); {} bez niej."""
+    """Domyślny tracker z nakładki firmowej i zespołu (`org_defaults` ← `team_defaults`, `operations.tracker`, bez adresu); {} bez nich."""
     for cand in (root / ".tf" / "factory" / "packs.py", Path(__file__).resolve().parents[4] / ".tf" / "factory" / "packs.py"):
         if not cand.is_file():
             continue

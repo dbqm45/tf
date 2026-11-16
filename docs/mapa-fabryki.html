@@ -190,8 +190,8 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
         <text x="46" y="84" class="w-h">Ty</text><text x="46" y="103" class="w-s">styl pracy (tf style), preferencje</text>
         <rect x="30" y="124" width="300" height="54" rx="5" class="w-box"/>
         <text x="46" y="148" class="w-h">Projekt</text><text x="46" y="167" class="w-s">własne persony, skille, limity</text>
-        <rect x="30" y="188" width="300" height="54" rx="5" class="w-plan"/>
-        <text x="46" y="212" class="w-h">Zespół</text><text x="46" y="231" class="w-s">standardy zespołu · planowane</text>
+        <rect x="30" y="188" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="212" class="w-h">Zespół</text><text x="46" y="231" class="w-s">standardy zespołu ponad firmą</text>
         <rect x="30" y="252" width="300" height="54" rx="5" class="w-box"/>
         <text x="46" y="276" class="w-h">Firma</text><text x="46" y="295" class="w-s">zakazy, reguły kodu, Jira, koszty</text>
         <rect x="30" y="316" width="300" height="64" rx="5" class="w-core"/>
@@ -300,12 +300,12 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
             <div class="where">.tf/config/config.yaml · .tf/config/personas/ · .claude/skills/</div>
           </div>
         </div>
-        <div class="floor planned">
-          <div class="name"><b>Zespół</b><span class="pill plan">planowane</span></div>
+        <div class="floor">
+          <div class="name"><b>Zespół</b><span class="pill now">działa</span></div>
           <div class="what">
-            <p>Standardy i ustawienia wspólne dla repozytoriów jednego zespołu. Backend wyłącza wiedzę o Figmie, a frontend
-              wiedzę o AWS. Zespół dokłada swoje reguły kodu i wybiera narzędzia.</p>
-            <div class="where">nakładka pack-&lt;firma&gt;-&lt;zespół&gt; · lista skills_off — propozycja</div>
+            <p>Standardy i ustawienia wspólne dla repozytoriów jednego zespołu, ponad standardami firmy: swoje reguły kodu,
+              prefiksy zgłoszeń, narzędzia. Zespół może tylko zaostrzyć zakazy firmy i zawęzić dozwolone tryby pracy.</p>
+            <div class="where">nakładka pack-&lt;firma&gt;-&lt;zespół&gt; · generator: org/new_org_pack.py &lt;firma&gt; --team &lt;zespół&gt;</div>
           </div>
         </div>
         <div class="floor">
@@ -369,7 +369,7 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
         <p>Twoje własne klocki z osobnego repozytorium.</p>
         <div class="chips">
           <div class="chip"><b>pack-&lt;firma&gt;</b>standardy i ustawienia firmy</div>
-          <div class="chip planned"><b>pack-&lt;firma&gt;-&lt;zespół&gt;</b>standardy zespołu · planowane</div>
+          <div class="chip"><b>pack-&lt;firma&gt;-&lt;zespół&gt;</b>standardy zespołu ponad firmą</div>
           <div class="chip"><b>pack-&lt;dziedzina&gt;</b>np. bankowość, logistyka; instalacja przez <code>--pack-dir</code></div>
         </div>
       </div>
@@ -469,7 +469,7 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
         <tbody>
           <tr><td>Rdzeń</td><td>opiekunowie fabryki</td><td>repozytorium fabryki, w projekcie <code>.tf/factory/</code></td><td>przy instalacji zespołowej</td><td><span class="pill now">działa</span></td></tr>
           <tr><td>Firma</td><td>zespół standardów firmy</td><td>repozytorium firmy (<code>pack-&lt;firma&gt;</code>)</td><td>przy instalacji zespołowej</td><td><span class="pill now">działa</span></td></tr>
-          <tr><td>Zespół</td><td>lider zespołu</td><td>repozytorium zespołu (<code>pack-&lt;firma&gt;-&lt;zespół&gt;</code>)</td><td>przy instalacji zespołowej</td><td><span class="pill plan">planowane</span></td></tr>
+          <tr><td>Zespół</td><td>lider zespołu</td><td>repozytorium zespołu (<code>pack-&lt;firma&gt;-&lt;zespół&gt;</code>)</td><td>przy instalacji zespołowej</td><td><span class="pill now">działa</span></td></tr>
           <tr><td>Projekt</td><td>zespół projektu</td><td><code>.tf/config/</code>, <code>.claude/skills/</code></td><td>tak, jak zwykły kod</td><td><span class="pill now">działa</span></td></tr>
           <tr><td>Ty</td><td>Ty (<code>tf style</code>)</td><td><code>~/.tf/preferences.yaml</code>, <code>.tf/config/me.yaml</code>, pliki <code>*.local</code></td><td>nigdy</td><td><span class="pill now">działa</span></td></tr>
         </tbody>
