@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Testy skryptu retro_data.py (skill core-agent-retro): dowody do retrospektywy pracy agentów."""
+import datetime as dt
 import json
 import shutil
 import subprocess
@@ -241,6 +242,37 @@ def main() -> int:
             d = {}
         check(r.returncode == 0 and {"usage.jsonl", "journal.md"} <= set(d.get("missing", [])),
               f"AR-13: brak źródeł → lista braków, kod 0: {r.stdout[:300]}{r.stderr[-300:]}")
+
+    # Powtarzające się błędy agenta z dwóch źródeł, które fabryka już zapisuje: blokady hooków
+    # (.tf/logs/hook-blocks.jsonl, czas w sekundach epoki) i trailer `Rework-Cause:` w commitach poprawek.
+    with tempfile.TemporaryDirectory() as t:
+        root = Path(t)
+        ep = lambda s: dt.datetime.fromisoformat(s).replace(tzinfo=dt.timezone.utc).timestamp()
+        jl(root / ".tf" / "logs" / "hook-blocks.jsonl", [
+            {"ts": ep("2026-10-01T10:00:00"), "hook": "guard_bash", "decision": "deny"},      # spoza okna
+            *[{"ts": ep(f"2026-10-1{i}T10:00:00"), "hook": "guard_bash", "decision": "deny"} for i in (2, 3, 4)],
+            {"ts": ep("2026-10-15T10:00:00"), "hook": "guard_paths", "decision": "ask"},
+        ])
+        if shutil.which("git"):
+            git(root, "init", "-q", "-b", "main")
+            commit(root, {"a.py": "1\n"}, "feat: a", "2026-10-12T10:00:00")
+            for i, cause in enumerate(("blad-agenta", "blad-agenta", "luka-specyfikacji")):
+                commit(root, {"a.py": f"{i + 2}\n"}, f"fix: a {i}\n\nRework-Cause: {cause}", f"2026-10-1{3 + i}T10:00:00")
+        d = json.loads(run(root, "--json").stdout or "{}")
+        ev = {e["key"]: e for e in d.get("evidence", [])}
+        check(ev.get("block:guard_bash:deny", {}).get("n") == 3 and ev.get("block:guard_paths:ask", {}).get("n") == 1,
+              f"AR-36: blokady hooków z okna (czas epoki) per hook i decyzja, wpis spoza okna pominięty: {sorted(ev)}")
+        sug = {x["key"]: x for x in d.get("suggestions", [])}
+        check("block:guard_bash:deny" in sug and "block:guard_paths:ask" not in sug,
+              f"AR-37: propozycja dopiero przy ≥3 odmowach tego samego hooka: {sorted(sug)}")
+        if shutil.which("git"):
+            check(ev.get("rework-cause:blad-agenta", {}).get("n") == 2
+                  and ev.get("rework-cause:luka-specyfikacji", {}).get("n") == 1,
+                  f"AR-38: przyczyny poprawek z trailera Rework-Cause: {sorted(ev)}")
+            check("rework-cause:blad-agenta" in sug and "rework-cause:luka-specyfikacji" not in sug,
+                  f"AR-39: propozycja przy ≥2 poprawkach z tą samą przyczyną: {sorted(sug)}")
+        md = run(root).stdout
+        check("guard_bash" in md and "Blokady hooków" in md, f"AR-40: raport markdown pokazuje blokady hooków: {md[:600]}")
 
     for f in fails:
         print(f"✗ {f}")
