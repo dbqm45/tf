@@ -2,9 +2,9 @@
 name: arch-tech-selection
 description: Użyj przy wyborze lub ocenie stacku (język, framework, baza, hosting) — kryteria, kandydaci, macierz, ryzyka.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj, gdy trzeba zarekomendować stack (języki, frameworki, bazę, hosting, narzędzia) dla nowego projektu albo ocenić i ewoluować stack istniejącego — czynniki, filtry obowiązkowe, 2–3 kandydaci, weryfikacja faktów ze źródeł, macierz ocen, ryzyka i spike'i, mapowanie na skille i persony. Nie do ustalania atrybutów jakości (arch-quality-attributes)."
-  slowa: "przepisać od zera, co zostawić a co wymienić, wybrać framework, który framework wybrać, czy wybrać, porównanie frameworków, modernizacja starego systemu, legacy, migracja stacku, nowy stack, wybór technologii"
+  review: "2027-10-09"
+  catalog: "Użyj, gdy trzeba zarekomendować stack (języki, frameworki, bazę, hosting, narzędzia) dla nowego projektu albo ocenić i ewoluować stack istniejącego — czynniki, filtry obowiązkowe, 2–3 kandydaci, weryfikacja faktów ze źródeł, macierz ocen, ryzyka i spike'i, mapowanie na skille i persony. Nie do ustalania atrybutów jakości (arch-quality-attributes)."
+  keywords: "przepisać od zera, co zostawić a co wymienić, wybrać framework, który framework wybrać, czy wybrać, porównanie frameworków, modernizacja starego systemu, legacy, migracja stacku, nowy stack, wybór technologii"
 ---
 
 # Dobór stacku technologicznego

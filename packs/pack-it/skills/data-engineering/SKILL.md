@@ -2,8 +2,8 @@
 name: data-engineering
 description: Użyj przy potokach danych — wsad, CDC, strumień, idempotencja, backfill, kontrakty, orkiestracja, dbt.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy budowie i utrzymaniu potoków danych — cykl życia danych, pozyskiwanie (wsad, CDC, strumień), idempotencja, backfill, spóźnione dane, kontrakty danych, orkiestracja (Airflow, Dagster), dbt, formaty plików i tabel, reverse ETL, testy potoków. Nie do analizy (data-analysis) ani wyboru architektury danych (arch-quality-attributes)."
+  review: "2027-10-17"
+  catalog: "Użyj przy budowie i utrzymaniu potoków danych — cykl życia danych, pozyskiwanie (wsad, CDC, strumień), idempotencja, backfill, spóźnione dane, kontrakty danych, orkiestracja (Airflow, Dagster), dbt, formaty plików i tabel, reverse ETL, testy potoków. Nie do analizy (data-analysis) ani wyboru architektury danych (arch-quality-attributes)."
 ---
 
 # Inżynieria danych

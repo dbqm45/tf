@@ -2,9 +2,9 @@
 name: ops-observability
 description: Użyj przy logach, metrykach, tracingu, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana).
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj przy logowaniu, metrykach, tracingu, healthcheckach, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana). Nie do debugowania logiki biznesowej ani pipeline'ów CI."
-  slowa: "po wdrożeniu, regresja wydajności, opóźnienia wzrosły, metryki biznesowe, adnotacje wdrożeń, alerty, dashboard, health zwraca 200, kontener up a nie odpowiada, sonda syntetyczna, synthetic monitoring, wygasł token, bot nie odpowiadał"
+  review: "2027-04-17"
+  catalog: "Użyj przy logowaniu, metrykach, tracingu, healthcheckach, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana). Nie do debugowania logiki biznesowej ani pipeline'ów CI."
+  keywords: "po wdrożeniu, regresja wydajności, opóźnienia wzrosły, metryki biznesowe, adnotacje wdrożeń, alerty, dashboard, health zwraca 200, kontener up a nie odpowiada, sonda syntetyczna, synthetic monitoring, wygasł token, bot nie odpowiadał"
 ---
 
 # Obserwowalność

@@ -2,9 +2,9 @@
 name: proc-agile
 description: Użyj przy organizacji pracy zespołu — Scrum, Kanban i metryki przepływu, historyjki (INVEST), Definition of Done.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy planowaniu i organizacji pracy zespołu — wartości i zasady Manifestu Agile, Scrum (Scrum Guide 2020 + Expansion Pack 2025), Kanban i metryki przepływu, historyjki użytkownika (INVEST, cięcie pionowe, mapa historyjek, wzorce dzielenia), Definition of Done, prognozowanie. Nie do skalowania na wiele zespołów (proc-safe) ani ekonomii przepływu."
-  slowa: "jeden zespół, Scrum czy Kanban, sprint, retrospektywa, daily, planowanie sprintu, tablica Kanban, limit WIP, mapa historyjek, story map, co wejdzie do pierwszego wydania, historyjka nie mieści się w sprincie, podzielić historyjkę, za duża historyjka, nikt nie widzi całości backlogu"
+  review: "2027-10-17"
+  catalog: "Użyj przy planowaniu i organizacji pracy zespołu — wartości i zasady Manifestu Agile, Scrum (Scrum Guide 2020 + Expansion Pack 2025), Kanban i metryki przepływu, historyjki użytkownika (INVEST, cięcie pionowe, mapa historyjek, wzorce dzielenia), Definition of Done, prognozowanie. Nie do skalowania na wiele zespołów (proc-safe) ani ekonomii przepływu."
+  keywords: "jeden zespół, Scrum czy Kanban, sprint, retrospektywa, daily, planowanie sprintu, tablica Kanban, limit WIP, mapa historyjek, story map, co wejdzie do pierwszego wydania, historyjka nie mieści się w sprincie, podzielić historyjkę, za duża historyjka, nikt nie widzi całości backlogu"
 ---
 
 # Agile: Scrum i Kanban w praktyce

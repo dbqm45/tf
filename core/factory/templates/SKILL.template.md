@@ -2,7 +2,7 @@
 name: {{name}}
 description: {{short}}
 metadata:
-  katalog: "{{description}}"
+  catalog: "{{description}}"
 ---
 
 # {{name}}
@@ -11,7 +11,7 @@ metadata:
 Zasady dobrego skilla:
 - description (wyżej) to REGUŁA WYBORU: „Użyj, gdy/przy <sytuacja> — <kluczowe pojęcia>.” (≤ 170 znaków, bez „: ”, bo psuje YAML) — tylko to
   Claude widzi na starcie (pole metadata Claude Code ignoruje), a lista
-  wszystkich opisów mieści się w ~1% okna kontekstu. Pełny opis z granicami („Nie do …”) → metadata.katalog
+  wszystkich opisów mieści się w ~1% okna kontekstu. Pełny opis z granicami („Nie do …”) → metadata.catalog
   (czyta go dyspozytor z .claude/catalog.md). Skill uruchamiany tylko ręcznie: disable-model-invocation: true.
 - Ewaluacje: tests/skill_evals/<nazwa>.json — 2 pytania, przy których skill ma się uruchomić (z kontrolą wiedzy
   specyficznej), 1 pytanie sąsiedniego skilla (format w tests/skill_evals/README.md).

@@ -2,9 +2,9 @@
 name: core-problem-routing
 description: Użyj, gdy problem opisano zwykłym tekstem — rozpoznanie wymiarów, dobór skilli i person, doraźny zespół.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy dostajesz problem opisany zwykłym tekstem i nie wiadomo, kto i jak ma się nim zająć — rozpoznanie wymiarów, dobór skilli i person z katalogu, zestawienie doraźnego zespołu, wybór formy wyniku (rekomendacja, plan, rozwiązanie krok po kroku). Nie do samej wiedzy merytorycznej (skille wymiarów) ani łączenia skilli w jednej odpowiedzi (core-skill-composition)."
-  slowa: "od czego zacząć, kogo zaangażować, dobierz zespół, skład zespołu, podejście do problemu, nie wiem jak się do tego zabrać, nikt u nas nie zna protokołów, kogo zaangażować z innej dziedziny, przeoczymy lepszą drogę, oczywiste pomysły, szerokie szukanie opcji, pułapka w decyzji"
+  review: "2027-10-17"
+  catalog: "Użyj, gdy dostajesz problem opisany zwykłym tekstem i nie wiadomo, kto i jak ma się nim zająć — rozpoznanie wymiarów, dobór skilli i person z katalogu, zestawienie doraźnego zespołu, wybór formy wyniku (rekomendacja, plan, rozwiązanie krok po kroku). Nie do samej wiedzy merytorycznej (skille wymiarów) ani łączenia skilli w jednej odpowiedzi (core-skill-composition)."
+  keywords: "od czego zacząć, kogo zaangażować, dobierz zespół, skład zespołu, podejście do problemu, nie wiem jak się do tego zabrać, nikt u nas nie zna protokołów, kogo zaangażować z innej dziedziny, przeoczymy lepszą drogę, oczywiste pomysły, szerokie szukanie opcji, pułapka w decyzji"
 argument-hint: "[opis problemu]"
 ---
 

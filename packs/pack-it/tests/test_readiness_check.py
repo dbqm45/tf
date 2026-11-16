@@ -78,7 +78,7 @@ def main() -> int:
         data = json.loads(r.stdout or "{}")
         msgs = " | ".join(f"{x.get('severity')}:{x.get('area')}:{x.get('message')}" for x in data.get("findings", []))
         check(r.returncode == 1, f"kod 1 przy ustaleniach wysokiej wagi: {r.returncode}")
-        check("lockfile" in msgs.lower() and "wysoka" in msgs, f"brak lockfile = wysoka: {msgs}")
+        check("lockfile" in msgs.lower() and "high" in msgs, f"brak lockfile = wysoka: {msgs}")
         check("strict" in msgs, f"TS bez strict wykryty: {msgs}")
         check(".gitignore" in msgs, f"brak .gitignore wykryty: {msgs}")
         check(data.get("verdict") == "krytyczne", f"werdykt krytyczne (brak runnera testów js): {data.get('verdict')}")
@@ -123,13 +123,13 @@ def main() -> int:
         data = json.loads(r.stdout or "{}")
         dxf = {x.get("message", ""): x.get("severity") for x in data.get("findings", []) if x.get("area") == "dx"}
         joined = " | ".join(f"{s}:{m}" for m, s in dxf.items())
-        check(any("polecenia startowego" in m and s == "średnia" for m, s in dxf.items()),
+        check(any("polecenia startowego" in m and s == "medium" for m, s in dxf.items()),
               f"DX: brak polecenia startowego (średnia): {joined}")
-        check(any("postgres" in m and "redis" in m and s == "średnia" for m, s in dxf.items()),
+        check(any("postgres" in m and "redis" in m and s == "medium" for m, s in dxf.items()),
               f"DX: usługi bez środowiska lokalnego (średnia): {joined}")
-        check(any(".env.example" in m and s == "wysoka" for m, s in dxf.items()),
+        check(any(".env.example" in m and s == "high" for m, s in dxf.items()),
               f"DX: sekret w .env.example (wysoka): {joined}")
-        check(any("danych startowych" in m and s == "niska" for m, s in dxf.items()),
+        check(any("danych startowych" in m and s == "low" for m, s in dxf.items()),
               f"DX: brak danych startowych (niska): {joined}")
         check("sk-proj-Ab3d" not in r.stdout, "DX: wartość klucza nie trafia do wyniku")
 

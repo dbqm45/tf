@@ -285,7 +285,7 @@ semver_strict_from: 3.0.0
 
 # Limity sprawdzane przez `build.py check`
 limits:
-  skill_description_max_chars: 170   # lista skilli zajmuje ~1% okna kontekstu; pełny opis z granicami → metadata.katalog
+  skill_description_max_chars: 170   # lista skilli zajmuje ~1% okna kontekstu; pełny opis z granicami → metadata.catalog
   skill_listing_max_chars: 14000     # nazwy i opisy skilli z opisem w typowym projekcie (.tf/factory/skill_profile.py)
   skill_listing_stack_slots: 6       # rezerwa: tyle skilli technologii (fw-/lang-/tool-) projekt wykrywa zwykle naraz
   trait_max_lines: 12

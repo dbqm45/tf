@@ -3,9 +3,9 @@ name: core-agent-retro
 argument-hint: "[--days N | --since RRRR-MM-DD]"
 description: Użyj przy retrospektywie pracy agentów na koniec etapu — dowody z logów i gita, propozycje zmian w fabryce.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy po etapie, serii sesji albo powtarzającym się błędzie agenta trzeba sprawdzić, co w pracy agentów poszło źle lub drogo, i zamienić to w trwałe zmiany: skrypt zbiera dowody (tokeny i tiery per agent, podpowiedzi skilli trafione i przeoczone, wpisy dziennika z problemami, pułapki z punktów kontrolnych, poprawki po własnych commitach, cofnięcia, commity WIP), procedura szuka przyczyn bez szukania winnych, klasyfikuje ustalenia (lekcja, reguła w CLAUDE.md, poprawka skilla, tier modelu, hook lub skrypt, nic) i daje najwyżej pięć propozycji z dowodem i miarą skutku; człowiek decyduje, następna retrospektywa sprawdza skutek. Nie do retrospektywy sprintu zespołu ludzi (skill procesu, np. proc-agile z pack-it), postmortemu incydentu produkcyjnego (skill operacji, np. ops-sre-incidents z pack-it), samego raportu kosztów (core-cost-control) ani pisania reguł CLAUDE.md od zera (core-agent-instructions)."
-  slowa: "zgłoś do fabryki, zgłoszenie do fabryki, feedback do fabryki, pamięć retrospektyw, trend z retrospektyw, czy zmiana pomogła, retrospektywa agentów, retro agentów, retrospektywa pracy agentów, co poszło źle w sesjach, co poprawić w fabryce, agent powtarza błąd, drugi raz ten sam błąd, poprawki po sobie, przepalone tokeny, za niski tier, przeoczone skille, podsumowanie etapu, wnioski z etapu, lekcje z sesji, jak zapobiec na stałe, ulepszyć pracę agentów"
+  review: "2027-10-17"
+  catalog: "Użyj, gdy po etapie, serii sesji albo powtarzającym się błędzie agenta trzeba sprawdzić, co w pracy agentów poszło źle lub drogo, i zamienić to w trwałe zmiany: skrypt zbiera dowody (tokeny i tiery per agent, podpowiedzi skilli trafione i przeoczone, wpisy dziennika z problemami, pułapki z punktów kontrolnych, poprawki po własnych commitach, cofnięcia, commity WIP), procedura szuka przyczyn bez szukania winnych, klasyfikuje ustalenia (lekcja, reguła w CLAUDE.md, poprawka skilla, tier modelu, hook lub skrypt, nic) i daje najwyżej pięć propozycji z dowodem i miarą skutku; człowiek decyduje, następna retrospektywa sprawdza skutek. Nie do retrospektywy sprintu zespołu ludzi (skill procesu, np. proc-agile z pack-it), postmortemu incydentu produkcyjnego (skill operacji, np. ops-sre-incidents z pack-it), samego raportu kosztów (core-cost-control) ani pisania reguł CLAUDE.md od zera (core-agent-instructions)."
+  keywords: "zgłoś do fabryki, zgłoszenie do fabryki, feedback do fabryki, pamięć retrospektyw, trend z retrospektyw, czy zmiana pomogła, retrospektywa agentów, retro agentów, retrospektywa pracy agentów, co poszło źle w sesjach, co poprawić w fabryce, agent powtarza błąd, drugi raz ten sam błąd, poprawki po sobie, przepalone tokeny, za niski tier, przeoczone skille, podsumowanie etapu, wnioski z etapu, lekcje z sesji, jak zapobiec na stałe, ulepszyć pracę agentów"
 ---
 
 # Retrospektywa pracy agentów — dowody, przyczyny, propozycje
@@ -63,7 +63,7 @@ Nie częściej niż co etap — retrospektywa po każdej sesji to szum i koszt.
 | ten sam błąd **drugi raz** albo lekcja, którą każdy wykonawca musi znać | reguła w `CLAUDE.md` | test włączenia z core-agent-instructions |
 | agent ponawia akcję, którą hook odrzuca (`block:<hook>:deny` ≥3) | lekcja z zamiennikiem; przy powtórce reguła w `CLAUDE.md` | co hook blokował — z dziennika i transkryptów, bo log blokad nie zapisuje treści; core-project-record, core-agent-instructions |
 | poprawki z przyczyną `blad-agenta` albo `luka-specyfikacji` (≥2) | plan przed kodem albo specyfikacja przed planem | core-delivery-lifecycle, `tf spec check` |
-| skill nie został użyty, choć pasował (przeoczony) / był podpowiadany bez sensu | `metadata.slowa`, opis, granice skilla | core-skill-authoring, potem `.tf/factory/skill_gate.py <skill>` |
+| skill nie został użyty, choć pasował (przeoczony) / był podpowiadany bez sensu | `metadata.keywords`, opis, granice skilla | core-skill-authoring, potem `.tf/factory/skill_gate.py <skill>` |
 | skill dał złą radę albo nieaktualny fakt | treść skilla, termin przeglądu | core-skill-authoring, `.tf/factory/freshness.py --reviewed` |
 | wykonawca stale „za niski” / „za wysoki” albo drogi przy prostych zadaniach | tier roli, wybór wykonawcy | core-cost-control (kaskada), `.tf/config/roles/*.yaml` |
 | błąd, który da się wykryć automatem (format, testy, ścieżki) | hook, bramka, skrypt | skill bramek lokalnych (pack-it: eng-local-quality-gates); zmiana w `.claude/hooks/` tylko za zgodą |
@@ -94,7 +94,7 @@ E-12 poprawka po własnym feat w pliku formularza · lekcja o Vitest już istnie
   z `--run`” (core-agent-instructions); miara: zero takich pułapek w następnym oknie.
 - U-2 frontend na sonnecie zgłasza za niski tier przy formularzach z walidacją → P-2: zadania z walidacją kierować
   do mocniejszego wykonawcy (core-cost-control); miara: brak „za niski”, koszt etapu.
-- U-3 `fe-css` (pack-it) przeoczony → P-3: słowa „układ formularza, odstępy, siatka” w `metadata.slowa` + bramka; miara: hint_report.
+- U-3 `fe-css` (pack-it) przeoczony → P-3: słowa „układ formularza, odstępy, siatka” w `metadata.keywords` + bramka; miara: hint_report.
 - U-4 poprawka pliku formularza — jednorazowa (zmiana wymagań w trakcie) → tylko dziennik.
 Decyzje człowieka: P-1 tak, P-2 później, P-3 tak.
 

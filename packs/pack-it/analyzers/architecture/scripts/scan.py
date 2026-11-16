@@ -55,18 +55,18 @@ def main() -> int:
     for c in g.get("cycles", {}).get("runtime", []):
         files = sorted(c.get("files", []))
         if files:
-            emit("cycle", f"cykl importów ({len(files)} plików)", files[0], " → ".join(files), "średnia", 0.9,
+            emit("cycle", f"cykl importów ({len(files)} plików)", files[0], " → ".join(files), "medium", 0.9,
                  "importy wykonywane przy imporcie tworzą cykl: " + ", ".join(files),
                  "eng-codebase-mapping (cykle), ddd-connascence-analysis",
                  "przerwij cykl: wydziel wspólną część, odwróć zależność przez interfejs albo zdarzenie")
     for u in g.get("upstream", []):
         emit("upstream", f"zależność w obie strony: {u['a']} ⇄ {u['b']}", u["a"], f"{u['a']} <-> {u['b']}",
-             "średnia", 0.7, f"{u['a']}→{u['b']}: {u['a_to_b']} importów, {u['b']}→{u['a']}: {u['b_to_a']}"
+             "medium", 0.7, f"{u['a']}→{u['b']}: {u['a_to_b']} importów, {u['b']}→{u['a']}: {u['b_to_a']}"
              + (f"; cykl {u['cycle']}" if u.get("cycle") else ""), "eng-codebase-mapping (pod prąd)",
              "ustal kierunek zależności między grupami i usuń importy przeciwne")
     for h in g.get("hubs", []):
         if h.get("in", 0) >= HUB_MIN and "_vendor" not in h["file"]:
-            emit("hub", f"hub: importowany przez {h['in']} plików", h["file"], h["file"], "niska", 0.6,
+            emit("hub", f"hub: importowany przez {h['in']} plików", h["file"], h["file"], "low", 0.6,
                  f"{h['in']} importujących, {h.get('out', 0)} importowanych",
                  "eng-codebase-mapping (huby), arch-quality-attributes (modyfikowalność)",
                  "przejrzyj, czy plik nie łączy kilku odpowiedzialności; zmiany tu mają szeroki zasięg")

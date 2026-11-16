@@ -64,7 +64,7 @@ def main() -> int:
               f"Z-4: sekret w kodzie znaleziony: {r.stdout}{r.stderr} {body[:500]}")
         found = json.loads(js).get("findings", []) if js else []
         sev = {f["file"]: f["severity"] for f in found if f["rule"] == "secret"}
-        check(sev.get("src/conf.py") == "krytyczna" and sev.get("tests/test_conf.py") == "niska",
+        check(sev.get("src/conf.py") == "critical" and sev.get("tests/test_conf.py") == "low",
               f"Z-6: sekret w pliku testowym zgłaszany z niską wagą, w kodzie — krytyczną: {sev}")
         check(SECRET not in body and SECRET not in js and SECRET[8:] not in js,
               "Z-5: wartość sekretu nie trafia do raportu ani do .json")

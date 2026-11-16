@@ -77,9 +77,9 @@ def main() -> int:
         p = Path(t)
         skill(p, "eng-rzadki")
         md = p / ".claude" / "skills" / "eng-rzadki" / "SKILL.md"
-        md.write_text(md.read_text().replace("description:", "metadata:\n  widocznosc: nazwa\ndescription:"))
+        md.write_text(md.read_text().replace("description:", "metadata:\n  visibility: name\ndescription:"))
         check(sp.desired("eng-rzadki", set(), sp.marked_name_only(md)) == "name-only",
-              "SP-1c: autor skilla oznacza go „metadata.widocznosc: nazwa” → sama nazwa")
+              "SP-1c: autor skilla oznacza go „metadata.visibility: name” → sama nazwa")
 
     check(d("ux-research-methods", set()) == "name-only" and d("sec-cryptography-pki", set()) == "name-only"
           and d("ai-evals", set()) == "name-only", "SP-1d: wymiary specjalistyczne (ux-, sec-, ai-) domyślnie tylko nazwa")

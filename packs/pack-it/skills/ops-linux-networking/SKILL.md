@@ -2,8 +2,8 @@
 name: ops-linux-networking
 description: Użyj przy diagnozie serwera Linux i sieci od objawu — pełny dysk, procesy, systemd, ss, dig, DNS, TLS.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj przy diagnozie problemów na serwerze Linux i w sieci — procedura od objawu do przyczyny (zasoby, procesy, logi systemd, pliki i połączenia), narzędzia sieciowe (ss, dig, curl, openssl, mtr, tcpdump), warstwy OSI, DNS, TLS, SSH, zapora, serwery WWW i proxy, poczta (SPF, DKIM, DMARC). Nie do manifestów Kubernetes (ops-kubernetes) ani IaC."
+  review: "2027-04-17"
+  catalog: "Użyj przy diagnozie problemów na serwerze Linux i w sieci — procedura od objawu do przyczyny (zasoby, procesy, logi systemd, pliki i połączenia), narzędzia sieciowe (ss, dig, curl, openssl, mtr, tcpdump), warstwy OSI, DNS, TLS, SSH, zapora, serwery WWW i proxy, poczta (SPF, DKIM, DMARC). Nie do manifestów Kubernetes (ops-kubernetes) ani IaC."
 ---
 
 # Linux i sieć: diagnoza i podstawy operacyjne

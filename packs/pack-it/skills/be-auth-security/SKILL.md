@@ -2,8 +2,8 @@
 name: be-auth-security
 description: Użyj przy uwierzytelnianiu i autoryzacji — sesje, tokeny, OAuth/OIDC, hasła, walidacja, OWASP.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy uwierzytelnianiu, autoryzacji, sesjach i tokenach (kradzież i odtwarzanie, rotacja, unieważnianie), OAuth/OIDC (PKCE, zgody, device code), hasłach, sekretach, walidacji wejścia, deserializacji, panelach administracyjnych i przeglądzie bezpieczeństwa backendu (OWASP). Nie do konfiguracji sieci i chmury ani zależności (ops-supply-chain-security)."
+  review: "2027-10-17"
+  catalog: "Użyj przy uwierzytelnianiu, autoryzacji, sesjach i tokenach (kradzież i odtwarzanie, rotacja, unieważnianie), OAuth/OIDC (PKCE, zgody, device code), hasłach, sekretach, walidacji wejścia, deserializacji, panelach administracyjnych i przeglądzie bezpieczeństwa backendu (OWASP). Nie do konfiguracji sieci i chmury ani zależności (ops-supply-chain-security)."
 ---
 
 # Auth i bezpieczeństwo backendu

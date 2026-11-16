@@ -273,7 +273,7 @@ Format:
      "quote": "<dosłowny fragment sekcji, co najmniej {MIN_QUOTE} znaków>", "statement": "<ustalenie jednym zdaniem>"}},
     {{"id": "U2", "section": "<id>", "area": "api", "kind": "pattern", "quote": "…", "statement": "…",
      "rule": {{"id": "api-sciezka-bez-wersji", "title": "endpoint bez wersji w ścieżce", "files": ["src/api/**"],
-                "forbid": "<wyrażenie zakazane w linii>", "severity": "średnia", "suggestion": "…",
+                "forbid": "<wyrażenie zakazane w linii>", "severity": "medium", "suggestion": "…",
                 "violation": {{"file": "src/api/orders.ts", "content": "<linia łamiąca regułę>"}},
                 "compliant": {{"file": "src/api/orders.ts", "content": "<ta sama sytuacja zapisana poprawnie>"}}}}}},
     {{"id": "U3", "section": "<id>", "area": "releases", "kind": "judgement", "quote": "…", "statement": "…",
@@ -283,7 +283,7 @@ Format:
 }}
 ```
 Zamiast `forbid` reguła może mieć `require` (wzorzec wymagany w pliku, z `head: N` — w pierwszych N liniach);
-`severity`: krytyczna | wysoka | średnia | niska. Plik przykładu musi pasować do `files` reguły.
+`severity`: critical | high | medium | low. Plik przykładu musi pasować do `files` reguły.
 {focus}
 ## Sekcje do pokrycia
 {listing}"""
@@ -318,7 +318,7 @@ def own_rules(mod: Path) -> list[dict]:
 
 def rule_entry(u: dict, sec: dict) -> dict:
     r = {k: v for k, v in u["rule"].items() if k not in ("violation", "compliant")}
-    r.setdefault("severity", "średnia")
+    r.setdefault("severity", "medium")
     r["basis"] = f"{sec['file']} › {sec['heading']} [{u['id']}]"
     return r
 

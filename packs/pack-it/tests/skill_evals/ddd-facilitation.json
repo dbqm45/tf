@@ -2,7 +2,7 @@
   "skill": "ddd-facilitation",
   "scenarios": [
     {
-      "id": "slowa-sygnaly",
+      "id": "keywords-sygnaly",
       "expect": "trigger",
       "prompt": "W rozmowie z ekspertem ciągle słyszę „zmieniono status” i „zaktualizowano rekord”. Jak dopytywać, żeby wydobyć język biznesu i go utrwalić? Odpowiedz zwięźle.",
       "checks": {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy: skill_gate --suggest (frazy do metadata.slowa z nietrafionych scenariuszy) i .tf/factory/facts.py
+"""Testy: skill_gate --suggest (frazy do metadata.keywords z nietrafionych scenariuszy) i .tf/factory/facts.py
 (szukanie już zweryfikowanych faktów przed nowym researchem)."""
 import importlib.util
 import json
@@ -73,12 +73,12 @@ def main() -> int:
             shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(".git", "logs", "__pycache__", "*.zip"))
             md = root / ".claude" / "skills" / "qa-test-design" / "SKILL.md"
             s = md.read_text(encoding="utf-8")
-            s = re.sub(r'^  slowa: ".*"$', '  slowa: ""', s, flags=re.M)       # bez słów scenariusz nie trafia
+            s = re.sub(r'^  keywords: ".*"$', '  keywords: ""', s, flags=re.M)       # bez słów scenariusz nie trafia
             md.write_text(s, encoding="utf-8")
             r = run([root / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=root)
             check("qa-test-design" in r.stdout, f"E-3: po usunięciu słów scenariusz znów nie trafia: {r.stdout[-300:]}")
             r = run([root / ".tf" / "factory" / "skill_gate.py", "--suggest", "qa-test-design"], cwd=root)
-            check(r.returncode == 0 and "slowa" in r.stdout and "--apply" in r.stdout and s == md.read_text(encoding="utf-8"),
+            check(r.returncode == 0 and "keywords" in r.stdout and "--apply" in r.stdout and s == md.read_text(encoding="utf-8"),
                   f"E-4: --suggest bez --apply tylko pokazuje propozycję: {r.stdout[-500:]}{r.stderr[-300:]}")
             r = run([root / ".tf" / "factory" / "skill_gate.py", "--suggest", "qa-test-design", "--apply"], cwd=root)
             r2 = run([root / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=root)

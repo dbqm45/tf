@@ -37,7 +37,7 @@
           [
             "description",
             "opis",
-            "metadata\\.slowa",
+            "metadata\\.keywords",
             "słow"
           ],
           [
@@ -62,7 +62,7 @@
       "checks": {
         "all": [
           [
-            "widocznosc",
+            "visibility",
             "name-only",
             "sama nazwa",
             "skillOverrides"

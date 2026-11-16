@@ -2,9 +2,9 @@
 name: eng-code-audit
 description: Użyj przy pełnym audycie kodu (architektura, bezpieczeństwo, jakość, prawo) — zakres, budżet, przeglądy równoległe.
 metadata:
-  katalog: "Użyj przy pełnym audycie kodu w kilku wymiarach naraz (architektura, bezpieczeństwo, jakość i dług, testy, dostępność, użyteczność, zgodność z prawem UE) — zakres i budżet zatwierdzone z góry, tani skan na najtańszym modelu, przeglądy równoległe po jednym wykonawcy na wymiar, scalenie duplikatów, ranking ryzyko × zasięg ÷ koszt naprawy, raport z dowodami i listą tego, czego nie sprawdzono. Nie do audytu samego długu technicznego (eng-tech-debt-audit) ani przeglądu jednego PR (qa-change-review)."
-  przeglad: "2027-10-18"
-  slowa: "pełny audyt kodu, audyt aplikacji, przegląd całego kodu, audyt wielowymiarowy, audyt przed wdrożeniem, due diligence kodu, przejęcie projektu, audyt przed inwestycją, przeanalizuj cały kod, ocena jakości aplikacji, audyt bezpieczeństwa i dostępności"
+  catalog: "Użyj przy pełnym audycie kodu w kilku wymiarach naraz (architektura, bezpieczeństwo, jakość i dług, testy, dostępność, użyteczność, zgodność z prawem UE) — zakres i budżet zatwierdzone z góry, tani skan na najtańszym modelu, przeglądy równoległe po jednym wykonawcy na wymiar, scalenie duplikatów, ranking ryzyko × zasięg ÷ koszt naprawy, raport z dowodami i listą tego, czego nie sprawdzono. Nie do audytu samego długu technicznego (eng-tech-debt-audit) ani przeglądu jednego PR (qa-change-review)."
+  review: "2027-10-18"
+  keywords: "pełny audyt kodu, audyt aplikacji, przegląd całego kodu, audyt wielowymiarowy, audyt przed wdrożeniem, due diligence kodu, przejęcie projektu, audyt przed inwestycją, przeanalizuj cały kod, ocena jakości aplikacji, audyt bezpieczeństwa i dostępności"
 ---
 
 # Pełny audyt kodu

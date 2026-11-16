@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy .tf/factory/freshness.py: terminy przeglądu skilli (metadata.przeglad) i znaczniki [niezweryfikowane]."""
+"""Testy .tf/factory/freshness.py: terminy przeglądu skilli (metadata.review) i znaczniki [niezweryfikowane]."""
 import datetime as dt
 import importlib.util
 import json
@@ -25,9 +25,9 @@ def skill(root: Path, name: str, due: str | None, body: str = "", meta: bool = T
     d.mkdir(parents=True)
     lines = ["---", f"name: {name}", f"description: Użyj przy {name}."]
     if meta:
-        lines += ["metadata:", f'  katalog: "Użyj przy {name}. Nie do innych (eng-x)."']
+        lines += ["metadata:", f'  catalog: "Użyj przy {name}. Nie do innych (eng-x)."']
         if due:
-            lines.append(f"  przeglad: {due}")
+            lines.append(f"  review: {due}")
     lines += ["---", f"# {name}", body]
     (d / "SKILL.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return d / "SKILL.md"
@@ -92,17 +92,17 @@ def main() -> int:
                             "--reviewed", "eng-stary", "eng-bez-daty"], capture_output=True, text=True)
         a = (root / ".claude" / "skills" / "eng-stary" / "SKILL.md").read_text(encoding="utf-8")
         b = (root / ".claude" / "skills" / "eng-bez-daty" / "SKILL.md").read_text(encoding="utf-8")
-        check(r.returncode == 0 and "  przeglad: \"2027-10-17\"\n" in a and a.count("przeglad:") == 1
-              and "  przeglad: \"2027-10-17\"\n" in b and "katalog:" in b and b.endswith("# eng-bez-daty\n\n"),
+        check(r.returncode == 0 and "  review: \"2027-10-17\"\n" in a and a.count("review:") == 1
+              and "  review: \"2027-10-17\"\n" in b and "catalog:" in b and b.endswith("# eng-bez-daty\n\n"),
               f"FR-7: --reviewed ustawia nowy termin (dziś + interwał), reszta pliku bez zmian: {r.stdout}{r.stderr}\n{b}")
         r = subprocess.run([sys.executable, str(SCRIPT), "--root", str(root), "--reviewed", "eng-wkrotce",
                             "--date", "2026-10-03"], capture_output=True, text=True)
         c = (root / ".claude" / "skills" / "eng-wkrotce" / "SKILL.md").read_text(encoding="utf-8")
-        check(r.returncode == 0 and "  przeglad: \"2027-10-03\"\n" in c, f"FR-8: --date podaje dzień przeglądu: {c}")
+        check(r.returncode == 0 and "  review: \"2027-10-03\"\n" in c, f"FR-8: --date podaje dzień przeglądu: {c}")
         nometa = skill(root, "eng-bez-metadata", None, meta=False)
         fr.mark_reviewed(nometa, TODAY, 12)
         txt = nometa.read_text(encoding="utf-8")
-        check("metadata:\n  przeglad: \"2027-10-17\"\n---\n" in txt, f"FR-9: brak sekcji metadata → dopisana: {txt}")
+        check("metadata:\n  review: \"2027-10-17\"\n---\n" in txt, f"FR-9: brak sekcji metadata → dopisana: {txt}")
         r = subprocess.run([sys.executable, str(SCRIPT), "--root", str(root), "--reviewed", "brak"],
                            capture_output=True, text=True)
         check(r.returncode == 2 and "brak" in r.stdout + r.stderr, f"FR-10: nieznany skill → kod 2: {r.stdout}{r.stderr}")

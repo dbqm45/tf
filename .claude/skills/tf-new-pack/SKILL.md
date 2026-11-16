@@ -2,8 +2,8 @@
 name: tf-new-pack
 description: Użyj, gdy w repo fabryki tf trzeba dodać nową nakładkę albo tryb — zakres, prefiks, zależności, scenariusze, generator new-pack, treść, bramki, PR.
 metadata:
-  katalog: "Użyj w repozytorium fabryki tf, gdy autor chce dodać nową nakładkę (packs/pack-*) albo tryb (modes/mode-*) — dopytanie o zakres i granice wobec istniejących skilli, wybór prefiksu i zależności, scenariusze ewaluacji przed treścią, generator `tools/workspace.py new-pack`, wypełnienie szkieletu, bramki, sprawdzenie w workspace, PR. Nie do dopisania skilla do istniejącej nakładki (core-skill-authoring), instalowania nakładek w projekcie (tf add) ani zmian w rdzeniu."
-  slowa: "nowa nakładka, nowy pack, new pack, nowy tryb, nowy mode, dodać nakładkę do fabryki, pakiet wiedzy dziedzinowej, nakładka z wiedzą o, tryb pracy włączany na żądanie, workspace.py new-pack"
+  catalog: "Użyj w repozytorium fabryki tf, gdy autor chce dodać nową nakładkę (packs/pack-*) albo tryb (modes/mode-*) — dopytanie o zakres i granice wobec istniejących skilli, wybór prefiksu i zależności, scenariusze ewaluacji przed treścią, generator `tools/workspace.py new-pack`, wypełnienie szkieletu, bramki, sprawdzenie w workspace, PR. Nie do dopisania skilla do istniejącej nakładki (core-skill-authoring), instalowania nakładek w projekcie (tf add) ani zmian w rdzeniu."
+  keywords: "nowa nakładka, nowy pack, new pack, nowy tryb, nowy mode, dodać nakładkę do fabryki, pakiet wiedzy dziedzinowej, nakładka z wiedzą o, tryb pracy włączany na żądanie, workspace.py new-pack"
 ---
 
 # Nowa nakładka lub tryb w fabryce

@@ -60,10 +60,10 @@ def skill_meta(name: str) -> dict:
 
 
 def skill_inactive(name: str) -> bool:
-    """Skill wyłączony po pomiarze (`metadata.status: nieaktywny`): scenariusze trigger leżą w skill_evals/inactive/."""
+    """Skill wyłączony po pomiarze (`metadata.status: inactive`): scenariusze trigger leżą w skill_evals/inactive/."""
     p = SKILLS / name / "SKILL.md"
     m = re.match(r"^---\n(.*?)\n---\n", p.read_text(encoding="utf-8"), re.S) if p.exists() else None
-    return bool(m and re.search(r"^\s+status:\s*[\"']?nieaktywny[\"']?", m.group(1), re.M))
+    return bool(m and re.search(r"^\s+status:\s*[\"']?inactive[\"']?", m.group(1), re.M))
 
 
 def validate_file(path: Path, holdout: bool = False) -> list[str]:

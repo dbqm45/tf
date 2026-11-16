@@ -43,28 +43,28 @@ TEST_OR_DOC = re.compile(r"(^|/)(tests?|__tests__|e2e|fixtures|spec|examples?|do
 
 # (reguła, tytuł, regex, rozszerzenia (None = kod), waga, pewność, podstawa, co zrobić)
 API = [
-    ("dangerous-api", "eval / new Function w JS", r"\beval\s*\(|\bnew\s+Function\s*\(", JS_EXT, "średnia", 0.6,
+    ("dangerous-api", "eval / new Function w JS", r"\beval\s*\(|\bnew\s+Function\s*\(", JS_EXT, "medium", 0.6,
      "CWE-94 (wstrzyknięcie kodu)", "usuń eval; dane parsuj (JSON.parse), logikę wybieraj z mapy funkcji"),
     ("dangerous-api", "exec/eval z nie-literałem w Pythonie", r"\b(exec|eval)\s*\(\s*(?!['\"])[^)]", {".py"},
-     "średnia", 0.6, "CWE-94 (wstrzyknięcie kodu)", "usuń exec/eval; użyj ast.literal_eval albo jawnej mapy"),
-    ("dangerous-api", "pickle.loads na danych", r"\bpickle\.loads?\s*\(", {".py"}, "średnia", 0.6,
+     "medium", 0.6, "CWE-94 (wstrzyknięcie kodu)", "usuń exec/eval; użyj ast.literal_eval albo jawnej mapy"),
+    ("dangerous-api", "pickle.loads na danych", r"\bpickle\.loads?\s*\(", {".py"}, "medium", 0.6,
      "CWE-502 (deserializacja niezaufanych danych)", "użyj JSON albo podpisanego formatu dla danych spoza procesu"),
-    ("dangerous-api", "yaml.load bez SafeLoader", r"\byaml\.load\s*\((?![^)]*SafeLoader)", {".py"}, "średnia", 0.8,
+    ("dangerous-api", "yaml.load bez SafeLoader", r"\byaml\.load\s*\((?![^)]*SafeLoader)", {".py"}, "medium", 0.8,
      "CWE-502 (deserializacja niezaufanych danych)", "użyj yaml.safe_load"),
-    ("dangerous-api", "polecenie powłoki z shell=True", r"shell\s*=\s*True", {".py"}, "średnia", 0.6,
+    ("dangerous-api", "polecenie powłoki z shell=True", r"shell\s*=\s*True", {".py"}, "medium", 0.6,
      "CWE-78 (wstrzyknięcie polecenia)", "przekaż listę argumentów bez shell=True"),
-    ("dangerous-api", "os.system", r"\bos\.system\s*\(", {".py"}, "średnia", 0.6,
+    ("dangerous-api", "os.system", r"\bos\.system\s*\(", {".py"}, "medium", 0.6,
      "CWE-78 (wstrzyknięcie polecenia)", "subprocess.run([...]) z listą argumentów"),
     ("dangerous-api", "child_process.exec ze złożonym poleceniem", r"\bexec(Sync)?\s*\(\s*(`[^`]*\$\{|[^)]*\+)",
-     JS_EXT, "średnia", 0.6, "CWE-78 (wstrzyknięcie polecenia)", "execFile/spawn z tablicą argumentów"),
+     JS_EXT, "medium", 0.6, "CWE-78 (wstrzyknięcie polecenia)", "execFile/spawn z tablicą argumentów"),
     ("dangerous-api", "HTML wstawiany bez sanityzacji", r"dangerouslySetInnerHTML|\.innerHTML\s*=|"
-     r"bypassSecurityTrust(Html|Script|Url|ResourceUrl|Style)\s*\(", JS_EXT, "średnia", 0.6,
+     r"bypassSecurityTrust(Html|Script|Url|ResourceUrl|Style)\s*\(", JS_EXT, "medium", 0.6,
      "CWE-79 (XSS), sec-web-vulnerabilities", "tekst przez textContent; HTML przez sanitizer (DOMPurify)"),
     ("tls-off", "wyłączona weryfikacja certyfikatu TLS", r"verify\s*=\s*False|rejectUnauthorized\s*:\s*false|"
-     r"NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['\"]?0|InsecureSkipVerify\s*:\s*true", None, "wysoka", 0.8,
+     r"NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['\"]?0|InsecureSkipVerify\s*:\s*true", None, "high", 0.8,
      "CWE-295 (niepoprawna walidacja certyfikatu)", "włącz weryfikację; własne CA dodaj do zaufanych"),
     ("weak-hash", "md5/sha1 przy haśle", r"(?i)(md5|sha1)\b.*(password|passwd|haslo|hasło)|"
-     r"(password|passwd|haslo|hasło).*\b(md5|sha1)\b", None, "średnia", 0.6,
+     r"(password|passwd|haslo|hasło).*\b(md5|sha1)\b", None, "medium", 0.6,
      "CWE-328 (słaby skrót), OWASP Password Storage", "argon2id, scrypt albo bcrypt"),
 ]
 
@@ -107,13 +107,13 @@ def scan(root: Path, files: list[str], all_files: list[str]) -> None:
         name = Path(rel).name
         p = root / rel
         if name.startswith(".env") and name not in ENV_OK:
-            emit("env-committed", "plik .env w repozytorium", rel, 1, name, "wysoka", 0.9,
+            emit("env-committed", "plik .env w repozytorium", rel, 1, name, "high", 0.9,
                  "plik zmiennych środowiskowych śledzony w repo (treści nie czytano)", "CWE-538",
                  "usuń z repo i z historii, zrotuj sekrety, zostaw .env.example")
             continue
         if name in ("package.json", "pyproject.toml") and Path(rel).parent == Path("."):
             if not names & LOCKFILES:
-                emit("no-lockfile", f"{name} bez lockfile'a", rel, 1, name, "średnia", 0.9,
+                emit("no-lockfile", f"{name} bez lockfile'a", rel, 1, name, "medium", 0.9,
                      "brak pliku blokady wersji zależności w repo", "ops-supply-chain-security (lockfile w gicie)",
                      "wygeneruj lockfile i dodaj go do repo")
         if p.suffix.lower() in SKIP_EXT or name in LOCKFILES or not p.is_file() or p.stat().st_size > 1_000_000:
@@ -130,7 +130,7 @@ def scan(root: Path, files: list[str], all_files: list[str]) -> None:
                 if m and not placeholder.search(m.group(0)):
                     masked = line.replace(m.group(0), f"«{label}»").strip()[:160]
                     emit("secret", f"sekret w kodzie: {label}" + (" (test lub dokumentacja)" if low else ""),
-                         rel, i, masked, "niska" if low else "krytyczna", 0.3 if low else 0.9,
+                         rel, i, masked, "low" if low else "critical", 0.3 if low else 0.9,
                          f"wzorzec „{label}” (wartość zamaskowana)", "CWE-798 (zaszyte poświadczenia)",
                          "sprawdź, czy to atrapa; prawdziwy sekret usuń, zrotuj i czytaj ze zmiennej środowiskowej"
                          if low else "usuń z kodu, czytaj ze zmiennej środowiskowej, zrotuj sekret")
@@ -139,7 +139,7 @@ def scan(root: Path, files: list[str], all_files: list[str]) -> None:
             for rule, title, rx, exts, sev, conf, basis, sug in API:
                 if (exts is None or ext in exts) and re.search(rx, line):
                     emit(rule, title + (" (test)" if low else ""), rel, i, line.strip()[:160],
-                         "niska" if low else sev, 0.3 if low else conf, line.strip()[:160], basis, sug)
+                         "low" if low else sev, 0.3 if low else conf, line.strip()[:160], basis, sug)
 
 
 def main() -> int:

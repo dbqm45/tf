@@ -2,8 +2,8 @@
 name: tool-playwright
 description: Użyj przy testach e2e i API w Playwright — lokatory wg ról, asercje z oczekiwaniem, fixtures, trace, flaky w CI.
 metadata:
-  przeglad: "2027-01-09"
-  katalog: "Użyj przy testach e2e i API w Playwright (@playwright/test) — lokatory wg ról, asercje z oczekiwaniem, fixtures, projekty i tagi, migawki dostępności, zegar, trace, sharding, flaky w CI, test agents. Nie do wyboru przypadków (qa-test-design) ani zasad wyroczni (qa-spec-first-testing)."
+  review: "2027-01-09"
+  catalog: "Użyj przy testach e2e i API w Playwright (@playwright/test) — lokatory wg ról, asercje z oczekiwaniem, fixtures, projekty i tagi, migawki dostępności, zegar, trace, sharding, flaky w CI, test agents. Nie do wyboru przypadków (qa-test-design) ani zasad wyroczni (qa-spec-first-testing)."
 ---
 
 # Playwright

@@ -2,8 +2,8 @@
 name: ddd-facilitation
 description: Użyj przy rozmowie lub warsztacie z ekspertami domeny — techniki facylitacji, język wszechobecny, słowa-sygnały.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy prowadzeniu rozmowy lub warsztatu z ekspertami domenowymi — techniki facylitacji, budowanie wszędobylskiego języka (ubiquitous language), wyłapywanie słów-sygnałów (status, CRUD), dynamika grupy. Także bramki decyzyjne agenta i samokontrola facylitatora. Nie do przebiegu i notacji Event Stormingu (ddd-event-storming) ani projektowania modelu (ddd-deep-modeling)."
+  review: "2027-10-09"
+  catalog: "Użyj przy prowadzeniu rozmowy lub warsztatu z ekspertami domenowymi — techniki facylitacji, budowanie wszędobylskiego języka (ubiquitous language), wyłapywanie słów-sygnałów (status, CRUD), dynamika grupy. Także bramki decyzyjne agenta i samokontrola facylitatora. Nie do przebiegu i notacji Event Stormingu (ddd-event-storming) ani projektowania modelu (ddd-deep-modeling)."
 ---
 
 # Facylitacja i wspólny język

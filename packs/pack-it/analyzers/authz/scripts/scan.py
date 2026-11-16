@@ -56,7 +56,7 @@ FASTAPI_WRITE = re.compile(rf"^\s*@\w+\.{WRITE}\s*\(", re.I)
 def emit(rel: str, line: int, snippet: str, framework: str) -> None:
     print(json.dumps({"rule": "write-without-authz", "title": f"endpoint zmieniający dane bez sprawdzenia uprawnień "
                       f"({framework})", "file": rel, "line": line, "snippet": snippet.strip()[:160],
-                      "severity": "wysoka", "confidence": 0.6,
+                      "severity": "high", "confidence": 0.6,
                       "evidence": "brak widocznego middleware'u, guarda lub zależności sprawdzającej uprawnienie",
                       "basis": "OWASP API1/API5 (BOLA, BFLA), CWE-862 (brak autoryzacji)",
                       "suggestion": "sprawdzaj uprawnienie na serwerze przy tej operacji (middleware, guard, "

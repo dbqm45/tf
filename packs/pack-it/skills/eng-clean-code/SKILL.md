@@ -2,9 +2,9 @@
 name: eng-clean-code
 description: Użyj przy czytelności kodu — nazwy, funkcje, komentarze, obsługa błędów, zapachy, małe refaktoryzacje.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy pisaniu, przeglądzie i refaktoryzacji kodu w dowolnym języku — nazewnictwo, funkcje, komentarze, obsługa błędów, zapachy kodu i bezpieczne refaktoryzacje małymi krokami. Nie do zasad architektonicznych (eng-design-principles) ani idiomów konkretnego języka (lang-*)."
-  slowa: "null jako znaczenie, zwracanie null, czytelność, nazwy zmiennych, długa funkcja, refaktoryzacja, Optional, Null Object"
+  review: "2027-10-09"
+  catalog: "Użyj przy pisaniu, przeglądzie i refaktoryzacji kodu w dowolnym języku — nazewnictwo, funkcje, komentarze, obsługa błędów, zapachy kodu i bezpieczne refaktoryzacje małymi krokami. Nie do zasad architektonicznych (eng-design-principles) ani idiomów konkretnego języka (lang-*)."
+  keywords: "null jako znaczenie, zwracanie null, czytelność, nazwy zmiennych, długa funkcja, refaktoryzacja, Optional, Null Object"
 ---
 
 # Czysty kod i refaktoryzacja

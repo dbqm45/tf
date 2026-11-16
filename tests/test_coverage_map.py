@@ -2,7 +2,7 @@
 """Mapa pokrycia katalogu (B2): hasła obszarów → skille, w których trasowanie je widzi. python3 tests/test_coverage_map.py
 
 Narzędzie autora fabryki: pokazuje dziury (hasło bez skilla) i miejsca cienkie (jeden skill) na podstawie metadanych
-skilli (`description`, `metadata.katalog`, `metadata.slowa`), czyli tego, po czym podpowiedź i model wybierają skill.
+skilli (`description`, `metadata.catalog`, `metadata.keywords`), czyli tego, po czym podpowiedź i model wybierają skill.
 Wynik jest informacją — kod wyjścia 0 także przy dziurach. Nowy skill powstaje tam, gdzie mapa pokazuje dziurę,
 a scenariusz ewaluacji potwierdza, że brak szkodzi.
 """
@@ -17,11 +17,11 @@ TOOL = ROOT / "tools" / "coverage_map.py"
 AREAS = ROOT / "tools" / "coverage_areas.json"
 
 
-def skill(root: Path, base: str, name: str, desc: str, katalog: str, slowa: str) -> None:
+def skill(root: Path, base: str, name: str, desc: str, katalog: str, keywords: str) -> None:
     d = root / base / "skills" / name
     d.mkdir(parents=True)
     (d / "SKILL.md").write_text(
-        f'---\nname: {name}\ndescription: {desc}\nmetadata:\n  katalog: "{katalog}"\n  slowa: "{slowa}"\n---\n'
+        f'---\nname: {name}\ndescription: {desc}\nmetadata:\n  catalog: "{katalog}"\n  keywords: "{keywords}"\n---\n'
         f"\n# {name}\n\nTreść: płatności, chargeback (w treści, nie w metadanych — nie liczy się).\n", encoding="utf-8")
 
 

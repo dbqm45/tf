@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Aktualność skilli: terminy przeglądu (`metadata.przeglad`) i znaczniki [niezweryfikowane] (tylko biblioteka standardowa).
+Aktualność skilli: terminy przeglądu (`metadata.review`) i znaczniki [niezweryfikowane] (tylko biblioteka standardowa).
 
   python3 .tf/factory/freshness.py                         # skille po terminie, z terminem ≤30 dni, bez terminu
   python3 .tf/factory/freshness.py --json                  # to samo jako JSON (np. dla przeglądu okresowego)
@@ -13,7 +13,7 @@ Termin przeglądu to data, do której treść skilla (wersje, przepisy, standard
 terminie skill nadal działa; agent sprawdza wtedy ulotne fakty w chwili użycia (core-source-research), a przegląd
 w repozytorium fabryki odświeża treść i ustawia nowy termin. Interwał w miesiącach: wyjątek dla skilla, potem
 najdłuższy pasujący prefiks, potem domyślny. Nakładki dokładają swoje interwały (`freshness` w pack.yaml), a projekt
-może je nadpisać w `.tf/config/config.yaml` → `freshness` (te same klucze co DEFAULT_POLICY). Linia `przeglad` nie wchodzi
+może je nadpisać w `.tf/config/config.yaml` → `freshness` (te same klucze co DEFAULT_POLICY). Linia `review` nie wchodzi
 do odcisku bramki jakości.
 """
 from __future__ import annotations
@@ -38,7 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SOON_DAYS = 30
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-REVIEW_RE = re.compile(r"^  przeglad:[ \t]*(.*?)[ \t]*$", re.M)
+REVIEW_RE = re.compile(r"^  review:[ \t]*(.*?)[ \t]*$", re.M)
 UNVERIFIED = "[niezweryfikowane"
 
 DEFAULT_POLICY = {
@@ -124,14 +124,14 @@ def scan(root: Path, today: dt.date) -> list[dict]:
 
 
 def mark_reviewed(md: Path, reviewed: dt.date, months: int) -> str:
-    """Ustawia `metadata.przeglad` = dzień przeglądu + interwał; zwraca nowy termin."""
+    """Ustawia `metadata.review` = dzień przeglądu + interwał; zwraca nowy termin."""
     due = add_months(reviewed, months).isoformat()
     text = md.read_text(encoding="utf-8")
     fm = frontmatter(text)
     if fm is None:
         raise ValueError(f"{md}: brak frontmattera")
     head, rest = text[:fm[1]], text[fm[1]:]
-    line = f'  przeglad: "{due}"'   # tekst, nie data YAML: specyfikacja Agent Skills — metadata to string → string
+    line = f'  review: "{due}"'   # tekst, nie data YAML: specyfikacja Agent Skills — metadata to string → string
     if REVIEW_RE.search(head):
         head = REVIEW_RE.sub(line, head, count=1)
     elif re.search(r"^metadata:[ \t]*$", head, re.M):

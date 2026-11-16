@@ -60,7 +60,7 @@ def main() -> int:
         sk = base / "skills" / "dm-start" / "SKILL.md"
         text = sk.read_text(encoding="utf-8") if sk.is_file() else ""
         check("name: dm-start" in text and "description: Użyj" in text and "katalog:" in text and "przeglad:" in text
-              and "slowa:" in text and "## Przykład" in text and "## Źródła" in text, f"N-4: SKILL.md:\n{text}")
+              and "keywords:" in text and "## Przykład" in text and "## Źródła" in text, f"N-4: SKILL.md:\n{text}")
         ev = base / "tests" / "skill_evals" / "dm-start.json"
         data = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
         sc = data.get("scenarios", [])

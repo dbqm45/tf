@@ -2,9 +2,9 @@
 name: core-git-workflow
 description: Użyj przy pracy z gitem — gałęzie, commity, pull requesty (także PR agenta i auto-merge), ich przegląd, konflikty.
 metadata:
-  przeglad: "2027-10-10"
-  katalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), PR napisany przez agenta (oznaczenie, ścieżki chronione, auto-merge), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
-  slowa: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai-review.yml, ai_review.py, workflow przeglądu AI, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR, CODEOWNERS, ochrona gałęzi, chronione testy akceptacyjne, agent zmienia scenariusze Gherkin, agent naprawia testy zmieniając je, wymagany check w CI, PR agenta, agent sam otwiera PR, auto-merge, automatyczne scalanie, ścieżki chronione, oznaczenie PR agenta, etykieta PR agenta"
+  review: "2027-10-10"
+  catalog: "Użyj przy pracy z gitem — gałęzie, przygotowanie commitów, pull requesty, przegląd PR (także przez AI: REVIEW.md, claude-code-action, rozdział obowiązków, ochrona gałęzi), PR napisany przez agenta (oznaczenie, ścieżki chronione, auto-merge), konflikty, operacje niebezpieczne. Nie do formatu commit message (core-conventional-commits) ani pipeline'ów CI (skill CI/CD, pack-it)."
+  keywords: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai-review.yml, ai_review.py, workflow przeglądu AI, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR, CODEOWNERS, ochrona gałęzi, chronione testy akceptacyjne, agent zmienia scenariusze Gherkin, agent naprawia testy zmieniając je, wymagany check w CI, PR agenta, agent sam otwiera PR, auto-merge, automatyczne scalanie, ścieżki chronione, oznaczenie PR agenta, etykieta PR agenta"
 ---
 
 # Git workflow

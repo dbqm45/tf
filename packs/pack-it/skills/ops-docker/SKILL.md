@@ -2,8 +2,8 @@
 name: ops-docker
 description: Użyj przy Dockerfile, docker-compose i obrazach — tworzenie, rozmiar i czas budowy, bezpieczeństwo obrazów.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj przy tworzeniu i optymalizacji Dockerfile, docker-compose, obrazów kontenerów i ich bezpieczeństwa. Nie do pipeline'ów CI (ops-ci-cd) ani infrastruktury chmurowej."
+  review: "2027-04-17"
+  catalog: "Użyj przy tworzeniu i optymalizacji Dockerfile, docker-compose, obrazów kontenerów i ich bezpieczeństwa. Nie do pipeline'ów CI (ops-ci-cd) ani infrastruktury chmurowej."
 ---
 
 # Docker

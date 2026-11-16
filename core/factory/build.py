@@ -215,17 +215,17 @@ def skill_fingerprint(name: str) -> str:
             if p.suffix == ".md" and rel.startswith("references/"):
                 text = with_toc(text)
             if rel == "SKILL.md":   # termin przeglądu (.tf/factory/freshness.py) nie zmienia treści — bramka zostaje ważna
-                text = re.sub(r"^  przeglad:.*\n", "", text, count=1, flags=re.M)
+                text = re.sub(r"^  review:.*\n", "", text, count=1, flags=re.M)
             data = text.encode("utf-8")
         h.update(rel.encode() + b"\0" + data + b"\0")
     return h.hexdigest()[:16]
 
 
 def check_review_date(name: str, meta: dict) -> tuple[list[str], list[str]]:
-    """`metadata.przeglad`: termin przeglądu skilla w formacie RRRR-MM-DD (.tf/factory/freshness.py)."""
-    raw = meta.get("przeglad")
+    """`metadata.review`: termin przeglądu skilla w formacie RRRR-MM-DD (.tf/factory/freshness.py)."""
+    raw = meta.get("review")
     if raw is None:
-        return [], [f"skill {name}: brak metadata.przeglad (termin przeglądu treści) — "
+        return [], [f"skill {name}: brak metadata.review (termin przeglądu treści) — "
                     f"python3 .tf/factory/freshness.py --reviewed {name}"]
     try:
         import datetime as _dt
@@ -233,9 +233,9 @@ def check_review_date(name: str, meta: dict) -> tuple[list[str], list[str]]:
     except ValueError:
         ok = False
     if not ok:
-        return [f"skill {name}: metadata.przeglad '{raw}' nie jest datą RRRR-MM-DD"], []
+        return [f"skill {name}: metadata.review '{raw}' nie jest datą RRRR-MM-DD"], []
     if not isinstance(raw, str):   # YAML zamienia RRRR-MM-DD bez cudzysłowu na datę; specyfikacja chce tekstu
-        return [], [f"skill {name}: metadata.przeglad bez cudzysłowu — zapisz przeglad: \"{raw}\" (Agent Skills: metadata to tekst)"]
+        return [], [f"skill {name}: metadata.review bez cudzysłowu — zapisz review: \"{raw}\" (Agent Skills: metadata to tekst)"]
     return [], []
 
 
@@ -287,7 +287,7 @@ def _union(a: list, b: list) -> list:
     return list(dict.fromkeys([*(a or []), *(b or [])]))
 
 
-INACTIVE_STATUS = "nieaktywny"   # metadata.status skilla wyłączonego po pomiarze (powód: docs/inactive-skills.md fabryki)
+INACTIVE_STATUS = "inactive"   # metadata.status skilla wyłączonego po pomiarze (powód: docs/inactive-skills.md fabryki)
 
 
 def inactive_skills(skills: dict) -> set[str]:
@@ -843,8 +843,8 @@ def render_catalog() -> str:
         cut = lambda s, n: s if len(s) <= n else s[:n].rsplit(" ", 1)[0] + "…"
         return cut(head, 200) + (f" Nie do {cut(tail, 110)}" if tail else "")
     def entry(s: dict) -> str:
-        """Krótki opis (co i kiedy) + granice „Nie do …” z metadata.katalog."""
-        katalog = (s.get("metadata") or {}).get("katalog", "")
+        """Krótki opis (co i kiedy) + granice „Nie do …” z metadata.catalog."""
+        katalog = (s.get("metadata") or {}).get("catalog", "")
         tail = katalog.rstrip(".").partition(" Nie do ")[2]
         if not tail:
             return short(s.get("description", ""))
@@ -897,7 +897,7 @@ def skill_listing(entries: dict[str, int], stack_slots: int, marked: set[str] = 
                   name_only: tuple[str, ...] = ()) -> int:
     """Rozmiar listy skilli w typowym projekcie: wpisy z opisem wg skill_profile (stack pusty) + `stack_slots`
     najdłuższych wpisów technologii (fw-/lang-/tool-), które projekt może wykryć. `entries`: nazwa → znaki wpisu;
-    `marked`: skille z `metadata.widocznosc: nazwa`."""
+    `marked`: skille z `metadata.visibility: name`."""
     sp = _skill_profile()
     base = sum(n for name, n in entries.items() if sp.desired(name, set(), name in marked, (), name_only) == "on")
     stack = sorted((n for name, n in entries.items() if name.startswith(sp.STACK_PREFIXES)), reverse=True)
@@ -1036,12 +1036,12 @@ def validate() -> tuple[list[str], list[str]]:
                             "żeby persona mogła go użyć, nadaj prefiks z .tf/config/config.yaml → facets")
             continue
         d = s.get("description", "")
-        katalog = (s.get("metadata") or {}).get("katalog", "")
+        katalog = (s.get("metadata") or {}).get("catalog", "")
         if not d:
             errors.append(f"skill {name}: brak description")
         elif len(d) > lim["skill_description_max_chars"]:
             errors.append(f"skill {name}: description ma {len(d)} znaków (> {lim['skill_description_max_chars']}) — "
-                          "krótko co i kiedy; granice („Nie do …”) w metadata.katalog")
+                          "krótko co i kiedy; granice („Nie do …”) w metadata.catalog")
         if d and not re.search(r"\b(Użyj|użyj|gdy|kiedy|przy\s)", d):
             warnings.append(f"skill {name}: description nie jest regułą wyboru — zacznij od „Użyj, gdy/przy …”; Claude Code "
                             "pokazuje modelowi tylko description (pole metadata pomija)")
@@ -1049,9 +1049,9 @@ def validate() -> tuple[list[str], list[str]]:
         errors += e
         warnings += w
         if not katalog:
-            warnings.append(f"skill {name}: brak metadata.katalog (pełny opis z granicami dla katalogu dyspozytora)")
+            warnings.append(f"skill {name}: brak metadata.catalog (pełny opis z granicami dla katalogu dyspozytora)")
         elif "nie" not in katalog.lower():
-            warnings.append(f"skill {name}: metadata.katalog nie określa granic (czego skill NIE obejmuje)")
+            warnings.append(f"skill {name}: metadata.catalog nie określa granic (czego skill NIE obejmuje)")
         if not s.get("disable-model-invocation"):
             listing[name] = len(name) + len(d) + 4
         for field in ("model", "effort"):
@@ -1075,7 +1075,7 @@ def validate() -> tuple[list[str], list[str]]:
         if s["_lines"] > 300:
             warnings.append(f"skill {name}: SKILL.md ma {s['_lines']} linii — przenieś szczegóły do references/")
 
-    marked = {n for n, s in skills.items() if (s.get("metadata") or {}).get("widocznosc") == "nazwa"}
+    marked = {n for n, s in skills.items() if (s.get("metadata") or {}).get("visibility") == "name"}
     size = skill_listing(listing, lim.get("skill_listing_stack_slots", 6), marked,
                          tuple(cfg["skill_visibility"]["name_only_prefixes"]))
     if size > lim.get("skill_listing_max_chars", 10**9):
@@ -1365,8 +1365,8 @@ def cmd_new_skill(name: str, description: str, role: str | None = None, name_onl
     import datetime as _dt
     fr = _freshness()
     due = fr.add_months(_dt.date.today(), fr.interval(name, fr.load_policy(ROOT))).isoformat()
-    extra = f"  przeglad: \"{due}\"\n  slowa: \"\"\n" + ("  widocznosc: nazwa\n" if name_only else "")
-    body = re.sub(r"^(  katalog: .*\n)", lambda m: m.group(1) + extra, body, count=1, flags=re.M)
+    extra = f"  review: \"{due}\"\n  keywords: \"\"\n" + ("  visibility: name\n" if name_only else "")
+    body = re.sub(r"^(  catalog: .*\n)", lambda m: m.group(1) + extra, body, count=1, flags=re.M)
     (d / "SKILL.md").write_text(body, encoding="utf-8")
     wired = ""
     if role_file:

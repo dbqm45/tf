@@ -2,8 +2,8 @@
 name: ddd-strategic-analysis
 description: Użyj przy podziale domeny na subdomeny (core, supporting, generic) i granicach kontekstów, Cynefin.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy wyborze strategii analizy (Cynefin, top-down vs bottom-up), podziale domeny na subdomeny (core, supporting, generic) i wyznaczaniu granic kontekstów (bounded contexts). Nie do relacji między kontekstami (ddd-context-mapping) ani prowadzenia warsztatu (ddd-event-storming)."
+  review: "2027-10-17"
+  catalog: "Użyj przy wyborze strategii analizy (Cynefin, top-down vs bottom-up), podziale domeny na subdomeny (core, supporting, generic) i wyznaczaniu granic kontekstów (bounded contexts). Nie do relacji między kontekstami (ddd-context-mapping) ani prowadzenia warsztatu (ddd-event-storming)."
 ---
 
 # Analiza strategiczna

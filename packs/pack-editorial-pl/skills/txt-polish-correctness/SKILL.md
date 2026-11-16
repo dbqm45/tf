@@ -2,8 +2,8 @@
 name: txt-polish-correctness
 description: Użyj przy poprawności tekstu po polsku — pisownia, interpunkcja wg RJP PAN, gramatyka, kalki.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj zawsze, gdy piszesz lub sprawdzasz prozę po polsku (dokumentacja, opisy, README, komunikaty UI, PR) — pisownia i interpunkcja wg zbioru RJP PAN (w mocy od 2026), gramatyka, składnia, kolokacje, pleonazmy, kalki; szybki linter i format raportu błędów. Nie do redakcji stylu i skracania (txt-polish-style) ani struktury dokumentu (docs-tech-writing)."
+  review: "2027-10-17"
+  catalog: "Użyj zawsze, gdy piszesz lub sprawdzasz prozę po polsku (dokumentacja, opisy, README, komunikaty UI, PR) — pisownia i interpunkcja wg zbioru RJP PAN (w mocy od 2026), gramatyka, składnia, kolokacje, pleonazmy, kalki; szybki linter i format raportu błędów. Nie do redakcji stylu i skracania (txt-polish-style) ani struktury dokumentu (docs-tech-writing)."
 ---
 
 # Poprawność polszczyzny

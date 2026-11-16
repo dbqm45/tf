@@ -2,9 +2,9 @@
 name: fe-architecture
 description: Użyj przy strukturze frontendu — stan i dane, granice komponentów, SSR/RSC, wydajność, odporność.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy decyzjach o strukturze frontendu (każdy framework) — styl architektury, FSD/feature folders, stan i warstwa danych, granice komponentów, renderowanie (SSR/RSC), wydajność, odporność (błędy, ładowanie, retry), routing, bezpieczeństwo klienta (CSP, CSRF, tokeny), testy komponentów, UI czatu AI. Nie do stylów (fe-css), API przeglądarki i a11y (fe-web-platform) ani składni (lang-*, fw-*)."
-  slowa: "tabela danych, tabela z filtrowaniem i sortowaniem, filtry znikają po odświeżeniu, filtry w URL, wirtualizacja listy, zaznacz wszystkie, aria-sort, architektura frontendu, SPA, ponawianie żądań, retry w przeglądarce, odporność frontendu, stan aplikacji, zarządzanie stanem, warstwa danych frontu, podatność we frameworku frontendowym, czy to problem tylko frontendu, Server Components, mikrofrontendy, routing, micro-frontendy, micro-frontends, Module Federation, dwie wersje Reacta, współdzielone zależności, BFF, backend for frontend, SSR na brzegu, edge rendering"
+  review: "2027-10-17"
+  catalog: "Użyj przy decyzjach o strukturze frontendu (każdy framework) — styl architektury, FSD/feature folders, stan i warstwa danych, granice komponentów, renderowanie (SSR/RSC), wydajność, odporność (błędy, ładowanie, retry), routing, bezpieczeństwo klienta (CSP, CSRF, tokeny), testy komponentów, UI czatu AI. Nie do stylów (fe-css), API przeglądarki i a11y (fe-web-platform) ani składni (lang-*, fw-*)."
+  keywords: "tabela danych, tabela z filtrowaniem i sortowaniem, filtry znikają po odświeżeniu, filtry w URL, wirtualizacja listy, zaznacz wszystkie, aria-sort, architektura frontendu, SPA, ponawianie żądań, retry w przeglądarce, odporność frontendu, stan aplikacji, zarządzanie stanem, warstwa danych frontu, podatność we frameworku frontendowym, czy to problem tylko frontendu, Server Components, mikrofrontendy, routing, micro-frontendy, micro-frontends, Module Federation, dwie wersje Reacta, współdzielone zależności, BFF, backend for frontend, SSR na brzegu, edge rendering"
 ---
 
 # Architektura frontendu

@@ -127,13 +127,13 @@ def scan(root: Path, files: list[str]) -> None:
             text = code[rel]
             if not has_health:
                 emit("no-health-endpoint", rel, line_of(text, m.start()), text.splitlines()[line_of(text, m.start()) - 1],
-                     "usługa bez endpointu health", "średnia",
+                     "usługa bez endpointu health", "medium",
                      "punkt startowy usługi; w repozytorium brak trasy health/livez/readyz, Actuatora i terminus",
                      "dodaj `/livez` (proces żyje) i `/readyz` (zależności gotowe) i podepnij je pod sondy "
                      "orkiestratora")
             if logs and not has_corr:
                 emit("no-correlation-id", rel, line_of(text, m.start()), text.splitlines()[line_of(text, m.start()) - 1],
-                     "logi bez identyfikatora żądania", "średnia",
+                     "logi bez identyfikatora żądania", "medium",
                      "usługa loguje, ale w repozytorium brak x-request-id, traceparent, OpenTelemetry i podobnych",
                      "nadaj identyfikator żądania w middleware (przyjmij `traceparent`/`x-request-id` albo "
                      "wygeneruj), dołączaj go do każdego logu i przekazuj dalej")
@@ -145,7 +145,7 @@ def scan(root: Path, files: list[str]) -> None:
                     continue
                 ln = line_of(text, m.start())
                 emit("print-instead-of-logger", rel, ln, text.splitlines()[ln - 1],
-                     "console/print zamiast loggera w kodzie usługi", "niska",
+                     "console/print zamiast loggera w kodzie usługi", "low",
                      "wyjście bez poziomu, pól i identyfikatora żądania; trudne do filtrowania i alertów",
                      "użyj loggera strukturalnego (pino, winston, logging/structlog, SLF4J) z polami zamiast "
                      "sklejania tekstu")
@@ -155,7 +155,7 @@ def scan(root: Path, files: list[str]) -> None:
                 if ext == ".py" and (m.group(2) or m.group(3)):
                     continue
                 ln = line_of(text, m.start(1) if ext == ".py" else m.start())
-                emit("swallowed-error", rel, ln, text.splitlines()[ln - 1], "połknięty błąd", "średnia",
+                emit("swallowed-error", rel, ln, text.splitlines()[ln - 1], "połknięty błąd", "medium",
                      "pusta obsługa wyjątku bez komentarza — błąd znika bez logu, metryki i ponowienia",
                      "zaloguj błąd z kontekstem i przekaż dalej albo obsłuż; jeśli pominięcie jest zamierzone, "
                      "opisz dlaczego w komentarzu", confidence=0.8)

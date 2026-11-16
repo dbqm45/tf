@@ -2,9 +2,9 @@
 name: ddd-discovery-intake
 description: Użyj przy surowych materiałach (wywiady, notatki, tablice ES) — obszary biznesowe z dowodami, sprzeczności.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj, gdy z surowych materiałów (wywiady, notatki, zdjęcia tablic Event Stormingu, dokumenty) trzeba wyprowadzić obszary biznesowe OPARTE NA DOWODACH — ocena „czy warto”, bank cytatów, progi dowodowe, wykrywanie sprzeczności, pytania strategiczne, zamrożenie obszarów. Nie do prowadzenia warsztatu (ddd-event-storming) ani granic kontekstów (ddd-strategic-analysis)."
-  slowa: "notatki z wywiadów, transkrypcje, zdjęcia tablic, czy warto modularyzować, czy dzielić na moduły, prototyp, obszary biznesowe, czy warto modularyzować, rozbijać na moduły i bounded contexty, pytania przed modularyzacją, pytania do wywiadów z użytkownikami, oceń pytania wywiadu, popraw pytania do wywiadów"
+  review: "2027-10-09"
+  catalog: "Użyj, gdy z surowych materiałów (wywiady, notatki, zdjęcia tablic Event Stormingu, dokumenty) trzeba wyprowadzić obszary biznesowe OPARTE NA DOWODACH — ocena „czy warto”, bank cytatów, progi dowodowe, wykrywanie sprzeczności, pytania strategiczne, zamrożenie obszarów. Nie do prowadzenia warsztatu (ddd-event-storming) ani granic kontekstów (ddd-strategic-analysis)."
+  keywords: "notatki z wywiadów, transkrypcje, zdjęcia tablic, czy warto modularyzować, czy dzielić na moduły, prototyp, obszary biznesowe, czy warto modularyzować, rozbijać na moduły i bounded contexty, pytania przed modularyzacją, pytania do wywiadów z użytkownikami, oceń pytania wywiadu, popraw pytania do wywiadów"
 ---
 
 # Od materiałów do obszarów biznesowych (intake)

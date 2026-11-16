@@ -231,9 +231,9 @@ SKILL_TPL = """---
 name: {skill}
 description: Użyj przy TODO — sytuacja i kluczowe pojęcia (reguła wyboru, do 170 znaków).
 metadata:
-  przeglad: "{review}"
-  katalog: "Użyj, gdy TODO — pełny opis z granicami. Nie do TODO (sąsiedni-skill)."
-  slowa: "TODO: słowa, którymi ludzie opisują problem"
+  review: "{review}"
+  catalog: "Użyj, gdy TODO — pełny opis z granicami. Nie do TODO (sąsiedni-skill)."
+  keywords: "TODO: słowa, którymi ludzie opisują problem"
 ---
 
 # TODO: tytuł

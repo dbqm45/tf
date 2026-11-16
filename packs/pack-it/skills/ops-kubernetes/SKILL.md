@@ -2,8 +2,8 @@
 name: ops-kubernetes
 description: Użyj przy manifestach i operacjach Kubernetes — zasoby, sondy, repliki i PDB, autoskalowanie, RBAC, NetworkPolicy.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj przy manifestach i operacjach Kubernetes — zasoby (requests/limits), sondy, liczba replik i PodDisruptionBudget, autoskalowanie, bezpieczeństwo podów (Pod Security Standards, securityContext), RBAC i konta usług, NetworkPolicy, sekrety, walidacja manifestów w CI, aktualizacje klastra. Nie do obrazów (ops-docker), wydań i GitOps (ops-release-engineering) ani chmury."
+  review: "2027-04-17"
+  catalog: "Użyj przy manifestach i operacjach Kubernetes — zasoby (requests/limits), sondy, liczba replik i PodDisruptionBudget, autoskalowanie, bezpieczeństwo podów (Pod Security Standards, securityContext), RBAC i konta usług, NetworkPolicy, sekrety, walidacja manifestów w CI, aktualizacje klastra. Nie do obrazów (ops-docker), wydań i GitOps (ops-release-engineering) ani chmury."
 ---
 
 # Kubernetes

@@ -7,7 +7,7 @@ Mapa pokrycia katalogu skilli (B2) — narzędzie autora fabryki, nie instalowan
   python3 tools/coverage_map.py --areas plik.json --root katalog
 
 Dla każdego hasła z `tools/coverage_areas.json` (obszar → lista haseł) liczy skille rdzenia, nakładek i trybów,
-w których metadanych (`description`, `metadata.katalog`, `metadata.slowa`) hasło występuje — bez względu na
+w których metadanych (`description`, `metadata.catalog`, `metadata.keywords`) hasło występuje — bez względu na
 wielkość liter; hasło to zwykle rdzeń wyrazu („faktur” trafia w „faktury”, „fakturach”). Liczą się metadane, bo po
 nich podpowiedź i model wybierają skill; wiedza ukryta w treści, do której nic nie prowadzi, jest dla trasowania
 niewidoczna. Hasło bez skilla to **dziura**, z jednym skillem — **cienkie** miejsce.
@@ -32,7 +32,7 @@ for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie 
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONT = re.compile(r"\A---\n(.*?)\n---", re.S)
-FIELD = re.compile(r"^\s*(description|katalog|slowa):\s*(.*)$", re.M)
+FIELD = re.compile(r"^\s*(description|katalog|keywords):\s*(.*)$", re.M)
 
 
 def load_skills(root: Path) -> dict[str, str]:

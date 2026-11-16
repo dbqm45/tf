@@ -9,7 +9,7 @@ Bramka jakości skilla — obowiązkowa przy dodaniu i każdej zmianie skilla.
   python3 .tf/factory/skill_gate.py core-grounding --model sonnet --baseline --yes         # + porównanie bez skilli
 
 Sprawdzenia bezpłatne (kolejno, każde musi przejść):
-  1. struktura      — reguły `build.py check` dla tego skilla (opis ≤170 znaków, metadata.katalog z granicami, brak `paths`,
+  1. struktura      — reguły `build.py check` dla tego skilla (opis ≤170 znaków, metadata.catalog z granicami, brak `paths`,
                       długość SKILL.md);
   2. scenariusze    — plik ewaluacji: ≥3 scenariusze, ≥2 „trigger” ze sprawdzeniami treści, ≥1 „no-trigger” z sąsiadem;
   3. podpowiedź     — hook skill_hint wskazuje skill przy jego pytaniach, a przy pytaniu sąsiada nie stawia go na pierwszym miejscu;
@@ -139,7 +139,7 @@ def check_hint(name: str, sc: dict) -> tuple[list[str], list[str], str]:
         else:
             top = [it["name"] for _, it in hint.rank(s["prompt"], items)[:3]]
             warns.append(f"#{s['id']}: hook nie podpowie skilla (najbliżej: {', '.join(top)}) — dopisz słowa do "
-                         "metadata.slowa albo opisu")
+                         "metadata.keywords albo opisu")
     if sc.get("trigger") and hits == 0:
         errs.append("hook nie podpowiada skilla przy żadnym jego pytaniu — model najpewniej go nie wczyta")
     for s in sc.get("no", []):
@@ -148,7 +148,7 @@ def check_hint(name: str, sc: dict) -> tuple[list[str], list[str], str]:
             nb = s.get("neighbor")
             if nb in picks or set(s.get("accept") or []) & set(picks):
                 warns.append(f"#{s['id']}: przy pytaniu sąsiada ({nb}) hook stawia ten skill przed nim (podpowiada oba — "
-                             "model wybiera; rozważ słowa sąsiada w metadata.slowa)")
+                             "model wybiera; rozważ słowa sąsiada w metadata.keywords)")
             else:
                 errs.append(f"#{s['id']}: przy pytaniu sąsiada ({nb}) hook podpowiada ten skill, a sąsiada wcale — "
                             "zawęź opis albo dopisz słowa sąsiadowi")
@@ -332,7 +332,7 @@ def status(strict: bool = False) -> int:
 
 
 def suggest_phrases(name: str, triggers: list[str], neighbors: list[str], items: list[dict], hint) -> dict:
-    """Frazy do metadata.slowa ze słów nietrafionych promptów: rdzenie, których opis skilla nie ma — najpierw te z treści
+    """Frazy do metadata.keywords ze słów nietrafionych promptów: rdzenie, których opis skilla nie ma — najpierw te z treści
     SKILL.md (temat skilla), potem najrzadsze (IDF) — z sąsiednim słowem; dopisywane po kolei, aż symulacja hooka podpowie skill. Na koniec: czy pytania sąsiada nadal nie są jego."""
     import math
     target = next(it for it in items if it["name"] == name)
@@ -391,17 +391,17 @@ def suggest(name: str, apply: bool) -> int:
         print("✓ Nic do dopisania.")
         return 0
     line = ", ".join(res["phrases"])
-    print(f'Propozycja do metadata.slowa: "{line}"')
+    print(f'Propozycja do metadata.keywords: "{line}"')
     if not apply:
         print(f"Dopisz: python3 .tf/factory/skill_gate.py --suggest {name} --apply (potem bramka: python3 .tf/factory/skill_gate.py {name})")
         return 0
     md = SKILLS / name / "SKILL.md"
     text = md.read_text(encoding="utf-8")
-    m = re.search(r'^  slowa: "(.*)"$', text, re.M)
+    m = re.search(r'^  keywords: "(.*)"$', text, re.M)
     if m:
         text = text[:m.start(1)] + (m.group(1) + ", " if m.group(1) else "") + line + text[m.end(1):]
     else:
-        text = re.sub(r"^(  katalog: .*\n)", lambda mm: mm.group(1) + f'  slowa: "{line}"\n', text, count=1, flags=re.M)
+        text = re.sub(r"^(  catalog: .*\n)", lambda mm: mm.group(1) + f'  keywords: "{line}"\n', text, count=1, flags=re.M)
     md.write_text(text, encoding="utf-8")
     print(f"✓ Dopisano do {md.relative_to(ROOT)} — teraz bramka: python3 .tf/factory/skill_gate.py {name}")
     return 0
@@ -443,7 +443,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--fast", action="store_true", help="pomiń regresję wszystkich skilli (krok 4)")
     ap.add_argument("--hints", action="store_true",
                     help="trafienia hooka skill_hint dla scenariuszy WSZYSTKICH skilli (nowy skill nie podkrada podpowiedzi)")
-    ap.add_argument("--suggest", metavar="SKILL", help="frazy do metadata.slowa z nietrafionych scenariuszy skilla")
+    ap.add_argument("--suggest", metavar="SKILL", help="frazy do metadata.keywords z nietrafionych scenariuszy skilla")
     ap.add_argument("--apply", action="store_true", help="z --suggest: dopisz frazy do SKILL.md")
     args = ap.parse_args(argv[1:])
     if args.suggest:

@@ -75,7 +75,7 @@ LINTERS = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint
 FORMATTERS = [".prettierrc", ".prettierrc.json", ".prettierrc.js", ".prettierrc.cjs", ".prettierrc.mjs", ".prettierrc.yml",
               ".prettierrc.yaml", "prettier.config.js", "prettier.config.mjs", "biome.json", "biome.jsonc",
               "rustfmt.toml", ".rustfmt.toml", ".php-cs-fixer.php", ".php-cs-fixer.dist.php", ".clang-format", "dprint.json"]
-SEV_ORDER = {"wysoka": 0, "średnia": 1, "niska": 2}
+SEV_ORDER = {"high": 0, "medium": 1, "low": 2}
 
 
 def read(p: Path) -> str:
@@ -218,7 +218,7 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
     if m:
         setup.append(f"README: {m.group(0).lstrip('#').strip()}")
     if families and not setup:
-        findings.append(("dx", "średnia", "brak jednego polecenia startowego (make/just/Taskfile, skrypt dev/setup) "
+        findings.append(("dx", "medium", "brak jednego polecenia startowego (make/just/Taskfile, skrypt dev/setup) "
                          "ani instrukcji uruchomienia w README", "—",
                          "dodaj `make setup` lub `just dev` (zależności, usługi, dane startowe) i opisz w README "
                          "i CLAUDE.md — agent i nowa osoba zaczynają od jednego polecenia"))
@@ -248,19 +248,19 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
     testcontainers = bool(re.search(r"testcontainers", dep_text, re.I))
     missing = [k for k in needed if k not in covered]
     if missing and not testcontainers:
-        findings.append(("dx", "średnia", f"zależności usług ({', '.join(missing)}) bez lokalnego środowiska "
+        findings.append(("dx", "medium", f"zależności usług ({', '.join(missing)}) bez lokalnego środowiska "
                          "(compose, devcontainer, Testcontainers)", "—",
                          "dodaj `compose.yaml` z tymi usługami i healthcheckami — agent uruchomi testy bez "
                          "ręcznej konfiguracji"))
     if no_health:
-        findings.append(("dx", "niska", f"usługi w compose bez healthcheck: {', '.join(no_health)}",
+        findings.append(("dx", "low", f"usługi w compose bez healthcheck: {', '.join(no_health)}",
                          compose.name if compose else "—",
                          "dodaj healthcheck i `depends_on: condition: service_healthy` — testy nie startują przed bazą"))
     # dane startowe
     seed = any(re.search(r"seed", f.name, re.I) for f in walk(root, 3)) or any(
         "seed" in k for pkg in pkgs for k in js_deps(pkg)[1]) or "loaddata" in read(root / "Makefile")
     if any(k in needed for k in ("postgres", "mysql", "mongodb")) and not seed:
-        findings.append(("dx", "niska", "brak danych startowych (seed) dla lokalnej bazy", "—",
+        findings.append(("dx", "low", "brak danych startowych (seed) dla lokalnej bazy", "—",
                          "dodaj idempotentny skrypt danych startowych z danymi syntetycznymi (bez kopii produkcji)"))
     # sekrety w .env.example — tylko nazwy zmiennych, nigdy wartości
     leaked = []
@@ -273,7 +273,7 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
                                           and len(value) >= 20 and not PLACEHOLDER.search(value)):
             leaked.append(name)
     if leaked:
-        findings.append(("dx", "wysoka", f".env.example zawiera wartości wyglądające na prawdziwe sekrety: "
+        findings.append(("dx", "high", f".env.example zawiera wartości wyglądające na prawdziwe sekrety: "
                          f"{', '.join(leaked)}", ".env.example",
                          "zostaw puste wartości albo oczywiste atrapy; jeśli klucz był prawdziwy — unieważnij go "
                          "(ops-secrets-identities)"))
@@ -323,14 +323,14 @@ def detect(root: Path) -> dict:
             entry["runner"], entry["dry_run"] = runner_for(family, m.parent, m)
             families.append(entry)
             if not lock and family != "java":
-                findings.append(("fundament", "wysoka", f"{family}: brak lockfile przy {rel}"
+                findings.append(("fundament", "high", f"{family}: brak lockfile przy {rel}"
                                  + (" (requirements.txt to słaby zamiennik)" if lock_note else ""),
                                  rel, f"wygeneruj lockfile menedżerem projektu ({', '.join(locks[:2])})"))
             if not entry["runner"]:
-                findings.append(("środowisko", "wysoka", f"{family}: nie wykryto runnera testów ({rel})", rel,
+                findings.append(("środowisko", "high", f"{family}: nie wykryto runnera testów ({rel})", rel,
                                  "dodaj runner testów zgodny ze stackiem — poprawka nr 1 dla agenta"))
             if cmd is None:
-                findings.append(("fundament", "niska", f"{family}: audyt zależności pominięto — brak wbudowanego narzędzia",
+                findings.append(("fundament", "low", f"{family}: audyt zależności pominięto — brak wbudowanego narzędzia",
                                  rel, note))
 
     # CI
@@ -340,12 +340,12 @@ def detect(root: Path) -> dict:
     stages = {name: bool(re.search(rx, ci_text, re.I)) for name, rx in STAGES.items()} if ci_files else {}
     ci = {"files": [str(p.relative_to(root)) for p in ci_files], "stages": stages}
     if not ci_files:
-        findings.append(("środowisko", "średnia", "brak konfiguracji CI", "—",
+        findings.append(("środowisko", "medium", "brak konfiguracji CI", "—",
                          "pipeline z etapami lint / test / build / typy / bezpieczeństwo (ops-ci-cd)"))
     else:
         missing = [s for s, ok in stages.items() if not ok]
         if missing:
-            findings.append(("środowisko", "średnia", f"CI bez etapów: {', '.join(missing)}", ci["files"][0],
+            findings.append(("środowisko", "medium", f"CI bez etapów: {', '.join(missing)}", ci["files"][0],
                              "dopisz brakujące etapy (ops-ci-cd)"))
 
     # konfiguracja
@@ -353,7 +353,7 @@ def detect(root: Path) -> dict:
     config = {}
     config[".gitignore"] = ".gitignore" in names
     if not config[".gitignore"]:
-        findings.append(("konfiguracja", "wysoka", "brak .gitignore (ryzyko commitu sekretów i artefaktów)", "—",
+        findings.append(("konfiguracja", "high", "brak .gitignore (ryzyko commitu sekretów i artefaktów)", "—",
                          "dodaj .gitignore dla stacku"))
     tsconfigs = [f for f in files if f.name == "tsconfig.json"]
     if tsconfigs:
@@ -367,7 +367,7 @@ def detect(root: Path) -> dict:
             strict, extends = None, None
         config["typescript_strict"] = bool(strict) if strict is not None else ("nieznane (extends)" if extends else False)
         if strict is not True and not extends:
-            findings.append(("konfiguracja", "wysoka", "TypeScript bez \"strict\": true", str(ts.relative_to(root)),
+            findings.append(("konfiguracja", "high", "TypeScript bez \"strict\": true", str(ts.relative_to(root)),
                              "włącz strict (stopniowo, per katalog, jeśli błędów dużo)"))
     pyproject = read(root / "pyproject.toml")
     linter = [n for n in LINTERS if n in names] + (["ruff (pyproject)"] if "[tool.ruff" in pyproject else [])
@@ -380,22 +380,22 @@ def detect(root: Path) -> dict:
         formatter.append("gofmt/rustfmt (wbudowany)")
     config["linter"], config["formatter"] = sorted(set(linter)), sorted(set(formatter))
     if families and not linter:
-        findings.append(("konfiguracja", "średnia", "nie wykryto lintera", "—", "dodaj linter zgodny ze stackiem"))
+        findings.append(("konfiguracja", "medium", "nie wykryto lintera", "—", "dodaj linter zgodny ze stackiem"))
     if families and not formatter:
-        findings.append(("konfiguracja", "średnia", "nie wykryto formatera", "—", "dodaj formater zgodny ze stackiem"))
+        findings.append(("konfiguracja", "medium", "nie wykryto formatera", "—", "dodaj formater zgodny ze stackiem"))
     for name, msg in ((".editorconfig", "brak .editorconfig"), (".env.example", "brak .env.example (lista zmiennych bez wartości)")):
         config[name] = name in names
         if not config[name]:
-            findings.append(("konfiguracja", "niska", msg, "—", f"dodaj {name}"))
+            findings.append(("konfiguracja", "low", msg, "—", f"dodaj {name}"))
 
     instructions = [n for n in ("CLAUDE.md", "AGENTS.md", ".claude") if (root / n).exists()]
     dx, dx_findings = dev_loop(root, files, families)
     findings += dx_findings
 
-    high = [f for f in findings if f[1] == "wysoka"]
+    high = [f for f in findings if f[1] == "high"]
     no_runner = any("runnera testów" in f[2] for f in findings)
     verdict = "krytyczne" if (no_runner or len(high) >= 3) else ("wymaga-uwagi" if findings and any(
-        f[1] in ("wysoka", "średnia") for f in findings) else "zdrowe")
+        f[1] in ("high", "medium") for f in findings) else "zdrowe")
     findings.sort(key=lambda f: SEV_ORDER[f[1]])
     return {
         "root": str(root),
@@ -447,7 +447,7 @@ def main(argv: list[str]) -> int:
         return 2
     r = detect(root)
     print(json.dumps(r, ensure_ascii=False, indent=2) if a.json else to_text(r))
-    return 1 if any(x["severity"] == "wysoka" for x in r["findings"]) else 0
+    return 1 if any(x["severity"] == "high" for x in r["findings"]) else 0
 
 
 if __name__ == "__main__":
