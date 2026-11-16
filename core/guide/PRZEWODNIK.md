@@ -38,6 +38,12 @@ agent wskaże plik, który podjął decyzję. Częste pytania: `.tf/factory/FAQ.
 
 Co jest zainstalowane: `tf list`. Stan instalacji: `tf doctor`.
 
+**Nakładka firmowa.** Standardy i domyślne ustawienia organizacji (polityka autonomii, reguły `tf risk`, limity
+`tf work`, profil kosztów, tracker i prefiksy zgłoszeń) dostarcza jedna nakładka firmy: `tf install --pack-dir
+<repozytorium firmy> --add pack-<firma>`. Jej wartości widać w `tf config show` jako „organizacja”; projekt nadpisuje
+je w `.tf/config/` (polityki autonomii nie rozluźni). Adresów i tokenów (Jira, Confluence) nakładka nie zawiera —
+są w zmiennych środowiska i połączeniach Claude Code.
+
 ### Instalacja prywatna i zespołowa
 | | Prywatna (domyślna) | Zespołowa (`--shared`) |
 |---|---|---|

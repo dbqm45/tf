@@ -92,16 +92,15 @@ def _merge(base: dict, over: dict) -> dict:
 
 
 def load_rules(repo: Path) -> dict:
-    """Reguły domyślne + `autonomy.triage` z konfiguracji silnika i projektu (`.tf/config/config.yaml`)."""
+    """Reguły domyślne + `autonomy.triage` z silnika, nakładki firmowej (`org_defaults`) i projektu."""
     rules = copy.deepcopy(DEFAULT_RULES)
     try:
-        load_yaml = _packs().load_yaml
+        layers = _packs().config_layers(repo)   # silnik ← organizacja (nakładka firmowa) ← projekt
     except Exception:   # bez packs.py (np. sam skrypt) — tylko reguły domyślne
         return rules
-    for p in (repo / ".tf" / "factory" / "config.yaml", repo / ".tf" / "config" / "config.yaml"):
-        if p.is_file():
-            over = ((load_yaml(p) or {}).get("autonomy") or {}).get("triage") or {}
-            rules = _merge(rules, over)
+    for _label, data in layers:
+        over = ((data or {}).get("autonomy") or {}).get("triage") or {}
+        rules = _merge(rules, over)
     return rules
 
 

@@ -42,6 +42,32 @@ i MINOR. Wydanie MAJOR, które zmienia publiczne API fabryki, wymaga Twojej decy
 - Domyślna nakładka lub tryb, które pojawią się w nowej wersji, dochodzą przy aktualizacji raz. Usunięte przez
   Ciebie nie wracają.
 
+## Jak dodać ustawienia firmy?
+Standardy i domyślne ustawienia całej organizacji trzyma jedna **nakładka firmowa** we własnym repozytorium firmy.
+Robisz ją raz, potem instalujesz w każdym projekcie.
+1. **Szkielet.** W klonie repozytorium fabryki (katalog wyniku musi leżeć poza nim):
+   ```
+   python3 tools/workspace.py new-org-pack <firma> --out <katalog> --title "Nazwa firmy"
+   ```
+2. **Uzupełnij pola `TODO`** (`grep -rn TODO <katalog>`; opis każdego pola: `README.md` w nakładce):
+   - `pack.yaml` → `org_defaults.config`: operacje agenta blokowane w firmie (`autonomy.operations`, tylko
+     zaostrzanie), ścieżki zawsze do przeglądu człowieka (`autonomy.triage`), limity `tf work` (`work`), profil
+     kosztów, języki;
+   - `pack.yaml` → `org_defaults.operations.tracker`: tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami;
+   - skill standardów (`skills/<firma>-standardy/`): ustalenia firmy, których model nie zna — najpierw scenariusze
+     w `tests/skill_evals/`, potem treść;
+   - `settings.json`: uprawnienia Claude Code dla całej firmy.
+3. **Sprawdź** w repozytorium fabryki: `python3 tools/workspace.py check --packs pack-it,pack-<firma> --pack-dir
+   <katalog>`.
+4. **Opublikuj** katalog jako repozytorium git firmy (z tagami wersji `vX.Y.Z`).
+5. **Zainstaluj w projekcie:** `tf install --pack-dir <adres repozytorium firmy> --add pack-<firma>`. `tf update`
+   pobiera potem nowe wersje nakładki.
+
+Wartości firmy pokazuje `tf config show` (źródło „organizacja”). Projekt nadpisuje je w `.tf/config/config.yaml`
+i `.tf/config/operations.json`; zakazu z polityki autonomii firmy nie rozluźni. Adresów i tokenów (Jira, Confluence)
+nakładka nie zawiera: Jira bierze adres i dane dostępu ze zmiennych `JIRA_BASE_URL`, `JIRA_EMAIL`,
+`JIRA_API_TOKEN` (albo `JIRA_TOKEN`), a dostęp do Confluence na żywo to połączenie (serwer MCP) w Claude Code.
+
 ## Który model i ile to kosztuje?
 - Role mają tiery: `fast` (Haiku), `std` (Sonnet), `deep` (Opus).
 - Profil zespołu przestawia je jednym poleceniem: `python3 .tf/factory/profile.py oszczedny|zrownowazony|jakosc`.

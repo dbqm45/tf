@@ -37,6 +37,13 @@ def project(t: Path, name: str, yaml: str | None) -> Path:
     return d
 
 
+def org_pack(d: Path, body: str) -> None:
+    """Nakładka firmowa z `org_defaults` w zainstalowanych nakładkach projektu."""
+    f = d / ".tf" / "factory" / "packs" / "pack-firma" / "pack.yaml"
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text("id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n" + body, encoding="utf-8")
+
+
 def main() -> int:
     fails = []
     with tempfile.TemporaryDirectory() as tmp:
@@ -45,7 +52,13 @@ def main() -> int:
         strict = project(t, "strict", "autonomy:\n  operations:\n    dependency_add: deny\n    git_push: deny\n")
         loose = project(t, "loose", "autonomy:\n  operations:\n    prod_command: full\n    destructive_sql: allow\n"
                                     "    nieznany_typ: deny\n")
+        org = project(t, "org", None)
+        org_pack(org, "  config:\n    autonomy:\n      operations:\n        git_push: deny\n")
+        org_loose = project(t, "org-loose", "autonomy:\n  operations:\n    git_push: confirm\n")
+        org_pack(org_loose, "  config:\n    autonomy:\n      operations:\n        git_push: deny\n")
         cases = [
+            # A-7: polityka organizacji (nakładka firmowa) zaostrza; projekt nie może jej rozluźnić
+            (org, "git push origin feat/x", "deny"), (org_loose, "git push origin feat/x", "deny"),
             # A-1: bez polityki projektu — zachowanie jak dotąd
             (plain, "npm install left-pad", "ask"), (plain, "git push origin feat/x", "ask"),
             (plain, "psql -c 'DROP TABLE users'", "ask"), (plain, "npm test", "none"),
@@ -76,7 +89,7 @@ def main() -> int:
         fails.append("A-6: .tf/factory/config.yaml opisuje autonomy.operations z wartościami domyślnymi")
     for f in fails:
         print(f"✗ {f}")
-    total = 13
+    total = 15
     print(f"{'✓' if not fails else '✗'} polityka autonomii: {total - len(fails)}/{total}")
     return 1 if fails else 0
 

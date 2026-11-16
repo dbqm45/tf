@@ -10,6 +10,7 @@ Układ w projekcie:
   .tf/factory/traits/*.md                 cechy rdzenia
   .tf/factory/packs/<id>/pack.yaml        nakładka: wymiary, agenci, konsultanci, wkład do rdzenia i innych nakładek
   .tf/factory/packs/<id>/{roles,personas,traits}/
+  .tf/factory/packs/<id>/pack.yaml → org_defaults   domyślne organizacji (nakładka firmowa, najwyżej jedna)
   .tf/config/config.yaml                  nadpisania projektu (nakładane rekurencyjnie na domyślną konfigurację)
   .tf/config/{roles,personas,traits}/     własne role, persony i cechy projektu (nadpisują te z rdzenia i nakładek)
   .claude/skills/                         skille rdzenia i nakładek (Claude Code czyta je tylko stąd)
@@ -66,11 +67,51 @@ def deep_merge(base: dict, over: dict) -> dict:
     return out
 
 
+# Nakładka firmowa (`org_defaults` w pack.yaml): domyślne organizacji między silnikiem a projektem. Tylko te klucze
+# konfiguracji — reszta to składanie fabryki (wymiary, agenci), którego nakładka firmowa nie przestawia.
+ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "loop", "steps",
+                   "default_language", "default_commit_language")
+ORG_OPERATIONS_KEYS = ("tracker",)
+
+
+def org_defaults(root: Path) -> tuple[str | None, dict]:
+    """Pierwsza (po id) zainstalowana nakładka z `org_defaults` i jej wartości; (None, {}) bez nakładki firmowej.
+    Więcej niż jedna to błąd zgłaszany przez `compose` (build.py check)."""
+    for pid, p in installed_packs(root).items():
+        if isinstance(p.get("org_defaults"), dict):
+            return pid, p["org_defaults"]
+    return None, {}
+
+
+def config_layers(root: Path) -> list[tuple[str, dict]]:
+    """Warstwy konfiguracji od najsłabszej: silnik, organizacja (nakładka firmowa), projekt. Każdy czytelnik
+    konfiguracji (build, hooki, tf risk, tf work) składa je w tej kolejności."""
+    engine, own = root / ENGINE_REL / "config.yaml", root / CONFIG_REL / "config.yaml"
+    layers = [((ENGINE_REL / "config.yaml").as_posix(), load_yaml(engine) if engine.is_file() else {})]
+    pid, od = org_defaults(root)
+    if pid:
+        part = {k: v for k, v in (od.get("config") or {}).items() if k in ORG_CONFIG_KEYS}
+        layers.append((f"{(PACKS_REL / pid / 'pack.yaml').as_posix()} (org_defaults)", part))
+    if own.is_file():
+        layers.append(((CONFIG_REL / "config.yaml").as_posix(), load_yaml(own)))
+    return layers
+
+
+def org_operations(root: Path) -> dict:
+    """Domyślne karty operacyjnej z nakładki firmowej (dziś: `tracker`). Adresu trackera (`url`) organizacja nie
+    ustawia — dokąd idzie token, mówi tylko zmienna JIRA_BASE_URL (skill tf, intake.py)."""
+    ops = org_defaults(root)[1].get("operations") or {}
+    tracker = ops.get("tracker") if isinstance(ops.get("tracker"), dict) else {}
+    return {"tracker": {k: v for k, v in tracker.items() if k != "url"}} if tracker else {}
+
+
 def load_config(root: Path) -> dict:
-    """Konfiguracja rdzenia: domyślna z `.tf/factory/config.yaml` z nadpisaniami projektu z `.tf/config/config.yaml`."""
-    cfg = load_yaml(root / ENGINE_REL / "config.yaml")
-    own = root / CONFIG_REL / "config.yaml"
-    return deep_merge(cfg, load_yaml(own)) if own.is_file() else cfg
+    """Konfiguracja rdzenia: silnik (`.tf/factory/config.yaml`) ← domyślne organizacji (nakładka firmowa) ←
+    nadpisania projektu (`.tf/config/config.yaml`)."""
+    cfg: dict = {}
+    for _label, layer in config_layers(root):
+        cfg = deep_merge(cfg, layer)
+    return cfg
 
 
 def installed_packs(root: Path) -> dict[str, dict]:
@@ -132,6 +173,22 @@ def compose(root: Path, cfg: dict) -> dict:
     settings = load_settings(root, cfg)
     errors: list[str] = []
     cfg["_packs"], cfg["_settings"] = packs, settings
+    orgs = [pid for pid, p in packs.items() if p.get("org_defaults") is not None]
+    if len(orgs) > 1:
+        errors.append(f"org_defaults: {' i '.join(orgs)} — w projekcie może być tylko jedna nakładka firmowa "
+                      f"(działa {orgs[0]})")
+    for pid in orgs[:1]:
+        od = packs[pid]["org_defaults"]
+        if not isinstance(od, dict):
+            errors.append(f"{pid}: org_defaults musi być słownikiem (config, operations)")
+            continue
+        for k in sorted(set(od) - {"config", "operations"}):
+            errors.append(f"{pid}: org_defaults.{k} — nieznana sekcja (są: config, operations)")
+        for k in sorted(set(od.get("config") or {}) - set(ORG_CONFIG_KEYS)):
+            errors.append(f"{pid}: org_defaults.config.{k} — tego klucza nakładka firmowa nie ustawia "
+                          f"(dozwolone: {', '.join(ORG_CONFIG_KEYS)}); wartość pominięta")
+        for k in sorted(set(od.get("operations") or {}) - set(ORG_OPERATIONS_KEYS)):
+            errors.append(f"{pid}: org_defaults.operations.{k} — nieznana sekcja (jest: tracker); wartość pominięta")
     cfg["_active"] = {pid for pid, p in packs.items() if active(p, settings)}
 
     facets = [dict(f, _pack="core") for f in cfg.get("facets") or []]

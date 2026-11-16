@@ -23,7 +23,9 @@ Opcje `--auto`, `--plan`, `--budget N`, `--change CHG-n` oraz słowo wymuszając
 
 Skrypt nie widzi narzędzi sesji: czy tracker jest podłączony (serwer MCP), ocenia model. Wybór człowieka zapisuje
 `tracker <typ> [--prefix <PREFIKS>]` w karcie operacyjnej `.tf/config/operations.json`:
-{"tracker": {"type": "linear", "prefixes": {"EBO": "jira"}}} — odtąd `resolve` o tracker nie pyta.
+{"tracker": {"type": "linear", "prefixes": {"EBO": "jira"}}} — odtąd `resolve` o tracker nie pyta. Domyślne
+organizacji (typ, prefiksy, `fields`, bez adresu) daje nakładka firmowa (`org_defaults.operations.tracker`); karta
+projektu je nadpisuje.
 
 Zgłoszenie z Jiry pobiera skrypt, nie model (`fetch`, a w przebiegu `run_report.py start --key <KLUCZ>
 --from-tracker`): jedno żądanie GET do Jira REST (`/rest/api/2/issue/<KLUCZ>`), tylko odczyt, bez przekierowań.
@@ -42,6 +44,7 @@ zmian).
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import re
@@ -90,14 +93,38 @@ def load_card(root: Path) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
+def org_tracker(root: Path) -> dict:
+    """Domyślny tracker organizacji z nakładki firmowej (`org_defaults.operations.tracker`, bez adresu); {} bez niej."""
+    for cand in (root / ".tf" / "factory" / "packs.py", Path(__file__).resolve().parents[4] / ".tf" / "factory" / "packs.py"):
+        if not cand.is_file():
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location("tf_packs_intake", cand)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.org_operations(root).get("tracker") or {}
+        except Exception:  # noqa: BLE001 — bez czytelnej nakładki firmowej działa sama karta projektu
+            return {}
+    return {}
+
+
+def tracker_source(root: Path, key: str | None) -> tuple[str | None, str | None]:
+    """Tracker dla klucza i skąd jest: prefiks z karty projektu, prefiks organizacji, typ z karty, typ organizacji."""
+    card = (load_card(root) or {}).get("tracker")
+    card = card if isinstance(card, dict) else {}
+    org = org_tracker(root)
+    pref = key.split("-", 1)[0] if key else None
+    for src, tr, field in (("karta", card, "prefixes"), ("organizacja", org, "prefixes"),
+                           ("karta", card, "type"), ("organizacja", org, "type")):
+        val = tr.get(field)
+        found = (val.get(pref) if isinstance(val, dict) and pref else None) if field == "prefixes" else val
+        if isinstance(found, str) and found:
+            return found, src
+    return None, None
+
+
 def card_tracker(root: Path, key: str | None) -> str | None:
-    tracker = (load_card(root) or {}).get("tracker")
-    if not isinstance(tracker, dict):
-        return None
-    prefixes = tracker.get("prefixes") if isinstance(tracker.get("prefixes"), dict) else {}
-    found = prefixes.get(key.split("-", 1)[0]) if key else None
-    found = found or tracker.get("type")
-    return found if isinstance(found, str) and found else None
+    return tracker_source(root, key)[0]
 
 
 def cut_changes(root: Path, key: str) -> list[str]:
@@ -248,7 +275,9 @@ def fetch_jira(root: Path, key: str) -> dict:
         raise FetchError("brak danych dostępu do Jiry — ustaw zmienne JIRA_EMAIL i JIRA_API_TOKEN (Jira Cloud) albo "
                          "JIRA_TOKEN (Data Center); fabryka ich nie zapisuje")
     tracker = (load_card(root) or {}).get("tracker")
-    fields_cfg = tracker.get("fields") if isinstance(tracker, dict) and isinstance(tracker.get("fields"), dict) else {}
+    org_fields = org_tracker(root).get("fields")
+    fields_cfg = {**(org_fields if isinstance(org_fields, dict) else {}),
+                  **(tracker.get("fields") if isinstance(tracker, dict) and isinstance(tracker.get("fields"), dict) else {})}
     acceptance = fields_cfg.get("acceptance") if re.fullmatch(r"[A-Za-z0-9_]+", str(fields_cfg.get("acceptance") or "")) else None
     wanted = ",".join(["summary", "description"] + ([acceptance] if acceptance else []))
     req = urllib.request.Request(f"{base}/rest/api/2/issue/{quote(key.upper())}?fields={wanted}", method="GET",
@@ -349,8 +378,8 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
     if re.match(r"(?i)https?://", first):
         tracker, key = from_url(first)
         out.update(kind="zgloszenie", key=key, source=first, tracker=tracker, tracker_from="adres" if tracker else None)
-        if tracker is None and (saved := card_tracker(root, key)):
-            out.update(tracker=saved, tracker_from="karta")
+        if tracker is None and (saved := tracker_source(root, key))[0]:
+            out.update(tracker=saved[0], tracker_from=saved[1])
         out["ask"], out["next"] = ticket_next(key, out["tracker"], first)
         if out["ask"] == "tracker":          # adres jest, więc o tracker nie pytamy — wystarczy treść
             out["ask"] = None
@@ -396,8 +425,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
                                + (" --story \"<uwagi człowieka>\"" if rest else ""))
             return done()
         if TICKET.fullmatch(head) and len(tokens) == 1:
-            saved = card_tracker(root, key)
-            origin = "karta" if saved else None
+            saved, origin = tracker_source(root, key)
             if saved is None and jira_ready(root):          # adres i dane dostępu do Jiry są w środowisku
                 saved, origin = "jira", "srodowisko"
             out.update(kind="zgloszenie", tracker=saved, tracker_from=origin)
