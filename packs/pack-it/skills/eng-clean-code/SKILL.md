@@ -4,7 +4,7 @@ description: Użyj przy czytelności kodu — nazwy, funkcje, komentarze, obsłu
 metadata:
   review: "2027-10-09"
   catalog: "Użyj przy pisaniu, przeglądzie i refaktoryzacji kodu w dowolnym języku — nazewnictwo, funkcje, komentarze, obsługa błędów, zapachy kodu i bezpieczne refaktoryzacje małymi krokami. Nie do zasad architektonicznych (eng-design-principles) ani idiomów konkretnego języka (lang-*)."
-  keywords: "null jako znaczenie, zwracanie null, czytelność, nazwy zmiennych, długa funkcja, refaktoryzacja, Optional, Null Object"
+  keywords: "null jako znaczenie, zwracanie null, czytelność, nazwy zmiennych, długa funkcja, refaktoryzacja, Optional, Null Object, czysty kod, połknięty wyjątek, pusty catch, błąd tylko zalogowany, sukces mimo błędu, clean code, swallowed exception, empty catch, log and continue"
 ---
 
 # Czysty kod i refaktoryzacja
