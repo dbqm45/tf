@@ -108,11 +108,11 @@ def main() -> int:
     # agent przeglądu: etykiety ustaleń i reguła nowej rundy
     cfg_text = (ROOT / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8")
     prompt = cfg_text.split("\n  scope-reviewer:", 1)[-1][:2500] if "\n  scope-reviewer:" in cfg_text else ""
-    check(all(w in prompt for w in ("[ważne]", "[drobne]", "[zastane]")),
-          "PR-7: scope-reviewer oznacza każde ustalenie: [ważne], [drobne] albo [zastane]")
-    check("SPOZA ZAKRESU" in prompt and "tylko" in prompt and "ważne" in prompt and "sprzed zmiany" in prompt
-          and "poprzedniej rundy" in prompt,
-          "PR-8: werdykt SPOZA ZAKRESU tylko przy ustaleniu ważnym; zastane to kod sprzed zmiany; druga runda ogląda "
+    check(all(w in prompt for w in ("[important]", "[minor]", "[pre-existing]")),
+          "PR-7: scope-reviewer oznacza każde ustalenie: [important], [minor] albo [pre-existing] (jak skill tf)")
+    check("OUT OF SCOPE" in prompt and "only" in prompt and "[important]" in prompt and "before the change" in prompt
+          and "previous round" in prompt,
+          "PR-8: werdykt OUT OF SCOPE tylko przy ustaleniu ważnym; zastane to kod sprzed zmiany; druga runda ogląda "
           "tylko zmiany od poprzedniej rundy")
     body = SKILL.read_text(encoding="utf-8")
     step4 = body.split("**The scope review:**", 1)[-1].split("5. **", 1)[0]

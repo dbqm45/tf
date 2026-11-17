@@ -55,11 +55,11 @@ def main() -> int:
               "CL-4: bez gita albo bez commitów → None (nowe repozytorium)")
         lines = pm.language_lines(cfg, t / "brak")
         text = "\n".join(lines)
-        check(cfg["language_note"].strip() in text and "po angielsku" in text,
+        check(cfg["language_note"].strip() in text and "in English" in text,
               f"CL-5: nowe repozytorium — reguła rozmowy i commity po angielsku: {text}")
-        check("po polsku" in "\n".join(pm.language_lines(cfg, pl)), "CL-6: repo z polskimi commitami → linia po polsku")
+        check("in Polish" in "\n".join(pm.language_lines(cfg, pl)), "CL-6: repo z polskimi commitami → linia po polsku")
         org = {**cfg, "commit_language": {**cfg["commit_language"], "new_repo": "pl"}}
-        check("po polsku" in "\n".join(pm.language_lines(org, t / "brak")),
+        check("in Polish" in "\n".join(pm.language_lines(org, t / "brak")),
               "CL-7: `commit_language.new_repo` (np. z nakładki firmy) zmienia język nowego repozytorium")
         check("commit_language" in pm.ORG_CONFIG_KEYS and "default_language" not in pm.ORG_CONFIG_KEYS,
               f"CL-8: nakładka firmy ustawia `commit_language`, nie `default_language`: {pm.ORG_CONFIG_KEYS}")

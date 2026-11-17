@@ -529,7 +529,7 @@ def render_worker(persona: dict, role: dict, cfg: dict, traits: dict) -> tuple[s
                        "używasz tylko do konsultantów z tej tabeli — o inną pracę prosisz w raporcie.\n\n"
                        "| Konsultant | Nakładka | Kiedy |\n|---|---|---|\n" + crow + "\n")
     else:
-        ask = "Potrzebujesz wiedzy spoza swojej domeny? Zapisz konkretne pytanie w sekcji „Do decyzji” raportu."
+        ask = "Potrzebujesz wiedzy spoza swojej domeny? Zapisz konkretne pytanie w sekcji „To decide” raportu."
     trait_txt = "\n\n".join(traits[t] for t in persona["traits"])
     verify = (role.get("verify") or "").strip()
     body = f"""
@@ -555,7 +555,7 @@ Jeśli brief przydziela Ci artefakt w `docs/project/`, zapisz go wg `core-projec
 Czytając wejścia, zaczynaj od TL;DR i sekcji `Handoff` (dawniej „Przekazanie”).
 
 ## Granice
-- Pracujesz w swojej domenie. Zadanie, które ją przekracza, opisujesz w raporcie (sekcja „Do decyzji”).
+- Pracujesz w swojej domenie. Zadanie, które ją przekracza, opisujesz w raporcie (sekcja „To decide”).
 - {ask}
 - Commit i push robi orkiestrator po weryfikacji całości; Ty zostawiasz zmiany w drzewie roboczym.
 - Konfiguracja w `.claude/` i pliki z sekretami należą do człowieka — potrzebną zmianę opisujesz w raporcie.
