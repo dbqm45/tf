@@ -91,7 +91,7 @@ scenariusz można „zazielenić” w adapterze.
   from Code Owners”. Auto-merge tylko dla PR, które ich nie dotykają. Zielone CI nie jest dowodem, gdy PR zmienia
   workflow, który go sprawdza. `tf risk` oznacza te ścieżki jako wysokie ryzyko.
 - **Zakres** ograniczony do zadania; zmiany poza nim wycofujesz (agent `scope-reviewer`).
-- **Testy akceptacyjne poza zasięgiem agenta** (akapit wyżej), żeby agent nie „zaliczył” sam siebie.
+- **Testy akceptacyjne poza zasięgiem agenta** (punkt wyżej), żeby agent nie „zaliczył” sam siebie.
 - **Infrastruktura od AI** przechodzi więcej bramek niż ludzka, nie mniej: plan zmian w PR i wykrywanie dryfu.
   Dalszy krok: podpisana atestacja (in-toto, SLSA, Sigstore) z modelem, zadaniem i dozwolonymi narzędziami.
 - Uprawnienia agenta w CI (sekrety, prawo zapisu, PR z forka): core-agent-security.
