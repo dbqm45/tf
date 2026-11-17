@@ -56,7 +56,9 @@ def make(root: Path, with_git: bool = True) -> None:
         "# Dziennik\n\n| Kiedy | Kto | Faza | Zdarzenie |\n|---|---|---|---|\n"
         "| 2026-10-01 09:00 | claude | plan | Stary wpis spoza okna — błąd |\n"
         "| 2026-10-15 09:00 | claude | realizacja | Dodano formularz |\n"
-        "| 2026-10-16 09:00 | claude | realizacja | Test nie zadziałał w CI, cofnięto zmianę |\n", encoding="utf-8")
+        "| 2026-10-16 09:00 | claude | realizacja | Test nie zadziałał w CI, cofnięto zmianę |\n"
+        "| 2026-10-16 10:00 | claude | delivery | Added the export endpoint |\n"
+        "| 2026-10-16 11:00 | claude | delivery | The migration failed in CI, rolled back |\n", encoding="utf-8")
     (arch / "20261016-formularz.md").write_text(
         "---\ntask: formularz\nupdated: 2026-10-16 12:00\n---\n# Formularz\n\n## Pułapki i ślepe uliczki\n"
         "- Vitest w trybie watch zawiesza hook — uruchamiaj z --run.\n\n## Otwarte pytania\n", encoding="utf-8")
@@ -114,8 +116,9 @@ def main() -> int:
         check(h.get("missed") == {"fe-css": 1} and h.get("ignored") == {"tool-nx": 2},
               f"AR-5: podpowiedzi — użyte bez podpowiedzi (przeoczone) i podpowiadane bez użycia: {h}")
         j = d.get("journal", {})
-        check(j.get("entries") == 2 and len(j.get("flagged", [])) == 1 and "cofnięto" in j["flagged"][0],
-              f"AR-6: dziennik z okna, wpisy z sygnałem problemu wyróżnione: {j}")
+        check(j.get("entries") == 4 and len(j.get("flagged", [])) == 2 and "cofnięto" in j["flagged"][0]
+              and "rolled back" in j["flagged"][1],
+              f"AR-6: dziennik z okna, wpisy z sygnałem problemu wyróżnione (po polsku i po angielsku): {j}")
         traps = d.get("traps", [])
         by_file = {x["file"].rsplit("/", 1)[-1]: x["text"] for x in traps}
         check(len(traps) == 2 and "Vitest" in by_file.get("20261016-formularz.md", "")
@@ -136,7 +139,7 @@ def main() -> int:
               f"AR-11: dowody ponumerowane E-n z rodzajem: {ev}")
 
         r = run(root)
-        check(r.returncode == 0 and r.stdout.startswith("# Dane do retrospektywy") and "E-1" in r.stdout
+        check(r.returncode == 0 and r.stdout.startswith("# Retrospective data") and "E-1" in r.stdout
               and "ola-frontend" in r.stdout, f"AR-12: raport markdown dla agenta: {r.stdout[:400]}")
 
     # Pamięć retrospektyw: stabilne klucze, zapis JSON, decyzje człowieka, trendy i propozycje liczone z logów.
@@ -159,12 +162,12 @@ def main() -> int:
         rec = {x["key"]: x for x in tr.get("recurring", [])}
         check(rec.get("tier:ola-frontend:za niski", {}).get("seen") == 1, f"AR-15: powtórka z poprzedniej retrospektywy: {tr}")
         meas = {x["key"]: x["status"] for x in tr.get("measured", [])}
-        check(meas == {"tier:ola-frontend:za niski": "wraca", "rework:src/old.ts": "zniknęło"},
+        check(meas == {"tier:ola-frontend:za niski": "coming back", "rework:src/old.ts": "gone"},
               f"AR-16: skutek zatwierdzonych zmian — zniknęło albo wraca: {meas}")
         check([x["key"] for x in tr.get("rejected_again", [])] == ["hint-missed:fe-css"],
               f"AR-17: sygnał odrzucony wcześniej wraca — oznaczony, żeby nie proponować bez nowych dowodów: {tr}")
         sug = {x["key"]: x for x in d.get("suggestions", [])}
-        check("tier:ola-frontend:za niski" in sug and sug["tier:ola-frontend:za niski"]["place"] == "tier roli"
+        check("tier:ola-frontend:za niski" in sug and sug["tier:ola-frontend:za niski"]["place"] == "role tier"
               and "hint-missed:fe-css" not in sug,
               f"AR-18: propozycje z logów — tier przy ≥2 sygnałach, słowa skilla dopiero przy ≥2 sesjach: {sug}")
 
@@ -189,7 +192,7 @@ def main() -> int:
                       for x in d.get("trend", {}).get("measured", [])),
               "AR-23: bieżąca retrospektywa (z dnia --until) nie jest historią samej siebie")
         r = run(root)
-        check("## Trend" in r.stdout and "wraca" in r.stdout and "## Propozycje z danych" in r.stdout,
+        check("## Trend" in r.stdout and "coming back" in r.stdout and "## Proposals from the data" in r.stdout,
               f"AR-24: raport markdown z sekcjami trendu i propozycji: {r.stdout[-600:]}")
 
     # Nachodzące okna: to samo zdarzenie (klucz i treść jak w poprzedniej retrospektywie) to „już ocenione”, nie powtórka.
@@ -214,13 +217,13 @@ def main() -> int:
               f"AR-30: identyczny dowód z poprzedniej retrospektywy → już ocenione, nie powtórka: {tr}")
         check(other["key"] in rec, f"AR-31: ten sam klucz, inna treść → nadal powtórka: {tr}")
         meas = {x["key"]: x["status"] for x in tr.get("measured", [])}
-        check(meas.get(same["key"]) == "bez nowych dowodów", f"AR-32: zatwierdzona zmiana bez nowych dowodów: {meas}")
+        check(meas.get(same["key"]) == "no new evidence", f"AR-32: zatwierdzona zmiana bez nowych dowodów: {meas}")
         check(same["key"] not in {x["key"] for x in d.get("suggestions", [])}, "AR-33: brak propozycji z już ocenionych")
         ov = d.get("overlap") or {}
         check(ov.get("previous_until") == "2026-10-10" and since <= "2026-10-10",
               f"AR-34: okno nachodzi na poprzednią retrospektywę → ostrzeżenie: {ov}")
         r = run(root)
-        check("nachodzi" in r.stdout and "już ocenione" in r.stdout, f"AR-35: ostrzeżenie w raporcie: {r.stdout[:900]}")
+        check("overlaps" in r.stdout and "already assessed" in r.stdout, f"AR-35: ostrzeżenie w raporcie: {r.stdout[:900]}")
 
     # Luka w logach: commity po ostatnim wpisie logów → ostrzeżenie „dane niepełne” (hooki mogły być nieaktywne).
     if shutil.which("git"):
@@ -237,7 +240,7 @@ def main() -> int:
                   and any(e["key"] == "data-gap:logs" for e in d.get("evidence", [])),
                   f"AR-26: commity po ostatnim wpisie logów → luka z liczbą commitów i dowód data-gap:logs: {gaps}")
             r = run(root)
-            check("Dane niepełne" in r.stdout.split("## Tokeny", 1)[0], f"AR-27: ostrzeżenie na górze raportu: {r.stdout[:400]}")
+            check("Incomplete data" in r.stdout.split("## Tokens", 1)[0], f"AR-27: ostrzeżenie na górze raportu: {r.stdout[:400]}")
 
     with tempfile.TemporaryDirectory() as t:
         r = run(Path(t), "--json")
@@ -277,7 +280,7 @@ def main() -> int:
             check("rework-cause:agent-error" in sug and "rework-cause:spec-gap" not in sug,
                   f"AR-39: propozycja przy ≥2 poprawkach z tą samą przyczyną: {sorted(sug)}")
         md = run(root).stdout
-        check("guard_bash" in md and "Blokady hooków" in md, f"AR-40: raport markdown pokazuje blokady hooków: {md[:600]}")
+        check("guard_bash" in md and "Hook blocks" in md, f"AR-40: raport markdown pokazuje blokady hooków: {md[:600]}")
 
     for f in fails:
         print(f"✗ {f}")

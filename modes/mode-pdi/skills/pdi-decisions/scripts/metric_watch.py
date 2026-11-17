@@ -124,7 +124,7 @@ def evaluate_metric(band, rows: list[dict], column: str, side: str, baseline: in
     try:
         result = band.evaluate([v for _, v in points], baseline, side)
     except ValueError as e:
-        return {**out, "note": f"brak zmienności w linii bazowej — {e}" if "odchylenie" in str(e) else str(e)}
+        return {**out, "note": f"brak zmienności w linii bazowej — {e}" if any(w in str(e) for w in ("standard deviation", "odchylenie")) else str(e)}   # pl: sprzed 14.x
     violations = [{"date": points[v["index"]][0], "rule": v["rule"], "value": v["value"], "z": v["z"],
                    "description": v["description"]} for v in result["violations"]]
     return {**out, "tier": result["tier"], "mean": result["mean"], "sd": result["sd"], "violations": violations,

@@ -46,7 +46,7 @@ No more often than once per stage — a retrospective after every session is noi
    ordered by "frequency × cost". Each: evidence, the change, the expected effect, a **measure** to check in the next
    retrospective. Present them to the human and wait for a decision on each (yes / no / later).
 5. **Closing.** Save the memory: `retro_data.py --since … --save`, then the human's decisions for the proposal keys:
-   `--decide "<klucz>=tak|nie|później"` (no decisions, no trend). Make only the approved changes, each with
+   `--decide "<klucz>=yes|no|later"` (no decisions, no trend). Make only the approved changes, each with
    the right skill (the "How" column). The report `docs/project/archive/retro/<RRRRMMDD>-retro.md` and an entry in the record.
    The next retrospective checks the effects itself: an approved key that disappeared is a change that worked.
    **Signals about the factory** (a missed or noisy factory skill, the tier of its agent) report to the factory repository:

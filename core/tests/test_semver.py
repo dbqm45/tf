@@ -53,7 +53,7 @@ def main() -> int:
             check(False, f"niepoprawna wersja przyjęta: {v}")
         except ValueError as e:
             if v == "v1.2.3":
-                check("nazwa tagu" in str(e), "v1.2.3: komunikat o prefiksie tagu")
+                check("tag name" in str(e), "v1.2.3: komunikat o prefiksie tagu")
 
     # podbicia (reguły 6–8: zerowanie niższych składników; wersje przedpremierowe)
     cases = [("2.4.1", "major", "3.0.0"), ("2.4.1", "minor", "2.5.0"), ("2.4.1", "patch", "2.4.2"),
@@ -88,7 +88,7 @@ def main() -> int:
         g("commit", "--allow-empty", "-q", "-m", "feat(ui): new filter")
         r = subprocess.run([sys.executable, str(SV_PATH), "next", "--since", "v1.4.0"], cwd=d, env=env,
                            capture_output=True, text=True)
-        check("następna wersja: 1.5.0 (minor" in r.stdout, f"next z historii git: {r.stdout}")
+        check("next version: 1.5.0 (minor" in r.stdout, f"next z historii git: {r.stdout}")
         r2 = subprocess.run([sys.executable, "-c", f"import sys; sys.path.insert(0, {str(SV_PATH.parent)!r}); "
                              "import semver; print(semver.last_tag())"], cwd=d, env=env, capture_output=True, text=True)
         check(r2.stdout.strip() == "v1.10.0-rc.1", f"last_tag wg precedencji SemVer: {r2.stdout.strip()}")
@@ -96,13 +96,13 @@ def main() -> int:
     # kontrola CHANGELOG
     log = "# Zmiany\n\n## [1.3.0] — d\n### Nowe\n- a\n\n## [1.2.1] — d\n### Poprawione\n- b\n\n## [1.2.0] — d\n### Nowe\n- c\n"
     check(sv.check_changelog(log, "1.3.0", "1.0.0") == [], "changelog poprawny")
-    check(any("≠ wersja" in p for p in sv.check_changelog(log, "1.3.1")), "changelog: VERSION ≠ najnowszy wpis")
-    check(any("kolejność" in p for p in sv.check_changelog(log.replace("[1.2.1]", "[1.4.0]"))), "changelog: kolejność")
-    check(any("dwa razy" in p for p in sv.check_changelog(log.replace("[1.2.1]", "[1.2.0]"))), "changelog: duplikat")
+    check(any("≠ version" in p for p in sv.check_changelog(log, "1.3.1")), "changelog: VERSION ≠ najnowszy wpis")
+    check(any("order" in p for p in sv.check_changelog(log.replace("[1.2.1]", "[1.4.0]"))), "changelog: kolejność")
+    check(any("occurs twice" in p for p in sv.check_changelog(log.replace("[1.2.1]", "[1.2.0]"))), "changelog: duplikat")
     bad_minor = log.replace("## [1.3.0] — d\n### Nowe", "## [1.2.2] — d\n### Nowe")
-    check(any("tylko patch" in p for p in sv.check_changelog(bad_minor, None, "1.0.0")), "changelog: Nowe w patch")
+    check(any("only patch" in p for p in sv.check_changelog(bad_minor, None, "1.0.0")), "changelog: Nowe w patch")
     bad_major = log.replace("### Nowe\n- a", "### Niezgodne\n- usunięto x")
-    check(any("wymagany major" in p for p in sv.check_changelog(bad_major, None, "1.0.0")), "changelog: Niezgodne w minor")
+    check(any("major required" in p for p in sv.check_changelog(bad_major, None, "1.0.0")), "changelog: Niezgodne w minor")
     check(sv.check_changelog(bad_minor, None, "1.3.0") == [], "changelog: kontrola rodzaju dopiero od strict_from")
 
     # update.py: precedencja SemVer

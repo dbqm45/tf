@@ -1,10 +1,10 @@
 {
  "core-agent-instructions": {
-  "fingerprint": "44ebe29bc350bce4",
+  "fingerprint": "7d65c573574d8d05",
   "offline": "2026-11-17"
  },
  "core-agent-retro": {
-  "fingerprint": "932e6314e8a4dc95",
+  "fingerprint": "bc914501290723ef",
   "offline": "2026-11-17"
  },
  "core-agent-security": {
@@ -16,7 +16,7 @@
   "offline": "2026-11-17"
  },
  "core-conventional-commits": {
-  "fingerprint": "4c6fcce394952355",
+  "fingerprint": "dafe6f96416c533b",
   "offline": "2026-11-17"
  },
  "core-cost-control": {
@@ -24,7 +24,7 @@
   "offline": "2026-11-17"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "fa122a337251221b",
+  "fingerprint": "878637e84a067f26",
   "offline": "2026-11-17"
  },
  "core-factory-update": {
@@ -32,15 +32,15 @@
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
-  "fingerprint": "9bf9b4a27c93285b",
+  "fingerprint": "b679b36152a9e85d",
   "offline": "2026-11-17"
  },
  "core-grounding": {
-  "fingerprint": "73b8e1a77530313f",
+  "fingerprint": "3570ccea0e2cd969",
   "offline": "2026-11-17"
  },
  "core-knowledge": {
-  "fingerprint": "93270d7cdc47db31",
+  "fingerprint": "1971b024491aa8ab",
   "offline": "2026-11-17"
  },
  "core-plan-interview": {
@@ -56,7 +56,7 @@
   "offline": "2026-11-17"
  },
  "core-semver": {
-  "fingerprint": "26551082ea5faba5",
+  "fingerprint": "cc8fae7d43a7055b",
   "offline": "2026-11-17"
  },
  "core-skill-authoring": {
@@ -68,7 +68,7 @@
   "offline": "2026-11-17"
  },
  "core-source-research": {
-  "fingerprint": "fe3c71ee4ddbcb68",
+  "fingerprint": "ed29acb719550cfa",
   "offline": "2026-11-17"
  },
  "core-stack-sync": {
@@ -80,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "adb1e14ecac9ee73",
+  "fingerprint": "b4f98da22acb7f7a",
   "offline": "2026-11-17"
  }
 }

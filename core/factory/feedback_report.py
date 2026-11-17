@@ -32,7 +32,7 @@ sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak no
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SIGNAL = re.compile(r"^(hint-missed|hint-ignored):[a-z0-9][a-z0-9-]*$|^tier:[a-z0-9][a-z0-9-]*:(za niski|za wysoki)$")
+SIGNAL = re.compile(r"^(hint-missed|hint-ignored):[a-z0-9][a-z0-9-]*$|^tier:[a-z0-9][a-z0-9-]*:(?:za )?(?:niski|wysoki)$")   # retro_data pisze klucz z wartością log_usage („niski”); „za niski” — dawna forma
 PROJECT = re.compile(r"^[0-9a-f]{10}$")
 BLOCK = re.compile(r"```json\s*\n(.*?)\n```", re.S)
 MIN_PROJECTS = 2

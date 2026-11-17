@@ -124,7 +124,7 @@ the start of the loop with the next one (at most two; the script will refuse a t
 1. The conditional phases from the plan (only those).
 2. **Agreement with the plan:** `plan_drift.py <katalog> --base <gałąź domyślna>` — a change outside the plan you revert or
    describe in the PR as a deviation. **The artifact budget:**
-   `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <gałąź domyślna>` — `Werdykt:
+   `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <gałąź domyślna>` — `Verdict:
    OVER` → you shorten the artifacts or describe the exception in the PR. **The criteria trace:** `run_state.py trace <katalog>
    --base <gałąź domyślna>` — exit code 1 (a criterion without a test, a test with a foreign `AC-n`) you fix.
 3. `run_state.py stage <katalog> pr` and `run_state.py step <katalog> PR plan_drift pass` (or `fail`). Push the branch

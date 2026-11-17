@@ -50,16 +50,16 @@ class Version:
 def why_invalid(text: str) -> str:
     t = text.strip()
     if t[:1] in "vV" and SEMVER_RE.match(t[1:]):
-        return f"„{t}” to nazwa tagu, nie wersja SemVer — wersją jest „{t[1:]}” (FAQ semver.org)"
+        return f"\"{t}\" is a tag name, not a SemVer version — the version is \"{t[1:]}\" (semver.org FAQ)"
     core = re.split(r"[-+]", t, maxsplit=1)[0]
     parts = core.split(".")
     if len(parts) != 3:
-        return f"„{t}”: wymagane dokładnie trzy liczby X.Y.Z (reguła 2)"
+        return f"\"{t}\": exactly three numbers X.Y.Z are required (rule 2)"
     if any(not p.isdigit() for p in parts):
-        return f"„{t}”: X, Y i Z muszą być nieujemnymi liczbami całkowitymi (reguła 2)"
+        return f"\"{t}\": X, Y and Z must be non-negative integers (rule 2)"
     if any(len(p) > 1 and p.startswith("0") for p in parts):
-        return f"„{t}”: liczby bez zer wiodących (reguła 2)"
-    return f"„{t}”: niepoprawna wersja przedpremierowa lub metadane — identyfikatory [0-9A-Za-z-], niepuste, liczbowe bez zer wiodących (reguły 9–10)"
+        return f"\"{t}\": numbers must not have leading zeros (rule 2)"
+    return f"\"{t}\": invalid pre-release version or build metadata — identifiers are [0-9A-Za-z-], not empty, numeric ones without leading zeros (rules 9–10)"
 
 
 def _cmp_ident(a: str, b: str) -> int:
@@ -106,7 +106,7 @@ def bump(version: str, part: str, pre_id: str = "rc") -> str:
         if v.pre:
             return f"{v.major}.{v.minor}.{v.patch}-{pre_id}.1"
         return f"{v.major}.{v.minor}.{v.patch + 1}-{pre_id}.1"
-    raise ValueError(f"nieznany rodzaj podbicia: {part} (major|minor|patch|pre|release)")
+    raise ValueError(f"unknown bump type: {part} (major|minor|patch|pre|release)")
 
 
 # ───────────── następna wersja z historii commitów (Conventional Commits) ─────────────
@@ -134,7 +134,7 @@ def classify(messages: list[str]) -> tuple[str | None, dict]:
 def git(*args: str) -> str:
     r = subprocess.run(["git", *args], capture_output=True, text=True, timeout=30)
     if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or "git zakończył się błędem")
+        raise RuntimeError(r.stderr.strip() or "git ended with an error")
     return r.stdout
 
 
@@ -171,30 +171,30 @@ def check_changelog(text: str, version: str | None = None, strict_from: str | No
     problems = []
     entries = [(m["v"], m.start()) for m in ENTRY_RE.finditer(text)]
     if not entries:
-        return ["brak wpisów „## [X.Y.Z]”"]
+        return ["no \"## [X.Y.Z]\" entries"]
     parsed = []
     for i, (v, pos) in enumerate(entries):
         try:
             parsed.append((Version(v), text[pos:entries[i + 1][1] if i + 1 < len(entries) else len(text)]))
         except ValueError as e:
-            problems.append(f"wpis [{v}]: {e}")
+            problems.append(f"entry [{v}]: {e}")
     for (a, _), (b, _) in zip(parsed, parsed[1:]):
         c = compare(a, b)
         if c == 0:
-            problems.append(f"wersja {a} występuje dwa razy — wydanej wersji nie zmienia się (reguła 3)")
+            problems.append(f"version {a} occurs twice — you do not change a released version (rule 3)")
         elif c < 0:
-            problems.append(f"kolejność: [{a}] stoi nad [{b}], a jest od niej starsza (najnowsza na górze)")
+            problems.append(f"order: [{a}] is above [{b}], but it is older (the newest goes on top)")
     if version and parsed and str(parsed[0][0]) != version.strip():
-        problems.append(f"najnowszy wpis CHANGELOG [{parsed[0][0]}] ≠ wersja w pliku wersji {version.strip()}")
+        problems.append(f"newest CHANGELOG entry [{parsed[0][0]}] ≠ version in the version file {version.strip()}")
     if strict_from:
         for (new, body), (prev, _) in zip(parsed, parsed[1:]):
             if compare(new, strict_from) < 0 or new.pre:
                 continue
             kind = bump_kind(prev, new)
             if MAJOR_SECTIONS.search(body) and kind != "major" and new.major > 0:
-                problems.append(f"[{new}]: wpis ma sekcję zmian niezgodnych/usunięć, a wersja podbija {kind} (wymagany major)")
+                problems.append(f"[{new}]: the entry has a breaking/removed section, but the version bumps {kind} (major required)")
             if MINOR_SECTIONS.search(body) and kind == "patch":
-                problems.append(f"[{new}]: wpis ma sekcję Nowe/Wycofywane, a wersja podbija tylko patch (wymagany co najmniej minor)")
+                problems.append(f"[{new}]: the entry has an Added/Deprecated section, but the version bumps only patch (at least minor required)")
     return problems
 
 
@@ -225,17 +225,17 @@ def main(argv: list[str]) -> int:
             since = opt("--since") or last_tag()
             current = opt("--current") or (since.lstrip("v") if since else None)
             if not current:
-                print("Brak tagu vX.Y.Z — podaj --current <wersja> (nowy projekt zaczyna od 0.1.0).")
+                print("No vX.Y.Z tag — give --current <version> (a new project starts at 0.1.0).")
                 return 2
             rng = [f"{since}..HEAD"] if since else []
             path = ["--", opt("--path")] if opt("--path") else []
             log = git("log", "--format=%B%x00", *rng, *path)
             kind, stats = classify([m for m in log.split("\x00") if m.strip()])
             nxt = next_version(current, kind)
-            print(f"od {since or 'początku historii'}: zmiany niezgodne {stats['breaking']}, feat {stats['feat']}, "
-                  f"fix/perf {stats['fix']}, inne {stats['other']}")
-            print(f"następna wersja: {nxt} ({kind}{', faza 0.y.z' if Version(current).major == 0 else ''})" if nxt
-                  else "brak zmian wymagających wydania (tylko docs/chore/test/…)")
+            print(f"since {since or 'the start of history'}: breaking changes {stats['breaking']}, feat {stats['feat']}, "
+                  f"fix/perf {stats['fix']}, other {stats['other']}")
+            print(f"next version: {nxt} ({kind}{', 0.y.z phase' if Version(current).major == 0 else ''})" if nxt
+                  else "no changes that need a release (only docs/chore/test/…)")
             return 0
         if cmd == "check-changelog":
             text = Path(args[0]).read_text(encoding="utf-8")
@@ -244,7 +244,7 @@ def main(argv: list[str]) -> int:
             problems = check_changelog(text, version, opt("--strict-from"))
             for p in problems:
                 print(f"✗ {p}")
-            print(f"{'✓' if not problems else '✗'} CHANGELOG: {len(ENTRY_RE.findall(text))} wpisów, problemów: {len(problems)}")
+            print(f"{'✓' if not problems else '✗'} CHANGELOG: {len(ENTRY_RE.findall(text))} entries, problems: {len(problems)}")
             return 1 if problems else 0
     except (ValueError, IndexError, RuntimeError) as e:
         print(f"✗ {e}")

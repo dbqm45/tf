@@ -27,8 +27,8 @@ from pathlib import Path
 
 TIER_OF_RULE = {1: "act", 2: "diagnose", 3: "log", 4: "log"}
 ORDER = ["ok", "log", "diagnose", "act"]
-RULE_TEXT = {1: "punkt poza 3σ", 2: "2 z 3 kolejnych poza 2σ po tej samej stronie",
-             3: "4 z 5 kolejnych poza 1σ po tej samej stronie", 4: "8 kolejnych po jednej stronie średniej"}
+RULE_TEXT = {1: "a point outside 3σ", 2: "2 of 3 consecutive points outside 2σ on the same side",
+             3: "4 of 5 consecutive points outside 1σ on the same side", 4: "8 consecutive points on one side of the mean"}
 
 
 def read_values(path: Path, column: str | None) -> list[float]:
@@ -57,11 +57,11 @@ def counts(side: str, z: float) -> int:
 def evaluate(values: list[float], baseline: int, side: str = "both") -> dict:
     base = values[:baseline]
     if len(base) < 2:
-        raise ValueError("linia bazowa musi mieć co najmniej 2 punkty")
+        raise ValueError("the baseline must have at least 2 points")
     mean = statistics.fmean(base)
     sd = statistics.pstdev(base)
     if sd == 0:
-        raise ValueError("odchylenie standardowe linii bazowej wynosi 0 — wydłuż linię bazową albo zmień metrykę")
+        raise ValueError("the standard deviation of the baseline is 0 — make the baseline longer or change the metric")
     pts = values[baseline:]
     z = [(v - mean) / sd for v in pts]
     violations = []
@@ -90,9 +90,9 @@ def evaluate(values: list[float], baseline: int, side: str = "both") -> dict:
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(description="Pasma kontrolne metryki (reguły Western Electric).")
+    ap = argparse.ArgumentParser(description="Control bands for a metric (Western Electric rules).")
     ap.add_argument("file", type=Path)
-    ap.add_argument("--baseline", type=int, required=True, help="liczba pierwszych punktów tworzących linię bazową")
+    ap.add_argument("--baseline", type=int, required=True, help="number of first points that make the baseline")
     ap.add_argument("--column")
     ap.add_argument("--side", choices=["both", "upper", "lower"], default="both")
     ap.add_argument("--format", choices=["json", "text"], default="json")
@@ -103,9 +103,9 @@ def main(argv: list[str]) -> int:
         print(json.dumps({"error": str(e)}, ensure_ascii=False))
         return 2
     if a.format == "text":
-        print(f"poziom: {result['tier']} · średnia {result['mean']} · σ {result['sd']} · punkty {result['evaluated']}")
+        print(f"tier: {result['tier']} · mean {result['mean']} · σ {result['sd']} · points {result['evaluated']}")
         for v in result["violations"]:
-            print(f"  reguła {v['rule']} ({v['description']}): punkt {v['index']}, wartość {v['value']}, z = {v['z']}")
+            print(f"  rule {v['rule']} ({v['description']}): point {v['index']}, value {v['value']}, z = {v['z']}")
     else:
         print(json.dumps(result, ensure_ascii=False))
     return 0
