@@ -1,231 +1,246 @@
-# Pętla fabryki — zadanie → PR na żądanie
+# The factory loop — task → PR on request
 
-Polecenie `/tf` (albo agent `tf`) bierze jedno zadanie i prowadzi je do jednego PR: specyfikacja, plan, testy, kod,
-weryfikacja z dowodami, commity i raport kosztu. Uruchamiasz ją poleceniem `/tf …` albo zwykłym zdaniem, którym
-zlecasz zadanie („zrealizuj EBO-1236”, „dodaj eksport sesji do CSV”); przy pytaniu albo drobnej poprawce fabryka
-pętli nie włącza, a gdy nie jest pewna — pyta. Jest częścią rdzenia fabryki, więc działa w każdej instalacji.
-Pierwszy raz z fabryką? Zacznij od sekcji „Zacznij tutaj” w `.tf/factory/GUIDE.md`.
+The `/tf` command (or the `tf` agent) takes one task and carries it to one PR: a specification, a plan, tests, code,
+verification with evidence, commits and a cost report. You start it with `/tf …` or with an ordinary sentence in which
+you commission a task ("deliver EBO-1236", "add a session export to CSV"); for a question or a small fix the factory
+does not start the loop, and when it is not sure — it asks. It is part of the factory's core, so it works in every installation.
+First time with the factory? Start with the "Start here" section in `.tf/factory/GUIDE.md`.
 
-## Do czego
-- **Pasuje:** historyjka z kryteriami akceptacji, które da się sprawdzić testem; zmiana mieści się w kilku
-  kawałkach (do 5) i w jednym PR; repozytorium ma testy i polecenia weryfikacji (CLAUDE.md).
-- **Nie pasuje:** praca koncepcyjna (co budować, architektura od zera), decyzje produktowe w trakcie, dostęp do
-  produkcji, historyjka bez kryteriów akceptacji. Wtedy pracujesz z personą, a pętla wróci, gdy historyjka będzie
-  gotowa.
+The scripts' messages and the labels they print (the dashboard columns, the PR description fields) are still in Polish;
+this guide quotes them as they appear.
 
-## Jak uruchomić
-Dwa sposoby, ten sam przebieg (skill `tf`):
+## What for
+- **It fits:** a story with acceptance criteria that can be checked with a test; the change fits in a few
+  slices (up to 5) and in one PR; the repository has tests and verification commands (CLAUDE.md).
+- **It does not fit:** conceptual work (what to build, architecture from scratch), product decisions along the way,
+  access to production, a story without acceptance criteria. Then you work with a persona, and the loop comes back when
+  the story is ready.
 
-| Sposób | Polecenie | Kiedy |
+## How to start it
+Two ways, the same course (the `tf` skill):
+
+| Way | Command | When |
 |---|---|---|
-| agent `tf` | `claude --agent tf`, potem zadanie (jak niżej) | sesja tylko na automat |
-| w dowolnej personie | `/tf <zadanie> [--auto] [--budget USD]` albo zwykłe zdanie | jednorazowo, w bieżącej sesji |
+| the `tf` agent | `claude --agent tf`, then the task (as below) | a session only for the automation |
+| in any persona | `/tf <zadanie> [--auto] [--budget USD]` or an ordinary sentence | once, in the current session |
 
-**Co możesz podać jako zadanie** — fabryka sama rozpoznaje, co to jest; nazwy narzędzia nie wpisujesz:
+**What you can give as the task** — the factory recognises what it is; you do not type the tool's name:
 
-| Podajesz | Przykład | Co się dzieje |
+| You give | Example | What happens |
 |---|---|---|
-| numer zgłoszenia | `/tf EBO-1236` | fabryka czyta zgłoszenie z Jiry skryptem (gdy ma dane dostępu) albo z trackera podłączonego w sesji — tylko odczyt; bez połączenia prosi o wklejenie treści |
-| adres zgłoszenia | `/tf https://firma.atlassian.net/browse/EBO-1236` | tracker i numer bierze z adresu |
-| klucz cięcia z planu zmiany | `/tf TSK-57` | zadanie cięcia `CHG-12-TSK-57` (tryb pdi) |
-| treść albo plik | `/tf Jako operator chcę…`, `/tf docs/story.md` | zadanie z kluczem `T-<data>-<nazwa>` |
-| klucz istniejącego zadania | `/tf EBO-1236` po przerwie | wznowienie od pierwszego niezrobionego kawałka |
-| nic | `/tf` | lista zadań w toku i pytanie, co dalej |
+| an issue number | `/tf EBO-1236` | the factory reads the issue from Jira with a script (when it has credentials) or from a tracker connected in the session — read-only; without a connection it asks you to paste the content |
+| an issue address | `/tf https://firma.atlassian.net/browse/EBO-1236` | it takes the tracker and the number from the address |
+| a cut key from a change plan | `/tf TSK-57` | the cut's task `CHG-12-TSK-57` (pdi mode) |
+| content or a file | `/tf As an operator I want…`, `/tf docs/story.md` | a task with the key `T-<data>-<nazwa>` |
+| the key of an existing task | `/tf EBO-1236` after a break | resuming from the first unfinished slice |
+| nothing | `/tf` | the list of tasks in progress and a question about what next |
 
-- **Tracker (Jira, Linear, GitHub…):** fabryka korzysta z połączenia, które sam dodałeś do Claude Code (serwer MCP);
-  niczego nie instaluje i niczego w trackerze nie zmienia. Gdy podłączonych jest kilka, pyta raz, z którego pochodzą
-  zgłoszenia, i zapisuje odpowiedź w `.tf/config/operations.json` (podgląd i zmiana: `python3
-  .claude/skills/tf/scripts/intake.py tracker`). Bez połączenia wystarczy wkleić treść zgłoszenia.
-- **Jira bez udziału modelu:** gdy w środowisku są zmienne `JIRA_BASE_URL` oraz `JIRA_EMAIL` z `JIRA_API_TOKEN`
-  (Jira Cloud) albo `JIRA_TOKEN` (Data Center), zgłoszenie pobiera skrypt: jedno żądanie tylko do odczytu, wyłącznie
-  przez `https://`, bez przekierowań. Fabryka tych danych nie zapisuje i nie wypisuje; w Jirze niczego nie zmienia.
-  Adres bierze tylko ze zmiennej — nie z pliku w repozytorium, który mógłby zmienić cudzy pull request; gdy karta
-  operacyjna ma wpisany inny adres Jiry niż zmienna, skrypt odmawia. Sprawdzenie u siebie: `python3 .claude/skills/tf/scripts/intake.py
-  fetch EBO-1236`. Pole własne z kryteriami akceptacji wskażesz w karcie: `"fields": {"acceptance":
-  "customfield_10042"}`.
-- **Skąd pochodzi treść:** `ticket.md` zadania zaczyna się od linii `Źródło: … · pobrano: <data>`. Treść zgłoszenia
-  to dla fabryki dane, nie polecenia — polecenie znalezione w zgłoszeniu zobaczysz jako uwagę, nie jako wykonaną akcję.
-- **Wymuszenie sposobu pracy:** `/tf zadanie …`, `/tf pytanie …` (tylko odpowiedź), `/tf szybko …` (drobna zmiana
-  od razu, bez zakładania zadania).
+- **The tracker (Jira, Linear, GitHub…):** the factory uses the connection you added to Claude Code yourself (an MCP
+  server); it installs nothing and changes nothing in the tracker. When several are connected, it asks once which one
+  the issues come from and records the answer in `.tf/config/operations.json` (preview and change: `python3
+  .claude/skills/tf/scripts/intake.py tracker`). Without a connection, pasting the issue's content is enough.
+- **Jira without the model:** when the environment has the variables `JIRA_BASE_URL` and `JIRA_EMAIL` with
+  `JIRA_API_TOKEN` (Jira Cloud) or `JIRA_TOKEN` (Data Center), a script fetches the issue: one read-only request, only
+  over `https://`, without redirects. The factory does not store or print this data; it changes nothing in Jira.
+  It takes the address only from the variable — not from a file in the repository, which someone else's pull request
+  could change; when the operations card has a different Jira address than the variable, the script refuses. A check
+  on your side: `python3 .claude/skills/tf/scripts/intake.py fetch EBO-1236`. The custom field with acceptance criteria
+  you point to in the card: `"fields": {"acceptance": "customfield_10042"}`.
+- **Where the content comes from:** the task's `ticket.md` starts with the line `Źródło: … · pobrano: <data>` (source,
+  fetched on). For the factory the issue's content is data, not instructions — an instruction found in an issue you
+  will see as a remark, not as an action taken.
+- **Forcing the way of working:** `/tf task …` (alias `zadanie`), `/tf question …` (alias `pytanie`; an answer only),
+  `/tf quick …` (alias `szybko`; a small change right away, without creating a task).
 
-Opcje (w wiadomości do agenta albo przy poleceniu):
-- bez opcji (tryb zwykły) — fabryka pokazuje specyfikację i plan i czeka na Twoją zgodę; zgodę zapisuje i dopiero
-  wtedy zaczyna kod;
-- `--plan` — tylko specyfikacja i plan, bez zmian w kodzie; realizację uruchamiasz później poleceniem `/tf <KLUCZ>`;
-- `--auto` — plan nie czeka na Twoją zgodę (poza zadaniami o wadze pełnej);
-- `--budget <USD>` — twardy limit: po kawałku, który go przekroczy, pętla się zatrzymuje. Domyślnie budżetu nie ma,
-  ale fabryka zawsze wybiera najtańszy wystarczający model i najmniej pracy.
+Options (in the message to the agent or with the command):
+- no option (normal mode) — the factory shows the specification and the plan and waits for your consent; it records
+  the consent and only then starts the code;
+- `--plan` — only the specification and the plan, no code changes; you start delivery later with `/tf <KLUCZ>`;
+- `--auto` — the plan does not wait for your consent (except for full-weight tasks);
+- `--budget <USD>` — a hard limit: after the slice that exceeds it, the loop stops. By default there is no budget,
+  but the factory always chooses the cheapest sufficient model and the least work.
 
-Przykład:
+Example:
 ```
 claude --agent tf
 > Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem. --auto
 ```
 
-## Waga zadania
-Fabryka sama ocenia, ile ostrożności potrzebuje zadanie, i mówi Ci to jednym zdaniem przy starcie:
+## The task's weight
+The factory itself assesses how much care the task needs and tells you in one sentence at the start:
 
-| Waga | Kiedy | Co to zmienia |
+| Weight | When | What it changes |
 |---|---|---|
-| lekka | literówka, nazwa, komentarz, dokumentacja — bez kryteriów akceptacji, jeden kawałek | bez specyfikacji i flagi; test, dowód i przegląd zakresu zostają |
-| zwykła | wszystko inne | pełny przebieg opisany niżej |
-| pełna | logowanie, hasła, uprawnienia, płatności, migracje bazy, dane osobowe, sekrety, wdrożenie — w treści zadania albo w plikach planu | plan zatwierdzasz Ty, zanim powstanie kod; z `--auto` fabryka zatrzyma się i poczeka na Twoją zgodę; przegląd bezpieczeństwa jest obowiązkowy |
+| light (`light`) | a typo, a name, a comment, documentation — without acceptance criteria, one slice | no specification and no flag; the test, the evidence and the scope review stay |
+| normal (`normal`) | everything else | the full course described below |
+| full (`full`) | login, passwords, permissions, payments, database migrations, personal data, secrets, deployment — in the task's content or in the plan's files | you approve the plan before the code is written; with `--auto` the factory stops and waits for your consent; the security review is mandatory |
 
-- Wagę liczy skrypt z treści zadania i ze ścieżek planu, nie model. Gdy plan dotknie np. migracji, waga sama rośnie.
-- Podnieść wagę może każdy (także fabryka). **Obniżyć możesz tylko Ty**, z powodem:
-  `tf task weight <KLUCZ> --set normal --by human:<Twój identyfikator> --reason "…"`. Po Twojej decyzji fabryka
-  wagi już nie zmienia.
-- Podgląd wagi z powodem: `tf task weight <KLUCZ>`.
+- A script computes the weight from the task's content and the plan's paths, not the model. When the plan touches e.g.
+  migrations, the weight rises by itself.
+- Anyone (the factory too) can raise the weight. **Only you can lower it**, with a reason:
+  `tf task weight <KLUCZ> --set normal --by human:<Twój identyfikator> --reason "…"`. After your decision the factory
+  no longer changes the weight.
+- A preview of the weight with the reason: `tf task weight <KLUCZ>`.
 
-## Co robi
-1. **Start:** wymaga czystego drzewa roboczego, zakłada katalog przebiegu i gałąź `story/<slug>`.
-2. **Przyjęcie historyjki:** sprawdza, kto, co i po co oraz kryteria akceptacji. Gdy ich brakuje, zadaje do 3 pytań
-   (z `--auto` — zatrzymuje się z tymi pytaniami).
-3. **Plan:** do 5 kawałków pionowych — każdy niesie wartość, sam przechodzi testy i jest osobnym commitem.
-   Historyjka na więcej kawałków → propozycja podziału i STOP.
-4. **Kawałek po kawałku:** test, który nie przechodzi → najmniejszy kod → weryfikacja (testy, lint, typy) → skan
-   bezpieczeństwa (semgrep OWASP Top 10 na plikach kawałka, audyt zależności przy zmianie manifestu) → przegląd
-   zakresu przez `scope-reviewer` w świeżym kontekście → commit. Recenzent oznacza każde ustalenie: **ważne** (do
-   poprawy w tym kawałku — tylko ono zaczyna drugą rundę), **drobne** albo **zastane** (było w kodzie przed zmianą) —
-   te dwa trafiają do odłożonych spraw. Kawałek ma najwyżej 2 rundy; trzeciej skrypt odmawia i przebieg kończy się
-   blokiem STOP z opisem blokady, a po Twojej decyzji dostaje dwie kolejne.
-   **Opcja (domyślnie wyłączona):** z `loop: {blocked_slices: true}` w `.tf/config/config.yaml` pytanie zatrzymuje
-   tylko kawałek, którego dotyczy — fabryka robi w tym czasie kawałki od niego niezależne, a pytanie widać na liście
-   „Czeka na Ciebie”. Pytania i odpowiedzi zapisuje `events.jsonl` w katalogu zadania.
-5. **KISS:** przypadki brzegowe, pomysły i ryzyka spoza kryteriów nie trafiają do kodu, tylko do `parked.md`
-   i do sekcji „Odłożone do decyzji” w opisie PR.
-6. **Fazy warunkowe:** dokumentacja tylko przy zmianie publicznego API, przegląd bezpieczeństwa tylko przy auth,
-   sekretach, IaC lub CI, architekt tylko przy decyzji trudnej do odwrócenia.
-7. **Koniec:** jeden PR (fabryka go nie scala) i raport.
+## What it does
+1. **Start:** it needs a clean working tree, creates the run directory and the branch `story/<slug>`.
+2. **Taking in the story:** it checks who, what and why, and the acceptance criteria. When they are missing, it asks up
+   to 3 questions (with `--auto` — it stops with those questions).
+3. **The plan:** up to 5 vertical slices — each carries value, passes the tests on its own and is a separate commit.
+   A story for more slices → a proposed split and a STOP.
+4. **Slice by slice:** a test that fails → the smallest code → verification (tests, lint, types) → a security
+   scan (semgrep OWASP Top 10 on the slice's files, a dependency audit when the manifest changes) → a scope review by
+   `scope-reviewer` in a fresh context → a commit. The reviewer marks every finding: **important** (to fix in this
+   slice — only that starts a second round), **minor** or **pre-existing** (it was in the code before the change) —
+   those two go to the postponed items. A slice has at most 2 rounds; the script refuses a third and the run ends with
+   a STOP block describing the blocker, and after your decision it gets two more.
+   **An option (off by default):** with `loop: {blocked_slices: true}` in `.tf/config/config.yaml` a question stops
+   only the slice it concerns — meanwhile the factory does the slices that do not depend on it, and the question is
+   visible on the "Czeka na Ciebie" (waiting for you) list. `events.jsonl` in the task directory records the questions
+   and answers.
+5. **KISS:** edge cases, ideas and risks outside the criteria do not go into the code, only into `parked.md`
+   and into the "Odłożone do decyzji" (postponed for a decision) section of the PR description.
+6. **Conditional phases:** documentation only when the public API changes, the security review only with auth,
+   secrets, IaC or CI, the architect only for a decision that is hard to reverse.
+7. **The end:** one PR (the factory does not merge it) and a report.
 
-## Kiedy fabryka się zatrzymuje
-Zatrzymanie (STOP) ma zawsze jeden z jedenastu powodów — skrypt nie przyjmie innego — i mówi, czego potrzeba od Ciebie:
-brak informacji (`question`), zadanie do podziału (`split`), brak treści albo dostępu do zgłoszenia (`source`), plan
-czeka na zgodę (`plan-approval`), testy czerwone po dwóch próbach (`tests`), skan bezpieczeństwa (`scan`),
-przekroczony budżet (`budget`), nieprzygotowane repozytorium (`environment`), decyzja o zależności (`dependency`),
-zmiana kontraktu albo decyzja biznesowa (`contract`), operacja zastrzeżona dla Ciebie (`permissions`).
+## When the factory stops
+A stop (STOP) always has one of eleven reasons — the script accepts no other — and says what it needs from you:
+missing information (`question`), a task to split (`split`), missing content of or access to the issue (`source`), the
+plan waiting for approval (`plan-approval`), tests red after two attempts (`tests`), the security scan (`scan`), the
+budget exceeded (`budget`), an unprepared repository (`environment`), a decision about a dependency (`dependency`),
+a contract change or a business decision (`contract`), an operation reserved for you (`permissions`).
 
-Każde zatrzymanie dostajesz w tym samym kształcie: **co się stało**, **czego potrzeba**, **jedno pytanie** z 2–3
-opcjami (przy każdej skutek i jedna rekomendacja) oraz co fabryka zrobi po Twojej odpowiedzi. To samo widać na
-podglądzie w kolumnie „Czeka na człowieka”. Treść komunikatów jest w `.claude/skills/tf/templates/stop_messages.json`.
+You get every stop in the same shape: **what happened**, **what is needed**, **one question** with 2–3
+options (each with its consequence and one recommendation) and what the factory will do after your answer. The same is
+visible in the preview in the "Czeka na człowieka" (waiting for the human) column. The messages' text is in
+`.claude/skills/tf/templates/stop_messages.json`.
 
-## Co dostajesz
-Każda historyjka to **zadanie** z kluczem (`T-<data>-<slug>` albo numer z trackera: `start --key PROJ-123`) i dwoma
-katalogami:
+## What you get
+Every story is a **task** with a key (`T-<data>-<slug>` or a number from the tracker: `start --key PROJ-123`) and two
+directories:
 
-| Gdzie | Co | Git |
+| Where | What | Git |
 |---|---|---|
-| `docs/project/changes/<KEY>/` | `ticket.md` (historyjka), `spec.md` (kryteria AC-n w formie Given / When / Then, co zostaje bez zmian, co poza zakresem, otwarte pytania — sprawdza ją skrypt; z błędami nie ma planu; plik powstaje dopiero, gdy pętla zaczyna specyfikację), `plan.md` (kawałki do odhaczenia — od niego wznawiasz przerwany przebieg), `task.json` (stan), `evidence/` (dowody weryfikacji kawałków), `report.md` (raport) | tak — jednym commitem `docs(task): record <KEY>` na końcu przebiegu |
-| `.tf/runs/<KEY>/` | `run.json`, `parked.md` (sprawy odłożone do Twojej decyzji), wyniki skanów, pełne logi weryfikacji | nie |
+| `docs/project/changes/<KEY>/` | `ticket.md` (the story), `spec.md` (AC-n criteria in the Given / When / Then form, what stays unchanged, what is out of scope, open questions — a script checks it; with errors there is no plan; the file is created only when the loop starts the specification), `plan.md` (slices to tick off — you resume an interrupted run from it), `task.json` (the state), `evidence/` (the slices' verification evidence), `report.md` (the report) | yes — with one commit `docs(task): record <KEY>` at the end of the run |
+| `.tf/runs/<KEY>/` | `run.json`, `parked.md` (items postponed for your decision), scan results, full verification logs | no |
 
-Lista zadań: `tf status` (liczona na żywo z folderów zadań); stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
-z dowodem: pętla uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
-i nie przepuści przebiegu do PR. Tak samo bez zapisanego, zaliczonego przeglądu zakresu (`run_state.py step … scope
-pass`): w pomiarze po kroku G pętla wywoływała recenzenta zawsze, ale wynik zapisywała w 7 z 15 przebiegów. Po
-przeglądzie bez ustaleń ważnych pętla kończy kawałek jednym poleceniem `run_state.py done <katalog> S<n> --message
-"<typ>(<zakres>): <opis>"`: zapis przeglądu, commit plików z dowodu ze stopkami, odhaczenie i następny kawałek. Bramka
-jakości nie reaguje na zmiany w `docs/project/changes/`.
+The list of tasks: `tf status` (computed live from the task folders); the state of one: `tf task status <KEY>`. A slice
+is "done" only with evidence: the loop runs the verification through `run_state.py verify`, and without current evidence
+the script will not tick the slice off and will not let the run through to the PR. The same without a recorded, passed
+scope review (`run_state.py step … scope pass`): in the measurement after step G the loop always called the reviewer,
+but recorded the result in 7 of 15 runs. After a review without important findings the loop finishes the slice with one
+command `run_state.py done <katalog> S<n> --message "<typ>(<zakres>): <opis>"`: recording the review, committing the
+evidence's files with footers, ticking off and the next slice. The quality gate does not react to changes in
+`docs/project/changes/`.
 
-Cięcie z planu zmiany (`/tf TSK-57`, tryb pdi) to takie samo zadanie, z kluczem złożonym ze zmiany i cięcia:
-`docs/project/changes/CHG-12-TSK-57/` i `.tf/runs/CHG-12-TSK-57/`. Różnice: treść zadania pochodzi z wiersza cięcia
-i zamiaru zmiany, flaga — z planu wydania, raport trafia też do `docs/project/changes/CHG-12/runs/TSK-57.md` (stamtąd
-pdi bierze opis PR); `tf status` pokazuje cięcia razem z ich zmianą.
+A cut from a change plan (`/tf TSK-57`, pdi mode) is the same kind of task, with a key made of the change and the cut:
+`docs/project/changes/CHG-12-TSK-57/` and `.tf/runs/CHG-12-TSK-57/`. The differences: the task's content comes from the
+cut's row and the change's intent, the flag — from the release plan, the report also goes to
+`docs/project/changes/CHG-12/runs/TSK-57.md` (pdi takes the PR description from there); `tf status` shows cuts
+together with their change.
 
-Raport (`python3 .claude/skills/tf/scripts/run_report.py finish <katalog>`): czas, tokeny (wejście, wyjście, odczyt i zapis cache),
-koszt w USD, modele i agenci, kawałki zrobione / plan, liczba odłożonych spraw. Liczy go skrypt z transkryptów
-sesji, nie model, więc nie zużywa tokenów. Koszt to szacunek z cennika API — przy subskrypcji równowartość, nie
-faktura. W trakcie przebiegu jedna linia stanu:
+The report (`python3 .claude/skills/tf/scripts/run_report.py finish <katalog>`): time, tokens (input, output, cache
+read and write), the cost in USD, models and agents, slices done / planned, the number of postponed items. A script
+computes it from the session transcripts, not the model, so it uses no tokens. The cost is an estimate from the API
+price list — with a subscription an equivalent, not an invoice. During the run, one status line:
 `python3 .claude/skills/tf/scripts/run_report.py status <katalog>`.
 
-Podgląd na żywo: `python3 .claude/skills/tf/scripts/run_state.py dashboard` buduje
-`.tf/runs/dashboard.html` (otwierasz plik w przeglądarce, odświeża się sam co 5 s). Kolumny to etapy przebiegu
-(Przyjęcie, Plan, Kawałki, PR, Czeka na człowieka, Gotowe), karta pokazuje rundy bieżącego kawałka (R1, R2…) i etapy
-pętli (test, code, verify, scan, scope) oraz pasek kawałków S1, S2… — fioletowy kawałek był odhaczony, ale nie ma
-aktualnego dowodu (plik zmienił się po weryfikacji). Karta pokazuje też etap zadania, a zadanie bez przebiegu
-(założone samym `tf task`, świeży klon) ma własną kartę. Panel plików dzieli pliki na katalog zadania (git), katalog
-roboczy, dowody, pliki kodu każdego kawałka, wyniki skanów, STOP i `report.md`. Nad tablicą jest lista **„Czeka na
-Ciebie”**: plan do zatwierdzenia, zatrzymanie przebiegu (co się stało, pytanie, opcje z rekomendacją, od kiedy czeka)
-albo kawałek zablokowany pytaniem. To samo tekstem: `tf status` (linia „czeka na Ciebie” pod zadaniem); `tf status
---open` buduje podgląd i otwiera go w przeglądarce w dowolnej chwili. Stan zapisuje pętla poleceniami `run_state.py stage` i `run_state.py step`; koszt i czas liczy skrypt
-z transkryptów (`dashboard` bez `--no-cost`). `run_report.py start` buduje dashboard sam i otwiera go w przeglądarce
-(cięcie z kluczem, wołane przez fazę pdi, tylko go buduje). Wyłączysz to w `.claude/tf.json` (osobisty plik, aktualizacja
-fabryki go nie rusza): `{"dashboard": false}` — wcale, `{"dashboard_open": false}` — buduje, ale nie otwiera;
-domyślnie oba `true`. To samo robią zmienne `TF_DASHBOARD=0` i `TF_DASHBOARD_OPEN=0`.
+A live preview: `python3 .claude/skills/tf/scripts/run_state.py dashboard` builds `.tf/runs/dashboard.html` (you open
+the file in a browser, it refreshes itself every 5 s). The columns are the run's stages (Przyjęcie, Plan, Kawałki, PR,
+Czeka na człowieka, Gotowe — intake, plan, slices, PR, waiting for the human, done), a card shows the rounds of the
+current slice (R1, R2…) and the loop's steps (test, code, verify, scan, scope) and a bar of slices S1, S2… — a purple
+slice was ticked off but has no current evidence (a file changed after the verification). A card also shows the task's
+stage, and a task without a run (created with `tf task` alone, a fresh clone) has its own card. The file panel splits
+files into the task directory (git), the working directory, evidence, the code files of every slice, scan results,
+STOP and `report.md`. Above the board is the **"Czeka na Ciebie"** (waiting for you) list: a plan to approve, a stopped
+run (what happened, the question, options with a recommendation, since when it has been waiting) or a slice blocked by
+a question. The same as text: `tf status` (the "czeka na Ciebie" line under the task); `tf status --open` builds the
+preview and opens it in a browser at any moment. The loop records the state with the commands `run_state.py stage` and
+`run_state.py step`; a script computes cost and time from the transcripts (`dashboard` without `--no-cost`).
+`run_report.py start` builds the dashboard itself and opens it in a browser (a cut with a key, called by the pdi phase,
+only builds it). You turn this off in `.claude/tf.json` (a personal file, a factory update does not touch it):
+`{"dashboard": false}` — not at all, `{"dashboard_open": false}` — it builds but does not open; both are `true` by
+default. The variables `TF_DASHBOARD=0` and `TF_DASHBOARD_OPEN=0` do the same.
 
-Zgodność zmian z planem (`python3 .claude/skills/tf/scripts/plan_drift.py <katalog> --base main`):
-pliki zmienione vs pliki kawałków, zmiany spoza planu, pokrycie diffu planem i testy w diffie — trafia do opisu PR.
+Agreement of the changes with the plan (`python3 .claude/skills/tf/scripts/plan_drift.py <katalog> --base main`):
+changed files vs the slices' files, changes outside the plan, the plan's coverage of the diff and tests in the diff —
+it goes into the PR description.
 
-**Opis PR składa skrypt, nie model** (`python3 .claude/skills/tf/scripts/run_state.py pr-body <katalog> --base main`
-→ plik `.tf/runs/<KLUCZ>/pr-body.md`, podawany przez `gh pr create --body-file`). Każdy PR ma te same pola:
-historyjka, kawałki z commitami, ślad kryteriów, **Jak sprawdzono** (polecenie, kod wyjścia i plik dowodu każdego
-kawałka, werdykt skanu bezpieczeństwa, zgodność z planem), **Ryzyko** (waga zadania i triaż `tf risk`),
-**Jak cofnąć**, odłożone sprawy i założenia. Kawałek bez zielonego dowodu jest w opisie nazwany wprost. Krok cofania
-wdrożenia skrypt bierze z karty operacyjnej (`.tf/config/operations.json`, pole `deploy.rollback` — tekst albo
-lista kroków); bez niego podaje `git revert` commita scalenia, a przy zadaniu z flagą zaczyna od jej wyłączenia.
+**A script, not the model, writes the PR description** (`python3 .claude/skills/tf/scripts/run_state.py pr-body
+<katalog> --base main` → the file `.tf/runs/<KLUCZ>/pr-body.md`, passed with `gh pr create --body-file`). Every PR has
+the same fields: the story, slices with commits, the criteria trace, **Jak sprawdzono** (how it was checked: the
+command, the exit code and the evidence file of every slice, the security scan's verdict, agreement with the plan),
+**Ryzyko** (risk: the task's weight and the `tf risk` triage), **Jak cofnąć** (how to roll back), postponed items and
+assumptions. A slice without green evidence is named plainly in the description. The script takes the deployment
+rollback step from the operations card (`.tf/config/operations.json`, the `deploy.rollback` field — text or a list of
+steps); without it, it gives `git revert` of the merge commit, and for a task with a flag it starts with turning the
+flag off.
 
-**Po scaleniu.** Karta operacyjna ma część o wdrożeniu (`deploy`), którą zakłada `tf onboard`: `smoke` (polecenie
-testu dymnego), `rollback` i `rollback_minutes` (jak cofnąć i ile to trwa), `approval` (co zatwierdza człowiek),
-`logs` (polecenie logów). Po wdrożeniu uruchamiasz `tf task deployed <KLUCZ> [--version X]`: fabryka puszcza test
-dymny i zapisuje wynik w zadaniu (`evidence/deploy-<n>.json`). Zielony wynik przenosi zadanie na etap „wdrożenie”.
-Czerwony kończy się pytaniem „wycofać?” z krokiem cofania i poleceniem logów z karty, a zadanie jest na liście
-„czeka na Ciebie”, dopóki nie zapiszesz decyzji (`tf task deployed <KLUCZ> --rolled-back --by human:<id>`) albo
-ponowny test po naprawie nie będzie zielony. Bez `smoke` w karcie fabryka kończy na scaleniu — mówi to zakończenie
-przebiegu i samo polecenie. Fabryka niczego nie wdraża i niczego sama nie cofa.
+**After the merge.** The operations card has a deployment part (`deploy`), which `tf onboard` creates: `smoke` (the
+smoke test command), `rollback` and `rollback_minutes` (how to roll back and how long it takes), `approval` (what the
+human approves), `logs` (the logs command). After a deployment you run `tf task deployed <KLUCZ> [--version X]`: the
+factory runs the smoke test and records the result in the task (`evidence/deploy-<n>.json`). A green result moves the
+task to the "deployment" stage. A red one ends with the question "roll back?" with the rollback step and the logs
+command from the card, and the task is on the "czeka na Ciebie" list until you record a decision
+(`tf task deployed <KLUCZ> --rolled-back --by human:<id>`) or a repeated test after a fix is green. Without `smoke` in
+the card the factory ends at the merge — the end of the run and the command itself say so. The factory deploys nothing
+and rolls nothing back by itself.
 
-**Panel recenzentów przy wadze pełnej.** Zadanie o wadze pełnej (logowanie, płatności, uprawnienia, migracje,
-sekrety, dane osobowe) przechodzi do etapu PR dopiero po dwóch przeglądach w osobnych kontekstach: `security-reviewer`
-(bezpieczeństwo zmiany) i `spec-reviewer` (każde kryterium i każda reguła „Unchanged” ze specyfikacji, z dowodem).
-Skład i zlecenia podaje `run_state.py panel <katalog>`; werdykt zapisuje pętla (`--record <recenzent> pass|fail`),
-a ręcznie: `tf task review <KLUCZ> <recenzent> pass|fail --note "…"`. Werdykt dotyczy commita — po poprawce w nowym
-commicie przegląd jest od nowa. Waga lekka i zwykła nie mają panelu.
+**The reviewer panel at full weight.** A full-weight task (login, payments, permissions, migrations, secrets, personal
+data) moves to the PR stage only after two reviews in separate contexts: `security-reviewer` (the change's security)
+and `spec-reviewer` (every criterion and every "Unchanged" rule from the specification, with evidence).
+`run_state.py panel <katalog>` gives the composition and the commissions; the loop records the verdict
+(`--record <recenzent> pass|fail`), and by hand: `tf task review <KLUCZ> <recenzent> pass|fail --note "…"`. The verdict
+concerns a commit — after a fix in a new commit the review starts again. Light and normal weights have no panel.
 
-**Zamknięcie zadania.** `tf task close <KLUCZ>` zamyka zadanie, gdy: zmiana jest scalona (plik zadania jest na
-gałęzi domyślnej — działa też przy scaleniu squash), wdrożenie nie czeka na decyzję o wycofaniu, a każde ważne
-ustalenie przeglądu ma zapisaną kontrolę, która złapie je następnym razem. Ważne ustalenia zapisuje pętla w chwili,
-gdy przegląd zakresu nie przechodzi (`run_state.py finding`; bez tego zapis nieudanego przeglądu jest odrzucany);
-kontrolę dopisujesz poleceniem `tf task finding <KLUCZ> control F1 "<test, hook, reguła albo powód jej braku>"`.
-Zamknięcie przypomina o dacie usunięcia flagi. Lekcję na przyszłość zapisuje tylko człowiek: `tf task close <KLUCZ>
---lesson "**reguła** — Context: … · Instead: … · Applies to: …" --by human:<id>` dopisuje ją raz do `docs/project/lessons.md`;
-fabryka sama lekcji nie wymyśla. Gdy scalenia nie da się potwierdzić (np. brak gita), człowiek może zamknąć zadanie
-mimo to: `--force --by human:<id>`. Zamknięte zadania nie są na liście `tf status`; pokazuje je `tf status --all`.
-Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), pętla przy przyjęciu historyjki czyta
-spis standardów i słownik domeny.
+**Closing the task.** `tf task close <KLUCZ>` closes the task when: the change is merged (the task file is on the
+default branch — this also works with a squash merge), the deployment is not waiting for a rollback decision, and every
+important finding of the review has a recorded control that will catch it next time. The loop records important
+findings at the moment the scope review fails (`run_state.py finding`; without it, recording a failed review is
+rejected); you add the control with `tf task finding <KLUCZ> control F1 "<test, hook, reguła albo powód jej braku>"`.
+Closing reminds you about the flag's removal date. Only a human records a lesson for the future: `tf task close <KLUCZ>
+--lesson "**reguła** — Context: … · Instead: … · Applies to: …" --by human:<id>` appends it once to
+`docs/project/lessons.md`; the factory does not invent lessons by itself. When the merge cannot be confirmed (e.g. no
+git), a human can close the task anyway: `--force --by human:<id>`. Closed tasks are not on the `tf status` list;
+`tf status --all` shows them. If the project has a reconstruction from the code (`docs/project/00-reconstruction/`),
+the loop reads the standards index and the domain glossary when taking in the story.
 
-## Bezpieczeństwo i karencja wersji
-Po zielonych testach kawałka pętla uruchamia
+## Security and the version cooldown
+After the slice's tests are green, the loop runs
 `python3 .claude/skills/tf/scripts/security_scan.py scan --slice S<n> --attempt <k> --out <katalog>/security/S<n>`:
-semgrep z regułami `p/owasp-top-ten` (i `.semgrep.yml` produktu, jeśli jest) tylko na zmienionych plikach, `npm audit`
-albo `pip-audit` tylko przy zmianie manifestu lub lockfile'a (`package.json` bez zależności i bez lockfile'a —
-audyt pominięty z adnotacją w raporcie; z zależnościami bez lockfile'a — błąd skanu); wynik każdej próby (SARIF,
-`verdict.json`, `summary.md`) to osobny katalog `<katalog>/security/S<n>/attempt-<k>/`, a
-`<katalog>/security/S<n>/feedback.md` to ustalenia ostatniej próby. Raport przebiegu wymienia każdą próbę kawałka
-(np. FAIL z ustaleniami, potem PASS). Ustalenie
-blokujące (error albo warning z CWE z OWASP Top 10 — ta sama reguła co SEC-001 w ci_for_sdlc) to czerwona bramka:
-druga próba dostaje ustalenia (reguła, plik:linia), po dwóch próbach STOP i brak commitu. Ustalenia poniżej progu
-trafiają do sekcji „Bezpieczeństwo” raportu. Brak semgrep albo pip-audit to FAIL z poleceniem instalacji
-(`pipx install semgrep`, `pipx install pip-audit`), nigdy cichy PASS.
+semgrep with the `p/owasp-top-ten` rules (and the product's `.semgrep.yml`, if any) only on the changed files, `npm audit`
+or `pip-audit` only when the manifest or the lockfile changes (`package.json` without dependencies and without a
+lockfile — the audit skipped with a note in the report; with dependencies without a lockfile — a scan error); the result
+of every attempt (SARIF, `verdict.json`, `summary.md`) is a separate directory `<katalog>/security/S<n>/attempt-<k>/`, and
+`<katalog>/security/S<n>/feedback.md` holds the findings of the last attempt. The run report lists every attempt of the
+slice (e.g. FAIL with findings, then PASS). A blocking finding (an error or a warning with a CWE from the OWASP Top 10 —
+the same rule as SEC-001 in ci_for_sdlc) is a red gate: the second attempt gets the findings (the rule, file:line),
+after two attempts a STOP and no commit. Findings below the threshold go to the "Bezpieczeństwo" (security) section of
+the report. A missing semgrep or pip-audit is a FAIL with an installation command (`pipx install semgrep`,
+`pipx install pip-audit`), never a silent PASS.
 
-Wymagania wobec produktu:
-- **Jedno polecenie weryfikacji (N3):** skrypt w stylu `templates/verify.sh` (format, lint, typy, testy, skan),
-  nazwany w pierwszej linii `CLAUDE.md` produktu; ten sam uruchamia pętla i CI (szablony w mode-pdi).
-- **Karencja wersji 7 dni (N10):** `.npmrc` `min-release-age=7` (npm ≥ 11.10), `pnpm-workspace.yaml`
-  `minimumReleaseAge: 10080` (minuty, pnpm ≥ 10.17), `.yarnrc.yml` `npmMinimalAgeGate`, `[tool.uv]
-  exclude-newer = "7 days"`; lockfile w gicie. Sprawdza to `security_scan.py cooldown` na starcie przebiegu. Uwaga
-  pnpm: Dependabot aktualizuje lockfile bez karencji, a `pnpm install --frozen-lockfile` w CI kończy się wtedy
-  `ERR_PNPM_NO_MATURE_MATCHING_VERSION` (pnpm/pnpm#11203, #12450) — PR-y Dependabota z wersjami młodszymi niż
-  7 dni czekają albo mają `cooldown` w `dependabot.yml`.
-- **Sieć:** rejestr reguł semgrep pobiera się z `semgrep.dev` — w kontenerze z listą dozwolonych hostów dodaj go
-  (Z8a); bez sieci podaj lokalne reguły przez `TF_SEMGREP_CONFIG=<plik.yml albo katalog>`.
-- **Rejestr bez logowania:** `p/owasp-top-ten` pobiera się bez `semgrep login` (semgrep 1.183.0, sprawdzone
-  2026-11-03: 560 reguł), ale zestaw jest węższy niż pełne reguły — nie ma w nim m.in. `tainted-sql-string`
-  (Express) ani reguł dla `node:sqlite`. Wzorce, których rejestr nie łapie, dopisuje produkt w `.semgrep.yml`
-  (skan dokłada go zawsze); szerszy zestaw w CI daje logowanie tokenem (`SEMGREP_APP_TOKEN`).
+Requirements for the product:
+- **One verification command (N3):** a script in the style of `templates/verify.sh` (format, lint, types, tests, scan),
+  named in the first line of the product's `CLAUDE.md`; the loop and CI run the same one (templates in mode-pdi).
+- **A 7-day version cooldown (N10):** `.npmrc` `min-release-age=7` (npm ≥ 11.10), `pnpm-workspace.yaml`
+  `minimumReleaseAge: 10080` (minutes, pnpm ≥ 10.17), `.yarnrc.yml` `npmMinimalAgeGate`, `[tool.uv]
+  exclude-newer = "7 days"`; the lockfile in git. `security_scan.py cooldown` checks this at the start of the run. A
+  pnpm caveat: Dependabot updates the lockfile without a cooldown, and `pnpm install --frozen-lockfile` in CI then ends
+  with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` (pnpm/pnpm#11203, #12450) — Dependabot PRs with versions younger than
+  7 days wait or have a `cooldown` in `dependabot.yml`.
+- **Network:** the semgrep rule registry is fetched from `semgrep.dev` — in a container with a list of allowed hosts
+  add it (Z8a); without a network give local rules through `TF_SEMGREP_CONFIG=<plik.yml albo katalog>`.
+- **A registry without login:** `p/owasp-top-ten` is fetched without `semgrep login` (semgrep 1.183.0, checked
+  2026-11-03: 560 rules), but the set is narrower than the full rules — it lacks e.g. `tainted-sql-string`
+  (Express) and rules for `node:sqlite`. Patterns the registry does not catch the product adds in `.semgrep.yml`
+  (the scan always includes it); logging in with a token (`SEMGREP_APP_TOKEN`) gives a wider set in CI.
 
-## Gdy pętla się zatrzyma
-Blok STOP mówi, co blokuje (z dowodem), co jest już zrobione (commity), czego potrzeba od Ciebie i od którego
-kawałka wznowić. Po decyzji poproś o wznowienie i podaj katalog przebiegu: pierwszy nieodhaczony kawałek
-w `plan.md` to miejsce, od którego kontynuuje. Raport kosztu powstaje także po STOP.
+## When the loop stops
+The STOP block says what blocks it (with evidence), what is already done (commits), what it needs from you and from
+which slice to resume. After your decision ask for a resume and give the run directory: the first unticked slice in
+`plan.md` is where it continues. The cost report is written also after a STOP.
 
-Szczegóły przebiegu: `.claude/skills/tf/SKILL.md` (w źródłach fabryki:
-`core/skills/tf/SKILL.md`); mechanizm: `docs/insights.md` w repozytorium fabryki, sekcje
-„Tryby” i „Talos” (tak nazywała się pętla do wersji 9.33).
+Details of the course: `.claude/skills/tf/SKILL.md` (in the factory's sources:
+`core/skills/tf/SKILL.md`); the mechanism: `docs/insights.md` in the factory repository, the sections
+"Tryby" and "Talos" (that was the loop's name up to version 9.33).

@@ -1,47 +1,47 @@
-# Jev (TypeSafe) w fabryce
+# Jev (TypeSafe) in the factory
 
-Jev to **model decyzyjny** („System One”). Nie pisze tekstu ani kodu. Dla stanu (tekst albo JSON) i pytań zwraca
-prawdopodobieństwa i pewność. Typy pytań:
-- **noul** — tak/nie;
-- **choice** — wybór spośród do 255 opcji;
-- **score** — skala 2–10 poziomów.
+Jev is a **decision model** ("System One"). It does not write text or code. For a state (text or JSON) and questions it
+returns probabilities and a confidence. Question types:
+- **noul** — yes/no;
+- **choice** — a choice among up to 255 options;
+- **score** — a scale of 2–10 levels.
 
-Parametry:
-- czas: ~0,1–0,5 s;
-- cena: $0,042 za 1 mln tokenów wejścia, wyjście bezpłatne;
-- okno: 64 tys. tokenów.
+Parameters:
+- time: ~0.1–0.5 s;
+- price: $0.042 per 1M input tokens, output free;
+- window: 64k tokens.
 
-W fabryce Jev **nie zastępuje** Claude. Robi szybkie, tanie i powtarzalne rozstrzygnięcia, a przy niepewności
-przekazuje sprawę zwykłemu modelowi albo człowiekowi.
+In the factory Jev **does not replace** Claude. It makes fast, cheap and repeatable decisions, and when uncertain
+it hands the matter over to an ordinary model or a human.
 
-## Gdzie fabryka go używa
+## Where the factory uses it
 
-Każde zastosowanie jest opcjonalne i ma rezerwę: bez klucza, przy błędzie sieci albo niepewnej odpowiedzi działa tak
-jak bez Jev.
+Every use is optional and has a fallback: without a key, on a network error or an uncertain answer it works as
+without Jev.
 
-| Zastosowanie | Wzorzec z dokumentacji TypeSafe | Włączenie | Co poprawia |
+| Use | Pattern from the TypeSafe documentation | Enabling | What it improves |
 |---|---|---|---|
-| Podpowiedź skilli | cookbook „Skill suggestion” | `CLAUDE_SKILL_HINT_JEV=1` | mniej błędnych i zbędnych wczytań skilli |
-| Weryfikacja odwołań `plik:linia` w dokumentach | cookbook „Double-checking citations” | `grounding_check.py --jev` | wykrywa odwołania, które nie potwierdzają zdania (halucynacje) |
-| Osłona treści z sieci | cookbook „Guardrails for LLMs” | `CLAUDE_JEV_GUARD=1` | ostrzega przed poleceniami ukrytymi w stronach (ClickFix, prompt injection) |
-| Kontrola raportów wykonawców | cookbook „SDE cascade” (sprawdź → popraw) | `CLAUDE_JEV_REPORT_CHECK=1` | wykonawca nie odda raportu „działa” bez dowodu ani „gotowe” z otwartymi punktami |
-| Ocena treści w ewaluacjach | „Confidence-gated routing” | `run_skill_evals.py --judge jev` | tańsza ocena; niepewne przypadki ocenia haiku |
-| Sugestia tieru modelu | „Composite scoring” | `jev_client.py --tier "<opis>"` | spójna ocena trudności zadania (rubryka core-cost-control) |
+| Skill hints | cookbook "Skill suggestion" | `CLAUDE_SKILL_HINT_JEV=1` | fewer wrong and unneeded skill loads |
+| Verifying `file:line` references in documents | cookbook "Double-checking citations" | `grounding_check.py --jev` | detects references that do not support the sentence (hallucinations) |
+| A shield for web content | cookbook "Guardrails for LLMs" | `CLAUDE_JEV_GUARD=1` | warns about instructions hidden in pages (ClickFix, prompt injection) |
+| Checking executors' reports | cookbook "SDE cascade" (check → fix) | `CLAUDE_JEV_REPORT_CHECK=1` | an executor will not hand in a report "it works" without evidence or "done" with open points |
+| Judging content in evaluations | "Confidence-gated routing" | `run_skill_evals.py --judge jev` | cheaper judging; haiku judges the uncertain cases |
+| A model tier suggestion | "Composite scoring" | `jev_client.py --tier "<opis>"` | a consistent assessment of task difficulty (the core-cost-control rubric) |
 
-Szczegóły działania:
-- **Podpowiedź skilli.** Etap 1 to wybór spośród wszystkich skilli oraz 3 pytania bramki (praca projektowa?
-  procedura specjalistyczna? wystarczy krótka odpowiedź?). Etap 2 to wybór spośród 3 najlepszych z pełnym opisem
-  i początkiem SKILL.md oraz pytanie „czy pasuje” dla każdego. Progi wynoszą 0,30 jak w cookbooku. W cookbooku
-  (182 skille, agent na Haiku 4.5) błędnych wczytań było 2,3 raza mniej.
-- **Weryfikacja odwołań.** Werdykt brzmi „potwierdza”, „przeczy” albo „nic nie mówi”. Pewność ≥0,8 daje werdykt
-  automatyczny, niższa oznacza przejrzenie przez człowieka.
-- **Osłona treści z sieci.** Progi „strict”: od 0,35 uwaga, od 0,70 ostrzeżenie.
-- **Kontrola raportów.** Jedna prośba o poprawę; potem hook nie blokuje (bez pętli).
-- **Sugestia tieru.** 5 pytań noul, a decyzję składa kod. „NIEPEWNE” oznacza, że rozstrzyga model.
+Details of how it works:
+- **Skill hints.** Stage 1 is a choice among all skills plus 3 gate questions (design work? a specialised procedure?
+  is a short answer enough?). Stage 2 is a choice among the best 3 with the full description and the start of SKILL.md,
+  plus a "does it fit" question for each. The thresholds are 0.30 as in the cookbook. In the cookbook
+  (182 skills, an agent on Haiku 4.5) there were 2.3 times fewer wrong loads.
+- **Verifying references.** The verdict is "supports", "contradicts" or "says nothing". A confidence ≥0.8 gives an
+  automatic verdict, a lower one means a review by a human.
+- **The web content shield.** "strict" thresholds: from 0.35 a note, from 0.70 a warning.
+- **Checking reports.** One request for a fix; after that the hook does not block (no loop).
+- **The tier suggestion.** 5 noul questions, and code makes the decision. "UNCERTAIN" means the model decides.
 
-## Konfiguracja
+## Configuration
 
-Zmienne środowiskowe (te same nazwy co w oficjalnym SDK). Klucza **nigdy** nie zapisuj w plikach repozytorium.
+Environment variables (the same names as in the official SDK). **Never** write the key in the repository's files.
 
 ```bash
 export TYPESAFE_API_KEY=...                    # z console.typesafe.ai
@@ -49,59 +49,60 @@ export TYPESAFE_API_KEY=...                    # z console.typesafe.ai
 python3 .claude/hooks/jev_client.py --check    # jedno tanie zapytanie: czy klucz i usługa działają
 ```
 
-## Najpierw pomiar, potem włączenie
+## Measure first, then enable
 
-Dokumentacja TypeSafe podaje, że angielski działa najlepiej, a inne języki słabiej. Fabryka zadaje pytania po
-angielsku, ale stan (polecenia, dokumenty) jest po polsku. Dlatego przed włączeniem zmierz Jev na danych fabryki:
+The TypeSafe documentation says English works best and other languages less well. The factory asks its questions in
+English, and the state (prompts, documents) is in English or in the human's language. So before enabling it, measure
+Jev on the factory's data:
 
 ```bash
 python3 .tf/factory/jev_calibration.py --routing                                   # słowa vs Jev
 python3 .tf/factory/jev_calibration.py --judge docs/evals/2026-10-02-sonnet.jsonl  # zgodność ocen
 ```
 
-Podpowiedź skilli zmierzysz na wszystkich ~270 scenariuszach za ułamek centa. Włącz:
-- `CLAUDE_SKILL_HINT_JEV=1`, gdy Jev ma mniej błędnych i zbędnych podpowiedzi niż słowa przy podobnej liczbie
-  trafnych;
-- `--judge jev`, gdy zgodność pewnych ocen wynosi ≥95%.
+You can measure skill hints on all ~270 scenarios for a fraction of a cent. Enable:
+- `CLAUDE_SKILL_HINT_JEV=1` when Jev has fewer wrong and unneeded hints than the keywords at a similar number of
+  correct ones;
+- `--judge jev` when the agreement of confident judgements is ≥95%.
 
-Strażników (`CLAUDE_JEV_GUARD`, `CLAUDE_JEV_REPORT_CHECK`) włącz na kilka dni i przejrzyj ich ostrzeżenia:
-- czy blokady raportów były zasadne;
-- czy ostrzeżenia o stronach dotyczyły podejrzanej treści.
+Enable the guards (`CLAUDE_JEV_GUARD`, `CLAUDE_JEV_REPORT_CHECK`) for a few days and review their warnings:
+- whether the report blocks were justified;
+- whether the page warnings concerned suspicious content.
 
-Zużycie Jev trafia do `.tf/logs/jev.jsonl` (bez treści zapytań).
+Jev usage goes to `.tf/logs/jev.jsonl` (without the content of the queries).
 
-## Ograniczenia
+## Limitations
 
-Według dokumentacji „model jaggedness” dla jev-1.13 Jev:
-- czyta instrukcje dosłownie;
-- nie liczy niezawodnie;
-- źle porównuje daty;
-- traci dokładność przy dużym stanie z nieistotną treścią;
-- nie traktuje stanu jako wrogiego (polecenia w treści mogą wpłynąć na wynik).
+According to the "model jaggedness" documentation for jev-1.13, Jev:
+- reads instructions literally;
+- does not count reliably;
+- compares dates badly;
+- loses accuracy with a large state with irrelevant content;
+- does not treat the state as hostile (instructions in the content can affect the result).
 
-Fabryka:
-- zadaje jedno pytanie o jeden warunek, a wysoka wartość zawsze oznacza „tak”;
-- wysyła tylko pola potrzebne do decyzji;
-- liczy w kodzie;
-- strażników traktuje jako dodatkową warstwę, a nie jedyną ochronę.
+The factory:
+- asks one question about one condition, and a high value always means "yes";
+- sends only the fields needed for the decision;
+- counts in code;
+- treats the guards as an additional layer, not the only protection.
 
-Prywatność:
-- stan trafia do usługi TypeSafe;
-- klient wycina znane wzorce sekretów, ale nie wysyłaj nim danych, których nie wolno przekazać poza firmę;
-- zerowa retencja danych jest dostępna dla klientów enterprise.
+Privacy:
+- the state goes to the TypeSafe service;
+- the client strips known secret patterns, but do not send through it data that must not leave the company;
+- zero data retention is available to enterprise customers.
 
-Dostępność: usługa wystartowała 15.09.2026, a rejestracja w konsoli bywa wstrzymywana. Limity: 100 tys. tokenów
-i 80 zapytań na sekundę („mogą się zmienić bez uprzedzenia”).
+Availability: the service launched on 15.09.2026, and sign-up in the console is sometimes paused. Limits: 100k tokens
+and 80 requests per second ("may change without notice").
 
-**Uwaga na podróbki.** Domena jevtypesafeai.com i jej „skill” nie należą do TypeSafe. Oficjalny skill dla agentów
-(potrzebny, gdy **Twój projekt** ma korzystać z Jev w kodzie aplikacji) instalujesz poleceniami:
-`claude plugin marketplace add typesafe-ai/skills`, potem `claude plugin install typesafe@typesafe-ai`.
+**Beware of fakes.** The domain jevtypesafeai.com and its "skill" do not belong to TypeSafe. The official skill for
+agents (needed when **your project** is to use Jev in the application's code) you install with the commands:
+`claude plugin marketplace add typesafe-ai/skills`, then `claude plugin install typesafe@typesafe-ai`.
 
-## Źródła (dostęp 2026-10-03)
+## Sources (accessed 2026-10-03)
 - docs.typesafe.ai: `introduction`, `models`, `api`, `confidence`, `concepts/state`, `introduction/coding-agents`,
   `model-jaggedness/jev-1.13`, `primitives/noul`, `patterns/confidence-routing`, `agent-skill`,
   `sdk/python/api/constants`.
-- Cookbooki TypeSafe: `skill_suggestion`, `citation_check`, `llm_guardrails`, `sde_cascade`,
+- TypeSafe cookbooks: `skill_suggestion`, `citation_check`, `llm_guardrails`, `sde_cascade`,
   `consistency_noul_cookbook`, `parallel_questions`.
 
-Opisane własnymi słowami.
+Described in our own words.

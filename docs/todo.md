@@ -755,8 +755,14 @@ treści (angielska), bez równoległej polskiej.
       `COMPOSE_HINT`, tabela wymiarów) oraz `facets`/`vocabulary` — razem z sekcjami pojęć w skillach fw-/lang-.
     - [ ] tf: panel recenzentów przy wadze pełnej tylko w `references/weight.md` — jedna linia w SKILL.md (Finishing),
       żeby model nie pomijał `run_state.py panel` (scenariusz `waga-pelna-panel-recenzentow` pada przed i po 4b-9).
-    - [ ] dalsze partie:
-      przewodniki (`core/guide/`).
+    - [x] 4b-10 (2026-11-17): przewodniki `core/guide/` (GUIDE, LOOP, FAQ, JEV, ONBOARDING) po angielsku. Napisy, które
+      drukują skrypty, zostają dosłownie z objaśnieniem (kolumny podglądu, lista „Czeka na Ciebie”, pola opisu PR
+      „Jak sprawdzono / Ryzyko / Jak cofnąć”, linia `Źródło: … · pobrano:`, źródła „organizacja”/„zespół” w
+      `tf config show`, wartości `Rework-Cause`) — do etapu komunikatów. Poprawione przy okazji: GUIDE nie mówi już
+      o pytaniu o język przy instalacji; LOOP podaje `/tf task|question|quick` z polskimi aliasami. Bez próbki Haiku:
+      żaden skill nie odsyła modelu do przewodników, więc scenariusze tej zmiany nie mierzą (testy T-5, T-37, T-39,
+      T-41 i I-9 przechodzą).
+    - [ ] dalsze partie: 4c (pack-docs, pack-ux, mode-team, mode-pdi, org).
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
