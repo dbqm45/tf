@@ -78,7 +78,7 @@
       "prompt": "Weź się za następne zadanie z trackera.",
       "checks": {
         "all": [["numer", "klucz", "które zadanie", "treś[ćc]"], ["wklej", "podaj", "wznowi"]],
-        "none": ["K1 —", "BRAMKA K1"]
+        "none": ["K1 —", "S1 —", "BRAMKA K1", "GATE S1"]
       }
     },
     {

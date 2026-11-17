@@ -119,7 +119,7 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
    testu>` — skrypt sam uruchamia weryfikację produktu (polecenie z `.claude/quality-gate.json`; gdy go nie ma,
    dodaj `--command "<polecenie z pierwszej linii CLAUDE.md>"`) i zapisuje dowód w `evidence/`. Kod 0 = zielono,
    1 = czerwono. Bez aktualnego dowodu `done` i etap `pr` są odrzucane; zmiana pliku po dowodzie go unieważnia.
-   Werdykt: `BRAMKA S<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
+   Werdykt: `GATE S<n>: PASS` albo `FAIL (<skrót>, attempt k/2)`.
    **Skan** po zielonych testach: `security_scan.py scan --slice S<n> --attempt <k> --out <katalog>/security/S<n>`.
    FAIL → ustalenia z `security/S<n>/feedback.md` są wejściem następnej próby; po 2 próbach STOP, kawałka nie
    commitujesz. Brak skanera to FAIL, nie cichy PASS (`references/security.md`).

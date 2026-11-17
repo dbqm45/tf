@@ -64,7 +64,7 @@ zamiast pytań:
   zależności, inna architektura, brak wyniku poprzedniej fazy) → STOP. W wątpliwości — strukturalny.
 - **Bramki fazy, od najtańszej:** polecenia z planu → pliki fazy dodane do indeksu po nazwie → **celowe zepsucie**
   dla nowych testów (pack-it: qa-spec-first-testing) → pełne testy, lint, typy → commit. Po każdej bramce linia
-  `BRAMKA <nazwa>: PASS` albo `FAIL (<skrót>, próba k/2)` — oceniający `/goal` widzi tylko transkrypt.
+  `GATE <nazwa>: PASS` albo `FAIL (<skrót>, attempt k/2)` — oceniający `/goal` widzi tylko transkrypt.
 - **Najwyżej 2 próby naprawy na bramkę;** trzecia porażka = STOP. Testu, asercji ani reguły lint nie osłabia.
 - **Warunek postępu, nie „aż będzie dobrze”.** Cel `/goal` to liczba z narzędzia (wynik Lighthouse, liczba
   zielonych testów, czas p95). Obok limitu tur: każda tura poprawia co najmniej jedną zmierzoną metrykę; dwie tury

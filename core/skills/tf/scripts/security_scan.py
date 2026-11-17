@@ -168,7 +168,7 @@ def item(f: dict) -> str:
 
 
 def render(v: dict) -> list[str]:
-    head = (f"SKAN: {v['status']} — blokujące: {len(v['blocking'])}, poniżej progu: {len(v['other'])}"
+    head = (f"SCAN: {v['status']} — blokujące: {len(v['blocking'])}, poniżej progu: {len(v['other'])}"
             + (f", błędy skanu: {len(v['errors'])}" if v["errors"] else ""))
     lines = [head]
     if v["errors"]:
@@ -396,10 +396,10 @@ def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str], li
 
 def slice_lines(v: dict, slice_id: str, attempt: int) -> list[str]:
     if v["status"] == "PASS":
-        return [f"BRAMKA {slice_id}: PASS (skan bezpieczeństwa, próba {attempt}/2)"]
+        return [f"GATE {slice_id}: PASS (skan bezpieczeństwa, attempt {attempt}/2)"]
     why = (f"{len(v['blocking'])} blokujących" if v["blocking"] else "") + \
           (", " if v["blocking"] and v["errors"] else "") + (f"{len(v['errors'])} błędów skanu" if v["errors"] else "")
-    lines = [f"BRAMKA {slice_id}: FAIL (skan bezpieczeństwa: {why}, próba {attempt}/2)"]
+    lines = [f"GATE {slice_id}: FAIL (skan bezpieczeństwa: {why}, attempt {attempt}/2)"]
     if attempt >= 2 or (v["errors"] and not v["blocking"]):
         where_ = "; ".join(f"{f['rule']} {where(f)}" for f in v["blocking"]) or "; ".join(v["errors"])
         lines += ["", f"STOP — {slice_id} (skan bezpieczeństwa)",
@@ -586,12 +586,12 @@ def cmd_cooldown(_a) -> int:
             problems.append("package.json ma zależności, a nie ma lockfile'a — wygeneruj (npm install) "
                             "i zacommituj package-lock.json (N10)")
         elif not ok and not problems:
-            print(f"KARENCJA: PASS — {NO_DEPS}; nie ma czego objąć karencją")
+            print(f"COOLDOWN: PASS — {NO_DEPS}; nie ma czego objąć karencją")
             return 0
     if not ok and not problems:
-        print("KARENCJA: PASS — nie wykryto menedżera pakietów z lockfile'em (npm, pnpm, Yarn, uv)")
+        print("COOLDOWN: PASS — nie wykryto menedżera pakietów z lockfile'em (npm, pnpm, Yarn, uv)")
         return 0
-    print(f"KARENCJA: {'FAIL' if problems else 'PASS'} (minimum {COOLDOWN_DAYS} dni)")
+    print(f"COOLDOWN: {'FAIL' if problems else 'PASS'} (minimum {COOLDOWN_DAYS} dni)")
     for line in ok:
         print(f"- ✓ {line}")
     for line in problems:
@@ -619,7 +619,7 @@ def main(argv: list[str]) -> int:
     try:
         return a.fn(a)
     except ScanError as e:
-        print(f"SKAN: FAIL — {e}")
+        print(f"SCAN: FAIL — {e}")
         return 1
 
 

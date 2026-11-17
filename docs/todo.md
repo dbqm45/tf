@@ -612,13 +612,19 @@ treści (angielska), bez równoległej polskiej.
   `Acceptance criteria`, `Unchanged`, `Out of scope`, `Open questions`, znacznik `[blocking]`; status pliku zadania
   `draft|approved`, stan kawałka `unverified`, dowód śladu `no-test|no-evidence`. Skrypty przyjmują dawną składnię przez
   wydania 14.x; migracja przepisuje `spec.md`/`plan.md` otwartych zadań i przelicza skróty zatwierdzeń.
-- [ ] Etap 3b — pozostała składnia dokumentów i linie wyników: `BRAMKA S<n>: PASS|FAIL`, `KARENCJA:`, `SKAN:`
-  (security_scan, czytane przez pętlę i testy); dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod /
-  do weryfikacji, nagłówki sekcji); sekcje raportu rekonstrukcji (`recon_check.SECTIONS`); kolumny planu cięć pdi
-  (kontrakt z ci_for_sdlc — angielskie nagłówki przyjmowane obok polskich, np. `Kind`); etykiety decyzji
-  qa-change-review; pole „Dotyczy” lekcji; tagi dziennika `project_record`; litery P/C/N/S w tabelach weryfikacji;
-  nazwy plików zakładanych w `docs/project/` (`<data>-przeglad.md`); po wydaniu 14.x — usunięcie dawnej składni
-  z parserów (K<n>, `pliki:`, Zakładając/Gdy/Wtedy).
+- [x] Etap 3b-1 — linie wyników skanu (`GATE S<n>: PASS|FAIL (…, attempt k/2)`, `COOLDOWN:`, `SCAN:`); raport
+  rekonstrukcji: sekcje `Modules`, `Domains`, `Requirements`, `Rules`, `Standards`, `Risks`, `Questions`, `Not checked`,
+  wiersze stacku `Language`, `Data`, `Tests`, `Configuration`; karty modułów (`<!-- card: … -->`, `Entry points`,
+  `Dependencies`, `Data`, `Rules`, `Terms`, `Deviations`, `Unknowns`, `(confidence: …)`, `(details: …)`), `rules.md`
+  (`Cross-cutting rules`). Polskie nagłówki przyjmowane przez 14.x (aliasy w `recon_check`, `recon_cards`,
+  `recon_refresh`, `recon_export`).
+- [ ] Etap 3b-2 — dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod / do weryfikacji, sekcje indeksu,
+  kart, oceny i rekomendacji) z migracją istniejących dossier; etykiety decyzji qa-change-review.
+- [ ] Etap 3b-3 — dziennik projektu: pole „Dotyczy” lekcji, tagi `project_record` (wzmianka, zastąpiony,
+  niezweryfikowany), litery P/C/N/S w tabelach weryfikacji, nazwy plików zakładanych w `docs/project/`
+  (`<data>-przeglad.md`), znaczniki `[założenie]`/`[niezweryfikowane]`/`[pytanie]` (core-grounding, razem z etapem 4).
+- [ ] Po wydaniach 14.x — usunięcie dawnej składni z parserów (`K<n>`, `pliki:`, Zakładając/Gdy/Wtedy, polskie
+  nagłówki rekonstrukcji).
 - [x] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”, #290):
   stała reguła rozmowy, język commitów z `git log`, bez `tf language`, `tf commit-language` i `--language`.
 - [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty po angielsku; język

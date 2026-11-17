@@ -7,7 +7,7 @@ Eksport rekonstrukcji z kodu w JSON (dla narzędzi, np. ci_for_sdlc jako „stan
 
 Pozycja = wypunktowanie albo wiersz tabeli: `id` (rodzaj + skrót treści bez dowodów — stały, gdy przesuną się linie),
 `text`, `section`, `module` (reguły z sekcji modułu), `evidence` [{path, line, line_end[, verified]}], `quote`,
-`confidence` (z „(pewność: …)”), `status` (evidence | assumption | unverified | question), `cells` (wiersz tabeli:
+`confidence` (z „(confidence: …)”, dawniej „(pewność: …)”), `status` (evidence | assumption | unverified | question), `cells` (wiersz tabeli:
 nagłówek → wartość), `source` (plik:linia w katalogu rekonstrukcji). Z `--repo` każdy dowód ma `verified`: plik i linie
 istnieją, a cytat z punktu pasuje do kodu ±2 linie (jak `recon_check.py`). Format: reconstruction-export.schema.json.
 
@@ -29,9 +29,9 @@ sys.path.insert(0, HERE)
 from recon_check import MARK, QUOTE, REF, norm  # noqa: E402  (ten sam format dowodów co kontrola)
 
 SOURCES = (("rules", "rules.md"), ("requirements", "requirements.md"), ("domain", "domain.md"))
-CONFIDENCE = re.compile(r"\(\s*pewność:?\s*([^)]+?)\s*\)", re.I)
+CONFIDENCE = re.compile(r"\(\s*(?:confidence|pewność):?\s*([^)]+?)\s*\)", re.I)
 STATUS = {"założenie": "assumption", "niezweryfikowane": "unverified", "pytanie": "question"}
-MODULE_HEAD = re.compile(r"^(.+?)\s+\(szczegóły: modules/[^)]+\)$")
+MODULE_HEAD = re.compile(r"^(.+?)\s+\((?:details|szczegóły): modules/[^)]+\)$")
 
 
 def refs(text: str) -> list:
