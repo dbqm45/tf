@@ -148,11 +148,12 @@ def steps_errors(cfg: dict) -> list[str]:
 
 def steps_table_errors(cfg: dict, skill_text: str) -> list[str]:
     """Tabela „Kto co robi” w skillu pętli wobec `steps`: każdy krok ma wiersz z tym samym wykonawcą i tierem."""
-    section = skill_text.split("## Kto co robi", 1)[-1].split("\n## ", 1)[0] if "## Kto co robi" in skill_text else ""
+    head = next((h for h in ("## Who does what", "## Kto co robi") if h in skill_text), None)   # pl: sprzed 14.x
+    section = skill_text.split(head, 1)[-1].split("\n## ", 1)[0] if head else ""
     rows = {}
     for line in section.splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if line.strip().startswith("|") and len(cells) == 3 and cells[0] not in ("Krok", "") and not set(cells[0]) <= {"-"}:
+        if line.strip().startswith("|") and len(cells) == 3 and cells[0] not in ("Krok", "Step", "") and not set(cells[0]) <= {"-"}:
             rows[cells[0]] = (cells[1], cells[2])
     errors = []
     steps = {s["label"]: s for s in (cfg.get("steps") or {}).values() if isinstance(s, dict) and s.get("label")}

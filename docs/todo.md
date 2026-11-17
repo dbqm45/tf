@@ -714,8 +714,16 @@ treści (angielska), bez równoległej polskiej.
       (2 scenariusze bezpieczeństwa — słowa kluczowe). Haiku przed/po: 4/6 → 3/6 + powtórka `clickfix-base64` 2/2
       (pojedynczy przebieg bez słowa „ClickFix”); `wstrzykniecie-w-zgloszeniu` i `przyjecie-zmiany-holdout` padały
       przed tłumaczeniem; $1,87.
+    - [x] 4b-7 (2026-11-17): `tf` (+ 6 referencji; SKILL.md 14996/15000 znaków, szczegóły podglądu i odłożonych
+      do `modes-and-stops.md`). Naprawione stare rozjazdy skilla ze skryptami: skill kazał `zakres fail` i `pytanie …`,
+      a `run_state.py` przyjmuje `scope`, `intake.py` — `question`; teraz komunikaty mówią `scope`, a `intake.py` ma
+      aliasy `task`/`pytanie`/`quick` (test I-23b). `build.py` czyta tabelę „Who does what” i „Kto co robi”; etykiety
+      kroków w `config.yaml` po angielsku. Podpowiedzi: all 900 · 31/43, none 168 · 16/16, `--hints` czysto w 8
+      instalacjach. Haiku przed/po: 5/6 → 3/6; dwa nowe ✗ to za wąskie sprawdzenia (`nie zgaduję` łapane jako
+      zgadywanie, `run_state.py park` zamiast słowa `parked`) — poszerzone, powtórka 4/4; `zwykla-implementacja-historyjki`
+      pada tak samo przed i po (pusty projekt → odpowiedź bez `intake.py`); $3,03.
     - [ ] dalsze partie:
-      tf, core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
+      core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).

@@ -185,6 +185,9 @@ def main() -> int:
               f"I-22: „pytanie …” → wymuszona odpowiedź bez pętli: {raw}")
         code, out, raw = resolve(p, "szybko", "popraw", "literówkę", "w", "README")
         check(out.get("intent") == "szybko" and "bez" in out.get("next", "").lower(), f"I-23: „szybko …”: {raw}")
+        for word, want in (("pytanie", "question"), ("quick", "szybko"), ("task", "zadanie")):   # 14.x: oba języki
+            code, out, raw = resolve(p, word, "popraw", "literówkę", "w", "README")
+            check(out.get("intent") == want, f"I-23b: „{word} …” rozpoznane jako {want}: {raw}")
         code, out, raw = resolve(p, "zadanie", "EBO-1236")
         check(out.get("intent") == "zadanie" and out.get("kind") == "zgloszenie" and out.get("key") == "EBO-1236",
               f"I-24: „zadanie <klucz>”: {raw}")

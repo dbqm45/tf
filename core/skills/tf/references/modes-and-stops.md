@@ -1,70 +1,78 @@
-# Tryby pracy i zatrzymania w pętli /tf
+# Work modes and stops in the /tf loop
 
-Czytasz, gdy człowiek podał `--plan` albo `--auto`, gdy skrypt odmawia wejścia w pętlę kawałka („zgoda człowieka na
-plan”, „tryb Plan”), gdy kończysz blokiem STOP i musisz dobrać kod albo gdy skrypt odrzuca STOP z kodem `question`
-i każe zablokować jeden kawałek.
+You read this when the human gave `--plan` or `--auto`, when the script refuses entry into the slice loop ("the human's consent to
+the plan", "Plan mode"), when you end with a STOP block and have to choose a code, or when the script rejects a STOP with the `question` code
+and tells you to block one slice.
 
-## Tryby
-Tryb wybiera człowiek w poleceniu; Ty go tylko zapisujesz przy pierwszym `run_state.py stage <katalog> intake`
-(`--plan` albo `--auto`; bez opcji — tryb zwykły). Sam trybu nie zmieniasz, żeby ominąć zgodę.
+## Modes
+The human chooses the mode in the command; you only record it at the first `run_state.py stage <katalog> intake`
+(`--plan` or `--auto`; without an option — the normal mode). You do not change the mode yourself to get around consent.
 
-| Tryb | Polecenie człowieka | Co robisz po planie |
+| Mode | The human's command | What you do after the plan |
 |---|---|---|
-| Plan | `/tf <zadanie> --plan` | kończysz: `run_state.py stage <katalog> needs --needs plan`, pokazujesz specyfikację i plan, potem `run_report.py finish` i commit plików zadania. Kodu nie ruszasz. |
-| zwykły | `/tf <zadanie>` | `run_state.py stage <katalog> needs --needs plan`, pokazujesz specyfikację i plan i czekasz. Po zgodzie człowieka: `run_state.py approve <katalog>` — dopiero wtedy `step` wpuści pętlę kawałka. Jedna zgoda obejmuje plan i specyfikację. |
-| Auto | `/tf <zadanie> --auto` | idziesz dalej bez zgody; plan i założenia trafiają do opisu PR. Przy wadze pełnej tryb Auto nie działa — zostaje zwykły (`references/weight.md`). |
+| Plan | `/tf <zadanie> --plan` | you end: `run_state.py stage <katalog> needs --needs plan`, you show the specification and the plan, then `run_report.py finish` and a commit of the task's files. You do not touch the code. |
+| normal | `/tf <zadanie>` | `run_state.py stage <katalog> needs --needs plan`, you show the specification and the plan and wait. After the human's consent: `run_state.py approve <katalog>` — only then does `step` let the slice loop in. One consent covers the plan and the specification. |
+| Auto | `/tf <zadanie> --auto` | you go on without consent; the plan and the assumptions go into the PR description. At the full weight the Auto mode does not work — the normal one stays (`references/weight.md`). |
 
-- **Wznowienie po trybie Plan:** człowiek pisze `/tf <KLUCZ>`; zmieniasz tryb na ten z polecenia
-  (`run_state.py mode <katalog> normal` albo `auto`) i idziesz od zgody na plan.
-- `run_state.py approve` zapisuje zgodę z identyfikatorem człowieka z gita. Wywołujesz je tylko po wyraźnej zgodzie
-  człowieka w rozmowie („tak”, „akceptuję plan”); w trybie Auto skrypt odmawia, bo nie ma kogo zapytać.
-- Zmiana planu albo specyfikacji po zgodzie wymaga nowej zgody; odhaczanie kawałków jej nie unieważnia.
-- Podgląd trybu: `run_state.py mode <katalog>`.
+- **Resuming after the Plan mode:** the human writes `/tf <KLUCZ>`; you change the mode to the one from the command
+  (`run_state.py mode <katalog> normal` or `auto`) and go from the consent to the plan.
+- `run_state.py approve` records the consent with the human's identifier from git. You call it only after the human's explicit consent
+  in the conversation ("yes", "I accept the plan"); in the Auto mode the script refuses, because there is nobody to ask.
+- A change of the plan or the specification after consent needs a new consent; ticking slices does not invalidate it.
+- A preview of the mode: `run_state.py mode <katalog>`.
 
-## Kody zatrzymań
-Blok STOP zapisujesz zawsze z kodem z tej listy:
-`run_state.py stage <katalog> needs --needs stop --code <kod> --reason "<powód z dowodem>"`. Kod spoza listy albo
-brak kodu to błąd polecenia. Wybierasz kod, który mówi, **czego potrzeba od człowieka**:
+## Stop codes
+You always record a STOP block with a code from this list:
+`run_state.py stage <katalog> needs --needs stop --code <kod> --reason "<powód z dowodem>"`. A code outside the list or
+no code is a command error. You choose the code that says **what is needed from the human**:
 
-| Kod | Kiedy | Czego potrzeba od człowieka |
+| Code | When | What is needed from the human |
 |---|---|---|
-| `question` | brakuje kryteriów akceptacji albo odpowiedzi na pytanie `[blocking]` | odpowiedzi na pytania (do 3, konkretne) |
-| `split` | więcej niż 5 kawałków albo kilka akcji w jednej historyjce (STORY-001) | wyboru podziału z Twojej propozycji |
-| `source` | nie ma treści zadania albo dostępu do zgłoszenia | wklejenia treści albo połączenia z trackerem |
-| `plan-approval` | waga pełna w przebiegu z `--auto`; plan czeka na zgodę | zgody na plan albo uwag |
-| `tests` | weryfikacja czerwona po dwóch próbach naprawy | decyzji: inna droga, zmiana kryterium albo przerwanie |
-| `scan` | skan bezpieczeństwa blokuje po dwóch próbach | decyzji o ustaleniu skanu (poprawka, wyjątek z uzasadnieniem) |
-| `budget` | koszt powyżej `--budget` | zgody na dalszy koszt albo zakończenia |
-| `environment` | niezacommitowane zmiany, brak zdalnego repozytorium, brak skanera albo narzędzia | przygotowania repozytorium lub narzędzia |
-| `dependency` | nowa zależność, karencja wersji (pakiet młodszy niż 7 dni), brak ustawień karencji | decyzji o zależności albo dodania ustawienia |
-| `contract` | zmiana publicznego API, schematu danych, migracja albo decyzja biznesowa, której nie ma w zadaniu | decyzji; wariantu zachowawczego nie wybierasz sam |
-| `permissions` | operacja zastrzeżona dla człowieka: produkcja, publikacja, flaga poza środowiskiem testowym, scalenie PR | wykonania operacji albo wyraźnej zgody |
+| `question` | acceptance criteria are missing or an answer to a `[blocking]` question | answers to the questions (up to 3, specific) |
+| `split` | more than 5 slices or several actions in one story (STORY-001) | choosing a split from your proposal |
+| `source` | there is no task content or no access to the issue | pasting the content or a connection to the tracker |
+| `plan-approval` | the full weight in a run with `--auto`; the plan waits for consent | consent to the plan or remarks |
+| `tests` | verification red after two repair attempts | a decision: another way, a criterion change or stopping |
+| `scan` | the security scan blocks after two attempts | a decision about the scan finding (a fix, an exception with a rationale) |
+| `budget` | the cost above `--budget` | consent to further cost or ending |
+| `environment` | uncommitted changes, no remote repository, no scanner or tool | preparing the repository or the tool |
+| `dependency` | a new dependency, the version cooldown (a package younger than 7 days), no cooldown settings | a decision about the dependency or adding the setting |
+| `contract` | a change of the public API, the data schema, a migration or a business decision that is not in the task | a decision; you do not choose the conservative option yourself |
+| `permissions` | an operation reserved for the human: production, publishing, a flag outside the test environment, merging a PR | performing the operation or explicit consent |
 
-„To za trudne” nie jest kodem: zatrzymujesz się na dowodzie (polecenie i wynik), nie na własnej ocenie trudności.
+"It's too hard" is not a code: you stop on evidence (a command and its output), not on your own assessment of difficulty.
 
-## Pytanie o jeden kawałek (przełącznik `loop.blocked_slices`)
-Działa tylko wtedy, gdy projekt włączył przełącznik w `.tf/config/config.yaml`; domyślnie jest wyłączony i każde
-pytanie to blok STOP. Z włączonym przełącznikiem pytanie zatrzymuje swój kawałek, a nie cały przebieg:
+## A question about one slice (the `loop.blocked_slices` switch)
+It works only when the project turned the switch on in `.tf/config/config.yaml`; it is off by default and every
+question is a STOP block. With the switch on, a question stops its slice, not the whole run:
 
-- **Plan zapisuje zależności** w wierszu kawałka: `· after: S1` (można zacząć po S1), `· after: none` (niezależny); bez
-  dopisku kawałek zależy od poprzedniego. Etap `plan` o tym przypomina.
-- **Pytanie w trakcie kawałka:** `run_state.py block <katalog> S2 --question "<pytanie do człowieka>"`. Skrypt
-  odpowiada `Dalej: S3` (rób ten kawałek) albo `Dalej: STOP` z listą pytań i gotowym poleceniem zatrzymania. STOP
-  z kodem `question` dla bieżącego kawałka skrypt odrzuca, dopóki został kawałek niezależny.
-- **Pytanie o całe zadanie** (bez odpowiedzi nie da się zrobić żadnego kawałka): STOP jak zwykle, z `--task`.
-- **Po odpowiedzi człowieka:** `run_state.py answer <katalog> S2 "<odpowiedź>" --by human:<id>` — kawałek wraca do
-  planu, a skrypt mówi, co dalej. Odpowiedzi nie zapisujesz za człowieka. Który kawałek teraz: `run_state.py next
+- **The plan records dependencies** in the slice's line: `· after: S1` (can start after S1), `· after: none` (independent); without
+  a note the slice depends on the previous one. The `plan` stage reminds about this.
+- **A question during a slice:** `run_state.py block <katalog> S2 --question "<pytanie do człowieka>"`. The script
+  answers `Dalej: S3` (do this slice) or `Dalej: STOP` with a list of questions and a ready stop command. A STOP
+  with the `question` code for the current slice the script rejects while an independent slice is left.
+- **A question about the whole task** (without an answer no slice can be done): STOP as usual, with `--task`.
+- **After the human's answer:** `run_state.py answer <katalog> S2 "<odpowiedź>" --by human:<id>` — the slice goes back to
+  the plan, and the script says what next. You do not record the answer for the human. Which slice now: `run_state.py next
   <katalog>`.
-- Zablokowany kawałek nie ma dowodu, więc etap `pr` nie przejdzie, dopóki pytanie czeka — przebieg kończy się
-  wtedy blokiem STOP z pytaniami, a zrobione kawałki zostają w commitach.
+- A blocked slice has no evidence, so the `pr` stage will not pass while the question waits — the run then ends
+  with a STOP block with the questions, and the done slices stay in the commits.
 
-## Co pokazujesz człowiekowi
-Po zapisie zatrzymania skrypt drukuje **Komunikat dla człowieka**: co się stało, czego potrzeba, jedno pytanie
-z 2–3 opcjami (przy każdej skutek, jedna rekomendowana) i co fabryka zrobi po odpowiedzi. Ten komunikat pokazujesz
-zamiast własnego opisu — bez słów z budowy fabryki (kawałek, bramka, tier, hook) i bez odsyłania do plików, żeby
-zrozumieć pytanie:
-- uzupełniasz go o konkret z tego przebiegu: dowód (polecenie i wynik), pytania do człowieka albo propozycję podziału;
-- w rozmowie pytanie zadajesz narzędziem AskUserQuestion z opcjami ze skryptu (rekomendowana pierwsza); odpowiedź
-  „zdecyduj sam” przyjmujesz tylko wtedy, gdy decyzja jest odwracalna i nie blokuje pracy;
-- w przebiegu bez nadzoru (`--auto`) komunikat trafia do raportu i do odpowiedzi kończącej przebieg;
-- podgląd komunikatu bez zapisywania zatrzymania: `run_state.py message <kod>`.
+## What you show the human
+After recording a stop the script prints **Komunikat dla człowieka** (a message for the human): what happened, what is needed, one question
+with 2–3 options (each with its effect, one recommended) and what the factory will do after the answer. You show this message
+instead of your own description — without words from the factory's internals (slice, gate, tier, hook) and without pointing to files to
+understand the question:
+- you complete it with something concrete from this run: evidence (a command and its output), questions for the human or a proposed split;
+- in the conversation you ask the question with the AskUserQuestion tool with the options from the script (the recommended one first); the answer
+  "decide yourself" you accept only when the decision is reversible and does not block the work;
+- in an unsupervised run (`--auto`) the message goes to the report and to the answer ending the run;
+- a preview of the message without recording a stop: `run_state.py message <kod>`.
+
+## The preview and postponed items
+- `start` opens the dashboard and prints a `Dashboard: …` line; when it is turned off in `.claude/tf.json`, there is no line and
+  you do not mention the dashboard.
+- A refusal of `stage`, `step`, `done` or `verify` names its cause (specification errors, missing evidence, a plan older
+  than the specification) — you remove it and repeat the command.
+- `parked.md` is outside git: in commits and code you do not refer to it; its items go into the PR description and the report
+  (the "Postponed for a decision" section).

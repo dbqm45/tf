@@ -67,7 +67,7 @@ zielonego dowodu jest w opisie nazwany wprost. Skrypt niczego nie wypycha i nie 
 z gotowym zleceniem dla każdego i zapisanymi werdyktami; `--record` zapisuje werdykt w zadaniu (`tf task review`).
 Etap `pr` zadania o wadze pełnej wymaga werdyktu `pass` od obu dla bieżącego commita.
 
-`finding` zapisuje w zadaniu ważne ustalenie przeglądu zakresu (z kawałkiem i rundą). `step … zakres fail` jest
+`finding` zapisuje w zadaniu ważne ustalenie przeglądu zakresu (z kawałkiem i rundą). `step … scope fail` jest
 odrzucany, dopóki kawałek nie ma ustalenia z tej rundy — przy zamknięciu zadania (`tf task close`) każde ważne
 ustalenie musi mieć kontrolę, która złapie je następnym razem.
 
@@ -695,7 +695,7 @@ def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, projec
 
 def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
     """Odhacza kawałek w plan.md (`- [ ] S<n>` → `- [x] S<n>`); powtórzenie niczego nie zmienia. Przebieg z zadaniem
-    odhacza tylko kawałek z aktualnym dowodem (`verify`) i z zapisanym, zaliczonym przeglądem zakresu (`step … zakres
+    odhacza tylko kawałek z aktualnym dowodem (`verify`) i z zapisanym, zaliczonym przeglądem zakresu (`step … scope
     pass`) — pomiar po kroku G: bez tego warunku wynik przeglądu był zapisany w 7 z 15 przebiegów."""
     meta = load(run_dir) or {}
     path = run_report.docs_dir(run_dir, meta) / "plan.md"
@@ -732,10 +732,10 @@ def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
     if last == "fail":
         return (f"{slice_id}: przegląd zakresu w R{k} nie przeszedł — wycofaj ustalenie [ważne] i zrób nową rundę: "
                 f"run_state.py step {run_dir} {slice_id} R{k + 1} kod run, a po ponownym przeglądzie scope-reviewer "
-                f"run_state.py step {run_dir} {slice_id} R{k + 1} zakres pass")
+                f"run_state.py step {run_dir} {slice_id} R{k + 1} scope pass")
     return (f"{slice_id}: nie ma zapisanego wyniku przeglądu zakresu (R{k}: {last or 'brak zapisu'}). Po przeglądzie "
-            f"scope-reviewer zapisz go: run_state.py step {run_dir} {slice_id} R{k} zakres pass — a przy ustaleniu "
-            f"[ważne]: run_state.py finding {run_dir} {slice_id} \"<ustalenie>\" i step … zakres fail, potem nowa runda")
+            f"scope-reviewer zapisz go: run_state.py step {run_dir} {slice_id} R{k} scope pass — a przy ustaleniu "
+            f"[ważne]: run_state.py finding {run_dir} {slice_id} \"<ustalenie>\" i step … scope fail, potem nowa runda")
 
 
 CONVENTIONAL = re.compile(r"^[a-z]+(\([^()\s]+\))?!?: \S")

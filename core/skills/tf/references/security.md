@@ -1,35 +1,35 @@
-# Bezpieczeństwo w pętli /tf: karencja wersji i skan kawałka
+# Security in the /tf loop: the version cooldown and the slice scan
 
-Czytasz, gdy `security_scan.py` zwraca FAIL albo STOP i trzeba zrozumieć wynik. Skrypt:
-`python3 .claude/skills/tf/scripts/security_scan.py` (dalej `security_scan.py`).
+You read this when `security_scan.py` returns FAIL or STOP and you need to understand the result. The script:
+`python3 .claude/skills/tf/scripts/security_scan.py` (below `security_scan.py`).
 
-## Karencja wersji na starcie (N10)
-`security_scan.py cooldown` — FAIL, gdy menedżer pakietów nie ma ustawionej karencji: `min-release-age=7` (npm),
-`minimumReleaseAge: 10080` (pnpm), `npmMinimalAgeGate` (Yarn), `exclude-newer` (uv), albo lockfile jest poza gitem.
-FAIL → STOP z linią do dodania z wyniku; ustawień nie zmieniasz sam. Nowa zależność młodsza niż 7 dni (menedżer
-pakietów odmawia instalacji) → STOP z wyjaśnieniem, nie obejście.
+## The version cooldown at the start (N10)
+`security_scan.py cooldown` — FAIL when the package manager has no cooldown set: `min-release-age=7` (npm),
+`minimumReleaseAge: 10080` (pnpm), `npmMinimalAgeGate` (Yarn), `exclude-newer` (uv), or the lockfile is outside git.
+FAIL → STOP with the line to add from the output; you do not change the settings yourself. A new dependency younger than 7 days (the package
+manager refuses to install it) → STOP with an explanation, not a workaround.
 
-## Skan kawałka (po zielonych testach)
+## The slice scan (after green tests)
 `security_scan.py scan --slice S<n> --attempt <k> --out <katalog-przebiegu>/security/S<n>`:
-- semgrep (OWASP Top 10 i `.semgrep.yml` produktu) na plikach kawałka; audyt zależności tylko przy zmianie manifestu
-  lub lockfile'a;
-- SARIF, werdykt i `summary.md` każdej próby w `security/S<n>/attempt-<k>/` — próby się nie nadpisują, raport pokazuje
-  wszystkie;
-- **blokujące** (error albo warning z CWE z OWASP Top 10, reguła SEC-001 z ci_for_sdlc) → FAIL próby: ustalenia
-  (reguła, plik:linia) z `security/S<n>/feedback.md` (zawsze z ostatniej próby) są wejściem następnej próby;
-- po 2 próbach skrypt drukuje blok STOP — kawałka nie commitujesz, tak jak przy czerwonym teście;
-- brak skanera to FAIL z poleceniem instalacji, nie cichy PASS;
-- ustalenia poniżej progu trafiają do raportu przebiegu (sekcja „Bezpieczeństwo”).
+- semgrep (OWASP Top 10 and the product's `.semgrep.yml`) on the slice's files; the dependency audit only when the manifest
+  or the lockfile changes;
+- SARIF, the verdict and the `summary.md` of each attempt in `security/S<n>/attempt-<k>/` — attempts do not overwrite each other, the report shows
+  all of them;
+- **blocking** (an error or a warning with a CWE from the OWASP Top 10, the rule SEC-001 from ci_for_sdlc) → the attempt FAILS: the findings
+  (the rule, file:line) from `security/S<n>/feedback.md` (always from the last attempt) are the input of the next attempt;
+- after 2 attempts the script prints a STOP block — you do not commit the slice, just as with a red test;
+- a missing scanner is a FAIL with an installation command, not a silent PASS;
+- findings below the threshold go to the run report (the "Security" section).
 
-Zmienne: `TF_SCAN_PATH` (gdzie szukać skanerów zamiast `PATH`), `TF_SEMGREP_CONFIG` (własny zestaw reguł). Stan semgrepa
-(`SEMGREP_SETTINGS_FILE`, `SEMGREP_LOG_FILE`, `SEMGREP_VERSION_CACHE_PATH`) skrypt kieruje do `.tf/cache/semgrep/`,
-bo bez zapisywalnego HOME semgrep kończy się błędem (PRB-32, odtworzone 2026-11-05) — zmiennych nie dopisujesz
-przed poleceniem.
+Variables: `TF_SCAN_PATH` (where to look for scanners instead of `PATH`), `TF_SEMGREP_CONFIG` (your own rule set). The semgrep state
+(`SEMGREP_SETTINGS_FILE`, `SEMGREP_LOG_FILE`, `SEMGREP_VERSION_CACHE_PATH`) the script directs to `.tf/cache/semgrep/`,
+because without a writable HOME semgrep ends with an error (PRB-32, reproduced 2026-11-05) — you do not add the variables
+before the command.
 
-## Źródła
-- OWASP Top 10 2021 i 2025, „List of Mapped CWEs” (github.com/OWASP/Top10, odczyt 2026-11-02): lista CWE progu
-  blokującego; reguła jak SEC-001 w ci_for_sdlc (`--sarif`).
-- semgrep 1.183.0 (kod pakietu, odczyt 2026-11-02): `--sarif --output`, `--metrics=off`, rejestr reguł z semgrep.dev
-  (host na liście dozwolonych kontenera).
-- npm 11.10.0 `min-release-age` (dni), pnpm 10.17.0 `minimumReleaseAge` (minuty), uv `exclude-newer` (czas względny)
-  — szczegóły i luki: plan `docs/plans/2026-11-02-z8c-2-…`.
+## Sources
+- OWASP Top 10 2021 and 2025, "List of Mapped CWEs" (github.com/OWASP/Top10, read 2026-11-02): the CWE list of the blocking
+  threshold; a rule like SEC-001 in ci_for_sdlc (`--sarif`).
+- semgrep 1.183.0 (the package code, read 2026-11-02): `--sarif --output`, `--metrics=off`, the rule registry from semgrep.dev
+  (a host on the container's allowlist).
+- npm 11.10.0 `min-release-age` (days), pnpm 10.17.0 `minimumReleaseAge` (minutes), uv `exclude-newer` (relative time)
+  — details and gaps: the plan `docs/plans/2026-11-02-z8c-2-…`.

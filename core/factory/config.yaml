@@ -409,13 +409,13 @@ autonomy:
 # dotychczasowym — zmiana przydziału to osobna decyzja po pomiarze. Projekt nadpisuje w .tf/config/config.yaml, np.
 # `steps: {review: {tier: deep}}`, i przebudowuje agentów (python3 .tf/factory/build.py). Podgląd: tf config show steps.
 steps:
-  facts:          {label: "fakty o repozytorium", who: scout, tier: fast}
-  versions:         {label: "wersje, dokumentacja zewnętrzna", who: researcher, tier: fast}
-  implementation:     {label: "plan, test, kod", who: tf, tier: std}
-  mechanical:      {label: "zmiana mechaniczna ze specyfikacją", who: quick-fixer, tier: fast}
-  review:       {label: "przegląd zakresu kawałka", who: scope-reviewer, tier: std}
-  decision:        {label: "decyzja trudna do odwrócenia", who: architect, tier: deep}
-  security: {label: "auth, sekrety, IaC, CI", who: security-reviewer, tier: deep}
+  facts:          {label: "facts about the repository", who: scout, tier: fast}
+  versions:         {label: "versions, external documentation", who: researcher, tier: fast}
+  implementation:     {label: "plan, test, code", who: tf, tier: std}
+  mechanical:      {label: "a mechanical change with a specification", who: quick-fixer, tier: fast}
+  review:       {label: "the scope review of a slice", who: scope-reviewer, tier: std}
+  decision:        {label: "a decision that is hard to reverse", who: architect, tier: deep}
+  security: {label: "auth, secrets, IaC, CI", who: security-reviewer, tier: deep}
 
 # Flagi funkcji (krok D osi przebiegu). auto: true — fabryka sama prowadzi flagę historyjki: pyta człowieka o nazwę,
 # zakłada flagę w pierwszym kawałku, chowa za nią nowe zachowanie i nie przepuszcza zadania do PR bez flagi albo

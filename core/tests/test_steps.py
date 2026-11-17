@@ -84,7 +84,7 @@ def main() -> int:
     r = subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "tf.py"), "config", "show", "steps"], cwd=ROOT,
                        capture_output=True, text=True, timeout=120, env={**os.environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
     check(r.returncode == 0 and all(a in r.stdout for a in TODAY) and "sonnet" in r.stdout and "effort" in r.stdout.lower()
-          and "przegląd zakresu kawałka" in r.stdout,
+          and "the scope review of a slice" in r.stdout,
           f"K-12: tf config show steps drukuje tabelę kroków z modelem i effortem: {r.returncode} {r.stdout[:400]}{r.stderr[:200]}")
 
     for f in fails:

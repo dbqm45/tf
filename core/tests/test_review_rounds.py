@@ -115,8 +115,8 @@ def main() -> int:
           "PR-8: werdykt SPOZA ZAKRESU tylko przy ustaleniu ważnym; zastane to kod sprzed zmiany; druga runda ogląda "
           "tylko zmiany od poprzedniej rundy")
     body = SKILL.read_text(encoding="utf-8")
-    step4 = body.split("**Przegląd zakresu:**", 1)[-1].split("5. **Commit**", 1)[0]
-    check(all(w in step4 for w in ("ważne", "drobne", "zastane", "parked.md")) and len(body) <= 15000,
+    step4 = body.split("**The scope review:**", 1)[-1].split("5. **", 1)[0]
+    check(all(w in step4 for w in ("important", "minor", "pre-existing", "parked.md")) and len(body) <= 15000,
           f"PR-9: pętla wycofuje kod tylko przy ustaleniu ważnym, drobne i zastane odkłada; SKILL.md w limicie: {len(body)}")
 
     for f in fails:

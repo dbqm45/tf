@@ -1,36 +1,36 @@
-# Waga zadania w pętli /tf
+# The task's weight in the /tf loop
 
-Czytasz, gdy `run_report.py start` albo etap `plan` drukuje linię o wadze innej niż zwykła, gdy skrypt odmawia etapu
-z powodu wagi albo gdy człowiek chce ją zmienić. Wagę dobiera skrypt, nie Ty i nie człowiek: z treści zgłoszenia
-przy starcie i ze ścieżek planu przy etapie `plan`. Człowiekowi mówisz jednym zdaniem, co wybrano i dlaczego
-(„Zmiana dotyczy haseł, więc przed kodem pokażę Ci plan”).
+You read this when `run_report.py start` or the `plan` stage prints a line with a weight other than normal, when the script refuses a stage
+because of the weight or when the human wants to change it. The script chooses the weight, not you and not the human: from the issue's content
+at the start and from the plan's paths at the `plan` stage. You tell the human in one sentence what was chosen and why
+("The change concerns passwords, so I'll show you the plan before the code").
 
-| Waga | Kiedy | Co się zmienia w przebiegu |
+| Weight | When | What changes in the run |
 |---|---|---|
-| `light` (lekka) | literówka, nazwa, komentarz, dokumentacja; bez kryteriów akceptacji; jeden kawałek, najwyżej 2 pliki | bez `spec.md` (więc bez flagi i śladu kryteriów); jeden kawałek; test, dowód `verify`, skan i przegląd zakresu zostają |
-| `normal` (zwykła) | wszystko inne | pełny przebieg ze SKILL.md |
-| `full` (pełna) | logowanie, hasła, uprawnienia, płatności, migracje bazy, dane osobowe, sekrety, wdrożenie — w treści zgłoszenia albo w ścieżkach planu | jak zwykła, a do tego dwa punkty niżej |
+| `light` (lekka) | a typo, a name, a comment, documentation; no acceptance criteria; one slice, at most 2 files | without `spec.md` (so without a flag and a criteria trace); one slice; the test, `verify` evidence, the scan and the scope review stay |
+| `normal` (zwykła) | everything else | the full run from SKILL.md |
+| `full` (pełna) | login, passwords, permissions, payments, database migrations, personal data, secrets, deployment — in the issue's content or in the plan's paths | like normal, plus the two points below |
 
-## Waga pełna
-1. **Plan zatwierdza człowiek przed kodem.** Po zapisaniu planu: `run_state.py stage <katalog> needs --needs plan`,
-   pokazujesz plan i czekasz. Po zgodzie człowieka zapisujesz ją: `python3 .tf/factory/tf.py task approve <KEY>
-   plan.md --by human:<id>` (identyfikator człowieka, który się zgodził) — dopiero wtedy `step` wpuści pętlę kawałka.
-   **Z `--auto` nie ma kogo zapytać:** kończysz blokiem STOP („zadanie o wadze pełnej — plan czeka na Twoją zgodę”),
-   z planem w raporcie. Zgody nie zapisujesz sam.
-2. **Panel recenzentów przed PR pilnuje skrypt.** `run_state.py panel <katalog>` podaje skład i zlecenia:
-   `security-reviewer` (bezpieczeństwo diffu) i `spec-reviewer` (każde kryterium `AC-n` i każda reguła „Unchanged”
-   ze `spec.md`, z dowodem plik:linia) — każdy w osobnym kontekście, przez narzędzie Agent. Werdykt zapisujesz:
-   `run_state.py panel <katalog> --record <recenzent> pass|fail --note "<najważniejsze ustalenie>"`. Etap `pr` przejdzie
-   dopiero z `pass` od obu dla bieżącego commita; po poprawce w nowym commicie przegląd od nowa. `architect` — gdy plan
-   zawiera decyzję trudną do odwrócenia (migracja danych, zmiana kontraktu).
+## The full weight
+1. **The human approves the plan before the code.** After saving the plan: `run_state.py stage <katalog> needs --needs plan`,
+   you show the plan and wait. After the human's consent you record it: `python3 .tf/factory/tf.py task approve <KEY>
+   plan.md --by human:<id>` (the identifier of the human who agreed) — only then does `step` let the slice loop in.
+   **With `--auto` there is nobody to ask:** you end with a STOP block ("a task with the full weight — the plan waits for your consent"),
+   with the plan in the report. You do not record the consent yourself.
+2. **The script guards the reviewer panel before the PR.** `run_state.py panel <katalog>` gives the composition and the commissions:
+   `security-reviewer` (the diff's security) and `spec-reviewer` (every `AC-n` criterion and every "Unchanged" rule
+   from `spec.md`, with file:line evidence) — each in a separate context, through the Agent tool. You record the verdict:
+   `run_state.py panel <katalog> --record <recenzent> pass|fail --note "<najważniejsze ustalenie>"`. The `pr` stage passes
+   only with a `pass` from both for the current commit; after a fix in a new commit the review starts again. `architect` — when the plan
+   contains a decision that is hard to reverse (a data migration, a contract change).
 
-## Zmiana wagi
-- Podgląd z powodem: `run_state.py weight <katalog>`.
-- **Podnieść** może każdy, także Ty, gdy widzisz ryzyko, którego skrypt nie złapał:
+## Changing the weight
+- A preview with the reason: `run_state.py weight <katalog>`.
+- **Anyone can raise it**, also you, when you see a risk the script did not catch:
   `run_state.py weight <katalog> --set full`.
-- **Obniżyć** może tylko człowiek, z powodem: `python3 .tf/factory/tf.py task weight <KEY> --set normal --by human:<id>
-  --reason "<dlaczego>"`. Gdy uważasz, że waga jest za wysoka, mówisz to człowiekowi i podajesz mu to polecenie —
-  sam go nie uruchamiasz. Po decyzji człowieka skrypt wagi już nie zmienia.
-- Waga lekka, a plan wyszedł na więcej niż jeden kawałek → podnosisz ją do zwykłej i zakładasz specyfikację.
-- Cięcie pdi ma wagę liczoną z wiersza cięcia (zamiar całej zmiany jej nie podnosi). Przy wadze pełnej przebieg
-  `--auto` nie staje po zgodę: plan zmiany człowiek zatwierdził na bramce pdi. Przegląd `security-reviewer` zostaje.
+- **Only the human can lower it**, with a reason: `python3 .tf/factory/tf.py task weight <KEY> --set normal --by human:<id>
+  --reason "<dlaczego>"`. When you think the weight is too high, you tell the human and give them this command —
+  you do not run it yourself. After the human's decision the script no longer changes the weight.
+- The light weight, and the plan came out at more than one slice → you raise it to normal and create a specification.
+- A pdi slice has its weight computed from the slice's row (the intent of the whole change does not raise it). At the full weight an
+  `--auto` run does not stop for consent: the human approved the change plan at the pdi gate. The `security-reviewer` review stays.
