@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-tf — the team factory command: install, update, packs, languages, health check (standard library only).
+tf — the team factory command: install, update, packs, health check (standard library only).
 
   cd ~/projects/my-app
   tf                          # no factory → install the latest release; installed → update (.tf/factory/update.py)
-  tf install [options]        # install (options go to install.py: --packs, --language, --commit-language, --shared…)
+  tf install [options]        # install (options go to install.py: --packs, --shared…)
   tf update [options]         # update (options go to update.py: --check, --yes, --source…)
   tf add <pack> [<pack>…]     # add packs or modes (e.g. tf add pack-ux, tf add mode-team)
   tf remove <pack> [<pack>…]  # remove packs (their files go to .tf/backup/)
-  tf list                     # installed packs and modes, languages, what the source offers
-  tf language <code>          # working language (conversation, documentation); pl installs pack-editorial-pl
-  tf commit-language <code>   # language of commit messages, PR titles and descriptions
-  tf doctor [--fix]           # check the install: core/pack versions, required packs, language pack, agents, renames
+  tf list                     # installed packs and modes, what the source offers
+  tf doctor [--fix]           # check the install: core/pack versions, required packs, agents, renames
                               # and whether the quality gate is on (.claude/quality-gate.json)
   tf onboard [--yes] [--verify] [--dry-run] [--json]
                               # prepare the repository: detect test/lint/type/build commands, write verify.sh, the
@@ -206,38 +204,6 @@ def run_build() -> int:
     print("✓ Rebuilt the agents and the catalog (.tf/factory/build.py)" if r.returncode == 0
           else "⚠ .tf/factory/build.py reported problems:\n" + r.stdout[-1500:] + r.stderr[-500:])
     return r.returncode
-
-
-def set_language(kind: str, code: str, repo: str | None) -> int:
-    """`kind`: language | commit_language. Language with a pack missing in the project goes through the installer."""
-    if not need_project():
-        return 2
-    pm = project_module("packs")
-    cfg = pm.load_config(Path.cwd())
-    langs = cfg.get("languages") or {}
-    if code not in langs:
-        print(f"✗ Unknown language '{code}'. Available: {', '.join(langs)}")
-        return 2
-    root = Path.cwd()
-    current = pm.load_settings(root, cfg)
-    flag = "--" + kind.replace("_", "-")
-    installed = pm.installed_packs(root)
-    if kind == "language":
-        need = (langs[code] or {}).get("pack")
-        if need and need not in installed:
-            print(f"ℹ Language {code} needs {need} — installing it.")
-            return update(repo, [flag, code])
-        old_pack = (langs.get(current["language"]) or {}).get("pack")
-        if old_pack and old_pack != need and old_pack in installed and sys.stdin.isatty():
-            if input(f"Remove {old_pack} (tools for {current['language']})? [y/N] ").strip().lower() in ("y", "yes"):
-                return update(repo, [flag, code, "--remove", old_pack])
-    pm.save_settings(root, **{kind: code})
-    settings = pm.load_settings(root, cfg)
-    for name in ("CLAUDE.local.md", "CLAUDE.md"):
-        if pm.write_language_lines(root / name, cfg, settings):
-            print(f"✓ {name}: language section updated")
-    print(f"✓ {kind.replace('_', ' ')}: {current[kind]} → {code}")
-    return run_build()
 
 
 def cmd_list() -> int:
@@ -488,11 +454,11 @@ def main(argv: list[str]) -> int:
             print(f"✗ Usage: tf {cmd} <pack> [<pack>…]")
             return 2
         return update(repo or REPO or None, [f"--{cmd}", ",".join(rest)]) if need_project() else 2
-    if cmd in ("language", "commit-language"):
-        if len(rest) != 1:
-            print(f"✗ Usage: tf {cmd} <code>")
-            return 2
-        return set_language(cmd.replace("-", "_"), rest[0], repo or REPO or None)
+    if cmd in ("language", "commit-language"):   # 12.0.0: język bez ustawień, jak w Claude
+        print(f"ℹ tf {cmd} is no longer needed: there is no language setting. The agents answer in the language you "
+              "write in and write your documents in it; commit messages follow the repository's history (git log; a new "
+              "repository: English, or commit_language.new_repo in the config).")
+        return 2
     if cmd == "list":
         return cmd_list()
     if cmd == "doctor":

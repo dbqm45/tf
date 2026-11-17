@@ -16,7 +16,7 @@ zmieniasz rzadko. Ten katalog nie trafia do projektów: to zestaw do przygotowan
 |---|---|
 | `pack.yaml` → `org_defaults.config.autonomy.operations` | blokuje operacje agenta w całej firmie (`deny`); projekt nie może tego rozluźnić |
 | `pack.yaml` → `org_defaults.config.autonomy.triage` | ścieżki, które `tf risk` zawsze oznacza do przeglądu człowieka |
-| `pack.yaml` → `org_defaults.config.work`, `default_profile`, języki | limity `tf work`, profil kosztów, język pracy i commitów |
+| `pack.yaml` → `org_defaults.config.work`, `default_profile`, `commit_language.new_repo` | limity `tf work`, profil kosztów, język commitów w nowym repozytorium (język rozmowy nie jest ustawieniem) |
 | `pack.yaml` → `org_defaults.config.task.allowed_modes` | tryby zadania dozwolone w firmie; styl pracy osoby (`tf style`) wybiera tylko spośród nich |
 | `pack.yaml` → `org_defaults.operations.tracker` | tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami (bez adresu i tokenu) |
 | `analyzers/<firma>-standards/rules.yaml` | standardy sprawdzane **bez modelu** (`tf analyze`): zakazane API i importy, wymagane nagłówki, nazwy plików |

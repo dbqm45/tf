@@ -16,7 +16,7 @@ INSTALL = ROOT / "core" / "factory" / "install.py"
 
 
 def install(app: Path, *extra: str) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(INSTALL), str(app), "--yes", "--language", "en", "--packs", "none", *extra],
+    return subprocess.run([sys.executable, str(INSTALL), str(app), "--yes", "--packs", "none", *extra],
                           capture_output=True, text=True, timeout=300)
 
 

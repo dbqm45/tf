@@ -22,18 +22,18 @@ cd ~/projects/moja-aplikacja
 tf
 ```
 
-Bez fabryki w projekcie `tf` instaluje najnowsze wydanie (najwyższy tag `vX.Y.Z`). Przy pierwszej instalacji pyta o:
-- język pracy (rozmowa, dokumentacja; domyślnie `pl`);
-- język commitów i PR (domyślnie `en`);
-- nakładki (`pack-*`) i tryby (`mode-*`).
+Bez fabryki w projekcie `tf` instaluje najnowsze wydanie (najwyższy tag `vX.Y.Z`). Przy pierwszej instalacji pyta
+o nakładki (`pack-*`) i tryby (`mode-*`). O język nie pyta: agenci odpowiadają w języku, w którym piszesz, i w nim
+piszą dla Ciebie dokumenty; commity idą za językiem historii repozytorium (w nowym repozytorium po angielsku).
+Piszesz po polsku? Dodaj `pack-editorial-pl` (poprawność i styl polszczyzny).
 
-Wymagane nakładki i nakładka języka (dla `pl`: `pack-editorial-pl`) dochodzą same. Na koniec instalator składa
+Wymagane nakładki dochodzą same. Na koniec instalator składa
 agentów (`.tf/factory/build.py`).
 
 Bez pytań, na przykład w skrypcie:
 
 ```bash
-tf install --packs pack-it,pack-docs --language pl --commit-language en --yes
+tf install --packs pack-it,pack-docs,pack-editorial-pl --yes
 ```
 
 Podgląd bez zmian: `python3 ~/tools/tf/core/factory/install.py --dry-run`.
@@ -64,7 +64,6 @@ Prywatnie — gdy fabryka jest tylko Twoim narzędziem. Zespołowo — gdy ma dz
 |---|---|
 | `tf` | aktualizacja (`tf update --check` — co się zmieni, bez zmian) |
 | `tf add <id>` / `tf remove <id>` | dodanie lub usunięcie nakładki albo trybu |
-| `tf language <kod>` / `tf commit-language <kod>` | zmiana języków |
 | `python3 .tf/factory/update.py --rollback` | powrót do poprzedniej wersji |
 
 Pliki fabryki aktualizacja nadpisuje (jak `node_modules`) — zmiany wprowadzasz w repo fabryki; Twoje pliki i ustawienia

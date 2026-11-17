@@ -16,20 +16,22 @@ Układ w projekcie:
   .tf/config/{roles,personas,traits}/     własne role, persony i cechy projektu (nadpisują te z rdzenia i nakładek)
   ~/.tf/preferences.yaml, .tf/config/me.yaml   preferencje osoby: styl pracy (`tf style`), ostatnia warstwa
   .claude/skills/                         skille rdzenia i nakładek (Claude Code czyta je tylko stąd)
-  .claude/factory-settings.json           ustawienia projektu: language, commit_language, targets
+  .claude/factory-settings.json           ustawienia projektu: targets (język rozmowy i commitów nie jest ustawieniem)
 
 Zasady składania:
   - listy (wymiary, słownik, skille samodzielne, wiersze routingu) — rdzeń, potem nakładki w kolejności nazw;
   - wymiary sortowane po `order`; ten sam prefiks w dwóch miejscach to błąd;
   - `always_skills` nakładki trafiają tylko do jej person i wykonawców;
   - `contributes` (wkład do person, ról i agentów spoza nakładki) oraz agenci wspólni, konsultanci i wiersze routingu
-    nakładki działają tylko wtedy, gdy spełniony jest `contributes_when` (np. `{language: pl}`);
+    nakładki działają tylko wtedy, gdy spełniony jest `contributes_when` (np. `{targets: [claude, managed-agents]}`);
   - odwołania do elementów nakładek z `optional_packs`, których nie zainstalowano, są pomijane bez błędu.
 Biblioteka standardowa + PyYAML (systemowy albo dołączony w .tf/factory/_vendor).
 """
 from __future__ import annotations
 
 import json
+import re
+import subprocess
 import sys
 
 import os
@@ -72,7 +74,7 @@ def deep_merge(base: dict, over: dict) -> dict:
 # Nakładka firmowa (`org_defaults` w pack.yaml): domyślne organizacji między silnikiem a projektem. Tylko te klucze
 # konfiguracji — reszta to składanie fabryki (wymiary, agenci), którego nakładka firmowa nie przestawia.
 ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "loop", "steps", "task",
-                   "default_language", "default_commit_language")
+                   "commit_language")
 ORG_OPERATIONS_KEYS = ("tracker",)
 
 
@@ -326,11 +328,8 @@ def load_settings(root: Path, cfg: dict) -> dict:
             data = json.loads(p.read_text(encoding="utf-8")) or {}
         except (json.JSONDecodeError, OSError):
             data = {}
-    langs = cfg.get("languages") or {}
-    lang = data.get("language") if data.get("language") in langs else cfg.get("default_language", "pl")
-    commit = data.get("commit_language") if data.get("commit_language") in langs else cfg.get("default_commit_language", "en")
     targets = [t for t in (data.get("targets") or cfg.get("default_targets") or ["claude"]) if isinstance(t, str)]
-    return {"language": lang, "commit_language": commit, "targets": targets}
+    return {"targets": targets}
 
 
 def save_settings(root: Path, **changes) -> dict:
@@ -345,6 +344,20 @@ def save_settings(root: Path, **changes) -> dict:
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return data
+
+
+def drop_settings(root: Path, *keys: str) -> bool:
+    """Usuwa klucze z ustawień projektu (np. dawne `language`, `commit_language`). True, gdy coś zmieniono."""
+    p = root / SETTINGS_REL
+    try:
+        data = json.loads(p.read_text(encoding="utf-8")) or {}
+    except (OSError, ValueError):
+        return False
+    if not isinstance(data, dict) or not any(k in data for k in keys):
+        return False
+    p.write_text(json.dumps({k: v for k, v in data.items() if k not in keys}, ensure_ascii=False, indent=1) + "\n",
+                 encoding="utf-8")
+    return True
 
 
 def active(pack: dict, settings: dict) -> bool:
@@ -493,14 +506,64 @@ def load_traits(root: Path) -> dict[str, str]:
 MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"
 
 
-def language_lines(cfg: dict, settings: dict) -> list[str]:
-    langs = cfg.get("languages") or {}
-    lines = [(langs.get(settings.get("language")) or {}).get("work"),
-             (langs.get(settings.get("commit_language")) or {}).get("commits"), cfg.get("code_language_note")]
-    return [f"- {x.strip()}" for x in lines if x]
+# Język commitów repozytorium bez modelu: tematy ostatnich commitów (bez przedrostka Conventional Commits).
+PL_CHARS = set("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ")
+PL_WORDS = {"i", "w", "na", "z", "dla", "nie", "oraz", "przez", "bez", "dodaj", "dodano", "popraw", "poprawka",
+            "poprawki", "zmiana", "zmiany", "nowy", "nowa", "nowe", "aktualizacja", "przenieś", "usuń", "obsługa"}
+EN_WORDS = {"the", "and", "for", "of", "in", "with", "from", "into", "add", "adds", "added", "fix", "fixes", "fixed",
+            "update", "updates", "remove", "removes", "use", "when", "by", "new", "move", "handle", "support"}
+CC_PREFIX = re.compile(r"^[a-z]+(\([^)]*\))?!?:\s*")
 
 
-def write_language_lines(path: Path, cfg: dict, settings: dict) -> bool:
+_COMMIT_LANG: dict = {}
+
+
+def commit_language(root: Path, last: int = 50) -> str | None:
+    """`pl`, `en`, `mixed` (brak wyraźnej przewagi) albo None (brak gita lub commitów — nowe repozytorium).
+    Wynik zapamiętany na proces — build wywołuje to raz na agenta."""
+    key = (str(Path(root).resolve()), last)
+    if key not in _COMMIT_LANG:
+        _COMMIT_LANG[key] = _commit_language(Path(root), last)
+    return _COMMIT_LANG[key]
+
+
+def _commit_language(root: Path, last: int) -> str | None:
+    if not root.is_dir():
+        return None
+    try:
+        r = subprocess.run(["git", "log", f"-{last}", "--no-merges", "--format=%s"], cwd=root, capture_output=True,
+                           text=True, encoding="utf-8", errors="replace", timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    subjects = [s for s in r.stdout.splitlines() if s.strip()] if r.returncode == 0 else []
+    if not subjects:
+        return None
+    pl = en = 0
+    for s in subjects:
+        body = CC_PREFIX.sub("", s)
+        words = set(re.findall(r"[^\W\d_]+", body.lower()))
+        is_pl, is_en = bool(PL_CHARS & set(body)) or bool(words & PL_WORDS), bool(words & EN_WORDS)
+        pl += is_pl and not is_en
+        en += is_en and not is_pl
+    if pl + en == 0 or min(pl, en) * 3 > max(pl, en):   # mniej niż 3:1 — bez rozstrzygnięcia
+        return "mixed"
+    return "pl" if pl > en else "en"
+
+
+def language_lines(cfg: dict, root: Path) -> list[str]:
+    """Sekcja „Język”: reguła rozmowy (stała), język commitów z `git log`, język kodu."""
+    cl = cfg.get("commit_language") or {}
+    found = commit_language(root)
+    code = found or cl.get("new_repo", "en")
+    commits = cl.get(code) or cl.get("mixed")
+    if commits:   # skąd ten język — człowiek widzi, że to nie ustawienie
+        commits = commits.rstrip(".") + (" (jak dotychczasowe commity, `git log`)." if found else
+                                         " (nowe repozytorium bez commitów; potem język historii z `git log`).")
+    lines = [cfg.get("language_note"), commits, cfg.get("code_language_note")]
+    return [f"- {' '.join(str(x).split())}" for x in lines if x]
+
+
+def write_language_lines(path: Path, cfg: dict, root: Path) -> bool:
     """Podmienia podsekcję „### Język” w bloku fabryki w CLAUDE.md / CLAUDE.local.md. Zwraca True, gdy zmieniono."""
     if not path.exists():
         return False
@@ -509,7 +572,7 @@ def write_language_lines(path: Path, cfg: dict, settings: dict) -> bool:
         return False
     a, b = text.index(MARK_BEGIN), text.index(MARK_END)
     block = text[a:b]
-    body = "### Język\n" + "\n".join(language_lines(cfg, settings)) + "\n"
+    body = "### Język\n" + "\n".join(language_lines(cfg, root)) + "\n"
     if "### Język\n" in block:
         i = block.index("### Język\n")
         j = block.find("\n### ", i + 1)
@@ -530,7 +593,7 @@ def main(argv: list[str]) -> int:
         print(json.dumps({k: v for k, v in cfg.items() if k != "_packs"}, ensure_ascii=False, indent=1, default=str))
         return 0
     s = cfg["_settings"]
-    print(f"Language: {s['language']} · commit language: {s['commit_language']} · targets: {', '.join(s['targets'])}")
+    print(f"Commit language: {commit_language(root) or 'new repository'} (from git log) · targets: {', '.join(s['targets'])}")
     for pid, p in cfg["_packs"].items():
         state = "" if pid in cfg["_active"] else " (dormant: contributes_when not met)"
         print(f"  {pid} {p.get('version', '?')} — {p.get('title', '')}{state}")

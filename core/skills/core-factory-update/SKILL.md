@@ -23,13 +23,12 @@ Launcher instaluje się raz: `python3 .tf/factory/tf.py --install-launcher` (dom
 |---|---|
 | `tf` / `tf update [opcje]` | aktualizacja — opcje idą do `.tf/factory/update.py` (`--check`, `--yes`, `--source`…; `--dry-run` = `--check`) |
 | `tf add <pack>…` / `tf remove <pack>…` | dodanie / usunięcie nakładki przez instalator; pliki usuniętej trafiają do `.tf/backup/` |
-| `tf list` | zainstalowane nakładki i języki oraz nakładki dostępne w źródle |
-| `tf language <kod>` | język pracy (rozmowa, dokumentacja); `pl` doinstalowuje pack-editorial-pl; aktualizuje sekcję języka w `CLAUDE.md`/`CLAUDE.local.md` i przebudowuje agentów |
-| `tf commit-language <kod>` | język commit message, tytułów i opisów PR |
-| `tf doctor [--fix]` | kontrola instalacji: wersje rdzenia i nakładek, wymagane nakładki, nakładka języka, agenci, zmiany nazw; `--fix` stosuje zmiany nazw, przebudowuje nieaktualne pliki i dodaje brakujące nakładki |
+| `tf list` | zainstalowane nakładki oraz nakładki dostępne w źródle |
+| `tf doctor [--fix]` | kontrola instalacji: wersje rdzenia i nakładek, wymagane nakładki, agenci, zmiany nazw; `--fix` stosuje zmiany nazw, przebudowuje nieaktualne pliki i dodaje brakujące nakładki |
 
-Bez launchera: `python3 .tf/factory/update.py` (te same opcje; nakładki i języki: `--add`, `--remove`, `--packs`,
-`--language`, `--commit-language`). Dodanie, usunięcie nakładki i zmiana języka zmieniają `.claude/` — tylko na prośbę
+Bez launchera: `python3 .tf/factory/update.py` (te same opcje; nakładki: `--add`, `--remove`, `--packs`).
+Języka się nie ustawia: agenci odpowiadają w języku człowieka, commity idą za `git log`. Dodanie i usunięcie
+nakładki zmieniają `.claude/` — tylko na prośbę
 człowieka, z planem (`--dry-run`) przed zmianą.
 
 ## Kroki

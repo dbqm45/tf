@@ -3,7 +3,7 @@
 Development workspace for the factory: an installed project assembled from core/, packs/ and modes/, where the build check
 and the factory tests run (tests and build expect the installed layout, not the source tree).
 
-  python3 tools/workspace.py assemble [--packs all|none|a,b] [--out DIR] [--language pl] [--commit-language en]
+  python3 tools/workspace.py assemble [--packs all|none|a,b] [--out DIR]
                                      [--pack-dir DIR|git URL]   # also packs from outside packs/ (install.py --pack-dir)
   python3 tools/workspace.py check    [same options]   # assemble + build check + tests + scenario validation + gate status
   python3 tools/workspace.py matrix                    # check: core only, each pack and mode alone, all
@@ -43,10 +43,10 @@ def item_dirs() -> list[Path]:
 
 
 def opts_of(argv: list[str]) -> dict:
-    out = {"packs": "all", "out": None, "language": None, "commit-language": None, "keep": False, "pack-dir": None}
+    out = {"packs": "all", "out": None, "keep": False, "pack-dir": None}
     it = iter(argv)
     for a in it:
-        if a in ("--packs", "--out", "--language", "--commit-language"):
+        if a in ("--packs", "--out"):
             out[a[2:]] = next(it, "")
         elif a == "--pack-dir":     # nakładki spoza packs/ (np. ../ev-intelligence/factory-pack); można powtórzyć
             out["pack-dir"] = ",".join(x for x in (out["pack-dir"], next(it, "")) if x)
@@ -64,9 +64,6 @@ def workspace_dir(o: dict) -> Path:
 
 def install_cmd(ws: Path, o: dict) -> list[str]:
     cmd = [sys.executable, str(INSTALL), str(ws), "--yes", "--packs", o["packs"] or "none"]
-    for k in ("language", "commit-language"):
-        if o.get(k):
-            cmd += [f"--{k}", o[k]]
     if o.get("pack-dir"):
         cmd += ["--pack-dir", o["pack-dir"]]
     return cmd
@@ -333,7 +330,7 @@ def new_pack(argv: list[str]) -> int:
     print(f"✓ {base.relative_to(ROOT)}: " + ", ".join(files) + f"\n✓ {ci_note}")
     ok = True
     if "--no-check" not in argv:
-        ok = check({"packs": pid, "out": None, "language": None, "commit-language": None, "keep": False})
+        ok = check({"packs": pid, "out": None, "keep": False})
         ok &= refs(False) == 0
     print(f"""Do zrobienia (skill core-skill-authoring, przewodnik docs/new-pack.md):
   1. pack.yaml: komentarz, description, facets.question, order; zależności (requires.packs, optional_packs).
@@ -356,8 +353,7 @@ def main(argv: list[str]) -> int:
         packs = [d.name for d in item_dirs()]
         results = {}
         for sel in ["none", *packs, "all"]:
-            # „none” = sam rdzeń: język en, bo pl dokłada pack-editorial-pl
-            results[sel] = check({**o, "packs": sel, "out": None, "language": "en" if sel == "none" else o["language"]})
+            results[sel] = check({**o, "packs": sel, "out": None})
         print("\n".join(f"{'✓' if v else '✗'} {k}" for k, v in results.items()))
         return 0 if all(results.values()) else 1
     if cmd == "sync-gate":

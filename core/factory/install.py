@@ -11,7 +11,6 @@ Run it from the project directory — the project is the current directory, the 
   python3 "$TEAM_FACTORY/core/factory/install.py" --packs pack-it,pack-ux   # choose packs without asking
   python3 "$TEAM_FACTORY/core/factory/install.py" --add pack-ux       # add a pack to an existing install
   python3 "$TEAM_FACTORY/core/factory/install.py" --remove pack-ux    # remove a pack
-  python3 "$TEAM_FACTORY/core/factory/install.py" --language pl --commit-language en
   python3 "$TEAM_FACTORY/core/factory/install.py" --shared            # team install: the factory is committed with the project
   python3 "$TEAM_FACTORY/core/factory/install.py" --gitignore         # private, but entries go to .gitignore, not .git/info/exclude
   python3 "$TEAM_FACTORY/core/factory/install.py" --python py         # force the Python command for hooks (default: detected)
@@ -30,10 +29,9 @@ stops the install). The sources are remembered in the manifest (and the team loc
 The core is always installed. Packs (`packs/pack-*`) are chosen interactively on the first install (or with
 `--packs`); later runs keep the previous choice. Modes (`modes/mode-*`, e.g. `mode-team`) are on-demand ways of
 working installed like packs (`--add mode-team`, `--remove mode-team`). A default pack or mode that is new in this
-version is added once on update; one you removed does not come back. A pack's required packs and the pack of the chosen working language
-(e.g. `pack-editorial-pl` for `pl`) are added automatically. On the first install you also choose the working
-language (conversation, documentation; default `pl`) and the commit language (commit messages, PR titles and
-descriptions; default `en`). Both can be changed later: `tf language <code>`, `tf commit-language <code>`.
+version is added once on update; one you removed does not come back. A pack's required packs are added automatically.
+There is no language setting: the agents answer in the language you write in (and write your documents in it), and
+commit messages follow the language of the repository's history (`git log`; a new repository: English).
 
 `TEAM_FACTORY` is the factory directory set once in your shell profile (e.g. `export TEAM_FACTORY=~/tools/tf`); any
 path works too, relative to the current directory. The project can also be given as the first argument.
@@ -44,11 +42,11 @@ Day to day you update from inside the project: `python3 .tf/factory/update.py` (
 Private mode (default): skills, hooks, `.tf/factory/`, factory tests (`.claude/tests/`) go into the project; permissions and
 hooks into `.claude/settings.local.json`, rules into `CLAUDE.local.md`; all factory paths into `.git/info/exclude`.
 Team mode (`--shared`): `.claude/settings.json`, `CLAUDE.md`, CI workflow and `.gitignore`.
-After copying, the installer builds the agents (`.tf/factory/build.py`) for the chosen packs and languages.
+After copying, the installer builds the agents (`.tf/factory/build.py`) for the chosen packs.
 
 The manifest `.claude/factory-manifest.json` records the version, source, mode, packs and a hash of every installed
 file (as it is after `.tf/factory/build.py`). The manifest stays outside git; in team mode the installer also writes
-`.claude/factory-lock.json` (version, packs, languages, file hashes — nothing machine-specific), committed with the
+`.claude/factory-lock.json` (version, packs, file hashes — nothing machine-specific), committed with the
 project, so a fresh clone without the manifest updates from it instead of skipping factory files. Thanks to them an
 update:
 - overwrites factory files you did not change and adds new ones;
@@ -485,8 +483,8 @@ def merge_settings(src: dict, dst: dict) -> dict:
     return out
 
 
-def claude_md_section(py: str = PY_DEFAULT, settings: dict | None = None, cfg: dict | None = None) -> str:
-    """Sekcja fabryki w CLAUDE.md / CLAUDE.local.md: zasady rdzenia + język pracy i commitów."""
+def claude_md_section(py: str = PY_DEFAULT, root: Path | None = None, cfg: dict | None = None) -> str:
+    """Sekcja fabryki w CLAUDE.md / CLAUDE.local.md: zasady rdzenia + język (rozmowa, commity z `git log`)."""
     text = (CORE / "CLAUDE.md").read_text(encoding="utf-8")
     body = text.split("\n", 1)[1] if text.startswith("# ") else text   # bez nagłówka „# Zasady projektu”
     body = "\n".join("#" + ln if ln.startswith("## ") else ln for ln in body.splitlines())   # podsekcje o poziom niżej
@@ -494,11 +492,8 @@ def claude_md_section(py: str = PY_DEFAULT, settings: dict | None = None, cfg: d
         shown = py if simple_command(py) else f'"{py}"'
         body = (f"- **Python w tym projekcie: `{shown}`.** Wszędzie, gdzie skille, przewodnik i komunikaty piszą `python3`, "
                 f"uruchamiaj `{shown}` (np. `{shown} .claude/hooks/project_record.py status`).\n" + body.lstrip("\n"))
-    if settings and cfg:
-        langs = cfg.get("languages") or {}
-        lines = [(langs.get(settings.get("language")) or {}).get("work"),
-                 (langs.get(settings.get("commit_language")) or {}).get("commits"), cfg.get("code_language_note")]
-        body = body.rstrip() + "\n\n### Język\n" + "\n".join(f"- {x.strip()}" for x in lines if x)
+    if root is not None and cfg:
+        body = body.rstrip() + "\n\n### Język\n" + "\n".join(load_packs_module().language_lines(cfg, root))
     return f"{MARK_BEGIN}\n## Zespół agentów (team factory)\n{body.strip()}\n{MARK_END}\n"
 
 
@@ -625,13 +620,10 @@ def dispatcher_hints(packs: list[str], available: dict, pm) -> list[str]:
     return out
 
 
-def resolve_packs(chosen: list[str], available: dict, language: str, cfg: dict) -> tuple[list[str], list[str]]:
-    """Wybrane nakładki + wymagane przez nie + nakładka języka pracy. Zwraca (nakładki, nieznane)."""
+def resolve_packs(chosen: list[str], available: dict) -> tuple[list[str], list[str]]:
+    """Wybrane nakładki + wymagane przez nie. Zwraca (nakładki, nieznane)."""
     unknown = [c for c in chosen if c not in available]
     out = [c for c in chosen if c in available]
-    lang_pack = ((cfg.get("languages") or {}).get(language) or {}).get("pack")
-    if lang_pack in available and lang_pack not in out:
-        out.append(lang_pack)
     i = 0
     while i < len(out):
         for dep in (available[out[i]].get("requires") or {}).get("packs") or []:
@@ -649,26 +641,15 @@ def ask(question: str, default: str) -> str:
     return answer or default
 
 
-def interactive_choice(available: dict, cfg: dict, preset: list[str]) -> tuple[list[str], str, str]:
-    """Pierwsza instalacja w terminalu: język pracy, język commitów, nakładki."""
-    langs = cfg.get("languages") or {}
-    codes = "/".join(langs)
+def interactive_choice(available: dict, preset: list[str]) -> list[str]:
+    """Pierwsza instalacja w terminalu: nakładki (języka nie wybiera się — agenci odpowiadają w Twoim)."""
     print("Team factory — first install. The core is always installed.")
-    language = ask(f"Working language (conversation, documentation) — {codes}", cfg.get("default_language", "pl"))
-    while language not in langs:
-        language = ask(f"  unknown language; choose {codes}", cfg.get("default_language", "pl"))
-    commit = ask(f"Commit language (commit messages, PR titles and descriptions) — {codes}",
-                 cfg.get("default_commit_language", "en"))
-    while commit not in langs:
-        commit = ask(f"  unknown language; choose {codes}", cfg.get("default_commit_language", "en"))
-    lang_pack = (langs.get(language) or {}).get("pack")
     print("\nAvailable packs and modes:")
     ids = list(available)
     for i, pid in enumerate(ids, 1):
         p = available[pid]
         mark = "*" if pid in preset else " "
-        auto = " (installed with this language)" if pid == lang_pack else ""
-        auto += " (mode — on-demand way of working)" if p.get("kind") == "mode" else ""
+        auto = " (mode — on-demand way of working)" if p.get("kind") == "mode" else ""
         print(f"  {i}. [{mark}] {pid} — {p.get('description', p.get('title', ''))}{auto}")
     raw = ask("Packs and modes to install: numbers or ids separated by commas, 'all', or Enter for the marked ones",
               ",".join(preset) or "none")
@@ -680,15 +661,14 @@ def interactive_choice(available: dict, cfg: dict, preset: list[str]) -> tuple[l
         chosen = []
         for tok in (t.strip() for t in raw.split(",") if t.strip()):
             chosen.append(ids[int(tok) - 1] if tok.isdigit() and 0 < int(tok) <= len(ids) else tok)
-    return chosen, language, commit
+    return chosen
 
 
-def save_manifest(dst_root: Path, manifest: dict, shared: bool, language: str, commit_language: str) -> None:
+def save_manifest(dst_root: Path, manifest: dict, shared: bool) -> None:
     """Manifest (lokalny) i — w trybie zespołowym — lock bez danych lokalnych (commitowany z projektem)."""
     (dst_root / MANIFEST).write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if shared:
-        lock = {"version": manifest["version"], "packs": list(manifest["packs"]), "language": language,
-                "commit_language": commit_language, "offered": manifest["offered"],
+        lock = {"version": manifest["version"], "packs": list(manifest["packs"]), "offered": manifest["offered"],
                 **({"pack_dirs": manifest["pack_dirs"]} if manifest.get("pack_dirs") else {}), "files": manifest["files"]}
         (dst_root / LOCK).write_text(json.dumps(lock, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
@@ -725,12 +705,17 @@ def compose_settings(packs: list[str], available: dict) -> dict:
     return base
 
 
+REMOVED_OPTIONS = ("--language", "--commit-language")   # 12.0.0: język bez ustawień
+
+
 def parse_args(argv: list[str]) -> tuple[list[str], dict]:
     args, opts = [], {}
     it = iter(argv[1:])
     for a in it:
-        if a in ("--source", "--python", "--packs", "--add", "--remove", "--language", "--commit-language"):
+        if a in ("--source", "--python", "--packs", "--add", "--remove"):
             opts[a.lstrip("-")] = next(it, "")
+        elif a in REMOVED_OPTIONS:                            # dawne flagi z wartością — wartość nie staje się katalogiem
+            opts.setdefault("_removed", []).append(f"{a} {next(it, '')}".strip())
         elif a in ("--pack-dir", "--drop-pack-dir"):          # można podać kilka razy
             opts.setdefault(a.lstrip("-"), []).extend(split_ids(next(it, "")))
         elif a.startswith("--") or a == "-h":
@@ -813,15 +798,9 @@ def _main(argv: list[str], tmp: Path) -> int:
         print(f"✗ Pack source: {e}")
         return 2
     old_sources = (manifest or {}).get("pack_sources") or {}
-    settings = pm.load_settings(dst_root, cfg)
-    had_settings = (dst_root / pm.SETTINGS_REL).exists()
-    language = opts.get("language") or (None if had_settings else (lock or {}).get("language")) or settings["language"]
-    commit_language = opts.get("commit-language") or \
-        (None if had_settings else (lock or {}).get("commit_language")) or settings["commit_language"]
-    for label, code in (("language", language), ("commit language", commit_language)):
-        if code not in (cfg.get("languages") or {}):
-            print(f"✗ Unknown {label} '{code}'. Available: {', '.join(cfg.get('languages') or {})}")
-            return 2
+    for old in opts.get("_removed") or []:
+        print(f"ℹ {old}: this option is gone — there is no language setting. The agents answer in the language you "
+              f"write in; commits follow the repository's history (git log).")
     legacy = legacy_packs(manifest, dst_root, available)
     previous = list((manifest or {}).get("packs") or {}) if manifest and "packs" in manifest else legacy
     for pid in [p for p in (previous or []) if p in RETIRED_PACKS]:   # wycofane: aktualizacja je pomija, nie kończy się błędem
@@ -839,22 +818,17 @@ def _main(argv: list[str], tmp: Path) -> int:
     elif opts.get("packs") == "":
         chosen = []
     elif previous is None and not opts.get("--yes") and sys.stdin.isatty() and not dry:
-        chosen, language, commit_language = interactive_choice(available, cfg, preset)
+        chosen = interactive_choice(available, preset)
     else:
         chosen = list(preset)
         if new_defaults:
             print(f"ℹ New default in this version: {', '.join(new_defaults)} (`tf remove <id>` if you don't want it).")
     chosen = [c for c in chosen if c not in split_ids(opts.get("remove"))] + split_ids(opts.get("add"))
-    lang_pack = ((cfg.get("languages") or {}).get(language) or {}).get("pack")
-    if lang_pack and lang_pack in split_ids(opts.get("remove")):
-        print(f"✗ {lang_pack} is required by the working language '{language}'. Change the language first "
-              f"(tf language <code>) or keep the pack.")
-        return 2
     retired = [c for c in dict.fromkeys(chosen) if c in RETIRED_PACKS]
     if retired:
         print("✗ " + "; ".join(f"{c} was retired — {RETIRED_PACKS[c]}" for c in retired))
         return 2
-    packs, unknown = resolve_packs(list(dict.fromkeys(chosen)), available, language, cfg)
+    packs, unknown = resolve_packs(list(dict.fromkeys(chosen)), available)
     lost = [u for u in unknown if old_sources.get(u) in missing]
     if lost:
         for u in lost:
@@ -932,8 +906,7 @@ def _main(argv: list[str], tmp: Path) -> int:
     md_p = dst_root / ("CLAUDE.md" if shared else "CLAUDE.local.md")
     md_old = md_p.read_text(encoding="utf-8") if md_p.exists() else ""
     md_base = drop_legacy_blocks(md_old, LEGACY_MARKS)
-    section = keep_commands(claude_md_section(py, {"language": language, "commit_language": commit_language}, cfg),
-                            md_base)
+    section = keep_commands(claude_md_section(py, dst_root, cfg), md_base)
     plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
                f"{md_p.name} (factory section)")
 
@@ -981,9 +954,8 @@ def _main(argv: list[str], tmp: Path) -> int:
             **({"skill_describe": manifest["skill_describe"]} if (manifest or {}).get("skill_describe") else {}),
             **({"auto_update": manifest["auto_update"]} if "auto_update" in (manifest or {}) else {}),   # update.py --auto
         }
-        save_manifest(dst_root, new_manifest, shared, language, commit_language)
-        if not had_settings or language != settings["language"] or commit_language != settings["commit_language"]:
-            pm.save_settings(dst_root, language=language, commit_language=commit_language)
+        save_manifest(dst_root, new_manifest, shared)
+        pm.drop_settings(dst_root, "language", "commit_language")   # 12.0.0: język nie jest już ustawieniem
 
     # raport
     mode_txt = "team (committed)" if shared else "private (outside git)"
@@ -991,8 +963,7 @@ def _main(argv: list[str], tmp: Path) -> int:
     ver = f"{old_version} → {new_version}" if update else new_version
     print(f"{head} in {dst_root} — version {ver}, {mode_txt} mode: new files {len(plan.created)}, "
           f"updated {len(plan.updated)}, merged {len(plan.merged)}, removed {len(plan.removed)}")
-    print(f"  packs: {', '.join(packs) or '— (core only)'} · working language: {language} · "
-          f"commit language: {commit_language}")
+    print(f"  packs: {', '.join(packs) or '— (core only)'}")
     for m in plan.merged:
         print(f"  ~ {m}")
     if not dry and update:     # autokorekta własnych plików projektu po zmianach nazw w rdzeniu (.tf/factory/migrations.py)
@@ -1018,7 +989,7 @@ def _main(argv: list[str], tmp: Path) -> int:
         rehashed = {r: sha((dst_root / r).read_bytes()) for r in written}
         if any(new_manifest["files"][r] != h for r, h in rehashed.items()):
             new_manifest["files"] = dict(sorted({**new_manifest["files"], **rehashed}.items()))
-            save_manifest(dst_root, new_manifest, shared, language, commit_language)
+            save_manifest(dst_root, new_manifest, shared)
     # widoczność opisów skilli: z opisem to, czego używa ten projekt, reszta jako sama nazwa (.tf/factory/skill_profile.py)
     if dry:
         print("ℹ Skill visibility will be matched to the project after the install (.tf/factory/skill_profile.py).")
@@ -1090,7 +1061,7 @@ Next:
   2. Run `claude` once in the project directory and accept folder trust (hooks and permissions need it).
   3. Start: {' or '.join(start) or 'a persona from .claude/catalog.md'}, e.g. `claude --agent <name>`.
   4. Costs: the `balanced` profile works right away; `{py} .tf/factory/profile.py economy|quality` switches the team.
-  Packs: `tf add <pack>` / `tf remove <pack>` · languages: `tf language <code>`, `tf commit-language <code>`.
+  Packs: `tf add <pack>` / `tf remove <pack>` · language: none to set — write in yours, the agents answer in it.
   Updates: `{py} .tf/factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")
     return 0
 

@@ -14,7 +14,6 @@ Updates the team factory in this project, like a software update (standard libra
   python3 .tf/factory/update.py --ci --source <git URL>      # CI run (the team-factory-update workflow opens a PR from it)
   python3 .tf/factory/update.py --packs a,b|all|none         # change packs (also --add x, --remove y); same version is re-applied
   python3 .tf/factory/update.py --pack-dir <dir|git URL> --add <pack>   # a pack from outside the factory (remembered)
-  python3 .tf/factory/update.py --language pl --commit-language en   # change languages; same version is re-applied
 Before updating, the skills of the new version are audited (`skill_audit.py` from the INSTALLED version, not the
 downloaded one): high-severity findings stop an update with `--yes` and need explicit confirmation interactively.
 
@@ -851,7 +850,7 @@ def pending_messages(root: Path) -> list[str]:
     return out
 
 
-PASS_THROUGH = ("--packs", "--add", "--remove", "--language", "--commit-language",   # → instalator nowej wersji
+PASS_THROUGH = ("--packs", "--add", "--remove",   # → instalator nowej wersji
                 "--pack-dir", "--drop-pack-dir")
 
 
@@ -913,8 +912,8 @@ def main(argv: list[str]) -> int:
             if (new / "core" / "factory" / "VERSION").exists() else "0.0.0"
         print(f"Installed version: {current}   available: {new_version}   (source: {src})")
         newer = newer_than(new_version, current) > 0
-        if passthrough:                       # zmiana nakładek albo języka — ta sama wersja też się nakłada
-            print("ℹ Changing packs or languages: " + " ".join(passthrough))
+        if passthrough:                       # zmiana nakładek — ta sama wersja też się nakłada
+            print("ℹ Changing packs: " + " ".join(passthrough))
         if not newer and not opts.get("--force") and not passthrough:
             if newer_than(new_version, current) < 0:
                 print("ℹ The source has an older version than the installed one — doing nothing (force: --force).")

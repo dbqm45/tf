@@ -362,25 +362,21 @@ standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-ret
 always_skills: [core-skill-composition, core-stack-sync, core-project-record, core-grounding, core-cost-control, core-semver]
 
 # ─────────────────────────────────────────────────────────────
-#  Języki
-#  `language` — język pracy: rozmowa z człowiekiem, dokumentacja, artefakty docs/project/.
-#  `commit_language` — treść commitów, tytuły i opisy PR, wpisy CHANGELOG z commitów.
+#  Język — bez ustawień, jak w Claude
+#  Rozmowa i dokumenty dla człowieka: w języku, w którym człowiek pisze (`language_note`, model dostosowuje się sam).
+#  Commity, tytuły i opisy PR, wpisy CHANGELOG: język repozytorium wykrywany bez modelu z `git log`
+#  (`packs.commit_language`); nowe repozytorium bez commitów: `commit_language.new_repo` (nakładka firmy może zmienić).
 #  Kod, nazwy i komentarze w kodzie są zawsze po angielsku; format Conventional Commits jest stały.
-#  Wybór zapisuje `tf language` / `tf commit-language` w .claude/factory-settings.json (poza tym plikiem).
-#  `pack` — nakładka instalowana automatycznie przy tym języku pracy (narzędzia redakcji tekstu).
 # ─────────────────────────────────────────────────────────────
-default_language: pl
-default_commit_language: en
-languages:
-  pl:
-    name: polski
-    pack: pack-editorial-pl
-    work: Z człowiekiem rozmawiasz po polsku; dokumentację i artefakty `docs/project/` piszesz po polsku.
-    commits: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po polsku.
-  en:
-    name: English
-    work: Z człowiekiem rozmawiasz po angielsku; dokumentację i artefakty `docs/project/` piszesz po angielsku.
-    commits: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po angielsku.
+language_note: >-
+  Odpowiadasz w języku, w którym pisze człowiek, i w tym języku piszesz dla niego dokumenty (`docs/project/`, raporty,
+  opisy). Bez rozmowy (wykonawca, faza bez interakcji, przegląd w CI) piszesz w języku briefu, zadania lub issue, a gdy
+  go nie ma — w języku istniejących dokumentów `docs/project/`.
+commit_language:
+  new_repo: en
+  pl: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po polsku.
+  en: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po angielsku.
+  mixed: Treść commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz w języku ostatnich commitów repozytorium.
 code_language_note: Kod, nazwy, identyfikatory i komentarze w kodzie piszesz po angielsku (standard w repozytorium).
 
 # Targety: narzędzia, dla których build.py generuje agentów. `claude` (Claude Code) zawsze; `managed-agents` — pliki
