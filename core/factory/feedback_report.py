@@ -83,12 +83,12 @@ def aggregate(issues: list[dict]) -> dict:
 def from_github(repo: str | None) -> list[dict]:
     gh = shutil.which("gh")
     if not gh:
-        sys.exit("✗ Brak gh — zapisz zgłoszenia do pliku i użyj --from-file.")
+        sys.exit("✗ gh is missing — save the issues to a file and use --from-file.")
     if not repo:
         r = subprocess.run(["git", "-C", str(ROOT), "remote", "get-url", "origin"], capture_output=True, text=True)
         m = re.search(r"github\.com[:/]([\w.-]+)/([\w.-]+?)(?:\.git)?$", r.stdout.strip())
         if not m:
-            sys.exit("✗ Nie znam repozytorium — podaj --repo właściciel/repo.")
+            sys.exit("✗ Unknown repository — pass --repo owner/repo.")
         repo = f"{m.group(1)}/{m.group(2)}"
     r = subprocess.run([gh, "issue", "list", "--repo", repo, "--state", "all", "--limit", "500", "--search",
                         "factory-feedback in:body", "--json", "number,body"], capture_output=True, text=True, timeout=120)
@@ -98,15 +98,15 @@ def from_github(repo: str | None) -> list[dict]:
 
 
 def render(rep: dict) -> str:
-    out = [f"# Zgłoszenia z projektów: {rep['issues']} (pominięte jako zepsute lub podejrzane: {rep['ignored']})", "",
-           "| Klucz | Projekty | Suma | Zgłoszenia | Status |", "|---|---|---|---|---|"]
+    out = [f"# Reports from projects: {rep['issues']} (skipped as broken or suspicious: {rep['ignored']})", "",
+           "| Key | Projects | Total | Issues | Status |", "|---|---|---|---|---|"]
     for k in rep["keys"]:
         out.append(f"| `{k['key']}` | {k['projects']} | {k['total']} | {', '.join(f'#{n}' for n in k['issues'])} | "
-                   f"{'kandydat do zmiany' if k['candidate'] else 'obserwuj'} |")
+                   f"{'change candidate' if k['candidate'] else 'watch'} |")
     if not rep["keys"]:
-        out.append("| — | | | | brak zgłoszeń |")
-    out += ["", f"Kandydat = sygnał z ≥{MIN_PROJECTS} projektów. Zmianę zrób przez core-skill-authoring (najpierw scenariusze, "
-                "potem bramka); w PR podaj numery zgłoszeń, a po wydaniu zamknij je z odesłaniem do wersji."]
+        out.append("| — | | | | no reports |")
+    out += ["", f"Candidate = a signal from ≥{MIN_PROJECTS} projects. Make the change with core-skill-authoring (scenarios first, "
+                "then the gate); list the issue numbers in the PR, and after the release close them with a link to the version."]
     return "\n".join(out) + "\n"
 
 

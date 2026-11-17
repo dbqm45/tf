@@ -69,7 +69,7 @@ def main() -> int:
 
         p = project(base, "alias", "managed_agents:\n  models: {fable: claude-fable-5-1}\n")
         r = call(p)
-        check(r.returncode == 1 and "claude-fable-5-1" in r.stdout and "fable" in r.stdout and "starsz" in r.stdout,
+        check(r.returncode == 1 and "claude-fable-5-1" in r.stdout and "fable" in r.stdout and "older" in r.stdout,
               f"MC-4: alias wskazujący starszy model → błąd: {r.returncode} {r.stdout}")
 
         p = project(base, "pinned", "tiers:\n  deep: {model: claude-fable-5-1, effort: high}\n")
@@ -96,7 +96,7 @@ def main() -> int:
     # tf doctor pokazuje wynik sprawdzenia modeli (informacja; nie zmienia kodu wyjścia)
     r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=ROOT, capture_output=True, text=True, timeout=300,
                        env={**os.environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
-    check("modele" in r.stdout.lower() and "Traceback" not in r.stderr,
+    check("models:" in r.stdout.lower() and "Traceback" not in r.stderr,
           f"MC-9: tf doctor pokazuje sprawdzenie nazw modeli: {r.stdout[-600:]} {r.stderr[-300:]}")
 
     for f in fails:

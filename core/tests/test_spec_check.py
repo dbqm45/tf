@@ -161,7 +161,7 @@ def main() -> int:
         r = run(p, SCRIPT, "new", "PROJ-1")
         text = spec.read_text(encoding="utf-8") if spec.is_file() else ""
         check(r.returncode == 0 and "Limit dobowy" in text and "AC-1" in text, f"SP-14: new zakłada spec.md z tytułem zadania: {r.stdout}{r.stderr}")
-        check("negatywn" in text, f"SP-34: szablon podpowiada kryterium negatywne: {text[:400]}")
+        check("negative" in text, f"SP-34: szablon podpowiada kryterium negatywne: {text[:400]}")
         r = run(p, SCRIPT, "check", "PROJ-1")
         check(r.returncode == 1 and "SPEC-007" in r.stdout, f"SP-15: niewypełniony szablon → SPEC-007: {r.stdout}")
         r = run(p, SCRIPT, "new", "PROJ-1")

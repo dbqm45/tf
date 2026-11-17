@@ -94,10 +94,10 @@ def main() -> int:
         r = cs.usd_pln(Path(d) / "pusty", now=t, fetch=lambda: (_ for _ in ()).throw(OSError("offline")))
         check(r is None, f"CS-8d: bez sieci i pamięci brak kursu: {r}")
         r = cs.usd_pln(cache, now=t, fetch=lambda: NBP, override=4.0)
-        check(r and r["rate"] == 4.0 and r["source"] == "ręczny", f"CS-8e: kurs podany ręcznie: {r}")
+        check(r and r["rate"] == 4.0 and r["source"] == "manual", f"CS-8e: kurs podany ręcznie: {r}")
 
-    check(cs.band([10, 11, 9, 10, 30])[-1] == "drogo" and cs.band([10, 11, 9, 10, 10.5])[-1] == "w normie"
-          and cs.band([10, 11, 2, 10, 10.5])[2] == "tanio" and cs.band([10, 30])[-1] == "za mało danych",
+    check(cs.band([10, 11, 9, 10, 30])[-1] == "expensive" and cs.band([10, 11, 9, 10, 10.5])[-1] == "normal"
+          and cs.band([10, 11, 2, 10, 10.5])[2] == "cheap" and cs.band([10, 30])[-1] == "too little data",
           f"CS-9: pasmo kontrolne mediana ± 3·MAD: {cs.band([10, 11, 9, 10, 30])}")
 
     if shutil.which("git"):
@@ -125,15 +125,15 @@ def main() -> int:
                   f"CS-11: CLI --json — PLN z kursu, zmiany, praca od nowa, koszt na zmianę: {r.stdout[:600]}{r.stderr[-400:]}")
             r = subprocess.run([sys.executable, str(SCRIPT), "--period", "week", "--log", str(log), "--repo-root", str(repo),
                                 "--usd-pln", "4"], capture_output=True, text=True, timeout=60)
-            check(r.returncode == 0 and "PLN" in r.stdout and "Udział modeli" in r.stdout and "kurs" in r.stdout.lower()
-                  and "Drogo czy tanio" in r.stdout, f"CS-12: raport markdown: {r.stdout[:800]}{r.stderr[-300:]}")
+            check(r.returncode == 0 and "PLN" in r.stdout and "Model share" in r.stdout and "rate" in r.stdout.lower()
+                  and "Expensive or cheap" in r.stdout, f"CS-12: raport markdown: {r.stdout[:800]}{r.stderr[-300:]}")
 
             commit(repo, "src/c.ts", "feat(web): add c", "2026-10-15T15:00:00")
             r = subprocess.run([sys.executable, str(SCRIPT), "--period", "week", "--log", str(log), "--repo-root", str(repo),
                                 "--usd-pln", "4", "--json"], capture_output=True, text=True, timeout=60)
             out = json.loads(r.stdout or "{}")
             per2 = {p["period"]: p for p in out.get("periods", [])}
-            check(out.get("gap") and per2.get("2026-W42", {}).get("band") == "dane niepełne"
+            check(out.get("gap") and per2.get("2026-W42", {}).get("band") == "incomplete data"
                   and per2.get("2026-W42", {}).get("incomplete") is True and not per2.get("2026-W41", {}).get("incomplete"),
                   f"CS-13: okres z luką w logach oznaczony jako niepełny i wyłączony z oceny: {per2}")
 

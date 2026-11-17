@@ -216,8 +216,8 @@ def update_health(repo: Path, now: datetime | None = None, days: int = 14, rever
     now = now or datetime.now(timezone.utc)
     up = last_update(repo)
     if up is None:
-        return {"update": None, "warnings": [], "notes": ["brak kopii sprzed aktualizacji w .tf/backup/ — nie ma z czym "
-                                                          "porównać (kopię robi każda aktualizacja fabryki)"]}
+        return {"update": None, "warnings": [], "notes": ["no pre-update backup in .tf/backup/ — nothing to compare with "
+                                                          "(every factory update makes a backup)"]}
     at, old = up
     try:
         new = json.loads((repo / ".claude" / "factory-manifest.json").read_text(encoding="utf-8")).get("version") or "?"
@@ -236,14 +236,14 @@ def update_health(repo: Path, now: datetime | None = None, days: int = 14, rever
     warnings, notes = [], []
     if before["decided"] >= MIN_DECIDED and after["decided"] >= MIN_DECIDED:
         if after["revert_rate"] - before["revert_rate"] >= REVERT_RISE - 1e-9:
-            warnings.append(f"odsetek cofniętych zmian wzrósł z {before['revert_rate']:.0%} do {after['revert_rate']:.0%}")
+            warnings.append(f"revert rate rose from {before['revert_rate']:.0%} to {after['revert_rate']:.0%}")
     else:
-        notes.append(f"za mało rozstrzygniętych zmian do porównania cofnięć ({before['decided']} przed, "
-                     f"{after['decided']} po; potrzeba co najmniej {MIN_DECIDED} w każdym oknie)")
+        notes.append(f"too few decided changes to compare reverts ({before['decided']} before, "
+                     f"{after['decided']} after; need at least {MIN_DECIDED} in each window)")
     if after["blocks"] >= MIN_BLOCKS and after["blocks"] >= 2 * before["blocks"]:
-        warnings.append(f"blokad hooków było {before['blocks']} przed i {after['blocks']} po")
+        warnings.append(f"hook blocks: {before['blocks']} before, {after['blocks']} after")
     if after["errors"] >= MIN_ERRORS and after["errors"] > 2 * before["errors"]:
-        warnings.append(f"błędów hooków było {before['errors']} przed i {after['errors']} po")
+        warnings.append(f"hook errors: {before['errors']} before, {after['errors']} after")
     return {"update": at.isoformat(), "from": old, "to": new, "window_days": round(span.total_seconds() / 86400, 1),
             "before": before, "after": after, "warnings": warnings, "notes": notes,
             "rollback": ROLLBACK if warnings else None}
@@ -251,12 +251,12 @@ def update_health(repo: Path, now: datetime | None = None, days: int = 14, rever
 
 def health_text(res: dict) -> str:
     if not res.get("update"):
-        return "• po aktualizacji fabryki: " + "; ".join(res.get("notes") or [])
-    head = f"po aktualizacji fabryki {res['from']} → {res['to']} ({res['update'][:10]}, okna po {res['window_days']} dni)"
+        return "• after the factory update: " + "; ".join(res.get("notes") or [])
+    head = f"after the factory update {res['from']} → {res['to']} ({res['update'][:10]}, windows of {res['window_days']} days)"
     if res["warnings"]:
-        return (f"⚠ {head}: {'; '.join(res['warnings'])}. Jeśli to skutek aktualizacji, wróć do poprzedniej wersji: "
-                f"{ROLLBACK} (kopia sprzed aktualizacji). Fabryka sama się nie cofa — decyzja należy do Ciebie.")
-    return f"✓ {head}: bez pogorszenia" + (f" ({'; '.join(res['notes'])})" if res.get("notes") else "")
+        return (f"⚠ {head}: {'; '.join(res['warnings'])}. If the update caused this, go back to the previous version: "
+                f"{ROLLBACK} (pre-update backup). The factory does not roll back by itself — the decision is yours.")
+    return f"✓ {head}: no regression" + (f" ({'; '.join(res['notes'])})" if res.get("notes") else "")
 
 
 def compute(repo: Path, now: datetime | None = None, weeks: int = 4, revert_days: int = 7, prices: dict | None = None,
@@ -296,31 +296,31 @@ def write_report(repo: Path, res: dict) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     (out / "metrics.json").write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     cur, base = res["current"], res["baseline"]
-    rows = [("Zmiany (główna linia, bez wydań i revertów)", "changes", "n"),
-            ("Przyjęte", "accepted", "n"), ("Cofnięte", "reverted", "n"), ("W toku (młodsze niż próg)", "pending", "n"),
-            ("Odsetek revertów", "revert_rate", "pct"), ("Koszt tokenów (bez pracy ludzi)", "cost_usd", "usd"),
-            ("Koszt przyjętej zmiany (bez pracy ludzi)", "cost_per_accepted", "usd"),
-            ("PR zmergowane (historia PR)", "prs", "n"), ("Mediana czasu od otwarcia PR do merge'a", "cycle_median_h", "h"),
-            ("Mediana commitów na PR", "commits_per_pr_median", "n")]
-    lines = [f"# Metryki fabryki — {res['generated'][:10]}", "",
-             f"Przyjęta zmiana = zmergowana i niecofnięta przez {res['revert_days']} dni (zmiana definicji = nowa seria). "
-             f"Okno bieżące: ostatnie {res['weeks']} tyg.; bazowe: {res['weeks']} tyg. wcześniej. Koszt bez pracy "
-             f"ludzi (czas człowieka nie jest mierzony). Liczba zmian sama w sobie nie jest celem.", "",
-             "| Metryka | Bieżące | Bazowe |", "|---|---|---|"]
+    rows = [("Changes (main line, without releases and reverts)", "changes", "n"),
+            ("Accepted", "accepted", "n"), ("Reverted", "reverted", "n"), ("Pending (younger than the threshold)", "pending", "n"),
+            ("Revert rate", "revert_rate", "pct"), ("Token cost (without human work)", "cost_usd", "usd"),
+            ("Cost per accepted change (without human work)", "cost_per_accepted", "usd"),
+            ("Merged PRs (PR history)", "prs", "n"), ("Median time from PR open to merge", "cycle_median_h", "h"),
+            ("Median commits per PR", "commits_per_pr_median", "n")]
+    lines = [f"# Factory metrics — {res['generated'][:10]}", "",
+             f"Accepted change = merged and not reverted for {res['revert_days']} days (a new definition = a new series). "
+             f"Current window: last {res['weeks']} weeks; baseline: {res['weeks']} weeks before that. Cost without human "
+             f"work (human time is not measured). The number of changes is not a goal by itself.", "",
+             "| Metric | Current | Baseline |", "|---|---|---|"]
     for label, key, kind in rows:
         lines.append(f"| {label} | {_fmt(cur.get(key), kind)} | {_fmt(base.get(key), kind)} |")
     causes = sorted(set(cur["rework_causes"]) | set(base["rework_causes"]))
-    lines += ["", "## Przyczyny poprawek (trailer `Rework-Cause:`)", ""]
+    lines += ["", "## Rework causes (trailer `Rework-Cause:`)", ""]
     if causes:
-        lines += ["| Przyczyna | Bieżące | Bazowe |", "|---|---|---|"]
+        lines += ["| Cause | Current | Baseline |", "|---|---|---|"]
         lines += [f"| {c} | {cur['rework_causes'].get(c, 0)} | {base['rework_causes'].get(c, 0)} |" for c in causes]
     else:
-        lines.append("Brak commitów z `Rework-Cause:` — dopisuj trailer w commitach poprawek po przeglądzie "
+        lines.append("No commits with `Rework-Cause:` — add the trailer to rework commits after review "
                      "(spec-gap, agent-error, requirement-change, unknown).")
     if not res["pr_history"]:
-        lines += ["", "Bez historii PR (`gh` niedostępne albo bez logowania) — czas cyklu nieznany."]
+        lines += ["", "No PR history (`gh` not available or not logged in) — cycle time unknown."]
     if res.get("after_update"):
-        lines += ["", "## Po ostatniej aktualizacji fabryki", "", health_text(res["after_update"])]
+        lines += ["", "## After the last factory update", "", health_text(res["after_update"])]
     p = out / "metrics.md"
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return p
@@ -328,11 +328,11 @@ def write_report(repo: Path, res: dict) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--weeks", type=int, default=4, help="długość okna bieżącego i bazowego (tygodnie)")
-    ap.add_argument("--revert-days", type=int, default=7, help="ile dni zmiana musi przetrwać bez revertu")
-    ap.add_argument("--no-gh", action="store_true", help="bez historii PR z gh")
-    ap.add_argument("--after-update", action="store_true", help="porównanie przed i po ostatniej aktualizacji fabryki")
-    ap.add_argument("--json", action="store_true", help="z --after-update: wynik jako JSON")
+    ap.add_argument("--weeks", type=int, default=4, help="length of the current and the baseline window (weeks)")
+    ap.add_argument("--revert-days", type=int, default=7, help="how many days a change must last without a revert")
+    ap.add_argument("--no-gh", action="store_true", help="without PR history from gh")
+    ap.add_argument("--after-update", action="store_true", help="compare before and after the last factory update")
+    ap.add_argument("--json", action="store_true", help="with --after-update: result as JSON")
     args = ap.parse_args(argv)
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
     if args.after_update:
@@ -340,13 +340,13 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(res, ensure_ascii=False, indent=1) if args.json else health_text(res))
         return 0
     if not (root / ".git").exists() and subprocess.run(["git", "-C", str(root), "rev-parse"], capture_output=True).returncode:
-        print("✗ To nie jest repozytorium git.")
+        print("✗ This is not a git repository.")
         return 2
     res = compute(root, weeks=args.weeks, revert_days=args.revert_days, prs=None if args.no_gh else pr_history(root))
     res["after_update"] = update_health(root, revert_days=args.revert_days)
     out = write_report(root, res)
     print(out.read_text(encoding="utf-8"))
-    print(f"✓ Raport: {out.relative_to(root)} (+ metrics.json)")
+    print(f"✓ Report: {out.relative_to(root)} (+ metrics.json)")
     return 0
 
 

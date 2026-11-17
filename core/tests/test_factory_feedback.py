@@ -146,7 +146,7 @@ def main() -> int:
               and rep.get("ignored") == 2 and not any("rm -rf" in k for k in keys),
               f"FF-11: klucze z ≥2 projektów to kandydaci; zepsute i podejrzane wpisy pominięte: {rep} {r.stderr}")
         r = run(REPORT, "--from-file", str(f))
-        check(r.returncode == 0 and "kandydat" in r.stdout and "#1" in r.stdout, f"FF-12: raport markdown: {r.stdout}")
+        check(r.returncode == 0 and "candidate" in r.stdout and "#1" in r.stdout, f"FF-12: raport markdown: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

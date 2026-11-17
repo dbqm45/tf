@@ -40,7 +40,7 @@ ENGINE = Path(".tf") / "factory"
 OWN = Path(".tf") / "config" / "config.yaml"
 ID = re.compile(r"\bclaude-[a-z]+(?:-[a-z0-9]+)*-\d+(?:-\d+)?\b")
 MAX_AGE_DAYS = 90
-SOURCE = "sprawdź w skillu claude-api (tabela bieżących modeli) i popraw `models_current` / `models_legacy`"
+SOURCE = "check in the claude-api skill (table of current models) and fix `models_current` / `models_legacy`"
 
 
 def packs_module(root: Path):
@@ -71,14 +71,14 @@ def check(root: Path, today: date) -> dict:
     try:
         core = mod.load_yaml(root / ENGINE / "config.yaml") or {}
     except Exception as e:  # noqa: BLE001 — konfiguracja rdzenia nieczytelna: nie ma czego sprawdzać
-        return {"errors": [f"nie da się odczytać {ENGINE / 'config.yaml'}: {e}"], "warnings": [], "current": {},
+        return {"errors": [f"cannot read {ENGINE / 'config.yaml'}: {e}"], "warnings": [], "current": {},
                 "legacy": [], "checked": None, "ids": []}
     own = {}
     if (root / OWN).is_file():
         try:
             own = mod.load_yaml(root / OWN) or {}
         except Exception as e:  # noqa: BLE001
-            warnings.append(f"{OWN.as_posix()} jest nieczytelny ({str(e).splitlines()[0][:120]}) — modeli z niego nie sprawdzono")
+            warnings.append(f"{OWN.as_posix()} is unreadable ({str(e).splitlines()[0][:120]}) — its models were not checked")
         if not isinstance(own, dict):
             own = {}
     cfg = mod.deep_merge(core, own)
@@ -104,23 +104,23 @@ def check(root: Path, today: date) -> dict:
             continue
     for mid, where in sorted(seen.items()):
         if mid not in known:
-            errors.append(f"nieznany model {mid} w: {', '.join(sorted(where))} — {SOURCE}")
+            errors.append(f"unknown model {mid} in: {', '.join(sorted(where))} — {SOURCE}")
     managed = ((cfg.get("managed_agents") or {}).get("models") or {}) if isinstance(cfg.get("managed_agents"), dict) else {}
     for alias, mid in sorted(managed.items()) if isinstance(managed, dict) else []:
         if alias in current and mid != current[alias] and mid in legacy:
-            errors.append(f"alias {alias} w managed_agents.models wskazuje starszy model {mid} zamiast {current[alias]}")
+            errors.append(f"alias {alias} in managed_agents.models points to an older model {mid} instead of {current[alias]}")
     prices = cfg.get("prices_usd_per_mtok") if isinstance(cfg.get("prices_usd_per_mtok"), dict) else {}
     for alias, mid in sorted(current.items()):
         if alias not in prices and mid not in prices:
-            warnings.append(f"cennik prices_usd_per_mtok nie ma ceny dla {alias} ({mid}) — raport kosztów pokaże same tokeny")
+            warnings.append(f"price list prices_usd_per_mtok has no price for {alias} ({mid}) — the cost report will show tokens only")
     checked = str(cfg.get("models_checked") or "")
     try:
         age = (today - date.fromisoformat(checked)).days
     except ValueError:
         age = None
-        warnings.append("brak daty models_checked w konfiguracji — nie wiadomo, kiedy sprawdzono nazwy modeli")
+        warnings.append("no models_checked date in the configuration — it is not known when the model names were checked")
     if age is not None and age > MAX_AGE_DAYS:
-        warnings.append(f"nazwy i ceny modeli sprawdzono {checked} (ponad {MAX_AGE_DAYS} dni temu): models_checked — {SOURCE}")
+        warnings.append(f"model names and prices were checked on {checked} (more than {MAX_AGE_DAYS} days ago): models_checked — {SOURCE}")
     return {"errors": errors, "warnings": warnings, "current": current, "legacy": legacy, "checked": checked or None,
             "ids": sorted(seen)}
 
@@ -128,28 +128,28 @@ def check(root: Path, today: date) -> dict:
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--today", default=None, help="data odniesienia RRRR-MM-DD (domyślnie dziś)")
+    ap.add_argument("--today", default=None, help="reference date YYYY-MM-DD (default: today)")
     a = ap.parse_args(argv[1:])
     try:
         today = date.fromisoformat(a.today) if a.today else date.today()
     except ValueError:
-        print("✗ --today: oczekiwana data RRRR-MM-DD")
+        print("✗ --today: expected a date YYYY-MM-DD")
         return 2
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     if not (root / ENGINE / "config.yaml").is_file():
-        print(f"✗ nie ma {ENGINE / 'config.yaml'} — uruchom w katalogu projektu z fabryką")
+        print(f"✗ {ENGINE / 'config.yaml'} does not exist — run in a project directory with the factory")
         return 2
     res = check(root, today)
     if a.json:
         print(json.dumps(res, ensure_ascii=False, indent=1))
     else:
         for e in res["errors"]:
-            print(f"✗ modele: {e}")
+            print(f"✗ models: {e}")
         for w in res["warnings"]:
-            print(f"⚠ modele: {w}")
+            print(f"⚠ models: {w}")
         if not res["errors"]:
-            print(f"✓ modele: {len(res['ids'])} identyfikatorów w konfiguracji i silniku, wszystkie znane "
-                  f"(sprawdzono {res['checked'] or '—'})")
+            print(f"✓ models: {len(res['ids'])} identifiers in the configuration and the engine, all known "
+                  f"(checked {res['checked'] or '—'})")
     return 1 if res["errors"] else 0
 
 

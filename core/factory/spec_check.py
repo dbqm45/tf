@@ -73,26 +73,26 @@ NEGATIVE = re.compile(r"\b(nie|odmaw\w*|odmow\w*|odrzuc\w*|blokuj\w*|zablok\w*|b
                       r"not|no|never|cannot|rejects?|rejected|denie[sd]|deny|error|forbidden|blocked)\b", re.I)
 TEMPLATE = """# Spec: {title}
 
-Źródło: `ticket.md`. Każde kryterium to jedno zachowanie: Given <stan>, when <jedna akcja>, then <wynik, który da się
-sprawdzić testem>. Sprawdzenie: `tf spec check {key}`.
+Source: `ticket.md`. Each criterion is one behaviour: Given <state>, when <one action>, then <result that a test can
+check>. Check: `tf spec check {key}`.
 
 ## Acceptance criteria
 
-- AC-1: Given <stan początkowy>, when <jedna akcja>, then <obserwowalny wynik>.
-- AC-2: Given <stan>, when <akcja niedozwolona albo błędne dane>, then <czego system nie robi — odmowa, komunikat>.
-  (kryterium negatywne: czego wynik nie może być; usuń, gdy historyjka go nie ma)
+- AC-1: Given <initial state>, when <one action>, then <observable result>.
+- AC-2: Given <state>, when <forbidden action or invalid data>, then <what the system does not do — refusal, message>.
+  (negative criterion: what the result must not be; remove it if the story has none)
 
 ## Unchanged
 
-- <co ma działać jak dotąd — albo „none, because …”>
+- <what must keep working as before — or „none, because …”>
 
 ## Out of scope
 
-- <czego ta historyjka nie obejmuje — albo „none, because …”>
+- <what this story does not cover — or „none, because …”>
 
 ## Open questions
 
-- <pytanie; gdy bez odpowiedzi nie da się zacząć, dodaj [blocking] — albo usuń tę linię>
+- <question; if work cannot start without an answer, add [blocking] — or remove this line>
 """
 
 
@@ -142,54 +142,54 @@ def check_text(text: str) -> dict:
 
     criteria = data["criteria"]
     if not criteria:
-        add("SPEC-001", 1, "brak kryteriów: w sekcji „Acceptance criteria” dodaj pozycje `- AC-1: Given …, when …, then …`")
+        add("SPEC-001", 1, "no criteria: in the „Acceptance criteria” section add items `- AC-1: Given …, when …, then …`")
     seen: dict[str, int] = {}
     for c in criteria:
         if c["id"] in seen:
-            add("SPEC-003", c["line"], f"{c['id']} powtórzone (pierwsze w linii {seen[c['id']]}) — nadaj kolejny numer")
+            add("SPEC-003", c["line"], f"{c['id']} repeated (first on line {seen[c['id']]}) — use the next number")
         seen.setdefault(c["id"], c["line"])
         if PLACEHOLDER.search(c["text"]):
-            add("SPEC-007", c["line"], f"{c['id']}: niewypełniony szablon (`<…>`) — wpisz stan, akcję i wynik")
+            add("SPEC-007", c["line"], f"{c['id']}: template not filled in (`<…>`) — write the state, the action and the result")
             continue
         missing = [name for name, rx in (("Given", GIVEN), ("When", WHEN), ("Then", THEN)) if not rx.search(c["text"])]
         if missing:
-            add("SPEC-002", c["line"], f"{c['id']}: brakuje części {', '.join(missing)}")
+            add("SPEC-002", c["line"], f"{c['id']}: missing part {', '.join(missing)}")
         when, then = WHEN.search(c["text"]), THEN.search(c["text"])
         action = c["text"][when.end():then.start()] if when and then and then.start() > when.end() else ""
         if len(WHEN.findall(c["text"])) > 1:
-            add("SPEC-004", c["line"], f"{c['id']}: więcej niż jedno „when” — jedna akcja na kryterium, drugą opisz osobnym AC")
+            add("SPEC-004", c["line"], f"{c['id']}: more than one „when” — one action per criterion, describe the second one in a separate AC")
         elif NEXT_ACTION.search(action):
-            add("SPEC-004", c["line"], f"{c['id']}: druga akcja w części Gdy („{NEXT_ACTION.search(action).group(0)}”) — "
-                                       "jedna akcja na kryterium, drugą opisz osobnym AC")
+            add("SPEC-004", c["line"], f"{c['id']}: second action in the When part („{NEXT_ACTION.search(action).group(0)}”) — "
+                                       "one action per criterion, describe the second one in a separate AC")
         outcome = c["text"][then.end():] if then else ""
         weak = [m.group(0) for m in WEAK.finditer(outcome)]
         if weak and not CONCRETE.search(outcome):
-            add("SPEC-008", c["line"], f"{c['id']}: wyniku „{' '.join(weak)}” nie da się sprawdzić testem — napisz, co "
-                                       "dokładnie widać (wartość, komunikat, stan)")
+            add("SPEC-008", c["line"], f"{c['id']}: a test cannot check the result „{' '.join(weak)}” — write what "
+                                       "exactly is visible (value, message, state)")
     for name in ("unchanged", "out"):
         if name not in data["sections"]:
-            add("SPEC-005", 1, f"brak sekcji „{LABEL[name]}” — wpisz pozycje albo „none, because …”")
+            add("SPEC-005", 1, f"no „{LABEL[name]}” section — add items or „none, because …”")
             continue
         body = filled(data["sections"][name])
         start = data["sections"][name][0][0] if data["sections"][name] else 1
         if not body:
-            add("SPEC-005", start, f"sekcja „{LABEL[name]}” jest pusta — wpisz pozycje albo „none, because …”")
+            add("SPEC-005", start, f"section „{LABEL[name]}” is empty — add items or „none, because …”")
         for n, line in body:
             if PLACEHOLDER.search(line):
-                add("SPEC-007", n, f"sekcja „{LABEL[name]}”: niewypełniony szablon (`<…>`)")
+                add("SPEC-007", n, f"section „{LABEL[name]}”: template not filled in (`<…>`)")
             elif NONE_ONLY.match(line) and len(body) == 1:
-                add("SPEC-005", n, f"sekcja „{LABEL[name]}”: samo „{line}” — dopisz powód („none, because …”)")
+                add("SPEC-005", n, f"section „{LABEL[name]}”: only „{line}” — add the reason („none, because …”)")
     for n, line in filled(data["sections"].get("questions", [])):
         if not PLACEHOLDER.search(line) and BLOCKING.search(line):
-            add("SPEC-006", n, "otwarte pytanie blokuje start — potrzebna odpowiedź człowieka: " + line[:120])
+            add("SPEC-006", n, "open question blocks the start — a human must answer: " + line[:120])
     errors.sort(key=lambda e: (e["line"], e["rule"]))
     warnings: list[dict] = []
     outcomes = [c["text"][THEN.search(c["text"]).end():] for c in criteria if THEN.search(c["text"])]
     if criteria and not errors and not any(NEGATIVE.search(o) for o in outcomes):
         line = data["sections"]["criteria"][0][0] if data["sections"].get("criteria") else 1
         warnings.append({"rule": "SPEC-009", "line": line,
-                         "message": "żadne kryterium nie opisuje zachowania niedozwolonego (odmowa, błąd, „nie …”) — "
-                                    "dopisz kryterium negatywne albo potwierdź, że historyjka go nie ma"})
+                         "message": "no criterion describes forbidden behaviour (refusal, error, „not …”) — "
+                                    "add a negative criterion or confirm that the story has none"})
     return {"ok": not errors, "criteria": [c["id"] for c in criteria], "errors": errors, "warnings": warnings}
 
 
@@ -209,17 +209,17 @@ def cmd_check(root: Path, key: str, as_json: bool) -> int:
     result = check_task(root, key)
     rel = CHANGES / key / "spec.md"
     if result is None:
-        print(f"✗ nie ma {rel} — szablon założysz: tf spec new {key}")
+        print(f"✗ {rel} does not exist — create the template: tf spec new {key}")
         return 2
     if as_json:
         print(json.dumps(result, ensure_ascii=False, indent=1))
         return 0 if result["ok"] else 1
     if result["ok"]:
-        print(f"✓ {rel}: {len(result['criteria'])} kryteriów ({', '.join(result['criteria'])}), gotowa do planu")
+        print(f"✓ {rel}: {len(result['criteria'])} criteria ({', '.join(result['criteria'])}), ready for the plan")
         for w in result.get("warnings", []):
             print(f"  ⚠ {rel}:{w['line']}  {w['rule']}  {w['message']}")
         return 0
-    print(f"✗ {rel}: {len(result['errors'])} do poprawy")
+    print(f"✗ {rel}: {len(result['errors'])} to fix")
     for e in result["errors"]:
         print(f"  {rel}:{e['line']}  {e['rule']}  {e['message']}")
     return 1
@@ -230,19 +230,19 @@ def cmd_new(root: Path, key: str) -> int:
     try:
         task = json.loads((folder / "task.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        print(f"✗ nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        print(f"✗ task {key} does not exist — create it: tf task start {key} --title \"…\"")
         return 1
     path = folder / "spec.md"
     if path.exists():
-        print(f"✗ {CHANGES / key / 'spec.md'} już istnieje — nie nadpisuję; sprawdzenie: tf spec check {key}")
+        print(f"✗ {CHANGES / key / 'spec.md'} already exists — not overwriting; check: tf spec check {key}")
         return 1
     path.write_text(TEMPLATE.format(title=task.get("title") or key, key=key), encoding="utf-8")
-    print(f"✓ {CHANGES / key / 'spec.md'} — wypełnij kryteria, potem: tf spec check {key}")
+    print(f"✓ {CHANGES / key / 'spec.md'} — fill in the criteria, then: tf spec check {key}")
     return 0
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(prog="tf spec", description="Specyfikacja zadania: szablon i sprawdzenie.")
+    ap = argparse.ArgumentParser(prog="tf spec", description="Task spec: template and check.")
     sub = ap.add_subparsers(dest="cmd", required=True)
     n = sub.add_parser("new")
     n.add_argument("key")
@@ -255,7 +255,7 @@ def main(argv: list[str]) -> int:
         return 2 if e.code else 0
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     if not KEY.fullmatch(a.key):
-        print(f"✗ klucz „{a.key}” nie pasuje do wzorca (np. PROJ-123, CHG-12, T-20261113-limit)")
+        print(f"✗ key „{a.key}” does not match the pattern (e.g. PROJ-123, CHG-12, T-20261113-limit)")
         return 2
     return cmd_new(root, a.key) if a.cmd == "new" else cmd_check(root, a.key, a.json)
 
