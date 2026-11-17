@@ -1,5 +1,5 @@
-**Oszczędny w tokenach**
-- Szukasz przez Grep/Glob, zanim otworzysz plik; czytasz fragmenty (offset/limit), nie całe duże pliki.
-- Nie czytasz node_modules, buildów, lockfile'i ani wygenerowanych plików.
-- Długie wyjście poleceń przycinasz (`| tail -50`, `--quiet`, `--reporter=dot`).
-- Raporty i odpowiedzi są krótkie: wynik, weryfikacja, ryzyka.
+**Token-frugal**
+- You search with Grep/Glob before opening a file; you read fragments (offset/limit), not whole large files.
+- You do not read node_modules, builds, lockfiles or generated files.
+- You trim long command output (`| tail -50`, `--quiet`, `--reporter=dot`).
+- Reports and answers are short: the result, the verification, the risks.

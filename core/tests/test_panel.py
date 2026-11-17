@@ -146,7 +146,7 @@ def main() -> int:
     # agent spec-reviewer: tylko odczyt, dostępny dla pętli
     cfg = (ROOT / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8")
     block = cfg.split("\n  spec-reviewer:", 1)[-1].split("\n\n", 1)[0] if "\n  spec-reviewer:" in cfg else ""
-    check(block and "tools: [Read, Grep, Glob, Bash]" in block and "AC-n" in block and "Bez zmian" in block,
+    check(block and "tools: [Read, Grep, Glob, Bash]" in block and "AC-n" in block and "Unchanged" in block,
           f"PN-15: agent spec-reviewer — tylko odczyt, sprawdza kryterium po kryterium i reguły „Bez zmian”: {block[:300]}")
     tf_tools = cfg.split("\n  tf:", 1)[-1].split("\n", 6)[:6] if "\n  tf:" in cfg else []
     check(any("spec-reviewer" in ln for ln in tf_tools), f"PN-16: pętla tf może wołać spec-reviewer: {tf_tools}")

@@ -141,7 +141,7 @@ def main() -> int:
               "P-9: konsultant tylko do odczytu")
         check("specialist" in ala_md.split("\n")[3] and "specialist" not in bolek_md.split("\n")[3],
               "P-10: specialist (@dispatcher) tylko u persony z dispatcher: true")
-        check("## Język" in ala_md and "w języku, w którym pisze człowiek" in ala_md and "commitów" in ala_md,
+        check("## Język" in ala_md and "in the language the human writes in" in ala_md and "commit messages" in ala_md,
               "P-11: sekcja języka w personie (reguła rozmowy, commity)")
         # 3.1.0: wykonawcy pytają konsultantów sami (zagnieżdżanie podagentów), konsultanci nie delegują dalej
         rendered = b.render_all()
@@ -161,8 +161,8 @@ def main() -> int:
                               ("ala/ala.md", "ala/ala-rola-a.md", "shared/scout.md", "consult/a-consult.md")),
                   f"P-23: `{key}` w personie, wykonawcy, agencie wspólnym i konsultancie")
         rc = cfg0["report_contract"]
-        check(all(s in rc for s in ("**Wynik:**", "**Zmienione pliki:**", "**Weryfikacja:**", "**Niepewne:**",
-                                    "**Do decyzji:**")), "P-24: stały szablon raportu wykonawcy")
+        check(all(s in rc for s in ("**Result:**", "**Changed files:**", "**Verification:**", "**Uncertain:**",
+                                    "**To decide:**")), "P-24: stały szablon raportu wykonawcy")
         check("## Typowe sytuacje" in rendered["bolek/bolek.md"] and "odsyłasz do cennika" in rendered["bolek/bolek.md"]
               and "## Typowe sytuacje" not in rendered["ala/ala.md"], "P-25: pole persony `scenarios`")
         check("effort: low" in rendered["shared/scout.md"].split("---")[1], "P-26: tier fast z effort low")
@@ -188,7 +188,7 @@ def main() -> int:
               and "cecha-b" not in personas["ala"]["traits"] and "b-consult" not in cfg["consultants"],
               "P-13: contributes_when niespełniony → nakładka uśpiona")
         md = b.render_all()["ala/ala.md"]
-        check("w języku, w którym pisze człowiek" in md and "wpisy CHANGELOG piszesz po angielsku" in md,
+        check("in the language the human writes in" in md and "CHANGELOG entries in English" in md,
               "P-14: reguła języka rozmowy i commity nowego repozytorium (bez historii) po angielsku w prompcie")
         pm.save_settings(p, targets=["claude"])   # z powrotem domyślne — dalsze kroki bez celu managed-agents
 
@@ -245,7 +245,7 @@ def main() -> int:
         md_p.write_text("x\n<!-- team-factory:begin -->\n## Zespół\n### Język\n- stare\n<!-- team-factory:end -->\n")
         changed = pm.write_language_lines(md_p, pm.load_yaml(p / ".tf" / "factory" / "config.yaml"), p)
         txt = md_p.read_text()
-        check(changed and "- stare" not in txt and "w języku, w którym pisze człowiek" in txt and txt.startswith("x\n"),
+        check(changed and "- stare" not in txt and "in the language the human writes in" in txt and txt.startswith("x\n"),
               f"P-18: podmiana sekcji języka w bloku fabryki: {txt}")
 
     # Nakładka firmowa (org_defaults): domyślne organizacji między silnikiem a projektem.

@@ -739,8 +739,24 @@ treści (angielska), bez równoległej polskiej.
       wersji (test HP-6, HP-6b, HP-7). Po zmianie: all 901 · 32/43, none 168 · 16/16, `--hints` i test poleceń ogólnych
       czyste w 8 instalacjach; słowa kluczowe `eng-llm-features` z jego sekcji 10 (scenariusz na granicy: 4. miejsce
       z różnicą 1,3 pkt), słowo „plan rozjechał się z kodem” zawężone (łapało „rozjedzie się” w pytaniu o ACL).
+    - [x] 4b-9 (2026-11-17): cechy rdzenia (9 plików) i teksty `config.yaml`, które czyta model: opisy i prompty agentów
+      wspólnych, `routing` + `routing_notes`, `report_contract` (sekcje **Result/Changed files/Verification/Uncertain/
+      To decide**, `Tier: too low/too high`), `work_contract`, `style_note`, `untrusted_note`, `grounding_note`
+      (znaczniki `[unverified]`, `[assumption]`), `sources_only_note`, `language_note`, `commit_language`,
+      `code_language_note`. Etykiety recenzenta zakresu jak w skillu tf: `[important]`/`[minor]`/`[pre-existing]`,
+      `Verdict: OUT OF SCOPE / IN SCOPE`; panel: `Verdict: PASS/FAIL` (werdykt trafia do kodu argumentem
+      `pass|fail`, tekst nie jest parsowany) — zlecenia panelu i komunikaty `run_state.py` z tymi samymi tokenami.
+      `build.py` odsyła do sekcji „To decide”. Zostają po polsku: komentarze YAML (dokumentacja opiekunów), `facets`
+      i `vocabulary` (skille fw-/lang- pokrywają pojęcia polskimi sekcjami — razem z pack-it), opisy profili kosztów
+      (wypisuje je `profile.py` — etap komunikatów). Haiku przed/po (tf ×2, core-cost-control ×2, core-grounding ×2):
+      4/6 → 5/6; `waga-pelna-panel-recenzentow` pada tak samo przed i po — panel jest tylko w `references/weight.md`,
+      a model nie sięga po plik; $1,93.
+    - [ ] szablony person i wykonawców w `build.py` (sekcje „Rola”, „Priorytety”, „Cechy”, „Granice”, „Konsultanci”,
+      `COMPOSE_HINT`, tabela wymiarów) oraz `facets`/`vocabulary` — razem z sekcjami pojęć w skillach fw-/lang-.
+    - [ ] tf: panel recenzentów przy wadze pełnej tylko w `references/weight.md` — jedna linia w SKILL.md (Finishing),
+      żeby model nie pomijał `run_state.py panel` (scenariusz `waga-pelna-panel-recenzentow` pada przed i po 4b-9).
     - [ ] dalsze partie:
-      cechy, `config.yaml`, przewodniki.
+      przewodniki (`core/guide/`).
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).

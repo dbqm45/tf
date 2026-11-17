@@ -595,7 +595,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
                     "przeglądu, którego nie da się usunąć w zakresie kawałka).")
     if step == "scope" and state == "fail" and meta.get("key") and not slice_finding(project, meta["key"], target, rnd):
         return fail(f"przegląd zakresu {target} R{rnd} nie przeszedł, a ważne ustalenie nie jest zapisane — najpierw: "
-                    f"run_state.py finding {run_dir} {target} \"<ustalenie [ważne] z przeglądu>\" --round {rnd}, potem "
+                    f"run_state.py finding {run_dir} {target} \"<ustalenie [important] z przeglądu>\" --round {rnd}, potem "
                     "powtórz to polecenie. Zapis służy zamknięciu zadania: każde ważne ustalenie dostaje kontrolę, "
                     "która złapie je następnym razem.")
     while len(rounds) < rnd:
@@ -632,11 +632,11 @@ def slice_finding(project: Path, key: str, slice_id: str, rnd: int) -> bool:
 
 PANEL_BRIEFS = {
     "security-reviewer": "przegląd bezpieczeństwa `git diff {base}...HEAD` (uwierzytelnianie, uprawnienia, sekrety, "
-                         "wejście użytkownika, płatności, migracje); wynik: Krytyczne / Ważne / Do rozważenia z plik:linia "
-                         "i na końcu `Werdykt: PASS` (brak krytycznych i ważnych) albo `Werdykt: FAIL`",
+                         "wejście użytkownika, płatności, migracje); wynik: Critical / Important / To consider z plik:linia "
+                         "i na końcu `Verdict: PASS` (brak krytycznych i ważnych) albo `Verdict: FAIL`",
     "spec-reviewer": "weryfikacja `{spec}` reguła po regule wobec `git diff {base}...HEAD`: każde kryterium AC-n "
                      "(spełnione / niespełnione / nie da się sprawdzić, z plik:linia i testem) i każda reguła „Unchanged” "
-                     "(zachowana / naruszona); na końcu `Werdykt: PASS` albo `Werdykt: FAIL`",
+                     "(zachowana / naruszona); na końcu `Verdict: PASS` albo `Verdict: FAIL`",
 }
 
 
@@ -730,12 +730,12 @@ def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
         return None
     k = len(rounds) or 1
     if last == "fail":
-        return (f"{slice_id}: przegląd zakresu w R{k} nie przeszedł — wycofaj ustalenie [ważne] i zrób nową rundę: "
+        return (f"{slice_id}: przegląd zakresu w R{k} nie przeszedł — wycofaj ustalenie [important] i zrób nową rundę: "
                 f"run_state.py step {run_dir} {slice_id} R{k + 1} kod run, a po ponownym przeglądzie scope-reviewer "
                 f"run_state.py step {run_dir} {slice_id} R{k + 1} scope pass")
     return (f"{slice_id}: nie ma zapisanego wyniku przeglądu zakresu (R{k}: {last or 'brak zapisu'}). Po przeglądzie "
             f"scope-reviewer zapisz go: run_state.py step {run_dir} {slice_id} R{k} scope pass — a przy ustaleniu "
-            f"[ważne]: run_state.py finding {run_dir} {slice_id} \"<ustalenie>\" i step … scope fail, potem nowa runda")
+            f"[important]: run_state.py finding {run_dir} {slice_id} \"<ustalenie>\" i step … scope fail, potem nowa runda")
 
 
 CONVENTIONAL = re.compile(r"^[a-z]+(\([^()\s]+\))?!?: \S")
