@@ -16,32 +16,32 @@ source_reported_at: 2026-10-30
 ## Bramka triage: approved
 - ref: CHG-1/D1
 - id: DEC-0001
-- wyslano: tak
-- kiedy: 2026-10-30
-- kto: pdi
-- rodzaj: gate
-- dlaczego: PRB-1 przyjęte
-- zrodlo: claude-cli
-- szkic: ai
+- sent: yes
+- date: 2026-10-30
+- by: pdi
+- kind: gate
+- why: PRB-1 przyjęte
+- source: claude-cli
+- drafted_by: ai
 
 ## Bramka B1: approved — wariant A
 - ref: CHG-1/D2
 - id: DEC-0002
-- wyslano: tak
-- kiedy: 2026-10-31
-- kto: człowiek
-- rodzaj: gate
-- dlaczego: wariant A rozwiązuje problem zaufania
-- zrodlo: claude-cli
-- szkic: ai
+- sent: yes
+- date: 2026-10-31
+- by: człowiek
+- kind: gate
+- why: wariant A rozwiązuje problem zaufania
+- source: claude-cli
+- drafted_by: ai
 
 ## Bramka B2: approved
 - ref: CHG-1/D3
 - id: DEC-0003
-- wyslano: tak
-- kiedy: 2026-10-31
-- kto: człowiek
-- rodzaj: gate
-- dlaczego: kryteria akceptacji pokrywają problem; stany błędu wymienione
-- zrodlo: claude-cli
-- szkic: ai
+- sent: yes
+- date: 2026-10-31
+- by: człowiek
+- kind: gate
+- why: kryteria akceptacji pokrywają problem; stany błędu wymienione
+- source: claude-cli
+- drafted_by: ai

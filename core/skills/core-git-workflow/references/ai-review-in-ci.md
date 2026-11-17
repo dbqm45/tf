@@ -25,11 +25,11 @@ Bezpieczeństwo workflow (uprawnienia, SHA akcji, `env:` zamiast interpolacji): 
   `- **Werdykt**: …`. Następny krok workflow sprawdza znacznik i werdykt deterministycznie. Model, który
   „improwizuje format”, ma zapalić czerwony check, a nie przejść po cichu.
 - Zamiast parsowania tekstu można wymusić JSON: `claude-code-action` z `--json-schema` w `claude_args` zwraca wynik
-  w wyjściu kroku `structured_output` (odczyt `fromJSON(steps.<id>.outputs.structured_output).werdykt`).
+  w wyjściu kroku `structured_output` (odczyt `fromJSON(steps.<id>.outputs.structured_output).verdict`).
 - Werdykt trzystopniowy:
-  - **ZATWIERDZONE** — wszystkie wymiary zaliczone albo najwyżej 2 drobne ostrzeżenia;
-  - **WYMAGA UWAGI** — kilka ostrzeżeń lub jedno niekrytyczne niezaliczenie; status zielony z opisem „do triażu”;
-  - **ODRZUCONE** — luka bezpieczeństwa, duży dryf od planu, zagrożenie danych, padające albo brakujące obiecane testy.
+  - **APPROVED** (zatwierdzone) — wszystkie wymiary zaliczone albo najwyżej 2 drobne ostrzeżenia;
+  - **NEEDS_ATTENTION** (wymaga uwagi) — kilka ostrzeżeń lub jedno niekrytyczne niezaliczenie; status zielony z opisem „do triażu”;
+  - **REJECTED** (odrzucone) — luka bezpieczeństwa, duży dryf od planu, zagrożenie danych, padające albo brakujące obiecane testy.
 - Agent w CI nie wysyła formalnego „approve” ani „request changes” — tylko komentarze. Decyduje człowiek.
 
 ## 4. Ustalenia
@@ -51,7 +51,7 @@ Z planu wyciągnij: pliki z faz, polecenia weryfikacji automatycznej, kryteria r
 Plan definiuje, co znaczy „przetestowane”; nie oceniasz tego, czego plan nie obiecał.
 
 ## 6. Publikacja i bramka
-- **Bramka żyje w workflow, nie w agencie.** Krok agenta kończy się kodem 0 nawet przy ODRZUCONE; następny krok
+- **Bramka żyje w workflow, nie w agencie.** Krok agenta kończy się kodem 0 nawet przy REJECTED; następny krok
   (`if: always()`) czyta werdykt i ustawia status commita o stałym kontekście (np. `ai-review/verdict`), który
   kolejne przebiegi nadpisują. Ochrona gałęzi wymaga tego statusu. Gdy agent padnie, komentarze zostają.
 - **Świadome obejście:** etykieta (np. `ai-review-override`) dodana przez człowieka zmienia status na zielony

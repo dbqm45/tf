@@ -110,6 +110,19 @@ STEP_KEYS = {"fakty": "facts", "wersje": "versions", "realizacja": "implementati
              "przeglad": "review", "decyzja": "decision", "bezpieczenstwo": "security", "opis": "description"}
 
 
+# 12.0.0: pola wpisu dziennika decyzji pdi (`docs/project/changes/*/decisions.md`, wiersze `- pole: wartość`)
+DECISION_KEYS = {"wyslano": "sent", "kiedy": "date", "kto": "by", "rodzaj": "kind", "dlaczego": "why", "zrodlo": "source",
+                 "szkic": "drafted_by", "ustalenie": "finding", "skutek": "effect", "pochodzenie": "origin",
+                 "pytanie": "question", "odpowiedz": "answer"}
+DECISION_RX = re.compile(r"(?m)^- (" + "|".join(DECISION_KEYS) + r"):")
+SENT_RX = re.compile(r"(?m)^- sent: (tak|nie)[ \t]*$")
+
+
+def _decisions(text: str) -> str:
+    text = DECISION_RX.sub(lambda m: f"- {DECISION_KEYS[m.group(1)]}:", text)
+    return SENT_RX.sub(lambda m: "- sent: " + ("yes" if m.group(1) == "tak" else "no"), text)
+
+
 def _walk(o):
     if isinstance(o, dict):
         out = {}
@@ -155,6 +168,13 @@ def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
                 out.append(p.relative_to(root).as_posix())
                 if not dry:
                     p.write_text(new, encoding="utf-8")
+    for p in root.glob("docs/project/changes/*/decisions.md"):
+        text = p.read_text(encoding="utf-8")
+        new = _decisions(text)
+        if new != text:
+            out.append(p.relative_to(root).as_posix())
+            if not dry:
+                p.write_text(new, encoding="utf-8")
     return out
 
 

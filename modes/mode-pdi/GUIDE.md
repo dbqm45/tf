@@ -72,7 +72,7 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
 ## Warunek: serwer MCP pdi
 Zapis do rejestru działa tylko wtedy, gdy w sesji jest serwer MCP `pdi` (narzędzia `record_decision`,
 `find_decisions`, `get_decision`, `supersede_decision`). Instalację opisuje repo pdi
-(`integrations/claude-code/README.md`; rejestracja `claude mcp add --scope user pdi …`). Bez niego decyzje zostają w `decisions.md` z pustym `id` i `wyslano: nie` — nic nie ginie.
+(`integrations/claude-code/README.md`; rejestracja `claude mcp add --scope user pdi …`). Bez niego decyzje zostają w `decisions.md` z pustym `id` i `sent: no` — nic nie ginie.
 
 ## Czego nie zmienia
 Rdzeń fabryki, dziennik faz projektu (`docs/project/0N-*`), inne nakładki i ustawienia — bez zmian. Projekt bez

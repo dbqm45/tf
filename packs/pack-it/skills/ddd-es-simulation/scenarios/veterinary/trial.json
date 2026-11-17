@@ -1,5 +1,5 @@
 {
-  "opis": "Próba scenariusza (es_probe.py): gotowe wypowiedzi facylitatora prowadzą do wiedzy ukrytej i obu celowych sprzeczności z brief.md; sprawdza też zachowania z kart.",
+  "description": "Próba scenariusza (es_probe.py): gotowe wypowiedzi facylitatora prowadzą do wiedzy ukrytej i obu celowych sprzeczności z brief.md; sprawdza też zachowania z kart.",
   "lines": [
     "Dzień dobry. Zaczynamy od chaosu: napiszcie na kartkach wszystkie zdarzenia, które dzieją się w przychodni — od pierwszego telefonu klienta do zapłaty. Jedno zdarzenie na kartkę, w czasie przeszłym.",
     "Pani Grażyno, dziękuję — zapiszmy to na kartkach. Beato, jak to wygląda od strony recepcji: ile umówionych wizyt naprawdę się odbywa?",

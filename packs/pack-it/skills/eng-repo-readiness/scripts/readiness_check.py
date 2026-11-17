@@ -17,7 +17,7 @@ Wykrywa (manifesty do głębokości 2, z pominięciem node_modules, .git, dist, 
   w .env.example wyglądające na prawdziwe sekrety (tylko nazwy zmiennych w wyniku), polecenie testów powiązanych.
 Audytu, testów ani builda NIE uruchamia — robi to agent za zgodą człowieka, z komendami podanymi w wyniku.
 
-Werdykt projektu: krytyczne (brak runnera testów albo ≥3 ustalenia wysokie) / wymaga-uwagi / zdrowe.
+Werdykt projektu: critical (brak runnera testów albo ≥3 ustalenia wysokie) / needs-attention / healthy.
 Podatności nie są tu znane — krytyczne podatności z audytu podnoszą werdykt ręcznie.
 
 Kod wyjścia: 0 — brak ustaleń wysokiej wagi; 1 — są ustalenia wysokiej wagi; 2 — błąd wywołania (zła ścieżka).
@@ -394,8 +394,8 @@ def detect(root: Path) -> dict:
 
     high = [f for f in findings if f[1] == "high"]
     no_runner = any("runnera testów" in f[2] for f in findings)
-    verdict = "krytyczne" if (no_runner or len(high) >= 3) else ("wymaga-uwagi" if findings and any(
-        f[1] in ("high", "medium") for f in findings) else "zdrowe")
+    verdict = "critical" if (no_runner or len(high) >= 3) else ("needs-attention" if findings and any(
+        f[1] in ("high", "medium") for f in findings) else "healthy")
     findings.sort(key=lambda f: SEV_ORDER[f[1]])
     return {
         "root": str(root),

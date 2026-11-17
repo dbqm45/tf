@@ -105,7 +105,7 @@ def main() -> int:
               and rv.get("timeout-minutes"), f"AR-7: fetch-depth 0, concurrency per PR, limit czasu: {co} {wf.get('concurrency')}")
         ai = next((s for s in rv.get("steps", []) if "claude-code-action" in str(s.get("uses"))), {})
         args = str(ai.get("with", {}).get("claude_args", ""))
-        check("--json-schema" in args and "--max-turns" in args and "werdykt" in args and "REVIEW.md" in str(ai.get("with", {}).get("prompt"))
+        check("--json-schema" in args and "--max-turns" in args and "verdict" in args and "REVIEW.md" in str(ai.get("with", {}).get("prompt"))
               and "ANTHROPIC_API_KEY" in str(ai.get("with", {}).get("anthropic_api_key")),
               f"AR-8: agent zwraca JSON wg schematu, z limitem tur, według REVIEW.md: {ai}")
         check(set(on.get("pull_request", {}).get("types", [])) >= {"opened", "synchronize", "labeled", "unlabeled"},
@@ -115,29 +115,29 @@ def main() -> int:
         check(set(env) >= {"OUT", "OVERRIDE", "SHA", "PR", "GH_TOKEN"}, f"AR-10: krok werdyktu dostaje dane przez env: {env}")
         base = {"SHA": "a" * 40, "PR": "7", "OVERRIDE": "false", "GH_TOKEN": "x"}
         cases = {
-            "ODRZUCONE": ("failure", json.dumps({"werdykt": "ODRZUCONE", "podsumowanie": "luka", "ustalenia": [
-                {"waga": "krytyczne", "plik": "src/a.py", "linia": 3, "opis": "SQL z konkatenacji"}]})),
-            "ZATWIERDZONE": ("success", json.dumps({"werdykt": "ZATWIERDZONE", "podsumowanie": "ok", "ustalenia": []})),
-            "WYMAGA_UWAGI": ("success", json.dumps({"werdykt": "WYMAGA_UWAGI", "podsumowanie": "drobne", "ustalenia": []})),
+            "REJECTED": ("failure", json.dumps({"verdict": "REJECTED", "summary": "luka", "findings": [
+                {"severity": "critical", "file": "src/a.py", "line": 3, "description": "SQL z konkatenacji"}]})),
+            "APPROVED": ("success", json.dumps({"verdict": "APPROVED", "summary": "ok", "findings": []})),
+            "NEEDS_ATTENTION": ("success", json.dumps({"verdict": "NEEDS_ATTENTION", "summary": "minor", "findings": []})),
             "brak JSON": ("failure", ""),
-            "zły werdykt": ("failure", json.dumps({"werdykt": "OK"})),
+            "zły werdykt": ("failure", json.dumps({"verdict": "OK"})),
         }
         for label, (want, out) in cases.items():
             res, calls = run_step(script, Path(tmp), {**base, "OUT": out})
             st = status_of(calls)
             check(res.returncode == 0 and st.get("state") == want and st.get("context") == "ai-review/verdict",
                   f"AR-11 werdykt {label} → {want}: {st} {res.stderr[-300:]}")
-        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["ODRZUCONE"][1]})
+        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["REJECTED"][1]})
         posted = [c for c in calls if any(a.endswith("/issues/7/comments") for a in c) and "--method" in c and "POST" in c]
         body = " ".join(" ".join(c) for c in posted)
-        check(posted and "<!-- AI-REVIEW-REPORT -->" in body and "ODRZUCONE" in body and "src/a.py:3" in body,
+        check(posted and "<!-- AI-REVIEW-REPORT -->" in body and "REJECTED" in body and "src/a.py:3" in body,
               f"AR-12: komentarz zbiorczy ze znacznikiem, werdyktem i ustaleniem plik:linia: {calls}")
         old = json.dumps([{"id": 55, "body": "<!-- AI-REVIEW-REPORT -->\nstary"}])
-        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["ZATWIERDZONE"][1]}, comments=old)
+        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["APPROVED"][1]}, comments=old)
         check(any("PATCH" in c and any(a.endswith("/issues/comments/55") for a in c) for c in calls)
               and not any("POST" in c and any(a.endswith("/comments") for a in c) for c in calls),
               f"AR-13: istniejący komentarz bota jest aktualizowany, nie dublowany: {calls}")
-        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["ODRZUCONE"][1], "OVERRIDE": "true"})
+        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["REJECTED"][1], "OVERRIDE": "true"})
         st = status_of(calls)
         check(st.get("state") == "success" and "obejście" in st.get("description", ""),
               f"AR-14: obejście etykietą → zielony status z opisem: {st}")

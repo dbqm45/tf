@@ -65,7 +65,7 @@ def main() -> int:
         ci = data.get("ci", {})
         check(all(ci.get("stages", {}).get(s) for s in ("lint", "test", "build", "types", "security")),
               f"etapy CI: {ci}")
-        check(data.get("verdict") == "zdrowe" and r.returncode == 0, f"werdykt zdrowe/kod 0: {data.get('verdict')} {r.returncode}")
+        check(data.get("verdict") == "healthy" and r.returncode == 0, f"werdykt zdrowe/kod 0: {data.get('verdict')} {r.returncode}")
         check("CLAUDE.md" in data.get("instructions", []), f"pliki instrukcji: {data.get('instructions')}")
 
         # Repo „krytyczne”: JS bez lockfile i bez runnera testów, TS bez strict, bez .gitignore i bez CI
@@ -81,7 +81,7 @@ def main() -> int:
         check("lockfile" in msgs.lower() and "high" in msgs, f"brak lockfile = wysoka: {msgs}")
         check("strict" in msgs, f"TS bez strict wykryty: {msgs}")
         check(".gitignore" in msgs, f"brak .gitignore wykryty: {msgs}")
-        check(data.get("verdict") == "krytyczne", f"werdykt krytyczne (brak runnera testów js): {data.get('verdict')}")
+        check(data.get("verdict") == "critical", f"werdykt krytyczne (brak runnera testów js): {data.get('verdict')}")
         fam = {f.get("family"): f for f in data.get("families", [])}
         check("python" in fam and "pip-audit" in fam["python"].get("audit", "")
               and "collect-only" in (fam["python"].get("dry_run") or ""), f"python w podkatalogu: {fam}")

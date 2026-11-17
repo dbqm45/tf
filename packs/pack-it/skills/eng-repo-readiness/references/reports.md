@@ -30,7 +30,7 @@ Status `failed`: zamiast tabeli przeniesień — polecenie, kod wyjścia, ostatn
 
 ```markdown
 # Gotowość repo do pracy agentów — <data>, commit <sha>
-**TL;DR:** projekt <zdrowe / wymaga-uwagi / krytyczne>, stack <gotowe / gotowe-z-kompensacją / duże-tarcie>; poprawka nr 1: <…>
+**TL;DR:** projekt <healthy / needs-attention / critical>, stack <gotowe / gotowe-z-kompensacją / duże-tarcie>; poprawka nr 1: <…>
 
 ## Fakty (readiness_check.py, detect_stack.py, polecenia uruchomione za zgodą)
 | Obszar | Ustalenie | Dowód |

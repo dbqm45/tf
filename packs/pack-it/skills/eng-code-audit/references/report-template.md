@@ -4,7 +4,7 @@
 ```
 Audyt kodu — wymiar: <wymiar>. Głębokość: <szybki|standard|pełny>.
 Zakres: <moduły / katalogi>; poza zakresem: <vendor/, kod generowany, …>.
-Inwentarz (przeczytaj najpierw, nie skanuj repo od nowa): docs/project/07-review/<data>-audyt-inwentarz.md
+Inwentarz (przeczytaj najpierw, nie skanuj repo od nowa): docs/project/07-review/<data>-code-audit-inventory.md
 Wczytaj skille: <skill-1>, <skill-2>.
 Pytanie: <jedno pytanie, np. „Które miejsca pozwalają użytkownikowi odczytać cudze dane?”>
 Nie zmieniaj kodu. Nie uruchamiaj skanów wobec działających systemów.
@@ -13,7 +13,7 @@ Wynik (≤ <N> ustaleń, najważniejsze pierwsze; „nic istotnego” jest popra
 Na końcu: czego nie sprawdziłeś i dlaczego (1–3 punkty).
 ```
 
-## Raport (`docs/project/07-review/<data>-audyt-kodu.md`)
+## Raport (`docs/project/07-review/<data>-code-audit.md`)
 ```markdown
 ---
 artifact: review
@@ -23,7 +23,7 @@ version: 1
 author: <kto>
 created: <data>
 updated: <data>
-inputs: [docs/project/07-review/<data>-audyt-inwentarz.md]
+inputs: [docs/project/07-review/<data>-code-audit-inventory.md]
 ---
 # Audyt kodu — <system>, <data>
 
@@ -70,5 +70,5 @@ Razem: <kwota> z budżetu <kwota> (źródło: `python3 .tf/factory/cost_report.p
 - **Przeczytaj:** TL;DR, Blokery, Ranking.
 ```
 
-Plik inwentarza (`<data>-audyt-inwentarz.md`) leży w tym samym katalogu, więc ma ten sam nagłówek (bez `inputs`
+Plik inwentarza (`<data>-code-audit-inventory.md`) leży w tym samym katalogu, więc ma ten sam nagłówek (bez `inputs`
 z inwentarza: `inputs: []`) oraz sekcje TL;DR i Przekazanie. Po zapisie: `python3 .claude/hooks/project_record.py check`.

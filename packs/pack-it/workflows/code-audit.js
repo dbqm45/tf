@@ -10,20 +10,20 @@ export const meta = {
 }
 
 // Argumenty (zakres zatwierdza człowiek w kroku 1 skilla eng-code-audit, zanim cokolwiek się uruchomi):
-//   {date: 'RRRR-MM-DD', dimensions: [...], depth: 'szybki'|'standard'|'pelny', limit: N, modules: [...],
+//   {date: 'RRRR-MM-DD', dimensions: [...], depth: 'quick'|'standard'|'full', limit: N, modules: [...],
 //    exclude: [...], executors: {wymiar: 'typ-agenta'}}
 // limit = najwięcej wywołań wykonawców (przeglądy + weryfikacje); inwentarz i raport się nie liczą.
 const DIMENSIONS = {
-  architektura: { agent: 'architect', skills: ['arch-quality-attributes', 'eng-module-depth', 'ddd-connascence-analysis'] },
-  bezpieczenstwo: { agent: 'security-reviewer', skills: ['sec-appsec-devsecops', 'be-auth-security', 'arch-threat-modeling'] },
-  jakosc: { agent: 'specialist', skills: ['eng-tech-debt-audit', 'eng-clean-code'] },
-  testy: { agent: 'specialist', skills: ['qa-test-design', 'qa-regression'] },
-  dostepnosc: { agent: 'specialist', skills: ['ux-accessibility'] },
-  uzytecznosc: { agent: 'specialist', skills: ['ux-feature-design'] },
-  wydajnosc: { agent: 'specialist', skills: ['fe-web-platform', 'fe-architecture'] },
-  prawo: { agent: 'specialist', skills: ['arch-eu-product-law', 'arch-privacy-compliance', 'sec-eu-regulations'] },
+  architecture: { agent: 'architect', skills: ['arch-quality-attributes', 'eng-module-depth', 'ddd-connascence-analysis'] },
+  security: { agent: 'security-reviewer', skills: ['sec-appsec-devsecops', 'be-auth-security', 'arch-threat-modeling'] },
+  quality: { agent: 'specialist', skills: ['eng-tech-debt-audit', 'eng-clean-code'] },
+  tests: { agent: 'specialist', skills: ['qa-test-design', 'qa-regression'] },
+  accessibility: { agent: 'specialist', skills: ['ux-accessibility'] },
+  usability: { agent: 'specialist', skills: ['ux-feature-design'] },
+  performance: { agent: 'specialist', skills: ['fe-web-platform', 'fe-architecture'] },
+  legal: { agent: 'specialist', skills: ['arch-eu-product-law', 'arch-privacy-compliance', 'sec-eu-regulations'] },
 }
-const DEEP = ['architektura', 'bezpieczenstwo']   // pełny: te wymiary na opus
+const DEEP = ['architecture', 'security']   // pełny: te wymiary na opus
 const COST = { S: 1, M: 2, L: 4 }
 
 const a = args || {}
@@ -46,7 +46,7 @@ const needed = [...new Set(a.dimensions.flatMap(d => DIMENSIONS[d].skills))]
 const inventory = await agent(
   `Etap 0 audytu kodu (skill eng-code-audit, sekcja 2) — tani inwentarz dla wszystkich przeglądających. ${scope}\n` +
   `Zrób kroki 1–5 z sekcji 2 skilla (stack, hotspoty, graf zależności, narzędzia projektu, mapa modułów) i zapisz ` +
-  `wynik do ${dir}/${a.date}-audyt-inwentarz.md. Bez globalnych instalacji; brakujące narzędzie to „nie sprawdzono”.\n` +
+  `wynik do ${dir}/${a.date}-code-audit-inventory.md. Bez globalnych instalacji; brakujące narzędzie to „nie sprawdzono”.\n` +
   `Sprawdź też, które z tych skilli są zainstalowane (plik .claude/skills/<nazwa>/SKILL.md): ${needed.join(', ')}.`,
   {
     label: 'inwentarz', phase: 'Inwentarz', model: 'haiku', effort: 'low',
@@ -87,7 +87,7 @@ const FINDINGS = {
           title: { type: 'string' }, file: { type: 'string' }, line: { type: ['integer', 'null'] },
           risk: { type: 'integer', minimum: 1, maximum: 4 }, reach: { type: 'integer', minimum: 1, maximum: 3 },
           cost: { type: 'string', enum: ['S', 'M', 'L'] }, evidence: { type: 'string' }, proposal: { type: 'string' },
-          blocker: { type: 'string', enum: ['', 'wyciek', 'autoryzacja', 'prawo'] },
+          blocker: { type: 'string', enum: ['', 'leak', 'authz', 'legal'] },
         },
         required: ['title', 'file', 'risk', 'reach', 'cost', 'evidence', 'proposal', 'blocker'],
       },
@@ -101,13 +101,13 @@ const results = await pipeline(reviewed, d => agent(
   `${inventory.path}.\nWczytaj skille: ${d.skills.join(', ')}` +
   (d.missing.length ? ` (niedostępne: ${d.missing.join(', ')} — zapisz to w ustaleniach jako ograniczenie)` : '') + '.\n' +
   `Pytanie: jakie są najważniejsze problemy tego wymiaru? Najwyżej 10 ustaleń. Każde z dowodem: plik:linia, wynik ` +
-  `polecenia albo cytat. Ryzyko 1–4, zasięg 1–3, koszt naprawy S/M/L. Pole blocker: „wyciek” (dane lub sekret), ` +
-  `„autoryzacja” (obejście), „prawo” (obowiązek z terminem), inaczej pusty. Brak istotnych problemów to poprawny ` +
+  `polecenia albo cytat. Ryzyko 1–4, zasięg 1–3, koszt naprawy S/M/L. Pole blocker: „leak” (dane lub sekret), ` +
+  `„authz” (obejście), „legal” (obowiązek z terminem), inaczej pusty. Brak istotnych problemów to poprawny ` +
   `wynik — pusta lista; nie dopisuj ustaleń dla objętości.`,
   {
     label: `przegląd:${d.key}`, phase: 'Przeglądy', schema: FINDINGS,
     agentType: (a.executors || {})[d.key] || DIMENSIONS[d.key].agent,
-    ...(depth === 'pelny' && DEEP.includes(d.key) ? { model: 'opus' } : {}),
+    ...(depth === 'full' && DEEP.includes(d.key) ? { model: 'opus' } : {}),
   }).then(r => r ? r.findings.map(f => ({ ...f, dimension: d.key })) : (notChecked.push(`${d.key}: wykonawca nie zwrócił wyniku`), [])))
 
 phase('Ranking')
@@ -131,7 +131,7 @@ const byScore = (x, y) => y.score - x.score || y.risk - x.risk
 let blockers = proven.filter(f => f.blocker).sort(byScore)
 let ranking = proven.filter(f => !f.blocker).sort(byScore)
 
-if (depth === 'pelny') {   // pełny: jeden sceptyk na bloker i na ustalenie z top 10, w ramach limitu
+if (depth === 'full') {   // pełny: jeden sceptyk na bloker i na ustalenie z top 10, w ramach limitu
   const budgetLeft = Math.max(0, limit - reviewed.length)
   const toCheck = [...blockers, ...ranking.slice(0, 10)]
   if (toCheck.length > budgetLeft) log(`Weryfikacja: ${budgetLeft} z ${toCheck.length} ustaleń (limit wykonawców)`)
@@ -155,7 +155,7 @@ const quickWins = ranking.filter(f => f.cost === 'S' && f.risk >= 2).map(f => f.
 log(`Ustalenia: ${all.length} po scaleniu, blokery ${blockers.length}, ranking ${ranking.length}, hipotezy ${hypotheses.length}`)
 
 phase('Raport')
-const reportPath = `${dir}/${a.date}-audyt-kodu.md`
+const reportPath = `${dir}/${a.date}-code-audit.md`
 const data = { depth, dimensions: reviewed.map(d => d.key), inventory, blockers, ranking, quick_wins: quickWins, hypotheses, not_checked: notChecked }
 const report = await agent(
   `Napisz raport audytu kodu do ${reportPath} według references/report-template.md skilla eng-code-audit ` +

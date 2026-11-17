@@ -63,13 +63,13 @@ def main() -> int:
         d = detected(p)
         check(cmds(d) == {"test": "npm test", "lint": "npm run lint", "typecheck": "npm run typecheck",
                           "build": "npm run build"}, f"O-1: skrypty package.json → polecenia npm: {d}")
-        check(d.get("verdict") == "gotowe" and not (p / ".claude").exists() and not (p / ".tf").exists(),
+        check(d.get("verdict") == "ready" and not (p / ".claude").exists() and not (p / ".tf").exists(),
               f"O-2: komplet → werdykt „gotowe”; --json niczego nie zapisuje: {d.get('verdict')}")
 
         p = make(base, "notest", {"package.json": {"scripts": {"test": 'echo "Error: no test specified" && exit 1'}}})
         r = run(p, "--json")
         d = json.loads(r.stdout)
-        check("test" not in cmds(d) and d.get("verdict") == "brak-testow" and r.returncode == 1,
+        check("test" not in cmds(d) and d.get("verdict") == "no-tests" and r.returncode == 1,
               f"O-3: domyślny skrypt npm to nie testy → werdykt brak-testow, kod 1: {r.returncode} {d}")
 
         p = make(base, "pnpm", {"package.json": NODE, "pnpm-lock.yaml": ""})
@@ -93,7 +93,7 @@ def main() -> int:
 
         p = make(base, "empty", {"README.md": "# x\n"})
         r = run(p, "--json")
-        check(r.returncode == 1 and json.loads(r.stdout).get("verdict") == "brak-testow",
+        check(r.returncode == 1 and json.loads(r.stdout).get("verdict") == "no-tests",
               f"O-9: nic nie wykryto → brak-testow, bez wyjątku: {r.stdout}{r.stderr}")
 
         # zapis: tylko z --yes; istniejącej konfiguracji bramki nie nadpisuje

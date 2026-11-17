@@ -588,7 +588,37 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
 
 ## Tłumaczenie treści fabryki na angielski
 
-- [ ] Tłumaczenie (szczegóły niżej).
+**Cel (decyzja właściciela, 2026-11-17):** jak w samym Claude — cała fabryka po angielsku (nazwy, klucze, wartości,
+skille, persony, prompty, komunikaty, składnia planu i specyfikacji), a rozmowa w języku człowieka: piszesz po
+polsku, odpowiedzi i dokumenty dla Ciebie są po polsku (`tf language`), model dostosowuje się sam. Jedna wersja
+treści (angielska), bez równoległej polskiej.
+
+- [x] Etap 1 — nazwy plików i katalogów (#286).
+- [x] Etap 2a–2b — klucze metadanych skilli i modułów, poziomy ważności (#287); pytanie niżej o pola metadanych
+  rozstrzygnięte: po angielsku.
+- [x] Etap 2c — stan zadania, pętla, profile, kody STOP, migracja danych projektu (#288, wydanie 11.0.0).
+- [x] Etap 2d — wymiary, głębokość i blokery audytu kodu (oraz nazwy plików `code-audit*.md`), pola wpisu dziennika
+  decyzji pdi (`sent`, `date`, `by`, `kind`, `why`, … z migracją `decisions.md`), `description` zamiast `opis`
+  (`control_band`, `metric_watch`, scenariusz ES; poprawka listy profili po #288), schemat przeglądu AI w CI
+  (`verdict`, `findings`, `APPROVED|NEEDS_ATTENTION|REJECTED`, `critical|major|minor`), werdykty `readiness_check`
+  i `tf onboard`, flaga `profile.py --team-only`.
+- [ ] Etap 2e — reszta zbiorów wartości: werdykty `pr_budget`, kontrole `instructions_lint` i `analyze` (OK / UWAGA /
+  BŁĄD, czytane przez `tf.py`), werdykty `facts.py` (niepotwierdzone, sprzeczne, źródło skilla), pozostałe polskie
+  flagi CLI; przed zmianą każdy zbiór razem z czytelnikami i testami (grep po wartościach w cudzysłowie).
+- [ ] Etap 3 — składnia dokumentów: planu i specyfikacji (`· pliki:`, `· kryteria:`, `· po: brak`, `## Kryteria`,
+  „Zakładając / Gdy / Wtedy”), nagłówki i pola dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod /
+  do weryfikacji), sekcje raportu rekonstrukcji, kolumny planu wydań pdi (`PLAN_COLUMNS`), etykiety decyzji
+  qa-change-review, pole „Dotyczy” lekcji i nazwy plików zakładanych w `docs/project/` (`<data>-przeglad.md`)
+  po angielsku razem z tłumaczeniem treści skilla `tf` i szablonów; skrypty przyjmują
+  stare słowa przez jedno wydanie, migracja przepisuje `plan.md`/`spec.md` otwartych zadań.
+- [ ] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”) —
+  następny PR po 2d: stała reguła „odpowiadasz i piszesz dokumenty dla człowieka w języku, w którym on pisze” zamiast
+  `languages.*.work` i `tf language`; bez rozmowy (wykonawca, faza pdi bez interakcji, przegląd w CI) — język briefu,
+  zadania lub issue, a bez nich istniejących dokumentów `docs/project/`; język commitów wykrywany skryptem z `git log`
+  (nowe repo: angielski) zamiast `tf commit-language`; `pack-editorial-pl` jako zwykła nakładka, niezależna od
+  języka instalacji; usunięcie `--language`, `tf language`, `tf commit-language` z migracją ustawień projektu.
+- [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty po angielsku; język
+  odpowiedzi wynika z rozmowy (punkt wyżej), nie z ustawienia.
 
 Treść fabryki jest dziś po polsku. Chodzi o:
 - skille (`SKILL.md`, `references/`) rdzenia i wszystkich nakładek;
@@ -608,8 +638,7 @@ Jak:
 Do rozstrzygnięcia wtedy:
 - czy tłumaczenie zastępuje treść polską, czy obie wersje żyją równolegle (wtedy `build.py` i instalator wybierają
   wersję według `language`);
-- czy nazwy pól metadanych skilli (`metadata.catalog`, `review`, `keywords`, `visibility`) też zmieniają się na
-  angielskie (zmiana publicznego API rdzenia — MAJOR).
+- ~~nazwy pól metadanych skilli~~ — rozstrzygnięte: po angielsku (#287).
 
 Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na wersji angielskiej.
 

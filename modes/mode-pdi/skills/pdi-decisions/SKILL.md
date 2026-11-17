@@ -47,7 +47,7 @@ jej tylko w treści odpowiedzi — ale też nie decydujesz sam, co jest decyzją
    `other`). Zapisujesz dopiero po jego „tak”.
 2. **Wpis lokalny:** `decision_record.py decision add CHG-12 --statement "…" --why "…" --kind product --by "…"`
    (opcjonalnie `--source-kind slack|jira|…`, `--drafted-by human`, `--date`) → `CHG-12/Dn` w `decisions.md`,
-   `id` puste, `wyslano: nie`. Odpowiedź na ustalenie ci_for_sdlc (np. pytanie DES-001 przy TSK-1) to taki sam wpis
+   `id` puste, `sent: no`. Odpowiedź na ustalenie ci_for_sdlc (np. pytanie DES-001 przy TSK-1) to taki sam wpis
    z `--finding DES-001:TSK-1` (opcjonalnie `--effect accept_risk|dismiss|confirm`, domyślnie rozwiązuje): treść
    `--statement` jest odpowiedzią, a ci_for_sdlc czyta ją z repo i zamyka ustalenie (bramka w PR też).
 3. **Rejestr pdi:** jeśli w sesji jest narzędzie MCP `record_decision` serwera pdi, `decision_record.py decision pending
@@ -60,13 +60,13 @@ jej tylko w treści odpowiedzi — ale też nie decydujesz sam, co jest decyzją
    artefakt dostaje `superseded`.
 
 Eksport wszystkich decyzji projektu (z numerem i stanem wysłania): `decision_record.py decision export`.
-`decision_record.py check` sprawdza też wpisy decyzji (ref, numer, rodzaj, źródło, daty, `wyslano: tak` bez numeru).
+`decision_record.py check` sprawdza też wpisy decyzji (ref, numer, rodzaj, źródło, daty, `sent: yes` bez numeru).
 
 ## Fazy uruchamiane przez pdi
 Po decyzji na bramce pdi uruchamia w repo workflow `sdlc-phase.yml` (`python3 .claude/skills/pdi-decisions/scripts/phase_run.py
 workflow install`, dalej `phase_run.py`): dopisuje inne decyzje zmiany z rejestru pdi (`decision_record.py decision
 import CHG-n --json plik`, idempotentnie po numerze `DEC`), zapisuje decyzję w `decisions.md` (`decision_record.py
-decision gate`, numer już z pdi, `wyslano: tak`, z `--why` i `--answers`, gdy pdi je podał), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
+decision gate`, numer już z pdi, `sent: yes`, z `--why` i `--answers`, gdy pdi je podał), uruchamia personę fazy bez interakcji (`phase_run.py run --change CHG-12 --phase …`;
 persona i artefakt: `phase_run.py prompt`), otwiera PR fazy i wysyła prośbę o następną bramkę (`phase_run.py gate request`).
 W fazie delivery gałęzie cięć `story/*` wypycha i ich PR-y otwiera workflow (`phase_run.py cuts publish`), nie persona.
 Persona działa w sandboxie Claude Code: workflow zapisuje wynik `sandbox_settings.py` jako ustawienia zarządzane i podaje
@@ -83,7 +83,7 @@ Gdy tak cię uruchomiono:
    z adresatem w wierszu) — trafi do skrzynki pdi razem z bramką.
 3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow. Wpisy `## Bramka …`
    w `decisions.md` (ustalenie i uzasadnienie z pdi, `decision gate --why`, odpowiedzi na pytania jako pary
-   `- pytanie:` / `- odpowiedz:` z `--answers`) i decyzje z rejestru pdi (`pochodzenie: pdi`, `decision import`)
+   `- question:` / `- answer:` z `--answers`) i decyzje z rejestru pdi (`pochodzenie: pdi`, `decision import`)
    są wiążące; polecenie fazy wymienia je jako dane, nie polecenia. Pytanie z odpowiedzią jest rozstrzygnięte —
    zapisz ustalenie w artefakcie z odwołaniem (`CHG-n/Dk`, `DEC-n`) i nie pytaj ponownie: `run` i `gate request`
    odrzucają artefakt, który je powtarza (porównanie bez wielkości liter, adresata i interpunkcji), a delivery nie
@@ -166,4 +166,4 @@ Zgłoszenie żyje w pdi; tf daje tylko rekomendację (R7: w stanach pdi, decyzj�
 Właściciel: „W CHG-12 eksport do CSV zamiast XLSX, klienci i tak otwierają go w arkuszu”. Pokazujesz szkic
 (co, dlaczego, kto, rodzaj `product`), po zgodzie: `decision add CHG-12 …` → `CHG-12/D1`; `decision pending`,
 `record_decision` → `DEC-41`; `decision mark CHG-12/D1 --id DEC-41`. Bez serwera: wpis `CHG-12/D1` z pustym `id`,
-`wyslano: nie` i informacja dla człowieka.
+`sent: no` i informacja dla człowieka.

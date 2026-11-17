@@ -19,19 +19,19 @@ Pokaż człowiekowi propozycję i poczekaj na zgodę:
 
 | Wymiar | Wykonawca | Skille w briefie |
 |---|---|---|
-| architektura | `architect` (analiza) albo `tomasz-solution-architect` | arch-quality-attributes, eng-module-depth, ddd-connascence-analysis |
-| bezpieczeństwo | `security-reviewer` | sec-appsec-devsecops, be-auth-security, arch-threat-modeling |
-| jakość i dług | `specialist` | eng-tech-debt-audit, eng-clean-code |
-| testy | `kasia-qa-analyst` | qa-test-design, qa-regression |
-| dostępność | `natalia-accessibility-specialist` | ux-accessibility |
-| użyteczność | `natalia-product-designer` | ux-feature-design |
-| wydajność front i przeglądarki | `specialist` | fe-web-platform, fe-architecture |
-| zgodność z prawem UE | `maja-product-compliance` | arch-eu-product-law, arch-privacy-compliance, sec-eu-regulations, ai-governance-compliance (gdy jest AI) |
+| architektura (`architecture`) | `architect` (analiza) albo `tomasz-solution-architect` | arch-quality-attributes, eng-module-depth, ddd-connascence-analysis |
+| bezpieczeństwo (`security`) | `security-reviewer` | sec-appsec-devsecops, be-auth-security, arch-threat-modeling |
+| jakość i dług (`quality`) | `specialist` | eng-tech-debt-audit, eng-clean-code |
+| testy (`tests`) | `kasia-qa-analyst` | qa-test-design, qa-regression |
+| dostępność (`accessibility`) | `natalia-accessibility-specialist` | ux-accessibility |
+| użyteczność (`usability`) | `natalia-product-designer` | ux-feature-design |
+| wydajność front i przeglądarki (`performance`) | `specialist` | fe-web-platform, fe-architecture |
+| zgodność z prawem UE (`legal`) | `maja-product-compliance` | arch-eu-product-law, arch-privacy-compliance, sec-eu-regulations, ai-governance-compliance (gdy jest AI) |
 
 - **Głębokość:**
-  - *szybki* — etap 0 i 2–3 wymiary o największym ryzyku, wykonawcy na `sonnet`;
+  - *szybki* (`quick`) — etap 0 i 2–3 wymiary o największym ryzyku, wykonawcy na `sonnet`;
   - *standard* — wszystkie wybrane wymiary na `sonnet`, ranking, top 10 z propozycjami;
-  - *pełny* — jak standard, a architektura i bezpieczeństwo na `opus`, duże repo dzielone na moduły.
+  - *pełny* (`full`) — jak standard, a architektura i bezpieczeństwo na `opus`, duże repo dzielone na moduły.
 - **Limit kosztu:** kwota albo liczba wywołań wykonawców, ustalona przez człowieka. Liczysz ją w pasku stanu lub
   `python3 .tf/factory/cost_report.py --days 1`; przy 80% limitu zatrzymujesz się i pytasz, co pominąć.
 - **Granice:** czego nie ruszasz (np. `vendor/`, kod generowany), czy wolno uruchamiać narzędzia projektu, czy jest
@@ -39,8 +39,8 @@ Pokaż człowiekowi propozycję i poczekaj na zgodę:
   zgody (core-agent-security §5b).
 
 **Uruchomienie po zgodzie:** workflow `/code-audit` (`.claude/workflows/code-audit.js`) przeprowadza etapy 0–2
-i raport. Argumenty to zatwierdzony zakres: `{"date": "RRRR-MM-DD", "dimensions": ["architektura", "bezpieczenstwo",
-"jakosc", "testy", "dostepnosc", "uzytecznosc", "wydajnosc", "prawo"], "depth": "standard", "limit": 8,
+i raport. Argumenty to zatwierdzony zakres: `{"date": "RRRR-MM-DD", "dimensions": ["architecture", "security",
+"quality", "tests", "accessibility", "usability", "performance", "legal"], "depth": "standard", "limit": 8,
 "modules": [], "exclude": ["vendor/"]}` (opcjonalnie `executors`: wymiar → agent, np. persona z tabeli).
 - Ranking, duplikaty, blokery i hipotezy liczy skrypt, bez modelu.
 - Wymiar bez zainstalowanych skilli i wymiar ponad limit trafiają do „Czego nie sprawdzono”.
@@ -57,7 +57,7 @@ Cel: jeden plik z faktami, który dostaną wszyscy przeglądający, żeby każdy
 4. Narzędzia, które projekt **już ma** (testy, lint, typy, `npm audit`, skanery z CI) — wynik do pliku. Bez globalnych
    instalacji; brakujące narzędzie zapisujesz jako „nie sprawdzono”, a nie instalujesz po cichu.
 5. Mapa modułów i punktów wejścia (eng-codebase-mapping).
-Wynik: `docs/project/07-review/<data>-audyt-inwentarz.md` — stack, moduły, hotspoty, wyniki narzędzi, czego brakuje.
+Wynik: `docs/project/07-review/<data>-code-audit-inventory.md` — stack, moduły, hotspoty, wyniki narzędzi, czego brakuje.
 
 ## 3. Etap 1 — przeglądy równoległe
 - Wszyscy wykonawcy w **jednej wiadomości** (osobne konteksty, cache 5-minutowy).
@@ -85,7 +85,7 @@ Wynik: `docs/project/07-review/<data>-audyt-inwentarz.md` — stack, moduły, ho
 7. `python3 .claude/skills/core-grounding/scripts/grounding_check.py <report.md>` — ścieżki i odwołania istnieją.
 
 ## 5. Raport
-Plik `docs/project/07-review/<data>-audyt-kodu.md` (core-project-record), szablon w `references/report-template.md`:
+Plik `docs/project/07-review/<data>-code-audit.md` (core-project-record), szablon w `references/report-template.md`:
 1. TL;DR (≤ 7 punktów) i blokery.
 2. Ranking (tabela) i top 10 z propozycją zmiany (bez wykonywania).
 3. Szybkie wygrane: koszt S przy ryzyku co najmniej średnim.
