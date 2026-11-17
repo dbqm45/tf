@@ -44,7 +44,7 @@ def glob_re(pattern: str) -> re.Pattern:
 def git(root: Path, *args: str) -> str:
     r = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, errors="replace", timeout=60)
     if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)} zakończony kodem {r.returncode}")
+        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)} ended with exit code {r.returncode}")
     return r.stdout
 
 
@@ -70,16 +70,16 @@ def budget(root: Path, base: str) -> dict:
             size = len(git(root, "show", f"HEAD:{path}").splitlines()) if n else 0
             limit = max_plan if PLAN.search(path) else max_artifact
             if size > limit:
-                kind = "plan" if limit == max_plan else "artefakt"
-                problems.append(f"{path}: {size} linii — {kind} ponad limit {limit}")
+                kind = "plan" if limit == max_plan else "artifact"
+                problems.append(f"{path}: {size} lines — {kind} over the limit of {limit}")
         else:
             code += n
     total = code + art
     share = art / total if total else 0.0
     if code and share > max_share:
         top = ", ".join(f"{p} (+{n})" for p, n in sorted(sizes.items(), key=lambda kv: -kv[1])[:3])
-        problems.append(f"artefakty to {share:.0%} dodanych linii ({art} z {total}) — limit {max_share:.0%}; "
-                        f"największe: {top}")
+        problems.append(f"artifacts are {share:.0%} of the added lines ({art} of {total}) — the limit is {max_share:.0%}; "
+                        f"largest: {top}")
     return {"verdict": "OVER" if problems else "OK", "base": base, "code_lines": code,
             "artifact_lines": art, "share": round(share, 3), "artifacts": artifacts, "problems": problems}
 
@@ -97,8 +97,8 @@ def main(argv=None) -> int:
     if a.json:
         print(json.dumps(res, ensure_ascii=False, indent=1))
     else:
-        print(f"Werdykt: {res['verdict']} — kod: {res['code_lines']} linii, artefakty: {res['artifact_lines']} linii "
-              f"({res['share']:.0%}), baza: {a.base}")
+        print(f"Verdict: {res['verdict']} — code: {res['code_lines']} lines, artifacts: {res['artifact_lines']} lines "
+              f"({res['share']:.0%}), base: {a.base}")
         for p in res["problems"]:
             print(f"✗ {p}")
     return 1 if res["problems"] else 0

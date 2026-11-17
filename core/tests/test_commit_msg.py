@@ -53,14 +53,14 @@ def main() -> int:
         "breaking": "feat(api)!: remove v1 endpoints\n\nBREAKING CHANGE: clients must call /v2\n",
     }
     bad = {
-        "bez typu": ("apply discount codes\n", "typ"),
-        "kropka": ("feat(cart): apply discount codes.\n", "kropk"),
+        "bez typu": ("apply discount codes\n", "type"),
+        "kropka": ("feat(cart): apply discount codes.\n", "period"),
         "za długi opis": ("feat(cart): " + "a" * 73 + "\n", "72"),
-        "brak pustej linii": ("feat(cart): apply codes\nbody here\n", "pust"),
+        "brak pustej linii": ("feat(cart): apply codes\nbody here\n", "blank line"),
         "zły klucz w Change": ("feat(cart): apply codes\n\nChange: tsk-57\n", "tsk-57"),
         "pusty Change": ("feat(cart): apply codes\n\nChange:\n", "Change"),
         "Flag ze spacją": ("feat(cart): apply codes\n\nChange: TSK-1\nFlag: payment retry\n", "Flag"),
-        "pusta wiadomość": ("# only a comment\n", "pust"),
+        "pusta wiadomość": ("# only a comment\n", "empty"),
         "breaking małymi": ("feat(api): drop v1\n\nbreaking change: gone\n", "BREAKING CHANGE"),
     }
     with tempfile.TemporaryDirectory() as tmp:

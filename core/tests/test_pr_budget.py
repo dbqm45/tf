@@ -60,13 +60,13 @@ def main() -> int:
         t = Path(t)
         ok = repo_with(t / "ok", {"src/app.py": lines(120), "docs/project/changes/CHG-1/runs/TSK-1.md": lines(40)})
         r = run(ok)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK") and "120" in r.stdout and "40" in r.stdout,
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: OK") and "120" in r.stdout and "40" in r.stdout,
               f"P-1: mało artefaktów → OK, kod 0, liczby kodu i artefaktów: {r.stdout}{r.stderr}")
 
         noisy = repo_with(t / "noisy", {"src/app.py": lines(95), "docs/project/changes/CHG-1/plan.md": lines(150),
                                         "docs/test/evidence/01-run.txt": lines(250)})
         r = run(noisy)
-        check(r.returncode == 1 and r.stdout.startswith("Werdykt: OVER") and "%" in r.stdout,
+        check(r.returncode == 1 and r.stdout.startswith("Verdict: OVER") and "%" in r.stdout,
               f"P-2: artefakty > 50% dodanych linii przy zmianie kodu → przekroczony: {r.stdout}{r.stderr}")
 
         big = repo_with(t / "big", {"src/app.py": lines(2000), "docs/project/02-domain/notatki.md": lines(700),
@@ -77,7 +77,7 @@ def main() -> int:
 
         docs = repo_with(t / "docs", {"docs/project/03-requirements/requirements.md": lines(400)})
         r = run(docs)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
               f"P-4: PR bez zmiany kodu (sama dokumentacja) nie podlega limitowi udziału: {r.stdout}")
 
         cfg = repo_with(t / "cfg", {"src/app.py": lines(50), "reports/run.log": lines(200)})

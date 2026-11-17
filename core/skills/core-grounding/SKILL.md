@@ -109,7 +109,7 @@ Before an answer with facts, a step report or an artifact:
    - Fix conflicting and non-confirming references.
    - Review the uncertain ones yourself.
    Numbers and dates: `python3 .claude/skills/core-grounding/scripts/claims_check.py <plik.md|katalog>` — the first line
-   is `Werdykt: OK | WARNINGS | ERRORS`.
+   is `Verdict: OK | WARNINGS | ERRORS`.
    - An error: a percentage that does not match the fraction in the `X/Y (Z%)` notation, a date that does not exist, a state date in the future — fix it.
    - A warning: a number with a unit (%, USD, ms…) without a trace of its origin on that line — add a command, a path,
      a link or [assumption]; a report based on one data file declares it once (a "Files:" line with the data file's path in backticks).

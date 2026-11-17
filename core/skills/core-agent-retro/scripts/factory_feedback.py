@@ -29,10 +29,10 @@ import urllib.parse
 from pathlib import Path
 
 RETRO_DIR = Path("docs") / "project" / "archive" / "retro"
-SIGNAL = re.compile(r"^(hint-missed|hint-ignored):([a-z0-9][a-z0-9-]*)$|^tier:([a-z0-9][a-z0-9-]*):(za niski|za wysoki)$")
+SIGNAL = re.compile(r"^(hint-missed|hint-ignored):([a-z0-9][a-z0-9-]*)$|^tier:([a-z0-9][a-z0-9-]*):(?:za )?(?:niski|wysoki)$")   # retro_data pisze klucz z wartością log_usage („niski”); „za niski” — dawna forma
 GITHUB = re.compile(r"github\.com[:/]([\w.-]+)/([\w.-]+?)(?:\.git)?(?:#.*)?$")
-LEAK = [(re.compile(r"(?:^|\s)(?:~|[A-Za-z]:\\|\.{0,2}/)[\w.-]+[/\\]"), "ścieżka"),
-        (re.compile(r"https?://|www\.", re.I), "adres"), (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "e-mail")]
+LEAK = [(re.compile(r"(?:^|\s)(?:~|[A-Za-z]:\\|\.{0,2}/)[\w.-]+[/\\]"), "a path"),
+        (re.compile(r"https?://|www\.", re.I), "an address"), (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "an e-mail")]
 URL_MAX = 7000
 
 
@@ -60,7 +60,7 @@ def signals(retro: dict, skills: set, agents: set, force: bool) -> list[dict]:
     for e in retro.get("evidence", []):
         k = e.get("key", "")
         m = SIGNAL.match(k)
-        if not m or dec.get(k) == "nie" or (k in sent and not force):
+        if not m or dec.get(k) in ("no", "nie") or (k in sent and not force):   # pl: sprzed 14.x (nie)
             continue
         if (m.group(2) and m.group(2) not in skills) or (m.group(3) and m.group(3) not in agents):
             continue
@@ -71,38 +71,38 @@ def signals(retro: dict, skills: set, agents: set, force: bool) -> list[dict]:
 def check_item(raw: str, skills: set, agents: set) -> tuple[dict | None, str]:
     m = re.match(r"^(skill|agent):([a-z0-9][a-z0-9-]*):\s*(.+)$", raw.strip(), re.S)
     if not m:
-        return None, "postać: skill:<nazwa>: <uwaga> albo agent:<nazwa>: <uwaga>"
+        return None, "form: skill:<name>: <remark> or agent:<name>: <remark>"
     kind, name, text = m.groups()
     if name not in (skills if kind == "skill" else agents):
-        return None, f"{kind} {name} nie pochodzi z fabryki"
+        return None, f"{kind} {name} does not come from the factory"
     if len(text) > 300:
-        return None, "uwaga dłuższa niż 300 znaków"
+        return None, "the remark is longer than 300 characters"
     for rx, what in LEAK:
         if rx.search(text):
-            return None, f"uwaga zawiera {what} — usuń dane projektu"
+            return None, f"the remark contains {what} — remove the project data"
     return {"target": f"{kind}:{name}", "text": text.strip()}, ""
 
 
-HINT = {"hint-missed": "dopisać słowa do metadata.keywords", "hint-ignored": "zawęzić słowa lub opis",
-        "tier": "zmienić tier roli lub podział zadań"}
+HINT = {"hint-missed": "add words to metadata.keywords", "hint-ignored": "narrow the words or the description",
+        "tier": "change the role tier or the task split"}
 
 
 def compose(payload: dict) -> tuple[str, str]:
     sig, items = payload["signals"], payload["items"]
-    title = f"Sygnały z retrospektywy projektu (fabryka {payload['factory_version']}): " + \
+    title = f"Signals from a project retrospective (factory {payload['factory_version']}): " + \
             ", ".join(s["key"].split(":")[1] for s in sig[:3]) + (" …" if len(sig) > 3 else "") if sig else \
-            f"Uwagi z retrospektywy projektu (fabryka {payload['factory_version']})"
-    lines = ["Zgłoszenie z retrospektywy pracy agentów (core-agent-retro). Zawiera tylko nazwy skilli i agentów fabryki "
-             "oraz liczby — bez danych projektu. To sygnał z jednego projektu: sprawdź go na innych zgłoszeniach "
-             "(`python3 .tf/factory/feedback_report.py`) i scenariuszach ewaluacji przed zmianą.", ""]
+            f"Remarks from a project retrospective (factory {payload['factory_version']})"
+    lines = ["A report from a retrospective of the agents' work (core-agent-retro). It contains only the names of the factory's "
+             "skills and agents and numbers — no project data. It is a signal from one project: check it against other reports "
+             "(`python3 .tf/factory/feedback_report.py`) and the evaluation scenarios before a change.", ""]
     if sig:
-        lines += ["| Klucz | Ile | Decyzja w projekcie | Co sugeruje |", "|---|---|---|---|"]
+        lines += ["| Key | Count | Decision in the project | What it suggests |", "|---|---|---|---|"]
         lines += [f"| `{s['key']}` | {s['n']} | {s['decision']} | {HINT[s['key'].split(':')[0]]} |" for s in sig]
     if items:
-        lines += ["", "Uwagi:"] + [f"- `{i['target']}`: {i['text']}" for i in items]
+        lines += ["", "Remarks:"] + [f"- `{i['target']}`: {i['text']}" for i in items]
     w = payload.get("window") or {}
-    lines += ["", f"Wersja fabryki: {payload['factory_version']} · okno: {w.get('since', '?')} – {w.get('until', '?')} · "
-                  f"projekt (anonimowo): {payload['project']}", "",
+    lines += ["", f"Factory version: {payload['factory_version']} · window: {w.get('since', '?')} – {w.get('until', '?')} · "
+                  f"project (anonymous): {payload['project']}", "",
               "```json", json.dumps(payload, ensure_ascii=False), "```", "<!-- factory-feedback -->"]
     return title, "\n".join(lines) + "\n"
 
@@ -137,25 +137,25 @@ def main(argv: list[str]) -> int:
         m = GITHUB.search(str(manifest.get("source") or os.environ.get("CLAUDE_TEAM_FACTORY") or ""))
         repo = f"{m.group(1)}/{m.group(2)}" if m else ""
     if not re.fullmatch(r"[\w.-]+/[\w.-]+", repo):
-        print("✗ Nie znam repozytorium fabryki na GitHubie (źródło w manifeście nie jest adresem GitHub). "
-              "Podaj --repo właściciel/repo.")
+        print("✗ The factory repository on GitHub is unknown (the source in the manifest is not a GitHub address). "
+              "Give --repo owner/repo.")
         return 2
     skills, agents = factory_names(root, manifest)
     items = []
     for raw in items_raw:
         item, err = check_item(raw, skills, agents)
         if not item:
-            print(f"✗ --item „{raw[:60]}”: {err}")
+            print(f"✗ --item \"{raw[:60]}\": {err}")
             return 2
         items.append(item)
     rf = retro_file(root, opts.get("--date"))
     retro = json.loads(rf.read_text(encoding="utf-8")) if rf else {}
     if not rf and not items:
-        print("✗ Brak zapisanej retrospektywy — najpierw retro_data.py --save (albo podaj --item).")
+        print("✗ No saved retrospective — run retro_data.py --save first (or give --item).")
         return 2
     sig = signals(retro, skills, agents, bool(opts.get("--force")))
     if not sig and not items:
-        print("✓ Brak: nic nowego do zgłoszenia fabryce (sygnały już zgłoszone, odrzucone albo spoza fabryki; --force zgłosi ponownie).")
+        print("✓ None: nothing new to report to the factory (signals already reported, rejected or not from the factory; --force reports them again).")
         return 0
     payload = {"factory_feedback": 1, "project": hashlib.sha256(str(root).encode()).hexdigest()[:10],
                "factory_version": version, "window": retro.get("window") or {}, "signals": sig, "items": items}
@@ -172,28 +172,28 @@ def main(argv: list[str]) -> int:
         return 0
     if opts.get("--mark-sent"):
         remember("link")
-        print(f"✓ Zapamiętano jako zgłoszone: {', '.join(s['key'] for s in sig) or '—'}")
+        print(f"✓ Recorded as reported: {', '.join(s['key'] for s in sig) or '—'}")
         return 0
-    print(f"Tytuł: {title}\n\n{body}")
+    print(f"Title: {title}\n\n{body}")
     if opts.get("--gh"):
         gh = os.environ.get("CTF_GH") or shutil.which("gh") or ""
         cmd = [gh or "gh", "issue", "create", "--repo", repo, "--title", title, "--body-file", "-"]
         if not opts.get("--yes"):
-            print(f"Plan: gh issue create --repo {repo} --title \"{title}\" --body-file - (treść wyżej).\n"
-                  "Wyślij: dodaj --yes. Albo otwórz link i wyślij sam:\n" + url)
+            print(f"Plan: gh issue create --repo {repo} --title \"{title}\" --body-file - (content above).\n"
+                  "To send: add --yes. Or open the link and send it yourself:\n" + url)
             return 0
         if not gh or not os.access(gh, os.X_OK):
-            print(f"✗ Brak gh — otwórz link i wyślij zgłoszenie sam (potem --mark-sent):\n{url}")
+            print(f"✗ gh is missing — open the link and send the report yourself (then --mark-sent):\n{url}")
             return 1
         r = subprocess.run(cmd, input=body, capture_output=True, text=True, timeout=60)
         if r.returncode != 0:
-            print(f"✗ gh zwrócił błąd: {r.stderr.strip()[:300]}\nOtwórz link i wyślij sam (potem --mark-sent):\n{url}")
+            print(f"✗ gh returned an error: {r.stderr.strip()[:300]}\nOpen the link and send it yourself (then --mark-sent):\n{url}")
             return 1
         created = (r.stdout.strip().splitlines() or ["gh"])[-1]
         remember(created)
-        print(f"✓ Zgłoszenie założone: {created}")
+        print(f"✓ Issue created: {created}")
         return 0
-    print(f"Otwórz, sprawdź treść i wyślij (potem --mark-sent, żeby nie zgłaszać drugi raz):\n{url}")
+    print(f"Open it, check the content and send it (then --mark-sent, so you do not report it twice):\n{url}")
     return 0
 
 

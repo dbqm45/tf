@@ -182,7 +182,7 @@ def main() -> int:
         project(repo, version="2.1.0")
 
         r = run(["fetch", "demo-lib", "--online", "--url", "http://127.0.0.1:9/docs.md"], repo)
-        check(r.returncode != 0 and ("niepubliczny" in r.stdout + r.stderr or "localhost" in r.stdout + r.stderr
+        check(r.returncode != 0 and ("non-public" in r.stdout + r.stderr or "niepubliczny" in r.stdout + r.stderr or "localhost" in r.stdout + r.stderr
                                      or "https" in r.stdout + r.stderr),
               f"D-12: --url na adres prywatny odrzucony: {r.stdout}{r.stderr}")
 

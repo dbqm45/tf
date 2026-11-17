@@ -39,7 +39,10 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 PROBLEM = re.compile(r"błąd|błęd|porażk|cofn|revert|nie zadziała|nie działa|nie przesz|pułapk|ponown|poprawk|"
-                     r"zawies|eskal|przekroczon|nie udał", re.I)
+                     r"zawies|eskal|przekroczon|nie udał|"
+                     r"\berror|\bfail|\brolled? back|did not work|does not work|didn't work|doesn't work|did not pass|"
+                     r"\bpitfall|\bretr(?:y|ied)|\bfix(?:ed)? again|\bhung\b|\bhangs?\b|\bescalat|\bexceeded|"
+                     r"could not", re.I)   # 14.x: dziennik pisany po angielsku
 JOURNAL_ROW = re.compile(r"^\|\s*(\d{4}-\d{2}-\d{2})[^|]*\|\s*([^|]*)\|\s*([^|]*)\|\s*(.*?)\s*\|\s*$")
 TRAPS_HEADS = ("## Pitfalls and dead ends", "## Pułapki i ślepe uliczki")   # pl: sprzed 14.x
 
@@ -267,43 +270,44 @@ def evidence(d: dict) -> list[dict]:
         ev.append({"id": f"E-{len(ev) + 1}", "kind": kind, "key": key, "text": text, **({"n": n} if n else {})})
 
     for gp in d.get("gaps", []):
-        add("data", "data-gap:logs", f"logi hooków kończą się {gp['last_log'][:16]}, a po nich jest {gp['after_commits']} "
-            "commitów — dane o kosztach i podpowiedziach niepełne (hooki fabryki nieaktywne?)", gp["after_commits"])
+        add("data", "data-gap:logs", f"hook logs end at {gp['last_log'][:16]}, and after them there are {gp['after_commits']} "
+            "commits — cost and hint data are incomplete (factory hooks inactive?)", gp["after_commits"])
     tot = d["tokens"]["output_total"]
     for a in d["tokens"]["agents"][:3]:
         if tot:
-            add("cost", f"cost:{a['agent']}", f"{a['agent']}: {a['output']} tokenów wyjścia ({100 * a['output'] // tot}% "
-                f"okna), {a['sessions']} sesji, modele: {', '.join(a['models']) or '?'}")
+            add("cost", f"cost:{a['agent']}", f"{a['agent']}: {a['output']} output tokens ({100 * a['output'] // tot}% "
+                f"of the window), {a['sessions']} sessions, models: {', '.join(a['models']) or '?'}")
     for a in d["tokens"]["agents"]:
         for k, n in a["tier_feedback"].items():
-            add("tier", f"tier:{a['agent']}:{k}", f"{a['agent']}: „Tier: {k}” × {n}", n)
+            add("tier", f"tier:{a['agent']}:{k}", f"{a['agent']}: \"Tier: {k}\" × {n}", n)
     for s, n in d["hints"]["missed"].items():
-        add("hint", f"hint-missed:{s}", f"{s}: użyty bez podpowiedzi w {n} sesjach (kandydat na metadata.keywords)", n)
+        add("hint", f"hint-missed:{s}", f"{s}: used without a hint in {n} sessions (candidate for metadata.keywords)", n)
     for s, n in d["hints"]["ignored"].items():
         if n >= 2:
-            add("hint", f"hint-ignored:{s}", f"{s}: podpowiadany, a nieużyty w {n} sesjach (szum podpowiedzi?)", n)
+            add("hint", f"hint-ignored:{s}", f"{s}: hinted but not used in {n} sessions (hint noise?)", n)
     for line in d["journal"]["flagged"]:
         add("journal", f"journal:{norm(line.split('] ', 1)[-1])}", line)
     for t in d["traps"]:
         add("trap", f"trap:{norm(t['text'])}", f"{t['text']} ({t['file']})")
     for k, n in d.get("blocks", {}).items():
         hook, decision = k.rsplit(":", 1)
-        what = "odmowa" if decision == "deny" else "pytanie o zgodę" if decision == "ask" else decision
-        add("block", f"block:{k}", f"{hook}: {what} × {n} (blokady hooka w oknie)", n)
+        what = "denial" if decision == "deny" else "consent prompt" if decision == "ask" else decision
+        add("block", f"block:{k}", f"{hook}: {what} × {n} (hook blocks in the window)", n)
     g = d["git"]
     for cause, shas in g.get("causes", {}).items():
-        add("git", f"rework-cause:{cause}", f"poprawki z przyczyną `{cause}` (Rework-Cause): {len(shas)} — {', '.join(shas[:5])}",
+        add("git", f"rework-cause:{cause}", f"fixes with cause `{cause}` (Rework-Cause): {len(shas)} — {', '.join(shas[:5])}",
             len(shas))
     for rw in g["rework"]:
-        add("git", f"rework:{rw['file']}", f"poprawka po własnym feat: {rw['file']} ({' → '.join(rw['commits'])}: {rw['fix']})")
+        add("git", f"rework:{rw['file']}", f"fix after an own feat: {rw['file']} ({' → '.join(rw['commits'])}: {rw['fix']})")
     for rv in g["reverts"]:
-        add("git", f"revert:{norm(rv.split(' ', 1)[-1])}", f"cofnięcie: {rv}")
+        add("git", f"revert:{norm(rv.split(' ', 1)[-1])}", f"revert: {rv}")
     if g["wip"]:
-        add("git", "wip:commits", f"commity WIP: {g['wip']} z {g['commits']}")
+        add("git", "wip:commits", f"WIP commits: {g['wip']} of {g['commits']}")
     return ev
 
 
-DECISIONS = ("tak", "nie", "później")
+DECISIONS = ("yes", "no", "later", "tak", "nie", "później")   # pl: sprzed 14.x (tak|nie|później)
+YES, NO = ("yes", "tak"), ("no", "nie")
 RETRO_DIR = Path("docs") / "project" / "archive" / "retro"
 
 
@@ -341,9 +345,9 @@ def trend(ev: list[dict], hist: list[dict]) -> dict:
     recurring = [{"key": k, "seen": seen[k], "last_decision": last.get(k, ("—", ""))[0]}
                  for k in sorted(fresh) if seen[k]]
     measured = [{"key": k, "date": dte,
-                 "status": "wraca" if k in fresh else ("bez nowych dowodów" if k in keys else "zniknęło")}
-                for k, (v, dte) in sorted(last.items()) if v == "tak"]
-    rejected = [{"key": k, "date": dte} for k, (v, dte) in sorted(last.items()) if v == "nie" and k in fresh]
+                 "status": "coming back" if k in fresh else ("no new evidence" if k in keys else "gone")}
+                for k, (v, dte) in sorted(last.items()) if v in YES]
+    rejected = [{"key": k, "date": dte} for k, (v, dte) in sorted(last.items()) if v in NO and k in fresh]
     return {"retros": len(hist), "recurring": recurring, "measured": measured, "rejected_again": rejected,
             "assessed": assessed}
 
@@ -362,41 +366,41 @@ def suggestions(d: dict) -> list[dict]:
         for k, n in a["tier_feedback"].items():
             if n >= 2:
                 up = "niski" in k
-                out.append({"key": f"tier:{a['agent']}:{k}", "place": "tier roli",
-                            "text": f"{a['agent']}: „{k}” × {n} — " + ("podnieś tier albo kieruj trudniejsze zadania do "
-                                    "mocniejszego wykonawcy" if up else "rozważ tańszy model dla tej roli")
+                out.append({"key": f"tier:{a['agent']}:{k}", "place": "role tier",
+                            "text": f"{a['agent']}: „{k}” × {n} — " + ("raise the tier or route harder tasks to a "
+                                    "stronger executor" if up else "consider a cheaper model for this role")
                             + " (core-cost-control)"})
     for s, n in d["hints"]["missed"].items():
         if n >= 2:
             out.append({"key": f"hint-missed:{s}", "place": "metadata.keywords",
-                        "text": f"{s}: użyty bez podpowiedzi w {n} sesjach — dopisz słowa z poleceń (core-skill-authoring)"})
+                        "text": f"{s}: used without a hint in {n} sessions — add words from the prompts (core-skill-authoring)"})
     for s, n in d["hints"]["ignored"].items():
         if n >= 3:
-            out.append({"key": f"hint-ignored:{s}", "place": "opis i granice skilla",
-                        "text": f"{s}: podpowiadany bez użycia w {n} sesjach — zawęź słowa lub dodaj no-trigger"})
+            out.append({"key": f"hint-ignored:{s}", "place": "skill description and boundaries",
+                        "text": f"{s}: hinted without use in {n} sessions — narrow the words or add a no-trigger"})
     for k, n in d.get("blocks", {}).items():
         if n >= 3 and k.endswith(":deny"):
-            out.append({"key": f"block:{k}", "place": "lekcja albo reguła w CLAUDE.md",
-                        "text": f"{k.rsplit(':', 1)[0]} odmówił {n} razy — agent ponawia akcję, którą hook odrzuca; ustal z "
-                                "dziennika i transkryptów, czego próbował, i zapisz zamiennik (core-agent-instructions)"})
+            out.append({"key": f"block:{k}", "place": "a lesson or a rule in CLAUDE.md",
+                        "text": f"{k.rsplit(':', 1)[0]} denied {n} times — the agent repeats an action that the hook rejects; find out "
+                                "from the journal and transcripts what it tried, and write down a replacement (core-agent-instructions)"})
         elif n >= 5 and k.endswith(":ask"):
-            out.append({"key": f"block:{k}", "place": "reguła uprawnień",
-                        "text": f"{k.rsplit(':', 1)[0]} pytał o zgodę {n} razy — rozważ wąską regułę allow po filtrze "
-                                "„co może zepsuć” (core-agent-security)"})
-    hint_cause = {"agent-error": ("plan przed kodem i przegląd zmiany",
-                                  "wymaganie było jasne, a poprawka i tak była potrzebna (core-delivery-lifecycle)"),
-                  "spec-gap": ("specyfikacja przed planem",
-                                        "kryteria niepełne przed kodem — `tf spec check` i przegląd specyfikacji")}
+            out.append({"key": f"block:{k}", "place": "a permission rule",
+                        "text": f"{k.rsplit(':', 1)[0]} asked for consent {n} times — consider a narrow allow rule after the "
+                                "\"what can it break\" filter (core-agent-security)"})
+    hint_cause = {"agent-error": ("a plan before the code and a change review",
+                                  "the requirement was clear, but a fix was still needed (core-delivery-lifecycle)"),
+                  "spec-gap": ("a specification before the plan",
+                                        "incomplete criteria before the code — `tf spec check` and a specification review")}
     for cause, shas in d["git"].get("causes", {}).items():
         if len(shas) >= 2 and cause in hint_cause:
             place, why = hint_cause[cause]
             out.append({"key": f"rework-cause:{cause}", "place": place,
-                        "text": f"{len(shas)} poprawki z przyczyną `{cause}` — {why}; szukaj wspólnego warunku"})
+                        "text": f"{len(shas)} fixes with cause `{cause}` — {why}; look for a common condition"})
     for r in d["trend"]["recurring"]:
         kind = r["key"].split(":", 1)[0]
-        if kind in ("trap", "journal", "rework", "revert") and r["last_decision"] != "nie":
-            out.append({"key": r["key"], "place": "reguła w CLAUDE.md",
-                        "text": f"powtórka ({r['seen'] + 1}. retrospektywa z tym sygnałem) — kandydat na regułę "
+        if kind in ("trap", "journal", "rework", "revert") and r["last_decision"] not in NO:
+            out.append({"key": r["key"], "place": "a rule in CLAUDE.md",
+                        "text": f"repeat (retrospective no. {r['seen'] + 1} with this signal) — candidate for a rule "
                                 "(core-agent-instructions)"})
     rejected = {r["key"] for r in d["trend"]["rejected_again"]}
     return [x for x in out if x["key"] not in rejected]
@@ -404,48 +408,48 @@ def suggestions(d: dict) -> list[dict]:
 
 def render(d: dict) -> str:
     w = d["window"]
-    out = [f"# Dane do retrospektywy ({w['since']} – {w['until']})", ""]
+    out = [f"# Retrospective data ({w['since']} – {w['until']})", ""]
     if d["missing"]:
-        out += [f"Brak źródeł: {', '.join(d['missing'])} — wnioski tylko z pozostałych.", ""]
+        out += [f"Missing sources: {', '.join(d['missing'])} — conclusions come only from the others.", ""]
     for gp in d.get("gaps", []):
-        out += [f"**Dane niepełne:** logi hooków kończą się {gp['last_log'][:16]}, a po nich jest {gp['after_commits']} "
-                "commitów. Hooki fabryki prawdopodobnie nie działały (np. sesja z kilkoma repozytoriami albo uruchomiona "
-                "z katalogu nadrzędnego) — wnioski o kosztach, tierach i podpowiedziach dotyczą tylko czasu przed luką.", ""]
-    out += ["## Tokeny per agent", "| Agent | Wyjście | Żądania | Sesje | Modele | Tier |", "|---|---|---|---|---|---|"]
+        out += [f"**Incomplete data:** hook logs end at {gp['last_log'][:16]}, and after them there are {gp['after_commits']} "
+                "commits. The factory hooks probably did not run (e.g. a session with several repositories or one started "
+                "from a parent directory) — conclusions about costs, tiers and hints cover only the time before the gap.", ""]
+    out += ["## Tokens per agent", "| Agent | Output | Requests | Sessions | Models | Tier |", "|---|---|---|---|---|---|"]
     for a in d["tokens"]["agents"]:
         tf = ", ".join(f"{k} × {n}" for k, n in a["tier_feedback"].items()) or "—"
         out.append(f"| {a['agent']} | {a['output']} | {a['requests']} | {a['sessions']} | "
                    f"{', '.join(a['models']) or '—'} | {tf} |")
     if d.get("blocks"):
-        out += ["", "## Blokady hooków", "| Hook | Decyzja | Ile |", "|---|---|---|"]
+        out += ["", "## Hook blocks", "| Hook | Decision | Count |", "|---|---|---|"]
         out += [f"| {k.rsplit(':', 1)[0]} | {k.rsplit(':', 1)[1]} | {n} |" for k, n in d["blocks"].items()]
     g = d["git"]
     if g.get("causes"):
-        out += ["", "Przyczyny poprawek (`Rework-Cause:`): "
+        out += ["", "Fix causes (`Rework-Cause:`): "
                 + ", ".join(f"{c} × {len(s)}" for c, s in g["causes"].items())]
-    out += ["", f"Dziennik: {d['journal']['entries']} wpisów · pułapki: {len(d['traps'])} · lekcje: {len(d['lessons'])} · "
-                f"git: {g['commits']} commitów, WIP {g['wip']}, cofnięcia {len(g['reverts'])}, poprawki po sobie "
-                f"{len(g['rework'])}", "", "## Dowody"]
+    out += ["", f"Journal: {d['journal']['entries']} entries · pitfalls: {len(d['traps'])} · lessons: {len(d['lessons'])} · "
+                f"git: {g['commits']} commits, WIP {g['wip']}, reverts {len(g['reverts'])}, fixes after own commits "
+                f"{len(g['rework'])}", "", "## Evidence"]
     if d.get("overlap"):
-        out[2:2] = [f"**Okno nachodzi** na poprzednią retrospektywę (do {d['overlap']['previous_until']}): dowody o tej "
-                    "samej treści są oznaczone jako już ocenione i nie dają propozycji. Następnym razem zacznij "
-                    "`--since` dzień po jej końcu.", ""]
+        out[2:2] = [f"**The window overlaps** the previous retrospective (until {d['overlap']['previous_until']}): evidence with the "
+                    "same content is marked as already assessed and gives no proposals. Next time start "
+                    "`--since` the day after its end.", ""]
     done = set(d["trend"].get("assessed", []))
-    out += [f"- **{e['id']}** [{e['kind']}] {e['text']}" + (" _(już ocenione)_" if e["key"] in done else "")
-            for e in d["evidence"]] or ["- brak sygnałów w oknie"]
+    out += [f"- **{e['id']}** [{e['kind']}] {e['text']}" + (" _(already assessed)_" if e["key"] in done else "")
+            for e in d["evidence"]] or ["- no signals in the window"]
     tr = d["trend"]
-    out += ["", f"## Trend (poprzednich retrospektyw: {tr['retros']})"]
-    out += [f"- powtórka: `{x['key']}` (było w {x['seen']}, ostatnia decyzja: {x['last_decision']})" for x in tr["recurring"]]
-    out += [f"- skutek zmiany z {x['date']}: `{x['key']}` — {x['status']}" for x in tr["measured"]]
-    out += [f"- odrzucone {x['date']}, znów jest: `{x['key']}` — proponuj tylko z nowymi dowodami" for x in tr["rejected_again"]]
+    out += ["", f"## Trend (previous retrospectives: {tr['retros']})"]
+    out += [f"- repeat: `{x['key']}` (seen in {x['seen']}, last decision: {x['last_decision']})" for x in tr["recurring"]]
+    out += [f"- effect of the change from {x['date']}: `{x['key']}` — {x['status']}" for x in tr["measured"]]
+    out += [f"- rejected {x['date']}, back again: `{x['key']}` — propose it only with new evidence" for x in tr["rejected_again"]]
     if tr.get("assessed"):
-        out.append(f"- już ocenione w poprzedniej retrospektywie (to samo zdarzenie): {', '.join(f'`{k}`' for k in tr['assessed'])}")
+        out.append(f"- already assessed in the previous retrospective (the same event): {', '.join(f'`{k}`' for k in tr['assessed'])}")
     if not (tr["recurring"] or tr["measured"] or tr["rejected_again"] or tr.get("assessed")):
-        out.append("- brak (pierwsza retrospektywa albo nic się nie powtarza)")
-    out += ["", "## Propozycje z danych (do oceny, nie decyzje)"]
-    out += [f"- `{x['key']}` → {x['place']}: {x['text']}" for x in d["suggestions"]] or ["- brak sygnałów ponad progi"]
+        out.append("- none (the first retrospective or nothing repeats)")
+    out += ["", "## Proposals from the data (to assess, not decisions)"]
+    out += [f"- `{x['key']}` → {x['place']}: {x['text']}" for x in d["suggestions"]] or ["- no signals above the thresholds"]
     if d["lessons"]:
-        out += ["", "## Istniejące lekcje (powtórka → propozycja do CLAUDE.md)"] + [f"- {x}" for x in d["lessons"]]
+        out += ["", "## Existing lessons (a repeat → a proposal for CLAUDE.md)"] + [f"- {x}" for x in d["lessons"]]
     return "\n".join(out) + "\n"
 
 
@@ -467,22 +471,22 @@ def main(argv: list[str]) -> int:
         since = dt.date.fromisoformat(opts["--since"]) if opts.get("--since") else \
             until - dt.timedelta(days=int(opts.get("--days") or 14))
     except ValueError as e:
-        print(f"✗ Zła data lub liczba dni: {e}")
+        print(f"✗ Wrong date or number of days: {e}")
         return 2
     path = root / RETRO_DIR / f"{until.strftime('%Y%m%d')}-retro.json"
     if decide:
         pairs = [x.rpartition("=") for x in decide]
         bad = [x for x, (k, _, v) in zip(decide, pairs) if not k or v not in DECISIONS]
         if bad:
-            print(f"✗ Decyzja ma postać KLUCZ=tak|nie|później: {', '.join(bad)}")
+            print(f"✗ A decision has the form KEY=yes|no|later: {', '.join(bad)}")
             return 2
         if not path.is_file():
-            print(f"✗ Brak {path.relative_to(root)} — najpierw --save.")
+            print(f"✗ Missing {path.relative_to(root)} — run --save first.")
             return 2
         saved = json.loads(path.read_text(encoding="utf-8"))
         saved.setdefault("decisions", {}).update({k: v for k, _, v in pairs})
         path.write_text(json.dumps(saved, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-        print(f"✓ Decyzje zapisane w {path.relative_to(root)}: " + ", ".join(f"{k}={v}" for k, _, v in pairs))
+        print(f"✓ Decisions saved in {path.relative_to(root)}: " + ", ".join(f"{k}={v}" for k, _, v in pairs))
         return 0
     data = collect(root, since, until)
     if opts.get("--save"):
@@ -496,8 +500,8 @@ def main(argv: list[str]) -> int:
                 "suggestions": data["suggestions"], "decisions": old.get("decisions", {})}
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(snap, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-        print(f"✓ Zapisano {path.relative_to(root)} (dowodów: {len(data['evidence'])}, decyzji: {len(snap['decisions'])}). "
-              "Decyzje człowieka: --decide KLUCZ=tak|nie|później")
+        print(f"✓ Saved {path.relative_to(root)} (evidence: {len(data['evidence'])}, decisions: {len(snap['decisions'])}). "
+              "Human decisions: --decide KEY=yes|no|later")
         return 0
     print(json.dumps(data, ensure_ascii=False, indent=1) if opts.get("--json") else render(data), end="" if not
           opts.get("--json") else "\n")

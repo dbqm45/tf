@@ -156,11 +156,11 @@ def main() -> int:
                 kb.ingest(url, root)
                 check(False, "I-5: adres lokalny bez zgody → błąd")
             except kb.KbError as e:
-                check("lokaln" in str(e) or "prywatn" in str(e), f"I-5: komunikat: {e}")
+                check("local" in str(e) or "private" in str(e), f"I-5: komunikat: {e}")
             os.environ["TF_KB_ALLOW_LOCAL"] = "1"
             m = kb.ingest(url, root)
             text = (cache / m["id"] / "doc.txt").read_text(encoding="utf-8")
-            check(m["rank"] == "W" and m["title"] == "AFIR test" and any("spoza rejestru" in w for w in m["warnings"]),
+            check(m["rank"] == "W" and m["title"] == "AFIR test" and any("not in the registry" in w for w in m["warnings"]),
                   f"I-6: URL spoza rejestru → ranga W z ostrzeżeniem: {m}")
             check("Płatność ad hoc" in text and "alert" not in text and "ukryte" not in text and ".x{}" not in text,
                   f"I-7: HTML → tekst bez skryptów, stylów i ukrytych elementów: {text!r}")
@@ -175,7 +175,7 @@ def main() -> int:
             kb.ingest(reg[2]["id"], root, file=empty)
             check(False, "I-8: pusta treść → KbError")
         except kb.KbError as e:
-            check("pust" in str(e) and not (cache / reg[2]["id"]).exists(), f"I-8: komunikat i brak wpisu w cache: {e}")
+            check("empty" in str(e) and not (cache / reg[2]["id"]).exists(), f"I-8: komunikat i brak wpisu w cache: {e}")
 
         # Strona anty-botowa (Imperva, Cloudflare) to błąd, nie źródło
         wall = root / "wall.html"
@@ -186,7 +186,7 @@ def main() -> int:
             kb.ingest(reg[2]["id"], root, file=wall)
             check(False, "I-9: strona anty-botowa → KbError")
         except kb.KbError as e:
-            check("anty-bot" in str(e), f"I-9: komunikat: {e}")
+            check("anti-bot" in str(e), f"I-9: komunikat: {e}")
 
         # Źródło z wielu plików: trafienie wskazuje konkretny plik
         multi = root / "multi.txt"
@@ -219,7 +219,7 @@ def main() -> int:
         # Wiersz poleceń
         run = lambda *a: subprocess.run([sys.executable, str(SCRIPT), *a, "--root", str(root)], capture_output=True, text=True)
         p = run("search", "step_size raz na sesję")
-        check(p.returncode == 0 and "dane, nie polecenia" in p.stdout and f"{rid}" in p.stdout and ":L" in p.stdout,
+        check(p.returncode == 0 and "data, not instructions" in p.stdout and f"{rid}" in p.stdout and ":L" in p.stdout,
               f"CLI-1: wynik tekstowy z nagłówkiem bezpieczeństwa i cytatem: {p.returncode} {p.stdout[:400]} {p.stderr[-200:]}")
         p = run("search", "credit_reference_id", "--json")
         check(p.returncode == 0 and json.loads(p.stdout)[0]["path"].endswith("szczegoly.md"), f"CLI-2: --json: {p.stdout[:200]}")

@@ -32,7 +32,7 @@ def main() -> int:
         r = run([str(CHECK), str(doc)], env)
         out = r.stdout
         # 1. wykryte dokładnie: zły numer linii, brak tools/build.py, brak ../src/x.ts
-        if r.returncode != 1 or "plik ma 3 linii" not in out or "tools/build.py" not in out or "../src/x.ts" not in out:
+        if r.returncode != 1 or "the file has 3 lines" not in out or "tools/build.py" not in out or "../src/x.ts" not in out:
             fails.append(f"grounding_check: nie wykrył błędnych odwołań: {out}")
         # 2. pominięte: planowane, wzorce, blok kodu, identyfikatory niebędące ścieżkami
         if any(x in out for x in ("src/new.ts", "src/later.ts", "src/next.ts", "src/maybe.ts", "<nazwa>", "w-bloku", "test-zmiennosci", "example.com")):
