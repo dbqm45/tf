@@ -51,7 +51,7 @@ def main() -> int:
 
         # 1. kod przed testem → blokada
         r = pre("src/price.ts")
-        check(r and r["permissionDecision"] == "deny" and "napisz test" in r["permissionDecisionReason"],
+        check(r and r["permissionDecision"] == "deny" and "write a test" in r["permissionDecisionReason"],
               f"kod przed testem powinien być zablokowany: {r}")
         # 2. test → czerwony → kod dozwolony
         post_edit("src/price.test.ts")
@@ -80,7 +80,7 @@ def main() -> int:
         for out in ("No test files found, exiting with code 1", "collected 0 items\n no tests ran",
                     "src/price.test.ts(3,5): error TS1005: ';' expected."):
             r = call("PostToolUseFailure", "Bash", {"command": "npx vitest run"}, {"stdout": out})
-            check(r and "nie wykonało asercji" in r.get("additionalContext", ""), f"pusty czerwony → ostrzeżenie: {out!r}: {r}")
+            check(r and "executed no assertions" in r.get("additionalContext", ""), f"pusty czerwony → ostrzeżenie: {out!r}: {r}")
         for out in ("Error: Cannot find module '../src/price' imported from src/price.test.ts", "Tests  1 failed"):
             r = call("PostToolUseFailure", "Bash", {"command": "npx vitest run"}, {"stdout": out})
             check(r is None, f"prawdziwy czerwony bez ostrzeżenia: {out!r}: {r}")
@@ -93,7 +93,7 @@ def main() -> int:
         post_edit("src/price.test.ts", session="s3")
         run_tests(failed=False, session="s3")
         r = pre("src/price.ts", session="s3")
-        check(r and "PRZESZEDŁ" in r["permissionDecisionReason"], f"zielony nowy test: ostrzeżenie {r}")
+        check(r and "PASSED" in r["permissionDecisionReason"], f"zielony nowy test: ostrzeżenie {r}")
         post_edit("src/legacy.test.ts", session="s4")
         run_tests(failed=False, session="s4")
         check(pre("src/legacy.ts", session="s4") is None, "oznaczony test charakteryzujący dopuszcza refaktoryzację")
@@ -107,7 +107,7 @@ def main() -> int:
         r = pre("src/price.ts", session="s5", env_extra=env)
         post_edit("src/price.test.ts", session="s5", env_extra=env)
         r2 = pre("src/price.ts", session="s5", env_extra=env)
-        check(r and "bez nowego testu" in r["permissionDecisionReason"] and r2 is None,
+        check(r and "without a new test" in r["permissionDecisionReason"] and r2 is None,
               f"reguła B: limit zmian i reset po nowym teście — {r} / {r2}")
         # 6. osobny stan dla subagenta
         r = pre("src/price.ts", agent="a1")          # sesja s1 jest „rozpoczęta”, subagent a1 — nie
@@ -144,7 +144,7 @@ def main() -> int:
         call("PostToolUse", "Bash", {"command": "python3 tests/test_cart.py"}, {"stdout": "✓ 2/2", "exit_code": 0},
              session="s8c")
         r = pre("app/cart.py", session="s8c")
-        check(r and "PRZESZEDŁ" in r["permissionDecisionReason"], f"skrypt testów zielony = zielony: {r}")
+        check(r and "PASSED" in r["permissionDecisionReason"], f"skrypt testów zielony = zielony: {r}")
 
         # 9. reguła C: osłabienie testu (mniej asercji, usunięty test, skip/xfail) — domyślnie ostrzeżenie
         def raw(tool, inp, env_extra=None):
@@ -168,8 +168,8 @@ def main() -> int:
                  "new_string": "    assert rabat(200) == 10\n"}
         r = raw("Edit", fewer)
         hso = r.get("hookSpecificOutput", {})
-        check("systemMessage" in r and "osłabi" in r["systemMessage"] and "permissionDecision" not in hso
-              and "osłabi" in hso.get("additionalContext", ""),
+        check("systemMessage" in r and "weaken" in r["systemMessage"] and "permissionDecision" not in hso
+              and "weaken" in hso.get("additionalContext", ""),
               f"mniej asercji → domyślnie ostrzeżenie dla człowieka i kontekst dla modelu, bez blokady: {r}")
         r = raw("Edit", fewer, {"CLAUDE_TDD_WEAKEN": "ask"})
         check(r.get("hookSpecificOutput", {}).get("permissionDecision") == "ask", f"CLAUDE_TDD_WEAKEN=ask: {r}")
@@ -262,7 +262,7 @@ def main() -> int:
         b = "FAILED tests/test_rabat.py::test_ujemne - ValueError: x"
         check(fail(a1, "l1") is None and fail(a2, "l1") is None, "1. i 2. powtórzenie → bez komunikatu")
         r = fail(a1, "l1")
-        check(r and "zmień podejście" in r.get("additionalContext", ""), f"3. powtórzenie → komunikat: {r}")
+        check(r and "change the approach" in r.get("additionalContext", ""), f"3. powtórzenie → komunikat: {r}")
         check(r and "permissionDecision" not in r, "pętla nie blokuje")
         fail(a1, "l2"), fail(a1, "l2"), fail(b, "l2")
         check(fail(a1, "l2") is None, "inna porażka zeruje licznik")
@@ -275,7 +275,7 @@ def main() -> int:
         vit = "FAIL  src/price.test.ts > rabat > progi\nAssertionError: expected 90 to be 80"
         for i in range(3):
             r = fail(vit, "l5")
-        check(r and "zmień podejście" in r.get("additionalContext", ""), f"vitest: 3× ten sam test → komunikat: {r}")
+        check(r and "change the approach" in r.get("additionalContext", ""), f"vitest: 3× ten sam test → komunikat: {r}")
 
         # 13. reguła F: zmiana plików chronionych i sekretów przez polecenie → ostrzeżenie (także przy CLAUDE_TDD=off)
         def guard(cmd, session, env_extra=None, event="PostToolUse", tool="Bash", inp=None):

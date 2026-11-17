@@ -79,18 +79,18 @@ def oracle_reason(rel: str, root: str) -> str | None:
     if m:
         key, name = m.group(1), m.group(2)
         if key is None or name == "task.json" or name.startswith("evidence/"):
-            return (f"{rel} pisze tylko `tf task` (stan zadania, dowody, spis) — użyj poleceń tf task zamiast edycji pliku.")
+            return (f"{rel} is written only by `tf task` (the task state, evidence, index) — use tf task commands instead of editing the file.")
         task = load_task(root, key)
         stage = task.get("stage")
         if not task or stage == CLOSED:
             return None
         art = (task.get("artifacts") or {}).get(name) or {}
         if art.get("status") == "approved":
-            return (f"{rel} jest zatwierdzony przez człowieka w zadaniu {key}. Zmiana wymaga jego decyzji: "
-                    f"tf task reopen {key} {name} --by human:<id> --reason \"<powód>\".")
+            return (f"{rel} was approved by a human in task {key}. A change needs their decision: "
+                    f"tf task reopen {key} {name} --by human:<id> --reason \"<reason>\".")
         if name == "spec.md" and stage in LOCKED_FROM:
-            return (f"specyfikacja zadania {key} ({rel}) jest w etapie „{stage}” podstawą testów i planu. Jej zmiana "
-                    f"to zmiana wymagań i wymaga zgody człowieka; po zmianie plan trzeba odświeżyć.")
+            return (f"the spec of task {key} ({rel}) is, at the stage \"{stage}\", the basis of the tests and the plan. Changing "
+                    f"it changes the requirements and needs a human's consent; after the change the plan must be refreshed.")
         return None
     tasks_dir = os.path.join(root, TASKS)
     try:
@@ -100,8 +100,8 @@ def oracle_reason(rel: str, root: str) -> str | None:
     for key in keys:
         task = load_task(root, key)
         if task and task.get("stage") != CLOSED and rel in (task.get("frozen") or {}):
-            return (f"{rel} jest zamrożony w zadaniu {key} (np. zatwierdzony test akceptacyjny). Zmiana wymaga decyzji "
-                    f"człowieka: tf task reopen {key} {rel} --by human:<id> --reason \"<powód>\".")
+            return (f"{rel} is frozen in task {key} (e.g. an approved acceptance test). A change needs a human's "
+                    f"decision: tf task reopen {key} {rel} --by human:<id> --reason \"<reason>\".")
     return None
 
 
@@ -134,9 +134,9 @@ def main() -> None:
     for p in targets:
         norm = p.replace("\\", "/")
         if SECRET_PATHS.search(norm) and not SAFE_ENV.search(norm):
-            decide("deny", f"Dostęp do pliku z sekretami ({p}) jest zablokowany. Używaj zmiennych środowiskowych i plików *.example.")
+            decide("deny", f"Access to a file with secrets ({p}) is blocked. Use environment variables and *.example files.")
         if tool in ("Edit", "Write", "NotebookEdit") and GUARDRAILS.search(norm):
-            decide("ask", f"Zmiana konfiguracji zabezpieczeń lub .git ({p}) wymaga zgody człowieka.")
+            decide("ask", f"A change to the safeguards' configuration or .git ({p}) needs a human's consent.")
         if tool in ("Edit", "Write", "NotebookEdit"):
             root = data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", "")
             rel = project_relative(norm, root)
@@ -147,9 +147,9 @@ def main() -> None:
             rel = project_relative(norm, data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", ""))
             if (CONTEXT_ANY.search(norm) or (rel is not None and CONTEXT_ROOT.search(rel))
                     or (tool == "Read" and LOCKFILES.search(norm))):
-                decide("deny", f"Ekonomia kontekstu: {p} to zależności, artefakt builda lub lockfile. Szukaj konkretnego "
-                               "miejsca (Grep po pliku źródłowym, grep -n nazwy paczki w lockfile'u); gdy naprawdę "
-                               "potrzebujesz tego pliku, poproś człowieka.")
+                decide("deny", f"Context economy: {p} is dependencies, a build artifact or a lockfile. Search for the specific "
+                               "place (Grep in a source file, grep -n for the package name in the lockfile); when you really "
+                               "need this file, ask a human.")
     sys.exit(0)
 
 

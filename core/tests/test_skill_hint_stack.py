@@ -79,7 +79,7 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(spring / ".claude" / "hooks" / "skill_hint.py"), "--explain", q],
                            capture_output=True, text=True, timeout=60, cwd=spring,
                            env={**os.environ, "CLAUDE_PROJECT_DIR": str(spring)})
-        check("poza stackiem" in r.stdout and "fw-nestjs" in r.stdout,
+        check("outside the project's stack" in r.stdout and "fw-nestjs" in r.stdout,
               f"SH-6: --explain pokazuje skille odfiltrowane jako poza stackiem: {r.stdout}")
     for f in fails:
         print(f"✗ {f}")

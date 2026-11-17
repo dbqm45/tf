@@ -41,14 +41,14 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "skills" / "core-project-record" / "templates"
 PHASES = [
-    ("discovery", "01-discovery", "Odkrywanie"),
-    ("domain", "02-domain", "Domena"),
-    ("requirements", "03-requirements", "Wymagania"),
-    ("architecture", "04-architecture", "Architektura i stack"),
+    ("discovery", "01-discovery", "Discovery"),
+    ("domain", "02-domain", "Domain"),
+    ("requirements", "03-requirements", "Requirements"),
+    ("architecture", "04-architecture", "Architecture and stack"),
     ("plan", "05-plan", "Plan"),
-    ("delivery", "06-delivery", "Realizacja"),
-    ("review", "07-review", "Przeglądy"),
-    ("operations", "08-operations", "Utrzymanie"),
+    ("delivery", "06-delivery", "Delivery"),
+    ("review", "07-review", "Reviews"),
+    ("operations", "08-operations", "Operations"),
 ]
 PHASE_DIR = {p: d for p, d, _ in PHASES}
 PHASE_LABEL = {p: label for p, _, label in PHASES}
@@ -146,8 +146,8 @@ def language_warnings(rec: Path) -> list[str]:
             issues = [i for i in mod.lint_file(f) if i["priority"] in ("WYSOKI", "ŚREDNI")]
             if issues:
                 first = issues[0]
-                out.append(f"{rel}: {len(issues)} uwag językowych (np. l.{first['line']}: {first['fragment']} → "
-                           f"{first['suggestion']}) — polish_lint.py lub polish-editor")
+                out.append(f"{rel}: {len(issues)} language remarks (e.g. l.{first['line']}: {first['fragment']} → "
+                           f"{first['suggestion']}) — polish_lint.py or polish-editor")
         return out
     except Exception:
         return []
@@ -157,68 +157,68 @@ def check(root: Path) -> tuple[list[str], list[str]]:
     rec = record_dir(root)
     errors, warnings = [], []
     if not rec.exists():
-        return [f"brak {rec.relative_to(root)} — uruchom: project_record.py init"], []
+        return [f"no {rec.relative_to(root)} — run: project_record.py init"], []
     items = artifacts(rec)
     by_rel = {f"docs/project/{i['rel']}": i for i in items}
     for it in items:
         meta, rel = it["meta"], it["rel"]
         if meta is None:
             if it["main"]:
-                errors.append(f"{rel}: brak nagłówka (frontmatter) — główny artefakt fazy")
+                errors.append(f"{rel}: no header (frontmatter) — the main artifact of a phase")
             continue
         for k in REQUIRED_KEYS:
             if k not in meta or meta[k] in ("", None):
-                errors.append(f"{rel}: brak pola '{k}' w nagłówku")
+                errors.append(f"{rel}: no '{k}' field in the header")
         raw = "\n".join(f"{k}: {v}" for k, v in meta.items())
         if "<" in raw and ">" in raw:
-            errors.append(f"{rel}: w nagłówku zostały znaczniki szablonu <…>")
+            errors.append(f"{rel}: template markers <…> are left in the header")
         status, phase, kind = meta.get("status"), meta.get("phase"), meta.get("artifact")
         if status and status not in STATUSES:
-            errors.append(f"{rel}: nieznany status '{status}' (dozwolone: {', '.join(STATUSES)})")
+            errors.append(f"{rel}: unknown status '{status}' (allowed: {', '.join(STATUSES)})")
         if phase and phase != "meta":
             if phase not in PHASE_DIR:
-                errors.append(f"{rel}: nieznana faza '{phase}'")
+                errors.append(f"{rel}: unknown phase '{phase}'")
             elif not rel.startswith(PHASE_DIR[phase] + "/"):
-                errors.append(f"{rel}: faza '{phase}', a plik nie leży w {PHASE_DIR[phase]}/")
+                errors.append(f"{rel}: phase '{phase}', but the file is not in {PHASE_DIR[phase]}/")
         if kind not in NO_SECTIONS:
             tldr = section(it["body"], "TL;DR")
             if tldr is None:
-                errors.append(f"{rel}: brak sekcji „## TL;DR”")
+                errors.append(f"{rel}: no \"## TL;DR\" section")
             elif not tldr or tldr.startswith("<"):
-                errors.append(f"{rel}: pusta sekcja TL;DR")
+                errors.append(f"{rel}: empty TL;DR section")
             elif len([l for l in tldr.splitlines() if l.strip()]) > 12:
-                warnings.append(f"{rel}: TL;DR dłuższy niż ~10 linii — skróć (czyta go każdy następny agent)")
+                warnings.append(f"{rel}: TL;DR longer than ~10 lines — shorten it (every next agent reads it)")
             handoff = section(it["body"], "Przekazanie")
             if handoff is None and status != "superseded":
-                errors.append(f"{rel}: brak sekcji „## Handoff” (dawniej „## Przekazanie”)")
+                errors.append(f"{rel}: no \"## Handoff\" section (formerly \"## Przekazanie\")")
             elif handoff is not None and status in ("proposed", "accepted") and (
                     re.search(r"<[^>]+>", handoff) or re.search(r":\*?\*?\s*…\s*$", handoff, re.M)):
-                errors.append(f"{rel}: Handoff zawiera niewypełnione pola szablonu (<…> lub …)")
+                errors.append(f"{rel}: Handoff has unfilled template fields (<…> or …)")
         if kind not in ("journal", "decisions") and status in ("proposed", "accepted"):
             leftovers = re.findall(r"^[^|`\n]*<[A-ZĄĆĘŁŃÓŚŹŻa-ząćęłńóśźż][^>\n]{3,}>", it["body"], re.M)
             if leftovers:
-                warnings.append(f"{rel}: pozostałości szablonu w treści, np. {leftovers[0].strip()[:60]!r}")
+                warnings.append(f"{rel}: template leftovers in the content, e.g. {leftovers[0].strip()[:60]!r}")
         if status == "superseded" and not meta.get("superseded_by"):
-            errors.append(f"{rel}: status superseded bez pola superseded_by")
+            errors.append(f"{rel}: status superseded without the superseded_by field")
         for inp in meta.get("inputs") or []:
             target = by_rel.get(inp)
             if not (root / inp).exists():
-                errors.append(f"{rel}: wejście '{inp}' nie istnieje")
+                errors.append(f"{rel}: the input '{inp}' does not exist")
             elif status == "accepted" and target and target["meta"] and target["meta"].get("status") != "accepted":
-                warnings.append(f"{rel}: zaakceptowany, ale wejście {inp} ma status '{target['meta'].get('status')}'")
+                warnings.append(f"{rel}: accepted, but the input {inp} has the status '{target['meta'].get('status')}'")
     dec = rec / "decisions.md"
     if dec.exists():
         ids = re.findall(r"^\|\s*(D-\d+)\s*\|", dec.read_text(encoding="utf-8"), re.M)
         dup = sorted({i for i in ids if ids.count(i) > 1})
         if dup:
-            errors.append(f"decisions.md: zduplikowane ID decyzji {dup}")
+            errors.append(f"decisions.md: duplicated decision IDs {dup}")
     warnings += language_warnings(rec)
     for phase, d, _ in PHASES:
         folder = rec / d
         mains = {"discovery": ["brief.md", "pre-flight.md"], "domain": ["strategic.md", "areas.md"], "requirements": ["requirements.md"],
                  "plan": ["plan.md", "test-plan.md"]}.get(phase)
         if mains and folder.exists() and any(folder.rglob("*.md")) and not any((folder / m).exists() for m in mains):
-            warnings.append(f"{d}/: są pliki, ale brak głównego artefaktu {' ani '.join(mains)}")
+            warnings.append(f"{d}/: there are files, but no main artifact {' nor '.join(mains)}")
     return errors, warnings
 
 
@@ -260,11 +260,11 @@ def build_index(root: Path) -> str:
     rec = record_dir(root)
     s = summary(root)
     lines = [
-        "<!-- WYGENEROWANO przez .claude/hooks/project_record.py — nie edytuj ręcznie -->",
-        "# Dziennik projektu", "",
-        f"**Bieżąca faza:** {PHASE_LABEL.get(s['current_phase'], '—')}  ·  "
-        f"**Do akceptacji:** {len(s['to_accept'])}  ·  [Dziennik zdarzeń](journal.md)  ·  [Rejestr decyzji](decisions.md)", "",
-        "| Faza | Artefakt | Status | Wersja | Autor | Aktualizacja | TL;DR |", "|---|---|---|---|---|---|---|",
+        "<!-- GENERATED by .claude/hooks/project_record.py — do not edit by hand -->",
+        "# Project record", "",
+        f"**Current phase:** {PHASE_LABEL.get(s['current_phase'], '—')}  ·  "
+        f"**To accept:** {len(s['to_accept'])}  ·  [Event journal](journal.md)  ·  [Decision register](decisions.md)", "",
+        "| Phase | Artifact | Status | Version | Author | Updated | TL;DR |", "|---|---|---|---|---|---|---|",
     ]
     for it in sorted(s["items"], key=lambda i: (phase_index(i["meta"]["phase"]), i["rel"])):
         m = it["meta"]
@@ -272,16 +272,16 @@ def build_index(root: Path) -> str:
                      f"{m.get('version', '')} | {m.get('author', '')} | {m.get('updated', '')} | {first_line(section(it['body'], 'TL;DR'))} |")
     wips = wip_items(root)
     if wips:
-        lines += ["", "## Praca w toku", "", "| Zadanie | Status | Aktualizacja | Następna czynność |", "|---|---|---|---|"]
+        lines += ["", "## Work in progress", "", "| Task | Status | Updated | Next step |", "|---|---|---|---|"]
         lines += [f"| [{title(w['body'], w['slug'])}](wip/{w['slug']}.md) | {w['meta'].get('status', 'active')} | "
                   f"{w['meta'].get('updated', '')} | {first_line(section(w['body'], 'Następna czynność'))} |" for w in wips]
     if s["latest"]:
         handoff = section(s["latest"]["body"], "Przekazanie")
         if handoff:
-            lines += ["", f"## Ostatnie przekazanie — z [{s['latest']['rel']}]({s['latest']['rel']})", "", handoff]
+            lines += ["", f"## Latest handoff — from [{s['latest']['rel']}]({s['latest']['rel']})", "", handoff]
     rows = journal_rows(rec, 5)
     if rows:
-        lines += ["", "## Ostatnie zdarzenia", "", "| Kiedy | Kto | Faza | Zdarzenie |", "|---|---|---|---|", *rows]
+        lines += ["", "## Recent events", "", "| When | Who | Phase | Event |", "|---|---|---|---|", *rows]
     return "\n".join(lines) + "\n"
 
 
@@ -297,18 +297,18 @@ def status_text(root: Path, compact: bool = False) -> str:
         return ""
     s = summary(root)
     out = wip_lines(root, compact)
-    out.append(f"Dziennik projektu: docs/project/README.md · bieżąca faza: {PHASE_LABEL.get(s['current_phase'], 'brak artefaktów')}")
+    out.append(f"Project record: docs/project/README.md · current phase: {PHASE_LABEL.get(s['current_phase'], 'no artifacts')}")
     if s["to_accept"]:
-        out.append("Do akceptacji przez człowieka: " + ", ".join(i["rel"] for i in s["to_accept"]))
+        out.append("For a human to accept: " + ", ".join(i["rel"] for i in s["to_accept"]))
     if s["latest"]:
         handoff = section(s["latest"]["body"], "Przekazanie") or ""
         h = [l for l in handoff.splitlines() if l.strip()][: 4 if compact else 20]
         if h:
-            out.append(f"Ostatnie przekazanie ({s['latest']['rel']}):")
+            out.append(f"Latest handoff ({s['latest']['rel']}):")
             out += ["  " + l for l in h]
     recent = journal_rows(rec, 3)
     if recent:
-        out.append("Ostatnie zdarzenia (journal.md) — uwzględnij decyzje i odpowiedzi użytkownika:")
+        out.append("Recent events (journal.md) — take the user's decisions and answers into account:")
         out += ["  " + " · ".join(c.strip() for c in r.strip("|").split("|")) for r in recent]
     if not compact:
         out.append("")
@@ -323,14 +323,14 @@ def report(root: Path, out: Path | None) -> Path:
     s = summary(root)
     brief = rec / "01-discovery" / "brief.md"
     name = title(parse(brief)[1], root.name) if brief.exists() else root.name
-    lines = [f"# Raport projektu: {name}", "", f"Wygenerowano: {datetime.now():%Y-%m-%d %H:%M} · bieżąca faza: "
-             f"{PHASE_LABEL.get(s['current_phase'], '—')}", "", "## Stan artefaktów", "",
-             "| Faza | Artefakt | Status | Autor | Aktualizacja |", "|---|---|---|---|---|"]
+    lines = [f"# Project report: {name}", "", f"Generated: {datetime.now():%Y-%m-%d %H:%M} · current phase: "
+             f"{PHASE_LABEL.get(s['current_phase'], '—')}", "", "## Artifact status", "",
+             "| Phase | Artifact | Status | Author | Updated |", "|---|---|---|---|---|"]
     ordered = sorted(s["items"], key=lambda i: (phase_index(i["meta"]["phase"]), i["rel"]))
     for it in ordered:
         m = it["meta"]
         lines.append(f"| {PHASE_LABEL[m['phase']]} | {it['rel']} | {m.get('status')} | {m.get('author')} | {m.get('updated')} |")
-    lines += ["", "## Podsumowania faz"]
+    lines += ["", "## Phase summaries"]
     for it in ordered:
         if it["meta"].get("status") in ("superseded", "rejected"):
             continue
@@ -341,7 +341,7 @@ def report(root: Path, out: Path | None) -> Path:
     if dec.exists():
         rows = [l for l in dec.read_text(encoding="utf-8").splitlines() if re.match(r"^\|\s*D-\d+", l)]
         if rows:
-            lines += ["", "## Decyzje", "", "| ID | Data | Decyzja | Uzasadnienie | Status | Autor | Szczegóły |",
+            lines += ["", "## Decisions", "", "| ID | Date | Decision | Rationale | Status | Author | Details |",
                       "|---|---|---|---|---|---|---|", *rows]
     questions = []
     for it in ordered:
@@ -351,10 +351,10 @@ def report(root: Path, out: Path | None) -> Path:
             if l.startswith(("- [ ]", "- ", "* ")) and not l.startswith("- [x]") and "…" not in l:
                 questions.append(f"{l}  _({it['rel']})_")
     if questions:
-        lines += ["", "## Otwarte pytania", "", *questions]
+        lines += ["", "## Open questions", "", *questions]
     rows = journal_rows(rec, 15)
     if rows:
-        lines += ["", "## Ostatnie zdarzenia", "", "| Kiedy | Kto | Faza | Zdarzenie |", "|---|---|---|---|", *rows]
+        lines += ["", "## Recent events", "", "| When | Who | Phase | Event |", "|---|---|---|---|", *rows]
     target = out or rec / "exports" / f"report-{date.today():%Y-%m-%d}.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -378,7 +378,7 @@ def init(root: Path) -> Path:
     for name in ("journal.md", "decisions.md"):
         if not (rec / name).exists():
             (rec / name).write_text(from_template(name), encoding="utf-8")
-    log(root, "system", "meta", "Utworzono dziennik projektu (docs/project/)")
+    log(root, "system", "meta", "Created the project record (docs/project/)")
     write_index(root)
     return rec
 
@@ -406,7 +406,7 @@ PL = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
 
 def slugify(text: str) -> str:
     s = re.sub(r"[^a-z0-9]+", "-", text.translate(PL).lower()).strip("-")
-    return s[:40].rstrip("-") or "zadanie"
+    return s[:40].rstrip("-") or "task"
 
 
 def git(root: Path, *args: str) -> str | None:
@@ -475,7 +475,7 @@ def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
     slug = slugify(slug or goal)
     path = folder / f"{slug}.md"
     if path.exists():
-        raise FileExistsError(f".tf/wip/{slug}.md już istnieje — wznów go albo podaj inne --slug")
+        raise FileExistsError(f".tf/wip/{slug}.md already exists — resume it or give another --slug")
     now = f"{datetime.now():%Y-%m-%d %H:%M}"
     branch = git(root, "branch", "--show-current") or "—"
     text = from_template("wip.md").replace("<slug>", slug)
@@ -483,7 +483,7 @@ def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
                           ("<branch>", "<gałąź>", branch)):   # pl: szablony sprzed 14.x
         text = text.replace(en, value).replace(pl, value)
     path.write_text(text, encoding="utf-8")
-    log(root, by, "meta", f"Start pracy w toku: {goal} (.tf/wip/{slug}.md)")
+    log(root, by, "meta", f"Work in progress started: {goal} (.tf/wip/{slug}.md)")
     write_index(root)
     return path
 
@@ -491,7 +491,7 @@ def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
 def wip_set_status(root: Path, slug: str, status: str, by: str) -> Path:
     path = wip_dir(root) / f"{slug}.md"
     if not path.exists():
-        raise FileNotFoundError(f"brak .tf/wip/{slug}.md")
+        raise FileNotFoundError(f"no .tf/wip/{slug}.md")
     text = path.read_text(encoding="utf-8")
     now = f"{datetime.now():%Y-%m-%d %H:%M}"
     text = re.sub(r"^status: .*$", f"status: {status}", text, count=1, flags=re.M)
@@ -504,9 +504,13 @@ def wip_set_status(root: Path, slug: str, status: str, by: str) -> Path:
         path = target
     else:
         path.write_text(text, encoding="utf-8")
-    log(root, by, "meta", f"Praca w toku {slug}: {status}")
+    log(root, by, "meta", f"Work in progress {slug}: {status}")
     write_index(root)
     return path
+
+
+# Nazwy zdarzeń z core/settings.json (polskie argumenty hooków sprzed 14.x) → angielski zapis w migawce.
+EVENT_NAMES = {"koniec sesji": "session end", "kompaktowanie kontekstu": "context compaction"}
 
 
 def snapshot(root: Path, event: str) -> int:
@@ -521,9 +525,9 @@ def snapshot(root: Path, event: str) -> int:
     block = "\n".join([
         AUTO_BEGIN,
         "## Automatic state (written by the hook — do not edit)",
-        f"- Zapisano: {datetime.now():%Y-%m-%d %H:%M} · zdarzenie: {event}",
-        f"- Gałąź: {branch} · ostatni commit: {head}",
-        f"- Niezacommitowane zmiany ({len(files) if files is not None else 'brak gita'}): {shown or '—'}",
+        f"- Saved: {datetime.now():%Y-%m-%d %H:%M} · event: {event}",
+        f"- Branch: {branch} · last commit: {head}",
+        f"- Uncommitted changes ({len(files) if files is not None else 'no git'}): {shown or '—'}",
         AUTO_END,
     ])
     for it in items:
@@ -552,32 +556,32 @@ def stop_reminder(root: Path, data: dict) -> str | None:
     if newest - checkpoint < STALE_MINUTES * 60:
         return None
     names = ", ".join(f".tf/wip/{i['slug']}.md" for i in items)
-    return (f"Punkt kontrolny ({names}) jest starszy niż zmiany w plikach o ponad {STALE_MINUTES} min. Zanim skończysz, "
-            "zaktualizuj go krótko: odhacz zakończone kroki z dowodem, wpisz „Następną czynność” i nowe ustalenia "
-            "z rozmowy. Jeśli zadanie jest skończone: `project_record.py wip done <nazwa>`; jeśli wstrzymane: `wip pause <nazwa>`.")
+    return (f"The checkpoint ({names}) is older than the file changes by more than {STALE_MINUTES} min. Before you finish, "
+            "update it briefly: tick the finished steps with evidence, write the \"Next step\" and new agreements "
+            "from the conversation. If the task is finished: `project_record.py wip done <name>`; if paused: `wip pause <name>`.")
 
 
 def repo_drift(root: Path, body: str) -> str | None:
     """Rozjazd bieżącego repo ze stanem zapisanym przez migawkę (gałąź, commit); None, gdy zgodne albo brak danych."""
-    m = re.search(r"^- Gałąź: (.+?) · ostatni commit: (\S+)", body, re.M)
+    m = re.search(r"^- (?:Branch|Gałąź): (.+?) · (?:last commit|ostatni commit): (\S+)", body, re.M)
     if not m or m.group(2) == "—":
         return None
     saved_branch, saved_commit = m.group(1).strip(), m.group(2)
     issues = []
     branch = git(root, "branch", "--show-current")
     if branch and saved_branch != "—" and branch != saved_branch:
-        issues.append(f"gałąź {branch} zamiast {saved_branch}")
+        issues.append(f"branch {branch} instead of {saved_branch}")
     saved = git(root, "rev-parse", "--verify", "--quiet", f"{saved_commit}^{{commit}}")
     head = git(root, "rev-parse", "HEAD")
     if saved is None:
-        issues.append(f"commit {saved_commit} z punktu kontrolnego nie istnieje w repozytorium")
+        issues.append(f"the checkpoint's commit {saved_commit} does not exist in the repository")
     elif head and saved != head:
         if git(root, "merge-base", "--is-ancestor", saved, "HEAD") is None:
-            issues.append(f"commit {saved_commit} nie jest w historii bieżącej gałęzi")
+            issues.append(f"commit {saved_commit} is not in the current branch's history")
         else:
             n = int(git(root, "rev-list", "--count", f"{saved}..HEAD") or 0)
-            word = "commit" if n == 1 else "commity" if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14) else "commitów"
-            issues.append(f"{n} {word} od zapisu")
+            word = "commit" if n == 1 else "commits"
+            issues.append(f"{n} {word} since the save")
     return "; ".join(issues) or None
 
 
@@ -587,18 +591,18 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
         m, body = it["meta"], it["body"]
         nxt = first_line(section(body, "Następna czynność"))
         todo = unchecked(body)
-        out.append(f"Praca w toku [{m.get('status', 'active')}]: .tf/wip/{it['slug']}.md — "
-                   f"{title(body, it['slug'])} (aktualizacja {m.get('updated', '?')}, kroki do zrobienia: {len(todo)})")
+        out.append(f"Work in progress [{m.get('status', 'active')}]: .tf/wip/{it['slug']}.md — "
+                   f"{title(body, it['slug'])} (updated {m.get('updated', '?')}, steps to do: {len(todo)})")
         if nxt:
-            out.append(f"  Następna czynność: {nxt}")
+            out.append(f"  Next step: {nxt}")
         drift = repo_drift(root, it["path"].read_text(encoding="utf-8"))
         if drift:
-            out.append(f"  Uwaga: stan repo różni się od punktu kontrolnego ({drift}) — przed kontynuacją uruchom testy "
-                       "i sprawdź, czy kroki odhaczone z dowodem nadal są prawdą.")
+            out.append(f"  Note: the repo state differs from the checkpoint ({drift}) — before continuing run the tests "
+                       "and check whether the steps ticked with evidence are still true.")
         out += [f"  - [ ] {t[:120]}" for t in todo[: 3 if compact else 20]]
     if out:
-        out.append("  Wznawiając: przeczytaj cały plik punktu kontrolnego i `git status` — zmiany po ostatnim zapisie mogą "
-                   "być niedokończone; sprawdź je, zanim zaczniesz następny krok.")
+        out.append("  When resuming: read the whole checkpoint file and `git status` — changes after the last save may "
+                   "be unfinished; check them before you start the next step.")
     return out
 
 
@@ -634,31 +638,31 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
     rec = record_dir(root)
     corpus = rec / "02-domain" / "corpus.md"
     if not corpus.exists():
-        return ["brak docs/project/02-domain/corpus.md"], [], {}
+        return ["no docs/project/02-domain/corpus.md"], [], {}
     entries, errors = corpus_entries(corpus)
     warnings: list[str] = []
     cache: dict[str, str | None] = {}
     for eid, e in entries.items():
         if not e["path"]:
-            errors.append(f"{eid}: cytat poza sekcją źródła (## S1 — ścieżka)"); continue
+            errors.append(f"{eid}: a quote outside a source section (## S1 — path)"); continue
         if e["path"] not in cache:
             f = (root / e["path"])
             cache[e["path"]] = f.read_text(encoding="utf-8", errors="ignore") if f.is_file() else None
         src = cache[e["path"]]
         if src is None:
-            errors.append(f"{eid}: źródło '{e['path']}' nie istnieje (ścieżka względem katalogu projektu)"); continue
+            errors.append(f"{eid}: the source '{e['path']}' does not exist (the path is relative to the project directory)"); continue
         frags = [f for f in re.split(r"\[(?:…|\.\.\.)\]|…", e["quote"]) if len(f.strip()) >= 3]
         nsrc = _norm(src)
         missing = [f for f in frags if _norm(f) not in nsrc]
         if missing and not {"unverified", "niezweryfikowany"} & set(e["tags"]):
-            errors.append(f"{eid}: cytat nie występuje dosłownie w {e['path']}: „{missing[0].strip()[:60]}”")
+            errors.append(f"{eid}: the quote does not appear verbatim in {e['path']}: \"{missing[0].strip()[:60]}\"")
             continue
         m = re.fullmatch(r"L(\d+)(?:\s*-\s*L?(\d+))?", e["loc"])
         if m and not missing:
             a = int(m.group(1)); b = int(m.group(2) or a)
             window = _norm("\n".join(src.splitlines()[max(0, a - 3): b + 2]))
             if not all(_norm(f) in window for f in frags):
-                warnings.append(f"{eid}: cytat jest w źródle, ale nie w miejscu {e['loc']}")
+                warnings.append(f"{eid}: the quote is in the source, but not at {e['loc']}")
     areas = rec / "02-domain" / "areas.md"
     if areas.exists():
         _, body = parse(areas)
@@ -668,19 +672,19 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
             ids = re.findall(r"E\d+", (re.search(r"(?:Evidence|Dowody):\*?\*?(.*)", block) or [None, ""])[1])
             unknown = [i for i in ids if i not in entries]
             if unknown:
-                errors.append(f"areas.md {aid}: nieznane dowody {unknown}")
+                errors.append(f"areas.md {aid}: unknown evidence {unknown}")
             strong = [i for i in ids if i in entries and not any(t.startswith(WEAK_TAGS) for t in entries[i]["tags"])]
             sources = {entries[i]["source"] for i in strong}
             user = re.search(r"(?:Named by the human|Wskazany przez człowieka):\*?\*?\s*(?:yes|tak)", block, re.I)
             if len(strong) < 3 or len(sources) < 2:
-                msg = f"areas.md {aid}: {len(strong)} mocnych cytatów z {len(sources)} źródeł (próg: 3 z 2)"
-                (warnings if user else errors).append(msg + (" — wskazany przez człowieka" if user else " — przenieś do „Kandydaci poniżej progu”"))
+                msg = f"areas.md {aid}: {len(strong)} strong quotes from {len(sources)} sources (threshold: 3 from 2)"
+                (warnings if user else errors).append(msg + (" — named by the human" if user else " — move it to \"Candidates below the threshold\""))
     contra = rec / "02-domain" / "contradictions.md"
     if contra.exists():
         for i in sorted(set(re.findall(r"\bE\d+\b", contra.read_text(encoding="utf-8")))):
             if i not in entries:
-                warnings.append(f"contradictions.md: odwołanie do nieistniejącego cytatu {i}")
-    return errors, warnings, {"cytatów": len(entries), "źródeł": len({e["path"] for e in entries.values()})}
+                warnings.append(f"contradictions.md: a reference to a non-existent quote {i}")
+    return errors, warnings, {"quotes": len(entries), "sources": len({e["path"] for e in entries.values()})}
 
 
 def main(argv: list[str]) -> int:
@@ -697,7 +701,8 @@ def main(argv: list[str]) -> int:
     if "--hook-snapshot" in args:
         try:
             i = args.index("--hook-snapshot")
-            snapshot(root, args[i + 1] if len(args) > i + 1 else "hook")
+            event = args[i + 1] if len(args) > i + 1 else "hook"
+            snapshot(root, EVENT_NAMES.get(event, event))
         except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
             record_error("project_record", e)
         return 0
@@ -723,14 +728,14 @@ def main(argv: list[str]) -> int:
         return 0
     cmd = args[0] if args else "status"
     if cmd == "init":
-        print(f"✓ Utworzono {init(root).relative_to(root)}")
+        print(f"✓ Created {init(root).relative_to(root)}")
         return 0
     if cmd == "index":
         write_index(root)
-        print("✓ Zaktualizowano docs/project/README.md")
+        print("✓ Updated docs/project/README.md")
         return 0
     if cmd == "status":
-        print(status_text(root) or "Brak docs/project/ — uruchom: project_record.py init")
+        print(status_text(root) or "No docs/project/ — run: project_record.py init")
         return 0
     if cmd == "check":
         errors, warnings = check(root)
@@ -739,23 +744,23 @@ def main(argv: list[str]) -> int:
         for e in errors:
             print(f"✗ {e}")
         write_index(root)
-        print("✓ Dziennik projektu poprawny" if not errors else f"✗ {len(errors)} błędów")
+        print("✓ Project record valid" if not errors else f"✗ {len(errors)} errors")
         return 1 if errors else 0
     if cmd == "log":
-        by = args[args.index("--by") + 1] if "--by" in args else "nieznany"
+        by = args[args.index("--by") + 1] if "--by" in args else "unknown"
         phase = args[args.index("--phase") + 1] if "--phase" in args else "meta"
         skip = {i for i, a in enumerate(args) if a in ("--by", "--phase")}
         skip |= {i + 1 for i in skip}
         text = " ".join(a for i, a in enumerate(args[1:], 1) if i not in skip)
         if not text:
-            print("Podaj treść wpisu"); return 2
+            print("Give the entry text"); return 2
         log(root, by, phase, text)
         write_index(root)
-        print("✓ Dopisano do journal.md")
+        print("✓ Appended to journal.md")
         return 0
     if cmd == "wip":
         sub = args[1] if len(args) > 1 else "list"
-        by = args[args.index("--by") + 1] if "--by" in args else "nieznany"
+        by = args[args.index("--by") + 1] if "--by" in args else "unknown"
         try:
             if sub == "start":
                 slug = args[args.index("--slug") + 1] if "--slug" in args else None
@@ -763,25 +768,25 @@ def main(argv: list[str]) -> int:
                 skip |= {i + 1 for i in skip}
                 goal = " ".join(a for i, a in enumerate(args[2:], 2) if i not in skip).strip()
                 if not goal:
-                    print("Podaj cel zadania, np. wip start \"Logowanie przez Google\""); return 2
-                print(f"✓ Punkt kontrolny: {wip_start(root, goal, slug, by).relative_to(root)} — uzupełnij cel, kroki i następną czynność")
+                    print("Give the task goal, e.g. wip start \"Sign-in with Google\""); return 2
+                print(f"✓ Checkpoint: {wip_start(root, goal, slug, by).relative_to(root)} — fill in the goal, the steps and the next step")
                 return 0
             if sub in ("done", "pause", "block", "resume"):
                 if len(args) < 3 or args[2].startswith("--"):
-                    print(f"Podaj nazwę: wip {sub} <nazwa>"); return 2
+                    print(f"Give the name: wip {sub} <name>"); return 2
                 status = {"done": "done", "pause": "paused", "block": "blocked", "resume": "active"}[sub]
                 print(f"✓ {wip_set_status(root, args[2], status, by).relative_to(root)} — status {status}")
                 return 0
             if sub == "snapshot":
-                print(f"✓ Migawka stanu w {snapshot(root, 'ręcznie')} punktach kontrolnych"); return 0
+                print(f"✓ State snapshot in {snapshot(root, 'manual')} checkpoints"); return 0
             if sub == "show":
                 items = [i for i in wip_items(root) if len(args) < 3 or i["slug"] == args[2]]
                 for it in items:
                     print(it["path"].read_text(encoding="utf-8"))
                 if not items:
-                    print("Brak pracy w toku")
+                    print("No work in progress")
                 return 0
-            print("\n".join(wip_lines(root, compact=False)) or "Brak pracy w toku")
+            print("\n".join(wip_lines(root, compact=False)) or "No work in progress")
             return 0
         except (FileExistsError, FileNotFoundError) as e:
             print(f"✗ {e}"); return 1
@@ -791,11 +796,11 @@ def main(argv: list[str]) -> int:
             print(f"⚠ {w}")
         for e in errors:
             print(f"✗ {e}")
-        print((f"✓ Dowody poprawne ({stats.get('cytatów', 0)} cytatów, {stats.get('źródeł', 0)} źródeł)") if not errors else f"✗ {len(errors)} błędów")
+        print((f"✓ Evidence valid ({stats.get('quotes', 0)} quotes, {stats.get('sources', 0)} sources)") if not errors else f"✗ {len(errors)} errors")
         return 1 if errors else 0
     if cmd == "report":
         out = Path(args[args.index("--out") + 1]) if "--out" in args else None
-        print(f"✓ Raport: {report(root, out).relative_to(root) if not out else out}")
+        print(f"✓ Report: {report(root, out).relative_to(root) if not out else out}")
         return 0
     print(__doc__)
     return 2

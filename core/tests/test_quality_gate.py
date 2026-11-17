@@ -139,7 +139,7 @@ def main() -> int:
         (repo / ".claude" / "quality-gate.expected-red").unlink()
 
         r1, r2, r3 = hook(repo), hook(repo), hook(repo)
-        check(blocked(r1) and blocked(r2) and blocked(r3) is None and "człowiek" in (r3.stdout + r3.stderr).lower(),
+        check(blocked(r1) and blocked(r2) and blocked(r3) is None and "human" in (r3.stdout + r3.stderr).lower(),
               f"Q-7: po max_blocks blokadach tego samego diffu przepuszcza z komunikatem: {r3.stdout}{r3.stderr}")
 
         (repo / "src" / "app.py").write_text("x = 5\n")
@@ -186,14 +186,14 @@ def main() -> int:
         saved = full.read_text(encoding="utf-8") if full.is_file() else ""
         check("PIERWSZY BLAD test_start" in reason and "PODSUMOWANIE 1 failed" in reason and "SRODEK" not in reason,
               f"B-1: długi log → w komunikacie początek i koniec, bez środka: {reason[:200]} … {reason[-200:]}")
-        check(".tf/logs/quality-gate-output.txt" in reason and "pominięto" in reason and len(reason) < 5000,
+        check(".tf/logs/quality-gate-output.txt" in reason and "skipped" in reason and len(reason) < 5000,
               f"B-2: komunikat podaje, ile pominięto i gdzie jest całość; pozostaje krótki ({len(reason)} znaków)")
         check("PIERWSZY BLAD" in saved and "SRODEK" in saved and "PODSUMOWANIE" in saved,
               f"B-3: pełne wyjście zapisane w .tf/logs/quality-gate-output.txt ({len(saved)} znaków)")
         (repo / "src" / "app.py").write_text("x = 4\n")
         (repo / "mode.txt").write_text("fail")
         b = blocked(hook(repo)) or {}
-        check("test_suma" in b.get("reason", "") and "pominięto" not in b.get("reason", ""),
+        check("test_suma" in b.get("reason", "") and "skipped" not in b.get("reason", ""),
               f"B-4: krótkie wyjście trafia do komunikatu w całości, bez dopisku o pominięciu: {b.get('reason', '')[-200:]}")
         now = full.read_text(encoding="utf-8") if full.is_file() else ""
         check("test_suma" in now and "SRODEK" not in now, "B-5: plik z pełnym wyjściem zawiera ostatni przebieg, nie poprzedni")
@@ -207,29 +207,29 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         repo = setup(Path(t) / "s1", None)
         r = status(repo)
-        check(r.returncode == 0 and "wyłączona" in r.stdout and "quality-gate.json" in r.stdout
-              and "nie zablokuje czerwonych testów" in r.stdout, f"S-1: brak konfiguracji → wyłączona, z powodem i skutkiem: {r.stdout}{r.stderr}")
+        check(r.returncode == 0 and "disabled" in r.stdout and "quality-gate.json" in r.stdout
+              and "will not block red tests" in r.stdout, f"S-1: brak konfiguracji → wyłączona, z powodem i skutkiem: {r.stdout}{r.stderr}")
         repo = setup(Path(t) / "s2", cfg)
         r = status(repo)
-        check(r.returncode == 0 and "włączona" in r.stdout and "check.py" in r.stdout and "wyłączona" not in r.stdout,
+        check(r.returncode == 0 and "gate on" in r.stdout and "check.py" in r.stdout and "disabled" not in r.stdout,
               f"S-2: konfiguracja z poleceniem → włączona, z poleceniem: {r.stdout}{r.stderr}")
         r = status(repo, "--quiet-ok")
         check(r.returncode == 0 and r.stdout.strip() == "", f"S-3: --quiet-ok milczy, gdy bramka działa: {r.stdout!r}")
         r = status(repo, "--quiet-ok", QG_GATE_DISABLE="1")
-        check("wyłączona" in r.stdout and "QG_GATE_DISABLE" in r.stdout, f"S-4: wyłącznik w środowisku → wyłączona: {r.stdout}")
+        check("disabled" in r.stdout and "QG_GATE_DISABLE" in r.stdout, f"S-4: wyłącznik w środowisku → wyłączona: {r.stdout}")
         (repo / ".claude" / "settings.local.json").write_text(json.dumps({"env": {"QG_GATE_DISABLE": "1"}}))
         r = status(repo)
-        check("wyłączona" in r.stdout and "settings.local.json" in r.stdout, f"S-5: wyłącznik w ustawieniach → wskazany plik: {r.stdout}")
+        check("disabled" in r.stdout and "settings.local.json" in r.stdout, f"S-5: wyłącznik w ustawieniach → wskazany plik: {r.stdout}")
         (repo / ".claude" / "settings.local.json").unlink()
         (repo / ".claude" / "quality-gate.expected-red").write_text("partia TDD: import CDR")
         r = status(repo, "--quiet-ok")
-        check("przepuszcza czerwone testy" in r.stdout and "import CDR" in r.stdout, f"S-6: znacznik czerwonej partii → ostrzeżenie z powodem: {r.stdout}")
+        check("lets red tests through" in r.stdout and "import CDR" in r.stdout, f"S-6: znacznik czerwonej partii → ostrzeżenie z powodem: {r.stdout}")
         repo = setup(Path(t) / "s7", {"watch": ["src/"]})
         r = status(repo)
-        check("wyłączona" in r.stdout and "command" in r.stdout, f"S-7: konfiguracja bez polecenia → wyłączona: {r.stdout}")
+        check("disabled" in r.stdout and "command" in r.stdout, f"S-7: konfiguracja bez polecenia → wyłączona: {r.stdout}")
         (repo / ".claude" / "quality-gate.json").write_text("{nie json")
         r = status(repo)
-        check(r.returncode == 0 and "wyłączona" in r.stdout and "JSON" in r.stdout, f"S-8: uszkodzony plik → wyłączona, bez wyjątku: {r.stdout}{r.stderr}")
+        check(r.returncode == 0 and "disabled" in r.stdout and "JSON" in r.stdout, f"S-8: uszkodzony plik → wyłączona, bez wyjątku: {r.stdout}{r.stderr}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów bramki jakości")
     return 1 if fails else 0
 

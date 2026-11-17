@@ -88,8 +88,8 @@ def summary(days: int = 7) -> str:
     if not hooks:
         return ""
     top = ", ".join(f"{k} ×{v}" for k, v in hooks.most_common(5))
-    return (f"⚠ błędy hooków w ostatnich {days} dniach: {sum(hooks.values())} — {top}. Hooki nie przerwały pracy, "
-            f"ale ich ochrona mogła nie zadziałać; szczegóły: {LOG.as_posix()}")
+    return (f"⚠ hook errors in the last {days} days: {sum(hooks.values())} — {top}. The hooks did not stop the work, "
+            f"but their protection may not have worked; details: {LOG.as_posix()}")
 
 
 def main(argv: list[str]) -> int:

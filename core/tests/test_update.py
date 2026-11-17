@@ -129,7 +129,7 @@ def notice_tests(up, check) -> None:
         r = subprocess.run([sys.executable, str(gated / ".claude" / "hooks" / "update_notice.py")], capture_output=True,
                            text=True, env={**genv, "CLAUDE_PROJECT_DIR": str(gated), "CTF_UPDATE_CHECK": "0"},
                            input="{}", timeout=30)
-        check(r.returncode == 0 and "Bramka jakości wyłączona" in r.stdout and "systemMessage" in r.stdout,
+        check(r.returncode == 0 and "Quality gate disabled" in r.stdout and "systemMessage" in r.stdout,
               f"UN-12: brak quality-gate.json → komunikat przy starcie sesji: {r.stdout}{r.stderr}")
         (gated / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "npm test"}))
         r = subprocess.run([sys.executable, str(gated / ".claude" / "hooks" / "update_notice.py")], capture_output=True,

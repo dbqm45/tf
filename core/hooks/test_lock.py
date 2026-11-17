@@ -43,7 +43,7 @@ def held(root: Path, wait: float | None = None):
     """Kontekst z blokadą; zwraca True, gdy blokada jest nasza (albo niepotrzebna), False — zajęta po czasie `wait`."""
     if os.environ.get("TF_TEST_LOCK_HELD") == "1" or fcntl is None:
         if fcntl is None:
-            print("⚠ test_lock: brak fcntl — testy bez blokady", file=sys.stderr)
+            print("⚠ test_lock: no fcntl — tests without a lock", file=sys.stderr)
         yield True
         return
     wait = float(os.environ.get("QG_LOCK_WAIT", "900")) if wait is None else wait
@@ -75,8 +75,8 @@ def main(argv: list[str]) -> int:
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     with held(root) as ok:
         if not ok:
-            print(f"LOCK BUSY: inne testy tego repozytorium trwają dłużej niż {os.environ.get('QG_LOCK_WAIT', '900')} s "
-                  f"— nic nie uruchomiono (kod {BUSY}); spróbuj ponownie po ich zakończeniu", file=sys.stderr)
+            print(f"LOCK BUSY: other tests of this repository have been running longer than {os.environ.get('QG_LOCK_WAIT', '900')} s "
+                  f"— nothing was run (code {BUSY}); try again after they finish", file=sys.stderr)
             return BUSY
         return subprocess.call(cmd, env={**os.environ, "TF_TEST_LOCK_HELD": "1"})
 

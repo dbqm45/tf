@@ -54,14 +54,14 @@ def context_tokens(transcript: Path) -> int:
 
 def message(level: int, k: int) -> str:
     if level == 2:
-        return (f"UWAGA (context_guard): kontekst tej sesji ma ok. {k} tys. tokenów — dużo. Rośnie ryzyko pomyłek, "
-                "zapominania wcześniejszych ustaleń i zmyśleń. Zanim zrobisz cokolwiek dalej: zapisz punkt kontrolny "
-                "(core-project-record: kroki, następna czynność, ustalenia z rozmowy) i zaproponuj użytkownikowi nową "
-                "sesję od punktu kontrolnego albo `/compact` z instrukcją, co zachować. Fakty podawaj tylko sprawdzone "
-                "w tej chwili (core-grounding), nie z pamięci wcześniejszej części rozmowy.")
-    return (f"context_guard: kontekst tej sesji ma ok. {k} tys. tokenów. Przy dłuższej pracy zapisz punkt kontrolny "
-            "i rozważ z użytkownikiem `/compact` z instrukcją albo nową sesję; eksplorację wielu plików zlecaj "
-            "subagentom. Ważne fakty sprawdzaj ponownie, zamiast polegać na wcześniejszej części rozmowy.")
+        return (f"WARNING (context_guard): this session's context is about {k}k tokens — a lot. The risk of mistakes, "
+                "forgetting earlier agreements and fabrication grows. Before doing anything else: write a checkpoint "
+                "(core-project-record: steps, next action, agreements from the conversation) and propose to the user a new "
+                "session from the checkpoint or `/compact` with an instruction on what to keep. State only facts checked "
+                "right now (core-grounding), not from memory of the earlier part of the conversation.")
+    return (f"context_guard: this session's context is about {k}k tokens. For longer work write a checkpoint "
+            "and consider with the user `/compact` with an instruction or a new session; delegate exploring many files "
+            "to subagents. Re-check important facts instead of relying on the earlier part of the conversation.")
 
 
 def main() -> int:

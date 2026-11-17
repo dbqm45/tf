@@ -56,9 +56,9 @@ def messages(root: Path) -> list[str]:
             rows = []
         if rows:
             names = ", ".join(r["skill"] for r in rows[:8]) + (" …" if len(rows) > 8 else "")
-            out.append(f"Skille po terminie przeglądu ({len(rows)}): {names}. Ulotne fakty z nich (wersje, przepisy, "
-                       "terminy, progi) sprawdź w źródłach przed użyciem (core-source-research). Lista: "
-                       "python3 .tf/factory/freshness.py; nowsza fabryka mogła je już odświeżyć.")
+            out.append(f"Skills past their review date ({len(rows)}): {names}. Check their volatile facts (versions, regulations, "
+                       "deadlines, thresholds) in sources before use (core-source-research). The list: "
+                       "python3 .tf/factory/freshness.py; a newer factory may have refreshed them already.")
     gate = root / ".claude" / "hooks" / "quality_gate.py"
     if gate.is_file() and (root / ".claude" / "factory-manifest.json").is_file():
         try:   # wyłączona bramka jakości: człowiek i agent mają to wiedzieć od pierwszej chwili sesji

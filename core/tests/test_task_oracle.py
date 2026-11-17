@@ -64,7 +64,7 @@ def main() -> int:
         check(d == "", f"O-2: spec.md w etapie plan — zapis bez pytania: {d} {why}")
         tf(p, "stage", "PROJ-1", "implementation")
         d, why = guard(p, "Edit", spec_rel)
-        check(d == "ask" and "PROJ-1" in why and "zmiana wymagań" in why, f"O-3: spec.md w etapie realizacja → ask z wyjaśnieniem: {d} {why}")
+        check(d == "ask" and "PROJ-1" in why and "changes the requirements" in why, f"O-3: spec.md w etapie realizacja → ask z wyjaśnieniem: {d} {why}")
         d, why = guard(p, "Write", spec_rel, absolute=False)
         check(d == "ask", f"O-4: ścieżka względna działa tak samo: {d} {why}")
         d, why = guard(p, "Read", spec_rel)

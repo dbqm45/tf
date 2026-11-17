@@ -196,11 +196,11 @@ def weakening(tool: str, inp: dict, root: Path, path: str) -> list[str]:
     new = "\n".join(b for _, b in pairs)
     found = []
     if len(ASSERT_RE.findall(new)) < len(ASSERT_RE.findall(old)):
-        found.append(f"mniej asercji ({len(ASSERT_RE.findall(old))} → {len(ASSERT_RE.findall(new))})")
+        found.append(f"fewer assertions ({len(ASSERT_RE.findall(old))} → {len(ASSERT_RE.findall(new))})")
     if len(TESTDEF_RE.findall(new)) < len(TESTDEF_RE.findall(old)):
-        found.append("usunięty test")
+        found.append("a removed test")
     if len(SKIP_RE.findall(new)) > len(SKIP_RE.findall(old)):
-        found.append("dopisane pominięcie testu (skip/xfail/disabled)")
+        found.append("an added test skip (skip/xfail/disabled)")
     return found
 
 
@@ -211,8 +211,8 @@ def weaken_check(tool: str, inp: dict, root: Path, path: str) -> None:
     found = weakening(tool, inp, root, path)
     if not found:
         return
-    reason = (f"TDD: ta edycja może osłabić test {path}: {', '.join(found)}. Testów nie osłabiasz, żeby przeszły — "
-              "popraw kod albo uzasadnij zmianę testu (zmienione wymaganie, refaktoryzacja testu bez utraty sprawdzeń).")
+    reason = (f"TDD: this edit may weaken the test {path}: {', '.join(found)}. You do not weaken tests to make them pass — "
+              "fix the code or justify the test change (a changed requirement, a test refactor without losing checks).")
     if mode in ("ask", "deny"):
         record_block("tdd_guard", mode)
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": mode,
@@ -257,19 +257,19 @@ def gate(s: dict, path: str) -> str | None:
         green_after_test = s["test_edit"] >= 0 and s["green"] > s["test_edit"] and s["red"] < s["test_edit"]
         if green_after_test and not s["green_warned"]:
             s["green_warned"] = True
-            return ("TDD: nowy test od razu PRZESZEDŁ, więc niczego nie dowodzi. Popraw test tak, żeby sprawdzał "
-                    "brakujące zachowanie i nie przechodził (czerwony z właściwego powodu), uruchom go i dopiero "
-                    "wtedy pisz kod. Jeśli to test charakteryzujący przed refaktoryzacją, oznacz go w pliku testu "
-                    "jako [charakteryzujący].")
-        return (f"TDD: zanim zmienisz kod produkcyjny ({path}), napisz test opisujący oczekiwane zachowanie "
-                "(przy błędzie: test odtwarzający błąd), uruchom testy i pokaż, że ten test NIE przechodzi "
-                "z właściwego powodu. Potem minimalny kod → zielony → refaktoryzacja. Wyjątki: "
-                "konfiguracja, style, dokumentacja; spike — człowiek ustawia CLAUDE_TDD=off.")
+            return ("TDD: the new test PASSED at once, so it proves nothing. Fix the test so that it checks "
+                    "the missing behaviour and fails (red for the right reason), run it, and only "
+                    "then write the code. If it is a characterization test before a refactor, mark it in the test file "
+                    "as [characterization].")
+        return (f"TDD: before you change production code ({path}), write a test describing the expected behaviour "
+                "(for a bug: a test reproducing the bug), run the tests and show that this test does NOT pass "
+                "for the right reason. Then minimal code → green → refactor. Exceptions: "
+                "configuration, styles, docs; a spike — a human sets CLAUDE_TDD=off.")
     limit = int(os.environ.get("CLAUDE_TDD_MAX_EDITS", "12") or 12)
     if s["prod_since_test"] >= limit:
-        return (f"TDD: {s['prod_since_test']} zmian kodu produkcyjnego bez nowego testu. Następne zachowanie = "
-                "następny test: dopisz test (czerwony), potem kod. Jeśli to tylko refaktoryzacja przy zielonych "
-                "testach, uruchom testy i dopisz/zaktualizuj test, który ją zabezpiecza.")
+        return (f"TDD: {s['prod_since_test']} production code changes without a new test. The next behaviour = "
+                "the next test: add a test (red), then the code. If it is only a refactor with green "
+                "tests, run the tests and add/update the test that guards it.")
     return None
 
 
@@ -388,7 +388,7 @@ def guard_changes(root: Path, state: dict, data: dict) -> list[str]:
             continue
         if p == ".git/config" and GIT_ONLY_RE.match(str((data.get("tool_input") or {}).get("command") or "")):
             continue
-        changed.append(f"{p} ({'nowy' if p not in prev else 'usunięty' if p not in cur else 'zmieniony'})")
+        changed.append(f"{p} ({'new' if p not in prev else 'deleted' if p not in cur else 'changed'})")
     return changed
 
 
@@ -408,10 +408,10 @@ def guard_note(root: Path, state: dict, data: dict) -> dict:
     if not changed:
         return {}
     names = ", ".join(changed[:8])
-    return {"context": (f"[tdd_guard] Polecenie zmieniło pliki chronione lub z sekretami: {names}. Zatrzymaj się i "
-                        "powiedz człowiekowi, co je zmieniło i dlaczego; nie czytaj ich treści i nie cofaj zmian "
-                        "człowieka (core-agent-security)."),
-            "human": f"⚠ tdd_guard: polecenie Bash zmieniło pliki chronione: {names} — sprawdź, czy to zamierzone."}
+    return {"context": (f"[tdd_guard] A command changed protected files or files with secrets: {names}. Stop and "
+                        "tell a human what changed them and why; do not read their content and do not undo a human's "
+                        "changes (core-agent-security)."),
+            "human": f"⚠ tdd_guard: a Bash command changed protected files: {names} — check whether that was intended."}
 
 
 FAIL_ID_RES = [
@@ -437,9 +437,9 @@ def same_failure(s: dict, text: str) -> str:
     s["fail_fp"] = fp
     if s["fail_n"] % LOOP_AT:
         return ""
-    return (f"[tdd_guard] Ta sama porażka {s['fail_n']}. raz z rzędu (ten sam test i typ błędu) — zmień podejście "
-            "albo eskaluj model (core-cost-control): nazwij, co nie zadziałało, sprawdź założenie o przyczynie, "
-            "zamiast kolejnej podobnej poprawki.")
+    return (f"[tdd_guard] The same failure {s['fail_n']} times in a row (the same test and error type) — change the approach "
+            "or escalate the model (core-cost-control): name what did not work, check the assumption about the cause, "
+            "instead of another similar fix.")
 
 
 def emit(event: str, notes: list[str], guard: dict) -> None:
@@ -484,10 +484,10 @@ def main() -> int:
                     if not red_without_assertion(data) and s.get("tests"):
                         log_red(root, s.pop("tests"), str(inp.get("command") or ""))
                     if red_without_assertion(data):
-                        notes.append("[tdd_guard] To uruchomienie nie wykonało asercji (brak plików testów, błąd "
-                                     "składni albo konfiguracji runnera) — to nie jest czerwony test. Napraw "
-                                     "uruchomienie i zobacz test padający na brakującym zachowaniu, zanim napiszesz "
-                                     "kod produkcyjny.")
+                        notes.append("[tdd_guard] This run executed no assertions (no test files, a syntax error "
+                                     "or a runner configuration error) — that is not a red test. Fix "
+                                     "the run and see a test failing on the missing behaviour before you write "
+                                     "production code.")
                     notes.append(same_failure(s, response_text(data)))
                 else:
                     s["green"] = s["seq"]
@@ -496,9 +496,9 @@ def main() -> int:
             if os.environ.get("CLAUDE_TDD_BASH", "on").lower() != "off":
                 changed = bash_changes(root, state, data)
                 if changed and not (s["started"] or may_start(s)):
-                    notes.append(f"[tdd_guard] TDD: polecenie zmieniło kod produkcyjny bez czerwonego testu: "
-                                 f"{', '.join(changed[:5])}. Jeśli to zmiana z tego polecenia, cofnij ją albo najpierw "
-                                 "napisz test i pokaż, że nie przechodzi. Zmian człowieka nie cofaj.")
+                    notes.append(f"[tdd_guard] TDD: a command changed production code without a red test: "
+                                 f"{', '.join(changed[:5])}. If the change came from this command, undo it or first "
+                                 "write a test and show that it fails. Do not undo a human's changes.")
             emit(event, notes, guard)
         elif event == "PostToolUse" and tool in ("Edit", "Write", "MultiEdit") and path:
             if is_test(path):
