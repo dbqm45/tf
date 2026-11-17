@@ -150,7 +150,7 @@ def main() -> int:
         check(status_of(calls).get("state") == "pending", f"AR-16: zdjęcie obejścia → pending: {status_of(calls)}")
 
         r = run(["install"], repo)
-        check(r.returncode == 1 and "istnieje" in r.stdout + r.stderr, f"AR-17: bez --force nie nadpisuje: {r.stdout}")
+        check(r.returncode == 1 and "already exists" in r.stdout + r.stderr, f"AR-17: bez --force nie nadpisuje: {r.stdout}")
         r = run(["install", "--force", "--all-prs"], repo)
         wf2 = yaml.safe_load(path.read_text(encoding="utf-8"))
         check(r.returncode == 0 and "'ai-review'" not in wf2["jobs"]["review"]["if"]
@@ -166,7 +166,7 @@ def main() -> int:
         check(r.returncode == 0 and (repo / "REVIEW.md").read_text(encoding="utf-8") == draft.read_text(encoding="utf-8"),
               f"AR-20: review-md kopiuje zatwierdzony szkic do REVIEW.md: {r.stdout}{r.stderr}")
         r = run(["review-md"], repo)
-        check(r.returncode == 1 and "istnieje" in r.stdout + r.stderr, f"AR-21: REVIEW.md nie jest nadpisywany: {r.stdout}")
+        check(r.returncode == 1 and "already exists" in r.stdout + r.stderr, f"AR-21: REVIEW.md nie jest nadpisywany: {r.stdout}")
         r = run(["install", "--force"], repo)
         check(r.returncode == 0 and "review-md" not in r.stdout, f"AR-22: z REVIEW.md install nie podpowiada review-md: {r.stdout}")
 

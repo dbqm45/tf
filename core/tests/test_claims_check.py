@@ -66,23 +66,23 @@ def main() -> int:
         r = run(["report.md"], d)
         out = r.stdout
         lines = out.splitlines()
-        check(r.returncode == 1 and lines and lines[0].startswith("Werdykt: ERRORS"),
+        check(r.returncode == 1 and lines and lines[0].startswith("Verdict: ERRORS"),
               f"C-1: błędy → kod 1 i werdykt w pierwszej linii: {out}")
         check("report.md:6" in out and "45/56" in out and "80%" in out,
               f"C-2: zły procent przy 45/56 wskazany z plik:linia i wartością poprawną: {out}")
         check("report.md:5" not in out, f"C-3: poprawne 46/48 (96%) i 22/48 (46%) bez uwag: {out}")
         check("2026-02-30" in out, f"C-4: niepoprawna data wykryta: {out}")
-        check(TOMORROW in out and "przyszło" in out, f"C-5: data stanu w przyszłości wykryta: {out}")
-        check("report.md:9" in out and "30%" in out and "OSTRZEŻENIE" in out.upper(),
+        check(TOMORROW in out and "future" in out, f"C-5: data stanu w przyszłości wykryta: {out}")
+        check("report.md:9" in out and "30%" in out and "WARNING" in out.upper(),
               f"C-6: liczba bez źródła w akapicie → ostrzeżenie: {out}")
         check("report.md:8" not in out and "report.md:10" not in out and "report.md:11" not in out,
               f"C-7: liczby ze źródłem (ścieżka, URL) i oznaczone [założenie] bez uwag: {out}")
         check("99%" not in out, f"C-8: bloki kodu pomijane: {out}")
         r = run(["czysty.md"], d)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"), f"C-9: czysty dokument → OK, kod 0: {r.stdout}")
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"), f"C-9: czysty dokument → OK, kod 0: {r.stdout}")
         (d / "tylko-ostrzezenia.md").write_text("Liczba sesji wzrosła o 12%.\n", encoding="utf-8")
         r = run(["tylko-ostrzezenia.md"], d)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: WARNINGS"),
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: WARNINGS"),
               f"C-10: same ostrzeżenia → kod 0 i werdykt WARNINGS: {r.stdout}")
         r = run(["tylko-ostrzezenia.md", "--strict"], d)
         check(r.returncode == 1, f"C-11: --strict traktuje ostrzeżenia jak błędy: {r.stdout}")
@@ -95,16 +95,16 @@ def main() -> int:
         (d / "z-deklaracja.md").write_text("# Pomiar\n\n- **Pliki:** surowe wyniki w `pomiar.jsonl`.\n\n"
                                            "Koszt wyniósł 21,07 USD, wynik wzrósł o 12%.\n", encoding="utf-8")
         r = run(["z-deklaracja.md"], d)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
               f"C-13: deklaracja źródła danych dokumentu (Pliki:/Źródło danych: z `ścieżką`) obejmuje liczby: {r.stdout}")
         (d / "inline.md").write_text("# Pomiar\n\nPowtórzenie testu. Dane: `wyniki/v2/`, skrypty obok.\n\n"
                                      "Koszt 5,38 USD, pokrycie 90%.\n", encoding="utf-8")
         r = run(["inline.md"], d)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
               f"C-14: deklaracja „Dane: `ścieżka`” w środku zdania też obejmuje liczby dokumentu: {r.stdout}")
         (d / "bez.md").write_text("# Pomiar\n\nNie mamy danych: wynik 5 USD.\n", encoding="utf-8")
         r = run(["bez.md"], d)
-        check(r.stdout.startswith("Werdykt: WARNINGS"), f"C-15: słowo „danych” bez ścieżki to nie deklaracja: {r.stdout}")
+        check(r.stdout.startswith("Verdict: WARNINGS"), f"C-15: słowo „danych” bez ścieżki to nie deklaracja: {r.stdout}")
         (d / "en.md").write_text("# Measurement\n\nAbout 40% of users will not notice [assumption].\n"
                                  "Latency dropped by 120 ms according to the vendor.\n"
                                  "Coverage is 70% [unverified].\n"

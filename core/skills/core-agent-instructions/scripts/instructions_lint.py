@@ -47,7 +47,7 @@ INTRO_RE = re.compile(r"^#+\s*(o projekcie|wstęp|wprowadzenie|misja|wartości|a
 IMPORT_RE = re.compile(r"(?<![\w`/])@((?:~/|\.{1,2}/|/)?[\w.\-][\w.\-/]*(?:\\ [\w.\-/]+)*)")
 EXCLUDED_LANGS = {"mermaid"}
 SPAN_RE = re.compile(r"`([^`\n]+)`")
-NEGATIVE_RE = re.compile(r"(?i)\b(nie czytaj|nie zmieniaj|nie edytuj|nie commituj|pomijaj|ignor\w*|never|don't|do not)\b")
+NEGATIVE_RE = re.compile(r"(?i)\b(nie czytaj|nie zmieniaj|nie edytuj|nie commituj|pomijaj|ignor\w*|skip|never|don't|do not)\b")
 ON_DEMAND = ("docs/project/", ".tf/", ".claude/")   # katalogi fabryki tworzone, gdy są potrzebne
 FACTORY_BLOCK = ("<!-- team-factory:begin -->", "<!-- team-factory:end -->")
 
@@ -154,11 +154,11 @@ def stale_refs(numbered, keep, path: Path, root: Path):
             if len(words) >= 2 and words[0] in ("npm", "pnpm") and npm is not None:
                 name = words[2] if words[1] in ("run", "run-script") and len(words) > 2 else words[1]
                 if words[1] in ("run", "run-script", "test", "start") and name not in npm and not name.startswith("-"):
-                    out.append({"line": i, "text": f"{span} — package.json nie ma skryptu „{name}”"})
+                    out.append({"line": i, "text": f"{span} — package.json has no script \"{name}\""})
                 continue
             if len(words) == 2 and words[0] == "make" and make is not None and not words[1].startswith("-"):
                 if words[1] not in make:
-                    out.append({"line": i, "text": f"{span} — Makefile nie ma celu „{words[1]}”"})
+                    out.append({"line": i, "text": f"{span} — Makefile has no target \"{words[1]}\""})
                 continue
             if len(words) != 1 or "://" in span or re.search(r"[<>{}*?$|=:@\\]", span) or span.startswith(("-", "/", "~")):
                 continue                      # polecenie, adres, wzorzec, opcja albo ścieżka spoza repozytorium
@@ -167,7 +167,7 @@ def stale_refs(numbered, keep, path: Path, root: Path):
                 continue
             if (root / target).exists() or (path.parent / target).exists():
                 continue
-            out.append({"line": i, "text": f"{target} — nie ma takiej ścieżki"})
+            out.append({"line": i, "text": f"{target} — no such path"})
     return out
 
 
@@ -185,18 +185,18 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
     checks = []
 
     checks.append({"id": "length", "value": n, "verdict": verdict(n, warn, error),
-                   "detail": f"{n} niepustych linii (próg {warn}/{error})"})
+                   "detail": f"{n} non-empty lines (threshold {warn}/{error})"})
 
     long_blocks = [(s, lang, c) for s, lang, c in fences(numbered) if c > 3 and lang not in EXCLUDED_LANGS]
     checks.append({"id": "blocks", "value": len(long_blocks), "verdict": verdict(len(long_blocks), 0, 2),
-                   "findings": [{"line": s, "text": f"blok {lang or 'bez języka'}, {c} linii"} for s, lang, c in long_blocks],
-                   "detail": "bloki kodu/konfiguracji > 3 linii — zamień na odnośnik do pliku"})
+                   "findings": [{"line": s, "text": f"block {lang or 'without language'}, {c} lines"} for s, lang, c in long_blocks],
+                   "detail": "code/config blocks > 3 lines — replace them with a link to a file"})
 
     prose = prose_lines(numbered)
     intents = [(i, m.group(0)) for i, l in prose for m in [INTENT_RE.search(l)] if m]
     checks.append({"id": "intents", "value": len(intents), "verdict": verdict(len(intents), 0, 3),
                    "findings": [{"line": i, "text": t} for i, t in intents],
-                   "detail": "intencje → zachowanie sprawdzalne w diffie albo usuń"})
+                   "detail": "intentions → behaviour you can check in a diff, or remove them"})
 
     headings = [(i, l) for i, l in prose if re.match(r"^#{1,6}\s", l)]
     critical = [i for i, l in prose if CRITICAL_RE.search(l)]
@@ -204,7 +204,7 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
     findings = []
     if n > 30 and not headings:
         v = "ERROR"
-        findings.append({"line": 1, "text": "brak nagłówków w pliku dłuższym niż 30 linii"})
+        findings.append({"line": 1, "text": "no headings in a file longer than 30 lines"})
     elif not critical:
         v = "OK"
     else:
@@ -217,15 +217,15 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
         else:
             v = "WARN"
         for i in late:
-            findings.append({"line": i, "text": "reguła krytyczna po 200. linii — przenieś na górę"})
+            findings.append({"line": i, "text": "critical rule after line 200 — move it to the top"})
         if first > max(10, n / 3):
-            findings.append({"line": critical[0], "text": "pierwsza reguła krytyczna poza pierwszą trzecią pliku"})
+            findings.append({"line": critical[0], "text": "the first critical rule is outside the first third of the file"})
     if headings and INTRO_RE.match(headings[0][1]) and v == "OK":
         v = "WARN"
     if headings and INTRO_RE.match(headings[0][1]):
-        findings.append({"line": headings[0][0], "text": "plik zaczyna się wstępem — zakazy i polecenia przed opisem"})
+        findings.append({"line": headings[0][0], "text": "the file starts with an introduction — put bans and commands before the description"})
     checks.append({"id": "order", "value": critical[0] if critical else 0, "verdict": v, "findings": findings,
-                   "detail": "krytyczne reguły w pierwszej trzeciej, bez wstępu na górze",
+                   "detail": "critical rules in the first third, no introduction at the top",
                    "headings": [{"line": i, "text": l.strip()} for i, l in headings]})
 
     imports, effective = [], n
@@ -247,10 +247,10 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
     missing = [x for x in imports if x.get("missing")]
     checks.append({"id": "imports", "value": len(imports), "verdict": "WARN" if missing else "OK",
                    "findings": imports, "effective_lines": effective,
-                   "detail": f"długość z importami: {effective} (importy ładują się przy starcie — nie oszczędzają kontekstu)"})
+                   "detail": f"length with imports: {effective} (imports load at startup — they do not save context)"})
     stale = stale_refs(numbered, outside_factory_block(raw), path, root or path.parent)
     checks.append({"id": "stale", "value": len(stale), "verdict": "WARN" if stale else "OK", "findings": stale,
-                   "detail": "odwołania do plików i poleceń, których nie ma — popraw albo usuń wpis"})
+                   "detail": "references to files and commands that do not exist — fix or remove the entry"})
     return {"path": str(path), "checks": checks}
 
 
@@ -304,52 +304,52 @@ def render(results, repo, root):
                 shown = shown.relative_to(root)
             except ValueError:
                 pass
-        out.append(f"Przegląd instrukcji — {shown.as_posix()}")
-        out.append(f"  {'kontrola':<10} {'werdykt':<7} szczegóły")
+        out.append(f"Instruction review — {shown.as_posix()}")
+        out.append(f"  {'check':<10} {'verdict':<7} details")
         for c in r["checks"]:
             out.append(f"  {c['id']:<10} {c['verdict']:<7} {c['detail']}")
             for f in c.get("findings", [])[:10]:
                 label = f.get("text") or f.get("target", "")
                 if f.get("missing"):
-                    label += " — brak pliku"
+                    label += " — file not found"
                 if f.get("external"):
-                    label += " — import spoza repo (wymaga zgody przy starcie)"
+                    label += " — import from outside the repo (needs approval at startup)"
                 out.append(f"      l.{f.get('line', '?')}: {label}")
         out.append("")
     if repo is not None:
-        out.append(f"Repozytorium — plik główny: {repo['main_file'] or 'brak'}")
+        out.append(f"Repository — main file: {repo['main_file'] or 'none'}")
         for p in repo["unindexed"]:
-            out.append(f"  WARN {p}: niewymieniony w pliku głównym (dopisz do sekcji „Moduły z własnym CLAUDE.md”)")
+            out.append(f"  WARN {p}: not listed in the main file (add it to the \"Modules with their own CLAUDE.md\" section)")
         for d in repo["duplicates"]:
-            out.append(f"  WARN {d['file']}:{d['line']}: kopia reguły z pliku głównego — {d['text'][:80]}")
+            out.append(f"  WARN {d['file']}:{d['line']}: copy of a rule from the main file — {d['text'][:80]}")
         if not repo["unindexed"] and not repo["duplicates"]:
-            out.append("  OK indeks i brak kopii reguł")
-    out.append("Ocenę wiedzy zbędnej (kontrola 4) i sensu reguł zrób ręcznie wg skilla core-agent-instructions.")
+            out.append("  OK index and no copied rules")
+    out.append("Assess unneeded knowledge (check 4) and the sense of the rules by hand, as the core-agent-instructions skill says.")
     return "\n".join(out)
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0],
                                  formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
-    ap.add_argument("files", nargs="*", help="pliki instrukcji do sprawdzenia")
-    ap.add_argument("--root", help="katalog repo: znajdź wszystkie pliki instrukcji i sprawdź indeks oraz duplikaty")
-    ap.add_argument("--warn", type=int, default=200, help="próg WARN długości (domyślnie 200)")
-    ap.add_argument("--error", type=int, default=500, help="próg ERROR długości (domyślnie 500)")
-    ap.add_argument("--strict", action="store_true", help="kod 1 także przy WARN")
-    ap.add_argument("--json", action="store_true", help="wynik w JSON")
+    ap.add_argument("files", nargs="*", help="instruction files to check")
+    ap.add_argument("--root", help="repo directory: find all instruction files and check the index and duplicates")
+    ap.add_argument("--warn", type=int, default=200, help="WARN length threshold (default 200)")
+    ap.add_argument("--error", type=int, default=500, help="ERROR length threshold (default 500)")
+    ap.add_argument("--strict", action="store_true", help="exit code 1 also on WARN")
+    ap.add_argument("--json", action="store_true", help="output as JSON")
     a = ap.parse_args(argv)
     if not a.files and not a.root:
         ap.print_usage(sys.stderr)
-        print("podaj plik(i) albo --root", file=sys.stderr)
+        print("give file(s) or --root", file=sys.stderr)
         return 2
     root = Path(a.root).resolve() if a.root else None
     if root and not root.is_dir():
-        print(f"brak katalogu: {root}", file=sys.stderr)
+        print(f"directory not found: {root}", file=sys.stderr)
         return 2
     paths = [Path(f) for f in a.files]
     for p in paths:
         if not p.is_file():
-            print(f"brak pliku: {p}", file=sys.stderr)
+            print(f"file not found: {p}", file=sys.stderr)
             return 2
     if root:
         paths += [p for p in discover(root) if p.resolve() not in {x.resolve() for x in paths}]

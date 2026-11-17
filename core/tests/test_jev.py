@@ -163,7 +163,7 @@ def main() -> int:
     bad = subprocess.run([sys.executable, str(gc), str(proj / "r.md"), "--jev"], capture_output=True, text=True, env=genv)
     Fake.script = {"verdict": "contradicts", "verdict:conf": 0.5}
     unsure = subprocess.run([sys.executable, str(gc), str(proj / "r.md"), "--jev"], capture_output=True, text=True, env=genv)
-    if ok.returncode != 0 or bad.returncode != 1 or "nie potwierdza" not in bad.stdout or "? " not in unsure.stdout:
+    if ok.returncode != 0 or bad.returncode != 1 or "does not support" not in bad.stdout or "? " not in unsure.stdout:
         fails.append(f"grounding_check --jev: {ok.stdout[-200:]} | {bad.stdout[-200:]} | {unsure.stdout[-200:]}")
 
     # 8. strażnik treści z sieci

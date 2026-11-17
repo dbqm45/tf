@@ -110,12 +110,12 @@ def check_doc(doc: Path) -> list[str]:
             target = resolve(doc, path)
             where = f"{doc.relative_to(ROOT) if doc.is_relative_to(ROOT) else doc}:{n}"
             if target is None:
-                problems.append(f"{where}: nie istnieje `{path}`")
+                problems.append(f"{where}: `{path}` does not exist")
             elif m and target.is_file():
                 last = int(m.group("b") or m.group("a"))
                 lines = len(target.read_text(encoding="utf-8", errors="ignore").splitlines())
                 if last > lines:
-                    problems.append(f"{where}: `{ref}` — plik ma {lines} linii")
+                    problems.append(f"{where}: `{ref}` — the file has {lines} lines")
     return problems
 
 
@@ -132,11 +132,11 @@ def jev_citations(doc: Path, limit: int) -> tuple[list[str], list[str]]:
     cands = [d / ".claude" / "hooks" for d in (ROOT, *ROOT.parents)] + [Path(__file__).resolve().parents[3] / "hooks"]
     hooks = next((h for h in cands if (h / "jev_client.py").exists()), None)
     if not hooks:
-        return [], ["brak .claude/hooks/jev_client.py — pominięto --jev"]
+        return [], [".claude/hooks/jev_client.py not found — skipped --jev"]
     sys.path.insert(0, str(hooks))
     import jev_client as jev
     if not jev.enabled():
-        return [], ["--jev wymaga zmiennej TYPESAFE_API_KEY — pominięto weryfikację treści"]
+        return [], ["--jev needs the TYPESAFE_API_KEY variable — skipped the content check"]
     problems, review, done = [], [], 0
     in_code = False
     for n, line in enumerate(doc.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
@@ -165,15 +165,15 @@ def jev_citations(doc: Path, limit: int) -> tuple[list[str], list[str]]:
             done += 1
             where = f"{doc.relative_to(ROOT) if doc.is_relative_to(ROOT) else doc}:{n}"
             if not ans:
-                review.append(f"{where}: `{span}` — Jev nie odpowiedział")
+                review.append(f"{where}: `{span}` — Jev did not answer")
                 continue
             v, conf = ans["verdict"].get("choice"), float(ans["verdict"].get("confidence") or 0)
             if conf < JEV_ACCEPT:
-                review.append(f"{where}: `{span}` — niepewne ({v}, pewność {conf:.2f}) — sprawdź ręcznie")
+                review.append(f"{where}: `{span}` — uncertain ({v}, confidence {conf:.2f}) — check by hand")
             elif v == "contradicts":
-                problems.append(f"{where}: `{span}` PRZECZY zdaniu (pewność {conf:.2f})")
+                problems.append(f"{where}: `{span}` CONTRADICTS the sentence (confidence {conf:.2f})")
             elif v == "says_nothing":
-                problems.append(f"{where}: `{span}` nie potwierdza zdania — wskazane linie o tym nie mówią (pewność {conf:.2f})")
+                problems.append(f"{where}: `{span}` does not support the sentence — the cited lines say nothing about it (confidence {conf:.2f})")
     return problems, review
 
 
@@ -199,7 +199,7 @@ def main(argv: list[str]) -> int:
         print("? " + x)
     for x in problems:
         print(("⚠ " if warn else "✗ ") + x)
-    print(f"{'✓' if not problems else ('⚠' if warn else '✗')} odwołania: {len(docs)} dokumentów, problemów: {len(problems)}")
+    print(f"{'✓' if not problems else ('⚠' if warn else '✗')} references: {len(docs)} documents, problems: {len(problems)}")
     return 0 if warn or not problems else 1
 
 

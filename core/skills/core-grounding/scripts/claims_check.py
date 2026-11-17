@@ -50,26 +50,26 @@ def check_text(text: str, label: str, today: dt.date) -> tuple[list[str], list[s
         for m in FRACTION.finditer(line):
             a, b, z = int(m.group(1)), int(m.group(2)), m.group(3).replace(",", ".")
             if b == 0:
-                errors.append(f"{where}: {m.group(0)} — dzielenie przez zero")
+                errors.append(f"{where}: {m.group(0)} — division by zero")
                 continue
             decimals = len(z.split(".")[1]) if "." in z else 0
             want = 100 * a / b
             if abs(float(z) - want) > 0.5 * 10 ** -decimals + 1e-9:
-                errors.append(f"{where}: {m.group(0)} — {a}/{b} to {want:.{decimals}f}%, nie {z}%")
+                errors.append(f"{where}: {m.group(0)} — {a}/{b} is {want:.{decimals}f}%, not {z}%")
         for m in DATE.finditer(line):
             try:
                 day = dt.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
             except ValueError:
-                errors.append(f"{where}: {m.group(0)} — taka data nie istnieje")
+                errors.append(f"{where}: {m.group(0)} — this date does not exist")
                 continue
             if day > today and STATE_WORDS.search(line):
-                errors.append(f"{where}: {m.group(0)} — data stanu z przyszłości (dziś {today.isoformat()})")
+                errors.append(f"{where}: {m.group(0)} — state date is in the future (today is {today.isoformat()})")
         if line.lstrip().startswith("|"):
             continue
         claims = [c.group(0) for c in CLAIM.finditer(line)]
         if claims and not declared and not SOURCE.search(line):
-            warnings.append(f"{where}: {', '.join(claims)} — liczba bez śladu pochodzenia w tej linii "
-                            f"(polecenie, ścieżka, link, źródło albo [assumption])")
+            warnings.append(f"{where}: {', '.join(claims)} — number with no trace of origin in this line "
+                            f"(command, path, link, source or [assumption])")
     return errors, warnings
 
 
@@ -93,17 +93,17 @@ def main(argv: list[str]) -> int:
     for arg in args:
         for f in files(arg):
             if not f.is_file():
-                errors.append(f"{f}: brak pliku")
+                errors.append(f"{f}: file not found")
                 continue
             e, w = check_text(f.read_text(encoding="utf-8", errors="replace"), f.as_posix(), today)
             errors += e
             warnings += w
     verdict = "ERRORS" if errors else ("WARNINGS" if warnings else "OK")
-    print(f"Werdykt: {verdict} (błędy: {len(errors)}, ostrzeżenia: {len(warnings)})")
+    print(f"Verdict: {verdict} (errors: {len(errors)}, warnings: {len(warnings)})")
     for e in errors:
         print(f"✗ {e}")
     for w in warnings:
-        print(f"⚠ ostrzeżenie: {w}")
+        print(f"⚠ warning: {w}")
     return 1 if errors or (strict and warnings) else 0
 
 
