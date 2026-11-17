@@ -6,7 +6,8 @@
   python3 tools/translation_check.py core/factory/traits/grounded.md        # pojedynczy plik
 
 Tłumaczenie zmienia język prozy, a nie fakty. Dla każdego pliku .md porównuje:
-- bloki kodu (``` … ```) — identyczne i w tej samej kolejności (komentarze i treść <placeholderów> to proza);
+- bloki kodu z językiem (```bash … ```) — identyczne i w tej samej kolejności (komentarze i treść <placeholderów>
+  to proza); blok bez języka (albo `text`, `markdown`) to przykład wyjścia — porównywany jak proza;
 - fragmenty w `…` (polecenia, ścieżki, pola, progi) — ten sam zbiór z krotnością;
 - liczby — te same ciągi cyfr (0,8 i 0.8 to ta sama liczba);
 - odnośniki markdown i adresy URL — te same cele;
@@ -47,10 +48,18 @@ def _code(block: str) -> str:
     return PLACEHOLDER.sub("<>", COMMENT.sub(r"\1", block)).rstrip()
 
 
+PROSE_LANGS = ("", "text", "markdown", "md")   # blok bez języka = przykład wyjścia (proza), tłumaczy się
+
+
+def _is_code(block: str) -> bool:
+    return block[3:].split("\n", 1)[0].strip().lower() not in PROSE_LANGS
+
+
 def facts(text: str) -> dict:
     fm, body = _front(text)
-    blocks = [_code(b) for b in CODE_BLOCK.findall(body)]
-    prose = CODE_BLOCK.sub(" ", body)
+    raw = CODE_BLOCK.findall(body)
+    blocks = [_code(b) for b in raw if _is_code(b)]
+    prose = CODE_BLOCK.sub(lambda m: " " if _is_code(m.group(0)) else m.group(0).strip("`"), body)
     lines = prose.splitlines()
     return {
         "front": fm,
