@@ -293,7 +293,7 @@ def suggest(prompt: str, items: list[dict]) -> list:
         if picks is not None:
             LAST_VIA = "jev"
             return picks
-        LAST_VIA = "keywords (Jev niedostępny)"
+        LAST_VIA = "keywords (Jev unavailable)"
     return select(prompt, items, exclude)
 
 
@@ -309,14 +309,14 @@ def hint(prompt: str, data: dict | None = None) -> str:
     top, rest = picks[0][0], [s for s, _ in picks[1:]]
     if top >= CLEAR_SCORE and (not rest or top >= CLEAR_LEAD * rest[0]):
         # wyraźny lider (ewaluacje 2026-10-02: przy łagodnej podpowiedzi model bywał pewny swojej wiedzy i pomijał skill)
-        lines = [f"Polecenie wyraźnie pasuje do skilla fabryki {picks[0][1]['name']} (podpowiedź hooka skill_hint). "
-                 "Wczytaj go narzędziem Skill, zanim odpowiesz — zawiera reguły i procedury tego projektu, których "
-                 "nie ma w wiedzy ogólnej."]
+        lines = [f"The prompt clearly matches the factory skill {picks[0][1]['name']} (a hint from the skill_hint hook). "
+                 "Load it with the Skill tool before you answer — it holds this project's rules and procedures, which "
+                 "general knowledge does not have."]
     else:
-        lines = ["Skille fabryki prawdopodobnie pasujące do tego polecenia (podpowiedź hooka skill_hint):"]
+        lines = ["Factory skills that probably match this prompt (a hint from the skill_hint hook):"]
     lines += [f"- {it['name']} — {it['desc']}" for _, it in picks]
-    lines.append("Jeśli zadanie mieści się w zakresie któregoś z nich, wczytaj go narzędziem Skill przed odpowiedzią "
-                 "i stosuj jego reguły zamiast wiedzy ogólnej. Jeśli nie pasuje, zignoruj tę podpowiedź.")
+    lines.append("If the task is within the scope of one of them, load it with the Skill tool before answering "
+                 "and apply its rules instead of general knowledge. If none matches, ignore this hint.")
     return "\n".join(lines)
 
 
@@ -326,10 +326,10 @@ def main(argv: list[str]) -> int:
         off = off_stack(prompt)
         for s, it in rank(prompt, load_index())[:8]:
             try:
-                print(f"{s:6.2f}  {it['name']}" + ("   (poza stackiem projektu — pominięty)" if it["name"] in off else ""))
+                print(f"{s:6.2f}  {it['name']}" + ("   (outside the project's stack — skipped)" if it["name"] in off else ""))
             except BrokenPipeError:
                 return 0
-        print("---\n" + (hint(prompt) or "(brak podpowiedzi — poniżej progu)"))
+        print("---\n" + (hint(prompt) or "(no hint — below the threshold)"))
         return 0
     if os.environ.get("CLAUDE_SKILL_HINT") == "0":
         return 0

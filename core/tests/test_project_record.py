@@ -55,7 +55,7 @@ def wip_tests() -> list[str]:
         before = wip.stat().st_mtime
         run(root, "--hook-snapshot", "koniec sesji")
         body = wip.read_text()
-        if "zdarzenie: koniec sesji" not in body or (git_ok and "`app.ts`" not in body) or wip.stat().st_mtime != before:
+        if "event: session end" not in body or (git_ok and "`app.ts`" not in body) or wip.stat().st_mtime != before:
             fails.append("migawka: brak stanu automatycznego, pliku app.ts albo zmieniony czas modyfikacji")
         old = before - 3600
         os.utime(wip, (old, old))
@@ -122,7 +122,7 @@ def english_tests() -> list[str]:
             fails.append("EN-5: obszar z **Evidence:** i kandydaci poniżej progu (po angielsku) " + run(root, "evidence").stdout[-200:])
         (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E2\n- **Named by the human:** yes"))
         r = run(root, "evidence")
-        if r.returncode != 0 or "wskazany przez człowieka" not in r.stdout:
+        if r.returncode != 0 or "named by the human" not in r.stdout:
             fails.append(f"EN-6: **Named by the human:** yes daje ostrzeżenie, nie błąd: {r.stdout[-200:]}")
     return fails
 
@@ -149,11 +149,11 @@ def resume_tests() -> list[str]:
         (root / "a.txt").write_text("2")
         g("commit", "-q", "-am", "zmiana spoza sesji")
         s = run(root, "--hook-session").stdout
-        if "różni się od punktu kontrolnego" not in s or "1 commit" not in s:
+        if "differs from the checkpoint" not in s or "1 commit" not in s:
             fails.append(f"wznowienie: brak ostrzeżenia o nowym commicie od zapisu: {s[-300:]}")
         g("checkout", "-q", "-b", "inna")
         s = run(root, "--hook-session").stdout
-        if "gałąź" not in s or "inna" not in s:
+        if "branch" not in s or "inna" not in s:
             fails.append(f"wznowienie: brak ostrzeżenia o innej gałęzi: {s[-300:]}")
     return fails
 
@@ -182,14 +182,14 @@ def main() -> int:
                  _body="# Retro\n## TL;DR\nWiem że zespół napewno zdąży.\n## Otwarte pytania\n## Przekazanie\n- Dla: ewa\n")
         chk = run(root, "check")
         lint = SCRIPT.parent.parent / "skills" / "txt-polish-correctness" / "scripts" / "polish_lint.py"   # pack-editorial-pl
-        if chk.returncode != 0 or (lint.exists() and "uwag językowych" not in chk.stdout):
+        if chk.returncode != 0 or (lint.exists() and "language remarks" not in chk.stdout):
             fails.append(f"check: ostrzeżenie językowe dla artefaktu po polsku: {chk.stdout[-300:]}")
         (root / "docs/project/07-review/2026-09-27-retro.md").unlink()
         artifact(root, "08-operations/2026-10-03-review-utrzymania.md", artifact="operations-review", phase="operations",
                  _body="# Przegląd utrzymania\n## TL;DR\nTrzy łatki wdrożone.\n## Otwarte pytania\n## Przekazanie\n- Dla: piotr\n")
         chk = run(root, "check")
         idx = (root / "docs/project/README.md").read_text() if (root / "docs/project/README.md").exists() else ""
-        if chk.returncode != 0 or "Utrzymanie" not in idx:
+        if chk.returncode != 0 or "Operations" not in idx:
             fails.append(f"faza 9 (operations, 08-operations/) jako artefakt dziennika: {chk.stdout[-300:]}")
         (root / "docs/project/08-operations/2026-10-03-review-utrzymania.md").unlink()
         bad = [
@@ -209,10 +209,10 @@ def main() -> int:
         if "Brief \\| gotowy" not in (root / "docs/project/journal.md").read_text():
             fails.append("log z escapowaniem |")
         readme = (root / "docs/project/README.md").read_text()
-        if "Wymagania" not in readme or "Krótko o wyniku" not in readme:
+        if "Requirements" not in readme or "Krótko o wyniku" not in readme:
             fails.append("indeks README")
         hook = run(root, "--hook-session").stdout
-        if "bieżąca faza:" not in hook:
+        if "current phase:" not in hook:
             fails.append(f"hook sesji: {hook!r}")
         (root / "docs/project/README.md").unlink()
         run(root, "--hook-index", stdin=json.dumps({"tool_input": {"file_path": str(root / "docs/project/01-discovery/brief.md")}}))
@@ -266,7 +266,7 @@ def main() -> int:
         (dom / "corpus.md").write_text(corpus)
         (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E3") + "- **Wskazany przez człowieka:** tak\n")
         r = run(root, "evidence")
-        if r.returncode != 0 or "wskazany przez człowieka" not in r.stdout:
+        if r.returncode != 0 or "named by the human" not in r.stdout:
             fails.append("evidence: obszar wskazany przez człowieka powinien dać ostrzeżenie, nie błąd")
     fails += english_tests()
     with tempfile.TemporaryDirectory() as d:

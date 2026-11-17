@@ -71,10 +71,10 @@ def on_edit(data: dict) -> None:
         return
     seen.append(skill)
     save_state(root, state)
-    msg = (f"Zmieniono skill {skill}. Zanim uznasz pracę za skończoną, uruchom bramkę jakości: "
-           f"`python3 .tf/factory/skill_gate.py {skill}` (bezpłatnie: struktura, scenariusze, podpowiedź, regresja innych "
-           "skilli, polszczyzna). Nowy skill zaczynasz od scenariuszy ewaluacji (skill core-skill-authoring). Ewaluację "
-           f"na modelu (`--model haiku,sonnet`) uruchamiasz dopiero po zgodzie człowieka — jest płatna.")
+    msg = (f"The skill {skill} was changed. Before you consider the work finished, run the quality gate: "
+           f"`python3 .tf/factory/skill_gate.py {skill}` (free: structure, scenarios, hint, regression of other "
+           "skills, language). A new skill starts from evaluation scenarios (the core-skill-authoring skill). An evaluation "
+           f"on a model (`--model haiku,sonnet`) you run only after a human's consent — it is paid.")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": msg}},
                      ensure_ascii=False))
 
@@ -94,8 +94,8 @@ def on_stop(data: dict) -> None:
     stale = [s for s in seen if (root / ".claude" / "skills" / s / "SKILL.md").exists()
              and reg.get(s, {}).get("fingerprint") != build.skill_fingerprint(s)]
     if stale:
-        print(json.dumps({"systemMessage": "⚠ Skille zmienione w tej sesji bez zaliczonej bramki jakości: "
-                          + ", ".join(stale) + f". Uruchom: python3 .tf/factory/skill_gate.py {' '.join(stale)}"},
+        print(json.dumps({"systemMessage": "⚠ Skills changed in this session without a passed quality gate: "
+                          + ", ".join(stale) + f". Run: python3 .tf/factory/skill_gate.py {' '.join(stale)}"},
                          ensure_ascii=False))
 
 

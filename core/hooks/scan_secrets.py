@@ -31,7 +31,7 @@ RULES = [
     ("Google API key", r"\bAIza[0-9A-Za-z_-]{35}\b"),
     ("Stripe live key", r"\b(sk|rk)_live_[0-9a-zA-Z]{20,}\b"),
     ("JWT", r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"),
-    ("hasło/sekret w kodzie",
+    ("password/secret in code",
      r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token|client[_-]?secret)\b\s*[:=]\s*['\"]([^'\"\s]{12,})['\"]"),
 ]
 PLACEHOLDER = re.compile(r"(?i)(example|changeme|change_me|placeholder|your[_-]|xxx|dummy|test|fake|<|\$\{|process\.env|os\.environ)")
@@ -59,9 +59,9 @@ def main() -> None:
             if m and not PLACEHOLDER.search(m.group(0)):
                 findings.append(f"  {path}:{lineno}: {label}")
     if findings:
-        print("[scan_secrets] W zapisanym pliku wykryto prawdopodobne sekrety:\n" + "\n".join(findings[:10]) +
-              "\nUsuń je i odczytuj wartość ze zmiennej środowiskowej. Jeśli to prawdziwy sekret, "
-              "poinformuj użytkownika, że należy go zrotować.", file=sys.stderr)
+        print("[scan_secrets] Likely secrets were found in the saved file:\n" + "\n".join(findings[:10]) +
+              "\nRemove them and read the value from an environment variable. If it is a real secret, "
+              "tell the user that it must be rotated.", file=sys.stderr)
         record_block("scan_secrets", "deny")
         sys.exit(2)
     sys.exit(0)

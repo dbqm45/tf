@@ -146,7 +146,7 @@ def main() -> int:
     via_fb = hint.LAST_VIA
     os.environ["TYPESAFE_BASE_URL"] = base
     os.environ["CLAUDE_SKILL_HINT_JEV"] = "0"
-    if none != [] or not fallback or "niedostępny" not in via_fb:
+    if none != [] or not fallback or "unavailable" not in via_fb:
         fails.append(f"jev_suggest: „pasuje” < 0,30 albo rezerwa słów — {none} / {via_fb}")
 
     # 7. weryfikacja odwołań plik:linia
@@ -175,7 +175,7 @@ def main() -> int:
     on = hook("jev_guard.py", page, {**env, "CLAUDE_JEV_GUARD": "1"})
     Fake.script = {"run_command": 0.05, "override": 0.05, "secrets": 0.05}
     clean = hook("jev_guard.py", page, {**env, "CLAUDE_JEV_GUARD": "1"})
-    if off.strip() or "UWAGA (jev_guard)" not in on or "polecenie do uruchomienia" not in on or clean.strip():
+    if off.strip() or "WARNING (jev_guard)" not in on or "a command to run" not in on or clean.strip():
         fails.append(f"jev_guard web: {off!r} / {on[:120]!r} / {clean!r}")
 
     # 9. strażnik raportów wykonawców: jedna prośba o poprawę, bez pętli
@@ -190,7 +190,7 @@ def main() -> int:
     es = hook("jev_guard.py", {**rep, "agent_type": "es-participant"}, renv)
     Fake.script = {"unverified": 0.1, "unfinished": 0.1}
     fine = hook("jev_guard.py", rep, renv)
-    if '"decision": "block"' not in blocked or "polecenie weryfikacji" not in blocked or again.strip() or es.strip() \
+    if '"decision": "block"' not in blocked or "verification command" not in blocked or again.strip() or es.strip() \
             or fine.strip():
         fails.append(f"jev_guard raport: {blocked[:120]!r} / {again!r} / {es!r} / {fine!r}")
 

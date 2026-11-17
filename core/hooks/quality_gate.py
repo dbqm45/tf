@@ -46,7 +46,7 @@ def clip(out: str, saved: str) -> str:
     całość. Pierwszy błąd bywa na początku logu, podsumowanie na końcu — sam koniec gubi przyczynę."""
     if len(out) <= HEAD + TAIL:
         return out
-    return (out[:HEAD] + f"\n… [pominięto {len(out) - HEAD - TAIL} znaków; całość: {saved}] …\n" + out[-TAIL:])
+    return (out[:HEAD] + f"\n… [skipped {len(out) - HEAD - TAIL} characters; full output: {saved}] …\n" + out[-TAIL:])
 
 
 def save_output(root: Path, name: str, out: str) -> str:
@@ -137,17 +137,17 @@ def decide(root: Path, data: dict) -> dict | None:
         return None
     marker = root / ".claude" / "quality-gate.expected-red"
     if marker.is_file():
-        print(f"bramka jakości: zadeklarowana czerwona partia — {marker.read_text(encoding='utf-8').strip()[:200]}",
+        print(f"quality gate: a declared red batch — {marker.read_text(encoding='utf-8').strip()[:200]}",
               file=sys.stderr)
         return None
     max_blocks = int(cfg.get("max_blocks", 3))
     red = state.get("red") or {}
     if red.get("fp") == fp and red.get("count", 0) >= max_blocks:
-        return {"systemMessage": f"Bramka jakości: testy wciąż czerwone po {max_blocks} próbach na tym samym stanie "
-                                 f"kodu — przepuszczam, decyzja należy do człowieka (`{cfg['command']}`)."}
+        return {"systemMessage": f"Quality gate: the tests are still red after {max_blocks} attempts on the same state of "
+                                 f"the code — letting it through, the decision is a human's (`{cfg['command']}`)."}
     ok, tail = run(root, cfg["command"], float(cfg.get("timeout", 600)))
     if ok is None:
-        print("bramka jakości: inne testy tego repozytorium trwają (blokada zajęta) — pomijam", file=sys.stderr)
+        print("quality gate: other tests of this repository are running (the lock is taken) — skipping", file=sys.stderr)
         return None
     state_path.parent.mkdir(parents=True, exist_ok=True)
     if ok:
@@ -156,14 +156,14 @@ def decide(root: Path, data: dict) -> dict | None:
     count = red.get("count", 0) + 1 if red.get("fp") == fp else 1
     state_path.write_text(json.dumps({"green": state.get("green"), "red": {"fp": fp, "count": count}}),
                           encoding="utf-8")
-    who = "podagenta" if data.get("hook_event_name") == "SubagentStop" else "tury"
+    who = "the subagent" if data.get("hook_event_name") == "SubagentStop" else "the turn"
     return {"decision": "block",
-            "reason": f"Bramka jakości: `{cfg['command']}` nie przechodzi — popraw przed zakończeniem {who} "
-                      f"(próba {count}/{max_blocks}). Jeśli czerwony test jest zamierzony (TDD), zapisz powód w "
-                      f".claude/quality-gate.expected-red.\n--- wyjście (całość: .tf/logs/{OUTPUT}) ---\n{tail}"}
+            "reason": f"Quality gate: `{cfg['command']}` does not pass — fix it before ending {who} "
+                      f"(attempt {count}/{max_blocks}). If the red test is intended (TDD), write the reason in "
+                      f".claude/quality-gate.expected-red.\n--- output (full: .tf/logs/{OUTPUT}) ---\n{tail}"}
 
 
-OFF = "Fabryka nie zablokuje czerwonych testów."
+OFF = "The factory will not block red tests."
 
 
 def _disabled_by(root: Path, env) -> str | None:
@@ -174,8 +174,8 @@ def _disabled_by(root: Path, env) -> str | None:
         except (OSError, ValueError):
             continue
         if str((cfg.get("env") or {}).get("QG_GATE_DISABLE", "")) == "1":
-            return f"w .claude/{name}"
-    return "w środowisku sesji" if env.get("QG_GATE_DISABLE") == "1" else None
+            return f"in .claude/{name}"
+    return "in the session environment" if env.get("QG_GATE_DISABLE") == "1" else None
 
 
 def gate_status(root: Path, env=None) -> tuple[str, str]:
@@ -184,21 +184,21 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
     env = os.environ if env is None else env
     where = _disabled_by(root, env)
     if where:
-        return "disabled", (f"⚠ Bramka jakości wyłączona zmienną QG_GATE_DISABLE=1 ({where}). {OFF} "
-                            "Włącz: usuń tę zmienną.")
+        return "disabled", (f"⚠ Quality gate disabled by the variable QG_GATE_DISABLE=1 ({where}). {OFF} "
+                            "To turn it on: remove this variable.")
     cfg_path = root / ".claude" / "quality-gate.json"
-    hint = 'Włącz: tf onboard --yes (wykryje polecenie testów) albo wpisz je do tego pliku, np. {"command": "npm test"}.'
+    hint = 'To turn it on: tf onboard --yes (it detects the test command) or write it in this file, e.g. {"command": "npm test"}.'
     if not cfg_path.is_file():
-        return "no-config", f"⚠ Bramka jakości wyłączona: brak pliku .claude/quality-gate.json. {OFF} {hint}"
+        return "no-config", f"⚠ Quality gate disabled: no .claude/quality-gate.json file. {OFF} {hint}"
     try:
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         cfg = None
     if not isinstance(cfg, dict):
-        return "invalid", (f"⚠ Bramka jakości wyłączona: plik .claude/quality-gate.json nie jest poprawnym JSON-em. "
-                           f"{OFF} Popraw plik.")
+        return "invalid", (f"⚠ Quality gate disabled: the file .claude/quality-gate.json is not valid JSON. "
+                           f"{OFF} Fix the file.")
     if not cfg.get("command"):
-        return "no-command", (f"⚠ Bramka jakości wyłączona: w .claude/quality-gate.json brakuje pola „command”. "
+        return "no-command", (f"⚠ Quality gate disabled: .claude/quality-gate.json lacks the \"command\" field. "
                               f"{OFF} {hint}")
     command = cfg["command"] if isinstance(cfg["command"], str) else " ".join(map(str, cfg["command"]))
     marker = root / ".claude" / "quality-gate.expected-red"
@@ -207,9 +207,9 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
             reason = marker.read_text(encoding="utf-8").strip()[:200]
         except OSError:
             reason = ""
-        return "expected-red", ("⚠ Bramka jakości przepuszcza czerwone testy: plik .claude/quality-gate.expected-red"
-                                + (f" ({reason})" if reason else "") + ". Usuń go po zakończeniu partii.")
-    return "on", f"✓ Bramka jakości włączona: `{command}`."
+        return "expected-red", ("⚠ Quality gate lets red tests through: the file .claude/quality-gate.expected-red"
+                                + (f" ({reason})" if reason else "") + ". Remove it when the batch is done.")
+    return "on", f"✓ Quality gate on: `{command}`."
 
 
 def main() -> int:
@@ -226,7 +226,7 @@ def main() -> int:
     try:
         out = decide(root, data)
     except Exception as e:  # noqa: BLE001 — bramka nie może wywrócić sesji
-        print(f"bramka jakości: błąd ({e}) — pomijam", file=sys.stderr)
+        print(f"quality gate: error ({e}) — skipping", file=sys.stderr)
         return 0
     if out:
         print(json.dumps(out, ensure_ascii=False))

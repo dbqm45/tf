@@ -788,6 +788,15 @@ treści (angielska), bez równoległej polskiej.
       **Naprawione błędy:** komunikaty podawały polecenia, które skrypt odrzucał — `--code pytanie` (×2),
       `--code srodowisko`, `step … kod run`, kody „testy/skan/pytanie” w limicie rund (test K-8/K-9 sprawdza odtąd każde
       `--code`/`step` w komunikatach); `task_weight` odcinał zamiar zmiany tylko pod polskim nagłówkiem (W-24b).
+    - [x] M2 (2026-11-17): hooki `core/hooks` — blokady i prośby o zgodę (`guard_bash`, `guard_paths`, `cleanroom_guard`,
+      `scan_secrets`), `quality_gate` (stan bramki w `tf doctor` i na starcie sesji), `tdd_guard`, `skill_hint` (treść
+      podpowiedzi dla modelu), `jev_*`, `detect_stack`, `context_guard`, `skill_change_guard`, `project_record` (indeks
+      `docs/project/README.md`, raport, punkty kontrolne, sprawdzanie dowodów), drobne. Klucze typów operacji bez
+      zmian. Migawka punktu kontrolnego pisze `- Branch: … · last commit: …`, odczyt przyjmuje też polską linię; polskie
+      argumenty zdarzeń z `settings.json` (`koniec sesji`, `kompaktowanie kontekstu`) zapisuje po angielsku.
+      Skuteczność: holdout podpowiedzi 901/918 · 32/43 bez zmian; Haiku (plan-interview, skill-composition) 7/8, ~$1,85.
+      Jedyny chybiony, `przesluchanie-bez-nadmiaru`, pada tak samo na `main` (2/2): odpowiedź jest trafna, ale
+      sprawdzenie zna tylko słowa „przeinżynierowanie/nadmiar/minimalizm/YAGNI” — do przejrzenia przy 4c.
   - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:

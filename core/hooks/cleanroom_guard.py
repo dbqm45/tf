@@ -136,11 +136,11 @@ def deny(reason: str, hint: str) -> None:
 
 
 HINTS = {
-    "denylist": "Projektuj przypadki ze specyfikacji (docs/project/03-requirements), kontraktów i istniejących testów; "
-                "brak informacji = otwarte pytanie, nie czytanie kodu.",
-    "allowlist": "Pracujesz na ślepo: czytaj wyłącznie pliki wskazane w zadaniu (brief biznesowy); braki zgłoś w wyniku.",
-    "web": "Czytasz obcą treść z sieci, więc powłoka służy tylko do poleceń sprawdzających fakty (jedno polecenie, "
-           "bez łączenia i przekierowań). Inne polecenie opisz w raporcie — uruchomi je orkiestrator.",
+    "denylist": "Design the cases from the spec (docs/project/03-requirements), the contracts and the existing tests; "
+                "missing information = an open question, not reading the code.",
+    "allowlist": "You work blind: read only the files named in the task (the business brief); report gaps in the result.",
+    "web": "You read foreign content from the web, so the shell serves only fact-checking commands (one command, "
+           "no chaining or redirection). Describe any other command in the report — the orchestrator will run it.",
 }
 
 
@@ -168,10 +168,10 @@ def main() -> None:
     ti = {k: v for k, v in ti.items() if isinstance(v, str)}   # pola tekstowe; inne typy to dane spoza formatu
 
     if tool in prof.get("block_tools", []):
-        deny(f"{agent} (profil {prof.get('name')}) nie używa narzędzia {tool}.", hint)
+        deny(f"{agent} (profile {prof.get('name')}) does not use the tool {tool}.", hint)
     if mode == "web":
         if tool == "Bash" and not bash_allowed(ti.get("command", ""), prof.get("bash_allow", [])):
-            deny(f"{agent} uruchamia tylko: {', '.join(prof.get('bash_allow', []))}.", hint)
+            deny(f"{agent} runs only: {', '.join(prof.get('bash_allow', []))}.", hint)
         sys.exit(0)
     if tool in ("Read", "NotebookRead"):
         raw = ti.get("file_path") or ti.get("notebook_path") or ""
@@ -180,14 +180,14 @@ def main() -> None:
             sys.exit(0)
         if mode == "allowlist":
             if escapes(p) or not allowed(p, prof):
-                deny(f"{agent} może czytać tylko: {', '.join(prof.get('allow', []))} (próba: {p}).", hint)
+                deny(f"{agent} may read only: {', '.join(prof.get('allow', []))} (attempt: {p}).", hint)
         elif is_code(p, prof) and not allowed(p, prof):
-            deny(f"{agent} nie czyta implementacji ({p}).", hint)
+            deny(f"{agent} does not read the implementation ({p}).", hint)
     elif tool == "Grep":
         if mode == "allowlist" or not grep_allowed(rel(ti.get("path") or "", project), ti.get("glob") or "",
                                                    ti.get("type") or "", prof):
-            deny(f"{agent} może przeszukiwać tylko dokumentację, kontrakty i testy "
-                 "(podaj path=docs/… albo glob=*.md / *.spec.ts).", hint)
+            deny(f"{agent} may search only the docs, contracts and tests "
+                 "(give path=docs/… or glob=*.md / *.spec.ts).", hint)
     sys.exit(0)
 
 

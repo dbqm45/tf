@@ -74,7 +74,7 @@ def redact(value):
     """Wycina sekrety ze wszystkich napisów (rekurencyjnie) i skraca długie teksty."""
     if isinstance(value, str):
         v = SECRET_RE.sub("[UKRYTO]", value)
-        return v if len(v) <= MAX_STATE_CHARS else v[:MAX_STATE_CHARS] + " …[skrócono]"
+        return v if len(v) <= MAX_STATE_CHARS else v[:MAX_STATE_CHARS] + " …[truncated]"
     if isinstance(value, dict):
         return {k: redact(v) for k, v in value.items()}
     if isinstance(value, list):
@@ -176,15 +176,15 @@ def suggest_tier(task: str) -> dict | None:
     p = {k: p_yes(a[k]) for k in TIER_QUESTIONS}
     conf = min(noul_confidence(v) for v in p.values())
     if p["risky"] > HIGH:
-        tier, why = "deep", "ryzyko (bezpieczeństwo, dane, pieniądze, architektura)"
+        tier, why = "deep", "risk (security, data, money, architecture)"
     elif p["broad"] > HIGH:
-        tier, why = "std", "zakres wielu obszarów — rozbij na kroki"
+        tier, why = "std", "a scope of many areas — split it into steps"
     elif p["decision"] > HIGH and p["verifiable"] < LOW:
-        tier, why = "deep", "decyzja bez obiektywnej weryfikacji"
+        tier, why = "deep", "a decision without objective verification"
     elif p["verifiable"] > HIGH and p["reversible"] > HIGH and p["decision"] < LOW:
-        tier, why = "fast", "sprawdzalne poleceniem, odwracalne, bez decyzji"
+        tier, why = "fast", "checkable by a command, reversible, no decision"
     else:
-        tier, why = "std", "typowa praca"
+        tier, why = "std", "typical work"
     return {"tier": tier, "why": why, "confidence": round(conf, 2), "p": {k: round(v, 2) for k, v in p.items()},
             "uncertain": conf < 0.4}
 
@@ -194,23 +194,23 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 0
     if not enabled():
-        print("Jev wyłączony: ustaw TYPESAFE_API_KEY (klucz z console.typesafe.ai; nie zapisuj go w repozytorium).")
+        print("Jev off: set TYPESAFE_API_KEY (a key from console.typesafe.ai; do not write it in the repository).")
         return 2
     if "--check" in argv:
         a = decide({"text": "Ala ma kota."}, {"animal": {"type": "noul", "instructions": "Does `text` mention an animal?"}})
         if not a:
-            print("✗ Brak poprawnej odpowiedzi — sprawdź klucz, TYPESAFE_BASE_URL i dostęp do sieci.")
+            print("✗ No valid answer — check the key, TYPESAFE_BASE_URL and network access.")
             return 1
-        print(f"✓ Jev działa: p(tak)={p_yes(a['animal'])}, {a['_usage']['seconds']} s, model {a['_usage']['model']}")
+        print(f"✓ Jev works: p(yes)={p_yes(a['animal'])}, {a['_usage']['seconds']} s, model {a['_usage']['model']}")
         return 0
     if "--tier" in argv:
         task = " ".join(a for a in argv[1:] if a != "--tier")
         s = suggest_tier(task)
         if not s:
-            print("Brak odpowiedzi Jev — oceń zadanie rubryką core-cost-control.")
+            print("No answer from Jev — assess the task with the core-cost-control rubric.")
             return 1
-        tail = " — NIEPEWNE: oceń rubryką samodzielnie" if s["uncertain"] else ""
-        print(f"tier: {s['tier']} ({s['why']}); pewność {s['confidence']}{tail}\n{json.dumps(s['p'])}")
+        tail = " — UNCERTAIN: assess it with the rubric yourself" if s["uncertain"] else ""
+        print(f"tier: {s['tier']} ({s['why']}); confidence {s['confidence']}{tail}\n{json.dumps(s['p'])}")
         return 0
     req = json.load(sys.stdin)
     print(json.dumps(decide(req.get("state") or {}, req.get("questions") or {}), ensure_ascii=False, indent=2))

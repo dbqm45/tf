@@ -364,41 +364,41 @@ def analyze(root: Path, with_latest: bool = False) -> dict:
 
 
 LABEL = {
-    "OK": "✓ zgodny",
-    "SKILL_OUTDATED": "↑ skill starszy niż projekt — zaktualizuj skill (core-stack-sync)",
-    "PROJECT_OLDER": "↓ projekt starszy niż zakres skilla — stosuj tylko funkcje dostępne w tej wersji",
-    "MISSING_SKILL": "+ brak skilla — rozważ utworzenie (build.py new-skill)",
-    "NO_META": "? skill bez skill.meta.json — nie wiadomo, na jakiej wersji się opiera",
-    "UNKNOWN_VERSION": "? nie udało się ustalić wersji w projekcie",
+    "OK": "✓ compatible",
+    "SKILL_OUTDATED": "↑ skill older than the project — update the skill (core-stack-sync)",
+    "PROJECT_OLDER": "↓ project older than the skill's range — use only features available in this version",
+    "MISSING_SKILL": "+ no skill — consider creating one (build.py new-skill)",
+    "NO_META": "? skill without skill.meta.json — unknown which version it is based on",
+    "UNKNOWN_VERSION": "? could not determine the version in the project",
 }
 
 
 def to_text(r: dict) -> str:
-    lines = [f"Stack projektu: {r['project']}"]
+    lines = [f"Project stack: {r['project']}"]
     for t in r["technologies"]:
         based = f" | skill: {t.get('skill_min_supported', '?')}–{t['skill_based_on']}" if t.get("skill_based_on") else ""
-        latest = f" | najnowsza: {t['latest']}" if t.get("latest") else ""
+        latest = f" | latest: {t['latest']}" if t.get("latest") else ""
         lines.append(f"  {t['technology']:<12} {str(t['project_version'] or '-'):<14} ({t['source']}){based}{latest}")
         lines.append(f"    {t['skill']}: {LABEL[t['status']]}")
     for c in r["constraints"]:
         mark = "✓" if c["ok"] else ("✗" if c["ok"] is False else "?")
-        lines.append(f"  {mark} {c['from']} wymaga {c['skill']} {c['requires']} (w projekcie: {c['project_version'] or 'brak'})")
-    lines.append(f"Sugerowany stack persony: {', '.join(r['suggested_stack']) or '—'}")
+        lines.append(f"  {mark} {c['from']} requires {c['skill']} {c['requires']} (in the project: {c['project_version'] or 'none'})")
+    lines.append(f"Suggested persona stack: {', '.join(r['suggested_stack']) or '—'}")
     return "\n".join(lines)
 
 
 def to_hook(r: dict) -> str:
     if not r["actions_needed"]:
         return ""
-    lines = ["Wykryto stack projektu, który wymaga uwagi przy korzystaniu ze skilli:"]
+    lines = ["The project's stack needs attention when using skills:"]
     for t in r["technologies"]:
         if t["status"] != "OK":
             lines.append(f"- {t['technology']} {t['project_version'] or ''} → {t['skill']}: {LABEL[t['status']]}"
-                         + (f" (skill opisuje {t.get('skill_min_supported')}–{t.get('skill_based_on')})" if t.get("skill_based_on") else ""))
+                         + (f" (the skill covers {t.get('skill_min_supported')}–{t.get('skill_based_on')})" if t.get("skill_based_on") else ""))
     for c in r["constraints"]:
         if c["ok"] is False:
-            lines.append(f"- Niezgodność: {c['from']} wymaga {c['skill']} {c['requires']}, a projekt ma {c['project_version']}.")
-    lines.append("Przed pracą w tych obszarach zastosuj skill core-stack-sync (nie aktualizuj zależności projektu bez prośby użytkownika).")
+            lines.append(f"- Mismatch: {c['from']} requires {c['skill']} {c['requires']}, and the project has {c['project_version']}.")
+    lines.append("Before working in these areas apply the core-stack-sync skill (do not update the project's dependencies without the user's request).")
     return "\n".join(lines)
 
 

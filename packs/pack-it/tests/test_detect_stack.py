@@ -120,7 +120,7 @@ def main() -> int:
         fails += 1
         print(f"✗ hook powinien milczeć dla zgodnego projektu, a wypisał: {silent!r}")
     loud = run({"package.json": pkg({"@angular/core": "22.0.0"}, {"typescript": "7.0.0"})}, "--hook", stdin="{}")
-    if "Niezgodność" not in loud:
+    if "Mismatch" not in loud:
         fails += 1
         print(f"✗ hook powinien zgłosić niezgodność TS, a wypisał: {loud!r}")
     total = len(CASES) + 2

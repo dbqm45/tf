@@ -52,10 +52,10 @@ def main() -> int:
             fails.append("context_guard: ostrzeżenie poniżej progu")
         usage(120)
         first, second = run([str(GUARD)], env, inp).stdout, run([str(GUARD)], env, inp).stdout
-        if "120 tys." not in first or second.strip():
+        if "120k" not in first or second.strip():
             fails.append(f"context_guard: próg 100k — oczekiwane jedno ostrzeżenie: {first!r} / {second!r}")
         usage(160)
-        if "UWAGA" not in run([str(GUARD)], env, inp).stdout:
+        if "WARNING" not in run([str(GUARD)], env, inp).stdout:
             fails.append("context_guard: brak mocnego ostrzeżenia przy 150k+")
         if run([str(GUARD)], {**env, "CLAUDE_CONTEXT_WARN_K": "0"}, json.dumps({"session_id": "s2", "transcript_path": str(tr)})).stdout.strip():
             fails.append("context_guard: CLAUDE_CONTEXT_WARN_K=0 powinno wyłączać")

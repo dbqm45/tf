@@ -62,7 +62,7 @@ def line(d: dict) -> str:
             parts.append(f"{'⚠ ' if p >= 80 else ''}{label} {p:.0f}%")
     sl = rl.get("spend_limit") or {}
     if sl.get("used_percentage") is not None and sl["used_percentage"] >= 50:
-        parts.append(f"{'⚠ ' if sl['used_percentage'] >= 80 else ''}limit wydatków {sl['used_percentage']:.0f}%")
+        parts.append(f"{'⚠ ' if sl['used_percentage'] >= 80 else ''}spend limit {sl['used_percentage']:.0f}%")
     return " │ ".join(p for p in parts if p)
 
 

@@ -197,11 +197,11 @@ def main() -> int:
         shutil.copy(ROOT / ".claude" / "hooks" / "quality_gate.py", doc / ".claude" / "hooks" / "quality_gate.py")
         denv = {k: v for k, v in env.items() if k != "QG_GATE_DISABLE"}
         r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
-        check(r.returncode == 0 and "Bramka jakości wyłączona" in r.stdout and "ok build check" in r.stdout,
+        check(r.returncode == 0 and "Quality gate disabled" in r.stdout and "ok build check" in r.stdout,
               f"CTF-12: doctor zgłasza wyłączoną bramkę i nie zmienia kodu wyjścia: {r.returncode} {r.stdout}{r.stderr}")
         (doc / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "npm test"}))
         r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
-        check(r.returncode == 0 and "Bramka jakości włączona" in r.stdout and "npm test" in r.stdout,
+        check(r.returncode == 0 and "Quality gate on" in r.stdout and "npm test" in r.stdout,
               f"CTF-13: doctor potwierdza działającą bramkę z poleceniem: {r.stdout}{r.stderr}")
 
     # personalizacja: jedno miejsce na polecenia — tf new skill, tf skill check/audit, tf config show
