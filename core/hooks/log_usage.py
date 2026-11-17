@@ -25,8 +25,9 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
     except (AttributeError, ValueError):
         pass
 
-TIER_RE = re.compile(r"Tier:\**\s*za\s+(niski|wysoki)", re.I)
-KLASA_RE = re.compile(r"^[\s*_`>#-]*Klasa\s*:[\s*_`]*([^\s—–,.;:*_`-]+)", re.I | re.M)
+TIER_RE = re.compile(r"Tier:\**\s*(?:za\s+)?(niski|wysoki|too\s+low|too\s+high)", re.I)
+TIER_EN = {"too low": "niski", "too high": "wysoki"}   # 14.x: sygnał po angielsku, zapis tą samą wartością
+KLASA_RE = re.compile(r"^[\s*_`>#-]*(?:Klasa|Class)\s*:[\s*_`]*([^\s—–,.;:*_`-]+)", re.I | re.M)
 CLASSES = ("reading", "parallel", "review", "mechanical", "decision", "other")   # core-cost-control §0
 # Brief po polsku („Klasa: Przegląd”) — ta sama klasa; zapis w dzienniku zawsze po angielsku.
 PL_CLASSES = {"czytanie": "reading", "rownolegle": "parallel", "przeglad": "review", "mechaniczna": "mechanical",
@@ -130,7 +131,7 @@ def usage_from_transcript(path: Path) -> dict:
         models[model] = models.get(model, 0) + (u.get("output_tokens") or 0)
     m = TIER_RE.search(last_text[-2000:])     # samoocena wykonawcy z raportu: „Tier: za niski/za wysoki — powód”
     return {**totals, "models": models, "skills": list(dict.fromkeys(skills)),
-            "tier_feedback": m.group(1).lower() if m else None, "claude_code": version}
+            "tier_feedback": TIER_EN.get(" ".join(m.group(1).lower().split()), m.group(1).lower()) if m else None, "claude_code": version}
 
 
 def harness(root: Path, claude_code: str | None) -> dict:

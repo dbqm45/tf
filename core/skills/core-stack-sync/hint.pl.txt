@@ -1,3 +1,4 @@
+head: Użyj na starcie pracy i przy niezgodności wersji — stack projektu i dopasowanie skilli, bez podnoszenia. Użyj na początku pracy w istniejącym projekcie i gdy hook zgłosi niezgodność wersji — odczytanie stacku (package.json, lockfile, pom.xml, build.gradle), porównanie z wersjami, na których oparte są skille, i aktualizacja skilli (nie projektu) do wersji z projektu. Nie do podnoszenia zależności projektu (to osobne zadanie na prośbę użytkownika).
 # Synchronizacja skilli ze stackiem projektu
 
 Skille technologiczne (`lang-*`, `fw-*`, `tool-*`) opisują konkretny zakres wersji zapisany w `skill.meta.json`

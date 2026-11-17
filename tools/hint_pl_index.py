@@ -7,8 +7,8 @@
 
 Hook skill_hint dopasowuje polecenie słowami. Polskie polecenia trafiały w polską treść skilla; po tłumaczeniu
 treść jest angielska, więc trafność spada (pomiar 4b-3: holdout 6/8 → 2/8). Skrypt bierze z historii gita ostatnią
-wersję SKILL.md z polską treścią i zapisuje jej treść (bez nagłówka YAML) obok skilla jako `hint.pl.txt`. Hook
-dokłada ten tekst do indeksu; model go nie wczytuje (nie jest odwołaniem w SKILL.md). Bez modelu i bez sieci.
+wersję SKILL.md z polską treścią i zapisuje obok skilla jako `hint.pl.txt`: linię `head:` (dawny opis i katalog —
+waga opisu) i treść (bez nagłówka YAML). Hook dokłada je do indeksu; model go nie wczytuje (nie jest odwołaniem w SKILL.md). Bez modelu i bez sieci.
 Kod 0 — gotowe; 1 — brak indeksu (--check) albo brak polskiej wersji w historii; 2 — złe wywołanie.
 """
 from __future__ import annotations
@@ -34,6 +34,15 @@ def language(text: str) -> str:
 
 def body_of(text: str) -> str:
     return re.sub(r"^---\n.*?\n---\n", "", text, count=1, flags=re.S).lstrip()
+
+
+def head_of(text: str) -> str:
+    """Dawny opis i katalog (jedna linia) — hook liczy je z wagą opisu skilla, jak przed tłumaczeniem."""
+    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    fm = m.group(1) if m else ""
+    desc = (re.search(r"^description:\s*(.*)$", fm, re.M) or [None, ""])[1].strip()
+    kat = (re.search(r"^\s+catalog:\s*(.*)$", fm, re.M) or [None, ""])[1].strip().strip('"')
+    return " ".join(f"{desc} {kat}".split())
 
 
 def git(*args: str) -> str:
@@ -68,7 +77,7 @@ def write(skill: Path) -> str:
     if not found:
         return f"• {skill.relative_to(ROOT)}: brak polskiej wersji w historii — pominięty"
     sha, old = found
-    (skill / INDEX).write_text(body_of(old), encoding="utf-8")
+    (skill / INDEX).write_text(f"head: {head_of(old)}\n" + body_of(old), encoding="utf-8")
     return f"✓ {skill.relative_to(ROOT)}/{INDEX} ← {sha[:7]}"
 
 

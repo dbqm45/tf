@@ -1,117 +1,117 @@
-# Skalowanie kontekstu agenta w dużym projekcie
+# Scaling an agent's context in a big project
 
-> **Spis treści:** 1. Trzy rodzaje kontekstu — trzy miejsca · 2. Cztery awarie przerośniętego pliku · 3. Drabina dojrzałości i sygnały przejścia wyżej · 4. Jak Claude Code ładuje pliki instrukcji (stan sprawdzony) · 5. CLAUDE.md w module — wzorzec i indeks w root · 6. Plik modułu czy reguła z `paths` · 7. Utrzymanie i przegląd reguł · 8. Wiele repozytoriów · 9. Wynik i przykład
+> **Contents:** 1. Three kinds of context — three places · 2. Four failures of an overgrown file · 3. The maturity ladder and the signals for moving up · 4. How Claude Code loads instruction files (checked state) · 5. A CLAUDE.md in a module — the pattern and the index in… · 6. A module file or a rule with `paths` · 7. Maintaining and reviewing rules · 8. Many repositories · 9. The result and an example
 
-Pytanie nie brzmi „co agent ma wiedzieć”, tylko „co ma wiedzieć **teraz**”. Stały kontekst zabiera uwagę zadaniu.
+The question is not "what should the agent know", but "what should it know **now**". Permanent context takes attention from the task.
 
-## 1. Trzy rodzaje kontekstu — trzy miejsca
-| Rodzaj | Co to jest | Gdzie |
+## 1. Three kinds of context — three places
+| Kind | What it is | Where |
 |---|---|---|
-| konwencje | jak pracujemy, czego nie widać z kodu | `CLAUDE.md` (root + moduły), `.claude/rules/` |
-| referencje | PRD, plany, research, decyzje, mapy kodu | `docs/project/` (core-project-record) — czytane, gdy potrzebne |
-| procedury | powtarzalne kroki z punktami decyzji | skille, komendy |
+| conventions | how we work, what cannot be seen from the code | `CLAUDE.md` (root + modules), `.claude/rules/` |
+| references | PRDs, plans, research, decisions, code maps | `docs/project/` (core-project-record) — read when needed |
+| procedures | repeatable steps with decision points | skills, commands |
 
-Główny `CLAUDE.md` to spis treści, nie encyklopedia: polecenia, konwencje globalne, wskaźniki do reszty.
+The main `CLAUDE.md` is a table of contents, not an encyclopedia: commands, global conventions, pointers to the rest.
 
-## 2. Cztery awarie przerośniętego pliku
-1. **Wypiera zadanie** — zajmuje kontekst, który powinien należeć do bieżącej pracy.
-2. **Rozcieńcza** — gdy wszystko jest ważne, nic nie jest; reguły ze środka giną.
-3. **Gnije** — reguły starzeją się szybciej, niż ktoś je przegląda; nieaktualna reguła szkodzi bardziej niż brak.
-4. **Nie da się sprawdzić**, czy agent go przestrzega — za dużo reguł na jedno zadanie.
+## 2. Four failures of an overgrown file
+1. **It crowds out the task** — it takes context that should belong to the current work.
+2. **It dilutes** — when everything is important, nothing is; rules from the middle get lost.
+3. **It rots** — rules age faster than anyone reviews them; an outdated rule does more harm than none.
+4. **It cannot be checked** whether the agent follows it — too many rules for one task.
 
-Kolejność naprawy: najpierw higiena (wytnij wg testu włączenia w SKILL.md), dopiero potem struktura (podział).
+The order of repair: hygiene first (cut per the inclusion test in SKILL.md), only then structure (splitting).
 
-## 3. Drabina dojrzałości i sygnały przejścia wyżej
-Wchodzisz wyżej na żądanie, nie po kolei i nie „na zapas”.
-1. **Root `CLAUDE.md` + `docs/project/`** — domyślnie; dla MVP i małych repo tak długo, jak się da.
-2. **`CLAUDE.md` w module + indeks w root** — moduł ma własne, szczegółowe konwencje nieistotne dla reszty albo
-   osobnego właściciela.
-3. **Własny katalog dokumentacji w module** (plany, decyzje modułu) — gdy prowadzi go osobny zespół albo praca
-   w module jest intensywna i długa.
+## 3. The maturity ladder and the signals for moving up
+You move up on demand, not in order and not "just in case".
+1. **Root `CLAUDE.md` + `docs/project/`** — the default; for an MVP and small repos for as long as possible.
+2. **A `CLAUDE.md` in a module + an index in the root** — the module has its own detailed conventions irrelevant to the rest or
+   a separate owner.
+3. **The module's own documentation directory** (the module's plans, decisions) — when a separate team runs it or the work
+   in the module is intensive and long.
 
-Sygnały do wejścia wyżej (co najmniej jeden, z dowodem zapisanym w wyniku):
-- root powyżej ~200 niepustych linii mimo higieny (skrypt `instructions_lint.py`);
-- agent powtarza błąd w module mimo reguły w root (wpisz konkretne przypadki: data, plik, co zrobił);
-- przy każdej pracy w module podajesz te same referencje ręcznie;
-- moduł ma własny deploy, własnego właściciela w CODEOWNERS albo inny stack.
+Signals for moving up (at least one, with the evidence written in the result):
+- the root above ~200 non-empty lines despite hygiene (the `instructions_lint.py` script);
+- the agent repeats a mistake in a module despite a rule in the root (write down specific cases: the date, the file, what it did);
+- for every piece of work in the module you give the same references by hand;
+- the module has its own deploy, its own owner in CODEOWNERS or a different stack.
 
-Liczba katalogów i poczucie „to duża aplikacja” **nie** są sygnałem. Dziel według granic własności, nie wielkości.
-Nie zakładaj `CLAUDE.md` młodego modułu, który jeszcze się zmienia — plik wolno zmieniający się nie trzyma faktów
-szybko zmieniających się (nazwy plików w ruchu, liczby, wersje).
+The number of directories and the feeling "this is a big application" are **not** a signal. Split by ownership boundaries, not size.
+Do not create a `CLAUDE.md` for a young module that is still changing — a slowly changing file does not hold
+quickly changing facts (file names in motion, numbers, versions).
 
-## 4. Jak Claude Code ładuje pliki instrukcji (stan sprawdzony)
-Źródło: code.claude.com/docs/en/memory i …/large-codebases, dostęp 2026-10-10. Zachowanie zależy od wersji —
-przy wątpliwości sprawdź `/context` (lista „Memory files”) w bieżącej sesji.
-- **Przy starcie**: `CLAUDE.md` i `CLAUDE.local.md` z katalogu roboczego i wszystkich katalogów nad nim, a także
-  `~/.claude/CLAUDE.md` i plik zarządzany przez organizację. Pliki się **sklejają**, nie nadpisują; bliższy katalogowi
-  roboczemu jest czytany później. Projektowy plik może leżeć w `./CLAUDE.md` albo `./.claude/CLAUDE.md`.
-- **Na żądanie**: `CLAUDE.md` z podkatalogów ładuje się dopiero, gdy agent czyta pliki w tym podkatalogu. Start
-  sesji z roota = plik modułu może jeszcze nie być w kontekście, gdy agent planuje. Reguła krytyczna modułu →
-  start sesji w module albo jawne wskazanie pliku w poleceniu lub briefie subagenta.
-- **Importy `@ścieżka`**: rozwijane przy starcie razem z plikiem, który je zawiera; ścieżki względne liczone od
-  pliku z importem; do 4 poziomów zagnieżdżenia. Porządkują, ale **nie zmniejszają** kosztu kontekstu. Import
-  w odwrotnych apostrofach (`` `@README` ``) i w bloku kodu nie jest wykonywany. Import spoza katalogu roboczego
-  wymaga jednorazowej zgody człowieka.
-- **`.claude/rules/*.md`**: bez pola `paths` ładują się przy starcie jak `.claude/CLAUDE.md`; z polem `paths`
-  (lista globów) — dopiero gdy agent czyta lub edytuje pasujący plik. `paths` to jedyne pole, które Claude Code
-  czyta z nagłówka reguły; błędny YAML = reguła ładowana zawsze.
-- **AGENTS.md**: nowsze wersje Claude Code czytają `AGENTS.md` same, ale domyślnie **tylko wtedy, gdy w katalogu
-  roboczym i wyżej nie ma `CLAUDE.md`, `.claude/CLAUDE.md` ani `CLAUDE.local.md`**. Gdy są oba pliki, Claude czyta
-  tylko `CLAUDE.md` — dlatego wzorzec „AGENTS.md źródłem prawdy, CLAUDE.md z `@AGENTS.md`” działa niezależnie od
-  wersji i ustawień. Uwaga: dodanie własnego `CLAUDE.local.md` w repo opartym na AGENTS.md wyłącza czytanie
-  AGENTS.md (zmiana w ustawieniu „Project instructions” w `/config`). Dowiązanie `CLAUDE.md → AGENTS.md` działa,
-  ale na Windows git może je wypakować jako zwykły plik tekstowy — tam bezpieczniejszy import.
-- **Inne narzędzia** (Codex, Copilot): czytają `AGENTS.md` z drzewa katalogów; szczegóły pierwszeństwa sprawdź
-  w ich dokumentacji dla używanej wersji [niezweryfikowane w tej sesji].
-- **Rozmiar**: plik powyżej zalecanej długości daje ostrzeżenie przy starcie; Claude Code pomija plik większy niż
-  4 MiB. Automatyczna pamięć (`~/.claude/projects/<projekt>/memory/MEMORY.md`) ładuje tylko pierwsze 200 linii lub
-  25 KB — to notatki maszyny, nie miejsce na reguły zespołu.
-- **Po `/compact`**: root `CLAUDE.md` jest wczytywany ponownie z dysku; pliki modułów i reguły z `paths` wracają
-  dopiero, gdy agent znów dotknie pasującego pliku. Instrukcja podana tylko w rozmowie znika.
-- **Monorepo z cudzymi pakietami**: `claudeMdExcludes` w `.claude/settings.local.json` (globy po ścieżkach
-  bezwzględnych) pomija pliki instrukcji katalogów, w których nie pracujesz.
+## 4. How Claude Code loads instruction files (checked state)
+Source: code.claude.com/docs/en/memory and …/large-codebases, accessed 2026-10-10. The behaviour depends on the version —
+when in doubt check `/context` (the "Memory files" list) in the current session.
+- **At start**: `CLAUDE.md` and `CLAUDE.local.md` from the working directory and all directories above it, and also
+  `~/.claude/CLAUDE.md` and the file managed by the organisation. The files are **concatenated**, not overwritten; the one closer to the working
+  directory is read later. The project file can be in `./CLAUDE.md` or `./.claude/CLAUDE.md`.
+- **On demand**: a `CLAUDE.md` from subdirectories loads only when the agent reads files in that subdirectory. Starting
+  the session from the root = the module file may not yet be in context when the agent plans. A critical rule of a module →
+  start the session in the module or point to the file explicitly in the instruction or the subagent's brief.
+- **`@ścieżka` imports**: expanded at start together with the file that contains them; relative paths counted from
+  the file with the import; up to 4 levels of nesting. They organise, but **do not reduce** the context cost. An import
+  in backticks (`` `@README` ``) and in a code block is not executed. An import from outside the working directory
+  needs the human's one-time consent.
+- **`.claude/rules/*.md`**: without a `paths` field they load at start like `.claude/CLAUDE.md`; with a `paths` field
+  (a list of globs) — only when the agent reads or edits a matching file. `paths` is the only field Claude Code
+  reads from a rule's header; invalid YAML = a rule loaded always.
+- **AGENTS.md**: newer versions of Claude Code read `AGENTS.md` themselves, but by default **only when in the working
+  directory and above there is no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`**. When both files exist, Claude reads
+  only `CLAUDE.md` — which is why the pattern "AGENTS.md as the source of truth, CLAUDE.md with `@AGENTS.md`" works regardless of
+  version and settings. Note: adding your own `CLAUDE.local.md` in a repo based on AGENTS.md turns off reading
+  AGENTS.md (changed in the "Project instructions" setting in `/config`). A link `CLAUDE.md → AGENTS.md` works,
+  but on Windows git may check it out as a plain text file — an import is safer there.
+- **Other tools** (Codex, Copilot): they read `AGENTS.md` from the directory tree; check the details of precedence
+  in their documentation for the version in use [unverified in this session].
+- **Size**: a file above the recommended length gives a warning at start; Claude Code skips a file bigger than
+  4 MiB. Automatic memory (`~/.claude/projects/<projekt>/memory/MEMORY.md`) loads only the first 200 lines or
+  25 KB — those are the machine's notes, not a place for the team's rules.
+- **After `/compact`**: the root `CLAUDE.md` is re-read from disk; module files and rules with `paths` come back
+  only when the agent touches a matching file again. An instruction given only in the conversation disappears.
+- **A monorepo with other people's packages**: `claudeMdExcludes` in `.claude/settings.local.json` (globs on absolute
+  paths) skips the instruction files of directories you do not work in.
 
-## 5. CLAUDE.md w module — wzorzec i indeks w root
-- Pierwsza linia: „Tylko kontekst `<moduł>`. Zasady całego repo: główny CLAUDE.md.”
-- Tylko to, czego nie da się wywnioskować z roota ani z kodu modułu: pułapki (prawdziwy punkt wejścia, zakazane
-  API, wymagany logger), antywzorce, polecenia modułu (test, migracje). Zero kopii reguł roota.
-- 10–40 linii; dłuższy plik modułu to sygnał, że część treści to referencja (do `docs/`) albo procedura (do skilla).
-- Root kończy się sekcją **„Moduły z własnym CLAUDE.md”**: `ścieżka — jedno zdanie zakresu`. Skrypt
-  `instructions_lint.py --root .` zgłasza plik modułu spoza tego indeksu i linie skopiowane z roota.
-- Właścicielem pliku modułu jest właściciel modułu; zmiany przechodzą przegląd w PR jak dokumentacja.
+## 5. A CLAUDE.md in a module — the pattern and the index in the root
+- The first line: "Only the `<module>` context. Rules for the whole repo: the main CLAUDE.md."
+- Only what cannot be inferred from the root or from the module's code: pitfalls (the real entry point, forbidden
+  APIs, the required logger), anti-patterns, the module's commands (tests, migrations). Zero copies of the root's rules.
+- 10–40 lines; a longer module file is a signal that part of the content is a reference (to `docs/`) or a procedure (to a skill).
+- The root ends with a **"Modules with their own CLAUDE.md"** section: `path — one sentence of scope`. The
+  `instructions_lint.py --root .` script reports a module file outside that index and lines copied from the root.
+- The owner of a module file is the module's owner; changes go through review in a PR like documentation.
 
-## 6. Plik modułu czy reguła z `paths`
-| Podejście | Gdzie leży | Ładuje się | Kiedy |
+## 6. A module file or a rule with `paths`
+| Approach | Where it lives | Loads | When |
 |---|---|---|---|
-| `CLAUDE.md` w katalogu | obok kodu | przy starcie z tego katalogu albo gdy agent czyta tam plik | właściciel katalogu utrzymuje własne konwencje |
-| reguła `.claude/rules/x.md` z `paths` | centralnie w root | gdy agent czyta/edytuje pasujący plik | wszystkie konwencje w jednym miejscu albo ta sama reguła dla rozproszonych plików (np. `**/*.test.ts`) |
-| skill w `<moduł>/.claude/skills/` | w module | gdy zadanie pasuje do opisu | procedura modułu (testy, migracje), nie stała konwencja |
+| a `CLAUDE.md` in a directory | next to the code | at start from that directory or when the agent reads a file there | the directory's owner keeps their own conventions |
+| a rule `.claude/rules/x.md` with `paths` | centrally in the root | when the agent reads/edits a matching file | all conventions in one place or the same rule for scattered files (e.g. `**/*.test.ts`) |
+| a skill in `<moduł>/.claude/skills/` | in the module | when the task fits the description | a module's procedure (tests, migrations), not a permanent convention |
 
-## 7. Utrzymanie i przegląd reguł
-Przegląd co miesiąc lub kwartał (i po większym wydaniu modelu), dla każdej reguły pięć pytań:
-1. Czy agent złamałby ją bez niej? (kalibracja A/B w SKILL.md, sekcja 6)
-2. Czy wynika z kodu, lintera, typów albo hooka? → usuń.
-3. Czy jest sprawdzalna w diffie?
-4. Czy jest aktualna (ścieżki, polecenia, wersje istnieją)?
-5. Czy dubluje albo przeczy innej regule w innym pliku?
-Wpis w wyniku: data przeglądu, usunięte i dodane reguły z powodem. Hook `Stop`, który po sesji proponuje poprawki
-CLAUDE.md, to opcja dla dojrzałych zespołów — propozycja trafia do człowieka, nie wprost do pliku.
+## 7. Maintaining and reviewing rules
+A review every month or quarter (and after a bigger model release), five questions for each rule:
+1. Would the agent break it without it? (the A/B calibration in SKILL.md, section 6)
+2. Does it follow from the code, the linter, types or a hook? → remove it.
+3. Is it checkable in the diff?
+4. Is it current (do the paths, commands, versions exist)?
+5. Does it duplicate or contradict another rule in another file?
+An entry in the result: the review date, the rules removed and added with a reason. A `Stop` hook that proposes CLAUDE.md
+fixes after a session is an option for mature teams — the proposal goes to the human, not straight into the file.
 
-## 8. Wiele repozytoriów
-Trzy warstwy, od najprostszej:
-1. **Wspólne reguły i skille w jednym repo-źródle**, wersjonowane (SemVer, core-semver).
-2. **Dystrybucja z aktualizacją**: paczka → CLI → wtyczka lub serwer MCP (rosnąca złożoność). Każde repo i tak ma
-   własny krótki `CLAUDE.md` z lokalnymi umowami. Szczegóły instalatora: `.claude/skills/core-skill-authoring/references/team-distribution.md`.
-3. **Widoczność innych repo w czasie pracy**: generowane kontrakty (OpenAPI, AsyncAPI, protobuf, GraphQL SDL),
-   paczki testów kontraktowych, dokumentacja generowana w CI — zamiast meta-repo opisującego wszystko ręcznie
-   (starzeje się najszybciej). Migawka całego repo do jednego pliku tylko doraźnie, do jednego zadania.
+## 8. Many repositories
+Three layers, from the simplest:
+1. **Shared rules and skills in one source repo**, versioned (SemVer, core-semver).
+2. **Distribution with updates**: a package → a CLI → a plugin or an MCP server (increasing complexity). Each repo still has
+   its own short `CLAUDE.md` with local agreements. Installer details: `.claude/skills/core-skill-authoring/references/team-distribution.md`.
+3. **Visibility of other repos during work**: generated contracts (OpenAPI, AsyncAPI, protobuf, GraphQL SDL),
+   contract test packages, documentation generated in CI — instead of a meta-repo describing everything by hand
+   (it ages fastest). A snapshot of a whole repo into one file only ad hoc, for one task.
 
-## 9. Wynik i przykład
-Wynik decyzji o strukturze: `docs/project/04-architecture/context-architecture.md` — szczebel drabiny, sygnały
-z dowodami, indeks plików instrukcji (ścieżka — zakres — właściciel), data następnego przeglądu.
+## 9. The result and an example
+The result of the structure decision: `docs/project/04-architecture/context-architecture.md` — the rung of the ladder, the signals
+with evidence, an index of instruction files (path — scope — owner), the date of the next review.
 
-Przykład: monorepo z pakietami `api`, `web`, `cli`; root 340 linii; agent 3× użył `console.log` w `cli` mimo reguły
-w root. Higiena: wycięte 90 linii dublujących lint i opis katalogów → root 250. Sygnał (powtarzany błąd w module
-z trzema przypadkami) → `packages/cli/CLAUDE.md`, 30 linii (punkt wejścia `src/main.ts`, logger `src/log.ts`,
-zakaz globalnego `fetch`), reguły CLI usunięte z roota → root 190 linii + sekcja „Moduły z własnym CLAUDE.md”.
-`api` i `web` zostają na szczeblu 1. Kontrola po tygodniu: 0 nowych `console.log` w 5 zadaniach w `cli`.
+Example: a monorepo with the packages `api`, `web`, `cli`; the root 340 lines; the agent used `console.log` 3× in `cli` despite a rule
+in the root. Hygiene: 90 lines duplicating lint and the directory description cut → the root 250. A signal (a repeated mistake in a module
+with three cases) → `packages/cli/CLAUDE.md`, 30 lines (the entry point `src/main.ts`, the logger `src/log.ts`,
+a ban on the global `fetch`), the CLI rules removed from the root → the root 190 lines + the "Modules with their own CLAUDE.md" section.
+`api` and `web` stay on rung 1. A check after a week: 0 new `console.log` in 5 tasks in `cli`.

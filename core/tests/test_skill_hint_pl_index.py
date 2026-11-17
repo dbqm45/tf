@@ -74,6 +74,11 @@ def main() -> int:
               f"HP-3: wyciąg pokazywany modelowi pochodzi z SKILL.md, nie z indeksu: {nightly['excerpt'][:120]}")
         picks = [it["name"] for _, it in h.select(SOURCES_PROMPT, items)]
         check("core-nightly" not in picks, f"HP-4: sekcja ## Sources nie trafia do indeksu: {picks}")
+        (skills / "core-nightly" / "hint.pl.txt").write_text("head: delegacja pracy agentowi bez nadzoru, zamknięty laptop\n" + PL,
+                                                             encoding="utf-8")
+        nightly = next(it for it in h.load_index() if it["name"] == "core-nightly")
+        check({"zamkn", "lapto"} <= nightly["head"] and "head" not in nightly["body"],
+              f"HP-5: linia „head:” indeksu waży jak opis skilla (dawny polski opis i katalog): {sorted(nightly['head'])[:12]}")
         shutil.rmtree(skills / "core-other")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów polskiego indeksu podpowiedzi")
     return 1 if fails else 0

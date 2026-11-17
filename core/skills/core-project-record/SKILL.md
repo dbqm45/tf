@@ -4,7 +4,7 @@ description: Use for the project record in docs/project/ — phase artifacts, de
 metadata:
   review: "2027-10-09"
   catalog: "Use whenever the work goes beyond one short change — the project record in docs/project/ (phase artifacts with a TL;DR and a Handoff, an event journal, a decision register, an index) and a checkpoint of work in progress (wip/) that lets you interrupt a session and come back at any moment. Not for the subject content of the phases (the ddd-*, arch-*, proc-* skills)."
-  keywords: "dziennik projektu, docs/project, artefakt fazy, punkt kontrolny, przerwana sesja, wznowienie pracy, przekazanie pracy, handoff, inny agent CLI, postęp w raporcie kroku, sekcja Postęp, od czego zacząć po przerwie, lekcje projektu, lessons.md, rejestr decyzji, źródło prawdy, Jira, project record, phase artifact, checkpoint, interrupted session, resume work, hand over work, another CLI agent, progress in the step report, where to start after a break, project lessons, decision register, source of truth"
+  keywords: "dziennik projektu, docs/project, artefakt fazy, punkt kontrolny, przerwana sesja, wznowienie pracy, przekazanie pracy, handoff, inny agent CLI, postęp w raporcie kroku, sekcja Postęp, od czego zacząć po przerwie, lekcje projektu, lessons.md, rejestr decyzji, źródło prawdy, Jira, project record, phase artifact, checkpoint, interrupted session, resume work, hand over work, another CLI agent, progress in the step report, where to start after a break, project lessons, decision register, source of truth, postęp w raporcie kroku, plan w fazach, commit po każdej fazie, od czego zacząć następna sesja, progress in the step report, a commit after each phase"
 ---
 
 # The project record (docs/project/)

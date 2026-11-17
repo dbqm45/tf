@@ -1,3 +1,4 @@
+head: Użyj przy dzienniku projektu w docs/project/ — artefakty faz, decyzje, punkt kontrolny pracy. Użyj zawsze, gdy praca wykracza poza jedną krótką zmianę — dziennik projektu w docs/project/ (artefakty faz z TL;DR i Przekazaniem, dziennik zdarzeń, rejestr decyzji, indeks) i punkt kontrolny pracy w toku (wip/), który pozwala przerwać sesję i wrócić w dowolnym momencie. Nie do treści merytorycznej faz (skille ddd-*, arch-*, proc-*).
 # Dziennik projektu (docs/project/)
 
 Każda faza kończy się **plikiem**, nie tylko odpowiedzią w rozmowie. Następny agent — w tej samej lub innej sesji,

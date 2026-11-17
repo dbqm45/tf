@@ -1,3 +1,4 @@
+head: Użyj na polecenie człowieka do nauki tematu przez wiele sesji w katalogu-warsztacie — lekcje, ściągi, postępy. Użyj tylko na polecenie człowieka (`/core-teaching-workspace`) — nauka jednego tematu przez wiele sesji w katalogu-warsztacie (misja, źródła, lekcje HTML, ściągi, zapisy postępów), np. wdrożenie w nowy stack lub kod projektu. Nie do jednorazowego wyjaśnienia ani badania źródeł bez nauki (core-source-research).
 # Warsztat nauki
 
 Nauka jednego tematu przez wiele sesji, które się na sobie budują. Ciągłość daje **katalog**, nie historia rozmowy:

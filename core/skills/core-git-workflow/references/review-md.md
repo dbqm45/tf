@@ -1,38 +1,38 @@
-# Szablon `REVIEW.md`
+# The `REVIEW.md` template
 
-`REVIEW.md` leży w katalogu głównym repozytorium i dostosowuje przegląd PR wykonywany przez Claude (usługa Code Review
-w Claude Code). Zasady wpisujesz wprost do pliku. Poniżej szablon do skopiowania i dopasowania — przebiegi i wagi
-według „The AI-Native SDLC Playbook” (Anthropic, 2026).
+`REVIEW.md` sits in the repository root and adjusts the PR review done by Claude (the Code Review service
+in Claude Code). You write the rules directly into the file. Below a template to copy and adapt — the passes and weights
+according to "The AI-Native SDLC Playbook" (Anthropic, 2026).
 
 ```markdown
-# Zasady przeglądu PR
+# PR review rules
 
-## Zakres
-Przeglądaj zmiany w `src/` i `infra/`. Pomijaj: kod generowany (`**/generated/**`, `*.lock`), zmiany samego
-formatowania i wszystko, co sprawdza CI (lint, typy, pokrycie).
+## Scope
+Review changes in `src/` and `infra/`. Skip: generated code (`**/generated/**`, `*.lock`), changes of
+formatting alone and everything CI checks (lint, types, coverage).
 
-## Przebiegi
-1. **Błędy i logika** — warunki brzegowe, obsługa błędów, współbieżność, zgodność z testami.
-2. **Bezpieczeństwo** — autoryzacja w każdej akcji i endpointcie, walidacja wejścia, sekrety, zależności,
-   dane osobowe (minimalizacja, logi).
-3. **Zgodność** — z wymaganiami i planem kroku (`docs/project/03-requirements/`, `docs/project/06-delivery/`),
-   z ADR (`docs/project/04-architecture/adr/`) i zasadami z `CLAUDE.md`.
+## Passes
+1. **Bugs and logic** — edge cases, error handling, concurrency, agreement with the tests.
+2. **Security** — authorisation in every action and endpoint, input validation, secrets, dependencies,
+   personal data (minimisation, logs).
+3. **Compliance** — with the requirements and the step plan (`docs/project/03-requirements/`, `docs/project/06-delivery/`),
+   with the ADRs (`docs/project/04-architecture/adr/`) and the rules from `CLAUDE.md`.
 
-## Waga ustaleń
-- **Krytyczne** — blokuje scalenie (błąd danych, luka bezpieczeństwa, złamanie kontraktu API).
-- **Ważne** — do poprawy w tym PR.
-- **Drobne** — najwyżej 3 na PR; resztę pomiń.
-Przy każdym ustaleniu: plik i linia, co jest nie tak, dlaczego, propozycja poprawki.
-Przy każdym ustaleniu także **trudność decyzji (wpływ)**: niska (oczywista poprawka) / średnia (kompromis — podaj
-koszt i czego nie sprawdziłeś) / wysoka (skutki architektoniczne). Najwyżej 10 ustaleń; podobne łącz w jedno.
-Nie oceniasz zgodności z tym, czego plan nie obiecał; to, co plan wyłączył („Poza zakresem”), nie jest rozrostem zakresu.
+## Weight of findings
+- **Critical** — blocks the merge (a data error, a security gap, breaking an API contract).
+- **Important** — to fix in this PR.
+- **Minor** — at most 3 per PR; skip the rest.
+For each finding: the file and line, what is wrong, why, a proposed fix.
+For each finding also **the difficulty of the decision (impact)**: low (an obvious fix) / medium (a trade-off — give
+the cost and what you did not check) / high (architectural consequences). At most 10 findings; merge similar ones into one.
+You do not judge compliance with what the plan did not promise; what the plan excluded ("Out of scope") is not scope creep.
 
-## Czego nie robisz
-Nie zatwierdzasz PR i nie oceniasz stylu, który pilnuje formatter. Pytania o wymagania kierujesz do autora.
+## What you do not do
+You do not approve the PR and do not judge style the formatter takes care of. Questions about requirements you direct to the author.
 ```
 
-Przegląd w GitHub Actions z werdyktem jako bramką: `ai-review-in-ci.md`. Triaż ustaleń z macierzą waga × wpływ:
-skill przeglądu zmiany (pack-it: qa-change-review).
+A review in GitHub Actions with the verdict as a gate: `ai-review-in-ci.md`. Triage of findings with a weight × impact matrix:
+the change review skill (pack-it: qa-change-review).
 
-Po miesiącu: przejrzyj ustalenia (trafne / nietrafne), popraw zakres i przykłady w pliku, a zmianę `REVIEW.md` przejdź
-tak jak zmianę kodu — przez PR.
+After a month: review the findings (accurate / inaccurate), improve the scope and examples in the file, and take the `REVIEW.md` change
+through the same path as a code change — a PR.
