@@ -234,10 +234,10 @@ const STATE_PL = {pass:"zaliczony", run:"w toku", fail:"nieudany", todo:"jeszcze
 const STATE_K = {pass:"zacommitowany", run:"w toku", fail:"bramka nieudana", todo:"w kolejce"};
 const VERDICTS = [
   {id:"test",   tip:"Test czerwony z kryteriów kawałka — tf · sonnet"},
-  {id:"kod",    tip:"Najmniejszy kod, który zazielenia test — tf · sonnet"},
-  {id:"weryf",  tip:"Polecenie weryfikacji: format, lint, typy, testy — skrypt, bez modelu"},
-  {id:"skan",   tip:"semgrep OWASP Top 10 na plikach kawałka — skrypt, bez modelu"},
-  {id:"zakres", tip:"Przegląd zakresu — scope-reviewer · sonnet, świeży kontekst"}
+  {id:"code",    tip:"Najmniejszy kod, który zazielenia test — tf · sonnet"},
+  {id:"verify",  tip:"Polecenie weryfikacji: format, lint, typy, testy — skrypt, bez modelu"},
+  {id:"scan",   tip:"semgrep OWASP Top 10 na plikach kawałka — skrypt, bez modelu"},
+  {id:"scope", tip:"Przegląd zakresu — scope-reviewer · sonnet, świeży kontekst"}
 ];
 function chip(label, st, tip, extra){
   const t = label + ": " + STATE_PL[st] + (tip ? " — " + tip : "");

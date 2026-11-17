@@ -121,7 +121,7 @@ FACTORY_ONLY = ("tests/flow_evals/", "tests/flow_evals_runner.py", "tests/test_f
 
 CONFIG_TEMPLATE = """# Nadpisania konfiguracji fabryki dla tego projektu (nakładane rekurencyjnie na .tf/factory/config.yaml).
 # Wpisuj tylko to, co zmieniasz, np.:
-#   default_profile: oszczedny
+#   default_profile: economy
 #   tiers:
 #     fast: {maxTurns: 20}
 # Po zmianie: python3 .tf/factory/build.py
@@ -1001,6 +1001,8 @@ def _main(argv: list[str], tmp: Path) -> int:
         spec.loader.exec_module(mig)
         for c in mig.apply(dst_root, dry=False):
             print(f"  ✓ migrated: {c}")
+        for c in mig.migrate_values(dst_root, dry=False) if hasattr(mig, "migrate_values") else []:
+            print(f"  ✓ migrated values: {c}")
     if not dry:
         msg = rebuild(dst_root, dry)
         if msg:
@@ -1087,7 +1089,7 @@ Next:
      and turns the quality gate on.
   2. Run `claude` once in the project directory and accept folder trust (hooks and permissions need it).
   3. Start: {' or '.join(start) or 'a persona from .claude/catalog.md'}, e.g. `claude --agent <name>`.
-  4. Costs: the `zrownowazony` profile works right away; `{py} .tf/factory/profile.py oszczedny|jakosc` switches the team.
+  4. Costs: the `balanced` profile works right away; `{py} .tf/factory/profile.py economy|quality` switches the team.
   Packs: `tf add <pack>` / `tf remove <pack>` · languages: `tf language <code>`, `tf commit-language <code>`.
   Updates: `{py} .tf/factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")
     return 0

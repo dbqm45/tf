@@ -107,9 +107,9 @@ Każde `AC-n` trafia do któregoś kawałka. Zmieniasz `spec.md` po planie → p
   Tryby: `references/modes-and-stops.md`.
 
 ## 3. Pętla kawałka
-Stan: `run_state.py step <katalog> K<n> R<k> <etap> <stan>` — etapy `test`, `kod`, `weryf`, `skan`, `zakres`; stany
+Stan: `run_state.py step <katalog> K<n> R<k> <etap> <stan>` — etapy `test`, `code`, `verify`, `scan`, `scope`; stany
 `run`, `pass`, `fail`; wołasz przy starcie etapu i przy wyniku. **R<k>** to runda: po nieudanej bramce wracasz na
-początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… K2 R1 weryf fail`, potem `… K2 R2 kod run`.
+początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… K2 R1 verify fail`, potem `… K2 R2 code run`.
 1. **Test czerwony** z kryteriów kawałka, tylko przypadki z kryteriów (TDD; hook `tdd_guard` pilnuje kolejności).
    Od pierwszej wersji test nosi identyfikator kryterium w nazwie albo komentarzu (`test_ac1_…`, `# AC-1`) —
    z niego powstaje ślad kryterium; dopisywanie po fakcie to dodatkowy commit.
@@ -167,8 +167,8 @@ Zrobione: <kawałki z SHA commitów> · Wznowienie: od <K<n>>
 Potrzebne od człowieka: <decyzja / dostęp / informacja>
 ```
 Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason "<powód>"`, potem i tak
-`run_report.py finish`. Kod tylko z listy: `pytanie`, `podzial`, `zrodlo`, `zgoda-na-plan`, `testy`, `skan`, `budzet`,
-`srodowisko`, `zaleznosc`, `kontrakt`, `uprawnienia` (`references/modes-and-stops.md`).
+`run_report.py finish`. Kod tylko z listy: `question`, `split`, `source`, `plan-approval`, `tests`, `scan`, `budget`,
+`environment`, `dependency`, `contract`, `permissions` (`references/modes-and-stops.md`).
 
 ## Przykład
 **Wejście:** `/tf "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`

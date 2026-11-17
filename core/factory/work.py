@@ -42,7 +42,7 @@ WORKTREES = Path(".tf") / "worktrees"
 LOG = Path(".tf") / "logs" / "work.jsonl"
 MANIFEST = Path(".claude") / "factory-manifest.json"
 OWN_CONFIG = Path(".tf") / "config"
-OPEN_STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad")
+OPEN_STAGES = ("intake", "spec", "plan", "implementation", "review")
 DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "acceptEdits", "lock_hours": 6, "timeout_minutes": 180}
 # bez nadzoru nikt nie odpowie na pytanie o zgodę: w trybie -p narzędzie spoza listy dozwolonych jest odrzucane.
 # acceptEdits (domyślny) przyjmuje edycje plików w katalogu roboczym (worktree) — bez tego pętla nie napisze kodu, bo
@@ -119,10 +119,10 @@ def refusal(root: Path, task: dict, folder: str) -> str | None:
     key = folder
     if task.get("closed") or task.get("stage") not in OPEN_STAGES:
         return f"{key}: etap {clean(task.get('stage'), 30)} — praca bez nadzoru prowadzi zadanie tylko do PR"
-    if task.get("weight") == "pelna":
+    if task.get("weight") == "full":
         return f"{key}: waga pełna — bez nadzoru tylko zadania o wadze lekkiej i zwykłej (pełna wymaga panelu i człowieka)"
     if task.get("mode") != "auto":
-        return (f"{key}: tryb {clean(task.get('mode') or 'zwykly', 30)}, nie auto — zgodę na pracę bez nadzoru daje człowiek: "
+        return (f"{key}: tryb {clean(task.get('mode') or 'normal', 30)}, nie auto — zgodę na pracę bez nadzoru daje człowiek: "
                 f"tf task mode {key} auto")
     if waits_for_human(root, key):
         return f"{key}: czeka na człowieka (tf status) — po odpowiedzi wróci do kolejki"

@@ -43,27 +43,27 @@ def main() -> int:
         prof = str(root / ".tf" / "factory" / "profile.py")
 
         total += 1
-        r = run([prof, "oszczedny"], cwd=root)
+        r = run([prof, "economy"], cwd=root)
         local = json.loads((root / ".claude" / "settings.local.json").read_text())
         if r.returncode != 0 or agent_model(root, "shared/architect.md") != "sonnet" \
                 or local.get("effortLevel") != "low" or local.get("autoCompactWindow") != 150000:
-            fails.append(f"profile oszczedny: architect na sonnet, effort low, kompaktowanie 150k — {r.stdout[-400:]} {local}")
+            fails.append(f"profile economy: architect na sonnet, effort low, kompaktowanie 150k — {r.stdout[-400:]} {local}")
 
         total += 1
-        r = run([prof, "jakosc"], cwd=root)
+        r = run([prof, "quality"], cwd=root)
         local = json.loads((root / ".claude" / "settings.local.json").read_text())
         if agent_model(root, "shared/architect.md") != "opus" or local.get("advisorModel") != "opus":
-            fails.append(f"profile jakosc: architect na opus i doradca opus — {local}")
+            fails.append(f"profile quality: architect na opus i doradca opus — {local}")
 
         total += 1
-        run([prof, "zrownowazony"], cwd=root)
+        run([prof, "balanced"], cwd=root)
         local = json.loads((root / ".claude" / "settings.local.json").read_text())
         if "advisorModel" in local or local.get("model") != "opus" or local.get("effortLevel") != "medium":
-            fails.append(f"profile: powrót do zrownowazony powinien zdjąć doradcę i zostawić własne `model` — {local}")
+            fails.append(f"profile: powrót do balanced powinien zdjąć doradcę i zostawić własne `model` — {local}")
 
         total += 1
         before = (root / ".claude" / "settings.local.json").read_text()
-        r = run([prof, "oszczedny", "--dry-run"], cwd=root)
+        r = run([prof, "economy", "--dry-run"], cwd=root)
         if (root / ".claude" / "settings.local.json").read_text() != before or "dry-run" not in r.stdout:
             fails.append("profile --dry-run zmienił ustawienia")
 
@@ -159,7 +159,7 @@ def main() -> int:
         total += 1
         brief = "Klasa: Czytanie\nZnajdź miejsca użycia."
         rec = delegate(brief)
-        want = {"agent": "scout", "model": "haiku", "klass": "czytanie", "brief_chars": len(brief),
+        want = {"agent": "scout", "model": "haiku", "klass": "reading", "brief_chars": len(brief),
                 "result_chars": len("raport"), "agent_id": "a1", "background": False, "session": "s"}
         if any(rec.get(k) != v for k, v in want.items()):
             fails.append(f"log_usage: wpis delegowania — {rec}")
@@ -167,13 +167,13 @@ def main() -> int:
         if delegate("Znajdź miejsca użycia.").get("klass", "?") is not None:
             fails.append("log_usage: brief bez linii Klasa → klass None")
         total += 1
-        if delegate("**Klasa:** Przegląd — świeże spojrzenie\n…").get("klass") != "przeglad":
-            fails.append("log_usage: klasa z diakrytykami i formatowaniem → przeglad")
+        if delegate("**Klasa:** Przegląd — świeże spojrzenie\n…").get("klass") != "review":
+            fails.append("log_usage: klasa z diakrytykami i formatowaniem → review")
         total += 1
-        if delegate("Klasa: coś innego\n…").get("klass") != "inne":
+        if delegate("Klasa: coś innego\n…").get("klass") != "other":
             fails.append("log_usage: nieznana klasa → inne")
         total += 1
-        if delegate("Klasa: mechaniczna", tool="Task").get("klass") != "mechaniczna":
+        if delegate("Klasa: mechaniczna", tool="Task").get("klass") != "mechanical":
             fails.append("log_usage: narzędzie Task (stara nazwa) też trafia do dziennika")
         total += 1     # tło: dokumentacja hooków (2026-10-18) — status async_launched, bez usage; resolvedModel
         run([str(HOOKS / "log_usage.py")], env, json.dumps({
@@ -211,11 +211,11 @@ def main() -> int:
 
     # ── cost_report --delegation: koszt delegowania wg klasy zadania ──
     total += 1
-    deleg = [{"klass": "czytanie", "agent_id": "a1", "brief_chars": 100, "result_chars": 50},
-             {"klass": "czytanie", "agent_id": "a2", "brief_chars": 300, "result_chars": 150},
-             {"klass": "czytanie", "agent_id": "a3", "brief_chars": 200, "result_chars": 100},
+    deleg = [{"klass": "reading", "agent_id": "a1", "brief_chars": 100, "result_chars": 50},
+             {"klass": "reading", "agent_id": "a2", "brief_chars": 300, "result_chars": 150},
+             {"klass": "reading", "agent_id": "a3", "brief_chars": 200, "result_chars": 100},
              {"klass": None, "agent_id": "a4", "brief_chars": 10, "result_chars": 10},
-             {"klass": "mechaniczna", "agent_id": None, "brief_chars": 40, "result_chars": 20}]
+             {"klass": "mechanical", "agent_id": None, "brief_chars": 40, "result_chars": 20}]
     usage = [{"event": "SubagentStop", "agent_id": "a1", "input": 1000, "output": 0, "cache_read": 0, "cache_write": 0,
               "models": {"claude-haiku-4-5": 1}},
              {"event": "SubagentStop", "agent_id": "a2", "input": 3000, "output": 0, "cache_read": 0, "cache_write": 0,
@@ -225,11 +225,11 @@ def main() -> int:
              {"event": "SessionEnd", "agent": "main", "input": 9, "output": 9, "models": {}}]
     prices = {"haiku": {"input": 1, "output": 5, "cache_read": 0.1, "cache_write": 1.25}}
     rows = {r["klass"]: r for r in cr.delegation_summary(deleg, usage, prices)}
-    c = rows.get("czytanie", {})
+    c = rows.get("reading", {})
     if c.get("n") != 3 or c.get("joined") != 3 or c.get("median_tokens") != 3000 or c.get("median_brief") != 200 \
             or c.get("median_result") != 100 or abs((c.get("median_usd") or 0) - 0.003) > 1e-9 \
-            or rows.get(None, {}).get("n") != 1 or rows.get("mechaniczna", {}).get("joined") != 0 \
-            or rows.get("mechaniczna", {}).get("median_tokens") is not None:
+            or rows.get(None, {}).get("n") != 1 or rows.get("mechanical", {}).get("joined") != 0 \
+            or rows.get("mechanical", {}).get("median_tokens") is not None:
         fails.append(f"cost_report.delegation_summary — {rows}")
     total += 1
     with tempfile.TemporaryDirectory() as d:
@@ -237,7 +237,7 @@ def main() -> int:
         dl.write_text("\n".join(json.dumps({"ts": "2026-10-18T12:00:00+00:00", **x}) for x in deleg), encoding="utf-8")
         ul.write_text("\n".join(json.dumps({"ts": "2026-10-18T12:00:00+00:00", **x}) for x in usage), encoding="utf-8")
         r = run([str(ROOT / ".tf" / "factory" / "cost_report.py"), "--delegation", "--log", str(ul), "--delegation-log", str(dl)])
-        if r.returncode != 0 or "czytanie" not in r.stdout or "bez klasy" not in r.stdout:
+        if r.returncode != 0 or "reading" not in r.stdout or "bez klasy" not in r.stdout:
             fails.append(f"cost_report --delegation: {r.returncode} {r.stdout[-400:]} {r.stderr[-400:]}")
 
     # ── instalator: scalanie kluczy najwyższego poziomu i polecenie Pythona w pasku stanu ──

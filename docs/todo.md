@@ -61,7 +61,7 @@ Cel człowieka: nad rdzeniem warstwy firmy, zespołu i osoby. Standardy firmy i 
 ustawia swój sposób pracy: jeden chce, żeby wszystko szło samo, drugi zatwierdza każdy krok, trzeci woli luźną
 rozmowę z agentem. Do tego zespół wyłącza skille, których nie potrzebuje (backend bez Figmy, frontend bez AWS).
 Stan dziś: warstwy `config_layers` to silnik ← organizacja (`org_defaults`) ← projekt. Skill wyłącza się tylko
-w całej fabryce (`metadata.status`). Tryb zadania (`tf task mode <KLUCZ> plan|zwykly|auto`) ustawia się osobno dla
+w całej fabryce (`metadata.status`). Tryb zadania (`tf task mode <KLUCZ> plan|normal|auto`) ustawia się osobno dla
 każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `.claude/settings.local.json`,
 `CLAUDE.local.md`, `.claude/factory-settings.json`.
 
@@ -156,7 +156,7 @@ człowieka, i z kontrolą wyniku skryptem.
 - [ ] **Style pracy osoby** (preset, który ustawia kilka istniejących przełączników naraz):
   - **autonomous** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
     wymaga limitów `work` i obowiązującej polityki autonomii;
-  - **step-by-step** — tryb `zwykly` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
+  - **step-by-step** — tryb `normal` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
     następnym), widoczny plan i diff każdego kroku;
   - **conversation** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
     bez automatycznego startu przebiegu z numeru zadania.
@@ -608,7 +608,7 @@ Jak:
 Do rozstrzygnięcia wtedy:
 - czy tłumaczenie zastępuje treść polską, czy obie wersje żyją równolegle (wtedy `build.py` i instalator wybierają
   wersję według `language`);
-- czy nazwy pól metadanych skilli (`metadata.catalog`, `przeglad`, `keywords`, `visibility`) też zmieniają się na
+- czy nazwy pól metadanych skilli (`metadata.catalog`, `review`, `keywords`, `visibility`) też zmieniają się na
   angielskie (zmiana publicznego API rdzenia — MAJOR).
 
 Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na wersji angielskiej.
@@ -1165,7 +1165,7 @@ katalogu) i `description` (1–1024 znaki); opcjonalne `license`, `compatibility
 string → string), `allowed-tools` (eksperymentalne); treść `SKILL.md` < 5000 tokenów i < 500 linii; odwołania
 o jeden poziom od `SKILL.md`; walidacja `skills-ref validate ./skill`. Stan fabryki (skrypt jednorazowy, 209
 skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyjątki:
-- [x] **`metadata.review` jest datą YAML, nie tekstem** (zrobione 2026-10-30: 209 skilli w cudzysłowie, zapis przez `freshness.py` i `build.py new-skill`, ostrzeżenie w `build.py check`) (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
+- [x] **`metadata.review` jest datą YAML, nie tekstem** (zrobione 2026-10-30: 209 skilli w cudzysłowie, zapis przez `freshness.py` i `build.py new-skill`, ostrzeżenie w `build.py check`) (wszystkie 209 skilli, np. `review: 2026-10-10` bez
   cudzysłowu) — specyfikacja wymaga wartości tekstowych; zapis w cudzysłowie w szablonie i w `build.py`/generatorze
   plus test w `skill_gate.py`; przy okazji sprawdzić `skills-ref validate` na kilku skillach (zmiana w `factory/` za
   zgodą człowieka). Klucze spoza specyfikacji (`argument-hint`, `disable-model-invocation`) to rozszerzenia Claude

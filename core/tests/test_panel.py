@@ -43,7 +43,7 @@ def ready_task(p: Path, weight: str) -> None:
     call(p, TASK, "artifact", "IMP-1", "plan.md", "--stage", "plan", "--by", "process:tf")
     call(p, TASK, "approve", "IMP-1", "plan.md", "--by", "human:anna")
     call(p, TASK, "stage", "IMP-1", "plan")
-    call(p, TASK, "stage", "IMP-1", "realizacja")
+    call(p, TASK, "stage", "IMP-1", "implementation")
     call(p, TASK, "verify", "IMP-1", "K1", "--files", "pay.py", "--command", OK)
     call(p, TASK, "flag", "IMP-1", "none", "--reason", "bez flagi, bo zmiana jest za zgodą człowieka w planie")
 
@@ -65,7 +65,7 @@ def main() -> int:
         base = Path(t)
         # waga pełna: bez werdyktów panelu etap pr jest odrzucany
         p = base / "full"
-        ready_task(p, "pelna")
+        ready_task(p, "full")
         r = call(p, TASK, "stage", "IMP-1", "pr")
         check(r.returncode != 0 and "security-reviewer" in r.stdout and "spec-reviewer" in r.stdout
               and "run_state.py panel" in r.stdout and task(p)["stage"] != "pr",
@@ -91,7 +91,7 @@ def main() -> int:
 
         # waga zwykła: bez panelu jak dotąd
         p = base / "normal"
-        ready_task(p, "zwykla")
+        ready_task(p, "normal")
         r = call(p, TASK, "stage", "IMP-1", "pr")
         check(r.returncode == 0, f"PN-8: waga zwykła przechodzi do pr bez panelu: {r.returncode} {r.stdout}")
 
@@ -103,7 +103,7 @@ def main() -> int:
         git(p, "add", "-A")
         git(p, "commit", "-q", "-m", "chore: init")
         git(p, "checkout", "-q", "-b", "story/platnosc-karta")   # ślad kryteriów liczy testy względem main
-        ready_task(p, "pelna")
+        ready_task(p, "full")
         (p / "test_pay.py").write_text("def test_ac1_card_fee():\n    assert True  # AC-1\n", encoding="utf-8")
         git(p, "add", "-A")
         git(p, "commit", "-q", "-m", "feat: płatność kartą\n\nKawałek K1: płatność kartą")
@@ -125,7 +125,7 @@ def main() -> int:
         call(p, SCRIPTS / "run_report.py", "start", "Płatność kartą", "--key", "IMP-1", "--story",
              "Jako kierowca chcę zapłacić kartą za postój.")
         d = str(p / ".tf" / "runs" / "IMP-1")
-        call(p, SCRIPTS / "run_state.py", "weight", d, "--set", "pelna")
+        call(p, SCRIPTS / "run_state.py", "weight", d, "--set", "full")
         r = call(p, SCRIPTS / "run_state.py", "panel", d)
         check(r.returncode == 0 and "security-reviewer" in r.stdout and "spec-reviewer" in r.stdout and "spec.md" in r.stdout
               and "--record" in r.stdout and "AC-n" in r.stdout and "Bez zmian" in r.stdout,

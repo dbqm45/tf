@@ -95,8 +95,72 @@ def apply(root: Path = ROOT, dry: bool = True) -> list[str]:
     return out
 
 
+# 11.0.0: identyfikatory stanu zadania, pętli i konfiguracji po angielsku (opisy zostają po polsku)
+VALUES = {
+    "przyjecie": "intake", "specyfikacja": "spec", "realizacja": "implementation", "przeglad": "review",
+    "wdrozenie": "deploy", "zamkniecie": "closed", "lekka": "light", "zwykla": "normal", "pelna": "full",
+    "zwykly": "normal", "czerwone": "red", "wycofane": "rolled-back", "oszczedny": "economy",
+    "zrownowazony": "balanced", "jakosc": "quality", "pytanie": "question", "podzial": "split", "zrodlo": "source",
+    "zgoda-na-plan": "plan-approval", "testy": "tests", "skan": "scan", "budzet": "budget", "srodowisko": "environment",
+    "zaleznosc": "dependency", "kontrakt": "contract", "uprawnienia": "permissions",
+}
+VALUE_KEYS = {"stage", "weight", "mode", "state", "from", "to", "stop_code", "code", "profile", "task_stage"}
+ROUND_KEYS = {"kod": "code", "weryf": "verify", "skan": "scan", "zakres": "scope"}
+STEP_KEYS = {"fakty": "facts", "wersje": "versions", "realizacja": "implementation", "mechanika": "mechanical",
+             "przeglad": "review", "decyzja": "decision", "bezpieczenstwo": "security", "opis": "description"}
+
+
+def _walk(o):
+    if isinstance(o, dict):
+        out = {}
+        for k, v in o.items():
+            k2 = ROUND_KEYS.get(k, k) if isinstance(v, str) and v in ("run", "pass", "fail", "todo") else k
+            out[k2] = VALUES.get(v, v) if k in VALUE_KEYS and isinstance(v, str) else _walk(v)
+        return out
+    if isinstance(o, list):
+        return [_walk(v) for v in o]
+    return o
+
+
+def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
+    """Dane projektu sprzed 11.0.0: zadania, przebiegi, konfiguracja projektu i osoby, profil kosztów."""
+    out = []
+    jsons = [*root.glob("docs/project/changes/*/task.json"), *root.glob(".tf/runs/*/run.json"),
+             root / ".claude" / "factory-profile.json"]
+    for p in jsons:
+        if not p.is_file():
+            continue
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        new = _walk(data)
+        if new != data:
+            out.append(p.relative_to(root).as_posix())
+            if not dry:
+                p.write_text(json.dumps(new, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    keys = {**STEP_KEYS, "oszczedny": "economy", "zrownowazony": "balanced", "jakosc": "quality"}
+    key_rx = re.compile(r"(?m)^(\s+)(" + "|".join(map(re.escape, keys)) + r"):")          # kroki, profile, opis
+    val_rx = re.compile(r"(?m)^(\s*(?:default_profile|default_mode|profile):\s*)([\w-]+)")  # pojedyncze wartości
+    list_rx = re.compile(r"(?m)^(\s*allowed_modes:\s*\[)([^\]]*)(\])")
+    for p in [root / ".tf" / "config" / "config.yaml", root / ".tf" / "config" / "me.yaml"]:
+        if p.is_file():
+            text = p.read_text(encoding="utf-8")
+            new = key_rx.sub(lambda m: m.group(1) + keys[m.group(2)] + ":", text)
+            new = val_rx.sub(lambda m: m.group(1) + VALUES.get(m.group(2), m.group(2)), new)
+            new = list_rx.sub(lambda m: m.group(1) + ", ".join(VALUES.get(x.strip(), x.strip())
+                                                               for x in m.group(2).split(",")) + m.group(3), new)
+            new = re.sub(r"(\{\s*default_mode:\s*)([\w-]+)", lambda m: m.group(1) + VALUES.get(m.group(2), m.group(2)), new)
+            if new != text:
+                out.append(p.relative_to(root).as_posix())
+                if not dry:
+                    p.write_text(new, encoding="utf-8")
+    return out
+
+
 def main(argv: list[str]) -> int:
-    changes = apply(ROOT, dry="--apply" not in argv)
+    changes = apply(ROOT, dry="--apply" not in argv) + [f"{c}: wartości 11.0.0" for c in
+                                                        migrate_values(ROOT, dry="--apply" not in argv)]
     for c in changes:
         print(("✓ " if "--apply" in argv else "⚠ ") + c)
     if not changes:

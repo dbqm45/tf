@@ -103,15 +103,15 @@ def main() -> int:
         (p / ".tf" / "config").mkdir()
         (p / ".tf" / "config" / "me.yaml").write_text("style: step-by-step\n", encoding="utf-8")
         cfg = packs.load_config(p)
-        check(cfg.get("style") == "step-by-step" and cfg["task"]["default_mode"] == "zwykly"
+        check(cfg.get("style") == "step-by-step" and cfg["task"]["default_mode"] == "normal"
               and cfg["loop"]["confirm_each_slice"] is True and cfg["loop"]["blocked_slices"] is False,
               f"WS-4: .tf/config/me.yaml nadpisuje preferencje ogólne: {cfg.get('style')} {cfg.get('task')} {cfg.get('loop')}")
 
         # WS-5: sufit trybów z wyższej warstwy
-        q = project(base, "b", "task:\n  allowed_modes: [plan, zwykly]\n")
+        q = project(base, "b", "task:\n  allowed_modes: [plan, normal]\n")
         prefs.write_text("style: autonomous\n", encoding="utf-8")
         ws = packs.work_style(q)
-        check(ws["default_mode"] == "zwykly" and any("allowed_modes" in w for w in ws["warnings"]),
+        check(ws["default_mode"] == "normal" and any("allowed_modes" in w for w in ws["warnings"]),
               f"WS-5: tryb Auto spoza task.allowed_modes nie przechodzi z preferencji osoby: {ws}")
 
         # WS-6: polityka autonomii — osoba zaostrza, nie rozluźnia

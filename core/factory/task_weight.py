@@ -6,16 +6,16 @@ Waga zadania (krok E osi przebiegu): ile ceremonii potrzebuje zadanie. Liczy skr
   tf task weight <KEY> --apply              # fabryka przydziela propozycję; później tylko podnosi
   tf task weight <KEY> --set <waga> [--by human:<id> --reason "<dlaczego>"]
 
-Wagi: `lekka` (drobna zmiana: bez spec.md, jeden kawałek, dowód weryfikacji nadal wymagany), `zwykla`,
-`pelna` (obszar wrażliwy: plan zatwierdza człowiek przed realizacją, więc przebieg bez nadzoru się zatrzymuje).
+Wagi: `light` (drobna zmiana: bez spec.md, jeden kawałek, dowód weryfikacji nadal wymagany), `normal`,
+`full` (obszar wrażliwy: plan zatwierdza człowiek przed realizacją, więc przebieg bez nadzoru się zatrzymuje).
 
 Propozycja powstaje z dwóch źródeł i zawsze ma powód zwykłym zdaniem:
 - treść `ticket.md`: słowa o obszarach wrażliwych (logowanie, hasła, uprawnienia, płatności, migracje bazy, dane
-  osobowe, sekrety, wdrożenie) → `pelna`; słowa o drobnej zmianie (literówka, nazwa, komentarz, dokumentacja) bez
-  kryteriów akceptacji i w krótkiej treści → `lekka`;
+  osobowe, sekrety, wdrożenie) → `full`; słowa o drobnej zmianie (literówka, nazwa, komentarz, dokumentacja) bez
+  kryteriów akceptacji i w krótkiej treści → `light`;
 - ścieżki z `plan.md` (pole `pliki:` kawałków): kategoria wysokiego ryzyka triażu zmian (`autonomy.triage.high`:
-  auth, payments, schema, deploy — te same reguły co `tf risk`) → `pelna`; więcej niż jeden kawałek albo więcej niż
-  dwa pliki wyklucza `lekka`.
+  auth, payments, schema, deploy — te same reguły co `tf risk`) → `full`; więcej niż jeden kawałek albo więcej niż
+  dwa pliki wyklucza `light`.
 Reguły są ostrożne: wątpliwość daje wyższą wagę. Podnieść wagę może każdy; obniżyć — tylko człowiek, z powodem.
 
 Tylko biblioteka standardowa (i `risk_triage.py` obok, gdy jest).
@@ -28,12 +28,12 @@ import re
 from pathlib import Path
 
 CHANGES = Path("docs") / "project" / "changes"
-ORDER = ("lekka", "zwykla", "pelna")
-LABEL = {"lekka": "lekka", "zwykla": "zwykła", "pelna": "pełna"}
+ORDER = ("light", "normal", "full")
+LABEL = {"light": "light", "normal": "zwykła", "full": "pełna"}
 EFFECT = {
-    "lekka": "bez spec.md, jeden kawałek, dowód weryfikacji nadal wymagany",
-    "zwykla": "specyfikacja, plan z kawałków, dowody i ślad kryteriów",
-    "pelna": "jak zwykła, a plan zatwierdza człowiek przed realizacją (przebieg z --auto zatrzyma się blokiem STOP); "
+    "light": "bez spec.md, jeden kawałek, dowód weryfikacji nadal wymagany",
+    "normal": "specyfikacja, plan z kawałków, dowody i ślad kryteriów",
+    "full": "jak zwykła, a plan zatwierdza człowiek przed realizacją (przebieg z --auto zatrzyma się blokiem STOP); "
              "przegląd security-reviewer obowiązkowy",
 }
 SENSITIVE = (
@@ -62,7 +62,7 @@ PATH_LABEL = {"auth": "uwierzytelnianie lub uprawnienia", "payments": "płatnoś
 
 
 def rank(weight: str) -> int:
-    return ORDER.index(weight) if weight in ORDER else ORDER.index("zwykla")
+    return ORDER.index(weight) if weight in ORDER else ORDER.index("normal")
 
 
 def plan_slices(text: str) -> list[dict]:
@@ -127,7 +127,7 @@ def propose(root: Path, key: str) -> dict:
         if hit:
             reasons.append(f"plan dotyka pliku {rel} ({PATH_LABEL.get(hit, hit)})")
     if reasons:
-        return {"weight": "pelna", "reasons": reasons}
+        return {"weight": "full", "reasons": reasons}
 
     small = re.search(SMALL, ticket, re.I)
     blockers = []
@@ -142,6 +142,6 @@ def propose(root: Path, key: str) -> dict:
     if len(files) > 2:
         blockers.append(f"plan wymienia {len(files)} pliki")
     if blockers:
-        return {"weight": "zwykla", "reasons": ["zadanie " + "; ".join(blockers) + "; obszarów wrażliwych nie widać"]}
-    return {"weight": "lekka", "reasons": [f"drobna zmiana („{small.group(0)}”), bez kryteriów akceptacji"
+        return {"weight": "normal", "reasons": ["zadanie " + "; ".join(blockers) + "; obszarów wrażliwych nie widać"]}
+    return {"weight": "light", "reasons": [f"drobna zmiana („{small.group(0)}”), bez kryteriów akceptacji"
                                            + (f", {len(files)} plik(i) w planie" if files else "")]}

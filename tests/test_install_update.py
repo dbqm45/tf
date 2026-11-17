@@ -147,20 +147,20 @@ def main() -> int:
         write(src / "core" / "factory" / "VERSION", f"{major}.99.1\n")
         own = clone / ".tf" / "config" / "config.yaml"
         own.parent.mkdir(parents=True, exist_ok=True)
-        own.write_text("default_profile: oszczedny\n", encoding="utf-8")
+        own.write_text("default_profile: economy\n", encoding="utf-8")
         mine = clone / ".tf" / "config" / "personas" / "moja-persona.yaml"
         write(mine, "name: moja\n")
         r = install(src, clone)
         engine = (clone / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8") \
             if (clone / ".tf" / "factory" / "config.yaml").exists() else ""
         check(r.returncode == 0 and "nowy_klucz_testu:" in engine and own.read_text(encoding="utf-8") ==
-              "default_profile: oszczedny\n", f"N-1: domyślny config silnika zaktualizowany, nadpisania projektu bez "
+              "default_profile: economy\n", f"N-1: domyślny config silnika zaktualizowany, nadpisania projektu bez "
               f"zmian: {r.stdout[-500:]}")
         spec = importlib.util.spec_from_file_location("tf_packs_n2", clone / ".tf" / "factory" / "packs.py")
         pm = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(pm)
         merged = pm.load_config(clone)
-        check(merged.get("default_profile") == "oszczedny" and (merged.get("nowy_klucz_testu") or {}).get("a") == 1,
+        check(merged.get("default_profile") == "economy" and (merged.get("nowy_klucz_testu") or {}).get("a") == 1,
               f"N-2: złożona konfiguracja — nadpisanie projektu i nowy klucz silnika: {merged.get('default_profile')}")
         check(mine.read_text(encoding="utf-8") == "name: moja\n", "N-3: własna persona w .tf/config/personas/ nietknięta")
         check(not factory_new(clone) and not (clone / "factory").exists(), f"N-4: żadnych *.factory-new ani factory/: "

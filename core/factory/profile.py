@@ -3,9 +3,9 @@
 Profil kosztów zespołu — jeden przełącznik między ceną a jakością.
 
   python3 .tf/factory/profile.py                 # aktywny profil, modele tierów i ustawienia sesji
-  python3 .tf/factory/profile.py oszczedny       # przełącz (też: zrownowazony, jakosc)
-  python3 .tf/factory/profile.py jakosc --dry-run
-  python3 .tf/factory/profile.py oszczedny --tylko-zespol   # bez zmian w .claude/settings.local.json
+  python3 .tf/factory/profile.py economy       # przełącz (też: balanced, quality)
+  python3 .tf/factory/profile.py quality --dry-run
+  python3 .tf/factory/profile.py economy --tylko-zespol   # bez zmian w .claude/settings.local.json
 
 Profil (.tf/config/config.yaml → profiles) robi dwie rzeczy:
 1. nadpisuje model i effort tierów (fast/std/deep), więc po przebudowaniu wszyscy agenci i persony dostają

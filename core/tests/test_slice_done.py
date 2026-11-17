@@ -93,7 +93,7 @@ def main() -> int:
         r = call(p, SCRIPT, "done", d, "K1", "--message", "feat(pay): card payment")
         cur = meta(d).get("current") or {}
         check(r.returncode != 0 and "verify" in r.stdout + r.stderr and len(commits(p)) == 1
-              and "- [x] K1" not in plan_text(p) and (cur.get("rounds") or [{}])[-1].get("zakres") != "pass",
+              and "- [x] K1" not in plan_text(p) and (cur.get("rounds") or [{}])[-1].get("scope") != "pass",
               f"DN-1: bez dowodu done odmawia i niczego nie zapisuje: {r.returncode} {r.stdout}{r.stderr} {cur}")
 
         call(p, SCRIPT, "verify", d, "K1", "--files", "pay.py,test_pay.py", "--command", OK)
@@ -112,7 +112,7 @@ def main() -> int:
         check(files == {"pay.py", "test_pay.py"} and "notes.txt" in git(p, "status", "--porcelain").stdout,
               f"DN-4: commit obejmuje tylko pliki z dowodu, reszta zostaje niezatwierdzona: {files}")
         cur = meta(d).get("current") or {}
-        check(cur.get("k") == "K1" and (cur.get("rounds") or [{}])[-1].get("zakres") == "pass",
+        check(cur.get("k") == "K1" and (cur.get("rounds") or [{}])[-1].get("scope") == "pass",
               f"DN-5: zapisany zaliczony przegląd zakresu bieżącej rundy: {cur}")
         check("- [x] K1" in plan_text(p) and "- [ ] K2" in plan_text(p) and "Dalej: K2" in r.stdout,
               f"DN-6: kawałek odhaczony, wyjście podaje następny: {r.stdout} {plan_text(p)}")
@@ -128,15 +128,15 @@ def main() -> int:
         (p / "pay.py").write_text("FEE = 45\nRECEIPT = True\n", encoding="utf-8")
         call(p, SCRIPT, "verify", d, "K2", "--files", "pay.py,test_pay.py", "--command", OK)
         call(p, SCRIPT, "finding", d, "K2", "paragon drukuje się dwa razy [ważne]", "--round", "1")
-        call(p, SCRIPT, "step", d, "K2", "R1", "zakres", "fail")
-        call(p, SCRIPT, "step", d, "K2", "R2", "kod", "run")
+        call(p, SCRIPT, "step", d, "K2", "R1", "scope", "fail")
+        call(p, SCRIPT, "step", d, "K2", "R2", "code", "run")
         (p / "pay.py").write_text("FEE = 45\nRECEIPT = 1\n", encoding="utf-8")
         call(p, SCRIPT, "verify", d, "K2", "--files", "pay.py,test_pay.py", "--command", OK)
         r = call(p, SCRIPT, "done", d, "K2", "--message", "feat(pay): print receipt\n\nKawałek K2: paragon")
         log = commits(p)
         rounds = (meta(d).get("current") or {}).get("rounds") or []
-        check(r.returncode == 0 and len(rounds) == 2 and rounds[0].get("zakres") == "fail"
-              and rounds[1].get("zakres") == "pass",
+        check(r.returncode == 0 and len(rounds) == 2 and rounds[0].get("scope") == "fail"
+              and rounds[1].get("scope") == "pass",
               f"DN-8: done zapisuje przegląd bieżącej rundy (R2), R1 zostaje fail: {r.returncode} {r.stdout}{r.stderr} {rounds}")
         check(log[0].count("Kawałek K2") == 1 and "Flag: imp_1_paragon" in log[0],
               f"DN-9: treść „Kawałek” nie jest dublowana, flaga zadania dodaje stopkę: {log[:1]}")

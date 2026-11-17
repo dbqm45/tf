@@ -73,7 +73,7 @@ Fabryka sama ocenia, ile ostrożności potrzebuje zadanie, i mówi Ci to jednym 
 
 - Wagę liczy skrypt z treści zadania i ze ścieżek planu, nie model. Gdy plan dotknie np. migracji, waga sama rośnie.
 - Podnieść wagę może każdy (także fabryka). **Obniżyć możesz tylko Ty**, z powodem:
-  `tf task weight <KLUCZ> --set zwykla --by human:<Twój identyfikator> --reason "…"`. Po Twojej decyzji fabryka
+  `tf task weight <KLUCZ> --set normal --by human:<Twój identyfikator> --reason "…"`. Po Twojej decyzji fabryka
   wagi już nie zmienia.
 - Podgląd wagi z powodem: `tf task weight <KLUCZ>`.
 
@@ -100,10 +100,10 @@ Fabryka sama ocenia, ile ostrożności potrzebuje zadanie, i mówi Ci to jednym 
 
 ## Kiedy fabryka się zatrzymuje
 Zatrzymanie (STOP) ma zawsze jeden z jedenastu powodów — skrypt nie przyjmie innego — i mówi, czego potrzeba od Ciebie:
-brak informacji (`pytanie`), zadanie do podziału (`podzial`), brak treści albo dostępu do zgłoszenia (`zrodlo`), plan
-czeka na zgodę (`zgoda-na-plan`), testy czerwone po dwóch próbach (`testy`), skan bezpieczeństwa (`skan`),
-przekroczony budżet (`budzet`), nieprzygotowane repozytorium (`srodowisko`), decyzja o zależności (`zaleznosc`),
-zmiana kontraktu albo decyzja biznesowa (`kontrakt`), operacja zastrzeżona dla Ciebie (`uprawnienia`).
+brak informacji (`question`), zadanie do podziału (`split`), brak treści albo dostępu do zgłoszenia (`source`), plan
+czeka na zgodę (`plan-approval`), testy czerwone po dwóch próbach (`tests`), skan bezpieczeństwa (`scan`),
+przekroczony budżet (`budget`), nieprzygotowane repozytorium (`environment`), decyzja o zależności (`dependency`),
+zmiana kontraktu albo decyzja biznesowa (`contract`), operacja zastrzeżona dla Ciebie (`permissions`).
 
 Każde zatrzymanie dostajesz w tym samym kształcie: **co się stało**, **czego potrzeba**, **jedno pytanie** z 2–3
 opcjami (przy każdej skutek i jedna rekomendacja) oraz co fabryka zrobi po Twojej odpowiedzi. To samo widać na

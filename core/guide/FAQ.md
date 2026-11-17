@@ -89,7 +89,7 @@ nie rozluźni zakazów polityki autonomii. Szczegóły: `.tf/factory/GUIDE.md`, 
 
 ## Który model i ile to kosztuje?
 - Role mają tiery: `fast` (Haiku), `std` (Sonnet), `deep` (Opus).
-- Profil zespołu przestawia je jednym poleceniem: `python3 .tf/factory/profile.py oszczedny|zrownowazony|jakosc`.
+- Profil zespołu przestawia je jednym poleceniem: `python3 .tf/factory/profile.py economy|balanced|quality`.
 - Koszt mierzysz poleceniem `python3 .tf/factory/cost_report.py --days 7`, a pasek stanu pokazuje koszt bieżącej sesji.
 
 Funkcje płatne z natury (ewaluacje skilli na modelu, agent teams) uruchamiasz świadomie.

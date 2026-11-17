@@ -30,8 +30,8 @@ def review_pass(run_dir: Path, slice_id: str) -> None:
     """Stan po zaliczonym przeglądzie zakresu kawałka (zapis `step … zakres pass`), wpisany wprost do run.json."""
     f = run_dir / "run.json"
     meta = json.loads(f.read_text(encoding="utf-8"))
-    meta["current"] = {"k": slice_id, "rounds": [{"test": "pass", "kod": "pass", "weryf": "pass", "skan": "pass",
-                                                  "zakres": "pass"}]}
+    meta["current"] = {"k": slice_id, "rounds": [{"test": "pass", "code": "pass", "verify": "pass", "scan": "pass",
+                                                  "scope": "pass"}]}
     f.write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
@@ -91,22 +91,22 @@ def main() -> int:
               f"S-2b: odhaczony K1 → slices, K2 bieżący: {o.get('stage')} {[s['state'] for s in o['slices']]}")
 
         # S-3: step zapisuje rundy; wcześniejsze etapy dostają pass, nowa runda po nieudanej bramce
-        r = run(SCRIPT, ["step", str(d), "K2", "R1", "weryf", "fail"], proj, cfg)
+        r = run(SCRIPT, ["step", str(d), "K2", "R1", "verify", "fail"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
-        check(r.returncode == 0 and meta["current"]["rounds"][0] == {"test": "pass", "kod": "pass", "weryf": "fail",
-                                                                  "skan": "todo", "zakres": "todo"},
-              f"S-3a: R1 weryf fail, test i kod domyślnie pass: {r.stdout} {r.stderr} {meta.get('current')}")
-        run(SCRIPT, ["step", str(d), "K2", "R2", "kod", "run"], proj, cfg)
-        run(SCRIPT, ["step", str(d), "K2", "R2", "skan", "run"], proj, cfg)
+        check(r.returncode == 0 and meta["current"]["rounds"][0] == {"test": "pass", "code": "pass", "verify": "fail",
+                                                                  "scan": "todo", "scope": "todo"},
+              f"S-3a: R1 verify fail, test i kod domyślnie pass: {r.stdout} {r.stderr} {meta.get('current')}")
+        run(SCRIPT, ["step", str(d), "K2", "R2", "code", "run"], proj, cfg)
+        run(SCRIPT, ["step", str(d), "K2", "R2", "scan", "run"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
         r2 = meta["current"]["rounds"][1]
-        check(len(meta["current"]["rounds"]) == 2 and r2["test"] == "pass" and r2["kod"] == "pass"
-              and r2["weryf"] == "pass" and r2["skan"] == "run" and r2["zakres"] == "todo",
+        check(len(meta["current"]["rounds"]) == 2 and r2["test"] == "pass" and r2["code"] == "pass"
+              and r2["verify"] == "pass" and r2["scan"] == "run" and r2["scope"] == "todo",
               f"S-3b: R2 liczona od początku, weryf przed skanem = pass: {r2}")
         check(meta.get("stage") == "slices" and "updated_at" in meta, f"S-3c: step ustawia stage slices: {meta.get('stage')}")
         o = one()
         check(o.get("cur", {}).get("k") == "K2" and len(o["cur"]["rounds"]) == 2
-              and o["cur"]["rounds"][0]["weryf"] == "fail",
+              and o["cur"]["rounds"][0]["verify"] == "fail",
               f"S-3d: dashboard po step (bez ręcznego odświeżenia): {o.get('cur')}")
 
         # S-4: nowy kawałek zaczyna od R1
@@ -117,8 +117,8 @@ def main() -> int:
 
         # S-5: błędne wejście → kod 2 i komunikat, run.json bez zmian
         before = (d / "run.json").read_text(encoding="utf-8")
-        bad = [["step", str(d), "K2", "R1", "weryf", "zielony"], ["step", str(d), "K2", "R1", "lint", "run"],
-               ["step", str(d), "K2", "weryf", "run"], ["stage", str(d), "needs"], ["stage", str(d), "nie-ma"],
+        bad = [["step", str(d), "K2", "R1", "verify", "zielony"], ["step", str(d), "K2", "R1", "lint", "run"],
+               ["step", str(d), "K2", "verify", "run"], ["stage", str(d), "needs"], ["stage", str(d), "nie-ma"],
                ["stage", str(d), "slices", "--needs", "stop"]]
         codes = [run(SCRIPT, a, proj, cfg).returncode for a in bad]
         check(all(c == 2 for c in codes)
@@ -128,8 +128,8 @@ def main() -> int:
         # S-6: STOP — etap needs z powodem; kawałek bieżący = fail, plik STOP w panelu
         (d / "security" / "K2" / "proba-2").mkdir(parents=True)
         (d / "security" / "K2" / "proba-2" / "summary.md").write_text("## Bezpieczeństwo\nWerdykt: FAIL\n", encoding="utf-8")
-        run(SCRIPT, ["step", str(d), "K2", "R2", "skan", "fail"], proj, cfg)
-        r = run(SCRIPT, ["stage", str(d), "needs", "--needs", "stop", "--code", "skan", "--reason", "Skan czerwony po 2 próbach (K2)."],
+        run(SCRIPT, ["step", str(d), "K2", "R2", "scan", "fail"], proj, cfg)
+        r = run(SCRIPT, ["stage", str(d), "needs", "--needs", "stop", "--code", "scan", "--reason", "Skan czerwony po 2 próbach (K2)."],
                 proj, cfg)
         o = one()
         names = [i["name"] for g in o.get("files", []) for i in g["items"]]
@@ -237,7 +237,7 @@ def main() -> int:
         # STOP w repozytorium nie zostaje pusty plik); bez spec.md i z niewypełnionym nie ma etapu plan
         check(not (doc / "spec.md").exists(), "P-0a: start nie zakłada spec.md")
         r = run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
-        check(r.returncode == 2 and "spec" in r.stdout and " new" in r.stdout and task().get("stage") == "przyjecie",
+        check(r.returncode == 2 and "spec" in r.stdout and " new" in r.stdout and task().get("stage") == "intake",
               f"P-0b: etap plan odrzucony, gdy specyfikacji jeszcze nie ma: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["spec", str(d), "new"], proj, cfg)
         check(r.returncode == 0 and (doc / "spec.md").is_file(), f"P-0c: spec new zakłada szablon: {r.returncode} {r.stdout}{r.stderr}")
@@ -245,7 +245,7 @@ def main() -> int:
         check(r.returncode == 1 and "SPEC-007" in r.stdout, f"P-1a: spec na szablonie → kod 1 z regułą: {r.returncode} {r.stdout}{r.stderr}")
         r = run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
         check(r.returncode == 2 and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") != "plan"
-              and task().get("stage") == "przyjecie" and "spec" in r.stdout,
+              and task().get("stage") == "intake" and "spec" in r.stdout,
               f"P-1b: etap plan odrzucony bez gotowej specyfikacji: {r.returncode} {r.stdout}")
         (doc / "spec.md").write_text(SPEC, encoding="utf-8")
         r = run(SCRIPT, ["spec", str(d)], proj, cfg)
@@ -298,10 +298,10 @@ def main() -> int:
         inputs = sorted((task().get("artifacts", {}).get("plan.md", {}).get("inputs") or {}))
         check(inputs == ["spec.md", "ticket.md"], f"P-3: stage plan zapisuje, z czego powstał plan: {inputs}")
         run(SCRIPT, ["step", str(d), "K2", "R1", "test", "run"], proj, cfg)
-        check(task().get("stage") == "realizacja", f"V-5b: pierwszy step → realizacja: {task().get('stage')}")
+        check(task().get("stage") == "implementation", f"V-5b: pierwszy step → realizacja: {task().get('stage')}")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
-        check(r.returncode == 2 and meta.get("stage") != "pr" and task().get("stage") == "realizacja" and "K2" in r.stdout,
+        check(r.returncode == 2 and meta.get("stage") != "pr" and task().get("stage") == "implementation" and "K2" in r.stdout,
               f"V-6a: etap pr odrzucony z niezweryfikowanym kawałkiem: {r.returncode} {r.stdout} {meta.get('stage')}")
         r = run(SCRIPT, ["step", str(d), "PR", "plan_drift", "pass"], proj, cfg)
         check(r.returncode == 2 and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") != "pr",
@@ -326,7 +326,7 @@ def main() -> int:
         # zmiana specyfikacji po planie: plan jest nieaktualny, dopóki pętla nie przejdzie etapu plan ponownie
         (doc / "spec.md").write_text(SPEC.replace("45 zł", "50 zł"), encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
-        check(r.returncode == 2 and "plan.md" in r.stdout and task().get("stage") == "realizacja",
+        check(r.returncode == 2 and "plan.md" in r.stdout and task().get("stage") == "implementation",
               f"P-4a: specyfikacja zmieniona po planie → etap pr odrzucony (plan nieaktualny): {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
         check(r.returncode == 0, f"P-4b: ponowny etap plan odświeża wejścia planu: {r.returncode} {r.stdout}")
@@ -395,7 +395,7 @@ def main() -> int:
         rs = runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
         bare = next((x for x in rs if x.get("key") == "PROJ-7"), {})
         check(len(rs) == 3 and bare.get("title") == "Eksport faktur" and bare.get("stage") == "intake"
-              and bare.get("taskStage") == "przyjecie" and [(s["id"], s["state"]) for s in bare.get("slices", [])] == [("K1", "done")],
+              and bare.get("taskStage") == "intake" and [(s["id"], s["state"]) for s in bare.get("slices", [])] == [("K1", "done")],
               f"D-7: zadanie bez przebiegu ma kartę z etapem i kawałkami: {len(rs)} {bare.get('stage')} {bare.get('slices')}")
 
     # waga zadania w pętli (krok E2): fabryka przydziela wagę i mówi dlaczego; skutki pilnuje skrypt
@@ -409,7 +409,7 @@ def main() -> int:
         d = proj / ".tf" / "runs" / "LOG-1"
         r = run(SCRIPT, ["weight", str(d)], proj, cfg)
         data = json.loads((proj / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8"))
-        check(r.returncode == 0 and data.get("weight") == "pelna" and "pełna" in r.stdout and "hasł" in r.stdout
+        check(r.returncode == 0 and data.get("weight") == "full" and "pełna" in r.stdout and "hasł" in r.stdout
               and "człowiek" in r.stdout,
               f"W-1: run_state weight przydziela wagę pełną, podaje powód i skutek: {r.returncode} {r.stdout}{r.stderr}")
         (proj / CHANGES / "LOG-1" / "spec.md").write_text(SPEC, encoding="utf-8")
@@ -430,17 +430,17 @@ def main() -> int:
                      "Popraw literówkę w README: instlacja na instalacja."], proj, cfg)
         d2 = proj / ".tf" / "runs" / "TYP-1"
         r = run(SCRIPT, ["weight", str(d2)], proj, cfg)
-        check(r.returncode == 0 and "lekka" in r.stdout and "bez spec.md" in r.stdout,
+        check(r.returncode == 0 and "light" in r.stdout and "bez spec.md" in r.stdout,
               f"W-5: literówka → waga lekka ze skutkiem: {r.stdout}{r.stderr}")
         (proj / CHANGES / "TYP-1" / "plan.md").write_text("# Plan\n- [ ] K1 — literówka · pliki: README.md\n", encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d2), "plan"], proj, cfg)
         check(r.returncode == 0 and not (proj / CHANGES / "TYP-1" / "spec.md").exists(),
               f"W-6: waga lekka — etap plan przebiegu bez spec.md: {r.returncode} {r.stdout}{r.stderr}")
-        r = run(SCRIPT, ["weight", str(d2), "--set", "zwykla"], proj, cfg)
+        r = run(SCRIPT, ["weight", str(d2), "--set", "normal"], proj, cfg)
         r2 = run(SCRIPT, ["stage", str(d2), "plan"], proj, cfg)
         check(r.returncode == 0 and r2.returncode == 2 and "spec" in r2.stdout,
               f"W-7: po podniesieniu wagi do zwykłej specyfikacja znów jest wymagana: {r.stdout} | {r2.returncode} {r2.stdout}")
-        r = run(SCRIPT, ["weight", str(d2), "--set", "lekka"], proj, cfg)
+        r = run(SCRIPT, ["weight", str(d2), "--set", "light"], proj, cfg)
         check(r.returncode != 0 and "human:" in r.stdout, f"W-8: obniżenie wagi z pętli → odmowa: {r.returncode} {r.stdout}")
         run(REPORT, ["start", "Limit dobowy", "--key", "REG-1", "--story",
                      "Jako operator chcę podnieść limit dobowy opłaty z 40 zł do 45 zł. AC1: 12 h = 45 zł."], proj, cfg)
@@ -450,13 +450,13 @@ def main() -> int:
             "# Plan\n- [ ] K1 — limit · pliki: fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d3), "plan"], proj, cfg)
         w = json.loads((proj / CHANGES / "REG-1" / "task.json").read_text(encoding="utf-8")).get("weight")
-        check(r.returncode == 0 and w == "pelna" and "pełna" in r.stdout and "db/migrations/0008_limit.sql" in r.stdout,
+        check(r.returncode == 0 and w == "full" and "pełna" in r.stdout and "db/migrations/0008_limit.sql" in r.stdout,
               f"W-10: etap plan ponawia przydział — plan z migracją podnosi wagę i mówi dlaczego: {w} {r.stdout}{r.stderr}")
-        subprocess.run([sys.executable, str(ts), "weight", "REG-1", "--set", "zwykla", "--by", "human:anna", "--reason",
+        subprocess.run([sys.executable, str(ts), "weight", "REG-1", "--set", "normal", "--by", "human:anna", "--reason",
                         "migracja dodaje tylko indeks"], cwd=proj, env=env, capture_output=True, text=True, timeout=60)
         r = run(SCRIPT, ["stage", str(d3), "plan"], proj, cfg)
         w = json.loads((proj / CHANGES / "REG-1" / "task.json").read_text(encoding="utf-8")).get("weight")
-        check(r.returncode == 0 and w == "zwykla", f"W-11: waga obniżona przez człowieka zostaje przy kolejnym etapie: {w} {r.stdout}")
+        check(r.returncode == 0 and w == "normal", f"W-11: waga obniżona przez człowieka zostaje przy kolejnym etapie: {w} {r.stdout}")
         # tryby (krok E3): Plan kończy się na planie, zwykły czeka na zgodę człowieka, Auto idzie dalej
         run(REPORT, ["start", "Eksport sesji", "--key", "EXP-1", "--story", "Jako operator chcę eksport sesji do pliku."],
             proj, cfg)
@@ -475,9 +475,9 @@ def main() -> int:
         r = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
         check(r.returncode == 2 and "Plan" in r.stdout and json.loads((d4 / "run.json").read_text(encoding="utf-8")).get("stage") == "plan",
               f"T-3: tryb Plan nie wchodzi w pętlę kawałka: {r.returncode} {r.stdout}")
-        r = run(SCRIPT, ["mode", str(d4), "zwykly"], proj, cfg)
+        r = run(SCRIPT, ["mode", str(d4), "normal"], proj, cfg)
         r2 = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
-        check(r.returncode == 0 and t4().get("mode") == "zwykly" and r2.returncode == 2 and "approve" in r2.stdout,
+        check(r.returncode == 0 and t4().get("mode") == "normal" and r2.returncode == 2 and "approve" in r2.stdout,
               f"T-4: po przejściu na tryb zwykły pętla czeka na zgodę człowieka: {r.stdout} | {r2.returncode} {r2.stdout}")
         r = run(SCRIPT, ["approve", str(d4)], proj, cfg, {"GIT_AUTHOR_NAME": "Anna Nowak"})
         art = (t4().get("artifacts") or {}).get("plan.md") or {}
@@ -512,39 +512,39 @@ def main() -> int:
               f"T-6: --auto zapisuje tryb Auto; zgody na plan nie da się zapisać bez człowieka: {mode} | {r2.returncode} {r2.stdout}")
         r = run(SCRIPT, ["stage", str(d), "intake", "--auto"], proj, cfg)        # LOG-1: waga pełna
         mode = json.loads((proj / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8")).get("mode")
-        check(r.returncode == 0 and mode == "zwykly" and "pełn" in r.stdout,
+        check(r.returncode == 0 and mode == "normal" and "pełn" in r.stdout,
               f"T-7: --auto przy wadze pełnej — zostaje tryb zwykły z wyjaśnieniem: {mode} {r.stdout}")
 
         # zamknięta lista kodów zatrzymań: brak kodu albo kod spoza listy to błąd; podgląd pokazuje przyczynę
         r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--reason", "Brak kryteriów."], proj, cfg)
-        check(r.returncode == 2 and "pytanie" in r.stdout and "budzet" in r.stdout,
+        check(r.returncode == 2 and "question" in r.stdout and "budget" in r.stdout,
               f"T-8: STOP bez kodu → kod 2 z listą kodów: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "zmeczenie", "--reason", "x"], proj, cfg)
-        check(r.returncode == 2 and "pytanie" in r.stdout, f"T-9: kod spoza listy → kod 2: {r.returncode} {r.stdout}")
-        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "pytanie", "--reason",
+        check(r.returncode == 2 and "question" in r.stdout, f"T-9: kod spoza listy → kod 2: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "question", "--reason",
                          "Brak kryteriów akceptacji."], proj, cfg)
         meta = json.loads((d5 / "run.json").read_text(encoding="utf-8"))
         card = next((x for x in runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
                      if x.get("key") == "IMP-1"), {})
-        check(r.returncode == 0 and meta.get("stop_code") == "pytanie" and card.get("stopCode") == "pytanie"
+        check(r.returncode == 0 and meta.get("stop_code") == "question" and card.get("stopCode") == "question"
               and card.get("stopLabel") and "Brak kryteriów akceptacji." in (card.get("stopText") or "")
               and "r.stopLabel" in (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"),
               f"T-10: STOP z kodem — kod w run.json, kod, opis i powód na podglądzie: {r.stdout} {card.get('stopCode')} {card.get('stopLabel')}")
-        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "plan", "--code", "pytanie"], proj, cfg)
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "plan", "--code", "question"], proj, cfg)
         check(r.returncode == 2, f"T-11: --code tylko dla --needs stop: {r.returncode} {r.stdout}")
 
         # komunikat zatrzymania w prostym języku (krok E4): co się stało, czego potrzeba, pytanie z opcjami
-        r = run(SCRIPT, ["message", "pytanie"], proj, cfg)
+        r = run(SCRIPT, ["message", "question"], proj, cfg)
         check(r.returncode == 0 and all(s in r.stdout for s in ("Co się stało:", "Czego potrzeba:", "Pytanie:", "Potem:"))
               and r.stdout.count("(rekomendowana)") == 1 and "  1. " in r.stdout and "  2. " in r.stdout,
               f"K-1: message <kod> drukuje komunikat ze stałymi polami i jedną rekomendacją: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["message", "zmeczenie"], proj, cfg)
-        check(r.returncode == 2 and "pytanie" in r.stdout, f"K-2: message z kodem spoza listy → kod 2: {r.returncode} {r.stdout}")
-        r = run(SCRIPT, ["message", "budzet", "--json"], proj, cfg)
+        check(r.returncode == 2 and "question" in r.stdout, f"K-2: message z kodem spoza listy → kod 2: {r.returncode} {r.stdout}")
+        r = run(SCRIPT, ["message", "budget", "--json"], proj, cfg)
         msg = json.loads(r.stdout) if r.returncode == 0 else {}
-        check(msg.get("kod") == "budzet" and msg.get("pytanie", "").endswith("?") and len(msg.get("opcje", [])) >= 2,
+        check(msg.get("code") == "budget" and msg.get("question", "").endswith("?") and len(msg.get("opcje", [])) >= 2,
               f"K-3: message --json: {r.stdout[:200]}")
-        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "testy", "--reason",
+        r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "tests", "--reason",
                          "pytest: 2 failed (test_fees.py)"], proj, cfg)
         check(r.returncode == 0 and "Co się stało: Testy nie przechodzą" in r.stdout and "pytest: 2 failed (test_fees.py)" in r.stdout
               and "Pytanie:" in r.stdout and "AskUserQuestion" in r.stdout,
@@ -560,7 +560,7 @@ def main() -> int:
         old.mkdir(parents=True)
         (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary przebieg",
                                                   "started_at": "2026-10-01T10:00:00+00:00"}), encoding="utf-8")
-        r = run(SCRIPT, ["stage", str(old), "needs", "--needs", "stop", "--code", "testy", "--reason", "czerwone"], proj, cfg)
+        r = run(SCRIPT, ["stage", str(old), "needs", "--needs", "stop", "--code", "tests", "--reason", "czerwone"], proj, cfg)
         check(r.returncode == 0, f"T-12: przebieg cięcia też zapisuje STOP z kodem: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["weight", str(old)], proj, cfg)
         check(r.returncode == 2 and "cięci" in r.stdout, f"W-9: przebieg cięcia nie ma wagi: {r.returncode} {r.stdout}")

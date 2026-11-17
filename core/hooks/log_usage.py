@@ -27,17 +27,21 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 
 TIER_RE = re.compile(r"Tier:\**\s*za\s+(niski|wysoki)", re.I)
 KLASA_RE = re.compile(r"^[\s*_`>#-]*Klasa\s*:[\s*_`]*([^\s—–,.;:*_`-]+)", re.I | re.M)
-CLASSES = ("czytanie", "rownolegle", "przeglad", "mechaniczna", "decyzja", "inne")   # core-cost-control §0
+CLASSES = ("reading", "parallel", "review", "mechanical", "decision", "other")   # core-cost-control §0
+# Brief po polsku („Klasa: Przegląd”) — ta sama klasa; zapis w dzienniku zawsze po angielsku.
+PL_CLASSES = {"czytanie": "reading", "rownolegle": "parallel", "przeglad": "review", "mechaniczna": "mechanical",
+              "decyzja": "decision", "inne": "other"}
 
 
 def task_class(brief: str) -> str | None:
-    """Klasa z linii „Klasa: …” briefu (bez diakrytyków, małymi literami); spoza listy → „inne”, brak linii → None."""
+    """Klasa z linii „Klasa: …” briefu (bez diakrytyków, małymi literami); spoza listy → „other”, brak linii → None."""
     m = KLASA_RE.search(brief[:2000])
     if not m:
         return None
     word = unicodedata.normalize("NFKD", m.group(1).lower().replace("ł", "l"))
     word = "".join(c for c in word if not unicodedata.combining(c))
-    return word if word in CLASSES else "inne"
+    word = PL_CLASSES.get(word, word)
+    return word if word in CLASSES else "other"
 
 
 def text_len(value) -> int:

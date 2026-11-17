@@ -22,20 +22,20 @@ tiers:
 # Profile kosztów — jeden przełącznik dla całego zespołu: `python3 .tf/factory/profile.py <profil>`.
 # Profil nadpisuje pola tierów (model, effort) przy budowaniu agentów i ustawia sesję w .claude/settings.local.json.
 # Wybór profilu jest zapisany w .claude/factory-profile.json (poza tym plikiem, więc aktualizacje fabryki go nie ruszają).
-default_profile: zrownowazony
+default_profile: balanced
 profiles:
-  oszczedny:
-    opis: "najniższy koszt: bez Opusa (deep → Sonnet z effort high), std z effort low, wcześniejsze kompaktowanie"
+  economy:
+    description: "najniższy koszt: bez Opusa (deep → Sonnet z effort high), std z effort low, wcześniejsze kompaktowanie"
     tiers:
       std:  {effort: low}
       deep: {model: sonnet, effort: high}
     settings: {effortLevel: low, autoCompactWindow: 150000}
-  zrownowazony:
-    opis: "domyślny: Haiku do mechaniki, Sonnet do codziennej pracy, Opus tylko do decyzji, przy których pomyłka jest droga"
+  balanced:
+    description: "domyślny: Haiku do mechaniki, Sonnet do codziennej pracy, Opus tylko do decyzji, przy których pomyłka jest droga"
     tiers: {}
     settings: {effortLevel: medium, autoCompactWindow: 200000}
-  jakosc:
-    opis: "najwyższa jakość: std z effort high, a doradca Opus, którego model sam wzywa przy trudnych decyzjach (advisor)"
+  quality:
+    description: "najwyższa jakość: std z effort high, a doradca Opus, którego model sam wzywa przy trudnych decyzjach (advisor)"
     tiers:
       std:  {effort: high}
     settings: {effortLevel: high, autoCompactWindow: 300000, advisorModel: opus}
@@ -221,7 +221,7 @@ routing_notes: |
   na to jedno wywołanie. Zaczynaj od najtańszego sensownego modelu; eskaluj o jeden poziom dopiero, gdy wykonawca
   zgłosi blokadę albo weryfikacja (testy, lint) nie przechodzi po 2 próbach. Po decyzji na deep implementację
   zlecaj znów na std. Nigdy nie używaj deep do rzeczy mechanicznych.
-  **Klasa w briefie:** pierwsza linia briefu dla wykonawcy to `Klasa: <czytanie|rownolegle|przeglad|mechaniczna|decyzja|inne>`
+  **Klasa w briefie:** pierwsza linia briefu dla wykonawcy to `Klasa: <reading|parallel|review|mechanical|decision|other>`
   — powód delegowania wg core-cost-control §0. Hook `log_usage` zapisuje ją w `.tf/logs/delegation.jsonl`,
   a `python3 .tf/factory/cost_report.py --delegation` pokazuje koszt wykonawców wg klasy.
 
@@ -411,15 +411,15 @@ autonomy:
 # Kroki pętli /tf (krok E osi przebiegu): kto wykonuje krok i na jakim poziomie. Tier kroku staje się tierem jego
 # wykonawcy przy budowaniu agentów (model i effort z `tiers` po nałożeniu profilu kosztów). Wartości są równe
 # dotychczasowym — zmiana przydziału to osobna decyzja po pomiarze. Projekt nadpisuje w .tf/config/config.yaml, np.
-# `steps: {przeglad: {tier: deep}}`, i przebudowuje agentów (python3 .tf/factory/build.py). Podgląd: tf config show steps.
+# `steps: {review: {tier: deep}}`, i przebudowuje agentów (python3 .tf/factory/build.py). Podgląd: tf config show steps.
 steps:
-  fakty:          {label: "fakty o repozytorium", who: scout, tier: fast}
-  wersje:         {label: "wersje, dokumentacja zewnętrzna", who: researcher, tier: fast}
-  realizacja:     {label: "plan, test, kod", who: tf, tier: std}
-  mechanika:      {label: "zmiana mechaniczna ze specyfikacją", who: quick-fixer, tier: fast}
-  przeglad:       {label: "przegląd zakresu kawałka", who: scope-reviewer, tier: std}
-  decyzja:        {label: "decyzja trudna do odwrócenia", who: architect, tier: deep}
-  bezpieczenstwo: {label: "auth, sekrety, IaC, CI", who: security-reviewer, tier: deep}
+  facts:          {label: "fakty o repozytorium", who: scout, tier: fast}
+  versions:         {label: "wersje, dokumentacja zewnętrzna", who: researcher, tier: fast}
+  implementation:     {label: "plan, test, kod", who: tf, tier: std}
+  mechanical:      {label: "zmiana mechaniczna ze specyfikacją", who: quick-fixer, tier: fast}
+  review:       {label: "przegląd zakresu kawałka", who: scope-reviewer, tier: std}
+  decision:        {label: "decyzja trudna do odwrócenia", who: architect, tier: deep}
+  security: {label: "auth, sekrety, IaC, CI", who: security-reviewer, tier: deep}
 
 # Flagi funkcji (krok D osi przebiegu). auto: true — fabryka sama prowadzi flagę historyjki: pyta człowieka o nazwę,
 # zakłada flagę w pierwszym kawałku, chowa za nią nowe zachowanie i nie przepuszcza zadania do PR bez flagi albo
@@ -440,8 +440,8 @@ loop:
 # Tryb zadania (`tf task mode`): domyślny dla nowego zadania i dozwolone. Firma, zespół albo projekt zawęża
 # `allowed_modes` (np. bez `auto`); osoba wybiera domyślny tryb tylko z tej listy.
 task:
-  default_mode: zwykly
-  allowed_modes: [plan, zwykly, auto]
+  default_mode: normal
+  allowed_modes: [plan, normal, auto]
 
 # Style pracy osoby (`tf style <nazwa>`, docs/todo.md): gotowe wartości przełączników wyżej. Styl to tylko wartości
 # domyślne — pojedyncze zadanie nadal może dostać inny tryb (`tf task mode`), w granicach `task.allowed_modes`.
@@ -450,7 +450,7 @@ styles:
     task: {default_mode: auto}
     loop: {blocked_slices: true, confirm_each_slice: false}
   step-by-step:    # „zatwierdzam każdy krok”: plan do zgody, po każdym kawałku zatrzymanie i zgoda na następny
-    task: {default_mode: zwykly}
+    task: {default_mode: normal}
     loop: {blocked_slices: false, confirm_each_slice: true}
   conversation:    # „najpierw porozmawiajmy”: zadanie kończy się na planie, kod dopiero po zmianie trybu przez człowieka
     task: {default_mode: plan}

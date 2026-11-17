@@ -130,7 +130,7 @@ def config_layers(root: Path) -> list[tuple[str, dict]]:
 # `task.allowed_modes` wyższych warstw (firma, zespół, projekt).
 PERSON_REL = CONFIG_REL / "me.yaml"
 PERSON_KEYS = {"task": ("default_mode",), "loop": ("blocked_slices", "confirm_each_slice"), "autonomy": ("operations",)}
-TASK_MODES = ("plan", "zwykly", "auto")
+TASK_MODES = ("plan", "normal", "auto")
 
 
 def preferences_path() -> Path:
@@ -275,7 +275,7 @@ def work_style(root: Path) -> dict:
     warns = person_layer(root, below)[1]
     task, loop = cfg.get("task") or {}, cfg.get("loop") or {}
     allowed = [m for m in (task.get("allowed_modes") or TASK_MODES) if m in TASK_MODES]
-    mode = task.get("default_mode") if task.get("default_mode") in allowed else ("zwykly" if "zwykly" in allowed else allowed[0])
+    mode = task.get("default_mode") if task.get("default_mode") in allowed else ("normal" if "normal" in allowed else allowed[0])
     return {"style": cfg.get("style"), "default_mode": mode, "allowed_modes": allowed,
             "blocked_slices": loop.get("blocked_slices") is True,
             "confirm_each_slice": loop.get("confirm_each_slice") is True, "warnings": warns}

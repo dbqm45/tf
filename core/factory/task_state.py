@@ -3,7 +3,7 @@
 tf task — stan zadania w jednym miejscu: `docs/project/changes/<KEY>/task.json`. Jedyny pisarz tego pliku;
 model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
 
-  tf task start <KEY> --title "<tytuł>" [--weight lekka|zwykla|pelna] [--mode plan|zwykly|auto]
+  tf task start <KEY> --title "<tytuł>" [--weight light|normal|full] [--mode plan|normal|auto]
   tf task start <CHG>-<TSK> --title "<tytuł>" --change <CHG> --cut <TSK>      # zadanie cięcia zmiany pdi
   tf task stage <KEY> <etap> [--force]
   tf task status <KEY> [--json]
@@ -12,8 +12,8 @@ model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
   tf task artifact <KEY> <plik> --stage <etap> --by <wykonawca> [--inputs <plik>[,<plik>…]]
   tf task approve <KEY> <plik> --by human:<id>
   tf task check <KEY>
-  tf task weight <KEY> [--apply | --set lekka|zwykla|pelna] [--by human:<id> --reason "<dlaczego>"] [--json]
-  tf task mode <KEY> [plan|zwykly|auto]
+  tf task weight <KEY> [--apply | --set light|normal|full] [--by human:<id> --reason "<dlaczego>"] [--json]
+  tf task mode <KEY> [plan|normal|auto]
   tf task deployed <KEY> [--version <X>] [--timeout <s>]           # test dymny z karty operacyjnej po wdrożeniu
   tf task deployed <KEY> --rolled-back --by human:<id> [--note "<co zrobiono>"]   # decyzja człowieka o wycofaniu
   tf task finding <KEY> add "<ważne ustalenie przeglądu>" [--slice K1] [--round 1]
@@ -28,7 +28,7 @@ i rekomendowana opcja — z `.tf/runs/<KEY>/run.json` i komunikatów pętli) alb
 w `--json` to pole `waiting`.
 
 Klucz: numer z trackera (PROJ-123), klucz pdi (CHG-12, TSK-57) albo T-<RRRRMMDD>-<slug>. Etapy idą w kolejności:
-przyjecie → specyfikacja → plan → realizacja → przeglad → pr → wdrozenie → zamkniecie; cofnięcie wymaga --force.
+intake → spec → plan → implementation → review → pr → deploy → closed; cofnięcie wymaga --force.
 `start` w istniejącym katalogu zmiany (np. z trybu pdi) dokłada sam `task.json` i nie rusza innych plików.
 Listę zadań daje `tf status` — liczy ją z folderów, więc agent nie musi ich przeglądać. Spisu w pliku nie ma:
 `docs/project/changes/INDEX.md` przepisywał każdy zapis zadania, przez co dwa otwarte naraz pull requesty zadań miały
@@ -42,20 +42,20 @@ człowiek zatwierdził na bramce pdi przed fazą realizacji, dlatego cięcie o w
 Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruchamia polecenie (domyślnie to z
 `.claude/quality-gate.json`), więc kodu wyjścia nie da się zadeklarować, i zapisuje `evidence/K1-<n>.json`
 (polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
-pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. Do etapu `przeglad` i dalszych zadanie
+pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. Do etapu `review` i dalszych zadanie
 przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force). Gdy zadanie ma `spec.md`, do etapu `plan`
-i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`), a do etapu `przeglad` i dalszych —
+i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`), a do etapu `review` i dalszych —
 gdy każde kryterium ma test (`tf trace <KEY>`); zadanie bez `spec.md` działa jak dotąd.
 
 Waga zadania (`weight`, reguły w `task_weight.py`): bez opcji pokazuje obecną wagę i propozycję z powodem; `--apply`
 przydziela propozycję (pierwszy raz dowolną, potem tylko wyższą; po decyzji człowieka nic nie zmienia); `--set` podnosi swobodnie, a obniża tylko z
-`--by human:<id>` i `--reason`. Skutki: zadanie o wadze `pelna` wchodzi do etapu `realizacja` dopiero z planem
-zatwierdzonym przez człowieka (`approve <KEY> plan.md`); zadanie o wadze `lekka` ma w planie najwyżej jeden kawałek.
+`--by human:<id>` i `--reason`. Skutki: zadanie o wadze `full` wchodzi do etapu `implementation` dopiero z planem
+zatwierdzonym przez człowieka (`approve <KEY> plan.md`); zadanie o wadze `light` ma w planie najwyżej jeden kawałek.
 
-Tryb zadania (`mode`; wybiera go człowiek w poleceniu): `plan` — zadanie nie wchodzi do etapu `realizacja` (przebieg
-kończy się na planie); `zwykly` — zadanie z zarejestrowanym `plan.md` wchodzi do realizacji po zgodzie człowieka
+Tryb zadania (`mode`; wybiera go człowiek w poleceniu): `plan` — zadanie nie wchodzi do etapu `implementation` (przebieg
+kończy się na planie); `normal` — zadanie z zarejestrowanym `plan.md` wchodzi do realizacji po zgodzie człowieka
 (`approve <KEY> plan.md`); `auto` — bez zgody, chyba że waga jest pełna. Trybu `auto` nie da się ustawić przy wadze
-pełnej: zostaje `zwykly`, a polecenie mówi dlaczego (wyjątek: zadanie cięcia, opis wyżej).
+pełnej: zostaje `normal`, a polecenie mówi dlaczego (wyjątek: zadanie cięcia, opis wyżej).
 
 Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
 wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
@@ -65,7 +65,7 @@ skrypt nigdy nie zmienia (nagłówki kontraktu pdi zostają nietknięte). Wykona
 
 Wyrocznia zadania: `freeze <KEY> <plik>[,<plik>…] --by human:<id>` zamraża pliki spoza katalogu zadania (np. testy
 akceptacyjne) — hook `guard_paths` pyta człowieka przed zapisem do nich, do zatwierdzonych plików zadania i do
-`spec.md` od etapu realizacji, a zmiana zamrożonego pliku inną drogą blokuje `check` i etap `przeglad`.
+`spec.md` od etapu realizacji, a zmiana zamrożonego pliku inną drogą blokuje `check` i etap `review`.
 `reopen <KEY> <plik> --by human:<id> --reason "<powód>"` zdejmuje zatwierdzenie albo zamrożenie i zapisuje powód.
 
 Flaga funkcji: `flag <KEY> set <klucz> [--remove-by RRRR-MM-DD]` zapisuje flagę, za którą chowa się nowe zachowanie;
@@ -105,16 +105,16 @@ PANEL = ("security-reviewer", "spec-reviewer")   # panel recenzentów przy wadze
 LESSONS = Path("docs") / "project" / "lessons.md"
 LESSON_HEAD = "Wykonanie i weryfikacja"           # kategoria lekcji zapisywanych przy zamknięciu zadania
 BASES = ("origin/main", "main", "origin/master", "master")
-DEPLOY_STATES = {"ok": "test dymny zielony", "czerwone": "test dymny czerwony — czeka na decyzję o wycofaniu",
-                 "wycofane": "wycofane decyzją człowieka"}
+DEPLOY_STATES = {"ok": "test dymny zielony", "red": "test dymny czerwony — czeka na decyzję o wycofaniu",
+                 "rolled-back": "wycofane decyzją człowieka"}
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
-STAGES = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
-WEIGHTS = ("lekka", "zwykla", "pelna")
-MODES = ("plan", "zwykly", "auto")
+STAGES = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", "closed")
+WEIGHTS = ("light", "normal", "full")
+MODES = ("plan", "normal", "auto")
 PDI_KEY = re.compile(r"[A-Z][A-Z0-9]+-[0-9]+")   # klucz zmiany i cięcia pdi (CHG-12, TSK-57)
 SLICE = re.compile(r"K[1-9][0-9]?")
 SLICE_STATES = ("planned", "implemented", "blocked")
-GATED = STAGES[STAGES.index("przeglad"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
+GATED = STAGES[STAGES.index("review"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
 ACTOR = re.compile(r"(human|process):[\w.@-]+|[\w.-]+/[\w.-]+")
 INDEX_NOTE = ("# Zadania\n\nListę zadań z etapem i stanem podaje polecenie `tf status` — liczy ją na żywo z folderów "
               "obok (jeden folder to jedno zadanie albo jedna zmiana).\n\nTen plik nie jest już spisem. Dawniej "
@@ -207,16 +207,16 @@ def evidence_of(root: Path, key: str, sl: dict) -> dict | None:
 def slice_state(root: Path, key: str, sl: dict) -> tuple[str, str]:
     """(stan, powód) wyliczony z dowodu i bieżących plików — nie z deklaracji."""
     if sl.get("state") == "blocked":
-        return "zablokowany", sl.get("reason") or "bez podanego powodu"
+        return "blocked", sl.get("reason") or "bez podanego powodu"
     ev = evidence_of(root, key, sl)
     if ev is None:
-        return ("zaplanowany", "") if sl.get("state") == "planned" else ("niezweryfikowany", "brak dowodu")
+        return ("planned", "") if sl.get("state") == "planned" else ("niezweryfikowany", "brak dowodu")
     if ev.get("exit_code") != 0:
-        return "czerwony", f"`{ev.get('command')}` zakończone kodem {ev.get('exit_code')}"
+        return "red", f"`{ev.get('command')}` zakończone kodem {ev.get('exit_code')}"
     changed = [f for f, h in (ev.get("files") or {}).items() if sha256(root / f) != h]
     if changed:
         return "niezweryfikowany", "pliki zmienione po dowodzie: " + ", ".join(changed)
-    return "zweryfikowany", ""
+    return "verified", ""
 
 
 def slice_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
@@ -236,10 +236,10 @@ def artifact_state(root: Path, key: str, art: dict, name: str) -> tuple[str, str
     folder = root / CHANGES / key
     changed = [f for f, h in (art.get("inputs") or {}).items() if sha256(folder / f) != h]
     if changed:
-        return "nieaktualny", "zmienione wejścia: " + ", ".join(changed)
+        return "stale", "zmienione wejścia: " + ", ".join(changed)
     if art.get("status") == "zatwierdzony":
         if approval_sha(folder / name) != art.get("approved_sha"):
-            return "zmieniony po zatwierdzeniu", "wymaga ponownego zatwierdzenia przez człowieka"
+            return "changed-after-approval", "wymaga ponownego zatwierdzenia przez człowieka"
         return "zatwierdzony", ""
     return "szkic", ""
 
@@ -320,7 +320,7 @@ def cmd_approve(root: Path, key: str, name: str, by: str) -> int:
     if art is None:
         return fail(f"plik {name} nie jest zarejestrowany — najpierw: tf task artifact {key} {name} --stage … --by …", 2)
     state, why = artifact_state(root, key, art, name)
-    if state == "nieaktualny":
+    if state == "stale":
         return fail(f"{name} jest nieaktualny ({why}) — odśwież go i zarejestruj ponownie przed zatwierdzeniem")
     art["status"] = "zatwierdzony"
     art["approved_sha"] = approval_sha(root / CHANGES / key / name)
@@ -335,7 +335,7 @@ def cmd_check(root: Path, key: str) -> int:
     task = load(root, key)
     if task is None:
         return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
-    bad = {n: (s, w) for n, (s, w) in artifact_states(root, task).items() if s in ("nieaktualny", "zmieniony po zatwierdzeniu")}
+    bad = {n: (s, w) for n, (s, w) in artifact_states(root, task).items() if s in ("stale", "changed-after-approval")}
     for n, (s, w) in bad.items():
         print(f"⚠ {n}: {s} ({w})")
     changed = frozen_changed(root, task)
@@ -501,10 +501,10 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
         return fail(f"zadanie {key} jest na etapie {stage} — wdrożenie zapisujesz po scaleniu PR (etap pr)")
     prev = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
     if rolled_back:
-        if prev.get("state") != "czerwone":
+        if prev.get("state") != "red":
             return fail(f"wycofanie zapisuje się po czerwonym teście dymnym, a zadanie {key} takiego wyniku nie ma "
                         f"(najpierw: tf task deployed {key})")
-        task["deploy"] = {**prev, "state": "wycofane", "decided_by": by, "decided_at": now(),
+        task["deploy"] = {**prev, "state": "rolled-back", "decided_by": by, "decided_at": now(),
                           **({"note": one_line(note)} if note.strip() else {})}
         task["updated"] = now()
         save(root, task)
@@ -542,10 +542,10 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
         {"kind": "deploy", "command": smoke, "exit_code": code, "version": ver, "sha": commit, "at": at, "log": str(log)},
         ensure_ascii=False, indent=1) + "\n")
     why = f"`{smoke}` zakończone kodem {code}"
-    task["deploy"] = {"state": "ok" if code == 0 else "czerwone", "evidence": rel, "at": at,
+    task["deploy"] = {"state": "ok" if code == 0 else "red", "evidence": rel, "at": at,
                       **({"version": ver} if ver else {}), **({} if code == 0 else {"why": why})}
-    if code == 0 and STAGES.index(stage) < STAGES.index("wdrozenie"):
-        task["stage"] = "wdrozenie"
+    if code == 0 and STAGES.index(stage) < STAGES.index("deploy"):
+        task["stage"] = "deploy"
     task["updated"] = at
     save(root, task)
     where = CHANGES / key / rel
@@ -640,12 +640,12 @@ def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: st
     if task is None:
         return fail(f"nie ma zadania {key} — lista zadań: tf status --all")
     stage = task.get("stage", STAGES[0])
-    if stage == "zamkniecie":
+    if stage == "closed":
         print(f"• {key} jest już zamknięte" + (f" ({task['closed']['at']})" if isinstance(task.get("closed"), dict)
                                               and task["closed"].get("at") else ""))
         return 0
     if stage not in STAGES or STAGES.index(stage) < STAGES.index("pr"):
-        return fail(f"zadanie {key} jest na etapie {stage} — zamykasz je po scaleniu PR (etap pr albo wdrozenie)")
+        return fail(f"zadanie {key} jest na etapie {stage} — zamykasz je po scaleniu PR (etap pr albo deploy)")
     if not force:
         merged, where = merged_on(root, key, base)
         if merged is None:
@@ -656,7 +656,7 @@ def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: st
                         f"{(CHANGES / key / 'task.json').as_posix()}. Po scaleniu PR pobierz gałąź (git fetch) i powtórz; "
                         f"zamknięcie mimo to: tf task close {key} --force --by human:<id>")
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
-    if dep.get("state") == "czerwone":
+    if dep.get("state") == "red":
         return fail(f"wdrożenie {key} czeka na decyzję o wycofaniu (czerwony test dymny). Po wycofaniu: tf task deployed "
                     f"{key} --rolled-back --by human:<id>; po naprawie i ponownym wdrożeniu: tf task deployed {key}")
     open_ = [f for f in task.get("findings") or [] if isinstance(f, dict) and not f.get("control")]
@@ -666,11 +666,11 @@ def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: st
                     + f". Zapisz ją dla każdego: tf task finding {key} control <F-n> \"<test, hook, reguła albo powód "
                       "jej braku>\"")
     wrote = add_lesson(root, key, lesson) if lesson else False
-    task["stage"], task["updated"] = "zamkniecie", now()
+    task["stage"], task["updated"] = "closed", now()
     task["closed"] = {"at": now(), **({"by": by} if by else {}), **({"forced": True} if force else {}),
                       **({"lesson": True} if lesson else {})}
     save(root, task)
-    print(f"✓ {key} zamknięte ({stage} → zamkniecie)")
+    print(f"✓ {key} zamknięte ({stage} → closed)")
     print("  wdrożenie: " + (DEPLOY_STATES[dep["state"]] if isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES
                              else "niesprawdzone testem dymnym (tf task deployed nie było uruchomione)"))
     flag = task.get("flag") if isinstance(task.get("flag"), dict) else {}
@@ -695,7 +695,7 @@ def work_style(root: Path) -> dict:
         spec.loader.exec_module(mod)
         return mod.work_style(root)
     except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienia domyślne
-        return {"default_mode": "zwykly", "allowed_modes": list(MODES)}
+        return {"default_mode": "normal", "allowed_modes": list(MODES)}
 
 
 def mode_refusal(root: Path, mode: str) -> str | None:
@@ -711,7 +711,7 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, c
     if load(root, key) is not None:
         return fail(f"zadanie {key} już istnieje ({CHANGES / key / 'task.json'}) — stan: tf task status {key}")
     if mode is None:                 # domyślny tryb z konfiguracji (styl pracy osoby w granicach firmy i projektu)
-        mode = work_style(root).get("default_mode") or "zwykly"
+        mode = work_style(root).get("default_mode") or "normal"
     elif mode_refusal(root, mode):
         return fail(mode_refusal(root, mode), 2)
     stamp = now()
@@ -719,8 +719,8 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, c
             "created": stamp, "updated": stamp}
     if change:                       # zadanie cięcia zmiany pdi
         task["change"], task["cut"] = change, cut
-    if weight != "zwykla":           # waga podana wprost przy zakładaniu to już przydział — `weight --apply` jej nie obniży
-        task["weight_log"] = [{"from": "zwykla", "to": weight, "by": "process:start", "at": stamp}]
+    if weight != "normal":           # waga podana wprost przy zakładaniu to już przydział — `weight --apply` jej nie obniży
+        task["weight_log"] = [{"from": "normal", "to": weight, "by": "process:start", "at": stamp}]
     save(root, task)
     print(f"✓ zadanie {key} założone: {CHANGES / key}/ (etap: {STAGES[0]})")
     return 0
@@ -739,28 +739,28 @@ def weight_rules():
 
 
 def weight_gate(root: Path, task: dict, stage: str) -> str | None:
-    """Skutki wagi przy zmianie etapu: `lekka` — plan z jednym kawałkiem; `pelna` — plan zatwierdzony przez człowieka
+    """Skutki wagi przy zmianie etapu: `light` — plan z jednym kawałkiem; `full` — plan zatwierdzony przez człowieka
     przed realizacją. Zwraca powód odmowy albo None."""
     key, weight = task["key"], task.get("weight")
     rules = weight_rules()
-    if weight == "lekka" and rules and STAGES.index(stage) >= STAGES.index("plan"):
+    if weight == "light" and rules and STAGES.index(stage) >= STAGES.index("plan"):
         try:
             slices = rules.plan_slices((root / CHANGES / key / "plan.md").read_text(encoding="utf-8", errors="replace"))
         except OSError:
             slices = []
         if len(slices) > 1:
             return (f"zadanie ma wagę lekką, czyli jeden kawałek, a plan ma ich {len(slices)} — połącz kawałki albo "
-                    f"podnieś wagę: tf task weight {key} --set zwykla")
-    if STAGES.index(stage) < STAGES.index("realizacja"):
+                    f"podnieś wagę: tf task weight {key} --set normal")
+    if STAGES.index(stage) < STAGES.index("implementation"):
         return None
     mode = task.get("mode")
     if mode == "plan":
         return (f"zadanie jest w trybie Plan — przebieg kończy się na planie, bez zmian w kodzie. Realizację uruchamia "
-                f"człowiek osobnym poleceniem (/tf {key}); wtedy zmień tryb: tf task mode {key} zwykly (albo auto)")
+                f"człowiek osobnym poleceniem (/tf {key}); wtedy zmień tryb: tf task mode {key} normal (albo auto)")
     art = (task.get("artifacts") or {}).get("plan.md")
     state = artifact_state(root, key, art, "plan.md")[0] if art else "brak"
     upstream = bool(task.get("change")) and mode == "auto"   # cięcie: plan zmiany zatwierdzono na bramce pdi
-    if weight == "pelna" and state != "zatwierdzony" and not upstream:
+    if weight == "full" and state != "zatwierdzony" and not upstream:
         return (f"zadanie ma wagę pełną (obszar wrażliwy), więc do etapu {stage} przechodzi dopiero z planem "
                 f"zatwierdzonym przez człowieka (stan planu: {state}): pokaż plan człowiekowi, a po jego zgodzie "
                 f"tf task approve {key} plan.md --by human:<id>. Przebieg bez nadzoru (--auto) kończy się tu "
@@ -773,14 +773,14 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
     return None
 
 
-MODE_LABEL = {"plan": "Plan", "zwykly": "zwykły", "auto": "Auto"}
+MODE_LABEL = {"plan": "Plan", "normal": "zwykły", "auto": "Auto"}
 
 
 def cmd_mode(root: Path, key: str, new: str | None) -> int:
     task = load(root, key)
     if task is None:
         return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
-    current = task.get("mode") if task.get("mode") in MODES else "zwykly"
+    current = task.get("mode") if task.get("mode") in MODES else "normal"
     if new is None:
         print(f"{key}: tryb {MODE_LABEL[current]}")
         return 0
@@ -789,11 +789,11 @@ def cmd_mode(root: Path, key: str, new: str | None) -> int:
     if mode_refusal(root, new):
         return fail(mode_refusal(root, new), 2)
     note = ""
-    if new == "auto" and task.get("weight") == "pelna" and task.get("change"):
+    if new == "auto" and task.get("weight") == "full" and task.get("change"):
         note = (f" — waga pełna (obszar wrażliwy), ale to cięcie zmiany {task['change']}: jej plan człowiek zatwierdził "
                 "na bramce pdi, więc przebieg nie czeka na drugą zgodę; przegląd bezpieczeństwa zostaje obowiązkowy")
-    elif new == "auto" and task.get("weight") == "pelna":
-        new = "zwykly"
+    elif new == "auto" and task.get("weight") == "full":
+        new = "normal"
         note = (" — tryb Auto nie obejmuje zadań o wadze pełnej (obszar wrażliwy): zostaje tryb zwykły, "
                 "plan zatwierdza człowiek")
     if new != task.get("mode"):
@@ -812,7 +812,7 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
         return fail("brak .tf/factory/task_weight.py — zaktualizuj fabrykę (tf update)", 2)
     if new is not None and new not in WEIGHTS:
         return fail(f"nieznana waga „{new}” — do wyboru: {', '.join(WEIGHTS)}", 2)
-    current = task.get("weight") if task.get("weight") in WEIGHTS else "zwykla"
+    current = task.get("weight") if task.get("weight") in WEIGHTS else "normal"
     assigned = bool(task.get("weight_log"))
     prop = rules.propose(root, key)
     note = ""
@@ -962,7 +962,7 @@ def cmd_review(root: Path, key: str, reviewer: str, verdict: str, note: str) -> 
 
 def panel_errors(root: Path, task: dict) -> list[str]:
     """Czego brakuje w panelu recenzentów zadania o wadze pełnej; pusta lista — panel kompletny (albo niewymagany)."""
-    if task.get("weight") != "pelna":
+    if task.get("weight") != "full":
         return []
     head, reviews = git_head(root), task.get("reviews") if isinstance(task.get("reviews"), dict) else {}
     out = []
@@ -995,12 +995,12 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
         if refused:
             return fail(refused)
     if stage in GATED and not force:
-        open_ = [f"{k} ({s}{': ' + w if w else ''})" for k, (s, w) in slice_states(root, task).items() if s != "zweryfikowany"]
+        open_ = [f"{k} ({s}{': ' + w if w else ''})" for k, (s, w) in slice_states(root, task).items() if s != "verified"]
         if open_:
             return fail(f"do etapu {stage} przechodzi zadanie ze zweryfikowanymi kawałkami; brakuje: " + "; ".join(open_)
                         + f". Dowód: tf task verify {key} K<n> --files <pliki kawałka>")
         stale = [f"{n} ({s})" for n, (s, _) in artifact_states(root, task).items()
-                 if s in ("nieaktualny", "zmieniony po zatwierdzeniu")]
+                 if s in ("stale", "changed-after-approval")]
         stale += [f"{rel} (zamrożony plik zmieniony)" for rel in frozen_changed(root, task)]
         missing = trace_errors(root, key)
         if missing:
@@ -1058,12 +1058,12 @@ def waiting(root: Path, task: dict) -> list[dict]:
                        for o in msg.get("opcje") or [] if isinstance(o, dict)]
             out.append({"kind": "stop", "code": run.get("stop_code"),
                         "what": msg.get("co") or f"przebieg zatrzymany ({run.get('stop_code') or 'bez kodu'})",
-                        "details": run.get("stop_text"), "question": msg.get("pytanie"), "options": options,
+                        "details": run.get("stop_text"), "question": msg.get("question"), "options": options,
                         "recommended": next((o["opcja"] for o in options if o["rekomendowana"]), None),
                         "how": msg.get("potem"), "since": since})
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
-    if dep.get("state") == "czerwone":
-        out.append({"kind": "wdrozenie", "what": "test dymny po wdrożeniu jest czerwony", "details": dep.get("why"),
+    if dep.get("state") == "red":
+        out.append({"kind": "deploy", "what": "test dymny po wdrożeniu jest czerwony", "details": dep.get("why"),
                     "question": "Wycofać wdrożenie?",
                     "options": [{"opcja": "wycofaj", "skutek": rollback_text(deploy_card(root)), "rekomendowana": True},
                                 {"opcja": "napraw i wdróż ponownie",
@@ -1072,7 +1072,7 @@ def waiting(root: Path, task: dict) -> list[dict]:
                     "how": f"po wycofaniu: tf task deployed {key} --rolled-back --by human:<id>; po naprawie "
                            f"i ponownym wdrożeniu: tf task deployed {key}", "since": dep.get("at")})
     for k, (state, why) in slice_states(root, task).items():
-        if state == "zablokowany":
+        if state == "blocked":
             out.append({"kind": "kawalek", "slice": k, "what": f"kawałek {k} czeka na Twoją odpowiedź", "details": why,
                         "question": None, "options": [], "recommended": None,
                         "how": f"po odpowiedzi: tf task slice {key} {k} planned", "since": None})
@@ -1087,10 +1087,10 @@ def task_rows(root: Path) -> list[dict]:
         if not t:
             continue
         slices = {k: s for k, (s, _) in slice_states(root, t).items()}
-        stale = [n for n, (s, _) in artifact_states(root, t).items() if s in ("nieaktualny", "zmieniony po zatwierdzeniu")]
+        stale = [n for n, (s, _) in artifact_states(root, t).items() if s in ("stale", "changed-after-approval")]
         rows.append({"key": t.get("key", f.parent.name), "title": t.get("title", ""), "stage": t.get("stage", "?"),
                      "updated": t.get("updated", ""), "slices": slices,
-                     "verified": sum(s == "zweryfikowany" for s in slices.values()), "stale": stale,
+                     "verified": sum(s == "verified" for s in slices.values()), "stale": stale,
                      "waiting": waiting(root, t),
                      **({"change": t["change"], "cut": t.get("cut")} if t.get("change") else {})})
     return rows
@@ -1104,16 +1104,16 @@ def cmd_list(root: Path, as_json: bool, show_all: bool = False) -> int:
     if not rows:
         print(f"Brak zadań w {CHANGES}/. Pierwsze założysz: tf task start <KEY> --title \"<tytuł>\"")
         return 0
-    closed = sum(r["stage"] == "zamkniecie" for r in rows)
+    closed = sum(r["stage"] == "closed" for r in rows)
     if not show_all:
-        rows = [r for r in rows if r["stage"] != "zamkniecie"]
+        rows = [r for r in rows if r["stage"] != "closed"]
         if not rows:
             print("Brak zadań w toku.")
     for r in rows:
         print(f"{r['key']}  {r['stage']}  kawałki z dowodem {r['verified']}/{len(r['slices'])}  {r['title']}"
               + (f"  ({cut_note(r)})" if cut_note(r) else ""))
         for k, s in r["slices"].items():
-            if s != "zweryfikowany":
+            if s != "verified":
                 print(f"    {k}: {s}")
         for name in r["stale"]:
             print(f"    {name}: do odświeżenia (tf task check {r['key']})")
@@ -1182,8 +1182,8 @@ def main(argv: list[str]) -> int:
     s = sub.add_parser("start")
     s.add_argument("key")
     s.add_argument("--title", default=None)
-    s.add_argument("--weight", default="zwykla")
-    s.add_argument("--mode", default=None, help="plan|zwykly|auto; bez opcji — task.default_mode (styl pracy, tf style)")
+    s.add_argument("--weight", default="normal")
+    s.add_argument("--mode", default=None, help="plan|normal|auto; bez opcji — task.default_mode (styl pracy, tf style)")
     s.add_argument("--change", default=None, help="klucz zmiany pdi, np. CHG-12 (zadanie cięcia; razem z --cut)")
     s.add_argument("--cut", default=None, help="klucz cięcia z planu zmiany, np. TSK-57 (razem z --change)")
     g = sub.add_parser("stage")

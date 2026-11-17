@@ -9,7 +9,7 @@ Rozpoznanie wejścia polecenia /tf (skill tf): co człowiek podał i skąd wzią
 `resolve` dostaje wejście człowieka (jeden argument w cudzysłowie albo kilka słów) i drukuje stałe pola:
 `Wejście`, `Klucz`, `Tracker`, `Dalej` (następna czynność), a gdy trzeba — `Pytanie` (o co zapytać człowieka).
 Opcje `--auto`, `--plan`, `--budget N`, `--change CHG-n` oraz słowo wymuszające sposób pracy na początku
-(`zadanie`, `pytanie`, `szybko`) są odcinane i zwracane osobno. Reguły, pierwsza pasująca wygrywa:
+(`zadanie`, `question`, `szybko`) są odcinane i zwracane osobno. Reguły, pierwsza pasująca wygrywa:
 
   nic                                   → brak        (zadania w toku do wznowienia)
   adres http(s)://…                     → zgłoszenie  (tracker i klucz z adresu: Jira …/browse/KEY, Linear
@@ -70,7 +70,7 @@ CARD = Path(".tf") / "config" / "operations.json"
 TICKET = re.compile(r"[A-Za-z][A-Za-z0-9]*-\d+")                      # klucz zgłoszenia albo cięcia: ABC-123
 TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")     # klucz zadania fabryki (jak w task_state.py)
 TRACKER = re.compile(r"[a-z][a-z0-9-]{1,30}")
-INTENTS = ("zadanie", "pytanie", "szybko")
+INTENTS = ("zadanie", "question", "szybko")
 KINDS = {"brak": "brak", "zgloszenie": "zgłoszenie", "wznowienie": "wznowienie", "ciecie": "cięcie", "plik": "plik",
          "tresc": "treść"}
 ASK = {"tracker": "z którego trackera pochodzi zgłoszenie", "change": "do której zmiany należy cięcie",
@@ -149,7 +149,7 @@ def open_tasks(root: Path) -> list[dict]:
     rows = []
     for f in sorted((root / CHANGES).glob("*/task.json")):
         task = load_task(root, f.parent.name)
-        if task and task.get("stage") != "zamkniecie":
+        if task and task.get("stage") != "closed":
             rows.append({"key": task.get("key", f.parent.name), "title": task.get("title", ""),
                          "stage": task.get("stage", "?")})
     return rows
@@ -350,7 +350,7 @@ def ticket_next(key: str | None, tracker: str | None, source: str | None, root: 
 def resolve(root: Path, raw: str) -> tuple[int, dict]:
     text, options = split_options(raw)
     intent = None
-    m = re.match(r"(?i)(zadanie|pytanie|szybko)\b:?\s+(?=\S)", text)
+    m = re.match(r"(?i)(zadanie|question|szybko)\b:?\s+(?=\S)", text)
     if m:
         intent, text = m.group(1).lower(), text[m.end():].strip()
     out = {"kind": "tresc", "key": None, "tracker": None, "tracker_from": None, "source": None, "changes": [],
@@ -360,7 +360,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
     suffix = opts_suffix(options)
 
     def done(code: int = 0) -> tuple[int, dict]:
-        if intent == "pytanie":
+        if intent == "question":
             out["next"] = ("odpowiedz na pytanie z dowodami z kodu (plik:linia); niczego nie zmieniaj w repozytorium "
                            "i nie zakładaj zadania")
         elif intent == "szybko":
@@ -410,7 +410,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
                            f"{(CHANGES / key).as_posix()}/plan.md i kontynuuj od pierwszego nieodhaczonego kawałka; "
                            f"katalog przebiegu: .tf/runs/{key}")
             if task.get("mode") == "plan" and not options["plan"]:   # realizacja po trybie Plan: tryb z polecenia
-                mode = "auto" if options["auto"] else "zwykly"
+                mode = "auto" if options["auto"] else "normal"
                 out["next"] += (f"; zadanie było w trybie Plan — ustaw tryb z polecenia człowieka: "
                                 f"python3 .claude/skills/tf/scripts/run_state.py mode .tf/runs/{key} {mode}")
             return done()
@@ -427,7 +427,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
         if TICKET.fullmatch(head) and len(tokens) == 1:
             saved, origin = tracker_source(root, key)
             if saved is None and jira_ready(root):          # adres i dane dostępu do Jiry są w środowisku
-                saved, origin = "jira", "srodowisko"
+                saved, origin = "jira", "environment"
             out.update(kind="zgloszenie", tracker=saved, tracker_from=origin)
             out["ask"], out["next"] = ticket_next(key, saved, None, root)
             return done()
@@ -461,7 +461,7 @@ def render(out: dict) -> str:
         lines.append(f"Klucz: {out['key']}")
     if out["kind"] == "zgloszenie":
         origin = {"karta": "z karty operacyjnej", "adres": "z adresu",
-                  "srodowisko": "ze zmiennych środowiska"}.get(out["tracker_from"], "")
+                  "environment": "ze zmiennych środowiska"}.get(out["tracker_from"], "")
         lines.append(f"Tracker: {out['tracker']} ({origin})" if out["tracker"] else "Tracker: nieznany")
     if out["source"]:
         lines.append(f"Źródło: {out['source']}")

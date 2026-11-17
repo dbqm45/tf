@@ -23,7 +23,7 @@ niezależne (równolegle), świeże spojrzenie (przegląd bezpieczeństwa, testy
 mechaniczna z pełną specyfikacją i testem (`quick-fixer`), decyzja trudna do odwrócenia (analiza na mocniejszym
 modelu, wykonanie wraca do sesji). Jednej spójnej zmiany nie dzielisz między wykonawców.
 Fork, sesja z worktree, subagent czy agent teams (i limit zagnieżdżania): `references/parallelism.md`.
-Brief zaczynasz linią `Klasa: czytanie|rownolegle|przeglad|mechaniczna|decyzja|inne` — powód delegowania, który
+Brief zaczynasz linią `Klasa: reading|parallel|review|mechanical|decision|other` — powód delegowania, który
 potem da się zmierzyć (§7).
 
 ## 1. Ocena zadania przed delegowaniem
@@ -59,9 +59,9 @@ modelowi decyzyjnemu Jev w ~0,1 s za ułamek centa. Sugestię „NIEPEWNE” roz
 
 ## 3. Główna sesja: model, profil, doradca
 - **Profil kosztów** (`python3 .tf/factory/profile.py`) przestawia cały zespół naraz:
-  - `oszczedny` — bez Opusa;
-  - `zrownowazony` — domyślny;
-  - `jakosc` — std z effort high i doradca Opus.
+  - `economy` — bez Opusa;
+  - `balanced` — domyślny;
+  - `quality` — std z effort high i doradca Opus.
 
   Profil zmienia też ustawienia sesji: effort, próg kompaktowania i doradcę.
 - **Doradca (advisor)** — tańszy model główny wzywa mocniejszy w kluczowych momentach: przed wyborem podejścia, przy
@@ -70,7 +70,7 @@ modelowi decyzyjnemu Jev w ~0,1 s za ułamek centa. Sugestię „NIEPEWNE” roz
   - Koszt: każda konsultacja czyta całą rozmowę po cenie doradcy i bez cache. Opłaca się w długich, wieloetapowych
     zadaniach, a nie w krótkich.
   - Ograniczenia: tylko API Anthropic (nie Bedrock, Vertex, Foundry); funkcja eksperymentalna. Subagenci dziedziczą
-    doradcę, więc w profilu `jakosc` także tani wykonawcy mogą go wzywać.
+    doradcę, więc w profilu `quality` także tani wykonawcy mogą go wzywać.
   - Włączenie: `/advisor opus`, wyłączenie: `/advisor off`. Przełączenie doradcy nie psuje cache.
 - **`opusplan`** — Opus w trybie planowania, Sonnet przy wykonaniu. Każde przełączenie trybu planowania zmienia
   model, więc oznacza pełny odczyt bez cache. Stosuj, gdy planujesz raz, a potem długo wykonujesz.

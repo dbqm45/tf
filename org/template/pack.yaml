@@ -46,9 +46,9 @@ org_defaults:
     # Tryby zadania dozwolone w firmie (tf task mode, styl pracy osoby: tf style). Bez `auto` nikt w firmie nie
     # włączy trybu, w którym agent idzie dalej bez zgody człowieka na plan.
     task:
-      allowed_modes: [plan, zwykly, auto]   # TODO: usuń auto, jeśli firma wymaga zgody człowieka na każdy plan
-    # Profil kosztów: oszczedny | zrownowazony | jakosc.
-    default_profile: zrownowazony
+      allowed_modes: [plan, normal, auto]   # TODO: usuń auto, jeśli firma wymaga zgody człowieka na każdy plan
+    # Profil kosztów: economy | balanced | quality.
+    default_profile: balanced
     # Język pracy agentów i język commitów.
     default_language: pl
     default_commit_language: en

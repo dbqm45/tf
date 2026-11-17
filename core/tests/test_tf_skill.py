@@ -134,7 +134,7 @@ def main() -> int:
     waga = ref("weight.md")
     check("`Waga:" in start and "references/weight.md" in start and "jednym zdaniem" in start,
           "T-27: start — linię `Waga:` pętla przekazuje człowiekowi jednym zdaniem; skutki w references/weight.md")
-    check(all(w in waga for w in ("lekka", "zwykła", "pełna", "run_state.py weight", "--by human:", "security-reviewer",
+    check(all(w in waga for w in ("light", "zwykła", "pełna", "run_state.py weight", "--by human:", "security-reviewer",
                                   "approve", "STOP", "bez `spec.md`")),
           "T-28: references/weight.md — trzy wagi, skutki, kto zmienia, obowiązkowy przegląd przy pełnej, STOP bez nadzoru")
     # krok E3: tryby (Plan / zwykły / Auto), zgoda człowieka na plan zapisana skryptem, zamknięta lista kodów STOP

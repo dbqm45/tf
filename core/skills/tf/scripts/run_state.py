@@ -4,11 +4,11 @@ Stan przebiegu zadania i podgląd (skill tf): jedyny pisarz etapu i rundy w run.
 oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła polecenie.
 
   python3 .claude/skills/tf/scripts/run_state.py stage <katalog-przebiegu> <etap> [--needs plan|stop] [--code <kod>] [--auto|--plan]
-  python3 .claude/skills/tf/scripts/run_state.py mode <katalog-przebiegu> [plan|zwykly|auto]   # tryb zadania
+  python3 .claude/skills/tf/scripts/run_state.py mode <katalog-przebiegu> [plan|normal|auto]   # tryb zadania
   python3 .claude/skills/tf/scripts/run_state.py approve <katalog-przebiegu>                   # zgoda człowieka na plan
   python3 .claude/skills/tf/scripts/run_state.py message <kod> [--json]                        # komunikat zatrzymania dla człowieka
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
-  python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> K2 R1 weryf fail
+  python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> K2 R1 verify fail
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
   python3 .claude/skills/tf/scripts/run_state.py spec <katalog-przebiegu> [new]
   python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> mode      # auto | manual
@@ -74,7 +74,7 @@ ustalenie musi mieć kontrolę, która złapie je następnym razem.
 `verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
 `tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
 z aktualnym dowodem, a etap `pr` przechodzi tylko wtedy, gdy każdy kawałek zadania go ma. Etap przebiegu trafia też
-do `task.json` (intake → przyjecie, plan → plan, slices → realizacja, pr → pr). Katalog przebiegu bez zadania w run.json
+do `task.json` (intake → intake, plan → plan, slices → realizacja, pr → pr). Katalog przebiegu bez zadania w run.json
 (stary układ cięć `.tf/runs/cuts/`) nie przyjmuje poleceń zadania (`spec`, `flag`, `verify`, `trace`, `mode`, `weight`,
 `approve`) — polecenie mówi, jak zacząć cięcie od nowa.
 
@@ -86,7 +86,7 @@ wyłączony): pytanie blokuje tylko swój kawałek (`block`), skrypt mówi, któ
 albo `Dalej: STOP`, gdy żaden nie jest niezależny), a `answer` zapisuje odpowiedź człowieka i odblokowuje kawałek.
 Zależności kawałków zapisuje plan (`· po: K1`, `· po: brak`; bez dopisku — po poprzednim), pytania i odpowiedzi —
 `events.jsonl` zadania (jeden wpis w wierszu: `at`, `type` — `question`
-albo `answer`, `slice`, `text`, `by`; plik zapisuje decyzje, stanem przebiegu nie steruje). Z włączonym przełącznikiem STOP z kodem `pytanie` dla bieżącego kawałka
+albo `answer`, `slice`, `text`, `by`; plik zapisuje decyzje, stanem przebiegu nie steruje). Z włączonym przełącznikiem STOP z kodem `question` dla bieżącego kawałka
 jest odrzucany, gdy został kawałek niezależny; pytanie o całe zadanie przechodzi z `--task`.
 
 `proceed` działa z przełącznikiem `loop.confirm_each_slice` (styl pracy `step-by-step` albo `conversation`, `tf style`):
@@ -124,29 +124,29 @@ sys.path.insert(0, str(HERE))
 import run_report  # noqa: E402
 
 STAGES = ("intake", "plan", "slices", "pr", "needs", "done")
-STEPS = ("test", "kod", "weryf", "skan", "zakres")
+STEPS = ("test", "code", "verify", "scan", "scope")
 STATES = ("run", "pass", "fail")
 PR_STEPS = {"plan_drift": "drift", "pr": "pr"}
 NEEDS = ("plan", "stop")
 # Zamknięta lista kodów zatrzymań (`stage … needs --needs stop --code <kod>`): kod → co się stało, zwykłym zdaniem.
 STOP_CODES = {
-    "pytanie": "brakuje informacji, bez której nie da się zacząć",
-    "podzial": "zadanie jest za duże albo łączy kilka akcji — trzeba je podzielić",
-    "zrodlo": "nie ma treści zadania albo dostępu do zgłoszenia",
-    "zgoda-na-plan": "plan czeka na zgodę człowieka",
-    "testy": "testy albo weryfikacja nie przechodzą po dwóch próbach naprawy",
-    "skan": "skan bezpieczeństwa blokuje po dwóch próbach",
-    "budzet": "przekroczony budżet przebiegu",
-    "srodowisko": "repozytorium nie jest gotowe (niezacommitowane zmiany, brak zdalnego repozytorium albo narzędzia)",
-    "zaleznosc": "nowa zależność albo karencja wersji wymaga decyzji",
-    "kontrakt": "zmiana kontraktu albo decyzja biznesowa (publiczne API, schemat danych, migracja)",
-    "uprawnienia": "operacja zastrzeżona dla człowieka (produkcja, publikacja, flaga poza środowiskiem testowym)",
+    "question": "brakuje informacji, bez której nie da się zacząć",
+    "split": "zadanie jest za duże albo łączy kilka akcji — trzeba je podzielić",
+    "source": "nie ma treści zadania albo dostępu do zgłoszenia",
+    "plan-approval": "plan czeka na zgodę człowieka",
+    "tests": "testy albo weryfikacja nie przechodzą po dwóch próbach naprawy",
+    "scan": "skan bezpieczeństwa blokuje po dwóch próbach",
+    "budget": "przekroczony budżet przebiegu",
+    "environment": "repozytorium nie jest gotowe (niezacommitowane zmiany, brak zdalnego repozytorium albo narzędzia)",
+    "dependency": "nowa zależność albo karencja wersji wymaga decyzji",
+    "contract": "zmiana kontraktu albo decyzja biznesowa (publiczne API, schemat danych, migracja)",
+    "permissions": "operacja zastrzeżona dla człowieka (produkcja, publikacja, flaga poza środowiskiem testowym)",
 }
-TASK_STAGE = {"intake": "przyjecie", "plan": "plan", "slices": "realizacja", "pr": "pr"}   # etap przebiegu → etap zadania
-TASK_ORDER = ("przyjecie", "specyfikacja", "plan", "realizacja", "przeglad", "pr", "wdrozenie", "zamkniecie")
-BARE_STAGE = {"przyjecie": "intake", "specyfikacja": "intake", "plan": "plan", "realizacja": "slices",
-              "przeglad": "slices", "pr": "pr", "wdrozenie": "done", "zamkniecie": "done"}   # zadanie bez przebiegu
-PROOF_STATE = {"zweryfikowany": "done", "czerwony": "fail", "zablokowany": "fail", "zaplanowany": "todo"}
+TASK_STAGE = {"intake": "intake", "plan": "plan", "slices": "implementation", "pr": "pr"}   # etap przebiegu → etap zadania
+TASK_ORDER = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", "closed")
+BARE_STAGE = {"intake": "intake", "spec": "intake", "plan": "plan", "implementation": "slices",
+              "review": "slices", "pr": "pr", "deploy": "done", "closed": "done"}   # zadanie bez przebiegu
+PROOF_STATE = {"verified": "done", "red": "fail", "blocked": "fail", "planned": "todo"}
 _TASK_API = None
 SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(K\d+)\s*[—-]\s*(.+)$")
 MAX_TEXT = 40000
@@ -226,7 +226,7 @@ def task_field(run_dir: Path, meta: dict, name: str) -> str | None:
 
 
 def task_weight(run_dir: Path, meta: dict) -> str | None:
-    """Waga zadania (lekka / zwykla / pelna); None, gdy przebieg nie ma zadania."""
+    """Waga zadania (lekka / normal / full); None, gdy przebieg nie ma zadania."""
     return task_field(run_dir, meta, "weight")
 
 
@@ -240,7 +240,7 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
         cur = json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("stage")
     except (OSError, ValueError, AttributeError):
         cur = None
-    if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") and task_weight(run_dir, meta) != "lekka" \
+    if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") and task_weight(run_dir, meta) != "light" \
             and not (run_report.docs_dir(run_dir, meta) / "spec.md").is_file():
         return (f"✗ zadanie {key} nie ma jeszcze specyfikacji — załóż szablon: run_state.py spec {run_dir} new, "
                 f"wypełnij go i sprawdź: run_state.py spec {run_dir}")
@@ -310,7 +310,7 @@ def stop_message(code: str | None) -> dict | None:
 
 def message_lines(msg: dict, reason: str | None = None) -> list[str]:
     lines = [f"Co się stało: {msg.get('co', '')}"] + ([f"Szczegóły: {reason.strip()}"] if reason and reason.strip() else [])
-    lines += [f"Czego potrzeba: {msg.get('potrzeba', '')}", f"Pytanie: {msg.get('pytanie', '')}"]
+    lines += [f"Czego potrzeba: {msg.get('potrzeba', '')}", f"Pytanie: {msg.get('question', '')}"]
     for n, o in enumerate(msg.get("opcje") or [], 1):
         lines.append(f"  {n}. {o.get('opcja', '')} — {o.get('skutek', '')}" + (" (rekomendowana)" if o.get("rekomendowana") else ""))
     return lines + [f"Potem: {msg.get('potem', '')}"]
@@ -320,7 +320,7 @@ def cmd_message(code: str, as_json: bool) -> int:
     msg = stop_message(code) if code in STOP_CODES else None
     if msg is None:
         return fail(f"nie ma komunikatu dla kodu „{code}”. Kody: {', '.join(STOP_CODES)}.")
-    print(json.dumps({"kod": code, **msg}, ensure_ascii=False, indent=1) if as_json else "\n".join(message_lines(msg)))
+    print(json.dumps({"code": code, **msg}, ensure_ascii=False, indent=1) if as_json else "\n".join(message_lines(msg)))
     return 0
 
 
@@ -364,7 +364,7 @@ def cmd_approve(run_dir: Path, project: Path) -> int:
         return no_task(meta)
     if task_field(run_dir, meta, "mode") == "auto":
         return fail("przebieg jest w trybie Auto — nie ma człowieka, który zatwierdziłby plan. Zgodę zapisujesz tylko "
-                    "po odpowiedzi człowieka w rozmowie; wtedy najpierw: run_state.py mode <katalog> zwykly.")
+                    "po odpowiedzi człowieka w rozmowie; wtedy najpierw: run_state.py mode <katalog> normal.")
     r = run_report.task_state(project, "approve", meta["key"], "plan.md", "--by", human_id(project))
     if r is None:
         return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
@@ -493,7 +493,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
                     + f": `--needs stop --code <kod> --reason \"<powód z dowodem>\"`. Kody: {codes}.")
     if code and needs != "stop":
         return fail("`--code` dotyczy tylko `--needs stop`.")
-    if code == "pytanie" and not whole_task and meta.get("key") and blocked_slices_enabled(project):
+    if code == "question" and not whole_task and meta.get("key") and blocked_slices_enabled(project):
         cur_k = (meta.get("current") or {}).get("k") if meta.get("stage") == "slices" else None
         slices, blocked = plan_and_blocked(project, run_dir, meta)
         open_cur = cur_k and cur_k not in blocked and any(s["id"] == cur_k and not s["checked"] for s in slices)
@@ -592,7 +592,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
                     f"blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code <kod> --reason \"<powód "
                     "z dowodem>\" (kod: testy — weryfikacja czerwona, skan — skan blokuje, pytanie — ustalenie "
                     "przeglądu, którego nie da się usunąć w zakresie kawałka).")
-    if step == "zakres" and state == "fail" and meta.get("key") and not slice_finding(project, meta["key"], target, rnd):
+    if step == "scope" and state == "fail" and meta.get("key") and not slice_finding(project, meta["key"], target, rnd):
         return fail(f"przegląd zakresu {target} R{rnd} nie przeszedł, a ważne ustalenie nie jest zapisane — najpierw: "
                     f"run_state.py finding {run_dir} {target} \"<ustalenie [ważne] z przeglądu>\" --round {rnd}, potem "
                     "powtórz to polecenie. Zapis służy zamknięciu zadania: każde ważne ustalenie dostaje kontrolę, "
@@ -653,7 +653,7 @@ def cmd_panel(run_dir: Path, record: list[str] | None, note: str, base: str | No
         print((r.stdout + r.stderr).rstrip("\n"))
         return r.returncode
     weight = task_weight(run_dir, meta)
-    if weight != "pelna":
+    if weight != "full":
         print(f"Waga zadania: {WEIGHT_PL.get(weight, weight or '?')}. To zadanie nie wymaga panelu recenzentów (dotyczy tylko "
               "wagi pełnej); przegląd zakresu kawałków zostaje jak zwykle.")
         return 0
@@ -705,8 +705,8 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
         m = SLICE.match(line)
         if m and m.group(2) == slice_id and not m.group(3).lstrip().startswith("<"):   # nie wiersz szablonu
             if m.group(1) == " ":
-                state = slice_evidence(project, meta, slice_id) if meta.get("key") else "zweryfikowany"
-                if state != "zweryfikowany":
+                state = slice_evidence(project, meta, slice_id) if meta.get("key") else "verified"
+                if state != "verified":
                     return fail(f"{slice_id} nie ma aktualnego dowodu ({state}) — najpierw: run_state.py verify "
                                 f"{run_dir} {slice_id} --files <pliki kawałka>")
                 refused = review_missing(run_dir, meta, slice_id) if meta.get("key") else None
@@ -724,7 +724,7 @@ def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
     """Powód odmowy odhaczenia, gdy ostatnia runda kawałka nie ma zaliczonego przeglądu zakresu; None — jest."""
     cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
     rounds = cur.get("rounds") if cur.get("k") == slice_id and isinstance(cur.get("rounds"), list) else []
-    last = rounds[-1].get("zakres") if rounds and isinstance(rounds[-1], dict) else None
+    last = rounds[-1].get("scope") if rounds and isinstance(rounds[-1], dict) else None
     if last == "pass":
         return None
     k = len(rounds) or 1
@@ -788,12 +788,12 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
         return fail(f"w plan.md nie ma kawałka {slice_id}")
     state = slice_evidence(project, meta, slice_id)
     files = slice_files(project, meta["key"], slice_id)
-    if state != "zweryfikowany" or not files:
+    if state != "verified" or not files:
         return fail(f"{slice_id} nie ma aktualnego dowodu ({state}) — najpierw: run_state.py verify {run_dir} "
                     f"{slice_id} --files <pliki kawałka>; nic nie zapisano")
     cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
     rnd = len(cur.get("rounds") or []) if cur.get("k") == slice_id else 0
-    code = cmd_step(run_dir, slice_id, [f"R{rnd or 1}", "zakres", "pass"], project)
+    code = cmd_step(run_dir, slice_id, [f"R{rnd or 1}", "scope", "pass"], project)
     if code:
         return code
     meta = load(run_dir) or meta
@@ -945,7 +945,7 @@ def plan_and_blocked(project: Path, run_dir: Path, meta: dict) -> tuple[list[dic
     except OSError:
         text = ""
     view = task_view(project, meta["key"]) if meta.get("key") else None
-    blocked = {k for k, s in (view["slices"] if view else {}).items() if s == "zablokowany"}
+    blocked = {k for k, s in (view["slices"] if view else {}).items() if s == "blocked"}
     return plan_with_deps(text), blocked
 
 
@@ -1013,7 +1013,7 @@ def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project:
     if r is None or r.returncode != 0:
         return fail(((r.stdout + r.stderr).strip() if r else "brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update)."))
     append_event(run_report.docs_dir(run_dir, meta), "answer", slice_id, text, by)
-    if meta.get("stage") == "needs" and meta.get("stop_code") == "pytanie" and blocked == {slice_id}:
+    if meta.get("stage") == "needs" and meta.get("stop_code") == "question" and blocked == {slice_id}:
         meta["stage"] = "slices"            # ostatnie pytanie ma odpowiedź: przebieg już na nikogo nie czeka
         for name in ("needs", "stop_text", "stop_code", "needs_at"):
             meta.pop(name, None)
@@ -1035,7 +1035,7 @@ def cmd_next(run_dir: Path, project: Path) -> int:
 
 
 # --- opis PR składany z plików zadania (krok G2) -------------------------------------------------------------------
-WEIGHT_PL = {"lekka": "lekka", "zwykla": "zwykła", "pelna": "pełna"}
+WEIGHT_PL = {"light": "light", "normal": "zwykła", "full": "pełna"}
 CARD = Path(".tf") / "config" / "operations.json"
 ASSUMPTION = re.compile(r"\[zało[żz]eni", re.I)
 BASES = ("origin/main", "main", "origin/master", "master")
@@ -1193,7 +1193,7 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
             line = (f"{'zielone' if green else '**czerwone**'}: {code_span(ev.get('command') or '?')} (kod wyjścia {code}, "
                     f"{as_data(ev.get('at') or 'bez daty', 40)}, dowód `{rel}`)")
             state = states.get(s["id"])
-            if green and state and state != "zweryfikowany":
+            if green and state and state != "verified":
                 line += f" — **dowód nieaktualny** (stan: {state})"
                 why = f"dowód nieaktualny, stan: {state}"
         if why:
@@ -1478,7 +1478,7 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
            "stopLabel": (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or ""),
            "stopHint": stop_hint(meta, cur) if needs == "stop" else None,
            "stopNeed": (stop_message(meta.get("stop_code")) or {}).get("potrzeba"),
-           "stopQuestion": (stop_message(meta.get("stop_code")) or {}).get("pytanie"),
+           "stopQuestion": (stop_message(meta.get("stop_code")) or {}).get("question"),
            "stopOptions": [{"opcja": o.get("opcja"), "skutek": o.get("skutek"), "rekomendowana": bool(o.get("rekomendowana"))}
                            for o in (stop_message(meta.get("stop_code")) or {}).get("opcje") or []],
            "slices": out_slices, "parked": len(parked), "parkedList": parked,
@@ -1529,7 +1529,7 @@ def slice_items(slices: list[dict], view: dict | None, cur: dict | None, stage: 
     for s in slices:
         proof = (view["slices"].get(s["id"]) or "brak dowodu") if view else None
         if s["checked"]:
-            state = "stale" if view and proof != "zweryfikowany" else "done"
+            state = "stale" if view and proof != "verified" else "done"
         elif cur and cur.get("k") == s["id"]:
             state = "fail" if stage == "needs" and needs == "stop" else "cur"
         elif not cur and stage == "slices" and s["id"] == first_open:

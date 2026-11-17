@@ -39,7 +39,7 @@ def git(project: Path, *args: str) -> subprocess.CompletedProcess:
                            "-c", "commit.gpgsign=false", *args], capture_output=True, text=True, timeout=60)
 
 
-def new_run(project: Path, weight: str = "zwykla") -> str:
+def new_run(project: Path, weight: str = "normal") -> str:
     """Repozytorium z gałęzią historyjki i zadaniem IMP-1: specyfikacja, plan z dwoma kawałkami, zapis „bez flagi”."""
     project.mkdir(parents=True)
     git(project, "init", "-q", "-b", "main")
@@ -48,13 +48,13 @@ def new_run(project: Path, weight: str = "zwykla") -> str:
     git(project, "add", "-A")
     git(project, "commit", "-q", "-m", "chore: init")
     git(project, "checkout", "-q", "-b", "story/limit-dobowy")
-    story = "Popraw literówkę w README." if weight == "lekka" else "Jako kierowca chcę limitu dobowego opłaty za postój."
+    story = "Popraw literówkę w README." if weight == "light" else "Jako kierowca chcę limitu dobowego opłaty za postój."
     call(project, SCRIPTS / "run_report.py", "start", "Limit dobowy", "--key", "IMP-1", "--story", story)
     d = str(project / ".tf" / "runs" / "IMP-1")
-    if weight != "lekka":           # wagę lekką przydziela start z treści zgłoszenia; obniżyć ją może tylko człowiek
+    if weight != "light":           # wagę lekką przydziela start z treści zgłoszenia; obniżyć ją może tylko człowiek
         call(project, SCRIPTS / "run_state.py", "weight", d, "--set", weight)
     doc = project / CHANGES / "IMP-1"
-    if weight != "lekka":
+    if weight != "light":
         (doc / "spec.md").write_text(SPEC, encoding="utf-8")
     (doc / "plan.md").write_text(PLAN, encoding="utf-8")
     call(project, SCRIPTS / "run_state.py", "flag", d, "none", "--reason", "bez flagi, bo zmiana jest w konfiguracji")
@@ -67,7 +67,7 @@ def slice_done(project: Path, d: str) -> None:
     call(project, TASK, "verify", "IMP-1", "K1", "--files", "fees.py", "--command", OK)
     git(project, "add", "fees.py")
     git(project, "commit", "-q", "-m", "feat(fees): add the daily cap\n\nKawałek K1: limit dobowy")
-    call(project, SCRIPTS / "run_state.py", "step", d, "K1", "R1", "zakres", "pass")
+    call(project, SCRIPTS / "run_state.py", "step", d, "K1", "R1", "scope", "pass")
     call(project, SCRIPTS / "run_state.py", "tick", d, "K1")
 
 
@@ -218,10 +218,10 @@ def main() -> int:
     # waga lekka: bez specyfikacji — pola nadal są
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "proj"
-        d = new_run(p, "lekka")
+        d = new_run(p, "light")
         r = call(p, rs, "pr-body", d, "--base", "main")
         text = body(p)
-        check(r.returncode == 0 and all(h in text for h in ORDER) and "lekka" in section(text, "## Ryzyko")
+        check(r.returncode == 0 and all(h in text for h in ORDER) and "light" in section(text, "## Ryzyko")
               and "specyfikacj" in section(text, "## Ślad kryteriów"),
               f"PB-20: zadanie bez specyfikacji ma wszystkie pola, a ślad mówi wprost, że jej nie ma: {r.returncode} {r.stdout}")
 

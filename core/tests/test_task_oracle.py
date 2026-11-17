@@ -58,11 +58,11 @@ def main() -> int:
 
         # specyfikacja: przed realizacją pisze się ją swobodnie, od etapu realizacja zapis wymaga zgody człowieka
         d, why = guard(p, "Write", spec_rel)
-        check(d == "", f"O-1: spec.md w etapie przyjecie — zapis bez pytania: {d} {why}")
+        check(d == "", f"O-1: spec.md w etapie intake — zapis bez pytania: {d} {why}")
         tf(p, "stage", "PROJ-1", "plan")
         d, why = guard(p, "Edit", spec_rel)
         check(d == "", f"O-2: spec.md w etapie plan — zapis bez pytania: {d} {why}")
-        tf(p, "stage", "PROJ-1", "realizacja")
+        tf(p, "stage", "PROJ-1", "implementation")
         d, why = guard(p, "Edit", spec_rel)
         check(d == "ask" and "PROJ-1" in why and "zmiana wymagań" in why, f"O-3: spec.md w etapie realizacja → ask z wyjaśnieniem: {d} {why}")
         d, why = guard(p, "Write", spec_rel, absolute=False)
@@ -113,8 +113,8 @@ def main() -> int:
         (p / "tests" / "test_fees.py").write_text("def test_ac1_limit():  # AC-1\n    assert 1\n", encoding="utf-8")
         r = tf(p, "check", "PROJ-1")
         check(r.returncode == 1 and "tests/test_fees.py" in r.stdout, f"O-19: zmiana zamrożonego pliku (np. przez powłokę) → check kod 1: {r.stdout}")
-        r = tf(p, "stage", "PROJ-1", "przeglad")
-        check(r.returncode == 1 and "tests/test_fees.py" in r.stdout, f"O-20: etap przeglad odrzucony przy zmienionym zamrożonym pliku: {r.stdout}")
+        r = tf(p, "stage", "PROJ-1", "review")
+        check(r.returncode == 1 and "tests/test_fees.py" in r.stdout, f"O-20: etap review odrzucony przy zmienionym zamrożonym pliku: {r.stdout}")
         r = tf(p, "reopen", "PROJ-1", "tests/test_fees.py", "--by", "human:anna", "--reason", "test miał błąd w danych")
         d, why = guard(p, "Edit", "tests/test_fees.py")
         check(r.returncode == 0 and d == "" and tf(p, "check", "PROJ-1").returncode == 0,
@@ -124,7 +124,7 @@ def main() -> int:
 
         # zadanie zamknięte niczego już nie chroni; uszkodzony task.json nie wywraca hooka
         tf(p, "freeze", "PROJ-1", "tests/test_fees.py", "--by", "human:anna")
-        tf(p, "stage", "PROJ-1", "zamkniecie", "--force")
+        tf(p, "stage", "PROJ-1", "closed", "--force")
         d1, _ = guard(p, "Edit", "tests/test_fees.py")
         d2, _ = guard(p, "Edit", spec_rel)
         check(d1 == "" and d2 == "", f"O-23: po zamknięciu zadania pliki nie są chronione: {d1} {d2}")

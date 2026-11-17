@@ -50,14 +50,14 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "proj"
         p.mkdir()
-        r = run(p, "start", "PROJ-123", "--title", "Limit dobowy 45 zł", "--weight", "lekka", "--mode", "auto")
+        r = run(p, "start", "PROJ-123", "--title", "Limit dobowy 45 zł", "--weight", "light", "--mode", "auto")
         d = task(p, "PROJ-123")
         check(r.returncode == 0 and d.get("key") == "PROJ-123" and d.get("title") == "Limit dobowy 45 zł"
-              and d.get("stage") == "przyjecie" and d.get("weight") == "lekka" and d.get("mode") == "auto"
+              and d.get("stage") == "intake" and d.get("weight") == "light" and d.get("mode") == "auto"
               and d.get("schema") == 1 and d.get("created") and d.get("created") == d.get("updated"),
-              f"TS-1: start tworzy docs/project/changes/<KEY>/task.json z etapem przyjecie: {r.stdout}{r.stderr}{d}")
+              f"TS-1: start tworzy docs/project/changes/<KEY>/task.json z etapem intake: {r.stdout}{r.stderr}{d}")
         rows = index_rows(p)
-        check(len(rows) == 1 and "PROJ-123" in rows[0] and "Limit dobowy 45 zł" in rows[0] and "przyjecie" in rows[0]
+        check(len(rows) == 1 and "PROJ-123" in rows[0] and "Limit dobowy 45 zł" in rows[0] and "intake" in rows[0]
               and not (p / CHANGES / "INDEX.md").exists(),
               f"TS-2: lista ma wiersz zadania z etapem; pliku INDEX.md skrypt nie zakłada: {rows}")
 
@@ -73,20 +73,20 @@ def main() -> int:
         check(not (p.parent / "x").exists(), "TS-5: klucz ze ścieżką nie tworzy niczego poza katalogiem zadań")
 
         r = run(p, "stage", "PROJ-123", "wymyslony")
-        check(r.returncode == 2 and task(p, "PROJ-123")["stage"] == "przyjecie" and "specyfikacja" in r.stdout,
+        check(r.returncode == 2 and task(p, "PROJ-123")["stage"] == "intake" and "spec" in r.stdout,
               f"TS-6: nieznany etap → błąd z listą etapów, stan bez zmian: {r.stdout}")
         r = run(p, "stage", "PROJ-123", "plan")
         d = task(p, "PROJ-123")
         check(r.returncode == 0 and d["stage"] == "plan" and d["updated"] >= d["created"]
               and "plan" in index_rows(p)[0], f"TS-7: etap do przodu zapisany w task.json i widoczny na liście: {r.stdout}{d}")
-        r = run(p, "stage", "PROJ-123", "specyfikacja")
+        r = run(p, "stage", "PROJ-123", "spec")
         check(r.returncode == 1 and task(p, "PROJ-123")["stage"] == "plan" and "--force" in r.stdout,
               f"TS-8: etap wstecz bez --force odrzucony: {r.returncode} {r.stdout}")
-        r = run(p, "stage", "PROJ-123", "specyfikacja", "--force")
-        check(r.returncode == 0 and task(p, "PROJ-123")["stage"] == "specyfikacja", f"TS-9: --force cofa etap: {r.stdout}")
+        r = run(p, "stage", "PROJ-123", "spec", "--force")
+        check(r.returncode == 0 and task(p, "PROJ-123")["stage"] == "spec", f"TS-9: --force cofa etap: {r.stdout}")
 
         run(p, "start", "ABC-7", "--title", "Raport | z kreską")
-        run(p, "stage", "ABC-7", "specyfikacja")
+        run(p, "stage", "ABC-7", "spec")
         run(p, "stage", "PROJ-123", "plan")
         rows = index_rows(p)
         check(len(rows) == 2 and rows[0].startswith("ABC-7 ") and rows[1].startswith("PROJ-123 ")
@@ -135,7 +135,7 @@ def main() -> int:
         (p / "src" / "fees.py").write_text("CAP = 4000\n", encoding="utf-8")
         run(p, "start", "EV-1", "--title", "Dowody")
         r = run(p, "slice", "EV-1", "K1", "planned", "--title", "limit 45 zł")
-        check(r.returncode == 0 and states("EV-1") == {"K1": "zaplanowany"}, f"TS-20: kawałek zaplanowany: {r.stdout}{states('EV-1')}")
+        check(r.returncode == 0 and states("EV-1") == {"K1": "planned"}, f"TS-20: kawałek zaplanowany: {r.stdout}{states('EV-1')}")
         run(p, "slice", "EV-1", "K1", "implemented")
         check(states("EV-1") == {"K1": "niezweryfikowany"}, f"TS-21: zrobione bez dowodu to niezweryfikowany: {states('EV-1')}")
         r = run(p, "verify", "EV-1", "K1", "--command", OK, "--files", "src/fees.py")
@@ -144,13 +144,13 @@ def main() -> int:
         check(r.returncode == 0 and e.get("command") == OK and e.get("exit_code") == 0 and e.get("at")
               and len((e.get("files") or {}).get("src/fees.py", "")) == 64 and e.get("slice") == "K1",
               f"TS-22: dowód w evidence/K1-1.json: polecenie, kod wyjścia, czas, skróty plików: {r.stdout}{r.stderr}{e}")
-        check(states("EV-1") == {"K1": "zweryfikowany"}, f"TS-23: zielony dowód na bieżących plikach → zweryfikowany: {states('EV-1')}")
+        check(states("EV-1") == {"K1": "verified"}, f"TS-23: zielony dowód na bieżących plikach → zweryfikowany: {states('EV-1')}")
         (p / "src" / "fees.py").write_text("CAP = 4500\n", encoding="utf-8")
         r = run(p, "status", "EV-1")
         check(states("EV-1") == {"K1": "niezweryfikowany"} and "zmienion" in r.stdout and "K1" in r.stdout,
               f"TS-24: zmiana pliku po dowodzie → niezweryfikowany, z powodem: {r.stdout}")
-        r = run(p, "stage", "EV-1", "przeglad")
-        check(r.returncode == 1 and "K1" in r.stdout and task(p, "EV-1")["stage"] == "przyjecie",
+        r = run(p, "stage", "EV-1", "review")
+        check(r.returncode == 1 and "K1" in r.stdout and task(p, "EV-1")["stage"] == "intake",
               f"TS-25: przegląd odrzucony, gdy kawałek nie jest zweryfikowany: {r.returncode} {r.stdout}")
         r = run(p, "verify", "EV-1", "K1", "--command", RED, "--files", "src/fees.py")
         e2 = json.loads((ev.parent / "K1-2.json").read_text(encoding="utf-8")) if (ev.parent / "K1-2.json").is_file() else {}
@@ -158,18 +158,18 @@ def main() -> int:
         check(r.returncode == 1 and e2.get("exit_code") == 3 and log.is_file() and "FAILED test_x" in log.read_text(encoding="utf-8")
               and "FAILED test_x" in r.stdout,
               f"TS-37: verify samo uruchamia polecenie: prawdziwy kod wyjścia w dowodzie, wyjście w .tf/runs/: {r.returncode} {r.stdout}{e2}")
-        check(states("EV-1") == {"K1": "czerwony"} and ev.is_file() and (ev.parent / "K1-2.json").is_file(),
+        check(states("EV-1") == {"K1": "red"} and ev.is_file() and (ev.parent / "K1-2.json").is_file(),
               f"TS-26: czerwony dowód → czerwony; poprzedni dowód zostaje, nowy ma kolejny numer: {states('EV-1')}")
         run(p, "verify", "EV-1", "K1", "--command", OK, "--files", "src/fees.py")
-        r = run(p, "stage", "EV-1", "przeglad")
-        check(r.returncode == 0 and task(p, "EV-1")["stage"] == "przeglad", f"TS-27: po zielonym dowodzie przegląd dozwolony: {r.stdout}")
+        r = run(p, "stage", "EV-1", "review")
+        check(r.returncode == 0 and task(p, "EV-1")["stage"] == "review", f"TS-27: po zielonym dowodzie przegląd dozwolony: {r.stdout}")
         (p / "src" / "fees.py").unlink()
         check(states("EV-1") == {"K1": "niezweryfikowany"}, f"TS-28: usunięty plik po dowodzie → niezweryfikowany: {states('EV-1')}")
 
         (p / "src" / "cli.py").write_text("x = 1\n", encoding="utf-8")
         run(p, "start", "EV-2", "--title", "Blokada")
         r = run(p, "slice", "EV-2", "K1", "blocked", "--reason", "czeka na decyzję o stawce")
-        check(states("EV-2") == {"K1": "zablokowany"} and run(p, "stage", "EV-2", "przeglad").returncode == 1
+        check(states("EV-2") == {"K1": "blocked"} and run(p, "stage", "EV-2", "review").returncode == 1
               and "czeka na decyzję" in run(p, "status", "EV-2").stdout,
               f"TS-29: kawałek zablokowany z powodem wstrzymuje przegląd: {r.stdout}{states('EV-2')}")
         r = run(p, "verify", "EV-2", "K2", "--command", OK)
@@ -183,16 +183,16 @@ def main() -> int:
         r = run(p, "slice", "EV-2", "K3", "gotowe")
         check(r.returncode == 2 and "implemented" in r.stdout, f"TS-34: nieznany stan kawałka → lista stanów: {r.stdout}")
         run(p, "start", "EV-3", "--title", "Bez kawałków")
-        check(run(p, "stage", "EV-3", "przeglad").returncode == 0, "TS-35: zadanie bez kawałków przechodzi do przeglądu")
+        check(run(p, "stage", "EV-3", "review").returncode == 0, "TS-35: zadanie bez kawałków przechodzi do przeglądu")
         r = run(p, "verify", "EV-3", "K1", "--command", OK, "--files", "src/cli.py")
-        check(r.returncode == 0 and states("EV-3") == {"K1": "zweryfikowany"}, f"TS-36: verify zakłada kawałek, jeśli go nie było: {r.stdout}")
+        check(r.returncode == 0 and states("EV-3") == {"K1": "verified"}, f"TS-36: verify zakłada kawałek, jeśli go nie było: {r.stdout}")
         r = run(p, "verify", "EV-3", "K2", "--files", "src/cli.py")
         check(r.returncode == 2 and "quality-gate.json" in r.stdout, f"TS-38: bez --command i bez bramki → nie ma czego uruchomić: {r.stdout}")
         (p / ".claude").mkdir(exist_ok=True)
         (p / ".claude" / "quality-gate.json").write_text(json.dumps({"command": OK}), encoding="utf-8")
         r = run(p, "verify", "EV-3", "K2", "--files", "src/cli.py")
         e3 = json.loads((p / CHANGES / "EV-3" / "evidence" / "K2-1.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
-        check(r.returncode == 0 and e3.get("command") == OK and states("EV-3").get("K2") == "zweryfikowany",
+        check(r.returncode == 0 and e3.get("command") == OK and states("EV-3").get("K2") == "verified",
               f"TS-39: bez --command verify uruchamia polecenie bramki jakości: {r.stdout}{r.stderr}")
         r = run(p, "verify", "EV-3", "K2", "--command", OK, "--exit", "0", "--files", "src/cli.py")
         check(r.returncode == 2, f"TS-40: kodu wyjścia nie da się zadeklarować (--exit odrzucone): {r.returncode}")
@@ -209,9 +209,9 @@ def main() -> int:
         folder = p / CHANGES / "AR-1"
         (folder / "spec.md").write_text(SPEC.format(limit=45), encoding="utf-8")
         (folder / "plan.md").write_text("# Plan\n- [ ] K1\n", encoding="utf-8")
-        r = run(p, "artifact", "AR-1", "spec.md", "--stage", "specyfikacja", "--by", "tf/1.0.0")
+        r = run(p, "artifact", "AR-1", "spec.md", "--stage", "spec", "--by", "tf/1.0.0")
         a = task(p, "AR-1").get("artifacts", {}).get("spec.md", {})
-        check(r.returncode == 0 and a.get("stage") == "specyfikacja" and a.get("generated", {}).get("by") == "tf/1.0.0"
+        check(r.returncode == 0 and a.get("stage") == "spec" and a.get("generated", {}).get("by") == "tf/1.0.0"
               and a.get("generated", {}).get("at") and astates("AR-1") == {"spec.md": "szkic"},
               f"TS-41: plik zarejestrowany jako szkic, z wykonawcą i czasem: {r.stdout}{r.stderr}{a}")
         r = run(p, "artifact", "AR-1", "nie-ma.md", "--stage", "plan", "--by", "tf/1.0.0")
@@ -232,11 +232,11 @@ def main() -> int:
         (folder / "spec.md").write_text(SPEC.format(limit=50), encoding="utf-8")
         r = run(p, "check", "AR-1")
         s = astates("AR-1")
-        check(r.returncode == 1 and s.get("plan.md") == "nieaktualny" and s.get("spec.md") == "zmieniony po zatwierdzeniu"
+        check(r.returncode == 1 and s.get("plan.md") == "stale" and s.get("spec.md") == "changed-after-approval"
               and "spec.md" in r.stdout and "plan.md" in r.stdout,
               f"TS-46: zmiana spec.md po zatwierdzeniu planu → plan nieaktualny, spec do ponownego zatwierdzenia: {r.stdout}{s}")
         r = run(p, "status", "AR-1")
-        check("nieaktualny" in r.stdout and "plan.md" in r.stdout, f"TS-47: status dla człowieka pokazuje nieaktualny plik: {r.stdout}")
+        check("stale" in r.stdout and "plan.md" in r.stdout, f"TS-47: status dla człowieka pokazuje nieaktualny plik: {r.stdout}")
         run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "tf/1.0.0", "--inputs", "spec.md")
         check(astates("AR-1").get("plan.md") == "szkic", f"TS-48: ponowna rejestracja odświeża wejścia i kasuje zatwierdzenie: {astates('AR-1')}")
         run(p, "approve", "AR-1", "spec.md", "--by", "human:anna")
@@ -256,10 +256,10 @@ def main() -> int:
         run(p, "approve", "CHG-12", "plan.md", "--by", "human:anna")
         check((pdi / "plan.md").read_text(encoding="utf-8") == plan and astates("CHG-12") == {"plan.md": "zatwierdzony"},
               f"TS-51: plik pdi zarejestrowany i zatwierdzony bez zmiany treści: {astates('CHG-12')}")
-        r = run(p, "stage", "AR-1", "realizacja")
+        r = run(p, "stage", "AR-1", "implementation")
         (folder / "spec.md").write_text(SPEC.format(limit=55), encoding="utf-8")
-        r = run(p, "stage", "AR-1", "przeglad")
-        check(r.returncode == 1 and "plan.md" in r.stdout and task(p, "AR-1")["stage"] == "realizacja",
+        r = run(p, "stage", "AR-1", "review")
+        check(r.returncode == 1 and "plan.md" in r.stdout and task(p, "AR-1")["stage"] == "implementation",
               f"TS-52: przegląd odrzucony, gdy plik zadania jest nieaktualny: {r.returncode} {r.stdout}")
 
         # tf task … uruchamia skrypt w projekcie
@@ -274,7 +274,7 @@ def main() -> int:
 
         # lista zadań (krok C5): `tf status` — etap, kawałki z dowodem, pliki do odświeżenia; stan liczony przy odczycie
         r = run(q, "list")
-        check(r.returncode == 0 and "PROJ-9" in r.stdout and "przyjecie" in r.stdout and "Przez tf" in r.stdout,
+        check(r.returncode == 0 and "PROJ-9" in r.stdout and "intake" in r.stdout and "Przez tf" in r.stdout,
               f"TS-53: list pokazuje zadanie z etapem i tytułem: {r.stdout}{r.stderr}")
         (q / "src").mkdir(exist_ok=True)
         (q / "src" / "a.py").write_text("a = 1\n", encoding="utf-8")
@@ -286,7 +286,7 @@ def main() -> int:
         except (ValueError, KeyError, TypeError):
             rows = {}
         row = rows.get("PROJ-9", {})
-        check(row.get("stage") == "przyjecie" and row.get("slices") == {"K1": "zweryfikowany", "K2": "zaplanowany"}
+        check(row.get("stage") == "intake" and row.get("slices") == {"K1": "verified", "K2": "planned"}
               and row.get("verified") == 1 and row.get("stale") == [],
               f"TS-54: list --json: etap, stany kawałków, liczba zweryfikowanych: {r.stdout[:300]}{r.stderr}")
         (q / "src" / "a.py").write_text("a = 2\n", encoding="utf-8")
@@ -310,7 +310,7 @@ def main() -> int:
               "TS-59: zadanie cięcia nie zakłada INDEX.md (PR-y cięć jednej zmiany nie mają o co się zderzyć)")
         run(c, "start", "PROJ-9", "--title", "Eksport sesji")
         r = run(c, "start", "CHG-12-TSK-58", "--title", "TSK-58: brak podwójnego obciążenia", "--change", "CHG-12", "--cut", "TSK-58")
-        run(c, "stage", "CHG-12-TSK-58", "specyfikacja")
+        run(c, "stage", "CHG-12-TSK-58", "spec")
         check(r.returncode == 0 and not (c / CHANGES / "INDEX.md").exists()
               and len([ln for ln in index_rows(c) if "TSK-5" in ln]) == 2,
               f"TS-60: zapisy zadań nie zakładają INDEX.md; cięcia są na liście: {index_rows(c)}")

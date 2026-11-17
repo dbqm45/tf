@@ -15,7 +15,7 @@ np. test uruchomiono poza sesją Claude Code.
 Reguły:
   TRACE-001 kryterium bez testu (błąd) · TRACE-002 test wskazuje `AC-n`, którego nie ma w specyfikacji (błąd) ·
   TRACE-003 test nie należy do plików żadnego kawałka — nie ma dowodu, że przeszedł (ostrzeżenie).
-Z błędem śladu `tf task stage <KEY> przeglad` (i dalsze etapy) kończy się odmową.
+Z błędem śladu `tf task stage <KEY> review` (i dalsze etapy) kończy się odmową.
 
 Baza: `--base`, inaczej pierwsza istniejąca z `main`, `origin/main`, `master`, `origin/master`.
 Pliki testów: katalogi tests/, test/, __tests__/, e2e/, spec/ oraz nazwy test_*.py, *_test.py, *_test.go, *.test.*,
