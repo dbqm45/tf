@@ -68,12 +68,12 @@ def main() -> int:
         skill(root, "eng-zla-data", "jutro")
         ref = root / ".claude" / "skills" / "eng-aktualny" / "references"
         ref.mkdir()
-        (ref / "a.md").write_text("Liczba [niezweryfikowane].\n", encoding="utf-8")
+        (ref / "a.md").write_text("Liczba [niezweryfikowane]. Number [unverified].\n", encoding="utf-8")
         rows = {r["skill"]: r for r in fr.scan(root, TODAY)}
         check({k: v["status"] for k, v in rows.items()} == {
             "eng-stary": "overdue", "eng-wkrotce": "soon", "eng-aktualny": "ok", "eng-bez-daty": "missing",
             "eng-zla-data": "invalid"}, f"FR-3: stany po terminie / ≤30 dni / ok / brak / zły format: {rows}")
-        check(rows["eng-stary"]["unverified"] == 2 and rows["eng-aktualny"]["unverified"] == 1,
+        check(rows["eng-stary"]["unverified"] == 2 and rows["eng-aktualny"]["unverified"] == 2,
               f"FR-4: liczy [niezweryfikowane] w SKILL.md i references/: {rows}")
 
         r = subprocess.run([sys.executable, str(SCRIPT), "--root", str(root), "--today", "2026-10-17", "--json"],

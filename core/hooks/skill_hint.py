@@ -79,6 +79,9 @@ def stems(text: str) -> list[str]:
     return out
 
 
+PL_INDEX = "hint.pl.txt"   # polski indeks skilla przetłumaczonego na angielski (tools/hint_pl_index.py); model go nie czyta
+
+
 def load_index() -> list[dict]:
     items = []
     for p in sorted(SKILLS.glob("*/SKILL.md")):
@@ -94,10 +97,13 @@ def load_index() -> list[dict]:
         name = p.parent.name
         name_words = name.split("-", 1)[-1].replace("-", " ")
         body = text[m.end() if m else 0:]
-        body = re.sub(r"```.*?```", " ", body, flags=re.S)          # bez przykładów kodu
-        body = re.sub(r"^## Źródła.*$", " ", body, flags=re.S | re.M)  # bez listy źródeł
-        head = stems(f"{desc} {kat} {name_words} {keywords}")
         excerpt = re.sub(r"<!--.*?-->|\s+", " ", body, flags=re.S).strip()[:700]
+        pl_index = p.parent / PL_INDEX       # tekst sprzed tłumaczenia: polskie polecenia trafiają jak dawniej
+        if pl_index.is_file():
+            body += "\n" + pl_index.read_text(encoding="utf-8", errors="ignore")
+        body = re.sub(r"```.*?```", " ", body, flags=re.S)          # bez przykładów kodu
+        body = re.sub(r"^## (Źródła|Sources)\b.*?(?=^# |\Z)", " ", body, flags=re.S | re.M)  # bez listy źródeł
+        head = stems(f"{desc} {kat} {name_words} {keywords}")
         items.append({"name": name, "desc": desc.strip(), "kat": kat.strip(), "excerpt": excerpt,
                       "head": set(head), "body": set(stems(body)) - set(head)})
     return items

@@ -111,11 +111,15 @@ def main() -> int:
                         ("## Reguły", "## Rules"), ("## Standardy", "## Standards"), ("## Ryzyka", "## Risks"),
                         ("## Pytania", "## Questions"), ("## Czego nie sprawdzono", "## Not checked"),
                         ("| Język |", "| Language |"), ("| Dane |", "| Data |"), ("| Testy |", "| Tests |"),
-                        ("| Konfiguracja |", "| Configuration |")):
+                        ("| Konfiguracja |", "| Configuration |"), ("[założenie", "[assumption"),
+                        ("[niezweryfikowane]", "[unverified]"), ("[pytanie", "[question")):
             en = en.replace(pl, eng)
         (repo / "docs/project/00-reconstruction/report.md").write_text(en, encoding="utf-8")
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--final", cwd=d)
         check(r.returncode == 0, f"R-8b: --final na raporcie z angielskimi sekcjami (14.x): {r.stdout[-400:]}")
+        r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--json", cwd=d)
+        check(json.loads(r.stdout).get("unsupported") == [],
+              f"R-8c: angielskie oznaczenia [assumption]/[unverified]/[question] (14.x): {r.stdout[:400]}")
         (repo / "docs/project/00-reconstruction/report.md").write_text(GOOD, encoding="utf-8")
         r = run("bad.md", "--repo", str(repo), "--final", cwd=d)
         check(r.returncode == 1 and "TL;DR" in r.stdout and "Not checked" in r.stdout,

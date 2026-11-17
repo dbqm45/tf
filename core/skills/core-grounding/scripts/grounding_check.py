@@ -14,8 +14,8 @@ Z --jev (wymaga TYPESAFE_API_KEY; cookbook TypeSafe „citation check”) dla ka
 decyzyjny Jev, czy wskazane linie POTWIERDZAJĄ zdanie, w którym stoi odwołanie, PRZECZĄ mu, czy NIC O NIM NIE MÓWIĄ.
 Pewność ≥0,8 → werdykt; niższa → „do przejrzenia przez człowieka”. Sprzeczne i niepotwierdzające liczą się jako problemy.
 Ścieżki szuka względem katalogu dokumentu, jego katalogów nadrzędnych i katalogu projektu. Pomija bloki kodu,
-adresy URL, wzorce z <…>, *, {…}, $ oraz ścieżki oznaczone w tej samej linii jako planowane („(nowy)”, „(do
-utworzenia)”, „[plan]”). Do dokumentów o projekcie (raporty, artefakty, README), nie do przykładów w skillach.
+adresy URL, wzorce z <…>, *, {…}, $ oraz ścieżki oznaczone w tej samej linii jako planowane („(new)”, „(to be
+created)”, „(planned)”, „[plan]”; też dawne „(nowy)”, „(do utworzenia)”). Do dokumentów o projekcie (raporty, artefakty, README), nie do przykładów w skillach.
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from pathlib import Path
 ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
 EXT = (".md", ".py", ".ts", ".tsx", ".js", ".mjs", ".cjs", ".jsx", ".json", ".yaml", ".yml", ".java", ".kt", ".html",
        ".css", ".scss", ".sql", ".sh", ".ps1", ".toml", ".xml", ".gradle", ".kts", ".tf", ".txt", ".jsonl", ".cfg", ".ini")
-PLANNED = re.compile(r"\((nowy|nowa|nowe|do utworzenia|planowan\w*)\)|\[plan\]", re.I)
+PLANNED = re.compile(r"\((nowy|nowa|nowe|do utworzenia|planowan\w*|new|to be created|planned)\)|\[plan\]", re.I)
 CODE_SPAN = re.compile(r"`([^`\n]+)`")
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 LINE_REF = re.compile(r"^(?P<path>[^\s:]+\.[A-Za-z0-9]+):(?P<a>\d+)(?:-(?P<b>\d+))?$")

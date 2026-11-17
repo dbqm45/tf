@@ -4,7 +4,7 @@
   "offline": "2026-11-17"
  },
  "core-agent-retro": {
-  "fingerprint": "399d5925e3af4a4c",
+  "fingerprint": "d3960ac6d3c08a5a",
   "offline": "2026-11-17"
  },
  "core-agent-security": {
@@ -12,12 +12,12 @@
   "offline": "2026-11-16"
  },
  "core-async-delegation": {
-  "fingerprint": "cba9ae57f5cefc67",
+  "fingerprint": "0d199ec9bbf594cb",
   "offline": "2026-11-17"
  },
  "core-conventional-commits": {
-  "fingerprint": "f4a985c528f67404",
-  "offline": "2026-11-16"
+  "fingerprint": "fe54afca129399a1",
+  "offline": "2026-11-17"
  },
  "core-cost-control": {
   "fingerprint": "5d93497a4439a50a",
@@ -28,7 +28,7 @@
   "offline": "2026-11-17"
  },
  "core-factory-update": {
-  "fingerprint": "7365c1d002044e92",
+  "fingerprint": "87a91c0967ddb34f",
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
@@ -36,19 +36,19 @@
   "offline": "2026-11-17"
  },
  "core-grounding": {
-  "fingerprint": "a9b742fea3806e28",
+  "fingerprint": "55b6b49eb186dfb9",
   "offline": "2026-11-17"
  },
  "core-knowledge": {
-  "fingerprint": "c8a003477b511d71",
-  "offline": "2026-11-16"
+  "fingerprint": "b1b38e8e0b582c6e",
+  "offline": "2026-11-17"
  },
  "core-plan-interview": {
-  "fingerprint": "cdb99e686e894b1c",
+  "fingerprint": "626effe163dd2bf1",
   "offline": "2026-11-17"
  },
  "core-problem-routing": {
-  "fingerprint": "086641df1ef22a05",
+  "fingerprint": "aea391cc3bbd69f3",
   "offline": "2026-11-17"
  },
  "core-project-record": {
@@ -56,7 +56,7 @@
   "offline": "2026-11-17"
  },
  "core-semver": {
-  "fingerprint": "f964111de6b2b410",
+  "fingerprint": "53c3f09a120a1e61",
   "offline": "2026-11-17"
  },
  "core-skill-authoring": {
@@ -64,19 +64,19 @@
   "offline": "2026-11-17"
  },
  "core-skill-composition": {
-  "fingerprint": "ef69ab84a8c8b0a6",
+  "fingerprint": "b67a7f30d2a5a26b",
   "offline": "2026-11-17"
  },
  "core-source-research": {
-  "fingerprint": "3d1b09a8ceed30ed",
+  "fingerprint": "14e7576e033bcaac",
   "offline": "2026-11-17"
  },
  "core-stack-sync": {
-  "fingerprint": "a72f96bae0faf5d1",
+  "fingerprint": "281fe2a7eeb88a48",
   "offline": "2026-11-17"
  },
  "core-teaching-workspace": {
-  "fingerprint": "2af8ddd9d1613437",
+  "fingerprint": "5fdfc2cba6dbe754",
   "offline": "2026-11-17"
  },
  "tf": {

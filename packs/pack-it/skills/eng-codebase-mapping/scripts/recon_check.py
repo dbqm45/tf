@@ -27,7 +27,7 @@ import sys
 
 REF = re.compile(r"`?((?:[\w.@-]+/)*[\w.@-]+\.[A-Za-z0-9]+):(\d+)(?:-(\d+))?`?")
 QUOTE = re.compile(r"\"([^\"]{3,})\"|„([^”]{3,})”")
-MARK = re.compile(r"\[(założenie|niezweryfikowane|pytanie)[^\]]*\]", re.I)
+MARK = re.compile(r"\[(assumption|unverified|question|założenie|niezweryfikowane|pytanie)[^\]]*\]", re.I)
 SECTIONS = ("TL;DR", "Stack", "Modules", "Domains", "Requirements", "Rules", "Standards", "Risks", "Questions",
             "Not checked")
 NO_EVIDENCE_SECTIONS = ("Questions", "Not checked")   # tu wypunktowania z natury nie mają dowodu

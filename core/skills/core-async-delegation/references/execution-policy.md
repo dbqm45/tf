@@ -1,61 +1,61 @@
-# Polityka wykonania planu bez nadzoru — formaty
+# The policy for executing a plan unsupervised — formats
 
-## Polecenie `/goal` do skopiowania
-Warunek celu jest testem zatrzymania sesji; polityka z `SKILL.md` §4 jest sposobem jego spełnienia. Oceniający
-widzi tylko rozmowę, więc warunek odwołuje się do tego, co agent wypisuje.
+## A `/goal` command to copy
+The goal condition is the session's stop test; the policy from `SKILL.md` §4 is the way to meet it. The evaluator
+sees only the conversation, so the condition refers to what the agent prints.
 ```text
-/goal Wykonaj wszystkie fazy planu docs/project/<krok>/plan.md wg polityki core-async-delegation §4.
-Gotowe, gdy: każdy automatyczny punkt w sekcji postępu planu jest odhaczony, każda faza ma własny commit
-(Conventional Commits) z SHA wypisanym w rozmowie, a na końcu jest lista punktów do weryfikacji ręcznej.
-Ograniczenia: nie zmieniaj ani nie osłabiaj istniejących testów, chyba że plan tak mówi; nie dotykaj plików
-spoza zakresu planu. Zatrzymaj się po <N> turach, jeśli nie skończysz.
+/goal Execute all phases of the plan docs/project/<step>/plan.md per the core-async-delegation §4 policy.
+Done when: every automatic item in the plan's progress section is ticked, every phase has its own commit
+(Conventional Commits) with the SHA printed in the conversation, and at the end there is a list of items for manual verification.
+Constraints: do not change or weaken existing tests unless the plan says so; do not touch files
+outside the plan's scope. Stop after <N> turns if you do not finish.
 ```
-Uruchomienie bez okna (lista narzędzi bez sieci i bez `git push`, jeśli zadanie ich nie wymaga):
+Running without a window (a tool list without network and without `git push`, if the task does not need them):
 ```bash
 claude -p "<polecenie>" --allowedTools "<lista>" --permission-mode acceptEdits --max-budget-usd <kwota>
 ```
 
-## Linie werdyktu (po każdej bramce)
+## Verdict lines (after each gate)
 ```text
-GATE testy-z-planu: PASS
-GATE celowe-zepsucie: PASS (test czerwony na zepsutym kodzie, plik przywrócony)
-GATE lint: FAIL (2 błędy w src/limits.ts, attempt 1/2)
+GATE tests-from-plan: PASS
+GATE deliberate-breakage: PASS (test red on the broken code, file restored)
+GATE lint: FAIL (2 errors in src/limits.ts, attempt 1/2)
 GATE lint: PASS
-DIRTY (nie dodane): .env.local, notes.md
-ADAPT: plan wskazuje src/limits.ts, plik jest w src/limits/index.ts
-COMMIT faza 2: a1b2c3d
+DIRTY (not added): .env.local, notes.md
+ADAPT: the plan points to src/limits.ts, the file is in src/limits/index.ts
+COMMIT phase 2: a1b2c3d
 ```
 
-## Celowe zepsucie (tylko fazy, które dodają lub zmieniają testy)
-1. Pliki fazy są już w indeksie (`git add <pliki>`), więc przywrócenie będzie dokładne.
-2. W kodzie produkcyjnym odwróć lub osłab chronione zachowanie — zmiana tylko w drzewie roboczym.
-3. Uruchom wyłącznie ten test. Czerwony = PASS bramki.
-4. Zawsze przywróć `git checkout -- <plik>`, także po porażce; zepsucie nigdy nie trafia do commita.
-5. Test zielony na zepsutym kodzie → asercja nic nie chroni → wzmocnij asercję (nie osłabiaj kodu, nie pomijaj kroku).
+## Deliberate breakage (only phases that add or change tests)
+1. The phase's files are already in the index (`git add <pliki>`), so the restore will be exact.
+2. In the production code invert or weaken the protected behaviour — a change only in the working tree.
+3. Run only that test. Red = the gate PASSES.
+4. Always restore with `git checkout -- <plik>`, also after a failure; the breakage never goes into a commit.
+5. The test is green on the broken code → the assertion protects nothing → strengthen the assertion (do not weaken the code, do not skip the step).
 
-## Blok STOP (potem koniec: bez dalszych zmian i bez commita)
+## The STOP block (then the end: no further changes and no commit)
 ```text
-STOP — <ROZJAZD STRUKTURALNY | PORAŻKA BRAMKI> w fazie <N>
-Oczekiwane: <co mówi plan / czego wymaga bramka>
-Znalezione: <stan faktyczny / skrót błędu>
-Dlaczego blokuje: <czemu nie da się kontynuować bez decyzji człowieka>
-Wznowienie: <co poprawić>, potem ponownie od fazy <N>
+STOP — <STRUCTURAL DIVERGENCE | GATE FAILURE> in phase <N>
+Expected: <what the plan says / what the gate requires>
+Found: <the actual state / a summary of the error>
+Why it blocks: <why it cannot continue without the human's decision>
+Resume: <what to fix>, then again from phase <N>
 ```
-Przed zatrzymaniem: odhaczone punkty zostają, praca w toku zostaje niezacommitowana w drzewie roboczym,
-celowe zepsucie przywrócone.
+Before stopping: ticked items stay, work in progress stays uncommitted in the working tree,
+the deliberate breakage restored.
 
-## Raport końcowy (zawsze — po sukcesie i po STOP)
+## The final report (always — after success and after STOP)
 ```text
-RAPORT — <krok>
-Fazy: <zrobione>/<wszystkie>
-- Faza 1: <tytuł> — <SHA> (bramki: testy, celowe-zepsucie, lint, typy: PASS)
-- Faza 2: <tytuł> — STOP (<powód>)
-Adaptacje: <po jednej linii albo „brak”>
-Niepewności: <punkty, gdzie plan i kod się nie zgadzały, bez niezależnego źródła — albo „brak”>
-Do weryfikacji ręcznej (dla człowieka): <punkty z planu, dosłownie>
-Następny krok: przegląd w świeżym kontekście (core-git-workflow; testy od specyfikacji, pack-it: qa-spec-first-testing)
+REPORT — <step>
+Phases: <done>/<all>
+- Phase 1: <title> — <SHA> (gates: tests, deliberate-breakage, lint, types: PASS)
+- Phase 2: <title> — STOP (<reason>)
+Adaptations: <one line each or "none">
+Uncertainties: <points where the plan and the code disagreed, without an independent source — or "none">
+For manual verification (for the human): <items from the plan, literally>
+Next step: a review in a fresh context (core-git-workflow; tests from the specification, pack-it: qa-spec-first-testing)
 ```
 
-## Odwołania w commitach
-Identyfikatory zgłoszeń (`ABC-123`, `#123`) dopisujesz w stopce commita tylko wtedy, gdy padły w rozmowie lub
-planie — nigdy nie wymyślasz ich z nazwy gałęzi.
+## References in commits
+Issue identifiers (`ABC-123`, `#123`) you add in the commit footer only when they came up in the conversation or
+the plan — you never make them up from the branch name.

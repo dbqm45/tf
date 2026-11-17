@@ -641,7 +641,9 @@ treści (angielska), bez równoległej polskiej.
   Skuteczność fabryki nie może spaść (właściciel, 2026-11-17). Każda partia przechodzi, zanim trafi do PR:
   1. `tools/translation_check.py <pliki>` — te same bloki kodu, `…`, liczby, odnośniki i struktura co przed
      tłumaczeniem (różnica = zgubiony albo dopisany fakt; zmiana treści to osobny commit, nie tłumaczenie);
-  2. podpowiedzi: `hint_holdout.py` — strojenie i holdout nie niżej niż przed partią; bramka każdego skilla;
+  2. podpowiedzi: `python3 tools/hint_pl_index.py <skille>` (polski indeks `hint.pl.txt` z ostatniej polskiej
+     wersji — decyzja właściciela 2026-11-17: polskie polecenia trafiają jak przed tłumaczeniem; hook dokłada go do
+     treści, model go nie czyta), potem `hint_holdout.py` — strojenie i holdout nie niżej niż przed partią; bramka każdego skilla;
      to samo w instalacji `none` (sam rdzeń) i `test_skill_evals.py` tam — polecenia ogólne bez podpowiedzi
      (słowo pospolite w słowach kluczowych zyskuje wagę, gdy polska proza znika z innych skilli; 4b-2: „jaka wersja”);
   3. model (zgoda właściciela: próbka z partii, Haiku, ~2 USD): 3–5 skilli o największym ruchu, scenariusze przed
@@ -664,7 +666,22 @@ treści (angielska), bez równoległej polskiej.
     - [ ] składnia danych retrospektywy wciąż po polsku (etap 3): decyzje `--decide KLUCZ=tak|nie|później`,
       `Rework-Cause:` (`luka-specyfikacji|blad-agenta|zmiana-wymagan|nieznana` — też `metrics.py`), sygnał
       „Tier: za niski/za wysoki” w raportach wykonawców — angielskie wartości z aliasami, jak w 3a.
-    - [ ] dalsze partie: core-knowledge, core-conventional-commits, core-grounding, core-project-record, core-async-delegation,
+    - [x] 4b-3 (2026-11-17): `core-grounding`, `core-knowledge`, `core-conventional-commits` (+ referencje),
+      `core-async-delegation` (+ referencje). `core-project-record` przesunięty: `project_record.py` czyta polskie
+      nagłówki artefaktów (`## Przekazanie`, „Otwarte pytania”, tabela TL;DR) — najpierw zmiana składni z aliasami
+      i migracją (jak 3a), potem tłumaczenie skilla i szablonów.
+      Oznaczenia rzetelności po angielsku: `[assumption]`, `[unverified]`, `[question]`, `[checked: …]`, `[assessment]`;
+      `claims_check`, `freshness`, `grounding_check` („(new)”, „(planned)”), `recon_check` (pack-it) przyjmują oba języki.
+      Polski indeks podpowiedzi: po tłumaczeniu holdout partii spadł 6/8 → 2/8 (słowa kluczowe dały tylko 2/8) →
+      `hint.pl.txt` dla 13 przetłumaczonych skilli (`tools/hint_pl_index.py`, test `tests/test_hint_pl_index.py`,
+      hook: `core/tests/test_skill_hint_pl_index.py`); hook wycina też `## Sources`. Wynik: all 899/918 · 31/43 (przed
+      partią 902 · 29; bez indeksu 900 · 25), none 167/175 · 16/16 (przed 169 · 15). Strata strojenia to pojedyncze
+      no-trigger w niezmienionych skillach (przesunięte IDF), zysk holdoutu — polskie polecenia jak przed tłumaczeniem.
+      Spis treści plików referencyjnych w języku pliku (`build.py`: „Contents” / „Spis treści”, oba rozpoznawane).
+      Haiku: przed 11/11; po 5/6 (`wynik-skryptu-to-twierdzenie` bez wywołania skilla) + powtórka 2/2 → 7/8; $2,64.
+      Treść: `core-conventional-commits` — opis commita w języku commitów repo (z `git log`, nowe repo: angielski), jak
+      `commit_language` od #290 (wcześniej „po angielsku”).
+    - [ ] dalsze partie: core-project-record (po zmianie składni),
       core-agent-instructions, core-skill-authoring, core-git-workflow, core-cost-control, tf, core-agent-security,
       core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
