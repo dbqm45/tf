@@ -8,8 +8,8 @@
   "offline": "2026-11-17"
  },
  "core-agent-security": {
-  "fingerprint": "9884a984b1764af8",
-  "offline": "2026-11-16"
+  "fingerprint": "6e9667ffa56fb2f4",
+  "offline": "2026-11-17"
  },
  "core-async-delegation": {
   "fingerprint": "3cb3c91ae8be2910",
@@ -60,7 +60,7 @@
   "offline": "2026-11-17"
  },
  "core-skill-authoring": {
-  "fingerprint": "a85163ed74b7a208",
+  "fingerprint": "1428d37832017f9b",
   "offline": "2026-11-17"
  },
  "core-skill-composition": {
