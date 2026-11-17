@@ -65,10 +65,14 @@ Sama treść SKILL.md niczego nie dowodzi.
    - **kontrakt wyjścia sprawdzalny maszynowo:** stały znacznik w pierwszej linii i stałe pola (np. `Werdykt: …`),
      żeby następny krok sprawdził je skryptem, a nie zakładał, że model trzymał się formatu.
 6. **Opis i wyszukiwanie:**
-   - `description` ≤170 znaków jako **reguła wyboru**: „Użyj, gdy/przy <sytuacja> — <kluczowe pojęcia>.”, bez „: ”
-     (psuje YAML). Tylko to model widzi na starcie; pole `metadata` Claude Code pomija. Nie „Pomaga z dokumentami”.
-   - `metadata.catalog`: pełny opis z granicami („Nie do … (skill)”).
-   - `metadata.keywords`: słowa, którymi ludzie opisują problem. Indeksuje je hook `skill_hint`.
+   - Treść skilla (opis, katalog, instrukcje, references) piszesz **po angielsku**; człowiekowi model odpowiada w jego
+     języku. Bramka rozpoznaje język treści sama (krok 5: polska treść przechodzi przez linter polszczyzny).
+   - `description` ≤170 znaków jako **reguła wyboru**: „Use when/for <sytuacja> — <kluczowe pojęcia>.”, bez „: ”
+     (psuje YAML). Tylko to model widzi na starcie; pole `metadata` Claude Code pomija. Nie „Helps with documents”.
+   - `metadata.catalog`: pełny opis z granicami („Not for … (skill)”; dawne „Nie do …” też działa).
+   - `metadata.keywords`: słowa, którymi ludzie opisują problem — **po polsku i po angielsku** (wyrażenia z pytań, nie
+     z treści skilla). Indeksuje je hook `skill_hint` bez modelu: polskie pytanie trafia w angielski skill tylko przez
+     polskie słowa kluczowe, więc po przetłumaczeniu treści bramka (krok 3) i scenariusze holdout pokażą, czego brakuje.
    - Pola `paths` nie używasz: z nim skill wczytuje się automatycznie tylko przy pasujących plikach, a pytanie
      projektowe pada zwykle, zanim pliki istnieją. `when_to_use` dokleja się do opisu na liście skilli i zjada
      budżet opisów — granice piszesz w `metadata.catalog`.
@@ -153,7 +157,7 @@ Sama treść SKILL.md niczego nie dowodzi.
 
 ## Checklista
 - [ ] luka zmierzona bez skilla; scenariusze (2× trigger, 1× no-trigger z sąsiadem) napisane przed treścią
-- [ ] description jako reguła wyboru „Użyj, gdy/przy …” (≤170 znaków), katalog z granicami, `metadata.keywords`, bez `paths`
+- [ ] treść po angielsku, description jako reguła wyboru „Use when/for …” (≤170 znaków), katalog z granicami, `metadata.keywords` PL+EN, bez `paths`
 - [ ] jedno zadanie; sekcja `## Przykład`; skrypty dla operacji deterministycznych; sieć zadeklarowana
 - [ ] SKILL.md zwięzły, `references/` jeden poziom od SKILL.md ze spisem treści, źródła z datą, `metadata.review`
 - [ ] skill procesowy: warunek wstępny pliku, raport ze statusami faz, bez łańcuchowania; w CI bez pytań, z linią werdyktu

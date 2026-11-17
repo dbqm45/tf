@@ -831,22 +831,32 @@ def reference_files() -> list[Path]:
     return sorted(p for p in SKILLS_DIR.glob("*/references/**/*.md") if p.is_file())
 
 
+BOUNDARY = re.compile(r" (Nie do|Not for) ")   # granice skilla w opisie i katalogu (dawniej tylko po polsku)
+
+
+def boundary(text: str) -> tuple[str, str, str]:
+    """(część przed granicą, „ Not for ”/„ Nie do ”, granice) — jak str.partition, dla obu języków."""
+    m = BOUNDARY.search(text)
+    return (text[:m.start()], m.group(0), text[m.end():]) if m else (text, "", "")
+
+
 def render_catalog() -> str:
     """Zwięzły katalog skilli, person i agentów — czyta go dyspozytor (core-problem-routing), zamiast wszystkich skilli."""
     cfg = load_config()
     roles, personas, _traits, skills, _errors = load_team(cfg)
     def short(d: str) -> str:
-        d = re.sub(r"^Użyj( zawsze)?,?\s*(przy|gdy|by|do|w)?\s*", "", d.strip())
-        head, _, tail = d.strip().rstrip(".").partition(" Nie do ")
+        d = re.sub(r"^(Użyj( zawsze)?,?\s*(przy|gdy|by|do|w)?|Use( always)?,?\s*(when|for|at|in|before|after|on)?)\s*", "",
+                   d.strip())
+        head, sep, tail = boundary(d.strip().rstrip("."))
         cut = lambda s, n: s if len(s) <= n else s[:n].rsplit(" ", 1)[0] + "…"
-        return cut(head, 200) + (f" Nie do {cut(tail, 110)}" if tail else "")
+        return cut(head, 200) + (f"{sep}{cut(tail, 110)}" if tail else "")
     def entry(s: dict) -> str:
         """Krótki opis (co i kiedy) + granice „Nie do …” z metadata.catalog."""
         katalog = (s.get("metadata") or {}).get("catalog", "")
-        tail = katalog.rstrip(".").partition(" Nie do ")[2]
+        _, sep, tail = boundary(katalog.rstrip("."))
         if not tail:
             return short(s.get("description", ""))
-        return s.get("description", "").rstrip(".") + ". Nie do " + (tail if len(tail) <= 110 else tail[:110].rsplit(" ", 1)[0] + "…")
+        return s.get("description", "").rstrip(".") + "." + sep + (tail if len(tail) <= 110 else tail[:110].rsplit(" ", 1)[0] + "…")
     lines = ["# Katalog zespołu (generowany przez .tf/factory/build.py — nie edytuj)", "",
              "Do doboru skilli i person do problemu (skill core-problem-routing). Skill wczytujesz narzędziem Skill po nazwie.", ""]
     installed = cfg.get("_packs") or {}
@@ -1036,15 +1046,15 @@ def validate() -> tuple[list[str], list[str]]:
         elif len(d) > lim["skill_description_max_chars"]:
             errors.append(f"skill {name}: description ma {len(d)} znaków (> {lim['skill_description_max_chars']}) — "
                           "krótko co i kiedy; granice („Nie do …”) w metadata.catalog")
-        if d and not re.search(r"\b(Użyj|użyj|gdy|kiedy|przy\s)", d):
-            warnings.append(f"skill {name}: description nie jest regułą wyboru — zacznij od „Użyj, gdy/przy …”; Claude Code "
+        if d and not re.search(r"\b(Użyj|użyj|gdy|kiedy|przy\s|Use|use|when|whenever)\b", d):
+            warnings.append(f"skill {name}: description nie jest regułą wyboru — zacznij od „Use when/for …”; Claude Code "
                             "pokazuje modelowi tylko description (pole metadata pomija)")
         e, w = check_review_date(name, s.get("metadata") or {})
         errors += e
         warnings += w
         if not katalog:
             warnings.append(f"skill {name}: brak metadata.catalog (pełny opis z granicami dla katalogu dyspozytora)")
-        elif "nie" not in katalog.lower():
+        elif not re.search(r"\b(nie|not)\b", katalog.lower()):
             warnings.append(f"skill {name}: metadata.catalog nie określa granic (czego skill NIE obejmuje)")
         if not s.get("disable-model-invocation"):
             listing[name] = len(name) + len(d) + 4
@@ -1346,7 +1356,7 @@ def cmd_new_skill(name: str, description: str, role: str | None = None, name_onl
         return 2
     tpl = (FACTORY / "templates" / "SKILL.template.md").read_text(encoding="utf-8")
     (d / "references").mkdir(parents=True)
-    short = description.split(" Nie do ")[0].strip()[:170].replace(": ", " — ")   # do skrócenia przez autora
+    short = boundary(description)[0].strip()[:170].replace(": ", " — ")   # do skrócenia przez autora
     body = (tpl.replace("{{name}}", name).replace("{{short}}", short)
             .replace("{{description}}", description.replace('"', "'")))
     facet = facet_of(name, cfg)

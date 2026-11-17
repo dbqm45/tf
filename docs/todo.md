@@ -632,8 +632,27 @@ treści (angielska), bez równoległej polskiej.
   nagłówki rekonstrukcji).
 - [x] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”, #290):
   stała reguła rozmowy, język commitów z `git log`, bez `tf language`, `tf commit-language` i `--language`.
-- [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty po angielsku; język
-  odpowiedzi wynika z rozmowy (punkt wyżej), nie z ustawienia.
+- [ ] Etap 4 — tłumaczenie treści: skille, persony, prompty, komunikaty po angielsku; język odpowiedzi wynika z rozmowy.
+  Decyzje właściciela (2026-11-17): słowa kluczowe skilli PL+EN (podpowiedź bez modelu), tłumaczenie etapami w sesji
+  (bez równoległych wykonawców). Metoda na partię: treść, description i catalog po angielsku (`Use when/for …`,
+  `Not for …`), `keywords` po polsku i angielsku (wyrażenia z pytań), bramka (`skill_gate.py`: krok 3 trafność, krok 5
+  rozpoznaje język), pomiar `tools/hint_holdout.py` przed i po partii. Punkt odniesienia (all, 2026-11-17): strojenie
+  902/918, holdout 29/43.
+  Skuteczność fabryki nie może spaść (właściciel, 2026-11-17). Każda partia przechodzi, zanim trafi do PR:
+  1. `tools/translation_check.py <pliki>` — te same bloki kodu, `…`, liczby, odnośniki i struktura co przed
+     tłumaczeniem (różnica = zgubiony albo dopisany fakt; zmiana treści to osobny commit, nie tłumaczenie);
+  2. podpowiedzi: `hint_holdout.py` — strojenie i holdout nie niżej niż przed partią; bramka każdego skilla;
+  3. model (zgoda właściciela: próbka z partii, Haiku, ~2 USD): 3–5 skilli o największym ruchu, scenariusze przed
+     i po tłumaczeniu (`run_skill_evals.py --models haiku`); spadek → poprawka przed PR;
+  4. pełna macierz `workspace.py check` w CI.
+  - [x] 4a — fabryka gotowa na angielską treść (reguły wyboru i granic w obu językach w `build.py`, `skill_audit`,
+    `skill_hint`; język treści w bramce), pilot `core-stack-sync`, narzędzie `hint_holdout.py`.
+  - [ ] 4b — rdzeń: pozostałe skille `core-*` i `tf`, cechy, `config.yaml` (prompty, notatki), przewodniki.
+  - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
+  - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
+    `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
+  - [ ] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku).
+  - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:
 - skille (`SKILL.md`, `references/`) rdzenia i wszystkich nakładek;

@@ -1,63 +1,66 @@
 ---
 name: core-stack-sync
-description: Użyj na starcie pracy i przy niezgodności wersji — stack projektu i dopasowanie skilli, bez podnoszenia.
+description: Use at the start of work and on a version mismatch — the project stack and matching skills to it, without upgrading.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj na początku pracy w istniejącym projekcie i gdy hook zgłosi niezgodność wersji — odczytanie stacku (package.json, lockfile, pom.xml, build.gradle), porównanie z wersjami, na których oparte są skille, i aktualizacja skilli (nie projektu) do wersji z projektu. Nie do podnoszenia zależności projektu (to osobne zadanie na prośbę użytkownika)."
-  keywords: "podnieść wersję, kompatybilność wersji, na jakich wersjach polegać, zakres obsługiwanych wersji, peerDependencies, jakie wersje mamy w projekcie, niezgodność wersji"
+  catalog: "Use at the start of work in an existing project and when a hook reports a version mismatch — reading the stack (package.json, lockfile, pom.xml, build.gradle), comparing it with the versions the skills are based on, and updating the skills (not the project) to the project's versions. Not for upgrading the project's dependencies (a separate task, only on the user's request)."
+  keywords: "podnieść wersję, kompatybilność wersji, na jakich wersjach polegać, zakres obsługiwanych wersji, peerDependencies, jakie wersje mamy w projekcie, niezgodność wersji, prawdziwy stack projektu, ustalić wersje w projekcie, starsza wersja frameworka w projekcie, moja wiedza dotyczy nowszych wersji, API niedostępne w wersji projektu, version mismatch, which versions to rely on, supported version range, project stack, older framework version"
 ---
 
-# Synchronizacja skilli ze stackiem projektu
+# Syncing skills with the project stack
 
-Skille technologiczne (`lang-*`, `fw-*`, `tool-*`) opisują konkretny zakres wersji zapisany w `skill.meta.json`
-(`min_supported` … `based_on`). Projekt może być nowszy albo starszy — wtedy skill trzeba zaktualizować
-albo stosować go ostrożnie.
+Technology skills (`lang-*`, `fw-*`, `tool-*`) describe a specific version range recorded in `skill.meta.json`
+(`min_supported` … `based_on`). The project can be newer or older — then the skill has to be updated or applied with
+care.
 
-## 1. Odczytaj stack
+## 1. Read the stack
 ```bash
-python3 .claude/hooks/detect_stack.py            # raport tekstowy
-python3 .claude/hooks/detect_stack.py --json     # dla dalszego przetwarzania
-python3 .claude/hooks/detect_stack.py --latest   # + najnowsze wersje z rejestru npm
+python3 .claude/hooks/detect_stack.py            # text report
+python3 .claude/hooks/detect_stack.py --json     # for further processing
+python3 .claude/hooks/detect_stack.py --latest   # + latest versions from the npm registry
 ```
-Kolejność źródeł wersji: zainstalowana (`node_modules`) → lockfile → zakres w `package.json`; Java: `pom.xml`,
-`build.gradle(.kts)`, `.java-version`. Hook `SessionStart` robi to automatycznie i odzywa się tylko wtedy, gdy jest coś do zrobienia.
-Monorepo (Nx, workspaces): wersje z głównego `package.json`; gdy projekty mają własne `package.json`, uruchom skrypt dla każdego.
+Order of version sources: installed (`node_modules`) → lockfile → range in `package.json`; Java: `pom.xml`,
+`build.gradle(.kts)`, `.java-version`. The `SessionStart` hook does this automatically and speaks only when there is
+something to do. Monorepo (Nx, workspaces): versions from the root `package.json`; when projects have their own
+`package.json`, run the script for each.
 
-## 2. Zdecyduj według statusu
-| Status | Znaczenie | Co robisz |
+## 2. Decide by status
+| Status | Meaning | What you do |
 |---|---|---|
-| `OK` | wersja projektu w zakresie skilla | pracujesz; z sekcji „Zależne od wersji” bierzesz tylko to, co dostępne w wersji projektu |
-| `SKILL_OUTDATED` | projekt nowszy niż `based_on` | **aktualizujesz skill** (krok 3), zanim na nim oprzesz decyzje |
-| `PROJECT_OLDER` | projekt starszy niż `min_supported` | **nie cofasz skilla**; dopisujesz do „Zależne od wersji” wiersze dla wersji projektu (co jest niedostępne i czym to zastąpić) i stosujesz tylko te funkcje |
-| `MISSING_SKILL` | technologia bez skilla | proponujesz utworzenie: `python3 .tf/factory/build.py new-skill fw-<technologia> "…"` (dostaje tabelę słownika) i wypełnienie wg kroku 3 |
-| ograniczenie ✗ | np. Angular 22 wymaga TypeScript 6.0.x | nie zalecasz wersji spoza zakresu (np. TS 7 w projekcie z Angularem 22); zgłaszasz niezgodność użytkownikowi |
+| `OK` | the project version is within the skill's range | you work; from the "Version-dependent" section you take only what the project's version has |
+| `SKILL_OUTDATED` | the project is newer than `based_on` | **you update the skill** (step 3) before basing decisions on it |
+| `PROJECT_OLDER` | the project is older than `min_supported` | **you do not roll the skill back**; you add rows to "Version-dependent" for the project's version (what is unavailable and what replaces it) and use only those features |
+| `MISSING_SKILL` | a technology without a skill | you propose creating it: `python3 .tf/factory/build.py new-skill fw-<technology> "…"` (it gets the vocabulary table) and filling it per step 3 |
+| constraint ✗ | e.g. Angular 22 requires TypeScript 6.0.x | you do not recommend versions outside the range (e.g. TS 7 in a project with Angular 22); you report the mismatch to the user |
 
-## 3. Aktualizacja skilla (dla każdego `SKILL_OUTDATED`)
-1. **Źródła pierwotne** z `skill.meta.json → sources` + informacje o wydaniach każdej wersji głównej między `based_on`
-   a wersją projektu (release notes, oficjalny blog, przewodnik aktualizacji). Blogi osób trzecich tylko pomocniczo.
-2. **Zbierz zmiany istotne dla skilla:** nowe stabilne API, zmienione wartości domyślne, wycofane (deprecated) i usunięte
-   elementy, nowe wymagania (wersje języka, Node, JDK), zmiany idiomów. Pomiń rzeczy eksperymentalne albo oznacz je wprost.
-3. **Edytuj SKILL.md:**
-   - „Konwencje / Zasady” — nowe domyślne podejście (np. nowy sposób na formularze, domyślna strategia detekcji zmian);
-   - „Pojęcia domenowe w …” — tylko gdy zmienił się idiom dla pojęcia ze słownika;
-   - „Zależne od wersji” — dopisz wiersze dla nowych wersji (co od której wersji, co wycofane, czym zastąpić).
-     Treść ogólna ma pozostać prawdziwa dla całego zakresu `min_supported … based_on`.
-4. **Zaktualizuj przykłady w `references/`** i — jeśli to możliwe — zweryfikuj je kompilatorem/testami tej wersji
-   w katalogu tymczasowym (np. `npm i` konkretnych wersji w scratchpadzie, nie w projekcie użytkownika).
-5. **Zaktualizuj `skill.meta.json`:** `based_on`, ewentualnie `min_supported`, `verified` (data), `verified_with`, `constraints`
-   (np. w pack-it `"22": {"lang-typescript": ">=6.0 <6.1"}`), `sources`.
-6. **Sprawdź skille powiązane** — ograniczenia (`constraints`) i zależności (`skill_requires` w `.tf/config/config.yaml`),
-   np. nowa wersja frameworka może wymagać aktualizacji skilla języka.
-7. `python3 .tf/factory/build.py check` → pokaż użytkownikowi diff → commit wg core-conventional-commits,
-   np. `docs(skills): update fw-angular to Angular 22` (skill z pack-it).
+## 3. Updating a skill (for each `SKILL_OUTDATED`)
+1. **Primary sources** from `skill.meta.json → sources` + release information for every major version between
+   `based_on` and the project's version (release notes, the official blog, the upgrade guide). Third-party blogs only
+   as support.
+2. **Collect the changes that matter to the skill:** new stable APIs, changed defaults, deprecated and removed elements,
+   new requirements (language, Node, JDK versions), changed idioms. Skip experimental things or mark them explicitly.
+3. **Edit SKILL.md:**
+   - "Conventions / Rules" — the new default approach (e.g. a new way to build forms, the default change-detection
+     strategy);
+   - "Domain concepts in …" — only when the idiom for a vocabulary concept changed;
+   - "Version-dependent" — add rows for the new versions (what from which version, what is deprecated, what replaces it).
+     The general content must stay true for the whole `min_supported … based_on` range.
+4. **Update the examples in `references/`** and — where possible — verify them with that version's compiler/tests in a
+   temporary directory (e.g. `npm i` of specific versions in a scratchpad, not in the user's project).
+5. **Update `skill.meta.json`:** `based_on`, possibly `min_supported`, `verified` (date), `verified_with`, `constraints`
+   (e.g. in pack-it `"22": {"lang-typescript": ">=6.0 <6.1"}`), `sources`.
+6. **Check related skills** — constraints (`constraints`) and dependencies (`skill_requires` in `.tf/config/config.yaml`),
+   e.g. a new framework version may require updating the language skill.
+7. `python3 .tf/factory/build.py check` → show the user the diff → commit per core-conventional-commits,
+   e.g. `docs(skills): update fw-angular to Angular 22` (a skill from pack-it).
 
-## Zasady
-- Skille są współdzielone między projektami: aktualizacja poszerza zakres (`based_on` w górę), a nie „przełącza” skill na
-  jeden projekt. Informacje dla starszych wersji zostają w „Zależne od wersji”.
-- **Nigdy nie podnoś zależności projektu** w ramach tej procedury. Aktualizacja projektu (`ng update`, `nx migrate`,
-  zmiana JDK) to osobne zadanie, wykonywane tylko na prośbę użytkownika.
-- Gdy nie masz dostępu do źródeł (brak sieci), zaznacz w raporcie, że skill nie został zweryfikowany dla danej wersji,
-  i pracuj ostrożnie, trzymając się funkcji wspólnych dla obu wersji.
-- Rejestr technologii do wykrywania: rejestr rdzenia `references/technologies.json` i rejestry nakładek
-  `.tf/factory/packs/<id>/technologies.json` (ten sam format); `detect_stack.py` czyta wszystkie. Własną technologię projektu
-  dopisz do rejestru rdzenia, żeby była raportowana.
+## Rules
+- Skills are shared between projects: an update widens the range (`based_on` up) rather than "switching" the skill to
+  one project. Information for older versions stays in "Version-dependent".
+- **Never upgrade the project's dependencies** as part of this procedure. Upgrading the project (`ng update`,
+  `nx migrate`, a JDK change) is a separate task, done only on the user's request.
+- When you have no access to sources (no network), state in the report that the skill was not verified for that
+  version, and work carefully, sticking to features shared by both versions.
+- Technology registry for detection: the core registry `references/technologies.json` and the pack registries
+  `.tf/factory/packs/<id>/technologies.json` (the same format); `detect_stack.py` reads all of them. Add your project's
+  own technology to the core registry so it is reported.

@@ -15,7 +15,7 @@ Sprawdzenia bezpłatne (kolejno, każde musi przejść):
   3. podpowiedź     — hook skill_hint wskazuje skill przy jego pytaniach, a przy pytaniu sąsiada nie stawia go na pierwszym miejscu;
   4. regresja       — testy ewaluacji fabryki: trafność podpowiedzi dla WSZYSTKICH skilli ≥80% i brak szumu
                       (nowy skill nie może „podkradać” pytań innym);
-  5. polszczyzna    — linter bez uwag wysokiej wagi w SKILL.md i references/;
+  5. język treści  — treść po polsku: linter bez uwag wysokiej wagi w SKILL.md i references/; po angielsku: pominięty;
   6. odwołania      — ścieżki i linki w skillu (tylko ostrzeżenia);
   7. audyt          — `skill_audit.py`: bezpieczeństwo (sieć bez deklaracji, curl | sh, wstrzyknięte polecenia,
                       dostęp do sekretów, eval, ukryte znaki, szerokie allowed-tools) i zalecenia Anthropic (opis
@@ -160,10 +160,25 @@ def check_regression() -> list[str]:
     return [] if r.returncode == 0 else [ln for ln in r.stdout.splitlines() if ln.startswith("✗")][:5] or [r.stdout[-500:]]
 
 
+PL_LETTERS = set("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ")
+
+
+def content_language(text: str) -> str:
+    """`pl` albo `en` po udziale polskich liter w treści skilla (bez nagłówka YAML, bloków i fragmentów kodu) — tekst
+    po polsku ma ich ~1,5–2% liter, angielski praktycznie zero (pojedyncze cytaty i nazwy nie przeważają)."""
+    body = re.sub(r"^---\n.*?\n---\n", "", text, count=1, flags=re.S)
+    body = re.sub(r"```.*?```|`[^`\n]*`", " ", body, flags=re.S)
+    letters = [c for c in body if c.isalpha()]
+    pl = sum(c in PL_LETTERS for c in letters)
+    return "pl" if letters and pl / len(letters) >= 0.004 else "en"
+
+
 def check_polish(name: str) -> tuple[list[str], list[str]]:
+    d = SKILLS / name
+    if content_language((d / "SKILL.md").read_text(encoding="utf-8", errors="replace")) == "en":
+        return [], []                      # treść po angielsku — linter polszczyzny nie dotyczy
     if not LINT.exists():
         return [], ["brak lintera polszczyzny — pominięto"]
-    d = SKILLS / name
     targets = [str(d / "SKILL.md")] + ([str(d / "references")] if (d / "references").is_dir() else [])
     r = subprocess.run([sys.executable, str(LINT), *targets], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     m = re.search(r"wysokich: (\d+)", r.stdout)
@@ -275,7 +290,7 @@ def gate(name: str, args) -> bool:
         step("3. podpowiedź (hook skill_hint)", he, hw, f"trafione {ratio}")
     step("4. regresja podpowiedzi wszystkich skilli", [] if args.fast else check_regression(),
          ["pominięto (--fast)"] if args.fast else [])
-    step("5. polszczyzna", *check_polish(name))
+    step("5. język treści", *check_polish(name))
     step("6. odwołania w skillu", [], check_refs(name))
     step("7. audyt bezpieczeństwa i zaleceń Anthropic", *check_audit(name))
 
