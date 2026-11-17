@@ -106,8 +106,19 @@ def main() -> int:
         check(len(uns) == 1 and "EUR" in uns[0]["text"] and uns[0]["at"] == "bad.md:6", f"R-7: twierdzenie bez dowodu: {uns}")
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--final", cwd=d)
         check(r.returncode == 0, f"R-8: --final na kompletnym raporcie: {r.stdout[-400:]}")
+        en = GOOD
+        for pl, eng in (("## Moduły", "## Modules"), ("## Domeny", "## Domains"), ("## Wymagania", "## Requirements"),
+                        ("## Reguły", "## Rules"), ("## Standardy", "## Standards"), ("## Ryzyka", "## Risks"),
+                        ("## Pytania", "## Questions"), ("## Czego nie sprawdzono", "## Not checked"),
+                        ("| Język |", "| Language |"), ("| Dane |", "| Data |"), ("| Testy |", "| Tests |"),
+                        ("| Konfiguracja |", "| Configuration |")):
+            en = en.replace(pl, eng)
+        (repo / "docs/project/00-reconstruction/report.md").write_text(en, encoding="utf-8")
+        r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--final", cwd=d)
+        check(r.returncode == 0, f"R-8b: --final na raporcie z angielskimi sekcjami (14.x): {r.stdout[-400:]}")
+        (repo / "docs/project/00-reconstruction/report.md").write_text(GOOD, encoding="utf-8")
         r = run("bad.md", "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 1 and "TL;DR" in r.stdout and "Czego nie sprawdzono" in r.stdout,
+        check(r.returncode == 1 and "TL;DR" in r.stdout and "Not checked" in r.stdout,
               f"R-9: --final wymienia brakujące sekcje: {r.stdout[-500:]}")
         r = run("docs/project/00-reconstruction", "--repo", str(repo), cwd=d)
         check(r.returncode == 0 and "Dowody: 8," in r.stdout, f"R-10: katalog raportu: {r.stdout[-300:]}")
@@ -123,7 +134,7 @@ def main() -> int:
             "| Testy | brak testów [niezweryfikowane] | — |\n", "")
         write(rep, {"report.md": no_ci})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 1 and "stack: brak wierszy: Testy, CI" in r.stdout, f"R-12: brak wierszy stacku: {r.stdout[-500:]}")
+        check(r.returncode == 1 and "stack: brak wierszy: Tests, CI" in r.stdout, f"R-12: brak wierszy stacku: {r.stdout[-500:]}")
         write(rep, {"report.md": GOOD.replace("| Konfiguracja | stała w kodzie | `src/billing/tax.py:1` |",
                                               "| Konfiguracja | stała w kodzie | — |")})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
@@ -133,7 +144,7 @@ def main() -> int:
         write(rep, {"report.md": GOOD})
         card(rep, "customers", {"module": "customers"})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 1 and "moduły bez wpisu w sekcji Moduły: customers" in r.stdout,
+        check(r.returncode == 1 and "moduły bez wpisu w sekcji Modules: customers" in r.stdout,
               f"R-14: moduł z karty nieopisany w raporcie: {r.stdout[-500:]}")
         write(rep, {"report.md": no_ci})
         r = run(str(rep / "report.md"), "--repo", str(repo), cwd=d)

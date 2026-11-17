@@ -17,10 +17,10 @@ claude -p "<polecenie>" --allowedTools "<lista>" --permission-mode acceptEdits -
 
 ## Linie werdyktu (po każdej bramce)
 ```text
-BRAMKA testy-z-planu: PASS
-BRAMKA celowe-zepsucie: PASS (test czerwony na zepsutym kodzie, plik przywrócony)
-BRAMKA lint: FAIL (2 błędy w src/limits.ts, próba 1/2)
-BRAMKA lint: PASS
+GATE testy-z-planu: PASS
+GATE celowe-zepsucie: PASS (test czerwony na zepsutym kodzie, plik przywrócony)
+GATE lint: FAIL (2 błędy w src/limits.ts, attempt 1/2)
+GATE lint: PASS
 DIRTY (nie dodane): .env.local, notes.md
 ADAPT: plan wskazuje src/limits.ts, plik jest w src/limits/index.ts
 COMMIT faza 2: a1b2c3d

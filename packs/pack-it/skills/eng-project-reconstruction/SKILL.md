@@ -106,7 +106,7 @@ czytasz sam, skanów i kopii nie robisz ręcznie.
   tylko, żeby sprawdzić konkretny dowód (fragment pliku, nie cały plik).
 - **Dowód albo oznaczenie** — bez wyjątków; cytat przy dowodzie musi się zgadzać z kodem (sprawdza `recon_check`).
 - **Czego nie widać, to nie istnieje w raporcie:** DI, refleksja, kolejki, wywołania HTTP między usługami, konfiguracja
-  zewnętrzna → „Czego nie sprawdzono” i pytania do ludzi.
+  zewnętrzna → „Not checked” i pytania do ludzi.
 - **Bez sieci i bez uruchamiania kodu** repozytorium; sekretów z plików nie cytujesz (core-agent-security).
 - **Budżet to STOP:** po partii, która go przekracza, zatrzymujesz się z raportem częściowym i planem dalszych partii.
 

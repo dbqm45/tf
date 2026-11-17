@@ -1,15 +1,15 @@
 # Szablon raportu rekonstrukcji (`docs/project/00-reconstruction/report.md`)
 
 Sekcje w tej kolejności (sprawdza je `recon_check.py --final`). Każde wypunktowanie: dowód `plik:linia` albo
-oznaczenie [założenie] / [niezweryfikowane] / [pytanie]. W „Pytaniach” i „Czego nie sprawdzono” dowód nie jest wymagany.
+oznaczenie [założenie] / [niezweryfikowane] / [pytanie]. W „Questions” i „Not checked” dowód nie jest wymagany.
 
 `--final` sprawdza też:
-- **Stack** jako tabelę z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja. Wiersz bez dowodu ma
+- **Stack** jako tabelę z wierszami Language, Framework, Data, Build, Tests, CI, Configuration. Wiersz bez dowodu ma
   oznaczenie, np. „CI: [niezweryfikowane] brak plików pipeline'u w repo”. Rozjazd wersji (CI kontra plik budowania,
-  obraz kontra SDK) wpisujesz w wierszu i powtarzasz w Ryzykach.
+  obraz kontra SDK) wpisujesz w wierszu i powtarzasz w Risks.
 - **CI**: gdy w repo są pliki pipeline'u (`.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile` i podobne), wiersz CI
   wskazuje któryś z nich jako dowód. Sam „brak CI [niezweryfikowane]” wtedy nie przejdzie.
-- **Moduły**: każdy moduł z kart `modules/*.json` ma wpis i aktualny `modules/<moduł>.md` z `recon_cards.py`. Sekcję
+- **Modules**: każdy moduł z kart `modules/*.json` ma wpis i aktualny `modules/<moduł>.md` z `recon_cards.py`. Sekcję
   wstawia `recon_cards.py modules/ --into report.md`: cel, dowód, kluczowe elementy (wejścia, pojęcia, tabele)
   i odnośnik. Duży moduł dzielą partie (karta na pakiet albo projekt), więc poziom niżej widać bez dopisywania.
 
@@ -23,37 +23,37 @@ Commit: <sha> · data: RRRR-MM-DD · zakres: <całość | katalogi> · koszt prz
 ## Stack
 | Obszar | Ustalenie (z wersją) | Dowód |
 |---|---|---|
-| Język | <język i wersja; rozjazdy, np. CI ≠ plik budowania> | `<plik budowania>:<linia>` |
+| Language | <język i wersja; rozjazdy, np. CI ≠ plik budowania> | `<plik budowania>:<linia>` |
 | Framework | <framework i wersja, główne biblioteki> | `<plik>:<linia>` |
-| Dane | <baza, ORM, migracje, wersje> | `<plik>:<linia>` |
+| Data | <baza, ORM, migracje, wersje> | `<plik>:<linia>` |
 | Build | <narzędzie i wersja, wrapper> | `<plik>:<linia>` |
-| Testy | <framework, kontenery testowe, pokrycie (np. JaCoCo)> | `<plik>:<linia>` |
+| Tests | <framework, kontenery testowe, pokrycie (np. JaCoCo)> | `<plik>:<linia>` |
 | CI | <system, wersje środowiska, kroki> | `<plik>:<linia>` |
-| Konfiguracja | <profile, ustawienia ze skutkiem (np. ddl-auto), zmienne środowiska> | `<plik>:<linia>` |
+| Configuration | <profile, ustawienia ze skutkiem (np. ddl-auto), zmienne środowiska> | `<plik>:<linia>` |
 | Wdrożenie | <obraz, manifesty; opcjonalnie> | `<plik>:<linia>` |
 
-## Moduły
-- <moduł>: <odpowiedzialność jednym zdaniem> — `<plik>:<linia>` · kluczowe: <wejścia, pojęcia, tabele> (szczegóły: modules/<moduł>.md)
+## Modules
+- <moduł>: <odpowiedzialność jednym zdaniem> — `<plik>:<linia>` · key: <wejścia, pojęcia, tabele> (szczegóły: modules/<moduł>.md)
   - <pakiet lub projekt poziom niżej>: <odpowiedzialność> — `<plik>:<linia>`
 
-## Domeny
+## Domains
 - <subdomena> (core | supporting | generic): <po co> — `<plik>:<linia>`; słownik: domain.md
 
-## Wymagania
-- <wymaganie językiem biznesu> — `<test lub kod>:<linia>` (pewność: test | kod | do potwierdzenia)
+## Requirements
+- <wymaganie językiem biznesu> — `<test lub kod>:<linia>` (confidence: test | kod | do potwierdzenia)
 
-## Reguły
+## Rules
 - <reguła biznesowa> — `<plik>:<linia>` "<cytat z linii>" (pewność)
 
-## Standardy
+## Standards
 - <obszar>: <reguła> — <udział>% (`standards/<obszar>.md`), wyjątki: <ile>
 
-## Ryzyka
+## Risks
 - <ryzyko> — `<plik>:<linia>` (hotspot, cykl, brak testów, sekret w konfiguracji…)
 
-## Pytania
+## Questions
 - [pytanie] <do kogo> — <pytanie>
 
-## Czego nie sprawdzono
+## Not checked
 - <obszar> — dlaczego (DI, refleksja, kolejki, HTTP między usługami, konfiguracja zewnętrzna, poza zakresem)
 ```

@@ -8,7 +8,7 @@ dokumentacji, nie tylko do JSON. Pierwsza linia .md to skrót treści karty — 
   python3 recon_cards.py docs/project/00-reconstruction/modules --summary  # + propozycja sekcji „Moduły” raportu
   python3 recon_cards.py <modules/> --repo <repo>   # dowody ze ścieżką względną wobec partii → ścieżka od korzenia
   python3 recon_cards.py <modules/> --rules         # + rules.md obok modules/: reguły z kart pogrupowane po module
-  python3 recon_cards.py <modules/> --into report.md   # sekcja „## Moduły” raportu = wpisy z kart (reszta bez zmian)
+  python3 recon_cards.py <modules/> --into report.md   # sekcja „## Modules” raportu = wpisy z kart (reszta bez zmian)
   python3 recon_cards.py <modules/> --prev raw/cards-prev   # po odświeżeniu: miejsca, które mogą opisywać stan sprzed zmiany
 
 --prev paruje reguły starej i nowej karty: ten sam plik dowodu i podobny tekst (wspólne rdzenie słów). Reguła bez pary
@@ -184,12 +184,12 @@ def rule_line(i: dict, fix) -> str:
     line = f"- {i.get('rule', '?')} {ev(i, fix)}"
     if i.get("evidence") and i.get("quote"):
         line += f" {quote(str(i['quote']))}"
-    return line + (f" (pewność: {i['confidence']})" if i.get("confidence") else "")
+    return line + (f" (confidence: {i['confidence']})" if i.get("confidence") else "")
 
 
 def render(stem: str, card: dict, digest: str, repo: str | None = None) -> str:
     fix = resolver(repo, str(card.get("batch") or ""))
-    out = [f"<!-- karta: modules/{stem}.json sha256:{digest} -->", f"# {card.get('module') or stem}", ""]
+    out = [f"<!-- card: modules/{stem}.json sha256:{digest} -->", f"# {card.get('module') or stem}", ""]
     if card.get("purpose"):
         out += [str(card["purpose"]), ""]
 
@@ -198,22 +198,22 @@ def render(stem: str, card: dict, digest: str, repo: str | None = None) -> str:
         if rows:
             out.extend([f"## {title}", *rows, ""])
 
-    section("Wejścia", card.get("entry_points"), lambda i: f"- {i.get('what', '?')} {ev(i, fix)}")
-    section("Zależności", card.get("depends_on"), lambda i: f"- {i.get('module', '?')} {ev(i, fix)}")
-    section("Dane", card.get("data"), lambda i: f"- {i.get('table', '?')} ({i.get('access', '?')}) {ev(i, fix)}")
+    section("Entry points", card.get("entry_points"), lambda i: f"- {i.get('what', '?')} {ev(i, fix)}")
+    section("Dependencies", card.get("depends_on"), lambda i: f"- {i.get('module', '?')} {ev(i, fix)}")
+    section("Data", card.get("data"), lambda i: f"- {i.get('table', '?')} ({i.get('access', '?')}) {ev(i, fix)}")
 
-    section("Reguły", card.get("rules"), lambda i: rule_line(i, fix))
-    section("Pojęcia", card.get("terms"), lambda i: f"- {i.get('term', '?')} → {i.get('code_name', '?')} {ev(i, fix)}")
-    section("Odstępstwa", card.get("deviations"), lambda i: f"- {i.get('what', '?')} {ev(i, fix)}")
+    section("Rules", card.get("rules"), lambda i: rule_line(i, fix))
+    section("Terms", card.get("terms"), lambda i: f"- {i.get('term', '?')} → {i.get('code_name', '?')} {ev(i, fix)}")
+    section("Deviations", card.get("deviations"), lambda i: f"- {i.get('what', '?')} {ev(i, fix)}")
     unknowns = [f"- [niezweryfikowane] {REF_IN_TEXT.sub(lambda m: fix(m.group(1)), str(u))}"
                 for u in card.get("unknowns") or [] if str(u).strip()]
     if unknowns:
-        out.extend(["## Niewiadome", *unknowns, ""])
+        out.extend(["## Unknowns", *unknowns, ""])
     return "\n".join(out).rstrip() + "\n"
 
 
 def summary(stem: str, card: dict, repo: str | None = None) -> str:
-    """Wpis do sekcji „Moduły” raportu: cel, pierwszy dowód, do 4 kluczowych elementów, odnośnik do .md."""
+    """Wpis do sekcji „Modules” raportu: cel, pierwszy dowód, do 4 kluczowych elementów, odnośnik do .md."""
     first = next((i for k in ("entry_points", "rules", "terms", "depends_on", "data", "deviations")
                   for i in card.get(k) or [] if isinstance(i, dict) and i.get("evidence")), None)
     keys = ([i.get("what") for i in card.get("entry_points") or [] if isinstance(i, dict)][:3]
@@ -223,28 +223,28 @@ def summary(stem: str, card: dict, repo: str | None = None) -> str:
     fix = resolver(repo, str(card.get("batch") or ""))
     line = f"- {card.get('module') or stem}: {card.get('purpose') or '?'} {ev(first, fix) if first else NO_EVIDENCE}"
     if keys:
-        line += f" · kluczowe: {', '.join(keys)}"
-    return line + f" (szczegóły: modules/{stem}.md)"
+        line += f" · key: {', '.join(keys)}"
+    return line + f" (details: modules/{stem}.md)"
 
 
 def inject(report: str, lines: list[str]) -> int:
-    """Podmienia treść sekcji „## Moduły” w raporcie na wpisy z kart; zwraca 1, gdy raportu albo sekcji brak."""
+    """Podmienia treść sekcji „## Modules” w raporcie na wpisy z kart; zwraca 1, gdy raportu albo sekcji brak."""
     try:
         with open(report, encoding="utf-8") as fh:
             text = fh.read()
     except OSError:
         print(f"✗ {report}: brak pliku raportu")
         return 1
-    m = re.search(r"^## Moduły[^\n]*\n", text, re.M)
+    m = re.search(r"^## (?:Modules|Moduły)[^\n]*\n", text, re.M)
     if not m:
-        print(f"✗ {report}: brak sekcji „## Moduły”")
+        print(f"✗ {report}: brak sekcji „## Modules”")
         return 1
     nxt = re.search(r"^#{1,2} ", text[m.end():], re.M)
     end = m.end() + nxt.start() if nxt else len(text)
     body = "\n".join(lines) + "\n" + ("\n" if nxt else "")
     with open(report, "w", encoding="utf-8") as fh:
         fh.write(text[:m.end()] + body + text[end:])
-    print(f"✓ {report}: sekcja Moduły — {len(lines)} wpisów z kart")
+    print(f"✓ {report}: sekcja Modules — {len(lines)} wpisów z kart")
     return 0
 
 
@@ -295,17 +295,17 @@ def main(argv: list[str]) -> int:
         fix = resolver(repo, str(card.get("batch") or ""))
         items = [rule_line(i, fix) for i in card.get("rules") or [] if isinstance(i, dict)]
         if items:
-            rules += ["", f"## {card.get('module') or stem} (szczegóły: modules/{stem}.md)", *items]
+            rules += ["", f"## {card.get('module') or stem} (details: modules/{stem}.md)", *items]
     print(f"{'✓' if rc == 0 else '✗'} karty → .md: {len(lines)}, zapisane od nowa: {written}")
     if "--rules" in argv:
-        head = ["# Reguły z kart modułów",
+        head = ["# Rules from module cards",
                 "Złożone skryptem z `modules/*.json`; reguły przekrojowe i mapowania dopisuje synteza poniżej."]
         path = os.path.join(os.path.dirname(os.path.abspath(d)), "rules.md")
         keep = ""
         try:
             with open(path, encoding="utf-8") as fh:
                 old = fh.read()
-            m = re.search(r"^## Reguły przekrojowe", old, re.M)   # sekcja syntezy zostaje przy ponownym składaniu
+            m = re.search(r"^## (?:Cross-cutting rules|Reguły przekrojowe)", old, re.M)   # sekcja syntezy zostaje przy ponownym składaniu
             keep = "\n" + old[m.start():] if m else ""
         except OSError:
             pass
@@ -319,7 +319,7 @@ def main(argv: list[str]) -> int:
         for path, n, tok, line in hits:
             print(f"  {path}:{n} [{tok}] {line[:160]}")
     if "--summary" in argv:
-        print("\n## Moduły (propozycja do raportu)")
+        print("\n## Modules (propozycja do raportu)")
         print("\n".join(lines))
     return rc
 

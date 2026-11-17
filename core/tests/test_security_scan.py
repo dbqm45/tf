@@ -151,7 +151,7 @@ def main() -> int:
               f"S-3: reguły OWASP, SARIF, bez metryk: {sem[:1]}")
         check((out / "semgrep.sarif").is_file() and (out / "verdict.json").is_file(), "S-4: SARIF i werdykt w katalogu wyniku")
         check(not [c for c in calls if c[0] in ("npm", "pip-audit")], f"S-5: bez zmiany manifestu nie ma audytu: {calls}")
-        check("SKAN: PASS" in r.stdout, f"S-6: linia werdyktu PASS: {r.stdout}")
+        check("SCAN: PASS" in r.stdout, f"S-6: linia werdyktu PASS: {r.stdout}")
 
         # S-19: stan semgrepa (ustawienia, log, pamięć wersji) w klonie, nie w $HOME — w sandboxie Bash kontenera
         # fazy HOME nie jest zapisywalny i semgrep kończy się FileNotFoundError przy mkdir (PRB-32, A6 2026-11-05)
@@ -236,7 +236,7 @@ def main() -> int:
         # S-16: brak skanera → FAIL z poleceniem instalacji, nigdy cichy PASS
         write(repo, "a.py")
         r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH=str(empty))
-        check(r.returncode == 1 and "semgrep" in r.stdout and "pipx install semgrep" in r.stdout and "SKAN: FAIL" in r.stdout,
+        check(r.returncode == 1 and "semgrep" in r.stdout and "pipx install semgrep" in r.stdout and "SCAN: FAIL" in r.stdout,
               f"S-16: brak semgrep: {r.returncode} {r.stdout} {r.stderr}")
         write(repo, "requirements.txt", "jinja2==3.1.4\n")
         r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH=str(fake_bin(tmp / "semonly", {"semgrep": FAKE_SEMGREP})))
@@ -245,7 +245,7 @@ def main() -> int:
 
         # S-18: błąd skanera (kod ≠ 0) → FAIL, nie PASS
         r = run("scan", "--out", str(out), cwd=repo, FAKE_EXIT="2")
-        check(r.returncode == 1 and "SKAN: FAIL" in r.stdout and "invalid configuration" in r.stdout,
+        check(r.returncode == 1 and "SCAN: FAIL" in r.stdout and "invalid configuration" in r.stdout,
               f"S-18: błąd semgrep to FAIL: {r.returncode} {r.stdout}")
         (repo / "a.py").unlink()
 
@@ -270,7 +270,7 @@ def main() -> int:
               f"N-3: werdykt mówi, że audyt pominięto (manifest bez zależności): {v.get('skipped')}")
         r = run("scan", "--out", str(nout), "--slice", "K1", "--attempt", "1", cwd=nd)
         summary = (nout / "attempt-1" / "summary.md").read_text(encoding="utf-8") if (nout / "attempt-1" / "summary.md").is_file() else ""
-        check(r.returncode == 0 and "BRAMKA K1: PASS" in r.stdout and "audyt zależności pominięty" in r.stdout.lower()
+        check(r.returncode == 0 and "GATE K1: PASS" in r.stdout and "audyt zależności pominięty" in r.stdout.lower()
               and "audyt zależności pominięty" in summary.lower() and "bez zależności" in summary,
               f"N-4: linia skanu i summary.md mówią o pominiętym audycie: {r.stdout} | {summary}")
         for section in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
@@ -318,7 +318,7 @@ def main() -> int:
         check(b0.get("file") == "app.py" and b0.get("line") == 2 and 89 in b0.get("cwe", []), f"V-4: reguła, plik, linia, CWE: {b0}")
         (vdir / "b.sarif").write_text(json.dumps(sarif([res("r.warn-other", "warning", tags=["CWE-1333"])])))
         r = run("verdict", str(vdir / "b.sarif"), cwd=repo)
-        check(r.returncode == 0 and "SKAN: PASS" in r.stdout and "r.warn-other" in r.stdout,
+        check(r.returncode == 0 and "SCAN: PASS" in r.stdout and "r.warn-other" in r.stdout,
               f"V-5: tylko poniżej progu → PASS z listą do raportu: {r.returncode} {r.stdout}")
         (vdir / "bad.sarif").write_text("nie json")
         r = run("verdict", str(vdir / "bad.sarif"), cwd=repo)
@@ -332,7 +332,7 @@ def main() -> int:
         out = repo / ".claude" / "runs" / "r2" / "security"
         r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "1", cwd=repo)
         fb = (out / "feedback.md").read_text(encoding="utf-8") if (out / "feedback.md").is_file() else ""
-        check(r.returncode == 1 and "BRAMKA K2: FAIL" in r.stdout and "próba 1/2" in r.stdout
+        check(r.returncode == 1 and "GATE K2: FAIL" in r.stdout and "attempt 1/2" in r.stdout
               and "fake.sql-injection src/orders.py:1" in r.stdout, f"L-1: FAIL próby 1 z regułą i miejscem: {r.stdout}")
         check("fake.sql-injection" in fb and "src/orders.py:1" in fb, f"L-2: ustalenie zapisane dla następnej próby: {fb}")
         check("STOP" not in r.stdout, f"L-3: po próbie 1 jeszcze bez STOP: {r.stdout}")
@@ -341,7 +341,7 @@ def main() -> int:
               f"L-4: FAIL próby 2 → blok STOP: {r.stdout}")
         write(repo, "src/orders.py", 'q = db.execute("SELECT * FROM o WHERE id=?", (user_id,))\n')
         r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "2", cwd=repo)
-        check(r.returncode == 0 and "BRAMKA K2: PASS" in r.stdout and "STOP" not in r.stdout,
+        check(r.returncode == 0 and "GATE K2: PASS" in r.stdout and "STOP" not in r.stdout,
               f"L-5: po poprawce PASS: {r.returncode} {r.stdout}")
         summary = (out / "attempt-2" / "summary.md").read_text(encoding="utf-8") if (out / "attempt-2" / "summary.md").is_file() else ""
         check(summary.startswith("## Bezpieczeństwo") and "PASS" in summary, f"L-6: summary.md do raportu przebiegu: {summary[:200]}")

@@ -10,7 +10,7 @@ i bez oznaczenia [założenie] / [niezweryfikowane] / [pytanie] są zgłaszane j
 --final sprawdza też:
 - tabelę w sekcji „Stack” z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja (każdy wiersz z dowodem
   albo oznaczeniem); gdy w repo są pliki pipeline'u (np. .github/workflows/), wiersz CI musi wskazać któryś z nich;
-- to, że sekcja „Moduły” wymienia każdy moduł z kart `modules/*.json` leżących obok raportu, a każda karta ma aktualny
+- to, że sekcja „Modules” wymienia każdy moduł z kart `modules/*.json` leżących obok raportu, a każda karta ma aktualny
   `modules/<karta>.md` z `recon_cards.py` (skrót treści karty w pierwszej linii).
 
 Dowód: `ścieżka:linia` albo `ścieżka:od-do`; cytat w "…" albo „…” w tym samym wierszu, po dowodzie.
@@ -28,14 +28,26 @@ import sys
 REF = re.compile(r"`?((?:[\w.@-]+/)*[\w.@-]+\.[A-Za-z0-9]+):(\d+)(?:-(\d+))?`?")
 QUOTE = re.compile(r"\"([^\"]{3,})\"|„([^”]{3,})”")
 MARK = re.compile(r"\[(założenie|niezweryfikowane|pytanie)[^\]]*\]", re.I)
-SECTIONS = ("TL;DR", "Stack", "Moduły", "Domeny", "Wymagania", "Reguły", "Standardy", "Ryzyka", "Pytania",
-            "Czego nie sprawdzono")
-NO_EVIDENCE_SECTIONS = ("Pytania", "Czego nie sprawdzono")   # tu wypunktowania z natury nie mają dowodu
-STACK_ROWS = ("Język", "Framework", "Dane", "Build", "Testy", "CI", "Konfiguracja")   # wymagane wiersze tabeli stacku
+SECTIONS = ("TL;DR", "Stack", "Modules", "Domains", "Requirements", "Rules", "Standards", "Risks", "Questions",
+            "Not checked")
+NO_EVIDENCE_SECTIONS = ("Questions", "Not checked")   # tu wypunktowania z natury nie mają dowodu
+STACK_ROWS = ("Language", "Framework", "Data", "Build", "Tests", "CI", "Configuration")   # wymagane wiersze tabeli stacku
+# Raporty sprzed 14.x: polskie nagłówki sekcji i wierszy stacku przyjmowane jako angielskie odpowiedniki.
+HEADING_ALIASES = {"Moduły": "Modules", "Domeny": "Domains", "Wymagania": "Requirements", "Reguły": "Rules",
+                   "Standardy": "Standards", "Ryzyka": "Risks", "Pytania": "Questions", "Czego nie sprawdzono": "Not checked"}
+ROW_ALIASES = {"język": "Language", "dane": "Data", "testy": "Tests", "konfiguracja": "Configuration"}
+
+
+def canon(heading: str) -> str:
+    """Nagłówek sekcji w postaci angielskiej (polski z raportu sprzed 14.x → odpowiednik)."""
+    for pl, en in HEADING_ALIASES.items():
+        if heading.startswith(pl):
+            return en + heading[len(pl):]
+    return heading
 CI_FILES = (".github/workflows/*.yml", ".github/workflows/*.yaml", ".gitlab-ci.yml", "Jenkinsfile",
             "azure-pipelines.yml", ".circleci/config.yml", "bitbucket-pipelines.yml", ".travis.yml", ".drone.yml",
             ".buildkite/pipeline.yml")
-CARD_MARK = re.compile(r"^<!-- karta: \S+ sha256:([0-9a-f]{12}) -->")
+CARD_MARK = re.compile(r"^<!-- (?:card|karta): \S+ sha256:([0-9a-f]{12}) -->")
 
 
 def norm(s: str) -> str:
@@ -61,7 +73,7 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
     for i, line in enumerate(lines, 1):
         h = re.match(r"^#{1,6}\s+(.*)", line)
         if h:
-            section = h.group(1).strip()
+            section = canon(h.group(1).strip())
             sections.append(section)
             continue
         found = [m for m in REF.finditer(line) if not re.match(r"https?$", m.group(1).split("/")[0])]
@@ -93,7 +105,7 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
         bullet = re.match(r"^\s*([-*]|\d+\.)\s+(.*)", line)
         if bullet and not found and not MARK.search(line) and not any(section.startswith(s) for s in NO_EVIDENCE_SECTIONS):
             unsupported.append({"at": f"{md}:{i}", "text": bullet.group(2).strip()})
-        if section.startswith("Moduły"):
+        if section.startswith("Modules"):
             modules_text.append(line)
         if section.startswith("Stack") and line.lstrip().startswith("|"):
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
@@ -103,7 +115,7 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
                     if row_at is not None:
                         unsupported[:] = [u for u in unsupported if u["at"] != row_at]
                 continue
-            stack_rows.append((cells[0], line))
+            stack_rows.append((ROW_ALIASES.get(cells[0].lower(), cells[0]), line))
             row_at = None
             if not found and not MARK.search(line):
                 row_at = f"{md}:{i}"
@@ -181,7 +193,7 @@ def main(argv: list[str]) -> int:
                 ci_row = next((line for name, line in rows if name.lower().startswith("ci")), None)
                 if ci_row is not None and repo_ci and not any(f in ci_row for f in repo_ci):
                     ci_unreferenced += repo_ci
-            if final and any(h.startswith("Moduły") for h in s):
+            if final and any(h.startswith("Modules") for h in s):
                 modules_missing += [m for m in module_names(md) if m not in mods]
                 cards_stale += stale_cards(md)
     missing = [s for s in SECTIONS if not any(h.startswith(s) for h in sections)] if final else []
@@ -200,7 +212,7 @@ def main(argv: list[str]) -> int:
         if ci_unreferenced:
             print(f"  ✗ CI: w repo są pliki pipeline'u, wiersz CI nie wskazuje żadnego: {', '.join(ci_unreferenced)}")
         if modules_missing:
-            print(f"  ✗ moduły bez wpisu w sekcji Moduły: {', '.join(modules_missing)}")
+            print(f"  ✗ moduły bez wpisu w sekcji Modules: {', '.join(modules_missing)}")
         if cards_stale:
             print(f"  ✗ karty bez aktualnego .md (recon_cards.py): {', '.join(cards_stale)}")
         for b in bad:

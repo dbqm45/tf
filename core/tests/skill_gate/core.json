@@ -12,8 +12,8 @@
   "offline": "2026-11-16"
  },
  "core-async-delegation": {
-  "fingerprint": "cb8dcd3ca238d71a",
-  "offline": "2026-11-16"
+  "fingerprint": "cba9ae57f5cefc67",
+  "offline": "2026-11-17"
  },
  "core-conventional-commits": {
   "fingerprint": "f4a985c528f67404",
@@ -80,7 +80,7 @@
   "offline": "2026-11-16"
  },
  "tf": {
-  "fingerprint": "9ab7b67d3f9c94db",
+  "fingerprint": "2d74fda9295cecea",
   "offline": "2026-11-17"
  }
 }

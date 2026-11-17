@@ -222,8 +222,8 @@ def card_source(d: str, rel: str, n: int) -> str | None:
     except OSError:
         return None
     head = next((ln for ln in reversed(lines) if ln.startswith("## ")), "")
-    m = re.search(r"\(szczegóły: modules/([^)]+)\.md\)", head)
-    return m.group(1) if m and not head.startswith("## Reguły przekrojowe") else None
+    m = re.search(r"\((?:details|szczegóły): modules/([^)]+)\.md\)", head)
+    return m.group(1) if m and not head.startswith(("## Cross-cutting rules", "## Reguły przekrojowe")) else None
 
 
 def doc_line(path: str, n: int) -> str:
