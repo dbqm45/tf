@@ -167,14 +167,14 @@ def main() -> int:
             write(r / "CLAUDE.md", "# Zasady\n\n- Kod w `src/stary.py`\n")
             res = subprocess.run([sys.executable, str(r / ".tf" / "factory" / "tf.py"), "doctor"], cwd=r, capture_output=True,
                                  text=True, encoding="utf-8", timeout=300, env={**os.environ, "CLAUDE_PROJECT_DIR": str(r)})
-            line = next((ln for ln in res.stdout.splitlines() if "instrukcje" in ln), "")
+            line = next((ln for ln in res.stdout.splitlines() if "instructions:" in ln), "")
             ok("CLAUDE.md" in line and "stale" in line and "instructions_lint.py --root" in res.stdout
                and "Traceback" not in res.stderr,
                f"tf doctor: linia o instrukcjach projektu z nazwą kontroli i poleceniem szczegółów: {res.stdout[-800:]} {res.stderr[-300:]}")
             write(r / "CLAUDE.md", "# Zasady\n\n- Testy: `python3 -m unittest`\n")
             res = subprocess.run([sys.executable, str(r / ".tf" / "factory" / "tf.py"), "doctor"], cwd=r, capture_output=True,
                                  text=True, encoding="utf-8", timeout=300, env={**os.environ, "CLAUDE_PROJECT_DIR": str(r)})
-            ok(any("instrukcje" in ln and "✓" in ln for ln in res.stdout.splitlines()),
+            ok(any("instructions:" in ln and "✓" in ln for ln in res.stdout.splitlines()),
                f"tf doctor: instrukcje bez uwag → jedna linia ✓: {res.stdout[-600:]}")
 
     for f in fails:

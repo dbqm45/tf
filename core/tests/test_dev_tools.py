@@ -49,7 +49,7 @@ def main() -> int:
         check(r.returncode == 1 and "coś się zepsuło w kroku 7" in r.stdout and "test_bad.py" in r.stdout
               and "2/2 testów ok" not in r.stdout and "ostrzeżenie" not in r.stdout and lines and lines[-1].startswith("✗"),
               f"A-1: błąd z szczegółami, zielone tylko jako liczba, ostatnia linia to werdykt: {r.stdout}{r.stderr}")
-        check(re.search(r"testy\D+1/2", r.stdout) is not None and "dziennik" in r.stdout and "pominięto" in r.stdout,
+        check(re.search(r"tests\D+1/2", r.stdout) is not None and "project record" in r.stdout and "skipped" in r.stdout,
               f"A-2: podsumowanie testów (zielone/wszystkie) i pominięte kroki bez skryptów: {r.stdout}")
         r = run([ROOT / ".tf" / "factory" / "check.py", "--root", r0, "-k", "ok"])
         check(r.returncode == 0 and r.stdout.strip().splitlines()[-1].startswith("✓"), f"A-3: -k zawęża testy: {r.stdout}")
@@ -70,7 +70,7 @@ def main() -> int:
         stub(r0 / ".tf" / "factory" / "skill_gate.py", "print('✗ #x: hook nie podpowie skilla'); print('✗ podpowiedzi: 1 skill'); sys.exit(1)"
              if True else "")
         r = run([ROOT / ".tf" / "factory" / "check.py", "--root", r0])
-        check(r.returncode == 1 and "podpowiedzi wszystkich skilli" in r.stdout, f"A-6: krok podpowiedzi w check.py: {r.stdout}")
+        check(r.returncode == 1 and "hints of all skills" in r.stdout, f"A-6: krok podpowiedzi w check.py: {r.stdout}")
 
     # ── B: build.py new-skill — termin przeglądu, słowa, --role, --name-only ──
     with tempfile.TemporaryDirectory() as t:
@@ -142,7 +142,7 @@ def main() -> int:
                   and git(repo, "status", "--porcelain").stdout.strip() == "",
                   f"C-5: commit z treścią z pliku, polecenie pushu wypisane, nie wykonane: {r.stdout}{r.stderr} {last}")
             r = run([fin, "--root", repo, "--message", msg, "--no-check"])
-            check(r.returncode == 0 and "nic do commita" in r.stdout, f"C-6: brak zmian → nic do commita: {r.stdout}")
+            check(r.returncode == 0 and "nothing to commit" in r.stdout, f"C-6: brak zmian → nic do commita: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

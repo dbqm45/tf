@@ -146,12 +146,12 @@ def _person_part(data: dict, warns: list[str], src: str) -> dict:
         if k == "style":
             continue
         if k not in PERSON_KEYS or not isinstance(v, dict):
-            warns.append(f"{src}: `{k}` — tego osoba nie ustawia (dozwolone: style, "
-                         f"{', '.join(f'{s}.{x}' for s, xs in PERSON_KEYS.items() for x in xs)}); pominięte")
+            warns.append(f"{src}: `{k}` — a person does not set this (allowed: style, "
+                         f"{', '.join(f'{s}.{x}' for s, xs in PERSON_KEYS.items() for x in xs)}). Skipped")
             continue
         part = {x: v[x] for x in PERSON_KEYS[k] if x in v}
         for x in sorted(set(v) - set(PERSON_KEYS[k])):
-            warns.append(f"{src}: `{k}.{x}` — tego osoba nie ustawia; pominięte")
+            warns.append(f"{src}: `{k}.{x}` — a person does not set this. Skipped")
         if part:
             out[k] = part
     return out
@@ -166,7 +166,7 @@ def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
         try:
             data = load_yaml(path) if path.is_file() else None
         except Exception as e:  # noqa: BLE001 — zły plik osoby nie psuje konfiguracji; zostaje ostrzeżenie
-            warns.append(f"{label}: nie da się odczytać ({e})")
+            warns.append(f"{label}: cannot read ({e})")
             continue
         if isinstance(data, dict) and data:
             raw, sources = deep_merge(raw, {**_person_part(data, warns, label),
@@ -182,13 +182,13 @@ def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
             out = deep_merge(_person_part(preset, warns, f"styles.{style}"), {})
             out["style"] = style
         else:
-            warns.append(f"nieznany styl „{style}” (są: {', '.join(styles) or 'brak'}); pominięty")
+            warns.append(f"unknown style \"{style}\" (available: {', '.join(styles) or 'none'}). Skipped")
     out = deep_merge(out, raw)
     allowed = (below.get("task") or {}).get("allowed_modes") or list(TASK_MODES)
     mode = (out.get("task") or {}).get("default_mode")
     if mode is not None and (mode not in TASK_MODES or mode not in allowed):
-        warns.append(f"task.default_mode: {mode} — poza task.allowed_modes ({', '.join(allowed)}) ustawionym wyżej; "
-                     "zostaje wartość firmy, zespołu albo projektu")
+        warns.append(f"task.default_mode: {mode} — not in task.allowed_modes ({', '.join(allowed)}) set at a higher layer. "
+                     "The company, team or project value stays")
         out["task"].pop("default_mode")
         if not out["task"]:
             out.pop("task")
@@ -217,7 +217,7 @@ def apply_style_permissions(root: Path) -> list[str]:
 
     data, marks = read(local), read(mark_path)
     if data is None:
-        return [f"{LOCAL_SETTINGS_REL.as_posix()}: niepoprawny JSON — trybu uprawnień stylu nie zmieniam"]
+        return [f"{LOCAL_SETTINGS_REL.as_posix()}: invalid JSON. The style does not change the permission mode"]
     marks = marks if isinstance(marks, dict) else {}
     mark = marks.get(STYLE_MARK) if isinstance(marks.get(STYLE_MARK), dict) else None
     perms = data.get("permissions") if isinstance(data.get("permissions"), dict) else {}
@@ -229,8 +229,8 @@ def apply_style_permissions(root: Path) -> list[str]:
         if cur == want:
             return msgs
         if mark is None and cur not in (None, "default"):
-            msgs = [f"tryb uprawnień Claude Code zostaje `{cur}` (wybrany przez Ciebie w {LOCAL_SETTINGS_REL.as_posix()}); "
-                    f"styl {style} ustawiłby `{want}` — zmień go sam, jeśli chcesz"]
+            msgs = [f"Claude Code permission mode stays `{cur}` (you chose it in {LOCAL_SETTINGS_REL.as_posix()}). "
+                    f"Style {style} would set `{want}`. Change it yourself if you want"]
             if STYLE_MARK in marks:
                 marks.pop(STYLE_MARK)
                 mark_path.write_text(json.dumps(marks, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -238,16 +238,16 @@ def apply_style_permissions(root: Path) -> list[str]:
         previous = mark.get("previous") if mark else cur
         perms["defaultMode"] = want
         mark = {"mode": want, "previous": previous}
-        msgs.append(f"tryb uprawnień Claude Code: `{want}` w {LOCAL_SETTINGS_REL.as_posix()} (styl {style}); działa od "
-                    "następnej sesji Claude Code")
+        msgs.append(f"Claude Code permission mode: `{want}` in {LOCAL_SETTINGS_REL.as_posix()} (style {style}). It applies from "
+                    "the next Claude Code session")
     elif mark or STYLE_MARK in marks:
         if mark:
             if mark.get("previous") is None:
                 perms.pop("defaultMode", None)
             else:
                 perms["defaultMode"] = mark["previous"]
-            msgs.append(f"tryb uprawnień Claude Code przywrócony: `{mark.get('previous') or 'domyślny'}` "
-                        f"(działa od następnej sesji)")
+            msgs.append(f"Claude Code permission mode restored: `{mark.get('previous') or 'default'}` "
+                        f"(applies from the next session)")
         mark = None
     else:
         return msgs
@@ -378,26 +378,26 @@ def compose(root: Path, cfg: dict) -> dict:
     settings = load_settings(root, cfg)
     errors: list[str] = []
     cfg["_packs"], cfg["_settings"] = packs, settings
-    for key, kind in (("org_defaults", "firmowa"), ("team_defaults", "zespołu")):
+    for key, kind in (("org_defaults", "company"), ("team_defaults", "team")):
         owners = [pid for pid, p in packs.items() if p.get(key) is not None]
         if len(owners) > 1:
-            errors.append(f"{key}: {' i '.join(owners)} — w projekcie może być tylko jedna nakładka {kind} "
-                          f"(działa {owners[0]})")
+            errors.append(f"{key}: {' and '.join(owners)} — a project can have only one {kind} pack "
+                          f"({owners[0]} is active)")
         if key == "team_defaults" and owners and not any(p.get("org_defaults") is not None for p in packs.values()):
-            errors.append(f"{owners[0]}: nakładka zespołu bez nakładki firmowej — zainstaluj pack-<firma> "
-                          "(requires.packs w pack.yaml zespołu)")
+            errors.append(f"{owners[0]}: team pack without a company pack. Install pack-<company> "
+                          "(requires.packs in the team pack.yaml)")
         for pid in owners[:1]:
             od = packs[pid][key]
             if not isinstance(od, dict):
-                errors.append(f"{pid}: {key} musi być słownikiem (config, operations)")
+                errors.append(f"{pid}: {key} must be a mapping (config, operations)")
                 continue
             for k in sorted(set(od) - {"config", "operations"}):
-                errors.append(f"{pid}: {key}.{k} — nieznana sekcja (są: config, operations)")
+                errors.append(f"{pid}: {key}.{k} — unknown section (available: config, operations)")
             for k in sorted(set(od.get("config") or {}) - set(ORG_CONFIG_KEYS)):
-                errors.append(f"{pid}: {key}.config.{k} — tego klucza nakładka {kind} nie ustawia "
-                              f"(dozwolone: {', '.join(ORG_CONFIG_KEYS)}); wartość pominięta")
+                errors.append(f"{pid}: {key}.config.{k} — a {kind} pack does not set this key "
+                              f"(allowed: {', '.join(ORG_CONFIG_KEYS)}). Value skipped")
             for k in sorted(set(od.get("operations") or {}) - set(ORG_OPERATIONS_KEYS)):
-                errors.append(f"{pid}: {key}.operations.{k} — nieznana sekcja (jest: tracker); wartość pominięta")
+                errors.append(f"{pid}: {key}.operations.{k} — unknown section (available: tracker). Value skipped")
     cfg["_active"] = {pid for pid, p in packs.items() if active(p, settings)}
 
     facets = [dict(f, _pack="core") for f in cfg.get("facets") or []]
@@ -406,7 +406,7 @@ def compose(root: Path, cfg: dict) -> dict:
     seen: dict[str, str] = {}
     for f in facets:
         if f["prefix"] in seen:
-            errors.append(f"wymiar {f['prefix']}: zdefiniowany w {seen[f['prefix']]} i w {f['_pack']}")
+            errors.append(f"facet {f['prefix']}: defined in {seen[f['prefix']]} and in {f['_pack']}")
         seen[f["prefix"]] = f["_pack"]
     cfg["facets"] = sorted(facets, key=lambda f: f.get("order", 500))
 
@@ -433,7 +433,7 @@ def compose(root: Path, cfg: dict) -> dict:
             continue
         for n, s in (p.get("shared_agents") or {}).items():
             if n in cfg["shared_agents"]:
-                errors.append(f"agent wspólny {n}: zdefiniowany w {cfg['shared_agents'][n]['_pack']} i w {pid}")
+                errors.append(f"shared agent {n}: defined in {cfg['shared_agents'][n]['_pack']} and in {pid}")
             cfg["shared_agents"][n] = dict(s, _pack=pid)
         for n, s in (p.get("consultants") or {}).items():
             cfg["consultants"][n] = dict(s, _pack=pid)
@@ -483,14 +483,14 @@ def load_items(root: Path, sub: str) -> tuple[dict[str, dict], list[str]]:
             data["_src"] = f.relative_to(root).as_posix()
             data["_pack"] = pid
             if data.get("name") in items:
-                notes.append(f"{sub} {data['name']}: w {items[data['name']]['_pack']} i w {pid} — używam {pid}")
+                notes.append(f"{sub} {data['name']}: in {items[data['name']]['_pack']} and in {pid}. Using {pid}")
             items[data["name"]] = data
     for f in sorted((root / CONFIG_REL / sub).glob("*.yaml")):
         data = load_yaml(f)
         data["_src"] = (CONFIG_REL / sub / f.name).as_posix()
         data["_pack"] = "project"
         if data.get("name") in items:
-            notes.append(f"{sub} {data['name']}: własna wersja projektu zastępuje wersję z {items[data['name']]['_pack']}")
+            notes.append(f"{sub} {data['name']}: the project's own version replaces the version from {items[data['name']]['_pack']}")
         items[data["name"]] = data
     return items, notes
 
@@ -557,8 +557,8 @@ def language_lines(cfg: dict, root: Path) -> list[str]:
     code = found or cl.get("new_repo", "en")
     commits = cl.get(code) or cl.get("mixed")
     if commits:   # skąd ten język — człowiek widzi, że to nie ustawienie
-        commits = commits.rstrip(".") + (" (jak dotychczasowe commity, `git log`)." if found else
-                                         " (nowe repozytorium bez commitów; potem język historii z `git log`).")
+        commits = commits.rstrip(".") + (" (like the existing commits, `git log`)." if found else
+                                         " (new repository without commits; later the language of the history in `git log`).")
     lines = [cfg.get("language_note"), commits, cfg.get("code_language_note")]
     return [f"- {' '.join(str(x).split())}" for x in lines if x]
 
@@ -572,9 +572,10 @@ def write_language_lines(path: Path, cfg: dict, root: Path) -> bool:
         return False
     a, b = text.index(MARK_BEGIN), text.index(MARK_END)
     block = text[a:b]
-    body = "### Język\n" + "\n".join(language_lines(cfg, root)) + "\n"
-    if "### Język\n" in block:
-        i = block.index("### Język\n")
+    body = "### Language\n" + "\n".join(language_lines(cfg, root)) + "\n"
+    head = next((h for h in ("### Language\n", "### Język\n") if h in block), None)   # pl: sprzed 14.x
+    if head:
+        i = block.index(head)
         j = block.find("\n### ", i + 1)
         new_block = block[:i] + body + (block[j + 1:] if j >= 0 else "")
     else:

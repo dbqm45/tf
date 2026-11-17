@@ -118,16 +118,16 @@ FACTORY_ONLY = ("tests/flow_evals/", "tests/flow_evals_runner.py", "tests/test_f
                 "tests/test_export_pdi_runs.py")
 
 
-CONFIG_TEMPLATE = """# Nadpisania konfiguracji fabryki dla tego projektu (nakładane rekurencyjnie na .tf/factory/config.yaml).
-# Wpisuj tylko to, co zmieniasz, np.:
+CONFIG_TEMPLATE = """# Factory configuration overrides for this project (merged recursively onto .tf/factory/config.yaml).
+# Write only what you change, e.g.:
 #   default_profile: economy
 #   tiers:
 #     fast: {maxTurns: 20}
-# Po zmianie: python3 .tf/factory/build.py
+# After a change: python3 .tf/factory/build.py
 """
-CONFIG_DIRS = {"personas": "własne persony projektu (nadpisują te z rdzenia i nakładek o tej samej nazwie)",
-               "roles": "własne role projektu (nadpisują te z nakładek o tej samej nazwie)",
-               "traits": "własne cechy projektu (*.md)"}
+CONFIG_DIRS = {"personas": "the project's own personas (they override core and pack personas with the same name)",
+               "roles": "the project's own roles (they override pack roles with the same name)",
+               "traits": "the project's own traits (*.md)"}
 
 
 def ensure_config(dst_root: Path) -> list[str]:
@@ -141,7 +141,7 @@ def ensure_config(dst_root: Path) -> list[str]:
     for d, what in CONFIG_DIRS.items():
         (base / d).mkdir(exist_ok=True)
         if not (base / d / "README.md").exists():
-            (base / d / "README.md").write_text(f"# .tf/config/{d}/\n\n{what.capitalize()}. Po zmianie: "
+            (base / d / "README.md").write_text(f"# .tf/config/{d}/\n\n{what.capitalize()}. After a change: "
                                                   "`python3 .tf/factory/build.py`.\n", encoding="utf-8")
     return made
 
@@ -491,11 +491,11 @@ def claude_md_section(py: str = PY_DEFAULT, root: Path | None = None, cfg: dict 
     body = "\n".join("#" + ln if ln.startswith("## ") else ln for ln in body.splitlines())   # podsekcje o poziom niżej
     if py != PY_DEFAULT:
         shown = py if simple_command(py) else f'"{py}"'
-        body = (f"- **Python w tym projekcie: `{shown}`.** Wszędzie, gdzie skille, przewodnik i komunikaty piszą `python3`, "
-                f"uruchamiaj `{shown}` (np. `{shown} .claude/hooks/project_record.py status`).\n" + body.lstrip("\n"))
+        body = (f"- **Python in this project: `{shown}`.** Wherever skills, the guide and messages say `python3`, "
+                f"run `{shown}` (e.g. `{shown} .claude/hooks/project_record.py status`).\n" + body.lstrip("\n"))
     if root is not None and cfg:
-        body = body.rstrip() + "\n\n### Język\n" + "\n".join(load_packs_module().language_lines(cfg, root))
-    return f"{MARK_BEGIN}\n## Zespół agentów (team factory)\n{body.strip()}\n{MARK_END}\n"
+        body = body.rstrip() + "\n\n### Language\n" + "\n".join(load_packs_module().language_lines(cfg, root))
+    return f"{MARK_BEGIN}\n## Agent team (team factory)\n{body.strip()}\n{MARK_END}\n"
 
 
 def drop_legacy_blocks(text: str, marks: list[tuple[str, str]]) -> str:
@@ -509,7 +509,7 @@ def drop_legacy_blocks(text: str, marks: list[tuple[str, str]]) -> str:
 
 
 COMMANDS_SECTION = re.compile(r"(### (?:Commands|Komendy)\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
-COMMANDS_DEFAULT_HINT = "dostosuj do swojego projektu"
+COMMANDS_DEFAULT_HINTS = ("adapt to your project", "dostosuj do swojego projektu")   # pl: sprzed 14.x
 
 
 def keep_commands(section: str, old: str) -> str:
@@ -517,7 +517,7 @@ def keep_commands(section: str, old: str) -> str:
     Podsekcja z dopiskiem „dostosuj do swojego projektu” jest wzorcem fabryki — ta jest podmieniana jak reszta bloku."""
     start = old.find(MARK_BEGIN)
     mine = COMMANDS_SECTION.search(old, start) if start >= 0 else None
-    if not mine or COMMANDS_DEFAULT_HINT in mine.group(2):
+    if not mine or any(h in mine.group(2) for h in COMMANDS_DEFAULT_HINTS):
         return section
     return COMMANDS_SECTION.sub(lambda m: m.group(1) + mine.group(2), section, count=1)
 
@@ -531,8 +531,8 @@ def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> st
     start = text.index(begin)
     end_at = text.find(end, start + len(begin))
     if end_at < 0:      # uszkodzony blok (brak znacznika końca) — nie zgadujemy, żeby nie skasować treści człowieka
-        raise SystemExit(f"✗ Znacznik {begin!r} bez {end!r} w pliku instrukcji — popraw ręcznie (dopisz znacznik końca "
-                         "albo usuń początek bloku) i uruchom ponownie.")
+        raise SystemExit(f"✗ Marker {begin!r} without {end!r} in the instructions file. Fix it by hand (add the end marker "
+                         "or remove the start of the block) and run again.")
     stop = end_at + len(end)
     rest = text[stop:].lstrip("\n")
     return text[:start].rstrip() + ("\n\n" if text[:start].strip() else "") + block + ("\n" + rest if rest else "")

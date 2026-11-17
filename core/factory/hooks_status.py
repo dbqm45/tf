@@ -83,13 +83,13 @@ def status(root: Path) -> dict:
 
 def line(s: dict) -> str:
     if s["active"] is None:
-        return "· hooki fabryki: brak hooków w .claude/settings.json albo CI — nic do sprawdzenia"
+        return "· factory hooks: no hooks in .claude/settings.json, or CI. Nothing to check"
     if s["active"]:
-        return "✓ hooki fabryki: aktywne (ślady w .tf/logs pokrywają ostatnie commity)"
-    since = f"po ostatnim śladzie hooków ({s['last_log'][:16]})" if s["last_log"] else "bez żadnego śladu hooków w .tf/logs"
-    return (f"⚠ hooki fabryki prawdopodobnie nieaktywne: {s['after_commits']} commitów {since} — tdd_guard, ochrona "
-            "ścieżek i logi kosztów nie działają. Uruchamiaj testy i bramki ręcznie; następną sesję w chmurze zacznij "
-            "z jednym repozytorium (README: Sesja w chmurze).")
+        return "✓ factory hooks: active (traces in .tf/logs cover the recent commits)"
+    since = f"after the last hook trace ({s['last_log'][:16]})" if s["last_log"] else "with no hook trace in .tf/logs"
+    return (f"⚠ factory hooks are probably not active: {s['after_commits']} commits {since}. tdd_guard, path "
+            "protection and cost logs do not work. Run the tests and gates by hand. Start the next cloud session "
+            "with one repository (README: Cloud session).")
 
 
 def main(argv: list[str]) -> int:

@@ -202,6 +202,11 @@ def main() -> int:
         out = keep(fresh.replace("### Stack\n- x", "### Stack\n- nowe"), block) if keep else ""
         check("npm test" in out and "dostosuj do swojego projektu" in out and "- nowe" in out,
               f"O-29: niedostosowana sekcja (z dopiskiem „dostosuj”) jest podmieniana na bieżącą: {out}")
+        en = block.replace("### Komendy", "### Commands").replace(
+            "dostosuj do swojego projektu — wykonawcy używają ich do weryfikacji", "adapt to your project — executors use them for verification")
+        out = keep(fresh.replace("### Stack\n- x", "### Stack\n- nowe"), en) if keep else ""
+        check("dostosuj do swojego projektu" in out and "- nowe" in out and "adapt to your project" not in out,
+              f"O-29b: angielski wzorzec fabryki („adapt to your project”) też jest podmieniany: {out}")
         check(keep and keep(fresh, "bez bloku") == fresh, "O-30: pierwszy zapis bloku bez zmian")
 
         # instalacja prywatna: pliki z tf onboard zostają lokalne, drzewo robocze czyste (pętla /tf tego wymaga)

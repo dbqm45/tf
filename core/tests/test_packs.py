@@ -245,7 +245,7 @@ def main() -> int:
         md_p.write_text("x\n<!-- team-factory:begin -->\n## Zespół\n### Język\n- stare\n<!-- team-factory:end -->\n")
         changed = pm.write_language_lines(md_p, pm.load_yaml(p / ".tf" / "factory" / "config.yaml"), p)
         txt = md_p.read_text()
-        check(changed and "- stare" not in txt and "in the language the human writes in" in txt and txt.startswith("x\n"),
+        check(changed and "- stare" not in txt and "in the language the human writes in" in txt and "### Language\n" in txt and "### Język" not in txt and txt.startswith("x\n"),
               f"P-18: podmiana sekcji języka w bloku fabryki: {txt}")
 
     # Nakładka firmowa (org_defaults): domyślne organizacji między silnikiem a projektem.

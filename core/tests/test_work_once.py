@@ -143,7 +143,7 @@ def main() -> int:
         check("IMP-4" in r.stdout and "IMP-1" not in r.stdout and "IMP-3" not in r.stdout,
               f"WO-8: zadanie z worktree pominięte, waga pełna i tryb zwykły nigdy: {r.stdout}")
         r = work(p, "--once", "--budget", "3", "--key", "IMP-3", "--dry-run")
-        check(r.returncode == 2 and "pełn" in r.stdout + r.stderr, f"WO-9: --key zadania o wadze pełnej → odmowa: {r.stdout}{r.stderr}")
+        check(r.returncode == 2 and "full" in r.stdout + r.stderr, f"WO-9: --key zadania o wadze pełnej → odmowa: {r.stdout}{r.stderr}")
         r = work(p, "--once", "--budget", "3", "--key", "IMP-1", "--dry-run")
         check(r.returncode == 2 and "auto" in (r.stdout + r.stderr).lower(),
               f"WO-10: --key zadania bez trybu Auto → odmowa z poleceniem tf task mode: {r.stdout}{r.stderr}")
@@ -182,7 +182,7 @@ def main() -> int:
         (locks / "IMP-8.json").write_text(json.dumps({"pid": dead.pid, "host": host, "at": time.time() - 7 * 3600}),
                                           encoding="utf-8")
         r = work(z, "--once", "--budget", "2")
-        check(r.returncode == 0 and len(agent_calls(z)) == 1 and "przej" in r.stdout,
+        check(r.returncode == 0 and len(agent_calls(z)) == 1 and "took over" in r.stdout,
               f"WO-16: martwa blokada starsza niż 6 h → przejęta z ostrzeżeniem: {r.returncode} {r.stdout}{r.stderr}")
 
         # przegląd bezpieczeństwa: klucz z task.json, symlinki, sekrety z manifestu, tryb uprawnień, łączny limit
@@ -317,7 +317,7 @@ def main() -> int:
         # agent zmienia plik sterujący w kopii człowieka → ostrzeżenie i wpis w dzienniku
         task(g, "", "start", "IMP-15", "--title", "Zadanie", "--mode", "auto")
         r = work(g, "--once", "--budget", "2", "--key", "IMP-15", TF_FAKE_TOUCH=str(g / ".claude" / "settings.json"))
-        check(r.returncode == 0 and "Twojej kopii" in r.stdout and ".claude/settings.json" in r.stdout
+        check(r.returncode == 0 and "your copy" in r.stdout and ".claude/settings.json" in r.stdout
               and ".claude/settings.json" in json.dumps(log(g)[-1].get("root_changed")),
               f"WO-32: zmiana pliku sterującego w kopii człowieka w trakcie przebiegu → ostrzeżenie i wpis: {r.stdout} {log(g)[-1:]}")
 

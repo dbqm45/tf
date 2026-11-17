@@ -268,9 +268,9 @@ def cmd_config_show(key: str | None) -> int:
     cfg = packs.load_config(root)
     if key == "steps" and cfg.get("steps"):     # kroki pętli /tf z modelem i effortem po nałożeniu profilu kosztów
         full = project_module("build").load_config()
-        print(f"# Kroki pętli /tf (profil kosztów: {full.get('_profile')}). Zmiana: steps w .tf/config/config.yaml, "
-              "potem python3 .tf/factory/build.py")
-        print(f"{'krok':<16} {'co':<38} {'kto':<18} {'tier':<5} {'model':<8} effort")
+        print(f"# /tf loop steps (cost profile: {full.get('_profile')}). To change: steps in .tf/config/config.yaml, "
+              "then python3 .tf/factory/build.py")
+        print(f"{'step':<16} {'what':<38} {'who':<18} {'tier':<5} {'model':<8} effort")
         for sid, step in full["steps"].items():
             tier = full["tiers"].get(step.get("tier"), {})
             print(f"{sid:<16} {step.get('label', ''):<38} {step.get('who', ''):<18} {step.get('tier', ''):<5} "
@@ -278,11 +278,11 @@ def cmd_config_show(key: str | None) -> int:
         return 0
     if key is not None:
         if key not in cfg:
-            print(f"✗ Nie ma klucza „{key}”. Lista kluczy: tf config show")
+            print(f"✗ No key \"{key}\". List of keys: tf config show")
             return 2
         print(json.dumps(cfg[key], ensure_ascii=False, indent=2))
         return 0
-    print("# Konfiguracja fabryki. Swoje wartości wpisujesz w .tf/config/config.yaml — aktualizacja ich nie rusza.")
+    print("# Factory configuration. You put your own values in .tf/config/config.yaml. An update does not touch them.")
     for k in sorted(cfg):
         shown = json.dumps(cfg[k], ensure_ascii=False)
         shown = shown if len(shown) <= 70 else shown[:67] + "…"
@@ -290,8 +290,8 @@ def cmd_config_show(key: str | None) -> int:
                else "organisation" if k in org else "factory")
         print(f"{k:<28} {src:<12} {shown}")
     for w in (packs.work_style(root).get("warnings") or []) if hasattr(packs, "work_style") else []:
-        print(f"⚠ preferencje osoby: {w}")
-    print("# Cała wartość jednego klucza: tf config show <klucz>")
+        print(f"⚠ personal preferences: {w}")
+    print("# The full value of one key: tf config show <key>")
     return 0
 
 
@@ -302,23 +302,23 @@ def cmd_style(rest: list[str]) -> int:
     packs = project_module("packs")
     root = Path.cwd()
     if not hasattr(packs, "work_style"):
-        print("✗ Silnik w .tf/factory/ nie zna stylów pracy — zaktualizuj fabrykę: tf update")
+        print("✗ The engine in .tf/factory/ does not know work styles. Update the factory: tf update")
         return 2
     styles = packs.load_config(root).get("styles") or {}
     if not names:
         ws = packs.work_style(root)
-        print(f"Styl pracy: {ws.get('style') or 'brak (ustawienia projektu)'}")
+        print(f"Work style: {ws.get('style') or 'none (project settings)'}")
         for m in packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []:
             print(f"• {m}")
-        print(f"  domyślny tryb zadania: {ws['default_mode']} (dozwolone: {', '.join(ws['allowed_modes'])})")
-        print(f"  pytanie wstrzymuje tylko swój kawałek: {'tak' if ws['blocked_slices'] else 'nie'}")
-        print(f"  zgoda człowieka po każdym kawałku: {'tak' if ws['confirm_each_slice'] else 'nie'}")
+        print(f"  default task mode: {ws['default_mode']} (allowed: {', '.join(ws['allowed_modes'])})")
+        print(f"  a question pauses only its own slice: {'yes' if ws['blocked_slices'] else 'no'}")
+        print(f"  human approval after each slice: {'yes' if ws['confirm_each_slice'] else 'no'}")
         for w in ws.get("warnings") or []:
             print(f"⚠ {w}")
-        print(f"Zmiana: tf style <{'|'.join(styles)}> [--here]")
+        print(f"To change: tf style <{'|'.join(styles)}> [--here]")
         return 0
     if len(names) != 1 or names[0] not in styles:
-        print(f"✗ Nieznany styl „{' '.join(names)}”. Do wyboru: {', '.join(styles)}")
+        print(f"✗ Unknown style \"{' '.join(names)}\". Choose from: {', '.join(styles)}")
         return 2
     path = root / ".tf" / "config" / "me.yaml" if here else packs.preferences_path()
     data = packs.load_yaml(path) if path.is_file() else {}
@@ -329,8 +329,8 @@ def cmd_style(rest: list[str]) -> int:
         ensure_excluded(root, ".tf/config/me.yaml")
     ws = packs.work_style(root)
     perm_msgs = packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []
-    print(f"✓ styl {names[0]} zapisany w {path if not here else '.tf/config/me.yaml'} — domyślny tryb zadania: "
-          f"{ws['default_mode']}, zgoda po każdym kawałku: {'tak' if ws['confirm_each_slice'] else 'nie'}")
+    print(f"✓ style {names[0]} saved in {path if not here else '.tf/config/me.yaml'}. Default task mode: "
+          f"{ws['default_mode']}, approval after each slice: {'yes' if ws['confirm_each_slice'] else 'no'}")
     for m in perm_msgs:
         print(f"• {m}")
     for w in ws.get("warnings") or []:
@@ -362,9 +362,9 @@ def instructions_summary(lint: Path) -> str:
                            encoding="utf-8", errors="replace", timeout=120)
         files = json.loads(r.stdout).get("files") or []
     except (OSError, ValueError, subprocess.SubprocessError, AttributeError):
-        return "⚠ instrukcje: karty plików instrukcji nie udało się policzyć"
+        return "⚠ instructions: could not compute the instruction file report"
     if not files:
-        return "• instrukcje: projekt nie ma pliku CLAUDE.md ani AGENTS.md"
+        return "• instructions: the project has no CLAUDE.md or AGENTS.md file"
     notes = []
     for f in files:
         bad = [f"{c['id']} ({len(c.get('findings') or []) or c.get('verdict')})" for c in f.get("checks") or []
@@ -376,8 +376,8 @@ def instructions_summary(lint: Path) -> str:
                 name = f["path"]
             notes.append(f"{name}: {', '.join(bad)}")
     if not notes:
-        return f"✓ instrukcje: {len(files)} plik(i) bez uwag"
-    return ("⚠ instrukcje: " + "; ".join(notes) + f"\n  szczegóły: python3 {lint.as_posix()} --root .")
+        return f"✓ instructions: {len(files)} file(s), no findings"
+    return ("⚠ instructions: " + "; ".join(notes) + f"\n  details: python3 {lint.as_posix()} --root .")
 
 
 def cmd_doctor(fix: bool, repo: str | None) -> int:
@@ -475,7 +475,7 @@ def main(argv: list[str]) -> int:
     if cmd == "new":
         if len(rest) < 3 or rest[0] != "skill":
             print('✗ Usage: tf new skill <name> "<description>" [--role <role>] [--name-only]\n'
-                  '  e.g. tf new skill app-faktury "Użyj przy fakturach korygujących — numeracja, stawki. Nie do płatności."')
+                  '  e.g. tf new skill app-invoices "Use for corrective invoices — numbering, tax rates. Not for payments."')
             return 2
         return engine("build.py", ["new-skill", *rest[1:]])
     if cmd == "skill":
@@ -552,7 +552,7 @@ def sync_style_permissions() -> None:
         for m in packs.apply_style_permissions(Path.cwd()) if hasattr(packs, "apply_style_permissions") else []:
             print(f"• {m}")
     except Exception as e:  # noqa: BLE001 — instalacja się udała; styl to dodatek
-        print(f"⚠ styl pracy: nie udało się uzgodnić trybu uprawnień Claude Code ({e})")
+        print(f"⚠ work style: could not sync the Claude Code permission mode ({e})")
 
 
 if __name__ == "__main__":

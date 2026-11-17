@@ -56,7 +56,7 @@ def steps(root: Path, pattern: str | None) -> list[dict]:
 
     def step(name: str, script: Path, *args: str, info: bool = False) -> None:
         if not script.is_file():
-            out.append({"name": name, "ok": True, "skipped": True, "summary": "pominięto (brak skryptu)"})
+            out.append({"name": name, "ok": True, "skipped": True, "summary": "skipped (no script)"})
             return
         ok, text = run([str(script), *args], root)
         out.append({"name": name, "ok": ok or info, "info": info, "summary": last_line(text),
@@ -66,15 +66,15 @@ def steps(root: Path, pattern: str | None) -> list[dict]:
     tests = sorted(p for p in tests_dir.glob("test_*.py") if not pattern or pattern in p.name)
     for t in tests:
         step(t.relative_to(root).as_posix(), t)
-    step("scenariusze", tests_dir / "run_skill_evals.py", "--validate")
-    step("bramka skilli", root / ".tf" / "factory" / "skill_gate.py", "--status", "--strict")
-    step("podpowiedzi wszystkich skilli", root / ".tf" / "factory" / "skill_gate.py", "--hints")
+    step("scenarios", tests_dir / "run_skill_evals.py", "--validate")
+    step("skill gate", root / ".tf" / "factory" / "skill_gate.py", "--status", "--strict")
+    step("hints of all skills", root / ".tf" / "factory" / "skill_gate.py", "--hints")
     if (root / "docs" / "project").is_dir():
-        step("dziennik", root / ".claude" / "hooks" / "project_record.py", "check")
+        step("project record", root / ".claude" / "hooks" / "project_record.py", "check")
     else:
-        out.append({"name": "dziennik", "ok": True, "skipped": True, "summary": "pominięto (brak docs/project/)"})
-    step("terminy przeglądu", root / ".tf" / "factory" / "freshness.py", "--root", str(root), info=True)
-    step("hooki fabryki", root / ".tf" / "factory" / "hooks_status.py", "--root", str(root), info=True)
+        out.append({"name": "project record", "ok": True, "skipped": True, "summary": "skipped (no docs/project/)"})
+    step("review dates", root / ".tf" / "factory" / "freshness.py", "--root", str(root), info=True)
+    step("factory hooks", root / ".tf" / "factory" / "hooks_status.py", "--root", str(root), info=True)
     return out
 
 
@@ -103,9 +103,9 @@ def main(argv: list[str]) -> int:
         for ln in s.get("details", []):
             print(f"    {ln}")
     green = sum(s["ok"] for s in tests)
-    print(f"{'✓' if green == len(tests) else '✗'} testy: {green}/{len(tests)} plików zielonych")
+    print(f"{'✓' if green == len(tests) else '✗'} tests: {green}/{len(tests)} files green")
     bad = [s["name"] for s in res if not s["ok"]]
-    print(f"✓ wszystko zielone ({len(res)} kroków)" if ok else f"✗ czerwone: {', '.join(bad)}")
+    print(f"✓ all green ({len(res)} steps)" if ok else f"✗ red: {', '.join(bad)}")
     return 0 if ok else 1
 
 
