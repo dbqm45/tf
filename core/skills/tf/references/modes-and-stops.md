@@ -28,7 +28,7 @@ brak kodu to błąd polecenia. Wybierasz kod, który mówi, **czego potrzeba od 
 
 | Kod | Kiedy | Czego potrzeba od człowieka |
 |---|---|---|
-| `question` | brakuje kryteriów akceptacji albo odpowiedzi na pytanie `[blokuje]` | odpowiedzi na pytania (do 3, konkretne) |
+| `question` | brakuje kryteriów akceptacji albo odpowiedzi na pytanie `[blocking]` | odpowiedzi na pytania (do 3, konkretne) |
 | `split` | więcej niż 5 kawałków albo kilka akcji w jednej historyjce (STORY-001) | wyboru podziału z Twojej propozycji |
 | `source` | nie ma treści zadania albo dostępu do zgłoszenia | wklejenia treści albo połączenia z trackerem |
 | `plan-approval` | waga pełna w przebiegu z `--auto`; plan czeka na zgodę | zgody na plan albo uwag |
@@ -46,13 +46,13 @@ brak kodu to błąd polecenia. Wybierasz kod, który mówi, **czego potrzeba od 
 Działa tylko wtedy, gdy projekt włączył przełącznik w `.tf/config/config.yaml`; domyślnie jest wyłączony i każde
 pytanie to blok STOP. Z włączonym przełącznikiem pytanie zatrzymuje swój kawałek, a nie cały przebieg:
 
-- **Plan zapisuje zależności** w wierszu kawałka: `· po: K1` (można zacząć po K1), `· po: brak` (niezależny); bez
+- **Plan zapisuje zależności** w wierszu kawałka: `· after: S1` (można zacząć po S1), `· after: none` (niezależny); bez
   dopisku kawałek zależy od poprzedniego. Etap `plan` o tym przypomina.
-- **Pytanie w trakcie kawałka:** `run_state.py block <katalog> K2 --question "<pytanie do człowieka>"`. Skrypt
-  odpowiada `Dalej: K3` (rób ten kawałek) albo `Dalej: STOP` z listą pytań i gotowym poleceniem zatrzymania. STOP
+- **Pytanie w trakcie kawałka:** `run_state.py block <katalog> S2 --question "<pytanie do człowieka>"`. Skrypt
+  odpowiada `Dalej: S3` (rób ten kawałek) albo `Dalej: STOP` z listą pytań i gotowym poleceniem zatrzymania. STOP
   z kodem `question` dla bieżącego kawałka skrypt odrzuca, dopóki został kawałek niezależny.
 - **Pytanie o całe zadanie** (bez odpowiedzi nie da się zrobić żadnego kawałka): STOP jak zwykle, z `--task`.
-- **Po odpowiedzi człowieka:** `run_state.py answer <katalog> K2 "<odpowiedź>" --by human:<id>` — kawałek wraca do
+- **Po odpowiedzi człowieka:** `run_state.py answer <katalog> S2 "<odpowiedź>" --by human:<id>` — kawałek wraca do
   planu, a skrypt mówi, co dalej. Odpowiedzi nie zapisujesz za człowieka. Który kawałek teraz: `run_state.py next
   <katalog>`.
 - Zablokowany kawałek nie ma dowodu, więc etap `pr` nie przejdzie, dopóki pytanie czeka — przebieg kończy się

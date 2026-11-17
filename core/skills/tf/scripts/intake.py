@@ -313,7 +313,7 @@ def fetch_jira(root: Path, key: str) -> dict:
         text = text[:MAX_TICKET].rstrip() + f"\n\n(opis ucięty po {MAX_TICKET} znakach — reszta jest w zgłoszeniu)"
     text = as_data(text)
     if criteria:
-        text += "\n\n## Kryteria akceptacji\n\n" + as_data(criteria[:MAX_TICKET])
+        text += "\n\n## Acceptance criteria\n\n" + as_data(criteria[:MAX_TICKET])
     url = f"{base}/browse/{key.upper()}"
     return {"key": key.upper(), "title": title, "text": text, "url": url, "source": f"jira {key.upper()} ({url})"}
 

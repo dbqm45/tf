@@ -147,7 +147,7 @@ def main() -> int:
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION, "--task")
         check(r.returncode == 0, f"WE-14: `--task` (pytanie o całe zadanie) przepuszcza STOP: {r.returncode} {r.stdout}")
         r = call(p, rs, "stage", d, "plan")
-        check("po:" in r.stdout and "po: brak" in r.stdout,
+        check("after:" in r.stdout and "after: none" in r.stdout,
               f"WE-15: etap plan z włączonym przełącznikiem przypomina o zapisie zależności kawałków: {r.stdout}")
 
     for f in fails:

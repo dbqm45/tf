@@ -7,8 +7,8 @@ model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
   tf task start <CHG>-<TSK> --title "<tytuł>" --change <CHG> --cut <TSK>      # zadanie cięcia zmiany pdi
   tf task stage <KEY> <etap> [--force]
   tf task status <KEY> [--json]
-  tf task slice <KEY> K1 planned|implemented|blocked [--title "<wartość>"] [--reason "<powód blokady>"]
-  tf task verify <KEY> K1 --files <plik>[,<plik>…] [--command "<polecenie>"] [--timeout <s>]
+  tf task slice <KEY> S1 planned|implemented|blocked [--title "<wartość>"] [--reason "<powód blokady>"]
+  tf task verify <KEY> S1 --files <plik>[,<plik>…] [--command "<polecenie>"] [--timeout <s>]
   tf task artifact <KEY> <plik> --stage <etap> --by <wykonawca> [--inputs <plik>[,<plik>…]]
   tf task approve <KEY> <plik> --by human:<id>
   tf task check <KEY>
@@ -16,7 +16,7 @@ model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
   tf task mode <KEY> [plan|normal|auto]
   tf task deployed <KEY> [--version <X>] [--timeout <s>]           # test dymny z karty operacyjnej po wdrożeniu
   tf task deployed <KEY> --rolled-back --by human:<id> [--note "<co zrobiono>"]   # decyzja człowieka o wycofaniu
-  tf task finding <KEY> add "<ważne ustalenie przeglądu>" [--slice K1] [--round 1]
+  tf task finding <KEY> add "<ważne ustalenie przeglądu>" [--slice S1] [--round 1]
   tf task finding <KEY> control F1 "<test, hook, reguła albo powód jej braku>"   # co złapie to następnym razem
   tf task review <KEY> <recenzent> pass|fail [--note "<uwaga>"]   # werdykt panelu przy wadze pełnej
   tf task close <KEY> [--lesson "<lekcja>" --by human:<id>] [--base <gałąź>] [--force --by human:<id>]
@@ -40,9 +40,9 @@ oraz `cut` w `task.json`; `list` i `status` pokazują je razem z ich zmianą. Pl
 człowiek zatwierdził na bramce pdi przed fazą realizacji, dlatego cięcie o wadze pełnej może iść w trybie `auto`.
 
 Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruchamia polecenie (domyślnie to z
-`.claude/quality-gate.json`), więc kodu wyjścia nie da się zadeklarować, i zapisuje `evidence/K1-<n>.json`
+`.claude/quality-gate.json`), więc kodu wyjścia nie da się zadeklarować, i zapisuje `evidence/S1-<n>.json`
 (polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
-pliku po dowodzie → niezweryfikowany; kod wyjścia inny niż 0 → czerwony. Do etapu `review` i dalszych zadanie
+pliku po dowodzie → unverified; kod wyjścia inny niż 0 → czerwony. Do etapu `review` i dalszych zadanie
 przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force). Gdy zadanie ma `spec.md`, do etapu `plan`
 i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`), a do etapu `review` i dalszych —
 gdy każde kryterium ma test (`tf trace <KEY>`); zadanie bez `spec.md` działa jak dotąd.
@@ -112,7 +112,7 @@ STAGES = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", 
 WEIGHTS = ("light", "normal", "full")
 MODES = ("plan", "normal", "auto")
 PDI_KEY = re.compile(r"[A-Z][A-Z0-9]+-[0-9]+")   # klucz zmiany i cięcia pdi (CHG-12, TSK-57)
-SLICE = re.compile(r"K[1-9][0-9]?")
+SLICE = re.compile(r"[KS][1-9][0-9]?")   # S<n>; K<n> — zadania sprzed 14.0.0
 SLICE_STATES = ("planned", "implemented", "blocked")
 GATED = STAGES[STAGES.index("review"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
 ACTOR = re.compile(r"(human|process):[\w.@-]+|[\w.-]+/[\w.-]+")
@@ -179,11 +179,11 @@ def sha256(path: Path) -> str | None:
         return None
 
 
-TICKED = re.compile(rb"(?m)^(\s*-\s*)\[[xX]\](\s*K\d+\b)")
+TICKED = re.compile(rb"(?m)^(\s*-\s*)\[[xX]\](\s*[KS]\d+\b)")
 
 
 def approval_sha(path: Path) -> str | None:
-    """Skrót pliku do zatwierdzenia. W `plan.md` nie liczy się odhaczenie kawałka (`- [x] K1`): pętla odhacza kawałki
+    """Skrót pliku do zatwierdzenia. W `plan.md` nie liczy się odhaczenie kawałka (`- [x] S1`): pętla odhacza kawałki
     po zatwierdzeniu planu i nie zmienia przez to jego treści; nowy albo zmieniony kawałek zmienia skrót."""
     if path.name != "plan.md":
         return sha256(path)
@@ -210,12 +210,12 @@ def slice_state(root: Path, key: str, sl: dict) -> tuple[str, str]:
         return "blocked", sl.get("reason") or "bez podanego powodu"
     ev = evidence_of(root, key, sl)
     if ev is None:
-        return ("planned", "") if sl.get("state") == "planned" else ("niezweryfikowany", "brak dowodu")
+        return ("planned", "") if sl.get("state") == "planned" else ("unverified", "brak dowodu")
     if ev.get("exit_code") != 0:
         return "red", f"`{ev.get('command')}` zakończone kodem {ev.get('exit_code')}"
     changed = [f for f, h in (ev.get("files") or {}).items() if sha256(root / f) != h]
     if changed:
-        return "niezweryfikowany", "pliki zmienione po dowodzie: " + ", ".join(changed)
+        return "unverified", "pliki zmienione po dowodzie: " + ", ".join(changed)
     return "verified", ""
 
 
@@ -232,16 +232,16 @@ def inside(folder: Path, name: str) -> Path | None:
 
 
 def artifact_state(root: Path, key: str, art: dict, name: str) -> tuple[str, str]:
-    """(stan, powód) pliku zadania wyliczony ze skrótów: szkic / zatwierdzony / nieaktualny / zmieniony po zatwierdzeniu."""
+    """(stan, powód) pliku zadania wyliczony ze skrótów: draft / approved / stale / changed-after-approval."""
     folder = root / CHANGES / key
     changed = [f for f, h in (art.get("inputs") or {}).items() if sha256(folder / f) != h]
     if changed:
         return "stale", "zmienione wejścia: " + ", ".join(changed)
-    if art.get("status") == "zatwierdzony":
+    if art.get("status") == "approved":
         if approval_sha(folder / name) != art.get("approved_sha"):
             return "changed-after-approval", "wymaga ponownego zatwierdzenia przez człowieka"
-        return "zatwierdzony", ""
-    return "szkic", ""
+        return "approved", ""
+    return "draft", ""
 
 
 def artifact_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
@@ -275,8 +275,8 @@ def cmd_reopen(root: Path, key: str, name: str, by: str, reason: str) -> int:
     if task is None:
         return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
     art = (task.get("artifacts") or {}).get(name)
-    if art is not None and art.get("status") == "zatwierdzony":
-        art["status"] = "szkic"
+    if art is not None and art.get("status") == "approved":
+        art["status"] = "draft"
         art.pop("approved_sha", None)
         what = "zatwierdzenie zdjęte"
     elif name in (task.get("frozen") or {}):
@@ -304,11 +304,11 @@ def cmd_artifact(root: Path, key: str, name: str, stage: str, by: str, inputs: l
         if target is None:
             return fail(f"wejście „{f}” nie jest plikiem w {CHANGES / key}/", 2)
         hashes[f] = sha256(target)
-    task.setdefault("artifacts", {})[name] = {"stage": stage, "status": "szkic", "generated": {"by": by, "at": now()},
+    task.setdefault("artifacts", {})[name] = {"stage": stage, "status": "draft", "generated": {"by": by, "at": now()},
                                               "inputs": hashes}
     task["updated"] = now()
     save(root, task)
-    print(f"✓ {key} {name}: szkic (etap {stage}" + (f"; wejścia: {', '.join(hashes)}" if hashes else "") + ")")
+    print(f"✓ {key} {name}: draft (etap {stage}" + (f"; wejścia: {', '.join(hashes)}" if hashes else "") + ")")
     return 0
 
 
@@ -322,12 +322,12 @@ def cmd_approve(root: Path, key: str, name: str, by: str) -> int:
     state, why = artifact_state(root, key, art, name)
     if state == "stale":
         return fail(f"{name} jest nieaktualny ({why}) — odśwież go i zarejestruj ponownie przed zatwierdzeniem")
-    art["status"] = "zatwierdzony"
+    art["status"] = "approved"
     art["approved_sha"] = approval_sha(root / CHANGES / key / name)
     art["verified"] = [{"by": by, "at": now()}]
     task["updated"] = now()
     save(root, task)
-    print(f"✓ {key} {name}: zatwierdzony przez {by}")
+    print(f"✓ {key} {name}: approved przez {by}")
     return 0
 
 
@@ -760,12 +760,12 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
     art = (task.get("artifacts") or {}).get("plan.md")
     state = artifact_state(root, key, art, "plan.md")[0] if art else "brak"
     upstream = bool(task.get("change")) and mode == "auto"   # cięcie: plan zmiany zatwierdzono na bramce pdi
-    if weight == "full" and state != "zatwierdzony" and not upstream:
+    if weight == "full" and state != "approved" and not upstream:
         return (f"zadanie ma wagę pełną (obszar wrażliwy), więc do etapu {stage} przechodzi dopiero z planem "
                 f"zatwierdzonym przez człowieka (stan planu: {state}): pokaż plan człowiekowi, a po jego zgodzie "
                 f"tf task approve {key} plan.md --by human:<id>. Przebieg bez nadzoru (--auto) kończy się tu "
                 "blokiem STOP — zgody człowieka nie da się zastąpić")
-    if mode != "auto" and art and state != "zatwierdzony":
+    if mode != "auto" and art and state != "approved":
         return (f"w trybie zwykłym do etapu {stage} zadanie przechodzi po zgodzie człowieka na plan (stan planu: "
                 f"{state}): pokaż plan i specyfikację człowiekowi, a po jego zgodzie tf task approve {key} plan.md "
                 f"--by human:<id>. Tryb bez zatwierdzania (--auto) wybiera człowiek w poleceniu /tf: jeśli go podał, "
@@ -998,7 +998,7 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
         open_ = [f"{k} ({s}{': ' + w if w else ''})" for k, (s, w) in slice_states(root, task).items() if s != "verified"]
         if open_:
             return fail(f"do etapu {stage} przechodzi zadanie ze zweryfikowanymi kawałkami; brakuje: " + "; ".join(open_)
-                        + f". Dowód: tf task verify {key} K<n> --files <pliki kawałka>")
+                        + f". Dowód: tf task verify {key} S<n> --files <pliki kawałka>")
         stale = [f"{n} ({s})" for n, (s, _) in artifact_states(root, task).items()
                  if s in ("stale", "changed-after-approval")]
         stale += [f"{rel} (zamrożony plik zmieniony)" for rel in frozen_changed(root, task)]
@@ -1298,7 +1298,7 @@ def main(argv: list[str]) -> int:
         return cmd_start(root, a.key, a.title.strip(), a.weight, a.mode, a.change, a.cut)
     if a.cmd == "finding":
         if a.slice and not SLICE.fullmatch(a.slice):
-            return fail(f"kawałek „{a.slice}” — oczekiwany zapis K1, K2…", 2)
+            return fail(f"kawałek „{a.slice}” — oczekiwany zapis S1, S2…", 2)
         if a.action == "control" and not (a.first and re.fullmatch(r"F[1-9][0-9]*", a.first)):
             return fail(f"podaj identyfikator ustalenia: tf task finding {a.key} control F1 \"<kontrola>\"", 2)
         return cmd_finding(root, a.key, a.action, a.first, a.second, a.slice, a.round if a.round and a.round > 0 else None)
@@ -1360,7 +1360,7 @@ def main(argv: list[str]) -> int:
         return cmd_artifact(root, a.key, a.name, a.stage, a.by, [f.strip() for f in a.inputs.split(",") if f.strip()])
     if a.cmd in ("slice", "verify"):
         if not SLICE.fullmatch(a.slice_id):
-            return fail(f"identyfikator kawałka „{a.slice_id}” — oczekiwany K1…K99", 2)
+            return fail(f"identyfikator kawałka „{a.slice_id}” — oczekiwany S1…S99", 2)
         if a.cmd == "slice":
             if a.state not in SLICE_STATES:
                 return fail(f"nieznany stan „{a.state}” — do wyboru: {', '.join(SLICE_STATES)} "

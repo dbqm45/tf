@@ -128,11 +128,11 @@ def trace(root: Path, key: str, base: str | None = None) -> dict | None:
         if not hits:
             errors.append({"rule": "TRACE-001", "criterion": ac,
                            "message": f"{ac} nie ma testu — dodaj test z „{ac}” w nazwie albo komentarzu"})
-            rows.append({"criterion": ac, "tests": [], "commit": None, "slice": None, "evidence": "brak testu", "red": False})
+            rows.append({"criterion": ac, "tests": [], "commit": None, "slice": None, "evidence": "no-test", "red": False})
             continue
         rel = hits[0][0]
         sid = next((owner[f] for f, _ in hits if f in owner), None)
-        evidence = states[sid][0] if sid in states else "bez dowodu"
+        evidence = states[sid][0] if sid in states else "no-evidence"
         if sid is None:
             warnings.append({"rule": "TRACE-003", "criterion": ac,
                              "message": f"{ac}: {rel} nie należy do plików żadnego kawałka — dopisz go do `--files` przy "

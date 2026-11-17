@@ -148,7 +148,7 @@ def main() -> int:
         (folder / "plan.md").write_text("# Plan\n- [x] K1 — reset · pliki: src/reset.py\n", encoding="utf-8")
         state = json.loads(tf(p, "status", "LOG-1", "--json").stdout).get("artifact_states", {}).get("plan.md")
         r = tf(p, "stage", "LOG-1", "implementation", "--force")
-        check(state == "zatwierdzony", f"W-19a: odhaczony kawałek — plan nadal zatwierdzony: {state}")
+        check(state == "approved", f"W-19a: odhaczony kawałek — plan nadal zatwierdzony: {state}")
         (folder / "plan.md").write_text("# Plan\n- [x] K1 — reset · pliki: src/reset.py\n- [ ] K2 — mail · pliki: src/mail.py\n",
                                         encoding="utf-8")
         state = json.loads(tf(p, "status", "LOG-1", "--json").stdout).get("artifact_states", {}).get("plan.md")

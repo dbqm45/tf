@@ -119,6 +119,90 @@ SENT_RX = re.compile(r"(?m)^- sent: (tak|nie)[ \t]*$")
 
 
 REGISTER_STATUS = {"otwarte": "open", "rozstrzygnięte": "resolved"}
+ART_STATUS = {"szkic": "draft", "zatwierdzony": "approved"}   # 14.0.0: status pliku zadania w task.json
+
+# 14.0.0: składnia specyfikacji i planu otwartych zadań (zamknięte zostają jako historia)
+SPEC_HEADINGS = [(re.compile(r"(?m)^# Specyfikacja:"), "# Spec:"),
+                 (re.compile(r"(?mi)^## Kryteria(?: akceptacji)?\s*$"), "## Acceptance criteria"),
+                 (re.compile(r"(?mi)^## Bez zmian\s*$"), "## Unchanged"),
+                 (re.compile(r"(?mi)^## Poza zakresem\s*$"), "## Out of scope"),
+                 (re.compile(r"(?mi)^## Otwarte pytania\s*$"), "## Open questions"),
+                 (re.compile(r"\[blokuje\]", re.I), "[blocking]")]
+AC_LINE = re.compile(r"(?m)^(\s*(?:[-*]\s+|#{3,6}\s+)?\**AC-\d+\**\s*[:—–-]?\s*)(.*)$")
+GWT = [(re.compile(r"^(Zakładając|Zakladajac|Mając|Majac)\b"), "Given"), (re.compile(r",\s+(gdy|kiedy)\b"), ", when"),
+       (re.compile(r",\s+wtedy\b"), ", then")]
+PLAN_FIELDS = {"pliki": "files", "kryteria": "criteria", "weryfikacja": "verify", "po": "after"}
+PLAN_SLICE = re.compile(r"(?m)^(\s*-\s*\[[ xX]\]\s*[KS]\d+\b)(.*)$")
+TICKED = re.compile(rb"(?m)^(\s*-\s*)\[[xX]\](\s*[KS]\d+\b)")
+
+
+def _spec(text: str) -> str:
+    for rx, new in SPEC_HEADINGS:
+        text = rx.sub(new, text)
+
+    def ac(m):
+        body = m.group(2)
+        for rx, new in GWT:
+            body = rx.sub(new, body, count=1)
+        return m.group(1) + body
+    return AC_LINE.sub(ac, text)
+
+
+def _plan(text: str) -> str:
+    def fields(m):
+        parts = m.group(2).split("·")
+        for i, part in enumerate(parts[1:], 1):
+            k, sep, v = part.partition(":")
+            name = k.strip().lower()
+            if sep and name in PLAN_FIELDS:
+                v = " none" if name == "po" and v.strip().lower() in ("brak", "nic") else v
+                parts[i] = k.replace(k.strip(), PLAN_FIELDS[name]) + ":" + v
+        return m.group(1) + "·".join(parts)
+    return PLAN_SLICE.sub(fields, text)
+
+
+def _sha(data: bytes, plan: bool = False) -> str:
+    import hashlib
+    return hashlib.sha256(TICKED.sub(rb"\1[ ]\2", data) if plan else data).hexdigest()
+
+
+def _task_docs(root: Path, tj: Path, dry: bool) -> list[str]:
+    """spec.md i plan.md otwartego zadania w składni 14.0.0; skróty w task.json przeliczone tylko tam, gdzie zgadzały
+    się z plikiem przed migracją — zgoda człowieka zostaje ważna, a zmiana bez zgody nadal jest widoczna."""
+    try:
+        task = json.loads(tj.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    if not isinstance(task, dict) or task.get("stage") in ("closed", "zamkniecie"):
+        return []
+    out, folder = [], tj.parent
+    for name, fn in (("spec.md", _spec), ("plan.md", _plan)):
+        f = folder / name
+        if not f.is_file():
+            continue
+        old = f.read_bytes()
+        new = fn(old.decode("utf-8")).encode("utf-8")
+        if new == old:
+            continue
+        out.append(f.relative_to(root).as_posix())
+        if dry:
+            continue
+        f.write_bytes(new)
+        for art_name, art in (task.get("artifacts") or {}).items():
+            if not isinstance(art, dict):
+                continue
+            if art_name == name and art.get("approved_sha") == _sha(old, name == "plan.md"):
+                art["approved_sha"] = _sha(new, name == "plan.md")
+            inputs = art.get("inputs") or {}
+            if inputs.get(name) == _sha(old):
+                inputs[name] = _sha(new)
+        rel = f.relative_to(root).as_posix()
+        fr = (task.get("frozen") or {}).get(rel)
+        if isinstance(fr, dict) and fr.get("sha") == _sha(old):
+            fr["sha"] = _sha(new)
+    if out and not dry:
+        tj.write_text(json.dumps(task, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return out
 
 
 def _decisions(text: str) -> str:
@@ -131,7 +215,8 @@ def _walk(o):
         out = {}
         for k, v in o.items():
             k2 = ROUND_KEYS.get(k, k) if isinstance(v, str) and v in ("run", "pass", "fail", "todo") else k
-            out[k2] = VALUES.get(v, v) if k in VALUE_KEYS and isinstance(v, str) else _walk(v)
+            out[k2] = VALUES.get(v, v) if k in VALUE_KEYS and isinstance(v, str) else \
+                ART_STATUS.get(v, v) if k == "status" and isinstance(v, str) else _walk(v)
         return out
     if isinstance(o, list):
         return [_walk(v) for v in o]
@@ -171,6 +256,8 @@ def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
                 out.append(p.relative_to(root).as_posix())
                 if not dry:
                     p.write_text(new, encoding="utf-8")
+    for tj in sorted(root.glob("docs/project/changes/*/task.json")):
+        out += _task_docs(root, tj, dry)
     reg = root / ".tf" / "register" / "items.jsonl"   # 13.0.0: status pozycji rejestru tf analyze
     if reg.is_file():
         rows, changed = [], False

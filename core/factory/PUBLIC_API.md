@@ -32,8 +32,8 @@ karty operacyjnej `.tf/config/operations.json`, sprawdzenie po wdrożeniu (`tf t
 [--timeout s]`, `tf task deployed <KEY> --rolled-back --by human:<id> [--note]`; pole `deploy` w `task.json`: `state` =
 `ok` | `czerwone` | `wycofane`, `evidence`, `version`, `at`; dowód `evidence/deploy-<n>.json`; pozycja `deploy` na
 liście `waiting`), zamknięcie zadania (`tf task close <KEY> [--lesson "…" --by human:<id>] [--base <gałąź>] [--force --by
-human:<id>]`; `tf task finding <KEY> add "<ustalenie>" [--slice K<n>] [--round R]` i `… control <F-n> "<kontrola>"`;
-`run_state.py finding <katalog> K<n> "<ustalenie>" [--round R]`; odmowa `run_state.py step … zakres fail` bez ustalenia
+human:<id>]`; `tf task finding <KEY> add "<ustalenie>" [--slice S<n>] [--round R]` i `… control <F-n> "<kontrola>"`;
+`run_state.py finding <katalog> S<n> "<ustalenie>" [--round R]`; odmowa `run_state.py step … zakres fail` bez ustalenia
 z tej rundy; pola `findings` (`id`, `text`, `slice`, `round`, `control`) i `closed` (`at`, `by`, `forced`, `lesson`)
 w `task.json`; `tf status --all`; plik `docs/project/lessons.md`), przydział kroków pętli (klucz `steps` w konfiguracji: identyfikator
 kroku → `label`, `who`, `tier`; `tf config show steps`), waga zadania (`tf task weight <KEY> [--apply | --set <waga>] [--by]
@@ -43,8 +43,8 @@ na stderr `run_report.py start`, `run_state.py weight <katalog> [--set <waga>]`)
 [tryb]`, `run_state.py approve <katalog>`), limit rund kawałka (`run_state.py step … R<k>`: najwyżej 2 rundy bez decyzji człowieka, trzecia to odmowa z kodem 2;
 po etapie `needs` dwie kolejne; pole `limit` w `current` pliku `run.json`), etykiety ustaleń agenta `scope-reviewer`
 (`[ważne]`, `[drobne]`, `[zastane]`), styl pracy osoby (`tf style [<nazwa>] [--here]`; plik `~/.tf/preferences.yaml` — ścieżkę podmienia `TF_PREFERENCES` — i `.tf/config/me.yaml` jako ostatnia warstwa konfiguracji, z kluczami `style`, `task.default_mode`, `loop.blocked_slices`, `loop.confirm_each_slice`, `autonomy.operations` (tylko zaostrzanie); klucze konfiguracji `styles` (z `claude.permission_mode` — tryb uprawnień Claude Code w `.claude/settings.local.json`, znacznik `style_permission_mode` w `.claude/factory-settings.json`), `task.default_mode`, `task.allowed_modes`, `loop.confirm_each_slice` z `run_state.py proceed <katalog>`), kawałek zablokowany pytaniem (klucz konfiguracji `loop.blocked_slices`, domyślnie `false`; `run_state.py block <katalog>
-K<n> --question`, `answer <katalog> K<n> "<odpowiedź>" --by human:<id>`, `next <katalog>`, `stage … --task`; dopisek
-`· po: K<n>` / `· po: brak` w wierszu kawałka `plan.md`; `events.jsonl` w katalogu zadania z polami `at`, `type`, `slice`,
+S<n> --question`, `answer <katalog> S<n> "<odpowiedź>" --by human:<id>`, `next <katalog>`, `stage … --task`; dopisek
+`· after: S<n>` / `· after: none` w wierszu kawałka `plan.md`; `events.jsonl` w katalogu zadania z polami `at`, `type`, `slice`,
 `text`, `by`), lista „czeka na Ciebie” (`tf status [--json] [--open]`: pole `waiting` z wpisami `kind` = `plan` / `stop` / `kawalek`,
 `what`, `details`, `question`, `options`, `recommended`, `how`, `since`; pole `needs_at` w `run.json`; to samo pole `waiting`
 na karcie podglądu), zadanie cięcia zmiany pdi (`tf task start <CHG>-<TSK> --title … --change <CHG>

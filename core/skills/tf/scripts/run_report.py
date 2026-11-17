@@ -44,7 +44,7 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
-ATTEMPT = re.compile(r"proba-(\d+)")  # katalog próby kawałka z security_scan.py scan --slice
+ATTEMPT = re.compile(r"(?:attempt|proba)-(\d+)")  # katalog próby kawałka z security_scan.py scan --slice
 
 # projekt: katalog z .tf/config/config.yaml nad skryptem (.claude/skills/tf/scripts/), inaczej bieżący
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "config.yaml").is_file()), Path.cwd())
@@ -66,7 +66,7 @@ PLAN_TEMPLATE = """# Plan: {title}
 
 Kawałki pionowe: każdy niesie wartość, przechodzi testy i jest osobnym commitem (skill tf).
 
-- [ ] K1 — <wartość dla użytkownika> · kryteria: <testy> · pliki: <ścieżki> · weryfikacja: `<polecenie>`
+- [ ] S1 — <wartość dla użytkownika> · criteria: <testy> · files: <ścieżki> · verify: `<polecenie>`
 """
 PARKED_TEMPLATE = """# Odłożone do decyzji: {title}
 
@@ -335,15 +335,15 @@ def report_md(slug: str, rep: dict) -> str:
 
 
 def security_section(run_dir: Path) -> list[str]:
-    """Sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security[/K<n>]);
-    każda próba kawałka (K<n>/proba-<k>/) pod nagłówkiem kawałka, w kolejności prób."""
+    """Sekcja „Bezpieczeństwo” z summary.md skanów kawałków (security_scan.py --out <przebieg>/security[/S<n>]);
+    każda próba kawałka (S<n>/attempt-<k>/) pod nagłówkiem kawałka, w kolejności prób."""
     sec = run_dir / "security"
 
     def key(f: Path):
         rel = f.parent.relative_to(sec)
         m = ATTEMPT.fullmatch(rel.name)
         group = rel.parent if m else rel
-        return [(int(p[1:]) if re.fullmatch(r"K\d+", p) else 0, p) for p in group.parts], int(m.group(1)) if m else 0
+        return [(int(p[1:]) if re.fullmatch(r"[KS]\d+", p) else 0, p) for p in group.parts], int(m.group(1)) if m else 0
 
     found = sorted(sec.glob("**/summary.md"), key=key)
     if not found:

@@ -8,7 +8,7 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/tf/scripts/run_state.py approve <katalog-przebiegu>                   # zgoda człowieka na plan
   python3 .claude/skills/tf/scripts/run_state.py message <kod> [--json]                        # komunikat zatrzymania dla człowieka
         [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
-  python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> K2 R1 verify fail
+  python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> S2 R1 verify fail
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
   python3 .claude/skills/tf/scripts/run_state.py spec <katalog-przebiegu> [new]
   python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> mode      # auto | manual
@@ -17,13 +17,13 @@ oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła
   python3 .claude/skills/tf/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
   python3 .claude/skills/tf/scripts/run_state.py pr-body <katalog-przebiegu> [--base <gałąź>]   # opis PR do --body-file
   python3 .claude/skills/tf/scripts/run_state.py panel <katalog-przebiegu> [--record <recenzent> pass|fail --note "…"]
-  python3 .claude/skills/tf/scripts/run_state.py finding <katalog-przebiegu> K2 "<ważne ustalenie przeglądu>" [--round R]
-  python3 .claude/skills/tf/scripts/run_state.py verify <katalog-przebiegu> K2 --files <plik>[,<plik>…]
+  python3 .claude/skills/tf/scripts/run_state.py finding <katalog-przebiegu> S2 "<ważne ustalenie przeglądu>" [--round R]
+  python3 .claude/skills/tf/scripts/run_state.py verify <katalog-przebiegu> S2 --files <plik>[,<plik>…]
         [--command "<polecenie>"] [--timeout <s>]
   python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> K2
   python3 .claude/skills/tf/scripts/run_state.py park <katalog-przebiegu> "<sprawa do decyzji>"
-  python3 .claude/skills/tf/scripts/run_state.py block <katalog-przebiegu> K2 --question "<pytanie do człowieka>"
-  python3 .claude/skills/tf/scripts/run_state.py answer <katalog-przebiegu> K2 "<odpowiedź>" --by human:<id>
+  python3 .claude/skills/tf/scripts/run_state.py block <katalog-przebiegu> S2 --question "<pytanie do człowieka>"
+  python3 .claude/skills/tf/scripts/run_state.py answer <katalog-przebiegu> S2 "<odpowiedź>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py next <katalog-przebiegu>
   python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
 
@@ -39,8 +39,8 @@ pętla zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi pr
 decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
 
 `spec <katalog> new` zakłada szablon `spec.md` (dopiero wtedy, gdy pętla zaczyna specyfikację — po wczesnym STOP
-w repozytorium nie zostaje pusty plik). `spec` sprawdza `spec.md` zadania (`tf spec check`): kryteria AC-n z Zakładając / Gdy / Wtedy, sekcje „Bez zmian”
-i „Poza zakresem”, brak pytań [blokuje]. Etap `plan` (i każdy dalszy) jest odrzucany, dopóki specyfikacja ma błędy;
+w repozytorium nie zostaje pusty plik). `spec` sprawdza `spec.md` zadania (`tf spec check`): kryteria AC-n z Given / When / Then, sekcje „Unchanged”
+i „Out of scope”, brak pytań [blocking]. Etap `plan` (i każdy dalszy) jest odrzucany, dopóki specyfikacja ma błędy;
 `stage plan` zapisuje też, z których plików powstał plan — zmiana `spec.md` po planie blokuje etap `pr`, dopóki
 `stage plan` nie zostanie wywołane ponownie.
 
@@ -84,7 +84,7 @@ zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (
 `block`, `answer` i `next` działają z przełącznikiem `loop.blocked_slices` (`.tf/config/config.yaml`, domyślnie
 wyłączony): pytanie blokuje tylko swój kawałek (`block`), skrypt mówi, który kawałek można robić dalej (`Dalej: K3`
 albo `Dalej: STOP`, gdy żaden nie jest niezależny), a `answer` zapisuje odpowiedź człowieka i odblokowuje kawałek.
-Zależności kawałków zapisuje plan (`· po: K1`, `· po: brak`; bez dopisku — po poprzednim), pytania i odpowiedzi —
+Zależności kawałków zapisuje plan (`· after: S1`, `· after: none`; bez dopisku — po poprzednim), pytania i odpowiedzi —
 `events.jsonl` zadania (jeden wpis w wierszu: `at`, `type` — `question`
 albo `answer`, `slice`, `text`, `by`; plik zapisuje decyzje, stanem przebiegu nie steruje). Z włączonym przełącznikiem STOP z kodem `question` dla bieżącego kawałka
 jest odrzucany, gdy został kawałek niezależny; pytanie o całe zadanie przechodzi z `--task`.
@@ -148,7 +148,8 @@ BARE_STAGE = {"intake": "intake", "spec": "intake", "plan": "plan", "implementat
               "review": "slices", "pr": "pr", "deploy": "done", "closed": "done"}   # zadanie bez przebiegu
 PROOF_STATE = {"verified": "done", "red": "fail", "blocked": "fail", "planned": "todo"}
 _TASK_API = None
-SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(K\d+)\s*[—-]\s*(.+)$")
+SLICE = re.compile(r"^\s*- \[([ xX])\]\s+([KS]\d+)\s*[—-]\s*(.+)$")   # S<n>; S<n> — plany sprzed 14.0.0
+SLICE_ID = r"[KS]\d+"
 MAX_TEXT = 40000
 MAX_RUNS = 40
 MAX_ROUNDS = 2      # rundy jednego kawałka bez decyzji człowieka (pierwsza próba i jedna naprawa); potem blok STOP
@@ -249,7 +250,7 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
     r = run_report.task_state(project, "stage", key, target)
     if r is not None and r.returncode != 0:
         hint = (f"Flaga: run_state.py flag {run_dir} set <klucz> albo none --reason \"bez flagi, bo …\" · "
-                f"specyfikacja: run_state.py spec {run_dir} · dowód kawałka: run_state.py verify {run_dir} K<n> "
+                f"specyfikacja: run_state.py spec {run_dir} · dowód kawałka: run_state.py verify {run_dir} S<n> "
                 f"--files <pliki kawałka> · plan po zmianie specyfikacji: run_state.py stage {run_dir} plan")
         return ((r.stdout + r.stderr).strip() or f"✗ zadanie {key} nie przeszło do etapu {target}") + "\n" + hint
     return None
@@ -412,7 +413,7 @@ def cmd_spec(run_dir: Path, project: Path, new: bool = False) -> int:
 
 
 def slice_evidence(project: Path, meta: dict, slice_id: str) -> str:
-    """Stan kawałka wyliczony przez `tf task` (zweryfikowany, niezweryfikowany, czerwony…); bez wpisu — brak dowodu."""
+    """Stan kawałka wyliczony przez `tf task` (verified, unverified, red…); bez wpisu — brak dowodu."""
     r = run_report.task_state(project, "status", meta["key"], "--json")
     try:
         return json.loads(r.stdout).get("slice_states", {}).get(slice_id) or "brak dowodu"
@@ -541,7 +542,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     refresh(project)
     print(f"✓ etap: {stage}" + (f" ({needs})" if needs else ""))
     if stage == "plan" and meta.get("key") and blocked_slices_enabled(project):
-        print("Zależności kawałków: dopisz w wierszu kawałka `· po: K<n>` (po którym można go zacząć) albo `· po: brak` "
+        print("Zależności kawałków: dopisz w wierszu kawałka `· after: S<n>` (po którym można go zacząć) albo `· after: none` "
               "(niezależny); bez dopisku kawałek zależy od poprzedniego. Dzięki temu pytanie w jednym kawałku nie "
               "zatrzyma pozostałych.")
     msg = stop_message(code) if needs == "stop" else None
@@ -556,7 +557,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
-    if re.fullmatch(r"K\d+", target) and hold_refusal(meta, target, run_dir):
+    if re.fullmatch(SLICE_ID, target) and hold_refusal(meta, target, run_dir):
         return fail(hold_refusal(meta, target, run_dir))
     if target.upper() == "PR":
         if len(rest) != 2 or rest[0] not in PR_STEPS or rest[1] not in STATES:
@@ -576,9 +577,9 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
         refresh(project)
         print(f"✓ PR: {rest[0]} = {rest[1]}")
         return 0
-    if not re.fullmatch(r"K\d+", target) or len(rest) != 3 or not re.fullmatch(r"R[1-9]", rest[0]) \
+    if not re.fullmatch(SLICE_ID, target) or len(rest) != 3 or not re.fullmatch(r"R[1-9]", rest[0]) \
             or rest[1] not in STEPS or rest[2] not in STATES:
-        return fail(f"użycie: step <katalog> K<n> R<k> <{'|'.join(STEPS)}> <{'|'.join(STATES)}>")
+        return fail(f"użycie: step <katalog> S<n> R<k> <{'|'.join(STEPS)}> <{'|'.join(STATES)}>")
     rnd, step, state = int(rest[0][1:]), rest[1], rest[2]
     cur = meta.get("current")
     if not isinstance(cur, dict) or cur.get("k") != target:
@@ -634,7 +635,7 @@ PANEL_BRIEFS = {
                          "wejście użytkownika, płatności, migracje); wynik: Krytyczne / Ważne / Do rozważenia z plik:linia "
                          "i na końcu `Werdykt: PASS` (brak krytycznych i ważnych) albo `Werdykt: FAIL`",
     "spec-reviewer": "weryfikacja `{spec}` reguła po regule wobec `git diff {base}...HEAD`: każde kryterium AC-n "
-                     "(spełnione / niespełnione / nie da się sprawdzić, z plik:linia i testem) i każda reguła „Bez zmian” "
+                     "(spełnione / niespełnione / nie da się sprawdzić, z plik:linia i testem) i każda reguła „Unchanged” "
                      "(zachowana / naruszona); na końcu `Werdykt: PASS` albo `Werdykt: FAIL`",
 }
 
@@ -693,7 +694,7 @@ def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, projec
 # ---- odczyt stanu i dashboard ------------------------------------------------------------------------------------
 
 def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
-    """Odhacza kawałek w plan.md (`- [ ] K<n>` → `- [x] K<n>`); powtórzenie niczego nie zmienia. Przebieg z zadaniem
+    """Odhacza kawałek w plan.md (`- [ ] S<n>` → `- [x] S<n>`); powtórzenie niczego nie zmienia. Przebieg z zadaniem
     odhacza tylko kawałek z aktualnym dowodem (`verify`) i z zapisanym, zaliczonym przeglądem zakresu (`step … zakres
     pass`) — pomiar po kroku G: bez tego warunku wynik przeglądu był zapisany w 7 z 15 przebiegów."""
     meta = load(run_dir) or {}
@@ -755,11 +756,11 @@ def slice_files(project: Path, key: str, slice_id: str) -> list[str]:
 
 
 def commit_message(message: str, slice_id: str, value: str, footers: list[str]) -> str:
-    """Tytuł i treść z `--message`; dopisuje `Kawałek K<n>: <wartość>` i brakujące stopki (ostatni akapit)."""
+    """Tytuł i treść z `--message`; dopisuje `Slice S<n>: <wartość>` i brakujące stopki (ostatni akapit)."""
     text = message.strip().replace("\r\n", "\n")
-    if not re.search(rf"^Kawałek {re.escape(slice_id)}:", text, re.M):
+    if not re.search(rf"^(?:Slice|Kawałek) {re.escape(slice_id)}:", text, re.M):
         title, _, rest = text.partition("\n")
-        text = f"{title}\n\nKawałek {slice_id}: {value}" + (f"\n{rest.strip(chr(10))}" if rest.strip() else "")
+        text = f"{title}\n\nSlice {slice_id}: {value}" + (f"\n{rest.strip(chr(10))}" if rest.strip() else "")
     missing = [f for f in footers if not re.search(rf"^{re.escape(f.split(':', 1)[0])}:", text, re.M)]
     if not missing:
         return text + "\n"
@@ -777,8 +778,8 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
         return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
     if not meta.get("key"):
         return no_task(meta)
-    if not re.fullmatch(r"K\d+", slice_id):
-        return fail("użycie: done <katalog> K<n> --message \"<typ>(<zakres>): <opis>\"")
+    if not re.fullmatch(SLICE_ID, slice_id):
+        return fail("użycie: done <katalog> S<n> --message \"<typ>(<zakres>): <opis>\"")
     if not CONVENTIONAL.match(message.strip()):
         return fail(f"tytuł commita poza Conventional Commits: „{message.strip().splitlines()[0] if message.strip() else ''}” "
                     "— podaj --message \"<typ>(<zakres>): <opis>\", np. feat(pay): add card payment")
@@ -849,7 +850,7 @@ def cmd_proceed(run_dir: Path, project: Path) -> int:
 
 
 # ---- pytania i zależności kawałków (krok F3, przełącznik loop.blocked_slices) ---------------------------------
-NO_DEPS = ("brak", "-", "—", "–", "nic")
+NO_DEPS = ("none", "brak", "-", "—", "–", "nic")
 HUMAN = re.compile(r"human:[\w.@-]+")
 
 
@@ -904,9 +905,9 @@ def plan_with_deps(text: str) -> list[dict]:
         deps: list[str] | None = None
         for part in parts[1:]:
             k, _, v = part.partition(":")
-            if k.strip().lower() == "po":
+            if k.strip().lower() in ("after", "po"):
                 names = [x.strip().strip("`") for x in v.split(",") if x.strip()]
-                deps = [] if any(n.lower() in NO_DEPS for n in names) else [n.upper() for n in names if re.fullmatch(r"[Kk]\d+", n)]
+                deps = [] if any(n.lower() in NO_DEPS for n in names) else [n.upper() for n in names if re.fullmatch(r"[KkSs]\d+", n)]
         if deps is None:                                       # bez dopisku: po poprzednim kawałku
             deps = [out[-1]["id"]] if out else []
         out.append({"id": m.group(2), "checked": m.group(1) != " ", "value": parts[0], "deps": deps})
@@ -950,7 +951,7 @@ def plan_and_blocked(project: Path, run_dir: Path, meta: dict) -> tuple[list[dic
 
 
 def print_next(project: Path, run_dir: Path, meta: dict) -> None:
-    """`Dalej: K<n>` — kawałek, który można robić; `Dalej: STOP` — gdy każdy czeka na odpowiedź człowieka."""
+    """`Dalej: S<n>` — kawałek, który można robić; `Dalej: STOP` — gdy każdy czeka na odpowiedź człowieka."""
     slices, blocked = plan_and_blocked(project, run_dir, meta)
     nxt = next_slice(slices, blocked)
     if nxt:
@@ -1069,7 +1070,7 @@ def pick_base(project: Path, base: str | None) -> str | None:
 
 
 def slice_commits(project: Path, base: str) -> dict[str, str]:
-    """Kawałek → najnowszy commit ze stopką „Kawałek K<n>” na gałęzi (skrót i tytuł)."""
+    """Kawałek → najnowszy commit ze stopką „Slice S<n>” (albo dawną „Kawałek S<n>”) na gałęzi (skrót i tytuł)."""
     try:
         r = subprocess.run(["git", "-C", str(project), "log", "--format=%h%x1f%s%x1f%b%x1e", f"{base}..HEAD"],
                            capture_output=True, text=True, timeout=30)
@@ -1079,16 +1080,16 @@ def slice_commits(project: Path, base: str) -> dict[str, str]:
     for rec in (r.stdout.split("\x1e") if r.returncode == 0 else []):
         parts = rec.strip("\n").split("\x1f")
         if len(parts) == 3:
-            for k in re.findall(r"^Kawałek (K\d+)\b", parts[2], re.M):
+            for k in re.findall(r"^(?:Slice|Kawałek) ([KS]\d+)\b", parts[2], re.M):
                 out.setdefault(k, f"{parts[0]} {parts[1]}")
     return out
 
 
 def last_evidence(docs: Path) -> dict[str, tuple[str, dict]]:
-    """Kawałek → (ścieżka względna, treść) ostatniego dowodu `evidence/K<n>-<m>.json`."""
+    """Kawałek → (ścieżka względna, treść) ostatniego dowodu `evidence/S<n>-<m>.json`."""
     best: dict[str, tuple[int, Path]] = {}
-    for f in docs.glob("evidence/K*-*.json"):
-        m = re.fullmatch(r"(K\d+)-(\d+)\.json", f.name)
+    for f in docs.glob("evidence/*-*.json"):
+        m = re.fullmatch(r"([KS]\d+)-(\d+)\.json", f.name)
         if m and int(m.group(2)) >= best.get(m.group(1), (0, f))[0]:
             best[m.group(1)] = (int(m.group(2)), f)
     out = {}
@@ -1336,9 +1337,9 @@ def dot_for(text: str) -> str:
 
 
 def evidence_items(docs: Path) -> list[dict]:
-    """Ostatni dowód każdego kawałka (evidence/K<n>-<m>.json): zielona kropka przy kodzie wyjścia 0."""
+    """Ostatni dowód każdego kawałka (evidence/S<n>-<m>.json): zielona kropka przy kodzie wyjścia 0."""
     last: dict[int, tuple[int, Path]] = {}
-    for f in docs.glob("evidence/K*-*.json"):
+    for f in docs.glob("evidence/*-*.json"):
         m = re.fullmatch(r"K(\d+)-(\d+)\.json", f.name)
         if m and int(m.group(2)) >= last.get(int(m.group(1)), (0, f))[0]:
             last[int(m.group(1))] = (int(m.group(2)), f)
@@ -1359,7 +1360,7 @@ def code_items(run_dir: Path, proofs: list[dict]) -> list[dict]:
     """Pliki kodu każdego kawałka — z ostatniego dowodu weryfikacji, więc także te, o których agent nie wspomniał."""
     project, out = run_dir.resolve().parents[2], []
     for proof in proofs:
-        m = re.match(r"evidence/(K\d+)-", proof["name"])
+        m = re.match(r"evidence/([KS]\d+)-", proof["name"])
         try:
             files = json.loads(proof["text"]).get("files") or {}
         except (ValueError, AttributeError):

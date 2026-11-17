@@ -80,14 +80,14 @@ drukuje `Wejście`, `Klucz`, `Tracker` i `Dalej`; robisz to, co stoi w `Dalej` (
   (jedna historyjka na akcję główną z wyniku lintu).
 - Drobna niejasność → wariant zachowawczy (mniej plików, mniejsza zmiana zachowania), w planie jako **[założenie]**.
 - **Specyfikacja przed planem** (dopiero gdy historyjka jest gotowa — przy STOP szablonu nie zakładasz):
-  `run_state.py spec <katalog> new` zakłada `spec.md`; wypełnij go: `- AC-n: Zakładając <stan>, gdy <jedna akcja>,
-  wtedy <wynik sprawdzalny testem>` wprost z kryteriów historyjki (niczego nie dopisujesz), „Bez zmian”, „Poza
-  zakresem”, „Otwarte pytania” (pytanie ze znacznikiem `[blokuje]` → pytasz człowieka; z `--auto` STOP).
+  `run_state.py spec <katalog> new` zakłada `spec.md`; wypełnij go: `- AC-n: Given <stan>, when <jedna akcja>,
+  then <wynik sprawdzalny testem>` wprost z kryteriów historyjki (niczego nie dopisujesz), „Unchanged”, „Out of
+  scope”, „Open questions” (pytanie ze znacznikiem `[blocking]` → pytasz człowieka; z `--auto` STOP).
   Sprawdzenie: `run_state.py spec <katalog>`, aż będzie `✓`.
 
 ## 2. Plan z kawałków
 `plan.md` — jeden wiersz na kawałek, pola do odhaczenia (stan wznowienia):
-`- [ ] K<n> — <wartość> · kryteria: <AC-n i testy> · pliki: <ścieżki> · weryfikacja: \`<polecenie>\` · kto: <tier>`
+`- [ ] S<n> — <wartość> · criteria: <AC-n i testy> · files: <ścieżki> · verify: \`<polecenie>\` · tier: <tier>`
 Każde `AC-n` trafia do któregoś kawałka. Zmieniasz `spec.md` po planie → powtórz `stage <katalog> plan`.
 - **Kawałek pionowy** (INVEST): niesie wartość widoczną dla użytkownika albo systemu, sam przechodzi testy i build,
   nie zostawia połowy funkcji. Pierwszy to najcieńsza działająca ścieżka. Kawałek = jeden commit
@@ -107,27 +107,27 @@ Każde `AC-n` trafia do któregoś kawałka. Zmieniasz `spec.md` po planie → p
   Tryby: `references/modes-and-stops.md`.
 
 ## 3. Pętla kawałka
-Stan: `run_state.py step <katalog> K<n> R<k> <etap> <stan>` — etapy `test`, `code`, `verify`, `scan`, `scope`; stany
+Stan: `run_state.py step <katalog> S<n> R<k> <etap> <stan>` — etapy `test`, `code`, `verify`, `scan`, `scope`; stany
 `run`, `pass`, `fail`; wołasz przy starcie etapu i przy wyniku. **R<k>** to runda: po nieudanej bramce wracasz na
-początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… K2 R1 verify fail`, potem `… K2 R2 code run`.
+początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… S2 R1 verify fail`, potem `… S2 R2 code run`.
 1. **Test czerwony** z kryteriów kawałka, tylko przypadki z kryteriów (TDD; hook `tdd_guard` pilnuje kolejności).
    Od pierwszej wersji test nosi identyfikator kryterium w nazwie albo komentarzu (`test_ac1_…`, `# AC-1`) —
    z niego powstaje ślad kryterium; dopisywanie po fakcie to dodatkowy commit.
 2. **Najmniejszy kod**, który go zazieleni, we własnym kontekście (cache). Mechaniczną zmianę w 1–2 plikach
    z gotową specyfikacją zlecasz `quick-fixer`.
-3. **Weryfikacja z dowodem:** `run_state.py verify <katalog> K<n> --files <pliki kawałka po przecinku, z plikiem
+3. **Weryfikacja z dowodem:** `run_state.py verify <katalog> S<n> --files <pliki kawałka po przecinku, z plikiem
    testu>` — skrypt sam uruchamia weryfikację produktu (polecenie z `.claude/quality-gate.json`; gdy go nie ma,
    dodaj `--command "<polecenie z pierwszej linii CLAUDE.md>"`) i zapisuje dowód w `evidence/`. Kod 0 = zielono,
    1 = czerwono. Bez aktualnego dowodu `done` i etap `pr` są odrzucane; zmiana pliku po dowodzie go unieważnia.
-   Werdykt: `BRAMKA K<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
-   **Skan** po zielonych testach: `security_scan.py scan --slice K<n> --attempt <k> --out <katalog>/security/K<n>`.
-   FAIL → ustalenia z `security/K<n>/feedback.md` są wejściem następnej próby; po 2 próbach STOP, kawałka nie
+   Werdykt: `BRAMKA S<n>: PASS` albo `FAIL (<skrót>, próba k/2)`.
+   **Skan** po zielonych testach: `security_scan.py scan --slice S<n> --attempt <k> --out <katalog>/security/S<n>`.
+   FAIL → ustalenia z `security/S<n>/feedback.md` są wejściem następnej próby; po 2 próbach STOP, kawałka nie
    commitujesz. Brak skanera to FAIL, nie cichy PASS (`references/security.md`).
 4. **Przegląd zakresu:** zawsze `scope-reviewer` (nie Ty, także przy małym diffie) dostaje kawałek z planu
-   i `git diff`. Ustalenie **ważne** → `run_state.py finding <katalog> K<n> "<ustalenie>"`, `step <katalog> K<n>
+   i `git diff`. Ustalenie **ważne** → `run_state.py finding <katalog> S<n> "<ustalenie>"`, `step <katalog> S<n>
    R<k> zakres fail`, wycofujesz, nowa runda; **drobne**, **zastane** → `parked.md`.
-5. **Bez ważnych:** `run_state.py done <katalog> K<n> --message "<typ>(<zakres>): <opis>"` zapisuje przegląd,
-   commituje pliki z dowodu (treść `Kawałek K<n>`, stopka `Flag:`), odhacza i podaje następny kawałek.
+5. **Bez ważnych:** `run_state.py done <katalog> S<n> --message "<typ>(<zakres>): <opis>"` zapisuje przegląd,
+   commituje pliki z dowodu (treść `Slice S<n>`, stopka `Flag:`), odhacza i podaje następny kawałek.
    Odmowa mówi, czego brak. Stopki i flaga cięcia: `references/pdi-cuts.md`.
 6. Z `--budget`: `run_report.py status <katalog>` — koszt powyżej budżetu → STOP po tym kawałku.
 
@@ -161,9 +161,9 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
 
 ## Blok STOP
 ```
-STOP — <faza / K<n>>
+STOP — <faza / S<n>>
 Powód: <co blokuje, z dowodem: polecenie i wynik albo plik:linia>
-Zrobione: <kawałki z SHA commitów> · Wznowienie: od <K<n>>
+Zrobione: <kawałki z SHA commitów> · Wznowienie: od <S<n>>
 Potrzebne od człowieka: <decyzja / dostęp / informacja>
 ```
 Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason "<powód>"`, potem i tak
@@ -174,8 +174,8 @@ Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason 
 **Wejście:** `/tf "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
 
 **Wynik:**
-- plan: K1 import poprawnego CSV (test: plik z 3 wierszami) · K2 lista sesji z błędem (test: wiersz bez EVSE ID)
-  · K3 komunikat o odrzuconym pliku (test: zły nagłówek → 422);
+- plan: S1 import poprawnego CSV (test: plik z 3 wierszami) · S2 lista sesji z błędem (test: wiersz bez EVSE ID)
+  · S3 komunikat o odrzuconym pliku (test: zły nagłówek → 422);
 - `parked.md`: duplikaty CDR, strefy czasowe, pliki > 50 MB — do decyzji;
 - 3 commity `feat(cdr): …`, jeden PR; raport: 14 min, 0,41 USD [przykład].
 

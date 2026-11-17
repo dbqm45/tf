@@ -379,7 +379,7 @@ def main() -> int:
         html = (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8")
         new = next((x for x in runs_json(html) if x.get("slug") != "stary"), {})
         st = {s["id"]: s["state"] for s in new.get("slices", [])}
-        check(st == {"K1": "stale", "K2": "stale"} and all(s.get("proof") == "niezweryfikowany" for s in new["slices"]),
+        check(st == {"K1": "stale", "K2": "stale"} and all(s.get("proof") == "unverified" for s in new["slices"]),
               f"D-5: odhaczony kawałek ze zmienionym plikiem ma stan stale: {new.get('slices')}")
         check(".chip.stale" in html and "r.slices.map" in html and "r.dir" in html,
               "D-6: szablon rysuje pasek kawałków, stan stale i katalog z danych przebiegu")
@@ -483,7 +483,7 @@ def main() -> int:
         art = (t4().get("artifacts") or {}).get("plan.md") or {}
         who = (art.get("verified") or [{}])[-1].get("by", "")
         r2 = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
-        check(r.returncode == 0 and art.get("status") == "zatwierdzony" and who.startswith("human:") and r2.returncode == 0,
+        check(r.returncode == 0 and art.get("status") == "approved" and who.startswith("human:") and r2.returncode == 0,
               f"T-5: approve zapisuje zgodę człowieka na plan i pętla rusza: {r.stdout}{r.stderr} {who} | {r2.stdout}")
         # identyfikator kryterium w teście już przy weryfikacji kawałka (pomiar po E3: dopisywany osobnym commitem)
         (proj / "export.py").write_text("ROWS = 1\n", encoding="utf-8")

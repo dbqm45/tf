@@ -115,14 +115,14 @@ katalogami:
 
 | Gdzie | Co | Git |
 |---|---|---|
-| `docs/project/changes/<KEY>/` | `ticket.md` (historyjka), `spec.md` (kryteria AC-n w formie Zakładając / Gdy / Wtedy, co zostaje bez zmian, co poza zakresem, otwarte pytania — sprawdza ją skrypt; z błędami nie ma planu; plik powstaje dopiero, gdy pętla zaczyna specyfikację), `plan.md` (kawałki do odhaczenia — od niego wznawiasz przerwany przebieg), `task.json` (stan), `evidence/` (dowody weryfikacji kawałków), `report.md` (raport) | tak — jednym commitem `docs(task): record <KEY>` na końcu przebiegu |
+| `docs/project/changes/<KEY>/` | `ticket.md` (historyjka), `spec.md` (kryteria AC-n w formie Given / When / Then, co zostaje bez zmian, co poza zakresem, otwarte pytania — sprawdza ją skrypt; z błędami nie ma planu; plik powstaje dopiero, gdy pętla zaczyna specyfikację), `plan.md` (kawałki do odhaczenia — od niego wznawiasz przerwany przebieg), `task.json` (stan), `evidence/` (dowody weryfikacji kawałków), `report.md` (raport) | tak — jednym commitem `docs(task): record <KEY>` na końcu przebiegu |
 | `.tf/runs/<KEY>/` | `run.json`, `parked.md` (sprawy odłożone do Twojej decyzji), wyniki skanów, pełne logi weryfikacji | nie |
 
 Lista zadań: `tf status` (liczona na żywo z folderów zadań); stan jednego: `tf task status <KEY>`. Kawałek jest „zrobiony” dopiero
 z dowodem: pętla uruchamia weryfikację przez `run_state.py verify`, a bez aktualnego dowodu skrypt nie odhaczy kawałka
 i nie przepuści przebiegu do PR. Tak samo bez zapisanego, zaliczonego przeglądu zakresu (`run_state.py step … zakres
 pass`): w pomiarze po kroku G pętla wywoływała recenzenta zawsze, ale wynik zapisywała w 7 z 15 przebiegów. Po
-przeglądzie bez ustaleń ważnych pętla kończy kawałek jednym poleceniem `run_state.py done <katalog> K<n> --message
+przeglądzie bez ustaleń ważnych pętla kończy kawałek jednym poleceniem `run_state.py done <katalog> S<n> --message
 "<typ>(<zakres>): <opis>"`: zapis przeglądu, commit plików z dowodu ze stopkami, odhaczenie i następny kawałek. Bramka
 jakości nie reaguje na zmiany w `docs/project/changes/`.
 
@@ -140,7 +140,7 @@ faktura. W trakcie przebiegu jedna linia stanu:
 Podgląd na żywo: `python3 .claude/skills/tf/scripts/run_state.py dashboard` buduje
 `.tf/runs/dashboard.html` (otwierasz plik w przeglądarce, odświeża się sam co 5 s). Kolumny to etapy przebiegu
 (Przyjęcie, Plan, Kawałki, PR, Czeka na człowieka, Gotowe), karta pokazuje rundy bieżącego kawałka (R1, R2…) i etapy
-pętli (test, kod, weryf, skan, zakres) oraz pasek kawałków K1, K2… — fioletowy kawałek był odhaczony, ale nie ma
+pętli (test, code, verify, scan, scope) oraz pasek kawałków S1, S2… — fioletowy kawałek był odhaczony, ale nie ma
 aktualnego dowodu (plik zmienił się po weryfikacji). Karta pokazuje też etap zadania, a zadanie bez przebiegu
 (założone samym `tf task`, świeży klon) ma własną kartę. Panel plików dzieli pliki na katalog zadania (git), katalog
 roboczy, dowody, pliki kodu każdego kawałka, wyniki skanów, STOP i `report.md`. Nad tablicą jest lista **„Czeka na
@@ -174,7 +174,7 @@ przebiegu i samo polecenie. Fabryka niczego nie wdraża i niczego sama nie cofa.
 
 **Panel recenzentów przy wadze pełnej.** Zadanie o wadze pełnej (logowanie, płatności, uprawnienia, migracje,
 sekrety, dane osobowe) przechodzi do etapu PR dopiero po dwóch przeglądach w osobnych kontekstach: `security-reviewer`
-(bezpieczeństwo zmiany) i `spec-reviewer` (każde kryterium i każda reguła „Bez zmian” ze specyfikacji, z dowodem).
+(bezpieczeństwo zmiany) i `spec-reviewer` (każde kryterium i każda reguła „Unchanged” ze specyfikacji, z dowodem).
 Skład i zlecenia podaje `run_state.py panel <katalog>`; werdykt zapisuje pętla (`--record <recenzent> pass|fail`),
 a ręcznie: `tf task review <KLUCZ> <recenzent> pass|fail --note "…"`. Werdykt dotyczy commita — po poprawce w nowym
 commicie przegląd jest od nowa. Waga lekka i zwykła nie mają panelu.
@@ -193,12 +193,12 @@ spis standardów i słownik domeny.
 
 ## Bezpieczeństwo i karencja wersji
 Po zielonych testach kawałka pętla uruchamia
-`python3 .claude/skills/tf/scripts/security_scan.py scan --slice K<n> --attempt <k> --out <katalog>/security/K<n>`:
+`python3 .claude/skills/tf/scripts/security_scan.py scan --slice S<n> --attempt <k> --out <katalog>/security/S<n>`:
 semgrep z regułami `p/owasp-top-ten` (i `.semgrep.yml` produktu, jeśli jest) tylko na zmienionych plikach, `npm audit`
 albo `pip-audit` tylko przy zmianie manifestu lub lockfile'a (`package.json` bez zależności i bez lockfile'a —
 audyt pominięty z adnotacją w raporcie; z zależnościami bez lockfile'a — błąd skanu); wynik każdej próby (SARIF,
-`verdict.json`, `summary.md`) to osobny katalog `<katalog>/security/K<n>/proba-<k>/`, a
-`<katalog>/security/K<n>/feedback.md` to ustalenia ostatniej próby. Raport przebiegu wymienia każdą próbę kawałka
+`verdict.json`, `summary.md`) to osobny katalog `<katalog>/security/S<n>/attempt-<k>/`, a
+`<katalog>/security/S<n>/feedback.md` to ustalenia ostatniej próby. Raport przebiegu wymienia każdą próbę kawałka
 (np. FAIL z ustaleniami, potem PASS). Ustalenie
 blokujące (error albo warning z CWE z OWASP Top 10 — ta sama reguła co SEC-001 w ci_for_sdlc) to czerwona bramka:
 druga próba dostaje ustalenia (reguła, plik:linia), po dwóch próbach STOP i brak commitu. Ustalenia poniżej progu
