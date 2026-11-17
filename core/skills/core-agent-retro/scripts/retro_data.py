@@ -40,7 +40,7 @@ from pathlib import Path
 PROBLEM = re.compile(r"błąd|błęd|porażk|cofn|revert|nie zadziała|nie działa|nie przesz|pułapk|ponown|poprawk|"
                      r"zawies|eskal|przekroczon|nie udał", re.I)
 JOURNAL_ROW = re.compile(r"^\|\s*(\d{4}-\d{2}-\d{2})[^|]*\|\s*([^|]*)\|\s*([^|]*)\|\s*(.*?)\s*\|\s*$")
-TRAPS_HEAD = "## Pułapki i ślepe uliczki"
+TRAPS_HEADS = ("## Pitfalls and dead ends", "## Pułapki i ślepe uliczki")   # pl: sprzed 14.x
 
 
 def day(ts: str) -> dt.date | None:
@@ -128,9 +128,10 @@ def traps(proj: Path, since: dt.date, until: dt.date, root: Path) -> list[dict]:
         text = f.read_text(encoding="utf-8", errors="replace")
         m = re.search(r"^updated:\s*(\S+)", text, re.M) or re.search(r"^started:\s*(\S+)", text, re.M)
         d = day(m.group(1)) if m else None
-        if not d or not since <= d <= until or TRAPS_HEAD not in text:
+        head = next((h for h in TRAPS_HEADS if h in text), None)
+        if not d or not since <= d <= until or not head:
             continue
-        body = text.split(TRAPS_HEAD, 1)[1].split("\n## ", 1)[0]
+        body = text.split(head, 1)[1].split("\n## ", 1)[0]
         body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
         for line in body.splitlines():
             line = line.strip()

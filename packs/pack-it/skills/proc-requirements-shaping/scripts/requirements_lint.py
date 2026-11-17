@@ -41,7 +41,8 @@ from functools import lru_cache
 from pathlib import Path
 
 RULE_MAX = 200
-SKIP_SECTIONS = ("obecny system", "ograniczenia", "do decyzji o stacku", "otwarte pytania", "przekazanie")
+SKIP_SECTIONS = ("obecny system", "ograniczenia", "do decyzji o stacku", "otwarte pytania", "przekazanie",
+                 "current system", "constraints", "for the stack decision", "open questions", "handoff")   # en: 14.x
 
 # (kategoria, wzorzec, rozróżniaj wielkość liter, tylko w sekcjach jakości)
 LEAK_PATTERNS = [

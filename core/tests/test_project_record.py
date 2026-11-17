@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Testy dziennika projektu: python3 tests/test_project_record.py"""
 import json
+import re
 import os
 import subprocess
 import sys
@@ -71,6 +72,59 @@ def wip_tests() -> list[str]:
 
 
 RESUME_TESTS = 3
+EN_TESTS = 6
+EN_BODY = "# Brief\n## TL;DR\nShort result.\n## Open questions\n- [ ] Question for the PO\n## Handoff\n- For: tomasz\n"
+
+
+def english_tests() -> list[str]:
+    """Składnia 14.x po angielsku: sekcje Handoff / Open questions, punkt kontrolny Steps / Next step, obszary domeny
+    (Evidence, Named by the human, Candidates below the threshold); polskie nazwy działają dalej."""
+    fails = []
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        run(root, "init")
+        artifact(root, "01-discovery/brief.md", _body=EN_BODY)
+        chk = run(root, "check")
+        if chk.returncode != 0:
+            fails.append(f"EN-1: artefakt z ## Handoff i ## Open questions przechodzi check: {chk.stdout[-300:]}")
+        artifact(root, "01-discovery/brief.md", _body=EN_BODY.replace("For: tomasz", "**For:** <persona>"))
+        if run(root, "check").returncode == 0:
+            fails.append("EN-2: niewypełniony ## Handoff wykryty jak dawne Przekazanie")
+        artifact(root, "01-discovery/brief.md", _body=EN_BODY)
+        run(root, "report")
+        exports = list((root / "docs/project/exports").glob("report-*.md"))
+        if not exports or "Question for the PO" not in exports[0].read_text():
+            fails.append("EN-3: raport zbiera ## Open questions")
+        r = run(root, "wip", "start", "Google login", "--by", "ola")
+        wip = root / ".tf/wip/google-login.md"
+        if r.returncode != 0 or not wip.exists():
+            fails.append(f"EN-4: wip start: {r.stdout[-200:]}")
+        else:
+            body = wip.read_text()
+            body = re.sub(r"(?ms)^## (Kroki|Steps)\b.*?(?=^## )", "## Steps\n- [ ] 1. Callback test ← next\n\n", body)
+            body = re.sub(r"(?ms)^## (Następna czynność|Next step)\b.*?(?=^## )", "## Next step\nWrite the callback test in auth.spec.ts\n\n", body)
+            wip.write_text(body)
+            s = run(root, "--hook-session").stdout
+            if "Write the callback test" not in s:
+                fails.append(f"EN-4: hook sesji czyta ## Next step z punktu kontrolnego: {s[-300:]}")
+        (root / "input").mkdir()
+        (root / "input/a.md").write_text("The manager picks people.\nNobody knows who is free.\n")
+        (root / "input/b.md").write_text("The planner books specialists.\n")
+        dom = root / "docs/project/02-domain"
+        (dom / "corpus.md").write_text("# Bank\n## TL;DR\nok\n## S1 — input/a.md\n"
+                                       "- **E1** > \"The manager picks people.\" — L1\n"
+                                       "- **E2** > \"Nobody knows who is free.\" — L2\n"
+                                       "## S2 — input/b.md\n- **E3** > \"The planner books specialists.\" — L1\n")
+        area = ("# Areas\n## TL;DR\nok\n## Areas\n### A1 — Assignment\n- **Evidence:** E1, E2, E3\n"
+                "## Candidates below the threshold\n### A9 — Leave\n- **Evidence:** E1\n")
+        (dom / "areas.md").write_text(area)
+        if run(root, "evidence").returncode != 0:
+            fails.append("EN-5: obszar z **Evidence:** i kandydaci poniżej progu (po angielsku) " + run(root, "evidence").stdout[-200:])
+        (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E2\n- **Named by the human:** yes"))
+        r = run(root, "evidence")
+        if r.returncode != 0 or "wskazany przez człowieka" not in r.stdout:
+            fails.append(f"EN-6: **Named by the human:** yes daje ostrzeżenie, nie błąd: {r.stdout[-200:]}")
+    return fails
 
 
 def resume_tests() -> list[str]:
@@ -214,12 +268,13 @@ def main() -> int:
         r = run(root, "evidence")
         if r.returncode != 0 or "wskazany przez człowieka" not in r.stdout:
             fails.append("evidence: obszar wskazany przez człowieka powinien dać ostrzeżenie, nie błąd")
+    fails += english_tests()
     with tempfile.TemporaryDirectory() as d:
         if run(Path(d), "--hook-session").stdout.strip():
             fails.append("hook sesji powinien milczeć bez docs/project")
     fails += wip_tests()
     fails += resume_tests()
-    total = 18 + WIP_TESTS + RESUME_TESTS + len(bad)
+    total = 18 + WIP_TESTS + RESUME_TESTS + EN_TESTS + len(bad)
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów dziennika projektu")

@@ -91,8 +91,14 @@ def parse(path: Path) -> tuple[dict | None, str]:
     return meta, m.group(2)
 
 
+# Nazwy sekcji: angielska (od 14.x) i dawna polska — obie rozpoznawane, szablony mają angielską.
+SECTION_NAMES = {"Przekazanie": ("Handoff", "Przekazanie"), "Otwarte pytania": ("Open questions", "Otwarte pytania"),
+                 "Następna czynność": ("Next step", "Następna czynność"), "Kroki": ("Steps", "Kroki")}
+
+
 def section(body: str, name: str) -> str | None:
-    m = re.search(rf"^##\s+{re.escape(name)}\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S)
+    names = "|".join(re.escape(n) for n in SECTION_NAMES.get(name, (name,)))
+    m = re.search(rf"^##\s+(?:{names})\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S)
     return m.group(1).strip() if m else None
 
 
@@ -184,10 +190,10 @@ def check(root: Path) -> tuple[list[str], list[str]]:
                 warnings.append(f"{rel}: TL;DR dłuższy niż ~10 linii — skróć (czyta go każdy następny agent)")
             handoff = section(it["body"], "Przekazanie")
             if handoff is None and status != "superseded":
-                errors.append(f"{rel}: brak sekcji „## Przekazanie”")
+                errors.append(f"{rel}: brak sekcji „## Handoff” (dawniej „## Przekazanie”)")
             elif handoff is not None and status in ("proposed", "accepted") and (
                     re.search(r"<[^>]+>", handoff) or re.search(r":\*?\*?\s*…\s*$", handoff, re.M)):
-                errors.append(f"{rel}: Przekazanie zawiera niewypełnione pola szablonu (<…> lub …)")
+                errors.append(f"{rel}: Handoff zawiera niewypełnione pola szablonu (<…> lub …)")
         if kind not in ("journal", "decisions") and status in ("proposed", "accepted"):
             leftovers = re.findall(r"^[^|`\n]*<[A-ZĄĆĘŁŃÓŚŹŻa-ząćęłńóśźż][^>\n]{3,}>", it["body"], re.M)
             if leftovers:
@@ -511,7 +517,7 @@ def snapshot(root: Path, event: str) -> int:
     shown = ", ".join(f"`{f}`" for f in (files or [])[:25]) + (" …" if files and len(files) > 25 else "")
     block = "\n".join([
         AUTO_BEGIN,
-        "## Stan automatyczny (zapisuje hook — nie edytuj)",
+        "## Automatic state (written by the hook — do not edit)",
         f"- Zapisano: {datetime.now():%Y-%m-%d %H:%M} · zdarzenie: {event}",
         f"- Gałąź: {branch} · ostatni commit: {head}",
         f"- Niezacommitowane zmiany ({len(files) if files is not None else 'brak gita'}): {shown or '—'}",
@@ -653,16 +659,16 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
     areas = rec / "02-domain" / "areas.md"
     if areas.exists():
         _, body = parse(areas)
-        main_part = re.split(r"^##\s+Kandydaci poniżej progu", body, flags=re.M)[0]
+        main_part = re.split(r"^##\s+(?:Candidates below the threshold|Kandydaci poniżej progu)", body, flags=re.M)[0]
         for m in re.finditer(r"^###\s+(A\d+)\b(.*?)(?=^###\s|^##\s|\Z)", main_part, re.M | re.S):
             aid, block = m.group(1), m.group(2)
-            ids = re.findall(r"E\d+", (re.search(r"Dowody:\*?\*?(.*)", block) or [None, ""])[1])
+            ids = re.findall(r"E\d+", (re.search(r"(?:Evidence|Dowody):\*?\*?(.*)", block) or [None, ""])[1])
             unknown = [i for i in ids if i not in entries]
             if unknown:
                 errors.append(f"areas.md {aid}: nieznane dowody {unknown}")
             strong = [i for i in ids if i in entries and not any(t.startswith(WEAK_TAGS) for t in entries[i]["tags"])]
             sources = {entries[i]["source"] for i in strong}
-            user = re.search(r"Wskazany przez człowieka:\*?\*?\s*tak", block, re.I)
+            user = re.search(r"(?:Named by the human|Wskazany przez człowieka):\*?\*?\s*(?:yes|tak)", block, re.I)
             if len(strong) < 3 or len(sources) < 2:
                 msg = f"areas.md {aid}: {len(strong)} mocnych cytatów z {len(sources)} źródeł (próg: 3 z 2)"
                 (warnings if user else errors).append(msg + (" — wskazany przez człowieka" if user else " — przenieś do „Kandydaci poniżej progu”"))
