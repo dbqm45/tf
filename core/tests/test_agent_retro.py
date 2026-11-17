@@ -60,6 +60,9 @@ def make(root: Path, with_git: bool = True) -> None:
     (arch / "20261016-formularz.md").write_text(
         "---\ntask: formularz\nupdated: 2026-10-16 12:00\n---\n# Formularz\n\n## Pułapki i ślepe uliczki\n"
         "- Vitest w trybie watch zawiesza hook — uruchamiaj z --run.\n\n## Otwarte pytania\n", encoding="utf-8")
+    (arch / "20261015-logowanie.md").write_text(   # 14.x: angielska nazwa sekcji punktu kontrolnego
+        "---\ntask: logowanie\nupdated: 2026-10-15 12:00\n---\n# Logowanie\n\n## Pitfalls and dead ends\n"
+        "- The OAuth mock keeps state between tests — reset it in afterEach.\n\n## Open questions\n", encoding="utf-8")
     (arch / "20260901-stary.md").write_text(
         "---\ntask: stary\nupdated: 2026-09-01 12:00\n---\n# Stary\n\n## Pułapki i ślepe uliczki\n- Stara pułapka.\n",
         encoding="utf-8")
@@ -114,8 +117,10 @@ def main() -> int:
         check(j.get("entries") == 2 and len(j.get("flagged", [])) == 1 and "cofnięto" in j["flagged"][0],
               f"AR-6: dziennik z okna, wpisy z sygnałem problemu wyróżnione: {j}")
         traps = d.get("traps", [])
-        check(len(traps) == 1 and "Vitest" in traps[0]["text"] and traps[0]["file"].endswith("20261016-formularz.md"),
-              f"AR-7: pułapki z punktów kontrolnych z okna: {traps}")
+        by_file = {x["file"].rsplit("/", 1)[-1]: x["text"] for x in traps}
+        check(len(traps) == 2 and "Vitest" in by_file.get("20261016-formularz.md", "")
+              and "OAuth mock" in by_file.get("20261015-logowanie.md", ""),
+              f"AR-7: pułapki z punktów kontrolnych z okna (sekcja po polsku i po angielsku): {traps}")
         les = d.get("lessons", [])
         check(les == ["Uruchamiaj Vitest z --run w hookach"], f"AR-8: istniejące lekcje (reguły) do wykrycia powtórek: {les}")
         if shutil.which("git"):

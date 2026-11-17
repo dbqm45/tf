@@ -683,7 +683,15 @@ treści (angielska), bez równoległej polskiej.
       Haiku: przed 11/11; po 5/6 (`wynik-skryptu-to-twierdzenie` bez wywołania skilla) + powtórka 2/2 → 7/8; $2,64.
       Treść: `core-conventional-commits` — opis commita w języku commitów repo (z `git log`, nowe repo: angielski), jak
       `commit_language` od #290 (wcześniej „po angielsku”).
-    - [ ] dalsze partie: core-project-record (po zmianie składni),
+    - [x] 3c — składnia dziennika projektu (2026-11-17): `project_record.py` czyta sekcje po angielsku i po polsku
+      (`Handoff`/`Przekazanie`, `Open questions`/`Otwarte pytania`, punkt kontrolny `Next step`/`Następna czynność`,
+      `Steps`/`Kroki`; obszary domeny `Evidence`/`Dowody`, `Named by the human: yes`/`Wskazany przez człowieka: tak`,
+      `Candidates below the threshold`/`Kandydaci poniżej progu`), migawka punktu kontrolnego pisze
+      `## Automatic state …`; `retro_data.py` — `Pitfalls and dead ends`; `requirements_lint` (pack-it) pomija
+      `Handoff`, `Open questions`, `Constraints`, `Current system`, `For the stack decision`. Testy EN-1…EN-6, AR-7,
+      lint (czerwone bez zmiany). Bez migracji istniejących artefaktów: to zapis historii projektu (zaakceptowane
+      dokumenty), a parser rozpoznaje obie nazwy — migracja dopiero przed usunięciem polskich aliasów.
+    - [ ] dalsze partie: core-project-record (skill i szablony po angielsku, prompty `build.py`),
       core-agent-instructions, core-skill-authoring, core-git-workflow, core-cost-control, tf, core-agent-security,
       core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).

@@ -133,6 +133,12 @@ def main() -> int:
     check(out.returncode == 0 and r.get("readiness", {}).get("score") == 4 and not r.get("leaks"),
           f"poprawne wymagania → gotowość 4/4, brak wycieków (sekcja „Obecny system” pominięta), kod 0: {out.returncode} {out.stdout[-300:]}")
 
+    en = GOOD + "\n## Handoff\n- For: tomasz — the export goes through the REST endpoint in Spring Boot and Kafka\n"
+    out = run({"r.md": en}, "r.md", "--json")
+    r = json.loads(out.stdout or "{}")
+    check(out.returncode == 0 and not r.get("leaks"),
+          f"sekcja „## Handoff” (14.x) pominięta jak dawne „Przekazanie”: {out.stdout[-300:]}")
+
     out = run({"r.md": LEAKY}, "r.md", "--json")
     r = json.loads(out.stdout or "{}")
     cats = {l["category"] for l in r.get("leaks", [])}
