@@ -131,7 +131,7 @@ def main() -> int:
         check(r.returncode == 0 and r.stdout.strip() == ".tf/runs/PROJ-123" and (pdoc / "task.json").is_file(),
               f"R-25: --key nadaje klucz z trackera: {r.stdout} {r.stderr}")
         r = run(["start", "Limit dobowy", "--key", "PROJ-123", "--story", "x"], proj, cfg)
-        check(r.returncode == 2 and "już istnieje" in r.stdout + r.stderr, f"R-26: powtórny start tego samego klucza: {r.stdout}")
+        check(r.returncode == 2 and "already exists" in r.stdout + r.stderr, f"R-26: powtórny start tego samego klucza: {r.stdout}")
         r = run(["start", "Zły klucz", "--key", "proj 1", "--story", "x"], proj, cfg)
         check(r.returncode == 2 and not (proj / ".tf" / "runs" / "proj 1").exists(),
               f"R-27: klucz spoza wzorca odrzucony, nic nie powstaje: {r.returncode} {r.stdout}")
@@ -305,7 +305,7 @@ def main() -> int:
         text = kept.read_text(encoding="utf-8") if kept.is_file() else ""
         check(r.returncode == 0 and "USD" in text and "TSK-58" in text and "changes/CHG-12/runs/TSK-58.md" in r.stdout,
               f"R-18: finish przebiegu cięcia zapisuje raport w dzienniku zmiany: {r.stdout[-300:]} {text[:300]}")
-        check("## Odłożone do decyzji" in text and "placeholderem w repo" in text and "- <" not in text,
+        check("## Postponed for a decision" in text and "placeholderem w repo" in text and "- <" not in text,
               f"R-19: raport w repo ma pozycje z parked.md (PRB-14: parked.md jest poza gitem): {text[-600:]}")
 
         # R-35 (PRB-34): w kontenerze fazy pdi transkrypty bywają niedostępne (sandbox) — finish i tak zapisuje raport
@@ -313,8 +313,8 @@ def main() -> int:
         kept.unlink()
         r = run(["finish", str(run_dir)], proj, Path(t) / "brak-transkryptow")
         text = kept.read_text(encoding="utf-8") if kept.is_file() else ""
-        check(r.returncode == 2 and "brak danych o koszcie" in text and "placeholderem w repo" in text
-              and "brak danych o koszcie" in r.stdout,
+        check(r.returncode == 2 and "no cost data" in text and "placeholderem w repo" in text
+              and "no cost data" in r.stdout,
               f"R-35: finish bez transkryptów zapisuje raport z adnotacją: {r.returncode} {r.stdout[-400:]} {text[:400]}")
         r = run(["status", str(run_dir)], proj, Path(t) / "brak-transkryptow")
         check(r.returncode == 2, f"R-36: status bez transkryptów → kod 2: {r.returncode} {r.stdout[-300:]}")
@@ -357,7 +357,7 @@ def main() -> int:
         r = run(["finish", str(rdir)], repo, Path(t) / "cfg3")
         out = r.stdout + r.stderr
         check(r.returncode == 2 and "Traceback" not in r.stderr and ws_slug in out and "--session" in out
-              and "katalogami nadrzędnymi" in out,
+              and "parent directories" in out,
               f"R-24: komunikat wymienia przeszukane katalogi i podpowiada --session: {out[-600:]}")
 
         # brak transkryptów → czytelny komunikat, nie wyjątek
@@ -393,7 +393,7 @@ def main() -> int:
         r = run(["start", "Reset hasła", "--key", "EBO-4", "--story", "Jako użytkownik chcę zresetować hasło."], proj, cfg)
         task = json.loads((changes / "EBO-4" / "task.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
         check(r.stdout.strip() == ".tf/runs/EBO-4" and task.get("weight") == "full"
-              and "Waga: pełna" in r.stderr and "hasł" in r.stderr,
+              and "Weight: " in r.stderr and "hasł" in r.stderr,
               f"R-44: start przydziela wagę i podaje powód: {r.stdout} | {r.stderr} | {task.get('weight')}")
         task2 = json.loads((changes / "EBO-2" / "task.json").read_text(encoding="utf-8"))
         check(task2.get("weight") == "normal" and task2.get("weight_log"),
@@ -401,7 +401,7 @@ def main() -> int:
         r = run(["start", "--task", "TSK-57", "--change", "CHG-12"], proj, cfg)
         cut = changes / "CHG-12-TSK-57" / "ticket.md"
         text = cut.read_text(encoding="utf-8") if cut.is_file() else ""
-        check(r.returncode == 0 and "Source:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text and "Waga:" in r.stderr,
+        check(r.returncode == 0 and "Source:" not in text and "Cut TSK-57 of the change CHG-12" in text and "Weight:" in r.stderr,
               f"R-43: zadanie cięcia pdi — ticket.md bez linii źródła (ma nagłówek cięcia), z wagą: {r.stdout} {r.stderr} {text[:200]}")
 
     for f in fails:

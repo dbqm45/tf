@@ -190,6 +190,11 @@ def main() -> int:
         code2, out2, raw2 = weight(p, "HIS-1")
         check(out.get("proposal") == "normal" and out2.get("proposal") == "full",
               f"W-24: waga cięcia nie rośnie od zamiaru całej zmiany; zwykłe zadanie z tą samą treścią — pełna: {raw} | {raw2}")
+        # W-24b: run_report.py pisze nagłówek zamiaru po angielsku (etap 4) — odcięcie działa dla obu wersji
+        (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(
+            cut_ticket.replace("## Zamiar zmiany", "## The change's intent"), encoding="utf-8")
+        code, out, raw = weight(p, "CHG-12-TSK-59")
+        check(out.get("proposal") == "normal", f"W-24b: angielski nagłówek zamiaru też jest odcinany: {raw}")
         (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(cut_ticket.replace("historia prób w panelu operatora",
                                                                                    "zmiana hasła operatora"), encoding="utf-8")
         code, out, raw = weight(p, "CHG-12-TSK-59")

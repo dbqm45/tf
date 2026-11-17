@@ -73,9 +73,9 @@ OWASP_CWES = {c for table in (OWASP_2021, OWASP_2025) for cwes in table.values()
 CWE = re.compile(r"^(?:external/cwe/)?cwe[-:]?\s*0*(\d+)\b", re.I)
 
 INSTALL = {
-    "semgrep": "pipx install semgrep  (albo: python3 -m pip install semgrep)",
+    "semgrep": "pipx install semgrep  (or: python3 -m pip install semgrep)",
     "npm": "zainstaluj Node.js z npm (https://nodejs.org/)",
-    "pip-audit": "pip install pip-audit  (albo: pipx install pip-audit)",
+    "pip-audit": "pip install pip-audit  (or: pipx install pip-audit)",
 }
 SEMGREP_DEFAULT = "p/owasp-top-ten"
 NPM_LEVEL = {"critical": "error", "high": "error", "moderate": "warning", "low": "note", "info": "note"}
@@ -145,9 +145,9 @@ def verdict(paths: list[Path], errors: list[str] | None = None) -> dict:
         try:
             data = json.loads(p.read_text(encoding="utf-8"))
             if not isinstance(data, dict) or not isinstance(data.get("runs"), list):
-                raise ValueError("brak runs")
+                raise ValueError("no runs")
         except (OSError, ValueError) as e:
-            errors.append(f"{p}: nie jest logiem SARIF ({e})")
+            errors.append(f"{p}: not a SARIF log ({e})")
             continue
         for f in findings(data):
             (blocking if is_blocking(f) else other).append(f)
@@ -157,7 +157,7 @@ def verdict(paths: list[Path], errors: list[str] | None = None) -> dict:
 
 def where(f: dict) -> str:
     if not f.get("file"):
-        return "(bez miejsca)"
+        return "(no location)"
     return f"{f['file']}:{f['line']}" if f.get("line") else f["file"]
 
 
@@ -168,17 +168,17 @@ def item(f: dict) -> str:
 
 
 def render(v: dict) -> list[str]:
-    head = (f"SCAN: {v['status']} — blokujące: {len(v['blocking'])}, poniżej progu: {len(v['other'])}"
-            + (f", błędy skanu: {len(v['errors'])}" if v["errors"] else ""))
+    head = (f"SCAN: {v['status']} — blocking: {len(v['blocking'])}, below the threshold: {len(v['other'])}"
+            + (f", scan errors: {len(v['errors'])}" if v["errors"] else ""))
     lines = [head]
     if v["errors"]:
-        lines += ["Błędy skanu (skan się nie wykonał — to nie jest czysty wynik):", *(f"- {e}" for e in v["errors"])]
+        lines += ["Scan errors (the scan did not run — this is not a clean result):", *(f"- {e}" for e in v["errors"])]
     if v["blocking"]:
-        lines += ["Blokujące (popraw przed commitem):", *map(item, v["blocking"])]
+        lines += ["Blocking (fix before the commit):", *map(item, v["blocking"])]
     if v["other"]:
-        lines += ["Poniżej progu (do raportu przebiegu):", *map(item, v["other"])]
+        lines += ["Below the threshold (for the run report):", *map(item, v["other"])]
     if v.get("skipped"):
-        lines += ["Audyt zależności pominięty:", *(f"- {s}" for s in v["skipped"])]
+        lines += ["Dependency audit skipped:", *(f"- {s}" for s in v["skipped"])]
     return lines
 
 
@@ -242,7 +242,7 @@ def run_semgrep(root: Path, files: list[str], out: Path) -> None:
     if r.returncode != 0 or not target.is_file():
         tail = (r.stderr or r.stdout).strip().splitlines()[-5:]
         target.unlink(missing_ok=True)
-        raise ScanError(f"semgrep zakończył się kodem {r.returncode}: {' | '.join(tail) or 'bez komunikatu'}")
+        raise ScanError(f"semgrep ended with code {r.returncode}: {' | '.join(tail) or 'no message'}")
 
 
 def line_of(text: str, pred) -> int | None:
@@ -252,12 +252,12 @@ def line_of(text: str, pred) -> int | None:
 def npm_audit_sarif(audit, lock_rel: str, lock_text: str | None) -> dict:
     """`npm audit --json` (auditReportVersion 2) jako SARIF — port scripts/lib/npm-audit-sarif.mjs z ci_for_sdlc."""
     if not isinstance(audit, dict):
-        raise ScanError("npm audit: to nie jest raport audytu (auditReportVersion 2)")
+        raise ScanError("npm audit: this is not an audit report (auditReportVersion 2)")
     if audit.get("error"):
         e = audit["error"] if isinstance(audit["error"], dict) else {}
-        raise ScanError(f"npm audit nie wykonał się: {' '.join(str(x) for x in (e.get('code'), e.get('summary')) if x) or 'nieznany błąd'}")
+        raise ScanError(f"npm audit did not run: {' '.join(str(x) for x in (e.get('code'), e.get('summary')) if x) or 'unknown error'}")
     if audit.get("auditReportVersion") != 2:
-        raise ScanError(f"npm audit: auditReportVersion {audit.get('auditReportVersion', 'brak')} (oczekiwano 2)")
+        raise ScanError(f"npm audit: auditReportVersion {audit.get('auditReportVersion', 'none')} (expected 2)")
     rules, index, results, seen = [], {}, [], set()
     for pkg, v in (audit.get("vulnerabilities") or {}).items():
         for a in (v or {}).get("via") or []:
@@ -294,7 +294,7 @@ def run_npm_audit(root: Path, lock_rel: str, out: Path, name: str) -> None:
     try:
         audit = json.loads(r.stdout)
     except ValueError:
-        raise ScanError(f"npm audit ({lock_rel}): wynik nie jest JSON-em: {(r.stderr or r.stdout).strip()[:300]}")
+        raise ScanError(f"npm audit ({lock_rel}): the output is not JSON: {(r.stderr or r.stdout).strip()[:300]}")
     sarif = npm_audit_sarif(audit, lock_rel, lock.read_text(encoding="utf-8"))
     (out / name).write_text(json.dumps(sarif, indent=2) + "\n", encoding="utf-8")
 
@@ -303,7 +303,7 @@ def pip_audit_sarif(report, manifest_rel: str, manifest_text: str | None) -> dic
     """Wynik `pip-audit -f json` jako SARIF. pip-audit nie podaje ważności: każda znana podatność to error
     z CWE-1104 (komponent z podatnością, A06:2021 / A03:2025), czyli blokuje."""
     if not isinstance(report, dict) or not isinstance(report.get("dependencies"), list):
-        raise ScanError("pip-audit: wynik nie ma listy dependencies")
+        raise ScanError("pip-audit: the output has no dependencies list")
     rules, index, results = [], {}, []
     for dep in report["dependencies"]:
         for vuln in dep.get("vulns") or []:
@@ -316,7 +316,7 @@ def pip_audit_sarif(report, manifest_rel: str, manifest_text: str | None) -> dic
             norm = re.sub(r"[-_.]+", "-", str(dep.get("name") or "").lower())
             line = line_of(manifest_text, lambda s: re.sub(r"[-_.]+", "-", s.strip().lower()).startswith(norm)) \
                 if manifest_text and norm else None
-            fix = ", ".join(vuln.get("fix_versions") or []) or "brak"
+            fix = ", ".join(vuln.get("fix_versions") or []) or "none"
             results.append({"ruleId": rid, "ruleIndex": index[rid], "level": "error",
                             "message": {"text": f"{dep.get('name')} {dep.get('version')}: {vuln.get('id')} (poprawka: {fix})"},
                             "locations": [{"physicalLocation": {"artifactLocation": {"uri": manifest_rel},
@@ -336,11 +336,11 @@ def run_pip_audit(root: Path, manifest_rel: str, out: Path, name: str) -> None:
         cmd = [tool("pip-audit"), "-f", "json", "-o", str(raw), str(path.parent.relative_to(root) or ".")]
     r = subprocess.run(cmd, cwd=root, capture_output=True, text=True)
     if r.returncode not in (0, 1) or not raw.is_file():  # 1 = znaleziono podatności
-        raise ScanError(f"pip-audit ({manifest_rel}) zakończył się kodem {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}")
+        raise ScanError(f"pip-audit ({manifest_rel}) ended with code {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}")
     try:
         report = json.loads(raw.read_text(encoding="utf-8"))
     except ValueError:
-        raise ScanError(f"pip-audit ({manifest_rel}): wynik nie jest JSON-em")
+        raise ScanError(f"pip-audit ({manifest_rel}): the output is not JSON")
     manifest = root / manifest_rel if path.name.startswith("requirements") else path.parent / "pyproject.toml"
     text = manifest.read_text(encoding="utf-8") if manifest.is_file() else None
     sarif = pip_audit_sarif(report, str(manifest.relative_to(root)), text)
@@ -348,7 +348,7 @@ def run_pip_audit(root: Path, manifest_rel: str, out: Path, name: str) -> None:
 
 
 NODE_DEP_KEYS = ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies")
-NO_DEPS = "package.json bez zależności (dependencies, devDependencies, optionalDependencies, peerDependencies)"
+NO_DEPS = "package.json without dependencies (dependencies, devDependencies, optionalDependencies, peerDependencies)"
 
 
 def node_has_deps(manifest: Path) -> bool:
@@ -381,12 +381,12 @@ def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str], li
         if lock:
             jobs.append(("npm", str(Path(d) / lock) if d != "." else lock))
         elif (base / "pnpm-lock.yaml").is_file() or (base / "yarn.lock").is_file():
-            errors.append(f"{d}: audyt zależności pnpm/Yarn nie jest obsługiwany przez skan — uruchom `pnpm audit` "
-                          "albo `yarn npm audit` i zdecyduj (STOP), albo dodaj package-lock.json")
+            errors.append(f"{d}: the scan does not support a pnpm/Yarn dependency audit — run `pnpm audit` "
+                          "or `yarn npm audit` and decide (STOP), or add package-lock.json")
         elif not node_has_deps(base / "package.json"):
-            skipped.append(f"{d}: {NO_DEPS} i bez lockfile'a — nie ma czego audytować")
+            skipped.append(f"{d}: {NO_DEPS} and without a lockfile — there is nothing to audit")
         else:
-            errors.append(f"{d}: zmieniony package.json bez lockfile'a — lockfile musi być w repo (N10)")
+            errors.append(f"{d}: a changed package.json without a lockfile — the lockfile must be in the repo (N10)")
     for d in sorted(dirs_py):
         jobs.append(("pip-audit", str(Path(d) / "pyproject.toml") if d != "." else "pyproject.toml"))
     return jobs, errors, skipped
@@ -396,33 +396,33 @@ def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str], li
 
 def slice_lines(v: dict, slice_id: str, attempt: int) -> list[str]:
     if v["status"] == "PASS":
-        return [f"GATE {slice_id}: PASS (skan bezpieczeństwa, attempt {attempt}/2)"]
-    why = (f"{len(v['blocking'])} blokujących" if v["blocking"] else "") + \
-          (", " if v["blocking"] and v["errors"] else "") + (f"{len(v['errors'])} błędów skanu" if v["errors"] else "")
-    lines = [f"GATE {slice_id}: FAIL (skan bezpieczeństwa: {why}, attempt {attempt}/2)"]
+        return [f"GATE {slice_id}: PASS (security scan, attempt {attempt}/2)"]
+    why = (f"{len(v['blocking'])} blocking" if v["blocking"] else "") + \
+          (", " if v["blocking"] and v["errors"] else "") + (f"{len(v['errors'])} scan errors" if v["errors"] else "")
+    lines = [f"GATE {slice_id}: FAIL (security scan: {why}, attempt {attempt}/2)"]
     if attempt >= 2 or (v["errors"] and not v["blocking"]):
         where_ = "; ".join(f"{f['rule']} {where(f)}" for f in v["blocking"]) or "; ".join(v["errors"])
-        lines += ["", f"STOP — {slice_id} (skan bezpieczeństwa)",
-                  f"Powód: {'skan się nie wykonał' if not v['blocking'] else 'blokujące ustalenia po 2 próbach'}: {where_}",
-                  "Zrobione: kod kawałka i testy (niezacommitowane); SARIF i werdykt w katalogu skanu",
-                  "Potrzebne od człowieka: poprawka albo decyzja o wyjątku z uzasadnieniem "
-                  "(np. `nosemgrep: <reguła>` w linii), albo instalacja brakującego skanera",
-                  f"Wznowienie: od {slice_id} w plan.md"]
+        lines += ["", f"STOP — {slice_id} (security scan)",
+                  f"Reason: {'the scan did not run' if not v['blocking'] else 'blocking findings after 2 attempts'}: {where_}",
+                  "Done: the slice's code and tests (not committed); SARIF and the verdict in the scan directory",
+                  "Needed from the human: a fix or a decision on an exception with a reason "
+                  "(e.g. `nosemgrep: <rule>` on the line), or installing the missing scanner",
+                  f"Resume: from {slice_id} in plan.md"]
     return lines
 
 
 def write_outputs(out: Path, v: dict, lines: list[str]) -> None:
     (out / "verdict.json").write_text(json.dumps(v, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    fb = ["# Skan bezpieczeństwa — do poprawy w następnej próbie", "",
-          *(map(item, v["blocking"]) if v["blocking"] else ["- brak blokujących"]), *(f"- {e}" for e in v["errors"])]
+    fb = ["# Security scan — to fix in the next attempt", "",
+          *(map(item, v["blocking"]) if v["blocking"] else ["- no blocking findings"]), *(f"- {e}" for e in v["errors"])]
     (out / "feedback.md").write_text("\n".join(fb) + "\n", encoding="utf-8")
-    summ = ["## Security", "", f"Skan: {v['status']} (blokujące: {len(v['blocking'])}, "
-            f"poniżej progu: {len(v['other'])}, błędy skanu: {len(v['errors'])}).", ""]
-    summ += ["Poniżej progu:", *map(item, v["other"])] if v["other"] else ["Poniżej progu: brak."]
+    summ = ["## Security", "", f"Scan: {v['status']} (blocking: {len(v['blocking'])}, "
+            f"below the threshold: {len(v['other'])}, scan errors: {len(v['errors'])}).", ""]
+    summ += ["Below the threshold:", *map(item, v["other"])] if v["other"] else ["Below the threshold: none."]
     if v.get("skipped"):
-        summ += ["", "Audyt zależności pominięty:", *(f"- {s}" for s in v["skipped"])]
+        summ += ["", "Dependency audit skipped:", *(f"- {s}" for s in v["skipped"])]
     if v["blocking"] or v["errors"]:
-        summ += ["", "Blokujące i błędy:", *map(item, v["blocking"]), *(f"- {e}" for e in v["errors"])]
+        summ += ["", "Blocking and errors:", *map(item, v["blocking"]), *(f"- {e}" for e in v["errors"])]
     (out / "summary.md").write_text("\n".join(summ) + "\n", encoding="utf-8")
 
 
@@ -450,7 +450,7 @@ def cmd_scan(a) -> int:
     errors += job_errors
     needed = (["semgrep"] if files else []) + sorted({t for t, _ in jobs})
     missing = [n for n in needed if not tool(n)]
-    errors += [f"brak skanera {n} — zainstaluj: {INSTALL[n]}" for n in missing]
+    errors += [f"the scanner {n} is missing — install it: {INSTALL[n]}" for n in missing]
     if files and "semgrep" not in missing:
         try:
             run_semgrep(root, files, out)
@@ -529,14 +529,14 @@ def cmd_cooldown(_a) -> int:
 
     def lock(name):
         if (root / name).is_file() and name not in tracked:
-            problems.append(f"{name} nie jest w gicie — lockfile musi być zacommitowany (git add {name})")
+            problems.append(f"{name} is not in git — the lockfile must be committed (git add {name})")
 
     if (root / "package-lock.json").is_file() or (root / "npm-shrinkwrap.json").is_file():
         val = kv(read(root / ".npmrc"), "min-release-age", "=")
         days = float(val) if val and re.fullmatch(r"\d+(\.\d+)?", val) else None
         if days is None or days < COOLDOWN_DAYS:
-            problems.append(f"npm: min-release-age={val or 'brak'} — dodaj do .npmrc linię `min-release-age={COOLDOWN_DAYS}` "
-                            "(dni; npm ≥ 11.10)")
+            problems.append(f"npm: min-release-age={val or 'none'} — add the line `min-release-age={COOLDOWN_DAYS}` to .npmrc "
+                            "(days; npm ≥ 11.10)")
         else:
             ok.append(f"npm min-release-age={val}")
         lock("package-lock.json") if (root / "package-lock.json").is_file() else lock("npm-shrinkwrap.json")
@@ -544,17 +544,17 @@ def cmd_cooldown(_a) -> int:
         val = kv(read(root / "pnpm-workspace.yaml"), "minimumReleaseAge", ":") or kv(read(root / ".npmrc"), "minimum-release-age", "=")
         mins = minutes(val) if val else None
         if mins is None or mins < need:
-            problems.append(f"pnpm: minimumReleaseAge={val or 'brak'} — dodaj do pnpm-workspace.yaml "
-                            f"`minimumReleaseAge: {need}` (minuty; pnpm ≥ 10.17)")
+            problems.append(f"pnpm: minimumReleaseAge={val or 'none'} — add to pnpm-workspace.yaml "
+                            f"`minimumReleaseAge: {need}` (minutes; pnpm ≥ 10.17)")
         else:
             ok.append(f"pnpm minimumReleaseAge={val}")
         lock("pnpm-lock.yaml") if (root / "pnpm-lock.yaml").is_file() else problems.append(
-            "pnpm-lock.yaml brak — wygeneruj (pnpm install) i zacommituj")
+            "pnpm-lock.yaml is missing — generate it (pnpm install) and commit it")
     if (root / "yarn.lock").is_file():
         val = kv(read(root / ".yarnrc.yml"), "npmMinimalAgeGate", ":")
         mins = minutes(val) if val else None
         if mins is None or mins < need:
-            problems.append(f"Yarn: npmMinimalAgeGate={val or 'brak'} — dodaj do .yarnrc.yml `npmMinimalAgeGate: \"7d\"` (Yarn 4)")
+            problems.append(f"Yarn: npmMinimalAgeGate={val or 'none'} — add to .yarnrc.yml `npmMinimalAgeGate: \"7d\"` (Yarn 4)")
         else:
             ok.append(f"Yarn npmMinimalAgeGate={val}")
         lock("yarn.lock")
@@ -570,12 +570,12 @@ def cmd_cooldown(_a) -> int:
                     val = data
                     break
         except Exception as e:  # noqa: BLE001 — zły TOML to też brak karencji
-            problems.append(f"uv: nie mogę odczytać konfiguracji ({e})")
+            problems.append(f"uv: I cannot read the configuration ({e})")
         mins = minutes(val) if val else None
         if val and mins is None and re.match(r"^\d{4}-\d{2}-\d{2}", val):
-            ok.append(f"uv exclude-newer={val} (data bezwzględna — zamrożony stan, pamiętaj o przesuwaniu)")
+            ok.append(f"uv exclude-newer={val} (an absolute date — a frozen state, remember to move it)")
         elif mins is None or mins < need:
-            problems.append(f"uv: exclude-newer={val or 'brak'} — dodaj do pyproject.toml w [tool.uv] "
+            problems.append(f"uv: exclude-newer={val or 'none'} — add to pyproject.toml in [tool.uv] "
                             f'`exclude-newer = "{COOLDOWN_DAYS} days"`')
         else:
             ok.append(f"uv exclude-newer={val}")
@@ -583,15 +583,15 @@ def cmd_cooldown(_a) -> int:
     if (root / "package.json").is_file() and not any(
             (root / n).is_file() for n in ("package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock")):
         if node_has_deps(root / "package.json"):  # ta sama reguła co audit_jobs w skanie
-            problems.append("package.json ma zależności, a nie ma lockfile'a — wygeneruj (npm install) "
-                            "i zacommituj package-lock.json (N10)")
+            problems.append("package.json has dependencies but no lockfile — generate it (npm install) "
+                            "and commit package-lock.json (N10)")
         elif not ok and not problems:
-            print(f"COOLDOWN: PASS — {NO_DEPS}; nie ma czego objąć karencją")
+            print(f"COOLDOWN: PASS — {NO_DEPS}; there is nothing to put under a cooldown")
             return 0
     if not ok and not problems:
-        print("COOLDOWN: PASS — nie wykryto menedżera pakietów z lockfile'em (npm, pnpm, Yarn, uv)")
+        print("COOLDOWN: PASS — no package manager with a lockfile was detected (npm, pnpm, Yarn, uv)")
         return 0
-    print(f"COOLDOWN: {'FAIL' if problems else 'PASS'} (minimum {COOLDOWN_DAYS} dni)")
+    print(f"COOLDOWN: {'FAIL' if problems else 'PASS'} (minimum {COOLDOWN_DAYS} days)")
     for line in ok:
         print(f"- ✓ {line}")
     for line in problems:

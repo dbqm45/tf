@@ -56,7 +56,7 @@ flags:
     remove_by: 2026-12-31
 """
 # to samo wyrażenie, którym pdi czyta listę odłożonych spraw z opisu PR cięcia (pdi: src/pdi/pr_loop.py, _outside_plan)
-PDI_PARKED = re.compile(r"^## Odłożone do decyzji\s*\n([\s\S]*?)(?=^## |\Z)", re.MULTILINE)
+PDI_PARKED = re.compile(r"^## (?:Postponed for a decision|Odłożone do decyzji)\s*\n([\s\S]*?)(?=^## |\Z)", re.MULTILINE)
 
 
 def sh(project: Path, *args: str) -> subprocess.CompletedProcess:
@@ -116,7 +116,7 @@ def main() -> int:
               and meta.get("task") == "TSK-57" and meta.get("flag") == "payment-retry",
               f"C-3: task.json i run.json wskazują zmianę, cięcie i flagę: {task} {meta}")
         ticket = (doc / "ticket.md").read_text(encoding="utf-8") if (doc / "ticket.md").is_file() else ""
-        check("Cięcie TSK-57 zmiany CHG-12" in ticket and "klient ponawia nieudaną płatność" in ticket
+        check("Cut TSK-57 of the change CHG-12" in ticket and "klient ponawia nieudaną płatność" in ticket
               and "Klient nie może ponowić" in ticket and "`Change: TSK-57`" in ticket and "`Flag: payment-retry`" in ticket,
               f"C-4: ticket.md z wiersza cięcia i zamiaru zmiany, ze stopkami commitów: {ticket[:500]}")
         flag = task.get("flag") or {}
@@ -127,7 +127,7 @@ def main() -> int:
         check(status.split() == ["??", "docs/project/changes/CHG-12-TSK-57/"],
               f"C-7: po starcie w repozytorium jest tylko nowy katalog zadania: {status!r}")
         r = script(p, cfg, "run_report.py", "start", "--task", "TSK-57", "--change", "CHG-12")
-        check(r.returncode == 2 and "już istnieje" in r.stdout, f"C-8: powtórny start → kod 2: {r.returncode} {r.stdout}")
+        check(r.returncode == 2 and "already exists" in r.stdout, f"C-8: powtórny start → kod 2: {r.returncode} {r.stdout}")
         r = script(p, cfg, "intake.py", "resolve", "--json", "TSK-57 --auto --change CHG-12")
         try:
             out = json.loads(r.stdout)
@@ -191,8 +191,8 @@ def main() -> int:
         kept = chg / "runs" / "TSK-57.md"
         text = kept.read_text(encoding="utf-8") if kept.is_file() else ""
         own = (doc / "report.md").read_text(encoding="utf-8") if (doc / "report.md").is_file() else ""
-        check(r.returncode == 2 and text.startswith("# Raport przebiegu TSK-57 (CHG-12)\n\n") and own
-              and text == "# Raport przebiegu TSK-57 (CHG-12)\n\n" + own,
+        check(r.returncode == 2 and text.startswith("# Run report TSK-57 (CHG-12)\n\n") and own
+              and text == "# Run report TSK-57 (CHG-12)\n\n" + own,
               f"C-18: raport cięcia tam, gdzie szuka go pdi, z tą samą treścią co report.md zadania: {r.returncode} {text[:200]}")
         m = PDI_PARKED.search(text)
         items = [ln.strip()[2:] for ln in (m.group(1) if m else "").splitlines() if ln.strip().startswith("- ")]

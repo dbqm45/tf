@@ -83,13 +83,13 @@ def drift(plan: list[dict], changed: list[str]) -> dict:
 
 def render(r: dict) -> str:
     done = sum(s["done"] for s in r["slices"])
-    L = [f"Zgodność z planem: kawałki {done}/{len(r['slices'])}, pokrycie diffu planem {r['coverage']}%, "
-         f"zmienione pliki {len(r['changed'])}, w tym testy {r['tests_changed']}"]
+    L = [f"Agreement with the plan: slices {done}/{len(r['slices'])}, the plan's coverage of the diff {r['coverage']}%, "
+         f"changed files {len(r['changed'])}, of which tests {r['tests_changed']}"]
     for s in r["slices"]:
-        L.append(f"  - {s['id']} [{'x' if s['done'] else ' '}]: ruszone {len(s['touched'])}"
-                 + (f"; nietknięte z planu: {', '.join(s['missing'])}" if s["missing"] else ""))
+        L.append(f"  - {s['id']} [{'x' if s['done'] else ' '}]: touched {len(s['touched'])}"
+                 + (f"; untouched from the plan: {', '.join(s['missing'])}" if s["missing"] else ""))
     if r["unplanned"]:
-        L.append("Zmiany spoza planu (sprawdź zakres albo dopisz do planu): " + ", ".join(r["unplanned"]))
+        L.append("Changes outside the plan (check the scope or add them to the plan): " + ", ".join(r["unplanned"]))
     return "\n".join(L)
 
 
@@ -108,7 +108,7 @@ def main(argv: list[str]) -> int:
             args.append(a)
     plan_md = plan_file(args[0]) if args else ""
     if len(args) != 1 or not os.path.isfile(plan_md):
-        print(f"✗ podaj katalog przebiegu z plan.md (jest: {args})", file=sys.stderr)
+        print(f"✗ give the run directory with plan.md (got: {args})", file=sys.stderr)
         return 2
     with open(plan_md, encoding="utf-8") as fh:
         r = drift(parse_plan(fh.read()), changed_files(base))

@@ -64,9 +64,9 @@ FAMILIES = ("haiku", "sonnet", "opus", "fable", "mythos")
 
 PLAN_TEMPLATE = """# Plan: {title}
 
-Kawałki pionowe: każdy niesie wartość, przechodzi testy i jest osobnym commitem (skill tf).
+Vertical slices: each carries value, passes the tests and is a separate commit (the tf skill).
 
-- [ ] S1 — <wartość dla użytkownika> · criteria: <testy> · files: <ścieżki> · verify: `<polecenie>`
+- [ ] S1 — <value for the user> · criteria: <tests> · files: <paths> · verify: `<command>`
 """
 PARKED_TEMPLATE = """# Postponed for a decision: {title}
 
@@ -122,7 +122,7 @@ def story_file(run_dir: Path, meta: dict | None = None) -> Path:
 def slugify(text: str) -> str:
     t = unicodedata.normalize("NFKD", text.lower().replace("ł", "l"))
     t = "".join(c for c in t if not unicodedata.combining(c))
-    return re.sub(r"[^a-z0-9]+", "-", t).strip("-")[:60] or "przebieg"
+    return re.sub(r"[^a-z0-9]+", "-", t).strip("-")[:60] or "run"
 
 
 def parse_ts(value: str) -> datetime | None:
@@ -302,9 +302,9 @@ def after_merge(project: Path, key: str) -> str:
     except (OSError, ValueError, KeyError, TypeError):
         smoke = None
     if isinstance(smoke, str) and smoke.strip():
-        return f"Po scaleniu i wdrożeniu: `tf task deployed {key}` — uruchomi polecenie testu dymnego zapisane w karcie operacyjnej i zapisze wynik."
-    return ("Po scaleniu: karta operacyjna nie ma testu dymnego (pole `deploy.smoke` w .tf/config/operations.json), "
-            "więc fabryka kończy na scaleniu i wdrożenia nie sprawdza.")
+        return f"After the merge and the deployment: `tf task deployed {key}` — it runs the smoke test command recorded in the operations card and records the result."
+    return ("After the merge: the operations card has no smoke test (the `deploy.smoke` field in .tf/config/operations.json), "
+            "so the factory ends at the merge and does not check the deployment.")
 
 
 def fmt_tokens(n: int) -> str:
@@ -313,25 +313,24 @@ def fmt_tokens(n: int) -> str:
 
 def report_md(slug: str, rep: dict) -> str:
     mins, secs = divmod(rep["duration_s"], 60)
-    lines = [f"# Raport przebiegu: {slug}", "",
-             f"- Czas: {int(mins)} min {int(secs)} s (od startu do ostatniej odpowiedzi modelu)",
-             (f"- Koszt: {rep['usage_missing']} — koszt przebiegu podaje wynik fazy pdi" if rep.get("usage_missing")
-              else f"- Koszt: {rep['cost_usd']:.4f} USD (szacunek z cennika API; przy subskrypcji — równowartość)"),
-             f"- Zapytania do modelu: {rep['requests']} · modele: {', '.join(rep['model_ids']) or '—'}",
-             f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} kawałków · odłożone do decyzji: {rep['parked']}",
-             f"- Transkrypty: {rep.get('transcripts') or '—'}", "",
-             "| Model | Wejście | Wyjście | Odczyt cache | Zapis cache 5 min | Zapis cache 1 h | Koszt USD |",
+    lines = [f"# Run report: {slug}", "",
+             f"- Time: {int(mins)} min {int(secs)} s (from the start to the model's last answer)",
+             (f"- Cost: {rep['usage_missing']} — the pdi phase result gives the run's cost" if rep.get("usage_missing")
+              else f"- Cost: {rep['cost_usd']:.4f} USD (an estimate from the API price list; with a subscription — an equivalent)"),
+             f"- Model requests: {rep['requests']} · models: {', '.join(rep['model_ids']) or '—'}",
+             f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} slices · postponed for a decision: {rep['parked']}",
+             f"- Transcripts: {rep.get('transcripts') or '—'}", "",
+             "| Model | Input | Output | Cache read | Cache write 5 min | Cache write 1 h | Cost USD |",
              "|---|---|---|---|---|---|---|"]
     for fam, t in sorted(rep["models"].items()):
-        c = "brak ceny" if t.get("_unpriced") else f"{t.get('_cost', 0):.4f}"
+        c = "no price" if t.get("_unpriced") else f"{t.get('_cost', 0):.4f}"
         lines.append(f"| {fam} | " + " | ".join(fmt_tokens(t[k]) for k in KEYS) + f" | {c} |")
-    lines += ["", "| Agent | Wejście | Wyjście | Odczyt cache | Koszt USD |", "|---|---|---|---|---|"]
+    lines += ["", "| Agent | Input | Output | Cache read | Cost USD |", "|---|---|---|---|---|"]
     for agent, t in sorted(rep["agents"].items(), key=lambda kv: -kv[1].get("_cost", 0)):
         lines.append(f"| {agent} | {fmt_tokens(t['input'])} | {fmt_tokens(t['output'])} | {fmt_tokens(t['cache_read'])} | "
                      f"{t.get('_cost', 0):.4f} |")
-    # Nagłówek zostaje dosłownie: pdi (src/pdi/pr_loop.py) czyta po nim odłożone sprawy z raportu cięcia — zmiana razem
-    # z repozytorium pdi (docs/todo.md, kolumny plan.md).
-    lines += ["", "## Odłożone do decyzji", "", *(rep.get("parked_items") or ["- none"])]
+    # pdi (src/pdi/pr_loop.py) czyta po tym nagłówku odłożone sprawy z raportu cięcia — od pdi#181 oba języki
+    lines += ["", "## Postponed for a decision", "", *(rep.get("parked_items") or ["- none"])]
     lines += ["", *(rep.get("security") or ["## Security", "", "- no scan result (security_scan.py was not run)"])]
     return "\n".join(lines) + "\n"
 
@@ -427,14 +426,14 @@ def task_contexts(project: Path, task: str) -> list[dict]:
 
 
 def task_story(task: str, ctx: dict, extra: str | None) -> str:
-    stopki = f"`Change: {task}`" + (f" i `Flag: {ctx['flag']}`" if ctx["flag"] else "")
-    lines = [f"Cięcie {task} zmiany {ctx['change']} (`{ctx['dir']}/plan.md`). Każdy commit przebiegu ma stopki "
-             f"{stopki}.", "", "| Pole | Wartość |", "|---|---|"]
+    stopki = f"`Change: {task}`" + (f" and `Flag: {ctx['flag']}`" if ctx["flag"] else "")
+    lines = [f"Cut {task} of the change {ctx['change']} (`{ctx['dir']}/plan.md`). Every commit of the run has the footers "
+             f"{stopki}.", "", "| Field | Value |", "|---|---|"]
     lines += [f"| {k} | {v} |" for k, v in ctx["row"].items() if k and v not in EMPTY_CELL]
     if ctx["intent"].strip():
-        lines += ["", f"## Zamiar zmiany (`{ctx['dir']}/intent.md`)", "", re.sub(r"(?m)^#", "##", ctx["intent"].strip())]
+        lines += ["", f"## The change's intent (`{ctx['dir']}/intent.md`)", "", re.sub(r"(?m)^#", "##", ctx["intent"].strip())]
     if extra and extra.strip():
-        lines += ["", "## Dodatkowo od człowieka", "", extra.strip()]
+        lines += ["", "## Additionally from the human", "", extra.strip()]
     return "\n".join(lines)
 
 
@@ -442,21 +441,21 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
               change: str | None = None, key: str | None = None, source: str | None = None) -> int:
     cut = None                           # cięcie zmiany pdi: wiersz planu zmiany, z którego powstaje zadanie
     if task and key:
-        print("✗ `--key` nie łączy się z `--task`: przebieg cięcia bierze klucz z planu zmiany.")
+        print("✗ `--key` does not combine with `--task`: a cut's run takes its key from the change plan.")
         return 2
     if task:
         matches = task_contexts(project, task)
         if change:                       # PRB-33: `--change` zawęża do jednej zmiany
             matches = [m for m in matches if m["change"] == change]
             if not matches:
-                print(f"✗ {task} nie ma w nagłówku `tasks` planu zmiany {change} — sprawdź klucz albo plan zmiany.")
+                print(f"✗ {task} is not in the `tasks` header of the change plan {change} — check the key or the change plan.")
                 return 2
         if not matches:
-            print(f"✗ {task} nie ma w nagłówku `tasks` żadnego {CHANGES}/*/plan.md — sprawdź klucz albo plan zmiany.")
+            print(f"✗ {task} is not in the `tasks` header of any {CHANGES}/*/plan.md — check the key or the change plan.")
             return 2
         if len(matches) > 1:            # PRB-33: ten sam TSK w kilku planach — wymagamy `--change`
             keys = ", ".join(m["change"] for m in matches)
-            print(f"✗ {task} jest w planach zmian: {keys}. Podaj `--change CHG-n`, żeby wybrać jedną.")
+            print(f"✗ {task} is in the change plans: {keys}. Give `--change CHG-n` to choose one.")
             return 2
         ctx = matches[0]
         value = next((v for k, v in ctx["row"].items() if k.lower() == "wartość" and v not in EMPTY_CELL), "")
@@ -464,29 +463,29 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         story = task_story(task, ctx, story)
         cut, key = ctx, f"{ctx['change']}-{task}"
     elif change:
-        print("✗ `--change` wymaga `--task TSK-n` (wybiera plan zmiany, do której należy cięcie).")
+        print("✗ `--change` needs `--task TSK-n` (it chooses the change plan the cut belongs to).")
         return 2
     if not title:
-        print("✗ podaj tytuł historyjki albo --task TSK-n")
+        print("✗ give the story's title or --task TSK-n")
         return 2
     slug = slugify(title)
     now = datetime.now(timezone.utc)
     # zadanie (także cięcie zmiany pdi): katalog trwały w gicie i roboczy poza nim
     key = key or f"T-{now:%Y%m%d}-{slug}"
     if not TASK_KEY.fullmatch(key):
-        print(f"✗ klucz „{key}” nie pasuje do wzorca (np. PROJ-123 albo T-20261113-limit).")
+        print(f"✗ the key \"{key}\" does not match the pattern (e.g. PROJ-123 or T-20261113-limit).")
         return 2
     run_dir, docs, story_name = project / WORK / key, project / CHANGES / key, "ticket.md"
     taken = [p for p in (run_dir, docs / "task.json", docs / "plan.md", docs / "spec.md", docs / story_name) if p.exists()]
     if taken:
-        print(f"✗ Przebieg już istnieje: {taken[0]} — "
-              + (f"wznów go (/tf {task}) albo usuń ten katalog, żeby zacząć cięcie od nowa." if cut
-                 else "dokończ go albo nadaj inny tytuł lub `--key`."))
+        print(f"✗ The run already exists: {taken[0]} — "
+              + (f"resume it (/tf {task}) or delete this directory to start the cut again." if cut
+                 else "finish it or give another title or `--key`."))
         return 2
     r = task_state(project, "start", key, "--title", title, *(["--change", cut["change"], "--cut", task] if cut else []))
     if r is None or r.returncode != 0:
-        print(f"✗ nie udało się założyć zadania {key}: "
-              + ((r.stdout + r.stderr).strip() if r else "brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update)"))
+        print(f"✗ the task {key} could not be created: "
+              + ((r.stdout + r.stderr).strip() if r else "no .tf/factory/task_state.py — update the factory (tf update)"))
         return 2
     meta = {"key": key, "task_dir": (CHANGES / key).as_posix()}
     if cut:
@@ -515,14 +514,15 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
             task_state(project, "flag", key, "set", cut["flag"], *(["--remove-by", cut["remove_by"]] if dated else []))
         else:
             task_state(project, "flag", key, "none", "--reason",
-                       f"plan wydania zmiany {cut['change']} nie przewiduje flagi dla cięcia {task}")
+                       f"the release plan of the change {cut['change']} has no flag for the cut {task}")
     w = task_state(project, "weight", key, "--apply")   # waga: propozycja fabryki z treści zgłoszenia, z powodem (krok E2)
     if w is not None and w.returncode == 0 and w.stdout.strip():
         lines = [ln.strip() for ln in w.stdout.splitlines() if ln.strip()]
-        head = lines[0].split("waga ", 1)[-1].split(" · ", 1)[0]
-        why = next((ln.split("powód: ", 1)[1] for ln in lines if ln.startswith("powód: ")), "")
-        print(f"Waga: {head}" + (f" — {why}" if why else "")
-              + f" (wyższa waga: run_state.py weight {(WORK / key).as_posix()} --set <waga>)", file=sys.stderr)
+        head = re.split(r"\b(?:weight|waga) ", lines[0], maxsplit=1)[-1].split(" · ", 1)[0]   # tf task weight: oba języki
+        why = next((re.split(r"^(?:reason|powód): ", ln, maxsplit=1)[1] for ln in lines
+                    if re.match(r"(?:reason|powód): ", ln)), "")
+        print(f"Weight: {head}" + (f" — {why}" if why else "")
+              + f" (a higher weight: run_state.py weight {(WORK / key).as_posix()} --set <weight>)", file=sys.stderr)
     try:   # podgląd: zbuduj dashboard i otwórz go (opcje w .claude/tf.json); przebieg cięcia (--task) nie otwiera
         import run_state
         uri = run_state.launch(project, open_browser=not cut)
@@ -538,7 +538,7 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
         meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         since = parse_ts(meta["started_at"])
     except (OSError, ValueError, KeyError):
-        print(f"✗ Brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        print(f"✗ Missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
         return 2
     try:
         data = collect(project, since, session)
@@ -546,16 +546,16 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
         data = {"requests": 0}
     usage_missing = None
     if not data["requests"]:
-        where = (f"sesji {session} (szukana we wszystkich katalogach {projects_dir()})" if session else
-                 "transkryptach:\n" + "\n".join(f"  - {d}" for d in transcript_dirs(project)))
-        print(f"✗ Brak odpowiedzi modelu po {since:%Y-%m-%d %H:%M} w {where}\n"
-              "Sesja uruchomiona poza projektem i jego katalogami nadrzędnymi albo inny CLAUDE_CONFIG_DIR? "
-              "Podaj `--session <ID>` (ID to nazwa pliku .jsonl sesji w katalogu projects).")
+        where = (f"the session {session} (searched in all directories of {projects_dir()})" if session else
+                 "the transcripts:\n" + "\n".join(f"  - {d}" for d in transcript_dirs(project)))
+        print(f"✗ No model answer after {since:%Y-%m-%d %H:%M} in {where}\n"
+              "A session started outside the project and its parent directories, or another CLAUDE_CONFIG_DIR? "
+              "Give `--session <ID>` (the ID is the name of the session's .jsonl file in the projects directory).")
         if status:
             return 2
         # PRB-34: raport (plan, odłożone, bezpieczeństwo) powstaje i tak — bez niego PR cięcia nie ma listy
         # „Odłożone do decyzji”; koszt podaje wtedy wynik fazy pdi (`cost_usd` z phase_run.py).
-        usage_missing = "brak danych o koszcie: transkryptów sesji nie znaleziono albo nie dało się ich odczytać"
+        usage_missing = "no cost data: the session transcripts were not found or could not be read"
         data = {"requests": 0, "last": since, "transcripts": None, "model_ids": [], "models": {}, "agents": {}}
     rep = {"slug": meta.get("slug"), "duration_s": int((data["last"] - since).total_seconds()),
            "transcripts": data["transcripts"],
@@ -565,8 +565,8 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
            "plan": plan_progress(run_dir, committed_pieces(project, meta)), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
            "security": security_section(run_dir), "usage_missing": usage_missing}
     if status:   # kontrola budżetu po kawałku: jedna linia, bez zapisu raportu
-        print(f"koszt: {rep['cost_usd']:.4f} USD · czas: {rep['duration_s'] // 60} min · plan: "
-              f"{rep['plan']['done']}/{rep['plan']['total']} · odłożone: {rep['parked']}")
+        print(f"cost: {rep['cost_usd']:.4f} USD · time: {rep['duration_s'] // 60} min · plan: "
+              f"{rep['plan']['done']}/{rep['plan']['total']} · postponed: {rep['parked']}")
         return 0
     md = report_md(meta.get("slug") or run_dir.name, rep)
     (docs_dir(run_dir, meta) / "report.md").write_text(md, encoding="utf-8")
@@ -576,20 +576,20 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     if meta.get("change") and meta.get("task"):   # przebieg cięcia zmiany: raport zostaje w repo
         kept = CHANGES / meta["change"] / "runs" / f"{meta['task']}.md"
         (project / kept).parent.mkdir(parents=True, exist_ok=True)
-        (project / kept).write_text(f"# Raport przebiegu {meta['task']} ({meta['change']})\n\n" + md, encoding="utf-8")
+        (project / kept).write_text(f"# Run report {meta['task']} ({meta['change']})\n\n" + md, encoding="utf-8")
         rep["kept"] = kept.as_posix()
     print(json.dumps(rep, ensure_ascii=False, default=str) if as_json else md, end="" if not as_json else "\n")
     if kept and not as_json:
-        print(f"Raport w repo: {kept.as_posix()}")
+        print(f"The report in the repo: {kept.as_posix()}")
     if meta.get("task_dir") and meta.get("key") and not as_json:   # pliki zadania: jeden commit na końcu przebiegu
         if kept:   # cięcie: katalog zadania i raport cięcia razem
-            print(f"Pliki zadania: {meta['task_dir']}/ — zapisz je razem z raportem cięcia jednym commitem: "
-                  f"`git add {meta['task_dir']} {kept.as_posix()}`, potem `git commit -m \"docs(task): record "
+            print(f"Task files: {meta['task_dir']}/ — save them together with the cut report in one commit: "
+                  f"`git add {meta['task_dir']} {kept.as_posix()}`, then `git commit -m \"docs(task): record "
                   f"{meta['key']}\" -m \"Change: {meta['task']}\"`.")
         else:   # dawny spis INDEX.md (jeśli jest w repozytorium) idzie w tym samym commicie — zapis zadania go zmienił
             index = f" {(CHANGES / 'INDEX.md').as_posix()}" if (project / CHANGES / "INDEX.md").is_file() else ""
-            print(f"Pliki zadania: {meta['task_dir']}/ — zapisz je jednym commitem: `git add {meta['task_dir']}{index}`, "
-                  f"potem `git commit -m \"docs(task): record {meta['key']}\"`.")
+            print(f"Task files: {meta['task_dir']}/ — save them in one commit: `git add {meta['task_dir']}{index}`, "
+                  f"then `git commit -m \"docs(task): record {meta['key']}\"`.")
             print(after_merge(project, meta["key"]))
     return 2 if usage_missing else 0   # kod 2 jak dotąd: brak danych o koszcie, ale raport już jest
 
@@ -599,16 +599,16 @@ def main(argv: list[str]) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("start")
     s.add_argument("title", nargs="?")
-    s.add_argument("--task", default=None, help="klucz cięcia z docs/project/changes/*/plan.md, np. TSK-57")
+    s.add_argument("--task", default=None, help="the cut key from docs/project/changes/*/plan.md, e.g. TSK-57")
     s.add_argument("--change", default=None,
-                   help="klucz zmiany, np. CHG-12 — wymagany, gdy TSK jest w planach wielu zmian (PRB-33)")
-    s.add_argument("--key", default=None, help="klucz zadania z trackera, np. PROJ-123 (domyślnie T-<data>-<slug>)")
+                   help="the change key, e.g. CHG-12 — required when the TSK is in the plans of several changes (PRB-33)")
+    s.add_argument("--key", default=None, help="the task key from the tracker, e.g. PROJ-123 (default T-<date>-<slug>)")
     s.add_argument("--story", default=None)
     s.add_argument("--story-file", default=None)
     s.add_argument("--from-tracker", action="store_true",
-                   help="pobierz zgłoszenie --key z Jiry skryptem (tylko odczyt; dane dostępu ze zmiennych środowiska)")
+                   help="fetch the --key issue from Jira with a script (read-only; credentials from environment variables)")
     s.add_argument("--source", default=None,
-                   help="skąd pochodzi treść zadania, np. \"jira EBO-1236\" albo adres zgłoszenia (trafia do ticket.md)")
+                   help="where the task content comes from, e.g. \"jira EBO-1236\" or the issue address (goes to ticket.md)")
     for name in ("status", "finish"):
         f = sub.add_parser(name)
         f.add_argument("run_dir")
@@ -621,16 +621,16 @@ def main(argv: list[str]) -> int:
         source = args.source or (f"file {args.story_file}" if args.story_file else None)
         if args.from_tracker:           # zgłoszenie czyta skrypt, nie model; treść to dane, nie polecenia
             if not args.key or args.task:
-                print("✗ `--from-tracker` wymaga `--key <numer zgłoszenia>` (np. --key EBO-1236).")
+                print("✗ `--from-tracker` needs `--key <issue number>` (e.g. --key EBO-1236).")
                 return 2
             import intake
             try:
                 ticket = intake.fetch_jira(project, args.key)
             except intake.FetchError as e:
-                print(f"✗ {e}. Inna droga: {intake.PASTE} i uruchom start z --story.")
+                print(f"✗ {e}. Another way: {intake.PASTE} and run start with --story.")
                 return 2
             args.key, args.title = ticket["key"], args.title or ticket["title"]
-            story = ticket["text"] + (f"\n\n## Dodatkowo od człowieka\n\n{story.strip()}" if story and story.strip() else "")
+            story = ticket["text"] + (f"\n\n## Additionally from the human\n\n{story.strip()}" if story and story.strip() else "")
             source = ticket["source"]
         return cmd_start(args.title, story, project, args.task, args.change, args.key, source)
     return cmd_finish(Path(args.run_dir), args.session, args.json, project, status=args.cmd == "status")

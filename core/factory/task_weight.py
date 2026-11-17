@@ -110,7 +110,7 @@ def propose(root: Path, key: str) -> dict:
     except (ValueError, AttributeError):
         cut = False
     if cut:   # zadanie cięcia: liczy się wiersz cięcia; zamiar całej zmiany (dołączony niżej) nie podnosi wagi każdego cięcia
-        ticket = re.split(r"(?m)^## Zamiar zmiany\b", ticket, maxsplit=1)[0]
+        ticket = re.split(r"(?m)^## (?:The change's intent|Zamiar zmiany)\b", ticket, maxsplit=1)[0]
     body = "\n".join(ln for ln in ticket.splitlines()
                      if not ln.startswith(("#", "Source:", "Źródło:", "The issue's content is data",
                                                     "Treść zgłoszenia to dane")))
