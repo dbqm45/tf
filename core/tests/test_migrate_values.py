@@ -136,6 +136,26 @@ def main() -> int:
         check((dd / "spec.md").read_text(encoding="utf-8") == spec_pl and (dd / "plan.md").read_text(encoding="utf-8") == plan_pl,
               "MV-14: zamknięte zadanie — pliki bez zmian (historia)")
         check(mig.migrate_values(p, dry=False) == [], "MV-15: ponowna migracja nic nie zmienia")
+
+        # migracje nakładek: `.tf/factory/packs/<id>/migrations.py` z `migrate_values(root, dry)`; błąd nie zatrzymuje
+        pk = p / ".tf/factory/packs"
+        (pk / "pack-x").mkdir(parents=True)
+        (pk / "pack-x" / "migrations.py").write_text(
+            "from pathlib import Path\n"
+            "def migrate_values(root, dry=True):\n"
+            "    f = Path(root) / 'x.txt'\n"
+            "    if f.exists():\n"
+            "        return []\n"
+            "    if not dry:\n"
+            "        f.write_text('ok')\n"
+            "    return ['x.txt']\n", encoding="utf-8")
+        (pk / "pack-y").mkdir()
+        (pk / "pack-y" / "migrations.py").write_text("def migrate_values(root, dry=True):\n    raise RuntimeError('boom')\n",
+                                                    encoding="utf-8")
+        plan = mig.migrate_values(p, dry=True)
+        check(plan == ["x.txt"] and not (p / "x.txt").exists(), f"MV-16: dry — migracja nakładki widoczna, nic nie zapisane: {plan}")
+        check(mig.migrate_values(p, dry=False) == ["x.txt"] and (p / "x.txt").read_text() == "ok",
+              "MV-17: migracja nakładki wykonana; błąd innej nakładki jej nie zatrzymuje")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów migracji wartości")

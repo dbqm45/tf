@@ -103,7 +103,8 @@ CORE_FILES = {"guide/JEV.md": ".claude/JEV.md",   # przewodnik i FAQ w .tf/facto
 PACK_DIRS = {"skills": ".claude/skills", "hooks": ".claude/hooks", "tests": ".claude/tests",
              "workflows": ".claude/workflows",   # workflows: skrypty wieloagentowe Claude Code (Workflow)
              "analyzers": ".tf/factory/analyzers"}   # moduły tf analyze (analyzer.yaml, scripts/, fixtures/)
-PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md", "semgrep.yml")   # → .tf/factory/packs/<id>/
+PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "GUIDE.md", "semgrep.yml",
+             "migrations.py")   # → .tf/factory/packs/<id>/
 SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
 USER_OWNED = (".tf/config/",)   # konfiguracja projektu — instalator zakłada szablon, nigdy go nie nadpisuje
 ALWAYS_OWNED = (".claude/cleanroom.json",)   # składany z rdzenia i nakładek — zawsze z bieżącej wersji

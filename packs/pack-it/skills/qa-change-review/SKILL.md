@@ -19,7 +19,7 @@ dobry plan lub kod daje krótki raport.
   i sekcją „Postęp” (szablon `delivery` w core-project-record).
 - Badanie lub przeramowanie obok raportu kroku, jeśli powstały.
 - `docs/project/lessons.md` — ustalenie łamiące zapisaną lekcję ma wyższą wagę.
-- Wcześniejszy raport przeglądu → wznów od triażu (ustalenia z decyzją `OCZEKUJE`).
+- Wcześniejszy raport przeglądu → wznów od triażu (ustalenia z decyzją `PENDING`).
 
 ## Tryb A — przegląd planu (przed kodem)
 1. **Spójność wewnętrzna** (tu jest najwięcej trafień):
@@ -95,7 +95,7 @@ Nie każde ustalenie trzeba naprawić. Po każdej decyzji aktualizuj zapisany ra
 ## Zapis
 - `docs/project/07-review/<data>-przeglad-planu-<krok>.md` albo `…-przeglad-impl-<krok>[-fN].md`, szablon
   `review` (core-project-record) z kolumnami Wpływ i Decyzja oraz linią „Ugruntowanie”.
-- Decyzje: `OCZEKUJE` / `NAPRAWIONE` / `POMINIĘTE` / `RYZYKO PRZYJĘTE` / `ODRZUCONE` / `LEKCJA`.
+- Decyzje: `PENDING` / `FIXED` / `SKIPPED` / `RISK_ACCEPTED` / `REJECTED` / `LESSON`.
 - Poprawki odłożone → „Otwarte pytania” raportu kroku.
 - Większa zmiana: zapisz raport, daj człowiekowi przeczytać go spokojnie, triaż w kolejnej rozmowie.
 - Ten sam wzorzec w CI (werdykt jako bramka workflow, komentarze inline): core-git-workflow,
@@ -108,9 +108,9 @@ NADMIAR `src/lib/format.ts` (helper dla zaplanowanego kodu), BRAK — żaden.
 ```
 Ugruntowanie: 6/6 ścieżek, 4/4 symbole, TL;DR zgodne z planem · npm test → 48 passed
 | ID | Waga | Wpływ | Wymiar | Miejsce | Ustalenie | Decyzja |
-| F1 | krytyczne | niski | bezpieczeństwo | api/cards/save.ts:18 | endpoint zapisu omija wspólny strażnik autoryzacji | NAPRAWIONE |
-| F2 | obserwacja | wysoki | spójność | db/schema.ts:40 | nowa nazwa statusu w bazie (front, backend, dane historyczne) | POMINIĘTE (notatka) |
-| F3 | ostrzeżenie | niski | wzorce | actions/deck.ts:12 | ręczne sprawdzanie userId zamiast strażnika | LEKCJA + NAPRAWIONE |
+| F1 | krytyczne | niski | bezpieczeństwo | api/cards/save.ts:18 | endpoint zapisu omija wspólny strażnik autoryzacji | FIXED |
+| F2 | obserwacja | wysoki | spójność | db/schema.ts:40 | nowa nazwa statusu w bazie (front, backend, dane historyczne) | SKIPPED (notatka) |
+| F3 | ostrzeżenie | niski | wzorce | actions/deck.ts:12 | ręczne sprawdzanie userId zamiast strażnika | LESSON + FIXED |
 Werdykt: wymaga uwagi → po triażu zatwierdzone
 ```
 Więcej (przegląd planu, dobry plan bez ustaleń): `references/examples.md`.

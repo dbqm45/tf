@@ -618,8 +618,10 @@ treści (angielska), bez równoległej polskiej.
   `Dependencies`, `Data`, `Rules`, `Terms`, `Deviations`, `Unknowns`, `(confidence: …)`, `(details: …)`), `rules.md`
   (`Cross-cutting rules`). Polskie nagłówki przyjmowane przez 14.x (aliasy w `recon_check`, `recon_cards`,
   `recon_refresh`, `recon_export`).
-- [ ] Etap 3b-2 — dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod / do weryfikacji, sekcje indeksu,
-  kart, oceny i rekomendacji) z migracją istniejących dossier; etykiety decyzji qa-change-review.
+- [x] Etap 3b-2 — dossier legacy po angielsku: sekcje indeksu, kart, oceny i rekomendacji, `State: green|yellow|red`,
+  tabela `ID | Rule | Evidence | Confidence` (`test|code|to verify`), pola ustaleń (`Area`, `Category`, `Gap`, …)
+  i rekomendacji (`Addresses`, `Decision`, …), kategorie i szczeble decyzji; dawne polskie nazwy przyjmowane, migracja
+  przepisuje istniejące dossier; etykiety decyzji przeglądu `PENDING|FIXED|SKIPPED|RISK_ACCEPTED|REJECTED|LESSON`.
 - [ ] Etap 3b-3 — dziennik projektu: pole „Dotyczy” lekcji, tagi `project_record` (wzmianka, zastąpiony,
   niezweryfikowany), litery P/C/N/S w tabelach weryfikacji, nazwy plików zakładanych w `docs/project/`
   (`<data>-przeglad.md`), znaczniki `[założenie]`/`[niezweryfikowane]`/`[pytanie]` (core-grounding, razem z etapem 4).

@@ -17,7 +17,7 @@ Ugruntowanie: <np. 5/5 ścieżek, 3/3 symbole, TL;DR zgodne z planem — przy pr
 | # | Waga | Wpływ | Ustalenie | Dowód (plik:linia / źródło) | Rekomendacja | Decyzja |
 |---|---|---|---|---|---|---|
 > Waga: krytyczne / ostrzeżenie / obserwacja. Wpływ: niski / średni / wysoki (pack-it: qa-change-review).
-> Decyzja: OCZEKUJE / NAPRAWIONE / POMINIĘTE / RYZYKO PRZYJĘTE / ODRZUCONE / LEKCJA.
+> Decyzja: PENDING / FIXED / SKIPPED / RISK_ACCEPTED / REJECTED / LESSON.
 ## Decyzje człowieka vs propozycje AI
 | Propozycja agenta | Decyzja człowieka | Dlaczego |
 |---|---|---|

@@ -161,6 +161,22 @@ def _plan(text: str) -> str:
     return PLAN_SLICE.sub(fields, text)
 
 
+def _pack_migrations(root: Path, dry: bool) -> list[str]:
+    """Migracje danych projektu z nakładek: `.tf/factory/packs/<id>/migrations.py` z funkcją
+    `migrate_values(root, dry) -> list[str]` (rdzeń nie zna skilli nakładek — każda migruje swoje pliki)."""
+    import importlib.util
+    out = []
+    for f in sorted((root / ".tf" / "factory" / "packs").glob("*/migrations.py")):
+        spec = importlib.util.spec_from_file_location(f"tf_pack_migrations_{f.parent.name}", f)
+        mod = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)
+            out += list(mod.migrate_values(root, dry) or [])
+        except Exception as e:   # noqa: BLE001 — błąd migracji nakładki nie zatrzymuje aktualizacji
+            print(f"⚠ migracja nakładki {f.parent.name}: {e}")
+    return out
+
+
 def _sha(data: bytes, plan: bool = False) -> str:
     import hashlib
     return hashlib.sha256(TICKED.sub(rb"\1[ ]\2", data) if plan else data).hexdigest()
@@ -258,6 +274,7 @@ def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
                     p.write_text(new, encoding="utf-8")
     for tj in sorted(root.glob("docs/project/changes/*/task.json")):
         out += _task_docs(root, tj, dry)
+    out += _pack_migrations(root, dry)
     reg = root / ".tf" / "register" / "items.jsonl"   # 13.0.0: status pozycji rejestru tf analyze
     if reg.is_file():
         rows, changed = [], False

@@ -188,7 +188,7 @@ def main() -> int:
           f"DC-2: brak znacznika w README.md → błąd: {r.stdout}")
 
     r = case(INDEX.replace("## Słownik", "## Inne"))
-    check(r.returncode == 1 and "Słownik" in r.stdout, f"DC-3: brak sekcji indeksu → błąd: {r.stdout}")
+    check(r.returncode == 1 and "Glossary" in r.stdout, f"DC-3: brak sekcji indeksu → błąd: {r.stdout}")
 
     r = case(module=None)
     check(r.returncode == 1 and "modules/faktury.md" in r.stdout, f"DC-4: moduł z indeksu bez pliku → błąd: {r.stdout}")
@@ -207,7 +207,7 @@ def main() -> int:
     check(r.returncode == 1 and "R-FAK-01" in r.stdout and "powt" in r.stdout, f"DC-8: powtórzone ID reguły → błąd: {r.stdout}")
 
     r = case(module=MODULE.replace("Stan: żółty — zaokrąglenia w dwóch miejscach\n", ""))
-    check(r.returncode == 1 and "Stan" in r.stdout, f"DC-9: karta modułu bez pola Stan → błąd: {r.stdout}")
+    check(r.returncode == 1 and "State" in r.stdout, f"DC-9: karta modułu bez pola Stan → błąd: {r.stdout}")
 
     r = case(module=MODULE.replace("| kod |", "| chyba |"))
     check(r.returncode == 1 and "chyba" in r.stdout, f"DC-10: nieznana pewność → błąd: {r.stdout}")
@@ -246,14 +246,44 @@ def main() -> int:
     r = case(assess=ASSESS, recs=RECS.replace("Priorytet: P1", "Priorytet: pilne"))
     check(r.returncode == 1 and "pilne" in r.stdout, f"DC-19: nieznany priorytet → błąd: {r.stdout}")
     r = case(assess=ASSESS.replace("## Mocne strony", "## Inne"), recs=RECS)
-    check(r.returncode == 1 and "Mocne strony" in r.stdout, f"DC-20: assessment bez mocnych stron → błąd: {r.stdout}")
+    check(r.returncode == 1 and "Strengths" in r.stdout, f"DC-20: assessment bez mocnych stron → błąd: {r.stdout}")
     r = case(recs=RECS)
     check(r.returncode == 1 and "assessment.md" in r.stdout, f"DC-21: rekomendacje bez assessment.md → błąd: {r.stdout}")
     r = case(assess=ASSESS.replace("Luka: zmiana w aplikacji psuje bibliotekę\n", ""), recs=RECS)
-    check(r.returncode == 1 and "Luka" in r.stdout, f"DC-22: ustalenie bez pola Luka → błąd: {r.stdout}")
+    check(r.returncode == 1 and "Gap" in r.stdout, f"DC-22: ustalenie bez pola Luka → błąd: {r.stdout}")
     r = case(assess=ASSESS, recs=RECS.replace("Decyzja: dokumentacja", "Decyzja: przeprojektowanie"))
     check(r.returncode == 1 and "preferencj" in r.stdout and "REC-002" in r.stdout,
           f"DC-23: przeprojektowanie uzasadnione samą preferencją → błąd: {r.stdout}")
+
+    # 14.x: migracja przepisuje polskie dossier na angielską składnię; treść zostaje, kontrola przechodzi
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ld_migrations", ROOT / ".tf" / "factory" / "migrations.py")
+    mig = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mig)
+    with tempfile.TemporaryDirectory() as t:
+        d = Path(t)
+        make(d, assess=ASSESS, recs=RECS)
+        target = d / "docs" / "project" / "04-architecture" / "legacy-dossier"
+        target.parent.mkdir(parents=True)
+        (d / "dossier").rename(target)
+        (d / ".claude").symlink_to(ROOT / ".claude", target_is_directory=True)
+        (d / ".tf" / "factory" / "packs").mkdir(parents=True)
+        (d / ".tf" / "factory" / "packs" / "pack-it").symlink_to(ROOT / ".tf" / "factory" / "packs" / "pack-it",
+                                                              target_is_directory=True)
+        changed = mig.migrate_values(d, dry=False)
+        idx = (target / "README.md").read_text(encoding="utf-8")
+        mod = (target / "modules" / "faktury.md").read_text(encoding="utf-8")
+        ass = (target / "assessment.md").read_text(encoding="utf-8")
+        rec = (target / "recommendations.md").read_text(encoding="utf-8")
+        check("## Glossary" in idx and "## Open questions" in idx and "Wystawia faktury i korekty." in idx
+              and "State: yellow — zaokrąglenia w dwóch miejscach" in mod and "## Business rules" in mod
+              and "| ID | Rule | Evidence | Confidence |" in mod and "| src/Invoice.java:3 | code |" in mod
+              and "| — | to verify |" in mod and "Category: confirmed problem" in ass and "Gap: zmiana w aplikacji" in ass
+              and "Decision: incremental refactoring" in rec and "Addresses: ARCH-001" in rec,
+              f"DC-24: migracja dossier — sekcje, pola i wartości po angielsku, treść bez zmian: {changed} {mod[:400]}")
+        r = subprocess.run([sys.executable, str(SCRIPT), str(target), "--root", str(d)], capture_output=True, text=True)
+        check(r.returncode == 0, f"DC-25: dossier po migracji przechodzi kontrolę: {r.stdout}")
+        check(mig.migrate_values(d, dry=False) == [], "DC-26: ponowna migracja dossier nic nie zmienia")
 
     for f in fails:
         print(f"✗ {f}")

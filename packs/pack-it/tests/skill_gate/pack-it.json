@@ -212,7 +212,7 @@
   "offline": "2026-11-16"
  },
  "eng-legacy-dossier": {
-  "fingerprint": "dc643b11d5204126",
+  "fingerprint": "b9b428a8bb0e240a",
   "offline": "2026-11-17"
  },
  "eng-llm-features": {
@@ -456,8 +456,8 @@
   "offline": "2026-11-16"
  },
  "qa-change-review": {
-  "fingerprint": "8c235290a7dd71ea",
-  "offline": "2026-11-16"
+  "fingerprint": "04c6ef9552394962",
+  "offline": "2026-11-17"
  },
  "qa-exploratory-manual": {
   "fingerprint": "e95579d0ea9659d6",

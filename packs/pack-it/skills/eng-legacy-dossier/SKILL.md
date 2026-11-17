@@ -11,7 +11,7 @@ metadata:
 
 Cel: dokument, po którym osoba bez znajomości systemu wie, **co** robi każda część, **dlaczego** (reguły biznesowe)
 i **gdzie** to jest w kodzie — a zespół ma gotowe wejście do poprawek i refaktoru. Teczka opisuje stan obecny,
-niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:linia` albo pewność „do weryfikacji”
+niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:linia` albo pewność `to verify`
 (core-grounding) — opis „z pamięci ogólnej” jest gorszy niż brak opisu, bo wprowadza w błąd przy refaktorze.
 
 ## Procedura
@@ -28,13 +28,13 @@ niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:li
      wychodzące i przychodzące z rodzajem); DI, kolejki, rejestry i wywołania po nazwie graf pomija — do Pytań;
    - **Reguły biznesowe** — tabela `ID | Reguła | Dowód | Pewność`. Regułę piszesz jako zdanie dla biznesu
      („Faktura po 30 dniach jest przeterminowana”), nie jako opis kodu. Pewność: `test` (jest test, który jej
-     pilnuje), `kod` (wynika wprost z kodu), `do weryfikacji` (wnioskowana, sprzeczna lub bez dowodu — trafia też do
+     pilnuje), `code` (wynika wprost z kodu), `to verify` (wnioskowana, sprzeczna lub bez dowodu — trafia też do
      Pytań). Gdzie szukać reguł: `references/template.md` § Skąd brać reguły;
    - **Pułapki** — zachowania zaskakujące: efekty uboczne, stan globalny, magiczne stałe, zależność od kolejności,
      ta sama reguła w kilku miejscach (często inaczej);
    - **Testy** — co jest pokryte, czego brakuje dla reguł z tabeli;
-   - **Stan** w nagłówku: `zielony` (zrozumiały, przetestowany), `żółty` (działa, ale ryzykowny w zmianie),
-     `czerwony` (niezrozumiały lub bez testów przy krytycznych regułach) — zawsze z powodem.
+   - **State** w nagłówku: `green` (zrozumiały, przetestowany), `yellow` (działa, ale ryzykowny w zmianie),
+     `red` (niezrozumiały lub bez testów przy krytycznych regułach) — zawsze z powodem.
 3. **Przepływy (3–5 kluczowych)** w indeksie: krok po kroku przez moduły z plikami, diagram sekwencji (Mermaid).
    Pogłębienie jednego przepływu: `.claude/skills/eng-codebase-mapping/references/flow-analysis.md`.
 4. **Słownik** kod ↔ biznes: nazwa w kodzie, pojęcie biznesowe, uwaga o rozjeździe (`Doc` = faktura, ale też
@@ -45,7 +45,7 @@ niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:li
 6. **Sprawdzenie** — **uruchom** `python3 .claude/skills/eng-legacy-dossier/scripts/dossier_check.py
    docs/project/04-architecture/legacy-dossier` (z katalogu repozytorium). Pierwsza linia: `legacy-dossier-check: OK`
    albo `ERRORS` z listą: brakujące sekcje i karty, powtórzone ID, dowód wskazujący nieistniejący plik lub linię.
-   Błędy poprawiasz przed oddaniem; liczba reguł „do weryfikacji” idzie do TL;DR.
+   Błędy poprawiasz przed oddaniem; liczba reguł `to verify` idzie do TL;DR.
 
 Wynik: `docs/project/04-architecture/legacy-dossier/README.md` (indeks) + `modules/*.md`; TL;DR i Przekazanie wg
 core-project-record. Duży system: najpierw indeks i karty rdzenia, reszta w kolejnych sesjach (punkt kontrolny).
@@ -58,11 +58,11 @@ Kolejność jest twarda: najpierw stan obecny z dowodami, ocena dopiero potem, r
 2. **Architecture Inventory (as-is)** = indeks i karty z procedury wyżej; modułem jest aplikacja lub biblioteka.
    Bez ocen. Nx i Angular: `references/nx-angular.md` (polecenia, inwentarz bibliotek, zależności, routing, stan, API).
 3. **Assessment** (`assessment.md`) — ustalenia `ARCH-NNN`: stan obecny / oczekiwany / luka, dowód, wpływ i
-   **kategoria**: potwierdzony problem · ryzyko · niespójność · możliwość poprawy · preferencja. Fakt (jest import)
+   **kategoria** (`Category`): `confirmed problem` · `risk` · `inconsistency` · `improvement` · `preference`. Fakt (jest import)
    oddzielasz od interpretacji (to szkodzi — wymaga uzasadnienia). Osobna sekcja **Mocne strony** — co zachować.
 4. **Recommendations & Roadmap** (`recommendations.md`) — `REC-NNN` do ustaleń: decyzja na najniższym szczeblu,
-   który rozwiązuje problem (bez zmian → dokumentacja → konfiguracja → refaktoryzacja przyrostowa → strukturalna →
-   przeprojektowanie), priorytet P1–P3, wysiłek, ryzyko, sposób weryfikacji; docelowe zasady (obowiązkowe /
+   który rozwiązuje problem (`no change` → `documentation` → `configuration` → `incremental refactoring` → `structural refactoring` →
+   `redesign`), priorytet P1–P3, wysiłek, ryzyko, sposób weryfikacji; docelowe zasady (obowiązkowe /
    zalecane / zależne od kontekstu); roadmapa w fazach; kryteria sukcesu.
 5. **Sprawdzenie** — ten sam `dossier_check.py`: pilnuje dowodów potwierdzonych problemów, rekomendacji dla każdego
    z nich i blokuje refaktoryzację strukturalną uzasadnioną samą preferencją.
@@ -86,16 +86,16 @@ Wynik (fragment `modules/faktury.md`):
 ```markdown
 <!-- legacy-dossier:module -->
 # Moduł: faktury
-Stan: żółty — zaokrąglenie kwot w dwóch miejscach, różnymi metodami
+State: yellow — zaokrąglenie kwot w dwóch miejscach, różnymi metodami
 
-## Reguły biznesowe
-| ID | Reguła | Dowód | Pewność |
+## Business rules
+| ID | Rule | Evidence | Confidence |
 |---|---|---|---|
 | R-FAK-01 | Kwotę brutto zaokrągla się do 2 miejsc „połówkowo w górę” | src/billing/Invoice.java:142 | test |
-| R-FAK-02 | PDF pokazuje kwotę zaokrągloną „bankowo” — może różnić się o 1 grosz | src/pdf/PdfExporter.java:57 | kod |
-| R-FAK-03 | Faktura po 30 dniach jest przeterminowana (dni kalendarzowe?) | — | do weryfikacji |
+| R-FAK-02 | PDF pokazuje kwotę zaokrągloną „bankowo” — może różnić się o 1 grosz | src/pdf/PdfExporter.java:57 | code |
+| R-FAK-03 | Faktura po 30 dniach jest przeterminowana (dni kalendarzowe?) | — | to verify |
 
-## Pułapki
+## Pitfalls
 - Ta sama kwota liczona w `Invoice.total()` i `PdfExporter.render()` (R-FAK-01 vs R-FAK-02).
 ```
 
@@ -105,9 +105,9 @@ W indeksie: kandydat „jedno miejsce zaokrągleń” z dowodem obu linii → en
 ## Checklista
 - [ ] zakres i commit HEAD zapisane; mapa (eng-codebase-mapping) istnieje albo powstała pierwsza
 - [ ] każdy moduł z indeksu ma kartę; „Po co” językiem biznesu; Stan z powodem
-- [ ] każda reguła: zdanie dla biznesu, dowód `plik:linia` lub „do weryfikacji” + pytanie
+- [ ] każda reguła: zdanie dla biznesu, dowód `plik:linia` lub `to verify` + pytanie
 - [ ] 3–5 przepływów, słownik z rozjazdami, kandydaci do refaktoru z dowodem (bez zmian w kodzie)
-- [ ] `dossier_check.py` → `legacy-dossier-check: OK`; liczba reguł „do weryfikacji” w TL;DR
+- [ ] `dossier_check.py` → `legacy-dossier-check: OK`; liczba reguł `to verify` w TL;DR
 
 ## Materiały dodatkowe
 - `references/template.md` — szablon indeksu i karty modułu, skąd brać reguły biznesowe; czytaj przy pisaniu teczki.
