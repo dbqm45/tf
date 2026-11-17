@@ -84,26 +84,26 @@ def analyse(hints: list[dict], usage: list[dict]) -> dict:
 
 
 def render(r: dict) -> str:
-    lines = [f"Sesje: {r['sessions']} · polecenia: {r['prompts']} · z podpowiedzią: {r['prompts_with_hint']}"]
+    lines = [f"Sessions: {r['sessions']} · prompts: {r['prompts']} · with a hint: {r['prompts_with_hint']}"]
     if not r["sessions"]:
-        lines.append("Brak danych: potrzebne logi .tf/logs/skill-hints.jsonl i usage.jsonl z tych samych sesji.")
+        lines.append("No data: logs .tf/logs/skill-hints.jsonl and usage.jsonl from the same sessions are needed.")
         return "\n".join(lines)
     total_hit, total_ign, total_miss = sum(r["hit"].values()), sum(r["ignored"].values()), sum(r["missed"].values())
-    lines.append(f"Podpowiedzi trafione: {total_hit} · zignorowane: {total_ign} · skille użyte bez podpowiedzi: {total_miss}")
+    lines.append(f"Hints hit: {total_hit} · ignored: {total_ign} · skills used without a hint: {total_miss}")
     names = sorted(set(r["hit"]) | set(r["ignored"]) | set(r["missed"]),
                    key=lambda n: -(r["missed"][n] + r["ignored"][n]))
-    lines += ["", f"{'skill':<36} {'trafione':>8} {'zignor.':>8} {'przeocz.':>8}"]
+    lines += ["", f"{'skill':<36} {'hit':>8} {'ignored':>8} {'missed':>8}"]
     lines += [f"{n:<36} {r['hit'][n]:>8} {r['ignored'][n]:>8} {r['missed'][n]:>8}" for n in names]
     tips = []
     for n in names:
         if r["missed"][n] >= 2:
-            tips.append(f"- {n}: używany bez podpowiedzi w {r['missed'][n]} sesjach — dopisz słowa użytkowników do "
-                        f"metadata.keywords (z CLAUDE_SKILL_HINT_LOG_PROMPT=1 zobaczysz brzmienie poleceń)")
+            tips.append(f"- {n}: used without a hint in {r['missed'][n]} sessions — add the users' words to "
+                        f"metadata.keywords (with CLAUDE_SKILL_HINT_LOG_PROMPT=1 you see the wording of prompts)")
         if r["ignored"][n] >= 3 and r["hit"][n] == 0:
-            tips.append(f"- {n}: podpowiadany {r['ignored'][n]}× i ani razu nie użyty — sprawdź, czy opis nie łapie "
-                        f"cudzych słów (python3 .claude/hooks/skill_hint.py --explain \"<polecenie>\")")
+            tips.append(f"- {n}: hinted {r['ignored'][n]}× and never used — check that the description does not catch "
+                        f"other skills' words (python3 .claude/hooks/skill_hint.py --explain \"<prompt>\")")
     if tips:
-        lines += ["", "Co poprawić:"] + tips
+        lines += ["", "What to fix:"] + tips
     return "\n".join(lines)
 
 

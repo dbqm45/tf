@@ -134,8 +134,8 @@ def main() -> int:
         out = m.write_report(repo, res2)
         md = (repo / ".tf" / "reports" / "metrics.md").read_text(encoding="utf-8")
         js = json.loads((repo / ".tf" / "reports" / "metrics.json").read_text(encoding="utf-8"))
-        if out != repo / ".tf" / "reports" / "metrics.md" or "niecofnięta przez 7 dni" not in md \
-                or "Odsetek revertów" not in md or "bez pracy ludzi" not in md or js["current"]["changes"] != 5:
+        if out != repo / ".tf" / "reports" / "metrics.md" or "not reverted for 7 days" not in md \
+                or "Revert rate" not in md or "without human work" not in md or js["current"]["changes"] != 5:
             fails.append(f"M-7: raport metrics.md i metrics.json: {md[:400]}")
 
     # M-8: `tf metrics` w launcherze uruchamia silnik (pomoc bez błędu)

@@ -84,7 +84,7 @@ def main() -> int:
             bad = base / f"{name}.yaml"
             write(bad, body)
             r = scan(bad, repo)
-            check(r.returncode == 2 and "reguła" in r.stderr, f"RS-4 {name}: błędna reguła → kod 2 z opisem: {r.returncode} {r.stderr}")
+            check(r.returncode == 2 and "rule" in r.stderr, f"RS-4 {name}: błędna reguła → kod 2 z opisem: {r.returncode} {r.stderr}")
 
         # moduł tf analyze z tier0.rules: uruchomienie i bramka na fixtures
         mods = base / "mods"

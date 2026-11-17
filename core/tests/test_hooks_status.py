@@ -68,7 +68,7 @@ def main() -> int:
         check(s["active"] is False and s["after_commits"] == 2, f"H2 luka: {s}")
         check(s["last_log"].startswith("2026-10-18T10:00"), f"H2 ostatni log: {s}")
         r = run("--root", str(repo))
-        check(r.returncode == 0 and "nieaktywne" in r.stdout and "2 commit" in r.stdout and "jednym repozytorium"
+        check(r.returncode == 0 and "not active" in r.stdout and "2 commit" in r.stdout and "one repository"
               in r.stdout, f"H2 tekst: {r.stdout}")
 
         # jeden commit po luce to jeszcze nie sygnał (bieżąca sesja mogła nie zapisać SessionEnd)
@@ -95,7 +95,7 @@ def main() -> int:
 
     r = subprocess.run([sys.executable, str(CHECK), "-k", "nic_takiego"], capture_output=True, text=True, timeout=900,
                        encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, cwd=ROOT, env=NO_CI)
-    check("hooki fabryki" in r.stdout, f"H6 krok w check.py: {r.stdout[-500:]}")
+    check("factory hooks" in r.stdout, f"H6 krok w check.py: {r.stdout[-500:]}")
 
     for f in fails:
         print("✗", f)

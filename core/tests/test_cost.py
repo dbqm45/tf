@@ -218,7 +218,7 @@ def main() -> int:
                rec("5", "d", "architect", "claude-opus-5-5", "wysoki"), rec("6", "e", "architect", "claude-opus-5-5", "wysoki"),
                rec("7", "f", "architect", "claude-opus-5-5")]
     adv = "\n".join(cr.tier_advice(records, cfg))
-    if "quick-fixer" not in adv or "podnieś" not in adv or "architect" not in adv or "obniż" not in adv:
+    if "quick-fixer" not in adv or "raise" not in adv or "architect" not in adv or "lower" not in adv:
         fails.append(f"cost_report: rekomendacje tierów — {adv!r}")
 
     # ── cost_report --delegation: koszt delegowania wg klasy zadania ──
@@ -249,7 +249,7 @@ def main() -> int:
         dl.write_text("\n".join(json.dumps({"ts": "2026-10-18T12:00:00+00:00", **x}) for x in deleg), encoding="utf-8")
         ul.write_text("\n".join(json.dumps({"ts": "2026-10-18T12:00:00+00:00", **x}) for x in usage), encoding="utf-8")
         r = run([str(ROOT / ".tf" / "factory" / "cost_report.py"), "--delegation", "--log", str(ul), "--delegation-log", str(dl)])
-        if r.returncode != 0 or "reading" not in r.stdout or "bez klasy" not in r.stdout:
+        if r.returncode != 0 or "reading" not in r.stdout or "no class" not in r.stdout:
             fails.append(f"cost_report --delegation: {r.returncode} {r.stdout[-400:]} {r.stderr[-400:]}")
 
     # ── instalator: scalanie kluczy najwyższego poziomu i polecenie Pythona w pasku stanu ──

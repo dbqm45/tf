@@ -127,7 +127,7 @@ def trace(root: Path, key: str, base: str | None = None) -> dict | None:
         hits = found.get(ac, [])
         if not hits:
             errors.append({"rule": "TRACE-001", "criterion": ac,
-                           "message": f"{ac} nie ma testu — dodaj test z „{ac}” w nazwie albo komentarzu"})
+                           "message": f"{ac} has no test — add a test with \"{ac}\" in its name or a comment"})
             rows.append({"criterion": ac, "tests": [], "commit": None, "slice": None, "evidence": "no-test", "red": False})
             continue
         rel = hits[0][0]
@@ -135,16 +135,16 @@ def trace(root: Path, key: str, base: str | None = None) -> dict | None:
         evidence = states[sid][0] if sid in states else "no-evidence"
         if sid is None:
             warnings.append({"rule": "TRACE-003", "criterion": ac,
-                             "message": f"{ac}: {rel} nie należy do plików żadnego kawałka — dopisz go do `--files` przy "
-                                        "weryfikacji kawałka"})
+                             "message": f"{ac}: {rel} is not in the files of any slice — add it to `--files` when you "
+                                        "verify the slice"})
         rows.append({"criterion": ac, "tests": [f"{f}:{n}" for f, n in hits],
                      "commit": first_commit(root, ref, rel, ac), "slice": sid, "evidence": evidence,
                      "red": any(f in red for f, _ in hits)})
     for ac in sorted(set(found) - set(spec["criteria"]), key=lambda a: int(a[3:])):
         rel, n = found[ac][0]
         errors.append({"rule": "TRACE-002", "criterion": ac,
-                       "message": f"{rel}:{n} wskazuje {ac}, którego nie ma w specyfikacji — popraw identyfikator albo "
-                                  "dopisz kryterium (zmiana wymagań)"})
+                       "message": f"{rel}:{n} points to {ac}, which is not in the specification — fix the ID or "
+                                  "add the criterion (a change of requirements)"})
     return {"ok": not errors, "spec": True, "rows": rows, "errors": errors, "warnings": warnings, "base": ref}
 
 
@@ -158,7 +158,7 @@ def render_md(rows: list[dict]) -> str:
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(prog="tf trace", description="Ślad kryterium → test → commit → dowód.")
+    ap = argparse.ArgumentParser(prog="tf trace", description="Trace criterion → test → commit → evidence.")
     ap.add_argument("key")
     ap.add_argument("--base", default=None)
     ap.add_argument("--md", action="store_true")
@@ -169,29 +169,29 @@ def main(argv: list[str]) -> int:
         return 2 if e.code else 0
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     if not KEY.fullmatch(a.key):
-        print(f"✗ klucz „{a.key}” nie pasuje do wzorca (np. PROJ-123, CHG-12, T-20261113-limit)")
+        print(f"✗ the key \"{a.key}\" does not match the pattern (e.g. PROJ-123, CHG-12, T-20261113-limit)")
         return 2
     result = trace(root, a.key, a.base)
     if result is None:
-        print("✗ śladu nie da się policzyć: katalog nie jest repozytorium git albo nie ma bazy porównania "
-              f"({a.base or ', '.join(BASES)}) — podaj --base <gałąź>")
+        print("✗ cannot compute the trace: the directory is not a git repository or there is no comparison base "
+              f"({a.base or ', '.join(BASES)}) — give --base <branch>")
         return 2
     if a.json:
         print(json.dumps(result, ensure_ascii=False, indent=1))
         return 0 if result["ok"] else 1
     if not result["spec"]:
-        print(f"Zadanie {a.key} nie ma {CHANGES / a.key / 'spec.md'} — śladu kryteriów nie ma z czego policzyć.")
+        print(f"Task {a.key} has no {CHANGES / a.key / 'spec.md'} — there is nothing to compute the criteria trace from.")
         return 0
     rows = result["rows"]
     if a.md:
         print(render_md(rows))
     else:
         covered = sum(1 for r in rows if r["tests"])
-        print(f"{'✓' if result['ok'] else '✗'} {a.key}: kryteria z testem {covered}/{len(rows)} (baza: {result['base']})")
+        print(f"{'✓' if result['ok'] else '✗'} {a.key}: criteria with a test {covered}/{len(rows)} (base: {result['base']})")
         for r in rows:
             proof = f"{r['slice']}: {r['evidence']}" if r["slice"] else r["evidence"]
-            print(f"  {r['criterion']} → {', '.join(r['tests']) or '—'} → czerwony przed kodem: "
-                  f"{'yes' if r.get('red') else 'not recorded'} → {r['commit'] or 'niezacommitowany'} → {proof}")
+            print(f"  {r['criterion']} → {', '.join(r['tests']) or '—'} → red before the code: "
+                  f"{'yes' if r.get('red') else 'not recorded'} → {r['commit'] or 'not committed'} → {proof}")
     for e in result["errors"]:
         print(f"✗ {e['rule']}  {e['message']}", file=sys.stderr if a.md else sys.stdout)
     for w in result["warnings"]:

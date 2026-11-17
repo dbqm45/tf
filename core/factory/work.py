@@ -115,17 +115,17 @@ def refusal(root: Path, task: dict, folder: str) -> str | None:
     """Dlaczego zadania nie wolno wziąć bez nadzoru; None — wolno. Klucz to nazwa folderu zadania, a pole `key`
     w task.json musi się z nią zgadzać (task.json przychodzi z repozytorium, np. z cudzego PR)."""
     if not KEY.fullmatch(folder) or task.get("key") != folder:
-        return f"{clean(folder)}: klucz w task.json nie zgadza się z nazwą folderu zadania — zadanie pominięte"
+        return f"{clean(folder)}: the key in task.json does not match the task folder name. Task skipped"
     key = folder
     if task.get("closed") or task.get("stage") not in OPEN_STAGES:
-        return f"{key}: etap {clean(task.get('stage'), 30)} — praca bez nadzoru prowadzi zadanie tylko do PR"
+        return f"{key}: stage {clean(task.get('stage'), 30)}. Unattended work takes a task only as far as a PR"
     if task.get("weight") == "full":
-        return f"{key}: waga pełna — bez nadzoru tylko zadania o wadze lekkiej i zwykłej (pełna wymaga panelu i człowieka)"
+        return f"{key}: weight full. Unattended work takes only light and normal tasks (full needs a panel and a human)"
     if task.get("mode") != "auto":
-        return (f"{key}: tryb {clean(task.get('mode') or 'normal', 30)}, nie auto — zgodę na pracę bez nadzoru daje człowiek: "
+        return (f"{key}: mode {clean(task.get('mode') or 'normal', 30)}, not auto. A human must allow unattended work: "
                 f"tf task mode {key} auto")
     if waits_for_human(root, key):
-        return f"{key}: czeka na człowieka (tf status) — po odpowiedzi wróci do kolejki"
+        return f"{key}: waits for a human (tf status). It returns to the queue after the answer"
     return None
 
 
@@ -171,8 +171,7 @@ def claim(root: Path, key: str, hours: float) -> tuple[bool, str]:
                      and not alive(held.get("pid")))
             if not stale:
                 return False, ""
-            note = (f"⚠ blokada {key} martwego procesu {held.get('pid')} z {datetime.fromtimestamp(at).isoformat(timespec='minutes')} "
-                    "przejęta")
+            note = (f"⚠ took over the lock on {key} held by dead process {held.get('pid')} since {datetime.fromtimestamp(at).isoformat(timespec='minutes')}")
             if not take_over(path, held, hours):
                 return False, ""
             continue
@@ -254,14 +253,14 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
     pliki z manifestu, konfigurację projektu i folder zadania, których w worktree brakuje."""
     wt = root / WORKTREES / key
     if not within(root / WORKTREES, wt):
-        return None, "ścieżka worktree poza .tf/worktrees"
+        return None, "worktree path is outside .tf/worktrees"
     if not wt.exists():
         branch = f"story/{key.lower()}"
         has = git(root, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}").returncode == 0
         r = git(root, "worktree", "add", "-q", str(wt), branch) if has else \
             git(root, "worktree", "add", "-q", "-b", branch, str(wt), base)
         if r.returncode != 0:
-            return None, f"git worktree add odrzucony: {(r.stdout + r.stderr).strip()}"
+            return None, f"git worktree add failed: {(r.stdout + r.stderr).strip()}"
     try:
         files = json.loads((root / MANIFEST).read_text(encoding="utf-8")).get("files") or {}
     except (OSError, ValueError, AttributeError):
@@ -275,7 +274,7 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
     # gałąź ma inne niż ta kopia, nie są nadpisywane — wykrywa je control_drift i przebieg jest odrzucany
     copied = sum(copy_missing(src, wt / rel, root, wt) for rel in dict.fromkeys(rels)
                  if (src := inside(root, rel)) and src.exists())
-    return wt, f"{copied} plików fabryki i zadania skopiowanych do worktree" if copied else ""
+    return wt, f"copied {copied} factory and task files to the worktree" if copied else ""
 
 
 def agent_command(key: str, budget: str, mode: str) -> list[str]:
@@ -305,7 +304,7 @@ def files_of(base: Path, rel: str) -> dict[str, str]:
             out[name] = (f"symlink:{os.readlink(f)}" if f.is_symlink() else
                          f"{hashlib.sha256(f.read_bytes()).hexdigest()}:{f.stat().st_mode & 0o111:o}")
         except OSError:
-            out[name] = "nieczytelny"
+            out[name] = "unreadable"
     return out
 
 
@@ -411,15 +410,15 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
     cfg = config(root)
     budget = budget_text(budget_arg if budget_arg is not None else cfg.get("budget_usd"))
     if budget is None:
-        print(f"✗ podaj limit wydatku od 0 do {MAX_RUN_USD} USD: tf work --once --budget <USD> (albo work.budget_usd "
-              "w .tf/config/config.yaml) — bez limitu praca bez nadzoru nie rusza")
+        print(f"✗ give a spending limit above 0 and up to {MAX_RUN_USD} USD: tf work --once --budget <USD> (or work.budget_usd "
+              "in .tf/config/config.yaml). Unattended work does not start without a limit")
         return 2
     mode = str(cfg.get("permission_mode") or DEFAULTS["permission_mode"])
     if mode not in MODES:
-        print(f"✗ work.permission_mode „{clean(mode, 40)}” — bez nadzoru dozwolone tylko: {', '.join(MODES)}")
+        print(f"✗ work.permission_mode \"{clean(mode, 40)}\": unattended work allows only: {', '.join(MODES)}")
         return 2
     if base is not None and (not base or base.startswith("-") or CONTROL.search(base)):
-        print("✗ --base: podaj nazwę gałęzi albo commita")
+        print("✗ --base: give a branch name or a commit")
         return 2
     try:
         cap = float(cfg.get("task_budget_usd"))        # 0 — świadomie bez łącznego limitu
@@ -429,7 +428,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
     if key:
         task = load_task(root, key) if KEY.fullmatch(key) else None
         if task is None:
-            print(f"✗ nie ma zadania {clean(key, 64)}")
+            print(f"✗ no task {clean(key, 64)}")
             return 2
         why = refusal(root, task, key)
         if why:
@@ -441,17 +440,17 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
     for task in queue:
         k = task["key"]
         if cap and spent(root, k) + float(budget) > cap:
-            msg = (f"{k}: łączny limit zadania work.task_budget_usd = {cap:g} USD — wcześniejsze przebiegi "
-                   f"{spent(root, k):g} USD + ten {budget} USD; decyzję o dalszym wydatku podejmuje człowiek")
+            msg = (f"{k}: total task limit work.task_budget_usd = {cap:g} USD. Earlier runs "
+                   f"{spent(root, k):g} USD + this run {budget} USD. A human decides on more spending")
             if key:
                 print(f"✗ {msg}")
                 return 2
             print(f"• {msg}")
             continue
         if dry:
-            print(f"• zadanie: {k} — {clean(task.get('title'))}")
-            print(f"• worktree: {(root / WORKTREES / k).as_posix()} (gałąź story/{k.lower()} od {base or 'HEAD'})")
-            print(f"• polecenie: {shlex.join(agent_command(k, budget, mode))}")
+            print(f"• task: {k} — {clean(task.get('title'))}")
+            print(f"• worktree: {(root / WORKTREES / k).as_posix()} (branch story/{k.lower()} from {base or 'HEAD'})")
+            print(f"• command: {shlex.join(agent_command(k, budget, mode))}")
             return 0
         ok, note = claim(root, k, float(cfg.get("lock_hours") or 6))
         if not ok:
@@ -469,57 +468,57 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
                 print(f"• {info}")
             drift = control_drift(root, wt)
             if drift:
-                shown = ", ".join(drift[:12]) + (f" i {len(drift) - 12} więcej" if len(drift) > 12 else "")
-                print(f"✗ {k}: pliki sterujące agentem w worktree różnią się od Twojej kopii projektu: {shown}. Bez "
-                      "nadzoru agent nie uruchomi cudzego hooka, instrukcji ani serwera MCP — przejrzyj różnice (git diff "
-                      f"w {wt.relative_to(root).as_posix()}), zatwierdź swoje zmiany albo usuń worktree i gałąź zadania")
+                shown = ", ".join(drift[:12]) + (f" and {len(drift) - 12} more" if len(drift) > 12 else "")
+                print(f"✗ {k}: agent control files in the worktree differ from your copy of the project: {shown}. Unattended, "
+                      "the agent does not run another person's hook, instructions or MCP server. Review the differences (git diff "
+                      f"in {wt.relative_to(root).as_posix()}), commit your changes, or remove the worktree and the task branch")
                 write_log(root, {"key": k, "event": "refused", "started": started, "ended": now(), "exit": 2,
                                  "drift": drift[:50]})
                 return 2
             watched = control_set(root, wt)
             before = snapshot(root, [*watched, ".git/hooks", ".git/config"])
-            print(f"• {k}: pętla /tf w {wt.as_posix()}, limit {budget} USD")
+            print(f"• {k}: /tf loop in {wt.as_posix()}, limit {budget} USD")
             write_log(root, {"key": k, "event": "start", "started": started, "budget_usd": float(budget),
                              "worktree": wt.relative_to(root).as_posix()})   # przed agentem: przerwanie też się liczy
             try:
                 code = subprocess.run(agent_command(k, budget, mode), cwd=wt, env=agent_env(),
                                       timeout=float(cfg.get("timeout_minutes") or 180) * 60).returncode
             except FileNotFoundError:
-                print("✗ nie ma polecenia claude (Claude Code) w PATH")
+                print("✗ the claude command (Claude Code) is not in PATH")
                 code = 127
             except subprocess.TimeoutExpired:
-                print(f"✗ {k}: przebieg przerwany po {cfg.get('timeout_minutes')} min")
+                print(f"✗ {k}: run stopped after {cfg.get('timeout_minutes')} min")
                 code = 124
             after = load_task(wt, k) or {}
             now_root = snapshot(root, [*sorted(set(watched) | instruction_files(root)), ".git/hooks", ".git/config"])
             changed = sorted(n for n in set(before) | set(now_root) if before.get(n) != now_root.get(n))
             if changed:
-                print(f"⚠ {k}: w trakcie przebiegu zmieniły się pliki sterujące w Twojej kopii projektu (poza worktree): "
-                      f"{', '.join(changed[:12])} — przejrzyj je przed kolejną sesją (git diff)")
+                print(f"⚠ {k}: control files in your copy of the project (outside the worktree) changed during the run: "
+                      f"{', '.join(changed[:12])}. Review them before the next session (git diff)")
             entry = {"key": k, "event": "end", "started": started, "ended": now(), "exit": code,
                      "stage": after.get("stage"), "worktree": wt.relative_to(root).as_posix(),
                      **({"root_changed": changed[:50]} if changed else {})}
             write_log(root, entry)
-            print(f"{'✓' if code == 0 else '✗'} {k}: kod {code}, etap {after.get('stage') or '?'} — wynik w "
-                  f"{entry['worktree']} (tf status w worktree); scalenie zostaje dla człowieka")
+            print(f"{'✓' if code == 0 else '✗'} {k}: exit code {code}, stage {after.get('stage') or '?'}. Result in "
+                  f"{entry['worktree']} (tf status in the worktree). A human does the merge")
             return code
         finally:
             release(root, k)
-    print("• nie ma zadania do wzięcia: tryb Auto (tf task mode <KEY> auto), waga lekka albo zwykła, bez worktree "
-          "i niezajęte" + (" — wszystkie pasujące są zajęte" if queue else ""))
+    print("• no task to take. A task needs mode Auto (tf task mode <KEY> auto), weight light or normal, no worktree, "
+          "and no lock" + (". All matching tasks are locked" if queue else ""))
     return 3
 
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="tf work", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--once", action="store_true", help="jedno zadanie i koniec (jedyny tryb na razie)")
+    ap.add_argument("--once", action="store_true", help="one task, then stop (the only mode for now)")
     ap.add_argument("--key", default=None)
     ap.add_argument("--budget", default=None)
     ap.add_argument("--base", default=None)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv[1:])
     if not args.once:
-        print("✗ użycie: tf work --once --budget <USD> [--key <KEY>] [--base <gałąź>] [--dry-run]")
+        print("✗ usage: tf work --once --budget <USD> [--key <KEY>] [--base <branch>] [--dry-run]")
         return 2
     return run_once(Path.cwd(), args.key, args.budget, args.base, args.dry_run)
 

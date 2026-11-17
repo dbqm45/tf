@@ -226,7 +226,7 @@ def main() -> int:
         check(c == ["build.py", "new-skill", "app-faktury", "Użyj przy fakturach. Nie do płatności.", "--role", "backend"],
               f"CTF-14: tf new skill → build.py new-skill z tymi samymi argumentami: {c} {r.stdout}{r.stderr}")
         r, c = called("new", "skill", "app-faktury")
-        check(c is None and r.returncode == 2 and "tf new skill" in r.stdout and "Nie do" in r.stdout,
+        check(c is None and r.returncode == 2 and "tf new skill" in r.stdout and "Not for" in r.stdout,
               f"CTF-15: bez opisu → podpowiedź użycia z przykładem opisu, nic nie uruchamia: {r.stdout}")
         r, c = called("skill", "check", "app-faktury", "--model", "haiku")
         check(c == ["skill_gate.py", "app-faktury", "--model", "haiku"], f"CTF-16: tf skill check → skill_gate.py: {c}")

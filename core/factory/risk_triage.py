@@ -108,7 +108,7 @@ def _git(repo: Path, *args) -> str:
     r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, encoding="utf-8",
                        errors="replace", timeout=120)
     if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: kod {r.returncode}")
+        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: exit code {r.returncode}")
     return r.stdout
 
 
@@ -204,15 +204,15 @@ def to_markdown(res: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--base", default=None, help="gałąź bazowa (domyślnie origin/main, main albo master)")
-    ap.add_argument("--json", action="store_true", help="wynik jako JSON")
-    ap.add_argument("--md", action="store_true", help="sekcja do opisu PR (Markdown)")
+    ap.add_argument("--base", default=None, help="base branch (default: origin/main, main or master)")
+    ap.add_argument("--json", action="store_true", help="result as JSON")
+    ap.add_argument("--md", action="store_true", help="section for the PR description (Markdown)")
     args = ap.parse_args(argv)
     repo = Path.cwd()
     try:
         res = triage(repo, base=args.base, rules=load_rules(repo))
     except (RuntimeError, OSError, subprocess.SubprocessError) as e:
-        print(f"✗ Triaż niemożliwy: {e}", file=sys.stderr)
+        print(f"✗ Triage not possible: {e}", file=sys.stderr)
         return 2
     if args.json:
         print(json.dumps(res, ensure_ascii=False, indent=1))

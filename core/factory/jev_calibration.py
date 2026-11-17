@@ -109,10 +109,10 @@ def order_sensitivity(pick, prompts: list[str], options: list) -> dict:
 
 def outcome(picked: list[str], expected: set[str]) -> str:
     if picked and set(picked) & expected:
-        return "trafne"
+        return "correct"
     if picked:
-        return "zbędne" if not expected else "błędne"
-    return "trafne" if not expected else "przeoczone"
+        return "unneeded" if not expected else "wrong"
+    return "correct" if not expected else "missed"
 
 
 def calibrate_routing(limit: int, shuffle: bool = False, target: float = 0.9) -> int:
@@ -120,7 +120,7 @@ def calibrate_routing(limit: int, shuffle: bool = False, target: float = 0.9) ->
     items = hint.load_index()
     cases = scenarios()[:limit]
     routed, order = [], {"checked": 0, "changed": 0}
-    stats = {"słowa": {}, "jev": {}}
+    stats = {"words": {}, "jev": {}}
     t0, spent = time.time(), 0.0
     for s in cases:
         if s["expect"] == "trigger":
@@ -130,7 +130,7 @@ def calibrate_routing(limit: int, shuffle: bool = False, target: float = 0.9) ->
         words = [it["name"] for _, it in hint.select(s["prompt"], items)][:1]
         j = hint.jev_suggest(s["prompt"], items)
         if j is None:
-            print("✗ Jev nie odpowiada — sprawdź TYPESAFE_API_KEY i sieć (python3 .claude/hooks/jev_client.py --check)")
+            print("✗ Jev does not answer — check TYPESAFE_API_KEY and the network (python3 .claude/hooks/jev_client.py --check)")
             return 1
         jev_pick = [it["name"] for _, it in j]
         if j:   # wynik zwycięzcy = p(„pasuje”) × 20; podpowiedzi poniżej bieżącego progu hook odrzuca, więc ich nie widać
@@ -140,7 +140,7 @@ def calibrate_routing(limit: int, shuffle: bool = False, target: float = 0.9) ->
             if jr is not None:
                 order["checked"] += 1
                 order["changed"] += [it["name"] for _, it in jr] != jev_pick
-        for k, picked in (("słowa", words), ("jev", jev_pick)):
+        for k, picked in (("words", words), ("jev", jev_pick)):
             o = outcome(picked, expected)
             stats[k][o] = stats[k].get(o, 0) + 1
     log = ROOT / ".tf" / "logs" / "jev.jsonl"
@@ -153,21 +153,21 @@ def calibrate_routing(limit: int, shuffle: bool = False, target: float = 0.9) ->
             if r.get("ts", "") >= time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(t0)):
                 spent += r.get("cost") or 0
     n = len(cases)
-    print(f"Podpowiedź skilli na {n} scenariuszach (1. wybór):")
-    for k in ("słowa", "jev"):
+    print(f"Skill hint on {n} scenarios (1st choice):")
+    for k in ("words", "jev"):
         st = stats[k]
         print(f"  {k:<6} " + ", ".join(f"{o} {st.get(o, 0)} ({100 * st.get(o, 0) / max(n, 1):.0f}%)"
-                                       for o in ("trafne", "błędne", "zbędne", "przeoczone")))
+                                       for o in ("correct", "wrong", "unneeded", "missed")))
     th = fit_threshold(routed, target)
     if th["threshold"] is not None:
-        print(f"Próg „pasuje” dla trasowania dopasowany na etykietach: {th['threshold']:.2f} (precyzja {th['precision']:.0%}"
-              f" przy celu {target:.0%}, podpowiedź przy {th['coverage']:.0%} pytań; bieżący JEV_FITS {hint.JEV_FITS:.2f})")
+        print(f"Routing „fits” threshold fitted on labels: {th['threshold']:.2f} (precision {th['precision']:.0%}"
+              f" at target {target:.0%}, hint on {th['coverage']:.0%} of questions; current JEV_FITS {hint.JEV_FITS:.2f})")
     else:
-        print(f"Żaden próg nie daje precyzji {target:.0%} — zostaw słowa (hook domyślny)")
+        print(f"No threshold gives precision {target:.0%} — keep words (the default hook)")
     if shuffle:
-        print(f"Test kolejności opcji: wybór zmienił się w {order['changed']}/{order['checked']} pytań po odwróceniu "
-              "listy skilli (każda zmiana = ocena pozycji, nie treści)")
-    print(f"Koszt Jev ≈ ${spent:.4f}, czas {time.time() - t0:.0f} s")
+        print(f"Option order test: the choice changed in {order['changed']}/{order['checked']} questions after reversing "
+              "the skill list (each change = rating the position, not the content)")
+    print(f"Jev cost ≈ ${spent:.4f}, time {time.time() - t0:.0f} s")
     return 0
 
 
@@ -189,7 +189,7 @@ def calibrate_judge(jsonl: Path, limit: int, jev, ev) -> int:
                         f"or with a synonym (the answer may be in Polish): {q}"} for i, q in enumerate(reqs)}
         a = jev.decide({"answer": r["answer"][:40000]}, qs, timeout=15)
         if not a:
-            print(f"✗ brak odpowiedzi Jev dla {r['skill']}#{r['id']} — przerywam")
+            print(f"✗ no Jev answer for {r['skill']}#{r['id']} — stopping")
             return 1
         cost += a["_usage"]["cost"]
         ps = [jev.p_yes(a[f"w{i}"]) for i in range(len(reqs))]
@@ -202,14 +202,14 @@ def calibrate_judge(jsonl: Path, limit: int, jev, ev) -> int:
         sure += 1
         agree += all(v or rx for v, rx in zip(verdicts, regex)) == bool(r.get("checks_ok"))
     n = len(rows)
-    print(f"Ocena treści: {n} odpowiedzi; pewne {sure} ({100 * sure / max(n, 1):.0f}%), zgodne z oceną przebiegu "
-          f"{agree}/{sure} ({100 * agree / max(sure, 1):.0f}%); niepewne → haiku: {unsure}. Koszt Jev: ${cost:.4f}")
+    print(f"Content rating: {n} answers; sure {sure} ({100 * sure / max(n, 1):.0f}%), agree with the run's rating "
+          f"{agree}/{sure} ({100 * agree / max(sure, 1):.0f}%); unsure → haiku: {unsure}. Jev cost: ${cost:.4f}")
     band = fit_band(points)
     if band["fitted"]:
-        print(f"Pas niepewności sędziego dopasowany na etykietach ({band['n']} wymagań): {band['low']:.2f}–{band['high']:.2f}"
-              f" (zgodność {band['agreement']:.0%}, niepewne {band['unsure']}); domyślny {jev.LOW:.2f}–{jev.HIGH:.2f}")
+        print(f"Judge uncertainty band fitted on labels ({band['n']} requirements): {band['low']:.2f}–{band['high']:.2f}"
+              f" (agreement {band['agreement']:.0%}, unsure {band['unsure']}); default {jev.LOW:.2f}–{jev.HIGH:.2f}")
     else:
-        print(f"Za mało danych albo żaden pas nie daje zgodności 95% — zostaje {jev.LOW:.2f}–{jev.HIGH:.2f}")
+        print(f"Too little data or no band gives 95% agreement — keeping {jev.LOW:.2f}–{jev.HIGH:.2f}")
     return 0
 
 
@@ -218,13 +218,13 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--judge", type=Path)
     ap.add_argument("--routing", action="store_true")
     ap.add_argument("--limit", type=int, default=300)
-    ap.add_argument("--shuffle", action="store_true", help="test kolejności: każde pytanie trasowania drugi raz z odwróconą listą skilli (2× koszt)")
-    ap.add_argument("--target", type=float, default=0.9, help="docelowa precyzja podpowiedzi przy dopasowaniu progu trasowania")
+    ap.add_argument("--shuffle", action="store_true", help="order test: each routing question a second time with the reversed skill list (2× cost)")
+    ap.add_argument("--target", type=float, default=0.9, help="target hint precision when fitting the routing threshold")
     args = ap.parse_args(argv[1:])
     sys.path.insert(0, str(HOOKS))
     import jev_client as jev
     if not jev.enabled():
-        print("Ustaw TYPESAFE_API_KEY (zmienna środowiskowa, nie plik w repozytorium).")
+        print("Set TYPESAFE_API_KEY (an environment variable, not a file in the repository).")
         return 2
     rc = 0
     if args.routing:

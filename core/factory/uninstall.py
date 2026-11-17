@@ -185,8 +185,8 @@ def plan(root: Path, force: bool) -> dict:
                              marks.get("style_permission_mode"), hook_files)
         if new != cur:
             edits[rel] = (json.dumps(new, ensure_ascii=False, indent=2) + "\n") if new else None
-    warns = [] if man.get("settings") else ["manifest bez zapisu ustawień fabryki (instalacja sprzed tej wersji) — "
-                                            "usuwam hooki fabryki, a uprawnienia (allow/deny) fabryki sprawdź ręcznie"]
+    warns = [] if man.get("settings") else ["the manifest has no record of the factory settings (installed before this version). "
+                                            "I remove the factory hooks. Check the factory permissions (allow/deny) by hand"]
     return {"delete": sorted(delete - set(edits)), "edits": edits, "own_skills": own_skills, "shared": shared,
             "warns": warns}
 
@@ -217,7 +217,7 @@ def main(argv: list[str]) -> int:
         return 0
     root = ROOT
     if not (root / MANIFEST).is_file():
-        print("✗ W tym katalogu nie ma fabryki (brak .claude/factory-manifest.json) — uruchom w katalogu projektu.")
+        print("✗ No factory in this directory (no .claude/factory-manifest.json). Run this in the project directory.")
         return 2
     force, yes, dry = "--force" in argv, "--yes" in argv, "--dry-run" in argv
     p = plan(root, force)
@@ -226,28 +226,28 @@ def main(argv: list[str]) -> int:
         key = next((g + "/" for g in GENERATED_DIRS + FORCE_DIRS + [".claude/skills", ".claude/hooks", ".claude/workflows"]
                     if d.startswith(g + "/")), d)
         groups[key] = groups.get(key, 0) + 1
-    print(f"Odinstalowanie fabryki z {root}{' (--force: także Twoje dodatki)' if force else ''}")
-    print(f"Usunę {len(p['delete'])} plików:")
+    print(f"Uninstalling the factory from {root}{' (--force: also your additions)' if force else ''}")
+    print(f"Files to delete: {len(p['delete'])}")
     for g, n in sorted(groups.items()):
-        print(f"  - {g}" + (f" ({n} plików)" if n > 1 else ""))
+        print(f"  - {g}" + (f" ({n} files)" if n > 1 else ""))
     if p["edits"]:
-        print("Zmienię (usunę wpisy fabryki):")
+        print("Files to change (factory entries removed):")
         for rel, new in p["edits"].items():
-            print(f"  - {rel}" + (" — po zmianie pusty, usunę" if new is None else ""))
+            print(f"  - {rel}" + (" — empty after the change, will delete" if new is None else ""))
     keep = [*(f".claude/skills/{s}/" for s in p["own_skills"] if not force),
-            *([".tf/ (config, raporty, rejestr, logi)", ".claude/agent-memory/"] if not force else []),
-            "docs/project/", "kod projektu"]
-    print("Zostawię: " + ", ".join(keep))
+            *([".tf/ (config, reports, register, logs)", ".claude/agent-memory/"] if not force else []),
+            "docs/project/", "project code"]
+    print("Kept: " + ", ".join(keep))
     for w in p["warns"]:
         print(f"⚠ {w}")
     if dry:
         return 0
     if not yes:
         if not sys.stdin.isatty():
-            print("Uruchom ponownie z --yes, żeby odinstalować (nie ma terminala do potwierdzenia). Nic nie zmieniono.")
+            print("Run again with --yes to uninstall (no terminal to confirm). Nothing changed.")
             return 1
-        if input("Odinstalować? [t/N] ").strip().lower() not in ("t", "tak", "y", "yes"):
-            print("Przerwane — nic nie zmieniono.")
+        if input("Uninstall? [y/N] ").strip().lower() not in ("t", "tak", "y", "yes"):   # t/tak: polskie odpowiedzi nadal przyjmowane
+            print("Stopped. Nothing changed.")
             return 1
     zipped = backup(root, p)
     for rel, new in p["edits"].items():
@@ -262,9 +262,9 @@ def main(argv: list[str]) -> int:
         if (root / d).is_dir():
             shutil.rmtree(root / d, ignore_errors=True)
     prune_empty(root, p["delete"])
-    print(f"✓ Fabryka odinstalowana. Kopia zapasowa: {zipped}")
-    print(f"  Przywrócenie: unzip -o {zipped} -d {root}")
-    print("  Launcher `tf` w ~/.local/bin zostaje (usuń go ręcznie, jeśli nie używasz fabryki w innych projektach).")
+    print(f"✓ Factory uninstalled. Backup: {zipped}")
+    print(f"  To restore: unzip -o {zipped} -d {root}")
+    print("  The `tf` launcher in ~/.local/bin stays (remove it by hand if you do not use the factory in other projects).")
     return 0
 
 

@@ -173,7 +173,7 @@ def _pack_migrations(root: Path, dry: bool) -> list[str]:
             spec.loader.exec_module(mod)
             out += list(mod.migrate_values(root, dry) or [])
         except Exception as e:   # noqa: BLE001 — błąd migracji nakładki nie zatrzymuje aktualizacji
-            print(f"⚠ migracja nakładki {f.parent.name}: {e}")
+            print(f"⚠ pack migration {f.parent.name}: {e}")
     return out
 
 
@@ -302,7 +302,7 @@ def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    changes = apply(ROOT, dry="--apply" not in argv) + [f"{c}: wartości 11.0.0" for c in
+    changes = apply(ROOT, dry="--apply" not in argv) + [f"{c}: 11.0.0 values" for c in
                                                         migrate_values(ROOT, dry="--apply" not in argv)]
     for c in changes:
         print(("✓ " if "--apply" in argv else "⚠ ") + c)

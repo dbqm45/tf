@@ -152,7 +152,7 @@ def _fetch_nbp() -> dict:
 def usd_pln(cache_dir: Path, now: dt.datetime | None = None, fetch=None, override: float | None = None) -> dict | None:
     """Kurs średni USD/PLN z tabeli A NBP: z pamięci (ten sam dzień), pobrany, albo ostatni znany (stale)."""
     if override:
-        return {"rate": float(override), "source": "ręczny", "table": None, "date": None}
+        return {"rate": float(override), "source": "manual", "table": None, "date": None}
     now = now or dt.datetime.now(dt.timezone.utc)
     f = cache_dir / "nbp-usd.json"
     try:
@@ -160,27 +160,27 @@ def usd_pln(cache_dir: Path, now: dt.datetime | None = None, fetch=None, overrid
     except (OSError, ValueError):
         cached = None
     if cached and str(cached.get("fetched_at", ""))[:10] == now.date().isoformat():
-        return {**cached, "source": "NBP, tabela A", "stale": False}
+        return {**cached, "source": "NBP, table A", "stale": False}
     try:
         rate, table, date = parse_nbp((fetch or _fetch_nbp)())
     except Exception:
-        return {**cached, "source": "NBP, tabela A", "stale": True} if cached else None
+        return {**cached, "source": "NBP, table A", "stale": True} if cached else None
     rec = {"rate": rate, "table": table, "date": date, "fetched_at": now.isoformat()}
     try:
         cache_dir.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(rec), encoding="utf-8")
     except OSError:
         pass
-    return {**rec, "source": "NBP, tabela A", "stale": False}
+    return {**rec, "source": "NBP, table A", "stale": False}
 
 
 def band(values: list[float]) -> list[str]:
     """Pasmo kontrolne: mediana ± 3·(1,4826·MAD) — wartości poza pasmem to „drogo” / „tanio” na tle własnej historii."""
     if len(values) < 4:
-        return ["za mało danych"] * len(values)
+        return ["too little data"] * len(values)
     med = statistics.median(values)
     sigma = max(1.4826 * statistics.median(abs(v - med) for v in values), 0.05 * abs(med), 1e-12)
-    return ["drogo" if v > med + 3 * sigma else "tanio" if v < med - 3 * sigma else "w normie" for v in values]
+    return ["expensive" if v > med + 3 * sigma else "cheap" if v < med - 3 * sigma else "normal" for v in values]
 
 
 def changes(repo: Path, period: str) -> dict[str, dict]:
@@ -224,46 +224,46 @@ def pl(x: float | None, nd: int = 2) -> str:
 def render(rep: dict) -> str:
     rate = rep["rate"]
     if not rate:
-        kurs = "Kurs: brak (bez sieci i bez zapamiętanego kursu) — PLN niepoliczone; podaj --usd-pln."
-    elif rate["source"] == "ręczny":
-        kurs = f"Kurs: 1 USD = {pl(rate['rate'], 4)} PLN (podany ręcznie)."
+        kurs = "Rate: none (no network and no saved rate) — PLN not computed; pass --usd-pln."
+    elif rate["source"] == "manual":
+        kurs = f"Rate: 1 USD = {pl(rate['rate'], 4)} PLN (set by hand)."
     else:
-        kurs = (f"Kurs: 1 USD = {pl(rate['rate'], 4)} PLN — kurs średni NBP, tabela A nr {rate['table']} z {rate['date']}"
-                + (" (ostatni znany — brak sieci)" if rate.get("stale") else "") + ".")
-    out = [f"# Statystyki kosztów ({rep['period_name']}, okresów: {len(rep['periods'])})", "", kurs,
-           f"Ceny: stan {rep['prices_checked']} (.tf/config/config.yaml → prices_usd_per_mtok). Przy subskrypcji (Pro/Max) "
-           "to koszt równoważny cenom API, nie faktyczny wydatek.", ""]
+        kurs = (f"Rate: 1 USD = {pl(rate['rate'], 4)} PLN — NBP average rate, table A no. {rate['table']} of {rate['date']}"
+                + (" (last known — no network)" if rate.get("stale") else "") + ".")
+    out = [f"# Cost statistics ({rep['period_name']}, periods: {len(rep['periods'])})", "", kurs,
+           f"Prices: as of {rep['prices_checked']} (.tf/config/config.yaml → prices_usd_per_mtok). With a subscription (Pro/Max) "
+           "this is a cost equal to API prices, not real spending.", ""]
     if rep.get("gap"):
-        out += [f"**Dane niepełne:** ostatni wpis logu {rep['gap']['last_log'][:16]}, ostatni commit "
-                f"{rep['gap']['last_commit'][:16]} — część pracy nie ma śladu w logach (np. sesja bez hooków fabryki); "
-                "koszty są zaniżone.", ""]
-    out += ["## Tokeny i koszt", "| Okres | Sesje | Uruchomienia | Wejście | Wyjście | Cache odczyt | Cache zapis | USD | PLN |",
+        out += [f"**Incomplete data:** last log entry {rep['gap']['last_log'][:16]}, last commit "
+                f"{rep['gap']['last_commit'][:16]} — part of the work has no trace in the logs (e.g. a session without factory hooks); "
+                "costs are too low.", ""]
+    out += ["## Tokens and cost", "| Period | Sessions | Runs | Input | Output | Cache read | Cache write | USD | PLN |",
             "|---|---|---|---|---|---|---|---|---|"]
     for p in rep["periods"]:
         out.append(f"| {p['period']} | {p['sessions']} | {p['runs']} | {pl(p['input'], 0)} | {pl(p['output'], 0)} | "
                    f"{pl(p['cache_read'], 0)} | {pl(p['cache_write'], 0)} | {pl(p['usd'])} | {pl(p.get('pln'))} |")
     fams = sorted({f for p in rep["periods"] for f in p["models_pct"]})
-    out += ["", "## Udział modeli (% tokenów)", "| Okres | " + " | ".join(fams) + " |", "|---|" + "---|" * len(fams)]
+    out += ["", "## Model share (% of tokens)", "| Period | " + " | ".join(fams) + " |", "|---|" + "---|" * len(fams)]
     for p in rep["periods"]:
         out.append(f"| {p['period']} | " + " | ".join(f"{pl(p['models_pct'].get(f, 0), 0)}%" for f in fams) + " |")
-    out += ["", "## Skuteczność", "| Okres | Zmiany (feat/fix) | PLN na zmianę | Praca od nowa | Cache w wejściu | "
-            "„Za niski tier” na 100 uruchomień |", "|---|---|---|---|---|---|"]
+    out += ["", "## Effectiveness", "| Period | Changes (feat/fix) | PLN per change | Rework | Cache in input | "
+            "„Tier too low” per 100 runs |", "|---|---|---|---|---|---|"]
     for p in rep["periods"]:
         tier = 100 * p["tier_low"] / p["subagent_runs"] if p["subagent_runs"] else None
         out.append(f"| {p['period']} | {p['changes']} | {pl(p.get('pln_per_change'))} | "
                    f"{pl(p.get('rework_pct'), 0) + '%' if p['changes'] else '—'} | {pl(p['cache_pct'], 0)}% | {pl(tier, 1)} |")
     cur = "PLN" if rep["rate"] else "USD"
-    out += ["", f"## Drogo czy tanio ({cur})", "| Okres | Koszt na zmianę | Na tle historii | Wszystko na Opusie | Bez cache | "
-            "Oszczędność z doboru modeli | Oszczędność z cache |", "|---|---|---|---|---|---|---|"]
+    out += ["", f"## Expensive or cheap ({cur})", "| Period | Cost per change | Against history | All on Opus | Without cache | "
+            "Savings from model choice | Savings from cache |", "|---|---|---|---|---|---|---|"]
     k = rep["rate"]["rate"] if rep["rate"] else 1.0
     for p in rep["periods"]:
         out.append(f"| {p['period']} | {pl(p['usd_per_change'] * k if p.get('usd_per_change') else None)} | {p['band']} | "
                    f"{pl(p['usd_all_opus'] * k)} | {pl(p['usd_no_cache'] * k)} | {pl((p['usd_all_opus'] - p['usd']) * k)} | "
                    f"{pl((p['usd_no_cache'] - p['usd']) * k)} |")
-    out += ["", "Jak czytać: „Na tle historii” porównuje koszt na zmianę z pasmem mediana ± 3·MAD z pokazanych okresów "
-                "(od 4) — „drogo” to sygnał do retrospektywy (core-agent-retro), nie wyrok. Warianty pokazują, ile "
-                "kosztowałaby ta sama praca na samym Opusie i bez cache; mała oszczędność z doboru modeli znaczy, że "
-                "większość pracy szła na najdroższym modelu."]
+    out += ["", "How to read: „Against history” compares the cost per change with the band median ± 3·MAD of the periods shown "
+                "(from 4) — „expensive” is a signal for a retrospective (core-agent-retro), not a verdict. The variants show what "
+                "the same work would cost on Opus only and without cache; a small saving from model choice means that "
+                "most of the work ran on the most expensive model."]
     return "\n".join(out) + "\n"
 
 
@@ -292,7 +292,7 @@ def main(argv: list[str]) -> int:
         cfg = (yaml.safe_load(Path(opts["--config"]).read_text(encoding="utf-8")) or {}) if opts.get("--config") \
             else _tf_config(ROOT)
     except ImportError:
-        print("✗ Brak PyYAML (pip install pyyaml) — potrzebny do cen z .tf/config/config.yaml.")
+        print("✗ PyYAML is missing (pip install pyyaml) — it is needed for the prices in .tf/config/config.yaml.")
         return 2
     prices = cfg.get("prices_usd_per_mtok") or {}
     records = []
@@ -303,7 +303,7 @@ def main(argv: list[str]) -> int:
             except ValueError:
                 continue
     if not records:
-        print(f"Brak wpisów w {log} — statystyki powstają z hooka log_usage (sesja uruchomiona w katalogu repozytorium).")
+        print(f"No entries in {log} — the statistics come from the log_usage hook (a session started in the repository directory).")
         return 0
     periods = aggregate(records, prices, period)
     n = int(opts.get("--last") or {"day": 14, "week": 8, "month": 6}[period])
@@ -313,7 +313,7 @@ def main(argv: list[str]) -> int:
     try:
         override = float(str(opts["--usd-pln"]).replace(",", ".")) if opts.get("--usd-pln") else None
     except ValueError:
-        print("✗ --usd-pln: liczba, np. 3.65")
+        print("✗ --usd-pln: a number, e.g. 3.65")
         return 2
     rate = usd_pln(base, override=override)
     k = rate["rate"] if rate else None
@@ -331,13 +331,13 @@ def main(argv: list[str]) -> int:
     for p in periods:      # od okresu ostatniego wpisu logu koszt jest zaniżony, a zmiany policzone w całości
         p["incomplete"] = bool(gap) and p["period"] >= period_key(last_log, period)
         if p["incomplete"]:
-            p["band"] = "dane niepełne"
+            p["band"] = "incomplete data"
     with_change = [p for p in periods if p["usd_per_change"] and not p["incomplete"]]
     for p, lab in zip(with_change, band([p["usd_per_change"] for p in with_change])):
         p["band"] = lab
     for p in periods:
-        p.setdefault("band", "brak zmian")
-    rep = {"period": period, "period_name": {"day": "dzień", "week": "tydzień", "month": "miesiąc"}[period],
+        p.setdefault("band", "no changes")
+    rep = {"period": period, "period_name": {"day": "day", "week": "week", "month": "month"}[period],
            "prices_checked": str(cfg.get("prices_checked") or "?"), "rate": rate, "gap": gap, "periods": periods}
     print(json.dumps(rep, ensure_ascii=False, indent=1) if opts.get("--json") else render(rep), end="\n" if opts.get("--json") else "")
     return 0

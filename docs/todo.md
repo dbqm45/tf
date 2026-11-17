@@ -808,6 +808,16 @@ treści (angielska), bez równoległej polskiej.
       `### Komendy` w bloku fabryki). Skuteczność: holdout 901/918 · 32/43 bez zmian, `--hints` czyste; przebieg
       `N5-synth-repeated-q` na Haiku kończy się tak samo jak na `main` (`waiting_gate`, 0,24 USD każdy).
       Zostaje: `core/CLAUDE.md` (blok instrukcji, `### Komendy`/`### Język`) i `templates/SKILL.template.md` — treść, M4/4c.
+    - [x] M4 (2026-11-17): reszta `core/factory` (29 plików: `tf.py`, `work.py`, `packs.py`, `install.py`, `uninstall.py`,
+      `check.py`, koszty i metryki, `spec_check`, `skill_audit`, `rules_scan`, `flag_check`, `freshness`, `trace_check`,
+      `facts`, `finish`, `target_managed` …), `core/CLAUDE.md` (blok instrukcji w projekcie: `## Agent team`,
+      `### Commands`, `### Language`) i szablon `SKILL.template.md`. Odczyt przyjmuje stare formy: `### Komendy`/
+      `### Język`, dopisek wzorca „dostosuj do swojego projektu” (test O-29b), nagłówek README targetu Managed Agents,
+      `## Źródła`/`odczyt` w `facts`. Zmienione wartości JSON `cost_stats --json` (`band`, `period_name`,
+      `rate.source`) — w repozytorium nikt ich nie czyta. Skuteczność: holdout 901/918 · 32/43 bez zmian; Haiku
+      (plan-interview, skill-composition) 7/8 jak w M2 (ten sam chybiony scenariusz), 1,26 USD.
+      Zostaje: docstringi drukowane jako `--help` (`uninstall`, `check`, `work`, `metrics` …), klucze sygnałów
+      `tier:<agent>:za niski|za wysoki` (pisze `core-agent-retro`, M5) i przykład `--reason "bez flagi, bo …"` w skillu tf.
   - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:

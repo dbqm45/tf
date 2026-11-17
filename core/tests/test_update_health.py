@@ -94,11 +94,11 @@ def main() -> int:
         check(r.returncode == 0 and data.get("from") == "10.11.0" and data.get("to") == "10.17.0"
               and (data.get("before") or {}).get("revert_rate") == 0.1 and (data.get("after") or {}).get("revert_rate") == 0.5,
               f"UH-1: okna przed i po aktualizacji z odsetkiem cofnięć i wersjami: {r.returncode} {r.stdout[:600]} {r.stderr[-300:]}")
-        check(any("cofnię" in w for w in data.get("warnings") or []),
+        check(any("revert" in w for w in data.get("warnings") or []),
               f"UH-2: wzrost cofnięć o ≥ 15 punktów → ostrzeżenie: {data.get('warnings')}")
         r = health(p)
         check(r.returncode == 0 and "update.py --rollback" in r.stdout and "10.11.0" in r.stdout and "10.17.0" in r.stdout
-              and "sam" in r.stdout,
+              and "by itself" in r.stdout,
               f"UH-3: ostrzeżenie podaje polecenie powrotu i mówi, że fabryka sama się nie cofa: {r.stdout}")
 
         # bez pogorszenia → bez ostrzeżenia
@@ -112,12 +112,12 @@ def main() -> int:
                     decision="deny")
         data = json.loads(health(p, "--json").stdout or "{}")
         check((data.get("after") or {}).get("blocks") == 6 and (data.get("before") or {}).get("blocks") == 2
-              and any("blokad" in w for w in data.get("warnings") or []),
+              and any("hook blocks" in w for w in data.get("warnings") or []),
               f"UH-5: blokady hooków 2 → 6 → ostrzeżenie: {data}")
         log_entries(p, "hook-errors.jsonl", [UPDATE + timedelta(hours=h) for h in (1, 2, 3, 4)], hook="tdd_guard",
                     type="KeyError", where="tdd_guard.py:10", msg="x")
         data = json.loads(health(p, "--json").stdout or "{}")
-        check(any("błęd" in w for w in data.get("warnings") or []), f"UH-6: błędy hooków 0 → 4 → ostrzeżenie: {data}")
+        check(any("hook errors" in w for w in data.get("warnings") or []), f"UH-6: błędy hooków 0 → 4 → ostrzeżenie: {data}")
 
         # za mało danych: nie ostrzega na podstawie dwóch zmian
         p = base / "few"
@@ -129,13 +129,13 @@ def main() -> int:
         b.mkdir(parents=True)
         (b / "backup.json").write_text(json.dumps({"version": "10.11.0"}), encoding="utf-8")
         data = json.loads(health(p, "--json").stdout or "{}")
-        check(data.get("warnings") == [] and "za mało" in json.dumps(data, ensure_ascii=False),
+        check(data.get("warnings") == [] and "too few" in json.dumps(data, ensure_ascii=False),
               f"UH-7: przy małej liczbie zmian odsetek cofnięć nie daje ostrzeżenia, a wynik mówi „za mało danych”: {data}")
 
         # bez kopii z aktualizacji → nic do porównania, kod 0
         p = project(base, "noupdate", before_reverts=1, after_reverts=5, with_backup=False)
         r = health(p)
-        check(r.returncode == 0 and "aktualizac" in r.stdout and "rollback" not in r.stdout,
+        check(r.returncode == 0 and "update" in r.stdout and "rollback" not in r.stdout,
               f"UH-8: bez kopii sprzed aktualizacji nie ma czego porównać — komunikat, nie błąd: {r.returncode} {r.stdout}")
 
         # tf doctor pokazuje ostrzeżenie (informacja)

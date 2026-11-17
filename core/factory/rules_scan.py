@@ -75,35 +75,35 @@ def load_rules(path: Path) -> list[dict]:
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError) as e:
-        raise RuleError(f"{path}: nie da się wczytać reguł ({e})") from e
+        raise RuleError(f"{path}: cannot load the rules ({e})") from e
     rules = data.get("rules") if isinstance(data, dict) else None
     if not isinstance(rules, list):
-        raise RuleError(f"{path}: brak listy `rules`")
+        raise RuleError(f"{path}: no `rules` list")
     out, seen = [], set()
     for n, r in enumerate(rules, 1):
         if not isinstance(r, dict):
-            raise RuleError(f"reguła {n}: to nie słownik")
+            raise RuleError(f"rule {n}: not a mapping")
         rid = str(r.get("id") or "")
-        where = f"reguła {rid or n}"
+        where = f"rule {rid or n}"
         if not ID_RE.fullmatch(rid):
-            raise RuleError(f"{where}: id — małe litery, cyfry i „-” (jest {rid!r})")
+            raise RuleError(f"{where}: id — lowercase letters, digits and \"-\" (got {rid!r})")
         if rid in seen:
-            raise RuleError(f"{where}: powtórzone id")
+            raise RuleError(f"{where}: duplicate id")
         seen.add(rid)
         if not r.get("title"):
-            raise RuleError(f"{where}: brak title")
+            raise RuleError(f"{where}: no title")
         if bool(r.get("forbid")) == bool(r.get("require")):
-            raise RuleError(f"{where}: podaj dokładnie jedno z forbid i require")
+            raise RuleError(f"{where}: give exactly one of forbid and require")
         sev = r.get("severity", "medium")
         if sev not in SEVERITY:
-            raise RuleError(f"{where}: severity — {' | '.join(SEVERITY)} (jest {sev!r})")
+            raise RuleError(f"{where}: severity — {' | '.join(SEVERITY)} (got {sev!r})")
         try:
             pattern = re.compile(str(r.get("forbid") or r.get("require")))
         except re.error as e:
-            raise RuleError(f"{where}: złe wyrażenie regularne ({e})") from e
+            raise RuleError(f"{where}: invalid regular expression ({e})") from e
         head = r.get("head")
         if head is not None and (not isinstance(head, int) or head < 1):
-            raise RuleError(f"{where}: head — liczba linii ≥ 1")
+            raise RuleError(f"{where}: head — number of lines ≥ 1")
         out.append({**r, "id": rid, "severity": sev, "_re": pattern, "_mode": "forbid" if r.get("forbid") else "require",
                     "_files": [glob_re(g) for g in (r.get("files") or ["**"])],
                     "_exclude": [glob_re(g) for g in (r.get("exclude") or [])]})
@@ -133,11 +133,11 @@ def read_text(p: Path) -> str | None:
 
 
 def finding(r: dict, rel: str, line: int, snippet: str) -> dict:
-    evidence = snippet if r["_mode"] == "forbid" else f"brak wzorca {r['_re'].pattern!r}" + (
-        f" w pierwszych {r['head']} liniach" if r.get("head") else "")
+    evidence = snippet if r["_mode"] == "forbid" else f"pattern {r['_re'].pattern!r} not found" + (
+        f" in the first {r['head']} lines" if r.get("head") else "")
     return {"rule": r["id"], "title": r["title"], "file": rel, "line": line, "snippet": snippet[:200],
             "severity": r["severity"], "confidence": 1.0, "evidence": evidence,
-            "basis": r.get("basis") or "reguła z rules.yaml", "suggestion": r.get("suggestion") or ""}
+            "basis": r.get("basis") or "rule from rules.yaml", "suggestion": r.get("suggestion") or ""}
 
 
 def scan(rules: list[dict], root: Path, files: list[str]) -> list[dict]:
@@ -159,7 +159,7 @@ def scan(rules: list[dict], root: Path, files: list[str]) -> list[dict]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Reguły deklaratywne tf analyze (rules.yaml) — JSON Lines na stdout")
+    ap = argparse.ArgumentParser(description="Declarative rules of tf analyze (rules.yaml) — JSON Lines on stdout")
     ap.add_argument("--rules", required=True)
     ap.add_argument("--root", required=True)
     ap.add_argument("--files", default=None)
