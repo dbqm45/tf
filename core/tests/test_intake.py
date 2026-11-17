@@ -80,12 +80,12 @@ def main() -> int:
         # zgłoszenie po kluczu: tracker nieznany → pytanie, a droga przez wklejenie zawsze jest podana
         before = snapshot(p)
         code, out, raw = resolve(p, "EBO-1236")
-        check(code == 0 and out.get("kind") == "zgloszenie" and out.get("key") == "EBO-1236"
-              and out.get("tracker") is None and out.get("ask") == "tracker" and "wklej" in out.get("next", "").lower(),
+        check(code == 0 and out.get("kind") == "issue" and out.get("key") == "EBO-1236"
+              and out.get("tracker") is None and out.get("ask") == "tracker" and "paste" in out.get("next", "").lower(),
               f"I-1: klucz bez trackera w karcie → zgłoszenie, pytanie o tracker, droga przez wklejenie: {raw}")
         check(snapshot(p) == before, "I-2: resolve niczego nie zapisuje (karta i pliki projektu bez zmian)")
         code, out, raw = resolve(p, "ebo-1236")
-        check(out.get("kind") == "zgloszenie" and out.get("key") == "EBO-1236", f"I-3: klucz małymi literami: {raw}")
+        check(out.get("kind") == "issue" and out.get("key") == "EBO-1236", f"I-3: klucz małymi literami: {raw}")
 
         # tracker zapamiętany w karcie nie jest pytany ponownie; karta zachowuje sekcję flag
         r = run(p, "tracker", "jira", "--prefix", "EBO")
@@ -94,7 +94,7 @@ def main() -> int:
               and card.get("flags", {}).get("test_env") == "test",
               f"I-4: tracker <typ> --prefix zapisuje kartę i nie rusza flag: {r.stdout}{r.stderr} {card}")
         code, out, raw = resolve(p, "EBO-1236")
-        check(out.get("tracker") == "jira" and out.get("tracker_from") == "karta" and out.get("ask") is None
+        check(out.get("tracker") == "jira" and out.get("tracker_from") == "card" and out.get("ask") is None
               and "EBO-1236" in out.get("next", "") and "--key EBO-1236" in out.get("next", ""),
               f"I-5: tracker z karty → bez pytania, następny krok z kluczem: {raw}")
         code, out, raw = resolve(p, "ENG-5")
@@ -119,26 +119,26 @@ def main() -> int:
                 ("https://github.com/acme/app/issues/17", "github", "GH-17"),
                 ("https://gitlab.com/acme/app/-/issues/9", "gitlab", "GL-9")):
             code, out, raw = resolve(p, url)
-            check(out.get("kind") == "zgloszenie" and out.get("tracker") == tracker and out.get("key") == key
-                  and out.get("source") == url and out.get("tracker_from") == "adres" and out.get("ask") is None,
+            check(out.get("kind") == "issue" and out.get("tracker") == tracker and out.get("key") == key
+                  and out.get("source") == url and out.get("tracker_from") == "address" and out.get("ask") is None,
                   f"I-10: adres {url} → {tracker} {key}: {raw}")
         code, out, raw = resolve(p, "https://tracker.example.com/t/ABC-5")
-        check(out.get("kind") == "zgloszenie" and out.get("key") == "ABC-5" and out.get("tracker") == "linear"
-              and out.get("tracker_from") == "karta",
+        check(out.get("kind") == "issue" and out.get("key") == "ABC-5" and out.get("tracker") == "linear"
+              and out.get("tracker_from") == "card",
               f"I-11: nieznany host z kluczem w adresie → klucz, tracker z karty: {raw}")
         code, out, raw = resolve(p, "https://tracker.example.com/tickets/5512")
-        check(out.get("kind") == "zgloszenie" and out.get("key") is None and out.get("ask") == "content"
-              and "wklej" in out.get("next", "").lower(),
+        check(out.get("kind") == "issue" and out.get("key") is None and out.get("ask") == "content"
+              and "paste" in out.get("next", "").lower(),
               f"I-12: adres bez rozpoznanego klucza → prośba o wklejenie treści: {raw}")
 
         # cięcie z planu zmiany
         code, out, raw = resolve(p, "TSK-57")
-        check(out.get("kind") == "ciecie" and out.get("key") == "TSK-57" and out.get("changes") == ["CHG-12"]
+        check(out.get("kind") == "cut" and out.get("key") == "TSK-57" and out.get("changes") == ["CHG-12"]
               and out.get("ask") is None and "start --task TSK-57 --change CHG-12" in out.get("next", "")
               and ".claude/skills/tf/references/pdi-cuts.md" in out.get("next", ""),
               f"I-13: klucz z nagłówka tasks → cięcie: najpierw zasady cięć (references), potem gotowe polecenie: {raw}")
         code, out, raw = resolve(p, "TSK-58")
-        check(out.get("kind") == "ciecie" and out.get("changes") == ["CHG-12", "CHG-13"] and out.get("ask") == "change",
+        check(out.get("kind") == "cut" and out.get("changes") == ["CHG-12", "CHG-13"] and out.get("ask") == "change",
               f"I-14: klucz w dwóch planach → pytanie o zmianę: {raw}")
         code, out, raw = resolve(p, "TSK-58", "--change", "CHG-13", "--auto", "--budget", "3")
         check(out.get("changes") == ["CHG-13"] and out.get("ask") is None
@@ -150,52 +150,52 @@ def main() -> int:
 
         # wznowienie, plik, treść
         code, out, raw = resolve(p, "PROJ-7")
-        check(out.get("kind") == "wznowienie" and out.get("stage") == "implementation" and "PROJ-7" in out.get("next", ""),
+        check(out.get("kind") == "resume" and out.get("stage") == "implementation" and "PROJ-7" in out.get("next", ""),
               f"I-17: klucz istniejącego zadania → wznowienie z etapem: {raw}")
         (p / CHANGES / "PROJ-7" / "task.json").write_text(json.dumps(
             {"key": "PROJ-7", "title": "Zadanie PROJ-7", "stage": "plan", "mode": "plan"}), encoding="utf-8")
         code, out, raw = resolve(p, "PROJ-7", "--auto")
-        check(out.get("kind") == "wznowienie" and "run_state.py mode .tf/runs/PROJ-7 auto" in out.get("next", ""),
+        check(out.get("kind") == "resume" and "run_state.py mode .tf/runs/PROJ-7 auto" in out.get("next", ""),
               f"I-17a: wznowienie zadania z trybu Plan — następny krok ustawia tryb z polecenia: {raw}")
         code, out, raw = resolve(p, "docs/story.md")
-        check(out.get("kind") == "plik" and out.get("file") == "docs/story.md"
+        check(out.get("kind") == "file" and out.get("file") == "docs/story.md"
               and "--story-file docs/story.md" in out.get("next", ""), f"I-18: ścieżka istniejącego pliku: {raw}")
         code, out, raw = resolve(p, "PROJ-12: Eksport sesji do CSV\nJako operator chcę pobrać sesje.")
-        check(out.get("kind") == "tresc" and out.get("key") == "PROJ-12" and out.get("title") == "Eksport sesji do CSV"
+        check(out.get("kind") == "content" and out.get("key") == "PROJ-12" and out.get("title") == "Eksport sesji do CSV"
               and "--key PROJ-12" in out.get("next", ""), f"I-19: klucz i treść → treść z kluczem i tytułem: {raw}")
         code, out, raw = resolve(p, "dodaj", "eksport", "sesji", "do", "CSV")
-        check(out.get("kind") == "tresc" and out.get("key") is None and out.get("title") == "dodaj eksport sesji do CSV"
+        check(out.get("kind") == "content" and out.get("key") is None and out.get("title") == "dodaj eksport sesji do CSV"
               and out.get("intent") is None, f"I-20: zwykłe zdanie → treść bez klucza: {raw}")
 
         code, out, raw = resolve(p, "X-ray")
-        check(out.get("kind") == "tresc" and out.get("key") is None and out.get("title") == "X-ray",
+        check(out.get("kind") == "content" and out.get("key") is None and out.get("title") == "X-ray",
               f"I-20a: jedno słowo z łącznikiem, które nie jest zadaniem ani numerem zgłoszenia → treść bez klucza: {raw}")
         code, out, raw = resolve(p, "PROJ-7", "dokończ", "eksport")
-        check(out.get("kind") == "wznowienie" and out.get("text") == "dokończ eksport",
+        check(out.get("kind") == "resume" and out.get("text") == "dokończ eksport",
               f"I-20b: klucz istniejącego zadania z dopiskiem → wznowienie, dopisek zachowany: {raw}")
 
         # brak wejścia: zadania w toku do wznowienia (zamknięte pominięte)
         code, out, raw = resolve(p)
         keys = [x.get("key") for x in out.get("tasks", [])]
-        check(out.get("kind") == "brak" and keys == ["PROJ-7"], f"I-21: bez wejścia → lista zadań w toku: {raw}")
+        check(out.get("kind") == "none" and keys == ["PROJ-7"], f"I-21: bez wejścia → lista zadań w toku: {raw}")
 
         # słowo wymuszające sposób pracy
         code, out, raw = resolve(p, "question", "jak", "działa", "logowanie?")
-        check(out.get("intent") == "question" and out.get("kind") == "tresc" and out.get("title") == "jak działa logowanie?",
+        check(out.get("intent") == "question" and out.get("kind") == "content" and out.get("title") == "jak działa logowanie?",
               f"I-22: „pytanie …” → wymuszona odpowiedź bez pętli: {raw}")
         code, out, raw = resolve(p, "szybko", "popraw", "literówkę", "w", "README")
-        check(out.get("intent") == "szybko" and "bez" in out.get("next", "").lower(), f"I-23: „szybko …”: {raw}")
-        for word, want in (("pytanie", "question"), ("quick", "szybko"), ("task", "zadanie")):   # 14.x: oba języki
+        check(out.get("intent") == "quick" and "without" in out.get("next", "").lower(), f"I-23: „szybko …”: {raw}")
+        for word, want in (("pytanie", "question"), ("szybko", "quick"), ("zadanie", "task"), ("quick", "quick")):   # oba języki
             code, out, raw = resolve(p, word, "popraw", "literówkę", "w", "README")
             check(out.get("intent") == want, f"I-23b: „{word} …” rozpoznane jako {want}: {raw}")
         code, out, raw = resolve(p, "zadanie", "EBO-1236")
-        check(out.get("intent") == "zadanie" and out.get("kind") == "zgloszenie" and out.get("key") == "EBO-1236",
+        check(out.get("intent") == "task" and out.get("kind") == "issue" and out.get("key") == "EBO-1236",
               f"I-24: „zadanie <klucz>”: {raw}")
 
         # wyjście dla człowieka i błędy wywołania
         r = run(p, "resolve", "EBO-1236")
-        check(r.returncode == 0 and all(s in r.stdout for s in ("Wejście: zgłoszenie", "Klucz: EBO-1236",
-                                                                "Tracker: jira", "Dalej: ")),
+        check(r.returncode == 0 and all(s in r.stdout for s in ("Input: issue", "Key: EBO-1236",
+                                                                "Tracker: jira", "Next: ")),
               f"I-25: wyjście tekstowe ze stałymi polami: {r.stdout}")
         r = run(p, "nieznane")
         check(r.returncode == 2 and "Traceback" not in r.stderr, f"I-26: nieznane polecenie → kod 2: {r.returncode} {r.stderr[-200:]}")
@@ -212,14 +212,14 @@ def main() -> int:
         f.write_text("id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n  operations:\n    tracker:\n"
                      "      type: linear\n      prefixes: {ACME: jira}\n", encoding="utf-8")
         code, out, raw = resolve(p, "ACME-3")
-        check(out.get("tracker") == "jira" and out.get("tracker_from") == "organizacja" and out.get("ask") is None,
+        check(out.get("tracker") == "jira" and out.get("tracker_from") == "organisation" and out.get("ask") is None,
               f"I-org-1: prefiks z nakładki firmowej → bez pytania, źródło „organizacja”: {raw}")
         code, out, raw = resolve(p, "OPS-1")
         check(out.get("tracker") == "linear", f"I-org-2: domyślny typ trackera organizacji: {raw}")
         (p / CARD).parent.mkdir(parents=True, exist_ok=True)
         (p / CARD).write_text(json.dumps({"tracker": {"prefixes": {"ACME": "github"}}}), encoding="utf-8")
         code, out, raw = resolve(p, "ACME-3")
-        check(out.get("tracker") == "github" and out.get("tracker_from") == "karta",
+        check(out.get("tracker") == "github" and out.get("tracker_from") == "card",
               f"I-org-3: karta projektu nadpisuje organizację: {raw}")
 
     for f in fails:

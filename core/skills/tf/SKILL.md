@@ -37,7 +37,7 @@ Establish what the human asks for, and tell them **in one sentence** what you ch
 A first word forces the way: `task`/`zadanie`, `question`/`pytanie`, `quick`/`szybko`.
 
 **The script establishes the source** — the human does not give the tool's name: `intake.py resolve "<pierwsza linia wejścia>"`
-prints `Wejście`, `Klucz`, `Tracker` and `Dalej`; you do what stands in `Dalej` (every kind of input is described in
+prints `Input`, `Key`, `Tracker` and `Next`; you do what stands in `Next` (every kind of input is described in
 `references/intake.md`).
 - **An issue from a tracker** — **read only**: Jira with the script (`start --key <KLUCZ> --from-tracker`), otherwise a tool
   connected in the session (MCP); several trackers → `intake.py tracker <typ> --prefix <PREFIKS>`. No connection → you ask

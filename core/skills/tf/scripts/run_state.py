@@ -130,17 +130,17 @@ PR_STEPS = {"plan_drift": "drift", "pr": "pr"}
 NEEDS = ("plan", "stop")
 # Zamknięta lista kodów zatrzymań (`stage … needs --needs stop --code <kod>`): kod → co się stało, zwykłym zdaniem.
 STOP_CODES = {
-    "question": "brakuje informacji, bez której nie da się zacząć",
-    "split": "zadanie jest za duże albo łączy kilka akcji — trzeba je podzielić",
-    "source": "nie ma treści zadania albo dostępu do zgłoszenia",
-    "plan-approval": "plan czeka na zgodę człowieka",
-    "tests": "testy albo weryfikacja nie przechodzą po dwóch próbach naprawy",
-    "scan": "skan bezpieczeństwa blokuje po dwóch próbach",
-    "budget": "przekroczony budżet przebiegu",
-    "environment": "repozytorium nie jest gotowe (niezacommitowane zmiany, brak zdalnego repozytorium albo narzędzia)",
-    "dependency": "nowa zależność albo karencja wersji wymaga decyzji",
-    "contract": "zmiana kontraktu albo decyzja biznesowa (publiczne API, schemat danych, migracja)",
-    "permissions": "operacja zastrzeżona dla człowieka (produkcja, publikacja, flaga poza środowiskiem testowym)",
+    "question": "information is missing, without which the work cannot start",
+    "split": "the task is too big or combines several actions — it has to be split",
+    "source": "there is no task content or no access to the issue",
+    "plan-approval": "the plan waits for the human's consent",
+    "tests": "the tests or the verification fail after two repair attempts",
+    "scan": "the security scan blocks after two attempts",
+    "budget": "the run's budget is exceeded",
+    "environment": "the repository is not ready (uncommitted changes, no remote repository or a missing tool)",
+    "dependency": "a new dependency or the version cooldown needs a decision",
+    "contract": "a contract change or a business decision (a public API, a data schema, a migration)",
+    "permissions": "an operation reserved for the human (production, publishing, a flag outside the test environment)",
 }
 TASK_STAGE = {"intake": "intake", "plan": "plan", "slices": "implementation", "pr": "pr"}   # etap przebiegu → etap zadania
 TASK_ORDER = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", "closed")
@@ -243,16 +243,16 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
         cur = None
     if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") and task_weight(run_dir, meta) != "light" \
             and not (run_report.docs_dir(run_dir, meta) / "spec.md").is_file():
-        return (f"✗ zadanie {key} nie ma jeszcze specyfikacji — załóż szablon: run_state.py spec {run_dir} new, "
-                f"wypełnij go i sprawdź: run_state.py spec {run_dir}")
+        return (f"✗ the task {key} has no specification yet — create the template: run_state.py spec {run_dir} new, "
+                f"fill it in and check it: run_state.py spec {run_dir}")
     if cur in TASK_ORDER and TASK_ORDER.index(target) <= TASK_ORDER.index(cur):
         return None
     r = run_report.task_state(project, "stage", key, target)
     if r is not None and r.returncode != 0:
-        hint = (f"Flaga: run_state.py flag {run_dir} set <klucz> albo none --reason \"bez flagi, bo …\" · "
-                f"specyfikacja: run_state.py spec {run_dir} · dowód kawałka: run_state.py verify {run_dir} S<n> "
-                f"--files <pliki kawałka> · plan po zmianie specyfikacji: run_state.py stage {run_dir} plan")
-        return ((r.stdout + r.stderr).strip() or f"✗ zadanie {key} nie przeszło do etapu {target}") + "\n" + hint
+        hint = (f"Flag: run_state.py flag {run_dir} set <key> or none --reason \"no flag, because …\" · "
+                f"specification: run_state.py spec {run_dir} · slice evidence: run_state.py verify {run_dir} S<n> "
+                f"--files <the slice's files> · the plan after a specification change: run_state.py stage {run_dir} plan")
+        return ((r.stdout + r.stderr).strip() or f"✗ the task {key} did not move to the stage {target}") + "\n" + hint
     return None
 
 
@@ -270,13 +270,13 @@ def no_task(meta: dict) -> int:
     """Katalog przebiegu bez zadania (stary układ cięć `.tf/runs/cuts/`): poleceń zadania nie da się na nim wykonać."""
     again = f"/tf {meta['task']}" + (f" --change {meta['change']}" if meta.get("change") else "") if meta.get("task") \
         else "/tf <TSK-n>"
-    return fail(f"ten katalog przebiegu jest w starym układzie (bez zadania) — zacznij cięcie od nowa: {again}")
+    return fail(f"this run directory has the old layout (without a task) — start the cut again: {again}")
 
 
 def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | None, reason: str, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if action == "mode":
@@ -285,8 +285,8 @@ def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | Non
             auto = json.loads(r.stdout).get("auto", True)
         except (AttributeError, ValueError):
             auto = True
-        print("auto — fabryka prowadzi flagę historyjki; o nazwę zapytaj człowieka" if auto else
-              "manual — flagi dodaje człowiek samodzielnie (feature_flags.auto: false); nie zakładasz flagi i jej nie zapisujesz")
+        print("auto — the factory runs the story's flag; ask the human for its name" if auto else
+              "manual — the human adds flags themselves (feature_flags.auto: false); you do not create a flag or record it")
         return 0
     args = ["flag", meta["key"], action, *([value] if value else [])]
     if remove_by:
@@ -295,7 +295,7 @@ def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | Non
         args += ["--reason", reason]
     r = run_report.task_state(project, *args)
     if r is None:
-        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/task_state.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return r.returncode
 
@@ -310,17 +310,17 @@ def stop_message(code: str | None) -> dict | None:
 
 
 def message_lines(msg: dict, reason: str | None = None) -> list[str]:
-    lines = [f"Co się stało: {msg.get('co', '')}"] + ([f"Szczegóły: {reason.strip()}"] if reason and reason.strip() else [])
-    lines += [f"Czego potrzeba: {msg.get('potrzeba', '')}", f"Pytanie: {msg.get('question', '')}"]
+    lines = [f"What happened: {msg.get('co', '')}"] + ([f"Details: {reason.strip()}"] if reason and reason.strip() else [])
+    lines += [f"What is needed: {msg.get('potrzeba', '')}", f"Question: {msg.get('question', '')}"]
     for n, o in enumerate(msg.get("opcje") or [], 1):
-        lines.append(f"  {n}. {o.get('opcja', '')} — {o.get('skutek', '')}" + (" (rekomendowana)" if o.get("rekomendowana") else ""))
-    return lines + [f"Potem: {msg.get('potem', '')}"]
+        lines.append(f"  {n}. {o.get('opcja', '')} — {o.get('skutek', '')}" + (" (recommended)" if o.get("rekomendowana") else ""))
+    return lines + [f"Then: {msg.get('potem', '')}"]
 
 
 def cmd_message(code: str, as_json: bool) -> int:
     msg = stop_message(code) if code in STOP_CODES else None
     if msg is None:
-        return fail(f"nie ma komunikatu dla kodu „{code}”. Kody: {', '.join(STOP_CODES)}.")
+        return fail(f"there is no message for the code \"{code}\". Codes: {', '.join(STOP_CODES)}.")
     print(json.dumps({"code": code, **msg}, ensure_ascii=False, indent=1) if as_json else "\n".join(message_lines(msg)))
     return 0
 
@@ -328,12 +328,12 @@ def cmd_message(code: str, as_json: bool) -> int:
 def cmd_mode(run_dir: Path, new: str | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     r = run_report.task_state(project, "mode", meta["key"], *([new] if new else []))
     if r is None:
-        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/task_state.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     if r.returncode == 0 and new:
         mode = task_field(run_dir, meta, "mode")
@@ -352,23 +352,23 @@ def human_id(project: Path) -> str:
                                   timeout=10).stdout.strip()
         except (OSError, subprocess.TimeoutExpired):
             name = ""
-    name = name or os.environ.get("USER") or os.environ.get("USERNAME") or "czlowiek"
-    return "human:" + (run_report.slugify(name) or "czlowiek")
+    name = name or os.environ.get("USER") or os.environ.get("USERNAME") or "human"
+    return "human:" + (run_report.slugify(name) or "human")
 
 
 def cmd_approve(run_dir: Path, project: Path) -> int:
     """Zgoda człowieka na plan (i specyfikację, z której powstał). W trybie Auto nie ma człowieka — odmowa."""
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if task_field(run_dir, meta, "mode") == "auto":
-        return fail("przebieg jest w trybie Auto — nie ma człowieka, który zatwierdziłby plan. Zgodę zapisujesz tylko "
-                    "po odpowiedzi człowieka w rozmowie; wtedy najpierw: run_state.py mode <katalog> normal.")
+        return fail("the run is in the Auto mode — there is no human to approve the plan. You record consent only "
+                    "after the human's answer in the conversation; then first: run_state.py mode <directory> normal.")
     r = run_report.task_state(project, "approve", meta["key"], "plan.md", "--by", human_id(project))
     if r is None:
-        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/task_state.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return 0 if r.returncode == 0 else 2
 
@@ -376,12 +376,12 @@ def cmd_approve(run_dir: Path, project: Path) -> int:
 def cmd_weight(run_dir: Path, new: str | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     r = run_report.task_state(project, "weight", meta["key"], *(["--set", new] if new else ["--apply"]))
     if r is None:
-        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/task_state.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return r.returncode
 
@@ -389,12 +389,12 @@ def cmd_weight(run_dir: Path, new: str | None, project: Path) -> int:
 def cmd_trace(run_dir: Path, base: str | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     r = run_report.engine(project, "trace_check.py", meta["key"], "--md", *(["--base", base] if base else []))
     if r is None:
-        return fail("brak .tf/factory/trace_check.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/trace_check.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return r.returncode
 
@@ -402,12 +402,12 @@ def cmd_trace(run_dir: Path, base: str | None, project: Path) -> int:
 def cmd_spec(run_dir: Path, project: Path, new: bool = False) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     r = run_report.engine(project, "spec_check.py", "new" if new else "check", meta["key"])
     if r is None:
-        return fail("brak .tf/factory/spec_check.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/spec_check.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return r.returncode
 
@@ -416,15 +416,15 @@ def slice_evidence(project: Path, meta: dict, slice_id: str) -> str:
     """Stan kawałka wyliczony przez `tf task` (verified, unverified, red…); bez wpisu — brak dowodu."""
     r = run_report.task_state(project, "status", meta["key"], "--json")
     try:
-        return json.loads(r.stdout).get("slice_states", {}).get(slice_id) or "brak dowodu"
+        return json.loads(r.stdout).get("slice_states", {}).get(slice_id) or "no evidence"
     except (AttributeError, ValueError):
-        return "stan zadania nieczytelny"
+        return "the task's state is unreadable"
 
 
 def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, timeout: float | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if hold_refusal(meta, slice_id, run_dir):
@@ -436,7 +436,7 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
         args += ["--timeout", str(timeout)]
     r = run_report.task_state(project, *args)
     if r is None:
-        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/task_state.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     for line in criterion_hints(project, run_dir, meta, files):
         print(line)
@@ -456,8 +456,8 @@ def criterion_hints(project: Path, run_dir: Path, meta: dict, files: str) -> lis
         return []
     tests = [f.strip() for f in files.split(",") if f.strip() and TEST_FILE.search(f.strip())]
     if not tests:
-        return ["⚠ wśród plików kawałka nie ma pliku testu — dodaj go do `--files`, inaczej kryterium nie będzie miało "
-                "dowodu w śladzie (etap pr zostanie odrzucony)"]
+        return ["⚠ there is no test file among the slice's files — add it to `--files`, otherwise the criterion will have no "
+                "evidence in the trace (the pr stage will be rejected)"]
     bare = []
     for rel in tests:
         try:
@@ -467,8 +467,8 @@ def criterion_hints(project: Path, run_dir: Path, meta: dict, files: str) -> lis
         if not CRITERION.search(text):
             bare.append(rel)
     if bare:
-        return [f"⚠ test bez identyfikatora kryterium: {', '.join(bare)} — dopisz AC-n w nazwie albo komentarzu testu "
-                "teraz, przed commitem kawałka (i powtórz verify); dopisywanie później to osobny commit"]
+        return [f"⚠ a test without a criterion identifier: {', '.join(bare)} — add AC-n to the test's name or comment "
+                "now, before the slice's commit (and repeat verify); adding it later is a separate commit"]
     return []
 
 
@@ -479,30 +479,30 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
               whole_task: bool = False) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if stage not in STAGES:
-        return fail(f"etap „{stage}” nie istnieje; dozwolone: {', '.join(STAGES)}.")
+        return fail(f"the stage \"{stage}\" does not exist; allowed: {', '.join(STAGES)}.")
     if stage == "needs" and needs not in NEEDS:
-        return fail("etap needs wymaga `--needs plan` (plan czeka na akceptację) albo `--needs stop` (blok STOP).")
+        return fail("the needs stage requires `--needs plan` (the plan waits for acceptance) or `--needs stop` (a STOP block).")
     if stage != "needs" and (needs or reason or code):
-        return fail("`--needs`, `--code` i `--reason` dotyczą tylko etapu needs.")
+        return fail("`--needs`, `--code` and `--reason` apply only to the needs stage.")
     if auto and plan_mode:
-        return fail("podaj jeden tryb: `--plan` (koniec na planie) albo `--auto` (bez zatwierdzania planu).")
+        return fail("give one mode: `--plan` (end at the plan) or `--auto` (without plan approval).")
     codes = "; ".join(f"{k} — {v}" for k, v in STOP_CODES.items())
     if stage == "needs" and needs == "stop" and code not in STOP_CODES:
-        return fail(("blok STOP wymaga kodu z listy" if not code else f"kod zatrzymania „{code}” nie istnieje")
-                    + f": `--needs stop --code <kod> --reason \"<powód z dowodem>\"`. Kody: {codes}.")
+        return fail(("a STOP block needs a code from the list" if not code else f"the stop code \"{code}\" does not exist")
+                    + f": `--needs stop --code <code> --reason \"<the reason with evidence>\"`. Codes: {codes}.")
     if code and needs != "stop":
-        return fail("`--code` dotyczy tylko `--needs stop`.")
+        return fail("`--code` applies only to `--needs stop`.")
     if code == "question" and not whole_task and meta.get("key") and blocked_slices_enabled(project):
         cur_k = (meta.get("current") or {}).get("k") if meta.get("stage") == "slices" else None
         slices, blocked = plan_and_blocked(project, run_dir, meta)
         open_cur = cur_k and cur_k not in blocked and any(s["id"] == cur_k and not s["checked"] for s in slices)
         other = next_slice(slices, blocked | {cur_k}) if open_cur else None
         if other:       # pytanie o jeden kawałek nie zatrzymuje całości, gdy jest co robić dalej
-            return fail(f"pytanie dotyczy kawałka {cur_k}, a {other['id']} od niego nie zależy — zablokuj tylko {cur_k}: "
-                        f"run_state.py block {run_dir} {cur_k} --question \"<pytanie>\" i rób {other['id']}. Gdy pytanie "
-                        "dotyczy całego zadania, dodaj `--task`.")
+            return fail(f"the question concerns the slice {cur_k}, and {other['id']} does not depend on it — block only {cur_k}: "
+                        f"run_state.py block {run_dir} {cur_k} --question \"<question>\" and do {other['id']}. When the question "
+                        "concerns the whole task, add `--task`.")
     if (auto or plan_mode) and meta.get("key"):               # tryb zadania wybiera człowiek w poleceniu /tf
         m = run_report.task_state(project, "mode", meta["key"], "auto" if auto else "plan")
         if m is not None and "—" in m.stdout:                  # np. Auto przy wadze pełnej: zostaje tryb zwykły
@@ -511,7 +511,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         before = task_weight(run_dir, meta)
         w = run_report.task_state(project, "weight", meta["key"], "--apply")
         if w is not None and w.returncode == 0 and task_weight(run_dir, meta) != before:
-            print("Waga zadania zmieniona — " + " ".join(ln.strip() for ln in w.stdout.splitlines()[:3] if ln.strip()))
+            print("The task's weight changed — " + " ".join(ln.strip() for ln in w.stdout.splitlines()[:3] if ln.strip()))
     refused = sync_task(project, run_dir, meta, stage)
     if refused:
         print(refused)
@@ -540,15 +540,15 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         meta["effort"] = effort
     write_run(run_dir, meta)
     refresh(project)
-    print(f"✓ etap: {stage}" + (f" ({needs})" if needs else ""))
+    print(f"✓ stage: {stage}" + (f" ({needs})" if needs else ""))
     if stage == "plan" and meta.get("key") and blocked_slices_enabled(project):
-        print("Zależności kawałków: dopisz w wierszu kawałka `· after: S<n>` (po którym można go zacząć) albo `· after: none` "
-              "(niezależny); bez dopisku kawałek zależy od poprzedniego. Dzięki temu pytanie w jednym kawałku nie "
-              "zatrzyma pozostałych.")
+        print("Slice dependencies: add `· after: S<n>` to the slice's row (after which it can start) or `· after: none` "
+              "(independent); without it a slice depends on the previous one. That way a question in one slice does not "
+              "stop the others.")
     msg = stop_message(code) if needs == "stop" else None
     if msg:     # komunikat dla człowieka: pętla pokazuje go zamiast własnego opisu
-        print("Komunikat dla człowieka — pokaż go z dowodem (polecenie i wynik); w rozmowie pytanie zadaj narzędziem "
-              "AskUserQuestion z tymi opcjami, w przebiegu bez nadzoru wpisz go do raportu:")
+        print("A message for the human — show it with evidence (the command and the output); in a conversation ask the question with "
+              "the AskUserQuestion tool with these options, in an unsupervised run write it into the report:")
         print("\n".join(message_lines(msg, reason)))
     return 0
 
@@ -556,12 +556,12 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
 def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if re.fullmatch(SLICE_ID, target) and hold_refusal(meta, target, run_dir):
         return fail(hold_refusal(meta, target, run_dir))
     if target.upper() == "PR":
         if len(rest) != 2 or rest[0] not in PR_STEPS or rest[1] not in STATES:
-            return fail(f"użycie: step <katalog> PR <{'|'.join(PR_STEPS)}> <{'|'.join(STATES)}>")
+            return fail(f"usage: step <directory> PR <{'|'.join(PR_STEPS)}> <{'|'.join(STATES)}>")
         entering = meta.get("stage") in (None, "intake", "plan", "slices", "needs")
         refused = sync_task(project, run_dir, meta, "pr") if entering else None
         if refused:
@@ -579,7 +579,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
         return 0
     if not re.fullmatch(SLICE_ID, target) or len(rest) != 3 or not re.fullmatch(r"R[1-9]", rest[0]) \
             or rest[1] not in STEPS or rest[2] not in STATES:
-        return fail(f"użycie: step <katalog> S<n> R<k> <{'|'.join(STEPS)}> <{'|'.join(STATES)}>")
+        return fail(f"usage: step <directory> S<n> R<k> <{'|'.join(STEPS)}> <{'|'.join(STATES)}>")
     rnd, step, state = int(rest[0][1:]), rest[1], rest[2]
     cur = meta.get("current")
     if not isinstance(cur, dict) or cur.get("k") != target:
@@ -589,15 +589,15 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     if rnd > limit and meta.get("stage") == "needs":
         limit = cur["limit"] = len(rounds) + MAX_ROUNDS     # człowiek zdecydował po STOP: kolejne próby
     if rnd > limit:                                         # limitu rund pilnuje skrypt, nie deklaracja modelu
-        return fail(f"{target} miał już {limit} rundy — kolejna zaczyna się dopiero po decyzji człowieka. Zakończ "
-                    f"blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code <kod> --reason \"<powód "
-                    "z dowodem>\" (kod: testy — weryfikacja czerwona, skan — skan blokuje, pytanie — ustalenie "
-                    "przeglądu, którego nie da się usunąć w zakresie kawałka).")
+        return fail(f"{target} already had {limit} rounds — the next one starts only after the human's decision. Finish "
+                    f"with a STOP block: run_state.py stage {run_dir} needs --needs stop --code <code> --reason \"<the reason "
+                    "with evidence>\" (codes: tests — the verification is red, scan — the scan blocks, contract — a review "
+                    "finding that cannot be removed within the slice's scope).")
     if step == "scope" and state == "fail" and meta.get("key") and not slice_finding(project, meta["key"], target, rnd):
-        return fail(f"przegląd zakresu {target} R{rnd} nie przeszedł, a ważne ustalenie nie jest zapisane — najpierw: "
-                    f"run_state.py finding {run_dir} {target} \"<ustalenie [important] z przeglądu>\" --round {rnd}, potem "
-                    "powtórz to polecenie. Zapis służy zamknięciu zadania: każde ważne ustalenie dostaje kontrolę, "
-                    "która złapie je następnym razem.")
+        return fail(f"the scope review {target} R{rnd} failed, and the important finding is not recorded — first: "
+                    f"run_state.py finding {run_dir} {target} \"<the [important] finding from the review>\" --round {rnd}, then "
+                    "repeat this command. The record serves closing the task: every important finding gets a control, "
+                    "which will catch it next time.")
     while len(rounds) < rnd:
         rounds.append({s: "todo" for s in STEPS})
     row = rounds[rnd - 1]
@@ -631,12 +631,12 @@ def slice_finding(project: Path, key: str, slice_id: str, rnd: int) -> bool:
 
 
 PANEL_BRIEFS = {
-    "security-reviewer": "przegląd bezpieczeństwa `git diff {base}...HEAD` (uwierzytelnianie, uprawnienia, sekrety, "
-                         "wejście użytkownika, płatności, migracje); wynik: Critical / Important / To consider z plik:linia "
-                         "i na końcu `Verdict: PASS` (brak krytycznych i ważnych) albo `Verdict: FAIL`",
-    "spec-reviewer": "weryfikacja `{spec}` reguła po regule wobec `git diff {base}...HEAD`: każde kryterium AC-n "
-                     "(spełnione / niespełnione / nie da się sprawdzić, z plik:linia i testem) i każda reguła „Unchanged” "
-                     "(zachowana / naruszona); na końcu `Verdict: PASS` albo `Verdict: FAIL`",
+    "security-reviewer": "a security review of `git diff {base}...HEAD` (authentication, permissions, secrets, "
+                         "user input, payments, migrations); the result: Critical / Important / To consider with file:line "
+                         "and at the end `Verdict: PASS` (no critical or important ones) or `Verdict: FAIL`",
+    "spec-reviewer": "verification of `{spec}` rule by rule against `git diff {base}...HEAD`: every AC-n criterion "
+                     "(met / not met / cannot be checked, with file:line and the test) and every \"Unchanged\" rule "
+                     "(kept / broken); at the end `Verdict: PASS` or `Verdict: FAIL`",
 }
 
 
@@ -644,34 +644,34 @@ def cmd_panel(run_dir: Path, record: list[str] | None, note: str, base: str | No
     """Panel recenzentów przy wadze pełnej: skład, zlecenia, zapisane werdykty i zapis nowego (`--record`)."""
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if record:
         r = run_report.task_state(project, "review", meta["key"], record[0], record[1], "--note", note)
         if r is None:
-            return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+            return fail("no .tf/factory/task_state.py — update the factory (tf update).")
         print((r.stdout + r.stderr).rstrip("\n"))
         return r.returncode
     weight = task_weight(run_dir, meta)
     if weight != "full":
-        print(f"Waga zadania: {WEIGHT_EN.get(weight, weight or '?')}. To zadanie nie wymaga panelu recenzentów (dotyczy tylko "
-              "wagi pełnej); przegląd zakresu kawałków zostaje jak zwykle.")
+        print(f"The task's weight: {WEIGHT_EN.get(weight, weight or '?')}. This task does not need the reviewer panel (it applies only "
+              "to the full weight); the slices' scope review stays as usual.")
         return 0
     docs = run_report.docs_dir(run_dir, meta)
     try:
         spec = docs.resolve().relative_to(project.resolve()).joinpath("spec.md").as_posix()
     except ValueError:
         spec = str(docs / "spec.md")
-    found = pick_base(project, base) or "<gałąź domyślna>"
+    found = pick_base(project, base) or "<the default branch>"
     reviews = ((task_view(project, meta["key"]) or {}).get("task") or {}).get("reviews") or {}
-    print(f"Panel recenzentów (waga pełna): każdy w osobnym kontekście, przez narzędzie Agent, przed etapem pr.")
+    print(f"The reviewer panel (full weight): each in a separate context, through the Agent tool, before the pr stage.")
     for name, brief in PANEL_BRIEFS.items():
         done = reviews.get(name) if isinstance(reviews.get(name), dict) else None
-        state = f"{done.get('verdict')}" + (f" — {as_data(done['note'], 200)}" if done.get("note") else "") if done else "brak werdyktu"
-        print(f"- {name}: {state}\n  zlecenie: {brief.format(spec=spec, base=found)}\n  zapis: run_state.py panel {run_dir} "
-              f"--record {name} pass|fail --note \"<najważniejsze ustalenie>\"")
-    print("Werdykt FAIL → poprawka w nowym commicie, potem przegląd od nowa (werdykt dotyczy commita).")
+        state = f"{done.get('verdict')}" + (f" — {as_data(done['note'], 200)}" if done.get("note") else "") if done else "no verdict"
+        print(f"- {name}: {state}\n  commission: {brief.format(spec=spec, base=found)}\n  record: run_state.py panel {run_dir} "
+              f"--record {name} pass|fail --note \"<the most important finding>\"")
+    print("Verdict FAIL → a fix in a new commit, then the review again (the verdict concerns a commit).")
     return 0
 
 
@@ -679,14 +679,14 @@ def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, projec
     """Zapisuje ważne ustalenie przeglądu zakresu w zadaniu (`tf task finding … add`), z kawałkiem i rundą."""
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
     rnd = rnd or (len(cur.get("rounds") or []) if cur.get("k") == slice_id else 0) or 1
     r = run_report.task_state(project, "finding", meta["key"], "add", text, "--slice", slice_id, "--round", str(rnd))
     if r is None:
-        return fail("brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update).")
+        return fail("no .tf/factory/task_state.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
     return r.returncode
 
@@ -700,7 +700,7 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
     meta = load(run_dir) or {}
     path = run_report.docs_dir(run_dir, meta) / "plan.md"
     if not path.is_file():
-        return fail(f"nie ma {path}")
+        return fail(f"{path} does not exist")
     lines = path.read_text(encoding="utf-8").split("\n")
     for i, line in enumerate(lines):
         m = SLICE.match(line)
@@ -708,17 +708,17 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
             if m.group(1) == " ":
                 state = slice_evidence(project, meta, slice_id) if meta.get("key") else "verified"
                 if state != "verified":
-                    return fail(f"{slice_id} nie ma aktualnego dowodu ({state}) — najpierw: run_state.py verify "
-                                f"{run_dir} {slice_id} --files <pliki kawałka>")
+                    return fail(f"{slice_id} has no current evidence ({state}) — first: run_state.py verify "
+                                f"{run_dir} {slice_id} --files <the slice's files>")
                 refused = review_missing(run_dir, meta, slice_id) if meta.get("key") else None
                 if refused:
                     return fail(refused)
                 lines[i] = line.replace("- [ ]", "- [x]", 1)
                 path.write_text("\n".join(lines), encoding="utf-8")
-            print(f"✓ {slice_id} odhaczony w {path.name}")
+            print(f"✓ {slice_id} ticked off in {path.name}")
             refresh(project)
             return 0
-    return fail(f"w {path.name} nie ma kawałka {slice_id}")
+    return fail(f"{path.name} has no slice {slice_id}")
 
 
 def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
@@ -730,12 +730,12 @@ def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
         return None
     k = len(rounds) or 1
     if last == "fail":
-        return (f"{slice_id}: przegląd zakresu w R{k} nie przeszedł — wycofaj ustalenie [important] i zrób nową rundę: "
-                f"run_state.py step {run_dir} {slice_id} R{k + 1} kod run, a po ponownym przeglądzie scope-reviewer "
+        return (f"{slice_id}: the scope review in R{k} failed — revert the [important] finding and do a new round: "
+                f"run_state.py step {run_dir} {slice_id} R{k + 1} code run, and after scope-reviewer's new review "
                 f"run_state.py step {run_dir} {slice_id} R{k + 1} scope pass")
-    return (f"{slice_id}: nie ma zapisanego wyniku przeglądu zakresu (R{k}: {last or 'brak zapisu'}). Po przeglądzie "
-            f"scope-reviewer zapisz go: run_state.py step {run_dir} {slice_id} R{k} scope pass — a przy ustaleniu "
-            f"[important]: run_state.py finding {run_dir} {slice_id} \"<ustalenie>\" i step … scope fail, potem nowa runda")
+    return (f"{slice_id}: there is no recorded result of the scope review (R{k}: {last or 'not recorded'}). After "
+            f"scope-reviewer's review record it: run_state.py step {run_dir} {slice_id} R{k} scope pass — and with an "
+            f"[important] finding: run_state.py finding {run_dir} {slice_id} \"<finding>\" and step … scope fail, then a new round")
 
 
 CONVENTIONAL = re.compile(r"^[a-z]+(\([^()\s]+\))?!?: \S")
@@ -775,23 +775,23 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
     i stopkami, odhaczenie i następny kawałek. Odmowa przed zapisem, gdy brak dowodu albo tytuł jest zły."""
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if not re.fullmatch(SLICE_ID, slice_id):
-        return fail("użycie: done <katalog> S<n> --message \"<typ>(<zakres>): <opis>\"")
+        return fail("usage: done <directory> S<n> --message \"<type>(<scope>): <description>\"")
     if not CONVENTIONAL.match(message.strip()):
-        return fail(f"tytuł commita poza Conventional Commits: „{message.strip().splitlines()[0] if message.strip() else ''}” "
-                    "— podaj --message \"<typ>(<zakres>): <opis>\", np. feat(pay): add card payment")
+        return fail(f"the commit title is outside Conventional Commits: \"{message.strip().splitlines()[0] if message.strip() else ''}\" "
+                    "— give --message \"<type>(<scope>): <description>\", e.g. feat(pay): add card payment")
     slices = plan_and_blocked(project, run_dir, meta)[0]
     entry = next((s for s in slices if s["id"] == slice_id), None)
     if entry is None:
-        return fail(f"w plan.md nie ma kawałka {slice_id}")
+        return fail(f"plan.md has no slice {slice_id}")
     state = slice_evidence(project, meta, slice_id)
     files = slice_files(project, meta["key"], slice_id)
     if state != "verified" or not files:
-        return fail(f"{slice_id} nie ma aktualnego dowodu ({state}) — najpierw: run_state.py verify {run_dir} "
-                    f"{slice_id} --files <pliki kawałka>; nic nie zapisano")
+        return fail(f"{slice_id} has no current evidence ({state}) — first: run_state.py verify {run_dir} "
+                    f"{slice_id} --files <the slice's files>; nothing was recorded")
     cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
     rnd = len(cur.get("rounds") or []) if cur.get("k") == slice_id else 0
     code = cmd_step(run_dir, slice_id, [f"R{rnd or 1}", "scope", "pass"], project)
@@ -806,17 +806,17 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
         staged = subprocess.run(["git", "-C", str(project), "diff", "--cached", "--quiet", "--", *files],
                                 capture_output=True, text=True, timeout=60)
     except (OSError, subprocess.SubprocessError) as e:
-        return fail(f"git nie odpowiada ({e}) — kawałek nie jest odhaczony")
+        return fail(f"git does not respond ({e}) — the slice is not ticked off")
     if add.returncode != 0 or staged.returncode not in (0, 1):
-        return fail(f"git add odrzucony — kawałek nie jest odhaczony:\n{(add.stdout + add.stderr + staged.stderr).strip()}")
+        return fail(f"git add was rejected — the slice is not ticked off:\n{(add.stdout + add.stderr + staged.stderr).strip()}")
     if staged.returncode == 0:
-        print(f"• pliki {slice_id} są już zatwierdzone — bez nowego commita")
+        print(f"• the files of {slice_id} are already committed — no new commit")
     else:
         msg = commit_message(message, slice_id, entry["value"], footers)
         r = subprocess.run(["git", "-C", str(project), "commit", "-q", "-F", "-", "--", *files], input=msg,
                            capture_output=True, text=True, timeout=120)
         if r.returncode != 0:
-            return fail(f"commit odrzucony — kawałek nie jest odhaczony; popraw i powtórz done:\n{(r.stdout + r.stderr).strip()}")
+            return fail(f"the commit was rejected — the slice is not ticked off; fix it and repeat done:\n{(r.stdout + r.stderr).strip()}")
         sha = subprocess.run(["git", "-C", str(project), "rev-parse", "--short", "HEAD"], capture_output=True,
                              text=True, timeout=30).stdout.strip()
         print(f"✓ commit {sha}: {msg.splitlines()[0]} ({', '.join(files)})")
@@ -828,8 +828,8 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
     if rest and confirm_each_slice(project) and task_field(run_dir, meta, "mode") != "auto":
         meta["hold"] = slice_id
         write_run(run_dir, meta)
-        print(f"Dalej: STOP — styl step-by-step: pokaż człowiekowi zmiany {slice_id} (git show --stat HEAD) i zapytaj, "
-              f"czy iść dalej. Po zgodzie: run_state.py proceed {run_dir}")
+        print(f"Next: STOP — the step-by-step style: show the human the changes of {slice_id} (git show --stat HEAD) and ask "
+              f"whether to go on. After consent: run_state.py proceed {run_dir}")
         return 0
     print_next(project, run_dir, meta)
     return 0
@@ -839,12 +839,12 @@ def cmd_proceed(run_dir: Path, project: Path) -> int:
     """Zgoda człowieka na następny kawałek po wstrzymaniu (styl step-by-step); bez wstrzymania — tylko `Dalej:`."""
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if meta.pop("hold", None):
         write_run(run_dir, meta)
-        print("✓ zgoda człowieka na następny kawałek")
+        print("✓ the human's consent to the next slice")
     print_next(project, run_dir, meta)
     return 0
 
@@ -889,8 +889,8 @@ def hold_refusal(meta: dict, slice_id: str, run_dir: Path) -> str | None:
     """Wstrzymanie po kawałku (step-by-step): inny kawałek dopiero po `proceed` — po zgodzie człowieka w rozmowie."""
     held = meta.get("hold")
     if held and slice_id != held:
-        return (f"przebieg czeka na zgodę człowieka po kawałku {held} (styl step-by-step) — pokaż zmiany "
-                f"(git show --stat HEAD), a po zgodzie: run_state.py proceed {run_dir}")
+        return (f"the run waits for the human's consent after the slice {held} (the step-by-step style) — show the changes "
+                f"(git show --stat HEAD), and after consent: run_state.py proceed {run_dir}")
     return None
 
 
@@ -955,45 +955,45 @@ def print_next(project: Path, run_dir: Path, meta: dict) -> None:
     slices, blocked = plan_and_blocked(project, run_dir, meta)
     nxt = next_slice(slices, blocked)
     if nxt:
-        print(f"Dalej: {nxt['id']} — {nxt['value']}")
+        print(f"Next: {nxt['id']} — {nxt['value']}")
         return
     if not blocked:
-        print("Dalej: zakończenie — wszystkie kawałki planu są odhaczone." if slices and all(s["checked"] for s in slices)
-              else "Dalej: brak kawałka do zrobienia — sprawdź plan.md.")
+        print("Next: finishing — all the plan's slices are ticked off." if slices and all(s["checked"] for s in slices)
+              else "Next: no slice to do — check plan.md.")
         return
     view = task_view(project, meta["key"]) or {"task": {}}
-    asked = {k: ((view["task"].get("slices") or {}).get(k) or {}).get("reason") or "(bez treści pytania)"
+    asked = {k: ((view["task"].get("slices") or {}).get(k) or {}).get("reason") or "(no question text)"
              for k in sorted(blocked, key=lambda x: int(x[1:]))}
-    print("Dalej: STOP — każdy pozostały kawałek czeka na odpowiedź człowieka.")
+    print("Next: STOP — every remaining slice waits for the human's answer.")
     for k, q in asked.items():
         print(f"  {k}: {q}")
     for k, deps in held_slices(slices, blocked):
-        print(f"  {k} czeka na {', '.join(deps)}")
-    print(f"Zakończ blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code pytanie --reason "
+        print(f"  {k} waits for {', '.join(deps)}")
+    print(f"Finish with a STOP block: run_state.py stage {run_dir} needs --needs stop --code question --reason "
           f"\"{'; '.join(f'{k}: {q}' for k, q in asked.items())}\"")
 
 
 def cmd_block(run_dir: Path, slice_id: str, question: str, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if not blocked_slices_enabled(project):
-        return fail("przełącznik `loop.blocked_slices` jest wyłączony (.tf/config/config.yaml) — pytanie kończy przebieg "
-                    f"blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code pytanie --reason \"<pytanie>\".")
+        return fail("the `loop.blocked_slices` switch is off (.tf/config/config.yaml) — a question ends the run "
+                    f"with a STOP block: run_state.py stage {run_dir} needs --needs stop --code question --reason \"<question>\".")
     question = " ".join(question.split())
     slices, blocked = plan_and_blocked(project, run_dir, meta)
     found = next((s for s in slices if s["id"] == slice_id), None)
     if not question or found is None or found["checked"]:
-        return fail(f"podaj pytanie i nieodhaczony kawałek z plan.md (jest: {', '.join(s['id'] for s in slices) or 'brak'}).")
+        return fail(f"give a question and an unticked slice from plan.md (there are: {', '.join(s['id'] for s in slices) or 'none'}).")
     r = run_report.task_state(project, "slice", meta["key"], slice_id, "blocked", "--reason", question)
     if r is None or r.returncode != 0:
-        return fail(((r.stdout + r.stderr).strip() if r else "brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update)."))
+        return fail(((r.stdout + r.stderr).strip() if r else "no .tf/factory/task_state.py — update the factory (tf update)."))
     if slice_id not in blocked:
         append_event(run_report.docs_dir(run_dir, meta), "question", slice_id, question, "process:tf")
     refresh(project)
-    print(f"✓ {slice_id} czeka na odpowiedź człowieka: {question}")
+    print(f"✓ {slice_id} waits for the human's answer: {question}")
     print_next(project, run_dir, meta)
     return 0
 
@@ -1001,18 +1001,18 @@ def cmd_block(run_dir: Path, slice_id: str, question: str, project: Path) -> int
 def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     if not by or not HUMAN.fullmatch(by):
-        return fail("odpowiedź zapisujesz z identyfikatorem człowieka, który jej udzielił: --by human:<id>.")
+        return fail("you record an answer with the identifier of the human who gave it: --by human:<id>.")
     text = " ".join(text.split())
     _, blocked = plan_and_blocked(project, run_dir, meta)
     if not text or slice_id not in blocked:
-        return fail(f"podaj odpowiedź i kawałek, który czeka na człowieka (czekają: {', '.join(sorted(blocked)) or 'żaden'}).")
+        return fail(f"give an answer and a slice that waits for the human (waiting: {', '.join(sorted(blocked)) or 'none'}).")
     r = run_report.task_state(project, "slice", meta["key"], slice_id, "planned")
     if r is None or r.returncode != 0:
-        return fail(((r.stdout + r.stderr).strip() if r else "brak .tf/factory/task_state.py — zaktualizuj fabrykę (tf update)."))
+        return fail(((r.stdout + r.stderr).strip() if r else "no .tf/factory/task_state.py — update the factory (tf update)."))
     append_event(run_report.docs_dir(run_dir, meta), "answer", slice_id, text, by)
     if meta.get("stage") == "needs" and meta.get("stop_code") == "question" and blocked == {slice_id}:
         meta["stage"] = "slices"            # ostatnie pytanie ma odpowiedź: przebieg już na nikogo nie czeka
@@ -1020,7 +1020,7 @@ def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project:
             meta.pop(name, None)
         write_run(run_dir, meta)
     refresh(project)
-    print(f"✓ {slice_id} odblokowany — odpowiedź zapisana ({by}).")
+    print(f"✓ {slice_id} unblocked — the answer is recorded ({by}).")
     print_next(project, run_dir, meta)
     return 0
 
@@ -1028,7 +1028,7 @@ def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project:
 def cmd_next(run_dir: Path, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     print_next(project, run_dir, meta)
@@ -1242,7 +1242,7 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
 def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
-        return fail(f"brak lub błędny {run_dir / 'run.json'} — przebieg zakłada `run_report.py start`.")
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
     if not meta.get("key"):
         return no_task(meta)
     try:
@@ -1256,14 +1256,14 @@ def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
         shown = target.resolve().relative_to(project.resolve()).as_posix()
     except ValueError:
         shown = str(target)
-    print(f"✓ opis PR: {shown}\n  użyj: gh pr create --title \"<typ>(<zakres>): <opis>\" --body-file {shown}\n"
-          "  własne uwagi (odstępstwa od planu, wyjątek budżetu artefaktów) dopisz na końcu pliku")
+    print(f"✓ the PR description: {shown}\n  use: gh pr create --title \"<type>(<scope>): <description>\" --body-file {shown}\n"
+          "  add your own remarks (deviations from the plan, an artifact budget exception) at the end of the file")
     if missing:
-        print(f"⚠ bez zielonego dowodu: {', '.join(missing)} — opis mówi to wprost")
+        print(f"⚠ without green evidence: {', '.join(missing)} — the description says so plainly")
     if not has_remote(project):
-        print(f"⚠ repozytorium nie ma zdalnego źródła (git remote) — gałęzi nie da się wypchnąć ani otworzyć PR. Nie "
-              f"próbuj wypychać; zakończ blokiem STOP: run_state.py stage {run_dir} needs --needs stop --code srodowisko "
-              "--reason \"brak zdalnego repozytorium; opis PR gotowy w pr-body.md\"")
+        print(f"⚠ the repository has no remote (git remote) — the branch cannot be pushed or a PR opened. Do not "
+              f"try to push; finish with a STOP block: run_state.py stage {run_dir} needs --needs stop --code environment "
+              "--reason \"no remote repository; the PR description is ready in pr-body.md\"")
     return 0
 
 
@@ -1280,13 +1280,13 @@ def cmd_park(run_dir: Path, item: str, project: Path) -> int:
     """Dopisuje sprawę odłożoną do decyzji człowieka na końcu parked.md (jeden wiersz)."""
     item = " ".join(item.split())
     if not item:
-        return fail("pusta sprawa — podaj, co odkładasz i dlaczego")
+        return fail("an empty item — give what you postpone and why")
     path = run_dir / "parked.md"
     if not run_dir.is_dir():
-        return fail(f"nie ma katalogu przebiegu {run_dir}")
+        return fail(f"the run directory {run_dir} does not exist")
     text = path.read_text(encoding="utf-8") if path.is_file() else ""
     path.write_text(text.rstrip("\n") + ("\n" if text.strip() else "") + f"- {item.lstrip('- ')}\n", encoding="utf-8")
-    print(f"✓ odłożono do decyzji w {path.name}")
+    print(f"✓ postponed for a decision in {path.name}")
     refresh(project)
     return 0
 
@@ -1321,7 +1321,7 @@ def infer_stage(meta: dict, run_dir: Path, slices: list[dict]) -> str:
 
 
 def clip(text: str) -> str:
-    return text if len(text) <= MAX_TEXT else text[:MAX_TEXT] + "\n…(ucięte)"
+    return text if len(text) <= MAX_TEXT else text[:MAX_TEXT] + "\n…(cut)"
 
 
 def read_text(path: Path) -> str | None:
@@ -1369,7 +1369,7 @@ def code_items(run_dir: Path, proofs: list[dict]) -> list[dict]:
         for rel in sorted(files) if m else []:
             text = read_text(project / rel)
             out.append({"name": f"{m.group(1)} · {rel}", "dot": "ok" if text is not None else "warn",
-                        "text": text if text is not None else "(pliku już nie ma)"})
+                        "text": text if text is not None else "(the file no longer exists)"})
     return out
 
 
@@ -1412,11 +1412,11 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     if stage == "needs" and needs == "stop":
         cur = (meta.get("current") or {}).get("k")
         result.append({"name": "STOP", "dot": "bad", "text": "\n".join(
-            [f"Zatrzymanie — {cur or 'przebieg'}"]
+            [f"Stopped — {cur or 'the run'}"]
             + (message_lines(stop_message(meta.get("stop_code")), meta.get("stop_text"))
-               if stop_message(meta.get("stop_code")) else [f"Powód: {meta.get('stop_text') or '(brak opisu)'}"])
+               if stop_message(meta.get("stop_code")) else [f"Reason: {meta.get('stop_text') or '(no description)'}"])
             + [
-             f"Wznowienie: od {cur or 'miejsca, w którym fabryka przerwała'}"])})
+             f"Resume: from {cur or 'the place where the factory stopped'}"])})
     report = read_text(docs / "report.md")
     if report is not None:
         result.append({"name": "report.md", "dot": "ok", "text": report})
@@ -1529,7 +1529,7 @@ def slice_items(slices: list[dict], view: dict | None, cur: dict | None, stage: 
     out = []
     first_open = next((s["id"] for s in slices if not s["checked"]), None)
     for s in slices:
-        proof = (view["slices"].get(s["id"]) or "brak dowodu") if view else None
+        proof = (view["slices"].get(s["id"]) or "no evidence") if view else None
         if s["checked"]:
             state = "stale" if view and proof != "verified" else "done"
         elif cur and cur.get("k") == s["id"]:
@@ -1565,7 +1565,7 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
     work = project / run_report.WORK / key          # może nie istnieć — wtedy panel pokazuje tylko katalog zadania
     files = file_groups(work, meta, stage, None, [])
     if not any(g["grp"] != "Dowody" for g in files):
-        files.insert(0, {"grp": f"Zadanie (git) · {rel}/", "items": [
+        files.insert(0, {"grp": f"Task (git) · {rel}/", "items": [
             {"name": "task.json", "dot": "", "text": json.dumps(task, ensure_ascii=False, indent=1)}]})
     created = str(task.get("created", ""))
     obj = {"slug": key, "title": task.get("title") or key, "date": created[:10], "stage": stage, "needs": None,
@@ -1659,7 +1659,7 @@ def main(argv: list[str]) -> int:
     s.add_argument("--plan", dest="plan_mode", action="store_true")
     s.add_argument("--code", default=None)
     s.add_argument("--task", dest="whole_task", action="store_true",
-                   help="pytanie dotyczy całego zadania, nie jednego kawałka (z przełącznikiem loop.blocked_slices)")
+                   help="the question concerns the whole task, not one slice (with the loop.blocked_slices switch)")
     s.add_argument("--effort", default=None, choices=["low", "medium", "high", "xhigh", "max"])
     t = sub.add_parser("step")
     t.add_argument("run_dir")
@@ -1719,7 +1719,7 @@ def main(argv: list[str]) -> int:
     pc.add_argument("run_dir")
     pn = sub.add_parser("panel")
     pn.add_argument("run_dir")
-    pn.add_argument("--record", nargs=2, metavar=("RECENZENT", "WERDYKT"), default=None)
+    pn.add_argument("--record", nargs=2, metavar=("REVIEWER", "VERDICT"), default=None)
     pn.add_argument("--note", default="")
     pn.add_argument("--base", default=None)
     fd = sub.add_parser("finding")
@@ -1733,7 +1733,7 @@ def main(argv: list[str]) -> int:
     d = sub.add_parser("dashboard")
     d.add_argument("--no-cost", action="store_true")
     d.add_argument("--out", default=None)
-    d.add_argument("--open", action="store_true", help="otwórz plik w przeglądarce")
+    d.add_argument("--open", action="store_true", help="open the file in a browser")
     args = ap.parse_args(argv[1:])
     project = Path.cwd()
     if args.cmd == "stage":

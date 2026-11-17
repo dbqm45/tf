@@ -102,7 +102,7 @@ def main() -> int:
         r = call(p, cfg, "run_state.py", "tick", d, "K1")
         check(r.returncode == 0 and "- [x] K1" in plan(), f"PR-13: przegląd zapisany jako zaliczony → odhaczenie: {r.returncode} {r.stdout}")
         r = call(p, cfg, "run_state.py", "finding", d, "K1", "drugie ustalenie")
-        check("zamknię" in r.stdout and "control" not in r.stdout,
+        check("closed" in r.stdout and "control:" not in r.stdout,
               f"PR-14: komunikat po zapisie ustalenia odsyła kontrolę do zamknięcia zadania, nie każe jej podać od razu: {r.stdout}")
 
     # agent przeglądu: etykiety ustaleń i reguła nowej rundy

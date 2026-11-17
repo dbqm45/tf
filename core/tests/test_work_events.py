@@ -84,7 +84,7 @@ def main() -> int:
 
         # przełącznik wyłączony (domyślnie): pętla działa jak dotąd — pytanie to blok STOP
         r = call(p, rs, "block", d, "K1", "--question", QUESTION)
-        check(r.returncode == 2 and "loop.blocked_slices" in r.stdout and "--code pytanie" in r.stdout
+        check(r.returncode == 2 and "loop.blocked_slices" in r.stdout and "--code question" in r.stdout
               and not events(p) and (task(p).get("slices") or {}).get("K1", {}).get("state") != "blocked",
               f"WE-1: bez przełącznika `block` odmawia i wskazuje STOP z kodem pytanie: {r.returncode} {r.stdout}")
         call(p, rs, "step", d, "K1", "R1", "test", "run")
@@ -99,7 +99,7 @@ def main() -> int:
               f"WE-3: z przełącznikiem STOP z pytaniem o jeden kawałek jest odrzucany, gdy jest co robić dalej: {r.returncode} {r.stdout}")
         r = call(p, rs, "block", d, "K1", "--question", QUESTION)
         ev = events(p)
-        check(r.returncode == 0 and "Dalej: K2" in r.stdout and task(p)["slices"]["K1"].get("state") == "blocked"
+        check(r.returncode == 0 and "Next: K2" in r.stdout and task(p)["slices"]["K1"].get("state") == "blocked"
               and task(p)["slices"]["K1"].get("reason") == QUESTION,
               f"WE-4: block blokuje tylko K1 i wskazuje niezależny kawałek K2: {r.returncode} {r.stdout} {task(p).get('slices')}")
         check(len(ev) == 1 and ev[0].get("type") == "question" and ev[0].get("slice") == "K1"
@@ -112,10 +112,10 @@ def main() -> int:
         # kolejność wg zależności: K3 (bez dopisku) zależy od K2, K4 zależy od zablokowanego K1
         done(p, d, "K2", "msg.py")
         r = call(p, rs, "next", d)
-        check(r.returncode == 0 and "Dalej: K3" in r.stdout, f"WE-7: po K2 kolej na K3 (zależy od poprzedniego): {r.stdout}")
+        check(r.returncode == 0 and "Next: K3" in r.stdout, f"WE-7: po K2 kolej na K3 (zależy od poprzedniego): {r.stdout}")
         done(p, d, "K3", "i18n.py")
         r = call(p, rs, "next", d)
-        check(r.returncode == 0 and "Dalej: STOP" in r.stdout and QUESTION in r.stdout and "--code pytanie" in r.stdout
+        check(r.returncode == 0 and "Next: STOP" in r.stdout and QUESTION in r.stdout and "--code question" in r.stdout
               and "K4" in r.stdout,
               f"WE-8: gdy nic niezależnego nie zostało (K4 czeka na K1) → STOP z listą pytań: {r.stdout}")
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
@@ -127,7 +127,7 @@ def main() -> int:
               f"WE-10: odpowiedź zapisuje się z identyfikatorem człowieka (--by human:<id>): {r.returncode} {r.stdout}")
         r = call(p, rs, "answer", d, "K1", "Nie, tylko postój jednorazowy", "--by", "human:anna")
         ev = events(p)
-        check(r.returncode == 0 and "Dalej: K1" in r.stdout and task(p)["slices"]["K1"].get("state") != "blocked"
+        check(r.returncode == 0 and "Next: K1" in r.stdout and task(p)["slices"]["K1"].get("state") != "blocked"
               and len(ev) == 2 and ev[1].get("type") == "answer" and ev[1].get("by") == "human:anna"
               and ev[1].get("text") == "Nie, tylko postój jednorazowy" and ev[1].get("slice") == "K1",
               f"WE-11: answer odblokowuje K1, zapisuje odpowiedź i wskazuje go jako następny: {r.returncode} {r.stdout} {ev}")
@@ -141,7 +141,7 @@ def main() -> int:
         switch(p, True)
         call(p, rs, "step", d, "K1", "R1", "test", "run")
         r = call(p, rs, "block", d, "K1", "--question", QUESTION)
-        check(r.returncode == 0 and "Dalej: STOP" in r.stdout and "--code pytanie" in r.stdout,
+        check(r.returncode == 0 and "Next: STOP" in r.stdout and "--code question" in r.stdout,
               f"WE-13: plan bez dopisków „po:” — pytanie w K1 nie zostawia nic do zrobienia: {r.stdout}")
         # pytanie o całe zadanie: STOP od razu, bez blokowania kawałka
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION, "--task")

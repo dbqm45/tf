@@ -64,7 +64,7 @@ def main() -> int:
         before = (p / CHANGES / "PROJ-123" / "task.json").read_text(encoding="utf-8")
         r = run(p, "start", "PROJ-123", "--title", "Inny tytuł")
         check(r.returncode == 1 and (p / CHANGES / "PROJ-123" / "task.json").read_text(encoding="utf-8") == before
-              and "już istnieje" in r.stdout, f"TS-3: ponowny start nie nadpisuje zadania: {r.returncode} {r.stdout}")
+              and "already exists" in r.stdout, f"TS-3: ponowny start nie nadpisuje zadania: {r.returncode} {r.stdout}")
 
         for bad in ("abc", "../x", "proj-1", "PROJ 1", "PROJ-"):
             r = run(p, "start", bad, "--title", "x")
@@ -147,7 +147,7 @@ def main() -> int:
         check(states("EV-1") == {"K1": "verified"}, f"TS-23: zielony dowód na bieżących plikach → zweryfikowany: {states('EV-1')}")
         (p / "src" / "fees.py").write_text("CAP = 4500\n", encoding="utf-8")
         r = run(p, "status", "EV-1")
-        check(states("EV-1") == {"K1": "unverified"} and "zmienion" in r.stdout and "K1" in r.stdout,
+        check(states("EV-1") == {"K1": "unverified"} and "changed" in r.stdout and "K1" in r.stdout,
               f"TS-24: zmiana pliku po dowodzie → niezweryfikowany, z powodem: {r.stdout}")
         r = run(p, "stage", "EV-1", "review")
         check(r.returncode == 1 and "K1" in r.stdout and task(p, "EV-1")["stage"] == "intake",
@@ -316,7 +316,7 @@ def main() -> int:
               f"TS-60: zapisy zadań nie zakładają INDEX.md; cięcia są na liście: {index_rows(c)}")
         r = run(c, "list")
         line = next((ln for ln in r.stdout.splitlines() if "CHG-12-TSK-57" in ln), "")
-        check("cięcie TSK-57 zmiany CHG-12" in line, f"TS-61: lista pokazuje cięcie i jego zmianę: {r.stdout}")
+        check("cut TSK-57 of the change CHG-12" in line, f"TS-61: lista pokazuje cięcie i jego zmianę: {r.stdout}")
         r = run(c, "list", "--json")
         try:
             rows = {x["key"]: x for x in json.loads(r.stdout)}
@@ -326,7 +326,7 @@ def main() -> int:
               and "change" not in rows.get("PROJ-9", {"change": 1}),
               f"TS-62: list --json podaje zmianę i cięcie tylko dla zadania cięcia: {r.stdout[:400]}")
         r = run(c, "status", "CHG-12-TSK-57")
-        check("cięcie TSK-57 zmiany CHG-12" in r.stdout, f"TS-63: status pokazuje cięcie i jego zmianę: {r.stdout}")
+        check("cut TSK-57 of the change CHG-12" in r.stdout, f"TS-63: status pokazuje cięcie i jego zmianę: {r.stdout}")
         r = run(c, "start", "CHG-12-TSK-60", "--title", "x", "--cut", "TSK-60")
         r2 = run(c, "start", "CHG-12-TSK-61", "--title", "x", "--change", "CHG-12")
         check(r.returncode == 2 and r2.returncode == 2 and not task(c, "CHG-12-TSK-60") and not task(c, "CHG-12-TSK-61"),

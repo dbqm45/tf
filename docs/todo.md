@@ -776,7 +776,18 @@ treści (angielska), bez równoległej polskiej.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
-  - [ ] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku).
+  - [ ] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
+    M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
+    tools, editorial, ux. Docstringi i komentarze w kodzie to dokumentacja opiekunów — poza tym etapem.
+    - [x] M1 (2026-11-17): skrypty skilla tf (`run_state`, `run_report`, `intake`, `plan_drift`, `security_scan`),
+      `task_state.py` (`tf status`, `tf task …`) i `task_weight.py` — komunikaty, etykiety wyjścia (`Input/Key/Next`,
+      `Next: S3`, `What happened/What is needed/Question/Then`), wartości JSON `intake` (`issue/cut/resume/file/content/
+      none`, `task/question/quick`, `card/address/organisation`; polskie słowa na wejściu nadal działają), raport
+      przebiegu z nagłówkiem „Postponed for a decision” (pdi czyta oba od pdi#181), etykiety wag `light/normal/full`.
+      Odczyt starych danych przyjmuje polskie formy (`## Zamiar zmiany`, `Źródło:`, `powód:`/`waga`, `## Bezpieczeństwo`).
+      **Naprawione błędy:** komunikaty podawały polecenia, które skrypt odrzucał — `--code pytanie` (×2),
+      `--code srodowisko`, `step … kod run`, kody „testy/skan/pytanie” w limicie rund (test K-8/K-9 sprawdza odtąd każde
+      `--code`/`step` w komunikatach); `task_weight` odcinał zamiar zmiany tylko pod polskim nagłówkiem (W-24b).
   - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:

@@ -216,8 +216,8 @@ def main() -> int:
 
         # brak zdalnego repozytorium: zamiast próby push — wskazanie zatrzymania z kodem srodowisko (pomiar po kroku G)
         r = call(p, rs, "pr-body", d, "--base", "main")
-        check("zdalnego" in r.stdout and "--code srodowisko" in r.stdout and "git push" not in r.stdout.split("⚠", 1)[-1][:40],
-              f"PB-25: bez zdalnego repozytorium pr-body mówi, żeby nie wypychać, i podaje STOP z kodem srodowisko: {r.stdout}")
+        check("no remote" in r.stdout and "--code environment" in r.stdout and "git push" not in r.stdout.split("⚠", 1)[-1][:40],
+              f"PB-25: bez zdalnego repozytorium pr-body mówi, żeby nie wypychać, i podaje STOP z kodem environment: {r.stdout}")
         bare = Path(t) / "remote.git"
         git(Path(t), "init", "-q", "--bare", str(bare))
         git(p, "remote", "add", "origin", str(bare))

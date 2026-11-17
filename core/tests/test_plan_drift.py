@@ -76,7 +76,7 @@ def main() -> int:
               f"P-6: zmiany spoza planu (bez .tf/): {out.get('unplanned')}")
         check(out.get("coverage") == 75 and out.get("tests_changed") == 1, f"P-7: pokrycie planem 3/4 i testy: {out}")
         r = run(str(run_dir), "--base", "main", cwd=repo)
-        check(r.returncode == 0 and "spoza planu" in r.stdout and "src/util/helpers.py" in r.stdout and "75%" in r.stdout,
+        check(r.returncode == 0 and "outside the plan" in r.stdout and "src/util/helpers.py" in r.stdout and "75%" in r.stdout,
               f"P-8: tekst: {r.stdout}")
         r = run(str(repo / "nie-ma"), cwd=repo)
         check(r.returncode == 2, "P-9: brak katalogu przebiegu → kod 2")

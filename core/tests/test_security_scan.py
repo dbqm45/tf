@@ -266,18 +266,18 @@ def main() -> int:
         check(r.returncode == 0 and v.get("status") == "PASS" and not v.get("errors") and not v.get("audits"),
               f"N-1: package.json bez zależności → PASS bez błędu i bez audytu: {r.returncode} {r.stdout[:400]}")
         check(not [c for c in log_of(log) if c[0] in ("npm", "pip-audit")], f"N-2: audyt nie uruchomiony: {log_of(log)}")
-        check(v.get("skipped") and "package.json" in v["skipped"][0] and "bez zależności" in v["skipped"][0],
+        check(v.get("skipped") and "package.json" in v["skipped"][0] and "without dependencies" in v["skipped"][0],
               f"N-3: werdykt mówi, że audyt pominięto (manifest bez zależności): {v.get('skipped')}")
         r = run("scan", "--out", str(nout), "--slice", "K1", "--attempt", "1", cwd=nd)
         summary = (nout / "attempt-1" / "summary.md").read_text(encoding="utf-8") if (nout / "attempt-1" / "summary.md").is_file() else ""
-        check(r.returncode == 0 and "GATE K1: PASS" in r.stdout and "audyt zależności pominięty" in r.stdout.lower()
-              and "audyt zależności pominięty" in summary.lower() and "bez zależności" in summary,
+        check(r.returncode == 0 and "GATE K1: PASS" in r.stdout and "dependency audit skipped" in r.stdout.lower()
+              and "dependency audit skipped" in summary.lower() and "without dependencies" in summary,
               f"N-4: linia skanu i summary.md mówią o pominiętym audycie: {r.stdout} | {summary}")
         for section in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
             write(nd, "package.json", '{"name": "p", "%s": {"left-pad": "1.3.0"}}\n' % section)
             r = run("scan", "--out", str(nout), "--json", cwd=nd)
             v = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
-            check(r.returncode == 1 and any("bez lockfile'a" in e for e in v.get("errors", [])) and not v.get("skipped"),
+            check(r.returncode == 1 and any("without a lockfile" in e for e in v.get("errors", [])) and not v.get("skipped"),
                   f"N-5: {section} bez lockfile'a → błąd jak dotąd: {r.returncode} {r.stdout[:400]}")
         write(nd, "package.json", "{nie json\n")
         r = run("scan", "--out", str(nout), "--json", cwd=nd)
@@ -286,7 +286,7 @@ def main() -> int:
         # karencja spójna ze skanem: bez zależności → PASS z tym samym powodem; z zależnościami bez lockfile'a → FAIL
         git(nd, "checkout", "-q", "--", "package.json")
         r = run("cooldown", cwd=nd)
-        check(r.returncode == 0 and "bez zależności" in r.stdout, f"N-7: karencja: package.json bez zależności → PASS: {r.stdout}")
+        check(r.returncode == 0 and "without dependencies" in r.stdout, f"N-7: karencja: package.json bez zależności → PASS: {r.stdout}")
         write(nd, "package.json", '{"name": "p", "dependencies": {"left-pad": "1.3.0"}}\n')
         r = run("cooldown", cwd=nd)
         check(r.returncode == 1 and "lockfile" in r.stdout and "package.json" in r.stdout,
@@ -337,7 +337,7 @@ def main() -> int:
         check("fake.sql-injection" in fb and "src/orders.py:1" in fb, f"L-2: ustalenie zapisane dla następnej próby: {fb}")
         check("STOP" not in r.stdout, f"L-3: po próbie 1 jeszcze bez STOP: {r.stdout}")
         r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "2", cwd=repo)
-        check(r.returncode == 1 and "STOP — K2" in r.stdout and "Powód:" in r.stdout and "src/orders.py:1" in r.stdout,
+        check(r.returncode == 1 and "STOP — K2" in r.stdout and "Reason:" in r.stdout and "src/orders.py:1" in r.stdout,
               f"L-4: FAIL próby 2 → blok STOP: {r.stdout}")
         write(repo, "src/orders.py", 'q = db.execute("SELECT * FROM o WHERE id=?", (user_id,))\n')
         r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "2", cwd=repo)
@@ -350,7 +350,7 @@ def main() -> int:
         check("FAIL" in first and "fake.sql-injection src/orders.py:1" in first and (out / "attempt-1" / "semgrep.sarif").is_file()
               and (out / "attempt-1" / "verdict.json").is_file(), f"L-7: wynik próby 1 zachowany po próbie 2: {first[:300]}")
         fb = (out / "feedback.md").read_text(encoding="utf-8") if (out / "feedback.md").is_file() else ""
-        check("brak blokujących" in fb and "fake.sql-injection" not in fb, f"L-8: feedback.md z ostatniej próby: {fb}")
+        check("no blocking findings" in fb and "fake.sql-injection" not in fb, f"L-8: feedback.md z ostatniej próby: {fb}")
         check(not (out / "summary.md").exists() and not list(out.glob("*.sarif")) and not (out / "verdict.json").exists(),
               f"L-9: bez wyniku próby poza attempt-<k>: {sorted(p.name for p in out.iterdir())}")
         git(repo, "add", "src/orders.py")

@@ -114,7 +114,7 @@ def main() -> int:
         cur = meta(d).get("current") or {}
         check(cur.get("k") == "K1" and (cur.get("rounds") or [{}])[-1].get("scope") == "pass",
               f"DN-5: zapisany zaliczony przegląd zakresu bieżącej rundy: {cur}")
-        check("- [x] K1" in plan_text(p) and "- [ ] K2" in plan_text(p) and "Dalej: K2" in r.stdout,
+        check("- [x] K1" in plan_text(p) and "- [ ] K2" in plan_text(p) and "Next: K2" in r.stdout,
               f"DN-6: kawałek odhaczony, wyjście podaje następny: {r.stdout} {plan_text(p)}")
 
         # ponowienie: nic nowego do zatwierdzenia, bez nowego commita, kod 0
@@ -140,7 +140,7 @@ def main() -> int:
               f"DN-8: done zapisuje przegląd bieżącej rundy (R2), R1 zostaje fail: {r.returncode} {r.stdout}{r.stderr} {rounds}")
         check(log[0].count("Kawałek K2") == 1 and "Flag: imp_1_paragon" in log[0],
               f"DN-9: treść „Kawałek” nie jest dublowana, flaga zadania dodaje stopkę: {log[:1]}")
-        check("- [x] K2" in plan_text(p) and "zakończenie" in r.stdout,
+        check("- [x] K2" in plan_text(p) and "finishing" in r.stdout,
               f"DN-10: ostatni kawałek odhaczony, wyjście mówi o zakończeniu: {r.stdout}")
 
         # plik zmieniony po dowodzie: odmowa
