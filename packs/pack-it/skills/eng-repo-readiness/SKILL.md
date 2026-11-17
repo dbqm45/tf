@@ -75,7 +75,7 @@ ustalenia wysokiej wagi). Skrypt niczego nie uruchamia — audyt i listę testó
    Procedura i progi: `references/developer-loop.md`.
 5. **Werdykt** (informuje, nie blokuje; nigdy nie rekomenduje zmiany stacku):
    - stack: `gotowe` / `gotowe-z-kompensacją` / `duże-tarcie`;
-   - projekt: `zdrowe` / `wymaga-uwagi` / `krytyczne` (krytyczne podatności, brak runnera testów, ≥ 3 luki wysokie).
+   - projekt: `healthy` (zdrowy) / `needs-attention` (wymaga uwagi) / `critical` (krytyczny) (krytyczne podatności, brak runnera testów, ≥ 3 luki wysokie).
 6. **Lista poprawek** w kolejności wpływu na pracę agenta (brak testów > niski alert audytu): co · dlaczego dla
    agenta · konkretne polecenie · wysiłek (szybko < 5 min / średnio 15–30 min / duże > 1 h). Nic nie naprawiasz sam.
 

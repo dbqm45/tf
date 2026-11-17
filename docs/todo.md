@@ -597,11 +597,19 @@ treści (angielska), bez równoległej polskiej.
 - [x] Etap 2a–2b — klucze metadanych skilli i modułów, poziomy ważności (#287); pytanie niżej o pola metadanych
   rozstrzygnięte: po angielsku.
 - [x] Etap 2c — stan zadania, pętla, profile, kody STOP, migracja danych projektu (#288, wydanie 11.0.0).
-- [ ] Etap 2d — pozostałe identyfikatory: zbiory wartości w nakładkach (wymiary audytu kodu, pewność reguł w dossier,
-  statusy rekonstrukcji, kategorie skanera standardów), klucze dziennika decyzji pdi, `opis` w scenariuszach i
-  `metric_watch`, nazwy plików zakładanych w `docs/project/`, pole „Dotyczy” lekcji.
-- [ ] Etap 3 — składnia planu i specyfikacji (`· pliki:`, `· kryteria:`, `· po: brak`, `## Kryteria`,
-  „Zakładając / Gdy / Wtedy”) po angielsku razem z tłumaczeniem treści skilla `tf` i szablonów; skrypty przyjmują
+- [x] Etap 2d — wymiary, głębokość i blokery audytu kodu (oraz nazwy plików `code-audit*.md`), pola wpisu dziennika
+  decyzji pdi (`sent`, `date`, `by`, `kind`, `why`, … z migracją `decisions.md`), `description` zamiast `opis`
+  (`control_band`, `metric_watch`, scenariusz ES; poprawka listy profili po #288), schemat przeglądu AI w CI
+  (`verdict`, `findings`, `APPROVED|NEEDS_ATTENTION|REJECTED`, `critical|major|minor`), werdykty `readiness_check`
+  i `tf onboard`, flaga `profile.py --team-only`.
+- [ ] Etap 2e — reszta zbiorów wartości: werdykty `pr_budget`, kontrole `instructions_lint` i `analyze` (OK / UWAGA /
+  BŁĄD, czytane przez `tf.py`), werdykty `facts.py` (niepotwierdzone, sprzeczne, źródło skilla), pozostałe polskie
+  flagi CLI; przed zmianą każdy zbiór razem z czytelnikami i testami (grep po wartościach w cudzysłowie).
+- [ ] Etap 3 — składnia dokumentów: planu i specyfikacji (`· pliki:`, `· kryteria:`, `· po: brak`, `## Kryteria`,
+  „Zakładając / Gdy / Wtedy”), nagłówki i pola dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod /
+  do weryfikacji), sekcje raportu rekonstrukcji, kolumny planu wydań pdi (`PLAN_COLUMNS`), etykiety decyzji
+  qa-change-review, pole „Dotyczy” lekcji i nazwy plików zakładanych w `docs/project/` (`<data>-przeglad.md`)
+  po angielsku razem z tłumaczeniem treści skilla `tf` i szablonów; skrypty przyjmują
   stare słowa przez jedno wydanie, migracja przepisuje `plan.md`/`spec.md` otwartych zadań.
 - [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty; instrukcja językowa
   (`tf language pl`) każe odpowiadać i pisać dokumenty dla człowieka po polsku.

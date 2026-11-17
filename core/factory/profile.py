@@ -5,7 +5,7 @@ Profil kosztów zespołu — jeden przełącznik między ceną a jakością.
   python3 .tf/factory/profile.py                 # aktywny profil, modele tierów i ustawienia sesji
   python3 .tf/factory/profile.py economy       # przełącz (też: balanced, quality)
   python3 .tf/factory/profile.py quality --dry-run
-  python3 .tf/factory/profile.py economy --tylko-zespol   # bez zmian w .claude/settings.local.json
+  python3 .tf/factory/profile.py economy --team-only   # bez zmian w .claude/settings.local.json
 
 Profil (.tf/config/config.yaml → profiles) robi dwie rzeczy:
 1. nadpisuje model i effort tierów (fast/std/deep), więc po przebudowaniu wszyscy agenci i persony dostają
@@ -80,7 +80,7 @@ def show(cfg: dict) -> int:
     print(f"Aktywny profil: {active}" + ("" if PROFILE_FILE.exists() else " (domyślny)"))
     for name, prof in (cfg.get("profiles") or {}).items():
         mark = "→" if name == active else " "
-        print(f" {mark} {name:<13} {prof.get('opis', '')}")
+        print(f" {mark} {name:<13} {prof.get('description', '')}")
     print("\nTiery w aktywnym profilu:")
     for tier, t in effective_tiers(cfg, active).items():
         print(f"  {tier:<5} {t.get('model', '?'):<7} effort {t.get('effort') or 'domyślny modelu'}")
@@ -92,7 +92,7 @@ def show(cfg: dict) -> int:
 def main(argv: list[str]) -> int:
     cfg = load_cfg()
     args = [a for a in argv[1:] if not a.startswith("--")]
-    dry, tiers_only = "--dry-run" in argv, "--tylko-zespol" in argv
+    dry, tiers_only = "--dry-run" in argv, "--team-only" in argv
     if "--help" in argv or "-h" in argv:
         print(__doc__)
         return 0
@@ -123,7 +123,7 @@ def main(argv: list[str]) -> int:
             new_local[k] = v
 
     tiers = effective_tiers(cfg, name)
-    print(f"Profil: {name} — {profiles[name].get('opis', '')}")
+    print(f"Profil: {name} — {profiles[name].get('description', '')}")
     print("Tiery: " + ", ".join(f"{t} → {v.get('model')}{'/' + v['effort'] if v.get('effort') else ''}"
                                 for t, v in tiers.items()))
     print("Sesja (.claude/settings.local.json):" + ("\n" + "\n".join(changes) if changes else " bez zmian"))

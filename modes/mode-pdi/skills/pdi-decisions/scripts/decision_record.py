@@ -16,22 +16,22 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision add CHG-12 --statement "…" --why "…" \
       --kind product --by "kto" [--date RRRR-MM-DD] [--source-kind claude-cli] [--drafted-by ai]
       [--finding DES-001:TSK-1 [--effect resolve|accept_risk|dismiss|confirm]]
-      dopisuje zatwierdzoną decyzję do decisions.md (ref CHG-12/Dn, id puste, wyslano: nie); z --finding to odpowiedź
-      na ustalenie ci_for_sdlc (pole `ustalenie`, statement = odpowiedź), którą ci_for_sdlc czyta z repo (PRB-16)
+      dopisuje zatwierdzoną decyzję do decisions.md (ref CHG-12/Dn, id puste, sent: no); z --finding to odpowiedź
+      na ustalenie ci_for_sdlc (pole `finding`, statement = odpowiedź), którą ci_for_sdlc czyta z repo (PRB-16)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision pending [--change CHG-12]
       JSON niewysłanych decyzji z gotowymi argumentami record_decision (MCP pdi)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision mark CHG-12/D1 --id DEC-41
-      wpisuje numer nadany przez rejestr pdi i wyslano: tak
+      wpisuje numer nadany przez rejestr pdi i sent: yes
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision export
       JSON wszystkich decyzji projektu (z numerem i stanem wysłania)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate CHG-12 --gate B1 --outcome approved \
       --id DEC-41 [--by pdi] [--date RRRR-MM-DD] [--why "…"] [--answers PLIK]
-      decyzja ze skrzynki pdi (gate.decided, wejścia szablonu sdlc-phase.yml) jako wpis z numerem i wyslano: tak;
+      decyzja ze skrzynki pdi (gate.decided, wejścia szablonu sdlc-phase.yml) jako wpis z numerem i sent: yes;
       ponowienie z tym samym numerem nic nie dopisuje; --answers: JSON [{question, answer}] — odpowiedzi człowieka na
-      pytania z `## Pytania do bramki` (kontrakt pdi 0.12.0, pole answers), w wpisie jako pary `pytanie`/`odpowiedz`
+      pytania z `## Pytania do bramki` (kontrakt pdi 0.12.0, pole answers), w wpisie jako pary `question`/`answer`
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision import CHG-12 --json PLIK
       decyzje zmiany z rejestru pdi (links.chg; JSON lista {id, statement, why, decided_at, decided_by, kind,
-      source_kind, drafted_by, answers?}) jako wpisy z numerem, wyslano: tak i pochodzenie: pdi; decyzja, której numer
+      source_kind, drafted_by, answers?}) jako wpisy z numerem, sent: yes i origin: pdi; decyzja, której numer
       już jest w decisions.md, jest pomijana (ponowienie nic nie dopisuje)
 
 Kod wyjścia: 0 — w porządku, 1 — błędy (z podpowiedzią), 2 — złe wywołanie.
@@ -55,11 +55,11 @@ OUTCOMES = ("approved", "changes_requested", "rejected")   # gate.decided w kont
 KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
 # source.kind decyzji z kontraktu pdi 0.10.0 (decyzje z pdi: konsola, ci_for_sdlc, spotkania)
 SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual", "console", "ci_for_sdlc", "meeting")
-ENTRY = ("ref", "id", "wyslano", "kiedy", "kto", "rodzaj", "dlaczego", "zrodlo", "szkic",
-         "ustalenie", "skutek",   # odpowiedź na ustalenie ci_for_sdlc
-         "pochodzenie")           # pdi — wpis z rejestru pdi (decision import)
+ENTRY = ("ref", "id", "sent", "date", "by", "kind", "why", "source", "drafted_by",
+         "finding", "effect",   # odpowiedź na ustalenie ci_for_sdlc
+         "origin")           # pdi — wpis z rejestru pdi (decision import)
 # Para wierszy odpowiedzi na pytanie bramki (kontrakt pdi 0.12.0, answers); w wpisie może być ich kilka.
-ANSWER_KEYS = ("pytanie", "odpowiedz")
+ANSWER_KEYS = ("question", "answer")
 ORIGINS = ("pdi",)
 TEXT_MAX = 2000   # jeden wiersz wpisu z danych z pdi
 # Id ustalenia ci_for_sdlc (reguła:element[:szczegół], np. DES-001:TSK-1) i skutek odpowiedzi (DECISION_EFFECTS w ci_for_sdlc).
@@ -175,9 +175,9 @@ def parse_entries(path: Path) -> list[dict]:
             out.append(cur)
         elif cur is not None and line.startswith("- ") and ":" in line:
             k, _, v = line[2:].partition(":")
-            if k.strip() == "pytanie":
+            if k.strip() == "question":
                 cur.setdefault("answers", []).append([v.strip(), None])
-            elif k.strip() == "odpowiedz":
+            elif k.strip() == "answer":
                 if cur.get("answers") and cur["answers"][-1][1] is None:
                     cur["answers"][-1][1] = v.strip()
                 else:
@@ -194,7 +194,7 @@ def one_line(text, limit: int = TEXT_MAX) -> str:
 
 
 def answers_lines(answers: list) -> str:
-    return "".join(f"- pytanie: {one_line(q)}\n- odpowiedz: {one_line(a)}\n" for q, a in answers)
+    return "".join(f"- question: {one_line(q)}\n- answer: {one_line(a)}\n" for q, a in answers)
 
 
 def load_answers(path: str) -> list:
@@ -222,9 +222,9 @@ def as_record(e: dict, change_header: dict) -> dict:
     links = {"chg": chg}
     if change_header.get("source"):
         links["prb"] = change_header["source"]
-    return {"statement": e["statement"], "why": e.get("dlaczego", ""), "kind": e.get("rodzaj", ""),
-            "source": {"kind": e.get("zrodlo", "")}, "drafted_by": e.get("szkic", ""),
-            "decided_by": e.get("kto", ""), "decided_at": e.get("kiedy", ""), "links": links}
+    return {"statement": e["statement"], "why": e.get("why", ""), "kind": e.get("kind", ""),
+            "source": {"kind": e.get("source", "")}, "drafted_by": e.get("drafted_by", ""),
+            "decided_by": e.get("by", ""), "decided_at": e.get("date", ""), "links": links}
 
 
 def all_entries(change: str | None = None) -> list[tuple[dict, dict]]:
@@ -253,13 +253,13 @@ def decision_add(a) -> int:
         return 1
     n = 1 + max([int(e["ref"].rsplit("D", 1)[1]) for e in parse_entries(f) if re.search(r"/D\d+$", e["ref"])] or [0])
     ref = f"{a.key}/D{n}"
-    entry = (f"\n## {a.statement.strip()}\n- ref: {ref}\n- id:\n- wyslano: nie\n- kiedy: {a.date or dt.date.today().isoformat()}\n"
-             f"- kto: {a.by.strip()}\n- rodzaj: {a.kind}\n- dlaczego: {a.why.strip()}\n- zrodlo: {a.source_kind}\n"
-             f"- szkic: {a.drafted_by}\n")
+    entry = (f"\n## {a.statement.strip()}\n- ref: {ref}\n- id:\n- sent: no\n- date: {a.date or dt.date.today().isoformat()}\n"
+             f"- by: {a.by.strip()}\n- kind: {a.kind}\n- why: {a.why.strip()}\n- source: {a.source_kind}\n"
+             f"- drafted_by: {a.drafted_by}\n")
     if a.finding:
-        entry += f"- ustalenie: {a.finding}\n" + (f"- skutek: {a.effect}\n" if a.effect else "")
+        entry += f"- finding: {a.finding}\n" + (f"- effect: {a.effect}\n" if a.effect else "")
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
-    print(f"✓ {ref} w {f} (wyslano: nie)")
+    print(f"✓ {ref} w {f} (sent: no)")
     return 0
 
 
@@ -292,12 +292,12 @@ def decision_gate(a) -> int:
     why = " ".join((a.why or "").split())
     why = f"{why} (decyzja w skrzynce bramek pdi, {a.id})" if why else (
         f"decyzja w skrzynce bramek pdi ({a.id}); uzasadnienie w rejestrze pdi")
-    entry = (f"\n## Bramka {a.gate.strip()}: {a.outcome}\n- ref: {ref}\n- id: {a.id}\n- wyslano: tak\n"
-             f"- kiedy: {a.date or dt.date.today().isoformat()}\n- kto: {a.by.strip()}\n- rodzaj: gate\n"
-             f"- dlaczego: {one_line(why)}\n- zrodlo: manual\n- szkic: human\n" + answers_lines(answers))
+    entry = (f"\n## Bramka {a.gate.strip()}: {a.outcome}\n- ref: {ref}\n- id: {a.id}\n- sent: yes\n"
+             f"- date: {a.date or dt.date.today().isoformat()}\n- by: {a.by.strip()}\n- kind: gate\n"
+             f"- why: {one_line(why)}\n- source: manual\n- drafted_by: human\n" + answers_lines(answers))
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
     told = f", odpowiedzi na pytania: {len(answers)}" if answers else ""
-    print(f"✓ {ref} w {f} ({a.id}, wyslano: tak{told})")
+    print(f"✓ {ref} w {f} ({a.id}, sent: yes{told})")
     return 0
 
 
@@ -349,10 +349,10 @@ def decision_import(a) -> int:
         n += 1
         ref = f"{a.key}/D{n}"
         source = d.get("source_kind") if d.get("source_kind") in SOURCE_KINDS else "manual"
-        text += (f"\n## {one_line(d['statement'], 300)}\n- ref: {ref}\n- id: {d['id']}\n- wyslano: tak\n"
-                 f"- kiedy: {d['decided_at']}\n- kto: {one_line(d['decided_by'], 200)}\n- rodzaj: {d['kind']}\n"
-                 f"- dlaczego: {one_line(d['why'])}\n- zrodlo: {source}\n- szkic: {d['drafted_by']}\n"
-                 f"- pochodzenie: pdi\n"
+        text += (f"\n## {one_line(d['statement'], 300)}\n- ref: {ref}\n- id: {d['id']}\n- sent: yes\n"
+                 f"- date: {d['decided_at']}\n- by: {one_line(d['decided_by'], 200)}\n- kind: {d['kind']}\n"
+                 f"- why: {one_line(d['why'])}\n- source: {source}\n- drafted_by: {d['drafted_by']}\n"
+                 f"- origin: pdi\n"
                  + answers_lines([(x["question"], x["answer"]) for x in d.get("answers") or []
                                   if x["question"].strip() and x["answer"].strip()]))
         added.append(f"{ref} ({d['id']})")
@@ -366,7 +366,7 @@ def decision_import(a) -> int:
 
 def decision_pending(change: str | None) -> int:
     items = [{"ref": e["ref"], "record_decision": as_record(e, h)} for e, h in all_entries(change)
-             if e.get("wyslano") != "tak"]
+             if e.get("sent") != "yes"]
     print(json.dumps(items, ensure_ascii=False, indent=2))
     return 0
 
@@ -385,19 +385,19 @@ def decision_mark(ref: str, dec_id: str) -> int:
         return 1
     text = f.read_text(encoding="utf-8")
     comments = [m.span() for m in re.finditer(r"<!--.*?-->", text, flags=re.S)]
-    block = next((m for m in re.finditer(rf"^- ref: {re.escape(ref)}\n- id:[ \t]*\n- wyslano: nie$", text, flags=re.M)
+    block = next((m for m in re.finditer(rf"^- ref: {re.escape(ref)}\n- id:[ \t]*\n- sent: no$", text, flags=re.M)
                   if not any(a <= m.start() < b for a, b in comments)), None)
     if not block:
-        print(f"✗ {ref}: wpis nie ma wierszy `- id:` i `- wyslano: nie` zaraz po `- ref:` — popraw ręcznie")
+        print(f"✗ {ref}: wpis nie ma wierszy `- id:` i `- sent: no` zaraz po `- ref:` — popraw ręcznie")
         return 1
-    f.write_text(text[:block.start()] + f"- ref: {ref}\n- id: {dec_id}\n- wyslano: tak" + text[block.end():],
+    f.write_text(text[:block.start()] + f"- ref: {ref}\n- id: {dec_id}\n- sent: yes" + text[block.end():],
                  encoding="utf-8")
-    print(f"✓ {ref} → {dec_id} (wyslano: tak)")
+    print(f"✓ {ref} → {dec_id} (sent: yes)")
     return 0
 
 
 def decision_export() -> int:
-    out = [{"ref": e["ref"], "id": e.get("id") or None, "sent": e.get("wyslano") == "tak", **as_record(e, h)}
+    out = [{"ref": e["ref"], "id": e.get("id") or None, "sent": e.get("sent") == "yes", **as_record(e, h)}
            for e, h in all_entries()]
     print(json.dumps(out, ensure_ascii=False, indent=2))
     return 0
@@ -423,33 +423,33 @@ def check_entries(path: Path) -> list[str]:
         seen.add(r)
         if e.get("id") and not KEY.match(e["id"]):
             errs.append(f"{r}: id '{e['id']}' — numer z rejestru pdi, np. DEC-41")
-        if e.get("wyslano") not in ("tak", "nie"):
-            errs.append(f"{r}: wyslano tak albo nie")
-        if e.get("wyslano") == "tak" and not e.get("id"):
-            errs.append(f"{r}: wyslano: tak bez numeru id")
-        if e.get("rodzaj") not in KINDS:
-            errs.append(f"{r}: rodzaj '{e.get('rodzaj')}' spoza {', '.join(KINDS)}")
-        if e.get("zrodlo") not in SOURCE_KINDS:
-            errs.append(f"{r}: zrodlo '{e.get('zrodlo')}' spoza {', '.join(SOURCE_KINDS)}")
-        if e.get("szkic") not in ("ai", "human"):
-            errs.append(f"{r}: szkic ai albo human")
-        if not DATE.match(e.get("kiedy", "")):
-            errs.append(f"{r}: kiedy RRRR-MM-DD")
-        errs += [f"{r}: brak pola {k}" for k in ("kto", "dlaczego") if not e.get(k)]
-        finding = e.get("ustalenie")
+        if e.get("sent") not in ("yes", "no"):
+            errs.append(f"{r}: sent yes albo no")
+        if e.get("sent") == "yes" and not e.get("id"):
+            errs.append(f"{r}: sent: yes bez numeru id")
+        if e.get("kind") not in KINDS:
+            errs.append(f"{r}: kind '{e.get('kind')}' spoza {', '.join(KINDS)}")
+        if e.get("source") not in SOURCE_KINDS:
+            errs.append(f"{r}: source '{e.get('source')}' spoza {', '.join(SOURCE_KINDS)}")
+        if e.get("drafted_by") not in ("ai", "human"):
+            errs.append(f"{r}: drafted_by ai albo human")
+        if not DATE.match(e.get("date", "")):
+            errs.append(f"{r}: date RRRR-MM-DD")
+        errs += [f"{r}: brak pola {k}" for k in ("by", "why") if not e.get(k)]
+        finding = e.get("finding")
         if finding is not None and not FINDING.match(finding):
-            errs.append(f"{r}: ustalenie '{finding}' — id ustalenia ci_for_sdlc, np. DES-001:TSK-1")
+            errs.append(f"{r}: finding '{finding}' — id ustalenia ci_for_sdlc, np. DES-001:TSK-1")
         elif finding and finding.split(":")[1] not in items:
-            errs.append(f"{r}: ustalenie {finding} dotyczy elementu spoza {path.parent.name} i jej cięć")
-        if e.get("skutek") is not None and (not finding or e["skutek"] not in EFFECTS):
-            errs.append(f"{r}: skutek {'/'.join(EFFECTS)} i tylko przy polu ustalenie")
-        if e.get("pochodzenie") is not None and e["pochodzenie"] not in ORIGINS:
-            errs.append(f"{r}: pochodzenie '{e['pochodzenie']}' — tylko {', '.join(ORIGINS)} (decision import)")
-        if e.get("pochodzenie") == "pdi" and not e.get("id"):
-            errs.append(f"{r}: pochodzenie: pdi bez numeru id")
+            errs.append(f"{r}: finding {finding} dotyczy elementu spoza {path.parent.name} i jej cięć")
+        if e.get("effect") is not None and (not finding or e["effect"] not in EFFECTS):
+            errs.append(f"{r}: effect {'/'.join(EFFECTS)} i tylko przy polu finding")
+        if e.get("origin") is not None and e["origin"] not in ORIGINS:
+            errs.append(f"{r}: origin '{e['origin']}' — tylko {', '.join(ORIGINS)} (decision import)")
+        if e.get("origin") == "pdi" and not e.get("id"):
+            errs.append(f"{r}: origin: pdi bez numeru id")
         for q, ans in e.get("answers") or []:
             if not q or not ans:
-                errs.append(f"{r}: wiersze `- pytanie:` i `- odpowiedz:` idą parami, oba niepuste")
+                errs.append(f"{r}: wiersze `- question:` i `- answer:` idą parami, oba niepuste")
     return errs
 
 
@@ -519,7 +519,7 @@ def validate(v, s: dict, at: str) -> list[str]:
     return errs
 
 
-PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odblokowuje", "weryfikacja")
+PLAN_COLUMNS = ("wydanie", "flaga", "kind", "wartość", "wymagania", "odblokowuje", "weryfikacja")
 FOUNDATION = re.compile(r"^(fundament|foundation|f|f-\d+)$", re.I)   # jak REL-008 w ci_for_sdlc (connectors/repo.ts)
 FOUNDATION_VALUE = re.compile(r"^\((fundament|foundation)\)", re.I)
 REQUIREMENT_ID = re.compile(r"\b[A-Z][A-Z0-9]*-\d+\b")
@@ -564,7 +564,7 @@ def check_plan(d: Path) -> list[str]:
     known = set(rows) | set(h["tasks"] if isinstance(h.get("tasks"), list) else [h["tasks"]] if h.get("tasks") else [])
     errs = []
     for t, row in rows.items():
-        if FOUNDATION.match(row.get("rodzaj") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
+        if FOUNDATION.match(row.get("kind") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
             unblocks = REQUIREMENT_ID.findall(row.get("odblokowuje") or "")
             if not unblocks:
                 errs.append(f"plan.md: {t} — fundament bez „Odblokowuje” (cięcia tej zmiany, których wymaga); "

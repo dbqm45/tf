@@ -63,6 +63,20 @@ def main() -> int:
         check("default_mode: normal" in (p / ".tf/config/me.yaml").read_text(encoding="utf-8")
               and json.loads(prof.read_text())["profile"] == "quality", "MV-5: me.yaml i profil kosztów")
         check(mig.migrate_values(p, dry=False) == [], "MV-6: ponowna migracja nic nie zmienia")
+
+        dec = p / "docs/project/changes/CHG-1/decisions.md"
+        dec.parent.mkdir(parents=True)
+        dec.write_text("## Kto: zespół\n- ref: CHG-1/D1\n- id:\n- wyslano: nie\n- kiedy: 2026-11-01\n- kto: Ola\n"
+                       "- rodzaj: product\n- dlaczego: kto pyta, dostaje odpowiedź\n- zrodlo: manual\n- szkic: ai\n"
+                       "- ustalenie: DES-001:TSK-1\n- skutek: resolve\n- pochodzenie: pdi\n- pytanie: Jak?\n"
+                       "- odpowiedz: Tak.\n\n## D2\n- ref: CHG-1/D2\n- wyslano: tak\n", encoding="utf-8")
+        mig.migrate_values(p, dry=False)
+        d = dec.read_text(encoding="utf-8")
+        check("- sent: no\n- date: 2026-11-01\n- by: Ola\n- kind: product\n- why: kto pyta, dostaje odpowiedź\n"
+              "- source: manual\n- drafted_by: ai\n- finding: DES-001:TSK-1\n- effect: resolve\n- origin: pdi\n"
+              "- question: Jak?\n- answer: Tak.\n" in d and "## Kto: zespół" in d and "- sent: yes" in d,
+              f"MV-7: decisions.md (pdi) — pola wpisu i sent yes/no; nagłówek i treść bez zmian: {d}")
+        check(mig.migrate_values(p, dry=False) == [], "MV-8: ponowna migracja decisions.md nic nie zmienia")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów migracji wartości")

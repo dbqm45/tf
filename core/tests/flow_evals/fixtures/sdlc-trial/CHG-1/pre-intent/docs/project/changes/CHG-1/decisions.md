@@ -16,10 +16,10 @@ source_reported_at: 2026-10-30
 ## Bramka triage: approved
 - ref: CHG-1/D1
 - id: DEC-0001
-- wyslano: tak
-- kiedy: 2026-10-30
-- kto: pdi
-- rodzaj: gate
-- dlaczego: zgłoszenie PRB-1 przyjęte w pdi; zmiana otwarta jako CHG-1
-- zrodlo: claude-cli
-- szkic: ai
+- sent: yes
+- date: 2026-10-30
+- by: pdi
+- kind: gate
+- why: zgłoszenie PRB-1 przyjęte w pdi; zmiana otwarta jako CHG-1
+- source: claude-cli
+- drafted_by: ai

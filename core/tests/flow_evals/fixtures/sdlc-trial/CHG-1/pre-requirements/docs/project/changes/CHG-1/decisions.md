@@ -16,24 +16,24 @@ source_reported_at: 2026-10-30
 ## Bramka triage: approved
 - ref: CHG-1/D1
 - id: DEC-0001
-- wyslano: tak
-- kiedy: 2026-10-30
-- kto: pdi
-- rodzaj: gate
-- dlaczego: zgłoszenie PRB-1 przyjęte w pdi
-- zrodlo: claude-cli
-- szkic: ai
+- sent: yes
+- date: 2026-10-30
+- by: pdi
+- kind: gate
+- why: zgłoszenie PRB-1 przyjęte w pdi
+- source: claude-cli
+- drafted_by: ai
 
 ## Bramka B1: approved — wariant A
 - ref: CHG-1/D2
 - id: DEC-0002
-- wyslano: tak
-- kiedy: 2026-10-31
-- kto: człowiek
-- rodzaj: gate
-- dlaczego: wariant A (data wdrożenia w stopce za flagą show_last_deployed) rozwiązuje problem zaufania
+- sent: yes
+- date: 2026-10-31
+- by: człowiek
+- kind: gate
+- why: wariant A (data wdrożenia w stopce za flagą show_last_deployed) rozwiązuje problem zaufania
   odwiedzającego; warianty B i C wymagają narzędzi deweloperskich
-- zrodlo: claude-cli
-- szkic: ai
-- pytanie: Czy flaga ma być on/off per odwiedzający czy globalna?
-- odpowiedz: globalna, bo mamy jeden rollout do prod
+- source: claude-cli
+- drafted_by: ai
+- question: Czy flaga ma być on/off per odwiedzający czy globalna?
+- answer: globalna, bo mamy jeden rollout do prod

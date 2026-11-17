@@ -16,7 +16,7 @@ nie uruchamia. `verify.sh` to jedno polecenie weryfikacji (lint → typy → tes
 w Windows bramka dostaje samo polecenie testów. Istniejącego verify.sh ani konfiguracji bramki nie nadpisuje.
 Blokujących kontroli jest najwyżej pięć — reszta to ostrzeżenia.
 
-Werdykt: gotowe / gotowe-z-brakami / brak-testow. Kod wyjścia: 0 — są testy; 1 — brak polecenia testów (fabryka nie
+Werdykt: ready / ready-with-gaps / no-tests. Kod wyjścia: 0 — są testy; 1 — brak polecenia testów (fabryka nie
 sprawdzi zmian) albo --verify czerwone; 2 — błąd wywołania. Tylko biblioteka standardowa, bez sieci.
 """
 from __future__ import annotations
@@ -161,7 +161,7 @@ def detect(root: Path) -> dict:
              "instructions": [f for f in ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md") if (root / f).is_file()],
              "gitignore": (root / ".gitignore").is_file()}
     missing = [k for k in ("lint",) if k not in commands] + [k for k in ("lockfile", "ci", "gitignore") if not facts[k]]
-    verdict = "brak-testow" if "test" not in commands else ("gotowe-z-brakami" if missing else "gotowe")
+    verdict = "no-tests" if "test" not in commands else ("ready-with-gaps" if missing else "ready")
     return {"families": families, "commands": commands, "facts": facts, "missing": missing, "verdict": verdict}
 
 
@@ -174,9 +174,9 @@ GAPS = {   # kolejność = kolejność naprawy: najpierw to, bez czego fabryka n
     "ci": "Brak CI. Kontrole działają tylko na komputerze autora; nikt nie sprawdza ich po wypchnięciu zmian.",
     "gitignore": "Brak .gitignore. Do repozytorium mogą trafić pliki tymczasowe i sekrety.",
 }
-VERDICTS = {"gotowe": "Repozytorium jest gotowe do pracy z fabryką.",
-            "gotowe-z-brakami": "Repozytorium nadaje się do pracy z fabryką, ale ma braki opisane niżej.",
-            "brak-testow": "Repozytorium nie jest gotowe: fabryka nie ma czym sprawdzić zmian."}
+VERDICTS = {"ready": "Repozytorium jest gotowe do pracy z fabryką.",
+            "ready-with-gaps": "Repozytorium nadaje się do pracy z fabryką, ale ma braki opisane niżej.",
+            "no-tests": "Repozytorium nie jest gotowe: fabryka nie ma czym sprawdzić zmian."}
 
 
 FLAG_FILES = ("config/flags.json", "flags.json", "feature-flags.json", "config/feature-flags.json",
@@ -404,7 +404,7 @@ def main(argv: list[str]) -> int:
         return 2 if unknown else 0
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     det = detect(root)
-    code = 1 if det["verdict"] == "brak-testow" else 0
+    code = 1 if det["verdict"] == "no-tests" else 0
     if "--json" in flags:
         print(json.dumps(det, ensure_ascii=False, indent=2))
         return code

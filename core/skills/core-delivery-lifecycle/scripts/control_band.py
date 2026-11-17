@@ -69,7 +69,7 @@ def evaluate(values: list[float], baseline: int, side: str = "both") -> dict:
     def add(rule: int, i: int) -> None:
         if not any(v["rule"] == rule and v["index"] == baseline + i for v in violations):
             violations.append({"rule": rule, "index": baseline + i, "value": pts[i], "z": round(z[i], 2),
-                               "opis": RULE_TEXT[rule]})
+                               "description": RULE_TEXT[rule]})
 
     for i, zi in enumerate(z):
         if counts(side, zi) and abs(zi) > 3:
@@ -105,7 +105,7 @@ def main(argv: list[str]) -> int:
     if a.format == "text":
         print(f"poziom: {result['tier']} · średnia {result['mean']} · σ {result['sd']} · punkty {result['evaluated']}")
         for v in result["violations"]:
-            print(f"  reguła {v['rule']} ({v['opis']}): punkt {v['index']}, wartość {v['value']}, z = {v['z']}")
+            print(f"  reguła {v['rule']} ({v['description']}): punkt {v['index']}, wartość {v['value']}, z = {v['z']}")
     else:
         print(json.dumps(result, ensure_ascii=False))
     return 0
