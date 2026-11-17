@@ -11,7 +11,7 @@ Sprawdza:
   „zmierzono”, „uruchomiono”),
 - ostrzeżenie: liczbę z jednostką (%, pp, USD, zł, EUR, ms, s, min, h, GB, MB, razy) w linii tekstu bez śladu
   pochodzenia w tej samej linii — `polecenie` albo `ścieżka`, link, adres URL, plik:linia, „źródło”, „wg”/„według”,
-  [założenie], [niezweryfikowane], przypis [^n]; dokument z deklaracją źródła danych („Pliki:”, „Dane:”,
+  [assumption], [unverified] (też dawne [założenie], [niezweryfikowane]), przypis [^n]; dokument z deklaracją źródła danych („Pliki:”, „Dane:”,
   „Źródło danych:” albo „surowe wyniki w” zaraz przed `ścieżką`, także w środku zdania) ma ją dla wszystkich liczb.
 Pomija bloki kodu, nagłówki i — dla ostrzeżeń — wiersze tabel (źródło tabeli stoi zwykle nad nią).
 Pierwsza linia wyniku: „Werdykt: OK | WARNINGS | ERRORS”. Kod wyjścia: 1 przy błędach (z --strict także przy
@@ -27,12 +27,13 @@ from pathlib import Path
 
 FRACTION = re.compile(r"(?<![\d.,])(\d+)\s*/\s*(\d+)\s*\(\s*(\d+(?:[.,]\d+)?)\s*%\s*\)")
 DATE = re.compile(r"(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)")
-STATE_WORDS = re.compile(r"stan na|dostęp|pobran\w*|zmierzon\w*|uruchomion\w*|sprawdzon\w*", re.I)
+STATE_WORDS = re.compile(r"stan na|dostęp|pobran\w*|zmierzon\w*|uruchomion\w*|sprawdzon\w*"
+                         r"|as of|accessed|fetched|measured|checked", re.I)
 CLAIM = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)?\s*(%|pp\b|p\.p\.|USD\b|zł\b|PLN\b|EUR\b|ms\b|s\b|min\b|h\b|GB\b|MB\b"
-                   r"|razy\b|×)", re.I)
-DOC_SOURCE = re.compile(r"(?<![\w])(pliki|dane|źródło danych|surowe wyniki(?: w)?)\s*\**\s*:?\s*\**\s*`[^`]+`", re.I)
-SOURCE = re.compile(r"`[^`]+`|https?://|\]\([^)]+\)|\b[\w./-]+\.\w+:\d+|źródł\w*|\bwg\b|według|\[założenie\]"
-                    r"|\[niezweryfikowane\]|\[\^[^\]]+\]", re.I)
+                   r"|razy\b|times\b|×)", re.I)
+DOC_SOURCE = re.compile(r"(?<![\w])(pliki|dane|źródło danych|surowe wyniki(?: w)?|files|data|data source|raw results(?: in)?)\s*\**\s*:?\s*\**\s*`[^`]+`", re.I)
+SOURCE = re.compile(r"`[^`]+`|https?://|\]\([^)]+\)|\b[\w./-]+\.\w+:\d+|źródł\w*|\bwg\b|według|\bsources?\b|according to"
+                    r"|\[(?:założenie|niezweryfikowane|assumption|unverified)\]|\[\^[^\]]+\]", re.I)
 
 
 def check_text(text: str, label: str, today: dt.date) -> tuple[list[str], list[str]]:
@@ -68,7 +69,7 @@ def check_text(text: str, label: str, today: dt.date) -> tuple[list[str], list[s
         claims = [c.group(0) for c in CLAIM.finditer(line)]
         if claims and not declared and not SOURCE.search(line):
             warnings.append(f"{where}: {', '.join(claims)} — liczba bez śladu pochodzenia w tej linii "
-                            f"(polecenie, ścieżka, link, źródło albo [założenie])")
+                            f"(polecenie, ścieżka, link, źródło albo [assumption])")
     return errors, warnings
 
 

@@ -55,6 +55,17 @@ def stale_tocs(root: Path) -> list[str]:
             if build.with_toc(p.read_text(encoding="utf-8")) != p.read_text(encoding="utf-8")]
 
 
+def toc_of(root: Path, text: str) -> str:
+    spec = importlib.util.spec_from_file_location("tf_build_toc", root / "core" / "factory" / "build.py")
+    sys.path.insert(0, str(root / "core" / "factory"))
+    try:
+        build = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(build)
+    finally:
+        sys.path.pop(0)
+    return build.with_toc(text)
+
+
 def main() -> int:
     fails, total = [], 0
 
@@ -67,6 +78,16 @@ def main() -> int:
     # T-1: źródło fabryki ma aktualne spisy treści (inaczej każdy projekt dostaje plik, który build.py przepisze)
     stale = stale_tocs(ROOT)
     check(not stale, f"T-1: nieaktualny spis treści w źródle ({len(stale)}): {stale[:5]}")
+    # T-1b: spis treści w języku pliku — angielski plik dostaje „Contents”, polski zostaje przy „Spis treści”
+    en = long_reference(None).replace("# Długi", "# Long").replace("Linia", "Line").replace("sekcji", "of section")
+    en = en.replace("Pierwsza", "First").replace("Druga", "Second").replace("Trzecia", "Third")
+    pl = long_reference(None).replace("Linia", "Zażółć gęślą jaźń, linia")
+    out_en, out_pl = toc_of(ROOT, en), toc_of(ROOT, pl)
+    check("> **Contents:** First · Second · Third" in out_en and "Spis treści" not in out_en,
+          f"T-1b: angielski plik referencyjny dostaje „Contents”: {out_en[:120]!r}")
+    check("> **Spis treści:** Pierwsza · Druga · Trzecia" in out_pl, f"T-1b: polski zostaje przy „Spis treści”: {out_pl[:120]!r}")
+    check(toc_of(ROOT, out_pl.replace("Spis treści", "Contents")) == out_pl,
+          "T-1b: zamiana znacznika na właściwy dla języka (stary znacznik rozpoznany i usunięty)")
 
     with tempfile.TemporaryDirectory() as t:
         src = Path(t) / "src"

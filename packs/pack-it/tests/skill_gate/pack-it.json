@@ -180,15 +180,15 @@
   "offline": "2026-11-16"
  },
  "eng-clean-code": {
-  "fingerprint": "43f5c1f1f412b226",
-  "offline": "2026-11-16"
+  "fingerprint": "f93f7febc98d4c95",
+  "offline": "2026-11-17"
  },
  "eng-code-audit": {
   "fingerprint": "f5670af533f15cb1",
   "offline": "2026-11-17"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "24a7017b23304f75",
+  "fingerprint": "ae6a417574cefacc",
   "offline": "2026-11-17"
  },
  "eng-continuous-delivery": {
@@ -244,8 +244,8 @@
   "offline": "2026-11-17"
  },
  "eng-testing": {
-  "fingerprint": "3f5c336adb13bb23",
-  "offline": "2026-11-16"
+  "fingerprint": "b7b3b7bff0782ac0",
+  "offline": "2026-11-17"
  },
  "fe-architecture": {
   "fingerprint": "b33e3887eab62f2a",

@@ -27,14 +27,15 @@ def main() -> int:
         doc = root / "docs" / "r.md"
         doc.write_text("# R\n- `src/app.ts:2` i `src/app.ts:9`\n- `python3 tools/build.py`\n- `src/new.ts` (do utworzenia)\n"
                        "- [ok](../src/app.ts) [zły](../src/x.ts) https://example.com/a.md\n- `docs/project/wip/<nazwa>.md`\n"
-                       "```\n`src/w-bloku.ts`\n```\n- `ddd-deep-modeling/test-zmiennosci`\n")
+                       "```\n`src/w-bloku.ts`\n```\n- `ddd-deep-modeling/test-zmiennosci`\n"
+                       "- `src/later.ts` (to be created)\n- `src/next.ts` (new)\n- `src/maybe.ts` (planned)\n")
         r = run([str(CHECK), str(doc)], env)
         out = r.stdout
         # 1. wykryte dokładnie: zły numer linii, brak tools/build.py, brak ../src/x.ts
         if r.returncode != 1 or "plik ma 3 linii" not in out or "tools/build.py" not in out or "../src/x.ts" not in out:
             fails.append(f"grounding_check: nie wykrył błędnych odwołań: {out}")
         # 2. pominięte: planowane, wzorce, blok kodu, identyfikatory niebędące ścieżkami
-        if any(x in out for x in ("src/new.ts", "<nazwa>", "w-bloku", "test-zmiennosci", "example.com")):
+        if any(x in out for x in ("src/new.ts", "src/later.ts", "src/next.ts", "src/maybe.ts", "<nazwa>", "w-bloku", "test-zmiennosci", "example.com")):
             fails.append(f"grounding_check: fałszywe alarmy: {out}")
         # 3. tryb --warn: kod 0
         if run([str(CHECK), str(doc), "--warn"], env).returncode != 0:

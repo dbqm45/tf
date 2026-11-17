@@ -105,6 +105,14 @@ def main() -> int:
         (d / "bez.md").write_text("# Pomiar\n\nNie mamy danych: wynik 5 USD.\n", encoding="utf-8")
         r = run(["bez.md"], d)
         check(r.stdout.startswith("Werdykt: WARNINGS"), f"C-15: słowo „danych” bez ścieżki to nie deklaracja: {r.stdout}")
+        (d / "en.md").write_text("# Measurement\n\nAbout 40% of users will not notice [assumption].\n"
+                                 "Latency dropped by 120 ms according to the vendor.\n"
+                                 "Coverage is 70% [unverified].\n"
+                                 f"As of {TOMORROW}: all tests pass.\n", encoding="utf-8")
+        r = run(["en.md"], d)
+        check("en.md:3" not in r.stdout and "en.md:4" not in r.stdout and "en.md:5" not in r.stdout
+              and "en.md:6" in r.stdout,
+              f"C-16: English markers [assumption]/[unverified], 'according to' and a future 'As of' date: {r.stdout}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recenzenta liczb")
     return 1 if fails else 0
 

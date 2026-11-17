@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SOON_DAYS = 30
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 REVIEW_RE = re.compile(r"^  review:[ \t]*(.*?)[ \t]*$", re.M)
-UNVERIFIED = "[niezweryfikowane"
+UNVERIFIED = ("[unverified", "[niezweryfikowane")   # pl: sprzed 14.x
 
 DEFAULT_POLICY = {
     "default_months": 12,
@@ -100,7 +100,7 @@ def review_date(text: str) -> str | None:
 
 def unverified(skill_dir: Path) -> int:
     files = [skill_dir / "SKILL.md", *sorted((skill_dir / "references").glob("*.md"))]
-    return sum(p.read_text(encoding="utf-8", errors="ignore").count(UNVERIFIED) for p in files if p.is_file())
+    return sum(p.read_text(encoding="utf-8", errors="ignore").count(m) for p in files if p.is_file() for m in UNVERIFIED)
 
 
 def scan(root: Path, today: dt.date) -> list[dict]:
@@ -197,12 +197,12 @@ def main(argv: list[str]) -> int:
     else:
         for r in rows:
             if r["status"] != "ok":
-                extra = f", [niezweryfikowane]: {r['unverified']}" if r["unverified"] else ""
+                extra = f", [unverified]: {r['unverified']}" if r["unverified"] else ""
                 print(f"  {'✗' if r['status'] in ('overdue', 'invalid') else '⚠'} {r['skill']:<36} "
                       f"{LABEL[r['status']]} ({r['due'] or '—'}{extra})")
         print(f"{'✓' if not s['overdue'] and not s['invalid'] else '⚠'} skilli: {len(rows)}, po terminie: "
               f"{s['overdue']}, termin ≤{SOON_DAYS} dni: {s['soon']}, bez terminu: {s['missing']}, "
-              f"znaczników [niezweryfikowane]: {s['unverified']}")
+              f"znaczników [unverified]: {s['unverified']}")
         if s["overdue"]:
             print("  Po przeglądzie (fakty sprawdzone w źródłach z datą): python3 .tf/factory/freshness.py --reviewed <skill>")
     return 1 if opts.get("--strict") and (s["overdue"] or s["invalid"]) else 0

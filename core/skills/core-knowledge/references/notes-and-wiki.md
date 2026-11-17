@@ -1,75 +1,75 @@
-# Notatki zespołu, wiki i świeżość wiedzy
+# Team notes, wiki and freshness of knowledge
 
-Spis treści: 1. Trzy strefy zapisu · 2. Nagłówek notatki · 3. Pojęcie przypięte do ścieżek · 4. Plik instrukcji czy
-pipeline w kodzie · 5. Świeżość generowanej wiedzy
+Contents: 1. Three write zones · 2. The note header · 3. A concept pinned to paths · 4. An instructions file or
+a pipeline in code · 5. Freshness of generated knowledge
 
-## 1. Trzy strefy zapisu
-| Strefa | Gdzie w fabryce | Kto zmienia |
+## 1. Three write zones
+| Zone | Where in the factory | Who changes it |
 |---|---|---|
-| Źródła | `.claude/knowledge/<id>/` (`kb.py ingest`), rejestry `zrodla.json` | nikt nie edytuje; tylko ponowne pobranie |
-| Strony utrzymywane przez agenta (streszczenia, mapy, indeksy) | `docs/knowledge/**`, z polem `sources` | agent; **aktualizacja** istniejącej strony, nie przepisywanie od nowa |
-| Notatki i decyzje zespołu | `docs/knowledge/**`, `docs/project/decisions.md` | tylko za zgodą człowieka |
+| Sources | `.claude/knowledge/<id>/` (`kb.py ingest`), the `zrodla.json` registries | nobody edits; only fetching again |
+| Pages maintained by the agent (summaries, maps, indexes) | `docs/knowledge/**`, with a `sources` field | the agent; an **update** of an existing page, not rewriting it from scratch |
+| The team's notes and decisions | `docs/knowledge/**`, `docs/project/decisions.md` | only with the human's consent |
 
-Każde wczytanie nowych źródeł zaczynasz od planu: które strony powstaną, a które się zmienią. Człowiek widzi go
-przed zapisem.
+Every load of new sources you start with a plan: which pages will be created and which will change. The human sees it
+before the write.
 
-## 2. Nagłówek notatki
-Notatka w `docs/knowledge/` ma krótki frontmatter, żeby inne agenty czytały ją bez zgadywania:
+## 2. The note header
+A note in `docs/knowledge/` has a short frontmatter, so other agents read it without guessing:
 ```yaml
 type: decision        # decision | concept | partner | metric | runbook
 owner: zespół-płatności
 status: stable        # draft | stable | deprecated
 sources: [docs/project/decisions.md#D-14, https://… (2026-10-20)]
-code_refs:            # sekcja 3
+code_refs:            # section 3
   - {path: src/payments/api/, level: constraint}
-verified: 2026-10-30  # wpisuje TYLKO człowiek; agent ustawia generated: <data>
+verified: 2026-10-30  # ONLY the human writes it; the agent sets generated: <date>
 stale_after: 2027-04-30
 ```
-- **Pole `verified` wpisuje tylko człowiek.** Agent zapisuje `generated` z datą. Strona „zweryfikowana przez
-  agenta” nie jest zweryfikowana.
-- Opis pojęcia piszesz **słowami, którymi ludzie szukają** (i synonimami: „deploy”, „wdrożenie”, „release”).
-  Wyszukiwanie słowami (BM25, `kb.py search`) nie zna synonimów.
-- Decyzja zapisuje wybrany wariant, warianty odrzucone z powodem i czy kod ją realizuje. Tego agent nie odczyta
-  z repo.
-- Najczęstsze pułapki projektu idą na początek indeksu (`docs/knowledge/index.md`, jeśli go macie) albo do
+- **Only the human writes the `verified` field.** The agent writes `generated` with a date. A page "verified by
+  the agent" is not verified.
+- You describe a concept **in the words people search with** (and synonyms: "deploy", "wdrożenie", "release").
+  Word search (BM25, `kb.py search`) does not know synonyms.
+- A decision records the chosen option, the rejected options with a reason and whether the code implements it. The agent cannot read that
+  from the repo.
+- The project's most common traps go at the start of the index (`docs/knowledge/index.md`, if you have one) or to
   `docs/project/lessons.md`.
-- Ten układ jest zbliżony do pól proponowanych w formacie OKF (`type`, `status`, `stale_after`, `verified`,
-  `index.md`). Zgodności z samym formatem nie sprawdzono [niezweryfikowane]. Przed deklaracją zgodności porównaj
-  ze specyfikacją z datą.
+- This layout is close to the fields proposed in the OKF format (`type`, `status`, `stale_after`, `verified`,
+  `index.md`). Compatibility with the format itself was not checked [unverified]. Before declaring compatibility compare
+  with the specification with a date.
 
-## 3. Pojęcie przypięte do ścieżek
-Ustalenie zespołu działa dopiero wtedy, gdy agent je zobaczy **przed** edycją pliku, a nie na przeglądzie PR.
-- Notatka wskazuje ścieżki, których dotyczy (`code_refs`), z poziomem:
-  - `constraint` — niezmiennik do zachowania (np. zamrożone API); agent może zmieniać plik, ale nie łamie
-    ustalenia;
-  - `hold` — stop: przed zmianą pliku agent pyta człowieka.
-- Przed pierwszą edycją pliku w zadaniu agent szuka notatek, które obejmują jego ścieżkę: `kb.py search "<ścieżka>"`
-  albo `grep -rl "<katalog>" docs/knowledge`. Trafienie cytuje w planie kroku.
-- To samo pole po stronie bramki (reguła „PR rusza obszar przyjętej decyzji”) jest kontrolą po zmianie. Jedno nie
-  zastępuje drugiego.
+## 3. A concept pinned to paths
+A team agreement works only when the agent sees it **before** editing the file, not at PR review.
+- The note points to the paths it concerns (`code_refs`), with a level:
+  - `constraint` — an invariant to keep (e.g. a frozen API); the agent may change the file, but does not break
+    the agreement;
+  - `hold` — stop: before changing the file the agent asks the human.
+- Before the first edit of a file in a task the agent looks for notes that cover its path: `kb.py search "<ścieżka>"`
+  or `grep -rl "<katalog>" docs/knowledge`. It quotes a hit in the step plan.
+- The same field on the gate side (the rule "the PR touches the area of an accepted decision") is a check after the change. One does not
+  replace the other.
 
-## 4. Plik instrukcji czy pipeline w kodzie
-- **Plik instrukcji z etapami** (np. sekcja w `AGENTS.md` albo `CLAUDE.md`) wystarcza dla małej bazy (rzędu kilkuset
-  dokumentów) i na początku, gdy szukacie kształtu wiki.
-- **Pipeline w kodzie**, gdy korpus jest duży, wynik ma być powtarzalny albo wiki zasila dalszą automatykę:
-  - identyfikator strony jako skrót treści lub stabilny klucz (zmiana nazwy pliku nic nie psuje);
-  - kontrakty typów między etapami;
-  - **lint struktury Markdown przed zapisem:** jeden H1, poprawny frontmatter, żywe linki. Dwa H1 albo zepsuty
-    nagłówek po cichu psują kolejne etapy;
-  - wyszukiwanie słowami (BM25) zamiast wektorów dla małej wiki (pack-it: ai-rag dla większych korpusów).
-- Definicje, które muszą być dokładne i mieć właściciela (metryki, schematy, reguły), czytasz deterministycznie
-  z kuratorowanych plików. Wyszukiwanie zostawiasz dla archiwów i treści masowych.
+## 4. An instructions file or a pipeline in code
+- **An instructions file with stages** (e.g. a section in `AGENTS.md` or `CLAUDE.md`) is enough for a small base (of the order of a few hundred
+  documents) and at the start, while you are looking for the shape of the wiki.
+- **A pipeline in code**, when the corpus is large, the result has to be repeatable or the wiki feeds further automation:
+  - a page identifier as a hash of the content or a stable key (renaming a file breaks nothing);
+  - type contracts between stages;
+  - **a lint of the Markdown structure before writing:** one H1, a valid frontmatter, live links. Two H1s or a broken
+    header silently break the next stages;
+  - word search (BM25) instead of vectors for a small wiki (pack-it: ai-rag for larger corpora).
+- Definitions that have to be exact and have an owner (metrics, schemas, rules) you read deterministically
+  from curated files. You leave search for archives and bulk content.
 
-## 5. Świeżość generowanej wiedzy
-Generowany indeks, graf kodu albo mapa dryfuje po cichu: hook raportuje „sukces”, a mapa jest sprzed tygodni
-(pominięte uruchomienie przy obciążeniu, lista rozszerzeń rozjechana ze źródłem, serwer z cache sprzed regeneracji).
-- Każdy generowany artefakt wiedzy ma **znacznik czasu i commit źródła**, z którego powstał.
-- Kontrola w CI (albo przy starcie sesji) porównuje ten commit z `git log -1` na ścieżkach źródłowych i alarmuje po
-  progu (np. więcej niż N commitów albo 24 h różnicy). Sam kod wyjścia hooka nie wystarcza.
-- Dla pobranych źródeł: `kb.py status --max-age <dni>`. Dla notatek: `stale_after` i przegląd właściciela.
-- Dotyczy też map z pack-it: eng-codebase-mapping i każdego cache, który czyta agent.
+## 5. Freshness of generated knowledge
+A generated index, code graph or map drifts silently: the hook reports "success", and the map is weeks old
+(a run skipped under load, a list of extensions out of sync with the source, a server with a cache from before regeneration).
+- Every generated knowledge artifact has **a timestamp and the source commit** it was made from.
+- A check in CI (or at session start) compares that commit with `git log -1` on the source paths and alarms after
+  a threshold (e.g. more than N commits or a 24 h difference). The hook's exit code alone is not enough.
+- For fetched sources: `kb.py status --max-age <dni>`. For notes: `stale_after` and a review by the owner.
+- This also applies to the maps from pack-it: eng-codebase-mapping and every cache the agent reads.
 
-Źródła: R. Brasil Monteiro, „Building a Complete Personal Harness: LLM Wiki…” (2026-05-03); U. Estari,
-„Production-Grade OKF + Graphify Setup” (2026-08-13); C. Core, „The Dev with Two Brains” (2026-10-07; narzędzie
-`okf-agent-memory` niesprawdzone, przed użyciem `skill_audit` i zgoda człowieka); artykuł o wiki z LLM „kod czy
-plik instrukcji” (2026). Liczby i zachowanie narzędzi wg autorów [niezweryfikowane].
+Sources: R. Brasil Monteiro, "Building a Complete Personal Harness: LLM Wiki…" (2026-05-03); U. Estari,
+"Production-Grade OKF + Graphify Setup" (2026-08-13); C. Core, "The Dev with Two Brains" (2026-10-07; the tool
+`okf-agent-memory` unchecked, before use `skill_audit` and the human's consent); an article about LLM wikis "code or
+an instructions file" (2026). Numbers and tool behaviour according to the authors [unverified].

@@ -769,7 +769,16 @@ def render_all() -> dict[str, str]:
 
 
 CATALOG = ROOT / ".claude" / "catalog.md"
-TOC_MARK = "> **Spis treści:**"
+TOC_MARKS = {"en": "> **Contents:**", "pl": "> **Spis treści:**"}   # znacznik w języku pliku; oba rozpoznawane
+TOC_MARK = TOC_MARKS["pl"]
+PL_LETTERS = set("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ")
+
+
+def text_language(text: str) -> str:
+    """`pl` albo `en` po udziale polskich liter poza kodem (ta sama reguła co bramka skilli, krok 5)."""
+    body = re.sub(r"```.*?```|`[^`\n]*`", " ", text, flags=re.S)
+    letters = [c for c in body if c.isalpha()]
+    return "pl" if letters and sum(c in PL_LETTERS for c in letters) / len(letters) >= 0.004 else "en"
 TOC_MIN_LINES = 100   # Anthropic: plik referencyjny > 100 linii ma spis treści (model czyta czasem tylko początek)
 
 
@@ -777,7 +786,7 @@ def with_toc(text: str) -> str:
     """Plik referencyjny z aktualnym spisem treści (jedna linia pod tytułem) albo bez zmian, gdy krótki."""
     lines = []
     for l in text.splitlines():
-        if l.startswith(TOC_MARK):
+        if l.startswith(tuple(TOC_MARKS.values())):
             if lines and not lines[-1].strip():
                 lines.pop()   # pusta linia wstawiona razem ze spisem
             continue
@@ -787,16 +796,17 @@ def with_toc(text: str) -> str:
     for l in lines:
         if l.startswith("```"):
             in_code = not in_code
-        elif not in_code and l.startswith("## ") and l[3:].strip() not in ("Źródła", "Spis treści"):
+        elif not in_code and l.startswith("## ") and l[3:].strip() not in ("Źródła", "Spis treści", "Sources", "Contents"):
             h = l[3:].strip()
             heads.append(h if len(h) <= 60 else h[:60].rsplit(" ", 1)[0] + "…")
     if len(lines) <= TOC_MIN_LINES or len(heads) < 3:
         return body + ("\n" if text.endswith("\n") else "")
-    toc = f"{TOC_MARK} " + " · ".join(heads)
+    mark = TOC_MARKS[text_language(body)]
+    toc = f"{mark} " + " · ".join(heads)
     i = next((k for k, l in enumerate(lines) if l.startswith("# ")), -1)
     out = lines[:i + 1] + ["", toc] + lines[i + 1:] if i >= 0 else [toc, ""] + lines
     # bez podwójnych pustych linii wokół spisu
-    res = "\n".join(out).replace(f"\n\n\n{TOC_MARK}", f"\n\n{TOC_MARK}").replace(toc + "\n\n\n", toc + "\n\n")
+    res = "\n".join(out).replace(f"\n\n\n{mark}", f"\n\n{mark}").replace(toc + "\n\n\n", toc + "\n\n")
     return res + "\n"
 
 
