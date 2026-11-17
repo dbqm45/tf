@@ -646,6 +646,8 @@ treści (angielska), bez równoległej polskiej.
      treści, model go nie czyta), potem `hint_holdout.py` — strojenie i holdout nie niżej niż przed partią; bramka każdego skilla;
      to samo w instalacji `none` (sam rdzeń) i `test_skill_evals.py` tam — polecenia ogólne bez podpowiedzi
      (słowo pospolite w słowach kluczowych zyskuje wagę, gdy polska proza znika z innych skilli; 4b-2: „jaka wersja”);
+     `skill_gate.py --hints` w każdej instalacji (all, pack-it, none, pozostałe nakładki): każdy scenariusz strojenia
+     trafia — przesunięte wagi słów zrzucają pojedyncze skille niezmieniane w partii (4b-3: eng-clean-code, eng-testing);
   3. model (zgoda właściciela: próbka z partii, Haiku, ~2 USD): 3–5 skilli o największym ruchu, scenariusze przed
      i po tłumaczeniu (`run_skill_evals.py --models haiku`); spadek → poprawka przed PR;
   4. pełna macierz `workspace.py check` w CI.
