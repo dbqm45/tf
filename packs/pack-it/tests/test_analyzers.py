@@ -34,7 +34,7 @@ def main() -> int:
         check((MODS / name / "analyzer.yaml").is_file(), f"Z-1: moduł {name} zainstalowany w .tf/factory/analyzers/")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", name], cwd=ROOT, capture_output=True,
                            text=True, timeout=300)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
               f"Z-2: moduł {name} przechodzi bramkę: {r.stdout}{r.stderr}")
     r = subprocess.run([sys.executable, str(ANALYZE), "list"], cwd=ROOT, capture_output=True, text=True, timeout=120)
     check("security" in r.stdout and "architecture" in r.stdout, f"Z-3: tf analyze --list pokazuje moduły: {r.stdout}")

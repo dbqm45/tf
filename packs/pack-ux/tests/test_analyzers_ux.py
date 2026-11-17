@@ -18,7 +18,7 @@ def main() -> int:
             fails.append(f"U-1: moduł {name} zainstalowany w .tf/factory/analyzers/")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", name], cwd=ROOT, capture_output=True,
                            text=True, encoding="utf-8", errors="replace", timeout=300)
-        if not (r.returncode == 0 and r.stdout.startswith("Werdykt: OK")):
+        if not (r.returncode == 0 and r.stdout.startswith("Verdict: OK")):
             fails.append(f"U-2: moduł {name} przechodzi bramkę: {r.stdout}{r.stderr}")
     for f in fails:
         print(f"✗ {f}")

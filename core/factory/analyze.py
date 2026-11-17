@@ -48,21 +48,21 @@ TF = Path(".tf")
 SEVERITY = ["critical", "high", "medium", "low"]
 NOTE = "  ↳ "  # adnotacje rdzenia w liście działań (odtwarzane przy każdej analizie; notatki człowieka zostają)
 DIRS = {
-    "reports": ("Raporty `tf analyze`: przegląd (ten plik po pierwszej analizie), `<moduł>.md` z listą działań "
-                "do odhaczania i `<moduł>.json` z pełną listą ustaleń.", True),
-    "register": ("Rejestr pracy: `items.jsonl`, jedna pozycja na linię (ustalenia analizy; później zadania, pytania, "
-                 "decyzje). Piszą `tf analyze` i persony; odhaczenie w raporcie zmienia status tutaj.", True),
-    "wip": ("Punkty kontrolne pracy w toku (`project_record.py wip`), zakończone w `archive/`.", True),
-    "cache": ("Wyniki pośrednie i odciski analiz (po commicie). Odtwarzalne — można usunąć.", False),
-    "logs": ("Logi pracy fabryki (zużycie, podpowiedzi, bramka jakości). Można usunąć.", False),
-    "runs": ("Przebiegi wykonawcze trybów. Można usunąć po zakończeniu pracy.", False),
-    "backup": ("Kopie plików z aktualizacji i usuwania nakładek. Można usunąć, gdy niepotrzebne.", False),
+    "reports": ("`tf analyze` reports: an overview (this file after the first analysis), `<module>.md` with a list of actions "
+                "to tick off and `<module>.json` with the full list of findings.", True),
+    "register": ("The work register: `items.jsonl`, one item per line (analysis findings; later tasks, questions, "
+                 "decisions). `tf analyze` and the personas write it; ticking in a report changes the status here.", True),
+    "wip": ("Work-in-progress checkpoints (`project_record.py wip`), finished ones in `archive/`.", True),
+    "cache": ("Intermediate results and analysis fingerprints (per commit). Reproducible — can be deleted.", False),
+    "logs": ("The factory's work logs (usage, hints, quality gate). Can be deleted.", False),
+    "runs": ("The modes' execution runs. Can be deleted when the work is done.", False),
+    "backup": ("Copies of files from updates and pack removals. Can be deleted when not needed.", False),
 }
-SHORT = {"reports": "raporty analiz z listą działań", "register": "rejestr pracy (ustalenia, później zadania i decyzje)",
-         "wip": "punkty kontrolne pracy w toku",
-         "cache": "wyniki pośrednie, odtwarzalne", "logs": "logi pracy fabryki", "runs": "przebiegi wykonawcze",
-         "backup": "kopie z aktualizacji"}
-CONFIG = "# Nadpisania konfiguracji fabryki dla tego projektu (nakładane na .tf/factory/config.yaml).\nanalyze:\n  top: 10\n"
+SHORT = {"reports": "analysis reports with a list of actions", "register": "the work register (findings, later tasks and decisions)",
+         "wip": "work-in-progress checkpoints",
+         "cache": "intermediate results, reproducible", "logs": "the factory's work logs", "runs": "execution runs",
+         "backup": "copies from updates"}
+CONFIG = "# Overrides of the factory configuration for this project (applied over .tf/factory/config.yaml).\nanalyze:\n  top: 10\n"
 
 
 # ───────────── narzędzia ─────────────
@@ -70,7 +70,7 @@ CONFIG = "# Nadpisania konfiguracji fabryki dla tego projektu (nakładane na .tf
 def git(root: Path, *args: str, check: bool = True) -> str:
     r = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, errors="replace", timeout=120)
     if check and r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: kod {r.returncode}")
+        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: code {r.returncode}")
     return r.stdout if r.returncode == 0 else ""
 
 
@@ -107,17 +107,17 @@ def cmd_init(root: Path) -> int:
         (base / d).mkdir(parents=True, exist_ok=True)
         readme = base / d / "README.md"
         if not readme.exists():
-            where = "w gicie (instalacja zespołowa)" if in_git else "poza gitem"
+            where = "in git (team installation)" if in_git else "outside git"
             readme.write_text(f"# .tf/{d}/\n\n{text}\n\nGit: {where}.\n", encoding="utf-8")
     cfg = base / "config" / "config.yaml"
     if not cfg.exists():
         cfg.parent.mkdir(parents=True, exist_ok=True)
         cfg.write_text(CONFIG, encoding="utf-8")
     note = git_rules(root)
-    print("✓ .tf/ — wyniki pracy fabryki:")
-    print("  config/       konfiguracja projektu: config.yaml (nadpisania, m.in. analyze.top), własne persony, role, cechy")
+    print("✓ .tf/ — the factory's work results:")
+    print("  config/       the project configuration: config.yaml (overrides, e.g. analyze.top), own personas, roles, traits")
     for d, (text, in_git) in DIRS.items():
-        print(f"  {d + '/':<13} {'git (zespołowa)' if in_git else 'poza gitem':<16} {SHORT[d]}")
+        print(f"  {d + '/':<13} {'git (team)' if in_git else 'outside git':<16} {SHORT[d]}")
     if note:
         print(note)
     return 0
@@ -173,7 +173,7 @@ def applies(m: dict, files: list[str]) -> str | None:
     if not pats:
         return None
     res = [glob_re(p) for p in pats]
-    return None if any(r.match(f) for f in files for r in res) else f"brak plików pasujących do {', '.join(pats)}"
+    return None if any(r.match(f) for f in files for r in res) else f"no files matching {', '.join(pats)}"
 
 
 def repo_files(root: Path) -> list[str]:
@@ -183,14 +183,14 @@ def repo_files(root: Path) -> list[str]:
 def cmd_list(root: Path) -> int:
     mods = discover(root)
     if not mods:
-        print("Brak modułów analizy. Moduły dokładają nakładki (krok 2 planu) albo katalog .tf/analyzers/; "
-              "katalogi: " + ", ".join(str(d) for d in module_dirs(root)))
+        print("No analysis modules. Packs add modules (step 2 of the plan) or the directory .tf/analyzers/; "
+              "directories: " + ", ".join(str(d) for d in module_dirs(root)))
         return 0
     files = repo_files(root)
     for m in mods:
         why = applies(m, files)
         print(f"  {m['name']:<16} {m.get('version', '?'):<8} {m.get('description', '')}"
-              f" — {'stosuje się' if why is None else 'pominięty: ' + why}")
+              f" — {'applies' if why is None else 'skipped: ' + why}")
     return 0
 
 
@@ -215,15 +215,15 @@ def run_script(m: dict, root: Path, files: list[str] | None) -> tuple[list[dict]
     elif tier0.get("script"):
         cmd = [sys.executable, str(m["_dir"] / tier0["script"]), "--root", str(root)]
     else:
-        return [], "brak tier0.script ani tier0.rules w analyzer.yaml"
+        return [], "no tier0.script nor tier0.rules in analyzer.yaml"
     if files is not None:
         cmd += ["--files", ",".join(files)]
     try:
         r = subprocess.run(cmd, cwd=root, capture_output=True, text=True, errors="replace", timeout=600)
     except subprocess.TimeoutExpired:
-        return [], "przekroczony czas 600 s"
+        return [], "time limit of 600 s exceeded"
     if r.returncode != 0:
-        return [], f"kod wyjścia {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}"
+        return [], f"exit code {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}"
     out = []
     for i, line in enumerate(r.stdout.splitlines(), 1):
         if not line.strip():
@@ -231,9 +231,9 @@ def run_script(m: dict, root: Path, files: list[str] | None) -> tuple[list[dict]
         try:
             f = json.loads(line)
         except ValueError:
-            return [], f"linia {i} wyjścia to nie JSON: {line[:120]}"
+            return [], f"output line {i} is not JSON: {line[:120]}"
         if not isinstance(f, dict) or not f.get("rule") or not f.get("file"):
-            return [], f"linia {i}: ustalenie bez pól rule i file"
+            return [], f"line {i}: a finding without the fields rule and file"
         out.append(f)
     return out, None
 
@@ -260,13 +260,13 @@ def analyze_module(m: dict, root: Path, head: str, clean: bool, since: str | Non
     c = load_json(cache)
     if (not os.environ.get("TF_ANALYZE_NO_CACHE") and not since and clean and c.get("commit") == head
             and c.get("version") == version):
-        return c.get("findings", []), None, "wynik z cache (ten sam commit i wersja modułu)"
-    files, scope = None, "całe repozytorium"
+        return c.get("findings", []), None, "a result from the cache (the same commit and module version)"
+    files, scope = None, "the whole repository"
     if since and m.get("incremental", True) is False:
-        since, scope = None, f"całe repozytorium (moduł całościowy — --since {since[:7]} nie zawęża skanu)"
+        since, scope = None, f"the whole repository (a whole-repo module — --since {since[:7]} does not narrow the scan)"
     if since:
         files = [f for f in git(root, "diff", "--name-only", f"{since}..HEAD").splitlines() if f]
-        scope = f"pliki zmienione od {since[:7]} ({len(files)}); ustalenia pozostałych plików z poprzedniej analizy"
+        scope = f"files changed since {since[:7]} ({len(files)}); findings for the other files from the previous analysis"
     raw, err = run_script(m, root, files)
     if err:
         return [], err, scope
@@ -291,14 +291,18 @@ def load_json(p: Path) -> dict:
 
 # ───────────── raport i scalanie ─────────────
 
+# Nagłówki sekcji raportu: angielskie (od 14.x) i dawne polskie — oba czytane przy scalaniu z poprzednim raportem.
+ACTIONS = ("## Recommended actions", "## Rekomendowane działania")
+HISTORY = ("## Analysis history", "## Historia analiz")
 ITEM = re.compile(r"^- \[( |x|X)\] ([A-Z0-9]+-[0-9a-f]{6})\b")
 
 
 def parse_actions(text: str) -> list[dict]:
     """Pozycje listy działań w kolejności: id, checked, header, notes (notatki człowieka)."""
-    if "## Rekomendowane działania" not in text:
+    head = next((h for h in ACTIONS if h in text), None)
+    if head is None:
         return []
-    body = text.split("## Rekomendowane działania", 1)[1].split("\n## ", 1)[0]
+    body = text.split(head, 1)[1].split("\n## ", 1)[0]
     items: list[dict] = []
     for line in body.splitlines():
         mt = ITEM.match(line)
@@ -310,9 +314,10 @@ def parse_actions(text: str) -> list[dict]:
 
 
 def history(text: str) -> list[str]:
-    if "## Historia analiz" not in text:
+    head = next((h for h in HISTORY if h in text), None)
+    if head is None:
         return []
-    return [ln for ln in text.split("## Historia analiz", 1)[1].splitlines() if ln.startswith("- ")]
+    return [ln for ln in text.split(head, 1)[1].splitlines() if ln.startswith("- ")]
 
 
 def header(f: dict, checked: bool) -> str:
@@ -332,9 +337,9 @@ def write_report(m: dict, root: Path, found: list[dict], err: str | None, scope:
         f = now.get(it["id"])
         lines = [header(f, it["checked"]) if f else it["header"]] + it["notes"]
         if f and it["checked"]:
-            lines.append(NOTE + "analiza wciąż widzi problem — sprawdź, czy poprawka objęła ten przypadek")
+            lines.append(NOTE + "the analysis still sees the problem — check whether the fix covered this case")
         if not f and not it["checked"] and not err:
-            lines.append(NOTE + "wygląda na naprawione — potwierdź (odhacz)")
+            lines.append(NOTE + "looks fixed — confirm it (tick it)")
         if f and not it["checked"]:
             open_n += 1
         reg = register.get(it["id"])
@@ -348,27 +353,27 @@ def write_report(m: dict, root: Path, found: list[dict], err: str | None, scope:
             actions.append(header(f, False))
             open_n += 1
     verdict = "ERROR" if err else ("NEEDS_FIX" if open_n else "OK")
-    tiers = "piętro 0 (skrypty); piętra 1–3 (model, przeglądarka, weryfikacja drugim agentem) jeszcze nie istnieją"
-    lines = [f"# {m.get('title', m['name'])} — raport tf analyze",
-             f"Werdykt: {verdict} · {today()} · commit {head[:7]} · moduł {m['name']} {m.get('version', '')} · "
-             f"koszt: 0 USD (piętro 0)", "", "## Zakres", f"- Zbadano: {scope}.", f"- Piętra: {tiers}."]
+    tiers = "floor 0 (scripts); floors 1–3 (model, browser, verification by a second agent) do not exist yet"
+    lines = [f"# {m.get('title', m['name'])} — tf analyze report",
+             f"Verdict: {verdict} · {today()} · commit {head[:7]} · module {m['name']} {m.get('version', '')} · "
+             f"cost: 0 USD (floor 0)", "", "## Scope", f"- Examined: {scope}.", f"- Floors: {tiers}."]
     if err:
-        lines.append(f"- Moduł nie powiódł się: {err}. Brak ustaleń nie jest tu wynikiem.")
-    lines += ["", "## Ustalenia", ""]
+        lines.append(f"- The module failed: {err}. No findings is not a result here.")
+    lines += ["", "## Findings", ""]
     if found:
-        lines += [f"- **{f['id']}** {f.get('severity', '?')} (pewność {f.get('confidence', '?')}) — "
+        lines += [f"- **{f['id']}** {f.get('severity', '?')} (confidence {f.get('confidence', '?')}) — "
                   f"{f.get('title') or f['rule']} — `{f['file']}:{f.get('line', '?')}`"
-                  + (f"; dowód: {f['evidence']}" if f.get("evidence") else "")
-                  + (f"; podstawa: {f['basis']}" if f.get("basis") else "")
-                  + (f"; co zrobić: {f['suggestion']}" if f.get("suggestion") else "") for f in found[:top]]
+                  + (f"; evidence: {f['evidence']}" if f.get("evidence") else "")
+                  + (f"; basis: {f['basis']}" if f.get("basis") else "")
+                  + (f"; what to do: {f['suggestion']}" if f.get("suggestion") else "") for f in found[:top]]
         if len(found) > top:
-            lines.append(f"- … i {len(found) - top} więcej w `{m['name']}.json`.")
+            lines.append(f"- … and {len(found) - top} more in `{m['name']}.json`.")
     else:
-        lines.append("- brak" if not err else "- brak (moduł nie powiódł się)")
+        lines.append("- none" if not err else "- none (the module failed)")
     gone = len(prev_ids - set(now)) if not err else 0
-    hist = history(old) + [f"- {today()} · {head[:7]} · ustaleń: {len(found)} (nowe: {len(set(now) - prev_ids)}, "
-                           f"zniknęło: {gone}) · {verdict}"]
-    lines += ["", "## Rekomendowane działania", "", *(actions or ["- brak"]), "", "## Historia analiz", "", *hist]
+    hist = history(old) + [f"- {today()} · {head[:7]} · findings: {len(found)} (new: {len(set(now) - prev_ids)}, "
+                           f"gone: {gone}) · {verdict}"]
+    lines += ["", ACTIONS[0], "", *(actions or ["- none"]), "", HISTORY[0], "", *hist]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     if not err:
@@ -414,7 +419,7 @@ def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> 
     top = top or int(((cfg.get("analyze") or {}).get("top")) or 10)
     mods = [m for m in discover(root) if not only or m["name"] in only]
     if not mods:
-        print("Brak modułów analizy do uruchomienia (tf analyze --list).")
+        print("No analysis modules to run (tf analyze --list).")
         return 0
     head = git(root, "rev-parse", "HEAD").strip()
     clean = not git(root, "status", "--porcelain", "--", ".", ":(exclude).tf").strip()
@@ -432,17 +437,17 @@ def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> 
         verdict, open_n = write_report(m, root, found, err, scope, head, top, reg)
         failed |= bool(err)
         rows.append(f"| [{name}]({name}.md) | {verdict} | {open_n} | {len(found)} |")
-        print(f"{'✗' if err else '✓'} {name}: {verdict} — ustaleń {len(found)}, do zrobienia {open_n}"
+        print(f"{'✗' if err else '✓'} {name}: {verdict} — findings {len(found)}, to do {open_n}"
               + (f" ({err})" if err else ""))
     save_register(root, reg)
     for m, why in skipped:
-        rows.append(f"| {m['name']} | pominięty: {why} | — | — |")
-        print(f"- {m['name']}: pominięty ({why})")
+        rows.append(f"| {m['name']} | skipped: {why} | — | — |")
+        print(f"- {m['name']}: skipped ({why})")
     (root / TF / "reports" / "README.md").write_text("\n".join(
-        ["# Raporty tf analyze", f"Stan: {today()} · commit {head[:7]}", "",
-         "| Moduł | Werdykt | Do zrobienia | Ustaleń |", "|---|---|---|---|", *rows, "",
-         "Lista działań w raporcie modułu jest widokiem rejestru `.tf/register/items.jsonl`: odhaczenie zmienia "
-         "status pozycji przy następnej analizie."]) + "\n", encoding="utf-8")
+        ["# tf analyze reports", f"State: {today()} · commit {head[:7]}", "",
+         "| Module | Verdict | To do | Findings |", "|---|---|---|---|", *rows, "",
+         "The list of actions in a module report is a view of the register `.tf/register/items.jsonl`: ticking changes "
+         "the item's status at the next analysis."]) + "\n", encoding="utf-8")
     return 1 if failed else 0
 
 
@@ -453,7 +458,7 @@ def gate_module(m: dict) -> tuple[bool, list[str]]:
     cases = sorted(p for p in (m["_dir"] / "fixtures").glob("*") if (p / "expected.json").is_file()) \
         if (m["_dir"] / "fixtures").is_dir() else []
     if not cases:
-        return False, ["brak zestawu testowego fixtures/<przypadek>/{repo/, expected.json}"]
+        return False, ["no test set fixtures/<case>/{repo/, expected.json}"]
     g = m.get("gate") or {}
     min_recall, max_fp = float(g.get("min_recall", 1.0)), int(g.get("max_false_positives", 0))
     want_n = hit_n = fp_n = 0
@@ -462,27 +467,27 @@ def gate_module(m: dict) -> tuple[bool, list[str]]:
         expected = {(e["rule"], e["file"]) for e in json.loads((case / "expected.json").read_text(encoding="utf-8"))}
         raw, err = run_script(m, (case / "repo").resolve(), None)
         if err:
-            return False, lines + [f"{case.name}: moduł nie powiódł się: {err}"]
+            return False, lines + [f"{case.name}: the module failed: {err}"]
         got = {(f["rule"], f["file"]) for f in raw}
         hit, fp = expected & got, got - expected
         want_n, hit_n, fp_n = want_n + len(expected), hit_n + len(hit), fp_n + len(fp)
         miss = sorted(expected - got)
-        lines.append(f"{case.name}: znalezione {len(hit)}/{len(expected)}, fałszywe trafienia {len(fp)}"
-                     + (f"; brak: {miss}" if miss else "") + (f"; fałszywe: {sorted(fp)}" if fp else ""))
+        lines.append(f"{case.name}: found {len(hit)}/{len(expected)}, false positives {len(fp)}"
+                     + (f"; missing: {miss}" if miss else "") + (f"; false: {sorted(fp)}" if fp else ""))
     recall = hit_n / want_n if want_n else 1.0
     ok = recall >= min_recall and fp_n <= max_fp
-    lines.append(f"czułość {recall:.0%} (próg {min_recall:.0%}), fałszywe trafienia {fp_n} (limit {max_fp})")
+    lines.append(f"recall {recall:.0%} (threshold {min_recall:.0%}), false positives {fp_n} (limit {max_fp})")
     return ok, lines
 
 
 def cmd_gate(root: Path, module: str | None) -> int:
     mods = [m for m in discover(root) if not module or m["name"] == module]
     if not mods:
-        print("Werdykt: FAILED — brak modułu" + (f" {module}" if module else "ów"))
+        print("Verdict: FAILED — no module" + (f" {module}" if module else "s"))
         return 1
     results = [(m, *gate_module(m)) for m in mods]
     bad = [m["name"] for m, ok, _ in results if not ok]
-    print("Werdykt: " + ("OK" if not bad else f"FAILED ({', '.join(bad)})"))
+    print("Verdict: " + ("OK" if not bad else f"FAILED ({', '.join(bad)})"))
     for m, ok, lines in results:
         print(f"{'✓' if ok else '✗'} {m['name']}")
         for ln in lines:

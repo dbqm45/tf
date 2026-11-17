@@ -132,7 +132,7 @@ def main() -> int:
 
         # A-3 list
         r = run("list", cwd=repo)
-        check(r.returncode == 0 and "brak modułów" in r.stdout.lower(), f"A-3: list bez modułów mówi to wprost: {r.stdout}")
+        check(r.returncode == 0 and "no analysis modules" in r.stdout.lower(), f"A-3: list bez modułów mówi to wprost: {r.stdout}")
         r = run("list", cwd=repo, env=env)
         check("sec" in r.stdout and "moduł testowy" in r.stdout, f"A-3: list pokazuje moduł z opisem: {r.stdout}")
 
@@ -150,9 +150,9 @@ def main() -> int:
         check(sorted(x["id"] for x in reg) == ids and all(x["status"] == "open" and x["kind"] == "finding" for x in reg),
               f"A-4: rejestr ma pozycję na ustalenie, status open: {reg}")
         text = rep.read_text() if rep.is_file() else ""
-        check(text.splitlines()[1].startswith("Werdykt: NEEDS_FIX") if len(text.splitlines()) > 1 else False,
+        check(text.splitlines()[1].startswith("Verdict: NEEDS_FIX") if len(text.splitlines()) > 1 else False,
               f"A-4: druga linia raportu to werdykt: {text[:200]}")
-        check("## Zakres" in text and "piętro 0" in text and "Historia analiz" in text,
+        check("## Scope" in text and "floor 0" in text and "Analysis history" in text,
               f"A-4: raport ma zakres (piętra) i historię: {text}")
         (repo / "src" / "a.py").write_text("\n\nx = 1\n# TODO-SEC HIGH token\n# TODO-SEC drobne\n# TODO-SEC drobne\n")
         commit(repo)
@@ -165,7 +165,7 @@ def main() -> int:
         (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 1\n")
         run("run", cwd=repo, env={**env, "TF_ANALYZE_NO_CACHE": "1"})
         text = rep.read_text()
-        ust = text.split("## Ustalenia", 1)[1].split("##", 1)[0] if "## Ustalenia" in text else ""
+        ust = text.split("## Findings", 1)[1].split("##", 1)[0] if "## Findings" in text else ""
         check("HIGH" in ust and "drobne" not in ust, f"A-5: w ustaleniach top 1 — najwyższa waga: {ust}")
         check(len(json.loads((tfd / "reports" / "sec.json").read_text())["findings"]) == 2,
               "A-5: pełna lista w .json mimo top 1")
@@ -185,12 +185,12 @@ def main() -> int:
         commit(repo)
         run("run", cwd=repo, env=env)
         text = rep.read_text()
-        act = text.split("## Rekomendowane działania", 1)[1] if "## Rekomendowane działania" in text else ""
+        act = text.split("## Recommended actions", 1)[1] if "## Recommended actions" in text else ""
         check(f"- [x] {hi}" in act and "notatka człowieka: naprawione w PR 12" in act,
               f"A-6: odhaczone i notatka człowieka zostają: {act}")
-        check("wciąż widzi" in act, f"A-6: odhaczone, a nadal widoczne → adnotacja: {act}")
+        check("still sees" in act, f"A-6: odhaczone, a nadal widoczne → adnotacja: {act}")
         lo_line = next((l for l in act.splitlines() if lo in l), "")
-        check("potwierdź" in act.split(lo, 1)[1][:300] if lo in act else False,
+        check("confirm it" in act.split(lo, 1)[1][:300] if lo in act else False,
               f"A-6: nieodhaczone, a zniknęło → „potwierdź”: {act}")
         new_ids = [f["id"] for f in json.loads((tfd / "reports" / "sec.json").read_text())["findings"]]
         newid = next(i for i in new_ids if i not in (hi, lo))
@@ -198,6 +198,17 @@ def main() -> int:
         reg = {x["id"]: x for x in map(json.loads, (tfd / "register" / "items.jsonl").read_text().splitlines())}
         check(reg[hi]["status"] == "resolved", f"A-6: odhaczenie w raporcie → resolved w rejestrze: {reg[hi]}")
         check(newid in reg and reg[newid]["status"] == "open", f"A-6: nowe ustalenie w rejestrze: {reg}")
+        # A-6b: raport sprzed 14.x (polskie nagłówki) — odhaczenia i historia przechodzą do nowego raportu
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ctf_analyze_t", ANALYZE)
+        an = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(an)
+        old = ("## Rekomendowane działania\n\n- [x] SEC-abc123 — x (a.py:1) — high\n  notatka\n\n"
+               "## Historia analiz\n\n- 2026-11-01 · abc1234 · ustaleń: 1\n")
+        items = an.parse_actions(old)
+        check(len(items) == 1 and items[0]["checked"] and items[0]["notes"] == ["  notatka"]
+              and an.history(old) == ["- 2026-11-01 · abc1234 · ustaleń: 1"],
+              f"A-6b: polskie nagłówki starego raportu czytane: {items} {an.history(old)}")
 
         # A-7 cache i --since
         counter.write_text("0")
@@ -218,10 +229,10 @@ def main() -> int:
         make_module(bad, name="ui", prefix="UI", applies="**/*.tsx")
         r = run("run", cwd=repo, env={**env, "TF_ANALYZERS_PATH": f"{mods}{os.pathsep}{bad}", "TF_ANALYZE_NO_CACHE": "1"})
         zly = (tfd / "reports" / "zly.md").read_text() if (tfd / "reports" / "zly.md").exists() else ""
-        check(r.returncode == 1 and "nie powiódł" in zly and (tfd / "reports" / "sec.md").is_file(),
+        check(r.returncode == 1 and "module failed" in zly and (tfd / "reports" / "sec.md").is_file(),
               f"A-8: błąd modułu w raporcie, pozostałe działają, kod 1: {r.returncode} {zly} {r.stdout}")
         overview = (tfd / "reports" / "README.md").read_text() if (tfd / "reports" / "README.md").exists() else ""
-        check("ui" in overview and "pominięty" in overview, f"A-8: moduł bez pasujących plików pominięty z powodem: {overview}")
+        check("ui" in overview and "skipped" in overview, f"A-8: moduł bez pasujących plików pominięty z powodem: {overview}")
         r = run("run", "--only", "sec", cwd=repo, env={**env, "TF_ANALYZERS_PATH": f"{mods}{os.pathsep}{bad}"})
         check(r.returncode == 0, f"A-8: --only ogranicza moduły: {r.stdout}{r.stderr}")
 
@@ -255,10 +266,10 @@ def main() -> int:
         make_module(gm, name="bez", prefix="BEZ")
         genv = {"TF_ANALYZERS_PATH": str(gm), "T_COUNTER": str(counter)}
         r = run("gate", "--module", "dobry", cwd=repo, env=genv)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
+        check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
               f"A-11: moduł znajdujący wszystko bez fałszywych trafień przechodzi bramkę: {r.stdout}{r.stderr}")
         r = run("gate", "--module", "szum", cwd=repo, env=genv)
-        check(r.returncode == 1 and "FAILED" in r.stdout and "fałszyw" in r.stdout,
+        check(r.returncode == 1 and "FAILED" in r.stdout and "false positives" in r.stdout,
               f"A-11: fałszywe trafienie w przypadku czystym → bramka nie przechodzi: {r.stdout}{r.stderr}")
         r = run("gate", "--module", "bez", cwd=repo, env=genv)
         check(r.returncode == 1 and "fixtures" in r.stdout, f"A-11: moduł bez zestawu nie przechodzi: {r.stdout}")

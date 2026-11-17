@@ -61,7 +61,7 @@ def main() -> int:
         p.write_text(p.read_text() + "\nZmiana.\n")
         st = run([gate, "--status"], cwd=root).stdout
         chk = run([str(root / ".tf" / "factory" / "build.py"), "check"], cwd=root).stdout
-        if "core-grounding" not in st or "zmieniony po bramce" not in st or "core-grounding: zmieniony po ostatniej bramce" not in chk:
+        if "core-grounding" not in st or "changed after the gate" not in st or "core-grounding: changed after the last gate" not in chk:
             fails.append(f"gate: zmiana skilla nie wykryta — {st[-300:]} / {chk[-300:]}")
 
         total += 1
@@ -90,13 +90,13 @@ def main() -> int:
         first = g.report_path(out, "x")
         first.with_suffix(".jsonl").write_text("{}\n")
         second = g.report_path(out, "x")
-        if first == second or not second.name.endswith("-bramka-x-2.md"):
+        if first == second or not second.name.endswith("-gate-x-2.md"):
             fails.append(f"report_path: {first.name} / {second.name}")
 
     # 6. B4: scenariusze zaliczane bez skilli to ostrzeżenie kroku 8, nie błąd
     total += 1
     g = load(ROOT / ".tf" / "factory" / "skill_gate.py", "gate_mod")
-    warns = g.paid_warnings({"haiku": "5/5", "bez_wkladu": ["a", "b"]})
+    warns = g.paid_warnings({"haiku": "5/5", "no_uplift": ["a", "b"]})
     if len(warns) != 1 or "a, b" not in warns[0] or g.paid_warnings({"haiku": "5/5"}):
         fails.append(f"paid_warnings: ostrzeżenie tylko przy scenariuszach zaliczanych bez skilli: {warns}")
 

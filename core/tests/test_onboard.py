@@ -108,16 +108,16 @@ def main() -> int:
         check(r.returncode == 0 and gate.is_file() and json.loads(gate.read_text()).get("command") == want,
               f"O-11: --yes zapisuje polecenie weryfikacji do bramki ({want}): {r.stdout}{r.stderr}")
         text = report.read_text(encoding="utf-8") if report.is_file() else ""
-        check(all(h in text for h in ("## Co jest", "## Czego brakuje", "## Co fabryka blokuje", "## Kiedy ma spojrzeć człowiek")),
+        check(all(h in text for h in ("## What is there", "## What is missing", "## What the factory blocks", "## When a human should look")),
               f"O-12: raport gotowości ma stałe sekcje: {text[:300]}")
-        blocking = text.split("## Co fabryka blokuje", 1)[-1].split("## ", 1)[0]
+        blocking = text.split("## What the factory blocks", 1)[-1].split("## ", 1)[0]
         n = sum(1 for ln in blocking.splitlines() if ln.startswith("- "))
         check(1 <= n <= 5, f"O-13: najwyżej pięć kontroli blokujących ({n}): {blocking}")
         check(not any(w in text.lower() for w in ("hook", "tier", "harness", "triaż")),
               "O-14: raport dla człowieka bez słownictwa z budowy fabryki")
         gate.write_text(json.dumps({"command": "npm run test:ci", "watch": ["src/"]}))
         r = run(p, "--yes")
-        check(json.loads(gate.read_text()).get("command") == "npm run test:ci" and "zostaje" in r.stdout,
+        check(json.loads(gate.read_text()).get("command") == "npm run test:ci" and "stays unchanged" in r.stdout,
               f"O-15: istniejąca konfiguracja bramki zostaje, z informacją: {r.stdout}")
         r = run(p, "--dry-run", "--yes")
         check(r.returncode == 0 and "npm test" in r.stdout, f"O-16: --dry-run pokazuje propozycję: {r.stdout}{r.stderr}")
@@ -125,7 +125,7 @@ def main() -> int:
         p = make(base, "dry", {"package.json": NODE})
         r = run(p, "--dry-run", "--yes")
         check(not (p / ".claude").exists() and not (p / ".tf").exists(), "O-17: --dry-run niczego nie zapisuje")
-        check("lockfile" not in r.stdout.lower() or "brak" in r.stdout.lower(), f"O-18: brak pliku blokady wersji jest nazwany: {r.stdout}")
+        check("lockfile" not in r.stdout.lower() or "no dependency lockfile" in r.stdout.lower(), f"O-18: brak pliku blokady wersji jest nazwany: {r.stdout}")
 
         # część 2: jedno polecenie weryfikacji (lint, typy, testy), polecenia w pliku instrukcji, próba na żądanie
         if os.name != "nt":
@@ -138,25 +138,25 @@ def main() -> int:
                   and "set -e" in body and "npm run build" not in body,
                   f"O-21: verify.sh wykonywalny, w kolejności lint → typy → testy, bez buildu: {body}")
             text = (p / ".tf" / "reports" / "readiness.md").read_text(encoding="utf-8")
-            blocking = text.split("## Co fabryka blokuje", 1)[-1].split("## ", 1)[0]
+            blocking = text.split("## What the factory blocks", 1)[-1].split("## ", 1)[0]
             n = sum(1 for ln in blocking.splitlines() if ln.startswith("- "))
-            check(n == 5 and "npm run lint" in blocking and "npm run typecheck" in blocking and "Tylko ostrzega" in text
-                  and "npm run build" in text.split("Tylko ostrzega", 1)[-1],
+            check(n == 5 and "npm run lint" in blocking and "npm run typecheck" in blocking and "Only warns" in text
+                  and "npm run build" in text.split("Only warns", 1)[-1],
                   f"O-22: lint i typy blokują (razem pięć kontroli), build tylko ostrzega: {blocking}")
 
             p = make(base, "own-verify", {"package.json": NODE, "verify.sh": "#!/bin/sh\necho moje\n"})
             r = run(p, "--yes")
-            check((p / "verify.sh").read_text() == "#!/bin/sh\necho moje\n" and "zostaje" in r.stdout
+            check((p / "verify.sh").read_text() == "#!/bin/sh\necho moje\n" and "stays unchanged" in r.stdout
                   and json.loads((p / ".claude" / "quality-gate.json").read_text()).get("command") == "./verify.sh",
                   f"O-23: istniejący verify.sh zostaje i jest poleceniem bramki: {r.stdout}")
 
             p = make(base, "run", {"Makefile": "test:\n\t@echo testy-ok\nlint:\n\t@echo lint-ok\n"})
             if shutil.which("make"):
                 r = run(p, "--yes", "--verify")
-                check(r.returncode == 0 and "przechodzi" in r.stdout, f"O-24: --verify uruchamia weryfikację raz, zielona: {r.stdout}{r.stderr}")
+                check(r.returncode == 0 and "Verification passes" in r.stdout, f"O-24: --verify uruchamia weryfikację raz, zielona: {r.stdout}{r.stderr}")
                 (p / "Makefile").write_text("test:\n\t@echo FAILED test_x; exit 1\nlint:\n\t@echo lint-ok\n")
                 r = run(p, "--yes", "--verify")
-                check(r.returncode == 1 and "nie przechodzi" in r.stdout and "FAILED test_x" in r.stdout,
+                check(r.returncode == 1 and "does not pass" in r.stdout and "FAILED test_x" in r.stdout,
                       f"O-25: --verify przy czerwonych testach → kod 1 i koniec wyjścia: {r.stdout}{r.stderr}")
                 (p / "gen.py").write_text("import sys\nprint('PIERWSZY-BLAD')\nfor i in range(300):\n"
                                           "    print(f'linia-{i}-' + 'x' * 20)\nprint('PODSUMOWANIE-1-failed')\nsys.exit(1)\n")
@@ -164,7 +164,7 @@ def main() -> int:
                 r = run(p, "--yes", "--verify")
                 saved = p / ".tf" / "logs" / "verify-output.txt"
                 check(r.returncode == 1 and "PIERWSZY-BLAD" in r.stdout and "PODSUMOWANIE-1-failed" in r.stdout
-                      and "linia-150-" not in r.stdout and "pominięto" in r.stdout and ".tf/logs/verify-output.txt" in r.stdout
+                      and "linia-150-" not in r.stdout and "skipped" in r.stdout and ".tf/logs/verify-output.txt" in r.stdout
                       and saved.is_file() and "linia-150-" in saved.read_text(encoding="utf-8"),
                       f"O-34: długie wyjście --verify → początek i koniec na ekranie, całość w pliku: {r.stdout[-400:]}")
 
@@ -225,11 +225,11 @@ def main() -> int:
                 excl = (p / ".git" / "info" / "exclude").read_text()
                 if mode == "private":
                     check(dirty == "" and excl.count("verify.sh") == 1 and excl.count(".claude/quality-gate.json") == 1
-                          and "lokaln" in r.stdout,
+                          and "stay local" in r.stdout,
                           f"O-31: instalacja prywatna → czyste drzewo, wpisy w .git/info/exclude raz: {dirty!r} {r.stdout[-300:]}")
                 else:
                     check("verify.sh" in dirty and "quality-gate.json" in dirty and "verify.sh" not in excl
-                          and "Do commita" in r.stdout,
+                          and "To commit" in r.stdout,
                           f"O-32: instalacja zespołowa → pliki do commita, bez wpisów ignorowania: {dirty!r} {r.stdout[-300:]}")
             p = make(base, "git-tracked", {"package.json": NODE, "verify.sh": "#!/bin/sh\n"})
             git(p, "init", "-q", "-b", "main")

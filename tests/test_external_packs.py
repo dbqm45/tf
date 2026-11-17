@@ -172,7 +172,7 @@ def main() -> int:
         q.mkdir()
         r = install(src, q, "--packs", "pack-old", "--pack-dir", str(old))
         o = r.stdout + r.stderr
-        check("pack-old" in o and "wymaga rdzenia" in o, f"EP-11: requires.core sprawdzane jak w packs/: {o[-800:]}")
+        check("pack-old" in o and "requires core" in o, f"EP-11: requires.core sprawdzane jak w packs/: {o[-800:]}")
 
         # EP-12: skill z groźnym wzorcem (skill_audit, wysoka waga) → odmowa instalacji nakładki zewnętrznej
         evil = make_pack(base / "evil", "pack-evil", major, prefix="ev-",
