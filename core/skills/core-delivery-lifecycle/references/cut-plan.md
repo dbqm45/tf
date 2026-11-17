@@ -1,74 +1,75 @@
-# Plan cięć — kolejność pracy przed planem pierwszego kroku
+# The cut plan — the order of work before the plan of the first step
 
-> **Spis treści:** Dwa rodzaje pozycji · Pola pozycji · Kolejność · Linie wydań i flagi · Rozmiar cięć (bez estymat) · Niewiadome — gdzie je rozstrzygnąć · Samokontrola przed zapisem · Przekazanie
+> **Contents:** Two kinds of items · Item fields · Order · Release lines and flags · Slice size (no estimates) · Unknowns — where to settle them · Self-check before saving · Handoff
 
-Plan cięć (`docs/project/05-plan/plan.md`, szablon `plan` w core-project-record) odpowiada tylko na pytania: co
-najpierw, co od czego zależy, co jest zablokowane i co odkładamy. Nie wybiera frameworków, nie projektuje schematu
-i nie rozpisuje plików — to robi plan kroku w raporcie `06-delivery/`.
+The cut plan (`docs/project/05-plan/plan.md`, the `plan` template in core-project-record) answers only these questions:
+what first, what depends on what, what is blocked and what we postpone. It does not choose frameworks, does not design
+the schema and does not list files — the step plan in the `06-delivery/` report does that.
 
-## Dwa rodzaje pozycji
-- **S-NN — cięcie:** jedna zdolność widoczna dla użytkownika, przechodząca przez wszystkie potrzebne warstwy.
-  Wynik zaczyna się od „użytkownik może …”. Jeśli tego zdania nie da się napisać, to nie jest cięcie pionowe.
-- **F-NN — fundament:** najmniejsza praca wstępna bez własnego efektu dla użytkownika. Musi mieć pole
-  **Odblokowuje**: konkretne S-NN, konkretną niewiadomą do rozstrzygnięcia albo ścieżkę weryfikacji, której
-  wymaga S-NN. Fundament bez „Odblokowuje” to praca warstwowa — usuń go albo włącz do pierwszego cięcia, które
-  go potrzebuje.
-- **Granica fundamentu:** nie kończy całej warstwy („cały model danych”, „całe API”, „pełne uwierzytelnianie”).
-  Po jego wykonaniu co najmniej jedno S-NN nadal integruje tę warstwę przez prawdziwą funkcję.
-- **Element techniczny pojawia się w pierwszym cięciu, które go potrzebuje.** Fundament ma sens tylko wtedy, gdy
-  bez niego pierwszego cięcia nie da się zaplanować, zabezpieczyć albo sprawdzić.
-- Fundament nie dubluje warstwy, którą **inwentarz repozytorium** zgłasza jako obecną. Inwentarz: frontend,
-  backend/API, dane, uwierzytelnianie, wdrożenie, obserwowalność — każda jako obecna / częściowa / brak,
-  z plikiem jako dowodem (mapa kodu; pack-it: eng-codebase-mapping).
-- Uzasadnione „najpierw poziomo” (integracja z systemem zastanym, wymóg regulacyjny dla modelu danych, rdzeń
-  krytyczny wydajnościowo) to nadal F-NN: konkretny, ograniczony i przypięty do S-NN.
+The plan's column names stay in their template form (e.g. `Odblokowuje`, `Wymagania`), because `decision_record.py`
+and the pdi contract read them; below each one has its meaning next to it.
 
-## Pola pozycji
-| Pole | Zasada |
+## Two kinds of items
+- **S-NN — a slice:** one capability visible to the user, going through all the layers it needs. The result starts with
+  "the user can …". If that sentence cannot be written, it is not a vertical slice.
+- **F-NN — a foundation:** the smallest preparatory work without its own effect for the user. It must have the
+  **`Odblokowuje`** (unblocks) field: a specific S-NN, a specific unknown to settle or a verification path that an S-NN
+  needs. A foundation without `Odblokowuje` is layered work — remove it or fold it into the first slice that needs it.
+- **The limit of a foundation:** it does not finish a whole layer ("the whole data model", "the whole API", "full
+  authentication"). After it is done, at least one S-NN still integrates that layer through a real feature.
+- **A technical element appears in the first slice that needs it.** A foundation makes sense only when without it the
+  first slice cannot be planned, secured or checked.
+- A foundation does not duplicate a layer that the **repository inventory** reports as present. The inventory: frontend,
+  backend/API, data, authentication, deployment, observability — each as present / partial / missing, with a file as
+  evidence (a code map; pack-it: eng-codebase-mapping).
+- A justified "horizontal first" (an integration with a legacy system, a regulatory requirement for the data model, a
+  performance-critical core) is still an F-NN: specific, bounded and pinned to an S-NN.
+
+## Item fields
+| Field (column) | Rule |
 |---|---|
-| Wynik | S: „użytkownik może …”, F: „(fundament) … jest gotowe” |
-| Identyfikator zmiany | kebab-case, stabilny; nazwa gałęzi i raportu kroku (nie `S-01`) |
-| Wymagania | dosłowne ID z wymagań (`FR-007`, `US-02`), bez parafrazy |
-| Warunki wstępne | ID innych pozycji albo konkretny stan zewnętrzny |
-| Równolegle z | pozycje bez ścieżki zależności między sobą (osobne worktree — core-git-workflow) |
-| Blokery | tylko zewnętrzne (dostawca, decyzja interesariusza); co zespół rozstrzygnie sam, jest niewiadomą |
-| Niewiadome | pytanie — właściciel — blokuje: tak/nie |
-| Ryzyko | jedno zdanie: dlaczego pozycja stoi właśnie tu w kolejności |
-| Wydanie | linia wydania: `R1` (MVP), `R2`… — sekcja „Linie wydań i flagi” |
-| Flaga | klucz flagi, za którą cięcie jest wdrażane przed decyzją o udostępnieniu, albo „—” |
-| Status | proponowane / gotowe / zablokowane / w toku / zrobione |
+| `Wynik` (outcome) | S: "the user can …", F: "(foundation) … is ready" |
+| `Identyfikator zmiany` (change identifier) | kebab-case, stable; the name of the branch and of the step report (not `S-01`) |
+| `Wymagania` (requirements) | literal IDs from the requirements (`FR-007`, `US-02`), no paraphrase |
+| `Warunki wstępne` (preconditions) | IDs of other items or a specific external state |
+| `Równolegle z` (in parallel with) | items with no dependency path between them (separate worktrees — core-git-workflow) |
+| Blockers | only external ones (a vendor, a stakeholder's decision); what the team settles itself is an unknown |
+| Unknowns | a question — an owner — blocks: yes/no |
+| Risk | one sentence: why the item stands exactly here in the order |
+| `Wydanie` (release) | the release line: `R1` (MVP), `R2`… — the "Release lines and flags" section |
+| `Flaga` (flag) | the key of the flag behind which the slice is deployed before the decision to expose it, or "—" |
+| `Status` | proposed / ready / blocked / in progress / done |
 
-- **Zablokowane** wtedy i tylko wtedy, gdy co najmniej jedna niewiadoma ma „blokuje: tak”.
-- **Gotowe** tylko wtedy, gdy wszystkie warunki wstępne są zrobione (albo obecne w inwentarzu) i nie ma
-  blokujących niewiadomych.
+- **Blocked** if and only if at least one unknown has "blocks: yes".
+- **Ready** only when all preconditions are done (or present in the inventory) and there are no blocking unknowns.
 
-## Kolejność
-1. Fundamenty w kolejności zależności, potem cięcia — nic nie zależy od pozycji późniejszej (porządek topologiczny).
-2. **Gwiazda przewodnia** — najmniejszy przepływ end-to-end, który dowodzi tezy produktu — tak wcześnie, jak
-   pozwalają zależności. Nie musi być pierwsza.
-3. Remisy rozstrzyga **cel sekwencji** zapisany w planie:
-   - szybkie wydanie → najpierw ścieżka „must”, reszta do odłożonych;
-   - sygnał z rynku → najpierw najbardziej ryzykowne założenie;
-   - jakość → fundamenty bezpieczeństwa i obserwowalności nie są odkładane;
-   - nauka → najpierw nieznana technologia;
-   - prostota → najpierw najmniejsze cięcie.
-4. Otwarte pytanie, które wpływa na kolejność, zostawia dotknięte pozycje jako zablokowane — nie przesądzaj odpowiedzi.
+## Order
+1. Foundations in dependency order, then slices — nothing depends on a later item (topological order).
+2. **The north star** — the smallest end-to-end flow that proves the product thesis — as early as the dependencies
+   allow. It does not have to be first.
+3. Ties are settled by the **sequence goal** recorded in the plan:
+   - a fast release → the "must" path first, the rest postponed;
+   - a market signal → the riskiest assumption first;
+   - quality → security and observability foundations are not postponed;
+   - learning → the unknown technology first;
+   - simplicity → the smallest slice first.
+4. An open question that affects the order leaves the affected items blocked — do not presume the answer.
 
-## Linie wydań i flagi
-- **R1 = MVP:** gwiazda przewodnia plus minimum, które daje wynik z zamiaru zmiany (`intent.md`) albo z celów
-  w briefie. Ma nazwany wynik i metrykę z progiem i horyzontem („odzyskane płatności ≥ 25% w 30 dni”) oraz metryki
-  ochronne. Reszta trafia do R2…Rn; „Poza zakresem MVP” z wymagań to kandydaci do R2.
-- **Flaga**, gdy cięcie jest wdrażane, zanim człowiek zdecyduje o udostępnieniu: właściciel, data usunięcia i etapy
-  udostępniania (wewnętrzni → procent → 100%), każdy z kryterium wyjścia i minimalnym czasem.
-- Zapis: plan wydania `release.yaml` obok planu cięć (`05-plan/release.yaml`; zmiana w dzienniku zmian:
-  `changes/CHG-n/release.yaml`) w kształcie kontraktu pdi 0.4.0:
+## Release lines and flags
+- **R1 = MVP:** the north star plus the minimum that gives the outcome from the change's intent (`intent.md`) or from the
+  goals in the brief. It has a named outcome and a metric with a threshold and a horizon ("recovered payments ≥ 25% in
+  30 days") and guardrail metrics. The rest goes to R2…Rn; "Out of MVP scope" from the requirements are candidates for R2.
+- **A flag** when a slice is deployed before the human decides to expose it: an owner, a removal date and rollout stages
+  (internal → percent → 100%), each with an exit criterion and a minimum time.
+- The record: the release plan `release.yaml` next to the cut plan (`05-plan/release.yaml`; a change in the change log:
+  `changes/CHG-n/release.yaml`) in the shape of the pdi 0.4.0 contract:
   ```yaml
   change: CHG-12
   mvp:
     release: R1
-    outcome: Klient może ponowić nieudaną płatność bez podwójnego obciążenia
-    metric: { name: odzyskane_platnosci, target: ">= 25%", horizon_days: 30 }
-    guardrails: [podwojne_obciazenia = 0]
+    outcome: The customer can retry a failed payment without being charged twice
+    metric: { name: recovered_payments, target: ">= 25%", horizon_days: 30 }
+    guardrails: [double_charges = 0]
   releases:
     - { id: R1, name: MVP, tasks: [TSK-57, TSK-58] }
     - { id: R2, tasks: [TSK-59] }
@@ -78,51 +79,51 @@ i nie rozpisuje plików — to robi plan kroku w raporcie `06-delivery/`.
       owner: PO Payments
       remove_by: 2026-12-31
       rollout:
-        - { stage: internal, min_days: 3, exit: "0 błędów krytycznych" }
-        - { stage: "10%", min_days: 7, exit: "odzyskane >= 15%, duplikaty = 0" }
+        - { stage: internal, min_days: 3, exit: "0 critical bugs" }
+        - { stage: "10%", min_days: 7, exit: "recovered >= 15%, duplicates = 0" }
         - { stage: "100%" }
   ```
-  Kolumny „Wydanie” i „Flaga” w planie mają te same wartości co `release.yaml`.
+  The `Wydanie` and `Flaga` columns in the plan have the same values as `release.yaml`.
 
-## Rozmiar cięć (bez estymat)
-Cięcia mają porównywalną wagę. Podziel cięcie, gdy:
-- obejmuje więcej niż jedną główną akcję użytkownika;
-- łączy konfigurację, główny przepływ i administrację;
-- pokrywa większość wymagań „must”, a inne cięcia po jednym drobnym;
-- ma więcej niż jedno niezależne ryzyko albo niewiadome różnych właścicieli.
-Dziel po węższych wynikach (ścieżki procesu, persony, etapy), nigdy po warstwach. W planie cięć nie ma dni, punktów
-ani rozmiarów — kolejność wynika z zależności. Koszt i termin dla sponsora: osobno, jako przedziały
-(planowanie projektu; pack-it: proc-project-planning).
+## Slice size (no estimates)
+Slices have a comparable weight. Split a slice when it:
+- covers more than one main user action;
+- combines configuration, the main flow and administration;
+- covers most of the "must" requirements while other slices cover one minor each;
+- has more than one independent risk or unknowns of different owners.
+Split by narrower outcomes (process paths, personas, stages), never by layers. The cut plan has no days, points or
+sizes — the order comes from the dependencies. Cost and deadline for the sponsor: separately, as ranges (project
+planning; pack-it: proc-project-planning).
 
-## Niewiadome — gdzie je rozstrzygnąć
-| Rodzaj niewiadomej | Gdzie |
+## Unknowns — where to settle them
+| Kind of unknown | Where |
 |---|---|
-| lokalna, o kodzie („czy jest już komponent formularza?”) | plan kroku — sprawdza repo i decyduje |
-| zewnętrzna, wpływa na decyzję techniczną (biblioteka, API dostawcy, algorytm) | badanie przed planem kroku (core-source-research; pack-it: eng-codebase-mapping) |
-| podejrzane założenie, problem może być źle postawiony | przeramowanie przed planem kroku (pack-it: eng-debugging) |
-| bez wpływu na bieżące cięcie | „Otwarte pytania” albo „Odłożone” |
-Badanie ma sens, gdy blokuje decyzję — nie „na zapas”.
+| local, about the code ("is there already a form component?") | the step plan — it checks the repo and decides |
+| external, affects a technical decision (a library, a vendor API, an algorithm) | research before the step plan (core-source-research; pack-it: eng-codebase-mapping) |
+| a suspicious assumption, the problem may be framed wrongly | reframing before the step plan (pack-it: eng-debugging) |
+| no effect on the current slice | "Open questions" or "Postponed" |
+Research makes sense when it blocks a decision — not "just in case".
 
-## Samokontrola przed zapisem
-Nie zapisuj planu, jeśli któryś punkt nie przechodzi:
-- [ ] każde wymaganie „must” i każda historyjka występuje w polu Wymagania co najmniej jednego cięcia;
-- [ ] każde cięcie ma co najmniej jedno prawdziwe ID wymagania — nowa potrzeba z rozmowy trafia do „Otwartych
-      pytań” albo „Odłożonych”, nie do planu;
-- [ ] graf bez cykli, każde ID z warunków wstępnych istnieje, kolejność topologiczna;
-- [ ] każdy F-NN ma „Odblokowuje”, nie kończy całej warstwy i nie dubluje warstwy obecnej w inwentarzu;
-- [ ] statusy zgodne z niewiadomymi; tabela zgodna z opisem pozycji;
-- [ ] co najmniej jedno cięcie „gotowe” — jeśli wszystko jest zablokowane albo jest pięć F i zero gotowych S,
-      wymagania są niedomknięte albo inwentarz źle odczytany: wróć do fazy 3;
-- [ ] pojęcia „gwiazda przewodnia” i „najbardziej ryzykowne założenie” objaśnione jednym zdaniem przy pierwszym
-      użyciu (człowiek nie zna żargonu planu);
-- [ ] R1 ma wynik i metrykę (próg, horyzont) z zamiaru zmiany; każde S-NN w R1 jest widoczne dla użytkownika;
-- [ ] każde S-NN wdrażane przed decyzją o udostępnieniu ma flagę z właścicielem, datą usunięcia i etapami
-      z kryterium wyjścia; `release.yaml` zgodny z kolumnami „Wydanie” i „Flaga”.
+## Self-check before saving
+Do not save the plan if any point fails:
+- [ ] every "must" requirement and every story appears in the `Wymagania` field of at least one slice;
+- [ ] every slice has at least one real requirement ID — a new need from the conversation goes to "Open questions" or
+      "Postponed", not into the plan;
+- [ ] the graph has no cycles, every ID from the preconditions exists, the order is topological;
+- [ ] every F-NN has `Odblokowuje`, does not finish a whole layer and does not duplicate a layer present in the inventory;
+- [ ] statuses agree with the unknowns; the table agrees with the item descriptions;
+- [ ] at least one slice is "ready" — if everything is blocked or there are five F and zero ready S, the requirements
+      are not closed or the inventory was misread: go back to phase 3;
+- [ ] the terms "north star" and "riskiest assumption" explained in one sentence at first use (the human does not know
+      the plan's jargon);
+- [ ] R1 has an outcome and a metric (threshold, horizon) from the change's intent; every S-NN in R1 is visible to the user;
+- [ ] every S-NN deployed before the decision to expose it has a flag with an owner, a removal date and stages with an
+      exit criterion; `release.yaml` agrees with the `Wydanie` and `Flaga` columns.
 
-## Przekazanie
-Na końcu **jedna** rekomendacja następnego kroku, nie lista do wyboru: gwiazda przewodnia, jeśli gotowa; inaczej
-fundament, który ją odblokowuje; inaczej najważniejsza niewiadoma do rozstrzygnięcia; inaczej gotowe cięcie
-z największą liczbą zależnych pozycji. Przed planem kroku warto przejrzeć plan (przegląd zmian; pack-it: qa-change-review, tryb A).
+## Handoff
+At the end **one** recommendation of the next step, not a list to choose from: the north star, if ready; otherwise the
+foundation that unblocks it; otherwise the most important unknown to settle; otherwise the ready slice with the most
+dependent items. Before the step plan it is worth reviewing the plan (change review; pack-it: qa-change-review, mode A).
 
-Źródło: kurs 10xDevs, ed. 3 (2026), moduł 2, lekcje 1–2 (roadmapa, niewiadome) — materiał szkoleniowy
-(dostęp 2026-10-09); A. Cockburn — walking skeleton. Opisane własnymi słowami.
+Source: the 10xDevs course, ed. 3 (2026), module 2, lessons 1–2 (roadmap, unknowns) — training material
+(accessed 2026-10-09); A. Cockburn — walking skeleton. Described in our own words.

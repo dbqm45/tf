@@ -722,8 +722,25 @@ treści (angielska), bez równoległej polskiej.
       instalacjach. Haiku przed/po: 5/6 → 3/6; dwa nowe ✗ to za wąskie sprawdzenia (`nie zgaduję` łapane jako
       zgadywanie, `run_state.py park` zamiast słowa `parked`) — poszerzone, powtórka 4/4; `zwykla-implementacja-historyjki`
       pada tak samo przed i po (pusty projekt → odpowiedź bez `intake.py`); $3,03.
+    - [x] 4b-8 (2026-11-17): `core-delivery-lifecycle` (+ 8 referencji). Kolumny planu cięć (`Odblokowuje`,
+      `Wymagania`, `Wydanie`, `Flaga`…) zostają dosłownie — czyta je `decision_record.py` (mode-pdi); w YAML przykładu
+      przetłumaczone tylko wartości, klucze bez zmian. Ścieżki mapy artefaktów bez zmian (`test_artifact_map` 7/7).
+      Podpowiedzi: holdout all spadł 31 → 30 (`ho-zmiana-kontraktu-w-kroku` — reguła „zmiana kontraktu = stop” tylko
+      w indeksie PL); słowa kluczowe z treści skilla (nie z promptu) → all 900 · 31/43, none 168 · 16/16, `--hints`
+      czysto w 8 instalacjach. Bramka w instalacji all (w none `canary-rollback` pada też przed tłumaczeniem — sąsiad
+      ops-release-engineering niezainstalowany). Haiku przed/po: 5/6 → 4/6 + powtórka `przeglad-specyfikacji-panel`
+      2/2 (pojedynczy przebieg zakończony pytaniami o ścieżkę); `pasma-kontrolne` pada tak samo przed i po (model
+      wybiera ops-sre-incidents); $2,29. SKILL.md 18065 znaków (> 15000, ostrzeżenie jak przed partią: 17023).
+      **Poprawka hooka skill_hint (z CI tej partii):** treść przetłumaczonego skilla w indeksie to angielski +
+      `hint.pl.txt`, a normalizacja wyniku liczyła długość sumy — średnia długość rosła z każdą partią (wyniki
+      nieprzetłumaczonych skilli w górę: w pack-docs „Przetłumacz ten akapit na angielski” przekroczyło próg,
+      7,98 → 8,07), a przetłumaczony skill tracił za „długą” treść. Teraz każda wersja językowa liczy się osobno,
+      znormalizowana swoją długością, i wygrywa lepiej pasująca (polecenie jest w jednym języku); średnia z dłuższej
+      wersji (test HP-6, HP-6b, HP-7). Po zmianie: all 901 · 32/43, none 168 · 16/16, `--hints` i test poleceń ogólnych
+      czyste w 8 instalacjach; słowa kluczowe `eng-llm-features` z jego sekcji 10 (scenariusz na granicy: 4. miejsce
+      z różnicą 1,3 pkt), słowo „plan rozjechał się z kodem” zawężone (łapało „rozjedzie się” w pytaniu o ACL).
     - [ ] dalsze partie:
-      core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
+      cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).

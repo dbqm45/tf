@@ -1,135 +1,135 @@
-# Mapa artefaktów
+# The artifact map
 
-> **Spis treści:** Pliki stałe (cały projekt) · 0. Rekonstrukcja istniejącego kodu (przed zmianami w… · 1. Przyjęcie, plan faz i odkrywanie produktu —… · 2. Domena — `02-domain/` · 3. Wymagania — `03-requirements/` · 4. Architektura — `04-architecture/` · 5. Plan — `05-plan/` · 6–7. Realizacja i przygotowanie do wydania — `06-delivery/` · 7–8. Przeglądy, wydanie, obserwacja — `07-review/` · 9. Utrzymanie — `08-operations/` · Poza `docs/project/` · Jak używać
+> **Contents:** Permanent files (the whole project) · 0. Reconstructing existing code (before changes in an… · 1. Intake, the phase plan and product discovery —… · 2. Domain — `02-domain/` · 3. Requirements — `03-requirements/` · 4. Architecture — `04-architecture/` · 5. Plan — `05-plan/` · 6–7. Delivery and release preparation — `06-delivery/` · 7–8. Reviews, release, observation — `07-review/` · 9. Maintenance — `08-operations/` · Outside `docs/project/` · How to use it
 
-Gdzie leży wynik każdej fazy, kto go pisze, który skill prowadzi pracę i kto go potem czyta. Ścieżki są względem
-`docs/project/` (dziennik projektu, core-project-record), chyba że podano inaczej. Skill z nakładką działa tylko
-wtedy, gdy nakładka jest zainstalowana (`.claude/catalog.md`). Kolumna „Mały projekt” mówi, kiedy artefakt można
-pominąć na ścieżce skróconej. Pominięcie zapisujesz jednym zdaniem w Przekazaniu fazy, żeby następna persona nie
-szukała pliku, którego nie ma.
+Where the result of every phase lies, who writes it, which skill leads the work and who reads it later. Paths are
+relative to `docs/project/` (the project record, core-project-record) unless stated otherwise. A skill with a pack
+works only when the pack is installed (`.claude/catalog.md`). The "Small project" column says when the artifact can be
+skipped on the shortened path. You record a skip in one sentence in the phase's Handoff, so that the next persona does
+not look for a file that does not exist.
 
-Zasada nadrzędna: artefakt powstaje, gdy ktoś go przeczyta i podejmie na jego podstawie decyzję. Pusty szablon nie
-jest artefaktem.
+The overriding rule: an artifact is written when someone will read it and make a decision based on it. An empty
+template is not an artifact.
 
-## Pliki stałe (cały projekt)
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## Permanent files (the whole project)
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `journal.md` | każda persona (dopisuje) | core-project-record | następna sesja: co się stało | zawsze |
-| `decisions.md` | persona przy decyzji człowieka | core-project-record | wszyscy: rejestr decyzji D-NNN | zawsze |
-| `lessons.md` | persona po powtarzającej się pułapce | core-agent-retro, core-project-record | każda sesja na starcie | gdy jest lekcja |
-| `questions.md` | dyspozytor, persony | core-problem-routing | człowiek: otwarte pytania | gdy są pytania |
-| `wip/<nazwa>.md` | persona przy zadaniu dłuższym niż kilka kroków | core-project-record | ta sama persona po przerwie | zawsze przy długim zadaniu |
-| `archive/research/<RRRRMMDD>-<temat>.md` | persona badająca fakty | core-source-research, core-knowledge | autor decyzji, która na nich stoi | gdy badano źródła |
-| `archive/retro/<RRRRMMDD>-retro.md` | persona po etapie | core-agent-retro | następny etap | po każdym etapie |
-| `exports/report-<data>.md`, `exports/handoff-<data>-<temat>.md` | generowane | core-project-record | ludzie poza repo, inny agent | na żądanie |
+| `journal.md` | every persona (appends) | core-project-record | the next session: what happened | always |
+| `decisions.md` | a persona at a human's decision | core-project-record | everyone: the D-NNN decision register | always |
+| `lessons.md` | a persona after a recurring trap | core-agent-retro, core-project-record | every session at the start | when there is a lesson |
+| `questions.md` | the dispatcher, personas | core-problem-routing | the human: open questions | when there are questions |
+| `wip/<nazwa>.md` | a persona on a task longer than a few steps | core-project-record | the same persona after a break | always on a long task |
+| `archive/research/<RRRRMMDD>-<temat>.md` | a persona researching facts | core-source-research, core-knowledge | the author of the decision that rests on them | when sources were researched |
+| `archive/retro/<RRRRMMDD>-retro.md` | a persona after a stage | core-agent-retro | the next stage | after every stage |
+| `exports/report-<data>.md`, `exports/handoff-<data>-<temat>.md` | generated | core-project-record | people outside the repo, another agent | on request |
 
-## 0. Rekonstrukcja istniejącego kodu (przed zmianami w nieznanym repo)
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 0. Reconstructing existing code (before changes in an unknown repo)
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `00-reconstruction/report.md`, `00-reconstruction/plan.md`, `00-reconstruction/manifest.json` | architekt / analityk | eng-project-reconstruction (pack-it) | każda persona przed zmianą | pomiń w nowym projekcie |
-| `00-reconstruction/domain.md`, `00-reconstruction/standards/INDEX.md` | jak wyżej | eng-project-reconstruction (pack-it) | pętla `/tf` przed historyjką (skill tf) | pomiń w nowym projekcie |
+| `00-reconstruction/report.md`, `00-reconstruction/plan.md`, `00-reconstruction/manifest.json` | architect / analyst | eng-project-reconstruction (pack-it) | every persona before a change | skip in a new project |
+| `00-reconstruction/domain.md`, `00-reconstruction/standards/INDEX.md` | as above | eng-project-reconstruction (pack-it) | the `/tf` loop before a story (the tf skill) | skip in a new project |
 
-## 1. Przyjęcie, plan faz i odkrywanie produktu — `01-discovery/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 1. Intake, the phase plan and product discovery — `01-discovery/`
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `01-discovery/brief.md` | dyspozytor | core-plan-interview, core-problem-routing; proc-requirements-shaping (pack-it) | wszystkie fazy: problem, cel, zakres, plan faz | zawsze (może być krótki) |
-| `01-discovery/project-plan.md` | dyspozytor / architekt | proc-project-planning (pack-it) | człowiek: koszt i termin P50/P80, ryzyka | pomiń bez budżetu i terminu |
-| `01-discovery/pre-flight.md` | analityk domeny | ddd-discovery-intake (pack-it) | decyzja „czy modularyzować” | pomiń przy jednym module |
-| `01-discovery/research-plan.md`, `01-discovery/research-report.md` | badacz UX | ux-research-methods (pack-ux) | projektant produktu: co wiemy o użytkownikach | pomiń bez badań |
-| `01-discovery/service-blueprint.md` | projektant usług | ux-service-design (pack-ux) | produkt i operacje: zaplecze usługi | pomiń bez usługi wielokanałowej |
-| `01-discovery/ux-maturity.md` | lider designu | ux-design-leadership (pack-ux) | kierownictwo: dojrzałość UX | rzadko potrzebne |
+| `01-discovery/brief.md` | the dispatcher | core-plan-interview, core-problem-routing; proc-requirements-shaping (pack-it) | all phases: the problem, goal, scope, phase plan | always (can be short) |
+| `01-discovery/project-plan.md` | the dispatcher / architect | proc-project-planning (pack-it) | the human: cost and deadline P50/P80, risks | skip without a budget and a deadline |
+| `01-discovery/pre-flight.md` | the domain analyst | ddd-discovery-intake (pack-it) | the decision "whether to modularise" | skip with one module |
+| `01-discovery/research-plan.md`, `01-discovery/research-report.md` | the UX researcher | ux-research-methods (pack-ux) | the product designer: what we know about users | skip without research |
+| `01-discovery/service-blueprint.md` | the service designer | ux-service-design (pack-ux) | product and operations: the service backstage | skip without a multichannel service |
+| `01-discovery/ux-maturity.md` | the design lead | ux-design-leadership (pack-ux) | management: UX maturity | rarely needed |
 
-## 2. Domena — `02-domain/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 2. Domain — `02-domain/`
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `02-domain/glossary.md` | analityk domeny | ddd-event-storming, ddd-facilitation (pack-it); korekta txt-polish-correctness (pack-editorial-pl) | wszyscy: język wszechobecny | zawsze, choćby 10 pojęć |
-| `02-domain/corpus.md`, `02-domain/contradictions.md`, `02-domain/strategic-gaps.md` | analityk domeny | ddd-discovery-intake (pack-it) | analityk: bank dowodów i sprzeczności | gdy są surowe materiały |
-| `02-domain/strategic.md`, `02-domain/context-map.md` | analityk domeny | ddd-strategic-analysis, ddd-context-mapping (pack-it) | architekt: granice kontekstów | pomiń przy jednym kontekście |
-| `02-domain/event-storming/<id>/` | facylitator | ddd-event-storming (pack-it) | analityk: zdarzenia i procesy | pomiń, gdy proces jest prosty |
-| `02-domain/concepts/<pojecie>.md` | analityk domeny | ddd-deep-modeling (pack-it) | implementer: trudne pojęcie | tylko trudne pojęcia |
-| `02-domain/archetypes/<archetyp>-<obszar>.md` | analityk domeny | ddd-archetypes (pack-it) | architekt, implementer | gdy pasuje archetyp |
-| `02-domain/algorithms.md` | analityk domeny | ddd-algorithm-recognition (pack-it) | implementer: ukryty problem algorytmiczny | gdy jest |
-| `02-domain/connascence/<a>-<b>.md`, `02-domain/connascence/<a>-<b>.frame.md` | analityk domeny | ddd-connascence-analysis (pack-it) | architekt: koszt sprzężenia | przy sporze o granice |
-| `02-domain/stress/<metryka>.md`, `02-domain/_blind/brief.md`, `02-domain/_blind/competitors.md` | analityk + ślepy analityk | ddd-model-stress-test (pack-it) | architekt: czy model wytrzyma wymagania | pomiń |
-| `02-domain/acl-<pakiet>.md`, `02-domain/distillation.md`, `02-domain/invariant-<nazwa>.md` | analityk domeny | ddd-legacy-modernization (pack-it) | implementer przy modernizacji | tylko legacy |
-| `02-domain/experiment-<nazwa>.md` | badacz AI | ai-research-methods (pack-it) | decyzja o podejściu ML | tylko badania ML |
+| `02-domain/glossary.md` | the domain analyst | ddd-event-storming, ddd-facilitation (pack-it); correction txt-polish-correctness (pack-editorial-pl) | everyone: the ubiquitous language | always, even 10 terms |
+| `02-domain/corpus.md`, `02-domain/contradictions.md`, `02-domain/strategic-gaps.md` | the domain analyst | ddd-discovery-intake (pack-it) | the analyst: the bank of evidence and contradictions | when there are raw materials |
+| `02-domain/strategic.md`, `02-domain/context-map.md` | the domain analyst | ddd-strategic-analysis, ddd-context-mapping (pack-it) | the architect: context boundaries | skip with one context |
+| `02-domain/event-storming/<id>/` | the facilitator | ddd-event-storming (pack-it) | the analyst: events and processes | skip when the process is simple |
+| `02-domain/concepts/<pojecie>.md` | the domain analyst | ddd-deep-modeling (pack-it) | the implementer: a difficult concept | only difficult concepts |
+| `02-domain/archetypes/<archetyp>-<obszar>.md` | the domain analyst | ddd-archetypes (pack-it) | the architect, the implementer | when an archetype fits |
+| `02-domain/algorithms.md` | the domain analyst | ddd-algorithm-recognition (pack-it) | the implementer: a hidden algorithmic problem | when there is one |
+| `02-domain/connascence/<a>-<b>.md`, `02-domain/connascence/<a>-<b>.frame.md` | the domain analyst | ddd-connascence-analysis (pack-it) | the architect: the cost of coupling | in a dispute about boundaries |
+| `02-domain/stress/<metryka>.md`, `02-domain/_blind/brief.md`, `02-domain/_blind/competitors.md` | the analyst + the blind analyst | ddd-model-stress-test (pack-it) | the architect: will the model withstand the requirements | skip |
+| `02-domain/acl-<pakiet>.md`, `02-domain/distillation.md`, `02-domain/invariant-<nazwa>.md` | the domain analyst | ddd-legacy-modernization (pack-it) | the implementer during modernisation | legacy only |
+| `02-domain/experiment-<nazwa>.md` | the AI researcher | ai-research-methods (pack-it) | the decision on the ML approach | ML research only |
 
-## 3. Wymagania — `03-requirements/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 3. Requirements — `03-requirements/`
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `03-requirements/requirements.md` | analityk + projektant produktu | proc-requirements-shaping, qa-test-design, ai-product-management (pack-it) | projektant testów (testy z kryteriów), architekt, implementer | zawsze |
-| `03-requirements/spec-review.md` | panel recenzentów | core-delivery-lifecycle (`references/spec-review.md`) | człowiek na bramce przed planem | pomiń na ścieżce skróconej |
-| `03-requirements/ia-documentation.md` | architekt informacji | ux-information-architecture (pack-ux) | projektant UI, implementer frontu | pomiń przy kilku ekranach |
+| `03-requirements/requirements.md` | the analyst + the product designer | proc-requirements-shaping, qa-test-design, ai-product-management (pack-it) | the test designer (tests from the criteria), the architect, the implementer | always |
+| `03-requirements/spec-review.md` | the reviewer panel | core-delivery-lifecycle (`references/spec-review.md`) | the human at the gate before the plan | skip on the shortened path |
+| `03-requirements/ia-documentation.md` | the information architect | ux-information-architecture (pack-ux) | the UI designer, the frontend implementer | skip with a few screens |
 
-## 4. Architektura — `04-architecture/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 4. Architecture — `04-architecture/`
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `04-architecture/stack-decision.md` | architekt rozwiązania | arch-tech-selection (pack-it) | generator szkieletu (eng-repo-readiness, pack-it), implementer | zawsze, krótko |
-| `04-architecture/architecture.md` | architekt rozwiązania | core-project-record (szablon); arch-system-design (pack-it) | wszyscy: C4, strategia danych i wdrożeń | jeden akapit + diagram |
-| `04-architecture/adr/NNNN-short-title.md` | architekt | core-project-record (szablon `adr`); docs-tech-writing (pack-docs) | przyszli autorzy zmian: dlaczego tak | gdy decyzja jest kosztowna w odwróceniu |
-| `04-architecture/erd.md` | architekt / implementer backendu | be-database (pack-it) | implementer, analityk danych, przegląd migracji | gdy jest relacyjna baza |
-| `04-architecture/threat-model.md` | architekt + security | arch-threat-modeling (pack-it) | security-reviewer, implementer | gdy dane wrażliwe lub dostęp z internetu |
-| `04-architecture/privacy.md`, `04-architecture/data-inventory.md` | architekt | arch-privacy-compliance (pack-it) | człowiek z IOD, implementer: klasy pól, retencja | zawsze przy danych osobowych |
-| `04-architecture/<data>-legal-map.md` | architekt | arch-eu-product-law (pack-it) | człowiek z prawnikiem | gdy produkt podlega prawu UE |
-| `04-architecture/compliance.md`, `04-architecture/risk-register.md`, `04-architecture/eu-cyber-regulations.md` | architekt bezpieczeństwa | sec-governance-compliance, sec-risk-management, sec-eu-regulations (pack-it) | kierownictwo, audytor | gdy są wymogi formalne |
-| `04-architecture/zero-trust.md`, `04-architecture/cloud-security-baseline.md`, `04-architecture/landing-zone.md` | architekt bezpieczeństwa / chmury | sec-zero-trust-identity, sec-cloud-security, ops-cloud-landing-zones (pack-it) | DevOps, security | pomiń poza chmurą firmową |
-| `04-architecture/ai-architecture.md`, `04-architecture/ai-compliance.md` | architekt AI | arch-ai-solutions, ai-governance-compliance (pack-it) | implementer funkcji AI, człowiek | tylko z komponentem AI |
-| `04-architecture/codebase-map.md`, `04-architecture/legacy-dossier/README.md` | architekt | eng-codebase-mapping, eng-legacy-dossier (pack-it) | implementer w nieznanym kodzie | tylko istniejący kod |
-| `04-architecture/context-architecture.md` | autor instrukcji agenta | core-agent-instructions | autor CLAUDE.md / AGENTS.md | przy dużych instrukcjach |
-| kontrakt API (OpenAPI) — **w repozytorium kodu**, obok serwisu, nie w dzienniku | architekt + implementer | be-api-design (pack-it) | klienci API, test kontraktu w CI | gdy jest API dla innych |
+| `04-architecture/stack-decision.md` | the solution architect | arch-tech-selection (pack-it) | the skeleton generator (eng-repo-readiness, pack-it), the implementer | always, briefly |
+| `04-architecture/architecture.md` | the solution architect | core-project-record (template); arch-system-design (pack-it) | everyone: C4, the data and deployment strategy | one paragraph + a diagram |
+| `04-architecture/adr/NNNN-short-title.md` | the architect | core-project-record (the `adr` template); docs-tech-writing (pack-docs) | future authors of changes: why so | when the decision is costly to reverse |
+| `04-architecture/erd.md` | the architect / the backend implementer | be-database (pack-it) | the implementer, the data analyst, the migration review | when there is a relational database |
+| `04-architecture/threat-model.md` | the architect + security | arch-threat-modeling (pack-it) | the security-reviewer, the implementer | with sensitive data or internet access |
+| `04-architecture/privacy.md`, `04-architecture/data-inventory.md` | the architect | arch-privacy-compliance (pack-it) | the human with the DPO, the implementer: field classes, retention | always with personal data |
+| `04-architecture/<data>-legal-map.md` | the architect | arch-eu-product-law (pack-it) | the human with a lawyer | when the product falls under EU law |
+| `04-architecture/compliance.md`, `04-architecture/risk-register.md`, `04-architecture/eu-cyber-regulations.md` | the security architect | sec-governance-compliance, sec-risk-management, sec-eu-regulations (pack-it) | management, the auditor | when there are formal requirements |
+| `04-architecture/zero-trust.md`, `04-architecture/cloud-security-baseline.md`, `04-architecture/landing-zone.md` | the security / cloud architect | sec-zero-trust-identity, sec-cloud-security, ops-cloud-landing-zones (pack-it) | DevOps, security | skip outside a corporate cloud |
+| `04-architecture/ai-architecture.md`, `04-architecture/ai-compliance.md` | the AI architect | arch-ai-solutions, ai-governance-compliance (pack-it) | the implementer of AI features, the human | only with an AI component |
+| `04-architecture/codebase-map.md`, `04-architecture/legacy-dossier/README.md` | the architect | eng-codebase-mapping, eng-legacy-dossier (pack-it) | the implementer in unknown code | existing code only |
+| `04-architecture/context-architecture.md` | the author of the agent instructions | core-agent-instructions | the author of CLAUDE.md / AGENTS.md | with large instructions |
+| the API contract (OpenAPI) — **in the code repository**, next to the service, not in the record | the architect + the implementer | be-api-design (pack-it) | API clients, the contract test in CI | when there is an API for others |
 
 ## 5. Plan — `05-plan/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `05-plan/plan.md` | architekt + projektant testów | core-delivery-lifecycle (`references/cut-plan.md`) | wykonawcy: cięcia w kolejności | zawsze |
-| `05-plan/release.yaml` | architekt | core-delivery-lifecycle (`references/cut-plan.md`) | DevOps przy wydaniu, bramki B5 | pomiń przy jednym wydaniu bez flag |
-| `05-plan/test-plan.md`, `05-plan/test-strategy.md` | projektant testów | qa-test-design, eng-local-quality-gates (pack-it) | implementer, przegląd zmian | test-plan zawsze; strategia przy wielu warstwach |
-| `05-plan/migration-plan.md` | architekt chmury | ops-cloud-migration (pack-it) | DevOps, człowiek: fale i cutover | tylko migracja |
+| `05-plan/plan.md` | the architect + the test designer | core-delivery-lifecycle (`references/cut-plan.md`) | executors: slices in order | always |
+| `05-plan/release.yaml` | the architect | core-delivery-lifecycle (`references/cut-plan.md`) | DevOps at the release, gates B5 | skip with one release without flags |
+| `05-plan/test-plan.md`, `05-plan/test-strategy.md` | the test designer | qa-test-design, eng-local-quality-gates (pack-it) | the implementer, the change review | test-plan always; the strategy with many layers |
+| `05-plan/migration-plan.md` | the cloud architect | ops-cloud-migration (pack-it) | DevOps, the human: waves and cutover | migration only |
 
-## 6–7. Realizacja i przygotowanie do wydania — `06-delivery/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 6–7. Delivery and release preparation — `06-delivery/`
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `06-delivery/NNN-<slug>.md` | wykonawca kroku | core-project-record (szablon `delivery`) | przegląd, następny krok | zawsze (raport kroku) |
-| `06-delivery/NNN-behavior-contract.md` | wykonawca refaktoryzacji | eng-behavior-preserving-refactoring (pack-it) | przegląd: zachowanie bez zmian | tylko refaktoryzacja |
-| `06-delivery/bootstrap-verification.md` | wykonawca szkieletu | eng-repo-readiness (pack-it) | człowiek: czy szkielet działa | nowy projekt |
-| `06-delivery/deploy-plan.md` | DevOps | ops-release-engineering (pack-it) | człowiek wdrażający | proste wdrożenie bez etapów |
-| `README.md`, `CHANGELOG.md` — **w korzeniu repozytorium** | implementer / tech writer | core-semver; docs-tech-writing (pack-docs) | użytkownicy i nowe osoby | zawsze |
-| runbook — **przy usłudze lub w dokumentacji operacyjnej** | DevOps/SRE | ops-sre-incidents (pack-it); docs-tech-writing (pack-docs) | dyżurny | gdy usługa ma dyżur |
-| sekcja „Ryzyko zmiany” w opisie PR | generowana (`tf risk --md`) | core-git-workflow | recenzent: co musi zobaczyć człowiek | każdy PR |
+| `06-delivery/NNN-<slug>.md` | the step executor | core-project-record (the `delivery` template) | the review, the next step | always (the step report) |
+| `06-delivery/NNN-behavior-contract.md` | the refactoring executor | eng-behavior-preserving-refactoring (pack-it) | the review: behaviour unchanged | refactoring only |
+| `06-delivery/bootstrap-verification.md` | the skeleton executor | eng-repo-readiness (pack-it) | the human: does the skeleton work | a new project |
+| `06-delivery/deploy-plan.md` | DevOps | ops-release-engineering (pack-it) | the human deploying | a simple deployment without stages |
+| `README.md`, `CHANGELOG.md` — **in the repository root** | the implementer / tech writer | core-semver; docs-tech-writing (pack-docs) | users and newcomers | always |
+| the runbook — **next to the service or in the operations documentation** | DevOps/SRE | ops-sre-incidents (pack-it); docs-tech-writing (pack-docs) | the on-call person | when the service has on-call |
+| the "Change risk" section in the PR description | generated (`tf risk --md`) | core-git-workflow | the reviewer: what the human must see | every PR |
 
-## 7–8. Przeglądy, wydanie, obserwacja — `07-review/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 7–8. Reviews, release, observation — `07-review/`
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `07-review/<data>-readiness.md` | DevOps + security + projektant testów | core-delivery-lifecycle (`references/production-readiness.md`) | człowiek na bramce wydania | zawsze przed produkcją |
-| `07-review/<data>-dry-run.md` | dyspozytor | core-delivery-lifecycle (`references/dry-run.md`) | człowiek: czy fabryka dowozi | jednorazowo |
-| `07-review/<data>-<rodzaj>.md` (bezpieczeństwo, architektura, retro, testy) | recenzent danego rodzaju | security-reviewer; core-agent-retro | człowiek, następna faza | wg ryzyka |
-| `07-review/<data>-repo-readiness.md` | audytor repo | eng-repo-readiness (pack-it) | człowiek, autor CLAUDE.md: poprawki dla agentów | przy przejęciu repo |
-| `07-review/<data>-code-audit.md`, `07-review/<data>-code-audit-inventory.md` | zespół audytu | eng-code-audit (pack-it) | człowiek: ranking problemów | na żądanie |
-| `07-review/<data>-tech-debt.md` | audytor | eng-tech-debt-audit (pack-it) | człowiek: priorytety długu | na żądanie |
-| `07-review/<data>-deep-dives.md` | architekt | eng-module-depth (pack-it) | implementer: płytkie moduły | na żądanie |
-| `07-review/<data>-plan-review-<krok>.md` | recenzent zmian | qa-change-review (pack-it) | wykonawca przed realizacją | przy ryzykownym kroku |
-| `07-review/<data>-facilitation.md` | coach facylitacji | ddd-facilitation (pack-it) | facylitator | po warsztacie |
-| `07-review/<data>-language-<dokument>.md` | redaktor | txt-polish-correctness (pack-editorial-pl) | autor dokumentu | dokumenty dla ludzi |
+| `07-review/<data>-readiness.md` | DevOps + security + the test designer | core-delivery-lifecycle (`references/production-readiness.md`) | the human at the release gate | always before production |
+| `07-review/<data>-dry-run.md` | the dispatcher | core-delivery-lifecycle (`references/dry-run.md`) | the human: does the factory deliver | once |
+| `07-review/<data>-<rodzaj>.md` (security, architecture, retro, tests) | the reviewer of that kind | security-reviewer; core-agent-retro | the human, the next phase | by risk |
+| `07-review/<data>-repo-readiness.md` | the repo auditor | eng-repo-readiness (pack-it) | the human, the author of CLAUDE.md: fixes for agents | when taking over a repo |
+| `07-review/<data>-code-audit.md`, `07-review/<data>-code-audit-inventory.md` | the audit team | eng-code-audit (pack-it) | the human: a ranking of problems | on request |
+| `07-review/<data>-tech-debt.md` | the auditor | eng-tech-debt-audit (pack-it) | the human: debt priorities | on request |
+| `07-review/<data>-deep-dives.md` | the architect | eng-module-depth (pack-it) | the implementer: shallow modules | on request |
+| `07-review/<data>-plan-review-<krok>.md` | the change reviewer | qa-change-review (pack-it) | the executor before delivery | for a risky step |
+| `07-review/<data>-facilitation.md` | the facilitation coach | ddd-facilitation (pack-it) | the facilitator | after a workshop |
+| `07-review/<data>-language-<dokument>.md` | the editor | txt-polish-correctness (pack-editorial-pl) | the document's author | documents for people |
 
-## 9. Utrzymanie — `08-operations/`
-| Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
+## 9. Maintenance — `08-operations/`
+| Artifact | Writes | Skill | Reads / what for | Small project |
 |---|---|---|---|---|
-| `08-operations/<data>-<rodzaj>.md` (przegląd okresowy z szablonu `operations-review`, łatki, aktualizacje, wycofania) | DevOps/SRE + implementer | core-delivery-lifecycle (`references/maintenance.md`) | człowiek: co wymaga decyzji | przegląd co kwartał |
+| `08-operations/<data>-<rodzaj>.md` (the periodic review from the `operations-review` template, patches, updates, retirements) | DevOps/SRE + the implementer | core-delivery-lifecycle (`references/maintenance.md`) | the human: what needs a decision | a review every quarter |
 
-## Poza `docs/project/`
-| Artefakt | Pisze | Czyta / po co |
+## Outside `docs/project/`
+| Artifact | Writes | Reads / what for |
 |---|---|---|
-| `.tf/reports/<moduł>.md` i `.tf/register/items.jsonl` | `tf analyze` (skrypty) | persona przy przeglądzie i planie poprawek; odhaczenia zostają przy ponownej analizie |
-| `.tf/reports/metrics.md` | `tf metrics` | człowiek: skuteczność fabryki (reverty, koszt na przyjętą zmianę, przyczyny poprawek) |
-| `.tf/logs/` (`usage.jsonl`, `hook-errors.jsonl`) | hooki | `cost_report.py`, `tf doctor` |
-| `docs/project/changes/CHG-n/` | tryby z cyklem zmiany (np. mode-pdi) | persony trybu: plan i decyzje jednej zmiany |
-| `docs/project/vendors/` | persony sprzętowe nakładki domenowej | onboarding modelu urządzenia |
-| `CLAUDE.md` / `AGENTS.md` | autor instrukcji (core-agent-instructions) | każdy agent w każdej sesji |
+| `.tf/reports/<moduł>.md` and `.tf/register/items.jsonl` | `tf analyze` (scripts) | a persona at the review and the fix plan; ticks stay at a repeated analysis |
+| `.tf/reports/metrics.md` | `tf metrics` | the human: the factory's effectiveness (reverts, cost per accepted change, causes of fixes) |
+| `.tf/logs/` (`usage.jsonl`, `hook-errors.jsonl`) | hooks | `cost_report.py`, `tf doctor` |
+| `docs/project/changes/CHG-n/` | modes with a change cycle (e.g. mode-pdi) | the mode's personas: the plan and decisions of one change |
+| `docs/project/vendors/` | the hardware personas of a domain pack | onboarding of a device model |
+| `CLAUDE.md` / `AGENTS.md` | the author of the instructions (core-agent-instructions) | every agent in every session |
 
-## Jak używać
-- **Persona na starcie fazy** czyta wiersze swojej fazy i Przekazanie poprzedniej. Brak wymaganego pliku z
-  poprzedniej fazy to pytanie do człowieka, a nie powód, żeby go zgadywać.
-- **Persona na końcu fazy** sprawdza swoje wiersze: każdy artefakt jest zapisany albo opisany w Przekazaniu jako
-  pominięty, z powodem.
-- **Nowy skill** zapisuje wynik w istniejącym katalogu fazy i dopisuje wiersz do tej mapy. Test repozytorium
-  fabryki (`tests/test_artifact_map.py`) pilnuje, że katalog istnieje, a artefakt jest w mapie.
+## How to use it
+- **A persona at the start of a phase** reads the rows of its phase and the Handoff of the previous one. A missing
+  required file from the previous phase is a question for the human, not a reason to guess it.
+- **A persona at the end of a phase** checks its rows: every artifact is saved or described in the Handoff as skipped,
+  with a reason.
+- **A new skill** saves its result in an existing phase directory and adds a row to this map. The factory repository's
+  test (`tests/test_artifact_map.py`) checks that the directory exists and the artifact is in the map.
