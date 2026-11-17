@@ -122,11 +122,11 @@ kroków ma **punkt kontrolny**: mały plik `.tf/wip/<nazwa>.md`.
 
 ## Lekcje projektu (`docs/project/lessons.md`)
 Krótki, kuratorowany zbiór reguł, żeby kolejna sesja nie powtarzała tych samych błędów — instrukcja, nie dziennik.
-- Kategorie (w tej kolejności): **wykonanie i weryfikacja**, **powłoka i narzędzia**, **domena i ograniczenia**,
-  **ustalenia człowieka**. Najwyżej 10 wpisów na kategorię, najważniejsze na górze.
-- Wpis: `- RRRR-MM-DD **reguła w trybie rozkazującym** — Kontekst: <obszar, ścieżka lub faza, na tyle konkretnie,
-  żeby dało się dopasować do pracy> · Zamiast tego: <działanie> · Dotyczy: plan|realizacja|przegląd|wszystko`.
-  Bez „zamiast tego” to nie lekcja.
+- Kategorie (nagłówki `##`, w tej kolejności): `Execution and verification`, `Shell and tools`,
+  `Domain and constraints`, `Human decisions`. Najwyżej 10 wpisów na kategorię, najważniejsze na górze.
+- Wpis: `- RRRR-MM-DD **reguła w trybie rozkazującym** — Context: <obszar, ścieżka lub faza, na tyle konkretnie,
+  żeby dało się dopasować do pracy> · Instead: <działanie> · Applies to: plan|implementation|review|all`.
+  Bez `Instead:` to nie lekcja.
 - Lekcję pisze człowiek albo agent na jego prośbę (np. decyzja „zapisz jako lekcję” w triażu przeglądu zmiany, pack-it: qa-change-review),
   jedna na raz; nie powstaje automatycznie z wypełnionych z góry pól.
 - Granica: jednorazowy incydent → `journal.md`; klasa błędów, która wróci i zmieniłaby wcześniejsze decyzje → lekcja.

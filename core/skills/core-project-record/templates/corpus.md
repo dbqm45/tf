@@ -15,7 +15,7 @@ inputs: []
 
 ## S1 — <ścieżka źródła względem katalogu projektu>
 - **E1** > „<dosłowny cytat>” — <L12-13>
-- **E2** > „<dosłowny cytat>” — <L20> [wzmianka]
+- **E2** > „<dosłowny cytat>” — <L20> [mention]
 
 ## Otwarte pytania
 ## Przekazanie

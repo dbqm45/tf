@@ -57,7 +57,7 @@ głęboko (eng-testing).
 2. **Szukaj tarcia** (zwykle tani `scout`): zrozumienie jednego pojęcia wymaga skakania po wielu małych modułach;
    interfejs prawie jak implementacja; czyste funkcje wydzielone „dla testów”, a błędy siedzą w sposobie wywołania; moduły
    przeciekające przez spoiny; kod nietestowalny przez obecny interfejs. Na każdym podejrzanym — test usunięcia.
-3. **Raport** `docs/project/07-review/<data>-poglebienia.md` (albo strona HTML wg docs-tech-writing, jeśli człowiek chce).
+3. **Raport** `docs/project/07-review/<data>-deep-dives.md` (albo strona HTML wg docs-tech-writing, jeśli człowiek chce).
    Karta kandydata: pliki/moduły · problem (tarcie) · rozwiązanie prostym językiem · korzyść w kategoriach lokalności
    i dźwigni oraz co z testami · diagram przed/po · siła: **Mocny** (test usunięcia przechodzi, realne tarcie) /
    **Warto zbadać** / **Spekulatywny**. Na końcu: od którego zacząć i dlaczego.

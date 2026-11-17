@@ -12,7 +12,7 @@ wiedzieć, od czego zacząć”.
    ma) pokazany człowiekowi przed oceną.
 3. **Ocena w dziewięciu wymiarach**; wymiar bez ustaleń = „nic istotnego”.
 4. **Priorytet** = waga (4/3/2/1) × zmiany w 6 mies. ÷ wysiłek (S=1, M=2, L=4).
-5. Raport `docs/project/07-review/2026-10-04-dlug-techniczny.md`.
+5. Raport `docs/project/07-review/2026-10-04-tech-debt.md`.
 
 **Wynik** (fragment tabeli, posortowany po priorytecie):
 
@@ -33,7 +33,7 @@ workery wdraża się osobno i nie mogą zależeć od `shared` (ADR-007). Nie sca
 **Sytuacja:** „Minął kwartał od audytu `shop-api`. Co się zmieniło?”
 
 **Jak:**
-1. Ta sama procedura, potem porównanie z raportem `2026-10-04-dlug-techniczny.md`.
+1. Ta sama procedura, potem porównanie z raportem `2026-10-04-tech-debt.md`.
 2. Każde ustalenie dostaje status ROZWIĄZANE, NOWE albo ZMIENIONE.
 3. Zebrane znaczniki `debt: <ograniczenie>, <kiedy wrócić>`; znacznik bez warunku powrotu to osobne ustalenie.
 

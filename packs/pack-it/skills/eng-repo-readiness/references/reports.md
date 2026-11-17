@@ -26,7 +26,7 @@
 Status `failed`: zamiast tabeli przeniesień — polecenie, kod wyjścia, ostatnie 20 linii wyjścia, ścieżka
 `.bootstrap-scaffold/` zostawiona do inspekcji. Żadnych ręcznie dopisanych plików.
 
-## Audyt istniejącego repo — `docs/project/07-review/<data>-gotowosc-repo.md`
+## Audyt istniejącego repo — `docs/project/07-review/<data>-repo-readiness.md`
 
 ```markdown
 # Gotowość repo do pracy agentów — <data>, commit <sha>

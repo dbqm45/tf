@@ -55,7 +55,7 @@ metadata:
 5. Struktura katalogów (tylko kluczowe).
 6. Gdzie szukać pomocy / jak kontrybuować.
 
-## ADR — `docs/project/04-architecture/adr/NNNN-krotki-tytul.md`
+## ADR — `docs/project/04-architecture/adr/NNNN-short-title.md`
 **Próg — wszystkie trzy naraz:** (1) trudno odwrócić, (2) bez kontekstu zaskoczy przyszłego czytelnika („czemu tak?”),
 (3) był prawdziwy wybór między alternatywami. Brak któregokolwiek → bez ADR (wystarczy wiersz w `decisions.md` albo nic).
 Kwalifikują się: kształt architektury, sposób integracji kontekstów, technologia z uzależnieniem (baza, kolejka,

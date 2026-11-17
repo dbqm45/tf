@@ -622,9 +622,12 @@ treści (angielska), bez równoległej polskiej.
   tabela `ID | Rule | Evidence | Confidence` (`test|code|to verify`), pola ustaleń (`Area`, `Category`, `Gap`, …)
   i rekomendacji (`Addresses`, `Decision`, …), kategorie i szczeble decyzji; dawne polskie nazwy przyjmowane, migracja
   przepisuje istniejące dossier; etykiety decyzji przeglądu `PENDING|FIXED|SKIPPED|RISK_ACCEPTED|REJECTED|LESSON`.
-- [ ] Etap 3b-3 — dziennik projektu: pole „Dotyczy” lekcji, tagi `project_record` (wzmianka, zastąpiony,
-  niezweryfikowany), litery P/C/N/S w tabelach weryfikacji, nazwy plików zakładanych w `docs/project/`
-  (`<data>-przeglad.md`), znaczniki `[założenie]`/`[niezweryfikowane]`/`[pytanie]` (core-grounding, razem z etapem 4).
+- [x] Etap 3b-3 — dziennik projektu: lekcje `**reguła** — Context: … · Instead: … · Applies to: …` pod nagłówkiem
+  `## Execution and verification` (kategorie po angielsku), tagi banku dowodów `[mention]`, `[superseded by …]`,
+  `[unverified]`, werdykty tabel weryfikacji słowem (`confirmed|partial|unconfirmed|contradicted`), nazwy plików
+  w `docs/project/` (`plan-review`, `impl-review`, `operations-review`, `tech-debt`, `readiness`, `repo-readiness`,
+  `legal-map`, `deep-dives`, `dry-run`, `language-<dokument>`). Dawne formy przyjmowane. Znaczniki
+  `[założenie]`/`[niezweryfikowane]`/`[pytanie]` (core-grounding) — razem z etapem 4.
 - [ ] Po wydaniach 14.x — usunięcie dawnej składni z parserów (`K<n>`, `pliki:`, Zakładając/Gdy/Wtedy, polskie
   nagłówki rekonstrukcji).
 - [x] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”, #290):
