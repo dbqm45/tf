@@ -66,7 +66,7 @@ def main() -> int:
         noisy = repo_with(t / "noisy", {"src/app.py": lines(95), "docs/project/changes/CHG-1/plan.md": lines(150),
                                         "docs/test/evidence/01-run.txt": lines(250)})
         r = run(noisy)
-        check(r.returncode == 1 and r.stdout.startswith("Werdykt: PRZEKROCZONY") and "%" in r.stdout,
+        check(r.returncode == 1 and r.stdout.startswith("Werdykt: OVER") and "%" in r.stdout,
               f"P-2: artefakty > 50% dodanych linii przy zmianie kodu → przekroczony: {r.stdout}{r.stderr}")
 
         big = repo_with(t / "big", {"src/app.py": lines(2000), "docs/project/02-domain/notatki.md": lines(700),
@@ -93,7 +93,7 @@ def main() -> int:
             data = json.loads(r.stdout)
         except ValueError:
             data = {}
-        check(data.get("verdict") == "PRZEKROCZONY" and data.get("artifact_lines") == 400 and data.get("code_lines") == 95,
+        check(data.get("verdict") == "OVER" and data.get("artifact_lines") == 400 and data.get("code_lines") == 95,
               f"P-6: --json z polami verdict, code_lines, artifact_lines: {r.stdout[:300]}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów budżetu artefaktów")
     return 1 if fails else 0

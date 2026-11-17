@@ -10,7 +10,7 @@ z `.claude/pr-budget.json` ({"artifacts": [...], "max_share": 0.5, "max_artifact
 Przekroczenie:
 - artefakty > max_share (domyślnie 50%) dodanych linii, gdy PR zmienia też kod (PR z samą dokumentacją nie podlega);
 - pojedynczy artefakt > max_artifact linii (domyślnie 600), plan (`plan.md`, `*-plan.md`) > max_plan (300).
-Pierwsza linia: `Werdykt: OK | PRZEKROCZONY`; kod wyjścia 1 przy przekroczeniu. Co zrobić: zostaw w PR to, czego
+Pierwsza linia: `Werdykt: OK | OVER`; kod wyjścia 1 przy przekroczeniu. Co zrobić: zostaw w PR to, czego
 przegląd potrzebuje (plan, raport cięcia), resztę (surowe logi, dowody, zrzuty) przenieś poza repozytorium albo
 skróć; przy uzasadnionym wyjątku opisz go w PR. Tylko biblioteka standardowa.
 """
@@ -80,7 +80,7 @@ def budget(root: Path, base: str) -> dict:
         top = ", ".join(f"{p} (+{n})" for p, n in sorted(sizes.items(), key=lambda kv: -kv[1])[:3])
         problems.append(f"artefakty to {share:.0%} dodanych linii ({art} z {total}) — limit {max_share:.0%}; "
                         f"największe: {top}")
-    return {"verdict": "PRZEKROCZONY" if problems else "OK", "base": base, "code_lines": code,
+    return {"verdict": "OVER" if problems else "OK", "base": base, "code_lines": code,
             "artifact_lines": art, "share": round(share, 3), "artifacts": artifacts, "problems": problems}
 
 

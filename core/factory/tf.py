@@ -368,7 +368,7 @@ def instructions_summary(lint: Path) -> str:
     notes = []
     for f in files:
         bad = [f"{c['id']} ({len(c.get('findings') or []) or c.get('verdict')})" for c in f.get("checks") or []
-               if c.get("verdict") in ("UWAGA", "BŁĄD")]
+               if c.get("verdict") in ("WARN", "ERROR")]
         if bad:
             try:
                 name = Path(f["path"]).resolve().relative_to(Path.cwd().resolve()).as_posix()
@@ -419,7 +419,7 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
         if g.stdout.strip():
             print(g.stdout.strip())
     missing = sorted(set(re.findall(r"tf add (pack-[a-z0-9-]+)", out)))
-    stale = "nieaktualne" in out or "stale" in out
+    stale = "stale" in out or "stale" in out
     if fix and stale:
         run_build()
     if fix and missing:

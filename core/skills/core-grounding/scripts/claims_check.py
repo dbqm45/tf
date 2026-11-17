@@ -14,7 +14,7 @@ Sprawdza:
   [założenie], [niezweryfikowane], przypis [^n]; dokument z deklaracją źródła danych („Pliki:”, „Dane:”,
   „Źródło danych:” albo „surowe wyniki w” zaraz przed `ścieżką`, także w środku zdania) ma ją dla wszystkich liczb.
 Pomija bloki kodu, nagłówki i — dla ostrzeżeń — wiersze tabel (źródło tabeli stoi zwykle nad nią).
-Pierwsza linia wyniku: „Werdykt: OK | OSTRZEŻENIA | BŁĘDY”. Kod wyjścia: 1 przy błędach (z --strict także przy
+Pierwsza linia wyniku: „Werdykt: OK | WARNINGS | ERRORS”. Kod wyjścia: 1 przy błędach (z --strict także przy
 ostrzeżeniach), inaczej 0.
 """
 from __future__ import annotations
@@ -97,7 +97,7 @@ def main(argv: list[str]) -> int:
             e, w = check_text(f.read_text(encoding="utf-8", errors="replace"), f.as_posix(), today)
             errors += e
             warnings += w
-    verdict = "BŁĘDY" if errors else ("OSTRZEŻENIA" if warnings else "OK")
+    verdict = "ERRORS" if errors else ("WARNINGS" if warnings else "OK")
     print(f"Werdykt: {verdict} (błędy: {len(errors)}, ostrzeżenia: {len(warnings)})")
     for e in errors:
         print(f"✗ {e}")

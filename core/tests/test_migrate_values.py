@@ -77,6 +77,15 @@ def main() -> int:
               "- question: Jak?\n- answer: Tak.\n" in d and "## Kto: zespół" in d and "- sent: yes" in d,
               f"MV-7: decisions.md (pdi) — pola wpisu i sent yes/no; nagłówek i treść bez zmian: {d}")
         check(mig.migrate_values(p, dry=False) == [], "MV-8: ponowna migracja decisions.md nic nie zmienia")
+
+        reg = p / ".tf/register/items.jsonl"
+        reg.parent.mkdir(parents=True)
+        reg.write_text('{"id": "A-1", "status": "otwarte", "note": "otwarte pytanie"}\n'
+                       '{"id": "A-2", "status": "rozstrzygnięte", "note": ""}\n', encoding="utf-8")
+        mig.migrate_values(p, dry=False)
+        rows = [json.loads(x) for x in reg.read_text(encoding="utf-8").splitlines()]
+        check([r["status"] for r in rows] == ["open", "resolved"] and rows[0]["note"] == "otwarte pytanie",
+              f"MV-9: rejestr tf analyze — status open/resolved, notatka bez zmian: {rows}")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów migracji wartości")

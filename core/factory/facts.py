@@ -7,8 +7,8 @@ Szukanie już zweryfikowanych faktów, zanim zacznie się nowy research (tańsze
   --root <katalog projektu> · --today RRRR-MM-DD (data odniesienia) · --max-age 180 (dni, po których ustalenie jest „stare”)
 
 Przeszukuje:
-- tabele weryfikacji w docs/project/archive/research/*.md (werdykty P / C / N / S → potwierdzone / częściowo /
-  niepotwierdzone / sprzeczne; data z nazwy pliku RRRRMMDD-…),
+- tabele weryfikacji w docs/project/archive/research/*.md (werdykty P / C / N / S → confirmed / partial /
+  unconfirmed / contradicted; data z nazwy pliku RRRRMMDD-…),
 - sekcje „## Źródła” w skillach (.claude/skills/*/SKILL.md i references/*.md; data z „odczyt RRRR-MM-DD” w linii).
 Ustalenie stare albo niepotwierdzone sprawdź ponownie w źródłach (agent researcher); nowe tabele weryfikacji zapisuj
 w docs/project/archive/research/, żeby kolejne wyszukanie je znalazło. Tylko biblioteka standardowa.
@@ -32,7 +32,7 @@ sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak no
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-VERDICT = {"P": "potwierdzone", "C": "częściowo", "N": "niepotwierdzone", "S": "sprzeczne"}
+VERDICT = {"P": "confirmed", "C": "partial", "N": "unconfirmed", "S": "contradicted"}
 LINE_VERDICT = re.compile(r"^\s*[-*]\s*(P|C|N|S)\b")
 DATE_IN_LINE = re.compile(r"odczyt[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")
 
@@ -73,7 +73,7 @@ def skill_sources(root: Path, ks: list[str]) -> list[dict]:
             if inside and line.strip() and matches(line, ks):
                 d = DATE_IN_LINE.search(line)
                 out.append({"file": f.relative_to(root).as_posix(), "line": i, "text": line.strip().lstrip("-* ").strip(),
-                            "verdict": "źródło skilla", "date": d.group(1) if d else None})
+                            "verdict": "skill-source", "date": d.group(1) if d else None})
     return out
 
 
@@ -100,7 +100,7 @@ def main(argv: list[str]) -> int:
     for h in hits:
         age = (today - dt.date.fromisoformat(h["date"])).days if h["date"] else None
         h["age_days"], h["stale"] = age, (age is None or age > max_age)
-    hits.sort(key=lambda h: (h["verdict"] == "źródło skilla", h["stale"], -(h["age_days"] is None), h["age_days"] or 0))
+    hits.sort(key=lambda h: (h["verdict"] == "skill-source", h["stale"], -(h["age_days"] is None), h["age_days"] or 0))
     if opts.get("--json"):
         print(json.dumps(hits, ensure_ascii=False, indent=1))
         return 0
@@ -110,7 +110,7 @@ def main(argv: list[str]) -> int:
         return 0
     for h in hits:
         when = f"{h['date']} · {h['age_days']} dni" if h["date"] else "bez daty"
-        note = " — nie podawaj jako faktu" if h["verdict"] in ("niepotwierdzone", "sprzeczne") else ""
+        note = " — nie podawaj jako faktu" if h["verdict"] in ("unconfirmed", "contradicted") else ""
         note += " — stare: sprawdź ponownie" if h["stale"] and h["date"] else ""
         print(f"- [{h['verdict']} · {when}] {h['text'][:220]}{note}  ({h['file']}:{h['line']})")
     print(f"\n{len(hits)} ustaleń. Świeże i potwierdzone możesz użyć z datą; resztę sprawdź w źródłach.")

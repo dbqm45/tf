@@ -109,7 +109,7 @@ Przed odpowiedzią z faktami, raportem kroku albo artefaktem:
    - Sprzeczne i niepotwierdzające odwołania popraw.
    - Niepewne przejrzyj sam.
    Liczby i daty: `python3 .claude/skills/core-grounding/scripts/claims_check.py <plik.md|katalog>` — pierwsza linia
-   to `Werdykt: OK | OSTRZEŻENIA | BŁĘDY`.
+   to `Werdykt: OK | WARNINGS | ERRORS`.
    - Błąd: procent niezgodny z ułamkiem w zapisie `X/Y (Z%)`, nieistniejąca data, data stanu z przyszłości — popraw.
    - Ostrzeżenie: liczba z jednostką (%, USD, ms…) bez śladu pochodzenia w tej linii — dopisz polecenie, ścieżkę,
      link albo [założenie]; raport oparty na jednym pliku danych deklaruje go raz (linia „Pliki:” ze ścieżką pliku danych w backtickach).

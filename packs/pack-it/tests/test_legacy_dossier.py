@@ -184,7 +184,7 @@ def main() -> int:
           f"DC-1: kompletna teczka → OK w pierwszej linii: {r.stdout}{r.stderr}")
 
     r = case(INDEX.replace("<!-- legacy-dossier -->\n", ""))
-    check(r.returncode == 1 and r.stdout.startswith("legacy-dossier-check: BŁĘDY") and "znacznik" in r.stdout,
+    check(r.returncode == 1 and r.stdout.startswith("legacy-dossier-check: ERRORS") and "znacznik" in r.stdout,
           f"DC-2: brak znacznika w README.md → błąd: {r.stdout}")
 
     r = case(INDEX.replace("## Słownik", "## Inne"))

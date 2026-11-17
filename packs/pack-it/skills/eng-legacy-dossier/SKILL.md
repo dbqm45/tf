@@ -44,7 +44,7 @@ niczego nie zmienia w kodzie. Każde twierdzenie o zachowaniu ma dowód `plik:li
    wykonanie z zamrożonym zachowaniem **eng-behavior-preserving-refactoring**.
 6. **Sprawdzenie** — **uruchom** `python3 .claude/skills/eng-legacy-dossier/scripts/dossier_check.py
    docs/project/04-architecture/legacy-dossier` (z katalogu repozytorium). Pierwsza linia: `legacy-dossier-check: OK`
-   albo `BŁĘDY` z listą: brakujące sekcje i karty, powtórzone ID, dowód wskazujący nieistniejący plik lub linię.
+   albo `ERRORS` z listą: brakujące sekcje i karty, powtórzone ID, dowód wskazujący nieistniejący plik lub linię.
    Błędy poprawiasz przed oddaniem; liczba reguł „do weryfikacji” idzie do TL;DR.
 
 Wynik: `docs/project/04-architecture/legacy-dossier/README.md` (indeks) + `modules/*.md`; TL;DR i Przekazanie wg

@@ -602,9 +602,11 @@ treści (angielska), bez równoległej polskiej.
   (`control_band`, `metric_watch`, scenariusz ES; poprawka listy profili po #288), schemat przeglądu AI w CI
   (`verdict`, `findings`, `APPROVED|NEEDS_ATTENTION|REJECTED`, `critical|major|minor`), werdykty `readiness_check`
   i `tf onboard`, flaga `profile.py --team-only`.
-- [ ] Etap 2e — reszta zbiorów wartości: werdykty `pr_budget`, kontrole `instructions_lint` i `analyze` (OK / UWAGA /
-  BŁĄD, czytane przez `tf.py`), werdykty `facts.py` (niepotwierdzone, sprzeczne, źródło skilla), pozostałe polskie
-  flagi CLI; przed zmianą każdy zbiór razem z czytelnikami i testami (grep po wartościach w cudzysłowie).
+- [x] Etap 2e — werdykty kontroli: `pr_budget` (`OVER`), `instructions_lint` (`OK|WARN|ERROR`, identyfikatory kontroli
+  `length`, `blocks`, `intents`, `order`, `imports`, `stale`, klucze trybu `--root`), `claims_check`
+  (`OK|WARNINGS|ERRORS`), `dossier_check` (`ERRORS`), `tf analyze` (`ERROR|NEEDS_FIX|OK`, bramka `FAILED`, rejestr
+  `open|resolved` z migracją `items.jsonl`), `facts.py` (`confirmed|partial|unconfirmed|contradicted|skill-source`),
+  rodzaje kart `recon_cards`. Flagi CLI były już po angielsku.
 - [ ] Etap 3 — składnia dokumentów: planu i specyfikacji (`· pliki:`, `· kryteria:`, `· po: brak`, `## Kryteria`,
   „Zakładając / Gdy / Wtedy”), nagłówki i pola dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod /
   do weryfikacji), sekcje raportu rekonstrukcji, kolumny planu wydań pdi (`PLAN_COLUMNS`), etykiety decyzji
