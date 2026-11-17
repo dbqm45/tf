@@ -71,6 +71,7 @@ TICKET = re.compile(r"[A-Za-z][A-Za-z0-9]*-\d+")                      # klucz zg
 TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")     # klucz zadania fabryki (jak w task_state.py)
 TRACKER = re.compile(r"[a-z][a-z0-9-]{1,30}")
 INTENTS = ("zadanie", "question", "szybko")
+INTENT_ALIASES = {"task": "zadanie", "pytanie": "question", "quick": "szybko"}   # słowo na początku w obu językach
 KINDS = {"brak": "brak", "zgloszenie": "zgłoszenie", "wznowienie": "wznowienie", "ciecie": "cięcie", "plik": "plik",
          "tresc": "treść"}
 ASK = {"tracker": "z którego trackera pochodzi zgłoszenie", "change": "do której zmiany należy cięcie",
@@ -350,9 +351,9 @@ def ticket_next(key: str | None, tracker: str | None, source: str | None, root: 
 def resolve(root: Path, raw: str) -> tuple[int, dict]:
     text, options = split_options(raw)
     intent = None
-    m = re.match(r"(?i)(zadanie|question|szybko)\b:?\s+(?=\S)", text)
+    m = re.match(r"(?i)(zadanie|task|question|pytanie|szybko|quick)\b:?\s+(?=\S)", text)
     if m:
-        intent, text = m.group(1).lower(), text[m.end():].strip()
+        intent, text = INTENT_ALIASES.get(m.group(1).lower(), m.group(1).lower()), text[m.end():].strip()
     out = {"kind": "tresc", "key": None, "tracker": None, "tracker_from": None, "source": None, "changes": [],
            "stage": None, "file": None, "title": None, "text": None, "tasks": [], "options": options,
            "intent": intent, "ask": None, "next": ""}
