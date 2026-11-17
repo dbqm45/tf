@@ -708,8 +708,14 @@ treści (angielska), bez równoległej polskiej.
       partii jak przed nią: all 900 · 31/43, none 167 · 16/16, `--hints` czysto w 8 instalacjach (3 pojedyncze
       scenariusze — słowa kluczowe). Haiku przed/po: 5/6 → 5/6 (ten sam `diagnoza-przed-dzwignia`), $1,71.
       Zostaje: komunikaty `ai-review.yml` i `instructions_lint` po polsku (etap komunikatów).
+    - [x] 4b-6 (2026-11-17): `core-agent-security` (+ 2 referencje), `core-skill-authoring` (+ 2 referencje; reguła:
+      po tłumaczeniu `tools/hint_pl_index.py`). Audyt bez ustaleń wysokiej wagi (znaczniki `audit-ok` przy opisach
+      ataków zostają). Podpowiedzi: all 900 · 31/43, none 168 · 16/16 (było 167), `--hints` czysto w 8 instalacjach
+      (2 scenariusze bezpieczeństwa — słowa kluczowe). Haiku przed/po: 4/6 → 3/6 + powtórka `clickfix-base64` 2/2
+      (pojedynczy przebieg bez słowa „ClickFix”); `wstrzykniecie-w-zgloszeniu` i `przyjecie-zmiany-holdout` padały
+      przed tłumaczeniem; $1,87.
     - [ ] dalsze partie:
-      core-skill-authoring, tf, core-agent-security, core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
+      tf, core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
