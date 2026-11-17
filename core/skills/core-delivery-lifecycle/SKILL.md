@@ -46,8 +46,8 @@ You choose the staffing for the problem; a question outside its own field the pe
 Example (pack-it): Maja → Natalia (pack-ux) → Ewa → Tomasz → Tomasz + Kasia → the executor per stack + Kasia → Piotr.
 Staffing with skills: `references/pack-staffing.md` (a domain pack: its `GUIDE.md`).
 
-Documentation is written along the way: the README and how to run it from phase 6, the runbook in phase 7 (pack-docs:
-docs-tech-writing). Language correction before handing to people (pack-editorial-pl: Stefan, txt-polish-correctness).
+Documentation is written along the way: the README and how to run it from phase 6, the runbook in phase 7
+(pack-docs: docs-tech-writing). Language correction before handing to people (pack-editorial-pl: Stefan, txt-polish-correctness).
 
 ## Working with agents — a loop, not a line
 When agents write code in hours, planning, review, deployment and maintenance become the slow parts — that is where you
