@@ -1,41 +1,42 @@
-# Przegląd specyfikacji przez panel recenzentów
+# A specification review by a panel of reviewers
 
-## Kiedy
-Po fazie 3 (wymagania) i przed planem cięć — gdy wymagania mają być realizowane przez agentów (pętla `/tf`, wykonawcy),
-zmiana jest duża albo dotyka obszarów z triażu wysokiego ryzyka (`tf risk`: uprawnienia, pieniądze, dane, schemat).
-Mała zmiana z kilkoma kryteriami: wystarczy zwykły przegląd planu.
+## When
+After phase 3 (requirements) and before the cut plan — when the requirements are to be delivered by agents (the `/tf`
+loop, executors), the change is large or touches areas from the high-risk triage (`tf risk`: permissions, money, data,
+schema). A small change with a few criteria: an ordinary plan review is enough.
 
-## Panel
-2–3 recenzentów, każdy jako osobny podagent w **świeżym kontekście**, bez wglądu w odpowiedzi pozostałych i bez
-rozmowy, w której specyfikacja powstała. Każdy dostaje tylko specyfikację (i ADR, jeśli są) oraz swoje zadanie:
-- **przeciwnik** — dziury i sprzeczności: wymagania niesprawdzalne, dwuznaczne, sprzeczne ze sobą, brakujące
-  przypadki brzegowe, nieograniczony zakres, otwarte pytania udające odpowiedzi;
-- **operator** — co się dzieje przy awariach: częściowe zapisy, współbieżność, ponowienia i duplikaty, zależności
-  niedostępne, limity, obserwowalność błędów, odzyskiwanie;
-- **wykonawca** — czy da się to zbudować i sprawdzić testem w ustalonym stacku: kryteria akceptacji jako testy,
-  dane testowe, zależności między wymaganiami, kolejność.
-Każde ustalenie: identyfikator (F1…), waga (blokujące / poważne / drobne), wymaganie lub fragment, scenariusz
-pokazujący problem, propozycja.
+## The panel
+2–3 reviewers, each as a separate subagent in a **fresh context**, without a view of the others' answers and without
+the conversation in which the specification was written. Each gets only the specification (and the ADRs, if any) and
+its task:
+- **the adversary** — holes and contradictions: requirements that cannot be checked, ambiguous ones, ones that
+  contradict each other, missing edge cases, an unbounded scope, open questions pretending to be answers;
+- **the operator** — what happens at failures: partial writes, concurrency, retries and duplicates, unavailable
+  dependencies, limits, observability of errors, recovery;
+- **the executor** — whether it can be built and checked with a test in the agreed stack: acceptance criteria as tests,
+  test data, dependencies between requirements, the order.
+Every finding: an identifier (F1…), a severity (blocking / serious / minor), the requirement or the fragment, a scenario
+showing the problem, a proposal.
 
-## Przebieg
-1. Uruchom recenzentów równolegle (Agent, osobne konteksty); brief zawiera ścieżkę specyfikacji i zadanie, bez
-   wniosków autora specyfikacji.
-2. Zbierz ustalenia do raportu `03-requirements/spec-review.md` (szablon `spec-review` w core-project-record).
-3. Dla każdego ustalenia decyzja: zmiana wymagania (nowy REQ lub poprawka), zapisana decyzja (DEC/ADR) albo
-   odrzucenie z powodem. Decyzje biznesowe i rozbieżności rozstrzyga człowiek.
+## The course
+1. Start the reviewers in parallel (Agent, separate contexts); the brief contains the specification path and the task,
+   without the conclusions of the specification's author.
+2. Collect the findings into the report `03-requirements/spec-review.md` (the `spec-review` template in core-project-record).
+3. For every finding a decision: a change of a requirement (a new REQ or a correction), a recorded decision (DEC/ADR) or
+   a rejection with a reason. The human settles business decisions and divergences.
 
-## Odczyt wyników
-- **Zbieżne** (wskazało je kilku recenzentów niezależnie) — traktuj jak defekt.
-- **Pojedyncze** — do zważenia jedno po drugim; często najcenniejsze (np. pominięty scenariusz awarii).
-- **Rozbieżne** (jeden uważa za problem, drugi wprost za poprawne) — decyzja człowieka, zapisana z uzasadnieniem.
-- **Niezależność ograniczona:** recenzenci to ten sam dostawca modeli; zgodność to słabszy dowód niż przegląd
-  przez ludzi albo różne modele — napisz to w raporcie.
+## Reading the results
+- **Convergent** (several reviewers pointed it out independently) — treat it as a defect.
+- **Single** — to be weighed one by one; often the most valuable (e.g. a missed failure scenario).
+- **Divergent** (one sees a problem, another explicitly sees it as correct) — the human's decision, recorded with a reason.
+- **Limited independence:** the reviewers come from the same model provider; agreement is weaker evidence than a review
+  by people or by different models — write that in the report.
 
-## Bramka
-Do planu cięć przechodzisz, gdy wszystkie ustalenia **blokujące i poważne** są zamknięte śladem (identyfikator
-wymagania lub decyzji przy ustaleniu). Drobne mogą zostać otwarte z adnotacją. Wykonawca i recenzent zadania mogą
-później cytować ustalenie po identyfikatorze (np. odrzucić pracę, która łamie wymaganie dopisane po F5).
+## The gate
+You move to the cut plan when all **blocking and serious** findings are closed with a trace (the identifier of a
+requirement or a decision at the finding). Minor ones can stay open with a note. The executor and the task reviewer can
+later quote a finding by its identifier (e.g. reject work that breaks a requirement added after F5).
 
-## Granice
-Panel nie zastępuje rozmowy z ekspertem domeny ani testów — znajduje dziury w tekście, nie w rzeczywistości.
-Koszt: kilka przebiegów modelu na specyfikację; przy małych zmianach nie warto.
+## Limits
+The panel does not replace a conversation with a domain expert or tests — it finds holes in the text, not in reality.
+Cost: a few model runs per specification; not worth it for small changes.
