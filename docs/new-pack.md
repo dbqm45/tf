@@ -76,3 +76,10 @@ Moduł reguł z `tier0.rules` wykonuje skaner rdzenia `.tf/factory/rules_scan.py
   reguła sprawdzana w CI]: nowy skill lub rola — MINOR, zmiana nazwy albo usunięcie skilla, roli lub persony —
   MAJOR z wpisem w `factory/migrations.py` (zmiana nazwy skilla jako MAJOR — decyzja z 2026-10-21).
 - `requires.core` zawęża zakres, gdy nakładka zaczyna używać funkcji nowszego rdzenia.
+
+## Migracje danych projektu
+Gdy nowa wersja nakładki zmienia format plików, które jej skille zakładają w projekcie (np. nagłówki dokumentu
+sprawdzanego skryptem), dodaj `packs/<id>/migrations.py` z funkcją `migrate_values(root, dry) -> list[str]`: zwraca
+zmienione ścieżki, przy `dry=True` niczego nie zapisuje, a ponowne wywołanie po migracji zwraca pustą listę. Instalator
+kopiuje plik do `.tf/factory/packs/<id>/`, a `migrations.migrate_values` rdzenia wywołuje go przy aktualizacji — rdzeń
+nie wymienia skilli nakładek. Przykład: `packs/pack-it/migrations.py` (dossier legacy).

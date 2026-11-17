@@ -12,32 +12,32 @@ System: <nazwa> · Commit: <HEAD> · Data: <RRRR-MM-DD>
 
 ## TL;DR
 <5–7 zdań: co system robi dla biznesu, z ilu modułów się składa, gdzie jest rdzeń, największe ryzyko zmiany,
-ile reguł „do weryfikacji”.>
+ile reguł `to verify`.>
 
-## Moduły
+## Modules
 | Moduł | Po co | Stan |
 |---|---|---|
 | [faktury](modules/faktury.md) | wystawianie faktur i korekt | żółty |
 
-## Przepływy
+## Flows
 ### Wystawienie faktury
 1. `InvoiceController.create` (src/web/InvoiceController.java:40) przyjmuje zamówienie …
 (diagram sekwencji Mermaid)
 
-## Słownik
+## Glossary
 | W kodzie | W biznesie | Uwaga |
 |---|---|---|
 | `Doc` | faktura | także korekta (`type = 'K'`) |
 
-## Stan i kandydaci do refaktoru
+## State and refactoring candidates
 | Moduł | Stan | Kandydat | Dlaczego (dowód) |
 |---|---|---|---|
 | faktury | żółty | jedno miejsce zaokrągleń | R-FAK-01 vs R-FAK-02 |
 
-## Pytania otwarte
+## Open questions
 - <pytanie> — kogo zapytać (obszar, nie ocena osoby)
 
-## Ograniczenia
+## Limitations
 <czego teczka nie obejmuje: moduły pominięte, brak dostępu do bazy produkcyjnej, kod generowany>
 
 ## Przekazanie
@@ -49,25 +49,25 @@ ile reguł „do weryfikacji”.>
 ```markdown
 <!-- legacy-dossier:module -->
 # Moduł: <nazwa>
-Stan: zielony|żółty|czerwony — <powód jednym zdaniem>
+State: green|yellow|red — <powód jednym zdaniem>
 
-## Po co
-## Odpowiedzialności
-## Wejścia i wyjścia
-## Reguły biznesowe
-| ID | Reguła | Dowód | Pewność |
+## Purpose
+## Responsibilities
+## Inputs and outputs
+## Business rules
+| ID | Rule | Evidence | Confidence |
 |---|---|---|---|
-| R-<MOD>-01 | <zdanie dla biznesu> | ścieżka/Plik.java:42 | test|kod|do weryfikacji |
-## Dane
-## Zależności
-## Pułapki
-## Testy
-## Pytania
+| R-<MOD>-01 | <zdanie dla biznesu> | ścieżka/Plik.java:42 | test|code|to verify |
+## Data
+## Dependencies
+## Pitfalls
+## Tests
+## Questions
 ```
 
 - ID reguły unikalne w całej teczce: `R-<skrót modułu>-<numer>`.
 - Dowód: ścieżka względem katalogu repozytorium, `plik:linia` albo `plik:od-do`; kilka dowodów po przecinku.
-- Brak dowodu: `—` i pewność `do weryfikacji`, a pytanie trafia do sekcji Pytania.
+- Brak dowodu: `—` i pewność `to verify`, a pytanie trafia do sekcji Questions.
 
 ## 3. Skąd brać reguły biznesowe
 
@@ -83,13 +83,13 @@ Stan: zielony|żółty|czerwony — <powód jednym zdaniem>
 | historia gita (`git log -S`, opisy „fix”) | reguły dodane po incydencie | „fix: korekta po zapłacie” |
 | triggery i procedury w bazie | reguły poza kodem aplikacji | `BEFORE UPDATE ON invoices` |
 
-Reguła z testu ma pewność `test`. Reguła z samego kodu — `kod`. Wniosek z nazwy, komentarza albo historii bez
-potwierdzenia w kodzie — `do weryfikacji`. Gdy test i kod mówią co innego, wpisz obie wersje i pytanie.
+Reguła z testu ma pewność `test`. Reguła z samego kodu — `code`. Wniosek z nazwy, komentarza albo historii bez
+potwierdzenia w kodzie — `to verify`. Gdy test i kod mówią co innego, wpisz obie wersje i pytanie.
 
 ## 4. Kontrakt dla `dossier_check.py`
 
 - Pierwsza linia indeksu: `<!-- legacy-dossier -->`, karty: `<!-- legacy-dossier:module -->`.
 - Sekcje indeksu: TL;DR, Moduły, Przepływy, Słownik, Stan i kandydaci do refaktoru, Pytania otwarte, Ograniczenia.
 - Sekcje karty: Po co, Odpowiedzialności, Wejścia i wyjścia, Reguły biznesowe, Dane, Zależności, Pułapki, Testy,
-  Pytania; linia `Stan: <zielony|żółty|czerwony> — <powód>`.
+  Pytania; linia `State: <green|yellow|red> — <powód>`.
 - Moduł z indeksu bez pliku i błędny dowód to błąd; karta spoza indeksu — ostrzeżenie.

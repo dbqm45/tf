@@ -33,13 +33,13 @@ Sprzężenie mierzone dowodem w kodzie (stopień connascence) — ddd-connascenc
 ## 4. Ustalenie (`ARCH-NNN`)
 ```markdown
 ### ARCH-004 — Biblioteka współdzielona importuje implementację aplikacji
-Obszar: granice bibliotek
-Kategoria: potwierdzony problem
-Stan obecny: libs/shared/ui importuje OrdersFacade z apps/shop
-Stan oczekiwany: biblioteki współdzielone nie zależą od aplikacji
-Luka: zmiana w aplikacji może zepsuć wszystkich konsumentów shared/ui
-Dowód: libs/shared/ui/src/lib/order-badge.component.ts:3
-Wpływ: sprzężenie; shared/ui nie da się użyć w drugiej aplikacji
+Area: granice bibliotek
+Category: confirmed problem
+Current state: libs/shared/ui importuje OrdersFacade z apps/shop
+Expected state: biblioteki współdzielone nie zależą od aplikacji
+Gap: zmiana w aplikacji może zepsuć wszystkich konsumentów shared/ui
+Evidence: libs/shared/ui/src/lib/order-badge.component.ts:3
+Impact: sprzężenie; shared/ui nie da się użyć w drugiej aplikacji
 ```
 - **Dowód** to `plik:linia` (kilka po przecinku). Wynik polecenia (np. graf zależności) zapisz w teczce
   (`evidence/graph.json`) i wskaż `evidence/graph.json:1` — `dossier_check.py` sprawdza istnienie pliku i linii.
@@ -49,25 +49,25 @@ Wpływ: sprzężenie; shared/ui nie da się użyć w drugiej aplikacji
 ## 5. Kategorie
 | Kategoria | Znaczenie | Dowód |
 |---|---|---|
-| potwierdzony problem | wykazany skutek, np. cykl blokujący niezależne zmiany | wymagany; wymaga rekomendacji |
-| ryzyko | może się ujawnić, np. brak kontroli zależności | zalecany |
-| niespójność | podobne rzeczy rozwiązane różnie | wymagany (oba miejsca) |
-| możliwość poprawy | da się prościej, bez krytycznego problemu | zalecany |
-| preferencja | inny styl, bez wykazanego skutku | — ; nie uzasadnia refaktoryzacji strukturalnej |
+| `confirmed problem` | wykazany skutek, np. cykl blokujący niezależne zmiany | wymagany; wymaga rekomendacji |
+| `risk` | może się ujawnić, np. brak kontroli zależności | zalecany |
+| `inconsistency` | podobne rzeczy rozwiązane różnie | wymagany (oba miejsca) |
+| `improvement` | da się prościej, bez krytycznego problemu | zalecany |
+| `preference` | inny styl, bez wykazanego skutku | — ; nie uzasadnia refaktoryzacji strukturalnej |
 
 ## 6. Rekomendacja (`REC-NNN`) i szczeble decyzji
 ```markdown
 ### REC-002 — Egzekwować kierunek zależności regułą Nx
-Dotyczy: ARCH-004, ARCH-007
-Decyzja: konfiguracja
-Priorytet: P1
-Wysiłek: 0,5 dnia
-Ryzyko: lint zablokuje istniejące importy — najpierw lista wyjątków
-Weryfikacja: przykładowy niedozwolony import jest zgłaszany przez lint, dozwolone przechodzą
+Addresses: ARCH-004, ARCH-007
+Decision: configuration
+Priority: P1
+Effort: 0,5 dnia
+Risk: lint zablokuje istniejące importy — najpierw lista wyjątków
+Verification: przykładowy niedozwolony import jest zgłaszany przez lint, dozwolone przechodzą
 ```
-Szczeble (wybierz najniższy, który rozwiązuje rzeczywisty problem): **bez zmian** (z powodem) → **dokumentacja** →
-**konfiguracja** (lint, reguły, tagi) → **refaktoryzacja przyrostowa** → **refaktoryzacja strukturalna** (zmiana
-podziału odpowiedzialności) → **przeprojektowanie**. Rekomendacja opisuje też obecne rozwiązanie, problem,
+Szczeble (wybierz najniższy, który rozwiązuje rzeczywisty problem): **`no change`** (z powodem) → **`documentation`** →
+**`configuration`** (lint, reguły, tagi) → **`incremental refactoring`** → **`structural refactoring`** (zmiana
+podziału odpowiedzialności) → **`redesign`**. Rekomendacja opisuje też obecne rozwiązanie, problem,
 uzasadnienie i oczekiwaną korzyść — w treści pod polami.
 
 ## 7. Priorytety i roadmapa
@@ -96,23 +96,23 @@ i UI, dostęp do API, zarządzanie stanem, wymagania testów, dokumentowanie wyj
 ```markdown
 <!-- legacy-dossier:assessment -->
 # Architecture Assessment — <system>
-## Podsumowanie
-## Zakres i metoda
-## Kryteria oceny
-## Ustalenia
+## Summary
+## Scope and method
+## Assessment criteria
+## Findings
 ### ARCH-001 — …
-## Mocne strony
-## Do dalszego zbadania
+## Strengths
+## To investigate
 ```
 `recommendations.md`:
 ```markdown
 <!-- legacy-dossier:recommendations -->
 # Architecture Recommendations & Roadmap — <system>
-## Docelowe zasady
-## Rekomendacje
+## Target principles
+## Recommendations
 ### REC-001 — …
-## Roadmapa
-## Kryteria sukcesu
+## Roadmap
+## Success criteria
 ```
 
 ## 10. Harmonogram orientacyjny
