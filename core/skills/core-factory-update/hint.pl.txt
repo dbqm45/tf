@@ -1,3 +1,4 @@
+head: Użyj na polecenie człowieka przy aktualizacji fabryki (rdzeń + nakładki) — tf update, nakładki i języki, omówienie zmian, nadpisane pliki fabryki. Użyj tylko na polecenie człowieka (`/core-factory-update`) — sprawdzenie i instalacja nowej wersji fabryki (rdzeń + nakładki) w projekcie poleceniem tf lub .tf/factory/update.py, dodanie i usunięcie nakładki, zmiana języka pracy i commitów, tf doctor, omówienie zmian, nadpisane pliki fabryki i nowe klucze konfiguracji, kontrola po aktualizacji. Nie do tworzenia własnych skilli (`.tf/factory/build.py new-skill`) ani aktualizacji zależności projektu.
 # Aktualizacja fabryki w projekcie
 
 Wywołanie: `/core-factory-update` albo `/core-factory-update <źródło>`. Źródło zapamiętuje manifest `.claude/factory-manifest.json`,

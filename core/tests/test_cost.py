@@ -100,6 +100,15 @@ def main() -> int:
         rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
         if rec.get("tier_feedback") != "niski":
             fails.append(f"log_usage: brak tier_feedback — {rec}")
+        total += 1     # 14.x: sygnał po angielsku zapisany tą samą wartością co dawny polski
+        tr.write_text(json.dumps({"type": "assistant", "message": {"id": "m2", "model": "claude-haiku-4-5",
+                      "usage": {"input_tokens": 10, "output_tokens": 50},
+                      "content": [{"type": "text", "text": "**Done:** …\n**Tier:** `Tier: too high — a rename only`"}]}}) + "\n")
+        run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SubagentStop", "agent_type": "scout",
+                                                             "agent_transcript_path": str(tr), "session_id": "s"}))
+        rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
+        if rec.get("tier_feedback") != "wysoki":
+            fails.append(f"log_usage: „Tier: too high” (14.x) → tier_feedback wysoki — {rec}")
         total += 1
         run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SubagentStop", "agent_type": "scout",
                                                              "agent_id": "a1", "agent_transcript_path": str(tr)}))
@@ -169,6 +178,9 @@ def main() -> int:
         total += 1
         if delegate("**Klasa:** Przegląd — świeże spojrzenie\n…").get("klass") != "review":
             fails.append("log_usage: klasa z diakrytykami i formatowaniem → review")
+        total += 1
+        if delegate("**Class:** review — a fresh look\n…").get("klass") != "review":
+            fails.append("log_usage: linia „Class:” (14.x) → review")
         total += 1
         if delegate("Klasa: coś innego\n…").get("klass") != "other":
             fails.append("log_usage: nieznana klasa → inne")

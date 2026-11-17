@@ -1,52 +1,52 @@
-# Strategie scalania i stos PR-ów
+# Merge strategies and a PR stack
 
-Polecenia `gh` (GitHub CLI) to przykład. Inne platformy mają odpowiedniki: zmianę gałęzi docelowej PR i scalanie
-z wyborem strategii.
+The `gh` (GitHub CLI) commands are an example. Other platforms have equivalents: changing a PR's target branch and merging
+with a choice of strategy.
 
-## 1. Strategia scalania
-| Strategia | Co trafia do gałęzi głównej | Kiedy |
+## 1. Merge strategy
+| Strategy | What goes into the main branch | When |
 |---|---|---|
-| **squash** | jeden commit z całego PR | domyślnie przy małych PR-ach; historia „jeden PR = jeden commit”, łatwy revert |
-| **rebase** | commity PR jeden po drugim, bez commita scalającego | commity PR są starannie podzielone i każdy przechodzi testy |
-| **merge commit** | commity PR plus commit scalający | gałęzie długo żyjące albo gdy liczy się zapis, kiedy i co scalono (np. gałąź wydania) |
+| **squash** | one commit from the whole PR | by default for small PRs; a "one PR = one commit" history, an easy revert |
+| **rebase** | the PR's commits one after another, without a merge commit | the PR's commits are carefully split and each one passes the tests |
+| **merge commit** | the PR's commits plus a merge commit | long-lived branches or when the record of when and what was merged matters (e.g. a release branch) |
 
-- W repozytorium obowiązuje jedna strategia (ustawienie repozytorium albo ochrona gałęzi). Nie zmieniaj jej dla
-  pojedynczego PR bez powodu.
-- Przy squash podaj tytuł commita wprost, czyli tytuł PR z numerem, np.
-  `gh pr merge 42 --squash --subject "feat(api): limit zapytań (#42)"`. Bez tego narzędzie może wziąć nazwę gałęzi
-  albo pierwszy commit. Format tytułu opisuje core-conventional-commits.
-- Stan PR przed scaleniem: `gh pr checks <N>` (CI), `gh pr status` (twoje PR-y i prośby o przegląd),
-  `gh pr view <N>` (opis, przeglądy). Scalasz tylko przy zielonym CI i wymaganych zatwierdzeniach.
+- One strategy applies in the repository (a repository setting or branch protection). Do not change it for
+  a single PR without a reason.
+- With squash give the commit title explicitly, that is the PR title with its number, e.g.
+  `gh pr merge 42 --squash --subject "feat(api): limit zapytań (#42)"`. Without it the tool may take the branch name
+  or the first commit. The title format is described in core-conventional-commits.
+- The PR's state before merging: `gh pr checks <N>` (CI), `gh pr status` (your PRs and review requests),
+  `gh pr view <N>` (description, reviews). You merge only with green CI and the required approvals.
 
-## 2. Stos PR-ów (stacked PRs)
-Duża zmiana podzielona na kolejne PR-y, z których każdy celuje w gałąź poprzedniego:
-`main ← #1 (feat-a) ← #2 (feat-b, baza feat-a) ← #3 (feat-c, baza feat-b)`. Każdy PR jest mały i przeglądany
-osobno, a kolejne mogą powstawać przed scaleniem pierwszego.
+## 2. A PR stack (stacked PRs)
+A big change split into successive PRs, each of which targets the previous one's branch:
+`main ← #1 (feat-a) ← #2 (feat-b, baza feat-a) ← #3 (feat-c, baza feat-b)`. Each PR is small and reviewed
+separately, and the next ones can be created before the first one is merged.
 
-**Problem po squash:** po scaleniu #1 przez squash gałąź `main` ma jeden nowy commit, którego nie ma w historii
-`feat-b`. PR #2 nadal zawiera oryginalne commity #1, więc diff względem `main` jest za duży, a przeniesienie
-zwykłym `rebase` daje konflikty z własną, już scaloną zmianą.
+**The problem after a squash:** after #1 is merged with a squash, `main` has one new commit that is not in the history
+of `feat-b`. PR #2 still contains the original commits of #1, so the diff against `main` is too big, and moving it with
+a plain `rebase` gives conflicts with your own, already merged change.
 
-**Procedura** (po kolei, jeden PR naraz):
-1. Scal pierwszy PR (squash, tytuł wprost) i pobierz `main`: `git fetch origin main`.
-2. Przenieś następny PR na `main` bez commitów poprzedniej gałęzi:
-   `git rebase --onto origin/main feat-a feat-b`. Polecenie bierze commity, które są w `feat-b`, a nie ma ich
-   w `feat-a`, i odtwarza je na `origin/main`. Zostają tylko zmiany #2.
-3. Wypchnij przepisaną gałąź: `git push --force-with-lease origin feat-b`. To przepisanie historii, więc tylko na
-   własnej gałęzi i za zgodą człowieka (sekcja „Zakazane” w SKILL.md).
-4. Zmień gałąź docelową PR na `main`: `gh pr edit <N> --base main`. Bez tego PR scali się do nieaktualnej `feat-a`.
-5. Poczekaj na CI na nowym commicie, potem scal (squash, tytuł wprost). Powtórz od kroku 1 dla kolejnego PR.
+**The procedure** (in order, one PR at a time):
+1. Merge the first PR (squash, the title explicitly) and fetch `main`: `git fetch origin main`.
+2. Move the next PR onto `main` without the previous branch's commits:
+   `git rebase --onto origin/main feat-a feat-b`. The command takes the commits that are in `feat-b` and not
+   in `feat-a`, and replays them on `origin/main`. Only the changes of #2 stay.
+3. Push the rewritten branch: `git push --force-with-lease origin feat-b`. This rewrites history, so only on
+   your own branch and with the human's consent (the "Forbidden" section in SKILL.md).
+4. Change the PR's target branch to `main`: `gh pr edit <N> --base main`. Without it the PR merges into the outdated `feat-a`.
+5. Wait for CI on the new commit, then merge (squash, the title explicitly). Repeat from step 1 for the next PR.
 
-**Konflikty w trakcie `rebase --onto`:** zatrzymaj się i pokaż człowiekowi pliki z konfliktami. Nie rozwiązuj ich
-automatycznie. Po rozwiązaniu: `git add <pliki>` i `git rebase --continue`; rezygnacja: `git rebase --abort`.
+**Conflicts during `rebase --onto`:** stop and show the human the files with conflicts. Do not resolve them
+automatically. After resolving: `git add <pliki>` and `git rebase --continue`; giving up: `git rebase --abort`.
 
-**Dlaczego nie cherry-pick:** przeniesienie bazy zachowuje PR w platformie (oznaczenie „scalony do main”,
-przeglądy, dyskusję), a historia `main` zostaje liniowa, bez zdublowanych commitów.
+**Why not cherry-pick:** moving the base keeps the PR in the platform (the "merged into main" marking,
+reviews, the discussion), and the history of `main` stays linear, without duplicated commits.
 
-## Źródła
-- callstackincubator/agent-skills, skill `github` z plikiem stacked-pr-workflow.md (wersja sprzed commita
-  3bd44da z 2026-08-07, w którym autorzy usunęli skill jako przestarzały), licencja MIT; odczyt 2026-10-21.
-  Opisane własnymi słowami; tabela strategii scalania to nasze uzupełnienie.
-- `git help rebase` (opcja `--onto`); `gh pr merge --help`, `gh pr edit --help`, `gh pr checks --help` w gh 2.89.0
-  (sprawdzone 2026-10-21): tytuł commita przy squash ustawia `--subject` (`-t`); opcja `--title` podana w źródle
-  w tej wersji nie istnieje.
+## Sources
+- callstackincubator/agent-skills, the `github` skill with the file stacked-pr-workflow.md (the version before the commit
+  3bd44da of 2026-08-07, in which the authors removed the skill as outdated), MIT licence; read 2026-10-21.
+  Described in our own words; the merge strategy table is our addition.
+- `git help rebase` (the `--onto` option); `gh pr merge --help`, `gh pr edit --help`, `gh pr checks --help` in gh 2.89.0
+  (checked 2026-10-21): the commit title on a squash is set with `--subject` (`-t`); the `--title` option given in the source
+  does not exist in this version.

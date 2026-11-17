@@ -701,9 +701,15 @@ treści (angielska), bez równoległej polskiej.
       Haiku przed/po: 5/5 → 5/5, $1,43.
     - [ ] nagłówki generowanego indeksu i raportu (`project_record.py`: „Praca w toku”, „Ostatnie zdarzenia”,
       „Decyzje”, „Otwarte pytania”) — razem z komunikatami skryptów.
+    - [x] 4b-5 (2026-11-17): `core-git-workflow` (+ 3 referencje), `core-cost-control` (+ 3 referencje),
+      `core-agent-instructions` (+ referencja). Hook `log_usage` czyta `Class:` (dawniej `Klasa:`) i `Tier: too low/too
+      high` (zapis tą samą wartością co `za niski/za wysoki`; test w `test_cost`). `hint.pl.txt` ma linię `head:` —
+      dawny opis i katalog z wagą opisu (wcześniej tylko treść); indeksy 17 skilli przebudowane. Podpowiedzi po
+      partii jak przed nią: all 900 · 31/43, none 167 · 16/16, `--hints` czysto w 8 instalacjach (3 pojedyncze
+      scenariusze — słowa kluczowe). Haiku przed/po: 5/6 → 5/6 (ten sam `diagnoza-przed-dzwignia`), $1,71.
+      Zostaje: komunikaty `ai-review.yml` i `instructions_lint` po polsku (etap komunikatów).
     - [ ] dalsze partie:
-      core-agent-instructions, core-skill-authoring, core-git-workflow, core-cost-control, tf, core-agent-security,
-      core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
+      core-skill-authoring, tf, core-agent-security, core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).

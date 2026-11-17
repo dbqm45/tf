@@ -99,11 +99,16 @@ def load_index() -> list[dict]:
         body = text[m.end() if m else 0:]
         excerpt = re.sub(r"<!--.*?-->|\s+", " ", body, flags=re.S).strip()[:700]
         pl_index = p.parent / PL_INDEX       # tekst sprzed tłumaczenia: polskie polecenia trafiają jak dawniej
+        pl_head = ""
         if pl_index.is_file():
-            body += "\n" + pl_index.read_text(encoding="utf-8", errors="ignore")
+            pl_text = pl_index.read_text(encoding="utf-8", errors="ignore")
+            if pl_text.startswith("head: "):     # dawny polski opis i katalog — waga opisu, nie treści
+                first, _, pl_text = pl_text.partition("\n")
+                pl_head = NEG_RE.sub("", first[6:])
+            body += "\n" + pl_text
         body = re.sub(r"```.*?```", " ", body, flags=re.S)          # bez przykładów kodu
         body = re.sub(r"^## (Źródła|Sources)\b.*?(?=^# |\Z)", " ", body, flags=re.S | re.M)  # bez listy źródeł
-        head = stems(f"{desc} {kat} {name_words} {keywords}")
+        head = stems(f"{desc} {kat} {name_words} {keywords} {pl_head}")
         items.append({"name": name, "desc": desc.strip(), "kat": kat.strip(), "excerpt": excerpt,
                       "head": set(head), "body": set(stems(body)) - set(head)})
     return items

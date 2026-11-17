@@ -1,153 +1,153 @@
 ---
 name: core-agent-instructions
-description: Użyj przy pisaniu i przeglądzie CLAUDE.md lub AGENTS.md — test włączenia, karta kontroli, moduły.
+description: Use when writing and reviewing CLAUDE.md or AGENTS.md — the inclusion test, a check card, modules.
 metadata:
   review: "2027-10-10"
-  catalog: "Użyj, gdy powstaje, puchnie, starzeje się albo nie działa plik instrukcji agenta w projekcie (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/) — test włączenia reguły, gdzie co trzymać (reguła, skill, hook, pamięć), szkic z inspekcji repo, karta pięciu kontroli ze skryptem, aktualizacja z historii gita, kalibracja reguły A/B, drabina plików w modułach z indeksem w root, AGENTS.md obok CLAUDE.md. Nie do pisania skilli (core-skill-authoring), lekcji i dziennika projektu (core-project-record) ani README i dokumentacji dla ludzi (skill dokumentacji, pack-docs)."
-  keywords: "CLAUDE.md, AGENTS.md, CLAUDE.local.md, plik instrukcji agenta, reguły dla agenta, reguły AI, zasady dla agenta, cursor rules, .claude/rules, /init, CLAUDE.md za długi, CLAUDE.md puchnie, agent ignoruje reguły, agent łamie konwencję, porządki w CLAUDE.md, przegląd reguł, onboarding agenta, monorepo CLAUDE.md, CLAUDE.md w module, reguły per katalog, AGENTS.md i CLAUDE.md razem, Codex i Claude Code, Copilot, Cursor, kilka narzędzi AI, wspólne reguły agentów, reguły się rozjechały, czy reguła działa, nieaktualne wpisy w CLAUDE.md, refaktor a CLAUDE.md"
+  catalog: "Use when the project's agent instructions file is being created, swells, goes stale or does not work (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/) — the rule inclusion test, where to keep what (a rule, a skill, a hook, memory), a draft from inspecting the repo, a five-check card with a script, an update from git history, A/B rule calibration, a ladder of files in modules with an index in the root, AGENTS.md next to CLAUDE.md. Not for writing skills (core-skill-authoring), project lessons and the record (core-project-record) or a README and documentation for people (the documentation skill, pack-docs)."
+  keywords: "CLAUDE.md, AGENTS.md, CLAUDE.local.md, plik instrukcji agenta, reguły dla agenta, reguły AI, zasady dla agenta, cursor rules, .claude/rules, /init, CLAUDE.md za długi, CLAUDE.md puchnie, agent ignoruje reguły, agent łamie konwencję, porządki w CLAUDE.md, przegląd reguł, onboarding agenta, monorepo CLAUDE.md, CLAUDE.md w module, reguły per katalog, AGENTS.md i CLAUDE.md razem, Codex i Claude Code, Copilot, Cursor, kilka narzędzi AI, wspólne reguły agentów, reguły się rozjechały, czy reguła działa, nieaktualne wpisy w CLAUDE.md, refaktor a CLAUDE.md, agent instructions file, rules for the agent, CLAUDE.md too long, agent ignores the rules, review the rules, rules per directory, several AI tools, does the rule work, outdated entries, czy reguła coś zmienia, reguła zajmuje kontekst, kalibracja reguły, test A/B reguły, does the rule change anything, the rule takes up context"
 ---
 
-# Instrukcje dla agentów w projekcie (CLAUDE.md, AGENTS.md, reguły)
+# Instructions for agents in a project (CLAUDE.md, AGENTS.md, rules)
 
-Plik instrukcji to wdrożenie agenta, który zna język i framework, ale nie zna Waszych lokalnych umów. Każda linia
-kosztuje kontekst w każdej sesji i u każdego wykonawcy, a reguły z długiego pliku są przestrzegane słabiej.
-Skill daje kryteria, co wpisać, gdzie to trzymać, jak plik przejrzeć i jak sprawdzić, że reguła działa.
-Architektura plików w dużym repo (moduły, indeks, wiele repozytoriów): `references/context-scaling.md`.
+An instructions file is the onboarding of an agent that knows the language and the framework, but not your local agreements. Every line
+costs context in every session and for every executor, and the rules from a long file are followed more weakly.
+The skill gives criteria for what to write, where to keep it, how to review the file and how to check that a rule works.
+The architecture of files in a big repo (modules, an index, many repositories): `references/context-scaling.md`.
 
-## 1. Test włączenia (przed dopisaniem każdej linii)
-„Czy agent wiedziałby to bez tego pliku — z danych treningowych, dokumentacji frameworka, README, konfiguracji
-lintera albo z samego kodu?” Tak → nie dopisuj (najwyżej odnośnik). Nie → dopisz.
-- **Należą:** nieoczywiste konwencje (kształt błędu API, nazewnictwo plików, dozwolone importy), pułapki projektu,
-  obejścia wynikające z historii lub błędu zależności, polecenia build/test/lint, wskazanie pliku-wzorca
-  (`src/users/user.service.ts` zamiast wklejonego przykładu).
-- **Nie należą:** dokumentacja frameworka, treść README, zasady już wymuszone konfiguracją (`strict` w tsconfig),
-  opis struktury katalogów i listy zależności (agent odczyta je z repo), intencje („pisz czysty kod”) — zamień na
-  zachowanie sprawdzalne w diffie albo usuń.
-- Reguła bez powtarzalnego błędu agenta nie trafia do pliku „na zapas”. Sygnały, że trzeba dopisać: ten sam błąd
-  agenta drugi raz, ta sama poprawka wpisywana w kolejnej sesji, uwaga z przeglądu kodu, której agent nie mógł znać.
+## 1. The inclusion test (before adding every line)
+"Would the agent know this without this file — from training data, the framework's documentation, the README, the linter
+configuration or from the code itself?" Yes → do not add it (at most a link). No → add it.
+- **Belong:** non-obvious conventions (the shape of an API error, file naming, allowed imports), the project's pitfalls,
+  workarounds resulting from history or a dependency bug, the build/test/lint commands, pointing to a model file
+  (`src/users/user.service.ts` instead of a pasted example).
+- **Do not belong:** framework documentation, README content, rules already enforced by configuration (`strict` in tsconfig),
+  a description of the directory structure and lists of dependencies (the agent reads them from the repo), intentions ("write clean code") — replace them with
+  behaviour checkable in the diff or remove them.
+- A rule without a recurring agent mistake does not go into the file "just in case". Signals that it needs adding: the same agent
+  mistake a second time, the same correction typed in the next session, a code review remark the agent could not have known.
 
-## 2. Gdzie co trzymać
-| Treść | Miejsce |
+## 2. Where to keep what
+| Content | Place |
 |---|---|
-| obowiązuje zawsze, w całym repo | główny `CLAUDE.md` / `AGENTS.md`, najważniejsze zakazy na górze |
-| dotyczy części kodu | `CLAUDE.md` w katalogu tej części albo reguła `.claude/rules/*.md` z polem `paths` |
-| procedura uruchamiana, gdy trzeba | skill (core-skill-authoring) |
-| kontrola, której nie wolno pominąć (format, sekrety, blokada polecenia) | hook albo reguła uprawnień — CLAUDE.md to kontekst, nie wymuszenie |
-| preferencja osobista | `CLAUDE.local.md` (w `.gitignore`) albo `~/.claude/CLAUDE.md` |
-| pułapka z incydentu | `docs/project/lessons.md` (core-project-record); wraca drugi raz → propozycja do CLAUDE.md |
-| referencje: PRD, plany, decyzje, mapy | `docs/project/` czytane w razie potrzeby, z odnośnikiem w CLAUDE.md |
+| applies always, across the whole repo | the main `CLAUDE.md` / `AGENTS.md`, the most important bans on top |
+| concerns a part of the code | a `CLAUDE.md` in that part's directory or a `.claude/rules/*.md` rule with a `paths` field |
+| a procedure run when needed | a skill (core-skill-authoring) |
+| a check that must not be skipped (format, secrets, blocking a command) | a hook or a permission rule — CLAUDE.md is context, not enforcement |
+| a personal preference | `CLAUDE.local.md` (in `.gitignore`) or `~/.claude/CLAUDE.md` |
+| a pitfall from an incident | `docs/project/lessons.md` (core-project-record); it comes back a second time → a proposal for CLAUDE.md |
+| references: PRDs, plans, decisions, maps | `docs/project/` read when needed, with a link in CLAUDE.md |
 
-**Agent startujący gdzie indziej** (sesja wielorepozytoryjna, agent z repo A zmienia repo B) nie wczytuje
-`CLAUDE.md` ani `AGENTS.md` repo B. Reguły potrzebne przy pracy z zewnątrz (nazwa forka, gałąź docelowa, wymagane
-flagi, np. `gh -R …`) trzymasz także tam, gdzie taki agent zagląda: w globalnych instrukcjach (`~/.claude/CLAUDE.md`)
-albo w README repo B; regułę krytyczną wymusza skrypt lub hook.
+**An agent starting elsewhere** (a multi-repository session, an agent from repo A changes repo B) does not load
+the `CLAUDE.md` or `AGENTS.md` of repo B. Rules needed when working from outside (the fork's name, the target branch, required
+flags, e.g. `gh -R …`) you also keep where such an agent looks: in the global instructions (`~/.claude/CLAUDE.md`)
+or in the README of repo B; a script or a hook enforces a critical rule.
 
-Jedna reguła żyje w jednym miejscu. Kilka narzędzi AI w zespole: `AGENTS.md` jako źródło prawdy, a `CLAUDE.md`
-z jedną linią `@AGENTS.md` (i ewentualnie regułami tylko dla Claude Code pod nią). Jak Claude Code ładuje te pliki
-(podkatalogi na żądanie, importy, AGENTS.md bez CLAUDE.md): `references/context-scaling.md`, sekcja 4.
+One rule lives in one place. Several AI tools in the team: `AGENTS.md` as the source of truth, and `CLAUDE.md`
+with one line `@AGENTS.md` (and possibly rules only for Claude Code below it). How Claude Code loads these files
+(subdirectories on demand, imports, AGENTS.md without CLAUDE.md): `references/context-scaling.md`, section 4.
 
-**Mapa własności artefaktów harnessu:** każdy plik instrukcji, skill, hook, kontrakt narzędzia, polityka uprawnień
-i czujnik ma właściciela z domeny, której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu
-i osobę zmieniającą kontrakt. Reguły dopisujesz jak zapadkę: tylko z prawdziwej porażki, po przeglądzie. Skill
-nieużywany przez 60–90 dni (fabryka liczy użycia z logów hooków) oznaczasz do wycofania. Miara: odsetek artefaktów
-bez właściciela i bez testu.
+**An ownership map of harness artifacts:** every instructions file, skill, hook, tool contract, permission policy
+and sensor has an owner from the domain it concerns (not a central "harness team"), a test in CI, a review cycle
+and a person who changes the contract. You add rules like a ratchet: only from a real failure, after a review. A skill
+unused for 60–90 days (the factory counts uses from hook logs) you mark for retirement. The measure: the share of artifacts
+without an owner and without a test.
 
-## 3. Procedura: pierwszy szkic
-1. Wbudowane `/init` albo inspekcja: README, manifest i jego skrypty, konfiguracje lint/format/typów/testów,
-   1–2 pliki CI, dwa poziomy drzewa, `git log --oneline -n 30` (konwencja commitów). Każde twierdzenie z pliku,
-   polecenia lub commita (core-grounding); czego nie ustalisz, wpisz jako pytanie do człowieka, nie domysł.
-2. Kolejność wg dźwigni: twarde zakazy → 3–6 poleceń (build, test, lint) → konwencje z plikiem-wzorcem →
-   testy → commit i PR → bezpieczeństwo. Bez misji, wartości i przedstawiania zespołu.
-3. Bez bloków kodu dłuższych niż 1–2 linie (odnośnik do pliku) i bez definicji pojęć ogólnych.
-4. Budżet: plik poniżej ~200 niepustych linii (zalecenie Anthropic na plik CLAUDE.md); plik modułu zwykle 10–40 linii.
-5. Uwagi dla ludzi w komentarzach HTML `<!-- … -->` — Claude Code usuwa je przed wstrzyknięciem do kontekstu.
+## 3. Procedure: the first draft
+1. The built-in `/init` or an inspection: the README, the manifest and its scripts, the lint/format/type/test configurations,
+   1–2 CI files, two levels of the tree, `git log --oneline -n 30` (the commit convention). Every claim from a file,
+   a command or a commit (core-grounding); what you cannot establish, write as a question for the human, not a guess.
+2. Order by leverage: hard bans → 3–6 commands (build, test, lint) → conventions with a model file →
+   tests → commit and PR → security. No mission, values or introducing the team.
+3. No code blocks longer than 1–2 lines (a link to the file) and no definitions of general concepts.
+4. Budget: a file below ~200 non-empty lines (Anthropic's recommendation for a CLAUDE.md file); a module file usually 10–40 lines.
+5. Notes for people in HTML comments `<!-- … -->` — Claude Code removes them before injecting into the context.
 
-## 4. Procedura: przegląd (karta pięciu kontroli)
-Najpierw skrypt — **uruchom**, nie czytaj:
-`python3 .claude/skills/core-agent-instructions/scripts/instructions_lint.py --root .` (albo ścieżka pliku; `--json`).
-Liczy kontrole 1, 2, 3 i 5, importy `@` i nieaktualne wpisy, a w trybie `--root` także pliki modułów spoza indeksu
-i reguły skopiowane z pliku głównego. Kod 1 = co najmniej jeden `ERROR`. Kontrolę 4 robisz sam.
+## 4. Procedure: a review (the five-check card)
+The script first — **run** it, do not read it:
+`python3 .claude/skills/core-agent-instructions/scripts/instructions_lint.py --root .` (or the file path; `--json`).
+It counts checks 1, 2, 3 and 5, `@` imports and outdated entries, and in `--root` mode also module files outside the index
+and rules copied from the main file. Exit code 1 = at least one `ERROR`. You do check 4 yourself.
 
-| # | Kontrola (`id`) | OK | WARN | ERROR |
+| # | Check (`id`) | OK | WARN | ERROR |
 |---|---|---|---|---|
-| 1 | długość (niepuste linie bez komentarzy HTML) | ≤200 | 201–500 | >500 |
-| 2 | bloki kodu/konfiguracji > 3 linii (poza diagramami) | 0 | 1–2 | ≥3 |
-| 3 | sformułowania-intencje | 0 | 1–3 | ≥4 |
-| 4 | wiedza zbędna: bez zaskoczenia dla agenta, domyślne zachowanie frameworka, definicja, brzmi jak poradnik, mogłaby być odnośnikiem | 0 | 1–3 | ≥4 |
-| 5 | kolejność: krytyczne reguły w pierwszej trzeciej, bez wstępu na górze | tak | mieszana | krytyczne po linii 200 / brak nagłówków |
+| 1 | length (non-empty lines without HTML comments) | ≤200 | 201–500 | >500 |
+| 2 | code/configuration blocks > 3 lines (except diagrams) | 0 | 1–2 | ≥3 |
+| 3 | intention phrases | 0 | 1–3 | ≥4 |
+| 4 | unneeded knowledge: no surprise for the agent, the framework's default behaviour, a definition, sounds like a tutorial, could be a link | 0 | 1–3 | ≥4 |
+| 5 | order: critical rules in the first third, no introduction on top | yes | mixed | critical after line 200 / no headings |
 
-- Każde ustalenie z `plik:linia`. Dla każdej intencji propozycja sprawdzalna oparta na sygnale z projektu
-  („dbaj o błędy” → „handlery zwracają `{ error: { code, message } }`, wzorzec `src/api/errors.ts`”); bez sygnału
-  w repo → domyślna dla stacku z oznaczeniem [założenie].
-- Sprzeczne reguły w dwóch plikach to błąd: model może wybrać dowolną z nich.
-- Domyślnie tylko raport. Przestawienie sekcji lub cięcia — za zgodą człowieka, bez zmiany treści reguł.
+- Every finding with `plik:linia`. For every intention a checkable proposal based on a signal from the project
+  ("take care of errors" → "handlers return `{ error: { code, message } }`, the model `src/api/errors.ts`"); no signal
+  in the repo → a default for the stack marked [assumption].
+- Conflicting rules in two files are an error: the model may choose either of them.
+- By default only a report. Rearranging sections or cuts — with the human's consent, without changing the content of the rules.
 
-Schemat wyniku:
+The output schema:
 ```
-Przegląd instrukcji — <ścieżka>   Ocena: <jedno zdanie>
-| # | Kontrola | Werdykt | Liczba |      (pięć wierszy)
-Ustalenia: <kontrola> — plik:linia — problem — propozycja
-3 działania o największej dźwigni: 1. … 2. … 3. …
+Instructions review — <path>   Assessment: <one sentence>
+| # | Check | Verdict | Count |      (five rows)
+Findings: <check> — file:line — problem — proposal
+3 actions with the biggest leverage: 1. … 2. … 3. …
 ```
 
-## 5. Procedura: aktualizacja istniejącego pliku
-1. `git log -1 --format=%H -- CLAUDE.md` → ostatnia zmiana pliku (`OSTATNIO`).
-2. `git diff OSTATNIO..HEAD --stat -- package.json pyproject.toml .github/ README.md <konfiguracje lint/testów>` —
-   co się zmieniło od tamtej pory (szczególnie skrypty i polecenia).
-3. Każdy plik i polecenie, na które CLAUDE.md się powołuje, sprawdź, że istnieje
+## 5. Procedure: updating an existing file
+1. `git log -1 --format=%H -- CLAUDE.md` → the last change of the file (`LAST`).
+2. `git diff LAST..HEAD --stat -- package.json pyproject.toml .github/ README.md <konfiguracje lint/testów>` —
+   what changed since then (especially scripts and commands).
+3. Every file and command CLAUDE.md refers to, check that it exists
    (`python3 .claude/skills/core-grounding/scripts/grounding_check.py CLAUDE.md`).
-4. Klasyfikuj linie: ZOSTAW / POPRAW / USUŃ / BRAKUJE, każdą z `plik:linia` źródła.
-5. Pokaż listę i edytuj punktowo za zgodą — nie przepisuj całości. Niezacommitowane zmiany człowieka w pliku = ZOSTAW.
-6. Po większej zmianie modelu przejrzyj reguły-obejścia słabości starszego modelu: część stała się zbędna.
+4. Classify the lines: KEEP / FIX / REMOVE / MISSING, each with the `plik:linia` of the source.
+5. Show the list and edit pointwise with consent — do not rewrite the whole thing. The human's uncommitted changes in the file = KEEP.
+6. After a bigger model change review the rules that work around weaknesses of an older model: some have become unneeded.
 
-## 6. Kalibracja reguły (A/B) — czy reguła coś zmienia
-1. To samo zadanie 3–5 razy w świeżej sesji z tego samego stanu repo, **bez reguły**. Zanotuj: złamania konwencji,
-   czas, liczbę przeczytanych plików, iteracje, koszt (jeśli widoczny).
-2. Dopisz regułę w 1–3 zdaniach we właściwym miejscu (sekcja 2).
-3. Powtórz te same przebiegi. Agent trafiał bez reguły albo brak poprawy → usuń regułę.
-4. Zmieniaj jedną rzecz naraz (treść, miejsce, kolejność). Zmiana CLAUDE.md fabryki lub projektu z personami to
-   zmiana konfiguracji agenta — ewaluacja jak w core-delivery-lifecycle.
+## 6. Rule calibration (A/B) — does the rule change anything
+1. The same task 3–5 times in a fresh session from the same repo state, **without the rule**. Note: convention breaches,
+   time, the number of files read, iterations, cost (if visible).
+2. Add the rule in 1–3 sentences in the right place (section 2).
+3. Repeat the same runs. The agent got it right without the rule or no improvement → remove the rule.
+4. Change one thing at a time (content, place, order). A change of the factory's CLAUDE.md or of a project with personas is
+   a change of the agent's configuration — an evaluation as in core-delivery-lifecycle.
 
-## Anty-wzorce
-- Plik-encyklopedia: reguły ze środka długiego pliku giną (modele najsłabiej uwzględniają środek długiego kontekstu).
-- Kopia dokumentacji lub README; opis architektury, który agent i tak odczyta z kodu.
-- Ta sama reguła w trzech plikach; reguła w root i jej kopia w module.
-- Pamięć lokalna (automatyczna pamięć, `CLAUDE.local.md`) jako jedyne miejsce ustaleń zespołu.
-- Prośba słowami „przeczytaj AGENTS.md” zamiast importu `@AGENTS.md` — agent może pliku nie otworzyć.
-- Import `@plik` jako sposób na oszczędność — importy ładują się przy starcie i liczą się do kontekstu.
+## Anti-patterns
+- An encyclopedia file: rules from the middle of a long file get lost (models take the middle of a long context into account worst).
+- A copy of the documentation or the README; a description of the architecture the agent reads from the code anyway.
+- The same rule in three files; a rule in the root and its copy in a module.
+- Local memory (automatic memory, `CLAUDE.local.md`) as the only place of the team's agreements.
+- Asking in words "read AGENTS.md" instead of the `@AGENTS.md` import — the agent may not open the file.
+- An `@plik` import as a way to save — imports load at start and count towards the context.
 
-## Przykład
-Wejście: CLAUDE.md 340 linii; linie 1–40 „O projekcie i wartościach”; linia 287 „nigdy nie wysyłaj danych klienta
-do logów”; blok 25 linii z tsconfig; „pisz czysty kod” w linii 52.
-Wynik skryptu: `length` WARN (340), `blocks` WARN (1), `intents` WARN (1), `order` ERROR (reguła krytyczna l. 287,
-wstęp na górze). Kontrola 4 (ręcznie): 6 linii opisu katalogów, które widać w drzewie → WARN.
-3 działania: (1) zakaz logowania danych klienta do pierwszej sekcji; (2) blok tsconfig → usuń (`strict` wymusza
-konfiguracja), w zamian 1 linia o wyjątku, którego konfiguracja nie widać; (3) wstęp do 2 zdań, opis katalogów usuń,
-„czysty kod” → „funkcje publiczne w `src/api/` mają typ zwracany i obsługują błąd przez `AppError`”.
-Po zmianach: 190 linii, kalibracja A/B dla reguły o `AppError` (3 przebiegi bez i 3 z regułą).
+## Example
+Input: a CLAUDE.md of 340 lines; lines 1–40 "About the project and values"; line 287 "never send customer data
+to the logs"; a 25-line block from tsconfig; "write clean code" in line 52.
+The script's output: `length` WARN (340), `blocks` WARN (1), `intents` WARN (1), `order` ERROR (a critical rule at l. 287,
+an introduction on top). Check 4 (by hand): 6 lines describing directories visible in the tree → WARN.
+3 actions: (1) the ban on logging customer data to the first section; (2) the tsconfig block → remove it (`strict` is enforced
+by the configuration), instead 1 line about the exception the configuration does not show; (3) the introduction down to 2 sentences, remove the directory description,
+"clean code" → "public functions in `src/api/` have a return type and handle errors through `AppError`".
+After the changes: 190 lines, an A/B calibration for the `AppError` rule (3 runs without and 3 with the rule).
 
-## Checklista
-- [ ] każda nowa linia przeszła test włączenia i odpowiada na powtarzalny błąd agenta
-- [ ] krytyczne zakazy na górze; plik ≤ ~200 niepustych linii; zero wklejonych bloków konfiguracji
-- [ ] intencje przepisane na zachowania sprawdzalne w diffie; jedna reguła w jednym miejscu, bez sprzeczności
-- [ ] reguły części kodu w pliku modułu lub `.claude/rules/` z `paths`; procedury w skillach; wymuszenia w hookach
-- [ ] `instructions_lint.py --root .` bez BŁĘDÓW; odwołania sprawdzone `grounding_check.py`
-- [ ] nowa reguła przetestowana w świeżej sesji (A/B), zbędna usunięta
+## Checklist
+- [ ] every new line passed the inclusion test and answers a recurring agent mistake
+- [ ] critical bans on top; the file ≤ ~200 non-empty lines; zero pasted configuration blocks
+- [ ] intentions rewritten into behaviour checkable in the diff; one rule in one place, no conflicts
+- [ ] rules for parts of the code in a module file or `.claude/rules/` with `paths`; procedures in skills; enforcement in hooks
+- [ ] `instructions_lint.py --root .` without ERRORs; references checked with `grounding_check.py`
+- [ ] a new rule tested in a fresh session (A/B), an unneeded one removed
 
-## Źródła
-- Claude Code, „How Claude remembers your project” (code.claude.com/docs/en/memory, dostęp 2026-10-10): cel poniżej
-  200 linii na plik, kolejność ładowania, podkatalogi na żądanie, importy `@` (do 4 poziomów, ładowane przy starcie),
-  `.claude/rules/` z `paths`, AGENTS.md czytany, gdy brak CLAUDE.md, usuwanie komentarzy HTML, „kiedy dopisać”.
-- Claude Code, „Set up Claude Code in a monorepo or large codebase” (code.claude.com/docs/en/large-codebases, dostęp
-  2026-10-10): CLAUDE.md w katalogach, reguły per ścieżka, przegląd po większych wydaniach modeli.
-- J. L. Lulla i in., „On the Impact of AGENTS.md Files on the Efficiency of AI Coding Agents”, arXiv:2601.20404
-  (2026): mediana czasu −28,64%, tokeny wyjściowe −16,58% przy porównywalnej skuteczności (10 repo, 124 PR).
-- T. Gloaguen i in., „Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?”,
-  arXiv:2602.11988 (2026): pliki kontekstu nie podnoszą skuteczności, a koszt rośnie o ponad 20%; przeglądy repo
-  nie pomagają; pomagają niestandardowe praktyki projektu (dostęp do streszczeń 2026-10-10).
-- N. F. Liu i in., „Lost in the Middle: How Language Models Use Long Contexts”, arXiv:2307.03172 [niezweryfikowane
-  w tej sesji — znana praca, cytowana za kursem].
-- Kurs 10xDevs, ed. 3 (2026), moduł 1, lekcja 4 (wdrożenie agenta, AGENTS.md, reguły) i moduł 4, lekcja 1
-  (skalowanie kontekstu) — materiał szkoleniowy (dostęp 2026-10-09).
+## Sources
+- Claude Code, "How Claude remembers your project" (code.claude.com/docs/en/memory, accessed 2026-10-10): the goal below
+  200 lines per file, the loading order, subdirectories on demand, `@` imports (up to 4 levels, loaded at start),
+  `.claude/rules/` with `paths`, AGENTS.md read when there is no CLAUDE.md, removing HTML comments, "when to add".
+- Claude Code, "Set up Claude Code in a monorepo or large codebase" (code.claude.com/docs/en/large-codebases, accessed
+  2026-10-10): CLAUDE.md in directories, rules per path, a review after bigger model releases.
+- J. L. Lulla et al., "On the Impact of AGENTS.md Files on the Efficiency of AI Coding Agents", arXiv:2601.20404
+  (2026): median time −28.64%, output tokens −16.58% at comparable effectiveness (10 repos, 124 PRs).
+- T. Gloaguen et al., "Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?",
+  arXiv:2602.11988 (2026): context files do not raise effectiveness, and the cost grows by over 20%; repo overviews
+  do not help; non-standard project practices do help (abstracts accessed 2026-10-10).
+- N. F. Liu et al., "Lost in the Middle: How Language Models Use Long Contexts", arXiv:2307.03172 [unverified
+  in this session — a well-known paper, cited after the course].
+- The 10xDevs course, ed. 3 (2026), module 1, lesson 4 (agent onboarding, AGENTS.md, rules) and module 4, lesson 1
+  (scaling context) — training material (accessed 2026-10-09).
 
-Opisane własnymi słowami.
+Described in our own words.

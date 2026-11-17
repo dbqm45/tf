@@ -1,3 +1,4 @@
+head: Użyj, gdy problem opisano zwykłym tekstem — rozpoznanie wymiarów, dobór skilli i person, doraźny zespół. Użyj, gdy dostajesz problem opisany zwykłym tekstem i nie wiadomo, kto i jak ma się nim zająć — rozpoznanie wymiarów, dobór skilli i person z katalogu, zestawienie doraźnego zespołu, wybór formy wyniku (rekomendacja, plan, rozwiązanie krok po kroku). Nie do samej wiedzy merytorycznej (skille wymiarów) ani łączenia skilli w jednej odpowiedzi (core-skill-composition).
 # Dobór zespołu i podejścia do problemu
 
 Procedura dyspozytora nakładki (persona z `dispatcher: true`, np. Maja w pack-it albo dyspozytor nakładki domenowej). Źródło prawdy o tym,

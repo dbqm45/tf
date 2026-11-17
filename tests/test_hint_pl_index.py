@@ -47,8 +47,8 @@ def main() -> int:
         check(hpi.missing([skill]) == ["core/skills/core-x"], f"HPI-2: --check widzi brak indeksu: {hpi.missing([skill])}")
         out = hpi.write(skill)
         idx = (skill / hpi.INDEX).read_text(encoding="utf-8") if (skill / hpi.INDEX).is_file() else ""
-        check(out.startswith("✓") and idx.startswith("# Praca w nocy") and "description" not in idx,
-              f"HPI-3: indeks = treść ostatniej polskiej wersji, bez nagłówka YAML: {out} {idx[:60]!r}")
+        check(out.startswith("✓") and idx.startswith("head: Użyj przy x.\n# Praca w nocy") and "description" not in idx,
+              f"HPI-3: indeks = linia head (dawny opis i katalog) + treść ostatniej polskiej wersji: {out} {idx[:60]!r}")
         check(hpi.missing([skill]) == [], "HPI-4: po zapisie --check bez braków")
         (skill / hpi.INDEX).unlink()
         (skill / "SKILL.md").write_text(PL, encoding="utf-8")

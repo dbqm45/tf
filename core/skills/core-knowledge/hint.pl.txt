@@ -1,3 +1,4 @@
+head: Użyj, gdy pytasz fabrykę o wiedzę z cytatem — baza wiedzy (kb.py), zaufane źródła nakładek, pobranie dokumentu. Użyj, gdy odpowiedź ma wynikać z bazy wiedzy fabryki, a nie z pamięci modelu — wyszukiwanie w skillach, notatkach zespołu, zbadanych faktach i pobranych źródłach (kb.py search) z cytatem plik:linia, URL i datą; rejestry zaufanych źródeł nakładek (references/zrodla.json: obszary, ranga, licencja); dodanie dokumentu lub pliku partnera (kb.py ingest), aktualność cache (kb.py status); forma odpowiedzi z propozycjami rozwiązań i planem wdrożenia. Nie do procedury badania faktów w sieci (core-source-research) ani do doboru person i zespołu (core-problem-routing).
 # Baza wiedzy fabryki — „zapytaj fabrykę”
 
 Fabryka odpowiada z **bazy wiedzy**, a nie z pamięci modelu. Każde twierdzenie w odpowiedzi ma cytat: `plik:linia`,

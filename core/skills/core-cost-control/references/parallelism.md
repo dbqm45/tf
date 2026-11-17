@@ -1,20 +1,20 @@
-# Fork, nowa sesja, subagent czy agent teams
+# A fork, a new session, a subagent or agent teams
 
-Najpierw zasada z SKILL.md §0: domyślnie pracuje główna sesja, delegujesz tylko, gdy przekazanie się opłaca.
-Gdy się opłaca, wybierz najtańszą formę, która daje potrzebną izolację:
+First the rule from SKILL.md §0: by default the main session works, you delegate only when the handover pays off.
+When it pays off, choose the cheapest form that gives the isolation you need:
 
-| Forma | Kiedy | Koszt i ograniczenia |
+| Form | When | Cost and limitations |
 |---|---|---|
-| **Fork** (`subagent_type: fork`; `/subtask` od v2.1.212) | poboczne zadanie, które potrzebuje całej dotychczasowej rozmowy (np. sprawdzenie hipotezy bez zaśmiecania głównego wątku) | dziedziczy cały kontekst, więc każda jego tura czyta tę historię; do sesji wraca tylko wynik |
-| **Nowa sesja z worktree** (`claude -w <nazwa>`, `git worktree add`) | osobna zmiana z własną gałęzią i przeglądem, praca równoległa (core-git-workflow) | czysty start: czyta pliki od nowa, ale nie płaci za cudzą historię; środowisko (porty, baza) izolujesz sam |
-| **Subagent** (`Agent`, opcjonalnie `isolation: worktree`) | dużo czytania i krótki wynik, świeże spojrzenie, zmiana mechaniczna z testem | zaczyna od zera, dostaje tylko brief; tańszy model przez parametr `model`; cache 5 min |
-| **Agent teams** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) | wyjątkowo: kilka ról, które muszą rozmawiać ze sobą w trakcie | **eksperymentalne**; 3–5 członków, znacznie więcej tokenów niż subagenci; bez zgody człowieka nie włączasz |
+| **A fork** (`subagent_type: fork`; `/subtask` from v2.1.212) | a side task that needs the whole conversation so far (e.g. checking a hypothesis without cluttering the main thread) | it inherits the whole context, so each of its turns reads that history; only the result comes back to the session |
+| **A new session with a worktree** (`claude -w <nazwa>`, `git worktree add`) | a separate change with its own branch and review, parallel work (core-git-workflow) | a clean start: it reads the files again, but does not pay for someone else's history; you isolate the environment (ports, database) yourself |
+| **A subagent** (`Agent`, optionally `isolation: worktree`) | a lot of reading and a short result, a fresh look, a mechanical change with a test | it starts from zero, gets only the brief; a cheaper model through the `model` parameter; a 5-minute cache |
+| **Agent teams** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) | exceptionally: several roles that must talk to each other along the way | **experimental**; 3–5 members, many more tokens than subagents; you do not turn it on without the human's consent |
 
-- **Limit zagnieżdżania:** subagent może uruchamiać kolejnych do głębokości `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`
-  (domyślnie 3; 1 = bez zagnieżdżania). Każdy poziom to osobny start od zera — w briefie zabraniaj dalszego
-  delegowania, gdy nie jest potrzebne.
-- [niezweryfikowane] czy fork współdzieli cache z sesją główną i czy może działać w worktree — nie zakładaj tego
-  przy szacowaniu kosztu.
+- **The nesting limit:** a subagent can launch further ones up to the depth `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`
+  (3 by default; 1 = no nesting). Each level is a separate start from zero — in the brief forbid further
+  delegation when it is not needed.
+- [unverified] whether a fork shares the cache with the main session and whether it can work in a worktree — do not assume it
+  when estimating the cost.
 
-Źródło: Anthropic, dokumentacja Claude Code (code.claude.com/docs: „Subagents”, „Agent teams”, „Common workflows”
-— worktree), dostęp 2026-10-18. Opisane własnymi słowami.
+Source: Anthropic, Claude Code documentation (code.claude.com/docs: "Subagents", "Agent teams", "Common workflows"
+— worktree), accessed 2026-10-18. Described in our own words.

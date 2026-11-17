@@ -1,57 +1,57 @@
-# Przykłady: dobór modelu i koszt
+# Examples: choosing a model and cost
 
-## 1. Zmiana nazwy pola w całym module
-**Sytuacja:** „Zmień nazwę pola `custId` na `customerId` w module zamówień — DTO, mapery i testy”. Moduł ma
-12 plików, testy jednostkowe przechodzą.
+## 1. Renaming a field across a whole module
+**Situation:** "Rename the field `custId` to `customerId` in the orders module — DTOs, mappers and tests". The module has
+12 files, the unit tests pass.
 
-**Jak:**
-1. Rubryka: wynik sprawdzą testy i typy (tak → tier niżej), zmianę cofnie git (tak → tier niżej), brak decyzji
-   (nie → tier niżej), brak ryzyka (dane osobowe, pieniądze, migracja — nie).
-2. 12 plików, ale według jednego wzorca — nie trzeba rozbijać.
-3. Start od najtańszego modelu z realną szansą.
+**How:**
+1. The rubric: tests and types will check the result (yes → a tier lower), git will undo the change (yes → a tier lower), no decision
+   (no → a tier lower), no risk (personal data, money, migration — no).
+2. 12 files, but per one pattern — no need to split.
+3. Start from the cheapest model with a real chance.
 
-**Wynik:**
+**Result:**
 ```
-Delegacja: wykonawca backendu, model: haiku
-Powód: zmiana mechaniczna, sprawdzalna testami i kompilacją, łatwa do cofnięcia, bez decyzji.
-Weryfikacja: testy modułu + sprawdzenie typów. Eskalacja na sonnet dopiero po 2 nieudanych próbach.
+Delegation: the backend executor, model: haiku
+Reason: a mechanical change, checkable with tests and compilation, easy to undo, no decision.
+Verification: the module's tests + a type check. Escalation to sonnet only after 2 failed attempts.
 ```
 
-## 2. Eskalacja po dwóch nieudanych próbach
-**Sytuacja:** Wykonawca na `sonnet` ma naprawić test, który raz przechodzi, a raz nie (obsługa stref czasowych
-przy wyliczaniu terminu płatności). Dwie poprawki — test dalej pada co kilka uruchomień.
+## 2. Escalation after two failed attempts
+**Situation:** An executor on `sonnet` is to fix a test that sometimes passes and sometimes fails (time zone handling
+when computing a payment due date). Two fixes — the test still fails every few runs.
 
-**Jak:**
-1. Weryfikacja nie przeszła po 2 próbach → eskalacja **o jeden poziom**, nie od razu „wszystko na max”.
-2. Rubryka potwierdza: błąd bez oczywistej przyczyny po próbie, dotyczy pieniędzy → `opus`.
-3. Do nowego wywołania dołączasz, co nie zadziałało.
-4. Po znalezieniu przyczyny wdrożenie poprawki wraca na `sonnet` (deeskalacja).
+**How:**
+1. Verification did not pass after 2 attempts → escalation **by one level**, not straight to "everything on max".
+2. The rubric confirms: a bug without an obvious cause after an attempt, it concerns money → `opus`.
+3. To the new call you add what did not work.
+4. After the cause is found, implementing the fix goes back to `sonnet` (de-escalation).
 
-**Wynik:**
+**Result:**
 ```
 Agent(model: "opus")
-Zadanie: znajdź przyczynę niestabilnego testu terminu płatności.
-Co nie zadziałało: (1) ustawienie strefy UTC w teście — dalej pada; (2) zamrożenie zegara w teście —
-pada przy przejściu na czas letni. Oczekiwane: przyczyna + plan poprawki, bez wdrażania.
-Potem: implementacja planu → Agent(model: "sonnet").
+Task: find the cause of the flaky payment due date test.
+What did not work: (1) setting the UTC zone in the test — it still fails; (2) freezing the clock in the test —
+it fails at the switch to summer time. Expected: the cause + a plan for the fix, without implementing it.
+Then: implementing the plan → Agent(model: "sonnet").
 ```
-Wykonawca na `sonnet` zakończył raport linią `Tier: za niski — błąd czasu wymagał analizy, nie wykonania`; `log_usage` ją
-zapisuje, a przy podobnym zadaniu od razu wybierasz `opus` do diagnozy.
+The executor on `sonnet` ended its report with the line `Tier: too low — the time bug needed analysis, not execution`; `log_usage` records
+it, and for a similar task you choose `opus` for the diagnosis right away.
 
-## 3. Tydzień pracy wychodzi drożej, niż zakładano
-**Sytuacja:** „Ten tydzień kosztował więcej niż zwykle. Sprawdź, gdzie uciekają tokeny, i zaproponuj zmianę”.
+## 3. A week of work comes out more expensive than assumed
+**Situation:** "This week cost more than usual. Check where the tokens are going, and propose a change".
 
-**Jak:**
-1. `python3 .tf/factory/cost_report.py --days 7` — koszt per agent i model, trafienia cache, sygnały `Tier:`.
-2. Szukasz wzorca: kto często eskaluje albo zgłasza „za wysoki”, gdzie trafienia cache są niskie.
-3. Sprawdzasz nawyki sesji: przełączanie `/model` w środku zadania, długie przerwy, `/compact` zamiast `/rewind`.
-4. Proponujesz zmianę konfiguracji, a nie jednorazowe „uważaj”.
+**How:**
+1. `python3 .tf/factory/cost_report.py --days 7` — the cost per agent and model, cache hits, `Tier:` signals.
+2. You look for a pattern: who often escalates or reports "too high", where cache hits are low.
+3. You check the session habits: switching `/model` in the middle of a task, long breaks, `/compact` instead of `/rewind`.
+4. You propose a configuration change, not a one-off "be careful".
 
-**Wynik (raport dla człowieka):**
+**Result (a report for the human):**
 
-| Ustalenie | Dowód | Zmiana |
+| Finding | Evidence | Change |
 |---|---|---|
-| wykonawca dokumentacji zgłasza „Tier: za wysoki” | raport: 4 z 9 zadań | obniż tier roli w `.tf/config/config.yaml` |
-| niskie trafienia cache w głównej sesji | pasek stanu „zimny” po przerwach | po długiej przerwie nowa sesja od punktu kontrolnego |
-| `/model` przełączany w trakcie zadania | historia sesji | model ustalany na początku; trudne kroki do wykonawcy z `model: opus` |
-| krótkie zadania przy profilu `quality` | doradca wzywany w krótkich zadaniach | `python3 .tf/factory/profile.py balanced --dry-run`, potem zmiana za zgodą |
+| the documentation executor reports "Tier: too high" | report: 4 of 9 tasks | lower the role's tier in `.tf/config/config.yaml` |
+| low cache hits in the main session | the status line "cold" after breaks | after a long break a new session from the checkpoint |
+| `/model` switched during a task | the session history | the model set at the start; hard steps to an executor with `model: opus` |
+| short tasks with the `quality` profile | the advisor called in short tasks | `python3 .tf/factory/profile.py balanced --dry-run`, then the change with consent |

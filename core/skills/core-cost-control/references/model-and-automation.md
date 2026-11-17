@@ -1,129 +1,129 @@
-# Ocena nowego modelu, kontekst i agenci w automatyzacji
+# Assessing a new model, context and agents in automation
 
-> **Spis treści:** 1. Ocena nowego modelu · 2. Agenci w automatyzacji — koszt · 3. Uwierzytelnienie a rachunek i dane · 4. Kontekst — MCP, dryf, skan repo · 5. Przykład: decyzja o zmianie modelu · 6. Diagnoza przed dźwignią · 7. Raporty kosztów · 8. `ultrathink` i `ultracode` w Claude Code
+> **Contents:** 1. Assessing a new model · 2. Agents in automation — cost · 3. Authentication versus the bill and data · 4. Context — MCP, drift, a repo scan · 5. Example: a decision to change the model · 6. Diagnosis before leverage · 7. Cost reports · 8. `ultrathink` and `ultracode` in Claude Code
 
-## 1. Ocena nowego modelu
-**Jak czytać ranking.** Liczba w tabeli = zestaw zadań + metryka + protokół (harness, limit kroków, liczba prób).
-Zanim ją porównasz, sprawdź wszystkie trzy:
-- **zestaw** — czy mierzy Twój typ pracy (naprawa zgłoszonego błędu ≠ budowa nowej funkcji ≠ praca w terminalu);
-  starsze zestawy się nasycają, a wyniki mogą odzwierciedlać zadania zapamiętane z danych treningowych;
-- **metryka** — pass@1 („udało się przy pierwszej próbie”) zawyża niezawodność pętli. Agent wykonuje kroki
-  po kolei, więc liczy się powtarzalność: przy 90% na krok pięć kroków z rzędu udaje się w ok. 59% (0,9⁵),
-  dziesięć — w ok. 35%;
-- **protokół** — ten sam model w różnych harnessach (inne narzędzia, prompt systemowy, plik instrukcji) potrafi
-  różnić się o kilkanaście punktów; część pozycji w rankingach to harnessy strojone pod sam benchmark.
-  Przy każdym wyniku zapisz, czy harness był **stały** (ten sam dla wszystkich modeli), czy **dowolny** (strojony
-  pod model), oraz wersję modelu i ustawienia inferencji — bez tego liczby nie są porównywalne. W jednym preprincie
-  sam harness dopasowany do modelu podniósł wynik z 29% do 78% bez zmiany wag (Yu i in., arXiv:2609.09134, v1
-  8.09.2026, za omówieniem J. Wasowskiego, ok. 12.10.2026; jedno badanie [niezweryfikowane]).
+## 1. Assessing a new model
+**How to read a ranking.** A number in the table = a task set + a metric + a protocol (the harness, a step limit, the number of attempts).
+Before you compare it, check all three:
+- **the set** — does it measure your type of work (fixing a reported bug ≠ building a new feature ≠ working in a terminal);
+  older sets saturate, and the results may reflect tasks memorised from training data;
+- **the metric** — pass@1 ("it worked at the first attempt") overstates the reliability of a loop. An agent performs steps
+  one after another, so repeatability counts: at 90% per step five steps in a row succeed in about 59% (0.9⁵),
+  ten — in about 35%;
+- **the protocol** — the same model in different harnesses (other tools, system prompt, instructions file) can
+  differ by a dozen or so points; some positions in rankings are harnesses tuned for the benchmark itself.
+  With each result write down whether the harness was **fixed** (the same for all models) or **free** (tuned
+  for the model), plus the model version and inference settings — without that the numbers are not comparable. In one preprint
+  the harness alone, fitted to the model, raised the result from 29% to 78% without changing the weights (Yu et al., arXiv:2609.09134, v1
+  8.09.2026, after J. Wasowski's write-up, about 12.10.2026; a single study [unverified]).
 
-**Jak decydować.**
-1. Kandydat musi przejść ten sam test co obecny model: 3–5 prawdziwych zadań projektu (z historii zgłoszeń),
-   ta sama weryfikacja (testy, build, `grounding_check`), najlepiej kilka powtórzeń.
-2. Liczysz **koszt rozwiązanego zadania**: tokeny wejścia i wyjścia × liczba iteracji do zielonej weryfikacji +
-   czas przeglądu człowieka. Tańszy token przy dwóch dodatkowych rundach poprawek to droższe zadanie.
-3. Dla agentów zbudowanych w kodzie (recenzent w CI, triaż) — macierz przypadków × modeli w zestawie ewaluacji
-   (pack-it: eng-llm-features §8), także po zmianie harnessu przy tym samym modelu.
-4. Zmianę domyślnego modelu zespołu zapisujesz z wynikiem testu (profil kosztów, `.tf/config/config.yaml`), a nie
-   z nagłówka ogłoszenia. Przegląd nowości co ok. 2 tygodnie wystarcza.
+**How to decide.**
+1. The candidate must pass the same test as the current model: 3–5 real project tasks (from the issue history),
+   the same verification (tests, build, `grounding_check`), preferably several repetitions.
+2. You count **the cost of a solved task**: input and output tokens × the number of iterations until green verification +
+   the human's review time. A cheaper token with two extra rounds of fixes is a more expensive task.
+3. For agents built in code (a reviewer in CI, triage) — a matrix of cases × models in the evaluation set
+   (pack-it: eng-llm-features §8), also after a harness change with the same model.
+4. You record a change of the team's default model with the test result (the cost profile, `.tf/config/config.yaml`), not
+   from an announcement's headline. A review of news about every 2 weeks is enough.
 
-**Polecenie dla modelu rozumującego:** cel + twarde ograniczenia + mierzalne kryterium sukcesu. Nie narzucaj kroków
-myślenia ani przykładowego rozwiązania — chyba że proces jest obowiązkowy (migracja danych, płatności,
-bezpieczeństwo) albo model po 1–2 próbach nie trafia; wtedy poproś o 2–3 podejścia do wyboru.
+**An instruction for a reasoning model:** the goal + hard constraints + a measurable success criterion. Do not impose thinking
+steps or an example solution — unless the process is mandatory (data migration, payments,
+security) or the model misses after 1–2 attempts; then ask for 2–3 approaches to choose from.
 
-## 2. Agenci w automatyzacji — koszt
-| Dźwignia | Reguła |
+## 2. Agents in automation — cost
+| Lever | Rule |
 |---|---|
-| wyzwalacz | zdarzenie, które ma znaczenie (otwarcie PR, czerwony build, nowe zgłoszenie); filtr ścieżek lub etykieta, żeby PR z samą dokumentacją nie płacił za przegląd |
-| triaż przed agentem | tani krok (liczba i ścieżki plików, rozmiar diffu, etykiety) przypisuje poziom ryzyka: niski → szybki tani przebieg, ścieżki krytyczne → mocniejszy model i zawsze człowiek |
-| limit przebiegu | liczba tur **i** budżet w dolarach; pętla bez górnego limitu kroków zakazana |
-| narzędzia | oceniacz bez narzędzi (1–2 tury); każde dodane narzędzie to kolejne tury i tokeny |
-| wejście | z diffu odfiltrowane lockfile'e, kod generowany, zrzuty — koszt i szum |
-| model per rola | triaż/etykiety — najtańszy; rozumowanie nad kodem — średni; drogi tylko dla ścieżek krytycznych |
-| pomiar | koszt, tury i czas z wyniku każdego przebiegu do tabeli lub dashboardu: per PR, per poziom triażu, per tydzień |
-| pętla zwrotna | co miesiąc: gdzie człowiek tylko przyklepał werdykt (można poluzować triaż), gdzie błąd przeszedł przez zielony przegląd (nowy przypadek w ewaluacji) |
+| trigger | an event that matters (a PR opened, a red build, a new issue); a path filter or a label, so a PR with documentation alone does not pay for a review |
+| triage before the agent | a cheap step (the number and paths of files, the diff size, labels) assigns a risk level: low → a fast cheap run, critical paths → a stronger model and always a human |
+| run limit | the number of turns **and** a budget in dollars; a loop without an upper step limit is forbidden |
+| tools | an evaluator without tools (1–2 turns); every added tool means more turns and tokens |
+| input | lockfiles, generated code and dumps filtered out of the diff — cost and noise |
+| model per role | triage/labels — the cheapest; reasoning about code — a medium one; an expensive one only for critical paths |
+| measurement | the cost, turns and time from the result of every run to a table or a dashboard: per PR, per triage level, per week |
+| feedback loop | every month: where the human only rubber-stamped the verdict (the triage can be loosened), where a bug got through a green review (a new case in the evaluation) |
 
-Uruchamianie z wiersza poleceń: `claude -p "<zadanie>" --max-budget-usd <kwota> --allowedTools "<lista>"`
-(budżet działa tylko z `--print`). Limit tur w CLI i w akcjach CI sprawdź w dokumentacji swojej wersji
-[`--max-turns` nie jest wypisany w `claude --help` 2.1.296 — niezweryfikowane]. Nazwy opcji SDK:
+Running from the command line: `claude -p "<zadanie>" --max-budget-usd <kwota> --allowedTools "<lista>"`
+(the budget works only with `--print`). Check the turn limit in the CLI and in CI actions in the documentation of your version
+[`--max-turns` is not listed in `claude --help` 2.1.296 — unverified]. The SDK option names:
 `.claude/skills/eng-llm-features/references/sdk-api.md`.
 
-## 3. Uwierzytelnienie a rachunek i dane
-- **Klucz API** (warunki komercyjne, rozliczenie za tokeny) — domyślny wybór dla kodu firmy i każdej automatyzacji.
-- **Login subskrypcji** — SDK i `claude -p` mogą po cichu użyć logowania dewelopera, gdy brak klucza. Obowiązują
-  wtedy warunki konsumenckie (inne domyślne ustawienia trenowania i retencji) i limity planu; użycie programistyczne
-  na planach subskrypcyjnych bywa liczone z osobnej puli [niezweryfikowane — sprawdź aktualne warunki i cennik
-  przed wdrożeniem].
-- W CI ustawiasz klucz z sekretu jawnie i sprawdzasz, że przebieg go używa (brak cichego przejścia na login).
+## 3. Authentication versus the bill and data
+- **An API key** (commercial terms, billing per token) — the default choice for company code and every automation.
+- **A subscription login** — the SDK and `claude -p` can silently use the developer's login when there is no key. Then
+  consumer terms apply (different default training and retention settings) and the plan's limits; programmatic use
+  on subscription plans is sometimes counted from a separate pool [unverified — check the current terms and pricing
+  before rollout].
+- In CI you set the key from a secret explicitly and check that the run uses it (no silent fallback to the login).
 
-## 4. Kontekst — MCP, dryf, skan repo
-- **MCP:** definicje narzędzi każdego podłączonego serwera wchodzą do każdego zapytania. Serwer z dziesiątkami
-  narzędzi kosztuje nawet wtedy, gdy go nie używasz. Wybieraj serwery z kilkoma uniwersalnymi narzędziami (wyszukaj
-  operację + wykonaj), wyłączaj nieużywane przed sesją (nie w trakcie — to kasuje cache), a operacje o znanym
-  poleceniu rób przez CLI (jawne, zostają w historii).
-- **Dryf kontekstu** (objawy w `SKILL.md` §6): środek długiego wejścia dostaje mniej uwagi, a podobne, lecz
-  nietrafne fragmenty działają jak dystraktory — dlatego jakość spada przed zapełnieniem okna. Reakcja: punkt
-  kontrolny (core-project-record) → nowa sesja → plan i postęp → faza od początku. Dwie nieudane poprawki tego
-  samego błędu to też sygnał do świeżego kontekstu (core-grounding).
-- **Szeroki skan repo:** inwentarz, historia gita, graf zależności zbiera skrypt lub CLI, a tani model streszcza
-  wynik; mocny model dostaje skondensowany raport i pogłębia jeden przepływ (mapa kodu, pack-it: eng-codebase-mapping).
+## 4. Context — MCP, drift, a repo scan
+- **MCP:** the tool definitions of every connected server go into every request. A server with dozens
+  of tools costs even when you do not use it. Choose servers with a few universal tools (search for
+  an operation + execute), turn off unused ones before the session (not during it — that clears the cache), and operations with a known
+  command do through a CLI (explicit, they stay in the history).
+- **Context drift** (symptoms in `SKILL.md` §6): the middle of a long input gets less attention, and similar but
+  irrelevant fragments act as distractors — that is why quality drops before the window fills up. The reaction: a
+  checkpoint (core-project-record) → a new session → the plan and progress → the phase from the beginning. Two failed fixes of the same
+  bug are also a signal for a fresh context (core-grounding).
+- **A broad repo scan:** an inventory, git history, a dependency graph are collected by a script or a CLI, and a cheap model summarises
+  the result; a strong model gets a condensed report and deepens one flow (a code map, pack-it: eng-codebase-mapping).
 
-## 5. Przykład: decyzja o zmianie modelu
-**Sytuacja:** nowy model ma w publicznym rankingu o 5 punktów więcej; zespół chce przestawić go dla agentów w CI.
+## 5. Example: a decision to change the model
+**Situation:** a new model has 5 points more in a public ranking; the team wants to switch to it for the agents in CI.
 
-**Jak:**
-1. Ranking: zestaw dotyczy naprawy zgłoszeń, a agent w CI robi przegląd PR — inny typ pracy.
-2. Test: 5 zamkniętych PR z historii (2 z błędem wykrytym później przez człowieka, 3 czyste) × obecny i nowy model,
-   po 3 powtórzenia; zestaw ewaluacji recenzenta z asercjami.
-3. Wynik: nowy model łapie oba błędy w 3/3 powtórzeń (obecny w 2/3), ale daje 1 fałszywy alarm na czystym PR
-   i zużywa o 40% więcej tokenów na przebieg.
+**How:**
+1. The ranking: the set concerns fixing issues, and the agent in CI does a PR review — a different type of work.
+2. The test: 5 closed PRs from the history (2 with a bug found later by a human, 3 clean) × the current and the new model,
+   3 repetitions each; the reviewer's evaluation set with assertions.
+3. The result: the new model catches both bugs in 3/3 repetitions (the current one in 2/3), but gives 1 false alarm on a clean PR
+   and uses 40% more tokens per run.
 
-**Wynik:**
+**Result:**
 ```
-Decyzja: nowy model tylko dla PR z poziomem triażu „krytyczny” (auth, płatności, migracje);
-reszta zostaje na obecnym. Koszt per PR mierzony 2 tygodnie, potem przegląd decyzji.
-Fałszywy alarm → nowy przypadek w zestawie ewaluacji i doprecyzowane kryteria przeglądu.
+Decision: the new model only for PRs with the triage level "critical" (auth, payments, migrations);
+the rest stays on the current one. The cost per PR measured for 2 weeks, then a review of the decision.
+The false alarm → a new case in the evaluation set and refined review criteria.
 ```
 
-## 6. Diagnoza przed dźwignią
-Zanim zmienisz model, ustal, który problem masz:
-- *kontekstu*: te same pliki czytane w całości kilka razy, stosunek tokenów wejścia do wyjścia ok. 100:1 i więcej,
-  częste kompaktowanie, niskie trafienia cache mimo stałego promptu, agent co sesję odkrywa, kto jest właścicielem
-  czego → inżynieria kontekstu (SKILL.md §5–6), nie tańszy model;
-- *modelu*: wysoki odsetek porażek klasy zadań mimo dobrego kontekstu, wiele tur do pierwszej poprawnej edycji →
-  zmiana modelu, sprawdzona jak w SKILL.md §8;
-- *pomiaru*: subskrypcja zamiast API, benchmark zamiast produkcji, tokeny szacowane ze znaków → najpierw liczniki
-  dostawcy.
-Cache obniża cenę powtarzanego prefiksu, ale nie zdejmuje treści z okna — gnicie kontekstu zostaje.
+## 6. Diagnosis before leverage
+Before you change the model, establish which problem you have:
+- *context*: the same files read in full several times, an input to output token ratio of about 100:1 and more,
+  frequent compaction, low cache hits despite a fixed prompt, the agent rediscovers every session who owns
+  what → context engineering (SKILL.md §5–6), not a cheaper model;
+- *model*: a high failure rate for a class of tasks despite good context, many turns until the first correct edit →
+  a model change, checked as in SKILL.md §8;
+- *measurement*: a subscription instead of the API, a benchmark instead of production, tokens estimated from characters → first the
+  vendor's counters.
+The cache lowers the price of a repeated prefix, but does not take the content out of the window — context rot stays.
 
-Źródło: J. Wąsowski, „Your Claude Code Bill Demystified” (2026-10-09); progi to przykłady autora [niezweryfikowane].
+Source: J. Wąsowski, "Your Claude Code Bill Demystified" (2026-10-09); the thresholds are the author's examples [unverified].
 
-## 7. Raporty kosztów
-- `python3 .tf/factory/cost_report.py --days 7` — koszt per agent i model, eskalacje, sygnały `Tier:` i rekomendacje
-  zmiany tieru ról.
-- `python3 .tf/factory/cost_report.py --delegation` — koszt wykonawców wg klasy z briefu (hook `log_usage` zapisuje każde
-  wywołanie Agent w `.tf/logs/delegation.jsonl`). Klasa droga przy krótkim raporcie → rób takie zadania sam.
-- `python3 .tf/factory/cost_stats.py` (`--period day|week|month`) — tokeny, udział modeli, koszt w USD i PLN (kurs średni
-  NBP), zmiany w gicie i pasmo „tanio / typowo / drogo” względem mediany poprzednich okresów; luki w logach oznacza
-  „dane niepełne”. Przyczyny kosztu etapu i tiery wykonawców ocenia retrospektywa agentów (core-agent-retro).
+## 7. Cost reports
+- `python3 .tf/factory/cost_report.py --days 7` — the cost per agent and model, escalations, `Tier:` signals and recommendations
+  to change the roles' tiers.
+- `python3 .tf/factory/cost_report.py --delegation` — the cost of executors by the class from the brief (the `log_usage` hook records every
+  Agent call in `.tf/logs/delegation.jsonl`). An expensive class with a short report → do such tasks yourself.
+- `python3 .tf/factory/cost_stats.py` (`--period day|week|month`) — tokens, the share of models, the cost in USD and PLN (the NBP
+  average rate), changes in git and a "cheap / typical / expensive" band against the median of previous periods; gaps in the logs are marked
+  "incomplete data". The causes of a stage's cost and the executors' tiers are assessed by the agent retrospective (core-agent-retro).
 
-## 8. `ultrathink` i `ultracode` w Claude Code
-- **`ultrathink`** w treści polecenia prosi o głębsze rozumowanie **w tej jednej turze** i nie zmienia zapisanego
-  effortu sesji. W terminalu słowo może podnieść turę do `xhigh` (wtedy jest podświetlone na tęczowo; Claude Code
-  ≥ 2.1.311). Nie podniesie tury, gdy `CLAUDE_CODE_EFFORT_LEVEL` lub limit `maxEffortLevel`/organizacji jest poniżej
-  `xhigh`, ani na Amazon Bedrock — tam ustawiasz effort. Inne frazy („think hard”) są zwykłym tekstem.
-  Wyłącza je `CLAUDE_CODE_DISABLE_ULTRATHINK`.
-- **`ultracode`** to ustawienie, a nie poziom effortu: Claude orkiestruje **dynamiczne workflow** (wiele agentów)
-  przy zadaniach, które tego wymagają, na bieżącym poziomie effortu. Włączenie: `/effort ultracode` (wyłączenie
-  `/effort ultracode off`), `"ultracode": true` w ustawieniach albo `claude --effort ultracode` — tylko flaga
-  i wartość z Agent SDK ustawiają przy tym effort `xhigh`. Niedostępne, gdy workflow są wyłączone albo model nie
-  obsługuje `xhigh`. Koszt: wiele agentów to wiele osobnych kontekstów (subagenci mają własny cache 5-minutowy),
-  więc włączasz je dla zadań, które opłaca się rozdzielić, a nie na stałe.
-- **Kiedy co:** jedna trudna tura → `ultrathink`; cała trudna sesja → effort ustawiony na starcie; zadanie do
-  rozłożenia na wielu wykonawców → `ultracode` albo jawna delegacja (§2, `parallelism.md`).
-- Zmiana effortu w trakcie sesji: na większości modeli następne zapytanie czyta całą historię bez cache. Na Opus 5.5,
-  Sonnet 5.5, Haiku 5.5 i Fable 5.1 przez API lub subskrypcję cache zostaje (nie na Bedrock, Agent Platform, bramce
-  Claude apps ani przy `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`).
+## 8. `ultrathink` and `ultracode` in Claude Code
+- **`ultrathink`** in the text of an instruction asks for deeper reasoning **in this one turn** and does not change the saved
+  effort of the session. In the terminal the word can raise the turn to `xhigh` (it is then highlighted in rainbow colours; Claude Code
+  ≥ 2.1.311). It will not raise the turn when `CLAUDE_CODE_EFFORT_LEVEL` or the `maxEffortLevel`/organisation limit is below
+  `xhigh`, or on Amazon Bedrock — there you set the effort. Other phrases ("think hard") are plain text.
+  `CLAUDE_CODE_DISABLE_ULTRATHINK` turns it off.
+- **`ultracode`** is a setting, not an effort level: Claude orchestrates **dynamic workflows** (many agents)
+  for tasks that need it, at the current effort level. Turning on: `/effort ultracode` (turning off
+  `/effort ultracode off`), `"ultracode": true` in the settings or `claude --effort ultracode` — only the flag
+  and the Agent SDK value set the effort to `xhigh` at the same time. Unavailable when workflows are turned off or the model does not
+  support `xhigh`. Cost: many agents are many separate contexts (subagents have their own 5-minute cache),
+  so you turn it on for tasks that pay off to split, not permanently.
+- **When which:** one hard turn → `ultrathink`; a whole hard session → effort set at the start; a task to
+  split across many executors → `ultracode` or explicit delegation (§2, `parallelism.md`).
+- Changing effort during a session: on most models the next request reads the whole history without cache. On Opus 5.5,
+  Sonnet 5.5, Haiku 5.5 and Fable 5.1 through the API or a subscription the cache stays (not on Bedrock, Agent Platform, the
+  Claude apps gateway or with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`).
 
-Źródła (sprawdzone 2026-11-01): code.claude.com/docs/en/model-config („ultrathink keyword”, „Ultracode”),
-code.claude.com/docs/en/prompt-caching („Changing effort level”); CHANGELOG anthropics/claude-code do 2.1.316.
+Sources (checked 2026-11-01): code.claude.com/docs/en/model-config ("ultrathink keyword", "Ultracode"),
+code.claude.com/docs/en/prompt-caching ("Changing effort level"); the anthropics/claude-code CHANGELOG up to 2.1.316.
