@@ -141,7 +141,7 @@ def main() -> int:
               "P-9: konsultant tylko do odczytu")
         check("specialist" in ala_md.split("\n")[3] and "specialist" not in bolek_md.split("\n")[3],
               "P-10: specialist (@dispatcher) tylko u persony z dispatcher: true")
-        check("## Język" in ala_md and "in the language the human writes in" in ala_md and "commit messages" in ala_md,
+        check("## Language" in ala_md and "in the language the human writes in" in ala_md and "commit messages" in ala_md,
               "P-11: sekcja języka w personie (reguła rozmowy, commity)")
         # 3.1.0: wykonawcy pytają konsultantów sami (zagnieżdżanie podagentów), konsultanci nie delegują dalej
         rendered = b.render_all()
@@ -163,8 +163,8 @@ def main() -> int:
         rc = cfg0["report_contract"]
         check(all(s in rc for s in ("**Result:**", "**Changed files:**", "**Verification:**", "**Uncertain:**",
                                     "**To decide:**")), "P-24: stały szablon raportu wykonawcy")
-        check("## Typowe sytuacje" in rendered["bolek/bolek.md"] and "odsyłasz do cennika" in rendered["bolek/bolek.md"]
-              and "## Typowe sytuacje" not in rendered["ala/ala.md"], "P-25: pole persony `scenarios`")
+        check("## Typical situations" in rendered["bolek/bolek.md"] and "odsyłasz do cennika" in rendered["bolek/bolek.md"]
+              and "## Typical situations" not in rendered["ala/ala.md"], "P-25: pole persony `scenarios`")
         check("effort: low" in rendered["shared/scout.md"].split("---")[1], "P-26: tier fast z effort low")
         main = rendered.get("shared/b-main.md", "")
         mfm = main.split("---")[1] if main else ""
@@ -177,7 +177,7 @@ def main() -> int:
               and so.splitlines()[0] not in rendered["bolek/bolek-rola-b.md"],
               "P-29: grounding: sources-only roli i konsultanci → sekcja „tylko z podanych materiałów”")
         e, _ = b.validate()
-        check(not [x for x in e if "nieaktualn" not in x],   # pliki agentów nie są zbudowane — tu bez znaczenia
+        check(not [x for x in e if "stale" not in x],   # pliki agentów nie są zbudowane — tu bez znaczenia
               f"P-12: złożona konfiguracja bez błędów: {e}")
 
         # inne targets: pack-b uśpiona — bez wkładu, agenta i wiersza routingu
@@ -210,7 +210,7 @@ def main() -> int:
         saved = sk.read_text()
         sk.write_text(saved.replace("name: aa-extra\n", "name: aa-extra\nmodel: haiku\npaths: src/**\n"))
         _, w = b.validate()
-        check(any("aa-extra" in x and "pole model" in x for x in w) and any("aa-extra" in x and "paths" in x for x in w),
+        check(any("aa-extra" in x and "field model" in x for x in w) and any("aa-extra" in x and "paths" in x for x in w),
               f"P-28: skill z model/paths → ostrzeżenie walidacji: {w}")
         sk.write_text(saved)
 
@@ -219,7 +219,7 @@ def main() -> int:
         y.write_text(y.read_text().replace(f'requires: {{core: "{core_range()}"}}', 'requires: {core: ">=' + str(int((ROOT / ".tf" / "factory" / "VERSION").read_text(encoding="utf-8").split(".")[0]) + 1)
                      + '.0.0", packs: [pack-z]}'))   # zawsze nowszy major niż zainstalowany rdzeń
         e, _ = b.check_packs(b.load_config())
-        check(any("wymaga rdzenia" in x for x in e) and any("tf add pack-z" in x for x in e),
+        check(any("requires core" in x for x in e) and any("tf add pack-z" in x for x in e),
               f"P-15: niezgodny rdzeń i brakująca wymagana nakładka → błędy: {e}")
 
         # migracje: własna persona projektu ze starą nazwą skilla

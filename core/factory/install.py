@@ -508,7 +508,7 @@ def drop_legacy_blocks(text: str, marks: list[tuple[str, str]]) -> str:
     return text
 
 
-COMMANDS_SECTION = re.compile(r"(### Komendy\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
+COMMANDS_SECTION = re.compile(r"(### (?:Commands|Komendy)\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
 COMMANDS_DEFAULT_HINT = "dostosuj do swojego projektu"
 
 

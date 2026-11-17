@@ -96,15 +96,15 @@ def check_structure(name: str) -> tuple[list[str], list[str]]:
     build = load_module(ROOT / ".tf" / "factory" / "build.py", "factory_build")
     errors, warnings = build.validate()
     mine = lambda xs: [x for x in xs if re.search(rf"\b(skill|skille?) {re.escape(name)}\b|'{re.escape(name)}'", x)]
-    return mine(errors), [w for w in mine(warnings) if "bramk" not in w and "bramce" not in w]   # stan bramki to wynik, nie wejście
+    return mine(errors), [w for w in mine(warnings) if "gate" not in w and "bramk" not in w and "bramce" not in w]   # stan bramki to wynik, nie wejście
 
 
 def check_scenarios(name: str) -> tuple[list[str], list[str], dict]:
     ev = load_module(TESTS / "run_skill_evals.py", "run_skill_evals")
     path = EVALS / f"{name}.json"
     if not path.exists():
-        return [f"brak pliku scenariuszy {path.relative_to(ROOT)} — utwórz go PRZED treścią skilla "
-                "(`build.py new-skill` tworzy szkielet)"], [], {}
+        return [f"no scenario file {path.relative_to(ROOT)} — create it BEFORE the skill's content "
+                "(`build.py new-skill` creates a skeleton)"], [], {}
     errs = ev.validate_file(path)
     data = json.loads(path.read_text(encoding="utf-8"))
     sc = ev.tuning_set(data.get("scenarios") or [])   # holdout nie służy do strojenia podpowiedzi ani opisu
@@ -112,16 +112,16 @@ def check_scenarios(name: str) -> tuple[list[str], list[str], dict]:
     trig = [s for s in sc if s.get("expect") == "trigger"]
     no = [s for s in sc if s.get("expect") == "no-trigger"]
     if not manual and len(trig) < 2:
-        errs.append(f"{len(trig)} scenariuszy trigger (wymagane ≥2: różne sformułowania prawdziwego problemu)")
+        errs.append(f"{len(trig)} trigger scenarios (≥2 required: different wordings of a real problem)")
     if not no:
-        errs.append("brak scenariusza no-trigger (pytanie sąsiedniego skilla — pilnuje granic)")
+        errs.append("no no-trigger scenario (a neighboring skill's question — it guards the boundaries)")
     if any(n.get("neighbor") == name for n in no):
-        errs.append("no-trigger wskazuje jako sąsiada ten sam skill")
+        errs.append("no-trigger names the same skill as its neighbor")
     if "TODO" in path.read_text(encoding="utf-8"):
-        errs.append("plik scenariuszy zawiera TODO — uzupełnij szkielet")
+        errs.append("the scenario file contains TODO — fill in the skeleton")
     warns = []
     if trig and all(len(s.get("checks", {}).get("all") or []) < 2 for s in trig):
-        warns.append("sprawdzenia treści mają po jednej grupie — dodaj drugą, sprawdzającą wiedzę specyficzną dla skilla")
+        warns.append("the content checks have one group each — add a second one checking knowledge specific to the skill")
     return errs, warns, {"trigger": trig, "no": no, "manual": manual}
 
 
@@ -130,7 +130,7 @@ def check_hint(name: str, sc: dict) -> tuple[list[str], list[str], str]:
     items = hint.load_index()
     errs, warns = [], []
     if sc.get("manual"):
-        return errs, ["skill ręczny (disable-model-invocation) — podpowiedź go nie dotyczy"], "—"
+        return errs, ["a manual skill (disable-model-invocation) — the hint does not apply to it"], "—"
     hits = 0
     for s in sc.get("trigger", []):
         picks = [it["name"] for _, it in hint.select(s["prompt"], items)]
@@ -138,20 +138,20 @@ def check_hint(name: str, sc: dict) -> tuple[list[str], list[str], str]:
             hits += 1
         else:
             top = [it["name"] for _, it in hint.rank(s["prompt"], items)[:3]]
-            warns.append(f"#{s['id']}: hook nie podpowie skilla (najbliżej: {', '.join(top)}) — dopisz słowa do "
-                         "metadata.keywords albo opisu")
+            warns.append(f"#{s['id']}: the hook will not hint the skill (closest: {', '.join(top)}) — add words to "
+                         "metadata.keywords or the description")
     if sc.get("trigger") and hits == 0:
-        errs.append("hook nie podpowiada skilla przy żadnym jego pytaniu — model najpewniej go nie wczyta")
+        errs.append("the hook does not hint the skill for any of its questions — the model will most likely not load it")
     for s in sc.get("no", []):
         picks = [it["name"] for _, it in hint.select(s["prompt"], items)]
         if picks and picks[0] == name:
             nb = s.get("neighbor")
             if nb in picks or set(s.get("accept") or []) & set(picks):
-                warns.append(f"#{s['id']}: przy pytaniu sąsiada ({nb}) hook stawia ten skill przed nim (podpowiada oba — "
-                             "model wybiera; rozważ słowa sąsiada w metadata.keywords)")
+                warns.append(f"#{s['id']}: for the neighbor's question ({nb}) the hook puts this skill before it (it hints both — "
+                             "the model chooses; consider the neighbor's words in metadata.keywords)")
             else:
-                errs.append(f"#{s['id']}: przy pytaniu sąsiada ({nb}) hook podpowiada ten skill, a sąsiada wcale — "
-                            "zawęź opis albo dopisz słowa sąsiadowi")
+                errs.append(f"#{s['id']}: for the neighbor's question ({nb}) the hook hints this skill and not the neighbor at all — "
+                            "narrow the description or add words to the neighbor")
     return errs, warns, f"{hits}/{len(sc.get('trigger', []))}"
 
 
@@ -178,15 +178,15 @@ def check_polish(name: str) -> tuple[list[str], list[str]]:
     if content_language((d / "SKILL.md").read_text(encoding="utf-8", errors="replace")) == "en":
         return [], []                      # treść po angielsku — linter polszczyzny nie dotyczy
     if not LINT.exists():
-        return [], ["brak lintera polszczyzny — pominięto"]
+        return [], ["no Polish linter — skipped"]
     targets = [str(d / "SKILL.md")] + ([str(d / "references")] if (d / "references").is_dir() else [])
     r = subprocess.run([sys.executable, str(LINT), *targets], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     m = re.search(r"wysokich: (\d+)", r.stdout)
     high = int(m.group(1)) if m else 0
     lines = [ln for ln in r.stdout.splitlines() if "[" in ln and "|" in ln]
     if high:
-        return [f"{high} uwag wysokiej wagi w polszczyźnie, np. {next((l for l in lines if 'WYSOKI' in l), '')}"], []
-    return [], ([f"{len(lines)} uwag niskiej/średniej wagi (polish_lint)"] if lines else [])
+        return [f"{high} high-priority Polish language remarks, e.g. {next((l for l in lines if 'WYSOKI' in l), '')}"], []
+    return [], ([f"{len(lines)} low/medium-priority remarks (polish_lint)"] if lines else [])
 
 
 def check_audit(name: str) -> tuple[list[str], list[str]]:
@@ -203,7 +203,7 @@ def check_refs(name: str) -> list[str]:
         return []
     r = subprocess.run([sys.executable, str(GROUND), str(SKILLS / name), "--warn"], capture_output=True, text=True, encoding="utf-8", errors="replace",
                        timeout=120, env={**__import__("os").environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
-    return [ln[2:] for ln in r.stdout.splitlines() if ln.startswith("⚠ ") and "odwołania:" not in ln][:5]
+    return [ln[2:] for ln in r.stdout.splitlines() if ln.startswith("⚠ ") and "odwołania:" not in ln and "references:" not in ln][:5]
 
 
 # ───────────── ewaluacja na modelu (płatna) ─────────────
@@ -211,10 +211,10 @@ def check_refs(name: str) -> list[str]:
 def report_path(out_dir: Path, name: str) -> Path:
     """Nowa nazwa raportu dla każdej rundy — runner dopisuje do istniejącego .jsonl, więc ta sama nazwa mieszałaby
     wyniki kilku rund (błąd z 2026-10-03)."""
-    out = out_dir / f"{dt.date.today().isoformat()}-bramka-{name}.md"
+    out = out_dir / f"{dt.date.today().isoformat()}-gate-{name}.md"
     n = 2
     while out.exists() or out.with_suffix(".jsonl").exists():
-        out = out_dir / f"{dt.date.today().isoformat()}-bramka-{name}-{n}.md"
+        out = out_dir / f"{dt.date.today().isoformat()}-gate-{name}-{n}.md"
         n += 1
     return out
 
@@ -235,7 +235,7 @@ def paid_eval(name: str, models: str, budget: float, baseline: bool, yes: bool) 
         if not any(x.get("passed") for x in res):
             for f in (out, jsonl):
                 f.unlink(missing_ok=True)
-        return False, {"przerwano": "limit użycia lub wydatków — to nie wynik skilla; powtórz, gdy limit się odnowi"}
+        return False, {"aborted": "a usage or spend limit — not the skill's result; repeat when the limit renews"}
     summary: dict = {"report": out.relative_to(ROOT).as_posix(), "cost": round(sum(x.get("cost") or 0 for x in res), 2)}
     ok = r.returncode == 0 and bool(res)
     for m in models.split(","):
@@ -248,27 +248,27 @@ def paid_eval(name: str, models: str, budget: float, baseline: bool, yes: bool) 
         ok = ok and p == len(mine)
         base = [x for x in res if x["model"] == m and x.get("baseline") and x["expect"] == "trigger"]
         if base:
-            summary[m + "_bez_skilli"] = f"{sum(x['checks_ok'] for x in base)}/{len(base)} treści"
+            summary[m + "_without_skills"] = f"{sum(x['checks_ok'] for x in base)}/{len(base)} content"
     if baseline and res:
         easy = load_module(TESTS / "run_skill_evals.py", "run_skill_evals").no_uplift(res)
         if easy:
-            summary["bez_wkladu"] = [i for _, i in easy]
+            summary["no_uplift"] = [i for _, i in easy]
     return ok, summary
 
 
 def paid_warnings(summary: dict) -> list[str]:
     """Ostrzeżenia kroku 8 (nie błędy): scenariusze zaliczane bez skilli nie mierzą wkładu skilla."""
-    easy = summary.get("bez_wkladu") or []
-    return [f"bez skilli też zaliczone: {', '.join(easy)} — scenariusze nie mierzą wkładu skilla; zaostrz je "
-            f"albo zastąp trudniejszymi (core-skill-authoring)"] if easy else []
+    easy = summary.get("no_uplift") or []
+    return [f"passed without skills too: {', '.join(easy)} — the scenarios do not measure the skill's contribution; tighten them "
+            f"or replace them with harder ones (core-skill-authoring)"] if easy else []
 
 
 # ───────────── przebieg ─────────────
 
 def gate(name: str, args) -> bool:
-    print(f"\n━━ Bramka: {name}")
+    print(f"\n━━ Gate: {name}")
     if not (SKILLS / name / "SKILL.md").exists():
-        print(f"✗ nie ma .claude/skills/{name}/SKILL.md")
+        print(f"✗ there is no .claude/skills/{name}/SKILL.md")
         return False
     failed = False
 
@@ -282,35 +282,35 @@ def gate(name: str, args) -> bool:
             print(f"      ⚠ {w}")
         failed = failed or bool(errs)
 
-    step("1. struktura", *check_structure(name))
+    step("1. structure", *check_structure(name))
     se, sw, sc = check_scenarios(name)
-    step("2. scenariusze ewaluacji", se, sw)
+    step("2. evaluation scenarios", se, sw)
     if sc:
         he, hw, ratio = check_hint(name, sc)
-        step("3. podpowiedź (hook skill_hint)", he, hw, f"trafione {ratio}")
-    step("4. regresja podpowiedzi wszystkich skilli", [] if args.fast else check_regression(),
-         ["pominięto (--fast)"] if args.fast else [])
-    step("5. język treści", *check_polish(name))
-    step("6. odwołania w skillu", [], check_refs(name))
-    step("7. audyt bezpieczeństwa i zaleceń Anthropic", *check_audit(name))
+        step("3. hint (the skill_hint hook)", he, hw, f"hits {ratio}")
+    step("4. hint regression of all skills", [] if args.fast else check_regression(),
+         ["skipped (--fast)"] if args.fast else [])
+    step("5. content language", *check_polish(name))
+    step("6. references in the skill", [], check_refs(name))
+    step("7. security audit and Anthropic recommendations", *check_audit(name))
 
     reg = read_registry()
     rec = reg.get(name, {})
     fp = fingerprint(name)
     if failed:
-        print(f"  ✗ bramka NIE przeszła — popraw i uruchom ponownie (rejestr bez zmian)")
+        print(f"  ✗ the gate did NOT pass — fix it and run again (the registry is unchanged)")
         return False
     paid = None
     if args.model:
         ok, paid = paid_eval(name, args.model, args.budget, args.baseline, args.yes)
-        if paid.get("przerwano"):
-            step("8. ewaluacja na modelu", [f"przerwana: {paid['przerwano']}"], [])
-            print("  ✗ bramka NIE przeszła (ewaluacja przerwana); wynik bezpłatnych sprawdzeń z rejestru bez zmian")
+        if paid.get("aborted"):
+            step("8. evaluation on a model", [f"aborted: {paid['aborted']}"], [])
+            print("  ✗ the gate did NOT pass (the evaluation was aborted); the free checks' result in the registry is unchanged")
             return False
-        step("8. ewaluacja na modelu", [] if ok else [f"nie wszystkie scenariusze zaliczone: {paid}"],
-             paid_warnings(paid), ", ".join(f"{k} {v}" for k, v in paid.items() if k not in ("report", "bez_wkladu")))
+        step("8. evaluation on a model", [] if ok else [f"not all scenarios passed: {paid}"],
+             paid_warnings(paid), ", ".join(f"{k} {v}" for k, v in paid.items() if k not in ("report", "no_uplift")))
         if not ok:
-            print(f"  ✗ bramka NIE przeszła — raport: {paid.get('report')}")
+            print(f"  ✗ the gate did NOT pass — report: {paid.get('report')}")
             return False
     new = {"fingerprint": fp, "offline": dt.date.today().isoformat()}
     if paid:
@@ -318,11 +318,11 @@ def gate(name: str, args) -> bool:
     elif rec.get("model") and rec.get("fingerprint") == fp:
         new["model"] = rec["model"]
     elif rec.get("model"):
-        new["model_previous"] = {**rec["model"], "uwaga": "dla wcześniejszej wersji skilla"}
+        new["model_previous"] = {**rec["model"], "note": "for an earlier version of the skill"}
     reg[name] = new
     write_registry(reg)
-    tail = "" if paid or new.get("model") else " · ewaluacja na modelu: brak (za zgodą człowieka: --model haiku,sonnet)"
-    print(f"  ✓ bramka przeszła, zapisano w {REGISTRY.relative_to(ROOT)}{tail}")
+    tail = "" if paid or new.get("model") else " · evaluation on a model: none (with a human's consent: --model haiku,sonnet)"
+    print(f"  ✓ the gate passed, recorded in {REGISTRY.relative_to(ROOT)}{tail}")
     return True
 
 
@@ -332,9 +332,9 @@ def status(strict: bool = False) -> int:
     for d in sorted(p.parent.name for p in SKILLS.glob("*/SKILL.md")):
         rec = reg.get(d)
         if not rec:
-            state = "brak bramki"
+            state = "no gate"
         elif rec.get("fingerprint") != fingerprint(d):
-            state = "zmieniony po bramce"
+            state = "changed after the gate"
         else:
             state = "ok"
         model = rec.get("model") if rec else None
@@ -342,7 +342,7 @@ def status(strict: bool = False) -> int:
     for d, s, m in rows:
         print(f"  {'✓' if s == 'ok' else '⚠'} {d:<36} {s:<20} {m}")
     bad = sum(s != "ok" for _, s, _ in rows)
-    print(f"{'✓' if not bad else '⚠'} skilli: {len(rows)}, do przejścia przez bramkę: {bad}")
+    print(f"{'✓' if not bad else '⚠'} skills: {len(rows)}, to pass the gate: {bad}")
     return 1 if strict and bad else 0
 
 
@@ -400,15 +400,15 @@ def suggest(name: str, apply: bool) -> int:
         return 2
     triggers = [s["prompt"] for s in sc.get("trigger", [])]
     res = suggest_phrases(name, triggers, [s["prompt"] for s in sc.get("no", [])], hint.load_index(), hint)
-    print(f"Podpowiedź {name}: trafione {res['hits_before']}/{len(triggers)} → po dopisaniu {res['hits_after']}/{len(triggers)}"
-          + ("" if res["neighbor_ok"] else " · UWAGA: przy pytaniu sąsiada skill wychodzi na pierwsze miejsce"))
+    print(f"Hint {name}: hits {res['hits_before']}/{len(triggers)} → after adding {res['hits_after']}/{len(triggers)}"
+          + ("" if res["neighbor_ok"] else " · WARNING: for the neighbor's question the skill comes first"))
     if not res["phrases"]:
-        print("✓ Nic do dopisania.")
+        print("✓ Nothing to add.")
         return 0
     line = ", ".join(res["phrases"])
-    print(f'Propozycja do metadata.keywords: "{line}"')
+    print(f'Proposal for metadata.keywords: "{line}"')
     if not apply:
-        print(f"Dopisz: python3 .tf/factory/skill_gate.py --suggest {name} --apply (potem bramka: python3 .tf/factory/skill_gate.py {name})")
+        print(f"Add: python3 .tf/factory/skill_gate.py --suggest {name} --apply (then the gate: python3 .tf/factory/skill_gate.py {name})")
         return 0
     md = SKILLS / name / "SKILL.md"
     text = md.read_text(encoding="utf-8")
@@ -418,7 +418,7 @@ def suggest(name: str, apply: bool) -> int:
     else:
         text = re.sub(r"^(  catalog: .*\n)", lambda mm: mm.group(1) + f'  keywords: "{line}"\n', text, count=1, flags=re.M)
     md.write_text(text, encoding="utf-8")
-    print(f"✓ Dopisano do {md.relative_to(ROOT)} — teraz bramka: python3 .tf/factory/skill_gate.py {name}")
+    print(f"✓ Added to {md.relative_to(ROOT)} — now the gate: python3 .tf/factory/skill_gate.py {name}")
     return 0
 
 
@@ -431,11 +431,11 @@ def hints_all() -> int:
         _, _, sc = check_scenarios(d)
         n += 1
         errs, warns, _ = check_hint(d, sc)
-        misses += [f"{d}: {x}" for x in errs + warns if "nie podpowie" in x]
-        narrow += sum("nie podpowie" not in x and "ręczny" not in x for x in warns)
+        misses += [f"{d}: {x}" for x in errs + warns if "will not hint" in x]
+        narrow += sum("will not hint" not in x and "manual skill" not in x for x in warns)
     for m in misses:
         print(f"  ✗ {m}")
-    print(f"{'✓' if not misses else '✗'} podpowiedzi: {n} skilli, nietrafione scenariusze: {len(misses)}, wąski zapas: {narrow}")
+    print(f"{'✓' if not misses else '✗'} hints: {n} skills, missed scenarios: {len(misses)}, narrow margin: {narrow}")
     return 1 if misses else 0
 
 
@@ -448,18 +448,18 @@ def changed() -> list[str]:
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("skills", nargs="*")
-    ap.add_argument("--changed", action="store_true", help="skille zmienione od ostatniej bramki")
+    ap.add_argument("--changed", action="store_true", help="skills changed since the last gate")
     ap.add_argument("--status", action="store_true")
-    ap.add_argument("--strict", action="store_true", help="z --status: kod 1, gdy któryś skill nie ma aktualnej bramki (CI)")
-    ap.add_argument("--model", default="", help="ewaluacja na modelu (płatna): haiku,sonnet,opus")
-    ap.add_argument("--budget", type=float, default=2.0, help="limit kosztu ewaluacji w USD")
-    ap.add_argument("--baseline", action="store_true", help="dodatkowo przebieg bez skilli (czy skill coś wnosi)")
-    ap.add_argument("--yes", action="store_true", help="bez pytania o zgodę na koszt")
-    ap.add_argument("--fast", action="store_true", help="pomiń regresję wszystkich skilli (krok 4)")
+    ap.add_argument("--strict", action="store_true", help="with --status: code 1 when some skill has no current gate (CI)")
+    ap.add_argument("--model", default="", help="evaluation on a model (paid): haiku,sonnet,opus")
+    ap.add_argument("--budget", type=float, default=2.0, help="the evaluation cost limit in USD")
+    ap.add_argument("--baseline", action="store_true", help="also a run without skills (does the skill add anything)")
+    ap.add_argument("--yes", action="store_true", help="without asking for consent to the cost")
+    ap.add_argument("--fast", action="store_true", help="skip the regression of all skills (step 4)")
     ap.add_argument("--hints", action="store_true",
-                    help="trafienia hooka skill_hint dla scenariuszy WSZYSTKICH skilli (nowy skill nie podkrada podpowiedzi)")
-    ap.add_argument("--suggest", metavar="SKILL", help="frazy do metadata.keywords z nietrafionych scenariuszy skilla")
-    ap.add_argument("--apply", action="store_true", help="z --suggest: dopisz frazy do SKILL.md")
+                    help="skill_hint hook hits for the scenarios of ALL skills (a new skill does not steal hints)")
+    ap.add_argument("--suggest", metavar="SKILL", help="phrases for metadata.keywords from the skill's missed scenarios")
+    ap.add_argument("--apply", action="store_true", help="with --suggest: add the phrases to SKILL.md")
     args = ap.parse_args(argv[1:])
     if args.suggest:
         return suggest(args.suggest, args.apply)
@@ -469,12 +469,12 @@ def main(argv: list[str]) -> int:
         return hints_all()
     names = list(args.skills) + (changed() if args.changed else [])
     if not names:
-        print("Nic do sprawdzenia." if args.changed else __doc__)
+        print("Nothing to check." if args.changed else __doc__)
         return 0
     results = {n: gate(n, args) for n in dict.fromkeys(names)}
     bad = [n for n, ok in results.items() if not ok]
-    print(f"\n{'✓' if not bad else '✗'} bramka: przeszło {len(results) - len(bad)}/{len(results)}"
-          + (f"; nie przeszły: {', '.join(bad)}" if bad else ""))
+    print(f"\n{'✓' if not bad else '✗'} gate: passed {len(results) - len(bad)}/{len(results)}"
+          + (f"; did not pass: {', '.join(bad)}" if bad else ""))
     return 1 if bad else 0
 
 

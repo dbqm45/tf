@@ -63,7 +63,7 @@ def main() -> int:
 
     # Podpowiedzi wszystkich skilli naraz: nowy skill nie może „podkraść” podpowiedzi starszemu (krok check.py).
     r = run([ROOT / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=ROOT)
-    check(r.returncode == 0 and "podpowiedzi" in r.stdout and r.stdout.strip().splitlines()[-1].startswith("✓"),
+    check(r.returncode == 0 and "hints" in r.stdout and r.stdout.strip().splitlines()[-1].startswith("✓"),
           f"A-5: skill_gate --hints sprawdza trafienia hooka dla scenariuszy wszystkich skilli: {r.stdout[-300:]}{r.stderr[-300:]}")
     with tempfile.TemporaryDirectory() as t:
         r0 = Path(t)

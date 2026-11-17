@@ -27,13 +27,13 @@ def main() -> int:
 
     skills = ["a", "b", "dom-x"]
     errors, warnings = b.skill_usage(skills, {"a"}, {})
-    check(errors == [] and len(warnings) == 2 and all("nie jest używany" in w for w in warnings),
+    check(errors == [] and len(warnings) == 2 and all("not used by" in w for w in warnings),
           f"SU-1: nieużywane skille → ostrzeżenia: {errors} {warnings}")
     errors, warnings = b.skill_usage(skills, {"a"}, {"standalone_skills": ["dom-x"]})
-    check(errors == [] and warnings == ["skill b: nie jest używany przez żadną rolę ani personę"],
+    check(errors == [] and warnings == ["skill b: not used by any role or persona"],
           f"SU-2: skill samodzielny bez ostrzeżenia: {errors} {warnings}")
     errors, _ = b.skill_usage(skills, {"a"}, {"standalone_skills": ["brak"]})
-    check(errors == ["standalone_skills: nieznany skill 'brak'"], f"SU-3: nieznany skill samodzielny → błąd: {errors}")
+    check(errors == ["standalone_skills: unknown skill 'brak'"], f"SU-3: nieznany skill samodzielny → błąd: {errors}")
     _, warnings = b.skill_usage(skills, {"a", "dom-x"}, {"standalone_skills": ["dom-x"]})
     check(any("dom-x" in w and "standalone_skills" in w for w in warnings),
           f"SU-4: skill samodzielny używany przez personę → ostrzeżenie o zbędnym wpisie: {warnings}")
@@ -52,7 +52,7 @@ def main() -> int:
     errors, _ = b.check_review_date("eng-a", {"review": "kwiecień"})
     check(len(errors) == 1 and "review" in errors[0], f"RD-2: zły format daty → błąd: {errors}")
     errors, warnings = b.check_review_date("eng-a", {"review": __import__("datetime").date(2027, 4, 17)})
-    check(errors == [] and len(warnings) == 1 and "cudzysłow" in warnings[0],
+    check(errors == [] and len(warnings) == 1 and "without quotes" in warnings[0],
           f"RD-2b: data YAML bez cudzysłowu → ostrzeżenie (specyfikacja Agent Skills: metadata to tekst): {errors} {warnings}")
     errors, warnings = b.check_review_date("eng-a", {})
     check(errors == [] and len(warnings) == 1 and "freshness.py" in warnings[0],
@@ -85,11 +85,11 @@ def main() -> int:
     check(orchestrators or not b.load_dir("personas"), "OR-0: są prompty orkiestratorów (gdy nakładki dają persony)")
     for k, t in orchestrators.items():
         check("Resztę delegujesz" not in t, f"OR-1 {k}: nie ma już zasady „resztę delegujesz”")
-        check("Domyślnie robisz zadanie sam" in t, f"OR-2 {k}: zasada domyślna — zadanie robisz sam")
-        check("## Język" in t, f"OR-4 {k}: sekcja języka pracy i commitów")
-        sec = re.search(r"^## Kiedy delegujesz\n(.*?)(?=^## )", t, re.M | re.S)
+        check("By default you do the task yourself" in t, f"OR-2 {k}: zasada domyślna — zadanie robisz sam")
+        check("## Language" in t, f"OR-4 {k}: sekcja języka pracy i commitów")
+        sec = re.search(r"^## When you delegate\n(.*?)(?=^## )", t, re.M | re.S)
         body = sec.group(1) if sec else ""
-        check(sec and all(w in body for w in ("scout", "równolegle", "świeże spojrzenie", "Nie dziel")),
+        check(sec and all(w in body for w in ("scout", "in parallel", "fresh look", "Do not split")),
               f"OR-3 {k}: sekcja „Kiedy delegujesz” z przypadkami, w których przekazanie się opłaca")
 
     # Skill wyłączony (metadata.status: inactive, docs/inactive-skills.md): zostaje w instalacji, ale znika z list
@@ -122,7 +122,7 @@ def main() -> int:
     catalog = b.render_catalog()
     for n in b.inactive_skills(b.load_skills()):
         check(f"- `{n}` —" not in catalog, f"IN-8: wyłączony skill {n} poza listą wymiarów katalogu")
-        check(n in catalog.split("## Wyłączone skille", 1)[-1], f"IN-9: wyłączony skill {n} w sekcji „Wyłączone skille”")
+        check(n in catalog.split("## Disabled skills", 1)[-1], f"IN-9: wyłączony skill {n} w sekcji „Wyłączone skille”")
 
     for f in fails:
         print(f"✗ {f}")
