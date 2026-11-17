@@ -82,6 +82,12 @@ def stems(text: str) -> list[str]:
 PL_INDEX = "hint.pl.txt"   # polski indeks skilla przetłumaczonego na angielski (tools/hint_pl_index.py); model go nie czyta
 
 
+def clean_body(text: str) -> str:
+    """Treść do indeksu: bez przykładów kodu i bez listy źródeł."""
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)
+    return re.sub(r"^## (Źródła|Sources)\b.*?(?=^# |\Z)", " ", text, flags=re.S | re.M)
+
+
 def load_index() -> list[dict]:
     items = []
     for p in sorted(SKILLS.glob("*/SKILL.md")):
@@ -105,12 +111,16 @@ def load_index() -> list[dict]:
             if pl_text.startswith("head: "):     # dawny polski opis i katalog — waga opisu, nie treści
                 first, _, pl_text = pl_text.partition("\n")
                 pl_head = NEG_RE.sub("", first[6:])
-            body += "\n" + pl_text
-        body = re.sub(r"```.*?```", " ", body, flags=re.S)          # bez przykładów kodu
-        body = re.sub(r"^## (Źródła|Sources)\b.*?(?=^# |\Z)", " ", body, flags=re.S | re.M)  # bez listy źródeł
-        head = stems(f"{desc} {kat} {name_words} {keywords} {pl_head}")
+        else:
+            pl_text = ""
+        head = set(stems(f"{desc} {kat} {name_words} {keywords} {pl_head}"))
+        en_stems, pl_stems = set(stems(clean_body(body))) - head, set(stems(clean_body(pl_text))) - head
+        # wersje językowe osobno: polecenie jest w jednym języku, więc treść liczy się wersją, która pasuje lepiej,
+        # znormalizowaną jej własną długością; suma wersji zawyżałaby średnią długość (wyższe wyniki
+        # nieprzetłumaczonych skilli, szum), a dopasowanie po sumie z jedną długością faworyzowałoby przetłumaczone
         items.append({"name": name, "desc": desc.strip(), "kat": kat.strip(), "excerpt": excerpt,
-                      "head": set(head), "body": set(stems(body)) - set(head)})
+                      "head": head, "body": en_stems | pl_stems, "blen": max(len(en_stems), len(pl_stems)),
+                      "langs": [s for s in (en_stems, pl_stems) if s]})
     return items
 
 
@@ -133,13 +143,15 @@ def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
     for it in items:
         for t in it["head"] | it["body"]:
             df[t] = df.get(t, 0) + 1
-    avg = sum(len(it["body"]) for it in items) / (len(items) or 1)
+    avg = sum(it.get("blen", len(it["body"])) for it in items) / (len(items) or 1)
     q = set(stems(intent(prompt)))
     scored = []
     for it in items:
         idf = lambda t: math.log(1 + n / df[t])
-        norm = (avg / max(1, len(it["body"]))) ** BODY_NORM   # długi skill nie wygrywa samą liczbą słów ogólnych
-        score = HEAD_WEIGHT * sum(idf(t) for t in q & it["head"]) + norm * sum(idf(t) for t in q & it["body"])
+        # długi skill nie wygrywa samą liczbą słów ogólnych: każda wersja językowa normalizowana swoją długością
+        body = max(((avg / max(1, len(b))) ** BODY_NORM * sum(idf(t) for t in q & b)
+                    for b in it.get("langs") or [it["body"]]), default=0.0)
+        score = HEAD_WEIGHT * sum(idf(t) for t in q & it["head"]) + body
         scored.append((round(score, 2), it))
     scored.sort(key=lambda x: -x[0])
     return scored

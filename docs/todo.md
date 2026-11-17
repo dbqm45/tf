@@ -731,6 +731,14 @@ treści (angielska), bez równoległej polskiej.
       ops-release-engineering niezainstalowany). Haiku przed/po: 5/6 → 4/6 + powtórka `przeglad-specyfikacji-panel`
       2/2 (pojedynczy przebieg zakończony pytaniami o ścieżkę); `pasma-kontrolne` pada tak samo przed i po (model
       wybiera ops-sre-incidents); $2,29. SKILL.md 18065 znaków (> 15000, ostrzeżenie jak przed partią: 17023).
+      **Poprawka hooka skill_hint (z CI tej partii):** treść przetłumaczonego skilla w indeksie to angielski +
+      `hint.pl.txt`, a normalizacja wyniku liczyła długość sumy — średnia długość rosła z każdą partią (wyniki
+      nieprzetłumaczonych skilli w górę: w pack-docs „Przetłumacz ten akapit na angielski” przekroczyło próg,
+      7,98 → 8,07), a przetłumaczony skill tracił za „długą” treść. Teraz każda wersja językowa liczy się osobno,
+      znormalizowana swoją długością, i wygrywa lepiej pasująca (polecenie jest w jednym języku); średnia z dłuższej
+      wersji (test HP-6, HP-6b, HP-7). Po zmianie: all 901 · 32/43, none 168 · 16/16, `--hints` i test poleceń ogólnych
+      czyste w 8 instalacjach; słowa kluczowe `eng-llm-features` z jego sekcji 10 (scenariusz na granicy: 4. miejsce
+      z różnicą 1,3 pkt), słowo „plan rozjechał się z kodem” zawężone (łapało „rozjedzie się” w pytaniu o ACL).
     - [ ] dalsze partie:
       cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).

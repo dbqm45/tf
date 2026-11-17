@@ -79,6 +79,19 @@ def main() -> int:
         nightly = next(it for it in h.load_index() if it["name"] == "core-nightly")
         check({"zamkn", "lapto"} <= nightly["head"] and "head" not in nightly["body"],
               f"HP-5: linia „head:” indeksu waży jak opis skilla (dawny polski opis i katalog): {sorted(nightly['head'])[:12]}")
+        # HP-6: długość treści do normalizacji wyniku to dłuższa z dwóch wersji językowych, nie ich suma — inaczej
+        # każdy przetłumaczony skill podnosi średnią długość i wyniki wszystkich nieprzetłumaczonych skilli rosną
+        # (szum na poleceniach ogólnych), a sam skill traci punkty za „długą” treść (PR #305, pack-docs).
+        en_only = set(h.stems(EN.split("---\n", 2)[2].split("## Sources")[0]))
+        pl_only = set(h.stems(PL))
+        check(nightly.get("blen") == max(len(en_only - nightly["head"]), len(pl_only - nightly["head"]))
+              and nightly["blen"] < len(nightly["body"]),
+              f"HP-6: długość do normalizacji = dłuższa wersja językowa: blen={nightly.get('blen')}, "
+              f"body={len(nightly['body'])}")
+        check(nightly.get("langs") == [en_only - nightly["head"], pl_only - nightly["head"]],
+              f"HP-6b: wersje językowe treści osobno (wynik liczy się lepiej pasującą): {nightly.get('langs')}")
+        other = next(it for it in h.load_index() if it["name"] == "core-other")
+        check(other.get("blen") == len(other["body"]), f"HP-7: skill bez indeksu: blen = długość treści: {other.get('blen')}")
         shutil.rmtree(skills / "core-other")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów polskiego indeksu podpowiedzi")
     return 1 if fails else 0
