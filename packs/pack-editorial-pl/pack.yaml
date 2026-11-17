@@ -1,11 +1,11 @@
 # Nakładka redakcji tekstu po polsku: poprawność (pisownia, interpunkcja wg RJP PAN) i styl, redaktor polish-editor,
-# persona Stefan. Instalowana automatycznie przy języku pracy `pl`; jej wkład działa tylko przy `language: pl`.
+# persona Stefan. Zwykła nakładka (`tf add pack-editorial-pl`): przydaje się każdemu, kto pisze po polsku; jej reguły
+# dotyczą tylko tekstu po polsku, więc nie przeszkadzają w rozmowie w innym języku.
 id: pack-editorial-pl
 version: 1.0.1
 title: Polish editorial
-description: Polish language editing — correctness and style checks, the polish-editor agent and the Stefan persona. Installed automatically with language pl.
+description: Polish language editing — correctness and style checks, the polish-editor agent and the Stefan persona. For anyone who writes in Polish.
 content_language: pl
-language: pl           # nakładka języka — instalowana przy tym języku pracy (core config → languages)
 requires:
   core: ">=3.0.0 <13.0.0"
 optional_packs: [pack-docs]
@@ -13,8 +13,7 @@ optional_packs: [pack-docs]
 facets:
   - {prefix: txt-, order: 160, name: język i redakcja, question: "jak pisać poprawnie i zrozumiale — pisownia, interpunkcja, styl, redakcja"}
 
-# Wkład do person, ról i routingu — tylko przy języku pracy `pl`.
-contributes_when: {language: pl}
+# Wkład do person, ról i routingu (reguły działają tylko dla tekstu po polsku).
 contributes:
   personas:
     traits: [polish-language]

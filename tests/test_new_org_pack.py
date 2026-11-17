@@ -89,7 +89,7 @@ def main() -> int:
         app.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=app, check=True)
         r = subprocess.run([sys.executable, str(ROOT / "core" / "factory" / "install.py"), str(app), "--yes",
-                            "--language", "en", "--packs", "pack-acme", "--pack-dir", str(out)],
+                            "--packs", "pack-acme", "--pack-dir", str(out)],
                            capture_output=True, text=True, timeout=300)
         check(r.returncode == 0 and (app / ".tf/factory/packs/pack-acme/pack.yaml").is_file()
               and (app / ".claude/skills/acme-standards/SKILL.md").is_file(),
@@ -142,7 +142,7 @@ def main() -> int:
         app2.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=app2, check=True)
         r = subprocess.run([sys.executable, str(ROOT / "core" / "factory" / "install.py"), str(app2), "--yes",
-                            "--language", "en", "--packs", "pack-acme-backend", "--pack-dir", str(out),
+                            "--packs", "pack-acme-backend", "--pack-dir", str(out),
                             "--pack-dir", str(team)], capture_output=True, text=True, timeout=300)
         check(r.returncode == 0 and (app2 / ".tf/factory/packs/pack-acme/pack.yaml").is_file()
               and (app2 / ".tf/factory/packs/pack-acme-backend/pack.yaml").is_file(),

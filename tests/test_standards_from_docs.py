@@ -183,7 +183,7 @@ def main() -> int:
         app.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=app, check=True)
         r = subprocess.run([sys.executable, str(ROOT / "core" / "factory" / "install.py"), str(app), "--yes",
-                            "--language", "en", "--packs", "pack-acme", "--pack-dir", str(pack)],
+                            "--packs", "pack-acme", "--pack-dir", str(pack)],
                            capture_output=True, text=True, timeout=300)
         g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standards"],
                            cwd=app, capture_output=True, text=True, timeout=120) if r.returncode == 0 else r

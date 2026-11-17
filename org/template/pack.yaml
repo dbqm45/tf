@@ -49,9 +49,9 @@ org_defaults:
       allowed_modes: [plan, normal, auto]   # TODO: usuń auto, jeśli firma wymaga zgody człowieka na każdy plan
     # Profil kosztów: economy | balanced | quality.
     default_profile: balanced
-    # Język pracy agentów i język commitów.
-    default_language: pl
-    default_commit_language: en
+    # Język commitów w NOWYM repozytorium firmy (bez historii). Język rozmowy nie jest ustawieniem — agenci
+    # odpowiadają w języku, w którym pisze człowiek; w repozytorium z historią commity idą za `git log`.
+    commit_language: {new_repo: en}
   operations:
     # Tracker zgłoszeń. Adres Jiry i token NIE trafiają tutaj: zmienne JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
     # (albo JIRA_TOKEN) ustawia każdy w swoim środowisku.

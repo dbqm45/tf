@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import packs as packs_mod  # noqa: E402  (.tf/factory/packs.py — nakładki i składanie konfiguracji)
 yaml = packs_mod.yaml
+packs_mod.commit_language(ROOT)   # język commitów z git log raz, przy wczytaniu — render nie uruchamia procesów
 FACTORY = ROOT / ".tf" / "factory"
 SKILLS_DIR = ROOT / ".claude" / "skills"
 OUT_DIR = ROOT / ".claude" / "agents" / "_generated"
@@ -452,12 +453,9 @@ def dimension_table(skills: list[str], cfg: dict) -> str:
 
 
 def language_section(cfg: dict) -> str:
-    """Język pracy i commitów z ustawień projektu (`tf language`, `tf commit-language`)."""
-    langs, st = cfg.get("languages") or {}, cfg.get("_settings") or {}
-    work = (langs.get(st.get("language")) or {}).get("work", "")
-    commits = (langs.get(st.get("commit_language")) or {}).get("commits", "")
-    lines = [x for x in (work, commits, cfg.get("code_language_note", "")) if x]
-    return "## Język\n" + "\n".join(f"- {x.strip()}" for x in lines) + "\n" if lines else ""
+    """Język bez ustawień: rozmowa w języku człowieka, commity w języku repozytorium (`git log`), kod po angielsku."""
+    lines = packs_mod.language_lines(cfg, ROOT)
+    return "## Język\n" + "\n".join(lines) + "\n" if lines else ""
 
 
 COMMON_SECTIONS = (("work_contract", "Zakończenie pracy"), ("style_note", "Styl odpowiedzi"),
@@ -946,10 +944,6 @@ def check_packs(cfg: dict) -> tuple[list[str], list[str]]:
         for dep in (p.get("requires") or {}).get("packs") or []:
             if dep not in packs:
                 errors.append(f"nakładka {pid}: wymaga nakładki {dep} — tf add {dep}")
-    lang = (cfg.get("_settings") or {}).get("language")
-    need = ((cfg.get("languages") or {}).get(lang) or {}).get("pack")
-    if need and need not in packs:
-        warnings.append(f"język pracy {lang}: brak nakładki {need} (narzędzia redakcji) — tf add {need}")
     return errors, warnings
 
 
@@ -1304,9 +1298,8 @@ def cmd_check():
 def cmd_list():
     cfg = load_config()
     roles, personas, _traits, _skills, _errors = load_team(cfg)
-    st = cfg["_settings"]
-    print(f"Nakładki: {', '.join(cfg['_packs']) or '— (sam rdzeń)'} · język pracy: {st['language']} · "
-          f"commity: {st['commit_language']}")
+    print(f"Nakładki: {', '.join(cfg['_packs']) or '— (sam rdzeń)'} · commity: "
+          f"{packs_mod.commit_language(ROOT) or 'nowe repozytorium'} (z git log)")
     for pname, p in personas.items():
         print(f"\n{p['title']}  →  claude --agent {pname}   [{p.get('_pack')}]")
         print(f"  cechy: {', '.join(p['traits'])}")

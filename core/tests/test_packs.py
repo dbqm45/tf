@@ -61,11 +61,10 @@ contributes:
     write(b / "pack.yaml", """id: pack-b
 version: 1.0.0
 title: B
-language: pl
 requires: {core: "CORE_RANGE"}
 facets:
   - {prefix: bb-, order: 20, name: wymiar B, question: "co w B"}
-contributes_when: {language: pl}
+contributes_when: {targets: [claude]}
 contributes:
   personas: {traits: [cecha-b], core_skills: [bb-tekst]}
 routing: |
@@ -124,7 +123,7 @@ def main() -> int:
         cfg = b.load_config()
         check([f["prefix"] for f in cfg["facets"]][:2] == ["aa-", "bb-"], f"P-1: wymiary nakładek po order: {cfg['facets'][:2]}")
         check("b-agent" in cfg["shared_agents"] and "| sygnał B |" in cfg["routing"],
-              "P-2: agent i wiersz routingu nakładki przy spełnionym contributes_when (język pl domyślnie)")
+              "P-2: agent i wiersz routingu nakładki przy spełnionym contributes_when (domyślne targets: [claude])")
         roles, personas, traits, skills, errors = b.load_team(cfg)
         ala = personas["ala"]
         check(ala["roles"] == ["rola-a"] and "rola rola-c" in ala["_dropped"] and "cecha cecha-c" in ala["_dropped"]
@@ -142,7 +141,8 @@ def main() -> int:
               "P-9: konsultant tylko do odczytu")
         check("specialist" in ala_md.split("\n")[3] and "specialist" not in bolek_md.split("\n")[3],
               "P-10: specialist (@dispatcher) tylko u persony z dispatcher: true")
-        check("## Język" in ala_md and "po polsku" in ala_md and "commitów" in ala_md, "P-11: sekcja języka w personie")
+        check("## Język" in ala_md and "w języku, w którym pisze człowiek" in ala_md and "commitów" in ala_md,
+              "P-11: sekcja języka w personie (reguła rozmowy, commity)")
         # 3.1.0: wykonawcy pytają konsultantów sami (zagnieżdżanie podagentów), konsultanci nie delegują dalej
         rendered = b.render_all()
         ala_w, bolek_w = rendered["ala/ala-rola-a.md"], rendered["bolek/bolek-rola-b.md"]
@@ -180,16 +180,17 @@ def main() -> int:
         check(not [x for x in e if "nieaktualn" not in x],   # pliki agentów nie są zbudowane — tu bez znaczenia
               f"P-12: złożona konfiguracja bez błędów: {e}")
 
-        # język en: pack-b uśpiona — bez wkładu, agenta i wiersza routingu
-        pm.save_settings(p, language="en", commit_language="pl")
+        # inne targets: pack-b uśpiona — bez wkładu, agenta i wiersza routingu
+        pm.save_settings(p, targets=["claude", "managed-agents"])
         cfg = b.load_config()
         roles, personas, traits, skills, errors = b.load_team(cfg)
         check("b-agent" not in cfg["shared_agents"] and "sygnał B" not in cfg["routing"]
               and "cecha-b" not in personas["ala"]["traits"] and "b-consult" not in cfg["consultants"],
               "P-13: contributes_when niespełniony → nakładka uśpiona")
         md = b.render_all()["ala/ala.md"]
-        check("po angielsku" in md and "commitów, tytuły i opisy pull requestów oraz wpisy CHANGELOG piszesz po polsku" in md,
-              "P-14: język pracy en i commitów pl w prompcie")
+        check("w języku, w którym pisze człowiek" in md and "wpisy CHANGELOG piszesz po angielsku" in md,
+              "P-14: reguła języka rozmowy i commity nowego repozytorium (bez historii) po angielsku w prompcie")
+        pm.save_settings(p, targets=["claude"])   # z powrotem domyślne — dalsze kroki bez celu managed-agents
 
         # błędne isolation i scenarios → błędy walidacji
         bp = p / ".tf" / "factory" / "packs" / "pack-b" / "personas" / "bolek.yaml"
@@ -242,10 +243,9 @@ def main() -> int:
         # sekcja języka w CLAUDE.local.md
         md_p = p / "CLAUDE.local.md"
         md_p.write_text("x\n<!-- team-factory:begin -->\n## Zespół\n### Język\n- stare\n<!-- team-factory:end -->\n")
-        changed = pm.write_language_lines(md_p, pm.load_yaml(p / ".tf" / "factory" / "config.yaml"),
-                                          {"language": "pl", "commit_language": "en"})
+        changed = pm.write_language_lines(md_p, pm.load_yaml(p / ".tf" / "factory" / "config.yaml"), p)
         txt = md_p.read_text()
-        check(changed and "- stare" not in txt and "po polsku" in txt and txt.startswith("x\n"),
+        check(changed and "- stare" not in txt and "w języku, w którym pisze człowiek" in txt and txt.startswith("x\n"),
               f"P-18: podmiana sekcji języka w bloku fabryki: {txt}")
 
     # Nakładka firmowa (org_defaults): domyślne organizacji między silnikiem a projektem.

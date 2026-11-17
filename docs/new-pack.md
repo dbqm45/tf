@@ -63,7 +63,7 @@ Nakładka może żyć w innym repozytorium (np. wiedza domenowa razem z jej źr�
 Standardy i domyślne ustawienia jednej organizacji: osobny zestaw w katalogu `org/` (generator `org/new_org_pack.py`,
 szablon `org/template/`, przewodnik `org/README.md`). Nakładka firmowa to zwykła nakładka z kluczem `org_defaults`:
 - `config` — domyślne organizacji między silnikiem a projektem (`autonomy`, `tiers`, `profiles`, `default_profile`,
-  `work`, `loop`, `steps`, `default_language`, `default_commit_language`); czytają je `build.py`, `guard_bash`
+  `work`, `loop`, `steps`, `task`, `commit_language`); czytają je `build.py`, `guard_bash`
   (polityka autonomii nadal tylko zaostrza), `tf risk`, `tf work` i `tf config show` (źródło „organizacja”);
 - `operations.tracker` — domyślny tracker, prefiksy i `fields` karty operacyjnej; bez adresu (`url`).
 W projekcie najwyżej jedna nakładka z `org_defaults`; klucz spoza listy to błąd `build.py check` bez skutku.

@@ -259,7 +259,7 @@ tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicac
 | ogólny poziom kosztu | profil kosztów | `python3 .tf/factory/profile.py <profil>` |
 | kto wykonuje krok pętli `/tf` i na jakim poziomie | `.tf/config/config.yaml` → `steps` | np. `steps: {review: {tier: deep}}`, potem `python3 .tf/factory/build.py`; podgląd z modelem i effortem: `tf config show steps` |
 | operacje, o które fabryka pyta albo które blokuje | `.tf/config/config.yaml` → `autonomy` | można tylko zaostrzyć (pytanie → blokada) |
-| język rozmowy i commitów | ustawienia fabryki | `tf language <kod>`, `tf commit-language <kod>` |
+| język rozmowy i commitów | nic do ustawiania | agenci odpowiadają w języku, w którym piszesz; commity w języku historii repozytorium (`git log`), w nowym repozytorium po angielsku (`.tf/config/config.yaml` → `commit_language.new_repo`) |
 | czy fabryka sama prowadzi flagi funkcji | `.tf/config/config.yaml` → `feature_flags.auto` | domyślnie `true`: fabryka pyta Cię o nazwę flagi, zakłada ją i pilnuje, żeby poza środowiskiem testowym była wyłączona; `false`: flagi dodajesz samodzielnie (w kodzie, w zewnętrznej usłudze), a fabryka ich nie zakłada i nie wymaga |
 | polecenia weryfikacji projektu | `verify.sh`, `.claude/quality-gate.json` | `tf onboard --yes` albo ręcznie |
 | wyłączenie bramki jakości u siebie | `.claude/settings.local.json` → `env` | `"QG_GATE_DISABLE": "1"` — `tf doctor` będzie o tym przypominać |
@@ -274,7 +274,6 @@ tryby są dozwolone (`task.allowed_modes`), i styl działa tylko w tych granicac
 | `python3 .tf/factory/update.py --full-check` | wszystkie testy fabryki w projekcie, równolegle (po aktualizacji domyślnie tylko szybka kontrola) |
 | `tf uninstall [--dry-run] [--yes] [--force]` | odinstalowanie fabryki: usuwa jej pliki i wpisy, Twoje zostają (`--force`: też Twoje dodatki); kopia w `~/.tf/backups/` |
 | `tf add <id>` / `tf remove <id>` | nakładka lub tryb |
-| `tf language <kod>` / `tf commit-language <kod>` | język pracy / język commitów i PR |
 | `tf list`, `tf doctor [--fix]` | co jest zainstalowane; stan instalacji i naprawy |
 | `tf new skill <nazwa> "<opis>"`, `tf skill check <nazwa>`, `tf skill audit <katalog>` | własny skill: szkielet ze scenariuszami, bramka jakości, audyt bezpieczeństwa |
 | `tf style [<nazwa>] [--here]` | Twój styl pracy: `autonomous`, `step-by-step`, `conversation`; bez nazwy — bieżący |

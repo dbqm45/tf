@@ -10,7 +10,7 @@ na żądanie (`mode-*`).
 
 ## Jak dodać fabrykę do projektu?
 W katalogu projektu uruchom `tf` (albo `python3 <fabryka>/core/factory/install.py`). Przy pierwszej instalacji
-wybierasz język pracy, język commitów oraz nakładki i tryby.
+wybierasz nakładki i tryby. Języka nie ustawiasz: agenci odpowiadają w języku, w którym piszesz.
 - **Prywatnie** (domyślnie): nic nie trafia do repozytorium. Ustawienia są w `.claude/settings.local.json`, zasady
   w `CLAUDE.local.md`, a ścieżki fabryki w `.git/info/exclude`.
 - **Zespołowo** (`--shared`): fabryka jest commitowana razem z projektem. Ustawienia są w `.claude/settings.json`,

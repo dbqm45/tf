@@ -68,6 +68,6 @@ jobs:
               print(f"Chromium {b}: pierwszy start {time.time() - t:.1f} s")
           PY
       - name: Budowa i testy w projekcie z nakładkami ${{ matrix.packs }}
-        run: python3 tools/workspace.py check --packs "${{ matrix.packs }}" $([ "${{ matrix.packs }}" = none ] && echo --language en)
+        run: python3 tools/workspace.py check --packs "${{ matrix.packs }}"
         env:
           CTF_REQUIRE_BROWSER: "1"  # test_fetch_page pada bez Chromium zamiast pomijać render
