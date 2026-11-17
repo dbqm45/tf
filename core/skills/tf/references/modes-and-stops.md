@@ -49,7 +49,7 @@ question is a STOP block. With the switch on, a question stops its slice, not th
 - **The plan records dependencies** in the slice's line: `· after: S1` (can start after S1), `· after: none` (independent); without
   a note the slice depends on the previous one. The `plan` stage reminds about this.
 - **A question during a slice:** `run_state.py block <katalog> S2 --question "<pytanie do człowieka>"`. The script
-  answers `Dalej: S3` (do this slice) or `Dalej: STOP` with a list of questions and a ready stop command. A STOP
+  answers `Next: S3` (do this slice) or `Next: STOP` with a list of questions and a ready stop command. A STOP
   with the `question` code for the current slice the script rejects while an independent slice is left.
 - **A question about the whole task** (without an answer no slice can be done): STOP as usual, with `--task`.
 - **After the human's answer:** `run_state.py answer <katalog> S2 "<odpowiedź>" --by human:<id>` — the slice goes back to

@@ -78,7 +78,7 @@ def main() -> int:
         p = Path(t) / "nocard"
         new_task(p)
         r = call(p, TASK, "deployed", "IMP-1")
-        check(r.returncode == 0 and "deploy.smoke" in r.stdout and "kończy na scaleniu" in r.stdout
+        check(r.returncode == 0 and "deploy.smoke" in r.stdout and "ends at the merge" in r.stdout
               and task(p)["stage"] == "pr" and not list((p / CHANGES / "IMP-1").glob("evidence/deploy-*.json")),
               f"DP-2: bez karty fabryka kończy na scaleniu i mówi to wprost (kod 0, bez dowodu): {r.returncode} {r.stdout}")
         card(p, {"smoke": "", "rollback": ROLLBACK})
@@ -105,7 +105,7 @@ def main() -> int:
         check("zatwierdza kierownik zmiany" in r.stdout,
               f"DP-6: komunikat przypomina, co zatwierdza człowiek (z karty): {r.stdout}")
         r = call(p, TASK, "status", "IMP-1")
-        check("wdrożenie" in r.stdout and "2.4.0" in r.stdout,
+        check("deployment" in r.stdout and "2.4.0" in r.stdout,
               f"DP-7: tf task status pokazuje wynik wdrożenia i wersję: {r.stdout}")
 
         # czerwony test dymny → pytanie „wycofać?”, krok cofania, logi; zadanie czeka na człowieka
@@ -113,8 +113,8 @@ def main() -> int:
         new_task(p)
         card(p, {"smoke": RED, "rollback": ROLLBACK, "rollback_minutes": 5, "logs": LOGS})
         r = call(p, TASK, "deployed", "IMP-1", "--version", "2.4.0")
-        check(r.returncode == 1 and "ycofać" in r.stdout and ROLLBACK in r.stdout and "5 min" in r.stdout
-              and LOGS in r.stdout and "HTTP 500 /health" in r.stdout and "kodem 7" in r.stdout,
+        check(r.returncode == 1 and "Roll back" in r.stdout and ROLLBACK in r.stdout and "5 min" in r.stdout
+              and LOGS in r.stdout and "HTTP 500 /health" in r.stdout and "code 7" in r.stdout,
               f"DP-8: czerwony test: pytanie o wycofanie, krok i czas cofania, polecenie logów, wyjście testu: "
               f"{r.returncode} {r.stdout}")
         check(task(p)["stage"] == "pr" and task(p).get("deploy", {}).get("state") == "red"

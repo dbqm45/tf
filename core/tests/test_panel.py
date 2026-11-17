@@ -116,7 +116,7 @@ def main() -> int:
         git(p, "commit", "-qam", "fix: poprawka po przeglądzie")
         call(p, TASK, "verify", "IMP-1", "K1", "--files", "pay.py,test_pay.py", "--command", OK)   # nowy dowód po poprawce
         r = call(p, TASK, "stage", "IMP-1", "pr")
-        check(r.returncode != 0 and "spec-reviewer" in r.stdout and ("nowszy" in r.stdout or "od nowa" in r.stdout),
+        check(r.returncode != 0 and "spec-reviewer" in r.stdout and ("newer" in r.stdout or "review again" in r.stdout),
               f"PN-10: po nowym commicie werdykty są nieaktualne → etap pr odrzucony: {r.returncode} {r.stdout}")
 
         # run_state.py panel: skład, zlecenia i zapis werdyktu przez pętlę
@@ -140,7 +140,7 @@ def main() -> int:
         p2.mkdir()
         call(p2, SCRIPTS / "run_report.py", "start", "Literówka", "--key", "IMP-1", "--story", "Popraw literówkę w README.")
         r = call(p2, SCRIPTS / "run_state.py", "panel", str(p2 / ".tf" / "runs" / "IMP-1"))
-        check(r.returncode == 0 and "nie wymaga" in r.stdout,
+        check(r.returncode == 0 and "does not need" in r.stdout,
               f"PN-14: przy wadze innej niż pełna panel mówi, że nie jest wymagany: {r.returncode} {r.stdout}")
 
     # agent spec-reviewer: tylko odczyt, dostępny dla pętli

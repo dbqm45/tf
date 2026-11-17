@@ -105,7 +105,7 @@ def main() -> int:
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
         check("waiting for you" in r.stdout and "K2" in r.stdout and "abonamentów" in r.stdout
-              and w[0].get("kind") == "kawalek" and w[0].get("slice") == "K2",
+              and w[0].get("kind") == "slice" and w[0].get("slice") == "K2",
               f"Z-9: zablokowany kawałek jest na liście oczekujących z powodem: {r.stdout} {w}")
 
         # panel plików: pliki kodu kawałka z dowodu weryfikacji

@@ -116,7 +116,7 @@ def main() -> int:
         (p / CHANGES / "REG-1" / "plan.md").write_text(
             "# Plan\n- [ ] K1 — limit · pliki: parking/fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
         code, out, raw = weight(p, "REG-1", "--apply")
-        check(task(p, "REG-1").get("weight") == "normal" and out.get("proposal") == "full" and "człowiek" in out.get("note", ""),
+        check(task(p, "REG-1").get("weight") == "normal" and out.get("proposal") == "full" and "human" in out.get("note", ""),
               f"W-14a: po decyzji człowieka --apply nie zmienia wagi, tylko mówi o propozycji: {raw}")
         tf(p, "start", "TYP-9", "--title", "Literówka w stopce", "--weight", "full")
         (p / CHANGES / "TYP-9" / "ticket.md").write_text("# Literówka w stopce\n\nPopraw literówkę w stopce.\n", encoding="utf-8")
@@ -128,7 +128,7 @@ def main() -> int:
         r = tf(p, "weight", "NIE-1")
         check(r.returncode != 0 and "Traceback" not in r.stderr, f"W-16: brak zadania → błąd bez wyjątku: {r.returncode}")
         r = tf(p, "weight", "LOG-1")
-        check(r.returncode == 0 and "pełna" in r.stdout and "hasł" in r.stdout,
+        check(r.returncode == 0 and "full" in r.stdout and "hasł" in r.stdout,
               f"W-17: wyjście tekstowe nazywa propozycję i powód: {r.stdout}")
 
         # skutek wagi full: realizacja dopiero po zatwierdzeniu planu przez człowieka (tryb bez nadzoru tego nie obejdzie)
@@ -139,7 +139,7 @@ def main() -> int:
         tf(p, "stage", "LOG-1", "plan")
         tf(p, "artifact", "LOG-1", "plan.md", "--stage", "plan", "--by", "process:tf", "--inputs", "spec.md")
         r = tf(p, "stage", "LOG-1", "implementation")
-        check(r.returncode == 1 and "approve LOG-1 plan.md" in r.stdout and "człowiek" in r.stdout,
+        check(r.returncode == 1 and "approve LOG-1 plan.md" in r.stdout and "human" in r.stdout,
               f"W-18: waga full — realizacja odrzucona bez planu zatwierdzonego przez człowieka: {r.returncode} {r.stdout}")
         tf(p, "approve", "LOG-1", "plan.md", "--by", "human:anna")
         r = tf(p, "stage", "LOG-1", "implementation")
@@ -166,7 +166,7 @@ def main() -> int:
         (p / CHANGES / "TYP-2" / "plan.md").write_text(
             "# Plan\n- [ ] K1 — stopka · pliki: web/footer.html\n- [ ] K2 — test · pliki: web/footer.test.js\n", encoding="utf-8")
         r = tf(p, "stage", "TYP-2", "plan")
-        check(task(p, "TYP-2").get("weight") == "light" and r.returncode == 1 and "jeden kawałek" in r.stdout
+        check(task(p, "TYP-2").get("weight") == "light" and r.returncode == 1 and "one slice" in r.stdout
               and "weight TYP-2 --set normal" in r.stdout,
               f"W-21: waga lekka z planem na dwa kawałki → odmowa z podpowiedzią: {r.returncode} {r.stdout}")
         (p / CHANGES / "TYP-2" / "plan.md").write_text("# Plan\n- [ ] K1 — stopka · pliki: web/footer.html\n", encoding="utf-8")
@@ -174,7 +174,7 @@ def main() -> int:
         check(r.returncode == 0 and not (p / CHANGES / "TYP-2" / "spec.md").exists(),
               f"W-22: waga lekka z jednym kawałkiem przechodzi do planu bez spec.md: {r.stdout}")
         r = tf(p, "status", "TYP-2")
-        check("waga: light" in r.stdout, f"W-23: status pokazuje wagę: {r.stdout}")
+        check("weight: light" in r.stdout, f"W-23: status pokazuje wagę: {r.stdout}")
 
         # zadanie cięcia zmiany pdi (krok E6): waga z wiersza cięcia, nie z zamiaru całej zmiany dołączonego do ticket.md
         cut_ticket = ("# TSK-59: historia prób w panelu\n\nCięcie TSK-59 zmiany CHG-12 (`docs/project/changes/CHG-12/plan.md`). "

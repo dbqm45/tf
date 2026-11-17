@@ -106,8 +106,8 @@ LESSONS = Path("docs") / "project" / "lessons.md"
 LESSON_HEAD = "Execution and verification"        # kategoria lekcji zapisywanych przy zamknięciu zadania
 LESSON_HEADS = (LESSON_HEAD, "Wykonanie i weryfikacja")   # dawny nagłówek (lessons.md sprzed 14.x) też pasuje
 BASES = ("origin/main", "main", "origin/master", "master")
-DEPLOY_STATES = {"ok": "test dymny zielony", "red": "test dymny czerwony — czeka na decyzję o wycofaniu",
-                 "rolled-back": "wycofane decyzją człowieka"}
+DEPLOY_STATES = {"ok": "the smoke test is green", "red": "the smoke test is red — waits for a rollback decision",
+                 "rolled-back": "rolled back by the human's decision"}
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
 STAGES = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", "closed")
 WEIGHTS = ("light", "normal", "full")
@@ -117,10 +117,10 @@ SLICE = re.compile(r"[KS][1-9][0-9]?")   # S<n>; K<n> — zadania sprzed 14.0.0
 SLICE_STATES = ("planned", "implemented", "blocked")
 GATED = STAGES[STAGES.index("review"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
 ACTOR = re.compile(r"(human|process):[\w.@-]+|[\w.-]+/[\w.-]+")
-INDEX_NOTE = ("# Zadania\n\nListę zadań z etapem i stanem podaje polecenie `tf status` — liczy ją na żywo z folderów "
-              "obok (jeden folder to jedno zadanie albo jedna zmiana).\n\nTen plik nie jest już spisem. Dawniej "
-              "przepisywał go każdy zapis zadania, przez co dwa otwarte naraz pull requesty zadań miały w nim "
-              "konflikt. Można go usunąć.\n")
+INDEX_NOTE = ("# Tasks\n\nThe `tf status` command gives the list of tasks with their stage and state — it computes it live from the "
+              "folders next to this file (one folder is one task or one change).\n\nThis file is no longer an index. In the "
+              "past every task record rewrote it, so two task pull requests open at the same time had a conflict in it. "
+              "It can be deleted.\n")
 
 
 def now() -> str:
@@ -159,7 +159,7 @@ def save(root: Path, task: dict) -> None:
 
 def cut_note(task: dict) -> str:
     """„cięcie TSK-57 zmiany CHG-12” dla zadania cięcia; pusty tekst dla zwykłego zadania."""
-    return f"cięcie {task.get('cut')} zmiany {task['change']}" if task.get("change") else ""
+    return f"cut {task.get('cut')} of the change {task['change']}" if task.get("change") else ""
 
 
 def retire_index(root: Path) -> None:
@@ -208,15 +208,15 @@ def evidence_of(root: Path, key: str, sl: dict) -> dict | None:
 def slice_state(root: Path, key: str, sl: dict) -> tuple[str, str]:
     """(stan, powód) wyliczony z dowodu i bieżących plików — nie z deklaracji."""
     if sl.get("state") == "blocked":
-        return "blocked", sl.get("reason") or "bez podanego powodu"
+        return "blocked", sl.get("reason") or "no reason given"
     ev = evidence_of(root, key, sl)
     if ev is None:
-        return ("planned", "") if sl.get("state") == "planned" else ("unverified", "brak dowodu")
+        return ("planned", "") if sl.get("state") == "planned" else ("unverified", "no evidence")
     if ev.get("exit_code") != 0:
-        return "red", f"`{ev.get('command')}` zakończone kodem {ev.get('exit_code')}"
+        return "red", f"`{ev.get('command')}` ended with code {ev.get('exit_code')}"
     changed = [f for f, h in (ev.get("files") or {}).items() if sha256(root / f) != h]
     if changed:
-        return "unverified", "pliki zmienione po dowodzie: " + ", ".join(changed)
+        return "unverified", "files changed after the evidence: " + ", ".join(changed)
     return "verified", ""
 
 
@@ -237,10 +237,10 @@ def artifact_state(root: Path, key: str, art: dict, name: str) -> tuple[str, str
     folder = root / CHANGES / key
     changed = [f for f, h in (art.get("inputs") or {}).items() if sha256(folder / f) != h]
     if changed:
-        return "stale", "zmienione wejścia: " + ", ".join(changed)
+        return "stale", "changed inputs: " + ", ".join(changed)
     if art.get("status") == "approved":
         if approval_sha(folder / name) != art.get("approved_sha"):
-            return "changed-after-approval", "wymaga ponownego zatwierdzenia przez człowieka"
+            return "changed-after-approval", "needs a new approval by the human"
         return "approved", ""
     return "draft", ""
 
@@ -257,101 +257,101 @@ def frozen_changed(root: Path, task: dict) -> list[str]:
 def cmd_freeze(root: Path, key: str, files: list[str], by: str) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     entries = {}
     for rel in files:
         target = inside(root, rel)
         if target is None:
-            return fail(f"„{rel}” nie jest plikiem w projekcie — podaj ścieżkę względem katalogu głównego", 2)
+            return fail(f"\"{rel}\" is not a file in the project — give a path relative to the root directory", 2)
         entries[target.relative_to(root).as_posix()] = {"sha": sha256(target), "by": by, "at": now()}
     task.setdefault("frozen", {}).update(entries)
     task["updated"] = now()
     save(root, task)
-    print(f"✓ {key}: zamrożone {', '.join(entries)} — zmiana wymaga: tf task reopen {key} <plik> --by human:<id> --reason \"…\"")
+    print(f"✓ {key}: frozen {', '.join(entries)} — a change needs: tf task reopen {key} <file> --by human:<id> --reason \"…\"")
     return 0
 
 
 def cmd_reopen(root: Path, key: str, name: str, by: str, reason: str) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     art = (task.get("artifacts") or {}).get(name)
     if art is not None and art.get("status") == "approved":
         art["status"] = "draft"
         art.pop("approved_sha", None)
-        what = "zatwierdzenie zdjęte"
+        what = "approval removed"
     elif name in (task.get("frozen") or {}):
         del task["frozen"][name]
-        what = "zamrożenie zdjęte"
+        what = "freeze removed"
     else:
-        return fail(f"{name} nie jest ani zatwierdzonym plikiem zadania {key}, ani plikiem zamrożonym — nie ma czego otwierać")
+        return fail(f"{name} is neither an approved file of the task {key} nor a frozen file — there is nothing to reopen")
     task.setdefault("reopened", []).append({"file": name, "by": by, "at": now(), "reason": reason})
     task["updated"] = now()
     save(root, task)
-    print(f"✓ {key} {name}: {what} ({reason}). Po zmianie zarejestruj i zatwierdź plik ponownie.")
+    print(f"✓ {key} {name}: {what} ({reason}). After the change register and approve the file again.")
     return 0
 
 
 def cmd_artifact(root: Path, key: str, name: str, stage: str, by: str, inputs: list[str]) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     folder = root / CHANGES / key
     if inside(folder, name) is None:
-        return fail(f"nie ma pliku {name} w {CHANGES / key}/ — rejestrujesz istniejący plik zadania", 2)
+        return fail(f"there is no file {name} in {CHANGES / key}/ — you register an existing task file", 2)
     hashes = {}
     for f in inputs:
         target = inside(folder, f)
         if target is None:
-            return fail(f"wejście „{f}” nie jest plikiem w {CHANGES / key}/", 2)
+            return fail(f"the input \"{f}\" is not a file in {CHANGES / key}/", 2)
         hashes[f] = sha256(target)
     task.setdefault("artifacts", {})[name] = {"stage": stage, "status": "draft", "generated": {"by": by, "at": now()},
                                               "inputs": hashes}
     task["updated"] = now()
     save(root, task)
-    print(f"✓ {key} {name}: draft (etap {stage}" + (f"; wejścia: {', '.join(hashes)}" if hashes else "") + ")")
+    print(f"✓ {key} {name}: draft (stage {stage}" + (f"; inputs: {', '.join(hashes)}" if hashes else "") + ")")
     return 0
 
 
 def cmd_approve(root: Path, key: str, name: str, by: str) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     art = (task.get("artifacts") or {}).get(name)
     if art is None:
-        return fail(f"plik {name} nie jest zarejestrowany — najpierw: tf task artifact {key} {name} --stage … --by …", 2)
+        return fail(f"the file {name} is not registered — first: tf task artifact {key} {name} --stage … --by …", 2)
     state, why = artifact_state(root, key, art, name)
     if state == "stale":
-        return fail(f"{name} jest nieaktualny ({why}) — odśwież go i zarejestruj ponownie przed zatwierdzeniem")
+        return fail(f"{name} is out of date ({why}) — refresh it and register it again before the approval")
     art["status"] = "approved"
     art["approved_sha"] = approval_sha(root / CHANGES / key / name)
     art["verified"] = [{"by": by, "at": now()}]
     task["updated"] = now()
     save(root, task)
-    print(f"✓ {key} {name}: approved przez {by}")
+    print(f"✓ {key} {name}: approved by {by}")
     return 0
 
 
 def cmd_check(root: Path, key: str) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     bad = {n: (s, w) for n, (s, w) in artifact_states(root, task).items() if s in ("stale", "changed-after-approval")}
     for n, (s, w) in bad.items():
         print(f"⚠ {n}: {s} ({w})")
     changed = frozen_changed(root, task)
     for rel in changed:
-        print(f"⚠ {rel}: zamrożony plik zmieniony bez decyzji człowieka — cofnij zmianę albo: tf task reopen {key} {rel} "
+        print(f"⚠ {rel}: a frozen file changed without the human's decision — revert the change or: tf task reopen {key} {rel} "
               "--by human:<id> --reason \"…\"")
     if not bad and not changed:
-        print(f"✓ {key}: pliki zadania są aktualne")
+        print(f"✓ {key}: the task's files are current")
     return 1 if bad or changed else 0
 
 
 def cmd_slice(root: Path, key: str, slice_id: str, state: str, title: str | None, reason: str | None) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     sl = task.setdefault("slices", {}).setdefault(slice_id, {})
     sl["state"] = state
     if title:
@@ -386,7 +386,7 @@ def run_command(root: Path, command: str, timeout: float) -> tuple[int, str]:
 def clip(out: str, saved: str) -> str:
     if len(out) <= 3000:
         return out
-    return out[:1000] + f"\n… [pominięto {len(out) - 3000} znaków; całość: {saved}] …\n" + out[-2000:]
+    return out[:1000] + f"\n… [{len(out) - 3000} characters skipped; the whole output: {saved}] …\n" + out[-2000:]
 
 
 def red_tests(root: Path, files: list[str]) -> dict[str, str]:
@@ -411,15 +411,15 @@ def red_tests(root: Path, files: list[str]) -> dict[str, str]:
 def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[str], timeout: float) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     hashes = {}
     for f in files:
         target = (root / f).resolve()
         if Path(f).is_absolute() or root not in target.parents:
-            return fail(f"plik „{f}” jest poza projektem — podaj ścieżki względne plików kawałka", 2)
+            return fail(f"the file \"{f}\" is outside the project — give relative paths of the slice's files", 2)
         digest = sha256(target)
         if digest is None:
-            return fail(f"nie ma pliku {f} — dowód wiąże się z istniejącymi plikami kawałka", 2)
+            return fail(f"there is no file {f} — evidence is tied to the slice's existing files", 2)
         hashes[f] = digest
     folder = root / CHANGES / key / "evidence"
     n = 1 + max([int(m.group(1)) for m in (re.fullmatch(rf"{slice_id}-(\d+)\.json", x.name) for x in folder.glob(f"{slice_id}-*.json")) if m]
@@ -449,10 +449,10 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
     task["updated"] = now()
     save(root, task)
     state, why = slice_state(root, key, sl)
-    print(f"{'✓' if code == 0 else '✗'} {key} {slice_id}: {state} (dowód: {CHANGES / key / rel})"
+    print(f"{'✓' if code == 0 else '✗'} {key} {slice_id}: {state} (evidence: {CHANGES / key / rel})"
           + (f" — {why}" if why else ""))
     if code != 0:
-        print(f"--- wyjście ---\n{clip(out, str(log))}")
+        print(f"--- output ---\n{clip(out, str(log))}")
     return 0 if code == 0 else 1
 
 
@@ -486,8 +486,8 @@ def rollback_text(dep: dict) -> str:
     lines = value.splitlines() if isinstance(value, str) else value if isinstance(value, list) else []
     steps = [one_line(x) for x in lines if isinstance(x, str) and x.strip()][:10]
     if not steps:
-        return ("git revert commita scalenia na gałęzi domyślnej i zwykłe wdrożenie (karta operacyjna nie opisuje "
-                "cofania: pole deploy.rollback)")
+        return ("git revert of the merge commit on the default branch and an ordinary deployment (the operations card does not "
+                "describe a rollback: the deploy.rollback field)")
     timed = minutes(dep.get("rollback_minutes"))
     return "; ".join(steps) + (f" ({timed})" if timed else "")
 
@@ -496,27 +496,27 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
                  note: str) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     stage = task.get("stage", STAGES[0])
     if stage not in STAGES or STAGES.index(stage) < STAGES.index("pr"):
-        return fail(f"zadanie {key} jest na etapie {stage} — wdrożenie zapisujesz po scaleniu PR (etap pr)")
+        return fail(f"the task {key} is at the stage {stage} — you record a deployment after the PR is merged (the pr stage)")
     prev = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
     if rolled_back:
         if prev.get("state") != "red":
-            return fail(f"wycofanie zapisuje się po czerwonym teście dymnym, a zadanie {key} takiego wyniku nie ma "
-                        f"(najpierw: tf task deployed {key})")
+            return fail(f"a rollback is recorded after a red smoke test, and the task {key} has no such result "
+                        f"(first: tf task deployed {key})")
         task["deploy"] = {**prev, "state": "rolled-back", "decided_by": by, "decided_at": now(),
                           **({"note": one_line(note)} if note.strip() else {})}
         task["updated"] = now()
         save(root, task)
-        print(f"✓ {key}: zapisano wycofanie wdrożenia ({by}). Po naprawie i ponownym wdrożeniu: tf task deployed {key}")
+        print(f"✓ {key}: the deployment rollback is recorded ({by}). After a fix and a new deployment: tf task deployed {key}")
         return 0
     card = deploy_card(root)
     smoke = card.get("smoke")
     if not isinstance(smoke, str) or not smoke.strip():
-        print(f"• {key}: karta operacyjna nie ma testu dymnego (pole `deploy.smoke` w {CARD.as_posix()}) — fabryka "
-              "kończy na scaleniu i wdrożenia nie sprawdza.\n  Wpisz polecenie testu dymnego (czego brakuje w karcie, "
-              f"pokaże `tf onboard`) i uruchom ponownie: tf task deployed {key}")
+        print(f"• {key}: the operations card has no smoke test (the `deploy.smoke` field in {CARD.as_posix()}) — the factory "
+              "ends at the merge and does not check the deployment.\n  Enter the smoke test command (`tf onboard` shows what "
+              f"the card is missing) and run again: tf task deployed {key}")
         return 0
     smoke = smoke.strip()
     folder = root / CHANGES / key / "evidence"
@@ -530,7 +530,7 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
     try:
         code, out = run_command(root, smoke, timeout)
     except ValueError as e:          # polecenie z karty nie daje się podzielić na argumenty (np. niedomknięty cudzysłów)
-        code, out = 127, f"polecenie testu dymnego jest niepoprawne: {e}"
+        code, out = 127, f"the smoke test command is invalid: {e}"
     log = RUNS / key / f"deploy-{n}.log"
     try:   # pełne wyjście poza gitem; w dowodzie zostaje tylko ścieżka
         (root / log).parent.mkdir(parents=True, exist_ok=True)
@@ -542,7 +542,7 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
     write_atomic(root / CHANGES / key / rel, json.dumps(
         {"kind": "deploy", "command": smoke, "exit_code": code, "version": ver, "sha": commit, "at": at, "log": str(log)},
         ensure_ascii=False, indent=1) + "\n")
-    why = f"`{smoke}` zakończone kodem {code}"
+    why = f"`{smoke}` ended with code {code}"
     task["deploy"] = {"state": "ok" if code == 0 else "red", "evidence": rel, "at": at,
                       **({"version": ver} if ver else {}), **({} if code == 0 else {"why": why})}
     if code == 0 and STAGES.index(stage) < STAGES.index("deploy"):
@@ -551,17 +551,17 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
     save(root, task)
     where = CHANGES / key / rel
     if code == 0:
-        print(f"✓ {key}: test dymny po wdrożeniu zielony (`{smoke}`) — etap {task['stage']}; dowód: {where}")
+        print(f"✓ {key}: the smoke test after the deployment is green (`{smoke}`) — stage {task['stage']}; evidence: {where}")
         if isinstance(card.get("approval"), str) and card["approval"].strip():
-            print(f"  Zatwierdza człowiek: {one_line(card['approval'])}")
+            print(f"  The human approves: {one_line(card['approval'])}")
         return 0
-    print(f"✗ {key}: test dymny po wdrożeniu jest czerwony — {why} (dowód: {where})\n--- wyjście ---\n{clip(out, str(log))}\n"
-          "Wycofać wdrożenie? Decyzja należy do Ciebie — fabryka sama niczego nie cofa.\n"
-          f"  Jak cofnąć: {rollback_text(card)}")
+    print(f"✗ {key}: the smoke test after the deployment is red — {why} (evidence: {where})\n--- output ---\n{clip(out, str(log))}\n"
+          "Roll back the deployment? The decision is yours — the factory rolls nothing back by itself.\n"
+          f"  How to roll back: {rollback_text(card)}")
     if isinstance(card.get("logs"), str) and card["logs"].strip():
-        print(f"  Logi (polecenie z karty, fabryka go nie uruchamia): {one_line(card['logs'])}")
-    print(f"  Po wycofaniu: tf task deployed {key} --rolled-back --by human:<id>\n"
-          f"  Po naprawie i ponownym wdrożeniu: tf task deployed {key}")
+        print(f"  Logs (the command from the card, the factory does not run it): {one_line(card['logs'])}")
+    print(f"  After rolling back: tf task deployed {key} --rolled-back --by human:<id>\n"
+          f"  After a fix and a new deployment: tf task deployed {key}")
     return 1
 
 
@@ -570,31 +570,31 @@ def cmd_finding(root: Path, key: str, action: str, first: str | None, second: st
     """Ważne ustalenia przeglądu (`findings` w task.json) i kontrola, która złapie je następnym razem."""
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     found = task.setdefault("findings", [])
     if action == "add":
         text = one_line(first or "", 400)
         if not text:
-            return fail(f"podaj ustalenie: tf task finding {key} add \"<co przegląd uznał za ważne>\"", 2)
+            return fail(f"give the finding: tf task finding {key} add \"<what the review found important>\"", 2)
         fid = f"F{len(found) + 1}"
         found.append({"id": fid, "text": text, **({"slice": slice_id} if slice_id else {}),
                       **({"round": rnd} if rnd else {}), "at": now()})
         task["updated"] = now()
         save(root, task)
-        print(f"✓ {key}: ustalenie {fid} zapisane. Teraz wycofaj kod i zrób nową rundę kawałka; kontrolę, która złapie "
-              "to następnym razem, dopisuje się przy zamknięciu zadania (tf task close pokaże, czego brakuje)")
+        print(f"✓ {key}: the finding {fid} is recorded. Now revert the code and do a new round of the slice; the control that will "
+              "catch it next time is added when the task is closed (tf task close shows what is missing)")
         return 0
     item = next((f for f in found if f.get("id") == first), None)
     if item is None:
-        return fail(f"nie ma ustalenia {first} w zadaniu {key} — zapisane: "
-                    + (", ".join(f.get("id", "?") for f in found) or "brak"))
+        return fail(f"there is no finding {first} in the task {key} — recorded: "
+                    + (", ".join(f.get("id", "?") for f in found) or "none"))
     text = one_line(second or "", 400)
     if not text:
-        return fail(f"podaj kontrolę: tf task finding {key} control {first} \"<test, hook, reguła albo powód jej braku>\"", 2)
+        return fail(f"give the control: tf task finding {key} control {first} \"<a test, a hook, a rule or the reason it is missing>\"", 2)
     item["control"], item["control_at"] = text, now()
     task["updated"] = now()
     save(root, task)
-    print(f"✓ {key}: kontrola do {first} zapisana")
+    print(f"✓ {key}: the control for {first} is recorded")
     return 0
 
 
@@ -610,10 +610,10 @@ def merged_on(root: Path, key: str, base: str | None) -> tuple[bool | None, str]
             known = subprocess.run(["git", "-C", str(root), "rev-parse", "--verify", "--quiet", f"{cand}^{{commit}}"],
                                    capture_output=True, timeout=20).returncode == 0
         except (OSError, subprocess.SubprocessError):
-            return None, "git nie odpowiada"
+            return None, "git does not respond"
         if known:
             seen.append(cand)
-    return (False, ", ".join(seen)) if seen else (None, "git nie zna gałęzi " + (base or "main ani master"))
+    return (False, ", ".join(seen)) if seen else (None, "git does not know the branch " + (base or "main or master"))
 
 
 def add_lesson(root: Path, key: str, lesson: str) -> bool:
@@ -639,50 +639,50 @@ def add_lesson(root: Path, key: str, lesson: str) -> bool:
 def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: str | None, force: bool) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — lista zadań: tf status --all")
+        return fail(f"there is no task {key} — the list of tasks: tf status --all")
     stage = task.get("stage", STAGES[0])
     if stage == "closed":
-        print(f"• {key} jest już zamknięte" + (f" ({task['closed']['at']})" if isinstance(task.get("closed"), dict)
+        print(f"• {key} is already closed" + (f" ({task['closed']['at']})" if isinstance(task.get("closed"), dict)
                                               and task["closed"].get("at") else ""))
         return 0
     if stage not in STAGES or STAGES.index(stage) < STAGES.index("pr"):
-        return fail(f"zadanie {key} jest na etapie {stage} — zamykasz je po scaleniu PR (etap pr albo deploy)")
+        return fail(f"the task {key} is at the stage {stage} — you close it after the PR is merged (the pr or deploy stage)")
     if not force:
         merged, where = merged_on(root, key, base)
         if merged is None:
-            return fail(f"nie da się potwierdzić, że zmiana {key} jest scalona ({where}). Zamknięcie mimo to jest "
-                        f"decyzją człowieka: tf task close {key} --force --by human:<id>")
+            return fail(f"it cannot be confirmed that the change {key} is merged ({where}). Closing it anyway is "
+                        f"the human's decision: tf task close {key} --force --by human:<id>")
         if not merged:
-            return fail(f"zmiana {key} nie jest scalona: na gałęzi domyślnej ({where}) nie ma pliku "
-                        f"{(CHANGES / key / 'task.json').as_posix()}. Po scaleniu PR pobierz gałąź (git fetch) i powtórz; "
-                        f"zamknięcie mimo to: tf task close {key} --force --by human:<id>")
+            return fail(f"the change {key} is not merged: the default branch ({where}) has no file "
+                        f"{(CHANGES / key / 'task.json').as_posix()}. After the PR is merged fetch the branch (git fetch) and repeat; "
+                        f"closing it anyway: tf task close {key} --force --by human:<id>")
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
     if dep.get("state") == "red":
-        return fail(f"wdrożenie {key} czeka na decyzję o wycofaniu (czerwony test dymny). Po wycofaniu: tf task deployed "
-                    f"{key} --rolled-back --by human:<id>; po naprawie i ponownym wdrożeniu: tf task deployed {key}")
+        return fail(f"the deployment of {key} waits for a rollback decision (a red smoke test). After rolling back: tf task deployed "
+                    f"{key} --rolled-back --by human:<id>; after a fix and a new deployment: tf task deployed {key}")
     open_ = [f for f in task.get("findings") or [] if isinstance(f, dict) and not f.get("control")]
     if open_:
-        return fail("ważne ustalenia przeglądu bez kontroli, która złapie je następnym razem: "
+        return fail("important review findings without a control that will catch them next time: "
                     + "; ".join(f"{f.get('id')} — {f.get('text')}" for f in open_)
-                    + f". Zapisz ją dla każdego: tf task finding {key} control <F-n> \"<test, hook, reguła albo powód "
-                      "jej braku>\"")
+                    + f". Record one for each: tf task finding {key} control <F-n> \"<a test, a hook, a rule or the reason "
+                      "it is missing>\"")
     wrote = add_lesson(root, key, lesson) if lesson else False
     task["stage"], task["updated"] = "closed", now()
     task["closed"] = {"at": now(), **({"by": by} if by else {}), **({"forced": True} if force else {}),
                       **({"lesson": True} if lesson else {})}
     save(root, task)
-    print(f"✓ {key} zamknięte ({stage} → closed)")
-    print("  wdrożenie: " + (DEPLOY_STATES[dep["state"]] if isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES
-                             else "niesprawdzone testem dymnym (tf task deployed nie było uruchomione)"))
+    print(f"✓ {key} closed ({stage} → closed)")
+    print("  deployment: " + (DEPLOY_STATES[dep["state"]] if isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES
+                             else "not checked with a smoke test (tf task deployed was not run)"))
     flag = task.get("flag") if isinstance(task.get("flag"), dict) else {}
     if flag.get("key") and flag.get("remove_by"):
-        print(f"  flaga {flag['key']}: do usunięcia do {flag['remove_by']} — zadanie jest zamknięte, flaga zostaje do tej daty")
+        print(f"  flag {flag['key']}: to be removed by {flag['remove_by']} — the task is closed, the flag stays until that date")
     elif flag.get("key"):
-        print(f"  flaga {flag['key']} nie ma daty usunięcia — ustaw ją: tf task flag {key} set {flag['key']} --remove-by RRRR-MM-DD")
+        print(f"  the flag {flag['key']} has no removal date — set it: tf task flag {key} set {flag['key']} --remove-by YYYY-MM-DD")
     if lesson:
-        print(f"  lekcja: {'dopisana do' if wrote else 'była już w'} {LESSONS.as_posix()}")
+        print(f"  lesson: {'added to' if wrote else 'was already in'} {LESSONS.as_posix()}")
     else:
-        print(f"  lekcja: nie zapisano (jeśli z zadania wynika reguła na przyszłość, dopisz ją do {LESSONS.as_posix()})")
+        print(f"  lesson: not recorded (if the task yields a rule for the future, add it to {LESSONS.as_posix()})")
     return 0
 
 
@@ -702,15 +702,15 @@ def work_style(root: Path) -> dict:
 def mode_refusal(root: Path, mode: str) -> str | None:
     allowed = work_style(root).get("allowed_modes") or list(MODES)
     if mode not in allowed:
-        return (f"tryb „{mode}” jest wyłączony w tym projekcie (task.allowed_modes: {', '.join(allowed)} — ustawia firma, "
-                "zespół albo projekt; tf config show task)")
+        return (f"the mode \"{mode}\" is turned off in this project (task.allowed_modes: {', '.join(allowed)} — set by the company, "
+                "the team or the project; tf config show task)")
     return None
 
 
 def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, change: str | None = None,
               cut: str | None = None) -> int:
     if load(root, key) is not None:
-        return fail(f"zadanie {key} już istnieje ({CHANGES / key / 'task.json'}) — stan: tf task status {key}")
+        return fail(f"the task {key} already exists ({CHANGES / key / 'task.json'}) — its state: tf task status {key}")
     if mode is None:                 # domyślny tryb z konfiguracji (styl pracy osoby w granicach firmy i projektu)
         mode = work_style(root).get("default_mode") or "normal"
     elif mode_refusal(root, mode):
@@ -723,7 +723,7 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, c
     if weight != "normal":           # waga podana wprost przy zakładaniu to już przydział — `weight --apply` jej nie obniży
         task["weight_log"] = [{"from": "normal", "to": weight, "by": "process:start", "at": stamp}]
     save(root, task)
-    print(f"✓ zadanie {key} założone: {CHANGES / key}/ (etap: {STAGES[0]})")
+    print(f"✓ the task {key} is created: {CHANGES / key}/ (stage: {STAGES[0]})")
     return 0
 
 
@@ -750,69 +750,69 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
         except OSError:
             slices = []
         if len(slices) > 1:
-            return (f"zadanie ma wagę lekką, czyli jeden kawałek, a plan ma ich {len(slices)} — połącz kawałki albo "
-                    f"podnieś wagę: tf task weight {key} --set normal")
+            return (f"the task has the light weight, i.e. one slice, and the plan has {len(slices)} — merge the slices or "
+                    f"raise the weight: tf task weight {key} --set normal")
     if STAGES.index(stage) < STAGES.index("implementation"):
         return None
     mode = task.get("mode")
     if mode == "plan":
-        return (f"zadanie jest w trybie Plan — przebieg kończy się na planie, bez zmian w kodzie. Realizację uruchamia "
-                f"człowiek osobnym poleceniem (/tf {key}); wtedy zmień tryb: tf task mode {key} normal (albo auto)")
+        return (f"the task is in the Plan mode — the run ends at the plan, without code changes. The human starts the delivery "
+                f"with a separate command (/tf {key}); then change the mode: tf task mode {key} normal (or auto)")
     art = (task.get("artifacts") or {}).get("plan.md")
-    state = artifact_state(root, key, art, "plan.md")[0] if art else "brak"
+    state = artifact_state(root, key, art, "plan.md")[0] if art else "none"
     upstream = bool(task.get("change")) and mode == "auto"   # cięcie: plan zmiany zatwierdzono na bramce pdi
     if weight == "full" and state != "approved" and not upstream:
-        return (f"zadanie ma wagę pełną (obszar wrażliwy), więc do etapu {stage} przechodzi dopiero z planem "
-                f"zatwierdzonym przez człowieka (stan planu: {state}): pokaż plan człowiekowi, a po jego zgodzie "
-                f"tf task approve {key} plan.md --by human:<id>. Przebieg bez nadzoru (--auto) kończy się tu "
-                "blokiem STOP — zgody człowieka nie da się zastąpić")
+        return (f"the task has the full weight (a sensitive area), so it moves to the stage {stage} only with a plan "
+                f"approved by the human (the plan's state: {state}): show the plan to the human, and after their consent "
+                f"tf task approve {key} plan.md --by human:<id>. An unsupervised run (--auto) ends here "
+                "with a STOP block — the human's consent cannot be replaced")
     if mode != "auto" and art and state != "approved":
-        return (f"w trybie zwykłym do etapu {stage} zadanie przechodzi po zgodzie człowieka na plan (stan planu: "
-                f"{state}): pokaż plan i specyfikację człowiekowi, a po jego zgodzie tf task approve {key} plan.md "
-                f"--by human:<id>. Tryb bez zatwierdzania (--auto) wybiera człowiek w poleceniu /tf: jeśli go podał, "
-                f"zapisz tryb (tf task mode {key} auto); sam go nie ustawiasz, żeby ominąć zgodę")
+        return (f"in the normal mode the task moves to the stage {stage} after the human's consent to the plan (the plan's state: "
+                f"{state}): show the plan and the specification to the human, and after their consent tf task approve {key} plan.md "
+                f"--by human:<id>. The human chooses the mode without approval (--auto) in the /tf command: if they gave it, "
+                f"record the mode (tf task mode {key} auto); you do not set it yourself to skip the consent")
     return None
 
 
-MODE_LABEL = {"plan": "Plan", "normal": "zwykły", "auto": "Auto"}
+MODE_LABEL = {"plan": "Plan", "normal": "normal", "auto": "Auto"}
 
 
 def cmd_mode(root: Path, key: str, new: str | None) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     current = task.get("mode") if task.get("mode") in MODES else "normal"
     if new is None:
-        print(f"{key}: tryb {MODE_LABEL[current]}")
+        print(f"{key}: mode {MODE_LABEL[current]}")
         return 0
     if new not in MODES:
-        return fail(f"nieznany tryb „{new}” — do wyboru: {', '.join(MODES)}", 2)
+        return fail(f"unknown mode \"{new}\" — choose from: {', '.join(MODES)}", 2)
     if mode_refusal(root, new):
         return fail(mode_refusal(root, new), 2)
     note = ""
     if new == "auto" and task.get("weight") == "full" and task.get("change"):
-        note = (f" — waga pełna (obszar wrażliwy), ale to cięcie zmiany {task['change']}: jej plan człowiek zatwierdził "
-                "na bramce pdi, więc przebieg nie czeka na drugą zgodę; przegląd bezpieczeństwa zostaje obowiązkowy")
+        note = (f" — the full weight (a sensitive area), but this is a cut of the change {task['change']}: the human approved its plan "
+                "at the pdi gate, so the run does not wait for a second consent; the security review stays mandatory")
     elif new == "auto" and task.get("weight") == "full":
         new = "normal"
-        note = (" — tryb Auto nie obejmuje zadań o wadze pełnej (obszar wrażliwy): zostaje tryb zwykły, "
-                "plan zatwierdza człowiek")
+        note = (" — the Auto mode does not cover full-weight tasks (a sensitive area): the normal mode stays, "
+                "the human approves the plan")
     if new != task.get("mode"):
         task["mode"], task["updated"] = new, now()
         save(root, task)
-    print(f"✓ {key}: tryb {MODE_LABEL[new]}{note}")
+    print(f"✓ {key}: mode {MODE_LABEL[new]}{note}")
     return 0
 
 
 def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | None, reason: str, as_json: bool) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     rules = weight_rules()
     if rules is None:
-        return fail("brak .tf/factory/task_weight.py — zaktualizuj fabrykę (tf update)", 2)
+        return fail("no .tf/factory/task_weight.py — update the factory (tf update)", 2)
     if new is not None and new not in WEIGHTS:
-        return fail(f"nieznana waga „{new}” — do wyboru: {', '.join(WEIGHTS)}", 2)
+        return fail(f"unknown weight \"{new}\" — choose from: {', '.join(WEIGHTS)}", 2)
     current = task.get("weight") if task.get("weight") in WEIGHTS else "normal"
     assigned = bool(task.get("weight_log"))
     prop = rules.propose(root, key)
@@ -826,13 +826,13 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
     if new is not None:
         who = by or "process:tf"
         if not ACTOR.fullmatch(who):
-            return fail(f"wykonawca „{who}” — oczekiwany zapis: human:<id> albo process:<id>", 2)
+            return fail(f"the performer \"{who}\" — expected form: human:<id> or process:<id>", 2)
         if rules.rank(new) < rules.rank(current):
             if not who.startswith("human:"):
-                return fail(f"obniżenie wagi ({rules.LABEL[current]} → {rules.LABEL[new]}) to decyzja człowieka: "
+                return fail(f"lowering the weight ({rules.LABEL[current]} → {rules.LABEL[new]}) is the human's decision: "
                             f"tf task weight {key} --set {new} --by human:<id> --reason \"<dlaczego>\"")
             if not reason.strip():
-                return fail("podaj powód obniżenia: --reason \"<dlaczego mniejsza waga wystarczy>\"", 2)
+                return fail("give the reason for lowering it: --reason \"<why a lower weight is enough>\"", 2)
         if new != current or not assigned:
             record(new, who, **({"reason": " ".join(reason.split())} if reason.strip() else {}))
         current, assigned = new, True
@@ -840,25 +840,25 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
         last = (task.get("weight_log") or [{}])[-1]
         if str(last.get("by", "")).startswith("human:"):      # decyzja człowieka zostaje; fabryka tylko mówi, co widzi
             if prop["weight"] != current:
-                note = (f"wagę ustawił człowiek ({last['by']}) — fabryka jej nie zmienia; jej propozycja to "
+                note = (f"the human set the weight ({last['by']}) — the factory does not change it; its proposal is "
                         f"{rules.LABEL[prop['weight']]}")
         elif not assigned or rules.rank(prop["weight"]) > rules.rank(current):
             record(prop["weight"], "process:tf", reasons=prop["reasons"])
             current, assigned = prop["weight"], True
         elif rules.rank(prop["weight"]) < rules.rank(current):
-            note = (f"propozycja ({rules.LABEL[prop['weight']]}) jest niższa niż przydzielona waga — zostaje "
-                    f"{rules.LABEL[current]}; obniżyć może tylko człowiek: tf task weight {key} --set {prop['weight']} "
-                    "--by human:<id> --reason \"<dlaczego>\"")
+            note = (f"the proposal ({rules.LABEL[prop['weight']]}) is lower than the assigned weight — "
+                    f"{rules.LABEL[current]} stays; only the human can lower it: tf task weight {key} --set {prop['weight']} "
+                    "--by human:<id> --reason \"<why>\"")
     if as_json:
         print(json.dumps({"key": key, "weight": current, "assigned": assigned, "proposal": prop["weight"],
                           "reasons": prop["reasons"], "effect": rules.EFFECT[current], "note": note},
                          ensure_ascii=False, indent=1))
         return 0
-    state = "" if assigned else " (domyślna, jeszcze nieprzydzielona)"
-    print(f"{key}: waga {rules.LABEL[current]}{state} · propozycja: {rules.LABEL[prop['weight']]}")
+    state = "" if assigned else " (the default, not assigned yet)"
+    print(f"{key}: weight {rules.LABEL[current]}{state} · proposal: {rules.LABEL[prop['weight']]}")
     for r in prop["reasons"]:
-        print(f"  powód: {r}")
-    print(f"  skutek: {rules.EFFECT[current]}")
+        print(f"  reason: {r}")
+    print(f"  effect: {rules.EFFECT[current]}")
     if note:
         print(f"  {note}")
     elif not assigned:
@@ -908,31 +908,31 @@ def flag_errors(root: Path, key: str) -> list[dict]:
 def cmd_flag(root: Path, key: str, action: str, value: str | None, remove_by: str | None, reason: str, by: str | None) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     if action == "set":
         if not value or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", value):
-            return fail("podaj klucz flagi (litery, cyfry, _ . -), np. proj_123_eksport_csv", 2)
+            return fail("give the flag key (letters, digits, _ . -), e.g. proj_123_csv_export", 2)
         if remove_by and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", remove_by):
-            return fail("data usunięcia flagi w formacie RRRR-MM-DD", 2)
+            return fail("the flag's removal date in the YYYY-MM-DD format", 2)
         old = task.get("flag") if isinstance(task.get("flag"), dict) else {}
         task["flag"] = {"key": value, "remove_by": remove_by or old.get("remove_by"),
                         "allowed": old.get("allowed", {}) if old.get("key") == value else {}}
-        msg = f"flaga {value}" + (f", do usunięcia do {task['flag']['remove_by']}" if task["flag"]["remove_by"] else "")
+        msg = f"flag {value}" + (f", to be removed by {task['flag']['remove_by']}" if task["flag"]["remove_by"] else "")
     elif action == "none":
         if not reason.strip():
-            return fail("podaj powód: --reason \"bez flagi, bo …\"", 2)
+            return fail("give the reason: --reason \"no flag, because …\"", 2)
         task["flag"] = {"none": " ".join(reason.split())}
-        msg = f"bez flagi: {task['flag']['none']}"
+        msg = f"no flag: {task['flag']['none']}"
     else:   # allow
         flag = task.get("flag") if isinstance(task.get("flag"), dict) else None
         if not flag or not flag.get("key"):
-            return fail(f"zadanie nie ma flagi — najpierw: tf task flag {key} set <klucz>")
+            return fail(f"the task has no flag — first: tf task flag {key} set <key>")
         if not value:
-            return fail("podaj środowisko, np. tf task flag <KEY> allow prod --by human:<id>", 2)
+            return fail("give the environment, e.g. tf task flag <KEY> allow prod --by human:<id>", 2)
         if not by or not by.startswith("human:") or not ACTOR.fullmatch(by):
-            return fail("zgodę na włączenie flagi poza środowiskiem testowym zapisuje człowiek: --by human:<id>", 2)
+            return fail("the human records the consent to turn a flag on outside the test environment: --by human:<id>", 2)
         flag.setdefault("allowed", {})[value] = {"by": by, "at": now()}
-        msg = f"flaga {flag['key']}: zgoda {by} na środowisko „{value}”"
+        msg = f"flag {flag['key']}: consent of {by} for the environment \"{value}\""
     task["updated"] = now()
     save(root, task)
     print(f"✓ {key}: {msg}")
@@ -951,7 +951,7 @@ def cmd_review(root: Path, key: str, reviewer: str, verdict: str, note: str) -> 
     """Werdykt recenzenta panelu (waga pełna): werdykt, commit HEAD, czas i uwaga w `reviews` zadania."""
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     head = git_head(root)
     task.setdefault("reviews", {})[reviewer] = {"verdict": verdict, **({"sha": head} if head else {}), "at": now(),
                                                 **({"note": one_line(note, 300)} if note.strip() else {})}
@@ -970,27 +970,27 @@ def panel_errors(root: Path, task: dict) -> list[str]:
     for name in PANEL:
         r = reviews.get(name) if isinstance(reviews.get(name), dict) else None
         if r is None:
-            out.append(f"{name} (brak werdyktu)")
+            out.append(f"{name} (no verdict)")
         elif r.get("verdict") != "pass":
             out.append(f"{name} ({r.get('verdict')}" + (f": {r['note']}" if r.get("note") else "") + ")")
         elif head and r.get("sha") and r["sha"] != head:
-            out.append(f"{name} (werdykt dla commita {str(r['sha'])[:12]}, a kod ma nowszy {head[:12]} — przegląd od nowa)")
+            out.append(f"{name} (the verdict is for the commit {str(r['sha'])[:12]}, and the code has a newer {head[:12]} — review again)")
     return out
 
 
 def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     was = task.get("stage", STAGES[0])
     if was in STAGES and STAGES.index(stage) < STAGES.index(was) and not force:
-        return fail(f"etap {stage} jest wcześniejszy niż obecny ({was}); cofnięcie wymaga --force")
+        return fail(f"the stage {stage} is earlier than the current one ({was}); going back needs --force")
     if STAGES.index(stage) >= STAGES.index("plan") and not force:
         spec = spec_errors(root, key)
         if spec:
-            return fail(f"do etapu {stage} przechodzi zadanie z gotową specyfikacją; do poprawy w spec.md: "
-                        + "; ".join(f"linia {e['line']} {e['rule']} {e['message']}" for e in spec[:3])
-                        + (f" (i {len(spec) - 3} więcej)" if len(spec) > 3 else "") + f". Całość: tf spec check {key}")
+            return fail(f"a task moves to the stage {stage} with a ready specification; to fix in spec.md: "
+                        + "; ".join(f"line {e['line']} {e['rule']} {e['message']}" for e in spec[:3])
+                        + (f" (and {len(spec) - 3} more)" if len(spec) > 3 else "") + f". All of it: tf spec check {key}")
     if not force:
         refused = weight_gate(root, task, stage)
         if refused:
@@ -998,29 +998,29 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
     if stage in GATED and not force:
         open_ = [f"{k} ({s}{': ' + w if w else ''})" for k, (s, w) in slice_states(root, task).items() if s != "verified"]
         if open_:
-            return fail(f"do etapu {stage} przechodzi zadanie ze zweryfikowanymi kawałkami; brakuje: " + "; ".join(open_)
-                        + f". Dowód: tf task verify {key} S<n> --files <pliki kawałka>")
+            return fail(f"a task moves to the stage {stage} with verified slices; missing: " + "; ".join(open_)
+                        + f". Evidence: tf task verify {key} S<n> --files <the slice's files>")
         stale = [f"{n} ({s})" for n, (s, _) in artifact_states(root, task).items()
                  if s in ("stale", "changed-after-approval")]
-        stale += [f"{rel} (zamrożony plik zmieniony)" for rel in frozen_changed(root, task)]
+        stale += [f"{rel} (a frozen file changed)" for rel in frozen_changed(root, task)]
         missing = trace_errors(root, key)
         if missing:
-            return fail(f"do etapu {stage} przechodzi zadanie, w którym każde kryterium ma test; do poprawy: "
+            return fail(f"a task moves to the stage {stage} when every criterion has a test; to fix: "
                         + "; ".join(e["message"] for e in missing[:3])
-                        + (f" (i {len(missing) - 3} więcej)" if len(missing) > 3 else "") + f". Całość: tf trace {key}")
+                        + (f" (and {len(missing) - 3} more)" if len(missing) > 3 else "") + f". All of it: tf trace {key}")
         if stale:
-            return fail(f"do etapu {stage} przechodzi zadanie z aktualnymi plikami; do odświeżenia: " + "; ".join(stale)
-                        + f". Szczegóły: tf task check {key}")
+            return fail(f"a task moves to the stage {stage} with current files; to refresh: " + "; ".join(stale)
+                        + f". Details: tf task check {key}")
     if STAGES.index(stage) >= STAGES.index("pr") and not force:
         bad = flag_errors(root, key)
         if bad:
-            return fail(f"do etapu {stage} przechodzi zadanie z uporządkowaną flagą funkcji: "
-                        + "; ".join(f"{e['rule']} {e['message']}" for e in bad) + f". Całość: tf flag check {key}")
+            return fail(f"a task moves to the stage {stage} with a feature flag in order: "
+                        + "; ".join(f"{e['rule']} {e['message']}" for e in bad) + f". All of it: tf flag check {key}")
         missing = panel_errors(root, task)
         if missing:
-            return fail(f"zadanie o wadze pełnej przechodzi do etapu {stage} po panelu recenzentów w osobnych "
-                        f"kontekstach; brakuje: {'; '.join(missing)}. Zlecenia i zapis werdyktu: run_state.py panel "
-                        f"<katalog przebiegu> (albo tf task review {key} <recenzent> pass|fail --note \"…\")")
+            return fail(f"a full-weight task moves to the stage {stage} after the reviewer panel in separate "
+                        f"contexts; missing: {'; '.join(missing)}. The commissions and recording a verdict: run_state.py panel "
+                        f"<run directory> (or tf task review {key} <reviewer> pass|fail --note \"…\")")
     task["stage"], task["updated"] = stage, now()
     save(root, task)
     print(f"✓ {key}: {was} → {stage}")
@@ -1074,7 +1074,7 @@ def waiting(root: Path, task: dict) -> list[dict]:
                            f"and a new deployment: tf task deployed {key}", "since": dep.get("at")})
     for k, (state, why) in slice_states(root, task).items():
         if state == "blocked":
-            out.append({"kind": "kawalek", "slice": k, "what": f"slice {k} waits for your answer", "details": why,
+            out.append({"kind": "slice", "slice": k, "what": f"slice {k} waits for your answer", "details": why,
                         "question": None, "options": [], "recommended": None,
                         "how": f"after the answer: tf task slice {key} {k} planned", "since": None})
     return out
@@ -1103,21 +1103,21 @@ def cmd_list(root: Path, as_json: bool, show_all: bool = False) -> int:
         print(json.dumps(rows, ensure_ascii=False, indent=1))
         return 0
     if not rows:
-        print(f"Brak zadań w {CHANGES}/. Pierwsze założysz: tf task start <KEY> --title \"<tytuł>\"")
+        print(f"No tasks in {CHANGES}/. You create the first one with: tf task start <KEY> --title \"<title>\"")
         return 0
     closed = sum(r["stage"] == "closed" for r in rows)
     if not show_all:
         rows = [r for r in rows if r["stage"] != "closed"]
         if not rows:
-            print("Brak zadań w toku.")
+            print("No tasks in progress.")
     for r in rows:
-        print(f"{r['key']}  {r['stage']}  kawałki z dowodem {r['verified']}/{len(r['slices'])}  {r['title']}"
+        print(f"{r['key']}  {r['stage']}  slices with evidence {r['verified']}/{len(r['slices'])}  {r['title']}"
               + (f"  ({cut_note(r)})" if cut_note(r) else ""))
         for k, s in r["slices"].items():
             if s != "verified":
                 print(f"    {k}: {s}")
         for name in r["stale"]:
-            print(f"    {name}: do odświeżenia (tf task check {r['key']})")
+            print(f"    {name}: to refresh (tf task check {r['key']})")
         for w in r["waiting"]:
             print(f"    waiting for you: {w['what']}" + (f" — {w['details']}" if w.get("details") else ""))
             if w.get("question"):
@@ -1126,14 +1126,14 @@ def cmd_list(root: Path, as_json: bool, show_all: bool = False) -> int:
             if w.get("how") and w["kind"] != "stop":
                 print(f"      {w['how']}")
     if closed and not show_all:
-        print(f"zamknięte: {closed} (pokaż wszystkie: tf status --all)")
+        print(f"closed: {closed} (show all: tf status --all)")
     return 0
 
 
 def cmd_status(root: Path, key: str, as_json: bool) -> int:
     task = load(root, key)
     if task is None:
-        return fail(f"nie ma zadania {key} — załóż je: tf task start {key} --title \"…\"")
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
     states = slice_states(root, task)
     if as_json:
         print(json.dumps({**task, "slice_states": {k: s for k, (s, _) in states.items()},
@@ -1142,8 +1142,8 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
         return 0
     done = STAGES.index(task["stage"]) + 1 if task.get("stage") in STAGES else 0
     print(f"{task['key']} — {task.get('title', '')}\n"
-          f"etap: {task.get('stage', '?')} ({done} z {len(STAGES)}) · waga: {task.get('weight', '?')} · "
-          f"tryb: {task.get('mode', '?')} · zmieniono: {task.get('updated', '?')}"
+          f"stage: {task.get('stage', '?')} ({done} of {len(STAGES)}) · weight: {task.get('weight', '?')} · "
+          f"mode: {task.get('mode', '?')} · changed: {task.get('updated', '?')}"
           + (f"\n{cut_note(task)}" if cut_note(task) else ""))
     for k, (state, why) in states.items():
         title = (task["slices"][k].get("title") or "").strip()
@@ -1152,28 +1152,28 @@ def cmd_status(root: Path, key: str, as_json: bool) -> int:
         print(f"  {n}: {state}" + (f" ({why})" if why else ""))
     flag = task.get("flag") if isinstance(task.get("flag"), dict) else None
     if flag and flag.get("key"):
-        print(f"  flaga: {flag['key']}" + (f" (do usunięcia do {flag['remove_by']})" if flag.get("remove_by") else "")
-              + (f" — zgoda na: {', '.join(sorted(flag['allowed']))}" if flag.get("allowed") else ""))
+        print(f"  flag: {flag['key']}" + (f" (to be removed by {flag['remove_by']})" if flag.get("remove_by") else "")
+              + (f" — consent for: {', '.join(sorted(flag['allowed']))}" if flag.get("allowed") else ""))
     elif flag and flag.get("none"):
-        print(f"  flaga: brak — {flag['none']}")
+        print(f"  flag: none — {flag['none']}")
     for f in task.get("findings") or []:
         if isinstance(f, dict):
-            print(f"  ustalenie {one_line(f.get('id'), 8)}" + (f" ({one_line(f['slice'], 4)})" if f.get("slice") else "")
+            print(f"  finding {one_line(f.get('id'), 8)}" + (f" ({one_line(f['slice'], 4)})" if f.get("slice") else "")
                   + f": {one_line(f.get('text'), 400)} — "
-                  + (f"kontrola: {one_line(f['control'], 400)}" if f.get("control") else "bez kontroli"))
+                  + (f"control: {one_line(f['control'], 400)}" if f.get("control") else "no control"))
     for name, r in sorted((task.get("reviews") or {}).items()) if isinstance(task.get("reviews"), dict) else []:
         if isinstance(r, dict):
-            print(f"  przegląd {one_line(name, 40)}: {one_line(r.get('verdict'), 10)}"
+            print(f"  review {one_line(name, 40)}: {one_line(r.get('verdict'), 10)}"
                   + (f" (commit {str(r['sha'])[:12]})" if r.get("sha") else "") + (f" — {one_line(r['note'], 200)}" if r.get("note") else ""))
     if isinstance(task.get("closed"), dict):
-        print(f"  zamknięte: {task['closed'].get('at', '?')}" + (f" ({task['closed']['by']})" if task["closed"].get("by") else ""))
+        print(f"  closed: {task['closed'].get('at', '?')}" + (f" ({task['closed']['by']})" if task["closed"].get("by") else ""))
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else None
     if dep and isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES:
-        print(f"  wdrożenie: {DEPLOY_STATES[dep['state']]}" + (f" · wersja {one_line(dep['version'], 60)}" if dep.get("version") else "")
+        print(f"  deployment: {DEPLOY_STATES[dep['state']]}" + (f" · version {one_line(dep['version'], 60)}" if dep.get("version") else "")
               + (f" · {one_line(dep['at'], 40)}" if dep.get("at") else ""))
     changed = set(frozen_changed(root, task))
     for rel in sorted(task.get("frozen") or {}):
-        print(f"  {rel}: zamrożony" + (" — zmieniony bez decyzji człowieka" if rel in changed else ""))
+        print(f"  {rel}: frozen" + (" — changed without the human's decision" if rel in changed else ""))
     return 0
 
 
@@ -1184,9 +1184,9 @@ def main(argv: list[str]) -> int:
     s.add_argument("key")
     s.add_argument("--title", default=None)
     s.add_argument("--weight", default="normal")
-    s.add_argument("--mode", default=None, help="plan|normal|auto; bez opcji — task.default_mode (styl pracy, tf style)")
-    s.add_argument("--change", default=None, help="klucz zmiany pdi, np. CHG-12 (zadanie cięcia; razem z --cut)")
-    s.add_argument("--cut", default=None, help="klucz cięcia z planu zmiany, np. TSK-57 (razem z --change)")
+    s.add_argument("--mode", default=None, help="plan|normal|auto; without the option — task.default_mode (the working style, tf style)")
+    s.add_argument("--change", default=None, help="the pdi change key, e.g. CHG-12 (a cut task; together with --cut)")
+    s.add_argument("--cut", default=None, help="the cut key from the change plan, e.g. TSK-57 (together with --change)")
     g = sub.add_parser("stage")
     g.add_argument("key")
     g.add_argument("stage")
@@ -1253,7 +1253,7 @@ def main(argv: list[str]) -> int:
     q.add_argument("--json", action="store_true")
     ls = sub.add_parser("list")
     ls.add_argument("--json", action="store_true")
-    ls.add_argument("--all", action="store_true", help="także zadania zamknięte")
+    ls.add_argument("--all", action="store_true", help="closed tasks too")
     fi = sub.add_parser("finding")
     fi.add_argument("key")
     fi.add_argument("action", choices=["add", "control"])
@@ -1280,55 +1280,55 @@ def main(argv: list[str]) -> int:
     if a.cmd == "list":
         return cmd_list(root, a.json, a.all)
     if not KEY.fullmatch(a.key):
-        return fail(f"klucz „{a.key}” nie pasuje do wzorca (np. PROJ-123, CHG-12, T-20261113-limit)", 2)
+        return fail(f"the key \"{a.key}\" does not match the pattern (e.g. PROJ-123, CHG-12, T-20261113-limit)", 2)
     if a.cmd == "start":
         if not a.title or not a.title.strip():
-            return fail("podaj tytuł: tf task start <KEY> --title \"<tytuł>\"", 2)
+            return fail("give the title: tf task start <KEY> --title \"<title>\"", 2)
         if a.weight not in WEIGHTS:
-            return fail(f"nieznana waga „{a.weight}” — do wyboru: {', '.join(WEIGHTS)}", 2)
+            return fail(f"unknown weight \"{a.weight}\" — choose from: {', '.join(WEIGHTS)}", 2)
         if a.mode is not None and a.mode not in MODES:
-            return fail(f"nieznany tryb „{a.mode}” — do wyboru: {', '.join(MODES)}", 2)
+            return fail(f"unknown mode \"{a.mode}\" — choose from: {', '.join(MODES)}", 2)
         if bool(a.change) != bool(a.cut):
-            return fail("zadanie cięcia podaje oba: --change <CHG> i --cut <TSK>", 2)
+            return fail("a cut task gives both: --change <CHG> and --cut <TSK>", 2)
         if a.change:
             if not PDI_KEY.fullmatch(a.change) or not PDI_KEY.fullmatch(a.cut):
-                return fail("klucz zmiany i cięcia w kształcie LITERY-liczba, np. --change CHG-12 --cut TSK-57", 2)
+                return fail("the change and cut keys in the LETTERS-number shape, e.g. --change CHG-12 --cut TSK-57", 2)
             if a.key != f"{a.change}-{a.cut}":
-                return fail(f"zadanie cięcia ma klucz <CHG>-<TSK>: tf task start {a.change}-{a.cut} --title \"…\" "
+                return fail(f"a cut task has the key <CHG>-<TSK>: tf task start {a.change}-{a.cut} --title \"…\" "
                             f"--change {a.change} --cut {a.cut}", 2)
         return cmd_start(root, a.key, a.title.strip(), a.weight, a.mode, a.change, a.cut)
     if a.cmd == "finding":
         if a.slice and not SLICE.fullmatch(a.slice):
-            return fail(f"kawałek „{a.slice}” — oczekiwany zapis S1, S2…", 2)
+            return fail(f"the slice \"{a.slice}\" — expected form S1, S2…", 2)
         if a.action == "control" and not (a.first and re.fullmatch(r"F[1-9][0-9]*", a.first)):
-            return fail(f"podaj identyfikator ustalenia: tf task finding {a.key} control F1 \"<kontrola>\"", 2)
+            return fail(f"give the finding's identifier: tf task finding {a.key} control F1 \"<control>\"", 2)
         return cmd_finding(root, a.key, a.action, a.first, a.second, a.slice, a.round if a.round and a.round > 0 else None)
     if a.cmd == "review":
         if not re.fullmatch(r"[a-z][a-z0-9-]{1,39}", a.reviewer):
-            return fail(f"recenzent „{a.reviewer}” — nazwa agenta, np. {', '.join(PANEL)}", 2)
+            return fail(f"the reviewer \"{a.reviewer}\" — the agent's name, e.g. {', '.join(PANEL)}", 2)
         return cmd_review(root, a.key, a.reviewer, a.verdict, a.note)
     if a.cmd == "close":
         human = bool(a.by) and a.by.startswith("human:") and bool(ACTOR.fullmatch(a.by))
         if a.by and not ACTOR.fullmatch(a.by):
-            return fail(f"wykonawca „{a.by}” — oczekiwany zapis: human:<id> albo process:<id>", 2)
+            return fail(f"the performer \"{a.by}\" — expected form: human:<id> or process:<id>", 2)
         if a.force and not human:
-            return fail("zamknięcie bez potwierdzenia scalenia to decyzja człowieka: --force --by human:<id>", 2)
+            return fail("closing without a confirmed merge is the human's decision: --force --by human:<id>", 2)
         lesson = one_line(a.lesson, 600) if a.lesson and a.lesson.strip() else None
         if lesson and not human:
-            return fail("lekcję zapisuje człowiek: --lesson \"…\" --by human:<id>", 2)
+            return fail("the human records a lesson: --lesson \"…\" --by human:<id>", 2)
         if lesson and "Instead:" not in lesson and "Zamiast tego:" not in lesson:
-            return fail("lekcja ma część „Instead: <działanie>” — bez niej to opis błędu, nie reguła "
-                        "(format: **reguła** — Context: … · Instead: … · Applies to: plan|implementation|review|all)", 2)
+            return fail("a lesson has an \"Instead: <action>\" part — without it, it is a description of a mistake, not a rule "
+                        "(format: **rule** — Context: … · Instead: … · Applies to: plan|implementation|review|all)", 2)
         return cmd_close(root, a.key, a.by, lesson, a.base, a.force)
     if a.cmd == "deployed":
         if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):
-            return fail("wycofanie wdrożenia to decyzja człowieka: --rolled-back --by human:<id>", 2)
+            return fail("rolling back a deployment is the human's decision: --rolled-back --by human:<id>", 2)
         if not 0 < a.timeout <= 86400:      # odrzuca też nan i inf
             return fail("limit czasu testu dymnego: liczba sekund od 1 do 86400", 2)
         return cmd_deployed(root, a.key, a.version, a.timeout, a.rolled_back, a.by, a.note)
     if a.cmd == "stage":
         if a.stage not in STAGES:
-            return fail(f"nieznany etap „{a.stage}” — kolejno: {', '.join(STAGES)}", 2)
+            return fail(f"unknown stage \"{a.stage}\" — in order: {', '.join(STAGES)}", 2)
         return cmd_stage(root, a.key, a.stage, a.force)
     if a.cmd == "check":
         return cmd_check(root, a.key)
@@ -1336,40 +1336,40 @@ def main(argv: list[str]) -> int:
         return cmd_mode(root, a.key, a.new)
     if a.cmd == "weight":
         if a.apply and a.new is not None:
-            return fail("podaj jedno: --apply (propozycja fabryki) albo --set <waga>", 2)
+            return fail("give one: --apply (the factory's proposal) or --set <weight>", 2)
         return cmd_weight(root, a.key, a.apply, a.new, a.by, a.reason, a.json)
     if a.cmd == "flag":
         return cmd_flag(root, a.key, a.action, a.value, a.remove_by, a.reason, a.by)
     if a.cmd in ("freeze", "reopen"):
         if not a.by.startswith("human:") or not ACTOR.fullmatch(a.by):
-            return fail(f"{a.cmd} to decyzja człowieka: --by human:<id>", 2)
+            return fail(f"{a.cmd} is the human's decision: --by human:<id>", 2)
         if a.cmd == "freeze":
             files = [f.strip() for f in a.files.split(",") if f.strip()]
-            return cmd_freeze(root, a.key, files, a.by) if files else fail("podaj pliki do zamrożenia", 2)
+            return cmd_freeze(root, a.key, files, a.by) if files else fail("give the files to freeze", 2)
         if not a.reason.strip():
-            return fail("podaj powód: --reason \"<dlaczego plik się zmienia>\"", 2)
+            return fail("give the reason: --reason \"<why the file changes>\"", 2)
         return cmd_reopen(root, a.key, a.name, a.by, " ".join(a.reason.split()))
     if a.cmd in ("artifact", "approve"):
         if not ACTOR.fullmatch(a.by):
-            return fail(f"wykonawca „{a.by}” — oczekiwany zapis: <narzędzie>/<wersja>, human:<id> albo process:<id>", 2)
+            return fail(f"the performer \"{a.by}\" — expected form: <tool>/<version>, human:<id> or process:<id>", 2)
         if a.cmd == "approve":
             if not a.by.startswith("human:"):
-                return fail("zatwierdza tylko człowiek: --by human:<id>", 2)
+                return fail("only the human approves: --by human:<id>", 2)
             return cmd_approve(root, a.key, a.name, a.by)
         if a.stage not in STAGES:
-            return fail(f"nieznany etap „{a.stage}” — kolejno: {', '.join(STAGES)}", 2)
+            return fail(f"unknown stage \"{a.stage}\" — in order: {', '.join(STAGES)}", 2)
         return cmd_artifact(root, a.key, a.name, a.stage, a.by, [f.strip() for f in a.inputs.split(",") if f.strip()])
     if a.cmd in ("slice", "verify"):
         if not SLICE.fullmatch(a.slice_id):
-            return fail(f"identyfikator kawałka „{a.slice_id}” — oczekiwany S1…S99", 2)
+            return fail(f"the slice identifier \"{a.slice_id}\" — expected S1…S99", 2)
         if a.cmd == "slice":
             if a.state not in SLICE_STATES:
-                return fail(f"nieznany stan „{a.state}” — do wyboru: {', '.join(SLICE_STATES)} "
-                            "(zweryfikowany wynika z dowodu: tf task verify)", 2)
+                return fail(f"unknown state \"{a.state}\" — choose from: {', '.join(SLICE_STATES)} "
+                            "(verified comes from the evidence: tf task verify)", 2)
             return cmd_slice(root, a.key, a.slice_id, a.state, a.title, a.reason)
         files = [f.strip() for f in a.files.split(",") if f.strip()]
         if not files:
-            return fail("podaj pliki kawałka: --files <plik>[,<plik>…] — bez nich dowód nie wiąże się z kodem", 2)
+            return fail("give the slice's files: --files <file>[,<file>…] — without them the evidence is not tied to the code", 2)
         command = a.command
         if not command:   # domyślnie to samo polecenie, którego pilnuje bramka jakości
             try:
@@ -1378,7 +1378,7 @@ def main(argv: list[str]) -> int:
                 gate = None
             command = gate if isinstance(gate, str) else (" ".join(map(shlex.quote, gate)) if gate else None)
         if not command:
-            return fail("nie ma czego uruchomić: podaj --command albo ustaw polecenie w .claude/quality-gate.json "
+            return fail("there is nothing to run: give --command or set the command in .claude/quality-gate.json "
                         "(tf onboard --yes)", 2)
         return cmd_verify(root, a.key, a.slice_id, command, files, a.timeout)
     return cmd_status(root, a.key, a.json)

@@ -46,7 +46,7 @@ def main() -> int:
         p = Path(t)
         new_task(p, "A-1")
         r = tf(p, "mode", "A-1")
-        check(r.returncode == 0 and "zwykły" in r.stdout, f"M-1: tryb domyślny to zwykły: {r.stdout}{r.stderr}")
+        check(r.returncode == 0 and "normal" in r.stdout, f"M-1: tryb domyślny to zwykły: {r.stdout}{r.stderr}")
 
         # tryb Plan: przebieg kończy się na planie
         r = tf(p, "mode", "A-1", "plan")
@@ -54,7 +54,7 @@ def main() -> int:
         r = tf(p, "stage", "A-1", "plan")
         check(r.returncode == 0, f"M-3: w trybie Plan zadanie dochodzi do etapu plan: {r.stdout}")
         r = tf(p, "stage", "A-1", "implementation")
-        check(r.returncode == 1 and "tryb" in r.stdout and "Plan" in r.stdout and "mode A-1 normal" in r.stdout,
+        check(r.returncode == 1 and "mode" in r.stdout and "Plan" in r.stdout and "mode A-1 normal" in r.stdout,
               f"M-4: tryb Plan nie wchodzi w realizację; komunikat mówi, jak kontynuować: {r.returncode} {r.stdout}")
 
         # tryb zwykły: zarejestrowany plan wymaga zgody człowieka
@@ -80,7 +80,7 @@ def main() -> int:
         new_task(p, "A-4")
         tf(p, "weight", "A-4", "--set", "full")
         r = tf(p, "mode", "A-4", "auto")
-        check(r.returncode == 0 and task(p, "A-4").get("mode") == "normal" and "pełn" in r.stdout and "zwykły" in r.stdout,
+        check(r.returncode == 0 and task(p, "A-4").get("mode") == "normal" and "full-weight" in r.stdout and "normal mode" in r.stdout,
               f"M-9: Auto przy wadze pełnej niedostępne — zostaje tryb zwykły z wyjaśnieniem: {r.returncode} {r.stdout}")
         new_task(p, "A-5")
         tf(p, "mode", "A-5", "auto")
@@ -92,7 +92,7 @@ def main() -> int:
         r = tf(p, "mode", "A-1", "turbo")
         check(r.returncode == 2, f"M-11: nieznany tryb → kod 2: {r.returncode} {r.stdout}")
         r = tf(p, "status", "A-3")
-        check("tryb: auto" in r.stdout, f"M-12: status pokazuje tryb: {r.stdout}")
+        check("mode: auto" in r.stdout, f"M-12: status pokazuje tryb: {r.stdout}")
         new_task(p, "A-6")
         tf(p, "mode", "A-6", "plan")
         r = tf(p, "stage", "A-6", "implementation", "--force")
@@ -113,7 +113,7 @@ def main() -> int:
               f"M-15: cięcie o wadze pełnej w trybie zwykłym czeka na zgodę człowieka: {r.returncode} {r.stdout}")
         r = tf(p, "mode", "CHG-12-TSK-57", "auto")
         check(r.returncode == 0 and task(p, "CHG-12-TSK-57").get("mode") == "auto" and "CHG-12" in r.stdout
-              and "bramce" in r.stdout,
+              and "pdi gate" in r.stdout,
               f"M-16: cięcie o wadze pełnej dostaje tryb Auto z wyjaśnieniem (bramka zmiany): {r.returncode} {r.stdout}")
         r = tf(p, "stage", "CHG-12-TSK-57", "implementation")
         check(r.returncode == 0, f"M-17: cięcie o wadze pełnej w trybie Auto wchodzi w realizację bez zgody: {r.stdout}")

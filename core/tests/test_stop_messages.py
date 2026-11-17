@@ -52,6 +52,17 @@ def main() -> int:
         check(not hits, f"K-6 {code}: komunikat bez słów z budowy fabryki: {hits}")
         check(all(len(t) <= 220 for t in texts), f"K-7 {code}: każde pole mieści się w dwóch liniach (≤220 znaków)")
 
+    # K-8: polecenia podawane w komunikatach używają nazw, które skrypt przyjmuje (dawniej `--code pytanie`,
+    # `step … kod run`, kody „testy/skan” — skrypt je odrzucał)
+    steps = re.findall(r'^STEPS = \(([^)]*)\)', script, re.M)
+    steps = set(re.findall(r'"([a-z]+)"', steps[0])) if steps else set()
+    bad_codes = sorted({c for c in re.findall(r"--code ([a-z][a-z-]+)", script) if c not in codes and c != "kod"})
+    bad_steps = sorted({s for s in re.findall(r"R\{k(?: \+ 1)?\} ([a-z]+) (?:run|pass|fail)", script) if s not in steps})
+    check(steps and not bad_codes and not bad_steps,
+          f"K-8: komunikaty podają tylko istniejące kody i kroki: kody {bad_codes}, kroki {bad_steps}")
+    plain = re.findall(r"\(kod: ([^)]*)\)", script)
+    check(not plain, f"K-9: lista kodów w komunikacie limitu rund używa nazw kodów: {plain}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów komunikatów zatrzymań")

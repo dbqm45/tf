@@ -29,23 +29,23 @@ from pathlib import Path
 
 CHANGES = Path("docs") / "project" / "changes"
 ORDER = ("light", "normal", "full")
-LABEL = {"light": "light", "normal": "zwykła", "full": "pełna"}
+LABEL = {"light": "light", "normal": "normal", "full": "full"}
 EFFECT = {
-    "light": "bez spec.md, jeden kawałek, dowód weryfikacji nadal wymagany",
-    "normal": "specyfikacja, plan z kawałków, dowody i ślad kryteriów",
-    "full": "jak zwykła, a plan zatwierdza człowiek przed realizacją (przebieg z --auto zatrzyma się blokiem STOP); "
-             "przegląd security-reviewer obowiązkowy",
+    "light": "no spec.md, one slice, verification evidence still required",
+    "normal": "a specification, a plan of slices, evidence and the criteria trace",
+    "full": "like normal, and the human approves the plan before delivery (a run with --auto stops with a STOP block); "
+             "the security-reviewer review is mandatory",
 }
 SENSITIVE = (
-    ("logowanie, hasła lub uprawnienia",
+    ("login, passwords or permissions",
      r"logowan\w*|zalogow\w*|wylogow\w*|uwierzytelni\w*|autoryzac\w*|uprawnie\w*|hasł\w*|haseł|\blogin\w*|"
      r"password\w*|sign[- ]?in|authenticat\w*|authoriz\w*|permission\w*|oauth\w*|\bjwt\b|\b2fa\b|\bmfa\b|\bsso\b"),
-    ("płatności lub rozliczenia",
+    ("payments or billing",
      r"płatnoś\w*|płatnos\w*|faktur\w*|rozlicze\w*|zwrot\w* środków|payment\w*|\bbilling\b|invoice\w*|refund\w*|"
      r"\bcheckout\b"),
-    ("schemat lub migracja bazy", r"migracj\w*|schemat\w* bazy|tabel\w* w bazie|migration\w*|database schema|db schema"),
+    ("the database schema or a migration", r"migracj\w*|schemat\w* bazy|tabel\w* w bazie|migration\w*|database schema|db schema"),
     ("dane osobowe", r"dan\w+ osobow\w+|\brodo\b|\bgdpr\b|\bpesel\w*|personal data"),
-    ("wdrożenie, infrastruktura lub sekrety",
+    ("deployment, infrastructure or secrets",
      r"wdroże\w* (na|do) produkcj\w*|produkcyjn\w*|sekret\w*|klucz\w* api|api key\w*|\bsecrets?\b|\bci/cd\b|terraform|"
      r"kubernetes|\bhelm\b|dockerfile|deployment\w*"),
 )
@@ -57,8 +57,8 @@ CRITERIA = (r"\bAC[- ]?\d|\bAC\s*:|kryteri\w* akceptacji|acceptance criteria|zak
 SHORT = 400       # dłuższa treść niż tyle znaków to nie jest drobna zmiana
 SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*([KS]\d+)\b(.*)$")
 SENSITIVE_PATHS = ("auth", "payments", "schema", "deploy")
-PATH_LABEL = {"auth": "uwierzytelnianie lub uprawnienia", "payments": "płatności lub rozliczenia",
-              "schema": "schemat lub migracja bazy", "deploy": "wdrożenie, CI, infrastruktura lub sekrety"}
+PATH_LABEL = {"auth": "authentication or permissions", "payments": "payments or billing",
+              "schema": "the database schema or a migration", "deploy": "deployment, CI, infrastructure or secrets"}
 
 
 def rank(weight: str) -> int:
@@ -121,28 +121,28 @@ def propose(root: Path, key: str) -> dict:
     for label, pattern in SENSITIVE:
         m = re.search(pattern, ticket, re.I)
         if m:
-            reasons.append(f"zgłoszenie dotyczy obszaru wrażliwego: {label} („{m.group(0)}”)")
+            reasons.append(f"the issue concerns a sensitive area: {label} (\"{m.group(0)}\")")
     rules = path_rules(root)
     for rel in files:
         hit = next((cat for cat, patterns in rules.items() if any(re.search(p, rel) for p in patterns)), None)
         if hit:
-            reasons.append(f"plan dotyka pliku {rel} ({PATH_LABEL.get(hit, hit)})")
+            reasons.append(f"the plan touches the file {rel} ({PATH_LABEL.get(hit, hit)})")
     if reasons:
         return {"weight": "full", "reasons": reasons}
 
     small = re.search(SMALL, ticket, re.I)
     blockers = []
     if not small:
-        blockers.append("zmienia zachowanie (to nie literówka, nazwa ani dokumentacja)")
+        blockers.append("changes behaviour (it is not a typo, a name or documentation)")
     if re.search(CRITERIA, ticket, re.I):
         blockers.append("ma kryteria akceptacji")
     if len(body.strip()) > SHORT:
-        blockers.append(f"treść zgłoszenia jest dłuższa niż {SHORT} znaków")
+        blockers.append(f"the issue's content is longer than {SHORT} characters")
     if len(slices) > 1:
-        blockers.append(f"plan ma {len(slices)} kawałki")
+        blockers.append(f"the plan has {len(slices)} slices")
     if len(files) > 2:
-        blockers.append(f"plan wymienia {len(files)} pliki")
+        blockers.append(f"the plan names {len(files)} files")
     if blockers:
-        return {"weight": "normal", "reasons": ["zadanie " + "; ".join(blockers) + "; obszarów wrażliwych nie widać"]}
-    return {"weight": "light", "reasons": [f"drobna zmiana („{small.group(0)}”), bez kryteriów akceptacji"
-                                           + (f", {len(files)} plik(i) w planie" if files else "")]}
+        return {"weight": "normal", "reasons": ["the task " + "; ".join(blockers) + "; no sensitive areas are visible"]}
+    return {"weight": "light", "reasons": [f"a small change (\"{small.group(0)}\"), no acceptance criteria"
+                                           + (f", {len(files)} file(s) in the plan" if files else "")]}

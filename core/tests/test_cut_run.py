@@ -133,7 +133,7 @@ def main() -> int:
             out = json.loads(r.stdout)
         except ValueError:
             out = {}
-        check(out.get("kind") == "wznowienie" and out.get("key") == "CHG-12-TSK-57" and ".tf/runs/CHG-12-TSK-57" in out.get("next", ""),
+        check(out.get("kind") == "resume" and out.get("key") == "CHG-12-TSK-57" and ".tf/runs/CHG-12-TSK-57" in out.get("next", ""),
               f"C-9: /tf TSK-57 przy istniejącym zadaniu cięcia wznawia je: {r.stdout[:400]} {r.stderr[-200:]}")
 
         # cięcie bez flagi w planie wydania: jawny brak flagi z powodem, bez pytania człowieka
@@ -217,7 +217,7 @@ def main() -> int:
         (old / "run.json").write_text(json.dumps({"slug": "tsk-1", "started_at": "2026-11-01T10:00:00+00:00",
                                                   "change": "CHG-1", "task": "TSK-1"}), encoding="utf-8")
         r = script(p, cfg, "run_state.py", "verify", str(old), "K1", "--files", "a.py")
-        check(r.returncode != 0 and "od nowa" in r.stdout + r.stderr and "/tf TSK-1" in r.stdout + r.stderr,
+        check(r.returncode != 0 and "start the cut again" in r.stdout + r.stderr and "/tf TSK-1" in r.stdout + r.stderr,
               f"C-23: przebieg bez zadania → komunikat „zacznij cięcie od nowa”: {r.returncode} {r.stdout} {r.stderr}")
 
     for f in fails:

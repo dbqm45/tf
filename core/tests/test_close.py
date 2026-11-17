@@ -70,7 +70,7 @@ def main() -> int:
         new_task(p, merged=False)
         git(p, "checkout", "-q", "story/imp-1")
         r = call(p, TASK, "close", "IMP-1")
-        check(r.returncode == 1 and "scalon" in r.stdout and task(p)["stage"] == "pr" and "closed" not in task(p),
+        check(r.returncode == 1 and "merged" in r.stdout and task(p)["stage"] == "pr" and "closed" not in task(p),
               f"CL-1: niescalonej zmiany nie da się zamknąć: {r.returncode} {r.stdout}")
         r = call(p, TASK, "close", "IMP-1", "--force")
         check(r.returncode == 2 and "human:" in r.stdout and task(p)["stage"] == "pr",
@@ -85,12 +85,12 @@ def main() -> int:
         new_task(p)
         r = call(p, TASK, "close", "IMP-1")
         check(r.returncode == 0 and task(p)["stage"] == "closed" and task(p)["closed"].get("at")
-              and "zamknięte" in r.stdout and "forced" not in task(p)["closed"],
+              and "closed" in r.stdout and "forced" not in task(p)["closed"],
               f"CL-4: scalona zmiana (squash) → etap closed i zapis closed: {r.returncode} {r.stdout}")
-        check("testem dymnym" in r.stdout,
+        check("smoke test" in r.stdout,
               f"CL-5: zamknięcie mówi wprost, że wdrożenie nie było sprawdzone testem dymnym: {r.stdout}")
         r = call(p, TASK, "close", "IMP-1")
-        check(r.returncode == 0 and "już" in r.stdout, f"CL-6: ponowne zamknięcie nie jest błędem: {r.returncode} {r.stdout}")
+        check(r.returncode == 0 and "already" in r.stdout, f"CL-6: ponowne zamknięcie nie jest błędem: {r.returncode} {r.stdout}")
 
         # ważne ustalenia przeglądu: bez kontroli nie ma zamknięcia
         p = Path(t) / "findings"
@@ -132,7 +132,7 @@ def main() -> int:
         card.write_text(json.dumps({"deploy": {"smoke": f'{sys.executable} -c "raise SystemExit(7)"'}}), encoding="utf-8")
         call(p, TASK, "deployed", "IMP-1")
         r = call(p, TASK, "close", "IMP-1")
-        check(r.returncode == 1 and "wycofani" in r.stdout and task(p)["stage"] == "pr",
+        check(r.returncode == 1 and "rollback" in r.stdout and task(p)["stage"] == "pr",
               f"CL-12: wdrożenie czekające na decyzję o wycofaniu blokuje zamknięcie: {r.returncode} {r.stdout}")
 
         # flaga: przypomnienie o dacie usunięcia albo o jej braku
@@ -198,7 +198,7 @@ def main() -> int:
         p = Path(t) / "merged"
         new_task(p, key="IMP-2")
         r = call(p, TASK, "list")
-        check("IMP-2" in r.stdout and "IMP-1" not in r.stdout and "zamknięte: 1" in r.stdout and "--all" in r.stdout,
+        check("IMP-2" in r.stdout and "IMP-1" not in r.stdout and "closed: 1" in r.stdout and "--all" in r.stdout,
               f"CL-20: tf status pokazuje zadania w toku, zamknięte liczy jedną linią: {r.stdout}")
         r = call(p, TASK, "list", "--all")
         check("IMP-1" in r.stdout and "IMP-2" in r.stdout, f"CL-21: tf status --all pokazuje wszystkie: {r.stdout}")
@@ -215,7 +215,7 @@ def main() -> int:
         check(r.returncode == 1 and "--force" in r.stdout and "Traceback" not in r.stdout + r.stderr,
               f"CL-23: bez repozytorium git scalenia nie da się potwierdzić — odmowa z drogą dla człowieka: {r.returncode} {r.stdout}")
         r = call(p, TASK, "close", "IMP-9")
-        check(r.returncode != 0 and "nie ma zadania" in r.stdout, f"CL-24: nieznane zadanie → odmowa: {r.stdout}")
+        check(r.returncode != 0 and "there is no task" in r.stdout, f"CL-24: nieznane zadanie → odmowa: {r.stdout}")
 
     # pętla: nieudany przegląd zakresu wymaga zapisanego ustalenia z tej rundy
     with tempfile.TemporaryDirectory() as t:

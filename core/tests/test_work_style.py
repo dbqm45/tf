@@ -196,14 +196,14 @@ def main() -> int:
         (s / "test_pay.py").write_text("def test_ac1_card_fee():  # AC-1\n    assert True\n", encoding="utf-8")
         run(s, prefs, RUN_STATE, "verify", d, "K1", "--files", "pay.py,test_pay.py", "--command", OK)
         r = run(s, prefs, RUN_STATE, "done", d, "K1", "--message", "feat(pay): card payment")
-        check(r.returncode == 0 and "STOP" in r.stdout and "proceed" in r.stdout and "Dalej: K2" not in r.stdout,
+        check(r.returncode == 0 and "STOP" in r.stdout and "proceed" in r.stdout and "Next: K2" not in r.stdout,
               f"WS-11: po kawałku styl step-by-step zatrzymuje przebieg do zgody człowieka: {r.returncode} {r.stdout}{r.stderr}")
         (s / "receipt.py").write_text("R = 1\n", encoding="utf-8")
         r = run(s, prefs, RUN_STATE, "verify", d, "K2", "--files", "receipt.py,test_pay.py", "--command", OK)
         check(r.returncode != 0 and "proceed" in r.stdout + r.stderr,
               f"WS-11: następny kawałek odrzucony przed zgodą: {r.returncode} {r.stdout}{r.stderr}")
         r = run(s, prefs, RUN_STATE, "proceed", d)
-        check(r.returncode == 0 and "Dalej: K2" in r.stdout, f"WS-11: proceed zdejmuje wstrzymanie: {r.stdout}{r.stderr}")
+        check(r.returncode == 0 and "Next: K2" in r.stdout, f"WS-11: proceed zdejmuje wstrzymanie: {r.stdout}{r.stderr}")
         r = run(s, prefs, RUN_STATE, "verify", d, "K2", "--files", "receipt.py,test_pay.py", "--command", OK)
         check(r.returncode == 0, f"WS-11: po zgodzie następny kawałek idzie dalej: {r.returncode} {r.stdout}{r.stderr}")
     for f in fails:

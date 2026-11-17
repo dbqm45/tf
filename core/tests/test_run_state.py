@@ -281,7 +281,7 @@ def main() -> int:
         r = run(SCRIPT, ["park", str(d), "  "], proj, cfg)
         check(r.returncode != 0 and parked.read_text(encoding="utf-8") == after, f"T-5: pusta sprawa → błąd, plik bez zmian: {r.returncode}")
         rep = run(REPORT, ["status", str(d)], proj, cfg)
-        check("2" in rep.stdout or "odłożon" in rep.stdout.lower(), f"T-6: raport przebiegu widzi odłożone sprawy: {rep.stdout[-300:]}")
+        check("2" in rep.stdout or "postponed" in rep.stdout.lower(), f"T-6: raport przebiegu widzi odłożone sprawy: {rep.stdout[-300:]}")
 
         # ślad kryteriów (krok D3): poza repozytorium git skrypt mówi wprost, że śladu nie policzy
         r = run(SCRIPT, ["trace", str(d)], proj, cfg)
@@ -345,7 +345,7 @@ def main() -> int:
         check(r.returncode == 0 and "- [x] K1" in (old / "plan.md").read_text(encoding="utf-8"),
               f"V-7a: stary przebieg — tick bez dowodu jak dotąd: {r.returncode} {r.stdout}{r.stderr}")
         r = run(SCRIPT, ["trace", str(old)], proj, cfg)
-        check(r.returncode == 2 and "starym układzie" in r.stdout, f"TRC-2: trace w starym przebiegu → kod 2: {r.returncode} {r.stdout}")
+        check(r.returncode == 2 and "old layout" in r.stdout, f"TRC-2: trace w starym przebiegu → kod 2: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["verify", str(old), "K1", "--files", "fees.py", "--command", OK], proj, cfg)
         check(r.returncode == 2 and not (old / "evidence").exists(),
               f"V-7b: verify w starym przebiegu → kod 2 z wyjaśnieniem: {r.returncode} {r.stdout}")
@@ -409,8 +409,8 @@ def main() -> int:
         d = proj / ".tf" / "runs" / "LOG-1"
         r = run(SCRIPT, ["weight", str(d)], proj, cfg)
         data = json.loads((proj / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8"))
-        check(r.returncode == 0 and data.get("weight") == "full" and "pełna" in r.stdout and "hasł" in r.stdout
-              and "człowiek" in r.stdout,
+        check(r.returncode == 0 and data.get("weight") == "full" and "full" in r.stdout and "hasł" in r.stdout
+              and "human" in r.stdout,
               f"W-1: run_state weight przydziela wagę pełną, podaje powód i skutek: {r.returncode} {r.stdout}{r.stderr}")
         (proj / CHANGES / "LOG-1" / "spec.md").write_text(SPEC, encoding="utf-8")
         (proj / CHANGES / "LOG-1" / "plan.md").write_text("# Plan\n- [ ] K1 — reset · pliki: reset.py\n", encoding="utf-8")
@@ -430,7 +430,7 @@ def main() -> int:
                      "Popraw literówkę w README: instlacja na instalacja."], proj, cfg)
         d2 = proj / ".tf" / "runs" / "TYP-1"
         r = run(SCRIPT, ["weight", str(d2)], proj, cfg)
-        check(r.returncode == 0 and "light" in r.stdout and "bez spec.md" in r.stdout,
+        check(r.returncode == 0 and "light" in r.stdout and "no spec.md" in r.stdout,
               f"W-5: literówka → waga lekka ze skutkiem: {r.stdout}{r.stderr}")
         (proj / CHANGES / "TYP-1" / "plan.md").write_text("# Plan\n- [ ] K1 — literówka · pliki: README.md\n", encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d2), "plan"], proj, cfg)
@@ -450,7 +450,7 @@ def main() -> int:
             "# Plan\n- [ ] K1 — limit · pliki: fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d3), "plan"], proj, cfg)
         w = json.loads((proj / CHANGES / "REG-1" / "task.json").read_text(encoding="utf-8")).get("weight")
-        check(r.returncode == 0 and w == "full" and "pełna" in r.stdout and "db/migrations/0008_limit.sql" in r.stdout,
+        check(r.returncode == 0 and w == "full" and "full" in r.stdout and "db/migrations/0008_limit.sql" in r.stdout,
               f"W-10: etap plan ponawia przydział — plan z migracją podnosi wagę i mówi dlaczego: {w} {r.stdout}{r.stderr}")
         subprocess.run([sys.executable, str(ts), "weight", "REG-1", "--set", "normal", "--by", "human:anna", "--reason",
                         "migracja dodaje tylko indeks"], cwd=proj, env=env, capture_output=True, text=True, timeout=60)
@@ -491,13 +491,13 @@ def main() -> int:
         (proj / "tests" / "test_export.py").write_text("def test_export():\n    assert True\n", encoding="utf-8")
         r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
         check(r.returncode == 0 and "⚠" in r.stdout and "AC-" in r.stdout and "tests/test_export.py" in r.stdout
-              and "przed commitem" in r.stdout,
+              and "before the slice's commit" in r.stdout,
               f"A-1: verify ostrzega, gdy test kawałka nie ma identyfikatora kryterium: {r.returncode} {r.stdout}")
         (proj / "tests" / "test_export.py").write_text("def test_ac1_export():  # AC-1\n    assert True\n", encoding="utf-8")
         r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
         check(r.returncode == 0 and "⚠" not in r.stdout, f"A-2: z identyfikatorem w teście bez ostrzeżenia: {r.stdout}")
         r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py", "--command", OK], proj, cfg)
-        check(r.returncode == 0 and "⚠" in r.stdout and "pliku testu" in r.stdout,
+        check(r.returncode == 0 and "⚠" in r.stdout and "no test file" in r.stdout,
               f"A-3: verify ostrzega, gdy wśród plików kawałka nie ma testu: {r.stdout}")
         r = run(SCRIPT, ["verify", str(d2), "K1", "--files", "README.md", "--command", OK], proj, cfg)
         check("⚠" not in r.stdout, f"A-4: zadanie bez specyfikacji (waga lekka) — bez ostrzeżenia o kryteriach: {r.stdout}")
@@ -508,11 +508,11 @@ def main() -> int:
         r = run(SCRIPT, ["stage", str(d5), "intake", "--auto"], proj, cfg)
         mode = json.loads((proj / CHANGES / "IMP-1" / "task.json").read_text(encoding="utf-8")).get("mode")
         r2 = run(SCRIPT, ["approve", str(d5)], proj, cfg)
-        check(r.returncode == 0 and mode == "auto" and r2.returncode == 2 and "człowiek" in r2.stdout,
+        check(r.returncode == 0 and mode == "auto" and r2.returncode == 2 and "human" in r2.stdout,
               f"T-6: --auto zapisuje tryb Auto; zgody na plan nie da się zapisać bez człowieka: {mode} | {r2.returncode} {r2.stdout}")
         r = run(SCRIPT, ["stage", str(d), "intake", "--auto"], proj, cfg)        # LOG-1: waga pełna
         mode = json.loads((proj / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8")).get("mode")
-        check(r.returncode == 0 and mode == "normal" and "pełn" in r.stdout,
+        check(r.returncode == 0 and mode == "normal" and "full-weight" in r.stdout,
               f"T-7: --auto przy wadze pełnej — zostaje tryb zwykły z wyjaśnieniem: {mode} {r.stdout}")
 
         # zamknięta lista kodów zatrzymań: brak kodu albo kod spoza listy to błąd; podgląd pokazuje przyczynę
@@ -535,8 +535,8 @@ def main() -> int:
 
         # komunikat zatrzymania w prostym języku (krok E4): co się stało, czego potrzeba, pytanie z opcjami
         r = run(SCRIPT, ["message", "question"], proj, cfg)
-        check(r.returncode == 0 and all(s in r.stdout for s in ("Co się stało:", "Czego potrzeba:", "Pytanie:", "Potem:"))
-              and r.stdout.count("(rekomendowana)") == 1 and "  1. " in r.stdout and "  2. " in r.stdout,
+        check(r.returncode == 0 and all(s in r.stdout for s in ("What happened:", "What is needed:", "Question:", "Then:"))
+              and r.stdout.count("(recommended)") == 1 and "  1. " in r.stdout and "  2. " in r.stdout,
               f"K-1: message <kod> drukuje komunikat ze stałymi polami i jedną rekomendacją: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["message", "zmeczenie"], proj, cfg)
         check(r.returncode == 2 and "question" in r.stdout, f"K-2: message z kodem spoza listy → kod 2: {r.returncode} {r.stdout}")
@@ -547,13 +547,13 @@ def main() -> int:
         r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "tests", "--reason",
                          "pytest: 2 failed (test_fees.py)"], proj, cfg)
         check(r.returncode == 0 and "The tests fail" in r.stdout and "pytest: 2 failed (test_fees.py)" in r.stdout
-              and "Pytanie:" in r.stdout and "AskUserQuestion" in r.stdout,
+              and "Question:" in r.stdout and "AskUserQuestion" in r.stdout,
               f"K-4: zapis STOP drukuje komunikat dla człowieka z powodem przebiegu: {r.stdout}")
         html = (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8")
         card = next((x for x in runs_json(html) if x.get("key") == "IMP-1"), {})
         stop_file = next((i for g in card.get("files", []) for i in g.get("items", []) if i.get("name") == "STOP"), {})
         check(card.get("stopNeed") and card.get("stopQuestion", "").endswith("?") and len(card.get("stopOptions") or []) >= 2
-              and "Czego potrzeba" in stop_file.get("text", "") and "r.stopQuestion" in html,
+              and "What is needed" in stop_file.get("text", "") and "r.stopQuestion" in html,
               f"K-5: podgląd pokazuje, czego potrzeba, i pytanie z opcjami: {card.get('stopNeed')} {card.get('stopQuestion')}")
 
         old = proj / ".tf" / "runs" / "cuts" / "2026-10-01-stary"
@@ -563,7 +563,7 @@ def main() -> int:
         r = run(SCRIPT, ["stage", str(old), "needs", "--needs", "stop", "--code", "tests", "--reason", "czerwone"], proj, cfg)
         check(r.returncode == 0, f"T-12: przebieg cięcia też zapisuje STOP z kodem: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["weight", str(old)], proj, cfg)
-        check(r.returncode == 2 and "cięci" in r.stdout, f"W-9: przebieg cięcia nie ma wagi: {r.returncode} {r.stdout}")
+        check(r.returncode == 2 and "cut" in r.stdout, f"W-9: przebieg cięcia nie ma wagi: {r.returncode} {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

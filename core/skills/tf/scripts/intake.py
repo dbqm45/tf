@@ -489,7 +489,7 @@ def cmd_tracker(root: Path, args: list[str]) -> int:
     if "--prefix" in args:
         i = args.index("--prefix")
         if i + 1 >= len(args):
-            print("✗ `--prefix` wymaga prefiksu klucza, np. --prefix EBO")
+            print("✗ `--prefix` needs a key prefix, e.g. --prefix EBO")
             return 2
         prefix = args[i + 1].upper()
         args = args[:i] + args[i + 2:]
