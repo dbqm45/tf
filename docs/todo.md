@@ -588,7 +588,23 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
 
 ## Tłumaczenie treści fabryki na angielski
 
-- [ ] Tłumaczenie (szczegóły niżej).
+**Cel (decyzja właściciela, 2026-11-17):** jak w samym Claude — cała fabryka po angielsku (nazwy, klucze, wartości,
+skille, persony, prompty, komunikaty, składnia planu i specyfikacji), a rozmowa w języku człowieka: piszesz po
+polsku, odpowiedzi i dokumenty dla Ciebie są po polsku (`tf language`), model dostosowuje się sam. Jedna wersja
+treści (angielska), bez równoległej polskiej.
+
+- [x] Etap 1 — nazwy plików i katalogów (#286).
+- [x] Etap 2a–2b — klucze metadanych skilli i modułów, poziomy ważności (#287); pytanie niżej o pola metadanych
+  rozstrzygnięte: po angielsku.
+- [x] Etap 2c — stan zadania, pętla, profile, kody STOP, migracja danych projektu (#288, wydanie 11.0.0).
+- [ ] Etap 2d — pozostałe identyfikatory: zbiory wartości w nakładkach (wymiary audytu kodu, pewność reguł w dossier,
+  statusy rekonstrukcji, kategorie skanera standardów), klucze dziennika decyzji pdi, `opis` w scenariuszach i
+  `metric_watch`, nazwy plików zakładanych w `docs/project/`, pole „Dotyczy” lekcji.
+- [ ] Etap 3 — składnia planu i specyfikacji (`· pliki:`, `· kryteria:`, `· po: brak`, `## Kryteria`,
+  „Zakładając / Gdy / Wtedy”) po angielsku razem z tłumaczeniem treści skilla `tf` i szablonów; skrypty przyjmują
+  stare słowa przez jedno wydanie, migracja przepisuje `plan.md`/`spec.md` otwartych zadań.
+- [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty; instrukcja językowa
+  (`tf language pl`) każe odpowiadać i pisać dokumenty dla człowieka po polsku.
 
 Treść fabryki jest dziś po polsku. Chodzi o:
 - skille (`SKILL.md`, `references/`) rdzenia i wszystkich nakładek;
@@ -608,8 +624,7 @@ Jak:
 Do rozstrzygnięcia wtedy:
 - czy tłumaczenie zastępuje treść polską, czy obie wersje żyją równolegle (wtedy `build.py` i instalator wybierają
   wersję według `language`);
-- czy nazwy pól metadanych skilli (`metadata.catalog`, `review`, `keywords`, `visibility`) też zmieniają się na
-  angielskie (zmiana publicznego API rdzenia — MAJOR).
+- ~~nazwy pól metadanych skilli~~ — rozstrzygnięte: po angielsku (#287).
 
 Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na wersji angielskiej.
 
