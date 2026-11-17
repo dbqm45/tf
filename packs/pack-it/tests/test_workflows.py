@@ -59,15 +59,15 @@ def scenario(depth="standard", limit=8, dims=("architecture", "security", "quali
                      "exclude": ["vendor/"]},
             "replies": [
                 {"label": "inwentarz", "reply": INVENTORY},
-                {"label": "przegląd:architektura", "reply": {"findings": [
+                {"label": "przegląd:architecture", "reply": {"findings": [
                     finding(title="cykl billing-accounts", file="api/a.py", line=10, risk=3, reach=2, cost="M",
                             evidence="import cykliczny api/a.py:10")]}},
-                {"label": "przegląd:bezpieczenstwo", "reply": {"findings": [
+                {"label": "przegląd:security", "reply": {"findings": [
                     finding(title="brak walidacji", file="api/a.py", line=10, risk=3, reach=3, cost="S",
                             evidence="api/a.py:10 bez walidacji"),
                     finding(title="brak sprawdzenia właściciela", file="api/b.py", line=5, risk=4, reach=3, cost="S",
                             evidence="api/b.py:5", blocker="authz")]}},
-                {"label": "przegląd:jakosc", "reply": {"findings": [
+                {"label": "przegląd:quality", "reply": {"findings": [
                     finding(title="podejrzenie martwego kodu", risk=1, reach=1, cost="S")]}},
                 {"label": "raport", "reply": "docs/project/07-review/2026-10-21-code-audit.md"},
                 {"contains": "Spróbuj obalić", "reply": {"refuted": False, "reason": "potwierdzone"}},
@@ -121,8 +121,8 @@ def main() -> int:
             res = out.get("result") or {}
             check(out.get("ok"), f"W-6: przebieg bez błędu: {out.get('error')}")
             types = {c.get("label"): c.get("agentType") for c in out.get("calls", [])}
-            check(types.get("przegląd:architektura") == "architect" and types.get("przegląd:bezpieczenstwo") ==
-                  "security-reviewer" and types.get("przegląd:jakosc") == "specialist",
+            check(types.get("przegląd:architecture") == "architect" and types.get("przegląd:security") ==
+                  "security-reviewer" and types.get("przegląd:quality") == "specialist",
                   f"W-7: wykonawcy wymiarów: {types}")
             inv = next((c for c in out.get("calls", []) if c.get("label") == "inwentarz"), {})
             check(inv.get("model") == "haiku" and "2026-10-21-code-audit-inventory.md" in inv.get("prompt", ""),
@@ -155,8 +155,8 @@ def main() -> int:
             out = run_node(audit, scenario(depth="full"), tmp)
             calls = out.get("calls", [])
             models = {c.get("label"): c.get("model") for c in calls}
-            check(models.get("przegląd:architektura") == "opus" and models.get("przegląd:bezpieczenstwo") == "opus"
-                  and models.get("przegląd:jakosc") is None, f"W-17: pełny — architektura i bezpieczeństwo na opus: {models}")
+            check(models.get("przegląd:architecture") == "opus" and models.get("przegląd:security") == "opus"
+                  and models.get("przegląd:quality") is None, f"W-17: pełny — architektura i bezpieczeństwo na opus: {models}")
             check(any("Spróbuj obalić" in c.get("prompt", "") for c in calls), "W-18: pełny — weryfikacja blokerów i top")
 
             out = run_node(audit, scenario(date=""), tmp)
