@@ -26,7 +26,7 @@ without Jev.
 | A shield for web content | cookbook "Guardrails for LLMs" | `CLAUDE_JEV_GUARD=1` | warns about instructions hidden in pages (ClickFix, prompt injection) |
 | Checking executors' reports | cookbook "SDE cascade" (check → fix) | `CLAUDE_JEV_REPORT_CHECK=1` | an executor will not hand in a report "it works" without evidence or "done" with open points |
 | Judging content in evaluations | "Confidence-gated routing" | `run_skill_evals.py --judge jev` | cheaper judging; haiku judges the uncertain cases |
-| A model tier suggestion | "Composite scoring" | `jev_client.py --tier "<opis>"` | a consistent assessment of task difficulty (the core-cost-control rubric) |
+| A model tier suggestion | "Composite scoring" | `jev_client.py --tier "<description>"` | a consistent assessment of task difficulty (the core-cost-control rubric) |
 
 Details of how it works:
 - **Skill hints.** Stage 1 is a choice among all skills plus 3 gate questions (design work? a specialised procedure?
@@ -44,9 +44,9 @@ Details of how it works:
 Environment variables (the same names as in the official SDK). **Never** write the key in the repository's files.
 
 ```bash
-export TYPESAFE_API_KEY=...                    # z console.typesafe.ai
-# opcjonalnie: TYPESAFE_BASE_URL (domyślnie https://api.typesafe.ai), TYPESAFE_DEFAULT_MODEL (domyślnie jev-latest)
-python3 .claude/hooks/jev_client.py --check    # jedno tanie zapytanie: czy klucz i usługa działają
+export TYPESAFE_API_KEY=...                    # from console.typesafe.ai
+# optional: TYPESAFE_BASE_URL (default https://api.typesafe.ai), TYPESAFE_DEFAULT_MODEL (default jev-latest)
+python3 .claude/hooks/jev_client.py --check    # one cheap request: do the key and the service work
 ```
 
 ## Measure first, then enable
@@ -56,8 +56,8 @@ English, and the state (prompts, documents) is in English or in the human's lang
 Jev on the factory's data:
 
 ```bash
-python3 .tf/factory/jev_calibration.py --routing                                   # słowa vs Jev
-python3 .tf/factory/jev_calibration.py --judge docs/evals/2026-10-02-sonnet.jsonl  # zgodność ocen
+python3 .tf/factory/jev_calibration.py --routing                                   # keywords vs Jev
+python3 .tf/factory/jev_calibration.py --judge docs/evals/2026-10-02-sonnet.jsonl  # agreement of judgements
 ```
 
 You can measure skill hints on all ~270 scenarios for a fraction of a cent. Enable:

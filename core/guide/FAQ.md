@@ -53,29 +53,29 @@ company's documents (e.g. Confluence) with the `org/standards_from_docs.py` scri
 `org/README.md` in the factory repository.
 1. **The skeleton.** In a clone of the factory repository (the output directory must be outside it):
    ```
-   python3 org/new_org_pack.py <firma> --out <katalog> --title "Nazwa firmy"
+   python3 org/new_org_pack.py <company> --out <directory> --title "Company name"
    ```
-2. **Fill in the `TODO` fields** (`grep -rn TODO <katalog>`; a description of every field: `README.md` in the pack):
+2. **Fill in the `TODO` fields** (`grep -rn TODO <directory>`; a description of every field: `README.md` in the pack):
    - `pack.yaml` → `org_defaults.config`: agent operations blocked in the company (`autonomy.operations`, tightening
      only), paths always for a human review (`autonomy.triage`), `tf work` limits (`work`), the cost profile,
      languages;
    - `pack.yaml` → `org_defaults.operations.tracker`: the tracker, issue key prefixes, the Jira field with criteria;
-   - rules checkable with a pattern (`analyzers/<firma>-standards/rules.yaml`, with examples in `fixtures/`): they work
+   - rules checkable with a pattern (`analyzers/<company>-standards/rules.yaml`, with examples in `fixtures/`): they work
      without a model in `tf analyze`; semgrep rules — `semgrep.yml`, used in the `/tf` loop's scan;
-   - the standards skill (`skills/<firma>-standards/`): only findings that need judgement — first the scenarios
+   - the standards skill (`skills/<company>-standards/`): only findings that need judgement — first the scenarios
      in `tests/skill_evals/`, then the content;
    - `settings.json`: Claude Code permissions for the whole company.
-3. **Check** in the factory repository: `python3 tools/workspace.py check --packs pack-it,pack-<firma> --pack-dir
-   <katalog>`.
+3. **Check** in the factory repository: `python3 tools/workspace.py check --packs pack-it,pack-<company> --pack-dir
+   <directory>`.
 4. **Publish** the directory as the company's git repository (with `vX.Y.Z` version tags).
-5. **Install it in a project:** `tf install --pack-dir <adres repozytorium firmy> --add pack-<firma>`. `tf update`
+5. **Install it in a project:** `tf install --pack-dir <company repository address> --add pack-<company>`. `tf update`
    then fetches new versions of the pack.
 
-**A team** has its own pack above the company one: `python3 org/new_org_pack.py <firma> --team <zespół> --out <katalog>`
+**A team** has its own pack above the company one: `python3 org/new_org_pack.py <company> --team <team> --out <directory>`
 (the team's standards, rules and issue prefixes; it only tightens the company's prohibitions). Installation in the
-team's project: `tf install --pack-dir <repo firmy> --pack-dir <repo zespołu> --add pack-<firma>-<zespół>`.
+team's project: `tf install --pack-dir <company repo> --pack-dir <team repo> --add pack-<company>-<team>`.
 
-`tf config show` shows the company's values (the source "organizacja", for a team "zespół"). A project overrides them in
+`tf config show` shows the company's values (the source "organisation", for a team "team"). A project overrides them in
 `.tf/config/config.yaml` and `.tf/config/operations.json`; it will not loosen a prohibition from the company's autonomy
 policy. The pack contains no addresses or tokens (Jira, Confluence): Jira takes the address and credentials from the
 variables `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` (or `JIRA_TOKEN`), and live access to Confluence is a
@@ -129,7 +129,7 @@ avoid it.
 reports), `register/` (the work register), `cache/`, `logs/`, `runs/`, `backup/`; every directory has a `README.md` on
 what is in it and whether it can be deleted. In a private installation the whole `.tf/` is in `.git/info/exclude`, in a
 team one only the reproducible directories go to `.gitignore`. `tf analyze` runs the review modules (`tf analyze --list`)
-and for each one writes `.tf/reports/<moduł>.md` with a list of actions to tick off; a repeated analysis keeps the ticks
+and for each one writes `.tf/reports/<module>.md` with a list of actions to tick off; a repeated analysis keeps the ticks
 and notes, marks what looks fixed and adds new findings at the end. For now only scripts work (floor 0), without a
 model and without cost; modules are added by packs or by your own `.tf/analyzers/` directory.
 
@@ -140,8 +140,8 @@ model and without cost; modules are added by packs or by your own `.tf/analyzers
 - the factory's entries in the Claude Code settings (your permissions and hooks stay) and the permission mode set by a style.
 
 Your files stay: your own skills, `.tf/config/`, the work results in `.tf/`. `--force` removes them too. The command
-never touches `docs/project/` or the project's code. Before a change it saves a copy in `~/.tf/backups/<projekt>-<data>.zip`
-(restoring: `unzip -o <plik> -d <projekt>`).
+never touches `docs/project/` or the project's code. Before a change it saves a copy in `~/.tf/backups/<project>-<date>.zip`
+(restoring: `unzip -o <file> -d <project>`).
 
 ## Where to read next?
 - `.claude/catalog.md` — the personas, roles and skills of this installation.

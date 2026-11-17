@@ -755,13 +755,23 @@ treści (angielska), bez równoległej polskiej.
       `COMPOSE_HINT`, tabela wymiarów) oraz `facets`/`vocabulary` — razem z sekcjami pojęć w skillach fw-/lang-.
     - [ ] tf: panel recenzentów przy wadze pełnej tylko w `references/weight.md` — jedna linia w SKILL.md (Finishing),
       żeby model nie pomijał `run_state.py panel` (scenariusz `waga-pelna-panel-recenzentow` pada przed i po 4b-9).
-    - [x] 4b-10 (2026-11-17): przewodniki `core/guide/` (GUIDE, LOOP, FAQ, JEV, ONBOARDING) po angielsku. Napisy, które
-      drukują skrypty, zostają dosłownie z objaśnieniem (kolumny podglądu, lista „Czeka na Ciebie”, pola opisu PR
-      „Jak sprawdzono / Ryzyko / Jak cofnąć”, linia `Źródło: … · pobrano:`, źródła „organizacja”/„zespół” w
-      `tf config show`, wartości `Rework-Cause`) — do etapu komunikatów. Poprawione przy okazji: GUIDE nie mówi już
-      o pytaniu o język przy instalacji; LOOP podaje `/tf task|question|quick` z polskimi aliasami. Bez próbki Haiku:
-      żaden skill nie odsyła modelu do przewodników, więc scenariusze tej zmiany nie mierzą (testy T-5, T-37, T-39,
-      T-41 i I-9 przechodzą).
+    - [x] 4b-10 (2026-11-17): przewodniki `core/guide/` (GUIDE, LOOP, FAQ, JEV, ONBOARDING) w całości po angielsku —
+      także symbole zastępcze w poleceniach, komentarze w blokach kodu i przykłady (bez jednej polskiej litery; zostają
+      tylko aliasy poleceń `zadanie`/`pytanie`/`szybko`, które skrypt przyjmuje). Napisy skryptów, które przewodniki
+      cytują, też po angielsku: opis PR (`run_state.py pr-body`: Story, Slices, Criteria trace, How it was checked, Risk,
+      How to roll back, Postponed for a decision, Assumptions, Run) z sekcjami `tf risk --md` i `tf trace --md`, cały
+      podgląd `dashboard.html` (kolumny, lista „Waiting for you”, panel plików), katalog komunikatów STOP
+      (`stop_messages.json` — wartości, klucze bez zmian), linie „waiting for you / question / recommended” w
+      `tf status`, linia `Source: … · fetched:` w `ticket.md` (odczyt przyjmuje też `Źródło:`), sekcje „Security”
+      i „Attempt n” w raporcie przebiegu (odczyt summary.md przyjmuje oba nagłówki), źródła w `tf config show`
+      (factory/organisation/team/project/person — także sufiks warstwy `(person)`, po którym kod rozpoznaje preferencje),
+      wartości `Rework-Cause` (`spec-gap`, `agent-error`, `requirement-change`, `unknown`; dawne polskie w starszych
+      commitach liczone jako aliasy w `tf metrics` i retrospektywie). **Naprawiony błąd:** opis PR szukał wyniku skanu
+      w `security/<kawałek>/proba-*`, a skan zapisuje `attempt-<k>` — każdy kawałek miał „brak wyniku” (test PB-24).
+      Zostaje dosłownie: nagłówek `## Odłożone do decyzji` w raporcie przebiegu — pdi (`src/pdi/pr_loop.py`) czyta po
+      nim odłożone sprawy z raportu cięcia (zmiana razem z repozytorium pdi, jak kolumny `plan.md`). Bez próbki Haiku:
+      żaden skill nie odsyła modelu do przewodników; podpowiedzi all 901 · 32/43, `--hints` czysto, bramki tf,
+      core-git-workflow, core-agent-retro przechodzą.
     - [ ] dalsze partie: 4c (pack-docs, pack-ux, mode-team, mode-pdi, org).
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,

@@ -4,7 +4,7 @@
   "offline": "2026-11-17"
  },
  "core-agent-retro": {
-  "fingerprint": "50896d6e1966fb97",
+  "fingerprint": "932e6314e8a4dc95",
   "offline": "2026-11-17"
  },
  "core-agent-security": {
@@ -32,7 +32,7 @@
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
-  "fingerprint": "ac37b689e0705d03",
+  "fingerprint": "9bf9b4a27c93285b",
   "offline": "2026-11-17"
  },
  "core-grounding": {
@@ -80,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "b11010d39f63a0d4",
+  "fingerprint": "31eaa683f7b75289",
   "offline": "2026-11-17"
  }
 }

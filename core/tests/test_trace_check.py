@@ -110,7 +110,7 @@ def main() -> int:
         run(p, TASK, "verify", "PROJ-1", "K2", "--files", "tests/test_free.py", "--command", OK)
         r = run(p, SCRIPT, "PROJ-1", "--md")
         lines = [ln for ln in r.stdout.splitlines() if ln.startswith("| AC-")]
-        check("Czerwony przed kodem" in r.stdout and "| tak |" in lines[0] and "brak zapisu" in lines[1],
+        check("Red before the code" in r.stdout and "| yes |" in lines[0] and "not recorded" in lines[1],
               f"TR-17: tabela ma kolumnę „Czerwony przed kodem”: {r.stdout}")
         check(r.returncode == 0 and len(lines) == 2 and sha1 in lines[0] and "K1" in lines[0] and "verified" in lines[0]
               and sha2 in lines[1] and "tests/test_free.py" in lines[1] and "K2" in lines[1],

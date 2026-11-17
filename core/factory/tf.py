@@ -264,7 +264,7 @@ def cmd_config_show(key: str | None) -> int:
     layers = packs.config_layers(root) if hasattr(packs, "config_layers") else []
     org = next((d for label, d in layers if "org_defaults" in label), {})   # nakładka firmowa
     team = next((d for label, d in layers if "team_defaults" in label), {})   # nakładka zespołu
-    person = next((d for label, d in layers if label.endswith("(osoba)")), {})   # preferencje osoby (tf style)
+    person = next((d for label, d in layers if label.endswith("(person)")), {})   # preferencje osoby (tf style)
     cfg = packs.load_config(root)
     if key == "steps" and cfg.get("steps"):     # kroki pętli /tf z modelem i effortem po nałożeniu profilu kosztów
         full = project_module("build").load_config()
@@ -286,9 +286,9 @@ def cmd_config_show(key: str | None) -> int:
     for k in sorted(cfg):
         shown = json.dumps(cfg[k], ensure_ascii=False)
         shown = shown if len(shown) <= 70 else shown[:67] + "…"
-        src = ("osoba" if k in person else "projekt" if k in own else "zespół" if k in team
-               else "organizacja" if k in org else "fabryka")
-        print(f"{k:<28} {src:<11} {shown}")
+        src = ("person" if k in person else "project" if k in own else "team" if k in team
+               else "organisation" if k in org else "factory")
+        print(f"{k:<28} {src:<12} {shown}")
     for w in (packs.work_style(root).get("warnings") or []) if hasattr(packs, "work_style") else []:
         print(f"⚠ preferencje osoby: {w}")
     print("# Cała wartość jednego klucza: tf config show <klucz>")

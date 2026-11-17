@@ -67,11 +67,11 @@ DEFAULT_RULES: dict = {
     "new_module_skip": [r"^\.", r"^(docs|tests?|__tests__|migrations?|scripts)/"],
 }
 
-LABELS = {"auth": "uwierzytelnianie lub uprawnienia", "payments": "płatności lub rozliczenia",
-          "schema": "schemat lub migracja bazy", "deploy": "wdrożenie, CI, infrastruktura lub sekrety",
-          "spec": "specyfikacja lub kryteria akceptacji", "tests-weakened": "osłabione testy",
-          "evidence-adr": "nowy moduł bez ADR"}
-LEVEL_PL = {"high": "wysokie", "medium": "średnie", "low": "niskie"}
+LABELS = {"auth": "authentication or permissions", "payments": "payments or billing",
+          "schema": "the database schema or a migration", "deploy": "deployment, CI, infrastructure or secrets",
+          "spec": "the specification or acceptance criteria", "tests-weakened": "weakened tests",
+          "evidence-adr": "a new module without an ADR"}
+LEVEL_EN = {"high": "high", "medium": "medium", "low": "low"}
 
 
 def _packs():
@@ -151,21 +151,21 @@ def triage(repo: Path, base: str | None = None, rules: dict | None = None) -> di
         for cat, pats in (rules.get("high") or {}).items():
             if _any(pats, path):
                 items.append({"level": "high", "category": cat, "file": path,
-                              "reason": LABELS.get(cat, cat) + (" (usunięty)" if status == "D" else "")})
+                              "reason": LABELS.get(cat, cat) + (" (deleted)" if status == "D" else "")})
         if _any(rules["test_files"], path):
             if status == "D":
                 items.append({"level": "high", "category": "tests-weakened", "file": path,
-                              "reason": "usunięty plik testów"})
+                              "reason": "a deleted test file"})
                 continue
             added, removed = _lines(repo, base, path)
             a_re, s_re = re.compile(rules["assert_lines"]), re.compile(rules["skip_lines"])
             lost = sum(bool(a_re.search(x)) for x in removed) - sum(bool(a_re.search(x)) for x in added)
             if lost > 0:
                 items.append({"level": "high", "category": "tests-weakened", "file": path,
-                              "reason": f"ubyło asercji: {lost}"})
+                              "reason": f"assertions lost: {lost}"})
             if any(s_re.search(x) for x in added):
                 items.append({"level": "high", "category": "tests-weakened", "file": path,
-                              "reason": "dodane pominięcie testu (skip)"})
+                              "reason": "an added test skip"})
     # D3: dowód — nowy katalog w kodzie (moduł) bez ADR w tej samej zmianie
     base_dirs = {str(Path(p).parent) for p in _git(repo, "ls-tree", "-r", "--name-only", base).splitlines()}
     has_adr = any(_any(rules["adr"], p) for _, p in changed)
@@ -175,7 +175,7 @@ def triage(repo: Path, base: str | None = None, rules: dict | None = None) -> di
                            and not _any(rules["low_docs"], p) and not _any(rules["test_files"], p)})
         for d in new_dirs:
             items.append({"level": "medium", "category": "evidence-adr", "file": d + "/",
-                          "reason": "nowy moduł bez ADR (czy to decyzja architektoniczna?)"})
+                          "reason": "a new module without an ADR (is it an architecture decision?)"})
     files = [p for _, p in changed]
     if any(i["level"] == "high" for i in items):
         level = "high"
@@ -188,17 +188,17 @@ def triage(repo: Path, base: str | None = None, rules: dict | None = None) -> di
 
 
 def to_markdown(res: dict) -> str:
-    lines = [f"## Ryzyko zmiany: {LEVEL_PL[res['level']]}", "",
-             "Triaż doradczy (`tf risk`): nie blokuje merge'a, mówi, co musi przejrzeć człowiek."]
+    lines = [f"## Change risk: {LEVEL_EN[res['level']]}", "",
+             "An advisory triage (`tf risk`): it does not block the merge, it says what a human must review."]
     if res["level"] == "high":
-        lines.append("Zmiana dotyka obszarów wysokiego ryzyka — wymaga zatwierdzenia człowieka po przejrzeniu poniższych.")
+        lines.append("The change touches high-risk areas — it needs a human's approval after reviewing the items below.")
     elif res["level"] == "medium":
-        lines.append("Wymagane: zielone testy i przegląd niezależnego recenzenta.")
+        lines.append("Required: green tests and a review by an independent reviewer.")
     else:
-        lines.append("Tylko dokumentacja albo zależności — przy zielonych testach wystarczy szybki przegląd.")
+        lines.append("Only documentation or dependencies — with green tests a quick review is enough.")
     if res["items"]:
-        lines += ["", "| Poziom | Plik | Powód |", "|---|---|---|"]
-        lines += [f"| {LEVEL_PL[i['level']]} | `{i['file']}` | {i['reason']} |" for i in res["items"]]
+        lines += ["", "| Level | File | Reason |", "|---|---|---|"]
+        lines += [f"| {LEVEL_EN[i['level']]} | `{i['file']}` | {i['reason']} |" for i in res["items"]]
     return "\n".join(lines) + "\n"
 
 

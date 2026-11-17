@@ -149,11 +149,11 @@ def trace(root: Path, key: str, base: str | None = None) -> dict | None:
 
 
 def render_md(rows: list[dict]) -> str:
-    out = ["| Kryterium | Test | Czerwony przed kodem | Commit | Dowód |", "|---|---|---|---|---|"]
+    out = ["| Criterion | Test | Red before the code | Commit | Evidence |", "|---|---|---|---|---|"]
     for r in rows:
         tests = ", ".join(f"`{t}`" for t in r["tests"]) or "—"
         proof = f"{r['slice']}: {r['evidence']}" if r["slice"] else r["evidence"]
-        out.append(f"| {r['criterion']} | {tests} | {'tak' if r.get('red') else 'brak zapisu'} | {r['commit'] or '—'} | {proof} |")
+        out.append(f"| {r['criterion']} | {tests} | {'yes' if r.get('red') else 'not recorded'} | {r['commit'] or '—'} | {proof} |")
     return "\n".join(out)
 
 
@@ -191,7 +191,7 @@ def main(argv: list[str]) -> int:
         for r in rows:
             proof = f"{r['slice']}: {r['evidence']}" if r["slice"] else r["evidence"]
             print(f"  {r['criterion']} → {', '.join(r['tests']) or '—'} → czerwony przed kodem: "
-                  f"{'tak' if r.get('red') else 'brak zapisu'} → {r['commit'] or 'niezacommitowany'} → {proof}")
+                  f"{'yes' if r.get('red') else 'not recorded'} → {r['commit'] or 'niezacommitowany'} → {proof}")
     for e in result["errors"]:
         print(f"✗ {e['rule']}  {e['message']}", file=sys.stderr if a.md else sys.stdout)
     for w in result["warnings"]:

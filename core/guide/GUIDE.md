@@ -17,7 +17,7 @@ Four steps from zero to the first PR. The rest of this file is details for the c
 
 | I want to… | Use | What I get |
 |---|---|---|
-| do a task with acceptance criteria | `/tf <numer zgłoszenia albo treść>` or an ordinary sentence ("deliver EBO-1236") | a plan, tests, code, a commit per slice, one PR |
+| do a task with acceptance criteria | `/tf <issue number or text>` or an ordinary sentence ("deliver EBO-1236") | a plan, tests, code, a commit per slice, one PR |
 | ask about the code, or I do not know where to start | `claude --agent maja` (the `pack-it` pack) | an answer or a choice of people and approach |
 | make a small change | an ordinary `claude` session | a change under the hooks' control, without a plan |
 | work in one role (tests, UX, domain…) | `claude --agent <persona>` from `.claude/catalog.md` | a conversation with the persona and its executors |
@@ -41,15 +41,15 @@ What is installed: `tf list`. The installation's state: `tf doctor`.
 
 **The company pack.** The organisation's standards and default settings (the autonomy policy, `tf risk` rules, `tf work`
 limits, the cost profile, the tracker and issue prefixes) come from one company pack: `tf install --pack-dir
-<repozytorium firmy> --add pack-<firma>`. Its values appear in `tf config show` as "organizacja" (organisation); the
+<company repository> --add pack-<company>`. Its values appear in `tf config show` as "organisation"; the
 project overrides them in `.tf/config/` (it will not loosen the autonomy policy). The pack contains no addresses or
 tokens (Jira, Confluence) — they are in environment variables and Claude Code connections.
 
-**The team pack.** Above the company, a team can have its own pack `pack-<firma>-<zespół>` (the generator:
-`org/new_org_pack.py <firma> --team <zespół>`): code rules, standards, issue prefixes, permissions. The order of layers:
-engine ← company ← team ← project ← person; `tf config show` shows the source ("zespół", team). The team and the project
+**The team pack.** Above the company, a team can have its own pack `pack-<company>-<team>` (the generator:
+`org/new_org_pack.py <company> --team <team>`): code rules, standards, issue prefixes, permissions. The order of layers:
+engine ← company ← team ← project ← person; `tf config show` shows the source ("team"). The team and the project
 only tighten the autonomy policy and only narrow the allowed task modes (`task.allowed_modes`). Installation:
-`tf install --pack-dir <repo firmy> --pack-dir <repo zespołu> --add pack-<firma>-<zespół>`.
+`tf install --pack-dir <company repo> --pack-dir <team repo> --add pack-<company>-<team>`.
 
 ### Private and team installation
 | | Private (default) | Team (`--shared`) |
@@ -82,9 +82,9 @@ section — an update replaces only the section between the factory's markers. T
 version. Details of how instruction files load: the `core-agent-instructions` skill (`references/context-scaling.md`).
 
 ## 2. How to start working
-1. **Choose a persona** from `.claude/catalog.md` and run it: `claude --agent <nazwa>` (e.g. `kuba` — product
+1. **Choose a persona** from `.claude/catalog.md` and run it: `claude --agent <name>` (e.g. `kuba` — product
    engineer, `ewa` — domain analyst, `kasia` — tests, `natalia` — UX). The persona talks with you and delegates
-   work to its executors (`<persona>-<rola>`) and to the shared agents.
+   work to its executors (`<persona>-<role>`) and to the shared agents.
 2. **Do not know whom to choose?** The pack's dispatcher (`maja` in `pack-it`; a domain pack can have its own —
    `tf list` and `.claude/catalog.md`) will recognise a problem described
    in plain text and choose personas, skills and an approach.
@@ -104,7 +104,7 @@ Shared agents, available to every persona:
 - **The project record** in `docs/project/` (the `core-project-record` skill): every phase leaves an artifact with a
   TL;DR and a "Handoff" section, the human's decisions are recorded, and the next session starts from them instead of
   reading the whole code.
-- **A checkpoint** for a longer task: `python3 .claude/hooks/project_record.py wip start "<cel>"`. After a break the
+- **A checkpoint** for a longer task: `python3 .claude/hooks/project_record.py wip start "<goal>"`. After a break the
   session starts from it and from `git status`.
 - **The phases from the idea to maintenance** (personas, gates, readiness): the `core-delivery-lifecycle` skill.
 - **A plan before the code, then TDD:** first a test that fails, then the code. The `tdd_guard` hook blocks production
@@ -116,8 +116,8 @@ Shared agents, available to every persona:
 ## 4. Modes and automation on request
 | What | How | When |
 |---|---|---|
-| the factory loop (in the core) | `/tf <zadanie>` or `claude --agent tf` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview in `.tf/runs/dashboard.html`; guide: `.tf/factory/LOOP.md` |
-| Agent teams (`mode-team`, `tf add mode-team`) | `team_switch.py on`, a new session, `/team-session <zadanie>` | the roles must talk to each other along the way; experimental and expensive; guide: `.tf/factory/packs/mode-team/GUIDE.md` |
+| the factory loop (in the core) | `/tf <task>` or `claude --agent tf` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview in `.tf/runs/dashboard.html`; guide: `.tf/factory/LOOP.md` |
+| Agent teams (`mode-team`, `tf add mode-team`) | `team_switch.py on`, a new session, `/team-session <task>` | the roles must talk to each other along the way; experimental and expensive; guide: `.tf/factory/packs/mode-team/GUIDE.md` |
 | A code audit (`pack-it`) | after the scope is approved: the `/code-audit` workflow | a full audit in many dimensions with a ranking (the `eng-code-audit` skill) |
 | An Event Storming simulation (`pack-it`) | `/ddd-es-simulation` or `claude --agent es-host` | facilitation training with AI participants |
 
@@ -138,7 +138,7 @@ one class of problems; packs provide the modules (`pack-it`, `accessibility` —
 
 - `tf analyze --list` shows the modules and whether they fit the repo; `tf analyze` runs all the fitting ones,
   `--only security,authz` the chosen ones, `--since <commit>` only the files changed since a commit, `--top N` shortens the report.
-- The result: `.tf/reports/<moduł>.md` with a list of actions (checkboxes), `.tf/reports/<moduł>.json` and an overview
+- The result: `.tf/reports/<module>.md` with a list of actions (checkboxes), `.tf/reports/<module>.json` and an overview
   `.tf/reports/README.md`. Every finding has a stable `id`, so a repeated analysis keeps your ticks, and the register
   `.tf/register/items.jsonl` remembers the findings' state between runs. The results are cached per commit
   (`TF_ANALYZE_NO_CACHE=1` turns it off).
@@ -155,14 +155,14 @@ inserts it itself: `run_state.py pr-body`), `--json` a result for scripts. The t
 merge. Your own rules (e.g. price list paths as high risk) you enter in `autonomy.triage` in `.tf/config/config.yaml`.
 
 ### Unsupervised work: `tf work --once`
-`tf work --once --budget 5` takes one task you gave the Auto mode (`tf task mode <KLUCZ> auto` — that is your consent to
+`tf work --once --budget 5` takes one task you gave the Auto mode (`tf task mode <KEY> auto` — that is your consent to
 unsupervised work), of light or normal weight, and runs it with the `/tf --auto` loop in a separate worktree
-(`.tf/worktrees/<KLUCZ>`, the branch `story/<klucz>`). A spending limit is mandatory (`--budget` or `work.budget_usd` in
+(`.tf/worktrees/<KEY>`, the branch `story/<key>`). A spending limit is mandatory (`--budget` or `work.budget_usd` in
 `.tf/config/config.yaml`); the agent works in the `acceptEdits` permission mode: it saves files in its worktree, and any
 other tool outside the allowed list in the `.claude` settings is rejected rather than waiting for you. A lock
 (`.tf/locks/`) holds the task, so two parallel runs will not take the same one. The result is a PR or a STOP block in
 the task's worktree, and an entry goes to `.tf/logs/work.jsonl`; the factory merges and deploys nothing. It does not take
-a task with a worktree again by itself — resuming: `tf work --once --key <KLUCZ>`; all the runs of one task together
+a task with a worktree again by itself — resuming: `tf work --once --key <KEY>`; all the runs of one task together
 will not exceed `work.task_budget_usd` (20 USD by default). `--dry-run` shows the task and the command without running
 it. Only the factory's files (`.claude/`, `.tf/factory/`), the configuration and the task folder go from the
 installation into the worktree — without symlinks and without files outside them (e.g. `.env`). Before the start the
@@ -200,9 +200,8 @@ machine without your credentials.
 - **The factory's effectiveness:** `tf metrics [--weeks 4] [--revert-days 7] [--no-gh]` → `.tf/reports/metrics.md`
   and `metrics.json`: the share of reverted changes, accepted and pending changes, the cost per accepted change, the
   median PR time (from `gh`, unless `--no-gh`) and the causes of fixes. The factory itself adds the cause of a fix in
-  the commit that fixes an earlier change, in the `Rework-Cause:` footer (`luka-specyfikacji` — a specification gap,
-  `blad-agenta` — an agent mistake, `zmiana-wymagan` — a requirement change, `nieznana` — unknown) — you do not have to
-  remember it.
+  the commit that fixes an earlier change, in the `Rework-Cause:` footer (`spec-gap`, `agent-error`, `requirement-change`,
+  `unknown`; the older Polish values in past commits count as their equivalents) — you do not have to remember it.
 - **The rules:** the cheapest sufficient model for the task and escalation only after a failure (the `core-cost-control`
   skill); you do not change the session's model in the middle of a task, because that wipes the cache; with a long
   context the `context_guard` hook suggests a checkpoint and a new session.
@@ -229,19 +228,19 @@ machine without your credentials.
 ## 7. Your own changes
 - **Personas, roles, traits:** YAML files in `.tf/config/personas/`, `.tf/config/roles/`, `.tf/config/traits/`; after a
   change `python3 .tf/factory/build.py`. The files in `.claude/agents/_generated/` are overwritten at a build.
-- **Your own skill:** `tf new skill <nazwa> "<opis z granicami>"` creates a skeleton from the template and a scenarios
-  file. Fill in the scenarios first, then the content (`core-skill-authoring`). `tf skill check <nazwa>` checks the
+- **Your own skill:** `tf new skill <name> "<description with boundaries>"` creates a skeleton from the template and a scenarios
+  file. Fill in the scenarios first, then the content (`core-skill-authoring`). `tf skill check <name>` checks the
   structure, the scenarios and security and says what to fix; an evaluation on a model (`--model …`) is paid. A skill
-  from a foreign source: first `tf skill audit <katalog>` and reading it.
+  from a foreign source: first `tf skill audit <directory>` and reading it.
 - **The factory's files are like `node_modules`:** an update overwrites them; you make a change in the factory repo and
   update. Your own files and settings in `.tf/config/config.yaml` stay (new keys are added at the end).
 
 ### What can I set
 The rule: you add your own next to the factory's files, then an update loses nothing. `tf config show` shows every
-value and where it comes from: from the factory, from the company (organizacja), from the project or from your
-preferences (osoba).
+value and where it comes from: from the factory, from the company (organisation), from the project or from your
+preferences (person).
 
-**Your working style.** `tf style <nazwa>` sets how you want to work with the agent, in all your projects
+**Your working style.** `tf style <name>` sets how you want to work with the agent, in all your projects
 (`~/.tf/preferences.yaml`; only in this project: `--here`, the file `.tf/config/me.yaml`, which never goes into the
 repository). `tf style` without a name shows the current style.
 
@@ -249,7 +248,7 @@ repository). `tf style` without a name shows the current style.
 |---|---|---|
 | `autonomous` | Auto | the agent goes without consent to the plan (not at full weight); a question holds only its own slice |
 | `step-by-step` | normal | you approve the plan; after every slice the agent shows the changes and waits for your consent |
-| `conversation` | Plan | the task ends at the plan; code only when you change the mode (`tf task mode <KLUCZ> normal`). Plus Claude Code's plan mode in the project's `.claude/settings.local.json`: a conversation outside `/tf` also does not change files until you approve the plan (leaving the mode: Shift+Tab) |
+| `conversation` | Plan | the task ends at the plan; code only when you change the mode (`tf task mode <KEY> normal`). Plus Claude Code's plan mode in the project's `.claude/settings.local.json`: a conversation outside `/tf` also does not change files until you approve the plan (leaving the mode: Shift+Tab) |
 
 A style sets Claude Code's permission mode only in place of the default: if you chose your own (e.g. `acceptEdits`), it
 stays, and changing the style gives back what was there before. A style from `~/.tf/preferences.yaml` reaches further
@@ -262,7 +261,7 @@ autonomy policy.
 | I want to change… | Where | How |
 |---|---|---|
 | the models and effort of the `fast` / `std` / `deep` levels | `.tf/config/config.yaml` → `tiers` | enter only the changed fields, then `python3 .tf/factory/build.py` |
-| the overall cost level | the cost profile | `python3 .tf/factory/profile.py <profil>` |
+| the overall cost level | the cost profile | `python3 .tf/factory/profile.py <profile>` |
 | who performs a step of the `/tf` loop and at what level | `.tf/config/config.yaml` → `steps` | e.g. `steps: {review: {tier: deep}}`, then `python3 .tf/factory/build.py`; a preview with the model and effort: `tf config show steps` |
 | the operations the factory asks about or blocks | `.tf/config/config.yaml` → `autonomy` | it can only be tightened (a question → a block) |
 | the language of the conversation and of commits | nothing to set | agents answer in the language you write in; commits in the language of the repository's history (`git log`), in a new repository in English (`.tf/config/config.yaml` → `commit_language.new_repo`) |
@@ -270,7 +269,7 @@ autonomy policy.
 | the project's verification commands | `verify.sh`, `.claude/quality-gate.json` | `tf onboard --yes` or by hand |
 | turning off the quality gate for yourself | `.claude/settings.local.json` → `env` | `"QG_GATE_DISABLE": "1"` — `tf doctor` will keep reminding you |
 | your own persona, role, trait | `.tf/config/personas/`, `roles/`, `traits/` | a YAML file, then `python3 .tf/factory/build.py` |
-| your own skill | `.claude/skills/<nazwa>/` | `tf new skill`, `tf skill check` |
+| your own skill | `.claude/skills/<name>/` | `tf new skill`, `tf skill check` |
 
 ## 8. Command cheat sheet
 | Command | What it does |
@@ -281,28 +280,28 @@ autonomy policy.
 | `tf uninstall [--dry-run] [--yes] [--force]` | uninstalling the factory: removes its files and entries, yours stay (`--force`: your additions too); a copy in `~/.tf/backups/` |
 | `tf add <id>` / `tf remove <id>` | a pack or a mode |
 | `tf list`, `tf doctor [--fix]` | what is installed; the installation's state and repairs |
-| `tf new skill <nazwa> "<opis>"`, `tf skill check <nazwa>`, `tf skill audit <katalog>` | your own skill: a skeleton with scenarios, the quality gate, a security audit |
-| `tf style [<nazwa>] [--here]` | your working style: `autonomous`, `step-by-step`, `conversation`; without a name — the current one |
-| `tf config show [<klucz>]` | the configuration after merging and where every value comes from |
-| `tf spec new <KLUCZ>`, `tf spec check <KLUCZ>` | the task's specification (`spec.md`): a template and a check whether the criteria have Given / When / Then, what stays unchanged and whether there are no blocking questions; with errors the task will not move to the plan |
-| `tf task freeze <KLUCZ> <plik> --by human:<id>`, `tf task reopen <KLUCZ> <plik> --by human:<id> --reason "…"` | protecting the task's basis: a frozen file (e.g. an acceptance test), an approved task file and `spec.md` from the delivery stage on the agent changes only with your consent; `reopen` removes the protection and records the reason |
-| `tf trace <KLUCZ> [--md]` | the trace: every `AC-n` criterion from the specification → a test with that identifier → whether the TDD hook saw it red → a commit → the slice's evidence; a criterion without a test blocks the review; `--md` gives a table for the PR description |
-| `tf task flag <KLUCZ> set <flaga>`, `… none --reason "…"`, `… allow <środowisko> --by human:<id>`, `tf flag check <KLUCZ>` | a feature flag per story: the new behaviour is behind a flag turned on only in the test environment; turning it on elsewhere needs your consent. The factory takes the flags file and the environments from the card `.tf/config/operations.json` (`tf onboard` creates it); without it, it says plainly that the flag has to be checked by hand |
-| `tf task weight <KLUCZ>`, `… --set <waga> [--by human:<id> --reason "…"]` | the task's weight: light (a small change, no specification, one slice), normal or full (login, payments, migrations, secrets — you approve the plan before the code); the factory chooses it itself and gives the reason, anyone can raise it, only you can lower it |
-| `tf task deployed <KLUCZ> [--version X]`, `… --rolled-back --by human:<id>` | a check after deployment: runs the smoke test from the operations card (`deploy.smoke` in `.tf/config/operations.json`) and records the result in the task. Green → the "deployment" stage. Red → the question "roll back?" with the rollback step, the time and the logs command from the card, and the task goes on the "czeka na Ciebie" list; you record the rollback decision. Without a smoke test in the card the factory ends at the merge and says so plainly. The factory deploys nothing and rolls nothing back by itself |
-| `tf task close <KLUCZ> [--lesson "…" --by human:<id>]`, `tf task finding <KLUCZ> control F1 "…"`, `tf status --all` | closing a task: only a merged change, with no deployment waiting for a decision and with a control recorded for every important review finding (a test, a hook, a rule or the reason it is missing); it reminds you about the flag's removal date; it adds a lesson to `docs/project/lessons.md` only on your command. Closed tasks disappear from `tf status` (all of them: `--all`) |
-| `tf task mode <KLUCZ> [plan\|normal\|auto]`, `tf task approve <KLUCZ> plan.md --by human:<id>` | the task's mode: Plan ends at the plan, normal lets the code in after your consent to the plan, Auto goes without consent (not at full weight) |
+| `tf new skill <name> "<description>"`, `tf skill check <name>`, `tf skill audit <directory>` | your own skill: a skeleton with scenarios, the quality gate, a security audit |
+| `tf style [<name>] [--here]` | your working style: `autonomous`, `step-by-step`, `conversation`; without a name — the current one |
+| `tf config show [<key>]` | the configuration after merging and where every value comes from |
+| `tf spec new <KEY>`, `tf spec check <KEY>` | the task's specification (`spec.md`): a template and a check whether the criteria have Given / When / Then, what stays unchanged and whether there are no blocking questions; with errors the task will not move to the plan |
+| `tf task freeze <KEY> <file> --by human:<id>`, `tf task reopen <KEY> <file> --by human:<id> --reason "…"` | protecting the task's basis: a frozen file (e.g. an acceptance test), an approved task file and `spec.md` from the delivery stage on the agent changes only with your consent; `reopen` removes the protection and records the reason |
+| `tf trace <KEY> [--md]` | the trace: every `AC-n` criterion from the specification → a test with that identifier → whether the TDD hook saw it red → a commit → the slice's evidence; a criterion without a test blocks the review; `--md` gives a table for the PR description |
+| `tf task flag <KEY> set <flag>`, `… none --reason "…"`, `… allow <environment> --by human:<id>`, `tf flag check <KEY>` | a feature flag per story: the new behaviour is behind a flag turned on only in the test environment; turning it on elsewhere needs your consent. The factory takes the flags file and the environments from the card `.tf/config/operations.json` (`tf onboard` creates it); without it, it says plainly that the flag has to be checked by hand |
+| `tf task weight <KEY>`, `… --set <weight> [--by human:<id> --reason "…"]` | the task's weight: light (a small change, no specification, one slice), normal or full (login, payments, migrations, secrets — you approve the plan before the code); the factory chooses it itself and gives the reason, anyone can raise it, only you can lower it |
+| `tf task deployed <KEY> [--version X]`, `… --rolled-back --by human:<id>` | a check after deployment: runs the smoke test from the operations card (`deploy.smoke` in `.tf/config/operations.json`) and records the result in the task. Green → the "deployment" stage. Red → the question "roll back?" with the rollback step, the time and the logs command from the card, and the task goes on the "waiting for you" list; you record the rollback decision. Without a smoke test in the card the factory ends at the merge and says so plainly. The factory deploys nothing and rolls nothing back by itself |
+| `tf task close <KEY> [--lesson "…" --by human:<id>]`, `tf task finding <KEY> control F1 "…"`, `tf status --all` | closing a task: only a merged change, with no deployment waiting for a decision and with a control recorded for every important review finding (a test, a hook, a rule or the reason it is missing); it reminds you about the flag's removal date; it adds a lesson to `docs/project/lessons.md` only on your command. Closed tasks disappear from `tf status` (all of them: `--all`) |
+| `tf task mode <KEY> [plan\|normal\|auto]`, `tf task approve <KEY> plan.md --by human:<id>` | the task's mode: Plan ends at the plan, normal lets the code in after your consent to the plan, Auto goes without consent (not at full weight) |
 | `tf status` | the list of tasks: the stage, how many slices have current evidence, which files need refreshing and what waits for you (a question with a recommendation); `tf status --open` opens the preview in a browser |
-| `tf task start <KLUCZ> --title "…"`, `tf task stage <KLUCZ> <etap>`, `tf task status <KLUCZ>` | one place for a task: `docs/project/changes/<KLUCZ>/task.json`; `tf status` gives the list of tasks |
+| `tf task start <KEY> --title "…"`, `tf task stage <KEY> <stage>`, `tf task status <KEY>` | one place for a task: `docs/project/changes/<KEY>/task.json`; `tf status` gives the list of tasks |
 | `tf onboard [--yes] [--verify] [--dry-run] [--json]` | preparing the repository: detecting commands, `verify.sh`, a readiness report, the quality gate, commands in the instruction file |
 | `tf init` | the `.tf/` skeleton for the factory's results (reports, the register, cache, logs) |
-| `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analysing the project with modules → `.tf/reports/<moduł>.md` |
-| `tf risk [--base <gałąź>] [--md\|--json]` | a risk triage of the change on the branch (advisory) |
+| `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analysing the project with modules → `.tf/reports/<module>.md` |
+| `tf risk [--base <branch>] [--md\|--json]` | a risk triage of the change on the branch (advisory) |
 | `tf metrics [--weeks N] [--revert-days N] [--no-gh]` | the factory's effectiveness → `.tf/reports/metrics.md` |
-| `tf work --once --budget <USD> [--key <KLUCZ>] [--dry-run]` | unsupervised work: one task in the Auto mode in a separate worktree, with a spending limit; without merging |
+| `tf work --once --budget <USD> [--key <KEY>] [--dry-run]` | unsupervised work: one task in the Auto mode in a separate worktree, with a spending limit; without merging |
 | `python3 .claude/hooks/guard_bash.py --check-policy` | checking the autonomy policy from `.tf/config/config.yaml` |
 | `python3 .tf/factory/update.py --rollback` | going back to the state from before the last update |
 | `python3 .tf/factory/build.py` | rebuilding the agents and the catalog |
-| `python3 .tf/factory/profile.py <profil>` | the team's cost profile |
+| `python3 .tf/factory/profile.py <profile>` | the team's cost profile |
 | `python3 .tf/factory/cost_report.py --days 7` | a cost report |
 | `python3 .claude/hooks/detect_stack.py` | the project's stack and the skills' compatibility with versions |

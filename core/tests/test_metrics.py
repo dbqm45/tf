@@ -99,7 +99,7 @@ def main() -> int:
         if (cur["reverted"], cur["pending"], cur["accepted"]) != (1, 1, 3) or abs(cur["revert_rate"] - 0.25) > 1e-9:
             fails.append(f"M-2: cofnięte 1, w toku 1, przyjęte 3, odsetek revertów 1/4: {cur}")
         # M-3: przyczyny poprawek z trailera; nieznana wartość → nieznana
-        if cur["rework_causes"] != {"luka-specyfikacji": 1, "nieznana": 1}:
+        if cur["rework_causes"] != {"spec-gap": 1, "unknown": 1}:   # dawna wartość polska → alias
             fails.append(f"M-3: Rework-Cause: {cur['rework_causes']}")
         # M-4: koszt z usage.jsonl w oknie; koszt przyjętej zmiany = koszt / przyjęte; oznaczenie bez pracy ludzi
         if abs((cur["cost_usd"] or 0) - 2.0) > 1e-9 or abs((cur["cost_per_accepted"] or 0) - 2.0 / 3) > 1e-9 \

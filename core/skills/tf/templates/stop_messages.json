@@ -1,119 +1,217 @@
 {
   "question": {
-    "co": "Nie mogę zacząć, bo w zadaniu brakuje informacji, bez której musiałbym zgadywać.",
-    "potrzeba": "Odpowiedzi na pytania wypisane niżej — wystarczy jedno zdanie na każde.",
-    "question": "Czy odpowiesz teraz na te pytania?",
+    "co": "I cannot start, because the task is missing information I would otherwise have to guess.",
+    "potrzeba": "Answers to the questions listed below — one sentence for each is enough.",
+    "question": "Will you answer these questions now?",
     "opcje": [
-      {"opcja": "Odpowiadam teraz", "skutek": "fabryka dopisze odpowiedzi do zadania i ruszy dalej", "rekomendowana": true},
-      {"opcja": "Wstrzymaj zadanie", "skutek": "zadanie zostaje zapisane i czeka; w kodzie nic się nie zmienia"}
+      {
+        "opcja": "I answer now",
+        "skutek": "the factory adds the answers to the task and moves on",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Pause the task",
+        "skutek": "the task is saved and waits; nothing changes in the code"
+      }
     ],
-    "potem": "Po odpowiedziach fabryka wraca do zadania od miejsca, w którym przerwała."
+    "potem": "After the answers the factory returns to the task from the place where it paused."
   },
   "split": {
-    "co": "Zadanie jest za duże na jedną zmianę albo łączy kilka niezależnych rzeczy.",
-    "potrzeba": "Wyboru, od której części zacząć — propozycja podziału jest niżej.",
-    "question": "Którą część zrobić najpierw?",
+    "co": "The task is too big for one change or combines several independent things.",
+    "potrzeba": "A choice of which part to start with — a proposed split is below.",
+    "question": "Which part should be done first?",
     "opcje": [
-      {"opcja": "Pierwsza część z propozycji", "skutek": "fabryka zrobi ją jako osobne zadanie, a pozostałe zapisze do zrobienia później", "rekomendowana": true},
-      {"opcja": "Inny podział", "skutek": "podajesz własny podział, fabryka zaczyna od wskazanej części"},
-      {"opcja": "Całość naraz", "skutek": "większa zmiana, trudniejsza do sprawdzenia; fabryka pokaże plan i poprosi o Twoją zgodę"}
+      {
+        "opcja": "The first part of the proposal",
+        "skutek": "the factory does it as a separate task and records the others for later",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Another split",
+        "skutek": "you give your own split, the factory starts with the part you name"
+      },
+      {
+        "opcja": "Everything at once",
+        "skutek": "a bigger change, harder to check; the factory shows the plan and asks for your consent"
+      }
     ],
-    "potem": "Po wyborze fabryka zakłada zadanie dla wybranej części i zaczyna od planu."
+    "potem": "After your choice the factory creates a task for the chosen part and starts with the plan."
   },
   "source": {
-    "co": "Nie mam treści zadania: nie udało się odczytać zgłoszenia albo nic nie zostało podane.",
-    "potrzeba": "Treści zadania wklejonej w rozmowie albo połączenia z systemem zgłoszeń.",
-    "question": "Jak chcesz przekazać treść zadania?",
+    "co": "I do not have the task's content: the issue could not be read or nothing was given.",
+    "potrzeba": "The task's content pasted in the conversation or a connection to the issue tracker.",
+    "question": "How do you want to give the task's content?",
     "opcje": [
-      {"opcja": "Wklejam treść", "skutek": "fabryka zaczyna od razu, z wklejonego tekstu", "rekomendowana": true},
-      {"opcja": "Podłączę system zgłoszeń", "skutek": "po podłączeniu fabryka odczyta zgłoszenie sama; do tego czasu zadanie czeka"}
+      {
+        "opcja": "I paste the content",
+        "skutek": "the factory starts right away, from the pasted text",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "I will connect the issue tracker",
+        "skutek": "after connecting, the factory reads the issue itself; until then the task waits"
+      }
     ],
-    "potem": "Gdy treść będzie dostępna, fabryka założy zadanie i powie, jak je oceniła."
+    "potem": "When the content is available, the factory creates the task and says how it assessed it."
   },
   "plan-approval": {
-    "co": "Plan jest gotowy i czeka na Twoją zgodę — bez niej fabryka nie zmienia kodu.",
-    "potrzeba": "Przeczytania planu i decyzji: zgoda albo uwagi.",
-    "question": "Czy akceptujesz plan?",
+    "co": "The plan is ready and waits for your consent — without it the factory does not change the code.",
+    "potrzeba": "Reading the plan and a decision: consent or remarks.",
+    "question": "Do you accept the plan?",
     "opcje": [
-      {"opcja": "Tak, zaczynaj", "skutek": "fabryka zapisuje Twoją zgodę i zaczyna zmiany w kodzie", "rekomendowana": true},
-      {"opcja": "Popraw plan", "skutek": "podajesz uwagi, fabryka poprawia plan i pokazuje go ponownie"},
-      {"opcja": "Nie rób tego zadania", "skutek": "zadanie zostaje zapisane, kod pozostaje bez zmian"}
+      {
+        "opcja": "Yes, start",
+        "skutek": "the factory records your consent and starts the changes in the code",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Fix the plan",
+        "skutek": "you give remarks, the factory fixes the plan and shows it again"
+      },
+      {
+        "opcja": "Do not do this task",
+        "skutek": "the task is saved, the code stays unchanged"
+      }
     ],
-    "potem": "Po zgodzie fabryka realizuje plan krok po kroku i pokazuje postęp na podglądzie."
+    "potem": "After your consent the factory carries out the plan step by step and shows the progress in the preview."
   },
   "tests": {
-    "co": "Testy nie przechodzą mimo dwóch prób naprawy.",
-    "potrzeba": "Decyzji, co dalej — niżej jest wynik testów i to, co zostało już sprawdzone.",
-    "question": "Jak postąpić z tą częścią zadania?",
+    "co": "The tests fail despite two repair attempts.",
+    "potrzeba": "A decision on what next — the test results and what has already been checked are below.",
+    "question": "How should this part of the task be handled?",
     "opcje": [
-      {"opcja": "Spróbuj inną drogą", "skutek": "fabryka proponuje inne rozwiązanie tej części i próbuje ponownie", "rekomendowana": true},
-      {"opcja": "Zmieniam wymaganie", "skutek": "podajesz poprawione wymaganie, fabryka dostosowuje testy i kod"},
-      {"opcja": "Przerwij zadanie", "skutek": "zrobione części zostają, reszta czeka na Ciebie"}
+      {
+        "opcja": "Try another way",
+        "skutek": "the factory proposes another solution for this part and tries again",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "I change the requirement",
+        "skutek": "you give the corrected requirement, the factory adjusts the tests and the code"
+      },
+      {
+        "opcja": "Abandon the task",
+        "skutek": "the finished parts stay, the rest waits for you"
+      }
     ],
-    "potem": "Po decyzji fabryka wraca do tej części zadania; wcześniejsze części zostają bez zmian."
+    "potem": "After your decision the factory returns to this part of the task; the earlier parts stay unchanged."
   },
   "scan": {
-    "co": "Kontrola bezpieczeństwa znalazła problem, którego nie udało się usunąć w dwóch próbach.",
-    "potrzeba": "Decyzji o znalezionym problemie — opis i miejsce w kodzie są niżej.",
-    "question": "Co zrobić ze znalezionym problemem?",
+    "co": "The security check found a problem that could not be removed in two attempts.",
+    "potrzeba": "A decision about the problem found — the description and the place in the code are below.",
+    "question": "What should be done with the problem found?",
     "opcje": [
-      {"opcja": "Napraw inaczej", "skutek": "fabryka próbuje innego rozwiązania i powtarza kontrolę", "rekomendowana": true},
-      {"opcja": "To fałszywy alarm", "skutek": "podajesz uzasadnienie, fabryka zapisuje wyjątek z Twoim podpisem i idzie dalej"},
-      {"opcja": "Przerwij zadanie", "skutek": "ta część nie trafia do kodu; reszta czeka na Ciebie"}
+      {
+        "opcja": "Fix it another way",
+        "skutek": "the factory tries another solution and repeats the check",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "It is a false alarm",
+        "skutek": "you give a reason, the factory records an exception with your signature and moves on"
+      },
+      {
+        "opcja": "Abandon the task",
+        "skutek": "this part does not go into the code; the rest waits for you"
+      }
     ],
-    "potem": "Po decyzji fabryka powtarza kontrolę bezpieczeństwa, zanim zapisze tę część."
+    "potem": "After your decision the factory repeats the security check before it saves this part."
   },
   "budget": {
-    "co": "Koszt zadania przekroczył ustalony limit.",
-    "potrzeba": "Zgody na dalszy koszt albo decyzji o zakończeniu — niżej jest dotychczasowy koszt i to, co zostało do zrobienia.",
-    "question": "Czy kontynuować mimo przekroczenia limitu?",
+    "co": "The task's cost exceeded the agreed limit.",
+    "potrzeba": "Consent to further cost or a decision to finish — the cost so far and what is left to do are below.",
+    "question": "Should the work continue despite exceeding the limit?",
     "opcje": [
-      {"opcja": "Zakończ na tym, co zrobione", "skutek": "gotowe części trafiają do przeglądu, reszta jest zapisana jako niezrobiona", "rekomendowana": true},
-      {"opcja": "Podnieś limit", "skutek": "podajesz nowy limit, fabryka kończy zadanie"}
+      {
+        "opcja": "Finish with what is done",
+        "skutek": "the finished parts go to review, the rest is recorded as not done",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Raise the limit",
+        "skutek": "you give a new limit, the factory finishes the task"
+      }
     ],
-    "potem": "Po decyzji fabryka albo kończy zadanie, albo zamyka je raportem z tym, co zostało."
+    "potem": "After your decision the factory either finishes the task or closes it with a report of what is left."
   },
   "environment": {
-    "co": "Repozytorium albo narzędzia nie są gotowe do pracy.",
-    "potrzeba": "Przygotowania tego, co wypisano niżej — na przykład zapisania własnych zmian albo doinstalowania narzędzia.",
-    "question": "Czy przygotujesz to teraz?",
+    "co": "The repository or the tools are not ready for work.",
+    "potrzeba": "Preparing what is listed below — for example saving your own changes or installing a tool.",
+    "question": "Will you prepare it now?",
     "opcje": [
-      {"opcja": "Przygotuję i dam znać", "skutek": "fabryka zaczyna od tego samego miejsca, gdy potwierdzisz", "rekomendowana": true},
-      {"opcja": "Wstrzymaj zadanie", "skutek": "nic się nie zmienia; zadanie czeka"}
+      {
+        "opcja": "I will prepare it and let you know",
+        "skutek": "the factory starts from the same place when you confirm",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Pause the task",
+        "skutek": "nothing changes; the task waits"
+      }
     ],
-    "potem": "Po Twoim potwierdzeniu fabryka sprawdza gotowość jeszcze raz i rusza dalej."
+    "potem": "After your confirmation the factory checks readiness once more and moves on."
   },
   "dependency": {
-    "co": "Zadanie wymaga nowej biblioteki albo jej wersji, która jest zbyt świeża, żeby dodać ją bez Twojej decyzji.",
-    "potrzeba": "Decyzji o tej bibliotece — nazwa, wersja i powód są niżej.",
-    "question": "Czy dodać tę bibliotekę?",
+    "co": "The task needs a new library or a version of it that is too fresh to add without your decision.",
+    "potrzeba": "A decision about this library — the name, the version and the reason are below.",
+    "question": "Should this library be added?",
     "opcje": [
-      {"opcja": "Użyj starszej wersji albo poczekaj", "skutek": "fabryka bierze wersję, która przeszła okres karencji, albo wstrzymuje tę część", "rekomendowana": true},
-      {"opcja": "Dodaj mimo to", "skutek": "biblioteka zostaje dodana, a Twoja zgoda jest zapisana w opisie zmiany"},
-      {"opcja": "Zrób bez niej", "skutek": "fabryka szuka rozwiązania bez nowej biblioteki"}
+      {
+        "opcja": "Use an older version or wait",
+        "skutek": "the factory takes a version that has passed the waiting period, or pauses this part",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Add it anyway",
+        "skutek": "the library is added, and your consent is recorded in the change description"
+      },
+      {
+        "opcja": "Do it without it",
+        "skutek": "the factory looks for a solution without a new library"
+      }
     ],
-    "potem": "Po decyzji fabryka wraca do tej części zadania."
+    "potem": "After your decision the factory returns to this part of the task."
   },
   "contract": {
-    "co": "Zadanie wymaga decyzji, która zmienia umowę z innymi: publiczne API, strukturę danych albo regułę biznesową.",
-    "potrzeba": "Twojej decyzji — warianty i ich skutki są niżej.",
-    "question": "Który wariant wybrać?",
+    "co": "The task needs a decision that changes the agreement with others: a public API, a data structure or a business rule.",
+    "potrzeba": "Your decision — the variants and their consequences are below.",
+    "question": "Which variant should be chosen?",
     "opcje": [
-      {"opcja": "Wariant zgodny wstecz", "skutek": "dotychczasowe zachowanie zostaje, nowe dochodzi obok", "rekomendowana": true},
-      {"opcja": "Zmiana niezgodna wstecz", "skutek": "inni użytkownicy tej części muszą się dostosować; fabryka opisuje to w zmianie"},
-      {"opcja": "Wstrzymaj do ustalenia", "skutek": "zadanie czeka, aż decyzja zapadnie poza fabryką"}
+      {
+        "opcja": "A backward-compatible variant",
+        "skutek": "the existing behaviour stays, the new one is added next to it",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "A backward-incompatible change",
+        "skutek": "other users of this part have to adapt; the factory describes this in the change"
+      },
+      {
+        "opcja": "Pause until it is settled",
+        "skutek": "the task waits until the decision is made outside the factory"
+      }
     ],
-    "potem": "Po decyzji fabryka dopisuje ją do zadania i poprawia plan."
+    "potem": "After your decision the factory adds it to the task and corrects the plan."
   },
   "permissions": {
-    "co": "Ten krok jest zastrzeżony dla człowieka: dotyczy produkcji, publikacji albo włączenia funkcji poza środowiskiem testowym.",
-    "potrzeba": "Żebyś wykonał ten krok samodzielnie albo wyraźnie się na niego zgodził.",
-    "question": "Kto wykona ten krok?",
+    "co": "This step is reserved for a human: it concerns production, publishing or turning a feature on outside the test environment.",
+    "potrzeba": "That you perform this step yourself or explicitly agree to it.",
+    "question": "Who will perform this step?",
     "opcje": [
-      {"opcja": "Zrobię to sam", "skutek": "fabryka podaje dokładne polecenie i czeka na wynik", "rekomendowana": true},
-      {"opcja": "Zgadzam się, wykonaj", "skutek": "fabryka wykonuje krok i zapisuje Twoją zgodę"},
-      {"opcja": "Nie teraz", "skutek": "zadanie kończy się bez tego kroku"}
+      {
+        "opcja": "I will do it myself",
+        "skutek": "the factory gives the exact command and waits for the result",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "I agree, do it",
+        "skutek": "the factory performs the step and records your consent"
+      },
+      {
+        "opcja": "Not now",
+        "skutek": "the task ends without this step"
+      }
     ],
-    "potem": "Po wykonaniu kroku fabryka zamyka zadanie raportem."
+    "potem": "After the step is performed the factory closes the task with a report."
   }
 }

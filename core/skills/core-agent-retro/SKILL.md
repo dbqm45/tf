@@ -62,7 +62,7 @@ No more often than once per stage — a retrospective after every session is noi
 | a recurring trap of the project (first time) | the project's lessons (docs/project/lessons.md) | format and limit from core-project-record |
 | the same mistake **a second time** or a lesson every executor has to know | a rule in `CLAUDE.md` | the inclusion test from core-agent-instructions |
 | the agent retries an action a hook rejects (`block:<hook>:deny` ≥3) | a lesson with a substitute; on a repeat a rule in `CLAUDE.md` | what the hook blocked — from the record and transcripts, because the block log does not store content; core-project-record, core-agent-instructions |
-| fixes with the cause `blad-agenta` or `luka-specyfikacji` (≥2) | a plan before the code or a specification before the plan | core-delivery-lifecycle, `tf spec check` |
+| fixes with the cause `agent-error` or `spec-gap` (≥2) | a plan before the code or a specification before the plan | core-delivery-lifecycle, `tf spec check` |
 | a skill was not used although it fitted (missed) / was hinted pointlessly | `metadata.keywords`, the description, the skill's boundaries | core-skill-authoring, then `.tf/factory/skill_gate.py <skill>` |
 | a skill gave bad advice or an outdated fact | the skill's content, the review date | core-skill-authoring, `.tf/factory/freshness.py --reviewed` |
 | an executor constantly "too low" / "too high" or expensive on simple tasks | the role's tier, the choice of executor | core-cost-control (cascade), `.tf/config/roles/*.yaml` |

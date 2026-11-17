@@ -23,8 +23,8 @@ PLAN = ("# Plan: Limit dobowy\n\n"
         "- [ ] K2 — komunikat o limicie · pliki: msg.py\n\n"
         "- **[założenie]** doba liczy się od północy czasu lokalnego\n")
 ROLLBACK = "Wdróż poprzednią wersję: ./deploy.sh --previous (ok. 5 minut)"
-ORDER = ("## Historyjka", "## Kawałki", "## Ślad kryteriów", "## Jak sprawdzono", "## Ryzyko", "## Jak cofnąć",
-         "## Odłożone do decyzji", "## Założenia")
+ORDER = ("## Story", "## Slices", "## Criteria trace", "## How it was checked", "## Risk", "## How to roll back",
+         "## Postponed for a decision", "## Assumptions")
 
 
 def call(project: Path, script: Path, *args: str) -> subprocess.CompletedProcess:
@@ -84,6 +84,12 @@ def section(text: str, heading: str) -> str:
     return rest.split("\n## ", 1)[0]
 
 
+def body_after(p, rs, d):
+    """Opis PR po ponownym złożeniu."""
+    call(p, rs, "pr-body", d, "--base", "main")
+    return (p / ".tf" / "runs" / "IMP-1" / "pr-body.md").read_text(encoding="utf-8")
+
+
 def main() -> int:
     fails, total = [], 0
 
@@ -106,33 +112,33 @@ def main() -> int:
         pos = [text.find(h) for h in ORDER]
         check(all(x >= 0 for x in pos) and pos == sorted(pos),
               f"PB-2: opis ma stałe sekcje w stałej kolejności (m.in. Jak sprawdzono, Ryzyko, Jak cofnąć): {pos}")
-        story = section(text, "## Historyjka")
-        check("Limit dobowy" in story and "IMP-1" in story and "wklejone w rozmowie" in story
+        story = section(text, "## Story")
+        check("Limit dobowy" in story and "IMP-1" in story and "pasted in the conversation" in story
               and "docs/project/changes/IMP-1" in story,
               f"PB-3: historyjka: tytuł, klucz, źródło zgłoszenia i katalog zadania: {story}")
-        pieces = section(text, "## Kawałki")
+        pieces = section(text, "## Slices")
         check("K1" in pieces and "feat(fees): add the daily cap" in pieces and "K2" in pieces
               and "komunikat o limicie" in pieces,
               f"PB-4: kawałki z planu, przy zrobionym commit ze stopką „Kawałek K1”: {pieces}")
-        how = section(text, "## Jak sprawdzono")
-        check("K1" in how and how.count("3 passed") == 1 and "kod wyjścia 0" in how and "evidence/K1-1.json" in how
+        how = section(text, "## How it was checked")
+        check("K1" in how and how.count("3 passed") == 1 and "exit code 0" in how and "evidence/K1-1.json" in how
               and OK.split(" -c ")[1][:12] in how,
               f"PB-5: Jak sprawdzono: polecenie (bez jego wyjścia), kod wyjścia i plik dowodu kawałka K1: {how}")
-        check("K2" in how and "brak dowodu" in how,
+        check("K2" in how and "no verification evidence" in how,
               f"PB-6: kawałek bez dowodu jest nazwany wprost: {how}")
-        check(r.stdout.count("K2") >= 1 and "brak dowodu" in r.stdout,
+        check(r.stdout.count("K2") >= 1 and "no evidence" in r.stdout,
               f"PB-7: brak dowodu jest też w komunikacie polecenia: {r.stdout}")
-        risk = section(text, "## Ryzyko")
-        check("zwykła" in risk and "Ryzyko zmiany" in risk and "fees.py" not in section(text, "## Jak cofnąć"),
+        risk = section(text, "## Risk")
+        check("normal" in risk and "Change risk" in risk and "fees.py" not in section(text, "## How to roll back"),
               f"PB-8: Ryzyko: waga zadania i wynik triażu ryzyka: {risk}")
-        back = section(text, "## Jak cofnąć")
+        back = section(text, "## How to roll back")
         check("git revert" in back and "bez flagi, bo zmiana jest w konfiguracji" in back,
               f"PB-9: bez karty i bez flagi: git revert i zapisany powód braku flagi: {back}")
-        check("brak" in section(text, "## Odłożone do decyzji"),
+        check("none" in section(text, "## Postponed for a decision"),
               f"PB-10: nic odłożonego → „brak”: {section(text, '## Odłożone do decyzji')}")
-        check("- **[założenie]** doba liczy się od północy" in section(text, "## Założenia"),
+        check("- **[założenie]** doba liczy się od północy" in section(text, "## Assumptions"),
               f"PB-11: założenia z planu trafiają do opisu: {section(text, '## Założenia')}")
-        check("AC-1" in section(text, "## Ślad kryteriów"),
+        check("AC-1" in section(text, "## Criteria trace"),
               f"PB-12: ślad kryteriów ze specyfikacji: {section(text, '## Ślad kryteriów')}")
 
         # czerwony dowód, odłożona sprawa, karta operacyjna z krokiem cofania, werdykt skanu, wynik plan_drift
@@ -149,42 +155,51 @@ def main() -> int:
         call(p, rs, "step", d, "PR", "plan_drift", "pass")
         r = call(p, rs, "pr-body", d, "--base", "main")
         text = body(p)
-        how = section(text, "## Jak sprawdzono")
-        check(r.returncode == 0 and "K2" in how and "czerwon" in how and "kod wyjścia 3" in how,
+        how = section(text, "## How it was checked")
+        check(r.returncode == 0 and "K2" in how and "red" in how and "exit code 3" in how,
               f"PB-13: czerwony dowód kawałka jest nazwany wprost: {how}")
         check("PASS" in how and "plan_drift" in how and "pass" in how,
               f"PB-14: werdykt skanu bezpieczeństwa i wynik plan_drift są w „Jak sprawdzono”: {how}")
-        back = section(text, "## Jak cofnąć")
+        # PB-24: skan kawałka zapisuje próby w security/<kawałek>/attempt-<k>/ (security_scan.py) — opis bierze ostatnią
+        for k, status in ((1, "PASS"), (2, "FAIL")):
+            att = p / ".tf" / "runs" / "IMP-1" / "security" / "K2" / f"attempt-{k}"
+            att.mkdir(parents=True)
+            (att / "verdict.json").write_text(json.dumps({"status": status, "blocking": [], "other": [], "errors": []}),
+                                              encoding="utf-8")
+        k2 = [ln for ln in section(body_after(p, rs, d), "## How it was checked").splitlines() if "**K2**" in ln]
+        check(k2 and k2[0].rstrip().endswith("FAIL"),
+              f"PB-24: werdykt skanu z ostatniej próby attempt-<k> (security_scan.py): {k2}")
+        back = section(text, "## How to roll back")
         check(ROLLBACK in back and "operations.json" in back and "git revert" in back,
               f"PB-15: krok cofania z karty operacyjnej, obok git revert: {back}")
-        check("Abonamenty — czy limit ich dotyczy" in section(text, "## Odłożone do decyzji"),
+        check("Abonamenty — czy limit ich dotyczy" in section(text, "## Postponed for a decision"),
               f"PB-16: sprawa odłożona jest w opisie: {section(text, '## Odłożone do decyzji')}")
 
         card.write_text(json.dumps({"deploy": {"rollback": ROLLBACK, "rollback_minutes": 12}}, ensure_ascii=False),
                         encoding="utf-8")
         call(p, rs, "pr-body", d, "--base", "main")
-        check("ok. 12 min" in section(body(p), "## Jak cofnąć"),
+        check("about 12 min" in section(body(p), "## How to roll back"),
               f"PB-23: czas cofnięcia z karty (rollback_minutes) jest w opisie: {section(body(p), '## Jak cofnąć')}")
 
         card.write_text('{"deploy": {"rollback": "cofnij", "rollback_minutes": 1%s}}' % ("0" * 400), encoding="utf-8")
         r = call(p, rs, "pr-body", d, "--base", "main")
-        check(r.returncode == 0 and "Traceback" not in r.stderr and "cofnij" in section(body(p), "## Jak cofnąć"),
+        check(r.returncode == 0 and "Traceback" not in r.stderr and "cofnij" in section(body(p), "## How to roll back"),
               f"PB-24: ogromna liczba w rollback_minutes nie wywraca opisu PR: {r.stderr[-200:]}")
 
         # flaga zadania → wyłączenie flagi jako krok cofania
         r = call(p, rs, "flag", d, "set", "limit-dobowy", "--remove-by", "2027-01-31")
         call(p, rs, "pr-body", d, "--base", "main")
-        back = section(body(p), "## Jak cofnąć")
-        check(r.returncode == 0 and "limit-dobowy" in back and "wyłącz" in back.lower(),
+        back = section(body(p), "## How to roll back")
+        check(r.returncode == 0 and "limit-dobowy" in back and "turn off" in back.lower(),
               f"PB-17: z flagą zadania cofnięcie zaczyna się od wyłączenia flagi: {r.stdout} {back}")
 
         # treść z karty to dane: nagłówek z karty nie staje się sekcją opisu
-        card.write_text(json.dumps({"deploy": {"rollback": "## Ryzyko\nbrak\n" + ROLLBACK}}, ensure_ascii=False),
+        card.write_text(json.dumps({"deploy": {"rollback": "## Risk\nnone\n" + ROLLBACK}}, ensure_ascii=False),
                         encoding="utf-8")
         call(p, rs, "pr-body", d, "--base", "main")
         text = body(p)
-        check(text.count("\n## Ryzyko") == 1 and ROLLBACK in text,
-              f"PB-18: nagłówek wpisany w karcie nie tworzy drugiej sekcji: {text.count(chr(10) + '## Ryzyko')}")
+        check(text.count("\n## Risk") == 1 and ROLLBACK in text,
+              f"PB-18: nagłówek wpisany w karcie nie tworzy drugiej sekcji: {text.count(chr(10) + '## Risk')}")
 
         # treść z zewnątrz (tytuł zgłoszenia, karta, odłożone) nie powiadamia ludzi i nie ładuje obrazów w opisie PR
         card.write_text(json.dumps({"deploy": {"rollback": "Zapytaj @octocat ![x](http://example.com/p.png)"}}),
@@ -212,7 +227,7 @@ def main() -> int:
 
         # bez gałęzi bazowej opis nadal powstaje
         r = call(p, rs, "pr-body", d, "--base", "nie-ma-takiej")
-        check(r.returncode == 0 and "## Jak cofnąć" in body(p) and "nie-ma-takiej" in section(body(p), "## Kawałki"),
+        check(r.returncode == 0 and "## How to roll back" in body(p) and "nie-ma-takiej" in section(body(p), "## Slices"),
               f"PB-19: nieznana gałąź bazowa nie zatrzymuje opisu, a brak commitów jest nazwany: {r.returncode} {r.stdout}")
 
     # waga lekka: bez specyfikacji — pola nadal są
@@ -221,8 +236,8 @@ def main() -> int:
         d = new_run(p, "light")
         r = call(p, rs, "pr-body", d, "--base", "main")
         text = body(p)
-        check(r.returncode == 0 and all(h in text for h in ORDER) and "light" in section(text, "## Ryzyko")
-              and "specyfikacj" in section(text, "## Ślad kryteriów"),
+        check(r.returncode == 0 and all(h in text for h in ORDER) and "light" in section(text, "## Risk")
+              and "specification" in section(text, "## Criteria trace"),
               f"PB-20: zadanie bez specyfikacji ma wszystkie pola, a ślad mówi wprost, że jej nie ma: {r.returncode} {r.stdout}")
 
     # przebieg bez zadania (stary układ) → czytelna odmowa

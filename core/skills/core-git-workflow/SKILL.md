@@ -23,7 +23,7 @@ metadata:
   `--amend` only for the last, unpushed commit and at an explicit request).
 - One commit = one logical change; small, frequent commits (easy review and revert).
 - A commit fixing something after a PR review or after a task came back for a fix: the trailer `Rework-Cause:` with one value —
-  `luka-specyfikacji`, `blad-agenta` (the requirement was clear), `zmiana-wymagan` or `nieznana` (not by default);
+  `spec-gap`, `agent-error` (the requirement was clear), `requirement-change` or `unknown` (not by default);
   `tf metrics` counts the causes of fixes from them.
 
 ## Before a commit

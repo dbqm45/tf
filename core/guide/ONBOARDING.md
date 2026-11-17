@@ -7,18 +7,18 @@ This file takes you from zero to a working factory in a project. Daily work: `GU
 You need Python 3 and git.
 
 ```bash
-git clone <adres repozytorium fabryki> ~/tools/tf
+git clone <factory repository address> ~/tools/tf
 python3 ~/tools/tf/core/factory/tf.py --install-launcher
 ```
 
-- The script copies `tf` to `~/.local/bin` (another directory: `--bin <katalog>`; on Windows `tf.cmd` is also created).
+- The script copies `tf` to `~/.local/bin` (another directory: `--bin <directory>`; on Windows `tf.cmd` is also created).
 - It records the repository address in `tf`: from `--repo <url>`, from the `TF_REPO` variable or from the clone's `origin`.
 - `~/.local/bin` must be in `PATH`.
 - `tf` runs code from that repository, so point it only at one you trust.
 
 ## 2. In the project: installation
 ```bash
-cd ~/projects/moja-aplikacja
+cd ~/projects/my-app
 tf
 ```
 
@@ -51,7 +51,7 @@ Private — when the factory is only your tool. Team — when it is to work for 
 1. In the project directory run `claude` and accept trust in the folder. Without that, hooks and permissions do not
    work.
 2. Check the installation: `tf doctor` (repair: `tf doctor --fix`), the list of packs and modes: `tf list`.
-3. Choose a persona from `.claude/catalog.md` and run it: `claude --agent <nazwa>`. Next: `.tf/factory/GUIDE.md`.
+3. Choose a persona from `.claude/catalog.md` and run it: `claude --agent <name>`. Next: `.tf/factory/GUIDE.md`.
 
 ## 5. Cloud sessions (claude.ai/code)
 - The factory's hooks work only in a session started in the project repository's directory.

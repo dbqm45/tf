@@ -655,7 +655,7 @@ def cmd_panel(run_dir: Path, record: list[str] | None, note: str, base: str | No
         return r.returncode
     weight = task_weight(run_dir, meta)
     if weight != "full":
-        print(f"Waga zadania: {WEIGHT_PL.get(weight, weight or '?')}. To zadanie nie wymaga panelu recenzentów (dotyczy tylko "
+        print(f"Waga zadania: {WEIGHT_EN.get(weight, weight or '?')}. To zadanie nie wymaga panelu recenzentów (dotyczy tylko "
               "wagi pełnej); przegląd zakresu kawałków zostaje jak zwykle.")
         return 0
     docs = run_report.docs_dir(run_dir, meta)
@@ -1036,9 +1036,9 @@ def cmd_next(run_dir: Path, project: Path) -> int:
 
 
 # --- opis PR składany z plików zadania (krok G2) -------------------------------------------------------------------
-WEIGHT_PL = {"light": "light", "normal": "zwykła", "full": "pełna"}
+WEIGHT_EN = {"light": "light", "normal": "normal", "full": "full"}
 CARD = Path(".tf") / "config" / "operations.json"
-ASSUMPTION = re.compile(r"\[zało[żz]eni", re.I)
+ASSUMPTION = re.compile(r"\[(zało[żz]eni|assumption)", re.I)
 BASES = ("origin/main", "main", "origin/master", "master")
 
 
@@ -1105,7 +1105,8 @@ def last_evidence(docs: Path) -> dict[str, tuple[str, dict]]:
 def scan_status(run_dir: Path, slice_id: str) -> str | None:
     """Werdykt skanu bezpieczeństwa kawałka (ostatnia próba); None, gdy skanu nie było albo wynik jest nieczytelny."""
     base = run_dir / "security" / slice_id
-    tries = sorted(base.glob("proba-*/verdict.json"), key=lambda f: int(re.sub(r"\D", "", f.parent.name) or 0))
+    tries = sorted([*base.glob("attempt-*/verdict.json"), *base.glob("proba-*/verdict.json")],   # proba-: starsze przebiegi
+                   key=lambda f: int(re.sub(r"\D", "", f.parent.name) or 0))
     try:
         status = json.loads((tries[-1] if tries else base / "verdict.json").read_text(encoding="utf-8")).get("status")
     except (OSError, ValueError, AttributeError):
@@ -1125,7 +1126,7 @@ def rollback_steps(project: Path) -> tuple[list[str], str]:
     steps = [s for s in (as_data(x) for x in lines if isinstance(x, str)) if s][:10]
     try:
         timed = isinstance(mins, (int, float)) and not isinstance(mins, bool) and 0 < mins < 100000
-        return steps, (f"ok. {float(mins):g} min" if steps and timed else "")
+        return steps, (f"about {float(mins):g} min" if steps and timed else "")
     except (OverflowError, ValueError):
         return steps, ""
 
@@ -1150,91 +1151,91 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
     base_args = ["--base", found] if found else []
 
     ticket = read_text(docs / "ticket.md") or ""
-    source = next((ln for ln in ticket.splitlines() if ln.startswith("Źródło:")), None)
-    out = ["## Historyjka", "", f"**{as_data(meta.get('title') or task.get('title') or key, 200)}** ({code_span(key)})", ""]
+    source = next((ln for ln in ticket.splitlines() if ln.startswith(("Source:", "Źródło:"))), None)
+    out = ["## Story", "", f"**{as_data(meta.get('title') or task.get('title') or key, 200)}** ({code_span(key)})", ""]
     if source:
         out.append(f"- {as_data(source, 300)}")
     if meta.get("change") or task.get("change"):
-        out.append(f"- Zmiana pdi: {as_data(meta.get('change') or task.get('change'), 40)}"
-                   + (f", cięcie {as_data(meta['task'], 40)}" if meta.get("task") else ""))
+        out.append(f"- pdi change: {as_data(meta.get('change') or task.get('change'), 40)}"
+                   + (f", cut {as_data(meta['task'], 40)}" if meta.get("task") else ""))
     try:
         rel_docs = docs.resolve().relative_to(project.resolve()).as_posix()
     except ValueError:
         rel_docs = str(docs)
-    out.append(f"- Pliki zadania: `{rel_docs}/` (zgłoszenie, specyfikacja, plan, dowody)")
+    out.append(f"- Task files: `{rel_docs}/` (issue, specification, plan, evidence)")
 
-    out += ["", "## Kawałki", ""]
+    out += ["", "## Slices", ""]
     for s in slices:
-        out.append(f"- [{'x' if s['checked'] else ' '}] **{s['id']}** — {as_data(s['value'], 200)} · stan: "
-                   f"{states.get(s['id'], 'bez wpisu w zadaniu')} · commit: "
-                   + (code_span(commits[s['id']]) if s['id'] in commits else "brak"))
+        out.append(f"- [{'x' if s['checked'] else ' '}] **{s['id']}** — {as_data(s['value'], 200)} · state: "
+                   f"{states.get(s['id'], 'no entry in the task')} · commit: "
+                   + (code_span(commits[s['id']]) if s['id'] in commits else "none"))
     if not slices:
-        out.append("- brak planu (`plan.md`)")
+        out.append("- no plan (`plan.md`)")
     if not found:
-        out.append(f"- Commitów kawałków nie ustalono: git nie zna gałęzi bazowej {code_span(base or ', '.join(BASES))}.")
+        out.append(f"- The slices' commits were not determined: git does not know the base branch {code_span(base or ', '.join(BASES))}.")
 
-    out += ["", "## Ślad kryteriów", ""]
+    out += ["", "## Criteria trace", ""]
     if (docs / "spec.md").is_file():
         out.append(engine_md(project, "trace_check.py", key, "--md", *base_args)
-                   or "- Śladu nie udało się policzyć (`tf trace`).")
+                   or "- The trace could not be computed (`tf trace`).")
     else:
-        out.append("- Zadanie nie ma specyfikacji (`spec.md`) — waga lekka jej nie wymaga, więc śladu kryteriów nie ma.")
+        out.append("- The task has no specification (`spec.md`) — the light weight does not need one, so there is no criteria trace.")
 
-    out += ["", "## Jak sprawdzono", ""]
+    out += ["", "## How it was checked", ""]
     missing = []
     for s in slices:
         rel, ev = proofs.get(s["id"], (None, {}))
-        scan = scan_status(run_dir, s["id"]) or "brak wyniku"
+        scan = scan_status(run_dir, s["id"]) or "no result"
         if rel is None:
-            line, why = "**brak dowodu weryfikacji**", "brak dowodu"
+            line, why = "**no verification evidence**", "no evidence"
         else:
             code = ev.get("exit_code")
             green = code == 0
-            why = None if green else f"czerwony dowód, kod wyjścia {code}"
-            line = (f"{'zielone' if green else '**czerwone**'}: {code_span(ev.get('command') or '?')} (kod wyjścia {code}, "
-                    f"{as_data(ev.get('at') or 'bez daty', 40)}, dowód `{rel}`)")
+            why = None if green else f"red evidence, exit code {code}"
+            line = (f"{'green' if green else '**red**'}: {code_span(ev.get('command') or '?')} (exit code {code}, "
+                    f"{as_data(ev.get('at') or 'no date', 40)}, evidence `{rel}`)")
             state = states.get(s["id"])
             if green and state and state != "verified":
-                line += f" — **dowód nieaktualny** (stan: {state})"
-                why = f"dowód nieaktualny, stan: {state}"
+                line += f" — **evidence out of date** (state: {state})"
+                why = f"evidence out of date, state: {state}"
         if why:
             missing.append(f"{s['id']} ({why})")
-        out.append(f"- **{s['id']}** — {line} · skan bezpieczeństwa: {scan}")
+        out.append(f"- **{s['id']}** — {line} · security scan: {scan}")
     if not slices:
-        out.append("- brak kawałków w planie, więc nie ma dowodów weryfikacji")
+        out.append("- no slices in the plan, so there is no verification evidence")
     drift = (meta.get("pr_steps") or {}).get("drift")
-    out += [f"- Zgodność z planem (`plan_drift`): {drift if drift in STATES else 'nie zapisano'}",
-            f"- Dowody są w `{rel_docs}/evidence/` (w tym PR); pełne wyjście poleceń zostaje poza repozytorium."]
+    out += [f"- Agreement with the plan (`plan_drift`): {drift if drift in STATES else 'not recorded'}",
+            f"- The evidence is in `{rel_docs}/evidence/` (in this PR); the full command output stays outside the repository."]
 
-    out += ["", "## Ryzyko", "", f"- Waga zadania: {WEIGHT_PL.get(task.get('weight'), 'nie zapisano')}", ""]
-    out.append(engine_md(project, "risk_triage.py", "--md", *base_args) or "- Triażu ryzyka nie udało się policzyć (`tf risk`).")
+    out += ["", "## Risk", "", f"- The task's weight: {WEIGHT_EN.get(task.get('weight'), 'not recorded')}", ""]
+    out.append(engine_md(project, "risk_triage.py", "--md", *base_args) or "- The risk triage could not be computed (`tf risk`).")
 
     flag = task.get("flag") if isinstance(task.get("flag"), dict) else {}
     steps = []
     if flag.get("key"):
-        steps.append(f"Wyłącz flagę {code_span(flag['key'])} — zmiana przestaje działać bez wdrożenia.")
+        steps.append(f"Turn off the flag {code_span(flag['key'])} — the change stops working without a deployment.")
     card_steps, card_time = rollback_steps(project)
-    steps += [f"{s} _(z karty operacyjnej `{CARD.as_posix()}`)_" for s in card_steps]
-    steps.append("Kod: `git revert <commit scalenia>` na gałęzi domyślnej, potem zwykłe wdrożenie.")
-    out += ["", "## Jak cofnąć", "", *(f"{i}. {s}" for i, s in enumerate(steps, 1)), ""]
+    steps += [f"{s} _(from the operations card `{CARD.as_posix()}`)_" for s in card_steps]
+    steps.append("Code: `git revert <merge commit>` on the default branch, then an ordinary deployment.")
+    out += ["", "## How to roll back", "", *(f"{i}. {s}" for i, s in enumerate(steps, 1)), ""]
     if not flag.get("key"):
-        out.append(f"- Flaga: brak — {as_data(flag['none'], 300)}." if flag.get("none") else
-                   "- Flaga: nie zapisano w zadaniu (flagi może prowadzić człowiek).")
+        out.append(f"- Flag: none — {as_data(flag['none'], 300)}." if flag.get("none") else
+                   "- Flag: not recorded in the task (a human may run the flags).")
     if card_time:
-        out.append(f"- Czas cofnięcia według karty operacyjnej: {card_time}.")
+        out.append(f"- The rollback time according to the operations card: {card_time}.")
     if not card_steps:
-        out.append(f"- Karta operacyjna (`{CARD.as_posix()}`, pole `deploy.rollback`) nie opisuje cofania wdrożenia — "
-                   "powyżej krok domyślny.")
+        out.append(f"- The operations card (`{CARD.as_posix()}`, the `deploy.rollback` field) does not describe rolling back a "
+                   "deployment — the default step above.")
 
-    out += ["", "## Odłożone do decyzji", "", *([f"- {as_data(x, 400)}" for x in run_report.parked_items(run_dir)] or ["- brak"])]
+    out += ["", "## Postponed for a decision", "", *([f"- {as_data(x, 400)}" for x in run_report.parked_items(run_dir)] or ["- none"])]
     notes = [as_data(ln, 400) for name in ("plan.md", "spec.md")
              for ln in (read_text(docs / name) or "").splitlines() if ASSUMPTION.search(ln)]
-    out += ["", "## Założenia", "", *([f"- {n}" for n in notes] or ["- brak zapisanych założeń"])]
+    out += ["", "## Assumptions", "", *([f"- {n}" for n in notes] or ["- no recorded assumptions"])]
     usage = meta.get("usage") if isinstance(meta.get("usage"), dict) else None
     if usage and isinstance(usage.get("cost_usd"), (int, float)):
-        out += ["", "## Przebieg", "", f"- Koszt do tej chwili: {usage['cost_usd']:.2f} USD (szacunek z cennika API), "
-                f"czas: {usage.get('minutes', '?')} min. Pełny raport: `report.md` w katalogu zadania."]
-    out += ["", "_Opis złożony skryptem `run_state.py pr-body` z plików zadania._"]
+        out += ["", "## Run", "", f"- The cost so far: {usage['cost_usd']:.2f} USD (an estimate from the API price list), "
+                f"time: {usage.get('minutes', '?')} min. The full report: `report.md` in the task directory."]
+    out += ["", "_The description was assembled by the `run_state.py pr-body` script from the task's files._"]
     return "\n".join(out) + "\n", missing
 
 
@@ -1389,15 +1390,15 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
             dot = "warn" if parked else ""
         (work if task_dir and name == "parked.md" else main).append({"name": name, "dot": dot, "text": text})
     if main:
-        groups.append({"grp": f"Zadanie (git) · {task_dir}/" if task_dir else "Przebieg", "items": main})
+        groups.append({"grp": f"Task (git) · {task_dir}/" if task_dir else "Run", "items": main})
     if work:
-        groups.append({"grp": f"Robocze · .tf/runs/{meta.get('key')}/", "items": work})
+        groups.append({"grp": f"Working · .tf/runs/{meta.get('key')}/", "items": work})
     proofs = evidence_items(docs) if task_dir else []
     if proofs:
-        groups.append({"grp": "Dowody", "items": proofs})
+        groups.append({"grp": "Evidence", "items": proofs})
     code = code_items(run_dir, proofs) if task_dir else []
     if code:
-        groups.append({"grp": "Kod kawałków (pliki z dowodów)", "items": code})
+        groups.append({"grp": "The slices' code (files from the evidence)", "items": code})
     sec_root = run_dir / "security"
     sec = []
     for f in sorted(sec_root.glob("**/summary.md")) if sec_root.is_dir() else []:
@@ -1406,7 +1407,7 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
             sec.append({"name": f"security/{f.parent.relative_to(sec_root).as_posix()}/summary.md".replace("//", "/"),
                         "dot": dot_for(text), "text": text})
     if sec:
-        groups.append({"grp": "Bezpieczeństwo", "items": sec})
+        groups.append({"grp": "Security", "items": sec})
     result = []
     if stage == "needs" and needs == "stop":
         cur = (meta.get("current") or {}).get("k")
@@ -1420,9 +1421,9 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     if report is not None:
         result.append({"name": "report.md", "dot": "ok", "text": report})
     if result:
-        groups.append({"grp": "Wynik", "items": result})
+        groups.append({"grp": "Result", "items": result})
     if not groups:
-        groups.append({"grp": "Przebieg", "items": [{"name": "run.json", "dot": "",
+        groups.append({"grp": "Run", "items": [{"name": "run.json", "dot": "",
                                                        "text": json.dumps(meta, ensure_ascii=False, indent=1)}]})
     return groups
 
@@ -1508,9 +1509,9 @@ def sentence(text: str | None, capital: bool = False) -> str:
 def stop_hint(meta: dict, cur: dict | None) -> str:
     """Opis zatrzymania na karcie: co się stało, powód z przebiegu i co zrobić — każda część osobnym zdaniem."""
     label = (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or "")
-    resume = (cur or {}).get("k") or "bieżącego kawałka"
+    resume = (cur or {}).get("k") or "the current slice"
     return " ".join(x for x in (sentence(label, capital=True), sentence(meta.get("stop_text") or "STOP"),
-                                f"Zdecyduj i napisz w sesji: wznów od {resume}") if x)
+                                f"Decide and write in the session: resume from {resume}") if x)
 
 
 def waiting_items(project: Path, view: dict | None) -> list[dict]:

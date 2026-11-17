@@ -1050,33 +1050,33 @@ def waiting(root: Path, task: dict) -> list[dict]:
     if isinstance(run, dict) and run.get("stage") == "needs":
         since = run.get("needs_at")
         if run.get("needs") == "plan":
-            out.append({"kind": "plan", "what": "plan czeka na Twoją zgodę", "details": f"{(CHANGES / key).as_posix()}/plan.md",
-                        "question": "Czy zatwierdzasz plan?", "options": [], "recommended": None,
+            out.append({"kind": "plan", "what": "the plan waits for your consent", "details": f"{(CHANGES / key).as_posix()}/plan.md",
+                        "question": "Do you approve the plan?", "options": [], "recommended": None,
                         "how": f"tf task approve {key} plan.md --by human:<id>", "since": since})
         elif run.get("needs") == "stop":
             msg = stop_message(root, run.get("stop_code"))
             options = [{"opcja": o.get("opcja"), "skutek": o.get("skutek"), "rekomendowana": bool(o.get("rekomendowana"))}
                        for o in msg.get("opcje") or [] if isinstance(o, dict)]
             out.append({"kind": "stop", "code": run.get("stop_code"),
-                        "what": msg.get("co") or f"przebieg zatrzymany ({run.get('stop_code') or 'bez kodu'})",
+                        "what": msg.get("co") or f"the run stopped ({run.get('stop_code') or 'no code'})",
                         "details": run.get("stop_text"), "question": msg.get("question"), "options": options,
                         "recommended": next((o["opcja"] for o in options if o["rekomendowana"]), None),
                         "how": msg.get("potem"), "since": since})
     dep = task.get("deploy") if isinstance(task.get("deploy"), dict) else {}
     if dep.get("state") == "red":
-        out.append({"kind": "deploy", "what": "test dymny po wdrożeniu jest czerwony", "details": dep.get("why"),
-                    "question": "Wycofać wdrożenie?",
-                    "options": [{"opcja": "wycofaj", "skutek": rollback_text(deploy_card(root)), "rekomendowana": True},
-                                {"opcja": "napraw i wdróż ponownie",
-                                 "skutek": "zmiana zostaje wdrożona do czasu poprawki", "rekomendowana": False}],
-                    "recommended": "wycofaj",
-                    "how": f"po wycofaniu: tf task deployed {key} --rolled-back --by human:<id>; po naprawie "
-                           f"i ponownym wdrożeniu: tf task deployed {key}", "since": dep.get("at")})
+        out.append({"kind": "deploy", "what": "the smoke test after the deployment is red", "details": dep.get("why"),
+                    "question": "Roll back the deployment?",
+                    "options": [{"opcja": "roll back", "skutek": rollback_text(deploy_card(root)), "rekomendowana": True},
+                                {"opcja": "fix and deploy again",
+                                 "skutek": "the change stays deployed until the fix", "rekomendowana": False}],
+                    "recommended": "roll back",
+                    "how": f"after rolling back: tf task deployed {key} --rolled-back --by human:<id>; after a fix "
+                           f"and a new deployment: tf task deployed {key}", "since": dep.get("at")})
     for k, (state, why) in slice_states(root, task).items():
         if state == "blocked":
-            out.append({"kind": "kawalek", "slice": k, "what": f"kawałek {k} czeka na Twoją odpowiedź", "details": why,
+            out.append({"kind": "kawalek", "slice": k, "what": f"slice {k} waits for your answer", "details": why,
                         "question": None, "options": [], "recommended": None,
-                        "how": f"po odpowiedzi: tf task slice {key} {k} planned", "since": None})
+                        "how": f"after the answer: tf task slice {key} {k} planned", "since": None})
     return out
 
 
@@ -1119,10 +1119,10 @@ def cmd_list(root: Path, as_json: bool, show_all: bool = False) -> int:
         for name in r["stale"]:
             print(f"    {name}: do odświeżenia (tf task check {r['key']})")
         for w in r["waiting"]:
-            print(f"    czeka na Ciebie: {w['what']}" + (f" — {w['details']}" if w.get("details") else ""))
+            print(f"    waiting for you: {w['what']}" + (f" — {w['details']}" if w.get("details") else ""))
             if w.get("question"):
-                print(f"      pytanie: {w['question']}"
-                      + (f" (rekomendacja: {w['recommended']})" if w.get("recommended") else ""))
+                print(f"      question: {w['question']}"
+                      + (f" (recommended: {w['recommended']})" if w.get("recommended") else ""))
             if w.get("how") and w["kind"] != "stop":
                 print(f"      {w['how']}")
     if closed and not show_all:

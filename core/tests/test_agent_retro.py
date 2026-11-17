@@ -261,7 +261,7 @@ def main() -> int:
         if shutil.which("git"):
             git(root, "init", "-q", "-b", "main")
             commit(root, {"a.py": "1\n"}, "feat: a", "2026-10-12T10:00:00")
-            for i, cause in enumerate(("blad-agenta", "blad-agenta", "luka-specyfikacji")):
+            for i, cause in enumerate(("agent-error", "blad-agenta", "spec-gap")):   # dawna wartość → alias
                 commit(root, {"a.py": f"{i + 2}\n"}, f"fix: a {i}\n\nRework-Cause: {cause}", f"2026-10-1{3 + i}T10:00:00")
         d = json.loads(run(root, "--json").stdout or "{}")
         ev = {e["key"]: e for e in d.get("evidence", [])}
@@ -271,10 +271,10 @@ def main() -> int:
         check("block:guard_bash:deny" in sug and "block:guard_paths:ask" not in sug,
               f"AR-37: propozycja dopiero przy ≥3 odmowach tego samego hooka: {sorted(sug)}")
         if shutil.which("git"):
-            check(ev.get("rework-cause:blad-agenta", {}).get("n") == 2
-                  and ev.get("rework-cause:luka-specyfikacji", {}).get("n") == 1,
+            check(ev.get("rework-cause:agent-error", {}).get("n") == 2
+                  and ev.get("rework-cause:spec-gap", {}).get("n") == 1,
                   f"AR-38: przyczyny poprawek z trailera Rework-Cause: {sorted(ev)}")
-            check("rework-cause:blad-agenta" in sug and "rework-cause:luka-specyfikacji" not in sug,
+            check("rework-cause:agent-error" in sug and "rework-cause:spec-gap" not in sug,
                   f"AR-39: propozycja przy ≥2 poprawkach z tą samą przyczyną: {sorted(sug)}")
         md = run(root).stdout
         check("guard_bash" in md and "Blokady hooków" in md, f"AR-40: raport markdown pokazuje blokady hooków: {md[:600]}")
