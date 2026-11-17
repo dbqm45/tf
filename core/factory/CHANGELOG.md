@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [18.1.0] — 2026-11-17
+### Added
+- **core:** English skill content support and pilot translation of core-stack-sync (#296)
+
 ## [18.0.0] — 2026-11-17
 ### Breaking
 - English project record syntax and artifact file names (#295)
