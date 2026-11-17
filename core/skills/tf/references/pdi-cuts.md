@@ -58,4 +58,4 @@ remarks (confirmed by a second model) and the cause of a red check from the CI l
 No new slices, refactorings or plan changes; a remark that cannot be fixed within the slice's scope you do not get around —
 you describe it in one sentence in the answer. Then the product's verification (`./verify.sh`), a commit of the files by name:
 `fix(<zakres>): <opis>` with `Runda pętli PR <k>` and the footers `Change: TSK-n` and `Rework-Cause:` (per the remark with the biggest
-effect: luka-specyfikacji / blad-agenta / zmiana-wymagan / nieznana — core-git-workflow). The push, the PR and CI are done by pdi.
+effect: spec-gap / agent-error / requirement-change / unknown — core-git-workflow). The push, the PR and CI are done by pdi.

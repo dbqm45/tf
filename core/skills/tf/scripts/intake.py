@@ -465,7 +465,7 @@ def render(out: dict) -> str:
                   "environment": "ze zmiennych środowiska"}.get(out["tracker_from"], "")
         lines.append(f"Tracker: {out['tracker']} ({origin})" if out["tracker"] else "Tracker: nieznany")
     if out["source"]:
-        lines.append(f"Źródło: {out['source']}")
+        lines.append(f"Source: {out['source']}")
     if out["changes"]:
         lines.append(f"Zmiana: {', '.join(out['changes'])}")
     if out["stage"]:
@@ -540,7 +540,7 @@ def main(argv: list[str]) -> int:
             print(f"✗ {e}. Inna droga: {PASTE}.")
             return 2
         print(json.dumps(ticket, ensure_ascii=False, indent=1) if as_json
-              else f"# {ticket['title']}\n\nŹródło: {ticket['source']}\n\n{ticket['text']}")
+              else f"# {ticket['title']}\n\nSource: {ticket['source']}\n\n{ticket['text']}")
         return 0
     if cmd != "resolve":
         print("Użycie: intake.py resolve [--json] <wejście…> | intake.py tracker [<typ> [--prefix <PREFIKS>]] | "

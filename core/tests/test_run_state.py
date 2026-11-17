@@ -546,7 +546,7 @@ def main() -> int:
               f"K-3: message --json: {r.stdout[:200]}")
         r = run(SCRIPT, ["stage", str(d5), "needs", "--needs", "stop", "--code", "tests", "--reason",
                          "pytest: 2 failed (test_fees.py)"], proj, cfg)
-        check(r.returncode == 0 and "Co się stało: Testy nie przechodzą" in r.stdout and "pytest: 2 failed (test_fees.py)" in r.stdout
+        check(r.returncode == 0 and "The tests fail" in r.stdout and "pytest: 2 failed (test_fees.py)" in r.stdout
               and "Pytanie:" in r.stdout and "AskUserQuestion" in r.stdout,
               f"K-4: zapis STOP drukuje komunikat dla człowieka z powodem przebiegu: {r.stdout}")
         html = (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8")

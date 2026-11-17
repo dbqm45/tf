@@ -133,7 +133,7 @@ def main() -> int:
             fails.append(f"R-org: reguła organizacji z nakładki firmowej: {res['level']} {reasons(res)}")
         # R-md: sekcja do opisu PR — poziom, lista z plikiem i powodem, uwaga, że to doradztwo
         md = m.to_markdown(m.triage(repo_with(t, "md", {"src/auth/login.py": "x = 1\n"}), base="main"))
-        if "## Ryzyko zmiany: wysokie" not in md or "src/auth/login.py" not in md or "doradcz" not in md:
+        if "## Change risk: high" not in md or "src/auth/login.py" not in md or "advisory" not in md:
             fails.append(f"R-md: sekcja opisu PR: {md[:300]}")
         # R-cli: --json bez wyjątku, kod 0 (doradczy — także przy high)
         repo = repo_with(t, "cli", {"src/auth/x.py": "x = 1\n"})

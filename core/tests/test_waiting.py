@@ -55,14 +55,14 @@ def main() -> int:
         check(r.returncode == 0, f"przygotowanie: start przebiegu: {r.stdout} {r.stderr}")
 
         r = call(p, cfg, TASK, "list")
-        check(r.returncode == 0 and "czeka na Ciebie" not in r.stdout and rows(p, cfg).get("IMP-1", {}).get("waiting") == [],
+        check(r.returncode == 0 and "waiting for you" not in r.stdout and rows(p, cfg).get("IMP-1", {}).get("waiting") == [],
               f"Z-1: zadanie w toku na nikogo nie czeka: {r.stdout}")
 
         # plan czeka na zgodę człowieka
         call(p, cfg, SCRIPTS / "run_state.py", "stage", d, "needs", "--needs", "plan")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
-        check("czeka na Ciebie" in r.stdout and "plan" in r.stdout and "approve IMP-1 plan.md" in r.stdout,
+        check("waiting for you" in r.stdout and "plan" in r.stdout and "approve IMP-1 plan.md" in r.stdout,
               f"Z-2: tf status mówi, że plan czeka na zgodę, i jak ją zapisać: {r.stdout}")
         check(len(w) == 1 and w[0].get("kind") == "plan" and re.match(r"\d{4}-\d{2}-\d{2}T", str(w[0].get("since"))),
               f"Z-3: list --json: jeden wpis „plan” z czasem, od kiedy czeka: {w}")
@@ -72,8 +72,8 @@ def main() -> int:
              "pytest: 2 failed (test_fees.py)")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
-        check("czeka na Ciebie" in r.stdout and "Testy nie przechodzą" in r.stdout and "pytest: 2 failed" in r.stdout
-              and "pytanie:" in r.stdout and "rekomendacja:" in r.stdout,
+        check("waiting for you" in r.stdout and "The tests fail" in r.stdout and "pytest: 2 failed" in r.stdout
+              and "question:" in r.stdout and "recommended:" in r.stdout,
               f"Z-4: tf status pokazuje zatrzymanie: co się stało, powód, pytanie i rekomendację: {r.stdout}")
         check(len(w) == 1 and w[0].get("kind") == "stop" and w[0].get("code") == "tests"
               and str(w[0].get("question", "")).endswith("?") and w[0].get("recommended")
@@ -88,23 +88,23 @@ def main() -> int:
               and cw[0].get("since") == w[0].get("since"),
               f"Z-6: karta podglądu ma tę samą listę oczekujących co tf status: {cw}")
         hint = card.get("stopHint") or ""
-        check(".." not in hint and "naprawy. pytest: 2 failed (test_fees.py). Zdecyduj" in hint and "r.stopHint" in html,
+        check(".." not in hint and "attempts. pytest: 2 failed (test_fees.py). Decide" in hint and "r.stopHint" in html,
               f"Z-6a: opis zatrzymania na karcie składa się z pełnych zdań (bez „..” i bez zlanych zdań): {hint!r}")
-        check('id="waiting"' in html and "Czeka na Ciebie" in html and "r.waiting" in html and "rekomendowana" in html,
+        check('id="waiting"' in html and "Waiting for you" in html and "r.waiting" in html and "rekomendowana" in html,
               "Z-7: szablon rysuje wyróżnioną listę „Czeka na Ciebie” z pytaniem i rekomendacją")
 
         # po wznowieniu nic nie czeka
         call(p, cfg, SCRIPTS / "run_state.py", "stage", d, "intake")
         r = call(p, cfg, TASK, "list")
         meta = json.loads((p / ".tf" / "runs" / "IMP-1" / "run.json").read_text(encoding="utf-8"))
-        check("czeka na Ciebie" not in r.stdout and "needs_at" not in meta,
+        check("waiting for you" not in r.stdout and "needs_at" not in meta,
               f"Z-8: po wznowieniu przebiegu zadanie nie czeka: {r.stdout} {meta}")
 
         # kawałek zablokowany pytaniem też czeka na człowieka
         call(p, cfg, TASK, "slice", "IMP-1", "K2", "blocked", "--reason", "nie wiadomo, czy limit dotyczy abonamentów")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
-        check("czeka na Ciebie" in r.stdout and "K2" in r.stdout and "abonamentów" in r.stdout
+        check("waiting for you" in r.stdout and "K2" in r.stdout and "abonamentów" in r.stdout
               and w[0].get("kind") == "kawalek" and w[0].get("slice") == "K2",
               f"Z-9: zablokowany kawałek jest na liście oczekujących z powodem: {r.stdout} {w}")
 
@@ -113,7 +113,7 @@ def main() -> int:
         call(p, cfg, SCRIPTS / "run_state.py", "dashboard", "--no-cost")
         card = next((x for x in runs_json((p / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
                      if x.get("key") == "IMP-1"), {})
-        code = next((g for g in card.get("files", []) if g.get("grp", "").startswith("Kod")), {})
+        code = next((g for g in card.get("files", []) if g.get("grp", "").startswith("The slices' code")), {})
         item = next((i for i in code.get("items", []) if i.get("name") == "K1 · fees.py"), {})
         check("LIMIT = 45" in item.get("text", ""),
               f"Z-10: panel plików ma grupę kodu z plikami kawałka (z dowodu): {[g.get('grp') for g in card.get('files', [])]}")

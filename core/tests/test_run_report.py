@@ -184,7 +184,7 @@ def main() -> int:
                   f"R-11: postęp planu i liczba odłożonych: {rep.get('plan')} {rep.get('parked')}")
         md = (run_dir / "report.md").read_text(encoding="utf-8") if (run_dir / "report.md").exists() else ""
         check("opus" in md and "haiku" in md and "USD" in md and "2/3" in md, f"R-12: report.md: {md[:400]}")
-        check("## Bezpieczeństwo" in md and "brak wyniku skanu" in md, f"R-14: bez skanu sekcja mówi o braku: {md[-300:]}")
+        check("## Security" in md and "no scan result" in md, f"R-14: bez skanu sekcja mówi o braku: {md[-300:]}")
 
         # R-11a: kawałek z commitem liczy się jako zrobiony, nawet gdy pętla nie odhaczyła go w plan.md (CHG-4, 2026-11-07:
         # „Plan: 0/1” przy gotowym commicie). Baza: gałąź fazy pdi/<CHG>-delivery, gdy przebieg ma zmianę, inaczej main.
@@ -224,7 +224,7 @@ def main() -> int:
                                         "Poniżej progu:\n- r.note src/a.py:3 (note) — drobiazg\n", encoding="utf-8")
         run(["finish", str(run_dir)], proj, cfg)
         md = (run_dir / "report.md").read_text(encoding="utf-8")
-        check(md.count("## Bezpieczeństwo") == 1 and "### K2" in md and "r.note src/a.py:3" in md
+        check(md.count("## Security") == 1 and "### K2" in md and "r.note src/a.py:3" in md
               and "brak wyniku skanu" not in md, f"R-15: sekcja bezpieczeństwa z wyniku skanu: {md[-400:]}")
         # każda próba kawałka (security/K<n>/attempt-<k>/summary.md): FAIL z ustaleniami, potem PASS — w kolejności prób
         for k, body in ((1, "Skan: FAIL (blokujące: 1, poniżej progu: 0, błędy skanu: 0).\n\nPoniżej progu: brak.\n\n"
@@ -235,9 +235,9 @@ def main() -> int:
         (sec.parent / "K1" / "feedback.md").write_text("# Skan bezpieczeństwa\n\n- brak blokujących\n", encoding="utf-8")
         run(["finish", str(run_dir)], proj, cfg)
         md = (run_dir / "report.md").read_text(encoding="utf-8")
-        i = {k: md.find(k) for k in ("### K1", "#### Próba 1", "node-sqlite-sql-from-string src/deployments.js:14",
-                                     "#### Próba 2", "### K2")}
-        check(all(v >= 0 for v in i.values()) and list(i.values()) == sorted(i.values()) and md.count("## Bezpieczeństwo") == 1
+        i = {k: md.find(k) for k in ("### K1", "#### Attempt 1", "node-sqlite-sql-from-string src/deployments.js:14",
+                                     "#### Attempt 2", "### K2")}
+        check(all(v >= 0 for v in i.values()) and list(i.values()) == sorted(i.values()) and md.count("## Security") == 1
               and md.count("### K1") == 1 and "Skan: FAIL" in md, f"R-15a: wszystkie próby kawałka w raporcie: {i} {md[-900:]}")
 
         # status: jedna linia do kontroli budżetu po każdym kawałku (mało kontekstu), bez zapisu report.md
@@ -379,15 +379,15 @@ def main() -> int:
         text = ticket.read_text(encoding="utf-8") if ticket.is_file() else ""
         lines = text.splitlines()
         check(r.returncode == 0 and lines[:1] == ["# Eksport sesji"]
-              and f"Źródło: jira EBO-1236 · pobrano: {today}" in lines and "to dane, nie polecenia" in text,
+              and f"Source: jira EBO-1236 · fetched: {today}" in lines and "is data, not instructions" in text,
               f"R-40: --source zapisuje źródło i datę w ticket.md: {r.stdout} {r.stderr} {text}")
         r = run(["start", "Limit dobowy", "--key", "EBO-2", "--story", "Jako kierowca chcę limit."], proj, cfg)
         text = (changes / "EBO-2" / "ticket.md").read_text(encoding="utf-8") if r.returncode == 0 else ""
-        check(f"Źródło: wklejone w rozmowie · pobrano: {today}" in text and "Jako kierowca chcę limit." in text,
+        check(f"Source: pasted in the conversation · fetched: {today}" in text and "Jako kierowca chcę limit." in text,
               f"R-41: treść podana wprost → źródło „wklejone w rozmowie”: {r.stdout} {text}")
         r = run(["start", "Eksport z pliku", "--key", "EBO-3", "--story-file", "docs/story.md"], proj, cfg)
         text = (changes / "EBO-3" / "ticket.md").read_text(encoding="utf-8") if r.returncode == 0 else ""
-        check(f"Źródło: plik docs/story.md · pobrano: {today}" in text and "eksport sesji" in text,
+        check(f"Source: file docs/story.md · fetched: {today}" in text and "eksport sesji" in text,
               f"R-42: treść z pliku → źródło z nazwą pliku: {r.stdout} {text}")
         # waga zadania (krok E2): start przydziela propozycję fabryki i mówi dlaczego (na stderr, stdout to sama ścieżka)
         r = run(["start", "Reset hasła", "--key", "EBO-4", "--story", "Jako użytkownik chcę zresetować hasło."], proj, cfg)
@@ -401,7 +401,7 @@ def main() -> int:
         r = run(["start", "--task", "TSK-57", "--change", "CHG-12"], proj, cfg)
         cut = changes / "CHG-12-TSK-57" / "ticket.md"
         text = cut.read_text(encoding="utf-8") if cut.is_file() else ""
-        check(r.returncode == 0 and "Źródło:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text and "Waga:" in r.stderr,
+        check(r.returncode == 0 and "Source:" not in text and "Cięcie TSK-57 zmiany CHG-12" in text and "Waga:" in r.stderr,
               f"R-43: zadanie cięcia pdi — ticket.md bez linii źródła (ma nagłówek cięcia), z wagą: {r.stdout} {r.stderr} {text[:200]}")
 
     for f in fails:

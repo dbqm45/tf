@@ -121,12 +121,12 @@ def main() -> int:
               and (p / CHANGES / "IMP-1" / "evidence" / "deploy-1.json").is_file(),
               f"DP-9: czerwony wynik zapisany z dowodem; etap nie przechodzi do deploy: {task(p).get('deploy')}")
         w = waiting(p)
-        check(len(w) == 1 and w[0].get("kind") == "deploy" and "ycofać" in (w[0].get("question") or "")
+        check(len(w) == 1 and w[0].get("kind") == "deploy" and "Roll back" in (w[0].get("question") or "")
               and w[0].get("recommended") and any(ROLLBACK in (o.get("skutek") or "") for o in w[0].get("options") or [])
               and "--rolled-back" in (w[0].get("how") or ""),
               f"DP-10: lista „czeka na Ciebie”: pytanie o wycofanie z opcjami, rekomendacją i poleceniem: {w}")
         r = call(p, TASK, "list")
-        check("czeka na Ciebie" in r.stdout and "ycofać" in r.stdout,
+        check("waiting for you" in r.stdout and "Roll back" in r.stdout,
               f"DP-11: tf status pokazuje zadanie czekające na decyzję o wycofaniu: {r.stdout}")
 
         # decyzja o wycofaniu należy do człowieka
@@ -177,7 +177,7 @@ def main() -> int:
         r = call(p, TASK, "deployed", "IMP-1")
         r2 = call(p, TASK, "list")
         check(r.returncode == 1 and "Traceback" not in r.stdout + r.stderr + r2.stdout + r2.stderr
-              and "czeka na Ciebie" in r2.stdout and "cofnij" in r.stdout,
+              and "waiting for you" in r2.stdout and "cofnij" in r.stdout,
               f"DP-24: ogromna liczba w rollback_minutes nie wywraca deployed ani tf status: {r.stderr[-300:]} {r2.stderr[-300:]}")
         check("\x1b" not in r.stdout and "logi" in r.stdout,
               f"DP-25: znaki sterujące z karty nie trafiają na terminal: {r.stdout!r}")

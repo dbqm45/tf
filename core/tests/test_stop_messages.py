@@ -11,7 +11,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / SKILL / "scripts
 MESSAGES = ROOT / SKILL / "templates" / "stop_messages.json"
 # słowa z budowy fabryki, których człowiek nie musi znać (dokument osi, §1a reguła 2)
 JARGON = ("tier", "hook", "bramk", "kawał", "triaż", "harness", "slice", "gate", "artefakt", "stop", "spec.md",
-          "plan.md", "run_state", "task.json", "commit", "diff", "scan", "agent")
+          "plan.md", "run_state", "task.json", "commit", "diff", "scan", "agent", "artifact")
 
 
 def main() -> int:

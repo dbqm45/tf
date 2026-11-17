@@ -239,8 +239,8 @@ def main() -> int:
         (per / ".tf" / "config" / "config.yaml").write_text("default_profile: economy\ntiers:\n  std:\n    effort: low\n")
         r, _ = called("config", "show")
         lines = {ln.split()[0]: ln for ln in r.stdout.splitlines() if ln.strip() and not ln.startswith(("#", " "))}
-        check(r.returncode == 0 and "projekt" in lines.get("default_profile", "") and "economy" in lines.get("default_profile", "")
-              and "projekt" in lines.get("tiers", "") and "fabryka" in lines.get("limits", ""),
+        check(r.returncode == 0 and "project" in lines.get("default_profile", "") and "economy" in lines.get("default_profile", "")
+              and "project" in lines.get("tiers", "") and "factory" in lines.get("limits", ""),
               f"CTF-19: tf config show pokazuje wartości i skąd pochodzą (projekt / fabryka): {r.stdout[:600]}{r.stderr}")
         r, _ = called("config", "show", "tiers")
         check(r.returncode == 0 and '"effort": "low"' in r.stdout and "haiku" in r.stdout and "limits" not in r.stdout,
@@ -253,7 +253,7 @@ def main() -> int:
                        "      budget_usd: 3\n    default_profile: quality\n", encoding="utf-8")
         r, _ = called("config", "show")
         lines = {ln.split()[0]: ln for ln in r.stdout.splitlines() if ln.strip() and not ln.startswith(("#", " "))}
-        check(r.returncode == 0 and "organizacja" in lines.get("work", "") and "projekt" in lines.get("default_profile", ""),
+        check(r.returncode == 0 and "organisation" in lines.get("work", "") and "project" in lines.get("default_profile", ""),
               f"CTF-21b: tf config show — wartość z nakładki firmowej jako „organizacja”, projekt nadal wygrywa: {r.stdout[:600]}")
 
     for f in fails:

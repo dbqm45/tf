@@ -62,8 +62,8 @@ def main() -> int:
           "T-9: wejście TSK z planu zmiany (`run_report.py start --task`), gałąź z kluczem od gałęzi fazy, `Change:` "
           "w commitach, raport w changes/CHG-n/runs/ — w references/pdi-cuts.md")
     fixes = cuts.split("## Fixes from the PR loop", 1)[-1] if "## Fixes from the PR loop" in cuts else ""
-    check("Rework-Cause:" in fixes and all(v in fixes for v in ("luka-specyfikacji", "blad-agenta", "zmiana-wymagan",
-                                                                 "nieznana")),
+    check("Rework-Cause:" in fixes and all(v in fixes for v in ("spec-gap", "agent-error", "requirement-change",
+                                                                 "unknown")),
           "T-11: commit poprawki z pętli PR ma trailer `Rework-Cause:` z jedną z 4 przyczyn (tf metrics, B3)")
     finish = body.split("## 4.", 1)[-1].split("## Who does what", 1)[0]
     check("run_state.py pr-body" in finish and "--body-file" in finish and "description" in finish,
@@ -188,7 +188,7 @@ def main() -> int:
           "T-41: LOOP.md opisuje zamknięcie zadania: scalenie, kontrola do ustaleń, lekcja od człowieka, lista w toku")
     check("Jak cofnąć" in finish and "risk_triage.py --md" not in finish,
           "T-38: krok PR wymienia pola opisu (m.in. „Jak cofnąć”) i nie każe już składać triażu ryzyka ręcznie")
-    check("pr-body" in gtext and all(w in gtext for w in ("Jak sprawdzono", "Ryzyko", "Jak cofnąć", "deploy.rollback")),
+    check("pr-body" in gtext and all(w in gtext for w in ("How it was checked", "Risk", "How to roll back", "deploy.rollback")),
           "T-39: LOOP.md opisuje opis PR ze skryptu: trzy stałe pola i krok cofania z karty operacyjnej")
 
     for f in fails:

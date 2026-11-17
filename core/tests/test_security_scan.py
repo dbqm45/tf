@@ -344,7 +344,7 @@ def main() -> int:
         check(r.returncode == 0 and "GATE K2: PASS" in r.stdout and "STOP" not in r.stdout,
               f"L-5: po poprawce PASS: {r.returncode} {r.stdout}")
         summary = (out / "attempt-2" / "summary.md").read_text(encoding="utf-8") if (out / "attempt-2" / "summary.md").is_file() else ""
-        check(summary.startswith("## Bezpieczeństwo") and "PASS" in summary, f"L-6: summary.md do raportu przebiegu: {summary[:200]}")
+        check(summary.startswith("## Security") and "PASS" in summary, f"L-6: summary.md do raportu przebiegu: {summary[:200]}")
         # każda próba ma własny katalog (attempt-<k>): wynik próby 1 przeżywa próbę 2; feedback.md w --out — z ostatniej
         first = (out / "attempt-1" / "summary.md").read_text(encoding="utf-8") if (out / "attempt-1" / "summary.md").is_file() else ""
         check("FAIL" in first and "fake.sql-injection src/orders.py:1" in first and (out / "attempt-1" / "semgrep.sarif").is_file()

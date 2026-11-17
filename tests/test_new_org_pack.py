@@ -173,8 +173,8 @@ def main() -> int:
             env = {**os.environ, "TF_PREFERENCES": str(base / "none.yaml")}
             r = subprocess.run([sys.executable, str(app2 / ".tf/factory/tf.py"), "config", "show"], cwd=app2,
                                capture_output=True, text=True, timeout=120, env=env)
-            check(any(ln.split()[:2] == ["task", "projekt"] for ln in r.stdout.splitlines())
-                  and "zespół" in r.stdout, f"OP-25: tf config show zna źródło „zespół”: {r.stdout}{r.stderr}")
+            check(any(ln.split()[:2] == ["task", "project"] for ln in r.stdout.splitlines())
+                  and " team " in r.stdout, f"OP-25: tf config show zna źródło „team”: {r.stdout}{r.stderr}")
             g = subprocess.run([sys.executable, str(app2 / ".tf/factory/analyze.py"), "gate", "--module",
                                 "acme-backend-standards"], cwd=app2, capture_output=True, text=True, timeout=120)
             check(g.returncode == 0, f"OP-26: bramka modułu reguł zespołu: {g.stdout[-600:]}{g.stderr[-300:]}")

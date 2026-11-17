@@ -11,7 +11,7 @@ Liczy z gita (główna linia, `--first-parent`, bez `chore(release)` i commitów
 - zmiany i przyjęte zmiany — przyjęta = zmergowana i niecofnięta przez N dni (`--revert-days`, domyślnie 7);
   zmiany młodsze niż N dni są „w toku” i nie wchodzą do odsetka;
 - odsetek revertów — główny wskaźnik jakości;
-- przyczyny poprawek z trailera `Rework-Cause:` (luka-specyfikacji, blad-agenta, zmiana-wymagan, nieznana);
+- przyczyny poprawek z trailera `Rework-Cause:` (spec-gap, agent-error, requirement-change, unknown; dawne polskie wartości jako aliasy);
 - koszt tokenów z `.tf/logs/usage.jsonl` (cennik `prices_usd_per_mtok`) i koszt przyjętej zmiany — bez pracy ludzi;
 - z historii PR (`gh pr list`, gdy jest): mediana czasu od otwarcia PR do merge'a i liczba commitów na PR.
 Liczba zmian sama w sobie nie jest celem — łatwo ją zawyżyć. Raport: `.tf/reports/metrics.md` i `metrics.json`.
@@ -47,7 +47,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CAUSES = ("luka-specyfikacji", "blad-agenta", "zmiana-wymagan", "nieznana")
+CAUSES = ("spec-gap", "agent-error", "requirement-change", "unknown")
+# Wartości sprzed tłumaczenia (etap 4) w starszych commitach — liczone jako ich odpowiedniki.
+CAUSE_ALIASES = {"luka-specyfikacji": "spec-gap", "blad-agenta": "agent-error", "zmiana-wymagan": "requirement-change",
+                 "nieznana": "unknown"}
 RELEASE = re.compile(r"^chore\(release\)")
 REVERT_SUBJECT = re.compile(r'^(Revert "|revert(\([^)]*\))?!?:)')
 REVERTS_SHA = re.compile(r"This reverts commit ([0-9a-f]{7,40})")
@@ -127,7 +130,8 @@ def _window(commits: list[dict], start: datetime, end: datetime, reverts: dict, 
     causes: dict[str, int] = {}
     for c in changes:
         for v in CAUSE_RE.findall(c["body"]):
-            v = v.lower() if v.lower() in CAUSES else "nieznana"
+            v = CAUSE_ALIASES.get(v.lower(), v.lower())
+            v = v if v in CAUSES else "unknown"
             causes[v] = causes.get(v, 0) + 1
     cost = None
     if usage is not None:
@@ -312,7 +316,7 @@ def write_report(repo: Path, res: dict) -> Path:
         lines += [f"| {c} | {cur['rework_causes'].get(c, 0)} | {base['rework_causes'].get(c, 0)} |" for c in causes]
     else:
         lines.append("Brak commitów z `Rework-Cause:` — dopisuj trailer w commitach poprawek po przeglądzie "
-                     "(luka-specyfikacji, blad-agenta, zmiana-wymagan, nieznana).")
+                     "(spec-gap, agent-error, requirement-change, unknown).")
     if not res["pr_history"]:
         lines += ["", "Bez historii PR (`gh` niedostępne albo bez logowania) — czas cyklu nieznany."]
     if res.get("after_update"):

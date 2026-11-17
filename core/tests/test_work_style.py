@@ -85,14 +85,14 @@ def main() -> int:
 
         # WS-1..4: warstwa osoby, styl, filtr kluczy, me.yaml
         p = project(base, "a")
-        check(not any("osoba" in lbl for lbl, _ in packs.config_layers(p)),
+        check(not any("person" in lbl for lbl, _ in packs.config_layers(p)),
               "WS-1: bez pliku preferencji nie ma warstwy osoby")
         prefs.write_text("style: autonomous\nloop:\n  blocked_slices: false\nwork:\n  budget_usd: 400\n"
                          "autonomy:\n  operations:\n    publish: deny\n  triage:\n    always_review: []\n",
                          encoding="utf-8")
         layers = packs.config_layers(p)
         lbl, person = layers[-1]
-        check("osoba" in lbl, f"WS-1: preferencje to ostatnia warstwa, oznaczona „osoba”: {[l for l, _ in layers]}")
+        check("person" in lbl, f"WS-1: preferencje to ostatnia warstwa, oznaczona „osoba”: {[l for l, _ in layers]}")
         check(person.get("style") == "autonomous" and (person.get("task") or {}).get("default_mode") == "auto",
               f"WS-2: styl rozwinięty do wartości przełączników: {person}")
         check((person.get("loop") or {}).get("blocked_slices") is False,
@@ -146,7 +146,7 @@ def main() -> int:
         check(r.returncode == 2 and "autonomous" in r.stdout + r.stderr,
               f"WS-9: nieznany styl → kod 2 z listą stylów: {r.returncode} {r.stdout}{r.stderr}")
         r = run(p, prefs, TF, "config", "show")
-        check(any(ln.split()[:2] == ["style", "osoba"] for ln in r.stdout.splitlines()),
+        check(any(ln.split()[:2] == ["style", "person"] for ln in r.stdout.splitlines()),
               f"WS-10: tf config show podaje źródło „osoba”: {r.stdout}{r.stderr}")
 
         # WS-12: styl conversation włącza tryb planowania Claude Code w .claude/settings.local.json i go oddaje

@@ -416,7 +416,7 @@ def write_outputs(out: Path, v: dict, lines: list[str]) -> None:
     fb = ["# Skan bezpieczeństwa — do poprawy w następnej próbie", "",
           *(map(item, v["blocking"]) if v["blocking"] else ["- brak blokujących"]), *(f"- {e}" for e in v["errors"])]
     (out / "feedback.md").write_text("\n".join(fb) + "\n", encoding="utf-8")
-    summ = ["## Bezpieczeństwo", "", f"Skan: {v['status']} (blokujące: {len(v['blocking'])}, "
+    summ = ["## Security", "", f"Skan: {v['status']} (blokujące: {len(v['blocking'])}, "
             f"poniżej progu: {len(v['other'])}, błędy skanu: {len(v['errors'])}).", ""]
     summ += ["Poniżej progu:", *map(item, v["other"])] if v["other"] else ["Poniżej progu: brak."]
     if v.get("skipped"):

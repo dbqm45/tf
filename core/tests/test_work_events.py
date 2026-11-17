@@ -106,7 +106,7 @@ def main() -> int:
               and ev[0].get("text") == QUESTION and ev[0].get("by") == "process:tf" and ev[0].get("at"),
               f"WE-5: pytanie zapisane w events.jsonl zadania (kto, kiedy, co): {ev}")
         r = call(p, TASK, "list")
-        check("czeka na Ciebie" in r.stdout and "K1" in r.stdout and QUESTION in r.stdout,
+        check("waiting for you" in r.stdout and "K1" in r.stdout and QUESTION in r.stdout,
               f"WE-6: pytanie zablokowanego kawałka jest na liście „czeka na Ciebie”: {r.stdout}")
 
         # kolejność wg zależności: K3 (bez dopisku) zależy od K2, K4 zależy od zablokowanego K1

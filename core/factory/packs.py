@@ -122,7 +122,7 @@ def config_layers(root: Path) -> list[tuple[str, dict]]:
     below.setdefault("task", {})["allowed_modes"] = narrowed_modes(layers)
     person, _warns, sources = person_layer(root, below)
     if person:
-        layers.append((f"{' + '.join(sources)} (osoba)", person))
+        layers.append((f"{' + '.join(sources)} (person)", person))
     return layers
 
 
@@ -270,7 +270,7 @@ def work_style(root: Path) -> dict:
     """Sposób pracy po złożeniu warstw: styl, domyślny i dozwolone tryby zadania, przełączniki pętli, ostrzeżenia."""
     cfg = load_config(root)
     below: dict = {}
-    lower = [lv for lv in config_layers(root) if not lv[0].endswith("(osoba)")]
+    lower = [lv for lv in config_layers(root) if not lv[0].endswith("(person)")]
     for _label, layer in lower:
         below = deep_merge(below, layer)
     below.setdefault("task", {})["allowed_modes"] = narrowed_modes(lower)
@@ -304,7 +304,7 @@ def load_config(root: Path) -> dict:
     for _label, layer in layers:
         cfg = deep_merge(cfg, layer)
     if layers:
-        cfg.setdefault("task", {})["allowed_modes"] = narrowed_modes([lv for lv in layers if not lv[0].endswith("(osoba)")])
+        cfg.setdefault("task", {})["allowed_modes"] = narrowed_modes([lv for lv in layers if not lv[0].endswith("(person)")])
     return cfg
 
 
