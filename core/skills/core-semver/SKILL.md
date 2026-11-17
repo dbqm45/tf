@@ -1,104 +1,107 @@
 ---
 name: core-semver
-description: Użyj przy numerze wersji (SemVer) — publiczne API, podbicie major/minor/patch, 0.y.z, wersje przedpremierowe.
+description: Use for a version number (SemVer) — public API, a major/minor/patch bump, 0.y.z, pre-release versions.
 metadata:
   review: "2027-10-09"
-  catalog: "Użyj, gdy nadajesz lub sprawdzasz numer wersji czegokolwiek, co wydajesz (biblioteka, pakiet, API, CLI, aplikacja, obraz, moduł IaC, sama fabryka) — deklaracja publicznego API, które zmiany wymagają major/minor/patch, faza 0.y.z i wydanie 1.0.0, wersje przedpremierowe i metadane, kolejność wersji, wycofywanie, wydanie bez zmiany opublikowanej wersji; skrypt semver.py liczy wersję bez zgadywania. Nie do formatu commit message (core-conventional-commits) ani strategii wdrożenia (skill wydań, pack-it)."
-  keywords: "semver, wersjonowanie, numer wersji, jaka wersja, podbić wersję, major, minor, patch, wersja 1.0.0, 0.x, beta, rc, alpha, wydanie, release, tag v1.2.3, zmiana niezgodna wstecz, breaking change, przestarzałe, deprecated"
+  catalog: "Use when you assign or check the version number of anything you release (a library, package, API, CLI, application, image, IaC module, the factory itself) — declaring the public API, which changes need major/minor/patch, the 0.y.z phase and the 1.0.0 release, pre-release versions and metadata, version order, deprecation, a release without changing a published version; the semver.py script computes the version without guessing. Not for the commit message format (core-conventional-commits) or the deployment strategy (the release skill, pack-it)."
+  keywords: "semver, wersjonowanie, numer wersji, jaka wersja, podbić wersję, major, minor, patch, wersja 1.0.0, 0.x, beta, rc, alpha, wydanie, release, tag v1.2.3, zmiana niezgodna wstecz, breaking change, przestarzałe, deprecated, następne wydanie, kolejność wersji, od jakiej wersji zacząć, version number, next version, version order, which version to start from"
 ---
 
-# Wersjonowanie semantyczne (SemVer 2.0.0)
+# Semantic versioning (SemVer 2.0.0)
 
-Numer wersji to obietnica dla użytkownika. MAJOR.MINOR.PATCH mówi, czy aktualizacja może coś zepsuć:
-- **MAJOR** — zmiana niezgodna wstecz;
-- **MINOR** — nowa funkcja zgodna wstecz;
-- **PATCH** — poprawka zgodna wstecz.
+A version number is a promise to the user. MAJOR.MINOR.PATCH says whether an update can break something:
+- **MAJOR** — a backward-incompatible change;
+- **MINOR** — a new backward-compatible feature;
+- **PATCH** — a backward-compatible fix.
 
-Numer **liczy skrypt**, nie pamięć modelu:
+**A script computes** the number, not the model's memory:
 `python3 .claude/skills/core-semver/scripts/semver.py bump|next|compare|valid|check-changelog`.
 
-## 1. Najpierw publiczne API
-Bez zadeklarowanego publicznego API nie da się ocenić zgodności (reguła 1). Zapisz je w README albo w pliku
-`PUBLIC_API.md`, zanim nadasz 1.0.0. Co zwykle do niego należy, zależy od typu produktu (szczegóły:
+## 1. Public API first
+Without a declared public API compatibility cannot be judged (rule 1). Write it down in the README or in a
+`PUBLIC_API.md` file before you assign 1.0.0. What usually belongs to it depends on the product type (details:
 `references/public-api.md`):
 
-| Produkt | Publiczne API |
+| Product | Public API |
 |---|---|
-| biblioteka | eksportowane funkcje, klasy, typy, wyjątki, minimalna wersja środowiska (Node, Java) |
-| HTTP API | ścieżki, metody, pola żądań i odpowiedzi, kody statusu, format błędów, uwierzytelnianie |
-| CLI | polecenia, flagi, kody wyjścia, format wyjścia czytany przez skrypty |
-| aplikacja lub serwis | konfiguracja (zmienne, klucze), kontrakty integracji, zdarzenia, schemat danych, który ktoś czyta |
-| moduł IaC, obraz kontenera | zmienne wejściowe i wyjściowe, porty, punkty montowania, zmienne środowiskowe |
+| library | exported functions, classes, types, exceptions, the minimal runtime version (Node, Java) |
+| HTTP API | paths, methods, request and response fields, status codes, error format, authentication |
+| CLI | commands, flags, exit codes, output format read by scripts |
+| application or service | configuration (variables, keys), integration contracts, events, a data schema someone reads |
+| IaC module, container image | input and output variables, ports, mount points, environment variables |
 
-Szczegóły wewnętrzne (prywatne funkcje, układ kodu, treść logów) nie należą do publicznego API.
+Internal details (private functions, code layout, log contents) are not part of the public API.
 
-## 2. Które podbicie
-| Zmiana w publicznym API | Podbicie |
+## 2. Which bump
+| Change in the public API | Bump |
 |---|---|
-| usunięcie, zmiana nazwy, zmiana typu lub znaczenia, nowe pole **wymagane** na wejściu, zawężenie akceptowanych wartości, zmiana domyślnego zachowania, podniesienie minimalnej wersji środowiska | **MAJOR** (minor i patch → 0) |
-| nowa funkcja, opcjonalny parametr, nowe pole w odpowiedzi, oznaczenie elementu jako przestarzałego (deprecated), istotne ulepszenie wewnętrzne | **MINOR** (patch → 0) |
-| poprawka błędu bez zmiany kontraktu, łatka bezpieczeństwa zgodna wstecz, aktualizacja zależności bez zmiany API | **PATCH** |
-| tylko dokumentacja, testy, CI, refaktoryzacja bez zmiany zachowania | bez wydania albo PATCH, jeśli wydajesz |
+| removal, renaming, a change of type or meaning, a new **required** input field, narrowing the accepted values, a change of default behaviour, raising the minimal runtime version | **MAJOR** (minor and patch → 0) |
+| a new feature, an optional parameter, a new field in the response, marking an element deprecated, a significant internal improvement | **MINOR** (patch → 0) |
+| a bug fix without a contract change, a backward-compatible security patch, a dependency update without an API change | **PATCH** |
+| only documentation, tests, CI, refactoring without a behaviour change | no release, or PATCH if you release |
 
-- Wiele zmian w jednym wydaniu: decyduje **najpoważniejsza**.
-- Poprawka błędu, na którym ktoś polega (zmienia obserwowalne zachowanie kontraktu), to MAJOR, chyba że zachowanie
-  było jawnie opisane jako błąd.
-- Z Conventional Commits: `python3 …/semver.py next` liczy podbicie od ostatniego tagu `vX.Y.Z` (`!` i `BREAKING
-  CHANGE` → major, `feat` → minor, `fix`/`perf` → patch). Wynik sprawdź z tabelą wyżej, bo commit może być źle
-  oznaczony.
+- Several changes in one release: the **most serious** decides.
+- A fix of a bug someone relies on (it changes the observable behaviour of the contract) is MAJOR, unless the
+  behaviour was explicitly described as a bug.
+- With Conventional Commits: `python3 …/semver.py next` computes the bump from the last `vX.Y.Z` tag (`!` and
+  `BREAKING CHANGE` → major, `feat` → minor, `fix`/`perf` → patch). Check the result against the table above,
+  because a commit can be mislabelled.
 
-## 3. Faza 0.y.z i wydanie 1.0.0
-- Nowy projekt zaczyna od **0.1.0**. W fazie 0.y.z wszystko może się zmienić (reguła 4).
-  - Konwencja fabryki: zmiana niezgodna → minor, reszta → patch. Tak liczy `semver.py next`.
-- **1.0.0** wydajesz, gdy produkt działa na produkcji, ktoś na nim polega albo dbasz o zgodność wstecz (FAQ).
-  Od 1.0.0 publiczne API jest zobowiązaniem. Wydanie 1.0.0 to decyzja człowieka; agent ją proponuje.
+## 3. The 0.y.z phase and the 1.0.0 release
+- A new project starts at **0.1.0**. In the 0.y.z phase anything may change (rule 4).
+  - The factory's convention: an incompatible change → minor, the rest → patch. That is how `semver.py next` computes it.
+- You release **1.0.0** when the product runs in production, someone relies on it, or you care about backward
+  compatibility (FAQ). From 1.0.0 the public API is a commitment. Releasing 1.0.0 is the human's decision; the agent
+  proposes it.
 
-## 4. Wersje przedpremierowe i metadane
-- Przedpremierowe: `1.4.0-alpha.1`, `1.4.0-beta.2`, `1.4.0-rc.1`. Mają niższą precedencję niż `1.4.0`.
-  - Numeruj liczbą po kropce (`rc.2`, nie `rc2`), bo `rc.10 > rc.9`, a `rc10 < rc9` (porównanie leksykalne).
-  - Kolejne: `semver.py bump 1.4.0-rc.1 pre` → `1.4.0-rc.2`; wydanie: `bump … release` → `1.4.0`.
-- Metadane budowania: `1.4.0+sha.5114f85`. **Nie wpływają** na kolejność; nie używaj ich do odróżniania wydań.
-- Kolejność sprawdzaj skryptem (`semver.py sort …`). Przykład ze specyfikacji:
+## 4. Pre-release versions and metadata
+- Pre-release: `1.4.0-alpha.1`, `1.4.0-beta.2`, `1.4.0-rc.1`. They have lower precedence than `1.4.0`.
+  - Number with a number after the dot (`rc.2`, not `rc2`), because `rc.10 > rc.9`, while `rc10 < rc9` (lexical
+    comparison).
+  - The next one: `semver.py bump 1.4.0-rc.1 pre` → `1.4.0-rc.2`; the release: `bump … release` → `1.4.0`.
+- Build metadata: `1.4.0+sha.5114f85`. It **does not affect** the order; do not use it to tell releases apart.
+- Check the order with the script (`semver.py sort …`). An example from the specification:
   1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.
 
-## 5. Wydanie
-1. Ustal ostatnią wydaną wersję: tag `vX.Y.Z`, plik wersji (`package.json`, `pom.xml`, `VERSION`), CHANGELOG.
-2. Sklasyfikuj zmiany (sekcja 2), policz numer skryptem.
-3. Zaktualizuj **wszystkie** miejsca z numerem naraz: plik wersji, CHANGELOG (najnowszy wpis na górze, sekcje: Nowe,
-   Zmienione, Wycofywane, Usunięte, Poprawione, Niezgodne), dokumentację instalacji.
-4. `semver.py check-changelog CHANGELOG.md --version-file <plik>` — format, kolejność i zgodność z plikiem wersji.
-5. Tag `v1.2.3` (prefiks `v` to konwencja tagu; sama wersja to `1.2.3`). Utworzenie tagu, `git push`, publikacja
-   pakietu lub obrazu tylko **po zgodzie człowieka**.
+## 5. Release
+1. Establish the last released version: the `vX.Y.Z` tag, the version file (`package.json`, `pom.xml`, `VERSION`),
+   the CHANGELOG.
+2. Classify the changes (section 2), compute the number with the script.
+3. Update **every** place with the number at once: the version file, the CHANGELOG (newest entry on top, sections:
+   Added, Changed, Deprecated, Removed, Fixed, Breaking), the installation docs.
+4. `semver.py check-changelog CHANGELOG.md --version-file <plik>` — format, order and agreement with the version file.
+5. The tag `v1.2.3` (the `v` prefix is a tag convention; the version itself is `1.2.3`). Creating the tag,
+   `git push`, publishing the package or image only **after the human's consent**.
 
-Zasady:
-- **Commit może pomylić się co do intencji, diff nie.** Przed automatycznym wydaniem sprawdź, czy od ostatniego tagu
-  zmieniły się pliki wchodzące do artefaktu: `git diff --name-only v1.2.3..HEAD -- <ścieżki artefaktu>` (listę plików
-  paczki npm pokaże `npm pack --dry-run`). Brak zmian = brak wydania, nawet przy `feat:`; zmiana plików przy samych
-  `chore:`/`docs:` = ostrzeżenie dla człowieka, nie ciche pominięcie.
-- **Wydanej wersji nigdy nie zmieniasz** (reguła 3): nie przenosisz tagu i nie publikujesz ponownie pod tym samym
-  numerem. Błąd w wydaniu naprawia nowa wersja.
-- **Przypadkowa zmiana niezgodna w minor:** wydaj nowy minor, który przywraca zgodność. Opisz wadliwą wersję
-  w CHANGELOG i poinformuj użytkowników (FAQ).
-- **Wycofywanie:** najpierw minor z oznaczeniem „przestarzałe”, opisem zastępstwa i dokumentacją. Usunięcie dopiero
-  w następnym major, po co najmniej jednym minor z ostrzeżeniem.
-- Monorepo: każdy pakiet ma własną wersję (`nx release`).
-- Numer wersji API w URL (`/v1/`) to osobna decyzja (skill projektu API, pack-it: be-api-design). Zmiana `/v1` → `/v2` zwykle idzie z major
-  pakietu lub serwisu.
-- Wersji **zależności** projektu nie podnosisz bez prośby człowieka (core-stack-sync). Ten skill dotyczy numeru
-  wersji tego, co wydajesz.
+Rules:
+- **A commit can be wrong about the intent, the diff cannot.** Before an automatic release check whether the files
+  that go into the artifact changed since the last tag: `git diff --name-only v1.2.3..HEAD -- <ścieżki artefaktu>`
+  (`npm pack --dry-run` shows the list of files in an npm package). No changes = no release, even with `feat:`; a
+  change of files with only `chore:`/`docs:` = a warning for the human, not a silent skip.
+- **You never change a released version** (rule 3): you do not move the tag and do not publish again under the same
+  number. A new version fixes a bug in a release.
+- **An accidental incompatible change in a minor:** release a new minor that restores compatibility. Describe the
+  faulty version in the CHANGELOG and inform the users (FAQ).
+- **Deprecation:** first a minor with a "deprecated" marker, a description of the replacement and documentation.
+  Removal only in the next major, after at least one minor with the warning.
+- Monorepo: each package has its own version (`nx release`).
+- The API version number in the URL (`/v1/`) is a separate decision (the API design skill, pack-it: be-api-design).
+  A change `/v1` → `/v2` usually goes with a major of the package or service.
+- You do not raise the project's **dependency** versions without the human's request (core-stack-sync). This skill
+  is about the version number of what you release.
 
-## Checklista
-- [ ] publiczne API zapisane (README lub PUBLIC_API.md)
-- [ ] najpoważniejsza zmiana sklasyfikowana; numer policzony `semver.py`, nie z pamięci
-- [ ] 0.y.z do pierwszej stabilnej wersji; 1.0.0 za zgodą człowieka
-- [ ] wszystkie pliki wersji i CHANGELOG zgodne (`semver.py check-changelog`)
-- [ ] żadna wydana wersja nie została zmieniona; tag i publikacja za zgodą człowieka
+## Checklist
+- [ ] public API written down (README or PUBLIC_API.md)
+- [ ] the most serious change classified; the number computed with `semver.py`, not from memory
+- [ ] 0.y.z until the first stable version; 1.0.0 with the human's consent
+- [ ] all version files and the CHANGELOG agree (`semver.py check-changelog`)
+- [ ] no released version was changed; tag and publication with the human's consent
 
-## Źródła
-- Semantic Versioning 2.0.0, semver.org (licencja CC BY 3.0; dostęp 2026-10-03): reguły 1–11, FAQ, oficjalne
-  wyrażenie regularne (w `scripts/semver.py`).
-- Conventional Commits 1.0.0 (powiązanie typów z podbiciem — core-conventional-commits).
-- Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 4 (wersjonowanie bez ręcznego podbijania) — materiał szkoleniowy
-  (dostęp 2026-10-09).
+## Sources
+- Semantic Versioning 2.0.0, semver.org (CC BY 3.0 licence; accessed 2026-10-03): rules 1–11, FAQ, the official
+  regular expression (in `scripts/semver.py`).
+- Conventional Commits 1.0.0 (mapping types to the bump — core-conventional-commits).
+- The 10xDevs course, ed. 3 (2026), module 5, lesson 4 (versioning without manual bumping) — training material
+  (accessed 2026-10-09).
 
-Opisane własnymi słowami.
+Described in our own words.

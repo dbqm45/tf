@@ -29,6 +29,10 @@ metadata:
 python3 tool.py            # raport tekstowy
 ```
 Wzorzec: `tool.py new <nazwa>`.
+
+```
+**P1 — Kto eksportuje**: a) admin → Rekomendacja: a, limit 50 tys.
+```
 """
 EN = """---
 name: core-x
@@ -50,6 +54,10 @@ metadata:
 python3 tool.py            # text report
 ```
 Pattern: `tool.py new <name>`.
+
+```
+**P1 — Who exports**: a) admin → Recommendation: a, limit 50k.
+```
 """
 
 
@@ -66,13 +74,14 @@ def main() -> int:
         "TC-7 wiersz tabeli": EN.replace("| `OK` | continue |\n", ""),
         "TC-8 słowa kluczowe PL": EN.replace("księgowanie, ", ""),
         "TC-9 nazwa": EN.replace("name: core-x", "name: core-y"),
+        "TC-10 liczba w przykładzie": EN.replace("limit 50k", "limit 60k"),
     }
     for label, bad in cases.items():
         if not tc.compare(PL, bad):
             fails.append(f"{label}: różnica niewykryta")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {9 - len(fails)}/9 testów translation_check")
+    print(f"{'✓' if not fails else '✗'} {10 - len(fails)}/10 testów translation_check")
     return 1 if fails else 0
 
 

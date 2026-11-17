@@ -44,8 +44,8 @@
   "offline": "2026-11-16"
  },
  "core-plan-interview": {
-  "fingerprint": "872d28857e380e84",
-  "offline": "2026-11-16"
+  "fingerprint": "cdb99e686e894b1c",
+  "offline": "2026-11-17"
  },
  "core-problem-routing": {
   "fingerprint": "37b6a36a788821cc",
@@ -56,16 +56,16 @@
   "offline": "2026-11-17"
  },
  "core-semver": {
-  "fingerprint": "ab3cd8783f8eadfa",
-  "offline": "2026-11-16"
+  "fingerprint": "7414a1a0e1cdac90",
+  "offline": "2026-11-17"
  },
  "core-skill-authoring": {
   "fingerprint": "a85163ed74b7a208",
   "offline": "2026-11-17"
  },
  "core-skill-composition": {
-  "fingerprint": "7c091ecb6cc55cfb",
-  "offline": "2026-11-16"
+  "fingerprint": "ef69ab84a8c8b0a6",
+  "offline": "2026-11-17"
  },
  "core-source-research": {
   "fingerprint": "03d208887d8d7504",
@@ -76,8 +76,8 @@
   "offline": "2026-11-17"
  },
  "core-teaching-workspace": {
-  "fingerprint": "5058f6fae2525313",
-  "offline": "2026-11-16"
+  "fingerprint": "2af8ddd9d1613437",
+  "offline": "2026-11-17"
  },
  "tf": {
   "fingerprint": "2d74fda9295cecea",

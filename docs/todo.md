@@ -648,6 +648,15 @@ treści (angielska), bez równoległej polskiej.
   - [x] 4a — fabryka gotowa na angielską treść (reguły wyboru i granic w obu językach w `build.py`, `skill_audit`,
     `skill_hint`; język treści w bramce), pilot `core-stack-sync`, narzędzie `hint_holdout.py`.
   - [ ] 4b — rdzeń: pozostałe skille `core-*` i `tf`, cechy, `config.yaml` (prompty, notatki), przewodniki.
+    - [x] 4b-1 (2026-11-17): `core-teaching-workspace`, `core-skill-composition`, `core-plan-interview`, `core-semver`.
+      Podpowiedzi przed/po: partia 17/17 → 17/17 (plan-interview straciło trafienie „za dużo pytań” — słowa kluczowe),
+      całość 902/918 · 29/43 bez zmian. Haiku przed/po (plan-interview, skill-composition): 8/8 → 8/8, ~$2,36.
+      `translation_check`: blok bez języka to przykład wyjścia (proza). Uwaga przy łamaniu wierszy: nazwa nakładki
+      i skill z niej muszą być w jednym wierszu (`workspace.py refs`).
+    - [ ] dalsze partie: core-factory-update, core-agent-retro, core-source-research, core-problem-routing,
+      core-knowledge, core-conventional-commits, core-grounding, core-project-record, core-async-delegation,
+      core-agent-instructions, core-skill-authoring, core-git-workflow, core-cost-control, tf, core-agent-security,
+      core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).

@@ -1,60 +1,61 @@
-# Przykłady: przesłuchanie planu
+# Examples: plan interview
 
-## 1. Eksport zamówień do CSV
-**Sytuacja:** „Chcę dodać eksport zamówień do CSV w panelu administratora. Przepytaj mnie, zanim zaczniesz”.
+## 1. CSV export of orders
+**Situation:** "I want to add a CSV export of orders in the admin panel. Grill me before you start".
 
-**Jak:**
-1. Drzewo: uprawnienia, dane osobowe i filtry są od siebie niezależne; rejestr eksportów zależy od danych
-   osobowych, rozmiar pliku od filtrów, a forma wydania pliku od rozmiaru.
-2. Fakty sprawdzasz sam: `scout` ustala, że panel ma role `admin` i `support`, a tabela zamówień ma ok. 2 mln
-   wierszy. O to nie pytasz.
-3. Front pierwszej rundy: tylko decyzje bez nierozstrzygniętych warunków (uprawnienia, dane osobowe, filtry).
-   Pytanie o formę wydania pliku czeka — zależy od odpowiedzi o filtrach (rozmiar pliku).
+**How:**
+1. Tree: permissions, personal data and filters are independent of each other; the export register depends on
+   personal data, the file size on the filters, and how the file is delivered on the size.
+2. You check facts yourself: `scout` finds that the panel has the roles `admin` and `support`, and the orders table
+   has about 2 million rows. You do not ask about that.
+3. Frontier of the first round: only decisions without unsettled preconditions (permissions, personal data,
+   filters). The question about how the file is delivered waits — it depends on the answer about filters (file size).
 
-**Wynik (runda 1):**
+**Result (round 1):**
 ```
-**P1 — Kto może eksportować**: a) tylko admin, b) admin i support
-→ Rekomendacja: a — eksport zawiera dane klientów; support może dostać to później.
+**Q1 — Who can export**: a) only admin, b) admin and support
+→ Recommendation: a — the export holds customer data; support can get it later.
 
-**P2 — Dane osobowe w pliku**: a) pełne (imię, e-mail, adres), b) bez danych osobowych, c) do wyboru przy eksporcie
-→ Rekomendacja: b — wystarcza do raportów, a nie tworzy kopii danych osobowych poza systemem.
+**Q2 — Personal data in the file**: a) full (name, e-mail, address), b) no personal data, c) selectable at export
+→ Recommendation: b — enough for reports, and it creates no copy of personal data outside the system.
 
-**P3 — Filtry**: a) zakres dat, b) zakres dat i status, c) wszystkie filtry z listy zamówień
-→ Rekomendacja: b — pokrywa opisany przypadek, a nie wiąże eksportu z każdą zmianą listy.
+**Q3 — Filters**: a) date range, b) date range and status, c) all filters from the order list
+→ Recommendation: b — covers the described case, and does not tie the export to every change in the list.
 ```
-Człowiek: `P1: a, P2: c, P3: b`. Odpowiedzi odblokowują nowe pytania do rundy 2: rejestr eksportów (wynika
-z P2: c) i forma wydania pliku, gdy filtr dat obejmie wszystkie 2 mln wierszy (wynika z P3).
+The human: `P1: a, P2: c, P3: b`. The answers unlock new questions for round 2: the export register (follows from
+Q2: c) and how the file is delivered when the date filter covers all 2 million rows (follows from Q3).
 
-## 2. Podsumowanie i potwierdzenie
-**Sytuacja:** Po trzech rundach (13 pytań) front jest pusty.
+## 2. Summary and confirmation
+**Situation:** After three rounds (13 questions) the frontier is empty.
 
-**Jak:**
-1. Podsumowanie: decyzje, założenia, co poza zakresem.
-2. Pytanie o wspólne zrozumienie; bez „tak” nie wdrażasz.
-3. Zapis decyzji do `decisions.md`; decyzja o wydawaniu plików w tle spełnia próg ADR → propozycja ADR.
+**How:**
+1. Summary: decisions, assumptions, what is out of scope.
+2. The question about shared understanding; without "yes" you do not implement.
+3. Decisions recorded to `decisions.md`; the decision to deliver files in the background meets the ADR threshold →
+   an ADR proposal.
 
-**Wynik:**
+**Result:**
 ```
-Decyzje: eksport tylko dla admina; dane osobowe do wyboru, każdy eksport z danymi osobowymi w rejestrze;
-filtry: daty i status; powyżej 50 tys. wierszy plik generowany w tle, link e-mailem.
-Założenia: format CSV UTF-8 z separatorem „;” [do potwierdzenia przez dział raportów].
-Poza zakresem: eksport do XLSX, harmonogram automatycznych eksportów.
-Czy tak to rozumiemy?
+Decisions: export only for admin; personal data selectable, every export with personal data in the register;
+filters: dates and status; above 50 thousand rows the file is generated in the background, link by e-mail.
+Assumptions: CSV format UTF-8 with the separator ";" [to be confirmed by the reporting team].
+Out of scope: export to XLSX, a schedule of automatic exports.
+Is that how we understand it?
 ```
 
-## 3. Człowiek niedostępny
-**Sytuacja:** Człowiek zostawia notatkę: „Wyjeżdżam do piątku, przygotuj plan migracji logowania na OIDC”.
+## 3. The human is unavailable
+**Situation:** The human leaves a note: "I'm away until Friday, prepare a plan for migrating login to OIDC".
 
-**Jak:**
-1. Fakty z repo zbierasz jak zwykle.
-2. Decyzji nie rozstrzygasz po cichu: rekomendacje przyjmujesz jako jawne **założenia**.
-3. Nie wdrażasz — plan czeka na potwierdzenie po powrocie.
+**How:**
+1. You gather facts from the repo as usual.
+2. You do not settle decisions silently: you take the recommendations as explicit **assumptions**.
+3. You do not implement — the plan waits for confirmation after they are back.
 
-**Wynik:**
+**Result:**
 ```
-Założenia (do potwierdzenia, nic nie wdrożono):
-Z1 — dostawca tożsamości: obecny Keycloak firmy [rekomendacja P1]
-Z2 — stare sesje: wygasają naturalnie, bez wymuszonego wylogowania [rekomendacja P2]
-Z3 — konta bez e-maila: ręczne łączenie przez support [rekomendacja P3]
-Po powrocie: potwierdź lub zmień Z1–Z3; Z1 zmienia kształt dalszych pytań.
+Assumptions (to confirm, nothing implemented):
+A1 — identity provider: the company's current Keycloak [recommendation Q1]
+A2 — old sessions: expire naturally, no forced logout [recommendation Q2]
+A3 — accounts without an e-mail: manual linking by support [recommendation Q3]
+After you are back: confirm or change A1–A3; A1 changes the shape of the further questions.
 ```

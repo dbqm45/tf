@@ -1,105 +1,109 @@
 ---
 name: core-plan-interview
-description: Użyj przed działaniem, by przepytać plan, decyzję lub pomysł — drzewo decyzji, rundy pytań z rekomendacją.
+description: Use before acting to interview a plan, decision or idea — a decision tree, rounds of questions with a recommendation.
 metadata:
   review: "2027-10-09"
-  catalog: "Użyj, gdy plan, decyzję lub pomysł trzeba przepytać przed działaniem — drzewo decyzji, rundy pytań z rekomendacją (tylko pytania niezależne od siebie), fakty sprawdzane samodzielnie, decyzje zostawione człowiekowi, koniec dopiero po potwierdzeniu wspólnego zrozumienia. Nie do warsztatu z ekspertami domeny (skill facylitacji, pack-it) ani doboru zespołu (core-problem-routing)."
-  keywords: "przepytaj mnie, przesłuchaj plan, grilling, zadawaj pytania przed planem, pytania z rekomendacją, ranking opcji, którą opcję wybrać, raport z badania, agent sam odpowiada na pytania, agent zaczyna kodować bez zgody, zanim zaczniesz"
-argument-hint: "[plan, decyzja albo pomysł]"
+  catalog: "Use when a plan, decision or idea has to be interviewed before acting — a decision tree, rounds of questions with a recommendation (only questions independent of each other), facts checked on your own, decisions left to the human, the end only after shared understanding is confirmed. Not for a workshop with domain experts (the facilitation skill, pack-it) or for choosing the team (core-problem-routing)."
+  keywords: "przepytaj mnie, przesłuchaj plan, grilling, zadawaj pytania przed planem, pytania z rekomendacją, ranking opcji, którą opcję wybrać, raport z badania, agent sam odpowiada na pytania, agent zaczyna kodować bez zgody, zanim zaczniesz, grill me, interview my plan, ask me before you start, questions with a recommendation, agent answers its own questions, za dużo pytań, przypadki brzegowe, plan urósł, przeinżynierowanie, too many questions, edge cases, over-engineering"
+argument-hint: "[plan, decision or idea]"
 ---
 
-# Przesłuchanie planu
+# Plan interview
 
-Rozmowa, która ma doprowadzić do **wspólnego zrozumienia**, zanim ktokolwiek zacznie pracę. Przedmiot przesłuchania
-traktujesz jak **drzewo decyzji**: każda decyzja ma decyzje od niej zależne.
+A conversation meant to reach **shared understanding** before anyone starts work. You treat the subject of the
+interview as a **decision tree**: every decision has decisions that depend on it.
 
-## Pojęcia
-- **Front** — decyzje, których wszystkie warunki wstępne są już rozstrzygnięte. Tylko o nie można teraz uczciwie zapytać.
-- **Runda** — cały front zadany naraz i w całości odpowiedziany. Dobrze idzie, gdy pytań jest dużo, a rund mało
-  (np. kilkanaście pytań w ok. 3 rundach).
+## Concepts
+- **Frontier** — decisions whose preconditions are all settled. Only those can honestly be asked now.
+- **Round** — the whole frontier asked at once and answered in full. It goes well when there are many questions and
+  few rounds (e.g. a dozen or so questions in about 3 rounds).
 
-## Procedura
-1. Zbuduj w głowie drzewo; nie licz go z góry do końca — odpowiedzi zmieniają kształt drzewa.
-2. **Fakty to twoja praca.** Co da się sprawdzić w repo, dokumentacji czy narzędziach, sprawdzasz sam (tani `scout`,
-   `researcher`) — nie pytasz człowieka. Sprawdzanie w toku to nierozstrzygnięty warunek: czekają tylko pytania od niego
-   zależne, resztę frontu zadajesz od razu.
-3. **Decyzje należą do człowieka.** Każdą zadajesz i czekasz. Agent, który sam odpowiada na własne pytania decyzyjne,
-   psuje cały mechanizm.
-4. Zadaj rundę w formacie:
+## Procedure
+1. Build the tree in your head; do not work it out to the end up front — answers change the tree's shape.
+2. **Facts are your job.** What can be checked in the repo, documentation or tools you check yourself (cheap `scout`,
+   `researcher`) — you do not ask the human. A check in progress is an unsettled precondition: only the questions that
+   depend on it wait, the rest of the frontier you ask right away.
+3. **Decisions belong to the human.** You ask each one and wait. An agent that answers its own decision questions
+   breaks the whole mechanism.
+4. Ask a round in this format:
    ```
-   **P1 — <tytuł>**: <treść, możliwe opcje>
-   → Rekomendacja: <twoja odpowiedź i krótko dlaczego>
+   **Q1 — <title>**: <content, the possible options>
+   → Recommendation: <your answer and briefly why>
 
-   **P2 — …**
+   **Q2 — …**
    ```
-   Dwa pytania nie trafiają do jednej rundy, jeśli jedno zależy od drugiego. Człowiek odpowiada numerami (`P1: b`).
-5. Po odpowiedziach przelicz front: rozstrzygnięte decyzje odblokowują kolejne. Odpowiedź może też wymusić powrót do
-   wcześniejszej decyzji — wtedy wracasz jawnie.
-6. Front pusty → podsumowanie ustaleń (decyzje, założenia, co zostało poza zakresem) i pytanie: „Czy tak to rozumiemy?”.
-   Koniec dopiero po potwierdzeniu. **Bez potwierdzenia nie zaczynasz wdrażać.**
-7. Zapis: decyzje do artefaktu i `decisions.md` (core-project-record), pojęcia do słownika (pack-it: ddd-facilitation),
-   decyzja spełniająca próg ADR → propozycja ADR (skill dokumentacji, pack-docs).
+   Two questions do not go into one round if one depends on the other. The human answers with numbers (`P1: b`).
+5. After the answers, recompute the frontier: settled decisions unlock the next ones. An answer may also force a
+   return to an earlier decision — then you go back explicitly.
+6. Frontier empty → a summary of what was settled (decisions, assumptions, what stayed out of scope) and the
+   question: "Is that how we understand it?". The end only after confirmation. **Without confirmation you do not
+   start implementing.**
+7. Recording: decisions to the artifact and `decisions.md` (core-project-record), concepts to the glossary
+   (pack-it: ddd-facilitation), a decision meeting the ADR threshold → an ADR proposal (the documentation skill, pack-docs).
 
-## Ustawienia
-- Człowiek woli pojedyncze pytania (dostępność, preferencja) → jedno pytanie na raz; zapisz to w `CLAUDE.md` projektu.
-- Bez sztywnego limitu pytań — zakres decyduje (orientacyjne liczby: „Skalowanie przesłuchania”). Gdy człowiek jest niedostępny: przyjmij rekomendacje jako założenia
-  i wypisz je (bramki decyzyjne w pack-it: ddd-facilitation).
-- Pytanie, na które odpowie tylko prototyp lub makieta — zaproponuj prototyp zamiast zgadywania.
+## Settings
+- The human prefers single questions (accessibility, preference) → one question at a time; record it in the
+  project's `CLAUDE.md`.
+- No fixed question limit — the scope decides (rough numbers: "Scaling the interview"). When the human is
+  unavailable: take the recommendations as assumptions and list them (decision gates in pack-it: ddd-facilitation).
+- A question only a prototype or mock-up can answer — propose a prototype instead of guessing.
 
-## Skalowanie przesłuchania
-- **Każdy artefakt wejściowy to decyzje już podjęte.** Przeczytaj go przed pierwszym pytaniem i nie pytaj o to, co
-  w nim zapisano. Pytanie pomijasz tylko wtedy, gdy artefakt dosłownie przesądza odpowiedź — ogłoś pominięcie
-  z cytatem.
-- Oznaczaj pytania: **[D]** diagnostyczne (problem, zakres, kryterium sukcesu) i **[R]** o rozwiązanie. Z gotowym
-  badaniem kodu pomijasz pytania o stan kodu; z gotowym przeramowaniem zadajesz tylko [R].
-- Orientacyjnie: zmiana prosta 4–6 pytań, średnia 7–10, złożona 11–15; z gotowym badaniem o ok. 1/3 mniej, z badaniem
-  i przeramowaniem ok. połowę. Ocenę złożoności z uzasadnieniem (systemy, integracje, zmiany danych, niewiadome)
-  pokaż człowiekowi i daj mu ją skorygować przed pierwszą rundą.
-- **Ranking opcji na wejściu** (np. z badania): pierwsze pytanie brzmi „którą opcję realizujemy?” — akceptacja
-  rankingu to jawna decyzja człowieka, nie ciche założenie.
-- **Nowy dowód w trakcie** (np. luka okazała się żywym błędem) nie trafia do planu po cichu — staje się osobnym
-  pytaniem do człowieka.
-- **Format opcji:** `co robi · mocna strona · koszt`; dokładnie jedna rekomendowana, oparta na dowodzie z repo lub
-  artefaktu. Opcja bez własnego „rozsądna, gdy …” wypada (bez słomianych alternatyw); gdy artefakty wspierają tylko
-  jedną odpowiedź, powiedz to: rekomendacja + „inaczej — wyjaśnię”.
-- Pytania w języku człowieka, bez żargonu skilla („pierwsza historyjka, która dowodzi, że produkt działa”, a nie
-  „gwiazda przewodnia”).
+## Scaling the interview
+- **Every input artifact holds decisions already made.** Read it before the first question and do not ask about what
+  it records. You skip a question only when the artifact literally settles the answer — announce the skip with a
+  quote.
+- Mark the questions: **[D]** diagnostic (the problem, scope, success criterion) and **[R]** about the solution. With
+  a finished code study you skip questions about the state of the code; with a finished reframing you ask only [R].
+- Roughly: a simple change 4–6 questions, a medium one 7–10, a complex one 11–15; with a finished study about 1/3
+  fewer, with a study and a reframing about half. Show the human the complexity estimate with its rationale
+  (systems, integrations, data changes, unknowns) and let them correct it before the first round.
+- **A ranking of options as input** (e.g. from a study): the first question is "which option do we implement?" —
+  accepting the ranking is an explicit decision by the human, not a silent assumption.
+- **New evidence along the way** (e.g. a gap turned out to be a live bug) does not go into the plan silently — it
+  becomes a separate question for the human.
+- **Option format:** `what it does · strength · cost`; exactly one recommended, based on evidence from the repo or an
+  artifact. An option without its own "sensible when …" is dropped (no straw-man alternatives); when the artifacts
+  support only one answer, say so: recommendation + "otherwise — I'll explain".
+- Questions in the human's language, without the skill's jargon ("the first story that proves the product works",
+  not "north star").
 
-## Gdy przesłuchanie się psuje
-- **Agent sam odpowiada na pytania decyzyjne albo zaczyna wdrażać** — najczęściej, gdy przesłuchanie jest częścią zadania
-  „rozwiąż zgłoszenie”: ramka zadania wygląda jak zgoda. Zapobieganie: w `CLAUDE.md` projektu linia „Nie wdrażaj bez
-  wyraźnej zgody po przesłuchaniu”.
-- **Słabszy model** zwija rundy do 2–3 ogólnych pytań i konspektu → przełącz na mocniejszy model albo tryb pytań
-  pojedynczych; nie skracaj procedury.
-- **Pytania zależne w jednej rundzie** (front to ocena agenta, nie policzony graf) → człowiek wskazuje zależność, agent
-  jawnie otwiera gałąź ponownie w kolejnej rundzie.
-- **Zakres za duży na jedną sesję** (dziesiątki decyzji, kilka obszarów) → najpierw mapa: lista obszarów i ich zależności
-  jako osobne zadania w `docs/project/`, potem przesłuchanie każdego zadania osobno.
+## When the interview breaks
+- **The agent answers decision questions itself or starts implementing** — most often when the interview is part of
+  a "solve the ticket" task: the task framing looks like consent. Prevention: in the project's `CLAUDE.md` the line
+  "Do not implement without explicit consent after the interview".
+- **A weaker model** collapses the rounds into 2–3 general questions and an outline → switch to a stronger model or
+  single-question mode; do not shorten the procedure.
+- **Dependent questions in one round** (the frontier is the agent's judgement, not a computed graph) → the human
+  points out the dependency, the agent explicitly reopens the branch in the next round.
+- **Scope too big for one session** (dozens of decisions, several areas) → first a map: a list of areas and their
+  dependencies as separate tasks in `docs/project/`, then an interview for each task separately.
 
-## Bez nadmiaru
-Przesłuchanie bez kontekstu wyciąga każdy przypadek brzegowy jako coś do rozwiązania i kończy się przeinżynierowaniem.
-Pytania szeregujesz wpływem i prawdopodobieństwem; odpowiedź „po prostu zawiedź z czytelnym błędem” jest
-pełnoprawna (drabina minimalizmu: eng-design-principles w pack-it). Sygnały ostrzegawcze procesu: zaległości
-wygenerowanych zgłoszeń, których nikt nie zrobi, i opisy PR dłuższe niż ktokolwiek przeczyta.
+## Without excess
+An interview without context pulls out every edge case as something to solve and ends in over-engineering. You rank
+questions by impact and likelihood; the answer "just fail with a readable error" is fully valid (the minimalism
+ladder: eng-design-principles in pack-it). Process warning signs: a backlog of generated tickets nobody will do, and
+PR descriptions longer than anyone will read.
 
-## Anty-wzorce
-Zaczynanie pracy bez zgody; skracanie przesłuchania do kilku ogólników; wszystkie pytania wyliczone z góry zamiast
-przeliczania frontu; pytanie człowieka o fakty z repo; mieszanie w jednej rundzie pytań zależnych.
+## Anti-patterns
+Starting work without consent; shortening the interview to a few generalities; all questions computed up front
+instead of recomputing the frontier; asking the human about facts from the repo; mixing dependent questions in one
+round.
 
-## Przykład
-**Sytuacja:** „Dodaję eksport zamówień do CSV w panelu admina — przepytaj mnie”. Role w panelu i liczbę zamówień
-(ok. 2 mln) ustala `scout`, nie człowiek. **Wynik (runda 1, tylko pytania niezależne):**
+## Example
+**Situation:** "I'm adding a CSV export of orders in the admin panel — grill me". The roles in the panel and the
+number of orders (about 2 million) are established by `scout`, not the human. **Result (round 1, independent
+questions only):**
 ```
-**P1 — Kto eksportuje**: a) admin, b) admin i support → Rekomendacja: a — plik zawiera dane klientów.
-**P2 — Dane osobowe**: a) pełne, b) bez, c) do wyboru → Rekomendacja: b — bez kopii danych poza systemem.
-**P3 — Filtry**: a) daty, b) daty i status → Rekomendacja: b — pokrywa opisany przypadek.
+**Q1 — Who exports**: a) admin, b) admin and support → Recommendation: a — the file holds customer data.
+**Q2 — Personal data**: a) full, b) none, c) selectable → Recommendation: b — no copy of the data outside the system.
+**Q3 — Filters**: a) dates, b) dates and status → Recommendation: b — covers the described case.
 ```
-Forma wydania dużego pliku czeka do rundy 2 — zależy od filtrów z P3.
+How a large file is delivered waits for round 2 — it depends on the filters from Q3.
 
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.
 
-## Źródło
-Kurs 10xDevs, ed. 3 (2026), moduł 2 (planowanie kroku, roadmapa) i moduł 4, lekcja 4 (bramka decyzyjna w planie) —
-materiał szkoleniowy (dostęp 2026-10-09).
-[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), skill `grilling`; opis:
-[aihero.dev](https://www.aihero.dev/skills-grilling). Opisane własnymi słowami.
+## Source
+The 10xDevs course, ed. 3 (2026), module 2 (step planning, roadmap) and module 4, lesson 4 (the decision gate in the
+plan) — training material (accessed 2026-10-09).
+[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), the `grilling` skill; description:
+[aihero.dev](https://www.aihero.dev/skills-grilling). Described in our own words.
