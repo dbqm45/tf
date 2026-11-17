@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import packs as packs_mod  # noqa: E402  (.tf/factory/packs.py — nakładki i składanie konfiguracji)
 yaml = packs_mod.yaml
+packs_mod.commit_language(ROOT)   # język commitów z git log raz, przy wczytaniu — render nie uruchamia procesów
 FACTORY = ROOT / ".tf" / "factory"
 SKILLS_DIR = ROOT / ".claude" / "skills"
 OUT_DIR = ROOT / ".claude" / "agents" / "_generated"
