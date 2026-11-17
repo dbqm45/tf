@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[2]
 VERDICT = {"confirmed": "confirmed", "partial": "partial", "unconfirmed": "unconfirmed", "contradicted": "contradicted",
            "P": "confirmed", "C": "partial", "N": "unconfirmed", "S": "contradicted"}   # litery P/C/N/S — tabele sprzed 14.x
 LINE_VERDICT = re.compile(r"^\s*[-*]\s*(confirmed|partial|unconfirmed|contradicted|P|C|N|S)\b")
-DATE_IN_LINE = re.compile(r"odczyt[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")
+DATE_IN_LINE = re.compile(r"(?:accessed|odczyt)[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")   # pl: sprzed 14.x — „odczyt”
 
 
 def keys(terms: list[str]) -> list[str]:
@@ -69,7 +69,7 @@ def skill_sources(root: Path, ks: list[str]) -> list[dict]:
         inside = False
         for i, line in enumerate(lines, 1):
             if line.startswith("## "):
-                inside = line.strip().startswith("## Źródła")
+                inside = line.strip().startswith(("## Sources", "## Źródła"))   # pl: sprzed 14.x — „## Źródła”
                 continue
             if inside and line.strip() and matches(line, ks):
                 d = DATE_IN_LINE.search(line)
@@ -106,15 +106,15 @@ def main(argv: list[str]) -> int:
         print(json.dumps(hits, ensure_ascii=False, indent=1))
         return 0
     if not hits:
-        print(f"Brak zweryfikowanych ustaleń dla: {' '.join(terms)} — sprawdź w źródłach (agent researcher, skill "
-              "core-source-research) i zapisz tabelę w docs/project/archive/research/.")
+        print(f"No verified findings for: {' '.join(terms)} — check the sources (agent researcher, skill "
+              "core-source-research) and save the table in docs/project/archive/research/.")
         return 0
     for h in hits:
-        when = f"{h['date']} · {h['age_days']} dni" if h["date"] else "bez daty"
-        note = " — nie podawaj jako faktu" if h["verdict"] in ("unconfirmed", "contradicted") else ""
-        note += " — stare: sprawdź ponownie" if h["stale"] and h["date"] else ""
+        when = f"{h['date']} · {h['age_days']} days" if h["date"] else "no date"
+        note = " — do not state it as a fact" if h["verdict"] in ("unconfirmed", "contradicted") else ""
+        note += " — old: check it again" if h["stale"] and h["date"] else ""
         print(f"- [{h['verdict']} · {when}] {h['text'][:220]}{note}  ({h['file']}:{h['line']})")
-    print(f"\n{len(hits)} ustaleń. Świeże i potwierdzone możesz użyć z datą; resztę sprawdź w źródłach.")
+    print(f"\n{len(hits)} findings. You can use fresh and confirmed ones with their date; check the rest in the sources.")
     return 0
 
 

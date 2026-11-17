@@ -81,7 +81,7 @@ def main() -> int:
 
         # kontrola diffu konfiguracji flag: bez karty operacyjnej skrypt mówi, że sprawdzić trzeba ręcznie
         r = run(p, SCRIPT, "PROJ-1")
-        check(r.returncode == 0 and "ręcznie" in r.stdout and "operations.json" in r.stdout,
+        check(r.returncode == 0 and "by hand" in r.stdout and "operations.json" in r.stdout,
               f"F-5: brak karty → informacja „sprawdź ręcznie”, kod 0: {r.returncode} {r.stdout}")
         write(p, ".tf/config/operations.json", json.dumps(CARD))
         r = run(p, SCRIPT, "PROJ-1")
@@ -114,7 +114,7 @@ def main() -> int:
               f"F-12: układ flaga → środowisko: qa bez decyzji → FLAG-001: {r.stdout}")
         write(p, "config/flags.json", "to nie json")
         r = run(p, SCRIPT, "PROJ-1")
-        check(r.returncode == 0 and "ręcznie" in r.stdout, f"F-13: plik, którego skrypt nie rozumie → „sprawdź ręcznie”, kod 0: {r.stdout}")
+        check(r.returncode == 0 and "by hand" in r.stdout, f"F-13: plik, którego skrypt nie rozumie → „sprawdź ręcznie”, kod 0: {r.stdout}")
         flags(p, test=True, qa=False, prod=False)
 
         # bramka etapu: zadanie ze specyfikacją potrzebuje flagi albo powodu jej braku; zmiana na prod bez decyzji blokuje
@@ -145,7 +145,7 @@ def main() -> int:
         check(r.returncode == 1 and data.get("auto") is True, f"F-21: domyślnie automatyczne flagi są włączone: {r.stdout[:200]}")
         write(p, ".tf/config/config.yaml", "feature_flags:\n  auto: false\n")
         r = run(p, SCRIPT, "PROJ-5")
-        check(r.returncode == 0 and "feature_flags.auto" in r.stdout and "samodzielnie" in r.stdout,
+        check(r.returncode == 0 and "feature_flags.auto" in r.stdout and "yourself" in r.stdout,
               f"F-22: feature_flags.auto: false → zadanie bez flagi przechodzi, z wyjaśnieniem: {r.returncode} {r.stdout}")
         r = run(p, TASK, "stage", "PROJ-5", "pr")
         check(r.returncode == 0, f"F-23: przy wyłączonych automatycznych flagach etap pr nie wymaga flagi: {r.stdout}")

@@ -153,31 +153,31 @@ def _check(root: Path, key: str, base: str | None, flag: dict | None, has_spec: 
     if flag is None:
         if not auto:
             return {"checked": False, "flag": None, "errors": [],
-                    "note": "automatyczne flagi są wyłączone (feature_flags.auto: false) — flagę dodajesz samodzielnie; "
-                            "fabryka jej nie zakłada i nie wymaga"}
+                    "note": "automatic flags are off (feature_flags.auto: false) — you add a flag yourself; "
+                            "the factory does not create or require one"}
         if has_spec:
             return {"checked": True, "flag": None, "errors": [{
                 "rule": "FLAG-000", "env": None,
-                "message": f"zadanie nie ma flagi ani powodu jej braku — tf task flag {key} set <klucz> albo "
-                           f"tf task flag {key} none --reason \"bez flagi, bo …\""}], "note": ""}
-        return {"checked": False, "flag": None, "errors": [], "note": "zadanie bez specyfikacji nie wymaga flagi"}
+                "message": f"the task has no flag and no reason for having none — tf task flag {key} set <key> or "
+                           f"tf task flag {key} none --reason \"no flag because …\""}], "note": ""}
+        return {"checked": False, "flag": None, "errors": [], "note": "a task without a specification needs no flag"}
     if flag.get("none"):
-        return {"checked": True, "flag": None, "errors": [], "note": f"bez flagi: {flag['none']}"}
+        return {"checked": True, "flag": None, "errors": [], "note": f"no flag: {flag['none']}"}
     name = flag.get("key")
     cfg = card(root)
     rel, envs, test_env = cfg.get("file"), cfg.get("envs") or [], cfg.get("test_env")
-    manual = (f"flaga {name}: stanu na środowiskach nie da się sprawdzić skryptem — sprawdź ręcznie, że poza "
-              "środowiskiem testowym jest wyłączona. ")
+    manual = (f"flag {name}: the script cannot check its state on the environments — check by hand that it is off "
+              "outside the test environment. ")
     if not rel or not envs or not test_env:
         return {"checked": False, "flag": name, "errors": [],
-                "note": manual + f"Uzupełnij kartę {CARD.as_posix()} (plik flag, środowiska, środowisko testowe)."}
+                "note": manual + f"Fill in the card {CARD.as_posix()} (flag file, environments, test environment)."}
     try:
         now = parse((root / rel).read_text(encoding="utf-8", errors="replace"), rel)
     except OSError:
         now = None
     if now is None:
         return {"checked": False, "flag": name, "errors": [],
-                "note": manual + f"Pliku {rel} nie ma albo ma format, którego skrypt nie czyta."}
+                "note": manual + f"The file {rel} does not exist or has a format the script cannot read."}
     before_text = git_show(root, base, rel)
     before = states(parse(before_text, rel) if before_text else None, name, envs)
     current = states(now, name, envs)
@@ -186,14 +186,14 @@ def _check(root: Path, key: str, base: str | None, flag: dict | None, has_spec: 
     for env in envs:
         if env != test_env and current.get(env) is True and before.get(env) is not True and env not in allowed:
             errors.append({"rule": "FLAG-001", "env": env,
-                           "message": f"flaga {name} włączona na środowisku „{env}” bez decyzji człowieka — wyłącz ją tam "
-                                      f"albo zapisz zgodę: tf task flag {key} allow {env} --by human:<id>"})
-    summary = ", ".join(f"{env}: {'włączona' if current.get(env) else 'wyłączona'}" for env in envs)
-    return {"checked": True, "flag": name, "errors": errors, "note": f"flaga {name} w {rel} — {summary}"}
+                           "message": f"flag {name} is on in the environment \"{env}\" without a human decision — turn it off there "
+                                      f"or record the approval: tf task flag {key} allow {env} --by human:<id>"})
+    summary = ", ".join(f"{env}: {'on' if current.get(env) else 'off'}" for env in envs)
+    return {"checked": True, "flag": name, "errors": errors, "note": f"flag {name} in {rel} — {summary}"}
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(prog="tf flag check", description="Kontrola flagi funkcji zadania.")
+    ap = argparse.ArgumentParser(prog="tf flag check", description="Check the feature flag of a task.")
     ap.add_argument("key")
     ap.add_argument("--base", default=None)
     ap.add_argument("--json", action="store_true")
@@ -204,10 +204,10 @@ def main(argv: list[str]) -> int:
         return 2 if e.code else 0
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     if not KEY.fullmatch(a.key):
-        print(f"✗ klucz „{a.key}” nie pasuje do wzorca (np. PROJ-123, CHG-12, T-20261113-limit)")
+        print(f"✗ the key \"{a.key}\" does not match the pattern (e.g. PROJ-123, CHG-12, T-20261113-limit)")
         return 2
     if load_task(root, a.key) is None:
-        print(f"✗ nie ma zadania {a.key} — załóż je: tf task start {a.key} --title \"…\"")
+        print(f"✗ there is no task {a.key} — create it: tf task start {a.key} --title \"…\"")
         return 2
     result = check(root, a.key, a.base)
     if a.json:

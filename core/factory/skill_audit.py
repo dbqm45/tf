@@ -99,24 +99,24 @@ def scan_lines(rel: str, text: str, is_script: bool, out: list[dict], suppressed
         if line.lstrip().startswith("```"):
             in_fence = not in_fence
         if "audit-ok" in line:
-            suppressed.append(finding("low", "suppressed", rel, i, "linia pominięta komentarzem audit-ok — sprawdź ręcznie"))
+            suppressed.append(finding("low", "suppressed", rel, i, "line skipped by an audit-ok comment — check it by hand"))
             continue
         if HIDDEN_RE.search(line):
             out.append(finding("high", "hidden-unicode", rel, i,
-                               "niewidoczne znaki lub znaki zmiany kierunku tekstu — mogą ukrywać treść przed człowiekiem"))
+                               "invisible or text-direction characters — they can hide content from a human"))
         if INJECTION_RE.search(line):
             out.append(finding("high", "prompt-injection", rel, i,
-                               "polecenie omijające instrukcje lub ukrywające działanie przed użytkownikiem"))
+                               "instruction that bypasses the rules or hides actions from the user"))
         if CURL_SH_RE.search(line):
-            out.append(finding("high", "curl-pipe-shell", rel, i, "pobieranie i wykonywanie kodu z sieci"))
+            out.append(finding("high", "curl-pipe-shell", rel, i, "downloads and runs code from the network"))
         if BASE64_RE.search(line):
-            out.append(finding("medium", "long-base64", rel, i, "długi ciąg base64 — możliwa zaciemniona treść"))
+            out.append(finding("medium", "long-base64", rel, i, "long base64 string — possibly obfuscated content"))
         if is_script:
             if SECRET_RE.search(line):
-                out.append(finding("high", "secret-access", rel, i, "dostęp do plików z poświadczeniami"))
+                out.append(finding("high", "secret-access", rel, i, "access to credential files"))
             if EXEC_RE.search(line):
                 out.append(finding("medium", "dynamic-exec", rel, i,
-                                   "dynamiczne wykonanie kodu lub powłoka (eval/exec/shell=True/os.system/pickle)"))
+                                   "dynamic code execution or shell (eval/exec/shell=True/os.system/pickle)"))
             if NETWORK_RE.search(line):
                 net = True
     return net
@@ -135,42 +135,42 @@ def audit_skill(d: Path) -> dict:
     # ── frontmatter (wymagania Anthropic) ──
     if not re.fullmatch(r"[a-z0-9-]{1,64}", name) or re.search(r"anthropic|claude", name):
         findings.append(finding("medium", "name-invalid", "SKILL.md", 2,
-                                "nazwa: do 64 znaków, małe litery, cyfry i myślniki, bez słów „anthropic” i „claude”"))
+                                "name: up to 64 characters, lowercase letters, digits and hyphens, without the words \"anthropic\" and \"claude\""))
     parts = set(name.split("-"))
     if parts and parts <= VAGUE_PARTS:
-        findings.append(finding("low", "vague-name", "SKILL.md", 2, f"ogólnikowa nazwa „{name}” — nazwij zadanie"))
+        findings.append(finding("low", "vague-name", "SKILL.md", 2, f"vague name \"{name}\" — name the task"))
     if not desc:
-        findings.append(finding("medium", "description-missing", "SKILL.md", 3, "brak opisu — model nie wie, kiedy użyć skilla"))
+        findings.append(finding("medium", "description-missing", "SKILL.md", 3, "no description — the model does not know when to use the skill"))
     else:
         if len(desc) > 1024:
-            findings.append(finding("medium", "description-too-long", "SKILL.md", 3, f"opis ma {len(desc)} znaków (> 1024)"))
+            findings.append(finding("medium", "description-too-long", "SKILL.md", 3, f"the description has {len(desc)} characters (> 1024)"))
         if not WHEN_RE.search(desc):
             findings.append(finding("low", "description-no-when", "SKILL.md", 3,
-                                    "opis nie mówi, KIEDY użyć skilla (reguła wyboru: „Użyj, gdy …”)"))
+                                    "the description does not say WHEN to use the skill (selection rule: \"Use when …\")"))
     if re.search(r"<[A-Za-z][^>]*>", fm):
-        findings.append(finding("medium", "xml-in-frontmatter", "SKILL.md", 1, "znaczniki XML w nagłówku"))
+        findings.append(finding("medium", "xml-in-frontmatter", "SKILL.md", 1, "XML tags in the frontmatter"))
     allowed = fm_value(fm, "allowed-tools") or ""
     if re.search(r"Bash\(\s*\*\s*\)|(^|[\s,])Bash($|[\s,])|Bash\((curl|wget|sudo|rm)\b|WebFetch|Write\(\s*\*", allowed):
         findings.append(finding("medium", "broad-allowed-tools", "SKILL.md", 1,
-                                f"allowed-tools „{allowed}” — szerokie uprawnienia bez pytania (nie zależą od zaufania do katalogu)"))
+                                f"allowed-tools \"{allowed}\" — broad permissions without asking (they do not depend on trust in the directory)"))
     if re.search(r"^hooks\s*:", fm, re.M):
         findings.append(finding("medium", "frontmatter-hooks", "SKILL.md", 1,
-                                "skill rejestruje hooki — działają do końca sesji; przeczytaj ich polecenia"))
+                                "the skill registers hooks — they run until the session ends; read their commands"))
 
     # ── treść SKILL.md ──
     for i, line in enumerate(body.splitlines(), fm_lines + 1):
         if re.match(r"^\s*!`|.*\s!`[^`]+`|^```!", line) and "audit-ok" not in line:
             findings.append(finding("medium", "shell-injection", "SKILL.md", i,
-                                    "polecenie !`…` wykonywane przy wczytaniu skilla, zanim zobaczy je model"))
+                                    "!`…` command runs when the skill loads, before the model sees it"))
     if body.count("\n") > 500:
         findings.append(finding("low", "body-too-long", "SKILL.md", 1,
-                                f"SKILL.md ma {body.count(chr(10))} linii (> 500) — przenieś szczegóły do references/"))
+                                f"SKILL.md has {body.count(chr(10))} lines (> 500) — move details to references/"))
     for ref in sorted(set(PATH_REF_RE.findall(body))):
         if not (d / ref).exists():
             findings.append(finding("medium", "missing-file", "SKILL.md", 1,
-                                    f"skill odwołuje się do `{ref}`, którego nie ma — obiecuje coś, czego nie dostarcza"))
+                                    f"the skill refers to `{ref}`, which does not exist — it promises something it does not deliver"))
     if re.search(r"\b[\w.-]+\\[\w.-]+\.(py|md|sh|js|json)\b", body):
-        findings.append(finding("low", "windows-path", "SKILL.md", 1, "ścieżka z ukośnikiem wstecznym — używaj „/”"))
+        findings.append(finding("low", "windows-path", "SKILL.md", 1, "path with a backslash — use \"/\""))
 
     # ── wszystkie pliki skilla ──
     net_files = []
@@ -181,9 +181,9 @@ def audit_skill(d: Path) -> dict:
         rel = p.relative_to(d).as_posix()
         if p.suffix.lower() in BINARY_EXT:
             if "__pycache__" in p.parts and p.suffix.lower() == ".pyc":
-                findings.append(finding("low", "pycache", rel, 0, "skompilowany cache Pythona — usuń przed instalacją lub publikacją"))
+                findings.append(finding("low", "pycache", rel, 0, "compiled Python cache — remove it before you install or publish"))
             else:
-                findings.append(finding("medium", "binary-file", rel, 0, "plik binarny lub wykonywalny w skillu"))
+                findings.append(finding("medium", "binary-file", rel, 0, "binary or executable file in the skill"))
             continue
         if p.suffix.lower() not in TEXT_EXT or p.stat().st_size > 2_000_000:
             continue
@@ -199,32 +199,32 @@ def audit_skill(d: Path) -> dict:
             all_md += "\n" + t
             lines = t.splitlines()
             if len(lines) > 100 and not re.search(r"spis treści|table of contents|^## contents", "\n".join(lines[:15]), re.I):
-                findings.append(finding("low", "ref-no-toc", rel, 1, "plik > 100 linii bez spisu treści na początku"))
+                findings.append(finding("low", "ref-no-toc", rel, 1, "file > 100 lines without a table of contents at the top"))
             if rel.startswith(("references/", "reference/")):
                 for target in sorted(set(re.findall(r"(?<![\w/.-])((?:references?)/[\w./-]+\.md)", t))):
                     if not (d / target).exists():
                         findings.append(finding("low", "ref-ambiguous", rel, 1,
-                                                f"`{target}` nie istnieje w tym skillu — przy pliku z innego skilla podaj pełną "
-                                                "ścieżkę `.claude/skills/<skill>/…`"))
+                                                f"`{target}` does not exist in this skill — for a file of another skill give the full "
+                                                "path `.claude/skills/<skill>/…`"))
                     elif target not in body:
                         findings.append(finding("low", "ref-nested", rel, 1,
-                                                f"`{target}` jest osiągalny tylko z innego pliku referencji — wymień go w SKILL.md "
-                                                "(odwołania jeden poziom od SKILL.md)"))
+                                                f"`{target}` is reachable only from another reference file — list it in SKILL.md "
+                                                "(references one level from SKILL.md)"))
 
     documented = bool(NETWORK_DOC_RE.search(text))
     for rel, t in net_files:
         hosts = set(URL_HOST_RE.findall(t))
         if documented:
             findings.append(finding("low", "network", rel, 0,
-                                    "skrypt łączy się z siecią — opisane w SKILL.md; sprawdź, dokąd i co wysyła"))
+                                    "the script connects to the network — described in SKILL.md; check where it connects and what it sends"))
         else:
             findings.append(finding("high", "network-undocumented", rel, 0,
-                                    "skrypt łączy się z siecią, a SKILL.md tego nie opisuje"
-                                    + (f" (hosty: {', '.join(sorted(hosts))})" if hosts else "")))
+                                    "the script connects to the network, but SKILL.md does not say so"
+                                    + (f" (hosts: {', '.join(sorted(hosts))})" if hosts else "")))
 
     if not re.search(r"^```|przykład|example|wejście:|input:", all_md, re.I | re.M):
         findings.append(finding("low", "no-examples", "SKILL.md", 1,
-                                "brak przykładu — konkretne przykłady działają lepiej niż lista reguł"))
+                                "no example — concrete examples work better than a list of rules"))
 
     findings += suppressed
     worst = max((SEVERITY_ORDER[f["severity"]] for f in findings), default=0)
@@ -252,7 +252,7 @@ def main(argv: list[str]) -> int:
         print(json.dumps({"skills": skills, "exit": code}, ensure_ascii=False, indent=1))
         return code
     if not skills:
-        print(f"Nie znaleziono SKILL.md w {path}")
+        print(f"No SKILL.md found in {path}")
         return 2
     counts = {"high": 0, "medium": 0, "low": 0}
     for s in skills:
@@ -266,9 +266,9 @@ def main(argv: list[str]) -> int:
             mark = {"high": "✗", "medium": "⚠", "low": "·"}[f["severity"]]
             loc = f"{f['file']}:{f['line']}" if f["line"] else f["file"]
             print(f"  {mark} [{f['severity']}] {f['code']} — {loc}: {f['message']}")
-    print(f"\nSkilli: {len(skills)} · wysokiej wagi: {counts['high']} · średniej: {counts['medium']} · niskiej: {counts['low']}")
-    print("Audyt automatyczny nie zastępuje przeczytania SKILL.md i każdego skryptu (zalecenie Anthropic dla skilli "
-          "spoza zaufanych źródeł).")
+    print(f"\nSkills: {len(skills)} · high severity: {counts['high']} · medium: {counts['medium']} · low: {counts['low']}")
+    print("An automatic audit does not replace reading SKILL.md and every script (Anthropic advice for skills "
+          "from untrusted sources).")
     return code
 
 

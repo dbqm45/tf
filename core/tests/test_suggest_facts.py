@@ -119,10 +119,10 @@ def main() -> int:
         check(r.returncode == 0 and "eIDAS 910/2014" in r.stdout and "partial" in r.stdout,
               f"F-3: wszystkie hasła naraz, bez wielkości liter, z rdzeniem słowa: {r.stdout}")
         r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "DORA", "terminy"])
-        check(r.returncode == 0 and "brak" in r.stdout.lower() and "researcher" in r.stdout,
+        check(r.returncode == 0 and "no verified findings" in r.stdout.lower() and "researcher" in r.stdout,
               f"F-4: brak trafień → wskazówka, że trzeba sprawdzić w źródłach: {r.stdout}")
         r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "Geographic", "Boundary"])
-        check("unconfirmed" in r.stdout and "nie podawaj jako faktu" in r.stdout,
+        check("unconfirmed" in r.stdout and "do not state it as a fact" in r.stdout,
               f"F-5: ustalenie niepotwierdzone oznaczone jako takie: {r.stdout}")
 
     for f in fails:

@@ -167,7 +167,7 @@ def main() -> int:
     check(not members_with_ma, f"IN-6 jeden poziom delegowania: {members_with_ma[:5]}")
     for pname in personas:
         fm, body = split(agents.get(f"agents/{pname}.md", "---\n{}\n---\n"), yaml)
-        if not (fm.get("multiagent") and "## Środowisko Managed Agents" in body):
+        if not (fm.get("multiagent") and "## Managed Agents environment" in body):
             check(False, f"IN-7 persona {pname}: koordynator z rosterem i sekcją środowiska")
             break
     else:

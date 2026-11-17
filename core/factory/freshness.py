@@ -129,7 +129,7 @@ def mark_reviewed(md: Path, reviewed: dt.date, months: int) -> str:
     text = md.read_text(encoding="utf-8")
     fm = frontmatter(text)
     if fm is None:
-        raise ValueError(f"{md}: brak frontmattera")
+        raise ValueError(f"{md}: no frontmatter")
     head, rest = text[:fm[1]], text[fm[1]:]
     line = f'  review: "{due}"'   # tekst, nie data YAML: specyfikacja Agent Skills — metadata to string → string
     if REVIEW_RE.search(head):
@@ -142,8 +142,8 @@ def mark_reviewed(md: Path, reviewed: dt.date, months: int) -> str:
     return due
 
 
-LABEL = {"overdue": "po terminie", "soon": f"termin ≤{SOON_DAYS} dni", "missing": "bez terminu",
-         "invalid": "zły format terminu", "ok": "aktualny"}
+LABEL = {"overdue": "overdue", "soon": f"due in ≤{SOON_DAYS} days", "missing": "no review date",
+         "invalid": "invalid review date format", "ok": "current"}
 
 
 def summary(rows: list[dict]) -> dict:
@@ -173,21 +173,21 @@ def main(argv: list[str]) -> int:
         today = dt.date.fromisoformat(opts["--today"]) if opts.get("--today") else dt.date.today()
         day = dt.date.fromisoformat(opts["--date"]) if opts.get("--date") else today
     except ValueError as e:
-        print(f"✗ Zła data: {e}")
+        print(f"✗ Invalid date: {e}")
         return 2
     policy = load_policy(root)
 
     if opts.get("--reviewed"):
         if not reviewed:
-            print("✗ Podaj skille po --reviewed.")
+            print("✗ Give the skills after --reviewed.")
             return 2
         missing = [n for n in reviewed if not (root / ".claude" / "skills" / n / "SKILL.md").is_file()]
         if missing:
-            print(f"✗ Nieznane skille: {', '.join(missing)}")
+            print(f"✗ Unknown skills: {', '.join(missing)}")
             return 2
         for n in reviewed:
             due = mark_reviewed(root / ".claude" / "skills" / n / "SKILL.md", day, interval(n, policy))
-            print(f"✓ {n}: przegląd {day.isoformat()}, następny termin {due} ({interval(n, policy)} mies.)")
+            print(f"✓ {n}: reviewed {day.isoformat()}, next review date {due} ({interval(n, policy)} months)")
         return 0
 
     rows = scan(root, today)
@@ -200,11 +200,11 @@ def main(argv: list[str]) -> int:
                 extra = f", [unverified]: {r['unverified']}" if r["unverified"] else ""
                 print(f"  {'✗' if r['status'] in ('overdue', 'invalid') else '⚠'} {r['skill']:<36} "
                       f"{LABEL[r['status']]} ({r['due'] or '—'}{extra})")
-        print(f"{'✓' if not s['overdue'] and not s['invalid'] else '⚠'} skilli: {len(rows)}, po terminie: "
-              f"{s['overdue']}, termin ≤{SOON_DAYS} dni: {s['soon']}, bez terminu: {s['missing']}, "
-              f"znaczników [unverified]: {s['unverified']}")
+        print(f"{'✓' if not s['overdue'] and not s['invalid'] else '⚠'} skills: {len(rows)}, overdue: "
+              f"{s['overdue']}, due in ≤{SOON_DAYS} days: {s['soon']}, no review date: {s['missing']}, "
+              f"[unverified] markers: {s['unverified']}")
         if s["overdue"]:
-            print("  Po przeglądzie (fakty sprawdzone w źródłach z datą): python3 .tf/factory/freshness.py --reviewed <skill>")
+            print("  After a review (facts checked in dated sources): python3 .tf/factory/freshness.py --reviewed <skill>")
     return 1 if opts.get("--strict") and (s["overdue"] or s["invalid"]) else 0
 
 

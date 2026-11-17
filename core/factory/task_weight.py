@@ -44,7 +44,7 @@ SENSITIVE = (
      r"płatnoś\w*|płatnos\w*|faktur\w*|rozlicze\w*|zwrot\w* środków|payment\w*|\bbilling\b|invoice\w*|refund\w*|"
      r"\bcheckout\b"),
     ("the database schema or a migration", r"migracj\w*|schemat\w* bazy|tabel\w* w bazie|migration\w*|database schema|db schema"),
-    ("dane osobowe", r"dan\w+ osobow\w+|\brodo\b|\bgdpr\b|\bpesel\w*|personal data"),
+    ("personal data", r"dan\w+ osobow\w+|\brodo\b|\bgdpr\b|\bpesel\w*|personal data"),
     ("deployment, infrastructure or secrets",
      r"wdroże\w* (na|do) produkcj\w*|produkcyjn\w*|sekret\w*|klucz\w* api|api key\w*|\bsecrets?\b|\bci/cd\b|terraform|"
      r"kubernetes|\bhelm\b|dockerfile|deployment\w*"),
@@ -135,7 +135,7 @@ def propose(root: Path, key: str) -> dict:
     if not small:
         blockers.append("changes behaviour (it is not a typo, a name or documentation)")
     if re.search(CRITERIA, ticket, re.I):
-        blockers.append("ma kryteria akceptacji")
+        blockers.append("has acceptance criteria")
     if len(body.strip()) > SHORT:
         blockers.append(f"the issue's content is longer than {SHORT} characters")
     if len(slices) > 1:
