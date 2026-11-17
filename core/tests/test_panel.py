@@ -128,8 +128,8 @@ def main() -> int:
         call(p, SCRIPTS / "run_state.py", "weight", d, "--set", "full")
         r = call(p, SCRIPTS / "run_state.py", "panel", d)
         check(r.returncode == 0 and "security-reviewer" in r.stdout and "spec-reviewer" in r.stdout and "spec.md" in r.stdout
-              and "--record" in r.stdout and "AC-n" in r.stdout and "Bez zmian" in r.stdout,
-              f"PN-11: panel drukuje skład, zlecenia (spec.md, kryterium po kryterium, Bez zmian) i polecenie zapisu: {r.stdout}")
+              and "--record" in r.stdout and "AC-n" in r.stdout and "Unchanged" in r.stdout,
+              f"PN-11: panel drukuje skład, zlecenia (spec.md, kryterium po kryterium, Unchanged) i polecenie zapisu: {r.stdout}")
         r = call(p, SCRIPTS / "run_state.py", "panel", d, "--record", "spec-reviewer", "pass", "--note", "AC-1 spełnione")
         check(r.returncode == 0 and (task(p).get("reviews") or {}).get("spec-reviewer", {}).get("verdict") == "pass",
               f"PN-12: panel --record zapisuje werdykt w zadaniu: {r.returncode} {r.stdout} {task(p).get('reviews')}")

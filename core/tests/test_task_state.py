@@ -137,7 +137,7 @@ def main() -> int:
         r = run(p, "slice", "EV-1", "K1", "planned", "--title", "limit 45 zł")
         check(r.returncode == 0 and states("EV-1") == {"K1": "planned"}, f"TS-20: kawałek zaplanowany: {r.stdout}{states('EV-1')}")
         run(p, "slice", "EV-1", "K1", "implemented")
-        check(states("EV-1") == {"K1": "niezweryfikowany"}, f"TS-21: zrobione bez dowodu to niezweryfikowany: {states('EV-1')}")
+        check(states("EV-1") == {"K1": "unverified"}, f"TS-21: zrobione bez dowodu to niezweryfikowany: {states('EV-1')}")
         r = run(p, "verify", "EV-1", "K1", "--command", OK, "--files", "src/fees.py")
         ev = p / CHANGES / "EV-1" / "evidence" / "K1-1.json"
         e = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
@@ -147,7 +147,7 @@ def main() -> int:
         check(states("EV-1") == {"K1": "verified"}, f"TS-23: zielony dowód na bieżących plikach → zweryfikowany: {states('EV-1')}")
         (p / "src" / "fees.py").write_text("CAP = 4500\n", encoding="utf-8")
         r = run(p, "status", "EV-1")
-        check(states("EV-1") == {"K1": "niezweryfikowany"} and "zmienion" in r.stdout and "K1" in r.stdout,
+        check(states("EV-1") == {"K1": "unverified"} and "zmienion" in r.stdout and "K1" in r.stdout,
               f"TS-24: zmiana pliku po dowodzie → niezweryfikowany, z powodem: {r.stdout}")
         r = run(p, "stage", "EV-1", "review")
         check(r.returncode == 1 and "K1" in r.stdout and task(p, "EV-1")["stage"] == "intake",
@@ -164,7 +164,7 @@ def main() -> int:
         r = run(p, "stage", "EV-1", "review")
         check(r.returncode == 0 and task(p, "EV-1")["stage"] == "review", f"TS-27: po zielonym dowodzie przegląd dozwolony: {r.stdout}")
         (p / "src" / "fees.py").unlink()
-        check(states("EV-1") == {"K1": "niezweryfikowany"}, f"TS-28: usunięty plik po dowodzie → niezweryfikowany: {states('EV-1')}")
+        check(states("EV-1") == {"K1": "unverified"}, f"TS-28: usunięty plik po dowodzie → niezweryfikowany: {states('EV-1')}")
 
         (p / "src" / "cli.py").write_text("x = 1\n", encoding="utf-8")
         run(p, "start", "EV-2", "--title", "Blokada")
@@ -212,22 +212,22 @@ def main() -> int:
         r = run(p, "artifact", "AR-1", "spec.md", "--stage", "spec", "--by", "tf/1.0.0")
         a = task(p, "AR-1").get("artifacts", {}).get("spec.md", {})
         check(r.returncode == 0 and a.get("stage") == "spec" and a.get("generated", {}).get("by") == "tf/1.0.0"
-              and a.get("generated", {}).get("at") and astates("AR-1") == {"spec.md": "szkic"},
+              and a.get("generated", {}).get("at") and astates("AR-1") == {"spec.md": "draft"},
               f"TS-41: plik zarejestrowany jako szkic, z wykonawcą i czasem: {r.stdout}{r.stderr}{a}")
         r = run(p, "artifact", "AR-1", "nie-ma.md", "--stage", "plan", "--by", "tf/1.0.0")
         check(r.returncode == 2 and "nie-ma.md" in r.stdout, f"TS-42: nieistniejący plik odrzucony: {r.stdout}")
         r = run(p, "approve", "AR-1", "spec.md", "--by", "tf/1.0.0")
-        check(r.returncode == 2 and astates("AR-1") == {"spec.md": "szkic"} and "human:" in r.stdout,
+        check(r.returncode == 2 and astates("AR-1") == {"spec.md": "draft"} and "human:" in r.stdout,
               f"TS-43: zatwierdza tylko człowiek (human:<id>): {r.returncode} {r.stdout}")
         r = run(p, "approve", "AR-1", "spec.md", "--by", "human:anna")
         a = task(p, "AR-1")["artifacts"]["spec.md"]
-        check(r.returncode == 0 and astates("AR-1") == {"spec.md": "zatwierdzony"}
+        check(r.returncode == 0 and astates("AR-1") == {"spec.md": "approved"}
               and a.get("verified", [{}])[-1].get("by") == "human:anna" and a["verified"][-1].get("at"),
               f"TS-44: zatwierdzenie przez człowieka zapisane z czasem: {r.stdout}{a}")
         run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "tf/1.0.0", "--inputs", "spec.md")
         run(p, "approve", "AR-1", "plan.md", "--by", "human:anna")
         r = run(p, "check", "AR-1")
-        check(r.returncode == 0 and astates("AR-1") == {"plan.md": "zatwierdzony", "spec.md": "zatwierdzony"},
+        check(r.returncode == 0 and astates("AR-1") == {"plan.md": "approved", "spec.md": "approved"},
               f"TS-45: wszystko aktualne → check 0: {r.returncode} {r.stdout}")
         (folder / "spec.md").write_text(SPEC.format(limit=50), encoding="utf-8")
         r = run(p, "check", "AR-1")
@@ -238,7 +238,7 @@ def main() -> int:
         r = run(p, "status", "AR-1")
         check("stale" in r.stdout and "plan.md" in r.stdout, f"TS-47: status dla człowieka pokazuje nieaktualny plik: {r.stdout}")
         run(p, "artifact", "AR-1", "plan.md", "--stage", "plan", "--by", "tf/1.0.0", "--inputs", "spec.md")
-        check(astates("AR-1").get("plan.md") == "szkic", f"TS-48: ponowna rejestracja odświeża wejścia i kasuje zatwierdzenie: {astates('AR-1')}")
+        check(astates("AR-1").get("plan.md") == "draft", f"TS-48: ponowna rejestracja odświeża wejścia i kasuje zatwierdzenie: {astates('AR-1')}")
         run(p, "approve", "AR-1", "spec.md", "--by", "human:anna")
         run(p, "approve", "AR-1", "plan.md", "--by", "human:jan")
         r = run(p, "check", "AR-1")
@@ -254,7 +254,7 @@ def main() -> int:
         # plik z nagłówkiem kontraktu pdi: rejestracja i zatwierdzenie nie zmieniają ani bajtu
         run(p, "artifact", "CHG-12", "plan.md", "--stage", "plan", "--by", "process:pdi")
         run(p, "approve", "CHG-12", "plan.md", "--by", "human:anna")
-        check((pdi / "plan.md").read_text(encoding="utf-8") == plan and astates("CHG-12") == {"plan.md": "zatwierdzony"},
+        check((pdi / "plan.md").read_text(encoding="utf-8") == plan and astates("CHG-12") == {"plan.md": "approved"},
               f"TS-51: plik pdi zarejestrowany i zatwierdzony bez zmiany treści: {astates('CHG-12')}")
         r = run(p, "stage", "AR-1", "implementation")
         (folder / "spec.md").write_text(SPEC.format(limit=55), encoding="utf-8")
@@ -292,7 +292,7 @@ def main() -> int:
         (q / "src" / "a.py").write_text("a = 2\n", encoding="utf-8")
         r = run(q, "list")
         line = next((ln for ln in r.stdout.splitlines() if "PROJ-9" in ln), "")
-        check("0/2" in line and "niezweryfikowany" in r.stdout, f"TS-55: zmiana pliku po dowodzie widać na liście: {r.stdout}")
+        check("0/2" in line and "unverified" in r.stdout, f"TS-55: zmiana pliku po dowodzie widać na liście: {r.stdout}")
         r = subprocess.run([sys.executable, str(CTF), "status"], cwd=q, capture_output=True, text=True, timeout=60)
         check(r.returncode == 0 and "PROJ-9" in r.stdout, f"TS-56: tf status to lista zadań: {r.stdout}{r.stderr}")
         with tempfile.TemporaryDirectory() as e:

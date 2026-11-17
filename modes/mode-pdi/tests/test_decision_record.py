@@ -355,6 +355,13 @@ def main() -> int:
                                         .replace("| | TSK-58 | | test klucza |", "| | | | test klucza |"),
                                         "TSK-57", "Odblokowuje"),
         "cięcie bez wymagania i weryfikacji": (rows_ok.replace("| US-03 | — | | |", "| | — | | |"), "TSK-59", "Wymagania"),
+        "fundament tylko w kolumnie Rodzaj": (rows_ok.replace("(fundament) klucz idempotencji", "klucz idempotencji")
+                                               .replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
+                                               "TSK-57", "Odblokowuje"),
+        "fundament w kolumnie Kind": (rows_ok.replace("| Cięcie | Rodzaj |", "| Cięcie | Kind |")
+                                       .replace("(fundament) klucz idempotencji", "klucz idempotencji")
+                                       .replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
+                                       "TSK-57", "Odblokowuje"),
     }
     for label, (rows, who, needle) in bad_plan.items():
         r = release_case(RELEASE_OK, rows=rows)

@@ -7,24 +7,24 @@ Specyfikacja zadania sprawdzana skryptem (krok D osi przebiegu): `docs/project/c
 
 Format pliku (bez nagłówka artefaktu — stan pliku trzyma task.json):
 
-  # Specyfikacja: <tytuł>
-  ## Kryteria          - AC-1: Zakładając <stan>, gdy <jedna akcja>, wtedy <obserwowalny wynik>.
-  ## Bez zmian         co ma działać jak dotąd (albo „brak, bo …”)
-  ## Poza zakresem     czego historyjka nie obejmuje (albo „brak, bo …”)
-  ## Otwarte pytania   pytanie, bez którego nie da się zacząć, ma znacznik [blokuje]
+  # Spec: <tytuł>
+  ## Acceptance criteria   - AC-1: Given <stan>, when <jedna akcja>, then <obserwowalny wynik>.
+  ## Unchanged             co ma działać jak dotąd (albo „none, because …”)
+  ## Out of scope          czego historyjka nie obejmuje (albo „none, because …”)
+  ## Open questions        pytanie, bez którego nie da się zacząć, ma znacznik [blocking]
 
-Kryterium może też zajmować kilka linii pod nagłówkiem `### AC-1`. Słowa kluczowe po polsku (Zakładając / Mając,
-Gdy / Kiedy, Wtedy) albo po angielsku (Given, When, Then; sekcje: Acceptance criteria, Unchanged, Out of scope, Open
-questions).
+Kryterium może też zajmować kilka linii pod nagłówkiem `### AC-1`. Słowa kluczowe i sekcje po angielsku; dawne polskie
+(Zakładając / Mając, Gdy / Kiedy, Wtedy; Kryteria, Bez zmian, Poza zakresem, Otwarte pytania, [blokuje]) skrypt
+przyjmuje przez wydanie 14.x, a migracja przepisuje je w otwartych zadaniach.
 
 Reguły — strukturalne, bez modelu:
-  SPEC-001 brak kryteriów `AC-n` · SPEC-002 kryterium bez części Zakładając, Gdy albo Wtedy · SPEC-003 powtórzony
-  identyfikator · SPEC-004 więcej niż jedno „Gdy” (jedna akcja na kryterium) · SPEC-005 sekcja „Bez zmian” albo „Poza
-  zakresem” pusta, nieobecna albo samo „brak” bez powodu · SPEC-006 otwarte pytanie ze znacznikiem [blokuje] ·
+  SPEC-001 brak kryteriów `AC-n` · SPEC-002 kryterium bez części Given, When albo Then · SPEC-003 powtórzony
+  identyfikator · SPEC-004 więcej niż jedno „When” (jedna akcja na kryterium) · SPEC-005 sekcja „Unchanged” albo „Out of
+  scope” pusta, nieobecna albo samo „none” bez powodu · SPEC-006 otwarte pytanie ze znacznikiem [blocking] ·
   SPEC-007 niewypełniony szablon (`<…>` w kryterium albo w sekcji) · SPEC-008 wynik, którego nie da się sprawdzić
-  („działa poprawnie”, „works as expected”) bez liczby ani cytowanej wartości w części Wtedy.
+  („działa poprawnie”, „works as expected”) bez liczby ani cytowanej wartości w części Then.
 SPEC-009 (ostrzeżenie, nie blokuje etapu): żadne kryterium nie opisuje zachowania niedozwolonego — odmowy, błędu,
-„nie …” w części Wtedy; sprawdzane tylko przy specyfikacji bez błędów.
+„nie …” w części Then; sprawdzane tylko przy specyfikacji bez błędów.
 SPEC-004 obejmuje też łącznik kolejnej akcji w części Gdy („a następnie”, „potem”, „oraz”, „and then”).
 Pozostałe reguły językowe (szczegół implementacji, kilka akcji w historyjce, pełny słownik) sprawdza
 `requirements_lint.py` z nakładki pack-it, gdy jest zainstalowana.
@@ -56,7 +56,7 @@ SECTIONS = {"criteria": ("kryteria", "kryteria akceptacji", "acceptance criteria
             "unchanged": ("bez zmian", "unchanged"),
             "out": ("poza zakresem", "out of scope"),
             "questions": ("otwarte pytania", "open questions")}
-LABEL = {"unchanged": "Bez zmian", "out": "Poza zakresem"}
+LABEL = {"unchanged": "Unchanged", "out": "Out of scope"}
 AC_START = re.compile(r"^\s*(?:[-*]\s+|#{3,6}\s+)?\**(AC-\d+)\**\s*[:—–-]?\s*(.*)$")
 GIVEN = re.compile(r"\b(zakładając|zakladajac|mając|majac|przy założeniu|given)\b", re.I)
 WHEN = re.compile(r"\b(gdy|kiedy|when)\b", re.I)
@@ -71,28 +71,28 @@ BLOCKING = re.compile(r"\[(blokuje|blocking)\]", re.I)
 # wynik opisujący zachowanie niedozwolone: odmowa, blokada, błąd, „nie …” (SPEC-009, tylko ostrzeżenie)
 NEGATIVE = re.compile(r"\b(nie|odmaw\w*|odmow\w*|odrzuc\w*|blokuj\w*|zablok\w*|błęd\w*|zabron\w*|brak\w*|"
                       r"not|no|never|cannot|rejects?|rejected|denie[sd]|deny|error|forbidden|blocked)\b", re.I)
-TEMPLATE = """# Specyfikacja: {title}
+TEMPLATE = """# Spec: {title}
 
-Źródło: `ticket.md`. Każde kryterium to jedno zachowanie: Zakładając <stan>, gdy <jedna akcja>, wtedy <wynik, który
-da się sprawdzić testem>. Sprawdzenie: `tf spec check {key}`.
+Źródło: `ticket.md`. Każde kryterium to jedno zachowanie: Given <stan>, when <jedna akcja>, then <wynik, który da się
+sprawdzić testem>. Sprawdzenie: `tf spec check {key}`.
 
-## Kryteria
+## Acceptance criteria
 
-- AC-1: Zakładając <stan początkowy>, gdy <jedna akcja>, wtedy <obserwowalny wynik>.
-- AC-2: Zakładając <stan>, gdy <akcja niedozwolona albo błędne dane>, wtedy <czego system nie robi — odmowa, komunikat>.
+- AC-1: Given <stan początkowy>, when <jedna akcja>, then <obserwowalny wynik>.
+- AC-2: Given <stan>, when <akcja niedozwolona albo błędne dane>, then <czego system nie robi — odmowa, komunikat>.
   (kryterium negatywne: czego wynik nie może być; usuń, gdy historyjka go nie ma)
 
-## Bez zmian
+## Unchanged
 
-- <co ma działać jak dotąd — albo „brak, bo …”>
+- <co ma działać jak dotąd — albo „none, because …”>
 
-## Poza zakresem
+## Out of scope
 
-- <czego ta historyjka nie obejmuje — albo „brak, bo …”>
+- <czego ta historyjka nie obejmuje — albo „none, because …”>
 
-## Otwarte pytania
+## Open questions
 
-- <pytanie; gdy bez odpowiedzi nie da się zacząć, dodaj [blokuje] — albo usuń tę linię>
+- <pytanie; gdy bez odpowiedzi nie da się zacząć, dodaj [blocking] — albo usuń tę linię>
 """
 
 
@@ -142,7 +142,7 @@ def check_text(text: str) -> dict:
 
     criteria = data["criteria"]
     if not criteria:
-        add("SPEC-001", 1, "brak kryteriów: w sekcji „Kryteria” dodaj pozycje `- AC-1: Zakładając …, gdy …, wtedy …`")
+        add("SPEC-001", 1, "brak kryteriów: w sekcji „Acceptance criteria” dodaj pozycje `- AC-1: Given …, when …, then …`")
     seen: dict[str, int] = {}
     for c in criteria:
         if c["id"] in seen:
@@ -151,13 +151,13 @@ def check_text(text: str) -> dict:
         if PLACEHOLDER.search(c["text"]):
             add("SPEC-007", c["line"], f"{c['id']}: niewypełniony szablon (`<…>`) — wpisz stan, akcję i wynik")
             continue
-        missing = [name for name, rx in (("Zakładając", GIVEN), ("Gdy", WHEN), ("Wtedy", THEN)) if not rx.search(c["text"])]
+        missing = [name for name, rx in (("Given", GIVEN), ("When", WHEN), ("Then", THEN)) if not rx.search(c["text"])]
         if missing:
             add("SPEC-002", c["line"], f"{c['id']}: brakuje części {', '.join(missing)}")
         when, then = WHEN.search(c["text"]), THEN.search(c["text"])
         action = c["text"][when.end():then.start()] if when and then and then.start() > when.end() else ""
         if len(WHEN.findall(c["text"])) > 1:
-            add("SPEC-004", c["line"], f"{c['id']}: więcej niż jedno „gdy” — jedna akcja na kryterium, drugą opisz osobnym AC")
+            add("SPEC-004", c["line"], f"{c['id']}: więcej niż jedno „when” — jedna akcja na kryterium, drugą opisz osobnym AC")
         elif NEXT_ACTION.search(action):
             add("SPEC-004", c["line"], f"{c['id']}: druga akcja w części Gdy („{NEXT_ACTION.search(action).group(0)}”) — "
                                        "jedna akcja na kryterium, drugą opisz osobnym AC")
@@ -168,17 +168,17 @@ def check_text(text: str) -> dict:
                                        "dokładnie widać (wartość, komunikat, stan)")
     for name in ("unchanged", "out"):
         if name not in data["sections"]:
-            add("SPEC-005", 1, f"brak sekcji „{LABEL[name]}” — wpisz pozycje albo „brak, bo …”")
+            add("SPEC-005", 1, f"brak sekcji „{LABEL[name]}” — wpisz pozycje albo „none, because …”")
             continue
         body = filled(data["sections"][name])
         start = data["sections"][name][0][0] if data["sections"][name] else 1
         if not body:
-            add("SPEC-005", start, f"sekcja „{LABEL[name]}” jest pusta — wpisz pozycje albo „brak, bo …”")
+            add("SPEC-005", start, f"sekcja „{LABEL[name]}” jest pusta — wpisz pozycje albo „none, because …”")
         for n, line in body:
             if PLACEHOLDER.search(line):
                 add("SPEC-007", n, f"sekcja „{LABEL[name]}”: niewypełniony szablon (`<…>`)")
             elif NONE_ONLY.match(line) and len(body) == 1:
-                add("SPEC-005", n, f"sekcja „{LABEL[name]}”: samo „{line}” — dopisz powód („brak, bo …”)")
+                add("SPEC-005", n, f"sekcja „{LABEL[name]}”: samo „{line}” — dopisz powód („none, because …”)")
     for n, line in filled(data["sections"].get("questions", [])):
         if not PLACEHOLDER.search(line) and BLOCKING.search(line):
             add("SPEC-006", n, "otwarte pytanie blokuje start — potrzebna odpowiedź człowieka: " + line[:120])

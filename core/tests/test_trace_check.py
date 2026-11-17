@@ -100,7 +100,7 @@ def main() -> int:
               f"TR-5: pełny ślad AC-1: test, commit, kawałek, stan dowodu: {r.stdout[:400]}{r.stderr}")
         check(rows.get("AC-1", {}).get("red") is True and rows.get("AC-2", {}).get("red") is False,
               f"TR-16: ślad mówi, czy test był widziany jako czerwony: {rows.get('AC-1')} {rows.get('AC-2')}")
-        check(rows.get("AC-2", {}).get("commit") is None and rows.get("AC-2", {}).get("evidence") == "bez dowodu"
+        check(rows.get("AC-2", {}).get("commit") is None and rows.get("AC-2", {}).get("evidence") == "no-evidence"
               and any(w.get("rule") == "TRACE-003" for w in data.get("warnings", [])),
               f"TR-6: test niezacommitowany i poza plikami kawałka → ostrzeżenie TRACE-003, bez błędu: {rows.get('AC-2')} {data.get('warnings')}")
 
@@ -123,7 +123,7 @@ def main() -> int:
         write(p, "src/fees.py", "LIMIT = 46\n")
         r = run(p, SCRIPT, "PROJ-1", "--json")
         rows = {x["criterion"]: x for x in json.loads(r.stdout).get("rows", [])} if r.stdout.strip().startswith("{") else {}
-        check(r.returncode == 0 and rows.get("AC-1", {}).get("evidence") == "niezweryfikowany",
+        check(r.returncode == 0 and rows.get("AC-1", {}).get("evidence") == "unverified",
               f"TR-10: plik kawałka zmieniony po dowodzie widać w śladzie: {rows.get('AC-1')}")
         r = run(p, SCRIPT, "PROJ-1", "--base", "nie-ma-takiej")
         check(r.returncode == 2, f"TR-11: nieznana baza → kod 2: {r.returncode} {r.stdout}")

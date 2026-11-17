@@ -4,7 +4,7 @@ Zgodność zmian z planem przebiegu: pliki zmienione na gałęzi historyjki vs p
 
   python3 .claude/skills/tf/scripts/plan_drift.py <katalog przebiegu> [--base main] [--json]
 
-Kawałek w plan.md: `- [x] K<n> — <wartość> · … · pliki: <ścieżki po przecinku> · …` (ścieżka może być katalogiem
+Kawałek w plan.md: `- [x] S<n> — <wartość> · … · files: <ścieżki po przecinku> · …` (ścieżka może być katalogiem
 albo wzorcem glob). Plan leży w katalogu przebiegu albo — gdy `run.json` ma `task_dir` — w katalogu zadania
 `docs/project/changes/<KEY>/`. Wynik: per kawałek pliki ruszone i nietknięte, zmiany spoza planu (bez wyników pracy
 fabryki w `.tf/` i plików zadań w `docs/project/changes/`), pokrycie diffu planem w % i liczba
@@ -19,7 +19,7 @@ import re
 import subprocess
 import sys
 
-SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*(K\d+)\b(.*)$")
+SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*([KS]\d+)\b(.*)$")
 TEST = re.compile(r"(^|/)(tests?|__tests__|e2e|spec)/|\.(test|spec)\.|(^|/)test_[^/]*\.py$|_test\.(py|go)$|"
                   r"(Test|Tests)\.(java|cs)$")
 
@@ -33,7 +33,7 @@ def parse_plan(text: str) -> list[dict]:
         files = []
         for part in m.group(3).split("·"):
             k, _, v = part.strip().partition(":")
-            if k.strip().lower() == "pliki":
+            if k.strip().lower() in ("files", "pliki"):
                 files = [f.strip().strip("`") for f in v.split(",") if f.strip()]
         out.append({"id": m.group(2), "done": m.group(1).lower() == "x", "files": files})
     return out

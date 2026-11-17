@@ -519,7 +519,8 @@ def validate(v, s: dict, at: str) -> list[str]:
     return errs
 
 
-PLAN_COLUMNS = ("wydanie", "flaga", "kind", "wartość", "wymagania", "odblokowuje", "weryfikacja")
+PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odblokowuje", "weryfikacja")   # kontrakt pdi
+COLUMN_ALIASES = {"kind": "rodzaj"}   # angielski nagłówek kolumny przyjmowany obok polskiego
 FOUNDATION = re.compile(r"^(fundament|foundation|f|f-\d+)$", re.I)   # jak REL-008 w ci_for_sdlc (connectors/repo.ts)
 FOUNDATION_VALUE = re.compile(r"^\((fundament|foundation)\)", re.I)
 REQUIREMENT_ID = re.compile(r"\b[A-Z][A-Z0-9]*-\d+\b")
@@ -537,7 +538,7 @@ def plan_columns(text: str) -> dict:
             cols = None
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        low = [c.lower() for c in cells]
+        low = [COLUMN_ALIASES.get(c.lower(), c.lower()) for c in cells]
         if "wydanie" in low or "flaga" in low or "odblokowuje" in low:
             cols = {k: low.index(k) for k in PLAN_COLUMNS if k in low}
             continue
@@ -564,7 +565,7 @@ def check_plan(d: Path) -> list[str]:
     known = set(rows) | set(h["tasks"] if isinstance(h.get("tasks"), list) else [h["tasks"]] if h.get("tasks") else [])
     errs = []
     for t, row in rows.items():
-        if FOUNDATION.match(row.get("kind") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
+        if FOUNDATION.match(row.get("rodzaj") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
             unblocks = REQUIREMENT_ID.findall(row.get("odblokowuje") or "")
             if not unblocks:
                 errs.append(f"plan.md: {t} — fundament bez „Odblokowuje” (cięcia tej zmiany, których wymaga); "

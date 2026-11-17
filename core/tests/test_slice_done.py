@@ -107,8 +107,8 @@ def main() -> int:
         log = commits(p)
         files = set(git(p, "show", "--name-only", "--format=", "HEAD").stdout.split())
         check(r.returncode == 0 and len(log) == 2 and log[0].startswith("feat(pay): card payment")
-              and "Kawałek K1: płatność kartą" in log[0],
-              f"DN-3: commit z tytułem i treścią „Kawałek K1: <wartość z planu>”: {r.returncode} {r.stdout}{r.stderr} {log[:1]}")
+              and "Slice K1: płatność kartą" in log[0],
+              f"DN-3: commit z tytułem i treścią „Slice K1: <wartość z planu>”: {r.returncode} {r.stdout}{r.stderr} {log[:1]}")
         check(files == {"pay.py", "test_pay.py"} and "notes.txt" in git(p, "status", "--porcelain").stdout,
               f"DN-4: commit obejmuje tylko pliki z dowodu, reszta zostaje niezatwierdzona: {files}")
         cur = meta(d).get("current") or {}

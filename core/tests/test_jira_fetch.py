@@ -120,7 +120,7 @@ def main() -> int:
             shutil.rmtree(p / ".tf" / "runs" / "EBO-1236")
             r = call(p, "run_report.py", "start", "Własny tytuł", "--key", "EBO-1236", "--from-tracker", env=dc)
             text = ticket.read_text(encoding="utf-8") if ticket.is_file() else ""
-            check(r.returncode == 0 and text.startswith("# Własny tytuł\n") and "## Kryteria akceptacji" in text
+            check(r.returncode == 0 and text.startswith("# Własny tytuł\n") and "## Acceptance criteria" in text
                   and "wtedy opłata wynosi 45 zł" in text and (SEEN[-1].get("auth") or "") == f"Bearer {TOKEN}",
                   f"J-6: token Bearer, tytuł człowieka, kryteria z pola własnego z karty: {r.returncode} {r.stdout} {r.stderr} {text[:300]}")
 

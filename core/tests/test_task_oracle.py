@@ -92,7 +92,7 @@ def main() -> int:
         r = tf(p, "reopen", "PROJ-1", "plan.md", "--by", "human:anna", "--reason", "zmiana wymagań: limit 50 zł")
         task = json.loads((folder / "task.json").read_text(encoding="utf-8"))
         log = task.get("reopened") or []
-        check(r.returncode == 0 and task["artifacts"]["plan.md"]["status"] == "szkic"
+        check(r.returncode == 0 and task["artifacts"]["plan.md"]["status"] == "draft"
               and log and log[-1].get("file") == "plan.md" and "limit 50" in log[-1].get("reason", "")
               and log[-1].get("by") == "human:anna",
               f"O-12: reopen zdejmuje zatwierdzenie i zapisuje powód: {r.stdout} {log}")

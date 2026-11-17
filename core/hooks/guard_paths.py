@@ -85,7 +85,7 @@ def oracle_reason(rel: str, root: str) -> str | None:
         if not task or stage == CLOSED:
             return None
         art = (task.get("artifacts") or {}).get(name) or {}
-        if art.get("status") == "zatwierdzony":
+        if art.get("status") == "approved":
             return (f"{rel} jest zatwierdzony przez człowieka w zadaniu {key}. Zmiana wymaga jego decyzji: "
                     f"tf task reopen {key} {name} --by human:<id> --reason \"<powód>\".")
         if name == "spec.md" and stage in LOCKED_FROM:

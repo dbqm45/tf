@@ -607,18 +607,20 @@ treści (angielska), bez równoległej polskiej.
   (`OK|WARNINGS|ERRORS`), `dossier_check` (`ERRORS`), `tf analyze` (`ERROR|NEEDS_FIX|OK`, bramka `FAILED`, rejestr
   `open|resolved` z migracją `items.jsonl`), `facts.py` (`confirmed|partial|unconfirmed|contradicted|skill-source`),
   rodzaje kart `recon_cards`. Flagi CLI były już po angielsku.
-- [ ] Etap 3 — składnia dokumentów: planu i specyfikacji (`· pliki:`, `· kryteria:`, `· po: brak`, `## Kryteria`,
-  „Zakładając / Gdy / Wtedy”), nagłówki i pola dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod /
-  do weryfikacji), sekcje raportu rekonstrukcji, kolumny planu wydań pdi (`PLAN_COLUMNS`), etykiety decyzji
-  qa-change-review, pole „Dotyczy” lekcji i nazwy plików zakładanych w `docs/project/` (`<data>-przeglad.md`)
-  po angielsku razem z tłumaczeniem treści skilla `tf` i szablonów; skrypty przyjmują
-  stare słowa przez jedno wydanie, migracja przepisuje `plan.md`/`spec.md` otwartych zadań.
-- [ ] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”) —
-  następny PR po 2d: stała reguła „odpowiadasz i piszesz dokumenty dla człowieka w języku, w którym on pisze” zamiast
-  `languages.*.work` i `tf language`; bez rozmowy (wykonawca, faza pdi bez interakcji, przegląd w CI) — język briefu,
-  zadania lub issue, a bez nich istniejących dokumentów `docs/project/`; język commitów wykrywany skryptem z `git log`
-  (nowe repo: angielski) zamiast `tf commit-language`; `pack-editorial-pl` jako zwykła nakładka, niezależna od
-  języka instalacji; usunięcie `--language`, `tf language`, `tf commit-language` z migracją ustawień projektu.
+- [x] Etap 3a — plan i specyfikacja: kawałki `S<n>`, pola `files:`, `criteria:`, `verify:`, `after:` (`none`), `tier:`,
+  stopka commita `Slice S<n>:`, katalog prób skanu `attempt-<k>`; specyfikacja `Given / When / Then`, sekcje
+  `Acceptance criteria`, `Unchanged`, `Out of scope`, `Open questions`, znacznik `[blocking]`; status pliku zadania
+  `draft|approved`, stan kawałka `unverified`, dowód śladu `no-test|no-evidence`. Skrypty przyjmują dawną składnię przez
+  wydania 14.x; migracja przepisuje `spec.md`/`plan.md` otwartych zadań i przelicza skróty zatwierdzeń.
+- [ ] Etap 3b — pozostała składnia dokumentów i linie wyników: `BRAMKA S<n>: PASS|FAIL`, `KARENCJA:`, `SKAN:`
+  (security_scan, czytane przez pętlę i testy); dossier legacy (`Stan: zielony`, kolumna `Pewność`: test / kod /
+  do weryfikacji, nagłówki sekcji); sekcje raportu rekonstrukcji (`recon_check.SECTIONS`); kolumny planu cięć pdi
+  (kontrakt z ci_for_sdlc — angielskie nagłówki przyjmowane obok polskich, np. `Kind`); etykiety decyzji
+  qa-change-review; pole „Dotyczy” lekcji; tagi dziennika `project_record`; litery P/C/N/S w tabelach weryfikacji;
+  nazwy plików zakładanych w `docs/project/` (`<data>-przeglad.md`); po wydaniu 14.x — usunięcie dawnej składni
+  z parserów (K<n>, `pliki:`, Zakładając/Gdy/Wtedy).
+- [x] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”, #290):
+  stała reguła rozmowy, język commitów z `git log`, bez `tf language`, `tf commit-language` i `--language`.
 - [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty po angielsku; język
   odpowiedzi wynika z rozmowy (punkt wyżej), nie z ustawienia.
 

@@ -13,7 +13,7 @@ Propozycja powstaje z dwóch źródeł i zawsze ma powód zwykłym zdaniem:
 - treść `ticket.md`: słowa o obszarach wrażliwych (logowanie, hasła, uprawnienia, płatności, migracje bazy, dane
   osobowe, sekrety, wdrożenie) → `full`; słowa o drobnej zmianie (literówka, nazwa, komentarz, dokumentacja) bez
   kryteriów akceptacji i w krótkiej treści → `light`;
-- ścieżki z `plan.md` (pole `pliki:` kawałków): kategoria wysokiego ryzyka triażu zmian (`autonomy.triage.high`:
+- ścieżki z `plan.md` (pole `files:` kawałków, dawniej `pliki:`): kategoria wysokiego ryzyka triażu zmian (`autonomy.triage.high`:
   auth, payments, schema, deploy — te same reguły co `tf risk`) → `full`; więcej niż jeden kawałek albo więcej niż
   dwa pliki wyklucza `light`.
 Reguły są ostrożne: wątpliwość daje wyższą wagę. Podnieść wagę może każdy; obniżyć — tylko człowiek, z powodem.
@@ -55,7 +55,7 @@ SMALL = (r"literówk\w*|\btypo\w*|pisowni\w*|interpunkcj\w*|przecin\w*|komentarz
 CRITERIA = (r"\bAC[- ]?\d|\bAC\s*:|kryteri\w* akceptacji|acceptance criteria|zakładając|\bgiven\b[^.\n]*\bwhen\b|"
             r"\bgdy\b[^.\n]*\bwtedy\b")
 SHORT = 400       # dłuższa treść niż tyle znaków to nie jest drobna zmiana
-SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*(K\d+)\b(.*)$")
+SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*([KS]\d+)\b(.*)$")
 SENSITIVE_PATHS = ("auth", "payments", "schema", "deploy")
 PATH_LABEL = {"auth": "uwierzytelnianie lub uprawnienia", "payments": "płatności lub rozliczenia",
               "schema": "schemat lub migracja bazy", "deploy": "wdrożenie, CI, infrastruktura lub sekrety"}
@@ -66,7 +66,7 @@ def rank(weight: str) -> int:
 
 
 def plan_slices(text: str) -> list[dict]:
-    """Kawałki planu: identyfikator i ścieżki z pola `pliki:`."""
+    """Kawałki planu: identyfikator i ścieżki z pola `files:` (dawniej `pliki:`)."""
     out = []
     for line in text.splitlines():
         m = SLICE.match(line)
@@ -75,7 +75,7 @@ def plan_slices(text: str) -> list[dict]:
         files: list[str] = []
         for part in m.group(3).split("·"):
             k, _, v = part.strip().partition(":")
-            if k.strip().lower() == "pliki":
+            if k.strip().lower() in ("files", "pliki"):
                 files = [f.strip().strip("`") for f in v.split(",") if f.strip().strip("`")]
         out.append({"id": m.group(2), "files": files})
     return out

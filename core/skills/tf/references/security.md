@@ -10,13 +10,13 @@ FAIL → STOP z linią do dodania z wyniku; ustawień nie zmieniasz sam. Nowa za
 pakietów odmawia instalacji) → STOP z wyjaśnieniem, nie obejście.
 
 ## Skan kawałka (po zielonych testach)
-`security_scan.py scan --slice K<n> --attempt <k> --out <katalog-przebiegu>/security/K<n>`:
+`security_scan.py scan --slice S<n> --attempt <k> --out <katalog-przebiegu>/security/S<n>`:
 - semgrep (OWASP Top 10 i `.semgrep.yml` produktu) na plikach kawałka; audyt zależności tylko przy zmianie manifestu
   lub lockfile'a;
-- SARIF, werdykt i `summary.md` każdej próby w `security/K<n>/proba-<k>/` — próby się nie nadpisują, raport pokazuje
+- SARIF, werdykt i `summary.md` każdej próby w `security/S<n>/attempt-<k>/` — próby się nie nadpisują, raport pokazuje
   wszystkie;
 - **blokujące** (error albo warning z CWE z OWASP Top 10, reguła SEC-001 z ci_for_sdlc) → FAIL próby: ustalenia
-  (reguła, plik:linia) z `security/K<n>/feedback.md` (zawsze z ostatniej próby) są wejściem następnej próby;
+  (reguła, plik:linia) z `security/S<n>/feedback.md` (zawsze z ostatniej próby) są wejściem następnej próby;
 - po 2 próbach skrypt drukuje blok STOP — kawałka nie commitujesz, tak jak przy czerwonym teście;
 - brak skanera to FAIL z poleceniem instalacji, nie cichy PASS;
 - ustalenia poniżej progu trafiają do raportu przebiegu (sekcja „Bezpieczeństwo”).

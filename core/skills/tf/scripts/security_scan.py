@@ -5,14 +5,14 @@ przez kawałek, audyt zależności tylko przy zmianie manifestu albo lockfile'a,
 SEC-001 w ci_for_sdlc. Brak skanera to FAIL z poleceniem instalacji, nigdy cichy PASS.
 
   python3 .claude/skills/tf/scripts/security_scan.py scan [--base REF] [--out DIR]
-                                                                       [--slice K<n> --attempt k] [--json]
+                                                                       [--slice S<n> --attempt k] [--json]
   python3 .claude/skills/tf/scripts/security_scan.py verdict PLIK.sarif... [--json]
   python3 .claude/skills/tf/scripts/security_scan.py cooldown
 
 scan     — bez --base: zmiany nieskomitowane i nowe pliki (pętla kawałka); z --base: także commity od bazy (CI na PR).
            Zapisuje do --out (domyślnie reports/security): semgrep.sarif, npm-audit.sarif, pip-audit.sarif,
            verdict.json, summary.md (sekcja raportu przebiegu) i feedback.md (ustalenia dla następnej próby).
-           Z --slice wynik próby trafia do --out/proba-<k>/ (próby się nie nadpisują), a --out/feedback.md to
+           Z --slice wynik próby trafia do --out/attempt-<k>/ (próby się nie nadpisują), a --out/feedback.md to
            kopia feedback.md ostatniej próby.
 verdict  — werdykt z gotowych plików SARIF.
 cooldown — karencja wersji (N10): min-release-age npm, minimumReleaseAge pnpm, npmMinimalAgeGate Yarn,
@@ -434,11 +434,11 @@ def cmd_scan(a) -> int:
     except ValueError:
         rel_out = ""
     base_out = out
-    # Kawałek: każda próba we własnym katalogu proba-<k> (raport pokazuje wszystkie); w --out tylko feedback.md
+    # Kawałek: każda próba we własnym katalogu attempt-<k> (raport pokazuje wszystkie); w --out tylko feedback.md
     # ostatniej próby. Bez --slice (CI) wynik prosto w --out.
     clean = [out]
     if a.slice:
-        out = base_out / f"proba-{a.attempt}"
+        out = base_out / f"attempt-{a.attempt}"
         clean.append(out)
     for d in clean:
         d.mkdir(parents=True, exist_ok=True)
