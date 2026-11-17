@@ -101,7 +101,7 @@ Agenci wspólni, dostępni dla każdej persony:
 
 ## 3. Przebieg projektu i dziennik
 - **Dziennik projektu** w `docs/project/` (skill `core-project-record`): każda faza zostawia artefakt z TL;DR
-  i sekcją „Przekazanie”, decyzje człowieka są zapisane, a następna sesja zaczyna od nich zamiast od czytania
+  i sekcją „Handoff” (przekazanie), decyzje człowieka są zapisane, a następna sesja zaczyna od nich zamiast od czytania
   całego kodu.
 - **Punkt kontrolny** przy dłuższym zadaniu: `python3 .claude/hooks/project_record.py wip start "<cel>"`. Po
   przerwie sesja zaczyna od niego i od `git status`.

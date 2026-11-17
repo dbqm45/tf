@@ -4,34 +4,34 @@ phase: plan
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/03-requirements/requirements.md]
 ---
-# Plan testów: <zakres>
+# Test plan: <scope>
 
 ## TL;DR
-<Zakres, najwyższe ryzyka, liczba przypadków (automatyczne/ręczne), poziomy, kryterium wyjścia.>
+<Scope, the highest risks, the number of cases (automatic/manual), levels, the exit criterion.>
 
-## Zakres i ryzyka
-| Obszar / wymaganie | Wpływ | Prawdopodobieństwo | Ryzyko | Techniki | Poziom |
+## Scope and risks
+| Area / requirement | Impact | Likelihood | Risk | Techniques | Level |
 |---|---|---|---|---|---|
 
-## Przypadki testowe
-Oczekiwany wynik pochodzi ze źródła — nigdy z kodu (pack-it: qa-spec-first-testing).
-| ID | Wymaganie | Technika | Warunki wstępne | Kroki / wejście | Oczekiwany wynik | Źródło wyniku | Poziom | Auto/ręczny | Priorytet |
+## Test cases
+The expected result comes from the source — never from the code (pack-it: qa-spec-first-testing).
+| ID | Requirement | Technique | Preconditions | Steps / input | Expected result | Source of the result | Level | Auto/manual | Priority |
 |---|---|---|---|---|---|---|---|---|---|
 
-## Sesje eksploracyjne i UAT
-| Karta | Czas | Kto |
+## Exploratory sessions and UAT
+| Charter | Time | Who |
 |---|---|---|
 
-## Kryteria wejścia i wyjścia
-- Wejście: <np. kryteria akceptacji zatwierdzone>
-- Wyjście: <np. wszystkie przypadki H zielone lub z defektem zaakceptowanym przez właściciela; mutation score logiki krytycznej ≥ …>
+## Entry and exit criteria
+- Entry: <e.g. acceptance criteria approved>
+- Exit: <e.g. all H cases green or with a defect accepted by the owner; mutation score of the critical logic ≥ …>
 
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <persona automatyzacji testów>
-- **Zadanie:** zautomatyzuj przypadki oznaczone „auto”, zaczynając od priorytetu H; najpierw czerwone
-- **Przeczytaj:** TL;DR, tabela przypadków
+## Open questions
+## Handoff
+- **For:** <the test automation persona>
+- **Task:** automate the cases marked "auto", starting with priority H; red first
+- **Read:** TL;DR, the cases table

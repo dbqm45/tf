@@ -10,7 +10,7 @@
 - Wersje technologii sprawdza `python3 .claude/hooks/detect_stack.py` (też automatycznie przy starcie sesji); skille technologiczne stosuj w zakresie wersji projektu.
 
 ## Dziennik projektu
-- Przebieg projektu w `docs/project/` (skill core-project-record): czytaj TL;DR + Przekazanie; zapisuj na końcu fazy.
+- Przebieg projektu w `docs/project/` (skill core-project-record): czytaj TL;DR + Handoff; zapisuj na końcu fazy.
 - Powtarzalne pułapki projektu: `docs/project/lessons.md`. Regułę dopisujesz do tego pliku instrukcji tylko wtedy, gdy
   agent nie wywnioskuje jej z kodu, README ani konfiguracji (core-agent-instructions).
 - Zadanie dłuższe niż kilka kroków: punkt kontrolny `python3 .claude/hooks/project_record.py wip start "<cel>"`, aktualizowany

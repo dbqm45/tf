@@ -4,24 +4,24 @@ phase: architecture
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/03-requirements/requirements.md]
 ---
-# Dane osobowe i RODO: <system>
+# Personal data and GDPR: <system>
 
 ## TL;DR
-<Jakie dane osobowe, w jakich celach, czy potrzebna DPIA, decyzje do potwierdzenia przez inspektora ochrony danych lub prawnika.>
+<Which personal data, for what purposes, whether a DPIA is needed, decisions to be confirmed by the data protection officer or a lawyer.>
 
-## Inwentarz przetwarzania (wejście do rejestru czynności, art. 30)
-| Cel | Kategorie osób | Kategorie danych | Podstawa (art. 6 / art. 9) | Odbiorcy i podmioty przetwarzające | Transfer poza EOG | Retencja | Zabezpieczenia |
+## Processing inventory (input to the record of processing activities, Art. 30)
+| Purpose | Categories of persons | Categories of data | Basis (Art. 6 / Art. 9) | Recipients and processors | Transfer outside the EEA | Retention | Safeguards |
 |---|---|---|---|---|---|---|---|
-## Minimalizacja i domyślna prywatność (art. 25)
-## Prawa osób — jak je obsłużyć w systemie
-| Prawo | Mechanizm w systemie | Gdzie są kopie (kopie zapasowe, logi, procesory) | Termin |
+## Minimisation and privacy by default (Art. 25)
+## Data subjects' rights — how to handle them in the system
+| Right | Mechanism in the system | Where the copies are (backups, logs, processors) | Deadline |
 |---|---|---|---|
-## Ocena potrzeby DPIA (art. 35, wykaz UODO)
-## Naruszenia ochrony danych — procedura i role
-## Otwarte pytania (dla inspektora ochrony danych / prawnika)
-## Przekazanie
-- **Dla:** <persona>
+## Assessing the need for a DPIA (Art. 35, the supervisory authority's list)
+## Personal data breaches — procedure and roles
+## Open questions (for the data protection officer / a lawyer)
+## Handoff
+- **For:** <persona>

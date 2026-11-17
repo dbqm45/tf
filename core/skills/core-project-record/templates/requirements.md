@@ -4,32 +4,32 @@ phase: requirements
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/01-discovery/brief.md]
 ---
-# Wymagania: <nazwa>
+# Requirements: <name>
 
 ## TL;DR
-<Liczba historyjek MVP, 3 kluczowe atrybuty jakości, największe ryzyko.>
+<The number of MVP stories, 3 key quality attributes, the biggest risk.>
 
-## Wymagania funkcjonalne
-- FR-001: <aktor> może <zdolność>. Priorytet: must|nice  <!-- brownfield: Zmiana: nowe|zmienione|zachowane -->
-  Wyzwanie: <kontrargument z rundy wyzwań i co z niego wynika albo „bez kontrargumentu”>
-## Reguła biznesowa
-<Jedno zdanie: decyzja, którą aplikacja podejmuje sama (pack-it: proc-requirements-shaping).>
-## Historyjki (MVP)
-| ID | Jako … chcę … aby … | Kryteria akceptacji (Given/When/Then) | Priorytet |
+## Functional requirements
+- FR-001: <actor> can <capability>. Priority: must|nice  <!-- brownfield: Change: new|changed|kept -->
+  Challenge: <the counterargument from the challenge round and what follows from it, or "no counterargument">
+## Business rule
+<One sentence: a decision the application makes on its own (pack-it: proc-requirements-shaping).>
+## Stories (MVP)
+| ID | As … I want … so that … | Acceptance criteria (Given/When/Then) | Priority |
 |---|---|---|---|
-## Atrybuty jakości (scenariusze — wejście dla architektury)
-| Atrybut | Scenariusz: źródło → bodziec → odpowiedź → miara | Priorytet (H/M/L) |
+## Quality attributes (scenarios — input for the architecture)
+| Attribute | Scenario: source → stimulus → response → measure | Priority (H/M/L) |
 |---|---|---|
-## Ograniczenia techniczne i organizacyjne
-## Poza zakresem MVP
-## Do decyzji o stacku
-<Preferencje technologiczne człowieka — wejście dla architektury, nie wymagania.>
+## Technical and organisational constraints
+## Out of scope (MVP)
+## For the stack decision
+<The human's technology preferences — input for the architecture, not requirements.>
 
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <architekt rozwiązania> (dobór stacku i architektury)
-- **Przeczytaj:** Atrybuty jakości, Ograniczenia
+## Open questions
+## Handoff
+- **For:** <the solution architect> (choosing the stack and the architecture)
+- **Read:** Quality attributes, Constraints

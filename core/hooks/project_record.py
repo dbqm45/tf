@@ -365,7 +365,7 @@ def report(root: Path, out: Path | None) -> Path:
 
 def from_template(name: str) -> str:
     today = f"{date.today():%Y-%m-%d}"
-    return (TEMPLATES / name).read_text(encoding="utf-8").replace("<RRRR-MM-DD>", today)
+    return (TEMPLATES / name).read_text(encoding="utf-8").replace("<YYYY-MM-DD>", today).replace("<RRRR-MM-DD>", today)
 
 
 def init(root: Path) -> Path:
@@ -477,8 +477,11 @@ def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
     if path.exists():
         raise FileExistsError(f".tf/wip/{slug}.md już istnieje — wznów go albo podaj inne --slug")
     now = f"{datetime.now():%Y-%m-%d %H:%M}"
-    text = (from_template("wip.md").replace("<slug>", slug).replace("<kto>", by).replace("<cel>", goal)
-            .replace("<RRRR-MM-DD GG:MM>", now).replace("<gałąź>", git(root, "branch", "--show-current") or "—"))
+    branch = git(root, "branch", "--show-current") or "—"
+    text = from_template("wip.md").replace("<slug>", slug)
+    for en, pl, value in (("<who>", "<kto>", by), ("<goal>", "<cel>", goal), ("<YYYY-MM-DD HH:MM>", "<RRRR-MM-DD GG:MM>", now),
+                          ("<branch>", "<gałąź>", branch)):   # pl: szablony sprzed 14.x
+        text = text.replace(en, value).replace(pl, value)
     path.write_text(text, encoding="utf-8")
     log(root, by, "meta", f"Start pracy w toku: {goal} (.tf/wip/{slug}.md)")
     write_index(root)

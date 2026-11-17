@@ -4,25 +4,25 @@ phase: domain
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/01-discovery/brief.md]
 ---
-# Domena: podsumowanie (plik docs/project/02-domain/strategic.md)
+# Domain: summary (the file docs/project/02-domain/strategic.md)
 
 ## TL;DR
-<Subdomeny (core/supporting/generic), konteksty, rozpoznane archetypy, klasy problemów.>
+<Subdomains (core/supporting/generic), contexts, recognised archetypes, problem classes.>
 
-## Subdomeny i ocena Cynefin
-## Konteksty i mapa kontekstów
-<link do context-map.md>
-## Archetypy i klasy problemów
-| Obszar | Archetyp | Klasa problemu | Konsekwencja dla architektury |
+## Subdomains and the Cynefin assessment
+## Contexts and the context map
+<link to context-map.md>
+## Archetypes and problem classes
+| Area | Archetype | Problem class | Consequence for the architecture |
 |---|---|---|---|
-## Słownik
-<link do glossary.md>
+## Glossary
+<link to glossary.md>
 
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <architekt rozwiązania> / autor wymagań
-- **Przeczytaj:** TL;DR, Archetypy i klasy problemów
+## Open questions
+## Handoff
+- **For:** <the solution architect> / the requirements author
+- **Read:** TL;DR, Archetypes and problem classes

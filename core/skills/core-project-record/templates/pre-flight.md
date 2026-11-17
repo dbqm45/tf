@@ -4,28 +4,28 @@ phase: discovery
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Ocena wstępna: czy modularyzować <nazwa>?
+# Initial assessment: should we modularise <name>?
 
 ## TL;DR
-<Werdykt: modularyzujemy / praca taktyczna w jednym module / prosty CRUD — i jedno zdanie dlaczego.>
+<Verdict: we modularise / tactical work in one module / a simple CRUD — and one sentence why.>
 
-## Odpowiedzi
-| Pytanie | Odpowiedź człowieka | Sygnały z materiałów (cytaty) |
+## Answers
+| Question | The human's answer | Signals from the materials (quotes) |
 |---|---|---|
-| Cykl życia: prototyp / jednorazowe? | | |
-| Zakres: z góry jeden moduł? | | |
-| Złożoność: reguły, konkurencja o zasoby, integracje? | | |
+| Life cycle: a prototype / one-off? | | |
+| Scope: one module from the start? | | |
+| Complexity: rules, competition for resources, integrations? | | |
 
-## Uzasadnienie
-## Jeśli się nie zgadzasz
-<Co musiałoby być prawdą, żeby werdykt był inny.>
+## Rationale
+## If you disagree
+<What would have to be true for the verdict to be different.>
 
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <persona>
-- **Zadanie:** <intake materiałów (pack-it: ddd-discovery-intake) albo praca taktyczna>
-- **Przeczytaj:** TL;DR
+## Open questions
+## Handoff
+- **For:** <persona>
+- **Task:** <intake of the materials (pack-it: ddd-discovery-intake) or tactical work>
+- **Read:** TL;DR
