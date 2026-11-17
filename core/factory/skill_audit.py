@@ -67,7 +67,7 @@ EXEC_RE = re.compile(r"(?<![\w.])eval\s*\(|(?<![\w.])exec\s*\(|os\.system\s*\(|s
 HIDDEN_RE = re.compile("[‪-‮⁦-⁩​-‍⁠­]")
 BASE64_RE = re.compile(r"[A-Za-z0-9+/]{200,}={0,2}")
 URL_HOST_RE = re.compile(r"https?://([A-Za-z0-9.-]+)")
-WHEN_RE = re.compile(r"\b(użyj|używaj|gdy|kiedy|przy\s|use\s+when|use\s+this\s+when|when\s+the\s+user|when\s+working)",
+WHEN_RE = re.compile(r"\b(użyj|używaj|gdy|kiedy|przy\s|use\s+(?:when|for|at|in|on|before|after|this\s+when)|when\s+the\s+user|when\s+working)",
                      re.I)
 VAGUE_PARTS = {"helper", "helpers", "utils", "util", "tools", "tool", "misc", "stuff", "documents", "docs", "data",
                "files", "general", "common", "productivity", "assistant"}

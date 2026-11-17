@@ -31,6 +31,19 @@ def load(path: Path, name: str):
 def main() -> int:
     fails, total = [], 0
 
+    # ── język treści: angielski skill nie przechodzi przez linter polszczyzny; reguły wyboru i granice w obu językach ──
+    gate_mod = load(ROOT / ".tf" / "factory" / "skill_gate.py", "g_lang")
+    total += 1
+    en = "---\nname: x\n---\n# Title\nUse the ledger when you post. The flag is `zażółć` in code only.\n```\nżółw ćma\n```\n"
+    pl = "---\nname: x\nmetadata:\n  keywords: \"księga, zaksięgować\"\n---\n# Tytuł\nUżyj księgi przy księgowaniu. Zażółć gęślą jaźń.\n"
+    if gate_mod.content_language(en) != "en" or gate_mod.content_language(pl) != "pl":
+        fails.append(f"język treści: en={gate_mod.content_language(en)} pl={gate_mod.content_language(pl)} (bez nagłówka i kodu)")
+    b_mod = load(ROOT / ".tf" / "factory" / "build.py", "b_lang")
+    total += 1
+    if b_mod.boundary("Use for invoices. Not for payments") != ("Use for invoices.", " Not for ", "payments") \
+            or b_mod.boundary("Użyj przy fakturach. Nie do płatności")[1] != " Nie do ":
+        fails.append("granice skilla: „ Not for ” i „ Nie do ” rozpoznane tak samo")
+
     # ── bramka na kopii fabryki ──
     with tempfile.TemporaryDirectory() as d:
         root = Path(d) / "f"
