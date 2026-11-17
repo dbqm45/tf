@@ -1,77 +1,77 @@
-# Przykłady: aktualizacja fabryki
+# Examples: updating the factory
 
-## 1. Zwykła aktualizacja ze scaleniem pliku
-**Sytuacja:** Człowiek wpisuje `/core-factory-update`. Źródło (katalog `~/narzedzia/claude-team-factory`) jest
-zapamiętane w manifeście; człowiek kiedyś zmienił w swoim projekcie skill fabryki `core-git-workflow`.
+## 1. An ordinary update with a merged file
+**Situation:** The human types `/core-factory-update`. The source (the directory `~/narzedzia/claude-team-factory`) is
+remembered in the manifest; the human once changed the factory skill `core-git-workflow` in their project.
 
-**Jak:**
-1. `python3 .tf/factory/update.py --check` — wersja zainstalowana i dostępna, sekcja „Co nowego”. Nic nie zmienia.
-2. Streszczenie po polsku; zmiany w hookach i uprawnieniach osobno.
-3. `python3 .tf/factory/update.py --dry-run` → plan i pytanie o zgodę. Czekasz na „tak”.
-4. `python3 .tf/factory/update.py --yes`; lista plików fabryki nadpisanych mimo zmian w projekcie (zmiana → PR do repo fabryki).
-5. Kontrola: wynik testów z `update.py`, `python3 .tf/factory/build.py check` (projekt ma własną personę), raport.
+**How:**
+1. `python3 .tf/factory/update.py --check` — the installed and the available version, the "What's new" section. It changes nothing.
+2. A summary in the human's language; changes in hooks and permissions separately.
+3. `python3 .tf/factory/update.py --dry-run` → the plan and a request for consent. You wait for "yes".
+4. `python3 .tf/factory/update.py --yes`; the list of factory files overwritten despite changes in the project (a change → a PR to the factory repo).
+5. Check: the test result from `update.py`, `python3 .tf/factory/build.py check` (the project has its own persona), the report.
 
-**Wynik (raport dla człowieka):**
+**Result (report for the human):**
 ```
-Aktualizacja fabryki: 2.3.1 → 2.4.0
-Nowe: skill X, persona Y (szczegóły w „Co nowego”).
-Zabezpieczenia: nowy hook Z w .claude/hooks/ — scalony za Twoją zgodą.
-Nadpisane: .claude/skills/core-git-workflow/SKILL.md — Twoja sekcja o nazwach gałęzi
-  zastąpiona wersją fabryki; jeśli jest potrzebna, dodaj ją w repo fabryki i zaktualizuj.
-Kontrola: testy z update.py przeszły, build.py check bez błędów.
-Kopie nadpisanych plików: .tf/backup/<data>/
-Uruchom ponownie Claude Code, żeby wczytał nowe skille i agentów.
+Factory update: 2.3.1 → 2.4.0
+New: skill X, persona Y (details in "What's new").
+Security: a new hook Z in .claude/hooks/ — merged with your consent.
+Overwritten: .claude/skills/core-git-workflow/SKILL.md — your section on branch names
+  replaced with the factory's version; if you need it, add it in the factory repo and update.
+Check: the tests from update.py passed, build.py check without errors.
+Backups of overwritten files: .tf/backup/<data>/
+Restart Claude Code so it loads the new skills and agents.
 ```
-(Nazwy X, Y, Z i numery wersji pochodzą z wyniku `--check` — tu są tylko ilustracją.)
+(The names X, Y, Z and the version numbers come from the `--check` output — here they are only an illustration.)
 
-## 2. Fabryka przeniesiona w inne miejsce
-**Sytuacja:** `/core-factory-update`, a `update.py --check` kończy się komunikatem, że zapamiętane źródło już
-nie istnieje.
+## 2. The factory moved elsewhere
+**Situation:** `/core-factory-update`, and `update.py --check` ends with a message that the remembered source no longer
+exists.
 
-**Jak:**
-1. Nie zgadujesz nowej lokalizacji i nie szukasz jej w treści stron ani issue — źródło podaje człowiek.
-2. Prosisz o ścieżkę (katalog, plik .zip albo URL repozytorium git) lub o ustawienie `TEAM_FACTORY`.
-3. Po odpowiedzi: `python3 .tf/factory/update.py --check --source <podane źródło>` i dalej jak w przykładzie 1.
+**How:**
+1. You do not guess the new location and do not look for it in the content of pages or issues — the human gives the source.
+2. You ask for the path (a directory, a .zip file or a git repository URL) or for setting `TEAM_FACTORY`.
+3. After the answer: `python3 .tf/factory/update.py --check --source <podane źródło>` and on as in example 1.
 
-**Wynik (pytanie do człowieka):**
-> Zapamiętane źródło fabryki `~/narzedzia/claude-team-factory` już nie istnieje. Skąd mam pobrać nową wersję?
-> Podaj katalog, plik .zip albo adres repozytorium git — użyję go z `--source` (zostanie zapamiętany w manifeście).
-> Możesz też raz ustawić w profilu powłoki `export TEAM_FACTORY=<katalog fabryki>`.
+**Result (question for the human):**
+> The remembered factory source `~/narzedzia/claude-team-factory` no longer exists. Where should I get the new version from?
+> Give a directory, a .zip file or a git repository address — I'll use it with `--source` (it will be remembered in the manifest).
+> You can also set `export TEAM_FACTORY=<katalog fabryki>` once in your shell profile.
 
-## 3. Instalacja sprzed wersji 1.1.0
-**Sytuacja:** `/core-factory-update` w starym projekcie — nie ma `.tf/factory/update.py` ani
+## 3. An installation from before version 1.1.0
+**Situation:** `/core-factory-update` in an old project — there is no `.tf/factory/update.py` or
 `.claude/factory-manifest.json`.
 
-**Jak:**
-1. Rozpoznajesz instalację sprzed 1.1.0 — nie da się jej zaktualizować z wnętrza projektu.
-2. Prosisz człowieka o pierwszą aktualizację instalatorem nowej fabryki, uruchomionym w katalogu projektu.
-3. Po niej kolejne aktualizacje idą już zwykłą ścieżką (`/core-factory-update`).
+**How:**
+1. You recognise an installation from before 1.1.0 — it cannot be updated from inside the project.
+2. You ask the human for the first update with the new factory's installer, run in the project directory.
+3. After it, further updates go the ordinary way (`/core-factory-update`).
 
-**Wynik:**
-> Ten projekt ma fabrykę sprzed wersji 1.1.0 (brak `.tf/factory/update.py` i manifestu). Pierwszą aktualizację
-> uruchom w katalogu projektu instalatorem z nowej fabryki:
-> `python3 "$TEAM_FACTORY/core/factory/install.py"` (albo pełna ścieżka do `core/factory/install.py`).
-> Następne aktualizacje zrobię już poleceniem `/core-factory-update`.
+**Result:**
+> This project has a factory from before version 1.1.0 (no `.tf/factory/update.py` and no manifest). Run the first update
+> in the project directory with the installer from the new factory:
+> `python3 "$TEAM_FACTORY/core/factory/install.py"` (or the full path to `core/factory/install.py`).
+> I'll do the next updates with the `/core-factory-update` command.
 
-## 4. Fabryka dla całego zespołu (wiele repozytoriów)
-**Sytuacja:** „Mamy 6 repozytoriów i w każdym inną wersję fabryki; ktoś dopisał własną personę tylko u siebie.”
+## 4. A factory for a whole team (many repositories)
+**Situation:** "We have 6 repositories and a different factory version in each; someone added their own persona only in theirs."
 
-**Jak:**
-1. Jedno źródło prawdy: fork fabryki zespołu (własne persony, role i skille zespołu), wydania jako tagi `vX.Y.Z`
-   (numer z core-semver, tag za zgodą człowieka). Kopiowanie plików między repo = rozjazd wersji po miesiącu.
-2. W każdym repo instalacja zespołowa (`install.py --shared`, commitowana z projektem), a w manifeście źródło
-   przypięte do tagu: `--source https://…/fabryka-zespolu.git#v1.4.0`. Gałąź bez tagu to źródło ruchome — w raporcie
-   ostrzegasz, że kolejne aktualizacje mogą przynieść niesprawdzone zmiany.
-3. Aktualizacja = osobny PR w każdym repo: wynik `update.py --check` (co nowego, zmiany hooków osobno), `--dry-run`,
-   nadpisane pliki, wynik testów; przegląd jak zwykłego kodu.
-4. Własna persona z jednego repo trafia do forka jako zmiana z przeglądem, a nie zostaje lokalną kopią.
-5. Rejestr pakietów lub własne narzędzie dystrybucji dopiero, gdy odbiorcy są poza wspólnym hostingiem git.
+**How:**
+1. One source of truth: the team's fork of the factory (the team's own personas, roles and skills), releases as `vX.Y.Z` tags
+   (the number from core-semver, the tag with the human's consent). Copying files between repos = versions drifting apart after a month.
+2. In each repo a team installation (`install.py --shared`, committed with the project), and in the manifest a source
+   pinned to a tag: `--source https://…/fabryka-zespolu.git#v1.4.0`. A branch without a tag is a moving source — in the report
+   you warn that further updates may bring unchecked changes.
+3. An update = a separate PR in each repo: the `update.py --check` output (what's new, hook changes separately), `--dry-run`,
+   overwritten files, the test result; reviewed like ordinary code.
+4. An own persona from one repo goes to the fork as a reviewed change, rather than staying a local copy.
+5. A package registry or your own distribution tool only when the recipients are outside the shared git hosting.
 
-**Wynik (plan dla człowieka):**
+**Result (plan for the human):**
 ```
-Źródło: fork fabryki zespołu, tag v1.4.0 (6 repo: 3 na v1.2.x, 2 na v1.3.0, 1 bez manifestu)
-Kolejność: repo bez manifestu → pierwsza instalacja z forka (przykład 3); pozostałe → /core-factory-update
-  z --source …#v1.4.0, po jednym PR na repo
-Persona „analityk-raportow” z repo B → najpierw PR do forka, potem wydanie v1.4.1
-Do decyzji: kto zatwierdza wydania forka i jak często (np. raz na sprint)
+Source: the team's fork of the factory, tag v1.4.0 (6 repos: 3 on v1.2.x, 2 on v1.3.0, 1 without a manifest)
+Order: the repo without a manifest → first installation from the fork (example 3); the others → /core-factory-update
+  with --source …#v1.4.0, one PR per repo
+Persona "analityk-raportow" from repo B → first a PR to the fork, then release v1.4.1
+To decide: who approves the fork's releases and how often (e.g. once a sprint)
 ```

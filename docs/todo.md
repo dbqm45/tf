@@ -653,8 +653,16 @@ treści (angielska), bez równoległej polskiej.
       całość 902/918 · 29/43 bez zmian. Haiku przed/po (plan-interview, skill-composition): 8/8 → 8/8, ~$2,36.
       `translation_check`: blok bez języka to przykład wyjścia (proza). Uwaga przy łamaniu wierszy: nazwa nakładki
       i skill z niej muszą być w jednym wierszu (`workspace.py refs`).
-    - [ ] dalsze partie: core-factory-update, core-agent-retro, core-source-research, core-problem-routing,
-      core-knowledge, core-conventional-commits, core-grounding, core-project-record, core-async-delegation,
+    - [x] 4b-2 (2026-11-17): `core-factory-update` (+ przykłady), `core-agent-retro`, `core-source-research`,
+      `core-problem-routing`. Podpowiedzi: po tłumaczeniu 18/23 (retro: okno i pamięć automatyczna; routing: decyzja
+      trudna do odwrócenia; research: sprzeczne źródła, nieistniejące funkcje) → słowa kluczowe PL+EN → 23/23; całość
+      902/918 · 29/43 bez zmian. Haiku przed/po (routing, research): 9/11 → 11/11 (jeden przebieg — „bez spadku”, nie zysk), $3,68 — ponad
+      uzgodnione ~2 USD; kolejne partie: próbka ≤ 7 scenariuszy na stronę. Z katalogu `core-factory-update`
+      zniknęła nieaktualna „zmiana języka pracy i commitów” (od #290 bez ustawień).
+    - [ ] składnia danych retrospektywy wciąż po polsku (etap 3): decyzje `--decide KLUCZ=tak|nie|później`,
+      `Rework-Cause:` (`luka-specyfikacji|blad-agenta|zmiana-wymagan|nieznana` — też `metrics.py`), sygnał
+      „Tier: za niski/za wysoki” w raportach wykonawców — angielskie wartości z aliasami, jak w 3a.
+    - [ ] dalsze partie: core-knowledge, core-conventional-commits, core-grounding, core-project-record, core-async-delegation,
       core-agent-instructions, core-skill-authoring, core-git-workflow, core-cost-control, tf, core-agent-security,
       core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
