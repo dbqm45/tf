@@ -24,7 +24,7 @@
   "offline": "2026-11-17"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "4bab3d06fdbd7d12",
+  "fingerprint": "5d2833d9a4bc0c91",
   "offline": "2026-11-17"
  },
  "core-factory-update": {
@@ -52,7 +52,7 @@
   "offline": "2026-11-16"
  },
  "core-project-record": {
-  "fingerprint": "06a5e3219fa1ed0b",
+  "fingerprint": "c3a5c2cf060e2e29",
   "offline": "2026-11-17"
  },
  "core-semver": {
@@ -68,8 +68,8 @@
   "offline": "2026-11-16"
  },
  "core-source-research": {
-  "fingerprint": "efad7ead69767426",
-  "offline": "2026-11-16"
+  "fingerprint": "03d208887d8d7504",
+  "offline": "2026-11-17"
  },
  "core-stack-sync": {
   "fingerprint": "a47ad3b247cc093f",

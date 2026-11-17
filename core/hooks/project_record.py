@@ -599,7 +599,7 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
 
 SRC_RE = re.compile(r"^##\s+(S\d+)\s+[—-]\s+(.+?)\s*$", re.M)
 ENTRY_RE = re.compile(r"^-\s+\*\*(E\d+)\*\*\s*>\s*[„\"“](.+?)[”\"“]\s*[—-]\s*([^\[\n]*?)\s*((?:\[[^\]]*\]\s*)*)$", re.M)
-WEAK_TAGS = ("wzmianka", "zastąpiony", "niezweryfikowany")
+WEAK_TAGS = ("mention", "superseded", "unverified", "wzmianka", "zastąpiony", "niezweryfikowany")   # pl: sprzed 14.x
 
 
 def _norm(text: str) -> str:
@@ -641,7 +641,7 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
         frags = [f for f in re.split(r"\[(?:…|\.\.\.)\]|…", e["quote"]) if len(f.strip()) >= 3]
         nsrc = _norm(src)
         missing = [f for f in frags if _norm(f) not in nsrc]
-        if missing and "niezweryfikowany" not in e["tags"]:
+        if missing and not {"unverified", "niezweryfikowany"} & set(e["tags"]):
             errors.append(f"{eid}: cytat nie występuje dosłownie w {e['path']}: „{missing[0].strip()[:60]}”")
             continue
         m = re.fullmatch(r"L(\d+)(?:\s*-\s*L?(\d+))?", e["loc"])

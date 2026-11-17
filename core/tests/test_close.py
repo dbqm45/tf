@@ -157,8 +157,8 @@ def main() -> int:
         check(r.returncode == 2 and "human:" in r.stdout and not lessons.exists() and task(p)["stage"] == "pr",
               f"CL-15: lekcję zapisuje człowiek (--by human:<id>): {r.returncode} {r.stdout}")
         r = call(p, TASK, "close", "IMP-1", "--lesson", "Uważaj na limit dobowy", "--by", "human:anna")
-        check(r.returncode == 2 and "Zamiast tego" in r.stdout and not lessons.exists(),
-              f"CL-16: lekcja bez „Zamiast tego:” nie jest lekcją: {r.returncode} {r.stdout}")
+        check(r.returncode == 2 and "Instead" in r.stdout and not lessons.exists(),
+              f"CL-16: lekcja bez „Instead:” nie jest lekcją: {r.returncode} {r.stdout}")
         r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna")
         text = lessons.read_text(encoding="utf-8") if lessons.is_file() else ""
         check(r.returncode == 0 and text.count(LESSON) == 1 and "IMP-1" in text and text.startswith("# ")
@@ -183,6 +183,16 @@ def main() -> int:
         check(text.count("## Wykonanie i weryfikacja") == 1 and "## Powłoka i narzędzia" in text
               and text.index(LESSON) < text.index("Stara lekcja") < text.index("## Powłoka") and "Inna" in text,
               f"CL-30: lekcja trafia pod istniejący nagłówek, nad starsze wpisy; reszta pliku bez zmian: {text}")
+
+        p = Path(t) / "lesson3"
+        new_task(p)
+        lessons = p / "docs" / "project" / "lessons.md"
+        en = "**Check the daily cap at midnight** — Context: parking fees · Instead: test a stay over midnight · Applies to: implementation"
+        r = call(p, TASK, "close", "IMP-1", "--lesson", en, "--by", "human:anna")
+        text = lessons.read_text(encoding="utf-8") if lessons.is_file() else ""
+        check(r.returncode == 0 and text.startswith("# Project lessons") and "## Execution and verification" in text
+              and en in text and "Task: IMP-1" in text,
+              f"CL-31: lekcja w formacie Context / Instead / Applies to, nowy plik z angielskim nagłówkiem: {r.stdout} {text}")
 
         # tf status: zamknięte zadania nie są na liście zadań w toku
         p = Path(t) / "merged"

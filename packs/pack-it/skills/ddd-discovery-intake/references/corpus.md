@@ -7,7 +7,7 @@
 - **Każdy cytat ma lokalizację**, po której człowiek odnajdzie go w źródle.
 - Źródło już ustrukturyzowane (np. opis tablicy `*.es.md`) wchodzi do banku w całości, krok po kroku.
 - **Odpowiedzi człowieka** z rozmowy to pełnoprawne źródło (`user-answers.md`, lokalizacja = id pytania).
-- Cytat przegrany w rozstrzygniętej sprzeczności **zostaje** z dopiskiem `[zastąpiony przez C3 → D-007]`.
+- Cytat przegrany w rozstrzygniętej sprzeczności **zostaje** z dopiskiem `[superseded by C3 → D-007]`.
 
 ## Lokalizacje
 | Źródło | Format |
@@ -39,6 +39,6 @@ phase: domain
 ```
 
 ## Weryfikacja (tanio, bez LLM)
-Każdy cytat musi dać się odnaleźć w źródle — sprawdza to `python3 .claude/hooks/project_record.py evidence` (także progi obszarów). Brak → cytat usuń albo oznacz `[niezweryfikowany]`
+Każdy cytat musi dać się odnaleźć w źródle — sprawdza to `python3 .claude/hooks/project_record.py evidence` (także progi obszarów). Brak → cytat usuń albo oznacz `[unverified]`
 i nie licz go do progów. Przy materiałach > ~150 KB twórz bank **per źródło w osobnych podagentach** i scalaj pliki —
 po kompresji kontekstu model potrafi „cytować” linie, których już nie widzi.

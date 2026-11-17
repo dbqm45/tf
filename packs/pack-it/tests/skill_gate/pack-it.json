@@ -60,8 +60,8 @@
   "offline": "2026-11-16"
  },
  "arch-eu-product-law": {
-  "fingerprint": "2215cbc96ef58491",
-  "offline": "2026-11-16"
+  "fingerprint": "584c8fe6e9a6a6d3",
+  "offline": "2026-11-17"
  },
  "arch-multi-tenancy": {
   "fingerprint": "7481017adfc99fe9",
@@ -140,8 +140,8 @@
   "offline": "2026-11-16"
  },
  "ddd-discovery-intake": {
-  "fingerprint": "fef3307307bfc664",
-  "offline": "2026-11-16"
+  "fingerprint": "a2b9820c2195d06e",
+  "offline": "2026-11-17"
  },
  "ddd-es-simulation": {
   "fingerprint": "63e58c99b80ff355",
@@ -224,8 +224,8 @@
   "offline": "2026-11-16"
  },
  "eng-module-depth": {
-  "fingerprint": "2acf24bac13c48d7",
-  "offline": "2026-11-16"
+  "fingerprint": "cc3644472ad2d3f6",
+  "offline": "2026-11-17"
  },
  "eng-project-reconstruction": {
   "fingerprint": "1bd8800e3f44d66f",
@@ -236,12 +236,12 @@
   "offline": "2026-11-16"
  },
  "eng-repo-readiness": {
-  "fingerprint": "602729ab534f71b1",
+  "fingerprint": "fa2a7ceab4ff0d0e",
   "offline": "2026-11-17"
  },
  "eng-tech-debt-audit": {
-  "fingerprint": "d62386070850f236",
-  "offline": "2026-11-16"
+  "fingerprint": "65d8ad08fb8f3dde",
+  "offline": "2026-11-17"
  },
  "eng-testing": {
   "fingerprint": "3f5c336adb13bb23",
@@ -456,7 +456,7 @@
   "offline": "2026-11-16"
  },
  "qa-change-review": {
-  "fingerprint": "04c6ef9552394962",
+  "fingerprint": "8aedd5de358db26f",
   "offline": "2026-11-17"
  },
  "qa-exploratory-manual": {

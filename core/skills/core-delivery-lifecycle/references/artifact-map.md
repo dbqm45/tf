@@ -66,11 +66,11 @@ jest artefaktem.
 |---|---|---|---|---|
 | `04-architecture/stack-decision.md` | architekt rozwiązania | arch-tech-selection (pack-it) | generator szkieletu (eng-repo-readiness, pack-it), implementer | zawsze, krótko |
 | `04-architecture/architecture.md` | architekt rozwiązania | core-project-record (szablon); arch-system-design (pack-it) | wszyscy: C4, strategia danych i wdrożeń | jeden akapit + diagram |
-| `04-architecture/adr/NNNN-krotki-tytul.md` | architekt | core-project-record (szablon `adr`); docs-tech-writing (pack-docs) | przyszli autorzy zmian: dlaczego tak | gdy decyzja jest kosztowna w odwróceniu |
+| `04-architecture/adr/NNNN-short-title.md` | architekt | core-project-record (szablon `adr`); docs-tech-writing (pack-docs) | przyszli autorzy zmian: dlaczego tak | gdy decyzja jest kosztowna w odwróceniu |
 | `04-architecture/erd.md` | architekt / implementer backendu | be-database (pack-it) | implementer, analityk danych, przegląd migracji | gdy jest relacyjna baza |
 | `04-architecture/threat-model.md` | architekt + security | arch-threat-modeling (pack-it) | security-reviewer, implementer | gdy dane wrażliwe lub dostęp z internetu |
 | `04-architecture/privacy.md`, `04-architecture/data-inventory.md` | architekt | arch-privacy-compliance (pack-it) | człowiek z IOD, implementer: klasy pól, retencja | zawsze przy danych osobowych |
-| `04-architecture/<data>-mapa-prawna.md` | architekt | arch-eu-product-law (pack-it) | człowiek z prawnikiem | gdy produkt podlega prawu UE |
+| `04-architecture/<data>-legal-map.md` | architekt | arch-eu-product-law (pack-it) | człowiek z prawnikiem | gdy produkt podlega prawu UE |
 | `04-architecture/compliance.md`, `04-architecture/risk-register.md`, `04-architecture/eu-cyber-regulations.md` | architekt bezpieczeństwa | sec-governance-compliance, sec-risk-management, sec-eu-regulations (pack-it) | kierownictwo, audytor | gdy są wymogi formalne |
 | `04-architecture/zero-trust.md`, `04-architecture/cloud-security-baseline.md`, `04-architecture/landing-zone.md` | architekt bezpieczeństwa / chmury | sec-zero-trust-identity, sec-cloud-security, ops-cloud-landing-zones (pack-it) | DevOps, security | pomiń poza chmurą firmową |
 | `04-architecture/ai-architecture.md`, `04-architecture/ai-compliance.md` | architekt AI | arch-ai-solutions, ai-governance-compliance (pack-it) | implementer funkcji AI, człowiek | tylko z komponentem AI |
@@ -100,16 +100,16 @@ jest artefaktem.
 ## 7–8. Przeglądy, wydanie, obserwacja — `07-review/`
 | Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |
 |---|---|---|---|---|
-| `07-review/<data>-gotowosc.md` | DevOps + security + projektant testów | core-delivery-lifecycle (`references/production-readiness.md`) | człowiek na bramce wydania | zawsze przed produkcją |
-| `07-review/<data>-przebieg-probny.md` | dyspozytor | core-delivery-lifecycle (`references/dry-run.md`) | człowiek: czy fabryka dowozi | jednorazowo |
+| `07-review/<data>-readiness.md` | DevOps + security + projektant testów | core-delivery-lifecycle (`references/production-readiness.md`) | człowiek na bramce wydania | zawsze przed produkcją |
+| `07-review/<data>-dry-run.md` | dyspozytor | core-delivery-lifecycle (`references/dry-run.md`) | człowiek: czy fabryka dowozi | jednorazowo |
 | `07-review/<data>-<rodzaj>.md` (bezpieczeństwo, architektura, retro, testy) | recenzent danego rodzaju | security-reviewer; core-agent-retro | człowiek, następna faza | wg ryzyka |
-| `07-review/<data>-gotowosc-repo.md` | audytor repo | eng-repo-readiness (pack-it) | człowiek, autor CLAUDE.md: poprawki dla agentów | przy przejęciu repo |
+| `07-review/<data>-repo-readiness.md` | audytor repo | eng-repo-readiness (pack-it) | człowiek, autor CLAUDE.md: poprawki dla agentów | przy przejęciu repo |
 | `07-review/<data>-code-audit.md`, `07-review/<data>-code-audit-inventory.md` | zespół audytu | eng-code-audit (pack-it) | człowiek: ranking problemów | na żądanie |
-| `07-review/<data>-dlug-techniczny.md` | audytor | eng-tech-debt-audit (pack-it) | człowiek: priorytety długu | na żądanie |
-| `07-review/<data>-poglebienia.md` | architekt | eng-module-depth (pack-it) | implementer: płytkie moduły | na żądanie |
-| `07-review/<data>-przeglad-planu-<krok>.md` | recenzent zmian | qa-change-review (pack-it) | wykonawca przed realizacją | przy ryzykownym kroku |
+| `07-review/<data>-tech-debt.md` | audytor | eng-tech-debt-audit (pack-it) | człowiek: priorytety długu | na żądanie |
+| `07-review/<data>-deep-dives.md` | architekt | eng-module-depth (pack-it) | implementer: płytkie moduły | na żądanie |
+| `07-review/<data>-plan-review-<krok>.md` | recenzent zmian | qa-change-review (pack-it) | wykonawca przed realizacją | przy ryzykownym kroku |
 | `07-review/<data>-facilitation.md` | coach facylitacji | ddd-facilitation (pack-it) | facylitator | po warsztacie |
-| `07-review/<data>-jezyk-<dokument>.md` | redaktor | txt-polish-correctness (pack-editorial-pl) | autor dokumentu | dokumenty dla ludzi |
+| `07-review/<data>-language-<dokument>.md` | redaktor | txt-polish-correctness (pack-editorial-pl) | autor dokumentu | dokumenty dla ludzi |
 
 ## 9. Utrzymanie — `08-operations/`
 | Artefakt | Pisze | Skill | Czyta / po co | Mały projekt |

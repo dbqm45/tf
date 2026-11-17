@@ -76,7 +76,8 @@ Dla zwykłego pytania o fakt wystarczy `researcher`. Dla raportu (np. wybór tec
 1. **Zakres:** podpytania, co w zakresie i poza nim, kryterium sukcesu, założenia. Najpierw ustal dzisiejszą datę.
    Zanim zaczniesz szukać: `python3 .tf/factory/facts.py <hasła>` — ustalenia już zweryfikowane w projekcie (werdykt, data);
    świeżych i potwierdzonych nie sprawdzasz ponownie, a nową tabelę weryfikacji zapisujesz w
-   `docs/project/archive/research/<RRRRMMDD>-<temat>.md` (werdykty P / C / N / S na początku linii).
+   `docs/project/archive/research/<RRRRMMDD>-<temat>.md` (werdykt na początku linii:
+   `- confirmed|partial|unconfirmed|contradicted (<źródło>): <ustalenie>`).
 2. **Kąty wyszukiwania (5–10):** podstawowy, techniczny, najnowszy, naukowy, **przeciwny** (krytyka, porażki),
    dane i liczby, branżowy, ograniczenia. Równolegle; wykonawcy zwracają `twierdzenie · cytat · URL · pewność`.
 3. **Dowody na dysku przed pisaniem:** `sources.md` i `evidence.md` w katalogu badania (przetrwają kompaktowanie).

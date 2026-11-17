@@ -206,6 +206,10 @@ def main() -> int:
         (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E2, E4"))
         if run(root, "evidence").returncode == 0:
             fails.append("evidence: nie wykryto obszaru poniżej progu (wzmianka i jedno źródło)")
+        (dom / "corpus.md").write_text(corpus.replace("[wzmianka]", "[mention]"))
+        if run(root, "evidence").returncode == 0:
+            fails.append("evidence: tag [mention] (14.x) nie liczy się do progu jak dawne [wzmianka]")
+        (dom / "corpus.md").write_text(corpus)
         (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E3") + "- **Wskazany przez człowieka:** tak\n")
         r = run(root, "evidence")
         if r.returncode != 0 or "wskazany przez człowieka" not in r.stdout:

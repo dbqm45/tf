@@ -20,7 +20,7 @@ Ocena poprawności: X/10 · uwag: N (wysoki A | średni B | niski C)
 Najczęstsze wzorce (do poprawy w całym tekście): 1. … 2. … 3. …
 Ocena stylu i spójności: X/10 — jedno zdanie
 ```
-Pełny raport jako plik: `docs/project/07-review/<data>-jezyk-<dokument>.md` (nagłówek core-project-record, `artifact: review`)
+Pełny raport jako plik: `docs/project/07-review/<data>-language-<dokument>.md` (nagłówek core-project-record, `artifact: review`)
 albo `.docx` na życzenie (skill docx; skrypt zapisuj narzędziem Write w UTF-8 i sprawdź `file -i` — raport o polszczyźnie
 bez polskich znaków sam jest błędny).
 

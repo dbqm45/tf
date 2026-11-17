@@ -79,7 +79,7 @@ ustalenia wysokiej wagi). Skrypt niczego nie uruchamia — audyt i listę testó
 6. **Lista poprawek** w kolejności wpływu na pracę agenta (brak testów > niski alert audytu): co · dlaczego dla
    agenta · konkretne polecenie · wysiłek (szybko < 5 min / średnio 15–30 min / duże > 1 h). Nic nie naprawiasz sam.
 
-Raport: `docs/project/07-review/<data>-gotowosc-repo.md` (core-project-record). Szablon obu raportów:
+Raport: `docs/project/07-review/<data>-repo-readiness.md` (core-project-record). Szablon obu raportów:
 `references/reports.md`.
 
 ## Przykład

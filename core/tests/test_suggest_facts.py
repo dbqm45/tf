@@ -95,6 +95,8 @@ def main() -> int:
             "- N: przynależność Geographic Boundary do Vol. 1.\n- C: eIDAS 910/2014 — pieczęć elektroniczna i podpis.\n",
             encoding="utf-8")
         (res_dir / "20250101-stare.md").write_text("- P: ISO 19112:2003 — stare wydanie.\n", encoding="utf-8")
+        (res_dir / "20261018-en.md").write_text("- contradicted (ietf.org): RFC 9999 — ISO 19112 cytowane błędnie.\n",
+                                                encoding="utf-8")
         sk = root / ".claude" / "skills" / "sec-x"
         sk.mkdir(parents=True)
         (sk / "SKILL.md").write_text("---\nname: sec-x\n---\n# X\nTreść o ISO 19112 poza źródłami.\n## Źródła\n"
@@ -108,6 +110,7 @@ def main() -> int:
         check(r.returncode == 0 and ("20261017-archetypy-zrodla.md", "confirmed") in by and ("SKILL.md", "skill-source") in by
               and not any("Treść o ISO" in h["text"] for h in hits),
               f"F-1: tabele weryfikacji i sekcje „Źródła” skilli, z werdyktem; treść skilla poza źródłami pominięta: {hits}")
+        check(("20261018-en.md", "contradicted") in by, f"F-1b: werdykt słowem (14.x) obok dawnych liter P/C/N/S: {by}")
         old = [h for h in hits if h["file"].endswith("20250101-stare.md")]
         new = [h for h in hits if h["file"].endswith("20261017-archetypy-zrodla.md")]
         check(old and old[0]["stale"] is True and new and new[0]["stale"] is False and new[0]["date"] == "2026-10-17",

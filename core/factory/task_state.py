@@ -103,7 +103,8 @@ STOP_MESSAGES = Path(".claude") / "skills" / "tf" / "templates" / "stop_messages
 CARD = Path(".tf") / "config" / "operations.json"   # karta operacyjna projektu; sekcja `deploy`: jak sprawdzić i cofnąć wdrożenie
 PANEL = ("security-reviewer", "spec-reviewer")   # panel recenzentów przy wadze pełnej (krok H11, decyzja D11)
 LESSONS = Path("docs") / "project" / "lessons.md"
-LESSON_HEAD = "Wykonanie i weryfikacja"           # kategoria lekcji zapisywanych przy zamknięciu zadania
+LESSON_HEAD = "Execution and verification"        # kategoria lekcji zapisywanych przy zamknięciu zadania
+LESSON_HEADS = (LESSON_HEAD, "Wykonanie i weryfikacja")   # dawny nagłówek (lessons.md sprzed 14.x) też pasuje
 BASES = ("origin/main", "main", "origin/master", "master")
 DEPLOY_STATES = {"ok": "test dymny zielony", "red": "test dymny czerwony — czeka na decyzję o wycofaniu",
                  "rolled-back": "wycofane decyzją człowieka"}
@@ -618,12 +619,12 @@ def merged_on(root: Path, key: str, base: str | None) -> tuple[bool | None, str]
 def add_lesson(root: Path, key: str, lesson: str) -> bool:
     """Dopisuje lekcję człowieka do docs/project/lessons.md (raz); True, gdy plik się zmienił."""
     path = root / LESSONS
-    text = path.read_text(encoding="utf-8") if path.is_file() else "# Lekcje projektu\n"
+    text = path.read_text(encoding="utf-8") if path.is_file() else "# Project lessons\n"
     if lesson in text:
         return False
-    entry = f"- {now()[:10]} {lesson} · Zadanie: {key}"
+    entry = f"- {now()[:10]} {lesson} · Task: {key}"
     lines = text.rstrip("\n").split("\n")
-    at = next((i for i, ln in enumerate(lines) if re.fullmatch(rf"##\s+{LESSON_HEAD}\s*", ln, re.I)), None)
+    at = next((i for i, ln in enumerate(lines) if re.fullmatch(rf"##\s+(?:{'|'.join(map(re.escape, LESSON_HEADS))})\s*", ln, re.I)), None)
     if at is None:
         lines += ["", f"## {LESSON_HEAD}", "", entry]
     elif at + 1 < len(lines) and not lines[at + 1].strip():
@@ -1315,9 +1316,9 @@ def main(argv: list[str]) -> int:
         lesson = one_line(a.lesson, 600) if a.lesson and a.lesson.strip() else None
         if lesson and not human:
             return fail("lekcję zapisuje człowiek: --lesson \"…\" --by human:<id>", 2)
-        if lesson and "Zamiast tego:" not in lesson:
-            return fail("lekcja ma część „Zamiast tego: <działanie>” — bez niej to opis błędu, nie reguła "
-                        "(format: **reguła** — Kontekst: … · Zamiast tego: … · Dotyczy: …)", 2)
+        if lesson and "Instead:" not in lesson and "Zamiast tego:" not in lesson:
+            return fail("lekcja ma część „Instead: <działanie>” — bez niej to opis błędu, nie reguła "
+                        "(format: **reguła** — Context: … · Instead: … · Applies to: plan|implementation|review|all)", 2)
         return cmd_close(root, a.key, a.by, lesson, a.base, a.force)
     if a.cmd == "deployed":
         if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):

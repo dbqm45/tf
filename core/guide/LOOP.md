@@ -185,7 +185,7 @@ ustalenie przeglądu ma zapisaną kontrolę, która złapie je następnym razem.
 gdy przegląd zakresu nie przechodzi (`run_state.py finding`; bez tego zapis nieudanego przeglądu jest odrzucany);
 kontrolę dopisujesz poleceniem `tf task finding <KLUCZ> control F1 "<test, hook, reguła albo powód jej braku>"`.
 Zamknięcie przypomina o dacie usunięcia flagi. Lekcję na przyszłość zapisuje tylko człowiek: `tf task close <KLUCZ>
---lesson "**reguła** — Kontekst: … · Zamiast tego: …" --by human:<id>` dopisuje ją raz do `docs/project/lessons.md`;
+--lesson "**reguła** — Context: … · Instead: … · Applies to: …" --by human:<id>` dopisuje ją raz do `docs/project/lessons.md`;
 fabryka sama lekcji nie wymyśla. Gdy scalenia nie da się potwierdzić (np. brak gita), człowiek może zamknąć zadanie
 mimo to: `--force --by human:<id>`. Zamknięte zadania nie są na liście `tf status`; pokazuje je `tf status --all`.
 Jeśli projekt ma rekonstrukcję z kodu (`docs/project/00-reconstruction/`), pętla przy przyjęciu historyjki czyta

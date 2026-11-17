@@ -25,7 +25,7 @@ w repozytorium fabryki: `docs/pilot/`.
    i przywracanie kopii na środowisku testowym.
 5. **Faza 8**: wdrożenie na środowisko testowe tak, jakby było produkcją: strategia stopniowa, obserwacja, retrospektywa.
 
-## Co mierzyć (zapisuj w trakcie w `docs/project/07-review/<data>-przebieg-probny.md`)
+## Co mierzyć (zapisuj w trakcie w `docs/project/07-review/<data>-dry-run.md`)
 | Miara | Jak |
 |---|---|
 | czas na fazę | od startu sesji do artefaktu `proposed` |

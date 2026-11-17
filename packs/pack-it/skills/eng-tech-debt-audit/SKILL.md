@@ -28,7 +28,7 @@ w repozytorium i da się go porównać przy następnym audycie. Audyt niczego ni
 2. **Ocena w dziewięciu wymiarach** (tabela niżej). Narzędzia uruchamiasz tylko te, które projekt już ma albo na które
    człowiek się zgodzi — bez globalnych instalacji.
 3. **Scal i oceń:** usuń duplikaty, nadaj wagę i wysiłek, policz priorytet.
-4. **Raport** `docs/project/07-review/<data>-dlug-techniczny.md` (core-project-record).
+4. **Raport** `docs/project/07-review/<data>-tech-debt.md` (core-project-record).
 
 | Wymiar | Czego szukasz | Narzędzia (TS / Java / Nx) |
 |---|---|---|
