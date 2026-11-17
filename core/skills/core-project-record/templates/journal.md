@@ -4,12 +4,12 @@ phase: meta
 status: accepted
 version: 1
 author: system
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Dziennik projektu
-<!-- Tylko dopisywanie. Najłatwiej: python3 .claude/hooks/project_record.py log --by <kto> --phase <faza> "<co i dlaczego>" -->
+# Project journal
+<!-- Append only. The easiest way: python3 .claude/hooks/project_record.py log --by <who> --phase <phase> "<what and why>" -->
 
-| Kiedy | Kto | Faza | Zdarzenie |
+| When | Who | Phase | Event |
 |---|---|---|---|

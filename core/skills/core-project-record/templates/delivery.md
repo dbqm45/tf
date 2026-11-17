@@ -4,46 +4,46 @@ phase: delivery
 status: proposed
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/05-plan/plan.md]
 ---
-# Realizacja kroku #<n>: <nazwa>
+# Delivery of step #<n>: <name>
 
 ## TL;DR
-<Co dostarczono, czy kryteria spełnione, co zostało.>
+<What was delivered, whether the criteria are met, what is left.>
 
-## Plan kroku (zatwierdzony przed kodem)
-Zatwierdził: <kto, data>. Odstępstwo od planu = aktualizacja tej sekcji w tym samym commicie co kod.
+## Step plan (approved before the code)
+Approved by: <who, date>. A deviation from the plan = an update of this section in the same commit as the code.
 
-### Stan końcowy
-<Co jest prawdą po kroku i jak to sprawdzić — zachowanie, nie istnienie plików.>
-### Poza zakresem
-- <co świadomie NIE jest robione w tym kroku>
-### Kluczowe decyzje
-| Decyzja | Wybór | Dlaczego (1 zdanie) | Źródło (badanie / przeramowanie / plan) |
+### End state
+<What is true after the step and how to check it — behaviour, not the existence of files.>
+### Out of scope
+- <what is deliberately NOT done in this step>
+### Key decisions
+| Decision | Choice | Why (1 sentence) | Source (research / reframing / plan) |
 |---|---|---|---|
-### Faza 1: <nazwa>
-- `<ścieżka/plik>` — **Intencja:** po co zmiana (1–2 zdania). **Kontrakt:** sygnatura, pole schematu, trasa albo
-  niezmiennik, którego nie wolno złamać. Fragment kodu tylko przy zmianie nieoczywistej.
-- Kryteria automatyczne: `<polecenie>`
-- Kryteria ręczne: <co ogląda człowiek>
-### Ryzyka i otwarte pytania
-<Puste przed startem realizacji — pytania rozstrzyga się przed kodem albo jawnie przyjmuje jako ryzyko.>
-### Postęp
-> `- [ ]` do zrobienia, `- [x]` zrobione; po commicie fazy dopisz ` — <sha>`. Numerów i tytułów nie zmieniasz.
-#### Faza 1: <nazwa>
-- [ ] 1.1 <kryterium automatyczne>
-- [ ] 1.2 <kryterium ręczne> (ręczne)
+### Phase 1: <name>
+- `<path/file>` — **Intent:** why the change (1–2 sentences). **Contract:** a signature, a schema field, a route or
+  an invariant that must not be broken. A code fragment only for a non-obvious change.
+- Automatic criteria: `<command>`
+- Manual criteria: <what the human looks at>
+### Risks and open questions
+<Empty before delivery starts — questions are settled before the code or explicitly accepted as a risk.>
+### Progress
+> `- [ ]` to do, `- [x]` done; after the phase's commit add ` — <sha>`. You do not change numbers or titles.
+#### Phase 1: <name>
+- [ ] 1.1 <automatic criterion>
+- [ ] 1.2 <manual criterion> (manual)
 
-## Zmiany
-<commity / PR, najważniejsze pliki>
-## Weryfikacja
-<testy, lint, build — polecenia i wynik>
-## Odstępstwa od planu i decyzje
-## Decyzje człowieka vs propozycje AI
-| Propozycja agenta | Decyzja człowieka | Dlaczego |
+## Changes
+<commits / PR, the most important files>
+## Verification
+<tests, lint, build — commands and the result>
+## Deviations from the plan and decisions
+## Human decisions vs AI proposals
+| Agent's proposal | Human's decision | Why |
 |---|---|---|
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <kolejny krok / przegląd>
+## Open questions
+## Handoff
+- **For:** <the next step / a review>

@@ -4,21 +4,21 @@ phase: domain
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Bank dowodów
+# Evidence bank
 
 ## TL;DR
-<Źródła: N · cytatów: M · zweryfikowano: `project_record.py evidence`.>
+<Sources: N · quotes: M · verified: `project_record.py evidence`.>
 
-## S1 — <ścieżka źródła względem katalogu projektu>
-- **E1** > „<dosłowny cytat>” — <L12-13>
-- **E2** > „<dosłowny cytat>” — <L20> [mention]
+## S1 — <source path relative to the project directory>
+- **E1** > "<literal quote>" — <L12-13>
+- **E2** > "<literal quote>" — <L20> [mention]
 
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <krytyk sprzeczności / analityk>
-- **Zadanie:** <wykryj sprzeczności / pogrupuj w obszary>
-- **Przeczytaj:** cały bank
+## Open questions
+## Handoff
+- **For:** <the contradiction critic / analyst>
+- **Task:** <find contradictions / group into areas>
+- **Read:** the whole bank

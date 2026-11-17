@@ -549,9 +549,9 @@ def render_worker(persona: dict, role: dict, cfg: dict, traits: dict) -> tuple[s
 {dimension_table(team_skills(persona, role, cfg), cfg)}
 
 ## Zapis w docs/project/
-Jeśli brief przydziela Ci artefakt w `docs/project/`, zapisz go wg `core-project-record` (TL;DR ≤ 10 linii, Otwarte pytania,
-Przekazanie) i uruchom `python3 .claude/hooks/project_record.py check`. Wpisy w dzienniku i rejestrze decyzji robi orkiestrator.
-Czytając wejścia, zaczynaj od TL;DR i Przekazania.
+Jeśli brief przydziela Ci artefakt w `docs/project/`, zapisz go wg `core-project-record` (TL;DR ≤ 10 linii, `Open questions`,
+`Handoff`) i uruchom `python3 .claude/hooks/project_record.py check`. Wpisy w dzienniku i rejestrze decyzji robi orkiestrator.
+Czytając wejścia, zaczynaj od TL;DR i sekcji `Handoff` (dawniej „Przekazanie”).
 
 ## Granice
 - Pracujesz w swojej domenie. Zadanie, które ją przekracza, opisujesz w raporcie (sekcja „Do decyzji”).
@@ -672,8 +672,8 @@ Nie dziel jednej spójnej zmiany (wspólne pliki, typy, decyzje) między kilku w
   ustalenia z rozmowy. Hook sesji pokazuje aktywne zadania. Wznawiając, czytasz punkt kontrolny i `git status`,
   zanim zrobisz cokolwiek innego. Koniec zadania: `wip done <nazwa>`.
 - **Start:** hook sesji pokazuje skrót stanu; w razie potrzeby `python3 .claude/hooks/project_record.py status`.
-  Z artefaktów wejściowych czytaj tylko **TL;DR + Przekazanie** i sekcje, które wskazuje przekazanie.
-- **Koniec fazy:** artefakt wg `core-project-record` (TL;DR, Otwarte pytania, Przekazanie) → `project_record.py log --by {persona['name']} --phase <faza> "…"`
+  Z artefaktów wejściowych czytaj tylko **TL;DR + Handoff** i sekcje, które wskazuje przekazanie.
+- **Koniec fazy:** artefakt wg `core-project-record` (TL;DR, Open questions, Handoff) → `project_record.py log --by {persona['name']} --phase <faza> "…"`
   → `project_record.py check`. Gdy treść jest już ustalona w rozmowie, zapis zleć najtańszemu wykonawcy (tier fast).
 - Status `accepted` ustawiasz tylko po wyraźnej akceptacji użytkownika.
 

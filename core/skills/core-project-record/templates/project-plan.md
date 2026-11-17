@@ -4,32 +4,32 @@ phase: discovery
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/01-discovery/brief.md]
 ---
-# Plan projektu: <nazwa>
+# Project plan: <name>
 
 ## TL;DR
-<Cel w jednym zdaniu; koszt i termin jako przedziały P50/P80 z datą prognozy; największe ryzyko; decyzja potrzebna od sponsora.>
+<The goal in one sentence; cost and deadline as P50/P80 ranges with the forecast date; the biggest risk; the decision needed from the sponsor.>
 
-## Cel i miara sukcesu
-## Zakres i „poza zakresem”
-## Kamienie milowe
-| # | Kamień milowy | Kryterium osiągnięcia (sprawdzalne) | Prognoza P50 | Prognoza P80 |
+## Goal and success measure
+## Scope and "out of scope"
+## Milestones
+| # | Milestone | Achievement criterion (checkable) | P50 forecast | P80 forecast |
 |---|---|---|---|---|
-## Koszt i budżet
-| Pozycja | Podstawa szacunku | Optymistycznie | Najbardziej prawdopodobnie | Pesymistycznie |
+## Cost and budget
+| Item | Basis of the estimate | Optimistic | Most likely | Pessimistic |
 |---|---|---|---|---|
-<Rezerwa na ryzyka zidentyfikowane i rezerwa kierownicza — osobno, z uzasadnieniem. Źródło stawek i liczby osób.>
-## Zasoby i role (RACI)
-| Decyzja / produkt | R | A | C | I |
+<A reserve for identified risks and a management reserve — separately, with a rationale. The source of the rates and the number of people.>
+## Resources and roles (RACI)
+| Decision / product | R | A | C | I |
 |---|---|---|---|---|
-## Interesariusze i komunikacja
-## Rejestr ryzyk
-| ID | Przyczyna → zdarzenie → skutek | P (1–5) | W (1–5) | Reakcja | Właściciel | Sygnał wczesny | Status |
+## Stakeholders and communication
+## Risk register
+| ID | Cause → event → effect | P (1–5) | I (1–5) | Response | Owner | Early signal | Status |
 |---|---|---|---|---|---|---|---|
-## Założenia i ograniczenia
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <persona>
+## Assumptions and constraints
+## Open questions
+## Handoff
+- **For:** <persona>

@@ -691,7 +691,17 @@ treści (angielska), bez równoległej polskiej.
       `Handoff`, `Open questions`, `Constraints`, `Current system`, `For the stack decision`. Testy EN-1…EN-6, AR-7,
       lint (czerwone bez zmiany). Bez migracji istniejących artefaktów: to zapis historii projektu (zaakceptowane
       dokumenty), a parser rozpoznaje obie nazwy — migracja dopiero przed usunięciem polskich aliasów.
-    - [ ] dalsze partie: core-project-record (skill i szablony po angielsku, prompty `build.py`),
+    - [x] 4b-4 (2026-11-17): `core-project-record` (SKILL, referencja, 22 szablony po angielsku, `hint.pl.txt`).
+      Wypełniacze szablonów po angielsku (`<YYYY-MM-DD>`, `<who>`, `<goal>`, `<branch>`), `project_record.py` wypełnia
+      oba warianty. W `templates/plan.md` nazwy kolumn tabeli pozycji i klucze `cel_sekwencji` / `glowne_ryzyko` bez
+      zmian — czyta je `decision_record.py` (mode-pdi) i kontrakt pdi (REL-008 w ci_for_sdlc); zmiana dopiero razem
+      z pdi. `requirements_lint` (pack-it): sekcje `Business rule` i `Out of scope` liczą się do gotowości.
+      Prompty `build.py`, `core/CLAUDE.md`, przewodnik: nazwy sekcji `Handoff` / `Open questions`.
+      Podpowiedzi bez zmian (all 900 · 31/43, none 167 · 16/16, `--hints` czysto we wszystkich instalacjach).
+      Haiku przed/po: 5/5 → 5/5, $1,43.
+    - [ ] nagłówki generowanego indeksu i raportu (`project_record.py`: „Praca w toku”, „Ostatnie zdarzenia”,
+      „Decyzje”, „Otwarte pytania”) — razem z komunikatami skryptów.
+    - [ ] dalsze partie:
       core-agent-instructions, core-skill-authoring, core-git-workflow, core-cost-control, tf, core-agent-security,
       core-delivery-lifecycle; cechy, `config.yaml`, przewodniki.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).

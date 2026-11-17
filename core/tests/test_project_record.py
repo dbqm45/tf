@@ -41,7 +41,7 @@ def wip_tests() -> list[str]:
         if r.returncode != 0 or not wip.exists():
             fails.append(f"wip start: {r.stdout[-200:]}")
             return fails
-        text = wip.read_text().replace("<!-- Jedna konkretna czynność, od której zacznie kolejna sesja: plik, funkcja, polecenie. -->",
+        text = wip.read_text().replace("<!-- One concrete action the next session starts from: a file, a function, a command. -->",
                                        "Dopisać test callbacku w auth.service.spec.ts")
         wip.write_text(text)
         s = run(root, "--hook-session").stdout

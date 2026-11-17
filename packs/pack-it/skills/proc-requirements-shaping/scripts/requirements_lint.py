@@ -102,8 +102,12 @@ def sections(text: str):
     return out
 
 
+SECTION_EN = {"reguła": "business rule", "poza zakresem": "out of scope"}   # angielskie nazwy sekcji (14.x)
+
+
 def section_lines(rows, needle: str):
-    return [(n, l) for n, h, l in rows if needle in h]
+    needles = (needle, SECTION_EN.get(needle, needle))
+    return [(n, l) for n, h, l in rows if any(x in h for x in needles)]
 
 
 def is_placeholder(line: str) -> bool:
@@ -129,7 +133,7 @@ def readiness(text: str, rows) -> dict:
     if not one_sentence:
         missing.append(f"„Reguła biznesowa” jednym zdaniem (≤ {RULE_MAX} znaków, z kropką, bez TODO)")
     out_of_scope = [l for _, l in section_lines(rows, "poza zakresem") if re.match(r"\s*[-*]\s+\S", l) and not is_placeholder(l)]
-    out_of_scope += [l for _, _, l in rows if re.match(r"\s*[-*]\s*poza zakresem\s*:\s*[^…<\s]", l, re.I)]
+    out_of_scope += [l for _, _, l in rows if re.match(r"\s*[-*]\s*(?:poza zakresem|out of scope)\s*:\s*[^…<\s]", l, re.I)]
     if not out_of_scope:
         missing.append("„Poza zakresem” z co najmniej jedną pozycją")
     score = 4 - len(missing)
