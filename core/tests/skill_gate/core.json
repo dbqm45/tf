@@ -4,8 +4,8 @@
   "offline": "2026-11-17"
  },
  "core-agent-retro": {
-  "fingerprint": "81f06fd7217e81ee",
-  "offline": "2026-11-16"
+  "fingerprint": "399d5925e3af4a4c",
+  "offline": "2026-11-17"
  },
  "core-agent-security": {
   "fingerprint": "9884a984b1764af8",
@@ -28,7 +28,7 @@
   "offline": "2026-11-17"
  },
  "core-factory-update": {
-  "fingerprint": "caa9045793494936",
+  "fingerprint": "7365c1d002044e92",
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
@@ -48,15 +48,15 @@
   "offline": "2026-11-17"
  },
  "core-problem-routing": {
-  "fingerprint": "37b6a36a788821cc",
-  "offline": "2026-11-16"
+  "fingerprint": "086641df1ef22a05",
+  "offline": "2026-11-17"
  },
  "core-project-record": {
   "fingerprint": "c3a5c2cf060e2e29",
   "offline": "2026-11-17"
  },
  "core-semver": {
-  "fingerprint": "7414a1a0e1cdac90",
+  "fingerprint": "f964111de6b2b410",
   "offline": "2026-11-17"
  },
  "core-skill-authoring": {
@@ -68,7 +68,7 @@
   "offline": "2026-11-17"
  },
  "core-source-research": {
-  "fingerprint": "03d208887d8d7504",
+  "fingerprint": "3d1b09a8ceed30ed",
   "offline": "2026-11-17"
  },
  "core-stack-sync": {

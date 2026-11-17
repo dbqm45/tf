@@ -4,7 +4,7 @@ description: Use for a version number (SemVer) — public API, a major/minor/pat
 metadata:
   review: "2027-10-09"
   catalog: "Use when you assign or check the version number of anything you release (a library, package, API, CLI, application, image, IaC module, the factory itself) — declaring the public API, which changes need major/minor/patch, the 0.y.z phase and the 1.0.0 release, pre-release versions and metadata, version order, deprecation, a release without changing a published version; the semver.py script computes the version without guessing. Not for the commit message format (core-conventional-commits) or the deployment strategy (the release skill, pack-it)."
-  keywords: "semver, wersjonowanie, numer wersji, jaka wersja, podbić wersję, major, minor, patch, wersja 1.0.0, 0.x, beta, rc, alpha, wydanie, release, tag v1.2.3, zmiana niezgodna wstecz, breaking change, przestarzałe, deprecated, następne wydanie, kolejność wersji, od jakiej wersji zacząć, version number, next version, version order, which version to start from"
+  keywords: "semver, wersjonowanie, numer wersji, podbić wersję, major, minor, patch, wersja 1.0.0, 0.x, beta, rc, alpha, wydanie, release, tag v1.2.3, zmiana niezgodna wstecz, breaking change, przestarzałe, deprecated, następne wydanie, kolejność wersji, od jakiej wersji zacząć, version number, next version, version order, which version to start from"
 ---
 
 # Semantic versioning (SemVer 2.0.0)
