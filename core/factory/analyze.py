@@ -339,7 +339,7 @@ def write_report(m: dict, root: Path, found: list[dict], err: str | None, scope:
             open_n += 1
         reg = register.get(it["id"])
         if reg is not None:
-            reg["status"] = "rozstrzygnięte" if it["checked"] else "otwarte"
+            reg["status"] = "resolved" if it["checked"] else "open"
             reg["note"] = lines[-1][len(NOTE):] if lines[-1].startswith(NOTE) else ""
         actions += lines
     listed = {it["id"] for it in old_items}
@@ -347,7 +347,7 @@ def write_report(m: dict, root: Path, found: list[dict], err: str | None, scope:
         if f["id"] not in listed:
             actions.append(header(f, False))
             open_n += 1
-    verdict = "BŁĄD" if err else ("DO POPRAWY" if open_n else "OK")
+    verdict = "ERROR" if err else ("NEEDS_FIX" if open_n else "OK")
     tiers = "piętro 0 (skrypty); piętra 1–3 (model, przeglądarka, weryfikacja drugim agentem) jeszcze nie istnieją"
     lines = [f"# {m.get('title', m['name'])} — raport tf analyze",
              f"Werdykt: {verdict} · {today()} · commit {head[:7]} · moduł {m['name']} {m.get('version', '')} · "
@@ -393,7 +393,7 @@ def update_register(root: Path, found_by_module: dict[str, list[dict]]) -> dict[
             x = reg.get(f["id"])
             if x is None:
                 reg[f["id"]] = {"id": f["id"], "kind": "finding", "module": mod, "title": f.get("title") or f["rule"],
-                                "status": "otwarte", "source": "tf analyze", "refs": [f"{f['file']}:{f.get('line')}"],
+                                "status": "open", "source": "tf analyze", "refs": [f"{f['file']}:{f.get('line')}"],
                                 "created": today(), "updated": today(), "note": ""}
             else:
                 x.update(title=f.get("title") or f["rule"], refs=[f"{f['file']}:{f.get('line')}"], updated=today())
@@ -478,11 +478,11 @@ def gate_module(m: dict) -> tuple[bool, list[str]]:
 def cmd_gate(root: Path, module: str | None) -> int:
     mods = [m for m in discover(root) if not module or m["name"] == module]
     if not mods:
-        print("Werdykt: NIE PRZESZŁA — brak modułu" + (f" {module}" if module else "ów"))
+        print("Werdykt: FAILED — brak modułu" + (f" {module}" if module else "ów"))
         return 1
     results = [(m, *gate_module(m)) for m in mods]
     bad = [m["name"] for m, ok, _ in results if not ok]
-    print("Werdykt: " + ("OK" if not bad else f"NIE PRZESZŁA ({', '.join(bad)})"))
+    print("Werdykt: " + ("OK" if not bad else f"FAILED ({', '.join(bad)})"))
     for m, ok, lines in results:
         print(f"{'✓' if ok else '✗'} {m['name']}")
         for ln in lines:

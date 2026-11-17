@@ -10,19 +10,19 @@ robi agent wg skilla core-agent-instructions.
   python3 instructions_lint.py CLAUDE.md --warn 150 --error 300
 
 Kontrole na plik:
-  dlugosc   niepuste linie bez komentarzy HTML (Claude Code je usuwa): OK ≤ warn, UWAGA ≤ error, BŁĄD > error
-  bloki     bloki ``` dłuższe niż 3 linie (bez mermaid): OK 0, UWAGA 1–2, BŁĄD ≥ 3
-  intencje  sformułowania-intencje („pisz czysty kod”, „best practices”): OK 0, UWAGA 1–3, BŁĄD ≥ 4
-  kolejnosc pierwsza reguła krytyczna (nigdy/zawsze/never/must…) w pierwszej trzeciej pliku; BŁĄD, gdy dopiero
+  length    niepuste linie bez komentarzy HTML (Claude Code je usuwa): OK ≤ warn, WARN ≤ error, ERROR > error
+  blocks    bloki ``` dłuższe niż 3 linie (bez mermaid): OK 0, WARN 1–2, ERROR ≥ 3
+  intents   sformułowania-intencje („pisz czysty kod”, „best practices”): OK 0, WARN 1–3, ERROR ≥ 4
+  order     pierwsza reguła krytyczna (nigdy/zawsze/never/must…) w pierwszej trzeciej pliku; ERROR, gdy dopiero
             po linii 200 albo gdy plik > 30 linii nie ma nagłówków
-  importy   importy @ścieżka (poza `kodem`): brakujące pliki, długość z importami (importy ładują się przy starcie)
-  nieaktualne odwołania w `kodzie`, których w repozytorium już nie ma: ścieżki plików i katalogów, `npm run <skrypt>`
-            bez skryptu w package.json, `make <cel>` bez celu w Makefile: OK 0, UWAGA ≥ 1 (blok fabryki
+  imports   importy @ścieżka (poza `kodem`): brakujące pliki, długość z importami (importy ładują się przy starcie)
+  stale     odwołania w `kodzie`, których w repozytorium już nie ma: ścieżki plików i katalogów, `npm run <skrypt>`
+            bez skryptu w package.json, `make <cel>` bez celu w Makefile: OK 0, WARN ≥ 1 (blok fabryki
             `<!-- team-factory:begin/end -->` pominięty — jest wspólny dla wszystkich projektów)
 Tryb --root dodatkowo: zagnieżdżone CLAUDE.md/AGENTS.md niewymienione w pliku głównym (indeks) i linie
 skopiowane z pliku głównego do pliku modułu.
 
-Kod wyjścia: 0 — brak BŁĘDÓW; 1 — co najmniej jeden BŁĄD (z --strict także UWAGA); 2 — błąd wywołania.
+Kod wyjścia: 0 — brak ERROR; 1 — co najmniej jeden ERROR (z --strict także WARN); 2 — błąd wywołania.
 Tylko odczyt plików, bez sieci.
 """
 import argparse
@@ -77,7 +77,7 @@ def strip_comments(lines):
 
 
 def verdict(value, warn, error):
-    return "OK" if value <= warn else ("UWAGA" if value <= error else "BŁĄD")
+    return "OK" if value <= warn else ("WARN" if value <= error else "ERROR")
 
 
 def fences(numbered):
@@ -184,17 +184,17 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
     n = len(nonempty)
     checks = []
 
-    checks.append({"id": "dlugosc", "value": n, "verdict": verdict(n, warn, error),
+    checks.append({"id": "length", "value": n, "verdict": verdict(n, warn, error),
                    "detail": f"{n} niepustych linii (próg {warn}/{error})"})
 
     long_blocks = [(s, lang, c) for s, lang, c in fences(numbered) if c > 3 and lang not in EXCLUDED_LANGS]
-    checks.append({"id": "bloki", "value": len(long_blocks), "verdict": verdict(len(long_blocks), 0, 2),
+    checks.append({"id": "blocks", "value": len(long_blocks), "verdict": verdict(len(long_blocks), 0, 2),
                    "findings": [{"line": s, "text": f"blok {lang or 'bez języka'}, {c} linii"} for s, lang, c in long_blocks],
                    "detail": "bloki kodu/konfiguracji > 3 linii — zamień na odnośnik do pliku"})
 
     prose = prose_lines(numbered)
     intents = [(i, m.group(0)) for i, l in prose for m in [INTENT_RE.search(l)] if m]
-    checks.append({"id": "intencje", "value": len(intents), "verdict": verdict(len(intents), 0, 3),
+    checks.append({"id": "intents", "value": len(intents), "verdict": verdict(len(intents), 0, 3),
                    "findings": [{"line": i, "text": t} for i, t in intents],
                    "detail": "intencje → zachowanie sprawdzalne w diffie albo usuń"})
 
@@ -203,7 +203,7 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
     pos = {i: k for k, (i, _) in enumerate(nonempty, 1)}  # numer linii pliku → pozycja wśród niepustych
     findings = []
     if n > 30 and not headings:
-        v = "BŁĄD"
+        v = "ERROR"
         findings.append({"line": 1, "text": "brak nagłówków w pliku dłuższym niż 30 linii"})
     elif not critical:
         v = "OK"
@@ -211,20 +211,20 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
         first = pos.get(critical[0], critical[0])
         late = [i for i in critical if pos.get(i, i) > 200]
         if late and first > 200:
-            v = "BŁĄD"
+            v = "ERROR"
         elif first <= max(10, n / 3) and not late:
             v = "OK"
         else:
-            v = "UWAGA"
+            v = "WARN"
         for i in late:
             findings.append({"line": i, "text": "reguła krytyczna po 200. linii — przenieś na górę"})
         if first > max(10, n / 3):
             findings.append({"line": critical[0], "text": "pierwsza reguła krytyczna poza pierwszą trzecią pliku"})
     if headings and INTRO_RE.match(headings[0][1]) and v == "OK":
-        v = "UWAGA"
+        v = "WARN"
     if headings and INTRO_RE.match(headings[0][1]):
         findings.append({"line": headings[0][0], "text": "plik zaczyna się wstępem — zakazy i polecenia przed opisem"})
-    checks.append({"id": "kolejnosc", "value": critical[0] if critical else 0, "verdict": v, "findings": findings,
+    checks.append({"id": "order", "value": critical[0] if critical else 0, "verdict": v, "findings": findings,
                    "detail": "krytyczne reguły w pierwszej trzeciej, bez wstępu na górze",
                    "headings": [{"line": i, "text": l.strip()} for i, l in headings]})
 
@@ -245,11 +245,11 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
             else:
                 imports.append({"line": i, "target": target, "missing": True})
     missing = [x for x in imports if x.get("missing")]
-    checks.append({"id": "importy", "value": len(imports), "verdict": "UWAGA" if missing else "OK",
+    checks.append({"id": "imports", "value": len(imports), "verdict": "WARN" if missing else "OK",
                    "findings": imports, "effective_lines": effective,
                    "detail": f"długość z importami: {effective} (importy ładują się przy starcie — nie oszczędzają kontekstu)"})
     stale = stale_refs(numbered, outside_factory_block(raw), path, root or path.parent)
-    checks.append({"id": "nieaktualne", "value": len(stale), "verdict": "UWAGA" if stale else "OK", "findings": stale,
+    checks.append({"id": "stale", "value": len(stale), "verdict": "WARN" if stale else "OK", "findings": stale,
                    "detail": "odwołania do plików i poleceń, których nie ma — popraw albo usuń wpis"})
     return {"path": str(path), "checks": checks}
 
@@ -272,7 +272,7 @@ def norm(line):
 
 def repo_checks(root: Path, files):
     main = next((root / n for n in ("CLAUDE.md", ".claude/CLAUDE.md", "AGENTS.md") if (root / n).is_file()), None)
-    res = {"plik_glowny": str(main.relative_to(root)) if main else None, "poza_indeksem": [], "duplikaty": []}
+    res = {"main_file": str(main.relative_to(root)) if main else None, "unindexed": [], "duplicates": []}
     if not main:
         return res
     main_text = main.read_text(encoding="utf-8", errors="replace")
@@ -283,15 +283,15 @@ def repo_checks(root: Path, files):
             continue
         rel_s = rel.as_posix()
         if rel_s not in main_text and rel.parent.as_posix() + "/" not in main_text:
-            res["poza_indeksem"].append(rel_s)
+            res["unindexed"].append(rel_s)
         for k, l in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
             if norm(l) in main_lines:
-                res["duplikaty"].append({"plik": rel_s, "line": k, "text": l.strip()})
+                res["duplicates"].append({"file": rel_s, "line": k, "text": l.strip()})
     return res
 
 
 def worst(results, strict):
-    bad = {"BŁĄD"} | ({"UWAGA"} if strict else set())
+    bad = {"ERROR"} | ({"WARN"} if strict else set())
     return any(c["verdict"] in bad for r in results for c in r["checks"])
 
 
@@ -317,12 +317,12 @@ def render(results, repo, root):
                 out.append(f"      l.{f.get('line', '?')}: {label}")
         out.append("")
     if repo is not None:
-        out.append(f"Repozytorium — plik główny: {repo['plik_glowny'] or 'brak'}")
-        for p in repo["poza_indeksem"]:
-            out.append(f"  UWAGA {p}: niewymieniony w pliku głównym (dopisz do sekcji „Moduły z własnym CLAUDE.md”)")
-        for d in repo["duplikaty"]:
-            out.append(f"  UWAGA {d['plik']}:{d['line']}: kopia reguły z pliku głównego — {d['text'][:80]}")
-        if not repo["poza_indeksem"] and not repo["duplikaty"]:
+        out.append(f"Repozytorium — plik główny: {repo['main_file'] or 'brak'}")
+        for p in repo["unindexed"]:
+            out.append(f"  WARN {p}: niewymieniony w pliku głównym (dopisz do sekcji „Moduły z własnym CLAUDE.md”)")
+        for d in repo["duplicates"]:
+            out.append(f"  WARN {d['file']}:{d['line']}: kopia reguły z pliku głównego — {d['text'][:80]}")
+        if not repo["unindexed"] and not repo["duplicates"]:
             out.append("  OK indeks i brak kopii reguł")
     out.append("Ocenę wiedzy zbędnej (kontrola 4) i sensu reguł zrób ręcznie wg skilla core-agent-instructions.")
     return "\n".join(out)
@@ -333,9 +333,9 @@ def main(argv=None):
                                  formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     ap.add_argument("files", nargs="*", help="pliki instrukcji do sprawdzenia")
     ap.add_argument("--root", help="katalog repo: znajdź wszystkie pliki instrukcji i sprawdź indeks oraz duplikaty")
-    ap.add_argument("--warn", type=int, default=200, help="próg UWAGA długości (domyślnie 200)")
-    ap.add_argument("--error", type=int, default=500, help="próg BŁĄD długości (domyślnie 500)")
-    ap.add_argument("--strict", action="store_true", help="kod 1 także przy UWAGA")
+    ap.add_argument("--warn", type=int, default=200, help="próg WARN długości (domyślnie 200)")
+    ap.add_argument("--error", type=int, default=500, help="próg ERROR długości (domyślnie 500)")
+    ap.add_argument("--strict", action="store_true", help="kod 1 także przy WARN")
     ap.add_argument("--json", action="store_true", help="wynik w JSON")
     a = ap.parse_args(argv)
     if not a.files and not a.root:

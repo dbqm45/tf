@@ -113,7 +113,7 @@ def rule_changes(prev_dir: str, cur_dir: str) -> list[dict]:
                     if sim > best:
                         pair, best = i, sim
             if pair is None or best < 0.3:
-                out.append({"card": stem, "kind": "usunięta", "old": r, "new": None, "marks": marks(text)})
+                out.append({"card": stem, "kind": "removed", "old": r, "new": None, "marks": marks(text)})
                 continue
             used.add(pair)
             n = now[pair]
@@ -125,8 +125,8 @@ def rule_changes(prev_dir: str, cur_dir: str) -> list[dict]:
                 toks = marks(str(r.get("rule", ""))) - marks(f"{n.get('rule', '')} {n.get('quote', '')}")
             else:
                 toks = marks(text) - marks(str(n.get("quote", "")))
-            out.append({"card": stem, "kind": "zmieniona", "old": r, "new": n, "marks": toks})
-        out += [{"card": stem, "kind": "nowa", "old": None, "new": n, "marks": set()}
+            out.append({"card": stem, "kind": "changed", "old": r, "new": n, "marks": toks})
+        out += [{"card": stem, "kind": "new", "old": None, "new": n, "marks": set()}
                 for i, n in enumerate(now) if i not in used and old.get(stem) is not None]
     return out
 

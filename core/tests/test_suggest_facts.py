@@ -105,7 +105,7 @@ def main() -> int:
         except ValueError:
             hits = []
         by = {(h["file"].split("/")[-1], h["verdict"]) for h in hits}
-        check(r.returncode == 0 and ("20261017-archetypy-zrodla.md", "potwierdzone") in by and ("SKILL.md", "źródło skilla") in by
+        check(r.returncode == 0 and ("20261017-archetypy-zrodla.md", "confirmed") in by and ("SKILL.md", "skill-source") in by
               and not any("Treść o ISO" in h["text"] for h in hits),
               f"F-1: tabele weryfikacji i sekcje „Źródła” skilli, z werdyktem; treść skilla poza źródłami pominięta: {hits}")
         old = [h for h in hits if h["file"].endswith("20250101-stare.md")]
@@ -113,13 +113,13 @@ def main() -> int:
         check(old and old[0]["stale"] is True and new and new[0]["stale"] is False and new[0]["date"] == "2026-10-17",
               f"F-2: data ustalenia i oznaczenie starych (> 180 dni): {old} {new}")
         r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "eidas", "podpis"])
-        check(r.returncode == 0 and "eIDAS 910/2014" in r.stdout and "częściowo" in r.stdout,
+        check(r.returncode == 0 and "eIDAS 910/2014" in r.stdout and "partial" in r.stdout,
               f"F-3: wszystkie hasła naraz, bez wielkości liter, z rdzeniem słowa: {r.stdout}")
         r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "DORA", "terminy"])
         check(r.returncode == 0 and "brak" in r.stdout.lower() and "researcher" in r.stdout,
               f"F-4: brak trafień → wskazówka, że trzeba sprawdzić w źródłach: {r.stdout}")
         r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "Geographic", "Boundary"])
-        check("niepotwierdzone" in r.stdout and "nie podawaj jako faktu" in r.stdout,
+        check("unconfirmed" in r.stdout and "nie podawaj jako faktu" in r.stdout,
               f"F-5: ustalenie niepotwierdzone oznaczone jako takie: {r.stdout}")
 
     for f in fails:

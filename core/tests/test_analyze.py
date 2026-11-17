@@ -147,10 +147,10 @@ def main() -> int:
         check(all(i.startswith("SEC-") and len(i) == 10 for i in ids), f"A-4: id w formacie SEC-<6 hex>: {ids}")
         reg = [json.loads(x) for x in (tfd / "register" / "items.jsonl").read_text().splitlines()] \
             if (tfd / "register" / "items.jsonl").exists() else []
-        check(sorted(x["id"] for x in reg) == ids and all(x["status"] == "otwarte" and x["kind"] == "finding" for x in reg),
-              f"A-4: rejestr ma pozycję na ustalenie, status otwarte: {reg}")
+        check(sorted(x["id"] for x in reg) == ids and all(x["status"] == "open" and x["kind"] == "finding" for x in reg),
+              f"A-4: rejestr ma pozycję na ustalenie, status open: {reg}")
         text = rep.read_text() if rep.is_file() else ""
-        check(text.splitlines()[1].startswith("Werdykt: DO POPRAWY") if len(text.splitlines()) > 1 else False,
+        check(text.splitlines()[1].startswith("Werdykt: NEEDS_FIX") if len(text.splitlines()) > 1 else False,
               f"A-4: druga linia raportu to werdykt: {text[:200]}")
         check("## Zakres" in text and "piętro 0" in text and "Historia analiz" in text,
               f"A-4: raport ma zakres (piętra) i historię: {text}")
@@ -196,8 +196,8 @@ def main() -> int:
         newid = next(i for i in new_ids if i not in (hi, lo))
         check(act.index(newid) > act.index(hi), f"A-6: nowe ustalenie na końcu listy: {act}")
         reg = {x["id"]: x for x in map(json.loads, (tfd / "register" / "items.jsonl").read_text().splitlines())}
-        check(reg[hi]["status"] == "rozstrzygnięte", f"A-6: odhaczenie w raporcie → rozstrzygnięte w rejestrze: {reg[hi]}")
-        check(newid in reg and reg[newid]["status"] == "otwarte", f"A-6: nowe ustalenie w rejestrze: {reg}")
+        check(reg[hi]["status"] == "resolved", f"A-6: odhaczenie w raporcie → resolved w rejestrze: {reg[hi]}")
+        check(newid in reg and reg[newid]["status"] == "open", f"A-6: nowe ustalenie w rejestrze: {reg}")
 
         # A-7 cache i --since
         counter.write_text("0")
@@ -258,7 +258,7 @@ def main() -> int:
         check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"),
               f"A-11: moduł znajdujący wszystko bez fałszywych trafień przechodzi bramkę: {r.stdout}{r.stderr}")
         r = run("gate", "--module", "szum", cwd=repo, env=genv)
-        check(r.returncode == 1 and "NIE PRZESZŁA" in r.stdout and "fałszyw" in r.stdout,
+        check(r.returncode == 1 and "FAILED" in r.stdout and "fałszyw" in r.stdout,
               f"A-11: fałszywe trafienie w przypadku czystym → bramka nie przechodzi: {r.stdout}{r.stderr}")
         r = run("gate", "--module", "bez", cwd=repo, env=genv)
         check(r.returncode == 1 and "fixtures" in r.stdout, f"A-11: moduł bez zestawu nie przechodzi: {r.stdout}")

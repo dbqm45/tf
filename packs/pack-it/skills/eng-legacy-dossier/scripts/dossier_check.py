@@ -14,7 +14,7 @@ dowodu; każdy potwierdzony problem — rekomendacji; samą preferencją nie uza
 Sprawdza: znaczniki i sekcje README.md oraz kart modułów (modules/*.md), pole `Stan:` karty, moduły z indeksu bez
 pliku (błąd) i pliki spoza indeksu (ostrzeżenie), reguły biznesowe — unikalne ID, znana pewność (test / kod /
 do weryfikacji), dowód `ścieżka:linia` lub `ścieżka:od-do` wskazujący istniejący plik i linię; reguła bez dowodu
-musi mieć pewność „do weryfikacji”. Pierwsza linia wyniku: `legacy-dossier-check: OK` albo `… BŁĘDY`; kod 0 / 1.
+musi mieć pewność „do weryfikacji”. Pierwsza linia wyniku: `legacy-dossier-check: OK` albo `… ERRORS`; kod 0 / 1.
 """
 from __future__ import annotations
 
@@ -153,7 +153,7 @@ def check(dossier: Path, root: Path) -> dict:
     errors, warnings, rules, unverified, ids = [], [], 0, 0, {}
     index = dossier / "README.md"
     if not index.is_file():
-        return {"status": "BŁĘDY", "errors": [f"brak {index}"], "warnings": [], "modules": 0, "rules": 0,
+        return {"status": "ERRORS", "errors": [f"brak {index}"], "warnings": [], "modules": 0, "rules": 0,
                 "unverified": 0}
     text = index.read_text(encoding="utf-8")
     if not text.startswith(INDEX_MARK):
@@ -197,7 +197,7 @@ def check(dossier: Path, root: Path) -> dict:
                     if problem:
                         errors.append(f"{rel}: {rid} — {problem}")
     n_find, n_recs = check_audit(dossier, root, errors)
-    return {"status": "BŁĘDY" if errors else "OK", "errors": errors, "warnings": warnings, "modules": len(files),
+    return {"status": "ERRORS" if errors else "OK", "errors": errors, "warnings": warnings, "modules": len(files),
             "rules": rules, "unverified": unverified, "findings": n_find, "recommendations": n_recs}
 
 

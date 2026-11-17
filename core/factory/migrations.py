@@ -118,6 +118,9 @@ DECISION_RX = re.compile(r"(?m)^- (" + "|".join(DECISION_KEYS) + r"):")
 SENT_RX = re.compile(r"(?m)^- sent: (tak|nie)[ \t]*$")
 
 
+REGISTER_STATUS = {"otwarte": "open", "rozstrzygnięte": "resolved"}
+
+
 def _decisions(text: str) -> str:
     text = DECISION_RX.sub(lambda m: f"- {DECISION_KEYS[m.group(1)]}:", text)
     return SENT_RX.sub(lambda m: "- sent: " + ("yes" if m.group(1) == "tak" else "no"), text)
@@ -168,6 +171,22 @@ def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
                 out.append(p.relative_to(root).as_posix())
                 if not dry:
                     p.write_text(new, encoding="utf-8")
+    reg = root / ".tf" / "register" / "items.jsonl"   # 13.0.0: status pozycji rejestru tf analyze
+    if reg.is_file():
+        rows, changed = [], False
+        for line in reg.read_text(encoding="utf-8").splitlines():
+            try:
+                x = json.loads(line)
+            except ValueError:
+                rows.append(line)
+                continue
+            if isinstance(x, dict) and x.get("status") in REGISTER_STATUS:
+                x["status"], changed = REGISTER_STATUS[x["status"]], True
+            rows.append(json.dumps(x, ensure_ascii=False, sort_keys=True) if isinstance(x, dict) else line)
+        if changed:
+            out.append(reg.relative_to(root).as_posix())
+            if not dry:
+                reg.write_text("".join(r + "\n" for r in rows), encoding="utf-8")
     for p in root.glob("docs/project/changes/*/decisions.md"):
         text = p.read_text(encoding="utf-8")
         new = _decisions(text)

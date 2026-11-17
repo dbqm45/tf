@@ -188,8 +188,8 @@
   "offline": "2026-11-17"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "e1e804680cb7799d",
-  "offline": "2026-11-16"
+  "fingerprint": "1fc43c36564c0a4c",
+  "offline": "2026-11-17"
  },
  "eng-continuous-delivery": {
   "fingerprint": "8b9609d0bc21366c",
@@ -212,8 +212,8 @@
   "offline": "2026-11-16"
  },
  "eng-legacy-dossier": {
-  "fingerprint": "9f53c7557a155b84",
-  "offline": "2026-11-16"
+  "fingerprint": "dc643b11d5204126",
+  "offline": "2026-11-17"
  },
  "eng-llm-features": {
   "fingerprint": "7c9220a40c689a8d",

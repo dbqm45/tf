@@ -49,48 +49,48 @@ def main() -> int:
         try:
             data = json.loads(r.stdout)
             c = checks(data, "good/CLAUDE.md")
-            ok(all(c[k]["verdict"] == "OK" for k in ("dlugosc", "bloki", "intencje", "kolejnosc")),
+            ok(all(c[k]["verdict"] == "OK" for k in ("length", "blocks", "intents", "order")),
                f"dobry plik: oczekiwane same OK: {c}")
         except Exception as e:  # noqa: BLE001
             ok(False, f"dobry plik: niepoprawny JSON ({e}): {r.stdout[:300]}")
 
-        # 2. długość: 520 niepustych linii → BŁĄD, kod 1; komentarze HTML nie liczą się do długości
+        # 2. długość: 520 niepustych linii → ERROR, kod 1; komentarze HTML nie liczą się do długości
         long_ = root / "long" / "CLAUDE.md"
         write(long_, "# Zasady\n" + "".join(f"- reguła {i}\n" for i in range(520)))
         r = run(long_, "--json")
         ok(r.returncode == 1, f"długi plik: oczekiwany kod 1, jest {r.returncode}")
         c = checks(json.loads(r.stdout), "long/CLAUDE.md")
-        ok(c["dlugosc"]["verdict"] == "BŁĄD" and c["dlugosc"]["value"] >= 520, f"długi plik: {c['dlugosc']}")
+        ok(c["length"]["verdict"] == "ERROR" and c["length"]["value"] >= 520, f"długi plik: {c['length']}")
         commented = root / "comm" / "CLAUDE.md"
         write(commented, "# Zasady\n<!--\n" + "notatka dla ludzi\n" * 300 + "-->\n- Nigdy nie loguj danych klienta.\n")
         c = checks(json.loads(run(commented, "--json").stdout), "comm/CLAUDE.md")
-        ok(c["dlugosc"]["verdict"] == "OK", f"komentarz HTML liczony do długości: {c['dlugosc']}")
+        ok(c["length"]["verdict"] == "OK", f"komentarz HTML liczony do długości: {c['length']}")
 
-        # 3. bloki kodu > 3 linii (mermaid pominięty) → 3 bloki = BŁĄD
+        # 3. bloki kodu > 3 linii (mermaid pominięty) → 3 bloki = ERROR
         block = "```json\n{\n  \"a\": 1,\n  \"b\": 2\n}\n```\n"
         mermaid = "```mermaid\ngraph TD\nA-->B\nB-->C\nC-->D\n```\n"
         blocks = root / "blocks" / "AGENTS.md"
         write(blocks, "# Zasady\n- Nigdy nie edytuj `generated/`.\n" + block * 3 + mermaid + "```bash\nnpm test\n```\n")
         c = checks(json.loads(run(blocks, "--json").stdout), "blocks/AGENTS.md")
-        ok(c["bloki"]["value"] == 3 and c["bloki"]["verdict"] == "BŁĄD", f"bloki kodu: {c['bloki']}")
+        ok(c["blocks"]["value"] == 3 and c["blocks"]["verdict"] == "ERROR", f"bloki kodu: {c['blocks']}")
 
-        # 4. intencje PL/EN → 4 trafienia = BŁĄD, z numerami linii
+        # 4. intencje PL/EN → 4 trafienia = ERROR, z numerami linii
         intents = root / "intents" / "CLAUDE.md"
         write(intents, "# Zasady\n- Pisz czysty kod.\n- Stosuj dobre praktyki.\n- Follow best practices.\n"
                        "- Write clean code always.\n- Nigdy nie usuwaj migracji.\n")
         c = checks(json.loads(run(intents, "--json").stdout), "intents/CLAUDE.md")
-        ok(c["intencje"]["value"] == 4 and c["intencje"]["verdict"] == "BŁĄD", f"intencje: {c['intencje']}")
-        ok(any(f.get("line") == 2 for f in c["intencje"].get("findings", [])), f"intencje bez numeru linii: {c['intencje']}")
+        ok(c["intents"]["value"] == 4 and c["intents"]["verdict"] == "ERROR", f"intencje: {c['intents']}")
+        ok(any(f.get("line") == 2 for f in c["intents"].get("findings", [])), f"intencje bez numeru linii: {c['intents']}")
 
-        # 5. kolejność: krytyczna reguła po linii 200 → BŁĄD; brak nagłówków w długim pliku → BŁĄD
+        # 5. kolejność: krytyczna reguła po linii 200 → ERROR; brak nagłówków w długim pliku → ERROR
         late = root / "late" / "CLAUDE.md"
         write(late, "# O projekcie\n" + "".join(f"Opis {i}.\n" for i in range(240)) + "- Nigdy nie wysyłaj danych klienta do logów.\n")
         c = checks(json.loads(run(late, "--json").stdout), "late/CLAUDE.md")
-        ok(c["kolejnosc"]["verdict"] == "BŁĄD", f"kolejność (reguła po linii 200): {c['kolejnosc']}")
+        ok(c["order"]["verdict"] == "ERROR", f"kolejność (reguła po linii 200): {c['order']}")
         flat = root / "flat" / "CLAUDE.md"
         write(flat, "- Nigdy nie commituj sekretów.\n" + "".join(f"- punkt {i}\n" for i in range(60)))
         c = checks(json.loads(run(flat, "--json").stdout), "flat/CLAUDE.md")
-        ok(c["kolejnosc"]["verdict"] == "BŁĄD", f"kolejność (brak nagłówków): {c['kolejnosc']}")
+        ok(c["order"]["verdict"] == "ERROR", f"kolejność (brak nagłówków): {c['order']}")
 
         # 6. importy @: brakujący wykryty, w odwrotnych apostrofach pominięty, istniejący doliczony do długości efektywnej
         imp = root / "imp"
@@ -98,7 +98,7 @@ def main() -> int:
         write(imp / "CLAUDE.md", "# Zasady\n- Nigdy nie zmieniaj API bez ADR.\n- API: @docs/api.md\n"
                                  "- Brak: @docs/nie-ma.md\n- Tekst: `@README.md` (bez importu)\n")
         c = checks(json.loads(run(imp / "CLAUDE.md", "--json").stdout), "imp/CLAUDE.md")
-        imports = c["importy"]
+        imports = c["imports"]
         missing = [f["target"] for f in imports.get("findings", []) if f.get("missing")]
         ok(missing == ["docs/nie-ma.md"], f"importy: brakujące {missing}")
         ok("README.md" not in json.dumps(imports), f"import w odwrotnych apostrofach nie powinien się liczyć: {imports}")
@@ -120,13 +120,13 @@ def main() -> int:
         ok(any(p.endswith(".claude/rules/tests.md") for p in paths), f"tryb katalogu: brak reguły z .claude/rules: {paths}")
         ok(not any("node_modules" in p for p in paths), f"tryb katalogu: node_modules nie pominięte: {paths}")
         repo_issues = json.dumps(data.get("repo", {}), ensure_ascii=False)
-        ok("packages/cli/CLAUDE.md" in repo_issues and "packages/api/CLAUDE.md" not in repo_issues.split("poza_indeksem")[-1][:200],
+        ok("packages/cli/CLAUDE.md" in repo_issues and "packages/api/CLAUDE.md" not in repo_issues.split("unindexed")[-1][:200],
            f"tryb katalogu: indeks roota — oczekiwany tylko cli poza indeksem: {repo_issues}")
         ok("Commity z prefiksem" in repo_issues, f"tryb katalogu: duplikat linii root↔moduł niewykryty: {repo_issues}")
 
         # 8. wyjście tekstowe: tabela z werdyktami; --help; zła ścieżka → kod 2
         r = run(intents)
-        ok("intencje" in r.stdout and "BŁĄD" in r.stdout and "intents/CLAUDE.md" in r.stdout.replace("\\", "/"),
+        ok("intents" in r.stdout and "ERROR" in r.stdout and "intents/CLAUDE.md" in r.stdout.replace("\\", "/"),
            f"wyjście tekstowe: {r.stdout[:400]}")
         ok(run("--help").returncode == 0, "--help powinien kończyć się kodem 0")
         ok(run(root / "nie-ma.md").returncode == 2, "nieistniejący plik: oczekiwany kod 2")
@@ -144,14 +144,14 @@ def main() -> int:
               "<!-- team-factory:begin -->\n- Nie czytaj `node_modules/` ani `.tf/wip/nie-ma.md`\n<!-- team-factory:end -->\n")
         res = run("--root", r, "--json")
         data = json.loads(res.stdout)
-        c = checks(data, "CLAUDE.md").get("nieaktualne") or {}
+        c = checks(data, "CLAUDE.md").get("stale") or {}
         found = sorted(f.get("text", "") for f in c.get("findings") or [])
-        ok(c.get("verdict") == "UWAGA" and any("src/legacy.py" in x for x in found) and any("lib/old/" in x for x in found)
+        ok(c.get("verdict") == "WARN" and any("src/legacy.py" in x for x in found) and any("lib/old/" in x for x in found)
            and any("typecheck" in x for x in found) and any("release" in x for x in found) and len(found) == 4,
            f"nieaktualne: brakujące pliki, katalogi, skrypt npm i cel make; bez adresów, wzorców, opcji i bloku fabryki: {c}")
-        ok(res.returncode == 0, f"nieaktualne to UWAGA, nie BŁĄD (kod 0 bez --strict): {res.returncode}")
+        ok(res.returncode == 0, f"stale to WARN, nie ERROR (kod 0 bez --strict): {res.returncode}")
         write(r / "CLAUDE.md", "# Zasady\n\n- Kod w `src/app.py`, test: `npm test`, build: `make build`\n")
-        c = checks(json.loads(run("--root", r, "--json").stdout), "CLAUDE.md").get("nieaktualne") or {}
+        c = checks(json.loads(run("--root", r, "--json").stdout), "CLAUDE.md").get("stale") or {}
         ok(c.get("verdict") == "OK" and not c.get("findings"), f"nieaktualne: aktualne odwołania → OK: {c}")
 
     # tf doctor pokazuje kartę instrukcji projektu w jednej linii na plik (informacja; krok H21)
@@ -168,7 +168,7 @@ def main() -> int:
             res = subprocess.run([sys.executable, str(r / ".tf" / "factory" / "tf.py"), "doctor"], cwd=r, capture_output=True,
                                  text=True, encoding="utf-8", timeout=300, env={**os.environ, "CLAUDE_PROJECT_DIR": str(r)})
             line = next((ln for ln in res.stdout.splitlines() if "instrukcje" in ln), "")
-            ok("CLAUDE.md" in line and "nieaktualne" in line and "instructions_lint.py --root" in res.stdout
+            ok("CLAUDE.md" in line and "stale" in line and "instructions_lint.py --root" in res.stdout
                and "Traceback" not in res.stderr,
                f"tf doctor: linia o instrukcjach projektu z nazwą kontroli i poleceniem szczegółów: {res.stdout[-800:]} {res.stderr[-300:]}")
             write(r / "CLAUDE.md", "# Zasady\n\n- Testy: `python3 -m unittest`\n")

@@ -66,9 +66,9 @@ bez właściciela i bez testu.
 Najpierw skrypt — **uruchom**, nie czytaj:
 `python3 .claude/skills/core-agent-instructions/scripts/instructions_lint.py --root .` (albo ścieżka pliku; `--json`).
 Liczy kontrole 1, 2, 3 i 5, importy `@` i nieaktualne wpisy, a w trybie `--root` także pliki modułów spoza indeksu
-i reguły skopiowane z pliku głównego. Kod 1 = co najmniej jeden BŁĄD. Kontrolę 4 robisz sam.
+i reguły skopiowane z pliku głównego. Kod 1 = co najmniej jeden `ERROR`. Kontrolę 4 robisz sam.
 
-| # | Kontrola | OK | UWAGA | BŁĄD |
+| # | Kontrola (`id`) | OK | WARN | ERROR |
 |---|---|---|---|---|
 | 1 | długość (niepuste linie bez komentarzy HTML) | ≤200 | 201–500 | >500 |
 | 2 | bloki kodu/konfiguracji > 3 linii (poza diagramami) | 0 | 1–2 | ≥3 |
@@ -119,8 +119,8 @@ Ustalenia: <kontrola> — plik:linia — problem — propozycja
 ## Przykład
 Wejście: CLAUDE.md 340 linii; linie 1–40 „O projekcie i wartościach”; linia 287 „nigdy nie wysyłaj danych klienta
 do logów”; blok 25 linii z tsconfig; „pisz czysty kod” w linii 52.
-Wynik skryptu: długość UWAGA (340), bloki UWAGA (1), intencje UWAGA (1), kolejność BŁĄD (reguła krytyczna l. 287,
-wstęp na górze). Kontrola 4 (ręcznie): 6 linii opisu katalogów, które widać w drzewie → UWAGA.
+Wynik skryptu: `length` WARN (340), `blocks` WARN (1), `intents` WARN (1), `order` ERROR (reguła krytyczna l. 287,
+wstęp na górze). Kontrola 4 (ręcznie): 6 linii opisu katalogów, które widać w drzewie → WARN.
 3 działania: (1) zakaz logowania danych klienta do pierwszej sekcji; (2) blok tsconfig → usuń (`strict` wymusza
 konfiguracja), w zamian 1 linia o wyjątku, którego konfiguracja nie widać; (3) wstęp do 2 zdań, opis katalogów usuń,
 „czysty kod” → „funkcje publiczne w `src/api/` mają typ zwracany i obsługują błąd przez `AppError`”.

@@ -66,7 +66,7 @@ def main() -> int:
         r = run(["report.md"], d)
         out = r.stdout
         lines = out.splitlines()
-        check(r.returncode == 1 and lines and lines[0].startswith("Werdykt: BŁĘDY"),
+        check(r.returncode == 1 and lines and lines[0].startswith("Werdykt: ERRORS"),
               f"C-1: błędy → kod 1 i werdykt w pierwszej linii: {out}")
         check("report.md:6" in out and "45/56" in out and "80%" in out,
               f"C-2: zły procent przy 45/56 wskazany z plik:linia i wartością poprawną: {out}")
@@ -82,8 +82,8 @@ def main() -> int:
         check(r.returncode == 0 and r.stdout.startswith("Werdykt: OK"), f"C-9: czysty dokument → OK, kod 0: {r.stdout}")
         (d / "tylko-ostrzezenia.md").write_text("Liczba sesji wzrosła o 12%.\n", encoding="utf-8")
         r = run(["tylko-ostrzezenia.md"], d)
-        check(r.returncode == 0 and r.stdout.startswith("Werdykt: OSTRZEŻENIA"),
-              f"C-10: same ostrzeżenia → kod 0 i werdykt OSTRZEŻENIA: {r.stdout}")
+        check(r.returncode == 0 and r.stdout.startswith("Werdykt: WARNINGS"),
+              f"C-10: same ostrzeżenia → kod 0 i werdykt WARNINGS: {r.stdout}")
         r = run(["tylko-ostrzezenia.md", "--strict"], d)
         check(r.returncode == 1, f"C-11: --strict traktuje ostrzeżenia jak błędy: {r.stdout}")
         (d / "kat").mkdir()
@@ -104,7 +104,7 @@ def main() -> int:
               f"C-14: deklaracja „Dane: `ścieżka`” w środku zdania też obejmuje liczby dokumentu: {r.stdout}")
         (d / "bez.md").write_text("# Pomiar\n\nNie mamy danych: wynik 5 USD.\n", encoding="utf-8")
         r = run(["bez.md"], d)
-        check(r.stdout.startswith("Werdykt: OSTRZEŻENIA"), f"C-15: słowo „danych” bez ścieżki to nie deklaracja: {r.stdout}")
+        check(r.stdout.startswith("Werdykt: WARNINGS"), f"C-15: słowo „danych” bez ścieżki to nie deklaracja: {r.stdout}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recenzenta liczb")
     return 1 if fails else 0
 

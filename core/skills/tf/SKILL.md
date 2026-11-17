@@ -136,7 +136,7 @@ początek pętli z kolejną (najwyżej dwie; trzeciej skrypt odmówi), np. `… 
 2. **Zgodność z planem:** `plan_drift.py <katalog> --base <gałąź domyślna>` — zmianę spoza planu wycofujesz albo
    opisujesz w PR jako odstępstwo. **Budżet artefaktów:**
    `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <gałąź domyślna>` — `Werdykt:
-   PRZEKROCZONY` → skracasz artefakty albo opisujesz wyjątek w PR. **Ślad kryteriów:** `run_state.py trace <katalog>
+   OVER` → skracasz artefakty albo opisujesz wyjątek w PR. **Ślad kryteriów:** `run_state.py trace <katalog>
    --base <gałąź domyślna>` — kod 1 (kryterium bez testu, test z obcym `AC-n`) naprawiasz.
 3. `run_state.py stage <katalog> pr` i `run_state.py step <katalog> PR plan_drift pass` (albo `fail`). Push gałęzi
    i jeden PR. Opis składa skrypt: `run_state.py pr-body <katalog> --base <gałąź domyślna>` → `gh pr create
