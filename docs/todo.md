@@ -611,8 +611,14 @@ treści (angielska), bez równoległej polskiej.
   qa-change-review, pole „Dotyczy” lekcji i nazwy plików zakładanych w `docs/project/` (`<data>-przeglad.md`)
   po angielsku razem z tłumaczeniem treści skilla `tf` i szablonów; skrypty przyjmują
   stare słowa przez jedno wydanie, migracja przepisuje `plan.md`/`spec.md` otwartych zadań.
-- [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty; instrukcja językowa
-  (`tf language pl`) każe odpowiadać i pisać dokumenty dla człowieka po polsku.
+- [ ] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”) —
+  następny PR po 2d: stała reguła „odpowiadasz i piszesz dokumenty dla człowieka w języku, w którym on pisze” zamiast
+  `languages.*.work` i `tf language`; bez rozmowy (wykonawca, faza pdi bez interakcji, przegląd w CI) — język briefu,
+  zadania lub issue, a bez nich istniejących dokumentów `docs/project/`; język commitów wykrywany skryptem z `git log`
+  (nowe repo: angielski) zamiast `tf commit-language`; `pack-editorial-pl` jako zwykła nakładka, niezależna od
+  języka instalacji; usunięcie `--language`, `tf language`, `tf commit-language` z migracją ustawień projektu.
+- [ ] Etap 4 — tłumaczenie treści (szczegóły niżej): skille, persony, prompty, komunikaty po angielsku; język
+  odpowiedzi wynika z rozmowy (punkt wyżej), nie z ustawienia.
 
 Treść fabryki jest dziś po polsku. Chodzi o:
 - skille (`SKILL.md`, `references/`) rdzenia i wszystkich nakładek;
