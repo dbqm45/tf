@@ -76,7 +76,7 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          suggestion: str, confidence: float = 0.6) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line, "snippet": snippet.strip()[:160],
                       "severity": severity, "confidence": confidence, "evidence": evidence,
-                      "basis": "ops-observability (logi strukturalne, korelacja), ops-sre-incidents (sondy, SLO)",
+                      "basis": "ops-observability (structured logs, correlation), ops-sre-incidents (probes, SLO)",
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
@@ -127,16 +127,16 @@ def scan(root: Path, files: list[str]) -> None:
             text = code[rel]
             if not has_health:
                 emit("no-health-endpoint", rel, line_of(text, m.start()), text.splitlines()[line_of(text, m.start()) - 1],
-                     "usługa bez endpointu health", "medium",
-                     "punkt startowy usługi; w repozytorium brak trasy health/livez/readyz, Actuatora i terminus",
-                     "dodaj `/livez` (proces żyje) i `/readyz` (zależności gotowe) i podepnij je pod sondy "
-                     "orkiestratora")
+                     "service without a health endpoint", "medium",
+                     "service entry point; the repository has no health/livez/readyz route, no Actuator and no terminus",
+                     "add `/livez` (the process is alive) and `/readyz` (dependencies are ready) and wire them to the "
+                     "orchestrator's probes")
             if logs and not has_corr:
                 emit("no-correlation-id", rel, line_of(text, m.start()), text.splitlines()[line_of(text, m.start()) - 1],
-                     "logi bez identyfikatora żądania", "medium",
-                     "usługa loguje, ale w repozytorium brak x-request-id, traceparent, OpenTelemetry i podobnych",
-                     "nadaj identyfikator żądania w middleware (przyjmij `traceparent`/`x-request-id` albo "
-                     "wygeneruj), dołączaj go do każdego logu i przekazuj dalej")
+                     "logs without a request ID", "medium",
+                     "the service logs, but the repository has no x-request-id, traceparent, OpenTelemetry or similar",
+                     "assign a request ID in middleware (accept `traceparent`/`x-request-id` or "
+                     "generate one), add it to every log line and pass it on")
     for rel, text in code.items():
         ext = Path(rel).suffix.lower()
         if SERVICE.search(text) or (ext in JS_EXT and NEXT_ROUTE.search(rel)):
@@ -145,20 +145,20 @@ def scan(root: Path, files: list[str]) -> None:
                     continue
                 ln = line_of(text, m.start())
                 emit("print-instead-of-logger", rel, ln, text.splitlines()[ln - 1],
-                     "console/print zamiast loggera w kodzie usługi", "low",
-                     "wyjście bez poziomu, pól i identyfikatora żądania; trudne do filtrowania i alertów",
-                     "użyj loggera strukturalnego (pino, winston, logging/structlog, SLF4J) z polami zamiast "
-                     "sklejania tekstu")
+                     "console/print instead of a logger in service code", "low",
+                     "output with no level, fields or request ID; hard to filter and alert on",
+                     "use a structured logger (pino, winston, logging/structlog, SLF4J) with fields instead of "
+                     "concatenated text")
         pats = [PY_EXCEPT_PASS] if ext == ".py" else [JAVA_EMPTY_CATCH] if ext in (".java", ".kt") else [EMPTY_CATCH]
         for pat in pats:
             for m in pat.finditer(text):
                 if ext == ".py" and (m.group(2) or m.group(3)):
                     continue
                 ln = line_of(text, m.start(1) if ext == ".py" else m.start())
-                emit("swallowed-error", rel, ln, text.splitlines()[ln - 1], "połknięty błąd", "medium",
-                     "pusta obsługa wyjątku bez komentarza — błąd znika bez logu, metryki i ponowienia",
-                     "zaloguj błąd z kontekstem i przekaż dalej albo obsłuż; jeśli pominięcie jest zamierzone, "
-                     "opisz dlaczego w komentarzu", confidence=0.8)
+                emit("swallowed-error", rel, ln, text.splitlines()[ln - 1], "swallowed error", "medium",
+                     "empty exception handler with no comment: the error disappears with no log, metric or retry",
+                     "log the error with context and rethrow it, or handle it; if ignoring it is intended, "
+                     "explain why in a comment", confidence=0.8)
 
 
 def main() -> int:

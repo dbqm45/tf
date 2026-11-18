@@ -38,7 +38,7 @@ def main() -> int:
         # faza 1 (kontekst): aktorzy i systemy tak, komendy nie — mieszanie poziomów jest blokowane z podpowiedzią
         check(es("add", "actor", "Klient").returncode == 0, "B-2: aktor w fazie 1")
         r = es("add", "command", "Złóż zamówienie")
-        check(r.returncode == 2 and "faz" in r.stdout + r.stderr and "3" in r.stdout + r.stderr,
+        check(r.returncode == 2 and "phase" in r.stdout + r.stderr and "3" in r.stdout + r.stderr,
               f"B-3: komenda w fazie 1 → kod 2 z numerem fazy: {r.returncode} {r.stdout}{r.stderr}")
 
         es("phase", "2")
@@ -60,7 +60,7 @@ def main() -> int:
         es("add", "command", "Złóż zamówienie", "--causes", "E1", "--actor", "Klient")
         r = es("check")
         out = r.stdout
-        check(r.returncode == 1 and "E2" in out and "E3" in out and "wyzwalacza" in out,
+        check(r.returncode == 1 and "E2" in out and "E3" in out and "without a trigger" in out,
               f"B-7: zdarzenia bez wyzwalacza: {out}")
         es("add", "system", "Operator płatności")
         es("edit", "E2", "--by", "S1")
@@ -68,7 +68,7 @@ def main() -> int:
         es("add", "policy", "Kiedy płatność potwierdzona, wyślij paczkę", "--on", "E2", "--issues", "C2")
         r = es("add", "command", "Anuluj zamówienie")
         r2 = es("check")
-        check(r2.returncode == 1 and "C3" in r2.stdout and "bez zdarzenia" in r2.stdout,
+        check(r2.returncode == 1 and "C3" in r2.stdout and "without an event" in r2.stdout,
               f"B-8: komenda bez zdarzenia: {r2.stdout}")
         es("remove", "C3")
         r = es("check")
@@ -79,7 +79,7 @@ def main() -> int:
         # faza 4: każda komenda trafia do agregatu (albo systemu); duży agregat to ostrzeżenie
         es("phase", "4")
         r = es("check")
-        check(r.returncode == 1 and "C1" in r.stdout and "agregat" in r.stdout, f"B-11: komenda bez agregatu: {r.stdout}")
+        check(r.returncode == 1 and "C1" in r.stdout and "aggregate" in r.stdout, f"B-11: komenda bez agregatu: {r.stdout}")
         es("add", "aggregate", "Zamówienie", "--handles", "C1")
         es("add", "aggregate", "Wysyłka", "--handles", "C2")
         check(es("check").returncode == 0, "B-12: agregaty przypisane")
@@ -87,16 +87,16 @@ def main() -> int:
         check(extra[0] == "C4", f"B-13a: identyfikator usuniętej kartki (C3) nie wraca: {extra[:2]}")
         es("edit", "A1", "--handles", ",".join(["C1"] + extra))
         r = es("check")
-        check("duży agregat" in r.stdout and r.returncode == 0, f"B-13: duży agregat to ostrzeżenie: {r.stdout}")
+        check("large aggregate" in r.stdout and r.returncode == 0, f"B-13: duży agregat to ostrzeżenie: {r.stdout}")
 
         # faza 5: konteksty z typem subdomeny, relacje z nazwanym wzorcem mapy kontekstów
         es("phase", "5")
         r = es("check")
-        check(r.returncode == 1 and "A1" in r.stdout and "kontekst" in r.stdout, f"B-14: agregat bez kontekstu: {r.stdout}")
+        check(r.returncode == 1 and "A1" in r.stdout and "context" in r.stdout, f"B-14: agregat bez kontekstu: {r.stdout}")
         es("add", "context", "Sprzedaż", "--contains", "A1", "--kind", "core")
         es("add", "context", "Logistyka", "--contains", "A2")
         r = es("check")
-        check(r.returncode == 1 and "K2" in r.stdout and "typu" in r.stdout, f"B-15: kontekst bez typu subdomeny: {r.stdout}")
+        check(r.returncode == 1 and "K2" in r.stdout and "subdomain type" in r.stdout, f"B-15: kontekst bez typu subdomeny: {r.stdout}")
         es("edit", "K2", "--kind", "supporting")
         r = es("add", "link", "Sprzedaż → Logistyka", "--from", "K1", "--to", "K2", "--pattern", "magia")
         check(r.returncode == 2 and "customer-supplier" in r.stdout + r.stderr, f"B-16: nieznany wzorzec → lista wzorców: {r.stdout}{r.stderr}")

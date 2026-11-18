@@ -53,7 +53,7 @@ def main() -> int:
         if "A1:" in (root / "docs/training/es-sim/t1/rounds/02/room.prompt.md").read_text().split("Beata")[1][:2000].split("###")[0]:
             fails.append("zużyta anegdota nie powinna wracać w prompcie")
         (root / "docs/training/es-sim/t1/rounds/02/room.reply.json").write_text("to nie jest json")
-        if "niepoprawny JSON" not in run(root, "round-end", "--id", "t1").stdout:
+        if "invalid JSON" not in run(root, "round-end", "--id", "t1").stdout:
             fails.append("zły JSON = cisza z ostrzeżeniem")
         if run(root, "pivotal", "--id", "t1", "--event", "ev_001").returncode != 0:
             fails.append("pivotal")
@@ -70,7 +70,7 @@ def main() -> int:
         run(root, "init", "--variant", "pelna", "--id", "t2")
         out = json.loads(run(root, "round-begin", "--id", "t2", "--text", "Opowiedzcie wszyscy.").stdout)
         p = (root / out["calls"][0]["prompt_file"]).read_text()
-        if len(out["calls"]) != 6 or "wie dobrze" not in p or p.count("Warianty dnia") or "Dziś (wariant dnia)" not in p:
+        if len(out["calls"]) != 6 or "wie dobrze" not in p or p.count("Warianty dnia") or "Today (day variant)" not in p:
             fails.append("wersja pełna: prompt na osobę z pełną kartą")
     total = 14
     for f in fails:
