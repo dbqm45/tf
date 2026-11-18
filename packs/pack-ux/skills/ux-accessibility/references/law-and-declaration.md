@@ -1,49 +1,49 @@
-# Prawo dostępności i deklaracja dostępności
+# Accessibility law and the accessibility statement
 
-Spis treści: 1. Mapa przepisów · 2. EAA i ustawa z 2024 r. · 3. Podmioty publiczne i deklaracja · 4. EN 301 549 · 5. Do sprawdzenia z prawnikiem
+Contents: 1. Map of regulations · 2. EAA and the 2024 act · 3. Public bodies and the statement · 4. EN 301 549 · 5. To check with a lawyer
 
-Stan wiedzy: 2026-10-17. Daty, numery i progi sprawdź w tekście aktu przed użyciem w dokumencie dla klienta; w tej sesji
-EUR-Lex i gov.pl nie były dostępne bezpośrednio, więc dane pochodzą z wyników wyszukiwania i są oznaczone.
+State of knowledge: 2026-10-17. Check dates, numbers and thresholds in the text of the act before using them in a document for a client; in this session
+EUR-Lex and gov.pl were not directly available, so the data comes from search results and is marked.
 
-## 1. Mapa przepisów
-| Kogo dotyczy | Akt | Norma techniczna |
+## 1. Map of regulations
+| Who it applies to | Act | Technical standard |
 |---|---|---|
-| Biznes: produkty i usługi (e-commerce, bankowość detaliczna, telekomunikacja, e-booki, transport pasażerski) | Dyrektywa (UE) 2019/882 (EAA); ustawa z 26.04.2024 r., Dz.U. 2024 poz. 731 | EN 301 549 (wymagania dla usług internetowych) |
-| Podmioty publiczne: strony i aplikacje mobilne | Dyrektywa (UE) 2016/2102; ustawa z 4.04.2019 r., Dz.U. 2019 poz. 848 (t.j. Dz.U. 2023 poz. 82) | WCAG 2.1 AA (załącznik do ustawy), EN 301 549 |
+| Business: products and services (e-commerce, retail banking, telecommunications, e-books, passenger transport) | Directive (EU) 2019/882 (EAA); the act of 26.04.2024, Dz.U. 2024 item 731 | EN 301 549 (requirements for web services) |
+| Public bodies: websites and mobile applications | Directive (EU) 2016/2102; the act of 4.04.2019, Dz.U. 2019 item 848 (consolidated text Dz.U. 2023 item 82) | WCAG 2.1 AA (annex to the act), EN 301 549 |
 
-## 2. EAA i ustawa z 2024 r.
-- Stosowanie: **od 28 czerwca 2025** (dyrektywa; polska ustawa wchodzi w życie 28 czerwca 2025, art. 88, z wyjątkiem
-  niektórych przepisów po 14 dniach od ogłoszenia).
-- Nadzór wg źródeł wtórnych: prezes zarządu PFRON, a w obszarach sektorowych także m.in. minister właściwy do spraw
-  informatyzacji, UKE, UTK i organy lotnictwa [niezweryfikowane]. Czy UOKiK ma rolę w tej ustawie – nie potwierdzono.
-- Wyłączenie mikroprzedsiębiorców (poniżej 10 osób i obrót lub suma bilansowa ≤ 2 mln euro) dotyczy **usług**, nie produktów
-  (dyrektywa art. 4 ust. 5 wg źródeł wtórnych [niezweryfikowane]).
-- Możliwe powołanie na nieproporcjonalne obciążenie lub fundamentalną zmianę (dyrektywa art. 14) — z udokumentowaną oceną.
-- Okresy przejściowe: umowy na usługi zawarte przed 28.06.2025 – do 28.06.2030; terminale samoobsługowe w użyciu do 20 lat
-  (wg źródeł wtórnych [niezweryfikowane]).
-- Obowiązki usługodawcy: spełnić wymagania dostępności, podać w ogólnych warunkach lub na stronie informacje o dostępności
-  usługi, rozpatrywać skargi konsumentów (wg źródeł wtórnych 30 dni [niezweryfikowane]), dokumentować ocenę.
-- Kary: wysokości nie potwierdzono [niezweryfikowane] — sprawdź w ustawie.
+## 2. EAA and the 2024 act
+- Application: **from 28 June 2025** (the directive; the Polish act enters into force on 28 June 2025, Art. 88, except
+  some provisions 14 days after publication).
+- Supervision according to secondary sources: the president of the PFRON board, and in sector areas also among others the minister responsible for
+  computerisation, UKE, UTK and the aviation authorities [unverified]. Whether UOKiK has a role in this act – not confirmed.
+- The exclusion of microenterprises (fewer than 10 people and turnover or balance sheet total ≤ EUR 2 million) applies to **services**, not products
+  (directive Art. 4(5) according to secondary sources [unverified]).
+- A possible claim of a disproportionate burden or a fundamental alteration (directive Art. 14) — with a documented assessment.
+- Transition periods: service contracts concluded before 28.06.2025 – until 28.06.2030; self-service terminals in use for up to 20 years
+  (according to secondary sources [unverified]).
+- Obligations of the service provider: meet the accessibility requirements, provide information on the accessibility of the service in the general terms or on the website,
+  handle consumer complaints (according to secondary sources 30 days [unverified]), document the assessment.
+- Penalties: the amount not confirmed [unverified] — check in the act.
 
-## 3. Podmioty publiczne i deklaracja dostępności
-- Podmiot publiczny sporządza i publikuje **deklarację dostępności** strony i aplikacji (art. 10 ustawy z 2019 r. wg
-  źródeł wtórnych), w formacie i wg wzoru z gov.pl (specyfikacja „Warunki techniczne publikacji oraz struktura
-  dokumentu elektronicznego Deklaracji Dostępności”).
-- Typowa treść: status zgodności (w pełni / częściowo / niezgodna), lista niezgodności i wyłączeń z uzasadnieniem, data
-  publikacji i ostatniej aktualizacji, data i metoda oceny (samoocena lub badanie zewnętrzne), osoba kontaktowa, sposób
-  zgłaszania wniosków i skarg, informacje o dostępności architektonicznej siedziby (w deklaracji urzędu).
-- Wniosek o zapewnienie dostępności i skarga: procedury w ustawie; terminy (np. 7 dni na realizację wniosku) sprawdź
-  w tekście [niezweryfikowane].
-- Przegląd: raz w roku, według źródeł wtórnych do 31 marca [niezweryfikowane]; aktualizacja po zmianie serwisu.
-- Brak deklaracji: kara do 5 000 zł wg źródła wtórnego [niezweryfikowane]. Nadzór: minister właściwy do spraw informatyzacji.
-- Deklaracja dla podmiotów prywatnych (np. sklep) nie jest wymagana tą ustawą; informacja o dostępności usług wynika z ustawy
-  z 2024 r. Dobra praktyka: strona „Dostępność” z kontaktem i znanymi ograniczeniami.
+## 3. Public bodies and the accessibility statement
+- A public body prepares and publishes an **accessibility statement** (deklaracja dostępności) of the website and the application (Art. 10 of the 2019 act according to
+  secondary sources), in the format and by the template from gov.pl (the specification "Warunki techniczne publikacji oraz struktura
+  dokumentu elektronicznego Deklaracji Dostępności").
+- Typical content: the conformance status (fully / partially / non-conformant), the list of non-conformities and exemptions with a justification, the date
+  of publication and of the last update, the date and method of the assessment (self-assessment or an external review), a contact person, how to
+  submit requests and complaints, information on the architectural accessibility of the premises (in an office's statement).
+- A request to ensure accessibility and a complaint: procedures in the act; deadlines (e.g. 7 days to fulfil a request) check
+  in the text [unverified].
+- Review: once a year, according to secondary sources by 31 March [unverified]; an update after a change of the site.
+- No statement: a penalty of up to PLN 5,000 according to a secondary source [unverified]. Supervision: the minister responsible for computerisation.
+- A statement for private entities (e.g. a shop) is not required by this act; information on the accessibility of services follows from the
+  2024 act. Good practice: an "Accessibility" page with a contact and the known limitations.
 
 ## 4. EN 301 549
-- V3.2.1 (2021): web oparty na WCAG 2.1 A+AA — wersja z domniemaniem zgodności dla EAA i dyrektywy 2016/2102.
-- V4.1.1: opublikowana 2 września 2026 (źródła wtórne), podnosi web do WCAG 2.2; przywołanie w Dz.Urz. UE przewidywano
-  na koniec 2026 r. [niezweryfikowane]. Do tego czasu minimum prawne = WCAG 2.1 AA; projektuj od razu pod 2.2 AA.
+- V3.2.1 (2021): web based on WCAG 2.1 A+AA — the version with a presumption of conformity for the EAA and directive 2016/2102.
+- V4.1.1: published on 2 September 2026 (secondary sources), raises web to WCAG 2.2; its citation in the OJ EU was expected
+  at the end of 2026 [unverified]. Until then the legal minimum = WCAG 2.1 AA; design for 2.2 AA right away.
 
-## 5. Do sprawdzenia z prawnikiem
-Czy produkt jest „usługą” w rozumieniu ustawy; mikroprzedsiębiorca w grupie kapitałowej; okresy przejściowe umów;
-dostawca platformy a sprzedawca; zakres odpowiedzialności umownej za dostępność wobec klienta.
+## 5. To check with a lawyer
+Whether the product is a "service" within the meaning of the act; a microenterprise in a capital group; transition periods of contracts;
+the platform provider vs. the seller; the scope of contractual liability for accessibility towards the client.

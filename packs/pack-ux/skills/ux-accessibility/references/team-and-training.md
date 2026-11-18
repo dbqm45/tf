@@ -1,30 +1,30 @@
-# Dostępność w zespole — DoD, role, szkolenie
+# Accessibility in the team — DoD, roles, training
 
-Spis treści: 1. Definicja ukończenia · 2. Role · 3. Plan szkolenia · 4. Metryki
+Contents: 1. Definition of done · 2. Roles · 3. Training plan · 4. Metrics
 
-## 1. Definicja ukończenia (DoD) komponentu i zadania
-- Komponent: działa z samą klawiaturą, ma nazwę dostępną i rolę, kontrasty z tokenów, stany fokus/błąd/wyłączony, test
-  z czytnikiem na jednej parze, adnotacje w dokumentacji komponentu.
-- Zadanie: kryteria akceptacji zawierają zachowanie z klawiatury i komunikaty; automat w CI bez nowych błędów.
-- Wydanie: lista kontrolna ścieżek kluczowych; nowe ustalenia trafiają do rejestru z wagą.
+## 1. Definition of done (DoD) of a component and a task
+- Component: works with the keyboard alone, has an accessible name and role, contrasts from tokens, focus/error/disabled states, a test
+  with a screen reader on one pair, annotations in the component documentation.
+- Task: the acceptance criteria include the keyboard behaviour and the messages; automated checks in CI without new errors.
+- Release: a checklist of the key paths; new findings go to the register with a severity.
 
-## 2. Role
-| Rola | Odpowiada za |
+## 2. Roles
+| Role | Responsible for |
 |---|---|
-| Projektant | kontrast, hierarchia, adnotacje (nagłówki, landmarki, kolejność fokusu), cele dotykowe |
-| Autor treści | nagłówki, linki, alternatywy, prosty język (ux-content-design) |
-| Programista | semantyka HTML, klawiatura, ARIA tylko gdy trzeba (fe-web-platform) |
-| QA | ścieżki z klawiaturą i czytnikiem (qa-exploratory-manual) |
-| Specjalista ds. dostępności | audyt, raport, plan, szkolenie, kontakt z prawnikiem |
-| Właściciel produktu | priorytety napraw, deklaracja, budżet |
+| Designer | contrast, hierarchy, annotations (headings, landmarks, focus order), touch targets |
+| Content author | headings, links, alternatives, plain language (ux-content-design) |
+| Developer | HTML semantics, keyboard, ARIA only when needed (fe-web-platform) |
+| QA | paths with the keyboard and a screen reader (qa-exploratory-manual) |
+| Accessibility specialist | audit, report, plan, training, contact with the lawyer |
+| Product owner | fix priorities, the statement, the budget |
 
-## 3. Plan szkolenia (3 sesje po 90 minut)
-1. **Doświadczenie**: godzina bez myszy; nawigacja serwisu czytnikiem ekranu (NVDA lub VoiceOver) z nagraniem osoby
-   korzystającej na co dzień; cel — zrozumieć, nie zaliczyć.
-2. **Rola**: ćwiczenia dla ról z p. 2 na własnym produkcie (naprawa 3 realnych ustaleń).
-3. **Proces**: DoD, zgłaszanie ustaleń, gdzie szukać pomocy; wyznaczenie „championa” w każdym zespole.
-Powtarzaj dla nowych osób; część materiałów w onboardingu.
+## 3. Training plan (3 sessions of 90 minutes)
+1. **Experience**: an hour without a mouse; navigating the site with a screen reader (NVDA or VoiceOver) with a recording of a person
+   who uses it every day; the goal — to understand, not to pass.
+2. **Role**: exercises for the roles from section 2 on your own product (fixing 3 real findings).
+3. **Process**: DoD, reporting findings, where to look for help; appointing a "champion" in every team.
+Repeat for new people; part of the materials in onboarding.
 
-## 4. Metryki
-Liczba otwartych ustaleń wg wagi i trend; odsetek ścieżek kluczowych przetestowanych czytnikiem w tym wydaniu; czas od
-zgłoszenia do naprawy krytycznych; liczba zgłoszeń od użytkowników. Nie mierz wyłącznie wynikiem automatu.
+## 4. Metrics
+The number of open findings by severity and the trend; the share of key paths tested with a screen reader in this release; the time from
+report to fix of critical ones; the number of reports from users. Do not measure by the automated result alone.

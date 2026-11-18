@@ -1,46 +1,46 @@
-# Audyt dostępności — raport, waga, kontrole
+# Accessibility audit — report, severity, checks
 
-Spis treści: 1. Szablon raportu · 2. Skala wagi · 3. Kontrole ręczne · 4. Pary czytnik–przeglądarka · 5. Plan napraw
+Contents: 1. Report template · 2. Severity scale · 3. Manual checks · 4. Screen reader–browser pairs · 5. Remediation plan
 
-## 1. Szablon raportu
-1. **Podsumowanie** (pół strony): zakres, norma i poziom (WCAG 2.2 A+AA), data, wersja produktu, liczba ustaleń wg wagi,
-   3 najważniejsze bariery, ocena ogólna słowami („częściowo zgodny: 5 barier blokujących zakup”).
-2. **Zakres i metoda**: adresy z próby i powód wyboru (WCAG-EM), narzędzia z wersjami, przeglądarki, technologie asystujące,
-   ograniczenia (czego nie sprawdzono: treści za logowaniem, PDF-y, aplikacja mobilna).
-3. **Ustalenia** — tabela lub karty: `ID | Kryterium sukcesu (numer, poziom) | Waga | Miejsce (URL, element, zrzut) | Opis i wpływ na użytkownika | Zalecenie | Jak sprawdzić po naprawie`.
-4. **Zgodność z kryteriami**: tabela kryteriów A+AA ze statusem: spełnione / niespełnione / nie dotyczy / nie sprawdzono.
-5. **Mocne strony** (co zachować) i **plan napraw** (sekcja 5).
-Jedno ustalenie = jeden problem w jednym wzorcu; to samo w 30 miejscach to jedno ustalenie z listą miejsc.
-Opis wpływu pisz o człowieku: „osoba niewidoma nie dowie się, które pole jest błędne”, nie „brak aria-describedby”.
+## 1. Report template
+1. **Summary** (half a page): scope, standard and level (WCAG 2.2 A+AA), date, product version, number of findings by severity,
+   the 3 most important barriers, an overall assessment in words ("partially conformant: 5 barriers blocking a purchase").
+2. **Scope and method**: the addresses in the sample and the reason for the choice (WCAG-EM), tools with versions, browsers, assistive technologies,
+   limitations (what was not checked: content behind login, PDFs, the mobile app).
+3. **Findings** — a table or cards: `ID | Success criterion (number, level) | Severity | Location (URL, element, screenshot) | Description and impact on the user | Recommendation | How to verify after the fix`.
+4. **Conformance with the criteria**: a table of the A+AA criteria with a status: met / not met / not applicable / not checked.
+5. **Strengths** (what to keep) and the **remediation plan** (section 5).
+One finding = one problem in one pattern; the same thing in 30 places is one finding with a list of places.
+Write the impact about a person: "a blind person will not learn which field is wrong", not "missing aria-describedby".
 
-## 2. Skala wagi (własna; dopasuj do umowy)
-| Waga | Kryterium | Przykład |
+## 2. Severity scale (our own; adjust to the contract)
+| Severity | Criterion | Example |
 |---|---|---|
-| Krytyczna | uniemożliwia wykonanie zadania w ścieżce kluczowej | formularz płatności niedostępny z klawiatury |
-| Poważna | bardzo utrudnia lub wymaga obejścia | brak etykiet pól, kontrast przycisku 2:1 |
-| Umiarkowana | utrudnia, jest obejście | niejasna kolejność nagłówków |
-| Niska | drobna niedogodność, ryzyko przy zmianie | nadmiarowy tekst alternatywny |
-Waga bierze pod uwagę zasięg (ścieżka kluczowa czy zakątek serwisu) i dotknięte grupy. Wagi nie mylić z poziomem A/AA
-kryterium.
+| Critical | prevents completing a task on a key path | the payment form not reachable with the keyboard |
+| Serious | makes it very hard or requires a workaround | missing field labels, button contrast 2:1 |
+| Moderate | makes it harder, there is a workaround | an unclear heading order |
+| Low | a minor inconvenience, a risk on change | redundant alternative text |
+Severity takes into account the reach (a key path or a corner of the site) and the affected groups. Do not confuse severity with the A/AA level
+of the criterion.
 
-## 3. Kontrole ręczne (zestaw na stronę z próby)
-- Klawiatura: Tab/Shift+Tab przechodzi wszystko, kolejność zgodna z układem, fokus zawsze widoczny i nie zasłonięty (2.4.7, 2.4.11),
-  brak pułapki, Escape zamyka nakładki, skróty jednoznakowe da się wyłączyć (2.1.4).
-- Powiększenie 200% oraz reflow przy szerokości 320 px bez przewijania w dwóch kierunkach (1.4.4, 1.4.10); odstępy tekstu (1.4.12).
-- Kontrast: tekst 4,5:1 (duży 3:1), elementy interfejsu i fokus 3:1 (1.4.3, 1.4.11).
-- Treść: nagłówki, landmarki, tytuł strony, język (`lang`), alternatywy tekstowe, linki zrozumiałe poza kontekstem (2.4.4).
-- Formularze: etykiety, wymagane pola, błędy tekstem z sugestią, autouzupełnianie (1.3.5), brak ponownego wpisywania (3.3.7),
-  uwierzytelnianie bez testu poznawczego (3.3.8).
-- Multimedia: napisy, transkrypcja, audiodeskrypcja tam, gdzie obraz niesie treść; brak autoodtwarzania z dźwiękiem.
-- Ruch: możliwość wstrzymania, brak błysków (> 3 na sekundę), alternatywa dla przeciągania (2.5.7), cele ≥ 24×24 px (2.5.8).
-- Dynamika: komunikaty statusu ogłaszane bez zabierania fokusu (4.1.3).
+## 3. Manual checks (a set per page in the sample)
+- Keyboard: Tab/Shift+Tab reaches everything, the order matches the layout, focus always visible and not obscured (2.4.7, 2.4.11),
+  no trap, Escape closes overlays, single-character shortcuts can be turned off (2.1.4).
+- 200% zoom and reflow at a width of 320 px without scrolling in two directions (1.4.4, 1.4.10); text spacing (1.4.12).
+- Contrast: text 4.5:1 (large 3:1), interface elements and focus 3:1 (1.4.3, 1.4.11).
+- Content: headings, landmarks, page title, language (`lang`), text alternatives, links understandable out of context (2.4.4).
+- Forms: labels, required fields, errors in text with a suggestion, autocomplete (1.3.5), no re-entering (3.3.7),
+  authentication without a cognitive test (3.3.8).
+- Multimedia: captions, transcript, audio description where the image carries content; no autoplay with sound.
+- Motion: the ability to pause, no flashes (> 3 per second), an alternative to dragging (2.5.7), targets ≥ 24×24 px (2.5.8).
+- Dynamics: status messages announced without taking focus (4.1.3).
 
-## 4. Pary czytnik–przeglądarka (typowy zestaw testowy)
-NVDA + Firefox lub Chrome (Windows), JAWS + Chrome (Windows), VoiceOver + Safari (macOS, iOS), TalkBack + Chrome (Android).
-Dobór pary według tego, z czego korzystają odbiorcy (ankieta WebAIM o czytnikach – sprawdź aktualną edycję [niezweryfikowane]).
-Zapisuj wersję czytnika i przeglądarki w raporcie; niezgodności między parami często wynikają z błędów czytnika.
+## 4. Screen reader–browser pairs (a typical test set)
+NVDA + Firefox or Chrome (Windows), JAWS + Chrome (Windows), VoiceOver + Safari (macOS, iOS), TalkBack + Chrome (Android).
+Choose the pair by what the audience uses (the WebAIM screen reader survey – check the current edition [unverified]).
+Record the screen reader and browser versions in the report; differences between pairs often come from screen reader bugs.
 
-## 5. Plan napraw
-Tabela: `ID ustaleń | Naprawa | Właściciel | Wysiłek | Termin | Weryfikacja`. Kolejność: (1) bariery blokujące zadanie,
-(2) poprawki w komponentach i szablonach, (3) pozostałe na ścieżkach kluczowych, (4) reszta. Ustalenia, których nie da
-się naprawić przed terminem prawnym, trafiają do deklaracji jako niezgodności z planem i datą.
+## 5. Remediation plan
+Table: `Finding IDs | Fix | Owner | Effort | Deadline | Verification`. Order: (1) barriers blocking a task,
+(2) fixes in components and templates, (3) the rest on key paths, (4) everything else. Findings that cannot
+be fixed before the legal deadline go into the statement as non-conformities with a plan and a date.
