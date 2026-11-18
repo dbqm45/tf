@@ -144,12 +144,12 @@
   "offline": "2026-11-17"
  },
  "ddd-es-simulation": {
-  "fingerprint": "63e58c99b80ff355",
-  "offline": "2026-11-17"
+  "fingerprint": "acccd1b948286ea0",
+  "offline": "2026-11-18"
  },
  "ddd-event-storming": {
-  "fingerprint": "ebbc8b67a5e01b31",
-  "offline": "2026-11-16"
+  "fingerprint": "c4b170f8fc6a2beb",
+  "offline": "2026-11-18"
  },
  "ddd-facilitation": {
   "fingerprint": "f4318bf4033bbbc5",
@@ -188,8 +188,8 @@
   "offline": "2026-11-17"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "ae6a417574cefacc",
-  "offline": "2026-11-17"
+  "fingerprint": "faffe1dabb23e12c",
+  "offline": "2026-11-18"
  },
  "eng-continuous-delivery": {
   "fingerprint": "8b9609d0bc21366c",
@@ -212,16 +212,16 @@
   "offline": "2026-11-16"
  },
  "eng-legacy-dossier": {
-  "fingerprint": "b9b428a8bb0e240a",
-  "offline": "2026-11-17"
+  "fingerprint": "d2ffb70c83ca84ca",
+  "offline": "2026-11-18"
  },
  "eng-llm-features": {
   "fingerprint": "310740d865c4e1a9",
   "offline": "2026-11-17"
  },
  "eng-local-quality-gates": {
-  "fingerprint": "05e152c8765d1486",
-  "offline": "2026-11-16"
+  "fingerprint": "88c252528d922725",
+  "offline": "2026-11-18"
  },
  "eng-module-depth": {
   "fingerprint": "cc3644472ad2d3f6",
@@ -236,8 +236,8 @@
   "offline": "2026-11-16"
  },
  "eng-repo-readiness": {
-  "fingerprint": "fa2a7ceab4ff0d0e",
-  "offline": "2026-11-17"
+  "fingerprint": "ec1c092c8744919f",
+  "offline": "2026-11-18"
  },
  "eng-tech-debt-audit": {
   "fingerprint": "65d8ad08fb8f3dde",
@@ -444,8 +444,8 @@
   "offline": "2026-11-16"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "40b9cc7a241c1e9c",
-  "offline": "2026-11-17"
+  "fingerprint": "8fafc6f7adcf8486",
+  "offline": "2026-11-18"
  },
  "proc-safe": {
   "fingerprint": "bb881148100226a9",
