@@ -1,47 +1,47 @@
 # Separation of Concerns
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/separation-of-concerns.
+Source: frontendpatterns.dev/separation-of-concerns.
 
-Uwaga: ogólna definicja tego pojęcia jest już w `../principles.md` (fundament „Logical
-Separation of Concerns” + zasada SoC z artykułu Hrynkevycha). Ten plik dodaje to, co konkretnie
-wnosi strona frontendpatterns.dev: podział na warstwy (dane/logika/prezentacja/style) z pełnymi
-przykładami before/after.
+Note: the general definition of this concept is already in `../principles.md` (the "Logical
+Separation of Concerns" foundation + the SoC principle from Hrynkevych's article). This file adds what
+the frontendpatterns.dev page specifically contributes: the split into layers (data/logic/presentation/styles) with full
+before/after examples.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Fundamentals
-- **Poziom:** Beginner
-- **Przykłady:** Native web
-- **Data aktualizacji:** September 22, 2025
-- **Autor:** Den Odell
+- **Category:** Fundamentals
+- **Level:** Beginner
+- **Examples:** Native web
+- **Last updated:** September 22, 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Organize code into layers (data, logic, presentation, styling) so changes in one area don't ripple through unrelated code.”
+"Organize code into layers (data, logic, presentation, styling) so changes in one area don't ripple through unrelated code."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Zasada jest agnostyczna (eng-design-principles); w Angularze warstwy to naturalnie serwis (dane) + czyste funkcje
-  (reguły) + komponent (prezentacja) — fw-angular.
-- W przykładach warstwy danych brakuje sprawdzenia `response.ok` (fe-web-platform) — dodaj je w realnym kodzie.
-- Logika domenowa jako klasa niemutowalna (`Cart`) albo czyste funkcje — obie formy są dobre; ważne, by nie
-  zależała od frameworka.
+- The principle is agnostic (eng-design-principles); in Angular the layers are naturally a service (data) + pure functions
+  (rules) + a component (presentation) — fw-angular.
+- The data layer examples lack a `response.ok` check (fe-web-platform) — add it in real code.
+- Domain logic as an immutable class (`Cart`) or pure functions — both forms are good; what matters is that it does not
+  depend on the framework.
 
 ## Problem
 
-Komponenty zawierające „500 lines of tangled spaghetti where API calls sit next to inline styles, business logic weaves through JSX, and validation rules hide between event handlers.” Efekt: trudności z ponownym użyciem kodu, testowaniem, pracą zespołową i utrzymaniem.
+Components containing "500 lines of tangled spaghetti where API calls sit next to inline styles, business logic weaves through JSX, and validation rules hide between event handlers." The effect: difficulties with code reuse, testing, teamwork and maintenance.
 
-## Rozwiązanie
+## Solution
 
-Podziel kod na warstwy: usługi API zwracające czyste dane, czyste funkcje dla reguł biznesowych, komponenty skupione wyłącznie na renderowaniu, i osobne pliki/moduły stylów.
+Split the code into layers: API services returning plain data, pure functions for business rules, components focused solely on rendering, and separate style files/modules.
 
-## Przykłady kodu
+## Code examples
 
-### Podstawowy podział na warstwy
+### A basic split into layers
 
-**❌ Wymieszane:**
+**❌ Mixed:**
 
 ```javascript
 function UserProfile({ userId }) {
@@ -63,7 +63,7 @@ function UserProfile({ userId }) {
 }
 ```
 
-**✅ Rozdzielone:**
+**✅ Separated:**
 
 ```javascript
 const userApi = {
@@ -96,7 +96,7 @@ function UserProfileContainer({ userId }) {
 }
 ```
 
-### Rozdzielenie danych od prezentacji (pełny przykład z formularzem)
+### Separating data from presentation (a full example with a form)
 
 ```javascript
 // Data layer
@@ -158,9 +158,9 @@ function UserFormContainer({ userId }) {
 }
 ```
 
-### Rozdzielenie logiki biznesowej od kodu frameworka
+### Separating business logic from framework code
 
-**❌ Wymieszane:**
+**❌ Mixed:**
 
 ```javascript
 function useShoppingCart() {
@@ -181,7 +181,7 @@ function useShoppingCart() {
 }
 ```
 
-**✅ Rozdzielone — logika koszyka jako niezależna od Reacta klasa:**
+**✅ Separated — the cart logic as a React-independent class:**
 
 ```javascript
 class Cart {
@@ -211,9 +211,9 @@ function useShoppingCart() {
 }
 ```
 
-### Rozdzielenie stylów od logiki komponentu
+### Separating styles from component logic
 
-**❌ Wymieszane:**
+**❌ Mixed:**
 
 ```javascript
 function Button({ onClick, children }) {
@@ -226,7 +226,7 @@ function Button({ onClick, children }) {
 }
 ```
 
-**✅ Rozdzielone (CSS Modules):**
+**✅ Separated (CSS Modules):**
 
 ```javascript
 import styles from './Button.module.css';
@@ -240,24 +240,24 @@ function Button({ onClick, children }) {
 .button:hover { background-color: #0056b3; }
 ```
 
-## Zalety
+## Advantages
 
-- „When I open a file, I know exactly what I'm looking at—it's handling data, managing business rules, or rendering UI, not all three.”
-- Testowanie staje się prostsze — każda warstwa testowalna niezależnie.
-- Kod jest faktycznie wielokrotnie używalny (czysta funkcja walidacji działa w każdym kontekście).
-- „Changes stop cascading. Update how data is fetched without touching components” — zmiana warstwy danych nie wymaga dotykania komponentów UI.
-- Zespoły mogą pracować równolegle na różnych warstwach bez wchodzenia sobie w drogę.
+- "When I open a file, I know exactly what I'm looking at—it's handling data, managing business rules, or rendering UI, not all three."
+- Testing becomes simpler — each layer testable independently.
+- The code is actually reusable (a pure validation function works in any context).
+- "Changes stop cascading. Update how data is fetched without touching components" — a change in the data layer does not require touching UI components.
+- Teams can work in parallel on different layers without getting in each other's way.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- „More files means more cognitive overhead navigating between layers” — więcej plików do otworzenia, żeby zrozumieć jedną funkcjonalność.
-- Zespół musi wspólnie uzgodnić, gdzie leżą granice warstw — inaczej podział będzie niekonsekwentny.
-- Konflikt między separacją warstw a kolokacją kodu (trzymaniem powiązanych rzeczy blisko siebie) — to są przeciwstawne siły, nie da się zmaksymalizować obu naraz.
-- „Debugging gets trickier when bugs span multiple layers” — błąd przechodzący przez trzy warstwy wymaga śledzenia go przez trzy pliki.
-- Idealna separacja jest niemożliwa/nieopłacalna w praktyce — zawsze jest jakiś kompromis.
-- Komponent-koordynator (container) może z czasem stać się mini God Objectem, jeśli koordynuje zbyt wiele warstw naraz.
+- "More files means more cognitive overhead navigating between layers" — more files to open to understand one feature.
+- The team must agree together where the layer boundaries lie — otherwise the split will be inconsistent.
+- A conflict between layer separation and code colocation (keeping related things close together) — these are opposing forces, you cannot maximize both at once.
+- "Debugging gets trickier when bugs span multiple layers" — a bug passing through three layers requires tracing it through three files.
+- Perfect separation is impossible/not worth it in practice — there is always some compromise.
+- A coordinating component (container) can over time become a mini God Object if it coordinates too many layers at once.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Single Responsibility](single-responsibility.md) — Fundamentals.
 - [Presentational vs. Container](../components/presentational-vs-container.md) — Components.
@@ -265,8 +265,8 @@ function Button({ onClick, children }) {
 - MVC Pattern — Wikipedia.
 - SOLID — Wikipedia.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Warstwuj kod (dane/logika/prezentacja/style) wtedy, gdy te warstwy realnie zmieniają się **z różną częstotliwością i z różnych powodów** — to jest sedno SoC, nie podział „dla porządku”. Jeśli logika walidacji zmienia się niezależnie od tego, jak wygląda formularz, rozdzielenie ich się opłaca.
+Layer the code (data/logic/presentation/styles) when these layers really change **at different frequencies and for different reasons** — that is the core of SoC, not a split "for tidiness". If the validation logic changes independently of what the form looks like, separating them pays off.
 
-Dla bardzo małego, jednorazowego komponentu (jeden plik, kilkanaście linii, bez planów rozwoju) pełne rozbicie na 4 warstwy jest przesadą — koszt indirekcji (więcej plików, więcej importów) przewyższa zysk. Znajdź poziom separacji proporcjonalny do realnej złożoności i przewidywanej zmienności kodu, nie maksymalny teoretycznie możliwy.
+For a very small, one-off component (one file, a dozen or so lines, no plans for development) a full split into 4 layers is overkill — the cost of indirection (more files, more imports) exceeds the gain. Find the level of separation proportional to the real complexity and the expected volatility of the code, not the maximum theoretically possible.

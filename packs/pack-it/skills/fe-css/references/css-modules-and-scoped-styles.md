@@ -1,55 +1,55 @@
 # CSS Modules & Scoped Styles
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/css-modules-and-scoped-styles.
+Source: frontendpatterns.dev/css-modules-and-scoped-styles.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Styling
-- **Poziom:** Beginner
-- **Przykłady frameworków:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 13 grudnia 2025
-- **Autor:** Den Odell
+- **Category:** Styling
+- **Level:** Beginner
+- **Framework examples:** React, Vue, Svelte, Native web
+- **Last updated:** 13 December 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Scope styles to components by generating unique class names at build time, preventing conflicts
-without runtime overhead.”
+"Scope styles to components by generating unique class names at build time, preventing conflicts
+without runtime overhead."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Mechanizmy izolacji w frameworkach: Angular — `ViewEncapsulation.Emulated` (domyślnie, atrybuty `_ngcontent-*`),
-  `ShadowDom`, `None`; `:host`, `::ng-deep` jest przestarzałe (fw-angular). Vue `scoped`/`module`; Svelte — domyślnie;
+- Isolation mechanisms in frameworks: Angular — `ViewEncapsulation.Emulated` (the default, `_ngcontent-*` attributes),
+  `ShadowDom`, `None`; `:host`, `::ng-deep` is deprecated (fw-angular). Vue `scoped`/`module`; Svelte — by default;
   Web Components — Shadow DOM + `::part()`.
-- Natywna alternatywa bez buildu: **`@scope (.card) to (.card__content) { … }`** — Baseline od końca 2025 (wszystkie
-  główne silniki); z kaskadowymi warstwami `@layer` (reset, tokens, components, utilities) rozwiązuje większość
-  kolizji bez generowanych nazw.
-- Wartości w przykładach (`blue`, `10px`, `#1a1a1a`) to ilustracja — w projekcie wyłącznie tokeny (SKILL.md).
-- Motyw: przełączaj tokeny na `:root`/`[data-theme]` i używaj `light-dark()` + `color-scheme`, zamiast klas
-  motywu z modułu.
-- Svelte: przykład w składni Svelte 4 (`export let`); w Svelte 5 `let { variant = 'primary' } = $props()`.
-  Vue: przykład `$style` w Options API — w `<script setup>` użyj `useCssModule()`.
-- Typy dla CSS Modules: Vite/TS — `vite/client` daje ogólny typ; dokładne klucze generuje np. `typed-css-modules`
-  lub wtyczka TS (lang-typescript).
+- A native alternative without a build: **`@scope (.card) to (.card__content) { … }`** — Baseline since the end of 2025 (all
+  major engines); together with `@layer` cascade layers (reset, tokens, components, utilities) it solves most
+  collisions without generated names.
+- The values in the examples (`blue`, `10px`, `#1a1a1a`) are an illustration — in the project, only tokens (SKILL.md).
+- Theme: switch tokens on `:root`/`[data-theme]` and use `light-dark()` + `color-scheme`, instead of theme classes
+  from a module.
+- Svelte: the example is in Svelte 4 syntax (`export let`); in Svelte 5 `let { variant = 'primary' } = $props()`.
+  Vue: the `$style` example is in the Options API — in `<script setup>` use `useCssModule()`.
+- Types for CSS Modules: Vite/TS — `vite/client` gives a general type; exact keys are generated e.g. by `typed-css-modules`
+  or a TS plugin (lang-typescript).
 
 ## Problem
 
-Globalny namespace CSS tworzy konflikty między zespołami i bibliotekami — dwie różne osoby (albo
-osoba i biblioteka komponentów) mogą nazwać klasę `.header`. Autor opisuje sytuację, w której zmiana
-`.button` w jednym miejscu złamała padding przycisku w zupełnie innym obszarze aplikacji. Konwencja
-BEM (`.component-name__element-name--modifier`) łagodzi problem, ale wymaga dyscypliny całego
-zespołu i w praktyce robi się długa/verbose.
+The global CSS namespace creates conflicts between teams and libraries — two different people (or
+a person and a component library) can name a class `.header`. The author describes a situation in which a change to
+`.button` in one place broke a button's padding in a completely different area of the application. The BEM
+convention (`.component-name__element-name--modifier`) mitigates the problem, but it requires the discipline of the whole
+team and in practice gets long/verbose.
 
-## Rozwiązanie
+## Solution
 
-Narzędzia działające w czasie budowania automatycznie transformują czytelne nazwy klas w unikalne
-identyfikatory — `.button` staje się `.Button_button__a1b2c3`. Styl importuje się jako moduł
-JavaScript: `import styles from './Button.module.css'`. Vue robi to atrybutami `data-v-*`, Svelte
-generuje unikalne klasy przy kompilacji. „When you genuinely need global styles, use `:global()`
-selectors.”
+Tools working at build time automatically transform readable class names into unique
+identifiers — `.button` becomes `.Button_button__a1b2c3`. The style is imported as a JavaScript
+module: `import styles from './Button.module.css'`. Vue does this with `data-v-*` attributes, Svelte
+generates unique classes at compile time. "When you genuinely need global styles, use `:global()`
+selectors."
 
-## Przykłady kodu
+## Code examples
 
 ### Basic Scoped Styles — React
 
@@ -244,39 +244,39 @@ export default {
 };
 ```
 
-## Zalety
+## Advantages
 
-- Konflikty nazw znikają całkowicie — bez ręcznej konwencji nazewniczej.
-- Izolacja wymuszana przez narzędzia, nie przez dyscyplinę zespołu (jak w BEM).
-- Zerowy koszt runtime — wszystko rozstrzyga się na etapie budowania.
-- To zwykła składnia CSS — brak nowego języka do nauki.
-- Bezpieczniejsza refaktoryzacja dzięki jawnym, importowanym zależnościom.
-- Łatwiej znaleźć martwy kod — nieużywany moduł CSS jest widoczny.
-- `:global()` pozwala świadomie wyjść poza izolację, gdy trzeba (integracja z bibliotekami trzecimi).
+- Name conflicts disappear completely — without a manual naming convention.
+- Isolation enforced by tools, not by team discipline (as in BEM).
+- Zero runtime cost — everything is resolved at build time.
+- It is ordinary CSS syntax — no new language to learn.
+- Safer refactoring thanks to explicit, imported dependencies.
+- Dead code is easier to find — an unused CSS module is visible.
+- `:global()` lets you deliberately step outside the isolation when needed (integration with third-party libraries).
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- DevTools pokazuje wygenerowane, nieczytelne nazwy klas (`Button_button__a1b2c3`) — utrudnia
-  debugowanie bez source maps.
-- Współdzielenie stylów między modułami wymaga jawnej kompozycji (`composes`).
-- Style w pełni dynamiczne są trudne — CSS Modules są statyczne; potrzebne CSS custom properties albo
+- DevTools shows generated, unreadable class names (`Button_button__a1b2c3`) — this makes
+  debugging harder without source maps.
+- Sharing styles between modules requires explicit composition (`composes`).
+- Fully dynamic styles are hard — CSS Modules are static; you need CSS custom properties or
   inline style.
-- Wymaga konfiguracji narzędzia budowania (Webpack, Vite, Parcel).
-- Frameworki CSS (Bootstrap, Material UI) zakładają globalne klasy — potrzeba wrapperów `:global()`.
-- Konkatenacja wielu klas robi się verbose — potrzebne template literale albo helper (`classnames`).
-- Wsparcie TypeScript wymaga wygenerowanych/ręcznych deklaracji typów dla modułów CSS.
+- Requires build tool configuration (Webpack, Vite, Parcel).
+- CSS frameworks (Bootstrap, Material UI) assume global classes — `:global()` wrappers are needed.
+- Concatenating many classes gets verbose — template literals or a helper (`classnames`) are needed.
+- TypeScript support requires generated/manual type declarations for CSS modules.
 
-## Powiązane wzorce
+## Related patterns
 
-- CSS Modules — repozytorium GitHub.
+- CSS Modules — the GitHub repository.
 - CSS Modules Specification — CSS-Tricks.
-- Scoped CSS — oficjalna dokumentacja Vue.js.
+- Scoped CSS — the official Vue.js documentation.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj domyślnie w każdym projekcie komponentowym z realnym ryzykiem kolizji nazw CSS (więcej niż
-jeden zespół/biblioteka w tej samej bazie stylów) — to niski koszt za pełną izolację bez runtime
-overhead. **Nie** jest to jedyna droga: dla bardzo małych, jednoosobowych projektów albo dla stylów
-z natury globalnych (reset, design tokens, theme) prostszy, jeden globalny arkusz CSS może być
-wystarczający — nie wprowadzaj build-time tooling tylko po to, żeby „robić to poprawnie”, jeśli
-problem kolizji nazw w praktyce nie występuje (YAGNI — eng-design-principles).
+Use it by default in every component project with a real risk of CSS name collisions (more than
+one team/library in the same style base) — it is a low cost for full isolation without runtime
+overhead. It is **not** the only way: for very small, single-person projects or for styles that are
+global by nature (reset, design tokens, theme) a simpler, single global CSS stylesheet may be
+enough — do not introduce build-time tooling only to "do it properly" if the
+name collision problem does not occur in practice (YAGNI — eng-design-principles).

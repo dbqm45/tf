@@ -1,79 +1,79 @@
 ---
 name: lang-csharp
-description: Użyj przy kodzie C# 12–14 (.NET 8–10) — konwencje, nullable, rekordy, async, obiekt wartości, agregat.
+description: Use for C# 12–14 (.NET 8–10) code — conventions, nullable, records, async, value object, aggregate.
 metadata:
   review: "2027-01-23"
-  catalog: "Użyj przy pisaniu i przeglądzie kodu C# na .NET 8–10 (C# 12–14) — konwencje języka, typy referencyjne dopuszczające null, rekordy i niezmienność, wynik operacji zamiast wyjątków dla odrzuceń biznesowych, dopasowanie wzorców i wyczerpujące switch, async i CancellationToken, różnice między wersjami (konstruktory główne, wyrażenia kolekcji, kolekcje params, field, bloki extension, ?.=) oraz wyrażanie pojęć domenowych idiomami C#. Nie do ASP.NET Core — endpointów, walidacji, OpenAPI, testów integracyjnych (fw-aspnet-core), projektu API niezależnie od technologii (be-api-design) ani modelowania domeny (ddd-*)."
-  keywords: "C#, csharp, .NET, dotnet, net8.0, net10.0, LangVersion, record, record struct, nullable, wynik operacji w C#, wyjątki czy wynik, switch expression, pattern matching, sealed, primary constructor, konstruktor główny, field keyword, extension members, blok extension, async await, CancellationToken, decimal kwota, obiekt wartości w C#, agregat w C#"
+  catalog: "Use when writing and reviewing C# code on .NET 8–10 (C# 12–14) — language conventions, nullable reference types, records and immutability, an operation result instead of exceptions for business rejections, pattern matching and exhaustive switch, async and CancellationToken, differences between versions (primary constructors, collection expressions, params collections, field, extension blocks, ?.=) and expressing domain concepts with C# idioms. Not for ASP.NET Core — endpoints, validation, OpenAPI, integration tests (fw-aspnet-core), API design independent of technology (be-api-design) or domain modelling (ddd-*)."
+  keywords: "C#, csharp, .NET, dotnet, net8.0, net10.0, LangVersion, record, record struct, nullable, wynik operacji w C#, wyjątki czy wynik, switch expression, pattern matching, sealed, primary constructor, konstruktor główny, field keyword, extension members, blok extension, async await, CancellationToken, decimal kwota, obiekt wartości w C#, agregat w C#, operation result in C#, exceptions or result, extension block, decimal amount, value object in C#, aggregate in C#"
 ---
 
 # C#
 
-## Zasady języka
-1. Wersję języka wyznacza platforma (`TargetFramework`): net8.0 → C# 12, net9.0 → C# 13, net10.0 → C# 14.
-   Nowa składnia = podniesienie platformy; `LangVersion` wyżej niż domyślna to ryzyko (część funkcji wymaga
-   wsparcia środowiska uruchomieniowego) — tylko świadomie i z testami.
-2. `<Nullable>enable</Nullable>` i `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` w każdym projekcie;
-   `null` nie jest wartością domenową — brak wartości wyrażasz typem (`T?` na granicy, warianty w domenie).
-3. Niezmienność: `record` / `readonly record struct` dla wartości, `init` zamiast `set`, kolekcje wystawiane jako
+## Language rules
+1. The language version is set by the platform (`TargetFramework`): net8.0 → C# 12, net9.0 → C# 13, net10.0 → C# 14.
+   New syntax = raising the platform; a `LangVersion` higher than the default is a risk (some features need
+   runtime support) — only deliberately and with tests.
+2. `<Nullable>enable</Nullable>` and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` in every project;
+   `null` is not a domain value — you express a missing value with a type (`T?` at the boundary, variants in the domain).
+3. Immutability: `record` / `readonly record struct` for values, `init` instead of `set`, collections exposed as
    `IReadOnlyList<T>`.
-4. Pieniądze: `decimal` z jawną walutą i zaokrągleniem (`MidpointRounding`) — nigdy `double`/`float`.
-5. Wyjątki dla błędów programisty i infrastruktury; **odrzucenia biznesowe** jako wynik operacji (zamknięta
-   hierarchia rekordów + `switch`), mapowane na odpowiedź na granicy (fw-aspnet-core).
-6. Async do końca: metody I/O `async Task`, `CancellationToken` jako ostatni parametr i przekazywany dalej;
-   bez `.Result`/`.Wait()` (zakleszczenia, blokowanie wątków puli).
-7. Identyfikatory jako typy (`readonly record struct ResourceId(Guid Value)`), nie goły `Guid`/`string`.
-8. Granice modułów: `internal` domyślnie, publiczne tylko API projektu; zależności między projektami tylko
-   w jedną stronę (domena nie zna infrastruktury).
+4. Money: `decimal` with an explicit currency and rounding (`MidpointRounding`) — never `double`/`float`.
+5. Exceptions for programmer and infrastructure errors; **business rejections** as an operation result (a closed
+   hierarchy of records + `switch`), mapped to a response at the boundary (fw-aspnet-core).
+6. Async all the way: I/O methods `async Task`, `CancellationToken` as the last parameter and passed on;
+   no `.Result`/`.Wait()` (deadlocks, blocking pool threads).
+7. Identifiers as types (`readonly record struct ResourceId(Guid Value)`), not a bare `Guid`/`string`.
+8. Module boundaries: `internal` by default, only the project API public; dependencies between projects only
+   in one direction (the domain does not know the infrastructure).
 
-## Pojęcia domenowe w csharp
-<!-- Kontrakt: każde pojęcie ze słownika → idiom tej technologii. Sprawdzane przez `build.py check`. -->
-| Pojęcie (słownik) | Idiom |
+## Domain concepts in csharp
+<!-- Contract: every concept from the vocabulary → an idiom of this technology. Checked by `build.py check`. -->
+| Concept (vocabulary) | Idiom |
 |---|---|
-| **obiekt wartości** | `readonly record struct` albo `record` z walidacją w konstruktorze; równość po wartości z kompilatora |
-| **encja** | klasa z identyfikatorem typu (`ResourceId`) i zachowaniem; równość po identyfikatorze |
-| **agregat** | `sealed class` z prywatnym stanem, metody biznesowe zamiast setterów, `Version` do blokady optymistycznej, `PullEvents()` |
-| **warianty** | `abstract record` z prywatnym konstruktorem i zagnieżdżonymi `sealed record`-ami (zbiór zamknięty) + `switch` |
-| **wynik operacji** | zamknięta hierarchia rekordów (`BlockResult.Blocked`, `.Conflict`, `.Disabled`) obsługiwana `switch`; wyjątki tylko dla błędów programisty |
-| **zdarzenie** | `sealed record` w czasie przeszłym implementujący `IDomainEvent` |
-| **polityka** | interfejs z jedną metodą albo delegat (`Func<Order, Money>`) wstrzykiwany konstruktorem |
-| **repozytorium** | interfejs (port) w projekcie domeny z metodami `async` i `CancellationToken`; adapter (EF Core, Dapper) w infrastrukturze |
-| **read model** | osobny `record` i zapytanie (Dapper, projekcja EF Core `AsNoTracking`) omijające agregat |
-| **maszyna stanów** | stan jako warianty (`Free`, `Taken`, `Off`), przejścia w `switch` z wzorcami i strażnikami `when` |
-| **moduł** | projekt (`.csproj`) lub przestrzeń nazw z `internal` domyślnie; zależności między projektami pilnują referencje i testy architektury |
+| **value object** | `readonly record struct` or `record` with validation in the constructor; value equality from the compiler |
+| **entity** | a class with an identifier type (`ResourceId`) and behaviour; equality by identifier |
+| **aggregate** | a `sealed class` with private state, business methods instead of setters, `Version` for optimistic locking, `PullEvents()` |
+| **variants** | an `abstract record` with a private constructor and nested `sealed record`s (a closed set) + `switch` |
+| **operation result** | a closed hierarchy of records (`BlockResult.Blocked`, `.Conflict`, `.Disabled`) handled with `switch`; exceptions only for programmer errors |
+| **event** | a `sealed record` in the past tense implementing `IDomainEvent` |
+| **policy** | an interface with one method or a delegate (`Func<Order, Money>`) injected through the constructor |
+| **repository** | an interface (port) in the domain project with `async` methods and `CancellationToken`; the adapter (EF Core, Dapper) in the infrastructure |
+| **read model** | a separate `record` and query (Dapper, an EF Core `AsNoTracking` projection) bypassing the aggregate |
+| **state machine** | the state as variants (`Free`, `Taken`, `Off`), transitions in a `switch` with patterns and `when` guards |
+| **module** | a project (`.csproj`) or namespace with `internal` by default; dependencies between projects are guarded by references and architecture tests |
 
-Przetestowane implementacje (kwota, identyfikator, wynik operacji, stany, zdarzenie, agregat, port repozytorium,
-testy xUnit): `references/domain-building-blocks.md`.
+Tested implementations (amount, identifier, operation result, states, event, aggregate, repository port,
+xUnit tests): `references/domain-building-blocks.md`.
 
-## Zależne od wersji
-Każdy próg sprawdzony kompilatorem (2026-10-23, SDK 10.0.113): kod nie kompiluje się w wersji wcześniejszej,
-kompiluje w podanej; domyślna wersja języka dla platformy też sprawdzona.
-| Wersja | Zmiany istotne dla tego skilla |
+## Version-dependent
+Every threshold checked with a compiler (2026-10-23, SDK 10.0.113): the code does not compile in the earlier version,
+and compiles in the given one; the default language version for the platform was checked too.
+| Version | Changes relevant to this skill |
 |---|---|
-| C# 12 (.NET 8, LTS) | konstruktory główne w klasach (`class P(string n)`), wyrażenia kolekcji (`int[] xs = [1, 2, 3]`), aliasy dowolnych typów |
-| C# 13 (.NET 9) | kolekcje `params` (`params ReadOnlySpan<int>`, `params IEnumerable<T>`), typ `System.Threading.Lock` |
-| C# 14 (.NET 10, LTS) | słowo kluczowe `field` we właściwościach, bloki `extension` (właściwości i metody rozszerzające), przypisanie warunkowe `x?.Prop = v` |
-.NET 11 z C# 15 (m.in. typy unii) jest w fazie kandydata do wydania; wydanie planowane na listopad 2026
-[niezweryfikowane: według Visual Studio Magazine, 14.09.2026]. Projekt na .NET 11 → `detect_stack.py` zgłosi
-`SKILL_OUTDATED`, aktualizacja wg core-stack-sync.
+| C# 12 (.NET 8, LTS) | primary constructors in classes (`class P(string n)`), collection expressions (`int[] xs = [1, 2, 3]`), aliases of any types |
+| C# 13 (.NET 9) | `params` collections (`params ReadOnlySpan<int>`, `params IEnumerable<T>`), the `System.Threading.Lock` type |
+| C# 14 (.NET 10, LTS) | the `field` keyword in properties, `extension` blocks (extension properties and methods), null-conditional assignment `x?.Prop = v` |
+.NET 11 with C# 15 (among others, union types) is at the release candidate stage; the release is planned for November 2026
+[unverified: according to Visual Studio Magazine, 14.09.2026]. A project on .NET 11 → `detect_stack.py` reports
+`SKILL_OUTDATED`, update per core-stack-sync.
 
-## Przykład
-Pytanie: „Reserve ma zwrócić sukces albo odrzucenie”. Wynik: `public BlockResult Block(string by, DateTimeOffset at)`
-z `abstract record BlockResult { private BlockResult() {} sealed record Blocked(...); sealed record Conflict(string
-BlockedBy); sealed record Disabled; }`. Wywołujący: `result switch { BlockResult.Blocked => …, BlockResult.Conflict
-c => …, BlockResult.Disabled => … }`. Dodanie nowego wariantu pokazuje każde miejsce do uzupełnienia przy przeglądzie
-`switch`; brak gałęzi kończy się wyjątkiem w `_ =>` (błąd programisty). Pełny kod z testem:
+## Example
+Question: "Reserve should return success or a rejection". Result: `public BlockResult Block(string by, DateTimeOffset at)`
+with `abstract record BlockResult { private BlockResult() {} sealed record Blocked(...); sealed record Conflict(string
+BlockedBy); sealed record Disabled; }`. The caller: `result switch { BlockResult.Blocked => …, BlockResult.Conflict
+c => …, BlockResult.Disabled => … }`. Adding a new variant shows every place to fill in when reviewing the
+`switch`; a missing branch ends with an exception in `_ =>` (a programmer error). The full code with a test:
 `references/domain-building-blocks.md`.
 
-## Checklista
-- [ ] `Nullable` włączone, ostrzeżenia jako błędy, `dotnet format --verify-no-changes`
-- [ ] brak `double` dla kwot, identyfikatory jako typy
-- [ ] odrzucenia biznesowe jako wynik, nie wyjątki; `switch` obsługuje każdy wariant
-- [ ] `async` z `CancellationToken` do końca, bez `.Result`
-- [ ] użyta składnia pasuje do `TargetFramework` (tabela wyżej)
+## Checklist
+- [ ] `Nullable` on, warnings as errors, `dotnet format --verify-no-changes`
+- [ ] no `double` for amounts, identifiers as types
+- [ ] business rejections as a result, not exceptions; the `switch` handles every variant
+- [ ] `async` with `CancellationToken` all the way, no `.Result`
+- [ ] the syntax used matches the `TargetFramework` (the table above)
 
-## Źródła
-- Microsoft Learn: „What's new in C# 12/13/14”, „C# language versioning” (dostęp 2026-10-23; progi sprawdzone
-  kompilatorem z SDK 8.0.132 i 10.0.113, pakiety Ubuntu 24.04).
-- .NET 11 RC: Visual Studio Magazine, „.NET 11 RC1 gets go-live support ahead of November launch” (14.09.2026).
-Opisane własnymi słowami.
+## Sources
+- Microsoft Learn: "What's new in C# 12/13/14", "C# language versioning" (accessed 2026-10-23; thresholds checked
+  with the compiler from SDK 8.0.132 and 10.0.113, Ubuntu 24.04 packages).
+- .NET 11 RC: Visual Studio Magazine, ".NET 11 RC1 gets go-live support ahead of November launch" (14.09.2026).
+Described in our own words.

@@ -1,44 +1,44 @@
 # Component Lifecycle
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/component-lifecycle.
+Source: frontendpatterns.dev/component-lifecycle.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Components
-- **Poziom:** Beginner
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** September 26, 2025
-- **Autor:** Den Odell
+- **Category:** Components
+- **Level:** Beginner
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** September 26, 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Hook into mount, update, and unmount phases to fetch data, sync with external systems, and clean up resources without causing leaks or stale state.”
+"Hook into mount, update, and unmount phases to fetch data, sync with external systems, and clean up resources without causing leaks or stale state."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Zasada jest agnostyczna: **każdy zasób otwarty przy montowaniu ma symetryczne zamknięcie**. Odpowiedniki: React
-  `useEffect` + cleanup; Vue `onMounted`/`onUnmounted` lub `watch(..., { onCleanup })`/`onWatcherCleanup`; Svelte 5
-  `$effect` zwracający cleanup; Angular (fw-angular) `DestroyRef.onDestroy`, `takeUntilDestroyed()`, `effect(onCleanup => …)`;
+- The principle is agnostic: **every resource opened on mount has a symmetrical close**. Equivalents: React
+  `useEffect` + cleanup; Vue `onMounted`/`onUnmounted` or `watch(..., { onCleanup })`/`onWatcherCleanup`; Svelte 5
+  `$effect` returning a cleanup; Angular (fw-angular) `DestroyRef.onDestroy`, `takeUntilDestroyed()`, `effect(onCleanup => …)`;
   Web Components `connectedCallback`/`disconnectedCallback`.
-- Wiele „ręcznych” efektów pobierających dane zastępują dziś warstwy danych (TanStack Query, loadery routera,
-  Angular `httpResource`) — efekt zostaje dla synchronizacji z systemami zewnętrznymi (subskrypcje, DOM, timery).
-- React w StrictMode (dev) celowo montuje efekt dwa razy — brak cleanupu wychodzi wtedy od razu.
-- W zapytaniach koduj parametry: `` `/api/search?q=${encodeURIComponent(query)}` `` (poprawione niżej).
-- Przykład Web Components poprawiony z `innerHTML` na `textContent`.
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<slot>`); w Svelte 5: `$props()`, `$state`,
-  `$derived`, `$effect`, atrybuty `onclick`, snippety zamiast slotów.
+- Many "manual" data-fetching effects are replaced today by data layers (TanStack Query, router loaders,
+  Angular `httpResource`) — the effect remains for synchronizing with external systems (subscriptions, DOM, timers).
+- React in StrictMode (dev) deliberately mounts an effect twice — a missing cleanup shows up immediately then.
+- Encode parameters in queries: `` `/api/search?q=${encodeURIComponent(query)}` `` (corrected below).
+- The Web Components example corrected from `innerHTML` to `textContent`.
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<slot>`); in Svelte 5: `$props()`, `$state`,
+  `$derived`, `$effect`, `onclick` attributes, snippets instead of slots.
 
 ## Problem
 
-Wycieki pamięci w aplikacjach frontendowych: słuchacze zdarzeń nigdy nie usunięci, subskrypcje niezamknięte, timery działające dla już usuniętych komponentów. Przykład ze strony: nawigacja po 50 stronach aplikacji tworzy 500 „osieroconych” słuchaczy zdarzeń, bo każdy mount dodawał nowego, a żaden unmount go nie usuwał.
+Memory leaks in frontend applications: event listeners never removed, subscriptions not closed, timers running for components already removed. An example from the site: navigating through 50 pages of an application creates 500 "orphaned" event listeners, because every mount added a new one and no unmount removed it.
 
-## Rozwiązanie
+## Solution
 
-Każdy otworzony zasób wymaga zamknięcia, każdy słuchacz — usunięcia, każdy timer — wyczyszczenia w odpowiednim momencie cyklu życia komponentu. Na montowaniu: ustaw słuchaczy, rozpocznij subskrypcje, pobierz dane, inicjalizuj zasoby. Na demontowaniu: odwróć to wszystko, symetrycznie. Współczesne frameworki dają na to gotowe haki: React `useEffect` z funkcją czyszczącą (return), Vue `onMounted`/`onUnmounted`, Svelte `onMount`/`onDestroy`.
+Every opened resource needs closing, every listener — removal, every timer — clearing at the right moment of the component's lifecycle. On mount: set up listeners, start subscriptions, fetch data, initialize resources. On unmount: reverse all of it, symmetrically. Modern frameworks provide ready hooks for this: React `useEffect` with a cleanup function (return), Vue `onMounted`/`onUnmounted`, Svelte `onMount`/`onDestroy`.
 
-## Przykłady kodu
+## Code examples
 
 ### React — Basic Lifecycle with Cleanup
 
@@ -214,26 +214,26 @@ function ConditionalEffect({ shouldSubscribe, userId }) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Wyciek pamięci ustaje po odpowiednim czyszczeniu — aplikacja działa bez degradacji przy długiej nawigacji.
-- Warunki wyścigu (race conditions) zanikają, gdy przestarzałe żądania są przerywane przy zmianie zależności (patrz `AbortController`).
-- Zachowanie przewidywalne — efekty uruchamiają się w dokładnie określonych punktach cyklu życia.
-- Zasoby zewnętrzne (WebSocket, interwały, słuchacze) są zarządzane symetrycznie: otwarcie na mount, zamknięcie na unmount.
-- Reakcja na zmianę propsów jest jawna: zmiana `userId` = odsubskrybowanie starych danych i subskrypcja nowych.
-- Debugowanie łatwiejsze — efekty scentralizowane w hakach cyklu życia, nie rozproszone losowo po komponencie.
+- Memory leaks stop with proper cleanup — the application works without degradation during long navigation.
+- Race conditions disappear when stale requests are aborted on a dependency change (see `AbortController`).
+- Predictable behaviour — effects run at precisely defined points of the lifecycle.
+- External resources (WebSocket, intervals, listeners) are managed symmetrically: opened on mount, closed on unmount.
+- The reaction to a props change is explicit: a change of `userId` = unsubscribing from the old data and subscribing to the new.
+- Easier debugging — effects centralized in lifecycle hooks, not scattered randomly across the component.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Zapomnienie funkcji czyszczącej jest łatwe; wynikające wycieki pamięci są subtelne i trudne do zdiagnozowania.
-- Tablice zależności w React bywają trudne — błędy prowadzą do domknięć z nieaktualnymi wartościami albo do nieskończonych pętli.
-- Komponent z pięcioma i więcej efektami staje się trudny do zrozumienia i utrzymania.
-- `useEffect` w React uruchamia się asynchronicznie, po malowaniu przeglądarki — do synchronicznego czasu przed malowaniem trzeba rzadszego `useLayoutEffect`.
-- Funkcja czyszcząca musi być synchroniczna — nie można zwrócić `Promise`; czyszczenie asynchroniczne wymaga innego podejścia.
-- Frameworki różnią się semantyką czasową (React: async po paint; Vue: sync) — nie da się przenieść intuicji 1:1 między nimi.
-- Testowanie zachowania cyklu życia wymaga uważnego setup/teardown — efekt z jednego testu może „przeciekać” do drugiego.
+- Forgetting the cleanup function is easy; the resulting memory leaks are subtle and hard to diagnose.
+- Dependency arrays in React can be tricky — mistakes lead to closures with stale values or to infinite loops.
+- A component with five or more effects becomes hard to understand and maintain.
+- `useEffect` in React runs asynchronously, after the browser paints — for synchronous timing before paint you need the less common `useLayoutEffect`.
+- The cleanup function must be synchronous — you cannot return a `Promise`; asynchronous cleanup requires a different approach.
+- Frameworks differ in timing semantics (React: async after paint; Vue: sync) — you cannot transfer intuitions 1:1 between them.
+- Testing lifecycle behaviour requires careful setup/teardown — an effect from one test can "leak" into another.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Async Boundary](../resilience/async-boundary.md) — Resilience.
 - `useEffect` — React docs.
@@ -241,8 +241,8 @@ function ConditionalEffect({ shouldSubscribe, userId }) {
 - Lifecycle — Svelte docs.
 - Custom Elements Lifecycle — MDN.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj świadomego zarządzania cyklem życia zawsze, gdy komponent otwiera **jakikolwiek** zasób zewnętrzny (subskrypcja, timer, listener, żądanie sieciowe) — to nie jest optymalizacja „dla dużych aplikacji”, to podstawowy warunek, żeby aplikacja SPA nie degradowała się z czasem nawigacji (zgodne z fundamentem „Resilience by Design”, `../principles.md`).
+Use deliberate lifecycle management whenever a component opens **any** external resource (subscription, timer, listener, network request) — this is not an optimization "for large applications", it is a basic condition for an SPA not to degrade over the course of navigation (in line with the "Resilience by Design" foundation, `../principles.md`).
 
-Nie komplikuj tego tam, gdzie nie ma żadnego zasobu do zamknięcia — komponent czysto prezentacyjny bez efektów nie potrzebuje `useEffect` „na wszelki wypadek”; to byłoby dokładanie boilerplate’u bez żadnego realnego zysku (YAGNI). Jeśli komponent zbiera 5+ niezależnych efektów, rozważ rozbicie go na mniejsze, bardziej wyspecjalizowane komponenty/hooki, zamiast koordynować wszystko w jednym miejscu.
+Do not complicate it where there is no resource to close — a purely presentational component without effects does not need a `useEffect` "just in case"; that would be adding boilerplate without any real gain (YAGNI). If a component accumulates 5+ independent effects, consider splitting it into smaller, more specialized components/hooks, instead of coordinating everything in one place.

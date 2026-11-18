@@ -1,56 +1,56 @@
 # Stop Generation
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/stop-generation.
+Source: frontendpatterns.dev/stop-generation.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** AI chat UI (u źródła: Resilience)
-- **Poziom:** Intermediate
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 2 lipca 2026
-- **Autor:** Den Odell
+- **Category:** AI chat UI (at the source: Resilience)
+- **Level:** Intermediate
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** 2 July 2026
+- **Author:** Den Odell
 
 ## TLDR
 
-„Give users a stop button that aborts the fetch with an AbortController, keeps whatever text
-already streamed in, and lets the server know to stop generating.”
+"Give users a stop button that aborts the fetch with an AbortController, keeps whatever text
+already streamed in, and lets the server know to stop generating."
 
-**Uwaga kontekstowa:** ten wzorzec dotyczy specyficznie interfejsów AI/chat ze streamowanymi
-odpowiedziami — zbudowany bezpośrednio na `streaming-response.md`.
+**A context note:** this pattern applies specifically to AI/chat interfaces with streamed
+responses — it is built directly on `streaming-response.md`.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Po stronie serwera Node reaguj na `res.on('close')`, nie `req.on('close')`** — od Node 16 zdarzenie `close` na
-  `req` odpala się po odczytaniu body żądania, a nie przy rozłączeniu klienta, więc generacja byłaby przerywana od razu
-  (albo wcale). Poprawiono w przykładzie Express.
-- Chroń się przed „starym” kontrolerem: po zakończeniu sprawdzaj, czy `controllerRef.current === controller`, zanim
-  zmienisz status — inaczej abort poprzedniej generacji nadpisze stan nowej. Poprawiono w przykładzie React.
-- Sprawdzaj `res.ok` przed odczytem strumienia; `AbortError` rozpoznawaj po `err.name === 'AbortError'`
-  (przy `AbortSignal.timeout()` przychodzi `TimeoutError` — to już błąd, nie „stopped”).
-- Przykłady Svelte używają składni Svelte 4 (`export let`, `$:`, `on:click`). W Svelte 5: `$props()`, `$state`,
-  `$derived`, atrybuty `onclick`.
+- **On a Node server react to `res.on('close')`, not `req.on('close')`** — since Node 16 the `close` event on
+  `req` fires after the request body has been read, not when the client disconnects, so generation would be interrupted at once
+  (or never). Corrected in the Express example.
+- Guard against a "stale" controller: after finishing, check whether `controllerRef.current === controller` before
+  you change the status — otherwise the abort of the previous generation overwrites the state of the new one. Corrected in the React example.
+- Check `res.ok` before reading the stream; recognize `AbortError` by `err.name === 'AbortError'`
+  (with `AbortSignal.timeout()` a `TimeoutError` arrives — that is an error, not "stopped").
+- The Svelte examples use Svelte 4 syntax (`export let`, `$:`, `on:click`). In Svelte 5: `$props()`, `$state`,
+  `$derived`, `onclick` attributes.
 
 ## Problem
 
-Model źle interpretuje pytanie i generuje odpowiedź, która idzie w złym kierunku. Użytkownik
-obserwuje ten proces w czasie rzeczywistym, ale nie ma sposobu, żeby go zatrzymać. Nawet gdy
-przycisk „Stop” istnieje, bywa fasadą — żądanie sieciowe zostaje otwarte, tokeny są dalej generowane
-i rozliczane (billing), mimo że użytkownik myśli, że proces został zatrzymany.
+The model misinterprets the question and generates an answer that goes in the wrong direction. The user
+watches this process in real time, but has no way to stop it. Even when
+a "Stop" button exists, it can be a facade — the network request stays open, tokens keep being generated
+and billed, even though the user thinks the process has been stopped.
 
-## Rozwiązanie
+## Solution
 
-Stwórz `AbortController` przy starcie generacji i przekaż jego `signal` do `fetch`. Przechowuj
-kontroler w referencji podczas streamowania. Po kliknięciu „Stop” wywołaj `controller.abort()`, co
-odrzuca aktywny fetch i przerywa pętlę odczytu strumienia. Przechwyć wynikowy `AbortError` i
-potraktuj go jako **normalny wynik** (`status: 'stopped'`), nie błąd.
+Create an `AbortController` at the start of generation and pass its `signal` to `fetch`. Keep
+the controller in a ref while streaming. When "Stop" is clicked call `controller.abort()`, which
+rejects the active fetch and breaks the stream-reading loop. Catch the resulting `AbortError` and
+treat it as a **normal outcome** (`status: 'stopped'`), not an error.
 
-Krytyczne: **zachowaj tokeny, które już przyszły** — abort powinien oznaczyć wiadomość jako
-„stopped” i zostawić jej częściową zawartość widoczną, nie wymazać jej. Zamień przycisk „Wyślij” na
-„Stop” podczas streamowania i z powrotem po zakończeniu.
+Critical: **keep the tokens that have already arrived** — an abort should mark the message as
+"stopped" and leave its partial content visible, not erase it. Swap the "Send" button for
+"Stop" while streaming and back again when finished.
 
-## Przykłady kodu
+## Code examples
 
 ### Wiring the Abort — React
 
@@ -259,29 +259,29 @@ app.post('/api/chat', async (req, res) => {
 });
 ```
 
-## Zalety
+## Advantages
 
-- Użytkownik może wyjść z odpowiedzi idącej w złym kierunku, zamiast czekać na jej koniec.
-- Wdrożenie abortu też po stronie serwera realnie zatrzymuje generowanie tokenów — nie płacisz za
-  tokeny, których nikt już nie przeczyta.
-- Zachowanie częściowego tekstu robi zatrzymanie **nieniszczącym** dla dotychczasowej odpowiedzi.
-- Buduje się bezpośrednio na infrastrukturze `Streaming Response` — nie jest osobnym systemem.
-- Jasna kontrola „Stop” daje użytkownikowi realne poczucie kontroli nad interfejsem.
+- The user can get out of an answer going in the wrong direction, instead of waiting for it to end.
+- Implementing the abort on the server side too really stops token generation — you do not pay for
+  tokens that nobody will read any more.
+- Keeping the partial text makes stopping **non-destructive** for the answer so far.
+- It builds directly on the `Streaming Response` infrastructure — it is not a separate system.
+- A clear "Stop" control gives the user a real sense of control over the interface.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- **Abort fetch po stronie klienta nie zatrzymuje samodzielnie generacji po stronie serwera** —
-  obsługa zamknięcia połączenia (`res.on('close', ...)`) to łatwy do zapomnienia, ale krytyczny
-  szczegół; bez niego serwer (i billing) działa dalej mimo „zatrzymanej” odpowiedzi w UI.
-- `AbortError` przychodzi jako odrzucona Promise — bez rozpoznania go jako oczekiwanego wyniku,
-  normalny stop wygląda jak błąd aplikacji.
-- Wyścig (race condition) na granicy: użytkownik klika stop dokładnie w momencie, gdy przychodzi
-  ostatni token.
-- Częściowe odpowiedzi mogą być mylące, jeśli są ucięte w środku zdania/myśli.
-- Czyszczenie referencji kontrolera ma znaczenie — nieaktualny, „stary” kontroler może przerwać
-  niewłaściwe, już nieaktualne żądanie.
+- **Aborting the fetch on the client does not by itself stop generation on the server** —
+  handling the connection close (`res.on('close', ...)`) is an easy-to-forget but critical
+  detail; without it the server (and billing) keeps running despite the "stopped" answer in the UI.
+- `AbortError` arrives as a rejected Promise — without recognizing it as an expected outcome,
+  a normal stop looks like an application error.
+- A race condition at the boundary: the user clicks stop exactly when the
+  last token arrives.
+- Partial answers can be confusing if they are cut off in the middle of a sentence/thought.
+- Clearing the controller ref matters — a stale, "old" controller can abort
+  the wrong, already outdated request.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Streaming Response](streaming-response.md) — ai-chat-ui
 - [Response Regeneration](response-regeneration.md) — ai-chat-ui
@@ -291,11 +291,11 @@ app.post('/api/chat', async (req, res) => {
 - [AbortSignal (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)
 - [Aborting a fetch (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#aborting_a_fetch)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Wymagane w każdym UI streamującym odpowiedzi modelu językowego — koszt per token i długość
-generacji uzasadniają dania użytkownikowi realnej kontroli przerwania. **Nie ma sensu** poza tym
-kontekstem: dla zwykłego, krótkiego `fetch()` po dane (nie-streamowane, szybkie) wystarczy zwykłe
-`AbortController` przy odmontowaniu komponentu (cleanup), bez dedykowanego przycisku „Stop” w UI —
-ten wzorzec jako *widoczna funkcja UI* ma sens tam, gdzie operacja jest długa i widoczna dla
-użytkownika w czasie rzeczywistym.
+Required in every UI that streams language model responses — the per-token cost and the length of
+generation justify giving the user real control to interrupt. It **makes no sense** outside this
+context: for an ordinary, short `fetch()` for data (non-streamed, fast) an ordinary
+`AbortController` on component unmount (cleanup) is enough, without a dedicated "Stop" button in the UI —
+this pattern as a *visible UI feature* makes sense where the operation is long and visible to
+the user in real time.

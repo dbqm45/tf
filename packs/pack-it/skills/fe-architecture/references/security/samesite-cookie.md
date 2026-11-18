@@ -1,122 +1,122 @@
 # SameSite Cookie
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/samesite-cookie.
+Source: frontendpatterns.dev/samesite-cookie.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Framework: Native web. Autor: Den Odell. Data aktualizacji:
-18 czerwca 2026.
+Category: Security. Level: Advanced. Framework: Native web. Author: Den Odell. Last updated:
+18 June 2026.
 
 ## TLDR
 
-Atrybut `SameSite` na ciasteczku kontroluje, kiedy przeglądarka dołącza je do żądań cross-site — to
-jedna z głównych, wymuszanych przez przeglądarkę obron przed CSRF.
+The `SameSite` attribute on a cookie controls when the browser attaches it to cross-site requests — it is
+one of the main browser-enforced defences against CSRF.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Poprawka:** `SameSite=Lax` jako wartość domyślna dla ciasteczek bez atrybutu to zachowanie **Chromium**; Firefox i
-  Safari go nie przyjęły (Safari ma własne ITP) — zawsze ustawiaj atrybut jawnie.
-- „Same-site” ≠ „same-origin”: `a.example.com` i `b.example.com` to ten sam site — przejęta subdomena omija SameSite.
-  Stąd prefiks `__Host-` dla ciasteczka sesji.
-- Ciasteczka stron trzecich (`SameSite=None`) są w 2026 ograniczane przez przeglądarki (Safari/Firefox blokują,
-  Chrome — kontrola użytkownika); dla embedów rozważ CHIPS (`Partitioned`) albo Storage Access API.
+- **Correction:** `SameSite=Lax` as the default value for cookies without the attribute is **Chromium** behaviour; Firefox and
+  Safari have not adopted it (Safari has its own ITP) — always set the attribute explicitly.
+- "Same-site" ≠ "same-origin": `a.example.com` and `b.example.com` are the same site — a taken-over subdomain bypasses SameSite.
+  Hence the `__Host-` prefix for the session cookie.
+- Third-party cookies (`SameSite=None`) are restricted by browsers in 2026 (Safari/Firefox block them,
+  Chrome — user control); for embeds consider CHIPS (`Partitioned`) or the Storage Access API.
 
 ## Problem
 
-Przeglądarki automatycznie dołączają ciasteczka do każdego żądania kierowanego na domenę serwera,
-niezależnie od źródła żądania. To umożliwia ataki CSRF — złośliwa strona wysyła zakamuflowane
-żądania wykorzystujące sesję uwierzytelnionego użytkownika, bez jego wiedzy.
+Browsers automatically attach cookies to every request directed at the server's domain,
+regardless of the request's origin. This enables CSRF attacks — a malicious site sends disguised
+requests that exploit an authenticated user's session, without their knowledge.
 
-## Rozwiązanie
+## Solution
 
-Atrybut `SameSite` określa, kiedy przeglądarka dołącza ciasteczko do żądań cross-site. Trzy wartości:
+The `SameSite` attribute determines when the browser attaches the cookie to cross-site requests. Three values:
 
-- **`Strict`** — nigdy nie wysyła ciasteczka na żądania cross-site (maksymalna ochrona, ale może
-  pogorszyć UX dla linków przychodzących — użytkownik ląduje niezalogowany).
-- **`Lax`** — wysyła na żądania same-site i nawigacje GET z innych stron, ale blokuje POSTy i
-  żądania AJAX cross-site (rekomendowana wartość domyślna w nowoczesnych przeglądarkach).
-- **`None`** — wysyła na wszystkie żądania cross-site (wymaga atrybutu `Secure`; przeznaczone
-  tylko dla uzasadnionych przypadków, np. embedy, SSO).
+- **`Strict`** — never sends the cookie on cross-site requests (maximum protection, but it can
+  worsen UX for incoming links — the user lands logged out).
+- **`Lax`** — sends it on same-site requests and GET navigations from other sites, but blocks cross-site POSTs and
+  AJAX requests (the recommended default in modern browsers).
+- **`None`** — sends it on all cross-site requests (requires the `Secure` attribute; intended
+  only for justified cases, e.g. embeds, SSO).
 
-## Przykłady kodu
+## Code examples
 
-### Ustawienie via nagłówek Set-Cookie
+### Setting via the Set-Cookie header
 
 ```
-# Strict: nigdy nie wysyłane cross-site — najlepsze dla wrażliwych ciasteczek sesji
+# Strict: never sent cross-site — best for sensitive session cookies
 Set-Cookie: sessionId=abc123; SameSite=Strict; Secure; HttpOnly; Path=/
 
-# Lax: wysyłane na nawigacje GET — domyślnie dla większości sesji
+# Lax: sent on GET navigations — the default for most sessions
 Set-Cookie: sessionId=abc123; SameSite=Lax; Secure; HttpOnly; Path=/
 
-# None: wysyłane na wszystkie żądania cross-site — WYMAGA Secure
+# None: sent on all cross-site requests — REQUIRES Secure
 Set-Cookie: widgetPrefs=xyz789; SameSite=None; Secure; Path=/
 ```
 
-### Ustawienie z serwera Express
+### Setting from an Express server
 
 ```javascript
-// Strict session cookie dla aplikacji first-party
+// Strict session cookie for a first-party application
 res.cookie('sessionId', 'abc123', {
-  sameSite: 'strict', // nigdy nie wysyłane na żądania cross-site
-  secure: true,       // tylko przez HTTPS
-  httpOnly: true,     // niedostępne dla JavaScriptu (ogranicza kradzież XSS)
-  maxAge: 1000 * 60 * 60 * 24, // 1 dzień
+  sameSite: 'strict', // never sent on cross-site requests
+  secure: true,       // HTTPS only
+  httpOnly: true,     // not accessible to JavaScript (limits XSS theft)
+  maxAge: 1000 * 60 * 60 * 24, // 1 day
 });
 
-// Lax jako bezpieczniejsza domyślna opcja, gdy linki przychodzące muszą utrzymać logowanie
+// Lax as the safer default when incoming links must keep the user logged in
 res.cookie('sessionId', 'abc123', {
   sameSite: 'lax',
   secure: true,
   httpOnly: true,
 });
 
-// None wymagane dla uzasadnionych ciasteczek cross-site (embedy, SSO)
-// Przeglądarka odrzuca SameSite=None bez atrybutu Secure
+// None required for justified cross-site cookies (embeds, SSO)
+// The browser rejects SameSite=None without the Secure attribute
 res.cookie('widgetPrefs', 'xyz789', {
   sameSite: 'none',
-  secure: true, // obowiązkowe z sameSite: 'none'
+  secure: true, // mandatory with sameSite: 'none'
 });
 ```
 
-## Zalety
+## Advantages
 
-- Blokuje mechanizm CSRF, zapobiegając dołączaniu ciasteczek do żądań z innych stron.
-- Wymuszane przez przeglądarkę — ochrona działa automatycznie, bez kodu aplikacji.
-- W Chromium `Lax` jest wartością domyślną, gdy atrybut nie jest ustawiony (inne silniki — nie; ustawiaj jawnie).
-- Jednolinijkowa konfiguracja na nagłówku `Set-Cookie`.
-- Łączy się z `Secure` i `HttpOnly` dla wielowarstwowej ochrony.
-- `Strict` praktycznie eliminuje CSRF dla ciasteczek niewymagających wysyłki cross-site.
+- Blocks the CSRF mechanism by preventing cookies from being attached to requests from other sites.
+- Browser-enforced — the protection works automatically, without application code.
+- In Chromium `Lax` is the default when the attribute is not set (other engines — no; set it explicitly).
+- A one-line configuration on the `Set-Cookie` header.
+- Combines with `Secure` and `HttpOnly` for multi-layered protection.
+- `Strict` practically eliminates CSRF for cookies that do not need to be sent cross-site.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- `Strict` pogarsza UX dla linków z poczty/wyszukiwarki (użytkownik musi się zalogować na nowo).
-- `None` przywraca ekspozycję cross-site i wymusza `Secure` (tylko HTTPS).
-- Sam `SameSite` nie stanowi kompletnej ochrony CSRF — dla operacji zmieniających stan trzymaj
-  jeszcze tokeny (patrz `csrf-protection.md`).
-- Starsze przeglądarki obsługują `SameSite` niekonsekwentnie.
-- Subdomeny traktowane są jako same-site — brak izolacji między własnymi subdomenami.
-- Brak `Secure` z `SameSite=None` powoduje ciche odrzucenie ciasteczka przez przeglądarkę.
-- Różne ciasteczka w tej samej aplikacji zwykle wymagają różnych wartości (sesja: `Strict`/`Lax`,
-  widget embedowalny: `None`).
+- `Strict` worsens UX for links from e-mail/a search engine (the user has to log in again).
+- `None` restores cross-site exposure and forces `Secure` (HTTPS only).
+- `SameSite` alone is not complete CSRF protection — for state-changing operations also keep
+  tokens (see `csrf-protection.md`).
+- Older browsers handle `SameSite` inconsistently.
+- Subdomains are treated as same-site — no isolation between your own subdomains.
+- A missing `Secure` with `SameSite=None` makes the browser silently reject the cookie.
+- Different cookies in the same application usually need different values (session: `Strict`/`Lax`,
+  an embeddable widget: `None`).
 
-## Powiązane wzorce
+## Related patterns
 
 - CSRF Protection — Security (`csrf-protection.md`)
 - Secure Token Storage — Security (`secure-token-storage.md`)
 - Content Security Policy (CSP) — Security (`content-security-policy.md`)
-- Zewnętrzne: [SameSite Cookie Attribute — MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite),
+- External: [SameSite Cookie Attribute — MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite),
   [CSRF Protection — OWASP](https://owasp.org/www-community/SameSite),
   [Cookie Security — web.dev](https://web.dev/samesite-cookies-explained/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Ustaw `SameSite` na **każdym** ciasteczku, które tworzysz — nie ma sensownego przypadku, żeby
-zostawić to na wartości domyślnej przeglądarki bez świadomej decyzji. Domyślnie wybieraj `Strict`
-dla ciasteczek sesji tej samej aplikacji; `Lax`, jeśli musisz wspierać nawigację z linków
-zewnętrznych (poczta, wyszukiwarka) bez utraty sesji; `None` + `Secure` tylko wtedy, gdy masz
-**konkretny, nazwany powód** cross-site (widget embedowalny, SSO) — nie „bo może się przydać”.
-Traktuj to jako uzupełnienie `csrf-protection.md`, nie zamiennik — same `SameSite` nie chroni przed
-wszystkimi wariantami CSRF (patrz Wady).
+Set `SameSite` on **every** cookie you create — there is no sensible case for
+leaving it at the browser's default without a conscious decision. By default choose `Strict`
+for the session cookies of the same application; `Lax` if you must support navigation from external
+links (e-mail, search engine) without losing the session; `None` + `Secure` only when you have
+**a specific, named cross-site reason** (an embeddable widget, SSO) — not "because it might come in handy".
+Treat it as a complement to `csrf-protection.md`, not a replacement — `SameSite` alone does not protect against
+all variants of CSRF (see Disadvantages).

@@ -1,48 +1,48 @@
 # Input Sanitization
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/input-sanitization.
+Source: frontendpatterns.dev/input-sanitization.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Przykłady: React, Vue, Svelte, Native web. Autor: Den Odell.
-Data aktualizacji: 16 czerwca 2026.
+Category: Security. Level: Advanced. Examples: React, Vue, Svelte, Native web. Author: Den Odell.
+Last updated: 16 June 2026.
 
 ## TLDR
 
-Czyść i waliduj niezaufane dane użytkownika na granicy, zanim je wyrenderujesz albo przetworzysz —
-używając allow-list i sprawdzonego sanitizera, żeby złośliwy markup stał się nieszkodliwym tekstem
-zamiast wykonywalnym kodem.
+Clean and validate untrusted user data at the boundary, before you render or process it —
+using an allow-list and a proven sanitizer, so that malicious markup becomes harmless text
+instead of executable code.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Sanitizer API** (`element.setHTML(input)`, `Sanitizer`) wchodzi do przeglądarek w 2025–2026 — gdy dostępne u
-  Twoich użytkowników, zastępuje bibliotekę; do tego czasu DOMPurify (utrzymuj aktualną wersję).
-- Angular sanityzuje `[innerHTML]` automatycznie (`DomSanitizer`); `bypassSecurityTrust*` to escape hatch wymagający
-  przeglądu — fw-angular.
-- Walidacja formatu po stronie klienta to UX, nie bezpieczeństwo — decyduje walidacja serwera (be-auth-security).
-  SQL injection to problem backendu (parametryzowane zapytania), wspomniany tu tylko dla pełności.
-- Przykłady Svelte w składni Svelte 4 (`export let`, `$:`); w Svelte 5 `$props()`/`$derived`.
+- The **Sanitizer API** (`element.setHTML(input)`, `Sanitizer`) is arriving in browsers in 2025–2026 — when it is available to
+  your users, it replaces the library; until then DOMPurify (keep the version up to date).
+- Angular sanitizes `[innerHTML]` automatically (`DomSanitizer`); `bypassSecurityTrust*` is an escape hatch that requires
+  review — fw-angular.
+- Client-side format validation is UX, not security — server validation decides (be-auth-security).
+  SQL injection is a backend problem (parameterized queries), mentioned here only for completeness.
+- The Svelte examples are in Svelte 4 syntax (`export let`, `$:`); in Svelte 5 `$props()`/`$derived`.
 
 ## Problem
 
-Dane wejściowe od użytkownika, np. `<script>` w nazwie profilu, mogą wykonać złośliwy kod, gdy są
-renderowane przez `innerHTML`. Wektory ataku wykraczają poza `<script>` — obejmują handlery `onerror`
-na obrazach, adresy `javascript:` w linkach, elementy SVG i wzorce SQL injection. Podstawowy
-problem: niezaufane dane przekazane do interpreterów (parserów HTML, silników SQL) wykonują się bez
-walidacji.
+User input, e.g. a `<script>` in a profile name, can execute malicious code when it is
+rendered through `innerHTML`. Attack vectors go beyond `<script>` — they include `onerror` handlers
+on images, `javascript:` URLs in links, SVG elements and SQL injection patterns. The basic
+problem: untrusted data passed to interpreters (HTML parsers, SQL engines) executes without
+validation.
 
-## Rozwiązanie
+## Solution
 
-Stosuj allow-listy, nie deny-listy. Dla czystego tekstu — `textContent` zamiast parsowania HTML.
-Dla realnie potrzebnego rich text — sprawdzone, utrzymywane biblioteki jak DOMPurify, nie
-własnoręcznie pisany regex. Sanityzuj na granicach wejścia, waliduj względem schematów,
-parametryzuj zapytania do bazy danych i dokładaj Content Security Policy jako defense-in-depth.
+Use allow-lists, not deny-lists. For plain text — `textContent` instead of parsing HTML.
+For rich text that is really needed — proven, maintained libraries such as DOMPurify, not
+a hand-written regex. Sanitize at the input boundaries, validate against schemas,
+parameterize database queries and add a Content Security Policy as defense-in-depth.
 
-## Przykłady kodu
+## Code examples
 
-### Sanityzacja rich text przed renderem — React
+### Sanitizing rich text before rendering — React
 
 ```javascript
 import DOMPurify from 'dompurify';
@@ -58,7 +58,7 @@ function Comment({ html }) {
 }
 ```
 
-### Sanityzacja rich text przed renderem — Vue
+### Sanitizing rich text before rendering — Vue
 
 ```javascript
 <script setup>
@@ -81,7 +81,7 @@ const clean = computed(() =>
 </template>
 ```
 
-### Sanityzacja rich text przed renderem — Svelte
+### Sanitizing rich text before rendering — Svelte
 
 ```javascript
 <script>
@@ -99,7 +99,7 @@ const clean = computed(() =>
 <div>{@html clean}</div>
 ```
 
-### Sanityzacja rich text przed renderem — Web Components
+### Sanitizing rich text before rendering — Web Components
 
 ```javascript
 import DOMPurify from 'dompurify';
@@ -117,7 +117,7 @@ class UserComment extends HTMLElement {
 customElements.define('user-comment', UserComment);
 ```
 
-### Escaping HTML bez biblioteki
+### Escaping HTML without a library
 
 ```javascript
 function escapeHTML(input) {
@@ -131,7 +131,7 @@ escapeHTML('<img src=x onerror=alert(1)>');
 // => "&lt;img src=x onerror=alert(1)&gt;"  (inert text, never executes)
 ```
 
-### Walidacja formatów za pomocą allow-list
+### Validating formats with an allow-list
 
 ```javascript
 const RULES = {
@@ -151,50 +151,50 @@ validate('username', 'jane_doe-42');         // ok
 validate('username', '<script>alert(1)</script>'); // throws: Invalid username
 ```
 
-## Zalety
+## Advantages
 
-- Neutralizuje stored i reflected XSS, zamieniając złośliwy markup na inertny tekst przed
-  parsowaniem HTML.
-- Allow-listy pozostają odporne na nowe wzorce ataków, bo Ty definiujesz dozwoloną zawartość.
-- Utrzymywane sanitizery pokrywają nietypowe wektory (SVG, mutation XSS, adresy `javascript:`),
-  które własne filtry przeoczają.
-- Walidacja formatu zatrzymuje błędne dane wcześnie, zapobiegając problemom bezpieczeństwa i
-  błędom wyświetlania.
-- Parametryzowane zapytania eliminują SQL injection, zachowując czytelność kodu.
-- Naturalnie łączy się z output encoding i strict CSP dla warstwowej ochrony.
-- Jeden punkt sanityzacji pozwala traktować dane jako zaufane dalej w przepływie.
+- Neutralizes stored and reflected XSS by turning malicious markup into inert text before
+  HTML parsing.
+- Allow-lists stay resistant to new attack patterns, because you define the allowed content.
+- Maintained sanitizers cover unusual vectors (SVG, mutation XSS, `javascript:` URLs)
+  that home-made filters miss.
+- Format validation stops bad data early, preventing security problems and
+  display errors.
+- Parameterized queries eliminate SQL injection while keeping the code readable.
+- Combines naturally with output encoding and a strict CSP for layered protection.
+- A single sanitization point lets you treat the data as trusted further down the flow.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Nadmiernie agresywna sanityzacja usuwa legalną zawartość, frustrując użytkowników.
-- Allow-listy wymagają utrzymania; zapomniany tag powoduje zgłoszenia supportowe.
-- Sanityzacja rich text jest trudna; własne regexy często zawierają obejścia (bypasses).
-- Nawet dobre sanitizery dostają łatki bezpieczeństwa; przypięcie starej wersji tworzy ryzyko.
-- Sanityzacja to nie to samo co kodowanie — wyczyszczone dane wciąż potrzebują kodowania
-  kontekstowego przy wypisywaniu (patrz `output-encoding.md`).
-- Sanityzacja tylko po stronie klienta jest niewystarczająca; walidacja server-side pozostaje
-  konieczna.
-- Widoczna modyfikacja wejścia po wysłaniu formularza dezorientuje użytkowników nieświadomych
-  sanityzacji.
-- Ponowne użycie sanityzowanych danych w innym kontekście (zapytania, komendy shell) wymaga
-  ponownej oceny — sanityzacja jest kontekstowa, nie uniwersalna.
-- Przetwarzanie dużych dokumentów dodaje wymierny narzut parsowania.
+- Overly aggressive sanitization removes legitimate content, frustrating users.
+- Allow-lists require maintenance; a forgotten tag causes support tickets.
+- Sanitizing rich text is hard; home-made regexes often contain bypasses.
+- Even good sanitizers get security patches; pinning an old version creates a risk.
+- Sanitization is not the same as encoding — cleaned data still needs context-specific encoding
+  on output (see `output-encoding.md`).
+- Client-side-only sanitization is insufficient; server-side validation remains
+  necessary.
+- A visible modification of the input after a form is submitted confuses users unaware of
+  sanitization.
+- Reusing sanitized data in another context (queries, shell commands) requires
+  a fresh assessment — sanitization is contextual, not universal.
+- Processing large documents adds a measurable parsing overhead.
 
-## Powiązane wzorce
+## Related patterns
 
 - Output Encoding — Security (`output-encoding.md`)
 - Trusted Types — Security (`trusted-types.md`)
-- Zewnętrzne: [Input Validation Cheat Sheet — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html),
+- External: [Input Validation Cheat Sheet — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html),
   [XSS Prevention — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html),
   [DOMPurify — GitHub](https://github.com/cure53/DOMPurify)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Sanityzuj **każde** wejście od użytkownika, które trafi do renderu HTML, zapytania do bazy albo
-innego interpretera — to nie jest opcjonalne przy jakiejkolwiek treści generowanej przez
-użytkownika. Dla zwykłego tekstu (imię, komentarz bez formatowania) wystarczy `textContent`/
-walidacja formatu — **nie sięgaj po DOMPurify**, jeśli nie potrzebujesz faktycznie renderować HTML;
-to niepotrzebny koszt (bundle + narzut parsowania) dla przypadku, który rozwiązuje prostsze
-escapowanie (zasada YAGNI, `../principles.md`). DOMPurify/pełna sanityzacja rich text jest
-uzasadniona tylko, gdy realnie potrzebujesz przyjąć ograniczony HTML od użytkownika (edytor WYSIWYG,
-komentarze z formatowaniem).
+Sanitize **every** user input that will reach an HTML render, a database query or
+another interpreter — this is not optional for any user-generated
+content. For plain text (a name, a comment without formatting) `textContent`/
+format validation is enough — **do not reach for DOMPurify** if you do not actually need to render HTML;
+it is an unnecessary cost (bundle + parsing overhead) for a case that simpler
+escaping solves (the YAGNI principle, `../principles.md`). DOMPurify/full rich text sanitization is
+justified only when you really need to accept limited HTML from the user (a WYSIWYG editor,
+comments with formatting).

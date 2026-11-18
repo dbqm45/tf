@@ -1,155 +1,155 @@
-# Style architektury całej aplikacji frontendowej
+# Architecture styles of the whole frontend application
 
-> **Spis treści:** Uwagi (stan 2026) · Style kompozycji frontendu (LogRocket) · Klasyczne style architektury oprogramowania zastosowane do… · Jak wybierać między tymi dwiema taksonomiami
+> **Contents:** Notes (state in 2026) · Frontend composition styles (LogRocket) · Classic software architecture styles applied to the… · How to choose between these two taxonomies
 
-Źródła: blog.logrocket.com „A guide to modern frontend architecture patterns” (5 stylów
-kompozycyjnych + hybrydowy) i artykuł Hrynkevycha (klasyczne style architektury oprogramowania
-zastosowane do frontendu). Te dwie taksonomie się uzupełniają — LogRocket opisuje, **jak fizycznie
-skomponować** frontend, Hrynkevych opisuje **szersze wzorce systemowe**, w które frontend jest
-osadzony (część z nich, jak Micro Frontends, pojawia się w obu, konsekwentnie).
+Sources: blog.logrocket.com "A guide to modern frontend architecture patterns" (5 composition
+styles + hybrid) and Hrynkevych's article (classic software architecture styles
+applied to the frontend). These two taxonomies complement each other — LogRocket describes **how to physically
+compose** a frontend, Hrynkevych describes **the broader system patterns** in which the frontend is
+embedded (some of them, such as Micro Frontends, appear in both, consistently).
 
-## Uwagi (stan 2026)
+## Notes (state in 2026)
 
-- Wybór stylu całego systemu (modularny monolit, mikroserwisy, zdarzenia) i atrybuty jakości — arch-quality-attributes;
-  wybór technologii — arch-tech-selection; zapis decyzji jako ADR — docs-tech-writing.
-- „Flux” to dziś rodzina rozwiązań (Redux Toolkit, NgRx, Pinia); równolegle rośnie model **sygnałów** (Angular,
-  Solid, Svelte 5, Preact) — stan reaktywny bez centralnego dispatchera. Centralny store tylko dla prawdziwie
-  globalnego stanu klienta (fsd-screaming-architecture.md).
-- Micro-frontends 2026: Module Federation 2.0 (webpack/Rspack, wtyczki Vite), Native Federation (Angular, oparte na
-  import maps), Single-SPA; często wystarczy **modularny monolit** w monorepo (Nx/Turborepo) z granicami
-  wymuszanymi lintem — niezależne wdrożenia są jedynym mocnym argumentem za MFE.
-- **Micro-frontends — typowa porażka:** dryf współdzielonych zależności, czyli dwie wersje frameworka na jednej stronie
-  (zepsute hooki, kontekst, podwójny rozmiar). Zapobiega `singleton: true` ze `strictVersion`/`requiredVersion`
-  w konfiguracji federacji i kontrola zgodności wersji w CI przed wdrożeniem. Decyzja „czy MFE” wynika z bólu
-  wdrożeń między zespołami, a nie ze złożoności aplikacji. Heurystyka (T. Kanjariya, 2026-08-06, nie reguła): do
-  ok. 15 osób monolit modularny; kilkadziesiąt osób i zespoły blokujące się przy wdrożeniach → rozważ MFE.
-- **BFF (Backend for Frontend) jako wzorzec:** cienki backend na każdy typ klienta (web, mobile), należący do zespołu
-  frontendu, który kształtuje dane pod jeden interfejs, agreguje wywołania i trzyma sesję w ciasteczku `HttpOnly`.
-  Kiedy nie: jeden klient i API już pasuje do ekranów — BFF to wtedy tylko dodatkowy przeskok sieciowy. Koszt:
-  kolejny serwis do utrzymania i pojedynczy punkt awarii dla klienta (wzorzec opisany przez P. Calçado i S. Newmana
-  [niezweryfikowane — źródła pierwotne nie otwierane w tej sesji]).
+- The choice of the style of the whole system (modular monolith, microservices, events) and quality attributes — arch-quality-attributes;
+  technology choice — arch-tech-selection; recording the decision as an ADR — docs-tech-writing.
+- "Flux" is today a family of solutions (Redux Toolkit, NgRx, Pinia); in parallel the **signals** model is growing (Angular,
+  Solid, Svelte 5, Preact) — reactive state without a central dispatcher. A central store only for truly
+  global client state (fsd-screaming-architecture.md).
+- Micro-frontends in 2026: Module Federation 2.0 (webpack/Rspack, Vite plugins), Native Federation (Angular, based on
+  import maps), Single-SPA; often a **modular monolith** in a monorepo (Nx/Turborepo) with boundaries
+  enforced by a linter is enough — independent deployments are the only strong argument for MFE.
+- **Micro-frontends — the typical failure:** drift of shared dependencies, i.e. two versions of the framework on one page
+  (broken hooks, context, double size). It is prevented by `singleton: true` with `strictVersion`/`requiredVersion`
+  in the federation configuration and a version compatibility check in CI before deployment. The "MFE or not" decision follows from the pain
+  of deployments between teams, not from the complexity of the application. A heuristic (T. Kanjariya, 2026-08-06, not a rule): up to
+  about 15 people a modular monolith; several dozen people and teams blocking each other on deployments → consider MFE.
+- **BFF (Backend for Frontend) as a pattern:** a thin backend per client type (web, mobile), owned by the frontend
+  team, which shapes the data for one interface, aggregates calls and keeps the session in an `HttpOnly` cookie.
+  When not: one client and the API already fits the screens — a BFF is then just an extra network hop. Cost:
+  another service to maintain and a single point of failure for the client (the pattern described by P. Calçado and S. Newman
+  [unverified — the primary sources were not opened in this session]).
 
-## Style kompozycji frontendu (LogRocket)
+## Frontend composition styles (LogRocket)
 
-### Architektura monolityczna
+### Monolithic architecture
 
-„Hosts the entire app frontend's interfaces, resources, and dependency module sources in just one
-project codebase.”
+"Hosts the entire app frontend's interfaces, resources, and dependency module sources in just one
+project codebase."
 
-- **Zalety:** najprostsza struktura dla małych projektów; łatwa do debugowania i testowania; szybkie
-  wdrożenia.
-- **Wady:** rosnąca złożoność kodu wpływa na utrzymywalność; ograniczenia skalowania; potencjalne
-  konflikty przy scalaniu kodu (merge).
-- **Kiedy używać:** małe i średnie projekty, gdzie priorytetem jest szybka dostawa produktu.
+- **Advantages:** the simplest structure for small projects; easy to debug and test; fast
+  deployments.
+- **Disadvantages:** growing code complexity affects maintainability; scaling limits; potential
+  conflicts when merging code (merge).
+- **When to use:** small and medium projects, where fast product delivery is the priority.
 
-### Architektura modularna
+### Modular architecture
 
-Dzieli kod na „separate, maintainable, and installable modules” oparte na funkcjonalności.
+It splits the code into "separate, maintainable, and installable modules" based on functionality.
 
-- **Zalety:** zmniejsza złożoność głównego repozytorium; ułatwia pracę zespołową i równoległy
-  rozwój; lepsze zarządzanie testami i wdrożeniami.
-- **Wady:** trudność w przeglądaniu pełnego projektu z jednego repozytorium; potencjalnie wolniejsze
-  wdrażanie (koordynacja między modułami).
-- **Kiedy używać:** duże kodebase wymagające lepszej kolaboracji między zespołami.
+- **Advantages:** reduces the complexity of the main repository; makes teamwork and parallel
+  development easier; better management of tests and deployments.
+- **Disadvantages:** difficulty browsing the full project from one repository; potentially slower
+  deployment (coordination between modules).
+- **When to use:** large codebases that need better collaboration between teams.
 
-### Architektura oparta na komponentach (component-based)
+### Component-based architecture
 
-„Components host a template, UI logic, and styles” — reużywalne elementy interfejsu jako
-podstawowa jednostka.
+"Components host a template, UI logic, and styles" — reusable interface elements as
+the basic unit.
 
-- **Zalety:** poprawia utrzymywalność i produktywność; konsystentny UI/UX; ułatwiona dekompozycja
-  interfejsu na mniejsze części.
-- **Wady:** trudności z zarządzaniem stanem w dużych drzewach komponentów; konieczność
-  implementacji mock services do testów; wymaga znajomości best practices, inaczej łatwo o
-  komponenty źle zaprojektowane.
-- **Kiedy używać:** podstawa nowoczesnych bibliotek/frameworków (React, Vue, Angular, Svelte) — to
-  jest dziś punkt wyjścia, nie alternatywa wobec innych stylów z tej listy.
+- **Advantages:** improves maintainability and productivity; consistent UI/UX; easier decomposition
+  of the interface into smaller parts.
+- **Disadvantages:** difficulties with state management in large component trees; the need to
+  implement mock services for tests; requires knowledge of best practices, otherwise badly designed
+  components come easily.
+- **When to use:** the basis of modern libraries/frameworks (React, Vue, Angular, Svelte) — this
+  is today the starting point, not an alternative to the other styles on this list.
 
-### Architektura mikrofrontendów (Micro Frontends)
+### Micro-frontend architecture (Micro Frontends)
 
-„Divide the app frontend into isolated, maintainable frontend projects” — z aplikacją host, która
-ładuje poszczególne mikrofrontendy dostarczające funkcjonalność na żądanie.
+"Divide the app frontend into isolated, maintainable frontend projects" — with a host application that
+loads the individual micro-frontends delivering functionality on demand.
 
-- **Zalety:** doskonałe skalowanie i utrzymywalność; wdrażanie bez restartowania całej aplikacji;
-  łatwe przydzielanie osobnych projektów do osobnych zespołów.
-- **Wady:** komplikuje architekturę produktu; wolniejszy początkowy rozwój (setup); wymaga
-  standaryzacji UI/UX między zespołami, inaczej produkt się rozjeżdża wizualnie/behawioralnie.
-- **Kiedy używać:** duże, złożone projekty utrzymywane przez duże, autonomiczne zespoły.
+- **Advantages:** excellent scaling and maintainability; deployment without restarting the whole application;
+  easy assignment of separate projects to separate teams.
+- **Disadvantages:** complicates the product architecture; slower initial development (setup); requires
+  UI/UX standardization between teams, otherwise the product drifts apart visually/behaviourally.
+- **When to use:** large, complex projects maintained by large, autonomous teams.
 
-### Architektura Flux
+### Flux architecture
 
-Wzorzec wprowadzony przez Meta: „centralized state stores and unidirectional data flow”.
+A pattern introduced by Meta: "centralized state stores and unidirectional data flow".
 
-- **Trzy elementy:** **Dispatcher** (wysyła akcje do store'u), **Store** (przechowuje stan i logikę),
-  **View** (komponenty UI, czytają ze store'u).
-- **Zalety:** zmniejsza złożoność zarządzania stanem; przewidywalny, jednokierunkowy przepływ danych;
-  łatwa, replayowalna historia zmian stanu (przydatne do debugowania/time-travel).
-- **Wady:** niełatwe dla początkujących; dodatkowy boilerplate; może niepotrzebnie skomplikować
-  proste projekty bez realnie złożonego stanu.
-- **Kiedy używać:** średnie i duże aplikacje komponentowe ze złożonym, współdzielonym stanem.
+- **Three elements:** **Dispatcher** (sends actions to the store), **Store** (holds the state and the logic),
+  **View** (UI components, read from the store).
+- **Advantages:** reduces the complexity of state management; a predictable, unidirectional data flow;
+  an easy, replayable history of state changes (useful for debugging/time travel).
+- **Disadvantages:** not easy for beginners; extra boilerplate; can needlessly complicate
+  simple projects without really complex state.
+- **When to use:** medium and large component applications with complex, shared state.
 
-### Architektura hybrydowa/mieszana
+### Hybrid/mixed architecture
 
-Kombinacja wielu wzorców naraz — np. monolityczna + component-based, albo modularna + Flux +
-component-based. **Kluczowy wniosek źródła:** „There is no strict rule telling you to follow just
-one architecture pattern — you can adhere to multiple patterns” w zależności od potrzeb projektu i
-preferencji zespołu — te style nie są wzajemnie wykluczające się kategorie.
+A combination of several patterns at once — e.g. monolithic + component-based, or modular + Flux +
+component-based. **The source's key conclusion:** "There is no strict rule telling you to follow just
+one architecture pattern — you can adhere to multiple patterns" depending on the project's needs and
+the team's preferences — these styles are not mutually exclusive categories.
 
-### Tabela porównawcza (LogRocket)
+### Comparison table (LogRocket)
 
-| Czynnik | Monolit | Modularna | Component-based | Micro-frontends | Flux |
+| Factor | Monolith | Modular | Component-based | Micro-frontends | Flux |
 |---|---|---|---|---|---|
-| Proste projekty | zalecana | nie | zalecana | nie | nie |
-| Średnie projekty | częściowo | zalecana | zalecana | częściowo | zalecana |
-| Duże projekty | nie | częściowo | zalecana | zalecana | zalecana |
-| Dla początkujących | tak | może być | tak | nie | nie |
+| Simple projects | recommended | no | recommended | no | no |
+| Medium projects | partly | recommended | recommended | partly | recommended |
+| Large projects | no | partly | recommended | recommended | recommended |
+| For beginners | yes | could be | yes | no | no |
 
-## Klasyczne style architektury oprogramowania zastosowane do frontendu (Hrynkevych)
+## Classic software architecture styles applied to the frontend (Hrynkevych)
 
-### Architektura warstwowa (Layered)
+### Layered architecture
 
-Aplikacja podzielona na stosowane (stacked) warstwy:
-- **Warstwa prezentacji** — UI, komponenty (np. React).
-- **Warstwa logiki biznesowej** — domena, zarządzanie stanem (Redux, Zustand).
-- **Warstwa dostępu do danych** — API, bazy danych, CMS.
+The application divided into stacked layers:
+- **Presentation layer** — UI, components (e.g. React).
+- **Business logic layer** — domain, state management (Redux, Zustand).
+- **Data access layer** — API, databases, CMS.
 
-Zalety: wyraźne rozdzielenie odpowiedzialności, modularność. Wady: sztywność, potencjalne
-niepotrzebne związanie (coupling) między warstwami, jeśli granice nie są pilnowane.
+Advantages: a clear separation of responsibilities, modularity. Disadvantages: rigidity, potential
+unnecessary coupling between layers if the boundaries are not guarded.
 
-### Architektura klient-serwer
+### Client-server architecture
 
-Przeglądarka wysyła żądania do backendu, który odsyła odpowiedzi — standard dla nowoczesnych
-aplikacji frontendowych; GraphQL i REST strukturyzują tę interakcję. Zalety: prostota, scentralizowana
-obsługa danych. Wady: wąskie gardła po stronie serwera, opóźnienia sieciowe.
+The browser sends requests to the backend, which sends back responses — the standard for modern
+frontend applications; GraphQL and REST structure this interaction. Advantages: simplicity, centralized
+data handling. Disadvantages: server-side bottlenecks, network latency.
 
-### Mikroserwisy i Micro Frontends
+### Microservices and Micro Frontends
 
-**Mikroserwisy** — backend podzielony po możliwościach biznesowych (business capabilities).
-**Micro Frontends** — frontend podzielony analogicznie, każdy zespół zarządza swoim wycinkiem UI;
-narzędzia: Webpack Module Federation, Turborepo, Single-Spa. Zalety: autonomia zespołów, niezależne
-wdrażanie. Wady: złożoność integracji, większe obciążenie infrastrukturalne.
+**Microservices** — the backend divided by business capabilities.
+**Micro Frontends** — the frontend divided analogously, each team manages its slice of the UI;
+tools: Webpack Module Federation, Turborepo, Single-Spa. Advantages: team autonomy, independent
+deployment. Disadvantages: integration complexity, a larger infrastructure burden.
 
 ### Serverless (Functions as a Service)
 
-Logika podzielona na funkcje uruchamiane w chmurze (AWS Lambda, Vercel Functions); w Next.js:
-API routes, middleware edge'owe. Zalety: skalowalność, brak zarządzania serwerem. Wady: cold starts,
-uzależnienie od dostawcy (vendor lock-in).
+Logic divided into functions run in the cloud (AWS Lambda, Vercel Functions); in Next.js:
+API routes, edge middleware. Advantages: scalability, no server management. Disadvantages: cold starts,
+dependence on the provider (vendor lock-in).
 
-### Systemy rozproszone
+### Distributed systems
 
-Współczesny frontend komunikuje się z wieloma zewnętrznymi systemami naraz — bramami płatniczymi,
-CMS-ami, systemami autentykacji stron trzecich. Wyzwania: opóźnienia, spójność danych, obsługa
-awarii częściowych. Rozwiązania: cachowanie, logika retry, strategie CDN — patrz też katalog wzorców,
-kategoria Resilience (`resilience/`).
+A modern frontend communicates with many external systems at once — payment gateways,
+CMSs, third-party authentication systems. Challenges: latency, data consistency, handling
+partial failures. Solutions: caching, retry logic, CDN strategies — see also the pattern catalogue,
+the Resilience category (`resilience/`).
 
-## Jak wybierać między tymi dwiema taksonomiami
+## How to choose between these two taxonomies
 
-Nie są konkurencyjne — pytaj o różne osie:
-- **„Jak fizycznie skomponować repo/deployment?”** → sekcja LogRocket (monolit/modularna/
+They are not competing — they ask about different axes:
+- **"How to physically compose the repo/deployment?"** → the LogRocket section (monolith/modular/
   component-based/micro-frontends/Flux).
-- **„Jak frontend komunikuje się z resztą systemu i jak jest zorganizowana logika wewnątrz warstw?”**
-  → sekcja Hrynkevycha (warstwowa/klient-serwer/mikroserwisy/serverless/systemy rozproszone).
+- **"How does the frontend communicate with the rest of the system and how is the logic organized inside the layers?"**
+  → Hrynkevych's section (layered/client-server/microservices/serverless/distributed systems).
 
-Realny projekt zwykle łączy jedną odpowiedź z każdej osi — np. „component-based + Flux” (LogRocket)
-**i** „klient-serwer + serverless” (Hrynkevych) naraz, co jest częstą kombinacją dla współczesnej
-aplikacji Next.js/React z API routes.
+A real project usually combines one answer from each axis — e.g. "component-based + Flux" (LogRocket)
+**and** "client-server + serverless" (Hrynkevych) at once, which is a common combination for a modern
+Next.js/React application with API routes.

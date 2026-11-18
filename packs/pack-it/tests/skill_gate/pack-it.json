@@ -248,72 +248,72 @@
   "offline": "2026-11-17"
  },
  "fe-architecture": {
-  "fingerprint": "b33e3887eab62f2a",
-  "offline": "2026-11-16"
+  "fingerprint": "c6d993f621d6623a",
+  "offline": "2026-11-18"
  },
  "fe-css": {
-  "fingerprint": "3d97d46928e2e053",
-  "offline": "2026-11-16"
+  "fingerprint": "26eb786a873f289f",
+  "offline": "2026-11-18"
  },
  "fe-engineering-levels": {
-  "fingerprint": "bc191a033a416350",
-  "offline": "2026-11-16"
+  "fingerprint": "ad3c29ce9b823236",
+  "offline": "2026-11-18"
  },
  "fe-technical-seo": {
-  "fingerprint": "0ddfb110b921ab6a",
-  "offline": "2026-11-16"
+  "fingerprint": "b78ce971faf7b0f0",
+  "offline": "2026-11-18"
  },
  "fe-web-platform": {
-  "fingerprint": "08a4e771ece3b50e",
-  "offline": "2026-11-16"
+  "fingerprint": "16667db630c7cada",
+  "offline": "2026-11-18"
  },
  "fw-angular": {
-  "fingerprint": "dc392badd5bc334e",
-  "offline": "2026-11-16"
+  "fingerprint": "d0197e65863a8208",
+  "offline": "2026-11-18"
  },
  "fw-aspnet-core": {
-  "fingerprint": "56285ab501462e9a",
-  "offline": "2026-11-16"
+  "fingerprint": "d22fb91404b3a7a4",
+  "offline": "2026-11-18"
  },
  "fw-nestjs": {
-  "fingerprint": "1c436b6284255f12",
-  "offline": "2026-11-16"
+  "fingerprint": "8c69333f3793a8ae",
+  "offline": "2026-11-18"
  },
  "fw-nextjs": {
-  "fingerprint": "7f08ebe55dcb9201",
-  "offline": "2026-11-16"
+  "fingerprint": "8db07a523fadeb79",
+  "offline": "2026-11-18"
  },
  "fw-react": {
-  "fingerprint": "683b54c64ac45273",
-  "offline": "2026-11-16"
+  "fingerprint": "f3c003a48913c26d",
+  "offline": "2026-11-18"
  },
  "fw-spring-boot": {
-  "fingerprint": "f24d63fb822e07d3",
-  "offline": "2026-11-16"
+  "fingerprint": "9d2b1f171343a4c9",
+  "offline": "2026-11-18"
  },
  "lang-csharp": {
-  "fingerprint": "9b7bb931681cf3fd",
-  "offline": "2026-11-16"
+  "fingerprint": "5e7ad00c64839b11",
+  "offline": "2026-11-18"
  },
  "lang-go": {
-  "fingerprint": "25318e2784ad6d1f",
-  "offline": "2026-11-16"
+  "fingerprint": "67e3788c3b506b28",
+  "offline": "2026-11-18"
  },
  "lang-java": {
-  "fingerprint": "37e53c1849bd008c",
-  "offline": "2026-11-16"
+  "fingerprint": "f9922929146b81b8",
+  "offline": "2026-11-18"
  },
  "lang-javascript": {
-  "fingerprint": "ec9d13ad45f2ee28",
-  "offline": "2026-11-16"
+  "fingerprint": "b8a7761fbfc8d01e",
+  "offline": "2026-11-18"
  },
  "lang-python": {
-  "fingerprint": "c9eb2c6c05345f2e",
-  "offline": "2026-11-16"
+  "fingerprint": "412be5c3074079fd",
+  "offline": "2026-11-18"
  },
  "lang-typescript": {
-  "fingerprint": "e6b6ae8f3319c645",
-  "offline": "2026-11-16"
+  "fingerprint": "8be33231090eb0f2",
+  "offline": "2026-11-18"
  },
  "ops-ai-inference": {
   "fingerprint": "e0e40040e3671c0d",

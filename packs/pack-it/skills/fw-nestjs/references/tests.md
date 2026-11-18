@@ -1,28 +1,28 @@
-# Testy w NestJS
+# Tests in NestJS
 
-## 1. Piramida
-| Poziom | Narzędzie | Co sprawdza | Czas |
+## 1. Pyramid
+| Level | Tool | What it checks | Time |
 |---|---|---|---|
-| domena | Vitest / Jest, bez Nesta | reguły agregatów, obiekty wartości, polityki | ms |
-| serwis / moduł | `Test.createTestingModule` + `overrideProvider` | serwis aplikacyjny z prawdziwym DI i podmienionymi adapterami | ~100 ms |
-| e2e | `createNestApplication` + supertest + Testcontainers | HTTP → walidacja → serwis → baza | sekundy |
+| domain | Vitest / Jest, without Nest | aggregate rules, value objects, policies | ms |
+| service / module | `Test.createTestingModule` + `overrideProvider` | the application service with real DI and replaced adapters | ~100 ms |
+| e2e | `createNestApplication` + supertest + Testcontainers | HTTP → validation → service → database | seconds |
 
-Większość testów na poziomie domeny i serwisu; e2e dla ścieżek krytycznych i reguł bezpieczeństwa.
+Most tests at the domain and service level; e2e for critical paths and security rules.
 
-## 2. Moduł testowy
+## 2. Testing module
 ```ts
 const moduleRef = await Test.createTestingModule({ imports: [OrdersModule] })
   .overrideProvider(PaymentsClient).useValue({ charge: vi.fn() })
   .overrideGuard(AuthGuard).useValue({ canActivate: () => true })
   .compile();
 ```
-- `overrideProvider(token)` przyjmuje `useValue`, `useClass` lub `useFactory`; analogicznie `overrideGuard`,
+- `overrideProvider(token)` accepts `useValue`, `useClass` or `useFactory`; likewise `overrideGuard`,
   `overridePipe`, `overrideInterceptor`, `overrideFilter`, `overrideModule`.
-- `useMocker(factory)` tworzy zastępniki dla wszystkich brakujących providerów — wygodne, ale ukrywa błędy
-  konfiguracji DI; używaj świadomie.
-- Import całego modułu (`imports: [OrdersModule]`) sprawdza też jego `exports` i zależności; lista `providers`
-  testuje tylko wybrane klasy.
-- Provider o zakresie `REQUEST` lub `TRANSIENT` pobierasz przez `await moduleRef.resolve(Token)`, nie `get`.
+- `useMocker(factory)` creates stand-ins for all missing providers — convenient, but it hides DI
+  configuration errors; use it consciously.
+- Importing the whole module (`imports: [OrdersModule]`) also checks its `exports` and dependencies; a `providers` list
+  tests only the chosen classes.
+- A provider with the `REQUEST` or `TRANSIENT` scope you get through `await moduleRef.resolve(Token)`, not `get`.
 
 ## 3. E2e
 ```ts
@@ -35,33 +35,33 @@ beforeAll(async () => {
 });
 afterAll(() => app.close());
 
-it('odrzuca nieznane pole', () =>
+it('rejects an unknown field', () =>
   request(app.getHttpServer()).post('/orders').send({ sku: 'A-1', qty: 1, admin: true }).expect(400));
 ```
-- Konfigurację z main.ts (pipe'y, filtry, prefiks, wersjonowanie) wydziel do funkcji `configureApp(app)`
-  i wywołuj w obu miejscach — inaczej e2e testuje inną aplikację niż produkcyjna.
-- Dla każdego chronionego endpointu: bez tokenu (401), zła rola (403), właściwa (2xx).
+- Extract the configuration from main.ts (pipes, filters, prefix, versioning) into a `configureApp(app)` function
+  and call it in both places — otherwise e2e tests a different application than the production one.
+- For every protected endpoint: no token (401), wrong role (403), the right one (2xx).
 
 ## 4. Testcontainers
-- Paczka `@testcontainers/postgresql`, klasa `PostgreSqlContainer`; obraz z jawnym tagiem jak na produkcji
-  (`postgres:17-alpine`), nie `latest`.
-- Kontener startuje raz w global setup (Vitest `globalSetup`, Jest `globalSetup`), URL trafia do zmiennej
-  środowiskowej, którą czyta `ConfigService`; migracje uruchamiasz przed testami.
-- Izolacja danych: czyszczenie tabel (`TRUNCATE ... CASCADE`) przed testem albo osobny schemat na plik testowy.
-- CI potrzebuje Dockera; bez niego testy e2e oznacz i uruchamiaj osobnym poleceniem (`test:e2e`).
+- The `@testcontainers/postgresql` package, the `PostgreSqlContainer` class; an image with an explicit tag as in production
+  (`postgres:17-alpine`), not `latest`.
+- The container starts once in global setup (Vitest `globalSetup`, Jest `globalSetup`), the URL goes into an environment
+  variable that `ConfigService` reads; you run migrations before the tests.
+- Data isolation: truncating tables (`TRUNCATE ... CASCADE`) before a test or a separate schema per test file.
+- CI needs Docker; without it, mark the e2e tests and run them with a separate command (`test:e2e`).
 
-## 5. Jest a Vitest
-- `nest new` w v12: domyślnie ESM (`"type": "module"`) z Vitestem (`vitest run`, osobny vitest.config.e2e.ts);
-  `--type cjs` → Jest z ts-jest (paczka `@nestjs/schematics` 12.0.8, dostęp 2026-10-19).
-- Dekoratory i DI wymagają metadanych typów (`emitDecoratorMetadata`). Szablon `nestjs/typescript-starter` (master,
-  dostęp 2026-10-20) ma Vitest 4 z `vite-tsconfig-paths`, bez `unplugin-swc` i bez `.swcrc`, a w tsconfig
-  `emitDecoratorMetadata` i `experimentalDecorators` — metadane daje więc domyślny transformer Vite/Vitest; czy
-  obsługuje `emitDecoratorMetadata` w każdej wersji Vite — [wtórne: ogłoszenie Vite 8 podaje obsługę wbudowaną].
-  Gdy wstrzykiwanie w testach zwraca `undefined`, dodaj `unplugin-swc` albo jawne `@Inject(Token)`.
-- Konfigurację runnera (mocki modułów, pokrycie, watch) opisują tool-vitest i tool-jest.
+## 5. Jest vs Vitest
+- `nest new` in v12: ESM by default (`"type": "module"`) with Vitest (`vitest run`, a separate vitest.config.e2e.ts);
+  `--type cjs` → Jest with ts-jest (the `@nestjs/schematics` 12.0.8 package, accessed 2026-10-19).
+- Decorators and DI require type metadata (`emitDecoratorMetadata`). The `nestjs/typescript-starter` template (master,
+  accessed 2026-10-20) has Vitest 4 with `vite-tsconfig-paths`, without `unplugin-swc` and without `.swcrc`, and in tsconfig
+  `emitDecoratorMetadata` and `experimentalDecorators` — so the metadata comes from the default Vite/Vitest transformer; whether
+  it supports `emitDecoratorMetadata` in every Vite version — [secondary: the Vite 8 announcement states built-in support].
+  When injection in tests returns `undefined`, add `unplugin-swc` or an explicit `@Inject(Token)`.
+- Runner configuration (module mocks, coverage, watch) is described by tool-vitest and tool-jest.
 
-## 6. Pułapki
-- SQLite „zamiast” PostgreSQL — inne typy, `ON CONFLICT`, blokady, sekwencje; błędy wychodzą dopiero na produkcji.
-- Brak `app.close()` → otwarte połączenia i wiszący proces testów.
-- `synchronize: true` w testach ukrywa brakujące migracje — testy uruchamiają te same migracje co produkcja.
-- Czas: wstrzykuj zegar (provider `Clock`) zamiast `new Date()`; w testach stała data albo `vi.useFakeTimers()`.
+## 6. Pitfalls
+- SQLite "instead of" PostgreSQL — different types, `ON CONFLICT`, locks, sequences; the errors only show up in production.
+- No `app.close()` → open connections and a hanging test process.
+- `synchronize: true` in tests hides missing migrations — tests run the same migrations as production.
+- Time: inject a clock (a `Clock` provider) instead of `new Date()`; in tests a fixed date or `vi.useFakeTimers()`.

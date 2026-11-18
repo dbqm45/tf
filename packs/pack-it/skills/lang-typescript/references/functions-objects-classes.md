@@ -1,58 +1,58 @@
-# Funkcje, typy obiektowe i klasy
+# Functions, object types and classes
 
-> **Spis treści:** Funkcje · Typy obiektowe · Klasy
+> **Contents:** Functions · Object types · Classes
 
-Na podstawie podręcznika TypeScript („More on Functions”, „Object Types”, „Classes”), opisane własnymi słowami.
-Przykłady sprawdzone w tsc 6.0.3 i 7.0.2 (`strict`, `noUncheckedIndexedAccess`).
+Based on the TypeScript Handbook ("More on Functions", "Object Types", "Classes"), described in our own words.
+Examples checked in tsc 6.0.3 and 7.0.2 (`strict`, `noUncheckedIndexedAccess`).
 
-## Funkcje
+## Functions
 
-### Typy funkcji, sygnatury wywołania i konstrukcji
+### Function types, call and construct signatures
 ```ts
-type GreetFunction = (a: string) => void;            // nazwa parametru wymagana w składni
+type GreetFunction = (a: string) => void;            // the parameter name is required by the syntax
 
 type DescribableFunction = {
   description: string;
-  (someArg: number): boolean;                         // call signature — funkcja z dodatkowymi polami
+  (someArg: number): boolean;                         // call signature — a function with extra fields
 };
 
 type SomeConstructor = new (s: string) => SomeObject; // construct signature
 ```
-Unikaj globalnego typu `Function` (wywołanie zwraca `any`) — typuj konkretną sygnaturę.
+Avoid the global `Function` type (a call returns `any`) — type a concrete signature.
 
-### Generyczne funkcje — zasady
+### Generic functions — rules
 ```ts
 function firstElement<T>(arr: readonly T[]): T | undefined { return arr[0]; }
 function longest<T extends { length: number }>(a: T, b: T): T { return a.length >= b.length ? a : b; }
 ```
-- Ogranicz element (`T extends { length: number }`), nie całość (`T extends any[]`), jeśli nie musisz.
-- Parametr typu powinien wystąpić **co najmniej dwa razy** w sygnaturze; inaczej zastąp go konkretnym typem.
-- Nie podawaj argumentu typu jawnie (`identity<string>("x")`), gdy inferencja wystarcza.
-- Więcej: `generics-and-utility-types.md`.
+- Constrain the element (`T extends { length: number }`), not the whole (`T extends any[]`), unless you have to.
+- A type parameter should appear **at least twice** in the signature; otherwise replace it with a concrete type.
+- Do not pass the type argument explicitly (`identity<string>("x")`) when inference is enough.
+- More: `generics-and-utility-types.md`.
 
-### Parametry opcjonalne w callbackach i wariancja
+### Optional parameters in callbacks and variance
 ```ts
 function f(x?: number) {}   // x: number | undefined
 function g(x = 10) {}       // x: number
 
-// ❌ `index?` w typie callbacku sugeruje, że wywołujący może go nie przekazać — i tak się dzieje:
+// ❌ `index?` in the callback type suggests the caller may not pass it — and that is what happens:
 function myForEach<T>(arr: readonly T[], cb: (arg: T, index?: number) => void) {
-  for (const item of arr) cb(item); // index nigdy nie przekazany
+  for (const item of arr) cb(item); // index never passed
 }
 ```
-Callback deklaruj z **wymaganymi** parametrami — funkcja przyjmująca mniej argumentów i tak pasuje.
-Z `strictFunctionTypes` (część `strict`) parametry typów funkcyjnych są sprawdzane kontrawariantnie, ale
-parametry **metod** (`method(x: T): void` w interfejsie) pozostają biwariantne — dla ścisłego sprawdzania
-w interfejsach używaj składni właściwości: `handle: (x: T) => void`.
+Declare a callback with **required** parameters — a function that takes fewer arguments still fits.
+With `strictFunctionTypes` (part of `strict`), parameters of function types are checked contravariantly, but
+**method** parameters (`method(x: T): void` in an interface) stay bivariant — for strict checking
+in interfaces use the property syntax: `handle: (x: T) => void`.
 
-### `this` w funkcjach (nie w arrow function)
+### `this` in functions (not in an arrow function)
 ```ts
 interface DB { filterUsers(filter: (this: User) => boolean): User[] }
-db.filterUsers(function (this: User) { return this.admin; }); // ✅ `this` typowane
-db.filterUsers(() => this.admin);                              // ❌ arrow bierze `this` z otoczenia
+db.filterUsers(function (this: User) { return this.admin; }); // ✅ `this` typed
+db.filterUsers(() => this.admin);                              // ❌ an arrow takes `this` from the surrounding scope
 ```
 
-### Przeciążenia (overloads)
+### Overloads
 ```ts
 function makeDate(timestamp: number): Date;
 function makeDate(m: number, d: number, y: number): Date;
@@ -60,47 +60,47 @@ function makeDate(mOrTs: number, d?: number, y?: number): Date {
   if (d !== undefined && y !== undefined) return new Date(y, mOrTs, d);
   return new Date(mOrTs);
 }
-makeDate(1, 2); // ❌ sygnatura implementacji NIE jest widoczna z zewnątrz
+makeDate(1, 2); // ❌ the implementation signature is NOT visible from outside
 ```
-- Sygnatury przeciążeń stoją nad implementacją; z zewnątrz widać **tylko przeciążenia**, a implementacja musi
-  być zgodna z każdym z nich.
-- Gdy wystarczy unia — użyj unii zamiast przeciążeń:
+- The overload signatures stand above the implementation; from outside **only the overloads** are visible, and the implementation must
+  be compatible with each of them.
+- When a union is enough — use a union instead of overloads:
   ```ts
   function len(x: string | readonly unknown[]): number { return x.length; }
   ```
 
-### `void`, `unknown`, `never` jako wynik
+### `void`, `unknown`, `never` as a result
 ```ts
 type VoidFunc = () => void;
-const f1: VoidFunc = () => true;                 // OK — wynik ignorowany (kontekstowe void)
-function f2(): void { return true; }             // ❌ w jawnej deklaracji to błąd
+const f1: VoidFunc = () => true;                 // OK — the result is ignored (contextual void)
+function f2(): void { return true; }             // ❌ in an explicit declaration it is an error
 function fail(msg: string): never { throw new Error(msg); }
 ```
 
 ---
 
-## Typy obiektowe
+## Object types
 
-### `?`, `readonly`, sygnatury indeksu
+### `?`, `readonly`, index signatures
 ```ts
 interface Options { shape: Shape; xPos?: number }
 interface Locked { readonly id: string }
 interface Dict {
-  [key: string]: number | string; // zwykłe pola muszą być zgodne z sygnaturą indeksu
+  [key: string]: number | string; // ordinary fields must be compatible with the index signature
   length: number;
 }
 ```
-`exactOptionalPropertyTypes` (poza `strict`) odróżnia „brak pola” od `xPos: undefined` — warto włączyć w nowym kodzie.
+`exactOptionalPropertyTypes` (outside `strict`) distinguishes "no field" from `xPos: undefined` — worth switching on in new code.
 
 ### Excess property checks
 ```ts
 interface SquareConfig { color?: string; width?: number }
-createSquare({ colour: "red", width: 100 }); // ❌ 'colour' nie istnieje
+createSquare({ colour: "red", width: 100 }); // ❌ 'colour' does not exist
 ```
-Działa tylko dla literału przekazanego bezpośrednio; obejścia (asercja, sygnatura indeksu, zmienna pośrednia)
-stosuj świadomie — zwykle błąd wskazuje literówkę.
+It works only for a literal passed directly; use the workarounds (an assertion, an index signature, an intermediate variable)
+deliberately — the error usually points to a typo.
 
-### Rozszerzanie, generyczne kształty, `readonly` tablice, tuple
+### Extending, generic shapes, `readonly` arrays, tuples
 ```ts
 interface ColorfulCircle extends Colorful, Circle {}
 type ColorfulCircle2 = Colorful & Circle;
@@ -116,70 +116,70 @@ type Optional3rd = [number, number, number?];
 type RestTuple = [string, ...boolean[]];
 const point = [3, 4] as const; // readonly [3, 4]
 ```
-Funkcja tylko czytająca dane: parametr `readonly T[]` / `Readonly<T>` — dokumentuje intencję i blokuje mutację.
+A function that only reads data: a `readonly T[]` / `Readonly<T>` parameter — it documents the intent and blocks mutation.
 
 ---
 
-## Klasy
+## Classes
 
-### Pola, `readonly`, `strictPropertyInitialization`
+### Fields, `readonly`, `strictPropertyInitialization`
 ```ts
 class Point {
   x = 0;
   y = 0;
-  readonly id: string;               // zainicjalizuj w konstruktorze albo od razu
+  readonly id: string;               // initialise in the constructor or immediately
   constructor(id: string) { this.id = id; }
 }
 ```
-`name!: string` (definite assignment) tylko gdy pole ustawia framework/inicjalizator poza konstruktorem.
+`name!: string` (definite assignment) only when a framework/initialiser sets the field outside the constructor.
 
 ### `public` / `protected` / `private` vs `#`
 ```ts
 class Example {
   public x = 0;
   protected y = 0;
-  private z = 0;       // tylko kontrola typów — w runtime dostępne (`obj["z"]`)
-  #realPrivate = 0;    // prywatne naprawdę (JS), także w runtime
+  private z = 0;       // type checking only — accessible at runtime (`obj["z"]`)
+  #realPrivate = 0;    // truly private (JS), also at runtime
 }
 ```
-- W nowym kodzie domyślnie `#pole` dla stanu wewnętrznego (agregaty — `domain-building-blocks.md`).
-- `protected` nie daje dostępu do składowych równoległej podklasy tej samej bazy.
-- `implements Interfejs` nie przenosi typów parametrów na metody: parametr bez adnotacji to niejawne `any`
-  (w `strict` błąd). Adnotuj parametry metod jawnie.
-- Nadpisywanie: `override` + `noImplicitOverride` — kompilator wykryje zmianę nazwy metody w bazie.
+- In new code, `#field` by default for internal state (aggregates — `domain-building-blocks.md`).
+- `protected` does not give access to the members of a sibling subclass of the same base.
+- `implements Interface` does not carry parameter types over to the methods: a parameter without an annotation is an implicit `any`
+  (an error in `strict`). Annotate method parameters explicitly.
+- Overriding: `override` + `noImplicitOverride` — the compiler detects a method rename in the base.
 
-### Statyczne składowe, klasy generyczne
+### Static members, generic classes
 ```ts
 class MyClass { static x = 0; static printX() { console.log(MyClass.x); } }
 
 class Box<T> {
   readonly contents: T;
   constructor(contents: T) { this.contents = contents; }
-  // static defaultValue: T; // ❌ pola statyczne nie widzą parametrów typu klasy
+  // static defaultValue: T; // ❌ static fields do not see the class's type parameters
 }
 ```
 
-### Polimorficzne `this`, strażnicy oparte na `this`
+### Polymorphic `this`, `this`-based guards
 ```ts
 class Box2 { contents = ""; set(v: string) { this.contents = v; return this; } }
 class Clearable extends Box2 { clear() { this.contents = ""; } }
-new Clearable().set("hi").clear(); // set zwraca Clearable, nie Box2
+new Clearable().set("hi").clear(); // set returns Clearable, not Box2
 
 class FSObject { isFile(): this is FileRep { return this instanceof FileRep; } }
 ```
 
-### Parameter properties — tylko przy składni nieusuwalnej
+### Parameter properties — only with non-erasable syntax
 ```ts
 class Service {
-  constructor(private readonly http: HttpClient) {} // tworzy pole + przypisanie
+  constructor(private readonly http: HttpClient) {} // creates a field + an assignment
 }
 ```
-- To składnia generująca kod: **błąd przy `erasableSyntaxOnly`** i nie działa przy uruchamianiu TS przez usuwanie
-  typów (Node). W nowym kodzie deklaruj pole jawnie (`readonly #http: HttpClient;` + przypisanie w konstruktorze).
-- Angular: nowoczesne DI to `inject()` w polu (`private readonly http = inject(HttpClient)`) — szczegóły w fw-angular.
-  Zmiana parametrów konstruktora w klasach z DI to zmiana kontraktu z frameworkiem.
+- It is code-generating syntax: **an error with `erasableSyntaxOnly`**, and it does not work when TS is run by type
+  stripping (Node). In new code declare the field explicitly (`readonly #http: HttpClient;` + an assignment in the constructor).
+- Angular: modern DI is `inject()` in a field (`private readonly http = inject(HttpClient)`) — details in fw-angular.
+  Changing constructor parameters in classes with DI is a change of the contract with the framework.
 
-### Klasy abstrakcyjne, `implements` vs `extends`
+### Abstract classes, `implements` vs `extends`
 ```ts
 abstract class BaseService {
   abstract getData(): unknown;
@@ -187,29 +187,29 @@ abstract class BaseService {
 }
 class UserService extends BaseService { getData() { return { id: 1 }; } }
 ```
-- `implements X` — klasa spełnia kontrakt `X`, nic nie dziedziczy.
-- `extends X` — dziedziczy implementację; preferuj kompozycję, gdy nie ma prawdziwej relacji „jest”.
+- `implements X` — the class fulfils the `X` contract, it inherits nothing.
+- `extends X` — inherits the implementation; prefer composition when there is no real "is a" relationship.
 
-### Pułapki wykonania
+### Runtime pitfalls
 
-**`super()` przed `this`** w konstruktorze podklasy.
+**`super()` before `this`** in a subclass constructor.
 
-**Kolejność inicjalizacji:** pola bazy → konstruktor bazy → pola podklasy → konstruktor podklasy.
+**Initialisation order:** base fields → base constructor → subclass fields → subclass constructor.
 ```ts
 class Base { name = "base"; constructor() { console.log(this.name); } }
 class Derived extends Base { override name = "derived"; }
-new Derived(); // loguje "base"
+new Derived(); // logs "base"
 ```
-Jeśli baza potrzebuje wartości z podklasy — przekaż ją argumentem konstruktora.
+If the base needs a value from the subclass — pass it as a constructor argument.
 
-**Utrata `this` przy przekazaniu metody jako referencji** (handlery, `setTimeout`, `.subscribe(this.m)`):
+**Losing `this` when passing a method as a reference** (handlers, `setTimeout`, `.subscribe(this.m)`):
 ```ts
 class C {
   name = "C";
-  getName() { return this.name; }       // `this` zależy od sposobu wywołania
-  getNameBound = () => this.name;        // pole-strzałka: zawsze instancja
+  getName() { return this.name; }       // `this` depends on how it is called
+  getNameBound = () => this.name;        // arrow field: always the instance
 }
 setTimeout(c.getName);                   // ❌
-setTimeout(c.getNameBound);              // ✅  (albo: () => c.getName(), c.getName.bind(c))
+setTimeout(c.getNameBound);              // ✅  (or: () => c.getName(), c.getName.bind(c))
 ```
-Mechanika `this` w runtime: lang-javascript `.claude/skills/lang-javascript/references/this-and-functions.md`.
+Runtime mechanics of `this`: lang-javascript `.claude/skills/lang-javascript/references/this-and-functions.md`.

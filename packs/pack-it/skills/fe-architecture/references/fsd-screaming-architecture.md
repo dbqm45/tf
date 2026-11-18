@@ -1,118 +1,118 @@
-# Feature-Sliced Design, Screaming Architecture, stan i tooling
+# Feature-Sliced Design, Screaming Architecture, state and tooling
 
-> **Spis treści:** Feature-Sliced Design (FSD) · Screaming Architecture · Komponenty w praktyce · Zarządzanie stanem — trzy rodzaje, trzy narzędzia · Tooling wspierający tę architekturę (stan 2026) · CMS w architekturze frontendu (headless CMS, np. Contentful) · Rekomendacje
+> **Contents:** Feature-Sliced Design (FSD) · Screaming Architecture · Components in practice · State management — three kinds, three tools · Tooling supporting this architecture (state in 2026) · CMS in frontend architecture (headless CMS, e.g. Contentful) · Recommendations
 
-Źródło: Mykhailo Hrynkevych, „Frontend Architecture” (syntetyzuje dokumentację Feature-Sliced Design, Khalila
-Stemmlera, Ivana Ojiego Garcię, Contentful, roadmap.sh) — uzupełnione o stan FSD 2.x i ekosystemu 2026.
-Modele renderowania (SPA/SSR/SSG/ISR/RSC) są w `rendering-models.md`.
+Source: Mykhailo Hrynkevych, "Frontend Architecture" (it synthesizes the documentation of Feature-Sliced Design, Khalil
+Stemmler, Ivan Ojiego Garcia, Contentful, roadmap.sh) — supplemented with the state of FSD 2.x and the ecosystem in 2026.
+Rendering models (SPA/SSR/SSG/ISR/RSC) are in `rendering-models.md`.
 
 ## Feature-Sliced Design (FSD)
 
-Metodologia organizująca kod po **biznesowych funkcjach**, nie po typach technicznych („wszystko o koszyku w
-jednym miejscu”, a nie „wszystkie hooki w jednym folderze”). Niezależna od frameworka — działa w React, Vue,
+A methodology that organizes code by **business features**, not by technical types ("everything about the cart in
+one place", not "all hooks in one folder"). Framework-independent — it works in React, Vue,
 Angular, Svelte.
 
-**Warstwy (od góry; FSD 2.x):**
+**Layers (from the top; FSD 2.x):**
 ```
-app/       → powłoka: bootstrap, providery, routing, globalne style
-pages/     → widoki tras (kompozycja widgetów/funkcji dla jednego URL)
-widgets/   → duże, samodzielne bloki UI (nagłówek, panel boczny) składane z features/entities
-features/  → akcje użytkownika dające wartość (login, dodaj-do-koszyka)
-entities/  → pojęcia biznesowe (User, Product) — model + UI encji
-shared/    → kod bez wiedzy o domenie: UI kit, api client, lib, config
+app/       → shell: bootstrap, providers, routing, global styles
+pages/     → route views (composition of widgets/features for one URL)
+widgets/   → large, self-contained UI blocks (header, sidebar) assembled from features/entities
+features/  → user actions that deliver value (login, add-to-cart)
+entities/  → business concepts (User, Product) — the entity's model + UI
+shared/    → code without knowledge of the domain: UI kit, api client, lib, config
 ```
-Warstwa `processes/` z FSD 1.x jest przestarzała (przepływy międzystronicowe → `app/` lub `features/`).
-Źródło pomijało `widgets/` — to pełny zestaw.
+The `processes/` layer from FSD 1.x is deprecated (cross-page flows → `app/` or `features/`).
+The source omitted `widgets/` — this is the full set.
 
-**Reguły importów (sedno FSD):**
-- Warstwa importuje **tylko z warstw niższych** (`features` → `entities`, `shared`; nigdy odwrotnie).
-- Slice'y tej samej warstwy **nie importują siebie nawzajem** (`features/cart` ↛ `features/auth`); wspólne
-  rzeczy schodzą niżej albo są składane wyżej (widget/strona).
-- Każdy slice wystawia **publiczne API** (`index.ts`) — reszta to szczegół implementacji
-  (fundamentals/barrel-export.md). Wymuszaj lintem (`eslint-plugin-boundaries`, Steiger — linter FSD, Nx
+**Import rules (the core of FSD):**
+- A layer imports **only from lower layers** (`features` → `entities`, `shared`; never the other way round).
+- Slices of the same layer **do not import each other** (`features/cart` ↛ `features/auth`); shared
+  things go lower or are assembled higher (widget/page).
+- Every slice exposes a **public API** (`index.ts`) — the rest is an implementation detail
+  (fundamentals/barrel-export.md). Enforce it with a linter (`eslint-plugin-boundaries`, Steiger — the FSD linter, Nx
   `enforce-module-boundaries`).
-- Segmenty wewnątrz slice'a nazwane po celu: `ui/`, `model/`, `api/`, `lib/`, `config/`.
+- Segments inside a slice named by purpose: `ui/`, `model/`, `api/`, `lib/`, `config/`.
 
-**Korzyści:** wyraźna ścieżka skalowania dla rosnących zespołów; jawne granice (wiadomo, gdzie szukać i co
-dodać); mniej konfliktów przy scalaniu i mniejsze obciążenie poznawcze przy dużym kodzie.
+**Benefits:** a clear scaling path for growing teams; explicit boundaries (you know where to look and what to
+add); fewer merge conflicts and a smaller cognitive load with a large codebase.
 
-**Kiedy nie:** mała aplikacja z kilkoma ekranami — wystarczy prostszy podział feature-first
-(`app/`, `features/<x>/`, `shared/` — hub SKILL.md). FSD wprowadzaj, gdy granice zaczynają się rozmywać.
+**When not:** a small application with a few screens — a simpler feature-first split is enough
+(`app/`, `features/<x>/`, `shared/` — the SKILL.md hub). Introduce FSD when the boundaries start to blur.
 
 ## Screaming Architecture
 
-Koncepcja Roberta C. Martina: struktura folderów ma „krzyczeć” o domenie biznesowej, nie o stosie technicznym.
+Robert C. Martin's concept: the folder structure should "scream" about the business domain, not about the technical stack.
 
-**Źle (struktura mówi „to projekt React”, nie mówi nic o produkcie):**
+**Bad (the structure says "this is a React project", it says nothing about the product):**
 ```
 /components
 /pages
 /hooks
 ```
 
-**Dobrze (struktura mówi, co produkt robi):**
+**Good (the structure says what the product does):**
 ```
 /billing
 /checkout
 /auth
 ```
 
-**Korzyści:** lepsza odkrywalność (nowa osoba widzi domenę, nie technologię), szybszy onboarding, zgodność
-struktury kodu z celami produktowymi zamiast z wyborem biblioteki.
+**Benefits:** better discoverability (a new person sees the domain, not the technology), faster onboarding, alignment of the
+code structure with product goals instead of with the choice of library.
 
-**Związek z FSD:** Screaming Architecture to zasada („nazywaj po domenie”), FSD — rozpisana struktura warstw, która
-ją realizuje (`features/`, `entities/` to domena). Nazwy slice'ów bierz z języka wszechobecnego (ddd-tactical-design).
+**Relation to FSD:** Screaming Architecture is the principle ("name by domain"), FSD — a written-out layer structure that
+implements it (`features/`, `entities/` are the domain). Take slice names from the ubiquitous language (ddd-tactical-design).
 
-## Komponenty w praktyce
+## Components in practice
 
-- **Komponent „inteligentny” vs prezentacyjny** — inteligentny zna dane/logikę i przekazuje je w dół; prezentacyjny
-  tylko renderuje wejścia (components/presentational-vs-container.md). Dziś rolę kontenera często pełni hook /
-  composable / serwis (Angular) albo loader trasy.
-- **Kolokacja** — logika, style i testy obok komponentu, który z nich korzysta, a nie w globalnych `/hooks`,
-  `/styles` (to samo uzasadnienie co Screaming Architecture).
-- **Organizacja modułowa** po domenie (`/auth`, `/cart`, `/product`), nie po typie technicznym (`/components`,
+- **"Smart" vs presentational component** — the smart one knows the data/logic and passes it down; the presentational one
+  only renders its inputs (components/presentational-vs-container.md). Today the container role is often played by a hook /
+  composable / service (Angular) or a route loader.
+- **Colocation** — logic, styles and tests next to the component that uses them, not in global `/hooks`,
+  `/styles` (the same justification as Screaming Architecture).
+- **Modular organization** by domain (`/auth`, `/cart`, `/product`), not by technical type (`/components`,
   `/reducers`, `/services`).
 
-## Zarządzanie stanem — trzy rodzaje, trzy narzędzia
+## State management — three kinds, three tools
 
-Stan to zachowanie aplikacji — projektuj go równie świadomie jak strukturę folderów.
+State is the behaviour of the application — design it as consciously as the folder structure.
 
-| Rodzaj | Opis | React | Vue | Angular (fw-angular) |
+| Kind | Description | React | Vue | Angular (fw-angular) |
 |---|---|---|---|---|
-| Lokalny UI | żyje w jednym komponencie | `useState`, `useReducer` | `ref`, `reactive` | `signal`, `computed` |
-| Stan serwera (async) | dane z API z cyklem loading/error/stale | TanStack Query, SWR, loadery routera, RSC | TanStack Query (Vue), Pinia Colada | `httpResource`/`resource`, TanStack Query (Angular) |
-| Globalny klienta | współdzielony między niezwiązanymi częściami | Zustand, Redux Toolkit, Jotai | Pinia | serwis z signals, NgRx Signal Store |
+| Local UI | lives in one component | `useState`, `useReducer` | `ref`, `reactive` | `signal`, `computed` |
+| Server state (async) | data from the API with a loading/error/stale cycle | TanStack Query, SWR, router loaders, RSC | TanStack Query (Vue), Pinia Colada | `httpResource`/`resource`, TanStack Query (Angular) |
+| Global client state | shared between unrelated parts | Zustand, Redux Toolkit, Jotai | Pinia | a service with signals, NgRx Signal Store |
 
-Do tego **stan w URL** (filtry, paginacja, zakładki) — linkowalny i odporny na odświeżenie.
+On top of that, **state in the URL** (filters, pagination, tabs) — linkable and survives a refresh.
 
-**Częsty błąd:** trzymanie danych z API w globalnym store razem ze stanem UI — miesza dwa cykle życia
-(cache/odświeżanie/retry vs proste flagi) i kończy się ręcznym reimplementowaniem biblioteki stanu serwera.
+**A common mistake:** keeping API data in a global store together with UI state — it mixes two lifecycles
+(cache/refresh/retry vs simple flags) and ends with manually reimplementing a server state library.
 
-## Tooling wspierający tę architekturę (stan 2026)
+## Tooling supporting this architecture (state in 2026)
 
-- **Meta-frameworki**: Next.js (App Router, RSC, Server Actions), React Router 7 (tryb frameworka, dawny Remix),
-  Nuxt (Vue), SvelteKit, Angular SSR (`@angular/ssr`, hybrydowe renderowanie per trasa) — routing plikowy lub
-  deklaratywny, kolokacja ładowania danych, SSR/SSG per trasa.
-- **Monorepo**: Nx (granice modułów, graf zależności, zadania z cache), Turborepo (cache zadań, remote
-  cache) — przydatne szczególnie dla wielu aplikacji i micro-frontendów (architecture-styles.md).
-- **Stan serwera**: TanStack Query (React/Vue/Solid/Angular) — zastępuje ręczne `fetch` + efekt + własny cache.
-- **Stan globalny**: Zustand, Jotai, Redux Toolkit (React); Pinia (Vue); NgRx Signal Store (Angular).
-  Recoil jest zarchiwizowany (2025) — nie wybieraj go do nowych projektów.
-- **UI**: Tailwind CSS (v4, konfiguracja w CSS) + biblioteki komponentów headless/kopiowanych (shadcn/ui, Radix,
-  Angular CDK/Aria) — spójność UI bez pisania design systemu od zera (fe-css).
+- **Meta-frameworks**: Next.js (App Router, RSC, Server Actions), React Router 7 (framework mode, formerly Remix),
+  Nuxt (Vue), SvelteKit, Angular SSR (`@angular/ssr`, hybrid rendering per route) — file-based or
+  declarative routing, colocated data loading, SSR/SSG per route.
+- **Monorepo**: Nx (module boundaries, dependency graph, cached tasks), Turborepo (task cache, remote
+  cache) — useful especially for many applications and micro-frontends (architecture-styles.md).
+- **Server state**: TanStack Query (React/Vue/Solid/Angular) — replaces a manual `fetch` + effect + your own cache.
+- **Global state**: Zustand, Jotai, Redux Toolkit (React); Pinia (Vue); NgRx Signal Store (Angular).
+  Recoil is archived (2025) — do not choose it for new projects.
+- **UI**: Tailwind CSS (v4, configuration in CSS) + headless/copied component libraries (shadcn/ui, Radix,
+  Angular CDK/Aria) — UI consistency without writing a design system from scratch (fe-css).
 
-## CMS w architekturze frontendu (headless CMS, np. Contentful)
+## CMS in frontend architecture (headless CMS, e.g. Contentful)
 
-**Korzyści:** oddzielenie treści od kodu (redakcja zmienia treść bez wdrożenia); modele treści dające strukturę
-dynamicznym widokom; integracja przez GraphQL lub REST.
+**Benefits:** separating content from code (editors change content without a deployment); content models giving structure
+to dynamic views; integration through GraphQL or REST.
 
-**Wpływ na architekturę:** zespół treści pracuje niezależnie od inżynierów; treść zmienia się rzadziej niż kod,
-więc pasuje do SSG/ISR i cache na CDN (rendering-models.md) zamiast renderowania przy każdym żądaniu.
+**Impact on architecture:** the content team works independently of engineers; content changes less often than code,
+so it fits SSG/ISR and a CDN cache (rendering-models.md) instead of rendering on every request.
 
-## Rekomendacje
+## Recommendations
 
-1. **„Think in features, not files”** — myśl funkcjami biznesowymi, nie typami plików.
-2. **FSD i Screaming Architecture** jako konkretne realizacje powyższego — w skali proporcjonalnej do projektu.
-3. **Tooling wspiera, nie zastępuje struktury** — dobre narzędzie na złej architekturze jej nie naprawi.
-4. **Architektura służy dwóm stronom** — deweloperom (utrzymywalność, onboarding) i użytkownikom (wydajność,
-   dostępność, odporność).
+1. **"Think in features, not files"** — think in business features, not file types.
+2. **FSD and Screaming Architecture** as concrete implementations of the above — at a scale proportional to the project.
+3. **Tooling supports the structure, it does not replace it** — a good tool on a bad architecture will not fix it.
+4. **Architecture serves two sides** — developers (maintainability, onboarding) and users (performance,
+   accessibility, resilience).

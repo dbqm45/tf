@@ -1,49 +1,49 @@
 ---
 name: fe-css
-description: Użyj przy stylowaniu — flex/grid, responsywność, design tokens, motywy, animacje, izolacja stylów.
+description: Use for styling — flex/grid, responsiveness, design tokens, themes, animations, style isolation.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy stylowaniu komponentów, layoutach (flex/grid), responsywności, design tokenach, motywach jasny/ciemny, animacjach i izolacji stylów (CSS Modules, scoped, @scope, @layer). Nie do logiki JavaScript (fe-web-platform) ani struktury komponentów (fe-architecture)."
+  catalog: "Use when styling components, layouts (flex/grid), responsiveness, design tokens, light/dark themes, animations and style isolation (CSS Modules, scoped, @scope, @layer). Not for JavaScript logic (fe-web-platform) or component structure (fe-architecture)."
 ---
 
 # CSS
 
-## Tokeny przede wszystkim
-- Kolory, odstępy, promienie, typografia wyłącznie z tokenów (CSS custom properties lub theme projektu).
-- Zakaz „magicznych” wartości (`#3a7bd5`, `13px`) w komponentach. Brakuje tokenu → dodaj token.
-- Tryb ciemny: nadpisujesz tokeny, nie style komponentów (`color-scheme` + `light-dark()` lub `[data-theme]`).
+## Tokens first
+- Colours, spacing, radii, typography only from tokens (CSS custom properties or the project's theme).
+- No "magic" values (`#3a7bd5`, `13px`) in components. A token is missing → add the token.
+- Dark mode: you override tokens, not component styles (`color-scheme` + `light-dark()` or `[data-theme]`).
 
 ## Layout
-- Grid dla układów 2D, flex dla 1D. `gap` zamiast marginesów między dziećmi.
-- Mobile-first: style bazowe dla wąskiego ekranu, `@media (min-width: …)` rozszerza.
-- Preferuj container queries dla komponentów wielokrotnego użytku.
-- Jednostki: `rem` dla typografii i odstępów, `%`/`fr`/`min()`/`clamp()` dla szerokości.
-- Właściwości logiczne (`margin-inline-start`, `padding-block`, `inset-inline`) zamiast `left/right` — układ gotowy na RTL (fe-web-platform, i18n).
+- Grid for 2D layouts, flex for 1D. `gap` instead of margins between children.
+- Mobile-first: base styles for a narrow screen, `@media (min-width: …)` extends them.
+- Prefer container queries for reusable components.
+- Units: `rem` for typography and spacing, `%`/`fr`/`min()`/`clamp()` for widths.
+- Logical properties (`margin-inline-start`, `padding-block`, `inset-inline`) instead of `left/right` — a layout ready for RTL (fe-web-platform, i18n).
 
-## Architektura
-- Trzymaj się podejścia repo (CSS Modules / Tailwind / styled / enkapsulacja frameworka). Nie wprowadzaj drugiego.
-- Izolacja: CSS Modules, `scoped` (Vue), enkapsulacja Angulara, Shadow DOM albo natywne `@scope`; kolejność warstw przez `@layer` (reset → tokens → components → utilities).
-- Niska specyficzność: klasy, bez ID i `!important` (wyjątek: utility nadpisujące).
-- Style komponentu obok komponentu.
+## Architecture
+- Stick to the repo's approach (CSS Modules / Tailwind / styled / the framework's encapsulation). Do not introduce a second one.
+- Isolation: CSS Modules, `scoped` (Vue), Angular's encapsulation, Shadow DOM or native `@scope`; layer order through `@layer` (reset → tokens → components → utilities).
+- Low specificity: classes, no IDs and no `!important` (exception: overriding utilities).
+- A component's styles next to the component.
 
-## Dostępność
-- Kontrast tekstu ≥ 4.5:1 (duży tekst ≥ 3:1).
-- Widoczny `:focus-visible` — nigdy `outline: none` bez zamiennika.
-- `prefers-reduced-motion`: wyłącz lub skróć animacje.
-- Cele dotykowe ≥ 44×44 px (minimum WCAG 2.2 AA: 24×24).
-- Nie przekazuj znaczenia samym kolorem; szanuj `forced-colors` (tryb wysokiego kontrastu).
+## Accessibility
+- Text contrast ≥ 4.5:1 (large text ≥ 3:1).
+- A visible `:focus-visible` — never `outline: none` without a replacement.
+- `prefers-reduced-motion`: turn off or shorten animations.
+- Touch targets ≥ 44×44 px (the WCAG 2.2 AA minimum: 24×24).
+- Do not convey meaning by colour alone; respect `forced-colors` (high contrast mode).
 
-## Wydajność
-- Animuj `transform` i `opacity`, nie `width/height/top/left`.
-- `content-visibility: auto` dla długich sekcji poza ekranem.
+## Performance
+- Animate `transform` and `opacity`, not `width/height/top/left`.
+- `content-visibility: auto` for long off-screen sections.
 
 ## References
-- `references/css-modules-and-scoped-styles.md` — CSS Modules, `scoped`, `:global`, `composes`, typy, konfiguracja build, odpowiedniki we frameworkach i `@scope`. Czytaj przy wyborze lub konfiguracji izolacji stylów.
+- `references/css-modules-and-scoped-styles.md` — CSS Modules, `scoped`, `:global`, `composes`, types, build configuration, equivalents in frameworks and `@scope`. Read it when choosing or configuring style isolation.
 
-- `references/ui-review.md` — kolejność ważności, progi (kontrast, cele dotyku, CLS, typografia), lista przed oddaniem UI, dokument główny systemu projektowego z nadpisaniami. Czytaj przy przeglądzie lub oddawaniu ekranu.
+- `references/ui-review.md` — the order of importance, thresholds (contrast, touch targets, CLS, typography), the list before handing over UI, the main design system document with overrides. Read it when reviewing or handing over a screen.
 
-## Checklista
-- [ ] brak twardych kolorów/odstępów
-- [ ] działa od 320 px szerokości bez poziomego scrolla
-- [ ] focus widoczny, reduced-motion obsłużone
-- [ ] motyw ciemny sprawdzony
+## Checklist
+- [ ] no hard-coded colours/spacing
+- [ ] works from 320 px width without horizontal scrolling
+- [ ] focus visible, reduced-motion handled
+- [ ] dark theme checked

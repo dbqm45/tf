@@ -1,68 +1,68 @@
-# Nowa aplikacja Angular i praca z CLI
+# A new Angular application and working with the CLI
 
-Spis treści: 1. Utworzenie aplikacji · 2. Generowanie kodu i paczki · 3. Nazwy plików · 4. Konfiguracja środowisk
-· 5. Serwer MCP Angular CLI · Źródła
+Contents: 1. Creating the application · 2. Generating code and packages · 3. File names · 4. Environment configuration
+· 5. The Angular CLI MCP server · Sources
 
-## 1. Utworzenie aplikacji
-1. **Wersja.** Bez prośby człowieka nie podajesz wersji: bierzesz najnowszą stabilną. Gdy człowiek prosi o konkretną,
-   używasz `npx @angular/cli@<wersja> new …` z pominięciem lokalnej instalacji.
-2. **CLI.** Sprawdź, czy `ng` jest dostępne (`ng version`). Jest → `ng new`; nie ma → `npx @angular/cli@latest new`.
-   Instalację globalną (`npm install -g @angular/cli`) proponujesz człowiekowi, nie wykonujesz jej sam.
-3. **Polecenie bez pytań:** `ng new <nazwa> --interactive=false` i flagi dobrane do opisu aplikacji:
-   - `--style=scss|css|less`, `--routing`, `--ssr` (renderowanie na serwerze, `rendering-and-ssr.md`),
-     `--prefix=<prefiks>` (prefiks selektorów);
-   - `--ai-config=<narzędzie>` zapisuje w projekcie reguły dla agenta (np. `claude`, `agents`); po utworzeniu przeczytaj
-     wygenerowany plik i stosuj go razem z tym skillem;
-   - `--skip-tests` tylko na wyraźną prośbę.
-4. **Nazwa aplikacji:** zaproponuj z opisu albo zapytaj.
-5. **Domyślne decyzje w nowym projekcie:** formularze w Signal Forms (stabilne od v22), zoneless i `OnPush` (domyślne
-   w nowych wersjach), Vitest, standalone, nowy control flow.
-6. **Nie uruchamiaj serwera deweloperskiego od razu.** Najpierw zbuduj pierwsze funkcje, potem zapytaj człowieka, czy
-   uruchomić `ng serve`.
-7. **Weryfikacja po każdej zmianie kodu:** `ng build`. Błędy kompilacji czytasz i poprawiasz przed oddaniem pracy.
+## 1. Creating the application
+1. **Version.** Without the human's request you do not specify a version: you take the latest stable one. When the human asks for a specific one,
+   you use `npx @angular/cli@<version> new …`, bypassing the local installation.
+2. **CLI.** Check whether `ng` is available (`ng version`). It is → `ng new`; it is not → `npx @angular/cli@latest new`.
+   You propose a global installation (`npm install -g @angular/cli`) to the human; you do not run it yourself.
+3. **A command without questions:** `ng new <name> --interactive=false` and flags chosen for the application description:
+   - `--style=scss|css|less`, `--routing`, `--ssr` (server-side rendering, `rendering-and-ssr.md`),
+     `--prefix=<prefix>` (the selector prefix);
+   - `--ai-config=<tool>` writes rules for the agent into the project (e.g. `claude`, `agents`); after creation read
+     the generated file and apply it together with this skill;
+   - `--skip-tests` only on an explicit request.
+4. **Application name:** propose one from the description or ask.
+5. **Default decisions in a new project:** forms in Signal Forms (stable since v22), zoneless and `OnPush` (the default
+   in new versions), Vitest, standalone, the new control flow.
+6. **Do not start the development server right away.** First build the first features, then ask the human whether
+   to run `ng serve`.
+7. **Verification after every code change:** `ng build`. You read and fix compilation errors before handing over the work.
 
-## 2. Generowanie kodu i paczki
-- Kod generujesz przez CLI, potem go uzupełniasz: `ng g c <ścieżka>` (komponent), `ng g s` (serwis), `ng g d`
-  (dyrektywa), `ng g p` (pipe), `ng g g` (guard funkcyjny), `ng g interceptor`, `ng g resolver`, `ng g interface`,
-  `ng g enum`, `ng g class`. Zapisz ścieżkę zwróconą przez generator, żeby edytować właściwy plik.
-- Trasy nie mają generatora: wygeneruj komponent i dopisz go do tablicy `Routes` (zwykle `app.routes.ts`).
-- Biblioteki Angulara dodajesz przez `ng add <paczka>` zamiast `npm install`: polecenie instaluje paczkę i uruchamia jej
-  schematy konfiguracji (np. `ng add @angular/material`, `ng add tailwindcss`).
-- **Tailwind CSS v4:** po `ng add tailwindcss` w globalnym arkuszu jest `@import 'tailwindcss';`. Nie twórz
-  `tailwind.config.js` ani dyrektyw `@tailwind base/components/utilities` z wersji 3. Przy ręcznej konfiguracji
-  wystarcza plik `.postcssrc.json` z wtyczką `@tailwindcss/postcss`.
-- Proxy do lokalnego API w trakcie pracy: plik `proxy.conf.json` i opcja `proxyConfig` celu `serve` w `angular.json`.
-- Testy e2e: `ng add` wybranego narzędzia (np. Playwright, Cypress), potem `ng e2e`.
+## 2. Generating code and packages
+- You generate code through the CLI, then fill it in: `ng g c <path>` (component), `ng g s` (service), `ng g d`
+  (directive), `ng g p` (pipe), `ng g g` (functional guard), `ng g interceptor`, `ng g resolver`, `ng g interface`,
+  `ng g enum`, `ng g class`. Note the path returned by the generator so that you edit the right file.
+- Routes have no generator: generate a component and add it to the `Routes` array (usually `app.routes.ts`).
+- You add Angular libraries through `ng add <package>` instead of `npm install`: the command installs the package and runs its
+  configuration schematics (e.g. `ng add @angular/material`, `ng add tailwindcss`).
+- **Tailwind CSS v4:** after `ng add tailwindcss` the global stylesheet has `@import 'tailwindcss';`. Do not create
+  `tailwind.config.js` or the `@tailwind base/components/utilities` directives from version 3. For manual configuration
+  a `.postcssrc.json` file with the `@tailwindcss/postcss` plugin is enough.
+- A proxy to a local API during development: the `proxy.conf.json` file and the `proxyConfig` option of the `serve` target in `angular.json`.
+- E2e tests: `ng add` of the chosen tool (e.g. Playwright, Cypress), then `ng e2e`.
 
-## 3. Nazwy plików (przewodnik stylu od v20)
-- W projektach utworzonych w nowym stylu pliki nie mają sufiksu roli: `product-list.ts` z klasą `ProductList` zamiast
-  `product-list.component.ts`; szablon i style mają tę samą nazwę bazową, test `.spec.ts`.
-- Nazwa mówi o celu, nie o roli: serwisy `auth-data.ts`, `orders-store.ts`, `user-data-client.ts`; kontekst daje katalog
-  (`core/`, `features/<funkcja>/`, `shared/`). Typy danych zostają z sufiksem `.model.ts`.
-- Kolizje nazw: komponent `UserProfile` w `user-profile.ts` obok interfejsu `User` w `user.model.ts`.
-- **Najpierw sprawdź projekt:** sąsiednie pliki, ustawienia schematów w `angular.json`, reguły ESLint. Projekt
-  z sufiksami zostaje przy sufiksach. Nie mieszaj obu stylów w jednym katalogu funkcji; w razie wątpliwości użyj
-  sufiksów.
+## 3. File names (the style guide since v20)
+- In projects created in the new style files have no role suffix: `product-list.ts` with the `ProductList` class instead of
+  `product-list.component.ts`; the template and styles have the same base name, the test `.spec.ts`.
+- The name says the purpose, not the role: services `auth-data.ts`, `orders-store.ts`, `user-data-client.ts`; the directory gives the context
+  (`core/`, `features/<feature>/`, `shared/`). Data types keep the `.model.ts` suffix.
+- Name collisions: the `UserProfile` component in `user-profile.ts` next to the `User` interface in `user.model.ts`.
+- **Check the project first:** neighbouring files, schematic settings in `angular.json`, ESLint rules. A project
+  with suffixes stays with suffixes. Do not mix both styles in one feature directory; when in doubt use
+  suffixes.
 
-## 4. Konfiguracja środowisk
-- **W czasie budowania:** `ng g environments` tworzy `src/environments/` i podmianę plików w `angular.json`. Sprawdzenie
-  trybu deweloperskiego: `isDevMode()` zamiast ręcznej flagi `production`.
-- **W czasie uruchomienia:** ten sam artefakt na wiele środowisk; konfiguracja z pliku JSON wczytywana przed startem
-  aplikacji (`provideAppInitializer`) i udostępniana tokenem. Sekretów nie umieszczasz w żadnym z tych plików: trafiają
-  do przeglądarki.
+## 4. Environment configuration
+- **At build time:** `ng g environments` creates `src/environments/` and the file replacement in `angular.json`. Checking
+  development mode: `isDevMode()` instead of a manual `production` flag.
+- **At run time:** the same artifact for many environments; configuration from a JSON file loaded before the application
+  starts (`provideAppInitializer`) and provided with a token. You do not put secrets in any of these files: they end up
+  in the browser.
 
-## 5. Serwer MCP Angular CLI
-- Angular CLI ma wbudowany serwer MCP: `npx @angular/cli mcp` (w konfiguracji klienta MCP jako `command: npx`,
-  `args: ["-y", "@angular/cli", "mcp"]`). Opcje: `--read-only` (tylko narzędzia bez zmian w projekcie), `--local-only`
-  (bez sieci).
-- Narzędzia m.in.: `get_best_practices` (przewodnik dobrych praktyk dla wersji projektu), `search_documentation`
-  (angular.dev), `list_projects`, `onpush_zoneless_migration` (plan przejścia na `OnPush` i zoneless), `run_target`,
+## 5. The Angular CLI MCP server
+- The Angular CLI has a built-in MCP server: `npx @angular/cli mcp` (in the MCP client configuration as `command: npx`,
+  `args: ["-y", "@angular/cli", "mcp"]`). Options: `--read-only` (only tools without changes to the project), `--local-only`
+  (no network).
+- Tools include: `get_best_practices` (the best-practices guide for the project's version), `search_documentation`
+  (angular.dev), `list_projects`, `onpush_zoneless_migration` (a plan for moving to `OnPush` and zoneless), `run_target`,
   `devserver_start`, `devserver_stop`, `devserver_wait_for_build`.
-- Dodanie serwera MCP do konfiguracji agenta to zmiana uprawnień: tylko za zgodą człowieka (core-agent-security).
-  Wybieraj `--read-only`, gdy agent ma tylko czytać.
+- Adding an MCP server to the agent configuration is a permission change: only with the human's consent (core-agent-security).
+  Choose `--read-only` when the agent only needs to read.
 
-## Źródła
-- angular/skills, skille `angular-new-app` i `angular-developer` (pliki angular-developer/references: cli, naming-conventions,
+## Sources
+- angular/skills, the `angular-new-app` and `angular-developer` skills (angular-developer/references files: cli, naming-conventions,
   environment-configuration, tailwind-css, mcp, e2e-testing), commit
-  43ec6adc2b35049734d0d114e3948e022f1cd1e7 z 2026-10-21 (generowane z angular/angular), licencja MIT, autor Google LLC.
-  Opisane własnymi słowami; odczyt 2026-10-21.
+  43ec6adc2b35049734d0d114e3948e022f1cd1e7 of 2026-10-21 (generated from angular/angular), MIT licence, author Google LLC.
+  Described in our own words; accessed 2026-10-21.

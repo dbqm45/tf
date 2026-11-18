@@ -1,43 +1,43 @@
 # Senior Frontend Engineer
 
-Poziom: właściciel jednej funkcjonalności/jednego repo od pomysłu do produkcji, wzorzec techniczny dla młodszych
-w zespole. Soczewka: **jeden zespół, jedna aplikacja**.
+Level: the owner of one feature/one repo from idea to production, a technical role model for more junior people
+in the team. Lens: **one team, one application**.
 
-Treść techniczna z pierwotnej wersji tego pliku (Critical Rendering Path, Virtual DOM, SSR/hydratacja/RSC, Core Web
-Vitals, Service Workers) została przeniesiona do skilli technicznych — tu zostaje **czego oczekujemy** od Seniora.
+The technical content from the original version of this file (Critical Rendering Path, Virtual DOM, SSR/hydration/RSC, Core Web
+Vitals, Service Workers) has been moved to the technical skills — what stays here is **what we expect** from a Senior.
 
-## Kompetencje techniczne — oczekiwane zachowania
+## Technical competencies — expected behaviours
 
-| Obszar | Senior potrafi… | Wiedza w |
+| Area | A Senior can… | Knowledge in |
 |---|---|---|
-| Event loop, pamięć | **wyjaśnić**, dlaczego operacja blokuje główny wątek, i **zdiagnozować** wyciek (heap snapshot, detached nodes) — nie tylko zdefiniować pętlę zdarzeń | fe-web-platform `.claude/skills/fe-web-platform/references/rendering-pipeline.md` |
-| Renderowanie przeglądarki | wskazać, która faza CRP jest wąskim gardłem (render-blocking CSS/JS, layout thrashing) i czemu animujemy `transform`/`opacity` | fe-web-platform `.claude/skills/fe-web-platform/references/rendering-pipeline.md` |
-| Wydajność | ustalić, która metryka (LCP/INP/CLS) jest zła, znaleźć przyczynę na danych polowych i zweryfikować poprawkę pomiarem | fe-web-platform `.claude/skills/fe-web-platform/references/core-web-vitals.md` |
-| Model renderowania | dobrać CSR/SSR/SSG/ISR/RSC per trasa, rozpoznać i naprawić hydration mismatch, rozumieć koszt reconciliation vs sygnałów | fe-architecture `.claude/skills/fe-architecture/references/rendering-models.md` |
-| Offline/PWA | ocenić, czy service worker jest potrzebny, dobrać strategię cache i bezpieczną aktualizację | fe-web-platform `.claude/skills/fe-web-platform/references/service-workers.md` |
-| Język i typy | swobodnie czytać/pisać typy średniej złożoności; rozpoznać, kiedy typ jest bardziej skomplikowany niż wart (nadmiar generyków to zapach, nie cel) | lang-typescript, lang-javascript |
-| Framework | znać model zmian swojego frameworka i jego pułapki (klucze list, czystość renderu, efekty, signals/OnPush) | fw-angular, fe-architecture |
-| Architektura aplikacji | **zastosować** wzorzec do nazwanego problemu i **rozpoznać nadużycie** wzorca | fe-architecture, eng-design-principles |
-| Dostępność i bezpieczeństwo | dostarczać funkcje zgodne z WCAG AA i bez XSS domyślnie, nie „po audycie” | fe-web-platform, fe-architecture `references/security/` |
-| Testy | pisać testy zachowania (nie implementacji) i dobrać poziom testu do ryzyka | eng-testing, fe-architecture `references/testing/` |
+| Event loop, memory | **explain** why an operation blocks the main thread, and **diagnose** a leak (heap snapshot, detached nodes) — not only define the event loop | fe-web-platform `.claude/skills/fe-web-platform/references/rendering-pipeline.md` |
+| Browser rendering | point out which CRP phase is the bottleneck (render-blocking CSS/JS, layout thrashing) and why we animate `transform`/`opacity` | fe-web-platform `.claude/skills/fe-web-platform/references/rendering-pipeline.md` |
+| Performance | establish which metric (LCP/INP/CLS) is bad, find the cause in field data and verify the fix by measurement | fe-web-platform `.claude/skills/fe-web-platform/references/core-web-vitals.md` |
+| Rendering model | choose CSR/SSR/SSG/ISR/RSC per route, recognize and fix a hydration mismatch, understand the cost of reconciliation vs signals | fe-architecture `.claude/skills/fe-architecture/references/rendering-models.md` |
+| Offline/PWA | assess whether a service worker is needed, choose a cache strategy and a safe update | fe-web-platform `.claude/skills/fe-web-platform/references/service-workers.md` |
+| Language and types | read/write types of medium complexity with ease; recognize when a type is more complicated than it is worth (an excess of generics is a smell, not a goal) | lang-typescript, lang-javascript |
+| Framework | know the change model of their framework and its pitfalls (list keys, render purity, effects, signals/OnPush) | fw-angular, fe-architecture |
+| Application architecture | **apply** a pattern to a named problem and **recognize the overuse** of a pattern | fe-architecture, eng-design-principles |
+| Accessibility and security | deliver features compliant with WCAG AA and free of XSS by default, not "after the audit" | fe-web-platform, fe-architecture `references/security/` |
+| Tests | write behaviour tests (not implementation tests) and match the test level to the risk | eng-testing, fe-architecture `references/testing/` |
 
-## Mentoring i code review
+## Mentoring and code review
 
-Na poziomie Senior rozwój innych staje się realną, ocenianą częścią pracy, nie efektem pobocznym.
+At the Senior level, developing others becomes a real, assessed part of the job, not a side effect.
 
-- **Code review** jest skuteczny, gdy:
-  - komentarz wskazuje **konkretny** problem i **konkretną** alternatywę (nie „to jest źle”);
-  - odróżnia **blokujące** od **nice-to-have** (oznaczaj np. `nit:`), a spory stylistyczne rozstrzyga
-    formatter/linter, nie dyskusja w PR;
-  - pyta „dlaczego”, zamiast zakładać złą intencję — autor mógł mieć kontekst, którego recenzent nie widzi;
-  - dotyczy małych zmian (małe PR-y to decyzja procesu — eng-continuous-delivery).
-- **Mentoring** jest skuteczny, gdy prowadzi mentee do **samodzielnego** rozwiązania (pytania naprowadzające, pair
-  programming), a nie do najszybszego rozwiązania przez mentora — inaczej problem wraca bez wzrostu kompetencji.
-- **Własność funkcji**: Senior doprowadza funkcję do produkcji razem z obserwowalnością (błędy, metryki) i
-  sprzątaniem (feature flag usunięty, dług zapisany).
+- **Code review** is effective when:
+  - a comment points to a **concrete** problem and a **concrete** alternative (not "this is wrong");
+  - it distinguishes **blocking** from **nice-to-have** (mark it e.g. `nit:`), and style disputes are settled by
+    the formatter/linter, not a discussion in the PR;
+  - it asks "why" instead of assuming bad intent — the author may have had context the reviewer does not see;
+  - it concerns small changes (small PRs are a process decision — eng-continuous-delivery).
+- **Mentoring** is effective when it leads the mentee to an **independent** solution (guiding questions, pair
+  programming), not to the fastest solution by the mentor — otherwise the problem comes back without any growth in competence.
+- **Feature ownership**: a Senior takes a feature to production together with observability (errors, metrics) and
+  cleanup (feature flag removed, debt recorded).
 
-## Senior a Staff
+## Senior vs Staff
 
-Senior optymalizuje, naprawia i projektuje **w granicach jednej aplikacji/zespołu** i jest lokalnym wzorcem jakości.
-Gdy decyzja dotyczy **wielu zespołów naraz** (współdzielony design system, standard bezpieczeństwa dla domeny, tooling
-wielu repo) — to już soczewka Staff (`staff.md`).
+A Senior optimizes, fixes and designs **within one application/team** and is the local quality role model.
+When a decision concerns **many teams at once** (a shared design system, a security standard for a domain, tooling
+for many repos) — that is already the Staff lens (`staff.md`).

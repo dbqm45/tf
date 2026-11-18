@@ -1,45 +1,45 @@
-# Service Workers, cache i offline
+# Service Workers, cache and offline
 
-Przeniesione z importu frontend-developer (`senior.md`, „Service Workers”), uzupełnione.
+Moved from the frontend-developer import (`senior.md`, "Service Workers"), supplemented.
 
-## Czym jest
+## What it is
 
-Skrypt działający w tle, poza wątkiem strony, jako **proxy między aplikacją a siecią** — podstawa PWA i offline.
-Działa tylko w bezpiecznym kontekście (HTTPS; `localhost` do testów), bo ma władzę nad całym ruchem strony w swoim
-zakresie (`scope`).
+A script running in the background, outside the page thread, as a **proxy between the application and the network** — the basis of PWA and offline.
+It works only in a secure context (HTTPS; `localhost` for testing), because it has power over all the page's traffic within its
+scope (`scope`).
 
-## Cykl życia
+## Lifecycle
 
-1. `install` — pierwsza instalacja: pre-cache statycznych assetów (app shell).
-2. `activate` — nowa wersja przejmuje kontrolę: sprzątanie starych cache'y.
-3. `fetch` — przechwytywanie żądań i odpowiedź z cache, sieci lub obu.
+1. `install` — the first installation: pre-caching static assets (the app shell).
+2. `activate` — the new version takes control: cleaning up old caches.
+3. `fetch` — intercepting requests and responding from the cache, the network or both.
 
-Pułapki aktualizacji: nowy SW czeka, aż zamkną się wszystkie karty ze starym (`waiting`); `skipWaiting()` +
-`clients.claim()` przyspieszają przejęcie, ale mogą zmieszać stary HTML z nowymi chunkami — pokaż użytkownikowi
-„Dostępna nowa wersja — odśwież” zamiast przełączać po cichu. Plik SW serwuj z `Cache-Control: no-cache`.
+Update pitfalls: a new SW waits until all tabs with the old one are closed (`waiting`); `skipWaiting()` +
+`clients.claim()` speed up the takeover, but can mix old HTML with new chunks — show the user
+"A new version is available — refresh" instead of switching silently. Serve the SW file with `Cache-Control: no-cache`.
 
-## Strategie cache (nazwy zwyczajowe)
+## Cache strategies (customary names)
 
-| Strategia | Działanie | Dla |
+| Strategy | Behaviour | For |
 |---|---|---|
-| Cache-first | cache, sieć tylko przy braku | assety z hashem w nazwie, fonty |
-| Network-first | sieć, cache przy błędzie/offline | HTML, dane, które mają być świeże |
-| Stale-while-revalidate | natychmiast z cache, w tle odśwież | treści średnio zmienne (awatary, listy) |
-| Network-only / cache-only | bez fallbacku / tylko cache | żądania mutujące / zasoby offline |
+| Cache-first | the cache, the network only when missing | assets with a hash in the name, fonts |
+| Network-first | the network, the cache on error/offline | HTML, data that should be fresh |
+| Stale-while-revalidate | immediately from the cache, refresh in the background | moderately changing content (avatars, lists) |
+| Network-only / cache-only | no fallback / the cache only | mutating requests / offline resources |
 
-Nie cache'uj odpowiedzi spersonalizowanych ani z danymi wrażliwymi bez klucza per użytkownik i czyszczenia przy
-wylogowaniu. Zwykle nie pisz strategii ręcznie — Workbox lub moduł frameworka (`@angular/service-worker`,
+Do not cache personalized responses or ones with sensitive data without a per-user key and clearing on
+logout. Usually do not write the strategies by hand — Workbox or the framework module (`@angular/service-worker`,
 `vite-plugin-pwa`).
 
-## Możliwości dodatkowe
+## Additional capabilities
 
-- **Push notifications** (Push API + Notification; na iOS tylko dla PWA dodanych do ekranu głównego).
-- **Background Sync** — dokończenie wysyłki po odzyskaniu sieci (Chromium; w innych silnikach — kolejka w IndexedDB
-  i ponowienie przy `online`).
-- **Navigation preload** — równoległe pobranie nawigacji podczas uruchamiania SW (mniejsze opóźnienie network-first).
+- **Push notifications** (Push API + Notification; on iOS only for PWAs added to the home screen).
+- **Background Sync** — finishing a send after the network comes back (Chromium; in other engines — a queue in IndexedDB
+  and a retry on `online`).
+- **Navigation preload** — fetching the navigation in parallel while the SW starts up (lower network-first latency).
 
-## Kiedy nie
+## When not to
 
-Aplikacja bez wymagań offline/instalacji rzadko potrzebuje SW — dodaje złożoność aktualizacji i trudne do
-odtworzenia błędy cache. Dla samej szybkości często wystarczy poprawny HTTP cache (`Cache-Control`, `immutable` dla
-assetów z hashem) i CDN.
+An application without offline/installation requirements rarely needs a SW — it adds update complexity and cache bugs that are hard to
+reproduce. For speed alone a correct HTTP cache (`Cache-Control`, `immutable` for
+assets with a hash) and a CDN are often enough.

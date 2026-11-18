@@ -1,18 +1,18 @@
-# Minimal API z wynikami typowanymi, ProblemDetails, walidacją i OpenAPI — przetestowany przykład
+# Minimal API with typed results, ProblemDetails, validation and OpenAPI — a tested example
 
-> **Spis treści:** Booking.Api.csproj · Program.cs · Booking.Api.Tests.csproj
+> **Contents:** Booking.Api.csproj · Program.cs · Booking.Api.Tests.csproj
 
-Projekt sprawdzony 2026-10-23 na net10.0 (SDK 10.0.113, Microsoft.AspNetCore.OpenApi 10.0.13,
-Microsoft.AspNetCore.Mvc.Testing 10.0.13): `dotnet test` — 4 testy integracyjne (200, 409 jako
-`application/problem+json`, 400 z walidacji, 404, dokument OpenAPI), `TreatWarningsAsErrors`,
-`dotnet format --verify-no-changes` bez uwag. Domena (`Booking.Domain`): lang-csharp
-(`.claude/skills/lang-csharp/references/domain-building-blocks.md`). Pliki skopiowane bez zmian.
+Project checked 2026-10-23 on net10.0 (SDK 10.0.113, Microsoft.AspNetCore.OpenApi 10.0.13,
+Microsoft.AspNetCore.Mvc.Testing 10.0.13): `dotnet test` — 4 integration tests (200, 409 as
+`application/problem+json`, 400 from validation, 404, the OpenAPI document), `TreatWarningsAsErrors`,
+`dotnet format --verify-no-changes` with no remarks. Domain (`Booking.Domain`): lang-csharp
+(`.claude/skills/lang-csharp/references/domain-building-blocks.md`). Code from the tested project; only comments and message strings were translated to English (logic unchanged).
 
-## Spis treści
+## Contents
 - Booking.Api.csproj
-- Program.cs — endpoint, mapowanie wyniku domeny na HTTP
+- Program.cs — the endpoint, mapping the domain result to HTTP
 - Booking.Api.Tests.csproj
-- BlockResourceTests.cs — testy integracyjne przez WebApplicationFactory
+- BlockResourceTests.cs — integration tests through WebApplicationFactory
 
 ## Booking.Api.csproj
 ```xml
@@ -43,9 +43,9 @@ using Booking.Domain;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddProblemDetails();          // błędy jako application/problem+json (RFC 9457)
-builder.Services.AddValidation();              // walidacja atrybutów w Minimal API (.NET 10)
-builder.Services.AddOpenApi();                 // dokument OpenAPI (.NET 9+)
+builder.Services.AddProblemDetails();          // errors as application/problem+json (RFC 9457)
+builder.Services.AddValidation();              // attribute validation in Minimal API (.NET 10)
+builder.Services.AddOpenApi();                 // OpenAPI document (.NET 9+)
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IResourceStore, InMemoryResourceStore>();
 
@@ -60,7 +60,7 @@ app.MapGroup("/resources")
 
 app.Run();
 
-// Typ wyniku wymienia każdą odpowiedź — trafia do OpenAPI i jest sprawdzany przez kompilator.
+// The result type lists every response — it goes into OpenAPI and is checked by the compiler.
 static Results<Ok<BlockResponse>, NotFound, ProblemHttpResult> BlockResource(
     Guid id, BlockRequest request, IResourceStore store, TimeProvider clock)
 {
@@ -68,15 +68,15 @@ static Results<Ok<BlockResponse>, NotFound, ProblemHttpResult> BlockResource(
     if (resource is null)
         return TypedResults.NotFound();
 
-    // Odrzucenie biznesowe z domeny → kod HTTP tu, na granicy; domena nie zna HTTP.
+    // A business rejection from the domain → the HTTP code here, at the boundary; the domain does not know HTTP.
     return resource.Block(request.By, clock.GetUtcNow()) switch
     {
         BlockResult.Blocked or BlockResult.AlreadyBlockedBySameOwner => TypedResults.Ok(new BlockResponse(id, request.By)),
-        // TypedResults.Problem → application/problem+json; Conflict(new ProblemDetails()) dałoby zwykły application/json.
+        // TypedResults.Problem → application/problem+json; Conflict(new ProblemDetails()) would give plain application/json.
         BlockResult.Conflict c => TypedResults.Problem(
-            title: "Zasób zajęty", detail: $"Zasób zablokował {c.BlockedBy}.", statusCode: StatusCodes.Status409Conflict),
-        BlockResult.Disabled => TypedResults.Problem(title: "Zasób wyłączony", statusCode: StatusCodes.Status409Conflict),
-        _ => throw new InvalidOperationException("Nieobsłużony wynik."),
+            title: "Resource taken", detail: $"The resource was blocked by {c.BlockedBy}.", statusCode: StatusCodes.Status409Conflict),
+        BlockResult.Disabled => TypedResults.Problem(title: "Resource disabled", statusCode: StatusCodes.Status409Conflict),
+        _ => throw new InvalidOperationException("Unhandled result."),
     };
 }
 

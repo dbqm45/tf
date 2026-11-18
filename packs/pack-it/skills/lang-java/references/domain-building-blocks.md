@@ -1,8 +1,8 @@
-# Pojęcia domenowe w Javie 21 — przetestowane implementacje
+# Domain concepts in Java 21 — tested implementations
 
-Skompilowane `javac --release 21 -Xlint:all -Werror` i przetestowane. Tu w jednym pliku dla zwięzłości —
-w projekcie: **jeden typ najwyższego poziomu na plik**, pakiet per moduł/kontekst.
-Przykłady z archetypów (ddd-archetypes): Money, Party, Availability (agregat segmentu z maszyną stanów i zdarzeniami).
+Compiled with `javac --release 21 -Xlint:all -Werror` and tested. Here in one file for brevity —
+in a project: **one top-level type per file**, a package per module/context.
+Examples from the archetypes (ddd-archetypes): Money, Party, Availability (a segment aggregate with a state machine and events).
 
 ```java
 package archetypes;
@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-// ===== Money.java — obiekt wartości (niezmienny, sam się waliduje) =====
+// ===== Money.java — value object (immutable, validates itself) =====
 record Money(BigDecimal amount, Currency currency) implements Comparable<Money> {
     Money {
         Objects.requireNonNull(amount, "amount");
@@ -39,7 +39,7 @@ record Money(BigDecimal amount, Currency currency) implements Comparable<Money> 
         return new Money(amount.subtract(other.amount), currency);
     }
 
-    /** Dzieli kwotę na części tak, by suma się zgadzała (reszta groszy do pierwszych części). */
+    /** Splits the amount into parts so that the sum matches (the leftover minor units go to the first parts). */
     List<Money> allocate(int parts) {
         if (parts <= 0) throw new IllegalArgumentException("parts must be positive");
         BigDecimal unit = BigDecimal.ONE.movePointLeft(currency.getDefaultFractionDigits());
@@ -68,7 +68,7 @@ record Money(BigDecimal amount, Currency currency) implements Comparable<Money> 
     }
 }
 
-// ===== Party.java — warianty jako sealed interface + recordy =====
+// ===== Party.java — variants as a sealed interface + records =====
 record PartyId(String value) {
     PartyId { Objects.requireNonNull(value); }
 }
@@ -82,7 +82,7 @@ sealed interface Party permits Person, Organization {
     }
 
     static String displayName(Party party) {
-        return switch (party) {                 // wyczerpujący switch — kompilator pilnuje wariantów
+        return switch (party) {                 // exhaustive switch — the compiler guards the variants
             case Person p -> p.firstName() + " " + p.lastName();
             case Organization o -> o.name();
         };
@@ -97,7 +97,7 @@ record Organization(PartyId id, Set<String> roles, String name, Optional<PartyId
     Organization { roles = Set.copyOf(roles); }
 }
 
-// ===== Result.java — wynik operacji (sukces albo odrzucenie z powodem) =====
+// ===== Result.java — operation result (success or a rejection with a reason) =====
 sealed interface Result<E, T> permits Result.Success, Result.Failure {
     record Success<E, T>(T value) implements Result<E, T> {}
     record Failure<E, T>(E error) implements Result<E, T> {}
@@ -119,17 +119,17 @@ record TimeSlot(Instant from, Instant to) {
     }
 }
 
-// ===== ResourceAvailability.java — agregat (archetyp Availability, wariant segmentu) =====
+// ===== ResourceAvailability.java — aggregate (Availability archetype, segment variant) =====
 record OwnerId(String value) {}
 
-/** Maszyna stanów blokady. */
+/** The blockade state machine. */
 sealed interface Blockade permits Blockade.Free, Blockade.Blocked, Blockade.Disabled {
     record Free() implements Blockade {}
     record Blocked(OwnerId by) implements Blockade {}
     record Disabled(OwnerId by) implements Blockade {}
 }
 
-/** Zdarzenia domenowe — czas przeszły, niezmienne. */
+/** Domain events — past tense, immutable. */
 sealed interface AvailabilityEvent permits ResourceBlocked, ResourceReleased, ResourceDisabled {}
 record ResourceBlocked(String resourceId, OwnerId by) implements AvailabilityEvent {}
 record ResourceReleased(String resourceId, OwnerId by) implements AvailabilityEvent {}
@@ -141,7 +141,7 @@ final class ResourceAvailability {
     private final String resourceId;
     private final TimeSlot segment;
     private Blockade blockade = new Blockade.Free();
-    private long version;                                  // blokada optymistyczna
+    private long version;                                  // optimistic locking
     private final List<AvailabilityEvent> pending = new ArrayList<>();
 
     ResourceAvailability(String resourceId, TimeSlot segment) {
@@ -193,14 +193,14 @@ final class ResourceAvailability {
     }
 }
 
-/** Repozytorium jako port w domenie; adapter (JPA, JDBC) w infrastrukturze. */
+/** The repository as a port in the domain; the adapter (JPA, JDBC) in infrastructure. */
 interface ResourceAvailabilityRepository {
     Optional<ResourceAvailability> find(String resourceId, TimeSlot segment);
     void save(ResourceAvailability availability);
 }
 ```
 
-## Testy (przypadki brzegowe)
+## Tests (edge cases)
 
 ```java
 package archetypes;
