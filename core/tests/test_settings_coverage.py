@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Pokrycie poleceń Bash pętli /tf przez permissions.allow (PRB-32): skille tf (SKILL.md i scripts/)
-oraz skrypty fazy delivery pdi (phase_run.py cuts publish) uruchamiają git i gh; każde takie wywołanie musi być
-w `permissions.allow` zestawionych ustawień projektu (.claude/settings.json, core + mode-pdi).
+"""Coverage of the /tf loop's Bash commands by permissions.allow (PRB-32): the tf skills (SKILL.md and scripts/)
+and the pdi delivery-phase scripts (phase_run.py cuts publish) run git and gh; every such call must be
+in `permissions.allow` of the project's assembled settings (.claude/settings.json, core + mode-pdi).
 
-Źródło (odczyt 2026-11-05 code.claude.com/docs/en/permissions): bez pokrywającej reguły `permissions.allow` polecenie
-Bash w `claude --print --permission-mode acceptEdits` prosi człowieka, a w `-p` prośba kończy się odmową.
+Source (read 2026-11-05 code.claude.com/docs/en/permissions): without a covering `permissions.allow` rule a Bash command
+in `claude --print --permission-mode acceptEdits` asks the human, and in `-p` the request ends in a refusal.
 
-Dwa układy: w przestrzeni fabryki (źródło `core/` + `modes/`) test zestawia ustawienia z plików nakładek, w zainstalowanym
-projekcie (`.claude/tests/` obok `.claude/skills/`) czyta `.claude/settings.json` i `.claude/settings.local.json`
-i sprawdza tylko polecenia skilli, które są zainstalowane (bez pdi-decisions — bez jego poleceń).
+Two layouts: in the factory workspace (source `core/` + `modes/`) the test assembles settings from the overlay files, in an installed
+project (`.claude/tests/` next to `.claude/skills/`) it reads `.claude/settings.json` and `.claude/settings.local.json`
+and checks only the commands of skills that are installed (without pdi-decisions — without its commands).
 
   python3 .claude/tests/test_settings_coverage.py
 """
@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve()
-# zainstalowany projekt: <projekt>/.claude/tests/test_settings_coverage.py (ma pierwszeństwo — także w .work/ fabryki)
+# installed project: <project>/.claude/tests/test_settings_coverage.py (takes precedence — also in the factory's .work/)
 INSTALLED = HERE.parent.name == "tests" and HERE.parent.parent.name == ".claude" \
     and (HERE.parent.parent / "skills").is_dir()
 ROOT = HERE.parents[2] if INSTALLED else next(
@@ -30,11 +30,11 @@ LOOP = ".claude/skills/tf/"
 PDI = ".claude/skills/pdi-decisions/"
 PY = "python3"
 
-# Polecenia, które pętla /tf i fazy pdi uruchamiają w sesji (persona w --print). Każde musi mieć regułę `allow`.
-# Nie wymieniamy tu `git push` ani `gh pr …` fazy cuts publish, bo one są w phase_run.py (uruchamiane spoza sesji
-# persony), a nie w zapytaniu pętli.
+# Commands the /tf loop and the pdi phases run in a session (a persona in --print). Each must have an `allow` rule.
+# We do not list `git push` or `gh pr …` of the cuts publish phase here, because they are in phase_run.py (run outside the session
+# of the persona), not in the loop's prompt.
 REQUIRED = [
-    # pętla w trakcie przebiegu (SKILL.md: start, pętla kawałka, zakończenie)
+    # the loop during a run (SKILL.md: start, slice loop, completion)
     "git status",
     "git status --porcelain",
     "git diff",
@@ -42,31 +42,31 @@ REQUIRED = [
     "git log --oneline -5",
     "git show HEAD",
     "git branch --show-current",
-    "git switch main",                         # powrót na gałąź domyślną po kawałku
-    "git switch -c story/tsk-1-fundament",     # gałąź historyjki (cięcie)
-    "git switch -c story/import-cdr",          # gałąź historyjki (zwykła)
+    "git switch main",                         # back to the default branch after a slice
+    "git switch -c story/tsk-1-fundament",     # story branch (cut)
+    "git switch -c story/import-cdr",          # story branch (ordinary)
     "git add -A",
     "git add src/payments/retry.ts",
     "git commit -m 'feat(x): y'",
-    # skrypty pętli
+    # loop scripts
     "python3 .claude/skills/tf/scripts/run_report.py start --task TSK-1",
     "python3 .claude/skills/tf/scripts/run_report.py finish .tf/runs/PROJ-1",
     "python3 .claude/skills/tf/scripts/plan_drift.py .tf/runs/PROJ-1 --base main",
     "python3 .claude/skills/tf/scripts/security_scan.py scan --slice K1 --attempt 1",
     "python3 .claude/skills/tf/scripts/run_state.py verify .tf/runs/PROJ-1 K1 --files src/a.py",
     "python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base main",
-    # skrypt pdi wywoływany na końcu fazy architecture/design (decision_record.py check — w prompcie phase_run.py)
+    # a pdi script called at the end of the architecture/design phase (decision_record.py check — in the phase_run.py prompt)
     "python3 .claude/skills/pdi-decisions/scripts/decision_record.py check",
-    # pętla PR (N2, pr_loop.py fix): poprawka uwag, weryfikacja N3 i commit z trzema -m
+    # the PR loop (N2, pr_loop.py fix): fixing comments, N3 verification and a commit with three -m
     "./verify.sh",
-    "git commit -m 'fix(x): y' -m 'Runda pętli PR 1' -m 'Change: TSK-1'",
-    # kroki pętli PR w kontenerze fazy (pdi uruchamia je poza sesją persony; wpis na wypadek ręcznego użycia)
+    "git commit -m 'fix(x): y' -m 'PR loop round 1' -m 'Change: TSK-1'",
+    # PR loop steps in the phase container (pdi runs them outside the persona session; an entry in case of manual use)
     "python3 .claude/skills/pdi-decisions/scripts/pr_loop.py verify",
 ]
 
 
 def installed_python() -> str:
-    """Polecenie Pythona z manifestu instalacji — instalator wpisuje je w reguły zamiast `python3` (apply_python)."""
+    """The Python command from the install manifest — the installer writes it into the rules instead of `python3` (apply_python)."""
     try:
         data = json.loads((ROOT / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
         return str(data.get("python") or PY)
@@ -75,8 +75,8 @@ def installed_python() -> str:
 
 
 def load_installed_allow() -> list[str]:
-    """Reguły `permissions.allow` zainstalowanego projektu (tryb zespołowy i prywatny), z `python3` w miejsce
-    polecenia Pythona wybranego przy instalacji."""
+    """The `permissions.allow` rules of the installed project (team and private mode), with `python3` in place
+    the Python command chosen at install time."""
     py = installed_python()
     rules: list[str] = []
     for name in ("settings.json", "settings.local.json"):
@@ -89,8 +89,8 @@ def load_installed_allow() -> list[str]:
 
 
 def load_allow() -> list[str]:
-    """Reguły `permissions.allow` zestawione z core + mode-pdi + pack-it (SKILL pętli wywołuje
-    `requirements_lint.py` z pack-it, jeśli jest zainstalowany — instalator zestawia settings tak samo)."""
+    """The `permissions.allow` rules assembled from core + mode-pdi + pack-it (the loop's SKILL calls
+    `requirements_lint.py` from pack-it if it is installed — the installer assembles settings the same way)."""
     if INSTALLED:
         return load_installed_allow()
     rules: list[str] = []
@@ -102,18 +102,18 @@ def load_allow() -> list[str]:
 
 
 def bash_patterns(rules: list[str]) -> list[str]:
-    """Wzorce `Bash(...)` ze zestawionych reguł — zwraca tylko polecenia (bez `Bash(` i `)`)."""
+    """`Bash(...)` patterns from the assembled rules — returns only the commands (without `Bash(` and `)`)."""
     return [m.group(1) for r in rules if (m := re.fullmatch(r"Bash\((.*)\)", r))]
 
 
 def to_regex(pattern: str) -> re.Pattern:
-    """Reguła `Bash(foo *)` matchuje każde polecenie zaczynające się od `foo` (z opcjonalnym argumentem lub bez).
-    Reguła `Bash(foo)` matchuje tylko dokładnie `foo` (bez trailing *)."""
-    # obsłuż też wariant z ':*' (równoważny według code.claude.com/docs/en/permissions)
+    """The rule `Bash(foo *)` matches every command starting with `foo` (with or without an argument).
+    The rule `Bash(foo)` matches only exactly `foo` (without a trailing *)."""
+    # also handle the ':*' variant (equivalent per code.claude.com/docs/en/permissions)
     if pattern.endswith(":*"):
         pattern = pattern[:-2] + " *"
     if pattern.endswith(" *"):
-        # `foo *` matchuje `foo`, `foo arg`, `foo arg1 arg2 …`
+        # `foo *` matches `foo`, `foo arg`, `foo arg1 arg2 …`
         head = re.escape(pattern[:-2])
         return re.compile(rf"^{head}(?:\s.*)?$")
     return re.compile(f"^{re.escape(pattern)}$")
@@ -130,7 +130,7 @@ def skill_path() -> Path:
 
 
 def required() -> list[str]:
-    """Polecenia do sprawdzenia: w zainstalowanym projekcie tylko te, których skill jest zainstalowany."""
+    """Commands to check: in an installed project only those whose skill is installed."""
     if not INSTALLED:
         return REQUIRED
     loop, pdi = (ROOT / LOOP).is_dir(), (ROOT / PDI).is_dir()
@@ -139,40 +139,40 @@ def required() -> list[str]:
 
 def main() -> int:
     if ROOT is None:
-        print("✗ brak katalogu głównego z core/settings.json i core/skills/tf/")
+        print("✗ no root directory with core/settings.json and core/skills/tf/")
         return 1
     cmds = required()
     if not cmds:
-        print("– pomijam: w projekcie nie ma skilli tf ani pdi-decisions — "
-              "nie ma czego sprawdzać; pełne sprawdzenie w przestrzeni fabryki (tools/workspace.py check)")
+        print("– skipping: the project has neither the tf skills nor pdi-decisions — "
+              "nothing to check; the full check is in the factory workspace (tools/workspace.py check)")
         return 0
     allow = load_allow()
     patterns = [to_regex(p) for p in bash_patterns(allow)]
     fails: list[str] = []
     for cmd in cmds:
         if not covers(cmd, patterns):
-            fails.append(f"polecenie Bash bez reguły allow: {cmd!r}")
-    # SKILL.md pętli wymienia polecenia skryptów — sprawdź, że każdy z nich ma dopuszczenie prefiksowe.
-    # W zainstalowanym projekcie pomijamy skrypty skilli spoza instalacji (np. requirements_lint.py z pack-it).
+            fails.append(f"Bash command without an allow rule: {cmd!r}")
+    # The loop's SKILL.md lists script commands — check that each has a prefix allowance.
+    # In an installed project we skip scripts of skills outside the install (e.g. requirements_lint.py from pack-it).
     skill = skill_path()
     text = skill.read_text(encoding="utf-8") if skill.is_file() else ""
-    for extra in sorted((skill.parent / "references").glob("*.md")):   # polecenia z plików szczegółów skilla też
+    for extra in sorted((skill.parent / "references").glob("*.md")):   # commands from the skill's detail files too
         text += "\n" + extra.read_text(encoding="utf-8")
     script_calls = set(re.findall(r"python3 \.claude/skills/[^\s`]+\.py", text))
     if INSTALLED:
         script_calls = {c for c in script_calls if (ROOT / c.split(" ", 1)[1]).is_file()}
-    # każdy skrypt skilla tf (scripts/*.py) ma regułę allow
+    # every script of the tf skill (scripts/*.py) has an allow rule
     scripts_dir = skill.parent / "scripts"
     script_calls |= {f"python3 {LOOP}scripts/{p.name}" for p in sorted(scripts_dir.glob("*.py"))} \
         if skill.is_file() else set()
     for call in sorted(script_calls):
         if not covers(f"{call} --test", patterns):
-            fails.append(f"skrypt pętli (SKILL.md lub scripts/) bez reguły allow: {call}")
+            fails.append(f"loop script (SKILL.md or scripts/) without an allow rule: {call}")
     for f in fails:
         print(f"✗ {f}")
     total = len(cmds) + len(script_calls)
-    where = "zainstalowane .claude/settings*.json" if INSTALLED else "core + nakładki"
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} poleceń Bash pokrytych przez allow ({where})")
+    where = "installed .claude/settings*.json" if INSTALLED else "core + overlays"
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} Bash commands covered by allow ({where})")
     return 1 if fails else 0
 
 

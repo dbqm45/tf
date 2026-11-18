@@ -1324,7 +1324,7 @@ def main(argv: list[str]) -> int:
         if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):
             return fail("rolling back a deployment is the human's decision: --rolled-back --by human:<id>", 2)
         if not 0 < a.timeout <= 86400:      # also rejects nan and inf
-            return fail("limit czasu testu dymnego: liczba sekund od 1 do 86400", 2)
+            return fail("smoke test time limit: a number of seconds from 1 to 86400", 2)
         return cmd_deployed(root, a.key, a.version, a.timeout, a.rolled_back, a.by, a.note)
     if a.cmd == "stage":
         if a.stage not in STAGES:

@@ -43,16 +43,16 @@ CHECKS = ("placeholders", "write_cwd", "write_root", "write_outside", "write_git
           "git_commit", "git_add_all", "localhost")
 
 CASES = {
-    "A_root": "start w korzeniu repo",
-    "B_subdir": "start w `pkg/`",
-    "B2_subdir_flag": "`pkg/` + `--settings <szablon>`",
-    "D_merge": "korzeń + częściowy `--settings`",
+    "A_root": "start in the repo root",
+    "B_subdir": "start in `pkg/`",
+    "B2_subdir_flag": "`pkg/` + `--settings <template>`",
+    "D_merge": "root + partial `--settings`",
 }
 
 PROBE = """#!/bin/sh
-# Sonda sandbox_check: jedna linia „klucz: wynik” na sprawdzenie.
+# sandbox_check probe: one “key: result” line per check.
 R=$(git rev-parse --show-toplevel)
-# najpierw pliki, które pojawiły się w repo przed jakimkolwiek zapisem sondy (atrapy piaskownicy)
+# first the files that appeared in the repo before any write by the probe (sandbox placeholders)
 P=$(git status --porcelain --untracked-files=all 2>/dev/null | sed 's/^...//' | tr '\\n' ' ' | sed 's/ *$//')
 echo "placeholders: ${{P:-none}}"
 chk() {{
@@ -76,7 +76,7 @@ PERF_PROMPT = ("Run the Bash command ./noop.sh exactly 5 times, as 5 separate Ba
 
 
 def parse_probe(text: str) -> dict[str, str]:
-    """The probe's „klucz: wartość” ("key: value") lines → a dict; other lines are skipped."""
+    """The probe's “key: value” lines → a dict; other lines are skipped."""
     out = {}
     for line in text.splitlines():
         key, sep, value = line.partition(": ")
@@ -110,7 +110,7 @@ def read_stream(text: str) -> tuple[dict[str, str], float]:
 
 
 def perf_medians(log: str) -> dict[str, float]:
-    """The hook log „pre|post <ns> <etykieta>” ("pre|post <ns> <label>") → the median call time in ms for each label."""
+    """The hook log “pre|post <ns> <label>” → the median call time in ms for each label."""
     start: dict[str, int] = {}
     times: dict[str, list[float]] = {}
     for line in log.splitlines():
@@ -202,10 +202,10 @@ def _claude(cwd: Path, prompt: str, tool: str, args: argparse.Namespace, extra: 
     try:
         p = subprocess.run(cmd, cwd=cwd, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=600)
     except subprocess.TimeoutExpired:
-        print(f"  ✗ przekroczony czas: {cwd}", file=sys.stderr)
+        print(f"  ✗ timed out: {cwd}", file=sys.stderr)
         return ""
     if p.returncode != 0:
-        print(f"  ! claude zakończył się kodem {p.returncode}: {p.stderr.strip()[:200]}", file=sys.stderr)
+        print(f"  ! claude exited with code {p.returncode}: {p.stderr.strip()[:200]}", file=sys.stderr)
     return p.stdout
 
 
@@ -217,14 +217,14 @@ def report(results: dict[str, dict[str, str]], perf: dict[str, float], meta: dic
     """Markdown report: a check × case table, overhead, system and Claude Code version."""
     cases = list(results)
     lines = [
-        "## Piaskownica Bash — sandbox_check",
+        "## Bash sandbox — sandbox_check",
         "",
         f"- system: {meta.get('os', '?')} {meta.get('os_version', '')}".rstrip()
         + f" · claude: {meta.get('claude', '?')} · model: {meta.get('model', '?')}"
-        + f" · koszt: {float(meta.get('cost', 0.0)):.4f} USD",
-        "- przypadki: " + "; ".join(f"`{c}` {CASES.get(c, '')}".rstrip() for c in cases),
+        + f" · cost: {float(meta.get('cost', 0.0)):.4f} USD",
+        "- cases: " + "; ".join(f"`{c}` {CASES.get(c, '')}".rstrip() for c in cases),
         "",
-        "| sprawdzenie | " + " | ".join(cases) + " |",
+        "| check | " + " | ".join(cases) + " |",
         "|---" * (len(cases) + 1) + "|",
     ]
     for key in CHECKS:
@@ -232,22 +232,22 @@ def report(results: dict[str, dict[str, str]], perf: dict[str, float], meta: dic
     on, off = perf.get("on"), perf.get("off")
     lines.append("")
     if on is not None and off is not None:
-        lines.append(f"- narzut na wywołanie Bash (mediana, hook pre→post): z piaskownicą {on:g} ms, "
-                     f"bez {off:g} ms, różnica {on - off:g} ms")
+        lines.append(f"- overhead per Bash call (median, hook pre→post): with the sandbox {on:g} ms, "
+                     f"without {off:g} ms, difference {on - off:g} ms")
     else:
-        lines.append(f"- narzut: brak pełnego pomiaru ({perf or 'brak danych'})")
+        lines.append(f"- overhead: no complete measurement ({perf or 'no data'})")
     return "\n".join(lines) + "\n"
 
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--model", default="haiku")
-    ap.add_argument("--budget", type=float, default=0.05, help="limit USD na jeden przebieg claude -p")
-    ap.add_argument("--keep", action="store_true", help="zostaw katalog roboczy (strumienie JSON) do wglądu")
+    ap.add_argument("--budget", type=float, default=0.05, help="USD limit for one claude -p run")
+    ap.add_argument("--keep", action="store_true", help="keep the working directory (JSON streams) for inspection")
     args = ap.parse_args(argv)
 
     if not shutil.which("claude") or not shutil.which("git"):
-        print("✗ potrzebne polecenia `claude` i `git` w PATH", file=sys.stderr)
+        print("✗ the commands `claude` and `git` are required in PATH", file=sys.stderr)
         return 1
     version = subprocess.run(["claude", "--version"], capture_output=True, text=True).stdout.strip()
     meta = {"os": platform.system(), "os_version": platform.release(), "claude": version, "model": args.model}
@@ -276,7 +276,7 @@ def main(argv: list[str]) -> int:
 
         log = workdir / "perf.log"
         for label in ("on", "off"):
-            print(f"… narzut: {label}", file=sys.stderr)
+            print(f"… overhead: {label}", file=sys.stderr)
             stream = _claude(_perf_repo(workdir, TEMPLATE, label, log), PERF_PROMPT, "./noop.sh", args, [])
             (workdir / f"perf-{label}.jsonl").write_text(stream, encoding="utf-8")
             total += read_stream(stream)[1]
@@ -286,7 +286,7 @@ def main(argv: list[str]) -> int:
         if outside.exists():
             outside.unlink()
         if args.keep:
-            print(f"katalog roboczy: {workdir}", file=sys.stderr)
+            print(f"working directory: {workdir}", file=sys.stderr)
         else:
             shutil.rmtree(workdir, ignore_errors=True)
 

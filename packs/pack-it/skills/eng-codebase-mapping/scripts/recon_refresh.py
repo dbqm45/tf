@@ -156,7 +156,7 @@ def review_places(d: str, changes: list[dict], code_lines: dict) -> list[tuple[s
 
 
 def remap(d: str, maps: dict[str, dict[int, int]]) -> int:
-    """Przelicza numery linii `plik:linia` w kartach (modules/*.json) i dokumentach .md poza raw/."""
+    """Recomputes `file:line` line numbers in the cards (modules/*.json) and .md documents outside raw/."""
     if not maps:
         return 0
     pat = re.compile(r"(?<![\w/.@-])(" + "|".join(re.escape(p) for p in sorted(maps, key=len, reverse=True))

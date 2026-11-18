@@ -188,7 +188,7 @@
   "offline": "2026-11-18"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "a2b0632ce541842c",
+  "fingerprint": "06f0f490faa453b1",
   "offline": "2026-11-18"
  },
  "eng-continuous-delivery": {
@@ -236,7 +236,7 @@
   "offline": "2026-11-18"
  },
  "eng-repo-readiness": {
-  "fingerprint": "637cc238246b1a07",
+  "fingerprint": "5f3d9a2cd7e12506",
   "offline": "2026-11-18"
  },
  "eng-tech-debt-audit": {
@@ -388,7 +388,7 @@
   "offline": "2026-11-18"
  },
  "ops-setup-wizard": {
-  "fingerprint": "e3ca88555532d1ae",
+  "fingerprint": "d9639bdb28759d55",
   "offline": "2026-11-18"
  },
  "ops-sre-incidents": {
@@ -444,7 +444,7 @@
   "offline": "2026-11-18"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "4910b4ec73f251b9",
+  "fingerprint": "25eecc3a0f0056a9",
   "offline": "2026-11-18"
  },
  "proc-safe": {

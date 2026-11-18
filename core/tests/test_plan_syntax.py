@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Składnia planu 14.0.0: kawałki `S<n>`, pola `files:`, `criteria:`, `verify:`, `after:` (`none`) i stopka commita
-`Slice S<n>:`; dawna składnia (`K<n>`, `pliki:`, `po:`, `brak`, `Kawałek K<n>:`) nadal przyjmowana.
+"""The 14.0.0 plan syntax: slices `S<n>`, the fields `files:`, `criteria:`, `verify:`, `after:` (`none`) and the commit footer
+`Slice S<n>:`; the old syntax (`K<n>`, `pliki:`, `po:`, `brak`, `Kawałek K<n>:`) is still accepted.
 python3 .claude/tests/test_plan_syntax.py"""
 import importlib.util
 import sys
@@ -45,10 +45,10 @@ def main() -> int:
 
     s = rs.plan_with_deps(NEW)
     check([(x["id"], x["checked"], x["deps"]) for x in s] == [("S1", True, []), ("S2", False, ["S1"]), ("S3", False, [])],
-          f"PS-1: kawałki S<n> z `after:` i `none`: {s}")
-    check(rs.next_slice(s, set())["id"] == "S2", "PS-2: następny kawałek po zależnościach")
+          f"PS-1: slices S<n> with `after:` and `none`: {s}")
+    check(rs.next_slice(s, set())["id"] == "S2", "PS-2: the next slice after dependencies")
     o = rs.plan_with_deps(OLD)
-    check([(x["id"], x["deps"]) for x in o] == [("K1", []), ("K2", ["K1"])], f"PS-3: dawna składnia nadal działa: {o}")
+    check([(x["id"], x["deps"]) for x in o] == [("K1", []), ("K2", ["K1"])], f"PS-3: the old syntax still works: {o}")
     p = pd.parse_plan(NEW)
     check([x["files"] for x in p] == [["src/pay.py", "tests/test_pay.py"], ["src/refund.py"], ["src/report.py"]]
           and p[0]["done"], f"PS-4: plan_drift czyta `files:`: {p}")
@@ -57,17 +57,17 @@ def main() -> int:
     check([x["id"] for x in w] == ["S1", "S2", "S3"] and w[0]["files"] == ["src/pay.py", "tests/test_pay.py"],
           f"PS-6: waga zadania czyta S<n> i `files:`: {w}")
     check(ts.SLICE.fullmatch("S12") and ts.SLICE.fullmatch("K3") and not ts.SLICE.fullmatch("X1"),
-          "PS-7: identyfikator kawałka S<n> (i dawny K<n>) w poleceniach tf task")
+          "PS-7: the slice identifier S<n> (and the old K<n>) in tf task commands")
     check(ts.TICKED.sub(rb"\1[ ]\2", NEW.encode()) == NEW.replace("[x] S1", "[ ] S1").encode(),
-          "PS-8: odhaczenie S<n> nie zmienia skrótu zatwierdzonego planu")
+          "PS-8: ticking S<n> does not change the approved plan hash")
     msg = rs.commit_message("feat(pay): card payment", "S1", "płatność kartą", [])
-    check("\n\nSlice S1: płatność kartą\n" in msg, f"PS-9: stopka commita `Slice S<n>:`: {msg!r}")
+    check("\n\nSlice S1: płatność kartą\n" in msg, f"PS-9: the commit footer `Slice S<n>:`: {msg!r}")
     old_msg = "feat(pay): card payment\n\nKawałek K1: płatność kartą"
     check(rs.commit_message(old_msg, "K1", "płatność kartą", []).count("K1:") == 1,
-          "PS-10: dawna stopka `Kawałek K<n>:` nie jest dopisywana drugi raz")
+          "PS-10: the old footer `Kawałek K<n>:` is not added a second time")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów składni planu")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} plan syntax tests")
     return 1 if fails else 0
 
 

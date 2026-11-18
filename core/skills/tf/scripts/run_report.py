@@ -528,7 +528,7 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         uri = run_state.launch(project, open_browser=not cut)
         if uri:
             print(f"Dashboard: {uri}", file=sys.stderr)
-    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje startu przebiegu
+    except Exception:  # noqa: BLE001 — the preview never breaks the run start
         pass
     return 0
 

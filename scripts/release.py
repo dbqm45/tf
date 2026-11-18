@@ -61,52 +61,52 @@ def main(argv: list[str]) -> int:
     wanted = next((a for a in argv if not a.startswith("--")), None)
 
     if not dry_run and git("status", "--porcelain"):
-        return fail("drzewo robocze ma niezacommitowane zmiany — zacommituj je lub odłóż (git stash)")
+        return fail("the working tree has uncommitted changes — commit them or set them aside (git stash)")
     current = VERSION_FILE.read_text(encoding="utf-8").strip()
     tags = sorted((t[1:] for t in git("tag", "--list", "v*").split() if cc.is_release(t[1:])),
                   key=cmp_to_key(cc.compare))
     if not tags:
-        return fail(f"brak tagu vX.Y.Z — pierwszy (v{current}) tworzy workflow Release na main po merge")
+        return fail(f"no vX.Y.Z tag yet — the first one (v{current}) is created by the Release workflow on main after the merge")
     last = tags[-1]
     if last != current:
-        return fail(f"core/factory/VERSION ma {current}, ostatni tag to v{last} — najpierw wydaj v{current} (merge jego PR)")
+        return fail(f"core/factory/VERSION is {current}, the last tag is v{last} — release v{current} first (merge its PR)")
 
     messages = [m.strip() for m in git("log", "--format=%B%x00", f"v{last}..HEAD").split("\0") if m.strip()]
     kind = cc.bump_kind(messages)
     if wanted is None:
         if not kind:
-            msg = f"od v{last} nie ma feat/fix/perf ani zmiany niezgodnej — nic do wydania"
+            msg = f"since v{last} there is no feat/fix/perf or breaking change — nothing to release"
             if ci:
                 print(msg)
                 return 0
-            return fail(f"{msg} (podaj wersję, żeby wymusić wydanie)")
+            return fail(f"{msg} (give a version to force a release)")
         version = cc.next_version(current, kind)
     elif wanted in ("major", "minor", "patch"):
         version = cc.bump(current, wanted)
     elif cc.is_release(wanted):
         version = wanted
     else:
-        return fail(f"„{wanted}” to ani major/minor/patch, ani X.Y.Z")
+        return fail(f"“{wanted}” is neither major/minor/patch nor X.Y.Z")
     if cc.compare(version, current) <= 0:
-        return fail(f"{version} nie jest nowsza od {current}")
+        return fail(f"{version} is not newer than {current}")
 
     entry = cc.changelog_entry(version, dt.date.today().isoformat(), messages)
-    print(f"{len(messages)} commit(ów) od v{last}{f' wymaga podbicia {kind}' if kind else ''} → {version}\n\n{entry}")
+    print(f"{len(messages)} commit(s) since v{last}{f' require a {kind} bump' if kind else ''} → {version}\n\n{entry}")
     if dry_run:
         return 0
     VERSION_FILE.write_text(version + "\n", encoding="utf-8")
     CHANGELOG.write_text(cc.insert_entry(CHANGELOG.read_text(encoding="utf-8"), entry), encoding="utf-8")
     widened = widen_pack_requirements(version)
     if widened:
-        print(f"✓ requires.core dopuszcza {version}: {', '.join(widened)}")
+        print(f"✓ requires.core allows {version}: {', '.join(widened)}")
     if ci:
-        print(f"✓ Wersja {version} zapisana")
+        print(f"✓ Version {version} saved")
         return 0
-    print(f"""✓ Wersja {version} zapisana. Dalej:
-  1. Przejrzyj core/factory/CHANGELOG.md (przeredaguj wpisy dla użytkowników, dodaj Changed/Deprecated, jeśli trzeba).
+    print(f"""✓ Version {version} saved. Next:
+  1. Review core/factory/CHANGELOG.md (reword the entries for users, add Changed/Deprecated if needed).
   2. python3 tools/workspace.py check
   3. git switch -c release/v{version} && git commit -am "chore(release): {version}"
-  4. Push i PR „chore(release): {version}”. Po merge workflow Release taguje v{version}.""")
+  4. Push and open a PR “chore(release): {version}”. After the merge the Release workflow tags v{version}.""")
     return 0
 
 

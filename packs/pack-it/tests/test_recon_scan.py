@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy eng-codebase-mapping/scripts/recon_scan.py: krok 1 rekonstrukcji jednym poleceniem — pięć skanów do raw/
-i zwięzłe streszczenie dla modelu (bez pełnych wyników w kontekście). python3 .claude/tests/test_recon_scan.py"""
+"""Tests of eng-codebase-mapping/scripts/recon_scan.py: reconstruction step 1 in one command — five scans into raw/
+and a concise summary for the model (without the full results in the context). python3 .claude/tests/test_recon_scan.py"""
 import json
 import subprocess
 import sys
@@ -62,32 +62,32 @@ def main() -> int:
         git(repo, "commit", "-q", "-m", "init")
         r = run(str(repo), "--out", str(out))
         check(r.returncode == 0 and all((out / f).is_file() for f in RAW),
-              f"RS-1: pięć wyników w raw/: rc={r.returncode} {sorted(p.name for p in out.glob('*'))} {r.stderr[-300:]}")
+              f"RS-1: five results in raw/: rc={r.returncode} {sorted(p.name for p in out.glob('*'))} {r.stderr[-300:]}")
         inv = json.loads((out / "inventory.json").read_text()) if (out / "inventory.json").is_file() else {}
-        check(inv.get("budget_tokens") == 12000, f"RS-2: małe repo → budżet partii 12000: {inv.get('budget_tokens')}")
+        check(inv.get("budget_tokens") == 12000, f"RS-2: small repo → batch budget 12000: {inv.get('budget_tokens')}")
         s = r.stdout
-        check(len(s.splitlines()) <= 60, f"RS-3: streszczenie ≤ 60 linii: {len(s.splitlines())}")
+        check(len(s.splitlines()) <= 60, f"RS-3: summary ≤ 60 lines: {len(s.splitlines())}")
         check("Languages: Python" in s and "Build files: pyproject.toml" in s and "CI: .github/workflows/ci.yml" in s,
-              f"RS-4: języki, pliki budowania, CI: {s[:800]}")
-        check("Batches (" in s and "shop/billing" in s, f"RS-5: lista partii: {s[:800]}")
-        check("Tables: invoice" in s, f"RS-6: tabele ze schematu: {s[:1200]}")
-        check("@pytest.mark.parametrize" in s, f"RS-7: sygnały standardów z idiomami: {s[-1200:]}")
-        check("layout · Java · packages by feature" in s, f"RS-11: układ pakietów w streszczeniu mimo udziału < 50%: {s[-1200:]}")
-        check("raw/" in s or str(out) in s, f"RS-8: gdzie są pełne wyniki: {s[-400:]}")
+              f"RS-4: languages, build files, CI: {s[:800]}")
+        check("Batches (" in s and "shop/billing" in s, f"RS-5: the list of batches: {s[:800]}")
+        check("Tables: invoice" in s, f"RS-6: tables from the schema: {s[:1200]}")
+        check("@pytest.mark.parametrize" in s, f"RS-7: standards signals with idioms: {s[-1200:]}")
+        check("layout · Java · packages by feature" in s, f"RS-11: package layout in the summary despite a share < 50%: {s[-1200:]}")
+        check("raw/" in s or str(out) in s, f"RS-8: where the full results are: {s[-400:]}")
 
-        # bez gita: historia pominięta, reszta działa
+        # without git: history skipped, the rest works
         plain, out2 = Path(d) / "plain", Path(d) / "raw2"
         write(plain, REPO)
         r = run(str(plain), "--out", str(out2), "--budget-tokens", "60000")
         inv2 = json.loads((out2 / "inventory.json").read_text()) if (out2 / "inventory.json").is_file() else {}
         check(r.returncode == 0 and "history: no git" in r.stdout and inv2.get("budget_tokens") == 60000
-              and not (out2 / "territory.json").exists(), f"RS-9: bez gita i z jawnym budżetem: rc={r.returncode} {r.stdout[-500:]}")
+              and not (out2 / "territory.json").exists(), f"RS-9: without git and with an explicit budget: rc={r.returncode} {r.stdout[-500:]}")
         r = run(str(Path(d) / "nie-ma"), "--out", str(out2))
-        check(r.returncode == 2, f"RS-10: brak repo → kod 2: {r.returncode}")
+        check(r.returncode == 2, f"RS-10: no repo → code 2: {r.returncode}")
 
     for f in fails:
         print("✗", f)
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_scan")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of recon_scan")
     return 1 if fails else 0
 
 

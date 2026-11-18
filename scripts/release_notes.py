@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wypisuje wpis core/factory/CHANGELOG.md jednej wersji (notatki GitHub Release); kod 1, gdy wpisu nie ma.
+"""Prints the core/factory/CHANGELOG.md entry of one version (GitHub Release notes); exit code 1 when there is no entry.
 
   python3 scripts/release_notes.py 2.7.0 > notes.md
 """
@@ -18,7 +18,7 @@ def main(argv: list[str]) -> int:
         return 2
     notes = cc.release_notes(Path("core/factory/CHANGELOG.md").read_text(encoding="utf-8"), argv[0])
     if notes is None:
-        print(f"✗ core/factory/CHANGELOG.md nie ma wpisu „## [{argv[0]}]”", file=sys.stderr)
+        print(f"✗ core/factory/CHANGELOG.md has no entry “## [{argv[0]}]”", file=sys.stderr)
         return 1
     print(notes)
     return 0

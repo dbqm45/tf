@@ -348,7 +348,7 @@ def instruction_files(base: Path) -> set[str]:
     """Committed instruction files across the whole project (including nested module `CLAUDE.md` files)."""
     pats = [f":(glob)**/{n}" for n in INSTRUCTION_NAMES]
     out: set[str] = set()
-    for extra in ([], ["-o", "--exclude-standard"]):          # zatwierdzone i nowe, niezignorowane
+    for extra in ([], ["-o", "--exclude-standard"]):          # committed and new, not ignored
         r = git(base, "ls-files", "-z", *extra, "--", *pats)
         out |= {p for p in r.stdout.split("\0") if p} if r.returncode == 0 else set()
     return out

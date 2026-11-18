@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Opis PR składany skryptem (krok G2): `run_state.py pr-body` buduje go z plików zadania — zawsze z polami
-„Jak sprawdzono”, „Ryzyko” i „Jak cofnąć”, także bez karty operacyjnej i bez flagi.
+"""A PR description assembled by a script (step G2): `run_state.py pr-body` builds it from the task files — always with the fields
+"How it was checked", "Risk" and "How to roll back", also without an operations card and without a flag.
 python3 .claude/tests/test_pr_body.py"""
 import json
 import os
@@ -40,7 +40,7 @@ def git(project: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 def new_run(project: Path, weight: str = "normal") -> str:
-    """Repozytorium z gałęzią historyjki i zadaniem IMP-1: specyfikacja, plan z dwoma kawałkami, zapis „bez flagi”."""
+    """A repository with a story branch and the IMP-1 task: a specification, a plan with two slices, a 'no flag' record."""
     project.mkdir(parents=True)
     git(project, "init", "-q", "-b", "main")
     for name in ("fees.py", "msg.py"):
@@ -51,7 +51,7 @@ def new_run(project: Path, weight: str = "normal") -> str:
     story = "Popraw literówkę w README." if weight == "light" else "Jako kierowca chcę limitu dobowego opłaty za postój."
     call(project, SCRIPTS / "run_report.py", "start", "Limit dobowy", "--key", "IMP-1", "--story", story)
     d = str(project / ".tf" / "runs" / "IMP-1")
-    if weight != "light":           # wagę lekką przydziela start z treści zgłoszenia; obniżyć ją może tylko człowiek
+    if weight != "light":           # the light weight is assigned by start from the ticket text; only a human can lower it
         call(project, SCRIPTS / "run_state.py", "weight", d, "--set", weight)
     doc = project / CHANGES / "IMP-1"
     if weight != "light":
@@ -62,7 +62,7 @@ def new_run(project: Path, weight: str = "normal") -> str:
 
 
 def slice_done(project: Path, d: str) -> None:
-    """K1: zmiana, zielony dowód, commit ze stopką kawałka, odhaczenie."""
+    """K1: a change, green evidence, a commit with the slice footer, ticking off."""
     (project / "fees.py").write_text("x = 2\n", encoding="utf-8")
     call(project, TASK, "verify", "IMP-1", "K1", "--files", "fees.py", "--command", OK)
     git(project, "add", "fees.py")
@@ -77,7 +77,7 @@ def body(project: Path) -> str:
 
 
 def section(text: str, heading: str) -> str:
-    """Treść sekcji od nagłówka do następnego nagłówka drugiego poziomu."""
+    """The content of a section from its heading to the next second-level heading."""
     if heading not in text:
         return ""
     rest = text.split(heading, 1)[1]
@@ -85,7 +85,7 @@ def section(text: str, heading: str) -> str:
 
 
 def body_after(p, rs, d):
-    """Opis PR po ponownym złożeniu."""
+    """The PR description after re-assembling."""
     call(p, rs, "pr-body", d, "--base", "main")
     return (p / ".tf" / "runs" / "IMP-1" / "pr-body.md").read_text(encoding="utf-8")
 
@@ -108,40 +108,40 @@ def main() -> int:
         r = call(p, rs, "pr-body", d, "--base", "main")
         text = body(p)
         check(r.returncode == 0 and text and "pr-body.md" in r.stdout and "--body-file" in r.stdout,
-              f"PB-1: pr-body zapisuje opis w katalogu przebiegu i podaje --body-file: {r.returncode} {r.stdout} {r.stderr}")
+              f"PB-1: pr-body saves the description in the run directory and gives --body-file: {r.returncode} {r.stdout} {r.stderr}")
         pos = [text.find(h) for h in ORDER]
         check(all(x >= 0 for x in pos) and pos == sorted(pos),
-              f"PB-2: opis ma stałe sekcje w stałej kolejności (m.in. Jak sprawdzono, Ryzyko, Jak cofnąć): {pos}")
+              f"PB-2: the description has fixed sections in a fixed order (incl. How it was checked, Risk, How to roll back): {pos}")
         story = section(text, "## Story")
         check("Limit dobowy" in story and "IMP-1" in story and "pasted in the conversation" in story
               and "docs/project/changes/IMP-1" in story,
-              f"PB-3: historyjka: tytuł, klucz, źródło zgłoszenia i katalog zadania: {story}")
+              f"PB-3: story: title, key, ticket source and task directory: {story}")
         pieces = section(text, "## Slices")
         check("K1" in pieces and "feat(fees): add the daily cap" in pieces and "K2" in pieces
               and "komunikat o limicie" in pieces,
-              f"PB-4: kawałki z planu, przy zrobionym commit ze stopką „Kawałek K1”: {pieces}")
+              f"PB-4: slices from the plan, with a commit with the 'Kawałek K1' footer next to the done one: {pieces}")
         how = section(text, "## How it was checked")
         check("K1" in how and how.count("3 passed") == 1 and "exit code 0" in how and "evidence/K1-1.json" in how
               and OK.split(" -c ")[1][:12] in how,
-              f"PB-5: Jak sprawdzono: polecenie (bez jego wyjścia), kod wyjścia i plik dowodu kawałka K1: {how}")
+              f"PB-5: How it was checked: the command (without its output), the exit code and the evidence file of slice K1: {how}")
         check("K2" in how and "no verification evidence" in how,
-              f"PB-6: kawałek bez dowodu jest nazwany wprost: {how}")
+              f"PB-6: a slice without evidence is named explicitly: {how}")
         check(r.stdout.count("K2") >= 1 and "no evidence" in r.stdout,
-              f"PB-7: brak dowodu jest też w komunikacie polecenia: {r.stdout}")
+              f"PB-7: the missing evidence is also in the command's message: {r.stdout}")
         risk = section(text, "## Risk")
         check("normal" in risk and "Change risk" in risk and "fees.py" not in section(text, "## How to roll back"),
-              f"PB-8: Ryzyko: waga zadania i wynik triażu ryzyka: {risk}")
+              f"PB-8: Risk: the task weight and the risk triage result: {risk}")
         back = section(text, "## How to roll back")
         check("git revert" in back and "bez flagi, bo zmiana jest w konfiguracji" in back,
-              f"PB-9: bez karty i bez flagi: git revert i zapisany powód braku flagi: {back}")
+              f"PB-9: without a card and without a flag: git revert and the recorded reason for no flag: {back}")
         check("none" in section(text, "## Postponed for a decision"),
-              f"PB-10: nic odłożonego → „brak”: {section(text, '## Odłożone do decyzji')}")
+              f"PB-10: nothing postponed -> 'none': {section(text, '## Postponed for a decision')}")
         check("- **[założenie]** doba liczy się od północy" in section(text, "## Assumptions"),
-              f"PB-11: założenia z planu trafiają do opisu: {section(text, '## Założenia')}")
+              f"PB-11: assumptions from the plan go into the description: {section(text, '## Assumptions')}")
         check("AC-1" in section(text, "## Criteria trace"),
-              f"PB-12: ślad kryteriów ze specyfikacji: {section(text, '## Ślad kryteriów')}")
+              f"PB-12: criteria trace from the specification: {section(text, '## Criteria trace')}")
 
-        # czerwony dowód, odłożona sprawa, karta operacyjna z krokiem cofania, werdykt skanu, wynik plan_drift
+        # red evidence, a postponed item, an operations card with a rollback step, the scan verdict, the plan_drift result
         (p / "msg.py").write_text("x = 3\n", encoding="utf-8")
         call(p, TASK, "verify", "IMP-1", "K2", "--files", "msg.py", "--command", RED)
         call(p, rs, "park", d, "Abonamenty — czy limit ich dotyczy")
@@ -157,10 +157,10 @@ def main() -> int:
         text = body(p)
         how = section(text, "## How it was checked")
         check(r.returncode == 0 and "K2" in how and "red" in how and "exit code 3" in how,
-              f"PB-13: czerwony dowód kawałka jest nazwany wprost: {how}")
+              f"PB-13: a slice's red evidence is named explicitly: {how}")
         check("PASS" in how and "plan_drift" in how and "pass" in how,
-              f"PB-14: werdykt skanu bezpieczeństwa i wynik plan_drift są w „Jak sprawdzono”: {how}")
-        # PB-24: skan kawałka zapisuje próby w security/<kawałek>/attempt-<k>/ (security_scan.py) — opis bierze ostatnią
+              f"PB-14: the security scan verdict and the plan_drift result are in 'How it was checked': {how}")
+        # PB-24: the slice scan saves attempts in security/<slice>/attempt-<k>/ (security_scan.py) — the description takes the last one
         for k, status in ((1, "PASS"), (2, "FAIL")):
             att = p / ".tf" / "runs" / "IMP-1" / "security" / "K2" / f"attempt-{k}"
             att.mkdir(parents=True)
@@ -168,40 +168,40 @@ def main() -> int:
                                               encoding="utf-8")
         k2 = [ln for ln in section(body_after(p, rs, d), "## How it was checked").splitlines() if "**K2**" in ln]
         check(k2 and k2[0].rstrip().endswith("FAIL"),
-              f"PB-24: werdykt skanu z ostatniej próby attempt-<k> (security_scan.py): {k2}")
+              f"PB-24: the scan verdict from the last attempt-<k> (security_scan.py): {k2}")
         back = section(text, "## How to roll back")
         check(ROLLBACK in back and "operations.json" in back and "git revert" in back,
-              f"PB-15: krok cofania z karty operacyjnej, obok git revert: {back}")
+              f"PB-15: the rollback step from the operations card, next to git revert: {back}")
         check("Abonamenty — czy limit ich dotyczy" in section(text, "## Postponed for a decision"),
-              f"PB-16: sprawa odłożona jest w opisie: {section(text, '## Odłożone do decyzji')}")
+              f"PB-16: the postponed item is in the description: {section(text, '## Postponed for a decision')}")
 
         card.write_text(json.dumps({"deploy": {"rollback": ROLLBACK, "rollback_minutes": 12}}, ensure_ascii=False),
                         encoding="utf-8")
         call(p, rs, "pr-body", d, "--base", "main")
         check("about 12 min" in section(body(p), "## How to roll back"),
-              f"PB-23: czas cofnięcia z karty (rollback_minutes) jest w opisie: {section(body(p), '## Jak cofnąć')}")
+              f"PB-23: the rollback time from the card (rollback_minutes) is in the description: {section(body(p), '## How to roll back')}")
 
         card.write_text('{"deploy": {"rollback": "cofnij", "rollback_minutes": 1%s}}' % ("0" * 400), encoding="utf-8")
         r = call(p, rs, "pr-body", d, "--base", "main")
         check(r.returncode == 0 and "Traceback" not in r.stderr and "cofnij" in section(body(p), "## How to roll back"),
-              f"PB-24: ogromna liczba w rollback_minutes nie wywraca opisu PR: {r.stderr[-200:]}")
+              f"PB-24: a huge number in rollback_minutes does not break the PR description: {r.stderr[-200:]}")
 
-        # flaga zadania → wyłączenie flagi jako krok cofania
+        # task flag -> turning the flag off as the rollback step
         r = call(p, rs, "flag", d, "set", "limit-dobowy", "--remove-by", "2027-01-31")
         call(p, rs, "pr-body", d, "--base", "main")
         back = section(body(p), "## How to roll back")
         check(r.returncode == 0 and "limit-dobowy" in back and "turn off" in back.lower(),
-              f"PB-17: z flagą zadania cofnięcie zaczyna się od wyłączenia flagi: {r.stdout} {back}")
+              f"PB-17: with a task flag the rollback starts by turning the flag off: {r.stdout} {back}")
 
-        # treść z karty to dane: nagłówek z karty nie staje się sekcją opisu
+        # card content is data: a heading from the card does not become a section of the description
         card.write_text(json.dumps({"deploy": {"rollback": "## Risk\nnone\n" + ROLLBACK}}, ensure_ascii=False),
                         encoding="utf-8")
         call(p, rs, "pr-body", d, "--base", "main")
         text = body(p)
         check(text.count("\n## Risk") == 1 and ROLLBACK in text,
-              f"PB-18: nagłówek wpisany w karcie nie tworzy drugiej sekcji: {text.count(chr(10) + '## Risk')}")
+              f"PB-18: a heading written in the card does not create a second section: {text.count(chr(10) + '## Risk')}")
 
-        # treść z zewnątrz (tytuł zgłoszenia, karta, odłożone) nie powiadamia ludzi i nie ładuje obrazów w opisie PR
+        # external content (ticket title, card, postponed items) does not notify people or load images in the PR description
         card.write_text(json.dumps({"deploy": {"rollback": "Zapytaj @octocat ![x](http://example.com/p.png)"}}),
                         encoding="utf-8")
         call(p, rs, "park", d, "Do decyzji @acme/platform — limit dla flot")
@@ -212,25 +212,25 @@ def main() -> int:
         text = body(p)
         bare = re.findall(r"(?<![`\\w])@[A-Za-z0-9]", text)
         check(not bare and "![" not in text and "`@octocat`" in text and "`@acme/platform`" in text and "`@hubot`" in text,
-              f"PB-22: wzmianki @… są w kodzie, a obrazy nie są osadzane: {bare} {'![' in text}")
+              f"PB-22: @... mentions are in code formatting, and images are not embedded: {bare} {'![' in text}")
 
-        # brak zdalnego repozytorium: zamiast próby push — wskazanie zatrzymania z kodem srodowisko (pomiar po kroku G)
+        # no remote repository: instead of trying a push — a stop with the environment code (measurement after step G)
         r = call(p, rs, "pr-body", d, "--base", "main")
         check("no remote" in r.stdout and "--code environment" in r.stdout and "git push" not in r.stdout.split("⚠", 1)[-1][:40],
-              f"PB-25: bez zdalnego repozytorium pr-body mówi, żeby nie wypychać, i podaje STOP z kodem environment: {r.stdout}")
+              f"PB-25: without a remote repository pr-body says not to push, and gives a STOP with the environment code: {r.stdout}")
         bare = Path(t) / "remote.git"
         git(Path(t), "init", "-q", "--bare", str(bare))
         git(p, "remote", "add", "origin", str(bare))
         r = call(p, rs, "pr-body", d, "--base", "main")
-        check("zdalnego" not in r.stdout and "--body-file" in r.stdout,
-              f"PB-26: ze zdalnym repozytorium bez ostrzeżenia: {r.stdout}")
+        check("no remote" not in r.stdout and "--body-file" in r.stdout,
+              f"PB-26: with a remote repository, no warning: {r.stdout}")
 
-        # bez gałęzi bazowej opis nadal powstaje
+        # without a base branch the description is still produced
         r = call(p, rs, "pr-body", d, "--base", "nie-ma-takiej")
         check(r.returncode == 0 and "## How to roll back" in body(p) and "nie-ma-takiej" in section(body(p), "## Slices"),
-              f"PB-19: nieznana gałąź bazowa nie zatrzymuje opisu, a brak commitów jest nazwany: {r.returncode} {r.stdout}")
+              f"PB-19: an unknown base branch does not stop the description, and the lack of commits is named: {r.returncode} {r.stdout}")
 
-    # waga lekka: bez specyfikacji — pola nadal są
+    # light weight: without a specification — the fields are still there
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "proj"
         d = new_run(p, "light")
@@ -238,9 +238,9 @@ def main() -> int:
         text = body(p)
         check(r.returncode == 0 and all(h in text for h in ORDER) and "light" in section(text, "## Risk")
               and "specification" in section(text, "## Criteria trace"),
-              f"PB-20: zadanie bez specyfikacji ma wszystkie pola, a ślad mówi wprost, że jej nie ma: {r.returncode} {r.stdout}")
+              f"PB-20: a task without a specification has all the fields, and the trace says outright that there is none: {r.returncode} {r.stdout}")
 
-    # przebieg bez zadania (stary układ) → czytelna odmowa
+    # a run without a task (old layout) -> a clear refusal
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "proj"
         p.mkdir()
@@ -249,11 +249,11 @@ def main() -> int:
         (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary"}), encoding="utf-8")
         r = call(p, rs, "pr-body", str(old))
         check(r.returncode == 2 and not (old / "pr-body.md").exists(),
-              f"PB-21: przebieg bez zadania → odmowa z kodem 2: {r.returncode} {r.stdout}")
+              f"PB-21: a run without a task -> refusal with code 2: {r.returncode} {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów opisu PR")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} PR description tests")
     return 1 if fails else 0
 
 

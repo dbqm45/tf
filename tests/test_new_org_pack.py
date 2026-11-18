@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Testy generatora nakładki firmowej: `org/new_org_pack.py <firma> --out <katalog>` — szablon
-`org/template/` z polami do uzupełnienia, odmowy (katalog w repo fabryki, istniejący katalog, zła nazwa,
-zajęty prefiks) i cała droga: instalacja w projekcie przez `install.py --pack-dir` i domyślne organizacji
-(`org_defaults`) w konfiguracji projektu. python3 tests/test_new_org_pack.py"""
+"""Tests of the company overlay generator: `org/new_org_pack.py <company> --out <directory>` — the `org/template/` template
+with fields to fill in, refusals (a directory inside the factory repo, an existing directory, a bad name,
+a taken prefix) and the whole path: install in a project through `install.py --pack-dir` and the organization defaults
+(`org_defaults`) in the project configuration. python3 tests/test_new_org_pack.py"""
 import importlib.util
 import json
 import os
@@ -41,15 +41,15 @@ def main() -> int:
         base = Path(t)
         out = base / "acme-factory"
         r = gen("acme", "--out", str(out), "--title", "ACME Sp. z o.o.")
-        check(r.returncode == 0, f"OP-1: generator działa: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"OP-1: the generator works: {r.stdout}{r.stderr}")
         files = ["pack.yaml", "README.md", "settings.json", "skills/acme-standards/SKILL.md",
                  "tests/skill_evals/acme-standards.json", "analyzers/acme-standards/analyzer.yaml",
                  "analyzers/acme-standards/rules.yaml", "analyzers/acme-standards/fixtures/violations/expected.json",
                  "analyzers/acme-standards/fixtures/clean/expected.json", "semgrep.yml",
                  *(f"skills/acme-standards/references/{a}.md" for a in ("ui", "api", "data", "releases"))]
-        check(all((out / f).is_file() for f in files), f"OP-1: pliki: {[f for f in files if not (out / f).is_file()]}")
+        check(all((out / f).is_file() for f in files), f"OP-1: files: {[f for f in files if not (out / f).is_file()]}")
         left = [str(f.relative_to(out)) for f in out.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
-        check(not left, f"OP-2: wszystkie pola szablonu podstawione: {left}")
+        check(not left, f"OP-2: all template fields substituted: {left}")
         pm = packs_mod(ROOT / "core" / "factory")
         pack = pm.load_yaml(out / "pack.yaml") if (out / "pack.yaml").is_file() else {}
         major = int((ROOT / "core" / "factory" / "VERSION").read_text(encoding="utf-8").split(".")[0])
@@ -57,32 +57,32 @@ def main() -> int:
               and str(pack.get("requires", {}).get("core", "")).endswith(f"<{major + 1}.0.0")
               and isinstance(pack.get("org_defaults"), dict)
               and set(pack["org_defaults"].get("config") or {}) <= set(pm.ORG_CONFIG_KEYS),
-              f"OP-3: pack.yaml z id, tytułem, zakresem rdzenia i org_defaults z dozwolonymi kluczami: {pack}")
+              f"OP-3: pack.yaml with the id, title, core range and org_defaults with allowed keys: {pack}")
         check("acme-standards" in json.dumps(pack.get("contributes", {})),
-              f"OP-4: standardy firmy trafiają do każdej persony (contributes): {pack.get('contributes')}")
+              f"OP-4: the company standards reach every persona (contributes): {pack.get('contributes')}")
         try:
             json.loads((out / "settings.json").read_text(encoding="utf-8"))
             ev = json.loads((out / "tests" / "skill_evals" / "acme-standards.json").read_text(encoding="utf-8"))
             ok = ev.get("skill") == "acme-standards" and len(ev.get("scenarios", [])) >= 3
         except (OSError, ValueError):
             ok = False
-        check(ok, "OP-5: settings.json i scenariusze to poprawny JSON, scenariusze dla skilla standardów")
+        check(ok, "OP-5: settings.json and the scenarios are valid JSON, scenarios for the standards skill")
         spis = (out / "skills/acme-standards/SKILL.md").read_text(encoding="utf-8") if (out / "skills/acme-standards/SKILL.md").is_file() else ""
         check(all(f"references/{a}.md" in spis for a in ("ui", "api", "data", "releases")) and len(spis.splitlines()) < 60,
-              f"OP-15: SKILL.md to krótki spis wskazujący plik każdego obszaru: {len(spis.splitlines())} linii")
+              f"OP-15: SKILL.md is a short index pointing to each area's file: {len(spis.splitlines())} lines")
 
-        # odmowy: bez zmian na dysku
+        # refusals: no change on disk
         r = gen("acme", "--out", str(out))
-        check(r.returncode == 2 and "exists" in r.stdout + r.stderr, f"OP-6: istniejący katalog → kod 2: {r.stdout}{r.stderr}")
+        check(r.returncode == 2 and "exists" in r.stdout + r.stderr, f"OP-6: an existing directory → code 2: {r.stdout}{r.stderr}")
         inside = ROOT / ".work" / "org-test-should-not-exist"
         r = gen("acme", "--out", str(inside))
-        check(r.returncode == 2 and not inside.exists(), f"OP-7: katalog w repo fabryki → kod 2: {r.stdout}{r.stderr}")
+        check(r.returncode == 2 and not inside.exists(), f"OP-7: a directory inside the factory repo → code 2: {r.stdout}{r.stderr}")
         r = gen("Acme Corp", "--out", str(base / "x"))
-        check(r.returncode == 2 and not (base / "x").exists(), f"OP-8: zła nazwa → kod 2: {r.stdout}{r.stderr}")
+        check(r.returncode == 2 and not (base / "x").exists(), f"OP-8: a bad name → code 2: {r.stdout}{r.stderr}")
         r = gen("firma", "--prefix", "core-", "--out", str(base / "y"))
-        check(r.returncode == 2 and not (base / "y").exists(), f"OP-9: zajęty prefiks → kod 2: {r.stdout}{r.stderr}")
+        check(r.returncode == 2 and not (base / "y").exists(), f"OP-9: a taken prefix → code 2: {r.stdout}{r.stderr}")
 
-        # cała droga: instalacja w projekcie i domyślne organizacji w konfiguracji
+        # the whole path: install in a project and the organization defaults in the configuration
         (out / "sources").mkdir()
         (out / "sources" / "api.md").write_text("# Standard API (poufne)\n", encoding="utf-8")
         app = base / "app"
@@ -93,45 +93,45 @@ def main() -> int:
                            capture_output=True, text=True, timeout=300)
         check(r.returncode == 0 and (app / ".tf/factory/packs/pack-acme/pack.yaml").is_file()
               and (app / ".claude/skills/acme-standards/SKILL.md").is_file(),
-              f"OP-10: instalacja nakładki firmowej przez --pack-dir: {(r.stdout + r.stderr)[-1500:]}")
+              f"OP-10: install of the company overlay through --pack-dir: {(r.stdout + r.stderr)[-1500:]}")
         if r.returncode == 0:
             pa = packs_mod(app / ".tf" / "factory")
             labels = [lbl for lbl, _ in pa.config_layers(app)]
             comp = pa.compose(app, pa.load_config(app))
             check(any("pack-acme" in lbl and "org_defaults" in lbl for lbl in labels)
                   and not [e for e in comp["_errors"] if "org_defaults" in e],
-                  f"OP-11: warstwa organizacji w konfiguracji projektu, bez błędów składania: {labels} {comp['_errors']}")
-            # standardy sprawdzane bez modelu: moduł reguł nakładki działa w projekcie i przechodzi swoją bramkę
+                  f"OP-11: the organization layer in the project configuration, no composition errors: {labels} {comp['_errors']}")
+            # standards checked without a model: the overlay's rule module works in the project and passes its gate
             an = pa.load_yaml(app / ".tf/factory/analyzers/acme-standards/analyzer.yaml") \
                 if (app / ".tf/factory/analyzers/acme-standards/analyzer.yaml").is_file() else {}
             leaked = [str(f) for f in app.rglob("*") if f.is_file() and ".git" not in f.parts
                       and "Standard API (poufne)" in f.read_text(encoding="utf-8", errors="ignore")]
-            check(not leaked, f"OP-16: dokumenty źródłowe firmy (sources/) nie trafiają do projektu: {leaked}")
+            check(not leaked, f"OP-16: the company's source documents (sources/) do not reach the project: {leaked}")
             check((app / ".tf/factory/packs/pack-acme/semgrep.yml").is_file(),
-                  "OP-14: semgrep.yml nakładki w .tf/factory/packs/pack-acme/ (skan kawałka pętli /tf)")
+                  "OP-14: the overlay's semgrep.yml in .tf/factory/packs/pack-acme/ (the /tf loop slice scan)")
             check(an.get("prefix") == "ACME" and (an.get("tier0") or {}).get("rules") == "rules.yaml",
-                  f"OP-12: moduł reguł firmy zainstalowany, prefiks ustaleń z nazwy firmy: {an}")
+                  f"OP-12: the company rule module installed, the finding prefix derived from the company name: {an}")
             g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standards"],
                                cwd=app, capture_output=True, text=True, timeout=120)
-            check(g.returncode == 0, f"OP-13: bramka modułu reguł na przykładach z szablonu: {g.stdout[-600:]}{g.stderr[-300:]}")
-        # warstwa zespołu: nakładka zespołu na bazie firmowej (silnik ← firma ← zespół ← projekt ← osoba)
+            check(g.returncode == 0, f"OP-13: the rule module gate on the template examples: {g.stdout[-600:]}{g.stderr[-300:]}")
+        # the team layer: a team overlay on top of the company one (engine ← company ← team ← project ← person)
         team = base / "acme-backend-factory"
         r = gen("acme", "--team", "backend", "--out", str(team), "--title", "ACME Backend")
         check(r.returncode == 0 and (team / "pack.yaml").is_file()
               and (team / "skills/backend-standards/SKILL.md").is_file()
               and (team / "analyzers/acme-backend-standards/rules.yaml").is_file(),
-              f"OP-17: generator nakładki zespołu (--team): {r.stdout}{r.stderr}")
+              f"OP-17: the team overlay generator (--team): {r.stdout}{r.stderr}")
         left = [str(f.relative_to(team)) for f in team.rglob("*") if f.is_file() and "{{" in f.read_text(encoding="utf-8")]
-        check(not left, f"OP-17: wszystkie pola szablonu zespołu podstawione: {left}")
+        check(not left, f"OP-17: all team template fields substituted: {left}")
         tp = pm.load_yaml(team / "pack.yaml") if (team / "pack.yaml").is_file() else {}
         check(tp.get("id") == "pack-acme-backend" and "pack-acme" in ((tp.get("requires") or {}).get("packs") or [])
               and isinstance(tp.get("team_defaults"), dict) and "org_defaults" not in tp
               and set((tp.get("team_defaults") or {}).get("config") or {}) <= set(pm.ORG_CONFIG_KEYS),
-              f"OP-18: pack.yaml zespołu: id, wymaga nakładki firmy, team_defaults z dozwolonymi kluczami: {tp}")
+              f"OP-18: the team pack.yaml: id, requires the company overlay, team_defaults with allowed keys: {tp}")
         r = gen("acme", "--team", "Back End", "--out", str(base / "z1"))
-        check(r.returncode == 2 and not (base / "z1").exists(), f"OP-19: zła nazwa zespołu → kod 2: {r.stdout}{r.stderr}")
+        check(r.returncode == 2 and not (base / "z1").exists(), f"OP-19: a bad team name → code 2: {r.stdout}{r.stderr}")
         r = gen("acme", "--team", "web", "--prefix", "fe-", "--out", str(base / "z2"))
-        check(r.returncode == 2 and not (base / "z2").exists(), f"OP-19: zajęty prefiks zespołu → kod 2: {r.stdout}{r.stderr}")
+        check(r.returncode == 2 and not (base / "z2").exists(), f"OP-19: a taken team prefix → code 2: {r.stdout}{r.stderr}")
         if isinstance(tp.get("team_defaults"), dict):
             td = tp["team_defaults"]
             td["config"] = {**(td.get("config") or {}), "task": {"allowed_modes": ["plan", "normal"]},
@@ -146,7 +146,7 @@ def main() -> int:
                             "--pack-dir", str(team)], capture_output=True, text=True, timeout=300)
         check(r.returncode == 0 and (app2 / ".tf/factory/packs/pack-acme/pack.yaml").is_file()
               and (app2 / ".tf/factory/packs/pack-acme-backend/pack.yaml").is_file(),
-              f"OP-20: instalacja nakładki zespołu dociąga nakładkę firmy: {(r.stdout + r.stderr)[-1500:]}")
+              f"OP-20: installing the team overlay pulls in the company overlay: {(r.stdout + r.stderr)[-1500:]}")
         if r.returncode == 0:
             (app2 / ".tf/config").mkdir(parents=True, exist_ok=True)
             (app2 / ".tf/config/config.yaml").write_text("task:\n  allowed_modes: [plan, normal, auto]\n",
@@ -156,31 +156,31 @@ def main() -> int:
             org_i = next((i for i, l in enumerate(labels) if "org_defaults" in l), -1)
             team_i = next((i for i, l in enumerate(labels) if "team_defaults" in l), -1)
             proj_i = next((i for i, l in enumerate(labels) if l.endswith(".tf/config/config.yaml")), -1)
-            check(0 < org_i < team_i < proj_i, f"OP-21: kolejność warstw silnik ← firma ← zespół ← projekt: {labels}")
+            check(0 < org_i < team_i < proj_i, f"OP-21: layer order engine ← company ← team ← project: {labels}")
             ws = pa.work_style(app2)
             check(ws["allowed_modes"] == ["plan", "normal"],
-                  f"OP-22: dozwolone tryby to przecięcie warstw — projekt nie przywraca Auto zabranego przez zespół: {ws}")
+                  f"OP-22: the allowed modes are the intersection of the layers — the project does not restore Auto taken away by the team: {ws}")
             guard = importlib.util.spec_from_file_location("op_guard", app2 / ".claude/hooks/guard_bash.py")
             gm = importlib.util.module_from_spec(guard)
             guard.loader.exec_module(gm)
             levels, _w = gm.load_policy(app2)
-            check(levels.get("git_push") == "deny", f"OP-23: zespół zaostrza politykę autonomii: {levels}")
+            check(levels.get("git_push") == "deny", f"OP-23: the team tightens the autonomy policy: {levels}")
             ops = pa.org_operations(app2)
             check((ops.get("tracker") or {}).get("prefixes") == {"BE": "jira"} and (ops.get("tracker") or {}).get("type"),
-                  f"OP-24: tracker zespołu nadpisuje prefiksy firmy, reszta zostaje z firmy: {ops}")
+                  f"OP-24: the team tracker overrides the company prefixes, the rest stays from the company: {ops}")
             comp = pa.compose(app2, pa.load_config(app2))
-            check(not [e for e in comp["_errors"] if "defaults" in e], f"OP-24: składanie bez błędów: {comp['_errors']}")
+            check(not [e for e in comp["_errors"] if "defaults" in e], f"OP-24: composition without errors: {comp['_errors']}")
             env = {**os.environ, "TF_PREFERENCES": str(base / "none.yaml")}
             r = subprocess.run([sys.executable, str(app2 / ".tf/factory/tf.py"), "config", "show"], cwd=app2,
                                capture_output=True, text=True, timeout=120, env=env)
             check(any(ln.split()[:2] == ["task", "project"] for ln in r.stdout.splitlines())
-                  and " team " in r.stdout, f"OP-25: tf config show zna źródło „team”: {r.stdout}{r.stderr}")
+                  and " team " in r.stdout, f"OP-25: tf config show knows the source “team”: {r.stdout}{r.stderr}")
             g = subprocess.run([sys.executable, str(app2 / ".tf/factory/analyze.py"), "gate", "--module",
                                 "acme-backend-standards"], cwd=app2, capture_output=True, text=True, timeout=120)
-            check(g.returncode == 0, f"OP-26: bramka modułu reguł zespołu: {g.stdout[-600:]}{g.stderr[-300:]}")
+            check(g.returncode == 0, f"OP-26: the team rule module gate: {g.stdout[-600:]}{g.stderr[-300:]}")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów new-org-pack")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} new-org-pack tests")
     return 1 if fails else 0
 
 

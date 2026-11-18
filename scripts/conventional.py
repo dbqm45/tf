@@ -52,30 +52,30 @@ def lint_message(raw: str) -> list[str]:
     """Problems with a commit message or PR title; an empty list = conforms to Conventional Commits."""
     message = clean(raw)
     if not message:
-        return ["wiadomość jest pusta"]
+        return ["the message is empty"]
     header = first_line(message)
     if GENERATED.match(header):
         return []
     h = parse_header(header)
     if not h:
-        return [f"„{header}” nie ma postaci „<typ>(<zakres>)!: <opis>” — np. „fix(build): odrzuć pusty opis persony”"]
+        return [f"“{header}” does not have the form “<type>(<scope>)!: <description>” — e.g. “fix(build): reject an empty persona description”"]
     problems = []
     if h["type"] not in TYPES:
-        problems.append(f"nieznany typ „{h['type']}” — użyj jednego z: {', '.join(TYPES)}")
+        problems.append(f"unknown type “{h['type']}” — use one of: {', '.join(TYPES)}")
     if h["scope"] is not None and not SCOPE.match(h["scope"]):
-        problems.append(f"zakres „{h['scope']}” pisz małymi literami, np. build, install, hooks, core-semver, deps")
+        problems.append(f"write the scope “{h['scope']}” in lowercase, e.g. build, install, hooks, core-semver, deps")
     subject = re.sub(r" \(#\d+\)$", "", h["subject"])   # the PR number that GitHub appends on squash merge
     if not subject.strip():
-        problems.append("opis po „: ” jest pusty")
+        problems.append("the description after “: ” is empty")
     if len(subject) > MAX_SUBJECT:
-        problems.append(f"opis ma {len(subject)} znaki (maksymalnie {MAX_SUBJECT})")
+        problems.append(f"the description has {len(subject)} characters (maximum {MAX_SUBJECT})")
     if subject.endswith("."):
-        problems.append("opis nie kończy się kropką")
+        problems.append("the description must not end with a period")
     lines = message.split("\n")
     if len(lines) > 1 and lines[1].strip():
-        problems.append("zostaw pustą linię między nagłówkiem a treścią")
+        problems.append("leave a blank line between the header and the body")
     if re.search(r"^breaking[ -]change:", message, re.M | re.I) and not BREAKING_FOOTER.search(message):
-        problems.append("stopkę pisz wielkimi literami: „BREAKING CHANGE: <co i jak migrować>”")
+        problems.append("write the footer in capital letters: “BREAKING CHANGE: <what and how to migrate>”")
     return problems
 
 
@@ -100,7 +100,7 @@ def is_release(version: str) -> bool:
 
 def _release(version: str) -> str:
     if not is_release(version):
-        raise ValueError(f"„{version}” nie jest wersją wydania X.Y.Z")
+        raise ValueError(f"“{version}” is not a release version X.Y.Z")
     return version
 
 

@@ -21,9 +21,9 @@ def main(argv: list[str]) -> int:
         message = " ".join(argv)
     problems = cc.lint_message(message)
     if problems:
-        print("✗ To nie jest Conventional Commit:\n" + "\n".join(f"  - {p}" for p in problems), file=sys.stderr)
-        print(f"\n  Format: <typ>(<zakres>)!: <opis>   typy: {', '.join(cc.TYPES)}", file=sys.stderr)
-        print("  Przykład: feat(install): tryb --shared zapisuje workflow team-factory   (docs/RELEASING.md)",
+        print("✗ This is not a Conventional Commit:\n" + "\n".join(f"  - {p}" for p in problems), file=sys.stderr)
+        print(f"\n  Format: <type>(<scope>)!: <description>   types: {', '.join(cc.TYPES)}", file=sys.stderr)
+        print("  Example: feat(install): the --shared mode writes the team-factory workflow   (docs/RELEASING.md)",
               file=sys.stderr)
         return 1
     print("✓ Conventional Commit")

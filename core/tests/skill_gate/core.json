@@ -32,7 +32,7 @@
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
-  "fingerprint": "9db9bef94fcf0ea7",
+  "fingerprint": "0a771cef40306ba6",
   "offline": "2026-11-18"
  },
  "core-grounding": {
@@ -68,7 +68,7 @@
   "offline": "2026-11-17"
  },
  "core-source-research": {
-  "fingerprint": "73e4a07dea5b6d6e",
+  "fingerprint": "09d0750a58a9df6b",
   "offline": "2026-11-18"
  },
  "core-stack-sync": {
@@ -80,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "0a9cf26c01e5c23e",
+  "fingerprint": "ee0ecd60e5af0627",
   "offline": "2026-11-18"
  }
 }

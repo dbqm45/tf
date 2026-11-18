@@ -25,17 +25,17 @@ tiers:
 default_profile: balanced
 profiles:
   economy:
-    description: "najniższy koszt: bez Opusa (deep → Sonnet z effort high), std z effort low, wcześniejsze kompaktowanie"
+    description: "lowest cost: no Opus (deep → Sonnet with effort high), std with effort low, earlier compaction"
     tiers:
       std:  {effort: low}
       deep: {model: sonnet, effort: high}
     settings: {effortLevel: low, autoCompactWindow: 150000}
   balanced:
-    description: "domyślny: Haiku do mechaniki, Sonnet do codziennej pracy, Opus tylko do decyzji, przy których pomyłka jest droga"
+    description: "default: Haiku for mechanical work, Sonnet for everyday work, Opus only for decisions where a mistake is expensive"
     tiers: {}
     settings: {effortLevel: medium, autoCompactWindow: 200000}
   quality:
-    description: "najwyższa jakość: std z effort high, a doradca Opus, którego model sam wzywa przy trudnych decyzjach (advisor)"
+    description: "highest quality: std with effort high, plus an Opus advisor the model calls itself for hard decisions (advisor)"
     tiers:
       std:  {effort: high}
     settings: {effortLevel: high, autoCompactWindow: 300000, advisorModel: opus}
@@ -82,7 +82,7 @@ shared_agents:
       The shell (the cleanroom_guard hook, the web profile): single commands `npm view`, `pip index versions`,
       `git ls-remote`, `python3 .tf/factory/facts.py` and the scripts of the core-source-research skill — without chaining
       commands or redirections. A page rendered with JavaScript you fetch with `fetch_page.py <url> --json`.
-      First `python3 .tf/factory/facts.py <hasła>`: fresh and confirmed findings you do not check again (give them with
+      First `python3 .tf/factory/facts.py <terms>`: fresh and confirmed findings you do not check again (give them with
       the date and the file), you check only the missing, old and unconfirmed ones.
       The procedure (the core-source-research skill): record the reference date and the time window; primary sources
       before secondary ones, and when a source is unavailable (paywall, login) — take the next one and note the gap, do not

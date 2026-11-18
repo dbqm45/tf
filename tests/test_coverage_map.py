@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Mapa pokrycia katalogu (B2): hasła obszarów → skille, w których trasowanie je widzi. python3 tests/test_coverage_map.py
+"""Catalog coverage map (B2): area terms → the skills in which routing sees them. python3 tests/test_coverage_map.py
 
-Narzędzie autora fabryki: pokazuje dziury (hasło bez skilla) i miejsca cienkie (jeden skill) na podstawie metadanych
-skilli (`description`, `metadata.catalog`, `metadata.keywords`), czyli tego, po czym podpowiedź i model wybierają skill.
-Wynik jest informacją — kod wyjścia 0 także przy dziurach. Nowy skill powstaje tam, gdzie mapa pokazuje dziurę,
-a scenariusz ewaluacji potwierdza, że brak szkodzi.
+A tool for the factory author: shows holes (a term without a skill) and thin spots (one skill) based on the skills'
+metadata (`description`, `metadata.catalog`, `metadata.keywords`), i.e. what the hint and the model pick a skill by.
+The result is information — exit code 0 also with holes. A new skill is created where the map shows a hole,
+and an evaluation scenario confirms that the absence hurts.
 """
 import json
 import subprocess
@@ -53,28 +53,28 @@ def main() -> int:
         out = root / "report.md"
         r = run("--root", str(root), "--areas", str(areas), "--out", str(out))
         rep = out.read_text(encoding="utf-8") if out.is_file() else ""
-        check(r.returncode == 0, f"C-1: kod 0 także przy dziurach: {r.returncode} {r.stderr[-300:]}")
+        check(r.returncode == 0, f"C-1: code 0 also with holes: {r.returncode} {r.stderr[-300:]}")
         check("| Finanse | `faktur` | 2 | x-billing, x-invoices |" in rep,
-              f"C-2: hasło w katalogu bez względu na wielkość liter, dwa skille: {rep[:900]}")
-        check("| Finanse | `chargeback` | 0 |" in rep, "C-3: hasło tylko w treści skilla to dziura (liczą się metadane)")
-        check("| Plan | `harmonogram` | 2 | core-a, y-flow |" in rep, "C-4: słowa kluczowe, rdzeń i tryb liczone")
-        check("| Finanse | `zwrot` | 1 | x-billing |" in rep, "C-5: rdzeń wyrazu trafia w odmianę („zwroty”)")
+              f"C-2: a term in the catalog regardless of letter case, two skills: {rep[:900]}")
+        check("| Finanse | `chargeback` | 0 |" in rep, "C-3: a term only in a skill's body is a hole (metadata counts)")
+        check("| Plan | `harmonogram` | 2 | core-a, y-flow |" in rep, "C-4: keywords, the core and a mode counted")
+        check("| Finanse | `zwrot` | 1 | x-billing |" in rep, "C-5: the stem of a word matches an inflected form (“zwroty”)")
         check("Holes" in rep and "`chargeback`" in rep.split("Holes", 1)[1] and "Thin" in rep
-              and "`zwrot`" in rep.split("Thin", 1)[1], f"C-6: sekcje dziur i cienkich: {rep[-600:]}")
+              and "`zwrot`" in rep.split("Thin", 1)[1], f"C-6: the holes and thin sections: {rep[-600:]}")
         r = run("--root", str(root), "--areas", str(areas), "--summary")
         check(r.returncode == 0 and "holes: 2" in r.stdout and "chargeback" in r.stdout,
-              f"C-7: --summary do CI: {r.stdout}")
-    # C-8: prawdziwe repo — plik obszarów niepusty, każdy obszar ma hasła, raport powstaje
+              f"C-7: --summary for CI: {r.stdout}")
+    # C-8: the real repo — the areas file is non-empty, every area has terms, the report is produced
     areas = json.loads(AREAS.read_text(encoding="utf-8")) if AREAS.is_file() else {}
     check(len(areas) >= 8 and all(isinstance(v, list) and len(v) >= 3 for v in areas.values()),
-          f"C-8: tools/coverage_areas.json — co najmniej 8 obszarów po 3+ hasła: {list(areas)}")
+          f"C-8: tools/coverage_areas.json — at least 8 areas with 3+ terms each: {list(areas)}")
     r = run("--summary")
-    check(r.returncode == 0 and "terms:" in r.stdout, f"C-9: --summary na repo fabryki: {r.stdout[:300]} {r.stderr[-300:]}")
+    check(r.returncode == 0 and "terms:" in r.stdout, f"C-9: --summary on the factory repo: {r.stdout[:300]} {r.stderr[-300:]}")
     wf = (ROOT / ".github" / "workflows" / "factory-checks.yml").read_text(encoding="utf-8")
-    check("tools/coverage_map.py --summary" in wf, "C-10: krok informacyjny w CI (factory-checks.yml)")
+    check("tools/coverage_map.py --summary" in wf, "C-10: an informational step in CI (factory-checks.yml)")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} mapa pokrycia: {total - len(fails)}/{total}")
+    print(f"{'✓' if not fails else '✗'} coverage map: {total - len(fails)}/{total}")
     return 1 if fails else 0
 
 

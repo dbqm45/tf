@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy pasm kontrolnych na metrykach z ShipScope (tryb mode-pdi, skill pdi-decisions, scripts/metric_watch.py):
-poziomy z control_band.py, zdarzenie metric.breached zgodne z kontraktem pdi, odczyt z ShipScope i wysyłka do pdi
-(lokalne serwery HTTP), konfiguracja i szablon workflow. python3 .claude/tests/test_metric_watch.py"""
+"""Tests of control bands on ShipScope metrics (mode-pdi, skill pdi-decisions, scripts/metric_watch.py):
+levels from control_band.py, a metric.breached event matching the pdi contract, reading from ShipScope and sending to pdi
+(local HTTP servers), configuration and the workflow template. python3 .claude/tests/test_metric_watch.py"""
 import datetime as dt
 import hashlib
 import hmac
@@ -25,7 +25,7 @@ START = dt.date(2026, 9, 1)
 
 
 def series(n: int = 40, **override) -> str:
-    """CSV jak z ShipScope: n dni od 2026-09-01; kolumny ze zmiennością w linii bazowej, override: {kolumna: {dzień: v}}."""
+    """CSV as from ShipScope: n days from 2026-09-01; columns with variance in the baseline, override: {column: {day: v}}."""
     rows = [HEADER]
     for i in range(n):
         day = {"deployments": 4 + i % 3, "failed_deployments": i % 2, "rollbacks": i % 2,
@@ -96,34 +96,34 @@ def main() -> int:
         out = jl(r) or {}
         by = {m["metric"]: m for m in out.get("metrics", [])}
         check(r.returncode == 0 and set(by) == {"rollbacks", "failed_deployments", "lead_time_days_median",
-                                                 "deployments"}, f"M-1: cztery metryki domyślne: {r.stdout}{r.stderr}")
+                                                 "deployments"}, f"M-1: four default metrics: {r.stdout}{r.stderr}")
         rb = by.get("rollbacks", {})
         check(rb.get("tier") == "act" and rb.get("side") == "upper"
               and any(v["rule"] == 1 and v["date"] == "2026-10-10" for v in rb.get("violations", [])),
-              f"M-2: skok rollbacków → act, naruszenie z datą: {rb}")
+              f"M-2: rollback spike → act, breach with a date: {rb}")
         breaches = out.get("breaches", [])
         ev = breaches[0] if breaches else {}
         check(len(breaches) == 1 and set(ev) == set(example) and ev.get("type") == "metric.breached"
               and ev.get("source") == "tf" and ev.get("contract_version") == example["contract_version"]
               and ev.get("id") == "tf-metric-rollbacks-2026-10-10",
-              f"M-3: jedno zdarzenie w kopercie kontraktu, stałe ID: {ev}")
+              f"M-3: one event in the contract envelope, stable ID: {ev}")
         p = ev.get("payload", {})
         check(p.get("metric") == "rollbacks" and p.get("value") == 9 and isinstance(p.get("threshold"), float)
               and p["threshold"] < 9 and "3σ" in p.get("diagnosis", "") and "2026-10-10" in p.get("window", "")
               and set(p) <= {"metric", "value", "threshold", "window", "service", "change", "diagnosis"},
-              f"M-4: treść zdarzenia: wartość, próg średnia + 3σ, okno, diagnoza: {p}")
-        check(out.get("sent") == [], f"M-5: bez --send nic nie wysłane: {out.get('sent')}")
+              f"M-4: event content: value, threshold mean + 3σ, window, diagnosis: {p}")
+        check(out.get("sent") == [], f"M-5: nothing sent without --send: {out.get('sent')}")
 
         csv.write_text(series(rollbacks={i: 0 for i in range(40)}), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)
         rb = {m["metric"]: m for m in (jl(r) or {}).get("metrics", [])}.get("rollbacks", {})
         check(r.returncode == 0 and rb.get("tier") is None and "variation" in rb.get("note", ""),
-              f"M-6: same zera w linii bazowej → uwaga, nie błąd: {rb} {r.stdout}")
+              f"M-6: all zeros in the baseline → warning, not an error: {rb} {r.stdout}")
         csv.write_text(series(n=20), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)
         notes = [m.get("note", "") for m in (jl(r) or {}).get("metrics", [])]
         check(r.returncode == 0 and notes and all("point" in n for n in notes),
-              f"M-7: za mało punktów → uwaga przy każdej metryce: {r.stdout}")
+              f"M-7: too few points → warning on every metric: {r.stdout}")
         csv.write_text(series(n=50, rollbacks={32: 9}), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)
         out = jl(r) or {}
@@ -134,7 +134,7 @@ def main() -> int:
         r = run(["check", "--csv", str(csv)], repo)
         evs = [e for e in (jl(r) or {}).get("breaches", []) if e["payload"]["metric"] == "deployments"]
         check(len(evs) == 1 and evs[0]["payload"]["value"] == 0 and evs[0]["payload"]["threshold"] > 0,
-              f"M-9: spadek wdrożeń (lower) → próg średnia − 3σ: {r.stdout}")
+              f"M-9: drop in deployments (lower) → threshold mean − 3σ: {r.stdout}")
 
         # --- konfiguracja ---
         cfg = repo / ".claude" / "pdi-metrics.json"
@@ -145,14 +145,14 @@ def main() -> int:
         out = jl(r) or {}
         check([m["metric"] for m in out.get("metrics", [])] == ["rollbacks"]
               and out["breaches"][0]["payload"].get("service") == "sklep",
-              f"M-10: konfiguracja wybiera metryki i nazywa usługę: {r.stdout}{r.stderr}")
+              f"M-10: configuration picks metrics and names the service: {r.stdout}{r.stderr}")
         cfg.write_text(json.dumps({"metrics": {"drift": {"side": "upper"}}}), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)
         check(r.returncode == 1 and "drift" in r.stdout and "pdi-metrics.json" in r.stdout,
-              f"M-11: kolumna spoza CSV → błąd z podpowiedzią: {r.stdout}")
+              f"M-11: column not in the CSV → error with a hint: {r.stdout}")
         cfg.write_text(json.dumps({"metrics": {"rollbacks": {"side": "w bok"}}}), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)
-        check(r.returncode == 1 and "side" in r.stdout, f"M-12: zła strona → błąd: {r.stdout}")
+        check(r.returncode == 1 and "side" in r.stdout, f"M-12: wrong side → error: {r.stdout}")
         cfg.unlink()
 
         # --- odczyt z ShipScope ---
@@ -167,21 +167,21 @@ def main() -> int:
             frm = (today - dt.timedelta(days=39)).isoformat()
             check(r.returncode == 0 and got.get("path") == f"/api/service/v1/metrics?from={frm}&to={today}&format=csv"
                   and got["headers"].get("authorization") == f"Bearer {TOKEN}" and len((jl(r) or {})["breaches"]) == 1,
-                  f"M-13: szereg z ShipScope (ścieżka, okno, Bearer): {got.get('path')} {r.stdout}{r.stderr}")
-            check(TOKEN not in r.stdout + r.stderr, "M-14: token ShipScope nie trafia do wyjścia")
+                  f"M-13: series from ShipScope (path, window, Bearer): {got.get('path')} {r.stdout}{r.stderr}")
+            check(TOKEN not in r.stdout + r.stderr, "M-14: ShipScope token does not reach the output")
             Server.got, Server.status, Server.body = [], 401, b'{"error":"Unauthorized"}'
             r = run(["check"], repo, SHIPSCOPE_URL=url, SHIPSCOPE_TOKEN=TOKEN)
             check(r.returncode == 1 and "401" in r.stdout and TOKEN not in r.stdout + r.stderr,
-                  f"M-15: 401 z ShipScope → błąd bez tokenu: {r.stdout}")
+                  f"M-15: 401 from ShipScope → error without the token: {r.stdout}")
             r = run(["check"], repo)
             check(r.returncode == 1 and "SHIPSCOPE_URL" in r.stdout and "--csv" in r.stdout,
-                  f"M-16: bez SHIPSCOPE_URL → błąd z podpowiedzią: {r.stdout}")
+                  f"M-16: no SHIPSCOPE_URL → error with a hint: {r.stdout}")
             r = run(["check"], repo, SHIPSCOPE_URL="http://shipscope.example.com", SHIPSCOPE_TOKEN=TOKEN)
-            check(r.returncode == 1 and "https" in r.stdout, f"M-17: http poza localhost → błąd: {r.stdout}")
+            check(r.returncode == 1 and "https" in r.stdout, f"M-17: http outside localhost → error: {r.stdout}")
             r = run(["check"], repo, SHIPSCOPE_URL=url)
-            check(r.returncode == 1 and "SHIPSCOPE_TOKEN" in r.stdout, f"M-18: bez tokenu → błąd: {r.stdout}")
+            check(r.returncode == 1 and "SHIPSCOPE_TOKEN" in r.stdout, f"M-18: no token → error: {r.stdout}")
 
-            # --- wysyłka do pdi ---
+            # --- sending to pdi ---
             Server.got, Server.status, Server.body = [], 202, b'{"status": "created"}'
             r = run(["check", "--csv", str(csv), "--send"], repo, PDI_EVENTS_URL=url, PDI_TF_SIGNING_SECRET=SECRET)
             got = Server.got[0] if Server.got else {}
@@ -193,12 +193,12 @@ def main() -> int:
                   and h.get("x-pdi-signature") == sig and json.loads(body or b"{}").get("id") == "tf-metric-rollbacks-2026-10-10"
                   and (jl(r) or {}).get("sent") == [{"id": "tf-metric-rollbacks-2026-10-10", "status": 202}],
                   f"M-19: --send → podpisane metric.breached na /events/tf: {got.get('path')} {r.stdout}{r.stderr}")
-            check(SECRET not in r.stdout + r.stderr, "M-20: sekret nie trafia do wyjścia")
+            check(SECRET not in r.stdout + r.stderr, "M-20: secret does not reach the output")
             r = run(["check", "--csv", str(csv), "--send"], repo, PDI_EVENTS_URL=url)
-            check(r.returncode == 1 and "PDI_TF_SIGNING_SECRET" in r.stdout, f"M-21: --send bez sekretu → błąd: {r.stdout}")
+            check(r.returncode == 1 and "PDI_TF_SIGNING_SECRET" in r.stdout, f"M-21: --send without a secret → error: {r.stdout}")
             Server.got, Server.status = [], 400
             r = run(["check", "--csv", str(csv), "--send"], repo, PDI_EVENTS_URL=url, PDI_TF_SIGNING_SECRET=SECRET)
-            check(r.returncode == 1 and "400" in r.stdout, f"M-22: odmowa pdi → błąd z kodem: {r.stdout}")
+            check(r.returncode == 1 and "400" in r.stdout, f"M-22: pdi refusal → error with a code: {r.stdout}")
         finally:
             srv.shutdown()
 
@@ -214,7 +214,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów pasm kontrolnych (metric_watch.py)")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of control bands (metric_watch.py)")
     return 1 if fails else 0
 
 

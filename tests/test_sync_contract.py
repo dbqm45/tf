@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy kopii kontraktu pdi (tools/sync_contract.py): sync z katalogu źródłowego zapisuje kopie i VERSION, check
-porównuje bajt w bajt, rozjazd i brak pliku → 1, złe przypięcie → 2. Bez sieci (--source).
+"""Tests of the pdi contract copies (tools/sync_contract.py): sync from the source directory writes the copies and VERSION, check
+compares byte for byte, a mismatch and a missing file → 1, a bad pin → 2. No network (--source).
 python3 tests/test_sync_contract.py"""
 import json
 import subprocess
@@ -44,45 +44,45 @@ def main() -> int:
         check(r.returncode == 0 and (repo / "scripts/a.schema.json").read_bytes() == (src / "a.schema.json").read_bytes()
               and (repo / "fix/a.json").read_bytes() == (src / "examples/a.json").read_bytes()
               and (repo / "fix/VERSION").read_text(encoding="utf-8") == "9.9.9\n",
-              f"S-1: sync zapisuje wszystkie kopie i VERSION: {r.stdout}{r.stderr}")
+              f"S-1: sync writes all the copies and VERSION: {r.stdout}{r.stderr}")
         r = run("check", *base, cwd=repo)
-        check(r.returncode == 0, f"S-2: check po sync → 0: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"S-2: check after sync → 0: {r.stdout}{r.stderr}")
 
         (repo / "fix").mkdir(exist_ok=True)
         (repo / "fix/a.schema.json").write_text('{"title": "poprawione ręcznie"}\n', encoding="utf-8")
         r = run("check", *base, cwd=repo)
         check(r.returncode == 1 and "fix/a.schema.json" in r.stdout + r.stderr and "scripts/a.schema.json" not in r.stdout,
-              f"S-3: ręczna zmiana kopii → 1 z nazwą tylko tej kopii: {r.stdout}{r.stderr}")
+              f"S-3: a manual change of a copy → 1 naming only that copy: {r.stdout}{r.stderr}")
         (repo / "fix/VERSION").write_text("1.0.0\n", encoding="utf-8")
         r = run("check", *base, cwd=repo)
-        check(r.returncode == 1 and "fix/VERSION" in r.stdout + r.stderr, f"S-4: zła VERSION → 1: {r.stdout}{r.stderr}")
+        check(r.returncode == 1 and "fix/VERSION" in r.stdout + r.stderr, f"S-4: a wrong VERSION → 1: {r.stdout}{r.stderr}")
         r = run("sync", *base, cwd=repo)
-        check(r.returncode == 0 and run("check", *base, cwd=repo).returncode == 0, "S-5: sync naprawia rozjazd")
+        check(r.returncode == 0 and run("check", *base, cwd=repo).returncode == 0, "S-5: sync repairs the mismatch")
 
         (src / "examples" / "a.json").unlink()
         r = run("check", *base, cwd=repo)
-        check(r.returncode == 1 and "examples/a.json" in r.stdout + r.stderr, f"S-6: brak pliku w źródle → 1: {r.stdout}{r.stderr}")
+        check(r.returncode == 1 and "examples/a.json" in r.stdout + r.stderr, f"S-6: a file missing in the source → 1: {r.stdout}{r.stderr}")
 
         pin_path.write_text(json.dumps({**pin, "extra": 1}), encoding="utf-8")
         r = run("check", *base, cwd=repo)
-        check(r.returncode == 2, f"S-7: nieznany klucz w przypięciu → 2: {r.stdout}{r.stderr}")
+        check(r.returncode == 2, f"S-7: an unknown key in the pin → 2: {r.stdout}{r.stderr}")
 
     real = json.loads((ROOT / "tools" / "pdi-contract.json").read_text(encoding="utf-8")) \
         if (ROOT / "tools" / "pdi-contract.json").is_file() else {}
     dests = [d for ds in real.get("files", {}).values() for d in ds] + real.get("version_files", [])
     check(real.get("repo") == "dbqm45/pdi" and dests and all((ROOT / d).is_file() for d in dests)
           and "packs/pack-it/skills/eng-codebase-mapping/scripts/reconstruction-export.schema.json" in dests,
-          f"S-8: przypięcie tf istnieje i wskazuje istniejące kopie (w tym schemat rekonstrukcji): {dests}")
+          f"S-8: the tf pin exists and points to existing copies (including the reconstruction schema): {dests}")
     copies = {}
     for name, ds in real.get("files", {}).items():
         contents = {(ROOT / d).read_bytes() for d in ds if (ROOT / d).is_file()}
         copies[name] = len(contents)
     check(copies and all(n == 1 for n in copies.values()),
-          f"S-9: kopie tego samego pliku kontraktu są identyczne w całym repo: {copies}")
+          f"S-9: copies of the same contract file are identical across the repo: {copies}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów kopii kontraktu pdi")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the pdi contract copies")
     return 1 if fails else 0
 
 

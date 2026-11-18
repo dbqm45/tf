@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy phase_progress.py: zamiana zdarzeń stream-JSON Claude Code na linie `run.progress`."""
+"""Tests of phase_progress.py: converting Claude Code stream-JSON events into `run.progress` lines."""
 import json
 import sys
 from pathlib import Path
@@ -29,7 +29,7 @@ def main() -> int:
     def events(*ev: dict) -> list[dict]:
         return list(ev)
 
-    # P-1: sukces — persona startuje, czyta plik, pisze plik, uruchamia polecenie, kończy wynikiem
+    # P-1: success — the persona starts, reads a file, writes a file, runs a command, ends with a result
     stream = events(
         {"type": "system", "subtype": "init", "session_id": "s", "model": "claude-opus-4-7"},
         {"type": "assistant", "message": {"content": [
@@ -55,21 +55,21 @@ def main() -> int:
     )
     rows, final = pp.events_to_progress(stream, phase="requirements", change="CHG-12", budget_usd=3)
     check(len(rows) == 4,
-          f"P-1: 4 linie postępu (init, Read, Write, Bash) — ma {len(rows)}")
+          f"P-1: 4 progress lines (init, Read, Write, Bash) — got {len(rows)}")
     check(rows[0]["status"] == "started" and rows[0]["phase"] == "requirements"
           and rows[0]["change"] == "CHG-12" and rows[0]["budget_usd"] == 3,
           f"P-1: pierwsza linia started z phase/change/budget: {rows[0]}")
     check(rows[1]["status"] == "in_progress"
           and rows[1]["message"] == "reads file docs/project/changes/CHG-12/intent.md",
-          f"P-1: Read → ścieżka względna od docs/project/changes/: {rows[1]}")
+          f"P-1: Read → path relative to docs/project/changes/: {rows[1]}")
     check(rows[2]["message"] == "writes file docs/project/changes/CHG-12/requirements.md",
-          f"P-1: Write → pisze plik z względną ścieżką: {rows[2]}")
+          f"P-1: Write → writes a file with a relative path: {rows[2]}")
     check(rows[3]["message"] == "runs a command",
           f"P-1: Bash nigdy nie zdradza polecenia: {rows[3]}")
     check(isinstance(final, dict) and final.get("total_cost_usd") == 0.42,
           f"P-1: final result zachowany: {final}")
 
-    # P-2: waiting_gate — emit_final po `result` ok dla fazy niebędącej delivery
+    # P-2: waiting_gate — emit_final after `result` ok for a non-delivery phase
     rel = pp.ProgressRelay(phase="requirements", change="CHG-12")
     for e in stream:
         rel.handle(e)
@@ -88,11 +88,11 @@ def main() -> int:
     )
     rows, final = pp.events_to_progress(failed_stream, phase="delivery", change="CHG-12")
     check(len(rows) == 1 and rows[0]["status"] == "started",
-          f"P-3: tylko linia started (żaden tool_use); ma {rows}")
+          f"P-3: only the started line (no tool_use); got {rows}")
     check(final and final["is_error"] and final["subtype"] == "error_max_turns",
-          f"P-3: final result z is_error=True: {final}")
+          f"P-3: final result with is_error=True: {final}")
 
-    # P-4: permission_denied w strumieniu → linia in_progress z „odmowa narzędzia …”
+    # P-4: permission_denied in the stream → an in_progress line with "tool denied …"
     denied_stream = events(
         {"type": "system", "subtype": "init", "session_id": "s", "model": "m"},
         {"type": "system", "subtype": "permission_denied", "tool_use_id": "u1", "tool_name": "Write",
@@ -105,9 +105,9 @@ def main() -> int:
     )
     rows, final = pp.events_to_progress(denied_stream, phase="design", change="CHG-12")
     check(any(r.get("message", "").startswith("tool denied Write") for r in rows),
-          f"P-4: linia z odmową narzędzia: {rows}")
+          f"P-4: line with a tool denial: {rows}")
 
-    # P-5: message nigdy nie wrzuca pełnego wejścia narzędzia
+    # P-5: message never includes the full tool input
     secret_stream = events(
         {"type": "system", "subtype": "init", "session_id": "s", "model": "m"},
         {"type": "assistant", "message": {"content": [
@@ -128,9 +128,9 @@ def main() -> int:
     check(edit and "stary" not in edit["message"] and "SEKRET" not in edit["message"]
           and "\x1b" not in edit["message"] and "\n" not in edit["message"]
           and len(edit["message"]) <= pp.MESSAGE_MAX,
-          f"P-5b: Edit tylko ścieżka pliku, bez treści, bez znaków sterujących: {edit}")
+          f"P-5b: Edit only the file path, no content, no control characters: {edit}")
 
-    # P-6: nieznane wiersze są pomijane — krtuli ani wyjątku
+    # P-6: unknown rows are skipped — no crash and no exception
     bad_stream = events(
         "nie-JSON",
         {"type": "foo"},
@@ -148,7 +148,7 @@ def main() -> int:
     check(final is not None and not final["is_error"],
           f"P-6: result zachowany mimo szumu: {final}")
 
-    # P-7: kształt linii (is_valid_progress)
+    # P-7: line shape (is_valid_progress)
     good = {"phase": "requirements", "status": "in_progress", "message": "czyta plik …", "cost_usd": 0.1}
     bad_status = {"phase": "requirements", "status": "oops"}
     bad_phase = {"phase": "", "status": "started"}
@@ -158,7 +158,7 @@ def main() -> int:
     check(not pp.is_valid_progress(bad_status), "P-7b: nieznany status odrzucony")
     check(not pp.is_valid_progress(bad_phase), "P-7c: pusta phase odrzucona")
     check(not pp.is_valid_progress(bad_cost), "P-7d: ujemny cost_usd odrzucony")
-    check(not pp.is_valid_progress(bad_type), "P-7e: message złego typu odrzucony")
+    check(not pp.is_valid_progress(bad_type), "P-7e: message of the wrong type rejected")
 
     # P-8: format_line — jeden wiersz z prefiksem
     row = {"phase": "design", "status": "in_progress", "message": "pisze plik x", "cost_usd": 0.2}
@@ -166,7 +166,7 @@ def main() -> int:
     check(line.startswith(pp.PREFIX) and "\n" not in line,
           f"P-8: format_line ma prefiks i brak \\n: {line}")
     check(json.loads(line[len(pp.PREFIX):]) == row,
-          f"P-8: JSON po prefiksie to ten sam słownik: {line}")
+          f"P-8: JSON after the prefix is the same dict: {line}")
 
     # P-9: tylko pierwszy `system init` emituje started (duplikaty pomijane)
     double_init = events(
@@ -175,9 +175,9 @@ def main() -> int:
     )
     rows, _ = pp.events_to_progress(double_init, phase="intent")
     check(len(rows) == 1 and rows[0]["status"] == "started",
-          f"P-9: drugi init pominięty: {rows}")
+          f"P-9: second init skipped: {rows}")
 
-    # P-10: MCP → serwer/narzędzie
+    # P-10: MCP → server/tool
     mcp_stream = events(
         {"type": "system", "subtype": "init", "session_id": "s", "model": "m"},
         {"type": "assistant", "message": {"content": [
@@ -186,9 +186,9 @@ def main() -> int:
     )
     rows, _ = pp.events_to_progress(mcp_stream, phase="requirements")
     check(any(r.get("message") == "uses tool pdi/list_inbox" for r in rows),
-          f"P-10: MCP ładnie nazwane: {rows}")
+          f"P-10: MCP named nicely: {rows}")
 
-    # P-11: tool_result z is_error=True → linia „błąd wyniku narzędzia”
+    # P-11: tool_result with is_error=True → a "tool result error" line
     err_stream = events(
         {"type": "system", "subtype": "init", "session_id": "s", "model": "m"},
         {"type": "user", "message": {"content": [
@@ -198,12 +198,12 @@ def main() -> int:
     )
     rows, _ = pp.events_to_progress(err_stream, phase="delivery")
     check(any(r.get("message") == "tool result error" for r in rows),
-          f"P-11: błąd wyniku narzędzia: {rows}")
+          f"P-11: tool result error: {rows}")
 
     # Podsumowanie
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów phase_progress")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of phase_progress")
     return 1 if fails else 0
 
 

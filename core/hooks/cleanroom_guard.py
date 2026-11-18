@@ -43,7 +43,7 @@ def load_config(project: Path) -> dict:
         cfg = json.loads((project / ".claude" / "cleanroom.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return DEFAULT
-    if "profiles" not in cfg:   # stary format (jeden profil denylist)
+    if "profiles" not in cfg:   # the old format (a single denylist profile)
         cfg = {"profiles": [{"name": "qa", "mode": "denylist", "block_tools": ["Bash"], **cfg}]}
     return cfg
 

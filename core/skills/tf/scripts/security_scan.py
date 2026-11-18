@@ -569,7 +569,7 @@ def cmd_cooldown(_a) -> int:
                 if isinstance(data, str) and data:
                     val = data
                     break
-        except Exception as e:  # noqa: BLE001 — zły TOML to też brak karencji
+        except Exception as e:  # noqa: BLE001 — a bad TOML also means no cooldown
             problems.append(f"uv: I cannot read the configuration ({e})")
         mins = minutes(val) if val else None
         if val and mins is None and re.match(r"^\d{4}-\d{2}-\d{2}", val):

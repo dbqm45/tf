@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy eksportu logów faz z $PDI_REGISTRY_PATH/runs/ (scripts/export_pdi_runs.py, PR2 N5).
+"""Tests of exporting phase logs from $PDI_REGISTRY_PATH/runs/ (scripts/export_pdi_runs.py, PR2 N5).
 
 python3 core/tests/test_export_pdi_runs.py
 """
@@ -92,18 +92,18 @@ def main() -> int:
     check("## Zatwierdzamy X" in md and "ref: CHG-9/D1" in md and "id: DEC-0001" in md
           and "wyslano: tak" in md and "- pytanie: czy A?" in md
           and "- odpowiedz: nie" in md and "artifact: decisions" in md
-          and "- answers:" not in md,   # top-level pary, nie `- answers:` z wcięciem (parse_entries)
+          and "- answers:" not in md,   # top-level pairs, not an indented `- answers:` (parse_entries)
           f"RD-1: md=\n{md[:400]}")
-    # Nowa linia w `why` zastąpiona spacją — jeden wiersz w markdownie.
-    check("bo tak chcemy" in md, f"RD-2: `why` nie jest jednowierszowe:\n{md[:400]}")
+    # A newline in `why` replaced with a space — one line in the markdown.
+    check("bo tak chcemy" in md, f"RD-2: `why` is not a single line:\n{md[:400]}")
 
-    md2 = e.render_decisions_md([{"statement": "Draft",  # bez id → wyslano: nie
+    md2 = e.render_decisions_md([{"statement": "Draft",  # without an id -> wyslano: nie
                                   "decided_at": "2026-11-05", "kind": "triage"}], "CHG-7")
     check("wyslano: nie" in md2 and "ref: CHG-7/D1" in md2, f"RD-3: {md2[:200]}")
 
     # ── render_answers_md ────────────────────────────────────────────────────
     am = e.render_answers_md([{"question": "Q1?", "answer": "A1"}])
-    check("**Pytanie:** Q1?" in am and "**Odpowiedź:** A1" in am, f"RA-1: {am[:200]}")
+    check("**Question:** Q1?" in am and "**Answer:** A1" in am, f"RA-1: {am[:200]}")
 
     # ── _one_line ────────────────────────────────────────────────────────────
     v = e._one_line("a\nb\r\nc")
@@ -124,7 +124,7 @@ def main() -> int:
              [{"id": "DEC-0012", "statement": "triage", "decided_at": "2026-11-03", "kind": "triage"}])
         _put(runs, "CHG-3-intent-20261103T205530Z.answers.json",
              [{"question": "Q?", "answer": "A"}])
-        # drugi przebieg bez decisions/answers
+        # a second run without decisions/answers
         _put(runs, "CHG-1-delivery-20261031T132001Z.result.json",
              {"status": "failed", "step": "cuts", "error": "brak cięć"})
         _put(runs, "CHG-1-delivery-20261031T132001Z.log",
@@ -133,7 +133,7 @@ def main() -> int:
         check(summary["count"] == 2, f"X-1: {summary}")
         manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
         check(len(manifest) == 2 and all("secret" not in str(m) for m in manifest),
-              f"X-2: sekret wyciekł: {manifest}")
+              f"X-2: the secret leaked: {manifest}")
         intent_entry = next((m for m in manifest if m["phase"] == "intent"), None)
         check(intent_entry and intent_entry["has_decisions"] and intent_entry["has_answers"]
               and intent_entry["status"] == "done" and intent_entry["cost_usd"] == 0.38,
@@ -143,22 +143,22 @@ def main() -> int:
               and delivery_entry["status"] == "failed" and delivery_entry["step"] == "cuts"
               and any("brak cięć" in l for l in delivery_entry["error_lines"]),
               f"X-4: {delivery_entry}")
-        # Pliki per run
+        # Per-run files
         intent_run = out / "CHG-3-intent-20261103T205530Z"
         check(intent_run.is_dir() and (intent_run / "decisions.md").is_file()
               and (intent_run / "answers.md").is_file() and (intent_run / "manifest.json").is_file(),
-              f"X-5: brak plików per-run w {intent_run}")
-        # manifest-only pomija podkatalogi
+              f"X-5: no per-run files in {intent_run}")
+        # manifest-only skips the subdirectories
         out2 = tmp / "import2"
         e.export(runs, out2, manifest_only=True)
         check((out2 / "manifest.json").is_file() and not (out2 / "CHG-3-intent-20261103T205530Z").exists(),
-              "X-6: manifest-only zrobił podkatalogi")
+              "X-6: manifest-only created subdirectories")
     finally:
         shutil.rmtree(tmp)
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów export_pdi_runs")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} export_pdi_runs tests")
     return 1 if fails else 0
 
 

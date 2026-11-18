@@ -102,7 +102,7 @@ def sections(text: str):
     return out
 
 
-SECTION_EN = {"reguła": "business rule", "poza zakresem": "out of scope"}   # angielskie nazwy sekcji (14.x)
+SECTION_EN = {"reguła": "business rule", "poza zakresem": "out of scope"}   # English section names (14.x)
 
 
 def section_lines(rows, needle: str):

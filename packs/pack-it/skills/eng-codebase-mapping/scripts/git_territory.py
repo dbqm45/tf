@@ -189,7 +189,7 @@ def analyse(a) -> dict:
             "max_files": a.max_files, "skipped_large_commits": skipped,
             "dir_pairs": [{"a": x, "b": y, "commits": n} for (x, y), n in dpairs.most_common(a.top)],
             "file_pairs": [{"a": x, "b": y, "commits": n,
-                            "share": round(n / min(file_c[x], file_c[y]), 2)}   # n / rzadziej zmieniany plik pary
+                            "share": round(n / min(file_c[x], file_c[y]), 2)}   # n / the less often changed file of the pair
                            for (x, y), n in fpairs.most_common() if n >= 2][:a.top],
             "hubs": [{"path": f, "areas": len(p), "alive": f in alive}
                      for f, p in sorted(partners.items(), key=lambda kv: (-len(kv[1]), kv[0])) if len(p) >= 1][:a.top],

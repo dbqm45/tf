@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Testy aktualizacji instalatora: manifest zapisuje skrót pliku po `.tf/factory/build.py` (spis treści plików referencyjnych),
-więc aktualizacja czystej instalacji nie zostawia `*.factory-new`; pliki fabryki zmienione w projekcie
-aktualizacja nadpisuje (jak node_modules), a `.tf/config/` (nadpisania konfiguracji, własne persony) zostawia; klon instalacji zespołowej (manifest poza gitem)
-aktualizuje się z commitowanego `.claude/factory-lock.json`, a nie pomija plików fabryki; spisy treści w źródle
-fabryki są aktualne. python3 tests/test_install_update.py"""
+"""Installer update tests: the manifest stores the file hash after `.tf/factory/build.py` (the table of contents of reference files),
+so an update of a clean install leaves no `*.factory-new`; factory files changed in the project are
+overwritten by the update (like node_modules), while `.tf/config/` (configuration overrides, own personas) is left alone; a clone of a team install (manifest outside git)
+updates from the committed `.claude/factory-lock.json` and does not skip factory files; the tables of contents in the factory
+source are up to date. python3 tests/test_install_update.py"""
 import importlib.util
 import json
 import shutil
@@ -23,7 +23,7 @@ def write(path: Path, text: str) -> None:
 
 
 def long_reference(toc: str | None) -> str:
-    """Plik referencyjny > 100 linii z 3 sekcjami — build.py dopisuje mu spis treści."""
+    """A reference file > 100 lines with 3 sections — build.py adds a table of contents to it."""
     body = ["# Długi", ""] + ([toc, ""] if toc else [])
     for h in ("Pierwsza", "Druga", "Trzecia"):
         body += [f"## {h}", ""] + [f"Linia {i} sekcji {h}." for i in range(40)] + [""]
@@ -40,7 +40,7 @@ def factory_new(proj: Path) -> list[str]:
 
 
 def stale_tocs(root: Path) -> list[str]:
-    """Pliki referencyjnych skilli w źródle fabryki, którym build.py zmieniłby spis treści."""
+    """Reference-skill files in the factory source whose table of contents build.py would change."""
     spec = importlib.util.spec_from_file_location("tf_build", root / "core" / "factory" / "build.py")
     sys.path.insert(0, str(root / "core" / "factory"))
     try:
@@ -75,19 +75,19 @@ def main() -> int:
         if not cond:
             fails.append(msg)
 
-    # T-1: źródło fabryki ma aktualne spisy treści (inaczej każdy projekt dostaje plik, który build.py przepisze)
+    # T-1: the factory source has up-to-date tables of contents (otherwise every project gets a file that build.py rewrites)
     stale = stale_tocs(ROOT)
-    check(not stale, f"T-1: nieaktualny spis treści w źródle ({len(stale)}): {stale[:5]}")
-    # T-1b: spis treści w języku pliku — angielski plik dostaje „Contents”, polski zostaje przy „Spis treści”
+    check(not stale, f"T-1: stale table of contents in the source ({len(stale)}): {stale[:5]}")
+    # T-1b: the table of contents in the file's language — an English file gets “Contents”, a Polish one keeps “Spis treści”
     en = long_reference(None).replace("# Długi", "# Long").replace("Linia", "Line").replace("sekcji", "of section")
     en = en.replace("Pierwsza", "First").replace("Druga", "Second").replace("Trzecia", "Third")
     pl = long_reference(None).replace("Linia", "Zażółć gęślą jaźń, linia")
     out_en, out_pl = toc_of(ROOT, en), toc_of(ROOT, pl)
     check("> **Contents:** First · Second · Third" in out_en and "Spis treści" not in out_en,
-          f"T-1b: angielski plik referencyjny dostaje „Contents”: {out_en[:120]!r}")
-    check("> **Spis treści:** Pierwsza · Druga · Trzecia" in out_pl, f"T-1b: polski zostaje przy „Spis treści”: {out_pl[:120]!r}")
+          f"T-1b: an English reference file gets “Contents”: {out_en[:120]!r}")
+    check("> **Spis treści:** Pierwsza · Druga · Trzecia" in out_pl, f"T-1b: a Polish one keeps “Spis treści”: {out_pl[:120]!r}")
     check(toc_of(ROOT, out_pl.replace("Spis treści", "Contents")) == out_pl,
-          "T-1b: zamiana znacznika na właściwy dla języka (stary znacznik rozpoznany i usunięty)")
+          "T-1b: the marker swapped for the language's own (the old marker recognized and removed)")
 
     with tempfile.TemporaryDirectory() as t:
         src = Path(t) / "src"
@@ -101,70 +101,70 @@ def main() -> int:
               "---\nname: aa-run\ndescription: Użyj przy A.\nmetadata:\n  catalog: \"Użyj przy A. Nie do niczego.\"\n"
               "  review: 2099-01-01\n---\n# aa-run\nTreść 1.\n")
         ref = pack / "skills" / "aa-run" / "references" / "dlugi.md"
-        write(ref, long_reference("> **Spis treści:** Pierwsza · Druga"))   # nieaktualny spis (brak „Trzecia”)
+        write(ref, long_reference("> **Spis treści:** Pierwsza · Druga"))   # stale table of contents (missing “Trzecia”)
 
-        # U-1..U-3: czysta instalacja, potem aktualizacja tą samą wersją — bez *.factory-new
+        # U-1..U-3: a clean install, then an update with the same version — no *.factory-new
         proj = Path(t) / "proj"
         proj.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=proj, check=True)
         r = install(src, proj, "--shared", "--packs", "pack-a")
-        check(r.returncode == 0, f"U-1: instalacja: {r.stdout[-600:]} {r.stderr[-300:]}")
+        check(r.returncode == 0, f"U-1: install: {r.stdout[-600:]} {r.stderr[-300:]}")
         check((proj / ".tf" / "reports" / "README.md").is_file() and (proj / ".tf" / "logs").is_dir(),
-              "U-1a: instalacja zakłada .tf/ (jak tf init)")
+              "U-1a: the install creates .tf/ (like tf init)")
         installed = proj / ".claude" / "skills" / "aa-run" / "references" / "dlugi.md"
         text = installed.read_text(encoding="utf-8") if installed.exists() else ""
         man = json.loads((proj / MANIFEST).read_text(encoding="utf-8")) if (proj / MANIFEST).exists() else {}
         import hashlib
         rel = ".claude/skills/aa-run/references/dlugi.md"
         check("Trzecia" in text.splitlines()[2] if len(text.splitlines()) > 2 else False,
-              f"U-2: build.py poprawił spis treści w projekcie: {text.splitlines()[:3]}")
+              f"U-2: build.py fixed the table of contents in the project: {text.splitlines()[:3]}")
         check(man.get("files", {}).get(rel) == hashlib.sha256(text.encode("utf-8")).hexdigest(),
-              "U-3: manifest ma skrót pliku po build.py (taki, jaki jest na dysku)")
+              "U-3: the manifest has the file hash after build.py (the one on disk)")
         r = install(src, proj)
         check(r.returncode == 0 and not factory_new(proj) and "You changed these factory files" not in r.stdout,
-              f"U-4: aktualizacja czystej instalacji bez *.factory-new: {factory_new(proj)} {r.stdout[-500:]}")
+              f"U-4: an update of a clean install without *.factory-new: {factory_new(proj)} {r.stdout[-500:]}")
 
-        # L-1..L-3: instalacja zespołowa ma commitowany lock (bez danych lokalnych), prywatna — nie
+        # L-1..L-3: a team install has a committed lock (without local data), a private one does not
         lock = json.loads((proj / LOCK).read_text(encoding="utf-8")) if (proj / LOCK).exists() else {}
         gi = (proj / ".gitignore").read_text(encoding="utf-8") if (proj / ".gitignore").exists() else ""
         check(lock.get("packs") == ["pack-a"] and lock.get("files", {}).get(rel) == man.get("files", {}).get(rel)
               and lock.get("version") and not {"source", "python", "installed_at"} & set(lock),
-              f"L-1: lock w trybie zespołowym — wersja, nakładki, skróty, bez danych lokalnych: {sorted(lock)}")
-        check(LOCK not in gi.splitlines() and MANIFEST in gi.splitlines(), "L-2: lock nie jest ignorowany, manifest jest")
+              f"L-1: the lock in team mode — version, overlays, hashes, no local data: {sorted(lock)}")
+        check(LOCK not in gi.splitlines() and MANIFEST in gi.splitlines(), "L-2: the lock is not ignored, the manifest is")
         priv = Path(t) / "priv"
         priv.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=priv, check=True)
         install(src, priv, "--packs", "pack-a")
-        check(not (priv / LOCK).exists(), "L-3: instalacja prywatna nie zapisuje locka")
+        check(not (priv / LOCK).exists(), "L-3: a private install does not write a lock")
 
-        # C-1..C-4: klon instalacji zespołowej (bez manifestu i ignorowanych plików), nowa wersja źródła
+        # C-1..C-4: a clone of a team install (without the manifest and ignored files), a new source version
         clone = Path(t) / "clone"
         subprocess.run(["git", "add", "-A"], cwd=proj, check=True)
         subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "i"], cwd=proj, check=True)
         subprocess.run(["git", "clone", "-q", str(proj), str(clone)], check=True)
-        check(not (clone / MANIFEST).exists() and (clone / LOCK).exists(), "C-1: klon ma lock, nie ma manifestu")
+        check(not (clone / MANIFEST).exists() and (clone / LOCK).exists(), "C-1: the clone has the lock, no manifest")
         write(pack / "skills" / "aa-run" / "SKILL.md",
               (pack / "skills" / "aa-run" / "SKILL.md").read_text(encoding="utf-8").replace("Treść 1.", "Treść 2."))
         write(src / "core" / "factory" / "VERSION", f"{major}.99.0\n")
         own = clone / ".claude" / "skills" / "aa-run" / "references" / "dlugi.md"
-        own.write_text(own.read_text(encoding="utf-8") + "Moja notatka.\n", encoding="utf-8")   # zmiana zespołu
+        own.write_text(own.read_text(encoding="utf-8") + "Moja notatka.\n", encoding="utf-8")   # a team change
         r = install(src, clone)
         skill = (clone / ".claude" / "skills" / "aa-run" / "SKILL.md").read_text(encoding="utf-8")
         check(r.returncode == 0 and "Treść 2." in skill and "Skipped existing" not in r.stdout,
-              f"C-2: aktualizacja klonu nadpisuje niezmieniony plik fabryki, nic nie pomija: {r.stdout[-700:]}")
+              f"C-2: updating the clone overwrites an unchanged factory file, skips nothing: {r.stdout[-700:]}")
         check("packs: pack-a" in r.stdout and f"→ {major}.99.0" in r.stdout,
-              f"C-3: nakładki i wersja z locka: {r.stdout[-400:]}")
+              f"C-3: overlays and version from the lock: {r.stdout[-400:]}")
         check("Moja notatka." not in own.read_text(encoding="utf-8") and not factory_new(clone)
               and "dlugi.md" in r.stdout,
-              f"C-4: plik fabryki zmieniony w projekcie nadpisany (jak node_modules), bez *.factory-new, wymieniony "
-              f"w wyniku: {factory_new(clone)} {r.stdout[-600:]}")
+              f"C-4: a factory file changed in the project overwritten (like node_modules), no *.factory-new, listed "
+              f"in the output: {factory_new(clone)} {r.stdout[-600:]}")
         lock2 = json.loads((clone / LOCK).read_text(encoding="utf-8")) if (clone / LOCK).exists() else {}
-        check(lock2.get("version") == f"{major}.99.0", f"C-5: lock zaktualizowany: {lock2.get('version')}")
+        check(lock2.get("version") == f"{major}.99.0", f"C-5: lock updated: {lock2.get('version')}")
 
-        # N-1..N-4: silnik (w tym domyślny config.yaml) nadpisywany; nadpisania projektu i własne persony w .tf/config/
-        # nietknięte, a nowe klucze domyślne działają bez łatania pliku projektu
+        # N-1..N-4: the engine (including the default config.yaml) is overwritten; project overrides and own personas in .tf/config/
+        # untouched, and new default keys work without patching the project file
         cfg_src = src / "core" / "factory" / "config.yaml"
-        write(cfg_src, cfg_src.read_text(encoding="utf-8") + "\n# nowy klucz fabryki\nnowy_klucz_testu:\n  a: 1\n")
+        write(cfg_src, cfg_src.read_text(encoding="utf-8") + "\n# a new factory key\nnowy_klucz_testu:\n  a: 1\n")
         write(src / "core" / "factory" / "VERSION", f"{major}.99.1\n")
         own = clone / ".tf" / "config" / "config.yaml"
         own.parent.mkdir(parents=True, exist_ok=True)
@@ -175,25 +175,25 @@ def main() -> int:
         engine = (clone / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8") \
             if (clone / ".tf" / "factory" / "config.yaml").exists() else ""
         check(r.returncode == 0 and "nowy_klucz_testu:" in engine and own.read_text(encoding="utf-8") ==
-              "default_profile: economy\n", f"N-1: domyślny config silnika zaktualizowany, nadpisania projektu bez "
-              f"zmian: {r.stdout[-500:]}")
+              "default_profile: economy\n", f"N-1: the engine's default config updated, project overrides "
+              f"unchanged: {r.stdout[-500:]}")
         spec = importlib.util.spec_from_file_location("tf_packs_n2", clone / ".tf" / "factory" / "packs.py")
         pm = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(pm)
         merged = pm.load_config(clone)
         check(merged.get("default_profile") == "economy" and (merged.get("nowy_klucz_testu") or {}).get("a") == 1,
-              f"N-2: złożona konfiguracja — nadpisanie projektu i nowy klucz silnika: {merged.get('default_profile')}")
-        check(mine.read_text(encoding="utf-8") == "name: moja\n", "N-3: własna persona w .tf/config/personas/ nietknięta")
-        check(not factory_new(clone) and not (clone / "factory").exists(), f"N-4: żadnych *.factory-new ani factory/: "
+              f"N-2: the composed configuration — a project override and a new engine key: {merged.get('default_profile')}")
+        check(mine.read_text(encoding="utf-8") == "name: moja\n", "N-3: an own persona in .tf/config/personas/ untouched")
+        check(not factory_new(clone) and not (clone / "factory").exists(), f"N-4: no *.factory-new or factory/: "
               f"{factory_new(clone)}")
 
-    # tryb wycofany z fabryki (mode-talos: pętla jest w rdzeniu jako /tf) — aktualizacja projektu, który go miał,
-    # pomija go z komunikatem zamiast kończyć się błędem „Unknown packs”, a jego pliki trafiają do kopii zapasowej
+    # a mode retired from the factory (mode-talos: the loop is in the core as /tf) — updating a project that had it
+    # skips it with a message instead of ending with an "Unknown packs" error, and its files go to the backup
     with tempfile.TemporaryDirectory() as t:
         proj = Path(t) / "app"
         proj.mkdir()
         r = install(ROOT, proj, "--packs", "none")
-        check(r.returncode == 0, f"W-0: instalacja: {r.stdout[-400:]} {r.stderr[-300:]}")
+        check(r.returncode == 0, f"W-0: install: {r.stdout[-400:]} {r.stderr[-300:]}")
         man = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
         man["packs"]["mode-talos"] = "1.3.0"
         if "offered" in man:
@@ -208,15 +208,15 @@ def main() -> int:
         r = install(ROOT, proj, "--update")
         after = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
         check(r.returncode == 0 and "mode-talos" in r.stdout and "/tf" in r.stdout and "Unknown packs" not in r.stdout,
-              f"W-1: aktualizacja z wycofanym trybem przechodzi i mówi, co go zastąpiło: {r.returncode} {r.stdout[-500:]}")
+              f"W-1: an update with a retired mode passes and says what replaced it: {r.returncode} {r.stdout[-500:]}")
         check("mode-talos" not in (after.get("packs") or {}) and not old.exists()
               and (proj / ".claude" / "skills" / "tf" / "SKILL.md").is_file(),
-              f"W-2: wycofany tryb znika z manifestu, jego plik z projektu, a pętla jest w rdzeniu: {list(after.get('packs') or {})}")
+              f"W-2: the retired mode disappears from the manifest, its file from the project, and the loop is in the core: {list(after.get('packs') or {})}")
         r = install(ROOT, proj, "--add", "mode-talos")
         check(r.returncode == 2 and "mode-talos" in r.stdout and "/tf" in r.stdout,
-              f"W-3: jawna prośba o wycofany tryb → odmowa z wyjaśnieniem: {r.returncode} {r.stdout[-300:]}")
+              f"W-3: an explicit request for a retired mode → refusal with an explanation: {r.returncode} {r.stdout[-300:]}")
 
-        # pack-ev wycofany: wiedza EV jest w projekcie EV Intelligence (skille ev-*, serwer MCP), nie w fabryce
+        # pack-ev retired: the EV knowledge lives in the EV Intelligence project (ev-* skills, an MCP server), not in the factory
         man = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
         man["packs"]["pack-ev"] = "1.1.0"
         man["offered"] = sorted({*(man.get("offered") or []), "pack-ev"})
@@ -228,13 +228,13 @@ def main() -> int:
         after = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
         check(r.returncode == 0 and "pack-ev" in r.stdout and "ev-intelligence" in r.stdout and "Unknown packs" not in r.stdout
               and "pack-ev" not in (after.get("packs") or {}) and not ev.exists(),
-              f"W-4: aktualizacja z pack-ev przechodzi, wskazuje ev-intelligence, pliki do kopii: {r.returncode} {r.stdout[-500:]}")
+              f"W-4: an update with pack-ev passes, points to ev-intelligence, files to the backup: {r.returncode} {r.stdout[-500:]}")
         r = install(ROOT, proj, "--add", "pack-ev")
-        check(r.returncode == 2 and "ev-intelligence" in r.stdout, f"W-5: --add pack-ev → odmowa z adresem: {r.stdout[-300:]}")
+        check(r.returncode == 2 and "ev-intelligence" in r.stdout, f"W-5: --add pack-ev → refusal with an address: {r.stdout[-300:]}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów aktualizacji instalatora")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} installer update tests")
     return 1 if fails else 0
 
 

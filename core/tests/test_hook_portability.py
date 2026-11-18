@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Hooki działają na Windows: kodowanie UTF-8 niezależne od strony kodowej i limit czasu.
+"""Hooks work on Windows: UTF-8 encoding independent of the code page, and a time limit.
 
 python3 tests/test_hook_portability.py
 
-Na Windows Python domyślnie koduje stdin/stdout stroną kodową systemu (np. cp1250), a Claude Code wysyła i czyta
-JSON w UTF-8. Symulujemy to przez PYTHONIOENCODING=cp1250. Drugi problem: `git` zawieszony przez proces potomny
-(np. fsmonitor na Windows trzyma potok) przekraczał limit hooka — Claude Code zabijał proces i zgłaszał
-„Stop hook error … No stderr output”. Hook ma skończyć się sam, z kodem 0, przed limitem.
+On Windows Python by default encodes stdin/stdout with the system code page (e.g. cp1250), while Claude Code sends and reads
+JSON in UTF-8. We simulate this with PYTHONIOENCODING=cp1250. The second problem: `git` hung by a child process
+(e.g. fsmonitor on Windows holds a pipe) exceeded the hook limit — Claude Code killed the process and reported
+"Stop hook error ... No stderr output". The hook must finish by itself, with code 0, before the limit.
 """
 import json
 import os
@@ -24,7 +24,7 @@ POLISH = "Zażółć gęślą jaźń — „cudzysłów” i zależności"
 
 
 def hook_commands() -> list[tuple[str, list[str], int]]:
-    # tryb zespołowy: settings.json; prywatny (domyślny): settings.local.json
+    # team mode: settings.json; private (the default): settings.local.json
     path = next(p for p in (ROOT / ".claude" / "settings.json", ROOT / ".claude" / "settings.local.json") if p.exists())
     settings = json.loads(path.read_text(encoding="utf-8"))
     out = []
@@ -54,7 +54,7 @@ def payload(event: str) -> bytes:
 
 
 def project(d: str) -> Path:
-    """Kopia `.claude/` fabryki w pustym repo — hooki mają skille i szablony, a zapisy nie trafiają do fabryki."""
+    """A copy of the factory's `.claude/` in an empty repo — the hooks have skills and templates, and the writes do not reach the factory."""
     root = Path(d)
     shutil.copytree(ROOT / ".claude", root / ".claude", ignore=shutil.ignore_patterns("__pycache__", "*.jsonl"))
     subprocess.run(["git", "init", "-q", str(root)], capture_output=True)
@@ -71,32 +71,32 @@ def encoding_tests() -> list[str]:
             r, _ = run(args, root, payload(event))
             name = " ".join(args)
             if r.returncode not in (0, 2):
-                fails.append(f"{event} {name}: kod wyjścia {r.returncode}, stderr: {r.stderr[-200:]!r}")
+                fails.append(f"{event} {name}: exit code {r.returncode}, stderr: {r.stderr[-200:]!r}")
             try:
                 r.stdout.decode("utf-8")
             except UnicodeDecodeError:
-                fails.append(f"{event} {name}: stdout nie jest w UTF-8 przy stronie kodowej cp1250")
+                fails.append(f"{event} {name}: stdout is not UTF-8 with the cp1250 code page")
     return fails
 
 
 def hint_test() -> list[str]:
-    """Polski prompt czytany przy cp1250 nie może się rozjechać (skill_hint dopasowuje rdzenie słów)."""
+    """A Polish prompt read under cp1250 must not get garbled (skill_hint matches word stems)."""
     with tempfile.TemporaryDirectory() as d:
         root = project(d)
-        # skill rdzenia — test działa bez nakładek; polskie znaki w poleceniu sprawdzają dekodowanie
+        # a core skill — the test works without packs; the Polish characters in the prompt check the decoding
         prompt = "Jaki numer wersji nadać po usunięciu flagi z publicznego API — SemVer, podbicie major czy minor?"
         data = json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": prompt}, ensure_ascii=False).encode("utf-8")
         r, _ = run([".claude/hooks/skill_hint.py"], root, data)
         r_utf, _ = run([".claude/hooks/skill_hint.py"], root, data, {"PYTHONIOENCODING": "utf-8"})
         if "core-semver" not in r_utf.stdout.decode("utf-8", "replace"):
-            return ["skill_hint: brak oczekiwanej podpowiedzi (test nieważny)"]
+            return ["skill_hint: the expected hint is missing (test invalid)"]
         if r.stdout != r_utf.stdout:
-            return ["skill_hint daje inny wynik przy cp1250 niż przy UTF-8 (prompt źle zdekodowany)"]
+            return ["skill_hint gives a different result under cp1250 than under UTF-8 (the prompt was decoded wrongly)"]
     return []
 
 
 def hanging_git_test() -> list[str]:
-    """Zawieszony `git` nie może przetrzymać hooka Stop do limitu Claude Code."""
+    """A hung `git` must not hold the Stop hook until the Claude Code limit."""
     if os.name == "nt":
         return []
     with tempfile.TemporaryDirectory() as d:
@@ -118,20 +118,20 @@ def hanging_git_test() -> list[str]:
         r, took = run([".claude/hooks/project_record.py", "--hook-stop"], root, b"{}", env, timeout=40)
         fails = []
         if r.returncode != 0:
-            fails.append(f"Stop przy zawieszonym git: kod {r.returncode}")
+            fails.append(f"Stop with a hung git: code {r.returncode}")
         if took > 4:
-            fails.append(f"Stop przy zawieszonym git trwał {took:.1f} s (limit własny 1.5 s)")
+            fails.append(f"Stop with a hung git took {took:.1f} s (own limit 1.5 s)")
     return fails
 
 
 def main() -> int:
-    tests = [("kodowanie", encoding_tests), ("skill_hint", hint_test), ("zawieszony git", hanging_git_test)]
+    tests = [("encoding", encoding_tests), ("skill_hint", hint_test), ("hung git", hanging_git_test)]
     fails = []
     for name, fn in tests:
         f = fn()
-        print(f"{'OK ' if not f else 'BŁĄD'} {name}" + ("" if not f else "\n  " + "\n  ".join(f)))
+        print(f"{'OK ' if not f else 'FAIL'} {name}" + ("" if not f else "\n  " + "\n  ".join(f)))
         fails += f
-    print(f"\n{len(tests)} grupy testów, błędów: {len(fails)}")
+    print(f"\n{len(tests)} test groups, errors: {len(fails)}")
     return 1 if fails else 0
 
 

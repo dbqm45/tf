@@ -929,8 +929,16 @@ treści (angielska), bez równoległej polskiej.
     (własny skrypt, niezależnie od wykonawców), YAML — dane identyczne poza komentarzami w blokach `run:`. Zostają:
     literały, regexy, linie `pl: sprzed 14.x`, cytowane polskie dane. Ponowna bramka 21 skilli (skrypty w odcisku).
     Wykonawcy na Sonnecie (tańsze, praca mechaniczna).
-    - [ ] polskie napisy w szablonie `core-git-workflow/templates/ai-review.yml` (prompt, komentarz PR, nazwy kroków)
-      i komunikaty `echo` w workflow — razem z etapem komunikatów i testów.
+    - [x] polskie napisy w szablonie `ai-review.yml` i komunikaty `echo` w workflow — w 4h.
+  - [x] 4h (2026-11-18): napisy dla człowieka i komunikaty testów po angielsku — 175 plików (runnery ewaluacji,
+    skrypty, workflow GitHub, szablon ai-review, testy core/modes/packs/repo). Etykiety i prompt weryfikacji
+    workflow code-audit po angielsku razem z test_workflows. Zostają: aliasy i wzorce przyjmujące polski
+    („pl: sprzed 14.x”), polskie dane testowe i fixture'y, formaty czytane przez inny program, prompty sędziego
+    w `run_skill_evals.py` i `flow_evals_runner.py` (zmiana języka sędziego zmienia ocenianie). Kontrola: wszystkie
+    testy repo i 8 obszarów roboczych CI zielone, ponowna bramka 7 skilli, 901/918 · 31/43.
+    - [ ] prompty sędziego ewaluacji po angielsku — osobno, z kalibracją (te same scenariusze przed i po).
+    - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
+      sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
     M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
     tools, editorial, ux. Docstringi i komentarze w kodzie to dokumentacja opiekunów — poza tym etapem.

@@ -487,7 +487,7 @@ def merge_settings(src: dict, dst: dict) -> dict:
 def claude_md_section(py: str = PY_DEFAULT, root: Path | None = None, cfg: dict | None = None) -> str:
     """Factory section in CLAUDE.md / CLAUDE.local.md: core rules + language (conversation, commits from `git log`)."""
     text = (CORE / "CLAUDE.md").read_text(encoding="utf-8")
-    body = text.split("\n", 1)[1] if text.startswith("# ") else text   # without the "# Zasady projektu" heading
+    body = text.split("\n", 1)[1] if text.startswith("# ") else text   # without the "# Project rules" heading
     body = "\n".join("#" + ln if ln.startswith("## ") else ln for ln in body.splitlines())   # subsections one level lower
     if py != PY_DEFAULT:
         shown = py if simple_command(py) else f'"{py}"'
@@ -513,7 +513,7 @@ COMMANDS_DEFAULT_HINTS = ("adapt to your project", "dostosuj do swojego projektu
 
 
 def keep_commands(section: str, old: str) -> str:
-    """An update keeps the project's commands in the "Komendy" subsection (entered by `tf onboard` or by a human).
+    """An update keeps the project's commands in the "Commands" subsection (entered by `tf onboard` or by a human).
     A subsection with the note "dostosuj do swojego projektu" is a factory template — it is replaced like the rest of the block."""
     start = old.find(MARK_BEGIN)
     mine = COMMANDS_SECTION.search(old, start) if start >= 0 else None

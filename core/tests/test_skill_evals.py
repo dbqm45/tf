@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy runnera ewaluacji skilli i plików scenariuszy (bez modelu, z atrapą claude): python3 tests/test_skill_evals.py"""
+"""Tests of the skill evaluation runner and the scenario files (no model, with a claude stub): python3 tests/test_skill_evals.py"""
 import importlib.util
 import json
 import os
@@ -47,7 +47,7 @@ PROTOCOL_TESTS = 8
 
 
 def protocol_tests() -> list[str]:
-    """Zamknięty zbiór testowy (holdout) i protokół raportu „wynik czy koszt”."""
+    """Closed test set (holdout) and the "result or cost" report protocol."""
     fails = []
     with tempfile.TemporaryDirectory() as d:
         bad = Path(d) / "core-grounding.json"
@@ -58,8 +58,8 @@ def protocol_tests() -> list[str]:
             {"id": "c", "expect": "no-trigger", "prompt": "Indeksy w tabeli orders?", "neighbor": "be-database"}]}),
             encoding="utf-8")
         if not any("holdout" in e for e in ev.validate_file(bad)):
-            fails.append("validate_file: holdout musi być true/false")
-        # osobny plik holdout/<skill>.json: same scenariusze trigger ze sprawdzeniami, poza odciskiem bramki skilla
+            fails.append("validate_file: holdout must be true/false")
+        # a separate holdout/<skill>.json file: only trigger scenarios with checks, outside the skill gate fingerprint
         ho = Path(d) / "holdout" / "core-grounding.json"
         ho.parent.mkdir()
         ho.write_text(json.dumps({"skill": "core-grounding", "scenarios": [
@@ -71,8 +71,8 @@ def protocol_tests() -> list[str]:
             encoding="utf-8")
         badh = ev.validate_file(ho, holdout=True)
         if okh or not badh:
-            fails.append(f"validate_file(holdout): jeden scenariusz trigger wystarcza, no-trigger to błąd: {okh} {badh}")
-    # Skill wyłączony (metadata.status: inactive): scenariusze trigger leżą w skill_evals/inactive/, w pliku głównym
+            fails.append(f"validate_file(holdout): one trigger scenario is enough, no-trigger is an error: {okh} {badh}")
+    # Disabled skill (metadata.status: inactive): trigger scenarios live in skill_evals/inactive/, in the main file
     # wystarcza jeden no-trigger; aktywny skill nadal potrzebuje co najmniej trzech.
     with tempfile.TemporaryDirectory() as d:
         old = ev.SKILLS
@@ -90,11 +90,11 @@ def protocol_tests() -> list[str]:
             errs[n] = ev.validate_file(f)
         ev.SKILLS = old
         if errs["x-off"] or not any("co najmniej 3" in e for e in errs["x-on"]):
-            fails.append(f"validate_file: wyłączony skill — jeden no-trigger wystarcza, aktywny potrzebuje 3: {errs}")
+            fails.append(f"validate_file: disabled skill — one no-trigger is enough, an active one needs 3: {errs}")
     scs = [{"id": "a", "expect": "trigger"}, {"id": "h", "expect": "trigger", "holdout": True},
            {"id": "n", "expect": "no-trigger"}]
     if [s["id"] for s in ev.tuning_set(scs)] != ["a", "n"] or [s["id"] for s in ev.holdout_set(scs)] != ["h"]:
-        fails.append("tuning_set/holdout_set: zbiór strojenia bez scenariuszy holdout, holdout osobno")
+        fails.append("tuning_set/holdout_set: the tuning set without holdout scenarios, holdout separate")
     row = lambda sid, base, passed, met, cost, ho=False, rep=0: {
         "skill": "s", "id": sid, "expect": "trigger", "model": "haiku", "baseline": base, "holdout": ho, "repeat": rep,
         "passed": passed, "triggered": passed, "checks_ok": passed, "groups_total": 2, "groups_met": met,
@@ -102,45 +102,45 @@ def protocol_tests() -> list[str]:
     res = [row("a", False, True, 2, 0.10), row("b", False, False, 1, 0.10), row("a", True, False, 1, 0.05),
            row("b", True, False, 0, 0.05), row("h", False, True, 2, 0.10, ho=True, rep=0),
            row("h", False, False, 1, 0.10, ho=True, rep=1),
-           # bez skilli nic się nie uruchamia — pełną odpowiedź liczymy po kryteriach, nie po uruchomieniu
+           # nothing triggers without skills — a full answer is counted by criteria, not by trigger
            {**row("c", True, False, 2, 0.05), "checks_ok": True}]
     rows = {(r["model"], r["baseline"], r["set"]): r for r in ev.protocol(res)}
-    w = rows.get(("haiku", False, "strojenie")) or {}
+    w = rows.get(("haiku", False, "tuning")) or {}
     if (w.get("tasks"), w.get("full_pass"), w.get("criteria")) != (2, 1, 0.75) or abs(w.get("cost_per_solved", 0) - 0.20) > 1e-9:
-        fails.append(f"protocol: ze skillami — zadania, zaliczone w całości, średnia kryteriów, koszt na rozwiązane: {w}")
-    b = rows.get(("haiku", True, "strojenie")) or {}
+        fails.append(f"protocol: with skills — tasks, passed in full, criteria average, cost per solved: {w}")
+    b = rows.get(("haiku", True, "tuning")) or {}
     h = rows.get(("haiku", False, "holdout")) or {}
     if b.get("full_pass") != 1 or b.get("tasks") != 3 or h.get("unstable") != 1 or h.get("tasks") != 2:
-        fails.append(f"protocol: bez skilli pełna odpowiedź po kryteriach; holdout osobno, niestabilny między powtórzeniami: {b} {h}")
+        fails.append(f"protocol: without skills a full answer by criteria; holdout separate, unstable between repeats: {b} {h}")
     if w.get("triggered") != 1:
-        fails.append(f"protocol: uruchomienie skilla raportowane osobno: {w}")
-    # pasmo szumu (krok H20): rozpiętość odsetka zaliczeń między powtórzeniami ramienia
+        fails.append(f"protocol: skill trigger reported separately: {w}")
+    # noise band (step H20): spread of the pass rate between repeats of the arm
     if w.get("band") is not None or h.get("band") != 1.0 or h.get("repeats") != 2:
-        fails.append(f"protocol: pasmo szumu tylko przy powtórzeniach (h: 1/1 i 0/1 → 100 pkt), bez nich brak: {w} {h}")
+        fails.append(f"protocol: noise band only with repeats (h: 1/1 and 0/1 → 100 pts), none without them: {w} {h}")
     noisy = []
     for rep, (a_ok, b_ok) in enumerate([(True, True), (True, False), (True, True), (True, True), (True, False)]):
         noisy += [row("a", False, a_ok, 2, 0.1, rep=rep), row("b", False, b_ok, 2, 0.1, rep=rep),
                   row("a", True, True, 2, 0.1, rep=rep), row("b", True, False, 1, 0.1, rep=rep)]
     pr = {(r["baseline"], r["set"]): r for r in ev.protocol(noisy)}
-    if pr[(False, "strojenie")].get("band") != 0.5 or pr[(True, "strojenie")].get("band") != 0.0 \
-            or pr[(False, "strojenie")].get("repeats") != 5:
-        fails.append(f"protocol: pasmo szumu z 5 powtórzeń (ze skillami 100%/50% → 50 pkt; bez skilli stałe → 0): {pr}")
-    g = ev.gap([{"model": "haiku", "baseline": False, "set": "strojenie", "tasks": 10, "full_pass": 8, "band": 0.2},
-                {"model": "haiku", "baseline": True, "set": "strojenie", "tasks": 10, "full_pass": 5, "band": 0.1},
+    if pr[(False, "tuning")].get("band") != 0.5 or pr[(True, "tuning")].get("band") != 0.0 \
+            or pr[(False, "tuning")].get("repeats") != 5:
+        fails.append(f"protocol: noise band from 5 repeats (with skills 100%/50% → 50 pts; without skills constant → 0): {pr}")
+    g = ev.gap([{"model": "haiku", "baseline": False, "set": "tuning", "tasks": 10, "full_pass": 8, "band": 0.2},
+                {"model": "haiku", "baseline": True, "set": "tuning", "tasks": 10, "full_pass": 5, "band": 0.1},
                 {"model": "haiku", "baseline": False, "set": "holdout", "tasks": 10, "full_pass": 6, "band": None},
                 {"model": "haiku", "baseline": True, "set": "holdout", "tasks": 10, "full_pass": 5, "band": 0.3}])
     if not g or g[0].get("band_tuning") != 0.2 or g[0].get("band_holdout") != 0.3:
-        fails.append(f"gap: pasmo przewagi to większe z pasm obu ramion w danym zbiorze: {g}")
+        fails.append(f"gap: the advantage band is the larger of the two arms' bands in a given set: {g}")
     with tempfile.TemporaryDirectory() as d:
         out = Path(d) / "r.md"
         ev.report([{**r, "triggered": True, "skills_used": [], "judged": False} for r in noisy], out)
         text = out.read_text(encoding="utf-8")
-        if "Pasmo szumu" not in text or "w paśmie szumu" not in text:
-            fails.append(f"report: kolumna „Pasmo szumu” i znacznik różnicy w paśmie (przewaga +30 pkt ≤ pasmo 50 pkt): {text[:1500]}")
+        if "Noise band" not in text or "within the noise band" not in text:
+            fails.append(f"report: the \"Noise band\" column and the within-band difference marker (advantage +30 pts ≤ band 50 pts): {text[:1500]}")
         ev.report([{**r, "triggered": True, "skills_used": [], "judged": False} for r in noisy if r["repeat"] < 2], out)
-        if "orientacyjn" not in out.read_text(encoding="utf-8"):
-            fails.append("report: przy mniej niż 5 powtórzeniach pasmo jest opisane jako orientacyjne")
-    # 5. --per-skill: równa próba zbioru strojenia na skill (powtarzalna), holdout zawsze w całości
+        if "indicative" not in out.read_text(encoding="utf-8"):
+            fails.append("report: with fewer than 5 repeats the band is described as indicative")
+    # 5. --per-skill: an equal sample of the tuning set per skill (repeatable), holdout always whole
     pool = ([{"skill": "a", "id": f"t{i}", "expect": "trigger"} for i in range(6)]
             + [{"skill": "b", "id": f"t{i}", "expect": "trigger"} for i in range(2)]
             + [{"skill": "a", "id": f"h{i}", "expect": "trigger", "holdout": True} for i in range(3)])
@@ -151,32 +151,32 @@ def protocol_tests() -> list[str]:
             per[s["skill"]] = per.get(s["skill"], 0) + 1
     if ([(s["skill"], s["id"]) for s in s1] != [(s["skill"], s["id"]) for s in s2] or per != {"a": 2, "b": 2}
             or sum(bool(s.get("holdout")) for s in s1) != 3):
-        fails.append(f"sample_per_skill: po 2 na skill, powtarzalnie, holdout w całości: {per} {s1}")
+        fails.append(f"sample_per_skill: 2 per skill, repeatable, holdout whole: {per} {s1}")
     if [s["id"] for s in ev.sample_per_skill(pool, 0)] != [s["id"] for s in pool]:
-        fails.append("sample_per_skill: n=0 nie zmienia listy")
-    # 6. luka strojenie − holdout (sygnał uczenia się egzaminu) i przewaga skilli w każdym zbiorze
-    proto = [{"model": "haiku", "baseline": False, "set": "strojenie", "tasks": 10, "full_pass": 9},
+        fails.append("sample_per_skill: n=0 does not change the list")
+    # 6. the tuning − holdout gap (a signal of learning the exam) and the skills' advantage in each set
+    proto = [{"model": "haiku", "baseline": False, "set": "tuning", "tasks": 10, "full_pass": 9},
              {"model": "haiku", "baseline": False, "set": "holdout", "tasks": 10, "full_pass": 7},
-             {"model": "haiku", "baseline": True, "set": "strojenie", "tasks": 10, "full_pass": 4},
+             {"model": "haiku", "baseline": True, "set": "tuning", "tasks": 10, "full_pass": 4},
              {"model": "haiku", "baseline": True, "set": "holdout", "tasks": 10, "full_pass": 4}]
     g = {r["model"]: r for r in ev.gap(proto)}.get("haiku") or {}
     if (round(g.get("tuning", -1), 2), round(g.get("holdout", -1), 2), round(g.get("gap", -1), 2),
             round(g.get("uplift_tuning", -1), 2), round(g.get("uplift_holdout", -1), 2)) != (0.9, 0.7, 0.2, 0.5, 0.3):
-        fails.append(f"gap: wynik strojenia, holdoutu, luka i przewaga skilli w obu zbiorach: {g}")
-    if ev.gap([p for p in proto if p["set"] == "strojenie"]):
-        fails.append("gap: bez holdoutu nie ma luki do policzenia")
+        fails.append(f"gap: tuning result, holdout result, gap and the skills' advantage in both sets: {g}")
+    if ev.gap([p for p in proto if p["set"] == "tuning"]):
+        fails.append("gap: without holdout there is no gap to compute")
     with tempfile.TemporaryDirectory() as d:
         out = Path(d) / "r.md"
         rws = [{**row("a", False, True, 2, 0.1), "holdout": False}, {**row("h", False, False, 1, 0.1), "holdout": True}]
         ev.report(rws, out)
-        if "Luka strojenie − holdout" not in out.read_text(encoding="utf-8"):
-            fails.append("report: brak sekcji „Luka strojenie − holdout”")
+        if "Gap tuning − holdout" not in out.read_text(encoding="utf-8"):
+            fails.append("report: missing the \"Gap tuning − holdout\" section")
     return fails
 
 
 
 def contribution_tests() -> list[str]:
-    """B4: wkład skilla — scenariusze zaliczane bez skilli, wkład na model, dziennik zbioru zamkniętego."""
+    """B4: skill contribution — scenarios passed without skills, contribution per model, the closed set log."""
     fails = []
     r = lambda sid, model, base, ok, ho=False, trig=True, exp="trigger": {
         "skill": "s", "id": sid, "expect": exp, "model": model, "baseline": base, "holdout": ho, "repeat": 0,
@@ -190,23 +190,23 @@ def contribution_tests() -> list[str]:
            r("d", "haiku", False, False, trig=False), r("d", "haiku", True, True),
            r("n", "haiku", False, True, exp="no-trigger")]
     nu = ev.no_uplift(res)
-    if nu != [("s", "a"), ("s", "d")]:   # d: bez skilli zaliczony, ze skillem skill się nie uruchomił
-        fails.append(f"no_uplift: tylko scenariusz zaliczony bez skilli na każdym modelu z przebiegiem bez skilli: {nu}")
+    if nu != [("s", "a"), ("s", "d")]:   # d: passed without skills, with the skill the skill did not trigger
+        fails.append(f"no_uplift: only a scenario passed without skills on every model that has a run without skills: {nu}")
     rows = {(x["skill"], x["model"]): x for x in ev.contribution(res)}
     h = rows.get(("s", "haiku"))
     if not h or (h["n"], h["with_skill"], h["without"], h["not_triggered"]) != (2, 1.0, 0.5, 1) \
             or abs(h["uplift"] - 0.5) > 1e-9:
-        fails.append(f"contribution: haiku — tylko scenariusze z uruchomionym skillem (2), 100% ze skillem, 50% bez, "
-                     f"wkład +50%, 1 scenariusz bez uruchomienia osobno: {h}")
+        fails.append(f"contribution: haiku — only scenarios with the skill triggered (2), 100% with the skill, 50% without, "
+                     f"contribution +50%, 1 scenario without a trigger separately: {h}")
     s = rows.get(("s", "sonnet"))
     if not s or abs(s["uplift"]) > 1e-9:
-        fails.append(f"contribution: sonnet bez wkładu: {s}")
+        fails.append(f"contribution: sonnet without contribution: {s}")
     with tempfile.TemporaryDirectory() as d:
         out = Path(d) / "report.md"
         ev.report(res, out)
         txt = out.read_text(encoding="utf-8")
-        if "## Wkład skilla" not in txt or "## Zaliczane bez skilli" not in txt or "`s` / a" not in txt:
-            fails.append("report: sekcje „Wkład skilla” i „Zaliczane bez skilli” z listą scenariuszy")
+        if "## Skill contribution" not in txt or "## Passed without skills" not in txt or "`s` / a" not in txt:
+            fails.append("report: the \"Skill contribution\" and \"Passed without skills\" sections with the scenario list")
         jl = Path(d) / "w.jsonl"
         jl.write_text("\n".join(json.dumps(x) for x in res) + "\n", encoding="utf-8")
         import contextlib, io
@@ -214,7 +214,7 @@ def contribution_tests() -> list[str]:
         with contextlib.redirect_stdout(buf):
             code = ev.main(["run_skill_evals.py", "--contribution", str(jl)])
         if code != 0 or "| s | haiku |" not in buf.getvalue() or "+50% | 1 |" not in buf.getvalue():
-            fails.append(f"--contribution: tabela wkładu z pliku .jsonl bez uruchamiania modelu: {code} {buf.getvalue()[:300]}")
+            fails.append(f"--contribution: the contribution table from a .jsonl file without running a model: {code} {buf.getvalue()[:300]}")
         log = Path(d) / "holdout-dostep.jsonl"
         scs = [{"skill": "s", "id": "h1", "holdout": True}, {"skill": "s", "id": "a"}, {"skill": "t", "id": "h2", "holdout": True}]
         n1 = ev.log_holdout_access(scs, ["haiku"], Path(d) / "r1.md", log)
@@ -229,13 +229,13 @@ def contribution_tests() -> list[str]:
 
 def main() -> int:
     fails = []
-    # 1–2. sprawdzenia treści
+    # 1–2. content checks
     ok, _ = ev.evaluate_checks("Nagłówek Idempotency-Key, konflikt 409", {"all": [["idempotency-key"], ["409|422"]]})
     if not ok:
-        fails.append("checks.all: poprawna odpowiedź odrzucona")
+        fails.append("checks.all: a correct answer rejected")
     ok, miss = ev.evaluate_checks("Użyj PUT zamiast POST", {"all": [["idempotency"]], "none": ["PUT zamiast POST"]})
     if ok or len(miss) != 2:
-        fails.append(f"checks: brak lub niepożądana fraza nie wykryta ({miss})")
+        fails.append(f"checks: a missing or unwanted phrase not detected ({miss})")
     # 3. parsowanie strumienia: Skill z prefiksem wtyczki i Read SKILL.md
     p = ev.parse_stream([
         json.dumps({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "x:be-api-design"}}]}}),
@@ -245,7 +245,7 @@ def main() -> int:
     ])
     if p["skills"] != ["be-api-design", "qa-regression"] or p["cost"] != 0.02 or p["text"] != "ok" or p["error"]:
         fails.append(f"parse_stream: {p}")
-    # 4–6. przebieg z atrapą claude
+    # 4–6. a run with the claude stub
     with tempfile.TemporaryDirectory() as d:
         fake = Path(d) / "claude"
         fake.write_text(FAKE, encoding="utf-8")
@@ -258,19 +258,19 @@ def main() -> int:
             fails.append(f"run_one trigger: {r}")
         r = ev.run_one({**base, "id": "b", "expect": "trigger", "prompt": "bez skilla, pytanie o POST"}, "haiku", False, args)
         if r["passed"] or r["triggered"] or not r["checks_ok"]:
-            fails.append(f"run_one: brak uruchomienia powinien oblać scenariusz trigger: {r}")
+            fails.append(f"run_one: no trigger should fail a trigger scenario: {r}")
         r = ev.run_one({"skill": "be-api-design", "id": "c", "expect": "no-trigger", "neighbor": "be-database",
                         "prompt": "CZYTAJ indeksy w tabeli"}, "haiku", False, args)
         if not r["passed"] or r["skills_used"] != ["be-database"]:
             fails.append(f"run_one no-trigger: {r}")
-        # 7. ocena modelem: wyrażenie nie trafia, oceniający uznaje wymaganie za spełnione
+        # 7. model judging: the expression does not match, the judge deems the requirement met
         args.judge = "haiku"
         r = ev.run_one({"skill": "be-api-design", "id": "d", "expect": "trigger", "prompt": "UŻYJ skilla",
                         "checks": {"all": [["zwrot\\w* tej samej odpowiedzi"]]}}, "haiku", False, args)
         if not (r["passed"] and r["judged"]) or abs(r["cost"] - 0.015) > 1e-9:
             fails.append(f"ocena modelem: {r}")
-        # 7b. sędzia inny niż oceniany model (develop-tests: „use a different model to evaluate”) i uzasadnienie
-        # przed oceną w schemacie odpowiedzi sędziego
+        # 7b. a judge different from the evaluated model (develop-tests: "use a different model to evaluate") and reasoning
+        # before the rating in the judge's response schema
         pairs = {("auto", "haiku"): "sonnet", ("auto", "sonnet"): "haiku", ("auto", "opus"): "sonnet",
                  ("auto", "claude-haiku-5-5"): "sonnet", ("haiku", "haiku"): "haiku", ("opus", "haiku"): "opus"}
         got = {k: ev.judge_model(*k) for k in pairs}
@@ -280,20 +280,20 @@ def main() -> int:
         r = ev.run_one({"skill": "be-api-design", "id": "e", "expect": "trigger", "prompt": "UŻYJ skilla",
                         "checks": {"all": [["zwrot\\w* tej samej odpowiedzi"]]}}, "haiku", False, args)
         if not (r["passed"] and r["judged"]) or r["judged_by"] != "sonnet" or r.get("judge_same_model"):
-            fails.append(f"sędzia auto: {r}")
+            fails.append(f"judge auto: {r}")
         args.judge = "haiku"
         r = ev.run_one({"skill": "be-api-design", "id": "f", "expect": "trigger", "prompt": "UŻYJ skilla",
                         "checks": {"all": [["zwrot\\w* tej samej odpowiedzi"]]}}, "haiku", False, args)
         if not r.get("judge_same_model"):
-            fails.append(f"sędzia = oceniany model powinien być oznaczony: {r}")
+            fails.append(f"judge = evaluated model should be flagged: {r}")
         rep = Path(d) / "report.md"
         ev.report([r], rep)
-        if "tej samej rodziny" not in rep.read_text(encoding="utf-8"):
-            fails.append("raport: brak ostrzeżenia o sędzi tej samej rodziny co oceniany model")
+        if "same family" not in rep.read_text(encoding="utf-8"):
+            fails.append("report: no warning about a judge of the same family as the evaluated model")
         if '"reason"' not in ev.JUDGE_SCHEMA or ev.DEFAULT_JUDGE != "auto":
-            fails.append("schemat sędziego bez uzasadnienia albo domyślny sędzia nie jest 'auto'")
-        # 7c. izolacja przebiegu bez skilli: --restricted (pliki tylko w katalogu testu, bez Bash, bez ustawień
-        # użytkownika i projektu) i wykrycie odczytu poza katalogiem testu w strumieniu — taki przebieg to błąd
+            fails.append("judge schema without reasoning or the default judge is not 'auto'")
+        # 7c. isolation of a run without skills: --restricted (files only in the test directory, no Bash, no
+        # user and project settings) and detection of a read outside the test directory in the stream — such a run is an error
         args.judge = "none"
         argv_file = Path(d) / "argv.json"
         os.environ["FAKE_ARGV"] = str(argv_file)
@@ -303,50 +303,50 @@ def main() -> int:
         if "--restricted" not in argv:
             fails.append(f"bez skilli: brak --restricted w poleceniu: {argv}")
         if r.get("outside_reads") != ["/home/u/tf/core/skills/be-api-design/SKILL.md", "/home/u/tf"]:
-            fails.append(f"bez skilli: odczyty poza katalogiem testu: {r.get('outside_reads')}")
-        if r["passed"] or "poza katalogiem testu" not in (r["error"] or ""):
-            fails.append(f"bez skilli: odczyt poza katalogiem testu powinien być błędem przebiegu: {r}")
+            fails.append(f"without skills: reads outside the test directory: {r.get('outside_reads')}")
+        if r["passed"] or "outside the test directory" not in (r["error"] or ""):
+            fails.append(f"without skills: a read outside the test directory should be a run error: {r}")
         r = ev.run_one(leak, "haiku", False, args)
         argv = json.loads(argv_file.read_text(encoding="utf-8")) if argv_file.is_file() else []
         if "--restricted" in argv or not r.get("outside_reads") or r["error"]:
-            fails.append(f"ze skillami: bez --restricted, odczyt zapisany, ale nie błąd: {argv} {r}")
+            fails.append(f"with skills: without --restricted, the read recorded, but not an error: {argv} {r}")
         p = ev.parse_stream([json.dumps({"type": "assistant", "message": {"content": [
             {"type": "tool_use", "name": "Glob", "input": {"pattern": "**/*.md", "path": "/w/sub"}},
             {"type": "tool_use", "name": "Read", "input": {"file_path": "/w/a.md"}}]}})])
         if p.get("paths") != ["/w/sub", "/w/a.md"]:
-            fails.append(f"parse_stream: ścieżki narzędzi plikowych: {p.get('paths')}")
+            fails.append(f"parse_stream: file tool paths: {p.get('paths')}")
         if ev.outside(["/w/a.md", "rel.md", "/w2/x", "/w/../etc/passwd"], "/w") != ["/w2/x", "/w/../etc/passwd"]:
             fails.append(f"outside: {ev.outside(['/w/a.md', 'rel.md', '/w2/x', '/w/../etc/passwd'], '/w')}")
         os.environ.pop("FAKE_ARGV")
         os.environ.pop("CLAUDE_BIN")
-        # 8. walidacja błędnego pliku
+        # 8. validation of a bad file
         bad = Path(d) / "be-api-design.json"
         bad.write_text(json.dumps({"skill": "be-api-design", "scenarios": [
             {"id": "x", "expect": "trigger", "prompt": "krótko"},
             {"id": "x", "expect": "no-trigger", "prompt": "pytanie bez sąsiada o czymś"}]}), encoding="utf-8")
         errs = ev.validate_file(bad)
         if len(errs) < 4:
-            fails.append(f"validate_file: za mało błędów dla złego pliku: {errs}")
-    # 8b. --ids: tylko wybrane scenariusze (id albo skill:id); nieznany identyfikator to błąd, nie cichy pusty przebieg
+            fails.append(f"validate_file: too few errors for a bad file: {errs}")
+    # 8b. --ids: only the selected scenarios (id or skill:id); an unknown identifier is an error, not a silent empty run
     scs = [{"skill": "a", "id": "x"}, {"skill": "a", "id": "y"}, {"skill": "b", "id": "x"}]
     sel, unknown = ev.select_ids(scs, "y,b:x")
     if [(c["skill"], c["id"]) for c in sel] != [("a", "y"), ("b", "x")] or unknown:
         fails.append(f"select_ids: {sel} {unknown}")
     sel, unknown = ev.select_ids(scs, "x,zzz")
     if len(sel) != 2 or unknown != ["zzz"]:
-        fails.append(f"select_ids: samo id pasuje do wszystkich skilli, nieznane zgłoszone: {sel} {unknown}")
+        fails.append(f"select_ids: a bare id matches all skills, unknown ones reported: {sel} {unknown}")
     if ev.main(["run", "--skills", "be-api-design", "--ids", "nie-ma-takiego", "--yes"]) != 2:
-        fails.append("--ids z nieznanym identyfikatorem powinno dać kod 2 bez uruchamiania modelu")
-    # 9. wszystkie pliki scenariuszy w repozytorium
+        fails.append("--ids with an unknown identifier should give code 2 without running a model")
+    # 9. all scenario files in the repository
     files = sorted(ev.EVALS.glob("*.json"))
     errs = [e for f in files for e in ev.validate_file(f)]
     if errs:
-        fails.append(f"pliki scenariuszy: {len(errs)} błędów, np. {errs[:3]}")
+        fails.append(f"scenario files: {len(errs)} errors, e.g. {errs[:3]}")
     skills = sorted(p.parent.name for p in ev.SKILLS.glob("*/SKILL.md"))
     missing = [s for s in skills if not (ev.EVALS / f"{s}.json").exists()]
     if files and missing:
         fails.append(f"skille bez scenariuszy: {missing[:5]}{' …' if len(missing) > 5 else ''}")
-    # 10. podpowiedź skilli (hook skill_hint) na scenariuszach: trafność i brak szumu na poleceniach ogólnych
+    # 10. skill hint (the skill_hint hook) on scenarios: accuracy and no noise on generic commands
     if files:
         hs = importlib.util.spec_from_file_location("skill_hint", ev.ROOT / ".claude" / "hooks" / "skill_hint.py")
         hint = importlib.util.module_from_spec(hs)
@@ -355,20 +355,20 @@ def main() -> int:
         trig = [(json.loads(f.read_text(encoding="utf-8"))["skill"], s) for f in files
                 for s in ev.tuning_set(json.loads(f.read_text(encoding="utf-8"))["scenarios"]) if s["expect"] == "trigger"]
         hits = sum(sk in [it["name"] for _, it in hint.select(s["prompt"], items)] for sk, s in trig)
-        # polecenie ogólne → brak podpowiedzi; dla prośby o commit dopuszczalne są tylko skille commitów (w małej
-        # instalacji, bez konkurencji innych skilli, podpowiedź core-git-workflow jest trafna, nie szumem)
+        # a generic command → no hint; for a commit request only commit skills are acceptable (in a small
+        # installation, without competition from other skills, the core-git-workflow hint is accurate, not noise)
         generic = {"hej, jak się masz?": set(), "Jaka jest stolica Francji?": set(),
                    "Przetłumacz ten akapit na angielski": set(), "Co robi ten plik?": set(),
                    "Zrób commit z tymi zmianami": {"core-git-workflow", "core-conventional-commits"}}
         def noisy(g: str, ok: set) -> bool:
             picks = [it["name"] for _, it in hint.select(g, items)]
-            return bool(picks) and (not ok or picks[0] not in ok)   # przy commicie liczy się lider podpowiedzi
+            return bool(picks) and (not ok or picks[0] not in ok)   # for a commit the hint leader counts
         noise = sum(noisy(g, ok) for g, ok in generic.items())
         if trig and hits / len(trig) < 0.8:
-            fails.append(f"skill_hint: trafność {hits}/{len(trig)} < 80% — sprawdź opisy skilli lub próg")
+            fails.append(f"skill_hint: accuracy {hits}/{len(trig)} < 80% — check the skill descriptions or the threshold")
         if noise:
-            fails.append(f"skill_hint: podpowiedź przy {noise} z {len(generic)} poleceń ogólnych")
-    # 11–12. logi z prawdziwej pracy: decyzje hooka (bez treści polecenia) i skille użyte w sesji → raport
+            fails.append(f"skill_hint: a hint on {noise} of {len(generic)} generic commands")
+    # 11–12. logs from real work: hook decisions (without the command text) and skills used in the session → report
     import subprocess as sp
     with tempfile.TemporaryDirectory() as d:
         proj = Path(d)
@@ -382,11 +382,11 @@ def main() -> int:
                capture_output=True, text=True, env=env)
         log = proj / ".tf" / "logs" / "skill-hints.jsonl"
         rec = json.loads(log.read_text(encoding="utf-8").splitlines()[0]) if log.exists() else {}
-        # pierwsza podpowiedź to skill API; kolejne mogą dojść z innych nakładek (np. paginacja w protokole z nakładki domenowej)
-        api = (ev.SKILLS / "be-api-design").is_dir()      # skill z pack-it; bez niego sprawdzamy tylko brak treści w logu
+        # the first hint is the API skill; further ones may come from other overlays (e.g. pagination in a protocol from a domain overlay)
+        api = (ev.SKILLS / "be-api-design").is_dir()      # a skill from pack-it; without it we only check the absence of content in the log
         if ((api and (rec.get("hinted") or [None])[0] != "be-api-design")
                 or "TAJNE" in log.read_text(encoding="utf-8") if log.exists() else api):
-            fails.append(f"skill_hint: log decyzji niepoprawny albo zawiera treść polecenia: {rec}")
+            fails.append(f"skill_hint: the decision log is incorrect or contains the command text: {rec}")
         tr = proj / "t.jsonl"
         tr.write_text(json.dumps({"type": "assistant", "message": {"id": "m1", "model": "x", "usage": {"output_tokens": 5},
                       "content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "be-api-design"}},
@@ -398,14 +398,14 @@ def main() -> int:
         hr.loader.exec_module(rep_mod)
         logs = proj / ".tf" / "logs"
         r = rep_mod.analyse(rep_mod.read_jsonl(logs / "skill-hints.jsonl", None), rep_mod.read_jsonl(logs / "usage.jsonl", None))
-        if api and (r["hit"].get("be-api-design") != 1 or r["missed"].get("be-database") != 1):   # podpowiedź z pack-it
+        if api and (r["hit"].get("be-api-design") != 1 or r["missed"].get("be-database") != 1):   # hint from pack-it
             fails.append(f"hint_report: trafione/przeoczone niepoprawne: {r}")
     fails += protocol_tests()
     fails += contribution_tests()
     total = 12 + PROTOCOL_TESTS
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów ewaluacji skilli ({len(files)} plików scenariuszy)")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} skill evaluation tests ({len(files)} scenario files)")
     return 1 if fails else 0
 
 

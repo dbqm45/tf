@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy instalatora: ścieżki testów fabryki (`tests/` → `.claude/tests/`) przepisywane tylko tam, gdzie chodzi
-o testy fabryki (workflow CI, ustawienia), a nie w treści skilli i scenariuszy, gdzie `tests/` to testy projektu.
+"""Installer tests: the factory test paths (`tests/` → `.claude/tests/`) are rewritten only where factory tests are meant
+(the CI workflow, settings), and not in the content of skills and scenarios, where `tests/` means the project's tests.
 python3 tests/test_install_paths.py"""
 import json
 import shutil
@@ -46,17 +46,17 @@ def main() -> int:
         proj.mkdir()
         r = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes",
                             "--shared", "--packs", "pack-a"], capture_output=True, text=True, timeout=300)
-        check(r.returncode == 0, f"I-1: instalacja: {r.stdout[-600:]} {r.stderr[-300:]}")
-        # T-1…T-5 (krok 4c): silnik w .tf/factory/, konfiguracja projektu w .tf/config/, nic w katalogu factory/
+        check(r.returncode == 0, f"I-1: install: {r.stdout[-600:]} {r.stderr[-300:]}")
+        # T-1…T-5 (step 4c): the engine in .tf/factory/, the project configuration in .tf/config/, nothing in a factory/ directory
         tfd = proj / ".tf"
         check((tfd / "factory" / "build.py").is_file() and (tfd / "factory" / "VERSION").is_file()
               and (tfd / "factory" / "packs" / "pack-a" / "pack.yaml").is_file() and not (proj / "factory").exists(),
-              f"T-1: silnik i metadane nakładek w .tf/factory/, bez factory/ w katalogu głównym: "
+              f"T-1: the engine and overlay metadata in .tf/factory/, no factory/ in the root directory: "
               f"{sorted(x.name for x in proj.iterdir())}")
         own_cfg = tfd / "config" / "config.yaml"
         check(own_cfg.is_file() and not any(ln.startswith("tiers:") for ln in own_cfg.read_text(encoding="utf-8").splitlines())
               and all((tfd / "config" / d).is_dir() for d in ("personas", "roles", "traits")),
-              f"T-2: .tf/config/ — config.yaml tylko na nadpisania i katalogi własnych person, ról, cech")
+              f"T-2: .tf/config/ — config.yaml only for overrides and the directories of own personas, roles, traits")
         own_cfg.parent.mkdir(parents=True, exist_ok=True)
         own_cfg.write_text("default_profile: economy\ntiers:\n  fast: {maxTurns: 7}\n", encoding="utf-8")
         r2 = subprocess.run([sys.executable, str(tfd / "factory" / "packs.py"), "--json"], cwd=proj,
@@ -68,38 +68,38 @@ def main() -> int:
         cfg = composed.get("config", composed)
         check(cfg.get("default_profile") == "economy" and (cfg.get("tiers") or {}).get("fast", {}).get("maxTurns") == 7
               and (cfg.get("tiers") or {}).get("fast", {}).get("model") and "std" in (cfg.get("tiers") or {}),
-              f"T-3: nadpisania z .tf/config/config.yaml nałożone na domyślne silnika: {r2.stdout[:300]} {r2.stderr[-300:]}")
+              f"T-3: overrides from .tf/config/config.yaml layered over the engine defaults: {r2.stdout[:300]} {r2.stderr[-300:]}")
         caches = sorted(str(x.relative_to(proj)) for x in (tfd / "factory").rglob("__pycache__"))
-        check(not caches, f"T-6: silnik nie zostawia __pycache__ w .tf/factory/ (instalacja, packs.py): {caches}")
+        check(not caches, f"T-6: the engine leaves no __pycache__ in .tf/factory/ (install, packs.py): {caches}")
         instr = (proj / "CLAUDE.md").read_text(encoding="utf-8") if (proj / "CLAUDE.md").exists() else ""
         check(".tf/factory/build.py" in instr and "python3 factory/" not in instr,
-              f"T-4: instrukcje projektu wskazują .tf/factory/: {instr[-400:]}")
+              f"T-4: the project instructions point to .tf/factory/: {instr[-400:]}")
         r3 = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes"],
                             capture_output=True, text=True, timeout=300)
         check(r3.returncode == 0 and "economy" in own_cfg.read_text(encoding="utf-8"),
-              f"T-5: aktualizacja nie rusza .tf/config/config.yaml: {r3.stdout[-400:]}")
+              f"T-5: the update does not touch .tf/config/config.yaml: {r3.stdout[-400:]}")
         skill = proj / ".claude" / "skills" / "aa-run"
         read = lambda p: p.read_text(encoding="utf-8") if p.exists() else ""
         check("python3 tests/test_orders.py" in read(skill / "SKILL.md"),
-              f"I-2: SKILL.md bez zmian ścieżek testów projektu: {read(skill / 'SKILL.md')[-120:]}")
+              f"I-2: SKILL.md without changes to the project test paths: {read(skill / 'SKILL.md')[-120:]}")
         check("# tests/test_discount.py" in read(skill / "references" / "examples.md"),
-              f"I-3: przykłady w references bez zmian: {read(skill / 'references' / 'examples.md')}")
+              f"I-3: examples in references unchanged: {read(skill / 'references' / 'examples.md')}")
         check("W tests/test_discount.py" in read(proj / ".claude" / "tests" / "skill_evals" / "aa-run.json"),
-              "I-4: scenariusz ewaluacji bez zmian")
+              "I-4: the evaluation scenario unchanged")
         wf = read(proj / ".github" / "workflows" / "team-factory.yml")
         check(".claude/tests/test_hooks.py" in wf and " tests/test_hooks.py" not in wf,
-              "I-5: workflow CI fabryki uruchamia testy z .claude/tests/")
+              "I-5: the factory CI workflow runs the tests from .claude/tests/")
         check("\n  workflow_dispatch:" in wf,
-              "I-5a: workflow CI fabryki da się uruchomić ręcznie (workflow_dispatch), np. po włączeniu Actions")
+              "I-5a: the factory CI workflow can be run manually (workflow_dispatch), e.g. after enabling Actions")
         check("name: 'aa-audit'" in read(proj / ".claude" / "workflows" / "aa-audit.js"),
-              "I-7: workflow nakładki w .claude/workflows/ (tam Claude Code szuka zapisanych workflows)")
+              "I-7: the overlay workflow in .claude/workflows/ (where Claude Code looks for saved workflows)")
         guide, faq = read(proj / ".tf" / "factory" / "GUIDE.md"), read(proj / ".tf" / "factory" / "FAQ.md")
         check(guide.startswith("# ") and faq.startswith("# ") and "tf " in guide,
-              "I-9: przewodnik i FAQ rdzenia w .tf/factory/ (bez README w korzeniu projektu)")
+              "I-9: the core guide and FAQ in .tf/factory/ (no README in the project root)")
         sett = read(proj / ".claude" / "settings.json")
-        check("python3 .claude/tests/test_cleanroom.py" in sett, "I-6: uprawnienie do testu fabryki w .claude/tests/")
+        check("python3 .claude/tests/test_cleanroom.py" in sett, "I-6: permission for the factory test in .claude/tests/")
 
-        # tryb prywatny: workflow fabryki ignorowany po nazwie pliku (własne workflows projektu zostają w repo)
+        # private mode: the factory workflow ignored by file name (the project's own workflows stay in the repo)
         priv = Path(t) / "priv"
         priv.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=priv, check=True)
@@ -107,11 +107,11 @@ def main() -> int:
                         "--packs", "pack-a"], capture_output=True, text=True, timeout=300)
         exclude = read(priv / ".git" / "info" / "exclude").splitlines()
         check(".claude/workflows/aa-audit.js" in exclude and ".claude/workflows/" not in exclude,
-              f"I-8: workflow fabryki w .git/info/exclude po nazwie: {[e for e in exclude if 'workflows' in e]}")
+              f"I-8: the factory workflow in .git/info/exclude by name: {[e for e in exclude if 'workflows' in e]}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów ścieżek instalatora")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} installer path tests")
     return 1 if fails else 0
 
 

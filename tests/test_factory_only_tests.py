@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Testy fabryki, które mają sens tylko w repozytorium fabryki (evale przebiegu N5: `test_flow_evals.py`,
-`flow_evals_runner.py`, `flow_evals/`, `test_export_pdi_runs.py` — importują `scripts/export_pdi_runs.py`
-i `modes/mode-pdi/.../phase_result.py` ze źródła fabryki), nie trafiają do projektu (`.claude/tests/`),
-aktualizacja usuwa ich kopie z wcześniejszych wersji, a `tools/workspace.py check` dalej je uruchamia (ze źródła).
+"""Factory tests that make sense only in the factory repository (the N5 flow evals: `test_flow_evals.py`,
+`flow_evals_runner.py`, `flow_evals/`, `test_export_pdi_runs.py` — they import `scripts/export_pdi_runs.py`
+and `modes/mode-pdi/.../phase_result.py` from the factory source), do not reach the project (`.claude/tests/`),
+an update removes their copies from earlier versions, and `tools/workspace.py check` still runs them (from the source).
 python3 tests/test_factory_only_tests.py"""
 import importlib.util
 import json
@@ -44,21 +44,21 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         proj = Path(t) / "app"
         r = install(proj, "mode-pdi,mode-team")
-        check(r.returncode == 0, f"FO-0: instalacja mode-pdi,mode-team: {r.stdout[-600:]} {r.stderr[-300:]}")
+        check(r.returncode == 0, f"FO-0: install of mode-pdi,mode-team: {r.stdout[-600:]} {r.stderr[-300:]}")
         present = [rel for rel in FACTORY_ONLY if (proj / rel).exists()]
-        check(not present, f"FO-1: testy tylko dla fabryki nie trafiają do projektu: {present}")
-        check(not (proj / ".claude" / "tests" / "flow_evals").exists(), "FO-1: brak katalogu .claude/tests/flow_evals/")
+        check(not present, f"FO-1: factory-only tests do not reach the project: {present}")
+        check(not (proj / ".claude" / "tests" / "flow_evals").exists(), "FO-1: no .claude/tests/flow_evals/ directory")
         files = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))["files"]
         listed = [rel for rel in files if "flow_evals" in rel or "export_pdi_runs" in rel]
-        check(not listed, f"FO-2: manifest nie wymienia testów tylko dla fabryki: {listed}")
+        check(not listed, f"FO-2: the manifest does not list factory-only tests: {listed}")
         check((proj / ".claude" / "tests" / "run_skill_evals.py").exists(),
-              "FO-3: walidator scenariuszy skilli (run_skill_evals.py) dalej instalowany")
+              "FO-3: the skill scenario validator (run_skill_evals.py) is still installed")
         leftovers = [p.name for p in sorted((proj / ".claude" / "tests").glob("test_*.py"))
                      if any(m in p.read_text(encoding="utf-8")
                             for m in ("import export_pdi_runs", "import flow_evals_runner"))]
-        check(not leftovers, f"FO-4: zainstalowane testy nie importują modułów ze źródła fabryki: {leftovers}")
+        check(not leftovers, f"FO-4: installed tests do not import modules from the factory source: {leftovers}")
 
-        # FO-5: projekt z wersji, która je instalowała (niezmienione kopie w manifeście) → aktualizacja je usuwa
+        # FO-5: a project from a version that installed them (unchanged copies in the manifest) → the update removes them
         inst = load("tf_install_fo", ROOT / "core" / "factory" / "install.py")
         man = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
         old = {".claude/tests/test_flow_evals.py": ROOT / "core/tests/test_flow_evals.py",
@@ -69,22 +69,22 @@ def main() -> int:
             man["files"][rel] = inst.sha(src.read_bytes())
         (proj / MANIFEST).write_text(json.dumps(man), encoding="utf-8")
         r = install(proj, "mode-pdi,mode-team", "--update")
-        check(r.returncode == 0, f"FO-5: aktualizacja: {r.stdout[-600:]} {r.stderr[-300:]}")
+        check(r.returncode == 0, f"FO-5: update: {r.stdout[-600:]} {r.stderr[-300:]}")
         still = [rel for rel in old if (proj / rel).exists()]
-        check(not still, f"FO-5: aktualizacja usuwa kopie testów tylko dla fabryki z poprzedniej wersji: {still}")
+        check(not still, f"FO-5: the update removes the factory-only test copies from the previous version: {still}")
 
-    # FO-6: przestrzeń fabryki uruchamia je ze źródła (core/tests/), więc dalej są sprawdzane w `workspace.py check`
+    # FO-6: the factory workspace runs them from the source (core/tests/), so they are still checked in `workspace.py check`
     ws = load("tf_workspace_fo", ROOT / "tools" / "workspace.py")
     tests = ws.factory_only_tests()
     names = sorted(p.name for p in tests)
     check(names == ["test_export_pdi_runs.py", "test_flow_evals.py"],
-          f"FO-6: workspace.py check uruchamia testy tylko dla fabryki: {names}")
+          f"FO-6: workspace.py check runs the factory-only tests: {names}")
     check(all(p.is_file() and p.parent == ROOT / "core" / "tests" for p in tests),
-          f"FO-6: ze źródła core/tests/: {tests}")
+          f"FO-6: from the core/tests/ source: {tests}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testy tylko dla fabryki")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} factory-only tests")
     return 1 if fails else 0
 
 
