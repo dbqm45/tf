@@ -1,187 +1,187 @@
-# Proces pisania dokumentacji technicznej
+# The process of writing technical documentation
 
-> **Spis treści:** Etapy · Zbieranie informacji · Projekt (plan) dokumentacji — co powinien zawierać · Weryfikacja i recenzja · Korekta (proofreading) — oddzielny przebieg od recenzji… · Przejmowanie dokumentacji napisanej przez kogoś innego · Podsumowanie (post-mortem) po zakończeniu pracy
+> **Contents:** Stages · Gathering information · The documentation project (plan) — what it should contain · Verification and review · Proofreading — a pass separate from the review… · Taking over documentation written by someone else · Summary (post-mortem) after the work ends
 
-Rozwinięcie hubu docs-tech-writing. W projektach z dziennikiem `docs/project/` plan, statusy i przekazania prowadzi
-core-project-record — tu tylko proces pisania samego dokumentu.
+An expansion of the docs-tech-writing hub. In projects with a `docs/project/` record, the plan, statuses and handoffs are run by
+core-project-record — here only the process of writing the document itself.
 
-## Etapy
+## Stages
 
-1. zbieranie informacji o opisywanym systemie,
-2. tworzenie projektu/struktury dokumentacji,
-3. pisanie treści,
-4. weryfikacja,
-5. poprawki i uzupełnianie braków.
+1. gathering information about the described system,
+2. creating the project/structure of the documentation,
+3. writing the content,
+4. verification,
+5. fixes and filling in the gaps.
 
-Etapy 4 i 5 zwykle powtarzają się kilkakrotnie, aż do usunięcia wszystkich usterek — to nie jest liniowy,
-jednorazowy przebieg.
+Stages 4 and 5 usually repeat several times until all defects are removed — this is not a linear,
+one-off pass.
 
-Nie pisz dokumentu liniowo od pierwszego do ostatniego akapitu. Lepiej: rozpisz najpierw pełną strukturę
-(rozdziały → podrozdziały → pod-podrozdziały, i tak dalej), a potem wypełniaj treścią kolejne węzły tej
-struktury. Zalety: (1) gdy trafisz na fragment, którego nie możesz w danym momencie napisać (np. czekasz na
-konsultację z developerem), zaznaczasz to i przechodzisz do innego węzła, zamiast blokować całą pracę; (2)
-na pierwszy rzut oka widać stan prac — co gotowe, co wymaga uzupełnienia, co nawet nie zaczęte; (3) unikasz
-sytuacji, w której cała treść jest już napisana, ale okazuje się, że układ powinien być inny.
+Do not write the document linearly from the first to the last paragraph. Better: first lay out the full structure
+(chapters → subchapters → sub-subchapters, and so on), and then fill the successive nodes of this
+structure with content. Advantages: (1) when you hit a fragment you cannot write at the moment (e.g. you are waiting for
+a consultation with a developer), you mark it and move to another node instead of blocking the whole work; (2)
+the state of the work is visible at a glance — what is ready, what needs filling in, what is not even started; (3) you avoid
+the situation in which the whole content is already written, but it turns out that the layout should be different.
 
-## Zbieranie informacji
+## Gathering information
 
-Trzy główne źródła, zwykle łączone:
-- czytanie już istniejących fragmentów dokumentacji,
-- praca z samym programem i analiza kodu źródłowego,
-- konsultacje (zazwyczaj z developerami, którzy stworzyli system).
+Three main sources, usually combined:
+- reading the already existing fragments of documentation,
+- working with the program itself and analysing the source code,
+- consultations (usually with the developers who built the system).
 
-Gdy sam po raz pierwszy uruchamiasz/używasz systemu jako „użytkownik” — **zapisuj wszystko, co sprawiło
-trudność**. Bardzo prawdopodobne, że realny użytkownik natknie się na te same trudności — to naturalny
-sygnał, które miejsca opisać ze szczególną dokładnością.
+When you run/use the system for the first time as a "user" — **write down everything that caused
+difficulty**. It is very likely that a real user will run into the same difficulties — it is a natural
+signal of which places to describe with particular care.
 
-Zawsze pracuj na **aktualnym kodzie rozwojowym**, nie na starej wersji ani na okrojonej wersji demo. Jeśli
-system nadal się zmienia w trakcie pisania dokumentacji, poproś developerów o krótkie, regularne (np.
-dzienne) informacje o zmianach — nie muszą to być szczegółowe raporty, wystarczy jedna linia typu "zmieniłem
-klasę taką i taką"; ty sam oceniasz, czy dana zmiana wymaga aktualizacji dokumentu.
+Always work on the **current development code**, not on an old version or a cut-down demo version. If
+the system keeps changing while you write the documentation, ask the developers for short, regular (e.g.
+daily) information about changes — these need not be detailed reports, one line like "I changed
+such-and-such class" is enough; you yourself judge whether a given change requires updating the document.
 
-### Konsultacje z developerami — jak je prowadzić efektywnie
+### Consulting developers — how to do it effectively
 
-- Konsultuj się najpierw z osobą **najniżej w hierarchii**, która może znać odpowiedź (programista → szef
-  zespołu → kierownik projektu), dopiero gdy niższy poziom nie potrafi odpowiedzieć. Powód: czas osób wyżej
-  w hierarchii jest cenniejszy dla organizacji.
-- **Przygotuj się przed rozmową** — dowiedz się samodzielnie tyle, ile się da, żeby zadawać precyzyjne
-  pytania i lepiej rozumieć odpowiedzi. Przygotuj konkretną listę pytań i wyślij ją rozmówcy z
-  wyprzedzeniem, żeby mógł się przygotować.
-- Przy rozmowie z kimś, kto ma mało czasu — użyj nagrania zamiast notatek robionych w trakcie (ale
-  **zapowiedz to od razu na początku rozmowy**, nigdy w połowie, i nigdy bez zapowiedzi). Notatki
-  robione „na bieżąco” zabierają rozmówcy czas na bezproduktywne przerwy; nagranie pozwala zachować naturalne
-  tempo rozmowy.
-- Jeśli osoba nigdy nie ma czasu — poproś, żeby **sama zaproponowała termin**. Jeśli to nie pomaga po kilku
-  próbach, poszukaj innej osoby ze tą wiedzą; jeśli to niemożliwe, zgłoś problem swojemu przełożonemu.
-- Na koniec konsultacji zawsze zadaj: **„czy jest coś jeszcze, o czym powinienem wiedzieć?”** — to pytanie
-  regularnie wyciąga informacje, o które sam nie zapytałbyś, bo nie przyszłyby ci do głowy.
-- Jeśli czas na spotkanie się kończy, a temat nie jest zamknięty — nie przeciągaj, tylko ustal kolejny
-  termin.
-- **Dodaj informacje z konsultacji do dokumentacji od razu po jej zakończeniu.** Odkładanie tego grozi
-  problemami z rozszyfrowaniem własnych skróconych notatek później.
+- Consult first the person **lowest in the hierarchy** who may know the answer (developer → team
+  lead → project manager), and go higher only when the lower level cannot answer. Reason: the time of people higher
+  in the hierarchy is more valuable to the organization.
+- **Prepare before the conversation** — find out on your own as much as you can, so that you ask precise
+  questions and understand the answers better. Prepare a concrete list of questions and send it to the person
+  in advance, so that they can prepare.
+- When talking to someone who has little time — use a recording instead of notes taken during the conversation (but
+  **announce it right at the start of the conversation**, never halfway through, and never without an announcement). Notes
+  taken "as you go" take the other person's time with unproductive pauses; a recording keeps the natural
+  pace of the conversation.
+- If a person never has time — ask them **to propose a date themselves**. If that does not help after a few
+  attempts, look for another person with this knowledge; if that is impossible, report the problem to your manager.
+- At the end of a consultation always ask: **"is there anything else I should know?"** — this question
+  regularly brings out information you would not ask about yourself, because it would not occur to you.
+- If the time for the meeting is running out and the topic is not closed — do not drag it out, set another
+  date.
+- **Add the information from the consultation to the documentation right after it ends.** Putting this off risks
+  problems deciphering your own shorthand notes later.
 
-## Projekt (plan) dokumentacji — co powinien zawierać
+## The documentation project (plan) — what it should contain
 
-- tytuł dokumentacji,
-- rodzaj dokumentacji (np. podręcznik użytkownika, dokumentacja API, runbook),
-- przewidywana data zakończenia,
-- autor(zy),
-- krótki opis zakresu — co dokumentacja będzie zawierać,
-- szacunkowa liczba stron (najlepiej przez porównanie z istniejącymi, podobnymi dokumentami),
-- spis głównych rozdziałów,
-- terminy kamieni milowych.
+- the title of the documentation,
+- the type of documentation (e.g. user manual, API documentation, runbook),
+- the expected completion date,
+- the author(s),
+- a short description of the scope — what the documentation will contain,
+- an estimated number of pages (best by comparison with existing, similar documents),
+- the list of main chapters,
+- the milestone dates.
 
-### Kamienie milowe
+### Milestones
 
-Zwykle wystarczą dwa:
-- **pierwszy** — gdy ok. 2/3–3/4 tekstu jest napisane, a miejsca docelowe dla rysunków/zrzutów ekranu są
-  już zaznaczone (nie muszą być wypełnione).
-- **drugi** — gdy praktycznie cały tekst i (prawie) wszystkie ilustracje są już w dokumencie, a usterki z
-  weryfikacji po pierwszym kamieniu są poprawione.
+Two are usually enough:
+- **the first** — when about 2/3–3/4 of the text is written, and the target places for figures/screenshots are
+  already marked (they need not be filled).
+- **the second** — when practically the whole text and (almost) all illustrations are already in the document, and the defects from
+  the verification after the first milestone are fixed.
 
-Kamień milowy to moment, w którym dokumentacja trafia do weryfikacji/recenzji — nie koniec pracy.
+A milestone is the moment when the documentation goes to verification/review — not the end of the work.
 
-### Znacznik miejsc niedokończonych
+### A marker for unfinished places
 
-Ustal **jeden, konsekwentny symbol** (np. `TBD`) dla miejsc wymagających uzupełnienia, zamiast ad hoc opisów
-(„do uzupełnienia”, „sprawdzić później” itp.). Powód jest czysto praktyczny: dzięki jednemu, stałemu ciągowi
-znaków wszystkie niedokończone miejsca w całym dokumencie da się znaleźć jednym wyszukiwaniem.
+Set **one consistent symbol** (e.g. `TBD`) for places that need filling in, instead of ad hoc descriptions
+("to be filled in", "check later" etc.). The reason is purely practical: thanks to one fixed string
+of characters, all unfinished places in the whole document can be found with one search.
 
-## Weryfikacja i recenzja
+## Verification and review
 
-Weryfikacja obejmuje:
-- dokładne przeczytanie w poszukiwaniu błędów,
-- sprawdzenie, czy zrzuty ekranu odpowiadają temu, co faktycznie widać w opisywanym momencie,
-- **wykonanie procedur/instrukcji z dokumentacji** i sprawdzenie, czy rzeczywiście dają opisany rezultat
-  (nie zakładać, że opis jest poprawny — przetestować go jak kod),
-- przekazanie do recenzji i zebranie uwag.
+Verification covers:
+- reading carefully in search of errors,
+- checking that the screenshots match what is actually visible at the described moment,
+- **performing the procedures/instructions from the documentation** and checking that they really give the described result
+  (do not assume the description is correct — test it like code),
+- passing it to review and collecting comments.
 
-Pożyteczne jest też poproszenie kogoś **bez głębokiej wiedzy o systemie** o przeczytanie i sprawdzenie, że
-wszystko zrozumiał — autor dokumentacji może przeoczyć coś „oczywistego dla niego”, a recenzent dobrze
-znający system może nie zauważyć tego braku, bo sam nie potrzebuje tego wyjaśnienia.
+It is also useful to ask someone **without deep knowledge of the system** to read it and check that
+they understood everything — the author of the documentation may miss something "obvious to them", and a reviewer who knows
+the system well may not notice this gap, because they do not need this explanation themselves.
 
-### Trzy metody zbierania opinii recenzentów
+### Three methods of collecting reviewers' opinions
 
-1. **Wspólne spotkanie** (najbardziej efektywne przy niewielkiej liczbie recenzentów) — wszyscy razem
-   przechodzą przez rozdziały/akapity, uwagi zgłaszane na głos są od razu rozpatrywane przez cały zespół.
-   Ryzyko: rozmowa łatwo odbiega od tematu, zwłaszcza gdy jest więcej uczestników — przy większej grupie
-   warto wyznaczyć **moderatora** (osobę niebiorącą udziału w recenzji), który tylko pilnuje trzymania się
-   tematu, nie zabiera głosu merytorycznie.
-2. **Rozesłanie i konsolidacja** — dokumentacja idzie do wszystkich recenzentów równolegle, uwagi wracają
-   osobno, autor je konsoliduje. Wymaga uwagi przy **sprzecznych sugestiach**: poinformować obu autorów
-   sprzecznych uwag o sytuacji i poprosić o przemyślenie stanowiska drugiej strony; jeśli nikt nie ustępuje
-   i autor dokumentacji nie ma własnego zdania — skłaniać się do propozycji osoby wyżej w hierarchii, ale
-   jeśli to autor osobiście preferuje wersję osoby niżej w hierarchii — skonsultować to ze swoim przełożonym
-   przed decyzją.
-3. **Przekazywanie sekwencyjne** — dokumentacja + uwagi każdego kolejnego recenzenta trafiają do
-   następnego, więc każdy (poza pierwszym) widzi też uwagi poprzedników. Najdokładniejsza, ale najbardziej
-   czasochłonna metoda.
+1. **A joint meeting** (the most effective with a small number of reviewers) — everyone together
+   goes through the chapters/paragraphs, comments raised aloud are considered at once by the whole team.
+   Risk: the conversation easily drifts off topic, especially when there are more participants — with a larger group
+   it is worth appointing a **moderator** (a person not taking part in the review) who only keeps the meeting on
+   topic and does not speak on the substance.
+2. **Send out and consolidate** — the documentation goes to all reviewers in parallel, the comments come back
+   separately, the author consolidates them. It needs attention with **contradictory suggestions**: inform both authors
+   of the contradictory comments about the situation and ask them to reconsider the other side's position; if nobody gives way
+   and the documentation author has no opinion of their own — lean towards the proposal of the person higher in the hierarchy, but
+   if the author personally prefers the version of the person lower in the hierarchy — consult this with your manager
+   before deciding.
+3. **Sequential passing** — the documentation + the comments of each successive reviewer go to
+   the next one, so everyone (except the first) also sees the comments of their predecessors. The most thorough, but the most
+   time-consuming method.
 
-Gdy dokument idzie do **powtórnej** recenzji — zawsze zaznacz, co zmieniło się od poprzedniej wersji, żeby
-recenzenci nie musieli czytać wszystkiego od nowa.
+When the document goes to a **repeated** review — always mark what changed since the previous version, so that
+the reviewers do not have to read everything again.
 
-Po oddaniu dokumentacji do produkcji następuje jej „zamrożenie” — dalsze zmiany idą do erraty (dołączanej
-osobno), a nie z powrotem do zamrożonego dokumentu; właściwe poprawki trafiają do następnej wersji.
+After the documentation is handed over to production, it is "frozen" — further changes go to an erratum (attached
+separately), not back into the frozen document; the actual fixes go into the next version.
 
-**Zbieraj uwagi od realnych odbiorców** po dostarczeniu im każdej gotowej części, a nie tylko od
-recenzentów wewnętrznych — to źródło zarówno konkretnych poprawek, jak i sygnałów o potrzebie zmiany
-przyjętych standardów (np. odbiorca prosi o większą czcionkę, bo ma słaby wzrok). Szczególnie ważne po
-pierwszej dostarczonej części, z tych samych powodów co recenzje wewnętrzne.
+**Collect comments from real readers** after delivering each finished part to them, not only from
+internal reviewers — it is a source of both concrete fixes and signals that the adopted
+standards need to change (e.g. a reader asks for a larger font because their eyesight is weak). Especially important after
+the first delivered part, for the same reasons as internal reviews.
 
-Po wdrożeniu warto też monitorować, **z jakimi problemami odbiorcy zgłaszają się do supportu** — jeśli
-dotyczą czegoś opisanego w dokumentacji, to sygnał, że dany fragment ma błąd, jest niejasny albo
-niedostatecznie szczegółowy.
+After deployment it is also worth monitoring **what problems readers bring to support** — if
+they concern something described in the documentation, it is a signal that the given fragment has an error, is unclear or
+is not detailed enough.
 
-## Korekta (proofreading) — oddzielny przebieg od recenzji merytorycznej
+## Proofreading — a pass separate from the content review
 
-- **Nigdy nie łącz** szukania błędów merytorycznych z szukaniem błędów literowych/gramatycznych/
-  interpunkcyjnych w jednym przebiegu — to różne rodzaje uwagi i robione razem gorzej wychwytują oba typy
-  błędów. Najpierw dopracuj merytorykę do końca, potem osobno przejdź korektę literową.
-- Sam automatyczny spellchecker nie wystarcza — nie wykryje błędu, który przypadkiem zamienił jedno
-  poprawne słowo w inne poprawne słowo.
-- Do wychwytywania błędów literowych: **wydrukuj tekst** (albo przenieś do innego medium/formatu niż to, w
-  którym pisano) — oko ludzkie łatwiej łapie błędy na papierze/w nowym kontekście niż w tym samym oknie
-  edytora, w którym tekst był tworzony.
-- Jedna z technik: czytaj akapity **od końca rozdziału do początku** — to wymusza skupienie na pisowni
-  słowa po słowie, zamiast na sensie całości (przy czytaniu od początku mózg „doczytuje” sens i łatwiej
-  przeoczyć literówkę).
-- Szczególna uwaga podczas korekty literowej na: ortografię/gramatykę/interpunkcję, imiona i nazwiska,
-  inicjały, tytuły, nazwy firm i inne nazwy własne, liczby, daty.
-- Tekst po polsku: korektę zleć skillom txt-polish-correctness (poprawność) i txt-polish-style (redakcja) albo
-  personie Stefan (edytor).
+- **Never combine** looking for content errors with looking for typos/grammar/
+  punctuation errors in one pass — these are different kinds of attention, and done together they catch both types
+  of errors worse. First polish the content to the end, then do a separate proofreading pass.
+- An automatic spellchecker alone is not enough — it will not detect an error that happened to turn one
+  correct word into another correct word.
+- To catch typos: **print the text** (or move it to a different medium/format than the one in
+  which it was written) — the human eye catches errors more easily on paper/in a new context than in the same editor
+  window in which the text was created.
+- One technique: read paragraphs **from the end of the chapter to the start** — this forces focus on the spelling
+  word by word instead of on the meaning of the whole (when reading from the start the brain "fills in" the meaning and it is easier
+  to miss a typo).
+- Pay particular attention during proofreading to: spelling/grammar/punctuation, first and last names,
+  initials, titles, company names and other proper names, numbers, dates.
+- Polish text: give the proofreading to the skills txt-polish-correctness (correctness) and txt-polish-style (editing) or
+  to the persona Stefan (editor).
 
-### Checklista przed wysłaniem do recenzentów
+### Checklist before sending to reviewers
 
-Zanim autor przekaże dokument do recenzji, powinien sam odpowiedzieć na:
-- czy dokumentacja jest wystarczająco obszerna jak na obecny kamień milowy?
-- czy informacje są właściwie zorganizowane/poukładane?
-- czy informacje techniczne są dokładne?
-- czy pojęcia, których czytelnik może nie znać, są wyjaśnione?
-- czy język dokumentacji jest spójny?
-- czy przykłady są dobrze dobrane i umieszczone w odpowiednich miejscach?
-- czy numery stron w spisie treści/indeksie są poprawne?
+Before the author passes the document to review, they should answer themselves:
+- is the documentation extensive enough for the current milestone?
+- is the information properly organized/laid out?
+- is the technical information accurate?
+- are the concepts the reader may not know explained?
+- is the language of the documentation consistent?
+- are the examples well chosen and placed in the right spots?
+- are the page numbers in the table of contents/index correct?
 
-## Przejmowanie dokumentacji napisanej przez kogoś innego
+## Taking over documentation written by someone else
 
-Przed dopisywaniem nowych rozdziałów:
-- przeczytaj, co już jest napisane,
-- jeśli możliwe, porozmawiaj z poprzednim autorem — czego nie zdążył napisać, co zamierzał zmienić,
-- usiądź z developerami, zweryfikuj, że w dokumentacji nie ma błędów i dowiedz się, co nowego pojawiło się
-  w systemie od czasu napisania istniejącej treści,
-- sam obejrzyj/przetestuj opisywany system i oceń, na ile pasuje do obecnej treści dokumentu,
-- dowiedz się, czy odbiorcy zgłaszali wcześniej uwagi lub prośby o zmiany.
+Before adding new chapters:
+- read what is already written,
+- if possible, talk to the previous author — what they did not manage to write, what they intended to change,
+- sit down with the developers, verify that there are no errors in the documentation and find out what is new
+  in the system since the existing content was written,
+- look at/test the described system yourself and judge how well it matches the current content of the document,
+- find out whether readers previously reported comments or change requests.
 
-## Podsumowanie (post-mortem) po zakończeniu pracy
+## Summary (post-mortem) after the work ends
 
-Warto zrobić to zawsze, a przy pracy zespołowej — jako spotkanie. Pytania do zadania:
-- ile czasu zajęło napisanie tej dokumentacji, a ile powinno zająć?
-- jakie problemy przeszkadzały lub spowalniały pracę?
-- co (np. jakie narzędzie) było pożyteczne i pomocne?
-- które osoby były uczynne i chętne do pomocy?
-- ile czasu pochłonęło samo czekanie na informacje?
-- czy komunikacja między osobami piszącymi dokumentację była dobra?
-- czy komunikacja z osobami udzielającymi konsultacji była dobra?
-- co można zrobić, żeby następną dokumentację napisać lepiej lub szybciej?
+It is worth doing always, and in team work — as a meeting. Questions to ask:
+- how much time did writing this documentation take, and how much should it have taken?
+- what problems got in the way or slowed the work down?
+- what (e.g. which tool) was useful and helpful?
+- which people were obliging and willing to help?
+- how much time was spent just waiting for information?
+- was the communication between the people writing the documentation good?
+- was the communication with the people giving consultations good?
+- what can be done to write the next documentation better or faster?
 
-Cel nie jest rytualny — to realny mechanizm poprawy procesu na następny raz, analogiczny do retro po
-sprincie.
+The goal is not ritual — it is a real mechanism for improving the process next time, analogous to a retro after
+a sprint.

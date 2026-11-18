@@ -5,12 +5,12 @@ kind: mode
 version: 1.0.0
 title: Agent teams
 description: Agent teams on demand (/team-session) — a persona leads 3–5 teammates who message each other and share a task list; experimental Claude Code feature, opt-in.
-content_language: pl
+content_language: en
 requires:
   core: ">=5.0.0 <19.0.0"
 
 facets:
-  - {prefix: team-, order: 195, name: tryb zespołu, question: "jak poprowadzić pracę zespołu agentów rozmawiających ze sobą"}
+  - {prefix: team-, order: 195, name: team mode, question: "how to lead the work of a team of agents that talk to each other"}
 
 # Skill uruchamia tylko człowiek (/team-session) — nie należy do żadnej roli.
 standalone_skills: [team-session]

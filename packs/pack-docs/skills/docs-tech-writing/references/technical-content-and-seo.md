@@ -1,54 +1,53 @@
-# Treści techniczne poza dokumentacją: lejek, SEO i dystrybucja
+# Technical content outside documentation: funnel, SEO and distribution
 
-Dla artykułów na blogu, poradników i porównań, które mają przyciągnąć i przekonać odbiorcę technicznego. Zasada
-nadrzędna: **rzetelność techniczna przed sprzedażą** — programiści szybko odrzucają treści, które obiecują więcej,
-niż produkt robi.
+For blog articles, guides and comparisons that are meant to attract and convince a technical reader. The overriding
+rule: **technical reliability before selling** — developers quickly reject content that promises more
+than the product does.
 
-## Odbiorca i cel
-- **Profil idealnego klienta** (jaka organizacja), **persona kupującego** (kto decyduje) i **persona czytelnika**
-  (kto czyta i wdraża — często inna osoba) — z badań i danych sprzedaży (proc-product-discovery).
-- Każdy tekst ma jeden cel i intencję czytelnika: poznać problem, porównać rozwiązania, wdrożyć konkretne.
+## Reader and goal
+- **Ideal customer profile** (which organization), **buyer persona** (who decides) and **reader persona**
+  (who reads and implements — often a different person) — from research and sales data (proc-product-discovery).
+- Every text has one goal and one reader intent: get to know the problem, compare solutions, implement a specific one.
 
-## Lejek treści
-| Etap | Czytelnik | Formy | Miara |
+## Content funnel
+| Stage | Reader | Forms | Measure |
 |---|---|---|---|
-| **góra** (świadomość) | zna problem, nie zna rozwiązań | artykuły wyjaśniające, trendy, przewodniki koncepcyjne | ruch z wyszukiwarki, czas czytania |
-| **środek** (rozważanie) | porównuje podejścia | porównania, architektury referencyjne, e-booki, białe księgi | zapisy na newsletter, pobrania, przejście do dokumentacji |
-| **dół** (decyzja) | wybiera i wdraża | studia przypadków, przewodniki migracji, szybki start, cennik i bezpieczeństwo produktu | rejestracje, uruchomione wersje próbne |
-- **Porównania** uczciwe: kryteria jawne, dane z datą i źródłem, słabe strony własnego produktu też; nieaktualne
-  porównanie z konkurencją to ryzyko prawne i wizerunkowe (core-source-research).
-- Treści za formularzem (e-booki, raporty) tylko gdy wartość uzasadnia oddanie danych; zgoda zgodna z RODO.
-- **Wezwanie do działania** na końcu: jeden następny krok dopasowany do etapu (dokumentacja, wersja próbna), nie pięć.
-- Subtelna sprzedaż: pokazuj wynik i oszczędzony czas na prawdziwym przykładzie, bez superlatywów i języka reklamy
+| **top** (awareness) | knows the problem, does not know the solutions | explanatory articles, trends, conceptual guides | traffic from search, reading time |
+| **middle** (consideration) | compares approaches | comparisons, reference architectures, e-books, white papers | newsletter sign-ups, downloads, moving on to the documentation |
+| **bottom** (decision) | chooses and implements | case studies, migration guides, quick start, the product's pricing and security | sign-ups, started trials |
+- **Comparisons** fair: open criteria, data with a date and source, the weaknesses of your own product too; an outdated
+  comparison with the competition is a legal and reputational risk (core-source-research).
+- Gated content (e-books, reports) only when the value justifies handing over data; consent compliant with GDPR.
+- **A call to action** at the end: one next step matched to the stage (documentation, trial), not five.
+- Subtle selling: show the result and the time saved on a real example, without superlatives and advertising language
   (txt-polish-style, `ai-writing-traces.md`).
 
-## SEO treści technicznych
-- **Intencja i słowa kluczowe**: jak ludzie nazywają problem (wyszukiwarka, społeczności, zgłoszenia do wsparcia).
-  Frazy krótkie (np. „kubernetes”) mają duży wolumen i ogromną konkurencję; frazy długie i konkretne („jak ustawić
-  limit pamięci poda w kubernetes”) — mniejszy wolumen, jasna intencja, realna szansa. Trendy wyszukiwania pokazują
-  tematy rosnące.
-- **Tytuł**: konkretny, ze słowami czytelnika, obietnica zgodna z treścią; nagłówki opisują sekcje, nie są ozdobą.
-- **Struktura klastrów**: strona filarowa (szeroki temat) linkuje do artykułów szczegółowych i odwrotnie.
-- **Technika**: kanoniczny URL przy treści publikowanej w kilku miejscach (np. blog firmowy i Dev.to — `canonical`
-  wskazuje oryginał), metadane Open Graph dla podglądów w komunikatorach, szybkie strony, dane strukturalne
+## SEO of technical content
+- **Intent and keywords**: how people name the problem (search engine, communities, support tickets).
+  Short phrases (e.g. "kubernetes") have a large volume and huge competition; long, specific phrases ("how to set
+  a pod memory limit in kubernetes") — a smaller volume, a clear intent, a real chance. Search trends show
+  growing topics.
+- **Title**: concrete, with the reader's words, a promise consistent with the content; headings describe sections, they are not decoration.
+- **Cluster structure**: a pillar page (a broad topic) links to detailed articles and the other way round.
+- **Technical**: a canonical URL for content published in several places (e.g. a company blog and Dev.to — `canonical`
+  points to the original), Open Graph metadata for previews in messengers, fast pages, structured data
   (fe-web-platform, `seo-public-pages.md`).
-- **Linki przychodzące** zdobywa się wartością: narzędzia open source, raporty z danymi, odpowiedzi w społecznościach.
-  Bez kupowania linków i farm treści.
-- Ocena pokrycia tematu przez narzędzia SEO to wskazówka — tekst pisany pod metrykę zamiast czytelnika traci jedno
-  i drugie.
+- **Inbound links** are earned with value: open source tools, reports with data, answers in communities.
+  No buying links and no content farms.
+- An SEO tool's topic coverage score is a hint — a text written for the metric instead of the reader loses both.
 
-## Dystrybucja
-- Kanały, w których jest odbiorca: newsletter, społeczności (Reddit, Hacker News, Dev.to, fora produktu), GitHub
-  (README, przykłady), LinkedIn, konferencje. Każdy kanał ma swoje zasady — autopromocja bez wartości jest usuwana.
-- Wzmacnianie: zespół i eksperci udostępniają, partnerzy cytują, krótsze wersje na różne kanały; odświeżanie
-  i ponowna publikacja najlepszych tekstów.
-- Śledzenie: parametry UTM w linkach per kanał (bez danych osobowych w URL), konwersje zdefiniowane z góry
-  (rejestracja, start wersji próbnej) — analityka zgodna z RODO.
-- Oryginalność: teksty piszesz sam; cytaty krótkie, z atrybucją; sprawdzanie podobieństwa przed publikacją, gdy
-  treść powstawała z wielu źródeł.
+## Distribution
+- The channels where the audience is: newsletter, communities (Reddit, Hacker News, Dev.to, product forums), GitHub
+  (README, examples), LinkedIn, conferences. Every channel has its own rules — self-promotion without value is removed.
+- Amplification: the team and experts share, partners quote, shorter versions for different channels; refreshing
+  and republishing the best texts.
+- Tracking: UTM parameters in links per channel (no personal data in the URL), conversions defined up front
+  (sign-up, trial start) — analytics compliant with GDPR.
+- Originality: you write the texts yourself; short quotes with attribution; a similarity check before publishing when
+  the content was built from many sources.
 
-## Źródła
+## Sources
 - [roadmap.sh — Technical Writer](https://roadmap.sh/technical-writer) (technical content marketing, buyer journey,
   ICP, funnel content, SEO keywords, pillar content, canonical, OpenGraph, backlinking, distribution, conversion
   tracking, subtle selling, call to actions, crafting titles)
-Opisane własnymi słowami.
+Described in our own words.

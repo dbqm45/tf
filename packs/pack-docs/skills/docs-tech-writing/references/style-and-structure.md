@@ -1,153 +1,153 @@
-# Styl i struktura dokumentacji technicznej
+# Style and structure of technical documentation
 
-> **Spis treści:** Cechy dobrej dokumentacji · Dla kogo piszesz — wybór stylu · Co musi się znaleźć w dokumentacji technicznej… · Przykłady dobrych spisów treści (wzorce nawigacji) · Opisywanie komponentów, metod, komend · Procedury w duchu ASD-STE100 · Konsystencja — ważniejsza niż elegancja · Formatowanie — jednolity zestaw stylów · Narzędzia (generatory dokumentacji) · Dlaczego to się opłaca
+> **Contents:** Traits of good documentation · Who you write for — choosing the style · What technical documentation must contain… · Examples of good tables of contents (navigation patterns) · Describing components, methods, commands · Procedures in the spirit of ASD-STE100 · Consistency — more important than elegance · Formatting — one set of styles · Tools (documentation generators) · Why it pays off
 
-Rozwinięcie hubu docs-tech-writing. Elementy „ciężkie” (copyright, spis ilustracji, indeks, numeracja stron) dotyczą
-większych dokumentów (podręcznik, dokumentacja systemu), nie README.
+An expansion of the docs-tech-writing hub. The "heavy" elements (copyright, list of figures, index, page numbering) apply to
+larger documents (a manual, system documentation), not to a README.
 
-## Cechy dobrej dokumentacji
+## Traits of good documentation
 
-- jest **dokładna i bezbłędna**,
-- jest **kompletna** (nie zostawia dziur, które czytelnik musi sam wypełnić domysłem),
-- jest **spójna** — terminologia, styl, formatowanie,
-- jest napisana **klarownie i jednoznacznie**,
-- użytkownik może **łatwo znaleźć** potrzebną informację (nawigacja, spis treści, indeks),
-- ma **porządny, przewidywalny wygląd** (jednolite formatowanie).
+- it is **accurate and error-free**,
+- it is **complete** (it leaves no holes the reader has to fill with guesses),
+- it is **consistent** — terminology, style, formatting,
+- it is written **clearly and unambiguously**,
+- the user can **easily find** the information they need (navigation, table of contents, index),
+- it has a **neat, predictable look** (uniform formatting).
 
-## Dla kogo piszesz — wybór stylu
+## Who you write for — choosing the style
 
-Trzy typowe sytuacje, w których ktoś otwiera dokumentację:
-1. jest ciekawy, jak coś działa i co oferuje,
-2. chce zacząć z tego korzystać,
-3. utknął w trakcie korzystania i szuka pomocy.
+Three typical situations in which someone opens documentation:
+1. they are curious how something works and what it offers,
+2. they want to start using it,
+3. they got stuck while using it and are looking for help.
 
-Realnym odbiorcą częściej jest **programista wdrażający/integrujący system** niż osoba czysto decyzyjna —
-domyślnie pisz stylem technicznym i konkretnym: krótkie, treściwe zdania bez ozdobników, czytelne od
-pierwszego spojrzenia, logicznie poukładane.
+The real reader is more often a **developer who deploys/integrates the system** than a purely decision-making person —
+by default write in a technical, concrete style: short, meaty sentences without ornaments, readable at
+first glance, logically ordered.
 
-Jeśli odbiorców jest kilka grup o istotnie różnych potrzebach (np. dział sprzedaży korzystający z UI vs.
-dział IT rozwijający kod źródłowy) — rozważ **dwie odrębne dokumentacje**. To więcej pracy, ale wygodniejsze
-dla odbiorców niż jedna dokumentacja próbująca obsłużyć obie grupy. Jeśli mimo to decydujesz się na jeden
-dokument, **wyraźnie oznacz**, które sekcje są dla której grupy.
+If there are several groups of readers with substantially different needs (e.g. a sales department using the UI vs.
+an IT department developing the source code) — consider **two separate documentations**. It is more work, but more convenient
+for the readers than one documentation trying to serve both groups. If you still decide on one
+document, **clearly mark** which sections are for which group.
 
-**Podejście opisowe vs. zadaniowe**: opisowe idzie za strukturą systemu (np. kolejność w menu); zadaniowe
-idzie za kolejnością, w jakiej odbiorca faktycznie wykonuje swoje zadania. Przykład: dokumentując interfejs
-dla osoby wystawiającej faktury, podejście zadaniowe opisze opcje w kolejności użycia przy wystawianiu
-faktury, nie w kolejności ułożenia w menu.
+**Descriptive vs. task-based approach**: the descriptive one follows the structure of the system (e.g. the order of the menu); the task-based one
+follows the order in which the reader actually performs their tasks. Example: when documenting an interface
+for a person issuing invoices, the task-based approach describes the options in the order of use when issuing an
+invoice, not in the order they are laid out in the menu.
 
-## Co musi się znaleźć w dokumentacji technicznej aplikacji/systemu
+## What technical documentation of an application/system must contain
 
-- **wstęp** — konkretny opis, co robi ta aplikacja/system (jednym zdaniem albo jednym akapitem — obie formy
-  są akceptowalne, zależnie od złożoności),
-- **sposób instalacji i zależności**,
-- **zastosowane algorytmy / logika działania**,
-- **rozmieszczenie i sposób działania poszczególnych komponentów**.
+- **an introduction** — a concrete description of what this application/system does (in one sentence or one paragraph — both forms
+  are acceptable, depending on complexity),
+- **installation and dependencies**,
+- **the algorithms used / the logic of operation**,
+- **the layout and the operation of the individual components**.
 
-### Na początku dokumentu
+### At the start of the document
 
-- copyright (jeśli dotyczy — najlepiej sformułowanie od działu prawnego, nie improwizowane),
-- spis treści,
-- opcjonalnie: spis ilustracji/diagramów (przydatny w większych dokumentach),
-- wstęp, który informuje: jaki produkt opisuje dokumentacja, dla kogo jest przeznaczona, co ogólnie zawiera,
-  jakie konwencje zapisu są stosowane (np. czcionka/format dla fragmentów kodu, oznaczenia UWAGA/OSTRZEŻENIE).
+- copyright (if applicable — preferably wording from the legal department, not improvised),
+- table of contents,
+- optionally: a list of figures/diagrams (useful in larger documents),
+- an introduction that says: what product the documentation describes, who it is for, what it generally contains,
+  what notation conventions are used (e.g. a font/format for code fragments, NOTE/WARNING markers).
 
-### Na końcu dokumentu
+### At the end of the document
 
-- załączniki — informacje pomocnicze, przydatne, ale niekrytyczne dla zrozumienia głównego tekstu (np.
-  definicje pól w bazie danych). Załączniki **nie są** miejscem na wszystko, czego nie wiadomo gdzie
-  umieścić — to sygnał, że struktura wymaga przemyślenia, nie że trzeba dorzucić kolejny załącznik.
-- słowniczek terminów specyficznych dla systemu oraz skrótów, których czytelnik może nie znać. **Słowniczek
-  na końcu jest lepszy niż wyjaśnianie przy pierwszym wystąpieniu w tekście** — dokumentacja nie jest
-  powieścią czytaną liniowo od A do Z, czytelnik trafia do konkretnego rozdziału z linku/wyszukiwania.
-- indeks — silnie wpływa na to, jak użyteczna jest dokumentacja w praktyce; nie traktować jako opcjonalnego
-  dodatku w większych dokumentach.
+- appendices — supporting information, useful but not critical for understanding the main text (e.g.
+  definitions of database fields). Appendices **are not** the place for everything that has no obvious
+  home — that is a signal that the structure needs rethinking, not that another appendix needs adding.
+- a glossary of system-specific terms and abbreviations the reader may not know. **A glossary
+  at the end is better than explaining on first use in the text** — documentation is not a
+  novel read linearly from A to Z; the reader lands in a specific chapter from a link/search.
+- an index — it strongly affects how useful the documentation is in practice; do not treat it as an optional
+  extra in larger documents.
 
-## Przykłady dobrych spisów treści (wzorce nawigacji)
+## Examples of good tables of contents (navigation patterns)
 
-- **Heroku Dev Center** — główne kategorie widoczne od razu (architektura, bazy danych, bezpieczeństwo,
-  CLI, dodatki, języki), a pod nimi — bez chowania w rozwijanych menu — pełna lista elementów każdej
-  kategorii w kilku kolumnach. Zaleta: nic nie wymaga dodatkowego kliknięcia, żeby zobaczyć zakres.
-- **Laravel** — główne kategorie w bocznym pasku, rozwijane plusikiem; aktualne podmenu wyróżnione kolorem.
-  Zaleta: wyraźna orientacja „gdzie jestem” przy głębszej nawigacji.
+- **Heroku Dev Center** — the main categories visible at once (architecture, databases, security,
+  CLI, add-ons, languages), and below them — without hiding in drop-down menus — the full list of items of each
+  category in several columns. Advantage: nothing needs an extra click to see the scope.
+- **Laravel** — the main categories in a sidebar, expanded with a plus; the current submenu highlighted in color.
+  Advantage: a clear sense of "where am I" in deeper navigation.
 
-Nie ma jednego słusznego układu — oba powyżej są uznawane za bardzo dobre, mimo że kompletnie różne. Wybór
-zależy od rozmiaru dokumentacji: płaska, widoczna od razu lista (Heroku) dla mniejszych/średnich zestawów;
-rozwijany boczny pasek (Laravel) dla bardzo rozległej dokumentacji.
+There is no one right layout — both above are considered very good, even though they are completely different. The choice
+depends on the size of the documentation: a flat list visible at once (Heroku) for small/medium sets;
+an expandable sidebar (Laravel) for very extensive documentation.
 
-## Opisywanie komponentów, metod, komend
+## Describing components, methods, commands
 
-- Każdą opisywaną metodę/komendę/endpoint **podeprzyj fragmentem kodu**. Powody: (1) przykład tłumaczy
-  zasadę działania szybciej niż opis słowny; (2) to gotowy element kopiuj-wklej dla czytelnika, który nie
-  musi samodzielnie rozpracowywać składni.
-- **Stopniuj trudność** — zacznij od 3–5 najłatwiejszych przypadków (proste żądanie, uwierzytelnianie),
-  potem przechodź do bardziej złożonych. Czytelnik zdobywa pewność na wczesnych sukcesach, zanim trafi na
-  trudniejsze wyzwania — łatwiej mu wtedy przyswoić nowe informacje.
-- Zrzuty ekranu z formularzami/danymi — wypełnij **realistycznymi, ale zmyślonymi** danymi (imię, adres,
-  telefon), nie zostawiaj pustych pól. **Nigdy** nie używaj danych rzeczywistych osób (np. przepisanych z
-  książki telefonicznej) — to realne ryzyko prawne, nie tylko stylistyczne uchybienie.
+- **Back every** described method/command/endpoint **with a code fragment**. Reasons: (1) an example explains
+  the principle faster than a verbal description; (2) it is a ready copy-paste element for a reader who does not
+  have to work out the syntax on their own.
+- **Grade the difficulty** — start with the 3–5 easiest cases (a simple request, authentication),
+  then move on to more complex ones. The reader gains confidence from early successes before meeting
+  harder challenges — it is then easier for them to absorb new information.
+- Screenshots with forms/data — fill them with **realistic but made-up** data (name, address,
+  phone), do not leave empty fields. **Never** use real people's data (e.g. copied from
+  a phone book) — that is a real legal risk, not only a stylistic slip.
 
-## Procedury w duchu ASD-STE100
+## Procedures in the spirit of ASD-STE100
 
-ASD-STE100 (Simplified Technical English) to standard języka dokumentacji obsługi technicznej z lotnictwa:
-ograniczony słownik, jedno znaczenie słowa, krótkie zdania [niezweryfikowane: aktualne wydanie i szczegółowe reguły
-— sprawdź w specyfikacji ASD przed powołaniem się na nią]. Standard dotyczy angielskiego; dla dokumentacji po
-angielsku możesz go przyjąć wprost, dla polskiej przenosisz zasady:
-- jedna czynność w jednym kroku, kroki numerowane, czasownik w trybie rozkazującym na początku („Uruchom…”);
-- zdanie w procedurze do ok. 20 słów; warunek przed czynnością („Jeśli test nie przechodzi, przerwij wdrożenie.”);
-- jeden termin na jedno pojęcie i jedno znaczenie terminu w całym dokumencie (słownik projektu);
-- ostrzeżenie przed krokiem, którego dotyczy, nie po nim;
-- strona czynna, bez zdań wtrąconych i bez skrótów myślowych („to”, „tamto” bez rzeczownika).
-Stosujesz je w runbookach, instrukcjach instalacji, krokach naprawczych i specyfikacjach — tam, gdzie czytelnik
-wykonuje czynności pod presją czasu. Tekst objaśniający (koncepcje, ADR) może być swobodniejszy.
+ASD-STE100 (Simplified Technical English) is a language standard for technical maintenance documentation from aviation:
+a limited vocabulary, one meaning per word, short sentences [unverified: the current edition and the detailed rules
+— check in the ASD specification before citing it]. The standard is about English; for documentation in
+English you can adopt it directly, for other languages you carry over the rules:
+- one action in one step, numbered steps, a verb in the imperative mood at the start ("Run…");
+- a sentence in a procedure up to about 20 words; the condition before the action ("If the test fails, stop the deployment.");
+- one term for one concept and one meaning of a term across the whole document (the project glossary);
+- a warning before the step it concerns, not after it;
+- active voice, no parenthetical clauses and no shortcuts ("this", "that" without a noun).
+You apply them in runbooks, installation instructions, repair steps and specifications — wherever the reader
+performs actions under time pressure. Explanatory text (concepts, ADR) can be looser.
 
-## Konsystencja — ważniejsza niż elegancja
+## Consistency — more important than elegance
 
-- Jeśli w jednym akapicie słowo „system” powtarza się dziesięć razy — to nie błąd. Zamiana na synonimy
-  („program”, „aplikacja”) dla urozmaicenia **wprowadza w błąd**, bo czytelnik zaczyna się zastanawiać, czy
-  to wciąż to samo, czy coś innego. Raz przyjęty termin na dane zjawisko/element — używany konsekwentnie do
-  końca dokumentu.
-- To samo dotyczy czynności: jeśli w pierwszym rozdziale piszesz o „kliknięciu”, nie zmieniaj w innym
-  rozdziale na inny synonim tej samej czynności.
-- Jednoznaczność bije ścisłe trzymanie się reguł stylistycznych/gramatycznych, gdy te dwie wartości
-  kolidują. Przykład: zdanie „systemy: A, B, C i D” jest niejednoznaczne (4 systemy, czy 3, z których
-  ostatni nazywa się „C i D”?) — dodanie przecinka po "C" usuwa niejednoznaczność, nawet jeśli wynikowa
-  interpunkcja jest nietypowa.
-- Dokumentacja jest dla człowieka, nie dla komputera: jeśli jakiś diagram (np. diagram przejść stanów)
-  wychodzi bardziej zagmatwany niż pomocny — lepiej zrezygnować z niego i opisać stany/warunki przejścia
-  słownie, niż upierać się przy wizualizacji „bo taki był plan”.
+- If the word "system" repeats ten times in one paragraph — that is not a mistake. Replacing it with synonyms
+  ("program", "application") for variety **misleads**, because the reader starts to wonder whether
+  it is still the same thing or something else. A term once adopted for a given phenomenon/element — used consistently to the
+  end of the document.
+- The same goes for actions: if in the first chapter you write about "clicking", do not switch in another
+  chapter to a different synonym of the same action.
+- Clarity beats strict adherence to stylistic/grammatical rules when these two values
+  collide. Example: the sentence "systems: A, B, C and D" is ambiguous (4 systems, or 3, the
+  last of which is called "C and D"?) — adding a comma after "C" removes the ambiguity, even if the resulting
+  punctuation is unusual.
+- Documentation is for a human, not for a computer: if a diagram (e.g. a state transition diagram)
+  turns out more confusing than helpful — better drop it and describe the states/transition conditions
+  in words than insist on the visualization "because that was the plan".
 
-## Formatowanie — jednolity zestaw stylów
+## Formatting — one set of styles
 
-Zdefiniuj i konsekwentnie stosuj styl dla (kluczowe zwłaszcza, gdy nad dokumentem pracuje więcej niż jedna
-osoba — inaczej rozdziały różnych autorów będą wizualnie niespójne):
-- nagłówek rozdziału głównego, podrozdziału, pod-podrozdziału (i tak dalej),
-- „zwykły” tekst,
-- lista numerowana / wypunktowana,
-- tekst-kontynuacja elementu listy (przesunięty, od nowego wiersza),
-- fragment kodu źródłowego,
-- podpis pod rysunkiem/zrzutem ekranu.
+Define and consistently apply a style for (key especially when more than one person works on the document
+— otherwise chapters by different authors will be visually inconsistent):
+- the heading of a main chapter, a subchapter, a sub-subchapter (and so on),
+- "plain" text,
+- a numbered / bulleted list,
+- the continuation text of a list item (indented, from a new line),
+- a source code fragment,
+- a caption under a figure/screenshot.
 
-Kluczowe informacje (zwłaszcza sekwencje czynności do wykonania) eksponuj jako **listę**, nie jako
-wyliczenie po przecinkach w jednym zdaniu ukrytym wśród innych. Czytelnik wykonujący czynności odrywa wzrok
-od ekranu/dokumentu i wraca do niego wielokrotnie — lista pozwala szybciej odnaleźć właściwy krok niż zdanie
-złożone.
+Expose key information (especially sequences of actions to perform) as a **list**, not as
+a comma-separated enumeration in one sentence hidden among others. A reader performing actions takes their eyes off
+the screen/document and comes back to it many times — a list lets them find the right step faster than a compound
+sentence.
 
-**Wiele małych rozdziałów jest lepsze niż kilka dużych** — łatwiej trafić bezpośrednio w potrzebny fragment.
+**Many small chapters are better than a few large ones** — it is easier to land directly on the fragment you need.
 
-**Zasada KISS** (*Keep It Short and Simple*): kilka krótkich, prostych zdań/akapitów łatwiej przyswoić niż
-jedno długie zdanie złożone / jeden długi akapit.
+**The KISS rule** (*Keep It Short and Simple*): a few short, simple sentences/paragraphs are easier to absorb than
+one long compound sentence / one long paragraph.
 
-## Narzędzia (generatory dokumentacji)
+## Tools (documentation generators)
 
-Gdy dokumentację da się generować ze źródeł (komentarze w kodzie, adnotacje, kontrakty) — generuj: szybciej niż ręczny
-dokument i mniej podatne na rozjazd z kodem. Przykłady: TypeDoc / JSDoc (TS/JS), OpenAPI + Redoc/Scalar/Swagger UI
-(HTTP API), Javadoc (Java), Doxygen (C/C++ i in.). Narracyjne strony (podręczniki, tutoriale) — generatory stron
-statycznych z Markdown (np. Docusaurus, MkDocs, VitePress; Slate dla jednostronicowej dokumentacji API).
-Generatory dobrze rozwiązują dokumentację referencyjną, gorzej narracyjną — tę piszesz sam.
+When documentation can be generated from the sources (code comments, annotations, contracts) — generate it: faster than a manual
+document and less prone to drifting from the code. Examples: TypeDoc / JSDoc (TS/JS), OpenAPI + Redoc/Scalar/Swagger UI
+(HTTP API), Javadoc (Java), Doxygen (C/C++ and others). Narrative pages (manuals, tutorials) — static site
+generators from Markdown (e.g. Docusaurus, MkDocs, VitePress; Slate for single-page API documentation).
+Generators handle reference documentation well, narrative documentation less so — that you write yourself.
 
-## Dlaczego to się opłaca
+## Why it pays off
 
-Dobra dokumentacja techniczna realnie zmniejsza liczbę zgłoszeń do supportu (rozwiązywanie problemu trwa
-zwykle dłużej niż napisanie akapitu, który by go uprzedził), zmienia ton komunikacji z klientami z
-frustracji na neutralność/zadowolenie, i staje się podwaliną do skalowania kolejnych produktów/funkcji bez
-konieczności odtwarzania kontekstu od zera.
+Good technical documentation really reduces the number of support tickets (solving a problem usually takes
+longer than writing the paragraph that would have prevented it), changes the tone of communication with customers from
+frustration to neutrality/satisfaction, and becomes the foundation for scaling further products/features without
+having to rebuild the context from zero.
