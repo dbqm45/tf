@@ -1,52 +1,52 @@
-# Architektura danych: spójność, rodzaje baz, analityka i przetwarzanie
+# Data architecture: consistency, kinds of databases, analytics and processing
 
-## Gwarancje i kompromisy
-- **ACID** (atomowość, spójność, izolacja, trwałość) — transakcje w jednej bazie relacyjnej. Poziom izolacji ma
-  znaczenie: domyślny „read committed” w PostgreSQL nie chroni przed każdą anomalią — reguły „nie więcej niż N” wymagają
-  blokady, ograniczenia lub `SERIALIZABLE` (be-database: transakcje).
-- **CAP**: przy podziale sieci system rozproszony wybiera między spójnością a dostępnością. **PACELC** dodaje, że
-  nawet bez podziału trzeba wybierać między opóźnieniem a spójnością — to częstszy, codzienny kompromis.
-- **BASE** (podstawowa dostępność, stan miękki, spójność ostateczna) — typowe dla systemów rozproszonych i wielu baz
-  NoSQL. **Spójność ostateczna** wymaga projektu: co widzi użytkownik w międzyczasie (read-your-writes, monotoniczne
-  odczyty), jak rozwiązujesz konflikty (wersje, ostatni zapis wygrywa — z utratą danych, scalanie).
-- Między usługami nie ma transakcji ACID: outbox i idempotentni odbiorcy (be-messaging-outbox), saga z kompensacjami
-  (ddd-tactical-design), CQRS z modelem odczytu aktualizowanym zdarzeniami.
+## Guarantees and trade-offs
+- **ACID** (atomicity, consistency, isolation, durability) — transactions in one relational database. The isolation level
+  matters: the default "read committed" in PostgreSQL does not protect against every anomaly — "no more than N" rules require
+  a lock, a constraint or `SERIALIZABLE` (be-database: transactions).
+- **CAP**: during a network partition a distributed system chooses between consistency and availability. **PACELC** adds that
+  even without a partition you must choose between latency and consistency — a more frequent, everyday trade-off.
+- **BASE** (basically available, soft state, eventual consistency) — typical for distributed systems and many NoSQL
+  databases. **Eventual consistency** requires design: what the user sees in the meantime (read-your-writes, monotonic
+  reads), how you resolve conflicts (versions, last write wins — with data loss, merging).
+- There are no ACID transactions between services: an outbox and idempotent consumers (be-messaging-outbox), a saga with compensations
+  (ddd-tactical-design), CQRS with a read model updated by events.
 
-## Rodzaje baz — wybór
-| Rodzaj | Model | Dobre do | Uwaga |
+## Kinds of databases — the choice
+| Kind | Model | Good for | Note |
 |---|---|---|---|
-| relacyjna (PostgreSQL, MySQL, SQL Server, Oracle) | tabele, SQL, transakcje | domyślny wybór dla danych biznesowych | JSONB w PostgreSQL pokrywa wiele potrzeb „dokumentowych” |
-| dokumentowa (MongoDB, Couchbase) | dokumenty JSON | dane o zmiennej strukturze czytane całością | relacje i transakcje wielodokumentowe są droższe |
-| klucz–wartość (Redis, DynamoDB) | klucz → wartość | cache, sesje, liczniki, bardzo duża skala prostych odczytów | zapytania tylko po kluczu (lub zaprojektowanych indeksach) |
-| szerokokolumnowa (Cassandra, ScyllaDB) | wiersze z wieloma kolumnami, partycje | ogromne wolumeny zapisów, szeregi czasowe | model danych z góry pod zapytania |
-| grafowa (Neo4j, Neptune) | węzły i krawędzie | relacje wielopoziomowe (rekomendacje, sieci, uprawnienia ReBAC) | |
-| szeregów czasowych (TimescaleDB, InfluxDB, Prometheus) | pomiar w czasie | metryki, IoT, telemetria (np. ładowarki EV) | retencja i agregacja w czasie |
-| wyszukiwania (Elasticsearch, OpenSearch) | indeks odwrócony | wyszukiwanie pełnotekstowe, filtry fasetowe | nie jako źródło prawdy |
-**Wiele baz w jednym systemie** (polyglot persistence) tylko z powodu — każda to koszt operacyjny, kopie, monitoring
-i kompetencje. Domyślnie jedna baza relacyjna plus cache.
+| relational (PostgreSQL, MySQL, SQL Server, Oracle) | tables, SQL, transactions | the default choice for business data | JSONB in PostgreSQL covers many "document" needs |
+| document (MongoDB, Couchbase) | JSON documents | data with a variable structure read as a whole | relations and multi-document transactions are more expensive |
+| key–value (Redis, DynamoDB) | key → value | cache, sessions, counters, a very large scale of simple reads | queries only by key (or designed indexes) |
+| wide-column (Cassandra, ScyllaDB) | rows with many columns, partitions | huge write volumes, time series | the data model designed up front for the queries |
+| graph (Neo4j, Neptune) | nodes and edges | multi-level relations (recommendations, networks, ReBAC permissions) | |
+| time series (TimescaleDB, InfluxDB, Prometheus) | a measurement over time | metrics, IoT, telemetry (e.g. EV chargers) | retention and aggregation over time |
+| search (Elasticsearch, OpenSearch) | an inverted index | full-text search, faceted filters | not as the source of truth |
+**Several databases in one system** (polyglot persistence) only for a reason — each one is an operating cost, backups, monitoring
+and skills. By default one relational database plus a cache.
 
-## Analityka: OLTP a OLAP
-- Baza transakcyjna (OLTP) obsługuje aplikację; zapytania analityczne (OLAP) na niej spowalniają produkcję. Analityka
-  w osobnym magazynie: hurtownia danych (BigQuery, Snowflake, Redshift, ClickHouse) lub lakehouse (pliki kolumnowe
-  w magazynie obiektów + format tabel, np. Apache Iceberg lub Delta Lake).
-- Modelowanie hurtowni: **schemat gwiazdy** — tabela faktów (zdarzenia, miary) i tabele wymiarów (kto, co, kiedy,
-  gdzie); płatek śniegu — wymiary znormalizowane. Historia zmian wymiarów: SCD typ 2 (nowy wiersz z okresem ważności).
-- **ETL** (przekształcenie przed załadowaniem) czy **ELT** (ładowanie surowych danych, przekształcenia w hurtowni,
-  np. dbt) — dziś częściej ELT. Dane osobowe: minimalizacja i pseudonimizacja przed trafieniem do analityki (RODO).
-- **CDC** (przechwytywanie zmian z logu bazy, np. Debezium) zamiast okresowych pełnych zrzutów; zdarzenia domenowe
-  jako lepszy kontrakt niż wewnętrzny schemat tabel (ddd-context-mapping: Published Language).
+## Analytics: OLTP vs OLAP
+- The transactional database (OLTP) serves the application; analytical queries (OLAP) on it slow production down. Analytics
+  in a separate store: a data warehouse (BigQuery, Snowflake, Redshift, ClickHouse) or a lakehouse (columnar files
+  in an object store + a table format, e.g. Apache Iceberg or Delta Lake).
+- Warehouse modelling: the **star schema** — a fact table (events, measures) and dimension tables (who, what, when,
+  where); the snowflake — normalized dimensions. Dimension change history: SCD type 2 (a new row with a validity period).
+- **ETL** (transforming before loading) or **ELT** (loading raw data, transformations in the warehouse,
+  e.g. dbt) — ELT is more common today. Personal data: minimization and pseudonymization before it reaches analytics (GDPR).
+- **CDC** (capturing changes from the database log, e.g. Debezium) instead of periodic full dumps; domain events
+  as a better contract than the internal table schema (ddd-context-mapping: Published Language).
 
-## Przetwarzanie dużych danych
-- **Wsadowe**: MapReduce (historyczny model Hadoopa: mapowanie i redukcja rozproszone po klastrze), dziś zwykle Apache
-  Spark (przetwarzanie w pamięci, SQL, DataFrame) albo silnik hurtowni.
-- **Strumieniowe**: Kafka Streams, Apache Flink, Spark Structured Streaming — gdy wynik potrzebny w sekundach (wykrywanie
-  nadużyć, alerty, liczniki na żywo). Okna czasowe, opóźnione zdarzenia, dokładnie-raz kontra co-najmniej-raz.
-- Najpierw sprawdź, czy dane naprawdę są „duże”: wiele obciążeń mieści się w jednej bazie lub hurtowni bez klastra
-  Spark (KISS, koszt — ops-finops).
+## Processing big data
+- **Batch**: MapReduce (Hadoop's historical model: mapping and reducing distributed across a cluster), today usually Apache
+  Spark (in-memory processing, SQL, DataFrame) or the warehouse engine.
+- **Streaming**: Kafka Streams, Apache Flink, Spark Structured Streaming — when the result is needed in seconds (fraud
+  detection, alerts, live counters). Time windows, late events, exactly-once vs at-least-once.
+- First check whether the data is really "big": many workloads fit in one database or warehouse without a Spark
+  cluster (KISS, cost — ops-finops).
 
-## Źródła
+## Sources
 - M. Kleppmann, *Designing Data-Intensive Applications* (2017); D. Abadi — PACELC (2012);
-  R. Kimball — modelowanie wymiarowe
-- [roadmap.sh — Software Architect](https://roadmap.sh/software-architect) (ACID, CAP, CQRS i spójność ostateczna,
-  NoSQL, hurtownie, ETL, Hadoop, Spark, MapReduce)
-Opisane własnymi słowami.
+  R. Kimball — dimensional modelling
+- [roadmap.sh — Software Architect](https://roadmap.sh/software-architect) (ACID, CAP, CQRS and eventual consistency,
+  NoSQL, warehouses, ETL, Hadoop, Spark, MapReduce)
+Described in our own words.

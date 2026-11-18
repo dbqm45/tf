@@ -1,39 +1,39 @@
-# Wzorce chmurowe i wybór platformy uruchomieniowej
+# Cloud patterns and choosing a runtime platform
 
-## Katalog wzorców (Azure Architecture Center) — gdzie w fabryce
-Nazwy wzorców to wspólny słownik w ADR i review. Kolumna „w fabryce” mówi, gdzie jest procedura.
-| Grupa | Wzorce | W fabryce |
+## Pattern catalogue (Azure Architecture Center) — where in the factory
+Pattern names are a shared vocabulary in ADRs and reviews. The "in the factory" column says where the procedure is.
+| Group | Patterns | In the factory |
 |---|---|---|
-| odporność | Retry, Circuit Breaker, Bulkhead, Health Endpoint Monitoring, Throttling, Rate Limiting | ops-sre-incidents (projektowanie na awarię), be-api-design (`http-in-practice.md`, `backend-performance-checklist.md`), ops-observability |
-| dane | Cache-Aside, Materialized View, Index Table, Sharding, CQRS, Event Sourcing | be-api-design (`backend-performance-checklist.md`), be-database (`database-performance.md`), ddd-tactical-design |
-| komunikacja | Publisher-Subscriber, Competing Consumers, Queue-Based Load Leveling, Priority Queue, Sequential Convoy, Claim Check, Messaging Bridge, Idempotent Consumer | be-messaging-outbox, `style-catalog.md` |
-| spójność rozproszona | Saga, Compensating Transaction, Choreography, Scheduler Agent Supervisor, Leader Election | ddd-tactical-design (saga), be-messaging-outbox |
-| bramy i krawędź | Gateway Routing, Gateway Aggregation, Gateway Offloading, Backends for Frontends, Gatekeeper, Ambassador, Sidecar | be-api-design (`styles-and-communication.md`), ops-linux-networking (`web-servers-and-proxies.md`) |
-| integracja i migracja | Anti-Corruption Layer, Strangler Fig, Asynchronous Request-Reply, Pipes and Filters | ddd-context-mapping, eng-behavior-preserving-refactoring, be-api-design (`202`) |
-| wdrożenie i skala | Deployment Stamps, Geode, Compute Resource Consolidation, Static Content Hosting, External Configuration Store | ops-release-engineering, ops-security-operations (wiele regionów) |
-| bezpieczeństwo | Federated Identity, Valet Key (podpisany URL), Quarantine | be-auth-security, ops-supply-chain-security |
-Uwagi do wybranych:
-- **Strangler Fig**: nowy system przejmuje funkcje starego stopniowo za wspólną fasadą (routing po ścieżce lub
-  funkcji), stary wyłączany kawałkami — zamiast przepisania „wielkim wybuchem”. Każdy krok wydawany i odwracalny.
-- **Deployment Stamps**: powtarzalne, niezależne kopie całego systemu (z danymi) per region lub grupa klientów —
-  ograniczają zasięg awarii i ułatwiają wymogi lokalizacji danych; koszt: wiele środowisk do utrzymania.
-- **Sidecar / Ambassador**: funkcje pomocnicze (proxy, mTLS, logi) w osobnym kontenerze obok aplikacji; podstawa siatki
-  usług. Zanim dodasz — czy biblioteka lub platforma nie zrobi tego taniej?
+| resilience | Retry, Circuit Breaker, Bulkhead, Health Endpoint Monitoring, Throttling, Rate Limiting | ops-sre-incidents (designing for failure), be-api-design (`http-in-practice.md`, `backend-performance-checklist.md`), ops-observability |
+| data | Cache-Aside, Materialized View, Index Table, Sharding, CQRS, Event Sourcing | be-api-design (`backend-performance-checklist.md`), be-database (`database-performance.md`), ddd-tactical-design |
+| messaging | Publisher-Subscriber, Competing Consumers, Queue-Based Load Leveling, Priority Queue, Sequential Convoy, Claim Check, Messaging Bridge, Idempotent Consumer | be-messaging-outbox, `style-catalog.md` |
+| distributed consistency | Saga, Compensating Transaction, Choreography, Scheduler Agent Supervisor, Leader Election | ddd-tactical-design (saga), be-messaging-outbox |
+| gateways and the edge | Gateway Routing, Gateway Aggregation, Gateway Offloading, Backends for Frontends, Gatekeeper, Ambassador, Sidecar | be-api-design (`styles-and-communication.md`), ops-linux-networking (`web-servers-and-proxies.md`) |
+| integration and migration | Anti-Corruption Layer, Strangler Fig, Asynchronous Request-Reply, Pipes and Filters | ddd-context-mapping, eng-behavior-preserving-refactoring, be-api-design (`202`) |
+| deployment and scale | Deployment Stamps, Geode, Compute Resource Consolidation, Static Content Hosting, External Configuration Store | ops-release-engineering, ops-security-operations (multiple regions) |
+| security | Federated Identity, Valet Key (a signed URL), Quarantine | be-auth-security, ops-supply-chain-security |
+Notes on selected ones:
+- **Strangler Fig**: the new system takes over the old one's functions gradually behind a shared facade (routing by path or
+  function), the old one is switched off piece by piece — instead of a "big bang" rewrite. Every step released and reversible.
+- **Deployment Stamps**: repeatable, independent copies of the whole system (with data) per region or customer group —
+  they limit the blast radius of failures and help with data location requirements; cost: many environments to maintain.
+- **Sidecar / Ambassador**: auxiliary functions (proxy, mTLS, logs) in a separate container next to the application; the basis of a service
+  mesh. Before you add one — would a library or the platform not do it cheaper?
 
-## Gdzie uruchamiać
-| Platforma | Kiedy | Uważaj na |
+## Where to run
+| Platform | When | Watch out for |
 |---|---|---|
-| **PaaS / hosting frontendu** (Vercel, Netlify, Render, Railway, Heroku, App Service) | mały zespół, aplikacja webowa lub API bez nietypowych wymagań | koszt przy dużym ruchu, uzależnienie od funkcji platformy, region danych |
-| **funkcje** (AWS Lambda, Azure Functions, Cloud Functions) | zdarzenia, nieregularny ruch, krótkie zadania | zimny start, limity czasu i pamięci, pule połączeń do bazy (pośrednik), koszt przy stałym obciążeniu |
-| **kontenery bez klastra** (Cloud Run, ECS na Fargate, Azure Container Apps) | usługi HTTP i zadania w tle bez zarządzania klastrem | mniej kontroli nad siecią i harmonogramem |
-| **Kubernetes zarządzany** (EKS, GKE, AKS) | wiele usług i zespołów, potrzeba wspólnej platformy | koszt operacyjny i kompetencje (ops-kubernetes); platforma jako produkt (proc-team-topologies) |
-| **maszyny wirtualne** | oprogramowanie, które tego wymaga, specyficzny sprzęt | łatanie i konfiguracja (ops-linux-networking), maszyny niezmienialne z obrazów |
-Mniejsi dostawcy (DigitalOcean, Hetzner) bywają znacznie tańsi dla prostych obciążeń — kosztem mniejszej liczby
-usług zarządzanych. Decyzja w ADR według scenariuszy jakości, kosztu (ops-finops) i kompetencji zespołu
+| **PaaS / frontend hosting** (Vercel, Netlify, Render, Railway, Heroku, App Service) | a small team, a web application or API without unusual requirements | cost at high traffic, dependence on platform features, the data region |
+| **functions** (AWS Lambda, Azure Functions, Cloud Functions) | events, irregular traffic, short tasks | cold start, time and memory limits, database connection pools (a proxy), cost under constant load |
+| **containers without a cluster** (Cloud Run, ECS on Fargate, Azure Container Apps) | HTTP services and background jobs without managing a cluster | less control over the network and scheduling |
+| **managed Kubernetes** (EKS, GKE, AKS) | many services and teams, a need for a shared platform | operating cost and skills (ops-kubernetes); the platform as a product (proc-team-topologies) |
+| **virtual machines** | software that requires it, specific hardware | patching and configuration (ops-linux-networking), immutable machines from images |
+Smaller providers (DigitalOcean, Hetzner) are often much cheaper for simple workloads — at the cost of fewer
+managed services. The decision in an ADR by the quality scenarios, cost (ops-finops) and the team's skills
 (arch-tech-selection).
 
-## Źródła
+## Sources
 - [Microsoft Azure Architecture Center — Cloud design patterns](https://learn.microsoft.com/en-us/azure/architecture/patterns/)
 - [roadmap.sh — DevOps](https://roadmap.sh/devops) (cloud design patterns, cloud providers, serverless, PaaS,
   container orchestration)
-Opisane własnymi słowami.
+Described in our own words.
