@@ -1,55 +1,55 @@
-# Wzorce logiki i dostępu do danych (PoEAA)
+# Logic and data access patterns (PoEAA)
 
-Klasyczne wzorce z *Patterns of Enterprise Application Architecture* (M. Fowler) — słownik, którym nazywasz decyzje
-w ADR i review. Taktyczne DDD (agregaty, repozytoria domenowe): ddd-tactical-design.
+The classic patterns from *Patterns of Enterprise Application Architecture* (M. Fowler) — the vocabulary you name decisions with
+in ADRs and reviews. Tactical DDD (aggregates, domain repositories): ddd-tactical-design.
 
-## 1. Gdzie żyje logika biznesowa
-| Wzorzec | Na czym polega | Kiedy | Sygnał, że już nie wystarcza |
+## 1. Where the business logic lives
+| Pattern | What it is | When | A signal that it is no longer enough |
 |---|---|---|---|
-| **Skrypt transakcji** (Transaction Script) | jedna procedura na żądanie: waliduje, liczy, zapisuje | prosty CRUD, mało reguł, raporty, integracje | te same reguły kopiowane do wielu skryptów; skrypty po kilkaset linii z `if` po typach |
-| **Moduł tabeli** (Table Module) | jedna klasa na tabelę, operuje na zbiorach rekordów | rzadko dziś; ekosystemy z rekordami w pamięci | — |
-| **Model domeny** (Domain Model) | obiekty z danymi i zachowaniem, niezmienniki w środku | dużo reguł, które się zmieniają (subdomena główna) | — (koszt: mapowanie, ORM, nauka) |
-Wybór zależy od złożoności logiki, nie od mody: subdomena generyczna → skrypt transakcji, główna → model domeny
-(ddd-strategic-analysis). Przejście w drugą stronę jest drogie, więc decyzja trafia do ADR.
-**Model anemiczny** = klasy domeny z samymi polami i „serwisy” z logiką — to skrypt transakcji z narzutem modelu.
-Świadomy skrypt transakcji jest uczciwszy niż model anemiczny udający model domeny.
+| **Transaction Script** | one procedure per request: validates, computes, writes | simple CRUD, few rules, reports, integrations | the same rules copied into many scripts; scripts of several hundred lines with `if`s on types |
+| **Table Module** | one class per table, operates on sets of records | rarely today; ecosystems with in-memory records | — |
+| **Domain Model** | objects with data and behaviour, invariants inside | many rules that change (the core subdomain) | — (cost: mapping, the ORM, learning) |
+The choice depends on the complexity of the logic, not on fashion: a generic subdomain → a transaction script, the core → a domain model
+(ddd-strategic-analysis). Going the other way is expensive, so the decision goes into an ADR.
+**An anemic model** = domain classes with only fields and "services" with the logic — it is a transaction script with the overhead of a model.
+A conscious transaction script is more honest than an anemic model pretending to be a domain model.
 
-## 2. Odwzorowanie obiektów na bazę
-| Wzorzec | Na czym polega | Uwagi |
+## 2. Mapping objects to the database
+| Pattern | What it is | Notes |
 |---|---|---|
-| **Active Record** | obiekt = wiersz, sam się zapisuje (`order.save()`) | szybki start, ale domena zależy od bazy; dobry dla prostych modeli |
-| **Data Mapper** | osobny mapper przenosi dane między obiektem a bazą; obiekt nie wie o bazie | wymagany dla modelu domeny niezależnego od infrastruktury |
-| **Repozytorium** | kolekcja agregatów z perspektywy domeny (`orders.byId(id)`, `orders.save(order)`) | interfejs w domenie, implementacja w infrastrukturze; bez ogólnego `findAll(filter)` dla każdego przypadku |
-| **Unit of Work** | śledzi zmiany w obiektach w ramach transakcji i zapisuje je razem | granica = jedna transakcja = zwykle jeden agregat |
-| **Identity Map** | w ramach jednej jednostki pracy jeden obiekt na jeden identyfikator | brak dwóch kopii tego samego rekordu, mniej zapytań; nie jest cache'em między żądaniami |
-| **Lazy Load** | dane powiązane ładowane przy pierwszym użyciu | źródło N+1 i błędów po zamknięciu sesji — w odczytach jawne `join`/eager albo DTO |
+| **Active Record** | an object = a row, it saves itself (`order.save()`) | a quick start, but the domain depends on the database; good for simple models |
+| **Data Mapper** | a separate mapper moves data between the object and the database; the object does not know about the database | required for a domain model independent of the infrastructure |
+| **Repository** | a collection of aggregates from the domain's perspective (`orders.byId(id)`, `orders.save(order)`) | the interface in the domain, the implementation in the infrastructure; no generic `findAll(filter)` for every case |
+| **Unit of Work** | tracks changes to objects within a transaction and writes them together | the boundary = one transaction = usually one aggregate |
+| **Identity Map** | within one unit of work one object per identifier | no two copies of the same record, fewer queries; it is not a cache between requests |
+| **Lazy Load** | related data loaded on first use | a source of N+1 and of errors after the session is closed — in reads explicit `join`/eager or DTOs |
 
-Co dają popularne narzędzia:
-- JPA/Hibernate: kontekst trwałości = Identity Map + Unit of Work (śledzenie zmian, zapis przy `flush`).
-- MikroORM: Data Mapper z Unit of Work i Identity Map.
-- TypeORM: oba style (Active Record i Data Mapper), bez pełnego Unit of Work.
-- Prisma: klient zapytań bez Identity Map i Unit of Work; spójność zapewniasz transakcją (`$transaction`).
-Sprawdź wersję i dokumentację w projekcie (core-stack-sync), zanim zaprojektujesz coś, co zakłada te mechanizmy.
+What popular tools give:
+- JPA/Hibernate: the persistence context = Identity Map + Unit of Work (change tracking, writes at `flush`).
+- MikroORM: Data Mapper with Unit of Work and Identity Map.
+- TypeORM: both styles (Active Record and Data Mapper), without a full Unit of Work.
+- Prisma: a query client without Identity Map and Unit of Work; you ensure consistency with a transaction (`$transaction`).
+Check the version and the documentation in the project (core-stack-sync) before you design something that assumes these mechanisms.
 
-## 3. Zapis przez ORM, odczyt przez SQL
-- Strona zapisu (zmiany stanu, niezmienniki): ORM z Unit of Work, agregat ładowany w całości.
-- Strona odczytu (listy, raporty, wyszukiwanie): zapytanie SQL, widok lub lekki builder zwracający **DTO** dopasowane
-  do ekranu — bez ładowania agregatów i bez lazy loadingu. To lekka forma CQRS (ddd-tactical-design), bez osobnej bazy.
-- ORM jest abstrakcją przeciekającą: znajomość SQL, planów zapytań i indeksów nadal jest potrzebna (SKILL.md).
+## 3. Writes through the ORM, reads through SQL
+- The write side (state changes, invariants): an ORM with Unit of Work, the aggregate loaded in full.
+- The read side (lists, reports, search): an SQL query, a view or a light builder returning a **DTO** fitted
+  to the screen — without loading aggregates and without lazy loading. This is a light form of CQRS (ddd-tactical-design), without a separate database.
+- An ORM is a leaky abstraction: knowledge of SQL, query plans and indexes is still needed (SKILL.md).
 
-## 4. DTO i mappery
-- **DTO** przenosi dane przez granicę (API, kolejka, warstwa odczytu): proste pola, bez zachowania, wersjonowany jak
-  kontrakt (be-api-design). Encja ani agregat nie wychodzą poza swój moduł.
-- **Mapper** tłumaczy reprezentacje (wiersz ↔ obiekt domeny, obiekt domeny ↔ DTO) w warstwie, która zna obie strony —
-  zwykle aplikacji lub infrastruktury, nigdy w domenie.
-- Mapowanie pisane ręcznie jest jawne i typowane (w TS nie ma refleksji w czasie działania); generatory (MapStruct
-  w Javie) — przy wielu prostych DTO. Test mappera: pola dodane do DTO bez mapowania mają powodować błąd kompilacji lub
-  testu, nie ciche `undefined`.
+## 4. DTOs and mappers
+- A **DTO** carries data across a boundary (an API, a queue, the read layer): simple fields, without behaviour, versioned like
+  a contract (be-api-design). Neither an entity nor an aggregate leaves its module.
+- A **mapper** translates representations (a row ↔ a domain object, a domain object ↔ a DTO) in a layer that knows both sides —
+  usually the application or the infrastructure, never in the domain.
+- Mapping written by hand is explicit and typed (TS has no runtime reflection); generators (MapStruct
+  in Java) — with many simple DTOs. A mapper test: fields added to a DTO without mapping must cause a compile or
+  test error, not a silent `undefined`.
 
-## Źródła
+## Sources
 - M. Fowler, *Patterns of Enterprise Application Architecture* (2002);
-  [katalog wzorców](https://martinfowler.com/eaaCatalog/) (m.in. [Transaction Script](https://martinfowler.com/eaaCatalog/transactionScript.html)).
-- V. Khorikov, [Do you need an ORM?](https://enterprisecraftsmanship.com/posts/do-you-need-an-orm/) — ORM po stronie
-  zapisu, SQL po stronie odczytu, Identity Map, Unit of Work, pułapki lazy loadingu.
+  [the pattern catalogue](https://martinfowler.com/eaaCatalog/) (among others [Transaction Script](https://martinfowler.com/eaaCatalog/transactionScript.html)).
+- V. Khorikov, [Do you need an ORM?](https://enterprisecraftsmanship.com/posts/do-you-need-an-orm/) — an ORM on the
+  write side, SQL on the read side, Identity Map, Unit of Work, lazy loading pitfalls.
 - [roadmap.sh — Software Design and Architecture](https://roadmap.sh/software-design-architecture) (enterprise patterns).
-Opisane własnymi słowami.
+Described in our own words.

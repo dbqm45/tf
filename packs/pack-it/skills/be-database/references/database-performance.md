@@ -1,75 +1,75 @@
-# Wydajność bazy danych w produkcji (PostgreSQL jako przykład)
+# Database performance in production (PostgreSQL as the example)
 
-Najpierw pomiar, potem zmiana. Kolejność zwykle opłacalna: zapytanie i indeks → pula połączeń → cache → repliki do
-odczytu → partycjonowanie → sharding (na końcu i rzadko).
+First a measurement, then a change. The order that usually pays off: the query and the index → the connection pool → a cache → read
+replicas → partitioning → sharding (last and rarely).
 
-## Pula połączeń
-- Każde połączenie do PostgreSQL to proces z pamięcią. Więcej połączeń ≠ większa przepustowość — powyżej pewnej liczby
-  rośnie rywalizacja o CPU, blokady i I/O.
-- Punkt startowy dla puli aplikacji (wiki HikariCP o rozmiarze puli): **liczba rdzeni bazy × 2 + liczba dysków**
-  efektywnie obsługujących I/O, potem dostrajanie na teście obciążenia (qa-performance-testing). Zwykle małe pule
-  (kilkanaście–kilkadziesiąt) i kolejka w aplikacji działają lepiej niż setki połączeń.
-- Suma: **rozmiar puli × liczba instancji aplikacji (także przy autoskalowaniu i wdrożeniu rolling) ≤ `max_connections`**
-  z zapasem na administrację i migracje. Przy wielu instancjach lub funkcjach serverless — pośrednik puli
-  (PgBouncer w trybie transakcyjnym; wtedy bez stanu sesji w połączeniu: przygotowane zapytania i `SET` sprawdź
-  w dokumentacji wersji).
-- Ustaw: limit czasu oczekiwania na połączenie z puli (krótki — lepiej szybki błąd niż kolejka bez końca), maksymalny
-  czas życia połączenia (krótszy niż limity sieci i bazy), limit czasu zapytania (`statement_timeout`) i transakcji
-  w bezczynności (`idle_in_transaction_session_timeout`).
-- Metryki puli w monitoringu: aktywne, bezczynne, oczekujący, czas oczekiwania (ops-observability).
+## The connection pool
+- Every connection to PostgreSQL is a process with memory. More connections ≠ more throughput — above a certain number
+  contention for the CPU, locks and I/O grows.
+- A starting point for the application pool (the HikariCP wiki on pool sizing): **the number of database cores × 2 + the number of disks**
+  effectively serving I/O, then tuning on a load test (qa-performance-testing). Usually small pools
+  (a dozen to a few dozen) and a queue in the application work better than hundreds of connections.
+- The sum: **the pool size × the number of application instances (also with autoscaling and a rolling deployment) ≤ `max_connections`**
+  with headroom for administration and migrations. With many instances or serverless functions — a pooling proxy
+  (PgBouncer in transaction mode; then no session state in the connection: check prepared statements and `SET`
+  in the version's documentation).
+- Set: a timeout for waiting for a connection from the pool (short — a fast error is better than an endless queue), a maximum
+  connection lifetime (shorter than the network and database limits), a query timeout (`statement_timeout`) and an idle-in-transaction
+  timeout (`idle_in_transaction_session_timeout`).
+- Pool metrics in monitoring: active, idle, waiting, wait time (ops-observability).
 
-## Wolne zapytania
-- `log_min_duration_statement` (np. 250–500 ms) loguje wolne zapytania; rozszerzenie `pg_stat_statements` daje
-  ranking według **łącznego** czasu (częste średnio-wolne zapytanie kosztuje więcej niż rzadkie bardzo wolne);
-  `auto_explain` zapisuje plany wolnych zapytań.
-- `EXPLAIN (ANALYZE, BUFFERS)` na danych w skali produkcji: skan sekwencyjny dużej tabeli, złe oszacowanie liczby
-  wierszy (nieaktualne statystyki → `ANALYZE`), sortowanie na dysku, pętle zagnieżdżone na dużych zbiorach.
-- Indeksy: kolejność kolumn w złożonym indeksie (równość przed zakresem), indeksy częściowe (`WHERE status = 'open'`)
-  i pokrywające (`INCLUDE`); każdy indeks spowalnia zapis — usuwaj nieużywane (`pg_stat_user_indexes`).
-- ORM: włącz logowanie SQL w testach i patrz na liczbę zapytań na żądanie (N+1); pobieraj tylko potrzebne kolumny
-  (`data-access-patterns.md`: odczyt przez SQL i DTO).
+## Slow queries
+- `log_min_duration_statement` (e.g. 250–500 ms) logs slow queries; the `pg_stat_statements` extension gives
+  a ranking by **total** time (a frequent moderately slow query costs more than a rare very slow one);
+  `auto_explain` records the plans of slow queries.
+- `EXPLAIN (ANALYZE, BUFFERS)` on production-scale data: a sequential scan of a large table, a bad row count estimate
+  (stale statistics → `ANALYZE`), sorting on disk, nested loops on large sets.
+- Indexes: the column order in a composite index (equality before range), partial indexes (`WHERE status = 'open'`)
+  and covering ones (`INCLUDE`); every index slows writes — remove unused ones (`pg_stat_user_indexes`).
+- ORM: turn on SQL logging in tests and look at the number of queries per request (N+1); fetch only the needed columns
+  (`data-access-patterns.md`: reads through SQL and DTOs).
 
-## Utrzymanie
-- **VACUUM i autovacuum**: aktualizacje i usunięcia zostawiają martwe wiersze; autovacuum musi nadążać (dla dużych,
-  często zmienianych tabel ustawienia per tabela). Objawy: rosnący rozmiar tabeli i indeksów, wolniejsze skany,
-  ostrzeżenia o zawijaniu identyfikatorów transakcji — to ostatnie jest sprawą pilną.
-- Sprzątanie danych: retencja (logi, zdarzenia, sesje, outbox po wysłaniu) usuwana partiami lub przez odłączanie
-  partycji, nie jednym wielkim `DELETE`.
+## Maintenance
+- **VACUUM and autovacuum**: updates and deletes leave dead rows; autovacuum must keep up (for large,
+  frequently changed tables per-table settings). Symptoms: a growing size of the table and indexes, slower scans,
+  transaction ID wraparound warnings — the last one is urgent.
+- Data clean-up: retention (logs, events, sessions, the outbox after sending) deleted in batches or by detaching
+  partitions, not with one huge `DELETE`.
 
-## Schemat i typy a wydajność
-Część popularnych porad (także w system-design-primer) pochodzi z MySQL 5.x. Sprawdź je dla swojej bazy i wersji.
-- Pieniądze jako `numeric` / `DECIMAL` (albo liczba całkowita groszy), nigdy jako liczba zmiennoprzecinkowa.
-- Identyfikatory i liczniki, które mogą urosnąć, jako `bigint`. `integer` ze znakiem kończy się na ~2,1 mld,
-  a zmiana typu dużej tabeli to kosztowna migracja.
-- `NOT NULL` tam, gdzie wartość jest wymagana. Chodzi przede wszystkim o poprawność, a planista zapytań też
-  korzysta z ograniczeń.
-- Duże pliki (obrazy, dokumenty) w magazynie obiektów, a w bazie tylko ich adres i metadane.
-- **PostgreSQL**: `text` i `varchar(n)` działają tak samo szybko, a `char(n)` nie jest szybszy (dopełnia spacjami;
-  dokumentacja odradza go). Limit długości wyrażaj ograniczeniem, gdy wynika z domeny. Rada „`CHAR` zamiast `VARCHAR`
-  dla szybkości” dotyczy starych silników MySQL.
-- **MySQL 8.0** nie ma już cache zapytań (query cache). Cache wyników trzymaj w aplikacji (be-api-design,
+## Schema and types vs performance
+Some popular advice (also in system-design-primer) comes from MySQL 5.x. Check it for your database and version.
+- Money as `numeric` / `DECIMAL` (or an integer number of the smallest unit), never as a floating-point number.
+- Identifiers and counters that may grow, as `bigint`. A signed `integer` ends at ~2.1 billion,
+  and changing the type of a large table is an expensive migration.
+- `NOT NULL` where a value is required. It is mainly about correctness, and the query planner also
+  uses the constraints.
+- Large files (images, documents) in an object store, and in the database only their address and metadata.
+- **PostgreSQL**: `text` and `varchar(n)` are equally fast, and `char(n)` is not faster (it pads with spaces;
+  the documentation advises against it). Express a length limit with a constraint, when it follows from the domain. The advice "`CHAR` instead of `VARCHAR`
+  for speed" concerns old MySQL engines.
+- **MySQL 8.0** no longer has the query cache. Keep the result cache in the application (be-api-design,
   `backend-performance-checklist.md`).
-- Duży import: wyłącz lub usuń indeksy niebędące kluczem, wczytaj dane (`COPY` w PostgreSQL), odbuduj indeksy
-  i uruchom `ANALYZE`. Każdy indeks przyspiesza odczyt, ale spowalnia zapis i zajmuje pamięć, więc zostawiaj tylko
-  te, których używają zapytania.
-- Gorące kolumny lub wiersze w osobnej, mniejszej tabeli mieszczą się w pamięci. Robisz to tylko po pomiarze.
+- A large import: disable or drop non-key indexes, load the data (`COPY` in PostgreSQL), rebuild the indexes
+  and run `ANALYZE`. Every index speeds up reads, but slows writes and takes memory, so keep only
+  those the queries use.
+- Hot columns or rows in a separate, smaller table fit in memory. You do it only after a measurement.
 
-## Skalowanie odczytu i danych
-- **Repliki do odczytu**: odciążają raporty i listy. Opóźnienie repliki oznacza, że użytkownik może nie zobaczyć
-  własnego zapisu — po zapisie czytaj z primary (read-your-writes) albo poczekaj na pozycję WAL. Replika to też
-  redundancja, ale nie kopia zapasowa (błędne `DELETE` replikuje się natychmiast — ops-sre-incidents).
-- **Denormalizacja i widoki zmaterializowane** dla obciążeń z przewagą odczytu (dashboardy, wyszukiwanie): odświeżanie
-  zaplanowane lub przez zdarzenia; źródłem prawdy pozostaje model znormalizowany (ddd-tactical-design: read modele, CQRS).
-- **Partycjonowanie** (deklaratywne, np. po dacie) dla bardzo dużych tabel z naturalnym kluczem czasu: szybkie
-  usuwanie starych danych, mniejsze indeksy. Zapytania muszą filtrować po kluczu partycji.
-- **Sharding** (podział danych między wiele baz) dopiero gdy pionowe skalowanie, repliki i partycjonowanie nie
-  wystarczają: komplikuje transakcje, zapytania przekrojowe, migracje i operacje. Klucz shardowania z domeny
-  (najemca, region); decyzja w ADR z alternatywami.
+## Scaling reads and data
+- **Read replicas**: they relieve reports and lists. Replica lag means the user may not see
+  their own write — after a write read from the primary (read-your-writes) or wait for the WAL position. A replica is also
+  redundancy, but not a backup (a wrong `DELETE` replicates immediately — ops-sre-incidents).
+- **Denormalization and materialized views** for read-heavy workloads (dashboards, search): refresh
+  scheduled or through events; the normalized model stays the source of truth (ddd-tactical-design: read models, CQRS).
+- **Partitioning** (declarative, e.g. by date) for very large tables with a natural time key: fast
+  deletion of old data, smaller indexes. Queries must filter by the partition key.
+- **Sharding** (splitting data across many databases) only when vertical scaling, replicas and partitioning are not
+  enough: it complicates transactions, cross-cutting queries, migrations and operations. A shard key from the domain
+  (the tenant, the region); the decision in an ADR with alternatives.
 
-## Źródła
-- Dokumentacja PostgreSQL: Routine Vacuuming, `pg_stat_statements`, `auto_explain`, Table Partitioning,
-  Runtime Config (Logging, Client Connection Defaults), Character Types, `COPY`; HikariCP wiki „About Pool Sizing”;
-  MySQL 8.0 Reference Manual (usunięcie query cache)
+## Sources
+- PostgreSQL documentation: Routine Vacuuming, `pg_stat_statements`, `auto_explain`, Table Partitioning,
+  Runtime Config (Logging, Client Connection Defaults), Character Types, `COPY`; the HikariCP wiki "About Pool Sizing";
+  MySQL 8.0 Reference Manual (removal of the query cache)
 - [system-design-primer](https://github.com/donnemartin/system-design-primer) — SQL tuning (CC BY 4.0)
 - [roadmap.sh — Backend Performance Best Practices](https://roadmap.sh/backend-performance-best-practices) (Databases)
-Opisane własnymi słowami.
+Described in our own words.
