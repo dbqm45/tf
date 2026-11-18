@@ -820,6 +820,10 @@ treści (angielska), bez równoległej polskiej.
       --force`). Bez próbki Haiku: SKILL.md bez zmian, szablony nie trafiają do modelu.
       Zostaje: szablony workflow `sdlc-phase.yml`, `change-check.yml`, `metric-watch.yml` (komentarze i nazwy kroków;
       P-8 i pdi czytają nazwę kroku N3 i sekcję „Przewodnik dokończenia”) — osobna partia 4c-y.
+  - [x] 4d-arch-a (2026-11-18): pack-it — `arch-ai-solutions`, `arch-architect-practice`, `arch-eu-product-law`
+    (+ referencje) po angielsku; polskie słowa kluczowe zostają, angielskie dochodzą; `hint.pl.txt`. Znaczniki źródeł
+    `[unverified]`/`[secondary]`; kryteria 2 scenariuszy eval EU law przyjmują też angielskie znaczniki. Podpowiedzi
+    bez zmian (901/918 · 31/43), `--hints` czysto (all, pack-it). Haiku przed/po (4 scenariusze): 4/4 → 4/4, 1,30 USD.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
