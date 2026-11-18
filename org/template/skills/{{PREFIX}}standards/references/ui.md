@@ -1,12 +1,12 @@
 # {{TITLE}}: UI
 
-Kiedy czytać: wygląd, układ, komponenty, teksty i dostępność ekranów. Inne obszary są w osobnych plikach (spis: `SKILL.md`).
+When to read: look, layout, components, screen texts and accessibility. The other areas are in separate files (index: `SKILL.md`).
 
-## Ustalenia
-- TODO: tylko ustalenia {{TITLE}}, których nie sprawdzi wzorzec i których model nie zna sam, np.: biblioteka komponentów firmy i kiedy wolno dodać własny; tokeny kolorów i odstępów; wymagany poziom dostępności (np. WCAG 2.2 AA).
+## Standards
+- TODO: only {{TITLE}} rules that a pattern cannot check and the model does not know by itself, e.g.: the company component library and when you may add your own; colour and spacing tokens; the required accessibility level (e.g. WCAG 2.2 AA).
 
-## Wyjątki
-- TODO: kiedy ustalenie nie obowiązuje i kto o tym decyduje.
+## Exceptions
+- TODO: when the rule does not apply and who decides.
 
-## Źródło
-- TODO: dokument firmowy (np. strona w Confluence) i data sprawdzenia (RRRR-MM-DD).
+## Source
+- TODO: the company document (e.g. a Confluence page) and the date it was checked (YYYY-MM-DD).

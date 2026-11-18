@@ -146,7 +146,7 @@ def main() -> int:
             ("nieznany obszar", lambda d: d["findings"][0].update(area="backend"), "area"),
             ("nieznana sekcja", lambda d: d["findings"][0].update(section="nie-ma"), "section"),
             ("sprzeczność bez pary", lambda d: d["findings"][3].update(conflicts_with=["U9"]), "U9"),
-            ("zły wzorzec", lambda d: d["findings"][1]["rule"].update(forbid="(["), "wyrażenie"),
+            ("zły wzorzec", lambda d: d["findings"][1]["rule"].update(forbid="(["), "regex"),
         ]:
             bad = copy.deepcopy(good)
             mutate(bad)
@@ -164,7 +164,7 @@ def main() -> int:
               and "[U2]" not in api,
               f"SD-6: ustalenie z cytatem i źródłem w pliku swojego obszaru, wzorce tylko w rules.yaml: {api}")
         wyd = (refs / "releases.md").read_text(encoding="utf-8")
-        check("U6" in wyd and "sprzeczn" in wyd.lower(), f"SD-6: sprzeczność oznaczona przy ustaleniu: {wyd}")
+        check("U6" in wyd and "conflicts with" in wyd.lower(), f"SD-6: sprzeczność oznaczona przy ustaleniu: {wyd}")
         mod = pack / "analyzers" / "acme-standards"
         rules = rs.load_rules(mod / "rules.yaml")
         ids = {x["id"] for x in rules}
@@ -200,7 +200,7 @@ def main() -> int:
         # SD-11: odświeżanie po zmianie dokumentu
         (src / "api.md").write_text(API_MD.replace("zgodnie z RFC 9457", "zgodnie z RFC 7807"), encoding="utf-8")
         r = tool("split", str(pack))
-        check(r.returncode == 0 and "zmienione: 1" in r.stdout, f"SD-11: split wskazuje zmienione sekcje: {r.stdout}")
+        check(r.returncode == 0 and "changed: 1" in r.stdout, f"SD-11: split wskazuje zmienione sekcje: {r.stdout}")
         r = tool("check", str(pack))
         check(r.returncode == 1 and "U1" in r.stdout, f"SD-11: ustalenie ze zmienionej sekcji do przejrzenia: {r.stdout}")
         r = tool("apply", str(pack))

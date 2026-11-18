@@ -71,7 +71,7 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          suggestion: str) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line,
                       "snippet": " ".join(snippet.split())[:160], "severity": severity, "confidence": 0.7,
-                      "evidence": "statyczna analiza szablonu (bez przeglądarki)", "basis": basis,
+                      "evidence": "static template analysis (no browser)", "basis": basis,
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
@@ -116,18 +116,18 @@ def scan_text(rel: str, text: str) -> None:
         pos, snippet = m.start(), m.group(0)
         if tag == "html":
             if not has_attr(attrs, "lang"):
-                emit("html-without-lang", rel, line_of(pos), snippet, "dokument bez atrybutu lang", "medium",
-                     "WCAG 2.2 SC 3.1.1", "dodaj `lang` z językiem strony, np. `<html lang=\"pl\">`")
+                emit("html-without-lang", rel, line_of(pos), snippet, "document without a lang attribute", "medium",
+                     "WCAG 2.2 SC 3.1.1", "add `lang` with the page language, e.g. `<html lang=\"en\">`")
             continue
         tabindex = attr_value(attrs, "tabindex") or attr_value(attrs, "tabIndex")
         if tabindex and re.fullmatch(r"\d+", tabindex) and int(tabindex) > 0:
-            emit("positive-tabindex", rel, line_of(pos), snippet, f"tabindex={tabindex} zmienia kolejność fokusu",
-                 "medium", "WCAG 2.2 SC 2.4.3", "użyj `tabindex=\"0\"` albo `-1` i ułóż elementy w kolejności DOM")
+            emit("positive-tabindex", rel, line_of(pos), snippet, f"tabindex={tabindex} changes the focus order",
+                 "medium", "WCAG 2.2 SC 2.4.3", "use `tabindex=\"0\"` or `-1` and order the elements in the DOM")
         if tag == "img":
             if not has_attr(attrs, "alt") and not has_attr(attrs, "aria-hidden") \
                     and attr_value(attrs, "role") not in ("presentation", "none"):
-                emit("img-without-alt", rel, line_of(pos), snippet, "obraz bez tekstu alternatywnego", "high",
-                     "WCAG 2.2 SC 1.1.1", "dodaj `alt` z opisem treści albo `alt=\"\"` dla grafiki dekoracyjnej")
+                emit("img-without-alt", rel, line_of(pos), snippet, "image without alternative text", "high",
+                     "WCAG 2.2 SC 1.1.1", "add `alt` describing the content, or `alt=\"\"` for a decorative image")
         if tag in ("button", "a"):
             if tag == "a" and not has_attr(attrs, "href") and not has_attr(attrs, "routerLink"):
                 continue
@@ -136,8 +136,8 @@ def scan_text(rel: str, text: str) -> None:
             inner = "" if m.group(0).endswith("/>") else inner_text(text, m.end(), tag)
             if inner is not None and not named_by_content(inner):
                 emit("control-without-name", rel, line_of(pos), snippet,
-                     f"{'przycisk' if tag == 'button' else 'link'} bez dostępnej nazwy", "high",
-                     "WCAG 2.2 SC 4.1.2 i 2.4.4", "dodaj widoczny tekst albo `aria-label` (np. dla przycisku z ikoną)")
+                     f"{'button' if tag == 'button' else 'link'} without an accessible name", "high",
+                     "WCAG 2.2 SC 4.1.2 and 2.4.4", "add visible text or `aria-label` (e.g. for an icon button)")
         if tag in ("input", "select", "textarea"):
             itype = (attr_value(attrs, "type") or "text").lower()
             if tag == "input" and itype in SKIP_INPUT_TYPES:
@@ -152,16 +152,16 @@ def scan_text(rel: str, text: str) -> None:
                 continue
             if len(re.findall(r"<label\b", before)) > len(re.findall(r"</label\s*>", before)):
                 continue
-            emit("input-without-label", rel, line_of(pos), snippet, f"pole `{tag}` bez etykiety", "high",
-                 "WCAG 2.2 SC 1.3.1 i 3.3.2",
-                 "dodaj `<label for>` (w JSX `htmlFor`) albo `aria-label`; placeholder nie zastępuje etykiety")
+            emit("input-without-label", rel, line_of(pos), snippet, f"`{tag}` field without a label", "high",
+                 "WCAG 2.2 SC 1.3.1 and 3.3.2",
+                 "add `<label for>` (`htmlFor` in JSX) or `aria-label`; a placeholder is not a label")
         if tag in ("div", "span", "li", "img", "p", "td", "tr", "section", "article") and CLICK.search(attrs):
             ok = has_attr(attrs, "role") and (has_attr(attrs, "tabindex") or has_attr(attrs, "tabIndex")) \
                 and bool(KEY.search(attrs))
             if not ok:
                 emit("click-without-keyboard", rel, line_of(pos), snippet,
-                     f"`{tag}` z obsługą kliknięcia niedostępny z klawiatury", "high", "WCAG 2.2 SC 2.1.1 i 4.1.2",
-                     "użyj `<button>` albo dodaj `role`, `tabindex=\"0\"` i obsługę Enter/Spacji")
+                     f"`{tag}` with a click handler is not keyboard accessible", "high", "WCAG 2.2 SC 2.1.1 and 4.1.2",
+                     "use `<button>` or add `role`, `tabindex=\"0\"` and Enter/Space handling")
 
 
 def list_files(root: Path) -> list[str]:

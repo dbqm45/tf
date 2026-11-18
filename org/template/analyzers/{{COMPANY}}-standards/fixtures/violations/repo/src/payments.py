@@ -1,3 +1,3 @@
-def zaplac(kwota):
-    print("płacę", kwota)
-    return kwota
+def pay(amount):
+    print("paying", amount)
+    return amount

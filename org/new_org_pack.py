@@ -100,24 +100,24 @@ def main(argv: list[str]) -> int:
         dst.parent.mkdir(parents=True, exist_ok=True)
         text = fill(src.read_text(encoding="utf-8"))
         if team and rel_src.name == "SKILL.md":   # opis skilla: ustalenia zespołu ponad standardami firmy
-            text = re.sub(r"^description: .*$", f"description: Użyj przy ustaleniach zespołu {title} ponad standardami "
-                          f"firmy ({org}-standards) — kto zatwierdza, progi, zakazy i wyjątki obowiązujące w zespole.",
+            text = re.sub(r"^description: .*$", f"description: Use for {title} team rules on top of the company "
+                          f"standards ({org}-standards) — who approves, thresholds, bans and exceptions that apply in the team.",
                           text, count=1, flags=re.M)
         dst.write_text(text, encoding="utf-8")
         written.append(rel)
-    print(f"✓ {out}: {len(written)} plików")
+    print(f"✓ {out}: {len(written)} files")
     if team:
-        print(f"""Dalej (README.md w nakładce zespołu, org/README.md):
-  1. Uzupełnij pola TODO: grep -rn TODO {out}
-  2. Sprawdź: python3 tools/workspace.py check --packs pack-it,pack-{org},pack-{name} --pack-dir <repo firmy> --pack-dir {out}
-  3. Opublikuj {out} jako repozytorium git zespołu (tagi vX.Y.Z)
-  4. Projekt zespołu: tf install --pack-dir <repo firmy> --pack-dir <repo zespołu> --add pack-{name}""")
+        print(f"""Next (README.md in the team pack, org/README.md):
+  1. Fill in the TODO fields: grep -rn TODO {out}
+  2. Check: python3 tools/workspace.py check --packs pack-it,pack-{org},pack-{name} --pack-dir <company repo> --pack-dir {out}
+  3. Publish {out} as the team's git repository (tags vX.Y.Z)
+  4. Team project: tf install --pack-dir <company repo> --pack-dir <team repo> --add pack-{name}""")
         return 0
-    print(f"""Dalej (org/README.md, README.md w nakładce):
-  1. Uzupełnij pola TODO: grep -rn TODO {out}
-  2. Sprawdź: python3 tools/workspace.py check --packs pack-it,pack-{name} --pack-dir {out}
-  3. Opublikuj {out} jako repozytorium git firmy (tagi vX.Y.Z)
-  4. Projekt: tf install --pack-dir <repozytorium firmy> --add pack-{name}""")
+    print(f"""Next (org/README.md, README.md in the pack):
+  1. Fill in the TODO fields: grep -rn TODO {out}
+  2. Check: python3 tools/workspace.py check --packs pack-it,pack-{name} --pack-dir {out}
+  3. Publish {out} as the company's git repository (tags vX.Y.Z)
+  4. Project: tf install --pack-dir <company repository> --add pack-{name}""")
     return 0
 
 

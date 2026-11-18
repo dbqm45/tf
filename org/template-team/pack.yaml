@@ -1,5 +1,5 @@
-# Nakładka zespołu {{TITLE}}: standardy i domyślne ustawienia jednego zespołu, ponad nakładką firmy pack-{{ORG}}.
-# Uzupełnij pola oznaczone TODO; reszta działa od razu. Przewodnik: README.md obok.
+# {{TITLE}} team pack: the standards and defaults of one team, on top of the company pack pack-{{ORG}}.
+# Fill in the fields marked TODO; the rest works as is. Guide: README.md next to this file.
 id: pack-{{COMPANY}}
 version: 0.1.0
 title: "{{TITLE}}"
@@ -8,14 +8,14 @@ content_language: pl
 default: false
 requires:
   core: "{{CORE_RANGE}}"
-  # Nakładka firmy — instaluje się razem z tą (tf install --pack-dir <repo firmy> --pack-dir <repo zespołu>).
+  # The company pack — installed together with this one (tf install --pack-dir <company repo> --pack-dir <team repo>).
   packs: [pack-{{ORG}}]
 optional_packs: [pack-it]
 
 facets:
-  - {prefix: {{PREFIX}}, order: 55, name: standardy zespołu, question: "jak w zespole {{TITLE}} piszemy, przeglądamy i wydajemy kod"}
+  - {prefix: {{PREFIX}}, order: 55, name: team standards, question: "how the {{TITLE}} team writes, reviews and ships code"}
 
-# Standardy zespołu w każdej personie i u agentów, którzy przeglądają zmiany (obok standardów firmy).
+# Team standards in every persona and for the agents that review changes (next to the company standards).
 contributes:
   personas:
     core_skills: [{{PREFIX}}standards]
@@ -23,21 +23,21 @@ contributes:
     security-reviewer:
       skills: [{{PREFIX}}standards]
 
-# Domyślne zespołu: silnik ← firma (pack-{{ORG}}) ← ta sekcja ← projekt ← osoba. Klucze jak w org_defaults firmy.
-# Zespół może tylko zaostrzyć politykę autonomii firmy i tylko zawęzić dozwolone tryby (task.allowed_modes);
-# pozostałe wartości (limity, profil kosztów, języki) zastępują wartości firmy w projektach zespołu.
-# Wpisz tylko to, czym zespół różni się od firmy — reszta przychodzi z nakładki firmy.
+# Team defaults: engine ← company (pack-{{ORG}}) ← this section ← project ← person. Same keys as the company org_defaults.
+# The team can only tighten the company autonomy policy and only narrow the allowed modes (task.allowed_modes);
+# the other values (limits, cost profile, languages) replace the company values in the team's projects.
+# Write only what makes the team differ from the company — the rest comes from the company pack.
 team_defaults:
   config:
-    # TODO: przykład — zespół, który sam nie wypuszcza paczek i zatwierdza każdy plan (usuń, czego nie potrzebujesz):
+    # TODO: example — a team that never publishes packages itself and approves every plan (remove what you do not need):
     # autonomy:
     #   operations:
     #     publish: deny
     # task:
     #   allowed_modes: [plan, normal]
-    # Profil kosztów zespołu: economy | balanced | quality.
-    default_profile: balanced     # TODO: albo usuń, wtedy obowiązuje profil firmy
+    # Team cost profile: economy | balanced | quality.
+    default_profile: balanced     # TODO: or remove it, then the company profile applies
   operations:
     tracker:
-      # TODO: prefiksy kluczy zgłoszeń zespołu; zastępują prefiksy firmy w projektach zespołu, np. {BE: jira}
+      # TODO: the team's issue key prefixes; they replace the company prefixes in the team's projects, e.g. {BE: jira}
       prefixes: {TODO: jira}

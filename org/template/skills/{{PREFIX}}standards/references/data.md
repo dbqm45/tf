@@ -1,12 +1,12 @@
-# {{TITLE}}: Dane
+# {{TITLE}}: Data
 
-Kiedy czytać: schemat bazy, migracje, dane osobowe i retencja. Inne obszary są w osobnych plikach (spis: `SKILL.md`).
+When to read: database schema, migrations, personal data and retention. The other areas are in separate files (index: `SKILL.md`).
 
-## Ustalenia
-- TODO: tylko ustalenia {{TITLE}}, których nie sprawdzi wzorzec i których model nie zna sam, np.: zasady migracji (np. wsteczna zgodność, kolejność wdrożeń); klasy danych i gdzie wolno je trzymać; okresy retencji.
+## Standards
+- TODO: only {{TITLE}} rules that a pattern cannot check and the model does not know by itself, e.g.: migration rules (e.g. backward compatibility, deployment order); data classes and where they may be stored; retention periods.
 
-## Wyjątki
-- TODO: kiedy ustalenie nie obowiązuje i kto o tym decyduje.
+## Exceptions
+- TODO: when the rule does not apply and who decides.
 
-## Źródło
-- TODO: dokument firmowy (np. strona w Confluence) i data sprawdzenia (RRRR-MM-DD).
+## Source
+- TODO: the company document (e.g. a Confluence page) and the date it was checked (YYYY-MM-DD).

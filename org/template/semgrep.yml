@@ -1,12 +1,12 @@
-# Reguły semgrep {{TITLE}} (wzorce w składni kodu). Pętla /tf używa tego pliku w skanie każdego kawałka,
-# obok reguł OWASP i .semgrep.yml projektu. Lista pusta = brak reguł firmy (skan działa normalnie).
-# Składnia: https://semgrep.dev/docs/writing-rules/rule-syntax
+# {{TITLE}} semgrep rules (patterns in code syntax). The /tf loop uses this file in the scan of every chunk,
+# next to the OWASP rules and the project's .semgrep.yml. Empty list = no company rules (the scan runs as usual).
+# Syntax: https://semgrep.dev/docs/writing-rules/rule-syntax
 rules: []
-# TODO: przykład (przenieś pod `rules:` zamiast `[]` i dopasuj):
-#  - id: requests-bez-timeoutu
+# TODO: example (move it under `rules:` in place of `[]` and adapt):
+#  - id: requests-without-timeout
 #    languages: [python]
 #    severity: WARNING
-#    message: "Wywołanie HTTP bez timeoutu — standard {{TITLE}} wymaga timeout="
+#    message: "HTTP call without a timeout — the {{TITLE}} standard requires timeout="
 #    pattern-either:
 #      - pattern: requests.$M(..., timeout=None, ...)
 #      - patterns:

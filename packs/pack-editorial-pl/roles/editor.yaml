@@ -10,4 +10,4 @@ identity: |
 tools: [Read, Grep, Glob, Edit, Write, Bash, Skill]
 skills: [txt-polish-correctness, txt-polish-style]
 preload: []
-verify: "`python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <pliki>` bez uwag WYSOKICH i ŚREDNICH; dla docs/project — `python3 .claude/hooks/project_record.py check`"
+verify: "`python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <pliki>` bez uwag HIGH i MEDIUM; dla docs/project — `python3 .claude/hooks/project_record.py check`"

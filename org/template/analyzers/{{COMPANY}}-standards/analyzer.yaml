@@ -1,14 +1,14 @@
-# Standardy {{TITLE}} sprawdzane bez modelu (tf analyze). Reguły są w rules.yaml; wykonuje je skaner fabryki.
+# {{TITLE}} standards checked without a model (tf analyze). The rules are in rules.yaml; the factory scanner runs them.
 name: {{COMPANY}}-standards
 prefix: {{COMPANY_UP}}
-title: "Standardy {{TITLE}}"
-description: "Reguły {{TITLE}}, które da się sprawdzić wzorcem: zakazane API i importy, wymagane nagłówki, nazwy plików"
+title: "{{TITLE}} standards"
+description: "{{TITLE}} rules a pattern can check: banned APIs and imports, required headers, file names"
 version: 0.1.0
 review: "{{REVIEW}}"
 skills: [{{PREFIX}}standards]
 tier0:
   rules: rules.yaml
-# Bramka: reguły muszą znaleźć wszystkie naruszenia z fixtures/violations i nic w fixtures/clean.
+# Gate: the rules must find every violation in fixtures/violations and nothing in fixtures/clean.
 gate:
   min_recall: 1.0
   max_false_positives: 0

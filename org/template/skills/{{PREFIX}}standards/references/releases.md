@@ -1,12 +1,12 @@
-# {{TITLE}}: Wydania
+# {{TITLE}}: Releases
 
-Kiedy czytać: wdrożenia, okna, zatwierdzenie wydania i wycofanie. Inne obszary są w osobnych plikach (spis: `SKILL.md`).
+When to read: deployments, windows, release approval and rollback. The other areas are in separate files (index: `SKILL.md`).
 
-## Ustalenia
-- TODO: tylko ustalenia {{TITLE}}, których nie sprawdzi wzorzec i których model nie zna sam, np.: okna wdrożeń i zamrożenia; kto zatwierdza wydanie; jak i w jakim czasie wycofać.
+## Standards
+- TODO: only {{TITLE}} rules that a pattern cannot check and the model does not know by itself, e.g.: deployment and freeze windows; who approves a release; how and how fast to roll back.
 
-## Wyjątki
-- TODO: kiedy ustalenie nie obowiązuje i kto o tym decyduje.
+## Exceptions
+- TODO: when the rule does not apply and who decides.
 
-## Źródło
-- TODO: dokument firmowy (np. strona w Confluence) i data sprawdzenia (RRRR-MM-DD).
+## Source
+- TODO: the company document (e.g. a Confluence page) and the date it was checked (YYYY-MM-DD).

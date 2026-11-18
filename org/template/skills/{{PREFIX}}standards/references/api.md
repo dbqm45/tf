@@ -1,12 +1,12 @@
 # {{TITLE}}: API
 
-Kiedy czytać: endpointy, kontrakty, błędy, wersje i autoryzacja wywołań. Inne obszary są w osobnych plikach (spis: `SKILL.md`).
+When to read: endpoints, contracts, errors, versions and call authorization. The other areas are in separate files (index: `SKILL.md`).
 
-## Ustalenia
-- TODO: tylko ustalenia {{TITLE}}, których nie sprawdzi wzorzec i których model nie zna sam, np.: format błędów i kodów odpowiedzi; zasady wersjonowania; kto zatwierdza zmianę kontraktu; wymagane nagłówki i limity.
+## Standards
+- TODO: only {{TITLE}} rules that a pattern cannot check and the model does not know by itself, e.g.: the error and response code format; versioning rules; who approves a contract change; required headers and limits.
 
-## Wyjątki
-- TODO: kiedy ustalenie nie obowiązuje i kto o tym decyduje.
+## Exceptions
+- TODO: when the rule does not apply and who decides.
 
-## Źródło
-- TODO: dokument firmowy (np. strona w Confluence) i data sprawdzenia (RRRR-MM-DD).
+## Source
+- TODO: the company document (e.g. a Confluence page) and the date it was checked (YYYY-MM-DD).

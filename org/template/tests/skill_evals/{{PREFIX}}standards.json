@@ -2,27 +2,27 @@
   "skill": "{{PREFIX}}standards",
   "scenarios": [
     {
-      "id": "TODO-obszar-ui",
+      "id": "TODO-area-ui",
       "expect": "trigger",
-      "prompt": "TODO: prawdziwe pytanie z pracy w {{TITLE}} o sam wygląd (np. dodaję w panelu sekcję z dwiema kolumnami — z której biblioteki komponentów i jakie odstępy?)",
+      "prompt": "TODO: a real question from work at {{TITLE}} about the look alone (e.g. I am adding a two-column section to the dashboard — which component library and what spacing?)",
       "checks": {
-        "all": [["TODO: ustalenie z references/ui.md"], ["TODO: drugie ustalenie UI"]],
-        "none": ["TODO: ustalenie z innego obszaru, np. z api.md — przy samym wyglądzie nie powinno paść"]
+        "all": [["TODO: a rule from references/ui.md"], ["TODO: a second UI rule"]],
+        "none": ["TODO: a rule from another area, e.g. from api.md — it should not come up for a change to the look alone"]
       }
     },
     {
-      "id": "TODO-obszar-api",
+      "id": "TODO-area-api",
       "expect": "trigger",
-      "prompt": "TODO: prawdziwe pytanie o API w {{TITLE}} (np. dodaję endpoint zwracający zamówienia klienta — jaki format błędów i kto zatwierdza kontrakt?)",
+      "prompt": "TODO: a real question about the API at {{TITLE}} (e.g. I am adding an endpoint that returns a customer's orders — what error format, and who approves the contract?)",
       "checks": {
-        "all": [["TODO: ustalenie z references/api.md"], ["TODO: drugie ustalenie API"]]
+        "all": [["TODO: a rule from references/api.md"], ["TODO: a second API rule"]]
       }
     },
     {
-      "id": "TODO-ogolne-pytanie",
+      "id": "TODO-general-question",
       "expect": "no-trigger",
       "neighbor": "core-git-workflow",
-      "prompt": "TODO: ogólne pytanie bez związku z firmą, np. jak rozwiązać konflikt przy rebase?"
+      "prompt": "TODO: a general question unrelated to the company, e.g. how do I resolve a conflict during a rebase?"
     }
   ]
 }

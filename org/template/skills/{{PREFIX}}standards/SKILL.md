@@ -1,41 +1,41 @@
 ---
 name: {{PREFIX}}standards
-description: Użyj przy ustaleniach firmy {{TITLE}} — kto zatwierdza, progi, zakazy i wyjątki obowiązujące w {{TITLE}}.
+description: Use for {{TITLE}} company rules — who approves, thresholds, bans and exceptions that apply at {{TITLE}}.
 metadata:
   review: "{{REVIEW}}"
-  catalog: "Użyj, gdy odpowiedź zależy od ustaleń {{TITLE}}, a nie od ogólnej praktyki — kto w {{TITLE}} zatwierdza zmianę, progi i zakazy, wyjątki, okna wdrożeń, gdzie {{TITLE}} trzyma decyzje. Nie do ogólnych praktyk (skille fabryki)."
-  keywords: "TODO: słowa, którymi ludzie w firmie opisują te sprawy, np. nazwy systemów, zespołów, procesów"
+  catalog: "Use when the answer depends on {{TITLE}} rules rather than general practice — who at {{TITLE}} approves a change, thresholds and bans, exceptions, release windows, where {{TITLE}} keeps its decisions. Not for general practice (factory skills)."
+  keywords: "TODO: the words people at the company use for these matters, e.g. names of systems, teams, processes"
 ---
 
-# Standardy {{TITLE}}
+# {{TITLE}} standards
 
-Ten plik to spis. Ustalenia każdego obszaru są w osobnym pliku: **wczytaj tylko plik obszaru, którego dotyczy
-zadanie** (zmiana w samym wyglądzie strony → tylko `ui.md`; nowy endpoint → `api.md`, a gdy zmienia schemat — też
-`data.md`). Ustalenia sprawdzalne wzorcem (zakazany import, wymagany nagłówek) są w `rules.yaml` modułu
-`{{COMPANY}}-standards` i sprawdza je `tf analyze` — w tych plikach ich nie powtarzasz.
+This file is an index. The rules of each area are in a separate file: **load only the file of the area the task is
+about** (a change to the page look alone → only `ui.md`; a new endpoint → `api.md`, and if it changes the schema, also
+`data.md`). Rules a pattern can check (banned import, required header) are in `rules.yaml` of the
+`{{COMPANY}}-standards` module and `tf analyze` checks them — do not repeat them in these files.
 
-## Wspólne dla każdej zmiany
-- TODO: najwyżej kilka ustaleń, które obowiązują zawsze (np. numer zgłoszenia w opisie PR, kto zatwierdza).
+## Common to every change
+- TODO: at most a few rules that always apply (e.g. the issue number in the PR description, who approves).
 
-## Obszary
-| Obszar | Kiedy czytać | Plik |
+## Areas
+| Area | When to read | File |
 |---|---|---|
-| UI | wygląd, układ, komponenty, teksty i dostępność ekranów | `references/ui.md` |
-| API | endpointy, kontrakty, błędy, wersje, autoryzacja wywołań | `references/api.md` |
-| Dane | schemat bazy, migracje, dane osobowe, retencja | `references/data.md` |
-| Wydania | wdrożenia, okna, zatwierdzenie wydania, wycofanie | `references/releases.md` |
+| UI | look, layout, components, screen texts and accessibility | `references/ui.md` |
+| API | endpoints, contracts, errors, versions, call authorization | `references/api.md` |
+| Data | database schema, migrations, personal data, retention | `references/data.md` |
+| Releases | deployments, windows, release approval, rollback | `references/releases.md` |
 
-TODO: obszar, którego firma nie ma, usuń razem z plikiem; nowy obszar to nowy wiersz i plik w `references/`.
-Osobny skill zamiast pliku tylko dla dużego obszaru, o który ludzie pytają innymi słowami — kilka podobnych skilli
-konkuruje o to samo pytanie.
+TODO: remove an area the company does not have, together with its file; a new area is a new row and a file in
+`references/`. Use a separate skill instead of a file only for a large area that people ask about in different words —
+several similar skills compete for the same question.
 
-## Gdzie szukać
-- TODO: gdzie są decyzje i dokumentacja (np. przestrzeń w Confluence) — ścieżka albo nazwa, bez haseł i tokenów.
-  Confluence nie jest czytany automatycznie; treść, która ma działać, przenieś do plików obszarów.
+## Where to look
+- TODO: where the decisions and documentation are (e.g. a Confluence space) — a path or name, no passwords or tokens.
+  Confluence is not read automatically; move the content that must take effect into the area files.
 
-## Przykład
-TODO: jedna prawdziwa sytuacja z firmy i poprawny wynik, np. „PR dodaje kolumnę w tabeli zamówień → `data.md`:
-migracja wsteczna zgodna, zatwierdzenie zespołu danych”.
+## Example
+TODO: one real situation from the company and the correct outcome, e.g. "a PR adds a column to the orders table →
+`data.md`: backward-compatible migration, approval by the data team".
 
-## Źródła
-- TODO: dokument firmowy, z którego pochodzą ustalenia, i data sprawdzenia (RRRR-MM-DD).
+## Sources
+- TODO: the company document the rules come from and the date it was checked (YYYY-MM-DD).
