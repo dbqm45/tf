@@ -1,51 +1,51 @@
-# Katalog stylów i wzorców architektury
+# A catalogue of architecture styles and patterns
 
-Uzupełnienie tabeli „Style architektury” w SKILL.md. Styl wybierasz ze scenariuszy atrybutów jakości, nie z mody;
-domyślnie najprostszy, który spełnia scenariusze (H,H). Wybór zapisujesz w ADR z odrzuconymi alternatywami.
+A complement to the "Architecture styles" table in SKILL.md. You choose a style from the quality attribute scenarios, not from fashion;
+by default the simplest one that meets the (H,H) scenarios. You record the choice in an ADR with the rejected alternatives.
 
-## Struktura całego systemu
-| Styl | Kiedy | Koszt i ryzyko | Sygnał złego wyboru |
+## The structure of the whole system
+| Style | When | Cost and risk | A signal of a bad choice |
 |---|---|---|---|
-| **Warstwowa** (prezentacja → aplikacja → domena → infrastruktura) | prawie zawsze wewnątrz modułu | warstwy „przelotowe” bez logiki; zmiana funkcji przechodzi przez wszystkie warstwy | każda zmiana dotyka 4 katalogów → podział według funkcji (eng-design-principles, `components-and-boundaries.md`) |
-| **Klient–serwer** | aplikacja z centralnymi danymi i wieloma klientami | serwer jako wąskie gardło i pojedynczy punkt awarii | — (to tło niemal każdego systemu webowego) |
-| **Modularny monolit** | domyślny start | dyscyplina granic (ArchUnit) | moduły wiedzą o swoich tabelach nawzajem |
-| **Mikroserwisy** | niezależne wdrażanie i skalowanie kontekstów, autonomiczne zespoły | sieć, spójność ostateczna, obserwowalność, platforma | rozproszony monolit: usługi wdrażane razem, wspólna baza, łańcuchy synchronicznych wywołań |
-| **SOA** | integracja wielu systemów organizacji przez wspólne kontrakty | szyna integracyjna (ESB) z logiką routingu i transformacji staje się centralnym monolitem | reguły biznesowe w szynie; mikroserwisy wolą „mądre końcówki, głupie rury” |
-| **Zdarzeniowa** | reakcje asynchroniczne, wielu odbiorców, audyt | trudne śledzenie przepływu, kolejność, duplikaty | łańcuch zdarzeń, którego nikt nie umie narysować |
-| **Serverless** | nieregularny ruch, mały zespół, zadania krótkie | zimny start, limity czasu, uzależnienie od dostawcy, koszt przy stałym ruchu | długie procesy dzielone na siłę; rachunek rośnie szybciej niż ruch |
-| **Peer-to-peer** | brak centralnego serwera z założenia (wymiana plików, sieci rozproszone, synchronizacja offline) | spójność, bezpieczeństwo i wykrywanie węzłów bez centrum | potrzebujesz i tak centralnego autorytetu (uprawnienia, rozliczenia) |
+| **Layered** (presentation → application → domain → infrastructure) | almost always inside a module | "pass-through" layers without logic; a feature change goes through all the layers | every change touches 4 directories → a split by feature (eng-design-principles, `components-and-boundaries.md`) |
+| **Client–server** | an application with central data and many clients | the server as a bottleneck and a single point of failure | — (it is the background of almost every web system) |
+| **Modular monolith** | the default start | boundary discipline (ArchUnit) | modules know about each other's tables |
+| **Microservices** | independent deployment and scaling of contexts, autonomous teams | the network, eventual consistency, observability, a platform | a distributed monolith: services deployed together, a shared database, chains of synchronous calls |
+| **SOA** | integrating many systems of the organization through shared contracts | the integration bus (ESB) with routing and transformation logic becomes a central monolith | business rules in the bus; microservices prefer "smart endpoints, dumb pipes" |
+| **Event-driven** | asynchronous reactions, many consumers, audit | hard flow tracing, ordering, duplicates | a chain of events nobody can draw |
+| **Serverless** | irregular traffic, a small team, short tasks | cold start, time limits, provider dependency, cost under constant traffic | long processes split by force; the bill grows faster than the traffic |
+| **Peer-to-peer** | no central server by design (file sharing, distributed networks, offline synchronization) | consistency, security and node discovery without a centre | you need a central authority anyway (permissions, billing) |
 
-## Wzorce wewnątrz systemu
-| Wzorzec | Na czym polega | Kiedy | Pułapki |
+## Patterns inside the system
+| Pattern | What it is | When | Pitfalls |
 |---|---|---|---|
-| **Mikrojądro (plug-in)** | małe jądro z minimalną funkcją + wtyczki przez kontrakt i rejestr | produkt z rozszerzeniami (IDE, ESLint, wtyczki Nx), reguły per klient lub rynek | kontrakt wtyczki to publiczne API — wersjonowanie i zgodność wstecz; wtyczki z zewnątrz to kod niezaufany (izolacja, uprawnienia) |
-| **Tablica (blackboard)** | wspólna przestrzeń danych + niezależne źródła wiedzy, które ją czytają i uzupełniają + sterowanie wybierające następne źródło | problemy bez znanego algorytmu, składane z częściowych wyników (rozpoznawanie, planowanie, zespoły agentów AI) | trudne testy i debugowanie, niedeterminizm; potrzebne jasne reguły zapisu na tablicę (fabryka używa tej idei: `docs/project/` jako tablica, orkiestrator jako sterowanie) |
-| **Publish–subscribe** | wydawca publikuje do tematu, nie znając odbiorców; broker dostarcza każdemu subskrybentowi | wielu niezależnych odbiorców tego samego faktu | dostarczenie „co najmniej raz” → idempotentni odbiorcy; kolejność tylko w partycji; zmiana schematu wiadomości to zmiana kontraktu (be-messaging-outbox) |
-| **Potoki i filtry** | dane przechodzą przez kolejne niezależne kroki | przetwarzanie wsadowe, ETL, kompilatory, przetwarzanie obrazu | wspólny format między krokami; błędy w środku potoku |
-| **MVC / MVP / MVVM** | oddzielenie modelu, widoku i sterowania lub stanu widoku | UI | logika biznesowa w kontrolerze lub komponencie; w Angularze komponenty i sygnały są bliżej MVVM (fe-architecture) |
+| **Microkernel (plug-in)** | a small core with minimal functionality + plug-ins through a contract and a registry | a product with extensions (IDE, ESLint, Nx plug-ins), rules per customer or market | the plug-in contract is a public API — versioning and backwards compatibility; external plug-ins are untrusted code (isolation, permissions) |
+| **Blackboard** | a shared data space + independent knowledge sources that read and complete it + control choosing the next source | problems without a known algorithm, assembled from partial results (recognition, planning, AI agent teams) | hard tests and debugging, non-determinism; clear rules for writing to the blackboard needed (the factory uses this idea: `docs/project/` as the blackboard, the orchestrator as the control) |
+| **Publish–subscribe** | the publisher publishes to a topic without knowing the consumers; the broker delivers to every subscriber | many independent consumers of the same fact | "at least once" delivery → idempotent consumers; ordering only within a partition; a message schema change is a contract change (be-messaging-outbox) |
+| **Pipes and filters** | data passes through successive independent steps | batch processing, ETL, compilers, image processing | a shared format between the steps; errors in the middle of the pipeline |
+| **MVC / MVP / MVVM** | separating the model, the view and the control or the view state | UI | business logic in the controller or component; in Angular components and signals are closer to MVVM (fe-architecture) |
 
-## Orkiestracja procesów biznesowych
-Długie procesy z wieloma krokami, oczekiwaniem (na człowieka, partnera, termin) i kompensacjami:
-- **Choreografia** (każda usługa reaguje na zdarzenia) — luźne sprzężenie, ale przepływ trudno zobaczyć i zmienić.
-- **Orkiestracja** (jeden koordynator wie, co dalej) — przepływ widoczny w jednym miejscu: saga w kodzie
-  (ddd-tactical-design), silnik BPMN (np. Camunda — proces modelowany diagramem, ddd-event-storming: sekcja 6a)
-  albo silnik trwałego wykonania (np. Temporal — proces jako kod, którego stan przetrwa restarty i awarie).
-- BPEL (XML, epoka SOA i szyn integracyjnych) spotkasz w starszych systemach — nowe procesy modeluj BPMN lub w kodzie.
-- Silnik procesów to ciężka zależność: wybieraj, gdy procesów jest wiele, trwają długo i biznes chce je widzieć
-  i zmieniać; pojedynczy przepływ to zwykła saga z tabelą stanu.
+## Orchestrating business processes
+Long processes with many steps, waiting (for a human, a partner, a deadline) and compensations:
+- **Choreography** (every service reacts to events) — loose coupling, but the flow is hard to see and change.
+- **Orchestration** (one coordinator knows what comes next) — the flow visible in one place: a saga in code
+  (ddd-tactical-design), a BPMN engine (e.g. Camunda — a process modelled with a diagram, ddd-event-storming: section 6a)
+  or a durable execution engine (e.g. Temporal — a process as code whose state survives restarts and failures).
+- BPEL (XML, the SOA and integration bus era) you will meet in older systems — model new processes in BPMN or in code.
+- A process engine is a heavy dependency: choose it when there are many processes, they last long and the business wants to see
+  and change them; a single flow is an ordinary saga with a state table.
 
-## Jak wybierać
-1. Wypisz scenariusze (H,H) z drzewa użyteczności (SKILL.md).
-2. Dla 2–3 kandydatów oceń każdy scenariusz: spełnia / częściowo / nie, z uzasadnieniem.
-3. Dopisz koszt operacyjny (ludzie, platforma, dyżury) — style rozproszone wymagają dojrzałości ops (ops-*).
-4. Zaplanuj fitness function, która pilnuje wybranego stylu (SKILL.md).
-Style łączysz: np. modularny monolit z publish–subscribe między modułami i mikrojądrem dla reguł per klient.
+## How to choose
+1. List the (H,H) scenarios from the utility tree (SKILL.md).
+2. For 2–3 candidates assess every scenario: meets / partly / does not, with a justification.
+3. Add the operating cost (people, platform, on-call) — distributed styles require ops maturity (ops-*).
+4. Plan a fitness function that guards the chosen style (SKILL.md).
+You combine styles: e.g. a modular monolith with publish–subscribe between modules and a microkernel for per-customer rules.
 
-## Źródła
-- F. Buschmann i in., *Pattern-Oriented Software Architecture, Vol. 1* (1996) — warstwy, potoki i filtry, tablica,
-  mikrojądro, MVC.
+## Sources
+- F. Buschmann et al., *Pattern-Oriented Software Architecture, Vol. 1* (1996) — layers, pipes and filters, blackboard,
+  microkernel, MVC.
 - M. Richards, [Software Architecture Patterns](https://www.oreilly.com/library/view/software-architecture-patterns/9781491971437/)
-  (O'Reilly) — rozdział o architekturze mikrojądra (dostępny fragment).
+  (O'Reilly) — the chapter on the microkernel architecture (an available excerpt).
 - [roadmap.sh — Software Design and Architecture](https://roadmap.sh/software-design-architecture) (architectural
-  styles i patterns: client-server, peer-to-peer, SOA, microkernel, blackboard, publish-subscribe, MVC, serverless).
-Opisane własnymi słowami.
+  styles and patterns: client-server, peer-to-peer, SOA, microkernel, blackboard, publish-subscribe, MVC, serverless).
+Described in our own words.

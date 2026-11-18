@@ -1,19 +1,19 @@
-# RODO w praktyce zespołu — procedury i kod
+# GDPR in the team's practice — procedures and code
 
-## 1. Tabela retencji (przykład dla systemu rezerwacji sal)
-| Dane | Cel | Podstawa (do potwierdzenia przez IOD) | Okres | Mechanizm usuwania |
+## 1. Retention table (an example for a room booking system)
+| Data | Purpose | Basis (to be confirmed by the DPO) | Period | Deletion mechanism |
 |---|---|---|---|---|
-| konto (imię, e-mail) | obsługa konta | umowa | do usunięcia konta + okres na reklamacje | usunięcie konta → zadanie usuwające |
-| telefon | przypomnienia o rezerwacji | umowa / zgoda — decyzja | do usunięcia konta | jak wyżej |
-| historia rezerwacji | rozliczenia | obowiązek prawny (księgowość) | wg przepisów podatkowych | zadanie retencji |
-| zdarzenia analityczne | ulepszanie produktu | prawnie uzasadniony interes albo zgoda — decyzja | 13 miesięcy, pseudonim zamiast ID | zadanie retencji |
-| logi aplikacji | bezpieczeństwo i diagnoza | prawnie uzasadniony interes | 30 dni, bez treści żądań z danymi | rotacja logów |
-| kopie zapasowe | ciągłość działania | prawnie uzasadniony interes | 35 dni | wygasanie w magazynie kopii |
+| account (name, email) | account handling | contract | until the account is deleted + the complaint period | account deletion → a deletion job |
+| phone | booking reminders | contract / consent — a decision | until the account is deleted | as above |
+| booking history | settlements | legal obligation (accounting) | per tax rules | a retention job |
+| analytics events | product improvement | legitimate interest or consent — a decision | 13 months, a pseudonym instead of the ID | a retention job |
+| application logs | security and diagnosis | legitimate interest | 30 days, without the content of requests with data | log rotation |
+| backups | business continuity | legitimate interest | 35 days | expiry in the backup store |
 
-Okresy w tabeli to przykład do decyzji, nie zalecenie prawne.
+The periods in the table are an example for a decision, not a legal recommendation.
 
-## 2. Pseudonimizacja i zadanie retencji (Python)
-Sprawdzone 2026-10-03 na CPython 3.14.8: pytest 9.1.1 (2 testy), `mypy --strict`, ruff z regułami bezpieczeństwa `S`.
+## 2. Pseudonymization and a retention job (Python)
+Checked 2026-10-03 on CPython 3.14.8: pytest 9.1.1 (2 tests), `mypy --strict`, ruff with the `S` security rules.
 ```python
 import hashlib
 import hmac
@@ -22,13 +22,13 @@ from datetime import datetime, timedelta
 
 
 def pseudonym(value: str, key: bytes) -> str:
-    """Stały pseudonim z kluczem HMAC — bez klucza nie da się go odwrócić słownikiem."""
+    """A stable pseudonym with an HMAC key — without the key it cannot be reversed with a dictionary."""
     normalized = value.strip().lower().encode("utf-8")
     return hmac.new(key, normalized, hashlib.sha256).hexdigest()[:32]
 
 
 def purge_expired(db: sqlite3.Connection, now: datetime, keep_days: int) -> int:
-    """Zadanie retencji: usuwa rezerwacje starsze niż okres przechowywania; zwraca liczbę usuniętych."""
+    """A retention job: deletes reservations older than the retention period; returns the number deleted."""
     cutoff = (now - timedelta(days=keep_days)).isoformat()
     cur = db.execute("DELETE FROM reservations WHERE ended_at < ?", (cutoff,))
     db.commit()
@@ -61,38 +61,38 @@ def test_purge_removes_only_rows_past_retention() -> None:
     assert purge_expired(db, now, keep_days=365) == 1
     assert db.execute("SELECT phone FROM reservations").fetchall() == [("500100201",)]
 ```
-Klucz pseudonimizacji trzymasz w menedżerze sekretów (ops-secrets-identities), osobno od danych — z kluczem
-pseudonim da się powiązać z osobą, więc nadal jest to dana osobowa. Sam skrót SHA-256 z e-maila bez klucza łatwo
-odwrócić słownikiem adresów.
+You keep the pseudonymization key in the secrets manager (ops-secrets-identities), separately from the data — with the key
+the pseudonym can be linked to the person, so it is still personal data. A plain SHA-256 hash of an email without a key is easy
+to reverse with a dictionary of addresses.
 
-## 3. Żądanie usunięcia danych — przebieg
-1. Przyjęcie: kanał, data (od niej liczysz miesiąc), weryfikacja tożsamości.
-2. Sprawdzenie wyjątków: czy przepis nie nakazuje przechowywać części danych (np. faktury) — wtedy ograniczasz
-   przetwarzanie tej części, resztę usuwasz.
-3. Usunięcie w systemie: konto, powiązane rekordy, pliki, indeksy wyszukiwania, cache.
-4. Procesorzy: polecenie usunięcia (mailing, analityka, obsługa klienta), z potwierdzeniem.
-5. Logi i kopie zapasowe: wygasają z cyklem; identyfikator trafia na listę usuniętych, którą stosujesz po każdym
-   odtworzeniu kopii.
-6. Odpowiedź dla osoby i zapis w rejestrze żądań (data, zakres, wynik).
-Test automatyczny: po usunięciu konta zapytania do wszystkich tabel z danymi tej osoby zwracają pustkę.
+## 3. A data erasure request — the flow
+1. Intake: the channel, the date (you count the month from it), identity verification.
+2. Checking exceptions: whether a rule requires keeping part of the data (e.g. invoices) — then you restrict
+   the processing of that part, the rest you erase.
+3. Erasure in the system: the account, related records, files, search indexes, cache.
+4. Processors: an erasure instruction (mailing, analytics, customer service), with confirmation.
+5. Logs and backups: they expire with the cycle; the identifier goes on the list of erased ones, which you apply after every
+   backup restore.
+6. An answer to the person and an entry in the request register (date, scope, result).
+An automated test: after the account is deleted, queries to all tables with this person's data return nothing.
 
-## 4. Naruszenie ochrony danych — oś czasu
-| Czas od stwierdzenia | Działanie | Kto |
+## 4. Personal data breach — the timeline
+| Time since becoming aware | Action | Who |
 |---|---|---|
-| natychmiast | zatrzymanie wycieku (zamknięcie dostępu, rotacja kluczy), zabezpieczenie dowodów | zespół + ops-security-operations |
-| do kilku godzin | ustalenie: jakie dane, ilu osób, od kiedy, kto miał dostęp, czy dane zaszyfrowane | zespół, agent zbiera fakty |
-| przed upływem 72 h | ocena ryzyka i decyzja o zgłoszeniu do UODO; zgłoszenie (można uzupełniać informacje etapami) | administrator z IOD |
-| bez zbędnej zwłoki | zawiadomienie osób, jeśli ryzyko wysokie: co się stało, skutki, co robimy, co mogą zrobić | administrator |
-| zawsze | wpis w wewnętrznym rejestrze naruszeń, także niezgłoszonych; poprawka procesu i lekcja | zespół |
+| immediately | stopping the leak (closing access, rotating keys), securing the evidence | the team + ops-security-operations |
+| within a few hours | establishing: what data, how many people, since when, who had access, whether the data was encrypted | the team, the agent gathers facts |
+| before 72 h pass | a risk assessment and the decision on notifying UODO (the supervisory authority); the notification (information can be supplemented in stages) | the controller with the DPO |
+| without undue delay | notifying the persons, if the risk is high: what happened, the consequences, what we are doing, what they can do | the controller |
+| always | an entry in the internal breach register, also for unreported ones; a process fix and a lesson | the team |
 
-Procesor (np. firma utrzymująca system) zawiadamia administratora bez zbędnej zwłoki — termin 72 godzin biegnie
-u administratora.
+A processor (e.g. the company maintaining the system) notifies the controller without undue delay — the 72-hour deadline runs
+at the controller.
 
-## 5. Kiedy rozważyć DPIA — pytania kontrolne
-- Czy system ocenia lub profiluje ludzi w sposób, który ma dla nich istotne skutki (kredyt, praca, dostęp do usług)?
-- Czy przetwarza szczególne kategorie danych albo dane o wyrokach na dużą skalę?
-- Czy monitoruje ludzi systematycznie (lokalizacja, zachowanie, miejsca publiczne)?
-- Czy używa danych biometrycznych, łączy zbiory z różnych źródeł, stosuje nową technologię (np. model AI podejmujący
-  decyzje)?
-- Czy dotyczy osób szczególnie wrażliwych (dzieci, pacjenci, pracownicy)?
-Dwa „tak” to mocny sygnał, by zapytać IOD o DPIA; wykaz UODO (M.P. 2019 poz. 666) rozstrzyga przypadki z listy.
+## 5. When to consider a DPIA — control questions
+- Does the system assess or profile people in a way that has significant effects for them (credit, work, access to services)?
+- Does it process special categories of data or data on convictions on a large scale?
+- Does it monitor people systematically (location, behaviour, public places)?
+- Does it use biometric data, combine data sets from different sources, apply a new technology (e.g. an AI model making
+  decisions)?
+- Does it concern particularly vulnerable people (children, patients, employees)?
+Two "yes" answers are a strong signal to ask the DPO about a DPIA; the UODO list (M.P. 2019 item 666) settles the cases on the list.

@@ -1,55 +1,55 @@
-# Ład danych: właściciel, klasy, inwentarz
+# Data governance: owner, classes, inventory
 
-Ład danych odpowiada na trzy pytania o każdy zbiór i pole: **kto za nie odpowiada**, **jak bardzo jest wrażliwe**
-i **gdzie jeszcze leży**. Bez tego retencja, prawa osób i reakcja na naruszenie są zgadywaniem.
+Data governance answers three questions about every data set and field: **who is responsible for it**, **how sensitive it is**
+and **where else it lives**. Without it, retention, data subjects' rights and the response to a breach are guesswork.
 
-## 1. Właściciel zbioru
-- Każdy zbiór (tabela, temat w kolejce, indeks logów, zbiór w hurtowni) ma **właściciela biznesowego**: osobę lub
-  zespół, który decyduje o celu, dostępie, retencji i zmianach schematu. Administrator systemu to nie właściciel.
-- Właściciel zatwierdza klasę zbioru i każde nowe pole z danymi osobowymi; agent przygotowuje propozycję.
-- Kopie (hurtownia, eksporty, środowiska testowe) dziedziczą klasę i właściciela źródła, chyba że dane zostały
-  skutecznie zanonimizowane — wtedy zapisz to jako decyzję.
+## 1. The data set's owner
+- Every data set (a table, a topic in a queue, a log index, a set in the warehouse) has a **business owner**: a person or
+  a team that decides on the purpose, access, retention and schema changes. The system administrator is not the owner.
+- The owner approves the data set's class and every new field with personal data; the agent prepares the proposal.
+- Copies (the warehouse, exports, test environments) inherit the class and owner of the source, unless the data has been
+  effectively anonymized — then record it as a decision.
 
-## 2. Klasy danych i wymagania na klasę
+## 2. Data classes and requirements per class
 
-| Klasa | Przykłady | Dostęp | Szyfrowanie | Maskowanie w logach i poza produkcją | Retencja |
+| Class | Examples | Access | Encryption | Masking in logs and outside production | Retention |
 |---|---|---|---|---|---|
-| publiczne | cennik, opis produktu | każdy | w transmisji | nie trzeba | wg potrzeb |
-| wewnętrzne | konfiguracja, metryki bez osób | pracownicy wg roli | w transmisji i w spoczynku | nie trzeba | wg potrzeb |
-| poufne | umowy, dane finansowe firmy, klucze | imiennie, najmniejsze uprawnienia, rejestr dostępu | w transmisji i w spoczynku | tak | określona, z usuwaniem |
-| dane osobowe | e-mail, telefon, PESEL, adres, IP, identyfikator klienta | imiennie wg celu, rejestr dostępu | w transmisji i w spoczynku; pola o wysokim ryzyku (PESEL, IBAN, dokument) także na poziomie pola | tak: pseudonim (HMAC) albo maska | okres na cel, automatyczne usuwanie |
-| szczególne kategorie (art. 9) i dane dzieci | zdrowie, biometria do identyfikacji, poglądy | wąsko, z uzasadnieniem | jak dane osobowe, zawsze na poziomie pola | zawsze; bez kopii w testach | najkrótsza możliwa; zwykle DPIA |
+| public | price list, product description | everyone | in transit | not needed | as needed |
+| internal | configuration, metrics without people | employees by role | in transit and at rest | not needed | as needed |
+| confidential | contracts, company financial data, keys | named, least privilege, access log | in transit and at rest | yes | defined, with deletion |
+| personal data | email, phone, PESEL (national ID), address, IP, customer identifier | named by purpose, access log | in transit and at rest; high-risk fields (PESEL, IBAN, document) also at the field level | yes: a pseudonym (HMAC) or a mask | a period per purpose, automatic deletion |
+| special categories (Art. 9) and children's data | health, biometrics for identification, opinions | narrowly, with a justification | as personal data, always at the field level | always; no copies in tests | the shortest possible; usually a DPIA |
 
-- Zbiór ma klasę najwrażliwszego pola, które zawiera.
-- Klasa wyznacza wymagania techniczne. Podstawę prawną i cel ustala się osobno (zasada 2 w SKILL.md).
+- A data set has the class of the most sensitive field it contains.
+- The class determines the technical requirements. The legal basis and the purpose are set separately (rule 2 in SKILL.md).
 
-## 3. Inwentarz danych
-Plik `docs/project/04-architecture/data-inventory.md`, jeden wiersz na pole z danymi poufnymi lub osobowymi:
+## 3. Data inventory
+The file `docs/project/04-architecture/data-inventory.md`, one row per field with confidential or personal data:
 
-| Zbiór | Pole | Klasa | Cel | Retencja | Właściciel | Gdzie jeszcze leży |
+| Data set | Field | Class | Purpose | Retention | Owner | Where else it lives |
 |---|---|---|---|---|---|---|
-| `customers` | `email` | dane osobowe | konto, powiadomienia | 2 lata po zamknięciu konta | zespół Konta | logi aplikacji (zamaskowane), mailing (procesor), hurtownia |
+| `customers` | `email` | personal data | account, notifications | 2 years after the account is closed | the Accounts team | application logs (masked), mailing (processor), warehouse |
 
-- „Gdzie jeszcze leży” to kopie: logi, kopie zapasowe, analityka, hurtownia, kolejki, procesorzy i środowiska
-  testowe. Od tej kolumny zależy, czy usunięcie danych na żądanie (zasada 5) w ogóle da się wykonać.
-- Inwentarz jest wkładem do rejestru czynności przetwarzania (art. 30), który prowadzi administrator.
+- "Where else it lives" are the copies: logs, backups, analytics, the warehouse, queues, processors and test
+  environments. Whether erasing data on request (rule 5) can be done at all depends on this column.
+- The inventory is input to the record of processing activities (Art. 30), kept by the controller.
 
-**Istniejący system bez inwentarza:**
-1. Zrób szkic automatycznie: `tf analyze --only data-classification` wypisuje pola o nazwach typowych dla danych
-   osobowych w schematach, migracjach i modelach, a także dane osobowe w logach i w wywołaniach analityki.
-2. Uzupełnij szkic o pola, których nazwa nic nie mówi. Przejrzyj próbkę danych z kolumn tekstowych i JSON
-   (`notes`, `metadata`, `payload`), robiąc to w środowisku produkcyjnym i bez kopiowania danych.
-3. Właściciele zatwierdzają klasy, a potem dopisujesz cel i retencję.
-4. Najpierw naprawiasz dane osobowe w logach i w analityce, bo mają najszersze grono odbiorców.
+**An existing system without an inventory:**
+1. Make a draft automatically: `tf analyze --only data-classification` lists fields with names typical for personal
+   data in schemas, migrations and models, and also personal data in logs and in analytics calls.
+2. Complete the draft with fields whose name says nothing. Review a sample of the data from text and JSON columns
+   (`notes`, `metadata`, `payload`), doing it in the production environment and without copying the data.
+3. The owners approve the classes, and then you add the purpose and retention.
+4. You first fix personal data in logs and in analytics, because they have the widest audience.
 
-## 4. Klasa przy polu w kodzie
-Pole z klasą poufną lub osobową oznacz w miejscu definicji, żeby przegląd zmiany i analiza ją widziały:
-- SQL: `email varchar(255) NOT NULL, -- pii: dane osobowe` albo `COMMENT ON COLUMN customers.email IS 'pii'`;
-- Prisma: komentarz `/// pii` nad polem;
-- ORM: adnotacja lub komentarz przy polu (`# pii`, `// pii`, własna adnotacja `@Pii`).
+## 4. The class next to the field in the code
+Mark a field with a confidential or personal class at its definition, so that the change review and the analysis see it:
+- SQL: `email varchar(255) NOT NULL, -- pii: personal data` or `COMMENT ON COLUMN customers.email IS 'pii'`;
+- Prisma: a `/// pii` comment above the field;
+- ORM: an annotation or comment next to the field (`# pii`, `// pii`, your own `@Pii` annotation).
 
-Nowe pole bez klasy i bez wpisu w inwentarzu zgłasza `tf analyze` (reguła `pii-field-unclassified`).
+A new field without a class and without an inventory entry is reported by `tf analyze` (the rule `pii-field-unclassified`).
 
-## 5. Pochodzenie i kontrakty
-Pochodzenie danych (lineage) i kontrakty danych między zespołami w potokach opisuje `data-engineering`. Kontrakt
-zbioru powinien nieść klasę pól, żeby konsument w hurtowni dostał te same wymagania co źródło.
+## 5. Lineage and contracts
+Data lineage and data contracts between teams in pipelines are described by `data-engineering`. A data set's contract
+should carry the class of the fields, so that the consumer in the warehouse gets the same requirements as the source.

@@ -1,42 +1,42 @@
-# RLS w PostgreSQL dla puli najemców — szczegóły i pułapki
+# RLS in PostgreSQL for a tenant pool — details and pitfalls
 
-Fakty sprawdzone przez agenta `researcher` 2026-10-18. Strony źródłowe nie zostały otwarte z sesji w chmurze
-(proxy 403), więc werdykty opierają się na streszczeniach wyszukiwarki z oficjalnych domen — oznaczenie [wtórne].
-Przed decyzją produkcyjną sprawdź w dokumentacji swojej wersji PostgreSQL.
+Facts checked by the `researcher` agent on 2026-10-18. The source pages were not opened from the cloud session
+(proxy 403), so the verdicts rest on search engine summaries from official domains — marked [secondary].
+Before a production decision check the documentation of your PostgreSQL version.
 
-## Fakty
-| Fakt | Źródło | Status |
+## Facts
+| Fact | Source | Status |
 |---|---|---|
-| Właściciel tabeli domyślnie omija polityki RLS, chyba że tabela ma `FORCE ROW LEVEL SECURITY`; superużytkownik i rola z `BYPASSRLS` omijają je zawsze. | postgresql.org/docs/current/ddl-rowsecurity.html (potwierdzone przez kopie dokumentacji wersji 12 i 15) | [wtórne] |
-| Włączony RLS bez żadnej polityki = domyślna odmowa: brak widocznych i modyfikowalnych wierszy. | j.w. | [wtórne] |
-| `SET LOCAL` działa do końca bieżącej transakcji (commit lub rollback); `set_config(nazwa, wartość, true)` — tak samo. | postgresql.org/docs/current/sql-set.html; …/functions-admin.html | [wtórne] |
-| PgBouncer w trybie `transaction`: `SET`/`RESET` oznaczone jako niewspierane („Never”) — kolejna transakcja może trafić na inne połączenie; wyjątek to parametry śledzone (np. `TimeZone`, `application_name`). | pgbouncer.org/features.html; pgbouncer.org/config.html | [wtórne] |
-| Modele silo, pool, bridge; „noisy neighbor” — obciążenie jednego najemcy pogarsza działanie innych. | docs.aws.amazon.com/wellarchitected/latest/saas-lens/silo-pool-and-bridge-models.html | [wtórne] |
-| Najnowsza wydana wersja główna: PostgreSQL 18 (premiera 25.09.2025); PG 19 w RC1 od 15.10.2026; wsparcie PG 14 kończy się 12.11.2026. | postgresql.org/support/versioning/ | [wtórne] |
+| The table owner bypasses RLS policies by default, unless the table has `FORCE ROW LEVEL SECURITY`; a superuser and a role with `BYPASSRLS` always bypass them. | postgresql.org/docs/current/ddl-rowsecurity.html (confirmed by copies of the version 12 and 15 documentation) | [secondary] |
+| RLS enabled without any policy = default deny: no visible or modifiable rows. | as above | [secondary] |
+| `SET LOCAL` works until the end of the current transaction (commit or rollback); `set_config(name, value, true)` — the same. | postgresql.org/docs/current/sql-set.html; …/functions-admin.html | [secondary] |
+| PgBouncer in `transaction` mode: `SET`/`RESET` marked as unsupported ("Never") — the next transaction may land on another connection; the exception are tracked parameters (e.g. `TimeZone`, `application_name`). | pgbouncer.org/features.html; pgbouncer.org/config.html | [secondary] |
+| The silo, pool, bridge models; the "noisy neighbor" — one tenant's load degrades the others. | docs.aws.amazon.com/wellarchitected/latest/saas-lens/silo-pool-and-bridge-models.html | [secondary] |
+| The latest released major version: PostgreSQL 18 (released 25.09.2025); PG 19 in RC1 since 15.10.2026; PG 14 support ends 12.11.2026. | postgresql.org/support/versioning/ | [secondary] |
 
-## Wzorzec (szkic)
+## Pattern (a sketch)
 ```sql
 ALTER TABLE invoice ENABLE ROW LEVEL SECURITY;
-ALTER TABLE invoice FORCE ROW LEVEL SECURITY;   -- także gdy aplikacja jest właścicielem (lepiej: nie jest)
+ALTER TABLE invoice FORCE ROW LEVEL SECURITY;   -- also when the application is the owner (better: it is not)
 CREATE POLICY tenant_isolation ON invoice
   USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
   WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 ```
-W transakcji aplikacji: `SELECT set_config('app.tenant_id', $1, true);` przed pierwszym zapytaniem.
-`current_setting(…, true)` zwraca NULL przy braku ustawienia, więc porównanie nie przepuszcza żadnego wiersza.
+In the application's transaction: `SELECT set_config('app.tenant_id', $1, true);` before the first query.
+`current_setting(…, true)` returns NULL when unset, so the comparison lets no row through.
 
-## Pułapki
-- Rola aplikacji jest właścicielem tabel (migracje tą samą rolą) → RLS nie działa bez `FORCE`. Osobna rola migracji.
-- `SET` (bez `LOCAL`) w puli połączeń → najemca „przecieka” do następnej transakcji innego klienta.
-- Widoki: domyślnie wykonują się z uprawnieniami właściciela widoku; od PostgreSQL 15 opcja `security_invoker`
-  [wtórne, 2026-10-20: man page CREATE VIEW z pakietu postgresql15, blog Supabase — dokumentacja postgresql.org
-  niedostępna z sesji].
-- Funkcje `SECURITY DEFINER` omijają RLS, jeśli ich właściciel go omija — przegląd każdej takiej funkcji.
-- Indeksy złożone z `tenant_id` na początku; bez nich polityka zamienia zapytania w skan (be-database).
+## Pitfalls
+- The application role owns the tables (migrations with the same role) → RLS does not work without `FORCE`. A separate migration role.
+- `SET` (without `LOCAL`) in a connection pool → the tenant "leaks" into the next transaction of another customer.
+- Views: by default they run with the view owner's permissions; from PostgreSQL 15 the `security_invoker` option
+  [secondary, 2026-10-20: the CREATE VIEW man page from the postgresql15 package, the Supabase blog — postgresql.org documentation
+  unavailable from the session].
+- `SECURITY DEFINER` functions bypass RLS if their owner bypasses it — review every such function.
+- Composite indexes with `tenant_id` first; without them the policy turns queries into a scan (be-database).
 
-## Test katalogu (szkic)
+## Catalogue test (a sketch)
 ```sql
 SELECT c.relname
 FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'tenant_id'
-WHERE c.relkind = 'r' AND NOT c.relrowsecurity;   -- ma tenant_id, a RLS wyłączony → test czerwony
+WHERE c.relkind = 'r' AND NOT c.relrowsecurity;   -- has tenant_id, but RLS disabled → a red test
 ```
