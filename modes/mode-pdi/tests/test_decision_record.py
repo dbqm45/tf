@@ -108,8 +108,8 @@ def main() -> int:
                   f"D-5 {n}: wartości nagłówka: {h}")
             check(("tasks" in h) == (n == "plan.md"), f"D-6 {n}: tasks tylko w plan.md")
         intent = (d / "intent.md").read_text(encoding="utf-8") if d.is_dir() else ""
-        for sec in ("## Problem", "## Metryki sukcesu", "## Poza zakresem", "## Ograniczenia", "## Kiedy to porażka",
-                    "## Powiązania"):
+        for sec in ("## Problem", "## Success metrics", "## Out of scope", "## Constraints", "## When it is a failure",
+                    "## Related"):
             check(sec in intent, f"D-2a: intent.md ma sekcję {sec!r} (ograniczenia, porażka i powiązania pisze człowiek)")
         r = run(["check"], repo)
         check(r.returncode == 0, f"D-7: świeży dziennik przechodzi check: {r.stdout}{r.stderr}")
@@ -378,8 +378,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         run(["change", "new", "CHG-3"], tmp)
         plan = Path(tmp) / "docs" / "project" / "changes" / "CHG-3" / "plan.md"
-        head = next((ln for ln in plan.read_text(encoding="utf-8").splitlines() if ln.startswith("| Cięcie")), "")
-        check(all(c in head for c in ("Rodzaj", "Wymagania", "Odblokowuje", "Weryfikacja")),
+        head = next((ln for ln in plan.read_text(encoding="utf-8").splitlines() if ln.startswith("| Slice")), "")
+        check(all(c in head for c in ("Kind", "Release", "Flag", "Requirements", "Unblocks", "Verification")),
               f"P-4: szablon plan.md ma kolumny samokontroli planu: {head}")
         r = run(["check"], tmp)
         check(r.returncode == 0, f"P-5: świeży szablon przechodzi check: {r.stdout}")

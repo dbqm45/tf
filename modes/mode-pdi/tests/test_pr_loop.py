@@ -151,7 +151,7 @@ def main() -> int:
         check("already exists" in r.stdout and "Tylko src/." in (repo / "REVIEW.md").read_text(encoding="utf-8"), "P-7")
         (repo / "REVIEW.md").unlink()
         run("scaffold")
-        check("## Waga ustaleń" in (repo / "REVIEW.md").read_text(encoding="utf-8"), "P-7 szablon")
+        check("## Finding severity" in (repo / "REVIEW.md").read_text(encoding="utf-8"), "P-7 szablon")
 
     # P-8: change-check.yml ma obowiązkowy krok N3 (brak verify.sh → czerwony)
     cc = (TEMPLATES / "change-check.yml").read_text(encoding="utf-8")

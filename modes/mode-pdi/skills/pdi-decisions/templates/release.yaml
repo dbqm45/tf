@@ -1,30 +1,30 @@
-# Plan wydania zmiany {CHG} — kontrakt pdi 0.12.0 (release-plan.schema.json); sprawdza: decision_record.py check.
-# R1 = MVP: gwiazda przewodnia plus minimum do wyniku z intent.md. Każde TSK z plan.md w dokładnie jednej linii;
-# kolumny „Wydanie” i „Flaga” w plan.md muszą się zgadzać z tym plikiem.
+# Release plan of change {CHG} — pdi contract 0.12.0 (release-plan.schema.json); checked by: decision_record.py check.
+# R1 = MVP: the north star plus the minimum for the outcome from intent.md. Every TSK from plan.md in exactly one line;
+# the "Release" and "Flag" columns in plan.md must agree with this file.
 change: {CHG}
 mvp:
   release: R1
-  # outcome: <wynik dla użytkownika z intent.md>
-  # metric: { name: <metryka>, target: "<próg, np. >= 25%>", horizon_days: 30 }
-  # guardrails: [<metryka ochronna, np. podwojne_obciazenia = 0>]
+  # outcome: <the outcome for the user from intent.md>
+  # metric: { name: <metric>, target: "<threshold, e.g. >= 25%>", horizon_days: 30 }
+  # guardrails: [<a guardrail metric, e.g. double_charges = 0>]
 releases:
   - { id: R1, name: MVP, tasks: [] }
-  # - { id: R2, tasks: [] }        # to, co odłożone z MVP („Poza zakresem MVP”)
-# flags:                           # cięcie wdrażane przed decyzją o udostępnieniu
+  # - { id: R2, tasks: [] }        # what was deferred from the MVP ("Out of the MVP scope")
+# flags:                           # a cut deployed before the decision to make it available
 #   - key: <klucz-flagi>
 #     tasks: [TSK-n]
-#     owner: <kto decyduje o przejściu etapu>
-#     remove_by: RRRR-MM-DD
+#     owner: <who decides on moving to the next stage>
+#     remove_by: YYYY-MM-DD
 #     rollout:
-#       - { stage: internal, min_days: 3, exit: "<kryterium wyjścia>" }
-#       - { stage: "10%", min_days: 7, exit: "<kryterium wyjścia>" }
+#       - { stage: internal, min_days: 3, exit: "<exit criterion>" }
+#       - { stage: "10%", min_days: 7, exit: "<exit criterion>" }
 #       - { stage: "100%" }
-# Cele zmiany (Z7b-1, DZ7). Architekt proponuje te same wartości w plan.md; człowiek zatwierdza na B3.
-# `coverage` i `mutation` tylko dla zmienionego kodu (N4). Dla produktu AI `evaluations` są obowiązkowe (DZ7).
+# Change targets (Z7b-1, DZ7). The architect proposes the same values in plan.md; the human approves them at B3.
+# `coverage` and `mutation` only for the changed code (N4). For an AI product `evaluations` are mandatory (DZ7).
 # targets:
 #   coverage: { kind: changed_lines, min_percent: 90, tool: pytest-cov }
 #   mutation: { kind: changed_lines, tool: mutmut, min_score: 70 }
 #   # performance:
-#   #   - { name: p95_login, metric: response_time_p95_ms, limit: "<= 400", note: "wynika z SLO 99,5% w 28 dni" }
-#   # evaluations:          # wymagane dla produktu AI (DZ7)
+#   #   - { name: p95_login, metric: response_time_p95_ms, limit: "<= 400", note: "follows from an SLO of 99.5% in 28 days" }
+#   # evaluations:          # required for an AI product (DZ7)
 #   #   - { name: rag_answer_quality, dataset: eval/rag.jsonl, metric: faithfulness, min: 0.9 }
