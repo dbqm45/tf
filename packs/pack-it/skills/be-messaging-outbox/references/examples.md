@@ -1,23 +1,23 @@
-# Przykłady — outbox, inbox, gwarancje
+# Examples — outbox, inbox, guarantees
 
-> **Spis treści:** 1. Zamówienia → fakturowanie: zdarzenie przez outbox · 2. Kiedy nie rozpraszać: sprawdzenie dostępności · 3. Idempotentny odbiorca z inboxem i testem duplikatu
+> **Contents:** 1. Orders → invoicing: an event through an outbox · 2. When not to distribute: an availability check · 3. An idempotent receiver with an inbox and a duplicate test
 
-## 1. Zamówienia → fakturowanie: zdarzenie przez outbox
-**Sytuacja.** „Moduł zamówień po złożeniu zamówienia woła synchronicznie `fakturowanie.wystawFakture(zamowienie)`.
-Gdy fakturowanie leży, nie da się złożyć zamówienia. Zróbmy to asynchronicznie.”
+## 1. Orders → invoicing: an event through an outbox
+**Situation.** "After an order is placed, the orders module synchronously calls `invoicing.issue_invoice(order)`.
+When invoicing is down, an order cannot be placed. Let's make it asynchronous."
 
-**Jak.**
-1. **Kryteria wykluczające** (sekcja 1): zamówienia nie używają wyniku (numeru faktury) w tej samej jednostce pracy;
-   ekran potwierdzenia nie pokazuje faktury → można rozproszyć.
-2. **Komenda czy zdarzenie**: komenda `WystawFakture` zachowuje dotychczasowe sprzężenie; zdarzenie `ZamowienieZlozone`
-   pasuje do granicy kontekstu i przyjmie kolejnych odbiorców (np. magazyn). Wybór: zdarzenie. Przestaje działać test
-   „złożenie zamówienia tworzy fakturę” — przenoszę go do testu konsumenta.
-3. **Atomowość**: zamówienie i outbox w tej samej bazie i tej samej transakcji → atomowe.
-4. **Decyzje outboxa**: id wiadomości nadawane przy zapisie w transakcji, nie przez relay; relay = poller co 1 s;
-   ujście = szyna w procesie (zmiana na broker to jedyna zmiana przy rozdzieleniu procesów).
-5. **Kolejność**: fakturowanie jej nie wymaga → bez klucza kolejności; dostarczenie co najmniej raz → odbiorca idempotentny (przykład 3).
+**How.**
+1. **The excluding criteria** (section 1): orders do not use the result (the invoice number) in the same unit of work;
+   the confirmation screen does not show the invoice → it can be distributed.
+2. **Command or event**: the command `IssueInvoice` keeps the existing coupling; the event `OrderPlaced`
+   fits the context boundary and will take further receivers (e.g. the warehouse). Choice: an event. The test
+   "placing an order creates an invoice" stops working — I move it to the consumer test.
+3. **Atomicity**: the order and the outbox in the same database and the same transaction → atomic.
+4. **Outbox decisions**: the message id assigned at write time in the transaction, not by the relay; relay = a poller every 1 s;
+   sink = an in-process bus (changing to a broker is the only change when splitting the processes).
+5. **Ordering**: invoicing does not require it → no ordering key; at-least-once delivery → an idempotent receiver (example 3).
 
-**Wynik** — zapis stanu i wiadomości w jednej transakcji (Python, `sqlite3` jako zasób transakcyjny producenta):
+**Result** — writing the state and the message in one transaction (Python, `sqlite3` as the producer's transactional resource):
 ```python
 import json
 import sqlite3
@@ -25,104 +25,104 @@ import uuid
 from datetime import datetime, timezone
 
 SCHEMA = """
-CREATE TABLE IF NOT EXISTS zamowienia (id TEXT PRIMARY KEY, klient TEXT NOT NULL, kwota_gr INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, customer TEXT NOT NULL, amount_cents INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS outbox (
-    id_wiadomosci TEXT PRIMARY KEY,
-    typ TEXT NOT NULL,
-    ladunek TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'oczekuje',
-    utworzono TEXT NOT NULL
+    message_id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TEXT NOT NULL
 );
 """
 
 
-def zloz_zamowienie(db: sqlite3.Connection, klient: str, kwota_gr: int) -> str:
-    id_zamowienia = str(uuid.uuid4())
-    with db:  # jedna transakcja: stan + rekord outboxa albo nic
-        db.execute("INSERT INTO zamowienia VALUES (?, ?, ?)", (id_zamowienia, klient, kwota_gr))
+def place_order(db: sqlite3.Connection, customer: str, amount_cents: int) -> str:
+    order_id = str(uuid.uuid4())
+    with db:  # one transaction: the state + the outbox record or nothing
+        db.execute("INSERT INTO orders VALUES (?, ?, ?)", (order_id, customer, amount_cents))
         db.execute(
-            "INSERT INTO outbox (id_wiadomosci, typ, ladunek, utworzono) VALUES (?, ?, ?, ?)",
+            "INSERT INTO outbox (message_id, type, payload, created_at) VALUES (?, ?, ?, ?)",
             (
-                str(uuid.uuid4()),  # id nadane tutaj, nie w relayu
-                "ZamowienieZlozone",
-                json.dumps({"idZamowienia": id_zamowienia, "klient": klient, "kwotaGr": kwota_gr}),
+                str(uuid.uuid4()),  # the id assigned here, not in the relay
+                "OrderPlaced",
+                json.dumps({"orderId": order_id, "customer": customer, "amountCents": amount_cents}),
                 datetime.now(timezone.utc).isoformat(),
             ),
         )
-    return id_zamowienia
+    return order_id
 
 
 if __name__ == "__main__":
-    polaczenie = sqlite3.connect(":memory:")
-    polaczenie.executescript(SCHEMA)
-    zloz_zamowienie(polaczenie, "K-17", 129_900)
-    print(polaczenie.execute("SELECT typ, status FROM outbox").fetchall())  # [('ZamowienieZlozone', 'oczekuje')]
+    connection = sqlite3.connect(":memory:")
+    connection.executescript(SCHEMA)
+    place_order(connection, "C-17", 129_900)
+    print(connection.execute("SELECT type, status FROM outbox").fetchall())  # [('OrderPlaced', 'pending')]
 ```
-Raport zmiany: można rozproszyć (kryteria 1–2) · zdarzenie `ZamowienieZlozone` · atomowe · outbox w bazie zamówień,
-poller 1 s · kolejność niegwarantowana, niepotrzebna · sprzężenie logiczne zostaje: fakturowanie zależy od pól `kwotaGr` i `klient`.
+The change report: it can be distributed (criteria 1–2) · the event `OrderPlaced` · atomic · an outbox in the orders database,
+a poller of 1 s · ordering not guaranteed, not needed · logical coupling remains: invoicing depends on the `amountCents` and `customer` fields.
 
-## 2. Kiedy nie rozpraszać: sprawdzenie dostępności
-**Sytuacja.** „Rezerwacja pokoju woła `dostepnosc.zablokuj(pokoj, termin)` i dopiero po `true` potwierdza rezerwację.
-Zamieńmy to na zdarzenie, będzie luźniej.”
+## 2. When not to distribute: an availability check
+**Situation.** "A room booking calls `availability.block(room, period)` and only after `true` confirms the booking.
+Let's turn it into an event, it will be looser."
 
-**Jak.**
-1. Kryterium pierwsze: wywołujący **rozgałęzia się na wyniku** (`true` → potwierdzenie, `false` → odmowa).
-2. Konwersja zmieniłaby poprawność: rezerwacja potwierdzona, zanim wiadomo, czy pokój jest wolny.
-3. **Stop** — zostaje synchronicznie albo przeprojektowanie przepływu (rezerwacja w stanie „oczekuje”), co jest decyzją biznesową.
+**How.**
+1. The first criterion: the caller **branches on the result** (`true` → confirmation, `false` → refusal).
+2. The conversion would change correctness: the booking confirmed before it is known whether the room is free.
+3. **Stop** — it stays synchronous or the flow is redesigned (the booking in a "pending" state), which is a business decision.
 
-**Wynik** (raport kroku):
+**Result** (the step report):
 
-| Pytanie | Odpowiedź |
+| Question | Answer |
 |---|---|
-| wywołujący korzysta z wyniku? | tak — `if zablokowano:` decyduje o potwierdzeniu |
-| werdykt | **nie rozpraszać** w obecnym kształcie |
-| opcja A | zostaje synchronicznie (rekomendacja) |
-| opcja B | rezerwacja „oczekuje” + zdarzenie `PokojZablokowany` / `BlokadaOdrzucona`; klient widzi potwierdzenie z opóźnieniem — decyzja właściciela produktu |
-| uwaga | asynchroniczność usunęłaby sprzężenie czasowe, logiczne zostaje w obu opcjach |
+| does the caller use the result? | yes — `if blocked:` decides on the confirmation |
+| verdict | **do not distribute** in the current shape |
+| option A | stays synchronous (the recommendation) |
+| option B | a "pending" booking + the event `RoomBlocked` / `BlockRejected`; the customer sees the confirmation with a delay — the product owner's decision |
+| note | asynchrony would remove the temporal coupling, the logical coupling remains in both options |
 
-## 3. Idempotentny odbiorca z inboxem i testem duplikatu
-**Sytuacja.** „Relay czasem wysyła `ZamowienieZlozone` dwa razy i klient dostaje dwie faktury. Napraw odbiorcę.”
+## 3. An idempotent receiver with an inbox and a duplicate test
+**Situation.** "The relay sometimes sends `OrderPlaced` twice and the customer gets two invoices. Fix the receiver."
 
-**Jak.**
-1. Dostarczenie co najmniej raz to założenie, nie błąd relaya → idempotencja odbiorcy.
-2. Rekord inboxa zapisany **w tej samej transakcji co efekt** (faktura).
-3. Deduplikacja przez **atomowe zajęcie** id (`INSERT … ON CONFLICT DO NOTHING`), nie „sprawdź, potem zapisz”.
-4. Najpierw czerwony test: to samo id dostarczone dwa razy → dokładnie jedna faktura.
+**How.**
+1. At-least-once delivery is an assumption, not a relay bug → receiver idempotency.
+2. The inbox record written **in the same transaction as the effect** (the invoice).
+3. Deduplication through an **atomic claim** of the id (`INSERT … ON CONFLICT DO NOTHING`), not "check, then write".
+4. A red test first: the same id delivered twice → exactly one invoice.
 
-**Wynik** (Python, `sqlite3`):
+**Result** (Python, `sqlite3`):
 ```python
 import json
 import sqlite3
 
 SCHEMA = """
-CREATE TABLE inbox (id_wiadomosci TEXT PRIMARY KEY);
-CREATE TABLE faktury (id_zamowienia TEXT NOT NULL, kwota_gr INTEGER NOT NULL);
+CREATE TABLE inbox (message_id TEXT PRIMARY KEY);
+CREATE TABLE invoices (order_id TEXT NOT NULL, amount_cents INTEGER NOT NULL);
 """
 
 
-def obsluz_zamowienie_zlozone(db: sqlite3.Connection, id_wiadomosci: str, ladunek: str) -> None:
-    with db:  # inbox i efekt w jednej jednostce pracy
-        zajete = db.execute(
-            "INSERT INTO inbox (id_wiadomosci) VALUES (?) ON CONFLICT DO NOTHING", (id_wiadomosci,)
+def handle_order_placed(db: sqlite3.Connection, message_id: str, payload: str) -> None:
+    with db:  # the inbox and the effect in one unit of work
+        claimed = db.execute(
+            "INSERT INTO inbox (message_id) VALUES (?) ON CONFLICT DO NOTHING", (message_id,)
         ).rowcount
-        if zajete == 0:
-            return  # duplikat — efekt już jest
-        dane = json.loads(ladunek)
-        db.execute("INSERT INTO faktury VALUES (?, ?)", (dane["idZamowienia"], dane["kwotaGr"]))
+        if claimed == 0:
+            return  # a duplicate — the effect already exists
+        data = json.loads(payload)
+        db.execute("INSERT INTO invoices VALUES (?, ?)", (data["orderId"], data["amountCents"]))
 
 
-def test_to_samo_id_dwa_razy_daje_jedna_fakture() -> None:
+def test_the_same_id_twice_gives_one_invoice() -> None:
     db = sqlite3.connect(":memory:")
     db.executescript(SCHEMA)
-    ladunek = json.dumps({"idZamowienia": "Z-1", "kwotaGr": 129_900})
-    obsluz_zamowienie_zlozone(db, "msg-0001", ladunek)
-    obsluz_zamowienie_zlozone(db, "msg-0001", ladunek)
-    assert db.execute("SELECT COUNT(*) FROM faktury").fetchone()[0] == 1
+    payload = json.dumps({"orderId": "O-1", "amountCents": 129_900})
+    handle_order_placed(db, "msg-0001", payload)
+    handle_order_placed(db, "msg-0001", payload)
+    assert db.execute("SELECT COUNT(*) FROM invoices").fetchone()[0] == 1
 
 
 if __name__ == "__main__":
-    test_to_samo_id_dwa_razy_daje_jedna_fakture()
+    test_the_same_id_twice_gives_one_invoice()
     print("ok")
 ```
-Do kompletu z sekcji 6: test kontraktu formatu (migawka ładunku tym samym serializerem, stałe id i czasy) i test
-integracyjny na prawdziwej bazie z tym samym przypadkiem duplikatu.
+To complete section 6: a format contract test (a snapshot of the payload with the same serializer, fixed ids and times) and an
+integration test on a real database with the same duplicate case.
