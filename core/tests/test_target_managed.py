@@ -71,6 +71,8 @@ def main() -> int:
     # Opis bez wskazówki uruchomienia w Claude Code.
     check(tm.description("Persona backend. Uruchom przez `claude --agent dorota`.") == "Persona backend.",
           f"DE-1: {tm.description('Persona backend. Uruchom przez `claude --agent dorota`.')!r}")
+    check(tm.description("Backend persona. Run with `claude --agent dorota`.") == "Backend persona.",
+          f"DE-1b: {tm.description('Backend persona. Run with `claude --agent dorota`.')!r}")
     check(tm.description("Persona X. Uruchom przez `claude --agent x`; orkiestruje zespół x-*.") == "Persona X.",
           "DE-2: wariant ze średnikiem")
     check(tm.description("Bez wskazówki.") == "Bez wskazówki.", "DE-3: bez zmian")
