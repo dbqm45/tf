@@ -1,43 +1,43 @@
-# Typografia, kolor, siatka, ikony
+# Typography, color, grid, icons
 
-## Typografia
-- **Skala:** baza 16 px × stosunek 1,2 (mała tercja, gęste UI) lub 1,25 (większa, strony treściowe). Przy 1,25:
-  16 → 20 → 25 → 31 → 39. Mniej stopni = spójniej; ponad 7 to sygnał bałaganu. Wartości zaokrąglaj do całych px.
-- **Długość linii:** 45–75 znaków, sufit 80 (WCAG 1.4.8, poziom AAA). Szerokość w `ch` (np. `max-width: 66ch`) liczysz
-  dla kroju i rozmiaru, nie na oko. Kolumny węższe niż 30 znaków dają rwane akapity.
-- **Interlinia:** tekst ciągły 1,4–1,6; nagłówki 1,1–1,3; im dłuższa linia, tym większa interlinia. Układ musi znosić
-  nadpisanie wg WCAG 1.4.12: interlinia 1,5, odstęp akapitów 2× rozmiar, litery +0,12 em, wyrazy +0,16 em — bez
-  ucinania i nakładania (żadnych sztywnych wysokości na tekście).
-- **Krój:** jeden, najwyżej dwa; sprawdź polskie znaki (ą ć ę ł ń ó ś ź ż) we wszystkich grubościach oraz cyfry
-  tabelaryczne w tabelach. Pogrubienie i wielkość niosą hierarchię; kapitaliki i `uppercase` tylko dla krótkich etykiet.
-- **Typowe błędy:** hierarchia samym szarym kolorem; tekst wyjustowany bez dzielenia wyrazów; nagłówek bliżej
-  poprzedniego akapitu niż swojego; ponad 3 grubości w jednym widoku.
+## Typography
+- **Scale:** base 16 px × a ratio of 1.2 (minor third, dense UI) or 1.25 (major third, content pages). At 1.25:
+  16 → 20 → 25 → 31 → 39. Fewer steps = more consistent; more than 7 is a sign of a mess. Round values to whole px.
+- **Line length:** 45–75 characters, ceiling 80 (WCAG 1.4.8, level AAA). You compute the width in `ch` (e.g. `max-width: 66ch`)
+  for the typeface and size, not by eye. Columns narrower than 30 characters give ragged paragraphs.
+- **Line height:** body text 1.4–1.6; headings 1.1–1.3; the longer the line, the larger the line height. The layout must withstand
+  an override per WCAG 1.4.12: line height 1.5, paragraph spacing 2× the size, letters +0.12 em, words +0.16 em — without
+  clipping or overlapping (no fixed heights on text).
+- **Typeface:** one, at most two; check Polish characters (ą ć ę ł ń ó ś ź ż) and other diacritics in all weights, and tabular
+  figures in tables. Weight and size carry hierarchy; small caps and `uppercase` only for short labels.
+- **Typical mistakes:** hierarchy with grey color alone; justified text without hyphenation; a heading closer
+  to the previous paragraph than to its own; more than 3 weights in one view.
 
-## Kontrast — jak liczyć
-1. Wzór WCAG: (L1 + 0,05) / (L2 + 0,05), gdzie L to luminancja względna sRGB, L1 jaśniejszego koloru.
-2. Progi: tekst 4,5:1; duży tekst 3:1; elementy interfejsu i fokus 3:1 (SC 1.4.11); tekst nieaktywny jest zwolniony,
-   ale i tak zostaw czytelny odpowiednik.
-3. Zaokrąglenie w górę nie jest dozwolone: 4,49:1 nie przechodzi.
-4. Tekst na zdjęciu lub gradiencie: licz w najgorszym punkcie albo dodaj półprzezroczystą warstwę.
-5. Stany (hover, wciśnięty, zaznaczony) liczysz osobno; wskaźnik fokusu nie może być zasłonięty przez przypięte
-   elementy (SC 2.4.11).
-- **Poprawka koloru:** zmieniaj jasność (L w OKLCH lub HSL), zachowaj odcień. Zestaw 10–12 tonów na rodzinę:
-  tony 50–200 tła, 500–600 akcent, 700–900 tekst.
-- **Tryb ciemny:** nie odwracaj jasnego; powierzchnie rozjaśniaj wraz z wysokością, akcent rozjaśnij i zdesaturuj,
-  czystą czerń i czystą biel na dużych powierzchniach zastąp tonami pośrednimi.
-- **Kolor semantyczny:** sukces, ostrzeżenie, błąd, informacja + ikona i tekst. Żółć rzadko przejdzie jako tekst
-  na bieli — użyj ciemnego brązu na żółtym tle.
+## Contrast — how to compute
+1. The WCAG formula: (L1 + 0.05) / (L2 + 0.05), where L is the sRGB relative luminance, L1 of the lighter color.
+2. Thresholds: text 4.5:1; large text 3:1; interface elements and focus 3:1 (SC 1.4.11); inactive text is exempt,
+   but still leave a readable equivalent.
+3. Rounding up is not allowed: 4.49:1 fails.
+4. Text on a photo or a gradient: compute at the worst point or add a semi-transparent layer.
+5. You compute states (hover, pressed, selected) separately; the focus indicator must not be obscured by sticky
+   elements (SC 2.4.11).
+- **Color fix:** change the lightness (L in OKLCH or HSL), keep the hue. A set of 10–12 tones per family:
+  tones 50–200 backgrounds, 500–600 accent, 700–900 text.
+- **Dark mode:** do not invert the light one; lighten surfaces with elevation, lighten and desaturate the accent,
+  replace pure black and pure white on large surfaces with intermediate tones.
+- **Semantic color:** success, warning, error, information + an icon and text. Yellow rarely passes as text
+  on white — use a dark brown on a yellow background.
 
-## Siatka i odstępy
-- Skala 4 px: 4, 8, 12, 16, 24, 32, 48, 64, 96. Wewnątrz komponentu 4–16, między komponentami 16–32, między sekcjami
-  48–96. Zasada bliskości: odstęp wewnątrz grupy ≤ połowa odstępu między grupami.
-- Strona treściowa: 12 kolumn, rynna 16–24 px, margines 16 px na telefonie. Aplikacja: elastyczne obszary
-  z minimalnymi szerokościami. Punkty zwrotu wybieraj według treści (kiedy układ się psuje), nie według urządzeń.
-- Wysokość kontrolek spójna (np. 32/40/48 px); wewnętrzny odstęp poziomy ≥ pionowego.
+## Grid and spacing
+- A 4 px scale: 4, 8, 12, 16, 24, 32, 48, 64, 96. Within a component 4–16, between components 16–32, between sections
+  48–96. The proximity rule: spacing within a group ≤ half the spacing between groups.
+- A content page: 12 columns, a 16–24 px gutter, a 16 px margin on a phone. An application: flexible areas
+  with minimum widths. Choose breakpoints by the content (when the layout breaks), not by devices.
+- Consistent control heights (e.g. 32/40/48 px); horizontal inner padding ≥ vertical.
 
-## Ikony i obrazy
-- Jedna rodzina, jedna siatka (24 px, pole bezpieczne 2 px), jedna grubość obrysu; wypełnione ikony tylko dla stanu
-  „aktywny”. Ikona bez etykiety tylko dla powszechnych znaczeń (zamknij, szukaj); reszta z tekstem.
-- Rozmiar ikony w linii z tekstem: wysokość kapitalika do wysokości interlinii; obszar dotyku niezależny od rysunku.
-- Zdjęcia: stałe proporcje (16:9, 4:3, 1:1), zdefiniowany punkt ostrości; ilustracje w jednej palecie z marką.
-  Eksport WebP/AVIF z wymiarami (CLS ≤ 0,1) — szczegóły wdrożenia w fe-css.
+## Icons and images
+- One family, one grid (24 px, a 2 px safe area), one stroke weight; filled icons only for the "active"
+  state. An icon without a label only for universal meanings (close, search); the rest with text.
+- The size of an icon inline with text: from the cap height to the line height; the touch area independent of the drawing.
+- Photos: fixed proportions (16:9, 4:3, 1:1), a defined focal point; illustrations in one palette with the brand.
+  Export WebP/AVIF with dimensions (CLS ≤ 0.1) — implementation details in fe-css.

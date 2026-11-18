@@ -1,40 +1,40 @@
-# Komponenty, dokumentacja, dostępność, testy
+# Components, documentation, accessibility, tests
 
-## Komponent — kiedy i jak
-- **Kiedy:** wzorzec użyty w ≥ 3 miejscach lub produktach, o stabilnym zachowaniu. Pierwsze użycie zostaje w produkcie.
-- **API** (Figma = kod): warianty tylko dla różnic wykluczających się (rodzaj, rozmiar), reszta jako właściwości
-  (ikona tak/nie, treść, zamiana ikony) i sloty. Nazwy identyczne: `variant=primary`, `size=md`, `disabled`.
-  Mapowanie właściwości Figma → propsy utrzymuj w Code Connect lub w tabeli w dokumentacji.
-- **Stany:** domyślny, najechanie, fokus, wciśnięty, wyłączony, błąd, ładowanie; komponent bez któregoś stanu
-  nie jest gotowy.
-- **Złożoność:** komponent, który ma ponad ok. 10 właściwości, dzielisz (np. `Button` + `IconButton`), zamiast
-  dodawać kolejną flagę.
+## A component — when and how
+- **When:** a pattern used in ≥ 3 places or products, with stable behaviour. The first use stays in the product.
+- **API** (Figma = code): variants only for mutually exclusive differences (kind, size), the rest as properties
+  (icon yes/no, text, icon swap) and slots. Identical names: `variant=primary`, `size=md`, `disabled`.
+  Keep the Figma property → props mapping in Code Connect or in a table in the documentation.
+- **States:** default, hover, focus, pressed, disabled, error, loading; a component missing any state
+  is not ready.
+- **Complexity:** a component with more than about 10 properties you split (e.g. `Button` + `IconButton`) instead of
+  adding another flag.
 
-## Dostępność w komponencie
-- Semantyczny element natywny przed `div` z rolą; nazwa dostępna wymuszona w API (brak `aria-label` na przycisku
-  z ikoną → błąd typu lub ostrzeżenie w trybie deweloperskim).
-- Klawiatura: kolejność, Enter/Spacja/Esc/strzałki zgodnie z wzorcem; fokus widoczny i niezasłonięty; pułapka fokusu
-  w oknie modalnym z powrotem fokusu po zamknięciu.
-- Cele dotyku ≥ 24×24 px (WCAG 2.2 SC 2.5.8), zalecane 44×44 px; kontrast w obu motywach i markach.
-- Automatyka (axe w Storybooku) wykrywa tylko część problemów — Storybook podaje do 57% — więc każdy komponent ma
-  też ręczny przegląd klawiaturą i czytnikiem ekranu (qa-exploratory-manual).
+## Accessibility in the component
+- A native semantic element before a `div` with a role; the accessible name enforced in the API (no `aria-label` on an icon
+  button → a type error or a warning in development mode).
+- Keyboard: order, Enter/Space/Esc/arrows by the pattern; focus visible and not obscured; a focus trap
+  in a modal dialog with focus returning after closing.
+- Touch targets ≥ 24×24 px (WCAG 2.2 SC 2.5.8), 44×44 px recommended; contrast in both themes and brands.
+- Automation (axe in Storybook) catches only part of the problems — Storybook says up to 57% — so every component also has
+  a manual review with the keyboard and a screen reader (qa-exploratory-manual).
 
-## Dokumentacja komponentu
-Stała struktura strony, żeby dało się ją sprawdzić:
-1. Po co i kiedy użyć; kiedy **nie** (z odesłaniem do właściwego komponentu).
-2. Anatomia (nazwane części), warianty, stany — obrazy z żywych historyjek, nie zrzuty ręczne.
-3. Rób / nie rób — para obrazków z jednym zdaniem uzasadnienia każdy.
-4. Treść: etykiety, długość, ton (ux-content-design, jeśli dostępny).
-5. Dostępność: rola, klawisze, odczyt, wymagania treściowe.
-6. API: propsy z typami i wartościami domyślnymi, tokeny komponentu, przykład kodu.
-7. Zmiany: link do changelogu, status (eksperymentalny, stabilny, przestarzały).
-- Storybook: historyjka na wariant i stan, `args` dla właściwości, panel dostępności, testy interakcji dla złożonych
-  komponentów. Historyjki są też danymi dla testów zrzutowych.
+## Component documentation
+A fixed page structure, so that it can be checked:
+1. What for and when to use it; when **not** (with a pointer to the right component).
+2. Anatomy (named parts), variants, states — images from live stories, not manual screenshots.
+3. Do / don't — a pair of images with one sentence of justification each.
+4. Content: labels, length, tone (ux-content-design, if available).
+5. Accessibility: role, keys, announcement, content requirements.
+6. API: props with types and default values, component tokens, a code example.
+7. Changes: a link to the changelog, the status (experimental, stable, deprecated).
+- Storybook: a story per variant and state, `args` for properties, the accessibility panel, interaction tests for complex
+  components. The stories are also the data for snapshot tests.
 
-## Testy zrzutowe (regresja wizualna)
-- Zrzut każdej historyjki w CI (np. Chromatic lub Playwright) w obu motywach i markach; próg różnicy ustawiony
-  (np. 0,1% pikseli) i stałe środowisko (czcionki, przeglądarka, brak animacji).
-- Różnica = przegląd człowieka: zatwierdzenie zmiany zamierzonej (wpisuje się w changelog) albo poprawka błędu.
-  Nigdy automatyczne zatwierdzanie.
-- Wykluczaj z zrzutów dane zmienne (daty, losowe obrazy); animacje wyłączone lub zatrzymane w stanie końcowym.
-- Zrzuty nie zastępują testów zachowania ani dostępności (tool-playwright, qa-regression).
+## Snapshot tests (visual regression)
+- A snapshot of every story in CI (e.g. Chromatic or Playwright) in both themes and brands; a difference threshold set
+  (e.g. 0.1% of pixels) and a stable environment (fonts, browser, no animations).
+- A difference = a human review: approval of an intended change (it goes into the changelog) or a bug fix.
+  Never automatic approval.
+- Exclude variable data from snapshots (dates, random images); animations off or stopped in the final state.
+- Snapshots do not replace behaviour or accessibility tests (tool-playwright, qa-regression).

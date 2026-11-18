@@ -1,22 +1,22 @@
-# Przegląd zgodności wdrożenia i krytyka projektu
+# Implementation fidelity review and design critique
 
-## Zgodność wdrożenia z projektem
-1. **Zakres:** ekrany, szerokości (375, 768, 1280), motywy, stany (domyślny, hover, fokus, błąd, pusty, ładowanie).
-2. **Materiał:** zrzut ze środowiska testowego w stałych warunkach (ta sama przeglądarka, skala 100%, ta sama
-   treść) i ramka z Figmy w tej samej szerokości. Nakładka (overlay, tryb różnicy) albo zestawienie obok siebie.
-3. **Sprawdź kolejno:** (a) tokeny — wartości z systemu, nie surowe (kolor, odstęp, promień, cień); (b) typografia —
-   rozmiar, grubość, interlinia, zawijanie; (c) odstępy i wyrównania; (d) stany i fokus; (e) ruch; (f) ciemny motyw;
-   (g) skrajne treści (długie, puste).
-4. **Tolerancje:** odstępy i rozmiary ±1 px (wynik zaokrągleń), kolor 0 (wartość tokenu), czcionka — ten sam krój
-   i grubość. Różnice poniżej tolerancji nie są uwagami. Różnica spowodowana błędem projektu (np. 7 px poza
-   skalą) wraca do projektanta, nie do programisty.
-5. **Wynik:** tabela `Nr | Ekran/stan | Oczekiwane (token) | Zastane | Waga | Właściciel`. Waga: blokuje
-   (dostępność, kontrast, fokus), poprawić w tym wydaniu, kosmetyka. Regresję wizualną powtarzalnych komponentów
-   automatyzuje się testami zrzutowymi (ux-design-systems).
+## Implementation fidelity to the design
+1. **Scope:** screens, widths (375, 768, 1280), themes, states (default, hover, focus, error, empty, loading).
+2. **Material:** a screenshot from the test environment in fixed conditions (the same browser, 100% scale, the same
+   content) and the Figma frame at the same width. An overlay (difference mode) or a side-by-side comparison.
+3. **Check in order:** (a) tokens — values from the system, not raw (color, spacing, radius, shadow); (b) typography —
+   size, weight, line height, wrapping; (c) spacing and alignment; (d) states and focus; (e) motion; (f) the dark theme;
+   (g) extreme content (long, empty).
+4. **Tolerances:** spacing and sizes ±1 px (a result of rounding), color 0 (the token value), font — the same typeface
+   and weight. Differences below the tolerance are not comments. A difference caused by a design error (e.g. 7 px off
+   the scale) goes back to the designer, not to the developer.
+5. **Result:** a table `No. | Screen/state | Expected (token) | Found | Severity | Owner`. Severity: blocking
+   (accessibility, contrast, focus), fix in this release, cosmetic. Visual regression of repeated components
+   is automated with snapshot tests (ux-design-systems).
 
-## Krytyka projektu wizualnego
-- Zaczynasz od celu i pytania autora; potem trzy kategorie: hierarchia (co widać najpierw), czytelność (kontrast,
-  skala, linia), spójność (system, marka). Każda uwaga: obserwacja → skutek dla użytkownika → propozycja.
-- Format: „Przycisk drugorzędny ma 2,6:1 względem tła, nie spełnia SC 1.4.11; ściemnij obrys do ≥ 3:1”, a nie
-  „jest za blady”. Rozdziel to, co mierzalne (próg), od preferencji (oznacz „gust”, decyduje autor).
-- Zamykasz listą ustaleń z właścicielami; nie przerabiasz cudzego projektu w trakcie krytyki.
+## Critique of the visual design
+- You start from the goal and the author's question; then three categories: hierarchy (what is seen first), readability (contrast,
+  scale, line), consistency (system, brand). Every comment: observation → consequence for the user → proposal.
+- Format: "The secondary button has 2.6:1 against the background, it does not meet SC 1.4.11; darken the border to ≥ 3:1", not
+  "it is too pale". Separate what is measurable (a threshold) from preferences (mark "taste", the author decides).
+- You close with a list of agreements with owners; you do not rework someone else's design during the critique.

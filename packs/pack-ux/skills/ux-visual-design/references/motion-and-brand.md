@@ -1,33 +1,33 @@
-# Ruch i nałożenie marki
+# Motion and applying the brand
 
-## Ruch — decyzje
-1. **Cel:** wskazuje związek (skąd się wzięło okno), potwierdza zmianę stanu, kieruje uwagę. Brak celu → bez ruchu.
-2. **Czas** (praktyka projektowa; Material 3 podaje własne tokeny, np. `md.motion.duration.short1` = 50 ms):
+## Motion — decisions
+1. **Purpose:** it shows a relationship (where the window came from), confirms a state change, directs attention. No purpose → no motion.
+2. **Duration** (design practice; Material 3 gives its own tokens, e.g. `md.motion.duration.short1` = 50 ms):
 
-   | Typ | Czas |
+   | Type | Duration |
    |---|---|
-   | zmiana stanu kontrolki, przełącznik | 100–150 ms |
-   | menu, podpowiedź, rozwinięcie | 150–200 ms |
-   | panel boczny, okno modalne | 200–300 ms |
-   | przejście całego widoku | 300–500 ms |
+   | a control state change, a toggle | 100–150 ms |
+   | a menu, a tooltip, an expansion | 150–200 ms |
+   | a side panel, a modal dialog | 200–300 ms |
+   | a whole-view transition | 300–500 ms |
 
-   Dystans rośnie → czas rośnie (nie liniowo). Wyjście ok. 70–80% czasu wejścia. Powyżej 500 ms tylko dla
-   rzadkich, wyróżnionych momentów.
-3. **Krzywa:** wejście ease-out (szybki start, łagodne hamowanie), wyjście ease-in, ruch w obrębie ekranu
-   ease-in-out. Liniowa tylko dla obrotu wskaźnika ładowania. Własna krzywa jako token, nie wartość w komponencie.
-4. **Reduced motion** (`prefers-reduced-motion: reduce`): zamień ruch przestrzenny (przesunięcie, skalowanie,
-   paralaksa, obrót) na przenikanie krótsze niż 150 ms albo brak; zostaw informację o zmianie (podświetlenie,
-   zmiana tekstu). Ruch wywołany akcją użytkownika dotyczy SC 2.3.3 (AAA). Ruch automatyczny trwający ponad 5 s wymaga pauzy
-   (SC 2.2.2), a miganie nie może przekraczać 3 razy na sekundę (SC 2.3.1) [niezweryfikowane w tej sesji].
-5. **Specyfikacja:** czas, krzywa, właściwości (`transform`, `opacity`), stan początkowy i końcowy, wersja
-   reduced motion. Prototyp w Figmie ≠ ruch w produkcie; ruch weryfikujesz na wdrożeniu.
+   Distance grows → duration grows (not linearly). Exit about 70–80% of the entrance time. Above 500 ms only for
+   rare, highlighted moments.
+3. **Curve:** entrance ease-out (a fast start, gentle braking), exit ease-in, movement within the screen
+   ease-in-out. Linear only for the rotation of a loading indicator. A custom curve as a token, not a value in the component.
+4. **Reduced motion** (`prefers-reduced-motion: reduce`): replace spatial motion (movement, scaling,
+   parallax, rotation) with a cross-fade shorter than 150 ms or none; keep the information about the change (a highlight,
+   a text change). Motion triggered by a user action falls under SC 2.3.3 (AAA). Automatic motion lasting more than 5 s requires a pause
+   (SC 2.2.2), and flashing must not exceed 3 times per second (SC 2.3.1) [unverified in this session].
+5. **Specification:** duration, curve, properties (`transform`, `opacity`), start and end state, a reduced
+   motion version. A Figma prototype ≠ motion in the product; you verify motion on the implementation.
 
-## Marka
-- **Dostawa od marki:** logo (pole ochronne, minimalny rozmiar), kolor główny i pomocnicze, krój, ton fotografii
-  i ilustracji, zasady użycia. Brak któregoś elementu → zapisz założenie i zapytaj.
-- **Konflikt marka ↔ dostępność:** dostępność wygrywa. Kolor marki za jasny na tekst → wariant do tekstu i przycisków
-  o kontraście ≥ 4,5:1, kolor oryginalny na dużych powierzchniach, nagłówkach ≥ 24 px i w ilustracjach.
-- **Przeniesienie marki do UI:** marka → role semantyczne (akcent, tło, powierzchnia), nie bezpośrednio do komponentów.
-  Dzięki temu zmiana marki lub druga marka to wymiana wartości, nie przebudowa (ux-design-systems, motywy).
-- **Czego unikać:** logo jako tła powtarzalnego wzoru za tekstem; dziesięć kolorów marki w interfejsie roboczym;
-  ilustracji w innym stylu niż reszta.
+## Brand
+- **Delivered by the brand:** the logo (clear space, minimum size), the primary and secondary colors, the typeface, the tone of photography
+  and illustration, usage rules. Any element missing → record an assumption and ask.
+- **Brand ↔ accessibility conflict:** accessibility wins. A brand color too light for text → a variant for text and buttons
+  with contrast ≥ 4.5:1, the original color on large surfaces, headings ≥ 24 px and in illustrations.
+- **Carrying the brand into the UI:** brand → semantic roles (accent, background, surface), not directly into components.
+  Thanks to that, a brand change or a second brand is a swap of values, not a rebuild (ux-design-systems, themes).
+- **What to avoid:** the logo as a repeating background pattern behind text; ten brand colors in a work interface;
+  illustrations in a style different from the rest.
