@@ -882,6 +882,18 @@ treści (angielska), bez równoległej polskiej.
       sformułowanie w skillu (przed tłumaczeniem też 0/2).
     - [ ] do sprawdzenia fakty ze źródła: `endoflife.ai` w fw-nestjs (pewnie endoflife.date), `@Service` jako
       dekorator Angulara w lang-typescript, wsparcie Spring Boot 3.5 do 2026-06-30 vs 3.5.16 w źródłach.
+  - [x] 4d-r3 (2026-11-18): trzecia runda równoległa — `ops-` (22), `sec-` (13): 35 skilli (+ referencje) po
+    angielsku, `hint.pl.txt`. Poprawki z raportów: w sec-llm-security oryginał nazywał bramkę „zawodzi otwarcie”,
+    choć reguła opisuje fail-closed (nieczytelne = odmowa) — teraz „fails closed”; grupa Dependabota `drobne` →
+    `minor-and-patch`. `skill_audit.py` nie rozpoznawał spisu „> **Contents:**”, który pisze `build.with_toc`
+    (`^` bez `re.M`) — 88 fałszywych `ref-no-toc` w pack-it, po poprawce 3; test SA-TOC (EN/PL/brak).
+    Podpowiedzi: nowe angielskie opisy przesunęły wagi i dwa scenariusze spoza rundy straciły podpowiedź
+    (`ai-evals` `sedzia-llm-kalibracja`, `proc-safe` `czy-safe-pasuje`) — słowa kluczowe PL+EN: 902/918 · 31/43.
+    Bramki 35/35, testy repo zielone. Haiku po zmianie 30/34; cztery porażki to brak wywołania skilla
+    (`ops-docker` `hardening-runtime`, `ops-kubernetes` `config-rollout`, `ops-linux-networking` `dysk-inody`,
+    `ops-secrets-identities` `wyciek-klucza-aws`) — na main też (7 z 8 przebiegów bez wywołania).
+    - [ ] cztery scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
+      sprawdzić słowa kluczowe PL+EN i opis pod polskie zgłoszenia.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
