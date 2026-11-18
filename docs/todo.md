@@ -869,6 +869,19 @@ treści (angielska), bez równoległej polskiej.
       `requirements_lint.py` (lint przyjmuje już angielskie) — przełączyć na angielskie przy usuwaniu aliasów.
     - [ ] nagłówek „## Brief dla wykonawcy” w `modes/mode-pdi/tests/test_triage_pdi.py` i
       `eng-code-audit/references/report-template.md` — skill `proc-issue-triage` ma już „Brief for the implementer”.
+  - [x] 4d-r2 (2026-11-18): druga runda równoległa — `lang-` (6), `fw-` (6), `fe-` (5): 17 skilli (+ referencje)
+    po angielsku, `hint.pl.txt`. Słownik pojęć kontraktu technologii (`core/factory/config.yaml` → `vocabulary`)
+    po angielsku (value object, entity, aggregate…); `build.py check` przyjmuje polskie nazwy jako aliasy
+    (`VOCABULARY_PL`, „pl: sprzed 14.x”) — 0 ostrzeżeń. Przykłady Go uruchomione po tłumaczeniu (`go test`),
+    TypeScript skompilowany i uruchomiony; zdanie „pliki skopiowane bez zmian” zastąpione „kod z testowanego
+    projektu; przetłumaczone tylko komentarze i komunikaty”. Spisy treści przeliczone `build.with_toc`.
+    Bramki 17/17, podpowiedzi 901/918 · 31/43, `--hints` czysto, testy repo zielone. Haiku po zmianie 14/16:
+    `modernizacja-typow` 2/2 w powtórce (szum); `bledy-walidacja-openapi` (fw-aspnet-core) pada tak samo na main
+    (0/2) — model cytuje antywzorzec `Conflict(new ProblemDetails…)`, przed którym skill ostrzega.
+    - [ ] `bledy-walidacja-openapi`: niepożądany wzorzec trafia w cytat ostrzeżenia — zawęzić regex albo zmienić
+      sformułowanie w skillu (przed tłumaczeniem też 0/2).
+    - [ ] do sprawdzenia fakty ze źródła: `endoflife.ai` w fw-nestjs (pewnie endoflife.date), `@Service` jako
+      dekorator Angulara w lang-typescript, wsparcie Spring Boot 3.5 do 2026-06-30 vs 3.5.16 w źródłach.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
