@@ -1,59 +1,59 @@
-# Style API i sposoby komunikacji
+# API styles and ways of communicating
 
-Domyślnie REST/JSON przez HTTP. Inny styl wybierasz, gdy konkretny scenariusz go wymaga, i zapisujesz decyzję w ADR.
+By default REST/JSON over HTTP. You choose another style when a specific scenario requires it, and you record the decision in an ADR.
 
-## 1. Wybór stylu
-| Styl | Kiedy | Koszt i pułapki |
+## 1. Choosing the style
+| Style | When | Cost and pitfalls |
 |---|---|---|
-| **REST / JSON** | API publiczne i między zespołami, CRUD z akcjami, cache HTTP | nadmiar lub niedobór danych na ekran → BFF albo pola wybierane parametrem |
-| **GraphQL** | wiele różnych klientów składa dane z wielu źródeł, front potrzebuje elastycznych zapytań | N+1 w resolverach (DataLoader), limity głębokości i kosztu zapytania (ochrona przed DoS — OWASP API4), autoryzacja per pole (API3), błędy zwracane w odpowiedzi 200, trudniejszy cache HTTP; w produkcji tylko zapisane (persisted) zapytania lub allowlista |
-| **gRPC** | komunikacja usługa–usługa, niskie opóźnienia, strumienie, kontrakt w Protobuf | przeglądarka tylko przez gRPC-Web lub Connect; zawsze ustawiony deadline (inaczej wiszące wywołania), kody statusu gRPC zamiast HTTP, zgodność schematu przez numery pól (nie usuwaj, nie zmieniaj numerów) |
-| **SOAP** | integracja z istniejącymi systemami, które go wymagają (bankowość, administracja) | XML, WSDL, WS-Security; nie wybierasz go do nowych API |
-| **Webhooki** | powiadamianie systemów zewnętrznych o zdarzeniach (płatność, zmiana statusu) | dostarczanie, ponowienia, podpisy, kolejność — sekcja 3 |
-| **SSE** (`text/event-stream`) | strumień serwer → przeglądarka: postęp, powiadomienia, odpowiedzi modelu AI token po tokenie | jednokierunkowe; ponowne połączenie z `Last-Event-ID`; proxy i timeouty muszą przepuszczać długie połączenia |
-| **WebSocket** | dwukierunkowo i z małym opóźnieniem: czat, współpraca na żywo, gry | stanowe połączenia (skalowanie, sticky sessions lub broker), własny protokół wiadomości, uwierzytelnianie przy nawiązaniu i wygasanie tokenu w trakcie |
-| **Strumieniowanie odpowiedzi** (NDJSON / JSON Lines, `application/json-seq` z RFC 7464) | duży wynik, który klient przetwarza na bieżąco (eksport, logi) | osobny endpoint lub typ w `Accept`, żeby klient oczekujący JSON nie dostał kilku obiektów |
-| **Odpytywanie (polling)** | rzadkie zmiany, klient bez publicznego adresu, prostota | opóźnienie do długości interwału, koszt pustych zapytań; ustaw rozsądny interwał i `ETag` (304 zamiast pełnej odpowiedzi) |
+| **REST / JSON** | public and cross-team APIs, CRUD with actions, HTTP caching | too much or too little data for a screen → a BFF or fields chosen by a parameter |
+| **GraphQL** | many different clients assemble data from many sources, the frontend needs flexible queries | N+1 in resolvers (DataLoader), query depth and cost limits (DoS protection — OWASP API4), per-field authorization (API3), errors returned in a 200 response, harder HTTP caching; in production only persisted queries or an allowlist |
+| **gRPC** | service–service communication, low latency, streams, a contract in Protobuf | the browser only through gRPC-Web or Connect; always set a deadline (otherwise hanging calls), gRPC status codes instead of HTTP, schema compatibility through field numbers (do not remove, do not change numbers) |
+| **SOAP** | integration with existing systems that require it (banking, public administration) | XML, WSDL, WS-Security; you do not choose it for new APIs |
+| **Webhooks** | notifying external systems about events (a payment, a status change) | delivery, retries, signatures, ordering — section 3 |
+| **SSE** (`text/event-stream`) | a server → browser stream: progress, notifications, AI model responses token by token | one-way; reconnection with `Last-Event-ID`; proxies and timeouts must let long connections through |
+| **WebSocket** | two-way and with low latency: chat, live collaboration, games | stateful connections (scaling, sticky sessions or a broker), your own message protocol, authentication at the handshake and token expiry during the session |
+| **Response streaming** (NDJSON / JSON Lines, `application/json-seq` from RFC 7464) | a large result that the client processes on the fly (an export, logs) | a separate endpoint or a type in `Accept`, so that a client expecting JSON does not get several objects |
+| **Polling** | rare changes, a client without a public address, simplicity | a delay of up to the interval length, the cost of empty queries; set a sensible interval and an `ETag` (304 instead of a full response) |
 
-## 2. Synchroniczne czy asynchroniczne
-- Operacja dłuższa niż kilka sekund (import, raport, generowanie przez AI) → **`202 Accepted`** z nagłówkiem `Location`
-  wskazującym zasób statusu (`/jobs/{id}`: `pending | running | succeeded | failed`, wynik lub link do wyniku). Klient
-  odpytuje z `Retry-After` albo dostaje webhook lub SSE po zakończeniu.
-- Zlecenie zadania jest idempotentne (`Idempotency-Key`), a anulowanie to osobna akcja (`POST /jobs/{id}/cancel`).
-- Między własnymi usługami zamiast łańcucha synchronicznych wywołań — zdarzenia przez broker (be-messaging-outbox).
+## 2. Synchronous or asynchronous
+- An operation longer than a few seconds (an import, a report, AI generation) → **`202 Accepted`** with a `Location` header
+  pointing to a status resource (`/jobs/{id}`: `pending | running | succeeded | failed`, the result or a link to the result). The client
+  polls with `Retry-After` or gets a webhook or SSE on completion.
+- Submitting a job is idempotent (`Idempotency-Key`), and cancellation is a separate action (`POST /jobs/{id}/cancel`).
+- Between your own services, instead of a chain of synchronous calls — events through a broker (be-messaging-outbox).
 
-## 3. Webhooki — projekt po stronie wysyłającego
-- **Podpis**: HMAC-SHA256 z treści i znacznika czasu w nagłówku (np. `Webhook-Signature`, `Webhook-Timestamp`);
-  odbiorca weryfikuje podpis w czasie stałym i odrzuca wiadomości starsze niż kilka minut (ochrona przed powtórzeniem).
-  Sekret per subskrypcja, z rotacją (dwa ważne sekrety przez okres przejściowy).
-- **Dostarczanie co najmniej raz**: ponowienia z wykładniczym odstępem i losowym rozrzutem przez wiele godzin, potem
-  kolejka martwych wiadomości i widok dostarczeń dla klienta (ręczne ponowienie). Każde zdarzenie ma `id` — odbiorca
-  odrzuca duplikaty.
-- **Kolejność nie jest gwarantowana** — zdarzenie niesie wersję lub znacznik czasu; „cienkie” zdarzenie (sam `id` i typ,
-  odbiorca pobiera aktualny stan przez API) omija problem nieaktualnych danych.
-- Odbiorca odpowiada szybko `2xx` i przetwarza asynchronicznie; timeout po stronie wysyłającego (np. 10 s).
-- **Adres URL podaje klient → ryzyko SSRF** (OWASP API7): tylko `https`, blokada adresów prywatnych i metadanych chmury,
-  rozwiązywanie DNS przy każdym wysłaniu.
-- Zdarzenia opisane w dokumentacji jak kontrakt (np. AsyncAPI lub schematy JSON), wersjonowane jak API.
+## 3. Webhooks — the design on the sender's side
+- **Signature**: HMAC-SHA256 of the body and a timestamp in a header (e.g. `Webhook-Signature`, `Webhook-Timestamp`);
+  the receiver verifies the signature in constant time and rejects messages older than a few minutes (replay protection).
+  A secret per subscription, with rotation (two valid secrets for a transition period).
+- **At-least-once delivery**: retries with exponential backoff and random jitter for many hours, then
+  a dead letter queue and a deliveries view for the customer (manual retry). Every event has an `id` — the receiver
+  rejects duplicates.
+- **Ordering is not guaranteed** — the event carries a version or a timestamp; a "thin" event (only the `id` and the type,
+  the receiver fetches the current state through the API) avoids the stale data problem.
+- The receiver responds quickly with `2xx` and processes asynchronously; a timeout on the sender's side (e.g. 10 s).
+- **The client gives the URL → an SSRF risk** (OWASP API7): only `https`, blocking private addresses and cloud metadata,
+  resolving DNS on every send.
+- Events described in the documentation like a contract (e.g. AsyncAPI or JSON schemas), versioned like an API.
 
-## 4. Brama API i BFF
-- **Brama API** (gateway): sprawy przekrojowe — routing, terminacja TLS, uwierzytelnianie, limity żądań, logi
-  i metryki, czasem cache. **Bez logiki biznesowej** — reguła w bramie to reguła ukryta przed testami domeny.
-  Brama jest punktem, przez który przechodzi każde żądanie, więc musi być wysoko dostępna (kilka instancji w różnych
-  strefach), skalowana razem z ruchem i objęta własnymi SLO i alertami. Jej awaria wyłącza wszystkie usługi naraz.
-  Centralne uwierzytelnianie w bramie nie zwalnia usług z autoryzacji: usługa sprawdza uprawnienia do konkretnego
-  zasobu i nie ufa ślepo ruchowi z sieci wewnętrznej (be-auth-security, OWASP API1).
-- **Backend for Frontend**: osobne API dopasowane do jednego rodzaju klienta (web, mobile, API publiczne — według
-  doświadczenia, nie urządzenia). Składa dane z wielu usług i kształtuje je pod ekran. Zwykle utrzymuje go zespół
-  tego frontu. Nie kopiuje reguł biznesowych — wywołuje usługi, które je mają.
-- **BFF jako strażnik tokenów** (token handler): przeglądarka dostaje ciasteczko `HttpOnly; Secure; SameSite`, a tokeny
-  OAuth zostają po stronie serwera (be-auth-security, `tokens-sessions-oauth.md`).
-- Jeden klient lub klienci o podobnych potrzebach → BFF niepotrzebny; wystarczy dobrze zaprojektowane API.
+## 4. The API gateway and BFF
+- **An API gateway**: cross-cutting concerns — routing, TLS termination, authentication, rate limits, logs
+  and metrics, sometimes caching. **No business logic** — a rule in the gateway is a rule hidden from the domain tests.
+  The gateway is a point every request passes through, so it must be highly available (several instances in different
+  zones), scaled with traffic and covered by its own SLOs and alerts. Its failure takes down all services at once.
+  Central authentication in the gateway does not exempt the services from authorization: a service checks the permissions to a specific
+  resource and does not blindly trust traffic from the internal network (be-auth-security, OWASP API1).
+- **Backend for Frontend**: a separate API fitted to one kind of client (web, mobile, the public API — by
+  experience, not device). It assembles data from many services and shapes it for the screen. It is usually maintained by the team
+  of that frontend. It does not copy business rules — it calls the services that have them.
+- **A BFF as a token guard** (token handler): the browser gets an `HttpOnly; Secure; SameSite` cookie, and the OAuth tokens
+  stay on the server side (be-auth-security, `tokens-sessions-oauth.md`).
+- One client or clients with similar needs → a BFF is unnecessary; a well-designed API is enough.
 
-## Źródła
+## Sources
 - [gRPC Core Concepts](https://grpc.io/docs/what-is-grpc/core-concepts/), [MDN: Using server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 - [Hookdeck: When to use webhooks, WebSocket, pub/sub and polling](https://hookdeck.com/webhooks/guides/when-to-use-webhooks)
 - [APIs You Won't Hate: Streaming data with REST APIs](https://apisyouwonthate.com/blog/streaming-data-with-rest-apis/)
-- [bff-patterns.com](https://bff-patterns.com/); S. Newman, „Backends For Frontends”
+- [bff-patterns.com](https://bff-patterns.com/); S. Newman, "Backends For Frontends"
 - [roadmap.sh — API Design](https://roadmap.sh/api-design)
-Opisane własnymi słowami.
+Described in our own words.

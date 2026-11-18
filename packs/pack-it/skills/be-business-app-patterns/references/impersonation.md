@@ -1,20 +1,20 @@
-# Impersonacja (support działa jako użytkownik)
+# Impersonation (support acts as the user)
 
-## Najpierw: czy wystarczy mniej
-- Widok tylko do odczytu konta klienta albo udostępnienie ekranu przez klienta często rozwiązuje problem bez
-  działania w jego imieniu.
+## First: whether less is enough
+- A read-only view of the customer's account or screen sharing by the customer often solves the problem without
+  acting on their behalf.
 
-## Jeśli impersonacja
-- Osobne uprawnienie (nie każda rola supportu), powód lub numer zgłoszenia wymagany przy starcie; dla kont
-  wrażliwych zgoda klienta.
-- Sesja z dwoma identyfikatorami: `user_id` (w czyim imieniu) i `actor_id` (kto działa) — oba w każdym wpisie
-  audytu i w logach.
-- Baner w interfejsie przez cały czas trwania i przycisk zakończenia; krótki limit czasu (np. 30 min).
-- Zakazane w trybie impersonacji: zmiana hasła, e-maila, MFA, metod płatności, eksport danych, usuwanie konta,
-  operacje finansowe — sprawdzane na serwerze po `actor_id`.
-- Nigdy przez hasło klienta ani jego token; sesja wydawana przez serwer na podstawie uprawnienia supportu.
-- Powiadomienie klienta (e-mail lub wpis w historii konta), że support miał dostęp.
+## If impersonation
+- A separate permission (not every support role), a reason or a ticket number required at the start; for sensitive
+  accounts the customer's consent.
+- A session with two identifiers: `user_id` (on whose behalf) and `actor_id` (who acts) — both in every audit
+  entry and in the logs.
+- A banner in the interface for the whole duration and an end button; a short time limit (e.g. 30 min).
+- Forbidden in impersonation mode: changing the password, email, MFA, payment methods, data export, deleting the account,
+  financial operations — checked on the server by `actor_id`.
+- Never through the customer's password or their token; a session issued by the server on the basis of the support permission.
+- A notification to the customer (an email or an entry in the account history) that support had access.
 
-## Testy
-- Operacja zakazana zwraca odmowę w trybie impersonacji; wpis audytu ma oba identyfikatory; sesja wygasa po
-  limicie; użytkownik bez uprawnienia nie rozpocznie impersonacji.
+## Tests
+- A forbidden operation returns a refusal in impersonation mode; the audit entry has both identifiers; the session expires after
+  the limit; a user without the permission will not start impersonation.

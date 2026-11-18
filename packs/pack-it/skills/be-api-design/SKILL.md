@@ -1,66 +1,66 @@
 ---
 name: be-api-design
-description: Użyj przy projekcie API HTTP — zasoby, kody, błędy, paginacja, wersje, idempotencja, OpenAPI, webhooki.
+description: Use for designing an HTTP API — resources, codes, errors, pagination, versions, idempotency, OpenAPI, webhooks.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy projektowaniu i implementacji endpointów HTTP/REST — ścieżki, metody, kody statusu, paginacja, błędy, wersjonowanie, idempotencja, OpenAPI, cache HTTP, limity żądań, webhooki, GraphQL/gRPC/SSE, OWASP API Top 10. Nie do schematu bazy (be-database) ani mechanizmów logowania (be-auth-security)."
-  keywords: "obsługa błędów API, format błędów, RFC 7807, RFC 9457, problem details, application/problem+json, eksport do CSV, eksport do Excela, eksport w tle, timeout przy eksporcie, CSV injection, wstrzykiwanie formuł, ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu, metody HTTP GET PUT PATCH DELETE, kod statusu odpowiedzi"
+  catalog: "Use when designing and implementing HTTP/REST endpoints — paths, methods, status codes, pagination, errors, versioning, idempotency, OpenAPI, HTTP caching, rate limits, webhooks, GraphQL/gRPC/SSE, OWASP API Top 10. Not for the database schema (be-database) or login mechanisms (be-auth-security)."
+  keywords: "obsługa błędów API, format błędów, RFC 7807, RFC 9457, problem details, application/problem+json, eksport do CSV, eksport do Excela, eksport w tle, timeout przy eksporcie, CSV injection, wstrzykiwanie formuł, ponowienie żądania, Idempotency-Key, timeout klienta, podwójne wykonanie, endpoint POST, odpowiedź przy ponowieniu, metody HTTP GET PUT PATCH DELETE, kod statusu odpowiedzi, API error handling, error format, export to CSV, export to Excel, background export, export timeout, formula injection, request retry, client timeout, double execution, response on retry, HTTP methods, response status code, REST API design, pagination, API versioning"
 ---
 
-# Projektowanie API
+# API design
 
-## Zasoby i metody
-- Maks. 2 poziomy zagnieżdżenia ścieżek (`/users/{id}/orders`).
-- Akcje, które nie pasują do CRUD: `POST /orders/{id}/cancel`. Gdy akcja ma własne dane, autora, wynik albo historię
-  (zatwierdzenie, odwołanie, korekta), modeluj ją jako **zasób-dokument komendy**: `POST /complaints/{id}/approvals`
-  tworzy zatwierdzenie z identyfikatorem, które można odczytać, zaudytować i wycofać kolejną komendą
-  (`http-in-practice.md`, sekcja 8).
+## Resources and methods
+- At most 2 levels of path nesting (`/users/{id}/orders`).
+- Actions that do not fit CRUD: `POST /orders/{id}/cancel`. When an action has its own data, author, result or history
+  (approval, revocation, correction), model it as a **command document resource**: `POST /complaints/{id}/approvals`
+  creates an approval with an identifier that can be read, audited and withdrawn by another command
+  (`http-in-practice.md`, section 8).
 
-## Kody statusu, które łatwo pomylić
-- `201` z `Location` po utworzeniu; `404` także wtedy, gdy nie chcemy ujawniać istnienia zasobu.
-- `409` — konflikt stanu (duplikat, wersja); `422` — poprawny format, ale reguła biznesowa odrzuca.
-- `429` z `Retry-After`; `5xx` tylko za błąd po naszej stronie, nigdy za błąd klienta.
+## Status codes that are easy to confuse
+- `201` with `Location` after creation; `404` also when we do not want to reveal that the resource exists.
+- `409` — a state conflict (a duplicate, a version); `422` — a correct format, but a business rule rejects it.
+- `429` with `Retry-After`; `5xx` only for an error on our side, never for a client error.
 
-## Format błędu (RFC 9457 Problem Details)
+## Error format (RFC 9457 Problem Details)
 ```json
 { "type": "https://example.com/errors/validation", "title": "Validation failed",
   "status": 400, "detail": "email is invalid", "errors": [{"field": "email", "code": "invalid"}] }
 ```
-Nigdy nie zwracaj stack trace ani komunikatów bazy danych.
+Never return a stack trace or database messages.
 
-## Kolekcje
-Kursor dla dużych zbiorów, twardy `limit` po stronie serwera, filtry i sortowanie z białej listy pól
+## Collections
+A cursor for large sets, a hard `limit` on the server side, filters and sorting from an allowlist of fields
 (`references/http-in-practice.md` §4).
-Eksport (CSV, XLSX) dużych zbiorów w tle, z tymi samymi filtrami i uprawnieniami, wygasającym linkiem, kolumnami
-z allowlisty i ochroną przed wstrzykiwaniem formuł: `references/data-export.md`.
+Export (CSV, XLSX) of large sets in the background, with the same filters and permissions, an expiring link, columns
+from an allowlist and protection against formula injection: `references/data-export.md`.
 
-## Idempotencja i spójność
-- `POST` z efektem finansowym lub zewnętrznym przyjmuje nagłówek `Idempotency-Key`.
-- Optymistyczna kontrola wersji: `ETag` + `If-Match` → 412 przy konflikcie.
+## Idempotency and consistency
+- A `POST` with a financial or external effect accepts the `Idempotency-Key` header.
+- Optimistic version control: `ETag` + `If-Match` → 412 on a conflict.
 
-## Wersjonowanie i kompatybilność
-- Dodawanie pól jest bezpieczne; usuwanie/zmiana typu = breaking change → nowa wersja lub okres deprecjacji z nagłówkiem `Deprecation`.
-- Numer wydania serwisu lub SDK nadajesz wg SemVer (core-semver): zmiana niezgodna kontraktu → MAJOR, nowe pole lub
-  endpoint → MINOR. Prefiks `/v1` w URL to osobna decyzja; jego zmiana zwykle idzie z MAJOR.
+## Versioning and compatibility
+- Adding fields is safe; removing/changing a type = a breaking change → a new version or a deprecation period with the `Deprecation` header.
+- You number a service or SDK release by SemVer (core-semver): an incompatible contract change → MAJOR, a new field or
+  endpoint → MINOR. The `/v1` prefix in the URL is a separate decision; changing it usually goes with a MAJOR.
 
-## Walidacja
-Każde wejście walidowane schematem na granicy (body, query, params). Nieznane pola odrzucane lub ignorowane — konsekwentnie.
+## Validation
+Every input validated with a schema at the boundary (body, query, params). Unknown fields rejected or ignored — consistently.
 
-## Indeks references
-- `styles-and-communication.md` — REST, GraphQL, gRPC, SOAP, webhooki (podpisy, ponowienia, SSRF), SSE, WebSocket,
-  strumieniowanie, operacje asynchroniczne (`202`), brama API i BFF.
-- `http-in-practice.md` — cache HTTP (`Cache-Control`, `ETag`/304, `Vary`), negocjacja treści (406/415), limity żądań
-  (algorytmy, 429, nagłówki RateLimit), paginacja kursorowa, filtry i sortowanie, batch vs bulk (207), ponowienia, HATEOAS,
-  model dojrzałości Richardsona i komendy jako dokumenty.
-- `data-export.md` — eksport CSV/XLSX: synchronicznie czy w tle (`202`, zasób zadania), te same filtry i uprawnienia, spójna migawka, podpisany link i retencja pliku, kolumny i dane osobowe, wstrzykiwanie formuł, testy.
-- Checklista bezpieczeństwa przed wydaniem: be-auth-security, `.claude/skills/be-auth-security/references/api-security-checklist.md`.
-- `backend-performance-checklist.md` — checklista wydajności (wzorce cache i unieważnianie, limity czasu i ponowienia, keep-alive, asynchroniczność, skalowanie, profilowanie, logowanie asynchroniczne).
-- `lifecycle-and-security.md` — design-first (lint, mock), wersjonowanie i wycofywanie (`Deprecation`, `Sunset`),
-  OWASP API Top 10 (2023), klucze API, testy kontraktowe i wydajnościowe, dane osobowe.
+## References index
+- `styles-and-communication.md` — REST, GraphQL, gRPC, SOAP, webhooks (signatures, retries, SSRF), SSE, WebSocket,
+  streaming, asynchronous operations (`202`), the API gateway and BFF.
+- `http-in-practice.md` — HTTP caching (`Cache-Control`, `ETag`/304, `Vary`), content negotiation (406/415), rate limits
+  (algorithms, 429, RateLimit headers), cursor pagination, filters and sorting, batch vs bulk (207), retries, HATEOAS,
+  the Richardson maturity model and commands as documents.
+- `data-export.md` — CSV/XLSX export: synchronously or in the background (`202`, a job resource), the same filters and permissions, a consistent snapshot, a signed link and file retention, columns and personal data, formula injection, tests.
+- The security checklist before a release: be-auth-security, `.claude/skills/be-auth-security/references/api-security-checklist.md`.
+- `backend-performance-checklist.md` — a performance checklist (cache patterns and invalidation, timeouts and retries, keep-alive, asynchrony, scaling, profiling, asynchronous logging).
+- `lifecycle-and-security.md` — design-first (lint, mock), versioning and retirement (`Deprecation`, `Sunset`),
+  OWASP API Top 10 (2023), API keys, contract and performance tests, personal data.
 
-## Checklista
-- [ ] spec OpenAPI zaktualizowany
-- [ ] testy: sukces, walidacja, 401/403, 404
-- [ ] autoryzacja sprawdzana per zasób (patrz be-auth-security)
-- [ ] `Cache-Control` ustawione świadomie; limity żądań i rozmiaru; brak nadmiarowych pól w odpowiedzi (OWASP API3)
-- [ ] zmiana łamiąca → nowa wersja albo `Deprecation`/`Sunset` z planem migracji
+## Checklist
+- [ ] the OpenAPI spec updated
+- [ ] tests: success, validation, 401/403, 404
+- [ ] authorization checked per resource (see be-auth-security)
+- [ ] `Cache-Control` set consciously; request and size limits; no excess fields in the response (OWASP API3)
+- [ ] a breaking change → a new version or `Deprecation`/`Sunset` with a migration plan

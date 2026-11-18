@@ -1,71 +1,71 @@
-# Cykl życia API, bezpieczeństwo i testy
+# API lifecycle, security and tests
 
-## 1. Najpierw kontrakt (design-first)
-1. Zasoby z języka domeny (słownik, ddd-facilitation): rzeczowniki, które ekspert rozpoznaje, a nie nazwy tabel.
-   Zasób API ≠ tabela ≠ agregat — modelujesz to, czego potrzebuje klient.
-2. Spec OpenAPI w PR **przed** implementacją; przegląd przez konsumentów.
-3. Lint specyfikacji w CI (np. Spectral z regułami zespołu: nazwy, kody błędów, paginacja, opisy, przykłady).
-4. Mock z specyfikacji (np. Prism) — front i integratorzy zaczynają pracę równolegle.
-5. Implementacja i testy kontraktu (sekcja 4). Dokumentacja generowana ze specyfikacji, z przykładami i opisem błędów.
+## 1. The contract first (design-first)
+1. Resources from the domain language (the glossary, ddd-facilitation): nouns the expert recognizes, not table names.
+   An API resource ≠ a table ≠ an aggregate — you model what the client needs.
+2. The OpenAPI spec in a PR **before** the implementation; a review by the consumers.
+3. Spec lint in CI (e.g. Spectral with the team's rules: names, error codes, pagination, descriptions, examples).
+4. A mock from the spec (e.g. Prism) — the frontend and integrators start work in parallel.
+5. Implementation and contract tests (section 4). The documentation generated from the spec, with examples and a description of errors.
 
-## 2. Wersjonowanie i wycofywanie
-- **Ewolucja addytywna** jako zasada: nowe pola opcjonalne, nowe endpointy, nowe wartości tylko tam, gdzie klienci
-  są na to przygotowani (enum w odpowiedzi — opisz, że może się rozszerzyć). Klienci ignorują nieznane pola.
-- Zmiana łamiąca → nowa wersja główna. W URL (`/v2/…`) dla API publicznych (widoczna, łatwa w routingu i logach);
-  nagłówek lub typ mediów tylko, gdy zespół i klienci to obsłużą. Jedna strategia w całej organizacji.
-- **Wycofanie** zapowiadane w odpowiedziach:
-  - `Deprecation: @<unix-timestamp>` (RFC 9745) — od kiedy wycofane;
-  - `Sunset: <data HTTP>` (RFC 8594) — kiedy przestanie odpowiadać (nie wcześniej niż data z `Deprecation`);
-  - `Link: <…>; rel="deprecation"` — dokumentacja migracji.
-  Do tego monitorowanie, kto jeszcze używa starej wersji (logi per klient), i kontakt z nimi przed wyłączeniem.
-- **Inwentarz** (OWASP API9): lista hostów, wersji, środowisk i właścicieli; brak zapomnianych `/v1`, endpointów
-  debugowania i środowisk testowych z prawdziwymi danymi.
+## 2. Versioning and retirement
+- **Additive evolution** as the principle: new optional fields, new endpoints, new values only where clients
+  are prepared for them (an enum in a response — document that it may grow). Clients ignore unknown fields.
+- A breaking change → a new major version. In the URL (`/v2/…`) for public APIs (visible, easy in routing and logs);
+  a header or a media type only when the team and the clients can handle it. One strategy across the organization.
+- **Retirement** announced in responses:
+  - `Deprecation: @<unix-timestamp>` (RFC 9745) — since when it is deprecated;
+  - `Sunset: <HTTP date>` (RFC 8594) — when it will stop responding (not earlier than the date from `Deprecation`);
+  - `Link: <…>; rel="deprecation"` — the migration documentation.
+  Plus monitoring who still uses the old version (logs per client), and contacting them before switching it off.
+- **Inventory** (OWASP API9): a list of hosts, versions, environments and owners; no forgotten `/v1`, debug
+  endpoints and test environments with real data.
 
-## 3. Bezpieczeństwo — OWASP API Security Top 10 (2023)
-| Ryzyko | Kontrola |
+## 3. Security — OWASP API Security Top 10 (2023)
+| Risk | Control |
 |---|---|
-| API1 — autoryzacja na poziomie obiektu (BOLA/IDOR) | każde wywołanie z identyfikatorem sprawdza, czy *ten* użytkownik ma prawo do *tego* obiektu (be-auth-security); testy z dwoma kontami |
-| API2 — uwierzytelnianie | sprawdzone biblioteki, limity prób logowania, tokeny krótkotrwałe (be-auth-security) |
-| API3 — autoryzacja na poziomie właściwości | DTO z jawną listą pól na wejściu i wyjściu; brak masowego przypisania (`role`, `price` z body ignorowane lub odrzucane); brak nadmiarowych danych w odpowiedzi |
-| API4 — nieograniczone zużycie zasobów | limity żądań, rozmiaru body, `limit` w paginacji, timeouty, limity kosztu zapytań GraphQL, limity wysyłki SMS i e-maili |
-| API5 — autoryzacja na poziomie funkcji | endpointy administracyjne osobno, domyślna odmowa, testy „zwykły użytkownik → endpoint admina = 403” |
-| API6 — nieograniczony dostęp do przepływów biznesowych | limity per przepływ (zakup, rejestracja, rezerwacja), wykrywanie automatyzacji, nie tylko limit techniczny |
-| API7 — SSRF | URL od użytkownika tylko przez allowlistę i blokadę adresów wewnętrznych (be-auth-security, webhooki) |
-| API8 — błędna konfiguracja | nagłówki bezpieczeństwa, CORS z allowlistą, brak stack trace, TLS wszędzie, wyłączone metody i funkcje debugowania |
-| API9 — zarządzanie inwentarzem | sekcja 2 |
-| API10 — niebezpieczne korzystanie z cudzych API | odpowiedzi zewnętrznych API walidowane jak wejście użytkownika, timeouty, brak ślepego podążania za przekierowaniami |
+| API1 — object-level authorization (BOLA/IDOR) | every call with an identifier checks whether *this* user has the right to *this* object (be-auth-security); tests with two accounts |
+| API2 — authentication | proven libraries, login attempt limits, short-lived tokens (be-auth-security) |
+| API3 — property-level authorization | DTOs with an explicit list of fields on input and output; no mass assignment (`role`, `price` from the body ignored or rejected); no excess data in the response |
+| API4 — unrestricted resource consumption | request limits, body size, `limit` in pagination, timeouts, GraphQL query cost limits, limits on sending SMS and emails |
+| API5 — function-level authorization | admin endpoints separate, deny by default, tests "an ordinary user → an admin endpoint = 403" |
+| API6 — unrestricted access to business flows | limits per flow (purchase, registration, booking), automation detection, not only a technical limit |
+| API7 — SSRF | a URL from the user only through an allowlist and blocking internal addresses (be-auth-security, webhooks) |
+| API8 — security misconfiguration | security headers, CORS with an allowlist, no stack traces, TLS everywhere, disabled methods and debug features |
+| API9 — improper inventory management | section 2 |
+| API10 — unsafe consumption of third-party APIs | responses of external APIs validated like user input, timeouts, no blindly following redirects |
 
-## 4. Klucze API (dla serwer–serwer, nie dla użytkowników w przeglądarce)
-- Generowane z CSPRNG, co najmniej 128 bitów losowości; **prefiks** z typem i środowiskiem (np. `acme_live_…`,
-  `acme_test_…`), żeby skanery sekretów i ludzie rozpoznali klucz (ops-secrets-identities).
-- W bazie tylko **skrót** (SHA-256 wystarcza dla kluczy o wysokiej entropii) i kilka pierwszych znaków do identyfikacji;
-  pełny klucz pokazany raz, przy utworzeniu.
-- Zakresy (scopes) i, gdzie to możliwe, ograniczenie do adresów lub środowisk; data wygaśnięcia; właściciel.
-- Rotacja z nakładaniem: dwa aktywne klucze na czas przejścia, potem unieważnienie starego. Natychmiastowe
-  unieważnienie po wycieku i log użycia per klucz.
-- Klucz tylko w nagłówku (`Authorization` lub dedykowany), **nigdy w URL** — trafia do logów, historii i nagłówka `Referer`.
+## 4. API keys (for server–server, not for users in the browser)
+- Generated from a CSPRNG, at least 128 bits of randomness; a **prefix** with the type and environment (e.g. `acme_live_…`,
+  `acme_test_…`), so that secret scanners and people recognize the key (ops-secrets-identities).
+- In the database only a **hash** (SHA-256 is enough for high-entropy keys) and the first few characters for identification;
+  the full key shown once, at creation.
+- Scopes and, where possible, a restriction to addresses or environments; an expiry date; an owner.
+- Rotation with overlap: two active keys for the transition, then revoking the old one. Immediate
+  revocation after a leak and a usage log per key.
+- The key only in a header (`Authorization` or a dedicated one), **never in the URL** — it ends up in logs, history and the `Referer` header.
 
-## 5. Testy API
-- **Kontraktowe**:
-  - dostawca sprawdza, że odpowiedzi zgadzają się ze specyfikacją OpenAPI (walidacja schematu w testach integracyjnych);
-  - przy wielu konsumentach wewnętrznych — testy kontraktowe sterowane przez konsumenta (Pact), uruchamiane w CI
-    dostawcy przed wydaniem.
-- **Integracyjne** przez prawdziwe HTTP z bazą testową: sukces, walidacja, 401/403/404, konflikty, idempotencja,
-  paginacja (granice stron).
-- **Mocki**: z specyfikacji (Prism) dla zespołów równoległych; w testach frontu MSW na poziomie sieci (tool-vitest).
-- **Wydajnościowe** (np. k6): scenariusz z prawdziwego ruchu, cel z SLO (p95, odsetek błędów), test obciążenia
-  i przeciążenia przed wzrostem ruchu (ops-sre-incidents).
-- **Bezpieczeństwa**: testy BOLA z dwoma kontami, fuzzing wejścia ze specyfikacji, skan DAST na stagingu.
+## 5. API tests
+- **Contract**:
+  - the provider checks that the responses match the OpenAPI spec (schema validation in integration tests);
+  - with many internal consumers — consumer-driven contract tests (Pact), run in the provider's
+    CI before a release.
+- **Integration** over real HTTP with a test database: success, validation, 401/403/404, conflicts, idempotency,
+  pagination (page boundaries).
+- **Mocks**: from the spec (Prism) for parallel teams; in frontend tests MSW at the network level (tool-vitest).
+- **Performance** (e.g. k6): a scenario from real traffic, a target from the SLO (p95, the error rate), a load test
+  and a stress test before traffic grows (ops-sre-incidents).
+- **Security**: BOLA tests with two accounts, input fuzzing from the spec, a DAST scan on staging.
 
-## 6. Dane osobowe i regulacje
-- Minimalizacja: API zwraca tylko pola potrzebne klientowi; dane szczególne (zdrowie, finanse) za osobnym zakresem.
-- Logi bez treści żądań z danymi osobowymi, tokenów i numerów kart (maskowanie). Retencja zgodna z polityką.
-- RODO: prawo dostępu i usunięcia jako operacje API lub procedura; dane kart płatniczych przez dostawcę płatności
-  (tokenizacja), żeby nie wchodzić w pełny zakres PCI DSS. Szczegóły prawne potwierdza dział prawny — agent nie
-  rozstrzyga zgodności.
+## 6. Personal data and regulations
+- Minimization: the API returns only the fields the client needs; special data (health, finance) behind a separate scope.
+- Logs without request bodies with personal data, tokens and card numbers (masking). Retention per the policy.
+- GDPR: the rights of access and erasure as API operations or a procedure; payment card data through the payment provider
+  (tokenization), so as not to enter the full PCI DSS scope. The legal department confirms the legal details — the agent does not
+  decide on compliance.
 
-## Źródła
+## Sources
 - [OWASP API Security Top 10 — 2023](https://owasp.org/API-Security/editions/2023/en/0x11-t10/)
 - [RFC 9745 — Deprecation header](https://www.rfc-editor.org/rfc/rfc9745.html), RFC 8594 — Sunset header
 - [roadmap.sh — API Design](https://roadmap.sh/api-design) (lifecycle, versioning, API keys, testing, standards and compliance)
-Opisane własnymi słowami.
+Described in our own words.

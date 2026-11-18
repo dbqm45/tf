@@ -1,84 +1,84 @@
-# Checklista wydajności backendu — przed wydaniem i w review
+# Backend performance checklist — before a release and in review
 
-Na podstawie listy roadmap.sh „Backend Performance Best Practices”, z doprecyzowaniem i odnośnikami do skilli, które
-dany punkt rozwijają. Cel wydajności wynika z SLO i scenariuszy atrybutów jakości (ops-sre-incidents,
-arch-quality-attributes). Każdą optymalizację potwierdzasz pomiarem przed i po (qa-performance-testing).
+Based on the roadmap.sh list "Backend Performance Best Practices", with clarifications and pointers to the skills that
+develop each item. The performance target follows from the SLOs and the quality attribute scenarios (ops-sre-incidents,
+arch-quality-attributes). You confirm every optimization with a measurement before and after (qa-performance-testing).
 
 ## Cache
-- [ ] Warstwy: cache HTTP i CDN dla odpowiedzi publicznych (`http-in-practice.md`), cache po stronie serwera dla drogich
-  obliczeń i odczytów, cache w kliencie tylko dla danych tego użytkownika.
-- [ ] **Wzorzec dobrany świadomie**:
-  | Wzorzec | Jak | Kiedy |
+- [ ] Layers: HTTP and CDN caching for public responses (`http-in-practice.md`), a server-side cache for expensive
+  computations and reads, a client-side cache only for that user's data.
+- [ ] **The pattern chosen consciously**:
+  | Pattern | How | When |
   |---|---|---|
-  | cache-aside (leniwy) | aplikacja czyta z cache; przy braku czyta z bazy i zapisuje do cache | domyślny; odporny na awarię cache |
-  | read-through | cache sam doczytuje z bazy przy braku | gdy biblioteka lub usługa to zapewnia |
-  | write-through | zapis idzie do cache i bazy synchronicznie | dane czytane zaraz po zapisie; wolniejszy zapis |
-  | write-behind | zapis do cache, do bazy asynchronicznie | rzadko; ryzyko utraty danych — tylko dla danych, które można stracić |
-  | refresh-ahead | cache odświeża popularne klucze przed wygaśnięciem | przewidywalnie gorące dane; marnuje pracę, gdy przewidywanie chybia |
-- [ ] **Unieważnianie**: czas życia (TTL) jako zabezpieczenie zawsze, do tego unieważnianie przy zmianie (zdarzenie
-  domenowe → usunięcie klucza) albo klucz z wersją (`produkt:42:v17`). Zapisz, ile nieaktualności biznes akceptuje.
-- [ ] **Lawina zapytań** po wygaśnięciu popularnego klucza: łączenie równoczesnych żądań o ten sam klucz (single-flight),
-  losowy rozrzut TTL, wcześniejsze odświeżanie w tle. Cache nie może być jedyną drogą do danych — awaria cache to
-  wolniejszy system, nie awaria.
-- [ ] W cache nic, czego nie wolno pokazać innemu użytkownikowi: klucz zawiera najemcę i użytkownika, gdy dane są
-  prywatne.
+  | cache-aside (lazy) | the application reads from the cache; on a miss it reads from the database and writes to the cache | the default; resilient to a cache failure |
+  | read-through | the cache itself loads from the database on a miss | when a library or service provides it |
+  | write-through | the write goes to the cache and the database synchronously | data read right after the write; slower writes |
+  | write-behind | the write to the cache, to the database asynchronously | rarely; a risk of data loss — only for data that can be lost |
+  | refresh-ahead | the cache refreshes popular keys before they expire | predictably hot data; wastes work when the prediction misses |
+- [ ] **Invalidation**: a time to live (TTL) as a safeguard always, plus invalidation on change (a domain
+  event → deleting the key) or a versioned key (`product:42:v17`). Record how much staleness the business accepts.
+- [ ] **A query stampede** after a popular key expires: coalescing concurrent requests for the same key (single-flight),
+  a random TTL jitter, earlier background refresh. The cache must not be the only path to the data — a cache failure means
+  a slower system, not an outage.
+- [ ] Nothing in the cache that must not be shown to another user: the key includes the tenant and the user when the data is
+  private.
 
-## Baza danych
-- [ ] Pula połączeń z dobranym rozmiarem i limitami czasu; log wolnych zapytań i `pg_stat_statements`; indeksy
-  sprawdzone `EXPLAIN ANALYZE`; brak N+1 i `SELECT *`; paginacja kursorowa; utrzymanie (VACUUM), repliki,
-  denormalizacja i partycjonowanie tylko z pomiaru (be-database, `database-performance.md`).
-- [ ] Ładowanie powiązań dobrane do przypadku: eager (`join`) dla danych zawsze potrzebnych, leniwe tylko w zapisie
-  agregatu, batch (`IN (...)`, DataLoader w GraphQL) zamiast zapytania w pętli.
+## Database
+- [ ] A connection pool with a chosen size and timeouts; a slow query log and `pg_stat_statements`; indexes
+  checked with `EXPLAIN ANALYZE`; no N+1 and no `SELECT *`; cursor pagination; maintenance (VACUUM), replicas,
+  denormalization and partitioning only from measurement (be-database, `database-performance.md`).
+- [ ] Loading of relations matched to the case: eager (`join`) for data always needed, lazy only when writing
+  an aggregate, batch (`IN (...)`, DataLoader in GraphQL) instead of a query in a loop.
 
-## API i sieć
-- [ ] Limity rozmiaru żądań, paginacja, kompresja odpowiedzi, odpowiedzi bez zbędnych pól (`http-in-practice.md`).
-- [ ] Duże wyniki strumieniowane (NDJSON, SSE) zamiast budowania całości w pamięci (`styles-and-communication.md`).
-- [ ] **Połączenia wielokrotnego użytku**: keep-alive i pula połączeń HTTP dla wywołań do innych usług (w Node od
-  wersji 19 globalny agent HTTP ma domyślnie włączony keep-alive; w Javie jeden współdzielony klient HTTP, nie nowy na
-  każde żądanie).
-- [ ] **Limity czasu na każdym wywołaniu wychodzącym** (połączenie i odpowiedź), ustalone z budżetu czasu żądania:
-  jeśli użytkownik czeka maksymalnie 2 s, trzy wywołania po 5 s nie mają sensu. Pozostały budżet przekazywany dalej
-  (deadline w gRPC, nagłówek w HTTP).
-- [ ] **Ponowienia** tylko dla błędów przejściowych i operacji idempotentnych, z wykładniczym odstępem i losowym
-  rozrzutem, limitem prób i budżetem ponowień (np. ≤ 10% ruchu) — inaczej ponowienia dobijają przeciążoną usługę;
-  bezpiecznik (circuit breaker) przy długotrwałej awarii zależności (ops-sre-incidents: projektowanie na awarię).
-- [ ] Grupowanie podobnych żądań (batch) między usługami, gdy wiele małych wywołań idzie do tej samej zależności.
-- [ ] Bliskość: backend i baza w tym samym regionie i strefie co większość użytkowników; zasoby statyczne przez CDN;
-  dane potrzebne w następnym kroku pobierane z wyprzedzeniem tylko wtedy, gdy prawdopodobieństwo użycia jest wysokie.
+## API and network
+- [ ] Request size limits, pagination, response compression, responses without unneeded fields (`http-in-practice.md`).
+- [ ] Large results streamed (NDJSON, SSE) instead of building the whole thing in memory (`styles-and-communication.md`).
+- [ ] **Reusable connections**: keep-alive and an HTTP connection pool for calls to other services (in Node since
+  version 19 the global HTTP agent has keep-alive on by default; in Java one shared HTTP client, not a new one for
+  every request).
+- [ ] **Timeouts on every outgoing call** (connect and response), set from the request's time budget:
+  if the user waits at most 2 s, three calls of 5 s make no sense. The remaining budget passed on
+  (a deadline in gRPC, a header in HTTP).
+- [ ] **Retries** only for transient errors and idempotent operations, with exponential backoff and random
+  jitter, a limit on attempts and a retry budget (e.g. ≤ 10% of traffic) — otherwise retries finish off an overloaded service;
+  a circuit breaker for a long-lasting dependency outage (ops-sre-incidents: designing for failure).
+- [ ] Batching similar requests between services, when many small calls go to the same dependency.
+- [ ] Proximity: the backend and the database in the same region and zone as most users; static assets through a CDN;
+  data needed in the next step prefetched only when the probability of use is high.
 
-## Asynchroniczność i skalowanie
-- [ ] Ciężka praca (raporty, importy, e-maile, przetwarzanie plików) w zadaniach w tle lub kolejce; żądanie zwraca
-  `202` z zasobem statusu (`styles-and-communication.md`); komunikacja między usługami przez broker z outboxem
+## Asynchrony and scaling
+- [ ] Heavy work (reports, imports, emails, file processing) in background jobs or a queue; the request returns
+  `202` with a status resource (`styles-and-communication.md`); communication between services through a broker with an outbox
   (be-messaging-outbox).
-- [ ] Skalowanie poziome wymaga bezstanowych instancji (sesje i pliki poza procesem); pionowe — prostsze, ale z sufitem.
-  Autoskalowanie z górnym limitem i zapasem w puli połączeń bazy (`database-performance.md`; ops-kubernetes).
-- [ ] Równoważenie obciążenia: algorytm najmniejszej liczby połączeń lub ważony dla żądań o różnym koszcie, sondy
-  gotowości, łagodne wygaszanie instancji (dokończ żądania przed zamknięciem).
+- [ ] Horizontal scaling requires stateless instances (sessions and files outside the process); vertical — simpler, but with a ceiling.
+  Autoscaling with an upper limit and headroom in the database connection pool (`database-performance.md`; ops-kubernetes).
+- [ ] Load balancing: a least-connections or weighted algorithm for requests of different cost, readiness
+  probes, graceful shutdown of instances (finish requests before closing).
 
-## Kod
-- [ ] **Profilowanie zamiast zgadywania**: w Javie JDK Flight Recorder i async-profiler (wykresy płomieniowe CPU
-  i alokacji), w Node `--cpu-prof` lub profil z inspektora; na danych i ruchu zbliżonych do produkcji. Optymalizujesz
-  ścieżki krytyczne i najczęściej wywoływane endpointy.
-- [ ] Struktury danych i algorytmy dobrane do skali (mapa zamiast wyszukiwania w liście w pętli, strumieniowanie
-  zamiast wczytania całego pliku); zadania CPU w Node poza pętlą zdarzeń (worker threads).
-- [ ] „Przepisz w Go lub Rust” albo „rozbij na mikroserwisy” to decyzje architektoniczne z kosztem (zespół, operacje,
-  sieć) — dopiero gdy profil pokazuje, że wąskim gardłem jest sam język lub granica wdrożenia, i z ADR
+## Code
+- [ ] **Profiling instead of guessing**: in Java JDK Flight Recorder and async-profiler (CPU and allocation flame graphs),
+  in Node `--cpu-prof` or a profile from the inspector; on data and traffic close to production. You optimize
+  the critical paths and the most frequently called endpoints.
+- [ ] Data structures and algorithms matched to the scale (a map instead of searching a list in a loop, streaming
+  instead of loading the whole file); CPU tasks in Node outside the event loop (worker threads).
+- [ ] "Rewrite in Go or Rust" or "split into microservices" are architectural decisions with a cost (the team, operations,
+  the network) — only when a profile shows that the bottleneck is the language itself or the deployment boundary, and with an ADR
   (arch-tech-selection, arch-quality-attributes).
 
-## Monitorowanie
-- [ ] Metryki RED per endpoint, metryki zasobów i puli, ślady rozproszone dla wolnych żądań (ops-observability).
-- [ ] **Logowanie asynchroniczne** (Logback `AsyncAppender`, asynchroniczne loggery Log4j2, w Node pino z transportem
-  w osobnym wątku) i bez logowania całych treści żądań w ścieżkach gorących. Przy przepełnieniu bufora świadomie:
-  zgubić logi czy spowolnić żądania.
-- [ ] Testy wydajnościowe regularnie i porównanie z poprzednim wynikiem (qa-performance-testing).
+## Monitoring
+- [ ] RED metrics per endpoint, resource and pool metrics, distributed traces for slow requests (ops-observability).
+- [ ] **Asynchronous logging** (Logback `AsyncAppender`, Log4j2 asynchronous loggers, in Node pino with a transport
+  in a separate thread) and no logging of whole request bodies on hot paths. On a buffer overflow decide consciously:
+  lose logs or slow down requests.
+- [ ] Performance tests regularly and a comparison with the previous result (qa-performance-testing).
 
-## Bezpieczeństwo a wydajność
-Limity żądań i rozmiaru chronią też wydajność (OWASP API4). Uwierzytelnianie i autoryzacja nie są miejscem na
-oszczędności — cache decyzji autoryzacji tylko krótki i z unieważnianiem. Punkt listy „aktualizuj zależności”: w fabryce
-na prośbę człowieka, jako osobne zadanie (core-stack-sync, ops-supply-chain-security).
+## Security vs performance
+Request and size limits also protect performance (OWASP API4). Authentication and authorization are not the place for
+savings — cache authorization decisions only briefly and with invalidation. The list item "update dependencies": in the factory
+at a human's request, as a separate task (core-stack-sync, ops-supply-chain-security).
 
-## Źródła
+## Sources
 - [roadmap.sh — Backend Performance Best Practices](https://roadmap.sh/backend-performance-best-practices)
-- Dokumentacja: Node.js (`http.globalAgent`, keep-alive), JDK Flight Recorder, async-profiler, Logback, Log4j2, pino;
-  Google SRE Book — budżety ponowień i obsługa przeciążenia
-Opisane własnymi słowami.
+- Documentation: Node.js (`http.globalAgent`, keep-alive), JDK Flight Recorder, async-profiler, Logback, Log4j2, pino;
+  the Google SRE Book — retry budgets and overload handling
+Described in our own words.

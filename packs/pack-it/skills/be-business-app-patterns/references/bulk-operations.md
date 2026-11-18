@@ -1,21 +1,21 @@
-# Operacje masowe
+# Bulk operations
 
-## Przed uruchomieniem
-- Zakres jako filtr („wszystkie pasujące: status = new, 50 213 rekordów”), nie lista ID przesyłana z przeglądarki.
-- Podgląd: liczba rekordów i próbka; potwierdzenie z liczbą; limit (powyżej progu dodatkowe potwierdzenie lub
-  rola).
-- Uprawnienie sprawdzane per rekord (te same reguły co dla pojedynczej zmiany) — rekordy bez uprawnienia pomijane
-  i raportowane.
+## Before starting
+- The scope as a filter ("all matching: status = new, 50,213 records"), not a list of IDs sent from the browser.
+- A preview: the number of records and a sample; a confirmation with the number; a limit (above a threshold an additional confirmation or
+  a role).
+- The permission checked per record (the same rules as for a single change) — records without the permission skipped
+  and reported.
 
-## Wykonanie
-- Zadanie w tle (kolejka), w partiach (np. 500), każda partia w osobnej transakcji; postęp widoczny w UI.
-- Idempotencja: identyfikator operacji, zapis przetworzonych rekordów; wznowienie po awarii nie zmienia ich drugi
-  raz.
-- Częściowe błędy nie przerywają całości: raport „zmienione / pominięte / błędy z powodem” do pobrania.
-- Blokady i obciążenie: partie poza godzinami szczytu albo z limitem tempa, żeby nie zablokować bazy.
+## Execution
+- A background job (a queue), in batches (e.g. 500), each batch in a separate transaction; progress visible in the UI.
+- Idempotency: an operation identifier, a record of the processed records; resuming after a failure does not change them a second
+  time.
+- Partial errors do not stop the whole: a report "changed / skipped / errors with a reason" to download.
+- Locks and load: batches outside peak hours or with a rate limit, so as not to block the database.
 
-## Po wykonaniu
-- Jeden wpis audytu operacji (kto, filtr, liczby) plus wpisy per rekord, jeśli audyt jest per obiekt.
-- Cofnięcie: zapis poprzednich wartości pozwala odwrócić operację w oknie czasu; dla nieodwracalnych (wysyłka
-  e-maili, płatności) wyraźne ostrzeżenie przed startem.
-- Powiadomienie o zakończeniu (UI, e-mail) — użytkownik nie czeka na otwartej stronie.
+## After execution
+- One audit entry for the operation (who, the filter, the numbers) plus entries per record, if the audit is per object.
+- Undo: recording the previous values lets you reverse the operation within a time window; for irreversible ones (sending
+  emails, payments) a clear warning before the start.
+- A completion notification (UI, email) — the user does not wait on an open page.
