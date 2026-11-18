@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Kreator konfiguracji — szablon claude-team-factory (skill ops-setup-wizard).
-# Uruchamia CZŁOWIEK na swoim komputerze. Agent pisze tylko etapy poniżej znacznika ETAPY.
-# Biblioteka powyżej znacznika jest taka sama w każdym kreatorze — nie edytuj jej ręcznie.
+# Setup wizard — claude-team-factory template (skill ops-setup-wizard).
+# Run by a HUMAN on their own computer. The agent writes only the stages below the ETAPY marker.
+# The library above the marker is the same in every wizard — do not edit it by hand.
 set -euo pipefail
 
 ENV_FILE="${ENV_FILE:-.env}"
-TOTAL_STAGES=0          # agent ustawia liczbę etapów
+TOTAL_STAGES=0          # the agent sets the number of stages
 CURRENT_STAGE=0
 START_TS=$(date +%s)
 DONE=()
@@ -31,7 +31,7 @@ stage() {
 
 pause() { read -r -p "${D}Enter, aby kontynuować…${R} " _ </dev/tty; }
 
-confirm() {  # confirm "Pytanie?" → 0 = tak
+confirm() {  # confirm "Question?" → 0 = yes
   local a; read -r -p "$1 [t/N] " a </dev/tty
   [[ "$a" =~ ^[tTyY] ]]
 }
@@ -45,7 +45,7 @@ open_url() {
   fi
 }
 
-env_get() {  # wartość z ENV_FILE (bez cudzysłowów) albo pusty napis
+env_get() {  # value from ENV_FILE (without quotes) or an empty string
   [ -f "$ENV_FILE" ] || return 0
   local line; line=$(grep -E "^$1=" "$ENV_FILE" | tail -n 1 || true)
   line=${line#*=}
@@ -55,19 +55,19 @@ env_get() {  # wartość z ENV_FILE (bez cudzysłowów) albo pusty napis
   printf '%s' "$line"
 }
 
-ask() {  # ask ZMIENNA "Pytanie" — domyślnie wartość z .env
+ask() {  # ask VARIABLE "Question" — defaults to the value from .env
   local def; def=$(env_get "$1"); local v
   read -r -p "  $2${def:+ [$def]}: " v </dev/tty
   printf -v "$1" '%s' "${v:-$def}"
 }
 
-ask_secret() {  # ask_secret ZMIENNA "Pytanie" — wpis bez echa; Enter zostawia obecną wartość
+ask_secret() {  # ask_secret VARIABLE "Question" — input without echo; Enter keeps the current value
   local def; def=$(env_get "$1"); local v
   read -r -s -p "  $2${def:+ [Enter = bez zmian]}: " v </dev/tty; printf '\n'
   printf -v "$1" '%s' "${v:-$def}"
 }
 
-write_env() {  # write_env KLUCZ wartość — dopisuje albo podmienia (idempotentnie)
+write_env() {  # write_env KEY value — appends or replaces (idempotent)
   local key=$1 val=$2 tmp
   if [[ ! "$val" =~ ^[A-Za-z0-9_./:@+-]*$ ]]; then val=${val//\\/\\\\}; val="\"${val//\"/\\\"}\""; fi
   touch "$ENV_FILE"; chmod 600 "$ENV_FILE" 2>/dev/null || true
@@ -80,12 +80,12 @@ write_env() {  # write_env KLUCZ wartość — dopisuje albo podmienia (idempote
 
 gh_ok() { command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; }
 
-set_secret() {  # set_secret NAZWA wartość — sekret GitHub Actions (wartość przez stdin, nie w argumentach)
+set_secret() {  # set_secret NAME value — GitHub Actions secret (value via stdin, not in arguments)
   if gh_ok; then printf '%s' "$2" | gh secret set "$1" >/dev/null && step "ustawiono sekret $1"
   else MANUAL+=("sekret GitHub $1 (brak zalogowanego gh)"); warn "gh niedostępny — ustaw sekret $1 ręcznie"; fi
 }
 
-set_var() {  # set_var NAZWA wartość — zmienna GitHub Actions (jawna)
+set_var() {  # set_var NAME value — GitHub Actions variable (plain)
   if gh_ok; then gh variable set "$1" --body "$2" >/dev/null && step "ustawiono zmienną $1"
   else MANUAL+=("zmienna GitHub $1"); warn "gh niedostępny — ustaw zmienną $1 ręcznie"; fi
 }

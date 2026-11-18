@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-PreToolUse (Bash): twarda bramka dla poleceń powłoki — działa niezależnie od decyzji modelu,
-również w subagentach. DENY = blokada, ASK = wymagana zgoda człowieka.
-Uzupełnia (nie zastępuje) reguły permissions w settings.json.
+PreToolUse (Bash): hard gate for shell commands — works independently of the model's decision,
+also in subagents. DENY = block, ASK = human approval required.
+Complements (does not replace) the permissions rules in settings.json.
 """
 import importlib.util
 import json
@@ -14,12 +14,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 try:
-    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
+    from hook_errors import record_block  # block to .tf/logs/hook-blocks.jsonl (warning after an update)
 except ImportError:
     def record_block(hook: str, decision: str) -> None:
         return None
@@ -40,7 +40,7 @@ DENY = [
      r"(\.env(?!\.(example|sample|template))\b|id_rsa|id_ed25519|\.pem\b|\.p12\b|\.aws/credentials|/secrets?/|"
      r"\.ssh/|\.git-credentials|\.kube/config|\.docker/config\.json|\.config/gh/hosts)",
      "reading a file with secrets"),
-    # Wzorce z analiz ataków (Huntress: ClickFix, fałszywe instrukcje AI, React2Shell, axios) — core-agent-security
+    # Patterns from attack analyses (Huntress: ClickFix, fake AI instructions, React2Shell, axios) — core-agent-security
     (r"\bbase64\s+(-d|-D|--decode)\b[^;&]*\|\s*(sudo\s+)?(sh|bash|zsh|python3?|py|node|perl)\b",
      "decoding base64 and running it in a shell (typical of ClickFix)"),
     (r"\b(sh|bash|zsh)\s+(-c\s+)?[\"']?\$\(\s*(curl|wget)\b|<\(\s*(curl|wget)\b",
@@ -57,11 +57,11 @@ DENY = [
     (r"\bmkfs(\.\w+)?\b|\bdd\s+[^;&|]*of=/dev/", "operations on block devices"),
     (r"\bchmod\s+(-R\s+)?0?777\b", "chmod 777"),
     (r":\(\)\s*\{\s*:\|:&\s*\};:", "fork bomb"),
-    # opcje gita uruchamiające dowolny program: git_exec_option() (po tokenach, bez komunikatów commita)
+    # git options that run an arbitrary program: git_exec_option() (by tokens, ignoring commit messages)
 ]
 
 # Typy operacji polityki autonomii (B1a, `autonomy.operations` w .tf/factory/config.yaml i .tf/config/config.yaml):
-# domyślnie „confirm” (zgoda człowieka); projekt może tylko zaostrzyć do „deny” (decyzja człowieka 2026-11-10, D1).
+# default "confirm" (human approval); a project may only tighten to "deny" (human decision 2026-11-10, D1).
 ASK = [
     (r"\bsudo\b", "sudo", "sudo"),
     (r"\bgit\s+(reset\s+--hard|clean\s+-[a-zA-Z]*f|push\b)", "git reset --hard / clean -f / push", "git_push"),
@@ -88,8 +88,8 @@ def _project_root() -> Path:
 
 
 def load_policy(root: Path | None = None) -> tuple[dict, list[str]]:
-    """Poziom każdego typu operacji i ostrzeżenia. Konfiguracja silnika i projektu może tylko zaostrzać: wartość
-    słabsza niż „confirm” (np. full, allow) albo nieznany typ jest ignorowany i zgłaszany w ostrzeżeniach."""
+    """Level of each operation type, and warnings. Engine and project configuration may only tighten: a value
+    weaker than "confirm" (e.g. full, allow) or an unknown type is ignored and reported in the warnings."""
     root = root or _project_root()
     levels, warns = {op: "confirm" for op in OPERATIONS}, []
     packs_py = next((c for c in (root / ".tf" / "factory" / "packs.py", Path(__file__).resolve().parents[2] / ".tf" / "factory"
@@ -100,7 +100,7 @@ def load_policy(root: Path | None = None) -> tuple[dict, list[str]]:
         spec = importlib.util.spec_from_file_location("tf_packs_guard", packs_py)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        if hasattr(mod, "config_layers"):     # silnik ← firma ← zespół ← projekt ← osoba
+        if hasattr(mod, "config_layers"):     # engine ← company ← team ← project ← person
             layers = mod.config_layers(root)
         else:
             layers = [(str(s), mod.load_yaml(s)) for s in (root / ".tf" / "factory" / "config.yaml",
@@ -115,7 +115,7 @@ def load_policy(root: Path | None = None) -> tuple[dict, list[str]]:
                     warns.append(f"{src}: `{op}: {val}` ignored — a policy can only tighten (confirm or deny)")
                 elif LEVELS[val] > LEVELS[levels[op]]:
                     levels[op] = val
-    except Exception as e:   # błąd konfiguracji nigdy nie rozluźnia — zostają wartości domyślne
+    except Exception as e:   # a configuration error never loosens — defaults remain
         warns.append(f"could not load the autonomy policy: {e}")
     return levels, warns
 
@@ -126,15 +126,15 @@ GIT_GLOBAL_OPTS = re.compile(
 
 
 def normalize(cmd: str) -> str:
-    """`git -C dir push -f` i `git -c a=b reset --hard` to te same operacje co bez opcji globalnych — wzorce widzą
-    podkomendę zaraz po `git`."""
+    """`git -C dir push -f` and `git -c a=b reset --hard` are the same operations as without global options — the patterns see
+    the subcommand right after `git`."""
     return GIT_GLOBAL_OPTS.sub("git", cmd)
 
 
-# Zapis plików przez powłokę (D-012): te same reguły co Edit/Write — guard_paths (sekrety, konfiguracja zabezpieczeń)
-# i tdd_guard (kod produkcyjny po czerwonym teście). Rozpoznaje przekierowania, tee, sed/perl -i, cp/mv/install oraz
-# open(…,'w') / Path(…).write_text / writeFileSync w kodzie podanym w poleceniu. Skrypt uruchomiony z pliku nie jest
-# sprawdzany przed wykonaniem — po wykonaniu zmianę kodu zgłasza tdd_guard (git status).
+# File writes through the shell (D-012): the same rules as Edit/Write — guard_paths (secrets, security configuration)
+# and tdd_guard (production code after a red test). Recognizes redirections, tee, sed/perl -i, cp/mv/install and
+# open(…,'w') / Path(…).write_text / writeFileSync in code given in the command. A script run from a file is not
+# checked before execution — after execution tdd_guard reports the code change (git status).
 REDIRECT = re.compile(r"[();|]*(&?>>?\|?)")
 NO_TARGET = re.compile(r"^(/dev/(null|std(out|err)|tty|fd/\d+)|&?\d*)$")
 HEREDOC = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
@@ -160,8 +160,8 @@ def strip_heredocs(cmd: str) -> str:
     return "\n".join(out)
 
 
-# git push/fetch/pull działają poza piaskownicą Bash (sandbox.excludedCommands) — te opcje uruchamiają dowolny program.
-# Sprawdzane po tokenach, nie po tekście: nazwa opcji w komunikacie commita (-m '…', heredoc) to dane.
+# git push/fetch/pull run outside the Bash sandbox (sandbox.excludedCommands) — these options run an arbitrary program.
+# Checked by tokens, not by text: an option name in a commit message (-m '…', heredoc) is data.
 GIT_EXEC_OPT = re.compile(r"--(upload-pack|receive-pack|exec)\b")
 GIT_EXEC_RAW = re.compile(r"\bgit\b[^;&|]*\s--(upload-pack|receive-pack|exec)\b")
 CODE_RUNNERS = re.compile(r"\b(sh|bash|zsh|dash|ksh|fish|eval|source|python3?|py|perl|ruby|node)\b")
@@ -174,7 +174,7 @@ def git_exec_option(cmd: str) -> bool:
             if line.strip() == end:
                 end = None
             elif keep:
-                lines.append(line)   # heredoc dla powłoki lub interpretera to kod, nie dane
+                lines.append(line)   # a heredoc for a shell or interpreter is code, not data
             continue
         lines.append(line)
         m = HEREDOC.search(line)
@@ -197,7 +197,7 @@ def git_exec_option(cmd: str) -> bool:
             runner = True
         if seen_git and GIT_EXEC_OPT.match(t):
             return True
-        # kod w argumencie: sh -c "git …", podstawienie $(…) lub `…` w cudzysłowie
+        # code in an argument: sh -c "git …", a $(…) or `…` substitution in quotes
         if (runner or "$(" in t or "`" in t) and GIT_EXEC_RAW.search(t):
             return True
         seen_git = seen_git or name == "git"
@@ -215,7 +215,7 @@ def tokens(cmd: str) -> list[str]:
 
 
 def write_targets(cmd: str) -> list[str]:
-    """Ścieżki, które polecenie może zapisać (bez wykonywania i bez czytania plików)."""
+    """Paths the command may write (without executing and without reading files)."""
     found = [m for r in INLINE_WRITES for m in r.findall(cmd)]
     segments, cur, redirect_next = [], [], False
     for t in tokens(cmd):
@@ -229,9 +229,9 @@ def write_targets(cmd: str) -> list[str]:
             redirect_next = True
             continue
         if t in ("<", "<<", "<<<", "<<-", ">&", "<&") or re.fullmatch(r"\d*[<>]&?\d*-?", t):
-            redirect_next = t.startswith(">")   # operand wejścia albo deskryptor — nie jest celem zapisu
+            redirect_next = t.startswith(">")   # an input operand or a descriptor — not a write target
             if not redirect_next:
-                cur.append("\0")               # następny token to operand, pomiń
+                cur.append("\0")               # the next token is an operand, skip it
             continue
         if t and all(c in ";&|()" for c in t):
             segments.append(cur)
@@ -358,7 +358,7 @@ def main() -> None:
         sys.exit(0)
     ti = data.get("tool_input") if isinstance(data, dict) else None
     cmd = ti.get("command") if isinstance(ti, dict) else None
-    if not cmd or not isinstance(cmd, str):   # dane spoza formatu Claude Code: decyzja, nie awaria (onFailure: block)
+    if not cmd or not isinstance(cmd, str):   # data outside the Claude Code format: a decision, not a failure (onFailure: block)
         sys.exit(0)
     cmd = normalize(cmd)
     for pattern, reason in DENY:
@@ -369,7 +369,7 @@ def main() -> None:
                        "--exec). If it is necessary, ask a human to run it by hand.")
     try:
         check_writes(data, cmd)
-    except Exception as e:  # błąd rozpoznawania zapisu nigdy nie blokuje (decide kończy proces przez SystemExit — nie łapiemy go)
+    except Exception as e:  # a write-detection error never blocks (decide ends the process via SystemExit — we do not catch it)
         record_error("guard_bash", e)
     hits = [(reason, op) for pattern, reason, op in ASK if re.search(pattern, cmd, re.IGNORECASE)]
     if hits:
@@ -380,7 +380,7 @@ def main() -> None:
                                f"Ask a human to run it by hand.")
         reason, op = hits[0]
         decide("ask", f"Needs consent ({op}): {reason}.")
-    sys.exit(0)  # brak decyzji → normalny przepływ uprawnień
+    sys.exit(0)  # no decision → normal permission flow
 
 
 if __name__ == "__main__":

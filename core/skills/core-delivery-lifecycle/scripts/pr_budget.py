@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Budżet artefaktów w PR: czy plany, raporty i dowody przebiegu nie zagłuszają zmiany kodu w przeglądzie.
+Artifact budget in a PR: whether plans, reports and run evidence drown out the code change in review.
 
   python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base main [--json]
 
-Liczy dodane linie gałęzi względem punktu rozejścia z --base (commity, bez zmian niezatwierdzonych) i dzieli je na
-kod i artefakty. Artefakty: docs/project/**, docs/test/**, docs/work/**, .tf/**, **/evidence/** oraz wzorce
-z `.claude/pr-budget.json` ({"artifacts": [...], "max_share": 0.5, "max_artifact": 600, "max_plan": 300}).
-Przekroczenie:
-- artefakty > max_share (domyślnie 50%) dodanych linii, gdy PR zmienia też kod (PR z samą dokumentacją nie podlega);
-- pojedynczy artefakt > max_artifact linii (domyślnie 600), plan (`plan.md`, `*-plan.md`) > max_plan (300).
-Pierwsza linia: `Werdykt: OK | OVER`; kod wyjścia 1 przy przekroczeniu. Co zrobić: zostaw w PR to, czego
-przegląd potrzebuje (plan, raport cięcia), resztę (surowe logi, dowody, zrzuty) przenieś poza repozytorium albo
-skróć; przy uzasadnionym wyjątku opisz go w PR. Tylko biblioteka standardowa.
+Counts the lines the branch adds relative to the merge base with --base (commits, without uncommitted changes) and splits them into
+code and artifacts. Artifacts: docs/project/**, docs/test/**, docs/work/**, .tf/**, **/evidence/** and patterns
+from `.claude/pr-budget.json` ({"artifacts": [...], "max_share": 0.5, "max_artifact": 600, "max_plan": 300}).
+Exceeded when:
+- artifacts > max_share (default 50%) of the added lines, when the PR also changes code (a docs-only PR is exempt);
+- a single artifact > max_artifact lines (default 600), a plan (`plan.md`, `*-plan.md`) > max_plan (300).
+First line: `Werdykt: OK | OVER` (verdict); exit code 1 when exceeded. What to do: keep in the PR what
+the review needs (plan, slicing report), move the rest (raw logs, evidence, screenshots) outside the repository or
+shorten it; for a justified exception describe it in the PR. Standard library only.
 """
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def budget(root: Path, base: str) -> dict:
     artifacts, problems, sizes = [], [], {}
     for line in git(root, "diff", "--numstat", f"{merge_base}..HEAD").splitlines():
         added, _deleted, path = line.split("\t", 2)
-        if added == "-":          # plik binarny
+        if added == "-":          # binary file
             continue
         n = int(added)
         if any(p.match(path) for p in patterns):

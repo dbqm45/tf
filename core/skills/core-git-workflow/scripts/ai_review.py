@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Przegląd PR przez AI w CI (skill core-git-workflow, references/ai-review-in-ci.md).
+PR review by AI in CI (skill core-git-workflow, references/ai-review-in-ci.md).
 
   python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--force] [--all-prs]
-      zapisuje .github/workflows/ai-review.yml z szablonu obok skryptu: przegląd PR z etykietą ai-review
-      (--all-prs: każdego PR z tego repo), werdykt jako status ai-review/verdict, jeden komentarz zbiorczy,
-      obejście etykietą ai-review-override; istniejącego pliku nie nadpisuje bez --force
-  python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md [--from PLIK] [--force]
-      zatwierdzony szkic zasad (domyślnie docs/project/00-reconstruction/REVIEW.draft.md z rekonstrukcji z kodu)
-      → REVIEW.md w katalogu głównym; istniejącego REVIEW.md nie nadpisuje bez --force
+      writes .github/workflows/ai-review.yml from the template next to the script: review of PRs with the ai-review label
+      (--all-prs: every PR in this repo), the verdict as the ai-review/verdict status, one summary comment,
+      bypass with the ai-review-override label; does not overwrite an existing file without --force
+  python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md [--from FILE] [--force]
+      the approved draft of the rules (default docs/project/00-reconstruction/REVIEW.draft.md from the reconstruction from code)
+      → REVIEW.md in the root directory; does not overwrite an existing REVIEW.md without --force
 
-Szkic zatwierdza człowiek — polecenie review-md uruchamiasz po jego zgodzie. Kod wyjścia: 0 — zapisane,
-1 — odmowa (plik istnieje, brak szkicu), 2 — złe wywołanie. Tylko biblioteka standardowa Pythona 3.9+.
+A human approves the draft — you run the review-md command after their consent. Exit code: 0 — written,
+1 — refusal (file exists, no draft), 2 — bad call. Standard library only, Python 3.9+.
 """
 from __future__ import annotations
 

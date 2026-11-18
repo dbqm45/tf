@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Hook commit-msg: Conventional Commits 1.0.0 i ślad zmiany w stopkach (skill core-conventional-commits).
+Hook commit-msg: Conventional Commits 1.0.0 and the change trace in footers (skill core-conventional-commits).
 
-  python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py check <plik-wiadomości>
+  python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py check <message-file>
   python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py install
 
-`check` sprawdza:
-  - nagłówek `<typ>(<zakres>)!: <opis>` — typ małymi literami, opis niepusty, ≤ 72 znaki, bez kropki na końcu;
-    pusta linia po nagłówku; `BREAKING CHANGE` wielkimi literami. Zakres dowolny (konwencja projektu).
-    Wiadomości gita (`Merge …`, `Revert "…"`, `fixup!`, `squash!`, `amend!`) przechodzą bez sprawdzania.
-  - stopkę `Change: TSK-57` (klucz zmiany albo cięcia, kilka po przecinku) — klucz w kształcie `[A-Z][A-Z0-9]+-[0-9]+`;
-  - stopkę `Flag: payment-retry` — jeden klucz flagi, bez spacji;
-  - gałąź z kluczem w nazwie (np. `story/tsk-57-ponowienie`) — wymagany `Change:` z tym kluczem.
-`install` zapisuje hook `commit-msg` w katalogu hooków gita (szanuje `core.hooksPath`); cudzego hooka nie nadpisuje.
+`check` verifies:
+  - the header `<type>(<scope>)!: <description>` — type in lowercase, non-empty description, ≤ 72 characters, no trailing period;
+    an empty line after the header; `BREAKING CHANGE` in capitals. Any scope (a project convention).
+    Git messages (`Merge …`, `Revert "…"`, `fixup!`, `squash!`, `amend!`) pass without checking.
+  - the footer `Change: TSK-57` (a change or slice key, several comma-separated) — the key shaped `[A-Z][A-Z0-9]+-[0-9]+`;
+  - the footer `Flag: payment-retry` — a single flag key, no spaces;
+  - a branch with a key in its name (e.g. `story/tsk-57-ponowienie`) — requires `Change:` with that key.
+`install` writes the `commit-msg` hook into git's hooks directory (respects `core.hooksPath`); it does not overwrite someone else's hook.
 
-Kod wyjścia: 0 — w porządku, 1 — wiadomość odrzucona albo hook nie zainstalowany, 2 — złe wywołanie.
-Tylko biblioteka standardowa Pythona 3.9+.
+Exit code: 0 — fine, 1 — message rejected or hook not installed, 2 — bad call.
+Standard library only, Python 3.9+.
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ BRANCH_KEY = re.compile(r"(?<![A-Za-z0-9])([A-Za-z][A-Za-z0-9]*-[0-9]+)(?![0-9])
 HEADER = re.compile(r"^(?P<type>[a-z]+)(?:\((?P<scope>[^()]+)\))?(?P<bang>!)?: (?P<subject>.*)$")
 GENERATED = re.compile(r"^(Merge |Revert \"|(fixup|squash|amend)! )")
 FLAG = re.compile(r"^[A-Za-z0-9._-]+$")
-MARK = "core-conventional-commits/scripts/commit_msg.py"   # rozpoznanie własnego hooka przy ponownym install
+MARK = "core-conventional-commits/scripts/commit_msg.py"   # recognizing our own hook on a repeated install
 HOOK = f"""#!/bin/sh
 # Factory commit-msg hook: Conventional Commits and Change:/Flag: footers ({MARK})
 exec python3 "$(git rev-parse --show-toplevel)/.claude/skills/{MARK}" check "$1"
@@ -39,7 +39,7 @@ exec python3 "$(git rev-parse --show-toplevel)/.claude/skills/{MARK}" check "$1"
 
 
 def clean(message: str) -> str:
-    """Bez linii komentarza i bez części pod linią nożyczek, które git wstawia do szablonu wiadomości."""
+    """Without comment lines and without the part under the scissors line, which git inserts into the message template."""
     lines = []
     for ln in message.replace("\r\n", "\n").split("\n"):
         if ln.startswith("# ------------------------ >8 ------------------------"):
@@ -71,7 +71,7 @@ def lint(raw: str, branch_name: str = "") -> list[str]:
         problems.append(f"\"{header}\" does not have the form \"<type>(<scope>)!: <subject>\" — type in lowercase, e.g. "
                         "\"feat(payments): retry failed payment\"")
     else:
-        subject = re.sub(r" \(#\d+\)$", "", h["subject"])   # numer PR, który GitHub dopisuje przy squash merge
+        subject = re.sub(r" \(#\d+\)$", "", h["subject"])   # the PR number that GitHub appends on squash merge
         if not subject.strip():
             problems.append("the subject after \": \" is empty")
         if len(subject) > MAX_SUBJECT:

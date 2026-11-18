@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Krok 1 rekonstrukcji jednym poleceniem, bez modelu: repo_inventory, code_graph, git_territory, standards_scan
-i schema_scan zapisują pełne wyniki JSON do --out, a na ekran trafia tylko zwięzłe streszczenie (≤ 60 linii).
-Model czyta streszczenie, a po szczegóły sięga do plików JSON. To oszczędza tury i kontekst głównego modelu.
+Reconstruction step 1 in a single command, without a model: repo_inventory, code_graph, git_territory, standards_scan
+and schema_scan write full JSON results to --out, and only a concise summary (≤ 60 lines) goes to the screen.
+The model reads the summary and reaches for the JSON files for details. This saves turns and the main model's context.
 
   python3 recon_scan.py <repo> --out docs/project/00-reconstruction/raw
-  python3 recon_scan.py <repo> --out <dir> --budget-tokens 60000   # budżet partii jawnie
+  python3 recon_scan.py <repo> --out <dir> --budget-tokens 60000   # explicit batch budget
 
-Budżet partii domyślnie: 12000 tokenów dla repo < 150 tys. tokenów kodu (partia ≈ pakiet, karta na pakiet),
-60000 dla większych. Bez gita historia jest pominięta. Kod wyjścia: 0 — w porządku, 2 — złe wywołanie.
+Default batch budget: 12000 tokens for repos < 150k tokens of code (batch ≈ package, one card per package),
+60000 for larger ones. Without git the history is skipped. Exit code: 0 — OK, 2 — bad invocation.
 """
 from __future__ import annotations
 

@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Dziennik projektu (docs/project/): struktura, indeks, walidacja, dziennik zdarzeń, raport.
+Project record (docs/project/): structure, index, validation, event log, report.
 
-  python3 .claude/hooks/project_record.py init                 # utwórz strukturę docs/project/
-  python3 .claude/hooks/project_record.py status               # stan faz, do akceptacji, ostatnie przekazanie
-  python3 .claude/hooks/project_record.py check                # walidacja artefaktów (exit 1 przy błędach)
-  python3 .claude/hooks/project_record.py index                # przebuduj docs/project/README.md
-  python3 .claude/hooks/project_record.py log --by ewa --phase domain "Utworzono mapę kontekstów (proposed)"
-  python3 .claude/hooks/project_record.py report [--out plik]  # raport do przeczytania/przekazania
-  python3 .claude/hooks/project_record.py evidence             # cytaty z corpus.md istnieją w źródłach; progi obszarów
-  python3 .claude/hooks/project_record.py wip start "Cel zadania" [--slug nazwa] [--by kto]   # punkt kontrolny pracy w toku
-  python3 .claude/hooks/project_record.py wip list | show [nazwa] | done <nazwa> | pause <nazwa> | snapshot
-  --hook-session / --hook-index                                 # tryby hooków (SessionStart / PostToolUse)
-  --hook-snapshot <zdarzenie> / --hook-stop                     # migawka stanu (PreCompact, SessionEnd) / przypomnienie (Stop)
+  python3 .claude/hooks/project_record.py init                 # create the docs/project/ structure
+  python3 .claude/hooks/project_record.py status               # phase state, items awaiting acceptance, last handoff
+  python3 .claude/hooks/project_record.py check                # artifact validation (exit 1 on errors)
+  python3 .claude/hooks/project_record.py index                # rebuild docs/project/README.md
+  python3 .claude/hooks/project_record.py log --by ewa --phase domain "Created the context map (proposed)"
+  python3 .claude/hooks/project_record.py report [--out file]  # a report to read/hand over
+  python3 .claude/hooks/project_record.py evidence             # quotes from corpus.md exist in the sources; area thresholds
+  python3 .claude/hooks/project_record.py wip start "Task goal" [--slug name] [--by who]   # checkpoint of work in progress
+  python3 .claude/hooks/project_record.py wip list | show [name] | done <name> | pause <name> | snapshot
+  --hook-session / --hook-index                                 # hook modes (SessionStart / PostToolUse)
+  --hook-snapshot <event> / --hook-stop                         # state snapshot (PreCompact, SessionEnd) / reminder (Stop)
 
-Tylko biblioteka standardowa. Katalog projektu: $CLAUDE_PROJECT_DIR albo bieżący.
+Standard library only. Project directory: $CLAUDE_PROJECT_DIR or the current one.
 """
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -55,7 +55,7 @@ PHASE_LABEL = {p: label for p, _, label in PHASES}
 STATUSES = ["draft", "proposed", "accepted", "superseded", "rejected"]
 REQUIRED_KEYS = ["artifact", "phase", "status", "version", "author", "created", "updated", "inputs"]
 NO_SECTIONS = {"adr", "journal", "decisions"}
-# główne artefakty faz — muszą mieć nagłówek (pozostałe pliki to materiały pomocnicze)
+# main phase artifacts — they must have a header (other files are supporting material)
 MAIN_PATTERNS = [
     r"01-discovery/brief\.md", r"02-domain/strategic\.md", r"03-requirements/requirements\.md",
     r"04-architecture/[^/]+\.md", r"04-architecture/adr/[^/]+\.md", r"05-plan/[^/]+\.md",
@@ -91,7 +91,7 @@ def parse(path: Path) -> tuple[dict | None, str]:
     return meta, m.group(2)
 
 
-# Nazwy sekcji: angielska (od 14.x) i dawna polska — obie rozpoznawane, szablony mają angielską.
+# Section names: English (since 14.x) and the former Polish — both recognized, templates use the English one.
 SECTION_NAMES = {"Przekazanie": ("Handoff", "Przekazanie"), "Otwarte pytania": ("Open questions", "Otwarte pytania"),
                  "Następna czynność": ("Next step", "Następna czynność"), "Kroki": ("Steps", "Kroki")}
 
@@ -114,7 +114,7 @@ def artifacts(rec: Path) -> list[dict]:
         if rel == "README.md" or rel.startswith(("exports/", "archive/", "wip/")):
             continue
         meta, body = parse(p)
-        if meta is None and rel.startswith("changes/"):   # plik zadania (ticket, plan, raport) — spis: changes/INDEX.md
+        if meta is None and rel.startswith("changes/"):   # a task file (ticket, plan, report) — index: changes/INDEX.md
             continue
         items.append({"path": p, "rel": rel, "meta": meta, "body": body,
                       "main": any(re.fullmatch(pat, rel) for pat in MAIN_PATTERNS)})
@@ -128,8 +128,8 @@ def phase_index(phase: str) -> int:
 # ───────────── walidacja ─────────────
 
 def language_warnings(rec: Path) -> list[str]:
-    """Uwagi językowe (WYSOKIE i ŚREDNIE) z lintera polszczyzny (pack-editorial-pl) — zero tokenów; tylko ostrzeżenia,
-    nie blokują. Bez nakładki — brak uwag."""
+    """Language remarks (HIGH and MEDIUM) from the Polish-language linter (pack-editorial-pl) — zero tokens; warnings only,
+    they do not block. Without the overlay — no remarks."""
     lint_path = Path(__file__).resolve().parent.parent / "skills" / "txt-polish-correctness" / "scripts" / "polish_lint.py"  # pack-editorial-pl
     if not lint_path.exists():
         return []
@@ -142,7 +142,7 @@ def language_warnings(rec: Path) -> list[str]:
         for f in sorted(rec.rglob("*.md")):
             rel = f.relative_to(rec).as_posix()
             if rel == "README.md" or rel.startswith(("exports/", "archive/")) or rel.endswith("corpus.md"):
-                continue   # bank dowodów to dosłowne cytaty — nie poprawiamy
+                continue   # the evidence bank holds verbatim quotes — we do not correct them
             issues = [i for i in mod.lint_file(f) if i["priority"] in ("HIGH", "MEDIUM", "WYSOKI", "ŚREDNI")]   # pl: sprzed 14.x
             if issues:
                 first = issues[0]
@@ -361,7 +361,7 @@ def report(root: Path, out: Path | None) -> Path:
     return target
 
 
-# ───────────── zapis ─────────────
+# ───────────── writing ─────────────
 
 def from_template(name: str) -> str:
     today = f"{date.today():%Y-%m-%d}"
@@ -396,11 +396,11 @@ def log(root: Path, by: str, phase: str, text: str) -> None:
     j.write_text(re.sub(r"^updated: .*$", f"updated: {date.today():%Y-%m-%d}", content, count=1, flags=re.M), encoding="utf-8")
 
 
-# ───────────── praca w toku (wip/) — przerwanie sesji i powrót ─────────────
+# ───────────── work in progress (wip/) — session interruption and return ─────────────
 
 WIP_ACTIVE = ("active", "paused", "blocked")
 AUTO_BEGIN, AUTO_END = "<!-- stan-automatyczny:begin -->", "<!-- stan-automatyczny:end -->"
-STALE_MINUTES = 10          # Stop przypomina, gdy zmiany w plikach są o tyle nowsze niż punkt kontrolny
+STALE_MINUTES = 10          # Stop reminds when file changes are this much newer than the checkpoint
 PL = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
 
 
@@ -410,8 +410,8 @@ def slugify(text: str) -> str:
 
 
 def git(root: Path, *args: str) -> str | None:
-    """Szybkie, nieblokujące wywołanie gita: bez fsmonitora (na Windows jego demon trzymał potok i hook wisiał),
-    bez opcjonalnych blokad indeksu, wyjście w UTF-8 niezależnie od strony kodowej systemu."""
+    """A fast, non-blocking git call: without fsmonitor (on Windows its daemon held the pipe and the hook hung),
+    without optional index locks, output in UTF-8 regardless of the system code page."""
     try:
         r = subprocess.run(["git", "--no-optional-locks", "-c", "core.fsmonitor=false", *args], cwd=root,
                            stdin=subprocess.DEVNULL, capture_output=True, encoding="utf-8", errors="replace",
@@ -422,8 +422,8 @@ def git(root: Path, *args: str) -> str | None:
 
 
 def hook_deadline() -> None:
-    """Tryb hooka kończy się sam (kod 0, bez wyniku) przed limitem Claude Code (10 s w settings.json). Zabity przez
-    Claude Code proces dawał na Windows „Stop hook error … No stderr output”."""
+    """Hook mode ends on its own (exit 0, no output) before the Claude Code limit (10 s in settings.json). A process killed by
+    Claude Code produced „Stop hook error … No stderr output” on Windows."""
     import threading
     try:
         seconds = float(os.environ.get("CLAUDE_HOOK_DEADLINE", "7"))
@@ -435,7 +435,7 @@ def hook_deadline() -> None:
 
 
 def changed_files(root: Path) -> list[str] | None:
-    """Niezacommitowane zmiany (bez samych punktów kontrolnych); None, gdy to nie repozytorium git."""
+    """Uncommitted changes (excluding the checkpoints themselves); None when this is not a git repository."""
     out = git(root, "status", "--porcelain", "-uall")
     if out is None:
         return None
@@ -449,7 +449,7 @@ def changed_files(root: Path) -> list[str] | None:
 
 
 def wip_dir(root: Path) -> Path:
-    """Punkty kontrolne pracy w toku: `.tf/wip/` (wyniki pracy fabryki), archiwum w `.tf/wip/archive/`."""
+    """Checkpoints of work in progress: `.tf/wip/` (the factory's work output), archive in `.tf/wip/archive/`."""
     return root / ".tf" / "wip"
 
 
@@ -509,12 +509,12 @@ def wip_set_status(root: Path, slug: str, status: str, by: str) -> Path:
     return path
 
 
-# Nazwy zdarzeń z core/settings.json (polskie argumenty hooków sprzed 14.x) → angielski zapis w migawce.
+# Event names from core/settings.json (Polish hook arguments from before 14.x) → English entry in the snapshot.
 EVENT_NAMES = {"koniec sesji": "session end", "kompaktowanie kontekstu": "context compaction"}
 
 
 def snapshot(root: Path, event: str) -> int:
-    """Mechaniczny zapis stanu (gałąź, commit, zmienione pliki) w aktywnych punktach kontrolnych; nie zmienia mtime."""
+    """Mechanical state record (branch, commit, changed files) in active checkpoints; does not change mtime."""
     items = wip_items(root)
     if not items:
         return 0
@@ -539,12 +539,12 @@ def snapshot(root: Path, event: str) -> int:
         else:
             text = text.rstrip() + "\n\n" + block + "\n"
         p.write_text(text, encoding="utf-8")
-        os.utime(p, (st.st_atime, st.st_mtime))      # migawka nie udaje aktualizacji przez agenta
+        os.utime(p, (st.st_atime, st.st_mtime))      # the snapshot does not pose as an update by the agent
     return len(items)
 
 
 def stop_reminder(root: Path, data: dict) -> str | None:
-    """Powód do kontynuacji, gdy punkt kontrolny jest wyraźnie starszy niż zmiany w plikach."""
+    """A reason to continue when the checkpoint is clearly older than the file changes."""
     if data.get("stop_hook_active"):
         return None
     items = [i for i in wip_items(root, ("active",))]
@@ -562,7 +562,7 @@ def stop_reminder(root: Path, data: dict) -> str | None:
 
 
 def repo_drift(root: Path, body: str) -> str | None:
-    """Rozjazd bieżącego repo ze stanem zapisanym przez migawkę (gałąź, commit); None, gdy zgodne albo brak danych."""
+    """Drift of the current repo from the state recorded by the snapshot (branch, commit); None when consistent or no data."""
     m = re.search(r"^- (?:Branch|Gałąź): (.+?) · (?:last commit|ostatni commit): (\S+)", body, re.M)
     if not m or m.group(2) == "—":
         return None
@@ -608,7 +608,7 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
 
 # ───────────── CLI ─────────────
 
-# ───────────── dowody (format banku dowodów ze skilla ddd-discovery-intake, pack-it) ─────────────
+# ───────────── evidence (the evidence-bank format from the ddd-discovery-intake skill, pack-it) ─────────────
 
 SRC_RE = re.compile(r"^##\s+(S\d+)\s+[—-]\s+(.+?)\s*$", re.M)
 ENTRY_RE = re.compile(r"^-\s+\*\*(E\d+)\*\*\s*>\s*[„\"“](.+?)[”\"“]\s*[—-]\s*([^\[\n]*?)\s*((?:\[[^\]]*\]\s*)*)$", re.M)
@@ -695,7 +695,7 @@ def main(argv: list[str]) -> int:
     if "--hook-session" in args:
         try:
             print(status_text(root, compact=True))
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     if "--hook-snapshot" in args:
@@ -703,7 +703,7 @@ def main(argv: list[str]) -> int:
             i = args.index("--hook-snapshot")
             event = args[i + 1] if len(args) > i + 1 else "hook"
             snapshot(root, EVENT_NAMES.get(event, event))
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     if "--hook-stop" in args:
@@ -711,7 +711,7 @@ def main(argv: list[str]) -> int:
             reason = stop_reminder(root, json.load(sys.stdin))
             if reason:
                 print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     if "--hook-index" in args:
@@ -723,7 +723,7 @@ def main(argv: list[str]) -> int:
                                                                or parse(path)[0] is None)
             if rec in path.parents and path.name != "README.md" and "exports" not in path.parts and not task_file:
                 write_index(root)
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     cmd = args[0] if args else "status"

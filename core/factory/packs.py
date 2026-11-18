@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 """
-Nakładki (pack-*) zainstalowane w projekcie i konfiguracja złożona z rdzenia i nakładek.
+Packs (pack-*) installed in a project and the configuration assembled from the core and packs.
 
-  python3 .tf/factory/packs.py              # zainstalowane nakładki i ustawienia projektu
-  python3 .tf/factory/packs.py --json       # konfiguracja po złożeniu (do diagnostyki)
+  python3 .tf/factory/packs.py              # installed packs and project settings
+  python3 .tf/factory/packs.py --json       # configuration after assembly (for diagnostics)
 
-Układ w projekcie:
-  .tf/factory/config.yaml                 domyślna konfiguracja rdzenia (silnik — nadpisuje go aktualizacja)
-  .tf/factory/traits/*.md                 cechy rdzenia
-  .tf/factory/packs/<id>/pack.yaml        nakładka: wymiary, agenci, konsultanci, wkład do rdzenia i innych nakładek
+Layout in a project:
+  .tf/factory/config.yaml                 default core configuration (the engine — overwritten by an update)
+  .tf/factory/traits/*.md                 core traits
+  .tf/factory/packs/<id>/pack.yaml        pack: dimensions, agents, consultants, contributions to the core and other packs
   .tf/factory/packs/<id>/{roles,personas,traits}/
-  .tf/factory/packs/<id>/pack.yaml → org_defaults   domyślne organizacji (nakładka firmowa, najwyżej jedna)
-  .tf/factory/packs/<id>/pack.yaml → team_defaults  domyślne zespołu (nakładka zespołu, najwyżej jedna, po firmowej)
-  .tf/config/config.yaml                  nadpisania projektu (nakładane rekurencyjnie na domyślną konfigurację)
-  .tf/config/{roles,personas,traits}/     własne role, persony i cechy projektu (nadpisują te z rdzenia i nakładek)
-  ~/.tf/preferences.yaml, .tf/config/me.yaml   preferencje osoby: styl pracy (`tf style`), ostatnia warstwa
-  .claude/skills/                         skille rdzenia i nakładek (Claude Code czyta je tylko stąd)
-  .claude/factory-settings.json           ustawienia projektu: targets (język rozmowy i commitów nie jest ustawieniem)
+  .tf/factory/packs/<id>/pack.yaml → org_defaults   organization defaults (company pack, at most one)
+  .tf/factory/packs/<id>/pack.yaml → team_defaults  team defaults (team pack, at most one, after the company one)
+  .tf/config/config.yaml                  project overrides (applied recursively over the default configuration)
+  .tf/config/{roles,personas,traits}/     the project's own roles, personas and traits (override those from the core and packs)
+  ~/.tf/preferences.yaml, .tf/config/me.yaml   personal preferences: work style (`tf style`), the last layer
+  .claude/skills/                         skills of the core and packs (Claude Code reads them only from here)
+  .claude/factory-settings.json           project settings: targets (the conversation and commit language is not a setting)
 
-Zasady składania:
-  - listy (wymiary, słownik, skille samodzielne, wiersze routingu) — rdzeń, potem nakładki w kolejności nazw;
-  - wymiary sortowane po `order`; ten sam prefiks w dwóch miejscach to błąd;
-  - `always_skills` nakładki trafiają tylko do jej person i wykonawców;
-  - `contributes` (wkład do person, ról i agentów spoza nakładki) oraz agenci wspólni, konsultanci i wiersze routingu
-    nakładki działają tylko wtedy, gdy spełniony jest `contributes_when` (np. `{targets: [claude, managed-agents]}`);
-  - odwołania do elementów nakładek z `optional_packs`, których nie zainstalowano, są pomijane bez błędu.
-Biblioteka standardowa + PyYAML (systemowy albo dołączony w .tf/factory/_vendor).
+Assembly rules:
+  - lists (dimensions, dictionary, standalone skills, routing rows) — the core, then packs in name order;
+  - dimensions sorted by `order`; the same prefix in two places is an error;
+  - a pack's `always_skills` go only to its personas and executors;
+  - `contributes` (contributions to personas, roles and agents outside the pack) as well as shared agents, consultants and routing rows
+    of a pack apply only when `contributes_when` is satisfied (e.g. `{targets: [claude, managed-agents]}`);
+  - references to elements of `optional_packs` that are not installed are skipped without error.
+Standard library + PyYAML (the system one or the bundled copy in .tf/factory/_vendor).
 """
 from __future__ import annotations
 
@@ -35,25 +35,25 @@ import subprocess
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (licencja MIT, .tf/factory/_vendor/yaml/LICENSE)
+except ImportError:  # bundled copy of PyYAML (MIT license, .tf/factory/_vendor/yaml/LICENSE)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
 SETTINGS_REL = Path(".claude") / "factory-settings.json"
-ENGINE_REL = Path(".tf") / "factory"     # silnik fabryki (tylko do odczytu — nadpisuje go aktualizacja)
-CONFIG_REL = Path(".tf") / "config"      # konfiguracja projektu: nadpisania config.yaml, własne persony, role, cechy
+ENGINE_REL = Path(".tf") / "factory"     # the factory engine (read-only — overwritten by an update)
+CONFIG_REL = Path(".tf") / "config"      # project configuration: config.yaml overrides, own personas, roles, traits
 PACKS_REL = ENGINE_REL / "packs"
 LIST_KEYS = ("traits", "core_skills", "skills")
 
@@ -64,23 +64,23 @@ def load_yaml(path: Path) -> dict:
 
 
 def deep_merge(base: dict, over: dict) -> dict:
-    """`over` nałożone na `base`: słowniki łączone rekurencyjnie, inne wartości (listy, napisy, liczby) zastępowane."""
+    """`over` applied on top of `base`: dicts merged recursively, other values (lists, strings, numbers) replaced."""
     out = dict(base)
     for k, v in (over or {}).items():
         out[k] = deep_merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
     return out
 
 
-# Nakładka firmowa (`org_defaults` w pack.yaml): domyślne organizacji między silnikiem a projektem. Tylko te klucze
-# konfiguracji — reszta to składanie fabryki (wymiary, agenci), którego nakładka firmowa nie przestawia.
+# Company pack (`org_defaults` in pack.yaml): organization defaults between the engine and the project. Only these configuration
+# keys — the rest is factory assembly (dimensions, agents), which the company pack does not rearrange.
 ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "loop", "steps", "task",
                    "commit_language")
 ORG_OPERATIONS_KEYS = ("tracker",)
 
 
 def org_defaults(root: Path, key: str = "org_defaults") -> tuple[str | None, dict]:
-    """Pierwsza (po id) zainstalowana nakładka z `org_defaults` (albo `team_defaults`, key) i jej wartości; (None, {})
-    bez takiej nakładki. Więcej niż jedna to błąd zgłaszany przez `compose` (build.py check)."""
+    """The first (by id) installed pack with `org_defaults` (or `team_defaults`, key) and its values; (None, {})
+    without such a pack. More than one is an error reported by `compose` (build.py check)."""
     for pid, p in installed_packs(root).items():
         if isinstance(p.get(key), dict):
             return pid, p[key]
@@ -88,13 +88,13 @@ def org_defaults(root: Path, key: str = "org_defaults") -> tuple[str | None, dic
 
 
 def team_defaults(root: Path) -> tuple[str | None, dict]:
-    """Nakładka zespołu (`team_defaults`): te same klucze co firmowa, warstwa między firmą a projektem."""
+    """Team pack (`team_defaults`): the same keys as the company one, a layer between the company and the project."""
     return org_defaults(root, "team_defaults")
 
 
 def narrowed_modes(layers: list[tuple[str, dict]]) -> list[str]:
-    """`task.allowed_modes` po wszystkich warstwach: przecięcie — niższa warstwa (zespół, projekt) tylko zawęża listę
-    wyższej (firma), nigdy nie przywraca trybu, który wyższa zabrała."""
+    """`task.allowed_modes` after all layers: an intersection — a lower layer (team, project) only narrows the list
+    of the higher one (company), never restores a mode the higher one took away."""
     allowed = list(TASK_MODES)
     for _label, layer in layers:
         modes = ((layer or {}).get("task") or {}).get("allowed_modes")
@@ -104,12 +104,12 @@ def narrowed_modes(layers: list[tuple[str, dict]]) -> list[str]:
 
 
 def config_layers(root: Path) -> list[tuple[str, dict]]:
-    """Warstwy konfiguracji od najsłabszej: silnik, organizacja (nakładka firmowa), zespół (nakładka zespołu), projekt,
-    osoba. Każdy czytelnik
-    konfiguracji (build, hooki, tf risk, tf work) składa je w tej kolejności."""
+    """Configuration layers from the weakest: engine, organization (company pack), team (team pack), project,
+    person. Every configuration
+    reader (build, hooks, tf risk, tf work) assembles them in this order."""
     engine, own = root / ENGINE_REL / "config.yaml", root / CONFIG_REL / "config.yaml"
     layers = [((ENGINE_REL / "config.yaml").as_posix(), load_yaml(engine) if engine.is_file() else {})]
-    for key in ("org_defaults", "team_defaults"):          # firma, potem zespół
+    for key in ("org_defaults", "team_defaults"):          # company, then team
         pid, od = org_defaults(root, key)
         if pid:
             part = {k: v for k, v in (od.get("config") or {}).items() if k in ORG_CONFIG_KEYS}
@@ -126,17 +126,17 @@ def config_layers(root: Path) -> list[tuple[str, dict]]:
     return layers
 
 
-# Warstwa osoby (docs/todo.md, „Warstwy zespołu i preferencji osoby”): ostatnia, najwęższa. Osoba ustawia tylko styl
-# i przełączniki sposobu pracy — bez limitów `work`, reguł `autonomy.triage` i składania fabryki. Operacje autonomii
-# może tylko zaostrzyć (sprawdza guard_bash przy składaniu warstw), a domyślny tryb zadania musi być w
-# `task.allowed_modes` wyższych warstw (firma, zespół, projekt).
+# Person layer (docs/todo.md, "Warstwy zespołu i preferencji osoby"): the last, the narrowest. A person sets only style
+# and work-mode switches — without `work` limits, `autonomy.triage` rules and factory assembly. Autonomy operations
+# can only be tightened (guard_bash checks this when assembling layers), and the default task mode must be in
+# `task.allowed_modes` of the higher layers (company, team, project).
 PERSON_REL = CONFIG_REL / "me.yaml"
 PERSON_KEYS = {"task": ("default_mode",), "loop": ("blocked_slices", "confirm_each_slice"), "autonomy": ("operations",)}
 TASK_MODES = ("plan", "normal", "auto")
 
 
 def preferences_path() -> Path:
-    """Preferencje osoby wspólne dla wszystkich jej projektów; `TF_PREFERENCES` podmienia ścieżkę (testy)."""
+    """Personal preferences shared by all of a person's projects; `TF_PREFERENCES` overrides the path (tests)."""
     return Path(os.environ.get("TF_PREFERENCES") or Path.home() / ".tf" / "preferences.yaml")
 
 
@@ -158,14 +158,14 @@ def _person_part(data: dict, warns: list[str], src: str) -> dict:
 
 
 def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
-    """Warstwa osoby: `~/.tf/preferences.yaml` ← `.tf/config/me.yaml`, styl rozwinięty do wartości przełączników
-    (`styles` w konfiguracji silnika), potem wartości podane wprost. Zwraca (warstwa, ostrzeżenia, źródła)."""
+    """Person layer: `~/.tf/preferences.yaml` ← `.tf/config/me.yaml`, the style expanded into switch values
+    (`styles` in the engine configuration), then explicitly given values. Returns (layer, warnings, sources)."""
     warns: list[str] = []
     raw, sources = {}, []
     for path, label in ((preferences_path(), "~/.tf/preferences.yaml"), (root / PERSON_REL, PERSON_REL.as_posix())):
         try:
             data = load_yaml(path) if path.is_file() else None
-        except Exception as e:  # noqa: BLE001 — zły plik osoby nie psuje konfiguracji; zostaje ostrzeżenie
+        except Exception as e:  # noqa: BLE001 — a bad person file does not break the configuration; a warning remains
             warns.append(f"{label}: cannot read ({e})")
             continue
         if isinstance(data, dict) and data:
@@ -178,7 +178,7 @@ def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
     if style:
         styles = below.get("styles") or {}
         if style in styles:
-            preset = {k: v for k, v in (styles[style] or {}).items() if k != "claude"}   # claude: tf style, nie konfiguracja
+            preset = {k: v for k, v in (styles[style] or {}).items() if k != "claude"}   # claude: tf style, not configuration
             out = deep_merge(_person_part(preset, warns, f"styles.{style}"), {})
             out["style"] = style
         else:
@@ -196,13 +196,13 @@ def person_layer(root: Path, below: dict) -> tuple[dict, list[str], list[str]]:
 
 
 LOCAL_SETTINGS_REL = Path(".claude") / "settings.local.json"
-STYLE_MARK = "style_permission_mode"   # w .claude/factory-settings.json: co ustawił styl i co było przedtem
+STYLE_MARK = "style_permission_mode"   # in .claude/factory-settings.json: what the style set and what was there before
 
 
 def apply_style_permissions(root: Path) -> list[str]:
-    """Tryb uprawnień Claude Code ze stylu pracy (`styles.<styl>.claude.permission_mode`) w `.claude/settings.local.json`
-    projektu. Ustawia go tylko w miejsce domyślnego (`default` albo brak) albo wcześniej ustawionego przez styl — trybu
-    wybranego przez człowieka nie nadpisuje. Styl bez trybu oddaje to, co było przed nim. Zwraca komunikaty."""
+    """Claude Code permission mode from the work style (`styles.<style>.claude.permission_mode`) in the project's
+    `.claude/settings.local.json`. Sets it only in place of the default (`default` or none) or one set earlier by the style —
+    a mode chosen by a human is not overwritten. A style without a mode gives back what was there before it. Returns messages."""
     cfg = load_config(root)
     style = cfg.get("style")
     want = ((((cfg.get("styles") or {}).get(style) or {}) if style else {}).get("claude") or {}).get("permission_mode")
@@ -224,7 +224,7 @@ def apply_style_permissions(root: Path) -> list[str]:
     cur = perms.get("defaultMode")
     msgs: list[str] = []
     if mark and cur != mark.get("mode"):
-        mark = None                      # człowiek zmienił tryb po stylu — jego wybór, styl go już nie oddaje
+        mark = None                      # a human changed the mode after the style — their choice, the style no longer gives it back
     if want:
         if cur == want:
             return msgs
@@ -251,7 +251,7 @@ def apply_style_permissions(root: Path) -> list[str]:
         mark = None
     else:
         return msgs
-    if msgs:                             # zmieniony tryb — zapis ustawień Claude Code (reszta pliku bez zmian)
+    if msgs:                             # mode changed — write Claude Code settings (the rest of the file unchanged)
         if perms:
             data["permissions"] = perms
         else:
@@ -267,7 +267,7 @@ def apply_style_permissions(root: Path) -> list[str]:
 
 
 def work_style(root: Path) -> dict:
-    """Sposób pracy po złożeniu warstw: styl, domyślny i dozwolone tryby zadania, przełączniki pętli, ostrzeżenia."""
+    """Work mode after assembling layers: style, default and allowed task modes, loop switches, warnings."""
     cfg = load_config(root)
     below: dict = {}
     lower = [lv for lv in config_layers(root) if not lv[0].endswith("(person)")]
@@ -284,21 +284,21 @@ def work_style(root: Path) -> dict:
 
 
 def org_operations(root: Path) -> dict:
-    """Domyślne karty operacyjnej z nakładki firmowej, nadpisane przez nakładkę zespołu (dziś: `tracker`). Adresu
-    trackera (`url`) żadna nie ustawia — dokąd idzie token, mówi tylko zmienna JIRA_BASE_URL (skill tf, intake.py)."""
+    """Operational card defaults from the company pack, overridden by the team pack (today: `tracker`). The tracker
+    address (`url`) is set by neither — where the token goes is determined only by the JIRA_BASE_URL variable (tf skill, intake.py)."""
     tracker: dict = {}
     for key in ("org_defaults", "team_defaults"):
         ops = org_defaults(root, key)[1].get("operations") or {}
         if isinstance(ops.get("tracker"), dict):
-            # prefiksy zespołu zastępują prefiksy firmy (klucze zgłoszeń zespołu), reszta pól się scala
+            # team prefixes replace company prefixes (the team's ticket keys), the other fields are merged
             tracker = {**deep_merge(tracker, ops["tracker"]),
                        **({"prefixes": ops["tracker"]["prefixes"]} if "prefixes" in ops["tracker"] else {})}
     return {"tracker": {k: v for k, v in tracker.items() if k != "url"}} if tracker else {}
 
 
 def load_config(root: Path) -> dict:
-    """Konfiguracja rdzenia: silnik (`.tf/factory/config.yaml`) ← domyślne organizacji (nakładka firmowa) ←
-    nadpisania projektu (`.tf/config/config.yaml`) ← preferencje osoby (styl pracy)."""
+    """Core configuration: engine (`.tf/factory/config.yaml`) ← organization defaults (company pack) ←
+    project overrides (`.tf/config/config.yaml`) ← personal preferences (work style)."""
     cfg: dict = {}
     layers = config_layers(root)
     for _label, layer in layers:
@@ -309,7 +309,7 @@ def load_config(root: Path) -> dict:
 
 
 def installed_packs(root: Path) -> dict[str, dict]:
-    """Nakładki zainstalowane w projekcie: id → dane pack.yaml (+ `_dir`)."""
+    """Packs installed in the project: id → pack.yaml data (+ `_dir`)."""
     out: dict[str, dict] = {}
     base = root / PACKS_REL
     for p in sorted(base.glob("*/pack.yaml")) if base.is_dir() else []:
@@ -320,7 +320,7 @@ def installed_packs(root: Path) -> dict[str, dict]:
 
 
 def load_settings(root: Path, cfg: dict) -> dict:
-    """Ustawienia projektu z domyślnymi wartościami rdzenia."""
+    """Project settings with the core's default values."""
     data: dict = {}
     p = root / SETTINGS_REL
     if p.exists():
@@ -347,7 +347,7 @@ def save_settings(root: Path, **changes) -> dict:
 
 
 def drop_settings(root: Path, *keys: str) -> bool:
-    """Usuwa klucze z ustawień projektu (np. dawne `language`, `commit_language`). True, gdy coś zmieniono."""
+    """Removes keys from the project settings (e.g. the former `language`, `commit_language`). True when something was changed."""
     p = root / SETTINGS_REL
     try:
         data = json.loads(p.read_text(encoding="utf-8")) or {}
@@ -361,7 +361,7 @@ def drop_settings(root: Path, *keys: str) -> bool:
 
 
 def active(pack: dict, settings: dict) -> bool:
-    """Czy wkład nakładki działa przy tych ustawieniach (`contributes_when`)."""
+    """Whether a pack's contribution applies under these settings (`contributes_when`)."""
     cond = pack.get("contributes_when") or {}
     return all(settings.get(k) == v for k, v in cond.items())
 
@@ -371,8 +371,8 @@ def _union(a, b) -> list:
 
 
 def compose(root: Path, cfg: dict) -> dict:
-    """Konfiguracja rdzenia (`cfg`) uzupełniona o zainstalowane nakładki i ustawienia projektu. Błędy składania
-    trafiają do `_errors` (zgłasza je `build.py check`)."""
+    """Core configuration (`cfg`) supplemented with installed packs and project settings. Assembly errors
+    go to `_errors` (reported by `build.py check`)."""
     cfg = dict(cfg)
     packs = installed_packs(root)
     settings = load_settings(root, cfg)
@@ -447,7 +447,7 @@ def compose(root: Path, cfg: dict) -> dict:
         for role, extra in (contrib.get("roles") or {}).items():
             role_contrib.setdefault(role, {"skills": []})["skills"] = _union(
                 role_contrib.get(role, {}).get("skills"), (extra or {}).get("skills"))
-    # wkład do agentów (także tych z nakładek): skille i akapit promptu
+    # contributions to agents (including those from packs): skills and a prompt paragraph
     for pid, p in packs.items():
         if pid not in cfg["_active"]:
             continue
@@ -469,12 +469,12 @@ def compose(root: Path, cfg: dict) -> dict:
 
 
 def missing_optional(pack: dict | None, packs: dict) -> list[str]:
-    """Nakładki opcjonalne tej nakładki, których nie zainstalowano."""
+    """Optional packs of this pack that are not installed."""
     return [o for o in (pack or {}).get("optional_packs") or [] if o not in packs]
 
 
 def load_items(root: Path, sub: str) -> tuple[dict[str, dict], list[str]]:
-    """Role albo persony: z nakładek i własne projektu (własne nadpisują nakładkę). Zwraca (elementy, ostrzeżenia)."""
+    """Roles or personas: from packs and the project's own (the project's own override the pack). Returns (items, warnings)."""
     items: dict[str, dict] = {}
     notes: list[str] = []
     for pid, p in installed_packs(root).items():
@@ -506,7 +506,7 @@ def load_traits(root: Path) -> dict[str, str]:
 MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"
 
 
-# Język commitów repozytorium bez modelu: tematy ostatnich commitów (bez przedrostka Conventional Commits).
+# Commit language of a repository without a model: subjects of recent commits (without the Conventional Commits prefix).
 PL_CHARS = set("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ")
 PL_WORDS = {"i", "w", "na", "z", "dla", "nie", "oraz", "przez", "bez", "dodaj", "dodano", "popraw", "poprawka",
             "poprawki", "zmiana", "zmiany", "nowy", "nowa", "nowe", "aktualizacja", "przenieś", "usuń", "obsługa"}
@@ -519,8 +519,8 @@ _COMMIT_LANG: dict = {}
 
 
 def commit_language(root: Path, last: int = 50) -> str | None:
-    """`pl`, `en`, `mixed` (brak wyraźnej przewagi) albo None (brak gita lub commitów — nowe repozytorium).
-    Wynik zapamiętany na proces — build wywołuje to raz na agenta."""
+    """`pl`, `en`, `mixed` (no clear majority) or None (no git or commits — a new repository).
+    Result memoized per process — build calls it once per agent."""
     key = (str(Path(root).resolve()), last)
     if key not in _COMMIT_LANG:
         _COMMIT_LANG[key] = _commit_language(Path(root), last)
@@ -545,18 +545,18 @@ def _commit_language(root: Path, last: int) -> str | None:
         is_pl, is_en = bool(PL_CHARS & set(body)) or bool(words & PL_WORDS), bool(words & EN_WORDS)
         pl += is_pl and not is_en
         en += is_en and not is_pl
-    if pl + en == 0 or min(pl, en) * 3 > max(pl, en):   # mniej niż 3:1 — bez rozstrzygnięcia
+    if pl + en == 0 or min(pl, en) * 3 > max(pl, en):   # fewer than 3:1 — no verdict
         return "mixed"
     return "pl" if pl > en else "en"
 
 
 def language_lines(cfg: dict, root: Path) -> list[str]:
-    """Sekcja „Język”: reguła rozmowy (stała), język commitów z `git log`, język kodu."""
+    """The "Język" section: the conversation rule (fixed), commit language from `git log`, code language."""
     cl = cfg.get("commit_language") or {}
     found = commit_language(root)
     code = found or cl.get("new_repo", "en")
     commits = cl.get(code) or cl.get("mixed")
-    if commits:   # skąd ten język — człowiek widzi, że to nie ustawienie
+    if commits:   # where this language comes from — a human sees it is not a setting
         commits = commits.rstrip(".") + (" (like the existing commits, `git log`)." if found else
                                          " (new repository without commits; later the language of the history in `git log`).")
     lines = [cfg.get("language_note"), commits, cfg.get("code_language_note")]
@@ -564,7 +564,7 @@ def language_lines(cfg: dict, root: Path) -> list[str]:
 
 
 def write_language_lines(path: Path, cfg: dict, root: Path) -> bool:
-    """Podmienia podsekcję „### Język” w bloku fabryki w CLAUDE.md / CLAUDE.local.md. Zwraca True, gdy zmieniono."""
+    """Replaces the "### Język" subsection in the factory block in CLAUDE.md / CLAUDE.local.md. Returns True when changed."""
     if not path.exists():
         return False
     text = path.read_text(encoding="utf-8")

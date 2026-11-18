@@ -144,11 +144,11 @@
   "offline": "2026-11-18"
  },
  "ddd-es-simulation": {
-  "fingerprint": "e7755520603e19a4",
+  "fingerprint": "ea1befed11fa2a2e",
   "offline": "2026-11-18"
  },
  "ddd-event-storming": {
-  "fingerprint": "db53564a2f76c8bf",
+  "fingerprint": "13d4a75f40ac4a82",
   "offline": "2026-11-18"
  },
  "ddd-facilitation": {
@@ -188,7 +188,7 @@
   "offline": "2026-11-18"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "e5375cc2672bbb9b",
+  "fingerprint": "a2b0632ce541842c",
   "offline": "2026-11-18"
  },
  "eng-continuous-delivery": {
@@ -212,7 +212,7 @@
   "offline": "2026-11-18"
  },
  "eng-legacy-dossier": {
-  "fingerprint": "8e9464ba7c6435f5",
+  "fingerprint": "21360873760ae308",
   "offline": "2026-11-18"
  },
  "eng-llm-features": {
@@ -220,7 +220,7 @@
   "offline": "2026-11-18"
  },
  "eng-local-quality-gates": {
-  "fingerprint": "ad6a38a665ffe167",
+  "fingerprint": "432e54d6a72262d9",
   "offline": "2026-11-18"
  },
  "eng-module-depth": {
@@ -236,7 +236,7 @@
   "offline": "2026-11-18"
  },
  "eng-repo-readiness": {
-  "fingerprint": "acaa01d34a09021f",
+  "fingerprint": "637cc238246b1a07",
   "offline": "2026-11-18"
  },
  "eng-tech-debt-audit": {
@@ -388,7 +388,7 @@
   "offline": "2026-11-18"
  },
  "ops-setup-wizard": {
-  "fingerprint": "231988df47d8f7f8",
+  "fingerprint": "e3ca88555532d1ae",
   "offline": "2026-11-18"
  },
  "ops-sre-incidents": {
@@ -444,7 +444,7 @@
   "offline": "2026-11-18"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "c3473cabff6b3d41",
+  "fingerprint": "4910b4ec73f251b9",
   "offline": "2026-11-18"
  },
  "proc-safe": {

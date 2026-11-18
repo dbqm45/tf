@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Zamknięcie zadania do commita jednym poleceniem (tańszy kontekst): sprawdzenia, treść commita, dziennik, commit.
+Closing a task to a commit with one command (cheaper context): checks, commit message, log, commit.
 
-  python3 .tf/factory/finish.py --message /ścieżka/msg.txt
-  python3 .tf/factory/finish.py --message msg.txt --log "Co zrobiono (jedno zdanie)" --wip <punkt-kontrolny>
-  --by claude · --phase maintenance · --no-check (pomiń .tf/factory/check.py) · --root <repozytorium>
+  python3 .tf/factory/finish.py --message /path/msg.txt
+  python3 .tf/factory/finish.py --message msg.txt --log "What was done (one sentence)" --wip <checkpoint>
+  --by claude · --phase maintenance · --no-check (skip .tf/factory/check.py) · --root <repository>
 
-Kolejność (zatrzymuje się na pierwszym błędzie): gałąź nie jest main/master → w zmianach nie ma plików `.env*`
-(poza `.env.example`) → `.tf/factory/check.py` zielony → treść commita przechodzi `scripts/check_commit_message.py`
-(gdy jest) → wpis w dzienniku i zamknięcie punktu kontrolnego (gdy podane) → `git add -A` i `git commit -F`.
-**Pushu nie robi**: wypisuje polecenie `git push -u origin <gałąź>` do uruchomienia osobno — strażnik guard_bash pyta
-o push człowieka, a skrypt nie może tego obchodzić. Plik z treścią commita trzymaj poza repozytorium (scratchpad).
+Order (stops at the first error): the branch is not main/master → the changes contain no `.env*` files
+(except `.env.example`) → `.tf/factory/check.py` is green → the commit message passes `scripts/check_commit_message.py`
+(when present) → a log entry and closing the checkpoint (when given) → `git add -A` and `git commit -F`.
+**It does not push**: it prints the `git push -u origin <branch>` command to run separately — the guard_bash guard asks
+a human about a push, and the script must not circumvent that. Keep the commit message file outside the repository (scratchpad).
 """
 from __future__ import annotations
 
@@ -18,14 +18,14 @@ import subprocess
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Sygnały standardów z kodu (rekonstrukcja projektu, standardy zespołu): narzędzia z plików konfiguracji oraz
-konwencje policzone w kodzie — każda z udziałem, przykładami plik:linia i wyjątkami. To DANE do standardu, nie
-standard: regułę zapisujesz po obejrzeniu przykładów i wyjątków. Tylko biblioteka standardowa; kodu nie uruchamia.
+Standards signals from code (project reconstruction, team standards): tools from config files and
+conventions counted in the code — each with a share, file:line examples and exceptions. This is DATA for a standard, not a
+standard: you write the rule after reviewing the examples and exceptions. Standard library only; it does not run the code.
 
-  python3 standards_scan.py <repo>          # tekst
-  python3 standards_scan.py <repo> --json   # pełny wynik
+  python3 standards_scan.py <repo>          # text
+  python3 standards_scan.py <repo> --json   # full result
 
-Obszary: nazwy plików, układ pakietów (według funkcji czy warstw), testy (framework, położenie), idiomy testów (rodzaj testu na warstwę, dublery, struktura
-przypadków, buildery), idiomy kodu (np. ctx jako 1. argument, kolekcje tylko do odczytu, Post/Redirect/Get), błędy
-(szerokie łapanie), logowanie, dług (TODO/FIXME).
-Wartości `share` w procentach (zaokrąglone); `total` = pliki danego języka, których sygnał dotyczy.
+Areas: file names, package layout (by function or by layer), tests (framework, location), test idioms (test kind per layer, doubles, case
+structure, builders), code idioms (e.g. ctx as the 1st argument, read-only collections, Post/Redirect/Get), errors
+(broad catching), logging, debt (TODO/FIXME).
+`share` values are in percent (rounded); `total` = files of the given language the signal applies to.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ LANG = {".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "Java
         ".java": "Java", ".cs": "C#", ".go": "Go"}
 TEST = re.compile(r"(^|/)(tests?|__tests__|e2e|spec)/|\.(test|spec)\.|(^|/)test_[^/]*\.py$|_test\.(py|go)$|"
                   r"\.Tests?/|(Test|Tests|IT)\.java$|Tests?\.cs$")
-TOOLS = [  # (narzędzie, plik albo wzorzec nazwy, warunek treści)
+TOOLS = [  # (tool, file or name pattern, content condition)
     ("editorconfig", re.compile(r"^\.editorconfig$"), None),
     ("eslint", re.compile(r"^(eslint\.config\.\w+|\.eslintrc(\.\w+)?)$"), None),
     ("prettier", re.compile(r"^(\.prettierrc(\.\w+)?|prettier\.config\.\w+)$"), None),
@@ -65,7 +65,7 @@ LOGS = {"Python": [("logging", r"^\s*import logging|getLogger\("), ("structlog",
         "Java": [("slf4j", r"import org\.slf4j"), ("System.out", r"System\.(out|err)\.print")],
         "C#": [("ILogger", r"\bILogger(<\w+>)?\b"), ("Console", r"\bConsole\.Write(Line)?\(")],
         "Go": [("log/slog", r"\"log/slog\""), ("log", r"\"log\""), ("zap", r"go\.uber\.org/zap")]}
-TEST_IDIOMS = {  # w plikach testów: jak zespół testuje (wzorce do standardu testów)
+TEST_IDIOMS = {  # in test files: how the team tests (patterns for the test standard)
     "Java": [("@WebMvcTest (web layer test)", r"@WebMvcTest\b"), ("@DataJpaTest (repository test)", r"@DataJpaTest\b"),
              ("@SpringBootTest (integration test)", r"@SpringBootTest\b"), ("@MockitoBean/@MockBean", r"@Mock(ito)?Bean\b"),
              ("Mockito (mock/when)", r"\bMockito\.|\bwhen\(|@Mock\b"), ("Testcontainers", r"@Testcontainers\b|\bTestcontainers\b|Container<"),
@@ -82,7 +82,7 @@ TEST_IDIOMS = {  # w plikach testów: jak zespół testuje (wzorce do standardu 
     "TypeScript": [("describe/it", r"\bdescribe\(|\bit\("), ("test.each/it.each", r"\b(test|it)\.each\b"),
                    ("vi.mock/jest.mock", r"\b(vi|jest)\.mock\("), ("Testing Library", r"@testing-library/"), ("msw", r"from ['\"]msw")],
     "JavaScript": [("describe/it", r"\bdescribe\(|\bit\("), ("vi.mock/jest.mock", r"\b(vi|jest)\.mock\(")]}
-CODE_IDIOMS = {  # w kodzie produkcyjnym: idiomy, które warto zapisać w standardzie
+CODE_IDIOMS = {  # in production code: idioms worth recording in the standard
     "Go": [("context.Context as first argument", r"^func (\([^)]*\) )?\w+\(\s*\w+ context\.Context\b"),
            ("sentinel errors (errors.New in var)", r"^\s*Err\w+\s*=\s*errors\.New\("), ("error wrapping (%w)", r"%w")],
     "Java": [("constructor injection (final fields)", r"^\s*private final \w+"), ("@Autowired on field", r"@Autowired\s*\n?\s*private"),
@@ -152,7 +152,7 @@ def scan(root: str) -> dict:
         prod = [p for p in files if not TEST.search(p)]
         tests = [p for p in files if TEST.search(p)]
         texts = {p: read(root, p) for p in files}
-        # nazwy plików (produkcyjnych): styl dominujący + wyjątki
+        # (production) file names: the dominant style + exceptions
         stems = {p: os.path.basename(p).split(".")[0] for p in prod}
         styles = {p: next((k for k, rx in NAMING.items() if rx.match(s)), "other") for p, s in stems.items()}
         cnt = collections.Counter(v for v in styles.values() if v != "lowercase")
@@ -161,7 +161,7 @@ def scan(root: str) -> dict:
             ok = [p for p, v in styles.items() if v in (top, "lowercase")]
             sigs.append(signal("file names", lang, top, ok, len(prod), ok,
                                [f"{p} ({styles[p]})" for p in prod if p not in ok]))
-        # układ pakietów: katalog z różnymi rolami plików (według funkcji) czy katalog nazwany jak warstwa
+        # package layout: a directory with files of different roles (by function) or a directory named like a layer
         dirs = collections.defaultdict(list)
         for p in prod:
             dirs[os.path.dirname(p)].append(os.path.basename(p).split(".")[0])
@@ -175,7 +175,7 @@ def scan(root: str) -> dict:
         if layered:
             sigs.append(signal("layout", lang, "packages by layer (directory = layer)", layered, len(dirs),
                                [f"{d}/" for d in layered], feature))
-        # testy: framework i położenie
+        # tests: framework and location
         for fw, rx in TEST_FW.get(lang, []):
             hit = {p: lines_matching(texts[p], rx) for p in tests}
             hit = {p: l for p, l in hit.items() if l}
@@ -189,14 +189,14 @@ def scan(root: str) -> dict:
             col = [p for p in tests if p not in sep]
             if col:
                 sigs.append(signal("tests", lang, "test next to code", col, len(tests), col, sep))
-        # idiomy: testów (w testach) i kodu (w kodzie produkcyjnym)
+        # idioms: of tests (in tests) and of code (in production code)
         for area, table, pool in (("test idioms", TEST_IDIOMS, tests), ("code idioms", CODE_IDIOMS, prod)):
             for rule, rx in table.get(lang, []):
                 hit = {p: lines_matching(texts[p], rx) for p in pool}
                 hit = {p: l for p, l in hit.items() if l}
                 if hit:
                     sigs.append(signal(area, lang, rule, list(hit), len(pool), [f"{p}:{l[0]}" for p, l in hit.items()]))
-        # błędy, logowanie, dług — w kodzie produkcyjnym
+        # errors, logging, debt — in production code
         for area, table in (("errors", BROAD), ("logging", LOGS)):
             for rule, rx in table.get(lang, []):
                 hit = {p: lines_matching(texts[p], rx) for p in prod}

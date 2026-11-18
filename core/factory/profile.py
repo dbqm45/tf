@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Profil kosztów zespołu — jeden przełącznik między ceną a jakością.
+Team cost profile — one switch between price and quality.
 
-  python3 .tf/factory/profile.py                 # aktywny profil, modele tierów i ustawienia sesji
-  python3 .tf/factory/profile.py economy       # przełącz (też: balanced, quality)
+  python3 .tf/factory/profile.py                 # the active profile, tier models and session settings
+  python3 .tf/factory/profile.py economy       # switch (also: balanced, quality)
   python3 .tf/factory/profile.py quality --dry-run
-  python3 .tf/factory/profile.py economy --team-only   # bez zmian w .claude/settings.local.json
+  python3 .tf/factory/profile.py economy --team-only   # without changes in .claude/settings.local.json
 
-Profil (.tf/config/config.yaml → profiles) robi dwie rzeczy:
-1. nadpisuje model i effort tierów (fast/std/deep), więc po przebudowaniu wszyscy agenci i persony dostają
-   nowe modele — role dalej wskazują tier, nie model;
-2. ustawia sesję w `.claude/settings.local.json` (osobisty plik, poza gitem): effortLevel, autoCompactWindow
-   i advisorModel (doradca: mocniejszy model, którego Claude sam wzywa przy trudnych decyzjach).
+A profile (.tf/config/config.yaml → profiles) does two things:
+1. overrides the model and effort of the tiers (fast/std/deep), so after a rebuild all agents and personas get
+   new models — roles still point to a tier, not a model;
+2. sets the session in `.claude/settings.local.json` (a personal file, outside git): effortLevel, autoCompactWindow
+   and advisorModel (the advisor: a stronger model that Claude itself calls on hard decisions).
 
-Wybór zapisuje w `.claude/factory-profile.json`. Klucze ustawione przez poprzedni profil usuwa tylko wtedy, gdy
-mają wciąż wartość, którą profil wpisał — Twoich własnych ustawień nie rusza.
-Zmiana działa od nowej sesji (`/clear` albo ponowne uruchomienie `claude`); zmiana modelu w trakcie sesji kasuje cache.
+The choice is saved in `.claude/factory-profile.json`. Keys set by the previous profile are removed only if
+they still hold the value the profile wrote — your own settings are not touched.
+The change takes effect from a new session (`/clear` or restarting `claude`); changing the model mid-session clears the cache.
 """
 from __future__ import annotations
 
@@ -24,14 +24,14 @@ import subprocess
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -42,7 +42,7 @@ MANAGED = ("effortLevel", "autoCompactWindow", "advisorModel", "model")
 
 
 def _tf_config(root: Path) -> dict:
-    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    """Factory configuration: the engine default with project overrides (.tf/config/config.yaml) — packs.load_config."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
     mod = importlib.util.module_from_spec(spec)
@@ -52,7 +52,7 @@ def _tf_config(root: Path) -> dict:
 def load_cfg() -> dict:
     try:
         import yaml
-    except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
+    except ImportError:  # bundled copy of PyYAML (.tf/factory/_vendor)
         sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
         import yaml
     return _tf_config(ROOT) or {}
@@ -110,7 +110,7 @@ def main(argv: list[str]) -> int:
     local = read_json(LOCAL_SETTINGS)
     new_local = dict(local)
     changes = []
-    for k, v in prev_set.items():                      # sprzątanie po poprzednim profilu
+    for k, v in prev_set.items():                      # cleaning up after the previous profile
         if k not in want and new_local.get(k) == v:
             new_local.pop(k)
             changes.append(f"  − {k} (set by the previous profile)")

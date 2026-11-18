@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-Próba scenariusza symulacji ES bez człowieka i bez gospodarza: gotowe wypowiedzi facylitatora z pliku próby, rundy
-przez es_sim.py, uczestnicy jako osobne wywołania modelu bez narzędzi (`claude -p`), na końcu coach. Sprawdza, czy
-scenariusz działa: czy wiedza ukryta wychodzi, czy celowe sprzeczności dają hot spoty, czy karty osób zachowują się
-zgodnie z opisem, ile odpowiedzi to niepoprawny JSON. Płatne — uruchamiaj tylko za zgodą człowieka.
+A probe of an ES simulation scenario without a human and without a host: ready facilitator utterances from a trial file, rounds
+through es_sim.py, participants as separate model calls without tools (`claude -p`), the coach at the end. It checks whether the
+scenario works: whether hidden knowledge comes out, whether deliberate contradictions yield hot spots, whether the persona cards behave
+as described, how many answers are invalid JSON. Paid — run only with the human's consent.
 
   es_probe.py --variant pelna|oszczedna [--scenario veterinary] [--probe <trial.json>] [--id <id>]
               [--coach full|light|none] [--budget-usd 2.5]
 
-Plik próby (domyślnie scenarios/<scenariusz>/trial.json):
-  {"lines": ["<wypowiedź facylitatora>", {"invite": "<id osoby>"}, …],
-   "expect": {"hidden": [{"fact": "…", "any": ["słowo", …]}],
-              "contradictions": [{"name": "…", "hot_spot_any": ["słowo", …]}],
+Trial file (default scenarios/<scenario>/trial.json):
+  {"lines": ["<facilitator's utterance>", {"invite": "<persona id>"}, …],
+   "expect": {"hidden": [{"fact": "…", "any": ["word", …]}],
+              "contradictions": [{"name": "…", "hot_spot_any": ["word", …]}],
               "behaviour": [{"round": 1, "persona": "<id>", "speaks": true | "max_sentences": 1, "why": "…",
-                             "skip_variants": [<nr wariantu dnia od 0>, …]}]}}
+                             "skip_variants": [<variant-of-the-day no. from 0>, …]}]}}
 
-Model: zmienna ES_PROBE_CMD (lista JSON, np. atrapa w testach) zastępuje `claude -p` bez narzędzi i bez MCP; skrypt
-dokłada `--model` i `--system-prompt`. Wynik: docs/training/es-sim/<id>/probe-report.md (+ debrief.md coacha).
-Kod wyjścia: 0 — wszystkie oczekiwania spełnione, 1 — nie wszystkie, 2 — złe wywołanie, 3 — przekroczony budżet.
+Model: the ES_PROBE_CMD variable (a JSON list, e.g. a stub in tests) replaces `claude -p` without tools and without MCP; the script
+adds `--model` and `--system-prompt`. Result: docs/training/es-sim/<id>/probe-report.md (+ the coach's debrief.md).
+Exit code: 0 — all expectations met, 1 — not all, 2 — bad invocation, 3 — budget exceeded.
 """
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def sim(env: dict, *args: str) -> str:
 
 def call_model(system: str, prompt: str, model: str) -> tuple[str, float]:
     base = json.loads(os.environ["ES_PROBE_CMD"]) if os.environ.get("ES_PROBE_CMD") else DEFAULT_CMD
-    with tempfile.TemporaryDirectory() as cwd:   # poza projektem: bez hooków i plików projektu
+    with tempfile.TemporaryDirectory() as cwd:   # outside the project: no hooks and no project files
         r = subprocess.run([*base, "--model", model, "--system-prompt", system], input=prompt, capture_output=True,
                            text=True, cwd=cwd, timeout=600)
     try:
@@ -93,7 +93,7 @@ def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool | None,
     for b in expect.get("behaviour", []):
         var = st.get("day_variant", {}).get(b["persona"])
         what = f"round {b['round']}, {b['persona']} (day variant {'—' if var is None else var + 1}): {b.get('why', '')}"
-        if var in b.get("skip_variants", []):   # wariant dnia z karty zmienia temperament — zachowanie może być inne
+        if var in b.get("skip_variants", []):   # the card's variant of the day changes the temperament — the behaviour may differ
             out.append((None, "persona card", what + " (skipped for this day variant)"))
             continue
         d = (rounds.get(b["round"], {}).get("replies", {}).get(b["persona"], {}) or {}).get("dialogue", "")

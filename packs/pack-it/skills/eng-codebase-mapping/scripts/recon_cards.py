@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-Karty modułów (JSON od wykonawców) → czytelne `modules/<karta>.md` z dowodami `plik:linia`, bez modelu. Dzięki temu
-dowody i cytaty z kart sprawdza `recon_check.py`, a szczegóły modułów (wejścia, dane, reguły, pojęcia) trafiają do
-dokumentacji, nie tylko do JSON. Pierwsza linia .md to skrót treści karty — `recon_check.py --final` porównuje go z kartą.
+Module cards (JSON from workers) → readable `modules/<card>.md` with `file:line` evidence, without a model. This way
+the evidence and quotes in the cards are checked by `recon_check.py`, and module details (entries, data, rules, concepts) go to
+the documentation, not only to JSON. The first line of the .md is a digest of the card content — `recon_check.py --final` compares it with the card.
 
-  python3 recon_cards.py docs/project/00-reconstruction/modules            # zapisuje .md obok kart
-  python3 recon_cards.py docs/project/00-reconstruction/modules --summary  # + propozycja sekcji „Moduły” raportu
-  python3 recon_cards.py <modules/> --repo <repo>   # dowody ze ścieżką względną wobec partii → ścieżka od korzenia
-  python3 recon_cards.py <modules/> --rules         # + rules.md obok modules/: reguły z kart pogrupowane po module
-  python3 recon_cards.py <modules/> --into report.md   # sekcja „## Modules” raportu = wpisy z kart (reszta bez zmian)
-  python3 recon_cards.py <modules/> --prev raw/cards-prev   # po odświeżeniu: miejsca, które mogą opisywać stan sprzed zmiany
+  python3 recon_cards.py docs/project/00-reconstruction/modules            # writes .md next to the cards
+  python3 recon_cards.py docs/project/00-reconstruction/modules --summary  # + a proposed "Modules" section of the report
+  python3 recon_cards.py <modules/> --repo <repo>   # evidence with a path relative to the batch → path from the root
+  python3 recon_cards.py <modules/> --rules         # + rules.md next to modules/: card rules grouped by module
+  python3 recon_cards.py <modules/> --into report.md   # the "## Modules" section of the report = entries from the cards (the rest unchanged)
+  python3 recon_cards.py <modules/> --prev raw/cards-prev   # after a refresh: places that may describe the pre-change state
 
---prev paruje reguły starej i nowej karty: ten sam plik dowodu i podobny tekst (wspólne rdzenie słów). Reguła bez pary
-jest usunięta i daje wszystkie swoje znaczniki: liczby, wzorce, identyfikatory jak 409, \\d{10}, int.MaxValue,
-DuplicateException. Reguła z parą, ale z innym cytatem, jest zmieniona i daje te znaczniki starej reguły, których nie
-ma w cytacie nowej (tekst nowej reguły bywa wzmianką o starej wartości, np. „było 10”). Znaczników szuka w plikach .md dokumentacji (bez raw/); linia trafia na listę, gdy zawiera
-znacznik jako całe słowo i rdzeń słowa z tej samej starej reguły (bez dowodów w `…` i cytatów w "…" / „…”). To lista do przejrzenia, nie bramka: dokument może celowo
-wspominać starą wartość.
+--prev pairs the rules of the old and new card: the same evidence file and similar text (shared word stems). A rule without a pair
+is removed and yields all its markers: numbers, patterns, identifiers like 409, \\d{10}, int.MaxValue,
+DuplicateException. A rule with a pair but a different quote is changed and yields those markers of the old rule that are not
+in the new rule's quote (the new rule's text may mention the old value, e.g. "was 10"). The markers are searched for in the documentation .md files (without raw/); a line goes on the list when it contains
+a marker as a whole word and a word stem from the same old rule (without evidence in `…` and quotes in "…" / „…”). It is a list to review, not a gate: a document may deliberately
+mention the old value.
 
-Z --repo: gdy pliku z dowodu nie ma od korzenia repo, a w katalogu partii (pole `batch`) jest dokładnie jeden plik
-o tej końcówce ścieżki, dowód dostaje pełną ścieżkę. Dwuznaczne zostają bez zmian (zgłosi je recon_check.py).
+With --repo: when the evidence file is not there from the repo root, and the batch directory (the `batch` field) has exactly one file
+with that path ending, the evidence gets the full path. Ambiguous ones stay unchanged (recon_check.py reports them).
 
-Element karty bez dowodu dostaje oznaczenie [niezweryfikowane: brak dowodu w karcie], niewiadome — [niezweryfikowane].
-Kod wyjścia: 0 — w porządku, 1 — któraś karta nie jest poprawnym JSON, 2 — złe wywołanie.
+A card item without evidence gets the mark [unverified: no evidence in the card], unknowns — [unverified].
+Exit code: 0 — OK, 1 — a card is not valid JSON, 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ WORD = re.compile(r"[^\W\d_]{5,}")
 
 
 def distinctive(tok: str) -> bool:
-    """Znacznik faktu: liczba (≥ 2 cyfry), wzorzec, identyfikator z wielką literą w środku albo z kropką."""
+    """Fact marker: a number (≥ 2 digits), a pattern, an identifier with a capital letter inside or with a dot."""
     tok = tok.strip(".")
     if not re.search(r"[A-Za-z0-9]{2,}", tok):
         return False
@@ -57,7 +57,7 @@ def stems(text: str) -> set[str]:
     return {w.lower()[:4] for w in WORD.findall(text)}
 
 
-PROSE = re.compile(r"`[^`]*`|\"[^\"]*\"|„[^”]*”")   # dowody i cytaty — nie są opisem do sprawdzenia
+PROSE = re.compile(r"`[^`]*`|\"[^\"]*\"|„[^”]*”")   # evidence and quotes — not a description to check
 
 
 def has_token(line: str, tok: str) -> bool:
@@ -73,7 +73,7 @@ def ev_file(rule: dict) -> str:
 
 
 def marks(text: str) -> set[str]:
-    """Znaczniki faktu z tekstu i liczby (≥ 2 cyfry) z ich wnętrza, np. 10 z \\d{10}."""
+    """Fact markers from the text and numbers (≥ 2 digits) from inside them, e.g. 10 from \\d{10}."""
     out = set()
     for t in TOKEN.findall(text):
         t = t.strip(".")
@@ -97,7 +97,7 @@ def load_cards(d: str) -> dict:
 
 
 def rule_changes(prev_dir: str, cur_dir: str) -> list[dict]:
-    """Reguły usunięte, zmienione i nowe: pary stara–nowa po pliku dowodu i podobieństwie tekstu, ze znacznikami."""
+    """Removed, changed and new rules: old–new pairs by evidence file and text similarity, with markers."""
     old, new = load_cards(prev_dir), load_cards(cur_dir)
     out = []
     for stem in sorted(set(old) | set(new)):
@@ -120,8 +120,8 @@ def rule_changes(prev_dir: str, cur_dir: str) -> list[dict]:
             same_quote = str(n.get("quote", "")).strip() == str(r.get("quote", "")).strip()
             same_text = " ".join(str(n.get("rule", "")).split()) == " ".join(str(r.get("rule", "")).split())
             if same_quote and same_text:
-                continue                                    # ta sama reguła
-            if same_quote:                                  # cytat ten sam (np. ucięty), zmieniony opis
+                continue                                    # the same rule
+            if same_quote:                                  # the same quote (e.g. truncated), changed description
                 toks = marks(str(r.get("rule", ""))) - marks(f"{n.get('rule', '')} {n.get('quote', '')}")
             else:
                 toks = marks(text) - marks(str(n.get("quote", "")))
@@ -132,7 +132,7 @@ def rule_changes(prev_dir: str, cur_dir: str) -> list[dict]:
 
 
 def stale_candidates(prev_dir: str, cur_dir: str, root: str) -> list[tuple[str, int, str, str]]:
-    """Linie dokumentacji ze znacznikiem, który zniknął z reguł karty, i rdzeniem słowa z tej samej starej reguły."""
+    """Documentation lines with a marker that vanished from the card rules, and a word stem from the same old rule."""
     probes = [(t, stems(f"{c['old'].get('rule', '')} {c['old'].get('quote', '')}"))
               for c in rule_changes(prev_dir, cur_dir) if c["old"] for t in c["marks"]]
     hits = []
@@ -153,7 +153,7 @@ def stale_candidates(prev_dir: str, cur_dir: str, root: str) -> list[tuple[str, 
 
 
 def resolver(repo: str | None, batch: str):
-    """Funkcja poprawiająca dowód `plik:linia` względny wobec partii na ścieżkę od korzenia repo."""
+    """Fixes a `file:line` evidence relative to the batch into a path from the repo root."""
     if not repo or not batch:
         return lambda e: e
     files = []
@@ -213,7 +213,7 @@ def render(stem: str, card: dict, digest: str, repo: str | None = None) -> str:
 
 
 def summary(stem: str, card: dict, repo: str | None = None) -> str:
-    """Wpis do sekcji „Modules” raportu: cel, pierwszy dowód, do 4 kluczowych elementów, odnośnik do .md."""
+    """An entry for the report's "Modules" section: purpose, first evidence, up to 4 key items, a link to the .md."""
     first = next((i for k in ("entry_points", "rules", "terms", "depends_on", "data", "deviations")
                   for i in card.get(k) or [] if isinstance(i, dict) and i.get("evidence")), None)
     keys = ([i.get("what") for i in card.get("entry_points") or [] if isinstance(i, dict)][:3]
@@ -228,7 +228,7 @@ def summary(stem: str, card: dict, repo: str | None = None) -> str:
 
 
 def inject(report: str, lines: list[str]) -> int:
-    """Podmienia treść sekcji „## Modules” w raporcie na wpisy z kart; zwraca 1, gdy raportu albo sekcji brak."""
+    """Replaces the content of the "## Modules" section in the report with entries from the cards; returns 1 when the report or section is missing."""
     try:
         with open(report, encoding="utf-8") as fh:
             text = fh.read()
@@ -305,7 +305,7 @@ def main(argv: list[str]) -> int:
         try:
             with open(path, encoding="utf-8") as fh:
                 old = fh.read()
-            m = re.search(r"^## (?:Cross-cutting rules|Reguły przekrojowe)", old, re.M)   # sekcja syntezy zostaje przy ponownym składaniu
+            m = re.search(r"^## (?:Cross-cutting rules|Reguły przekrojowe)", old, re.M)   # the synthesis section stays on reassembly
             keep = "\n" + old[m.start():] if m else ""
         except OSError:
             pass

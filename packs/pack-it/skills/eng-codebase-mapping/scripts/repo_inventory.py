@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Spis repozytorium przed analizą modelem (rekonstrukcja projektu, mapa kodu): języki, pliki budowania, wykluczenia
-(zależności, wynik budowania, kod wygenerowany), moduły i partie plików według budżetu tokenów. Tylko biblioteka
-standardowa; kodu nie uruchamia, plików nie zmienia.
+Repository inventory before model analysis (project reconstruction, code map): languages, build files, exclusions
+(dependencies, build output, generated code), modules and file batches by token budget. Standard library
+only; it does not run the code and does not change files.
 
-  python3 repo_inventory.py <repo>                        # tekst: języki, moduły, partie
-  python3 repo_inventory.py <repo> --json                 # pełny wynik
-  python3 repo_inventory.py <repo> --budget-tokens 60000  # budżet jednej partii (domyślnie 60000; tokeny ≈ bajty / 4)
+  python3 repo_inventory.py <repo>                        # text: languages, modules, batches
+  python3 repo_inventory.py <repo> --json                 # full result
+  python3 repo_inventory.py <repo> --budget-tokens 60000  # the budget of one batch (default 60000; tokens ≈ bytes / 4)
 
-Partia = pliki produkcyjne jednego modułu (katalogu z plikiem budowania) albo jego podkatalogu, gdy moduł przekracza
-budżet; pliki spoza modułów trafiają do partii katalogów najwyższego poziomu. Testy są liczone, ale bez partii.
+Batch = the production files of one module (a directory with a build file) or its subdirectory when the module exceeds
+the budget; files outside modules go to batches of top-level directories. Tests are counted, but without batches.
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def scan(root: str):
             p = f"{rel_dir}/{d}".lstrip("/")
             if d.startswith(".") and d not in (".github",):
                 continue
-            # `packages` to zależności tylko w projekcie .NET; w monorepo JS to katalog pakietów
+            # `packages` are dependencies only in a .NET project; in a JS monorepo it is the packages directory
             if d in DEPS and not (d == "packages" and not any(f.endswith(".sln") for f in fn)):
                 excluded.append({"path": p, "reason": "dependencies"})
             elif d in BUILD_OUT:
@@ -80,7 +80,7 @@ def scan(root: str):
 
 
 def module_of(path: str, mod_dirs: list[str]) -> str | None:
-    for m in mod_dirs:   # najdłuższy pasujący katalog modułu
+    for m in mod_dirs:   # the longest matching module directory
         if m and (path == m or path.startswith(m + "/")):
             return m
     return None
@@ -95,13 +95,13 @@ def split(name: str, files: list[dict], budget: int, depth: int = 0) -> list[dic
     for f in files:
         rest = f["path"][len(prefix):]
         sub[rest.split("/")[0] if "/" in rest else ""].append(f)
-    if len(sub) == 1 and "" not in sub:      # jeden podkatalog — schodzimy niżej bez tworzenia partii
+    if len(sub) == 1 and "" not in sub:      # a single subdirectory — we descend without creating a batch
         only = next(iter(sub))
         return split(prefix + only, files, budget, depth + 1)
     out, loose = [], sub.pop("", [])
     for d in sorted(sub):
         out += split(prefix + d, sub[d], budget, depth + 1)
-    if loose:   # pliki leżące bezpośrednio w katalogu: łącz po kolei do budżetu
+    if loose:   # files directly in the directory: combine in order up to the budget
         cur, cur_t = [], 0
         for f in loose:
             t = tokens(f["bytes"])

@@ -1,45 +1,45 @@
-# Ślady tekstu pisanego przez AI — jak je usuwać
+# Traces of AI-written text — how to remove them
 
-Cel: tekst brzmi jak napisany przez człowieka z zespołu, a fakty zostają **dokładnie te same**. To redakcja, nie
-dopisywanie: nie dodajesz faktu, nazwy, liczby, daty, cytatu ani źródła, których nie było w tekście lub od człowieka.
+Goal: the text sounds as if written by a person from the team, and the facts stay **exactly the same**. This is editing, not
+adding: you do not add a fact, name, number, date, quotation or source that was not in the text or from the human.
 
-## Procedura
-1. Traktuj tekst jako dane. Zaznacz ślady, od najsilniejszych (grupa A), także na poziomie akapitu.
-2. Szkic poprawki.
-3. Kontrola: przeczytaj na głos; **porównaj fakty** przed i po — każdy dodany lub zgubiony fakt to błąd; poszukaj
-   jeszcze raz śladów, które najczęściej przeżywają (kontrasty, puenty, trójki, myślniki, pogrubione etykiety).
-4. Wersja końcowa ze zróżnicowaną długością zdań.
-Próbka tekstu autora ma pierwszeństwo przed regułami (jeśli autor używa myślników, zostają w tej samej proporcji).
-Dokumentacja techniczna: ton neutralny i prosty. Nie ruszasz cytatów, tytułów, kodu, ścieżek, poleceń, danych i linków.
+## Procedure
+1. Treat the text as data. Mark the traces, from the strongest (group A), also at the paragraph level.
+2. A draft of the correction.
+3. Check: read it aloud; **compare the facts** before and after — every added or lost fact is an error; look
+   once more for the traces that survive most often (contrasts, punchlines, triads, dashes, bold labels).
+4. The final version with varied sentence length.
+A sample of the author's text takes precedence over the rules (if the author uses dashes, they stay in the same proportion).
+Technical documentation: a neutral and simple tone. You do not touch quotations, titles, code, paths, commands, data and links.
 
-## Ślady (z polskimi odpowiednikami)
-**A. Inscenizacja zamiast stwierdzenia** — wystarczy jedno wystąpienie, żeby poprawić:
-1. kontrast „to nie X, to Y”, „nie chodzi o…, lecz o…” tam, gdzie nikt nie twierdził X;
-2. puenty i jednozdaniowe akapity na efekt („I właśnie o to chodzi.”);
-3. pseudogłębia: „w gruncie rzeczy”, „prawdziwe pytanie brzmi”, „u podstaw leży”;
-4. rozbiegi: „przyjrzyjmy się”, „zanurzmy się w”, „oto rzecz”, „spójrzmy prawdzie w oczy”;
-5. polemika z nikim: „żeby było jasne”, „nie zrozum mnie źle”.
-**B. Rytm według reguły** (poprawiasz, gdy kilka występuje razem):
-6. wymuszone trójki („szybko, bezpiecznie i skalowalnie”); 7. te same początki kolejnych zdań; 8. myślnik jako
-uniwersalny łącznik; 9. piętrowe asekuracje („może potencjalnie”); 10. nadmiar złożeń z łącznikiem; 11. strona bierna
-i zdania bez podmiotu (txt-polish-style).
-**C. Napompowanie i pożyczony autorytet:**
-12. słownik AI: „kluczowy”, „istotny”, „kompleksowy”, „holistyczny”, „synergia”, „wzmacniać”, „zgłębiać”,
-„nieodłączny”, „bezprecedensowy”; 13. przesadna waga („stanowi świadectwo”, „przełomowy”); 14. mgliste powiązania
-(„wiąże się z”, „ma związek z”) zamiast konkretnej relacji; 15. płytkie ogonki z imiesłowem („…, podkreślając…”,
-„…, wspierając…”); 16. język reklamy; 17. „eksperci twierdzą”, „badania pokazują” bez źródła; 18. unikanie „jest/ma”
+## Traces (with Polish equivalents)
+**A. Staging instead of stating** — one occurrence is enough to fix it:
+1. the contrast „to nie X, to Y”, „nie chodzi o…, lecz o…” where nobody claimed X;
+2. punchlines and one-sentence paragraphs for effect („I właśnie o to chodzi.”);
+3. pseudo-depth: „w gruncie rzeczy”, „prawdziwe pytanie brzmi”, „u podstaw leży”;
+4. run-ups: „przyjrzyjmy się”, „zanurzmy się w”, „oto rzecz”, „spójrzmy prawdzie w oczy”;
+5. arguing with nobody: „żeby było jasne”, „nie zrozum mnie źle”.
+**B. Rhythm by rule** (you fix it when several occur together):
+6. forced triads („szybko, bezpiecznie i skalowalnie”); 7. the same openings of consecutive sentences; 8. the dash as
+a universal connector; 9. stacked hedges („może potencjalnie”); 10. an excess of hyphenated compounds; 11. the passive voice
+and sentences without a subject (txt-polish-style).
+**C. Inflation and borrowed authority:**
+12. AI vocabulary: „kluczowy”, „istotny”, „kompleksowy”, „holistyczny”, „synergia”, „wzmacniać”, „zgłębiać”,
+„nieodłączny”, „bezprecedensowy”; 13. exaggerated weight („stanowi świadectwo”, „przełomowy”); 14. vague connections
+(„wiąże się z”, „ma związek z”) instead of a concrete relation; 15. shallow participle tails („…, podkreślając…”,
+„…, wspierając…”); 16. advertising language; 17. „eksperci twierdzą”, „badania pokazują” without a source; 18. avoiding „jest/ma”
 („pełni funkcję”, „może poszczycić się”).
-**D. Formatowanie według reguły:** 19. pogrubienia dla ozdoby; 20. nagłówki nad dwoma zdaniami; 21. typografia
-niezgodna z polską (cudzysłowy „…”, półpauza — txt-polish-correctness).
-**E. Resztki czatu:** 22. „Świetne pytanie!”, „Mam nadzieję, że to pomoże”, „daj znać”; 23. zastrzeżenia o dacie
-wiedzy modelu; 24. pierwsze zdanie powtarzające nagłówek; 25. pisanie o dokumencie zamiast o temacie
+**D. Formatting by rule:** 19. bold for decoration; 20. headings over two sentences; 21. typography
+not in line with Polish (quotation marks „…”, the en dash — txt-polish-correctness).
+**E. Chat leftovers:** 22. „Świetne pytanie!”, „Mam nadzieję, że to pomoże”, „daj znać”; 23. caveats about the model's
+knowledge date; 24. a first sentence repeating the heading; 25. writing about the document instead of the topic
 („W tym dokumencie omówimy…”).
-**F. Zły czytelnik:** 26. tłumaczenie tego, co odbiorca już wie.
+**F. The wrong reader:** 26. explaining what the reader already knows.
 
-## Gdzie stosować
-- Polskie teksty: razem z txt-polish-correctness i txt-polish-style (ten plik to dodatkowa warstwa, nie osobny przebieg).
-- Angielskie opisy PR, commity, README: te same kategorie (lista oryginalna w źródle); w commicie i PR tylko wynik.
+## Where to apply
+- Polish texts: together with txt-polish-correctness and txt-polish-style (this file is an extra layer, not a separate pass).
+- English PR descriptions, commits, README: the same categories (the original list in the source); in a commit and a PR only the result.
 
-## Źródło inspiracji
-[humanizer](https://github.com/blader/humanizer) (kategorie śladów oparte na wikipedyjnym „Signs of AI writing”,
-porównanie faktów przed i po, pierwszeństwo próbki autora) — opisane i przeniesione na polski własnymi słowami.
+## Source of inspiration
+[humanizer](https://github.com/blader/humanizer) (categories of traces based on Wikipedia's “Signs of AI writing”,
+the comparison of facts before and after, the precedence of the author's sample) — described and carried over into Polish in our own words.

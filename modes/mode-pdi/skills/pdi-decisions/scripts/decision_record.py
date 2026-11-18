@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
 """
-Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0.5.0 z `source_reported_at`) i planem wydania z kontraktu 0.4.0
-(contract/release-plan.schema.json, kopia obok skryptu) — tryb mode-pdi.
+Change log conforming to the pdi 0.3.0 contract (contract/change.schema.json; from 0.5.0 with `source_reported_at`) and the release plan from contract 0.4.0
+(contract/release-plan.schema.json, a copy next to the script) — mode-pdi.
 
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new CHG-12 [--source PRB-34] [--author NAME]
-      [--source-reported-at RRRR-MM-DD]   (dzień zgłoszenia, z pdi; kontrakt 0.5.0)
-      tworzy docs/project/changes/CHG-12/ z intent.md, plan.md, decisions.md i release.yaml (szablony obok skryptu)
+      [--source-reported-at YYYY-MM-DD]   (the report date, from pdi; contract 0.5.0)
+      creates docs/project/changes/CHG-12/ with intent.md, plan.md, decisions.md and release.yaml (templates next to the script)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py check [--change CHG-n]
-      sprawdza nagłówki artefaktów i wpisy decyzji w docs/project/changes/*/, a release.yaml — schematem z kontraktu
-      i spójnością: mvp.release wśród linii, TSK w jednej linii i zgodne z plan.md (tasks, kolumny Wydanie i Flaga),
-      flaga z etapami (rollout) i datą usunięcia (remove_by), TSK flagi w liniach; w plan.md samokontrolę planu cięć
-      (fundament z „Odblokowuje” wskazującym TSK tej zmiany, cięcie z ID wymagania albo weryfikacją — jak REL-008)
-      folder zadania fabryki (z `task.json`, bez `intent.md`, np. zadanie cięcia CHG-12-TSK-57) jest pomijany — jego
-      pliki nie są artefaktami zmiany
+      checks artifact headers and decision entries in docs/project/changes/*/, and release.yaml — against the contract schema
+      and for consistency: mvp.release among the lines, TSK in a single line and matching plan.md (tasks, the Wydanie and Flaga columns),
+      flag with stages (rollout) and a removal date (remove_by), flag TSKs in the lines; in plan.md the cut-plan self-check
+      (a foundation whose „Odblokowuje” points to a TSK of this change, a cut with a requirement ID or verification — like REL-008)
+      a factory task folder (with `task.json`, without `intent.md`, e.g. cut task CHG-12-TSK-57) is skipped — its
+      files are not change artifacts
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision add CHG-12 --statement "…" --why "…" \
-      --kind product --by "kto" [--date RRRR-MM-DD] [--source-kind claude-cli] [--drafted-by ai]
+      --kind product --by "who" [--date YYYY-MM-DD] [--source-kind claude-cli] [--drafted-by ai]
       [--finding DES-001:TSK-1 [--effect resolve|accept_risk|dismiss|confirm]]
-      dopisuje zatwierdzoną decyzję do decisions.md (ref CHG-12/Dn, id puste, sent: no); z --finding to odpowiedź
-      na ustalenie ci_for_sdlc (pole `finding`, statement = odpowiedź), którą ci_for_sdlc czyta z repo (PRB-16)
+      appends an approved decision to decisions.md (ref CHG-12/Dn, empty id, sent: no); with --finding it is an answer
+      to a ci_for_sdlc finding (field `finding`, statement = the answer), which ci_for_sdlc reads from the repo (PRB-16)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision pending [--change CHG-12]
-      JSON niewysłanych decyzji z gotowymi argumentami record_decision (MCP pdi)
+      JSON of unsent decisions with ready arguments for record_decision (pdi MCP)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision mark CHG-12/D1 --id DEC-41
-      wpisuje numer nadany przez rejestr pdi i sent: yes
+      records the number assigned by the pdi register and sent: yes
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision export
-      JSON wszystkich decyzji projektu (z numerem i stanem wysłania)
+      JSON of all project decisions (with number and sent state)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate CHG-12 --gate B1 --outcome approved \
-      --id DEC-41 [--by pdi] [--date RRRR-MM-DD] [--why "…"] [--answers PLIK]
-      decyzja ze skrzynki pdi (gate.decided, wejścia szablonu sdlc-phase.yml) jako wpis z numerem i sent: yes;
-      ponowienie z tym samym numerem nic nie dopisuje; --answers: JSON [{question, answer}] — odpowiedzi człowieka na
-      pytania z `## Gate questions` (dawniej `## Pytania do bramki`; kontrakt pdi 0.12.0, pole answers), w wpisie jako pary `question`/`answer`
-  python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision import CHG-12 --json PLIK
-      decyzje zmiany z rejestru pdi (links.chg; JSON lista {id, statement, why, decided_at, decided_by, kind,
-      source_kind, drafted_by, answers?}) jako wpisy z numerem, sent: yes i origin: pdi; decyzja, której numer
-      już jest w decisions.md, jest pomijana (ponowienie nic nie dopisuje)
+      --id DEC-41 [--by pdi] [--date YYYY-MM-DD] [--why "…"] [--answers FILE]
+      a decision from the pdi inbox (gate.decided, inputs of the sdlc-phase.yml template) as an entry with a number and sent: yes;
+      a repeat with the same number appends nothing; --answers: JSON [{question, answer}] — the human's answers to
+      questions from `## Gate questions` (formerly `## Pytania do bramki`; pdi contract 0.12.0, field answers), in the entry as `question`/`answer` pairs
+  python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision import CHG-12 --json FILE
+      decisions of the change from the pdi register (links.chg; JSON list {id, statement, why, decided_at, decided_by, kind,
+      source_kind, drafted_by, answers?}) as entries with a number, sent: yes and origin: pdi; a decision whose number
+      is already in decisions.md is skipped (a repeat appends nothing)
 
-Kod wyjścia: 0 — w porządku, 1 — błędy (z podpowiedzią), 2 — złe wywołanie.
+Exit code: 0 — OK, 1 — errors (with a hint), 2 — bad invocation.
 """
 import argparse
 import datetime as dt
@@ -56,13 +56,13 @@ KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
 # source.kind decyzji z kontraktu pdi 0.10.0 (decyzje z pdi: konsola, ci_for_sdlc, spotkania)
 SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual", "console", "ci_for_sdlc", "meeting")
 ENTRY = ("ref", "id", "sent", "date", "by", "kind", "why", "source", "drafted_by",
-         "finding", "effect",   # odpowiedź na ustalenie ci_for_sdlc
-         "origin")           # pdi — wpis z rejestru pdi (decision import)
-# Para wierszy odpowiedzi na pytanie bramki (kontrakt pdi 0.12.0, answers); w wpisie może być ich kilka.
+         "finding", "effect",   # answer to a ci_for_sdlc finding
+         "origin")           # pdi — an entry from the pdi register (decision import)
+# A pair of rows of an answer to a gate question (pdi contract 0.12.0, answers); an entry may have several.
 ANSWER_KEYS = ("question", "answer")
 ORIGINS = ("pdi",)
-TEXT_MAX = 2000   # jeden wiersz wpisu z danych z pdi
-# Id ustalenia ci_for_sdlc (reguła:element[:szczegół], np. DES-001:TSK-1) i skutek odpowiedzi (DECISION_EFFECTS w ci_for_sdlc).
+TEXT_MAX = 2000   # one entry row from pdi data
+# Id of a ci_for_sdlc finding (rule:element[:detail], e.g. DES-001:TSK-1) and the effect of the answer (DECISION_EFFECTS in ci_for_sdlc).
 FINDING = re.compile(r"^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[0-9]{3}:[A-Z][A-Z0-9]+-[0-9]+(?::\S{1,80})?$")
 EFFECTS = ("resolve", "accept_risk", "dismiss", "confirm")
 NEW = {"intent": "discovery", "plan": "plan", "decisions": "plan"}   # artefakty `change new` i ich faza
@@ -73,7 +73,7 @@ EMPTY_CELL = ("", "—", "-", "–")
 
 
 def parse_header(text: str) -> dict | None:
-    """Nagłówek YAML w prostej postaci z kontraktu: `klucz: wartość`, listy `[a, b]` albo `- a` w kolejnych wierszach."""
+    """The YAML header in the simple form from the contract: `key: value`, lists `[a, b]` or `- a` on consecutive lines."""
     if not text.startswith("---\n") or "\n---" not in text[4:]:
         return None
     out, last = {}, None
@@ -166,7 +166,7 @@ def check_file(path: Path) -> list[str]:
 
 
 def parse_entries(path: Path) -> list[dict]:
-    """Wpisy decyzji: nagłówek `## <co>` i lista `- pole: wartość`; wzór wpisu w komentarzu szablonu jest pomijany."""
+    """Decision entries: a `## <what>` heading and a `- field: value` list; the entry pattern in the template comment is skipped."""
     text = re.sub(r"<!--.*?-->", "", path.read_text(encoding="utf-8"), flags=re.S)
     out, cur = [], None
     for line in text.splitlines():
@@ -188,7 +188,7 @@ def parse_entries(path: Path) -> list[dict]:
 
 
 def one_line(text, limit: int = TEXT_MAX) -> str:
-    """Tekst z pdi w jednym wierszu wpisu (wpis to lista `- pole: wartość`), bez znaczników komentarza."""
+    """Text from pdi in one entry row (an entry is a `- field: value` list), without comment markers."""
     s = " ".join(str(text or "").split()).replace("<!--", "<! --").replace("-->", "-- >")
     return s if len(s) <= limit else s[:limit - 1] + "…"
 
@@ -198,7 +198,7 @@ def answers_lines(answers: list) -> str:
 
 
 def load_answers(path: str) -> list:
-    """Odpowiedzi z pliku JSON [{question, answer}] (pdi, kontrakt 0.12.0) jako pary albo Refused-podobny błąd."""
+    """Answers from a JSON file [{question, answer}] (pdi, contract 0.12.0) as pairs or a Refused-like error."""
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
@@ -264,7 +264,7 @@ def decision_add(a) -> int:
 
 
 def decision_gate(a) -> int:
-    """Decyzja podjęta w skrzynce pdi: numer nadał już rejestr, więc wpis od razu jest wysłany."""
+    """A decision made in the pdi inbox: the register already assigned the number, so the entry is sent right away."""
     f = decisions_file(a.key) if KEY.match(a.key) else None
     if f is None:
         print(f"✗ no {CHANGES / a.key / 'decisions.md'} — first run: decision_record.py change new {a.key}")
@@ -288,7 +288,7 @@ def decision_gate(a) -> int:
         return 0
     n = 1 + max([int(e["ref"].rsplit("D", 1)[1]) for e in entries if re.search(r"/D\d+$", e["ref"])] or [0])
     ref = f"{a.key}/D{n}"
-    # Ustalenie i uzasadnienie z pdi (PRB-3) w jednym wierszu, bo wpis to lista `- pole: wartość`.
+    # The finding and rationale from pdi (PRB-3) in one row, because an entry is a `- field: value` list.
     why = " ".join((a.why or "").split())
     why = f"{why} (decision in the pdi gate inbox, {a.id})" if why else (
         f"decision in the pdi gate inbox ({a.id}); rationale in the pdi registry")
@@ -321,7 +321,7 @@ def import_problems(d, n: int) -> list[str]:
 
 
 def decision_import(a) -> int:
-    """Decyzje zmiany z rejestru pdi (Z1, PRB-3): dopisuje te, których numeru jeszcze nie ma w decisions.md."""
+    """Change decisions from the pdi register (Z1, PRB-3): appends those whose number is not yet in decisions.md."""
     f = decisions_file(a.key) if KEY.match(a.key) else None
     if f is None:
         print(f"✗ no {CHANGES / a.key / 'decisions.md'} — first run: decision_record.py change new {a.key}")
@@ -404,7 +404,7 @@ def decision_export() -> int:
 
 
 def items_of(key: str) -> set[str]:
-    """Zmiana i jej cięcia (`tasks` w nagłówku plan.md i TSK z jego tabeli): elementy, których dotyczą jej ustalenia."""
+    """The change and its cuts (`tasks` in the plan.md header and the TSKs of its table): the elements its findings concern."""
     plan = CHANGES / key / "plan.md"
     text = plan.read_text(encoding="utf-8") if plan.is_file() else ""
     tasks = (parse_header(text) or {}).get("tasks") or []
@@ -456,7 +456,7 @@ def check_entries(path: Path) -> list[str]:
 def load_yaml(text: str):
     try:
         import yaml
-    except ImportError:   # dołączona kopia PyYAML (.tf/factory/_vendor), jak w skryptach pętli (skill tf)
+    except ImportError:   # bundled PyYAML copy (.tf/factory/_vendor), as in the loop scripts (skill tf)
         vendor = next((p / ".tf" / "factory" / "_vendor" for p in Path(__file__).resolve().parents
                        if (p / ".tf" / "factory" / "_vendor").is_dir()), None)
         if vendor is None:
@@ -470,7 +470,7 @@ def load_yaml(text: str):
 
 
 def plain(v):
-    """Daty z YAML (`remove_by: 2026-12-31`) jako tekst — schemat kontraktu opisuje je jako string."""
+    """YAML dates (`remove_by: 2026-12-31`) as text — the contract schema describes them as a string."""
     if isinstance(v, dict):
         return {str(k): plain(x) for k, x in v.items()}
     if isinstance(v, list):
@@ -479,8 +479,8 @@ def plain(v):
 
 
 def validate(v, s: dict, at: str) -> list[str]:
-    """Podzbiór JSON Schema użyty w kontrakcie pdi: type, required, additionalProperties, properties, items, pattern,
-    minLength, minItems, minimum, enum, const, allOf z if/then (warunek: pola wymagane przy danym stanie)."""
+    """Subset of JSON Schema used in the pdi contract: type, required, additionalProperties, properties, items, pattern,
+    minLength, minItems, minimum, enum, const, allOf with if/then (condition: fields required in a given state)."""
     types = {"object": dict, "array": list, "string": str, "integer": int}
     t = s.get("type")
     if t and (not isinstance(v, types[t]) or (t == "integer" and isinstance(v, bool))):
@@ -508,7 +508,7 @@ def validate(v, s: dict, at: str) -> list[str]:
             errs.append(f"{at}: '{v}' does not match {s['pattern']}")
     elif t == "integer" and "minimum" in s and v < s["minimum"]:
         errs.append(f"{at}: {v} < {s['minimum']}")
-    if "enum" in s and not isinstance(v, (dict, list)) and v not in s["enum"]:   # także bez type (warunki kontraktu)
+    if "enum" in s and not isinstance(v, (dict, list)) and v not in s["enum"]:   # also without type (contract conditions)
         errs.append(f"{at}: '{v}' not in {', '.join(map(str, s['enum']))}")
     for sub in s.get("allOf", []):
         if "if" in sub:
@@ -519,8 +519,8 @@ def validate(v, s: dict, at: str) -> list[str]:
     return errs
 
 
-PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odblokowuje", "weryfikacja")   # kontrakt pdi
-# Angielskie nagłówki kolumn (szablon od 4c-x, jak ci_for_sdlc connectors/repo.ts) → klucze wewnętrzne.
+PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odblokowuje", "weryfikacja")   # pdi contract
+# English column headers (template since 4c-x, like ci_for_sdlc connectors/repo.ts) → internal keys.
 # pl: sprzed 14.x — polskie nagłówki zostają przyjmowane.
 COLUMN_ALIASES = {"kind": "rodzaj", "release": "wydanie", "flag": "flaga", "flags": "flaga", "value": "wartość",
                   "requirements": "wymagania", "requirement": "wymagania", "unblocks": "odblokowuje",
@@ -528,7 +528,7 @@ COLUMN_ALIASES = {"kind": "rodzaj", "release": "wydanie", "flag": "flaga", "flag
 FOUNDATION = re.compile(r"^(fundament|foundation|f|f-\d+)$", re.I)   # jak REL-008 w ci_for_sdlc (connectors/repo.ts)
 FOUNDATION_VALUE = re.compile(r"^\((fundament|foundation)\)", re.I)
 REQUIREMENT_ID = re.compile(r"\b[A-Z][A-Z0-9]*-\d+\b")
-# Sekcje architekta w plan.md (N20 i Z7b-1a; kontrakt pdi 0.12.0 — plan.md czyta człowiek, release.yaml maszyna).
+# Architect sections in plan.md (N20 and Z7b-1a; pdi contract 0.12.0 — a human reads plan.md, a machine reads release.yaml).
 # pl: sprzed 14.x — „Rozważone opcje”, „Opcja”, „Cele zmiany”.
 OPTIONS_HEADING = re.compile(r"^##+\s+(?:Options considered|Rozwa[zż]one opcje)\b", re.M | re.I)
 OPTION_ENTRY = re.compile(r"^###+\s+(?:Option|Opcja)\b", re.M)
@@ -536,7 +536,7 @@ TARGETS_HEADING = re.compile(r"^##+\s+(?:Change targets|Cele zmiany)\b", re.M | 
 
 
 def plan_columns(text: str) -> dict:
-    """Wiersze tabeli cięć plan.md: TSK → {kolumna: wartość} dla kolumn z PLAN_COLUMNS obecnych w nagłówku."""
+    """Rows of the plan.md cut table: TSK → {column: value} for the PLAN_COLUMNS columns present in the header."""
     out, cols = {}, None
     for line in re.sub(r"<!--.*?-->", "", text, flags=re.S).splitlines():
         if not line.strip().startswith("|"):
@@ -554,12 +554,12 @@ def plan_columns(text: str) -> dict:
 
 
 def check_plan(d: Path) -> list[str]:
-    """Samokontrola planu cięć (core-delivery-lifecycle cut-plan.md), ta sama co REL-008 w ci_for_sdlc: fundament
-    z „Odblokowuje” wskazującym cięcia tej zmiany; cięcie z ID wymagania albo weryfikacją (gdy plan ma „Wymagania”).
+    """Cut-plan self-check (core-delivery-lifecycle cut-plan.md), the same as REL-008 in ci_for_sdlc: a foundation
+    with „Odblokowuje” pointing to the cuts of this change; a cut with a requirement ID or verification (when the plan has „Wymagania”).
 
-    Od kontraktu 0.12.0 (Z7b-1a, DZ6, DZ7, N20) plan w statusie innym niż `draft` musi też mieć sekcję
-    `## Rozważone opcje` z co najmniej dwiema opcjami (`### Opcja ...`) i sekcję `## Cele zmiany` (`targets`).
-    Plan `draft` jest szkicem architekta — jeszcze nie zatwierdzony na B3, więc tych sekcji nie wymagamy.
+    From contract 0.12.0 (Z7b-1a, DZ6, DZ7, N20) a plan with a status other than `draft` must also have a section
+    `## Rozważone opcje` with at least two options (`### Opcja ...`) and a `## Cele zmiany` section (`targets`).
+    A `draft` plan is an architect's sketch — not yet approved at B3, so we do not require these sections.
     """
     plan = d / "plan.md"
     if not plan.is_file():
@@ -654,14 +654,14 @@ def check_release(d: Path) -> list[str]:
 
 
 def is_task_folder(folder: Path) -> bool:
-    """Folder zadania fabryki (`task.json`, bez `intent.md`): jego pliki nie są artefaktami zmiany i nie mają
-    nagłówka kontraktu pdi. Zmiana, w której ktoś założył też `task.json`, ma `intent.md` i jest sprawdzana."""
+    """A factory task folder (`task.json`, without `intent.md`): its files are not change artifacts and have no
+    pdi contract header. A change in which someone also created `task.json` has `intent.md` and is checked."""
     return (folder / "task.json").is_file() and not (folder / "intent.md").is_file()
 
 
 def check(change: str | None = None) -> int:
-    """Nagłówki, wpisy decyzji, plan i plan wydania. `change` zawęża do jednej zmiany: faza pdi sprawdza swoją,
-    a artefakty starszych zmian (pisane pod wcześniejszy kontrakt) jej nie blokują."""
+    """Headers, decision entries, the plan and the release plan. `change` narrows to one change: a pdi phase checks its own,
+    and artifacts of older changes (written for an earlier contract) do not block it."""
     pattern = "*"
     if change is not None:
         if not KEY.match(change):
@@ -683,7 +683,7 @@ def check(change: str | None = None) -> int:
         for e in check_file(f) + extra:
             print(f"✗ {f}: {e}")
             bad += 1
-    for f in releases:   # zmiana bez release.yaml (sprzed planu wydania) nie jest błędem
+    for f in releases:   # a change without release.yaml (predating the release plan) is not an error
         for e in check_release(f.parent):
             print(f"✗ {f}: {e}")
             bad += 1

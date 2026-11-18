@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Opcjonalne strażniki oparte na modelu decyzyjnym Jev (TypeSafe). Bez TYPESAFE_API_KEY i bez zmiennych włączających
-nic nie robią. Błąd nigdy nie blokuje pracy.
+Optional guards based on the Jev decision model (TypeSafe). Without TYPESAFE_API_KEY and without the enabling variables
+they do nothing. An error never blocks work.
 
-1. Treść z sieci (PostToolUse: WebFetch|WebSearch), CLAUDE_JEV_GUARD=1 — wzorzec „guardrails” z dokumentacji
-   TypeSafe. Trzy pytania noul o pobraną treść:
-   - czy próbuje zmienić instrukcje agenta;
-   - czy każe uruchomić polecenie lub coś zainstalować (ClickFix);
-   - czy prosi o sekrety.
-   Progi „strict”: ≥0,70 → ostrzeżenie dla agenta; 0,35–0,70 → uwaga. Treść zostaje danymi, a nie poleceniem
+1. Web content (PostToolUse: WebFetch|WebSearch), CLAUDE_JEV_GUARD=1 — the "guardrails" pattern from the
+   TypeSafe documentation. Three noul questions about the fetched content:
+   - does it try to change the agent's instructions;
+   - does it tell the agent to run a command or install something (ClickFix);
+   - does it ask for secrets.
+   "strict" thresholds: ≥0.70 → a warning for the agent; 0.35–0.70 → a notice. The content stays data, not a command
    (core-agent-security).
-2. Raporty wykonawców (SubagentStop), CLAUDE_JEV_REPORT_CHECK=1 — kaskada „sprawdź → popraw”. Dwa pytania o raport:
-   - czy ogłasza „działa / testy przechodzą” bez polecenia i wyniku;
-   - czy nazywa pracę skończoną, choć wspomina pominięte lub nieudane części.
-   Gdy któreś ≥0,70, wykonawca dostaje jedną prośbę o poprawę raportu (`decision: block`); przy ponownym zatrzymaniu
-   (stop_hook_active) hook już nie blokuje.
+2. Executor reports (SubagentStop), CLAUDE_JEV_REPORT_CHECK=1 — a "check → fix" cascade. Two questions about the report:
+   - does it announce "works / tests pass" without a command and a result;
+   - does it call the work finished although it mentions skipped or failed parts.
+   When either is ≥0.70, the executor gets one request to fix the report (`decision: block`); on a repeated stop
+   (stop_hook_active) the hook no longer blocks.
 """
 from __future__ import annotations
 
@@ -26,8 +26,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import jev_client as jev  # noqa: E402
 try:
-    from hook_errors import record as record_error  # noqa: E402 — błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # noqa: E402 — hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -93,7 +93,7 @@ def report(data: dict) -> None:
     if os.environ.get("CLAUDE_JEV_REPORT_CHECK") != "1" or data.get("stop_hook_active"):
         return
     if str(data.get("agent_type") or "").startswith("es-"):
-        return                                    # agenci odgrywający role w symulacji warsztatu
+        return                                    # agents playing roles in a workshop simulation
     msg = str(data.get("last_assistant_message") or "")
     if len(msg) < 80:
         return
@@ -120,7 +120,7 @@ def main() -> int:
             report(data)
         else:
             web(data)
-    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+    except Exception as e:  # the hook does not interrupt the session; the error goes to the log
         record_error("jev_guard", e)
     return 0
 

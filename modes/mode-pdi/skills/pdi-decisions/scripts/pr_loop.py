@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-"""Kroki pętli PR (N2, pdi docs/plan-n2-petla-pr.md), które biegną w kontenerze fazy (pdi Z8a) — bez tokenów
-GitHuba. Pętlę prowadzi pdi na hoście: walidacja uwag drugim modelem (`second_review.py comments`, N1), push, odczyt
-checków i logów CI (`gh`) i podmiana sekcji „Przewodnik dokończenia” w opisie PR zostają poza kontenerem.
+"""PR loop steps (N2, pdi docs/plan-n2-petla-pr.md) that run in the phase container (pdi Z8a) — without GitHub
+tokens. The loop is driven by pdi on the host: validating remarks with a second model (`second_review.py comments`, N1), push, reading
+checks and CI logs (`gh`) and replacing the „Przewodnik dokończenia” (completion guide) section in the PR description stay outside the container.
 
   python3 .claude/skills/pdi-decisions/scripts/pr_loop.py review --change CHG-n --branch story/tsk-1-x --base B \\
       [--budget-usd N] [--dry-run]
-      przegląd AI PR cięcia według REVIEW.md produktu (bez niego — szablonu tf, `review_md: template`); diff
-      `git diff B...branch` i decyzje zmiany idą jako dane w znacznikach <untrusted>; claude --print
-      --output-format json --json-schema, narzędzia tylko Read, Grep, Glob. Wynik (ostatni obiekt JSON na stdout):
+      AI review of the cut's PR according to the product's REVIEW.md (without it — the tf template, `review_md: template`); the diff
+      `git diff B...branch` and the change's decisions go as data in <untrusted> markers; claude --print
+      --output-format json --json-schema, tools only Read, Grep, Glob. Result (the last JSON object on stdout):
       {status: ok | failed, review_md, cost_usd, findings: [{id, severity: critical|important|minor, file, line?,
       body, decision_ref?}], reason?}
   python3 .claude/skills/pdi-decisions/scripts/pr_loop.py fix --change CHG-n --branch story/tsk-1-x --round K \\
-      [--input PLIK] [--budget-usd N] [--dry-run]
-      agent tf poprawia tylko podane uwagi (i czerwony check z logu CI); wejście JSON {comments: […], ci_log?, ci_source?}
-      z PLIKU albo ze zmiennej PDI_PR_LOOP_INPUT; log CI to treść z zewnątrz — w znacznikach <untrusted>.
-      Wynik: {status: ok | failed, cost_usd, detail?}
+      [--input FILE] [--budget-usd N] [--dry-run]
+      the tf agent fixes only the given remarks (and a red check from the CI log); input JSON {comments: […], ci_log?, ci_source?}
+      from FILE or from the variable PDI_PR_LOOP_INPUT; the CI log is external content — in <untrusted> markers.
+      Result: {status: ok | failed, cost_usd, detail?}
   python3 .claude/skills/pdi-decisions/scripts/pr_loop.py verify [--base B]
-      jedno polecenie weryfikacji produktu (N3, ./verify.sh); {status: pass | fail | missing, exit_code?, log}
+      one product verification command (N3, ./verify.sh); {status: pass | fail | missing, exit_code?, log}
   python3 .claude/skills/pdi-decisions/scripts/pr_loop.py scaffold [--force]
-      REVIEW.md w katalogu głównym produktu z szablonu (nie nadpisuje bez --force)
+      REVIEW.md in the product's root directory from the template (does not overwrite without --force)
 
-Model: $PDI_CLAUDE_BIN (domyślnie claude); sandbox persony: $PDI_CLAUDE_SETTINGS (pdi). Kod wyjścia: 0 — wynik na
-stdout (także `failed` — to wynik, nie błąd skryptu), 2 — złe wywołanie.
+Model: $PDI_CLAUDE_BIN (default claude); persona sandbox: $PDI_CLAUDE_SETTINGS (pdi). Exit code: 0 — result on
+stdout (also `failed` — that is a result, not a script error), 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ FINDINGS_SCHEMA: dict[str, Any] = {
 
 
 class Refused(Exception):
-    """Złe wywołanie (kod 2)."""
+    """Bad invocation (code 2)."""
 
 
 def neutralise(text: str) -> str:
@@ -102,9 +102,9 @@ def _checked(a: argparse.Namespace) -> None:
 
 
 def _decisions(change: str) -> list[str]:
-    """Wiążące decyzje zmiany jak w promptach faz (phase_run.decisions_block, Z1)."""
+    """Binding decisions of the change as in the phase prompts (phase_run.decisions_block, Z1)."""
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import phase_run  # noqa: E402 — skrypt obok, bez zależności spoza stdlib
+    import phase_run  # noqa: E402 — a script next to this one, no dependencies outside the stdlib
 
     return phase_run.decisions_block(change)
 
@@ -151,8 +151,8 @@ def _call(argv: list[str], prompt: str) -> tuple[int, dict[str, Any] | None, str
 
 
 def structured(result: dict[str, Any]) -> dict[str, Any] | None:
-    """Wynik ze schematem: `structured_output` (code.claude.com/docs/en/agent-sdk/structured-outputs, 2026-11-07);
-    zapasowo JSON w tekście `result`. `success` bez danych to błąd, nie pusty przegląd."""
+    """Result with a schema: `structured_output` (code.claude.com/docs/en/agent-sdk/structured-outputs, 2026-11-07);
+    fallback to JSON in the `result` text. `success` without data is an error, not an empty review."""
     out = result.get("structured_output")
     if isinstance(out, dict):
         return out

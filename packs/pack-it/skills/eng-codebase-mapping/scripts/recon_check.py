@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Kontrola dowodów w raporcie z kodu (rekonstrukcja projektu, mapa kodu, dossier): każde `plik:linia` musi wskazywać
-istniejący plik i linię, a cytat podany przy dowodzie musi się znaleźć w kodzie (±2 linie). Wypunktowania bez dowodu
-i bez oznaczenia [założenie] / [niezweryfikowane] / [pytanie] są zgłaszane jako twierdzenia bez dowodu.
+Evidence check in a report built from code (project reconstruction, code map, dossier): every `file:line` must point to
+an existing file and line, and the quote given with the evidence must be found in the code (±2 lines). Bullets without
+evidence and without a [assumption] / [unverified] / [question] mark are reported as claims without evidence.
 
-  python3 recon_check.py <plik.md|katalog> [--repo DIR] [--json]
-  python3 recon_check.py docs/project/00-reconstruction/report.md --final   # też sekcje raportu i 0 twierdzeń bez dowodu
+  python3 recon_check.py <file.md|directory> [--repo DIR] [--json]
+  python3 recon_check.py docs/project/00-reconstruction/report.md --final   # also report sections and 0 claims without evidence
 
---final sprawdza też:
-- tabelę w sekcji „Stack” z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja (każdy wiersz z dowodem
-  albo oznaczeniem); gdy w repo są pliki pipeline'u (np. .github/workflows/), wiersz CI musi wskazać któryś z nich;
-- to, że sekcja „Modules” wymienia każdy moduł z kart `modules/*.json` leżących obok raportu, a każda karta ma aktualny
-  `modules/<karta>.md` z `recon_cards.py` (skrót treści karty w pierwszej linii).
+--final also checks:
+- the table in the "Stack" section with the rows Language, Framework, Data, Build, Tests, CI, Configuration (each row with
+  evidence or a mark); when the repo has pipeline files (e.g. .github/workflows/), the CI row must point to one of them;
+- that the "Modules" section lists every module from the `modules/*.json` cards next to the report, and every card has a
+  current `modules/<card>.md` from `recon_cards.py` (a digest of the card content in the first line).
 
-Dowód: `ścieżka:linia` albo `ścieżka:od-do`; cytat w "…" albo „…” w tym samym wierszu, po dowodzie.
-Kod wyjścia: 0 — w porządku, 1 — złe dowody (albo braki przy --final), 2 — złe wywołanie.
+Evidence: `path:line` or `path:from-to`; a quote in "…" or „…” in the same row, after the evidence.
+Exit code: 0 — OK, 1 — bad evidence (or gaps with --final), 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -30,16 +30,16 @@ QUOTE = re.compile(r"\"([^\"]{3,})\"|„([^”]{3,})”")
 MARK = re.compile(r"\[(assumption|unverified|question|założenie|niezweryfikowane|pytanie)[^\]]*\]", re.I)
 SECTIONS = ("TL;DR", "Stack", "Modules", "Domains", "Requirements", "Rules", "Standards", "Risks", "Questions",
             "Not checked")
-NO_EVIDENCE_SECTIONS = ("Questions", "Not checked")   # tu wypunktowania z natury nie mają dowodu
-STACK_ROWS = ("Language", "Framework", "Data", "Build", "Tests", "CI", "Configuration")   # wymagane wiersze tabeli stacku
-# Raporty sprzed 14.x: polskie nagłówki sekcji i wierszy stacku przyjmowane jako angielskie odpowiedniki.
+NO_EVIDENCE_SECTIONS = ("Questions", "Not checked")   # bullets here have no evidence by nature
+STACK_ROWS = ("Language", "Framework", "Data", "Build", "Tests", "CI", "Configuration")   # required rows of the stack table
+# Reports from before 14.x: Polish section and stack row headings accepted as English equivalents.
 HEADING_ALIASES = {"Moduły": "Modules", "Domeny": "Domains", "Wymagania": "Requirements", "Reguły": "Rules",
                    "Standardy": "Standards", "Ryzyka": "Risks", "Pytania": "Questions", "Czego nie sprawdzono": "Not checked"}
 ROW_ALIASES = {"język": "Language", "dane": "Data", "testy": "Tests", "konfiguracja": "Configuration"}
 
 
 def canon(heading: str) -> str:
-    """Nagłówek sekcji w postaci angielskiej (polski z raportu sprzed 14.x → odpowiednik)."""
+    """Section heading in its English form (Polish from a pre-14.x report → the equivalent)."""
     for pl, en in HEADING_ALIASES.items():
         if heading.startswith(pl):
             return en + heading[len(pl):]
@@ -58,14 +58,14 @@ def md_files(path: str) -> list[str]:
     if os.path.isdir(path):
         out = []
         for dp, dn, fn in os.walk(path):
-            dn[:] = [x for x in dn if x != "raw"]   # raw/: wyniki skanów i zlecenia robocze, nie dokumentacja
+            dn[:] = [x for x in dn if x != "raw"]   # raw/: scan results and work orders, not documentation
             out += [os.path.join(dp, f) for f in fn if f.endswith(".md")]
         return sorted(out)
     return [path]
 
 
 def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[dict], list[str], list[tuple], str]:
-    """Dowody, złe dowody, twierdzenia bez dowodu, nagłówki, wiersze tabeli stacku (nazwa, linia), tekst sekcji Moduły."""
+    """Evidence, bad evidence, claims without evidence, headings, stack table rows (name, line), the Modules section text."""
     refs, bad, unsupported, sections, section = 0, [], [], [], ""
     stack_rows, modules_text, row_at = [], [], None
     with open(md, encoding="utf-8") as fh:
@@ -110,7 +110,7 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
         if section.startswith("Stack") and line.lstrip().startswith("|"):
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
             if all(re.fullmatch(r":?-{3,}:?", c) for c in cells if c):
-                if stack_rows:   # wiersz nad separatorem to nagłówek tabeli
+                if stack_rows:   # the row above the separator is the table header
                     stack_rows.pop()
                     if row_at is not None:
                         unsupported[:] = [u for u in unsupported if u["at"] != row_at]
@@ -124,13 +124,13 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
 
 
 def ci_files(repo: str) -> list[str]:
-    """Pliki pipeline'u CI w repo (ścieżki względne)."""
+    """CI pipeline files in the repo (relative paths)."""
     found = {os.path.relpath(p, repo).replace(os.sep, "/") for pat in CI_FILES for p in glob.glob(os.path.join(repo, pat))}
     return sorted(found)
 
 
 def stale_cards(md: str) -> list[str]:
-    """Karty `modules/*.json` bez `modules/<karta>.md` albo z .md wygenerowanym ze starszej treści karty."""
+    """`modules/*.json` cards without `modules/<card>.md` or with an .md generated from older card content."""
     d = os.path.join(os.path.dirname(md), "modules")
     stale = []
     for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
@@ -149,7 +149,7 @@ def stale_cards(md: str) -> list[str]:
 
 
 def module_names(md: str) -> list[str]:
-    """Nazwy modułów z kart `modules/*.json` obok raportu (pole `module`)."""
+    """Module names from the `modules/*.json` cards next to the report (the `module` field)."""
     d = os.path.join(os.path.dirname(md), "modules")
     names = []
     for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:

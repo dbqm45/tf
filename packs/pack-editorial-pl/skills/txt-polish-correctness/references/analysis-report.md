@@ -1,29 +1,29 @@
-# Format raportu analizy językowej
+# Language analysis report format
 
-## Pojedyncza uwaga
+## A single remark
 ```
-[KATEGORIA] | PRIORYTET: WYSOKI / ŚREDNI / NISKI
-Lokalizacja: plik:linia albo sekcja / akapit / cytat lokalizujący
-ORYGINALNIE: „<dokładny cytat>”
-PROBLEM: <1–2 zdania, z odwołaniem do reguły, np. RJP 12.1.1>
-SUGESTIA: „<poprawna wersja>”
+[CATEGORY] | PRIORITY: HIGH / MEDIUM / LOW
+Location: file:line or section / paragraph / a locating quotation
+ORIGINAL: „<exact quotation>”
+PROBLEM: <1–2 sentences, with a reference to the rule, e.g. RJP 12.1.1>
+SUGGESTION: „<correct version>”
 ```
-Kategorie: `ORTOGRAFIA` · `INTERPUNKCJA` · `GRAMATYKA` · `KOLOKACJA` · `PLEONAZM` · `KALKA` · `STYL` · `CZYTELNOŚĆ` · `TYPOGRAFIA`.
-Priorytet: **WYSOKI** — błąd normy lub zmieniający sens; **ŚREDNI** — zauważalny dla czytelnika (styl, rejestr, powtórzenia);
-**NISKI** — preferencja redakcyjna, typografia.
+Categories: `SPELLING` · `PUNCTUATION` · `GRAMMAR` · `COLLOCATION` · `PLEONASM` · `CALQUE` · `STYLE` · `READABILITY` · `TYPOGRAPHY`.
+Priority: **HIGH** — an error against the norm or one that changes the meaning; **MEDIUM** — noticeable to the reader (style,
+register, repetitions); **LOW** — an editorial preference, typography.
 
-## Podsumowanie (w odpowiedzi)
+## Summary (in the reply)
 ```
-## Analiza językowa — <dokument>
-Ocena poprawności: X/10 · uwag: N (wysoki A | średni B | niski C)
-| Kategoria | Liczba | Przykład |
-Najczęstsze wzorce (do poprawy w całym tekście): 1. … 2. … 3. …
-Ocena stylu i spójności: X/10 — jedno zdanie
+## Language analysis — <document>
+Correctness score: X/10 · remarks: N (high A | medium B | low C)
+| Category | Count | Example |
+Most frequent patterns (to fix in the whole text): 1. … 2. … 3. …
+Style and consistency score: X/10 — one sentence
 ```
-Pełny raport jako plik: `docs/project/07-review/<data>-language-<dokument>.md` (nagłówek core-project-record, `artifact: review`)
-albo `.docx` na życzenie (skill docx; skrypt zapisuj narzędziem Write w UTF-8 i sprawdź `file -i` — raport o polszczyźnie
-bez polskich znaków sam jest błędny).
+The full report as a file: `docs/project/07-review/<data>-language-<dokument>.md` (core-project-record header, `artifact: review`)
+or `.docx` on request (the docx skill; write the script with the Write tool in UTF-8 and check `file -i` — a report on Polish
+without Polish characters is itself wrong).
 
-## Poprawione fragmenty (na życzenie)
-ORYGINAŁ → POPRAWKA, zmiany wypunktowane z wyjaśnieniem; przy pierwszym wystąpieniu wzorca `[ZMIANA: …]`.
-Minimalna ingerencja — bez zmian merytorycznych, bez „upiększania”, terminy i kod bez zmian.
+## Corrected passages (on request)
+ORIGINAL → CORRECTION, changes listed as bullets with an explanation; at the first occurrence of a pattern `[CHANGE: …]`.
+Minimal intervention — no changes of substance, no “embellishing”, terms and code unchanged.

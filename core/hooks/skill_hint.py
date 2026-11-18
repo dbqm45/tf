@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-Hook UserPromptSubmit: podpowiada modelowi 1–3 skille fabryki pasujące do polecenia użytkownika.
+UserPromptSubmit hook: suggests to the model 1–3 factory skills matching the user's prompt.
 
-Po co: Claude Code trzyma opisy skilli w ~1% okna kontekstu. Przy oknie 200 tys. tokenów (np. Haiku) opisy skilli
-fabryki wypadają z listy i model widzi same nazwy, a i przy pełnych opisach model często odpowiada z wiedzy ogólnej,
-nie wczytując skilla (pomiar: tests/run_skill_evals.py). Hook dopasowuje polecenie do opisów skilli (description
-i metadata.catalog) prostym dopasowaniem rdzeni słów z wagą rzadkości i dopisuje do kontekstu krótką podpowiedź.
+Why: Claude Code keeps skill descriptions in ~1% of the context window. With a 200k-token window (e.g. Haiku) the factory
+skill descriptions drop out of the list and the model sees names only, and even with full descriptions the model often answers from general knowledge,
+without loading the skill (measurement: tests/run_skill_evals.py). The hook matches the prompt to skill descriptions (description
+and metadata.catalog) by simple word-stem matching weighted by rarity, and appends a short hint to the context.
 
-  python3 .claude/hooks/skill_hint.py --explain "Jak zrobić paginację GET /orders?"   # ranking z punktacją
+  python3 .claude/hooks/skill_hint.py --explain "Jak zrobić paginację GET /orders?"   # ranking with scores
 
-W projekcie z wykrytym stackiem (detect_stack) hook pomija skille frameworków i języków (`fw-`, `lang-`), których
-w projekcie nie ma, chyba że polecenie je wymienia; wyłączenie filtra: CLAUDE_SKILL_HINT_STACK=0.
+In a project with a detected stack (detect_stack) the hook skips framework and language skills (`fw-`, `lang-`) that
+the project does not have, unless the prompt mentions them; to disable the filter: CLAUDE_SKILL_HINT_STACK=0.
 
-Wyłączenie: zmienna CLAUDE_SKILL_HINT=0. Tylko biblioteka standardowa; błąd nigdy nie blokuje polecenia.
+Disable: the variable CLAUDE_SKILL_HINT=0. Standard library only; an error never blocks the command.
 
-Log: każda decyzja trafia do .tf/logs/skill-hints.jsonl (czas, sesja, podpowiedziane skille, 5 najwyżej
-ocenionych z wynikiem). Treści polecenia NIE zapisujemy — chyba że CLAUDE_SKILL_HINT_LOG_PROMPT=1 (pierwsze 200
-znaków, do strojenia słów kluczowych na własnej maszynie). Raport: python3 .tf/factory/hint_report.py
+Log: each decision goes to .tf/logs/skill-hints.jsonl (time, session, suggested skills, the 5 highest-
+scored with their score). The prompt content is NOT recorded — unless CLAUDE_SKILL_HINT_LOG_PROMPT=1 (the first 200
+characters, for tuning keywords on your own machine). Report: python3 .tf/factory/hint_report.py
 """
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -42,16 +42,16 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
         pass
 
 SKILLS = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parents[2]) / ".claude" / "skills"
-STEM = 5                  # długość rdzenia: polska odmiana zmienia głównie końcówki
-MIN_SCORE = 8.0           # próg trafności (dobrany na scenariuszach w tests/skill_evals)
+STEM = 5                  # stem length: Polish inflection mostly changes the endings
+MIN_SCORE = 8.0           # relevance threshold (tuned on the scenarios in tests/skill_evals)
 MAX_HINTS = 3
-CLEAR_SCORE = 16.0          # wyraźny lider: wynik co najmniej taki …
-CLEAR_LEAD = 1.3            # … i o 30% lepszy od drugiego skilla → mocniejsza podpowiedź (kalibracja: 176 trafnych, 2 błędne na 283 scenariuszach)
-STRONG_SCORE = 12.0       # powyżej tego wyniku lider nie musi odstawać od drugiego
-MARGIN = 1.15             # inaczej lider musi być o 15% lepszy od drugiego skilla
-RATIO = 0.6               # podpowiadamy tylko skille blisko najlepszego wyniku
-BODY_NORM = 0.5           # normalizacja wyniku treści względem jej długości (pomiar na tests/skill_evals)
-HEAD_WEIGHT = 2.0         # słowo z opisu skilla waży więcej niż słowo z treści SKILL.md
+CLEAR_SCORE = 16.0          # clear leader: a score of at least this …
+CLEAR_LEAD = 1.3            # … and 30% better than the second skill → a stronger hint (calibration: 176 correct, 2 wrong on 283 scenarios)
+STRONG_SCORE = 12.0       # above this score the leader need not stand out from the second
+MARGIN = 1.15             # otherwise the leader must be 15% better than the second skill
+RATIO = 0.6               # we suggest only skills close to the best score
+BODY_NORM = 0.5           # normalization of the body score by its length (measured on tests/skill_evals)
+HEAD_WEIGHT = 2.0         # a word from the skill description weighs more than a word from the SKILL.md body
 STOP = set("""
 aby albo ale bez być będzie bo by czy dla do gdy go i ich ile im jak jaki jakie jako je jest jeśli już kiedy który
 która które ma mam mamy może można mnie na nad nam nas nie niż o od oraz po pod przez przy się są ta tak także te
@@ -61,8 +61,8 @@ odpowiedz zwięźle krótko proszę chcę chcemy potrzebuję jak zrobić czy war
 NEG_RE = re.compile(r"\b(Nie do|Not for)\b.*$", re.S)
 
 
-# Nazwy narzędzi, które po polsku są słowami pomijanymi („Jest” = narzędzie, „jest” = czasownik). Wielka litera
-# w środku zdania albo nazwa z wersją/kropką oznacza narzędzie.
+# Names of tools that are stop words in Polish („Jest” = the tool, „jest” = the verb "is"). A capital letter
+# mid-sentence, or a name with a version/dot, means the tool.
 TOOL_ALIASES = [(re.compile(r"(?<=[^.!?\s] )Jest\b|\bJest(?=\s*\d)|\bjest(?=\.config|\.mock|\.fn|\.use)"), "jestjs")]
 
 
@@ -79,11 +79,11 @@ def stems(text: str) -> list[str]:
     return out
 
 
-PL_INDEX = "hint.pl.txt"   # polski indeks skilla przetłumaczonego na angielski (tools/hint_pl_index.py); model go nie czyta
+PL_INDEX = "hint.pl.txt"   # Polish index of a skill translated into English (tools/hint_pl_index.py); the model does not read it
 
 
 def clean_body(text: str) -> str:
-    """Treść do indeksu: bez przykładów kodu i bez listy źródeł."""
+    """Body for the index: without code examples and without the list of sources."""
     text = re.sub(r"```.*?```", " ", text, flags=re.S)
     return re.sub(r"^## (Źródła|Sources)\b.*?(?=^# |\Z)", " ", text, flags=re.S | re.M)
 
@@ -95,29 +95,29 @@ def load_index() -> list[dict]:
         m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
         fm = m.group(1) if m else ""
         if re.search(r"^disable-model-invocation:\s*true", fm, re.M):
-            continue                       # skill uruchamiany tylko ręcznie
+            continue                       # skill invoked only manually
         desc = (re.search(r"^description:\s*(.*)$", fm, re.M) or [None, ""])[1]
         kat = (re.search(r"^\s+catalog:\s*(.*)$", fm, re.M) or [None, ""])[1].strip().strip('"')
-        kat = NEG_RE.sub("", kat)          # granice „Nie do …” opisują sąsiadów, nie ten skill
+        kat = NEG_RE.sub("", kat)          # the „Nie do …” boundaries describe neighbors, not this skill
         keywords = (re.search(r"^\s+keywords:\s*(.*)$", fm, re.M) or [None, ""])[1].strip().strip('"')
         name = p.parent.name
         name_words = name.split("-", 1)[-1].replace("-", " ")
         body = text[m.end() if m else 0:]
         excerpt = re.sub(r"<!--.*?-->|\s+", " ", body, flags=re.S).strip()[:700]
-        pl_index = p.parent / PL_INDEX       # tekst sprzed tłumaczenia: polskie polecenia trafiają jak dawniej
+        pl_index = p.parent / PL_INDEX       # pre-translation text: Polish prompts match as before
         pl_head = ""
         if pl_index.is_file():
             pl_text = pl_index.read_text(encoding="utf-8", errors="ignore")
-            if pl_text.startswith("head: "):     # dawny polski opis i katalog — waga opisu, nie treści
+            if pl_text.startswith("head: "):     # the former Polish description and catalog — description weight, not body
                 first, _, pl_text = pl_text.partition("\n")
                 pl_head = NEG_RE.sub("", first[6:])
         else:
             pl_text = ""
         head = set(stems(f"{desc} {kat} {name_words} {keywords} {pl_head}"))
         en_stems, pl_stems = set(stems(clean_body(body))) - head, set(stems(clean_body(pl_text))) - head
-        # wersje językowe osobno: polecenie jest w jednym języku, więc treść liczy się wersją, która pasuje lepiej,
-        # znormalizowaną jej własną długością; suma wersji zawyżałaby średnią długość (wyższe wyniki
-        # nieprzetłumaczonych skilli, szum), a dopasowanie po sumie z jedną długością faworyzowałoby przetłumaczone
+        # language versions separately: a prompt is in one language, so the body is scored by the version that fits better,
+        # normalized by its own length; summing the versions would inflate the average length (higher scores
+        # for untranslated skills, noise), and matching on the sum with a single length would favor the translated ones
         items.append({"name": name, "desc": desc.strip(), "kat": kat.strip(), "excerpt": excerpt,
                       "head": head, "body": en_stems | pl_stems, "blen": max(len(en_stems), len(pl_stems)),
                       "langs": [s for s in (en_stems, pl_stems) if s]})
@@ -128,13 +128,13 @@ QUOTED_RE = re.compile(r"„[^”]{20,}”|\"[^\"]{20,}\"|```.*?```", re.S)
 
 
 def intent(prompt: str) -> str:
-    """Treść polecenia bez cytowanego materiału (tekst do redakcji, fragment kodu) — o wyborze skilla decyduje prośba."""
+    """The prompt content without quoted material (text to edit, a code fragment) — the request decides the skill choice."""
     rest = QUOTED_RE.sub(" ", prompt)
     return rest if len(stems(rest)) >= 2 else prompt
 
 
-REF_SKILLS = 150   # progi skalibrowano na ~150 skillach; mniejsza instalacja (rdzeń + 1 nakładka) liczy IDF jak przy 150,
-                   # inaczej wszystkie wyniki są niższe i nawet trafne podpowiedzi spadają pod MIN_SCORE
+REF_SKILLS = 150   # thresholds were calibrated on ~150 skills; a smaller install (core + 1 overlay) computes IDF as for 150,
+                   # otherwise all scores are lower and even correct hints fall below MIN_SCORE
 
 
 def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
@@ -148,7 +148,7 @@ def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
     scored = []
     for it in items:
         idf = lambda t: math.log(1 + n / df[t])
-        # długi skill nie wygrywa samą liczbą słów ogólnych: każda wersja językowa normalizowana swoją długością
+        # a long skill does not win on sheer number of generic words: each language version is normalized by its own length
         body = max(((avg / max(1, len(b))) ** BODY_NORM * sum(idf(t) for t in q & b)
                     for b in it.get("langs") or [it["body"]]), default=0.0)
         score = HEAD_WEIGHT * sum(idf(t) for t in q & it["head"]) + body
@@ -158,8 +158,8 @@ def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
 
 
 def select(prompt: str, items: list[dict], exclude: set[str] | frozenset = frozenset()) -> list[tuple[float, dict]]:
-    """Skille do podpowiedzi: wynik ponad progiem i wyraźny lider (płaski ranking to zwykle szum słów ogólnych).
-    `exclude` (skille poza stackiem projektu) odpada po rankingu: wagi słów liczy cały indeks, jak przy kalibracji."""
+    """Skills to suggest: a score above the threshold and a clear leader (a flat ranking is usually noise from generic words).
+    `exclude` (skills outside the project stack) is dropped after ranking: word weights are computed over the whole index, as in calibration."""
     ranked = [x for x in rank(prompt, items) if x[1]["name"] not in exclude]
     if not ranked or ranked[0][0] < MIN_SCORE:
         return []
@@ -171,7 +171,7 @@ def select(prompt: str, items: list[dict], exclude: set[str] | frozenset = froze
 
 
 def log_decision(data: dict, prompt: str, items: list[dict], picks: list) -> None:
-    """Zapis decyzji do .tf/logs/skill-hints.jsonl (bez treści polecenia, o ile nie włączono jawnie)."""
+    """Record the decision to .tf/logs/skill-hints.jsonl (without the prompt content, unless explicitly enabled)."""
     try:
         top = [(it["name"], s) for s, it in rank(prompt, items)[:5]] if items else []
         rec = {"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"), "session": data.get("session_id"),
@@ -186,9 +186,9 @@ def log_decision(data: dict, prompt: str, items: list[dict], picks: list) -> Non
         pass
 
 
-# ───────────── opcjonalny Jev: dwuetapowa podpowiedź (cookbook TypeSafe „skill suggestion”) ─────────────
-JEV_GATE = 0.30          # średnia trzech pytań bramki — poniżej nie podpowiadamy nic
-JEV_FITS = 0.30          # „czy zwycięzca robi dokładnie to, o co proszono” — poniżej nie podpowiadamy nic
+# ───────────── optional Jev: two-stage hint (TypeSafe cookbook "skill suggestion") ─────────────
+JEV_GATE = 0.30          # mean of the three gate questions — below it we suggest nothing
+JEV_FITS = 0.30          # "does the winner do exactly what was asked" — below it we suggest nothing
 JEV_SHORTLIST = 3
 LAST_VIA = "keywords"
 GATE_QS = {
@@ -202,9 +202,9 @@ GATE_QS = {
 
 
 def jev_suggest(prompt: str, items: list[dict]) -> list | None:
-    """Etap 1: wybór spośród wszystkich skilli (opisy, które widzi model) + 3 pytania bramki.
-    Etap 2: wybór spośród 3 najlepszych (pełny opis i początek SKILL.md) + „czy pasuje” dla każdego.
-    Zwraca [(wynik, skill)] (może być pusta) albo None, gdy Jev niedostępny — wtedy zostają słowa."""
+    """Stage 1: a pick among all skills (the descriptions the model sees) + 3 gate questions.
+    Stage 2: a pick among the top 3 (full description and the start of SKILL.md) + "does it fit" for each.
+    Returns [(score, skill)] (may be empty) or None when Jev is unavailable — then the word-based path remains."""
     try:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import jev_client as jev
@@ -241,7 +241,7 @@ def jev_suggest(prompt: str, items: list[dict]) -> list | None:
         return None
 
 
-STACK_PREFIXES = ("fw-", "lang-")   # tożsamość stacku; narzędzia (tool-) polecenie może dopiero dodawać
+STACK_PREFIXES = ("fw-", "lang-")   # stack identity; tools (tool-) can only be added by the prompt
 
 
 def _mentioned(prompt: str, variants: list[str]) -> bool:
@@ -249,16 +249,16 @@ def _mentioned(prompt: str, variants: list[str]) -> bool:
         v = v.strip()
         if not v:
             continue
-        flags = re.I if len(v) >= 4 else 0   # krótkie nazwy (Go, C#) tylko z wielkiej litery — „go” to też zaimek
+        flags = re.I if len(v) >= 4 else 0   # short names (Go, C#) only capitalized — „go” is also a Polish pronoun
         if re.search(r"(?<![\w.#])" + re.escape(v) + r"(?![\w#])", prompt, flags):
             return True
     return False
 
 
 def off_stack(prompt: str) -> set[str]:
-    """Skille frameworków i języków z rejestru technologii (detect_stack), których w projekcie nie wykryto i których
-    polecenie nie wymienia. Pusty zbiór, gdy nie wykryto żadnej technologii (nowy projekt) albo przy
-    CLAUDE_SKILL_HINT_STACK=0. Pomiar 2026-11-16 (docs/todo.md): w repo Spring Boot hook podsuwał skill NestJS."""
+    """Framework and language skills from the technology registry (detect_stack) that were not detected in the project and that
+    the prompt does not mention. An empty set when no technology was detected (a new project) or with
+    CLAUDE_SKILL_HINT_STACK=0. Measurement 2026-11-16 (docs/todo.md): in a Spring Boot repo the hook suggested the NestJS skill."""
     if os.environ.get("CLAUDE_SKILL_HINT_STACK") == "0":
         return set()
     try:
@@ -278,13 +278,13 @@ def off_stack(prompt: str) -> set[str]:
             if not _mentioned(prompt, names):
                 out.add(s)
         return out - found
-    except Exception as e:   # filtr to tylko optymalizacja: przy błędzie podpowiedź działa jak dotąd
+    except Exception as e:   # the filter is only an optimization: on error the hint works as before
         record_error("skill_hint", e)
         return set()
 
 
 def suggest(prompt: str, items: list[dict]) -> list:
-    """Słowa (domyślnie) albo Jev (CLAUDE_SKILL_HINT_JEV=1) z rezerwą w słowach, gdy Jev niedostępny."""
+    """Words (default) or Jev (CLAUDE_SKILL_HINT_JEV=1), falling back to words when Jev is unavailable."""
     global LAST_VIA
     LAST_VIA = "keywords"
     exclude = off_stack(prompt)
@@ -308,7 +308,7 @@ def hint(prompt: str, data: dict | None = None) -> str:
         return ""
     top, rest = picks[0][0], [s for s, _ in picks[1:]]
     if top >= CLEAR_SCORE and (not rest or top >= CLEAR_LEAD * rest[0]):
-        # wyraźny lider (ewaluacje 2026-10-02: przy łagodnej podpowiedzi model bywał pewny swojej wiedzy i pomijał skill)
+        # a clear leader (evaluations 2026-10-02: with a mild hint the model was sometimes sure of its own knowledge and skipped the skill)
         lines = [f"The prompt clearly matches the factory skill {picks[0][1]['name']} (a hint from the skill_hint hook). "
                  "Load it with the Skill tool before you answer — it holds this project's rules and procedures, which "
                  "general knowledge does not have."]
@@ -338,7 +338,7 @@ def main(argv: list[str]) -> int:
         text = hint(str(data.get("prompt") or ""), data)
         if text:
             print(text)
-    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+    except Exception as e:  # the hook does not interrupt the session; the error goes to the log
         record_error("skill_hint", e)
     return 0
 

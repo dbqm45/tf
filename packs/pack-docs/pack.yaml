@@ -1,14 +1,14 @@
-# Nakładka dokumentacji: pisanie dokumentacji technicznej (README, API, ADR, CHANGELOG, runbooki, podręczniki)
-# i rola Technical Writer. Wpina się do wszystkich person.
+# Documentation overlay: technical writing (README, API, ADR, CHANGELOG, runbooks, manuals)
+# and the Technical Writer role. Attaches to all personas.
 id: pack-docs
 version: 1.0.2
 title: Documentation
 description: Technical writing — README, API docs, ADRs, changelogs, runbooks and manuals; adds the docs skill to every persona and the tech-writer role.
 content_language: en
-default: true          # zaznaczona domyślnie w instalatorze
+default: true          # selected by default in the installer
 requires:
   core: ">=3.0.0 <19.0.0"
-# Skill dokumentacji podaje przykłady ze skilli tych nakładek; bez nich odwołania są tylko tekstem.
+# The docs skill gives examples from the skills of these overlays; without them the references are plain text.
 optional_packs: [pack-it, pack-ux, pack-editorial-pl]
 
 facets:
@@ -19,4 +19,4 @@ routing: |
 
 contributes:
   personas:
-    core_skills: [docs-tech-writing]   # „Skille wspólne” każdej persony
+    core_skills: [docs-tech-writing]   # each persona's "Skille wspólne" (shared skills)

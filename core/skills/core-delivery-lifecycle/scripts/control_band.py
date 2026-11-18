@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Pasma kontrolne dla metryk produkcji i procesu (faza 9 — utrzymanie). Wykrywanie jest deterministyczne;
-model jest wołany dopiero wtedy, gdy ten skrypt zwróci poziom wyższy niż „ok”.
+Control bands for production and process metrics (phase 9 — maintenance). Detection is deterministic;
+the model is called only when this script returns a level higher than „ok”.
 
-  python3 control_band.py metryka.csv --baseline 30 [--column nazwa] [--side both|upper|lower] [--format json|text]
+  python3 control_band.py metric.csv --baseline 30 [--column name] [--side both|upper|lower] [--format json|text]
 
-Wejście: CSV z nagłówkiem (domyślnie pierwsza kolumna liczbowa) albo jedna liczba w wierszu. Pierwsze N punktów
-(--baseline) to linia bazowa: z niej średnia i odchylenie standardowe. Reguły Western Electric sprawdzane są na
-punktach po linii bazowej:
-  1. punkt poza 3σ                                → poziom act      (agent może działać: PR, zatwierdzony runbook)
-  2. 2 z 3 kolejnych poza 2σ po tej samej stronie → poziom diagnose (agent diagnozuje tylko do odczytu)
-  3. 4 z 5 kolejnych poza 1σ po tej samej stronie → poziom log      (tylko zapis)
-  4. 8 kolejnych po jednej stronie średniej       → poziom log
---side upper: liczą się tylko wzrosty (np. odsetek błędów 5xx), lower — tylko spadki (np. odsetek udanych wdrożeń).
-Poziomy i progi to propozycja z „The AI-Native SDLC Playbook” (Anthropic, 2026); zmień je w konfiguracji projektu.
-Kod wyjścia: 0 — wynik policzony, 2 — błędne dane (np. zerowe odchylenie linii bazowej). Tylko biblioteka standardowa.
+Input: CSV with a header (by default the first numeric column) or one number per line. The first N points
+(--baseline) are the baseline: mean and standard deviation come from it. Western Electric rules are checked on
+the points after the baseline:
+  1. a point outside 3σ                           → level act      (the agent may act: PR, approved runbook)
+  2. 2 of 3 consecutive outside 2σ on one side   → level diagnose (the agent diagnoses read-only)
+  3. 4 of 5 consecutive outside 1σ on one side   → level log      (write only)
+  4. 8 consecutive on one side of the mean       → level log
+--side upper: only increases count (e.g. the share of 5xx errors), lower — only decreases (e.g. the share of successful deployments).
+The levels and thresholds are a proposal from „The AI-Native SDLC Playbook” (Anthropic, 2026); change them in the project configuration.
+Exit code: 0 — result computed, 2 — bad data (e.g. zero standard deviation of the baseline). Standard library only.
 """
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ def read_values(path: Path, column: str | None) -> list[float]:
 
 
 def counts(side: str, z: float) -> int:
-    """+1 / -1 dla strony, którą liczymy; 0 dla strony ignorowanej."""
+    """+1 / -1 for the side we count; 0 for the ignored side."""
     s = 1 if z > 0 else -1 if z < 0 else 0
     if side == "upper" and s < 0 or side == "lower" and s > 0:
         return 0

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Pasek stanu Claude Code: model i effort, zapełnienie kontekstu, cache, koszt sesji, limity — bez tokenów modelu.
+Claude Code status line: model and effort, context fill, cache, session cost, limits — with no model tokens.
 
   Opus · high │ kontekst 42% 84k │ cache 91% │ $0.42 │ 5h 23%
 
-Ostrzega (⚠), gdy kontekst przekracza próg z CLAUDE_CONTEXT_WARN_K (domyślnie 100 tys. — ten sam co hook
-context_guard), gdy cache jest zimny (następna tura przeczyta całą historię bez rabatu) i gdy limit jest blisko.
-Dane bierze z JSON-a, który Claude Code podaje na wejście; brakujące pola pomija. Błąd nigdy nie przerywa pracy.
+Warns (⚠) when the context exceeds the CLAUDE_CONTEXT_WARN_K threshold (default 100k — the same as the
+context_guard hook), when the cache is cold (the next turn will read the whole history without a discount) and when a limit is near.
+It takes data from the JSON that Claude Code passes on input; missing fields are skipped. An error never interrupts work.
 """
 from __future__ import annotations
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-SubagentStop / SessionEnd: zapisuje zużycie tokenów per agent i model oraz użyte skille do .tf/logs/usage.jsonl.
-Każdy wpis ma odcisk harnessu (`harness`): wersję Claude Code z transkryptu, wersję fabryki i nakładek
-z `.claude/factory-manifest.json` oraz skrót sum kontrolnych zainstalowanych plików — wyniki i koszty da się
-porównać między wersjami (krok H20).
-PostToolUse narzędzia Agent (dawniej Task): wpis delegowania do .tf/logs/delegation.jsonl — wykonawca, model,
-klasa zadania z linii „Klasa: …” briefu, długość briefu i raportu; agent_id łączy go z wpisem w usage.jsonl.
-Raport: python3 .tf/factory/cost_report.py [--delegation]
+SubagentStop / SessionEnd: records token usage per agent and model, and the skills used, to .tf/logs/usage.jsonl.
+Each entry has a harness fingerprint (`harness`): the Claude Code version from the transcript, the factory and overlay versions
+from `.claude/factory-manifest.json`, and a digest of the checksums of installed files — results and costs can be
+compared across versions (step H20).
+PostToolUse of the Agent tool (formerly Task): a delegation entry to .tf/logs/delegation.jsonl — executor, model,
+task class from the „Klasa: …” line of the brief, brief and report length; agent_id links it to the entry in usage.jsonl.
+Report: python3 .tf/factory/cost_report.py [--delegation]
 """
 from __future__ import annotations
 
@@ -26,16 +26,16 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
         pass
 
 TIER_RE = re.compile(r"Tier:\**\s*(?:za\s+)?(niski|wysoki|too\s+low|too\s+high)", re.I)
-TIER_EN = {"too low": "niski", "too high": "wysoki"}   # 14.x: sygnał po angielsku, zapis tą samą wartością
+TIER_EN = {"too low": "niski", "too high": "wysoki"}   # 14.x: signal in English, recorded with the same value
 KLASA_RE = re.compile(r"^[\s*_`>#-]*(?:Klasa|Class)\s*:[\s*_`]*([^\s—–,.;:*_`-]+)", re.I | re.M)
 CLASSES = ("reading", "parallel", "review", "mechanical", "decision", "other")   # core-cost-control §0
-# Brief po polsku („Klasa: Przegląd”) — ta sama klasa; zapis w dzienniku zawsze po angielsku.
+# A brief in Polish („Klasa: Przegląd”) — the same class; the log entry is always in English.
 PL_CLASSES = {"czytanie": "reading", "rownolegle": "parallel", "przeglad": "review", "mechaniczna": "mechanical",
               "decyzja": "decision", "inne": "other"}
 
 
 def task_class(brief: str) -> str | None:
-    """Klasa z linii „Klasa: …” briefu (bez diakrytyków, małymi literami); spoza listy → „other”, brak linii → None."""
+    """Class from the „Klasa: …” line of the brief (without diacritics, lowercase); outside the list → "other", no line → None."""
     m = KLASA_RE.search(brief[:2000])
     if not m:
         return None
@@ -46,8 +46,8 @@ def task_class(brief: str) -> str | None:
 
 
 def text_len(value) -> int:
-    """Długość tekstu raportu: string, lista bloków {type: text} albo słownik z `content`/`result`
-    (w tle — status async_launched — raportu jeszcze nie ma: 0)."""
+    """Length of the report text: a string, a list of {type: text} blocks, or a dict with `content`/`result`
+    (in the background — status async_launched — there is no report yet: 0)."""
     if isinstance(value, str):
         return len(value)
     if isinstance(value, list):
@@ -74,7 +74,7 @@ def delegation_record(data: dict) -> dict:
         "result_chars": text_len(resp),
         "agent_id": resp_d.get("agentId") or resp_d.get("agent_id"),
         "background": bool(inp.get("run_in_background")) or resp_d.get("status") == "async_launched",
-        "usage": resp_d.get("usage"),        # tylko pierwszy plan; w tle zużycie daje SubagentStop (agent_id)
+        "usage": resp_d.get("usage"),        # foreground only; in the background usage comes from SubagentStop (agent_id)
         "duration_ms": resp_d.get("totalDurationMs"),
     }
 
@@ -86,8 +86,8 @@ def log_dir_for(data: dict) -> Path:
 
 
 def usage_from_transcript(path: Path) -> dict:
-    """Sumuje usage z transkryptu. Ta sama odpowiedź (message.id) bywa zapisana w kilku liniach
-    podczas streamingu — bierzemy OSTATNI (pełny) zapis dla każdego id."""
+    """Sums usage from the transcript. The same response (message.id) may be written on several lines
+    during streaming — we take the LAST (complete) entry for each id."""
     per_msg: dict[str, tuple[str, dict]] = {}
     skills: list[str] = []
     last_text = ""
@@ -129,14 +129,14 @@ def usage_from_transcript(path: Path) -> dict:
         totals["cache_read"] += u.get("cache_read_input_tokens") or 0
         totals["cache_write"] += u.get("cache_creation_input_tokens") or 0
         models[model] = models.get(model, 0) + (u.get("output_tokens") or 0)
-    m = TIER_RE.search(last_text[-2000:])     # samoocena wykonawcy z raportu: „Tier: za niski/za wysoki — powód”
+    m = TIER_RE.search(last_text[-2000:])     # the executor's self-assessment from the report: „Tier: za niski/za wysoki — powód”
     return {**totals, "models": models, "skills": list(dict.fromkeys(skills)),
             "tier_feedback": TIER_EN.get(" ".join(m.group(1).lower().split()), m.group(1).lower()) if m else None, "claude_code": version}
 
 
 def harness(root: Path, claude_code: str | None) -> dict:
-    """Odcisk harnessu: wersja Claude Code, fabryki i nakładek oraz 12 znaków SHA-256 z sum kontrolnych plików
-    z manifestu instalacji. Bez manifestu — tylko to, co da się ustalić."""
+    """Harness fingerprint: the Claude Code, factory and overlay versions, and 12 characters of a SHA-256 over the file checksums
+    from the install manifest. Without a manifest — only what can be determined."""
     out = {"claude_code": claude_code} if claude_code else {}
     try:
         man = json.loads((root / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
@@ -172,7 +172,7 @@ def main() -> None:
         path = data.get("agent_transcript_path")
         if not path and transcript and data.get("agent_id"):
             path = str(Path(transcript).with_suffix("") / "subagents" / f"agent-{data['agent_id']}.jsonl")
-    else:  # SessionEnd — główny wątek (persona uruchomiona przez --agent albo zwykła sesja)
+    else:  # SessionEnd — the main thread (a persona started with --agent, or a regular session)
         agent = data.get("agent_type") or "main"
         path = transcript
     if not path:

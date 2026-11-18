@@ -1,62 +1,62 @@
-# Warsztat redakcyjny — zasady i zamienniki
+# The editing workshop — principles and replacements
 
-Zasada nadrzędna: **dobry tekst jest poprawny, krótki, konkretny i prowadzi czytelnika — dopiero potem brzmi ładnie.**
+The overriding principle: **a good text is correct, short, concrete and guides the reader — only then does it sound nice.**
 <!-- polish-lint: off -->
 
-## 1. Uproszczenie
-| Zamiast | Pisz |
+## 1. Simplification
+| Instead of | Write |
 |---|---|
 | w celu | aby, żeby |
 | z uwagi na fakt, że | ponieważ, bo |
-| należy zaznaczyć, że / warto wspomnieć, że | (usuń) |
+| należy zaznaczyć, że / warto wspomnieć, że | (remove) |
 | w ramach | podczas, przy, w |
 | jest możliwe | można |
 | dokonać analizy / przeprowadzić weryfikację / wykonać optymalizację | przeanalizować / zweryfikować / zoptymalizować |
-| w związku z powyższym, w dniu dzisiejszym, niniejszym, przedmiotowy | dlatego, dziś, (usuń), ten |
-| posiadać (o rzeczach) | mieć |
-- **Jedno zdanie = jedna myśl.** Więcej niż 2–3 poziomy zależności → podziel.
-- Słowo w trzech kolejnych zdaniach → przebuduj zdanie (ale **terminu technicznego nie zastępuj synonimem**).
-  W procedurach, runbookach i specyfikacjach powtórzenie terminu jest zamierzone (zasady ASD-STE100, skill
-  dokumentacji technicznej z pack-docs) — tam stały termin wygrywa z urozmaiceniem.
-- Przymiotnik, który nic nie wnosi („ciekawy”, „nowoczesny”, „kompleksowy”) → usuń.
+| w związku z powyższym, w dniu dzisiejszym, niniejszym, przedmiotowy | dlatego, dziś, (remove), ten |
+| posiadać (about things) | mieć |
+- **One sentence = one thought.** More than 2–3 levels of subordination → split.
+- A word in three consecutive sentences → rebuild the sentence (but **do not replace a technical term with a synonym**).
+  In procedures, runbooks and specifications repeating a term is intended (the ASD-STE100 rules, the technical
+  documentation skill from pack-docs) — there a fixed term beats variety.
+- An adjective that adds nothing („ciekawy”, „nowoczesny”, „kompleksowy”) → remove.
 <!-- polish-lint: on -->
 
-## 2. Styl
-- **Strona czynna:** „Zespół wdrożył poprawkę.” zamiast „Zostało wykonane wdrożenie poprawki.” Bierna tylko, gdy wykonawca
-  jest nieistotny lub nieznany („Plik zostaje usunięty po 30 dniach.”).
-- **Konkret:** „skróciliśmy czas odpowiedzi z 800 do 200 ms” zamiast „nastąpiła optymalizacja wydajności”;
-  „ponad 10 000 użytkowników” zamiast „duża liczba użytkowników”.
-- **Rytm:** krótkie zdanie = akcent; dłuższe = kontekst. Kilka długich pod rząd → podziel jedno.
-- **Naturalność:** pisz tak, jak wyjaśniłbyś to koledze przy biurku — bez urzędowych formuł i bez żargonu marketingowego.
+## 2. Style
+- **Active voice:** „Zespół wdrożył poprawkę.” instead of „Zostało wykonane wdrożenie poprawki.” Passive only when the doer
+  is irrelevant or unknown („Plik zostaje usunięty po 30 dniach.”).
+- **Concreteness:** „skróciliśmy czas odpowiedzi z 800 do 200 ms” instead of „nastąpiła optymalizacja wydajności”;
+  „ponad 10 000 użytkowników” instead of „duża liczba użytkowników”.
+- **Rhythm:** a short sentence = emphasis; a longer one = context. Several long ones in a row → split one.
+- **Naturalness:** write the way you would explain it to a colleague at the desk — without official formulas and without marketing jargon.
 
-## 3. Ton i perspektywa
-| Perspektywa | Kiedy | Przykład |
+## 3. Tone and perspective
+| Perspective | When | Example |
 |---|---|---|
-| bezosobowo / tryb rozkazujący | instrukcje, runbooki | „Uruchom migrację.” / „Należy uruchomić…” — wybierz jedno |
-| „ty” | poradniki, komunikaty UI | „Możesz przywrócić wersję…” |
-| „my” | teksty zespołu/firmy, ADR | „Wybraliśmy PostgreSQL, bo…” |
-| neutralna | raporty, analizy | „System obsługuje…” |
-Mieszanie („Użytkownik powinien… Możesz teraz… System umożliwia…”) to najczęstszy błąd — ujednolić. Poziom formalności:
-profesjonalny (dokumentacja), półformalny (artykuły), osobisty (blog) — jeden w całym tekście.
+| impersonal / imperative mood | instructions, runbooks | „Uruchom migrację.” / „Należy uruchomić…” — pick one |
+| „ty” | guides, UI messages | „Możesz przywrócić wersję…” |
+| „my” | team/company texts, ADR | „Wybraliśmy PostgreSQL, bo…” |
+| neutral | reports, analyses | „System obsługuje…” |
+Mixing („Użytkownik powinien… Możesz teraz… System umożliwia…”) is the most common error — unify it. Level of formality:
+professional (documentation), semi-formal (articles), personal (blog) — one in the whole text.
 
-## 4. Czytelność instrukcji (UX tekstu)
-Czytelnik zawsze wie: **gdzie jest** (kontekst), **co ma zrobić** (akcja), **co się stanie** (efekt).
-- Kroki numerowane, jeden krok = jedna akcja; warunek przed akcją („Jeśli X, kliknij Y”).
-- Czasowniki operacyjne: kliknij, wybierz, wpisz, uruchom, sprawdź — zamiast „można skorzystać z opcji”.
-- Bez mgły: „kliknij **Zapisz**, aby zakończyć” zamiast „możliwe jest wykonanie operacji zapisu”.
-- Komunikat błędu: co się stało + dlaczego (jeśli wiadomo) + co zrobić. Bez obwiniania użytkownika.
-- Przycisk: czasownik + efekt („Zapisz zmiany”, „Wyślij zaproszenie”), nie „OK”/„Kliknij tutaj”.
+## 4. Readability of instructions (text UX)
+The reader always knows: **where they are** (context), **what to do** (action), **what will happen** (effect).
+- Numbered steps, one step = one action; the condition before the action („Jeśli X, kliknij Y”).
+- Operational verbs: kliknij, wybierz, wpisz, uruchom, sprawdź — instead of „można skorzystać z opcji”.
+- No fog: „kliknij **Zapisz**, aby zakończyć” instead of „możliwe jest wykonanie operacji zapisu”.
+- An error message: what happened + why (if known) + what to do. Without blaming the user.
+- A button: verb + effect („Zapisz zmiany”, „Wyślij zaproszenie”), not „OK”/„Kliknij tutaj”.
 
-## 5. Spójność (tryb rozszerzony)
-- Zbierz terminy, nazwy własne i skróty → jedna forma w całości (zgodnie ze słownikiem projektu).
-- Wyrównaj szczegółowość podobnych sekcji (jedna z przykładem, druga bez → dodaj albo usuń w obu).
-- Przejścia: sekcja kończy się tym, co dalej, albo następna zaczyna od problemu, który rozwiązuje.
-- Jednolite wyróżnienia: nazwy przycisków zawsze tak samo (pogrubienie albo cudzysłów), kod zawsze w `kodzie`.
+## 5. Consistency (extended mode)
+- Collect terms, proper names and abbreviations → one form in the whole (per the project glossary).
+- Even out the level of detail of similar sections (one with an example, the other without → add or remove in both).
+- Transitions: a section ends with what comes next, or the next one starts with the problem it solves.
+- Uniform emphasis: button names always the same way (bold or quotation marks), code always in `kodzie`.
 
-## 6. Obrazowość (tryb premium, na życzenie)
-Oszczędnie i tylko gdy wzmacnia: obraz zamiast ogólnika („reaguje, zanim zauważysz opóźnienie” zamiast „działa szybko”),
-wejście w sytuację czytelnika, kontrast przed/po („Wczoraj 10 minut. Dziś trzy kliknięcia.”), jedno krótkie zdanie po długim akapicie.
+## 6. Imagery (premium mode, on request)
+Sparingly and only when it strengthens: an image instead of a generality („reaguje, zanim zauważysz opóźnienie” instead of „działa szybko”),
+stepping into the reader's situation, a before/after contrast („Wczoraj 10 minut. Dziś trzy kliknięcia.”), one short sentence after a long paragraph.
 
-## 7. Heurystyki
-Czytasz zdanie dwa razy → przepisz. Da się usunąć słowo bez straty sensu → usuń. Brzmi urzędowo → po ludzku.
-Czytelnik nie wie, co kliknąć → popraw. Akapit nic nie wnosi → skróć albo usuń (za zgodą autora, jeśli to treść merytoryczna).
+## 7. Heuristics
+You read a sentence twice → rewrite it. A word can be removed without loss of meaning → remove it. It sounds official → make it human.
+The reader does not know what to click → fix it. A paragraph adds nothing → shorten or remove it (with the author's consent, if it is substantive content).

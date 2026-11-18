@@ -1,110 +1,110 @@
 #!/usr/bin/env python3
 """
-Stan przebiegu zadania i podgląd (skill tf): jedyny pisarz etapu i rundy w run.json
-oraz generator dashboardu. Stan zapisuje skrypt, nie model — model tylko woła polecenie.
+Task run state and the preview (skill tf): the only writer of the stage and round in run.json
+and the dashboard generator. The state is written by the script, not the model — the model only calls the command.
 
-  python3 .claude/skills/tf/scripts/run_state.py stage <katalog-przebiegu> <etap> [--needs plan|stop] [--code <kod>] [--auto|--plan]
-  python3 .claude/skills/tf/scripts/run_state.py mode <katalog-przebiegu> [plan|normal|auto]   # tryb zadania
-  python3 .claude/skills/tf/scripts/run_state.py approve <katalog-przebiegu>                   # zgoda człowieka na plan
-  python3 .claude/skills/tf/scripts/run_state.py message <kod> [--json]                        # komunikat zatrzymania dla człowieka
-        [--reason "<powód STOP>"] [--pr N] [--auto] [--effort low|medium|high]
+  python3 .claude/skills/tf/scripts/run_state.py stage <run-directory> <stage> [--needs plan|stop] [--code <code>] [--auto|--plan]
+  python3 .claude/skills/tf/scripts/run_state.py mode <run-directory> [plan|normal|auto]   # the task's mode
+  python3 .claude/skills/tf/scripts/run_state.py approve <run-directory>                   # the human's consent to the plan
+  python3 .claude/skills/tf/scripts/run_state.py message <code> [--json]                   # the stop message for the human
+        [--reason "<STOP reason>"] [--pr N] [--auto] [--effort low|medium|high]
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> S2 R1 verify fail
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
   python3 .claude/skills/tf/scripts/run_state.py spec <katalog-przebiegu> [new]
   python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> mode      # auto | manual
-  python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> set <klucz> [--remove-by RRRR-MM-DD]
-  python3 .claude/skills/tf/scripts/run_state.py flag <katalog-przebiegu> none --reason "bez flagi, bo …"
-  python3 .claude/skills/tf/scripts/run_state.py trace <katalog-przebiegu> [--base <gałąź>]
-  python3 .claude/skills/tf/scripts/run_state.py pr-body <katalog-przebiegu> [--base <gałąź>]   # opis PR do --body-file
-  python3 .claude/skills/tf/scripts/run_state.py panel <katalog-przebiegu> [--record <recenzent> pass|fail --note "…"]
-  python3 .claude/skills/tf/scripts/run_state.py finding <katalog-przebiegu> S2 "<ważne ustalenie przeglądu>" [--round R]
-  python3 .claude/skills/tf/scripts/run_state.py verify <katalog-przebiegu> S2 --files <plik>[,<plik>…]
-        [--command "<polecenie>"] [--timeout <s>]
+  python3 .claude/skills/tf/scripts/run_state.py flag <run-directory> set <key> [--remove-by YYYY-MM-DD]
+  python3 .claude/skills/tf/scripts/run_state.py flag <run-directory> none --reason "no flag, because …"
+  python3 .claude/skills/tf/scripts/run_state.py trace <run-directory> [--base <branch>]
+  python3 .claude/skills/tf/scripts/run_state.py pr-body <run-directory> [--base <branch>]   # the PR description for --body-file
+  python3 .claude/skills/tf/scripts/run_state.py panel <run-directory> [--record <reviewer> pass|fail --note "…"]
+  python3 .claude/skills/tf/scripts/run_state.py finding <run-directory> S2 "<important review finding>" [--round R]
+  python3 .claude/skills/tf/scripts/run_state.py verify <run-directory> S2 --files <file>[,<file>…]
+        [--command "<command>"] [--timeout <s>]
   python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> K2
-  python3 .claude/skills/tf/scripts/run_state.py park <katalog-przebiegu> "<sprawa do decyzji>"
-  python3 .claude/skills/tf/scripts/run_state.py block <katalog-przebiegu> S2 --question "<pytanie do człowieka>"
-  python3 .claude/skills/tf/scripts/run_state.py answer <katalog-przebiegu> S2 "<odpowiedź>" --by human:<id>
+  python3 .claude/skills/tf/scripts/run_state.py park <run-directory> "<matter for a decision>"
+  python3 .claude/skills/tf/scripts/run_state.py block <run-directory> S2 --question "<question for the human>"
+  python3 .claude/skills/tf/scripts/run_state.py answer <run-directory> S2 "<answer>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py next <katalog-przebiegu>
-  python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out PLIK]
+  python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out FILE]
 
-`stage` ustawia etap przebiegu: intake, plan, slices, pr, needs, done. Etap `needs` wymaga `--needs plan` (plan czeka
-na akceptację) albo `--needs stop --code <kod>` (blok STOP; kod z zamkniętej listy `STOP_CODES`, `--reason` to powód
-z dowodem; bez kodu albo z kodem spoza listy polecenie kończy się kodem 2 i wypisuje listę). `--auto` i `--plan`
-zapisują tryb zadania (`tf task mode`): Plan kończy przebieg na planie, zwykły (domyślny) wpuszcza pętlę kawałka po
-zgodzie człowieka na plan (`approve`), Auto — bez zgody, chyba że waga jest pełna. `step` zapisuje wynik etapu pętli w rundzie
-bieżącego kawałka: etapy test, kod, weryf, skan, zakres; stany run, pass, fail. Rundę zaczyna kolejna próba kawałka
-po nieudanej bramce (R1, R2). Trzeciej rundy skrypt odmawia: kawałek kończy się blokiem STOP, a po decyzji człowieka
-(etap `needs`) dostaje dwie kolejne. Etapy wcześniejsze od zapisywanego, które nie mają stanu albo trwają, dostają pass —
-pętla zgłasza tylko to, co zaczyna i czym kończy. Pierwszy `step` przenosi przebieg z intake/plan do slices, a po
-decyzji człowieka (needs) wraca do slices. Cel `PR` zapisuje etapy plan_drift i pr.
+`stage` sets the run's stage: intake, plan, slices, pr, needs, done. The `needs` stage requires `--needs plan` (the plan waits
+for acceptance) or `--needs stop --code <code>` (a STOP block; the code from the closed list `STOP_CODES`, `--reason` is the reason
+with evidence; without a code or with a code outside the list the command exits with code 2 and prints the list). `--auto` and `--plan`
+record the task's mode (`tf task mode`): Plan ends the run at the plan, the normal (default) lets the slice loop in after
+the human's consent to the plan (`approve`), Auto — without consent, unless the weight is full. `step` records the result of a loop step in the round
+of the current slice: steps test, code, verify, scan, scope; states run, pass, fail. A round starts with the next attempt at the slice
+after a failed gate (R1, R2). The script refuses a third round: the slice ends with a STOP block, and after the human's decision
+(the `needs` stage) it gets two more. Steps earlier than the one being written that have no state or are running get pass —
+the loop reports only what it starts and what it ends with. The first `step` moves the run from intake/plan to slices, and after
+the human's decision (needs) it returns to slices. The target `PR` records the plan_drift and pr steps.
 
-`spec <katalog> new` zakłada szablon `spec.md` (dopiero wtedy, gdy pętla zaczyna specyfikację — po wczesnym STOP
-w repozytorium nie zostaje pusty plik). `spec` sprawdza `spec.md` zadania (`tf spec check`): kryteria AC-n z Given / When / Then, sekcje „Unchanged”
-i „Out of scope”, brak pytań [blocking]. Etap `plan` (i każdy dalszy) jest odrzucany, dopóki specyfikacja ma błędy;
-`stage plan` zapisuje też, z których plików powstał plan — zmiana `spec.md` po planie blokuje etap `pr`, dopóki
-`stage plan` nie zostanie wywołane ponownie.
+`spec <directory> new` creates the `spec.md` template (only when the loop starts the specification — after an early STOP
+no empty file stays in the repository). `spec` checks the task's `spec.md` (`tf spec check`): AC-n criteria with Given / When / Then, the „Unchanged”
+and „Out of scope” sections, no [blocking] questions. The `plan` stage (and every later one) is rejected while the specification has errors;
+`stage plan` also records which files the plan was built from — a change of `spec.md` after the plan blocks the `pr` stage until
+`stage plan` is called again.
 
-`flag mode` mówi, kto prowadzi flagi: `auto` (domyślnie — fabryka, po zapytaniu człowieka o nazwę) albo `manual`
-(`feature_flags.auto: false` w `.tf/config/config.yaml` — człowiek dodaje flagi sam, pętla ich nie zakłada).
-`flag` zapisuje flagę funkcji historyjki (`tf task flag`) albo jawny powód jej braku; bez tego, albo z flagą włączoną
-poza środowiskiem testowym bez zgody człowieka, etap `pr` jest odrzucany. Zgody na inne środowisko pętla nie zapisuje.
+`flag mode` says who handles flags: `auto` (default — the factory, after asking the human for a name) or `manual`
+(`feature_flags.auto: false` in `.tf/config/config.yaml` — the human adds flags themselves, the loop does not create them).
+`flag` records the story's feature flag (`tf task flag`) or an explicit reason for its absence; without it, or with a flag enabled
+outside the test environment without the human's consent, the `pr` stage is rejected. The loop does not record consent for another environment.
 
-`weight` pokazuje wagę zadania (lekka / zwykła / pełna) z powodem i skutkami. Wagę przydziela `run_report.py start`
-z treści zgłoszenia, a etapy `intake` i `plan` ponawiają przydział (`tf task weight --apply`: tylko w górę, np. gdy
-plan dotyka migracji; decyzji człowieka nie zmieniają); `weight --set <waga>` podnosi wagę, a obniżyć może tylko człowiek (`tf task weight … --by
-human:<id>`). Zadanie o wadze lekkiej nie potrzebuje `spec.md`; zadanie o wadze pełnej nie wejdzie w pętlę kawałka
-bez planu zatwierdzonego przez człowieka.
+`weight` shows the task's weight (light / normal / full) with the reason and consequences. The weight is assigned by `run_report.py start`
+from the issue content, and the `intake` and `plan` stages repeat the assignment (`tf task weight --apply`: upward only, e.g. when the
+plan touches migrations; they do not change the human's decisions); `weight --set <weight>` raises the weight, and only a human can lower it (`tf task weight … --by
+human:<id>`). A light task does not need `spec.md`; a full task will not enter the slice loop
+without a plan approved by a human.
 
-`trace` drukuje tabelę kryterium → test → commit → dowód (`tf trace --md`) do opisu PR; kryterium bez testu albo
-test z `AC-n` spoza specyfikacji to kod 1 i odmowa etapu `pr`.
+`trace` prints the criterion → test → commit → evidence table (`tf trace --md`) for the PR description; a criterion without a test or
+a test with an `AC-n` outside the specification is exit code 1 and a refusal of the `pr` stage.
 
-`pr-body` składa opis PR z plików zadania i zapisuje go w `<katalog-przebiegu>/pr-body.md`: historyjka, kawałki
-z commitami, ślad kryteriów, **Jak sprawdzono** (dowody, skan, plan_drift), **Ryzyko** (waga i `tf risk`), **Jak
-cofnąć** (karta operacyjna `deploy.rollback`, `git revert`, flaga), odłożone sprawy i założenia. Kawałek bez
-zielonego dowodu jest w opisie nazwany wprost. Skrypt niczego nie wypycha i nie zakłada PR.
+`pr-body` assembles the PR description from the task files and writes it to `<run-directory>/pr-body.md`: the story, slices
+with commits, the criteria trace, **How it was checked** (evidence, scan, plan_drift), **Risk** (weight and `tf risk`), **How to
+roll back** (the operations card `deploy.rollback`, `git revert`, the flag), postponed matters and assumptions. A slice without
+green evidence is named explicitly in the description. The script pushes nothing and creates no PR.
 
-`panel` (waga pełna, krok H11): skład panelu recenzentów w osobnych kontekstach (`security-reviewer`, `spec-reviewer`)
-z gotowym zleceniem dla każdego i zapisanymi werdyktami; `--record` zapisuje werdykt w zadaniu (`tf task review`).
-Etap `pr` zadania o wadze pełnej wymaga werdyktu `pass` od obu dla bieżącego commita.
+`panel` (full weight, step H11): the composition of the reviewer panel in separate contexts (`security-reviewer`, `spec-reviewer`)
+with a ready assignment for each and the recorded verdicts; `--record` records a verdict in the task (`tf task review`).
+The `pr` stage of a full-weight task requires a `pass` verdict from both for the current commit.
 
-`finding` zapisuje w zadaniu ważne ustalenie przeglądu zakresu (z kawałkiem i rundą). `step … scope fail` jest
-odrzucany, dopóki kawałek nie ma ustalenia z tej rundy — przy zamknięciu zadania (`tf task close`) każde ważne
-ustalenie musi mieć kontrolę, która złapie je następnym razem.
+`finding` records in the task an important finding of the scope review (with the slice and round). `step … scope fail` is
+rejected while the slice has no finding from this round — when the task is closed (`tf task close`) every important
+finding must have a check that will catch it next time.
 
-`verify` zapisuje dowód kawałka: uruchamia polecenie weryfikacji (domyślnie to z `.claude/quality-gate.json`) przez
-`tf task verify` i zapisuje wynik w `docs/project/changes/<KEY>/evidence/`. `tick` odhacza w plan.md tylko kawałek
-z aktualnym dowodem, a etap `pr` przechodzi tylko wtedy, gdy każdy kawałek zadania go ma. Etap przebiegu trafia też
-do `task.json` (intake → intake, plan → plan, slices → realizacja, pr → pr). Katalog przebiegu bez zadania w run.json
-(stary układ cięć `.tf/runs/cuts/`) nie przyjmuje poleceń zadania (`spec`, `flag`, `verify`, `trace`, `mode`, `weight`,
-`approve`) — polecenie mówi, jak zacząć cięcie od nowa.
+`verify` records a slice's evidence: it runs the verification command (by default the one from `.claude/quality-gate.json`) through
+`tf task verify` and writes the result in `docs/project/changes/<KEY>/evidence/`. `tick` ticks off in plan.md only a slice
+with current evidence, and the `pr` stage passes only when every slice of the task has it. The run's stage also goes
+to `task.json` (intake → intake, plan → plan, slices → implementation, pr → pr). A run directory without a task in run.json
+(the old cut layout `.tf/runs/cuts/`) does not accept task commands (`spec`, `flag`, `verify`, `trace`, `mode`, `weight`,
+`approve`) — the command says how to start the cut anew.
 
-`tick` odhacza kawałek w plan.md, `park` dopisuje sprawę na końcu parked.md — jedno polecenie z listy dozwolonych
-zamiast `sed`, `>>` i heredoc w powłoce, o które Claude Code pyta człowieka (pomiar E0, 2026-11-13).
+`tick` ticks off a slice in plan.md, `park` appends a matter at the end of parked.md — one command from the allowed list
+instead of `sed`, `>>` and a heredoc in the shell, which Claude Code asks the human about (measurement E0, 2026-11-13).
 
-`block`, `answer` i `next` działają z przełącznikiem `loop.blocked_slices` (`.tf/config/config.yaml`, domyślnie
-wyłączony): pytanie blokuje tylko swój kawałek (`block`), skrypt mówi, który kawałek można robić dalej (`Dalej: K3`
-albo `Dalej: STOP`, gdy żaden nie jest niezależny), a `answer` zapisuje odpowiedź człowieka i odblokowuje kawałek.
-Zależności kawałków zapisuje plan (`· after: S1`, `· after: none`; bez dopisku — po poprzednim), pytania i odpowiedzi —
-`events.jsonl` zadania (jeden wpis w wierszu: `at`, `type` — `question`
-albo `answer`, `slice`, `text`, `by`; plik zapisuje decyzje, stanem przebiegu nie steruje). Z włączonym przełącznikiem STOP z kodem `question` dla bieżącego kawałka
-jest odrzucany, gdy został kawałek niezależny; pytanie o całe zadanie przechodzi z `--task`.
+`block`, `answer` and `next` work with the `loop.blocked_slices` switch (`.tf/config/config.yaml`, off
+by default): a question blocks only its own slice (`block`), the script says which slice can be done next (`Next: K3`
+or `Next: STOP`, when none is independent), and `answer` records the human's answer and unblocks the slice.
+Slice dependencies are recorded by the plan (`· after: S1`, `· after: none`; without a note — after the previous one), questions and answers —
+the task's `events.jsonl` (one entry per line: `at`, `type` — `question`
+or `answer`, `slice`, `text`, `by`; the file records decisions, it does not steer the run state). With the switch on, a STOP with the code `question` for the current slice
+is rejected when an independent slice remains; a question about the whole task goes through with `--task`.
 
-`proceed` działa z przełącznikiem `loop.confirm_each_slice` (styl pracy `step-by-step` albo `conversation`, `tf style`):
-po `done` przebieg czeka na zgodę człowieka (`Dalej: STOP`), a `verify` i `step` następnego kawałka odmawiają, dopóki
-`proceed` nie zapisze zgody. W trybie Auto przełącznik nie działa — nie ma człowieka, który by ją dał.
+`proceed` works with the `loop.confirm_each_slice` switch (the `step-by-step` or `conversation` work style, `tf style`):
+after `done` the run waits for the human's consent (`Next: STOP`), and `verify` and `step` of the next slice refuse until
+`proceed` records the consent. In Auto mode the switch does not work — there is no human to give it.
 
-`launch` (wołane przez `run_report.py start`) buduje dashboard i otwiera go w przeglądarce; wyłączysz to w
-`.claude/tf.json`: {"dashboard": false} (wcale) albo {"dashboard_open": false} (buduje, ale nie otwiera);
-domyślnie oba włączone. Zmienne TF_DASHBOARD=0 i TF_DASHBOARD_OPEN=0 robią to samo bez pliku.
+`launch` (called by `run_report.py start`) builds the dashboard and opens it in the browser; you turn this off in
+`.claude/tf.json`: {"dashboard": false} (entirely) or {"dashboard_open": false} (builds, but does not open);
+both on by default. The variables TF_DASHBOARD=0 and TF_DASHBOARD_OPEN=0 do the same without the file.
 
-`dashboard` buduje samodzielny plik .tf/runs/dashboard.html z wszystkich przebiegów w .tf/runs/<KEY>/ i przebiegów cięć
-w .tf/runs/cuts/ (ignorowany przez git razem z przebiegami): kolumny wg etapu, karty z rundami, panel plików. Koszt i czas liczy z transkryptów
-(run_report.py) i zapamiętuje w run.json; `stage` i `step` odświeżają plik bez liczenia kosztu. Karta zadania
-pokazuje etap z task.json i pasek kawałków; kawałek odhaczony, który stracił aktualny dowód, ma osobny stan (`stale`).
-Zadanie bez przebiegu (samo `tf task`, świeży klon bez `.tf/runs/`) też dostaje kartę. Panel plików dzieli
-pliki na katalog zadania (git), katalog roboczy i dowody. Etap, którego nikt nie
-zapisał, wynika z plan.md (kawałki odhaczone i nie) i report.md.
-Zapis stanu służy podglądowi: błąd tego skryptu nie jest powodem do STOP przebiegu.
+`dashboard` builds a standalone file .tf/runs/dashboard.html from all runs in .tf/runs/<KEY>/ and cut runs
+in .tf/runs/cuts/ (ignored by git along with the runs): columns by stage, cards with rounds, a file panel. It computes the cost and time from the transcripts
+(run_report.py) and stores them in run.json; `stage` and `step` refresh the file without computing the cost. The task card
+shows the stage from task.json and a slice bar; a ticked-off slice that lost its current evidence has a separate state (`stale`).
+A task without a run (just `tf task`, a fresh clone without `.tf/runs/`) also gets a card. The file panel splits
+files into the task directory (git), the working directory and evidence. A stage that nobody
+recorded is derived from plan.md (slices ticked off and not) and report.md.
+The state write serves the preview: an error of this script is not a reason for a run STOP.
 """
 from __future__ import annotations
 
@@ -128,7 +128,7 @@ STEPS = ("test", "code", "verify", "scan", "scope")
 STATES = ("run", "pass", "fail")
 PR_STEPS = {"plan_drift": "drift", "pr": "pr"}
 NEEDS = ("plan", "stop")
-# Zamknięta lista kodów zatrzymań (`stage … needs --needs stop --code <kod>`): kod → co się stało, zwykłym zdaniem.
+# A closed list of stop codes (`stage … needs --needs stop --code <code>`): code → what happened, in a plain sentence.
 STOP_CODES = {
     "question": "information is missing, without which the work cannot start",
     "split": "the task is too big or combines several actions — it has to be split",
@@ -142,20 +142,20 @@ STOP_CODES = {
     "contract": "a contract change or a business decision (a public API, a data schema, a migration)",
     "permissions": "an operation reserved for the human (production, publishing, a flag outside the test environment)",
 }
-TASK_STAGE = {"intake": "intake", "plan": "plan", "slices": "implementation", "pr": "pr"}   # etap przebiegu → etap zadania
+TASK_STAGE = {"intake": "intake", "plan": "plan", "slices": "implementation", "pr": "pr"}   # the run's stage → the task's stage
 TASK_ORDER = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", "closed")
 BARE_STAGE = {"intake": "intake", "spec": "intake", "plan": "plan", "implementation": "slices",
-              "review": "slices", "pr": "pr", "deploy": "done", "closed": "done"}   # zadanie bez przebiegu
+              "review": "slices", "pr": "pr", "deploy": "done", "closed": "done"}   # a task without a run
 PROOF_STATE = {"verified": "done", "red": "fail", "blocked": "fail", "planned": "todo"}
 _TASK_API = None
-SLICE = re.compile(r"^\s*- \[([ xX])\]\s+([KS]\d+)\s*[—-]\s*(.+)$")   # S<n>; S<n> — plany sprzed 14.0.0
+SLICE = re.compile(r"^\s*- \[([ xX])\]\s+([KS]\d+)\s*[—-]\s*(.+)$")   # S<n>; S<n> — plans from before 14.0.0
 SLICE_ID = r"[KS]\d+"
 MAX_TEXT = 40000
 MAX_RUNS = 40
-MAX_ROUNDS = 2      # rundy jednego kawałka bez decyzji człowieka (pierwsza próba i jedna naprawa); potem blok STOP
+MAX_ROUNDS = 2      # rounds of one slice without a human decision (the first attempt and one repair); then a STOP block
 TEMPLATE = HERE.parent / "templates" / "dashboard.html"
-MESSAGES = HERE.parent / "templates" / "stop_messages.json"   # komunikaty zatrzymań dla człowieka, jeden na kod
-CONFIG = Path(".claude") / "tf.json"         # opcje podglądu; plik osobisty, aktualizacja fabryki go nie rusza
+MESSAGES = HERE.parent / "templates" / "stop_messages.json"   # stop messages for the human, one per code
+CONFIG = Path(".claude") / "tf.json"         # preview options; a personal file, a factory update does not touch it
 DEFAULTS = {"dashboard": True, "dashboard_open": True}
 
 
@@ -168,7 +168,7 @@ def read_run(run_dir: Path) -> dict:
 
 
 def write_run(run_dir: Path, meta: dict) -> None:
-    """Zapis atomowy (plik tymczasowy i podmiana) — podgląd nigdy nie czyta połowy pliku."""
+    """Atomic write (a temporary file and a replace) — the preview never reads half a file."""
     meta["updated_at"] = now_iso()
     tmp = run_dir / "run.json.tmp"
     tmp.write_text(json.dumps(meta, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -187,10 +187,10 @@ def load(run_dir: Path) -> dict | None:
         return None
 
 
-# ---- zadanie (task.json pisze tylko `tf task`) -------------------------------------------------------------------
+# ---- task (task.json is written only by `tf task`) -------------------------------------------------------------------
 
 def task_api(project: Path):
-    """`task_state.py` silnika jako moduł — odczyt stanu zadań bez podprocesu na każdą kartę; None, gdy go nie ma."""
+    """The engine's `task_state.py` as a module — reading task state without a subprocess for every card; None when it is not there."""
     global _TASK_API
     if _TASK_API is None:
         _TASK_API = False
@@ -206,7 +206,7 @@ def task_api(project: Path):
 
 
 def task_view(project: Path, key: str) -> dict | None:
-    """Zadanie i wyliczone stany jego kawałków; None, gdy zadania nie ma albo nie da się go odczytać."""
+    """The task and the computed states of its slices; None when there is no task or it cannot be read."""
     try:
         api = task_api(project)
         root = project.resolve()
@@ -219,7 +219,7 @@ def task_view(project: Path, key: str) -> dict | None:
 
 
 def task_field(run_dir: Path, meta: dict, name: str) -> str | None:
-    """Pole zadania z task.json (np. weight, mode); None, gdy przebieg nie ma zadania."""
+    """A task field from task.json (e.g. weight, mode); None when the run has no task."""
     try:
         return json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get(name)
     except (OSError, ValueError, AttributeError):
@@ -227,13 +227,13 @@ def task_field(run_dir: Path, meta: dict, name: str) -> str | None:
 
 
 def task_weight(run_dir: Path, meta: dict) -> str | None:
-    """Waga zadania (lekka / normal / full); None, gdy przebieg nie ma zadania."""
+    """The task's weight (light / normal / full); None when the run has no task."""
     return task_field(run_dir, meta, "weight")
 
 
 def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | None:
-    """Przenosi etap przebiegu do task.json (tylko do przodu). Zwraca odmowę `tf task` (specyfikacja z błędami,
-    kawałek bez aktualnego dowodu, nieaktualny plik) — to bramka, nie błąd podglądu."""
+    """Moves the run's stage to task.json (forward only). Returns a `tf task` refusal (a specification with errors,
+    a slice without current evidence, a stale file) — it is a gate, not a preview error."""
     key, target = meta.get("key"), TASK_STAGE.get(stage)
     if not key or not target:
         return None
@@ -257,8 +257,8 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
 
 
 def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
-    """Zapisuje w task.json, z których plików powstał plan (skróty spec.md i ticket.md) — zmiana specyfikacji po
-    planie oznacza plan jako nieaktualny, co wykrywa `tf task`, nie model."""
+    """Records in task.json which files the plan was built from (hashes of spec.md and ticket.md) — a change of the specification after
+    the plan marks the plan as stale, which `tf task` detects, not the model."""
     docs = run_report.docs_dir(run_dir, meta)
     inputs = [n for n in ("spec.md", "ticket.md") if (docs / n).is_file()]
     if meta.get("key") and inputs and (docs / "plan.md").is_file():
@@ -267,7 +267,7 @@ def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
 
 
 def no_task(meta: dict) -> int:
-    """Katalog przebiegu bez zadania (stary układ cięć `.tf/runs/cuts/`): poleceń zadania nie da się na nim wykonać."""
+    """A run directory without a task (the old cut layout `.tf/runs/cuts/`): task commands cannot be executed on it."""
     again = f"/tf {meta['task']}" + (f" --change {meta['change']}" if meta.get("change") else "") if meta.get("task") \
         else "/tf <TSK-n>"
     return fail(f"this run directory has the old layout (without a task) — start the cut again: {again}")
@@ -301,7 +301,7 @@ def cmd_flag(run_dir: Path, action: str, value: str | None, remove_by: str | Non
 
 
 def stop_message(code: str | None) -> dict | None:
-    """Komunikat zatrzymania dla człowieka (prosty język): co, potrzeba, pytanie, opcje, potem. None, gdy go nie ma."""
+    """The stop message for the human (plain language): what, need, question, options, then. None when there is none."""
     try:
         msg = json.loads(MESSAGES.read_text(encoding="utf-8")).get(code or "")
     except (OSError, ValueError, AttributeError):
@@ -344,7 +344,7 @@ def cmd_mode(run_dir: Path, new: str | None, project: Path) -> int:
 
 
 def human_id(project: Path) -> str:
-    """Identyfikator człowieka do zapisu zgody: nazwa z gita (zmienna albo konfiguracja), inaczej użytkownik systemu."""
+    """The human's identifier for recording consent: the name from git (a variable or the configuration), otherwise the system user."""
     name = os.environ.get("GIT_AUTHOR_NAME") or ""
     if not name:
         try:
@@ -357,7 +357,7 @@ def human_id(project: Path) -> str:
 
 
 def cmd_approve(run_dir: Path, project: Path) -> int:
-    """Zgoda człowieka na plan (i specyfikację, z której powstał). W trybie Auto nie ma człowieka — odmowa."""
+    """The human's consent to the plan (and the specification it was built from). In Auto mode there is no human — a refusal."""
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -413,7 +413,7 @@ def cmd_spec(run_dir: Path, project: Path, new: bool = False) -> int:
 
 
 def slice_evidence(project: Path, meta: dict, slice_id: str) -> str:
-    """Stan kawałka wyliczony przez `tf task` (verified, unverified, red…); bez wpisu — brak dowodu."""
+    """The slice state computed by `tf task` (verified, unverified, red…); without an entry — no evidence."""
     r = run_report.task_state(project, "status", meta["key"], "--json")
     try:
         return json.loads(r.stdout).get("slice_states", {}).get(slice_id) or "no evidence"
@@ -445,13 +445,13 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
 
 
 TEST_FILE = re.compile(r"(^|/)(tests?|__tests__|e2e|spec)/|\.(test|spec)\.|(^|/)test_[^/]*\.py$|_test\.(py|go)$|"
-                       r"(Test|Tests)\.(java|cs)$")          # te same wzorce co w śladzie kryteriów (trace_check.py)
+                       r"(Test|Tests)\.(java|cs)$")          # the same patterns as in the criteria trace (trace_check.py)
 CRITERION = re.compile(r"\bAC[-_ ]?\d+\b", re.I)
 
 
 def criterion_hints(project: Path, run_dir: Path, meta: dict, files: str) -> list[str]:
-    """Ostrzeżenia przy weryfikacji kawałka zadania ze specyfikacją: test bez identyfikatora kryterium (`AC-n`) albo
-    brak pliku testu wśród plików kawałka. Dopisanie teraz trafia do commita kawałka, a nie do osobnego commita."""
+    """Warnings when verifying a task slice with a specification: a test without a criterion identifier (`AC-n`) or
+    no test file among the slice's files. Adding it now goes into the slice's commit, not a separate commit."""
     if not (run_report.docs_dir(run_dir, meta) / "spec.md").is_file():
         return []
     tests = [f.strip() for f in files.split(",") if f.strip() and TEST_FILE.search(f.strip())]
@@ -472,7 +472,7 @@ def criterion_hints(project: Path, run_dir: Path, meta: dict, files: str) -> lis
     return []
 
 
-# ---- zapis stanu -------------------------------------------------------------------------------------------------
+# ---- state write -------------------------------------------------------------------------------------------------
 
 def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, pr: int | None, auto: bool,
               effort: str | None, project: Path, plan_mode: bool = False, code: str | None = None,
@@ -499,15 +499,15 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         slices, blocked = plan_and_blocked(project, run_dir, meta)
         open_cur = cur_k and cur_k not in blocked and any(s["id"] == cur_k and not s["checked"] for s in slices)
         other = next_slice(slices, blocked | {cur_k}) if open_cur else None
-        if other:       # pytanie o jeden kawałek nie zatrzymuje całości, gdy jest co robić dalej
+        if other:       # a question about one slice does not stop the whole when there is something to do next
             return fail(f"the question concerns the slice {cur_k}, and {other['id']} does not depend on it — block only {cur_k}: "
                         f"run_state.py block {run_dir} {cur_k} --question \"<question>\" and do {other['id']}. When the question "
                         "concerns the whole task, add `--task`.")
-    if (auto or plan_mode) and meta.get("key"):               # tryb zadania wybiera człowiek w poleceniu /tf
+    if (auto or plan_mode) and meta.get("key"):               # the task's mode is chosen by the human in the /tf command
         m = run_report.task_state(project, "mode", meta["key"], "auto" if auto else "plan")
-        if m is not None and "—" in m.stdout:                  # np. Auto przy wadze pełnej: zostaje tryb zwykły
+        if m is not None and "—" in m.stdout:                  # e.g. Auto at full weight: the normal mode stays
             print(m.stdout.strip())
-    if stage in ("intake", "plan") and meta.get("key"):      # waga: ponowny przydział (tylko w górę) po treści i planie
+    if stage in ("intake", "plan") and meta.get("key"):      # weight: a repeated assignment (upward only) after the content and the plan
         before = task_weight(run_dir, meta)
         w = run_report.task_state(project, "weight", meta["key"], "--apply")
         if w is not None and w.returncode == 0 and task_weight(run_dir, meta) != before:
@@ -525,7 +525,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     meta.pop("needs_at", None)
     if stage == "needs":
         meta["needs"] = needs
-        meta["needs_at"] = now_iso()                # od kiedy zadanie czeka na człowieka (lista „Czeka na Ciebie”)
+        meta["needs_at"] = now_iso()                # since when the task has been waiting for the human (the „Czeka na Ciebie” list — "Waiting for you")
         if needs == "stop":
             meta["stop_code"] = code
             if reason:
@@ -546,7 +546,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
               "(independent); without it a slice depends on the previous one. That way a question in one slice does not "
               "stop the others.")
     msg = stop_message(code) if needs == "stop" else None
-    if msg:     # komunikat dla człowieka: pętla pokazuje go zamiast własnego opisu
+    if msg:     # a message for the human: the loop shows it instead of its own description
         print("A message for the human — show it with evidence (the command and the output); in a conversation ask the question with "
               "the AskUserQuestion tool with these options, in an unsupervised run write it into the report:")
         print("\n".join(message_lines(msg, reason)))
@@ -583,12 +583,12 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     rnd, step, state = int(rest[0][1:]), rest[1], rest[2]
     cur = meta.get("current")
     if not isinstance(cur, dict) or cur.get("k") != target:
-        cur = {"k": target, "rounds": []}      # nowy kawałek: rundy liczą się od R1
+        cur = {"k": target, "rounds": []}      # a new slice: rounds count from R1
     rounds = cur.setdefault("rounds", [])
     limit = cur.get("limit") or MAX_ROUNDS
     if rnd > limit and meta.get("stage") == "needs":
-        limit = cur["limit"] = len(rounds) + MAX_ROUNDS     # człowiek zdecydował po STOP: kolejne próby
-    if rnd > limit:                                         # limitu rund pilnuje skrypt, nie deklaracja modelu
+        limit = cur["limit"] = len(rounds) + MAX_ROUNDS     # the human decided after STOP: further attempts
+    if rnd > limit:                                         # the round limit is enforced by the script, not by the model's declaration
         return fail(f"{target} already had {limit} rounds — the next one starts only after the human's decision. Finish "
                     f"with a STOP block: run_state.py stage {run_dir} needs --needs stop --code <code> --reason \"<the reason "
                     "with evidence>\" (codes: tests — the verification is red, scan — the scan blocks, contract — a review "
@@ -603,11 +603,11 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     row = rounds[rnd - 1]
     for earlier in STEPS[:STEPS.index(step)]:
         if row.get(earlier, "todo") in ("todo", "run"):
-            row[earlier] = "pass"             # pętla zgłasza tylko początek i koniec — wcześniejsze przeszły
+            row[earlier] = "pass"             # the loop reports only the start and the end — the earlier ones passed
     row[step] = state
     for later in STEPS[STEPS.index(step) + 1:]:
         if state == "run" or row.get(later) not in STATES:
-            row[later] = "todo"               # nowy start etapu unieważnia stany późniejszych
+            row[later] = "todo"               # a new start of a step invalidates the states of the later ones
     meta["current"] = cur
     if meta.get("stage") in (None, "intake", "plan", "needs", "pr", "done"):
         refused = sync_task(project, run_dir, meta, "slices")
@@ -624,7 +624,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
 
 
 def slice_finding(project: Path, key: str, slice_id: str, rnd: int) -> bool:
-    """Czy zadanie ma zapisane ważne ustalenie przeglądu dla tego kawałka i tej rundy."""
+    """Whether the task has a recorded important scope-review finding for this slice and this round."""
     view = task_view(project, key)
     return any(isinstance(f, dict) and f.get("slice") == slice_id and f.get("round") == rnd
                for f in ((view or {}).get("task") or {}).get("findings") or [])
@@ -641,7 +641,7 @@ PANEL_BRIEFS = {
 
 
 def cmd_panel(run_dir: Path, record: list[str] | None, note: str, base: str | None, project: Path) -> int:
-    """Panel recenzentów przy wadze pełnej: skład, zlecenia, zapisane werdykty i zapis nowego (`--record`)."""
+    """The reviewer panel at full weight: composition, assignments, recorded verdicts and recording a new one (`--record`)."""
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -676,7 +676,7 @@ def cmd_panel(run_dir: Path, record: list[str] | None, note: str, base: str | No
 
 
 def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, project: Path) -> int:
-    """Zapisuje ważne ustalenie przeglądu zakresu w zadaniu (`tf task finding … add`), z kawałkiem i rundą."""
+    """Records an important scope-review finding in the task (`tf task finding … add`), with the slice and round."""
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -691,12 +691,12 @@ def cmd_finding(run_dir: Path, slice_id: str, text: str, rnd: int | None, projec
     return r.returncode
 
 
-# ---- odczyt stanu i dashboard ------------------------------------------------------------------------------------
+# ---- state read and dashboard ------------------------------------------------------------------------------------
 
 def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
-    """Odhacza kawałek w plan.md (`- [ ] S<n>` → `- [x] S<n>`); powtórzenie niczego nie zmienia. Przebieg z zadaniem
-    odhacza tylko kawałek z aktualnym dowodem (`verify`) i z zapisanym, zaliczonym przeglądem zakresu (`step … scope
-    pass`) — pomiar po kroku G: bez tego warunku wynik przeglądu był zapisany w 7 z 15 przebiegów."""
+    """Ticks off a slice in plan.md (`- [ ] S<n>` → `- [x] S<n>`); a repeat changes nothing. A run with a task
+    ticks off only a slice with current evidence (`verify`) and with a recorded, passed scope review (`step … scope
+    pass`) — a measurement after step G: without this condition the review result was recorded in 7 of 15 runs."""
     meta = load(run_dir) or {}
     path = run_report.docs_dir(run_dir, meta) / "plan.md"
     if not path.is_file():
@@ -704,7 +704,7 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
     lines = path.read_text(encoding="utf-8").split("\n")
     for i, line in enumerate(lines):
         m = SLICE.match(line)
-        if m and m.group(2) == slice_id and not m.group(3).lstrip().startswith("<"):   # nie wiersz szablonu
+        if m and m.group(2) == slice_id and not m.group(3).lstrip().startswith("<"):   # not a template row
             if m.group(1) == " ":
                 state = slice_evidence(project, meta, slice_id) if meta.get("key") else "verified"
                 if state != "verified":
@@ -722,7 +722,7 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
 
 
 def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
-    """Powód odmowy odhaczenia, gdy ostatnia runda kawałka nie ma zaliczonego przeglądu zakresu; None — jest."""
+    """The reason for refusing to tick off, when the slice's last round has no passed scope review; None — there is one."""
     cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
     rounds = cur.get("rounds") if cur.get("k") == slice_id and isinstance(cur.get("rounds"), list) else []
     last = rounds[-1].get("scope") if rounds and isinstance(rounds[-1], dict) else None
@@ -743,7 +743,7 @@ TRAILER = re.compile(r"^[\w-]+: \S")
 
 
 def slice_files(project: Path, key: str, slice_id: str) -> list[str]:
-    """Pliki z dowodu kawałka (`verify --files`), w kolejności zapisu; pusta lista — dowodu nie ma."""
+    """Files from a slice's evidence (`verify --files`), in the order of recording; an empty list — there is no evidence."""
     view = task_view(project, key)
     sl = (((view or {}).get("task") or {}).get("slices") or {}).get(slice_id) or {}
     rel = sl.get("evidence") if isinstance(sl, dict) else None
@@ -756,7 +756,7 @@ def slice_files(project: Path, key: str, slice_id: str) -> list[str]:
 
 
 def commit_message(message: str, slice_id: str, value: str, footers: list[str]) -> str:
-    """Tytuł i treść z `--message`; dopisuje `Slice S<n>: <wartość>` i brakujące stopki (ostatni akapit)."""
+    """Title and body from `--message`; appends `Slice S<n>: <value>` and missing footers (the last paragraph)."""
     text = message.strip().replace("\r\n", "\n")
     if not re.search(rf"^(?:Slice|Kawałek) {re.escape(slice_id)}:", text, re.M):
         title, _, rest = text.partition("\n")
@@ -771,8 +771,8 @@ def commit_message(message: str, slice_id: str, value: str, footers: list[str]) 
 
 
 def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
-    """Koniec kawałka jednym poleceniem: zaliczony przegląd zakresu bieżącej rundy, commit plików z dowodu z treścią
-    i stopkami, odhaczenie i następny kawałek. Odmowa przed zapisem, gdy brak dowodu albo tytuł jest zły."""
+    """The end of a slice in one command: a passed scope review of the current round, a commit of the evidence files with the body
+    and footers, ticking off and the next slice. A refusal before writing when there is no evidence or the title is bad."""
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -836,7 +836,7 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
 
 
 def cmd_proceed(run_dir: Path, project: Path) -> int:
-    """Zgoda człowieka na następny kawałek po wstrzymaniu (styl step-by-step); bez wstrzymania — tylko `Dalej:`."""
+    """The human's consent to the next slice after a pause (the step-by-step style); without a pause — only `Next:`."""
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -849,14 +849,14 @@ def cmd_proceed(run_dir: Path, project: Path) -> int:
     return 0
 
 
-# ---- pytania i zależności kawałków (krok F3, przełącznik loop.blocked_slices) ---------------------------------
+# ---- questions and slice dependencies (step F3, the loop.blocked_slices switch) ---------------------------------
 NO_DEPS = ("none", "brak", "-", "—", "–", "nic")
 HUMAN = re.compile(r"human:[\w.@-]+")
 
 
 def loop_setting(project: Path, name: str) -> bool:
-    """Przełącznik `loop.<name>` po złożeniu warstw konfiguracji (silnik ← firma ← projekt ← osoba, packs.work_style);
-    starsza instalacja bez work_style — silnik i projekt; bez konfiguracji — wyłączony."""
+    """The `loop.<name>` switch after composing the configuration layers (engine ← company ← project ← person, packs.work_style);
+    an older installation without work_style — engine and project; without configuration — off."""
     for base in (next((p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "packs.py").is_file()),
                       project), project):
         try:
@@ -876,17 +876,17 @@ def loop_setting(project: Path, name: str) -> bool:
 
 
 def blocked_slices_enabled(project: Path) -> bool:
-    """`loop.blocked_slices`: pytanie blokuje tylko swój kawałek (styl `autonomous`)."""
+    """`loop.blocked_slices`: a question blocks only its own slice (the `autonomous` style)."""
     return loop_setting(project, "blocked_slices")
 
 
 def confirm_each_slice(project: Path) -> bool:
-    """`loop.confirm_each_slice`: po każdym kawałku zgoda człowieka przed następnym (style `step-by-step`, `conversation`)."""
+    """`loop.confirm_each_slice`: after each slice the human's consent before the next (the `step-by-step`, `conversation` styles)."""
     return loop_setting(project, "confirm_each_slice")
 
 
 def hold_refusal(meta: dict, slice_id: str, run_dir: Path) -> str | None:
-    """Wstrzymanie po kawałku (step-by-step): inny kawałek dopiero po `proceed` — po zgodzie człowieka w rozmowie."""
+    """A pause after a slice (step-by-step): another slice only after `proceed` — after the human's consent in the conversation."""
     held = meta.get("hold")
     if held and slice_id != held:
         return (f"the run waits for the human's consent after the slice {held} (the step-by-step style) — show the changes "
@@ -895,11 +895,11 @@ def hold_refusal(meta: dict, slice_id: str, run_dir: Path) -> str | None:
 
 
 def plan_with_deps(text: str) -> list[dict]:
-    """Kawałki planu w kolejności: `id`, `checked`, `value` i `deps` — lista kawałków, po których można zacząć."""
+    """The plan's slices in order: `id`, `checked`, `value` and `deps` — the list of slices after which one can start."""
     out: list[dict] = []
     for line in text.splitlines():
         m = SLICE.match(line)
-        if not m or m.group(3).lstrip().startswith("<"):      # wiersz szablonu planu nie jest kawałkiem
+        if not m or m.group(3).lstrip().startswith("<"):      # a plan template row is not a slice
             continue
         parts = [p.strip() for p in m.group(3).split("·")]
         deps: list[str] | None = None
@@ -908,14 +908,14 @@ def plan_with_deps(text: str) -> list[dict]:
             if k.strip().lower() in ("after", "po"):
                 names = [x.strip().strip("`") for x in v.split(",") if x.strip()]
                 deps = [] if any(n.lower() in NO_DEPS for n in names) else [n.upper() for n in names if re.fullmatch(r"[KkSs]\d+", n)]
-        if deps is None:                                       # bez dopisku: po poprzednim kawałku
+        if deps is None:                                       # without a note: after the previous slice
             deps = [out[-1]["id"]] if out else []
         out.append({"id": m.group(2), "checked": m.group(1) != " ", "value": parts[0], "deps": deps})
     return out
 
 
 def next_slice(slices: list[dict], blocked: set[str]) -> dict | None:
-    """Pierwszy nieodhaczony i niezablokowany kawałek, którego wszystkie zależności są odhaczone."""
+    """The first unticked and unblocked slice whose dependencies are all ticked."""
     done = {s["id"] for s in slices if s["checked"]}
     for s in slices:
         if not s["checked"] and s["id"] not in blocked and all(d in done for d in s["deps"]):
@@ -924,14 +924,14 @@ def next_slice(slices: list[dict], blocked: set[str]) -> dict | None:
 
 
 def held_slices(slices: list[dict], blocked: set[str]) -> list[tuple[str, list[str]]]:
-    """Nieodhaczone kawałki, które czekają na inne: (kawałek, nieodhaczone zależności)."""
+    """Unticked slices that wait for others: (slice, unticked dependencies)."""
     done = {s["id"] for s in slices if s["checked"]}
     return [(s["id"], [d for d in s["deps"] if d not in done]) for s in slices
             if not s["checked"] and s["id"] not in blocked and any(d not in done for d in s["deps"])]
 
 
 def append_event(task_dir: Path, kind: str, slice_id: str, text: str, by: str) -> dict:
-    """Dopisuje wpis do events.jsonl zadania i go zwraca."""
+    """Appends an entry to the task's events.jsonl and returns it."""
     event = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "type": kind, "slice": slice_id,
              "text": " ".join(text.split()), "by": by}
     with (task_dir / "events.jsonl").open("a", encoding="utf-8") as f:
@@ -940,7 +940,7 @@ def append_event(task_dir: Path, kind: str, slice_id: str, text: str, by: str) -
 
 
 def plan_and_blocked(project: Path, run_dir: Path, meta: dict) -> tuple[list[dict], set[str]]:
-    """Kawałki planu z zależnościami i zbiór kawałków zablokowanych pytaniem (z task.json)."""
+    """The plan's slices with dependencies and the set of slices blocked by a question (from task.json)."""
     try:
         text = (run_report.docs_dir(run_dir, meta) / "plan.md").read_text(encoding="utf-8")
     except OSError:
@@ -951,7 +951,7 @@ def plan_and_blocked(project: Path, run_dir: Path, meta: dict) -> tuple[list[dic
 
 
 def print_next(project: Path, run_dir: Path, meta: dict) -> None:
-    """`Dalej: S<n>` — kawałek, który można robić; `Dalej: STOP` — gdy każdy czeka na odpowiedź człowieka."""
+    """`Next: S<n>` — a slice that can be done; `Next: STOP` — when every one waits for the human's answer."""
     slices, blocked = plan_and_blocked(project, run_dir, meta)
     nxt = next_slice(slices, blocked)
     if nxt:
@@ -1015,7 +1015,7 @@ def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project:
         return fail(((r.stdout + r.stderr).strip() if r else "no .tf/factory/task_state.py — update the factory (tf update)."))
     append_event(run_report.docs_dir(run_dir, meta), "answer", slice_id, text, by)
     if meta.get("stage") == "needs" and meta.get("stop_code") == "question" and blocked == {slice_id}:
-        meta["stage"] = "slices"            # ostatnie pytanie ma odpowiedź: przebieg już na nikogo nie czeka
+        meta["stage"] = "slices"            # the last question has an answer: the run no longer waits for anyone
         for name in ("needs", "stop_text", "stop_code", "needs_at"):
             meta.pop(name, None)
         write_run(run_dir, meta)
@@ -1035,7 +1035,7 @@ def cmd_next(run_dir: Path, project: Path) -> int:
     return 0
 
 
-# --- opis PR składany z plików zadania (krok G2) -------------------------------------------------------------------
+# --- the PR description assembled from the task files (step G2) -------------------------------------------------------------------
 WEIGHT_EN = {"light": "light", "normal": "normal", "full": "full"}
 CARD = Path(".tf") / "config" / "operations.json"
 ASSUMPTION = re.compile(r"\[(zało[żz]eni|assumption)", re.I)
@@ -1043,9 +1043,9 @@ BASES = ("origin/main", "main", "origin/master", "master")
 
 
 def as_data(value, limit: int = 600) -> str:
-    """Tekst z plików zadania i z karty operacyjnej wstawiany do opisu PR: jedna linia bez znaków nagłówka i listy na
-    początku — treść jest danymi, nie strukturą opisu. Wzmianka `@nazwa` trafia do kodu (nikogo nie powiadamia),
-    a obraz staje się zwykłym odnośnikiem (opis nie pobiera niczego z obcego adresu)."""
+    """Text from the task files and the operations card inserted into the PR description: one line without header and list characters at
+    the start — the content is data, not the structure of the description. A `@name` mention goes into code (it notifies nobody),
+    and an image becomes a plain link (the description fetches nothing from a foreign address)."""
     text = re.sub(r"^(?:[#>]+\s*|[-*+]\s+)+", "", " ".join(str(value).split()))
     text = re.sub(r"(?<![`\w])@([A-Za-z0-9][\w/-]*)", r"`@\1`", text.replace("![", "["))
     return text[:limit] + ("…" if len(text) > limit else "")
@@ -1057,7 +1057,7 @@ def code_span(value) -> str:
 
 
 def pick_base(project: Path, base: str | None) -> str | None:
-    """Gałąź bazowa do listy commitów: podana, a bez niej pierwsza istniejąca z typowych; None, gdy git jej nie zna."""
+    """The base branch for the commit list: the given one, and without it the first existing of the typical ones; None when git does not know it."""
     for cand in ([base] if base else BASES):
         try:
             r = subprocess.run(["git", "-C", str(project), "rev-parse", "--verify", "--quiet", f"{cand}^{{commit}}"],
@@ -1070,7 +1070,7 @@ def pick_base(project: Path, base: str | None) -> str | None:
 
 
 def slice_commits(project: Path, base: str) -> dict[str, str]:
-    """Kawałek → najnowszy commit ze stopką „Slice S<n>” (albo dawną „Kawałek S<n>”) na gałęzi (skrót i tytuł)."""
+    """A slice → the newest commit with the footer „Slice S<n>” (or the old „Kawałek S<n>”) on the branch (hash and title)."""
     try:
         r = subprocess.run(["git", "-C", str(project), "log", "--format=%h%x1f%s%x1f%b%x1e", f"{base}..HEAD"],
                            capture_output=True, text=True, timeout=30)
@@ -1086,7 +1086,7 @@ def slice_commits(project: Path, base: str) -> dict[str, str]:
 
 
 def last_evidence(docs: Path) -> dict[str, tuple[str, dict]]:
-    """Kawałek → (ścieżka względna, treść) ostatniego dowodu `evidence/S<n>-<m>.json`."""
+    """A slice → (relative path, content) of the latest evidence `evidence/S<n>-<m>.json`."""
     best: dict[str, tuple[int, Path]] = {}
     for f in docs.glob("evidence/*-*.json"):
         m = re.fullmatch(r"([KS]\d+)-(\d+)\.json", f.name)
@@ -1103,9 +1103,9 @@ def last_evidence(docs: Path) -> dict[str, tuple[str, dict]]:
 
 
 def scan_status(run_dir: Path, slice_id: str) -> str | None:
-    """Werdykt skanu bezpieczeństwa kawałka (ostatnia próba); None, gdy skanu nie było albo wynik jest nieczytelny."""
+    """The verdict of a slice's security scan (the last attempt); None when there was no scan or the result is unreadable."""
     base = run_dir / "security" / slice_id
-    tries = sorted([*base.glob("attempt-*/verdict.json"), *base.glob("proba-*/verdict.json")],   # proba-: starsze przebiegi
+    tries = sorted([*base.glob("attempt-*/verdict.json"), *base.glob("proba-*/verdict.json")],   # proba-: older runs
                    key=lambda f: int(re.sub(r"\D", "", f.parent.name) or 0))
     try:
         status = json.loads((tries[-1] if tries else base / "verdict.json").read_text(encoding="utf-8")).get("status")
@@ -1115,8 +1115,8 @@ def scan_status(run_dir: Path, slice_id: str) -> str | None:
 
 
 def rollback_steps(project: Path) -> tuple[list[str], str]:
-    """Kroki cofnięcia wdrożenia z karty operacyjnej (`deploy.rollback`: tekst albo lista) i czas cofnięcia
-    (`deploy.rollback_minutes`); bez karty — pusta lista i pusty tekst."""
+    """The deployment rollback steps from the operations card (`deploy.rollback`: text or a list) and the rollback time
+    (`deploy.rollback_minutes`); without a card — an empty list and an empty text."""
     try:
         dep = json.loads((project / CARD).read_text(encoding="utf-8"))["deploy"]
         value, mins = dep["rollback"], dep.get("rollback_minutes")
@@ -1132,7 +1132,7 @@ def rollback_steps(project: Path) -> tuple[list[str], str]:
 
 
 def engine_md(project: Path, name: str, *args: str) -> str | None:
-    """Wyjście skryptu silnika do wklejenia pod własny nagłówek: jego nagłówki stają się pogrubieniem."""
+    """An engine script's output to paste under our own header: its headers become bold."""
     r = run_report.engine(project, name, *args)
     text = (r.stdout if r is not None else "").strip("\n")
     if r is None or not text:
@@ -1141,7 +1141,7 @@ def engine_md(project: Path, name: str, *args: str) -> str | None:
 
 
 def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple[str, list[str]]:
-    """Opis PR i lista kawałków bez zielonego dowodu."""
+    """The PR description and the list of slices without green evidence."""
     key, docs = meta["key"], run_report.docs_dir(run_dir, meta)
     view = task_view(project, key) or {"task": {}, "slices": {}}
     task, states = view["task"], view["slices"]
@@ -1268,7 +1268,7 @@ def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
 
 
 def has_remote(project: Path) -> bool:
-    """Czy repozytorium ma skonfigurowane zdalne źródło; przy błędzie gita zakładamy, że ma (bez fałszywego STOP)."""
+    """Whether the repository has a remote configured; on a git error we assume it has (no false STOP)."""
     try:
         r = subprocess.run(["git", "-C", str(project), "remote"], capture_output=True, text=True, timeout=20)
     except (OSError, subprocess.SubprocessError):
@@ -1277,7 +1277,7 @@ def has_remote(project: Path) -> bool:
 
 
 def cmd_park(run_dir: Path, item: str, project: Path) -> int:
-    """Dopisuje sprawę odłożoną do decyzji człowieka na końcu parked.md (jeden wiersz)."""
+    """Appends a matter postponed for the human's decision at the end of parked.md (one row)."""
     item = " ".join(item.split())
     if not item:
         return fail("an empty item — give what you postpone and why")
@@ -1300,7 +1300,7 @@ def parse_slices(run_dir: Path) -> list[dict]:
         if not m:
             continue
         value = m.group(3).split(" · ")[0].strip()
-        if value.startswith("<"):               # wiersz z szablonu plan.md, jeszcze nie plan
+        if value.startswith("<"):               # a row from the plan.md template, not yet a plan
             continue
         out.append({"id": m.group(2), "value": value, "checked": m.group(1) in "xX"})
     return out
@@ -1338,7 +1338,7 @@ def dot_for(text: str) -> str:
 
 
 def evidence_items(docs: Path) -> list[dict]:
-    """Ostatni dowód każdego kawałka (evidence/S<n>-<m>.json): zielona kropka przy kodzie wyjścia 0."""
+    """The latest evidence of every slice (evidence/S<n>-<m>.json): a green dot when the exit code is 0."""
     last: dict[int, tuple[int, Path]] = {}
     for f in docs.glob("evidence/*-*.json"):
         m = re.fullmatch(r"K(\d+)-(\d+)\.json", f.name)
@@ -1358,7 +1358,7 @@ def evidence_items(docs: Path) -> list[dict]:
 
 
 def code_items(run_dir: Path, proofs: list[dict]) -> list[dict]:
-    """Pliki kodu każdego kawałka — z ostatniego dowodu weryfikacji, więc także te, o których agent nie wspomniał."""
+    """The code files of every slice — from the last verification evidence, so also those the agent did not mention."""
     project, out = run_dir.resolve().parents[2], []
     for proof in proofs:
         m = re.match(r"evidence/([KS]\d+)-", proof["name"])
@@ -1377,7 +1377,7 @@ def file_groups(run_dir: Path, meta: dict, stage: str, needs: str | None, parked
     groups: list[dict] = []
     main, work = [], []
     task_dir = meta.get("task_dir")
-    docs = run_report.docs_dir(run_dir, meta)       # nowy układ: historyjka, plan i raport w katalogu zadania
+    docs = run_report.docs_dir(run_dir, meta)       # the new layout: the story, plan and report in the task directory
     for path in (run_report.story_file(run_dir, meta), docs / "spec.md", docs / "plan.md", docs / "events.jsonl",
                  run_dir / "parked.md"):
         name, text = path.name, read_text(path)
@@ -1436,8 +1436,8 @@ def normalize_rounds(cur: dict) -> list[dict]:
 
 
 def update_usage(run_dir: Path, meta: dict, project: Path) -> None:
-    """Koszt, czas i modele z transkryptów (run_report.collect), zapamiętane w run.json (`usage`). Przebieg skończony
-    z już policzonym kosztem nie jest liczony ponownie. Brak transkryptów nie jest błędem — karta nie pokaże kosztu."""
+    """Cost, time and models from the transcripts (run_report.collect), stored in run.json (`usage`). A finished run
+    with an already computed cost is not computed again. Missing transcripts are not an error — the card will not show the cost."""
     if meta.get("stage") == "done" and isinstance(meta.get("usage"), dict):
         return
     since = run_report.parse_ts(meta.get("started_at", ""))
@@ -1499,7 +1499,7 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
 
 
 def sentence(text: str | None, capital: bool = False) -> str:
-    """Tekst zakończony jedną kropką (bez „..”), na życzenie od wielkiej litery; pusty zostaje pusty."""
+    """Text ending with a single period (without „..”), capitalized on request; empty stays empty."""
     s = (text or "").strip()
     if not s:
         return s
@@ -1507,7 +1507,7 @@ def sentence(text: str | None, capital: bool = False) -> str:
 
 
 def stop_hint(meta: dict, cur: dict | None) -> str:
-    """Opis zatrzymania na karcie: co się stało, powód z przebiegu i co zrobić — każda część osobnym zdaniem."""
+    """The stop description on the card: what happened, the reason from the run and what to do — each part in a separate sentence."""
     label = (stop_message(meta.get("stop_code")) or {}).get("co") or STOP_CODES.get(meta.get("stop_code") or "")
     resume = (cur or {}).get("k") or "the current slice"
     return " ".join(x for x in (sentence(label, capital=True), sentence(meta.get("stop_text") or "STOP"),
@@ -1515,7 +1515,7 @@ def stop_hint(meta: dict, cur: dict | None) -> str:
 
 
 def waiting_items(project: Path, view: dict | None) -> list[dict]:
-    """Na co zadanie czeka u człowieka — ta sama lista co w `tf status` (`task_state.waiting`)."""
+    """What the task waits for from the human — the same list as in `tf status` (`task_state.waiting`)."""
     try:
         api = task_api(project)
         return api.waiting(project.resolve(), view["task"]) if api and view and hasattr(api, "waiting") else []
@@ -1524,8 +1524,8 @@ def waiting_items(project: Path, view: dict | None) -> list[dict]:
 
 
 def slice_items(slices: list[dict], view: dict | None, cur: dict | None, stage: str, needs: str | None) -> list[dict]:
-    """Stan kawałków planu na karcie. Z zadaniem (`view`) kawałek odhaczony bez aktualnego dowodu ma stan `stale`,
-    a każdy kawałek niesie `proof` — stan wyliczony przez `tf task`."""
+    """The state of the plan's slices on the card. With a task (`view`) a ticked-off slice without current evidence has the state `stale`,
+    and every slice carries `proof` — the state computed by `tf task`."""
     out = []
     first_open = next((s["id"] for s in slices if not s["checked"]), None)
     for s in slices:
@@ -1546,8 +1546,8 @@ def slice_items(slices: list[dict], view: dict | None, cur: dict | None, stage: 
 
 
 def task_object(task_dir: Path, project: Path) -> dict | None:
-    """Karta zadania, które nie ma przebiegu w `.tf/runs/` (samo `tf task` albo świeży klon): etap z task.json,
-    kawałki z plan.md, a bez planu — z samego zadania."""
+    """A card of a task that has no run in `.tf/runs/` (just `tf task` or a fresh clone): the stage from task.json,
+    the slices from plan.md, and without a plan — from the task itself."""
     key = task_dir.name
     view = task_view(project, key)
     if view is None:
@@ -1562,7 +1562,7 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
     else:
         slices = [{"id": k, "value": (task.get("slices", {}).get(k) or {}).get("title") or "", "proof": s,
                    "state": PROOF_STATE.get(s, "stale")} for k, s in view["slices"].items()]
-    work = project / run_report.WORK / key          # może nie istnieć — wtedy panel pokazuje tylko katalog zadania
+    work = project / run_report.WORK / key          # may not exist — then the panel shows only the task directory
     files = file_groups(work, meta, stage, None, [])
     if not any(g["grp"] != "Dowody" for g in files):
         files.insert(0, {"grp": f"Task (git) · {rel}/", "items": [
@@ -1579,15 +1579,15 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
 
 
 def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) -> Path:
-    root = project / run_report.RUNS                # stary układ cięć (już nie powstaje): historia zostaje w podglądzie
-    work = project / run_report.WORK                # katalogi robocze zadań: .tf/runs/<KEY>/
+    root = project / run_report.RUNS                # the old cut layout (no longer created): the history stays in the preview
+    work = project / run_report.WORK                # the tasks' working directories: .tf/runs/<KEY>/
     runs = []
     for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
         obj = run_object(d.parent, project, costs)
         if obj:
             runs.append(obj)
     seen = {r["key"] for r in runs}
-    for f in sorted((project / run_report.CHANGES).glob("*/task.json")):   # zadania bez przebiegu w .tf/runs/
+    for f in sorted((project / run_report.CHANGES).glob("*/task.json")):   # tasks without a run in .tf/runs/
         obj = task_object(f.parent, project) if f.parent.name not in seen else None
         if obj:
             runs.append(obj)
@@ -1604,8 +1604,8 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
 
 
 def options(project: Path) -> dict:
-    """Opcje z `.claude/tf.json` (brak pliku albo klucza = domyślnie włączone); zmienne TF_DASHBOARD=0
-    i TF_DASHBOARD_OPEN=0 wyłączają opcję bez edycji pliku."""
+    """Options from `.claude/tf.json` (no file or key = on by default); the variables TF_DASHBOARD=0
+    and TF_DASHBOARD_OPEN=0 turn the option off without editing the file."""
     opts = dict(DEFAULTS)
     try:
         data = json.loads((project / CONFIG).read_text(encoding="utf-8"))
@@ -1615,14 +1615,14 @@ def options(project: Path) -> dict:
     for key, env in (("dashboard", "TF_DASHBOARD"), ("dashboard_open", "TF_DASHBOARD_OPEN")):
         if os.environ.get(env, "").strip().lower() in ("0", "false", "no", "off"):
             opts[key] = False
-    if os.environ.get("CI"):          # CI i testy: bez otwierania przeglądarki
+    if os.environ.get("CI"):          # CI and tests: without opening the browser
         opts["dashboard_open"] = False
     return opts
 
 
 def launch(project: Path, open_browser: bool = True) -> str | None:
-    """Start przebiegu: zbuduj dashboard i (gdy opcje i `open_browser` pozwalają) otwórz go w przeglądarce.
-    Zwraca adres pliku albo None, gdy dashboard jest wyłączony. Błąd nigdy nie przerywa przebiegu."""
+    """Run start: build the dashboard and (when the options and `open_browser` allow) open it in the browser.
+    Returns the file's address or None when the dashboard is off. An error never interrupts the run."""
     opts = options(project)
     if not opts["dashboard"]:
         return None
@@ -1639,7 +1639,7 @@ def launch(project: Path, open_browser: bool = True) -> str | None:
 
 
 def refresh(project: Path) -> None:
-    """Odświeżenie podglądu po zapisie stanu; bez liczenia kosztu, bez przerywania przebiegu przy błędzie."""
+    """Refreshing the preview after a state write; without computing the cost, without interrupting the run on an error."""
     try:
         build_dashboard(project, costs=False)
     except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje przebiegu
@@ -1670,7 +1670,7 @@ def main(argv: list[str]) -> int:
     sp.add_argument("action", nargs="?", choices=["new"])
     fg = sub.add_parser("flag")
     fg.add_argument("run_dir")
-    fg.add_argument("action", choices=["mode", "set", "none"])      # zgodę na inne środowisko zapisuje człowiek: tf task flag … allow
+    fg.add_argument("action", choices=["mode", "set", "none"])      # consent to another environment is recorded by the human: tf task flag … allow
     fg.add_argument("value", nargs="?")
     fg.add_argument("--remove-by", default=None)
     fg.add_argument("--reason", default="")
@@ -1684,7 +1684,7 @@ def main(argv: list[str]) -> int:
     apv.add_argument("run_dir")
     wg = sub.add_parser("weight")
     wg.add_argument("run_dir")
-    wg.add_argument("--set", dest="new", default=None)      # obniżenie zapisuje człowiek: tf task weight … --by human:<id>
+    wg.add_argument("--set", dest="new", default=None)      # lowering is recorded by the human: tf task weight … --by human:<id>
     tr = sub.add_parser("trace")
     tr.add_argument("run_dir")
     tr.add_argument("--base", default=None)

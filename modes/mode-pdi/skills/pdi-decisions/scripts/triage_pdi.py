@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Triaż zgłoszenia z pdi (F3) — tryb mode-pdi. Procedura triażu: skill proc-issue-triage; ten skrypt sprawdza wejście
-i składa rekomendację w stanach pdi (kontrakt 0.13.0, R7).
+Triage of a pdi report (F3) — mode-pdi. The triage procedure: skill proc-issue-triage; this script checks the input
+and assembles a recommendation in pdi states (contract 0.13.0, R7).
 
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py check <prb.json>
-      zgłoszenie PRB w JSON wobec contract/problem.schema.json (kopia obok skryptu); triaż tylko dla stanów
+      a PRB report in JSON against contract/problem.schema.json (a copy next to the script); triage only for the states
       new, clarifying, ready_for_triage
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py recommend <prb.json> --status S --rationale "…" […]
       S: clarifying (--question … ×n) · accepted (--brief "…", --executor agent|human) · rejected (--reason R
-      [--note "…"], przy out_of_scope_recorded --out-of-scope-file .out-of-scope/<pojęcie>.md) · parked
+      [--note "…"], with out_of_scope_recorded --out-of-scope-file .out-of-scope/<concept>.md) · parked
       (--return-when "…") · duplicate (--duplicate-of PRB-n); opcjonalnie --category bug|enhancement,
-      --observation "…" i --evidence "…" (dowody: obserwacja albo wniosek AI), --out PLIK
-      JSON rekomendacji (triage-recommendation.schema.json obok skryptu) z tf_state z tabeli mapowania kontraktu.
+      --observation "…" and --evidence "…" (evidence: an observation or an AI conclusion), --out FILE
+      recommendation JSON (triage-recommendation.schema.json next to the script) with tf_state from the contract's mapping table.
 
-Rekomendacja nie zmienia zgłoszenia: decyzję podejmuje człowiek w pdi, a zmianę (CHG) tworzy pdi po przyjęciu.
-Kod wyjścia: 0 — w porządku, 1 — błędy (z podpowiedzią), 2 — złe wywołanie.
+A recommendation does not change the report: a human makes the decision in pdi, and the change (CHG) is created by pdi after acceptance.
+Exit code: 0 — OK, 1 — errors (with a hint), 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -25,13 +25,13 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from decision_record import validate  # noqa: E402  (ten sam walidator podzbioru JSON Schema co dla release.yaml)
+from decision_record import validate  # noqa: E402  (the same JSON Schema subset validator as for release.yaml)
 
 CONTRACT = "0.13.0"
 PROBLEM_SCHEMA = HERE / "problem.schema.json"                  # kopia z kontraktu pdi (tools/pdi-contract.json)
 RECOMMENDATION_SCHEMA = HERE / "triage-recommendation.schema.json"   # kopia z kontraktu pdi (tools/pdi-contract.json)
 TRIAGE_INPUT = ("new", "clarifying", "ready_for_triage")
-# Tabela „Stany zgłoszenia i mapowanie na tf” z contract/README.md (R7).
+# The table „Stany zgłoszenia i mapowanie na tf” (report states and mapping to tf) from contract/README.md (R7).
 TF_STATE = {"clarifying": "needs-info", "rejected": "wontfix", "duplicate": "wontfix", "parked": "needs-triage"}
 REASONS = ("out_of_strategy", "works_as_designed", "cost_disproportionate", "already_exists", "out_of_scope_recorded",
            "other")

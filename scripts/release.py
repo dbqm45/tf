@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Przygotowuje wydanie fabryki na bieżącej gałęzi: liczy następną wersję SemVer z Conventional Commits od ostatniego
-tagu vX.Y.Z, zapisuje ją w core/factory/VERSION i dopisuje wpis na górze core/factory/CHANGELOG.md; przy wydaniu MAJOR
-podnosi górną granicę `requires.core` nakładek i trybów, które wykluczałyby nowy rdzeń. Nie commituje, nie taguje
-i nie pushuje: na main robi to workflow Release po każdym merge (`--ci`), commitując „chore(release): X.Y.Z”
-(docs/RELEASING.md). Wywołuj z katalogu głównego repozytorium.
+"""Prepares a factory release on the current branch: computes the next SemVer version from Conventional Commits since the last
+tag vX.Y.Z, writes it to core/factory/VERSION and adds an entry at the top of core/factory/CHANGELOG.md; on a MAJOR release
+raises the upper bound of `requires.core` of overlays and modes that would exclude the new core. It does not commit, tag
+or push: on main the Release workflow does that after every merge (`--ci`), committing "chore(release): X.Y.Z"
+(docs/RELEASING.md). Run from the repository root.
 
-  python3 scripts/release.py                  # wersja z commitów
-  python3 scripts/release.py minor            # wymuszenie: major | minor | patch | X.Y.Z (1.0.0 zawsze jawnie)
-  python3 scripts/release.py --dry-run        # tylko pokaż, co by się stało
-  python3 scripts/release.py --ci             # workflow Release: brak zmian do wydania nie jest błędem
+  python3 scripts/release.py                  # version from commits
+  python3 scripts/release.py minor            # force: major | minor | patch | X.Y.Z (1.0.0 always explicitly)
+  python3 scripts/release.py --dry-run        # only show what would happen
+  python3 scripts/release.py --ci             # Release workflow: having no changes to release is not an error
 """
 from __future__ import annotations
 
@@ -36,9 +36,9 @@ def fail(msg: str) -> int:
 
 
 def widen_pack_requirements(version: str) -> list[str]:
-    """Przy wydaniu MAJOR: nakładki i tryby z górną granicą `requires.core` równą `<{nowy major}.0.0` (czyli
-    wykluczające nowy rdzeń) dostają `<{nowy major + 1}.0.0`. Bez tego `build.py check` po podbiciu wersji zgłasza
-    każdą nakładkę i wydanie się nie udaje (6.0.0 i 7.0.0, tf#179, tf#181). Inne granice zostają bez zmian."""
+    """On a MAJOR release: overlays and modes whose upper `requires.core` bound equals `<{new major}.0.0` (i.e.
+    excluding the new core) get `<{new major + 1}.0.0`. Without this `build.py check` after the version bump reports
+    every overlay and the release fails (6.0.0 and 7.0.0, tf#179, tf#181). Other bounds stay unchanged."""
     major = int(version.split(".")[0])
     if version != f"{major}.0.0":
         return []

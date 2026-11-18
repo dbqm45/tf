@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 """
-Kontrola flagi funkcji zadania (krok D osi przebiegu): stan flagi poza środowiskiem testowym zmienia tylko człowiek.
+Task feature-flag check (step D of the run axis): only a human changes a flag's state outside the test environment.
 
-  tf flag check <KEY> [--base <gałąź>] [--json]
+  tf flag check <KEY> [--base <branch>] [--json]
 
-Flagę zadania zapisuje `tf task flag <KEY> set <klucz> [--remove-by RRRR-MM-DD]`, jej brak —
-`tf task flag <KEY> none --reason "bez flagi, bo …"`, a zgodę człowieka na inne środowisko —
-`tf task flag <KEY> allow <środowisko> --by human:<id>`.
+The task flag is recorded by `tf task flag <KEY> set <key> [--remove-by YYYY-MM-DD]`, its absence —
+`tf task flag <KEY> none --reason "bez flagi, bo …"`, and a human's consent for another environment —
+`tf task flag <KEY> allow <environment> --by human:<id>`.
 
-Skąd skrypt wie, jak w projekcie działają flagi: z karty operacyjnej `.tf/config/operations.json` (zakłada ją
+How the script knows how flags work in the project: from the operations card `.tf/config/operations.json` (created by
 `tf onboard`): {"flags": {"file": "config/flags.json", "envs": ["test", "prod"], "test_env": "test"}}.
-Obsługiwany jest plik JSON (a YAML, gdy dostępny jest PyYAML) w układzie `środowisko → flaga → stan` albo
-`flaga → środowisko → stan`; stan to wartość logiczna albo obiekt z polem `enabled`. Porównanie: plik w bazie (git)
-wobec pliku roboczego.
+A JSON file is supported (and YAML, when PyYAML is available) in the layout `environment → flag → state` or
+`flag → environment → state`; the state is a boolean or an object with an `enabled` field. Comparison: the file in the base (git)
+against the working file.
 
-Reguła FLAG-001: flaga zadania włączona na środowisku innym niż testowe, której nie było włączonej w bazie i dla
-której zadanie nie ma zapisanej zgody człowieka. Z tym błędem `tf task stage <KEY> pr` (i dalsze) kończy się odmową.
+Rule FLAG-001: a task flag enabled on an environment other than the test one, which was not enabled in the base and for
+which the task has no recorded human consent. With this error `tf task stage <KEY> pr` (and later stages) is refused.
 
-Gdy karty nie ma, nie wskazuje pliku, plik ma inny format albo flagami steruje inny mechanizm (zmienne środowiska,
-usługa), skrypt mówi wprost „sprawdź ręcznie” i kończy kodem 0 — nie udaje kontroli, której nie umie zrobić.
+When there is no card, it does not point to a file, the file has another format or the flags are controlled by another mechanism (environment variables,
+a service), the script says plainly „sprawdź ręcznie” (check manually) and exits with code 0 — it does not pretend to run a check it cannot do.
 
-Wyłącznik: `feature_flags.auto` w konfiguracji (`.tf/config/config.yaml`, domyślnie `true`). Z `auto: false` flagi
-dodaje człowiek sam — zadanie bez flagi przechodzi bez błędu, a flaga zapisana w zadaniu jest sprawdzana jak zwykle.
+Switch: `feature_flags.auto` in the configuration (`.tf/config/config.yaml`, default `true`). With `auto: false` a human
+adds flags themselves — a task without a flag passes without an error, and a flag recorded in the task is checked as usual.
 
-Kod wyjścia: 0 — zgodnie z regułą (albo kontroli nie dało się wykonać); 1 — FLAG-001 albo zadanie ze specyfikacją
-bez flagi i bez powodu; 2 — błąd wywołania. Tylko biblioteka standardowa (PyYAML opcjonalnie).
+Exit code: 0 — compliant with the rule (or the check could not be run); 1 — FLAG-001 or a task with a specification
+without a flag and without a reason; 2 — invocation error. Standard library only (PyYAML optional).
 """
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -68,8 +68,8 @@ def card(root: Path) -> dict:
 
 
 def auto_flags(root: Path) -> bool:
-    """`feature_flags.auto` z konfiguracji: domyślna silnika (config.yaml obok skryptu) z nadpisaniem projektu
-    (.tf/config/config.yaml). Gdy konfiguracji nie da się odczytać — włączone, jak domyślnie."""
+    """`feature_flags.auto` from the configuration: the engine default (config.yaml next to the script) with the project override
+    (.tf/config/config.yaml). When the configuration cannot be read — enabled, as by default."""
     try:
         spec = importlib.util.spec_from_file_location("tf_packs_cfg", Path(__file__).resolve().with_name("packs.py"))
         packs = importlib.util.module_from_spec(spec)
@@ -79,12 +79,12 @@ def auto_flags(root: Path) -> bool:
         if own.is_file():
             cfg = packs.deep_merge(cfg, packs.load_yaml(own))
         return (cfg.get("feature_flags") or {}).get("auto", True) is not False
-    except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienie domyślne, nie awaria
+    except Exception:  # noqa: BLE001 — no configuration means the default setting, not a failure
         return True
 
 
 def parse(text: str, name: str):
-    """Treść pliku flag jako słownik; None, gdy formatu nie da się odczytać."""
+    """File content of the flags as a dict; None when the format cannot be read."""
     try:
         if name.lower().endswith((".yaml", ".yml")):
             try:
@@ -98,7 +98,7 @@ def parse(text: str, name: str):
             data = yaml.safe_load(text)
         else:
             data = json.loads(text)
-    except Exception:  # noqa: BLE001 — nieczytelny plik to „sprawdź ręcznie”, nie awaria
+    except Exception:  # noqa: BLE001 — an unreadable file means „sprawdź ręcznie” (check manually), not a failure
         return None
     return data if isinstance(data, dict) else None
 
@@ -112,7 +112,7 @@ def on(value) -> bool | None:
 
 
 def states(data: dict | None, flag: str, envs: list[str]) -> dict[str, bool]:
-    """Stan flagi na środowiskach z karty, w obu obsługiwanych układach pliku."""
+    """Flag state on the card's environments, in both supported file layouts."""
     out: dict[str, bool] = {}
     if not data:
         return out
@@ -126,7 +126,7 @@ def states(data: dict | None, flag: str, envs: list[str]) -> dict[str, bool]:
 
 
 def git_show(root: Path, base: str | None, rel: str) -> str | None:
-    """Plik w bazie porównania; None, gdy nie ma repozytorium, bazy albo pliku w bazie."""
+    """The file in the comparison base; None when there is no repository, base or file in the base."""
     for ref in ([base] if base else BASES):
         try:
             r = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=root, capture_output=True, text=True,
@@ -139,7 +139,7 @@ def git_show(root: Path, base: str | None, rel: str) -> str | None:
 
 
 def check(root: Path, key: str, base: str | None = None) -> dict:
-    """Wynik kontroli: `checked` (czy dało się ją wykonać), `errors`, `note` (dlaczego nie albo co sprawdzono)."""
+    """Check result: `checked` (whether it could be run), `errors`, `note` (why not, or what was checked)."""
     task = load_task(root, key) or {}
     flag = task.get("flag") if isinstance(task.get("flag"), dict) else None
     has_spec = (root / CHANGES / key / "spec.md").is_file()

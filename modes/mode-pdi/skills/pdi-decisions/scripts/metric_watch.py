@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Pasma kontrolne na metrykach PROD z ShipScope (tryb mode-pdi, F5): punkt poza 3σ to zdarzenie `metric.breached` do pdi.
+Control bands on PROD metrics from ShipScope (mode-pdi, F5): a point beyond 3σ is a `metric.breached` event to pdi.
 
-  python3 .claude/skills/pdi-decisions/scripts/metric_watch.py check [--csv plik] [--days 120] [--baseline 30] \\
+  python3 .claude/skills/pdi-decisions/scripts/metric_watch.py check [--csv file] [--days 120] [--baseline 30] \\
       [--recent 7] [--send]
       JSON {window, metrics: [{metric, side, tier, mean, sd, points, violations | note}], breaches, sent}
   python3 .claude/skills/pdi-decisions/scripts/metric_watch.py workflow install [--force]
-      szablon .github/workflows/metric-watch.yml (raz dziennie: check --send)
+      template .github/workflows/metric-watch.yml (once a day: check --send)
 
-Szereg: `--csv` albo ShipScope `GET $SHIPSCOPE_URL/api/service/v1/metrics?from&to&format=csv` z tokenem usługi
-`$SHIPSCOPE_TOKEN` (shps_…). Poziomy liczy `control_band.py` ze skilla core-delivery-lifecycle. Reguła 1 (punkt poza
-3σ, poziom act) w ostatnich `--recent` dniach szeregu → `metric.breached` (kontrakt pdi 0.9.0, ID
-`tf-metric-<metryka>-<dzień>`); `--send` wysyła je podpisane na `$PDI_EVENTS_URL/events/tf` (`PDI_TF_SIGNING_SECRET`).
-Metryki: METRICS niżej; nadpisanie w .claude/pdi-metrics.json ({"baseline", "recent", "service", "metrics"}).
-Kod wyjścia: 0 — policzone (i wysłane), 1 — błąd (z podpowiedzią), 2 — złe wywołanie.
+Series: `--csv` or ShipScope `GET $SHIPSCOPE_URL/api/service/v1/metrics?from&to&format=csv` with the service token
+`$SHIPSCOPE_TOKEN` (shps_…). The levels are computed by `control_band.py` from the core-delivery-lifecycle skill. Rule 1 (a point beyond
+3σ, level act) in the last `--recent` days of the series → `metric.breached` (pdi contract 0.9.0, ID
+`tf-metric-<metric>-<day>`); `--send` sends them signed to `$PDI_EVENTS_URL/events/tf` (`PDI_TF_SIGNING_SECRET`).
+Metrics: METRICS below; override in .claude/pdi-metrics.json ({"baseline", "recent", "service", "metrics"}).
+Exit code: 0 — computed (and sent), 1 — error (with a hint), 2 — bad invocation.
 """
 import argparse
 import csv
@@ -39,8 +39,8 @@ CONFIG = Path(".claude") / "pdi-metrics.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "metric-watch.yml"
 WORKFLOW = Path(".github") / "workflows" / "metric-watch.yml"
 BAND = Path(__file__).resolve().parents[2] / "core-delivery-lifecycle" / "scripts" / "control_band.py"
-MAX_DAYS = 400  # ShipScope oddaje najwyżej 400 dni
-# Kolumna szeregu ShipScope → strona, po której wzrost jest zły (dbqm45/evdt-service-shipscope server/lib/service-api.js).
+MAX_DAYS = 400  # ShipScope returns at most 400 days
+# ShipScope series column → the side on which an increase is bad (dbqm45/evdt-service-shipscope server/lib/service-api.js).
 METRICS = {
     "rollbacks": {"side": "upper"},
     "failed_deployments": {"side": "upper"},
@@ -100,7 +100,7 @@ def fetch_csv(days: int) -> tuple[str, dict]:
     req = urllib.request.Request(f"{base}/api/service/v1/metrics?{query}",
                                  headers={"authorization": f"Bearer {token}", "accept": "text/csv"})
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 — adres sprawdzony wyżej
+        with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 — address checked above
             return resp.read().decode("utf-8"), window
     except urllib.error.HTTPError as e:
         raise Refused(f"ShipScope answered {e.code} to the metrics request — check SHIPSCOPE_TOKEN and its workspace") from e
@@ -132,7 +132,7 @@ def evaluate_metric(band, rows: list[dict], column: str, side: str, baseline: in
 
 
 def breach_event(m: dict, last_date: str, recent: int, service: str | None) -> dict | None:
-    """Najnowszy punkt poza 3σ z ostatnich `recent` dni szeregu jako `metric.breached`, albo None."""
+    """The newest point beyond 3σ from the last `recent` days of the series as `metric.breached`, or None."""
     since = (dt.date.fromisoformat(last_date) - dt.timedelta(days=recent - 1)).isoformat()
     hits = [v for v in m.get("violations", []) if v["rule"] == 1 and v["date"] >= since]
     if not hits:

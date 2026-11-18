@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Raport skuteczności podpowiedzi skilli (hook skill_hint) na prawdziwej pracy w projekcie.
+Effectiveness report of skill hints (the skill_hint hook) on real work in a project.
 
-  python3 .tf/factory/hint_report.py               # wszystkie sesje z logów
-  python3 .tf/factory/hint_report.py --days 7      # ostatnie 7 dni
+  python3 .tf/factory/hint_report.py               # all sessions from the logs
+  python3 .tf/factory/hint_report.py --days 7      # the last 7 days
 
-Łączy dwa logi z .tf/logs/:
-- skill-hints.jsonl (hook skill_hint): co podpowiedziano przy każdym poleceniu,
-- usage.jsonl (hook log_usage): jakie skille sesja faktycznie wczytała (wątek główny i wykonawcy).
+Combines two logs from .tf/logs/:
+- skill-hints.jsonl (the skill_hint hook): what was suggested at each command,
+- usage.jsonl (the log_usage hook): which skills the session actually loaded (main thread and executors).
 
-Wynik per skill:
-- trafione: podpowiedziany i użyty w tej samej sesji,
-- zignorowane: podpowiedziany, a w sesji nieużyty (szum albo model uznał, że niepotrzebny),
-- przeoczone: użyty, a w sesji ani razu niepodpowiedziany (kandydat na `metadata.keywords` w SKILL.md).
-Porównanie jest na poziomie sesji, nie pojedynczego polecenia — to przybliżenie. Tylko biblioteka standardowa.
+Result per skill:
+- hit: suggested and used in the same session,
+- ignored: suggested but unused in the session (noise, or the model judged it unnecessary),
+- missed: used but never suggested in the session (a candidate for `metadata.keywords` in SKILL.md).
+The comparison is at the session level, not of a single command — it is an approximation. Standard library only.
 """
 from __future__ import annotations
 
@@ -22,14 +22,14 @@ import json
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path

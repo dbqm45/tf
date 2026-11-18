@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Wierność tłumaczenia treści fabryki (etap 4), bez modelu: wersja przed tłumaczeniem kontra po.
+"""Translation fidelity of factory content (stage 4), no model: the version before translation versus after.
 
-  python3 tools/translation_check.py core/skills/core-stack-sync            # katalog skilla względem origin/main
-  python3 tools/translation_check.py core/skills/core-x --ref HEAD~1        # inny punkt odniesienia
-  python3 tools/translation_check.py core/factory/traits/grounded.md        # pojedynczy plik
+  python3 tools/translation_check.py core/skills/core-stack-sync            # a skill directory against origin/main
+  python3 tools/translation_check.py core/skills/core-x --ref HEAD~1        # a different reference point
+  python3 tools/translation_check.py core/factory/traits/grounded.md        # a single file
 
-Tłumaczenie zmienia język prozy, a nie fakty. Dla każdego pliku .md porównuje:
-- bloki kodu z językiem (```bash … ```) — identyczne i w tej samej kolejności (komentarze i treść <placeholderów>
-  to proza); blok bez języka (albo `text`, `markdown`) to przykład wyjścia — porównywany jak proza;
-- fragmenty w `…` (polecenia, ścieżki, pola, progi) — ten sam zbiór z krotnością;
-- liczby — te same ciągi cyfr (0,8 i 0.8 to ta sama liczba);
-- odnośniki markdown i adresy URL — te same cele;
-- strukturę — liczba nagłówków, punktów list, wierszy tabel;
-- nagłówek YAML — ten sam `name`; wszystkie dawne `metadata.keywords` zostają (dochodzą angielskie).
-Kod 0 — bez różnic; 1 — różnice (lista na wyjściu); 2 — złe wywołanie.
+Translation changes the language of the prose, not the facts. For each .md file it compares:
+- code blocks with a language (```bash … ```) — identical and in the same order (comments and the content of <placeholders>
+  are prose); a block without a language (or `text`, `markdown`) is an output example — compared as prose;
+- fragments in `…` (commands, paths, fields, thresholds) — the same set with multiplicity;
+- numbers — the same digit strings (0,8 and 0.8 are the same number);
+- markdown links and URLs — the same targets;
+- structure — the number of headings, list items, table rows;
+- YAML header — the same `name`; all former `metadata.keywords` stay (English ones are added).
+Exit 0 — no differences; 1 — differences (listed in the output); 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -40,15 +40,15 @@ def _front(text: str) -> tuple[dict, str]:
     return {"name": name, "keywords": {k.strip().lower() for k in kw.split(",") if k.strip()}}, text[m.end():]
 
 
-COMMENT = re.compile(r"(?m)(^|\s)(#|//|--)\s.*$")   # komentarz w kodzie to proza — tłumaczy się
-PLACEHOLDER = re.compile(r"<[^<>\n]+>")              # <technologia> → <technology>: treść placeholdera to proza
+COMMENT = re.compile(r"(?m)(^|\s)(#|//|--)\s.*$")   # a comment in code is prose — it gets translated
+PLACEHOLDER = re.compile(r"<[^<>\n]+>")              # <technologia> → <technology>: the placeholder content is prose
 
 
 def _code(block: str) -> str:
     return PLACEHOLDER.sub("<>", COMMENT.sub(r"\1", block)).rstrip()
 
 
-PROSE_LANGS = ("", "text", "markdown", "md")   # blok bez języka = przykład wyjścia (proza), tłumaczy się
+PROSE_LANGS = ("", "text", "markdown", "md")   # a block without a language = an output example (prose), it gets translated
 
 
 def _is_code(block: str) -> bool:
@@ -84,7 +84,7 @@ def _diff(label: str, old: Counter, new: Counter) -> list[str]:
 
 
 def compare(old_text: str, new_text: str) -> list[str]:
-    """Różnice faktów między wersją przed tłumaczeniem i po; pusta lista — tłumaczenie wierne."""
+    """Differences in facts between the version before translation and after; an empty list — a faithful translation."""
     a, b = facts(old_text), facts(new_text)
     out = []
     if a["front"].get("name") != b["front"].get("name"):

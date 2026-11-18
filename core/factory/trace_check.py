@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-Ślad kryterium → test → commit → dowód (krok D osi przebiegu).
+Trace criterion → test → commit → proof (step D of the run axis).
 
-  tf trace <KEY> [--base <gałąź>] [--md | --json]
+  tf trace <KEY> [--base <branch>] [--md | --json]
 
-Kryteria `AC-n` bierze z `docs/project/changes/<KEY>/spec.md`. Testu szuka po identyfikatorze `AC-n` w nazwie albo
-komentarzu, tylko w plikach testów zmienionych na gałęzi względem bazy (zacommitowanych i roboczych) — identyfikatory
-innych zadań się nie mieszają, a `AC-n` w kodzie produkcyjnym testem nie jest. Commit to pierwszy commit gałęzi, który
-wprowadził identyfikator do pliku. Dowód to kawałek zadania (`tf task verify`), którego pliki obejmują plik testu,
-ze stanem wyliczonym teraz. „Czerwony przed kodem” mówi, czy hook TDD widział ten test jako nieprzechodzący
-(zapis w dowodzie kawałka albo w `.tf/logs/tdd-red.jsonl`); „brak zapisu” znaczy tylko, że hook tego nie widział —
-np. test uruchomiono poza sesją Claude Code.
+Criteria `AC-n` come from `docs/project/changes/<KEY>/spec.md`. A test is found by the identifier `AC-n` in the name or a
+comment, only in test files changed on the branch relative to the base (committed and working) — identifiers
+of other tasks do not mix in, and an `AC-n` in production code is not a test. The commit is the first commit of the branch that
+introduced the identifier into the file. The proof is a task slice (`tf task verify`) whose files include the test file,
+with the state computed now. "Red before code" tells whether the TDD hook saw this test as failing
+(recorded in the slice's proof or in `.tf/logs/tdd-red.jsonl`); "no record" only means the hook did not see it —
+e.g. the test was run outside a Claude Code session.
 
-Reguły:
-  TRACE-001 kryterium bez testu (błąd) · TRACE-002 test wskazuje `AC-n`, którego nie ma w specyfikacji (błąd) ·
-  TRACE-003 test nie należy do plików żadnego kawałka — nie ma dowodu, że przeszedł (ostrzeżenie).
-Z błędem śladu `tf task stage <KEY> review` (i dalsze etapy) kończy się odmową.
+Rules:
+  TRACE-001 a criterion without a test (error) · TRACE-002 a test points to an `AC-n` that is not in the specification (error) ·
+  TRACE-003 a test does not belong to the files of any slice — no proof that it passed (warning).
+With a trace error `tf task stage <KEY> review` (and later stages) is refused.
 
-Baza: `--base`, inaczej pierwsza istniejąca z `main`, `origin/main`, `master`, `origin/master`.
-Pliki testów: katalogi tests/, test/, __tests__/, e2e/, spec/ oraz nazwy test_*.py, *_test.py, *_test.go, *.test.*,
+Base: `--base`, otherwise the first existing of `main`, `origin/main`, `master`, `origin/master`.
+Test files: directories tests/, test/, __tests__/, e2e/, spec/ and names test_*.py, *_test.py, *_test.go, *.test.*,
 *.spec.*, *Test.java, *Tests.cs.
 
-Kod wyjścia: 0 — każde kryterium ma test (albo zadanie nie ma specyfikacji); 1 — błędy śladu; 2 — brak repozytorium
-git, nieznana baza albo błąd wywołania. Tylko biblioteka standardowa.
+Exit code: 0 — every criterion has a test (or the task has no specification); 1 — trace errors; 2 — no git
+repository, unknown base or invocation error. Standard library only.
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -51,7 +51,7 @@ BASES = ("main", "origin/main", "master", "origin/master")
 
 
 def sibling(name: str):
-    """Skrypt silnika obok tego pliku jako moduł (task_state, spec_check)."""
+    """An engine script next to this file as a module (task_state, spec_check)."""
     spec = importlib.util.spec_from_file_location(f"tf_{name}", Path(__file__).resolve().with_name(f"{name}.py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -68,7 +68,7 @@ def git(root: Path, *args: str) -> tuple[int, str]:
 
 
 def find_base(root: Path, base: str | None) -> str | None:
-    """Baza porównania; None, gdy katalog nie jest repozytorium git albo bazy nie ma."""
+    """Comparison base; None when the directory is not a git repository or there is no base."""
     if git(root, "rev-parse", "--is-inside-work-tree")[0] != 0:
         return None
     for ref in ([base] if base else BASES):
@@ -78,7 +78,7 @@ def find_base(root: Path, base: str | None) -> str | None:
 
 
 def changed_tests(root: Path, base: str) -> list[str]:
-    """Pliki testów zmienione na gałęzi względem bazy: zacommitowane, zmienione roboczo i nowe nieśledzone."""
+    """Test files changed on the branch relative to the base: committed, changed in the working tree and new untracked."""
     files: set[str] = set()
     for args in (("diff", "--name-only", f"{base}...HEAD"), ("diff", "--name-only", "HEAD"),
                  ("ls-files", "--others", "--exclude-standard")):
@@ -87,14 +87,14 @@ def changed_tests(root: Path, base: str) -> list[str]:
 
 
 def first_commit(root: Path, base: str, rel: str, ident: str) -> str | None:
-    """Pierwszy commit gałęzi, który wprowadził identyfikator do pliku; None, gdy zmiana nie jest zacommitowana."""
+    """The first commit of the branch that introduced the identifier into the file; None when the change is not committed."""
     out = git(root, "log", "--reverse", "--format=%h", f"-S{ident}", f"{base}..HEAD", "--", rel)[1].split()
     return out[0] if out else None
 
 
 def trace(root: Path, key: str, base: str | None = None) -> dict | None:
-    """Ślad zadania. None, gdy nie da się go policzyć (brak repozytorium git albo bazy). `spec: False`, gdy zadanie
-    nie ma specyfikacji."""
+    """Task trace. None when it cannot be computed (no git repository or base). `spec: False` when the task
+    has no specification."""
     spec = sibling("spec_check").check_task(root, key)
     if spec is None:
         return {"ok": True, "spec": False, "rows": [], "errors": [], "warnings": [], "base": None}
@@ -104,7 +104,7 @@ def trace(root: Path, key: str, base: str | None = None) -> dict | None:
     ts = sibling("task_state")
     task = ts.load(root, key) or {}
     states = ts.slice_states(root, task)
-    owner: dict[str, str] = {}           # plik → kawałek, którego dowód go obejmuje (ostatni wygrywa)
+    owner: dict[str, str] = {}           # file → slice whose proof covers it (the last wins)
     for sid, sl in (task.get("slices") or {}).items():
         for rel in ((ts.evidence_of(root, key, sl) or {}).get("files") or {}):
             owner[rel] = sid
@@ -120,7 +120,7 @@ def trace(root: Path, key: str, base: str | None = None) -> dict | None:
         for n, line in enumerate(lines, 1):
             for m in AC.finditer(line):
                 hits = found.setdefault(f"AC-{int(m.group(1))}", [])
-                if not any(f == rel for f, _ in hits):       # jeden wpis na plik: pierwsze wystąpienie
+                if not any(f == rel for f, _ in hits):       # one entry per file: the first occurrence
                     hits.append((rel, n))
     errors, warnings, rows = [], [], []
     for ac in spec["criteria"]:

@@ -1,11 +1,11 @@
 {
  "core-agent-instructions": {
-  "fingerprint": "7d65c573574d8d05",
-  "offline": "2026-11-17"
+  "fingerprint": "9ca3967a0efa9a8a",
+  "offline": "2026-11-18"
  },
  "core-agent-retro": {
-  "fingerprint": "bc914501290723ef",
-  "offline": "2026-11-17"
+  "fingerprint": "a041144137a412d6",
+  "offline": "2026-11-18"
  },
  "core-agent-security": {
   "fingerprint": "6e9667ffa56fb2f4",
@@ -16,32 +16,32 @@
   "offline": "2026-11-17"
  },
  "core-conventional-commits": {
-  "fingerprint": "dafe6f96416c533b",
-  "offline": "2026-11-17"
+  "fingerprint": "410d05655a1d525d",
+  "offline": "2026-11-18"
  },
  "core-cost-control": {
   "fingerprint": "3284bb17e35291a3",
   "offline": "2026-11-17"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "878637e84a067f26",
-  "offline": "2026-11-17"
+  "fingerprint": "fa48da250fe7284c",
+  "offline": "2026-11-18"
  },
  "core-factory-update": {
   "fingerprint": "0f357e941ec029a6",
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
-  "fingerprint": "b679b36152a9e85d",
-  "offline": "2026-11-17"
+  "fingerprint": "9db9bef94fcf0ea7",
+  "offline": "2026-11-18"
  },
  "core-grounding": {
-  "fingerprint": "3570ccea0e2cd969",
-  "offline": "2026-11-17"
+  "fingerprint": "5ee660741040289f",
+  "offline": "2026-11-18"
  },
  "core-knowledge": {
-  "fingerprint": "1971b024491aa8ab",
-  "offline": "2026-11-17"
+  "fingerprint": "d37357a25a61949b",
+  "offline": "2026-11-18"
  },
  "core-plan-interview": {
   "fingerprint": "ca78ea7971e226dd",
@@ -56,8 +56,8 @@
   "offline": "2026-11-17"
  },
  "core-semver": {
-  "fingerprint": "cc8fae7d43a7055b",
-  "offline": "2026-11-17"
+  "fingerprint": "c67a9ca677b57459",
+  "offline": "2026-11-18"
  },
  "core-skill-authoring": {
   "fingerprint": "1428d37832017f9b",
@@ -68,8 +68,8 @@
   "offline": "2026-11-17"
  },
  "core-source-research": {
-  "fingerprint": "ed29acb719550cfa",
-  "offline": "2026-11-17"
+  "fingerprint": "73e4a07dea5b6d6e",
+  "offline": "2026-11-18"
  },
  "core-stack-sync": {
   "fingerprint": "7b528f562584e845",
@@ -80,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "89e45e83ef540bfc",
+  "fingerprint": "0a9cf26c01e5c23e",
   "offline": "2026-11-18"
  }
 }

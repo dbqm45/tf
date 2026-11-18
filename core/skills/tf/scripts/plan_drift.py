@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Zgodność zmian z planem przebiegu: pliki zmienione na gałęzi historyjki vs pliki kawałków w plan.md.
+Conformance of changes to the run plan: files changed on the story branch vs the slice files in plan.md.
 
-  python3 .claude/skills/tf/scripts/plan_drift.py <katalog przebiegu> [--base main] [--json]
+  python3 .claude/skills/tf/scripts/plan_drift.py <run directory> [--base main] [--json]
 
-Kawałek w plan.md: `- [x] S<n> — <wartość> · … · files: <ścieżki po przecinku> · …` (ścieżka może być katalogiem
-albo wzorcem glob). Plan leży w katalogu przebiegu albo — gdy `run.json` ma `task_dir` — w katalogu zadania
-`docs/project/changes/<KEY>/`. Wynik: per kawałek pliki ruszone i nietknięte, zmiany spoza planu (bez wyników pracy
-fabryki w `.tf/` i plików zadań w `docs/project/changes/`), pokrycie diffu planem w % i liczba
-zmienionych plików testów. Skrypt tylko raportuje (kod 0); 2 — złe wywołanie.
+A slice in plan.md: `- [x] S<n> — <value> · … · files: <comma-separated paths> · …` (a path may be a directory
+or a glob pattern). The plan lives in the run directory or — when `run.json` has `task_dir` — in the task directory
+`docs/project/changes/<KEY>/`. Result: per slice the touched and untouched files, changes outside the plan (without the factory's
+work output in `.tf/` and task files in `docs/project/changes/`), the plan's coverage of the diff in % and the number of
+changed test files. The script only reports (code 0); 2 — bad call.
 """
 from __future__ import annotations
 
@@ -45,12 +45,12 @@ def matches(path: str, spec: str) -> bool:
     return path == spec or fnmatch.fnmatch(path, spec) or path.startswith(spec.rstrip("/") + "/")
 
 
-RUN_PREFIXES = (".tf/", "docs/project/changes/")   # wyniki pracy fabryki i pliki zadań (pisze je `tf task`)
+RUN_PREFIXES = (".tf/", "docs/project/changes/")   # the factory's work output and task files (written by `tf task`)
 
 
 def plan_file(run_dir: str) -> str:
-    """plan.md przebiegu: w katalogu zadania wskazanym przez `task_dir` w run.json (od katalogu projektu, trzy
-    poziomy nad .tf/runs/<KEY>/), a w starym układzie w samym katalogu przebiegu."""
+    """The run's plan.md: in the task directory pointed to by `task_dir` in run.json (from the project directory, three
+    levels above .tf/runs/<KEY>/), and in the old layout in the run directory itself."""
     try:
         with open(os.path.join(run_dir, "run.json"), encoding="utf-8") as fh:
             rel = json.load(fh).get("task_dir")

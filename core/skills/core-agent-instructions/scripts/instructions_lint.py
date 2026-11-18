@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
-"""Karta kontroli plików instrukcji agenta (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/*.md).
+"""Checklist for agent instruction files (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/*.md).
 
-Liczy heurystycznie kontrole, które da się sprawdzić mechanicznie; ocenę treści (wiedza zbędna, sens reguł)
-robi agent wg skilla core-agent-instructions.
+Heuristically computes the checks that can be verified mechanically; the assessment of content (redundant knowledge, sense of the rules)
+is done by the agent per the core-agent-instructions skill.
 
-  python3 instructions_lint.py CLAUDE.md                 # jeden lub kilka plików
-  python3 instructions_lint.py --root .                  # wszystkie pliki instrukcji w repo + indeks i duplikaty
-  python3 instructions_lint.py --root . --json           # wynik maszynowy
+  python3 instructions_lint.py CLAUDE.md                 # one or several files
+  python3 instructions_lint.py --root .                  # all instruction files in the repo + index and duplicates
+  python3 instructions_lint.py --root . --json           # machine-readable result
   python3 instructions_lint.py CLAUDE.md --warn 150 --error 300
 
-Kontrole na plik:
-  length    niepuste linie bez komentarzy HTML (Claude Code je usuwa): OK ≤ warn, WARN ≤ error, ERROR > error
-  blocks    bloki ``` dłuższe niż 3 linie (bez mermaid): OK 0, WARN 1–2, ERROR ≥ 3
-  intents   sformułowania-intencje („pisz czysty kod”, „best practices”): OK 0, WARN 1–3, ERROR ≥ 4
-  order     pierwsza reguła krytyczna (nigdy/zawsze/never/must…) w pierwszej trzeciej pliku; ERROR, gdy dopiero
-            po linii 200 albo gdy plik > 30 linii nie ma nagłówków
-  imports   importy @ścieżka (poza `kodem`): brakujące pliki, długość z importami (importy ładują się przy starcie)
-  stale     odwołania w `kodzie`, których w repozytorium już nie ma: ścieżki plików i katalogów, `npm run <skrypt>`
-            bez skryptu w package.json, `make <cel>` bez celu w Makefile: OK 0, WARN ≥ 1 (blok fabryki
-            `<!-- team-factory:begin/end -->` pominięty — jest wspólny dla wszystkich projektów)
-Tryb --root dodatkowo: zagnieżdżone CLAUDE.md/AGENTS.md niewymienione w pliku głównym (indeks) i linie
-skopiowane z pliku głównego do pliku modułu.
+Per-file checks:
+  length    non-empty lines without HTML comments (Claude Code strips them): OK ≤ warn, WARN ≤ error, ERROR > error
+  blocks    ``` blocks longer than 3 lines (excluding mermaid): OK 0, WARN 1–2, ERROR ≥ 3
+  intents   intention phrasings („pisz czysty kod” = "write clean code", „best practices”): OK 0, WARN 1–3, ERROR ≥ 4
+  order     the first critical rule (nigdy/zawsze = never/always, never/must…) in the first third of the file; ERROR when only
+            after line 200 or when a file > 30 lines has no headings
+  imports   @path imports (outside `code`): missing files, length with imports (imports load at startup)
+  stale     references in `code` that are no longer in the repository: file and directory paths, `npm run <script>`
+            without a script in package.json, `make <target>` without a target in the Makefile: OK 0, WARN ≥ 1 (the factory block
+            `<!-- team-factory:begin/end -->` is skipped — it is common to all projects)
+The --root mode additionally: nested CLAUDE.md/AGENTS.md not listed in the main file (index) and lines
+copied from the main file into a module file.
 
-Kod wyjścia: 0 — brak ERROR; 1 — co najmniej jeden ERROR (z --strict także WARN); 2 — błąd wywołania.
-Tylko odczyt plików, bez sieci.
+Exit code: 0 — no ERROR; 1 — at least one ERROR (with --strict also WARN); 2 — call error.
+File reading only, no network.
 """
 import argparse
 import json
@@ -48,12 +48,12 @@ IMPORT_RE = re.compile(r"(?<![\w`/])@((?:~/|\.{1,2}/|/)?[\w.\-][\w.\-/]*(?:\\ [\
 EXCLUDED_LANGS = {"mermaid"}
 SPAN_RE = re.compile(r"`([^`\n]+)`")
 NEGATIVE_RE = re.compile(r"(?i)\b(nie czytaj|nie zmieniaj|nie edytuj|nie commituj|pomijaj|ignor\w*|skip|never|don't|do not)\b")
-ON_DEMAND = ("docs/project/", ".tf/", ".claude/")   # katalogi fabryki tworzone, gdy są potrzebne
+ON_DEMAND = ("docs/project/", ".tf/", ".claude/")   # factory directories created when needed
 FACTORY_BLOCK = ("<!-- team-factory:begin -->", "<!-- team-factory:end -->")
 
 
 def strip_comments(lines):
-    """Usuwa blokowe komentarze HTML poza blokami kodu (Claude Code nie wstrzykuje ich do kontekstu)."""
+    """Removes HTML block comments outside code blocks (Claude Code does not inject them into the context)."""
     out, in_comment, in_fence = [], False, False
     for i, line in enumerate(lines, 1):
         s = line.strip()
@@ -81,7 +81,7 @@ def verdict(value, warn, error):
 
 
 def fences(numbered):
-    """Bloki ``` jako (linia_startu, język, liczba_linii_treści)."""
+    """``` blocks as (start_line, language, content_line_count)."""
     res, start, lang, count = [], None, "", 0
     for i, line in numbered:
         s = line.strip()
@@ -97,7 +97,7 @@ def fences(numbered):
 
 
 def prose_lines(numbered):
-    """Linie poza blokami kodu, z usuniętymi fragmentami `kodu`."""
+    """Lines outside code blocks, with `code` fragments removed."""
     out, in_fence = [], False
     for i, line in numbered:
         if line.strip().startswith("```"):
@@ -109,7 +109,7 @@ def prose_lines(numbered):
 
 
 def outside_factory_block(raw):
-    """Numery linii poza blokiem fabryki (`<!-- team-factory:begin -->` … `<!-- team-factory:end -->`)."""
+    """Line numbers outside the factory block (`<!-- team-factory:begin -->` … `<!-- team-factory:end -->`)."""
     keep, inside = set(), False
     for i, line in enumerate(raw, 1):
         s = line.strip()
@@ -123,7 +123,7 @@ def outside_factory_block(raw):
 
 
 def manifest_names(root: Path):
-    """Skrypty package.json i cele Makefile w katalogu głównym; None, gdy pliku nie ma (nie ma czego sprawdzać)."""
+    """package.json scripts and Makefile targets in the root directory; None when the file does not exist (nothing to check)."""
     try:
         scripts = json.loads((root / "package.json").read_text(encoding="utf-8")).get("scripts")
         npm = set(scripts) if isinstance(scripts, dict) else set()
@@ -137,9 +137,9 @@ def manifest_names(root: Path):
 
 
 def stale_refs(numbered, keep, path: Path, root: Path):
-    """Odwołania w `kodzie` do ścieżek, skryptów npm i celów make, których nie ma. Heurystyka: pomija wzorce, adresy,
-    opcje, ścieżki bezwzględne, same nazwy plików (bez `/`), katalogi fabryki tworzone na żądanie i linie z zakazem
-    („nie czytaj `dist/`” — taki katalog może nie istnieć)."""
+    """References in `code` to paths, npm scripts and make targets that do not exist. Heuristic: skips patterns, addresses,
+    options, absolute paths, bare file names (without `/`), factory directories created on demand and lines with a prohibition
+    („nie czytaj `dist/`” = "do not read `dist/`" — such a directory may not exist)."""
     npm, make = manifest_names(root)
     out, in_fence = [], False
     for i, line in numbered:
@@ -161,7 +161,7 @@ def stale_refs(numbered, keep, path: Path, root: Path):
                     out.append({"line": i, "text": f"{span} — Makefile has no target \"{words[1]}\""})
                 continue
             if len(words) != 1 or "://" in span or re.search(r"[<>{}*?$|=:@\\]", span) or span.startswith(("-", "/", "~")):
-                continue                      # polecenie, adres, wzorzec, opcja albo ścieżka spoza repozytorium
+                continue                      # a command, address, pattern, option or a path outside the repository
             target = span.rstrip(".,;)")
             if "/" not in target or target.startswith(ON_DEMAND) or target.lstrip("./").startswith(ON_DEMAND):
                 continue
@@ -174,7 +174,7 @@ def stale_refs(numbered, keep, path: Path, root: Path):
 def check_file(path: Path, warn: int, error: int, root: Path | None = None):
     text = path.read_text(encoding="utf-8", errors="replace")
     raw = text.splitlines()
-    # frontmatter reguły (.claude/rules) nie trafia do kontekstu
+    # a rule's frontmatter (.claude/rules) does not reach the context
     if raw and raw[0].strip() == "---":
         end = next((k for k in range(1, len(raw)) if raw[k].strip() == "---"), None)
         if end is not None:
@@ -200,7 +200,7 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
 
     headings = [(i, l) for i, l in prose if re.match(r"^#{1,6}\s", l)]
     critical = [i for i, l in prose if CRITICAL_RE.search(l)]
-    pos = {i: k for k, (i, _) in enumerate(nonempty, 1)}  # numer linii pliku → pozycja wśród niepustych
+    pos = {i: k for k, (i, _) in enumerate(nonempty, 1)}  # file line number → position among the non-empty ones
     findings = []
     if n > 30 and not headings:
         v = "ERROR"
@@ -233,7 +233,7 @@ def check_file(path: Path, warn: int, error: int, root: Path | None = None):
         for m in IMPORT_RE.finditer(l):
             target = m.group(1).replace("\\ ", " ").rstrip(".,;:)")
             if "/" not in target and "." not in target:
-                continue  # @nazwa (np. wzmianka) — nie ścieżka
+                continue  # @name (e.g. a mention) — not a path
             if target.startswith("~/"):
                 imports.append({"line": i, "target": target, "external": True})
                 continue

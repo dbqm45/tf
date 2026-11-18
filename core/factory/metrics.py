@@ -1,41 +1,41 @@
 #!/usr/bin/env python3
-"""Metryki skuteczności fabryki (B3): czy zmiany robione z fabryką są przyjmowane, cofane i ile kosztują.
+"""Factory effectiveness metrics (B3): whether changes made with the factory are accepted, reverted, and what they cost.
 
-  python3 .tf/factory/metrics.py                    # ostatnie 4 tygodnie wobec 4 tygodni wcześniej
+  python3 .tf/factory/metrics.py                    # the last 4 weeks against the 4 weeks before
   python3 .tf/factory/metrics.py --weeks 2 --revert-days 14
-  python3 .tf/factory/metrics.py --no-gh            # bez historii PR (tylko git)
-  tf metrics [opcje]
-  python3 .tf/factory/metrics.py --after-update [--json]   # czy po ostatniej aktualizacji fabryki coś się pogorszyło
+  python3 .tf/factory/metrics.py --no-gh            # without PR history (git only)
+  tf metrics [options]
+  python3 .tf/factory/metrics.py --after-update [--json]   # whether anything got worse after the last factory update
 
-Liczy z gita (główna linia, `--first-parent`, bez `chore(release)` i commitów revert):
-- zmiany i przyjęte zmiany — przyjęta = zmergowana i niecofnięta przez N dni (`--revert-days`, domyślnie 7);
-  zmiany młodsze niż N dni są „w toku” i nie wchodzą do odsetka;
-- odsetek revertów — główny wskaźnik jakości;
-- przyczyny poprawek z trailera `Rework-Cause:` (spec-gap, agent-error, requirement-change, unknown; dawne polskie wartości jako aliasy);
-- koszt tokenów z `.tf/logs/usage.jsonl` (cennik `prices_usd_per_mtok`) i koszt przyjętej zmiany — bez pracy ludzi;
-- z historii PR (`gh pr list`, gdy jest): mediana czasu od otwarcia PR do merge'a i liczba commitów na PR.
-Liczba zmian sama w sobie nie jest celem — łatwo ją zawyżyć. Raport: `.tf/reports/metrics.md` i `metrics.json`.
+Counts from git (main line, `--first-parent`, without `chore(release)` and revert commits):
+- changes and accepted changes — accepted = merged and not reverted within N days (`--revert-days`, default 7);
+  changes younger than N days are "in progress" and do not enter the percentage;
+- revert rate — the main quality indicator;
+- rework causes from the `Rework-Cause:` trailer (spec-gap, agent-error, requirement-change, unknown; former Polish values as aliases);
+- token cost from `.tf/logs/usage.jsonl` (price list `prices_usd_per_mtok`) and the cost of an accepted change — without human labor;
+- from PR history (`gh pr list`, when available): median time from PR opening to merge and the number of commits per PR.
+The number of changes by itself is not a goal — it is easy to inflate. Report: `.tf/reports/metrics.md` and `metrics.json`.
 
-`--after-update` (krok H29, decyzja D13): ostatnia kopia w `.tf/backup/` wyznacza chwilę aktualizacji fabryki
-i wersję sprzed niej. Okno po aktualizacji (do 14 dni) jest porównane z oknem tej samej długości przed nią:
-odsetek cofnięć (ostrzeżenie przy wzroście o ≥ 15 punktów, gdy w obu oknach jest ≥ 5 rozstrzygniętych zmian),
-blokady hooków z `.tf/logs/hook-blocks.jsonl` (≥ 5 po i co najmniej dwukrotny wzrost) i błędy hooków z
-`.tf/logs/hook-errors.jsonl` (≥ 3 po i ponad dwukrotny wzrost). Ostrzeżenie podaje polecenie powrotu
-(`update.py --rollback`); fabryka sama się nie cofa — przy małej liczbie zmian ten wskaźnik jest zaszumiony.
+`--after-update` (step H29, decision D13): the latest copy in `.tf/backup/` marks the moment of the factory update
+and the version before it. The window after the update (up to 14 days) is compared with a window of the same length before it:
+revert rate (a warning on a rise of ≥ 15 points when both windows have ≥ 5 settled changes),
+hook blocks from `.tf/logs/hook-blocks.jsonl` (≥ 5 after and at least a twofold rise) and hook errors from
+`.tf/logs/hook-errors.jsonl` (≥ 3 after and more than a twofold rise). The warning gives the rollback command
+(`update.py --rollback`); the factory does not roll back by itself — with few changes this indicator is noisy.
 """
 from __future__ import annotations
 
 import os
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 import argparse
 import importlib.util
 import json
@@ -48,7 +48,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CAUSES = ("spec-gap", "agent-error", "requirement-change", "unknown")
-# Wartości sprzed tłumaczenia (etap 4) w starszych commitach — liczone jako ich odpowiedniki.
+# Values from before the translation (stage 4) in older commits — counted as their equivalents.
 CAUSE_ALIASES = {"luka-specyfikacji": "spec-gap", "blad-agenta": "agent-error", "zmiana-wymagan": "requirement-change",
                  "nieznana": "unknown"}
 RELEASE = re.compile(r"^chore\(release\)")
@@ -65,7 +65,7 @@ def _cost_module():
 
 
 def git_log(repo: Path) -> list[dict]:
-    """Commity głównej linii (najnowsze pierwsze): sha, czas, temat, treść."""
+    """Main-line commits (newest first): sha, time, subject, body."""
     try:
         out = subprocess.run(["git", "-C", str(repo), "log", "--first-parent", "--format=%H%x1f%ct%x1f%B%x1e", "HEAD"],
                              capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
@@ -85,7 +85,7 @@ def git_log(repo: Path) -> list[dict]:
 
 
 def pr_history(repo: Path) -> list[dict]:
-    """Zmergowane PR z `gh` (number, createdAt, mergedAt, commits); bez `gh`, bez logowania albo poza repo — []."""
+    """Merged PRs from `gh` (number, createdAt, mergedAt, commits); without `gh`, without login or outside a repo — []."""
     if not shutil.which("gh") or not repo.is_dir():
         return []
     try:
@@ -161,7 +161,7 @@ def _window(commits: list[dict], start: datetime, end: datetime, reverts: dict, 
 
 
 def _reverts(log: list[dict]) -> dict[str, datetime]:
-    """sha zmiany → czas pierwszego commita, który ją cofa."""
+    """change sha → time of the first commit that reverts it."""
     reverts: dict[str, datetime] = {}
     for c in log:
         if REVERT_SUBJECT.match(c["subject"]):
@@ -179,14 +179,14 @@ MIN_DECIDED, REVERT_RISE, MIN_BLOCKS, MIN_ERRORS = 5, 0.15, 5, 3
 
 
 def last_update(repo: Path) -> tuple[datetime, str] | None:
-    """Chwila ostatniej aktualizacji i wersja sprzed niej — z nazwy i znacznika najnowszej kopii w `.tf/backup/`."""
+    """Time of the last update and the version before it — from the name and marker of the newest copy in `.tf/backup/`."""
     best = None
     for d in (repo / BACKUP).glob("*/backup.json") if (repo / BACKUP).is_dir() else []:
         m = re.match(r"(\d{8}-\d{6})-v", d.parent.name)
         if not m:
             continue
         try:
-            at = datetime.strptime(m.group(1), "%Y%m%d-%H%M%S").astimezone()   # nazwa kopii w czasie lokalnym
+            at = datetime.strptime(m.group(1), "%Y%m%d-%H%M%S").astimezone()   # the copy name is in local time
             version = str(json.loads(d.read_text(encoding="utf-8")).get("version") or "?")
         except (ValueError, OSError, AttributeError):
             continue
@@ -196,7 +196,7 @@ def last_update(repo: Path) -> tuple[datetime, str] | None:
 
 
 def _events(path: Path, start: datetime, end: datetime) -> int:
-    """Wpisy dziennika (pole `ts` w sekundach) w oknie (start, end]."""
+    """Log entries (field `ts` in seconds) in the window (start, end]."""
     n = 0
     try:
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -212,7 +212,7 @@ def _events(path: Path, start: datetime, end: datetime) -> int:
 
 
 def update_health(repo: Path, now: datetime | None = None, days: int = 14, revert_days: int = 7) -> dict:
-    """Porównanie okna po ostatniej aktualizacji fabryki z oknem tej samej długości przed nią (D13: tylko ostrzega)."""
+    """Comparison of the window after the last factory update with a window of the same length before it (D13: warns only)."""
     now = now or datetime.now(timezone.utc)
     up = last_update(repo)
     if up is None:
@@ -261,7 +261,7 @@ def health_text(res: dict) -> str:
 
 def compute(repo: Path, now: datetime | None = None, weeks: int = 4, revert_days: int = 7, prices: dict | None = None,
             prs: list[dict] | None = None) -> dict:
-    """Okno bieżące (ostatnie `weeks` tygodni) i bazowe (`weeks` tygodni wcześniej)."""
+    """The current window (the last `weeks` weeks) and the base window (`weeks` weeks earlier)."""
     now = now or datetime.now(timezone.utc)
     log = git_log(repo)
     reverts = _reverts(log)
@@ -269,7 +269,7 @@ def compute(repo: Path, now: datetime | None = None, weeks: int = 4, revert_days
     if prices is None:
         try:
             prices = _cost_module()._tf_config(repo).get("prices_usd_per_mtok") or {}
-        except Exception:   # brak konfiguracji projektu — koszt bez cennika to zero, raport mówi, skąd ceny
+        except Exception:   # no project configuration — cost without a price list is zero, the report says where prices come from
             prices = {}
     usage = _usage(repo)
     span = timedelta(weeks=weeks)

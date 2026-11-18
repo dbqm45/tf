@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Cała lokalna pętla sprawdzeń fabryki jednym poleceniem — krótki wynik zamiast kilku długich wyjść (tańszy kontekst).
+The whole local factory check loop in one command — short output instead of several long ones (cheaper context).
 
-  python3 .tf/factory/check.py              # build check, testy, scenariusze, bramka, dziennik
-  python3 .tf/factory/check.py -k skill     # tylko testy, których nazwa zawiera „skill” (plus pozostałe kroki)
-  python3 .tf/factory/check.py --json       # wynik dla automatu
-  --root <katalog> (domyślnie repozytorium tej fabryki)
+  python3 .tf/factory/check.py              # build check, tests, scenarios, gate, journal
+  python3 .tf/factory/check.py -k skill     # only tests whose name contains “skill” (plus the remaining steps)
+  python3 .tf/factory/check.py --json       # machine-readable result
+  --root <directory> (default: this factory's repository)
 
-Na wyjściu: linia na krok (zielone tylko z liczbą), szczegóły wyłącznie przy błędach (ostatnie linie wyjścia), ostatnia
-linia to werdykt. Kod 1, gdy któryś krok jest czerwony. Krok bez skryptu (np. w projekcie bez docs/project/) jest
-pomijany z adnotacją. Termin przeglądu skilli (freshness.py) jest informacją, nie błędem. Tylko biblioteka standardowa.
+Output: one line per step (green ones only with a count), details only on failures (the last lines of output), the last
+line is the verdict. Exit code 1 when any step is red. A step without a script (e.g. in a project without docs/project/) is
+skipped with a note. The skill review deadline (freshness.py) is information, not an error. Standard library only.
 """
 from __future__ import annotations
 
@@ -18,14 +18,14 @@ import subprocess
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
