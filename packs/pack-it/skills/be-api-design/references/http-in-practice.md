@@ -1,85 +1,85 @@
-# HTTP w praktyce API: cache, negocjacja, limity, kolekcje, operacje masowe
+# HTTP in API practice: caching, negotiation, limits, collections, bulk operations
 
-## 1. Cache HTTP
-- Każda odpowiedź `GET` ma świadomie ustawione `Cache-Control`:
-  - dane publiczne i rzadko zmienne: `public, max-age=…` (dla CDN `s-maxage`);
-  - dane konkretnego użytkownika: `private` albo `no-store`, nigdy w cache współdzielonym.
-- **Walidacja**: `ETag` (albo `Last-Modified`) + żądanie warunkowe `If-None-Match` → `304 Not Modified` bez treści.
-  Ten sam `ETag` służy do optymistycznej kontroli wersji przy zapisie (`If-Match` → 412, SKILL.md).
-- `Vary` wymienia nagłówki, od których zależy odpowiedź (`Accept`, `Accept-Language`, `Authorization`, jeśli dotyczy).
-  Bez tego cache poda jednemu klientowi odpowiedź przygotowaną dla innego.
-- Cache po stronie serwera (Redis, cache aplikacji) to osobna decyzja z jawną strategią unieważniania i czasem życia.
+## 1. HTTP caching
+- Every `GET` response has a consciously set `Cache-Control`:
+  - public, rarely changing data: `public, max-age=…` (for a CDN `s-maxage`);
+  - a specific user's data: `private` or `no-store`, never in a shared cache.
+- **Validation**: an `ETag` (or `Last-Modified`) + a conditional `If-None-Match` request → `304 Not Modified` without a body.
+  The same `ETag` serves optimistic version control on writes (`If-Match` → 412, SKILL.md).
+- `Vary` lists the headers the response depends on (`Accept`, `Accept-Language`, `Authorization`, if applicable).
+  Without it the cache gives one client a response prepared for another.
+- A server-side cache (Redis, an application cache) is a separate decision with an explicit invalidation strategy and lifetime.
 
-## 2. Negocjacja treści
-- Klient mówi, co przyjmuje (`Accept`), i co wysyła (`Content-Type`). Brak `Accept` → domyślnie `application/json`.
-- Typ nieobsługiwany w `Accept` → `406`, nieobsługiwany `Content-Type` żądania → `415`; w odpowiedzi lista obsługiwanych.
-- Błędy w `application/problem+json` (RFC 9457) niezależnie od typu sukcesu.
-- Kompresja (`Accept-Encoding: gzip, br`) włączona dla dużych odpowiedzi JSON; nie kompresuj danych tajnych razem
-  z danymi od użytkownika w tej samej odpowiedzi (ataki typu BREACH).
+## 2. Content negotiation
+- The client says what it accepts (`Accept`) and what it sends (`Content-Type`). No `Accept` → `application/json` by default.
+- A type unsupported in `Accept` → `406`, an unsupported request `Content-Type` → `415`; the response lists the supported ones.
+- Errors in `application/problem+json` (RFC 9457) regardless of the success type.
+- Compression (`Accept-Encoding: gzip, br`) enabled for large JSON responses; do not compress secret data together
+  with user-supplied data in the same response (BREACH-type attacks).
 
-## 3. Limity żądań
-- **Gdzie**: per klucz API lub klient OAuth (podstawowo), per użytkownik, per najemca, per IP (ochrona przed nadużyciem
-  bez logowania). Osobne, ostrzejsze limity dla drogich operacji i przepływów biznesowych (logowanie, reset hasła,
-  zakup, wysyłka SMS — OWASP API6).
-- **Algorytm**: token bucket (pozwala na krótkie skoki, najczęstszy wybór), okno przesuwne (równiej), stałe okno
-  (najprostsze, ale skok na granicy okien). Licznik wspólny dla wszystkich instancji (np. Redis) albo limit w bramie API.
-- **Odpowiedź**: `429 Too Many Requests` z `Retry-After`. Informacja o limicie: nagłówki `RateLimit-Policy`
-  i `RateLimit` z projektu IETF (draft-ietf-httpapi-ratelimit-headers, wersja 11 z 05.2026 — jeszcze nie RFC; składnia
-  może się zmienić) albo popularne `X-RateLimit-Limit` / `-Remaining` / `-Reset`. Wybierz jedną konwencję
-  i opisz ją w OpenAPI.
-- **Kwoty** (np. 10 000 żądań miesięcznie w planie) to coś innego niż limit szybkości — osobny licznik i komunikat.
-- Klient (także nasz) respektuje `Retry-After` i ponawia z wykładniczym odstępem i losowym rozrzutem.
+## 3. Rate limits
+- **Where**: per API key or OAuth client (primarily), per user, per tenant, per IP (protection against abuse
+  without login). Separate, stricter limits for expensive operations and business flows (login, password reset,
+  purchase, sending an SMS — OWASP API6).
+- **Algorithm**: token bucket (allows short bursts, the most common choice), sliding window (smoother), fixed window
+  (the simplest, but a burst at the window boundary). A counter shared by all instances (e.g. Redis) or a limit in the API gateway.
+- **Response**: `429 Too Many Requests` with `Retry-After`. Limit information: the `RateLimit-Policy`
+  and `RateLimit` headers from the IETF draft (draft-ietf-httpapi-ratelimit-headers, version 11 of 05.2026 — not yet an RFC; the syntax
+  may change) or the popular `X-RateLimit-Limit` / `-Remaining` / `-Reset`. Choose one convention
+  and describe it in OpenAPI.
+- **Quotas** (e.g. 10,000 requests a month on a plan) are something different from a rate limit — a separate counter and message.
+- The client (ours too) respects `Retry-After` and retries with exponential backoff and random jitter.
 
-## 4. Kolekcje: paginacja, filtrowanie, sortowanie, wyszukiwanie
-- Offset tylko dla małych, rzadko zmiennych zbiorów; poza tym kursor (keyset) — **nieprzezroczysty**, z wszystkimi
-  polami sortowania, a sortowanie kończy się unikalnym polem (`id`). Liczba wszystkich wyników opcjonalna albo przybliżona.
-- Filtry i sortowanie tylko z allowlisty; nieznany filtr → `400`, nie cicha ignoracja; każdy filtr i sortowanie ma
-  indeks albo limit (be-database).
+## 4. Collections: pagination, filtering, sorting, search
+- Offset only for small, rarely changing sets; otherwise a cursor (keyset) — **opaque**, with all
+  the sort fields, and sorting ends with a unique field (`id`). The total count of results optional or approximate.
+- Filters and sorting only from an allowlist; an unknown filter → `400`, not silently ignored; every filter and sort has
+  an index or a limit (be-database).
 
-## 5. Operacje masowe i długie
-| Rodzaj | Semantyka | Odpowiedź |
+## 5. Bulk and long operations
+| Kind | Semantics | Response |
 |---|---|---|
-| **batch** | wszystko albo nic (jedna transakcja) | `200`/`201` albo błąd z listą rekordów do poprawy |
-| **bulk** | każdy rekord osobno, częściowy sukces dozwolony | `207 Multi-Status` z wynikiem per rekord (status, błędy, identyfikator) |
-| długie (sekundy i więcej) | asynchronicznie | `202 Accepted` + `Location` zasobu zadania (`styles-and-communication.md`) |
-- Limit liczby rekordów i rozmiaru żądania; duże importy jako strumień rekordów (NDJSON albo `application/json-seq`),
-  żeby jeden błędny rekord nie unieważniał całego dokumentu JSON.
-- Wynik per rekord pozwala klientowi ponowić tylko nieudane — z tym samym kluczem idempotencji per rekord.
+| **batch** | all or nothing (one transaction) | `200`/`201` or an error with a list of records to fix |
+| **bulk** | each record separately, partial success allowed | `207 Multi-Status` with a result per record (status, errors, identifier) |
+| long (seconds and more) | asynchronously | `202 Accepted` + the `Location` of a job resource (`styles-and-communication.md`) |
+- A limit on the number of records and the request size; large imports as a stream of records (NDJSON or `application/json-seq`),
+  so that one bad record does not invalidate the whole JSON document.
+- A result per record lets the client retry only the failed ones — with the same idempotency key per record.
 
-## 6. Ponowienia i idempotencja
-- Bezpiecznie ponawiane: `GET`, `HEAD`, `PUT`, `DELETE` (idempotentne z definicji). `POST` i `PATCH` — tylko
-  z `Idempotency-Key`: serwer zapamiętuje wynik pierwszego wykonania dla klucza (np. 24 h) i zwraca go ponownie;
-  ten sam klucz z inną treścią → `422`.
-- Ponawiaj błędy przejściowe (`408`, `429`, `502`, `503`, `504`, zerwane połączenie), nie ponawiaj `4xx` błędów
-  klienta. Wykładniczy odstęp z losowym rozrzutem, limit prób i łączny limit czasu.
+## 6. Retries and idempotency
+- Safely retried: `GET`, `HEAD`, `PUT`, `DELETE` (idempotent by definition). `POST` and `PATCH` — only
+  with an `Idempotency-Key`: the server remembers the result of the first execution for the key (e.g. 24 h) and returns it again;
+  the same key with a different body → `422`.
+- Retry transient errors (`408`, `429`, `502`, `503`, `504`, a dropped connection), do not retry `4xx` client
+  errors. Exponential backoff with random jitter, a limit on attempts and a total time limit.
 
-## 7. HATEOAS w praktyce
-Pełne API sterowane hipermediami rzadko się opłaca. Linki `next`/`prev` w kolekcjach i odnośniki do powiązanych
-zasobów są tanie i przydatne. Lista dozwolonych akcji w zasobie (np. `"actions": ["cancel"]`) pomaga frontowi
-pokazać właściwe przyciski bez kopiowania reguł biznesowych.
+## 7. HATEOAS in practice
+A full hypermedia-driven API rarely pays off. `next`/`prev` links in collections and links to related
+resources are cheap and useful. A list of allowed actions in a resource (e.g. `"actions": ["cancel"]`) helps the frontend
+show the right buttons without copying business rules.
 
-## 8. Poziomy dojrzałości REST i komendy jako dokumenty
-- **Model dojrzałości Richardsona** opisuje kroki w stronę REST:
-  - poziom 0: jeden punkt końcowy, wszystko przez `POST` (styl RPC przez HTTP);
-  - poziom 1: osobne zasoby z własnymi adresami;
-  - poziom 2: metody i kody HTTP zgodnie z semantyką (`GET` bez efektów, `201`, `404`, `409`);
-  - poziom 3: hipermedia, czyli odpowiedź zawiera linki do możliwych dalszych kroków (sekcja 7).
+## 8. REST maturity levels and commands as documents
+- **The Richardson maturity model** describes the steps towards REST:
+  - level 0: one endpoint, everything through `POST` (an RPC style over HTTP);
+  - level 1: separate resources with their own addresses;
+  - level 2: HTTP methods and codes according to their semantics (`GET` without effects, `201`, `404`, `409`);
+  - level 3: hypermedia, i.e. the response contains links to the possible next steps (section 7).
 
-  Większość dobrych API publicznych celuje w poziom 2 i bierze z poziomu 3 tylko tanie elementy. Model to narzędzie
-  do opisu, a nie cel do „zaliczenia”.
-- **Komenda jako dokument:** operację biznesową, która nie jest edycją pól, wystawiasz jako utworzenie zasobu
-  opisującego decyzję, np. `POST /complaints/{id}/approvals` z treścią `{ "reason": …, "decidedBy": … }`.
-  Odpowiedź to `201` z `Location` (synchronicznie) albo `202` ze statusem przetwarzania (asynchronicznie).
-  - Komenda ma tożsamość, autora, czas i wynik, więc da się ją odczytać, zaudytować, ponowić idempotentnie
-    (`Idempotency-Key` albo identyfikator nadany przez klienta) i odrzucić z powodem (`422`).
-  - Nazwa zasobu pochodzi z języka domeny (zatwierdzenie, odwołanie, korekta), a nie z tabeli. `PATCH` zmieniający
-    `status` na `approved` ukrywa decyzję biznesową i omija jej reguły.
-  - Wycofanie to kolejna komenda (np. `POST /complaints/{id}/approval-revocations`), a nie `DELETE` historii.
-  - Po stronie serwera dokument komendy trafia do handlera komendy w warstwie aplikacji (ddd-tactical-design).
-- Część materiałów szkoleniowych nazywa projektowanie API wokół komend-dokumentów „poziomem 4” dojrzałości REST.
-  Model Richardsona ma poziomy 0–3, a „poziom 4” to określenie nieformalne.
+  Most good public APIs aim for level 2 and take only the cheap elements from level 3. The model is a tool
+  for description, not a goal to "pass".
+- **A command as a document:** a business operation that is not a field edit you expose as creating a resource
+  describing the decision, e.g. `POST /complaints/{id}/approvals` with the body `{ "reason": …, "decidedBy": … }`.
+  The response is `201` with `Location` (synchronously) or `202` with a processing status (asynchronously).
+  - The command has an identity, an author, a time and a result, so it can be read, audited, retried idempotently
+    (an `Idempotency-Key` or a client-assigned identifier) and rejected with a reason (`422`).
+  - The resource name comes from the domain language (approval, revocation, correction), not from the table. A `PATCH` changing
+    `status` to `approved` hides the business decision and bypasses its rules.
+  - A withdrawal is another command (e.g. `POST /complaints/{id}/approval-revocations`), not a `DELETE` of history.
+  - On the server side the command document goes to a command handler in the application layer (ddd-tactical-design).
+- Some training materials call designing an API around command documents "level 4" of REST maturity.
+  The Richardson model has levels 0–3, and "level 4" is an informal term.
 
-## Źródła
+## Sources
 - [MDN: HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching), [MDN: Content negotiation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation),
   [SoftwareMill: Content negotiation in practice](https://softwaremill.com/content-negotiation-in-practice/)
 - [Tyk: API rate limiting](https://tyk.io/learning-center/api-rate-limiting/),
@@ -87,9 +87,9 @@ pokazać właściwe przyciski bez kopiowania reguł biznesowych.
 - [Nordic APIs: API pagination](https://nordicapis.com/everything-you-need-to-know-about-api-pagination/),
   [Tyk: bulk vs batch import](https://tyk.io/blog/api-design-guidance-bulk-and-batch-import/)
 - [roadmap.sh — API Design](https://roadmap.sh/api-design)
-- L. Richardson, „Justice Will Take Us Millions Of Intricate Moves”, QCon 2008 (wystąpienie, w którym przedstawiono
-  poziomy) oraz M. Fowler, „Richardson Maturity Model” (martinfowler.com/articles/richardsonMaturityModel.html,
-  2010) [niezweryfikowane: strony niedostępne z tej sesji, daty ze źródeł wtórnych].
-- Komenda jako dokument i „poziom 4” na podstawie programu szkolenia „DDD — zaawansowane techniki modelowania
-  i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21).
-Opisane własnymi słowami.
+- L. Richardson, "Justice Will Take Us Millions Of Intricate Moves", QCon 2008 (the talk that introduced
+  the levels) and M. Fowler, "Richardson Maturity Model" (martinfowler.com/articles/richardsonMaturityModel.html,
+  2010) [unverified: pages unavailable from this session, dates from secondary sources].
+- A command as a document and "level 4" based on the programme of the training "DDD — advanced modelling techniques
+  and archetypes" (Bottega IT Minds, material from the human, 2026-10-21).
+Described in our own words.
