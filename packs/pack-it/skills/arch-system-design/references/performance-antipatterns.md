@@ -1,20 +1,20 @@
-# Antywzorce wydajności (katalog Azure Architecture Center)
+# Performance antipatterns (the Azure Architecture Center catalogue)
 
-| Antywzorzec | Objaw | Jak wykryć | Naprawa |
+| Antipattern | Symptom | How to detect | Fix |
 |---|---|---|---|
-| **Zajęta baza** (Busy Database) | baza wykonuje logikę (procedury, formatowanie, przetwarzanie dużych zbiorów) i staje się wąskim gardłem | wysoki CPU bazy przy umiarkowanym ruchu, długie procedury w `pg_stat_statements` | przenieś obliczenia do skalowalnej warstwy aplikacji; baza do przechowywania i zapytań |
-| **Zajęty front** (Busy Front End) | ciężkie zadania w procesie obsługującym żądania (także w wątkach w tle tego procesu) spowalniają wszystkie żądania | rośnie opóźnienie wszystkich endpointów, gdy działa jedno ciężkie zadanie | kolejka i osobne procesy robocze, `202` i zasób statusu (be-api-design) |
-| **Gadatliwe I/O** (Chatty I/O) | wiele małych żądań do bazy, usługi lub plików zamiast jednego | liczba zapytań na żądanie, N+1, ślady z dziesiątkami krótkich wywołań | zapytania zbiorcze, batch, odpowiedzi z potrzebnymi danymi (be-database) |
-| **Zbędne pobieranie** (Extraneous Fetching) | pobieranie więcej danych niż potrzeba (wszystkie kolumny, cała kolekcja, filtrowanie w aplikacji) | duże odpowiedzi, transfer z bazy nieproporcjonalny do wyniku | projekcja kolumn, filtrowanie i paginacja w bazie, DTO dla odczytów |
-| **Niewłaściwe tworzenie instancji** (Improper Instantiation) | nowy klient HTTP, połączenie do bazy lub obiekt kosztowny tworzony przy każdym żądaniu | wyczerpanie gniazd lub połączeń, rosnące `TIME_WAIT`, czas tworzenia w profilu | jeden współdzielony klient, pule połączeń (`backend-performance-checklist.md`) |
-| **Monolityczne utrwalanie** (Monolithic Persistence) | jedna baza dla danych o skrajnie różnych wzorcach (transakcje, logi, analityka, pliki) | rywalizacja o zasoby, wolne zapytania transakcyjne podczas raportów | rozdziel magazyny według wzorca dostępu (repliki, hurtownia, magazyn obiektów) — tylko z pomiaru |
-| **Brak cache** (No Caching) | te same, rzadko zmienne dane czytane za każdym razem ze źródła | powtarzalne identyczne zapytania w logach | cache z TTL i unieważnianiem; uwaga na lawinę zapytań |
-| **Hałaśliwy sąsiad** (Noisy Neighbor) | jeden najemca lub proces zużywa nieproporcjonalnie dużo zasobów wspólnych | metryki per najemca, skoki u wszystkich przy aktywności jednego | limity per najemca, kolejki z priorytetami, izolacja (grodzie, osobne pule, Deployment Stamps) |
-| **Burza ponowień** (Retry Storm) | wielu klientów ponawia bez odstępu i limitu, dobijając odradzającą się usługę | ruch rośnie po awarii zamiast spadać | wykładniczy odstęp z rozrzutem, budżet ponowień, bezpiecznik, `Retry-After` |
-| **Synchroniczne I/O** (Synchronous I/O) | wątek blokowany na czas operacji wejścia–wyjścia | wyczerpana pula wątków przy niskim CPU | asynchroniczne API (w Node domyślnie; w Javie wątki wirtualne lub reaktywnie), limity czasu |
-Każdy antywzorzec potwierdzasz pomiarem (profil, ślady, metryki) przed naprawą i po niej (qa-performance-testing).
+| **Busy Database** | the database runs logic (procedures, formatting, processing large sets) and becomes a bottleneck | high database CPU at moderate traffic, long procedures in `pg_stat_statements` | move the computation to the scalable application layer; the database for storage and queries |
+| **Busy Front End** | heavy tasks in the process serving requests (also in background threads of that process) slow down all requests | the latency of all endpoints grows while one heavy task runs | a queue and separate worker processes, `202` and a status resource (be-api-design) |
+| **Chatty I/O** | many small requests to the database, a service or files instead of one | the number of queries per request, N+1, traces with dozens of short calls | bulk queries, batches, responses with the needed data (be-database) |
+| **Extraneous Fetching** | fetching more data than needed (all columns, the whole collection, filtering in the application) | large responses, transfer from the database disproportionate to the result | column projection, filtering and pagination in the database, DTOs for reads |
+| **Improper Instantiation** | a new HTTP client, database connection or costly object created on every request | exhausted sockets or connections, a growing `TIME_WAIT`, creation time in the profile | one shared client, connection pools (`backend-performance-checklist.md`) |
+| **Monolithic Persistence** | one database for data with extremely different patterns (transactions, logs, analytics, files) | resource contention, slow transactional queries during reports | split the stores by access pattern (replicas, a warehouse, an object store) — only from measurement |
+| **No Caching** | the same, rarely changing data read every time from the source | repeated identical queries in the logs | a cache with a TTL and invalidation; beware of a query stampede |
+| **Noisy Neighbor** | one tenant or process consumes disproportionately many shared resources | per-tenant metrics, spikes for everyone when one is active | limits per tenant, priority queues, isolation (bulkheads, separate pools, Deployment Stamps) |
+| **Retry Storm** | many clients retry without a gap and a limit, finishing off a recovering service | traffic grows after an outage instead of dropping | exponential backoff with jitter, a retry budget, a circuit breaker, `Retry-After` |
+| **Synchronous I/O** | a thread blocked for the duration of an input–output operation | an exhausted thread pool at low CPU | an asynchronous API (default in Node; in Java virtual threads or reactive), timeouts |
+You confirm every antipattern with a measurement (a profile, traces, metrics) before the fix and after it (qa-performance-testing).
 
-## Źródła
+## Sources
 - [Microsoft — Performance antipatterns for cloud applications](https://learn.microsoft.com/en-us/azure/architecture/antipatterns/)
 - [roadmap.sh — System Design](https://roadmap.sh/system-design) (performance antipatterns)
-Opisane własnymi słowami.
+Described in our own words.
